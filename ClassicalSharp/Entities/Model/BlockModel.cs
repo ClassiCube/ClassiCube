@@ -66,7 +66,7 @@ namespace ClassicalSharp.Model {
 			
 			if (BlockInfo.FullBright[block]) {
 				for (int i = 0; i < cols.Length; i++) {
-					cols[i] = FastColour.WhitePacked;
+					cols[i] = PackedCol.White;
 				}
 			}			
 			
@@ -112,7 +112,7 @@ namespace ClassicalSharp.Model {
 				drawer.x2 = max.X - 0.5f; drawer.y2 = max.Y; drawer.z2 = max.Z - 0.5f;
 				
 				drawer.Tinted = BlockInfo.Tinted[block];
-				drawer.TintColour = BlockInfo.FogColour[block];
+				drawer.TintCol = BlockInfo.FogCol[block];
 				
 				drawer.Bottom(1, cols[1], GetTex(Side.Bottom), cache.vertices, ref index);
 				drawer.Front(1, cols[3], GetTex(Side.Front), cache.vertices, ref index);
@@ -136,10 +136,8 @@ namespace ClassicalSharp.Model {
 			TextureRec rec = Atlas1D.GetTexRec(texLoc, 1, out texIndex);
 			if (lastTexIndex != texIndex) Flush();
 			
-			int col = cols[0];
-			if (BlockInfo.Tinted[block]) {
-				col = Utils.Tint(col, BlockInfo.FogColour[block]);
-			}
+			PackedCol col = cols[0];
+			if (BlockInfo.Tinted[block]) { col *= BlockInfo.FogCol[block]; }
 			
 			float p1 = 0, p2 = 0;
 			if (firstPart) { // Need to break into two quads for when drawing a sprite model in hand.
@@ -161,10 +159,8 @@ namespace ClassicalSharp.Model {
 			TextureRec rec = Atlas1D.GetTexRec(texLoc, 1, out texIndex);
 			if (lastTexIndex != texIndex) Flush();
 
-			int col = cols[0];
-			if (BlockInfo.Tinted[block]) {
-				col = Utils.Tint(col, BlockInfo.FogColour[block]);
-			}
+			PackedCol col = cols[0];
+			if (BlockInfo.Tinted[block]) { col *= BlockInfo.FogCol[block]; }
 			
 			float x1 = 0, x2 = 0, z1 = 0, z2 = 0;
 			if (firstPart) {

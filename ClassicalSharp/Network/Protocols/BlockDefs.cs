@@ -127,7 +127,7 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			byte fogDensity = reader.ReadUInt8();
 			BlockInfo.FogDensity[block] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
-			BlockInfo.FogColour[block] = new FastColour(reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8());
+			BlockInfo.FogCol[block] = new PackedCol(reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8());
 			
 			BlockInfo.DefineCustom(game, block);
 		}

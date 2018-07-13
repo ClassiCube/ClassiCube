@@ -57,7 +57,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract void DisableMipmaps();
 		
 		public abstract bool Fog { get; set; }
-		public abstract void SetFogColour(FastColour col);
+		public abstract void SetFogCol(PackedCol col);
 		public abstract void SetFogDensity(float value);
 		public abstract void SetFogStart(float value);
 		public abstract void SetFogEnd(float value);
@@ -72,12 +72,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract void AlphaBlendFunc(BlendFunc srcFunc, BlendFunc dstFunc);
 		
 		public abstract void Clear();
-		public abstract void ClearColour(FastColour col);
+		public abstract void ClearCol(PackedCol col);
 		
 		public abstract bool DepthTest { set; }
 		public abstract void DepthTestFunc(CompareFunc func);
 		
-		public abstract void ColourWriteMask(bool r, bool g, bool b, bool a);
+		public abstract void ColWriteMask(bool r, bool g, bool b, bool a);
 		public abstract bool DepthWrite { set; }
 		
 		/// <summary> Whether blending between the alpha components of the texture and colour are performed. </summary>

@@ -29,7 +29,7 @@ namespace Launcher.Gui.Views {
 			using (drawer) {
 				drawer.SetBitmap(game.Framebuffer);
 				RedrawAll();
-				FastColour col = LauncherSkin.ButtonBorderCol;
+				PackedCol col = LauncherSkin.ButtonBorderCol;
 				int middle = game.Height / 2;
 				game.Drawer.DrawRect(col, game.Width / 2 - 160, middle - 100, 320, 1);
 				game.Drawer.DrawRect(col, game.Width / 2 - 160, middle - 5, 320, 1);

@@ -18,14 +18,14 @@ namespace ClassicalSharp.Particles {
 		
 		// http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/
 		public static void DoRender(ref Matrix4 view, ref Vector2 size, ref Vector3 pos, ref TextureRec rec,
-		                            int col, VertexP3fT2fC4b[] vertices, ref int index) {
+		                            PackedCol col, VertexP3fT2fC4b[] vertices, ref int index) {
 			float sX = size.X * 0.5f, sY = size.Y * 0.5f;
 			Vector3 centre = pos; centre.Y += sY;
 			Vector3 a, b;
 			
 			a.X = view.Row0.X * sX; a.Y = view.Row1.X * sX; a.Z = view.Row2.X * sX; // right * size.X * 0.5f
 			b.X = view.Row0.Y * sY; b.Y = view.Row1.Y * sY; b.Z = view.Row2.Y * sY; // up * size.Y * 0.5f
-			VertexP3fT2fC4b v; v.Colour = col;
+			VertexP3fT2fC4b v; v.Col = col;
 			
 			v.X = centre.X - a.X - b.X; v.Y = centre.Y - a.Y - b.Y; v.Z = centre.Z - a.Z - b.Z;
 			v.U = rec.U1; v.V = rec.V2; vertices[index++] = v;
@@ -135,7 +135,7 @@ namespace ClassicalSharp.Particles {
 			Vector2 size; size.X = Size * 0.015625f; size.Y = size.X;
 			
 			int x = Utils.Floor(pos.X), y = Utils.Floor(pos.Y), z = Utils.Floor(pos.Z);
-			int col = game.World.IsValidPos(x, y, z) ? game.Lighting.LightCol(x, y, z) : game.Lighting.Outside;
+			PackedCol col = game.World.IsValidPos(x, y, z) ? game.Lighting.LightCol(x, y, z) : game.Lighting.Outside;
 			DoRender(ref game.Graphics.View, ref size, ref pos, ref rec, col, vertices, ref index);
 		}
 	}
@@ -153,18 +153,13 @@ namespace ClassicalSharp.Particles {
 			Vector3 pos = Vector3.Lerp(lastPos, nextPos, t);
 			Vector2 size; size.X = Size * 0.015625f; size.Y = size.X;
 
-			int col = FastColour.WhitePacked;
+			PackedCol col = PackedCol.White;
 			if (!BlockInfo.FullBright[block]) {
 				int x = Utils.Floor(pos.X), y = Utils.Floor(pos.Y), z = Utils.Floor(pos.Z);
 				col = game.World.IsValidPos(x, y, z) ? game.Lighting.LightCol_ZSide(x, y, z) : game.Lighting.OutsideZSide;
 			}
 			
-			if (BlockInfo.Tinted[block]) {
-				FastColour fogCol = BlockInfo.FogColour[block];
-				FastColour newCol = FastColour.Unpack(col);
-				newCol *= fogCol;
-				col = newCol.Pack();
-			}
+			if (BlockInfo.Tinted[block]) { col *= BlockInfo.FogCol[block]; }
 			DoRender(ref game.Graphics.View, ref size, ref pos, ref rec, col, vertices, ref index);
 		}
 	}

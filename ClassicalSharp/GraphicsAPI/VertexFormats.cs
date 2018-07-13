@@ -12,11 +12,11 @@ namespace ClassicalSharp.GraphicsAPI {
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	public struct VertexP3fC4b {
 		public float X, Y, Z;
-		public int Colour;
+		public PackedCol Col;
 		
-		public VertexP3fC4b(float x, float y, float z, int c) {
+		public VertexP3fC4b(float x, float y, float z, PackedCol c) {
 			X = x; Y = y; Z = z;
-			Colour = c;
+			Col = c;
 		}
 		
 		public const int Size = 16; // (4 + 4 + 4) + (1 + 1 + 1 + 1)
@@ -29,13 +29,13 @@ namespace ClassicalSharp.GraphicsAPI {
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	public struct VertexP3fT2fC4b {
 		public float X, Y, Z;	
-		public int Colour;
+		public PackedCol Col;
 		public float U, V;
 
-		public VertexP3fT2fC4b(float x, float y, float z, float u, float v, int c) {
+		public VertexP3fT2fC4b(float x, float y, float z, float u, float v, PackedCol c) {
 			X = x; Y = y; Z = z; 
 			U = u; V = v;
-			Colour = c;
+			Col = c;
 		}
 		
 		public const int Size = 24; // 3 * 4 + 2 * 4 + 4 * 1

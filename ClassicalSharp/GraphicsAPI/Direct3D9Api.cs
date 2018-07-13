@@ -119,13 +119,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 
-		int fogCol, lastFogCol = FastColour.BlackPacked;
-		public override void SetFogColour(FastColour col) {
-			fogCol = col.Pack();
+		PackedCol fogCol, lastFogCol = PackedCol.Black;
+		public override void SetFogCol(PackedCol col) {
+			fogCol = col;
 			if (fogCol == lastFogCol) return;
 			lastFogCol = fogCol;
 			if (LostContext) return;
-			Device.SetRenderState(device, RenderState.FogColor, fogCol);
+			Device.SetRenderState(device, RenderState.FogColor, (int)fogCol.Packed);
 		}
 
 		float fogDensity = -1, fogStart = -1, fogEnd = -1;
@@ -247,16 +247,17 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 
-		int lastClearCol;
+		PackedCol lastClearCol;
 		public override void Clear() {
-			Device.Clear(device, ClearFlags.Target | ClearFlags.ZBuffer, lastClearCol, 1f, 0);
+			Device.Clear(device, ClearFlags.Target | ClearFlags.ZBuffer, 
+			             (int)lastClearCol.Packed, 1f, 0);
 		}
 
-		public override void ClearColour(FastColour col) {
-			lastClearCol = col.Pack();
+		public override void ClearCol(PackedCol col) {
+			lastClearCol = col;
 		}
 
-		public override void ColourWriteMask(bool r, bool g, bool b, bool a) {
+		public override void ColWriteMask(bool r, bool g, bool b, bool a) {
 			int flags = (r ? 1 : 0) | (g ? 2 : 0) | (b ? 4 : 0) | (a ? 8 : 0);
 			Device.SetRenderState(device, RenderState.ColorWriteEnable, flags);
 		}
@@ -481,7 +482,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			Device.SetRenderState(device, RenderState.SourceBlend, (int)srcBlendFunc);
 			Device.SetRenderState(device, RenderState.DestinationBlend, (int)dstBlendFunc);
 			Device.SetRenderState(device, RenderState.FogEnable, fogEnable);
-			Device.SetRenderState(device, RenderState.FogColor, fogCol);
+			Device.SetRenderState(device, RenderState.FogColor, (int)fogCol.Packed);
 			Device.SetRenderState(device, RenderState.FogDensity, fogDensity);
 			Device.SetRenderState(device, RenderState.FogStart, fogStart);
 			Device.SetRenderState(device, RenderState.FogEnd, fogEnd);

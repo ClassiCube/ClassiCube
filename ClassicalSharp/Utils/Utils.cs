@@ -129,12 +129,6 @@ namespace ClassicalSharp {
 			return CeilDiv(axis1Len, axisSize) * CeilDiv(axis2Len, axisSize) * 4;
 		}
 		
-		public static int Tint(int col, FastColour tint) {
-			FastColour adjCol = FastColour.Unpack(col);
-			adjCol *= tint;
-			return adjCol.Pack();
-		}
-		
 		/// <summary> Determines the skin type of the specified bitmap. </summary>
 		public static SkinType GetSkinType(Bitmap bmp) {
 			if (bmp.Width == bmp.Height * 2) {

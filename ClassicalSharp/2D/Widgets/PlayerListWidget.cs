@@ -29,8 +29,8 @@ namespace ClassicalSharp.Gui.Widgets {
 		ushort[] IDs = new ushort[512];
 		int xMin, xMax, yHeight;
 		
-		static FastColour topCol = new FastColour(0, 0, 0, 180);
-		static FastColour bottomCol = new FastColour(50, 50, 50, 205);
+		static PackedCol topCol = new PackedCol(0, 0, 0, 180);
+		static PackedCol bottomCol = new PackedCol(50, 50, 50, 205);
 		TextWidget overview;
 		
 		public override void Init() {

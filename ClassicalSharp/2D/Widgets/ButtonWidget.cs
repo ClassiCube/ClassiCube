@@ -72,9 +72,9 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 		}
 		
-		static FastColour normCol = new FastColour(224, 224, 224),
-		activeCol = new FastColour(255, 255, 160),
-		disabledCol = new FastColour(160, 160, 160);
+		static PackedCol normCol = new PackedCol(224, 224, 224),
+		activeCol = new PackedCol(255, 255, 160),
+		disabledCol = new PackedCol(160, 160, 160);
 		
 		public override void Render(double delta) {
 			IGraphicsApi gfx = game.Graphics;
@@ -97,14 +97,14 @@ namespace ClassicalSharp.Gui.Widgets {
 				
 				back.Width = (ushort)(Width / 2); 
 				back.U1 = 0; back.U2 = uWidth * scale;
-				gfx.Draw2DTexture(ref back, FastColour.White);
+				gfx.Draw2DTexture(ref back, PackedCol.White);
 				
 				back.X1 += (short)(Width / 2); 
 				back.U1 = uWidth - uWidth * scale; back.U2 = uWidth;
-				gfx.Draw2DTexture(ref back, FastColour.White);
+				gfx.Draw2DTexture(ref back, PackedCol.White);
 			}
 			
-			FastColour col = Disabled ? disabledCol : (Active ? activeCol : normCol);
+			PackedCol col = Disabled ? disabledCol : (Active ? activeCol : normCol);
 			texture.Render(gfx, col);
 		}
 		

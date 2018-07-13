@@ -49,12 +49,12 @@ namespace ClassicalSharp {
 		
 		public void Render(IGraphicsApi gfx) {
 			gfx.BindTexture(ID);
-			gfx.Draw2DTexture(ref this, FastColour.White);
+			gfx.Draw2DTexture(ref this, PackedCol.White);
 		}
 		
-		public void Render(IGraphicsApi gfx, FastColour colour) {
+		public void Render(IGraphicsApi gfx, PackedCol col) {
 			gfx.BindTexture(ID);
-			gfx.Draw2DTexture(ref this, colour);
+			gfx.Draw2DTexture(ref this, col);
 		}
 		
 		public override string ToString() {

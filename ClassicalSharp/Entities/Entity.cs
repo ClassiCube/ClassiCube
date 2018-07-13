@@ -99,7 +99,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		/// <summary> Gets the brightness colour of this entity. </summary>
-		public virtual int Colour() {
+		public virtual PackedCol Colour() {
 			Vector3I P = Vector3I.Floor(EyePosition);
 			return game.World.IsValidPos(P) ? game.Lighting.LightCol(P.X, P.Y, P.Z) : game.Lighting.Outside;
 		}

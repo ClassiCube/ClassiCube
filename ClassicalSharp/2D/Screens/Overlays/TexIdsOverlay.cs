@@ -79,7 +79,7 @@ namespace ClassicalSharp.Gui.Screens {
 					
 					Texture tex = new Texture(0, xOffset + x * tileSize, yOffset + y * tileSize,
 					                          tileSize, tileSize, rec);
-					IGraphicsApi.Make2DQuad(ref tex, FastColour.WhitePacked, vertices, ref index);
+					IGraphicsApi.Make2DQuad(ref tex, PackedCol.White, vertices, ref index);
 				}
 				i += Atlas1D.TilesPerAtlas;
 				

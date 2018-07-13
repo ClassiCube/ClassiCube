@@ -11,7 +11,7 @@ namespace ClassicalSharp.Gui.Screens {
 		const int keyI = 0, modifyI = 1, actionI = 2;
 		Hotkey curHotkey, origHotkey;
 		int selectedI = -1;
-		static FastColour grey = new FastColour(150, 150, 150);
+		static PackedCol grey = new PackedCol(150, 150, 150);
 		
 		public EditHotkeyScreen(Game game, Hotkey original) : base(game) {
 			origHotkey = original;

@@ -232,9 +232,9 @@ namespace ClassicalSharp.Renderers {
 		public override void RenderName() { }
 		public override void Despawn() { }
 		
-		public override int Colour() {
+		public override PackedCol Colour() {
 			Player realP = game.LocalPlayer;
-			int col = realP.Colour();
+			PackedCol col = realP.Colour();
 			
 			// Adjust pitch so angle when looking straight down is 0.
 			float adjHeadX = realP.HeadX - 90;
@@ -243,7 +243,7 @@ namespace ClassicalSharp.Renderers {
 			// Adjust colour so held block is brighter when looking straght up
 			float t = Math.Abs(adjHeadX - 180) / 180;
 			float colScale = Utils.Lerp(0.9f, 0.7f, t);
-			return FastColour.ScalePacked(col, colScale);
+			return PackedCol.Scale(col, colScale);
 		}
 	}
 }

@@ -107,7 +107,7 @@ namespace ClassicalSharp.Gui.Screens {
 			clearTime = DateTime.UtcNow.AddSeconds(0.5);
 		}
 		
-		readonly FastColour top = new FastColour(64, 32, 32), bottom = new FastColour(80, 16, 16);
+		readonly PackedCol top = new PackedCol(64, 32, 32), bottom = new PackedCol(80, 16, 16);
 		void Redraw(double delta) {
 			game.Graphics.Draw2DQuad(0, 0, game.Width, game.Height, top, bottom);
 			game.Graphics.Texturing = true;

@@ -29,12 +29,12 @@ namespace Launcher.Gui.Widgets {
 					BitmapDrawer.DrawIndexed(indices, palette, size, x, y, bmp);
 				}
 			}
-			drawer.DrawRectBounds(FastColour.Black, 1, X, Y, Width - 1, Height - 1);
+			drawer.DrawRectBounds(PackedCol.Black, 1, X, Y, Width - 1, Height - 1);
 		}
 		
 		
-		static FastColour boxTop = new FastColour(255, 255, 255);
-		static FastColour boxBottom = new FastColour(240, 240, 240);
+		static PackedCol boxTop = new PackedCol(255, 255, 255);
+		static PackedCol boxBottom = new PackedCol(240, 240, 240);
 		
 		// Based off checkbox from original ClassiCube Launcher
 		static byte[] indices = new byte[] {
@@ -52,22 +52,22 @@ namespace Launcher.Gui.Widgets {
 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		};
 
-		static FastColour[] palette = new FastColour[] {
-			new FastColour(0, 0, 0, 0),    new FastColour(144, 144, 144),
-			new FastColour(61, 61, 61),    new FastColour(94, 94, 94),
-			new FastColour(197, 196, 197), new FastColour(57, 57, 57),
-			new FastColour(33, 33, 33),    new FastColour(177, 177, 177),
-			new FastColour(189, 189, 189), new FastColour(67, 67, 67),
-			new FastColour(108, 108, 108), new FastColour(171, 171, 171),
-			new FastColour(220, 220, 220), new FastColour(43, 43, 43),
-			new FastColour(63, 63, 63),    new FastColour(100, 100, 100),
-			new FastColour(192, 192, 192), new FastColour(132, 132, 132),
-			new FastColour(175, 175, 175), new FastColour(217, 217, 217),
-			new FastColour(42, 42, 42),    new FastColour(86, 86, 86),
-			new FastColour(56, 56, 56),    new FastColour(76, 76, 76),
-			new FastColour(139, 139, 139), new FastColour(130, 130, 130),
-			new FastColour(181, 181, 181), new FastColour(62, 62, 62),
-			new FastColour(75, 75, 75),    new FastColour(184, 184, 184),
+		static PackedCol[] palette = new PackedCol[] {
+			new PackedCol(0, 0, 0, 0),    new PackedCol(144, 144, 144),
+			new PackedCol(61, 61, 61),    new PackedCol(94, 94, 94),
+			new PackedCol(197, 196, 197), new PackedCol(57, 57, 57),
+			new PackedCol(33, 33, 33),    new PackedCol(177, 177, 177),
+			new PackedCol(189, 189, 189), new PackedCol(67, 67, 67),
+			new PackedCol(108, 108, 108), new PackedCol(171, 171, 171),
+			new PackedCol(220, 220, 220), new PackedCol(43, 43, 43),
+			new PackedCol(63, 63, 63),    new PackedCol(100, 100, 100),
+			new PackedCol(192, 192, 192), new PackedCol(132, 132, 132),
+			new PackedCol(175, 175, 175), new PackedCol(217, 217, 217),
+			new PackedCol(42, 42, 42),    new PackedCol(86, 86, 86),
+			new PackedCol(56, 56, 56),    new PackedCol(76, 76, 76),
+			new PackedCol(139, 139, 139), new PackedCol(130, 130, 130),
+			new PackedCol(181, 181, 181), new PackedCol(62, 62, 62),
+			new PackedCol(75, 75, 75),    new PackedCol(184, 184, 184),
 		};
 	}
 }

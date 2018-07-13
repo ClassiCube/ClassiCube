@@ -119,10 +119,10 @@ namespace Launcher {
 				
 				// form of \uYYYY
 				int aH, aL, bH, bL;
-				if (!FastColour.UnHex(ctx.Val[ctx.Idx + 0], out aH)) break;
-				if (!FastColour.UnHex(ctx.Val[ctx.Idx + 1], out aL)) break;
-				if (!FastColour.UnHex(ctx.Val[ctx.Idx + 2], out bH)) break;
-				if (!FastColour.UnHex(ctx.Val[ctx.Idx + 3], out bL)) break;
+				if (!PackedCol.UnHex(ctx.Val[ctx.Idx + 0], out aH)) break;
+				if (!PackedCol.UnHex(ctx.Val[ctx.Idx + 1], out aL)) break;
+				if (!PackedCol.UnHex(ctx.Val[ctx.Idx + 2], out bH)) break;
+				if (!PackedCol.UnHex(ctx.Val[ctx.Idx + 3], out bL)) break;
 								
 				int codePoint = (aH << 12) | (aL << 8) | (bH << 4) | bL;
 				// don't want control characters in names/software

@@ -18,9 +18,9 @@ namespace ClassicalSharp.Gui.Widgets {
 	}
 	
 	/// <summary> Ensures that the input conforms to a hex colour code. </summary>
-	public sealed class HexColourValidator : MenuInputValidator {
+	public sealed class HexColValidator : MenuInputValidator {
 		
-		public HexColourValidator() {
+		public HexColValidator() {
 			Range = "&7(#000000 - #FFFFFF)";
 		}
 		
@@ -34,8 +34,8 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override bool IsValidValue(string s) {
-			FastColour col;
-			return FastColour.TryParse(s, out col);
+			PackedCol col;
+			return PackedCol.TryParse(s, out col);
 		}
 	}
 

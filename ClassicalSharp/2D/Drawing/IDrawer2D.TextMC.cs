@@ -72,10 +72,10 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawPart(FastBitmap dst, ref DrawTextArgs args, int x, int y, bool shadowCol) {
-			FastColour col = Cols['f'];
+			PackedCol col = Cols['f'];
 			if (shadowCol)
-				col = BlackTextShadows ? FastColour.Black : FastColour.Scale(col, 0.25f);
-			FastColour lastCol = col;
+				col = BlackTextShadows ? PackedCol.Black : PackedCol.Scale(col, 0.25f);
+			PackedCol lastCol = col;
 			
 			int runCount = 0, lastY = -1;
 			string text = args.Text;
@@ -87,7 +87,7 @@ namespace ClassicalSharp {
 				if (c == '&' && ValidColCode(text, i + 1)) {
 					col = GetCol(text[i + 1]);
 					if (shadowCol)
-						col = BlackTextShadows ? FastColour.Black : FastColour.Scale(col, 0.25f);
+						col = BlackTextShadows ? PackedCol.Black : PackedCol.Scale(col, 0.25f);
 					i++; continue; // Skip over the colour code.
 				}
 				int coords = Utils.UnicodeToCP437(c);
@@ -113,7 +113,7 @@ namespace ClassicalSharp {
 			DrawRun(dst, x, y, runCount, coordsPtr, point, lastCol);
 		}
 		
-		void DrawRun(FastBitmap dst, int x, int y, int runCount, byte* coords, int point, FastColour col) {
+		void DrawRun(FastBitmap dst, int x, int y, int runCount, byte* coords, int point, PackedCol col) {
 			if (runCount == 0) return;
 			int srcY = (coords[0] >> 4) * boxSize;
 			int textHeight = AdjTextSize(point), cellHeight = CellSize(textHeight);
@@ -162,7 +162,7 @@ namespace ClassicalSharp {
 			int height = AdjTextSize(point) + Utils.CeilDiv(padding, 2);
 			int offset = ShadowOffset(args.Font.Size);
 			
-			int col = FastColour.White.ToArgb();
+			int col = PackedCol.White.ToArgb();
 			string text = args.Text;
 			if (args.UseShadow) height += offset;
 			int startX = x;
@@ -176,7 +176,7 @@ namespace ClassicalSharp {
 						col = Cols[text[i + 1]].ToArgb();
 						i++; continue; // Skip over the colour code.
 					}
-					if (shadowCol) col = FastColour.Black.ToArgb();
+					if (shadowCol) col = PackedCol.Black.ToArgb();
 					
 					int coords = Utils.UnicodeToCP437(c);
 					int width = PaddedWidth(point, widths[coords]);
@@ -185,7 +185,7 @@ namespace ClassicalSharp {
 					x += width;
 				}
 				x = startX;
-				col = FastColour.White.ToArgb();
+				col = PackedCol.White.ToArgb();
 			}
 		}
 #endif

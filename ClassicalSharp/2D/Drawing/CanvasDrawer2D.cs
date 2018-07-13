@@ -32,27 +32,27 @@ namespace ClassicalSharp {
 		
 		public override Bitmap ConvertTo32Bpp(Bitmap src) { return src; }
 
-		public override void DrawRect(FastColour colour, int x, int y, int width, int height) {
+		public override void DrawRect(PackedCol col, int x, int y, int width, int height) {
 			RectF rec = new RectF(x, y, x + width, y + height);
-			Paint brush = GetOrCreateBrush(colour);
+			Paint brush = GetOrCreateBrush(col);
 			c.DrawRect(rec, brush);
 		}
 		
-		public override void DrawRectBounds(FastColour colour, float lineWidth, int x, int y, int width, int height) {
+		public override void DrawRectBounds(PackedCol col, float lineWidth, int x, int y, int width, int height) {
 			RectF rec = new RectF(x, y, x + width, y + height);
-			Paint brush = GetOrCreateBrush(colour);
+			Paint brush = GetOrCreateBrush(col);
 			brush.SetStyle(Paint.Style.Stroke);
 			c.DrawRect(rec, brush);
 			brush.SetStyle(Paint.Style.FillAndStroke);
 		}
 		
-		public override void Clear(FastColour colour) {
-			c.DrawColor(colour);
+		public override void Clear(PackedCol col) {
+			c.DrawColor(col);
 		}
 		
-		public override void Clear(FastColour colour, int x, int y, int width, int height) {
+		public override void Clear(PackedCol col, int x, int y, int width, int height) {
 			RectF rec = new RectF(x, y, x + width, y + height);
-			Paint brush = GetOrCreateBrush(colour);
+			Paint brush = GetOrCreateBrush(col);
 			brush.AntiAlias = false;
 			c.DrawRect(rec, brush);
 			brush.AntiAlias = true;
@@ -71,15 +71,15 @@ namespace ClassicalSharp {
 			DisposeFontBitmap();
 		}
 		
-		Paint GetOrCreateBrush(Color color) {
-			int key = color.ToArgb();
+		Paint GetOrCreateBrush(Color col) {
+			int key = col.ToArgb();
 			Paint brush;
 			if (brushCache.TryGetValue(key, out brush))
 				return brush;
 			
 			brush = new Paint();
 			brush.AntiAlias = true;
-			brush.Color = color;
+			brush.Color = col;
 			brush.FilterBitmap = true;
 			brush.SetStyle(Paint.Style.FillAndStroke);
 			brushCache[key] = brush;
@@ -91,7 +91,7 @@ namespace ClassicalSharp {
 				GetTextParts(args.Text);
 			
 			float textX = x;
-			Paint backBrush = GetOrCreateBrush(FastColour.Black);
+			Paint backBrush = GetOrCreateBrush(PackedCol.Black);
 			for (int i = 0; i < parts.Count; i++) {
 				TextPart part = parts[i];
 				Paint foreBrush = GetOrCreateBrush(part.Col);

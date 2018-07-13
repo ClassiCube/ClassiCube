@@ -22,7 +22,7 @@ namespace ClassicalSharp.Gui.Screens {
 			ContextRecreated();
 		}
 		
-		static FastColour tableCol = new FastColour(20, 20, 20, 200);
+		static PackedCol tableCol = new PackedCol(20, 20, 20, 200);
 		public override void Render(double delta) {
 			base.Render(delta);
 			if (extHelp == null) return;

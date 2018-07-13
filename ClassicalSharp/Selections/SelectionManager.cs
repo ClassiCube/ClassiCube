@@ -24,7 +24,7 @@ namespace ClassicalSharp.Selections {
 		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
 		List<SelectionBox> selections = new List<SelectionBox>(256);
-		public void AddSelection(byte id, Vector3I p1, Vector3I p2, FastColour col) {
+		public void AddSelection(byte id, Vector3I p1, Vector3I p2, PackedCol col) {
 			RemoveSelection(id);
 			SelectionBox selection = new SelectionBox(p1, p2, col);
 			selection.ID = id;

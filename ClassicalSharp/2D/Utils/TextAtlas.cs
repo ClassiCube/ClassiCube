@@ -58,7 +58,7 @@ namespace ClassicalSharp {
 			part.U2 = part.U1 + width * uScale;
 			
 			curX += width;
-			IGraphicsApi.Make2DQuad(ref part, FastColour.WhitePacked, 
+			IGraphicsApi.Make2DQuad(ref part, PackedCol.White, 
 			                        vertices, ref index);
 		}
 		

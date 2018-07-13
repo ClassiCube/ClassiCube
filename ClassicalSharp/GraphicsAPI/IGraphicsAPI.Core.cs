@@ -77,9 +77,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		internal VertexP3fC4b[] quadVerts = new VertexP3fC4b[4];
 		internal int quadVb;
 		public virtual void Draw2DQuad(int x, int y, int width, int height,
-		                               FastColour col) {
+		                               PackedCol col) {
 			VertexP3fC4b[] verts = quadVerts;
-			VertexP3fC4b v; v.Z = 0; v.Colour = col.Pack();
+			VertexP3fC4b v; v.Z = 0; v.Col = col;
 			
 			v.X = x;         v.Y = y;          verts[0] = v;
 			v.X = x + width;                   verts[1] = v;
@@ -90,13 +90,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public virtual void Draw2DQuad(int x, int y, int width, int height,
-		                               FastColour topCol, FastColour bottomCol) {
+		                               PackedCol topCol, PackedCol bottomCol) {
 			VertexP3fC4b[] verts = quadVerts;
-			VertexP3fC4b v; v.Z = 0; v.Colour = topCol.Pack();
+			VertexP3fC4b v; v.Z = 0; v.Col = topCol;
 			v.X = x;         v.Y = y;          verts[0] = v;
 			v.X = x + width;                   verts[1] = v;
 			
-			v.Colour = bottomCol.Pack();
+			v.Col = bottomCol;
 			                 v.Y = y + height; verts[2] = v;
 			v.X = x;                           verts[3] = v;
 			SetBatchFormat(VertexFormat.P3fC4b);
@@ -105,14 +105,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		internal VertexP3fT2fC4b[] texVerts = new VertexP3fT2fC4b[4];
 		internal int texVb;
-		public virtual void Draw2DTexture(ref Texture tex, FastColour col) {
+		public virtual void Draw2DTexture(ref Texture tex, PackedCol col) {
 			int index = 0;
-			Make2DQuad(ref tex, col.Pack(), texVerts, ref index);
+			Make2DQuad(ref tex, col, texVerts, ref index);
 			SetBatchFormat(VertexFormat.P3fT2fC4b);
 			UpdateDynamicVb_IndexedTris(texVb, texVerts, 4);
 		}
 		
-		public static void Make2DQuad(ref Texture tex, int col,
+		public static void Make2DQuad(ref Texture tex, PackedCol col,
 		                              VertexP3fT2fC4b[] vertices, ref int index) {
 			float x1 = tex.X, y1 = tex.Y, x2 = tex.X + tex.Width, y2 = tex.Y + tex.Height;
 			#if USE_DX
@@ -122,7 +122,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			y1 -= 0.5f; y2 -= 0.5f;
 			#endif
 			
-			VertexP3fT2fC4b v; v.Z = 0; v.Colour = col;
+			VertexP3fT2fC4b v; v.Z = 0; v.Col = col;
 			v.X = x1; v.Y = y1; v.U = tex.U1; v.V = tex.V1; vertices[index++] = v;
 			v.X = x2;           v.U = tex.U2;               vertices[index++] = v;
 			          v.Y = y2;               v.V = tex.V2; vertices[index++] = v;

@@ -7,7 +7,7 @@ namespace Launcher.Drawing {
 	public unsafe static class Gradient {
 		
 		public static void Noise(FastBitmap bmp, Rectangle rect,
-		                         FastColour col, int variation) {
+		                         PackedCol col, int variation) {
 			int x, y, width, height;
 			if (!Drawer2DExt.ClampCoords(bmp, rect, out x, out y,
 			                             out width, out height)) return;
@@ -32,11 +32,11 @@ namespace Launcher.Drawing {
 		}
 		
 		public static void Vertical(FastBitmap bmp, Rectangle rect,
-		                            FastColour a, FastColour b) {
+		                            PackedCol a, PackedCol b) {
 			int x, y, width, height;
 			if (!Drawer2DExt.ClampCoords(bmp, rect, out x, out y,
 			                             out width, out height)) return;
-			FastColour c = a;
+			PackedCol c = a;
 			
 			for (int yy = 0; yy < height; yy++) {
 				int* row = bmp.GetRowPtr(y + yy);
@@ -53,7 +53,7 @@ namespace Launcher.Drawing {
 		}
 		
 		public static void Blend(FastBitmap bmp, Rectangle rect,
-		                         FastColour col, int blend) {
+		                         PackedCol col, int blend) {
 			int x, y, width, height;
 			if (!Drawer2DExt.ClampCoords(bmp, rect, out x, out y,
 			                             out width, out height)) return;

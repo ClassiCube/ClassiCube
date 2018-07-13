@@ -86,7 +86,7 @@ namespace ClassicalSharp.Model {
 		
 		protected static float cosHead, sinHead;
 		protected static float uScale, vScale;
-		protected static int[] cols = new int[Side.Sides];
+		protected static PackedCol[] cols = new PackedCol[Side.Sides];
 		
 		/// <summary> Returns whether the model should be rendered based on the given entity's position. </summary>
 		public static bool ShouldRender(Entity p, FrustumCulling culling) {
@@ -135,7 +135,7 @@ namespace ClassicalSharp.Model {
 		
 		public void SetupState(Entity p) {
 			index = 0;
-			int col = p.Colour();
+			PackedCol col = p.Colour();
 
 			bool _64x64 = p.SkinType != SkinType.Type64x32;
 			// only apply when using humanoid skins
@@ -146,9 +146,9 @@ namespace ClassicalSharp.Model {
 			
 			cols[0] = col;
 			if (!p.NoShade) {
-				cols[1] = FastColour.ScalePacked(col, FastColour.ShadeYBottom);
-				cols[2] = FastColour.ScalePacked(col, FastColour.ShadeZ);
-				cols[4] = FastColour.ScalePacked(col, FastColour.ShadeX);
+				cols[1] = PackedCol.Scale(col, PackedCol.ShadeYBottom);
+				cols[2] = PackedCol.Scale(col, PackedCol.ShadeZ);
+				cols[4] = PackedCol.Scale(col, PackedCol.ShadeX);
 			} else {
 				cols[1] = col; cols[2] = col; cols[4] = col;
 			}
@@ -211,7 +211,7 @@ namespace ClassicalSharp.Model {
 			for (int i = 0; i < part.Count; i++) {
 				ModelVertex v = vertices[part.Offset + i];
 				vertex.X = v.X; vertex.Y = v.Y; vertex.Z = v.Z;
-				vertex.Colour = cols[i >> 2];
+				vertex.Col = cols[i >> 2];
 				
 				vertex.U = (v.U & UVMask) * uScale - (v.U >> UVMaxShift) * 0.01f * uScale;
 				vertex.V = (v.V & UVMask) * vScale - (v.V >> UVMaxShift) * 0.01f * vScale;
@@ -252,7 +252,7 @@ namespace ClassicalSharp.Model {
 					t = cosHead * v.X - sinHead * v.Z; v.Z = sinHead * v.X + cosHead * v.Z; v.X = t; // Inlined RotY
 				}
 				vertex.X = v.X + x; vertex.Y = v.Y + y; vertex.Z = v.Z + z;
-				vertex.Colour = cols[i >> 2];
+				vertex.Col = cols[i >> 2];
 				
 				vertex.U = (v.U & UVMask) * uScale - (v.U >> UVMaxShift) * 0.01f * uScale;
 				vertex.V = (v.V & UVMask) * vScale - (v.V >> UVMaxShift) * 0.01f * vScale;

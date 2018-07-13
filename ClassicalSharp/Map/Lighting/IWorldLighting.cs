@@ -10,7 +10,7 @@ namespace ClassicalSharp.Map {
 	public abstract class IWorldLighting : IGameComponent {
 
 		protected internal short[] heightmap;
-		public int Outside, OutsideZSide, OutsideXSide, OutsideYBottom;
+		public PackedCol Outside, OutsideZSide, OutsideXSide, OutsideYBottom;
 		protected int width, height, length;
 		
 		// Equivalent to
@@ -35,19 +35,19 @@ namespace ClassicalSharp.Map {
 
 		/// <summary> Returns the light colour of the block at the given coordinates. </summary>
 		/// <remarks> *** Does NOT check that the coordinates are inside the map. *** </remarks>
-		public abstract int LightCol(int x, int y, int z);
+		public abstract PackedCol LightCol(int x, int y, int z);
 
 		/// <summary> Returns the light colour of the block at the given coordinates. </summary>
 		/// <remarks> *** Does NOT check that the coordinates are inside the map. *** 
 		/// NOTE: This actually returns X shaded colour, but is called ZSide to avoid breaking compatibility. </remarks>
-		public abstract int LightCol_ZSide(int x, int y, int z);
+		public abstract PackedCol LightCol_ZSide(int x, int y, int z);
 		
 
-		public abstract int LightCol_Sprite_Fast(int x, int y, int z);		
-		public abstract int LightCol_YTop_Fast(int x, int y, int z);
-		public abstract int LightCol_YBottom_Fast(int x, int y, int z);
-		public abstract int LightCol_XSide_Fast(int x, int y, int z);
-		public abstract int LightCol_ZSide_Fast(int x, int y, int z);		
+		public abstract PackedCol LightCol_Sprite_Fast(int x, int y, int z);		
+		public abstract PackedCol LightCol_YTop_Fast(int x, int y, int z);
+		public abstract PackedCol LightCol_YBottom_Fast(int x, int y, int z);
+		public abstract PackedCol LightCol_XSide_Fast(int x, int y, int z);
+		public abstract PackedCol LightCol_ZSide_Fast(int x, int y, int z);		
 		
 		public virtual void Dispose() { }
 		public virtual void Reset(Game game) { }

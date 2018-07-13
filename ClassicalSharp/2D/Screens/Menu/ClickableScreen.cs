@@ -13,8 +13,8 @@ namespace ClassicalSharp.Gui.Screens {
 		// These were sourced by taking a screenshot of vanilla
 		// Then using paint to extract the colour components
 		// Then using wolfram alpha to solve the glblendfunc equation
-		static FastColour topBackCol = new FastColour(24, 24, 24, 105);
-		static FastColour bottomBackCol = new FastColour(51, 51, 98, 162);
+		static PackedCol topBackCol = new PackedCol(24, 24, 24, 105);
+		static PackedCol bottomBackCol = new PackedCol(51, 51, 98, 162);
 
 		protected void RenderMenuBounds() {
 			game.Graphics.Draw2DQuad(0, 0, game.Width, game.Height, topBackCol, bottomBackCol);

@@ -70,11 +70,11 @@ namespace ClassicalSharp.Map {
 				p.ReachDistance = (short)curCpeExt["Distance"].Value / 32f;
 			}
 			if (CheckKey("EnvColors", 1, metadata)) {
-				map.Env.SetSkyCol(GetColour("Sky", WorldEnv.DefaultSkyCol));
-				map.Env.SetCloudsCol(GetColour("Cloud", WorldEnv.DefaultCloudsCol));
-				map.Env.SetFogCol(GetColour("Fog", WorldEnv.DefaultFogCol));
-				map.Env.SetSunCol(GetColour("Sunlight", WorldEnv.DefaultSunlight));
-				map.Env.SetShadowCol(GetColour("Ambient", WorldEnv.DefaultShadowlight));
+				map.Env.SetSkyCol(GetCol("Sky", WorldEnv.DefaultSkyCol));
+				map.Env.SetCloudsCol(GetCol("Cloud", WorldEnv.DefaultCloudsCol));
+				map.Env.SetFogCol(GetCol("Fog", WorldEnv.DefaultFogCol));
+				map.Env.SetSunCol(GetCol("Sunlight", WorldEnv.DefaultSunlight));
+				map.Env.SetShadowCol(GetCol("Ambient", WorldEnv.DefaultShadowlight));
 			}
 			if (CheckKey("EnvMapAppearance", 1, metadata)) {
 				string url = null;
@@ -121,7 +121,7 @@ namespace ClassicalSharp.Map {
 			return false;
 		}
 		
-		FastColour GetColour(string key, FastColour def) {
+		PackedCol GetCol(string key, PackedCol def) {
 			NbtTag tag;
 			if (!curCpeExt.TryGetValue(key, out tag))
 				return def;
@@ -131,7 +131,7 @@ namespace ClassicalSharp.Map {
 			short g = (short)compound["G"].Value;
 			short b = (short)compound["B"].Value;
 			bool invalid = r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255;
-			return invalid ? def : new FastColour(r, g, b);
+			return invalid ? def : new PackedCol(r, g, b);
 		}
 		
 		void ParseBlockDefinition(NbtCompound compound) {
@@ -166,7 +166,7 @@ namespace ClassicalSharp.Map {
 			BlockInfo.FogDensity[id] = (data[0] + 1) / 128f;
 			// Fix for older ClassicalSharp versions which saved wrong fog density value
 			if (data[0] == 0xFF) BlockInfo.FogDensity[id] = 0;
-			BlockInfo.FogColour[id] = new FastColour(data[1], data[2], data[3]);
+			BlockInfo.FogCol[id] = new PackedCol(data[1], data[2], data[3]);
 
 			data = (byte[])compound["Coords"].Value;
 			BlockInfo.MinBB[id] = new Vector3(data[0] / 16f, data[1] / 16f, data[2] / 16f);

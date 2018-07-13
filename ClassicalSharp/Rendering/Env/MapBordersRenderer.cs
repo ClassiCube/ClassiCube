@@ -173,10 +173,8 @@ namespace ClassicalSharp.Renderers {
 			int index = 0;
 			
 			fullBrightSides = BlockInfo.FullBright[block];
-			int col = fullBrightSides ? FastColour.WhitePacked : map.Env.Shadow;
-			if (BlockInfo.Tinted[block]) {
-				col = Utils.Tint(col, BlockInfo.FogColour[block]);
-			}
+			PackedCol col = fullBrightSides ? PackedCol.White : map.Env.Shadow;
+			if (BlockInfo.Tinted[block]) { col *= BlockInfo.FogCol[block]; }
 			
 			for (int i = 0; i < rects.Length; i++) {
 				Rectangle r = rects[i];
@@ -210,10 +208,8 @@ namespace ClassicalSharp.Renderers {
 			int index = 0;
 			
 			fullBrightEdge = BlockInfo.FullBright[block];
-			int col = fullBrightEdge ? FastColour.WhitePacked : map.Env.Sun;
-			if (BlockInfo.Tinted[block]) {
-				col = Utils.Tint(col, BlockInfo.FogColour[block]);
-			}
+			PackedCol col = fullBrightEdge ? PackedCol.White : map.Env.Sun;
+			if (BlockInfo.Tinted[block]) { col *= BlockInfo.FogCol[block]; }
 			
 			for (int i = 0; i < rects.Length; i++) {
 				Rectangle r = rects[i];
@@ -235,10 +231,10 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void DrawX(int x, int z1, int z2, int y1, int y2, int axisSize,
-		           int col, VertexP3fT2fC4b[] vertices, ref int i) {
+		           PackedCol col, VertexP3fT2fC4b[] vertices, ref int i) {
 			int endZ = z2, endY = y2, startY = y1;
 			VertexP3fT2fC4b v;
-			v.X = x; v.Colour = col;
+			v.X = x; v.Col = col;
 			
 			for (; z1 < endZ; z1 += axisSize) {
 				z2 = z1 + axisSize;
@@ -258,10 +254,10 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void DrawZ(int z, int x1, int x2, int y1, int y2, int axisSize,
-		           int col, VertexP3fT2fC4b[] vertices, ref int i) {
+		           PackedCol col, VertexP3fT2fC4b[] vertices, ref int i) {
 			int endX = x2, endY = y2, startY = y1;
 			VertexP3fT2fC4b v;
-			v.Z = z; v.Colour = col;
+			v.Z = z; v.Col = col;
 			
 			for (; x1 < endX; x1 += axisSize) {
 				x2 = x1 + axisSize;
@@ -281,10 +277,10 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void DrawY(int x1, int z1, int x2, int z2, float y, int axisSize,
-		           int col, float offset, float yOffset, VertexP3fT2fC4b[] vertices, ref int i) {
+		           PackedCol col, float offset, float yOffset, VertexP3fT2fC4b[] vertices, ref int i) {
 			int endX = x2, endZ = z2, startZ = z1;
 			VertexP3fT2fC4b v;
-			v.Y = y + yOffset; v.Colour = col;
+			v.Y = y + yOffset; v.Col = col;
 			
 			for (; x1 < endX; x1 += axisSize) {
 				x2 = x1 + axisSize;

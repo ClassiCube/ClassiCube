@@ -28,12 +28,12 @@ namespace ClassicalSharp.Blocks {
 			return 0;
 		}
 		
-		public static FastColour FogColour(BlockID b) {
+		public static PackedCol FogColour(BlockID b) {
 			if (b == Block.Water || b == Block.StillWater)
-				return new FastColour(5, 5, 51);
+				return new PackedCol(5, 5, 51);
 			if (b == Block.Lava || b == Block.StillLava)
-				return new FastColour(153, 25, 0);
-			return default(FastColour);
+				return new PackedCol(153, 25, 0);
+			return default(PackedCol);
 		}
 		
 		public static byte Collide(BlockID b) {

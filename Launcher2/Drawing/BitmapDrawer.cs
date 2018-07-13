@@ -6,7 +6,7 @@ using ClassicalSharp;
 namespace Launcher.Drawing {
 	public unsafe static class BitmapDrawer {
 		
-		public static void DrawIndexed(byte[] indices, FastColour[] palette,
+		public static void DrawIndexed(byte[] indices, PackedCol[] palette,
 		                               int size, int x, int y, FastBitmap dst) {
 			int* argb = stackalloc int[palette.Length];
 			for (int i = 0; i < palette.Length; i++)

@@ -124,7 +124,7 @@ namespace ClassicalSharp.Gui.Screens {
 			int index = 0;
 			Texture tex = posAtlas.tex;
 			tex.X1 = 2; tex.Width = (ushort)posAtlas.offset;
-			IGraphicsApi.Make2DQuad(ref tex, FastColour.WhitePacked,
+			IGraphicsApi.Make2DQuad(ref tex, PackedCol.White,
 			                        game.ModelCache.vertices, ref index);
 			
 			Vector3I pos = Vector3I.Floor(game.LocalPlayer.Position);

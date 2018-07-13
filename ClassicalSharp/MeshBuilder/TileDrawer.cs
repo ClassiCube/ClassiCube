@@ -128,9 +128,9 @@ namespace ClassicalSharp {
 			}
 			
 			DrawInfo part = normalParts[i];
-			int col = fullBright ? FastColour.WhitePacked : light.LightCol_Sprite_Fast(X, Y, Z);
-			if (tinted) col = TintBlock(curBlock, col);
-			VertexP3fT2fC4b v; v.Colour = col;
+			PackedCol col = fullBright ? PackedCol.White : light.LightCol_Sprite_Fast(X, Y, Z);
+			if (tinted) { col *= BlockInfo.FogCol[curBlock]; }
+			VertexP3fT2fC4b v; v.Col = col;
 			
 			// Draw Z axis
 			int index = part.sIndex;
@@ -161,13 +161,6 @@ namespace ClassicalSharp {
 			v.Y = y1;                     v.V = v2; vertices[index + 3] = v;
 			
 			part.sIndex += 4;
-		}
-		
-		protected int TintBlock(BlockID curBlock, int col) {
-			FastColour fogCol = BlockInfo.FogColour[curBlock];
-			FastColour newCol = FastColour.Unpack(col);
-			newCol *= fogCol;
-			return newCol.Pack();
 		}
 	}
 }

@@ -140,14 +140,11 @@ namespace ClassicalSharp {
 			int aY1_Z0 = ((F >> xM1_yP1_zM1) & 1) + ((F >> xM1_yCC_zM1) & 1) + ((F >> xM1_yP1_zCC) & 1) + ((F >> xM1_yCC_zCC) & 1);
 			int aY1_Z1 = ((F >> xM1_yP1_zP1) & 1) + ((F >> xM1_yCC_zP1) & 1) + ((F >> xM1_yP1_zCC) & 1) + ((F >> xM1_yCC_zCC) & 1);
 			
-			int col0_0 = fullBright ? FastColour.WhitePacked : lerpX[aY0_Z0], col1_0 = fullBright ? FastColour.WhitePacked : lerpX[aY1_Z0];
-			int col1_1 = fullBright ? FastColour.WhitePacked : lerpX[aY1_Z1], col0_1 = fullBright ? FastColour.WhitePacked : lerpX[aY0_Z1];
+			PackedCol col0_0 = fullBright ? PackedCol.White : lerpX[aY0_Z0], col1_0 = fullBright ? PackedCol.White : lerpX[aY1_Z0];
+			PackedCol col1_1 = fullBright ? PackedCol.White : lerpX[aY1_Z1], col0_1 = fullBright ? PackedCol.White : lerpX[aY0_Z1];
 			if (tinted) {
-				FastColour tint = BlockInfo.FogColour[curBlock];
-				col0_0 = Utils.Tint(col0_0, tint);
-				col1_0 = Utils.Tint(col1_0, tint);
-				col1_1 = Utils.Tint(col1_1, tint);
-				col0_1 = Utils.Tint(col0_1, tint);
+				PackedCol tint = BlockInfo.FogCol[curBlock];
+				col0_0 *= tint; col1_0 *= tint; col1_1 *= tint; col0_1 *= tint;
 			}
 			
 			int index = part.vIndex[Side.Left];
@@ -182,14 +179,11 @@ namespace ClassicalSharp {
 			int aY1_Z0 = ((F >> xP1_yP1_zM1) & 1) + ((F >> xP1_yCC_zM1) & 1) + ((F >> xP1_yP1_zCC) & 1) + ((F >> xP1_yCC_zCC) & 1);
 			int aY1_Z1 = ((F >> xP1_yP1_zP1) & 1) + ((F >> xP1_yCC_zP1) & 1) + ((F >> xP1_yP1_zCC) & 1) + ((F >> xP1_yCC_zCC) & 1);
 			
-			int col0_0 = fullBright ? FastColour.WhitePacked : lerpX[aY0_Z0], col1_0 = fullBright ? FastColour.WhitePacked : lerpX[aY1_Z0];
-			int col1_1 = fullBright ? FastColour.WhitePacked : lerpX[aY1_Z1], col0_1 = fullBright ? FastColour.WhitePacked : lerpX[aY0_Z1];
+			PackedCol col0_0 = fullBright ? PackedCol.White : lerpX[aY0_Z0], col1_0 = fullBright ? PackedCol.White : lerpX[aY1_Z0];
+			PackedCol col1_1 = fullBright ? PackedCol.White : lerpX[aY1_Z1], col0_1 = fullBright ? PackedCol.White : lerpX[aY0_Z1];
 			if (tinted) {
-				FastColour tint = BlockInfo.FogColour[curBlock];
-				col0_0 = Utils.Tint(col0_0, tint);
-				col1_0 = Utils.Tint(col1_0, tint);
-				col1_1 = Utils.Tint(col1_1, tint);
-				col0_1 = Utils.Tint(col0_1, tint);
+				PackedCol tint = BlockInfo.FogCol[curBlock];
+				col0_0 *= tint; col1_0 *= tint; col1_1 *= tint; col0_1 *= tint;
 			}
 			
 			int index = part.vIndex[Side.Right];
@@ -224,14 +218,11 @@ namespace ClassicalSharp {
 			int aX1_Y0 = ((F >> xP1_yM1_zM1) & 1) + ((F >> xP1_yCC_zM1) & 1) + ((F >> xCC_yM1_zM1) & 1) + ((F >> xCC_yCC_zM1) & 1);
 			int aX1_Y1 = ((F >> xP1_yP1_zM1) & 1) + ((F >> xP1_yCC_zM1) & 1) + ((F >> xCC_yP1_zM1) & 1) + ((F >> xCC_yCC_zM1) & 1);
 			
-			int col0_0 = fullBright ? FastColour.WhitePacked : lerpZ[aX0_Y0], col1_0 = fullBright ? FastColour.WhitePacked : lerpZ[aX1_Y0];
-			int col1_1 = fullBright ? FastColour.WhitePacked : lerpZ[aX1_Y1], col0_1 = fullBright ? FastColour.WhitePacked : lerpZ[aX0_Y1];
+			PackedCol col0_0 = fullBright ? PackedCol.White : lerpZ[aX0_Y0], col1_0 = fullBright ? PackedCol.White : lerpZ[aX1_Y0];
+			PackedCol col1_1 = fullBright ? PackedCol.White : lerpZ[aX1_Y1], col0_1 = fullBright ? PackedCol.White : lerpZ[aX0_Y1];
 			if (tinted) {
-				FastColour tint = BlockInfo.FogColour[curBlock];
-				col0_0 = Utils.Tint(col0_0, tint);
-				col1_0 = Utils.Tint(col1_0, tint);
-				col1_1 = Utils.Tint(col1_1, tint);
-				col0_1 = Utils.Tint(col0_1, tint);
+				PackedCol tint = BlockInfo.FogCol[curBlock];
+				col0_0 *= tint; col1_0 *= tint; col1_1 *= tint; col0_1 *= tint;
 			}
 			
 			int index = part.vIndex[Side.Front];
@@ -266,14 +257,11 @@ namespace ClassicalSharp {
 			int aX0_Y1 = ((F >> xM1_yP1_zP1) & 1) + ((F >> xM1_yCC_zP1) & 1) + ((F >> xCC_yP1_zP1) & 1) + ((F >> xCC_yCC_zP1) & 1);
 			int aX1_Y1 = ((F >> xP1_yP1_zP1) & 1) + ((F >> xP1_yCC_zP1) & 1) + ((F >> xCC_yP1_zP1) & 1) + ((F >> xCC_yCC_zP1) & 1);
 			
-			int col1_1 = fullBright ? FastColour.WhitePacked : lerpZ[aX1_Y1], col1_0 = fullBright ? FastColour.WhitePacked : lerpZ[aX1_Y0];
-			int col0_0 = fullBright ? FastColour.WhitePacked : lerpZ[aX0_Y0], col0_1 = fullBright ? FastColour.WhitePacked : lerpZ[aX0_Y1];
+			PackedCol col1_1 = fullBright ? PackedCol.White : lerpZ[aX1_Y1], col1_0 = fullBright ? PackedCol.White : lerpZ[aX1_Y0];
+			PackedCol col0_0 = fullBright ? PackedCol.White : lerpZ[aX0_Y0], col0_1 = fullBright ? PackedCol.White : lerpZ[aX0_Y1];
 			if (tinted) {
-				FastColour tint = BlockInfo.FogColour[curBlock];
-				col0_0 = Utils.Tint(col0_0, tint);
-				col1_0 = Utils.Tint(col1_0, tint);
-				col1_1 = Utils.Tint(col1_1, tint);
-				col0_1 = Utils.Tint(col0_1, tint);
+				PackedCol tint = BlockInfo.FogCol[curBlock];
+				col0_0 *= tint; col1_0 *= tint; col1_1 *= tint; col0_1 *= tint;
 			}
 			
 			int index = part.vIndex[Side.Back];
@@ -308,14 +296,11 @@ namespace ClassicalSharp {
 			int aX0_Z1 = ((F >> xM1_yM1_zP1) & 1) + ((F >> xM1_yM1_zCC) & 1) + ((F >> xCC_yM1_zP1) & 1) + ((F >> xCC_yM1_zCC) & 1);
 			int aX1_Z1 = ((F >> xP1_yM1_zP1) & 1) + ((F >> xP1_yM1_zCC) & 1) + ((F >> xCC_yM1_zP1) & 1) + ((F >> xCC_yM1_zCC) & 1);
 			
-			int col0_1 = fullBright ? FastColour.WhitePacked : lerpY[aX0_Z1], col1_1 = fullBright ? FastColour.WhitePacked : lerpY[aX1_Z1];
-			int col1_0 = fullBright ? FastColour.WhitePacked : lerpY[aX1_Z0], col0_0 = fullBright ? FastColour.WhitePacked : lerpY[aX0_Z0];
+			PackedCol col0_1 = fullBright ? PackedCol.White : lerpY[aX0_Z1], col1_1 = fullBright ? PackedCol.White : lerpY[aX1_Z1];
+			PackedCol col1_0 = fullBright ? PackedCol.White : lerpY[aX1_Z0], col0_0 = fullBright ? PackedCol.White : lerpY[aX0_Z0];
 			if (tinted) {
-				FastColour tint = BlockInfo.FogColour[curBlock];
-				col0_0 = Utils.Tint(col0_0, tint);
-				col1_0 = Utils.Tint(col1_0, tint);
-				col1_1 = Utils.Tint(col1_1, tint);
-				col0_1 = Utils.Tint(col0_1, tint);
+				PackedCol tint = BlockInfo.FogCol[curBlock];
+				col0_0 *= tint; col1_0 *= tint; col1_1 *= tint; col0_1 *= tint;
 			}
 			
 			int index = part.vIndex[Side.Bottom];
@@ -350,14 +335,11 @@ namespace ClassicalSharp {
 			int aX0_Z1 = ((F >> xM1_yP1_zP1) & 1) + ((F >> xM1_yP1_zCC) & 1) + ((F >> xCC_yP1_zP1) & 1) + ((F >> xCC_yP1_zCC) & 1);
 			int aX1_Z1 = ((F >> xP1_yP1_zP1) & 1) + ((F >> xP1_yP1_zCC) & 1) + ((F >> xCC_yP1_zP1) & 1) + ((F >> xCC_yP1_zCC) & 1);
 			
-			int col0_0 = fullBright ? FastColour.WhitePacked : lerp[aX0_Z0], col1_0 = fullBright ? FastColour.WhitePacked : lerp[aX1_Z0];
-			int col1_1 = fullBright ? FastColour.WhitePacked : lerp[aX1_Z1], col0_1 = fullBright ? FastColour.WhitePacked : lerp[aX0_Z1];
+			PackedCol col0_0 = fullBright ? PackedCol.White : lerp[aX0_Z0], col1_0 = fullBright ? PackedCol.White : lerp[aX1_Z0];
+			PackedCol col1_1 = fullBright ? PackedCol.White : lerp[aX1_Z1], col0_1 = fullBright ? PackedCol.White : lerp[aX0_Z1];
 			if (tinted) {
-				FastColour tint = BlockInfo.FogColour[curBlock];
-				col0_0 = Utils.Tint(col0_0, tint);
-				col1_0 = Utils.Tint(col1_0, tint);
-				col1_1 = Utils.Tint(col1_1, tint);
-				col0_1 = Utils.Tint(col0_1, tint);
+				PackedCol tint = BlockInfo.FogCol[curBlock];
+				col0_0 *= tint; col1_0 *= tint; col1_1 *= tint; col0_1 *= tint;
 			}
 			
 			int index = part.vIndex[Side.Top];
@@ -375,23 +357,18 @@ namespace ClassicalSharp {
 			part.vIndex[Side.Top] += 4;
 		}
 		
-		int[] lerp = new int[5], lerpX = new int[5], lerpZ = new int[5], lerpY = new int[5];		
+		PackedCol[] lerp = new PackedCol[5];
+		PackedCol[] lerpX = new PackedCol[5];
+		PackedCol[] lerpZ = new PackedCol[5];
+		PackedCol[] lerpY = new PackedCol[5];
 		protected override void PreStretchTiles(int x1, int y1, int z1) {
 			base.PreStretchTiles(x1, y1, z1);
 			for (int i = 0; i <= 4; i++) {
-				lerp[i]  = Lerp(env.Shadow, env.Sun, i / 4f);
-				lerpX[i] = Lerp(env.ShadowXSide, env.SunXSide, i / 4f);
-				lerpZ[i] = Lerp(env.ShadowZSide, env.SunZSide, i / 4f);
-				lerpY[i] = Lerp(env.ShadowYBottom, env.SunYBottom, i / 4f);
+				lerp[i]  = PackedCol.Lerp(env.Shadow, env.Sun, i / 4f);
+				lerpX[i] = PackedCol.Lerp(env.ShadowXSide, env.SunXSide, i / 4f);
+				lerpZ[i] = PackedCol.Lerp(env.ShadowZSide, env.SunZSide, i / 4f);
+				lerpY[i] = PackedCol.Lerp(env.ShadowYBottom, env.SunYBottom, i / 4f);
 			}
-		}
-		
-		static int Lerp(int a, int b, float t) {
-			int c = FastColour.BlackPacked;
-			c |= (byte)Utils.Lerp((a & 0xFF0000) >> 16, (b & 0xFF0000) >> 16, t) << 16;
-			c |= (byte)Utils.Lerp((a & 0x00FF00) >> 8, (b & 0x00FF00) >> 8, t) << 8;
-			c |= (byte)Utils.Lerp(a & 0x0000FF, b & 0x0000FF, t);
-			return c;
 		}
 		
 		

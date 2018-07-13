@@ -46,14 +46,14 @@ namespace ClassicalSharp {
 		
 		/// <summary> Draws a 2D flat rectangle of the specified dimensions at the
 		/// specified coordinates in the currently bound bitmap. </summary>
-		public abstract void DrawRect(FastColour colour, int x, int y, int width, int height);
+		public abstract void DrawRect(PackedCol col, int x, int y, int width, int height);
 		
 		/// <summary> Draws the outline of a 2D flat rectangle of the specified dimensions
 		/// at the specified coordinates in the currently bound bitmap. </summary>
-		public abstract void DrawRectBounds(FastColour colour, int lineWidth, int x, int y, int width, int height);
+		public abstract void DrawRectBounds(PackedCol col, int lineWidth, int x, int y, int width, int height);
 		
 		/// <summary> Clears the entire given area to the specified colour. </summary>
-		public abstract void Clear(FastColour colour, int x, int y, int width, int height);
+		public abstract void Clear(PackedCol col, int x, int y, int width, int height);
 		
 		/// <summary> Disposes of any resources used by this class that are associated with the underlying bitmap. </summary>
 		public abstract void Dispose();
@@ -127,23 +127,23 @@ namespace ClassicalSharp {
 			return Platform.CreateBmp(Utils.NextPowerOf2(size.Width), Utils.NextPowerOf2(size.Height));
 		}
 		
-		public static FastColour[] Cols = new FastColour[256];
+		public static PackedCol[] Cols = new PackedCol[256];
 		
 		public IDrawer2D() { InitCols(); }
 		
 		public static void InitCols() {
 			for (int i = 0; i < Cols.Length; i++)
-				Cols[i] = default(FastColour);
+				Cols[i] = default(PackedCol);
 			
 			for (int i = 0; i <= 9; i++)
-				Cols['0' + i] = FastColour.GetHexEncodedCol(i, 191, 64);
+				Cols['0' + i] = PackedCol.GetHexEncodedCol(i, 191, 64);
 			for (int i = 10; i <= 15; i++) {
-				Cols['a' + i - 10] = FastColour.GetHexEncodedCol(i, 191, 64);
+				Cols['a' + i - 10] = PackedCol.GetHexEncodedCol(i, 191, 64);
 				Cols['A' + i - 10] = Cols['a' + i - 10];
 			}
 		}
 		
-		public static FastColour GetCol(char c) {
+		public static PackedCol GetCol(char c) {
 			if (c >= ' ' && c <= '~') return Cols[c];
 			return Cols[Utils.UnicodeToCP437(c)];
 		}
@@ -151,9 +151,9 @@ namespace ClassicalSharp {
 		protected List<TextPart> parts = new List<TextPart>(64);
 		protected struct TextPart {
 			public string Text;
-			public FastColour Col;
+			public PackedCol Col;
 			
-			public TextPart(string text, FastColour col) {
+			public TextPart(string text, PackedCol col) {
 				Text = text;
 				Col = col;
 			}
@@ -194,7 +194,7 @@ namespace ClassicalSharp {
 		}
 		
 		public static bool ValidColCode(char c) {
-			if (c >= '~' && c <= '~') return Cols[c].A > 0;
+			if (c >= ' ' && c <= '~') return Cols[c].A > 0;
 			return Cols[Utils.UnicodeToCP437(c)].A > 0;
 		}
 		

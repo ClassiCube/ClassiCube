@@ -39,12 +39,12 @@ namespace ClassicalSharp.Selections {
 			Vector3 P = game.LocalPlayer.Position; P.Y += 0.05f;
 			int index = 0;
 			
-			SelectionBox.HorQuad(vertices, ref index, FastColour.Red.Pack(), 
+			SelectionBox.HorQuad(vertices, ref index, PackedCol.Red,
 			                   P.X, P.Z - size, P.X + 3, P.Z + size, P.Y);
-			SelectionBox.HorQuad(vertices, ref index, FastColour.Blue.Pack(),
+			SelectionBox.HorQuad(vertices, ref index, PackedCol.Blue,
 			                   P.X - size, P.Z, P.X + size, P.Z + 3, P.Y);
 			if (game.Camera.IsThirdPerson) {
-				SelectionBox.VerQuad(vertices, ref index, FastColour.Green.Pack(),
+				SelectionBox.VerQuad(vertices, ref index, PackedCol.Green,
 				                     P.X - size, P.Y, P.Z + size, P.X + size, P.Y + 3, P.Z - size);
 			}
 			

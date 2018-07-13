@@ -11,10 +11,10 @@ namespace Launcher.Gui.Widgets {
 		public byte[] Indices;
 		
 		/// <summary> The ARGB palette for this image. </summary>
-		public FastColour[] Palette;
+		public PackedCol[] Palette;
 		
 		public BitmapWidget(LauncherWindow window, int size,
-		                    byte[] indices, FastColour[] palette) : base(window) {
+		                    byte[] indices, PackedCol[] palette) : base(window) {
 			Indices = indices;
 			Palette = palette;
 			Width = size; Height = size;
@@ -49,8 +49,8 @@ namespace Launcher.Gui.Widgets {
 		
 		unsafe void CalculatePalette(int* palette) {
 			for (int i = 0; i < Palette.Length; i++) {
-				FastColour col = Palette[i];
-				if (!Active) col = FastColour.Scale(col, 0.7f);
+				PackedCol col = Palette[i];
+				if (!Active) col = PackedCol.Scale(col, 0.7f);
 				palette[i] = col.ToArgb();
 			}
 		}

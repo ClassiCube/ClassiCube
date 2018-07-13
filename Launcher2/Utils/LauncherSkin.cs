@@ -7,18 +7,18 @@ namespace Launcher {
 
 	public static class LauncherSkin {
 		
-		public static FastColour BackgroundCol = new FastColour(153, 127, 172);
-		public static FastColour ButtonBorderCol = new FastColour(97, 81, 110);
-		public static FastColour ButtonForeActiveCol = new FastColour(189, 168, 206);
-		public static FastColour ButtonForeCol = new FastColour(141, 114, 165);
-		public static FastColour ButtonHighlightCol = new FastColour(162, 131, 186);
+		public static PackedCol BackgroundCol = new PackedCol(153, 127, 172);
+		public static PackedCol ButtonBorderCol = new PackedCol(97, 81, 110);
+		public static PackedCol ButtonForeActiveCol = new PackedCol(189, 168, 206);
+		public static PackedCol ButtonForeCol = new PackedCol(141, 114, 165);
+		public static PackedCol ButtonHighlightCol = new PackedCol(162, 131, 186);
 		
 		public static void ResetToDefault() {
-			BackgroundCol = new FastColour(153, 127, 172);
-			ButtonBorderCol = new FastColour(97, 81, 110);
-			ButtonForeActiveCol = new FastColour(189, 168, 206);
-			ButtonForeCol = new FastColour(141, 114, 165);
-			ButtonHighlightCol = new FastColour(162, 131, 186);
+			BackgroundCol = new PackedCol(153, 127, 172);
+			ButtonBorderCol = new PackedCol(97, 81, 110);
+			ButtonForeActiveCol = new PackedCol(189, 168, 206);
+			ButtonForeCol = new PackedCol(141, 114, 165);
+			ButtonHighlightCol = new PackedCol(162, 131, 186);
 		}
 		
 		public static void LoadFromOptions() {
@@ -37,12 +37,12 @@ namespace Launcher {
 			Options.Set("launcher-btn-highlight-inactive-col", ButtonHighlightCol.ToHex());
 		}
 		
-		static void Get(string key, ref FastColour col) {
-			FastColour defaultCol = col;
+		static void Get(string key, ref PackedCol col) {
+			PackedCol defaultCol = col;
 			string value = Options.Get(key, null);
 			if (String.IsNullOrEmpty(value)) return;
 			
-			if (!FastColour.TryParse(value, out col))
+			if (!PackedCol.TryParse(value, out col))
 				col = defaultCol;
 		}
 	}

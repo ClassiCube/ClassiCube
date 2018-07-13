@@ -59,11 +59,11 @@ namespace Launcher.Gui.Views {
 			return;
 			
 			sliderIndex = widgetIndex;
-			Makers.Slider(this, 100, 10, 30, 255, FastColour.Red)
+			Makers.Slider(this, 100, 10, 30, 255, PackedCol.Red)
 				.SetLocation(Anchor.Min, Anchor.Min, 5, 5);
-			Makers.Slider(this, 100, 10, 30, 255, FastColour.Green)
+			Makers.Slider(this, 100, 10, 30, 255, PackedCol.Green)
 				.SetLocation(Anchor.Min, Anchor.Min, 5, 25);
-			Makers.Slider(this, 100, 10, 30, 255, FastColour.Blue)
+			Makers.Slider(this, 100, 10, 30, 255, PackedCol.Blue)
 				.SetLocation(Anchor.Min, Anchor.Min, 5, 45);
 		}
 		
@@ -76,7 +76,7 @@ namespace Launcher.Gui.Views {
 			MakeRGBTriplet(LauncherSkin.ButtonForeActiveCol, force, 60);
 		}
 		
-		void MakeRGBTriplet(FastColour defCol, bool force, int y) {
+		void MakeRGBTriplet(PackedCol defCol, bool force, int y) {
 			MakeInput(GetCol(defCol.R, force), 55, false, 3, null)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 30, y);
 			MakeInput(GetCol(defCol.G, force), 55, false, 3, null)

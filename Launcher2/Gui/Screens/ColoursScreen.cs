@@ -119,7 +119,7 @@ namespace Launcher.Gui.Screens {
 			Resize();
 		}
 		
-		bool Parse(int index, ref FastColour dst) {
+		bool Parse(int index, ref PackedCol dst) {
 			byte r, g, b;
 			if (!Byte.TryParse(widgets[index + 0].Text, out r)
 			    || !Byte.TryParse(widgets[index + 1].Text, out g)

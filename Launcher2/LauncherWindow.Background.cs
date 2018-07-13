@@ -141,7 +141,7 @@ namespace Launcher {
 			if (ClassicBackground && terrainPixels != null) {
 				ClearTile(x, y, width, height, 0, dst);
 			} else {
-				FastColour col = LauncherSkin.BackgroundCol;
+				PackedCol col = LauncherSkin.BackgroundCol;
 				Gradient.Noise(dst, new Rectangle(x, y, width, height), col, 6);
 			}
 		}

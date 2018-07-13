@@ -22,9 +22,9 @@ namespace ClassicalSharp.Gui.Widgets {
 		public override void Dispose() { }
 
 		const int scrollWidth = 22, scrollBorder = 2, nubsWidth = 3;
-		static FastColour scrollBackCol = new FastColour(10, 10, 10, 220);
-		static FastColour scrollBarCol = new FastColour(100, 100, 100, 220);
-		static FastColour scrollHoverCol = new FastColour(122, 122, 122, 220);
+		static PackedCol scrollBackCol = new PackedCol(10, 10, 10, 220);
+		static PackedCol scrollBarCol = new PackedCol(100, 100, 100, 220);
+		static PackedCol scrollHoverCol = new PackedCol(122, 122, 122, 220);
 		float ScrollbarScale { get { return (Height - scrollBorder * 2) / (float)TotalRows; } }
 		
 		public override void Render(double delta) {
@@ -38,7 +38,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			bool hovered = Mouse.Y >= y && Mouse.Y < (y + height) &&
 				Mouse.X >= x && Mouse.X < (x + width);
-			FastColour barCol = hovered ? scrollHoverCol : scrollBarCol;
+			PackedCol barCol = hovered ? scrollHoverCol : scrollBarCol;
 			gfx.Draw2DQuad(x, y, width, height, barCol);
 			
 			if (height < 20) return;

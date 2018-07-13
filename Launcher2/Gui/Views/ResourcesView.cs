@@ -105,9 +105,9 @@ namespace Launcher.Gui.Views {
 		}
 		
 		
-		static FastColour backCol = new FastColour(120, 85, 151);
-		static FastColour clearCol = new FastColour(12, 12, 12);
-		static FastColour progFront = new FastColour(0, 220, 0);
+		static PackedCol backCol = new PackedCol(120, 85, 151);
+		static PackedCol clearCol = new PackedCol(12, 12, 12);
+		static PackedCol progFront = new PackedCol(0, 220, 0);
 
 		static readonly string mainText = "Some required resources weren't found" +
 			Environment.NewLine + "Okay to download them?";

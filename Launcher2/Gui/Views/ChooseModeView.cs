@@ -27,7 +27,7 @@ namespace Launcher.Gui.Views {
 			using (drawer) {
 				drawer.SetBitmap(game.Framebuffer);
 				RedrawAll();
-				FastColour col = LauncherSkin.ButtonBorderCol;
+				PackedCol col = LauncherSkin.ButtonBorderCol;
 				int midX = game.Width / 2, midY = game.Height / 2;
 				game.Drawer.DrawRect(col, midX - 250, midY - 35, 490, 1);
 				game.Drawer.DrawRect(col, midX - 250, midY + 35, 490, 1);

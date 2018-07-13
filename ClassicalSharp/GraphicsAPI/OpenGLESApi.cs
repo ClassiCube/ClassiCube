@@ -47,8 +47,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			set { fogEnable = value; Toggle(All.Fog, value); } 
 		}
 		
-		FastColour lastFogCol = FastColour.Black;
-		public override void SetFogColour(FastColour col) {
+		PackedCol lastFogCol = PackedCol.Black;
+		public override void SetFogCol(PackedCol col) {
 			if (col != lastFogCol) {
 				Vector4 colRGBA = new Vector4(col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f);
 				GL.Fog(All.FogColor, &colRGBA.X);
@@ -96,8 +96,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 		}
 		
-		FastColour lastClearCol;
-		public override void ClearColour(FastColour col) {
+		PackedCol lastClearCol;
+		public override void ClearCol(PackedCol col) {
 			if (col != lastClearCol) {
 				GL.ClearColor(col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f);
 				lastClearCol = col;

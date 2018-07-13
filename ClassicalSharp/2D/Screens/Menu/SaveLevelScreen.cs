@@ -14,7 +14,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		InputWidget input;
 		const int overwriteIndex = 2;
-		static FastColour grey = new FastColour(150, 150, 150);
+		static PackedCol grey = new PackedCol(150, 150, 150);
 		string textPath;
 		
 		public override void Render(double delta) {

@@ -24,7 +24,7 @@ namespace ClassicalSharp.Renderers {
 			return blend;
 		}
 		
-		void BlockOn(out float fogDensity, out FastColour fogCol) {
+		void BlockOn(out float fogDensity, out PackedCol fogCol) {
 			Vector3 pos = game.CurrentCameraPos;
 			Vector3I coords = Vector3I.Floor(pos);
 			
@@ -35,12 +35,12 @@ namespace ClassicalSharp.Renderers {
 			
 			if (blockBB.Contains(pos) && BlockInfo.FogDensity[block] != 0) {
 				fogDensity = BlockInfo.FogDensity[block];
-				fogCol = BlockInfo.FogColour[block];
+				fogCol = BlockInfo.FogCol[block];
 			} else {
 				fogDensity = 0;
 				// Blend fog and sky together
 				float blend = (float)BlendFactor(game.ViewDistance);
-				fogCol = FastColour.Lerp(map.Env.FogCol, map.Env.SkyCol, blend);
+				fogCol = PackedCol.Lerp(map.Env.FogCol, map.Env.SkyCol, blend);
 			}
 		}
 		
@@ -142,7 +142,7 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.Fog = !minimal;
 			
 			if (minimal) {
-				game.Graphics.ClearColour(map.Env.SkyCol);
+				game.Graphics.ClearCol(map.Env.SkyCol);
 			} else {
 				game.Graphics.SetFogStart(0);
 				ResetClouds();
@@ -152,10 +152,10 @@ namespace ClassicalSharp.Renderers {
 		
 		void RenderMinimal(double deltaTime) {
 			if (!map.HasBlocks) return;
-			FastColour fogCol = FastColour.White;
+			PackedCol fogCol = PackedCol.White;
 			float fogDensity = 0;
 			BlockOn(out fogDensity, out fogCol);
-			game.Graphics.ClearColour(fogCol);
+			game.Graphics.ClearCol(fogCol);
 			
 			// TODO: rewrite this to avoid raising the event? want to avoid recreating vbos too many times often
 			if (fogDensity != 0) {
@@ -220,7 +220,7 @@ namespace ClassicalSharp.Renderers {
 		
 		void UpdateFog() {
 			if (!map.HasBlocks || minimal) return;
-			FastColour fogCol = FastColour.White;
+			PackedCol fogCol = PackedCol.White;
 			float fogDensity = 0;
 			BlockOn(out fogDensity, out fogCol);
 			IGraphicsApi gfx = game.Graphics;
@@ -244,8 +244,8 @@ namespace ClassicalSharp.Renderers {
 				gfx.SetFogMode(Fog.Linear);
 				gfx.SetFogEnd(game.ViewDistance);
 			}
-			gfx.ClearColour(fogCol);
-			gfx.SetFogColour(fogCol);
+			gfx.ClearCol(fogCol);
+			gfx.SetFogCol(fogCol);
 		}
 		
 		void ResetClouds() {
@@ -267,7 +267,7 @@ namespace ClassicalSharp.Renderers {
 			cloudVertices = Utils.CountVertices(x2 - x1, z2 - z1, axisSize);
 			
 			VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[cloudVertices];
-			DrawCloudsY(x1, z1, x2, z2, map.Env.CloudHeight, axisSize, map.Env.CloudsCol.Pack(), vertices);
+			DrawCloudsY(x1, z1, x2, z2, map.Env.CloudHeight, axisSize, map.Env.CloudsCol, vertices);
 			fixed (VertexP3fT2fC4b* ptr = vertices) {
 				cloudsVb = game.Graphics.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, cloudVertices);
 			}
@@ -282,17 +282,18 @@ namespace ClassicalSharp.Renderers {
 			VertexP3fC4b[] vertices = new VertexP3fC4b[skyVertices];
 			int height = Math.Max(map.Height + 2 + 6, map.Env.CloudHeight + 6);
 			
-			DrawSkyY(x1, z1, x2, z2, height, axisSize, map.Env.SkyCol.Pack(), vertices);
+			DrawSkyY(x1, z1, x2, z2, height, axisSize, map.Env.SkyCol, vertices);
 			fixed (VertexP3fC4b* ptr = vertices) {
 				skyVb = game.Graphics.CreateVb((IntPtr)ptr, VertexFormat.P3fC4b, skyVertices);
 			}
 		}
 		
-		void DrawSkyY(int x1, int z1, int x2, int z2, int y, int axisSize, int col, VertexP3fC4b[] vertices) {
+		void DrawSkyY(int x1, int z1, int x2, int z2, int y, int axisSize, 
+		              PackedCol col, VertexP3fC4b[] vertices) {
 			int endX = x2, endZ = z2, startZ = z1;
 			int i = 0;
 			VertexP3fC4b v;
-			v.Y = y; v.Colour = col;
+			v.Y = y; v.Col = col;
 			
 			for (; x1 < endX; x1 += axisSize) {
 				x2 = x1 + axisSize;
@@ -310,13 +311,14 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void DrawCloudsY(int x1, int z1, int x2, int z2, int y, int axisSize, int col, VertexP3fT2fC4b[] vertices) {
+		void DrawCloudsY(int x1, int z1, int x2, int z2, int y, int axisSize, 
+		                 PackedCol col, VertexP3fT2fC4b[] vertices) {
 			int endX = x2, endZ = z2, startZ = z1;
 			// adjust range so that largest negative uv coordinate is shifted to 0 or above.
 			float offset = Utils.CeilDiv(-x1, 2048);
 			int i = 0;
 			VertexP3fT2fC4b v;
-			v.Y = y + 0.1f; v.Colour = col;
+			v.Y = y + 0.1f; v.Col = col;
 			
 			for (; x1 < endX; x1 += axisSize) {
 				x2 = x1 + axisSize;

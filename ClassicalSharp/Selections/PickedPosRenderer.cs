@@ -11,7 +11,7 @@ namespace ClassicalSharp.Renderers {
 		
 		void IGameComponent.Init(Game game) {
 			this.game = game;
-			col = new FastColour(0, 0, 0, 102).Pack();
+			col = new PackedCol(0, 0, 0, 102);
 			
 			ContextRecreated();
 			game.Graphics.ContextLost += ContextLost;
@@ -29,7 +29,7 @@ namespace ClassicalSharp.Renderers {
 		void IGameComponent.OnNewMap(Game game) { }
 		void IGameComponent.OnNewMapLoaded(Game game) { }		
 		
-		int col;
+		PackedCol col;
 		int index;
 		const int verticesCount = 16 * 6;
 		VertexP3fC4b[] vertices = new VertexP3fC4b[verticesCount];

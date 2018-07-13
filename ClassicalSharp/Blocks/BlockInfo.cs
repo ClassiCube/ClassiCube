@@ -70,7 +70,7 @@ namespace ClassicalSharp {
 		public static string[] Name;
 		public static float[] FogDensity, SpeedMultiplier;
 		public static TexLoc[] textures;
-		public static FastColour[] FogColour;
+		public static PackedCol[] FogCol;
 		public static Vector3[] MinBB, MaxBB, RenderMinBB, RenderMaxBB;
 		static uint[] DefinedCustomBlocks;
 		public static int MaxUsed, Count, IDMask;
@@ -96,7 +96,7 @@ namespace ClassicalSharp {
 			Name = new string[count];
 			FogDensity = new float[count];
 			SpeedMultiplier = new float[count];
-			FogColour = new FastColour[count];
+			FogCol = new PackedCol[count];
 			MinBB = new Vector3[count];
 			MaxBB = new Vector3[count];
 			RenderMinBB = new Vector3[count];
@@ -158,7 +158,7 @@ namespace ClassicalSharp {
 			CalcRenderBounds(block);
 			UpdateCulling(block);
 			
-			Tinted[block] = FogColour[block] != FastColour.Black && Name[block].IndexOf('#') >= 0;
+			Tinted[block] = FogCol[block] != PackedCol.Black && Name[block].IndexOf('#') >= 0;
 			CalcLightOffset(block);
 			
 			game.Inventory.AddDefault(block);
@@ -201,7 +201,7 @@ namespace ClassicalSharp {
 		public static void ResetBlockProps(BlockID block) {
 			BlocksLight[block] = DefaultSet.BlocksLight(block);
 			FullBright[block] = DefaultSet.FullBright(block);
-			FogColour[block] = DefaultSet.FogColour(block);
+			FogCol[block] = DefaultSet.FogColour(block);
 			FogDensity[block] = DefaultSet.FogDensity(block);
 			SetCollide(block, DefaultSet.Collide(block));
 			DigSounds[block] = DefaultSet.DigSound(block);

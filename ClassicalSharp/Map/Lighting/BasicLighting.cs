@@ -9,7 +9,8 @@ namespace ClassicalSharp.Map {
 	/// <summary> Manages lighting through a simple heightmap, where each block is either in sun or shadow. </summary>
 	public sealed partial class BasicLighting : IWorldLighting {
 		
-		int oneY, shadow, shadowZSide, shadowXSide, shadowYBottom;
+		int oneY;
+		PackedCol shadow, shadowZSide, shadowXSide, shadowYBottom;
 		Game game;
 		
 		public override void Reset(Game game) { heightmap = null; }
@@ -46,20 +47,20 @@ namespace ClassicalSharp.Map {
 
 		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
 			if (e.Var == EnvVar.SunCol) {
-				SetSun(game.World.Env.Sunlight);
+				SetSun(game.World.Env.Sun);
 			} else if (e.Var == EnvVar.ShadowCol) {
-				SetShadow(game.World.Env.Shadowlight);
+				SetShadow(game.World.Env.Shadow);
 			}
 		}
 		
-		void SetSun(FastColour col) {
-			Outside = col.Pack();
-			FastColour.GetShaded(col, out OutsideXSide, out OutsideZSide, out OutsideYBottom);
+		void SetSun(PackedCol col) {
+			Outside = col;
+			PackedCol.GetShaded(col, out OutsideXSide, out OutsideZSide, out OutsideYBottom);
 		}
 		
-		void SetShadow(FastColour col) {
-			shadow = col.Pack();
-			FastColour.GetShaded(col, out shadowXSide, out shadowZSide, out shadowYBottom);
+		void SetShadow(PackedCol col) {
+			shadow = col;
+			PackedCol.GetShaded(col, out shadowXSide, out shadowZSide, out shadowYBottom);
 		}
 		
 		
@@ -97,32 +98,32 @@ namespace ClassicalSharp.Map {
 			return y > GetLightHeight(x, z);
 		}
 
-		public override int LightCol(int x, int y, int z) {
+		public override PackedCol LightCol(int x, int y, int z) {
 			return y > GetLightHeight(x, z) ? Outside : shadow;
 		}
 		
-		public override int LightCol_ZSide(int x, int y, int z) {
+		public override PackedCol LightCol_ZSide(int x, int y, int z) {
 			return y > GetLightHeight(x, z) ? OutsideXSide : shadowXSide;
 		}
 		
 
-		public override int LightCol_Sprite_Fast(int x, int y, int z) {
+		public override PackedCol LightCol_Sprite_Fast(int x, int y, int z) {
 			return y > heightmap[(z * width) + x] ? Outside : shadow;
 		}
 		
-		public override int LightCol_YTop_Fast(int x, int y, int z) {
+		public override PackedCol LightCol_YTop_Fast(int x, int y, int z) {
 			return y > heightmap[(z * width) + x] ? Outside : shadow;
 		}
 		
-		public override int LightCol_YBottom_Fast(int x, int y, int z) {
+		public override PackedCol LightCol_YBottom_Fast(int x, int y, int z) {
 			return y > heightmap[(z * width) + x] ? OutsideYBottom : shadowYBottom;
 		}
 		
-		public override int LightCol_XSide_Fast(int x, int y, int z) {
+		public override PackedCol LightCol_XSide_Fast(int x, int y, int z) {
 			return y > heightmap[(z * width) + x] ? OutsideXSide : shadowXSide;
 		}
 		
-		public override int LightCol_ZSide_Fast(int x, int y, int z) {
+		public override PackedCol LightCol_ZSide_Fast(int x, int y, int z) {
 			return y > heightmap[(z * width) + x] ? OutsideZSide : shadowZSide;
 		}
 		

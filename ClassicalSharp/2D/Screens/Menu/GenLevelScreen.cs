@@ -69,7 +69,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			label.XOffset = -110 - label.Width / 2;
 			label.Reposition();
-			label.Colour = new FastColour(224, 224, 224);
+			label.Col = new PackedCol(224, 224, 224);
 			return label;
 		}
 		

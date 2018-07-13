@@ -17,8 +17,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			Active = false;
 		}
 		
-		public void UpdateColours() {
-			elements[0].Contents = GetColourString();
+		public void UpdateCols() {
+			elements[0].Contents = GetColString();
 			if (!Active || selectedIndex != 0) return;
 			Redraw();
 		}
@@ -136,7 +136,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		void InitData() {
 			elements = new SpecialInputTab[] {
-				new SpecialInputTab("Colours", 10, 4, GetColourString()),
+				new SpecialInputTab("Colours", 10, 4, GetColString()),
 				new SpecialInputTab("Math", 16, 1, "ƒ½¼αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°√ⁿ²"),
 				new SpecialInputTab("Line/Box", 17, 1, "░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀■"),
 				new SpecialInputTab("Letters", 17, 1, "ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜáíóúñÑ"),
@@ -144,7 +144,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			};
 		}
 		
-		string GetColourString() {
+		static string GetColString() {
 			int count = 0;
 			for (int i = 0; i < IDrawer2D.Cols.Length; i++) {
 				if (i >= 'A' && i <= 'F') continue;

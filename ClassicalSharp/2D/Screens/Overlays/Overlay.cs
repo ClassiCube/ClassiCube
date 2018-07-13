@@ -26,7 +26,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				TextWidget label = TextWidget.Create(game, lines[i], textFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -70 + 20 * i);
-				label.Colour = new FastColour(224, 224, 224);
+				label.Col = new PackedCol(224, 224, 224);
 				widgets[i] = label;
 			}
 		}

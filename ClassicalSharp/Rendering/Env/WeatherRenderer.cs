@@ -51,7 +51,7 @@ namespace ClassicalSharp.Renderers {
 			bool particles = weather == Weather.Rainy;
 
 			int vCount = 0;
-			FastColour col = game.World.Env.Sunlight;
+			PackedCol col = game.World.Env.Sun;
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			
 			for (int dx = -extent; dx <= extent; dx++)
@@ -70,7 +70,7 @@ namespace ClassicalSharp.Renderers {
 				col.A = (byte)alpha;
 				
 				// NOTE: Making vertex is inlined since this is called millions of times.
-				v.Colour = col.Pack();
+				v.Col = col;
 				float worldV = vOffset + (z & 1) / 2f - (x & 0x0F) / 16f;
 				float v1 = y / 6f + worldV, v2 = (y + height) / 6f + worldV;
 				float x1 = x,     y1 = y,          z1 = z;

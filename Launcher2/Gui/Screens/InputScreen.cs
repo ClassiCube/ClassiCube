@@ -41,7 +41,7 @@ namespace Launcher.Gui.Screens {
 				
 				Rectangle r = curInput.MeasureCaret(drawer);
 				if (caretShow) {
-					drawer.Clear(FastColour.Black, r.X, r.Y, r.Width, r.Height);
+					drawer.Clear(PackedCol.Black, r.X, r.Y, r.Width, r.Height);
 				}
 				
 				if (lastRec == r) game.DirtyArea = r;

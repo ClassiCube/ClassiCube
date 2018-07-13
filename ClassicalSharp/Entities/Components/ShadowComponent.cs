@@ -74,7 +74,7 @@ namespace ClassicalSharp.Entities {
 		const byte c = 255; // avoids 'ambiguous match' compile errors.
 		static void DrawSquareShadow(VertexP3fT2fC4b[] verts, ref int index,
 		                             float y, float x, float z) {
-			int col = new FastColour(c, c, c, (byte)220).Pack();
+			PackedCol col = new PackedCol(c, c, c, (byte)220);
 			TextureRec rec = new TextureRec(63/128f, 63/128f, 1/128f, 1/128f);
 			verts[index++] = new VertexP3fT2fC4b(x, y, z, rec.U1, rec.V1, col);
 			verts[index++] = new VertexP3fT2fC4b(x + 1, y, z, rec.U2, rec.V1, col);
@@ -114,8 +114,8 @@ namespace ClassicalSharp.Entities {
 			x2 = Math.Min(x2, cen.X + radius); u2 = u2 <= 1 ? u2 : 1;
 			z2 = Math.Min(z2, cen.Z + radius); v2 = v2 <= 1 ? v2 : 1;
 			
-			int col = new FastColour(c, c, c, data.A).Pack();
-			VertexP3fT2fC4b v; v.Y = data.Y; v.Colour = col;
+			PackedCol col = new PackedCol(c, c, c, data.A);
+			VertexP3fT2fC4b v; v.Y = data.Y; v.Col = col;
 			v.X = x1; v.Z = z1; v.U = u1; v.V = v1; verts[index++] = v;
 			v.X = x2;           v.U = u2;           verts[index++] = v;
 			          v.Z = z2;           v.V = v2; verts[index++] = v;
@@ -194,8 +194,8 @@ namespace ClassicalSharp.Entities {
 			using (Bitmap bmp = Platform.CreateBmp(size, size))
 				using (FastBitmap fastBmp = new FastBitmap(bmp, true, false))
 			{
-				int inPix = new FastColour(0, 0, 0, 200).ToArgb();
-				int outPix = new FastColour(0, 0, 0, 0).ToArgb();
+				int inPix = new PackedCol(0, 0, 0, 200).ToArgb();
+				int outPix = new PackedCol(0, 0, 0, 0).ToArgb();
 				for (int y = 0; y < fastBmp.Height; y++) {
 					int* row = fastBmp.GetRowPtr(y);
 					for (int x = 0; x < fastBmp.Width; x++) {

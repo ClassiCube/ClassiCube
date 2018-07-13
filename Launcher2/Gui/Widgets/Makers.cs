@@ -72,7 +72,7 @@ namespace Launcher.Gui.Widgets {
 		
 		public static Widget Slider(IView view, int width, int height,
 		                            int initValue, int maxValue,
-		                            FastColour progressCol) {
+		                            PackedCol progressCol) {
 			SliderWidget widget;
 			if (view.widgets[view.widgetIndex] != null) {
 				widget = (SliderWidget)view.widgets[view.widgetIndex];
@@ -89,7 +89,7 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		public static Widget Bitmap(IView view, byte[] indices, 
-		                            FastColour[] palette, int size) {
+		                            PackedCol[] palette, int size) {
 			BitmapWidget widget;
 			if (view.widgets[view.widgetIndex] != null) {
 				widget = (BitmapWidget)view.widgets[view.widgetIndex];

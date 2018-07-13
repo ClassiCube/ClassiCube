@@ -9,7 +9,7 @@ namespace Launcher.Gui.Widgets {
 	public sealed class SliderWidget : Widget {
 		
 		public int Value, MaxValue = 100;
-		public FastColour ProgressColour;
+		public PackedCol ProgressColour;
 		
 		public SliderWidget(LauncherWindow window, int width, int height) : base(window) {
 			Width = width; Height = height;
@@ -52,10 +52,10 @@ namespace Launcher.Gui.Widgets {
 			Gradient.Vertical(bmp, r, progBottom, progTop);
 		}
 		
-		static FastColour progTop = new FastColour(220, 204, 233);
-		static FastColour progBottom = new FastColour(207, 181, 216);
+		static PackedCol progTop = new PackedCol(220, 204, 233);
+		static PackedCol progBottom = new PackedCol(207, 181, 216);
 		
-		static FastColour boundsTop = new FastColour(119, 100, 132);
-		static FastColour boundsBottom = new FastColour(150, 130, 165);
+		static PackedCol boundsTop = new PackedCol(119, 100, 132);
+		static PackedCol boundsBottom = new PackedCol(150, 130, 165);
 	}
 }

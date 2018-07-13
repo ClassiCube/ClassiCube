@@ -6,7 +6,7 @@ using ClassicalSharp;
 namespace Launcher.Drawing {
 	public unsafe static class Drawer2DExt {
 		
-		public static void Clear(FastBitmap bmp, Rectangle rect, FastColour col) {
+		public static void Clear(FastBitmap bmp, Rectangle rect, PackedCol col) {
 			int x, y, width, height;
 			if (!ClampCoords(bmp, rect, out x, out y, out width, out height))
 				return;

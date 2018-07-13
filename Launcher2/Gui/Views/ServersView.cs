@@ -67,7 +67,7 @@ namespace Launcher.Gui.Views {
 			Rectangle rec = new Rectangle(tableX, tableY, game.Width - tableX, tableHeight);
 			
 			if (!game.ClassicBackground) {
-				FastColour col = TableView.backGridCol;
+				PackedCol col = TableView.backGridCol;
 				Drawer2DExt.Clear(dst, rec, col);
 			} else {
 				game.ResetArea(rec.X, rec.Y, rec.Width, rec.Height, dst);

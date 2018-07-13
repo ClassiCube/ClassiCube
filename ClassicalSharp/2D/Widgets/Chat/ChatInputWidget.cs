@@ -17,7 +17,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			Padding = 5;
 		}
 
-		static FastColour backColour = new FastColour(0, 0, 0, 127);
+		static PackedCol backCol = new PackedCol(0, 0, 0, 127);
 		int typingLogPos;
 		string originalText;
 		
@@ -37,7 +37,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				if (game.PureClassic)
 					drawWidth = Math.Max(drawWidth, game.Width - X * 4);
 				
-				game.Graphics.Draw2DQuad(x, y, drawWidth + Padding * 2, prefixHeight, backColour);
+				game.Graphics.Draw2DQuad(x, y, drawWidth + Padding * 2, prefixHeight, backCol);
 				y += lineSizes[i].Height;
 			}
 			

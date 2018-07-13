@@ -102,11 +102,11 @@ namespace ClassicalSharp.Map {
 			nbt.Write(NbtTagType.End);
 			
 			nbt.WriteCpeExtCompound("EnvColors", 1);
-			WriteColourCompound("Sky", map.Env.SkyCol);
-			WriteColourCompound("Cloud", map.Env.CloudsCol);
-			WriteColourCompound("Fog", map.Env.FogCol);
-			WriteColourCompound("Ambient", map.Env.Shadowlight);
-			WriteColourCompound("Sunlight", map.Env.Sunlight);
+			WriteColCompound("Sky", map.Env.SkyCol);
+			WriteColCompound("Cloud", map.Env.CloudsCol);
+			WriteColCompound("Fog", map.Env.FogCol);
+			WriteColCompound("Ambient", map.Env.Shadow);
+			WriteColCompound("Sunlight", map.Env.Sun);
 			nbt.Write(NbtTagType.End);
 			
 			nbt.WriteCpeExtCompound("BlockDefinitions", 1);
@@ -121,7 +121,7 @@ namespace ClassicalSharp.Map {
 			nbt.Write(NbtTagType.End);
 		}
 		
-		void WriteColourCompound(string name, FastColour col) {
+		void WriteColCompound(string name, PackedCol col) {
 			nbt.Write(NbtTagType.Compound, name);
 			
 			nbt.Write(NbtTagType.Int16, "R"); 
@@ -171,7 +171,7 @@ namespace ClassicalSharp.Map {
 			byte draw = sprite ? BlockInfo.SpriteOffset[id] : BlockInfo.Draw[id];
 			nbt.WriteUInt8(draw);
 			
-			FastColour col = BlockInfo.FogColour[id];
+			PackedCol col = BlockInfo.FogCol[id];
 			nbt.Write(NbtTagType.Int8Array, "Fog"); 
 			nbt.WriteInt32(4);
 			byte fog = (byte)(128 * BlockInfo.FogDensity[id] - 1);

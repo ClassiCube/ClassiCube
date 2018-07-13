@@ -39,7 +39,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		protected Texture inputTex, caretTex, prefixTex;
 		protected readonly Font font;
 		protected int caretWidth, prefixWidth, prefixHeight;
-		protected FastColour caretColour;
+		protected PackedCol caretCol;
 		
 		/// <summary> The raw text entered. </summary>
 		/// <remarks> You should Append() to add more text, as that also updates the caret position and texture. </remarks>
@@ -125,7 +125,7 @@ namespace ClassicalSharp.Gui.Widgets {
 
 			if (caretX == MaxCharsPerLine) {
 				caretTex.X1 = X + Padding + lineSizes[caretY].Width;
-				caretColour = FastColour.Yellow;
+				caretCol = PackedCol.Yellow;
 				caretTex.Width = (ushort)caretWidth;
 			} else {
 				args.Text = lines[caretY].Substring(0, caretX);
@@ -133,7 +133,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				if (caretY == 0) trimmedSize.Width += prefixWidth;
 
 				caretTex.X1 = X + Padding + trimmedSize.Width;
-				caretColour = FastColour.Scale(FastColour.White, 0.8f);
+				caretCol = PackedCol.Scale(PackedCol.White, 0.8f);
 				
 				string line = lines[caretY];
 				if (caretX < line.Length) {
@@ -147,8 +147,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			caretTex.Y1 = lineSizes[0].Height * caretY + inputTex.Y1 + 2;
 			
 			// Update the colour of the caret
-			char code = GetLastColour(caretX, caretY);
-			if (code != '\0') caretColour = IDrawer2D.GetCol(code);
+			char code = GetLastCol(caretX, caretY);
+			if (code != '\0') caretCol = IDrawer2D.GetCol(code);
 		}
 		
 		protected void RenderCaret(double delta) {
@@ -156,7 +156,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			caretAccumulator += delta;
 			if ((caretAccumulator % 1) < 0.5) {
-				caretTex.Render(game.Graphics, caretColour);
+				caretTex.Render(game.Graphics, caretCol);
 			}
 		}
 		
@@ -185,7 +185,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				for (int i = 0; i < lines.Length; i++) {
 					if (lines[i] == null) break;
 					args.Text = lines[i];
-					char lastCol = GetLastColour(0, i);
+					char lastCol = GetLastCol(0, i);
 					if (!IDrawer2D.IsWhiteCol(lastCol))
 						args.Text = "&" + lastCol + args.Text;
 					
@@ -202,7 +202,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			inputTex.X1 = X + Padding; inputTex.Y1 = Y;
 		}
 		
-		protected char GetLastColour(int indexX, int indexY) {
+		protected char GetLastCol(int indexX, int indexY) {
 			int x = indexX;
 			for (int y = indexY; y >= 0; y--) {
 				string part = lines[y];
@@ -334,9 +334,9 @@ namespace ClassicalSharp.Gui.Widgets {
 				Recreate();
 			} else if (!Text.Empty && caret != 0) {
 				int index = caret == -1 ? Text.Length - 1 : caret;
-				if (CheckColour(index - 1)) {
+				if (CheckCol(index - 1)) {
 					DeleteChar(); // backspace XYZ%e to XYZ
-				} else if (CheckColour(index - 2)) {
+				} else if (CheckCol(index - 2)) {
 					DeleteChar(); DeleteChar(); // backspace XYZ%eH to XYZ
 				}
 				
@@ -345,7 +345,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 		}
 
-		bool CheckColour(int index) {
+		bool CheckCol(int index) {
 			if (index < 0) return false;
 			char code = Text.value[index], col = Text.value[index + 1];
 			return (code == '%' || code == '&') && IDrawer2D.ValidColCode(col);

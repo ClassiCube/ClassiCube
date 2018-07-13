@@ -10,8 +10,8 @@ namespace Launcher.Gui.Widgets {
 	
 	public sealed class TableView {
 		
-		internal static FastColour backGridCol = new FastColour(20, 20, 10),
-		foreGridCol = new FastColour(40, 40, 40);
+		internal static PackedCol backGridCol = new PackedCol(20, 20, 10),
+		foreGridCol = new PackedCol(40, 40, 40);
 		
 		int entryHeight, headerHeight;
 		internal int headerStartY, headerEndY;
@@ -137,10 +137,10 @@ namespace Launcher.Gui.Widgets {
 			return maxWidth + 5;
 		}
 
-		FastColour GetGridCol(bool featured, bool selected) {
+		PackedCol GetGridCol(bool featured, bool selected) {
 			if (featured) {
-				if (selected) return new FastColour(50, 53, 0);
-				return new FastColour(101, 107, 0);
+				if (selected) return new PackedCol(50, 53, 0);
+				return new PackedCol(101, 107, 0);
 			}
 			return foreGridCol;
 		} 
@@ -185,9 +185,9 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		void DrawScrollbar(IDrawer2D drawer) {
-			FastColour col = game.ClassicBackground ? new FastColour(80, 80, 80) : LauncherSkin.ButtonBorderCol;
+			PackedCol col = game.ClassicBackground ? new PackedCol(80, 80, 80) : LauncherSkin.ButtonBorderCol;
 			drawer.Clear(col, game.Width - 10, table.Y, 10, table.Height);
-			col = game.ClassicBackground ? new FastColour(160, 160, 160) : LauncherSkin.ButtonForeActiveCol;
+			col = game.ClassicBackground ? new PackedCol(160, 160, 160) : LauncherSkin.ButtonForeActiveCol;
 			int yOffset, height;
 			table.GetScrollbarCoords(out yOffset, out height);
 			drawer.Clear(col, game.Width - 10, table.Y + yOffset, 10, height);

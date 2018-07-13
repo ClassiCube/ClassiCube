@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using System.Drawing;
+using System.Runtime.InteropServices;
 #if ANDROID
 using AndroidColor = Android.Graphics.Color;
 #endif
@@ -9,59 +10,62 @@ namespace ClassicalSharp {
 	
 	/// <summary> Structure that can be used for quick manipulations of A/R/G/B colours. </summary>
 	/// <remarks> This structure is **not** suitable for interop with OpenGL or Direct3D. </remarks>
-	public struct FastColour : IEquatable<FastColour> {
+	[StructLayout(LayoutKind.Explicit)]
+	public struct PackedCol : IEquatable<PackedCol> {
 		
-		public byte A, R, G, B;
+		[FieldOffset(0)] public uint Packed;
+		#if USE_DX
+		[FieldOffset(0)] public byte B;
+		[FieldOffset(1)] public byte G;
+		[FieldOffset(2)] public byte R;
+		[FieldOffset(3)] public byte A;
+		#else
+		[FieldOffset(0)] public byte R;
+		[FieldOffset(1)] public byte G;
+		[FieldOffset(2)] public byte B;
+		[FieldOffset(3)] public byte A;
+		#endif
 		
-		public FastColour(byte r, byte g, byte b, byte a) {
+		public PackedCol(byte r, byte g, byte b, byte a) {
+			Packed = 0;
 			A = a; R = r; G = g; B = b;
 		}
 		
-		public FastColour(int r, int g, int b, int a) {
+		public PackedCol(int r, int g, int b, int a) {
+			Packed = 0;
 			A = (byte)a; R = (byte)r; G = (byte)g; B = (byte)b;
 		}
 		
-		public FastColour(byte r, byte g, byte b) {
+		public PackedCol(byte r, byte g, byte b) {
+			Packed = 0;
 			A = 255; R = r; G = g; B = b;
 		}
 		
-		public FastColour(int r, int g, int b) {
+		public PackedCol(int r, int g, int b) {
+			Packed = 0;
 			A = 255; R = (byte)r; G = (byte)g; B = (byte)b;
 		}		
 	
 		/// <summary> Multiplies the RGB components of this instance by the
 		/// specified t parameter, where 0 ≤ t ≤ 1 </summary>
-		public static FastColour Scale(FastColour value, float t) {
+		public static PackedCol Scale(PackedCol value, float t) {
 			value.R = (byte)(value.R * t);
 			value.G = (byte)(value.G * t);
 			value.B = (byte)(value.B * t);
 			return value;
 		}
-	
-#if !LAUNCHER		
-		/// <summary> Multiplies the RGB components of this instance by the
-		/// specified t parameter, where 0 ≤ t ≤ 1 </summary>
-		public static int ScalePacked(int value, float t) {
-			int a = (value >> 16) & 0xFF; a = (int)(a * t);
-			int b = (value >> 8 ) & 0xFF; b = (int)(b * t);
-			int c = value         & 0xFF; c = (int)(c * t);
-			
-			value &= ~0xFFFFFF;
-			return value | (a << 16) | (b << 8) | c;
-		}
-#endif
 		
 		/// <summary> Linearly interpolates the RGB components of the two colours
 		/// by the specified t parameter, where 0 ≤ t ≤ 1 </summary>
-		public static FastColour Lerp(FastColour a, FastColour b, float t) {
+		public static PackedCol Lerp(PackedCol a, PackedCol b, float t) {
 			a.R = (byte)Utils.Lerp(a.R, b.R, t);
 			a.G = (byte)Utils.Lerp(a.G, b.G, t);
 			a.B = (byte)Utils.Lerp(a.B, b.B, t);
 			return a;
 		}
 		
-		public static FastColour GetHexEncodedCol(int hex, int lo, int hi) {
-			return new FastColour(
+		public static PackedCol GetHexEncodedCol(int hex, int lo, int hi) {
+			return new PackedCol(
 				lo * ((hex >> 2) & 1) + hi * (hex >> 3),
 				lo * ((hex >> 1) & 1) + hi * (hex >> 3),
 				lo * ((hex >> 0) & 1) + hi * (hex >> 3));
@@ -69,10 +73,11 @@ namespace ClassicalSharp {
 
 #if !LAUNCHER		
 		public const float ShadeX = 0.6f, ShadeZ = 0.8f, ShadeYBottom = 0.5f;
-		public static void GetShaded(FastColour normal, out int xSide, out int zSide, out int yBottom) {
-			xSide = FastColour.Scale(normal, ShadeX).Pack();
-			zSide = FastColour.Scale(normal, ShadeZ).Pack();
-			yBottom = FastColour.Scale(normal, ShadeYBottom).Pack();
+		public static void GetShaded(PackedCol normal, out PackedCol xSide, 
+		                             out PackedCol zSide, out PackedCol yBottom) {
+			xSide = PackedCol.Scale(normal, ShadeX);
+			zSide = PackedCol.Scale(normal, ShadeZ);
+			yBottom = PackedCol.Scale(normal, ShadeYBottom);
 		}
 #endif
 
@@ -81,96 +86,62 @@ namespace ClassicalSharp {
 		/// the highest 8 bits and B occupies the lowest 8 bits. </summary>
 		public int ToArgb() { return A << 24 | R << 16 | G << 8 | B; }		
 				
-		public static FastColour Argb(int c) {
-			FastColour col;
+		public static PackedCol Argb(int c) {
+			PackedCol col = default(PackedCol);
 			col.A = (byte)(c >> 24);
 			col.R = (byte)(c >> 16);
 			col.G = (byte)(c >> 8);
 			col.B = (byte)c;
 			return col;
 		}
-
-#if !LAUNCHER		
-		/// <summary> Packs this instance into a 32 bit integer, where A occupies
-		/// the highest 8 bits, and the order of RGB bytes is determined by the graphics API. </summary>
-		public int Pack() {
-			#if USE_DX
-			return A << 24 | R << 16 | G << 8 | B;			
-			#else
-			return A << 24 | B << 16 | G << 8 | R;
-			#endif
-		}
-		
-		public static FastColour Unpack(int c) {
-			FastColour col;
-			col.A = (byte)(c >> 24);
-			col.G = (byte)(c >> 8);
-			#if USE_DX			
-			col.R = (byte)(c >> 16);
-			col.B = (byte)c;
-			#else
-			col.B = (byte)(c >> 16);
-			col.R = (byte)c;	
-			#endif
-			return col;
-		}
-#endif
-		
 		
 		public override bool Equals(object obj) {
-			return (obj is FastColour) && Equals((FastColour)obj);
+			return (obj is PackedCol) && Equals((PackedCol)obj);
 		}
 		
-		public bool Equals(FastColour other) {
-			return A == other.A && R == other.R && G == other.G && B == other.B;
-		}
-		
-		public override int GetHashCode() {
-			return A << 24 | R << 16 | G << 8 | B;
-		}
+		public bool Equals(PackedCol other) { return Packed == other.Packed; }	
+		public override int GetHashCode() { return (int)Packed; }
 		
 		public override string ToString() {
 			return R + ", " + G + ", " + B + " : " + A;
 		}
 		
 
-		public static bool operator == (FastColour left, FastColour right) {
+		public static bool operator == (PackedCol left, PackedCol right) {
 			return left.Equals(right);
 		}
 		
-		public static bool operator != (FastColour left, FastColour right) {
+		public static bool operator != (PackedCol left, PackedCol right) {
 			return !left.Equals(right);
 		}
 		
-		public static FastColour operator * (FastColour left, FastColour right) {
+		public static PackedCol operator * (PackedCol left, PackedCol right) {
 			left.R = (byte)((left.R * right.R) / 255);
 			left.G = (byte)((left.G * right.G) / 255);
 			left.B = (byte)((left.B * right.B) / 255);
 			return left;
 		}
 		
-		public static implicit operator Color(FastColour col) {
+		public static implicit operator Color(PackedCol col) {
 			return Color.FromArgb(col.A, col.R, col.G, col.B);
 		}
 
 		#if ANDROID
-		public static implicit operator AndroidColor(FastColour col) {
+		public static implicit operator AndroidColor(PackedCol col) {
 			return AndroidColor.Argb(col.A, col.R, col.G, col.B);
 		}
 		#endif
 		
-		public static FastColour Red = new FastColour(255, 0, 0);
-		public static FastColour Green = new FastColour(0, 255, 0);
-		public static FastColour Blue = new FastColour(0, 0, 255);
+		public static PackedCol Red   = new PackedCol(255, 0, 0);
+		public static PackedCol Green = new PackedCol(0, 255, 0);
+		public static PackedCol Blue  = new PackedCol(0, 0, 255);
 		
-		public static FastColour White = new FastColour(255, 255, 255);
-		public static FastColour Black = new FastColour(0, 0, 0);
-		public const int WhitePacked = unchecked((int)0xFFFFFFFF);
-		public const int BlackPacked = unchecked((int)0xFF000000);
+		public static PackedCol White = new PackedCol(255, 255, 255);
+		public static PackedCol Black = new PackedCol(0, 0, 0);
 
-		public static FastColour Yellow = new FastColour(255, 255, 0);
-		public static FastColour Magenta = new FastColour(255, 0, 255);
-		public static FastColour Cyan = new FastColour(0, 255, 255);
+		public static PackedCol Yellow  = new PackedCol(255, 255, 0);
+		public static PackedCol Magenta = new PackedCol(255, 0, 255);
+		public static PackedCol Cyan    = new PackedCol(0, 255, 255);
 			
 		public string ToHex() {
 			byte[] array = new byte[] { R, G, B };
@@ -186,8 +157,8 @@ namespace ClassicalSharp {
 			return new String(hex);
 		}
 		
-		public static bool TryParse(string input, out FastColour value) {
-			value = default(FastColour);
+		public static bool TryParse(string input, out PackedCol value) {
+			value = default(PackedCol);
 			if (input == null || input.Length < 6) return false;
 			if (input.Length > 6 && (input[0] != '#' || input.Length > 7)) return false;
 			
@@ -198,12 +169,12 @@ namespace ClassicalSharp {
 			if (!UnHex(input[i + 2], out gH) || !UnHex(input[i + 3], out gL)) return false;
 			if (!UnHex(input[i + 4], out bH) || !UnHex(input[i + 5], out bL)) return false;
 			
-			value = new FastColour((rH << 4) | rL, (gH << 4) | gL, (bH << 4) | bL);
+			value = new PackedCol((rH << 4) | rL, (gH << 4) | gL, (bH << 4) | bL);
 			return true;
 		}
 		
-		public static FastColour Parse(string input) {
-			FastColour value;
+		public static PackedCol Parse(string input) {
+			PackedCol value;
 			if (!TryParse(input, out value)) throw new FormatException();
 			return value;
 		}

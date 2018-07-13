@@ -100,8 +100,8 @@ namespace ClassicalSharp.GraphicsAPI {
 				else GL.Disable(EnableCap.Fog); }
 		}
 		
-		FastColour lastFogCol = FastColour.Black;
-		public override void SetFogColour(FastColour col) {
+		PackedCol lastFogCol = PackedCol.Black;
+		public override void SetFogCol(PackedCol col) {
 			if (col == lastFogCol) return;
 			Vector4 colRGBA = new Vector4(col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f);
 			GL.Fogfv(FogParameter.FogColor, &colRGBA.X);
@@ -143,15 +143,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 		}
 		
-		FastColour lastClearCol;
-		public override void ClearColour(FastColour col) {
+		PackedCol lastClearCol;
+		public override void ClearCol(PackedCol col) {
 			if (col != lastClearCol) {
 				GL.ClearColor(col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f);
 				lastClearCol = col;
 			}
 		}
 		
-		public override void ColourWriteMask(bool r, bool g, bool b, bool a) {
+		public override void ColWriteMask(bool r, bool g, bool b, bool a) {
 			GL.ColorMask(r, g, b, a);
 		}
 		
@@ -328,14 +328,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		#if GL11
 		static void V(VertexP3fC4b v) {
-			FastColour AAA = FastColour.Unpack(v.Colour);
-			GL.Color4ub(AAA.R, AAA.G, AAA.B, AAA.A);
+			GL.Color4ub(v.Col.R, v.Col.G, v.Col.B, v.Col.A);
 			GL.Vertex3f(v.X, v.Y, v.Z);
 		}
 		
 		static void V(VertexP3fT2fC4b v) {
-			FastColour AAA = FastColour.Unpack(v.Colour);
-			GL.Color4ub(AAA.R, AAA.G, AAA.B, AAA.A);
+			GL.Color4ub(v.Col.R, v.Col.G, v.Col.B, v.Col.A);
 			GL.TexCoord2f(v.U, v.V);
 			GL.Vertex3f(v.X, v.Y, v.Z);
 		}

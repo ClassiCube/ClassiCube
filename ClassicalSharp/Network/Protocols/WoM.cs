@@ -64,13 +64,13 @@ namespace ClassicalSharp.Network.Protocols {
 				string value = line.Substring(sepIndex + 1).TrimStart();
 				
 				if (key == "environment.cloud") {
-					FastColour col = ParseWomColour(value, WorldEnv.DefaultCloudsCol);
+					PackedCol col = ParseWomCol(value, WorldEnv.DefaultCloudsCol);
 					game.World.Env.SetCloudsCol(col);
 				} else if (key == "environment.sky") {
-					FastColour col = ParseWomColour(value, WorldEnv.DefaultSkyCol);
+					PackedCol col = ParseWomCol(value, WorldEnv.DefaultSkyCol);
 					game.World.Env.SetSkyCol(col);
 				} else if (key == "environment.fog") {
-					FastColour col = ParseWomColour(value, WorldEnv.DefaultFogCol);
+					PackedCol col = ParseWomCol(value, WorldEnv.DefaultFogCol);
 					game.World.Env.SetFogCol(col);
 				} else if (key == "environment.level") {
 					int waterLevel = 0;
@@ -83,9 +83,9 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		const int fullAlpha = 0xFF << 24;
-		static FastColour ParseWomColour(string value, FastColour defaultCol) {
+		static PackedCol ParseWomCol(string value, PackedCol defaultCol) {
 			int argb;
-			return Int32.TryParse(value, out argb) ? FastColour.Argb(argb | fullAlpha) : defaultCol;
+			return Int32.TryParse(value, out argb) ? PackedCol.Argb(argb | fullAlpha) : defaultCol;
 		}
 		
 		static string ReadLine(ref int start, string value) {

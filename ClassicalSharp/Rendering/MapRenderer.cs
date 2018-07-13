@@ -125,7 +125,7 @@ namespace ClassicalSharp.Renderers {
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			gfx.Texturing = false;
 			gfx.AlphaBlending = false;
-			gfx.ColourWriteMask(false, false, false, false);
+			gfx.ColWriteMask(false, false, false, false);
 			for (int batch = 0; batch < _1DUsed; batch++) {
 				if (translucentPartsCount[batch] <= 0) continue;
 				if (pendingTranslucent[batch] || usedTranslucent[batch]) {
@@ -138,7 +138,7 @@ namespace ClassicalSharp.Renderers {
 			// Then actually draw the transluscent blocks
 			gfx.AlphaBlending = true;
 			gfx.Texturing = true;
-			gfx.ColourWriteMask(true, true, true, true);
+			gfx.ColWriteMask(true, true, true, true);
 			gfx.DepthWrite = false; // we already calculated depth values in depth pass
 			
 			int[] texIds = Atlas1D.TexIds;

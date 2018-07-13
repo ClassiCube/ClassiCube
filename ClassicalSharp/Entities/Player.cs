@@ -62,9 +62,9 @@ namespace ClassicalSharp.Entities {
 				using (Bitmap bmp = IDrawer2D.CreatePow2Bitmap(size))
 			{
 				drawer.SetBitmap(bmp);
-				FastColour origWhiteCol = IDrawer2D.Cols['f'];
+				PackedCol origWhiteCol = IDrawer2D.Cols['f'];
 				
-				IDrawer2D.Cols['f'] = new FastColour(80, 80, 80);			
+				IDrawer2D.Cols['f'] = new PackedCol(80, 80, 80);			
 				args.Text = Utils.StripColours(args.Text);
 				game.Drawer2D.DrawText(ref args, 3, 3);
 				
@@ -93,7 +93,7 @@ namespace ClassicalSharp.Entities {
 			Model.RecalcProperties(this);
 			Vector3.TransformY(Model.NameYOffset, ref transform, out pos);
 			float scale = Math.Min(1, Model.NameScale * ModelScale.Y) / 70f;
-			int col = FastColour.WhitePacked;
+			PackedCol col = PackedCol.White;
 			Vector2 size = new Vector2(nameTex.Width * scale, nameTex.Height * scale);
 			
 			if (game.Entities.NamesMode == NameMode.AllUnscaled && game.LocalPlayer.Hacks.CanSeeAllNames) {
@@ -211,8 +211,8 @@ namespace ClassicalSharp.Entities {
 				}
 				
 				// only perform filtering when the entire hat is opaque
-				int fullWhite = FastColour.White.ToArgb();
-				int fullBlack = FastColour.Black.ToArgb();
+				int fullWhite = PackedCol.White.ToArgb();
+				int fullBlack = PackedCol.Black.ToArgb();
 				for (int y = 0; y < sizeY; y++) {
 					int* row = fastBmp.GetRowPtr(y);
 					row += sizeX;

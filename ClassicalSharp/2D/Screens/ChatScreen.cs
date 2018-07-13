@@ -42,7 +42,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			game.Events.ChatReceived += ChatReceived;
 			game.Events.ChatFontChanged += ChatFontChanged;
-			game.Events.ColourCodeChanged += ColourCodeChanged;
+			game.Events.ColCodeChanged += ColCodeChanged;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 		}
@@ -180,7 +180,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 		
-		static FastColour backColour = new FastColour(0, 0, 0, 127);
+		static PackedCol backCol = new PackedCol(0, 0, 0, 127);
 		public void RenderBackground() {
 			int chatHeight = normalChat.GetUsedHeight();
 			int x = normalChat.X;
@@ -190,7 +190,7 @@ namespace ClassicalSharp.Gui.Screens {
 			int height = chatHeight + clientStatus.GetUsedHeight();
 			
 			if (height > 0) {
-				game.Graphics.Draw2DQuad(x - 5, y - 5, width + 10, height + 10, backColour);
+				game.Graphics.Draw2DQuad(x - 5, y - 5, width + 10, height + 10, backCol);
 			}
 		}
 		
@@ -207,10 +207,10 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 
-		void ColourCodeChanged(object sender, ColourCodeEventArgs e) {
+		void ColCodeChanged(object sender, ColourCodeEventArgs e) {
 			if (game.Graphics.LostContext) return;
 			
-			altText.UpdateColours();
+			altText.UpdateCols();
 			Recreate(normalChat, e.Code); Recreate(status, e.Code);
 			Recreate(bottomRight, e.Code); Recreate(clientStatus, e.Code);
 			
@@ -265,7 +265,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			game.Events.ChatReceived -= ChatReceived;
 			game.Events.ChatFontChanged -= ChatFontChanged;
-			game.Events.ColourCodeChanged -= ColourCodeChanged;
+			game.Events.ColCodeChanged -= ColCodeChanged;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}

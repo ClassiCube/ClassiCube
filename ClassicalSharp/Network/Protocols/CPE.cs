@@ -172,7 +172,7 @@ namespace ClassicalSharp.Network.Protocols {
 			byte b = (byte)reader.ReadInt16();
 			byte a = (byte)reader.ReadInt16();
 			
-			FastColour col = new FastColour(r, g, b, a);
+			PackedCol col = new PackedCol(r, g, b, a);
 			game.SelectionManager.AddSelection(selectionId, p1, p2, col);
 		}
 		
@@ -187,7 +187,7 @@ namespace ClassicalSharp.Network.Protocols {
 			short g = reader.ReadInt16();
 			short b = reader.ReadInt16();
 			bool invalid = r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255;
-			FastColour col = new FastColour(r, g, b);
+			PackedCol col = new PackedCol(r, g, b);
 
 			if (variable == 0) {
 				game.World.Env.SetSkyCol(invalid ? WorldEnv.DefaultSkyCol : col);
@@ -306,7 +306,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleSetTextColor() {
-			FastColour col = new FastColour(reader.ReadUInt8(), reader.ReadUInt8(),
+			PackedCol col = new PackedCol(reader.ReadUInt8(), reader.ReadUInt8(),
 			                                reader.ReadUInt8(), reader.ReadUInt8());
 			byte code = reader.ReadUInt8();
 			

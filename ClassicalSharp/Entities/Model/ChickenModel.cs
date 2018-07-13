@@ -64,9 +64,9 @@ namespace ClassicalSharp.Model {
 			DrawRotate(0, 0, -Math.Abs(p.anim.leftArmX), LeftWing, false);
 			DrawRotate(0, 0, Math.Abs(p.anim.leftArmX), RightWing, false);
 			
-			int col = cols[0];
+			PackedCol col = cols[0];
 			for (int i = 0; i < cols.Length; i++) {
-				cols[i] = FastColour.ScalePacked(col, 0.7f);
+				cols[i] = PackedCol.Scale(col, 0.7f);
 			}
 			DrawRotate(p.anim.leftLegX, 0, 0, LeftLeg, false);
 			DrawRotate(p.anim.rightLegX, 0, 0, RightLeg, false);

@@ -10,16 +10,16 @@ namespace ClassicalSharp.Map {
 	/// <summary> Contains the environment metadata for a world. </summary>
 	public sealed class WorldEnv {
 		
-		public FastColour SkyCol = DefaultSkyCol;
-		public static readonly FastColour DefaultSkyCol = new FastColour(0x99, 0xCC, 0xFF);
+		public PackedCol SkyCol = DefaultSkyCol;
+		public static readonly PackedCol DefaultSkyCol = new PackedCol(0x99, 0xCC, 0xFF);
 		public const string DefaultSkyColHex = "99CCFF";
 
-		public FastColour FogCol = DefaultFogCol;
-		public static readonly FastColour DefaultFogCol = new FastColour(0xFF, 0xFF, 0xFF);
+		public PackedCol FogCol = DefaultFogCol;
+		public static readonly PackedCol DefaultFogCol = new PackedCol(0xFF, 0xFF, 0xFF);
 		public const string DefaultFogColHex = "FFFFFF";
 		
-		public FastColour CloudsCol = DefaultCloudsCol;
-		public static readonly FastColour DefaultCloudsCol = new FastColour(0xFF, 0xFF, 0xFF);
+		public PackedCol CloudsCol = DefaultCloudsCol;
+		public static readonly PackedCol DefaultCloudsCol = new PackedCol(0xFF, 0xFF, 0xFF);
 		public const string DefaultCloudsColHex = "FFFFFF";
 		
 		public int CloudHeight;
@@ -28,14 +28,12 @@ namespace ClassicalSharp.Map {
 		public float WeatherSpeed = 1;
 		public float WeatherFade = 1;
 		
-		public FastColour Sunlight;
-		public int Sun, SunXSide, SunZSide, SunYBottom;
-		public static readonly FastColour DefaultSunlight = new FastColour(0xFF, 0xFF, 0xFF);
+		public PackedCol Sun, SunXSide, SunZSide, SunYBottom;
+		public static readonly PackedCol DefaultSunlight = new PackedCol(0xFF, 0xFF, 0xFF);
 		public const string DefaultSunlightHex = "FFFFFF";
 		
-		public FastColour Shadowlight;
-		public int Shadow, ShadowXSide, ShadowZSide, ShadowYBottom;
-		public static readonly FastColour DefaultShadowlight = new FastColour(0x9B, 0x9B, 0x9B);
+		public PackedCol Shadow, ShadowXSide, ShadowZSide, ShadowYBottom;
+		public static readonly PackedCol DefaultShadowlight = new PackedCol(0x9B, 0x9B, 0x9B);
 		public const string DefaultShadowlightHex = "9B9B9B";
 		
 		public Weather Weather = Weather.Sunny;
@@ -70,14 +68,11 @@ namespace ClassicalSharp.Map {
 		}
 		
 		void ResetLight() {
-			Shadowlight = DefaultShadowlight;
-			Shadow = Shadowlight.Pack();
-			FastColour.GetShaded(Shadowlight, out ShadowXSide,
-			                     out ShadowZSide, out ShadowYBottom);
-			
-			Sunlight = DefaultSunlight;
-			Sun = Sunlight.Pack();
-			FastColour.GetShaded(Sunlight, out SunXSide,
+			Shadow = DefaultShadowlight;
+			PackedCol.GetShaded(Shadow, out ShadowXSide,
+			                     out ShadowZSide, out ShadowYBottom);			
+			Sun = DefaultSunlight;
+			PackedCol.GetShaded(Sun, out SunXSide,
 			                     out SunZSide, out SunYBottom);
 		}
 
@@ -115,22 +110,20 @@ namespace ClassicalSharp.Map {
 			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.Weather);
 		}
 		
-		public void SetSkyCol(FastColour col) { Set(col, ref SkyCol, EnvVar.SkyCol); }
-		public void SetFogCol(FastColour col) { Set(col, ref FogCol, EnvVar.FogCol); }
-		public void SetCloudsCol(FastColour col) { Set(col, ref CloudsCol, EnvVar.CloudsCol); }
+		public void SetSkyCol(PackedCol col) { Set(col, ref SkyCol, EnvVar.SkyCol); }
+		public void SetFogCol(PackedCol col) { Set(col, ref FogCol, EnvVar.FogCol); }
+		public void SetCloudsCol(PackedCol col) { Set(col, ref CloudsCol, EnvVar.CloudsCol); }
 
-		public void SetSunCol(FastColour col) {
-			FastColour.GetShaded(col, out SunXSide,
+		public void SetSunCol(PackedCol col) {
+			PackedCol.GetShaded(col, out SunXSide,
 			                     out SunZSide, out SunYBottom);
-			Sun = col.Pack();
-			Set(col, ref Sunlight, EnvVar.SunCol);
+			Set(col, ref Sun, EnvVar.SunCol);
 		}
 
-		public void SetShadowCol(FastColour col) {
-			FastColour.GetShaded(col, out ShadowXSide,
+		public void SetShadowCol(PackedCol col) {
+			PackedCol.GetShaded(col, out ShadowXSide,
 			                     out ShadowZSide, out ShadowYBottom);
-			Shadow = col.Pack();
-			Set(col, ref Shadowlight, EnvVar.ShadowCol);
+			Set(col, ref Shadow, EnvVar.ShadowCol);
 		}
 		
 		bool Set<T>(T value, ref T target, EnvVar var) where T : IEquatable<T> {

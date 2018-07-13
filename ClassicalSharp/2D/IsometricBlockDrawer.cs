@@ -27,12 +27,12 @@ namespace ClassicalSharp {
 			game.Graphics.LoadMatrix(ref transform);
 		}
 		
-		static int colNormal = FastColour.WhitePacked, colXSide, colZSide, colYBottom;
+		static PackedCol colNormal = PackedCol.White, colXSide, colZSide, colYBottom;
 		static float cosX, sinX, cosY, sinY;
 		static Matrix4 transform;
 		
 		static IsometricBlockDrawer() {
-			FastColour.GetShaded(FastColour.White, out colXSide, out colZSide, out colYBottom);
+			PackedCol.GetShaded(PackedCol.White, out colXSide, out colZSide, out colYBottom);
 			Matrix4 rotY, rotX;
 			Matrix4.RotateY(out rotY, 45 * Utils.Deg2Rad);
 			Matrix4.RotateX(out rotX, -30f * Utils.Deg2Rad);
@@ -75,7 +75,7 @@ namespace ClassicalSharp {
 				drawer.z1 = scale * (1 - min.Z * 2) + pos.Z; drawer.z2 = scale * (1 - max.Z * 2) + pos.Z;
 				
 				drawer.Tinted = BlockInfo.Tinted[block];
-				drawer.TintColour = BlockInfo.FogColour[block];
+				drawer.TintCol = BlockInfo.FogCol[block];
 				
 				drawer.Right(1, bright ? colNormal : colXSide, GetTex(block, Side.Right), vertices, ref index);
 				drawer.Front(1, bright ? colNormal : colZSide, GetTex(block, Side.Front), vertices, ref index);
@@ -104,11 +104,8 @@ namespace ClassicalSharp {
 			if (lastTexIndex != texIndex) Flush();
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
-			v.Colour = colNormal;
-			
-			if (BlockInfo.Tinted[block]) {
-				v.Colour = Utils.Tint(v.Colour, BlockInfo.FogColour[block]);
-			}
+			v.Col = colNormal;	
+			if (BlockInfo.Tinted[block]) { v.Col *= BlockInfo.FogCol[block]; }
 			
 			float x1 = firstPart ? 0.5f : -0.1f, x2 = firstPart ? 1.1f : 0.5f;
 			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);
@@ -128,11 +125,8 @@ namespace ClassicalSharp {
 			if (lastTexIndex != texIndex) Flush();
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
-			v.Colour = colNormal;
-			
-			if (BlockInfo.Tinted[block]) {
-				v.Colour = Utils.Tint(v.Colour, BlockInfo.FogColour[block]);
-			}
+			v.Col = colNormal;	
+			if (BlockInfo.Tinted[block]) { v.Col *= BlockInfo.FogCol[block]; }
 			
 			float z1 = firstPart ? 0.5f : -0.1f, z2 = firstPart ? 1.1f : 0.5f;
 			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);

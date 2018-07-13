@@ -71,12 +71,12 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			for (int heart = 0; heart < 10; heart++) {
 				Texture tex = new Texture(0, X + middle * heart, y, outer, outer, backRec);
-				IGraphicsApi.Make2DQuad(ref tex, FastColour.WhitePacked, cache.vertices, ref index);
+				IGraphicsApi.Make2DQuad(ref tex, PackedCol.White, cache.vertices, ref index);
 				if (health <= 0) continue;
 				
 				TextureRec rec = (health >= 2) ? fullRec : halfRec;
 				tex = new Texture(0, X + middle * heart + offset, y + offset, inner, inner, rec);
-				IGraphicsApi.Make2DQuad(ref tex, FastColour.WhitePacked, cache.vertices, ref index);
+				IGraphicsApi.Make2DQuad(ref tex, PackedCol.White, cache.vertices, ref index);
 				health -= 2;
 			}
 			

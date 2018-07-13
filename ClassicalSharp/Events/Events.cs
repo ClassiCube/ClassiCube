@@ -61,9 +61,9 @@ namespace ClassicalSharp.Events {
 		public void RaiseHackPermissionsChanged() { Raise(HackPermissionsChanged); }
 		
 		/// <summary> Raised when the colour codes usable by the player changes. </summary>
-		public event EventHandler<ColourCodeEventArgs> ColourCodeChanged;
+		public event EventHandler<ColourCodeEventArgs> ColCodeChanged;
 		public void RaiseColourCodeChanged(char code) {
-			colArgs.Code = code; Raise(ColourCodeChanged, colArgs); }
+			colArgs.Code = code; Raise(ColCodeChanged, colArgs); }
 		
 		/// <summary> Raised when the projection matrix changes. </summary>
 		public event EventHandler ProjectionChanged;

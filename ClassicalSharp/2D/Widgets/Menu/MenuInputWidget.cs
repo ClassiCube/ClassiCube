@@ -24,7 +24,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			return input;
 		}
 		
-		static FastColour backCol = new FastColour(30, 30, 30, 200);
+		static PackedCol backCol = new PackedCol(30, 30, 30, 200);
 		public int MinWidth, MinHeight;
 		public MenuInputValidator Validator;
 		

@@ -53,7 +53,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			selTex.ID = texId;
 			selTex.X1 = (int)(x - selBlockSize / 2);
-			game.Graphics.Draw2DTexture(ref selTex, FastColour.White);
+			game.Graphics.Draw2DTexture(ref selTex, PackedCol.White);
 		}
 		
 		void RenderHotbarBlocks() {

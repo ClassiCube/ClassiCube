@@ -28,7 +28,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		protected internal Font font;
 		
 		public bool ReducePadding;
-		public FastColour Colour = FastColour.White;
+		public PackedCol Col = PackedCol.White;
 		public bool IsValid { get { return texture.IsValid; } }
 		
 		public override void Init() {
@@ -62,7 +62,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override void Render(double delta) {
 			if (texture.IsValid) {
-				texture.Render(game.Graphics, Colour);
+				texture.Render(game.Graphics, Col);
 			}
 		}
 		

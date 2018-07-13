@@ -102,7 +102,7 @@ namespace Launcher {
 				platformDrawer = new OSXPlatformDrawer();
 			}
 			
-			IDrawer2D.Cols['g'] = new FastColour(125, 125, 125);
+			IDrawer2D.Cols['g'] = new PackedCol(125, 125, 125);
 		}
 		
 		void LoadFont() {

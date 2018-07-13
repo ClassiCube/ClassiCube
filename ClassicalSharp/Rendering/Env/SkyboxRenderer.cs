@@ -105,7 +105,7 @@ namespace ClassicalSharp.Renderers {
 			IntPtr start = (IntPtr)vertices;
 			
 			const float pos = 1.0f;
-			VertexP3fT2fC4b v; v.Colour = game.World.Env.CloudsCol.Pack();
+			VertexP3fT2fC4b v; v.Col = game.World.Env.CloudsCol;
 			
 			// Render the front quad			                        
 			v.X =  pos; v.Y = -pos; v.Z = -pos; v.U = 0.25f; v.V = 1.00f; *vertices = v; vertices++;

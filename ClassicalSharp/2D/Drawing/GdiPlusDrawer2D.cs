@@ -47,21 +47,21 @@ namespace ClassicalSharp {
 			curBmp = bmp;
 		}
 		
-		public override void DrawRect(FastColour colour, int x, int y, int width, int height) {
-			Brush brush = GetOrCreateBrush(colour);
+		public override void DrawRect(PackedCol col, int x, int y, int width, int height) {
+			Brush brush = GetOrCreateBrush(col);
 			g.FillRectangle(brush, x, y, width, height);
 		}
 		
-		public override void DrawRectBounds(FastColour colour, int lineWidth, int x, int y, int width, int height) {
-			using (Pen pen = new Pen(colour, lineWidth)) {
+		public override void DrawRectBounds(PackedCol col, int lineWidth, int x, int y, int width, int height) {
+			using (Pen pen = new Pen(col, lineWidth)) {
 				pen.Alignment = PenAlignment.Inset;
 				g.DrawRectangle(pen, x, y, width, height);
 			}
 		}
 		
-		public override void Clear(FastColour colour, int x, int y, int width, int height) {
+		public override void Clear(PackedCol col, int x, int y, int width, int height) {
 			g.SmoothingMode = SmoothingMode.None;
-			Brush brush = GetOrCreateBrush(colour);
+			Brush brush = GetOrCreateBrush(col);
 			g.FillRectangle(brush, x, y, width, height);
 			g.SmoothingMode = SmoothingMode.HighQuality;
 		}
@@ -89,7 +89,7 @@ namespace ClassicalSharp {
 			DisposeFontBitmap();
 		}
 		
-		SolidBrush GetOrCreateBrush(FastColour col) {
+		SolidBrush GetOrCreateBrush(PackedCol col) {
 			int argb = col.ToArgb();
 			for (int i = 0; i < brushes.Count; i++) {
 				if (brushes[i].ARGB == argb) return brushes[i].Brush;
@@ -105,7 +105,7 @@ namespace ClassicalSharp {
 				GetTextParts(args.Text);
 			
 			float textX = x;
-			Brush backBrush = GetOrCreateBrush(FastColour.Black);
+			Brush backBrush = GetOrCreateBrush(PackedCol.Black);
 			for (int i = 0; i < parts.Count; i++) {
 				TextPart part = parts[i];
 				Brush foreBrush = GetOrCreateBrush(part.Col);
@@ -121,7 +121,7 @@ namespace ClassicalSharp {
 			if (!args.SkipPartsCheck)
 				GetTextParts(args.Text);
 			
-			Brush shadowBrush = GetOrCreateBrush(FastColour.Black);
+			Brush shadowBrush = GetOrCreateBrush(PackedCol.Black);
 			StringFormatFlags flags = format.FormatFlags;
 			format.FormatFlags |= StringFormatFlags.NoWrap;
 			format.Trimming = StringTrimming.EllipsisCharacter;

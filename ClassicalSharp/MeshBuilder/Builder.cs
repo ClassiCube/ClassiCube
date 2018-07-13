@@ -221,7 +221,7 @@ namespace ClassicalSharp {
 			int flags = ComputeOcclusion();
 			#endif
 			#if DEBUG_OCCLUSION
-			FastColour col = new FastColour(60, 60, 60, 255);
+			PackedCol col = new PackedCol(60, 60, 60, 255);
 			if ((flags & 1) != 0) col.R = 255; // x
 			if ((flags & 4) != 0) col.G = 255; // y
 			if ((flags & 2) != 0) col.B = 255; // z

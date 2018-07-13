@@ -28,8 +28,8 @@ namespace ClassicalSharp.Gui.Screens {
 		float progress;
 		TextWidget titleWidget, messageWidget;
 		const int progWidth = 200, progHeight = 4;
-		readonly FastColour backCol = new FastColour(128, 128, 128);
-		readonly FastColour progressCol = new FastColour(128, 255, 128);
+		readonly PackedCol backCol = new PackedCol(128, 128, 128);
+		readonly PackedCol progressCol = new PackedCol(128, 255, 128);
 
 		
 		public override void Init() {
@@ -135,7 +135,7 @@ namespace ClassicalSharp.Gui.Screens {
 			VertexP3fT2fC4b[] vertices = game.ModelCache.vertices;
 			int index = 0, atlasIndex = 0;
 			int drawnY = 0, height = game.Height;
-			int col = new FastColour(64, 64, 64).Pack();
+			PackedCol col = new PackedCol(64, 64, 64);
 			
 			int texLoc = BlockInfo.GetTextureLoc(Block.Dirt, Side.Top);
 			Texture tex = new Texture(0, 0, 0, game.Width, 64,

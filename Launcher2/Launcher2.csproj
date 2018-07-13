@@ -69,8 +69,8 @@
     <Compile Include="..\ClassicalSharp\2D\Utils\FastBitmap.cs">
       <Link>Shared\FastBitmap.cs</Link>
     </Compile>
-    <Compile Include="..\ClassicalSharp\2D\Utils\FastColour.cs">
-      <Link>Shared\FastColour.cs</Link>
+    <Compile Include="..\ClassicalSharp\2D\Utils\PackedCol.cs">
+      <Link>Shared\PackedCol.cs</Link>
     </Compile>
     <Compile Include="..\ClassicalSharp\Network\Utils\AsyncDownloader.cs">
       <Link>Shared\AsyncDownloader.cs</Link>
