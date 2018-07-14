@@ -253,5 +253,8 @@ void Camera_CycleActive(void) {
 
 	Camera_Active = &Camera_Cameras[i];
 	Camera_ActiveIndex = i;
+	/* reset rotation offset when changing cameras */
+	cam_rotOffset.X = 0.0f; cam_rotOffset.Y = 0.0f;
+
 	Game_UpdateProjection();
 }
