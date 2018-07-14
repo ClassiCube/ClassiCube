@@ -7,13 +7,10 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-/* Draws a vertical quad. */
 void SelectionBox_VerQuad(VertexP3fC4b** vertices, PackedCol col,
 	Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2);
-/* Draws a horizonal quad. */
 void SelectionBox_HorQuad(VertexP3fC4b** vertices, PackedCol col,
 	Real32 x1, Real32 z1, Real32 x2, Real32 z2, Real32 y);
-/* Draws a line between two points. */
 void SelectionBox_Line(VertexP3fC4b** vertices, PackedCol col,
 	Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2);
 

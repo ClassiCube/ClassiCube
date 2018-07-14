@@ -22,10 +22,16 @@ namespace ClassicalSharp {
 			CalculateTextWidths();
 		}
 		
-		protected Bitmap fontBitmap;
-		protected FastBitmap fontPixels;
-		protected int boxSize;
-		protected int[] widths = new int[256];
+		protected void DisposeFontBitmap() {
+			if (fontBitmap == null) return;
+			fontPixels.Dispose();
+			fontBitmap.Dispose();
+		}
+		
+		Bitmap fontBitmap;
+		FastBitmap fontPixels;
+		int boxSize;
+		int[] widths = new int[256];
 		
 		void CalculateTextWidths() {
 			int width = fontPixels.Width, height = fontPixels.Height;
@@ -210,11 +216,5 @@ namespace ClassicalSharp {
 			return Utils.CeilDiv(widths[c] * point, boxSize); 
 		}
 		static int AdjHeight(int point) { return Utils.CeilDiv(point * 3, 2); }
-		
-		protected void DisposeFontBitmap() {
-			if (fontBitmap == null) return;
-			fontPixels.Dispose();
-			fontBitmap.Dispose();
-		}
 	}
 }

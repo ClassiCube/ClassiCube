@@ -5,6 +5,7 @@
 #include "GraphicsCommon.h"
 #include "Game.h"
 #include "Event.h"
+#include "Picking.h"
 
 GfxResourceID pickedPos_vb;
 PackedCol pickedPos_col = PACKEDCOL_CONST(0, 0, 0, 102);

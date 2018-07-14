@@ -85,9 +85,6 @@
     <Filter Include="Header Files\IO">
       <UniqueIdentifier>{82a3fbdf-5459-4e08-bff9-04dd23aa4342}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Game">
-      <UniqueIdentifier>{570b92b8-b3df-40cb-a42a-da14c81c877a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Game">
       <UniqueIdentifier>{62c942cf-1d93-4e9c-8635-61fa1ec2bbdc}</UniqueIdentifier>
     </Filter>
@@ -147,6 +144,9 @@
     </Filter>
     <Filter Include="Source Files\Blocks">
       <UniqueIdentifier>{f693e3de-8aee-440f-9edc-61544d2f7f79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Game">
+      <UniqueIdentifier>{570b92b8-b3df-40cb-a42a-da14c81c877a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
