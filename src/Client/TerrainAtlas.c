@@ -6,13 +6,13 @@
 #include "GraphicsAPI.h"
 #include "Platform.h"
 
-void Atlas2D_UpdateState(Bitmap* bmp) {
+void Atlas2D_UpdateState(struct Bitmap* bmp) {
 	Atlas2D_Bitmap = *bmp;
 	Atlas2D_TileSize = bmp->Width / ATLAS2D_TILES_PER_ROW;
 	Block_RecalculateSpriteBB();
 }
 
-static GfxResourceID Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element) {
+static GfxResourceID Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, struct Bitmap* element) {
 	Int32 size = Atlas2D_TileSize;
 	Int32 x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
 	Bitmap_CopyBlock(x * size, y * size, 0, 0, &Atlas2D_Bitmap, element, size);
@@ -22,7 +22,7 @@ static GfxResourceID Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* e
 
 GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {
 	Int32 size = Atlas2D_TileSize;
-	Bitmap tile;
+	struct Bitmap tile;
 
 	/* Try to allocate bitmap on stack if possible */
 	if (size > 64) {
@@ -57,7 +57,7 @@ TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index) {
 
 static void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 	Int32 tileSize = Atlas2D_TileSize;
-	Bitmap atlas1D;
+	struct Bitmap atlas1D;
 	Bitmap_Allocate(&atlas1D, tileSize, atlas1DHeight);
 
 	Int32 index1D;

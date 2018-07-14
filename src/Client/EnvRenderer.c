@@ -279,7 +279,7 @@ static void EnvRenderer_ResetAllEnv(void* obj) {
 	EnvRenderer_ContextRecreated(NULL);
 }
 
-static void EnvRenderer_FileChanged(void* obj, Stream* src) {
+static void EnvRenderer_FileChanged(void* obj, struct Stream* src) {
 	if (String_CaselessEqualsConst(&src->Name, "cloud.png") || String_CaselessEqualsConst(&src->Name, "clouds.png")) {
 		Game_UpdateTexture(&env_cloudsTex, src, false);
 	}

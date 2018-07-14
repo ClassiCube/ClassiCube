@@ -55,14 +55,14 @@ bool AABB_ContainsPoint(AABB* parent, Vector3* P) {
 
 
 
-Vector3 Intersection_InverseRotate(Vector3 pos, Entity* target) {
+Vector3 Intersection_InverseRotate(Vector3 pos, struct Entity* target) {
 	pos = Vector3_RotateY(pos, -target->RotY * MATH_DEG2RAD);
 	pos = Vector3_RotateZ(pos, -target->RotZ * MATH_DEG2RAD);
 	pos = Vector3_RotateX(pos, -target->RotX * MATH_DEG2RAD);
 	return pos;
 }
 
-bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, Entity* target, Real32* tMin, Real32* tMax) {
+bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, struct Entity* target, Real32* tMin, Real32* tMax) {
 	/* This is the rotated AABB of the model we want to test for intersection
 			  *
 			 / \     we then perform a counter       *---*   and we can then do
@@ -125,12 +125,12 @@ bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vec
 
 
 #define SEARCHER_STATES_MIN 64
-SearcherState Searcher_StatesInitial[SEARCHER_STATES_MIN];
-extern SearcherState* Searcher_States = Searcher_StatesInitial;
+struct SearcherState Searcher_StatesInitial[SEARCHER_STATES_MIN];
+extern struct SearcherState* Searcher_States = Searcher_StatesInitial;
 UInt32 Searcher_StatesCount = SEARCHER_STATES_MIN;
 
 static void Searcher_QuickSort(Int32 left, Int32 right) {
-	SearcherState* keys = Searcher_States; SearcherState key;
+	struct SearcherState* keys = Searcher_States; struct SearcherState key;
 	while (left < right) {
 		Int32 i = left, j = right;
 		Real32 pivot = keys[(i + j) >> 1].tSquared;
@@ -146,7 +146,7 @@ static void Searcher_QuickSort(Int32 left, Int32 right) {
 	}
 }
 
-Int32 Searcher_FindReachableBlocks(Entity* entity, AABB* entityBB, AABB* entityExtentBB) {
+Int32 Searcher_FindReachableBlocks(struct Entity* entity, AABB* entityBB, AABB* entityExtentBB) {
 	Vector3 vel = entity->Velocity;
 	Entity_GetBounds(entity, entityBB);
 
@@ -170,7 +170,7 @@ Int32 Searcher_FindReachableBlocks(Entity* entity, AABB* entityBB, AABB* entityE
 		}
 		Searcher_StatesCount = elements;
 
-		Searcher_States = Platform_MemAlloc(elements, sizeof(SearcherState));
+		Searcher_States = Platform_MemAlloc(elements, sizeof(struct SearcherState));
 		if (Searcher_States == NULL) {
 			ErrorHandler_Fail("Failed to allocate memory for Searcher_FindReachableBlocks");
 		}
@@ -179,7 +179,7 @@ Int32 Searcher_FindReachableBlocks(Entity* entity, AABB* entityBB, AABB* entityE
 	/* Order loops so that we minimise cache misses */
 	AABB blockBB;
 	Int32 x, y, z;
-	SearcherState* curState = Searcher_States;
+	struct SearcherState* curState = Searcher_States;
 
 	for (y = min.Y; y <= max.Y; y++) {
 		for (z = min.Z; z <= max.Z; z++) {

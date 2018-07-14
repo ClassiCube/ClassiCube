@@ -167,7 +167,7 @@ void Options_Load(void) {
 
 	UChar lineBuffer[String_BufferSize(768)];
 	String line = String_InitAndClearArray(lineBuffer);
-	Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file, &path);
 
 	/* Remove all the unchanged options */
 	UInt32 i;
@@ -178,7 +178,7 @@ void Options_Load(void) {
 	}
 
 	/* ReadLine reads single byte at a time */
-	UInt8 buffer[2048]; Stream buffered;
+	UInt8 buffer[2048]; struct Stream buffered;
 	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
 
 	while (Stream_ReadLine(&buffered, &line)) {
@@ -211,7 +211,7 @@ void Options_Save(void) {
 
 	UChar lineBuffer[String_BufferSize(1024)];
 	String line = String_InitAndClearArray(lineBuffer);
-	Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	UInt32 i;
 
 	for (i = 0; i < Options_Keys.Count; i++) {

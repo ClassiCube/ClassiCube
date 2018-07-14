@@ -83,7 +83,7 @@ bool Gui_Contains(Int32 recX, Int32 recY, Int32 width, Int32 height, Int32 x, In
 	return x >= recX && y >= recY && x < recX + width && y < recY + height;
 }
 
-static void Gui_FileChanged(void* obj, Stream* stream) {
+static void Gui_FileChanged(void* obj, struct Stream* stream) {
 	if (String_CaselessEqualsConst(&stream->Name, "gui.png")) {
 		Game_UpdateTexture(&Gui_GuiTex, stream, false);
 	} else if (String_CaselessEqualsConst(&stream->Name, "gui_classic.png")) {
@@ -252,7 +252,7 @@ void TextAtlas_Make(TextAtlas* atlas, STRING_PURE String* chars, FontDesc* font,
 	size.Width += 16 * chars->length;
 
 	Platform_MemSet(atlas->Widths, 0, sizeof(atlas->Widths));
-	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+	struct Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
 	{
 		Drawer2D_DrawText(&args, 0, 0);

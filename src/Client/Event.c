@@ -77,7 +77,7 @@ void Event_UnregisterReal(Event_Real* handlers, void* obj, Event_Real_Callback h
 	Event_UnregisterImpl((Event_Void*)handlers, obj, (Event_Void_Callback)handler);
 }
 
-void Event_RaiseStream(Event_Stream* handlers, Stream* stream) {
+void Event_RaiseStream(Event_Stream* handlers, struct Stream* stream) {
 	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], stream);

@@ -9,9 +9,9 @@
 #define ATLAS2D_TILES_PER_ROW 16
 #define ATLAS2D_ROWS_COUNT 16
 
-Bitmap Atlas2D_Bitmap;
+struct Bitmap Atlas2D_Bitmap;
 Int32 Atlas2D_TileSize;
-void Atlas2D_UpdateState(Bitmap* bmp);
+void Atlas2D_UpdateState(struct Bitmap* bmp);
 /* Creates a native texture that contains the tile at the specified index. */
 GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc);
 void Atlas2D_Free(void);

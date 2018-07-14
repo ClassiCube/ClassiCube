@@ -71,7 +71,7 @@ void ServerConnection_DownloadTexturePack(STRING_PURE String* url) {
 	}
 }
 
-void ServerConnection_LogResourceFail(AsyncRequest* item) {
+void ServerConnection_LogResourceFail(struct AsyncRequest* item) {
 	Int32 status = item->StatusCode;
 	if (status == 0 || status == 304) return;
 
@@ -82,7 +82,7 @@ void ServerConnection_LogResourceFail(AsyncRequest* item) {
 }
 
 void ServerConnection_CheckAsyncResources(void) {
-	AsyncRequest item;
+	struct AsyncRequest item;
 	String terrain = String_FromConst("terrain");
 	String texPack = String_FromConst("texturePack");
 
@@ -107,11 +107,11 @@ void ServerConnection_CheckAsyncResources(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------PingList---------------------------------------------------------*
 *#########################################################################################################################*/
-typedef struct PingEntry_ {
+struct PingEntry {
 	Int64 TimeSent, TimeReceived;
 	UInt16 Data;
-} PingEntry;
-PingEntry PingList_Entries[10];
+};
+struct PingEntry PingList_Entries[10];
 
 UInt16 PingList_Set(Int32 i, UInt16 prev) {
 	DateTime now; Platform_CurrentUTCTime(&now);
@@ -153,7 +153,7 @@ Int32 PingList_AveragePingMs(void) {
 	Int32 measures = 0;
 	Int32 i;
 	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
-		PingEntry entry = PingList_Entries[i];
+		struct PingEntry entry = PingList_Entries[i];
 		if (entry.TimeSent == 0 || entry.TimeReceived == 0) continue;
 
 		/* Half, because received->reply time is actually twice time it takes to send data */
@@ -263,8 +263,8 @@ void ServerConnection_InitSingleplayer(void) {
 *--------------------------------------------------Multiplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
 void* net_socket;
-Stream net_readStream;
-Stream net_writeStream;
+struct Stream net_readStream;
+struct Stream net_writeStream;
 UInt8 net_readBuffer[4096 * 5];
 UInt8 net_writeBuffer[131];
 
@@ -449,7 +449,7 @@ static void MPConnection_Tick(ScheduledTask* task) {
 			Platform_LogConst("Skipping invalid HackControl byte from D3 server");
 			Stream_Skip(&net_readStream, 1);
 
-			LocalPlayer* p = &LocalPlayer_Instance;
+			struct LocalPlayer* p = &LocalPlayer_Instance;
 			p->Physics.JumpVel = 0.42f; /* assume default jump height */
 			p->Physics.ServerJumpVel = p->Physics.JumpVel;
 			continue;
@@ -509,8 +509,8 @@ void Net_SendPacket(void) {
 	net_writeStream.Meta_Mem_Left = net_writeStream.Meta_Mem_Length;
 }
 
-static Stream* MPConnection_ReadStream(void)  { return &net_readStream; }
-static Stream* MPConnection_WriteStream(void) { return &net_writeStream; }
+static struct Stream* MPConnection_ReadStream(void)  { return &net_readStream; }
+static struct Stream* MPConnection_WriteStream(void) { return &net_writeStream; }
 void ServerConnection_InitMultiplayer(void) {
 	ServerConnection_ResetState();
 	ServerConnection_IsSinglePlayer = false;

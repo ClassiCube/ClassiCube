@@ -7,7 +7,7 @@
    - Calculates all possible blocks that a moving entity can intersect with.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
-typedef struct Entity_ Entity;
+struct Entity;
 
 /* Descibes an axis aligned bounding box. */
 typedef struct AABB_ { Vector3 Min, Max; } AABB;
@@ -20,14 +20,14 @@ bool AABB_Contains(AABB* parent, AABB* child);
 bool AABB_ContainsPoint(AABB* parent, Vector3* P);
 
 /* Calculates the intersection points of a ray and a rotated bounding box. */
-bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, Entity* target, Real32* tMin, Real32* tMax);
+bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, struct Entity* target, Real32* tMin, Real32* tMax);
 /* Calculates the intersection points of a ray and a bounding box.
 Source: http://www.cs.utah.edu/~awilliam/box/box.pdf */
 bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vector3 max, Real32* t0, Real32* t1);
 
-typedef struct SearcherState_ { Int32 X, Y, Z; Real32 tSquared; } SearcherState;
-extern SearcherState* Searcher_States;
-Int32 Searcher_FindReachableBlocks(Entity* entity, AABB* entityBB, AABB* entityExtentBB);
+struct SearcherState { Int32 X, Y, Z; Real32 tSquared; };
+extern struct SearcherState* Searcher_States;
+Int32 Searcher_FindReachableBlocks(struct Entity* entity, AABB* entityBB, AABB* entityExtentBB);
 void Searcher_CalcTime(Vector3* vel, AABB *entityBB, AABB* blockBB, Real32* tx, Real32* ty, Real32* tz);
 void Searcher_Free(void);
 #endif

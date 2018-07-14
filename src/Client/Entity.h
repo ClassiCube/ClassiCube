@@ -8,7 +8,7 @@
 /* Represents an in-game entity.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
-typedef struct IModel_ IModel;
+struct IModel;
 
 /* Offset used to avoid floating point roundoff errors. */
 #define ENTITY_ADJUSTMENT 0.001f
@@ -39,40 +39,40 @@ extern const UChar* ShadowMode_Names[SHADOW_MODE_COUNT];
 #define LOCATIONUPDATE_FLAG_ROTX  0x08
 #define LOCATIONUPDATE_FLAG_ROTZ  0x10
 /* Represents a location update for an entity. Can be a relative position, full position, and/or an orientation update. */
-typedef struct LocationUpdate_ {
+struct LocationUpdate {
 	Vector3 Pos;
 	Real32 HeadX, HeadY, RotX, RotZ;
 	UInt8 Flags;
 	bool RelativePos;
-} LocationUpdate;
+};
 
 /* Clamps the given angle so it lies between [0, 360). */
 Real32 LocationUpdate_Clamp(Real32 degrees);
-void LocationUpdate_Empty(LocationUpdate* update);
-void LocationUpdate_MakeOri(LocationUpdate* update, Real32 rotY, Real32 headX);
-void LocationUpdate_MakePos(LocationUpdate* update, Vector3 pos, bool rel);
-void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos, Real32 rotY, Real32 headX, bool rel);
+void LocationUpdate_Empty(struct LocationUpdate* update);
+void LocationUpdate_MakeOri(struct LocationUpdate* update, Real32 rotY, Real32 headX);
+void LocationUpdate_MakePos(struct LocationUpdate* update, Vector3 pos, bool rel);
+void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, Real32 rotY, Real32 headX, bool rel);
 
-typedef struct Entity_ Entity;
-typedef struct EntityVTABLE_ {
-	void (*Tick)(Entity* entity, Real64 delta);
-	void (*SetLocation)(Entity* entity, LocationUpdate* update, bool interpolate);
-	void (*RenderModel)(Entity* entity, Real64 deltaTime, Real32 t);
-	void (*RenderName)(Entity* entity);
-	void (*ContextLost)(Entity* entity);
-	void (*ContextRecreated)(Entity* entity);
-	void (*Despawn)(Entity* entity);
-	PackedCol (*GetCol)(Entity* entity);
-} EntityVTABLE;
+struct Entity;
+struct EntityVTABLE {
+	void (*Tick)(struct Entity* entity, Real64 delta);
+	void (*SetLocation)(struct Entity* entity, struct LocationUpdate* update, bool interpolate);
+	void (*RenderModel)(struct Entity* entity, Real64 deltaTime, Real32 t);
+	void (*RenderName)(struct Entity* entity);
+	void (*ContextLost)(struct Entity* entity);
+	void (*ContextRecreated)(struct Entity* entity);
+	void (*Despawn)(struct Entity* entity);
+	PackedCol (*GetCol)(struct Entity* entity);
+};
 
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */
-typedef struct Entity_ {
-	EntityVTABLE* VTABLE;
+struct Entity {
+	struct EntityVTABLE* VTABLE;
 	Vector3 Position;
 	Real32 HeadX, HeadY, RotX, RotY, RotZ;
 	Vector3 Velocity, OldVelocity;
 
-	IModel* Model;
+	struct IModel* Model;
 	BlockID ModelBlock; /* BlockID, if model name was originally a vaid block id. */
 	bool ModelIsSheepNoFur; /* Hacky, but only sheep model relies on model name. So use just 1 byte. */
 	AABB ModelAABB;
@@ -85,23 +85,23 @@ typedef struct Entity_ {
 	Real32 uScale, vScale;
 	Matrix Transform;
 
-	AnimatedComp Anim;	
-} Entity;
+	struct AnimatedComp Anim;
+};
 
-void Entity_Init(Entity* entity);
-Vector3 Entity_GetEyePosition(Entity* entity);
-Real32 Entity_GetEyeHeight(Entity* entity);
-void Entity_GetTransform(Entity* entity, Vector3 pos, Vector3 scale);
-void Entity_GetPickingBounds(Entity* entity, AABB* bb);
-void Entity_GetBounds(Entity* entity, AABB* bb);
-void Entity_SetModel(Entity* entity, STRING_PURE String* model);
-void Entity_UpdateModelBounds(Entity* entity);
+void Entity_Init(struct Entity* entity);
+Vector3 Entity_GetEyePosition(struct Entity* entity);
+Real32 Entity_GetEyeHeight(struct Entity* entity);
+void Entity_GetTransform(struct Entity* entity, Vector3 pos, Vector3 scale);
+void Entity_GetPickingBounds(struct Entity* entity, AABB* bb);
+void Entity_GetBounds(struct Entity* entity, AABB* bb);
+void Entity_SetModel(struct Entity* entity, STRING_PURE String* model);
+void Entity_UpdateModelBounds(struct Entity* entity);
 bool Entity_TouchesAny(AABB* bb, bool(*touches_condition)(BlockID block__));
-bool Entity_TouchesAnyRope(Entity* entity);	
-bool Entity_TouchesAnyLava(Entity* entity);
-bool Entity_TouchesAnyWater(Entity* entity);
+bool Entity_TouchesAnyRope(struct Entity* entity);	
+bool Entity_TouchesAnyLava(struct Entity* entity);
+bool Entity_TouchesAnyWater(struct Entity* entity);
 
-Entity* Entities_List[ENTITIES_MAX_COUNT];
+struct Entity* Entities_List[ENTITIES_MAX_COUNT];
 void Entities_Tick(ScheduledTask* task);
 void Entities_RenderModels(Real64 delta, Real32 t);
 void Entities_RenderNames(Real64 delta);
@@ -109,7 +109,7 @@ void Entities_RenderHoveredNames(Real64 delta);
 void Entities_Init(void);
 void Entities_Free(void);
 void Entities_Remove(EntityID id);
-EntityID Entities_GetCloset(Entity* src);
+EntityID Entities_GetCloset(struct Entity* src);
 void Entities_DrawShadows(void);
 
 #define TABLIST_MAX_NAMES 256
@@ -128,36 +128,36 @@ IGameComponent TabList_MakeComponent(void);
 #define TabList_UNSAFE_GetGroup(id)  StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_GroupNames[id]);
 
 
-#define Player_Layout Entity Base; UInt8 DisplayNameRaw[String_BufferSize(STRING_SIZE)]; \
+#define Player_Layout struct Entity Base; UInt8 DisplayNameRaw[String_BufferSize(STRING_SIZE)]; \
 UChar SkinNameRaw[String_BufferSize(STRING_SIZE)]; bool FetchedSkin; Texture NameTex;
 
 /* Represents a player entity. */
-typedef struct Player_ { Player_Layout } Player;
-void Player_UpdateName(Player* player);
-void Player_ResetSkin(Player* player);
+struct Player { Player_Layout };
+void Player_UpdateName(struct Player* player);
+void Player_ResetSkin(struct Player* player);
 
 /* Represents another entity in multiplayer */
-typedef struct NetPlayer_ {
+struct NetPlayer {
 	Player_Layout
-	NetInterpComp Interp;
+	struct NetInterpComp Interp;
 	bool ShouldRender;
-} NetPlayer;
-void NetPlayer_Init(NetPlayer* player, STRING_PURE String* displayName, STRING_PURE String* skinName);
-NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
+};
+void NetPlayer_Init(struct NetPlayer* player, STRING_PURE String* displayName, STRING_PURE String* skinName);
+struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 
 /* Represents the user/player's own entity. */
-typedef struct LocalPlayer_ {
+struct LocalPlayer {
 	Player_Layout
 	Vector3 Spawn;
 	Real32 SpawnRotY, SpawnHeadX, ReachDistance;
-	HacksComp Hacks;
-	TiltComp Tilt;
-	InterpComp Interp;
-	CollisionsComp Collisions;
-	PhysicsComp Physics;
-} LocalPlayer;
+	struct HacksComp Hacks;
+	struct TiltComp Tilt;
+	struct InterpComp Interp;
+	struct CollisionsComp Collisions;
+	struct PhysicsComp Physics;
+};
 
-LocalPlayer LocalPlayer_Instance;
+struct LocalPlayer LocalPlayer_Instance;
 IGameComponent LocalPlayer_MakeComponent(void);
 void LocalPlayer_Init(void);
 Real32 LocalPlayer_JumpHeight(void);

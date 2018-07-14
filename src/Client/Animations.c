@@ -125,17 +125,17 @@ static void WaterAnimation_Tick(UInt32* ptr, Int32 size) {
 }
 
 
-typedef struct AnimationData_ {
+struct AnimationData {
 	TextureLoc TexLoc;     /* Tile (not pixel) coordinates in terrain.png */
 	UInt16 FrameX, FrameY; /* Top left pixel coordinates of start frame in animatons.png */
 	UInt16 FrameSize;      /* Size of each frame in pixel coordinates */
 	UInt16 State;          /* Current animation frame index */
 	UInt16 StatesCount;    /* Total number of animation frames */
 	Int16 Tick, TickDelay;
-} AnimationData;
+};
 
-Bitmap anims_bmp;
-AnimationData anims_list[ATLAS1D_MAX_ATLASES];
+struct Bitmap anims_bmp;
+struct AnimationData anims_list[ATLAS1D_MAX_ATLASES];
 UInt32 anims_count;
 bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
 
@@ -146,18 +146,18 @@ static void Animations_LogFail(STRING_TRANSIENT String* line, const UInt8* raw) 
 	Chat_Add(&msg);
 }
 
-static void Animations_ReadDescription(Stream* stream) {
+static void Animations_ReadDescription(struct Stream* stream) {
 	UChar lineBuffer[String_BufferSize(128)];
 	String line = String_InitAndClearArray(lineBuffer);
 	String parts[7];
 
 	/* ReadLine reads single byte at a time */
-	UInt8 buffer[2048]; Stream buffered;
+	UInt8 buffer[2048]; struct Stream buffered;
 	Stream_ReadonlyBuffered(&buffered, stream, buffer, sizeof(buffer));
 
 	while (Stream_ReadLine(&buffered, &line)) {
 		if (line.length == 0 || line.buffer[0] == '#') continue;
-		AnimationData data = { 0 };
+		struct AnimationData data = { 0 };
 		UInt8 tileX, tileY;
 
 		UInt32 partsCount = Array_Elems(parts);	
@@ -198,7 +198,7 @@ static void Animations_ReadDescription(Stream* stream) {
 
 /* TODO: should we use 128 size here? */
 #define ANIMS_FAST_SIZE 64
-static void Animations_Draw(AnimationData* data, TextureLoc texLoc, Int32 size) {
+static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, Int32 size) {
 	UInt8 buffer[Bitmap_DataSize(ANIMS_FAST_SIZE, ANIMS_FAST_SIZE)];
 	UInt8* ptr = buffer;
 	if (size > ANIMS_FAST_SIZE) {
@@ -209,7 +209,7 @@ static void Animations_Draw(AnimationData* data, TextureLoc texLoc, Int32 size) 
 
 	Int32 index_1D = Atlas1D_Index(texLoc);
 	Int32 rowId_1D = Atlas1D_RowId(texLoc);
-	Bitmap animPart; Bitmap_Create(&animPart, size, size, buffer);
+	struct Bitmap animPart; Bitmap_Create(&animPart, size, size, buffer);
 
 	if (data == NULL) {
 		if (texLoc == 30) {
@@ -227,7 +227,7 @@ static void Animations_Draw(AnimationData* data, TextureLoc texLoc, Int32 size) 
 	if (size > ANIMS_FAST_SIZE) Platform_MemFree(&ptr);
 }
 
-static void Animations_Apply(AnimationData* data) {
+static void Animations_Apply(struct AnimationData* data) {
 	data->Tick--;
 	if (data->Tick >= 0) return;
 	data->State++;
@@ -262,7 +262,7 @@ static void Animations_Validate(void) {
 	UInt32 i, j;
 
 	for (i = 0; i < anims_count; i++) {
-		AnimationData data = anims_list[i];
+		struct AnimationData data = anims_list[i];
 		Int32 maxY = data.FrameY + data.FrameSize;
 		Int32 maxX = data.FrameX + data.FrameSize * data.StatesCount;
 		String_Clear(&msg);
@@ -318,7 +318,7 @@ static void Animations_PackChanged(void* obj) {
 	anims_useWaterAnim = anims_useLavaAnim;
 }
 
-static void Animations_FileChanged(void* obj, Stream* stream) {
+static void Animations_FileChanged(void* obj, struct Stream* stream) {
 	String* name = &stream->Name;
 	if (String_CaselessEqualsConst(name, "animation.png") || String_CaselessEqualsConst(name, "animations.png")) {
 		Bitmap_DecodePng(&anims_bmp, stream);

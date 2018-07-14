@@ -266,7 +266,7 @@ void ChunkUpdater_UpdateChunks(Real64 delta) {
 	cu_chunksTarget += delta < cu_targetTime ? 1 : -1; /* build more chunks if 30 FPS or over, otherwise slowdown. */
 	Math_Clamp(cu_chunksTarget, 4, Game_MaxChunkUpdates);
 
-	LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	Vector3 camPos = Game_CurrentCameraPos;
 	Real32 headX = p->Base.HeadX;
 	Real32 headY = p->Base.HeadY;

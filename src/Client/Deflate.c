@@ -4,7 +4,7 @@
 #include "Platform.h"
 #include "Stream.h"
 
-static bool Header_ReadByte(Stream* s, UInt8* state, Int32* value) {
+static bool Header_ReadByte(struct Stream* s, UInt8* state, Int32* value) {
 	*value = Stream_TryReadByte(s);
 	if (*value == -1) return false;
 
@@ -24,14 +24,14 @@ enum GZIP_STATE_ {
 	GZIP_STATE_FILENAME, GZIP_STATE_COMMENT, GZIP_STATE_DONE,
 };
 
-void GZipHeader_Init(GZipHeader* header) {
+void GZipHeader_Init(struct GZipHeader* header) {
 	header->State = GZIP_STATE_HEADER1;
 	header->Done = false;
 	header->Flags = 0;
 	header->PartsRead = 0;
 }
 
-void GZipHeader_Read(Stream* s, GZipHeader* header) {
+void GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
 	Int32 temp;
 	switch (header->State) {
 
@@ -107,13 +107,13 @@ enum ZLIB_STATE_ {
 	ZLIB_STATE_COMPRESSIONMETHOD, ZLIB_STATE_FLAGS, ZLIB_STATE_DONE,
 };
 
-void ZLibHeader_Init(ZLibHeader* header) {
+void ZLibHeader_Init(struct ZLibHeader* header) {
 	header->State = ZLIB_STATE_COMPRESSIONMETHOD;
 	header->Done = false;
 	header->LZ77WindowSize = 0;
 }
 
-void ZLibHeader_Read(Stream* s, ZLibHeader* header) {
+void ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header) {
 	Int32 temp;
 	switch (header->State) {
 
@@ -184,7 +184,7 @@ static UInt32 Huffman_ReverseBits(UInt32 n, UInt8 bits) {
 	return n >> (16 - bits);
 }
 
-static void Huffman_Build(HuffmanTable* table, UInt8* bitLens, Int32 count) {
+static void Huffman_Build(struct HuffmanTable* table, UInt8* bitLens, Int32 count) {
 	Int32 i;
 	table->FirstCodewords[0] = 0;
 	table->FirstOffsets[0] = 0;
@@ -247,7 +247,7 @@ static void Huffman_Build(HuffmanTable* table, UInt8* bitLens, Int32 count) {
 	}
 }
 
-static Int32 Huffman_Decode(InflateState* state, HuffmanTable* table) {
+static Int32 Huffman_Decode(struct InflateState* state, struct HuffmanTable* table) {
 	/* Buffer as many bits as possible */
 	while (state->NumBits <= INFLATE_MAX_BITS) {
 		if (state->AvailIn == 0) break;
@@ -296,7 +296,7 @@ static Int32 Huffman_Decode(InflateState* state, HuffmanTable* table) {
 	}\
 }
 
-static Int32 Huffman_Unsafe_Decode_Slow(InflateState* state, HuffmanTable* table) {
+static Int32 Huffman_Unsafe_Decode_Slow(struct InflateState* state, struct HuffmanTable* table) {
 	UInt32 codeword = Inflate_PeekBits(state, INFLATE_FAST_BITS);
 	/* Slow, bit by bit lookup. Need to reverse order for huffman. */
 	codeword = Huffman_ReverseBits(codeword, INFLATE_FAST_BITS);
@@ -316,7 +316,7 @@ static Int32 Huffman_Unsafe_Decode_Slow(InflateState* state, HuffmanTable* table
 	return -1;
 }
 
-void Inflate_Init(InflateState* state, Stream* source) {
+void Inflate_Init(struct InflateState* state, struct Stream* source) {
 	state->State = INFLATE_STATE_HEADER;
 	state->LastBlock = false;
 	state->Bits = 0;
@@ -358,7 +358,7 @@ UInt8 dist_bits[32] = { 0,0,0,0,1,1,2,2,3,3,
 9,9,10,10,11,11,12,12,13,13,0,0 };
 UInt8 codelens_order[INFLATE_MAX_CODELENS] = { 16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15 };
 
-static void Inflate_InflateFast(InflateState* state) {
+static void Inflate_InflateFast(struct InflateState* state) {
 	UInt32 copyStart = state->WindowIndex, copyLen = 0;
 	UInt8* window = state->Window;
 	UInt32 curIdx = state->WindowIndex;
@@ -419,7 +419,7 @@ static void Inflate_InflateFast(InflateState* state) {
 	}
 }
 
-void Inflate_Process(InflateState* state) {
+void Inflate_Process(struct InflateState* state) {
 	for (;;) {
 		switch (state->State) {
 		case INFLATE_STATE_HEADER: {
@@ -663,8 +663,8 @@ void Inflate_Process(InflateState* state) {
 	}
 }
 
-static ReturnCode Inflate_StreamRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	InflateState* state = (InflateState*)stream->Meta_Inflate;
+static ReturnCode Inflate_StreamRead(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	struct InflateState* state = stream->Meta_Inflate;
 	*modified = 0;
 	state->Output = data;
 	state->AvailOut = count;
@@ -696,7 +696,7 @@ static ReturnCode Inflate_StreamRead(Stream* stream, UInt8* data, UInt32 count, 
 	return 0;
 }
 
-void Inflate_MakeStream(Stream* stream, InflateState* state, Stream* underlying) {
+void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struct Stream* underlying) {
 	Inflate_Init(state, underlying);
 	Stream_SetName(stream, &underlying->Name);
 	stream->Meta_Inflate = state;
@@ -729,13 +729,13 @@ static UInt32 Deflate_Hash(UInt8* src) {
 	return (UInt32)((src[0] << 8) ^ (src[1] << 4) ^ (src[2])) & DEFLATE_HASH_MASK;
 }
 
-static void Deflate_Lit(DeflateState* state, Int32 lit) {
+static void Deflate_Lit(struct DeflateState* state, Int32 lit) {
 	if (lit <= 143) { Deflate_PushHuff(state, lit + 48, 8); } 
 	else { Deflate_PushHuff(state, lit + 256, 9); }
 	Deflate_FlushBits(state);
 }
 
-static void Deflate_LenDist(DeflateState* state, Int32 len, Int32 dist) {
+static void Deflate_LenDist(struct DeflateState* state, Int32 len, Int32 dist) {
 	Int32 j;
 	len_base[29]  = UInt16_MaxValue;
 	dist_base[30] = UInt16_MaxValue;
@@ -758,7 +758,7 @@ static void Deflate_LenDist(DeflateState* state, Int32 len, Int32 dist) {
 	dist_base[30] = 0;
 }
 
-static ReturnCode Deflate_FlushBlock(DeflateState* state, Int32 len) {
+static ReturnCode Deflate_FlushBlock(struct DeflateState* state, Int32 len) {
 	if (!state->WroteHeader) {
 		state->WroteHeader = true;
 		Deflate_PushBits(state, 2, 3); /* final block TRUE, block type FIXED */
@@ -836,8 +836,8 @@ static ReturnCode Deflate_FlushBlock(DeflateState* state, Int32 len) {
 	return resultFinal;
 }
 
-static ReturnCode Deflate_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	DeflateState* state = stream->Meta_Inflate;
+static ReturnCode Deflate_StreamWrite(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	struct DeflateState* state = stream->Meta_Inflate;
 	*modified = 0;
 	while (count > 0) {
 		UInt8* dst = &state->Input[state->InputPosition];
@@ -860,8 +860,8 @@ static ReturnCode Deflate_StreamWrite(Stream* stream, UInt8* data, UInt32 count,
 	return 0;
 }
 
-static ReturnCode Deflate_StreamClose(Stream* stream) {
-	DeflateState* state = stream->Meta_Inflate;
+static ReturnCode Deflate_StreamClose(struct Stream* stream) {
+	struct DeflateState* state = stream->Meta_Inflate;
 	ReturnCode result = Deflate_FlushBlock(state, state->InputPosition);
 	if (result != 0) return result;
 
@@ -878,7 +878,7 @@ static ReturnCode Deflate_StreamClose(Stream* stream) {
 	return Stream_TryWrite(state->Dest, state->Output, DEFLATE_OUT_SIZE - state->AvailOut);
 }
 
-void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying) {
+void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struct Stream* underlying) {
 	Stream_SetName(stream, &underlying->Name);
 	stream->Meta_Inflate = state;
 
@@ -903,19 +903,19 @@ void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying)
 /*########################################################################################################################*
 *-----------------------------------------------------GZip (compress)-----------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode GZip_StreamClose(Stream* stream) {
+static ReturnCode GZip_StreamClose(struct Stream* stream) {
 	ReturnCode result = Deflate_StreamClose(stream);
 	if (result != 0) return result;
 
-	GZipState* state = stream->Meta_Inflate;
+	struct GZipState* state = stream->Meta_Inflate;
 	UInt32 crc32 = state->Crc32 ^ 0xFFFFFFFFUL;
 	Stream_WriteU32_LE(state->Base.Dest, crc32);
 	Stream_WriteU32_LE(state->Base.Dest, state->Size);
 	return 0;
 }
 
-static ReturnCode GZip_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	GZipState* state = stream->Meta_Inflate;
+static ReturnCode GZip_StreamWrite(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	struct GZipState* state = stream->Meta_Inflate;
 	state->Size += count;
 	UInt32 i, crc32 = state->Crc32;
 
@@ -928,9 +928,9 @@ static ReturnCode GZip_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UI
 	return Deflate_StreamWrite(stream, data, count, modified);
 }
 
-static ReturnCode GZip_StreamWriteFirst(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode GZip_StreamWriteFirst(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	static UInt8 gz_header[10] = { 0x1F, 0x8B, 0x08 };
-	GZipState* state = stream->Meta_Inflate;
+	struct GZipState* state = stream->Meta_Inflate;
 
 	ReturnCode result = Stream_TryWrite(state->Base.Dest, gz_header, sizeof(gz_header));
 	if (result != 0) return result;
@@ -939,7 +939,7 @@ static ReturnCode GZip_StreamWriteFirst(Stream* stream, UInt8* data, UInt32 coun
 	return GZip_StreamWrite(stream, data, count, modified);
 }
 
-void GZip_MakeStream(Stream* stream, GZipState* state, Stream* underlying) {
+void GZip_MakeStream(struct Stream* stream, struct GZipState* state, struct Stream* underlying) {
 	Deflate_MakeStream(stream, &state->Base, underlying);
 	state->Crc32 = 0xFFFFFFFFUL;
 	state->Size  = 0;
@@ -951,17 +951,17 @@ void GZip_MakeStream(Stream* stream, GZipState* state, Stream* underlying) {
 /*########################################################################################################################*
 *-----------------------------------------------------ZLib (compress)-----------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode ZLib_StreamClose(Stream* stream) {
+static ReturnCode ZLib_StreamClose(struct Stream* stream) {
 	ReturnCode result = Deflate_StreamClose(stream);
 	if (result != 0) return result;
 
-	ZLibState* state = stream->Meta_Inflate;
+	struct ZLibState* state = stream->Meta_Inflate;
 	Stream_WriteU32_BE(state->Base.Dest, state->Adler32);
 	return 0;
 }
 
-static ReturnCode ZLib_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	ZLibState* state = stream->Meta_Inflate;
+static ReturnCode ZLib_StreamWrite(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	struct ZLibState* state = stream->Meta_Inflate;
 	UInt32 i, adler32 = state->Adler32;
 	UInt32 s1 = adler32 & 0xFFFF, s2 = (adler32 >> 16) & 0xFFFF;
 
@@ -976,9 +976,9 @@ static ReturnCode ZLib_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UI
 	return Deflate_StreamWrite(stream, data, count, modified);
 }
 
-static ReturnCode ZLib_StreamWriteFirst(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode ZLib_StreamWriteFirst(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	static UInt8 zl_header[2] = { 0x78, 0x9C };
-	ZLibState* state = stream->Meta_Inflate;
+	struct ZLibState* state = stream->Meta_Inflate;
 
 	ReturnCode result = Stream_TryWrite(state->Base.Dest, zl_header, sizeof(zl_header));
 	if (result != 0) return result;
@@ -987,7 +987,7 @@ static ReturnCode ZLib_StreamWriteFirst(Stream* stream, UInt8* data, UInt32 coun
 	return ZLib_StreamWrite(stream, data, count, modified);
 }
 
-void ZLib_MakeStream(Stream* stream, ZLibState* state, Stream* underlying) {
+void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stream* underlying) {
 	Deflate_MakeStream(stream, &state->Base, underlying);
 	state->Adler32 = 1;
 	stream->Write = ZLib_StreamWriteFirst;

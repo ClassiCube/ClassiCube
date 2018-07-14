@@ -308,13 +308,13 @@ static void StatusScreen_DrawPosition(StatusScreen* screen) {
 }
 
 static bool StatusScreen_HacksChanged(StatusScreen* screen) {
-	HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 	return hacks->Speeding != screen->Speed || hacks->HalfSpeeding != screen->HalfSpeed || hacks->Flying != screen->Fly
 		|| hacks->Noclip != screen->Noclip  || Game_Fov != screen->LastFov || hacks->CanSpeed != screen->CanSpeed;
 }
 
 static void StatusScreen_UpdateHackState(StatusScreen* screen) {
-	HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 	screen->Speed = hacks->Speeding; screen->HalfSpeed = hacks->HalfSpeeding; screen->Fly = hacks->Flying;
 	screen->Noclip = hacks->Noclip; screen->LastFov = Game_Fov; screen->CanSpeed = hacks->CanSpeed;
 
@@ -659,11 +659,11 @@ static void GeneratingScreen_EndGeneration(void) {
 	World_SetNewMap(Gen_Blocks, World_BlocksSize, Gen_Width, Gen_Height, Gen_Length);
 	Gen_Blocks = NULL;
 
-	LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	Real32 x = (World_Width / 2) + 0.5f, z = (World_Length / 2) + 0.5f;
 	p->Spawn = Respawn_FindSpawnPosition(x, z, p->Base.Size);
 
-	LocationUpdate update; LocationUpdate_MakePosAndOri(&update, p->Spawn, 0.0f, 0.0f, false);
+	struct LocationUpdate update; LocationUpdate_MakePosAndOri(&update, p->Spawn, 0.0f, 0.0f, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
 	Game_CurrentCameraPos = Camera_Active->GetPosition(0.0f);
 	Event_RaiseVoid(&WorldEvents_MapLoaded);
@@ -809,7 +809,7 @@ static void ChatScreen_SetInitialMessages(ChatScreen* screen) {
 }
 
 static void ChatScreen_CheckOtherStatuses(ChatScreen* screen) {
-	AsyncRequest request;
+	struct AsyncRequest request;
 	Int32 progress;
 	bool hasRequest = AsyncDownloader_GetCurrent(&request, &progress);
 

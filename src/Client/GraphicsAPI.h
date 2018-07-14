@@ -8,7 +8,7 @@
 /* Abstracts a 3D graphics rendering API.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
-typedef struct Stream_ Stream;
+struct Stream;
 
 #define ICOUNT(verticesCount) (((verticesCount) >> 2) * 6)
 #define VERTEX_FORMAT_P3FC4B 0
@@ -44,8 +44,8 @@ Matrix Gfx_View, Gfx_Projection;
 /* Callback invoked when the current context is lost, and is repeatedly invoked until the context can be retrieved. */
 ScheduledTaskCallback Gfx_LostContextFunction;
 
-GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps);
-void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 x, Int32 y, Bitmap* part, bool mipmaps);
+GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, bool managedPool, bool mipmaps);
+void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 x, Int32 y, struct Bitmap* part, bool mipmaps);
 void Gfx_BindTexture(GfxResourceID texId);
 void Gfx_DeleteTexture(GfxResourceID* texId);
 void Gfx_SetTexturing(bool enabled);
@@ -97,7 +97,7 @@ void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, Matrix* matrix);
 void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 zFar, Matrix* matrix);
 
 /* Outputs a .png screenshot of the backbuffer */
-void Gfx_TakeScreenshot(Stream* output, Int32 width, Int32 height);
+void Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height);
 /* Adds a warning to game's chat if this graphics API has problems with the current user's GPU. 
 Returns boolean of whether legacy rendering mode is needed. */
 bool Gfx_WarnIfNecessary(void);

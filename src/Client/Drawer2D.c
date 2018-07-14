@@ -17,8 +17,8 @@ void DrawTextArgs_MakeEmpty(DrawTextArgs* args, FontDesc* font, bool useShadow) 
 	args->UseShadow = useShadow;
 }
 
-Bitmap Drawer2D_FontBitmap;
-Bitmap* Drawer2D_Cur;
+struct Bitmap Drawer2D_FontBitmap;
+struct Bitmap* Drawer2D_Cur;
 Int32 Drawer2D_BoxSize;
 /* So really 16 characters per row */
 #define DRAWER2D_LOG2_CHARS_PER_ROW 4
@@ -58,7 +58,7 @@ static void Drawer2D_FreeFontBitmap(void) {
 	Platform_MemFree(&Drawer2D_FontBitmap.Scan0);
 }
 
-void Drawer2D_SetFontBitmap(Bitmap* bmp) {
+void Drawer2D_SetFontBitmap(struct Bitmap* bmp) {
 	Drawer2D_FreeFontBitmap();
 	Drawer2D_FontBitmap = *bmp;
 	Drawer2D_BoxSize = bmp->Width >> DRAWER2D_LOG2_CHARS_PER_ROW;
@@ -94,7 +94,7 @@ void Drawer2D_Free(void) {
 	Drawer2D_FreeFontBitmap();
 }
 
-void Drawer2D_Begin(Bitmap* bmp) {
+void Drawer2D_Begin(struct Bitmap* bmp) {
 	if (!Drawer2D_UseBitmappedChat) Platform_SetBitmap(bmp);
 	Drawer2D_Cur = bmp;
 }
@@ -105,9 +105,9 @@ void Drawer2D_End(void) {
 }
 
 /* Draws a 2D flat rectangle. */
-void Drawer2D_Rect(Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
+void Drawer2D_Rect(struct Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
 
-void Drawer2D_Clear(Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height) {
+void Drawer2D_Clear(struct Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height) {
 	if (x < 0 || y < 0 || (x + width) > bmp->Width || (y + height) > bmp->Height) {
 		ErrorHandler_Fail("Drawer2D_Clear - tried to clear at invalid coords");
 	}
@@ -133,7 +133,7 @@ Texture Drawer2D_MakeTextTexture(DrawTextArgs* args, Int32 windowX, Int32 window
 		return Texture_FromOrigin(NULL, windowX, windowY, 0, 0, 1.0f, 1.0f);
 	}
 
-	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+	struct Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
 	{
 		Drawer2D_DrawText(args, 0, 0);
@@ -144,7 +144,7 @@ Texture Drawer2D_MakeTextTexture(DrawTextArgs* args, Int32 windowX, Int32 window
 	return tex;
 }
 
-Texture Drawer2D_Make2DTexture(Bitmap* bmp, Size2D used, Int32 windowX, Int32 windowY) {
+Texture Drawer2D_Make2DTexture(struct Bitmap* bmp, Size2D used, Int32 windowX, Int32 windowY) {
 	GfxResourceID texId = Gfx_CreateTexture(bmp, false, false);
 	return Texture_FromOrigin(texId, windowX, windowY, used.Width, used.Height,
 		(Real32)used.Width / (Real32)bmp->Width, (Real32)used.Height / (Real32)bmp->Height);
@@ -179,7 +179,7 @@ UChar Drawer2D_LastCol(STRING_PURE String* text, Int32 start) {
 	}
 	return NULL;
 }
-bool Drawer2D_IsWhiteCol(UInt8 c) { return c == NULL || c == 'f' || c == 'F'; }
+bool Drawer2D_IsWhiteCol(UChar c) { return c == NULL || c == 'f' || c == 'F'; }
 
 #define Drawer2D_ShadowOffset(point) (point / 8)
 #define Drawer2D_XPadding(point) (Math_CeilDiv(point, 8))

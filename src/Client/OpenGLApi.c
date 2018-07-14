@@ -107,7 +107,7 @@ void Gfx_Free(void) {
 
 #define gl_Toggle(cap) if (enabled) { glEnable(cap); } else { glDisable(cap); }
 
-static void GL_DoMipmaps(GfxResourceID texId, Int32 x, Int32 y, Bitmap* bmp, bool partial) {
+static void GL_DoMipmaps(GfxResourceID texId, Int32 x, Int32 y, struct Bitmap* bmp, bool partial) {
 	UInt8* prev = bmp->Scan0;
 	Int32 lvls = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
 	Int32 lvl, width = bmp->Width, height = bmp->Height;
@@ -133,7 +133,7 @@ static void GL_DoMipmaps(GfxResourceID texId, Int32 x, Int32 y, Bitmap* bmp, boo
 	if (prev != bmp->Scan0) Platform_MemFree(&prev);
 }
 
-GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
+GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, bool managedPool, bool mipmaps) {
 	UInt32 texId;
 	glGenTextures(1, &texId);
 	glBindTexture(GL_TEXTURE_2D, texId);
@@ -155,7 +155,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 	return texId;
 }
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 x, Int32 y, Bitmap* part, bool mipmaps) {
+void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 x, Int32 y, struct Bitmap* part, bool mipmaps) {
 	glBindTexture(GL_TEXTURE_2D, texId);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->Width, part->Height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, part->Scan0);
 	if (mipmaps) GL_DoMipmaps(texId, x, y, part, true);
@@ -515,8 +515,8 @@ void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 z
 }
 
 
-void Gfx_TakeScreenshot(Stream* output, Int32 width, Int32 height) {
-	Bitmap bmp; Bitmap_Allocate(&bmp, width, height);
+void Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) {
+	struct Bitmap bmp; Bitmap_Allocate(&bmp, width, height);
 	glReadPixels(0, 0, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, bmp.Scan0);
 	UInt8 tmp[PNG_MAX_DIMS * BITMAP_SIZEOF_PIXEL];
 

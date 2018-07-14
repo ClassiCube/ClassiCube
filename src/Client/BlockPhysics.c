@@ -15,16 +15,16 @@
 #include "Vectors.h"
 
 /* Data for a resizable queue, used for liquid physic tick entries. */
-typedef struct TickQueue_ {
+struct TickQueue {
 	UInt32* Buffer;    /* Buffer holding the items in the tick queue. */
 	UInt32 BufferSize; /* Max number of elements in the buffer.*/
 	UInt32 BufferMask; /* BufferSize - 1, as BufferSize is always a power of two. */
 	UInt32 Size;       /* Number of used elements. */
 	UInt32 Head;       /* Head index into the buffer. */
 	UInt32 Tail;       /* Tail index into the buffer. */
-} TickQueue;
+};
 
-static void TickQueue_Init(TickQueue* queue) {
+static void TickQueue_Init(struct TickQueue* queue) {
 	queue->Buffer = NULL;
 	queue->BufferSize = 0;
 	queue->BufferMask = 0;
@@ -33,13 +33,13 @@ static void TickQueue_Init(TickQueue* queue) {
 	queue->Size = 0;
 }
 
-static void TickQueue_Clear(TickQueue* queue) {
+static void TickQueue_Clear(struct TickQueue* queue) {
 	if (queue->Buffer == NULL) return;
 	Platform_MemFree(&queue->Buffer);
 	TickQueue_Init(queue);
 }
 
-static void TickQueue_Resize(TickQueue* queue) {
+static void TickQueue_Resize(struct TickQueue* queue) {
 	if (queue->BufferSize >= (Int32_MaxValue / 4)) {
 		ErrorHandler_Fail("TickQueue - too large to resize.");
 	}
@@ -65,7 +65,7 @@ static void TickQueue_Resize(TickQueue* queue) {
 	queue->Tail = queue->Size;
 }
 
-static void TickQueue_Enqueue(TickQueue* queue, UInt32 item) {
+static void TickQueue_Enqueue(struct TickQueue* queue, UInt32 item) {
 	if (queue->Size == queue->BufferSize)
 		TickQueue_Resize(queue);
 
@@ -74,7 +74,7 @@ static void TickQueue_Enqueue(TickQueue* queue, UInt32 item) {
 	queue->Size++;
 }
 
-static UInt32 TickQueue_Dequeue(TickQueue* queue) {
+static UInt32 TickQueue_Dequeue(struct TickQueue* queue) {
 	UInt32 result = queue->Buffer[queue->Head];
 	queue->Head = (queue->Head + 1) & queue->BufferMask;
 	queue->Size--;
@@ -91,7 +91,7 @@ PhysicsHandler Physics_OnDelete[BLOCK_COUNT];
 Random physics_rnd;
 Int32 physics_tickCount;
 Int32 physics_maxWaterX, physics_maxWaterY, physics_maxWaterZ;
-TickQueue physics_lavaQ, physics_waterQ;
+struct TickQueue physics_lavaQ, physics_waterQ;
 
 #define physics_tickMask 0xF8000000UL
 #define physics_posMask 0x07FFFFFFUL
@@ -215,7 +215,7 @@ static void Physics_DoFalling(Int32 index, BlockID block) {
 	Physics_ActivateNeighbours(x, y, z, start);
 }
 
-static bool Physics_CheckItem(TickQueue* queue, Int32* posIndex) {
+static bool Physics_CheckItem(struct TickQueue* queue, Int32* posIndex) {
 	UInt32 packed = TickQueue_Dequeue(queue);
 	Int32 tickDelay = (Int32)((packed & physics_tickMask) >> physics_tickShift);
 	*posIndex = (Int32)(packed & physics_posMask);

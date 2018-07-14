@@ -181,7 +181,7 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 	Gfx_SetAlphaTest(false);
 }
 
-static void WeatherRenderer_FileChanged(void* obj, Stream* stream) {
+static void WeatherRenderer_FileChanged(void* obj, struct Stream* stream) {
 	if (String_CaselessEqualsConst(&stream->Name, "snow.png")) {
 		Game_UpdateTexture(&weather_snowTex, stream, false);
 	} else if (String_CaselessEqualsConst(&stream->Name, "rain.png")) {

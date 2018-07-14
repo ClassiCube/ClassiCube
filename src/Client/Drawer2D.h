@@ -7,7 +7,7 @@
 */
 
 typedef struct DrawTextArgs_ { String Text; FontDesc Font; bool UseShadow; } DrawTextArgs;
-typedef struct Bitmap_ Bitmap;
+struct Bitmap;
 void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow);
 void DrawTextArgs_MakeEmpty(DrawTextArgs* args, FontDesc* font, bool useShadow);
 
@@ -23,20 +23,20 @@ void Drawer2D_Init(void);
 void Drawer2D_Free(void);
 
 /* Sets the underlying bitmap that text operations are performed on. */
-void Drawer2D_Begin(Bitmap* bmp);
+void Drawer2D_Begin(struct Bitmap* bmp);
 /* Frees any resources associated with the underlying bitmap. */
 void Drawer2D_End(void);
 /* Draws a 2D flat rectangle. */
-void Drawer2D_Rect(Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
+void Drawer2D_Rect(struct Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
 /* Clears the entire given area to the specified colour. */
-void Drawer2D_Clear(Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
+void Drawer2D_Clear(struct Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
 
 void Drawer2D_DrawText(DrawTextArgs* args, Int32 x, Int32 y);
 Size2D Drawer2D_MeasureText(DrawTextArgs* args);
 Int32 Drawer2D_FontHeight(FontDesc* font, bool useShadow);
 
 Texture Drawer2D_MakeTextTexture(DrawTextArgs* args, Int32 windowX, Int32 windowY);
-Texture Drawer2D_Make2DTexture(Bitmap* bmp, Size2D used, Int32 windowX, Int32 windowY);
+Texture Drawer2D_Make2DTexture(struct Bitmap* bmp, Size2D used, Int32 windowX, Int32 windowY);
 
 bool Drawer2D_ValidColCodeAt(STRING_PURE String* text, Int32 i);
 bool Drawer2D_ValidColCode(UChar c);
@@ -47,5 +47,5 @@ bool Drawer2D_IsWhiteCol(UChar c);
 
 void Drawer2D_ReducePadding_Tex(Texture* tex, Int32 point, Int32 scale);
 void Drawer2D_ReducePadding_Height(Int32* height, Int32 point, Int32 scale);
-void Drawer2D_SetFontBitmap(Bitmap* bmp);
+void Drawer2D_SetFontBitmap(struct Bitmap* bmp);
 #endif

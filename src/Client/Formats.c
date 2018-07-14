@@ -11,7 +11,7 @@
 #include "Event.h"
 #include "Funcs.h"
 
-static void Map_ReadBlocks(Stream* stream) {
+static void Map_ReadBlocks(struct Stream* stream) {
 	World_BlocksSize = World_Width * World_Length * World_Height;
 	World_Blocks = Platform_MemAlloc(World_BlocksSize, sizeof(BlockID));
 	if (World_Blocks == NULL) {
@@ -38,7 +38,7 @@ UInt8 Lvl_table[256 - BLOCK_CPE_COUNT] = { 0, 0, 0, 0, 39, 36, 36, 10, 46, 21, 2
 47, 0, 0, 0, 0, 0, 27, 46, 48, 24, 22, 36, 34, 8, 10, 21, 29, 22, 10, 22, 22,
 41, 19, 35, 21, 29, 49, 34, 16, 41, 0, 22 };
 
-static void Lvl_ReadCustomBlocks(Stream* stream) {
+static void Lvl_ReadCustomBlocks(struct Stream* stream) {
 	Int32 x, y, z, i;
 	UInt8 chunk[LVL_CHUNKSIZE * LVL_CHUNKSIZE * LVL_CHUNKSIZE];
 	/* skip bounds checks when we know chunk is entirely inside map */
@@ -95,13 +95,13 @@ static void Lvl_ConvertPhysicsBlocks(void) {
 	}
 }
 
-void Lvl_Load(Stream* stream) {
-	GZipHeader gzHeader;
+void Lvl_Load(struct Stream* stream) {
+	struct GZipHeader gzHeader;
 	GZipHeader_Init(&gzHeader);
 	while (!gzHeader.Done) { GZipHeader_Read(stream, &gzHeader); }
 	
-	Stream compStream;
-	InflateState state;
+	struct Stream compStream;
+	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
 	UInt16 header = Stream_ReadU16_LE(&compStream);
@@ -109,7 +109,7 @@ void Lvl_Load(Stream* stream) {
 	World_Length  = Stream_ReadU16_LE(&compStream);
 	World_Height  = Stream_ReadU16_LE(&compStream);
 
-	LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	p->Spawn.X = (Real32)Stream_ReadU16_LE(&compStream);
 	p->Spawn.Z = (Real32)Stream_ReadU16_LE(&compStream);
 	p->Spawn.Y = (Real32)Stream_ReadU16_LE(&compStream);
@@ -133,13 +133,13 @@ void Lvl_Load(Stream* stream) {
 *#########################################################################################################################*/
 #define FCM_IDENTIFIER 0x0FC2AF40UL
 #define FCM_REVISION 13
-static void Fcm_ReadString(Stream* stream) {
+static void Fcm_ReadString(struct Stream* stream) {
 	UInt16 length = Stream_ReadU16_LE(stream);
 	ReturnCode code = Stream_Skip(stream, length);
 	ErrorHandler_CheckOrFail(code, "FCM import - skipping string");
 }
 
-void Fcm_Load(Stream* stream) {
+void Fcm_Load(struct Stream* stream) {
 	if (Stream_ReadU32_LE(stream) != FCM_IDENTIFIER) {
 		ErrorHandler_Fail("Invalid identifier in .fcm file");
 	}
@@ -151,7 +151,7 @@ void Fcm_Load(Stream* stream) {
 	World_Length = Stream_ReadU16_LE(stream);
 	World_Height = Stream_ReadU16_LE(stream);
 
-	LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	p->Spawn.X = Stream_ReadI32_LE(stream) / 32.0f;
 	p->Spawn.Y = Stream_ReadI32_LE(stream) / 32.0f;
 	p->Spawn.Z = Stream_ReadI16_LE(stream) / 32.0f;
@@ -165,8 +165,8 @@ void Fcm_Load(Stream* stream) {
 	Stream_Read(stream, tmp, 26); /* layer index */
 	Int32 metaSize = Stream_ReadU32_LE(stream);
 
-	Stream compStream;
-	InflateState state;
+	struct Stream compStream;
+	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
 	Int32 i;
@@ -198,9 +198,9 @@ enum NBT_TAG {
 };
 
 #define NBT_SMALL_SIZE STRING_SIZE
-struct NbtTag_;
-typedef struct NbtTag_ {
-	struct NbtTag_* Parent;
+struct NbtTag;
+struct NbtTag {
+	struct NbtTag* Parent;
 	UInt8  TagID;
 	UChar  NameBuffer[String_BufferSize(NBT_SMALL_SIZE)];
 	UInt32 NameSize;
@@ -216,39 +216,39 @@ typedef struct NbtTag_ {
 		UInt8  DataSmall[String_BufferSize(NBT_SMALL_SIZE)];
 		UInt8* DataBig; /* malloc for big byte arrays */
 	};
-} NbtTag;
+};
 
-static UInt8 NbtTag_U8(NbtTag* tag) {
+static UInt8 NbtTag_U8(struct NbtTag* tag) {
 	if (tag->TagID != NBT_TAG_INT8) { ErrorHandler_Fail("Expected I8 NBT tag"); }
 	return tag->Value_U8;
 }
 
-static Int16 NbtTag_I16(NbtTag* tag) {
+static Int16 NbtTag_I16(struct NbtTag* tag) {
 	if (tag->TagID != NBT_TAG_INT16) { ErrorHandler_Fail("Expected I16 NBT tag"); }
 	return tag->Value_I16;
 }
 
-static Int32 NbtTag_I32(NbtTag* tag) {
+static Int32 NbtTag_I32(struct NbtTag* tag) {
 	if (tag->TagID != NBT_TAG_INT32) { ErrorHandler_Fail("Expected I32 NBT tag"); }
 	return tag->Value_I32;
 }
 
-static Int64 NbtTag_I64(NbtTag* tag) {
+static Int64 NbtTag_I64(struct NbtTag* tag) {
 	if (tag->TagID != NBT_TAG_INT64) { ErrorHandler_Fail("Expected I64 NBT tag"); }
 	return tag->Value_I64;
 }
 
-static Real32 NbtTag_R32(NbtTag* tag) {
+static Real32 NbtTag_R32(struct NbtTag* tag) {
 	if (tag->TagID != NBT_TAG_REAL32) { ErrorHandler_Fail("Expected R32 NBT tag"); }
 	return tag->Value_R32;
 }
 
-static Real64 NbtTag_R64(NbtTag* tag) {
+static Real64 NbtTag_R64(struct NbtTag* tag) {
 	if (tag->TagID != NBT_TAG_REAL64) { ErrorHandler_Fail("Expected R64 NBT tag"); }
 	return tag->Value_R64;
 }
 
-static UInt8 NbtTag_U8_At(NbtTag* tag, Int32 i) {
+static UInt8 NbtTag_U8_At(struct NbtTag* tag, Int32 i) {
 	if (tag->TagID != NBT_TAG_INT8_ARRAY) { ErrorHandler_Fail("Expected I8_Array NBT tag"); }
 	if (i >= tag->DataSize) { ErrorHandler_Fail("Tried to access past bounds of I8_Array tag"); }
 
@@ -256,19 +256,19 @@ static UInt8 NbtTag_U8_At(NbtTag* tag, Int32 i) {
 	return tag->DataBig[i];
 }
 
-static String NbtTag_String(NbtTag* tag) {
+static String NbtTag_String(struct NbtTag* tag) {
 	if (tag->TagID != NBT_TAG_STRING) { ErrorHandler_Fail("Expected String NBT tag"); }
 	return String_Init(tag->DataSmall, tag->DataSize, tag->DataSize);
 }
 
-static UInt32 Nbt_ReadString(Stream* stream, UChar* strBuffer) {
+static UInt32 Nbt_ReadString(struct Stream* stream, UChar* strBuffer) {
 	UInt16 nameLen = Stream_ReadU16_BE(stream);
 	if (nameLen > NBT_SMALL_SIZE * 4) ErrorHandler_Fail("NBT String too long");
 	UChar nameBuffer[NBT_SMALL_SIZE * 4];
 	Stream_Read(stream, nameBuffer, nameLen);
 
 	/* TODO: Check how slow reading strings this way is */
-	Stream memStream; 
+	struct Stream memStream;
 	Stream_ReadonlyMemory(&memStream, nameBuffer, nameLen, &stream->Name);
 	UInt16 codepoint;
 
@@ -280,11 +280,11 @@ static UInt32 Nbt_ReadString(Stream* stream, UChar* strBuffer) {
 	return i;
 }
 
-typedef bool (*Nbt_Callback)(NbtTag* tag);
-static void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent, Nbt_Callback callback) {
+typedef bool (*Nbt_Callback)(struct NbtTag* tag);
+static void Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* stream, struct NbtTag* parent, Nbt_Callback callback) {
 	if (typeId == NBT_TAG_END) return;
 
-	NbtTag tag;
+	struct NbtTag tag;
 	tag.TagID = typeId;
 	tag.Parent = parent;
 	tag.NameSize = readTagName ? Nbt_ReadString(stream, tag.NameBuffer) : 0;
@@ -353,7 +353,7 @@ static void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* 
 	if (!processed && tag.DataSize >= NBT_SMALL_SIZE) Platform_MemFree(&tag.DataBig);
 }
 
-static bool IsTag(NbtTag* tag, const UChar* tagName) {
+static bool IsTag(struct NbtTag* tag, const UChar* tagName) {
 	String name = { tag->NameBuffer, tag->NameSize, tag->NameSize };
 	return String_CaselessEqualsConst(&name, tagName);
 }
@@ -363,7 +363,7 @@ static bool IsTag(NbtTag* tag, const UChar* tagName) {
 #define Nbt_WriteI16(stream, value) Stream_WriteI16_BE(stream, value)
 #define Nbt_WriteI32(stream, value) Stream_WriteI32_BE(stream, value)
 
-static void Nbt_WriteString(Stream* stream, STRING_PURE String* text) {
+static void Nbt_WriteString(struct Stream* stream, STRING_PURE String* text) {
 	if (text->length > NBT_SMALL_SIZE) ErrorHandler_Fail("NBT String too long");
 	UInt8 buffer[NBT_SMALL_SIZE * 3];
 	Int32 i, len = 0;
@@ -378,7 +378,7 @@ static void Nbt_WriteString(Stream* stream, STRING_PURE String* text) {
 	Stream_Write(stream, buffer, len);
 }
 
-static void Nbt_WriteTag(Stream* stream, UInt8 tagType, const UInt8* tagName) {
+static void Nbt_WriteTag(struct Stream* stream, UInt8 tagType, const UInt8* tagName) {
 	Nbt_WriteU8(stream, tagType);
 	String str = String_FromReadonly(tagName);
 	Nbt_WriteString(stream, &str);
@@ -388,7 +388,7 @@ static void Nbt_WriteTag(Stream* stream, UInt8 tagType, const UInt8* tagName) {
 /*########################################################################################################################*
 *--------------------------------------------------ClassicWorld format----------------------------------------------------*
 *#########################################################################################################################*/
-static bool Cw_Callback_1(NbtTag* tag) {
+static bool Cw_Callback_1(struct NbtTag* tag) {
 	if (IsTag(tag, "X")) { World_Width  = (UInt16)NbtTag_I16(tag); return true; }
 	if (IsTag(tag, "Y")) { World_Height = (UInt16)NbtTag_I16(tag); return true; }
 	if (IsTag(tag, "Z")) { World_Length = (UInt16)NbtTag_I16(tag); return true; }
@@ -412,10 +412,10 @@ static bool Cw_Callback_1(NbtTag* tag) {
 	return false;
 }
 
-static bool Cw_Callback_2(NbtTag* tag) {
+static bool Cw_Callback_2(struct NbtTag* tag) {
 	if (!IsTag(tag->Parent, "Spawn")) return false;
 
-	LocalPlayer*p = &LocalPlayer_Instance;
+	struct LocalPlayer*p = &LocalPlayer_Instance;
 	if (IsTag(tag, "X")) { p->Spawn.X = NbtTag_I16(tag); return true; }
 	if (IsTag(tag, "Y")) { p->Spawn.Y = NbtTag_I16(tag); return true; }
 	if (IsTag(tag, "Z")) { p->Spawn.Z = NbtTag_I16(tag); return true; }
@@ -437,10 +437,10 @@ static PackedCol Cw_ParseCol(PackedCol defValue) {
 	}
 }
 
-static bool Cw_Callback_4(NbtTag* tag) {
+static bool Cw_Callback_4(struct NbtTag* tag) {
 	if (!IsTag(tag->Parent->Parent, "CPE")) return false;
 	if (!IsTag(tag->Parent->Parent->Parent, "Metadata")) return false;
-	LocalPlayer*p = &LocalPlayer_Instance;
+	struct LocalPlayer*p = &LocalPlayer_Instance;
 
 	if (IsTag(tag->Parent, "ClickDistance")) {
 		if (IsTag(tag, "Distance")) { p->ReachDistance = NbtTag_I16(tag) / 32.0f; return true; }
@@ -503,10 +503,10 @@ static bool Cw_Callback_4(NbtTag* tag) {
 	return false;
 }
 
-static bool Cw_Callback_5(NbtTag* tag) {
+static bool Cw_Callback_5(struct NbtTag* tag) {
 	if (!IsTag(tag->Parent->Parent->Parent, "CPE")) return false;
 	if (!IsTag(tag->Parent->Parent->Parent->Parent, "Metadata")) return false;
-	LocalPlayer*p = &LocalPlayer_Instance;
+	struct LocalPlayer*p = &LocalPlayer_Instance;
 
 	if (IsTag(tag->Parent->Parent, "EnvColors")) {
 		if (IsTag(tag, "R")) { cw_colR = NbtTag_I16(tag); return true; }
@@ -570,9 +570,9 @@ static bool Cw_Callback_5(NbtTag* tag) {
 	return false;
 }
 
-static bool Cw_Callback(NbtTag* tag) {
+static bool Cw_Callback(struct NbtTag* tag) {
 	UInt32 depth = 0;
-	NbtTag* tmp = tag->Parent;
+	struct NbtTag* tmp = tag->Parent;
 	while (tmp != NULL) { depth++; tmp = tmp->Parent; }
 
 	switch (depth) {
@@ -587,13 +587,13 @@ static bool Cw_Callback(NbtTag* tag) {
 	        0             1         2        3          4   */
 }
 
-void Cw_Load(Stream* stream) {
-	GZipHeader gzHeader;
+void Cw_Load(struct Stream* stream) {
+	struct GZipHeader gzHeader;
 	GZipHeader_Init(&gzHeader);
 	while (!gzHeader.Done) { GZipHeader_Read(stream, &gzHeader); }
 
-	Stream compStream;
-	InflateState state;
+	struct Stream compStream;
+	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
 	if (Stream_ReadU8(&compStream) != NBT_TAG_COMPOUND) {
@@ -622,7 +622,7 @@ enum JFieldType {
 };
 
 #define JNAME_SIZE 48
-typedef struct JFieldDesc_ {
+struct JFieldDesc {
 	UInt8 Type;
 	UChar FieldName[String_BufferSize(JNAME_SIZE)];
 	union {
@@ -632,15 +632,15 @@ typedef struct JFieldDesc_ {
 		Real32 Value_R32;
 		struct { UInt8* Value_Ptr; UInt32 Value_Size; };
 	};
-} JFieldDesc;
+};
 
-typedef struct JClassDesc_ {
+struct JClassDesc {
 	UChar ClassName[String_BufferSize(JNAME_SIZE)];
 	UInt16 FieldsCount;
-	JFieldDesc Fields[22];
-} JClassDesc;
+	struct JFieldDesc Fields[22];
+};
 
-static void Dat_ReadString(Stream* stream, UInt8* buffer) {
+static void Dat_ReadString(struct Stream* stream, UInt8* buffer) {
 	Platform_MemSet(buffer, 0, JNAME_SIZE);
 	UInt16 len = Stream_ReadU16_BE(stream);
 
@@ -648,7 +648,7 @@ static void Dat_ReadString(Stream* stream, UInt8* buffer) {
 	Stream_Read(stream, buffer, len);
 }
 
-static void Dat_ReadFieldDesc(Stream* stream, JFieldDesc* desc) {
+static void Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* desc) {
 	desc->Type = Stream_ReadU8(stream);
 	Dat_ReadString(stream, desc->FieldName);
 
@@ -665,7 +665,7 @@ static void Dat_ReadFieldDesc(Stream* stream, JFieldDesc* desc) {
 	}
 }
 
-static void Dat_ReadClassDesc(Stream* stream, JClassDesc* desc) {
+static void Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* desc) {
 	UInt8 typeCode = Stream_ReadU8(stream);
 	if (typeCode == TC_NULL) { desc->ClassName[0] = NULL; desc->FieldsCount = 0; return; }
 	if (typeCode != TC_CLASSDESC) ErrorHandler_Fail("Unsupported type code in ClassDesc header");
@@ -683,11 +683,11 @@ static void Dat_ReadClassDesc(Stream* stream, JClassDesc* desc) {
 
 	typeCode = Stream_ReadU8(stream);
 	if (typeCode != TC_ENDBLOCKDATA) ErrorHandler_Fail("Unsupported type code in ClassDesc footer");
-	JClassDesc superClassDesc;
+	struct JClassDesc superClassDesc;
 	Dat_ReadClassDesc(stream, &superClassDesc);
 }
 
-static void Dat_ReadFieldData(Stream* stream, JFieldDesc* field) {
+static void Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
 	switch (field->Type) {
 	case JFIELD_INT8:
 		field->Value_I8  = Stream_ReadI8(stream); break;
@@ -726,7 +726,7 @@ static void Dat_ReadFieldData(Stream* stream, JFieldDesc* field) {
 		if (typeCode == TC_NULL) break;
 		if (typeCode != TC_ARRAY) ErrorHandler_Fail("Unsupported type code in Array field");
 
-		JClassDesc arrayClassDesc;
+		struct JClassDesc arrayClassDesc;
 		Dat_ReadClassDesc(stream, &arrayClassDesc);
 		if (arrayClassDesc.ClassName[1] != JFIELD_INT8) ErrorHandler_Fail("Only byte array fields supported");
 
@@ -740,18 +740,18 @@ static void Dat_ReadFieldData(Stream* stream, JFieldDesc* field) {
 	}
 }
 
-static Int32 Dat_I32(JFieldDesc* field) {
+static Int32 Dat_I32(struct JFieldDesc* field) {
 	if (field->Type != JFIELD_INT32) ErrorHandler_Fail("Field type must be Int32");
 	return field->Value_I32;
 }
 
-void Dat_Load(Stream* stream) {
-	GZipHeader gzHeader;
+void Dat_Load(struct Stream* stream) {
+	struct GZipHeader gzHeader;
 	GZipHeader_Init(&gzHeader);
 	while (!gzHeader.Done) { GZipHeader_Read(stream, &gzHeader); }
 
-	Stream compStream;
-	InflateState state;
+	struct Stream compStream;
+	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
 	/* .dat header */
@@ -766,7 +766,7 @@ void Dat_Load(Stream* stream) {
 
 	UInt8 typeCode = Stream_ReadU8(&compStream);
 	if (typeCode != TC_OBJECT) ErrorHandler_Fail("Unexpected type code for root class");
-	JClassDesc obj; Dat_ReadClassDesc(&compStream, &obj);
+	struct JClassDesc obj; Dat_ReadClassDesc(&compStream, &obj);
 
 	Int32 i;
 	for (i = 0; i < obj.FieldsCount; i++) {
@@ -775,7 +775,7 @@ void Dat_Load(Stream* stream) {
 
 	Vector3* spawn = &LocalPlayer_Instance.Spawn;
 	for (i = 0; i < obj.FieldsCount; i++) {
-		JFieldDesc* field = &obj.Fields[i];
+		struct JFieldDesc* field = &obj.Fields[i];
 		String fieldName = String_FromRawArray(field->FieldName);
 
 		if (String_CaselessEqualsConst(&fieldName, "width")) {
@@ -802,15 +802,15 @@ void Dat_Load(Stream* stream) {
 /*########################################################################################################################*
 *--------------------------------------------------ClassicWorld export----------------------------------------------------*
 *#########################################################################################################################*/
-static void Cw_WriteCpeExtCompound(Stream* stream, const UChar* tagName, Int32 version) {
+static void Cw_WriteCpeExtCompound(struct Stream* stream, const UChar* tagName, Int32 version) {
 	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, tagName);
 	Nbt_WriteTag(stream, NBT_TAG_INT32, "ExtensionVersion");
 	Nbt_WriteI32(stream, version);
 }
 
-static void Cw_WriteSpawnCompound(Stream* stream) {
+static void Cw_WriteSpawnCompound(struct Stream* stream) {
 	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "Spawn");
-	LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	Vector3 spawn = p->Spawn; /* TODO: Maybe keep real spawn too? */
 
 	Nbt_WriteTag(stream, NBT_TAG_INT16, "X");
@@ -828,7 +828,7 @@ static void Cw_WriteSpawnCompound(Stream* stream) {
 	Nbt_WriteU8(stream, NBT_TAG_END);
 }
 
-static void Cw_WriteColCompound(Stream* stream, const UChar* tagName, PackedCol col) {
+static void Cw_WriteColCompound(struct Stream* stream, const UChar* tagName, PackedCol col) {
 	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, tagName);
 
 	Nbt_WriteTag(stream, NBT_TAG_INT16, "R");
@@ -841,7 +841,7 @@ static void Cw_WriteColCompound(Stream* stream, const UChar* tagName, PackedCol 
 	Nbt_WriteU8(stream, NBT_TAG_END);
 }
 
-static void Cw_WriteBlockDefinitionCompound(Stream* stream, BlockID id) {
+static void Cw_WriteBlockDefinitionCompound(struct Stream* stream, BlockID id) {
 	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "Block" + id);
 	bool sprite = Block_Draw[id] == DRAW_SPRITE;
 
@@ -897,7 +897,7 @@ static void Cw_WriteBlockDefinitionCompound(Stream* stream, BlockID id) {
 	Nbt_WriteU8(stream, NBT_TAG_END);
 }
 
-static void Cw_WriteMetadataCompound(Stream* stream) {
+static void Cw_WriteMetadataCompound(struct Stream* stream) {
 	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "Metadata");
 	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "CPE");
 
@@ -943,9 +943,9 @@ static void Cw_WriteMetadataCompound(Stream* stream) {
 	Nbt_WriteU8(stream, NBT_TAG_END);
 }
 
-void Cw_Save(Stream* stream) {
-	GZipState state;
-	Stream compStream;
+void Cw_Save(struct Stream* stream) {
+	struct GZipState state;
+	struct Stream compStream;
 	GZip_MakeStream(&compStream, &state, stream);
 	stream = &compStream;
 
@@ -981,9 +981,9 @@ void Cw_Save(Stream* stream) {
 /*########################################################################################################################*
 *---------------------------------------------------Schematic export------------------------------------------------------*
 *#########################################################################################################################*/
-void Schematic_Save(Stream* stream) {
-	GZipState state;
-	Stream compStream;
+void Schematic_Save(struct Stream* stream) {
+	struct GZipState state;
+	struct Stream compStream;
 	GZip_MakeStream(&compStream, &state, stream);
 	stream = &compStream;
 

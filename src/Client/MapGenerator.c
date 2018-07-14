@@ -117,10 +117,10 @@ static void NotchyGen_FloodFill(Int32 startIndex, BlockID block) {
 
 
 static void NotchyGen_CreateHeightmap(void) {
-	CombinedNoise n1, n2;
+	struct CombinedNoise n1, n2;
 	CombinedNoise_Init(&n1, &rnd, 8, 8);
 	CombinedNoise_Init(&n2, &rnd, 8, 8);
-	OctaveNoise n3;
+	struct OctaveNoise n3;
 	OctaveNoise_Init(&n3, &rnd, 6);
 
 	Int32 index = 0;
@@ -179,7 +179,7 @@ static void NotchyGen_CreateStrata(void) {
 	/* Try to bulk fill bottom of the map if possible */
 	Int32 minStoneY = NotchyGen_CreateStrataFast();
 
-	OctaveNoise n;
+	struct OctaveNoise n;
 	OctaveNoise_Init(&n, &rnd, 8);
 	Gen_CurrentState = "Creating strata";
 	Int32 hMapIndex = 0, maxY = Gen_MaxY, mapIndex = 0;
@@ -332,7 +332,7 @@ static void NotchyGen_FloodFillLava(void) {
 }
 
 static void NotchyGen_CreateSurfaceLayer(void) {
-	OctaveNoise n1, n2;
+	struct OctaveNoise n1, n2;
 	OctaveNoise_Init(&n1, &rnd, 8);
 	OctaveNoise_Init(&n2, &rnd, 8);
 	Gen_CurrentState = "Creating surface";

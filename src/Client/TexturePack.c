@@ -19,7 +19,7 @@
 *--------------------------------------------------------ZipEntry---------------------------------------------------------*
 *#########################################################################################################################*/
 #define ZIP_MAXNAMELEN 512
-static String Zip_ReadFixedString(Stream* stream, UChar* buffer, UInt16 length) {
+static String Zip_ReadFixedString(struct Stream* stream, UChar* buffer, UInt16 length) {
 	if (length > ZIP_MAXNAMELEN) ErrorHandler_Fail("Zip string too long");
 	String fileName = String_Init(buffer, length, length);
 	Stream_Read(stream, buffer, length);
@@ -27,8 +27,8 @@ static String Zip_ReadFixedString(Stream* stream, UChar* buffer, UInt16 length) 
 	return fileName;
 }
 
-static void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
-	Stream* stream = state->Input;
+static void Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* entry) {
+	struct Stream* stream = state->Input;
 	UInt16 versionNeeded = Stream_ReadU16_LE(stream);
 	UInt16 flags = Stream_ReadU16_LE(stream);
 	UInt16 compressionMethod = Stream_ReadU16_LE(stream);
@@ -53,12 +53,12 @@ static void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 		Platform_Log1("May not be able to properly extract a .zip enty with version %i", &version);
 	}
 
-	Stream portion, compStream;
+	struct Stream portion, compStream;
 	if (compressionMethod == 0) {
 		Stream_ReadonlyPortion(&portion, stream, uncompressedSize);
 		state->ProcessEntry(&filename, &portion, entry);
 	} else if (compressionMethod == 8) {
-		InflateState inflate;
+		struct InflateState inflate;
 		Stream_ReadonlyPortion(&portion, stream, compressedSize);
 		Inflate_MakeStream(&compStream, &inflate, &portion);
 		state->ProcessEntry(&filename, &compStream, entry);
@@ -68,8 +68,8 @@ static void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 	}
 }
 
-static void Zip_ReadCentralDirectory(ZipState* state, ZipEntry* entry) {
-	Stream* stream = state->Input;
+static void Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* entry) {
+	struct Stream* stream = state->Input;
 	Stream_ReadU16_LE(stream); /* OS */
 	UInt16 versionNeeded = Stream_ReadU16_LE(stream);
 	UInt16 flags = Stream_ReadU16_LE(stream);
@@ -92,8 +92,8 @@ static void Zip_ReadCentralDirectory(ZipState* state, ZipEntry* entry) {
 	ErrorHandler_CheckOrFail(code, "Zip - skipping central header extra");
 }
 
-static void Zip_ReadEndOfCentralDirectory(ZipState* state, Int32* centralDirectoryOffset) {
-	Stream* stream = state->Input;
+static void Zip_ReadEndOfCentralDirectory(struct ZipState* state, Int32* centralDirectoryOffset) {
+	struct Stream* stream = state->Input;
 	UInt16 diskNum = Stream_ReadU16_LE(stream);
 	UInt16 diskNumStart = Stream_ReadU16_LE(stream);
 	UInt16 diskEntries = Stream_ReadU16_LE(stream);
@@ -107,18 +107,18 @@ static void Zip_ReadEndOfCentralDirectory(ZipState* state, Int32* centralDirecto
 #define ZIP_CENTRALDIR      0x02014b50UL
 #define ZIP_LOCALFILEHEADER 0x04034b50UL
 
-static void Zip_DefaultProcessor(STRING_TRANSIENT String* path, Stream* data, ZipEntry* entry) { }
+static void Zip_DefaultProcessor(STRING_TRANSIENT String* path, struct Stream* data, struct ZipEntry* entry) { }
 static bool Zip_DefaultSelector(STRING_TRANSIENT String* path) { return true; }
-void Zip_Init(ZipState* state, Stream* input) {
+void Zip_Init(struct ZipState* state, struct Stream* input) {
 	state->Input = input;
 	state->EntriesCount = 0;
 	state->ProcessEntry = Zip_DefaultProcessor;
 	state->SelectEntry  = Zip_DefaultSelector;
 }
 
-void Zip_Extract(ZipState* state) {
+void Zip_Extract(struct ZipState* state) {
 	state->EntriesCount = 0;
-	Stream* stream = state->Input;
+	struct Stream* stream = state->Input;
 	UInt32 sig = 0, stream_len = 0;
 	ReturnCode result = stream->Length(stream, &stream_len);
 
@@ -161,7 +161,7 @@ void Zip_Extract(ZipState* state) {
 
 	/* Now read the local file header entries */
 	for (i = 0; i < count; i++) {
-		ZipEntry* entry = &state->Entries[i];
+		struct ZipEntry* entry = &state->Entries[i];
 		result = stream->Seek(stream, entry->LocalHeaderOffset, STREAM_SEEKFROM_BEGIN);
 		ErrorHandler_CheckOrFail(result, "ZIP - Seek to local file header");
 
@@ -197,10 +197,10 @@ static void EntryList_Load(EntryList* list) {
 	if (result == ReturnCode_FileNotFound) return;
 	/* TODO: Should we just log failure to save? */
 	ErrorHandler_CheckOrFail(result, "EntryList_Load - open file");
-	Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		/* ReadLine reads single byte at a time */
-		UInt8 buffer[2048]; Stream buffered;
+		UInt8 buffer[2048]; struct Stream buffered;
 		Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
 
 		while (Stream_ReadLine(&buffered, &path)) {
@@ -231,7 +231,7 @@ static void EntryList_Save(EntryList* list) {
 	ReturnCode result = Platform_FileCreate(&file, &path);
 	/* TODO: Should we just log failure to save? */
 	ErrorHandler_CheckOrFail(result, "EntryList_Save - open file");
-	Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		Int32 i;
 		for (i = 0; i < list->Entries.Count; i++) {
@@ -308,7 +308,7 @@ bool TextureCache_HasUrl(STRING_PURE String* url) {
 	return Platform_FileExists(&path);
 }
 
-bool TextureCache_GetStream(STRING_PURE String* url, Stream* stream) {
+bool TextureCache_GetStream(STRING_PURE String* url, struct Stream* stream) {
 	String path; TexCache_InitAndMakePath(url);
 
 	void* file;
@@ -368,10 +368,10 @@ static void* TextureCache_CreateFile(STRING_PURE String* path) {
 	return file;
 }
 
-void TextureCache_AddImage(STRING_PURE String* url, Bitmap* bmp) {
+void TextureCache_AddImage(STRING_PURE String* url, struct Bitmap* bmp) {
 	String path; TexCache_InitAndMakePath(url);
 	void* file = TextureCache_CreateFile(&path);
-	Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		Bitmap_EncodePng(bmp, &stream);
 	}
@@ -382,7 +382,7 @@ void TextureCache_AddImage(STRING_PURE String* url, Bitmap* bmp) {
 void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length) {
 	String path; TexCache_InitAndMakePath(url);
 	void* file = TextureCache_CreateFile(&path);
-	Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		Stream_Write(&stream, data, length);
 	}
@@ -426,7 +426,7 @@ void TextureCache_AddLastModified(STRING_PURE String* url, DateTime* lastModifie
 /*########################################################################################################################*
 *-------------------------------------------------------TexturePack-------------------------------------------------------*
 *#########################################################################################################################*/
-static void TexturePack_ProcessZipEntry(STRING_TRANSIENT String* path, Stream* stream, ZipEntry* entry) {
+static void TexturePack_ProcessZipEntry(STRING_TRANSIENT String* path, struct Stream* stream, struct ZipEntry* entry) {
 	/* Ignore directories: convert x/name to name and x\name to name. */
 	String_MakeLowercase(path);
 	String name = *path;
@@ -441,11 +441,11 @@ static void TexturePack_ProcessZipEntry(STRING_TRANSIENT String* path, Stream* s
 	Event_RaiseStream(&TextureEvents_FileChanged, stream);
 }
 
-static void TexturePack_ExtractZip(Stream* stream) {
+static void TexturePack_ExtractZip(struct Stream* stream) {
 	Event_RaiseVoid(&TextureEvents_PackChanged);
 	if (Gfx_LostContext) return;
 
-	ZipState state;
+	struct ZipState state;
 	Zip_Init(&state, stream);
 	state.ProcessEntry = TexturePack_ProcessZipEntry;
 	Zip_Extract(&state);
@@ -459,7 +459,7 @@ void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
 	void* file;
 	ReturnCode result = Platform_FileOpen(&file, &path);
 	ErrorHandler_CheckOrFail(result, "TexturePack_Extract - opening file");
-	Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		TexturePack_ExtractZip(&stream);
 	}
@@ -467,8 +467,8 @@ void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
 	ErrorHandler_CheckOrFail(result, "TexturePack_Extract - closing file");
 }
 
-void TexturePack_ExtractTerrainPng(Stream* stream) {
-	Bitmap bmp; Bitmap_DecodePng(&bmp, stream);
+void TexturePack_ExtractTerrainPng(struct Stream* stream) {
+	struct Bitmap bmp; Bitmap_DecodePng(&bmp, stream);
 	Event_RaiseVoid(&TextureEvents_PackChanged);
 
 	if (Game_ChangeTerrainAtlas(&bmp)) return;
@@ -487,7 +487,7 @@ void TexturePack_ExtractDefault(void) {
 void TexturePack_ExtractCurrent(STRING_PURE String* url) {
 	if (url->length == 0) { TexturePack_ExtractDefault(); return; }
 
-	Stream stream;
+	struct Stream stream;
 	if (!TextureCache_GetStream(url, &stream)) {
 		/* e.g. 404 errors */
 		if (World_TextureUrl.length > 0) TexturePack_ExtractDefault();
@@ -507,10 +507,10 @@ void TexturePack_ExtractCurrent(STRING_PURE String* url) {
 	}
 }
 
-void TexturePack_ExtractTerrainPng_Req(AsyncRequest* item) {
+void TexturePack_ExtractTerrainPng_Req(struct AsyncRequest* item) {
 	String url = String_FromRawArray(item->URL);
 	String_Set(&World_TextureUrl, &url);
-	Bitmap bmp = item->ResultBitmap;
+	struct Bitmap bmp = item->ResultBitmap;
 
 	String etag = String_FromRawArray(item->Etag);
 	TextureCache_AddImage(&url, &bmp);
@@ -521,7 +521,7 @@ void TexturePack_ExtractTerrainPng_Req(AsyncRequest* item) {
 	if (!Game_ChangeTerrainAtlas(&bmp)) ASyncRequest_Free(item);
 }
 
-void TexturePack_ExtractTexturePack_Req(AsyncRequest* item) {
+void TexturePack_ExtractTexturePack_Req(struct AsyncRequest* item) {
 	String url = String_FromRawArray(item->URL);
 	String_Set(&World_TextureUrl, &url);
 	void* data = item->ResultData.Ptr;
@@ -533,7 +533,7 @@ void TexturePack_ExtractTexturePack_Req(AsyncRequest* item) {
 	TextureCache_AddLastModified(&url, &item->LastModified);
 
 	String id = String_FromRawArray(item->ID);
-	Stream stream; Stream_ReadonlyMemory(&stream, data, len, &id);
+	struct Stream stream; Stream_ReadonlyMemory(&stream, data, len, &id);
 	TexturePack_ExtractZip(&stream);
 	ASyncRequest_Free(item);
 }

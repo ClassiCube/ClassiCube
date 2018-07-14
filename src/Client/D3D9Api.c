@@ -155,7 +155,7 @@ void Gfx_Free(void) {
 	D3D9_FreeResource(&d3d);
 }
 
-static void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, Int32 lvl) {
+static void D3D9_SetTextureData(IDirect3DTexture9* texture, struct Bitmap* bmp, Int32 lvl) {
 	D3DLOCKED_RECT rect;
 	ReturnCode hresult = IDirect3DTexture9_LockRect(texture, lvl, &rect, NULL, 0);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTextureData - Lock");
@@ -167,7 +167,7 @@ static void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, Int32 l
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTextureData - Unlock");
 }
 
-static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitmap* bmp, Int32 lvl) {
+static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, Int32 x, Int32 y, struct Bitmap* bmp, Int32 lvl) {
 	RECT part;
 	part.left = x; part.right = x + bmp->Width;
 	part.top = y; part.bottom = y + bmp->Height;
@@ -192,7 +192,7 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, Int32 x, Int32 y
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTexturePartData - Unlock");
 }
 
-static void D3D9_DoMipmaps(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitmap* bmp, bool partial) {
+static void D3D9_DoMipmaps(IDirect3DTexture9* texture, Int32 x, Int32 y, struct Bitmap* bmp, bool partial) {
 	UInt8* prev = bmp->Scan0;
 	Int32 lvls = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
 	Int32 lvl, width = bmp->Width, height = bmp->Height;
@@ -206,7 +206,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitmap*
 		if (cur == NULL) ErrorHandler_Fail("Allocating memory for mipmaps");
 		GfxCommon_GenMipmaps(width, height, cur, prev);
 
-		Bitmap mipmap;
+		struct Bitmap mipmap;
 		Bitmap_Create(&mipmap, width, height, cur);
 		if (partial) {
 			D3D9_SetTexturePartData(texture, x, y, &mipmap, lvl);
@@ -220,7 +220,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitmap*
 	if (prev != bmp->Scan0) Platform_MemFree(&prev);
 }
 
-GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
+GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, bool managedPool, bool mipmaps) {
 	IDirect3DTexture9* texture;
 	ReturnCode hresult;
 	Int32 mipmapsLevels = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
@@ -251,7 +251,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 	return texture;
 }
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 x, Int32 y, Bitmap* part, bool mipmaps) {
+void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 x, Int32 y, struct Bitmap* part, bool mipmaps) {
 	IDirect3DTexture9* texture = (IDirect3DTexture9*)texId;
 	D3D9_SetTexturePartData(texture, x, y, part, 0);
 	if (mipmaps) D3D9_DoMipmaps(texture, x, y, part, true);
@@ -573,7 +573,7 @@ void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 z
 }
 
 
-void Gfx_TakeScreenshot(Stream* output, Int32 width, Int32 height) {
+void Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) {
 	IDirect3DSurface9* backbuffer;
 	IDirect3DSurface9* temp;
 	ReturnCode hresult;
@@ -590,7 +590,7 @@ void Gfx_TakeScreenshot(Stream* output, Int32 width, Int32 height) {
 	hresult = IDirect3DSurface9_LockRect(temp, &rect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
 	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Lock temp surface");
 
-	Bitmap bmp; Bitmap_Create(&bmp, width, height, rect.pBits);
+	struct Bitmap bmp; Bitmap_Create(&bmp, width, height, rect.pBits);
 	Bitmap_EncodePng(&bmp, output);
 	hresult = IDirect3DSurface9_UnlockRect(temp);
 	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Unlock temp surface");

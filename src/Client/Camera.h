@@ -9,7 +9,7 @@
 Matrix Camera_TiltM;
 Real32 Camera_BobbingVer, Camera_BobbingHor;
 
-typedef struct Camera_ {
+struct Camera {
 	bool IsThirdPerson;
 	void (*GetProjection)(Matrix* proj);
 	void (*GetView)(Matrix* view);
@@ -20,11 +20,11 @@ typedef struct Camera_ {
 	void (*UpdateMouse)(void);
 	void (*RegrabMouse)(void);
 
-	void (*GetPickedBlock)(PickedPos* pos);
+	void (*GetPickedBlock)(struct PickedPos* pos);
 	bool (*Zoom)(Real32 amount);
-} Camera;
+};
 
-Camera* Camera_Active;
+struct Camera* Camera_Active;
 void Camera_Init(void);
 void Camera_CycleActive(void);
 #endif

@@ -36,25 +36,25 @@ void (*Builder_PreStretchTiles)(Int32 x1, Int32 y1, Int32 z1);
 void (*Builder_PostStretchTiles)(Int32 x1, Int32 y1, Int32 z1);
 
 /* Contains state for vertices for a portion of a chunk mesh (vertices that are in a 1D atlas) */
-typedef struct Builder1DPart_ {
+struct Builder1DPart {
 	VertexP3fT2fC4b* fVertices[FACE_COUNT];
 	Int32 fCount[FACE_COUNT];
 	Int32 sCount, sOffset, sAdvance;
-} Builder1DPart;
+};
 
 /* Part builder data, for both normal and translucent parts.
 The first ATLAS1D_MAX_ATLASES parts are for normal parts, remainder are for translucent parts. */
-Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES * 2];
+struct Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES * 2];
 VertexP3fT2fC4b* Builder_Vertices;
 Int32 Builder_VerticesElems;
 
-static Int32 Builder1DPart_VerticesCount(Builder1DPart* part) {
+static Int32 Builder1DPart_VerticesCount(struct Builder1DPart* part) {
 	Int32 i, count = part->sCount;
 	for (i = 0; i < FACE_COUNT; i++) { count += part->fCount[i]; }
 	return count;
 }
 
-static void Builder1DPart_CalcOffsets(Builder1DPart* part, Int32* offset) {
+static void Builder1DPart_CalcOffsets(struct Builder1DPart* part, Int32* offset) {
 	Int32 pos = *offset, i;
 	part->sOffset = pos;
 	part->sAdvance = part->sCount >> 2;
@@ -78,18 +78,18 @@ static Int32 Builder_TotalVerticesCount(void) {
 
 static void Builder_AddSpriteVertices(BlockID block) {
 	Int32 i = Atlas1D_Index(Block_GetTexLoc(block, FACE_XMIN));
-	Builder1DPart* part = &Builder_Parts[i];
+	struct Builder1DPart* part = &Builder_Parts[i];
 	part->sCount += 4 * 4;
 }
 
 static void Builder_AddVertices(BlockID block, Face face) {
 	Int32 baseOffset = (Block_Draw[block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
 	Int32 i = Atlas1D_Index(Block_GetTexLoc(block, face));
-	Builder1DPart* part = &Builder_Parts[baseOffset + i];
+	struct Builder1DPart* part = &Builder_Parts[baseOffset + i];
 	part->fCount[face] += 4;
 }
 
-static void Builder_SetPartInfo(Builder1DPart* part, Int32* offset, ChunkPartInfo* info, bool* hasParts) {
+static void Builder_SetPartInfo(struct Builder1DPart* part, Int32* offset, ChunkPartInfo* info, bool* hasParts) {
 	Int32 vCount = Builder1DPart_VerticesCount(part);
 	info->Offset = -1;
 	if (vCount == 0) return;
@@ -410,7 +410,7 @@ static void Builder_DrawSprite(Int32 count) {
 		if (offsetType == 7) { y1 -= valY; y2 -= valY; }
 	}
 	
-	Builder1DPart* part = &Builder_Parts[i];
+	struct Builder1DPart* part = &Builder_Parts[i];
 	PackedCol white = PACKEDCOL_WHITE;
 	PackedCol col = Builder_FullBright ? white : Lighting_Col_Sprite_Fast(Builder_X, Builder_Y, Builder_Z);
 	Block_Tint(col, Builder_Block);
@@ -581,7 +581,7 @@ static void NormalBuilder_RenderBlock(Int32 index) {
 	if (count_XMin) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMIN);
 		Int32 offset = (lightFlags >> FACE_XMIN) & 1;
-		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
+		struct Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white :
 			Builder_X >= offset ? Lighting_Col_XSide_Fast(Builder_X - offset, Builder_Y, Builder_Z) : Lighting_OutsideXSide;
@@ -591,7 +591,7 @@ static void NormalBuilder_RenderBlock(Int32 index) {
 	if (count_XMax) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMAX);
 		Int32 offset = (lightFlags >> FACE_XMAX) & 1;
-		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
+		struct Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white :
 			Builder_X <= (World_MaxX - offset) ? Lighting_Col_XSide_Fast(Builder_X + offset, Builder_Y, Builder_Z) : Lighting_OutsideXSide;
@@ -601,7 +601,7 @@ static void NormalBuilder_RenderBlock(Int32 index) {
 	if (count_ZMin) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_ZMIN);
 		Int32 offset = (lightFlags >> FACE_ZMIN) & 1;
-		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
+		struct Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white :
 			Builder_Z >= offset ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z - offset) : Lighting_OutsideZSide;
@@ -611,7 +611,7 @@ static void NormalBuilder_RenderBlock(Int32 index) {
 	if (count_ZMax) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_ZMAX);
 		Int32 offset = (lightFlags >> FACE_ZMAX) & 1;
-		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
+		struct Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white :
 			Builder_Z <= (World_MaxZ - offset) ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z + offset) : Lighting_OutsideZSide;
@@ -621,7 +621,7 @@ static void NormalBuilder_RenderBlock(Int32 index) {
 	if (count_YMin) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_YMIN);
 		Int32 offset = (lightFlags >> FACE_YMIN) & 1;
-		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
+		struct Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white : Lighting_Col_YBottom_Fast(Builder_X, Builder_Y - offset, Builder_Z);
 		Drawer_YMin(count_YMin, col, texLoc, &part->fVertices[FACE_YMIN]);
@@ -630,7 +630,7 @@ static void NormalBuilder_RenderBlock(Int32 index) {
 	if (count_YMax) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_YMAX);
 		Int32 offset = (lightFlags >> FACE_YMAX) & 1;
-		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
+		struct Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white : Lighting_Col_YTop_Fast(Builder_X, (Builder_Y + 1) - offset, Builder_Z);
 		Drawer_YMax(count_YMax, col, texLoc, &part->fVertices[FACE_YMAX]);

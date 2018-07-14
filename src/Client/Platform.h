@@ -7,8 +7,8 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 typedef struct DrawTextArgs_ DrawTextArgs;
-typedef struct Bitmap_ Bitmap;
-typedef struct AsyncRequest_ AsyncRequest;
+struct Bitmap;
+struct AsyncRequest;
 
 enum SOCKET_SELECT {
 	SOCKET_SELECT_READ, SOCKET_SELECT_WRITE, SOCKET_SELECT_ERROR,
@@ -84,7 +84,7 @@ ReturnCode Platform_StartShell(STRING_PURE String* args);
 void Platform_FontMake(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
 void Platform_FontFree(FontDesc* desc);
 Size2D Platform_TextMeasure(DrawTextArgs* args);
-void Platform_SetBitmap(Bitmap* bmp);
+void Platform_SetBitmap(struct Bitmap* bmp);
 Size2D Platform_TextDraw(DrawTextArgs* args, Int32 x, Int32 y, PackedCol col);
 void Platform_ReleaseBitmap(void);
 
@@ -100,9 +100,9 @@ ReturnCode Platform_SocketClose(void* socket);
 ReturnCode Platform_SocketSelect(void* socket, Int32 selectMode, bool* success);
 
 void Platform_HttpInit(void);
-ReturnCode Platform_HttpMakeRequest(AsyncRequest* request, void** handle);
-ReturnCode Platform_HttpGetRequestHeaders(AsyncRequest* request, void* handle, UInt32* size);
-ReturnCode Platform_HttpGetRequestData(AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress);
+ReturnCode Platform_HttpMakeRequest(struct AsyncRequest* request, void** handle);
+ReturnCode Platform_HttpGetRequestHeaders(struct AsyncRequest* request, void* handle, UInt32* size);
+ReturnCode Platform_HttpGetRequestData(struct AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress);
 ReturnCode Platform_HttpFreeRequest(void* handle);
 ReturnCode Platform_HttpFree(void);
 #endif

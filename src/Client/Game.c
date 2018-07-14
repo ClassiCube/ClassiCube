@@ -127,7 +127,7 @@ void Game_SetCursorVisible(bool visible) {
 	game_CursorVisible = visible;
 }
 
-bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
+bool Game_ChangeTerrainAtlas(struct Bitmap* atlas) {
 	String terrain = String_FromConst("terrain.png");
 	if (!Game_ValidateBitmap(&terrain, atlas)) return false;
 
@@ -211,7 +211,7 @@ bool Game_CanPick(BlockID block) {
 	return Game_BreakableLiquids && Block_CanPlace[block] && Block_CanDelete[block];
 }
 
-void Game_SetDefaultSkinType(Bitmap* bmp) {
+void Game_SetDefaultSkinType(struct Bitmap* bmp) {
 	Game_DefaultPlayerSkinType = Utils_GetSkinType(bmp);
 	if (Game_DefaultPlayerSkinType == SKIN_TYPE_INVALID) {
 		ErrorHandler_Fail("char.png has invalid dimensions");
@@ -219,14 +219,14 @@ void Game_SetDefaultSkinType(Bitmap* bmp) {
 
 	Int32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		Entity* entity = Entities_List[i];
+		struct Entity* entity = Entities_List[i];
 		if (entity == NULL || entity->TextureId != NULL) continue;
 		entity->SkinType = Game_DefaultPlayerSkinType;
 	}
 }
 
-bool Game_UpdateTexture(GfxResourceID* texId, Stream* src, bool setSkinType) {
-	Bitmap bmp; Bitmap_DecodePng(&bmp, src);
+bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, bool setSkinType) {
+	struct Bitmap bmp; Bitmap_DecodePng(&bmp, src);
 	bool success = Game_ValidateBitmap(&src->Name, &bmp);
 
 	if (success) {
@@ -239,7 +239,7 @@ bool Game_UpdateTexture(GfxResourceID* texId, Stream* src, bool setSkinType) {
 	return success;
 }
 
-bool Game_ValidateBitmap(STRING_PURE String* file, Bitmap* bmp) {
+bool Game_ValidateBitmap(STRING_PURE String* file, struct Bitmap* bmp) {
 	UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String msg = String_InitAndClearArray(msgBuffer);
 
@@ -307,13 +307,13 @@ static void Game_OnNewMapLoadedCore(void* obj) {
 	}
 }
 
-static void Game_TextureChangedCore(void* obj, Stream* src) {
+static void Game_TextureChangedCore(void* obj, struct Stream* src) {
 	if (String_CaselessEqualsConst(&src->Name, "terrain.png")) {
-		Bitmap atlas; Bitmap_DecodePng(&atlas, src);
+		struct Bitmap atlas; Bitmap_DecodePng(&atlas, src);
 		if (Game_ChangeTerrainAtlas(&atlas)) return;
 		Platform_MemFree(&atlas.Scan0);
 	} else if (String_CaselessEqualsConst(&src->Name, "default.png")) {
-		Bitmap bmp; Bitmap_DecodePng(&bmp, src);
+		struct Bitmap bmp; Bitmap_DecodePng(&bmp, src);
 		Drawer2D_SetFontBitmap(&bmp);
 		Event_RaiseVoid(&ChatEvents_FontChanged);
 	}
@@ -654,7 +654,7 @@ void Game_TakeScreenshot(void) {
 	void* file;
 	ReturnCode result = Platform_FileCreate(&file, &path);
 	ErrorHandler_CheckOrFail(result, "Taking screenshot - opening file");
-	Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		Gfx_TakeScreenshot(&stream, Game_Width, Game_Height);
 	}

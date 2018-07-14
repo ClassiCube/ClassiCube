@@ -15,7 +15,7 @@ typedef struct DateTime_ {
 	UInt8 Second; /* Second of this point in time, ranges from 0 to 59. */
 	UInt16 Milli; /* Milliseconds of this point in time, ranges from 0 to 999. */
 } DateTime;
-typedef struct Bitmap_ Bitmap;
+struct Bitmap;
 
 #define DATETIME_MILLISECS_PER_SECOND 1000
 Int64 DateTime_TotalMs(DateTime* time);
@@ -30,7 +30,7 @@ bool Utils_IsUrlPrefix(STRING_PURE String* value, Int32 index);
 Int32 Utils_AccumulateWheelDelta(Real32* accmulator, Real32 delta);
 #define Utils_AdjViewDist(value) ((Int32)(1.4142135f * (value)))
 
-UInt8 Utils_GetSkinType(Bitmap* bmp);
+UInt8 Utils_GetSkinType(struct Bitmap* bmp);
 UInt32 Utils_CRC32(UInt8* data, UInt32 length);
 extern UInt32 Utils_Crc32Table[256];
 #endif

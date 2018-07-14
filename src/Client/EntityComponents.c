@@ -35,7 +35,7 @@ static void AnimatedComp_DoTilt(Real32* tilt, bool reduce) {
 	Math_Clamp(*tilt, 0.0f, 1.0f);
 }
 
-static void AnimatedComp_PerpendicularAnim(AnimatedComp* anim, Real32 flapSpeed, Real32 idleXRot, Real32 idleZRot, bool left) {
+static void AnimatedComp_PerpendicularAnim(struct AnimatedComp* anim, Real32 flapSpeed, Real32 idleXRot, Real32 idleZRot, bool left) {
 	Real32 verAngle = 0.5f + 0.5f * Math_SinF(anim->WalkTime * flapSpeed);
 	Real32 zRot = -idleZRot - verAngle * anim->Swing * ANIM_MAX_ANGLE;
 	Real32 horAngle = Math_CosF(anim->WalkTime) * anim->Swing * ANIM_ARM_MAX * 1.5f;
@@ -48,19 +48,19 @@ static void AnimatedComp_PerpendicularAnim(AnimatedComp* anim, Real32 flapSpeed,
 	}
 }
 
-static void AnimatedComp_CalcHumanAnim(AnimatedComp* anim, Real32 idleXRot, Real32 idleZRot) {
+static void AnimatedComp_CalcHumanAnim(struct AnimatedComp* anim, Real32 idleXRot, Real32 idleZRot) {
 	AnimatedComp_PerpendicularAnim(anim, 0.23f, idleXRot, idleZRot, true);
 	AnimatedComp_PerpendicularAnim(anim, 0.28f, idleXRot, idleZRot, false);
 	anim->RightArmX = -anim->RightArmX; anim->RightArmZ = -anim->RightArmZ;
 }
 
-void AnimatedComp_Init(AnimatedComp* anim) {
-	Platform_MemSet(anim, 0, sizeof(AnimatedComp));
+void AnimatedComp_Init(struct AnimatedComp* anim) {
+	Platform_MemSet(anim, 0, sizeof(struct AnimatedComp));
 	anim->BobStrength = 1.0f; anim->BobStrengthO = 1.0f; anim->BobStrengthN = 1.0f;
 }
 
-void AnimatedComp_Update(Entity* entity, Vector3 oldPos, Vector3 newPos, Real64 delta) {
-	AnimatedComp* anim = &entity->Anim;
+void AnimatedComp_Update(struct Entity* entity, Vector3 oldPos, Vector3 newPos, Real64 delta) {
+	struct AnimatedComp* anim = &entity->Anim;
 	anim->WalkTimeO = anim->WalkTimeN;
 	anim->SwingO    = anim->SwingN;
 	Real32 dx = newPos.X - oldPos.X;
@@ -84,8 +84,8 @@ void AnimatedComp_Update(Entity* entity, Vector3 oldPos, Vector3 newPos, Real64 
 	}
 }
 
-void AnimatedComp_GetCurrent(Entity* entity, Real32 t) {
-	AnimatedComp* anim = &entity->Anim;
+void AnimatedComp_GetCurrent(struct Entity* entity, Real32 t) {
+	struct AnimatedComp* anim = &entity->Anim;
 	anim->Swing = Math_Lerp(anim->SwingO, anim->SwingN, t);
 	anim->WalkTime = Math_Lerp(anim->WalkTimeO, anim->WalkTimeN, t);
 	anim->BobStrength = Math_Lerp(anim->BobStrengthO, anim->BobStrengthN, t);
@@ -115,14 +115,14 @@ void AnimatedComp_GetCurrent(Entity* entity, Real32 t) {
 /*########################################################################################################################*
 *------------------------------------------------------TiltComponent------------------------------------------------------*
 *#########################################################################################################################*/
-void TiltComp_Init(TiltComp* anim) {
+void TiltComp_Init(struct TiltComp* anim) {
 	anim->TiltX = 0.0f; anim->TiltY = 0.0f; anim->VelTiltStrength = 1.0f;
 	anim->VelTiltStrengthO = 1.0f; anim->VelTiltStrengthN = 1.0f;
 }
 
-void TiltComp_Update(TiltComp* anim, Real64 delta) {
+void TiltComp_Update(struct TiltComp* anim, Real64 delta) {
 	anim->VelTiltStrengthO = anim->VelTiltStrengthN;
-	LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 
 	/* TODO: the Tilt code was designed for 60 ticks/second, fix it up for 20 ticks/second */
 	Int32 i;
@@ -131,11 +131,11 @@ void TiltComp_Update(TiltComp* anim, Real64 delta) {
 	}
 }
 
-void TiltComp_GetCurrent(TiltComp* anim, Real32 t) {
-	LocalPlayer* p = &LocalPlayer_Instance;
+void TiltComp_GetCurrent(struct TiltComp* anim, Real32 t) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	anim->VelTiltStrength = Math_Lerp(anim->VelTiltStrengthO, anim->VelTiltStrengthN, t);
 
-	AnimatedComp* pAnim = &p->Base.Anim;
+	struct AnimatedComp* pAnim = &p->Base.Anim;
 	anim->TiltX = Math_CosF(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
 	anim->TiltY = Math_SinF(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
 }
@@ -144,15 +144,15 @@ void TiltComp_GetCurrent(TiltComp* anim, Real32 t) {
 /*########################################################################################################################*
 *-----------------------------------------------------HacksComponent------------------------------------------------------*
 *#########################################################################################################################*/
-static void HacksComp_SetAll(HacksComp* hacks, bool allowed) {
+static void HacksComp_SetAll(struct HacksComp* hacks, bool allowed) {
 	hacks->CanAnyHacks = allowed; hacks->CanFly = allowed;
 	hacks->CanNoclip = allowed; hacks->CanRespawn = allowed;
 	hacks->CanSpeed = allowed; hacks->CanPushbackBlocks = allowed;
 	hacks->CanUseThirdPersonCamera = allowed;
 }
 
-void HacksComp_Init(HacksComp* hacks) {
-	Platform_MemSet(hacks, 0, sizeof(HacksComp));
+void HacksComp_Init(struct HacksComp* hacks) {
+	Platform_MemSet(hacks, 0, sizeof(struct HacksComp));
 	HacksComp_SetAll(hacks, true);
 	hacks->SpeedMultiplier = 10.0f;
 	hacks->Enabled = true;
@@ -165,15 +165,15 @@ void HacksComp_Init(HacksComp* hacks) {
 	hacks->HacksFlags = String_InitAndClearArray(hacks->HacksFlagsBuffer);
 }
 
-bool HacksComp_CanJumpHigher(HacksComp* hacks) {
+bool HacksComp_CanJumpHigher(struct HacksComp* hacks) {
 	return hacks->Enabled && hacks->CanAnyHacks && hacks->CanSpeed;
 }
 
-bool HacksComp_Floating(HacksComp* hacks) {
+bool HacksComp_Floating(struct HacksComp* hacks) {
 	return hacks->Noclip || hacks->Flying;
 }
 
-static String HacksComp_UNSAFE_FlagValue(const UChar* flagRaw, HacksComp* hacks) {
+static String HacksComp_UNSAFE_FlagValue(const UChar* flagRaw, struct HacksComp* hacks) {
 	String* joined = &hacks->HacksFlags;
 	String flag = String_FromReadonly(flagRaw);
 
@@ -187,7 +187,7 @@ static String HacksComp_UNSAFE_FlagValue(const UChar* flagRaw, HacksComp* hacks)
 	return String_UNSAFE_Substring(joined, start, end - start);
 }
 
-static Real32 HacksComp_ParseFlagReal(const UChar* flagRaw, HacksComp* hacks) {
+static Real32 HacksComp_ParseFlagReal(const UChar* flagRaw, struct HacksComp* hacks) {
 	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
 	if (raw.length == 0 || Game_ClassicMode) return 1.0f;
 
@@ -196,7 +196,7 @@ static Real32 HacksComp_ParseFlagReal(const UChar* flagRaw, HacksComp* hacks) {
 	return value;
 }
 
-static Int32 HacksComp_ParseFlagInt(const UChar* flagRaw, HacksComp* hacks) {
+static Int32 HacksComp_ParseFlagInt(const UChar* flagRaw, struct HacksComp* hacks) {
 	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
 	if (raw.length == 0 || Game_ClassicMode) return 1;
 
@@ -205,7 +205,7 @@ static Int32 HacksComp_ParseFlagInt(const UChar* flagRaw, HacksComp* hacks) {
 	return value;
 }
 
-static void HacksComp_ParseFlag(HacksComp* hacks, const UChar* incFlag, const UChar* excFlag, bool* target) {
+static void HacksComp_ParseFlag(struct HacksComp* hacks, const UChar* incFlag, const UChar* excFlag, bool* target) {
 	String include = String_FromReadonly(incFlag);
 	String exclude = String_FromReadonly(excFlag);
 	String* joined = &hacks->HacksFlags;
@@ -217,7 +217,7 @@ static void HacksComp_ParseFlag(HacksComp* hacks, const UChar* incFlag, const UC
 	}
 }
 
-static void HacksComp_ParseAllFlag(HacksComp* hacks, const UChar* incFlag, const UChar* excFlag) {
+static void HacksComp_ParseAllFlag(struct HacksComp* hacks, const UChar* incFlag, const UChar* excFlag) {
 	String include = String_FromReadonly(incFlag);
 	String exclude = String_FromReadonly(excFlag);
 	String* joined = &hacks->HacksFlags;
@@ -229,7 +229,7 @@ static void HacksComp_ParseAllFlag(HacksComp* hacks, const UChar* incFlag, const
 	}
 }
 
-void HacksComp_SetUserType(HacksComp* hacks, UInt8 value, bool setBlockPerms) {
+void HacksComp_SetUserType(struct HacksComp* hacks, UInt8 value, bool setBlockPerms) {
 	bool isOp = value >= 100 && value <= 127;
 	hacks->UserType = value;
 	hacks->CanSeeAllNames = isOp;
@@ -243,7 +243,7 @@ void HacksComp_SetUserType(HacksComp* hacks, UInt8 value, bool setBlockPerms) {
 	Block_CanPlace[BLOCK_STILL_LAVA]  = isOp;
 }
 
-void HacksComp_CheckConsistency(HacksComp* hacks) {
+void HacksComp_CheckConsistency(struct HacksComp* hacks) {
 	if (!hacks->CanFly || !hacks->Enabled) {
 		hacks->Flying = false; hacks->FlyingDown = false; hacks->FlyingUp = false;
 	}
@@ -262,7 +262,7 @@ void HacksComp_CheckConsistency(HacksComp* hacks) {
 	}
 }
 
-void HacksComp_UpdateState(HacksComp* hacks) {
+void HacksComp_UpdateState(struct HacksComp* hacks) {
 	HacksComp_SetAll(hacks, true);
 	if (hacks->HacksFlags.length == 0) return;
 	hacks->CanBePushed = true;
@@ -294,7 +294,7 @@ void HacksComp_UpdateState(HacksComp* hacks) {
 /*########################################################################################################################*
 *--------------------------------------------------InterpolationComponent-------------------------------------------------*
 *#########################################################################################################################*/
-static void InterpComp_RemoveOldestRotY(InterpComp* interp) {
+static void InterpComp_RemoveOldestRotY(struct InterpComp* interp) {
 	Int32 i;
 	for (i = 0; i < Array_Elems(interp->RotYStates); i++) {
 		interp->RotYStates[i] = interp->RotYStates[i + 1];
@@ -302,14 +302,14 @@ static void InterpComp_RemoveOldestRotY(InterpComp* interp) {
 	interp->RotYCount--;
 }
 
-static void InterpComp_AddRotY(InterpComp* interp, Real32 state) {
+static void InterpComp_AddRotY(struct InterpComp* interp, Real32 state) {
 	if (interp->RotYCount == Array_Elems(interp->RotYStates)) {
 		InterpComp_RemoveOldestRotY(interp);
 	}
 	interp->RotYStates[interp->RotYCount] = state; interp->RotYCount++;
 }
 
-static void InterpComp_AdvanceRotY(InterpComp* interp) {
+static void InterpComp_AdvanceRotY(struct InterpComp* interp) {
 	interp->PrevRotY = interp->NextRotY;
 	if (interp->RotYCount == 0) return;
 
@@ -317,9 +317,9 @@ static void InterpComp_AdvanceRotY(InterpComp* interp) {
 	InterpComp_RemoveOldestRotY(interp);
 }
 
-void InterpComp_LerpAngles(InterpComp* interp, Entity* entity, Real32 t) {
-	InterpState* prev = &interp->Prev;
-	InterpState* next = &interp->Next;
+void InterpComp_LerpAngles(struct InterpComp* interp, struct Entity* entity, Real32 t) {
+	struct InterpState* prev = &interp->Prev;
+	struct InterpState* next = &interp->Next;
 
 	entity->HeadX = Math_LerpAngle(prev->HeadX, next->HeadX, t);
 	entity->HeadY = Math_LerpAngle(prev->HeadY, next->HeadY, t);
@@ -328,7 +328,7 @@ void InterpComp_LerpAngles(InterpComp* interp, Entity* entity, Real32 t) {
 	entity->RotZ  = Math_LerpAngle(prev->RotZ,  next->RotZ, t);
 }
 
-static void InterpComp_SetPos(InterpState* state, LocationUpdate* update) {
+static void InterpComp_SetPos(struct InterpState* state, struct LocationUpdate* update) {
 	if (update->RelativePos) {
 		Vector3_AddBy(&state->Pos, &update->Pos);
 	} else {
@@ -340,7 +340,7 @@ static void InterpComp_SetPos(InterpState* state, LocationUpdate* update) {
 /*########################################################################################################################*
 *----------------------------------------------NetworkInterpolationComponent----------------------------------------------*
 *#########################################################################################################################*/
-static void NetInterpComp_RemoveOldestState(NetInterpComp* interp) {
+static void NetInterpComp_RemoveOldestState(struct NetInterpComp* interp) {
 	Int32 i;
 	for (i = 0; i < Array_Elems(interp->States); i++) {
 		interp->States[i] = interp->States[i + 1];
@@ -348,16 +348,16 @@ static void NetInterpComp_RemoveOldestState(NetInterpComp* interp) {
 	interp->StatesCount--;
 }
 
-static void NetInterpComp_AddState(NetInterpComp* interp, InterpState state) {
+static void NetInterpComp_AddState(struct NetInterpComp* interp, struct InterpState state) {
 	if (interp->StatesCount == Array_Elems(interp->States)) {
 		NetInterpComp_RemoveOldestState(interp);
 	}
 	interp->States[interp->StatesCount] = state; interp->StatesCount++;
 }
 
-void NetInterpComp_SetLocation(NetInterpComp* interp, LocationUpdate* update, bool interpolate) {
-	InterpState last = interp->Cur;
-	InterpState* cur = &interp->Cur;
+void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, bool interpolate) {
+	struct InterpState last = interp->Cur;
+	struct InterpState* cur = &interp->Cur;
 	UInt8 flags = update->Flags;
 
 	if (flags & LOCATIONUPDATE_FLAG_POS)   InterpComp_SetPos(cur, update);
@@ -372,7 +372,7 @@ void NetInterpComp_SetLocation(NetInterpComp* interp, LocationUpdate* update, bo
 		interp->RotYCount = 0; interp->StatesCount = 0;
 	} else {
 		/* Smoother interpolation by also adding midpoint. */
-		InterpState mid;
+		struct InterpState mid;
 		Vector3_Lerp(&mid.Pos, &last.Pos, &cur->Pos, 0.5f);
 		mid.RotX  = Math_LerpAngle(last.RotX,  cur->RotX,  0.5f);
 		mid.RotZ  = Math_LerpAngle(last.RotZ,  cur->RotZ,  0.5f);
@@ -382,19 +382,19 @@ void NetInterpComp_SetLocation(NetInterpComp* interp, LocationUpdate* update, bo
 		NetInterpComp_AddState(interp, *cur);
 
 		/* Head rotation lags behind body a tiny bit */
-		InterpComp_AddRotY((InterpComp*)interp, Math_LerpAngle(last.HeadY, cur->HeadY, 0.33333333f));
-		InterpComp_AddRotY((InterpComp*)interp, Math_LerpAngle(last.HeadY, cur->HeadY, 0.66666667f));
-		InterpComp_AddRotY((InterpComp*)interp, Math_LerpAngle(last.HeadY, cur->HeadY, 1.00000000f));
+		InterpComp_AddRotY((struct InterpComp*)interp, Math_LerpAngle(last.HeadY, cur->HeadY, 0.33333333f));
+		InterpComp_AddRotY((struct InterpComp*)interp, Math_LerpAngle(last.HeadY, cur->HeadY, 0.66666667f));
+		InterpComp_AddRotY((struct InterpComp*)interp, Math_LerpAngle(last.HeadY, cur->HeadY, 1.00000000f));
 	}
 }
 
-void NetInterpComp_AdvanceState(NetInterpComp* interp) {
+void NetInterpComp_AdvanceState(struct NetInterpComp* interp) {
 	interp->Prev = interp->Next;
 	if (interp->StatesCount > 0) {
 		interp->Next = interp->States[0];
 		NetInterpComp_RemoveOldestState(interp);
 	}
-	InterpComp_AdvanceRotY((InterpComp*)interp);
+	InterpComp_AdvanceRotY((struct InterpComp*)interp);
 }
 
 
@@ -406,10 +406,10 @@ static void LocalInterpComp_Angle(Real32* prev, Real32* next, Real32 value, bool
 	if (!interpolate) *prev = value;
 }
 
-void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate* update, bool interpolate) {
-	Entity* entity = &LocalPlayer_Instance.Base;
-	InterpState* prev = &interp->Prev;
-	InterpState* next = &interp->Next;
+void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update, bool interpolate) {
+	struct Entity* entity = &LocalPlayer_Instance.Base;
+	struct InterpState* prev = &interp->Prev;
+	struct InterpState* next = &interp->Next;
 	UInt8 flags = update->Flags;
 
 	if (flags & LOCATIONUPDATE_FLAG_POS) {
@@ -450,8 +450,8 @@ void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate* update, boo
 	InterpComp_LerpAngles(interp, entity, 0.0f);
 }
 
-void LocalInterpComp_AdvanceState(InterpComp* interp) {
-	Entity* entity = &LocalPlayer_Instance.Base;
+void LocalInterpComp_AdvanceState(struct InterpComp* interp) {
+	struct Entity* entity = &LocalPlayer_Instance.Base;
 	interp->Prev = interp->Next;
 	entity->Position = interp->Next.Pos;
 	InterpComp_AdvanceRotY(interp);
@@ -462,10 +462,10 @@ void LocalInterpComp_AdvanceState(InterpComp* interp) {
 *-----------------------------------------------------ShadowComponent-----------------------------------------------------*
 *#########################################################################################################################*/
 Real32 ShadowComponent_radius, shadowComponent_uvScale;
-typedef struct ShadowData_ { Real32 Y; BlockID Block; UInt8 A; } ShadowData;
+struct ShadowData { Real32 Y; BlockID Block; UInt8 A; };
 
 bool lequal(Real32 a, Real32 b) { return a < b || Math_AbsF(a - b) < 0.001f; }
-static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, Entity* entity, ShadowData* data, Real32 x1, Real32 z1, Real32 x2, Real32 z2) {
+static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity* entity, struct ShadowData* data, Real32 x1, Real32 z1, Real32 x2, Real32 z2) {
 	Vector3 cen = entity->Position;
 	if (lequal(x2, x1) || lequal(z2, z1)) return;
 
@@ -506,7 +506,7 @@ static void ShadowComponent_DrawSquareShadow(VertexP3fT2fC4b** vertices, Real32 
 	*vertices = ptr;
 }
 
-static void ShadowComponent_DrawCircle(VertexP3fT2fC4b** vertices, Entity* entity, ShadowData* data, Real32 x, Real32 z) {
+static void ShadowComponent_DrawCircle(VertexP3fT2fC4b** vertices, struct Entity* entity, struct ShadowData* data, Real32 x, Real32 z) {
 	x = (Real32)Math_Floor(x); z = (Real32)Math_Floor(z);
 	Vector3 min = Block_MinBB[data[0].Block], max = Block_MaxBB[data[0].Block];
 
@@ -524,7 +524,7 @@ static void ShadowComponent_DrawCircle(VertexP3fT2fC4b** vertices, Entity* entit
 	}
 }
 
-static void ShadowComponent_CalcAlpha(Real32 playerY, ShadowData* data) {
+static void ShadowComponent_CalcAlpha(Real32 playerY, struct ShadowData* data) {
 	Real32 height = playerY - data->Y;
 	if (height <= 6.0f) {
 		data->A = (UInt8)(160 - 160 * height / 6.0f);
@@ -538,13 +538,13 @@ static void ShadowComponent_CalcAlpha(Real32 playerY, ShadowData* data) {
 	else data->Y += 1.0f / 4.0f;
 }
 
-static bool ShadowComponent_GetBlocks(Entity* entity, Int32 x, Int32 y, Int32 z, ShadowData* data) {
+static bool ShadowComponent_GetBlocks(struct Entity* entity, Int32 x, Int32 y, Int32 z, struct ShadowData* data) {
 	Int32 count;
-	ShadowData zeroData = { 0.0f, 0, 0 };
+	struct ShadowData zeroData = { 0 };
 	for (count = 0; count < 4; count++) { data[count] = zeroData; }
 	count = 0;
 
-	ShadowData* cur = data;
+	struct ShadowData* cur = data;
 	Real32 posY = entity->Position.Y;
 	bool outside = x < 0 || z < 0 || x >= World_Width || z >= World_Length;
 
@@ -587,7 +587,7 @@ static bool ShadowComponent_GetBlocks(Entity* entity, Int32 x, Int32 y, Int32 z,
 #define sh_half (sh_size / 2)
 static void ShadowComponent_MakeTex(void) {
 	UInt8 pixels[Bitmap_DataSize(sh_size, sh_size)];
-	Bitmap bmp; Bitmap_Create(&bmp, sh_size, sh_size, pixels);
+	struct Bitmap bmp; Bitmap_Create(&bmp, sh_size, sh_size, pixels);
 
 	UInt32 inPix  = PackedCol_ARGB(0, 0, 0, 200);
 	UInt32 outPix = PackedCol_ARGB(0, 0, 0, 0);
@@ -605,7 +605,7 @@ static void ShadowComponent_MakeTex(void) {
 	ShadowComponent_ShadowTex = Gfx_CreateTexture(&bmp, false, false);
 }
 
-void ShadowComponent_Draw(Entity* entity) {
+void ShadowComponent_Draw(struct Entity* entity) {
 	Vector3 Position = entity->Position;
 	if (Position.Y < 0.0f) return;
 
@@ -618,7 +618,7 @@ void ShadowComponent_Draw(Entity* entity) {
 	shadowComponent_uvScale = 16.0f / (radius * 2.0f);
 
 	VertexP3fT2fC4b vertices[128];
-	ShadowData data[4];
+	struct ShadowData data[4];
 
 	/* TODO: Should shadow component use its own VB? */
 	VertexP3fT2fC4b* ptr = vertices;
@@ -666,24 +666,24 @@ void ShadowComponent_Draw(Entity* entity) {
 *---------------------------------------------------CollisionsComponent---------------------------------------------------*
 *#########################################################################################################################*/
 /* Whether a collision occurred with any horizontal sides of any blocks */
-bool Collisions_HitHorizontal(CollisionsComp* comp) {
+bool Collisions_HitHorizontal(struct CollisionsComp* comp) {
 	return comp->HitXMin || comp->HitXMax || comp->HitZMin || comp->HitZMax;
 }
 #define COLLISIONS_ADJ 0.001f
 
-static void Collisions_ClipX(Entity* entity, Vector3* size, AABB* entityBB, AABB* extentBB) {
+static void Collisions_ClipX(struct Entity* entity, Vector3* size, AABB* entityBB, AABB* extentBB) {
 	entity->Velocity.X = 0.0f;
 	entityBB->Min.X = entity->Position.X - size->X / 2; extentBB->Min.X = entityBB->Min.X;
 	entityBB->Max.X = entity->Position.X + size->X / 2; extentBB->Max.X = entityBB->Max.X;
 }
 
-static void Collisions_ClipY(Entity* entity, Vector3* size, AABB* entityBB, AABB* extentBB) {
+static void Collisions_ClipY(struct Entity* entity, Vector3* size, AABB* entityBB, AABB* extentBB) {
 	entity->Velocity.Y = 0.0f;
 	entityBB->Min.Y = entity->Position.Y;               extentBB->Min.Y = entityBB->Min.Y;
 	entityBB->Max.Y = entity->Position.Y + size->Y;     extentBB->Max.Y = entityBB->Max.Y;
 }
 
-static void Collisions_ClipZ(Entity* entity, Vector3* size, AABB* entityBB, AABB* extentBB) {
+static void Collisions_ClipZ(struct Entity* entity, Vector3* size, AABB* entityBB, AABB* extentBB) {
 	entity->Velocity.Z = 0.0f;
 	entityBB->Min.Z = entity->Position.Z - size->Z / 2; extentBB->Min.Z = entityBB->Min.Z;
 	entityBB->Max.Z = entity->Position.Z + size->Z / 2; extentBB->Max.Z = entityBB->Max.Z;
@@ -711,7 +711,7 @@ static bool Collisions_CanSlideThrough(AABB* adjFinalBB) {
 	return true;
 }
 
-static bool Collisions_DidSlide(CollisionsComp* comp, AABB* blockBB, Vector3* size, AABB* finalBB, AABB* entityBB, AABB* extentBB) {
+static bool Collisions_DidSlide(struct CollisionsComp* comp, AABB* blockBB, Vector3* size, AABB* finalBB, AABB* entityBB, AABB* extentBB) {
 	Real32 yDist = blockBB->Max.Y - entityBB->Min.Y;
 	if (yDist > 0.0f && yDist <= comp->Entity->StepSize + 0.01f) {
 		Real32 blockBB_MinX = max(blockBB->Min.X, blockBB->Max.X - size->X / 2);
@@ -736,7 +736,7 @@ static bool Collisions_DidSlide(CollisionsComp* comp, AABB* blockBB, Vector3* si
 	return false;
 }
 
-static void Collisions_ClipXMin(CollisionsComp* comp, AABB* blockBB, AABB* entityBB, bool wasOn, AABB* finalBB, AABB* extentBB, Vector3* size) {
+static void Collisions_ClipXMin(struct CollisionsComp* comp, AABB* blockBB, AABB* entityBB, bool wasOn, AABB* finalBB, AABB* extentBB, Vector3* size) {
 	if (!wasOn || !Collisions_DidSlide(comp, blockBB, size, finalBB, entityBB, extentBB)) {
 		comp->Entity->Position.X = blockBB->Min.X - size->X / 2 - COLLISIONS_ADJ;
 		Collisions_ClipX(comp->Entity, size, entityBB, extentBB);
@@ -744,7 +744,7 @@ static void Collisions_ClipXMin(CollisionsComp* comp, AABB* blockBB, AABB* entit
 	}
 }
 
-static void Collisions_ClipXMax(CollisionsComp* comp, AABB* blockBB, AABB* entityBB, bool wasOn, AABB* finalBB, AABB* extentBB, Vector3* size) {
+static void Collisions_ClipXMax(struct CollisionsComp* comp, AABB* blockBB, AABB* entityBB, bool wasOn, AABB* finalBB, AABB* extentBB, Vector3* size) {
 	if (!wasOn || !Collisions_DidSlide(comp, blockBB, size, finalBB, entityBB, extentBB)) {
 		comp->Entity->Position.X = blockBB->Max.X + size->X / 2 + COLLISIONS_ADJ;
 		Collisions_ClipX(comp->Entity, size, entityBB, extentBB);
@@ -752,7 +752,7 @@ static void Collisions_ClipXMax(CollisionsComp* comp, AABB* blockBB, AABB* entit
 	}
 }
 
-static void Collisions_ClipZMax(CollisionsComp* comp, AABB* blockBB, AABB* entityBB, bool wasOn, AABB* finalBB, AABB* extentBB, Vector3* size) {
+static void Collisions_ClipZMax(struct CollisionsComp* comp, AABB* blockBB, AABB* entityBB, bool wasOn, AABB* finalBB, AABB* extentBB, Vector3* size) {
 	if (!wasOn || !Collisions_DidSlide(comp, blockBB, size, finalBB, entityBB, extentBB)) {
 		comp->Entity->Position.Z = blockBB->Max.Z + size->Z / 2 + COLLISIONS_ADJ;
 		Collisions_ClipZ(comp->Entity, size, entityBB, extentBB);
@@ -760,7 +760,7 @@ static void Collisions_ClipZMax(CollisionsComp* comp, AABB* blockBB, AABB* entit
 	}
 }
 
-static void Collisions_ClipZMin(CollisionsComp* comp, AABB* blockBB, AABB* entityBB, bool wasOn, AABB* finalBB, AABB* extentBB, Vector3* size) {
+static void Collisions_ClipZMin(struct CollisionsComp* comp, AABB* blockBB, AABB* entityBB, bool wasOn, AABB* finalBB, AABB* extentBB, Vector3* size) {
 	if (!wasOn || !Collisions_DidSlide(comp, blockBB, size, finalBB, entityBB, extentBB)) {
 		comp->Entity->Position.Z = blockBB->Min.Z - size->Z / 2 - COLLISIONS_ADJ;
 		Collisions_ClipZ(comp->Entity, size, entityBB, extentBB);
@@ -768,21 +768,21 @@ static void Collisions_ClipZMin(CollisionsComp* comp, AABB* blockBB, AABB* entit
 	}
 }
 
-static void Collisions_ClipYMin(CollisionsComp* comp, AABB* blockBB, AABB* entityBB, AABB* extentBB, Vector3* size) {
+static void Collisions_ClipYMin(struct CollisionsComp* comp, AABB* blockBB, AABB* entityBB, AABB* extentBB, Vector3* size) {
 	comp->Entity->Position.Y = blockBB->Min.Y - size->Y - COLLISIONS_ADJ;
 	Collisions_ClipY(comp->Entity, size, entityBB, extentBB);
 	comp->HitYMin = true;
 }
 
-static void Collisions_ClipYMax(CollisionsComp* comp, AABB* blockBB, AABB* entityBB, AABB* extentBB, Vector3* size) {
+static void Collisions_ClipYMax(struct CollisionsComp* comp, AABB* blockBB, AABB* entityBB, AABB* extentBB, Vector3* size) {
 	comp->Entity->Position.Y = blockBB->Max.Y + COLLISIONS_ADJ;
 	comp->Entity->OnGround = true;
 	Collisions_ClipY(comp->Entity, size, entityBB, extentBB);
 	comp->HitYMax = true;
 }
 
-static void Collisions_CollideWithReachableBlocks(CollisionsComp* comp, Int32 count, AABB* entityBB, AABB* extentBB) {
-	Entity* entity = comp->Entity;
+static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, Int32 count, AABB* entityBB, AABB* extentBB) {
+	struct Entity* entity = comp->Entity;
 	/* Reset collision detection states */
 	bool wasOn = entity->OnGround;
 	entity->OnGround = false;
@@ -794,7 +794,7 @@ static void Collisions_CollideWithReachableBlocks(CollisionsComp* comp, Int32 co
 	Int32 i;
 	for (i = 0; i < count; i++) {
 		/* Unpack the block and coordinate data */
-		SearcherState state = Searcher_States[i];
+		struct SearcherState state = Searcher_States[i];
 		bPos.X = state.X >> 3; bPos.Y = state.Y >> 3; bPos.Z = state.Z >> 3;
 		Int32 block = (state.X & 0x7) | (state.Y & 0x7) << 3 | (state.Z & 0x7) << 6;
 
@@ -852,9 +852,9 @@ static void Collisions_CollideWithReachableBlocks(CollisionsComp* comp, Int32 co
 }
 
 /* TODO: test for corner cases, and refactor this */
-void Collisions_MoveAndWallSlide(CollisionsComp* comp) {
+void Collisions_MoveAndWallSlide(struct CollisionsComp* comp) {
 	Vector3 zero = Vector3_Zero;
-	Entity* entity = comp->Entity;
+	struct Entity* entity = comp->Entity;
 	if (Vector3_Equals(&entity->Velocity, &zero)) return;
 
 	AABB entityBB, entityExtentBB;
@@ -866,8 +866,8 @@ void Collisions_MoveAndWallSlide(CollisionsComp* comp) {
 /*########################################################################################################################*
 *----------------------------------------------------PhysicsComponent-----------------------------------------------------*
 *#########################################################################################################################*/
-void PhysicsComp_Init(PhysicsComp* comp, Entity* entity) {
-	Platform_MemSet(comp, 0, sizeof(PhysicsComp));
+void PhysicsComp_Init(struct PhysicsComp* comp, struct Entity* entity) {
+	Platform_MemSet(comp, 0, sizeof(struct PhysicsComp));
 	comp->CanLiquidJump = true;
 	comp->Entity = entity;
 	comp->JumpVel       = 0.42f;
@@ -876,9 +876,9 @@ void PhysicsComp_Init(PhysicsComp* comp, Entity* entity) {
 }
 
 static bool PhysicsComp_TouchesLiquid(BlockID block) { return Block_Collide[block] == COLLIDE_LIQUID; }
-void PhysicsComp_UpdateVelocityState(PhysicsComp* comp) {
-	Entity* entity = comp->Entity;
-	HacksComp* hacks = comp->Hacks;
+void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
+	struct Entity* entity = comp->Entity;
+	struct HacksComp* hacks = comp->Hacks;
 
 	if (hacks->Floating) {
 		entity->Velocity.Y = 0.0f; /* eliminate the effect of gravity */
@@ -937,9 +937,9 @@ void PhysicsComp_UpdateVelocityState(PhysicsComp* comp) {
 	}
 }
 
-void PhysicsComp_DoNormalJump(PhysicsComp* comp) {
-	Entity* entity = comp->Entity;
-	HacksComp* hacks = comp->Hacks;
+void PhysicsComp_DoNormalJump(struct PhysicsComp* comp) {
+	struct Entity* entity = comp->Entity;
+	struct HacksComp* hacks = comp->Hacks;
 	if (comp->JumpVel == 0.0f || hacks->MaxJumps <= 0) return;
 
 	entity->Velocity.Y = comp->JumpVel;
@@ -949,7 +949,7 @@ void PhysicsComp_DoNormalJump(PhysicsComp* comp) {
 }
 
 static bool PhysicsComp_TouchesSlipperyIce(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_SLIPPERY_ICE; }
-static bool PhysicsComp_OnIce(Entity* entity) {
+static bool PhysicsComp_OnIce(struct Entity* entity) {
 	Vector3 under = entity->Position; under.Y -= 0.01f;
 	Vector3I underCoords; Vector3I_Floor(&underCoords, &under);
 	BlockID blockUnder = World_SafeGetBlock_3I(underCoords);
@@ -960,19 +960,19 @@ static bool PhysicsComp_OnIce(Entity* entity) {
 	return Entity_TouchesAny(&bounds, PhysicsComp_TouchesSlipperyIce);
 }
 
-static void PhysicsComp_MoveHor(PhysicsComp* comp, Vector3 vel, Real32 factor) {
+static void PhysicsComp_MoveHor(struct PhysicsComp* comp, Vector3 vel, Real32 factor) {
 	Real32 dist = Math_SqrtF(vel.X * vel.X + vel.Z * vel.Z);
 	if (dist < 0.00001f) return;
 	if (dist < 1.0f) dist = 1.0f;
 
 	/* entity.Velocity += vel * (factor / dist) */
-	Entity* entity = comp->Entity;
+	struct Entity* entity = comp->Entity;
 	Vector3_Mul1By(&vel, factor / dist);
 	Vector3_AddBy(&entity->Velocity, &vel);
 }
 
-static void PhysicsComp_Move(PhysicsComp* comp, Vector3 drag, Real32 gravity, Real32 yMul) {
-	Entity* entity = comp->Entity;
+static void PhysicsComp_Move(struct PhysicsComp* comp, Vector3 drag, Real32 gravity, Real32 yMul) {
+	struct Entity* entity = comp->Entity;
 	entity->Velocity.Y *= yMul;
 	if (!comp->Hacks->Noclip) {
 		Collisions_MoveAndWallSlide(comp->Collisions);
@@ -984,9 +984,9 @@ static void PhysicsComp_Move(PhysicsComp* comp, Vector3 drag, Real32 gravity, Re
 	entity->Velocity.Y -= gravity;
 }
 
-static void PhysicsComp_MoveFlying(PhysicsComp* comp, Vector3 vel, Real32 factor, Vector3 drag, Real32 gravity, Real32 yMul) {
-	Entity* entity = comp->Entity;
-	HacksComp* hacks = comp->Hacks;
+static void PhysicsComp_MoveFlying(struct PhysicsComp* comp, Vector3 vel, Real32 factor, Vector3 drag, Real32 gravity, Real32 yMul) {
+	struct Entity* entity = comp->Entity;
+	struct HacksComp* hacks = comp->Hacks;
 
 	PhysicsComp_MoveHor(comp, vel, factor);
 	Real32 yVel = Math_SqrtF(entity->Velocity.X * entity->Velocity.X + entity->Velocity.Z * entity->Velocity.Z);
@@ -1000,12 +1000,12 @@ static void PhysicsComp_MoveFlying(PhysicsComp* comp, Vector3 vel, Real32 factor
 	PhysicsComp_Move(comp, drag, gravity, yMul);
 }
 
-static void PhysicsComp_MoveNormal(PhysicsComp* comp, Vector3 vel, Real32 factor, Vector3 drag, Real32 gravity, Real32 yMul) {
+static void PhysicsComp_MoveNormal(struct PhysicsComp* comp, Vector3 vel, Real32 factor, Vector3 drag, Real32 gravity, Real32 yMul) {
 	PhysicsComp_MoveHor(comp, vel, factor);
 	PhysicsComp_Move(comp, drag, gravity, yMul);
 }
 
-static Real32 PhysicsComp_LowestModifier(PhysicsComp* comp, AABB* bounds, bool checkSolid) {
+static Real32 PhysicsComp_LowestModifier(struct PhysicsComp* comp, AABB* bounds, bool checkSolid) {
 	Vector3I bbMin, bbMax;
 	Vector3I_Floor(&bbMin, &bounds->Min);
 	Vector3I_Floor(&bbMax, &bounds->Max);
@@ -1040,14 +1040,14 @@ static Real32 PhysicsComp_LowestModifier(PhysicsComp* comp, AABB* bounds, bool c
 	return modifier;
 }
 
-static Real32 PhysicsComp_GetSpeed(HacksComp* hacks, Real32 speedMul) {
+static Real32 PhysicsComp_GetSpeed(struct HacksComp* hacks, Real32 speedMul) {
 	Real32 factor = hacks->Floating ? speedMul : 1.0f, speed = factor;
 	if (hacks->Speeding     && hacks->CanSpeed) speed += factor * hacks->SpeedMultiplier;
 	if (hacks->HalfSpeeding && hacks->CanSpeed) speed += factor * hacks->SpeedMultiplier / 2;
 	return hacks->CanSpeed ? speed : min(speed, 1.0f);
 }
 
-static Real32 PhysicsComp_GetBaseSpeed(PhysicsComp* comp) {
+static Real32 PhysicsComp_GetBaseSpeed(struct PhysicsComp* comp) {
 	AABB bounds; Entity_GetBounds(comp->Entity, &bounds);
 	comp->UseLiquidGravity = false;
 	Real32 baseModifier = PhysicsComp_LowestModifier(comp, &bounds, false);
@@ -1060,9 +1060,9 @@ static Real32 PhysicsComp_GetBaseSpeed(PhysicsComp* comp) {
 
 #define LIQUID_GRAVITY 0.02f
 #define ROPE_GRAVITY   0.034f
-void PhysicsComp_PhysicsTick(PhysicsComp* comp, Vector3 vel) {
-	Entity* entity = comp->Entity;
-	HacksComp* hacks = comp->Hacks;
+void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vector3 vel) {
+	struct Entity* entity = comp->Entity;
+	struct HacksComp* hacks = comp->Hacks;
 
 	if (hacks->Noclip) entity->OnGround = false;
 	Real32 baseSpeed = PhysicsComp_GetBaseSpeed(comp);
@@ -1140,7 +1140,7 @@ Real64 PhysicsComp_GetMaxHeight(Real32 u) {
 
 /* Calculates the jump velocity required such that when a client presses
 the jump binding they will be able to jump up to the given height. */
-void PhysicsComp_CalculateJumpVelocity(PhysicsComp* comp, Real32 jumpHeight) {
+void PhysicsComp_CalculateJumpVelocity(struct PhysicsComp* comp, Real32 jumpHeight) {
 	comp->JumpVel = 0.0f;
 	if (jumpHeight == 0.0f) return;
 
@@ -1151,12 +1151,12 @@ void PhysicsComp_CalculateJumpVelocity(PhysicsComp* comp, Real32 jumpHeight) {
 	while (PhysicsComp_GetMaxHeight(comp->JumpVel) <= jumpHeight) { comp->JumpVel += 0.001f; }
 }
 
-void PhysicsComp_DoEntityPush(Entity* entity) {
+void PhysicsComp_DoEntityPush(struct Entity* entity) {
 	Int32 id;
 	Vector3 dir; dir.Y = 0.0f;
 
 	for (id = 0; id < ENTITIES_MAX_COUNT; id++) {
-		Entity* other = Entities_List[id];
+		struct Entity* other = Entities_List[id];
 		if (other == NULL || other == entity) continue;
 		if (!other->Model->Pushes) continue;
 
@@ -1203,7 +1203,7 @@ static bool Sounds_CheckSolid(BlockID b) {
 	return false;
 }
 
-static void SoundComp_GetSound(LocalPlayer* p) {
+static void SoundComp_GetSound(struct LocalPlayer* p) {
 	Vector3 pos = p->Interp.Next.Pos;
 	AABB bounds; Entity_GetBounds(&p->Base, &bounds);
 	sounds_Type = SOUND_NONE;
@@ -1230,7 +1230,7 @@ static void SoundComp_GetSound(LocalPlayer* p) {
 	Entity_TouchesAny(&bounds, Sounds_CheckSolid);
 }
 
-static bool SoundComp_DoPlaySound(LocalPlayer* p, Vector3 soundPos) {
+static bool SoundComp_DoPlaySound(struct LocalPlayer* p, Vector3 soundPos) {
 	Vector3 delta; Vector3_Sub(&delta, &sounds_LastPos, &soundPos);
 	Real32 distSq = Vector3_LengthSquared(&delta);
 	bool enoughDist = distSq > 1.75f * 1.75f;
@@ -1250,7 +1250,7 @@ static bool SoundComp_DoPlaySound(LocalPlayer* p, Vector3 soundPos) {
 }
 
 void SoundComp_Tick(bool wasOnGround) {
-	LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	Vector3 soundPos = p->Interp.Next.Pos;
 	SoundComp_GetSound(p);
 	if (!sounds_AnyNonAir) soundPos = Vector3_BigPos();

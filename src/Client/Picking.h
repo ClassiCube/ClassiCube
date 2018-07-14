@@ -7,7 +7,7 @@
 */
 
 /* Describes the picked/selected block by the user and its position. */
-typedef struct PickedPos_ {
+struct PickedPos {
 	Vector3 Min;            /* Minimum coords of the block's bounding box.*/
 	Vector3 Max;            /* Maximum coords of the block's bounding box. */
 	Vector3 Intersect;      /* Coords at which the ray intersected this block. */
@@ -16,7 +16,7 @@ typedef struct PickedPos_ {
 	bool Valid;             /* Whether this instance actually has a selected block currently */
 	Face ClosestFace;       /* Face of the picked block that is closet to the player */
 	BlockID Block;          /* Block ID of the picked block */
-} PickedPos;
+};
 
 /* Implements a voxel ray tracer
 http://www.xnawiki.com/index.php/Voxel_traversal
@@ -27,23 +27,23 @@ John Amanatides, Andrew Woo
 http://www.cse.yorku.ca/~amana/research/grid.pdf
 http://www.devmaster.net/articles/raytracing_series/A%20faster%20voxel%20traversal%20algorithm%20for%20ray%20tracing.pdf
 */
-typedef struct RayTracer_ {
+struct RayTracer {
 	Int32 X, Y, Z;
 	Vector3 Origin, Dir;
 	Vector3 Min, Max; /* Block data */
 	BlockID Block;    /* Block data */
 	Vector3I step;
 	Vector3 tMax, tDelta;
-} RayTracer;
+};
 
-void PickedPos_SetAsValid(PickedPos* pos, RayTracer* t, Vector3 intersect);
-void PickedPos_SetAsInvalid(PickedPos* pos);
-void RayTracer_SetVectors(RayTracer* t, Vector3 origin, Vector3 dir);
-void RayTracer_Step(RayTracer* t);
+void PickedPos_SetAsValid(struct PickedPos* pos, struct RayTracer* t, Vector3 intersect);
+void PickedPos_SetAsInvalid(struct PickedPos* pos);
+void RayTracer_SetVectors(struct RayTracer* t, Vector3 origin, Vector3 dir);
+void RayTracer_Step(struct RayTracer* t);
 
 /* Determines the picked block based on the given origin and direction vector.
    Marks pickedPos as invalid if a block could not be found due to going outside map boundaries
    or not being able to find a suitable candiate within the given reach distance.*/
-void Picking_CalculatePickedBlock(Vector3 origin, Vector3 dir, Real32 reach, PickedPos* pos);
-void Picking_ClipCameraPos(Vector3 origin, Vector3 dir, Real32 reach, PickedPos* pos);
+void Picking_CalculatePickedBlock(Vector3 origin, Vector3 dir, Real32 reach, struct PickedPos* pos);
+void Picking_ClipCameraPos(Vector3 origin, Vector3 dir, Real32 reach, struct PickedPos* pos);
 #endif

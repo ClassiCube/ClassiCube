@@ -6,35 +6,35 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-typedef struct Entity_ Entity;
-typedef struct LocationUpdate_ LocationUpdate;
+struct Entity;
+struct LocationUpdate;
 
 /* Entity component that performs model animation depending on movement speed and time */
-typedef struct AnimatedComp_ {
+struct AnimatedComp {
 	Real32 BobbingHor, BobbingVer, BobbingModel;
 	Real32 WalkTime, Swing, BobStrength;
 	Real32 WalkTimeO, WalkTimeN, SwingO, SwingN, BobStrengthO, BobStrengthN;
 
 	Real32 LeftLegX, LeftLegZ, RightLegX, RightLegZ;
 	Real32 LeftArmX, LeftArmZ, RightArmX, RightArmZ;
-} AnimatedComp;
+};
 
-void AnimatedComp_Init(AnimatedComp* anim);
-void AnimatedComp_Update(Entity* entity, Vector3 oldPos, Vector3 newPos, Real64 delta);
-void AnimatedComp_GetCurrent(Entity* entity, Real32 t);
+void AnimatedComp_Init(struct AnimatedComp* anim);
+void AnimatedComp_Update(struct Entity* entity, Vector3 oldPos, Vector3 newPos, Real64 delta);
+void AnimatedComp_GetCurrent(struct Entity* entity, Real32 t);
 
 /* Entity component that performs tilt animation depending on movement speed and time */
-typedef struct TiltComp_ {
+struct TiltComp {
 	Real32 TiltX, TiltY, VelTiltStrength;
 	Real32 VelTiltStrengthO, VelTiltStrengthN;
-} TiltComp;
+};
 
-void TiltComp_Init(TiltComp* anim);
-void TiltComp_Update(TiltComp* anim, Real64 delta);
-void TiltComp_GetCurrent(TiltComp* anim, Real32 t);
+void TiltComp_Init(struct TiltComp* anim);
+void TiltComp_Update(struct TiltComp* anim, Real64 delta);
+void TiltComp_GetCurrent(struct TiltComp* anim, Real32 t);
 
 /* Entity component that performs management of hack states */
-typedef struct HacksComponent_ {
+struct HacksComp {
 	UInt8 UserType;
 	/* Speed player move at, relative to normal speed, when the 'speeding' key binding is held down */
 	Real32 SpeedMultiplier;
@@ -62,75 +62,75 @@ typedef struct HacksComponent_ {
 	bool Floating; /* true if NoClip or Flying */
 	UChar HacksFlagsBuffer[String_BufferSize(128)];
 	String HacksFlags;
-} HacksComp;
+};
 
-void HacksComp_Init(HacksComp* hacks);
-bool HacksComp_CanJumpHigher(HacksComp* hacks);
-bool HacksComp_Floating(HacksComp* hacks);
-void HacksComp_SetUserType(HacksComp* hacks, UInt8 value, bool setBlockPerms);
-void HacksComp_CheckConsistency(HacksComp* hacks);
-void HacksComp_UpdateState(HacksComp* hacks);
+void HacksComp_Init(struct HacksComp* hacks);
+bool HacksComp_CanJumpHigher(struct HacksComp* hacks);
+bool HacksComp_Floating(struct HacksComp* hacks);
+void HacksComp_SetUserType(struct HacksComp* hacks, UInt8 value, bool setBlockPerms);
+void HacksComp_CheckConsistency(struct HacksComp* hacks);
+void HacksComp_UpdateState(struct HacksComp* hacks);
 
 /* Represents a position and orientation state */
-typedef struct InterpState_ { Vector3 Pos; Real32 HeadX, HeadY, RotX, RotZ; } InterpState;
+struct InterpState { Vector3 Pos; Real32 HeadX, HeadY, RotX, RotZ; };
 
 #define InterpComp_Layout \
-InterpState Prev, Next; Real32 PrevRotY, NextRotY; \
+struct InterpState Prev, Next; Real32 PrevRotY, NextRotY; \
 Int32 RotYCount; Real32 RotYStates[15];
 
 /* Base entity component that performs interpolation of position and orientation */
-typedef struct InterpComp_ { InterpComp_Layout } InterpComp;
+struct InterpComp { InterpComp_Layout };
 
-void InterpComp_LerpAngles(InterpComp* interp, Entity* entity, Real32 t);
+void InterpComp_LerpAngles(struct InterpComp* interp, struct Entity* entity, Real32 t);
 
-void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate* update, bool interpolate);
-void LocalInterpComp_AdvanceState(InterpComp* interp);
+void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update, bool interpolate);
+void LocalInterpComp_AdvanceState(struct InterpComp* interp);
 
 /* Entity component that performs interpolation for network players */
-typedef struct NetInterpComp_ {
+struct NetInterpComp {
 	InterpComp_Layout
 	/* Last known position and orientation sent by the server */
-	InterpState Cur;
+	struct InterpState Cur;
 	Int32 StatesCount;
-	InterpState States[10];
-} NetInterpComp;
+	struct InterpState States[10];
+};
 
-void NetInterpComp_SetLocation(NetInterpComp* interp, LocationUpdate* update, bool interpolate);
-void NetInterpComp_AdvanceState(NetInterpComp* interp);
+void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, bool interpolate);
+void NetInterpComp_AdvanceState(struct NetInterpComp* interp);
 
 /* Entity component that draws square and circle shadows beneath entities */
 
 bool ShadowComponent_BoundShadowTex;
 GfxResourceID ShadowComponent_ShadowTex;
-void ShadowComponent_Draw(Entity* entity);
+void ShadowComponent_Draw(struct Entity* entity);
 
 /* Entity component that performs collision detection */
-typedef struct CollisionsComp_ {
-	Entity* Entity;
+struct CollisionsComp {
+	struct Entity* Entity;
 	bool HitXMin, HitYMin, HitZMin, HitXMax, HitYMax, HitZMax, WasOn;
-} CollisionsComp;
-bool Collisions_HitHorizontal(CollisionsComp* comp);
-void Collisions_MoveAndWallSlide(CollisionsComp* comp);
+};
+bool Collisions_HitHorizontal(struct CollisionsComp* comp);
+void Collisions_MoveAndWallSlide(struct CollisionsComp* comp);
 
 /* Entity component that performs collisions */
-typedef struct PhysicsComp_ {
+struct PhysicsComp {
 	bool UseLiquidGravity; /* used by BlockDefinitions */
 	bool CanLiquidJump, Jumping;
 	Int32 MultiJumps;
-	Entity* Entity;
+	struct Entity* Entity;
 
 	Real32 JumpVel, UserJumpVel, ServerJumpVel;
-	HacksComp* Hacks;
-	CollisionsComp* Collisions;
-} PhysicsComp;
+	struct HacksComp* Hacks;
+	struct CollisionsComp* Collisions;
+};
 
-void PhysicsComp_Init(PhysicsComp* comp, Entity* entity);
-void PhysicsComp_UpdateVelocityState(PhysicsComp* comp);
-void PhysicsComp_DoNormalJump(PhysicsComp* comp);
-void PhysicsComp_PhysicsTick(PhysicsComp* comp, Vector3 vel);
-void PhysicsComp_CalculateJumpVelocity(PhysicsComp* comp, Real32 jumpHeight);
+void PhysicsComp_Init(struct PhysicsComp* comp, struct Entity* entity);
+void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp);
+void PhysicsComp_DoNormalJump(struct PhysicsComp* comp);
+void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vector3 vel);
+void PhysicsComp_CalculateJumpVelocity(struct PhysicsComp* comp, Real32 jumpHeight);
 Real64 PhysicsComp_GetMaxHeight(Real32 u);
-void PhysicsComp_DoEntityPush(Entity* entity);
+void PhysicsComp_DoEntityPush(struct Entity* entity);
 
 /* Entity component that plays block step sounds */
 void SoundComp_Tick(bool wasOnGround);

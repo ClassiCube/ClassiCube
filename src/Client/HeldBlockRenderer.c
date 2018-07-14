@@ -12,8 +12,8 @@
 #include "IModel.h"
 
 BlockID held_block;
-Entity held_entity;
-EntityVTABLE held_entityVTABLE;
+struct Entity held_entity;
+struct EntityVTABLE held_entityVTABLE;
 Matrix held_blockProjection;
 
 bool held_animating, held_breaking, held_swinging;
@@ -27,7 +27,7 @@ static void HeldBlockRenderer_RenderModel(void) {
 	GfxCommon_SetupAlphaState(Block_Draw[held_block]);
 	Gfx_SetDepthTest(false);
 
-	IModel* model;
+	struct IModel* model;
 	if (Block_Draw[held_block] == DRAW_GAS) {
 		String name = String_FromConst("arm"); model = ModelCache_Get(&name);
 		held_entity.ModelScale = Vector3_Create1(1.0f);
@@ -44,7 +44,7 @@ static void HeldBlockRenderer_RenderModel(void) {
 }
 
 static void HeldBlockRenderer_SetMatrix(void) {
-	Entity* player = &LocalPlayer_Instance.Base;
+	struct Entity* player = &LocalPlayer_Instance.Base;
 	Vector3 eyePos = VECTOR3_CONST(0.0f, Entity_GetEyeHeight(player), 0.0f);
 	Vector3 up = Vector3_UnitY;
 	Vector3 target = eyePos; target.Z -= 1.0f; /* Look straight down*/	
@@ -57,7 +57,7 @@ static void HeldBlockRenderer_SetMatrix(void) {
 
 static void HeldBlockRenderer_ResetHeldState(void) {
 	/* Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!) */
-	Entity* player = &LocalPlayer_Instance.Base;
+	struct Entity* player = &LocalPlayer_Instance.Base;
 	Vector3 eyePos = VECTOR3_CONST(0.0f, Entity_GetEyeHeight(player), 0.0f);
 	held_entity.Position = eyePos;
 
@@ -124,8 +124,8 @@ static void HeldBlockRenderer_ResetAnim(bool setLastHeld, Real64 period) {
 	if (setLastHeld) { held_lastBlock = Inventory_SelectedBlock; }
 }
 
-static PackedCol HeldBlockRenderer_GetCol(Entity* entity) {
-	Entity* player = &LocalPlayer_Instance.Base;
+static PackedCol HeldBlockRenderer_GetCol(struct Entity* entity) {
+	struct Entity* player = &LocalPlayer_Instance.Base;
 	PackedCol col = player->VTABLE->GetCol(player);
 
 	/* Adjust pitch so angle when looking straight down is 0. */

@@ -43,7 +43,7 @@ static void ChatLine_Make(ChatLine* line, STRING_TRANSIENT String* text) {
 
 UChar Chat_LogNameBuffer[String_BufferSize(STRING_SIZE)];
 String Chat_LogName = String_FromEmptyArray(Chat_LogNameBuffer);
-Stream Chat_LogStream;
+struct Stream Chat_LogStream;
 DateTime ChatLog_LastLogDate;
 
 static void Chat_CloseLog(void) {
@@ -152,17 +152,17 @@ void Chat_AddOf(STRING_PURE String* text, Int32 msgType) {
 /*########################################################################################################################*
 *---------------------------------------------------------Commands--------------------------------------------------------*
 *#########################################################################################################################*/
-typedef struct ChatCommand_ {
+struct ChatCommand {
 	const UChar* Name;
 	const UChar* Help[5];
 	void (*Execute)(STRING_PURE String* args, UInt32 argsCount);
 	bool SingleplayerOnly;
-} ChatCommand;
-typedef void (*ChatCommandConstructor)(ChatCommand* cmd);
+};
+typedef void (*ChatCommandConstructor)(struct ChatCommand* cmd);
 
 #define COMMANDS_PREFIX "/client"
 #define COMMANDS_PREFIX_SPACE "/client "
-ChatCommand commands_list[8];
+struct ChatCommand commands_list[8];
 Int32 commands_count;
 
 static bool Commands_IsCommandPrefix(STRING_PURE String* input) {
@@ -181,7 +181,7 @@ static void Commands_Register(ChatCommandConstructor constructor) {
 		ErrorHandler_Fail("Commands_Register - hit max client commands");
 	}
 
-	ChatCommand command = { 0 };
+	struct ChatCommand command = { 0 };
 	constructor(&command);
 	commands_list[commands_count++] = command;
 }
@@ -193,11 +193,11 @@ static void Commands_Log(const UChar* format, void* a1) {
 	Chat_Add(&str);
 }
 
-static ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
-	ChatCommand* match = NULL;
+static struct ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
+	struct ChatCommand* match = NULL;
 	Int32 i;
 	for (i = 0; i < commands_count; i++) {
-		ChatCommand* cmd = &commands_list[i];
+		struct ChatCommand* cmd = &commands_list[i];
 		String name = String_FromReadonly(cmd->Name);
 		if (!String_CaselessStarts(&name, cmdName)) continue;
 
@@ -226,7 +226,7 @@ static void Commands_PrintDefined(void) {
 	Int32 i;
 
 	for (i = 0; i < commands_count; i++) {
-		ChatCommand* cmd = &commands_list[i];
+		struct ChatCommand* cmd = &commands_list[i];
 		String name = String_FromReadonly(cmd->Name);
 
 		if ((str.length + name.length + 2) > str.capacity) {
@@ -264,7 +264,7 @@ static void Commands_Execute(STRING_PURE String* input) {
 	UInt32 argsCount = Array_Elems(args);
 	String_UNSAFE_Split(&text, ' ', args, &argsCount);
 
-	ChatCommand* cmd = Commands_GetMatch(&args[0]);
+	struct ChatCommand* cmd = Commands_GetMatch(&args[0]);
 	if (cmd == NULL) return;
 	cmd->Execute(args, argsCount);
 }
@@ -279,7 +279,7 @@ static void HelpCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 		Commands_PrintDefined();
 		Chat_AddRaw(tmp2, "&eTo see help for a command, type /client help [cmd name]");
 	} else {
-		ChatCommand* cmd = Commands_GetMatch(&args[1]);
+		struct ChatCommand* cmd = Commands_GetMatch(&args[1]);
 		if (cmd == NULL) return;
 
 		Int32 i;
@@ -291,7 +291,7 @@ static void HelpCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	}
 }
 
-static void HelpCommand_Make(ChatCommand* cmd) {
+static void HelpCommand_Make(struct ChatCommand* cmd) {
 	cmd->Name    = "Help";
 	cmd->Help[0] = "&a/client help [command name]";
 	cmd->Help[1] = "&eDisplays the help for the given command.";
@@ -315,7 +315,7 @@ static void GpuInfoCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	}
 }
 
-static void GpuInfoCommand_Make(ChatCommand* cmd) {
+static void GpuInfoCommand_Make(struct ChatCommand* cmd) {
 	cmd->Name    = "GpuInfo";
 	cmd->Help[0] = "&a/client gpuinfo";
 	cmd->Help[1] = "&eDisplays information about your GPU.";
@@ -344,7 +344,7 @@ static void RenderTypeCommand_Execute(STRING_PURE String* args, UInt32 argsCount
 	}
 }
 
-static void RenderTypeCommand_Make(ChatCommand* cmd) {
+static void RenderTypeCommand_Make(struct ChatCommand* cmd) {
 	cmd->Name    = "RenderType";
 	cmd->Help[0] = "&a/client rendertype [normal/legacy/legacyfast]";
 	cmd->Help[1] = "&bnormal: &eDefault renderer, with all environmental effects enabled.";
@@ -370,7 +370,7 @@ static void ResolutionCommand_Execute(STRING_PURE String* args, UInt32 argsCount
 	}
 }
 
-static void ResolutionCommand_Make(ChatCommand* cmd) {
+static void ResolutionCommand_Make(struct ChatCommand* cmd) {
 	cmd->Name    = "Resolution";
 	cmd->Help[0] = "&a/client resolution [width] [height]";
 	cmd->Help[1] = "&ePrecisely sets the size of the rendered window.";
@@ -389,7 +389,7 @@ static void ModelCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	}
 }
 
-static void ModelCommand_Make(ChatCommand* cmd) {
+static void ModelCommand_Make(struct ChatCommand* cmd) {
 	cmd->Name    = "Model";
 	cmd->Help[0] = "&a/client model [name]";
 	cmd->Help[1] = "&bnames: &echibi, chicken, creeper, human, pig, sheep";
@@ -499,7 +499,7 @@ static void CuboidCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	cuboid_hooked = true;
 }
 
-static void CuboidCommand_Make(ChatCommand* cmd) {
+static void CuboidCommand_Make(struct ChatCommand* cmd) {
 	cmd->Name    = "Cuboid";
 	cmd->Help[0] = "&a/client cuboid [block] [persist]";
 	cmd->Help[1] = "&eFills the 3D rectangle between two points with [block].";
@@ -525,13 +525,13 @@ static void TeleportCommand_Execute(STRING_PURE String* args, UInt32 argsCount) 
 		}
 
 		Vector3 v = { x, y, z };
-		LocationUpdate update; LocationUpdate_MakePos(&update, v, false);
-		Entity* entity = &LocalPlayer_Instance.Base;
+		struct LocationUpdate update; LocationUpdate_MakePos(&update, v, false);
+		struct Entity* entity = &LocalPlayer_Instance.Base;
 		entity->VTABLE->SetLocation(entity, &update, false);
 	}
 }
 
-static void TeleportCommand_Make(ChatCommand* cmd) {
+static void TeleportCommand_Make(struct ChatCommand* cmd) {
 	cmd->Name    = "TP";
 	cmd->Help[0] = "&a/client tp [x y z]";
 	cmd->Help[1] = "&eMoves you to the given coordinates.";

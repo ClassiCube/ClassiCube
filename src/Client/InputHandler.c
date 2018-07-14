@@ -37,7 +37,7 @@ static bool InputHandler_IsMousePressed(MouseButton button) {
 static void InputHandler_ButtonStateUpdate(MouseButton button, bool pressed) {
 	/* defer getting the targeted entity as it's a costly operation */
 	if (input_pickingId == -1) {
-		Entity* p = &LocalPlayer_Instance.Base;
+		struct Entity* p = &LocalPlayer_Instance.Base;
 		input_pickingId = Entities_GetCloset(p);
 	}
 
@@ -117,7 +117,7 @@ static void InputHandler_CycleDistanceBackwards(Int32* viewDists, Int32 count) {
 
 bool InputHandler_SetFOV(Int32 fov, bool setZoom) {
 	if (Game_Fov == fov) return true;
-	HacksComp* h = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
 	if (!h->Enabled || !h->CanAnyHacks || !h->CanUseThirdPersonCamera) return false;
 
 	Game_Fov = fov;
@@ -128,7 +128,7 @@ bool InputHandler_SetFOV(Int32 fov, bool setZoom) {
 
 static bool InputHandler_DoFovZoom(Real32 deltaPrecise) {
 	if (!KeyBind_IsPressed(KeyBind_ZoomScrolling)) return false;
-	HacksComp* h = &LocalPlayer_Instance.Hacks;
+	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
 	if (!h->Enabled || !h->CanAnyHacks || !h->CanUseThirdPersonCamera) return false;
 
 	if (input_fovIndex == -1.0f) input_fovIndex = (Real32)Game_ZoomFov;
@@ -192,8 +192,8 @@ static bool InputHandler_HandleCoreKey(Key key) {
 
 static bool InputHandler_TouchesSolid(BlockID b) { return Block_Collide[b] == COLLIDE_SOLID; }
 static bool InputHandler_PushbackPlace(AABB* blockBB) {
-	Entity* p = &LocalPlayer_Instance.Base;
-	HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	struct Entity* p = &LocalPlayer_Instance.Base;
+	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 	Vector3 curPos = p->Position, adjPos = p->Position;
 
 	/* Offset position by the closest face */
@@ -226,7 +226,7 @@ static bool InputHandler_PushbackPlace(AABB* blockBB) {
 	}
 
 	p->Position = curPos;
-	LocationUpdate update; LocationUpdate_MakePos(&update, adjPos, false);
+	struct LocationUpdate update; LocationUpdate_MakePos(&update, adjPos, false);
 	p->VTABLE->SetLocation(p, &update, false);
 	return true;
 }
@@ -238,7 +238,7 @@ static bool InputHandler_IntersectsOthers(Vector3 pos, BlockID block) {
 
 	Int32 id;
 	for (id = 0; id < ENTITIES_SELF_ID; id++) {
-		Entity* entity = Entities_List[id];
+		struct Entity* entity = Entities_List[id];
 		if (entity == NULL) continue;
 
 		AABB bounds; Entity_GetBounds(entity, &bounds);
@@ -250,8 +250,8 @@ static bool InputHandler_IntersectsOthers(Vector3 pos, BlockID block) {
 
 static bool InputHandler_CheckIsFree(BlockID block) {
 	Vector3 pos; Vector3I_ToVector3(&pos, &Game_SelectedPos.TranslatedPos);
-	Entity* p = &LocalPlayer_Instance.Base;
-	HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	struct Entity* p = &LocalPlayer_Instance.Base;
+	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 
 	if (Block_Collide[block] != COLLIDE_SOLID) return true;
 	if (InputHandler_IntersectsOthers(pos, block)) return false;
@@ -276,7 +276,7 @@ static bool InputHandler_CheckIsFree(BlockID block) {
 
 	/* Push player upwards when they are jumping and trying to place a block underneath them */
 	nextPos.Y = pos.Y + Block_MaxBB[block].Y + ENTITY_ADJUSTMENT;
-	LocationUpdate update; LocationUpdate_MakePos(&update, nextPos, false);
+	struct LocationUpdate update; LocationUpdate_MakePos(&update, nextPos, false);
 	p->VTABLE->SetLocation(p, &update, false);
 	return true;
 }

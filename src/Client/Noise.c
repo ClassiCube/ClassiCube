@@ -47,7 +47,7 @@ Real32 ImprovedNoise_Calc(UInt8* p, Real32 x, Real32 y) {
 }
 
 
-void OctaveNoise_Init(OctaveNoise* n, Random* rnd, Int32 octaves) {
+void OctaveNoise_Init(struct OctaveNoise* n, Random* rnd, Int32 octaves) {
 	n->octaves = octaves;
 	Int32 i;
 	for (i = 0; i < octaves; i++) {
@@ -55,7 +55,7 @@ void OctaveNoise_Init(OctaveNoise* n, Random* rnd, Int32 octaves) {
 	}
 }
 
-Real32 OctaveNoise_Calc(OctaveNoise* n, Real32 x, Real32 y) {
+Real32 OctaveNoise_Calc(struct OctaveNoise* n, Real32 x, Real32 y) {
 	Real32 amplitude = 1, freq = 1;
 	Real32 sum = 0;
 	Int32 i;
@@ -69,12 +69,12 @@ Real32 OctaveNoise_Calc(OctaveNoise* n, Real32 x, Real32 y) {
 }
 
 
-void CombinedNoise_Init(CombinedNoise* n, Random* rnd, Int32 octaves1, Int32 octaves2) {
+void CombinedNoise_Init(struct CombinedNoise* n, Random* rnd, Int32 octaves1, Int32 octaves2) {
 	OctaveNoise_Init(&n->noise1, rnd, octaves1);
 	OctaveNoise_Init(&n->noise2, rnd, octaves2);
 }
 
-Real32 CombinedNoise_Calc(CombinedNoise* n, Real32 x, Real32 y) {
+Real32 CombinedNoise_Calc(struct CombinedNoise* n, Real32 x, Real32 y) {
 	Real32 offset = OctaveNoise_Calc(&n->noise2, x, y);
 	return OctaveNoise_Calc(&n->noise1, x + offset, y);
 }

@@ -145,13 +145,13 @@ void Platform_Log(STRING_PURE String* message) {
 	OutputDebugStringA("\n");
 }
 
-void Platform_LogConst(const UInt8* message) {
+void Platform_LogConst(const UChar* message) {
 	/* TODO: log to console */
 	OutputDebugStringA(message);
 	OutputDebugStringA("\n");
 }
 
-void Platform_Log4(const UInt8* format, const void* a1, const void* a2, const void* a3, const void* a4) {
+void Platform_Log4(const UChar* format, const void* a1, const void* a2, const void* a3, const void* a4) {
 	UChar msgBuffer[String_BufferSize(512)];
 	String msg = String_InitAndClearArray(msgBuffer);
 	String_Format4(&msg, format, a1, a2, a3, a4);
@@ -463,10 +463,10 @@ Size2D Platform_TextMeasure(DrawTextArgs* args) {
 
 HBITMAP platform_dib;
 HBITMAP platform_oldBmp;
-Bitmap* platform_bmp;
+struct Bitmap* platform_bmp;
 void* platform_bits;
 
-void Platform_SetBitmap(Bitmap* bmp) {
+void Platform_SetBitmap(struct Bitmap* bmp) {
 	platform_bmp = bmp;
 	platform_bits = NULL;
 
@@ -495,7 +495,7 @@ Size2D Platform_TextDraw(DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) {
 	TextOutW(hdc, 0, 0, strUnicode, args->Text.length);
 
 	Int32 xx, yy;
-	Bitmap* bmp = platform_bmp;
+	struct Bitmap* bmp = platform_bmp;
 	for (yy = 0; yy < area.cy; yy++) {
 		UInt8* src = (UInt8*)platform_bits + (yy * bmp->Stride);
 		UInt8* dst = (UInt8*)Bitmap_GetRow(bmp, y + yy); dst += x * BITMAP_SIZEOF_PIXEL;
@@ -616,7 +616,7 @@ void Platform_HttpInit(void) {
 	if (hInternet == NULL) ErrorHandler_FailWithCode(GetLastError(), "Failed to init WinINet");
 }
 
-ReturnCode Platform_HttpMakeRequest(AsyncRequest* request, void** handle) {
+ReturnCode Platform_HttpMakeRequest(struct AsyncRequest* request, void** handle) {
 	String url = String_FromRawArray(request->URL);
 	UChar headersBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String headers = String_MakeNull();
@@ -646,7 +646,7 @@ ReturnCode Platform_HttpMakeRequest(AsyncRequest* request, void** handle) {
 
 /* TODO: Test last modified and etag even work */
 #define Http_Query(flags, result) HttpQueryInfoA(handle, flags, result, &bufferLen, NULL)
-ReturnCode Platform_HttpGetRequestHeaders(AsyncRequest* request, void* handle, UInt32* size) {
+ReturnCode Platform_HttpGetRequestHeaders(struct AsyncRequest* request, void* handle, UInt32* size) {
 	DWORD bufferLen;
 
 	UInt32 status;
@@ -670,7 +670,7 @@ ReturnCode Platform_HttpGetRequestHeaders(AsyncRequest* request, void* handle, U
 	return 0;
 }
 
-ReturnCode Platform_HttpGetRequestData(AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress) {
+ReturnCode Platform_HttpGetRequestData(struct AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress) {
 	if (size == 0) return ERROR_NOT_SUPPORTED;
 	*data = Platform_MemAlloc(size, 1);
 	if (*data == NULL) ErrorHandler_Fail("Failed to allocate memory for http get data");

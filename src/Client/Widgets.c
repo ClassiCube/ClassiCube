@@ -1516,7 +1516,7 @@ static void MenuInputWidget_RemakeTexture(GuiElement* elem) {
 	widget->Base.Height = max(size.Height, widget->MinHeight);
 	Size2D adjSize = size; adjSize.Width = widget->Base.Width;
 
-	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, adjSize.Width, adjSize.Height);
+	struct Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, adjSize.Width, adjSize.Height);
 	Drawer2D_Begin(&bmp);
 	{
 		Drawer2D_DrawText(&args, widget->Base.Padding, 0);
@@ -1595,7 +1595,7 @@ static void ChatInputWidget_RemakeTexture(GuiElement* elem) {
 	widget->CaretAccumulator = 0;
 
 	Int32 realHeight = 0;
-	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+	struct Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
 
 	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, true);
@@ -2513,7 +2513,7 @@ static Int32 SpecialInputWidget_MeasureTitles(SpecialInputWidget* widget) {
 	return totalWidth;
 }
 
-static void SpecialInputWidget_DrawTitles(SpecialInputWidget* widget, Bitmap* bmp) {
+static void SpecialInputWidget_DrawTitles(SpecialInputWidget* widget, struct Bitmap* bmp) {
 	Int32 x = 0;
 	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, false);
 
@@ -2587,7 +2587,7 @@ static void SpecialInputWidget_Make(SpecialInputWidget* widget, SpecialInputTab*
 	Size2D size = Size2D_Make(max(bodySize.Width, titleWidth), bodySize.Height + titleHeight);
 	Gfx_DeleteTexture(&widget->Tex.ID);
 
-	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+	struct Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
 	{
 		SpecialInputWidget_DrawTitles(widget, &bmp);

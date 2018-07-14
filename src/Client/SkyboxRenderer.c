@@ -23,7 +23,7 @@ static void SkyboxRenderer_TexturePackChanged(void* obj) {
 	WorldEnv_SkyboxClouds = false;
 }
 
-static void SkyboxRenderer_FileChanged(void* obj, Stream* src) {
+static void SkyboxRenderer_FileChanged(void* obj, struct Stream* src) {
 	if (String_CaselessEqualsConst(&src->Name, "skybox.png")) {
 		Game_UpdateTexture(&skybox_tex, src, false);
 	} else if (String_CaselessEqualsConst(&src->Name, "useclouds")) {

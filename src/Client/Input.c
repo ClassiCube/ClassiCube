@@ -197,7 +197,7 @@ UInt8 Hotkeys_LWJGL[256] = {
 };
 
 static void Hotkeys_QuickSort(Int32 left, Int32 right) {
-	HotkeyData* keys = HotkeysList; HotkeyData key;
+	struct HotkeyData* keys = HotkeysList; struct HotkeyData key;
 
 	while (left < right) {
 		Int32 i = left, j = right;
@@ -215,7 +215,7 @@ static void Hotkeys_QuickSort(Int32 left, Int32 right) {
 }
 
 void Hotkeys_AddNewHotkey(Key baseKey, UInt8 flags, STRING_PURE String* text, bool more) {
-	HotkeyData hKey;
+	struct HotkeyData hKey;
 	hKey.BaseKey = baseKey;
 	hKey.Flags = flags;
 	hKey.TextIndex = HotkeysText.Count;
@@ -234,7 +234,7 @@ void Hotkeys_AddNewHotkey(Key baseKey, UInt8 flags, STRING_PURE String* text, bo
 void Hotkeys_Add(Key baseKey, UInt8 flags, STRING_PURE String* text, bool more) {
 	UInt32 i;
 	for (i = 0; i < HotkeysText.Count; i++) {
-		HotkeyData hKey = HotkeysList[i];
+		struct HotkeyData hKey = HotkeysList[i];
 		if (hKey.BaseKey == baseKey && hKey.Flags == flags) {
 			StringsBuffer_Remove(&HotkeysText, hKey.TextIndex);
 			HotkeysList[i].StaysOpen = more;
@@ -249,7 +249,7 @@ void Hotkeys_Add(Key baseKey, UInt8 flags, STRING_PURE String* text, bool more) 
 bool Hotkeys_Remove(Key baseKey, UInt8 flags) {
 	UInt32 i, j;
 	for (i = 0; i < HotkeysText.Count; i++) {
-		HotkeyData hKey = HotkeysList[i];
+		struct HotkeyData hKey = HotkeysList[i];
 		if (hKey.BaseKey == baseKey && hKey.Flags == flags) {
 			for (j = i + 1; j < HotkeysText.Count; j++) { HotkeysList[j - 1] = HotkeysList[j]; }
 			StringsBuffer_Remove(&HotkeysText, hKey.TextIndex);
@@ -271,7 +271,7 @@ bool Hotkeys_IsHotkey(Key key, STRING_TRANSIENT String* text, bool* moreInput) {
 
 	UInt32 i;
 	for (i = 0; i < HotkeysText.Count; i++) {
-		HotkeyData hKey = HotkeysList[i];
+		struct HotkeyData hKey = HotkeysList[i];
 		if ((hKey.Flags & flags) == hKey.Flags && hKey.BaseKey == key) {
 			String hkeyText = StringsBuffer_UNSAFE_Get(&HotkeysText, hKey.TextIndex);
 			String_AppendString(text, &hkeyText);

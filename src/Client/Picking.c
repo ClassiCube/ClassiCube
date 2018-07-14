@@ -10,7 +10,7 @@
 #include "ErrorHandler.h"
 
 Real32 PickedPos_dist;
-static void PickedPos_TestAxis(PickedPos* pos, Real32 dAxis, Face fAxis) {
+static void PickedPos_TestAxis(struct PickedPos* pos, Real32 dAxis, Face fAxis) {
 	dAxis = Math_AbsF(dAxis);
 	if (dAxis >= PickedPos_dist) return;
 
@@ -18,7 +18,7 @@ static void PickedPos_TestAxis(PickedPos* pos, Real32 dAxis, Face fAxis) {
 	pos->ClosestFace = fAxis;
 }
 
-void PickedPos_SetAsValid(PickedPos* pos, RayTracer* t, Vector3 intersect) {
+void PickedPos_SetAsValid(struct PickedPos* pos, struct RayTracer* t, Vector3 intersect) {
 	Vector3I blockPos  = { t->X, t->Y, t->Z };
 	pos->Valid         = true;
 	pos->BlockPos      = blockPos;
@@ -45,7 +45,7 @@ void PickedPos_SetAsValid(PickedPos* pos, RayTracer* t, Vector3 intersect) {
 	pos->TranslatedPos = blockPos;
 }
 
-void PickedPos_SetAsInvalid(PickedPos* pos) {
+void PickedPos_SetAsInvalid(struct PickedPos* pos) {
 	Vector3I blockPos  = { -1, -1, -1 };
 	pos->Valid         = false;
 	pos->BlockPos      = blockPos;
@@ -59,7 +59,7 @@ static Real32 RayTracer_Div(Real32 a, Real32 b) {
 	return a / b;
 }
 
-void RayTracer_SetVectors(RayTracer* t, Vector3 origin, Vector3 dir) {
+void RayTracer_SetVectors(struct RayTracer* t, Vector3 origin, Vector3 dir) {
 	t->Origin = origin; t->Dir = dir;
 	/* Rounds the position's X, Y and Z down to the nearest integer values. */
 	Vector3I start;
@@ -89,7 +89,7 @@ void RayTracer_SetVectors(RayTracer* t, Vector3 origin, Vector3 dir) {
 	t->tDelta.Z = RayTracer_Div((Real32)t->step.Z, dir.Z);
 }
 
-void RayTracer_Step(RayTracer* t) {
+void RayTracer_Step(struct RayTracer* t) {
 	/* For each step, determine which distance to the next voxel boundary is lowest
 	(i.e. which voxel boundary is nearest) and walk that way. */
 	if (t->tMax.X < t->tMax.Y && t->tMax.X < t->tMax.Z) {
@@ -107,9 +107,9 @@ void RayTracer_Step(RayTracer* t) {
 	}
 }
 
-RayTracer tracer;
+struct RayTracer tracer;
 #define PICKING_BORDER BLOCK_BEDROCK
-typedef bool(*IntersectTest)(PickedPos* pos);
+typedef bool(*IntersectTest)(struct PickedPos* pos);
 
 static BlockID Picking_InsideGetBlock(Int32 x, Int32 y, Int32 z) {
 	if (x >= 0 && z >= 0 && x < World_Width && z < World_Length) {
@@ -141,7 +141,7 @@ static BlockID Picking_OutsideGetBlock(Int32 x, Int32 y, Int32 z, Vector3I origi
 	return BLOCK_AIR;
 }
 
-static bool Picking_RayTrace(Vector3 origin, Vector3 dir, Real32 reach, PickedPos* pos, IntersectTest intersect) {
+static bool Picking_RayTrace(Vector3 origin, Vector3 dir, Real32 reach, struct PickedPos* pos, IntersectTest intersect) {
 	RayTracer_SetVectors(&tracer, origin, dir);
 	Real32 reachSq = reach * reach;
 	Vector3I pOrigin; Vector3I_Floor(&pOrigin, &origin);
@@ -174,7 +174,7 @@ static bool Picking_RayTrace(Vector3 origin, Vector3 dir, Real32 reach, PickedPo
 	return false;
 }
 
-static bool Picking_ClipBlock(PickedPos* pos) {
+static bool Picking_ClipBlock(struct PickedPos* pos) {
 	if (!Game_CanPick(tracer.Block)) return false;
 
 	/* This cell falls on the path of the ray. Now perform an additional AABB test,
@@ -199,7 +199,7 @@ static bool Picking_ClipBlock(PickedPos* pos) {
 	return true;
 }
 
-static bool Picking_ClipCamera(PickedPos* pos) {
+static bool Picking_ClipCamera(struct PickedPos* pos) {
 	if (Block_Draw[tracer.Block] == DRAW_GAS || Block_Collide[tracer.Block] != COLLIDE_SOLID) {
 		return false;
 	}
@@ -226,13 +226,13 @@ static bool Picking_ClipCamera(PickedPos* pos) {
 	return true;
 }
 
-void Picking_CalculatePickedBlock(Vector3 origin, Vector3 dir, Real32 reach, PickedPos* pos) {
+void Picking_CalculatePickedBlock(Vector3 origin, Vector3 dir, Real32 reach, struct PickedPos* pos) {
 	if (!Picking_RayTrace(origin, dir, reach, pos, Picking_ClipBlock)) {
 		PickedPos_SetAsInvalid(pos);
 	}
 }
 
-void Picking_ClipCameraPos(Vector3 origin, Vector3 dir, Real32 reach, PickedPos* pos) {
+void Picking_ClipCameraPos(Vector3 origin, Vector3 dir, Real32 reach, struct PickedPos* pos) {
 	bool noClip = !Game_CameraClipping || LocalPlayer_Instance.Hacks.Noclip;
 	if (noClip || !Picking_RayTrace(origin, dir, reach, pos, Picking_ClipCamera)) {
 		PickedPos_SetAsInvalid(pos);

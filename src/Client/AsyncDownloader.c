@@ -4,7 +4,7 @@
 #include "ErrorHandler.h"
 #include "Stream.h"
 
-void ASyncRequest_Free(AsyncRequest* request) {
+void ASyncRequest_Free(struct AsyncRequest* request) {
 	switch (request->RequestType) {
 	case REQUEST_TYPE_IMAGE:
 		Platform_MemFree(&request->ResultBitmap.Scan0);
@@ -19,24 +19,24 @@ void ASyncRequest_Free(AsyncRequest* request) {
 }
 
 #define ASYNCREQUESTLIST_DEFELEMS 10
-typedef struct AsyncRequestList_ {
+struct AsyncRequestList {
 	UInt32 MaxElems, Count;
-	AsyncRequest* Requests;
-	AsyncRequest DefaultRequests[ASYNCREQUESTLIST_DEFELEMS];
-} AsyncRequestList;
+	struct AsyncRequest* Requests;
+	struct AsyncRequest DefaultRequests[ASYNCREQUESTLIST_DEFELEMS];
+};
 
-static void AsyncRequestList_EnsureSpace(AsyncRequestList* list) {
+static void AsyncRequestList_EnsureSpace(struct AsyncRequestList* list) {
 	if (list->Count < list->MaxElems) return;
-	StringsBuffer_Resize(&list->Requests, &list->MaxElems, sizeof(AsyncRequest),
+	StringsBuffer_Resize(&list->Requests, &list->MaxElems, sizeof(struct AsyncRequest),
 		ASYNCREQUESTLIST_DEFELEMS, 10);
 }
 
-static void AsyncRequestList_Append(AsyncRequestList* list, AsyncRequest* item) {
+static void AsyncRequestList_Append(struct AsyncRequestList* list, struct AsyncRequest* item) {
 	AsyncRequestList_EnsureSpace(list);
 	list->Requests[list->Count++] = *item;
 }
 
-static void AsyncRequestList_Prepend(AsyncRequestList* list, AsyncRequest* item) {
+static void AsyncRequestList_Prepend(struct AsyncRequestList* list, struct AsyncRequest* item) {
 	AsyncRequestList_EnsureSpace(list);
 	UInt32 i;
 	for (i = list->Count; i > 0; i--) {
@@ -46,7 +46,7 @@ static void AsyncRequestList_Prepend(AsyncRequestList* list, AsyncRequest* item)
 	list->Count++;
 }
 
-static void AsyncRequestList_RemoveAt(AsyncRequestList* list, UInt32 i) {
+static void AsyncRequestList_RemoveAt(struct AsyncRequestList* list, UInt32 i) {
 	if (i >= list->Count) ErrorHandler_Fail("Tried to remove element at list end");
 
 	for (; i < list->Count - 1; i++) {
@@ -55,13 +55,13 @@ static void AsyncRequestList_RemoveAt(AsyncRequestList* list, UInt32 i) {
 	list->Count--;
 }
 
-static void AsyncRequestList_Init(AsyncRequestList* list) {
+static void AsyncRequestList_Init(struct AsyncRequestList* list) {
 	list->MaxElems = ASYNCREQUESTLIST_DEFELEMS;
 	list->Count = 0;
 	list->Requests = list->DefaultRequests;
 }
 
-static void AsyncRequestList_Free(AsyncRequestList* list) {
+static void AsyncRequestList_Free(struct AsyncRequestList* list) {
 	if (list->Requests != list->DefaultRequests) {
 		Platform_MemFree(&list->Requests);
 	}
@@ -75,10 +75,10 @@ void* async_processedMutex;
 void* async_curRequestMutex;
 volatile bool async_terminate;
 
-AsyncRequestList async_pending;
-AsyncRequestList async_processed;
+struct AsyncRequestList async_pending;
+struct AsyncRequestList async_processed;
 String async_skinServer = String_FromConst("http://static.classicube.net/skins/");
-AsyncRequest async_curRequest;
+struct AsyncRequest async_curRequest;
 volatile Int32 async_curProgress = ASYNC_PROGRESS_NOTHING;
 /* TODO: Implement these */
 bool ManageCookies;
@@ -88,7 +88,7 @@ bool KeepAlive;
 static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 type, DateTime* lastModified, String* etag, String* data) {
 	Platform_MutexLock(async_pendingMutex);
 	{
-		AsyncRequest req = { 0 };
+		struct AsyncRequest req = { 0 };
 		String reqUrl = String_FromEmptyArray(req.URL); String_Set(&reqUrl, url);
 		String reqID  = String_FromEmptyArray(req.ID);  String_Set(&reqID, id);
 		req.RequestType = type;
@@ -163,7 +163,7 @@ void AsyncDownloader_PurgeOldEntriesTask(ScheduledTask* task) {
 		DateTime now; Platform_CurrentUTCTime(&now);
 		Int32 i;
 		for (i = async_processed.Count - 1; i >= 0; i--) {
-			AsyncRequest* item = &async_processed.Requests[i];
+			struct AsyncRequest* item = &async_processed.Requests[i];
 			if (DateTime_MsBetween(&item->TimeDownloaded, &now) <= 10 * 1000) continue;
 
 			ASyncRequest_Free(item);
@@ -173,7 +173,7 @@ void AsyncDownloader_PurgeOldEntriesTask(ScheduledTask* task) {
 	Platform_MutexUnlock(async_processedMutex);
 }
 
-static Int32 AsyncRequestList_Find(STRING_PURE String* id, AsyncRequest* item) {
+static Int32 AsyncRequestList_Find(STRING_PURE String* id, struct AsyncRequest* item) {
 	Int32 i;
 	for (i = 0; i < async_processed.Count; i++) {
 		String reqID = String_FromRawArray(async_processed.Requests[i].ID);
@@ -185,7 +185,7 @@ static Int32 AsyncRequestList_Find(STRING_PURE String* id, AsyncRequest* item) {
 	return -1;
 }
 
-bool AsyncDownloader_Get(STRING_PURE String* id, AsyncRequest* item) {
+bool AsyncDownloader_Get(STRING_PURE String* id, struct AsyncRequest* item) {
 	bool success = false;
 
 	Platform_MutexLock(async_processedMutex);
@@ -198,7 +198,7 @@ bool AsyncDownloader_Get(STRING_PURE String* id, AsyncRequest* item) {
 	return success;
 }
 
-bool AsyncDownloader_GetCurrent(AsyncRequest* request, Int32* progress) {
+bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, Int32* progress) {
 	Platform_MutexLock(async_curRequestMutex);
 	{
 		*request   = async_curRequest;
@@ -208,7 +208,7 @@ bool AsyncDownloader_GetCurrent(AsyncRequest* request, Int32* progress) {
 	return request->ID[0] != NULL;
 }
 
-static void AsyncDownloader_ProcessRequest(AsyncRequest* request) {
+static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	String url = String_FromRawArray(request->URL);
 	Platform_Log2("Downloading from %s (type %b)", &url, &request->RequestType);
 	Stopwatch stopwatch; UInt32 elapsedMS;
@@ -247,7 +247,7 @@ static void AsyncDownloader_ProcessRequest(AsyncRequest* request) {
 	UInt64 addr = (UInt64)data;
 	Platform_Log2("OK I got the DATA! %i bytes at %x", &size, &addr);
 
-	Stream memStream;
+	struct Stream memStream;
 	switch (request->RequestType) {
 	case REQUEST_TYPE_DATA:
 		request->ResultData.Ptr = data;
@@ -269,11 +269,11 @@ static void AsyncDownloader_ProcessRequest(AsyncRequest* request) {
 	}
 }
 
-static void AsyncDownloader_CompleteResult(AsyncRequest* request) {
+static void AsyncDownloader_CompleteResult(struct AsyncRequest* request) {
 	Platform_CurrentUTCTime(&request->TimeDownloaded);
 	Platform_MutexLock(async_processedMutex);
 	{
-		AsyncRequest older;
+		struct AsyncRequest older;
 		String id = String_FromRawArray(request->ID);
 		Int32 index = AsyncRequestList_Find(&id, &older);
 
@@ -281,7 +281,7 @@ static void AsyncDownloader_CompleteResult(AsyncRequest* request) {
 			/* very rare case - priority item was inserted, then inserted again (so put before first item), */
 			/* and both items got downloaded before an external function removed them from the queue */
 			if (DateTime_TotalMs(&older.TimeAdded) > DateTime_TotalMs(&request->TimeAdded)) {
-				AsyncRequest tmp = older; older = *request; *request = tmp;
+				struct AsyncRequest tmp = older; older = *request; *request = tmp;
 			}
 
 			ASyncRequest_Free(&older);
@@ -295,7 +295,7 @@ static void AsyncDownloader_CompleteResult(AsyncRequest* request) {
 
 static void AsyncDownloader_WorkerFunc(void) {
 	while (true) {
-		AsyncRequest request;
+		struct AsyncRequest request;
 		bool hasRequest = false;
 
 		Platform_MutexLock(async_pendingMutex);

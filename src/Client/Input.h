@@ -118,15 +118,15 @@ void KeyBind_Init(void);
 
 
 extern UInt8 Hotkeys_LWJGL[256];
-typedef struct HotkeyData_ {
+struct HotkeyData {
 	UInt32 TextIndex; /* contents to copy directly into the input bar */
 	UInt8 BaseKey;    /* Member of Key enumeration */
 	UInt8 Flags;      /* ctrl 1, shift 2, alt 4 */
 	bool StaysOpen;   /* whether the user is able to enter further input */
-} HotkeyData;
+};
 
 #define HOTKEYS_MAX_COUNT 256
-HotkeyData HotkeysList[HOTKEYS_MAX_COUNT];
+struct HotkeyData HotkeysList[HOTKEYS_MAX_COUNT];
 StringsBuffer HotkeysText;
 #define HOTKEYS_FLAG_CTRL  1
 #define HOTKEYS_FLAG_SHIFT 2

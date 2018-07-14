@@ -6,9 +6,9 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-typedef struct Bitmap_ Bitmap;
+struct Bitmap;
 typedef struct DisplayDevice_ DisplayDevice;
-typedef struct Stream_ Stream;
+struct Stream;
 
 Int32 Game_Width, Game_Height;
 /* Total rendering time(in seconds) elapsed since the client was started. */
@@ -17,8 +17,8 @@ Int32 Game_ChunkUpdates;
 bool Game_CameraClipping;
 bool Game_SkipClear;
 UInt8 Game_DefaultPlayerSkinType;
-PickedPos Game_SelectedPos;
-PickedPos Game_CameraClipPos;
+struct PickedPos Game_SelectedPos;
+struct PickedPos Game_CameraClipPos;
 GfxResourceID Game_DefaultIb;
 
 bool Game_UseCPEBlocks;
@@ -81,14 +81,14 @@ bool Game_GetCursorVisible(void);
 bool Game_GetRealCursorVisible(void);
 void Game_SetCursorVisible(bool visible);
 
-bool Game_ChangeTerrainAtlas(Bitmap* atlas);
+bool Game_ChangeTerrainAtlas(struct Bitmap* atlas);
 void Game_SetViewDistance(Int32 distance, bool userDist);
 void Game_UpdateProjection(void);
 void Game_Disconnect(STRING_PURE String* title, STRING_PURE String* reason);
 void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block);
 bool Game_CanPick(BlockID block);
-bool Game_UpdateTexture(GfxResourceID* texId, Stream* src, bool setSkinType);
-bool Game_ValidateBitmap(STRING_PURE String* file, Bitmap* bmp);
+bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, bool setSkinType);
+bool Game_ValidateBitmap(STRING_PURE String* file, struct Bitmap* bmp);
 Int32 Game_CalcRenderType(STRING_PURE String* type);
 void Game_SetFpsLimitMethod(FpsLimit method);
 

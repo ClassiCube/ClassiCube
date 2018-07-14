@@ -6,13 +6,13 @@
 #include "ErrorHandler.h"
 #include "Stream.h"
 
-void Bitmap_Create(Bitmap* bmp, Int32 width, Int32 height, UInt8* scan0) {
+void Bitmap_Create(struct Bitmap* bmp, Int32 width, Int32 height, UInt8* scan0) {
 	bmp->Width = width; bmp->Height = height;
 	bmp->Stride = width * BITMAP_SIZEOF_PIXEL;
 	bmp->Scan0 = scan0;
 }
 
-void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, Bitmap* src, Bitmap* dst, Int32 size) {
+void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, struct Bitmap* src, struct Bitmap* dst, Int32 size) {
 	Int32 x, y;
 	for (y = 0; y < size; y++) {
 		UInt32* srcRow = Bitmap_GetRow(src, srcY + y);
@@ -23,7 +23,7 @@ void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, Bitmap* sr
 	}
 }
 
-void Bitmap_Allocate(Bitmap* bmp, Int32 width, Int32 height) {
+void Bitmap_Allocate(struct Bitmap* bmp, Int32 width, Int32 height) {
 	bmp->Width = width; bmp->Height = height;
 	bmp->Stride = width * BITMAP_SIZEOF_PIXEL;
 	bmp->Scan0 = Platform_MemAlloc(width * height, BITMAP_SIZEOF_PIXEL);
@@ -33,7 +33,7 @@ void Bitmap_Allocate(Bitmap* bmp, Int32 width, Int32 height) {
 	}
 }
 
-void Bitmap_AllocateClearedPow2(Bitmap* bmp, Int32 width, Int32 height) {
+void Bitmap_AllocateClearedPow2(struct Bitmap* bmp, Int32 width, Int32 height) {
 	width = Math_NextPowOf2(width);
 	height = Math_NextPowOf2(height);
 	Bitmap_Allocate(bmp, width, height);
@@ -63,7 +63,7 @@ enum PNG_FILTER {
 typedef void(*Png_RowExpander)(UInt8 bpp, Int32 width, UInt32* palette, UInt8* src, UInt32* dst);
 UInt8 png_sig[PNG_SIG_SIZE] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
-static void Png_CheckHeader(Stream* stream) {
+static void Png_CheckHeader(struct Stream* stream) {
 	UInt8 header[PNG_SIG_SIZE];
 	Stream_Read(stream, header, PNG_SIG_SIZE);
 	Int32 i;
@@ -276,7 +276,7 @@ static void Png_Expand_RGB_A(UInt8 bitsPerSample, Int32 width, UInt32* palette, 
 	}
 }
 
-static void Png_ComputeTransparency(Bitmap* bmp, UInt32 transparentCol) {
+static void Png_ComputeTransparency(struct Bitmap* bmp, UInt32 transparentCol) {
 	UInt32 trnsRGB = transparentCol & PNG_RGB_MASK;
 	Int32 x, y, width = bmp->Width, height = bmp->Height;
 
@@ -292,7 +292,7 @@ static void Png_ComputeTransparency(Bitmap* bmp, UInt32 transparentCol) {
 /* Most bits per sample is 16. Most samples per pixel is 4. Add 1 for filter byte. */
 #define PNG_BUFFER_SIZE ((PNG_MAX_DIMS * 2 * 4 + 1) * 2)
 /* TODO: Test a lot of .png files and ensure output is right */
-void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
+void Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 	Png_CheckHeader(stream);
 	Bitmap_Create(bmp, 0, 0, NULL);
 	UInt32 transparentCol = PackedCol_ARGB(0, 0, 0, 255);
@@ -306,10 +306,10 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 	}
 	bool gotHeader = false, readingChunks = true;
 
-	InflateState inflate;
-	Stream compStream;
+	struct InflateState inflate;
+	struct Stream compStream;
 	Inflate_MakeStream(&compStream, &inflate, stream);
-	ZLibHeader zlibHeader;
+	struct ZLibHeader zlibHeader;
 	ZLibHeader_Init(&zlibHeader);
 
 	UInt32 scanlineSize, scanlineBytes, curY = 0;
@@ -400,7 +400,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 		} break;
 
 		case PNG_FourCC('I', 'D', 'A', 'T'): {
-			Stream datStream;
+			struct Stream datStream;
 			Stream_ReadonlyPortion(&datStream, stream, dataSize);
 			inflate.Source = &datStream;
 			/* TODO: This assumes zlib header will be in 1 IDAT chunk */
@@ -465,7 +465,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 /*########################################################################################################################*
 *------------------------------------------------------PNG encoder--------------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode Bitmap_Crc32StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode Bitmap_Crc32StreamWrite(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	UInt32 i, crc32 = stream->Meta_CRC32;
 	/* TODO: Optimise this calculation */
 	for (i = 0; i < count; i++) {
@@ -473,11 +473,11 @@ static ReturnCode Bitmap_Crc32StreamWrite(Stream* stream, UInt8* data, UInt32 co
 	}
 	stream->Meta_CRC32 = crc32;
 
-	Stream* underlying = stream->Meta_CRC32_Source;
+	struct Stream* underlying = stream->Meta_CRC32_Source;
 	return underlying->Write(underlying, data, count, modified);
 }
 
-static void Bitmap_Crc32Stream(Stream* stream, Stream* underlying) {
+static void Bitmap_Crc32Stream(struct Stream* stream, struct Stream* underlying) {
 	Stream_SetName(stream, &underlying->Name);
 	stream->Meta_CRC32_Source = underlying;
 	stream->Meta_CRC32 = 0xFFFFFFFFUL;
@@ -573,10 +573,10 @@ static void Png_EncodeRow(UInt8* src, UInt8* cur, UInt8* prior, UInt8* best, Int
 	best[0] = bestFilter;
 }
 
-void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) {
+void Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 	Stream_Write(stream, png_sig, PNG_SIG_SIZE);
-	Stream* underlying = stream;
-	Stream crc32Stream;
+	struct Stream* underlying = stream;
+	struct Stream crc32Stream;
 
 	/* Write header chunk */
 	Stream_WriteU32_BE(stream, PNG_IHDR_SIZE);
@@ -607,8 +607,8 @@ void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) {
 	Stream_WriteU32_BE(stream, PNG_FourCC('I', 'D', 'A', 'T'));
 	{
 		Int32 y, lineSize = bmp->Width * 3;
-		ZLibState zlState;
-		Stream zlStream;
+		struct ZLibState zlState;
+		struct Stream zlStream;
 		ZLib_MakeStream(&zlStream, &zlState, stream);
 
 		for (y = 0; y < bmp->Height; y++) {

@@ -7,13 +7,13 @@
 #include "Game.h"
 
 /* Data for a selection box. */
-typedef struct SelectionBox_ {
+struct SelectionBox {
 	Vector3 Min, Max;
 	PackedCol Col;
 	Real32 MinDist, MaxDist;
-} SelectionBox;
+};
 
-void SelectionBox_Render(SelectionBox* box, VertexP3fC4b** vertices, VertexP3fC4b** lineVertices) {
+void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** vertices, VertexP3fC4b** lineVertices) {
 	Real32 offset = box->MinDist < 32.0f * 32.0f ? (1.0f / 32.0f) : (1.0f / 16.0f);
 	Vector3 p1 = box->Min, p2 = box->Max;
 	Vector3_Add1(&p1, &p1, -offset);
@@ -80,7 +80,7 @@ void SelectionBox_Line(VertexP3fC4b** vertices, PackedCol col,
 }
 
 
-static Int32 SelectionBox_Compare(SelectionBox* a, SelectionBox* b) {
+static Int32 SelectionBox_Compare(struct SelectionBox* a, struct SelectionBox* b) {
 	Real32 aDist, bDist;
 	if (a->MinDist == b->MinDist) {
 		aDist = a->MaxDist; bDist = b->MaxDist;
@@ -102,7 +102,7 @@ static void SelectionBox_UpdateDist(Vector3 p, Real32 x2, Real32 y2, Real32 z2, 
 	if (dist > *furthest) *furthest = dist;
 }
 
-static void SelectionBox_Intersect(SelectionBox* box, Vector3 origin) {
+static void SelectionBox_Intersect(struct SelectionBox* box, Vector3 origin) {
 	Vector3 min = box->Min, max = box->Max;
 	Real32 closest = MATH_POS_INF, furthest = -MATH_POS_INF;
 	/* Bottom corners */
@@ -124,13 +124,13 @@ static void SelectionBox_Intersect(SelectionBox* box, Vector3 origin) {
 #define SELECTIONS_MAX_VERTICES SELECTIONS_MAX * SELECTIONS_VERTICES
 
 UInt32 selections_count;
-SelectionBox selections_list[SELECTIONS_MAX];
+struct SelectionBox selections_list[SELECTIONS_MAX];
 UInt8 selections_ids[SELECTIONS_MAX];
 GfxResourceID selections_VB, selections_LineVB;
 bool selections_used;
 
 void Selections_Add(UInt8 id, Vector3I p1, Vector3I p2, PackedCol col) {	
-	SelectionBox sel;
+	struct SelectionBox sel;
 	Vector3I min, max;
 	Vector3I_Min(&min, &p1, &p2); Vector3I_ToVector3(&sel.Min, &min);
 	Vector3I_Max(&max, &p1, &p2); Vector3I_ToVector3(&sel.Max, &max);
@@ -169,11 +169,12 @@ static void Selections_ContextRecreated(void* obj) {
 }
 
 static void Selections_QuickSort(Int32 left, Int32 right) {
-	UInt8* values = selections_ids;       UInt8 value;
-	SelectionBox* keys = selections_list; SelectionBox key;
+	UInt8* values = selections_ids; UInt8 value;
+	struct SelectionBox* keys = selections_list; struct SelectionBox key;
+
 	while (left < right) {
 		Int32 i = left, j = right;
-		SelectionBox* pivot = &keys[(i + j) / 2];
+		struct SelectionBox* pivot = &keys[(i + j) / 2];
 
 		/* partition the list */
 		while (i <= j) {

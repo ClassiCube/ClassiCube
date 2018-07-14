@@ -56,8 +56,8 @@ enum OPCODE_ {
 	OPCODE_CPE_SET_INVENTORY_ORDER,
 };
 
-typedef struct PickedPos_ PickedPos;
-typedef struct Stream_ Stream;
+struct PickedPos;
+struct Stream;
 
 UInt16 PingList_NextPingData(void);
 void PingList_Update(UInt16 data);
@@ -71,10 +71,10 @@ extern String ServerConnection_AppName;
 void (*ServerConnection_BeginConnect)(void);
 void (*ServerConnection_SendChat)(STRING_PURE String* text);
 void (*ServerConnection_SendPosition)(Vector3 pos, Real32 rotY, Real32 headX);
-void (*ServerConnection_SendPlayerClick)(MouseButton button, bool isDown, EntityID targetId, PickedPos* pos);
+void (*ServerConnection_SendPlayerClick)(MouseButton button, bool isDown, EntityID targetId, struct PickedPos* pos);
 void (*ServerConnection_Tick)(ScheduledTask* task);
-Stream* (*ServerConnection_ReadStream)(void);
-Stream* (*ServerConnection_WriteStream)(void);
+struct Stream* (*ServerConnection_ReadStream)(void);
+struct Stream* (*ServerConnection_WriteStream)(void);
 
 /* Whether the network processor is currently disconnected from the server. */
 bool ServerConnection_Disconnected;
@@ -93,7 +93,7 @@ void ServerConnection_InitSingleplayer(void);
 void ServerConnection_InitMultiplayer(void);
 IGameComponent ServerConnection_MakeComponent(void);
 
-typedef void (*Net_Handler)(Stream* stream);
+typedef void (*Net_Handler)(struct Stream* stream);
 #define OPCODE_COUNT 45
 UInt16 Net_PacketSizes[OPCODE_COUNT];
 Net_Handler Net_Handlers[OPCODE_COUNT];

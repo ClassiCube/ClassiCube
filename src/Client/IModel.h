@@ -6,7 +6,7 @@
 /* Contains various structs and methods for an entity model.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
-typedef struct Entity_ Entity;
+struct Entity;
 typedef struct AABB_ AABB;
 
 #define IMODEL_QUAD_VERTICES 4
@@ -27,7 +27,7 @@ void ModelPart_Init(ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Rea
 
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
 the bounding boxes that contain the entire set of quads and/or boxes. */
-typedef struct IModel_ {
+struct IModel {
 	/* Pointer to the raw vertices of the model.*/
 	ModelVertex* vertices;
 	/* Count of assigned vertices within the raw vertices array. */
@@ -45,26 +45,26 @@ typedef struct IModel_ {
 
 	Real32 Gravity; Vector3 Drag, GroundFriction;
 
-	Real32 (*GetEyeY)(Entity* entity);
+	Real32 (*GetEyeY)(struct Entity* entity);
 	Vector3 (*GetCollisionSize)(void);
 	void (*GetPickingBounds)(AABB* bb);
 	void (*CreateParts)(void);
-	void (*DrawModel)(Entity* entity);
-	void (*GetTransform)(Entity* entity, Vector3 pos);
+	void (*DrawModel)(struct Entity* entity);
+	void (*GetTransform)(struct Entity* entity, Vector3 pos);
 	/* Recalculates properties such as name Y offset, collision size. 
 	Not used by majority of models. (BlockModel is the exception).*/
-	void (*RecalcProperties)(Entity* entity);
+	void (*RecalcProperties)(struct Entity* entity);
 
 	Real32 NameYOffset, MaxScale, ShadowScale, NameScale;
-} IModel;
+};
 
 PackedCol IModel_Cols[FACE_COUNT];
 Real32 IModel_uScale, IModel_vScale;
 /* Angle of offset from head to body rotation. */
 Real32 IModel_cosHead, IModel_sinHead;
 UInt8 IModel_Rotation;
-IModel* IModel_ActiveModel;
-void IModel_Init(IModel* model);
+struct IModel* IModel_ActiveModel;
+void IModel_Init(struct IModel* model);
 
 #define IModel_SetPointers(typeName)\
 typeName.GetEyeY = typeName ## _GetEyeY;\
@@ -73,12 +73,12 @@ typeName.GetPickingBounds = typeName ## _GetPickingBounds;\
 typeName.CreateParts = typeName ## _CreateParts;\
 typeName.DrawModel = typeName ## _DrawModel;
 
-bool IModel_ShouldRender(Entity* entity);
-Real32 IModel_RenderDistance(Entity* entity);
-void IModel_Render(IModel* model, Entity* entity);
-void IModel_SetupState(IModel* model, Entity* entity);
+bool IModel_ShouldRender(struct Entity* entity);
+Real32 IModel_RenderDistance(struct Entity* entity);
+void IModel_Render(struct IModel* model, struct Entity* entity);
+void IModel_SetupState(struct IModel* model, struct Entity* entity);
 void IModel_UpdateVB(void);
-GfxResourceID IModel_GetTexture(Entity* entity);
+GfxResourceID IModel_GetTexture(struct Entity* entity);
 void IModel_DrawPart(ModelPart part);
 void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart part, bool head);
 
@@ -125,7 +125,7 @@ let SW = sides width, BW = body width, BH = body height
 |H--------tex---------H|H--------tex---------H|H--------tex---------H|H--------tex---------H|
 |----------SW----------|----------BW----------|----------SW----------|----------BW----------|
 ********************************************************************************************* */
-void BoxDesc_BuildBox(ModelPart* part, IModel* m, BoxDesc* desc);
+void BoxDesc_BuildBox(ModelPart* part, struct IModel* m, BoxDesc* desc);
 
 /* Builds a box model assuming the follow texture layout:
 let SW = sides width, BW = body width, BH = body height
@@ -140,12 +140,12 @@ let SW = sides width, BW = body width, BH = body height
 |H--------tex---------H|H--------tex---------H|H--------tex---------H|H--------tex---------H|
 |----------SW----------|----------BW----------|----------BW----------|----------------------|
 ********************************************************************************************* */
-void BoxDesc_BuildRotatedBox(ModelPart* part, IModel* m, BoxDesc* desc);
+void BoxDesc_BuildRotatedBox(ModelPart* part, struct IModel* m, BoxDesc* desc);
 
-void BoxDesc_XQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
+void BoxDesc_XQuad(struct IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 z1, Real32 z2, Real32 y1, Real32 y2, Real32 x, bool swapU);
-void BoxDesc_YQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
+void BoxDesc_YQuad(struct IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 x1, Real32 x2, Real32 z1, Real32 z2, Real32 y, bool swapU);
-void BoxDesc_ZQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
+void BoxDesc_ZQuad(struct IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 x1, Real32 x2, Real32 y1, Real32 y2, Real32 z, bool swapU);
 #endif

@@ -31,26 +31,26 @@ Real32 LocationUpdate_Clamp(Real32 degrees) {
 	return degrees;
 }
 
-LocationUpdate loc_empty;
-void LocationUpdate_Empty(LocationUpdate* update) {
+struct LocationUpdate loc_empty;
+void LocationUpdate_Empty(struct LocationUpdate* update) {
 	*update = loc_empty;
 }
 
-void LocationUpdate_MakeOri(LocationUpdate* update, Real32 rotY, Real32 headX) {
+void LocationUpdate_MakeOri(struct LocationUpdate* update, Real32 rotY, Real32 headX) {
 	*update = loc_empty;
 	update->Flags = LOCATIONUPDATE_FLAG_HEADX | LOCATIONUPDATE_FLAG_HEADY;
 	update->HeadX = LocationUpdate_Clamp(headX);
 	update->HeadY = LocationUpdate_Clamp(rotY);
 }
 
-void LocationUpdate_MakePos(LocationUpdate* update, Vector3 pos, bool rel) {
+void LocationUpdate_MakePos(struct LocationUpdate* update, Vector3 pos, bool rel) {
 	*update = loc_empty;
 	update->Flags = LOCATIONUPDATE_FLAG_POS;
 	update->Pos   = pos;
 	update->RelativePos = rel;
 }
 
-void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos, Real32 rotY, Real32 headX, bool rel) {
+void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, Real32 rotY, Real32 headX, bool rel) {
 	*update = loc_empty;
 	update->Flags = LOCATIONUPDATE_FLAG_POS | LOCATIONUPDATE_FLAG_HEADX | LOCATIONUPDATE_FLAG_HEADY;
 	update->HeadX = LocationUpdate_Clamp(headX);
@@ -63,15 +63,15 @@ void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos, Real32 ro
 /*########################################################################################################################*
 *---------------------------------------------------------Entity----------------------------------------------------------*
 *#########################################################################################################################*/
-EntityVTABLE entity_VTABLE;
-static PackedCol Entity_DefaultGetCol(Entity* entity) {
+struct EntityVTABLE entity_VTABLE;
+static PackedCol Entity_DefaultGetCol(struct Entity* entity) {
 	Vector3 eyePos = Entity_GetEyePosition(entity);
 	Vector3I P; Vector3I_Floor(&P, &eyePos);
 	return World_IsValidPos_3I(P) ? Lighting_Col(P.X, P.Y, P.Z) : Lighting_Outside;
 }
-static void Entity_NullFunc(Entity* entity) {}
+static void Entity_NullFunc(struct Entity* entity) {}
 
-void Entity_Init(Entity* entity) {
+void Entity_Init(struct Entity* entity) {
 	entity->ModelScale = Vector3_Create1(1.0f);
 	entity->uScale = 1.0f;
 	entity->vScale = 1.0f;
@@ -82,15 +82,15 @@ void Entity_Init(Entity* entity) {
 	entity->VTABLE->GetCol           = Entity_DefaultGetCol;
 }
 
-Vector3 Entity_GetEyePosition(Entity* entity) {
+Vector3 Entity_GetEyePosition(struct Entity* entity) {
 	Vector3 pos = entity->Position; pos.Y += Entity_GetEyeHeight(entity); return pos;
 }
 
-Real32 Entity_GetEyeHeight(Entity* entity) {
+Real32 Entity_GetEyeHeight(struct Entity* entity) {
 	return entity->Model->GetEyeY(entity) * entity->ModelScale.Y;
 }
 
-void Entity_GetTransform(Entity* entity, Vector3 pos, Vector3 scale) {
+void Entity_GetTransform(struct Entity* entity, Vector3 pos, Vector3 scale) {
 	Matrix* m = &entity->Transform;
 	*m = Matrix_Identity;
 	Matrix tmp;
@@ -108,15 +108,15 @@ void Entity_GetTransform(Entity* entity, Vector3 pos, Vector3 scale) {
 	/* return rotZ * rotX * rotY * scale * translate; */
 }
 
-void Entity_GetPickingBounds(Entity* entity, AABB* bb) {
+void Entity_GetPickingBounds(struct Entity* entity, AABB* bb) {
 	AABB_Offset(bb, &entity->ModelAABB, &entity->Position);
 }
 
-void Entity_GetBounds(Entity* entity, AABB* bb) {
+void Entity_GetBounds(struct Entity* entity, AABB* bb) {
 	AABB_Make(bb, &entity->Position, &entity->Size);
 }
 
-static void Entity_ParseScale(Entity* entity, String scale) {
+static void Entity_ParseScale(struct Entity* entity, String scale) {
 	if (scale.buffer == NULL) return;
 	Real32 value;
 	if (!Convert_TryParseReal32(&scale, &value)) return;
@@ -126,7 +126,7 @@ static void Entity_ParseScale(Entity* entity, String scale) {
 	entity->ModelScale = Vector3_Create1(value);
 }
 
-void Entity_SetModel(Entity* entity, STRING_PURE String* model) {
+void Entity_SetModel(struct Entity* entity, STRING_PURE String* model) {
 	entity->ModelScale = Vector3_Create1(1.0f);
 	entity->ModelBlock = BLOCK_AIR;
 
@@ -157,8 +157,8 @@ void Entity_SetModel(Entity* entity, STRING_PURE String* model) {
 	entity->ModelIsSheepNoFur = String_CaselessEqualsConst(&name, "sheep_nofur");
 }
 
-void Entity_UpdateModelBounds(Entity* entity) {
-	IModel* model = entity->Model;
+void Entity_UpdateModelBounds(struct Entity* entity) {
+	struct IModel* model = entity->Model;
 	Vector3 baseSize = model->GetCollisionSize();
 	Vector3_Mul3(&entity->Size, &baseSize, &entity->ModelScale);
 
@@ -196,7 +196,7 @@ bool Entity_TouchesAny(AABB* bounds, bool (*touches_condition)(BlockID block__))
 }
 
 static bool Entity_IsRope(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_CLIMB_ROPE; }
-bool Entity_TouchesAnyRope(Entity* entity) {
+bool Entity_TouchesAnyRope(struct Entity* entity) {
 	AABB bounds; Entity_GetBounds(entity, &bounds);
 	bounds.Max.Y += 0.5f / 16.0f;
 	return Entity_TouchesAny(&bounds, Entity_IsRope);
@@ -204,14 +204,14 @@ bool Entity_TouchesAnyRope(Entity* entity) {
 
 Vector3 entity_liqExpand = { 0.25f / 16.0f, 0.0f / 16.0f, 0.25f / 16.0f };
 static bool Entity_IsLava(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_LIQUID_LAVA; }
-bool Entity_TouchesAnyLava(Entity* entity) {
+bool Entity_TouchesAnyLava(struct Entity* entity) {
 	AABB bounds; Entity_GetBounds(entity, &bounds);
 	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
 	return Entity_TouchesAny(&bounds, Entity_IsLava);
 }
 
 static bool Entity_IsWater(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_LIQUID_WATER; }
-bool Entity_TouchesAnyWater(Entity* entity) {
+bool Entity_TouchesAnyWater(struct Entity* entity) {
 	AABB bounds; Entity_GetBounds(entity, &bounds);
 	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
 	return Entity_TouchesAny(&bounds, Entity_IsWater);
@@ -245,7 +245,7 @@ void Entities_RenderModels(Real64 delta, Real32 t) {
 
 void Entities_RenderNames(Real64 delta) {
 	if (Entities_NameMode == NAME_MODE_NONE) return;
-	LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	entities_closestId = Entities_GetCloset(&p->Base);
 	if (!p->Hacks.CanSeeAllNames || Entities_NameMode != NAME_MODE_ALL) return;
 
@@ -269,7 +269,7 @@ void Entities_RenderNames(Real64 delta) {
 
 void Entities_RenderHoveredNames(Real64 delta) {
 	if (Entities_NameMode == NAME_MODE_NONE) return;
-	LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	bool allNames = !(Entities_NameMode == NAME_MODE_HOVERED || Entities_NameMode == NAME_MODE_ALL)
 		&& p->Hacks.CanSeeAllNames;
 
@@ -315,7 +315,7 @@ static void Entities_ChatFontChanged(void* obj) {
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
-		Player_UpdateName((Player*)Entities_List[i]);
+		Player_UpdateName((struct Player*)Entities_List[i]);
 	}
 }
 
@@ -355,7 +355,7 @@ void Entities_Remove(EntityID id) {
 	Entities_List[id] = NULL;
 }
 
-EntityID Entities_GetCloset(Entity* src) {
+EntityID Entities_GetCloset(struct Entity* src) {
 	Vector3 eyePos = Entity_GetEyePosition(src);
 	Vector3 dir = Vector3_GetDirVector(src->HeadY * MATH_DEG2RAD, src->HeadX * MATH_DEG2RAD);
 	Real32 closestDist = MATH_POS_INF;
@@ -363,7 +363,7 @@ EntityID Entities_GetCloset(Entity* src) {
 
 	UInt32 i;
 	for (i = 0; i < ENTITIES_SELF_ID; i++) { /* because we don't want to pick against local player */
-		Entity* entity = Entities_List[i];
+		struct Entity* entity = Entities_List[i];
 		if (entity == NULL) continue;
 
 		Real32 t0, t1;
@@ -469,7 +469,7 @@ IGameComponent TabList_MakeComponent(void) {
 *---------------------------------------------------------Player----------------------------------------------------------*
 *#########################################################################################################################*/
 #define PLAYER_NAME_EMPTY_TEX -30000
-static void Player_MakeNameTexture(Player* player) {
+static void Player_MakeNameTexture(struct Player* player) {
 	FontDesc font; 
 	Platform_FontMake(&font, &Game_FontName, 24, FONT_STYLE_NORMAL);
 
@@ -490,7 +490,7 @@ static void Player_MakeNameTexture(Player* player) {
 		String shadowName = String_InitAndClearArray(buffer);
 
 		size.Width += 3; size.Height += 3;
-		Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+		struct Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 		Drawer2D_Begin(&bmp);
 		{
 			PackedCol origWhiteCol = Drawer2D_Cols['f'];
@@ -512,17 +512,17 @@ static void Player_MakeNameTexture(Player* player) {
 	Drawer2D_UseBitmappedChat = bitmapped;
 }
 
-void Player_UpdateName(Player* player) {
-	Entity* entity = &player->Base;
+void Player_UpdateName(struct Player* player) {
+	struct Entity* entity = &player->Base;
 	entity->VTABLE->ContextLost(entity);
 
 	if (Gfx_LostContext) return;
 	Player_MakeNameTexture(player);
 }
 
-static void Player_DrawName(Player* player) {
-	Entity* entity = &player->Base;
-	IModel* model = entity->Model;
+static void Player_DrawName(struct Player* player) {
+	struct Entity* entity = &player->Base;
+	struct IModel* model = entity->Model;
 
 	if (player->NameTex.X == PLAYER_NAME_EMPTY_TEX) return;
 	if (player->NameTex.ID == NULL) Player_MakeNameTexture(player);
@@ -553,44 +553,44 @@ static void Player_DrawName(Player* player) {
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_texVb, vertices, 4);
 }
 
-static Player* Player_FirstOtherWithSameSkin(Player* player) {
-	Entity* entity = &player->Base;
+static struct Player* Player_FirstOtherWithSameSkin(struct Player* player) {
+	struct Entity* entity = &player->Base;
 	String skin = String_FromRawArray(player->SkinNameRaw);
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL || Entities_List[i] == entity) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
-		Player* p = (Player*)Entities_List[i];
+		struct Player* p = (struct Player*)Entities_List[i];
 		String pSkin = String_FromRawArray(p->SkinNameRaw);
 		if (String_Equals(&skin, &pSkin)) return p;
 	}
 	return NULL;
 }
 
-static Player* Player_FirstOtherWithSameSkinAndFetchedSkin(Player* player) {
-	Entity* entity = &player->Base;
+static struct Player* Player_FirstOtherWithSameSkinAndFetchedSkin(struct Player* player) {
+	struct Entity* entity = &player->Base;
 	String skin = String_FromRawArray(player->SkinNameRaw);
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL || Entities_List[i] == entity) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
-		Player* p = (Player*)Entities_List[i];
+		struct Player* p = (struct Player*)Entities_List[i];
 		String pSkin = String_FromRawArray(p->SkinNameRaw);
 		if (p->FetchedSkin && String_Equals(&skin, &pSkin)) return p;
 	}
 	return NULL;
 }
 
-static void Player_ApplySkin(Player* player, Player* from) {
-	Entity* dst = &player->Base;
-	Entity* src = &from->Base;
+static void Player_ApplySkin(struct Player* player, struct Player* from) {
+	struct Entity* dst = &player->Base;
+	struct Entity* src = &from->Base;
 
-	dst->TextureId    = src->TextureId;	
-	dst->SkinType     = src->SkinType;
-	dst->uScale       = src->uScale;
-	dst->vScale       = src->vScale;
+	dst->TextureId = src->TextureId;	
+	dst->SkinType  = src->SkinType;
+	dst->uScale    = src->uScale;
+	dst->vScale    = src->vScale;
 
 	/* Custom mob textures */
 	dst->MobTextureId = NULL;
@@ -600,8 +600,8 @@ static void Player_ApplySkin(Player* player, Player* from) {
 	}
 }
 
-void Player_ResetSkin(Player* player) {
-	Entity* entity = &player->Base;
+void Player_ResetSkin(struct Player* player) {
+	struct Entity* entity = &player->Base;
 	entity->uScale = 1; entity->vScale = 1.0f;
 	entity->MobTextureId = NULL;
 	entity->TextureId    = NULL;
@@ -609,14 +609,14 @@ void Player_ResetSkin(Player* player) {
 }
 
 /* Apply or reset skin, for all players with same skin */
-static void Player_SetSkinAll(Player* player, bool reset) {
+static void Player_SetSkinAll(struct Player* player, bool reset) {
 	String skin = String_FromRawArray(player->SkinNameRaw);
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
-		Player* p = (Player*)Entities_List[i];
+		struct Player* p = (struct Player*)Entities_List[i];
 		String pSkin = String_FromRawArray(p->SkinNameRaw);
 		if (!String_Equals(&skin, &pSkin)) continue;
 
@@ -628,15 +628,15 @@ static void Player_SetSkinAll(Player* player, bool reset) {
 	}
 }
 
-static void Player_ClearHat(Bitmap bmp, UInt8 skinType) {
-	Int32 sizeX = (bmp.Width / 64) * 32;
+static void Player_ClearHat(struct Bitmap* bmp, UInt8 skinType) {
+	Int32 sizeX = (bmp->Width / 64) * 32;
 	Int32 yScale = skinType == SKIN_TYPE_64x32 ? 32 : 64;
-	Int32 sizeY = (bmp.Height / yScale) * 16;
+	Int32 sizeY = (bmp->Height / yScale) * 16;
 	Int32 x, y;
 
 	/* determine if we actually need filtering */
 	for (y = 0; y < sizeY; y++) {
-		UInt32* row = Bitmap_GetRow(&bmp, y);
+		UInt32* row = Bitmap_GetRow(bmp, y);
 		row += sizeX;
 		for (x = 0; x < sizeX; x++) {
 			UInt8 alpha = PackedCol_ARGB_A(row[x]);
@@ -648,7 +648,7 @@ static void Player_ClearHat(Bitmap bmp, UInt8 skinType) {
 	UInt32 fullWhite = PackedCol_ARGB(255, 255, 255, 255);
 	UInt32 fullBlack = PackedCol_ARGB(0,   0,   0,   255);
 	for (y = 0; y < sizeY; y++) {
-		UInt32* row = Bitmap_GetRow(&bmp, y);
+		UInt32* row = Bitmap_GetRow(bmp, y);
 		row += sizeX;
 		for (x = 0; x < sizeX; x++) {
 			UInt32 pixel = row[x];
@@ -657,12 +657,12 @@ static void Player_ClearHat(Bitmap bmp, UInt8 skinType) {
 	}
 }
 
-static void Player_EnsurePow2(Player* player, Bitmap* bmp) {
+static void Player_EnsurePow2(struct Player* player, struct Bitmap* bmp) {
 	Int32 width  = Math_NextPowOf2(bmp->Width);
 	Int32 height = Math_NextPowOf2(bmp->Height);
 	if (width == bmp->Width && height == bmp->Height) return;
 
-	Bitmap scaled; Bitmap_Allocate(&scaled, width, height);
+	struct Bitmap scaled; Bitmap_Allocate(&scaled, width, height);
 	if (scaled.Scan0 == NULL) {
 		ErrorHandler_Fail("Failed to allocate memory for resizing player skin");
 	}
@@ -675,7 +675,7 @@ static void Player_EnsurePow2(Player* player, Bitmap* bmp) {
 		Platform_MemCpy(dst, src, stride);
 	}
 
-	Entity* entity = &player->Base;
+	struct Entity* entity = &player->Base;
 	entity->uScale = (Real32)bmp->Width  / width;
 	entity->vScale = (Real32)bmp->Height / height;
 
@@ -683,12 +683,12 @@ static void Player_EnsurePow2(Player* player, Bitmap* bmp) {
 	*bmp = scaled;
 }
 
-static void Player_CheckSkin(Player* player) {
-	Entity* entity = &player->Base;
+static void Player_CheckSkin(struct Player* player) {
+	struct Entity* entity = &player->Base;
 	String skin = String_FromRawArray(player->SkinNameRaw);
 
 	if (!player->FetchedSkin && entity->Model->UsesSkin) {
-		Player* first = Player_FirstOtherWithSameSkinAndFetchedSkin(player);
+		struct Player* first = Player_FirstOtherWithSameSkinAndFetchedSkin(player);
 		if (first == NULL) {
 			AsyncDownloader_GetSkin(&skin, &skin);
 		} else {
@@ -697,9 +697,9 @@ static void Player_CheckSkin(Player* player) {
 		player->FetchedSkin = true;
 	}
 
-	AsyncRequest item;
+	struct AsyncRequest item;
 	if (!AsyncDownloader_Get(&skin, &item)) return;
-	Bitmap bmp = item.ResultBitmap;
+	struct Bitmap bmp = item.ResultBitmap;
 	if (bmp.Scan0 == NULL) { Player_SetSkinAll(player, true); return; }
 
 	Gfx_DeleteTexture(&entity->TextureId);
@@ -711,7 +711,7 @@ static void Player_CheckSkin(Player* player) {
 		Player_SetSkinAll(player, true);
 	} else {
 		if (entity->Model->UsesHumanSkin) {
-			Player_ClearHat(bmp, entity->SkinType);
+			Player_ClearHat(&bmp, entity->SkinType);
 		}
 		entity->TextureId = Gfx_CreateTexture(&bmp, true, false);
 		Player_SetSkinAll(player, false);
@@ -719,9 +719,9 @@ static void Player_CheckSkin(Player* player) {
 	Platform_MemFree(&bmp.Scan0);
 }
 
-static void Player_Despawn(Entity* entity) {
-	Player* player = (Player*)entity;
-	Player* first = Player_FirstOtherWithSameSkin(player);
+static void Player_Despawn(struct Entity* entity) {
+	struct Player* player = (struct Player*)entity;
+	struct Player* first = Player_FirstOtherWithSameSkin(player);
 	if (first == NULL) {
 		Gfx_DeleteTexture(&entity->TextureId);
 		Player_ResetSkin(player);
@@ -729,27 +729,27 @@ static void Player_Despawn(Entity* entity) {
 	entity->VTABLE->ContextLost(entity);
 }
 
-static void Player_ContextLost(Entity* entity) {
-	Player* player = (Player*)entity;
+static void Player_ContextLost(struct Entity* entity) {
+	struct Player* player = (struct Player*)entity;
 	Gfx_DeleteTexture(&player->NameTex.ID);
 	player->NameTex = Texture_MakeInvalid();
 }
 
-static void Player_ContextRecreated(Entity* entity) {
-	Player* player = (Player*)entity;
+static void Player_ContextRecreated(struct Entity* entity) {
+	struct Player* player = (struct Player*)entity;
 	Player_UpdateName(player);
 }
 
-static void Player_SetName(Player* player, STRING_PURE String* displayName, STRING_PURE String* skinName) {
+static void Player_SetName(struct Player* player, STRING_PURE String* displayName, STRING_PURE String* skinName) {
 	String dstDisplayName = String_FromEmptyArray(player->DisplayNameRaw);
 	String_AppendString(&dstDisplayName, displayName);
 	String dstSkinName = String_FromEmptyArray(player->SkinNameRaw);
 	String_AppendString(&dstSkinName, skinName);
 }
 
-EntityVTABLE player_VTABLE;
-void Player_Init(Player* player) {
-	Entity* entity = &player->Base;
+struct EntityVTABLE player_VTABLE;
+void Player_Init(struct Player* player) {
+	struct Entity* entity = &player->Base;
 	Entity_Init(entity);
 	entity->StepSize = 0.5f;
 	entity->EntityType = ENTITY_TYPE_PLAYER;
@@ -768,12 +768,12 @@ void Player_Init(Player* player) {
 *------------------------------------------------------LocalPlayer--------------------------------------------------------*
 *#########################################################################################################################*/
 Real32 LocalPlayer_JumpHeight(void) {
-	LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	return (Real32)PhysicsComp_GetMaxHeight(p->Physics.JumpVel);
 }
 
 void LocalPlayer_CheckHacksConsistency(void) {
-	LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	HacksComp_CheckConsistency(&p->Hacks);
 	if (!HacksComp_CanJumpHigher(&p->Hacks)) {
 		p->Physics.JumpVel = p->Physics.ServerJumpVel;
@@ -781,16 +781,16 @@ void LocalPlayer_CheckHacksConsistency(void) {
 }
 
 void LocalPlayer_SetInterpPosition(Real32 t) {
-	LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (!(p->Hacks.WOMStyleHacks && p->Hacks.Noclip)) {
 		Vector3_Lerp(&p->Base.Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
 	}
-	InterpComp_LerpAngles((InterpComp*)(&p->Interp), &p->Base, t);
+	InterpComp_LerpAngles((struct InterpComp*)(&p->Interp), &p->Base, t);
 }
 
 static void LocalPlayer_HandleInput(Real32* xMoving, Real32* zMoving) {
-	LocalPlayer* p = &LocalPlayer_Instance;
-	HacksComp* hacks = &p->Hacks;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct HacksComp* hacks = &p->Hacks;
 
 	if (Gui_GetActiveScreen()->HandlesAllInput) {
 		p->Physics.Jumping = false; hacks->Speeding = false;
@@ -814,15 +814,15 @@ static void LocalPlayer_HandleInput(Real32* xMoving, Real32* zMoving) {
 	}
 }
 
-static void LocalPlayer_SetLocation(Entity* entity, LocationUpdate* update, bool interpolate) {
-	LocalPlayer* p = (LocalPlayer*)entity;
+static void LocalPlayer_SetLocation(struct Entity* entity, struct LocationUpdate* update, bool interpolate) {
+	struct LocalPlayer* p = (struct LocalPlayer*)entity;
 	LocalInterpComp_SetLocation(&p->Interp, update, interpolate);
 }
 
-void LocalPlayer_Tick(Entity* entity, Real64 delta) {
+void LocalPlayer_Tick(struct Entity* entity, Real64 delta) {
 	if (World_Blocks == NULL) return;
-	LocalPlayer* p = (LocalPlayer*)entity;
-	HacksComp* hacks = &p->Hacks;
+	struct LocalPlayer* p = (struct LocalPlayer*)entity;
+	struct HacksComp* hacks = &p->Hacks;
 
 	entity->StepSize = hacks->FullBlockStep && hacks->Enabled && hacks->CanAnyHacks && hacks->CanSpeed ? 1.0f : 0.5f;
 	entity->OldVelocity = entity->Velocity;
@@ -850,12 +850,12 @@ void LocalPlayer_Tick(Entity* entity, Real64 delta) {
 	AnimatedComp_Update(entity, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
 	TiltComp_Update(&p->Tilt, delta);
 
-	Player_CheckSkin((Player*)p);
+	Player_CheckSkin((struct Player*)p);
 	SoundComp_Tick(wasOnGround);
 }
 
-static void LocalPlayer_RenderModel(Entity* entity, Real64 deltaTime, Real32 t) {
-	LocalPlayer* p = (LocalPlayer*)entity;
+static void LocalPlayer_RenderModel(struct Entity* entity, Real64 deltaTime, Real32 t) {
+	struct LocalPlayer* p = (struct LocalPlayer*)entity;
 	AnimatedComp_GetCurrent(entity, t);
 	TiltComp_GetCurrent(&p->Tilt, t);
 
@@ -863,14 +863,14 @@ static void LocalPlayer_RenderModel(Entity* entity, Real64 deltaTime, Real32 t) 
 	IModel_Render(entity->Model, entity);
 }
 
-static void LocalPlayer_RenderName(Entity* entity) {
+static void LocalPlayer_RenderName(struct Entity* entity) {
 	if (!Camera_Active->IsThirdPerson) return;
-	Player_DrawName((Player*)entity);
+	Player_DrawName((struct Player*)entity);
 }
 
 static void LocalPlayer_Init_(void) {
-	LocalPlayer* p = &LocalPlayer_Instance;
-	HacksComp* hacks = &p->Hacks;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct HacksComp* hacks = &p->Hacks;
 
 	hacks->Enabled = !Game_PureClassic && Options_GetBool(OPT_HACKS_ENABLED, true);
 	/* p->Base.Health = 20; TODO: survival mode stuff */
@@ -886,7 +886,7 @@ static void LocalPlayer_Init_(void) {
 }
 
 static void LocalPlayer_Reset(void) {
-	LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	p->ReachDistance = 5.0f;
 	Vector3 zero = Vector3_Zero; p->Base.Velocity = zero;
 	p->Physics.JumpVel       = 0.42f;
@@ -901,12 +901,12 @@ IGameComponent LocalPlayer_MakeComponent(void) {
 	return comp;
 }
 
-EntityVTABLE localplayer_VTABLE;
+struct EntityVTABLE localplayer_VTABLE;
 void LocalPlayer_Init(void) {
-	LocalPlayer* p = &LocalPlayer_Instance;
-	Platform_MemSet(p, 0, sizeof(LocalPlayer));
-	Player_Init((Player*)p);
-	Player_SetName((Player*)p, &Game_Username, &Game_Username);
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	Platform_MemSet(p, 0, sizeof(struct LocalPlayer));
+	Player_Init((struct Player*)p);
+	Player_SetName((struct Player*)p, &Game_Username, &Game_Username);
 
 	p->Collisions.Entity = &p->Base;
 	HacksComp_Init(&p->Hacks);
@@ -917,7 +917,7 @@ void LocalPlayer_Init(void) {
 	p->Physics.Hacks = &p->Hacks;
 	p->Physics.Collisions = &p->Collisions;
 
-	Entity* entity = &p->Base;
+	struct Entity* entity = &p->Base;
 	localplayer_VTABLE = *entity->VTABLE;
 	entity->VTABLE     = &localplayer_VTABLE;
 
@@ -930,7 +930,7 @@ void LocalPlayer_Init(void) {
 static bool LocalPlayer_IsSolidCollide(BlockID b) { return Block_Collide[b] == COLLIDE_SOLID; }
 static void LocalPlayer_DoRespawn(void) {
 	if (World_Blocks == NULL) return;
-	LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	Vector3 spawn = p->Spawn;
 	Vector3I P; Vector3I_Floor(&P, &spawn);
 	AABB bb;
@@ -952,7 +952,7 @@ static void LocalPlayer_DoRespawn(void) {
 	}
 
 	spawn.Y += 2.0f / 16.0f;
-	LocationUpdate update; LocationUpdate_MakePosAndOri(&update, spawn, p->SpawnRotY, p->SpawnHeadX, false);
+	struct LocationUpdate update; LocationUpdate_MakePosAndOri(&update, spawn, p->SpawnRotY, p->SpawnHeadX, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
 	Vector3 zero = Vector3_Zero; p->Base.Velocity = zero;
 
@@ -963,9 +963,9 @@ static void LocalPlayer_DoRespawn(void) {
 }
 
 bool LocalPlayer_HandlesKey(Int32 key) {
-	LocalPlayer* p = &LocalPlayer_Instance;
-	HacksComp* hacks = &p->Hacks;
-	PhysicsComp* physics = &p->Physics;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct HacksComp* hacks = &p->Hacks;
+	struct PhysicsComp* physics = &p->Physics;
 
 	if (key == KeyBind_Get(KeyBind_Respawn) && hacks->CanRespawn) {
 		LocalPlayer_DoRespawn();
@@ -999,44 +999,44 @@ bool LocalPlayer_HandlesKey(Int32 key) {
 /*########################################################################################################################*
 *-------------------------------------------------------NetPlayer---------------------------------------------------------*
 *#########################################################################################################################*/
-static void NetPlayer_SetLocation(Entity* entity, LocationUpdate* update, bool interpolate) {
-	NetPlayer* p = (NetPlayer*)entity;
+static void NetPlayer_SetLocation(struct Entity* entity, struct LocationUpdate* update, bool interpolate) {
+	struct NetPlayer* p = (struct NetPlayer*)entity;
 	NetInterpComp_SetLocation(&p->Interp, update, interpolate);
 }
 
-void NetPlayer_Tick(Entity* entity, Real64 delta) {
-	NetPlayer* p = (NetPlayer*)entity;
-	Player_CheckSkin((Player*)p);
+void NetPlayer_Tick(struct Entity* entity, Real64 delta) {
+	struct NetPlayer* p = (struct NetPlayer*)entity;
+	Player_CheckSkin((struct Player*)p);
 	NetInterpComp_AdvanceState(&p->Interp);
 	AnimatedComp_Update(entity, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
 }
 
-static void NetPlayer_RenderModel(Entity* entity, Real64 deltaTime, Real32 t) {
-	NetPlayer* p = (NetPlayer*)entity;
+static void NetPlayer_RenderModel(struct Entity* entity, Real64 deltaTime, Real32 t) {
+	struct NetPlayer* p = (struct NetPlayer*)entity;
 	Vector3_Lerp(&entity->Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
-	InterpComp_LerpAngles((InterpComp*)(&p->Interp), entity, t);
+	InterpComp_LerpAngles((struct InterpComp*)(&p->Interp), entity, t);
 
 	AnimatedComp_GetCurrent(entity, t);
 	p->ShouldRender = IModel_ShouldRender(entity);
 	if (p->ShouldRender) IModel_Render(entity->Model, entity);
 }
 
-static void NetPlayer_RenderName(Entity* entity) {
-	NetPlayer* p = (NetPlayer*)entity;
+static void NetPlayer_RenderName(struct Entity* entity) {
+	struct NetPlayer* p = (struct NetPlayer*)entity;
 	if (!p->ShouldRender) return;
 
 	Real32 dist = IModel_RenderDistance(entity);
 	Int32 threshold = Entities_NameMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
-	if (dist <= (Real32)threshold) Player_DrawName((Player*)p);
+	if (dist <= (Real32)threshold) Player_DrawName((struct Player*)p);
 }
 
-EntityVTABLE netplayer_VTABLE;
-void NetPlayer_Init(NetPlayer* player, STRING_PURE String* displayName, STRING_PURE String* skinName) {
-	Platform_MemSet(player, 0, sizeof(NetPlayer));	
-	Player_Init((Player*)player);
-	Player_SetName((Player*)player, displayName, skinName);
+struct EntityVTABLE netplayer_VTABLE;
+void NetPlayer_Init(struct NetPlayer* player, STRING_PURE String* displayName, STRING_PURE String* skinName) {
+	Platform_MemSet(player, 0, sizeof(struct NetPlayer));
+	Player_Init((struct Player*)player);
+	Player_SetName((struct Player*)player, displayName, skinName);
 
-	Entity* entity = &player->Base;
+	struct Entity* entity = &player->Base;
 	netplayer_VTABLE = *entity->VTABLE;
 	entity->VTABLE   = &netplayer_VTABLE;
 

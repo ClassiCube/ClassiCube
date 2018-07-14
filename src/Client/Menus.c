@@ -74,7 +74,7 @@ typedef struct DeathScreen_ {
 
 typedef struct EditHotkeyScreen_ {
 	MenuScreen_Layout
-	HotkeyData CurHotkey, OrigHotkey;
+	struct HotkeyData CurHotkey, OrigHotkey;
 	Int32 SelectedI;
 	bool SupressNextPress;
 	MenuInputWidget Input;
@@ -929,7 +929,7 @@ static void EditHotkeyScreen_LeaveOpen(GuiElement* elem, GuiElement* widget) {
 
 static void EditHotkeyScreen_SaveChanges(GuiElement* elem, GuiElement* widget) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
-	HotkeyData hotkey = screen->OrigHotkey;
+	struct HotkeyData hotkey = screen->OrigHotkey;
 	if (hotkey.BaseKey != Key_None) {
 		Hotkeys_Remove(hotkey.BaseKey, hotkey.Flags);
 		Hotkeys_UserRemovedHotkey(hotkey.BaseKey, hotkey.Flags);
@@ -946,7 +946,7 @@ static void EditHotkeyScreen_SaveChanges(GuiElement* elem, GuiElement* widget) {
 
 static void EditHotkeyScreen_RemoveHotkey(GuiElement* elem, GuiElement* widget) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
-	HotkeyData hotkey = screen->OrigHotkey;
+	struct HotkeyData hotkey = screen->OrigHotkey;
 	if (hotkey.BaseKey != Key_None) {
 		Hotkeys_Remove(hotkey.BaseKey, hotkey.Flags);
 		Hotkeys_UserRemovedHotkey(hotkey.BaseKey, hotkey.Flags);
@@ -1040,7 +1040,7 @@ static void EditHotkeyScreen_ContextRecreated(void* obj) {
 	screen->Input.Base.ShowCaret = true;
 }
 
-Screen* EditHotkeyScreen_MakeInstance(HotkeyData original) {
+Screen* EditHotkeyScreen_MakeInstance(struct HotkeyData original) {
 	static Widget* widgets[7];
 	EditHotkeyScreen* screen = &EditHotkeyScreen_Instance;
 	MenuScreen_MakeInstance((MenuScreen*)screen, widgets, 
@@ -1372,7 +1372,7 @@ static void SaveLevelScreen_Render(GuiElement* elem, Real64 delta) {
 	void* file;
 	ReturnCode result = Platform_FileCreate(&file, &path);
 	ErrorHandler_CheckOrFail(result, "Saving map - opening file");
-	Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		String cw = String_FromConst(".cw");
 		if (String_CaselessEnds(&path, &cw)) {
@@ -1516,7 +1516,7 @@ Screen* TexturePackScreen_MakeInstance(void) {
 static void HotkeyListScreen_EntryClick(GuiElement* elem, GuiElement* w) {
 	ListScreen* screen = (ListScreen*)elem;
 	String text = ListScreen_UNSAFE_GetCur(screen, w);
-	HotkeyData original = { 0 };
+	struct HotkeyData original = { 0 };
 
 	if (String_CaselessEqualsConst(&text, LIST_SCREEN_EMPTY)) {
 		Gui_ReplaceActive(EditHotkeyScreen_MakeInstance(original)); return;
@@ -1538,7 +1538,7 @@ static void HotkeyListScreen_EntryClick(GuiElement* elem, GuiElement* w) {
 	Key baseKey = Utils_ParseEnum(&key, Key_None, Key_Names, Key_Count);
 	Int32 i;
 	for (i = 0; i < HotkeysText.Count; i++) {
-		HotkeyData h = HotkeysList[i];
+		struct HotkeyData h = HotkeysList[i];
 		if (h.BaseKey == baseKey && h.Flags == flags) { original = h; break; }
 	}
 	Gui_ReplaceActive(EditHotkeyScreen_MakeInstance(original));
@@ -1554,7 +1554,7 @@ Screen* HotkeyListScreen_MakeInstance(void) {
 	Int32 i;
 
 	for (i = 0; i < HotkeysText.Count; i++) {
-		HotkeyData hKey = HotkeysList[i];
+		struct HotkeyData hKey = HotkeysList[i];
 		String_Clear(&text);
 
 		String_AppendConst(&text, Key_Names[hKey.BaseKey]);
@@ -1600,7 +1600,7 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 	void* file;
 	ReturnCode result = Platform_FileOpen(&file, path);
 	ErrorHandler_CheckOrFail(result, "Loading map - open file");
-	Stream stream; Stream_FromFile(&stream, file, path);
+	struct Stream stream; Stream_FromFile(&stream, file, path);
 	{
 		String cw = String_FromConst(".cw");   String lvl = String_FromConst(".lvl");
 		String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
@@ -1620,8 +1620,8 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 	World_SetNewMap(World_Blocks, World_BlocksSize, World_Width, World_Height, World_Length);
 	Event_RaiseVoid(&WorldEvents_MapLoaded);
 
-	LocalPlayer* p = &LocalPlayer_Instance;
-	LocationUpdate update; LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnRotY, p->SpawnHeadX, false);
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocationUpdate update; LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnRotY, p->SpawnHeadX, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
 }
 
@@ -2669,7 +2669,7 @@ static void HacksSettingsScreen_SetClipping(STRING_PURE String* v) {
 
 static void HacksSettingsScreen_GetJump(STRING_TRANSIENT String* v) { String_AppendReal32(v, LocalPlayer_JumpHeight(), 3); }
 static void HacksSettingsScreen_SetJump(STRING_PURE String* v) {
-	PhysicsComp* physics = &LocalPlayer_Instance.Physics;
+	struct PhysicsComp* physics = &LocalPlayer_Instance.Physics;
 	PhysicsComp_CalculateJumpVelocity(physics, Menu_Real32(v));
 	physics->UserJumpVel = physics->JumpVel;
 
@@ -2723,7 +2723,7 @@ static void HacksSettingsScreen_CheckHacksAllowed(void* obj) {
 		widgets[i]->Disabled = false;
 	}
 
-	LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	bool noGlobalHacks = !p->Hacks.CanAnyHacks || !p->Hacks.Enabled;
 	widgets[3]->Disabled = noGlobalHacks || !p->Hacks.CanSpeed;
 	widgets[4]->Disabled = noGlobalHacks || !p->Hacks.CanSpeed;
@@ -3318,7 +3318,7 @@ static void TexPackOverlay_Render(GuiElement* elem, Real64 delta) {
 	String identifier = String_FromRawArray(screen->IdentifierBuffer);
 
 	MenuScreen_Render(elem, delta);
-	AsyncRequest item;
+	struct AsyncRequest item;
 	if (!AsyncDownloader_Get(&identifier, &item)) return;
 
 	screen->ContentLength = item.ResultContentLength;

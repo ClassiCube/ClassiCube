@@ -128,7 +128,7 @@ Int32 Utils_AccumulateWheelDelta(Real32* accmulator, Real32 delta) {
 	return steps;
 }
 
-UInt8 Utils_GetSkinType(Bitmap* bmp) {
+UInt8 Utils_GetSkinType(struct Bitmap* bmp) {
 	if (bmp->Width == bmp->Height * 2) return SKIN_TYPE_64x32;
 	if (bmp->Width != bmp->Height)     return SKIN_TYPE_INVALID;
 

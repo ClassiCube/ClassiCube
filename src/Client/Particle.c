@@ -287,7 +287,7 @@ static void Terrain_Tick(Real64 delta) {
 /*########################################################################################################################*
 *--------------------------------------------------------Particles--------------------------------------------------------*
 *#########################################################################################################################*/
-static void Particles_FileChanged(void* obj, Stream* stream) {
+static void Particles_FileChanged(void* obj, struct Stream* stream) {
 	if (String_CaselessEqualsConst(&stream->Name, "particles.png")) {
 		Game_UpdateTexture(&Particles_TexId, stream, false);
 	}

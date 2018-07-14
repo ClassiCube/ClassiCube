@@ -28,7 +28,7 @@ typedef struct Event_Real_ {
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
 } Event_Real;
 
-typedef void (*Event_Stream_Callback)(void* obj, Stream* stream);
+typedef void (*Event_Stream_Callback)(void* obj, struct Stream* stream);
 typedef struct Event_Stream_ {
 	Event_Stream_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
@@ -64,7 +64,7 @@ void Event_RaiseReal(Event_Real* handlers, Real32 arg);
 void Event_RegisterReal(Event_Real* handlers, void* obj, Event_Real_Callback handler);
 void Event_UnregisterReal(Event_Real* handlers, void* obj, Event_Real_Callback handler);
 
-void Event_RaiseStream(Event_Stream* handlers, Stream* stream);
+void Event_RaiseStream(Event_Stream* handlers, struct Stream* stream);
 void Event_RegisterStream(Event_Stream* handlers, void* obj, Event_Stream_Callback handler);
 void Event_UnregisterStream(Event_Stream* handlers, void* obj, Event_Stream_Callback handler);
 
