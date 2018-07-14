@@ -183,7 +183,9 @@ bool Drawer2D_IsWhiteCol(UInt8 c) { return c == NULL || c == 'f' || c == 'F'; }
 
 #define Drawer2D_ShadowOffset(point) (point / 8)
 #define Drawer2D_XPadding(point) (Math_CeilDiv(point, 8))
-static Int32 Drawer2D_Width(Int32 point, Int32 value) { return Math_CeilDiv(value * point, Drawer2D_BoxSize); }
+static Int32 Drawer2D_Width(Int32 point, Int32 value) { 
+	return Math_CeilDiv(Drawer2D_Widths[value] * point, Drawer2D_BoxSize); 
+}
 static Int32 Drawer2D_AdjHeight(Int32 point) { return Math_CeilDiv(point * 3, 2); }
 
 void Drawer2D_ReducePadding_Tex(Texture* tex, Int32 point, Int32 scale) {
