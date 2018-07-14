@@ -118,6 +118,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void DrawClippedText(ref DrawTextArgs args, int x, int y, float maxWidth, float maxHeight) {
+			if (EmptyText(args.Text)) return;
 			if (!args.SkipPartsCheck)
 				GetTextParts(args.Text);
 			
@@ -152,7 +153,6 @@ namespace ClassicalSharp {
 		
 		protected override Size MeasureSysSize(ref DrawTextArgs args) {
 			GetTextParts(args.Text);
-			if (EmptyText(args.Text)) return Size.Empty;
 			
 			float width = 0, height = 0;
 			for (int i = 0; i < parts.Count; i++) {

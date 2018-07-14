@@ -281,7 +281,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			// We may split up a line into say %e<word><url>
 			// url and word both need to have %e at the start.
 			
-			if (lastCol >= 0 && IDrawer2D.ValidColCode(line,lastCol + 1)) {
+			if (lastCol >= 0 && IDrawer2D.ValidColCode(line, lastCol + 1)) {
 				part = "&" + line[lastCol + 1] + part;
 			}
 			return part;

@@ -12,7 +12,7 @@ using Android.Graphics;
 namespace ClassicalSharp {
 	
 	/// <summary> Contains arguments for measuring or drawing text. </summary>
-	public struct DrawTextArgs {		
+	public struct DrawTextArgs {
 		public string Text;
 		public Font Font;
 		public bool UseShadow, SkipPartsCheck;
@@ -22,19 +22,19 @@ namespace ClassicalSharp {
 			Font = font;
 			UseShadow = useShadow;
 			SkipPartsCheck = false;
-		}		
+		}
 	}
 
 	/// <summary> Class responsible for performing drawing operations on bitmaps
 	/// and for converting bitmaps into graphics api textures. </summary>
 	/// <remarks> Uses GDI+ on Windows, uses Cairo on Mono. </remarks>
 	public abstract partial class IDrawer2D : IDisposable {
-#if !LAUNCHER		
+		#if !LAUNCHER
 		protected IGraphicsApi graphics;
-#endif
+		#endif
 		public const float Offset = 1.3f;
 		
-		/// <summary> Whether chat text should be drawn and measuring using the currently bitmapped font, 
+		/// <summary> Whether chat text should be drawn and measuring using the currently bitmapped font,
 		/// false uses the font supplied as the DrawTextArgs argument supplied to the function. </summary>
 		public bool UseBitmappedChat;
 		
@@ -75,16 +75,23 @@ namespace ClassicalSharp {
 		protected abstract void DrawBitmappedText(ref DrawTextArgs args, int x, int y);
 		
 		public void DrawText(ref DrawTextArgs args, int x, int y) {
-			if (!UseBitmappedChat)
+			if (EmptyText(args.Text)) return;
+			if (!UseBitmappedChat) {
 				DrawSysText(ref args, x, y);
-			else
+			} else {
 				DrawBitmappedText(ref args, x, y);
+			}
 		}
 		
 		protected abstract Size MeasureSysSize(ref DrawTextArgs args);
 		
 		public Size MeasureSize(ref DrawTextArgs args) {
-			return !UseBitmappedChat ? MeasureSysSize(ref args) : MeasureBitmappedSize(ref args);
+			if (EmptyText(args.Text)) return Size.Empty;
+			if (!UseBitmappedChat) {
+				return MeasureSysSize(ref args);
+			} else {
+				return MeasureBitmapText(ref args);
+			}
 		}
 		
 		public int FontHeight(Font font, bool useShadow) {
@@ -92,7 +99,7 @@ namespace ClassicalSharp {
 			return MeasureSize(ref args).Height;
 		}
 		
-#if !LAUNCHER
+		#if !LAUNCHER
 		public Texture MakeTextTexture(ref DrawTextArgs args, int windowX, int windowY) {
 			Size size = MeasureSize(ref args);
 			if (size == Size.Empty)
@@ -107,20 +114,20 @@ namespace ClassicalSharp {
 				return Make2DTexture(bmp, size, windowX, windowY);
 			}
 		}
-#endif
+		#endif
 		
 		
 		/// <summary> Disposes of all native resources used by this class. </summary>
 		/// <remarks> You will no longer be able to perform measuring or drawing calls after this. </remarks>
 		public abstract void DisposeInstance();
 		
-#if !LAUNCHER
-		public Texture Make2DTexture(Bitmap bmp, Size used, int windowX, int windowY) {			
+		#if !LAUNCHER
+		public Texture Make2DTexture(Bitmap bmp, Size used, int windowX, int windowY) {
 			int texId = graphics.CreateTexture(bmp, false, false);
 			return new Texture(texId, windowX, windowY, used.Width, used.Height,
 			                   (float)used.Width / bmp.Width, (float)used.Height / bmp.Height);
 		}
-#endif
+		#endif
 		
 		/// <summary> Creates a power-of-2 sized bitmap larger or equal to to the given size. </summary>
 		public static Bitmap CreatePow2Bitmap(Size size) {
@@ -161,8 +168,7 @@ namespace ClassicalSharp {
 		
 		protected void GetTextParts(string value) {
 			parts.Clear();
-			if (EmptyText(value)) {
-			} else if (value.IndexOf('&') == -1) {
+			if (value.IndexOf('&') == -1) {
 				parts.Add(new TextPart(value, Cols['f']));
 			} else {
 				SplitText(value);
@@ -188,7 +194,7 @@ namespace ClassicalSharp {
 				if (i <= value.Length) code = value[i - 1];
 			}
 		}
-	
+		
 		public static bool ValidColCode(string text, int i) {
 			return i < text.Length && ValidColCode(text[i]);
 		}
@@ -209,7 +215,7 @@ namespace ClassicalSharp {
 			return true;
 		}
 
-#if !LAUNCHER		
+		#if !LAUNCHER
 		public static char LastCol(string text, int start) {
 			if (start >= text.Length)
 				start = text.Length - 1;
@@ -227,7 +233,6 @@ namespace ClassicalSharp {
 		
 		public void ReducePadding(ref Texture tex, int point, int scale) {
 			if (!UseBitmappedChat) return;
-			point = AdjTextSize(point);
 			
 			int padding = (tex.Height - point) / scale;
 			float vAdj = (float)padding / Utils.NextPowerOf2(tex.Height);
@@ -237,7 +242,6 @@ namespace ClassicalSharp {
 
 		public void ReducePadding(ref int height, int point, int scale) {
 			if (!UseBitmappedChat) return;
-			point = AdjTextSize(point);
 			
 			int padding = (height - point) / scale;
 			height -= padding * 2;

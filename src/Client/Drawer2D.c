@@ -181,19 +181,13 @@ UChar Drawer2D_LastCol(STRING_PURE String* text, Int32 start) {
 }
 bool Drawer2D_IsWhiteCol(UInt8 c) { return c == NULL || c == 'f' || c == 'F'; }
 
-static Int32 Drawer2D_ShadowOffset(Int32 fontSize) { return fontSize / 8; }
+#define Drawer2D_ShadowOffset(point) (point / 8)
+#define Drawer2D_XPadding(point) (Math_CeilDiv(point, 8))
 static Int32 Drawer2D_Width(Int32 point, Int32 value) { return Math_CeilDiv(value * point, Drawer2D_BoxSize); }
-static Int32 Drawer2D_PaddedWidth(Int32 point, Int32 value) {
-	return Math_CeilDiv(value * point, Drawer2D_BoxSize) + Math_CeilDiv(point, 8);
-}
-/* Rounds font size up to the nearest whole multiple of the size of a character in default.png. */
-static Int32 Drawer2D_AdjTextSize(Int32 point) { return point; } /* Math_CeilDiv(point, Drawer2D_BoxSize) * Drawer2D_BoxSize; */
-/* Returns the height of the bounding box that contains the font size, in addition to padding. */
-static Int32 Drawer2D_CellSize(Int32 point) { return Math_CeilDiv(point * 3, 2); }
+static Int32 Drawer2D_AdjHeight(Int32 point) { return Math_CeilDiv(point * 3, 2); }
 
 void Drawer2D_ReducePadding_Tex(Texture* tex, Int32 point, Int32 scale) {
 	if (!Drawer2D_UseBitmappedChat) return;
-	point = Drawer2D_AdjTextSize(point);
 
 	Int32 padding = (tex->Height - point) / scale;
 	Real32 vAdj = (Real32)padding / Math_NextPowOf2(tex->Height);
@@ -203,47 +197,72 @@ void Drawer2D_ReducePadding_Tex(Texture* tex, Int32 point, Int32 scale) {
 
 void Drawer2D_ReducePadding_Height(Int32* height, Int32 point, Int32 scale) {
 	if (!Drawer2D_UseBitmappedChat) return;
-	point = Drawer2D_AdjTextSize(point);
 
 	Int32 padding = (*height - point) / scale;
 	*height -= padding * 2;
 }
 
-static void Drawer2D_DrawRun(Int32 x, Int32 y, Int32 runCount, UInt8* coords, Int32 point, PackedCol col) {
-	if (runCount == 0) return;
-	Int32 srcY = (coords[0] >> 4) * Drawer2D_BoxSize;
-	Int32 textHeight = Drawer2D_AdjTextSize(point), cellHeight = Drawer2D_CellSize(textHeight);
-	/* inlined xPadding so we don't need to call PaddedWidth */
-	Int32 xPadding = Math_CeilDiv(point, 8), yPadding = (cellHeight - textHeight) / 2;
-	Int32 startX = x;
-
-	UInt16 dstWidths[1280];
-	Int32 i, xx, yy;
-	for (i = 0; i < runCount; i++) {
-		dstWidths[i] = Drawer2D_Width(point, Drawer2D_Widths[coords[i]]);
+static void Drawer2D_DrawCore(DrawTextArgs* args, Int32 x, Int32 y, bool shadow) {
+	PackedCol black = PACKEDCOL_BLACK;
+	PackedCol col = Drawer2D_Cols['f'];
+	if (shadow) {
+		col = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col, 0.25f);
 	}
 
-	for (yy = 0; yy < textHeight; yy++) {
-		Int32 fontY = srcY + yy * Drawer2D_BoxSize / textHeight;		
+	String text = args->Text;
+	Int32 point = args->Font.Size, count = 0, i;
+
+	UInt8 coords[256];
+	PackedCol cols[256];
+	UInt16 dstWidths[256];
+
+	for (i = 0; i < text.length; i++) {
+		UChar c = text.buffer[i];
+		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
+			col = Drawer2D_Cols[text.buffer[i + 1]];
+			if (shadow) {
+				col = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col, 0.25f);
+			}
+			i++; continue; /* skip over the colour code */
+		}
+
+		coords[count] = c;
+		cols[count] = col;
+		dstWidths[count] = Drawer2D_Width(point, c);
+		count++;
+	}
+
+	Int32 dstHeight = point, startX = x, xx, yy;
+	/* adjust coords to make drawn text match GDI fonts */
+	Int32 xPadding = Drawer2D_XPadding(point);
+	Int32 yPadding = (Drawer2D_AdjHeight(dstHeight) - dstHeight) / 2;
+
+	for (yy = 0; yy < dstHeight; yy++) {
 		Int32 dstY = y + (yy + yPadding);
 		if (dstY >= Drawer2D_Cur->Height) return;
 
-		UInt32* fontRow = Bitmap_GetRow(&Drawer2D_FontBitmap, fontY);
-		UInt32* dstRow  = Bitmap_GetRow(Drawer2D_Cur, dstY);
-		for (i = 0; i < runCount; i++) {
+		Int32 fontY = 0 + yy * Drawer2D_BoxSize / dstHeight;
+		UInt32* dstRow = Bitmap_GetRow(Drawer2D_Cur, dstY);
+
+		for (i = 0; i < count; i++) {
 			Int32 srcX = (coords[i] & 0x0F) * Drawer2D_BoxSize;
+			Int32 srcY = (coords[i] >> 4)   * Drawer2D_BoxSize;
+			UInt32* fontRow = Bitmap_GetRow(&Drawer2D_FontBitmap, fontY + srcY);
+
 			Int32 srcWidth = Drawer2D_Widths[coords[i]], dstWidth = dstWidths[i];
+			col = cols[i];
 
 			for (xx = 0; xx < dstWidth; xx++) {
 				Int32 fontX = srcX + xx * srcWidth / dstWidth;
 				UInt32 src = fontRow[fontX];
 				if (PackedCol_ARGB_A(src) == 0) continue;
+
 				Int32 dstX = x + xx;
 				if (dstX >= Drawer2D_Cur->Width) break;
 
-				UInt32 pixel = src & ~0xFFFFFFUL;
-				pixel |= (((src)       & 0xFF) * col.B / 255);
-				pixel |= (((src >> 8 ) & 0xFF) * col.G / 255) << 8;
+				UInt32 pixel = src & ~0xFFFFFF;
+				pixel |= ((src & 0xFF)         * col.B / 255);
+				pixel |= (((src >> 8) & 0xFF)  * col.G / 255) << 8;
 				pixel |= (((src >> 16) & 0xFF) * col.R / 255) << 16;
 				dstRow[dstX] = pixel;
 			}
@@ -253,115 +272,75 @@ static void Drawer2D_DrawRun(Int32 x, Int32 y, Int32 runCount, UInt8* coords, In
 	}
 }
 
-static void Drawer2D_DrawPart(DrawTextArgs* args, Int32 x, Int32 y, bool shadowCol) {
-	PackedCol col = Drawer2D_Cols['f'];
-	PackedCol black = PACKEDCOL_BLACK;
-	if (shadowCol) {
-		col = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col, 0.25f);
-	}
-	PackedCol lastCol = col;
+static void Drawer2D_DrawUnderline(DrawTextArgs* args, Int32 x, Int32 y, bool shadow) {
+	Int32 point = args->Font.Size, dstHeight = point, startX = x, xx;
+	/* adjust coords to make drawn text match GDI fonts */
+	Int32 xPadding = Drawer2D_XPadding(point), i;
+	Int32 yPadding = (Drawer2D_AdjHeight(dstHeight) - dstHeight) / 2;
 
-	Int32 runCount = 0, lastY = -1;
-	String text = args->Text;
-	Int32 point = args->Font.Size;
-	UInt8 coordsPtr[256];
+	/* scale up bottom row of a cell to drawn text font */
+	Int32 startYY = (8 - 1) * dstHeight / 8, yy;
+	for (yy = startYY; yy < dstHeight; yy++) {
+		Int32 dstY = y + (yy + yPadding);
+		if (dstY >= Drawer2D_Cur->Height) return;
+		UInt32* dstRow = Bitmap_GetRow(Drawer2D_Cur, dstY);
 
-	Int32 i, j;
-	for (i = 0; i < text.length; i++) {
-		UChar c = text.buffer[i];
-		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
-			col = Drawer2D_Cols[text.buffer[i + 1]];
-			if (shadowCol) {
-				col = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col, 0.25f);
-			}
-			i++; continue; /* Skip over the colour code */
-		}
-		Int32 coords = c;
-
-		/* First character in the string, begin run counting */
-		if (lastY == -1) {
-			lastY = coords >> 4; lastCol = col;
-			coordsPtr[0] = (UInt8)coords; runCount = 1;
-			continue;
-		}
-		if (lastY == (coords >> 4) && PackedCol_Equals(col, lastCol)) {
-			coordsPtr[runCount] = (UInt8)coords; runCount++;
-			continue;
-		}
-
-		Drawer2D_DrawRun(x, y, runCount, coordsPtr, point, lastCol);
-		lastY = coords >> 4; lastCol = col;
-		for (j = 0; j < runCount; j++) {
-			x += Drawer2D_PaddedWidth(point, Drawer2D_Widths[coordsPtr[j]]);
-		}
-		coordsPtr[0] = (UInt8)coords; runCount = 1;
-	}
-	Drawer2D_DrawRun(x, y, runCount, coordsPtr, point, lastCol);
-}
-
-static void Drawer2D_DrawUnderline(Int32 x, Int32 yOffset, DrawTextArgs* args, bool shadowCol) {
-	Int32 point = args->Font.Size;
-	Int32 padding = Drawer2D_CellSize(point) - Drawer2D_AdjTextSize(point);
-	Int32 height = Drawer2D_AdjTextSize(point) + Math_CeilDiv(padding, 2);
-	Int32 offset = Drawer2D_ShadowOffset(args->Font.Size);
-
-	String text = args->Text;
-	if (args->UseShadow) height += offset;
-	Int32 startX = x;
-
-	Int32 xx, yy, i;
-	for (yy = height - offset; yy < height; yy++) {
-		UInt32* dstRow = Bitmap_GetRow(Drawer2D_Cur, yy + yOffset);
-		UInt32 col = PackedCol_ARGB(255, 255, 255, 255);
+		PackedCol col = Drawer2D_Cols['f'];
+		String text = args->Text;
 
 		for (i = 0; i < text.length; i++) {
 			UChar c = text.buffer[i];
 			if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
-				col = PackedCol_ToARGB(Drawer2D_Cols[text.buffer[i + 1]]);
+				col = Drawer2D_Cols[text.buffer[i + 1]];
 				i++; continue; // Skip over the colour code.
 			}
-			if (shadowCol) { col = PackedCol_ARGB(0, 0, 0, 255); }
 
-			Int32 coords = c;
-			Int32 width = Drawer2D_PaddedWidth(point, Drawer2D_Widths[coords]);
-			for (xx = 0; xx < width; xx++) { dstRow[x + xx] = col; }
-			x += width;
+			Int32 dstWidth = Drawer2D_Width(point, c);
+			UInt32 argb = shadow ? PackedCol_ARGB(0, 0, 0, 255) : PackedCol_ToARGB(col);
+
+			for (xx = 0; xx < dstWidth + xPadding; xx++) {
+				if (x >= Drawer2D_Cur->Width) break;
+				dstRow[x++] = argb;
+			}
 		}
 		x = startX;
 	}
 }
 
 void Drawer2D_DrawBitmapText(DrawTextArgs* args, Int32 x, Int32 y) {
-	bool underline = args->Font.Style == FONT_STYLE_UNDERLINE;
+	bool ul = args->Font.Style == FONT_STYLE_UNDERLINE;
+	Int32 offset = Drawer2D_ShadowOffset(args->Font.Size);
+
 	if (args->UseShadow) {
-		Int32 offset = Drawer2D_ShadowOffset(args->Font.Size);
-		Drawer2D_DrawPart(args, x + offset, y + offset, true);
-		if (underline) Drawer2D_DrawUnderline(x + offset, 0, args, true);
+		Drawer2D_DrawCore(args, x + offset, y + offset, true);
+		if (ul) Drawer2D_DrawUnderline(args, x + offset, y + offset, true);
 	}
 
-	Drawer2D_DrawPart(args, x, y, false);
-	if (underline) Drawer2D_DrawUnderline(x, -2, args, false);
+	Drawer2D_DrawCore(args, x, y, false);
+	if (ul) Drawer2D_DrawUnderline(args, x, y, false);
 }
 
 Size2D Drawer2D_MeasureBitmapText(DrawTextArgs* args) {
-	Int32 textHeight = Drawer2D_AdjTextSize(args->Font.Size);
-	Size2D total = { 0, Drawer2D_CellSize(textHeight) };
-	Int32 point = Math_Floor(args->Font.Size);
+	Int32 point = args->Font.Size;
+	/* adjust coords to make drawn text match GDI fonts */
+	Int32 xPadding = Drawer2D_XPadding(point), i;
+	Size2D total = { 0, Drawer2D_AdjHeight(point) };
 
 	String text = args->Text;
-	Int32 i;
 	for (i = 0; i < text.length; i++) {
 		UChar c = text.buffer[i];
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
-			i++; continue; /* Skip over the colour code */
+			i++; continue; /* skip over the colour code */
 		}
-
-		Int32 coords = c;
-		total.Width += Drawer2D_PaddedWidth(point, Drawer2D_Widths[coords]);
+		total.Width += Drawer2D_Width(point, c) + xPadding;
 	}
 
+	/* TODO: this should be uncommented */
+	/* Remove padding at end */
+	/*if (total.Width > 0) total.Width -= xPadding;*/
+
 	if (args->UseShadow) {
-		Int32 offset = Drawer2D_ShadowOffset(args->Font.Size);
+		Int32 offset = Drawer2D_ShadowOffset(point);
 		total.Width += offset; total.Height += offset;
 	}
 	return total;
