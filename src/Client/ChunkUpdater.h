@@ -8,17 +8,17 @@
 */
 
 /* Describes a portion of the data needed for rendering a chunk. */
-typedef struct ChunkPartInfo_ {
+struct ChunkPartInfo {
 #if CC_BUILD_GL11
 	GfxResourceID Vb;
 #endif
 	Int32 Offset;              /* -1 if no vertices at all */
 	Int32 SpriteCount;         /* Sprite vertices count */
 	UInt16 Counts[FACE_COUNT]; /* Counts per face */
-} ChunkPartInfo;
+};
 
 /* Describes data necessary for rendering a chunk. */
-typedef struct ChunkInfo_ {	
+struct ChunkInfo {	
 	UInt16 CentreX, CentreY, CentreZ; /* Centre coordinates of the chunk */
 
 	UInt8 Visible : 1;       /* Whether chunk is visibile to the player */
@@ -41,11 +41,11 @@ typedef struct ChunkInfo_ {
 #if !CC_BUILD_GL11
 	GfxResourceID Vb;
 #endif
-	ChunkPartInfo* NormalParts;
-	ChunkPartInfo* TranslucentParts;
-} ChunkInfo;
+	struct ChunkPartInfo* NormalParts;
+	struct ChunkPartInfo* TranslucentParts;
+};
 
-void ChunkInfo_Reset(ChunkInfo* chunk, Int32 x, Int32 y, Int32 z);
+void ChunkInfo_Reset(struct ChunkInfo* chunk, Int32 x, Int32 y, Int32 z);
 
 void ChunkUpdater_Init(void);
 void ChunkUpdater_Free(void);
@@ -60,6 +60,6 @@ void ChunkUpdater_CreateChunkCache(void);
 void ChunkUpdater_ResetChunkCache(void);
 void ChunkUpdater_ClearChunkCache(void);
 
-void ChunkUpdater_DeleteChunk(ChunkInfo* info);
-void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates);
+void ChunkUpdater_DeleteChunk(struct ChunkInfo* info);
+void ChunkUpdater_BuildChunk(struct ChunkInfo* info, Int32* chunkUpdates);
 #endif

@@ -179,13 +179,13 @@ void Zip_Extract(struct ZipState* state) {
 /*########################################################################################################################*
 *--------------------------------------------------------EntryList--------------------------------------------------------*
 *#########################################################################################################################*/
-typedef struct EntryList_ {
+struct EntryList {
 	UChar FolderBuffer[String_BufferSize(STRING_SIZE)];
 	UChar FileBuffer[String_BufferSize(STRING_SIZE)];
 	StringsBuffer Entries;
-} EntryList;
+};
 
-static void EntryList_Load(EntryList* list) {
+static void EntryList_Load(struct EntryList* list) {
 	String folder = String_FromRawArray(list->FolderBuffer);
 	String filename = String_FromRawArray(list->FileBuffer);
 	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
@@ -215,7 +215,7 @@ static void EntryList_Load(EntryList* list) {
 	ErrorHandler_CheckOrFail(result, "EntryList_Load - close file");
 }
 
-static void EntryList_Save(EntryList* list) {
+static void EntryList_Save(struct EntryList* list) {
 	String folder = String_FromRawArray(list->FolderBuffer);
 	String filename = String_FromRawArray(list->FileBuffer);
 	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
@@ -243,12 +243,12 @@ static void EntryList_Save(EntryList* list) {
 	ErrorHandler_CheckOrFail(result, "EntryList_Save - close file");
 }
 
-static void EntryList_Add(EntryList* list, STRING_PURE String* entry) {
+static void EntryList_Add(struct EntryList* list, STRING_PURE String* entry) {
 	StringsBuffer_Add(&list->Entries, entry);
 	EntryList_Save(list);
 }
 
-static bool EntryList_Has(EntryList* list, STRING_PURE String* entry) {
+static bool EntryList_Has(struct EntryList* list, STRING_PURE String* entry) {
 	Int32 i;
 	for (i = 0; i < list->Entries.Count; i++) {
 		String curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
@@ -257,7 +257,7 @@ static bool EntryList_Has(EntryList* list, STRING_PURE String* entry) {
 	return false;
 }
 
-static void EntryList_Make(EntryList* list, STRING_PURE const UChar* folder, STRING_PURE const UChar* file) {
+static void EntryList_Make(struct EntryList* list, STRING_PURE const UChar* folder, STRING_PURE const UChar* file) {
 	String dstFolder = String_InitAndClearArray(list->FolderBuffer);
 	String_AppendConst(&dstFolder, folder);
 	String dstFile = String_InitAndClearArray(list->FileBuffer);
@@ -274,7 +274,7 @@ static void EntryList_Make(EntryList* list, STRING_PURE const UChar* folder, STR
 #define TEXCACHE_FOLDER "texturecache"
 /* Because I didn't store milliseconds in original C# client */
 #define TEXCACHE_TICKS_PER_MS 10000LL
-EntryList cache_accepted, cache_denied, cache_eTags, cache_lastModified;
+struct EntryList cache_accepted, cache_denied, cache_eTags, cache_lastModified;
 
 #define TexCache_InitAndMakePath(url) \
 UChar pathBuffer[String_BufferSize(FILENAME_SIZE)]; \
@@ -320,7 +320,7 @@ bool TextureCache_GetStream(STRING_PURE String* url, struct Stream* stream) {
 	return true;
 }
 
-void TexturePack_GetFromTags(STRING_PURE String* url, STRING_TRANSIENT String* result, EntryList* list) {
+void TexturePack_GetFromTags(STRING_PURE String* url, STRING_TRANSIENT String* result, struct EntryList* list) {
 	String crc32; TexCache_Crc32(url);
 	Int32 i;
 	for (i = 0; i < list->Entries.Count; i++) {
@@ -390,7 +390,7 @@ void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length) {
 	ErrorHandler_CheckOrFail(result, "TextureCache_AddData - close file");
 }
 
-void TextureCache_AddToTags(STRING_PURE String* url, STRING_PURE String* data, EntryList* list) {
+void TextureCache_AddToTags(STRING_PURE String* url, STRING_PURE String* data, struct EntryList* list) {
 	String crc32; TexCache_Crc32(url);
 	UChar entryBuffer[String_BufferSize(2048)];
 	String entry = String_InitAndClearArray(entryBuffer);

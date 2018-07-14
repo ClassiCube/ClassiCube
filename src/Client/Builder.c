@@ -89,7 +89,7 @@ static void Builder_AddVertices(BlockID block, Face face) {
 	part->fCount[face] += 4;
 }
 
-static void Builder_SetPartInfo(struct Builder1DPart* part, Int32* offset, ChunkPartInfo* info, bool* hasParts) {
+static void Builder_SetPartInfo(struct Builder1DPart* part, Int32* offset, struct ChunkPartInfo* info, bool* hasParts) {
 	Int32 vCount = Builder1DPart_VerticesCount(part);
 	info->Offset = -1;
 	if (vCount == 0) return;
@@ -311,7 +311,7 @@ static bool Builder_BuildChunk(Int32 x1, Int32 y1, Int32 z1, bool* allAir) {
 	return true;
 }
 
-void Builder_MakeChunk(ChunkInfo* info) {
+void Builder_MakeChunk(struct ChunkInfo* info) {
 	Int32 x = info->CentreX - 8, y = info->CentreY - 8, z = info->CentreZ - 8;
 	bool allAir = false, hasMesh;
 	hasMesh = Builder_BuildChunk(x, y, z, &allAir);

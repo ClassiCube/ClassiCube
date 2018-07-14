@@ -230,7 +230,7 @@ static void SPConnection_SendChat(STRING_PURE String* text) {
 }
 
 static void SPConnection_SendPosition(Vector3 pos, Real32 rotY, Real32 headX) { }
-static void SPConnection_SendPlayerClick(MouseButton button, bool isDown, EntityID targetId, PickedPos* pos) { }
+static void SPConnection_SendPlayerClick(MouseButton button, bool isDown, EntityID targetId, struct PickedPos* pos) { }
 
 static void SPConnection_Tick(ScheduledTask* task) {
 	if (ServerConnection_Disconnected) return;
@@ -389,7 +389,7 @@ static void MPConnection_SendPosition(Vector3 pos, Real32 rotY, Real32 headX) {
 	Net_SendPacket();
 }
 
-static void MPConnection_SendPlayerClick(MouseButton button, bool buttonDown, EntityID targetId, PickedPos* pos) {
+static void MPConnection_SendPlayerClick(MouseButton button, bool buttonDown, EntityID targetId, struct PickedPos* pos) {
 	CPE_WritePlayerClick(&net_writeStream, button, buttonDown, targetId, pos);
 	Net_SendPacket();
 }

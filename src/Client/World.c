@@ -203,13 +203,13 @@ void WorldEnv_SetShadowCol(PackedCol col) {
 	WorldEnv_SetCol(col, WorldEnv_ShadowCol, ENV_VAR_SHADOW_COL);
 }
 
-Real32 Respawn_HighestFreeY(AABB* bb) {
+Real32 Respawn_HighestFreeY(struct AABB* bb) {
 	Int32 minX = Math_Floor(bb->Min.X), maxX = Math_Floor(bb->Max.X);
 	Int32 minY = Math_Floor(bb->Min.Y), maxY = Math_Floor(bb->Max.Y);
 	Int32 minZ = Math_Floor(bb->Min.Z), maxZ = Math_Floor(bb->Max.Z);
 
 	Real32 spawnY = RESPAWN_NOT_FOUND;
-	AABB blockBB;
+	struct AABB blockBB;
 	Int32 x, y, z;
 	Vector3 pos;
 
@@ -235,7 +235,7 @@ Real32 Respawn_HighestFreeY(AABB* bb) {
 Vector3 Respawn_FindSpawnPosition(Real32 x, Real32 z, Vector3 modelSize) {
 	Vector3 spawn = Vector3_Create3(x, 0.0f, z);
 	spawn.Y = World_Height + ENTITY_ADJUSTMENT;
-	AABB bb;
+	struct AABB bb;
 	AABB_Make(&bb, &spawn, &modelSize);
 	spawn.Y = 0.0f;
 

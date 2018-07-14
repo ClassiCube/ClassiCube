@@ -75,7 +75,7 @@ void GfxCommon_Draw2DGradient(Int32 x, Int32 y, Int32 width, Int32 height, Packe
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, verts, 4);
 }
 
-void GfxCommon_Draw2DTexture(Texture* tex, PackedCol col) {
+void GfxCommon_Draw2DTexture(struct Texture* tex, PackedCol col) {
 	VertexP3fT2fC4b texVerts[4];
 	VertexP3fT2fC4b* ptr = texVerts;
 	GfxCommon_Make2DQuad(tex, col, &ptr);
@@ -83,7 +83,7 @@ void GfxCommon_Draw2DTexture(Texture* tex, PackedCol col) {
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_texVb, texVerts, 4);
 }
 
-void GfxCommon_Make2DQuad(Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices) {
+void GfxCommon_Make2DQuad(struct Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices) {
 	Real32 x1 = (Real32)tex->X, x2 = (Real32)(tex->X + tex->Width);
 	Real32 y1 = (Real32)tex->Y, y2 = (Real32)(tex->Y + tex->Height);
 #if CC_BUILD_D3D9

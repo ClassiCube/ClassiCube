@@ -6,7 +6,8 @@
 /* Abstracts platform specific memory management, I/O, etc.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
-typedef struct DrawTextArgs_ DrawTextArgs;
+struct DrawTextArgs;
+struct FontDesc;
 struct Bitmap;
 struct AsyncRequest;
 
@@ -81,11 +82,11 @@ void Stopwatch_Start(Stopwatch* timer);
 Int32 Stopwatch_ElapsedMicroseconds(Stopwatch* timer);
 ReturnCode Platform_StartShell(STRING_PURE String* args);
 
-void Platform_FontMake(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
-void Platform_FontFree(FontDesc* desc);
-Size2D Platform_TextMeasure(DrawTextArgs* args);
+void Platform_FontMake(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
+void Platform_FontFree(struct FontDesc* desc);
+struct Size2D Platform_TextMeasure(struct DrawTextArgs* args);
 void Platform_SetBitmap(struct Bitmap* bmp);
-Size2D Platform_TextDraw(DrawTextArgs* args, Int32 x, Int32 y, PackedCol col);
+struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col);
 void Platform_ReleaseBitmap(void);
 
 void Platform_SocketCreate(void** socket);

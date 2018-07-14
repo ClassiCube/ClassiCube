@@ -14,12 +14,12 @@
 #define AABB_Height(bb) (bb->Max.Y - bb->Min.Y)
 #define AABB_Length(bb) (bb->Max.Z - bb->Min.Z)
 
-void ModelVertex_Init(ModelVertex* vertex, Real32 x, Real32 y, Real32 z, Int32 u, Int32 v) {
+void ModelVertex_Init(struct ModelVertex* vertex, Real32 x, Real32 y, Real32 z, Int32 u, Int32 v) {
 	vertex->X = x; vertex->Y = y; vertex->Z = z;
 	vertex->U = (UInt16)u; vertex->V = (UInt16)v;
 }
 
-void ModelPart_Init(ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Real32 rotY, Real32 rotZ) {
+void ModelPart_Init(struct ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Real32 rotY, Real32 rotZ) {
 	part->Offset = offset; part->Count = count;
 	part->RotX = rotX; part->RotY = rotY; part->RotZ = rotZ;
 }
@@ -52,9 +52,9 @@ void IModel_Init(struct IModel* model) {
 
 bool IModel_ShouldRender(struct Entity* entity) {
 	Vector3 pos = entity->Position;
-	AABB bb; Entity_GetPickingBounds(entity, &bb);
+	struct AABB bb; Entity_GetPickingBounds(entity, &bb);
 
-	AABB* bbPtr = &bb;
+	struct AABB* bbPtr = &bb;
 	Real32 bbWidth  = AABB_Width(bbPtr);
 	Real32 bbHeight = AABB_Height(bbPtr);
 	Real32 bbLength = AABB_Length(bbPtr);
@@ -74,7 +74,7 @@ static Real32 IModel_MinDist(Real32 dist, Real32 extent) {
 
 Real32 IModel_RenderDistance(struct Entity* entity) {
 	Vector3 pos = entity->Position;
-	AABB* bb = &entity->ModelAABB;
+	struct AABB* bb = &entity->ModelAABB;
 	pos.Y += AABB_Height(bb) * 0.5f; /* Centre Y coordinate. */
 	Vector3 camPos = Game_CurrentCameraPos;
 
@@ -140,14 +140,14 @@ GfxResourceID IModel_GetTexture(struct Entity* entity) {
 	return pTex != NULL ? pTex : ModelCache_Textures[model->defaultTexIndex].TexID;
 }
 
-void IModel_DrawPart(ModelPart part) {
+void IModel_DrawPart(struct ModelPart part) {
 	struct IModel* model = IModel_ActiveModel;
-	ModelVertex* src = &model->vertices[part.Offset];
+	struct ModelVertex* src = &model->vertices[part.Offset];
 	VertexP3fT2fC4b* dst = &ModelCache_Vertices[model->index];
 	Int32 i;
 
 	for (i = 0; i < part.Count; i++) {
-		ModelVertex v = *src;
+		struct ModelVertex v = *src;
 		dst->X = v.X; dst->Y = v.Y; dst->Z = v.Z;
 		dst->Col = IModel_Cols[i >> 2];
 
@@ -162,18 +162,18 @@ void IModel_DrawPart(ModelPart part) {
 #define IModel_RotateY t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z; v.X = t;
 #define IModel_RotateZ t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t;
 
-void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart part, bool head) {
+void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct ModelPart part, bool head) {
 	struct IModel* model = IModel_ActiveModel;
 	Real32 cosX = Math_CosF(-angleX), sinX = Math_SinF(-angleX);
 	Real32 cosY = Math_CosF(-angleY), sinY = Math_SinF(-angleY);
 	Real32 cosZ = Math_CosF(-angleZ), sinZ = Math_SinF(-angleZ);
 	Real32 x = part.RotX, y = part.RotY, z = part.RotZ;
 
-	ModelVertex* src = &model->vertices[part.Offset];
+	struct ModelVertex* src = &model->vertices[part.Offset];
 	VertexP3fT2fC4b* dst = &ModelCache_Vertices[model->index];
 	Int32 i;
 	for (i = 0; i < part.Count; i++) {
-		ModelVertex v = *src;
+		struct ModelVertex v = *src;
 		v.X -= x; v.Y -= y; v.Z -= z;
 		Real32 t = 0;
 
@@ -206,37 +206,37 @@ void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart pa
 	model->index += part.Count;
 }
 
-void BoxDesc_TexOrigin(BoxDesc* desc, Int32 x, Int32 y) {
+void BoxDesc_TexOrigin(struct BoxDesc* desc, Int32 x, Int32 y) {
 	desc->TexX = x; desc->TexY = y;
 }
 
-void BoxDesc_SetBounds(BoxDesc* desc, Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2) {
+void BoxDesc_SetBounds(struct BoxDesc* desc, Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2) {
 	desc->X1 = x1 / 16.0f; desc->X2 = x2 / 16.0f;
 	desc->Y1 = y1 / 16.0f; desc->Y2 = y2 / 16.0f;
 	desc->Z1 = z1 / 16.0f; desc->Z2 = z2 / 16.0f;
 }
 
-void BoxDesc_Expand(BoxDesc* desc, Real32 amount) {
+void BoxDesc_Expand(struct BoxDesc* desc, Real32 amount) {
 	amount /= 16.0f;
 	desc->X1 -= amount; desc->X2 += amount;
 	desc->Y1 -= amount; desc->Y2 += amount;
 	desc->Z1 -= amount; desc->Z2 += amount;
 }
 
-void BoxDesc_Scale(BoxDesc* desc, Real32 scale) {
+void BoxDesc_Scale(struct BoxDesc* desc, Real32 scale) {
 	desc->X1 *= scale; desc->X2 *= scale;
 	desc->Y1 *= scale; desc->Y2 *= scale;
 	desc->Z1 *= scale; desc->Z2 *= scale;
 	desc->RotX *= scale; desc->RotY *= scale; desc->RotZ *= scale;
 }
 
-void BoxDesc_RotOrigin(BoxDesc* desc, Int8 x, Int8 y, Int8 z) {
+void BoxDesc_RotOrigin(struct BoxDesc* desc, Int8 x, Int8 y, Int8 z) {
 	desc->RotX = (Real32)x / 16.0f;
 	desc->RotY = (Real32)y / 16.0f;
 	desc->RotZ = (Real32)z / 16.0f;
 }
 
-void BoxDesc_MirrorX(BoxDesc* desc) {
+void BoxDesc_MirrorX(struct BoxDesc* desc) {
 	Real32 temp = desc->X1; desc->X1 = desc->X2; desc->X2 = temp;
 }
 
@@ -246,14 +246,14 @@ BoxDesc_TexOrigin(desc, 0, 0);\
 BoxDesc_RotOrigin(desc, 0, 0, 0);\
 BoxDesc_SetBounds(desc, (Real32)x1, (Real32)y1, (Real32)z1, (Real32)x2, (Real32)y2, (Real32)z2);\
 
-void BoxDesc_Box(BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2) {
+void BoxDesc_Box(struct BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2) {
 	BoxDesc_InitBox(desc);
 	desc->SidesW = Math_AbsI(z2 - z1);
 	desc->BodyW = Math_AbsI(x2 - x1);
 	desc->BodyH = Math_AbsI(y2 - y1);
 }
 
-void BoxDesc_RotatedBox(BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2) {
+void BoxDesc_RotatedBox(struct BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2) {
 	BoxDesc_InitBox(desc);
 	desc->SidesW = Math_AbsI(y2 - y1);
 	desc->BodyW = Math_AbsI(x2 - x1);
@@ -261,7 +261,7 @@ void BoxDesc_RotatedBox(BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, I
 }
 
 
-void BoxDesc_BuildBox(ModelPart* part, struct IModel* m, BoxDesc* desc) {
+void BoxDesc_BuildBox(struct ModelPart* part, struct IModel* m, struct BoxDesc* desc) {
 	Int32 sidesW = desc->SidesW, bodyW = desc->BodyW, bodyH = desc->BodyH;
 	Real32 x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
@@ -278,7 +278,7 @@ void BoxDesc_BuildBox(ModelPart* part, struct IModel* m, BoxDesc* desc) {
 		desc->RotX, desc->RotY, desc->RotZ);
 }
 
-void BoxDesc_BuildRotatedBox(ModelPart* part, struct IModel* m, BoxDesc* desc) {
+void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct IModel* m, struct BoxDesc* desc) {
 	Int32 sidesW = desc->SidesW, bodyW = desc->BodyW, bodyH = desc->BodyH;
 	Real32 x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
@@ -294,7 +294,7 @@ void BoxDesc_BuildRotatedBox(ModelPart* part, struct IModel* m, BoxDesc* desc) {
 	/* rotate left and right 90 degrees	*/
 	Int32 i;
 	for (i = m->index - 8; i < m->index; i++) {
-		ModelVertex vertex = m->vertices[i];
+		struct ModelVertex vertex = m->vertices[i];
 		Real32 z = vertex.Z; vertex.Z = vertex.Y; vertex.Y = z;
 		m->vertices[i] = vertex;
 	}

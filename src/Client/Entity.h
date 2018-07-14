@@ -75,7 +75,7 @@ struct Entity {
 	struct IModel* Model;
 	BlockID ModelBlock; /* BlockID, if model name was originally a vaid block id. */
 	bool ModelIsSheepNoFur; /* Hacky, but only sheep model relies on model name. So use just 1 byte. */
-	AABB ModelAABB;
+	struct AABB ModelAABB;
 	Vector3 ModelScale, Size;
 	Real32 StepSize;
 	
@@ -92,11 +92,11 @@ void Entity_Init(struct Entity* entity);
 Vector3 Entity_GetEyePosition(struct Entity* entity);
 Real32 Entity_GetEyeHeight(struct Entity* entity);
 void Entity_GetTransform(struct Entity* entity, Vector3 pos, Vector3 scale);
-void Entity_GetPickingBounds(struct Entity* entity, AABB* bb);
-void Entity_GetBounds(struct Entity* entity, AABB* bb);
+void Entity_GetPickingBounds(struct Entity* entity, struct AABB* bb);
+void Entity_GetBounds(struct Entity* entity, struct AABB* bb);
 void Entity_SetModel(struct Entity* entity, STRING_PURE String* model);
 void Entity_UpdateModelBounds(struct Entity* entity);
-bool Entity_TouchesAny(AABB* bb, bool(*touches_condition)(BlockID block__));
+bool Entity_TouchesAny(struct AABB* bb, bool(*touches_condition)(BlockID block__));
 bool Entity_TouchesAnyRope(struct Entity* entity);	
 bool Entity_TouchesAnyLava(struct Entity* entity);
 bool Entity_TouchesAnyWater(struct Entity* entity);
@@ -129,7 +129,7 @@ IGameComponent TabList_MakeComponent(void);
 
 
 #define Player_Layout struct Entity Base; UInt8 DisplayNameRaw[String_BufferSize(STRING_SIZE)]; \
-UChar SkinNameRaw[String_BufferSize(STRING_SIZE)]; bool FetchedSkin; Texture NameTex;
+UChar SkinNameRaw[String_BufferSize(STRING_SIZE)]; bool FetchedSkin; struct Texture NameTex;
 
 /* Represents a player entity. */
 struct Player { Player_Layout };

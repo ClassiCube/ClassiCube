@@ -198,7 +198,7 @@ void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
 
 	/* Refresh the chunk the block was located in. */
 	Int32 cx = x >> 4, cy = y >> 4, cz = z >> 4;
-	ChunkInfo* chunk = MapRenderer_GetChunk(cx, cy, cz);
+	struct ChunkInfo* chunk = MapRenderer_GetChunk(cx, cy, cz);
 	chunk->AllAir &= Block_Draw[block] == DRAW_GAS;
 	MapRenderer_RefreshChunk(cx, cy, cz);
 }
@@ -283,7 +283,7 @@ Int32 Game_CalcRenderType(STRING_PURE String* type) {
 }
 
 static void Game_OnResize(void* obj) {
-	Size2D size = Window_GetClientSize();
+	struct Size2D size = Window_GetClientSize();
 	Game_Width = size.Width; Game_Height = size.Height;
 	if (Game_Width == 0)  Game_Width = 1;
 	if (Game_Height == 0) Game_Height = 1;
@@ -457,7 +457,7 @@ void Game_Load(void) {
 	comp = LocalPlayer_MakeComponent(); Game_AddComponent(&comp);
 	Entities_List[ENTITIES_SELF_ID] = &LocalPlayer_Instance.Base;
 
-	Size2D size = Window_GetClientSize();
+	struct Size2D size = Window_GetClientSize();
 	Game_Width = size.Width; Game_Height = size.Height;
 
 	ChunkUpdater_Init();
@@ -739,7 +739,7 @@ void Game_Free(void* obj) {
 }
 
 Stopwatch game_renderTimer;
-void Game_Run(Int32 width, Int32 height, STRING_REF String* title, DisplayDevice* device) {
+void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct DisplayDevice* device) {
 	Int32 x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
 	Int32 y = device->Bounds.Y + (device->Bounds.Height - height) / 2;
 

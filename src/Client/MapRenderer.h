@@ -30,24 +30,24 @@ bool MapRenderer_CheckingTranslucentParts[ATLAS1D_MAX_ATLASES];
 bool MapRenderer_CheckingNormalParts[ATLAS1D_MAX_ATLASES];
 
 /* Render info for all chunks in the world. Unsorted.*/
-ChunkInfo* MapRenderer_Chunks;
+struct ChunkInfo* MapRenderer_Chunks;
 /* The number of chunks in the world, or ChunksX * ChunksY * ChunksZ */
 Int32 MapRenderer_ChunksCount;
 /* Pointers to render info for all chunks in the world, sorted by distance from the camera. */
-ChunkInfo** MapRenderer_SortedChunks;
+struct ChunkInfo** MapRenderer_SortedChunks;
 /* Pointers to render info for all chunks in the world, sorted by distance from the camera.
 Chunks that can be rendered (not empty and are visible) are included in this array. */
-ChunkInfo** MapRenderer_RenderChunks;
+struct ChunkInfo** MapRenderer_RenderChunks;
 /* The number of actually used pointers in the RenderChunks array.
 Entries past this count should be ignored and skipped. */
 Int32 MapRenderer_RenderChunksCount;
 /* Buffer for all chunk parts. There are (MapRenderer_ChunksCount * Atlas1D_Count) * 2 parts in the buffer,
  with parts for 'normal' buffer being in lower half. */
-ChunkPartInfo* MapRenderer_PartsBuffer_Raw;
-ChunkPartInfo* MapRenderer_PartsNormal;
-ChunkPartInfo* MapRenderer_PartsTranslucent;
+struct ChunkPartInfo* MapRenderer_PartsBuffer_Raw;
+struct ChunkPartInfo* MapRenderer_PartsNormal;
+struct ChunkPartInfo* MapRenderer_PartsTranslucent;
 
-ChunkInfo* MapRenderer_GetChunk(Int32 cx, Int32 cy, Int32 cz);
+struct ChunkInfo* MapRenderer_GetChunk(Int32 cx, Int32 cy, Int32 cz);
 void MapRenderer_RefreshChunk(Int32 cx, Int32 cy, Int32 cz);
 void MapRenderer_RenderNormal(Real64 deltaTime);
 void MapRenderer_RenderTranslucent(Real64 deltaTime);

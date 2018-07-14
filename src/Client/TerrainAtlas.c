@@ -42,12 +42,12 @@ void Atlas2D_Free(void) {
 }
 
 
-TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index) {
+struct TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index) {
 	*index  = Atlas1D_Index(texLoc);
 	Int32 y = Atlas1D_RowId(texLoc);
 
 	/* Adjust coords to be slightly inside - fixes issues with AMD/ATI cards. */
-	TextureRec rec;
+	struct TextureRec rec;
 	rec.U1 = 0.0f; 
 	rec.V1 = y * Atlas1D_InvTileSize;
 	rec.U2 = (uCount - 1) + UV2_Scale;

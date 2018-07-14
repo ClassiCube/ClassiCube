@@ -7,7 +7,7 @@
 */
 
 struct Bitmap;
-typedef struct DisplayDevice_ DisplayDevice;
+struct DisplayDevice;
 struct Stream;
 
 Int32 Game_Width, Game_Height;
@@ -92,5 +92,5 @@ bool Game_ValidateBitmap(STRING_PURE String* file, struct Bitmap* bmp);
 Int32 Game_CalcRenderType(STRING_PURE String* type);
 void Game_SetFpsLimitMethod(FpsLimit method);
 
-void Game_Run(Int32 width, Int32 height, STRING_REF String* title, DisplayDevice* device);
+void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct DisplayDevice* device);
 #endif

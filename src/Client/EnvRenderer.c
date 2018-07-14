@@ -32,7 +32,7 @@ static void EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
 	Vector3I_ToVector3(&pos, &coords); /* pos = coords; */
 
 	BlockID block = World_SafeGetBlock_3I(coords);
-	AABB blockBB;
+	struct AABB blockBB;
 	Vector3_Add(&blockBB.Min, &pos, &Block_MinBB[block]);
 	Vector3_Add(&blockBB.Max, &pos, &Block_MaxBB[block]);
 

@@ -6,10 +6,10 @@
 	Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-typedef struct DrawTextArgs_ { String Text; FontDesc Font; bool UseShadow; } DrawTextArgs;
+struct DrawTextArgs { String Text; struct FontDesc Font; bool UseShadow; };
 struct Bitmap;
-void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow);
-void DrawTextArgs_MakeEmpty(DrawTextArgs* args, FontDesc* font, bool useShadow);
+void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF String* text, struct FontDesc* font, bool useShadow);
+void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, bool useShadow);
 
 /* Whether chat text should be drawn and measuring using the currently bitmapped font, 
  false uses the font supplied as the DrawTextArgs argument supplied to the function. */
@@ -31,12 +31,12 @@ void Drawer2D_Rect(struct Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 wi
 /* Clears the entire given area to the specified colour. */
 void Drawer2D_Clear(struct Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
 
-void Drawer2D_DrawText(DrawTextArgs* args, Int32 x, Int32 y);
-Size2D Drawer2D_MeasureText(DrawTextArgs* args);
-Int32 Drawer2D_FontHeight(FontDesc* font, bool useShadow);
+void Drawer2D_DrawText(struct DrawTextArgs* args, Int32 x, Int32 y);
+struct Size2D Drawer2D_MeasureText(struct DrawTextArgs* args);
+Int32 Drawer2D_FontHeight(struct FontDesc* font, bool useShadow);
 
-Texture Drawer2D_MakeTextTexture(DrawTextArgs* args, Int32 windowX, Int32 windowY);
-Texture Drawer2D_Make2DTexture(struct Bitmap* bmp, Size2D used, Int32 windowX, Int32 windowY);
+struct Texture Drawer2D_MakeTextTexture(struct DrawTextArgs* args, Int32 windowX, Int32 windowY);
+struct Texture Drawer2D_Make2DTexture(struct Bitmap* bmp, struct Size2D used, Int32 windowX, Int32 windowY);
 
 bool Drawer2D_ValidColCodeAt(STRING_PURE String* text, Int32 i);
 bool Drawer2D_ValidColCode(UChar c);
@@ -45,7 +45,7 @@ bool Drawer2D_IsEmptyText(STRING_PURE String* text);
 UChar Drawer2D_LastCol(STRING_PURE String* text, Int32 start);
 bool Drawer2D_IsWhiteCol(UChar c);
 
-void Drawer2D_ReducePadding_Tex(Texture* tex, Int32 point, Int32 scale);
+void Drawer2D_ReducePadding_Tex(struct Texture* tex, Int32 point, Int32 scale);
 void Drawer2D_ReducePadding_Height(Int32* height, Int32 point, Int32 scale);
 void Drawer2D_SetFontBitmap(struct Bitmap* bmp);
 #endif

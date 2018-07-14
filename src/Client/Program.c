@@ -57,7 +57,7 @@ int main(void) {
 	Options_Init();
 	Options_Load();
 
-	DisplayDevice device = DisplayDevice_Default;
+	struct DisplayDevice device = DisplayDevice_Default;
 	Int32 width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, device.Bounds.Width,  0);
 	Int32 height = Options_GetInt(OPT_WINDOW_HEIGHT, 0, device.Bounds.Height, 0);
 

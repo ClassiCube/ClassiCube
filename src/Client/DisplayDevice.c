@@ -2,8 +2,8 @@
 
 #if !CC_BUILD_D3D9
 
-ColorFormat ColorFormat_FromBPP(Int32 bpp) {
-	ColorFormat format = { 0 };
+struct ColorFormat ColorFormat_FromBPP(Int32 bpp) {
+	struct ColorFormat format = { 0 };
 	format.BitsPerPixel = bpp;
 	UInt8 rba;
 
@@ -40,16 +40,16 @@ ColorFormat ColorFormat_FromBPP(Int32 bpp) {
 	return format;
 }
 
-ColorFormat ColorFormat_FromRGBA(UInt8 r, UInt8 g, UInt8 b, UInt8 a) {
-	ColorFormat format;
+struct ColorFormat ColorFormat_FromRGBA(UInt8 r, UInt8 g, UInt8 b, UInt8 a) {
+	struct ColorFormat format;
 	format.R = r; format.G = g; format.B = b; format.A = a;
 	format.BitsPerPixel = r + g + b + a;
 	format.IsIndexed = format.BitsPerPixel < 15 && format.BitsPerPixel != 0;
 	return format;
 }
 
-GraphicsMode GraphicsMode_Make(ColorFormat color, UInt8 depth, UInt8 stencil, UInt8 buffers) {
-	GraphicsMode mode;
+struct GraphicsMode GraphicsMode_Make(struct ColorFormat color, UInt8 depth, UInt8 stencil, UInt8 buffers) {
+	struct GraphicsMode mode;
 	mode.Format = color;
 	mode.DepthBits = depth;
 	mode.StencilBits = stencil;
@@ -57,9 +57,9 @@ GraphicsMode GraphicsMode_Make(ColorFormat color, UInt8 depth, UInt8 stencil, UI
 	return mode;
 }
 
-GraphicsMode GraphicsMode_MakeDefault(void) {
+struct GraphicsMode GraphicsMode_MakeDefault(void) {
 	Int32 bpp = DisplayDevice_Default.BitsPerPixel;
-	ColorFormat format = ColorFormat_FromBPP(bpp);
+	struct ColorFormat format = ColorFormat_FromBPP(bpp);
 	return GraphicsMode_Make(format, 24, 0, 2);
 }
 #endif

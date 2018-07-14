@@ -2,19 +2,18 @@
 #include "GraphicsCommon.h"
 #include "GraphicsAPI.h"
 
-Texture Texture_FromOrigin(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height,
+struct Texture Texture_FromOrigin(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height,
 	Real32 u2, Real32 v2) {
 	return Texture_From(id, x, y, width, height, 0, u2, 0, v2);
 }
 
-Texture Texture_FromRec(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height,
-	TextureRec rec) {
+struct Texture Texture_FromRec(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height, struct TextureRec rec) {
 	return Texture_From(id, x, y, width, height, rec.U1, rec.U2, rec.V1, rec.V2);
 }
 
-Texture Texture_From(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height,
+struct Texture Texture_From(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height,
 	Real32 u1, Real32 u2, Real32 v1, Real32 v2) {
-	Texture tex; tex.ID = id;
+	struct Texture tex; tex.ID = id;
 	tex.X = x; tex.Y = y; 
 	tex.Width = width; tex.Height = height;
 
@@ -23,17 +22,17 @@ Texture Texture_From(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 heig
 	return tex;
 }
 
-Texture Texture_MakeInvalid(void) {
-	Texture tex = { 0 }; return tex;
+struct Texture Texture_MakeInvalid(void) {
+	struct Texture tex = { 0 }; return tex;
 }
 
-void Texture_Render(Texture* tex) {
+void Texture_Render(struct Texture* tex) {
 	Gfx_BindTexture(tex->ID);
 	PackedCol white = PACKEDCOL_WHITE;
 	GfxCommon_Draw2DTexture(tex, white);
 }
 
-void Texture_RenderShaded(Texture* tex, PackedCol shadeCol) {
+void Texture_RenderShaded(struct Texture* tex, PackedCol shadeCol) {
 	Gfx_BindTexture(tex->ID);
 	GfxCommon_Draw2DTexture(tex, shadeCol);
 }

@@ -64,7 +64,7 @@ void Platform_Init(void) {
 		bool isPrimary = (display.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) != 0;
 		if (!isPrimary) continue;
 
-		DisplayDevice device = { 0 };
+		struct DisplayDevice device = { 0 };
 		device.Bounds.Width  = mode.dmPelsWidth;
 		device.Bounds.Height = mode.dmPelsHeight;
 		device.BitsPerPixel  = mode.dmBitsPerPel;
@@ -292,12 +292,12 @@ ReturnCode Platform_FileAppend(void** file, STRING_PURE String* path) {
 	return Platform_FileSeek(*file, 0, STREAM_SEEKFROM_END);
 }
 
-ReturnCode Platform_FileRead(void* file, UChar* buffer, UInt32 count, UInt32* bytesRead) {
+ReturnCode Platform_FileRead(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead) {
 	BOOL success = ReadFile((HANDLE)file, buffer, count, bytesRead, NULL);
 	return success ? 0 : GetLastError();
 }
 
-ReturnCode Platform_FileWrite(void* file, UChar* buffer, UInt32 count, UInt32* bytesWritten) {
+ReturnCode Platform_FileWrite(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWritten) {
 	BOOL success = WriteFile((HANDLE)file, buffer, count, bytesWritten, NULL);
 	return success ? 0 : GetLastError();
 }
@@ -428,7 +428,7 @@ Int32 Stopwatch_ElapsedMicroseconds(Stopwatch* timer) {
 	}
 }
 
-void Platform_FontMake(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) {
+void Platform_FontMake(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) {
 	desc->Size    = size; 
 	desc->Style   = style;
 	LOGFONTA font = { 0 };
@@ -444,13 +444,13 @@ void Platform_FontMake(FontDesc* desc, STRING_PURE String* fontName, UInt16 size
 	if (desc->Handle == NULL) ErrorHandler_Fail("Creating font handle failed");
 }
 
-void Platform_FontFree(FontDesc* desc) {
+void Platform_FontFree(struct FontDesc* desc) {
 	if (!DeleteObject(desc->Handle)) ErrorHandler_Fail("Deleting font handle failed");
 	desc->Handle = NULL;
 }
 
 /* TODO: not associate font with device so much */
-Size2D Platform_TextMeasure(DrawTextArgs* args) {
+struct Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
 	WCHAR strUnicode[String_BufferSize(FILENAME_SIZE)];
 	Platform_UnicodeExpand(strUnicode, &args->Text);
 
@@ -486,7 +486,7 @@ void Platform_SetBitmap(struct Bitmap* bmp) {
 /* TODO: check return codes and stuff */
 /* TODO: make text prettier.. somehow? */
 /* TODO: Do we need to / 255 instead of >> 8 ? */
-Size2D Platform_TextDraw(DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) {
+struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) {
 	WCHAR strUnicode[String_BufferSize(FILENAME_SIZE)];
 	Platform_UnicodeExpand(strUnicode, &args->Text);
 

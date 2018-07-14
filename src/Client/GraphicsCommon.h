@@ -6,7 +6,7 @@
 /* Provides common/shared methods for a 3D graphics rendering API.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
-typedef struct Texture_ Texture;
+struct Texture;
 
 GfxResourceID GfxCommon_defaultIb;
 void GfxCommon_Init(void);
@@ -25,8 +25,8 @@ GfxResourceID GfxCommon_quadVb;
 void GfxCommon_Draw2DFlat(Int32 x, Int32 y, Int32 width, Int32 height, PackedCol col);
 void GfxCommon_Draw2DGradient(Int32 x, Int32 y, Int32 width, Int32 height, PackedCol top, PackedCol bottom);
 GfxResourceID GfxCommon_texVb;
-void GfxCommon_Draw2DTexture(Texture* tex, PackedCol col);
-void GfxCommon_Make2DQuad(Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices);
+void GfxCommon_Draw2DTexture(struct Texture* tex, PackedCol col);
+void GfxCommon_Make2DQuad(struct Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices);
 void GfxCommon_Mode2D(Int32 width, Int32 height);
 void GfxCommon_Mode3D(void);
 

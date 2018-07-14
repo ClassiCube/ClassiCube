@@ -3,10 +3,10 @@
 #include "Input.h"
 #include "Texture.h"
 #include "GameStructs.h"
+#include "VertexStructs.h"
 /* Describes and manages 2D GUI elements on screen.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
-typedef struct VertexP3fT2fC4b_ VertexP3fT2fC4b;
 
 #define ANCHOR_MIN 0    /* Left or top */
 #define ANCHOR_CENTRE 1 /* Middle */
@@ -91,16 +91,16 @@ void Gui_OnResize(void);
 
 
 #define TEXTATLAS_MAX_WIDTHS 16
-typedef struct TextAtlas_ {
-	Texture Tex;
+struct TextAtlas {
+	struct Texture Tex;
 	Int32 Offset, CurX, FontSize;
 	Real32 uScale;
 	Int32 Widths[TEXTATLAS_MAX_WIDTHS];
-} TextAtlas;
-void TextAtlas_Make(TextAtlas* atlas, STRING_PURE String* chars, FontDesc* font, STRING_PURE String* prefix);
-void TextAtlas_Free(TextAtlas* atlas);
-void TextAtlas_Add(TextAtlas* atlas, Int32 charI, VertexP3fT2fC4b** vertices);
-void TextAtlas_AddInt(TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** vertices);
+};
+void TextAtlas_Make(struct TextAtlas* atlas, STRING_PURE String* chars, struct FontDesc* font, STRING_PURE String* prefix);
+void TextAtlas_Free(struct TextAtlas* atlas);
+void TextAtlas_Add(struct TextAtlas* atlas, Int32 charI, VertexP3fT2fC4b** vertices);
+void TextAtlas_AddInt(struct TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** vertices);
 
 
 #define Elem_Init(elem)           (elem)->VTABLE->Init((GuiElement*)(elem))

@@ -244,9 +244,9 @@ void Gui_OnResize(void) {
 }
 
 
-void TextAtlas_Make(TextAtlas* atlas, STRING_PURE String* chars, FontDesc* font, STRING_PURE String* prefix) {
-	DrawTextArgs args; DrawTextArgs_Make(&args, prefix, font, true);
-	Size2D size = Drawer2D_MeasureText(&args);
+void TextAtlas_Make(struct TextAtlas* atlas, STRING_PURE String* chars, struct FontDesc* font, STRING_PURE String* prefix) {
+	struct DrawTextArgs args; DrawTextArgs_Make(&args, prefix, font, true);
+	struct Size2D size = Drawer2D_MeasureText(&args);
 	atlas->Offset = size.Width;
 	atlas->FontSize = font->Size;
 	size.Width += 16 * chars->length;
@@ -273,11 +273,11 @@ void TextAtlas_Make(TextAtlas* atlas, STRING_PURE String* chars, FontDesc* font,
 	atlas->Tex.Width = atlas->Offset;	
 }
 
-void TextAtlas_Free(TextAtlas* atlas) { Gfx_DeleteTexture(&atlas->Tex.ID); }
+void TextAtlas_Free(struct TextAtlas* atlas) { Gfx_DeleteTexture(&atlas->Tex.ID); }
 
-void TextAtlas_Add(TextAtlas* atlas, Int32 charI, VertexP3fT2fC4b** vertices) {
+void TextAtlas_Add(struct TextAtlas* atlas, Int32 charI, VertexP3fT2fC4b** vertices) {
 	Int32 width = atlas->Widths[charI];
-	Texture part = atlas->Tex;
+	struct Texture part = atlas->Tex;
 
 	part.X = atlas->CurX; part.Width = width;
 	part.U1 = (atlas->Offset + charI * atlas->FontSize) * atlas->uScale;
@@ -288,7 +288,7 @@ void TextAtlas_Add(TextAtlas* atlas, Int32 charI, VertexP3fT2fC4b** vertices) {
 	GfxCommon_Make2DQuad(&part, white, vertices);
 }
 
-void TextAtlas_AddInt(TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** vertices) {
+void TextAtlas_AddInt(struct TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** vertices) {
 	if (value < 0) {
 		TextAtlas_Add(atlas, 10, vertices); value = -value; /* - sign */
 	}

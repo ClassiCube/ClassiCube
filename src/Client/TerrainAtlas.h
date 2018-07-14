@@ -29,7 +29,7 @@ GfxResourceID Atlas1D_TexIds[ATLAS1D_MAX_ATLASES];
 /* Number of 1D atlases that actually have textures / are used. */
 Int32 Atlas1D_Count;
 /* Retrieves the 1D texture rectangle and 1D atlas index of the given texture. */
-TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index);
+struct TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index);
 /* Returns the index of the 1D atlas within the array of 1D atlases that contains the given texture id.*/
 #define Atlas1D_Index(texLoc) ((texLoc) / Atlas1D_TilesPerAtlas)
 /* Returns the index of the given texture id within a 1D atlas. */

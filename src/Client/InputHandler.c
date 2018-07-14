@@ -191,7 +191,7 @@ static bool InputHandler_HandleCoreKey(Key key) {
 }
 
 static bool InputHandler_TouchesSolid(BlockID b) { return Block_Collide[b] == COLLIDE_SOLID; }
-static bool InputHandler_PushbackPlace(AABB* blockBB) {
+static bool InputHandler_PushbackPlace(struct AABB* blockBB) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 	Vector3 curPos = p->Position, adjPos = p->Position;
@@ -219,7 +219,7 @@ static bool InputHandler_PushbackPlace(AABB* blockBB) {
 	if (!validPos) return false;
 
 	p->Position = adjPos;
-	AABB bounds; Entity_GetBounds(p, &bounds);
+	struct AABB bounds; Entity_GetBounds(p, &bounds);
 	if (!hacks->Noclip && Entity_TouchesAny(&bounds, InputHandler_TouchesSolid)) {
 		p->Position = curPos;
 		return false;
@@ -232,7 +232,7 @@ static bool InputHandler_PushbackPlace(AABB* blockBB) {
 }
 
 static bool InputHandler_IntersectsOthers(Vector3 pos, BlockID block) {
-	AABB blockBB;
+	struct AABB blockBB;
 	Vector3_Add(&blockBB.Min, &pos, &Block_MinBB[block]);
 	Vector3_Add(&blockBB.Max, &pos, &Block_MaxBB[block]);
 
@@ -241,7 +241,7 @@ static bool InputHandler_IntersectsOthers(Vector3 pos, BlockID block) {
 		struct Entity* entity = Entities_List[id];
 		if (entity == NULL) continue;
 
-		AABB bounds; Entity_GetBounds(entity, &bounds);
+		struct AABB bounds; Entity_GetBounds(entity, &bounds);
 		bounds.Min.Y += 1.0f / 32.0f; /* when player is exactly standing on top of ground */
 		if (AABB_Intersects(&bounds, &blockBB)) return true;
 	}
@@ -257,13 +257,13 @@ static bool InputHandler_CheckIsFree(BlockID block) {
 	if (InputHandler_IntersectsOthers(pos, block)) return false;
 	Vector3 nextPos = LocalPlayer_Instance.Interp.Next.Pos;
 
-	AABB blockBB;
+	struct AABB blockBB;
 	Vector3_Add(&blockBB.Min, &pos, &Block_MinBB[block]);
 	Vector3_Add(&blockBB.Max, &pos, &Block_MaxBB[block]);
 
 	/* NOTE: Need to also test against nextPos here, otherwise player can 
 	fall through the block at feet as collision is performed against nextPos */
-	AABB localBB; AABB_Make(&localBB, &p->Position, &p->Size);
+	struct AABB localBB; AABB_Make(&localBB, &p->Position, &p->Size);
 	localBB.Min.Y = min(nextPos.Y, localBB.Min.Y);
 
 	if (hacks->Noclip || !AABB_Intersects(&localBB, &blockBB)) return true;

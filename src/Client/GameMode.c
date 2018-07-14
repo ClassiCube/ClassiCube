@@ -84,7 +84,7 @@ void GameMode_PickRight(BlockID old, BlockID block) {
 	Event_RaiseBlock(&UserEvents_BlockChanged, pos, old, block);
 }
 
-HotbarWidget GameMode_Hotbar;
-HotbarWidget* GameMode_MakeHotbar(void) { return &GameMode_Hotbar; }
+struct HotbarWidget GameMode_Hotbar;
+struct HotbarWidget* GameMode_MakeHotbar(void) { return &GameMode_Hotbar; }
 void GameMode_BeginFrame(Real64 delta) { }
 void GameMode_EndFrame(Real64 delta) { }

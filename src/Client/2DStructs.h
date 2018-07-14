@@ -5,24 +5,21 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-/* Stores location and dimensions of a 2D rectangle. */
-typedef struct Rectangle2D_ { Int32 X, Y, Width, Height; } Rectangle2D;
-Rectangle2D Rectangle2D_Empty;
+struct Rectangle2D { Int32 X, Y, Width, Height; };
+struct Rectangle2D Rectangle2D_Empty;
 
-/* Stores a coordinate in 2D space.*/
-typedef struct Point2D_ { Int32 X, Y; } Point2D;
-Point2D Point2D_Empty;
+struct Point2D { Int32 X, Y; };
+struct Point2D Point2D_Empty;
 
-/* Stores a point in 2D space. */
-typedef struct Size2D_ { Int32 Width, Height; } Size2D;
-Size2D Size2D_Empty;
+struct Size2D { Int32 Width, Height; };
+struct Size2D Size2D_Empty;
 
-Rectangle2D Rectangle2D_Make(Int32 x, Int32 y, Int32 width, Int32 height);
-bool Rectangle2D_Contains(Rectangle2D a, Int32 x, Int32 y);
-bool Rectangle2D_Equals(Rectangle2D a, Rectangle2D b);
+struct Rectangle2D Rectangle2D_Make(Int32 x, Int32 y, Int32 width, Int32 height);
+bool Rectangle2D_Contains(struct Rectangle2D a, Int32 x, Int32 y);
+bool Rectangle2D_Equals(struct Rectangle2D a, struct Rectangle2D b);
 
-Size2D Size2D_Make(Int32 width, Int32 height);
-Point2D Point2D_Make(Int32 x, Int32 y);
+struct Size2D Size2D_Make(Int32 width, Int32 height);
+struct Point2D Point2D_Make(Int32 x, Int32 y);
 
-typedef struct TextureRec_ { Real32 U1, V1, U2, V2; } TextureRec;
+struct TextureRec { Real32 U1, V1, U2, V2; };
 #endif

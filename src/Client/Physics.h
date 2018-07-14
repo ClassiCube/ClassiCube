@@ -10,14 +10,14 @@
 struct Entity;
 
 /* Descibes an axis aligned bounding box. */
-typedef struct AABB_ { Vector3 Min, Max; } AABB;
-void AABB_FromCoords6(AABB* result, Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2);
-void AABB_FromCoords(AABB* result, Vector3* min, Vector3* max);
-void AABB_Make(AABB* result, Vector3* pos, Vector3* size);
-void AABB_Offset(AABB* result, AABB* bb, Vector3* amount);
-bool AABB_Intersects(AABB* bb, AABB* other);
-bool AABB_Contains(AABB* parent, AABB* child);
-bool AABB_ContainsPoint(AABB* parent, Vector3* P);
+struct AABB { Vector3 Min, Max; };
+void AABB_FromCoords6(struct AABB* result, Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2);
+void AABB_FromCoords(struct AABB* result, Vector3* min, Vector3* max);
+void AABB_Make(struct AABB* result, Vector3* pos, Vector3* size);
+void AABB_Offset(struct AABB* result, struct AABB* bb, Vector3* amount);
+bool AABB_Intersects(struct AABB* bb, struct AABB* other);
+bool AABB_Contains(struct AABB* parent, struct AABB* child);
+bool AABB_ContainsPoint(struct AABB* parent, Vector3* P);
 
 /* Calculates the intersection points of a ray and a rotated bounding box. */
 bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, struct Entity* target, Real32* tMin, Real32* tMax);
@@ -27,7 +27,7 @@ bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vec
 
 struct SearcherState { Int32 X, Y, Z; Real32 tSquared; };
 extern struct SearcherState* Searcher_States;
-Int32 Searcher_FindReachableBlocks(struct Entity* entity, AABB* entityBB, AABB* entityExtentBB);
-void Searcher_CalcTime(Vector3* vel, AABB *entityBB, AABB* blockBB, Real32* tx, Real32* ty, Real32* tz);
+Int32 Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, struct AABB* entityExtentBB);
+void Searcher_CalcTime(Vector3* vel, struct AABB *entityBB, struct AABB* blockBB, Real32* tx, Real32* ty, Real32* tz);
 void Searcher_Free(void);
 #endif

@@ -7,7 +7,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 struct Entity;
-typedef struct AABB_ AABB;
+struct AABB;
 
 #define IMODEL_QUAD_VERTICES 4
 #define IMODEL_BOX_VERTICES (FACE_COUNT * IMODEL_QUAD_VERTICES)
@@ -17,19 +17,19 @@ typedef struct AABB_ AABB;
 #define ROTATE_ORDER_YZX 2
 
 /* Describes a vertex within a model. */
-typedef struct ModelVertex_ { Real32 X, Y, Z; UInt16 U, V; } ModelVertex;
-void ModelVertex_Init(ModelVertex* vertex, Real32 x, Real32 y, Real32 z, Int32 u, Int32 v);
+struct ModelVertex { Real32 X, Y, Z; UInt16 U, V; };
+void ModelVertex_Init(struct ModelVertex* vertex, Real32 x, Real32 y, Real32 z, Int32 u, Int32 v);
 
 /* Describes the starting index of this part within a model's array of vertices,
 and the number of vertices following the starting index that this part uses. */
-typedef struct ModelPart_ { UInt16 Offset, Count; Real32 RotX, RotY, RotZ; } ModelPart;
-void ModelPart_Init(ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Real32 rotY, Real32 rotZ);
+struct ModelPart { UInt16 Offset, Count; Real32 RotX, RotY, RotZ; };
+void ModelPart_Init(struct ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Real32 rotY, Real32 rotZ);
 
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
 the bounding boxes that contain the entire set of quads and/or boxes. */
 struct IModel {
 	/* Pointer to the raw vertices of the model.*/
-	ModelVertex* vertices;
+	struct ModelVertex* vertices;
 	/* Count of assigned vertices within the raw vertices array. */
 	Int32 index;
 	/* Index within ModelCache's textures of the default texture for this model. */
@@ -47,7 +47,7 @@ struct IModel {
 
 	Real32 (*GetEyeY)(struct Entity* entity);
 	Vector3 (*GetCollisionSize)(void);
-	void (*GetPickingBounds)(AABB* bb);
+	void (*GetPickingBounds)(struct AABB* bb);
 	void (*CreateParts)(void);
 	void (*DrawModel)(struct Entity* entity);
 	void (*GetTransform)(struct Entity* entity, Vector3 pos);
@@ -79,38 +79,38 @@ void IModel_Render(struct IModel* model, struct Entity* entity);
 void IModel_SetupState(struct IModel* model, struct Entity* entity);
 void IModel_UpdateVB(void);
 GfxResourceID IModel_GetTexture(struct Entity* entity);
-void IModel_DrawPart(ModelPart part);
-void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart part, bool head);
+void IModel_DrawPart(struct ModelPart part);
+void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct ModelPart part, bool head);
 
 /* Describes data for a box being built. */
-typedef struct BoxDesc_ {
+struct BoxDesc {
 	/* Texture coordinates and dimensions. */
 	Int32 TexX, TexY, SidesW, BodyW, BodyH;
 	/* Box corner coordinates. */
 	Real32 X1, X2, Y1, Y2, Z1, Z2;
 	/* Coordinate around which this box is rotated. */
 	Real32 RotX, RotY, RotZ;
-} BoxDesc;
+};
 
 /* Sets the texture origin for this part within the texture atlas. */
-void BoxDesc_TexOrigin(BoxDesc* desc, Int32 x, Int32 y);
+void BoxDesc_TexOrigin(struct BoxDesc* desc, Int32 x, Int32 y);
 /* Sets the the two corners of this box, in pixel coordinates. */
-void BoxDesc_SetBounds(BoxDesc* desc, Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2);
+void BoxDesc_SetBounds(struct BoxDesc* desc, Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2);
 /* Expands the corners of this box outwards by the given amount in pixel coordinates. */
-void BoxDesc_Expand(BoxDesc* desc, Real32 amount);
+void BoxDesc_Expand(struct BoxDesc* desc, Real32 amount);
 /* Scales the corners of this box outwards by the given amounts. */
-void BoxDesc_Scale(BoxDesc* desc, Real32 scale);
+void BoxDesc_Scale(struct BoxDesc* desc, Real32 scale);
 /* Sets the coordinate that this box is rotated around, in pixel coordinates. */
-void BoxDesc_RotOrigin(BoxDesc* desc, Int8 x, Int8 y, Int8 z);
+void BoxDesc_RotOrigin(struct BoxDesc* desc, Int8 x, Int8 y, Int8 z);
 /* Swaps the min and max X around, resulting in the part being drawn mirrored. */
-void BoxDesc_MirrorX(BoxDesc* desc);
+void BoxDesc_MirrorX(struct BoxDesc* desc);
 
 /* Constructs a description of the given box, from two corners.
 See BoxDesc_BuildBox for details on texture layout. */
-void BoxDesc_Box(BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2);
+void BoxDesc_Box(struct BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2);
 /* Constructs a description of the given rotated box, from two corners.
 See BoxDesc_BuildRotatedBox for details on texture layout. */
-void BoxDesc_RotatedBox(BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2);
+void BoxDesc_RotatedBox(struct BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2);
 
 /* Builds a box model assuming the follow texture layout:
 let SW = sides width, BW = body width, BH = body height
@@ -125,7 +125,7 @@ let SW = sides width, BW = body width, BH = body height
 |H--------tex---------H|H--------tex---------H|H--------tex---------H|H--------tex---------H|
 |----------SW----------|----------BW----------|----------SW----------|----------BW----------|
 ********************************************************************************************* */
-void BoxDesc_BuildBox(ModelPart* part, struct IModel* m, BoxDesc* desc);
+void BoxDesc_BuildBox(struct ModelPart* part, struct IModel* m, struct BoxDesc* desc);
 
 /* Builds a box model assuming the follow texture layout:
 let SW = sides width, BW = body width, BH = body height
@@ -140,7 +140,7 @@ let SW = sides width, BW = body width, BH = body height
 |H--------tex---------H|H--------tex---------H|H--------tex---------H|H--------tex---------H|
 |----------SW----------|----------BW----------|----------BW----------|----------------------|
 ********************************************************************************************* */
-void BoxDesc_BuildRotatedBox(ModelPart* part, struct IModel* m, BoxDesc* desc);
+void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct IModel* m, struct BoxDesc* desc);
 
 void BoxDesc_XQuad(struct IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 z1, Real32 z2, Real32 y1, Real32 y2, Real32 x, bool swapU);

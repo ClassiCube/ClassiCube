@@ -18,7 +18,7 @@ GfxResourceID borders_sidesVb, borders_edgesVb;
 GfxResourceID borders_edgeTexId, borders_sideTexId;
 Int32 borders_sidesVertices, borders_edgesVertices;
 bool borders_fullBrightSides, borders_fullBrightEdge;
-Rectangle2D borders_rects[4];
+struct Rectangle2D borders_rects[4];
 TextureLoc borders_lastEdgeTexLoc, borders_lastSideTexLoc;
 
 
@@ -170,7 +170,7 @@ static void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {
 
 	Int32 i;
 	for (i = 0; i < 4; i++) {
-		Rectangle2D r = borders_rects[i];
+		struct Rectangle2D r = borders_rects[i];
 		borders_sidesVertices += Math_CountVertices(r.Width, r.Height, axisSize); /* YQuads outside */
 	}
 	borders_sidesVertices += Math_CountVertices(World_Width, World_Length, axisSize); /* YQuads beneath map */
@@ -191,7 +191,7 @@ static void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {
 	Block_Tint(col, block)
 
 	for (i = 0; i < 4; i++) {
-		Rectangle2D r = borders_rects[i];
+		struct Rectangle2D r = borders_rects[i];
 		BordersRenderer_DrawY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, (Real32)y, axisSize, col,
 			0, borders_YOffset(block), &temp);
 	}
@@ -216,7 +216,7 @@ static void BordersRenderer_RebuildEdges(Int32 y, Int32 axisSize) {
 
 	Int32 i;
 	for (i = 0; i < 4; i++) {
-		Rectangle2D r = borders_rects[i];
+		struct Rectangle2D r = borders_rects[i];
 		borders_edgesVertices += Math_CountVertices(r.Width, r.Height, axisSize); /* YPlanes outside */
 	}
 
@@ -234,7 +234,7 @@ static void BordersRenderer_RebuildEdges(Int32 y, Int32 axisSize) {
 	Block_Tint(col, block)
 
 	for (i = 0; i < 4; i++) {
-		Rectangle2D r = borders_rects[i];
+		struct Rectangle2D r = borders_rects[i];
 		BordersRenderer_DrawY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, (Real32)y, axisSize, col,
 			borders_HorOffset(block), borders_YOffset(block), &temp);
 	}

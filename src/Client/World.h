@@ -6,7 +6,7 @@
    Also contains associated environment metadata.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
-typedef struct AABB_ AABB;
+struct AABB;
 
 #define World_Unpack(idx, x, y, z) x = idx % World_Width; z = (idx / World_Width) % World_Length; y = (idx / World_Width) / World_Length;
 #define World_Pack(x, y, z) (((y) * World_Length + (z)) * World_Width + (x))
@@ -97,7 +97,7 @@ void WorldEnv_SetShadowCol(PackedCol col);
 
 #define RESPAWN_NOT_FOUND -100000.0f
 /* Finds the highest free Y coordinate in the given bounding box */
-Real32 Respawn_HighestFreeY(AABB* bb);
+Real32 Respawn_HighestFreeY(struct AABB* bb);
 /* Finds a suitable spawn position for the entity, by iterating 
 downwards from top of the world until the ground is found */
 Vector3 Respawn_FindSpawnPosition(Real32 x, Real32 z, Vector3 modelSize);

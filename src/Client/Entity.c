@@ -108,11 +108,11 @@ void Entity_GetTransform(struct Entity* entity, Vector3 pos, Vector3 scale) {
 	/* return rotZ * rotX * rotY * scale * translate; */
 }
 
-void Entity_GetPickingBounds(struct Entity* entity, AABB* bb) {
+void Entity_GetPickingBounds(struct Entity* entity, struct AABB* bb) {
 	AABB_Offset(bb, &entity->ModelAABB, &entity->Position);
 }
 
-void Entity_GetBounds(struct Entity* entity, AABB* bb) {
+void Entity_GetBounds(struct Entity* entity, struct AABB* bb) {
 	AABB_Make(bb, &entity->Position, &entity->Size);
 }
 
@@ -162,13 +162,13 @@ void Entity_UpdateModelBounds(struct Entity* entity) {
 	Vector3 baseSize = model->GetCollisionSize();
 	Vector3_Mul3(&entity->Size, &baseSize, &entity->ModelScale);
 
-	AABB* bb = &entity->ModelAABB;
+	struct AABB* bb = &entity->ModelAABB;
 	model->GetPickingBounds(bb);
 	Vector3_Mul3By(&bb->Min, &entity->ModelScale);
 	Vector3_Mul3By(&bb->Max, &entity->ModelScale);
 }
 
-bool Entity_TouchesAny(AABB* bounds, bool (*touches_condition)(BlockID block__)) {
+bool Entity_TouchesAny(struct AABB* bounds, bool (*touches_condition)(BlockID block__)) {
 	Vector3I bbMin, bbMax;
 	Vector3I_Floor(&bbMin, &bounds->Min);
 	Vector3I_Floor(&bbMax, &bounds->Max);
@@ -177,7 +177,7 @@ bool Entity_TouchesAny(AABB* bounds, bool (*touches_condition)(BlockID block__))
 	bbMin.Y = max(bbMin.Y, 0); bbMax.Y = min(bbMax.Y, World_MaxY);
 	bbMin.Z = max(bbMin.Z, 0); bbMax.Z = min(bbMax.Z, World_MaxZ);
 
-	AABB blockBB;
+	struct AABB blockBB;
 	Vector3 v;
 	Int32 x, y, z;
 	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (Real32)y;
@@ -197,7 +197,7 @@ bool Entity_TouchesAny(AABB* bounds, bool (*touches_condition)(BlockID block__))
 
 static bool Entity_IsRope(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_CLIMB_ROPE; }
 bool Entity_TouchesAnyRope(struct Entity* entity) {
-	AABB bounds; Entity_GetBounds(entity, &bounds);
+	struct AABB bounds; Entity_GetBounds(entity, &bounds);
 	bounds.Max.Y += 0.5f / 16.0f;
 	return Entity_TouchesAny(&bounds, Entity_IsRope);
 }
@@ -205,14 +205,14 @@ bool Entity_TouchesAnyRope(struct Entity* entity) {
 Vector3 entity_liqExpand = { 0.25f / 16.0f, 0.0f / 16.0f, 0.25f / 16.0f };
 static bool Entity_IsLava(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_LIQUID_LAVA; }
 bool Entity_TouchesAnyLava(struct Entity* entity) {
-	AABB bounds; Entity_GetBounds(entity, &bounds);
+	struct AABB bounds; Entity_GetBounds(entity, &bounds);
 	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
 	return Entity_TouchesAny(&bounds, Entity_IsLava);
 }
 
 static bool Entity_IsWater(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_LIQUID_WATER; }
 bool Entity_TouchesAnyWater(struct Entity* entity) {
-	AABB bounds; Entity_GetBounds(entity, &bounds);
+	struct AABB bounds; Entity_GetBounds(entity, &bounds);
 	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
 	return Entity_TouchesAny(&bounds, Entity_IsWater);
 }
@@ -470,17 +470,17 @@ IGameComponent TabList_MakeComponent(void) {
 *#########################################################################################################################*/
 #define PLAYER_NAME_EMPTY_TEX -30000
 static void Player_MakeNameTexture(struct Player* player) {
-	FontDesc font; 
+	struct FontDesc font;
 	Platform_FontMake(&font, &Game_FontName, 24, FONT_STYLE_NORMAL);
 
 	String displayName = String_FromRawArray(player->DisplayNameRaw);
-	DrawTextArgs args; 
+	struct DrawTextArgs args;
 	DrawTextArgs_Make(&args, &displayName, &font, false);
 
 	/* we want names to always be drawn not using the system font */
 	bool bitmapped = Drawer2D_UseBitmappedChat;
 	Drawer2D_UseBitmappedChat = true;
-	Size2D size = Drawer2D_MeasureText(&args);
+	struct Size2D size = Drawer2D_MeasureText(&args);
 
 	if (size.Width == 0) {
 		player->NameTex = Texture_MakeInvalid();
@@ -545,7 +545,7 @@ static void Player_DrawName(struct Player* player) {
 	}
 
 	VertexP3fT2fC4b vertices[4];
-	TextureRec rec = { 0.0f, 0.0f, player->NameTex.U2, player->NameTex.V2 };
+	struct TextureRec rec = { 0.0f, 0.0f, player->NameTex.U2, player->NameTex.V2 };
 	PackedCol col = PACKEDCOL_WHITE;
 	Particle_DoRender(&size, &pos, &rec, col, vertices);
 
@@ -933,7 +933,7 @@ static void LocalPlayer_DoRespawn(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	Vector3 spawn = p->Spawn;
 	Vector3I P; Vector3I_Floor(&P, &spawn);
-	AABB bb;
+	struct AABB bb;
 
 	/* Spawn player at highest valid position */
 	if (World_IsValidPos_3I(P)) {

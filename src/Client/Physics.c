@@ -8,15 +8,15 @@
 #include "ErrorHandler.h"
 #include "Entity.h"
 
-void AABB_FromCoords6(AABB* result, Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2) {
+void AABB_FromCoords6(struct AABB* result, Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2) {
 	result->Min = Vector3_Create3(x1, y1, z1); result->Max = Vector3_Create3(x2, y2, z2);
 }
 
-void AABB_FromCoords(AABB* result, Vector3* min, Vector3* max) {
+void AABB_FromCoords(struct AABB* result, Vector3* min, Vector3* max) {
 	result->Min = *min; result->Max = *max;
 }
 
-void AABB_Make(AABB* result, Vector3* pos, Vector3* size) {
+void AABB_Make(struct AABB* result, Vector3* pos, Vector3* size) {
 	result->Min.X = pos->X - size->X * 0.5f;
 	result->Min.Y = pos->Y;
 	result->Min.Z = pos->Z - size->Z * 0.5f;
@@ -26,12 +26,12 @@ void AABB_Make(AABB* result, Vector3* pos, Vector3* size) {
 	result->Max.Z = pos->Z + size->Z * 0.5f;
 }
 
-void AABB_Offset(AABB* result, AABB* bb, Vector3* amount) {
+void AABB_Offset(struct AABB* result, struct AABB* bb, Vector3* amount) {
 	Vector3_Add(&result->Min, &bb->Min, amount);
 	Vector3_Add(&result->Max, &bb->Max, amount);
 }
 
-bool AABB_Intersects(AABB* bb, AABB* other) {
+bool AABB_Intersects(struct AABB* bb, struct AABB* other) {
 	if (bb->Max.X >= other->Min.X && bb->Min.X <= other->Max.X) {
 		if (bb->Max.Y < other->Min.Y || bb->Min.Y > other->Max.Y) {
 			return false;
@@ -41,13 +41,13 @@ bool AABB_Intersects(AABB* bb, AABB* other) {
 	return false;
 }
 
-bool AABB_Contains(AABB* parent, AABB* child) {
+bool AABB_Contains(struct AABB* parent, struct AABB* child) {
 	return
 		child->Min.X >= parent->Min.X && child->Min.Y >= parent->Min.Y && child->Min.Z >= parent->Min.Z &&
 		child->Max.X <= parent->Max.X && child->Max.Y <= parent->Max.Y && child->Max.Z <= parent->Max.Z;
 }
 
-bool AABB_ContainsPoint(AABB* parent, Vector3* P) {
+bool AABB_ContainsPoint(struct AABB* parent, Vector3* P) {
 	return
 		P->X >= parent->Min.X && P->Y >= parent->Min.Y && P->Z >= parent->Min.Z &&
 		P->X <= parent->Max.X && P->Y <= parent->Max.Y && P->Z <= parent->Max.Z;
@@ -76,7 +76,7 @@ bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, struct En
 	Vector3_Add(&origin, &delta, &target->Position);                     /* origin = delta + target.Position */
 
 	dir = Intersection_InverseRotate(dir, target);
-	AABB bb;
+	struct AABB bb;
 	Entity_GetPickingBounds(target, &bb);
 	return Intersection_RayIntersectsBox(origin, dir, bb.Min, bb.Max, tMin, tMax);
 }
@@ -146,7 +146,7 @@ static void Searcher_QuickSort(Int32 left, Int32 right) {
 	}
 }
 
-Int32 Searcher_FindReachableBlocks(struct Entity* entity, AABB* entityBB, AABB* entityExtentBB) {
+Int32 Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, struct AABB* entityExtentBB) {
 	Vector3 vel = entity->Velocity;
 	Entity_GetBounds(entity, entityBB);
 
@@ -177,7 +177,7 @@ Int32 Searcher_FindReachableBlocks(struct Entity* entity, AABB* entityBB, AABB* 
 	}
 
 	/* Order loops so that we minimise cache misses */
-	AABB blockBB;
+	struct AABB blockBB;
 	Int32 x, y, z;
 	struct SearcherState* curState = Searcher_States;
 
@@ -213,7 +213,7 @@ Int32 Searcher_FindReachableBlocks(struct Entity* entity, AABB* entityBB, AABB* 
 	return count;
 }
 
-void Searcher_CalcTime(Vector3* vel, AABB *entityBB, AABB* blockBB, Real32* tx, Real32* ty, Real32* tz) {
+void Searcher_CalcTime(Vector3* vel, struct AABB *entityBB, struct AABB* blockBB, Real32* tx, Real32* ty, Real32* tz) {
 	Real32 dx = vel->X > 0.0f ? blockBB->Min.X - entityBB->Max.X : entityBB->Min.X - blockBB->Max.X;
 	Real32 dy = vel->Y > 0.0f ? blockBB->Min.Y - entityBB->Max.Y : entityBB->Min.Y - blockBB->Max.Y;
 	Real32 dz = vel->Z > 0.0f ? blockBB->Min.Z - entityBB->Max.Z : entityBB->Min.Z - blockBB->Max.Z;

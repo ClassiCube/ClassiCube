@@ -48,7 +48,7 @@ typedef UInt8 TextureLoc;
 typedef UInt8 Face;
 typedef UInt32 ReturnCode;
 
-typedef struct FontDesc_ { void* Handle; UInt16 Size, Style; } FontDesc;
+struct FontDesc { void* Handle; UInt16 Size, Style; };
 
 #define UInt8_MaxValue  ((UInt8)255)
 #define Int16_MinValue  ((Int16)-32768)

@@ -7,7 +7,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-typedef struct PickedPos_ PickedPos;
+struct PickedPos;
 struct Stream;
 void Handlers_RemoveEntity(EntityID id);
 void Handlers_Reset(void);
@@ -18,5 +18,5 @@ void Classic_WriteChat(struct Stream* stream, STRING_PURE String* text, bool par
 void Classic_WritePosition(struct Stream* stream, Vector3 pos, Real32 rotY, Real32 headX);
 void Classic_WriteSetBlock(struct Stream* stream, Int32 x, Int32 y, Int32 z, bool place, BlockID block);
 void Classic_WriteLogin(struct Stream* stream, STRING_PURE String* username, STRING_PURE String* verKey);
-void CPE_WritePlayerClick(struct Stream* stream, MouseButton button, bool buttonDown, UInt8 targetId, PickedPos* pos);
+void CPE_WritePlayerClick(struct Stream* stream, MouseButton button, bool buttonDown, UInt8 targetId, struct PickedPos* pos);
 #endif

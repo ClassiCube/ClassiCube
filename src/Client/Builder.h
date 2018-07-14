@@ -8,13 +8,13 @@ NormalMeshBuilder:
 
 Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
-typedef struct ChunkInfo_ ChunkInfo;
+struct ChunkInfo;
 
 Int32 Builder_SidesLevel, Builder_EdgeLevel;
 
 void Builder_Init(void);
 void Builder_OnNewMapLoaded(void);
-void Builder_MakeChunk(ChunkInfo* info);
+void Builder_MakeChunk(struct ChunkInfo* info);
 
 void NormalBuilder_SetActive(void);
 void AdvLightingBuilder_SetActive(void);

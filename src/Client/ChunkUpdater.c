@@ -18,7 +18,7 @@
 Vector3I ChunkUpdater_ChunkPos;
 UInt32* ChunkUpdater_Distances;
 
-void ChunkInfo_Reset(ChunkInfo* chunk, Int32 x, Int32 y, Int32 z) {
+void ChunkInfo_Reset(struct ChunkInfo* chunk, Int32 x, Int32 y, Int32 z) {
 	chunk->CentreX = x + 8; chunk->CentreY = y + 8; chunk->CentreZ = z + 8;
 #if !CC_BUILD_GL11
 	chunk->Vb = NULL;
@@ -95,23 +95,23 @@ static void ChunkUpdater_FreeAllocations(void) {
 
 static void ChunkUpdater_PerformPartsAllocations(void) {
 	UInt32 partsCount = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
-	MapRenderer_PartsBuffer_Raw = Platform_MemAlloc(partsCount * 2, sizeof(ChunkPartInfo));
+	MapRenderer_PartsBuffer_Raw = Platform_MemAlloc(partsCount * 2, sizeof(struct ChunkPartInfo));
 	if (MapRenderer_PartsBuffer_Raw == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk parts buffer");
 
-	UInt32 partsSize = partsCount * 2 * (UInt32)sizeof(ChunkPartInfo);
+	UInt32 partsSize = partsCount * 2 * (UInt32)sizeof(struct ChunkPartInfo);
 	Platform_MemSet(MapRenderer_PartsBuffer_Raw, 0, partsSize);
 	MapRenderer_PartsNormal = MapRenderer_PartsBuffer_Raw;
 	MapRenderer_PartsTranslucent = MapRenderer_PartsBuffer_Raw + partsCount;
 }
 
 static void ChunkUpdater_PerformAllocations(void) {
-	MapRenderer_Chunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(ChunkInfo));
+	MapRenderer_Chunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo));
 	if (MapRenderer_Chunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk info");
 
-	MapRenderer_SortedChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(ChunkInfo*));
+	MapRenderer_SortedChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*));
 	if (MapRenderer_Chunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate sorted chunk info");
 
-	MapRenderer_RenderChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(ChunkInfo*));
+	MapRenderer_RenderChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*));
 	if (MapRenderer_RenderChunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate render chunk info");
 
 	ChunkUpdater_Distances = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(Int32));
@@ -206,7 +206,7 @@ static Int32 ChunkUpdater_UpdateChunksAndVisibility(Int32* chunkUpdates) {
 	Int32 userDistSqr = ChunkUpdater_AdjustViewDist(Game_UserViewDistance);
 
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
-		ChunkInfo* info = MapRenderer_SortedChunks[i];
+		struct ChunkInfo* info = MapRenderer_SortedChunks[i];
 		if (info->Empty) { continue; }
 		Int32 distSqr = ChunkUpdater_Distances[i];
 		bool noData = info->NormalParts == NULL && info->TranslucentParts == NULL;
@@ -235,7 +235,7 @@ static Int32 ChunkUpdater_UpdateChunksStill(Int32* chunkUpdates) {
 	Int32 userDistSqr = ChunkUpdater_AdjustViewDist(Game_UserViewDistance);
 
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
-		ChunkInfo* info = MapRenderer_SortedChunks[i];
+		struct ChunkInfo* info = MapRenderer_SortedChunks[i];
 		if (info->Empty) { continue; }
 		Int32 distSqr = ChunkUpdater_Distances[i];
 		bool noData = info->NormalParts == NULL && info->TranslucentParts == NULL;
@@ -344,7 +344,7 @@ static void ChunkUpdater_ClearChunkCache_Handler(void* obj) {
 }
 
 
-void ChunkUpdater_DeleteChunk(ChunkInfo* info) {
+void ChunkUpdater_DeleteChunk(struct ChunkInfo* info) {
 	info->Empty = false; info->AllAir = false;
 #if OCCLUSION
 	info.OcclusionFlags = 0;
@@ -356,7 +356,7 @@ void ChunkUpdater_DeleteChunk(ChunkInfo* info) {
 	Int32 i;
 
 	if (info->NormalParts != NULL) {
-		ChunkPartInfo* ptr = info->NormalParts;
+		struct ChunkPartInfo* ptr = info->NormalParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
 			if (ptr->Offset < 0) continue; 
 			MapRenderer_NormalPartsCount[i]--;
@@ -368,7 +368,7 @@ void ChunkUpdater_DeleteChunk(ChunkInfo* info) {
 	}
 
 	if (info->TranslucentParts != NULL) {
-		ChunkPartInfo* ptr = info->TranslucentParts;
+		struct ChunkPartInfo* ptr = info->TranslucentParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
 			if (ptr->Offset < 0) continue;
 			MapRenderer_TranslucentPartsCount[i]--;
@@ -380,7 +380,7 @@ void ChunkUpdater_DeleteChunk(ChunkInfo* info) {
 	}
 }
 
-void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates) {
+void ChunkUpdater_BuildChunk(struct ChunkInfo* info, Int32* chunkUpdates) {
 	Game_ChunkUpdates++;
 	(*chunkUpdates)++;
 	info->PendingDelete = false;
@@ -393,14 +393,14 @@ void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates) {
 	Int32 i;
 
 	if (info->NormalParts != NULL) {
-		ChunkPartInfo* ptr = info->NormalParts;
+		struct ChunkPartInfo* ptr = info->NormalParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
 			if (ptr->Offset >= 0) { MapRenderer_NormalPartsCount[i]++; }
 		}
 	}
 
 	if (info->TranslucentParts != NULL) {
-		ChunkPartInfo* ptr = info->TranslucentParts;
+		struct ChunkPartInfo* ptr = info->TranslucentParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
 			if (ptr->Offset >= 0) { MapRenderer_TranslucentPartsCount[i]++; }
 		}
@@ -408,7 +408,7 @@ void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates) {
 }
 
 static void ChunkUpdater_QuickSort(Int32 left, Int32 right) {
-	ChunkInfo** values = MapRenderer_SortedChunks; ChunkInfo* value;
+	struct ChunkInfo** values = MapRenderer_SortedChunks; struct ChunkInfo* value;
 	Int32* keys = ChunkUpdater_Distances;          Int32 key;
 	while (left < right) {
 		Int32 i = left, j = right;
@@ -442,7 +442,7 @@ static void ChunkUpdater_UpdateSortOrder(void) {
 
 	Int32 i = 0;
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
-		ChunkInfo* info = MapRenderer_SortedChunks[i];
+		struct ChunkInfo* info = MapRenderer_SortedChunks[i];
 
 		/* Calculate distance to chunk centre*/
 		Int32 dx = info->CentreX - pPos.X, dy = info->CentreY - pPos.Y, dz = info->CentreZ - pPos.Z;

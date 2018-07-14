@@ -50,9 +50,9 @@ static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
 	Picking_CalculatePickedBlock(eyePos, dir, reach, pos);
 }
 
-Point2D cam_prev, cam_delta;
+struct Point2D cam_prev, cam_delta;
 static void PerspectiveCamera_CentreMousePosition(void) {
-	Point2D topLeft = Window_PointToScreen(Point2D_Empty);
+	struct Point2D topLeft = Window_PointToScreen(Point2D_Empty);
 	Int32 cenX = topLeft.X + Game_Width / 2;
 	Int32 cenY = topLeft.Y + Game_Height / 2;
 
@@ -117,7 +117,7 @@ static void PerspectiveCamera_UpdateMouse(void) {
 	if (screen->HandlesAllInput) {
 		cam_delta = Point2D_Empty;
 	} else if (Window_GetFocused()) {
-		Point2D pos = Window_GetDesktopCursorPos();
+		struct Point2D pos = Window_GetDesktopCursorPos();
 		cam_delta = Point2D_Make(pos.X - cam_prev.X, pos.Y - cam_prev.Y);
 		PerspectiveCamera_CentreMousePosition();
 	}

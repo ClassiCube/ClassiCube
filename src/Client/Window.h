@@ -38,7 +38,7 @@
 #define WINDOW_STATE_MAXIMISED 2
 #define WINDOW_STATE_FULLSCREEN 3
 
-void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, DisplayDevice* device);
+void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, struct DisplayDevice* device);
 void Window_GetClipboardText(STRING_TRANSIENT String* value);
 void Window_SetClipboardText(STRING_PURE String* value);
 /* TODO: IMPLEMENT THIS  void Window_SetIcon(Bitmap* bmp); */
@@ -51,29 +51,29 @@ void* Window_GetWindowHandle(void);
 UInt8 Window_GetWindowState(void);
 void Window_SetWindowState(UInt8 value);
 
-Rectangle2D Window_GetBounds(void);
-void Window_SetBounds(Rectangle2D rect);
-Point2D Window_GetLocation(void);
-void Window_SetLocation(Point2D point);
-Size2D Window_GetSize(void);
-void Window_SetSize(Size2D size);
-Size2D Window_GetClientSize(void);
-void Window_SetClientSize(Size2D size);
+struct Rectangle2D Window_GetBounds(void);
+void Window_SetBounds(struct Rectangle2D rect);
+struct Point2D Window_GetLocation(void);
+void Window_SetLocation(struct Point2D point);
+struct Size2D Window_GetSize(void);
+void Window_SetSize(struct Size2D size);
+struct Size2D Window_GetClientSize(void);
+void Window_SetClientSize(struct Size2D size);
 
 void Window_Close(void);
 void Window_ProcessEvents(void);
 /* Transforms the specified point from screen to client coordinates. */
-Point2D Window_PointToClient(Point2D point);
+struct Point2D Window_PointToClient(struct Point2D point);
 /* Transforms the specified point from client to screen coordinates. */
-Point2D Window_PointToScreen(Point2D point);
+struct Point2D Window_PointToScreen(struct Point2D point);
 
-Point2D Window_GetDesktopCursorPos(void);
-void Window_SetDesktopCursorPos(Point2D point);
+struct Point2D Window_GetDesktopCursorPos(void);
+void Window_SetDesktopCursorPos(struct Point2D point);
 bool Window_GetCursorVisible(void);
 void Window_SetCursorVisible(bool visible);
 
 #if !CC_BUILD_D3D9
-void GLContext_Init(GraphicsMode mode);
+void GLContext_Init(struct GraphicsMode mode);
 void GLContext_Update(void);
 void GLContext_Free(void);
 

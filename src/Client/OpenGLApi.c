@@ -84,7 +84,7 @@ static void GL_CheckVboSupport(void) {
 
 void Gfx_Init(void) {
 	Gfx_MinZNear = 0.1f;
-	GraphicsMode mode = GraphicsMode_MakeDefault();
+	struct GraphicsMode mode = GraphicsMode_MakeDefault();
 	GLContext_Init(mode);
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx_MaxTextureDimensions);
 
