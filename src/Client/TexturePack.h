@@ -1,12 +1,11 @@
 #ifndef CC_TEXPACKS_H
 #define CC_TEXPACKS_H
-#include "String.h"
+#include "Utils.h"
 /* Extracts entries from a .zip archive stream (mostly resources for .zip texture pack)
    Caches terrain atlases and texture packs to avoid making redundant downloads. 
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 struct Stream;
-typedef struct DateTime_ DateTime;
 struct Bitmap;
 struct AsyncRequest;
 

@@ -214,11 +214,9 @@ static void WeatherRenderer_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated,  NULL, WeatherRenderer_ContextRecreated);
 }
 
-IGameComponent WeatherRenderer_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = WeatherRenderer_Init;
-	comp.Free = WeatherRenderer_Free;
-	comp.OnNewMap = WeatherRenderer_Reset;
-	comp.Reset = WeatherRenderer_Reset;
-	return comp;
+void WeatherRenderer_MakeComponent(struct IGameComponent* comp) {
+	comp->Init = WeatherRenderer_Init;
+	comp->Free = WeatherRenderer_Free;
+	comp->OnNewMap = WeatherRenderer_Reset;
+	comp->Reset = WeatherRenderer_Reset;
 }

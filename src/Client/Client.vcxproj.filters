@@ -413,9 +413,6 @@
     <ClCompile Include="Stream.c">
       <Filter>Source Files\IO</Filter>
     </ClCompile>
-    <ClCompile Include="GameStructs.c">
-      <Filter>Source Files\Game</Filter>
-    </ClCompile>
     <ClCompile Include="SelectionBox.c">
       <Filter>Source Files\SelectionBox</Filter>
     </ClCompile>

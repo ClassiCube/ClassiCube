@@ -38,8 +38,8 @@ void SkyboxRenderer_Render(Real64 deltaTime) {
 	Gfx_BindTexture(skybox_tex);
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 
-	Matrix m = Matrix_Identity;
-	Matrix rotX, rotY, view;
+	struct Matrix m = Matrix_Identity;
+	struct Matrix rotX, rotY, view;
 
 	/* Base skybox rotation */
 	Real32 rotTime = (Real32)(Game_Accumulator * 2 * MATH_PI); /* So speed of 1 rotates whole skybox every second */
@@ -139,11 +139,9 @@ static void SkyboxRenderer_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated,  NULL, SkyboxRenderer_ContextRecreated);
 }
 
-IGameComponent SkyboxRenderer_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = SkyboxRenderer_Init;
-	comp.Free = SkyboxRenderer_Free;
-	comp.OnNewMap = SkyboxRenderer_MakeVb; /* Need to recreate colour component of vertices */
-	comp.Reset = SkyboxRenderer_Reset;
-	return comp;
+void SkyboxRenderer_MakeComponent(struct IGameComponent* comp) {
+	comp->Init = SkyboxRenderer_Init;
+	comp->Free = SkyboxRenderer_Free;
+	comp->OnNewMap = SkyboxRenderer_MakeVb; /* Need to recreate colour component of vertices */
+	comp->Reset = SkyboxRenderer_Reset;
 }

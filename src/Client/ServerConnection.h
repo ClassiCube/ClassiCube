@@ -1,7 +1,6 @@
 #ifndef CC_SERVERCONNECTION_H
 #define CC_SERVERCONNECTION_H
 #include "Input.h"
-#include "GameStructs.h"
 #include "Vectors.h"
 /* Represents a connection to either a singleplayer or multiplayer server.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
@@ -58,6 +57,8 @@ enum OPCODE_ {
 
 struct PickedPos;
 struct Stream;
+struct IGameComponent;
+struct ScheduledTask;
 
 UInt16 PingList_NextPingData(void);
 void PingList_Update(UInt16 data);
@@ -91,7 +92,7 @@ void ServerConnection_RetrieveTexturePack(STRING_PURE String* url);
 void ServerConnection_DownloadTexturePack(STRING_PURE String* url);
 void ServerConnection_InitSingleplayer(void);
 void ServerConnection_InitMultiplayer(void);
-IGameComponent ServerConnection_MakeComponent(void);
+void ServerConnection_MakeComponent(struct IGameComponent* comp);
 
 typedef void (*Net_Handler)(struct Stream* stream);
 #define OPCODE_COUNT 45

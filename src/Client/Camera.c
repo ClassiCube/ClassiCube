@@ -27,13 +27,13 @@ static Vector3 PerspectiveCamera_GetDirVector(void) {
 	return dir;
 }
 
-static void PerspectiveCamera_GetProjection(Matrix* proj) {
+static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
 	Real32 fovy = Game_Fov * MATH_DEG2RAD;
 	Real32 aspectRatio = (Real32)Game_Width / (Real32)Game_Height;
 	Matrix_PerspectiveFieldOfView(proj, fovy, aspectRatio, Gfx_MinZNear, (Real32)Game_ViewDistance);
 }
 
-static void PerspectiveCamera_GetView(Matrix* mat) {
+static void PerspectiveCamera_GetView(struct Matrix* mat) {
 	Vector3 pos = Game_CurrentCameraPos, target, up = Vector3_UnitY;
 	Vector3_Add(&target, &pos, &cam_targetOffset);
 
@@ -128,7 +128,7 @@ static void PerspectiveCamera_CalcViewBobbing(Real32 t, Real32 velTiltScale) {
 	if (!Game_ViewBobbing) { Camera_TiltM = Matrix_Identity; return; }
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct Entity* e = &p->Base;
-	Matrix Camera_tiltY, Camera_velX;
+	struct Matrix Camera_tiltY, Camera_velX;
 
 	Matrix_RotateZ(&Camera_TiltM, -p->Tilt.TiltX * e->Anim.BobStrength);
 	Matrix_RotateX(&Camera_tiltY, Math_AbsF(p->Tilt.TiltY) * 3.0f * e->Anim.BobStrength);

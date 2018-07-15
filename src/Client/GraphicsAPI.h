@@ -35,7 +35,7 @@ Real32 Gfx_MinZNear;
 bool Gfx_LostContext;
 bool Gfx_Mipmaps;
 bool Gfx_CustomMipmapsLevels;
-Matrix Gfx_View, Gfx_Projection;
+struct Matrix Gfx_View, Gfx_Projection;
 
 #define GFX_MAX_INDICES (65536 / 4 * 6)
 #define GFX_MAX_VERTICES 65536
@@ -91,10 +91,10 @@ void Gfx_DrawVb_IndexedTris(Int32 verticesCount);
 void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex);
 
 void Gfx_SetMatrixMode(Int32 matrixType);
-void Gfx_LoadMatrix(Matrix* matrix);
+void Gfx_LoadMatrix(struct Matrix* matrix);
 void Gfx_LoadIdentityMatrix(void);
-void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, Matrix* matrix);
-void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 zFar, Matrix* matrix);
+void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, struct Matrix* matrix);
+void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 zFar, struct Matrix* matrix);
 
 /* Outputs a .png screenshot of the backbuffer */
 void Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height);

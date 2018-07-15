@@ -127,9 +127,7 @@ void PickedPosRenderer_Update(struct PickedPos* selected) {
 	PickedPosRenderer_ZQuad(p2.Z, p1.X, p2.Y, p2.X, p2.Y - size);
 }
 
-IGameComponent PickedPosRenderer_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = PickedPosRenderer_Init;
-	comp.Free = PickedPosRenderer_Free;
-	return comp;
+void PickedPosRenderer_MakeComponent(struct IGameComponent* comp) {
+	comp->Init = PickedPosRenderer_Init;
+	comp->Free = PickedPosRenderer_Free;
 }

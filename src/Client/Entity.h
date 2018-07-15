@@ -9,6 +9,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 struct IModel;
+struct IGameComponent;
 
 /* Offset used to avoid floating point roundoff errors. */
 #define ENTITY_ADJUSTMENT 0.001f
@@ -83,7 +84,7 @@ struct Entity {
 	bool NoShade, OnGround;
 	GfxResourceID TextureId, MobTextureId;
 	Real32 uScale, vScale;
-	Matrix Transform;
+	struct Matrix Transform;
 
 	struct AnimatedComp Anim;
 };
@@ -121,7 +122,7 @@ UInt8 TabList_GroupRanks[TABLIST_MAX_NAMES];
 bool TabList_Valid(EntityID id);
 bool TabList_Remove(EntityID id);
 void TabList_Set(EntityID id, STRING_PURE String* player, STRING_PURE String* list,  STRING_PURE String* group, UInt8 rank);
-IGameComponent TabList_MakeComponent(void);
+void TabList_MakeComponent(struct IGameComponent* comp);
 
 #define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_PlayerNames[id]);
 #define TabList_UNSAFE_GetList(id)   StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_ListNames[id]);
@@ -158,7 +159,7 @@ struct LocalPlayer {
 };
 
 struct LocalPlayer LocalPlayer_Instance;
-IGameComponent LocalPlayer_MakeComponent(void);
+void LocalPlayer_MakeComponent(struct IGameComponent* comp);
 void LocalPlayer_Init(void);
 Real32 LocalPlayer_JumpHeight(void);
 void LocalPlayer_CheckHacksConsistency(void);

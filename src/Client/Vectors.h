@@ -9,9 +9,9 @@
 typedef struct Vector2_ { Real32 X, Y; } Vector2;
 typedef struct Vector3_ { Real32 X, Y, Z; } Vector3;
 typedef struct Vector3I_ { Int32 X, Y, Z; } Vector3I;
-typedef struct Vector4_ { Real32 X, Y, Z, W; } Vector4;
-typedef struct Matrix_ { Vector4 Row0, Row1, Row2, Row3; } Matrix;
-extern Matrix Matrix_Identity;
+struct Vector4 { Real32 X, Y, Z, W; };
+struct Matrix { struct Vector4 Row0, Row1, Row2, Row3; };
+extern struct Matrix Matrix_Identity;
 
 Vector3 Vector3_Create1(Real32 value);
 Vector3 Vector3_Create3(Real32 x, Real32 y, Real32 z);
@@ -44,8 +44,8 @@ Real32 Vector3_Dot(Vector3* left, Vector3* right);
 void Vector3_Cross(Vector3* result, Vector3* a, Vector3* b);
 void Vector3_Normalize(Vector3* result, Vector3* a);
 
-void Vector3_Transform(Vector3* result, Vector3* a, Matrix* mat);
-void Vector3_TransformY(Vector3* result, Real32 y, Matrix* mat);
+void Vector3_Transform(Vector3* result, Vector3* a, struct Matrix* mat);
+void Vector3_TransformY(Vector3* result, Real32 y, struct Matrix* mat);
 
 Vector3 Vector3_RotateX(Vector3 v, Real32 angle);
 Vector3 Vector3_RotateY(Vector3 v, Real32 angle);
@@ -68,21 +68,21 @@ Vector3 Vector3_GetDirVector(Real32 yawRad, Real32 pitchRad);
 NOTE: This is not an identity function. Returned pitch is always within [-90, 90] degrees.*/
 /*void Vector3_GetHeading(Vector3 dir, Real32* yawRad, Real32* pitchRad);*/
 
-void Matrix_RotateX(Matrix* result, Real32 angle);
-void Matrix_RotateY(Matrix* result, Real32 angle);
-void Matrix_RotateZ(Matrix* result, Real32 angle);
-void Matrix_Translate(Matrix* result, Real32 x, Real32 y, Real32 z);
-void Matrix_Scale(Matrix* result, Real32 x, Real32 y, Real32 z);
+void Matrix_RotateX(struct Matrix* result, Real32 angle);
+void Matrix_RotateY(struct Matrix* result, Real32 angle);
+void Matrix_RotateZ(struct Matrix* result, Real32 angle);
+void Matrix_Translate(struct Matrix* result, Real32 x, Real32 y, Real32 z);
+void Matrix_Scale(struct Matrix* result, Real32 x, Real32 y, Real32 z);
 
 #define Matrix_MulBy(dst, right) Matrix_Mul(dst, dst, right)
-void Matrix_Mul(Matrix* result, Matrix* left, Matrix* right);
+void Matrix_Mul(struct Matrix* result, struct Matrix* left, struct Matrix* right);
 
-void Matrix_Orthographic(Matrix* result, Real32 width, Real32 height, Real32 zNear, Real32 zFar);
-void Matrix_OrthographicOffCenter(Matrix* result, Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar);
-void Matrix_PerspectiveFieldOfView(Matrix* result, Real32 fovy, Real32 aspect, Real32 zNear, Real32 zFar);
-void Matrix_PerspectiveOffCenter(Matrix* result, Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar);
-void Matrix_LookAt(Matrix* result, Vector3 eye, Vector3 target, Vector3 up);
+void Matrix_Orthographic(struct Matrix* result, Real32 width, Real32 height, Real32 zNear, Real32 zFar);
+void Matrix_OrthographicOffCenter(struct Matrix* result, Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar);
+void Matrix_PerspectiveFieldOfView(struct Matrix* result, Real32 fovy, Real32 aspect, Real32 zNear, Real32 zFar);
+void Matrix_PerspectiveOffCenter(struct Matrix* result, Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar);
+void Matrix_LookAt(struct Matrix* result, Vector3 eye, Vector3 target, Vector3 up);
 
 bool FrustumCulling_SphereInFrustum(Real32 x, Real32 y, Real32 z, Real32 radius);
-void FrustumCulling_CalcFrustumEquations(Matrix* projection, Matrix* modelView);
+void FrustumCulling_CalcFrustumEquations(struct Matrix* projection, struct Matrix* modelView);
 #endif

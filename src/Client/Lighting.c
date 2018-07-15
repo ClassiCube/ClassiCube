@@ -6,6 +6,7 @@
 #include "World.h"
 #include "ErrorHandler.h"
 #include "Event.h"
+#include "GameStructs.h"
 
 Int16* Lighting_heightmap;
 PackedCol shadow, shadowZSide, shadowXSide, shadowYBottom;
@@ -344,12 +345,10 @@ static void Lighting_Free(void) {
 }
 
 
-IGameComponent Lighting_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = Lighting_Init;
-	comp.Free = Lighting_Free;
-	comp.OnNewMap = Lighting_OnNewMap;
-	comp.OnNewMapLoaded = Lighting_OnNewMapLoaded;
-	comp.Reset = Lighting_Reset;
-	return comp;
+void Lighting_MakeComponent(struct IGameComponent* comp) {
+	comp->Init = Lighting_Init;
+	comp->Free = Lighting_Free;
+	comp->OnNewMap = Lighting_OnNewMap;
+	comp->OnNewMapLoaded = Lighting_OnNewMapLoaded;
+	comp->Reset = Lighting_Reset; 
 }

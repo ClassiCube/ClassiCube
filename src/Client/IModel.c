@@ -84,7 +84,7 @@ Real32 IModel_RenderDistance(struct Entity* entity) {
 	return dx * dx + dy * dy + dz * dz;
 }
 
-Matrix IModel_transform;
+struct Matrix IModel_transform;
 void IModel_Render(struct IModel* model, struct Entity* entity) {
 	Vector3 pos = entity->Position;
 	if (model->Bobbing) pos.Y += entity->Anim.BobbingModel;
@@ -92,7 +92,7 @@ void IModel_Render(struct IModel* model, struct Entity* entity) {
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 
 	model->GetTransform(entity, pos);
-	Matrix m;
+	struct Matrix m;
 	Matrix_Mul(&m, &entity->Transform, &Gfx_View);
 
 	Gfx_LoadMatrix(&m);

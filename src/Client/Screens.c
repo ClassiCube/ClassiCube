@@ -433,10 +433,8 @@ struct Screen* StatusScreen_MakeInstance(void) {
 }
 
 static void StatusScreen_Ready(void) { Elem_Init(&StatusScreen_Instance); }
-IGameComponent StatusScreen_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Ready = StatusScreen_Ready;
-	return comp;
+void StatusScreen_MakeComponent(struct IGameComponent* comp) {
+	comp->Ready = StatusScreen_Ready;
 }
 
 
@@ -528,7 +526,9 @@ static void LoadingScreen_DrawBackground(void) {
 
 	TextureLoc texLoc = Block_GetTexLoc(BLOCK_DIRT, FACE_YMAX);
 	struct TextureRec rec = Atlas1D_TexRec(texLoc, 1, &atlasIndex);
-	struct Texture tex = Texture_FromRec(0, 0, 0, Game_Width, LOADING_TILE_SIZE, rec);
+
+	struct Texture tex;
+	Texture_FromRec(&tex, 0, 0, 0, Game_Width, LOADING_TILE_SIZE, rec);
 	tex.U2 = (Real32)Game_Width / (Real32)LOADING_TILE_SIZE;
 
 	bool bound = false;
@@ -1217,7 +1217,9 @@ static void HUDScreen_DrawCrosshairs(void) {
 
 	Int32 extent = (Int32)(CH_EXTENT * Game_Scale(Game_Height / 480.0f));
 	Int32 chX = (Game_Width / 2) - extent, chY = (Game_Height / 2) - extent;
-	struct Texture chTex = Texture_FromRec(Gui_IconsTex, chX, chY, extent * 2, extent * 2, chRec);
+
+	struct Texture chTex;
+	Texture_FromRec(&chTex, Gui_IconsTex, chX, chY, extent * 2, extent * 2, chRec);
 	Texture_Render(&chTex);
 }
 
@@ -1395,10 +1397,8 @@ struct Screen* HUDScreen_MakeInstance(void) {
 }
 
 static void HUDScreen_Ready(void) { Elem_Init(&HUDScreen_Instance); }
-IGameComponent HUDScreen_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Ready = HUDScreen_Ready;
-	return comp;
+void HUDScreen_MakeComponent(struct IGameComponent* comp) {
+	comp->Ready = HUDScreen_Ready;
 }
 
 void HUDScreen_OpenInput(struct Screen* hud, STRING_PURE String* text) {

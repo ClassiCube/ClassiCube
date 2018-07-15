@@ -342,9 +342,7 @@ static void Animations_Free(void) {
 	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, Animations_FileChanged);
 }
 
-IGameComponent Animations_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = Animations_Init;
-	comp.Free = Animations_Free;
-	return comp;
+void Animations_MakeComponent(struct IGameComponent* comp) {
+	comp->Init = Animations_Init;
+	comp->Free = Animations_Free;
 }

@@ -1,13 +1,13 @@
 #ifndef CC_GAMEMODE_H
 #define CC_GAMEMODE_H
-#include "GameStructs.h"
 #include "Input.h"
-#include "Widgets.h"
 /* Implements behaviour specific for creative / survival game modes.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-IGameComponent GameMode_MakeComponent(void);
+struct IGameComponent;
+struct HorbarWidget;
+void GameMode_MakeComponent(struct IGameComponent* comp);
 
 bool GameMode_HandlesKeyDown(Key key);
 bool GameMode_PickingLeft(void);

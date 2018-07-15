@@ -1,11 +1,12 @@
 #ifndef CC_BORDERSRENDERER_H
 #define CC_BORDERSRENDERER_H
-#include "GameStructs.h"
+#include "Typedefs.h"
 /* Renders map sides and map edges (horizon) as large quads.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+struct IGameComponent;
 
-IGameComponent BordersRenderer_MakeComponent(void);
+void BordersRenderer_MakeComponent(struct IGameComponent* comp);
 bool BordersRenderer_Legacy;
 void BordersRenderer_UseLegacyMode(bool legacy);
 void BordersRenderer_RenderSides(Real64 delta);

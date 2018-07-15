@@ -4,6 +4,7 @@
 #include "Block.h"
 #include "Event.h"
 #include "Chat.h"
+#include "GameStructs.h"
 
 bool Inventory_CanChangeSelected(void) {
 	if (!Inventory_CanChangeHeldBlock) {
@@ -100,9 +101,7 @@ static void Inventory_ResetState(void) {
 	Inventory_CanPick = true;
 }
 
-IGameComponent Inventory_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init  = Inventory_ResetState;
-	comp.Reset = Inventory_ResetState;
-	return comp;
+void Inventory_MakeComponent(struct IGameComponent* comp) {
+	comp->Init  = Inventory_ResetState;
+	comp->Reset = Inventory_ResetState;
 }

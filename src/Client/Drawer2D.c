@@ -4,6 +4,7 @@
 #include "Platform.h"
 #include "ExtMath.h"
 #include "ErrorHandler.h"
+#include "Texture.h"
 
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF String* text, struct FontDesc* font, bool useShadow) {
 	args->Text = *text;
@@ -127,10 +128,10 @@ Int32 Drawer2D_FontHeight(struct FontDesc* font, bool useShadow) {
 	return Drawer2D_MeasureText(&args).Height;
 }
 
-struct Texture Drawer2D_MakeTextTexture(struct DrawTextArgs* args, Int32 windowX, Int32 windowY) {
+void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, Int32 windowX, Int32 windowY) {
 	struct Size2D size = Drawer2D_MeasureText(args);
 	if (size.Width == 0 && size.Height == 0) {
-		return Texture_FromOrigin(NULL, windowX, windowY, 0, 0, 1.0f, 1.0f);
+		Texture_FromOrigin(tex, NULL, windowX, windowY, 0, 0, 1.0f, 1.0f); return;
 	}
 
 	struct Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
@@ -139,14 +140,14 @@ struct Texture Drawer2D_MakeTextTexture(struct DrawTextArgs* args, Int32 windowX
 		Drawer2D_DrawText(args, 0, 0);
 	}
 	Drawer2D_End();
-	struct Texture tex = Drawer2D_Make2DTexture(&bmp, size, windowX, windowY);
+
+	Drawer2D_Make2DTexture(tex, &bmp, size, windowX, windowY);
 	Platform_MemFree(&bmp.Scan0);
-	return tex;
 }
 
-struct Texture Drawer2D_Make2DTexture(struct Bitmap* bmp, struct Size2D used, Int32 windowX, Int32 windowY) {
+void Drawer2D_Make2DTexture(struct Texture* tex, struct Bitmap* bmp, struct Size2D used, Int32 windowX, Int32 windowY) {
 	GfxResourceID texId = Gfx_CreateTexture(bmp, false, false);
-	return Texture_FromOrigin(texId, windowX, windowY, used.Width, used.Height,
+	Texture_FromOrigin(tex, texId, windowX, windowY, used.Width, used.Height,
 		(Real32)used.Width / (Real32)bmp->Width, (Real32)used.Height / (Real32)bmp->Height);
 }
 

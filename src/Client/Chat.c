@@ -581,10 +581,8 @@ static void Chat_Free(void) {
 	StringsBuffer_Free(&Chat_InputLog);
 }
 
-IGameComponent Chat_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init  = Chat_Init;
-	comp.Reset = Chat_Reset;
-	comp.Free  = Chat_Free;
-	return comp;
+void Chat_MakeComponent(struct IGameComponent* comp) {
+	comp->Init  = Chat_Init;
+	comp->Reset = Chat_Reset;
+	comp->Free  = Chat_Free;
 }

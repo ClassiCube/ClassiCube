@@ -6,6 +6,7 @@
 #include "Block.h"
 #include "Event.h"
 #include "HeldBlockRenderer.h"
+#include "GameStructs.h"
 
 void GameMode_Init(void) {
 	BlockID* inv = Inventory_Table;
@@ -14,10 +15,8 @@ void GameMode_Init(void) {
 	inv[6] = BLOCK_LEAVES; inv[7] = BLOCK_GRASS;  inv[8] = BLOCK_SLAB;
 }
 
-IGameComponent GameMode_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = GameMode_Init;
-	return comp;
+void GameMode_MakeComponent(struct IGameComponent* comp) {
+	comp->Init = GameMode_Init;
 }
 
 bool GameMode_HandlesKeyDown(Key key) {

@@ -1,11 +1,12 @@
 #ifndef CC_SKYBOXRENDERER_H
 #define CC_SKYBOXRENDERER_H
-#include "GameStructs.h"
+#include "Typedefs.h"
 /* Renders a skybox.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-IGameComponent SkyboxRenderer_MakeComponent(void);
+struct IGameComponent;
+void SkyboxRenderer_MakeComponent(struct IGameComponent* comp);
 void SkyboxRenderer_Render(Real64 deltaTime);
 bool SkyboxRenderer_ShouldRender(void);
 #endif

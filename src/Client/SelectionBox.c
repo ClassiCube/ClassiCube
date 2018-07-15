@@ -236,11 +236,9 @@ static void Selections_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, Selections_ContextRecreated);
 }
 
-IGameComponent Selections_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = Selections_Init;
-	comp.Free = Selections_Free;
-	comp.Reset = Selections_Reset;
-	comp.OnNewMap = Selections_Reset;
-	return comp;
+void Selections_MakeComponent(struct IGameComponent* comp) {
+	comp->Init = Selections_Init;
+	comp->Free = Selections_Free;
+	comp->Reset = Selections_Reset;
+	comp->OnNewMap = Selections_Reset;
 }

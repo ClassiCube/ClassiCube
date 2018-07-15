@@ -1,11 +1,12 @@
 #ifndef CC_ENVRENDERER_H
 #define CC_ENVRENDERER_H
-#include "GameStructs.h"
+#include "Typedefs.h"
 /* Renders environment of the map. (clouds, sky, fog)
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+struct IGameComponent;
 
-IGameComponent EnvRenderer_MakeComponent(void);
+void EnvRenderer_MakeComponent(struct IGameComponent* comp);
 bool EnvRenderer_Legacy;
 bool EnvRenderer_Minimal;
 void EnvRenderer_UseLegacyMode(bool legacy);

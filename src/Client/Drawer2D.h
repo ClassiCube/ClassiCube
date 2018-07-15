@@ -1,6 +1,7 @@
 #ifndef CC_DRAWER2D_H
 #define CC_DRAWER2D_H
-#include "Texture.h"
+#include "2DStructs.h"
+#include "PackedCol.h"
 #include "Constants.h"
 /*  Responsible for performing drawing operations on bitmaps, and for converting bitmaps into textures.
 	Copyright 2017 ClassicalSharp | Licensed under BSD-3
@@ -8,6 +9,8 @@
 
 struct DrawTextArgs { String Text; struct FontDesc Font; bool UseShadow; };
 struct Bitmap;
+struct Texture;
+
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF String* text, struct FontDesc* font, bool useShadow);
 void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, bool useShadow);
 
@@ -35,8 +38,8 @@ void Drawer2D_DrawText(struct DrawTextArgs* args, Int32 x, Int32 y);
 struct Size2D Drawer2D_MeasureText(struct DrawTextArgs* args);
 Int32 Drawer2D_FontHeight(struct FontDesc* font, bool useShadow);
 
-struct Texture Drawer2D_MakeTextTexture(struct DrawTextArgs* args, Int32 windowX, Int32 windowY);
-struct Texture Drawer2D_Make2DTexture(struct Bitmap* bmp, struct Size2D used, Int32 windowX, Int32 windowY);
+void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, Int32 windowX, Int32 windowY);
+void Drawer2D_Make2DTexture(struct Texture* tex, struct Bitmap* bmp, struct Size2D used, Int32 windowX, Int32 windowY);
 
 bool Drawer2D_ValidColCodeAt(STRING_PURE String* text, Int32 i);
 bool Drawer2D_ValidColCode(UChar c);

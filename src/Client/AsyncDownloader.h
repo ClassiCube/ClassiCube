@@ -2,11 +2,12 @@
 #define CC_ASYNCDOWNLOADER_H
 #include "Constants.h"
 #include "Utils.h"
-#include "GameStructs.h"
 #include "Bitmap.h"
 /* Downloads images, texture packs, skins, etc in async manner.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+struct IGameComponent;
+struct ScheduledTask;
 
 enum REQUEST_TYPE {
 	REQUEST_TYPE_DATA, REQUEST_TYPE_IMAGE,
@@ -38,7 +39,7 @@ struct AsyncRequest {
 
 void ASyncRequest_Free(struct AsyncRequest* request);
 
-IGameComponent AsyncDownloader_MakeComponent(void);
+void AsyncDownloader_MakeComponent(struct IGameComponent* comp);
 void AsyncDownloader_GetSkin(STRING_PURE String* id, STRING_PURE String* skinName);
 void AsyncDownloader_GetData(STRING_PURE String* url, bool priority, STRING_PURE String* id);
 void AsyncDownloader_GetImage(STRING_PURE String* url, bool priority, STRING_PURE String* id);

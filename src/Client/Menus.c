@@ -3055,8 +3055,10 @@ static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* screen) {
 			Int32 x = (i + j) % ATLAS2D_TILES_PER_ROW;
 			Int32 y = (i + j) / ATLAS2D_TILES_PER_ROW;
 
-			struct Texture tex = Texture_FromRec(NULL, screen->XOffset + x * size,
+			struct Texture tex;
+			Texture_FromRec(&tex, NULL, screen->XOffset + x * size,
 				screen->YOffset + y * size, size, size, rec);
+
 			PackedCol col = PACKEDCOL_WHITE;
 			GfxCommon_Make2DQuad(&tex, col, &ptr);
 		}

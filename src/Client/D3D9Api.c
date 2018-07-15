@@ -540,7 +540,7 @@ void Gfx_SetMatrixMode(Int32 matrixType) {
 	}
 }
 
-void Gfx_LoadMatrix(Matrix* matrix) {
+void Gfx_LoadMatrix(struct Matrix* matrix) {
 	if (curMatrix == D3DTS_TEXTURE0) {
 		matrix->Row2.X = matrix->Row3.X; /* NOTE: this hack fixes the texture movements. */
 		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
@@ -563,12 +563,12 @@ void Gfx_LoadIdentityMatrix(void) {
 
 #define d3d9_zN -10000.0f
 #define d3d9_zF 10000.0f
-void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, Matrix* matrix) {
+void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, struct Matrix* matrix) {
 	Matrix_OrthographicOffCenter(matrix, 0.0f, width, height, 0.0f, d3d9_zN, d3d9_zF);
 	matrix->Row2.Z = 1.0f / (d3d9_zN - d3d9_zF);
 	matrix->Row3.Z = d3d9_zN / (d3d9_zN - d3d9_zF);
 }
-void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 zFar, Matrix* matrix) {
+void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 zFar, struct Matrix* matrix) {
 	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
 }
 

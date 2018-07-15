@@ -1,13 +1,13 @@
 #ifndef CC_TREE_GEN_H
 #define CC_TREE_GEN_H
 #include "Random.h"
+#include "Vectors.h"
 /* Implements original classic vanilla map generation
    Based on: https://github.com/UnknownShadow200/ClassicalSharp/wiki/Minecraft-Classic-map-generation-algorithm
    Thanks to Jerralish for originally reverse engineering classic's algorithm, then preparing a high level overview of the algorithm.
    I believe this process adheres to clean room reverse engineering.
    Copyright 2014 - 2017 ClassicalSharp | Licensed under BSD-3
 */
-typedef struct Vector3I_ Vector3I;
 
 /* Dimensions of the map trees are generated on. */
 Int32 Tree_Width, Tree_Height, Tree_Length;

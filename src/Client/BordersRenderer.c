@@ -323,12 +323,10 @@ static void BordersRenderer_Reset(void) {
 }
 
 
-IGameComponent BordersRenderer_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = BordersRenderer_Init;
-	comp.Free = BordersRenderer_Free;
-	comp.OnNewMap = BordersRenderer_Reset;
-	comp.Reset = BordersRenderer_Reset;
-	comp.OnNewMapLoaded = BordersRenderer_ResetSidesAndEdges;
-	return comp;
+void BordersRenderer_MakeComponent(struct IGameComponent* comp) {
+	comp->Init = BordersRenderer_Init;
+	comp->Free = BordersRenderer_Free;
+	comp->OnNewMap = BordersRenderer_Reset;
+	comp->Reset = BordersRenderer_Reset;
+	comp->OnNewMapLoaded = BordersRenderer_ResetSidesAndEdges;
 }

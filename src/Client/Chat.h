@@ -2,10 +2,11 @@
 #define CC_CHAT_H
 #include "Constants.h"
 #include "Utils.h"
-#include "GameStructs.h"
+#include "Typedefs.h"
 /* Manages sending and logging chat.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+struct IGameComponent;
 
 enum MSG_TYPE {
 	MSG_TYPE_NORMAL = 0,
@@ -26,7 +27,7 @@ struct ChatLine Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_
 StringsBuffer Chat_Log, Chat_InputLog;
 void Chat_GetLogTime(UInt32 index, Int64* timeMS);
 
-IGameComponent Chat_MakeComponent(void);
+void Chat_MakeComponent(struct IGameComponent* comp);
 void Chat_SetLogName(STRING_PURE String* name);
 void Chat_Send(STRING_PURE String* text);
 void Chat_Add(STRING_PURE String* text);

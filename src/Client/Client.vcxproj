@@ -280,7 +280,6 @@
     <ClCompile Include="InputHandler.c" />
     <ClCompile Include="Inventory.c" />
     <ClCompile Include="MapGenerator.c" />
-    <ClCompile Include="GameStructs.c" />
     <ClCompile Include="Deflate.c" />
     <ClCompile Include="IModel.c" />
     <ClCompile Include="Menus.c" />

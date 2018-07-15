@@ -1,11 +1,12 @@
 #ifndef CC_INVENTORY_H
 #define CC_INVENTORY_H
-#include "GameStructs.h"
+#include "Typedefs.h"
 #include "BlockID.h"
 
 /* Manages inventory hotbar, and ordering of blocks in the inventory menu.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
+struct IGameComponent;
 
 #define INVENTORY_BLOCKS_PER_HOTBAR 9
 #define INVENTORY_HOTBARS 9
@@ -13,7 +14,7 @@
 BlockID Inventory_Table[INVENTORY_HOTBARS * INVENTORY_BLOCKS_PER_HOTBAR];
 /* Mapping of indices in inventory menu to block IDs. */
 BlockID Inventory_Map[BLOCK_COUNT];
-IGameComponent Inventory_MakeComponent(void);
+void Inventory_MakeComponent(struct IGameComponent* comp);
 
 Int32 Inventory_SelectedIndex;
 Int32 Inventory_Offset;

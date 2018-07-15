@@ -1,6 +1,6 @@
 #ifndef CC_ANIMS_H
 #define CC_ANIMS_H
-#include "GameStructs.h"
+#include "Typedefs.h"
 /* Texture animations, and water and lava liquid animations.
    Copyright 2014 - 2017 ClassicalSharp | Licensed under BSD-3
    Based off the incredible work from https://dl.dropboxusercontent.com/u/12694594/lava.txt
@@ -8,6 +8,8 @@
    Water animation originally written by cybertoon, big thanks!
 */
 
-IGameComponent Animations_MakeComponent(void);
+struct IGameComponent;
+struct ScheduledTask;
+void Animations_MakeComponent(struct IGameComponent* comp);
 void Animations_Tick(struct ScheduledTask* task);
 #endif

@@ -6,7 +6,7 @@
 */
 
 /* Represents a game component. */
-typedef struct IGameComponent_ {
+struct IGameComponent {
 	/* Called when the game is being loaded. */
 	void (*Init)(void);
 	/* Called when the component is being freed, due to game being closed. */
@@ -19,10 +19,10 @@ typedef struct IGameComponent_ {
 	void (*OnNewMap)(void);
 	/* Called to update the component's state when the user has finished loading a new map. */
 	void (*OnNewMapLoaded)(void);
-} IGameComponent;
+};
 
-IGameComponent IGameComponent_MakeEmpty(void);
-void Game_AddComponent(IGameComponent* comp);
+void IGameComponent_MakeEmpty(struct IGameComponent* comp);
+void Game_AddComponent(struct IGameComponent* comp);
 
 /* Represents a task that periodically runs on the main thread every specified interval. */
 struct ScheduledTask;

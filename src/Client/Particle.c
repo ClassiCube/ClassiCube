@@ -11,6 +11,7 @@
 #include "Funcs.h"
 #include "Game.h"
 #include "Event.h"
+#include "GameStructs.h"
 
 
 /*########################################################################################################################*
@@ -25,7 +26,7 @@ void Particle_DoRender(Vector2* size, Vector3* pos, struct TextureRec* rec, Pack
 	Real32 sX = size->X * 0.5f, sY = size->Y * 0.5f;
 	Vector3 centre = *pos; centre.Y += sY;
 
-	Matrix* view = &Gfx_View;
+	struct Matrix* view = &Gfx_View;
 	Real32 aX, aY, aZ, bX, bY, bZ;
 	aX = view->Row0.X * sX; aY = view->Row1.X * sX; aZ = view->Row2.X * sX; /* right * size.X * 0.5f */
 	bX = view->Row0.Y * sY; bY = view->Row1.Y * sY; bZ = view->Row2.Y * sY; /* up    * size.Y * 0.5f */
@@ -326,13 +327,11 @@ static void Particles_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated,  NULL, Particles_ContextRecreated);
 }
 
-IGameComponent Particles_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init     = Particles_Init;
-	comp.Reset    = Particles_Reset;
-	comp.OnNewMap = Particles_Reset;
-	comp.Free     = Particles_Free;
-	return comp;
+void Particles_MakeComponent(struct IGameComponent* comp) {
+	comp->Init     = Particles_Init;
+	comp->Reset    = Particles_Reset;
+	comp->OnNewMap = Particles_Reset;
+	comp->Free     = Particles_Free;
 }
 
 void Particles_Render(Real64 delta, Real32 t) {

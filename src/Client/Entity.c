@@ -91,9 +91,9 @@ Real32 Entity_GetEyeHeight(struct Entity* entity) {
 }
 
 void Entity_GetTransform(struct Entity* entity, Vector3 pos, Vector3 scale) {
-	Matrix* m = &entity->Transform;
+	struct Matrix* m = &entity->Transform;
 	*m = Matrix_Identity;
-	Matrix tmp;
+	struct Matrix tmp;
 
 	Matrix_Scale(&tmp, scale.X, scale.Y, scale.Z);
 	Matrix_MulBy(m, &tmp);
@@ -456,12 +456,10 @@ static void TabList_Reset(void) {
 	StringsBuffer_Free(&TabList_Buffer);
 }
 
-IGameComponent TabList_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = TabList_Init;
-	comp.Free = TabList_Free;
-	comp.Reset = TabList_Reset;
-	return comp;
+void TabList_MakeComponent(struct IGameComponent* comp) {
+	comp->Init = TabList_Init;
+	comp->Free = TabList_Free;
+	comp->Reset = TabList_Reset;
 }
 
 
@@ -483,7 +481,7 @@ static void Player_MakeNameTexture(struct Player* player) {
 	struct Size2D size = Drawer2D_MeasureText(&args);
 
 	if (size.Width == 0) {
-		player->NameTex = Texture_MakeInvalid();
+		Texture_MakeInvalid(&player->NameTex);
 		player->NameTex.X = PLAYER_NAME_EMPTY_TEX;
 	} else {
 		UChar buffer[String_BufferSize(STRING_SIZE)];
@@ -505,10 +503,10 @@ static void Player_MakeNameTexture(struct Player* player) {
 			Drawer2D_DrawText(&args, 0, 0);
 		}
 		Drawer2D_End();
-		player->NameTex = Drawer2D_Make2DTexture(&bmp, size, 0, 0);
+
+		Drawer2D_Make2DTexture(&player->NameTex, &bmp, size, 0, 0);
 		Platform_MemFree(&bmp.Scan0);
 	}
-
 	Drawer2D_UseBitmappedChat = bitmapped;
 }
 
@@ -538,7 +536,7 @@ static void Player_DrawName(struct Player* player) {
 
 	if (Entities_NameMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {
 		/* Get W component of transformed position */
-		Matrix mat;
+		struct Matrix mat;
 		Matrix_Mul(&mat, &Gfx_View, &Gfx_Projection); /* TODO: This mul is slow, avoid it */
 		Real32 tempW = pos.X * mat.Row0.W + pos.Y * mat.Row1.W + pos.Z * mat.Row2.W + mat.Row3.W;
 		size.X *= tempW * 0.2f; size.Y *= tempW * 0.2f;
@@ -732,7 +730,7 @@ static void Player_Despawn(struct Entity* entity) {
 static void Player_ContextLost(struct Entity* entity) {
 	struct Player* player = (struct Player*)entity;
 	Gfx_DeleteTexture(&player->NameTex.ID);
-	player->NameTex = Texture_MakeInvalid();
+	Texture_MakeInvalid(&player->NameTex);
 }
 
 static void Player_ContextRecreated(struct Entity* entity) {
@@ -894,11 +892,9 @@ static void LocalPlayer_Reset(void) {
 	/* p->Base.Health = 20; TODO: survival mode stuff */
 }
 
-IGameComponent LocalPlayer_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init  = LocalPlayer_Init_;
-	comp.Ready = LocalPlayer_Reset;
-	return comp;
+void LocalPlayer_MakeComponent(struct IGameComponent* comp) {
+	comp->Init  = LocalPlayer_Init_;
+	comp->Ready = LocalPlayer_Reset;
 }
 
 struct EntityVTABLE localplayer_VTABLE;

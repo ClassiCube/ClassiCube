@@ -26,11 +26,9 @@ static void AxisLinesRenderer_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ContextLost, NULL, AxisLinesRenderer_ContextLost);
 }
 
-IGameComponent AxisLinesRenderer_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = AxisLinesRenderer_Init;
-	comp.Free = AxisLinesRenderer_Free;
-	return comp;
+void AxisLinesRenderer_MakeComponent(struct IGameComponent* comp) {
+	comp->Init = AxisLinesRenderer_Init;
+	comp->Free = AxisLinesRenderer_Free;
 }
 
 void AxisLinesRenderer_Render(Real64 delta) {

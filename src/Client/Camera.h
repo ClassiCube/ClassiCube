@@ -6,13 +6,13 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-Matrix Camera_TiltM;
+struct Matrix Camera_TiltM;
 Real32 Camera_BobbingVer, Camera_BobbingHor;
 
 struct Camera {
 	bool IsThirdPerson;
-	void (*GetProjection)(Matrix* proj);
-	void (*GetView)(Matrix* view);
+	void (*GetProjection)(struct Matrix* proj);
+	void (*GetView)(struct Matrix* view);
 
 	Vector2 (*GetOrientation)(void);
 	Vector3 (*GetPosition)(Real32 t);

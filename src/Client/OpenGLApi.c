@@ -504,13 +504,13 @@ void Gfx_SetMatrixMode(Int32 matrixType) {
 	gl_lastMatrixType = matrixType;
 }
 
-void Gfx_LoadMatrix(Matrix* matrix) { glLoadMatrixf((Real32*)matrix); }
+void Gfx_LoadMatrix(struct Matrix* matrix) { glLoadMatrixf((Real32*)matrix); }
 void Gfx_LoadIdentityMatrix(void) { glLoadIdentity(); }
 
-void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, Matrix* matrix) {
+void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, struct Matrix* matrix) {
 	Matrix_OrthographicOffCenter(matrix, 0.0f, width, height, 0.0f, -10000.0f, 10000.0f);
 }
-void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 zFar, Matrix* matrix) {
+void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 zFar, struct Matrix* matrix) {
 	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
 }
 

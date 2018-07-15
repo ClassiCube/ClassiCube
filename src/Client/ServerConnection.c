@@ -20,6 +20,7 @@
 #include "PacketHandlers.h"
 #include "Inventory.h"
 #include "Platform.h"
+#include "GameStructs.h"
 
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
@@ -560,10 +561,8 @@ static void ServerConnection_Free(void) {
 	}
 }
 
-IGameComponent ServerConnection_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.OnNewMap = MPConnection_OnNewMap;
-	comp.Reset    = MPConnection_Reset;
-	comp.Free     = ServerConnection_Free;
-	return comp;
+void ServerConnection_MakeComponent(struct IGameComponent* comp) {
+	comp->OnNewMap = MPConnection_OnNewMap;
+	comp->Reset    = MPConnection_Reset;
+	comp->Free     = ServerConnection_Free;
 }

@@ -105,7 +105,7 @@ void GfxCommon_Make2DQuad(struct Texture* tex, PackedCol col, VertexP3fT2fC4b** 
 bool gfx_hadFog;
 void GfxCommon_Mode2D(Int32 width, Int32 height) {
 	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
-	Matrix ortho;
+	struct Matrix ortho;
 	Gfx_CalcOrthoMatrix((Real32)width, (Real32)height, &ortho);
 	Gfx_LoadMatrix(&ortho);
 	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);

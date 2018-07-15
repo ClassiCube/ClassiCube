@@ -76,7 +76,7 @@ static void EnvRenderer_RenderClouds(Real64 deltaTime) {
 	Real32 offset = (Real32)(time / 2048.0f * 0.6f * WorldEnv_CloudsSpeed);
 
 	Gfx_SetMatrixMode(MATRIX_TYPE_TEXTURE);
-	Matrix matrix = Matrix_Identity; matrix.Row3.X = offset; /* translate X axis */
+	struct Matrix matrix = Matrix_Identity; matrix.Row3.X = offset; /* translate X axis */
 	Gfx_LoadMatrix(&matrix);
 	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
 
@@ -104,7 +104,7 @@ static void EnvRenderer_RenderSky(Real64 deltaTime) {
 	if (skyY == normalY) {
 		Gfx_DrawVb_IndexedTris(env_skyVertices);
 	} else {
-		Matrix m = Gfx_View;
+		struct Matrix m = Gfx_View;
 		Real32 dy = skyY - normalY; /* inlined Y translation matrix multiply */
 		m.Row3.X += dy * m.Row1.X; m.Row3.Y += dy * m.Row1.Y;
 		m.Row3.Z += dy * m.Row1.Z; m.Row3.W += dy * m.Row1.W;
@@ -343,12 +343,10 @@ static void EnvRenderer_Free(void) {
 	Event_UnregisterInt(&WorldEvents_EnvVarChanged,    NULL, EnvRenderer_EnvVariableChanged);
 }
 
-IGameComponent EnvRenderer_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = EnvRenderer_Init;
-	comp.Reset = EnvRenderer_OnNewMap;
-	comp.OnNewMap = EnvRenderer_OnNewMap;
-	comp.OnNewMapLoaded = EnvRenderer_OnNewMapLoaded;
-	comp.Free = EnvRenderer_Free;
-	return comp;
+void EnvRenderer_MakeComponent(struct IGameComponent* comp) {
+	comp->Init = EnvRenderer_Init;
+	comp->Reset = EnvRenderer_OnNewMap;
+	comp->OnNewMap = EnvRenderer_OnNewMap;
+	comp->OnNewMapLoaded = EnvRenderer_OnNewMapLoaded;
+	comp->Free = EnvRenderer_Free;
 }

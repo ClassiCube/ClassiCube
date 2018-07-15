@@ -83,12 +83,12 @@ void TextWidget_Create(struct TextWidget* widget, STRING_PURE String* text, stru
 void TextWidget_SetText(struct TextWidget* widget, STRING_PURE String* text) {
 	Gfx_DeleteTexture(&widget->Texture.ID);
 	if (Drawer2D_IsEmptyText(text)) {
-		widget->Texture = Texture_MakeInvalid();
+		Texture_MakeInvalid(&widget->Texture);
 		widget->Width = 0; widget->Height = widget->DefaultHeight;
 	} else {
 		struct DrawTextArgs args;
 		DrawTextArgs_Make(&args, text, &widget->Font, true);
-		widget->Texture = Drawer2D_MakeTextTexture(&args, 0, 0);
+		Drawer2D_MakeTextTexture(&widget->Texture, &args, 0, 0);
 		if (widget->ReducePadding) {
 			Drawer2D_ReducePadding_Tex(&widget->Texture, widget->Font.Size, 4);
 		}
@@ -184,12 +184,12 @@ void ButtonWidget_Create(struct ButtonWidget* widget, Int32 minWidth, STRING_PUR
 void ButtonWidget_SetText(struct ButtonWidget* widget, STRING_PURE String* text) {
 	Gfx_DeleteTexture(&widget->Texture.ID);
 	if (Drawer2D_IsEmptyText(text)) {
-		widget->Texture = Texture_MakeInvalid();
+		Texture_MakeInvalid(&widget->Texture);
 		widget->Width = 0; widget->Height = widget->DefaultHeight;
 	} else {
 		struct DrawTextArgs args;
 		DrawTextArgs_Make(&args, text, &widget->Font, true);
-		widget->Texture = Drawer2D_MakeTextTexture(&args, 0, 0);
+		Drawer2D_MakeTextTexture(&widget->Texture, &args, 0, 0);
 		widget->Width  = max(widget->Texture.Width,  widget->MinWidth);
 		widget->Height = max(widget->Texture.Height, widget->MinHeight);
 
@@ -364,7 +364,7 @@ static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* widget) {
 
 static void HotbarWidget_RepositonBackgroundTexture(struct HotbarWidget* widget) {
 	struct TextureRec rec = { 0.0f, 0.0f, 182.0f / 256.0f, 22.0f / 256.0f };
-	widget->BackTex = Texture_FromRec(0, widget->X, widget->Y, widget->Width, widget->Height, rec);
+	Texture_FromRec(&widget->BackTex, NULL, widget->X, widget->Y, widget->Width, widget->Height, rec);
 }
 
 static void HotbarWidget_RepositionSelectionTexture(struct HotbarWidget* widget) {
@@ -375,7 +375,7 @@ static void HotbarWidget_RepositionSelectionTexture(struct HotbarWidget* widget)
 	Int32 y = widget->Y + (widget->Height - (Int32)(23.0f * scale));
 
 	struct TextureRec rec = { 0.0f, 22.0f / 256.0f, 24.0f / 256.0f, 44.0f / 256.0f };
-	widget->SelTex = Texture_FromRec(0, 0, y, hSize, vSize, rec);
+	Texture_FromRec(&widget->SelTex, NULL, 0, y, hSize, vSize, rec);
 }
 
 static Int32 HotbarWidget_ScrolledIndex(struct HotbarWidget* widget, Real32 delta, Int32 index, Int32 dir) {
@@ -599,7 +599,7 @@ void TableWidget_MakeDescTex(struct TableWidget* widget, BlockID block) {
 
 	struct DrawTextArgs args;
 	DrawTextArgs_Make(&args, &desc, &widget->Font, true);
-	widget->DescTex = Drawer2D_MakeTextTexture(&args, 0, 0);
+	Drawer2D_MakeTextTexture(&widget->DescTex, &args, 0, 0);
 	TableWidget_UpdateDescTexPos(widget);
 }
 
@@ -1310,7 +1310,7 @@ void InputWidget_Create(struct InputWidget* widget, struct FontDesc* font, STRIN
 
 	String caret = String_FromConst("_");
 	struct DrawTextArgs args; DrawTextArgs_Make(&args, &caret, font, true);
-	widget->CaretTex = Drawer2D_MakeTextTexture(&args, 0, 0);
+	Drawer2D_MakeTextTexture(&widget->CaretTex, &args, 0, 0);
 	widget->CaretTex.Width = (UInt16)((widget->CaretTex.Width * 3) / 4);
 	widget->CaretWidth     = (UInt16)widget->CaretTex.Width;
 
@@ -1531,7 +1531,7 @@ static void MenuInputWidget_RemakeTexture(struct GuiElem* elem) {
 	Drawer2D_End();
 
 	struct Texture* tex = &widget->Base.InputTex;
-	*tex = Drawer2D_Make2DTexture(&bmp, adjSize, 0, 0);
+	Drawer2D_Make2DTexture(tex, &bmp, adjSize, 0, 0);
 	Platform_MemFree(&bmp.Scan0);
 
 	Widget_Reposition(&widget->Base);
@@ -1625,9 +1625,9 @@ static void ChatInputWidget_RemakeTexture(struct GuiElem* elem) {
 		Drawer2D_DrawText(&args, offset, realHeight);
 		realHeight += widget->LineSizes[i].Height;
 	}
-
 	Drawer2D_End();
-	widget->InputTex = Drawer2D_Make2DTexture(&bmp, size, 0, 0);
+
+	Drawer2D_Make2DTexture(&widget->InputTex, &bmp, size, 0, 0);
 	Platform_MemFree(&bmp.Scan0);
 
 	widget->Width = size.Width;
@@ -1840,7 +1840,7 @@ void ChatInputWidget_Create(struct ChatInputWidget* widget, struct FontDesc* fon
 #define LIST_BOUNDS_SIZE 10
 #define LIST_NAMES_PER_COLUMN 16
 
-static struct Texture PlayerListWidget_DrawName(struct PlayerListWidget* widget, STRING_PURE String* name) {
+static void PlayerListWidget_DrawName(struct Texture* tex, struct PlayerListWidget* widget, STRING_PURE String* name) {
 	UChar tmpBuffer[String_BufferSize(STRING_SIZE)];
 	String tmp;
 	if (Game_PureClassic) {
@@ -1851,9 +1851,8 @@ static struct Texture PlayerListWidget_DrawName(struct PlayerListWidget* widget,
 	}
 
 	struct DrawTextArgs args; DrawTextArgs_Make(&args, &tmp, &widget->Font, !widget->Classic);
-	struct Texture tex = Drawer2D_MakeTextTexture(&args, 0, 0);
-	Drawer2D_ReducePadding_Tex(&tex, widget->Font.Size, 3);
-	return tex;
+	Drawer2D_MakeTextTexture(tex, &args, 0, 0);
+	Drawer2D_ReducePadding_Tex(tex, widget->Font.Size, 3);
 }
 
 static Int32 PlayerListWidget_HighlightedName(struct PlayerListWidget* widget, Int32 mouseX, Int32 mouseY) {
@@ -1967,7 +1966,7 @@ static void PlayerListWidget_AddName(struct PlayerListWidget* widget, EntityID i
 
 	String name = TabList_UNSAFE_GetList(id);
 	widget->IDs[index]      = id;
-	widget->Textures[index] = PlayerListWidget_DrawName(widget, &name);
+	PlayerListWidget_DrawName(&widget->Textures[index], widget, &name);
 }
 
 static void PlayerListWidget_DeleteAt(struct PlayerListWidget* widget, Int32 i) {
@@ -1980,7 +1979,7 @@ static void PlayerListWidget_DeleteAt(struct PlayerListWidget* widget, Int32 i) 
 	}
 
 	widget->IDs[widget->NamesCount] = 0;
-	widget->Textures[widget->NamesCount] = Texture_MakeInvalid();
+	Texture_MakeInvalid(&widget->Textures[widget->NamesCount]);
 	widget->NamesCount--;
 }
 
@@ -1998,7 +1997,7 @@ static void PlayerListWidget_AddGroup(struct PlayerListWidget* widget, UInt16 id
 
 	String group = TabList_UNSAFE_GetGroup(id);
 	widget->IDs[*index] = GROUP_NAME_ID;
-	widget->Textures[*index] = PlayerListWidget_DrawName(widget, &group);
+	PlayerListWidget_DrawName(&widget->Textures[*index], widget, &group);
 
 	(*index)++;
 	widget->NamesCount++;
@@ -2351,10 +2350,10 @@ void TextGroupWidget_SetText(struct TextGroupWidget* widget, Int32 index, STRING
 	if (!Drawer2D_IsEmptyText(text)) {
 		/* TODO: Add support for URLs */
 		struct DrawTextArgs args; DrawTextArgs_Make(&args, text, &widget->Font, true);
-		tex = Drawer2D_MakeTextTexture(&args, 0, 0);
+		Drawer2D_MakeTextTexture(&tex, &args, 0, 0);
 		Drawer2D_ReducePadding_Tex(&tex, widget->Font.Size, 3);
 	} else {
-		tex = Texture_MakeInvalid();
+		Texture_MakeInvalid(&tex);
 		tex.Height = widget->PlaceholderHeight[index] ? widget->DefaultHeight : 0;
 	}
 
@@ -2597,7 +2596,8 @@ static void SpecialInputWidget_Make(struct SpecialInputWidget* widget, struct Sp
 		SpecialInputWidget_DrawContent(widget, e, titleHeight);
 	}
 	Drawer2D_End();
-	widget->Tex = Drawer2D_Make2DTexture(&bmp, size, widget->X, widget->Y);
+
+	Drawer2D_Make2DTexture(&widget->Tex, &bmp, size, widget->X, widget->Y);
 	Platform_MemFree(&bmp.Scan0);
 }
 

@@ -3,6 +3,7 @@
 #include "Funcs.h"
 #include "ErrorHandler.h"
 #include "Stream.h"
+#include "GameStructs.h"
 
 void ASyncRequest_Free(struct AsyncRequest* request) {
 	switch (request->RequestType) {
@@ -373,10 +374,8 @@ static void AsyncDownloader_Free(void) {
 	Platform_MutexFree(async_curRequestMutex);
 }
 
-IGameComponent AsyncDownloader_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init  = AsyncDownloader_Init;
-	comp.Reset = AsyncDownloader_Reset;
-	comp.Free  = AsyncDownloader_Free;
-	return comp;
+void AsyncDownloader_MakeComponent(struct IGameComponent* comp) {
+	comp->Init  = AsyncDownloader_Init;
+	comp->Reset = AsyncDownloader_Reset;
+	comp->Free  = AsyncDownloader_Free;
 }

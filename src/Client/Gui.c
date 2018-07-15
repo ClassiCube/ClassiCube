@@ -98,9 +98,9 @@ static void Gui_Init(void) {
 	Gui_Status = StatusScreen_MakeInstance();
 	Gui_HUD = HUDScreen_MakeInstance();
 
-	IGameComponent comp;
-	comp = StatusScreen_MakeComponent(); Game_AddComponent(&comp);
-	comp = HUDScreen_MakeComponent();    Game_AddComponent(&comp);
+	struct IGameComponent comp; IGameComponent_MakeEmpty(&comp);
+	StatusScreen_MakeComponent(&comp); Game_AddComponent(&comp);
+	HUDScreen_MakeComponent(&comp);    Game_AddComponent(&comp);
 }
 
 static void Gui_Reset(void) {
@@ -123,12 +123,10 @@ static void Gui_Free(void) {
 	Gui_Reset();
 }
 
-IGameComponent Gui_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init  = Gui_Init;
-	comp.Reset = Gui_Reset;
-	comp.Free  = Gui_Free;
-	return comp;
+void Gui_MakeComponent(struct IGameComponent* comp) {
+	comp->Init  = Gui_Init;
+	comp->Reset = Gui_Reset;
+	comp->Free  = Gui_Free;
 }
 
 struct Screen* Gui_GetActiveScreen(void) {
@@ -264,7 +262,8 @@ void TextAtlas_Make(struct TextAtlas* atlas, STRING_PURE String* chars, struct F
 		}
 	}
 	Drawer2D_End();
-	atlas->Tex = Drawer2D_Make2DTexture(&bmp, size, 0, 0);
+
+	Drawer2D_Make2DTexture(&atlas->Tex, &bmp, size, 0, 0);
 	Platform_MemFree(&bmp.Scan0);
 
 	Drawer2D_ReducePadding_Tex(&atlas->Tex, Math_Floor(font->Size), 4);

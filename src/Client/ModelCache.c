@@ -1023,7 +1023,7 @@ static struct IModel* HeadModel_GetInstance(void) {
 
 struct IModel ArmModel;
 bool arm_classic;
-Matrix arm_translate;
+struct Matrix arm_translate;
 
 static void ArmModel_SetTranslationMatrix(void) {
 	if (Game_ClassicArmModel) {
@@ -1059,7 +1059,7 @@ static void ArmModel_DrawModel(struct Entity* entity) {
 	/* If user changes option while game is running */
 	if (arm_classic != Game_ClassicArmModel) { ArmModel_CreateParts(); }
 
-	Matrix m;
+	struct Matrix m;
 	Matrix_Mul(&m, &entity->Transform, &Gfx_View);
 	Matrix_Mul(&m, &arm_translate, &m);
 	Gfx_LoadMatrix(&m);

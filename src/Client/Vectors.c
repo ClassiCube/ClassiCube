@@ -72,7 +72,7 @@ void Vector3_Normalize(Vector3* result, Vector3* a) {
 	result->Z = a->Z * scale;
 }
 
-void Vector3_Transform(Vector3* result, Vector3* a, Matrix* mat) {
+void Vector3_Transform(Vector3* result, Vector3* a, struct Matrix*  mat) {
 	/* a could be pointing to result - can't directly assign X/Y/Z therefore */
 	Real32 x = a->X * mat->Row0.X + a->Y * mat->Row1.X + a->Z * mat->Row2.X + mat->Row3.X;
 	Real32 y = a->X * mat->Row0.Y + a->Y * mat->Row1.Y + a->Z * mat->Row2.Y + mat->Row3.Y;
@@ -80,7 +80,7 @@ void Vector3_Transform(Vector3* result, Vector3* a, Matrix* mat) {
 	result->X = x; result->Y = y; result->Z = z;
 }
 
-void Vector3_TransformY(Vector3* result, Real32 y, Matrix* mat) {
+void Vector3_TransformY(Vector3* result, Real32 y, struct Matrix*  mat) {
 	result->X = y * mat->Row1.X + mat->Row3.X;
 	result->Y = y * mat->Row1.Y + mat->Row3.Y;
 	result->Z = y * mat->Row1.Z + mat->Row3.Z;
@@ -146,7 +146,7 @@ Vector3 Vector3_GetDirVector(Real32 yawRad, Real32 pitchRad) {
 }*/
 
 
-Matrix Matrix_Identity = {
+struct Matrix Matrix_Identity = {
 	1.0f, 0.0f, 0.0f, 0.0f,
 	0.0f, 1.0f, 0.0f, 0.0f,
 	0.0f, 0.0f, 1.0f, 0.0f,
@@ -155,38 +155,38 @@ Matrix Matrix_Identity = {
 
 /* Transposed, source https://open.gl/transformations */
 
-void Matrix_RotateX(Matrix* result, Real32 angle) {
+void Matrix_RotateX(struct Matrix*  result, Real32 angle) {
 	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
 	*result = Matrix_Identity;
 	result->Row1.Y = cosA;  result->Row1.Z = sinA;
 	result->Row2.Y = -sinA; result->Row2.Z = cosA;
 }
 
-void Matrix_RotateY(Matrix* result, Real32 angle) {
+void Matrix_RotateY(struct Matrix*  result, Real32 angle) {
 	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
 	*result = Matrix_Identity;
 	result->Row0.X = cosA; result->Row0.Z = -sinA;
 	result->Row2.X = sinA; result->Row2.Z = cosA;
 }
 
-void Matrix_RotateZ(Matrix* result, Real32 angle) {
+void Matrix_RotateZ(struct Matrix*  result, Real32 angle) {
 	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
 	*result = Matrix_Identity;
 	result->Row0.X = cosA;  result->Row0.Y = sinA;
 	result->Row1.X = -sinA; result->Row1.Y = cosA;
 }
 
-void Matrix_Translate(Matrix* result, Real32 x, Real32 y, Real32 z) {
+void Matrix_Translate(struct Matrix*  result, Real32 x, Real32 y, Real32 z) {
 	*result = Matrix_Identity;
 	result->Row3.X = x; result->Row3.Y = y; result->Row3.Z = z;
 }
 
-void Matrix_Scale(Matrix* result, Real32 x, Real32 y, Real32 z) {
+void Matrix_Scale(struct Matrix*  result, Real32 x, Real32 y, Real32 z) {
 	*result = Matrix_Identity;
 	result->Row0.X = x; result->Row1.Y = y; result->Row2.Z = z;
 }
 
-void Matrix_Mul(Matrix* result, Matrix* left, Matrix* right) {
+void Matrix_Mul(struct Matrix*  result, struct Matrix*  left, struct Matrix*  right) {
 	/* Originally from http://www.edais.co.uk/blog/?p=27 */
 	Real32
 		lM11 = left->Row0.X, lM12 = left->Row0.Y, lM13 = left->Row0.Z, lM14 = left->Row0.W,
@@ -220,11 +220,11 @@ void Matrix_Mul(Matrix* result, Matrix* left, Matrix* right) {
 	result->Row3.W = (((lM41 * rM14) + (lM42 * rM24)) + (lM43 * rM34)) + (lM44 * rM44);
 }
 
-void Matrix_Orthographic(Matrix* result, Real32 width, Real32 height, Real32 zNear, Real32 zFar) {
+void Matrix_Orthographic(struct Matrix*  result, Real32 width, Real32 height, Real32 zNear, Real32 zFar) {
 	Matrix_OrthographicOffCenter(result, -width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, zNear, zFar);
 }
 
-void Matrix_OrthographicOffCenter(Matrix* result, Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar) {
+void Matrix_OrthographicOffCenter(struct Matrix*  result, Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar) {
 	/* Transposed, source https://msdn.microsoft.com/en-us/library/dd373965(v=vs.85).aspx */
 	*result = Matrix_Identity;
 
@@ -237,12 +237,12 @@ void Matrix_OrthographicOffCenter(Matrix* result, Real32 left, Real32 right, Rea
 	result->Row3.Z = -(zFar + zNear) / (zFar - zNear);
 }
 
-void Matrix_PerspectiveFieldOfView(Matrix* result, Real32 fovy, Real32 aspect, Real32 zNear, Real32 zFar) {
+void Matrix_PerspectiveFieldOfView(struct Matrix*  result, Real32 fovy, Real32 aspect, Real32 zNear, Real32 zFar) {
 	Real32 c = zNear * (Real32)Math_FastTan(0.5f * fovy);
 	Matrix_PerspectiveOffCenter(result, -c * aspect, c * aspect, -c, c, zNear, zFar);
 }
 
-void Matrix_PerspectiveOffCenter(Matrix* result, Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar) {
+void Matrix_PerspectiveOffCenter(struct Matrix*  result, Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar) {
 	/* Transposed, source https://msdn.microsoft.com/en-us/library/dd373537(v=vs.85).aspx */
 	*result = Matrix_Identity;
 	result->Row3.W = 0.0f;
@@ -257,7 +257,7 @@ void Matrix_PerspectiveOffCenter(Matrix* result, Real32 left, Real32 right, Real
 	result->Row2.W = -1.0f;
 }
 
-void Matrix_LookAt(Matrix* result, Vector3 eye, Vector3 target, Vector3 up) {
+void Matrix_LookAt(struct Matrix*  result, Vector3 eye, Vector3 target, Vector3 up) {
 	/* Transposed, source https://msdn.microsoft.com/en-us/library/windows/desktop/bb281711(v=vs.85).aspx */
 	Vector3 x, y, z;
 	Vector3_Sub(&z, &eye, &target); Vector3_Normalize(&z, &z);
@@ -306,8 +306,8 @@ bool FrustumCulling_SphereInFrustum(Real32 x, Real32 y, Real32 z, Real32 radius)
 	return true;
 }
 
-void FrustumCulling_CalcFrustumEquations(Matrix* projection, Matrix* modelView) {
-	Matrix clipMatrix;
+void FrustumCulling_CalcFrustumEquations(struct Matrix*  projection, struct Matrix*  modelView) {
+	struct Matrix clipMatrix;
 	Matrix_Mul(&clipMatrix, modelView, projection);
 
 	Real32* clip = (Real32*)&clipMatrix;

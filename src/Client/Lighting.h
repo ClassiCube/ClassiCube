@@ -1,18 +1,18 @@
 #ifndef CC_WORLDLIGHTING_H
 #define CC_WORLDLIGHTING_H
 #include "PackedCol.h"
-#include "GameStructs.h"
 /* Manages lighting of blocks in the world.
 BasicLighting: Uses a simple heightmap, where each block is either in sun or shadow.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+struct IGameComponent;
 
 PackedCol Lighting_Outside;
 PackedCol Lighting_OutsideZSide;
 PackedCol Lighting_OutsideXSide;
 PackedCol Lighting_OutsideYBottom;
 
-IGameComponent Lighting_MakeComponent(void);
+void Lighting_MakeComponent(struct IGameComponent* comp);
 /* Equivalent to (but far more optimised form of)
 * for x = startX; x < startX + 18; x++
 *   for z = startZ; z < startZ + 18; z++

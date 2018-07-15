@@ -10,11 +10,12 @@
 #include "Event.h"
 #include "Entity.h"
 #include "IModel.h"
+#include "GameStructs.h"
 
 BlockID held_block;
 struct Entity held_entity;
 struct EntityVTABLE held_entityVTABLE;
-Matrix held_blockProjection;
+struct Matrix held_blockProjection;
 
 bool held_animating, held_breaking, held_swinging;
 Real32 held_swingY;
@@ -49,7 +50,7 @@ static void HeldBlockRenderer_SetMatrix(void) {
 	Vector3 up = Vector3_UnitY;
 	Vector3 target = eyePos; target.Z -= 1.0f; /* Look straight down*/	
 
-	Matrix m, lookAt;
+	struct Matrix m, lookAt;
 	Matrix_LookAt(&lookAt, eyePos, target, up);
 	Matrix_Mul(&m, &lookAt, &Camera_TiltM);
 	Gfx_View = m;
@@ -203,7 +204,7 @@ void HeldBlockRenderer_Render(Real64 delta) {
 	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
 	Gfx_LoadMatrix(&held_blockProjection);
 	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
-	Matrix view = Gfx_View;
+	struct Matrix view = Gfx_View;
 	HeldBlockRenderer_SetMatrix();
 
 	HeldBlockRenderer_ResetHeldState();
@@ -235,9 +236,7 @@ static void HeldBlockRenderer_Free(void) {
 	Event_UnregisterBlock(&UserEvents_BlockChanged,    NULL, HeldBlockRenderer_BlockChanged);
 }
 
-IGameComponent HeldBlockRenderer_MakeComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = HeldBlockRenderer_Init;
-	comp.Free = HeldBlockRenderer_Free;
-	return comp;
+void HeldBlockRenderer_MakeComponent(struct IGameComponent* comp) {
+	comp->Init = HeldBlockRenderer_Init;
+	comp->Free = HeldBlockRenderer_Free;
 }

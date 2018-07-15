@@ -19,7 +19,7 @@ PackedCol iso_colNormal, iso_colXSide, iso_colZSide, iso_colYBottom;
 #define iso_cosY  (0.70710678118654752f) /* Math_CosF(-45.0f * MATH_DEG2RAD); */
 #define iso_sinY (-0.70710678118654752f) /* Math_SinF(-45.0f * MATH_DEG2RAD); */
 
-Matrix iso_transform;
+struct Matrix iso_transform;
 Vector3 iso_pos;
 Int32 iso_lastTexIndex, iso_texIndex;
 
@@ -42,7 +42,7 @@ static void IsometricDrawer_InitCache(void) {
 	iso_colNormal = white;
 	PackedCol_GetShaded(iso_colNormal, &iso_colXSide, &iso_colZSide, &iso_colYBottom);
 
-	Matrix rotY, rotX;
+	struct Matrix rotY, rotX;
 	Matrix_RotateY(&rotY,  45.0f * MATH_DEG2RAD);
 	Matrix_RotateX(&rotX, -30.0f * MATH_DEG2RAD);
 	Matrix_Mul(&iso_transform, &rotY, &rotX);

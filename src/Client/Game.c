@@ -39,7 +39,7 @@
 #include "Menus.h"
 #include "Audio.h"
 
-IGameComponent Game_Components[26];
+struct IGameComponent Game_Components[26];
 Int32 Game_ComponentsCount;
 struct ScheduledTask Game_Tasks[6];
 Int32 Game_TasksCount, entTaskI;
@@ -54,11 +54,22 @@ String Game_IPAddress = String_FromEmptyArray(Game_IPAddressBuffer);
 UChar Game_FontNameBuffer[String_BufferSize(STRING_SIZE)];
 String Game_FontName = String_FromEmptyArray(Game_FontNameBuffer);
 
-void Game_AddComponent(IGameComponent* comp) {
+void Game_AddComponent(struct IGameComponent* comp) {
 	if (Game_ComponentsCount == Array_Elems(Game_Components)) {
 		ErrorHandler_Fail("Game_AddComponent - hit max count");
 	}
 	Game_Components[Game_ComponentsCount++] = *comp;
+	IGameComponent_MakeEmpty(comp);
+}
+
+void IGameComponent_NullFunc(void) { }
+void IGameComponent_MakeEmpty(struct IGameComponent* comp) {
+	comp->Init = IGameComponent_NullFunc;
+	comp->Free = IGameComponent_NullFunc;
+	comp->Ready = IGameComponent_NullFunc;
+	comp->Reset = IGameComponent_NullFunc;
+	comp->OnNewMap = IGameComponent_NullFunc;
+	comp->OnNewMapLoaded = IGameComponent_NullFunc;
 }
 
 Int32 ScheduledTask_Add(Real64 interval, ScheduledTaskCallback callback) {
@@ -414,7 +425,7 @@ void Game_Load(void) {
 	Game_Fov = 70;
 	Game_AutoRotate = true;
 
-	IGameComponent comp;
+	struct IGameComponent comp; IGameComponent_MakeEmpty(&comp);
 	Gfx_Init();
 	Gfx_SetVSync(true);
 	Gfx_MakeApiInfo();
@@ -423,15 +434,15 @@ void Game_Load(void) {
 	Entities_Init();
 	TextureCache_Init();
 	/* TODO: Survival vs Creative game mode */
-	comp = GameMode_MakeComponent(); Game_AddComponent(&comp);
+	GameMode_MakeComponent(&comp); Game_AddComponent(&comp);
 
 	InputHandler_Init();
-	comp = Particles_MakeComponent(); Game_AddComponent(&comp);
-	comp = TabList_MakeComponent();   Game_AddComponent(&comp);
+	Particles_MakeComponent(&comp); Game_AddComponent(&comp);
+	TabList_MakeComponent(&comp);   Game_AddComponent(&comp);
 
 	Game_LoadOptions();
 	Game_LoadGuiOptions();
-	comp = Chat_MakeComponent(); Game_AddComponent(&comp);
+	Chat_MakeComponent(&comp); Game_AddComponent(&comp);
 
 	Event_RegisterVoid(&WorldEvents_NewMap,          NULL, Game_OnNewMapCore);
 	Event_RegisterVoid(&WorldEvents_MapLoaded,       NULL, Game_OnNewMapLoadedCore);
@@ -441,28 +452,28 @@ void Game_Load(void) {
 
 	Block_Init();
 	ModelCache_Init();
-	comp = AsyncDownloader_MakeComponent(); Game_AddComponent(&comp);
-	comp = Lighting_MakeComponent();        Game_AddComponent(&comp);
+	AsyncDownloader_MakeComponent(&comp); Game_AddComponent(&comp);
+	Lighting_MakeComponent(&comp);        Game_AddComponent(&comp);
 
 	Drawer2D_UseBitmappedChat = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
 	Drawer2D_BlackTextShadows = Options_GetBool(OPT_BLACK_TEXT, false);
 	Gfx_Mipmaps               = Options_GetBool(OPT_MIPMAPS, false);
 
-	comp = Animations_MakeComponent(); Game_AddComponent(&comp);
-	comp = Inventory_MakeComponent();  Game_AddComponent(&comp);
+	Animations_MakeComponent(&comp); Game_AddComponent(&comp);
+	Inventory_MakeComponent(&comp);  Game_AddComponent(&comp);
 	Block_SetDefaultPerms();
 	WorldEnv_Reset();
 
 	LocalPlayer_Init(); 
-	comp = LocalPlayer_MakeComponent(); Game_AddComponent(&comp);
+	LocalPlayer_MakeComponent(&comp); Game_AddComponent(&comp);
 	Entities_List[ENTITIES_SELF_ID] = &LocalPlayer_Instance.Base;
 
 	struct Size2D size = Window_GetClientSize();
 	Game_Width = size.Width; Game_Height = size.Height;
 
 	ChunkUpdater_Init();
-	comp = EnvRenderer_MakeComponent();     Game_AddComponent(&comp);
-	comp = BordersRenderer_MakeComponent(); Game_AddComponent(&comp);
+	EnvRenderer_MakeComponent(&comp);     Game_AddComponent(&comp);
+	BordersRenderer_MakeComponent(&comp); Game_AddComponent(&comp);
 
 	UChar renderTypeBuffer[String_BufferSize(STRING_SIZE)];
 	String renderType = String_InitAndClearArray(renderTypeBuffer);
@@ -479,17 +490,17 @@ void Game_Load(void) {
 	} else {
 		ServerConnection_InitMultiplayer();
 	}
-	comp = ServerConnection_MakeComponent(); Game_AddComponent(&comp);
+	ServerConnection_MakeComponent(&comp); Game_AddComponent(&comp);
 	String_AppendConst(&ServerConnection_AppName, PROGRAM_APP_NAME);
 
 	Gfx_LostContextFunction = ServerConnection_Tick;
 	Camera_Init();
 	Game_UpdateProjection();
 
-	comp = Gui_MakeComponent();               Game_AddComponent(&comp);
-	comp = Selections_MakeComponent();        Game_AddComponent(&comp);
-	comp = WeatherRenderer_MakeComponent();   Game_AddComponent(&comp);
-	comp = HeldBlockRenderer_MakeComponent(); Game_AddComponent(&comp);
+	Gui_MakeComponent(&comp);               Game_AddComponent(&comp);
+	Selections_MakeComponent(&comp);        Game_AddComponent(&comp);
+	WeatherRenderer_MakeComponent(&comp);   Game_AddComponent(&comp);
+	HeldBlockRenderer_MakeComponent(&comp); Game_AddComponent(&comp);
 
 	Gfx_SetDepthTest(true);
 	Gfx_SetDepthTestFunc(COMPARE_FUNC_LESSEQUAL);
@@ -497,10 +508,10 @@ void Game_Load(void) {
 	Gfx_SetAlphaBlendFunc(BLEND_FUNC_SRC_ALPHA, BLEND_FUNC_INV_SRC_ALPHA);
 	Gfx_SetAlphaTestFunc(COMPARE_FUNC_GREATER, 0.5f);
 
-	comp = PickedPosRenderer_MakeComponent(); Game_AddComponent(&comp);
-	comp = Audio_MakeComponent();             Game_AddComponent(&comp);
-	comp = AxisLinesRenderer_MakeComponent(); Game_AddComponent(&comp);
-	comp = SkyboxRenderer_MakeComponent();    Game_AddComponent(&comp);
+	PickedPosRenderer_MakeComponent(&comp); Game_AddComponent(&comp);
+	Audio_MakeComponent(&comp);             Game_AddComponent(&comp);
+	AxisLinesRenderer_MakeComponent(&comp); Game_AddComponent(&comp);
+	SkyboxRenderer_MakeComponent(&comp);    Game_AddComponent(&comp);
 
 	/* TODO: plugin dll support */
 	/* List<string> nonLoaded = PluginLoader.LoadAll(); */
@@ -764,7 +775,7 @@ void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct Displa
 }
 
 /* TODO: fix all these stubs.... */
-IGameComponent Audio_MakeComponent(void) { return IGameComponent_MakeEmpty(); }
+void Audio_MakeComponent(struct IGameComponent* comp) { }
 void Audio_SetMusic(Int32 volume) { }
 void Audio_SetSounds(Int32 volume) { }
 void Audio_PlayDigSound(UInt8 type) { }
