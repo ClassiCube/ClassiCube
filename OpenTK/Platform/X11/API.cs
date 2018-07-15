@@ -137,10 +137,7 @@ namespace OpenTK.Platform.X11 {
 		public extern static IntPtr XFreePixmap(IntPtr display, IntPtr pixmap);
 
 		[DllImport("libX11")]
-		public extern static int XGetWMNormalHints(IntPtr display, IntPtr window, ref XSizeHints hints, out IntPtr supplied_return);
-		[DllImport("libX11")]
 		public extern static void XSetWMNormalHints(IntPtr display, IntPtr window, ref XSizeHints hints);
-
 		[DllImport("libX11")]
 		public static extern IntPtr XGetWMHints(Display display, Window w); // returns XWMHints*
 		[DllImport("libX11")]
@@ -178,23 +175,6 @@ namespace OpenTK.Platform.X11 {
 		[DllImport("libX11")]
 		public extern static int XSetSelectionOwner(IntPtr display, IntPtr selection, IntPtr owner, IntPtr time);
 
-		static readonly IntPtr CopyFromParent = IntPtr.Zero;
-
-		internal static void SendNetWMMessage(X11Window window, IntPtr message_type, IntPtr l0, IntPtr l1, IntPtr l2) {
-			XEvent xev = new XEvent();
-			xev.ClientMessageEvent.type = XEventName.ClientMessage;
-			xev.ClientMessageEvent.send_event = true;
-			xev.ClientMessageEvent.window = window.WinHandle;
-			xev.ClientMessageEvent.message_type = message_type;
-			xev.ClientMessageEvent.format = 32;
-			xev.ClientMessageEvent.ptr1 = l0;
-			xev.ClientMessageEvent.ptr2 = l1;
-			xev.ClientMessageEvent.ptr3 = l2;
-
-			XSendEvent(API.DefaultDisplay, API.RootWindow, false,
-			           EventMask.SubstructureRedirectMask | EventMask.SubstructureNotifyMask, ref xev);
-		}
-
 		internal static IntPtr CreatePixmapFromImage(Display display, System.Drawing.Bitmap image) {
 			int width = image.Width, height = image.Height;
 
@@ -202,6 +182,7 @@ namespace OpenTK.Platform.X11 {
 			                                                        System.Drawing.Imaging.ImageLockMode.ReadOnly,
 			                                                        System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 			
+			IntPtr CopyFromParent = IntPtr.Zero;
 			IntPtr ximage = XCreateImage(display, CopyFromParent, 24, ImageFormat.ZPixmap,
 			                             0, data.Scan0, width, height, 32, 0);
 			IntPtr pixmap = XCreatePixmap(display, XDefaultRootWindow(display),

@@ -1,19 +1,24 @@
-
 #include "Window.h"
 #define CC_BUILD_X11 1
 #if CC_BUILD_X11
 #include "DisplayDevice.h"
 #include "ErrorHandler.h"
 #include "Input.h"
+#include "Funcs.h"
+#include "Platform.h"
+#include "Event.h"
+#include "Stream.h"
 #include <X11/Xlib.h>
 #include <GL/glx.h>
 
+/* TODO: Move to Platform code */
 Display* win_display;
 Window win_rootWin;
 int win_screen;
 
 Window win_handle;
 XVisualInfo win_visual;
+Int32 borderLeft, borderRight, borderTop, borderBottom;
 
 static Key Window_MapKey(int key) {
 	if (key >= XK_F1 && key <= XK_F35) { return Key_F1 + (key - XK_F1); }
@@ -110,39 +115,369 @@ static Key Window_MapKey(int key) {
 }
 
 void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, struct DisplayDevice* device);
-void Window_GetClipboardText(STRING_TRANSIENT String* value);
-void Window_SetClipboardText(STRING_PURE String* value);
 
-bool Window_GetVisible(void);
-void Window_SetVisible(bool visible);
-void* Window_GetWindowHandle(void);
-UInt8 Window_GetWindowState(void);
-void Window_SetWindowState(UInt8 value);
+UChar clipboard_copy_buffer[String_BufferSize(256)];
+String clipboard_copy_text = String_FromEmptyArray(clipboard_copy_buffer);
+UChar clipboard_paste_buffer[String_BufferSize(256)];
+String clipboard_paste_text = String_FromEmptyArray(clipboard_paste_buffer);
 
-void Window_SetBounds(struct Rectangle2D rect);
+void Window_GetClipboardText(STRING_TRANSIENT String* value) {
+	Window owner = XGetSelectionOwner(win_display, xa_clipboard);
+	if (owner == NULL) return; /* no window owner */
+
+	XConvertSelection(win_display, xa_clipboard, xa_utf8_string, xa_data_sel, win_handle, NULL);
+	String_Clear(&clipboard_paste_text);
+	Int32 i;
+
+	/* wait up to 1 second for SelectionNotify event to arrive */
+	for (i = 0; i < 10; i++) {
+		Window_ProcessEvents();
+		if (clipboard_paste_text.length > 0) {
+			String_Set(value, &clipboard_paste_text);
+			return;
+		} else {
+			Platform_ThreadSleep(100);
+		}
+	}
+}
+
+void Window_SetClipboardText(STRING_PURE String* value) {
+	String_Set(&clipboard_paste_text, value);
+	XSetSelectionOwner(win_display, xa_clipboard, win_handle, NULL);
+}
+
+bool win_visible;
+bool Window_GetVisible(void) { return win_visible; }
+
+void Window_SetVisible(bool visible) {
+	if (visible == win_visible) return;
+	if (visible) {
+		XMapWindow(win_display, win_handle);
+	} else {
+		XUnmapWindow(win_display, win_handle);
+	}
+}
+
+void* Window_GetWindowHandle(void) { return win_handle; }
+
+UInt8 Window_GetWindowState(void) {
+	Atom prop_type;
+	long items, bytes_after;
+	int prop_format;
+	Atom* data = NULL;
+
+	XGetWindowProperty(win_display, win_handle,
+		net_wm_state, 0, 256, false, xa_atom, &prop_type,
+		&prop_format, &items, &bytes_after, &data);
+
+	bool fullscreen = false, minimised = false;
+	Int32 maximised = 0, i;
+
+	/* TODO: Check this works right */
+	if (items > 0 && prop != NULL) {
+		for (i = 0; i < items; i++) {
+			Atom atom = data[i];
+
+			if (atom == net_wm_state_maximized_horizontal ||
+				atom == net_wm_state_maximized_vertical) {
+				maximised++;
+			} else if (atom == net_wm_state_minimized) {
+				minimised = true;
+			} else if (atom == net_wm_state_fullscreen) {
+				fullscreen = true;
+			}
+		}
+		XFree(prop);
+	}
+
+	if (minimised)      return WINDOW_STATE_MINIMISED;
+	if (maximised == 2) return WINDOW_STATE_MAXIMISED;
+	if (fullscreen)     return WINDOW_STATE_FULLSCREEN;
+	return WINDOW_STATE_NORMAL;
+}
+
+void Window_SendNetWMState(long op, Atom a1, Atom a2) {
+	XEvent ev = { 0 };
+	ev.ClientMessageEvent.type = ClientMessage;
+	ev.ClientMessageEvent.send_event = true;
+	ev.ClientMessageEvent.window = win_handle;
+	ev.ClientMessageEvent.message_type = net_wm_state;
+	ev.ClientMessageEvent.format = 32;
+	ev.ClientMessageEvent.l[0] = op;
+	ev.ClientMessageEvent.l[1] = a1;
+	ev.ClientMessageEvent.l[2] = a2;
+
+	XSendEvent(win_display, win_rootWindow, false,
+		SubstructureRedirectMask | SubstructureNotifyMask, &ev);
+}
+
+void Window_SetWindowState(UInt8 state) {
+	UInt8 current_state = Window_GetWindowState();
+	if (current_state == state) return;
+
+	/* Reset the current window state */
+	if (current_state == WINDOW_STATE_MINIMISED) {
+		XMapWindow(win_display, win_handle);
+	} else if (current_state == WINDOW_STATE_FULLSCREEN) {
+		Window_SendNetWMState(_NET_WM_STATE_REMOVE, net_wm_state_fullscreen, NULL);
+	} else if (current_state == WINDOW_STATE_MAXIMISED) {
+		Window_SendNetWMState(_NET_WM_STATE_TOGGLE, net_wm_state_maximized_horizontal, 
+			net_wm_state_maximized_vertical);
+	}
+
+	XSync(win_display, false);
+
+	switch (state) {
+	case WINDOW_STATE_NORMAL:
+		XRaiseWindow(win_display, win_handle);
+		break;
+
+	case WINDOW_STATE_MAXIMISED:
+		Window_SendNetWMState(_NET_WM_STATE_ADD, net_wm_state_maximized_horizontal,
+			net_wm_state_maximized_vertical);
+		XRaiseWindow(win_display, win_handle);
+		break;
+
+	case WINDOW_STATE_MINIMISED:
+		/* TODO: multiscreen support */
+		XIconifyWindow(win_display, win_handle, win_screen);
+		break;
+
+	case WINDOW_STATE_FULLSCREEN:
+		Window_SendNetWMState(_NET_WM_STATE_ADD, net_wm_state_fullscreen, NULL);
+		XRaiseWindow(win_display, win_handle);
+		break;
+	}
+	Window_ProcessEvents();
+}
+
+void Window_SetBounds(struct Rectangle2D rect) {
+	Int32 width  = rect.Width  - borderLeft - borderRight;
+	Int32 height = rect.Height - borderTop  - borderBottom;
+	XMoveResizeWindow(win_display, win_handle, rect.X, rect.Y,
+		max(width, 1), max(height, 1));
+	Window_ProcessEvents();
+}
+
 void Window_SetLocation(struct Point2D point) {
 	XMoveWindow(win_display, win_handle, point.X, point.Y);
 	Window_ProcessEvents();
 }
-void Window_SetSize(struct Size2D size);
+
+void Window_SetSize(struct Size2D size) {
+	Int32 width  = size.Width  - borderLeft - borderRight;
+	Int32 height = size.Height - borderTop  - borderBottom;
+	XResizeWindow(win_display, win_handle, 
+		max(width, 1), max(height, 1));
+	Window_ProcessEvents();
+}
 
 void Window_SetClientSize(struct Size2D size) {
 	XResizeWindow(win_display, win_handle, size.Width, size.Height);
 	Window_ProcessEvents();
 }
 
-void Window_Close(void);
-void Window_ProcessEvents(void);
+void Window_Close(void) {
+	XEvent ev = { 0 };
+	ev.type = ClientMessage;
+	ev.ClientMessageEvent.format = 32;
+	ev.ClientMessageEvent.display = win_display;
+	ev.ClientMessageEvent.window = win_handle;
+	ev.ClientMessageEvent.l[0] = wm_destroy;
+
+	XSendEvent(win_display, win_handle, false, 0, &ev);
+	XFlush(win_display);
+}
+
+bool Window_GetPendingEvent(XEvent* e) {
+	return XCheckWindowEvent(win_display, win_handle, eventMask, e) ||
+		XCheckTypedWindowEvent(win_display, win_handle, ClientMessage, e) ||
+		XCheckTypedWindowEvent(win_display, win_handle, SelectionNotify, e) ||
+		XCheckTypedWindowEvent(win_display, win_handle, SelectionRequest, e);
+}
+
+
+Atom Window_GetSelectionProperty(XEvent* e) {
+	Atom property = e.SelectionRequestEvent.property;
+	if (property != NULL) return property;
+
+	/* For obsolete clients. See ICCCM spec, selections chapter for reasoning. */
+	return e.SelectionRequestEvent.target;
+}
+
+void Window_ProcessEvents(void) {
+	XEvent e;
+	while (Window_Exists) {
+		if (!Window_GetPendingEvent(&e)) break;
+
+		switch (e.type) {
+		case MapNotify:
+		case UnmapNotify:
+		{
+			bool wasVisible = win_visible;
+			win_visible = e.type == MapNotify;
+			if (win_visible != wasVisible) {
+				Event_RaiseVoid(&WindowEvents_VisibilityChanged);
+			}
+		} break;
+
+		case ClientMessage:
+			if (!isExiting && e.ClientMessageEvent.l[0] == wm_destroy) {
+				Platform_LogConst("Exit message received.");
+				RaiseClosing();
+
+				isExiting = true;
+				Window_Destroy();
+				RaiseClosed();
+			} break;
+
+		case DestroyNotify:
+			Platform_LogConst("Window destroyed");
+			Window_Exists = false;
+			break;
+
+		case ConfigureNotify:
+			RefreshWindowBounds(&e);
+			break;
+
+		case KeyPress:
+		{
+			ToggleKey(&e.KeyEvent, true);
+			int status = XLookupString(&e.KeyEvent, ascii, ascii.Length, null, IntPtr.Zero);
+			Encoding.Default.GetChars(ascii, 0, status, chars, 0);
+
+			Int32 i;
+			for (i = 0; i < status; i++) {
+				/* ignore NULL char after non-ASCII input char, like ä or å on Finnish keyboard layout */
+				if (chars[i] == '\0') continue;
+				RaiseKeyPress(chars[i]);
+			}
+		} break;
+
+		case KeyRelease:
+			/* TODO: raise KeyPress event. Use code from */
+			/* http://anonsvn.mono-project.com/viewvc/trunk/mcs/class/Managed.Windows.Forms/System.Windows.Forms/X11Keyboard.cs?view=markup */
+			ToggleKey(&e.KeyEvent, false);
+			break;
+
+		case ButtonPress:
+			if (e.ButtonEvent.button == 1) Mouse.Set(MouseButton.Left, true);
+			else if (e.ButtonEvent.button == 2) Mouse.Set(MouseButton.Middle, true);
+			else if (e.ButtonEvent.button == 3) Mouse.Set(MouseButton.Right, true);
+			else if (e.ButtonEvent.button == 4) Mouse.SetWheel(Mouse.Wheel + 1);
+			else if (e.ButtonEvent.button == 5) Mouse.SetWheel(Mouse.Wheel - 1);
+			else if (e.ButtonEvent.button == 6) Keyboard.Set(Key.XButton1, true);
+			else if (e.ButtonEvent.button == 7) Keyboard.Set(Key.XButton2, true);
+			break;
+
+		case ButtonRelease:
+			if (e.ButtonEvent.button == 1) Mouse.Set(MouseButton.Left, false);
+			else if (e.ButtonEvent.button == 2) Mouse.Set(MouseButton.Middle, false);
+			else if (e.ButtonEvent.button == 3) Mouse.Set(MouseButton.Right, false);
+			else if (e.ButtonEvent.button == 6) Keyboard.Set(Key.XButton1, false);
+			else if (e.ButtonEvent.button == 7) Keyboard.Set(Key.XButton2, false);
+			break;
+
+		case MotionNotify:
+			Mouse_SetPos(e.MotionEvent.x, e.MotionEvent.y);
+			break;
+
+		case FocusIn:
+		case FocusOut:
+		{
+			bool wasFocused = Window_Focused;
+			Window_Focused = e.type == FocusIn;
+			if (Window_Focused != wasFocused) {
+				Event_RaiseVoid(&WindowEvents_FocusChanged);
+			}
+		} break;
+
+		case MappingNotify:
+			/* 0 == MappingModifier, 1 == MappingKeyboard */
+			if (e.MappingEvent.request == 0 || e.MappingEvent.request == 1) {
+				Platform_LogConst("keybard mapping refreshed");
+				XRefreshKeyboardMapping(&e.MappingEvent);
+			}
+			break;
+
+		case PropertyNotify:
+			if (e.PropertyEvent.atom == net_wm_state) {
+				RaiseWindowStateChanged();
+			}
+
+			//if (e.PropertyEvent.atom == net_frame_extents) {
+			//    RefreshWindowBorders();
+			//}
+			break;
+
+		case SelectionNotify:
+			String_Clear(&clipboard_paste_text);
+
+			if (e.SelectionEvent.selection == xa_clipboard && e.SelectionEvent.target == xa_utf8_string && e.SelectionEvent.property == xa_data_sel) {
+				Atom prop_type;
+				int prop_format;
+				long num_items, bytes_after;
+				UChar* data = NULL;			
+
+				XGetWindowProperty(win_display, win_handle, xa_data_sel, 0, 1024, false, NULL,
+					&prop_type, &prop_format, &num_items, &bytes_after, &data);
+
+				XDeleteProperty(win_display, win_handle, xa_data_sel);
+				if (num_items == 0) break;
+
+				if (prop_type == xa_utf8_string) {
+					byte[] dst = new byte[(int)num_items];
+					byte* src = (byte*)data;
+					for (int i = 0; i < dst.Length; i++) { dst[i] = src[i]; }
+
+					clipboard_paste_text = Encoding.UTF8.GetString(dst);
+				}
+				XFree(data);
+			}
+			break;
+
+		case SelectionRequest:
+		{
+			XEvent reply = { 0 };
+			reply.SelectionEvent.type = SelectionNotify;
+			reply.SelectionEvent.send_event = true;
+			reply.SelectionEvent.display = win_display;
+			reply.SelectionEvent.requestor = e.SelectionRequestEvent.requestor;
+			reply.SelectionEvent.selection = e.SelectionRequestEvent.selection;
+			reply.SelectionEvent.target = e.SelectionRequestEvent.target;
+			reply.SelectionEvent.property = NULL;
+			reply.SelectionEvent.time = e.SelectionRequestEvent.time;
+
+			if (e.SelectionRequestEvent.selection == xa_clipboard && e.SelectionRequestEvent.target == xa_utf8_string && clipboard_copy_text.length > 0) {
+				reply.SelectionEvent.property = Window_GetSelectionProperty(&e);
+
+				byte[] utf8_data = Encoding.UTF8.GetBytes(clipboard_copy_text);
+				fixed(byte* utf8_ptr = utf8_data) {
+					XChangeProperty(win_display, reply.SelectionEvent.requestor, reply.SelectionEvent.property, xa_utf8_string, 8,
+						PropModeReplace, (IntPtr)utf8_ptr, utf8_data.Length);
+				}
+			} else if (e.SelectionRequestEvent.selection == xa_clipboard && e.SelectionRequestEvent.target == xa_targets) {
+				reply.SelectionEvent.property = Window_GetSelectionProperty(&e);
+
+				Atom data[2] = { xa_utf8_string, xa_targets };
+				XChangeProperty(win_display, reply.SelectionEvent.requestor, reply.SelectionEvent.property, xa_atom, 32,
+					PropModeReplace, data, 2);
+			}
+			XSendEvent(win_display, e.SelectionRequestEvent.requestor, true, 0, &reply);
+		} break;
+		}
+	}
+}
 
 struct Point2D Window_PointToClient(struct Point2D point) {
-	Int32 ox, oy;
+	int ox, oy;
 	Window child;
 	XTranslateCoordinates(win_display, win_rootWin, win_handle, point.X, point.Y, &ox, &oy, &child);
 	return Point2D_Make(ox, oy);
 }
 
 struct Point2D Window_PointToScreen(struct Point2D point) {
-	Int32 ox, oy;
+	int ox, oy;
 	Window child;
 	XTranslateCoordinates(win_display, win_handle, win_rootWin, point.X, point.Y, &ox, &oy, &child);
 	return Point2D_Make(ox, oy);
@@ -150,7 +485,7 @@ struct Point2D Window_PointToScreen(struct Point2D point) {
 
 struct Point2D Window_GetDesktopCursorPos(void) {
 	Window root, child;
-	Int32 rootX, rootY, childX, childY, mask;
+	int rootX, rootY, childX, childY, mask;
 	XQueryPointer(win_display, win_rootWin, &root, &child, &rootX, &rootY, &childX, &childY, &mask);
 	return Point2D_Make(rootX, rootY);
 }
@@ -179,7 +514,7 @@ void Window_SetCursorVisible(bool visible) {
 }
 
 GLXContext ctx_Handle;
-typedef Int32 (*FN_GLXSWAPINTERVAL)(Int32 interval);
+typedef int (*FN_GLXSWAPINTERVAL)(int interval);
 FN_GLXSWAPINTERVAL glXSwapIntervalSGI;
 bool ctx_supports_vSync;
 Int32 ctx_vsync_interval;
@@ -233,7 +568,7 @@ bool GLContext_GetVSync(void) {
 void GLContext_SetVSync(bool enabled) {
 	if (!ctx_supports_vSync) return;
 
-	Int32 result = glXSwapIntervalSGI(enabled);
+	int result = glXSwapIntervalSGI(enabled);
 	if (result != 0) {
 		Platform_Log1("Set VSync failed, error: %i", &result);
 	}

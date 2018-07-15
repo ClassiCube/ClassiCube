@@ -113,9 +113,6 @@ namespace OpenTK.Platform.X11 {
 
 			if (title != null)
 				API.XStoreName(API.DefaultDisplay, WinHandle, title);
-
-			// Set the window hints
-			SetWindowMinMax(_min_width, _min_height, -1, -1);
 			
 			XSizeHints hints = new XSizeHints();
 			hints.base_width = width;
@@ -162,33 +159,6 @@ namespace OpenTK.Platform.X11 {
 			xa_data_sel = API.XInternAtom(display, "CS_SEL_DATA", false);
 		}
 
-		void SetWindowMinMax(short min_width, short min_height, short max_width, short max_height) {
-			IntPtr dummy;
-			XSizeHints hints = new XSizeHints();
-			API.XGetWMNormalHints(API.DefaultDisplay, WinHandle, ref hints, out dummy);
-
-			if (min_width > 0 || min_height > 0) {
-				hints.flags = (IntPtr)((int)hints.flags | (int)XSizeHintsFlags.PMinSize);
-				hints.min_width = min_width;
-				hints.min_height = min_height;
-			} else
-				hints.flags = (IntPtr)((int)hints.flags & ~(int)XSizeHintsFlags.PMinSize);
-
-			if (max_width > 0 || max_height > 0) {
-				hints.flags = (IntPtr)((int)hints.flags | (int)XSizeHintsFlags.PMaxSize);
-				hints.max_width = max_width;
-				hints.max_height = max_height;
-			} else
-				hints.flags = (IntPtr)((int)hints.flags & ~(int)XSizeHintsFlags.PMaxSize);
-
-			if (hints.flags != IntPtr.Zero) {
-				// The Metacity team has decided that they won't care about this when clicking the maximize
-				// icon, will maximize the window to fill the screen/parent no matter what.
-				// http://bugzilla.ximian.com/show_bug.cgi?id=80021
-				API.XSetWMNormalHints(API.DefaultDisplay, WinHandle, ref hints);
-			}
-		}
-		
 		void ToggleKey(ref XKeyEvent keyEvent, bool pressed) {
 			int keysym  = (int)API.XLookupKeysym(ref keyEvent, 0);
 			int keysym2 = (int)API.XLookupKeysym(ref keyEvent, 1);
@@ -287,10 +257,6 @@ namespace OpenTK.Platform.X11 {
 							if (visible != previous_visible)
 								RaiseVisibleChanged();
 						} break;
-
-					case XEventName.CreateNotify:
-						// A child was was created - nothing to do
-						break;
 
 					case XEventName.ClientMessage:
 						if (!isExiting && e.ClientMessageEvent.ptr1 == wm_destroy) {
@@ -398,7 +364,7 @@ namespace OpenTK.Platform.X11 {
 
 								clipboard_paste_text = Encoding.UTF8.GetString(dst);
 							}
-							API.XFree (data);
+							API.XFree(data);
 						}
 						break;
 
@@ -430,10 +396,6 @@ namespace OpenTK.Platform.X11 {
 						}
 						
 						API.XSendEvent(API.DefaultDisplay, e.SelectionRequestEvent.requestor, true, EventMask.NoEventMask, ref reply);
-						break;
-						
-					default:
-						//Debug.WriteLine(String.Format("{0} event was not handled", e.type));
 						break;
 				}
 			}
@@ -471,9 +433,10 @@ namespace OpenTK.Platform.X11 {
 		public override Rectangle Bounds {
 			get { return bounds; }
 			set {
-				API.XMoveResizeWindow(
-					API.DefaultDisplay, WinHandle, value.X, value.Y,
-					value.Width - borderLeft - borderRight, value.Height - borderTop - borderBottom);
+				int width  = value.Width  - borderLeft - borderRight;
+				int height = value.Height - borderTop  - borderBottom;
+				API.XMoveResizeWindow(API.DefaultDisplay, WinHandle, value.X, value.Y,
+				                      Math.Max(width, 1), Math.Max(height, 1));
 				ProcessEvents();
 			}
 		}
@@ -489,11 +452,10 @@ namespace OpenTK.Platform.X11 {
 		public override Size Size {
 			get { return Bounds.Size; }
 			set {
-				int width = value.Width - borderLeft - borderRight;
-				int height = value.Height - borderTop - borderBottom;
-				width  = Math.Max(width,  1);
-				height = Math.Max(height, 1);
-				API.XResizeWindow(API.DefaultDisplay, WinHandle, width, height);
+				int width  = value.Width  - borderLeft - borderRight;
+				int height = value.Height - borderTop  - borderBottom;
+				API.XResizeWindow(API.DefaultDisplay, WinHandle,
+				                  Math.Max(width, 1), Math.Max(height, 1));
 				ProcessEvents();
 			}
 		}
@@ -556,6 +518,21 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 		
+		void SendNetWMState(IntPtr op, IntPtr a1, IntPtr a2) {
+			XEvent ev = new XEvent();
+			ev.ClientMessageEvent.type = XEventName.ClientMessage;
+			ev.ClientMessageEvent.send_event = true;
+			ev.ClientMessageEvent.window = WinHandle;
+			ev.ClientMessageEvent.message_type = net_wm_state;
+			ev.ClientMessageEvent.format = 32;
+			ev.ClientMessageEvent.ptr1 = op;
+			ev.ClientMessageEvent.ptr2 = a1;
+			ev.ClientMessageEvent.ptr3 = a2;
+
+			API.XSendEvent(API.DefaultDisplay, API.RootWindow, false,
+			               EventMask.SubstructureRedirectMask | EventMask.SubstructureNotifyMask, ref ev);
+		}
+		
 		public override WindowState WindowState {
 			get {
 				IntPtr actual_atom, nitems, bytes_after, prop = IntPtr.Zero;
@@ -588,57 +565,42 @@ namespace OpenTK.Platform.X11 {
 					return OpenTK.WindowState.Maximized;
 				else if (fullscreen)
 					return OpenTK.WindowState.Fullscreen;
-				/*
-                                attributes = new XWindowAttributes();
-                                Functions.XGetWindowAttributes(API.DefaultDisplay, window.WindowHandle, ref attributes);
-                                if (attributes.map_state == MapState.IsUnmapped)
-                                    return (OpenTK.WindowState)(-1);
-				 */
 				return WindowState.Normal;
 			}
 			set {
 				WindowState current_state = this.WindowState;
-
-				if (current_state == value)
-					return;
-
-				Debug.Print("GameWindow {0} changing WindowState from {1} to {2}.", WinHandle.ToString(),
-				            current_state.ToString(), value.ToString());
+				if (current_state == value) return;
 
 				// Reset the current window state
-				if (current_state == OpenTK.WindowState.Minimized)
+				if (current_state == WindowState.Minimized) {
 					API.XMapWindow(API.DefaultDisplay, WinHandle);
-				else if (current_state == OpenTK.WindowState.Fullscreen)
-					API.SendNetWMMessage(this, net_wm_state, _remove,
-					                     net_wm_state_fullscreen,
-					                     IntPtr.Zero);
-				else if (current_state == OpenTK.WindowState.Maximized)
-					API.SendNetWMMessage(this, net_wm_state, _toggle,
-					                     net_wm_state_maximized_horizontal,
-					                     net_wm_state_maximized_vertical);
+				} else if (current_state == WindowState.Fullscreen) {
+					SendNetWMState(_remove, net_wm_state_fullscreen, IntPtr.Zero);
+				} else if (current_state == WindowState.Maximized) {
+					SendNetWMState(_toggle, net_wm_state_maximized_horizontal,
+					               net_wm_state_maximized_vertical);
+				}
 				
 				API.XSync(API.DefaultDisplay, false);
 
 				switch (value) {
-					case OpenTK.WindowState.Normal:
+					case WindowState.Normal:
 						API.XRaiseWindow(API.DefaultDisplay, WinHandle);
 						break;
 						
-					case OpenTK.WindowState.Maximized:
-						API.SendNetWMMessage(this, net_wm_state, _add,
-						                     net_wm_state_maximized_horizontal,
-						                     net_wm_state_maximized_vertical);
+					case WindowState.Maximized:
+						SendNetWMState(_add, net_wm_state_maximized_horizontal,
+						               net_wm_state_maximized_vertical);
 						API.XRaiseWindow(API.DefaultDisplay, WinHandle);
 						break;
 						
-					case OpenTK.WindowState.Minimized:
+					case WindowState.Minimized:
 						// Todo: multiscreen support
 						API.XIconifyWindow(API.DefaultDisplay, WinHandle, API.DefaultScreen);
 						break;
 						
-					case OpenTK.WindowState.Fullscreen:
-						API.SendNetWMMessage(this, net_wm_state, _add,
-						                     net_wm_state_fullscreen, IntPtr.Zero);
+					case WindowState.Fullscreen:
+						SendNetWMState(_add, net_wm_state_fullscreen, IntPtr.Zero);
 						API.XRaiseWindow(API.DefaultDisplay, WinHandle);
 						break;
 				}
@@ -682,9 +644,10 @@ namespace OpenTK.Platform.X11 {
 		public override bool Visible {
 			get { return visible; }
 			set {
-				if (value && !visible) {
+				if (value == visible) return;
+				if (value) {
 					API.XMapWindow(API.DefaultDisplay, WinHandle);
-				} else if (!value && visible) {
+				} else {
 					API.XUnmapWindow(API.DefaultDisplay, WinHandle);
 				}
 			}

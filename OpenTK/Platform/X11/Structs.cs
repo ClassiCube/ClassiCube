@@ -23,15 +23,10 @@
 //    Peter Bartok    pbartok@novell.com
 //
 
-
-// NOT COMPLETE
-
 using System;
 using System.Runtime.InteropServices;
 
-// X11 Version
-namespace OpenTK.Platform.X11
-{
+namespace OpenTK.Platform.X11 {
 	//
 	// In the structures below, fields of type long are mapped to IntPtr.
 	// This will work on all platforms where sizeof(long)==sizeof(void*), which
@@ -39,8 +34,7 @@ namespace OpenTK.Platform.X11
 	//
 	
 	[StructLayout(LayoutKind.Sequential)]
-	public struct XKeyEvent
-	{
+	public struct XKeyEvent{	
 		public XEventName type;
 		public IntPtr serial;
 		public bool send_event;
@@ -59,8 +53,7 @@ namespace OpenTK.Platform.X11
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct XButtonEvent
-	{
+	public struct XButtonEvent {
 		public XEventName type;
 		public IntPtr serial;
 		public bool send_event;
@@ -79,8 +72,7 @@ namespace OpenTK.Platform.X11
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct XMotionEvent
-	{
+	public struct XMotionEvent {
 		public XEventName type;
 		public IntPtr serial;
 		public bool send_event;
@@ -99,8 +91,7 @@ namespace OpenTK.Platform.X11
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct XConfigureEvent
-	{
+	public struct XConfigureEvent {
 		public XEventName type;
 		public IntPtr serial;
 		public bool send_event;
@@ -117,8 +108,7 @@ namespace OpenTK.Platform.X11
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct XPropertyEvent
-	{
+	public struct XPropertyEvent {
 		public XEventName type;
 		public IntPtr serial;
 		public bool send_event;
@@ -130,8 +120,7 @@ namespace OpenTK.Platform.X11
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct XSelectionRequestEvent
-	{
+	public struct XSelectionRequestEvent {
 		public XEventName type;
 		public IntPtr serial;
 		public bool send_event;
@@ -145,8 +134,7 @@ namespace OpenTK.Platform.X11
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct XSelectionEvent
-	{
+	public struct XSelectionEvent {
 		public XEventName type;
 		public IntPtr serial;
 		public bool send_event;
@@ -159,8 +147,7 @@ namespace OpenTK.Platform.X11
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct XClientMessageEvent
-	{
+	public struct XClientMessageEvent {
 		public XEventName type;
 		public IntPtr serial;
 		public bool send_event;
@@ -176,8 +163,7 @@ namespace OpenTK.Platform.X11
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct XMappingEvent
-	{
+	public struct XMappingEvent {
 		public XEventName type;
 		public IntPtr serial;
 		public bool send_event;
@@ -189,8 +175,7 @@ namespace OpenTK.Platform.X11
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct XEventPad
-	{
+	public struct XEventPad {
 		public IntPtr pad0;
 		public IntPtr pad1;
 		public IntPtr pad2;
@@ -218,8 +203,7 @@ namespace OpenTK.Platform.X11
 	}
 
 	[StructLayout(LayoutKind.Explicit)]
-	public struct XEvent
-	{
+	public struct XEvent {
 		[FieldOffset(0)]
 		public XEventName type;
 		[FieldOffset(0)]
@@ -248,8 +232,7 @@ namespace OpenTK.Platform.X11
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct XSetWindowAttributes
-	{
+	public struct XSetWindowAttributes {
 		public IntPtr background_pixmap;
 		public IntPtr background_pixel;
 		public IntPtr border_pixmap;
@@ -267,8 +250,7 @@ namespace OpenTK.Platform.X11
 		public IntPtr cursor;
 	}
 
-	public enum XEventName
-	{
+	public enum XEventName {
 		KeyPress = 2,
 		KeyRelease = 3,
 		ButtonPress = 4,
@@ -327,16 +309,14 @@ namespace OpenTK.Platform.X11
 		Cursor = 16384
 	}
 
-	public enum CreateWindowArgs
-	{
+	public enum CreateWindowArgs {
 		CopyFromParent = 0,
 		ParentRelative = 1,
 		InputOutput = 1,
 		InputOnly = 2
 	}
 
-	public enum Gravity
-	{
+	public enum Gravity {
 		ForgetGravity = 0,
 		NorthWestGravity = 1,
 		NorthGravity = 2,
@@ -353,8 +333,7 @@ namespace OpenTK.Platform.X11
 	#pragma warning disable 1591
 
 	[Flags]
-	public enum EventMask
-	{
+	public enum EventMask {
 		NoEventMask = 0,
 		KeyPressMask = 1 << 0,
 		KeyReleaseMask = 1 << 1,
@@ -386,8 +365,7 @@ namespace OpenTK.Platform.X11
 	#pragma warning restore 1591
 
 	[StructLayout(LayoutKind.Sequential, Pack = 2)]
-	public struct XColor
-	{
+	public struct XColor {
 		public IntPtr pixel;
 		public ushort red;
 		public ushort green;
@@ -396,52 +374,20 @@ namespace OpenTK.Platform.X11
 		public byte pad;
 	}
 
-	public enum PropertyMode
-	{
+	public enum PropertyMode {
 		Replace = 0,
 		Prepend = 1,
 		Append = 2
 	}
 
-	[StructLayout(LayoutKind.Sequential)]
-	public struct XKeyBoardState
-	{
-		public int key_click_percent;
-		public int bell_percent;
-		public uint bell_pitch, bell_duration;
-		public IntPtr led_mask;
-		public int global_auto_repeat;
-		public AutoRepeats auto_repeats;
-
-		[StructLayout(LayoutKind.Explicit)]
-		public struct AutoRepeats
-		{
-			[FieldOffset(0)]
-			public byte first;
-			[FieldOffset(31)]
-			public byte last;
-		}
-	}
-
 	[Flags]
-	public enum XSizeHintsFlags
-	{
-		USPosition = (1 << 0),
-		USSize = (1 << 1),
+	public enum XSizeHintsFlags {
 		PPosition = (1 << 2),
 		PSize = (1 << 3),
-		PMinSize = (1 << 4),
-		PMaxSize = (1 << 5),
-		PResizeInc = (1 << 6),
-		PAspect = (1 << 7),
-		PAllHints = (PPosition | PSize | PMinSize | PMaxSize | PResizeInc | PAspect),
-		PBaseSize = (1 << 8),
-		PWinGravity = (1 << 9),
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct XSizeHints
-	{
+	public struct XSizeHints {
 		public IntPtr flags;
 		public int x;
 		public int y;
@@ -463,20 +409,12 @@ namespace OpenTK.Platform.X11
 	}
 
 	[Flags]
-	public enum XWMHintsFlags
-	{
-		InputHint = (1 << 0),
-		StateHint = (1 << 1),
+	public enum XWMHintsFlags {
 		IconPixmapHint = (1 << 2),
-		IconWindowHint = (1 << 3),
-		IconPositionHint = (1 << 4),
 		IconMaskHint = (1 << 5),
-		WindowGroupHint = (1 << 6),
-		AllHints = (InputHint | StateHint | IconPixmapHint | IconWindowHint | IconPositionHint | IconMaskHint | WindowGroupHint)
 	}
 
-	public enum XInitialState
-	{
+	public enum XInitialState {
 		DontCareState = 0,
 		NormalState = 1,
 		ZoomState = 2,
@@ -498,8 +436,7 @@ namespace OpenTK.Platform.X11
 		public IntPtr window_group;
 	}
 
-	public enum ImageFormat
-	{
+	public enum ImageFormat {
 		XYPixmap = 1,
 		ZPixmap
 	}

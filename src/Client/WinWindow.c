@@ -164,25 +164,15 @@ static void Window_UpdateClientSize(HWND handle) {
 }
 
 static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
-	bool wasFocused;
-	Real32 wheel_delta;
-	WORD mouse_x, mouse_y;
-	WINDOWPOS* pos;
-	UInt8 new_state;
-	UInt8 keyChar;
-	bool pressed, extended, lShiftDown, rShiftDown;
-	Key mappedKey;
-	CREATESTRUCT* cs;
-
 	switch (message) {
-
 	case WM_ACTIVATE:
-		wasFocused = Window_Focused;
+	{
+		bool wasFocused = Window_Focused;
 		Window_Focused = LOWORD(wParam) != 0;
 		if (Window_Focused != wasFocused) {
 			Event_RaiseVoid(&WindowEvents_FocusChanged);
 		}
-		break;
+	} break;
 
 	case WM_ENTERMENULOOP:
 	case WM_ENTERSIZEMOVE:
@@ -191,10 +181,12 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		break;
 
 	case WM_ERASEBKGND:
+		Event_RaiseVoid(&WindowEvents_Redraw);
 		return 1;
 
 	case WM_WINDOWPOSCHANGED:
-		pos = (WINDOWPOS*)lParam;
+	{
+		WINDOWPOS* pos = (WINDOWPOS*)lParam;
 		if (pos->hwnd == win_Handle) {
 			struct Point2D loc = Window_GetLocation();
 			if (loc.X != pos->x || loc.Y != pos->y) {
@@ -216,7 +208,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 				}
 			}
 		}
-		break;
+	} break;
 
 	case WM_STYLECHANGED:
 		if (wParam == GWL_STYLE) {
@@ -230,9 +222,10 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		break;
 
 	case WM_SIZE:
-		new_state = win_State;
+	{
+		UInt8 new_state = win_State;
 		switch (wParam) {
-		case SIZE_RESTORED: new_state = WINDOW_STATE_NORMAL; break;
+		case SIZE_RESTORED:  new_state = WINDOW_STATE_NORMAL; break;
 		case SIZE_MINIMIZED: new_state = WINDOW_STATE_MINIMISED; break;
 		case SIZE_MAXIMIZED: new_state = win_hiddenBorder ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_MAXIMISED; break;
 		}
@@ -241,31 +234,35 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			win_State = new_state;
 			Event_RaiseVoid(&WindowEvents_WindowStateChanged);
 		}
-		break;
+	} break;
 
 
 	case WM_CHAR:
+	{
+		UChar keyChar;
 		if (Convert_TryUnicodeToCP437((UInt16)wParam, &keyChar)) {
 			Event_RaiseInt(&KeyEvents_Press, keyChar);
 		}
-		break;
+	} break;
 
 	case WM_MOUSEMOVE:
+	{
 		/* set before position change, in case mouse buttons changed when outside window */
 		Mouse_SetPressed(MouseButton_Left,   wParam & 0x01);
 		Mouse_SetPressed(MouseButton_Right,  wParam & 0x02);
 		Mouse_SetPressed(MouseButton_Middle, wParam & 0x10);
 		/* TODO: do we need to set XBUTTON1 / XBUTTON 2 here */
 
-		mouse_x = LOWORD(lParam);
-		mouse_y = HIWORD(lParam);
+		WORD mouse_x = LOWORD(lParam);
+		WORD mouse_y = HIWORD(lParam);
 		Mouse_SetPosition(mouse_x, mouse_y);
-		break;
+	} break;
 
 	case WM_MOUSEWHEEL:
-		wheel_delta = ((short)HIWORD(wParam)) / (Real32)WHEEL_DELTA;
+	{
+		Real32 wheel_delta = ((short)HIWORD(wParam)) / (Real32)WHEEL_DELTA;
 		Mouse_SetWheel(Mouse_Wheel + wheel_delta);
-		return 0;
+	} return 0;
 
 	case WM_LBUTTONDOWN:
 		Mouse_SetPressed(MouseButton_Left, true);
@@ -296,16 +293,18 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	case WM_KEYUP:
 	case WM_SYSKEYDOWN:
 	case WM_SYSKEYUP:
-		pressed = message == WM_KEYDOWN || message == WM_SYSKEYDOWN;
-
+	{
+		bool pressed = message == WM_KEYDOWN || message == WM_SYSKEYDOWN;
 		/* Shift/Control/Alt behave strangely when e.g. ShiftRight is held down and ShiftLeft is pressed
 		and released. It looks like neither key is released in this case, or that the wrong key is
 		released in the case of Control and Alt.
 		To combat this, we are going to release both keys when either is released. Hacky, but should work.
 		Win95 does not distinguish left/right key constants (GetAsyncKeyState returns 0).
 		In this case, both keys will be reported as pressed.	*/
+		bool extended = (lParam & (1UL << 24)) != 0;
 
-		extended = (lParam & (1UL << 24)) != 0;
+		bool lShiftDown, rShiftDown;
+		Key mappedKey;
 		switch (wParam)
 		{
 		case VK_SHIFT:
@@ -352,7 +351,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			}
 			return 0;
 		}
-		break;
+	} break;
 
 	case WM_SYSCHAR:
 		return 0;
@@ -363,14 +362,15 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 
 	case WM_CREATE:
-		cs = (CREATESTRUCT*)lParam;
+	{
+		CREATESTRUCT* cs = (CREATESTRUCT*)lParam;
 		if (cs->hwndParent == NULL) {
 			Window_Bounds.X = cs->x;      Window_Bounds.Y = cs->y;
 			Window_Bounds.Width = cs->cx; Window_Bounds.Height = cs->cy;
 			Window_UpdateClientSize(handle);
 			invisible_since_creation = true;
 		}
-		break;
+	} break;
 
 	case WM_CLOSE:
 		Event_RaiseVoid(&WindowEvents_Closing);
@@ -428,7 +428,8 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF Strin
 void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 	/* retry up to 10 times*/
 	Int32 i;
-	value->length = 0;
+	String_Clear(value);
+
 	for (i = 0; i < 10; i++) {
 		if (!OpenClipboard(win_Handle)) {
 			Platform_ThreadSleep(100);
@@ -535,13 +536,13 @@ void Window_Close(void) {
 }
 
 UInt8 Window_GetWindowState(void) { return win_State; }
-void Window_SetWindowState(UInt8 value) {
-	if (win_State == value) return;
+void Window_SetWindowState(UInt8 state) {
+	if (win_State == state) return;
 
 	DWORD command = 0;
 	bool exiting_fullscreen = false;
 
-	switch (value) {
+	switch (state) {
 	case WINDOW_STATE_NORMAL:
 		command = SW_RESTORE;
 
@@ -652,7 +653,7 @@ void GLContext_SelectGraphicsMode(struct GraphicsMode mode) {
 	if (mode.DepthBits <= 0) pfd.dwFlags |= PFD_DEPTH_DONTCARE;
 	if (mode.Buffers > 1)    pfd.dwFlags |= PFD_DOUBLEBUFFER;
 
-	Int32 modeIndex = ChoosePixelFormat(win_DC, &pfd);
+	int modeIndex = ChoosePixelFormat(win_DC, &pfd);
 	if (modeIndex == 0) {
 		ErrorHandler_Fail("Requested graphics mode not available");
 	}
@@ -669,7 +670,7 @@ void GLContext_SelectGraphicsMode(struct GraphicsMode mode) {
 
 HGLRC ctx_Handle;
 HDC ctx_DC;
-typedef BOOL (WINAPI *FN_WGLSWAPINTERVAL)(Int32 interval);
+typedef BOOL (WINAPI *FN_WGLSWAPINTERVAL)(int interval);
 typedef int (WINAPI *FN_WGLGETSWAPINTERVAL)(void);
 FN_WGLSWAPINTERVAL wglSwapIntervalEXT;
 FN_WGLGETSWAPINTERVAL wglGetSwapIntervalEXT;

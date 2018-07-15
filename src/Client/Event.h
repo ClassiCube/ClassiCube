@@ -110,6 +110,7 @@ struct Event_Void ChatEvents_FontChanged;     /* User changes whether system cha
 struct Event_Chat ChatEvents_ChatReceived;    /* Raised when the server or a client-side command sends a message */
 struct Event_Int ChatEvents_ColCodeChanged; /* Raised when a colour code changes */
 
+struct Event_Void WindowEvents_Redraw;             /* Window contents invalidated, should be redrawn */
 struct Event_Void WindowEvents_Moved;              /* Window is moved. */
 struct Event_Void WindowEvents_Resized;            /* Window is resized. */
 struct Event_Void WindowEvents_Closing;            /* Window is about to close. */
