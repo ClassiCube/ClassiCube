@@ -25,15 +25,16 @@ IGameComponent IGameComponent_MakeEmpty(void);
 void Game_AddComponent(IGameComponent* comp);
 
 /* Represents a task that periodically runs on the main thread every specified interval. */
-typedef struct ScheduledTask_ {
+struct ScheduledTask;
+struct ScheduledTask {
 	/* How long (in seconds) has elapsed since callback was last invoked. */
 	Real64 Accumulator;	
 	/* How long (in seconds) between invocations of the callback. */
 	Real64 Interval;
 	/* Callback function that is periodically invoked. */
-	void (*Callback)(struct ScheduledTask_* task);
-} ScheduledTask;
+	void (*Callback)(struct ScheduledTask* task);
+};
 
-typedef void (*ScheduledTaskCallback)(ScheduledTask* task);
+typedef void (*ScheduledTaskCallback)(struct ScheduledTask* task);
 Int32 ScheduledTask_Add(Real64 interval, ScheduledTaskCallback callback);
 #endif

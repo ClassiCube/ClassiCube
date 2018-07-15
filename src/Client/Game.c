@@ -41,7 +41,7 @@
 
 IGameComponent Game_Components[26];
 Int32 Game_ComponentsCount;
-ScheduledTask Game_Tasks[6];
+struct ScheduledTask Game_Tasks[6];
 Int32 Game_TasksCount, entTaskI;
 
 UChar Game_UsernameBuffer[String_BufferSize(STRING_SIZE)];
@@ -62,7 +62,7 @@ void Game_AddComponent(IGameComponent* comp) {
 }
 
 Int32 ScheduledTask_Add(Real64 interval, ScheduledTaskCallback callback) {
-	ScheduledTask task = { 0.0, interval, callback };
+	struct ScheduledTask task = { 0.0, interval, callback };
 	if (Game_TasksCount == Array_Elems(Game_Tasks)) {
 		ErrorHandler_Fail("ScheduledTask_Add - hit max count");
 	}
@@ -620,7 +620,7 @@ static void Game_Render3D(Real64 delta, Real32 t) {
 static void Game_DoScheduledTasks(Real64 time) {
 	Int32 i;
 	for (i = 0; i < Game_TasksCount; i++) {
-		ScheduledTask task = Game_Tasks[i];
+		struct ScheduledTask task = Game_Tasks[i];
 		task.Accumulator += time;
 
 		while (task.Accumulator >= task.Interval) {
@@ -688,7 +688,7 @@ static void Game_RenderFrame(Real64 delta) {
 	}
 
 	Game_DoScheduledTasks(delta);
-	ScheduledTask entTask = Game_Tasks[entTaskI];
+	struct ScheduledTask entTask = Game_Tasks[entTaskI];
 	Real32 t = (Real32)(entTask.Accumulator / entTask.Interval);
 	LocalPlayer_SetInterpPosition(t);
 

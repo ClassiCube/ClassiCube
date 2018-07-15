@@ -113,7 +113,7 @@ static void PerspectiveCamera_UpdateMouseRotation(void) {
 }
 
 static void PerspectiveCamera_UpdateMouse(void) {
-	Screen* screen = Gui_GetActiveScreen();
+	struct Screen* screen = Gui_GetActiveScreen();
 	if (screen->HandlesAllInput) {
 		cam_delta = Point2D_Empty;
 	} else if (Window_GetFocused()) {

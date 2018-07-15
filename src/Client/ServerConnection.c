@@ -42,7 +42,7 @@ static void ServerConnection_ResetState(void) {
 
 void ServerConnection_RetrieveTexturePack(STRING_PURE String* url) {
 	if (!TextureCache_HasAccepted(url) && !TextureCache_HasDenied(url)) {
-		Screen* warning = TexPackOverlay_MakeInstance(url);
+		struct Screen* warning = TexPackOverlay_MakeInstance(url);
 		Gui_ShowOverlay(warning, false);
 	} else {
 		ServerConnection_DownloadTexturePack(url);
@@ -232,7 +232,7 @@ static void SPConnection_SendChat(STRING_PURE String* text) {
 static void SPConnection_SendPosition(Vector3 pos, Real32 rotY, Real32 headX) { }
 static void SPConnection_SendPlayerClick(MouseButton button, bool isDown, EntityID targetId, struct PickedPos* pos) { }
 
-static void SPConnection_Tick(ScheduledTask* task) {
+static void SPConnection_Tick(struct ScheduledTask* task) {
 	if (ServerConnection_Disconnected) return;
 	if ((ServerConnection_Ticks % 3) == 0) {
 		Physics_Tick();
@@ -410,7 +410,7 @@ static void MPConnection_CheckDisconnection(Real64 delta) {
 	}
 }
 
-static void MPConnection_Tick(ScheduledTask* task) {
+static void MPConnection_Tick(struct ScheduledTask* task) {
 	if (ServerConnection_Disconnected) return;
 	if (net_connecting) { MPConnection_TickConnect(); return; }
 

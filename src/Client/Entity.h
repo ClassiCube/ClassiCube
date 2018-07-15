@@ -102,7 +102,7 @@ bool Entity_TouchesAnyLava(struct Entity* entity);
 bool Entity_TouchesAnyWater(struct Entity* entity);
 
 struct Entity* Entities_List[ENTITIES_MAX_COUNT];
-void Entities_Tick(ScheduledTask* task);
+void Entities_Tick(struct ScheduledTask* task);
 void Entities_RenderModels(Real64 delta, Real32 t);
 void Entities_RenderNames(Real64 delta);
 void Entities_RenderHoveredNames(Real64 delta);

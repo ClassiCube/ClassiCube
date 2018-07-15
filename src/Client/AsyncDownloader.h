@@ -51,5 +51,5 @@ void AsyncDownloader_GetImageEx(STRING_PURE String* url, bool priority, STRING_P
 
 bool AsyncDownloader_Get(STRING_PURE String* id, struct AsyncRequest* item);
 bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, Int32* progress);
-void AsyncDownloader_PurgeOldEntriesTask(ScheduledTask* task);
+void AsyncDownloader_PurgeOldEntriesTask(struct ScheduledTask* task);
 #endif

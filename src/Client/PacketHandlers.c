@@ -21,6 +21,7 @@
 #include "Drawer2D.h"
 #include "ErrorHandler.h"
 #include "TexturePack.h"
+#include "Gui.h"
 
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
@@ -307,7 +308,7 @@ Int32 mapSizeIndex, mapIndex, mapVolume;
 UInt8 mapSize[4];
 UInt8* map;
 struct Stream mapPartStream;
-Screen* prevScreen;
+struct Screen* prevScreen;
 bool prevCursorVisible, receivedFirstPosition;
 
 void Classic_WriteChat(struct Stream* stream, STRING_PURE String* text, bool partial) {

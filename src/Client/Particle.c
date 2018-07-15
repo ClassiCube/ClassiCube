@@ -44,7 +44,7 @@ void Particle_DoRender(Vector2* size, Vector3* pos, struct TextureRec* rec, Pack
 				   v.V = rec->V2; vertices[3] = v;
 }
 
-static void Particle_Reset(Particle* p, Vector3 pos, Vector3 velocity, Real32 lifetime) {
+static void Particle_Reset(struct Particle* p, Vector3 pos, Vector3 velocity, Real32 lifetime) {
 	p->LastPos = pos; p->NextPos = pos;
 	p->Velocity = velocity;
 	p->Lifetime = lifetime;
@@ -71,7 +71,7 @@ static BlockID Particle_GetBlock(Int32 x, Int32 y, Int32 z) {
 	return WorldEnv_SidesBlock;
 }
 
-static bool Particle_TestY(Particle* p, Int32 y, bool topFace, bool throughLiquids) {
+static bool Particle_TestY(struct Particle* p, Int32 y, bool topFace, bool throughLiquids) {
 	if (y < 0) {
 		p->NextPos.Y = ENTITY_ADJUSTMENT; p->LastPos.Y = ENTITY_ADJUSTMENT;
 		Vector3 zero = Vector3_Zero; p->Velocity = zero;
@@ -97,7 +97,7 @@ static bool Particle_TestY(Particle* p, Int32 y, bool topFace, bool throughLiqui
 	return true;
 }
 
-static bool Particle_PhysicsTick(Particle* p, Real32 gravity, bool throughLiquids, Real64 delta) {
+static bool Particle_PhysicsTick(struct Particle* p, Real32 gravity, bool throughLiquids, Real64 delta) {
 	p->LastPos = p->NextPos;
 
 	BlockID cur = Particle_GetBlock((Int32)p->NextPos.X, (Int32)p->NextPos.Y, (Int32)p->NextPos.Z);
@@ -131,18 +131,18 @@ static bool Particle_PhysicsTick(Particle* p, Real32 gravity, bool throughLiquid
 /*########################################################################################################################*
 *-------------------------------------------------------Rain particle-----------------------------------------------------*
 *#########################################################################################################################*/
-typedef struct RainParticle_ { Particle Base; } RainParticle;
+struct RainParticle { struct Particle Base; };
 
-RainParticle Rain_Particles[PARTICLES_MAX];
+struct RainParticle Rain_Particles[PARTICLES_MAX];
 Int32 Rain_Count;
 
-static bool RainParticle_Tick(RainParticle* p, Real64 delta) {
+static bool RainParticle_Tick(struct RainParticle* p, Real64 delta) {
 	particle_hitTerrain = false;
 	return Particle_PhysicsTick(&p->Base, 3.5f, false, delta) || particle_hitTerrain;
 }
 
 struct TextureRec Rain_Rec = { 2.0f / 128.0f, 14.0f / 128.0f, 5.0f / 128.0f, 16.0f / 128.0f };
-static void RainParticle_Render(RainParticle* p, Real32 t, VertexP3fT2fC4b* vertices) {
+static void RainParticle_Render(struct RainParticle* p, Real32 t, VertexP3fT2fC4b* vertices) {
 	Vector3 pos;
 	Vector3_Lerp(&pos, &p->Base.LastPos, &p->Base.NextPos, t);
 	Vector2 size; size.X = (Real32)p->Base.Size * 0.015625f; size.Y = size.X;
@@ -167,7 +167,7 @@ static void Rain_Render(Real32 t) {
 }
 
 static void Rain_RemoveAt(Int32 index) {
-	RainParticle removed = Rain_Particles[index];
+	struct RainParticle removed = Rain_Particles[index];
 	Int32 i;
 	for (i = index; i < Rain_Count - 1; i++) {
 		Rain_Particles[i] = Rain_Particles[i + 1];
@@ -189,23 +189,23 @@ static void Rain_Tick(Real64 delta) {
 /*########################################################################################################################*
 *------------------------------------------------------Terrain particle---------------------------------------------------*
 *#########################################################################################################################*/
-typedef struct TerrainParticle_ {
-	Particle Base;
+struct TerrainParticle {
+	struct Particle Base;
 	struct TextureRec Rec;
 	TextureLoc TexLoc;
 	BlockID Block;
-} TerrainParticle;
+};
 
-TerrainParticle Terrain_Particles[PARTICLES_MAX];
+struct TerrainParticle Terrain_Particles[PARTICLES_MAX];
 Int32 Terrain_Count;
 UInt16 Terrain_1DCount[ATLAS1D_MAX_ATLASES];
 UInt16 Terrain_1DIndices[ATLAS1D_MAX_ATLASES];
 
-static bool TerrainParticle_Tick(TerrainParticle* p, Real64 delta) {
+static bool TerrainParticle_Tick(struct TerrainParticle* p, Real64 delta) {
 	return Particle_PhysicsTick(&p->Base, 5.4f, true, delta);
 }
 
-static void TerrainParticle_Render(TerrainParticle* p, Real32 t, VertexP3fT2fC4b* vertices) {
+static void TerrainParticle_Render(struct TerrainParticle* p, Real32 t, VertexP3fT2fC4b* vertices) {
 	Vector3 pos;
 	Vector3_Lerp(&pos, &p->Base.LastPos, &p->Base.NextPos, t);
 	Vector2 size; size.X = (Real32)p->Base.Size * 0.015625f; size.Y = size.X;
@@ -265,7 +265,7 @@ static void Terrain_Render(Real32 t) {
 }
 
 static void Terrain_RemoveAt(Int32 index) {
-	TerrainParticle removed = Terrain_Particles[index];
+	struct TerrainParticle removed = Terrain_Particles[index];
 	Int32 i;
 	for (i = index; i < Terrain_Count - 1; i++) {
 		Terrain_Particles[i] = Terrain_Particles[i + 1];
@@ -350,7 +350,7 @@ void Particles_Render(Real64 delta, Real32 t) {
 	Gfx_SetTexturing(false);
 }
 
-void Particles_Tick(ScheduledTask* task) {
+void Particles_Tick(struct ScheduledTask* task) {
 	Terrain_Tick(task->Interval);
 	Rain_Tick(task->Interval);
 }
@@ -407,7 +407,7 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID oldBlock, BlockID block
 				rec.V2 = min(rec.V2, maxV2) - 0.01f * vScale;
 
 				if (Terrain_Count == PARTICLES_MAX) Terrain_RemoveAt(0);
-				TerrainParticle* p = &Terrain_Particles[Terrain_Count++];
+				struct TerrainParticle* p = &Terrain_Particles[Terrain_Count++];
 				Real32 life = 0.3f + Random_Float(&rnd) * 1.2f;
 
 				Vector3 pos;
@@ -438,7 +438,7 @@ void Particles_RainSnowEffect(Vector3 pos) {
 		offset.Z = Random_Float(&rnd);
 
 		if (Rain_Count == PARTICLES_MAX) Rain_RemoveAt(0);
-		RainParticle* p = &Rain_Particles[Rain_Count++];
+		struct RainParticle* p = &Rain_Particles[Rain_Count++];
 
 		Vector3_Add(&pos, &startPos, &offset);
 		Particle_Reset(&p->Base, pos, velocity, 40.0f);

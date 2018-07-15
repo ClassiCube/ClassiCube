@@ -21,7 +21,7 @@ IGameComponent GameMode_MakeComponent(void) {
 }
 
 bool GameMode_HandlesKeyDown(Key key) {
-	Screen* activeScreen = Gui_GetActiveScreen();
+	struct Screen* activeScreen = Gui_GetActiveScreen();
 	if (key == KeyBind_Get(KeyBind_Inventory) && activeScreen == Gui_HUD) {
 		Gui_ReplaceActive(InventoryScreen_MakeInstance());
 		return true;

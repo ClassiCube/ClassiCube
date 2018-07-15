@@ -1,4 +1,4 @@
-﻿#include "EntityComponents.h"
+#include "EntityComponents.h"
 #include "ExtMath.h"
 #include "World.h"
 #include "Block.h"

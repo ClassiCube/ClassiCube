@@ -157,7 +157,7 @@ void AsyncDownloader_GetImageEx(STRING_PURE String* url, bool priority, STRING_P
 	AsyncDownloader_Add(url, priority, id, REQUEST_TYPE_IMAGE, lastModified, etag, NULL);
 }
 
-void AsyncDownloader_PurgeOldEntriesTask(ScheduledTask* task) {
+void AsyncDownloader_PurgeOldEntriesTask(struct ScheduledTask* task) {
 	Platform_MutexLock(async_processedMutex);
 	{
 		DateTime now; Platform_CurrentUTCTime(&now);

@@ -222,7 +222,7 @@ bool Entity_TouchesAnyWater(struct Entity* entity) {
 *--------------------------------------------------------Entities---------------------------------------------------------*
 *#########################################################################################################################*/
 EntityID entities_closestId;
-void Entities_Tick(ScheduledTask* task) {
+void Entities_Tick(struct ScheduledTask* task) {
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;

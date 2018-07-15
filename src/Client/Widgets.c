@@ -17,10 +17,10 @@
 #include "Game.h"
 #include "ErrorHandler.h"
 
-void Widget_SetLocation(Widget* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xOffset, Int32 yOffset) {
+void Widget_SetLocation(struct Widget* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xOffset, Int32 yOffset) {
 	widget->HorAnchor = horAnchor; widget->VerAnchor = verAnchor;
 	widget->XOffset = xOffset; widget->YOffset = yOffset;
-	widget->Reposition((GuiElement*)widget);
+	widget->Reposition((struct GuiElem*)widget);
 }
 
 
@@ -35,25 +35,25 @@ static void TextWidget_SetHeight(struct TextWidget* widget, Int32 height) {
 	widget->Height = height;
 }
 
-static void TextWidget_Init(GuiElement* elem) {
+static void TextWidget_Init(struct GuiElem* elem) {
 	struct TextWidget* widget = (struct TextWidget*)elem;
 	Int32 height = Drawer2D_FontHeight(&widget->Font, true);
 	TextWidget_SetHeight(widget, height);
 }
 
-static void TextWidget_Render(GuiElement* elem, Real64 delta) {
+static void TextWidget_Render(struct GuiElem* elem, Real64 delta) {
 	struct TextWidget* widget = (struct TextWidget*)elem;	
 	if (widget->Texture.ID != NULL) {
 		Texture_RenderShaded(&widget->Texture, widget->Col);
 	}
 }
 
-static void TextWidget_Free(GuiElement* elem) {
+static void TextWidget_Free(struct GuiElem* elem) {
 	struct TextWidget* widget = (struct TextWidget*)elem;
 	Gfx_DeleteTexture(&widget->Texture.ID);
 }
 
-static void TextWidget_Reposition(GuiElement* elem) {
+static void TextWidget_Reposition(struct GuiElem* elem) {
 	struct TextWidget* widget = (struct TextWidget*)elem;
 	Int32 oldX = widget->X, oldY = widget->Y;
 	Widget_DoReposition(elem);
@@ -61,10 +61,10 @@ static void TextWidget_Reposition(GuiElement* elem) {
 	widget->Texture.Y += widget->Y - oldY;
 }
 
-GuiElementVTABLE TextWidget_VTABLE;
+struct GuiElementVTABLE TextWidget_VTABLE;
 void TextWidget_Make(struct TextWidget* widget, struct FontDesc* font) {
 	widget->VTABLE = &TextWidget_VTABLE;
-	Widget_Init((Widget*)widget);
+	Widget_Init((struct Widget*)widget);
 	PackedCol col = PACKEDCOL_WHITE;
 	widget->Col = col;
 	widget->Font = *font;
@@ -108,18 +108,18 @@ struct Texture Button_ShadowTex   = { 0, 0, 0, 0, 0,  0.0f, 66.0f / 256.0f, BUTT
 struct Texture Button_SelectedTex = { 0, 0, 0, 0, 0,  0.0f, 86.0f / 256.0f, BUTTON_uWIDTH, 106.0f / 256.0f };
 struct Texture Button_DisabledTex = { 0, 0, 0, 0, 0,  0.0f, 46.0f / 256.0f, BUTTON_uWIDTH,  66.0f / 256.0f };
 
-static void ButtonWidget_Init(GuiElement* elem) {
+static void ButtonWidget_Init(struct GuiElem* elem) {
 	struct ButtonWidget* widget = (struct ButtonWidget*)elem;
 	widget->DefaultHeight = Drawer2D_FontHeight(&widget->Font, true);
 	widget->Height = widget->DefaultHeight;
 }
 
-static void ButtonWidget_Free(GuiElement* elem) {
+static void ButtonWidget_Free(struct GuiElem* elem) {
 	struct ButtonWidget* widget = (struct ButtonWidget*)elem;
 	Gfx_DeleteTexture(&widget->Texture.ID);
 }
 
-static void ButtonWidget_Reposition(GuiElement* elem) {
+static void ButtonWidget_Reposition(struct GuiElem* elem) {
 	struct ButtonWidget* widget = (struct ButtonWidget*)elem;
 	Int32 oldX = widget->X, oldY = widget->Y;
 	Widget_DoReposition(elem);
@@ -128,7 +128,7 @@ static void ButtonWidget_Reposition(GuiElement* elem) {
 	widget->Texture.Y += widget->Y - oldY;
 }
 
-static void ButtonWidget_Render(GuiElement* elem, Real64 delta) {
+static void ButtonWidget_Render(struct GuiElem* elem, Real64 delta) {
 	struct ButtonWidget* widget = (struct ButtonWidget*)elem;
 	if (widget->Texture.ID == NULL) return;
 	struct Texture back = widget->Active ? Button_SelectedTex : Button_ShadowTex;
@@ -164,10 +164,10 @@ static void ButtonWidget_Render(GuiElement* elem, Real64 delta) {
 	Texture_RenderShaded(&widget->Texture, col);
 }
 
-GuiElementVTABLE ButtonWidget_VTABLE;
+struct GuiElementVTABLE ButtonWidget_VTABLE;
 void ButtonWidget_Create(struct ButtonWidget* widget, Int32 minWidth, STRING_PURE String* text, struct FontDesc* font, Widget_LeftClick onClick) {
 	widget->VTABLE = &ButtonWidget_VTABLE;
-	Widget_Init((Widget*)widget);
+	Widget_Init((struct Widget*)widget);
 	widget->VTABLE->Init   = ButtonWidget_Init;
 	widget->VTABLE->Render = ButtonWidget_Render;
 	widget->VTABLE->Free   = ButtonWidget_Free;
@@ -211,8 +211,8 @@ PackedCol Scroll_BackCol  = PACKEDCOL_CONST( 10,  10,  10, 220);
 PackedCol Scroll_BarCol   = PACKEDCOL_CONST(100, 100, 100, 220);
 PackedCol Scroll_HoverCol = PACKEDCOL_CONST(122, 122, 122, 220);
 
-static void ScrollbarWidget_Init(GuiElement* elem) { }
-static void ScrollbarWidget_Free(GuiElement* elem) { }
+static void ScrollbarWidget_Init(struct GuiElem* elem) { }
+static void ScrollbarWidget_Free(struct GuiElem* elem) { }
 
 static void ScrollbarWidget_ClampScrollY(struct ScrollbarWidget* widget) {
 	Int32 maxRows = widget->TotalRows - TABLE_MAX_ROWS_DISPLAYED;
@@ -232,7 +232,7 @@ static void ScrollbarWidget_GetScrollbarCoords(struct ScrollbarWidget* widget, I
 	*height = min(*y + *height, widget->Height - SCROLL_BORDER) - *y;
 }
 
-static void ScrollbarWidget_Render(GuiElement* elem, Real64 delta) {
+static void ScrollbarWidget_Render(struct GuiElem* elem, Real64 delta) {
 	struct ScrollbarWidget* widget = (struct ScrollbarWidget*)elem;
 	Int32 x = widget->X, width = widget->Width;
 	GfxCommon_Draw2DFlat(x, widget->Y, width, widget->Height, Scroll_BackCol);
@@ -255,7 +255,7 @@ static void ScrollbarWidget_Render(GuiElement* elem, Real64 delta) {
 	GfxCommon_Draw2DFlat(x, y - 1 + 4, width, SCROLL_BORDER, Scroll_BackCol);
 }
 
-static bool ScrollbarWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+static bool ScrollbarWidget_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
 	struct ScrollbarWidget* widget = (struct ScrollbarWidget*)elem;
 	if (widget->DraggingMouse) return true;
 	if (btn != MouseButton_Left) return false;
@@ -277,14 +277,14 @@ static bool ScrollbarWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y,
 	return true;
 }
 
-static bool ScrollbarWidget_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+static bool ScrollbarWidget_HandlesMouseUp(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
 	struct ScrollbarWidget* widget = (struct ScrollbarWidget*)elem;
 	widget->DraggingMouse = false;
 	widget->MouseOffset = 0;
 	return true;
 }
 
-static bool ScrollbarWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
+static bool ScrollbarWidget_HandlesMouseScroll(struct GuiElem* elem, Real32 delta) {
 	struct ScrollbarWidget* widget = (struct ScrollbarWidget*)elem;
 	Int32 steps = Utils_AccumulateWheelDelta(&widget->ScrollingAcc, delta);
 	widget->ScrollY -= steps;
@@ -292,7 +292,7 @@ static bool ScrollbarWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
 	return true;
 }
 
-static bool ScrollbarWidget_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
+static bool ScrollbarWidget_HandlesMouseMove(struct GuiElem* elem, Int32 x, Int32 y) {
 	struct ScrollbarWidget* widget = (struct ScrollbarWidget*)elem;
 	if (widget->DraggingMouse) {
 		y -= widget->Y;
@@ -304,10 +304,10 @@ static bool ScrollbarWidget_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y)
 	return false;
 }
 
-GuiElementVTABLE ScrollbarWidget_VTABLE;
+struct GuiElementVTABLE ScrollbarWidget_VTABLE;
 void ScrollbarWidget_Create(struct ScrollbarWidget* widget) {
 	widget->VTABLE = &ScrollbarWidget_VTABLE;
-	Widget_Init((Widget*)widget);
+	Widget_Init((struct Widget*)widget);
 	widget->VTABLE->Init   = ScrollbarWidget_Init;
 	widget->VTABLE->Render = ScrollbarWidget_Render;
 	widget->VTABLE->Free   = ScrollbarWidget_Free;
@@ -389,7 +389,7 @@ static Int32 HotbarWidget_ScrolledIndex(struct HotbarWidget* widget, Real32 delt
 	return index;
 }
 
-static void HotbarWidget_Reposition(GuiElement* elem) {
+static void HotbarWidget_Reposition(struct GuiElem* elem) {
 	struct HotbarWidget* widget = (struct HotbarWidget*)elem;
 	Real32 scale = Game_GetHotbarScale();
 
@@ -407,19 +407,19 @@ static void HotbarWidget_Reposition(GuiElement* elem) {
 	HotbarWidget_RepositionSelectionTexture(widget);
 }
 
-static void HotbarWidget_Init(GuiElement* elem) { 
+static void HotbarWidget_Init(struct GuiElem* elem) { 
 	struct HotbarWidget* widget = (struct HotbarWidget*)elem;
 	Widget_Reposition(widget);
 }
 
-static void HotbarWidget_Render(GuiElement* elem, Real64 delta) {
+static void HotbarWidget_Render(struct GuiElem* elem, Real64 delta) {
 	struct HotbarWidget* widget = (struct HotbarWidget*)elem;
 	HotbarWidget_RenderHotbarOutline(widget);
 	HotbarWidget_RenderHotbarBlocks(widget);
 }
-static void HotbarWidget_Free(GuiElement* elem) { }
+static void HotbarWidget_Free(struct GuiElem* elem) { }
 
-static bool HotbarWidget_HandlesKeyDown(GuiElement* elem, Key key) {
+static bool HotbarWidget_HandlesKeyDown(struct GuiElem* elem, Key key) {
 	if (key >= Key_1 && key <= Key_9) {
 		Int32 index = key - Key_1;
 		if (KeyBind_IsPressed(KeyBind_HotbarSwitching)) {
@@ -435,7 +435,7 @@ static bool HotbarWidget_HandlesKeyDown(GuiElement* elem, Key key) {
 	return false;
 }
 
-static bool HotbarWidget_HandlesKeyUp(GuiElement* elem, Key key) {
+static bool HotbarWidget_HandlesKeyUp(struct GuiElem* elem, Key key) {
 	/* We need to handle these cases:
 	   a) user presses alt then number
 	   b) user presses alt
@@ -453,10 +453,10 @@ static bool HotbarWidget_HandlesKeyUp(GuiElement* elem, Key key) {
 	return true;
 }
 
-static bool HotbarWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+static bool HotbarWidget_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
 	struct HotbarWidget* widget = (struct HotbarWidget*)elem;
-	if (btn != MouseButton_Left || !Widget_Contains((Widget*)widget, x, y)) return false;
-	Screen* screen = Gui_GetActiveScreen();
+	if (btn != MouseButton_Left || !Widget_Contains((struct Widget*)widget, x, y)) return false;
+	struct Screen* screen = Gui_GetActiveScreen();
 	if (screen != InventoryScreen_UNSAFE_RawPointer) return false;
 
 	Int32 width  = (Int32)(widget->ElemSize * widget->BorderSize);
@@ -475,7 +475,7 @@ static bool HotbarWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, Mo
 	return false;
 }
 
-static bool HotbarWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
+static bool HotbarWidget_HandlesMouseScroll(struct GuiElem* elem, Real32 delta) {
 	struct HotbarWidget* widget = (struct HotbarWidget*)elem;
 	if (KeyBind_IsPressed(KeyBind_HotbarSwitching)) {
 		Int32 index = Inventory_Offset / INVENTORY_BLOCKS_PER_HOTBAR;
@@ -489,10 +489,10 @@ static bool HotbarWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
 	return true;
 }
 
-GuiElementVTABLE HotbarWidget_VTABLE;
+struct GuiElementVTABLE HotbarWidget_VTABLE;
 void HotbarWidget_Create(struct HotbarWidget* widget) {
 	widget->VTABLE = &HotbarWidget_VTABLE;
-	Widget_Init((Widget*)widget);
+	Widget_Init((struct Widget*)widget);
 	widget->HorAnchor = ANCHOR_CENTRE;
 	widget->VerAnchor = ANCHOR_MAX;
 
@@ -650,7 +650,7 @@ static void TableWidget_RecreateElements(struct TableWidget* widget) {
 	}
 }
 
-static void TableWidget_Init(GuiElement* elem) {
+static void TableWidget_Init(struct GuiElem* elem) {
 	struct TableWidget* widget = (struct TableWidget*)elem;
 	widget->LastX = Mouse_X; widget->LastY = Mouse_Y;
 
@@ -661,7 +661,7 @@ static void TableWidget_Init(GuiElement* elem) {
 	Elem_Recreate(widget);
 }
 
-static void TableWidget_Render(GuiElement* elem, Real64 delta) {	
+static void TableWidget_Render(struct GuiElem* elem, Real64 delta) {	
 	/* These were sourced by taking a screenshot of vanilla
 	Then using paint to extract the colour components
 	Then using wolfram alpha to solve the glblendfunc equation */
@@ -719,21 +719,21 @@ static void TableWidget_Render(GuiElement* elem, Real64 delta) {
 	Gfx_SetTexturing(false);
 }
 
-static void TableWidget_Free(GuiElement* elem) {
+static void TableWidget_Free(struct GuiElem* elem) {
 	struct TableWidget* widget = (struct TableWidget*)elem;
 	Gfx_DeleteVb(&widget->VB);
 	Gfx_DeleteTexture(&widget->DescTex.ID);
 	widget->LastCreatedIndex = -1000;
 }
 
-static void TableWidget_Recreate(GuiElement* elem) {
+static void TableWidget_Recreate(struct GuiElem* elem) {
 	struct TableWidget* widget = (struct TableWidget*)elem;
 	Elem_TryFree(widget);
 	widget->VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TABLE_MAX_VERTICES);
 	TableWidget_RecreateDescTex(widget);
 }
 
-static void TableWidget_Reposition(GuiElement* elem) {
+static void TableWidget_Reposition(struct GuiElem* elem) {
 	struct TableWidget* widget = (struct TableWidget*)elem;
 	Real32 scale = Game_GetInventoryScale();
 	widget->BlockSize = (Int32)(50 * Math_SqrtF(scale));
@@ -756,7 +756,7 @@ static void TableWidget_ScrollRelative(struct TableWidget* widget, Int32 delta) 
 	TableWidget_MoveCursorToSelected(widget);
 }
 
-static bool TableWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+static bool TableWidget_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
 	struct TableWidget* widget = (struct TableWidget*)elem;
 	widget->PendingClose = false;
 	if (btn != MouseButton_Left) return false;
@@ -773,12 +773,12 @@ static bool TableWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, Mou
 	return false;
 }
 
-static bool TableWidget_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+static bool TableWidget_HandlesMouseUp(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
 	struct TableWidget* widget = (struct TableWidget*)elem;
 	return Elem_HandlesMouseUp(&widget->Scroll, x, y, btn);
 }
 
-static bool TableWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
+static bool TableWidget_HandlesMouseScroll(struct GuiElem* elem, Real32 delta) {
 	struct TableWidget* widget = (struct TableWidget*)elem;
 	Int32 scrollWidth = widget->Scroll.Width;
 	bool bounds = Gui_Contains(Table_X(widget) - scrollWidth, Table_Y(widget),
@@ -798,7 +798,7 @@ static bool TableWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
 	return true;
 }
 
-static bool TableWidget_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
+static bool TableWidget_HandlesMouseMove(struct GuiElem* elem, Int32 x, Int32 y) {
 	struct TableWidget* widget = (struct TableWidget*)elem;
 	if (Elem_HandlesMouseMove(&widget->Scroll, x, y)) return true;
 
@@ -825,7 +825,7 @@ static bool TableWidget_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	return true;
 }
 
-static bool TableWidget_HandlesKeyDown(GuiElement* elem, Key key) {
+static bool TableWidget_HandlesKeyDown(struct GuiElem* elem, Key key) {
 	struct TableWidget* widget = (struct TableWidget*)elem;
 	if (widget->SelectedIndex == -1) return false;
 
@@ -843,10 +843,10 @@ static bool TableWidget_HandlesKeyDown(GuiElement* elem, Key key) {
 	return true;
 }
 
-GuiElementVTABLE TableWidget_VTABLE;
+struct GuiElementVTABLE TableWidget_VTABLE;
 void TableWidget_Create(struct TableWidget* widget) {
 	widget->VTABLE = &TableWidget_VTABLE;
-	Widget_Init((Widget*)widget);
+	Widget_Init((struct Widget*)widget);
 	widget->LastCreatedIndex = -1000;
 
 	widget->VTABLE->Init     = TableWidget_Init;
@@ -1005,7 +1005,7 @@ static void InputWidget_RenderCaret(struct InputWidget* widget, Real64 delta) {
 	}
 }
 
-static void InputWidget_OnPressedEnter(GuiElement* elem) {
+static void InputWidget_OnPressedEnter(struct GuiElem* elem) {
 	struct InputWidget* widget = (struct InputWidget*)elem;
 	InputWidget_Clear(widget);
 	widget->Height = widget->PrefixHeight;
@@ -1022,7 +1022,7 @@ void InputWidget_Clear(struct InputWidget* widget) {
 	Gfx_DeleteTexture(&widget->InputTex.ID);
 }
 
-static bool InputWidget_AllowedChar(GuiElement* elem, UChar c) {
+static bool InputWidget_AllowedChar(struct GuiElem* elem, UChar c) {
 	return Utils_IsValidInputChar(c, ServerConnection_SupportsFullCP437);
 }
 
@@ -1039,7 +1039,7 @@ static void InputWidget_AppendChar(struct InputWidget* widget, UChar c) {
 static bool InputWidget_TryAppendChar(struct InputWidget* widget, UChar c) {
 	Int32 maxChars = widget->GetMaxLines() * INPUTWIDGET_LEN;
 	if (widget->Text.length >= maxChars) return false;
-	if (!widget->AllowedChar((GuiElement*)widget, c)) return false;
+	if (!widget->AllowedChar((struct GuiElem*)widget, c)) return false;
 
 	InputWidget_AppendChar(widget, c);
 	return true;
@@ -1185,7 +1185,7 @@ static bool InputWidget_OtherKey(struct InputWidget* widget, Key key) {
 	return false;
 }
 
-static void InputWidget_Init(GuiElement* elem) {
+static void InputWidget_Init(struct GuiElem* elem) {
 	struct InputWidget* widget = (struct InputWidget*)elem;
 	Int32 lines = widget->GetMaxLines();
 	if (lines > 1) {
@@ -1199,19 +1199,19 @@ static void InputWidget_Init(GuiElement* elem) {
 	InputWidget_UpdateCaret(widget);
 }
 
-static void InputWidget_Free(GuiElement* elem) {
+static void InputWidget_Free(struct GuiElem* elem) {
 	struct InputWidget* widget = (struct InputWidget*)elem;
 	Gfx_DeleteTexture(&widget->InputTex.ID);
 	Gfx_DeleteTexture(&widget->CaretTex.ID);
 }
 
-static void InputWidget_Recreate(GuiElement* elem) {
+static void InputWidget_Recreate(struct GuiElem* elem) {
 	struct InputWidget* widget = (struct InputWidget*)elem;
 	Gfx_DeleteTexture(&widget->InputTex.ID);
 	InputWidget_Init(elem);
 }
 
-static void InputWidget_Reposition(GuiElement* elem) {
+static void InputWidget_Reposition(struct GuiElem* elem) {
 	struct InputWidget* widget = (struct InputWidget*)elem;
 	Int32 oldX = widget->X, oldY = widget->Y;
 	Widget_DoReposition(elem);
@@ -1220,7 +1220,7 @@ static void InputWidget_Reposition(GuiElement* elem) {
 	widget->InputTex.X += widget->X - oldX; widget->InputTex.Y += widget->Y - oldY;
 }
 
-static bool InputWidget_HandlesKeyDown(GuiElement* elem, Key key) {
+static bool InputWidget_HandlesKeyDown(struct GuiElem* elem, Key key) {
 	struct InputWidget* widget = (struct InputWidget*)elem;
 
 	if (key == Key_Left) {
@@ -1241,15 +1241,15 @@ static bool InputWidget_HandlesKeyDown(GuiElement* elem, Key key) {
 	return true;
 }
 
-static bool InputWidget_HandlesKeyUp(GuiElement* elem, Key key) { return true; }
+static bool InputWidget_HandlesKeyUp(struct GuiElem* elem, Key key) { return true; }
 
-static bool InputWidget_HandlesKeyPress(GuiElement* elem, UChar key) {
+static bool InputWidget_HandlesKeyPress(struct GuiElem* elem, UChar key) {
 	struct InputWidget* widget = (struct InputWidget*)elem;
 	InputWidget_Append(widget, key);
 	return true;
 }
 
-static bool InputWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton button) {
+static bool InputWidget_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton button) {
 	struct InputWidget* widget = (struct InputWidget*)elem;
 	if (button != MouseButton_Left) return true;
 
@@ -1288,10 +1288,10 @@ static bool InputWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, Mou
 	return true;
 }
 
-GuiElementVTABLE InputWidget_VTABLE;
+struct GuiElementVTABLE InputWidget_VTABLE;
 void InputWidget_Create(struct InputWidget* widget, struct FontDesc* font, STRING_REF String* prefix) {
 	widget->VTABLE = &InputWidget_VTABLE;
-	Widget_Init((Widget*)widget);
+	Widget_Init((struct Widget*)widget);
 	widget->Font            = *font;
 	widget->Prefix          = *prefix;
 	widget->CaretPos        = -1;
@@ -1323,30 +1323,30 @@ void InputWidget_Create(struct InputWidget* widget, struct FontDesc* font, STRIN
 
 
 /*########################################################################################################################*
-*---------------------------------------------------MenuInputValidator----------------------------------------------------*
+*---------------------------------------------------struct MenuInputValidator----------------------------------------------------*
 *#########################################################################################################################*/
-static bool MenuInputValidator_AlwaysValidChar(MenuInputValidator* validator, UChar c) { return true; }
-static bool MenuInputValidator_AlwaysValidString(MenuInputValidator* validator, STRING_PURE String* s) { return true; }
+static bool MenuInputValidator_AlwaysValidChar(struct MenuInputValidator* v, UChar c) { return true; }
+static bool MenuInputValidator_AlwaysValidString(struct MenuInputValidator* v, STRING_PURE String* s) { return true; }
 
-static void HexColValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
+static void HexColValidator_GetRange(struct MenuInputValidator* v, STRING_TRANSIENT String* range) {
 	String_AppendConst(range, "&7(#000000 - #FFFFFF)");
 }
 
-static bool HexColValidator_IsValidChar(MenuInputValidator* validator, UChar c) {
+static bool HexColValidator_IsValidChar(struct MenuInputValidator* v, UChar c) {
 	return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
 }
 
-static bool HexColValidator_IsValidString(MenuInputValidator* validator, STRING_PURE String* s) {
+static bool HexColValidator_IsValidString(struct MenuInputValidator* v, STRING_PURE String* s) {
 	return s->length <= 6;
 }
 
-static bool HexColValidator_IsValidValue(MenuInputValidator* validator, STRING_PURE String* s) {
+static bool HexColValidator_IsValidValue(struct MenuInputValidator* v, STRING_PURE String* s) {
 	PackedCol col;
 	return PackedCol_TryParseHex(s, &col);
 }
 
-MenuInputValidator MenuInputValidator_Hex(void) {
-	MenuInputValidator validator;
+struct MenuInputValidator MenuInputValidator_Hex(void) {
+	struct MenuInputValidator validator;
 	validator.GetRange      = HexColValidator_GetRange;
 	validator.IsValidChar   = HexColValidator_IsValidChar;
 	validator.IsValidString = HexColValidator_IsValidString;
@@ -1354,30 +1354,30 @@ MenuInputValidator MenuInputValidator_Hex(void) {
 	return validator;
 }
 
-static void IntegerValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
-	String_Format2(range, "&7(%i - %i)", &validator->Meta_Int[0], &validator->Meta_Int[1]);
+static void IntegerValidator_GetRange(struct MenuInputValidator* v, STRING_TRANSIENT String* range) {
+	String_Format2(range, "&7(%i - %i)", &v->Meta_Int[0], &v->Meta_Int[1]);
 }
 
-static bool IntegerValidator_IsValidChar(MenuInputValidator* validator, UChar c) {
+static bool IntegerValidator_IsValidChar(struct MenuInputValidator* v, UChar c) {
 	return (c >= '0' && c <= '9') || c == '-';
 }
 
-static bool IntegerValidator_IsValidString(MenuInputValidator* validator, STRING_PURE String* s) {
+static bool IntegerValidator_IsValidString(struct MenuInputValidator* v, STRING_PURE String* s) {
 	Int32 value;
 	if (s->length == 1 && s->buffer[0] == '-') return true; /* input is just a minus sign */
 	return Convert_TryParseInt32(s, &value);
 }
 
-static bool IntegerValidator_IsValidValue(MenuInputValidator* validator, STRING_PURE String* s) {
+static bool IntegerValidator_IsValidValue(struct MenuInputValidator* v, STRING_PURE String* s) {
 	Int32 value;
 	if (!Convert_TryParseInt32(s, &value)) return false;
 
-	Int32 min = validator->Meta_Int[0], max = validator->Meta_Int[1];
+	Int32 min = v->Meta_Int[0], max = v->Meta_Int[1];
 	return min <= value && value <= max;
 }
 
-MenuInputValidator MenuInputValidator_Integer(Int32 min, Int32 max) {
-	MenuInputValidator validator;
+struct MenuInputValidator MenuInputValidator_Integer(Int32 min, Int32 max) {
+	struct MenuInputValidator validator;
 	validator.GetRange      = IntegerValidator_GetRange;
 	validator.IsValidChar   = IntegerValidator_IsValidChar;
 	validator.IsValidString = IntegerValidator_IsValidString;
@@ -1388,39 +1388,39 @@ MenuInputValidator MenuInputValidator_Integer(Int32 min, Int32 max) {
 	return validator;
 }
 
-static void SeedValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
+static void SeedValidator_GetRange(struct MenuInputValidator* v, STRING_TRANSIENT String* range) {
 	String_AppendConst(range, "&7(an integer)");
 }
 
-MenuInputValidator MenuInputValidator_Seed(void) {
-	MenuInputValidator validator = MenuInputValidator_Integer(Int32_MinValue, Int32_MaxValue);
+struct MenuInputValidator MenuInputValidator_Seed(void) {
+	struct MenuInputValidator validator = MenuInputValidator_Integer(Int32_MinValue, Int32_MaxValue);
 	validator.GetRange = SeedValidator_GetRange;
 	return validator;
 }
 
-static void RealValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
-	String_Format2(range, "&7(%f2 - %f2)", &validator->Meta_Real[0], &validator->Meta_Real[1]);
+static void RealValidator_GetRange(struct MenuInputValidator* v, STRING_TRANSIENT String* range) {
+	String_Format2(range, "&7(%f2 - %f2)", &v->Meta_Real[0], &v->Meta_Real[1]);
 }
 
-static bool RealValidator_IsValidChar(MenuInputValidator* validator, UChar c) {
+static bool RealValidator_IsValidChar(struct MenuInputValidator* v, UChar c) {
 	return (c >= '0' && c <= '9') || c == '-' || c == '.' || c == ',';
 }
 
-static bool RealValidator_IsValidString(MenuInputValidator* validator, STRING_PURE String* s) {
+static bool RealValidator_IsValidString(struct MenuInputValidator* v, STRING_PURE String* s) {
 	Real32 value;
-	if (s->length == 1 && RealValidator_IsValidChar(validator, s->buffer[0])) return true;
+	if (s->length == 1 && RealValidator_IsValidChar(v, s->buffer[0])) return true;
 	return Convert_TryParseReal32(s, &value);
 }
 
-static bool RealValidator_IsValidValue(MenuInputValidator* validator, STRING_PURE String* s) {
+static bool RealValidator_IsValidValue(struct MenuInputValidator* v, STRING_PURE String* s) {
 	Real32 value;
 	if (!Convert_TryParseReal32(s, &value)) return false;
-	Real32 min = validator->Meta_Real[0], max = validator->Meta_Real[1];
+	Real32 min = v->Meta_Real[0], max = v->Meta_Real[1];
 	return min <= value && value <= max;
 }
 
-MenuInputValidator MenuInputValidator_Real(Real32 min, Real32 max) {
-	MenuInputValidator validator;
+struct MenuInputValidator MenuInputValidator_Real(Real32 min, Real32 max) {
+	struct MenuInputValidator validator;
 	validator.GetRange      = RealValidator_GetRange;
 	validator.IsValidChar   = RealValidator_IsValidChar;
 	validator.IsValidString = RealValidator_IsValidString;
@@ -1430,17 +1430,17 @@ MenuInputValidator MenuInputValidator_Real(Real32 min, Real32 max) {
 	return validator;
 }
 
-static void PathValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
+static void PathValidator_GetRange(struct MenuInputValidator* validator, STRING_TRANSIENT String* range) {
 	String_AppendConst(range, "&7(Enter name)");
 }
 
-static bool PathValidator_IsValidChar(MenuInputValidator* validator, UChar c) {
+static bool PathValidator_IsValidChar(struct MenuInputValidator* validator, UChar c) {
 	return !(c == '/' || c == '\\' || c == '?' || c == '*' || c == ':'
 		|| c == '<' || c == '>' || c == '|' || c == '"' || c == '.');
 }
 
-MenuInputValidator MenuInputValidator_Path(void) {
-	MenuInputValidator validator;
+struct MenuInputValidator MenuInputValidator_Path(void) {
+	struct MenuInputValidator validator;
 	validator.GetRange      = PathValidator_GetRange;
 	validator.IsValidChar   = PathValidator_IsValidChar;
 	validator.IsValidString = MenuInputValidator_AlwaysValidString;
@@ -1448,27 +1448,27 @@ MenuInputValidator MenuInputValidator_Path(void) {
 	return validator;
 }
 
-MenuInputValidator MenuInputValidator_Enum(const UChar** names, UInt32 namesCount) {
-	MenuInputValidator validator = { 0 };
+struct MenuInputValidator MenuInputValidator_Enum(const UChar** names, UInt32 namesCount) {
+	struct MenuInputValidator validator = { 0 };
 	validator.Meta_Ptr[0] = names;
 	validator.Meta_Ptr[1] = (void*)namesCount; /* TODO: Need to handle void* size < 32 bits?? */
 	return validator;
 }
 
-static void StringValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
+static void StringValidator_GetRange(struct MenuInputValidator* validator, STRING_TRANSIENT String* range) {
 	String_AppendConst(range, "&7(Enter text)");
 }
 
-static bool StringValidator_IsValidChar(MenuInputValidator* validator, UChar c) {
+static bool StringValidator_IsValidChar(struct MenuInputValidator* validator, UChar c) {
 	return c != '&' && Utils_IsValidInputChar(c, true);
 }
 
-static bool StringValidator_IsValidString(MenuInputValidator* validator, STRING_PURE String* s) {
+static bool StringValidator_IsValidString(struct MenuInputValidator* validator, STRING_PURE String* s) {
 	return s->length <= STRING_SIZE;
 }
 
-MenuInputValidator MenuInputValidator_String(void) {
-	MenuInputValidator validator;
+struct MenuInputValidator MenuInputValidator_String(void) {
+	struct MenuInputValidator validator;
 	validator.GetRange      = StringValidator_GetRange;
 	validator.IsValidChar   = StringValidator_IsValidChar;
 	validator.IsValidString = StringValidator_IsValidString;
@@ -1480,7 +1480,7 @@ MenuInputValidator MenuInputValidator_String(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------MenuInputWidget-----------------------------------------------------*
 *#########################################################################################################################*/
-static void MenuInputWidget_Render(GuiElement* elem, Real64 delta) {
+static void MenuInputWidget_Render(struct GuiElem* elem, Real64 delta) {
 	struct InputWidget* widget = (struct InputWidget*)elem;
 	PackedCol backCol = PACKEDCOL_CONST(30, 30, 30, 200);
 
@@ -1492,7 +1492,7 @@ static void MenuInputWidget_Render(GuiElement* elem, Real64 delta) {
 	InputWidget_RenderCaret(widget, delta);
 }
 
-static void MenuInputWidget_RemakeTexture(GuiElement* elem) {
+static void MenuInputWidget_RemakeTexture(struct GuiElem* elem) {
 	struct MenuInputWidget* widget = (struct MenuInputWidget*)elem;
 
 	struct DrawTextArgs args;
@@ -1502,7 +1502,7 @@ static void MenuInputWidget_RemakeTexture(GuiElement* elem) {
 
 	UChar rangeBuffer[String_BufferSize(STRING_SIZE)];
 	String range = String_InitAndClearArray(rangeBuffer);
-	MenuInputValidator* validator = &widget->Validator;
+	struct MenuInputValidator* validator = &widget->Validator;
 	validator->GetRange(validator, &range);
 
 	/* Ensure we don't have 0 text height */
@@ -1541,11 +1541,11 @@ static void MenuInputWidget_RemakeTexture(GuiElement* elem) {
 	}
 }
 
-static bool MenuInputWidget_AllowedChar(GuiElement* elem, UChar c) {
+static bool MenuInputWidget_AllowedChar(struct GuiElem* elem, UChar c) {
 	if (c == '&' || !Utils_IsValidInputChar(c, true)) return false;
 	struct MenuInputWidget* widget = (struct MenuInputWidget*)elem;
 	struct InputWidget* elemW = (struct InputWidget*)elem;
-	MenuInputValidator* validator = &widget->Validator;
+	struct MenuInputValidator* validator = &widget->Validator;
 
 	if (!validator->IsValidChar(validator, c)) return false;
 	Int32 maxChars = elemW->GetMaxLines() * INPUTWIDGET_LEN;
@@ -1559,8 +1559,8 @@ static bool MenuInputWidget_AllowedChar(GuiElement* elem, UChar c) {
 }
 
 static Int32 MenuInputWidget_GetMaxLines(void) { return 1; }
-GuiElementVTABLE MenuInputWidget_VTABLE;
-void MenuInputWidget_Create(struct MenuInputWidget* widget, Int32 width, Int32 height, STRING_PURE String* text, struct FontDesc* font, MenuInputValidator* validator) {
+struct GuiElementVTABLE MenuInputWidget_VTABLE;
+void MenuInputWidget_Create(struct MenuInputWidget* widget, Int32 width, Int32 height, STRING_PURE String* text, struct FontDesc* font, struct MenuInputValidator* validator) {
 	String empty = String_MakeNull();
 	InputWidget_Create(&widget->Base, font, &empty);
 	widget->MinWidth  = width;
@@ -1585,7 +1585,7 @@ void MenuInputWidget_Create(struct MenuInputWidget* widget, Int32 width, Int32 h
 /*########################################################################################################################*
 *-----------------------------------------------------ChatInputWidget-----------------------------------------------------*
 *#########################################################################################################################*/
-static void ChatInputWidget_RemakeTexture(GuiElement* elem) {
+static void ChatInputWidget_RemakeTexture(struct GuiElem* elem) {
 	struct InputWidget* widget = (struct InputWidget*)elem;
 	Int32 totalHeight = 0, maxWidth = 0, i;
 	for (i = 0; i < widget->GetMaxLines(); i++) {
@@ -1637,7 +1637,7 @@ static void ChatInputWidget_RemakeTexture(GuiElement* elem) {
 	widget->InputTex.Y = widget->Y;
 }
 
-static void ChatInputWidget_Render(GuiElement* elem, Real64 delta) {
+static void ChatInputWidget_Render(struct GuiElem* elem, Real64 delta) {
 	struct ChatInputWidget* widget = (struct ChatInputWidget*)elem;
 	struct InputWidget* input = (struct InputWidget*)elem;
 	Gfx_SetTexturing(false);
@@ -1663,7 +1663,7 @@ static void ChatInputWidget_Render(GuiElement* elem, Real64 delta) {
 	InputWidget_RenderCaret(input, delta);
 }
 
-static void ChatInputWidget_OnPressedEnter(GuiElement* elem) {
+static void ChatInputWidget_OnPressedEnter(struct GuiElem* elem) {
 	struct ChatInputWidget* widget = (struct ChatInputWidget*)elem;
 
 	/* Don't want trailing spaces in output message */
@@ -1681,7 +1681,7 @@ static void ChatInputWidget_OnPressedEnter(GuiElement* elem) {
 	InputWidget_OnPressedEnter(elem);
 }
 
-static void ChatInputWidget_UpKey(GuiElement* elem) {
+static void ChatInputWidget_UpKey(struct GuiElem* elem) {
 	struct ChatInputWidget* widget = (struct ChatInputWidget*)elem;
 	struct InputWidget* input = (struct InputWidget*)elem;
 
@@ -1711,7 +1711,7 @@ static void ChatInputWidget_UpKey(GuiElement* elem) {
 	Elem_Recreate(&widget->Base);
 }
 
-static void ChatInputWidget_DownKey(GuiElement* elem) {
+static void ChatInputWidget_DownKey(struct GuiElem* elem) {
 	struct ChatInputWidget* widget = (struct ChatInputWidget*)elem;
 	struct InputWidget* input = (struct InputWidget*)elem;
 
@@ -1746,7 +1746,7 @@ static bool ChatInputWidget_IsNameChar(char c) {
 		|| (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
 
-static void ChatInputWidget_TabKey(GuiElement* elem) {
+static void ChatInputWidget_TabKey(struct GuiElem* elem) {
 	struct ChatInputWidget* widget = (struct ChatInputWidget*)elem;
 	struct InputWidget* input = (struct InputWidget*)elem;
 
@@ -1800,7 +1800,7 @@ static void ChatInputWidget_TabKey(GuiElement* elem) {
 	}
 }
 
-static bool ChatInputWidget_HandlesKeyDown(GuiElement* elem, Key key) {
+static bool ChatInputWidget_HandlesKeyDown(struct GuiElem* elem, Key key) {
 	if (key == Key_Tab)  { ChatInputWidget_TabKey(elem);  return true; }
 	if (key == Key_Up)   { ChatInputWidget_UpKey(elem);   return true; }
 	if (key == Key_Down) { ChatInputWidget_DownKey(elem); return true; }
@@ -1811,7 +1811,7 @@ static Int32 ChatInputWidget_GetMaxLines(void) {
 	return !Game_ClassicMode && ServerConnection_SupportsPartialMessages ? 3 : 1;
 }
 
-GuiElementVTABLE ChatInputWidget_VTABLE;
+struct GuiElementVTABLE ChatInputWidget_VTABLE;
 void ChatInputWidget_Create(struct ChatInputWidget* widget, struct FontDesc* font) {
 	String prefix = String_FromConst("> ");
 	InputWidget_Create(&widget->Base, font, &prefix);
@@ -1946,7 +1946,7 @@ static void PlayerListWidget_RepositionColumns(struct PlayerListWidget* widget) 
 	}
 }
 
-static void PlayerListWidget_Reposition(GuiElement* elem) {
+static void PlayerListWidget_Reposition(struct GuiElem* elem) {
 	struct PlayerListWidget* widget = (struct PlayerListWidget*)elem;
 	Int32 yPosition = Game_Height / 4 - widget->Height / 2;
 	widget->YOffset = -max(0, yPosition);
@@ -2102,7 +2102,7 @@ static void PlayerListWidget_SortAndReposition(struct PlayerListWidget* widget) 
 	PlayerListWidget_SortEntries(widget);
 	PlayerListWidget_RepositionColumns(widget);
 	PlayerListWidget_UpdateTableDimensions(widget);
-	PlayerListWidget_Reposition((GuiElement*)widget);
+	PlayerListWidget_Reposition((struct GuiElem*)widget);
 }
 
 static void PlayerListWidget_TabEntryAdded(void* obj, Int32 id) {
@@ -2136,7 +2136,7 @@ static void PlayerListWidget_TabEntryRemoved(void* obj, Int32 id) {
 	}
 }
 
-static void PlayerListWidget_Init(GuiElement* elem) {
+static void PlayerListWidget_Init(struct GuiElem* elem) {
 	struct PlayerListWidget* widget = (struct PlayerListWidget*)elem;
 	Int32 id;
 	for (id = 0; id < TABLIST_MAX_NAMES; id++) {
@@ -2147,14 +2147,14 @@ static void PlayerListWidget_Init(GuiElement* elem) {
 
 	String msg = String_FromConst("Connected players:");
 	TextWidget_Create(&widget->Overview, &msg, &widget->Font);
-	Widget_SetLocation((Widget*)(&widget->Overview), ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
+	Widget_SetLocation((struct Widget*)(&widget->Overview), ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
 
 	Event_RegisterInt(&TabListEvents_Added,   widget, PlayerListWidget_TabEntryAdded);
 	Event_RegisterInt(&TabListEvents_Changed, widget, PlayerListWidget_TabEntryChanged);
 	Event_RegisterInt(&TabListEvents_Removed, widget, PlayerListWidget_TabEntryRemoved);
 }
 
-static void PlayerListWidget_Render(GuiElement* elem, Real64 delta) {
+static void PlayerListWidget_Render(struct GuiElem* elem, Real64 delta) {
 	struct PlayerListWidget* widget = (struct PlayerListWidget*)elem;
 	struct TextWidget* overview = &widget->Overview;
 	PackedCol topCol = PACKEDCOL_CONST(0, 0, 0, 180);
@@ -2180,7 +2180,7 @@ static void PlayerListWidget_Render(GuiElement* elem, Real64 delta) {
 	}
 }
 
-static void PlayerListWidget_Free(GuiElement* elem) {
+static void PlayerListWidget_Free(struct GuiElem* elem) {
 	struct PlayerListWidget* widget = (struct PlayerListWidget*)elem;
 	Int32 i;
 	for (i = 0; i < widget->NamesCount; i++) {
@@ -2193,10 +2193,10 @@ static void PlayerListWidget_Free(GuiElement* elem) {
 	Event_UnregisterInt(&TabListEvents_Removed, widget, PlayerListWidget_TabEntryRemoved);
 }
 
-GuiElementVTABLE PlayerListWidgetVTABLE;
+struct GuiElementVTABLE PlayerListWidgetVTABLE;
 void PlayerListWidget_Create(struct PlayerListWidget* widget, struct FontDesc* font, bool classic) {
 	widget->VTABLE = &PlayerListWidgetVTABLE;
-	Widget_Init((Widget*)widget);
+	Widget_Init((struct Widget*)widget);
 	widget->VTABLE->Init   = PlayerListWidget_Init;
 	widget->VTABLE->Render = PlayerListWidget_Render;
 	widget->VTABLE->Free   = PlayerListWidget_Free;
@@ -2286,7 +2286,7 @@ Int32 TextGroupWidget_UsedHeight(struct TextGroupWidget* widget) {
 	return height;
 }
 
-static void TextGroupWidget_Reposition(GuiElement* elem) {
+static void TextGroupWidget_Reposition(struct GuiElem* elem) {
 	struct TextGroupWidget* widget = (struct TextGroupWidget*)elem;
 	Int32 i;
 	struct Texture* textures = widget->Textures;
@@ -2365,7 +2365,7 @@ void TextGroupWidget_SetText(struct TextGroupWidget* widget, Int32 index, STRING
 }
 
 
-static void TextGroupWidget_Init(GuiElement* elem) {
+static void TextGroupWidget_Init(struct GuiElem* elem) {
 	struct TextGroupWidget* widget = (struct TextGroupWidget*)elem;
 	Int32 height = Drawer2D_FontHeight(&widget->Font, true);
 	Drawer2D_ReducePadding_Height(&height, widget->Font.Size, 3);
@@ -2379,7 +2379,7 @@ static void TextGroupWidget_Init(GuiElement* elem) {
 	TextGroupWidget_UpdateDimensions(widget);
 }
 
-static void TextGroupWidget_Render(GuiElement* elem, Real64 delta) {
+static void TextGroupWidget_Render(struct GuiElem* elem, Real64 delta) {
 	struct TextGroupWidget* widget = (struct TextGroupWidget*)elem;
 	Int32 i;
 	struct Texture* textures = widget->Textures;
@@ -2390,7 +2390,7 @@ static void TextGroupWidget_Render(GuiElement* elem, Real64 delta) {
 	}
 }
 
-static void TextGroupWidget_Free(GuiElement* elem) {
+static void TextGroupWidget_Free(struct GuiElem* elem) {
 	struct TextGroupWidget* widget = (struct TextGroupWidget*)elem;
 	Int32 i;
 
@@ -2400,10 +2400,10 @@ static void TextGroupWidget_Free(GuiElement* elem) {
 	}
 }
 
-GuiElementVTABLE TextGroupWidget_VTABLE;
+struct GuiElementVTABLE TextGroupWidget_VTABLE;
 void TextGroupWidget_Create(struct TextGroupWidget* widget, Int32 linesCount, struct FontDesc* font, struct FontDesc* underlineFont, STRING_REF struct Texture* textures, STRING_REF UChar* buffer) {
 	widget->VTABLE = &TextGroupWidget_VTABLE;
-	Widget_Init((Widget*)widget);
+	Widget_Init((struct Widget*)widget);
 	widget->VTABLE->Init   = TextGroupWidget_Init;
 	widget->VTABLE->Render = TextGroupWidget_Render;
 	widget->VTABLE->Free   = TextGroupWidget_Free;
@@ -2607,7 +2607,7 @@ static void SpecialInputWidget_Redraw(struct SpecialInputWidget* widget) {
 	widget->Height = widget->Tex.Height;
 }
 
-static void SpecialInputWidget_Init(GuiElement* elem) {
+static void SpecialInputWidget_Init(struct GuiElem* elem) {
 	struct SpecialInputWidget* widget = (struct SpecialInputWidget*)elem;
 	widget->X = 5; widget->Y = 5;
 	SpecialInputWidget_InitTabs(widget);
@@ -2615,17 +2615,17 @@ static void SpecialInputWidget_Init(GuiElement* elem) {
 	SpecialInputWidget_SetActive(widget, widget->Active);
 }
 
-static void SpecialInputWidget_Render(GuiElement* elem, Real64 delta) {
+static void SpecialInputWidget_Render(struct GuiElem* elem, Real64 delta) {
 	struct SpecialInputWidget* widget = (struct SpecialInputWidget*)elem;
 	Texture_Render(&widget->Tex);
 }
 
-static void SpecialInputWidget_Free(GuiElement* elem) {
+static void SpecialInputWidget_Free(struct GuiElem* elem) {
 	struct SpecialInputWidget* widget = (struct SpecialInputWidget*)elem;
 	Gfx_DeleteTexture(&widget->Tex.ID);
 }
 
-static bool SpecialInputWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+static bool SpecialInputWidget_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
 	struct SpecialInputWidget* widget = (struct SpecialInputWidget*)elem;
 	x -= widget->X; y -= widget->Y;
 
@@ -2649,10 +2649,10 @@ void SpecialInputWidget_SetActive(struct SpecialInputWidget* widget, bool active
 	widget->Height = active ? widget->Tex.Height : 0;
 }
 
-GuiElementVTABLE SpecialInputWidget_VTABLE;
+struct GuiElementVTABLE SpecialInputWidget_VTABLE;
 void SpecialInputWidget_Create(struct SpecialInputWidget* widget, struct FontDesc* font, struct InputWidget* appendObj) {
 	widget->VTABLE = &SpecialInputWidget_VTABLE;
-	Widget_Init((Widget*)widget);
+	Widget_Init((struct Widget*)widget);
 	widget->VerAnchor = ANCHOR_MAX;
 	widget->Font = *font;
 	widget->AppendObj = appendObj;

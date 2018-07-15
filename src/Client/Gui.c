@@ -12,19 +12,19 @@
 #include "ErrorHandler.h"
 #include "Platform.h"
 
-Screen* Gui_Status;
-void GuiElement_Recreate(GuiElement* elem) {
+struct Screen* Gui_Status;
+void GuiElement_Recreate(struct GuiElem* elem) {
 	elem->VTABLE->Free(elem);
 	elem->VTABLE->Init(elem);
 }
 
-bool Gui_FalseMouse(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) { return false; }
-bool Gui_FalseKey(GuiElement* elem, Key key)                { return false; }
-bool Gui_FalseKeyPress(GuiElement* elem, UInt8 keyChar)     { return false; }
-bool Gui_FalseMouseMove(GuiElement* elem, Int32 x, Int32 y) { return false; }
-bool Gui_FalseMouseScroll(GuiElement* elem, Real32 delta)   { return false; }
+bool Gui_FalseMouse(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) { return false; }
+bool Gui_FalseKey(struct GuiElem* elem, Key key)                { return false; }
+bool Gui_FalseKeyPress(struct GuiElem* elem, UInt8 keyChar)     { return false; }
+bool Gui_FalseMouseMove(struct GuiElem* elem, Int32 x, Int32 y) { return false; }
+bool Gui_FalseMouseScroll(struct GuiElem* elem, Real32 delta)   { return false; }
 
-void GuiElement_Reset(GuiElement* elem) {
+void GuiElement_Reset(struct GuiElem* elem) {
 	elem->VTABLE->Init     = NULL;
 	elem->VTABLE->Render   = NULL;
 	elem->VTABLE->Free     = NULL;
@@ -40,8 +40,8 @@ void GuiElement_Reset(GuiElement* elem) {
 	elem->VTABLE->HandlesMouseScroll = Gui_FalseMouseScroll;
 }
 
-void Screen_Reset(Screen* screen) {
-	GuiElement_Reset((GuiElement*)screen);
+void Screen_Reset(struct Screen* screen) {
+	GuiElement_Reset((struct GuiElem*)screen);
 	screen->HandlesAllInput = false;
 	screen->BlocksWorld     = false;
 	screen->HidesHUD        = false;
@@ -49,14 +49,14 @@ void Screen_Reset(Screen* screen) {
 	screen->OnResize        = NULL;
 }
 
-void Widget_DoReposition(GuiElement* elem) {
-	Widget* w = (Widget*)elem;
+void Widget_DoReposition(struct GuiElem* elem) {
+	struct Widget* w = (struct Widget*)elem;
 	w->X = Gui_CalcPos(w->HorAnchor, w->XOffset, w->Width , Game_Width );
 	w->Y = Gui_CalcPos(w->VerAnchor, w->YOffset, w->Height, Game_Height);
 }
 
-void Widget_Init(Widget* widget) {
-	GuiElement_Reset((GuiElement*)widget);
+void Widget_Init(struct Widget* widget) {
+	GuiElement_Reset((struct GuiElem*)widget);
 	widget->Active = false;
 	widget->Disabled = false;
 	widget->X = 0; widget->Y = 0;
@@ -68,7 +68,7 @@ void Widget_Init(Widget* widget) {
 	widget->MenuClick = NULL;
 }
 
-bool Widget_Contains(Widget* widget, Int32 x, Int32 y) {
+bool Widget_Contains(struct Widget* widget, Int32 x, Int32 y) {
 	return Gui_Contains(widget->X, widget->Y, widget->Width, widget->Height, x, y);
 }
 
@@ -131,15 +131,15 @@ IGameComponent Gui_MakeComponent(void) {
 	return comp;
 }
 
-Screen* Gui_GetActiveScreen(void) {
+struct Screen* Gui_GetActiveScreen(void) {
 	return Gui_OverlaysCount > 0 ? Gui_Overlays[0] : Gui_GetUnderlyingScreen();
 }
 
-Screen* Gui_GetUnderlyingScreen(void) {
+struct Screen* Gui_GetUnderlyingScreen(void) {
 	return Gui_Active == NULL ? Gui_HUD : Gui_Active;
 }
 
-void Gui_ReplaceActive(Screen* screen) { 
+void Gui_ReplaceActive(struct Screen* screen) { 
 	Gui_FreeActive();
 	Gui_SetActive(screen);
 }
@@ -147,7 +147,7 @@ void Gui_FreeActive(void) {
 	if (Gui_Active != NULL) { Elem_TryFree(Gui_Active); }
 }
 
-void Gui_SetActive(Screen* screen) {
+void Gui_SetActive(struct Screen* screen) {
 	InputHandler_ScreenChanged(Gui_Active, screen);
 
 	if (screen == NULL) {
@@ -162,7 +162,7 @@ void Gui_SetActive(Screen* screen) {
 }
 void Gui_RefreshHud(void) { Elem_Recreate(Gui_HUD); }
 
-void Gui_ShowOverlay(Screen* overlay, bool atFront) {
+void Gui_ShowOverlay(struct Screen* overlay, bool atFront) {
 	if (Gui_OverlaysCount == GUI_MAX_OVERLAYS) {
 		ErrorHandler_Fail("Cannot have more than 6 overlays");
 	}
@@ -185,7 +185,7 @@ void Gui_ShowOverlay(Screen* overlay, bool atFront) {
 	Elem_Init(overlay);
 }
 
-Int32 Gui_IndexOverlay(Screen* overlay) {
+Int32 Gui_IndexOverlay(struct Screen* overlay) {
 	Int32 i;
 	for (i = 0; i < Gui_OverlaysCount; i++) {
 		if (Gui_Overlays[i] == overlay) return i;
@@ -193,7 +193,7 @@ Int32 Gui_IndexOverlay(Screen* overlay) {
 	return -1;
 }
 
-void Gui_FreeOverlay(Screen* overlay) {
+void Gui_FreeOverlay(struct Screen* overlay) {
 	Int32 i = Gui_IndexOverlay(overlay);
 	Elem_Free(overlay);
 	if (i == -1) return;
@@ -233,13 +233,13 @@ void Gui_RenderGui(Real64 delta) {
 
 void Gui_OnResize(void) {
 	if (Gui_Active != NULL) {
-		Gui_Active->OnResize((GuiElement*)Gui_Active);
+		Gui_Active->OnResize((struct GuiElem*)Gui_Active);
 	}
-	Gui_HUD->OnResize((GuiElement*)Gui_HUD);
+	Gui_HUD->OnResize((struct GuiElem*)Gui_HUD);
 
 	Int32 i;
 	for (i = 0; i < Gui_OverlaysCount; i++) {
-		Gui_Overlays[i]->OnResize((GuiElement*)Gui_Overlays[i]);
+		Gui_Overlays[i]->OnResize((struct GuiElem*)Gui_Overlays[i]);
 	}
 }
 

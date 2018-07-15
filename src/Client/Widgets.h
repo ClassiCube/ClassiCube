@@ -8,7 +8,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-void Widget_SetLocation(Widget* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xOffset, Int32 yOffset);
+void Widget_SetLocation(struct Widget* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xOffset, Int32 yOffset);
 
 struct TextWidget {
 	Widget_Layout
@@ -90,9 +90,9 @@ struct InputWidget {
 	Widget_Layout
 	struct FontDesc Font;		
 	Int32 (*GetMaxLines)(void);
-	void (*RemakeTexture)(GuiElement* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
-	void (*OnPressedEnter)(GuiElement* elem); /* Invoked when the user presses enter. */
-	bool (*AllowedChar)(GuiElement* elem, UChar c);
+	void (*RemakeTexture)(struct GuiElem* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
+	void (*OnPressedEnter)(struct GuiElem* elem); /* Invoked when the user presses enter. */
+	bool (*AllowedChar)(struct GuiElem* elem, UChar c);
 
 	String Text;
 	String Lines[INPUTWIDGET_MAX_LINES];            /* raw text of each line */
@@ -121,34 +121,35 @@ void InputWidget_AppendString(struct InputWidget* widget, STRING_PURE String* te
 void InputWidget_Append(struct InputWidget* widget, UChar c);
 
 
-typedef struct MenuInputValidator_ {
-	void (*GetRange)(struct MenuInputValidator_* validator, STRING_TRANSIENT String* range);
-	bool (*IsValidChar)(struct MenuInputValidator_* validator, UChar c);
-	bool (*IsValidString)(struct MenuInputValidator_* validator, STRING_PURE String* s);
-	bool (*IsValidValue)(struct MenuInputValidator_* validator, STRING_PURE String* s);
+struct MenuInputValidator;
+struct MenuInputValidator {
+	void (*GetRange)(struct MenuInputValidator* validator, STRING_TRANSIENT String* range);
+	bool (*IsValidChar)(struct MenuInputValidator* validator, UChar c);
+	bool (*IsValidString)(struct MenuInputValidator* validator, STRING_PURE String* s);
+	bool (*IsValidValue)(struct MenuInputValidator* validator, STRING_PURE String* s);
 
 	union {
 		void* Meta_Ptr[2];
 		Int32 Meta_Int[2];
 		Real32 Meta_Real[2];
 	};
-} MenuInputValidator;
+};
 
-MenuInputValidator MenuInputValidator_Hex(void);
-MenuInputValidator MenuInputValidator_Integer(Int32 min, Int32 max);
-MenuInputValidator MenuInputValidator_Seed(void);
-MenuInputValidator MenuInputValidator_Real(Real32 min, Real32 max);
-MenuInputValidator MenuInputValidator_Path(void);
-MenuInputValidator MenuInputValidator_Enum(const UChar** names, UInt32 namesCount);
-MenuInputValidator MenuInputValidator_String(void);
+struct MenuInputValidator MenuInputValidator_Hex(void);
+struct MenuInputValidator MenuInputValidator_Integer(Int32 min, Int32 max);
+struct MenuInputValidator MenuInputValidator_Seed(void);
+struct MenuInputValidator MenuInputValidator_Real(Real32 min, Real32 max);
+struct MenuInputValidator MenuInputValidator_Path(void);
+struct MenuInputValidator MenuInputValidator_Enum(const UChar** names, UInt32 namesCount);
+struct MenuInputValidator MenuInputValidator_String(void);
 
 struct MenuInputWidget {
 	struct InputWidget Base;
 	Int32 MinWidth, MinHeight;
-	MenuInputValidator Validator;
+	struct MenuInputValidator Validator;
 	UChar TextBuffer[String_BufferSize(INPUTWIDGET_LEN)];
 };
-void MenuInputWidget_Create(struct MenuInputWidget* widget, Int32 width, Int32 height, STRING_PURE String* text, struct FontDesc* font, MenuInputValidator* validator);
+void MenuInputWidget_Create(struct MenuInputWidget* widget, Int32 width, Int32 height, STRING_PURE String* text, struct FontDesc* font, struct MenuInputValidator* validator);
 
 
 struct ChatInputWidget {

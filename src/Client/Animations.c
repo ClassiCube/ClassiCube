@@ -286,7 +286,7 @@ static void Animations_Validate(void) {
 }
 
 
-void Animations_Tick(ScheduledTask* task) {
+void Animations_Tick(struct ScheduledTask* task) {
 	if (anims_useLavaAnim) {
 		Int32 size = min(Atlas2D_TileSize, 64);
 		Animations_Draw(NULL, 30, size);

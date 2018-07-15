@@ -9,5 +9,5 @@
 */
 
 IGameComponent Animations_MakeComponent(void);
-void Animations_Tick(ScheduledTask* task);
+void Animations_Tick(struct ScheduledTask* task);
 #endif

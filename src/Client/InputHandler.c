@@ -16,6 +16,7 @@
 #include "Screens.h"
 #include "Block.h"
 #include "Menus.h"
+#include "Gui.h"
 
 bool input_buttonsDown[3];
 Int32 input_pickingId = -1;
@@ -56,7 +57,7 @@ static void InputHandler_ButtonStateChanged(MouseButton button, bool pressed) {
 	}
 }
 
-void InputHandler_ScreenChanged(Screen* oldScreen, Screen* newScreen) {
+void InputHandler_ScreenChanged(struct Screen* oldScreen, struct Screen* newScreen) {
 	if (oldScreen != NULL && oldScreen->HandlesAllInput) {
 		Platform_CurrentUTCTime(&input_lastClick);
 	}
@@ -178,7 +179,7 @@ static bool InputHandler_HandleCoreKey(Key key) {
 	} else if (GameMode_HandlesKeyDown(key)) {
 	} else if (key == KeyBind_Get(KeyBind_IDOverlay)) {
 		if (Gui_OverlaysCount > 0) return true;
-		Screen* overlay = TexIdsOverlay_MakeInstance();
+		struct Screen* overlay = TexIdsOverlay_MakeInstance();
 		Gui_ShowOverlay(overlay, false);
 	} else if (key == KeyBind_Get(KeyBind_BreakableLiquids)) {
 		InputHandler_Toggle(key, &Game_BreakableLiquids,
@@ -329,24 +330,24 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 }
 
 static void InputHandler_MouseWheel(void* obj, Real32 delta) {
-	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
+	struct GuiElem* active = (struct GuiElem*)Gui_GetActiveScreen();
 	if (active->VTABLE->HandlesMouseScroll(active, delta)) return;
 
 	bool hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
 	if (!hotbar && Camera_Active->Zoom(delta)) return;
 	if (InputHandler_DoFovZoom(delta) || !Inventory_CanChangeHeldBlock) return;
 
-	Widget* hotbarW = HUDScreen_GetHotbar(Gui_HUD);
+	struct Widget* hotbarW = HUDScreen_GetHotbar(Gui_HUD);
 	Elem_HandlesMouseScroll(hotbarW, delta);
 }
 
 static void InputHandler_MouseMove(void* obj, Int32 xDelta, Int32 yDelta) {
-	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
+	struct GuiElem* active = (struct GuiElem*)Gui_GetActiveScreen();
 	active->VTABLE->HandlesMouseMove(active, Mouse_X, Mouse_Y);
 }
 
 static void InputHandler_MouseDown(void* obj, Int32 button) {
-	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
+	struct GuiElem* active = (struct GuiElem*)Gui_GetActiveScreen();
 	if (!active->VTABLE->HandlesMouseDown(active, Mouse_X, Mouse_Y, button)) {
 		bool left   = button == MouseButton_Left;
 		bool middle = button == MouseButton_Middle;
@@ -358,7 +359,7 @@ static void InputHandler_MouseDown(void* obj, Int32 button) {
 }
 
 static void InputHandler_MouseUp(void* obj, Int32 button) {
-	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
+	struct GuiElem* active = (struct GuiElem*)Gui_GetActiveScreen();
 	if (!active->VTABLE->HandlesMouseUp(active, Mouse_X, Mouse_Y, button)) {
 		if (ServerConnection_SupportsPlayerClick && button <= MouseButton_Middle) {
 			input_pickingId = -1;
@@ -381,7 +382,7 @@ static bool InputHandler_SimulateMouse(Key key, bool pressed) {
 
 static void InputHandler_KeyDown(void* obj, Int32 key) {
 	if (InputHandler_SimulateMouse(key, true)) return;
-	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
+	struct GuiElem* active = (struct GuiElem*)Gui_GetActiveScreen();
 
 	if (InputHandler_IsShutdown(key)) {
 		/* TODO: Do we need a separate exit function in Game class? */
@@ -412,12 +413,12 @@ static void InputHandler_KeyUp(void* obj, Int32 key) {
 		InputHandler_SetFOV(Game_DefaultFov, false);
 	}
 
-	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
+	struct GuiElem* active = (struct GuiElem*)Gui_GetActiveScreen();
 	active->VTABLE->HandlesKeyUp(active, key);
 }
 
 static void InputHandler_KeyPress(void* obj, Int32 keyChar) {
-	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
+	struct GuiElem* active = (struct GuiElem*)Gui_GetActiveScreen();
 	active->VTABLE->HandlesKeyPress(active, keyChar);
 }
 
