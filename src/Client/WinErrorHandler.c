@@ -4,8 +4,8 @@
 #define NOSERVICE
 #define NOMCX
 #define NOIME
-#include <Windows.h>
-#include <Dbghelp.h>
+#include <windows.h>
+#include <dbghelp.h>
 
 /* TODO: These might be better off as a function. */
 #define ErrorHandler_WriteLogBody(raw_msg)\

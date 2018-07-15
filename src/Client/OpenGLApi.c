@@ -10,7 +10,7 @@
 #define NOSERVICE
 #define NOMCX
 #define NOIME
-#include <Windows.h>
+#include <windows.h>
 #include <GL/gl.h>
 
 #if !CC_BUILD_D3D9
@@ -20,6 +20,7 @@
 #define GL_ELEMENT_ARRAY_BUFFER 0x8893
 #define GL_STATIC_DRAW          0x88E4
 #define GL_DYNAMIC_DRAW         0x88E8
+#define GL_BGRA_EXT             0x80E1
 
 #if CC_BUILD_GL11
 GfxResourceID gl_activeList;

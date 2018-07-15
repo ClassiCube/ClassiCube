@@ -126,7 +126,7 @@ bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vec
 
 #define SEARCHER_STATES_MIN 64
 struct SearcherState Searcher_StatesInitial[SEARCHER_STATES_MIN];
-extern struct SearcherState* Searcher_States = Searcher_StatesInitial;
+struct SearcherState* Searcher_States = Searcher_StatesInitial;
 UInt32 Searcher_StatesCount = SEARCHER_STATES_MIN;
 
 static void Searcher_QuickSort(Int32 left, Int32 right) {

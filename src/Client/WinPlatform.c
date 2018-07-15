@@ -10,10 +10,14 @@
 #define NOSERVICE
 #define NOMCX
 #define NOIME
-#include <Windows.h>
+#define _WIN32_WINNT 0x0500
+#include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <WinInet.h>
+#include <wininet.h>
+
+/* Missing from some old MingW32 headers */
+#define HTTP_QUERY_ETAG 54
 
 HDC hdc;
 HANDLE heap;
