@@ -14,10 +14,6 @@ namespace OpenTK.Platform.X11
 {
 	/// <summary> Defines LATIN-1 and miscellaneous keys. </summary>
 	internal static class XKey {
-		/* TTY function keys, cleverly chosen to map to ASCII, for convenience of
-		 * programming, but could have been arbitrary (at the cost of lookup
-		 * tables in client code). */
-
 		public const int BackSpace   = 0xff08;  /* Back space, back char */
 		public const int Tab         = 0xff09;
 		public const int Linefeed    = 0xff0a;  /* Linefeed, LF */
@@ -76,18 +72,10 @@ namespace OpenTK.Platform.X11
 
 		public const int KP_0 = 0xffb0;
 		public const int KP_9 = 0xffb9;
-
-		/*
-		 * Auxiliary functions; note the duplicate definitions for left and right
-		 * function keys;  Sun keyboards and a few other manufacturers have such
-		 * function key groups on the left and/or right sides of the keyboard.
-		 * We've not found a keyboard with more than 35 function keys total.
-		 */
 		public const int F1  = 0xffbe;
 		public const int F35 = 0xffe0;
 
 		/* Modifiers */
-
 		public const int Shift_L    = 0xffe1;  /* Left shift */
 		public const int Shift_R    = 0xffe2;  /* Right shift */
 		public const int Control_L  = 0xffe3;  /* Left control */
@@ -189,7 +177,7 @@ namespace OpenTK.Platform.X11
 
 			for (int i = 0; i <= 9; i++) {
 				Add(XKey.Number0 + i, Key.Number0 + i);
-				Add(XKey.KP_0,        Key.Keypad0 + i);
+				Add(XKey.KP_0 + i,    Key.Keypad0 + i);
 			}
 
 			Add(XKey.Pause, Key.Pause);

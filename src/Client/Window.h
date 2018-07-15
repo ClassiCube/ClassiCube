@@ -43,8 +43,7 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value);
 void Window_SetClipboardText(STRING_PURE String* value);
 /* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */
 
-bool Window_Exists;
-bool Window_Focused;
+bool Window_Exists, Window_Focused;
 bool Window_GetVisible(void);
 void Window_SetVisible(bool visible);
 void* Window_GetWindowHandle(void);

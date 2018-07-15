@@ -669,9 +669,9 @@ namespace OpenTK.Platform.X11 {
 					API.XUndefineCursor(API.DefaultDisplay, WinHandle);
 				} else {
 					if (blankCursor == IntPtr.Zero) {
-						XColor color = default(XColor);
+						XColor col = default(XColor);
 						IntPtr pixmap = API.XCreatePixmap(API.DefaultDisplay, API.RootWindow, 1, 1, 1);
-						blankCursor = API.XCreatePixmapCursor(API.DefaultDisplay, pixmap, pixmap, ref color, ref color, 0, 0);
+						blankCursor = API.XCreatePixmapCursor(API.DefaultDisplay, pixmap, pixmap, ref col, ref col, 0, 0);
 						API.XFreePixmap(API.DefaultDisplay, pixmap);
 					}
 					API.XDefineCursor(API.DefaultDisplay, WinHandle, blankCursor);

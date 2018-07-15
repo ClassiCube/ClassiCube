@@ -676,12 +676,12 @@ namespace OpenTK.Platform.MacOS {
 			}
 		}
 		
-		bool visible = true;
+		bool cursorVisible = true;
 		public override bool CursorVisible {
-			get { return visible; }
+			get { return cursorVisible; }
 			set {
-				visible = value;
-				if(visible)
+				cursorVisible = value;
+				if (cursorVisible)
 					CG.CGDisplayShowCursor(CG.CGMainDisplayID());
 				else
 					CG.CGDisplayHideCursor(CG.CGMainDisplayID());

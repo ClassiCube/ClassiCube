@@ -4,6 +4,7 @@
 #if CC_BUILD_X11
 #include "DisplayDevice.h"
 #include "ErrorHandler.h"
+#include "Input.h"
 #include <X11/Xlib.h>
 #include <GL/glx.h>
 
@@ -13,6 +14,100 @@ int win_screen;
 
 Window win_handle;
 XVisualInfo win_visual;
+
+static Key Window_MapKey(int key) {
+	if (key >= XK_F1 && key <= XK_F35) { return Key_F1 + (key - XK_F1); }
+	if (key >= XK_0 && key <= XK_9) { return Key_0 + (key - XK_0); }
+	if (key >= XK_A && key <= XK_Z) { return Key_A + (key - XK_A); }
+	if (key >= XK_a && key <= XK_z) { return Key_A + (key - XK_z); }
+
+	if (key >= XK_KP_0 && key <= XK_KP_9) {
+		return Key_Keypad0 + (key - XK_KP_9);
+	}
+
+	switch (key) {
+		case XK_Escape: return Key_Escape;
+		case XK_Return: return Key_Enter;
+		case XK_space: return Key_Space;
+		case XK_BackSpace: return Key_BackSpace;
+
+		case XK_Shift_L: return Key_ShiftLeft;
+		case XK_Shift_R: return Key_ShiftRight;
+		case XK_Alt_L: return Key_AltLeft;
+		case XK_Alt_R: return Key_AltRight;
+		case XK_Control_L: return Key_ControlLeft;
+		case XK_Control_R: return Key_ControlRight;
+		case XK_Super_L: return Key_WinLeft;
+		case XK_Super_R: return Key_WinRight;
+		case XK_Meta_L: return Key_WinLeft;
+		case XK_Meta_R: return Key_WinRight;
+
+		case XK_Menu: return Key_Menu;
+		case XK_Tab: return Key_Tab;
+		case XK_minus: return Key_Minus;
+		case XK_plus: return Key_Plus;
+		case XK_equal: return Key_Plus;
+
+		case XK_Caps_Lock: return Key_CapsLock;
+		case XK_Num_Lock: return Key_NumLock;
+
+		case XK_Pause: return Key_Pause;
+		case XK_Break: return Key_Pause;
+		case XK_Scroll_Lock: return Key_Pause;
+		case XK_Insert: return Key_PrintScreen;
+		case XK_Print: return Key_PrintScreen;
+		case XK_Sys_Req: return Key_PrintScreen;
+
+		case XK_backslash: return Key_BackSlash;
+		case XK_bar: return Key_BackSlash;
+		case XK_braceleft: return Key_BracketLeft;
+		case XK_bracketleft: return Key_BracketLeft;
+		case XK_braceright: return Key_BracketRight;
+		case XK_bracketright: return Key_BracketRight;
+		case XK_colon: return Key_Semicolon;
+		case XK_semicolon: return Key_Semicolon;
+		case XK_quoteright: return Key_Quote;
+		case XK_quotedbl: return Key_Quote;
+		case XK_quoteleft: return Key_Tilde;
+		case XK_asciitilde: return Key_Tilde;
+
+		case XK_comma: return Key_Comma;
+		case XK_less: return Key_Comma;
+		case XK_period: return Key_Period;
+		case XK_greater: return Key_Period;
+		case XK_slash: return Key_Slash;
+		case XK_question: return Key_Slash;
+
+		case XK_Left: return Key_Left;
+		case XK_Down: return Key_Down;
+		case XK_Right: return Key_Right;
+		case XK_Up: return Key_Up;
+
+		case XK_Delete: return Key_Delete;
+		case XK_Home: return Key_Home;
+		case XK_End: return Key_End;
+		case XK_Page_Up: return Key_PageUp;
+		case XK_Page_Down: return Key_PageDown;
+
+		case XK_KP_Add: return Key_KeypadAdd;
+		case XK_KP_Subtract: return Key_KeypadSubtract;
+		case XK_KP_Multiply: return Key_KeypadMultiply;
+		case XK_KP_Divide: return Key_KeypadDivide;
+		case XK_KP_Decimal: return Key_KeypadDecimal;
+		case XK_KP_Insert: return Key_Keypad0;
+		case XK_KP_End: return Key_Keypad1;
+		case XK_KP_Down: return Key_Keypad2;
+		case XK_KP_Page_Down: return Key_Keypad3;
+		case XK_KP_Left: return Key_Keypad4;
+		case XK_KP_Right: return Key_Keypad6;
+		case XK_KP_Home: return Key_Keypad7;
+		case XK_KP_Up: return Key_Keypad8;
+		case XK_KP_Page_Up: return Key_Keypad9;
+		case XK_KP_Delete: return Key_KeypadDecimal;
+		case XK_KP_Enter: return Key_KeypadEnter;
+	}
+	return Key_None;
+}
 
 void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, struct DisplayDevice* device);
 void Window_GetClipboardText(STRING_TRANSIENT String* value);
@@ -65,8 +160,23 @@ void Window_SetDesktopCursorPos(struct Point2D point) {
 	XFlush(win_display); /* TODO: not sure if XFlush call is necessary */
 }
 
-bool Window_GetCursorVisible(void);
-void Window_SetCursorVisible(bool visible);
+Cursor win_blankCursor;
+bool win_cursorVisible = true;
+bool Window_GetCursorVisible(void) { return win_cursorVisible; }
+void Window_SetCursorVisible(bool visible) {
+	win_cursorVisible = visible;
+	if (visible) {
+		XUndefineCursor(win_display, win_handle);
+	} else {
+		if (win_blankCursor == NULL) {
+			XColor col = { 0 };
+			Pixmap pixmap = XCreatePixmap(win_display, win_rootWindow, 1, 1, 1);
+			win_blankCursor = XCreatePixmapCursor(win_display, pixmap, pixmap, &col, &col, 0, 0);
+			XFreePixmap(win_display, pixmap);
+		}
+		XDefineCursor(win_display, win_handle, win_blankCursor);
+	}
+}
 
 GLXContext ctx_Handle;
 typedef Int32 (*FN_GLXSWAPINTERVAL)(Int32 interval);

@@ -92,17 +92,12 @@ static void Window_SetHiddenBorder(bool hidden) {
 }
 
 static Key Window_MapKey(WPARAM key) {
-	if (key >= VK_F1 && key <= VK_F24) {
-		return Key_F1 + (key - VK_F1);
-	}
-	if (key >= '0' && key <= '9') {
-		return Key_0 + (key - '0');
-	}
-	if (key >= 'A' && key <= 'Z') {
-		return Key_A + (key - 'A');
-	}
-	if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {
-		return Key_Keypad0 + (key - VK_NUMPAD0);
+	if (key >= VK_F1 && key <= VK_F24) { return Key_F1 + (key - VK_F1); }
+	if (key >= '0' && key <= '9') { return Key_0 + (key - '0'); }
+	if (key >= 'A' && key <= 'Z') { return Key_A + (key - 'A'); }
+
+	if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) { 
+		return Key_Keypad0 + (key - VK_NUMPAD0); 
 	}
 
 	switch (key) {
