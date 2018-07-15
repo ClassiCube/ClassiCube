@@ -9,7 +9,7 @@ namespace ClassicalSharp.Model {
 
 	public class ChibiModel : HumanoidModel {
 		
-		public ChibiModel(Game window) : base(window) {
+		public ChibiModel(Game game) : base(game) {
 			MaxScale = 3.0f;
 			ShadowScale = 0.5f;
 		}
@@ -41,7 +41,7 @@ namespace ClassicalSharp.Model {
 	
 	public class SittingModel : IModel {
 		
-		public SittingModel(Game window) : base(window) {
+		public SittingModel(Game game) : base(game) {
 			CalcHumanAnims = true;
 			UsesHumanSkin = true;
 			ShadowScale = 0.5f;
@@ -79,7 +79,7 @@ namespace ClassicalSharp.Model {
 
 	public class HeadModel : HumanoidModel {
 		
-		public HeadModel(Game window) : base(window) { Pushes = false; }
+		public HeadModel(Game game) : base(game) { Pushes = false; }
 		public override void CreateParts() { }
 		
 		public override float GetEyeY(Entity entity) { return 6/16f; }
@@ -117,7 +117,7 @@ namespace ClassicalSharp.Model {
 		
 		Matrix4 translate;
 		bool classicArms;
-		public ArmModel(Game window) : base(window) { Pushes = false; }
+		public ArmModel(Game game) : base(game) { Pushes = false; }
 		
 		public override void CreateParts() {
 			classicArms = game.ClassicArmModel;
@@ -184,7 +184,7 @@ namespace ClassicalSharp.Model {
 	
 	public class CorpseModel : IModel {
 		
-		public CorpseModel(Game window) : base(window) {
+		public CorpseModel(Game game) : base(game) {
 			UsesHumanSkin = true;
 		}
 		

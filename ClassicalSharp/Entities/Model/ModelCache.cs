@@ -9,9 +9,7 @@ namespace ClassicalSharp.Model {
 	public class ModelCache : IDisposable {
 		
 		Game game;
-		public ModelCache(Game window) {
-			this.game = window;
-		}
+		public ModelCache(Game game) { this.game = game; }
 		
 		#if FALSE
 		public CustomModel[] CustomModels = new CustomModel[256];

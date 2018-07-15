@@ -37,9 +37,8 @@ namespace OpenTK.Platform.Windows {
 		readonly IntPtr ClassName = Marshal.StringToHGlobalAuto("CS_WindowClass");
 		readonly WindowProcedure WindowProcedureDelegate;
 
-		bool class_registered, disposed, exists;
+		bool class_registered, disposed;
 		WindowState windowState = WindowState.Normal;
-		bool focused;
 		bool invisible_since_creation; // Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront).
 		int suppress_resize; // Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events.
 
@@ -54,7 +53,7 @@ namespace OpenTK.Platform.Windows {
 			WindowProcedureDelegate = WindowProcedure;
 			UngroupFromTaskbar();
 			WinHandle = CreateWindow(x, y, width, height, title, device);
-			exists = true;
+			Exists = true;
 		}
 		
 		IntPtr dc;
@@ -88,10 +87,9 @@ namespace OpenTK.Platform.Windows {
 				case WindowMessage.ACTIVATE:
 					// See http://msdn.microsoft.com/en-us/library/ms646274(VS.85).aspx (WM_ACTIVATE notification):
 					// wParam: The low-order word specifies whether the window is being activated or deactivated.
-					bool new_focused_state = Focused;
-					focused = (wParam.ToInt64() & 0xFFFF) != 0;
-
-					if (new_focused_state != Focused)
+					bool wasFocused = Focused;
+					Focused = (wParam.ToInt64() & 0xFFFF) != 0;
+					if (Focused != wasFocused)
 						RaiseFocusedChanged();
 					break;
 
@@ -131,7 +129,7 @@ namespace OpenTK.Platform.Windows {
 					break;
 
 				case WindowMessage.STYLECHANGED:
-					if (wParam.ToInt64() == (long)GWL.STYLE) {
+					if (wParam.ToInt64() == (long)GetWindowLong.STYLE) {
 						WindowStyle style = ((StyleStruct*)lParam)->New;
 						if ((style & WindowStyle.Popup) != 0)
 							hiddenBorder = true;
@@ -308,8 +306,7 @@ namespace OpenTK.Platform.Windows {
 					break;
 
 				case WindowMessage.DESTROY:
-					exists = false;
-
+					Exists = false;
 					API.UnregisterClass(ClassName, Instance);
 					Dispose();
 					RaiseClosed();
@@ -368,11 +365,10 @@ namespace OpenTK.Platform.Windows {
 
 		/// <summary> Starts the teardown sequence for the current window. </summary>
 		void DestroyWindow() {
-			if (exists) {
-				Debug.Print("Destroying window: {0}", WinHandle);
-				API.DestroyWindow(WinHandle);
-				exists = false;
-			}
+			if (!Exists) return;
+			Debug.Print("Destroying window: {0}", WinHandle);
+			API.DestroyWindow(WinHandle);
+			Exists = false;
 		}
 
 		void SetHiddenBorder(bool hidden) {
@@ -473,14 +469,12 @@ namespace OpenTK.Platform.Windows {
 		}
 
 		public override Size ClientSize {
-			get {
-				if (clientSize.Width == 0)  clientSize.Width = 1;
-				if (clientSize.Height == 0) clientSize.Height = 1;
-				return clientSize;
-			}
+			get { return clientSize; }
 			set {
-				WindowStyle style = (WindowStyle)API.GetWindowLong(WinHandle, GetWindowLongOffsets.STYLE);
-				Win32Rectangle rect = Win32Rectangle.From(value);
+				WindowStyle style = (WindowStyle)API.GetWindowLong(WinHandle, GetWindowLong.STYLE);
+				Win32Rectangle rect = new Win32Rectangle();
+				rect.right = value.Width; rect.bottom = value.Height;
+				
 				API.AdjustWindowRect(ref rect, style, false);
 				Size = new Size(rect.Width, rect.Height);
 			}
@@ -500,10 +494,6 @@ namespace OpenTK.Platform.Windows {
 			}
 		}
 
-		public override bool Focused {
-			get { return focused; }
-		}
-
 		public override bool Visible {
 			get { return API.IsWindowVisible(WinHandle); }
 			set {
@@ -518,8 +508,6 @@ namespace OpenTK.Platform.Windows {
 				}
 			}
 		}
-
-		public override bool Exists { get { return exists; } }
 
 		public override void Close() {
 			API.PostMessage(WinHandle, WindowMessage.CLOSE, IntPtr.Zero, IntPtr.Zero);
@@ -608,7 +596,7 @@ namespace OpenTK.Platform.Windows {
 				if (was_visible)
 					Visible = false;
 
-				API.SetWindowLong(WinHandle, GetWindowLongOffsets.STYLE, (int)style);
+				API.SetWindowLong(WinHandle, GetWindowLong.STYLE, (int)style);
 				API.SetWindowPos(WinHandle, IntPtr.Zero, 0, 0, rect.Width, rect.Height,
 				                 SetWindowPosFlags.NOMOVE | SetWindowPosFlags.NOZORDER |
 				                 SetWindowPosFlags.FRAMECHANGED);
@@ -648,7 +636,7 @@ namespace OpenTK.Platform.Windows {
 			}
 			IntPtr foreground = API.GetForegroundWindow();
 			if (foreground != IntPtr.Zero)
-				focused = foreground == WinHandle;
+				Focused = foreground == WinHandle;
 		}
 
 		public override Point DesktopCursorPos {

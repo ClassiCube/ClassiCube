@@ -10,7 +10,11 @@
 #define NOSERVICE
 #define NOMCX
 #define NOIME
+#if CC_BUILD_WIN
 #include <windows.h>
+#else
+#define APIENETRY
+#endif
 #include <GL/gl.h>
 
 #if !CC_BUILD_D3D9

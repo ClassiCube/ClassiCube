@@ -15,7 +15,7 @@ namespace OpenTK.Platform.X11 {
 	#endif
 	
 	internal sealed class X11GLContext : IGraphicsContext {
-#if !USE_DX		
+		#if !USE_DX
 		X11Window cur;
 		bool vsync_supported;
 		int vsync_interval;
@@ -24,7 +24,6 @@ namespace OpenTK.Platform.X11 {
 			Debug.Print("Creating X11GLContext context: ");
 			cur = window;
 			XVisualInfo info = cur.VisualInfo;
-			Mode = GetGraphicsMode(info);
 			
 			// Cannot pass a Property by reference.
 			IntPtr display = API.DefaultDisplay;
@@ -43,23 +42,15 @@ namespace OpenTK.Platform.X11 {
 			
 			if (!Glx.glXIsDirect(display, ContextHandle))
 				Debug.Print("Warning: Context is not direct.");
+			if (!Glx.glXMakeCurrent(API.DefaultDisplay, window.WinHandle, ContextHandle))
+				throw new GraphicsContextException("Failed to make context current.");
+			
+			Glx.LoadEntryPoints();
+			vsync_supported = Glx.glXSwapIntervalSGI != null;
 		}
 
 		public override void SwapBuffers() {
 			Glx.glXSwapBuffers(API.DefaultDisplay, cur.WinHandle);
-		}
-
-		public override void MakeCurrent(INativeWindow window) {
-			Debug.Print("Making context {0} current (Screen: {1}, Window: {2})... ",
-			            ContextHandle, API.DefaultScreen, window.WinHandle);
-			
-			if (!Glx.glXMakeCurrent(API.DefaultDisplay, window.WinHandle, ContextHandle))
-				throw new GraphicsContextException("Failed to make context current.");
-			cur = (X11Window)window;
-		}
-
-		public override bool IsCurrent {
-			get { return Glx.glXGetCurrentContext() == ContextHandle; }
 		}
 
 		public override bool VSync {
@@ -78,18 +69,12 @@ namespace OpenTK.Platform.X11 {
 			return Glx.GetAddress(function);
 		}
 
-		public override void LoadAll() {
-			Glx.LoadEntryPoints();
-			vsync_supported = Glx.glXSwapIntervalSGI != null;
-			Debug.Print("Context supports vsync: {0}.", vsync_supported);
-		}
-
 		protected override void Dispose(bool manuallyCalled) {
 			if (ContextHandle == IntPtr.Zero) return;
 			
 			if (manuallyCalled) {
 				IntPtr display = API.DefaultDisplay;
-				if (IsCurrent) {
+				if (Glx.glXGetCurrentContext() == ContextHandle) {
 					Glx.glXMakeCurrent(display, IntPtr.Zero, IntPtr.Zero);
 				}
 				Glx.glXDestroyContext(display, ContextHandle);
@@ -98,26 +83,30 @@ namespace OpenTK.Platform.X11 {
 			}
 			ContextHandle = IntPtr.Zero;
 		}
-				
-		internal static GraphicsMode GetGraphicsMode(XVisualInfo info) {
-			// See what we *really* got:
-			int r, g, b, a, depth, stencil, buffers;
-			IntPtr display = API.DefaultDisplay;
-			Glx.glXGetConfig(display, ref info, GLXAttribute.ALPHA_SIZE, out a);
-			Glx.glXGetConfig(display, ref info, GLXAttribute.RED_SIZE, out r);
-			Glx.glXGetConfig(display, ref info, GLXAttribute.GREEN_SIZE, out g);
-			Glx.glXGetConfig(display, ref info, GLXAttribute.BLUE_SIZE, out b);
-			Glx.glXGetConfig(display, ref info, GLXAttribute.DEPTH_SIZE, out depth);
-			Glx.glXGetConfig(display, ref info, GLXAttribute.STENCIL_SIZE, out stencil);
-			Glx.glXGetConfig(display, ref info, GLXAttribute.DOUBLEBUFFER, out buffers);
-			++buffers;
-			// the above lines returns 0 - false and 1 - true.
-			return new GraphicsMode(new ColorFormat(r, g, b, a), depth, stencil, buffers);
-		}		
-#endif		
-		internal static XVisualInfo SelectGraphicsMode(GraphicsMode template) {
-			int[] attribs = GetVisualAttribs(template.ColorFormat, template.Depth, template.Stencil, template.Buffers);
-			IntPtr visual = SelectVisual(attribs);
+		#endif
+
+		internal unsafe static XVisualInfo SelectGraphicsMode(GraphicsMode template) {
+			int[] attribs = GetVisualAttribs(template);
+			int major = 0, minor = 0, fbcount;
+			if (!Glx.glXQueryVersion(API.DefaultDisplay, ref major, ref minor))
+				throw new InvalidOperationException("glXQueryVersion failed");
+			
+			IntPtr visual = IntPtr.Zero;
+			if (major >= 1 && minor >= 3) {
+				Debug.Print("Getting FB config.");
+				// ChooseFBConfig returns an array of GLXFBConfig opaque structures (i.e. mapped to IntPtrs).
+				IntPtr* fbconfigs = Glx.glXChooseFBConfig(API.DefaultDisplay, API.DefaultScreen, attribs, out fbcount);
+				if (fbcount > 0 && fbconfigs != null) {
+					// Use the first GLXFBConfig from the fbconfigs array (best match)
+					visual = Glx.glXGetVisualFromFBConfig(API.DefaultDisplay, *fbconfigs);
+					API.XFree((IntPtr)fbconfigs);
+				}
+			}
+			
+			if (visual == IntPtr.Zero) {
+				Debug.Print("Falling back to glXChooseVisual.");
+				visual = Glx.glXChooseVisual(API.DefaultDisplay, API.DefaultScreen, attribs);
+			}
 			if (visual == IntPtr.Zero)
 				throw new GraphicsModeException("Requested GraphicsMode not available.");
 			
@@ -125,60 +114,43 @@ namespace OpenTK.Platform.X11 {
 			API.XFree(visual);
 			return info;
 		}
-
-		// See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_61/com.ibm.aix.opengl/doc/openglrf/glXChooseFBConfig.htm%23glxchoosefbconfig
-		// See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_71/com.ibm.aix.opengl/doc/openglrf/glXChooseVisual.htm%23b5c84be452rree
-		// for the attribute declarations. Note that the attributes are different than those used in Glx.ChooseVisual.
-		static unsafe IntPtr SelectVisual(int[] attribs) {
-			int major = 0, minor = 0;
-			if (!Glx.glXQueryVersion(API.DefaultDisplay, ref major, ref minor))
-				throw new InvalidOperationException("glXQueryVersion failed, potentially corrupt OpenGL driver");
-			
-			if (major >= 1 && minor >= 3) {
-				Debug.Print("Getting FB config.");
-				int fbcount;
-				// Note that ChooseFBConfig returns an array of GLXFBConfig opaque structures (i.e. mapped to IntPtrs).
-				IntPtr* fbconfigs = Glx.glXChooseFBConfig(API.DefaultDisplay, API.DefaultScreen, attribs, out fbcount);
-				if (fbcount > 0 && fbconfigs != null) {
-					// We want to use the first GLXFBConfig from the fbconfigs array (the first one is the best match).
-					IntPtr visual = Glx.glXGetVisualFromFBConfig(API.DefaultDisplay, *fbconfigs);
-					API.XFree((IntPtr)fbconfigs);
-					return visual;
-				}
-			}
-			Debug.Print("Falling back to glXChooseVisual.");
-			return Glx.glXChooseVisual(API.DefaultDisplay, API.DefaultScreen, attribs);
-		}
 		
-		static int[] GetVisualAttribs(ColorFormat color, int depth, int stencil, int buffers) {
-			int[] attribs = new int[16];
-			int index = 0;
-			Debug.Print("Bits per pixel: {0}", color.BitsPerPixel);
-			Debug.Print("Depth: {0}", depth);
+		static int[] GetVisualAttribs(GraphicsMode mode) {
+			// See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_61/com.ibm.aix.opengl/doc/openglrf/glXChooseFBConfig.htm%23glxchoosefbconfig
+			// See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_71/com.ibm.aix.opengl/doc/openglrf/glXChooseVisual.htm%23b5c84be452rree
+			// for the attribute declarations. Note that the attributes are different than those used in Glx.ChooseVisual.
+			int[] attribs = new int[20];
+			int i = 0;
+			ColorFormat color = mode.ColorFormat;
 			
-			if (!color.IsIndexed)
-				attribs[index++] = (int)GLXAttribute.RGBA;
-			attribs[index++] = (int)GLXAttribute.RED_SIZE;
-			attribs[index++] = color.Red;
-			attribs[index++] = (int)GLXAttribute.GREEN_SIZE;
-			attribs[index++] = color.Green;
-			attribs[index++] = (int)GLXAttribute.BLUE_SIZE;
-			attribs[index++] = color.Blue;
-			attribs[index++] = (int)GLXAttribute.ALPHA_SIZE;
-			attribs[index++] = color.Alpha;
-
-			if (depth > 0) {
-				attribs[index++] = (int)GLXAttribute.DEPTH_SIZE;
-				attribs[index++] = depth;
+			Debug.Print("Bits per pixel: {0}", color.BitsPerPixel);
+			Debug.Print("Depth: {0}", mode.Depth);
+			
+			if (!color.IsIndexed) {
+				attribs[i++] = (int)GLXAttribute.RGBA;
 			}
-			if (stencil > 0) {
-				attribs[index++] = (int)GLXAttribute.STENCIL_SIZE;
-				attribs[index++] = stencil;
-			}
-			if (buffers > 1)
-				attribs[index++] = (int)GLXAttribute.DOUBLEBUFFER;
+			attribs[i++] = (int)GLXAttribute.RED_SIZE;
+			attribs[i++] = color.Red;
+			attribs[i++] = (int)GLXAttribute.GREEN_SIZE;
+			attribs[i++] = color.Green;
+			attribs[i++] = (int)GLXAttribute.BLUE_SIZE;
+			attribs[i++] = color.Blue;
+			attribs[i++] = (int)GLXAttribute.ALPHA_SIZE;
+			attribs[i++] = color.Alpha;
 
-			attribs[index++] = 0;
+			if (mode.Depth > 0) {
+				attribs[i++] = (int)GLXAttribute.DEPTH_SIZE;
+				attribs[i++] = mode.Depth;
+			}
+			if (mode.Stencil > 0) {
+				attribs[i++] = (int)GLXAttribute.STENCIL_SIZE;
+				attribs[i++] = mode.Stencil;
+			}
+			if (mode.Buffers > 1) {
+				attribs[i++] = (int)GLXAttribute.DOUBLEBUFFER;
+			}
+
+			attribs[i++] = 0;
 			return attribs;
 		}
 	}

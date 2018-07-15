@@ -16,8 +16,8 @@ namespace ClassicalSharp.Singleplayer {
 		
 		internal PhysicsBase physics;
 		
-		public SinglePlayerServer(Game window) {
-			game = window;
+		public SinglePlayerServer(Game game) {
+			this.game = game;
 			physics = new PhysicsBase(game);
 			SupportsFullCP437 = !game.ClassicMode;
 			SupportsPartialMessages = true;

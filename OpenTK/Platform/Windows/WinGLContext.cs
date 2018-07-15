@@ -15,14 +15,16 @@ namespace OpenTK.Platform.Windows {
 	internal sealed class WinGLContext : IGraphicsContext {
 		static IntPtr opengl32Handle;
 		bool vsync_supported;
+		IntPtr dc;
 
 		static WinGLContext() {
 			// Dynamically load the OpenGL32.dll in order to use the extension loading capabilities of Wgl.
 			if (opengl32Handle == IntPtr.Zero) {
 				opengl32Handle = API.LoadLibrary("OPENGL32.DLL");
-				if (opengl32Handle == IntPtr.Zero)
-					throw new ApplicationException(String.Format("LoadLibrary call failed with code {0}",
-					                                             Marshal.GetLastWin32Error()));
+				if (opengl32Handle == IntPtr.Zero) {
+					throw new ApplicationException("LoadLibrary failed. " +
+					                              "Error: " + Marshal.GetLastWin32Error());
+				}
 				Debug.Print("Loaded opengl32.dll: {0}", opengl32Handle);
 			}
 		}
@@ -39,26 +41,20 @@ namespace OpenTK.Platform.Windows {
 			if (ContextHandle == IntPtr.Zero)
 				throw new GraphicsContextException("Context creation failed. Error: " + Marshal.GetLastWin32Error());
 			
-			Debug.Print("Context created! (id: {0})", ContextHandle);
+			if (!Wgl.wglMakeCurrent(window.DeviceContext, ContextHandle)) {
+				throw new GraphicsContextException("Failed to make context current. " +
+				                                  "Error: " + Marshal.GetLastWin32Error());
+			}
+			
+			dc = Wgl.wglGetCurrentDC();		
+			Wgl.LoadEntryPoints();
+			vsync_supported = Wgl.wglGetSwapIntervalEXT != null && Wgl.wglSwapIntervalEXT != null;
 		}
 
 		public override void SwapBuffers() {
 			if (!API.SwapBuffers(dc))
-				throw new GraphicsContextException(String.Format(
-					"Failed to swap buffers for context. Error: {0}", Marshal.GetLastWin32Error()));
-		}
-
-		IntPtr dc;
-		public override void MakeCurrent(INativeWindow window) {
-			if (!Wgl.wglMakeCurrent(((WinWindow)window).DeviceContext, ContextHandle)) {
-				throw new GraphicsContextException(String.Format(
-					"Failed to make context current. Error: {0}", Marshal.GetLastWin32Error()));
-			}
-			dc = Wgl.wglGetCurrentDC();
-		}
-
-		public override bool IsCurrent {
-			get { return Wgl.wglGetCurrentContext() == ContextHandle; }
+				throw new GraphicsContextException("Failed to swap buffers for context. " +
+				                                  "Error: " + Marshal.GetLastWin32Error());
 		}
 
 		public override bool VSync {
@@ -67,11 +63,6 @@ namespace OpenTK.Platform.Windows {
 				if (vsync_supported)
 					Wgl.wglSwapIntervalEXT(value ? 1 : 0);
 			}
-		}
-
-		public override void LoadAll() {
-			Wgl.LoadEntryPoints();
-			vsync_supported = Wgl.wglGetSwapIntervalEXT != null && Wgl.wglSwapIntervalEXT != null;
 		}
 
 		public override IntPtr GetAddress(string funcName) {
@@ -90,15 +81,10 @@ namespace OpenTK.Platform.Windows {
 			pfd.Version = PixelFormatDescriptor.DefaultVersion;
 			API.DescribePixelFormat(deviceContext, modeIndex, pfd.Size, ref pfd);
 			
-			Mode = new GraphicsMode(
-				new ColorFormat(pfd.RedBits, pfd.GreenBits, pfd.BlueBits, pfd.AlphaBits),
-				pfd.DepthBits, pfd.StencilBits,
-				(pfd.Flags & PixelFormatDescriptorFlags.DOUBLEBUFFER) != 0 ? 2 : 1);
-			
 			Debug.Print("WGL mode index: " + modeIndex.ToString());
 			if (!API.SetPixelFormat(window.DeviceContext, modeIndex, ref pfd))
-				throw new GraphicsContextException(String.Format(
-					"Requested GraphicsMode not available. SetPixelFormat error: {0}", Marshal.GetLastWin32Error()));
+				throw new GraphicsContextException("SetPixelFormat failed. " +
+				                                  "Error: " + Marshal.GetLastWin32Error());
 		}
 
 		void SelectGraphicsModePFD(GraphicsMode format, WinWindow window) {

@@ -8,7 +8,7 @@ namespace ClassicalSharp.Model {
 
 	public class ZombieModel : IModel {
 		
-		public ZombieModel(Game window) : base(window) { SurivalScore = 80; }
+		public ZombieModel(Game game) : base(game) { SurivalScore = 80; }
 		
 		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 7];

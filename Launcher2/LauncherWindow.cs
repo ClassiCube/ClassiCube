@@ -21,35 +21,19 @@ namespace Launcher {
 
 	public sealed partial class LauncherWindow {
 		
-		/// <summary> Underlying native window instance. </summary>
 		public INativeWindow Window;
-		
-		/// <summary> Platform specific class used to draw 2D elements,
-		/// such as text, rounded rectangles and lines. </summary>
-		public IDrawer2D Drawer;
-		
-		/// <summary> Currently active screen. </summary>
+		public IDrawer2D Drawer;	
 		public Screen Screen;
 		
 		/// <summary> Whether the client drawing area needs to be redrawn/presented to the screen. </summary>
 		public bool Dirty;
-		
-		/// <summary> The specific area/region of the window that needs to be redrawn. </summary>
+				/// <summary> The specific area/region of the window that needs to be redrawn. </summary>
 		public Rectangle DirtyArea;
 		
-		/// <summary> Currently active logged in session with classicube.net. </summary>
 		public string Username;
-		
-		/// <summary> Queue used to download resources asynchronously. </summary>
 		public AsyncDownloader Downloader;
 		
-		/// <summary> Returns the width of the client drawing area. </summary>
-		public int Width { get { return Window.ClientSize.Width; } }
-		
-		/// <summary> Returns the height of the client drawing area. </summary>
-		public int Height { get { return Window.ClientSize.Height; } }
-		
-		/// <summary> Bitmap that contains the entire array of pixels that describe the client drawing area. </summary>
+		public int Width, Height;	
 		public Bitmap Framebuffer;
 		
 		/// <summary> Whether at the next tick, the launcher window should proceed to stop displaying frames and subsequently exit. </summary>
@@ -117,6 +101,7 @@ namespace Launcher {
 		}
 
 		void Resize(object sender, EventArgs e) {
+			UpdateClientSize();
 			platformDrawer.Resize();
 			ForceRedraw(sender, e);
 		}
@@ -169,11 +154,19 @@ namespace Launcher {
 			return true;
 		}
 		
+		void UpdateClientSize() {
+			Size size = Window.ClientSize;
+			Width  = Math.Max(size.Width,  1);
+			Height = Math.Max(size.Height, 1);
+		}
+		
 		public void Run() {
 			Window = Factory.CreateWindow(640, 400, Program.AppName,
 			                              GraphicsMode.Default, DisplayDevice.Primary);
 			Window.Visible = true;
 			Drawer = new GdiPlusDrawer2D();
+			UpdateClientSize();
+			
 			Init();
 			TryLoadTexturePack();
 			platformDrawer.window = Window;

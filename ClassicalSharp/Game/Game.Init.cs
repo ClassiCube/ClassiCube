@@ -42,6 +42,7 @@ namespace ClassicalSharp {
 			#else
 			Drawer2D = new GdiPlusDrawer2D(Graphics);
 			#endif
+			UpdateClientSize();
 			
 			Entities = new EntityList(this);
 			TextureCache.Init();
@@ -90,9 +91,6 @@ namespace ClassicalSharp {
 			World = new World(this);
 			LocalPlayer = new LocalPlayer(this); Components.Add(LocalPlayer);
 			Entities.List[EntityList.SelfID] = LocalPlayer;
-			
-			Size size = window.ClientSize;
-			Width = size.Width; Height = size.Height;
 			
 			MapRenderer = new MapRenderer(this);
 			ChunkUpdater = new ChunkUpdater(this);

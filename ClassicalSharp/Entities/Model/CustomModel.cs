@@ -10,7 +10,7 @@ namespace ClassicalSharp.Model {
 
 	public class CustomModel : IModel {
 		
-		public CustomModel(Game window) : base(window) { }
+		public CustomModel(Game game) : base(game) { }
 		
 		internal override void CreateParts() { }
 		

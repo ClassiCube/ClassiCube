@@ -62,22 +62,19 @@ namespace OpenTK.Platform.X11 {
 		Size clientSize;
 		int borderLeft, borderRight, borderTop, borderBottom;
 		Icon icon;
-		bool has_focus, visible;
+		bool visible;
 		EventMask eventMask;
 		
 		public XVisualInfo VisualInfo;
 		// Used for event loop.
 		XEvent e = new XEvent();
-		bool disposed, exists, isExiting;
+		bool disposed, isExiting;
 
 		// Keyboard input
 		readonly byte[] ascii = new byte[16];
 		readonly char[] chars = new char[16];
 
 		X11KeyMap keymap = new X11KeyMap();
-		int firstKeyCode, lastKeyCode; // The smallest and largest KeyCode supported by the X server.
-		int keysyms_per_keycode;    // The number of KeySyms for each KeyCode.
-		IntPtr[] keysyms;
 		
 		public X11Window(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
 			Debug.Print("Creating X11GLNative window.");
@@ -138,31 +135,13 @@ namespace OpenTK.Platform.X11 {
 			RefreshWindowBounds(ref e);
 
 			Debug.Print("X11GLNative window created successfully (id: {0}).", WinHandle);
-			SetupInput();
-			exists = true;
-		}
-		
-		void SetupInput() {
-			Debug.Print("Initalizing X11 input driver.");
-			
-			// Init keyboard
-			API.XDisplayKeycodes(API.DefaultDisplay, ref firstKeyCode, ref lastKeyCode);
-			Debug.Print("First keycode: {0}, last {1}", firstKeyCode, lastKeyCode);
-			
-			IntPtr keysym_ptr = API.XGetKeyboardMapping(API.DefaultDisplay, (byte)firstKeyCode,
-			                                            lastKeyCode - firstKeyCode + 1, ref keysyms_per_keycode);
-			Debug.Print("{0} keysyms per keycode.", keysyms_per_keycode);
-			
-			keysyms = new IntPtr[(lastKeyCode - firstKeyCode + 1) * keysyms_per_keycode];
-			Marshal.PtrToStructure(keysym_ptr, keysyms);
-			API.XFree(keysym_ptr);
-			
 			// Request that auto-repeat is only set on devices that support it physically.
 			// This typically means that it's turned off for keyboards (which is what we want).
 			// We prefer this method over XAutoRepeatOff/On, because the latter needs to
 			// be reset before the program exits.
 			bool supported;
 			API.XkbSetDetectableAutoRepeat(API.DefaultDisplay, true, out supported);
+			Exists = true;
 		}
 		
 		void RegisterAtoms() {
@@ -226,7 +205,7 @@ namespace OpenTK.Platform.X11 {
 		}
 		
 		static void DeleteIconPixmaps(IntPtr display, IntPtr window) {
-			IntPtr wmHints_ptr = API.XGetWMHints(display, window);			
+			IntPtr wmHints_ptr = API.XGetWMHints(display, window);
 			if (wmHints_ptr == IntPtr.Zero) return;
 			
 			XWMHints wmHints = (XWMHints)Marshal.PtrToStructure(wmHints_ptr, typeof(XWMHints));
@@ -235,7 +214,7 @@ namespace OpenTK.Platform.X11 {
 			if ((flags & XWMHintsFlags.IconPixmapHint) != 0) {
 				wmHints.flags = new IntPtr((int)(flags & ~XWMHintsFlags.IconPixmapHint));
 				API.XFreePixmap(display, wmHints.icon_pixmap);
-			}			
+			}
 			if ((flags & XWMHintsFlags.IconMaskHint) != 0) {
 				wmHints.flags = new IntPtr((int)(flags & ~XWMHintsFlags.IconMaskHint));
 				API.XFreePixmap(display, wmHints.icon_mask);
@@ -296,7 +275,7 @@ namespace OpenTK.Platform.X11 {
 		public override unsafe void ProcessEvents() {
 			// Process all pending events
 			while (Exists) {
-				if (!GetPendingEvent ()) break;
+				if (!GetPendingEvent()) break;
 				
 				// Respond to the event e
 				switch (e.type) {
@@ -325,8 +304,7 @@ namespace OpenTK.Platform.X11 {
 
 					case XEventName.DestroyNotify:
 						Debug.Print("Window destroyed");
-						exists = false;
-
+						Exists = false;
 						break;
 
 					case XEventName.ConfigureNotify:
@@ -376,9 +354,9 @@ namespace OpenTK.Platform.X11 {
 					case XEventName.FocusIn:
 					case XEventName.FocusOut:
 						{
-							bool previous_focus = has_focus;
-							has_focus = e.type == XEventName.FocusIn;
-							if (has_focus != previous_focus)
+							bool wasFocused = Focused;
+							Focused = e.type == XEventName.FocusIn;
+							if (Focused != wasFocused)
 								RaiseFocusedChanged();
 						} break;
 
@@ -462,7 +440,7 @@ namespace OpenTK.Platform.X11 {
 		}
 
 		IntPtr GetSelectionProperty(ref XEvent e) {
-			IntPtr property  = e.SelectionRequestEvent.property;
+			IntPtr property = e.SelectionRequestEvent.property;
 			if (property != IntPtr.Zero) return property;
 
 			/* For obsolete clients. See ICCCM spec, selections chapter for reasoning. */
@@ -478,7 +456,7 @@ namespace OpenTK.Platform.X11 {
 
 			// wait up to 1 second for SelectionNotify event to arrive
 			for (int i = 0; i < 10; i++) {
-				ProcessEvents ();
+				ProcessEvents();
 				if (clipboard_paste_text != null) return clipboard_paste_text;
 				Thread.Sleep(100);
 			}
@@ -513,19 +491,15 @@ namespace OpenTK.Platform.X11 {
 			set {
 				int width = value.Width - borderLeft - borderRight;
 				int height = value.Height - borderTop - borderBottom;
-				width = width <= 0 ? 1 : width;
-				height = height <= 0 ? 1 : height;
+				width  = Math.Max(width,  1);
+				height = Math.Max(height, 1);
 				API.XResizeWindow(API.DefaultDisplay, WinHandle, width, height);
 				ProcessEvents();
 			}
 		}
 
 		public override Size ClientSize {
-			get {
-				if (clientSize.Width == 0)  clientSize.Width = 1;
-				if (clientSize.Height == 0) clientSize.Height = 1;
-				return clientSize;
-			}
+			get { return clientSize; }
 			set {
 				API.XResizeWindow(API.DefaultDisplay, WinHandle, value.Width, value.Height);
 				ProcessEvents();
@@ -582,10 +556,6 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 		
-		public override bool Focused {
-			get { return has_focus; }
-		}
-		
 		public override WindowState WindowState {
 			get {
 				IntPtr actual_atom, nitems, bytes_after, prop = IntPtr.Zero;
@@ -594,7 +564,7 @@ namespace OpenTK.Platform.X11 {
 				int maximised = 0;
 				API.XGetWindowProperty(API.DefaultDisplay, WinHandle,
 				                       net_wm_state, IntPtr.Zero, new IntPtr(256), false,
-				                       new IntPtr(4) /*XA_ATOM*/, out actual_atom, out actual_format,
+				                       xa_atom, out actual_atom, out actual_format,
 				                       out nitems, out bytes_after, ref prop);
 
 				if ((long)nitems > 0 && prop != IntPtr.Zero) {
@@ -689,6 +659,7 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 		
+		IntPtr blankCursor;
 		bool cursorVisible = true;
 		public override bool CursorVisible {
 			get { return cursorVisible; }
@@ -697,24 +668,15 @@ namespace OpenTK.Platform.X11 {
 				if (value) {
 					API.XUndefineCursor(API.DefaultDisplay, WinHandle);
 				} else {
-					if (blankCursor == IntPtr.Zero)
-						MakeBlankCursor();
+					if (blankCursor == IntPtr.Zero) {
+						XColor color = default(XColor);
+						IntPtr pixmap = API.XCreatePixmap(API.DefaultDisplay, API.RootWindow, 1, 1, 1);
+						blankCursor = API.XCreatePixmapCursor(API.DefaultDisplay, pixmap, pixmap, ref color, ref color, 0, 0);
+						API.XFreePixmap(API.DefaultDisplay, pixmap);
+					}
 					API.XDefineCursor(API.DefaultDisplay, WinHandle, blankCursor);
 				}
 			}
-		}
-		
-		IntPtr blankCursor;
-		void MakeBlankCursor() {
-			XColor color = default(XColor);
-			IntPtr pixmap = API.XCreatePixmap(API.DefaultDisplay, API.RootWindow, 1, 1, 1);
-			blankCursor = API.XCreatePixmapCursor(API.DefaultDisplay, pixmap, pixmap, ref color, ref color, 0, 0);
-			API.XFreePixmap(API.DefaultDisplay, pixmap);
-		}
-		
-		/// <summary> Returns true if a render window/context exists. </summary>
-		public override bool Exists {
-			get { return exists; }
 		}
 		
 		public override bool Visible {
@@ -744,7 +706,7 @@ namespace OpenTK.Platform.X11 {
 			Debug.Print("X11GLNative shutdown sequence initiated.");
 			API.XSync(API.DefaultDisplay, true);
 			API.XDestroyWindow(API.DefaultDisplay, WinHandle);
-			exists = false;
+			Exists = false;
 		}
 
 		public override Point PointToClient(Point point) {

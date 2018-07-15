@@ -282,13 +282,6 @@ namespace OpenTK.Platform.X11 {
 		}
 
 		[DllImport("libX11")]
-		public static extern KeySym XGetKeyboardMapping(Display display, KeyCode first_keycode, int keycode_count,
-		                                                ref int keysyms_per_keycode_return);
-
-		[DllImport("libX11")]
-		public static extern void XDisplayKeycodes(Display display, ref int min_keycodes_return, ref int max_keycodes_return);
-
-		[DllImport("libX11")]
 		public static extern KeySym XLookupKeysym(ref XKeyEvent key_event, int index);
 	}
 	

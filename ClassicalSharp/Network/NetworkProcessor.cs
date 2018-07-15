@@ -18,10 +18,10 @@ namespace ClassicalSharp.Network {
 
 	public sealed class NetworkProcessor : IServerConnection {
 		
-		public NetworkProcessor(Game window) {
-			game = window;
+		public NetworkProcessor(Game game) {
+			this.game = game;
 			cpeData = new CPESupport();
-			cpeData.game = window;
+			cpeData.game = game;
 			IsSinglePlayer = false;
 		}
 		

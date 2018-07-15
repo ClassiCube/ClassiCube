@@ -8,7 +8,7 @@ namespace ClassicalSharp.Model {
 
 	public class PigModel : IModel {
 		
-		public PigModel(Game window) : base(window) { SurivalScore = 10; }
+		public PigModel(Game game) : base(game) { SurivalScore = 10; }
 
 		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 6];

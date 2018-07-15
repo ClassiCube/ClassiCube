@@ -10,7 +10,7 @@ namespace ClassicalSharp.Model {
 	public class HumanoidModel : IModel {
 		
 		public ModelSet Set, SetSlim, Set64;
-		public HumanoidModel(Game window) : base(window) {
+		public HumanoidModel(Game game) : base(game) {
 			CalcHumanAnims = true;
 			UsesHumanSkin = true;
 		}

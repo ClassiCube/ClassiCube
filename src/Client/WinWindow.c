@@ -20,13 +20,9 @@ HINSTANCE win_Instance;
 HWND win_Handle;
 HDC win_DC;
 UInt8 win_State = WINDOW_STATE_NORMAL;
-bool win_Exists, win_Focused;
-bool invisible_since_creation; // Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront).
-Int32 suppress_resize; // Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events.
-
-struct Rectangle2D win_Bounds;
-struct Size2D win_ClientSize;
-struct Rectangle2D previous_bounds; // Used to restore previous size when leaving fullscreen mode.
+bool invisible_since_creation; /* Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront) */
+Int32 suppress_resize; /* Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events */
+struct Rectangle2D previous_bounds; /* Used to restore previous size when leaving fullscreen mode */
 
 static struct Rectangle2D Window_FromRect(RECT rect) {
 	struct Rectangle2D r;
@@ -38,10 +34,9 @@ static struct Rectangle2D Window_FromRect(RECT rect) {
 
 
 void Window_Destroy(void) {
-	if (!win_Exists) return;
-
+	if (!Window_Exists) return;
 	DestroyWindow(win_Handle);
-	win_Exists = false;
+	Window_Exists = false;
 }
 
 static void Window_ResetWindowState(void) {
@@ -69,9 +64,9 @@ static void Window_DoSetHiddenBorder(bool value) {
 
 	/* Make sure client size doesn't change when changing the border style.*/
 	RECT rect;
-	rect.left = win_Bounds.X; rect.top = win_Bounds.Y;
-	rect.right = rect.left + win_Bounds.Width;
-	rect.bottom = rect.top + win_Bounds.Height;
+	rect.left = Window_Bounds.X; rect.top = Window_Bounds.Y;
+	rect.right = rect.left + Window_Bounds.Width;
+	rect.bottom = rect.top + Window_Bounds.Height;
 	AdjustWindowRect(&rect, style, false);
 
 	/* This avoids leaving garbage on the background window. */
@@ -169,12 +164,12 @@ static Key Window_MapKey(WPARAM key) {
 static void Window_UpdateClientSize(HWND handle) {
 	RECT rect;
 	GetClientRect(handle, &rect);
-	win_ClientSize.Width  = RECT_WIDTH(rect);
-	win_ClientSize.Height = RECT_HEIGHT(rect);
+	Window_ClientSize.Width  = RECT_WIDTH(rect);
+	Window_ClientSize.Height = RECT_HEIGHT(rect);
 }
 
 static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
-	bool new_focused_state;
+	bool wasFocused;
 	Real32 wheel_delta;
 	WORD mouse_x, mouse_y;
 	WINDOWPOS* pos;
@@ -187,9 +182,9 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	switch (message) {
 
 	case WM_ACTIVATE:
-		new_focused_state = LOWORD(wParam) != 0;
-		if (new_focused_state != win_Focused) {
-			win_Focused = new_focused_state;
+		wasFocused = Window_Focused;
+		Window_Focused = LOWORD(wParam) != 0;
+		if (Window_Focused != wasFocused) {
 			Event_RaiseVoid(&WindowEvents_FocusChanged);
 		}
 		break;
@@ -208,17 +203,17 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		if (pos->hwnd == win_Handle) {
 			struct Point2D loc = Window_GetLocation();
 			if (loc.X != pos->x || loc.Y != pos->y) {
-				win_Bounds.X = pos->x; win_Bounds.Y = pos->y;
+				Window_Bounds.X = pos->x; Window_Bounds.Y = pos->y;
 				Event_RaiseVoid(&WindowEvents_Moved);
 			}
 
 			struct Size2D size = Window_GetSize();
 			if (size.Width != pos->cx || size.Height != pos->cy) {
-				win_Bounds.Width = pos->cx; win_Bounds.Height = pos->cy;
+				Window_Bounds.Width = pos->cx; Window_Bounds.Height = pos->cy;
 				Window_UpdateClientSize(handle);
 
 				SetWindowPos(win_Handle, NULL,
-					win_Bounds.X, win_Bounds.Y, win_Bounds.Width, win_Bounds.Height,
+					Window_Bounds.X, Window_Bounds.Y, Window_Bounds.Width, Window_Bounds.Height,
 					SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
 				if (suppress_resize <= 0) {
@@ -375,8 +370,8 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	case WM_CREATE:
 		cs = (CREATESTRUCT*)lParam;
 		if (cs->hwndParent == NULL) {
-			win_Bounds.X = cs->x;      win_Bounds.Y = cs->y;
-			win_Bounds.Width = cs->cx; win_Bounds.Height = cs->cy;
+			Window_Bounds.X = cs->x;      Window_Bounds.Y = cs->y;
+			Window_Bounds.Width = cs->cx; Window_Bounds.Height = cs->cy;
 			Window_UpdateClientSize(handle);
 			invisible_since_creation = true;
 		}
@@ -388,7 +383,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		break;
 
 	case WM_DESTROY:
-		win_Exists = false;
+		Window_Exists = false;
 		UnregisterClassA(win_ClassName, win_Instance);
 		if (win_DC != NULL) ReleaseDC(win_Handle, win_DC);
 		Event_RaiseVoid(&WindowEvents_Closed);
@@ -432,7 +427,7 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF Strin
 	if (win_DC == NULL) {
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to get device context");
 	}
-	win_Exists = true;
+	Window_Exists = true;
 }
 
 void Window_GetClipboardText(STRING_TRANSIENT String* value) {
@@ -501,27 +496,19 @@ void Window_SetClipboardText(STRING_PURE String* value) {
 }
 
 
-struct Rectangle2D Window_GetBounds(void) { return win_Bounds; }
 void Window_SetBounds(struct Rectangle2D rect) {
 	/* Note: the bounds variable is updated when the resize/move message arrives.*/
 	SetWindowPos(win_Handle, NULL, rect.X, rect.Y, rect.Width, rect.Height, 0);
 }
 
-struct Point2D Window_GetLocation(void) {
-	struct Point2D point = { win_Bounds.X, win_Bounds.Y }; return point;
-}
 void Window_SetLocation(struct Point2D point) {
 	SetWindowPos(win_Handle, NULL, point.X, point.Y, 0, 0, SWP_NOSIZE);
 }
 
-struct Size2D Window_GetSize(void) {
-	struct Size2D size = { win_Bounds.Width, win_Bounds.Height }; return size;
-}
 void Window_SetSize(struct Size2D size) {
 	SetWindowPos(win_Handle, NULL, 0, 0, size.Width, size.Height, SWP_NOMOVE);
 }
 
-struct Size2D Window_GetClientSize(void) { return win_ClientSize; }
 void Window_SetClientSize(struct Size2D size) {
 	DWORD style = GetWindowLongA(win_Handle, GWL_STYLE);
 	RECT rect; rect.left = 0; rect.top = 0;
@@ -532,23 +519,6 @@ void Window_SetClientSize(struct Size2D size) {
 	Window_SetSize(adjSize);
 }
 
-/* TODO: Set window icon
-public Icon Icon{
-get{ return icon; }
-set{
-icon = value;
-if (window.handle != IntPtr.Zero)
-{
-//Icon small = new Icon( value, 16, 16 );
-//GC.KeepAlive( small );
-API.SendMessage(window.handle, WM_SETICON, (IntPtr)0, icon == null ? IntPtr.Zero : value.Handle);
-API.SendMessage(window.handle, WM_SETICON, (IntPtr)1, icon == null ? IntPtr.Zero : value.Handle);
-}
-}
-}*/
-
-bool Window_GetFocused(void) { return win_Focused; }
-bool Window_GetExists(void) { return win_Exists; }
 void* Window_GetWindowHandle(void) { return win_Handle; }
 
 bool Window_GetVisible(void) { return IsWindowVisible(win_Handle); }
@@ -602,7 +572,7 @@ void Window_SetWindowState(UInt8 value) {
 
 		/* Reset state to avoid strange side-effects from maximized/minimized windows. */
 		Window_ResetWindowState();
-		previous_bounds = win_Bounds;
+		previous_bounds = Window_Bounds;
 		Window_SetHiddenBorder(true);
 
 		command = SW_MAXIMIZE;
@@ -645,7 +615,7 @@ void Window_ProcessEvents(void) {
 
 	HWND foreground = GetForegroundWindow();
 	if (foreground != NULL) {
-		win_Focused = foreground == win_Handle;
+		Window_Focused = foreground == win_Handle;
 	}
 }
 
@@ -702,40 +672,40 @@ void GLContext_SelectGraphicsMode(struct GraphicsMode mode) {
 	}
 }
 
-HGLRC GLContext_Handle;
-HDC GLContext_DC;
-typedef BOOL (WINAPI *FN_WGLSWAPINTERVAL)(int interval);
+HGLRC ctx_Handle;
+HDC ctx_DC;
+typedef BOOL (WINAPI *FN_WGLSWAPINTERVAL)(Int32 interval);
 typedef int (WINAPI *FN_WGLGETSWAPINTERVAL)(void);
 FN_WGLSWAPINTERVAL wglSwapIntervalEXT;
 FN_WGLGETSWAPINTERVAL wglGetSwapIntervalEXT;
-bool GLContext_supports_vSync;
+bool ctx_supports_vSync;
 
 void GLContext_Init(struct GraphicsMode mode) {
 	GLContext_SelectGraphicsMode(mode);
-	GLContext_Handle = wglCreateContext(win_DC);
-	if (GLContext_Handle == NULL) {
-		GLContext_Handle = wglCreateContext(win_DC);
+	ctx_Handle = wglCreateContext(win_DC);
+	if (ctx_Handle == NULL) {
+		ctx_Handle = wglCreateContext(win_DC);
 	}
-	if (GLContext_Handle == NULL) {
+	if (ctx_Handle == NULL) {
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to create OpenGL context");
 	}
 
-	if (!wglMakeCurrent(win_DC, GLContext_Handle)) {
+	if (!wglMakeCurrent(win_DC, ctx_Handle)) {
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to make OpenGL context current");
 	}
-	GLContext_DC = wglGetCurrentDC();
+	ctx_DC = wglGetCurrentDC();
 
 	wglGetSwapIntervalEXT = (FN_WGLGETSWAPINTERVAL)GLContext_GetAddress("wglGetSwapIntervalEXT");
 	wglSwapIntervalEXT = (FN_WGLSWAPINTERVAL)GLContext_GetAddress("wglSwapIntervalEXT");
-	GLContext_supports_vSync = wglGetSwapIntervalEXT != NULL && wglSwapIntervalEXT != NULL;
+	ctx_supports_vSync = wglGetSwapIntervalEXT != NULL && wglSwapIntervalEXT != NULL;
 }
 
 void GLContext_Update(void) { }
 void GLContext_Free(void) {
-	if (!wglDeleteContext(GLContext_Handle)) {
+	if (!wglDeleteContext(ctx_Handle)) {
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to destroy OpenGL context");
 	}
-	GLContext_Handle = NULL;
+	ctx_Handle = NULL;
 }
 
 void* GLContext_GetAddress(const UChar* function) {
@@ -744,17 +714,17 @@ void* GLContext_GetAddress(const UChar* function) {
 }
 
 void GLContext_SwapBuffers(void) {
-	if (!SwapBuffers(GLContext_DC)) {
+	if (!SwapBuffers(ctx_DC)) {
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to swap buffers");
 	}
 }
 
 bool GLContext_GetVSync(void) {
-	return GLContext_supports_vSync && wglGetSwapIntervalEXT();
+	return ctx_supports_vSync && wglGetSwapIntervalEXT();
 }
 
 void GLContext_SetVSync(bool enabled) {
-	if (GLContext_supports_vSync) wglSwapIntervalEXT(enabled ? 1 : 0);
+	if (ctx_supports_vSync) wglSwapIntervalEXT(enabled);
 }
 #endif
 #endif

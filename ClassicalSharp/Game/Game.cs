@@ -35,6 +35,7 @@ namespace ClassicalSharp {
 		public Game(string username, string mppass, string skinServer, int width, int height) {
 			string title = Program.AppName + " (" + username + ")";
 			window = Factory.CreateWindow(width, height, title, GraphicsMode.Default, DisplayDevice.Primary);
+			window.Visible = true;
 			Username = username;
 			Mppass = mppass;
 			this.skinServer = skinServer;
@@ -85,10 +86,10 @@ namespace ClassicalSharp {
 		}
 		
 		bool isExiting;
-		public void Exit() { 
+		public void Exit() {
 			isExiting = true;
 			// TODO: is isExiting right
-			window.Close(); 
+			window.Close();
 		}
 		
 		public void SetViewDistance(int distance, bool userDist) {
@@ -244,10 +245,14 @@ namespace ClassicalSharp {
 			return -1;
 		}
 		
-		void OnResize(object sender, EventArgs e) {
+		void UpdateClientSize() {
 			Size size = window.ClientSize;
-			Width = size.Width; Height = size.Height;
-			
+			Width  = Math.Max(size.Width,  1);
+			Height = Math.Max(size.Height, 1);
+		}
+		
+		void OnResize(object sender, EventArgs e) {
+			UpdateClientSize();
 			Graphics.OnWindowResize(this);
 			UpdateProjection();
 			Gui.OnResize();

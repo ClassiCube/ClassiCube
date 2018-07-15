@@ -566,5 +566,8 @@
     <ClCompile Include="DisplayDevice.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
+    <ClCompile Include="X11Window.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

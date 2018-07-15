@@ -41,23 +41,24 @@
 void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, struct DisplayDevice* device);
 void Window_GetClipboardText(STRING_TRANSIENT String* value);
 void Window_SetClipboardText(STRING_PURE String* value);
-/* TODO: IMPLEMENT THIS  void Window_SetIcon(Bitmap* bmp); */
+/* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */
 
-bool Window_GetFocused(void);
+bool Window_Exists;
+bool Window_Focused;
 bool Window_GetVisible(void);
 void Window_SetVisible(bool visible);
-bool Window_GetExists(void);
 void* Window_GetWindowHandle(void);
 UInt8 Window_GetWindowState(void);
 void Window_SetWindowState(UInt8 value);
 
-struct Rectangle2D Window_GetBounds(void);
+struct Rectangle2D Window_Bounds;
+struct Size2D Window_ClientSize;
+#define Window_GetLocation() Point2D_Make(Window_Bounds.X, Window_Bounds.Y)
+#define Window_GetSize() Size2D_Make(Window_Bounds.Width, Window_Bounds.Height)
+
 void Window_SetBounds(struct Rectangle2D rect);
-struct Point2D Window_GetLocation(void);
 void Window_SetLocation(struct Point2D point);
-struct Size2D Window_GetSize(void);
 void Window_SetSize(struct Size2D size);
-struct Size2D Window_GetClientSize(void);
 void Window_SetClientSize(struct Size2D size);
 
 void Window_Close(void);

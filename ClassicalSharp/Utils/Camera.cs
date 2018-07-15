@@ -170,7 +170,7 @@ namespace ClassicalSharp {
 	}
 	
 	public class ThirdPersonCamera : PerspectiveCamera {
-		public ThirdPersonCamera(Game window, bool forward) : base(window) { this.forward = forward; }
+		public ThirdPersonCamera(Game game, bool forward) : base(game) { this.forward = forward; }
 		public override bool IsThirdPerson { get { return true; } }
 		
 		bool forward;
@@ -204,7 +204,7 @@ namespace ClassicalSharp {
 	}
 	
 	public class FirstPersonCamera : PerspectiveCamera {
-		public FirstPersonCamera(Game window) : base(window) { }
+		public FirstPersonCamera(Game game) : base(game) { }
 		public override bool IsThirdPerson { get { return false; } }
 		
 		public override Vector2 GetOrientation() {

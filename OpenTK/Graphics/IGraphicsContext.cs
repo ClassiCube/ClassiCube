@@ -17,17 +17,10 @@ namespace OpenTK.Graphics {
     	
         public abstract void SwapBuffers();
 
-        public abstract void MakeCurrent(INativeWindow window);
-
-        public abstract bool IsCurrent { get; }
-
         public abstract bool VSync { get; set; }
 
         public virtual void Update(INativeWindow window) { }
-
-        public abstract void LoadAll();
         
-        public GraphicsMode Mode;
         public IntPtr ContextHandle;
 
         public abstract IntPtr GetAddress(string function);

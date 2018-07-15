@@ -8,7 +8,7 @@ namespace ClassicalSharp.Model {
 
 	public class CreeperModel : IModel {
 		
-		public CreeperModel(Game window) : base(window) { SurivalScore = 200; }
+		public CreeperModel(Game game) : base(game) { SurivalScore = 200; }
 
 		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 6];

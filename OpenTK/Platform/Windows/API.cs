@@ -35,9 +35,9 @@ namespace OpenTK.Platform.Windows {
 		internal static extern short UnregisterClass(IntPtr className, IntPtr instance);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern int SetWindowLong(IntPtr hWnd, GetWindowLongOffsets nIndex, int dwNewLong);
+		internal static extern int SetWindowLong(IntPtr hWnd, GetWindowLong nIndex, int dwNewLong);
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern uint GetWindowLong(IntPtr hWnd, GetWindowLongOffsets nIndex);
+		internal static extern uint GetWindowLong(IntPtr hWnd, GetWindowLong nIndex);
 		
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern IntPtr GetForegroundWindow();
@@ -330,19 +330,14 @@ namespace OpenTK.Platform.Windows {
 	internal struct Win32Rectangle {
 		
 		internal Win32Rectangle(int width, int height) {
-			left = top = 0;
+			left = 0; top = 0;
 			right = width;
 			bottom = height;
 		}
 
 		internal int left, top, right, bottom;
-
 		internal int Width { get { return right - left; } }
 		internal int Height { get { return bottom - top; } }
-
-		internal Rectangle ToRectangle() {
-			return Rectangle.FromLTRB(left, top, right, bottom);
-		}
 
 		internal static Win32Rectangle From(Rectangle value) {
 			Win32Rectangle rect = new Win32Rectangle();
@@ -352,16 +347,7 @@ namespace OpenTK.Platform.Windows {
 			rect.bottom = value.Bottom;
 			return rect;
 		}
-
-		internal static Win32Rectangle From(Size value) {
-			Win32Rectangle rect = new Win32Rectangle();
-			rect.right = value.Width;
-			rect.bottom = value.Height;
-			return rect;
-		}
 	}
-	
-	enum GWL { STYLE = (-16), }
 
 	internal enum SizeMessage {
 		MAXHIDE = 4,
@@ -400,7 +386,7 @@ namespace OpenTK.Platform.Windows {
 		OverlappedWindow = Overlapped | Caption | SystemMenu | ThickFrame | MinimizeBox | MaximizeBox,
 	}
 	
-	internal enum GetWindowLongOffsets : int {
+	internal enum GetWindowLong : int {
 		STYLE = (-16),
 	}
 	

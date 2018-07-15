@@ -50,17 +50,17 @@ namespace OpenTK {
 		public abstract void SetClipboardText(string value);
 		public abstract Icon Icon { get; set; }
 		
-		/// <summary> Gets or sets the handle of the window. </summary>
+		/// <summary> Gets the handle of the window. </summary>
 		public IntPtr WinHandle;
 		
-		/// <summary> Gets a System.Boolean that indicates whether this window has input focus. </summary>
-		public abstract bool Focused { get; }
+		/// <summary> Gets whether the window has been created and has not been destroyed. </summary>
+		public bool Exists;
 		
-		/// <summary> Gets or sets a System.Boolean that indicates whether the window is visible. </summary>
+		/// <summary> Gets whether this window has input focus. </summary>
+		public bool Focused;
+		
+		/// <summary> Gets or sets whether this window is visible. </summary>
 		public abstract bool Visible { get; set; }
-		
-		/// <summary> Gets a System.Boolean that indicates whether the window has been created and has not been destroyed. </summary>
-		public abstract bool Exists { get; }
 		
 		public abstract WindowState WindowState { get; set; }
 

@@ -42,13 +42,11 @@ namespace OpenTK.Platform.MacOS {
 		Size clientSize;
 		Rectangle windowedBounds;
 		bool mIsDisposed = false;
-		bool mExists = true;
 		internal DisplayDevice Display;
 
 		WindowPositionMethod mPositionMethod = WindowPositionMethod.CenterOnMainScreen;
 		int mTitlebarHeight;
 		WindowState windowState = WindowState.Normal;
-		bool mIsActive = false;
 		Icon mIcon;
 		readonly MacOSEventHandler handler;
 
@@ -56,15 +54,14 @@ namespace OpenTK.Platform.MacOS {
 			Application.Initialize();
 		}
 		
-		public CarbonWindow(int x, int y, int width, int height, string title, DisplayDevice device)
-		{
+		public CarbonWindow(int x, int y, int width, int height, string title, DisplayDevice device) {
 			this.title = title;
 			handler = EventHandlerFunc;
 			CreateNativeWindow(WindowClass.Document,
 			                   WindowAttributes.StandardDocument | WindowAttributes.StandardHandler |
 			                   WindowAttributes.InWindowMenu | WindowAttributes.LiveResize,
 			                   new Rect((short)x, (short)y, (short)width, (short)height));
-			
+			Exists = true;
 			Display = device;
 		}
 
@@ -74,7 +71,7 @@ namespace OpenTK.Platform.MacOS {
 			Debug.Print("Disposing of CarbonGLNative window.");
 			API.DisposeWindow(WinHandle);
 			mIsDisposed = true;
-			mExists = false;
+			Exists = false;
 			DisposeUPP();
 		}
 
@@ -226,7 +223,7 @@ namespace OpenTK.Platform.MacOS {
 					return OSStatus.EventNotHandled;
 
 				case WindowEventKind.WindowClosed:
-					mExists = false;
+					Exists = false;
 					RaiseClosed();
 					return OSStatus.NoError;
 
@@ -240,12 +237,12 @@ namespace OpenTK.Platform.MacOS {
 					return OSStatus.EventNotHandled;
 
 				case WindowEventKind.WindowActivate:
-					mIsActive = true;
+					Focused = true;
 					RaiseFocusedChanged();
 					return OSStatus.EventNotHandled;
 
 				case WindowEventKind.WindowDeactivate:
-					mIsActive = false;
+					Focused = false;
 					RaiseFocusedChanged();
 					return OSStatus.EventNotHandled;
 			}
@@ -492,10 +489,6 @@ namespace OpenTK.Platform.MacOS {
 			return new Point(point.X + r.X, point.Y + r.Y);
 		}
 
-		public override bool Exists {
-			get { return mExists; }
-		}
-
 		public override Icon Icon {
 			get { return mIcon; }
 			set { SetIcon(value); }
@@ -566,10 +559,6 @@ namespace OpenTK.Platform.MacOS {
 					API.HideWindow(WinHandle);
 				}
 			}
-		}
-
-		public override bool Focused {
-			get { return this.mIsActive; }
 		}
 
 		public override Rectangle Bounds {

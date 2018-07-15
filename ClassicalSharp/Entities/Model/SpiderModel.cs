@@ -8,7 +8,7 @@ namespace ClassicalSharp.Model {
 
 	public class SpiderModel : IModel {
 		
-		public SpiderModel(Game window) : base(window) { SurivalScore = 105; }
+		public SpiderModel(Game game) : base(game) { SurivalScore = 105; }
 
 		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 5];

@@ -46,10 +46,7 @@ namespace OpenTK.Platform.Windows {
 		internal extern static Boolean wglDeleteContext(IntPtr oldContext);
 		
 		[DllImport("OPENGL32.DLL", SetLastError = true)]
-		internal extern static IntPtr wglGetCurrentContext();	
-		[DllImport("OPENGL32.DLL", SetLastError = true)]
-		internal extern static Boolean wglMakeCurrent(IntPtr hDc, IntPtr newContext);
-		
+		internal extern static Boolean wglMakeCurrent(IntPtr hDc, IntPtr newContext);		
 		[DllImport("OPENGL32.DLL", SetLastError = true)]
 		internal extern static IntPtr wglGetCurrentDC();
 		

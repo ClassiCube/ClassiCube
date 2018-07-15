@@ -321,6 +321,7 @@
     <ClCompile Include="WinPlatform.c" />
     <ClCompile Include="WinWindow.c" />
     <ClCompile Include="World.c" />
+    <ClCompile Include="X11Window.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -11,7 +11,6 @@ using System.Security;
 
 namespace OpenTK.Platform.X11 {
 	enum GLXAttribute : int {
-		USE_GL = 1,
 		RGBA = 4,
 		DOUBLEBUFFER = 5,
 		RED_SIZE = 8,
@@ -59,10 +58,7 @@ namespace OpenTK.Platform.X11 {
 		public static extern IntPtr glXGetProcAddress([MarshalAs(UnmanagedType.LPTStr)] string procName);
 
 		[DllImport(lib)]
-		public static extern int glXGetConfig(IntPtr dpy, ref XVisualInfo vis, GLXAttribute attrib, out int value);
-		[DllImport(lib)]
 		public static extern IntPtr glXChooseVisual(IntPtr dpy, int screen, int[] attriblist);
-
 		// Returns an array of GLXFBConfig structures.
 		[DllImport(lib)]
 		public unsafe extern static IntPtr* glXChooseFBConfig(IntPtr dpy, int screen, int[] attriblist, out int fbount);

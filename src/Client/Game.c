@@ -293,12 +293,14 @@ Int32 Game_CalcRenderType(STRING_PURE String* type) {
 	return -1;
 }
 
-static void Game_OnResize(void* obj) {
-	struct Size2D size = Window_GetClientSize();
-	Game_Width = size.Width; Game_Height = size.Height;
-	if (Game_Width == 0)  Game_Width = 1;
-	if (Game_Height == 0) Game_Height = 1;
+static void Game_UpdateClientSize(void) {
+	struct Size2D size = Window_ClientSize;
+	Game_Width  = max(size.Width,  1);
+	Game_Height = max(size.Height, 1);
+}
 
+static void Game_OnResize(void* obj) {
+	Game_UpdateClientSize();
 	Gfx_OnWindowResize();
 	Game_UpdateProjection();
 	Gui_OnResize();
@@ -429,7 +431,9 @@ void Game_Load(void) {
 	Gfx_Init();
 	Gfx_SetVSync(true);
 	Gfx_MakeApiInfo();
+
 	Drawer2D_Init();
+	Game_UpdateClientSize();
 
 	Entities_Init();
 	TextureCache_Init();
@@ -452,6 +456,7 @@ void Game_Load(void) {
 
 	Block_Init();
 	ModelCache_Init();
+
 	AsyncDownloader_MakeComponent(&comp); Game_AddComponent(&comp);
 	Lighting_MakeComponent(&comp);        Game_AddComponent(&comp);
 
@@ -467,9 +472,6 @@ void Game_Load(void) {
 	LocalPlayer_Init(); 
 	LocalPlayer_MakeComponent(&comp); Game_AddComponent(&comp);
 	Entities_List[ENTITIES_SELF_ID] = &LocalPlayer_Instance.Base;
-
-	struct Size2D size = Window_GetClientSize();
-	Game_Width = size.Width; Game_Height = size.Height;
 
 	ChunkUpdater_Init();
 	EnvRenderer_MakeComponent(&comp);     Game_AddComponent(&comp);

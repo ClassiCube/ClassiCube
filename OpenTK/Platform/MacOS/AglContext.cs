@@ -3,7 +3,6 @@
 //  Copyright 2008. All rights reserved.
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using OpenTK.Graphics;
 
@@ -18,40 +17,48 @@ namespace OpenTK.Platform.MacOS {
 
 		public AglContext(GraphicsMode mode, CarbonWindow window) {
 			Debug.Print("Window info: {0}", window);
-			Mode = mode;
 			CreateContext(mode, window, true);
+			MakeCurrent(window);
 		}
+		
+		int[] GetAttribs(GraphicsMode mode, bool fullscreen) {
+			int[] attribs = new int[20];
+			int i = 0;
+			ColorFormat color = mode.ColorFormat;
+			
+			Debug.Print("Bits per pixel: {0}", color.BitsPerPixel);
+			Debug.Print("Depth: {0}", mode.Depth);
+			
+			attribs[i++] = (int)AglAttribute.RGBA;
+			attribs[i++] = (int)AglAttribute.DOUBLEBUFFER;
 
-		void AddPixelAttrib(List<int> attribs, Agl.PixelFormatAttribute name, int value) {
-			attribs.Add((int)name);
-			attribs.Add(value);
+			attribs[i++] = (int)AglAttribute.RED_SIZE;
+			attribs[i++] = color.Red;
+			attribs[i++] = (int)AglAttribute.GREEN_SIZE;
+			attribs[i++] = color.Green;
+			attribs[i++] = (int)AglAttribute.BLUE_SIZE;
+			attribs[i++] = color.Blue;
+			attribs[i++] = (int)AglAttribute.ALPHA_SIZE;
+			attribs[i++] = color.Alpha;
+
+			if (mode.Depth > 0) {
+				attribs[i++] = (int)AglAttribute.DEPTH_SIZE;
+				attribs[i++] = mode.Depth;
+			}
+			if (mode.Stencil > 0) {
+				attribs[i++] = (int)AglAttribute.STENCIL_SIZE;
+				attribs[i++] = mode.Stencil;
+			}
+			if (fullscreen) {
+				attribs[i++] = (int)AglAttribute.FULLSCREEN;
+			}
+			
+			attribs[i++] = 0;
+			return attribs;
 		}
 		
 		void CreateContext(GraphicsMode mode, CarbonWindow wind, bool fullscreen) {
-			List<int> attribs = new List<int>();
-
-			attribs.Add((int)Agl.PixelFormatAttribute.AGL_RGBA);
-			attribs.Add((int)Agl.PixelFormatAttribute.AGL_DOUBLEBUFFER);
-			AddPixelAttrib(attribs, Agl.PixelFormatAttribute.AGL_RED_SIZE, mode.ColorFormat.Red);
-			AddPixelAttrib(attribs, Agl.PixelFormatAttribute.AGL_GREEN_SIZE, mode.ColorFormat.Green);
-			AddPixelAttrib(attribs, Agl.PixelFormatAttribute.AGL_BLUE_SIZE, mode.ColorFormat.Blue);
-			AddPixelAttrib(attribs, Agl.PixelFormatAttribute.AGL_ALPHA_SIZE, mode.ColorFormat.Alpha);
-
-			if (mode.Depth > 0)
-				AddPixelAttrib(attribs, Agl.PixelFormatAttribute.AGL_DEPTH_SIZE, mode.Depth);
-
-			if (mode.Stencil > 0)
-				AddPixelAttrib(attribs, Agl.PixelFormatAttribute.AGL_STENCIL_SIZE, mode.Stencil);
-
-			if (fullscreen)
-				attribs.Add((int)Agl.PixelFormatAttribute.AGL_FULLSCREEN);
-			attribs.Add((int)Agl.PixelFormatAttribute.AGL_NONE);
-
-			Debug.Print("AGL Attribute array:  ");
-			for (int i = 0; i < attribs.Count; i++)
-				Debug.Print(attribs[i].ToString() + "  ");
-			Debug.Print("");
-
+			int[] attribs = GetAttribs(mode, fullscreen);
 			IntPtr pixelFormat;
 
 			// Choose a pixel format with the attributes we specified.
@@ -67,7 +74,7 @@ namespace OpenTK.Platform.MacOS {
 				if (status != OSStatus.NoError)
 					throw new MacOSException(status, "DMGetGDeviceByDisplayID failed.");
 
-				pixelFormat = Agl.aglChoosePixelFormat(ref gdevice, 1, attribs.ToArray());
+				pixelFormat = Agl.aglChoosePixelFormat(ref gdevice, 1, attribs);
 				int err = Agl.aglGetError();
 
 				if (err == Agl.AGL_BAD_PIXEL_FORMAT) {
@@ -78,7 +85,7 @@ namespace OpenTK.Platform.MacOS {
 					return;
 				}
 			} else {
-				pixelFormat = Agl.aglChoosePixelFormat(IntPtr.Zero, 0, attribs.ToArray());
+				pixelFormat = Agl.aglChoosePixelFormat(IntPtr.Zero, 0, attribs);
 				Agl.CheckReturnValue(0, "aglChoosePixelFormat");
 			}
 
@@ -170,13 +177,9 @@ namespace OpenTK.Platform.MacOS {
 			Agl.CheckReturnValue(0, "aglSwapBuffers");
 		}
 		
-		public override void MakeCurrent(INativeWindow window) {
+		void MakeCurrent(INativeWindow window) {
 			byte code = Agl.aglSetCurrentContext(ContextHandle);
 			Agl.CheckReturnValue(code, "aglSetCurrentContext");
-		}
-
-		public override bool IsCurrent {
-			get { return ContextHandle == Agl.aglGetCurrentContext(); }
 		}
 
 		public override bool VSync {
@@ -231,8 +234,6 @@ namespace OpenTK.Platform.MacOS {
 				symbol = NSAddressOfSymbol(symbol);
 			return symbol;
 		}
-		
-		public override void LoadAll() { }
 	}
 }
 #endif

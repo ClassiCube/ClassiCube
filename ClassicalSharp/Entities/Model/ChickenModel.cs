@@ -8,7 +8,7 @@ namespace ClassicalSharp.Model {
 
 	public class ChickenModel : IModel {
 		
-		public ChickenModel(Game window) : base(window) { }
+		public ChickenModel(Game game) : base(game) { }
 		
 		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 6 + quadVertices * 2 * 2];
