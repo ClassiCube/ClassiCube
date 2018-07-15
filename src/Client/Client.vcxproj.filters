@@ -130,12 +130,6 @@
     <Filter Include="Source Files\Entities\Model">
       <UniqueIdentifier>{d9fb5d8e-29d7-4774-abfb-d30b6ab766e7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Platform\Window">
-      <UniqueIdentifier>{e4324350-79a5-4976-a8cc-28881077ca9a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Platform\Window">
-      <UniqueIdentifier>{37746374-0a3a-415c-99a6-e1e350328eab}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Network">
       <UniqueIdentifier>{9e70549b-2798-4372-b887-876f8403a7ff}</UniqueIdentifier>
     </Filter>
@@ -282,12 +276,6 @@
     <ClInclude Include="ModelCache.h">
       <Filter>Header Files\Entities\Model</Filter>
     </ClInclude>
-    <ClInclude Include="DisplayDevice.h">
-      <Filter>Header Files\Platform\Window</Filter>
-    </ClInclude>
-    <ClInclude Include="Window.h">
-      <Filter>Header Files\Platform\Window</Filter>
-    </ClInclude>
     <ClInclude Include="TerrainAtlas.h">
       <Filter>Header Files\TexturePack</Filter>
     </ClInclude>
@@ -368,6 +356,12 @@
     </ClInclude>
     <ClInclude Include="PacketHandlers.h">
       <Filter>Header Files\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="DisplayDevice.h">
+      <Filter>Header Files\Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="Window.h">
+      <Filter>Header Files\Platform</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -466,9 +460,6 @@
     </ClCompile>
     <ClCompile Include="Program.c">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DisplayDevice.c">
-      <Filter>Source Files\Platform\Window</Filter>
     </ClCompile>
     <ClCompile Include="WinWindow.c">
       <Filter>Source Files\Platform</Filter>
@@ -571,6 +562,9 @@
     </ClCompile>
     <ClCompile Include="AsyncDownloader.c">
       <Filter>Source Files\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="DisplayDevice.c">
+      <Filter>Source Files\Platform</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

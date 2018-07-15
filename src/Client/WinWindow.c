@@ -1,8 +1,8 @@
 #include "Window.h"
+#if CC_BUILD_WIN
 #include "Platform.h"
 #include "Input.h"
 #include "Event.h"
-#include "String.h"
 #include "ErrorHandler.h"
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
@@ -756,4 +756,5 @@ bool GLContext_GetVSync(void) {
 void GLContext_SetVSync(bool enabled) {
 	if (GLContext_supports_vSync) wglSwapIntervalEXT(enabled ? 1 : 0);
 }
+#endif
 #endif

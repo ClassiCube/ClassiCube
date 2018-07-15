@@ -1,4 +1,5 @@
 #include "ErrorHandler.h"
+#if CC_BUILD_WIN
 #include "Platform.h"
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
@@ -99,3 +100,4 @@ void ErrorHandler_Backtrace(STRING_TRANSIENT String* str) {
 	}
 	String_AppendConst(str, "\r\n");
 }
+#endif

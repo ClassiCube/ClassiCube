@@ -1,6 +1,5 @@
 #ifndef CC_EVENT_H
 #define CC_EVENT_H
-#include "String.h"
 #include "Stream.h"
 #include "Vectors.h"
 /* Helper method for managing events, and contains all events.

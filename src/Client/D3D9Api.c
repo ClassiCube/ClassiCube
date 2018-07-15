@@ -52,7 +52,7 @@ static void D3D9_FreeResource(GfxResourceID* resource) {
 }
 
 static void D3D9_LoopUntilRetrieved(void) {
-	ScheduledTask task;
+	struct ScheduledTask task;
 	task.Interval = 1.0f / 60.0f;
 	task.Callback = Gfx_LostContextFunction;
 

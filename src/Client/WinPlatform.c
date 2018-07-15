@@ -1,4 +1,5 @@
 #include "Platform.h"
+#if CC_BUILD_WIN
 #include "Stream.h"
 #include "DisplayDevice.h"
 #include "ExtMath.h"
@@ -709,3 +710,4 @@ ReturnCode Platform_HttpFreeRequest(void* handle) {
 ReturnCode Platform_HttpFree(void) {
 	return InternetCloseHandle(hInternet) ? 0 : GetLastError();
 }
+#endif
