@@ -186,6 +186,15 @@ namespace ClassicalSharp {
 			return ExtendedCharReplacements[c - 0x7F];
 		}
 		
+		public static string GetFilename(string path) {
+			// Ignore directories: convert x/name to name and x\name to name
+			for (int i = path.Length - 1; i >= 0; i--) {
+				char c = path[i];
+				if (c == '/' || c == '\\') return path.Substring(i + 1);
+			}
+			return path;
+		}
+		
 		public static string ToLower(string src) {
 			bool hasUpper = false;
 			for (int i = 0; i < src.Length; i++) {

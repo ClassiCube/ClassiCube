@@ -62,7 +62,7 @@ static void PerspectiveCamera_CentreMousePosition(void) {
 }
 
 static void PerspectiveCamera_RegrabMouse(void) {
-	if (!Window_GetExists()) return;
+	if (!Window_Exists) return;
 	cam_delta = Point2D_Empty;
 	PerspectiveCamera_CentreMousePosition();
 }
@@ -116,7 +116,7 @@ static void PerspectiveCamera_UpdateMouse(void) {
 	struct Screen* screen = Gui_GetActiveScreen();
 	if (screen->HandlesAllInput) {
 		cam_delta = Point2D_Empty;
-	} else if (Window_GetFocused()) {
+	} else if (Window_Focused) {
 		struct Point2D pos = Window_GetDesktopCursorPos();
 		cam_delta = Point2D_Make(pos.X - cam_prev.X, pos.Y - cam_prev.Y);
 		PerspectiveCamera_CentreMousePosition();

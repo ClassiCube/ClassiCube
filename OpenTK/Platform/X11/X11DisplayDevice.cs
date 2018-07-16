@@ -9,15 +9,14 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Runtime.InteropServices;
 
 namespace OpenTK.Platform.X11 {
 	
 	internal static class X11DisplayDevice {
-		static bool xinerama_supported, xrandr_supported, xf86_supported;
 		
 		internal static void Init() {
 			List<DisplayDevice> devices = new List<DisplayDevice>();
+			bool xinerama_supported = false, xrandr_supported = false;
 			try {
 				xinerama_supported = QueryXinerama(devices);
 			} catch {
@@ -40,25 +39,18 @@ namespace OpenTK.Platform.X11 {
 			} catch { }
 
 			if (!xrandr_supported) {
-				Debug.Print("XRandR query failed, falling back to XF86.");
-				try {
-					xf86_supported = QueryXF86(devices);
-				}  catch { }
-
-				if (!xf86_supported) {
-					Debug.Print("XF86 query failed, no DisplayDevice support available.");
-				}
+				Debug.Print("XRandR query failed, no DisplayDevice support available.");
 			}
 		}
 		
-		static bool QueryXinerama(List<DisplayDevice> devices) {
+		unsafe static bool QueryXinerama(List<DisplayDevice> devices) {
 			// Try to use Xinerama to obtain the geometry of all output devices.
-			int event_base, error_base;
-			if (NativeMethods.XineramaQueryExtension(API.DefaultDisplay, out event_base, out error_base) &&
-			    NativeMethods.XineramaIsActive(API.DefaultDisplay)) {
-				XineramaScreenInfo[] screens = NativeMethods.XineramaQueryScreens(API.DefaultDisplay);
+			int a, b;
+			if (API.XineramaQueryExtension(API.DefaultDisplay, out a, out b) && API.XineramaIsActive(API.DefaultDisplay)) {
+				int count = 0;
+				XineramaScreenInfo* screens = API.XineramaQueryScreens(API.DefaultDisplay, out count);
 				
-				for (int i = 0; i < screens.Length; i++) {
+				for (int i = 0; i < count; i++) {
 					XineramaScreenInfo screen = screens[i];
 					DisplayDevice dev = new DisplayDevice();
 					dev.Bounds = new Rectangle(screen.X, screen.Y, screen.Width, screen.Height);
@@ -71,8 +63,9 @@ namespace OpenTK.Platform.X11 {
 					// It seems that all X screens are equal to 0 is Xinerama is enabled, at least on Nvidia (verify?)
 					dev.Metadata = (IntPtr)0; /*screen.ScreenNumber*/
 				}
+				return count > 0;
 			}
-			return true;
+			return false;
 		}
 
 		unsafe static bool QueryXRandR(List<DisplayDevice> devices) {
@@ -97,44 +90,6 @@ namespace OpenTK.Platform.X11 {
 				dev.RefreshRate = curRefreshRate;
 			}
 			return true;
-		}
-
-		static bool QueryXF86(List<DisplayDevice> devices) {
-			return false;
-		}
-		
-		static class NativeMethods {
-			const string Xinerama = "libXinerama";
-
-			[DllImport(Xinerama)]
-			public static extern bool XineramaQueryExtension(IntPtr dpy, out int event_basep, out int error_basep);
-
-			[DllImport(Xinerama)]
-			public static extern bool XineramaIsActive(IntPtr dpy);
-
-			[DllImport(Xinerama)]
-			static extern IntPtr XineramaQueryScreens(IntPtr dpy, out int count);
-
-			public unsafe static XineramaScreenInfo[] XineramaQueryScreens(IntPtr dpy) {
-				int count;
-				IntPtr screen_ptr = XineramaQueryScreens(dpy, out count);
-				XineramaScreenInfo* ptr = (XineramaScreenInfo*)screen_ptr;
-				
-				XineramaScreenInfo[] screens = new XineramaScreenInfo[count];
-				for(int i = 0; i < screens.Length; i++) {
-					screens[i] = *ptr++;
-				}
-				return screens;
-			}
-		}
-
-		[StructLayout(LayoutKind.Sequential, Pack = 1)]
-		struct XineramaScreenInfo {
-			public int ScreenNumber;
-			public short X;
-			public short Y;
-			public short Width;
-			public short Height;
 		}
 	}
 }

@@ -33,6 +33,16 @@ ReturnCode ReturnCode_NotSupported = ERROR_NOT_SUPPORTED;
 ReturnCode ReturnCode_SocketInProgess = WSAEINPROGRESS;
 ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 
+static void Platform_UnicodeExpand(WCHAR* dst, STRING_PURE String* src) {
+	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
+
+	Int32 i;
+	for (i = 0; i < src->length; i++) {
+		*dst = Convert_CP437ToUnicode(src->buffer[i]); dst++;
+	}
+	*dst = NULL;
+}
+
 void Platform_Init(void) {
 	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */
 	hdc = CreateCompatibleDC(NULL);
@@ -43,39 +53,9 @@ void Platform_Init(void) {
 	SetBkMode(hdc, OPAQUE);
 
 	stopwatch_highResolution = QueryPerformanceFrequency(&stopwatch_freq);
-
 	WSADATA wsaData;
 	ReturnCode wsaResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	ErrorHandler_CheckOrFail(wsaResult, "WSAStartup failed");
-
-	/* Get available video adapters and enumerate all monitors */
-	UInt32 displayNum = 0;
-	DISPLAY_DEVICEW display = { 0 }; display.cb = sizeof(DISPLAY_DEVICEW);
-
-	while (EnumDisplayDevicesW(NULL, displayNum, &display, 0)) {
-		displayNum++;
-		if ((display.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) == 0) continue;
-		DEVMODEW mode = { 0 }; mode.dmSize = sizeof(DEVMODEW);
-
-		/* The second function should only be executed when the first one fails (e.g. when the monitor is disabled) */
-		if (EnumDisplaySettingsW(display.DeviceName, ENUM_CURRENT_SETTINGS, &mode) ||
-			EnumDisplaySettingsW(display.DeviceName, ENUM_REGISTRY_SETTINGS, &mode)) {
-		} else {
-			mode.dmBitsPerPel = 0;
-		}
-
-		/* This device has no valid resolution, ignore it */
-		if (mode.dmBitsPerPel == 0) continue;
-		bool isPrimary = (display.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) != 0;
-		if (!isPrimary) continue;
-
-		struct DisplayDevice device = { 0 };
-		device.Bounds.Width  = mode.dmPelsWidth;
-		device.Bounds.Height = mode.dmPelsHeight;
-		device.BitsPerPixel  = mode.dmBitsPerPel;
-		device.RefreshRate   = mode.dmDisplayFrequency;
-		DisplayDevice_Default = device;
-	}
 }
 
 void Platform_Free(void) {
@@ -86,16 +66,6 @@ void Platform_Free(void) {
 
 void Platform_Exit(ReturnCode code) {
 	ExitProcess(code);
-}
-
-static void Platform_UnicodeExpand(WCHAR* dst, STRING_PURE String* src) {
-	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
-
-	Int32 i;
-	for (i = 0; i < src->length; i++) {
-		dst[i] = Convert_CP437ToUnicode(src->buffer[i]);
-	}
-	dst[i] = NULL;
 }
 
 STRING_PURE String Platform_GetCommandLineArgs(void) {
@@ -187,26 +157,20 @@ void Platform_CurrentLocalTime(DateTime* time) {
 
 
 bool Platform_FileExists(STRING_PURE String* path) {
-	WCHAR pathUnicode[String_BufferSize(FILENAME_SIZE)];
-	Platform_UnicodeExpand(pathUnicode, path);
-
-	UInt32 attribs = GetFileAttributesW(pathUnicode);
+	WCHAR data[512]; Platform_UnicodeExpand(data, path);
+	UInt32 attribs = GetFileAttributesW(data);
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 bool Platform_DirectoryExists(STRING_PURE String* path) {
-	WCHAR pathUnicode[String_BufferSize(FILENAME_SIZE)];
-	Platform_UnicodeExpand(pathUnicode, path);
-
-	UInt32 attribs = GetFileAttributesW(pathUnicode);
+	WCHAR data[512]; Platform_UnicodeExpand(data, path);
+	UInt32 attribs = GetFileAttributesW(data);
 	return attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 ReturnCode Platform_DirectoryCreate(STRING_PURE String* path) {
-	WCHAR pathUnicode[String_BufferSize(FILENAME_SIZE)];
-	Platform_UnicodeExpand(pathUnicode, path);
-
-	BOOL success = CreateDirectoryW(pathUnicode, NULL);
+	WCHAR data[512]; Platform_UnicodeExpand(data, path);
+	BOOL success = CreateDirectoryW(data, NULL);
 	return success ? 0 : GetLastError();
 }
 
@@ -234,12 +198,7 @@ ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_Enum
 		}
 		path.length = i;
 
-		/* folder1/folder2/entry.zip --> entry.zip */
-		Int32 lastDir = String_LastIndexOf(&path, Platform_DirectorySeparator);
-		String filename = path;
-		if (lastDir >= 0) {
-			filename = String_UNSAFE_SubstringAt(&filename, lastDir + 1);
-		}
+		String filename = path; String_UNSAFE_GetFilename(&filename);
 		callback(&filename, obj);
 	}  while (FindNextFileW(find, &data));
 
@@ -270,28 +229,22 @@ ReturnCode Platform_FileGetWriteTime(STRING_PURE String* path, DateTime* time) {
 
 
 ReturnCode Platform_FileOpen(void** file, STRING_PURE String* path) {
-	WCHAR pathUnicode[String_BufferSize(FILENAME_SIZE)];
-	Platform_UnicodeExpand(pathUnicode, path);
-
-	HANDLE handle = CreateFileW(pathUnicode, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	WCHAR data[512]; Platform_UnicodeExpand(data, path);
+	HANDLE handle = CreateFileW(data, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	*file = (void*)handle;
 	return handle != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
 ReturnCode Platform_FileCreate(void** file, STRING_PURE String* path) {
-	WCHAR pathUnicode[String_BufferSize(FILENAME_SIZE)];
-	Platform_UnicodeExpand(pathUnicode, path);
-
-	HANDLE handle = CreateFileW(pathUnicode, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	WCHAR data[512]; Platform_UnicodeExpand(data, path);
+	HANDLE handle = CreateFileW(data, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	*file = (void*)handle;
 	return handle != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
 ReturnCode Platform_FileAppend(void** file, STRING_PURE String* path) {
-	WCHAR pathUnicode[String_BufferSize(FILENAME_SIZE)];
-	Platform_UnicodeExpand(pathUnicode, path);
-
-	HANDLE handle = CreateFileW(pathUnicode, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	WCHAR data[512]; Platform_UnicodeExpand(data, path);
+	HANDLE handle = CreateFileW(data, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	*file = (void*)handle;
 	if (handle == INVALID_HANDLE_VALUE) return GetLastError();
 	return Platform_FileSeek(*file, 0, STREAM_SEEKFROM_END);
@@ -456,11 +409,9 @@ void Platform_FontFree(struct FontDesc* desc) {
 
 /* TODO: not associate font with device so much */
 struct Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
-	WCHAR strUnicode[String_BufferSize(FILENAME_SIZE)];
-	Platform_UnicodeExpand(strUnicode, &args->Text);
-
+	WCHAR data[512]; Platform_UnicodeExpand(data, &args->Text);
 	HGDIOBJ oldFont = SelectObject(hdc, args->Font.Handle);
-	SIZE area; GetTextExtentPointW(hdc, strUnicode, args->Text.length, &area);
+	SIZE area; GetTextExtentPointW(hdc, data, args->Text.length, &area);
 
 	SelectObject(hdc, oldFont);
 	return Size2D_Make(area.cx, area.cy);

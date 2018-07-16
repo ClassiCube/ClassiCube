@@ -1,5 +1,4 @@
 #include "Window.h"
-#define CC_BUILD_X11 1
 #if CC_BUILD_X11
 #include "DisplayDevice.h"
 #include "ErrorHandler.h"

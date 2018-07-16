@@ -103,15 +103,5 @@ namespace Launcher.Patcher {
 			"ce/ceaaaa1d57dfdfbb0bd4da5ea39628b42897a687", "dd/dd85fb564e96ee2dbd4754f711ae9deb08a169f9",
 			"5e/5e7d63e75c6e042f452bc5e151276911ef92fed8",
 		};
-		
-		public static string GetFile(string path) {
-			// Ignore directories: convert x/name to name and x\name to name.
-			string name = Utils.ToLower(path);
-			int i = name.LastIndexOf('\\');
-			if (i >= 0) name = name.Substring(i + 1, name.Length - 1 - i);
-			i = name.LastIndexOf('/');
-			if (i >= 0) name = name.Substring(i + 1, name.Length - 1 - i);
-			return name;
-		}
 	}
 }

@@ -150,7 +150,7 @@ void Gui_SetActive(struct Screen* screen) {
 
 	if (screen == NULL) {
 		Game_SetCursorVisible(false);
-		if (Window_GetFocused()) { Camera_Active->RegrabMouse(); }
+		if (Window_Focused) { Camera_Active->RegrabMouse(); }
 	} else if (Gui_Active == NULL) {
 		Game_SetCursorVisible(true);
 	}

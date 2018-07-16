@@ -14,6 +14,7 @@
 
 int main(void) {
 	ErrorHandler_Init("client.log");
+	DisplayDevice_Init();
 	Platform_Init();
 
 	/*Platform_HttpInit();

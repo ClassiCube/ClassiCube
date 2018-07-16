@@ -427,16 +427,8 @@ void TextureCache_AddLastModified(STRING_PURE String* url, DateTime* lastModifie
 *-------------------------------------------------------TexturePack-------------------------------------------------------*
 *#########################################################################################################################*/
 static void TexturePack_ProcessZipEntry(STRING_TRANSIENT String* path, struct Stream* stream, struct ZipEntry* entry) {
-	/* Ignore directories: convert x/name to name and x\name to name. */
 	String_MakeLowercase(path);
-	String name = *path;
-	Int32 i;
-
-	i = String_LastIndexOf(&name, '\\');
-	if (i >= 0) { name = String_UNSAFE_SubstringAt(&name, i + 1); }
-	i = String_LastIndexOf(&name, '/');
-	if (i >= 0) { name = String_UNSAFE_SubstringAt(&name, i + 1); }
-
+	String name = *path; Utils_UNSAFE_GetFilename(&name);
 	String_Set(&stream->Name, &name);
 	Event_RaiseStream(&TextureEvents_FileChanged, stream);
 }

@@ -53,7 +53,7 @@ namespace Launcher.Updater {
 		}
 		
 		static void ProcessZipEntry(string filename, byte[] data, ZipEntry entry) {
-			string path = Path.Combine("CS_Update", Path.GetFileName(filename));
+			string path = Path.Combine("CS_Update", Utils.GetFilename(filename));
 			Platform.WriteAllBytes(path, data);
 			
 			try {

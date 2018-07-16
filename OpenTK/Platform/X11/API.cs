@@ -46,12 +46,12 @@ namespace OpenTK.Platform.X11 {
 		[DllImport("libX11")]
 		public extern static Bool XCheckWindowEvent(Display display, Window w, EventMask event_mask, ref XEvent event_return);
 		[DllImport("libX11")]
-		public extern static Bool XCheckTypedWindowEvent(Display display, Window w, XEventName event_type, ref XEvent event_return);	
+		public extern static Bool XCheckTypedWindowEvent(Display display, Window w, XEventName event_type, ref XEvent event_return);
 
 		[DllImport("libX11")]
 		public extern static int XMoveResizeWindow(IntPtr display, IntPtr window, int x, int y, int width, int height);
 		[DllImport("libX11")]
-		public extern static int XMoveWindow(IntPtr display, IntPtr w, int x, int y);	
+		public extern static int XMoveWindow(IntPtr display, IntPtr w, int x, int y);
 		[DllImport("libX11")]
 		public extern static int XResizeWindow(IntPtr display, IntPtr window, int width, int height);
 
@@ -70,10 +70,10 @@ namespace OpenTK.Platform.X11 {
 		}
 		
 		[DllImport("libX11")]
-		public extern static bool XQueryPointer(IntPtr display, IntPtr window, out IntPtr root, out IntPtr child, 
+		public extern static bool XQueryPointer(IntPtr display, IntPtr window, out IntPtr root, out IntPtr child,
 		                                        out int root_x, out int root_y, out int win_x, out int win_y, out int keys_buttons);
 		[DllImport("libX11")]
-		public extern static uint XWarpPointer(IntPtr display, IntPtr src_w, IntPtr dest_w, int src_x, int src_y, 
+		public extern static uint XWarpPointer(IntPtr display, IntPtr src_w, IntPtr dest_w, int src_x, int src_y,
 		                                       uint src_width, uint src_height, int dest_x, int dest_y);
 
 		[DllImport("libX11")]
@@ -104,7 +104,7 @@ namespace OpenTK.Platform.X11 {
 		[DllImport("libX11")]
 		public extern static int XChangeProperty(IntPtr display, IntPtr window, IntPtr property, IntPtr type, int format, PropertyMode mode, IntPtr[] data, int nelements);
 		[DllImport("libX11")]
-		public extern static int XChangeProperty(IntPtr display, IntPtr window, IntPtr property, IntPtr type, int format, PropertyMode mode, IntPtr data, int nelements);	
+		public extern static int XChangeProperty(IntPtr display, IntPtr window, IntPtr property, IntPtr type, int format, PropertyMode mode, IntPtr data, int nelements);
 		[DllImport("libX11")]
 		public extern static int XDeleteProperty(IntPtr display, IntPtr window, IntPtr property);
 		[DllImport("libX11")]
@@ -131,7 +131,7 @@ namespace OpenTK.Platform.X11 {
 		[DllImport("libX11")]
 		public extern static IntPtr XCreatePixmap(IntPtr display, IntPtr d, int width, int height, int depth);
 		[DllImport("libX11")]
-		public extern static IntPtr XCreatePixmapCursor(IntPtr display, IntPtr source, IntPtr mask, 
+		public extern static IntPtr XCreatePixmapCursor(IntPtr display, IntPtr source, IntPtr mask,
 		                                                ref XColor foregroundCol, ref XColor backgroundCol, int x_hot, int y_hot);
 		[DllImport("libX11")]
 		public extern static IntPtr XFreePixmap(IntPtr display, IntPtr pixmap);
@@ -218,24 +218,29 @@ namespace OpenTK.Platform.X11 {
 			                                   mask, width, height, new IntPtr(1), IntPtr.Zero, 1);
 		}
 		
+		[DllImport("libX11")]
+		public static extern int XScreenCount(Display display);
+		
 		const string Xrandr = "libXrandr.so.2";
-
 		[DllImport(Xrandr)]
 		public static extern XRRScreenConfiguration XRRGetScreenInfo(Display dpy, Drawable draw);
 		[DllImport(Xrandr)]
 		public static extern void XRRFreeScreenConfigInfo(XRRScreenConfiguration config);
-
 		[DllImport(Xrandr)]
 		public static extern ushort XRRConfigCurrentConfiguration(XRRScreenConfiguration config, out ushort rotation);
 		[DllImport(Xrandr)]
 		public static extern short XRRConfigCurrentRate(XRRScreenConfiguration config);
-
 		// the following are always safe to call, even if RandR is not implemented on a screen
 		[DllImport(Xrandr)]
 		public unsafe static extern XRRScreenSize* XRRSizes(Display dpy, int screen, int* nsizes);
-
-		[DllImport("libX11")]
-		public static extern int XScreenCount(Display display);
+		
+		const string Xinerama = "libXinerama";
+		[DllImport(Xinerama)]
+		public static extern bool XineramaQueryExtension(IntPtr dpy, out int event_basep, out int error_basep);
+		[DllImport(Xinerama)]
+		public static extern bool XineramaIsActive(IntPtr dpy);
+		[DllImport(Xinerama)]
+		public unsafe static extern XineramaScreenInfo* XineramaQueryScreens(IntPtr dpy, out int count);
 
 		public static Display DefaultDisplay;
 		public static int DefaultScreen;
@@ -284,6 +289,13 @@ namespace OpenTK.Platform.X11 {
 	public struct XRRScreenSize {
 		internal int Width, Height;
 		internal int MWidth, MHeight;
+	}
+	
+	[StructLayout(LayoutKind.Sequential, Pack = 1)]
+	public struct XineramaScreenInfo {
+		public int ScreenNumber;
+		public short X, Y;
+		public short Width, Height;
 	}
 
 	public enum XVisualClass : int {

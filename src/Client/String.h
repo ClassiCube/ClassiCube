@@ -78,7 +78,6 @@ void String_DeleteAt(STRING_TRANSIENT String* str, Int32 offset);
 void String_UNSAFE_TrimStart(STRING_TRANSIENT String* str);
 void String_UNSAFE_TrimEnd(STRING_TRANSIENT String* str);
 
-
 Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub);
 #define String_ContainsString(str, sub) (String_IndexOfString(str, sub) >= 0)
 bool String_StartsWith(STRING_PURE String* str, STRING_PURE String* sub);

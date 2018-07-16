@@ -943,7 +943,6 @@ static void CPE_ChangeModel(struct Stream* stream) {
 	UInt8 id = Stream_ReadU8(stream);
 	String modelName = Handlers_ReadString(stream, modelNameBuffer);
 
-	String_MakeLowercase(&modelName);
 	struct Entity* entity = Entities_List[id];
 	if (entity != NULL) { Entity_SetModel(entity, &modelName); }
 }

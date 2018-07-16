@@ -119,6 +119,16 @@ bool Utils_IsUrlPrefix(STRING_PURE String* value, Int32 index) {
 		|| String_IndexOfString(value, &https) == index;
 }
 
+void String_UNSAFE_GetFilename(STRING_TRANSIENT String* str) {
+	Int32 i;
+	for (i = str->length - 1; i >= 0; i--) {
+		UChar c = str->buffer[i];
+		if (c == '/' || c == '\\') { 
+			*str = String_UNSAFE_SubstringAt(str, i); return; 
+		}
+	}
+}
+
 Int32 Utils_AccumulateWheelDelta(Real32* accmulator, Real32 delta) {
 	/* Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2) */
 	/* We must use rounding at final step, not at every intermediate step. */

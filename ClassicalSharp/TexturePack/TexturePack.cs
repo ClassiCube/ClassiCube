@@ -56,12 +56,8 @@ namespace ClassicalSharp.Textures {
 		}		
 		
 		static void ProcessZipEntry(string filename, byte[] data, ZipEntry entry) {
-			// Ignore directories: convert x/name to name and x\name to name.
 			string name = Utils.ToLower(filename);
-			int i = name.LastIndexOf('\\');
-			if (i >= 0) name = name.Substring(i + 1);
-			i = name.LastIndexOf('/');
-			if (i >= 0) name = name.Substring(i + 1);
+			name = Utils.GetFilename(name);
 			game.Events.RaiseTextureChanged(name, data);
 		}	
 		

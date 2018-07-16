@@ -384,7 +384,6 @@ static void ModelCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 		UChar modelBuffer[String_BufferSize(STRING_SIZE)];
 		String model = String_InitAndClearArray(modelBuffer);
 		String_AppendString(&model, &args[1]);
-		String_MakeLowercase(&model);
 		Entity_SetModel(&LocalPlayer_Instance.Base, &model);
 	}
 }

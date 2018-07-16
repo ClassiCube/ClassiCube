@@ -690,7 +690,7 @@ static void Game_RenderFrame(Real64 delta) {
 	GameMode_BeginFrame(delta);
 
 	Camera_Active->UpdateMouse();
-	if (!Window_GetFocused() && !Gui_GetActiveScreen()->HandlesAllInput) {
+	if (!Window_Focused && !Gui_GetActiveScreen()->HandlesAllInput) {
 		Gui_FreeActive();
 		Gui_SetActive(PauseScreen_MakeInstance());
 	}
@@ -765,7 +765,7 @@ void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct Displa
 	Stopwatch_Start(&game_renderTimer);
 	for (;;) {
 		Window_ProcessEvents();
-		if (!Window_GetExists()) break;
+		if (!Window_Exists) break;
 
 		/* Limit maximum render to 1 second (for suspended process) */
 		Real64 time = Stopwatch_ElapsedMicroseconds(&game_renderTimer) / (1000.0 * 1000.0);

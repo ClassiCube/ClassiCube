@@ -956,7 +956,7 @@ static bool ChatScreen_HandlesKeyUp(struct GuiElem* elem, Key key) {
 	if (!screen->HandlesAllInput) return false;
 
 	if (ServerConnection_SupportsFullCP437 && key == KeyBind_Get(KeyBind_ExtInput)) {
-		if (Window_GetFocused()) {
+		if (Window_Focused) {
 			bool active = !screen->AltText.Active;
 			SpecialInputWidget_SetActive(&screen->AltText, active);
 		}

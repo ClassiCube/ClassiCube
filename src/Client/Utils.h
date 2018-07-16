@@ -27,6 +27,7 @@ UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const UChar** 
 bool Utils_IsValidInputChar(UChar c, bool supportsCP437);
 bool Utils_IsUrlPrefix(STRING_PURE String* value, Int32 index);
 
+void Utils_UNSAFE_GetFilename(STRING_TRANSIENT String* str);
 Int32 Utils_AccumulateWheelDelta(Real32* accmulator, Real32 delta);
 #define Utils_AdjViewDist(value) ((Int32)(1.4142135f * (value)))
 

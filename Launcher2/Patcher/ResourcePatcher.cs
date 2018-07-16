@@ -66,10 +66,9 @@ namespace Launcher.Patcher {
 		List<ZipEntry> entries = new List<ZipEntry>();
 		List<byte[]> datas = new List<byte[]>();
 		
-		void ExtractExisting(string filename, byte[] data, ZipEntry entry) {
-			filename = ResourceList.GetFile(filename);
-			entry.Filename = filename;
-			existing.Add(filename);
+		void ExtractExisting(string path, byte[] data, ZipEntry entry) {
+			entry.Filename = Utils.ToFilename(path);		
+			existing.Add(entry.Filename);
 			entries.Add(entry);
 			datas.Add(data);
 		}
@@ -92,9 +91,9 @@ namespace Launcher.Patcher {
 				|| filename.StartsWith("mob") || filename.IndexOf('/') < 0;
 		}
 
-		void ProcessZipEntry_Classic(string filename, byte[] data, ZipEntry entry) {
-			if (!Utils.CaselessEnds(filename, ".png")) return;
-			entry.Filename = ResourceList.GetFile(filename);
+		void ProcessZipEntry_Classic(string path, byte[] data, ZipEntry entry) {
+			if (!Utils.CaselessEnds(path, ".png")) return;
+			entry.Filename = Utils.ToFilename(path);
 			
 			if (entry.Filename != "terrain.png") {
 				if (entry.Filename == "gui.png")
@@ -159,42 +158,42 @@ namespace Launcher.Patcher {
 				);
 		}
 		
-		void ProcessZipEntry_Modern(string filename, byte[] data, ZipEntry entry) {
-			entry.Filename = ResourceList.GetFile(filename);
-			if (filename == "assets/minecraft/textures/environment/snow.png") {
+		void ProcessZipEntry_Modern(string path, byte[] data, ZipEntry entry) {
+			entry.Filename = Utils.ToFilename(path);
+			if (path == "assets/minecraft/textures/environment/snow.png") {
 				if (!existing.Contains("snow.png")) {
 					writer.WriteZipEntry(entry, data);
 				}
-			} else if (filename == "assets/minecraft/textures/entity/chicken.png") {
+			} else if (path == "assets/minecraft/textures/entity/chicken.png") {
 				if (!existing.Contains("chicken.png")) {
 					writer.WriteZipEntry(entry, data);
 				}
-			} else if (filename == "assets/minecraft/textures/blocks/fire_layer_1.png") {
+			} else if (path == "assets/minecraft/textures/blocks/fire_layer_1.png") {
 				PatchAnim(data);
-			} else if (filename == "assets/minecraft/textures/blocks/sandstone_bottom.png") {
+			} else if (path == "assets/minecraft/textures/blocks/sandstone_bottom.png") {
 				PatchBlock(data, 9, 3);
-			} else if (filename == "assets/minecraft/textures/blocks/sandstone_normal.png") {
+			} else if (path == "assets/minecraft/textures/blocks/sandstone_normal.png") {
 				PatchBlock(data, 9, 2);
-			} else if (filename == "assets/minecraft/textures/blocks/sandstone_top.png") {
+			} else if (path == "assets/minecraft/textures/blocks/sandstone_top.png") {
 				PatchBlock(data, 9, 1);
-			} else if (filename == "assets/minecraft/textures/blocks/quartz_block_lines_top.png") {
+			} else if (path == "assets/minecraft/textures/blocks/quartz_block_lines_top.png") {
 				PatchBlock(data, 10, 3);
 				PatchBlock(data, 10, 1);
-			} else if (filename == "assets/minecraft/textures/blocks/quartz_block_lines.png") {
+			} else if (path == "assets/minecraft/textures/blocks/quartz_block_lines.png") {
 				PatchBlock(data, 10, 2);
-			} else if (filename == "assets/minecraft/textures/blocks/stonebrick.png") {
+			} else if (path == "assets/minecraft/textures/blocks/stonebrick.png") {
 				PatchBlock(data, 4, 3);
-			} else if (filename == "assets/minecraft/textures/blocks/snow.png") {
+			} else if (path == "assets/minecraft/textures/blocks/snow.png") {
 				PatchBlock(data, 2, 3);
-			} else if (filename == "assets/minecraft/textures/blocks/wool_colored_blue.png") {
+			} else if (path == "assets/minecraft/textures/blocks/wool_colored_blue.png") {
 				PatchBlock(data, 3, 5);
-			} else if (filename == "assets/minecraft/textures/blocks/wool_colored_brown.png") {
+			} else if (path == "assets/minecraft/textures/blocks/wool_colored_brown.png") {
 				PatchBlock(data, 2, 5);
-			} else if (filename == "assets/minecraft/textures/blocks/wool_colored_cyan.png") {
+			} else if (path == "assets/minecraft/textures/blocks/wool_colored_cyan.png") {
 				PatchBlock(data, 4, 5);
-			} else if (filename == "assets/minecraft/textures/blocks/wool_colored_green.png") {
+			} else if (path == "assets/minecraft/textures/blocks/wool_colored_green.png") {
 				PatchBlock(data, 1, 5);
-			} else if (filename == "assets/minecraft/textures/blocks/wool_colored_pink.png") {
+			} else if (path == "assets/minecraft/textures/blocks/wool_colored_pink.png") {
 				PatchBlock(data, 0, 5);
 			}
 		}

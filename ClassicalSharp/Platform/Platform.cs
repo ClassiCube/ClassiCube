@@ -104,7 +104,7 @@ namespace ClassicalSharp {
 		public static string[] DirectoryFiles(string path) {
 			string[] files = Directory.GetFiles(path);		
 			for (int i = 0; i < files.Length; i++) {
-				files[i] = Path.GetFileName(files[i]);
+				files[i] = Utils.GetFilename(files[i]);
 			}
 			return files;
 		}
@@ -112,7 +112,7 @@ namespace ClassicalSharp {
 		public static string[] DirectoryFiles(string path, string filter) {
 			string[] files = Directory.GetFiles(path, filter);			
 			for (int i = 0; i < files.Length; i++) {
-				files[i] = Path.GetFileName(files[i]);
+				files[i] = Utils.GetFilename(files[i]);
 			}
 			return files;
 		}
