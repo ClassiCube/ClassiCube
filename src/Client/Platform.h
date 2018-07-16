@@ -48,13 +48,13 @@ ReturnCode Platform_DirectoryCreate(STRING_PURE String* path);
 bool Platform_FileExists(STRING_PURE String* path);
 typedef void Platform_EnumFilesCallback(STRING_PURE String* filename, void* obj);
 ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_EnumFilesCallback callback);
-ReturnCode Platform_FileGetWriteTime(STRING_PURE String* path, DateTime* time);
+ReturnCode Platform_FileGetModifiedTime(STRING_PURE String* path, DateTime* time);
 
 ReturnCode Platform_FileCreate(void** file, STRING_PURE String* path);
 ReturnCode Platform_FileOpen(void** file, STRING_PURE String* path);
 ReturnCode Platform_FileAppend(void** file, STRING_PURE String* path);
 ReturnCode Platform_FileRead(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead);
-ReturnCode Platform_FileWrite(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWritten);
+ReturnCode Platform_FileWrite(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWrote);
 ReturnCode Platform_FileClose(void* file);
 ReturnCode Platform_FileSeek(void* file, Int32 offset, Int32 seekType);
 ReturnCode Platform_FilePosition(void* file, UInt32* position);

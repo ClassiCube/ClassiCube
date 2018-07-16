@@ -352,31 +352,35 @@ void Stream_WriteU32_BE(struct Stream* stream, UInt32 value) {
 *#########################################################################################################################*/
 bool Stream_ReadUtf8Char(struct Stream* stream, UInt16* codepoint) {
 	UInt32 read = 0;
-	UInt8 header;
-	ReturnCode code = stream->Read(stream, &header, 1, &read);
+	UInt8 data;
+	ReturnCode result = stream->Read(stream, &data, 1, &read);
 
 	if (read == 0) return false; /* end of stream */
-	if (!ErrorHandler_Check(code)) { Stream_Fail(stream, code, "reading utf8 from"); }
+	if (!ErrorHandler_Check(result)) { Stream_Fail(stream, result, "reading utf8 from"); }
 	/* Header byte is just the raw codepoint (common case) */
-	if (header <= 0x7F) { *codepoint = header; return true; }
+	if (data <= 0x7F) { *codepoint = data; return true; }
 
 	/* Header byte encodes variable number of following bytes */
 	/* The remaining bits of the header form first part of the character */
 	Int32 byteCount = 0, i;
 	for (i = 7; i >= 0; i--) {
-		if ((header & (1 << i)) != 0) {
+		if ((data & (1 << i)) != 0) {
 			byteCount++;
-			header &= (UInt8)~(1 << i);
+			data &= (UInt8)~(1 << i);
 		} else {
 			break;
 		}
 	}
 
-	*codepoint = header;
+	*codepoint = data;
 	for (i = 0; i < byteCount - 1; i++) {
+		result = stream->Read(stream, &data, 1, &read);
+		if (read == 0) return false; /* end of stream */
+		if (!ErrorHandler_Check(result)) { Stream_Fail(stream, result, "reading utf8 from"); }
+
 		*codepoint <<= 6;
 		/* Top two bits of each are always 10 */
-		*codepoint |= (UInt16)(Stream_ReadU8(stream) & 0x3F);
+		*codepoint |= (UInt16)(data & 0x3F);
 	}
 	return true;
 }

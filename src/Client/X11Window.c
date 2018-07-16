@@ -570,7 +570,7 @@ void Window_ProcessEvents(void) {
 					String_Clear(&clipboard_paste_text);
 					UInt16 codepoint;
 					while (Stream_ReadUtf8Char(&mem, &codepoint)) {
-						String_append(&clipboard_paste_text, Convert_UnicodeToCP437(codepoint));
+						String_Append(&clipboard_paste_text, Convert_UnicodeToCP437(codepoint));
 					}
 				}
 				XFree(data);

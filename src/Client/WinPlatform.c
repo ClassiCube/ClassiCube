@@ -202,13 +202,12 @@ ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_Enum
 		callback(&filename, obj);
 	}  while (FindNextFileW(find, &data));
 
-	/* get return code from FindNextFile before closing find handle */
-	ReturnCode code = GetLastError();
+	ReturnCode code = GetLastError(); /* return code from FindNextFile */
 	FindClose(find);
 	return code == ERROR_NO_MORE_FILES ? 0 : code;
 }
 
-ReturnCode Platform_FileGetWriteTime(STRING_PURE String* path, DateTime* time) {
+ReturnCode Platform_FileGetModifiedTime(STRING_PURE String* path, DateTime* time) {
 	void* file;
 	ReturnCode result = Platform_FileOpen(&file, path);
 	if (result != 0) return result;
@@ -219,7 +218,6 @@ ReturnCode Platform_FileGetWriteTime(STRING_PURE String* path, DateTime* time) {
 		FileTimeToSystemTime(&writeTime, &sysTime);
 		Platform_FromSysTime(time, &sysTime);
 	} else {
-		Platform_MemSet(time, 0, sizeof(DateTime));
 		result = GetLastError();
 	}
 
@@ -228,25 +226,21 @@ ReturnCode Platform_FileGetWriteTime(STRING_PURE String* path, DateTime* time) {
 }
 
 
+ReturnCode Platform_FileDo(void** file, STRING_PURE String* path, DWORD access, DWORD createMode) {
+	WCHAR data[512]; Platform_UnicodeExpand(data, path);
+	*file = CreateFileW(data, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
+	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
+}
+
 ReturnCode Platform_FileOpen(void** file, STRING_PURE String* path) {
-	WCHAR data[512]; Platform_UnicodeExpand(data, path);
-	HANDLE handle = CreateFileW(data, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	*file = (void*)handle;
-	return handle != INVALID_HANDLE_VALUE ? 0 : GetLastError();
+	return Platform_FileDo(file, path, GENERIC_READ, OPEN_EXISTING);
 }
-
 ReturnCode Platform_FileCreate(void** file, STRING_PURE String* path) {
-	WCHAR data[512]; Platform_UnicodeExpand(data, path);
-	HANDLE handle = CreateFileW(data, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	*file = (void*)handle;
-	return handle != INVALID_HANDLE_VALUE ? 0 : GetLastError();
+	return Platform_FileDo(file, path, GENERIC_WRITE, CREATE_ALWAYS);
 }
-
 ReturnCode Platform_FileAppend(void** file, STRING_PURE String* path) {
-	WCHAR data[512]; Platform_UnicodeExpand(data, path);
-	HANDLE handle = CreateFileW(data, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	*file = (void*)handle;
-	if (handle == INVALID_HANDLE_VALUE) return GetLastError();
+	ReturnCode code = Platform_FileDo(file, path, GENERIC_WRITE, OPEN_ALWAYS);
+	if (code != 0) return code;
 	return Platform_FileSeek(*file, 0, STREAM_SEEKFROM_END);
 }
 
@@ -255,8 +249,8 @@ ReturnCode Platform_FileRead(void* file, UInt8* buffer, UInt32 count, UInt32* by
 	return success ? 0 : GetLastError();
 }
 
-ReturnCode Platform_FileWrite(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWritten) {
-	BOOL success = WriteFile((HANDLE)file, buffer, count, bytesWritten, NULL);
+ReturnCode Platform_FileWrite(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWrote) {
+	BOOL success = WriteFile((HANDLE)file, buffer, count, bytesWrote, NULL);
 	return success ? 0 : GetLastError();
 }
 
@@ -265,17 +259,14 @@ ReturnCode Platform_FileClose(void* file) {
 }
 
 ReturnCode Platform_FileSeek(void* file, Int32 offset, Int32 seekType) {
-	DWORD pos;
+	DWORD mode = -1;
 	switch (seekType) {
-	case STREAM_SEEKFROM_BEGIN:
-		pos = SetFilePointer(file, offset, NULL, FILE_BEGIN); break;
-	case STREAM_SEEKFROM_CURRENT:
-		pos = SetFilePointer(file, offset, NULL, FILE_CURRENT); break;
-	case STREAM_SEEKFROM_END:
-		pos = SetFilePointer(file, offset, NULL, FILE_END); break;
-	default:
-		ErrorHandler_Fail("Invalid SeekType provided when seeking file");
+	case STREAM_SEEKFROM_BEGIN:   mode = FILE_BEGIN; break;
+	case STREAM_SEEKFROM_CURRENT: mode = FILE_CURRENT; break;
+	case STREAM_SEEKFROM_END:     mode = FILE_END; break;
 	}
+
+	DWORD pos = SetFilePointer(file, offset, NULL, mode);
 	return pos == INVALID_SET_FILE_POINTER ? GetLastError() : 0;
 }
 
@@ -511,26 +502,20 @@ ReturnCode Platform_SocketConnect(void* socket, STRING_PURE String* ip, Int32 po
 	addr.sin_addr.s_addr = inet_addr(ip->buffer);
 	addr.sin_port = htons((UInt16)port);
 
-	ReturnCode result = connect(socket, (SOCKADDR*)(&addr), sizeof(addr));
+	ReturnCode result = connect(socket, (struct sockaddr*)(&addr), sizeof(addr));
 	return result == SOCKET_ERROR ? WSAGetLastError() : 0;
 }
 
 ReturnCode Platform_SocketRead(void* socket, UInt8* buffer, UInt32 count, UInt32* modified) {
 	Int32 recvCount = recv(socket, buffer, count, 0);
-	if (recvCount == SOCKET_ERROR) {
-		*modified = 0; return WSAGetLastError();
-	} else {
-		*modified = recvCount; return 0;
-	}
+	if (recvCount == SOCKET_ERROR) { *modified = recvCount; return 0; }
+	*modified = 0; return WSAGetLastError();
 }
 
 ReturnCode Platform_SocketWrite(void* socket, UInt8* buffer, UInt32 count, UInt32* modified) {
 	Int32 sentCount = send(socket, buffer, count, 0);
-	if (sentCount == SOCKET_ERROR) {
-		*modified = 0; return WSAGetLastError();
-	} else {
-		*modified = sentCount; return 0;
-	}
+	if (sentCount != SOCKET_ERROR) { *modified = sentCount; return 0; }
+	*modified = 0; return WSAGetLastError();
 }
 
 ReturnCode Platform_SocketClose(void* socket) {
@@ -545,7 +530,7 @@ ReturnCode Platform_SocketClose(void* socket) {
 
 ReturnCode Platform_SocketSelect(void* socket, Int32 selectMode, bool* success) {
 	void* args[2]; args[0] = (void*)1; args[1] = socket;
-	TIMEVAL time = { 0 };
+	struct timeval time = { 0 };
 	Int32 selectCount;
 
 	if (selectMode == SOCKET_SELECT_READ) {
@@ -558,11 +543,8 @@ ReturnCode Platform_SocketSelect(void* socket, Int32 selectMode, bool* success) 
 		selectCount = SOCKET_ERROR;
 	}
 
-	if (selectCount == SOCKET_ERROR) {
-		*success = false; return WSAGetLastError();
-	} else {
-		*success = args[0] != 0; return 0;
-	}
+	if (selectCount != SOCKET_ERROR) { *success = args[0] != 0; return 0; }
+	*success = false; return WSAGetLastError();
 }
 
 HINTERNET hInternet;

@@ -345,7 +345,7 @@ void TextureCache_GetLastModified(STRING_PURE String* url, DateTime* time) {
 		DateTime_FromTotalMs(time, ticks / TEXCACHE_TICKS_PER_MS);
 	} else {
 		String path; TexCache_InitAndMakePath(url);
-		ReturnCode result = Platform_FileGetWriteTime(&path, time);
+		ReturnCode result = Platform_FileGetModifiedTime(&path, time);
 		ErrorHandler_CheckOrFail(result, "TextureCache - get file last modified time")
 	}
 }

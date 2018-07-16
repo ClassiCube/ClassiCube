@@ -54,7 +54,7 @@ namespace ClassicalSharp.Textures {
 				return new DateTime(ticks, DateTimeKind.Utc);
 			} else {
 				string path = MakePath(url);
-				return Platform.FileGetWriteTime(path);
+				return Platform.FileGetModifiedTime(path);
 			}
 		}
 

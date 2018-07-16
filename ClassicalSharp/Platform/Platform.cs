@@ -85,11 +85,11 @@ namespace ClassicalSharp {
 			return File.Exists(path);
 		}
 		
-		public static DateTime FileGetWriteTime(string path) {
+		public static DateTime FileGetModifiedTime(string path) {
 			return File.GetLastWriteTimeUtc(path);
 		}
 		
-		public static void FileSetWriteTime(string path, DateTime time) {
+		public static void FileSetModifiedTime(string path, DateTime time) {
 			File.SetLastWriteTimeUtc(path, time);
 		}
 		
