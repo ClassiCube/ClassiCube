@@ -40,19 +40,17 @@ namespace OpenTK.Platform.X11 {
 		// TODO: What happens if we can't disable decorations through motif?
 		// TODO: Mouse/keyboard grabbing/wrapping.
 		
-		const int _min_width = 30, _min_height = 30;
-		IntPtr wm_destroy;
-		IntPtr net_wm_state;
+		IntPtr wm_destroy, net_wm_state;
 		IntPtr net_wm_state_minimized;
 		IntPtr net_wm_state_fullscreen;
 		IntPtr net_wm_state_maximized_horizontal;
-		IntPtr net_wm_state_maximized_vertical;
-		
+		IntPtr net_wm_state_maximized_vertical;	
 		IntPtr net_wm_icon, net_frame_extents;
 
-		IntPtr xa_clipboard, xa_targets, xa_utf8_string, xa_atom, xa_data_sel;
+		IntPtr xa_clipboard, xa_targets, xa_utf8_string, xa_data_sel;
 		string clipboard_paste_text, clipboard_copy_text;
 
+		static readonly IntPtr xa_atom = (IntPtr)4;
 		static readonly IntPtr xa_cardinal = (IntPtr)6;
 		static readonly IntPtr _remove = (IntPtr)0;
 		static readonly IntPtr _add = (IntPtr)1;
@@ -88,8 +86,6 @@ namespace OpenTK.Platform.X11 {
 			Debug.Print("Opening render window... ");
 
 			XSetWindowAttributes attributes = new XSetWindowAttributes();
-			attributes.background_pixel = IntPtr.Zero;
-			attributes.border_pixel = IntPtr.Zero;
 			attributes.colormap = API.XCreateColormap(API.DefaultDisplay, API.RootWindow, VisualInfo.Visual, 0/*AllocNone*/);
 			
 			eventMask = EventMask.StructureNotifyMask /*| EventMask.SubstructureNotifyMask*/ | EventMask.ExposureMask |
@@ -155,7 +151,6 @@ namespace OpenTK.Platform.X11 {
 			xa_clipboard = API.XInternAtom(display, "CLIPBOARD", false);
 			xa_targets = API.XInternAtom(display, "TARGETS", false);
 			xa_utf8_string = API.XInternAtom(display, "UTF8_STRING", false);
-			xa_atom = API.XInternAtom(display, "ATOM", false);
 			xa_data_sel = API.XInternAtom(display, "CS_SEL_DATA", false);
 		}
 

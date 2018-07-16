@@ -11,6 +11,10 @@
 #include <X11/Xlib.h>
 #include <GL/glx.h>
 
+#define _NET_WM_STATE_REMOVE 0
+#define _NET_WM_STATE_ADD    1
+#define _NET_WM_STATE_TOGGLE 2
+
 /* TODO: Move to Platform code */
 Display* win_display;
 Window win_rootWin;
@@ -19,8 +23,20 @@ int win_screen;
 Window win_handle;
 XVisualInfo win_visual;
 Int32 borderLeft, borderRight, borderTop, borderBottom;
+bool win_isExiting;
+ 
+Atom wm_destroy, net_wm_state;
+Atom net_wm_state_minimized;
+Atom net_wm_state_fullscreen;
+Atom net_wm_state_maximized_horizontal;
+Atom net_wm_state_maximized_vertical;
+Atom net_wm_icon, net_frame_extents;
 
-static Key Window_MapKey(int key) {
+Atom xa_clipboard, xa_targets, xa_utf8_string, xa_data_sel;
+Atom xa_atom = 4, xa_cardinal = 6;
+long win_eventMask;
+
+static Key Window_MapKey(KeySym key) {
 	if (key >= XK_F1 && key <= XK_F35) { return Key_F1 + (key - XK_F1); }
 	if (key >= XK_0 && key <= XK_9) { return Key_0 + (key - XK_0); }
 	if (key >= XK_A && key <= XK_Z) { return Key_A + (key - XK_A); }
@@ -114,7 +130,79 @@ static Key Window_MapKey(int key) {
 	return Key_None;
 }
 
-void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, struct DisplayDevice* device);
+void Window_RegisterAtoms(void) {
+	Display* display = win_display;
+	wm_destroy = XInternAtom(display, "WM_DELETE_WINDOW", true);
+	net_wm_state = XInternAtom(display, "_NET_WM_STATE", false);
+	net_wm_state_minimized = XInternAtom(display, "_NET_WM_STATE_MINIMIZED", false);
+	net_wm_state_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", false);
+	net_wm_state_maximized_horizontal = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", false);
+	net_wm_state_maximized_vertical = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", false);
+	net_wm_icon = XInternAtom(display, "_NEW_WM_ICON", false);
+	net_frame_extents = XInternAtom(display, "_NET_FRAME_EXTENTS", false);
+
+	xa_clipboard = XInternAtom(display, "CLIPBOARD", false);
+	xa_targets = XInternAtom(display, "TARGETS", false);
+	xa_utf8_string = XInternAtom(display, "UTF8_STRING", false);
+	xa_data_sel = XInternAtom(display, "CS_SEL_DATA", false);
+}
+
+static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode);
+void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, 
+	struct GraphicsMode* mode, struct DisplayDevice* device) {
+	/* Open a display connection to the X server, and obtain the screen and root window */
+	UInt64 addr = (UInt64)win_display;
+	Platform_Log3("Display: %y, Screen %i, Root window: %y", &addr, &win_screen, &win_rootWin);
+
+	Window_RegisterAtoms();
+	win_visual = GLContext_SelectVisual(mode);
+	Platform_LogConst("Opening render window... ");
+
+	XSetWindowAttributes attributes = { 0 };
+	attributes.colormap = XCreateColormap(win_display, win_rootWin, win_visual.visual, AllocNone);
+
+	win_eventMask = StructureNotifyMask /*| SubstructureNotifyMask*/ | ExposureMask |
+		KeyReleaseMask | KeyPressMask | KeymapStateMask | PointerMotionMask |
+		FocusChangeMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask |
+		LeaveWindowMask | PropertyChangeMask;
+	attributes.event_mask = win_eventMask;
+
+	long mask = CWColormap | CWEventMask | CWBackPixel | CWBorderPixel;
+	win_handle = XCreateWindow(win_display, win_rootWin, x, y, width, height,
+		0, win_visual.depth /* CopyFromParent*/, InputOutput, win_visual.visual, mask, &attributes);
+
+	if (win_handle == NULL) ErrorHandler_Fail("XCreateWindow call failed");
+	if (title->length > 0) {
+		XStoreName(win_display, win_handle, title->buffer);
+	}
+
+	XSizeHints hints = { 0 };
+	hints.base_width = width;
+	hints.base_height = height;
+	hints.flags = PSize | PPosition;
+	XSetWMNormalHints(win_display, win_handle, &hints);
+
+	/* Register for window destroy notification */
+	Atom atoms[1] = { wm_destroy };
+	XSetWMProtocols(win_display, win_handle, atoms, 1);
+
+	/* Set the initial window size to ensure X, Y, Width, Height and the rest
+	   return the correct values inside the constructor and the Load event. */
+	XEvent e = { 0 };
+	e.xconfigure.x = x;
+	e.xconfigure.y = y;
+	e.xconfigure.width = width;
+	e.xconfigure.height = height;
+	Window_RefreshBounds(&e);
+
+	/* Request that auto-repeat is only set on devices that support it physically.
+	   This typically means that it's turned off for keyboards (which is what we want).
+	   We prefer this method over XAutoRepeatOff/On, because the latter needs to
+	   be reset before the program exits. */
+	bool supported;
+	XkbSetDetectableAutoRepeat(win_display, true, &supported);
+	Window_Exists = true;
+}
 
 UChar clipboard_copy_buffer[String_BufferSize(256)];
 String clipboard_copy_text = String_FromEmptyArray(clipboard_copy_buffer);
@@ -174,7 +262,7 @@ UInt8 Window_GetWindowState(void) {
 	Int32 maximised = 0, i;
 
 	/* TODO: Check this works right */
-	if (items > 0 && prop != NULL) {
+	if (items > 0 && data != NULL) {
 		for (i = 0; i < items; i++) {
 			Atom atom = data[i];
 
@@ -187,7 +275,7 @@ UInt8 Window_GetWindowState(void) {
 				fullscreen = true;
 			}
 		}
-		XFree(prop);
+		XFree(data);
 	}
 
 	if (minimised)      return WINDOW_STATE_MINIMISED;
@@ -198,16 +286,16 @@ UInt8 Window_GetWindowState(void) {
 
 void Window_SendNetWMState(long op, Atom a1, Atom a2) {
 	XEvent ev = { 0 };
-	ev.ClientMessageEvent.type = ClientMessage;
-	ev.ClientMessageEvent.send_event = true;
-	ev.ClientMessageEvent.window = win_handle;
-	ev.ClientMessageEvent.message_type = net_wm_state;
-	ev.ClientMessageEvent.format = 32;
-	ev.ClientMessageEvent.l[0] = op;
-	ev.ClientMessageEvent.l[1] = a1;
-	ev.ClientMessageEvent.l[2] = a2;
+	ev.xclient.type = ClientMessage;
+	ev.xclient.send_event = true;
+	ev.xclient.window = win_handle;
+	ev.xclient.message_type = net_wm_state;
+	ev.xclient.format = 32;
+	ev.xclient.data.l[0] = op;
+	ev.xclient.data.l[1] = a1;
+	ev.xclient.data.l[2] = a2;
 
-	XSendEvent(win_display, win_rootWindow, false,
+	XSendEvent(win_display, win_rootWin, false,
 		SubstructureRedirectMask | SubstructureNotifyMask, &ev);
 }
 
@@ -280,29 +368,78 @@ void Window_SetClientSize(struct Size2D size) {
 void Window_Close(void) {
 	XEvent ev = { 0 };
 	ev.type = ClientMessage;
-	ev.ClientMessageEvent.format = 32;
-	ev.ClientMessageEvent.display = win_display;
-	ev.ClientMessageEvent.window = win_handle;
-	ev.ClientMessageEvent.l[0] = wm_destroy;
+	ev.xclient.format = 32;
+	ev.xclient.display = win_display;
+	ev.xclient.window = win_handle;
+	ev.xclient.data.l[0] = wm_destroy;
 
 	XSendEvent(win_display, win_handle, false, 0, &ev);
 	XFlush(win_display);
 }
 
-bool Window_GetPendingEvent(XEvent* e) {
-	return XCheckWindowEvent(win_display, win_handle, eventMask, e) ||
-		XCheckTypedWindowEvent(win_display, win_handle, ClientMessage, e) ||
-		XCheckTypedWindowEvent(win_display, win_handle, SelectionNotify, e) ||
-		XCheckTypedWindowEvent(win_display, win_handle, SelectionRequest, e);
+void Window_RefreshBorders(void) {
+	Atom prop_type;
+	int prop_format;
+	long items, bytes_after;
+	long* borders = NULL;
+	
+	XGetWindowProperty(win_display, win_handle, net_frame_extents, 0, 16, false,
+		xa_cardinal, &prop_type, &prop_format, &items, &bytes_after, &borders);
+
+	if (borders == NULL) return;
+	if (items == 4) {
+		borderLeft = borders[0]; borderRight = borders[1];
+		borderTop = borders[2]; borderBottom = borders[3];
+	}
+	XFree(borders);
 }
 
+void Window_RefreshBounds(XEvent* e) {
+	Window_RefreshBorders();
+
+	struct Point2D curLoc = Window_GetLocation();
+	struct Point2D loc = { e->xconfigure.x - borderLeft, e->xconfigure.y - borderTop };
+	if (loc.X != curLoc.X || loc.Y != curLoc.Y) {
+		Window_Bounds.X = loc.X; Window_Bounds.Y = loc.Y;
+		Event_RaiseVoid(&WindowEvents_Moved);
+	}
+
+	/* Note: width and height denote the internal (client) size.
+	   To get the external (window) size, we need to add the border size. */
+	struct Size2D curSize = Window_GetSize();
+	struct Size2D size = {
+		e->xconfigure.width + borderLeft + borderRight,
+		e->xconfigure.height + borderTop + borderBottom };
+
+	if (curSize.Width != size.Width || curSize.Height != size.Height) {
+		Window_Bounds.Width = size.Width; Window_Bounds.Height = size.Height;
+		Window_ClientSize = Size2D_Make(e->xconfigure.width, e->xconfigure.height);
+		Event_RaiseVoid(&WindowEvents_Resized);
+	}
+}
+
+void Window_ToggleKey(XKeyEvent* keyEvent, bool pressed) {
+	KeySym keysym1 = XLookupKeysym(keyEvent, 0);
+	KeySym keysym2 = XLookupKeysym(keyEvent, 1);
+
+	Key key = Window_MapKey(keysym1);
+	if (key == Key_None) key = Window_MapKey(keysym2);
+	if (key != Key_None) Keyboard_Set(key, pressed);
+}
 
 Atom Window_GetSelectionProperty(XEvent* e) {
-	Atom property = e.SelectionRequestEvent.property;
+	Atom property = e->xselectionrequest.property;
 	if (property != NULL) return property;
 
 	/* For obsolete clients. See ICCCM spec, selections chapter for reasoning. */
-	return e.SelectionRequestEvent.target;
+	return e->xselectionrequest.target;
+}
+
+bool Window_GetPendingEvent(XEvent* e) {
+	return XCheckWindowEvent(win_display, win_handle, win_eventMask, e) ||
+		XCheckTypedWindowEvent(win_display, win_handle, ClientMessage, e) ||
+		XCheckTypedWindowEvent(win_display, win_handle, SelectionNotify, e) ||
+		XCheckTypedWindowEvent(win_display, win_handle, SelectionRequest, e);
 }
 
 void Window_ProcessEvents(void) {
@@ -322,11 +459,11 @@ void Window_ProcessEvents(void) {
 		} break;
 
 		case ClientMessage:
-			if (!isExiting && e.ClientMessageEvent.l[0] == wm_destroy) {
+			if (!win_isExiting && e.xclient.data.l[0] == wm_destroy) {
 				Platform_LogConst("Exit message received.");
 				RaiseClosing();
 
-				isExiting = true;
+				win_isExiting = true;
 				Window_Destroy();
 				RaiseClosed();
 			} break;
@@ -342,44 +479,46 @@ void Window_ProcessEvents(void) {
 
 		case KeyPress:
 		{
-			ToggleKey(&e.KeyEvent, true);
-			int status = XLookupString(&e.KeyEvent, ascii, ascii.Length, null, IntPtr.Zero);
-			Encoding.Default.GetChars(ascii, 0, status, chars, 0);
+			ToggleKey(&e.xkey, true);
+			UInt8 data[16];
+			int status = XLookupString(&e.xkey, data, Array_Elems(data), NULL, NULL);
 
-			Int32 i;
-			for (i = 0; i < status; i++) {
-				/* ignore NULL char after non-ASCII input char, like ä or å on Finnish keyboard layout */
-				if (chars[i] == '\0') continue;
-				RaiseKeyPress(chars[i]);
+			String name = String_FromConst("Translate key press");
+			struct Stream mem; Stream_ReadonlyMemory(&mem, data, status, &name);
+
+			/* TODO: Is this even right... */
+			UInt16 codepoint;
+			while (Stream_ReadUtf8Char(&mem, &codepoint)) {
+				Event_RaiseInt(&KeyEvents_Press, Convert_UnicodeToCP437(codepoint));
 			}
 		} break;
 
 		case KeyRelease:
 			/* TODO: raise KeyPress event. Use code from */
 			/* http://anonsvn.mono-project.com/viewvc/trunk/mcs/class/Managed.Windows.Forms/System.Windows.Forms/X11Keyboard.cs?view=markup */
-			ToggleKey(&e.KeyEvent, false);
+			ToggleKey(&e.xkey, false);
 			break;
 
 		case ButtonPress:
-			if (e.ButtonEvent.button == 1) Mouse.Set(MouseButton.Left, true);
-			else if (e.ButtonEvent.button == 2) Mouse.Set(MouseButton.Middle, true);
-			else if (e.ButtonEvent.button == 3) Mouse.Set(MouseButton.Right, true);
-			else if (e.ButtonEvent.button == 4) Mouse.SetWheel(Mouse.Wheel + 1);
-			else if (e.ButtonEvent.button == 5) Mouse.SetWheel(Mouse.Wheel - 1);
-			else if (e.ButtonEvent.button == 6) Keyboard.Set(Key.XButton1, true);
-			else if (e.ButtonEvent.button == 7) Keyboard.Set(Key.XButton2, true);
+			if (e.xbutton.button == 1)      Mouse_Set(MouseButton_Left,   true);
+			else if (e.xbutton.button == 2) Mouse_Set(MouseButton_Middle, true);
+			else if (e.xbutton.button == 3) Mouse_Set(MouseButton_Right,  true);
+			else if (e.xbutton.button == 4) Mouse_SetWheel(Mouse_Wheel + 1);
+			else if (e.xbutton.button == 5) Mouse_SetWheel(Mouse_Wheel - 1);
+			else if (e.xbutton.button == 6) Keyboard_Set(Key_XButton1, true);
+			else if (e.xbutton.button == 7) Keyboard_Set(Key_XButton2, true);
 			break;
 
 		case ButtonRelease:
-			if (e.ButtonEvent.button == 1) Mouse.Set(MouseButton.Left, false);
-			else if (e.ButtonEvent.button == 2) Mouse.Set(MouseButton.Middle, false);
-			else if (e.ButtonEvent.button == 3) Mouse.Set(MouseButton.Right, false);
-			else if (e.ButtonEvent.button == 6) Keyboard.Set(Key.XButton1, false);
-			else if (e.ButtonEvent.button == 7) Keyboard.Set(Key.XButton2, false);
+			if (e.xbutton.button == 1)      Mouse_Set(MouseButton_Left,   false);
+			else if (e.xbutton.button == 2) Mouse_Set(MouseButton_Middle, false);
+			else if (e.xbutton.button == 3) Mouse_Set(MouseButton_Right,  false);
+			else if (e.xbutton.button == 6) Keyboard_Set(Key_XButton1, false);
+			else if (e.xbutton.button == 7) Keyboard_Set(Key_XButton2, false);
 			break;
 
 		case MotionNotify:
-			Mouse_SetPos(e.MotionEvent.x, e.MotionEvent.y);
+			Mouse_SetPos(e.xmotion.x, e.xmotion.y);
 			break;
 
 		case FocusIn:
@@ -394,18 +533,18 @@ void Window_ProcessEvents(void) {
 
 		case MappingNotify:
 			/* 0 == MappingModifier, 1 == MappingKeyboard */
-			if (e.MappingEvent.request == 0 || e.MappingEvent.request == 1) {
+			if (e.xmapping.request == 0 || e.xmapping.request == 1) {
 				Platform_LogConst("keybard mapping refreshed");
-				XRefreshKeyboardMapping(&e.MappingEvent);
+				XRefreshKeyboardMapping(&e.xmapping);
 			}
 			break;
 
 		case PropertyNotify:
-			if (e.PropertyEvent.atom == net_wm_state) {
+			if (e.xproperty.atom == net_wm_state) {
 				RaiseWindowStateChanged();
 			}
 
-			//if (e.PropertyEvent.atom == net_frame_extents) {
+			//if (e.xproperty.atom == net_frame_extents) {
 			//    RefreshWindowBorders();
 			//}
 			break;
@@ -413,24 +552,27 @@ void Window_ProcessEvents(void) {
 		case SelectionNotify:
 			String_Clear(&clipboard_paste_text);
 
-			if (e.SelectionEvent.selection == xa_clipboard && e.SelectionEvent.target == xa_utf8_string && e.SelectionEvent.property == xa_data_sel) {
+			if (e.xselection.selection == xa_clipboard && e.xselection.target == xa_utf8_string && e.xselection.property == xa_data_sel) {
 				Atom prop_type;
 				int prop_format;
-				long num_items, bytes_after;
-				UChar* data = NULL;			
+				long items, bytes_after;
+				UInt8* data = NULL;			
 
 				XGetWindowProperty(win_display, win_handle, xa_data_sel, 0, 1024, false, NULL,
-					&prop_type, &prop_format, &num_items, &bytes_after, &data);
+					&prop_type, &prop_format, items, &bytes_after, &data);
 
 				XDeleteProperty(win_display, win_handle, xa_data_sel);
-				if (num_items == 0) break;
+				if (items == 0) break;
 
 				if (prop_type == xa_utf8_string) {
-					byte[] dst = new byte[(int)num_items];
-					byte* src = (byte*)data;
-					for (int i = 0; i < dst.Length; i++) { dst[i] = src[i]; }
+					String name = String_FromConst("Clipboard get");
+					struct Stream mem; Stream_ReadonlyMemory(&mem, data, items, &name);
 
-					clipboard_paste_text = Encoding.UTF8.GetString(dst);
+					String_Clear(&clipboard_paste_text);
+					UInt16 codepoint;
+					while (Stream_ReadUtf8Char(&mem, &codepoint)) {
+						String_append(&clipboard_paste_text, Convert_UnicodeToCP437(codepoint));
+					}
 				}
 				XFree(data);
 			}
@@ -439,31 +581,36 @@ void Window_ProcessEvents(void) {
 		case SelectionRequest:
 		{
 			XEvent reply = { 0 };
-			reply.SelectionEvent.type = SelectionNotify;
-			reply.SelectionEvent.send_event = true;
-			reply.SelectionEvent.display = win_display;
-			reply.SelectionEvent.requestor = e.SelectionRequestEvent.requestor;
-			reply.SelectionEvent.selection = e.SelectionRequestEvent.selection;
-			reply.SelectionEvent.target = e.SelectionRequestEvent.target;
-			reply.SelectionEvent.property = NULL;
-			reply.SelectionEvent.time = e.SelectionRequestEvent.time;
+			reply.xselection.type = SelectionNotify;
+			reply.xselection.send_event = true;
+			reply.xselection.display = win_display;
+			reply.xselection.requestor = e.xselectionrequest.requestor;
+			reply.xselection.selection = e.xselectionrequest.selection;
+			reply.xselection.target = e.xselectionrequest.target;
+			reply.xselection.property = NULL;
+			reply.xselection.time = e.xselectionrequest.time;
 
-			if (e.SelectionRequestEvent.selection == xa_clipboard && e.SelectionRequestEvent.target == xa_utf8_string && clipboard_copy_text.length > 0) {
-				reply.SelectionEvent.property = Window_GetSelectionProperty(&e);
+			if (e.xselectionrequest.selection == xa_clipboard && e.xselectionrequest.target == xa_utf8_string && clipboard_copy_text.length > 0) {
+				reply.xselection.property = Window_GetSelectionProperty(&e);
+				UInt8 data[1024];
+				Int32 i, len = 0;
 
-				byte[] utf8_data = Encoding.UTF8.GetBytes(clipboard_copy_text);
-				fixed(byte* utf8_ptr = utf8_data) {
-					XChangeProperty(win_display, reply.SelectionEvent.requestor, reply.SelectionEvent.property, xa_utf8_string, 8,
-						PropModeReplace, (IntPtr)utf8_ptr, utf8_data.Length);
+				for (i = 0; i < clipboard_copy_text.length; i++) {
+					UInt16 codepoint = Convert_CP437ToUnicode(clipboard_copy_text.buffer[i]);
+					UInt8* cur = data + len;
+					len += Stream_WriteUtf8(cur, codepoint);
 				}
-			} else if (e.SelectionRequestEvent.selection == xa_clipboard && e.SelectionRequestEvent.target == xa_targets) {
-				reply.SelectionEvent.property = Window_GetSelectionProperty(&e);
+
+				XChangeProperty(win_display, reply.xselection.requestor, reply.xselection.property, xa_utf8_string, 8,
+					PropModeReplace, data, len);
+			} else if (e.xselectionrequest.selection == xa_clipboard && e.xselectionrequest.target == xa_targets) {
+				reply.xselection.property = Window_GetSelectionProperty(&e);
 
 				Atom data[2] = { xa_utf8_string, xa_targets };
-				XChangeProperty(win_display, reply.SelectionEvent.requestor, reply.SelectionEvent.property, xa_atom, 32,
+				XChangeProperty(win_display, reply.xselection.requestor, reply.xselection.property, xa_atom, 32,
 					PropModeReplace, data, 2);
 			}
-			XSendEvent(win_display, e.SelectionRequestEvent.requestor, true, 0, &reply);
+			XSendEvent(win_display, e.xselectionrequest.requestor, true, 0, &reply);
 		} break;
 		}
 	}
@@ -505,7 +652,7 @@ void Window_SetCursorVisible(bool visible) {
 	} else {
 		if (win_blankCursor == NULL) {
 			XColor col = { 0 };
-			Pixmap pixmap = XCreatePixmap(win_display, win_rootWindow, 1, 1, 1);
+			Pixmap pixmap = XCreatePixmap(win_display, win_rootWin, 1, 1, 1);
 			win_blankCursor = XCreatePixmapCursor(win_display, pixmap, pixmap, &col, &col, 0, 0);
 			XFreePixmap(win_display, pixmap);
 		}
@@ -603,9 +750,9 @@ static void GLContext_GetAttribs(struct GraphicsMode mode, Int32* attribs) {
 	attribs[i++] = 0;
 }
 
-static XVisualInfo GLContext_SelectVisual(struct GraphicsMode mode) {
+static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 	Int32 attribs[20];
-	GLContext_GetAttribs(mode, attribs);
+	GLContext_GetAttribs(*mode, attribs);
 	Int32 major = 0, minor = 0, fbcount;
 	if (!glXQueryVersion(win_display, &major, &minor)) {
 		ErrorHandler_Fail("glXQueryVersion failed");

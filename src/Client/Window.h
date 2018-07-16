@@ -38,7 +38,8 @@
 #define WINDOW_STATE_MAXIMISED 2
 #define WINDOW_STATE_FULLSCREEN 3
 
-void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, struct DisplayDevice* device);
+void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, 
+	struct GraphicsMode* mode, struct DisplayDevice* device);
 void Window_GetClipboardText(STRING_TRANSIENT String* value);
 void Window_SetClipboardText(STRING_PURE String* value);
 /* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */

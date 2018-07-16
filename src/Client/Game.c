@@ -755,8 +755,9 @@ Stopwatch game_renderTimer;
 void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct DisplayDevice* device) {
 	Int32 x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
 	Int32 y = device->Bounds.Y + (device->Bounds.Height - height) / 2;
+	struct GraphicsMode mode = GraphicsMode_MakeDefault();
 
-	Window_Create(x, y, width, height, title, device);
+	Window_Create(x, y, width, height, title, &mode, device);
 	Window_SetVisible(true);
 	Game_Load();
 	Event_RaiseVoid(&WindowEvents_Resized);
