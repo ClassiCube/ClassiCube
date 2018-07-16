@@ -11,9 +11,12 @@ struct FontDesc;
 struct Bitmap;
 struct AsyncRequest;
 
-enum SOCKET_SELECT {
-	SOCKET_SELECT_READ, SOCKET_SELECT_WRITE, SOCKET_SELECT_ERROR,
-};
+enum SOCKET_SELECT { SOCKET_SELECT_READ, SOCKET_SELECT_WRITE, SOCKET_SELECT_ERROR };
+#if CC_BUILD_WIN
+typedef void* SocketPtr;
+#else
+typedef Int32 SocketPtr;
+#endif
 
 extern UChar* Platform_NewLine; /* Newline for text */
 extern UChar Platform_DirectorySeparator;
@@ -89,16 +92,16 @@ void Platform_SetBitmap(struct Bitmap* bmp);
 struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col);
 void Platform_ReleaseBitmap(void);
 
-void Platform_SocketCreate(void** socket);
-ReturnCode Platform_SocketAvailable(void* socket, UInt32* available);
-ReturnCode Platform_SocketSetBlocking(void* socket, bool blocking);
-ReturnCode Platform_SocketGetError(void* socket, ReturnCode* result);
+void Platform_SocketCreate(SocketPtr* socket);
+ReturnCode Platform_SocketAvailable(SocketPtr socket, UInt32* available);
+ReturnCode Platform_SocketSetBlocking(SocketPtr socket, bool blocking);
+ReturnCode Platform_SocketGetError(SocketPtr socket, ReturnCode* result);
 
-ReturnCode Platform_SocketConnect(void* socket, STRING_PURE String* ip, Int32 port);
-ReturnCode Platform_SocketRead(void* socket, UInt8* buffer, UInt32 count, UInt32* modified);
-ReturnCode Platform_SocketWrite(void* socket, UInt8* buffer, UInt32 count, UInt32* modified);
-ReturnCode Platform_SocketClose(void* socket);
-ReturnCode Platform_SocketSelect(void* socket, Int32 selectMode, bool* success);
+ReturnCode Platform_SocketConnect(SocketPtr socket, STRING_PURE String* ip, Int32 port);
+ReturnCode Platform_SocketRead(SocketPtr socket, UInt8* buffer, UInt32 count, UInt32* modified);
+ReturnCode Platform_SocketWrite(SocketPtr socket, UInt8* buffer, UInt32 count, UInt32* modified);
+ReturnCode Platform_SocketClose(SocketPtr socket);
+ReturnCode Platform_SocketSelect(SocketPtr socket, Int32 selectMode, bool* success);
 
 void Platform_HttpInit(void);
 ReturnCode Platform_HttpMakeRequest(struct AsyncRequest* request, void** handle);

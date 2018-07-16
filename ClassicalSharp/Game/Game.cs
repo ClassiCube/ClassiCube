@@ -61,7 +61,6 @@ namespace ClassicalSharp {
 		
 		Stopwatch render_watch = new Stopwatch();
 		public void Run() {
-			window.Visible = true;
 			window.Closed += OnClosed;
 			window.Resize += OnResize;
 			

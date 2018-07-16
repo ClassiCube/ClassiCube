@@ -550,7 +550,7 @@ namespace OpenTK.Platform.MacOS {
 		public override bool Visible {
 			get { return API.IsWindowVisible(WinHandle); }
 			set {
-				if (value && Visible == false) {
+				if (value && !Visible) {
 					API.ShowWindow(WinHandle);
 					API.RepositionWindow(WinHandle, IntPtr.Zero, mPositionMethod);
 					API.SelectWindow(WinHandle);

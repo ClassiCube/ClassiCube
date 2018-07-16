@@ -101,7 +101,6 @@ namespace OpenTK.Platform.MacOS {
 			
 			SetDrawable(wind);
 			Update(wind);
-			
 			MakeCurrent(wind);
 
 			Debug.Print("context: {0}", ContextHandle);
