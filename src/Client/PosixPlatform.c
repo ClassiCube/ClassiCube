@@ -1,5 +1,5 @@
 #include "Platform.h"
-#define CC_BUILD_X11 1
+#define CC_BUILD_X11 0
 #if CC_BUILD_X11
 #include "PackedCol.h"
 #include "Drawer2D.h"
@@ -9,16 +9,12 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <time.h>
 #include <pthread.h> 
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
 #define UNIX_EPOCH 62135596800
 
@@ -27,8 +23,6 @@ UChar Platform_DirectorySeparator = '/';
 ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 ReturnCode ReturnCode_FileNotFound = ENOENT;
 ReturnCode ReturnCode_NotSupported = EPERM;
-extern ReturnCode ReturnCode_SocketInProgess;
-ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 
 static void Platform_UnicodeExpand(UInt8* dst, STRING_PURE String* src) {
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
@@ -232,78 +226,6 @@ struct Size2D Platform_TextMeasure(struct DrawTextArgs* args);
 void Platform_SetBitmap(struct Bitmap* bmp);
 struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col);
 void Platform_ReleaseBitmap(void);
-
-void Platform_SocketCreate(void** socketResult) {
-	*socketResult = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (*socketResult == -1) {
-		ErrorHandler_FailWithCode(errno, "Failed to create socket");
-	}
-}
-
-ReturnCode Platform_SocketAvailable(void* socket, UInt32* available) {
-	return ioctl(socket, FIONREAD, available);
-}
-
-ReturnCode Platform_SocketSetBlocking(void* socket, bool blocking) {
-	Int32 blocking_raw = blocking ? 0 : -1;
-	return ioctl(socket, FIONBIO, &blocking_raw);
-}
-
-ReturnCode Platform_SocketGetError(void* socket, ReturnCode* result) {
-	Int32 resultSize = sizeof(ReturnCode);
-	return getsockopt(socket, SOL_SOCKET, SO_ERROR, result, &resultSize);
-}
-
-ReturnCode Platform_SocketConnect(void* socket, STRING_PURE String* ip, Int32 port) {
-	struct sockaddr_in addr;
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = inet_addr(ip->buffer);
-	addr.sin_port = htons((UInt16)port);
-
-	ReturnCode result = connect(socket, (struct sockaddr*)(&addr), sizeof(addr));
-	return result == -1 ? errno : 0;
-}
-
-ReturnCode Platform_SocketRead(void* socket, UInt8* buffer, UInt32 count, UInt32* modified) {
-	Int32 recvCount = recv(socket, buffer, count, 0);
-	if (recvCount != -1) { *modified = recvCount; return 0; }
-	*modified = 0; return errno;
-}
-
-ReturnCode Platform_SocketWrite(void* socket, UInt8* buffer, UInt32 count, UInt32* modified) {
-	Int32 sentCount = send(socket, buffer, count, 0);
-	if (sentCount != -1) { *modified = sentCount; return 0; }
-	*modified = 0; return errno;
-}
-
-ReturnCode Platform_SocketClose(void* socket) {
-	ReturnCode result = 0;
-	ReturnCode result1 = shutdown(socket, SHUT_RDWR);
-	if (result1 == -1) result = errno;
-
-	ReturnCode result2 = closesocket(socket);
-	if (result2 == -1) result = errno;
-	return result;
-}
-
-ReturnCode Platform_SocketSelect(void* socket, Int32 selectMode, bool* success) {
-	void* args[2]; args[0] = (void*)1; args[1] = socket;
-	struct timeval time = { 0 };
-	Int32 selectCount;
-
-	if (selectMode == SOCKET_SELECT_READ) {
-		selectCount = select(1, &args, NULL, NULL, &time);
-	} else if (selectMode == SOCKET_SELECT_WRITE) {
-		selectCount = select(1, NULL, &args, NULL, &time);
-	} else if (selectMode == SOCKET_SELECT_ERROR) {
-		selectCount = select(1, NULL, NULL, &args, &time);
-	} else {
-		selectCount = -1;
-	}
-
-	if (selectCount != -1) { *success = args[0] != 0; return 0; }
-	*success = false; return errno;
-}
 
 void Platform_HttpInit(void);
 ReturnCode Platform_HttpMakeRequest(struct AsyncRequest* request, void** handle);

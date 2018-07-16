@@ -85,7 +85,7 @@ namespace Launcher.Patcher {
 		}
 
 		bool SelectZipEntry(string path) {
-			string name = Utils.ToFilename(path);
+			string name = Utils.GetFilename(path);
 			for (int i = 0; i < ResourceList.Filenames.Length; i++) {
 				if (ResourceList.FilesExist[i]) continue;
 				if (name != ResourceList.Filenames[i]) continue;

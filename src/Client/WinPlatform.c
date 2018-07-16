@@ -30,8 +30,6 @@ UChar Platform_DirectorySeparator = '\\';
 ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
 ReturnCode ReturnCode_NotSupported = ERROR_NOT_SUPPORTED;
-ReturnCode ReturnCode_SocketInProgess = WSAEINPROGRESS;
-ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 
 static void Platform_UnicodeExpand(WCHAR* dst, STRING_PURE String* src) {
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
@@ -198,7 +196,7 @@ ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_Enum
 		}
 		path.length = i;
 
-		String filename = path; String_UNSAFE_GetFilename(&filename);
+		String filename = path; Utils_UNSAFE_GetFilename(&filename);
 		callback(&filename, obj);
 	}  while (FindNextFileW(find, &data));
 
@@ -472,79 +470,6 @@ void Platform_ReleaseBitmap(void) {
 	platform_oldBmp = NULL;
 	platform_dib = NULL;
 	platform_bmp = NULL;
-}
-
-
-void Platform_SocketCreate(void** socketResult) {
-	*socketResult = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (*socketResult == INVALID_SOCKET) {
-		ErrorHandler_FailWithCode(WSAGetLastError(), "Failed to create socket");
-	}
-}
-
-ReturnCode Platform_SocketAvailable(void* socket, UInt32* available) {
-	return ioctlsocket(socket, FIONREAD, available);
-}
-
-ReturnCode Platform_SocketSetBlocking(void* socket, bool blocking) {
-	Int32 blocking_raw = blocking ? 0 : -1;
-	return ioctlsocket(socket, FIONBIO, &blocking_raw);
-}
-
-ReturnCode Platform_SocketGetError(void* socket, ReturnCode* result) {
-	Int32 resultSize = sizeof(ReturnCode);
-	return getsockopt(socket, SOL_SOCKET, SO_ERROR, result, &resultSize);
-}
-
-ReturnCode Platform_SocketConnect(void* socket, STRING_PURE String* ip, Int32 port) {
-	struct sockaddr_in addr;
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = inet_addr(ip->buffer);
-	addr.sin_port = htons((UInt16)port);
-
-	ReturnCode result = connect(socket, (struct sockaddr*)(&addr), sizeof(addr));
-	return result == SOCKET_ERROR ? WSAGetLastError() : 0;
-}
-
-ReturnCode Platform_SocketRead(void* socket, UInt8* buffer, UInt32 count, UInt32* modified) {
-	Int32 recvCount = recv(socket, buffer, count, 0);
-	if (recvCount == SOCKET_ERROR) { *modified = recvCount; return 0; }
-	*modified = 0; return WSAGetLastError();
-}
-
-ReturnCode Platform_SocketWrite(void* socket, UInt8* buffer, UInt32 count, UInt32* modified) {
-	Int32 sentCount = send(socket, buffer, count, 0);
-	if (sentCount != SOCKET_ERROR) { *modified = sentCount; return 0; }
-	*modified = 0; return WSAGetLastError();
-}
-
-ReturnCode Platform_SocketClose(void* socket) {
-	ReturnCode result = 0;
-	ReturnCode result1 = shutdown(socket, SD_BOTH);
-	if (result1 == SOCKET_ERROR) result = WSAGetLastError();
-
-	ReturnCode result2 = closesocket(socket);
-	if (result2 == SOCKET_ERROR) result = WSAGetLastError();
-	return result;
-}
-
-ReturnCode Platform_SocketSelect(void* socket, Int32 selectMode, bool* success) {
-	void* args[2]; args[0] = (void*)1; args[1] = socket;
-	struct timeval time = { 0 };
-	Int32 selectCount;
-
-	if (selectMode == SOCKET_SELECT_READ) {
-		selectCount = select(1, &args, NULL, NULL, &time);
-	} else if (selectMode == SOCKET_SELECT_WRITE) {
-		selectCount = select(1, NULL, &args, NULL, &time);
-	} else if (selectMode == SOCKET_SELECT_ERROR) {
-		selectCount = select(1, NULL, NULL, &args, &time);
-	} else {
-		selectCount = SOCKET_ERROR;
-	}
-
-	if (selectCount != SOCKET_ERROR) { *success = args[0] != 0; return 0; }
-	*success = false; return WSAGetLastError();
 }
 
 HINTERNET hInternet;

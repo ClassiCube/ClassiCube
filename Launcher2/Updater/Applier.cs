@@ -57,7 +57,7 @@ namespace Launcher.Updater {
 			Platform.WriteAllBytes(path, data);
 			
 			try {
-				Platform.FileSetWriteTime(path, PatchTime);
+				Platform.FileSetModifiedTime(path, PatchTime);
 			} catch (IOException ex) {
 				ErrorHandler.LogError("I/O exception when trying to set modified time for: " + filename, ex);
 			} catch (UnauthorizedAccessException ex) {

@@ -308,6 +308,7 @@
     <ClCompile Include="SelectionBox.c" />
     <ClCompile Include="ServerConnection.c" />
     <ClCompile Include="SkyboxRenderer.c" />
+    <ClCompile Include="Socket.c" />
     <ClCompile Include="Stream.c" />
     <ClCompile Include="String.c" />
     <ClCompile Include="TerrainAtlas.c" />

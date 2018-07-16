@@ -86,14 +86,13 @@ namespace OpenTK.Platform.MacOS {
 		void CreateNativeWindow(WindowClass @class, WindowAttributes attrib, Rect r) {
 			Debug.Print("Creating window...");
 
-			IntPtr windowRef;
-			OSStatus err = API.CreateNewWindow(@class, attrib, ref r, out windowRef);
+			OSStatus err = API.CreateNewWindow(@class, attrib, ref r, out WinHandle);
 			API.CheckReturn(err);
-			Debug.Print("Created window " + windowRef.ToString());
+			Debug.Print("Created window " + WinHandle.ToString());
 			
 			IntPtr titleCF = CF.CFSTR(title);
-			Debug.Print("Setting window title: {0},   CFstring : {1},  Text : {2}", windowRef, titleCF, title);
-			API.SetWindowTitleWithCFString(windowRef, titleCF);
+			Debug.Print("Setting window title: {0},   CFstring : {1},  Text : {2}", WinHandle, titleCF, title);
+			API.SetWindowTitleWithCFString(WinHandle, titleCF);
 
 			SetLocation(r.X, r.Y);
 			SetSize(r.Width, r.Height);

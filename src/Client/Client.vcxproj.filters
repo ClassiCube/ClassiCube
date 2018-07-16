@@ -575,5 +575,8 @@
     <ClCompile Include="PosixPlatform.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
+    <ClCompile Include="Socket.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

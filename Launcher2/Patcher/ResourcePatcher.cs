@@ -67,7 +67,7 @@ namespace Launcher.Patcher {
 		List<byte[]> datas = new List<byte[]>();
 		
 		void ExtractExisting(string path, byte[] data, ZipEntry entry) {
-			entry.Filename = Utils.ToFilename(path);		
+			entry.Filename = Utils.GetFilename(path);		
 			existing.Add(entry.Filename);
 			entries.Add(entry);
 			datas.Add(data);
@@ -93,7 +93,7 @@ namespace Launcher.Patcher {
 
 		void ProcessZipEntry_Classic(string path, byte[] data, ZipEntry entry) {
 			if (!Utils.CaselessEnds(path, ".png")) return;
-			entry.Filename = Utils.ToFilename(path);
+			entry.Filename = Utils.GetFilename(path);
 			
 			if (entry.Filename != "terrain.png") {
 				if (entry.Filename == "gui.png")
@@ -159,7 +159,7 @@ namespace Launcher.Patcher {
 		}
 		
 		void ProcessZipEntry_Modern(string path, byte[] data, ZipEntry entry) {
-			entry.Filename = Utils.ToFilename(path);
+			entry.Filename = Utils.GetFilename(path);
 			if (path == "assets/minecraft/textures/environment/snow.png") {
 				if (!existing.Contains("snow.png")) {
 					writer.WriteZipEntry(entry, data);

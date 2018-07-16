@@ -119,7 +119,7 @@ bool Utils_IsUrlPrefix(STRING_PURE String* value, Int32 index) {
 		|| String_IndexOfString(value, &https) == index;
 }
 
-void String_UNSAFE_GetFilename(STRING_TRANSIENT String* str) {
+void Utils_UNSAFE_GetFilename(STRING_TRANSIENT String* str) {
 	Int32 i;
 	for (i = str->length - 1; i >= 0; i--) {
 		UChar c = str->buffer[i];

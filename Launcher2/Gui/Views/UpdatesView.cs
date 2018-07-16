@@ -39,7 +39,7 @@ namespace Launcher.Gui.Views {
 		const string dateFormat = "dd-MM-yyyy HH:mm";
 		protected override void MakeWidgets() {
 			widgetIndex = 0;
-			DateTime writeTime = Platform.FileGetWriteTime("ClassicalSharp.exe");
+			DateTime writeTime = Platform.FileGetModifiedTime("ClassicalSharp.exe");
 			
 			Makers.Label(this, "Your build:", textFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, -55, -120);
