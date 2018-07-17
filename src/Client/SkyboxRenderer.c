@@ -20,14 +20,11 @@ bool SkyboxRenderer_ShouldRender(void) {
 
 static void SkyboxRenderer_TexturePackChanged(void* obj) {
 	Gfx_DeleteTexture(&skybox_tex);
-	WorldEnv_SkyboxClouds = false;
 }
 
 static void SkyboxRenderer_FileChanged(void* obj, struct Stream* src) {
 	if (String_CaselessEqualsConst(&src->Name, "skybox.png")) {
 		Game_UpdateTexture(&skybox_tex, src, false);
-	} else if (String_CaselessEqualsConst(&src->Name, "useclouds")) {
-		WorldEnv_SkyboxClouds = true;
 	}
 }
 

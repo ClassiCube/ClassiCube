@@ -45,7 +45,7 @@ namespace ClassicalSharp.Map {
 		public int SidesOffset = -2;
 		
 		public float SkyboxHorSpeed, SkyboxVerSpeed;
-		public bool ExpFog, SkyboxClouds;
+		public bool ExpFog;
 		
 		Game game;
 		public WorldEnv(Game game) {

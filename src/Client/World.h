@@ -55,7 +55,6 @@ Int32 WorldEnv_Weather;
 bool WorldEnv_ExpFog;
 Real32 WorldEnv_SkyboxHorSpeed;
 Real32 WorldEnv_SkyboxVerSpeed;
-bool WorldEnv_SkyboxClouds;
 
 PackedCol WorldEnv_SkyCol;
 extern PackedCol WorldEnv_DefaultSkyCol;

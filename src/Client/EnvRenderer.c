@@ -95,6 +95,7 @@ static void EnvRenderer_RenderClouds(Real64 deltaTime) {
 }
 
 static void EnvRenderer_RenderSky(Real64 deltaTime) {
+	if (SkyboxRenderer_ShouldRender()) return;
 	Vector3 pos = Game_CurrentCameraPos;
 	Real32 normalY = (Real32)World_Height + 8.0f;
 	Real32 skyY = max(pos.Y + 8.0f, normalY);
@@ -149,12 +150,8 @@ void EnvRenderer_Render(Real64 deltaTime) {
 		EnvRenderer_RenderMinimal(deltaTime);
 	} else {
 		if (env_skyVb == NULL || env_cloudsVb == NULL) return;
-		if (!SkyboxRenderer_ShouldRender()) {
-			EnvRenderer_RenderSky(deltaTime);
-			EnvRenderer_RenderClouds(deltaTime);
-		} else if (WorldEnv_SkyboxClouds) {
-			EnvRenderer_RenderClouds(deltaTime);
-		}
+		EnvRenderer_RenderSky(deltaTime);
+		EnvRenderer_RenderClouds(deltaTime);
 		EnvRenderer_UpdateFog();
 	}
 }
