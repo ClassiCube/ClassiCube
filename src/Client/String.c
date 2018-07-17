@@ -3,6 +3,7 @@
 #include "ErrorHandler.h"
 #include "Platform.h"
 #include "ExtMath.h"
+#include "Stream.h"
 
 #define Char_MakeLower(ch) if ((ch) >= 'A' && (ch) <= 'Z') { (ch) += ' '; }
 UChar Char_ToLower(UChar c) {
@@ -23,20 +24,21 @@ String String_InitAndClear(STRING_REF UChar* buffer, UInt16 capacity) {
 	return str;
 }
 
+UInt16 String_CalcLen(STRING_PURE UChar* raw, UInt16 capacity) {
+	UInt16 length = 0;
+	while (length < capacity && *raw) { raw++; length++; }
+	return length;
+}
+
 String String_MakeNull(void) { return String_Init(NULL, 0, 0); }
 
 String String_FromRaw(STRING_REF UChar* buffer, UInt16 capacity) {
-	UInt16 length = 0;
-	UChar* cur = buffer;
-	while (length < capacity && *cur != NULL) { cur++; length++; }
-
-	return String_Init(buffer, length, capacity);
+	return String_Init(buffer, String_CalcLen(buffer, capacity), capacity);
 }
 
 String String_FromReadonly(STRING_REF const UChar* buffer) {
-	String str = String_FromRaw(buffer, UInt16_MaxValue);
-	str.capacity = str.length;
-	return str;
+	UInt16 len = String_CalcLen(buffer, UInt16_MaxValue);
+	return String_Init(buffer, len, len);
 }
 
 
@@ -250,30 +252,28 @@ bool String_Hex64(STRING_TRANSIENT String* str, UInt64 value) {
 	return String_AppendConst(str, hex);
 }
 
-bool String_AppendConst(STRING_TRANSIENT String* str, const UChar* toAppend) {
-	UChar cur;
-
-	while ((cur = *toAppend) != NULL) {
-		if (!String_Append(str, cur)) return false;
-		toAppend++;
+bool String_AppendConst(STRING_TRANSIENT String* str, const UChar* src) {
+	while (*src) {
+		if (!String_Append(str, *src)) return false;
+		src++;
 	}
 	return true;
 }
 
-bool String_AppendString(STRING_TRANSIENT String* str, STRING_PURE String* toAppend) {
+bool String_AppendString(STRING_TRANSIENT String* str, STRING_PURE String* src) {
 	Int32 i;
 
-	for (i = 0; i < toAppend->length; i++) {
-		if (!String_Append(str, toAppend->buffer[i])) return false;
+	for (i = 0; i < src->length; i++) {
+		if (!String_Append(str, src->buffer[i])) return false;
 	}
 	return true;
 }
 
-bool String_AppendColorless(STRING_TRANSIENT String* str, STRING_PURE String* toAppend) {
+bool String_AppendColorless(STRING_TRANSIENT String* str, STRING_PURE String* src) {
 	Int32 i;
 
-	for (i = 0; i < toAppend->length; i++) {
-		UChar c = toAppend->buffer[i];
+	for (i = 0; i < src->length; i++) {
+		UChar c = src->buffer[i];
 		if (c == '&') { i++; continue; } /* Skip over the following colour code */
 		if (!String_Append(str, c)) return false;
 	}
@@ -509,6 +509,17 @@ bool Convert_TryUnicodeToCP437(UInt16 c, UChar* value) {
 	}
 
 	*value = '?'; return false;
+}
+
+void String_DecodeUtf8(STRING_TRANSIENT String* str, UInt8* data, UInt32 len) {
+	String name = String_FromConst("Decoding UTF8");
+	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len, &name);
+	UInt16 codepoint;
+
+	while (mem.Meta_Mem_Left > 0) {
+		if (!Stream_ReadUtf8Char(&mem, &codepoint)) break;
+		String_Append(str, Convert_UnicodeToCP437(codepoint));
+	}
 }
 
 bool Convert_TryParseUInt8(STRING_PURE String* str, UInt8* value) {

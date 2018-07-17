@@ -380,7 +380,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	case WM_DESTROY:
 		Window_Exists = false;
 		UnregisterClassA(win_ClassName, win_Instance);
-		if (win_DC != NULL) ReleaseDC(win_Handle, win_DC);
+		if (win_DC) ReleaseDC(win_Handle, win_DC);
 		Event_RaiseVoid(&WindowEvents_Closed);
 		break;
 	}
@@ -449,12 +449,12 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 		UInt8 c;
 		if (isUnicode) {
 			UInt16* text = (UInt16*)src;
-			for (; *text != NULL; text++) {
+			for (; *text; text++) {
 				if (Convert_TryUnicodeToCP437(*text, &c)) String_Append(value, c);
 			}
 		} else {
 			UChar* text = (UChar*)src;
-			for (; *text != NULL; text++) {
+			for (; *text; text++) {
 				if (Convert_TryUnicodeToCP437(*text, &c)) String_Append(value, c);
 			}
 		}
@@ -611,7 +611,7 @@ void Window_ProcessEvents(void) {
 	}
 
 	HWND foreground = GetForegroundWindow();
-	if (foreground != NULL) {
+	if (foreground) {
 		Window_Focused = foreground == win_Handle;
 	}
 }

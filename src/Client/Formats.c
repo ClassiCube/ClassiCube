@@ -267,17 +267,9 @@ static UInt32 Nbt_ReadString(struct Stream* stream, UChar* strBuffer) {
 	UChar nameBuffer[NBT_SMALL_SIZE * 4];
 	Stream_Read(stream, nameBuffer, nameLen);
 
-	/* TODO: Check how slow reading strings this way is */
-	struct Stream memStream;
-	Stream_ReadonlyMemory(&memStream, nameBuffer, nameLen, &stream->Name);
-	UInt16 codepoint;
-
-	UInt32 i;
-	for (i = 0; i < NBT_SMALL_SIZE; i++) {
-		if (!Stream_ReadUtf8Char(&memStream, &codepoint)) break;
-		strBuffer[i] = Convert_UnicodeToCP437(codepoint);
-	}
-	return i;
+	String str = String_Init(strBuffer, 0, NBT_SMALL_SIZE);
+	String_DecodeUtf8(&str, nameBuffer, nameLen);
+	return str.length;
 }
 
 typedef bool (*Nbt_Callback)(struct NbtTag* tag);
@@ -573,7 +565,7 @@ static bool Cw_Callback_5(struct NbtTag* tag) {
 static bool Cw_Callback(struct NbtTag* tag) {
 	UInt32 depth = 0;
 	struct NbtTag* tmp = tag->Parent;
-	while (tmp != NULL) { depth++; tmp = tmp->Parent; }
+	while (tmp) { depth++; tmp = tmp->Parent; }
 
 	switch (depth) {
 	case 1: return Cw_Callback_1(tag);

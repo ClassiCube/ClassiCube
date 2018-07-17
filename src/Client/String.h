@@ -27,6 +27,7 @@ typedef struct String_ {
 	UInt16 capacity; /* Max number of characters that can be in buffer. */
 } String;
 
+UInt16 String_CalcLen(STRING_PURE UChar* raw, UInt16 capacity);
 String String_MakeNull(void);
 String String_Init(STRING_REF UChar* buffer, UInt16 length, UInt16 capacity);
 String String_InitAndClear(STRING_REF UChar* buffer, UInt16 capacity);
@@ -67,9 +68,9 @@ bool String_AppendUInt64(STRING_TRANSIENT String* str, UInt64 num);
 bool String_AppendReal32(STRING_TRANSIENT String* str, Real32 num, Int32 fracDigits); /* TODO: Need to account for , or . for decimal */
 bool String_Hex32(STRING_TRANSIENT String* str, UInt32 value);
 bool String_Hex64(STRING_TRANSIENT String* str, UInt64 value);
-bool String_AppendConst(STRING_TRANSIENT String* str, const UChar* toAppend);
-bool String_AppendString(STRING_TRANSIENT String* str, STRING_PURE String* toAppend);
-bool String_AppendColorless(STRING_TRANSIENT String* str, STRING_PURE String* toAppend);
+bool String_AppendConst(STRING_TRANSIENT String* str, const UChar* src);
+bool String_AppendString(STRING_TRANSIENT String* str, STRING_PURE String* src);
+bool String_AppendColorless(STRING_TRANSIENT String* str, STRING_PURE String* src);
 
 Int32 String_IndexOf(STRING_PURE String* str, UChar c, Int32 offset);
 Int32 String_LastIndexOf(STRING_PURE String* str, UChar c);
@@ -93,6 +94,8 @@ void String_Format4(STRING_TRANSIENT String* str, const UChar* format, const voi
 UInt16 Convert_CP437ToUnicode(UChar c);
 UChar Convert_UnicodeToCP437(UInt16 c);
 bool Convert_TryUnicodeToCP437(UInt16 c, UChar* value);
+void String_DecodeUtf8(STRING_TRANSIENT String* str, UInt8* data, UInt32 len);
+
 bool Convert_TryParseUInt8(STRING_PURE String* str, UInt8* value);
 bool Convert_TryParseInt16(STRING_PURE String* str, Int16* value);
 bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value);

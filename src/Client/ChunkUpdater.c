@@ -122,7 +122,7 @@ static void ChunkUpdater_PerformAllocations(void) {
 
 void ChunkUpdater_Refresh(void) {
 	ChunkUpdater_ChunkPos = Vector3I_MaxValue();
-	if (MapRenderer_Chunks != NULL && World_Blocks != NULL) {
+	if (MapRenderer_Chunks && World_Blocks) {
 		ChunkUpdater_ClearChunkCache();
 		ChunkUpdater_ResetChunkCache();
 
@@ -355,7 +355,7 @@ void ChunkUpdater_DeleteChunk(struct ChunkInfo* info) {
 #endif
 	Int32 i;
 
-	if (info->NormalParts != NULL) {
+	if (info->NormalParts) {
 		struct ChunkPartInfo* ptr = info->NormalParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
 			if (ptr->Offset < 0) continue; 
@@ -367,7 +367,7 @@ void ChunkUpdater_DeleteChunk(struct ChunkInfo* info) {
 		info->NormalParts = NULL;
 	}
 
-	if (info->TranslucentParts != NULL) {
+	if (info->TranslucentParts) {
 		struct ChunkPartInfo* ptr = info->TranslucentParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
 			if (ptr->Offset < 0) continue;
@@ -392,14 +392,14 @@ void ChunkUpdater_BuildChunk(struct ChunkInfo* info, Int32* chunkUpdates) {
 	}
 	Int32 i;
 
-	if (info->NormalParts != NULL) {
+	if (info->NormalParts) {
 		struct ChunkPartInfo* ptr = info->NormalParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
 			if (ptr->Offset >= 0) { MapRenderer_NormalPartsCount[i]++; }
 		}
 	}
 
-	if (info->TranslucentParts != NULL) {
+	if (info->TranslucentParts) {
 		struct ChunkPartInfo* ptr = info->TranslucentParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
 			if (ptr->Offset >= 0) { MapRenderer_TranslucentPartsCount[i]++; }

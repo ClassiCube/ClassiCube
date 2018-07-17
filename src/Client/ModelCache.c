@@ -54,7 +54,7 @@ void ModelCache_Register(STRING_REF const UChar* name, STRING_PURE const UChar* 
 		model.Instance = instance;
 		ModelCache_Models[ModelCache_modelCount++] = model;
 
-		if (defaultTexName != NULL) {
+		if (defaultTexName) {
 			String defaultTex = String_FromReadonly(defaultTexName);
 			instance->defaultTexIndex = ModelCache_GetTextureIndex(&defaultTex);
 		}		

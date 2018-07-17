@@ -1,10 +1,10 @@
 #include "Platform.h"
-#define CC_BUILD_X11 0
 #if CC_BUILD_X11
 #include "PackedCol.h"
 #include "Drawer2D.h"
 #include "Stream.h"
 #include "ErrorHandler.h"
+#include "Constants.h"
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -35,8 +35,9 @@ static void Platform_UnicodeExpand(UInt8* dst, STRING_PURE String* src) {
 	*dst = NULL;
 }
 
-void Platform_Init(void);
-void Platform_Free(void);
+void Platform_Init(void) { }
+void Platform_Free(void) { }
+
 void Platform_Exit(ReturnCode code) { exit(code); }
 STRING_PURE String Platform_GetCommandLineArgs(void);
 
@@ -123,15 +124,23 @@ ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_Enum
 	DIR* dirPtr = opendir(data);
 	if (dirPtr == NULL) return errno;
 
+	UInt8 fileBuffer[String_BufferSize(FILENAME_SIZE)];
+	String file = String_InitAndClearArray(fileBuffer);
 	struct dirent* entry;
+
+	/* TODO: does this also include subdirectories */
 	while (entry = readdir(dirPtr)) {
-		puts(ep->d_name);
-		/* TODO: does this also include subdirectories */
+		UInt16 len = String_CalcLen(entry->d_name, UInt16_MaxValue);
+		String_Clear(&file);
+		String_DecodeUtf8(&file, entry->d_name, len);
+
+		Utils_UNSAFE_GetFilename(&file);
+		callback(&file, obj);
 	}
 
 	int result = errno; /* return code from readdir */
 	closedir(dirPtr);
-	return  result;
+	return result;
 }
 
 ReturnCode Platform_FileGetModifiedTime(STRING_PURE String* path, DateTime* time) {
@@ -200,17 +209,60 @@ ReturnCode Platform_FileLength(void* file, UInt32* length) {
 	*length = st.st_size; return 0;
 }
 
-void Platform_ThreadSleep(UInt32 milliseconds);
-typedef void Platform_ThreadFunc(void);
-void* Platform_ThreadStart(Platform_ThreadFunc* func);
-void Platform_ThreadJoin(void* handle);
-/* Frees handle to thread - NOT THE THREAD ITSELF */
-void Platform_ThreadFreeHandle(void* handle);
+void Platform_ThreadSleep(UInt32 milliseconds) {
+	usleep(milliseconds * 1000);
+}
 
-void* Platform_MutexCreate(void);
-void Platform_MutexFree(void* handle);
-void Platform_MutexLock(void* handle);
-void Platform_MutexUnlock(void* handle);
+void* Platform_ThreadStartCallback(void* lpParam) {
+	Platform_ThreadFunc* func = (Platform_ThreadFunc*)lpParam;
+	(*func)();
+	return NULL;
+}
+
+pthread_t threadList[3]; Int32 threadIndex;
+void* Platform_ThreadStart(Platform_ThreadFunc* func) {
+	if (threadIndex == Array_Elems(threadIndex)) ErrorHandler_Fail("Cannot allocate thread");
+	pthread_t* ptr = &threadList[threadIndex];
+	int result = pthread_create(ptr, NULL, Platform_ThreadStartCallback, func);
+
+	ErrorHandler_CheckOrFail(result, "Creating thread");
+	threadIndex++; return ptr;
+}
+
+void Platform_ThreadJoin(void* handle) {
+	int result = pthread_join(*((pthread_t*)handle), NULL);
+	ErrorHandler_CheckOrFail(result, "Joining thread");
+}
+
+void Platform_ThreadFreeHandle(void* handle) {
+	int result = pthread_detach(*((pthread_t*)handle));
+	ErrorHandler_CheckOrFail(result, "Detaching thread");
+}
+
+pthread_mutex_t mutexList[3]; Int32 mutexIndex;
+void* Platform_MutexCreate(void) {
+	if (mutexIndex == Array_Elems(mutexList)) ErrorHandler_Fail("Cannot allocate mutex");
+	pthread_mutex_t* ptr = &mutexList[mutexIndex];
+	int result = pthread_mutex_init(ptr, NULL);
+
+	ErrorHandler_CheckOrFail(result, "Creating mutex");
+	mutexIndex++; return ptr;
+}
+
+void Platform_MutexFree(void* handle) {
+	int result = pthread_mutex_destroy((pthread_mutex_t*)handle);
+	ErrorHandler_CheckOrFail(result, "Destroying mutex");
+}
+
+void Platform_MutexLock(void* handle) {
+	int result = pthread_mutex_lock((pthread_mutex_t*)handle);
+	ErrorHandler_CheckOrFail(result, "Locking mutex");
+}
+
+void Platform_MutexUnlock(void* handle) {
+	int result = pthread_mutex_unlock((pthread_mutex_t*)handle);
+	ErrorHandler_CheckOrFail(result, "Unlocking mutex");
+}
 
 void* Platform_EventCreate(void);
 void Platform_EventFree(void* handle);

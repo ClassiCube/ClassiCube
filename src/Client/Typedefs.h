@@ -14,7 +14,7 @@ typedef signed __int8  Int8;
 typedef signed __int16 Int16;
 typedef signed __int32 Int32;
 typedef signed __int64 Int64;
-#elif (__STDC_VERSION__ >= 199901L)
+#elif __GNUC__ || (__STDC_VERSION__ >= 199901L)
 #include <stdint.h>
 typedef uint8_t  UInt8;
 typedef uint16_t UInt16;

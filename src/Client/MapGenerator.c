@@ -3,13 +3,11 @@
 #include "ErrorHandler.h"
 #include "ExtMath.h"
 #include "Funcs.h"
-#include "Noise.h"
 #include "Platform.h"
-#include "Random.h"
-#include "TreeGen.h"
-#include "Vectors.h"
 
 Int32 Gen_MaxX, Gen_MaxY, Gen_MaxZ, Gen_Volume;
+#define Gen_Pack(x, y, z) (((y) * Gen_Length + (z)) * Gen_Width + (x))
+
 static void Gen_Init(void) {
 	Gen_MaxX = Gen_Width - 1; Gen_MaxY = Gen_Height - 1; Gen_MaxZ = Gen_Length - 1;
 	Gen_Volume = Gen_Width * Gen_Length * Gen_Height;
@@ -24,6 +22,10 @@ static void Gen_Init(void) {
 	Gen_Done = false;
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Flatgrass gen-------------------------------------------------------*
+*#########################################################################################################################*/
 static void FlatgrassGen_MapSet(Int32 yStart, Int32 yEnd, BlockID block) {
 	yStart = max(yStart, 0); yEnd = max(yEnd, 0);
 	Int32 y, yHeight = (yEnd - yStart) + 1;
@@ -53,6 +55,9 @@ void FlatgrassGen_Generate(void) {
 }
 
 
+/*########################################################################################################################*
+*----------------------------------------------------Notchy map gen-------------------------------------------------------*
+*#########################################################################################################################*/
 Int32 waterLevel, oneY, minHeight;
 Int16* Heightmap;
 Random rnd;
@@ -493,4 +498,172 @@ void NotchyGen_Generate(void) {
 
 	Platform_MemFree(&Heightmap);
 	Gen_Done = true;
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------Noise generation------------------------------------------------------*
+*#########################################################################################################################*/
+void ImprovedNoise_Init(UInt8* p, Random* rnd) {
+	/* shuffle randomly using fisher-yates */
+	Int32 i;
+	for (i = 0; i < 256; i++) { p[i] = i; }
+
+	for (i = 0; i < 256; i++) {
+		Int32 j = Random_Range(rnd, i, 256);
+		UInt8 temp = p[i]; p[i] = p[j]; p[j] = temp;
+	}
+
+	for (i = 0; i < 256; i++) {
+		p[i + 256] = p[i];
+	}
+}
+
+Real32 ImprovedNoise_Calc(UInt8* p, Real32 x, Real32 y) {
+	Int32 xFloor = x >= 0 ? (Int32)x : (Int32)x - 1;
+	Int32 yFloor = y >= 0 ? (Int32)y : (Int32)y - 1;
+	Int32 X = xFloor & 0xFF, Y = yFloor & 0xFF;
+	x -= xFloor; y -= yFloor;
+
+	Real32 u = x * x * x * (x * (x * 6 - 15) + 10); /* Fade(x) */
+	Real32 v = y * y * y * (y * (y * 6 - 15) + 10); /* Fade(y) */
+	Int32 A = p[X] + Y, B = p[X + 1] + Y;
+
+	/* Normally, calculating Grad involves a function call. However, we can directly pack this table
+	(since each value indicates either -1, 0 1) into a set of bit flags. This way we avoid needing
+	to call another function that performs branching */
+#define xFlags 0x46552222
+#define yFlags 0x2222550A
+
+	Int32 hash = (p[p[A]] & 0xF) << 1;
+	Real32 g22 = (((xFlags >> hash) & 3) - 1) * x + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[A], x, y) */
+	hash = (p[p[B]] & 0xF) << 1;
+	Real32 g12 = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[B], x - 1, y) */
+	Real32 c1 = g22 + u * (g12 - g22);
+
+	hash = (p[p[A + 1]] & 0xF) << 1;
+	Real32 g21 = (((xFlags >> hash) & 3) - 1) * x + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[A + 1], x, y - 1) */
+	hash = (p[p[B + 1]] & 0xF) << 1;
+	Real32 g11 = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[B + 1], x - 1, y - 1) */
+	Real32 c2 = g21 + u * (g11 - g21);
+
+	return c1 + v * (c2 - c1);
+}
+
+
+void OctaveNoise_Init(struct OctaveNoise* n, Random* rnd, Int32 octaves) {
+	n->octaves = octaves;
+	Int32 i;
+	for (i = 0; i < octaves; i++) {
+		ImprovedNoise_Init(n->p[i], rnd);
+	}
+}
+
+Real32 OctaveNoise_Calc(struct OctaveNoise* n, Real32 x, Real32 y) {
+	Real32 amplitude = 1, freq = 1;
+	Real32 sum = 0;
+	Int32 i;
+
+	for (i = 0; i < n->octaves; i++) {
+		sum += ImprovedNoise_Calc(n->p[i], x * freq, y * freq) * amplitude;
+		amplitude *= 2.0f;
+		freq *= 0.5f;
+	}
+	return sum;
+}
+
+
+void CombinedNoise_Init(struct CombinedNoise* n, Random* rnd, Int32 octaves1, Int32 octaves2) {
+	OctaveNoise_Init(&n->noise1, rnd, octaves1);
+	OctaveNoise_Init(&n->noise2, rnd, octaves2);
+}
+
+Real32 CombinedNoise_Calc(struct CombinedNoise* n, Real32 x, Real32 y) {
+	Real32 offset = OctaveNoise_Calc(&n->noise2, x, y);
+	return OctaveNoise_Calc(&n->noise1, x + offset, y);
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------Tree generation----------------------------------------------------*
+*#########################################################################################################################*/
+#define Tree_Pack(x, y, z) (((y) * Tree_Length + (z)) * Tree_Width + (x))
+
+bool TreeGen_CanGrow(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 treeHeight) {
+	/* check tree base */
+	Int32 baseHeight = treeHeight - 4;
+	Int32 x, y, z;
+
+	for (y = treeY; y < treeY + baseHeight; y++) {
+		for (z = treeZ - 1; z <= treeZ + 1; z++) {
+			for (x = treeX - 1; x <= treeX + 1; x++) {
+				if (x < 0 || y < 0 || z < 0 || x >= Tree_Width || y >= Tree_Height || z >= Tree_Length)
+					return false;
+				Int32 index = Tree_Pack(x, y, z);
+				if (Tree_Blocks[index] != BLOCK_AIR) return false;
+			}
+		}
+	}
+
+	/* and also check canopy */
+	for (y = treeY + baseHeight; y < treeY + treeHeight; y++) {
+		for (z = treeZ - 2; z <= treeZ + 2; z++) {
+			for (x = treeX - 2; x <= treeX + 2; x++) {
+				if (x < 0 || y < 0 || z < 0 || x >= Tree_Width || y >= Tree_Height || z >= Tree_Length)
+					return false;
+				Int32 index = Tree_Pack(x, y, z);
+				if (Tree_Blocks[index] != BLOCK_AIR) return false;
+			}
+		}
+	}
+	return true;
+}
+
+#define TreeGen_Place(x, y, z, block)\
+coords[count].X = (x); coords[count].Y = (y); coords[count].Z = (z);\
+blocks[count] = block; count++;
+
+Int32 TreeGen_Grow(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height, Vector3I* coords, BlockID* blocks) {
+	Int32 baseHeight = height - 4;
+	Int32 count = 0;
+	Int32 xx, y, zz;
+
+	/* leaves bottom layer */
+	for (y = treeY + baseHeight; y < treeY + baseHeight + 2; y++) {
+		for (zz = -2; zz <= 2; zz++) {
+			for (xx = -2; xx <= 2; xx++) {
+				Int32 x = treeX + xx, z = treeZ + zz;
+
+				if (Math_AbsI(xx) == 2 && Math_AbsI(zz) == 2) {
+					if (Random_Float(Tree_Rnd) >= 0.5f) {
+						TreeGen_Place(x, y, z, BLOCK_LEAVES);
+					}
+				} else {
+					TreeGen_Place(x, y, z, BLOCK_LEAVES);
+				}
+			}
+		}
+	}
+
+	/* leaves top layer */
+	Int32 bottomY = treeY + baseHeight + 2;
+	for (y = treeY + baseHeight + 2; y < treeY + height; y++) {
+		for (zz = -1; zz <= 1; zz++) {
+			for (xx = -1; xx <= 1; xx++) {
+				Int32 x = xx + treeX, z = zz + treeZ;
+
+				if (xx == 0 || zz == 0) {
+					TreeGen_Place(x, y, z, BLOCK_LEAVES);
+				} else if (y == bottomY && Random_Float(Tree_Rnd) >= 0.5f) {
+					TreeGen_Place(x, y, z, BLOCK_LEAVES);
+				}
+			}
+		}
+	}
+
+	/* then place trunk */
+	for (y = 0; y < height - 1; y++) {
+		TreeGen_Place(treeX, treeY + y, treeZ, BLOCK_LOG);
+	}
+	return count;
 }

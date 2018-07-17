@@ -819,7 +819,7 @@ static void ChatScreen_CheckOtherStatuses(struct ChatScreen* screen) {
 
 	/* Is terrain / texture pack currently being downloaded? */
 	if (!hasRequest || !(String_Equals(&id, &terrain) || String_Equals(&id, &texPack))) {
-		if (screen->Status.Textures[1].ID != NULL) {
+		if (screen->Status.Textures[1].ID) {
 			String empty = String_MakeNull();
 			TextGroupWidget_SetText(&screen->Status, 1, &empty);
 		}

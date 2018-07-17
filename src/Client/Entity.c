@@ -344,7 +344,7 @@ void Entities_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, Entities_ContextRecreated);
 	Event_UnregisterVoid(&ChatEvents_FontChanged,     NULL, Entities_ChatFontChanged);
 
-	if (ShadowComponent_ShadowTex != NULL) {
+	if (ShadowComponent_ShadowTex) {
 		Gfx_DeleteTexture(&ShadowComponent_ShadowTex);
 	}
 }

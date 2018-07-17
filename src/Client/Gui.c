@@ -116,7 +116,7 @@ static void Gui_Free(void) {
 	Gui_ReplaceActive(NULL);
 	Elem_TryFree(Gui_Status);
 
-	if (Gui_Active != NULL) { Elem_TryFree(Gui_Active); }
+	if (Gui_Active) { Elem_TryFree(Gui_Active); }
 	Gfx_DeleteTexture(&Gui_GuiTex);
 	Gfx_DeleteTexture(&Gui_GuiClassicTex);
 	Gfx_DeleteTexture(&Gui_IconsTex);
@@ -142,7 +142,7 @@ void Gui_ReplaceActive(struct Screen* screen) {
 	Gui_SetActive(screen);
 }
 void Gui_FreeActive(void) {
-	if (Gui_Active != NULL) { Elem_TryFree(Gui_Active); }
+	if (Gui_Active) { Elem_TryFree(Gui_Active); }
 }
 
 void Gui_SetActive(struct Screen* screen) {
@@ -155,7 +155,7 @@ void Gui_SetActive(struct Screen* screen) {
 		Game_SetCursorVisible(true);
 	}
 
-	if (screen != NULL) { Elem_Init(screen); }
+	if (screen) { Elem_Init(screen); }
 	Gui_Active = screen;
 }
 void Gui_RefreshHud(void) { Elem_Recreate(Gui_HUD); }
@@ -216,10 +216,10 @@ void Gui_RenderGui(Real64 delta) {
 	if (Gui_Active == NULL || !Gui_Active->HidesHUD && !Gui_Active->RenderHUDOver) {
 		Elem_Render(Gui_HUD, delta);
 	}
-	if (Gui_Active != NULL) {
+	if (Gui_Active) {
 		Elem_Render(Gui_Active, delta);
 	}
-	if (Gui_Active != NULL && !Gui_Active->HidesHUD && Gui_Active->RenderHUDOver) {
+	if (Gui_Active && !Gui_Active->HidesHUD && Gui_Active->RenderHUDOver) {
 		Elem_Render(Gui_HUD, delta);
 	}
 
@@ -230,7 +230,7 @@ void Gui_RenderGui(Real64 delta) {
 }
 
 void Gui_OnResize(void) {
-	if (Gui_Active != NULL) {
+	if (Gui_Active) {
 		Gui_Active->OnResize((struct GuiElem*)Gui_Active);
 	}
 	Gui_HUD->OnResize((struct GuiElem*)Gui_HUD);

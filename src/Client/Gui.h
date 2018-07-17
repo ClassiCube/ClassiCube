@@ -116,5 +116,5 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** ve
 #define Elem_HandlesMouseScroll(elem, delta)   (elem)->VTABLE->HandlesMouseScroll((struct GuiElem*)(elem), delta)
 
 #define Widget_Reposition(widget) (widget)->Reposition((struct GuiElem*)(widget));
-#define Elem_TryFree(elem)        if ((elem)->VTABLE != NULL) { Elem_Free(elem); }
+#define Elem_TryFree(elem)        if ((elem)->VTABLE) { Elem_Free(elem); }
 #endif

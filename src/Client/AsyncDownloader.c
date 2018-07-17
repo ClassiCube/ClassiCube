@@ -96,10 +96,10 @@ static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 ty
 
 		Platform_Log2("Adding %s (type %b)", &reqUrl, &type);
 
-		if (lastModified != NULL) {
+		if (lastModified) {
 			req.LastModified = *lastModified;
 		}
-		if (etag != NULL) {
+		if (etag) {
 			String reqEtag = String_FromEmptyArray(req.Etag); String_Set(&reqEtag, etag);
 		}
 		//request.Data = data; TODO: Implement this. do we need to copy or expect caller to malloc it? 
@@ -206,7 +206,7 @@ bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, Int32* progress) {
 		*progress = async_curProgress;
 	}
 	Platform_MutexUnlock(async_curRequestMutex);
-	return request->ID[0] != NULL;
+	return request->ID[0];
 }
 
 static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {

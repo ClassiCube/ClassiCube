@@ -114,7 +114,7 @@ static void Handlers_AddEntity(EntityID id, STRING_TRANSIENT String* displayName
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (id != ENTITIES_SELF_ID) {
 		struct Entity* oldEntity = Entities_List[id];
-		if (oldEntity != NULL) Entities_Remove(id);
+		if (oldEntity) Entities_Remove(id);
 
 		struct NetPlayer* player = &NetPlayers_List[id];
 		NetPlayer_Init(player, displayName, skinName);
@@ -159,7 +159,7 @@ void Handlers_RemoveEntity(EntityID id) {
 
 static void Handlers_UpdateLocation(EntityID playerId, struct LocationUpdate* update, bool interpolate) {
 	struct Entity* entity = Entities_List[playerId];
-	if (entity != NULL) {
+	if (entity) {
 		entity->VTABLE->SetLocation(entity, update, interpolate);
 	}
 }
@@ -453,7 +453,7 @@ static void Classic_LevelDataChunk(struct Stream* stream) {
 static void Classic_LevelFinalise(struct Stream* stream) {
 	Gui_ReplaceActive(NULL);
 	Gui_Active = prevScreen;
-	if (prevScreen != NULL && prevCursorVisible != Game_GetCursorVisible()) {
+	if (prevScreen && prevCursorVisible != Game_GetCursorVisible()) {
 		Game_SetCursorVisible(prevCursorVisible);
 	}
 	prevScreen = NULL;
@@ -944,7 +944,7 @@ static void CPE_ChangeModel(struct Stream* stream) {
 	String modelName = Handlers_ReadString(stream, modelNameBuffer);
 
 	struct Entity* entity = Entities_List[id];
-	if (entity != NULL) { Entity_SetModel(entity, &modelName); }
+	if (entity) { Entity_SetModel(entity, &modelName); }
 }
 
 static void CPE_EnvSetMapAppearance(struct Stream* stream) {

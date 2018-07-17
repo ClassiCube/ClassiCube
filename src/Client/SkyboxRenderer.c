@@ -15,7 +15,7 @@ GfxResourceID skybox_tex, skybox_vb;
 #define SKYBOX_COUNT (6 * 4)
 
 bool SkyboxRenderer_ShouldRender(void) {
-	return skybox_tex != NULL && !EnvRenderer_Minimal;
+	return skybox_tex && !EnvRenderer_Minimal;
 }
 
 static void SkyboxRenderer_TexturePackChanged(void* obj) {
@@ -49,11 +49,11 @@ void SkyboxRenderer_Render(Real64 deltaTime) {
 	Matrix_MulBy(&m, &rotX);
 
 	/* Rotate around camera */
-	Vector3 pos = Game_CurrentCameraPos, zero = Vector3_Zero;
+	Vector3 camPos = Game_CurrentCameraPos, zero = Vector3_Zero;
 	Game_CurrentCameraPos = zero;
 	Camera_Active->GetView(&view);
 	Matrix_MulBy(&m, &view);
-	Game_CurrentCameraPos = pos;
+	Game_CurrentCameraPos = camPos;
 
 	Gfx_LoadMatrix(&m);
 	Gfx_BindVb(skybox_vb);

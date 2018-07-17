@@ -433,6 +433,6 @@ void Stream_WriteLine(struct Stream* stream, STRING_TRANSIENT String* text) {
 	}
 	
 	UInt8* ptr = Platform_NewLine;
-	while (*ptr != NULL) { buffer[j++] = *ptr++; }
+	while (*ptr) { buffer[j++] = *ptr++; }
 	if (j > 0) Stream_Write(stream, buffer, j);
 }

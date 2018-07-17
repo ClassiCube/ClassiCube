@@ -232,7 +232,6 @@
     <ClInclude Include="GameStructs.h" />
     <ClInclude Include="TerrainAtlas.h" />
     <ClInclude Include="TexturePack.h" />
-    <ClInclude Include="TreeGen.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="WeatherRenderer.h" />
     <ClInclude Include="PackedCol.h" />
@@ -241,7 +240,6 @@
     <ClInclude Include="ExtMath.h" />
     <ClInclude Include="GraphicsAPI.h" />
     <ClInclude Include="GraphicsCommon.h" />
-    <ClInclude Include="Noise.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="Random.h" />
     <ClInclude Include="String.h" />
@@ -296,12 +294,11 @@
     <ClCompile Include="Options.c" />
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="GraphicsCommon.c" />
-    <ClCompile Include="Noise.c" />
     <ClCompile Include="Particle.c" />
     <ClCompile Include="BlockPhysics.c" />
     <ClCompile Include="PickedPosRenderer.c" />
     <ClCompile Include="Picking.c" />
-    <ClCompile Include="PosixPlatform.c" />
+    <ClCompile Include="X11Platform.c" />
     <ClCompile Include="Program.c" />
     <ClCompile Include="Random.c" />
     <ClCompile Include="Screens.c" />
@@ -314,7 +311,6 @@
     <ClCompile Include="TerrainAtlas.c" />
     <ClCompile Include="Texture.c" />
     <ClCompile Include="TexturePack.c" />
-    <ClCompile Include="TreeGen.c" />
     <ClCompile Include="Utils.c" />
     <ClCompile Include="Vectors.c" />
     <ClCompile Include="WeatherRenderer.c" />

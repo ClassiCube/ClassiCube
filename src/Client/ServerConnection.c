@@ -189,7 +189,7 @@ static void SPConnection_BeginConnect(void) {
 	}
 
 	Random rnd; Random_InitFromCurrentTime(&rnd);
-	Get_SetDimensions(128, 64, 128); Gen_Vanilla = true;
+	Gen_SetDimensions(128, 64, 128); Gen_Vanilla = true;
 	Gen_Seed = Random_Next(&rnd, Int32_MaxValue);
 	Gui_ReplaceActive(GeneratingScreen_MakeInstance());
 }
@@ -213,7 +213,7 @@ static void SPConnection_AddPortion(STRING_PURE String* text) {
 	String_UNSAFE_TrimEnd(&tmp);
 
 	UInt8 col = Drawer2D_LastCol(&tmp, tmp.length);
-	if (col != NULL) SPConnection_LastCol = col;
+	if (col) SPConnection_LastCol = col;
 	Chat_Add(&tmp);
 }
 

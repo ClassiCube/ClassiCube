@@ -8,7 +8,7 @@
 #include "Block.h"
 #include "Lighting.h"
 #include "Options.h"
-#include "TreeGen.h"
+#include "MapGenerator.h"
 #include "Platform.h"
 #include "Game.h"
 #include "ErrorHandler.h"
@@ -121,7 +121,7 @@ void Physics_SetEnabled(bool enabled) {
 static void Physics_Activate(Int32 index) {
 	BlockID block = World_Blocks[index];
 	PhysicsHandler activate = Physics_OnActivate[block];
-	if (activate != NULL) activate(index, block);
+	if (activate) activate(index, block);
 }
 
 static void Physics_ActivateNeighbours(Int32 x, Int32 y, Int32 z, Int32 index) {
@@ -153,10 +153,10 @@ static void Physics_BlockChanged(void* obj, Vector3I p, BlockID oldBlock, BlockI
 
 	if (block == BLOCK_AIR) {
 		PhysicsHandler deleteHandler = Physics_OnDelete[oldBlock];
-		if (deleteHandler != NULL) deleteHandler(index, oldBlock);
+		if (deleteHandler) deleteHandler(index, oldBlock);
 	} else {
 		PhysicsHandler placeHandler = Physics_OnPlace[block];
-		if (placeHandler != NULL) placeHandler(index, block);
+		if (placeHandler) placeHandler(index, block);
 	}
 	Physics_ActivateNeighbours(p.X, p.Y, p.Z, index);
 }
@@ -176,17 +176,17 @@ static void Physics_TickRandomBlocks(void) {
 				Int32 index = Random_Range(&physics_rnd, lo, hi);
 				BlockID block = World_Blocks[index];
 				PhysicsHandler tick = Physics_OnRandomTick[block];
-				if (tick != NULL) tick(index, block);
+				if (tick) tick(index, block);
 
 				index = Random_Range(&physics_rnd, lo, hi);
 				block = World_Blocks[index];
 				tick = Physics_OnRandomTick[block];
-				if (tick != NULL) tick(index, block);
+				if (tick) tick(index, block);
 
 				index = Random_Range(&physics_rnd, lo, hi);
 				block = World_Blocks[index];
 				tick = Physics_OnRandomTick[block];
-				if (tick != NULL) tick(index, block);
+				if (tick) tick(index, block);
 			}
 		}
 	}

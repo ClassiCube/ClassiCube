@@ -202,7 +202,7 @@ void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
 	BlockID oldBlock = World_GetBlock(x, y, z);
 	World_SetBlock(x, y, z, block);
 
-	if (Weather_Heightmap != NULL) {
+	if (Weather_Heightmap) {
 		WeatherRenderer_OnBlockChanged(x, y, z, oldBlock, block);
 	}
 	Lighting_OnBlockChanged(x, y, z, oldBlock, block);
@@ -231,7 +231,7 @@ void Game_SetDefaultSkinType(struct Bitmap* bmp) {
 	Int32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		struct Entity* entity = Entities_List[i];
-		if (entity == NULL || entity->TextureId != NULL) continue;
+		if (entity == NULL || entity->TextureId) continue;
 		entity->SkinType = Game_DefaultPlayerSkinType;
 	}
 }

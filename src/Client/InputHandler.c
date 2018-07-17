@@ -58,7 +58,7 @@ static void InputHandler_ButtonStateChanged(MouseButton button, bool pressed) {
 }
 
 void InputHandler_ScreenChanged(struct Screen* oldScreen, struct Screen* newScreen) {
-	if (oldScreen != NULL && oldScreen->HandlesAllInput) {
+	if (oldScreen && oldScreen->HandlesAllInput) {
 		Platform_CurrentUTCTime(&input_lastClick);
 	}
 

@@ -201,7 +201,7 @@ static struct ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
 		String name = String_FromReadonly(cmd->Name);
 		if (!String_CaselessStarts(&name, cmdName)) continue;
 
-		if (match != NULL) {
+		if (match) {
 			Commands_Log("&e/client: Multiple commands found that start with: \"&f%s&e\".", cmdName);
 			return NULL;
 		}

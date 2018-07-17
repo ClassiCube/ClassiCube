@@ -261,7 +261,7 @@ UInt8 Window_GetWindowState(void) {
 	Int32 maximised = 0, i;
 
 	/* TODO: Check this works right */
-	if (items > 0 && data != NULL) {
+	if (data && items) {
 		for (i = 0; i < items; i++) {
 			Atom atom = data[i];
 
@@ -274,8 +274,8 @@ UInt8 Window_GetWindowState(void) {
 				fullscreen = true;
 			}
 		}
-		XFree(data);
 	}
+	if (data) XFree(data);
 
 	if (minimised)      return WINDOW_STATE_MINIMISED;
 	if (maximised == 2) return WINDOW_STATE_MAXIMISED;
@@ -427,8 +427,8 @@ void Window_ToggleKey(XKeyEvent* keyEvent, bool pressed) {
 }
 
 Atom Window_GetSelectionProperty(XEvent* e) {
-	Atom property = e->xselectionrequest.property;
-	if (property != NULL) return property;
+	Atom prop = e->xselectionrequest.property;
+	if (prop) return prop;
 
 	/* For obsolete clients. See ICCCM spec, selections chapter for reasoning. */
 	return e->xselectionrequest.target;
@@ -479,17 +479,15 @@ void Window_ProcessEvents(void) {
 		case KeyPress:
 		{
 			ToggleKey(&e.xkey, true);
-			UInt8 data[16];
+			UInt8 data[16]; UInt8 convBuffer[16];
 			int status = XLookupString(&e.xkey, data, Array_Elems(data), NULL, NULL);
 
-			String name = String_FromConst("Translate key press");
-			struct Stream mem; Stream_ReadonlyMemory(&mem, data, status, &name);
-
 			/* TODO: Is this even right... */
-			UInt16 codepoint;
-			while (Stream_ReadUtf8Char(&mem, &codepoint)) {
-				Event_RaiseInt(&KeyEvents_Press, Convert_UnicodeToCP437(codepoint));
-			}
+			String conv = String_FromEmptyArray(convBuffer);
+			String_DecodeUtf8(&conv, data, status);
+
+			Int32 i;
+			for (i = 0; i < conv.length; i++) { Event_RaiseInt(&KeyEvents_Press, conv.buffer[i]); }
 		} break;
 
 		case KeyRelease:
@@ -559,21 +557,13 @@ void Window_ProcessEvents(void) {
 
 				XGetWindowProperty(win_display, win_handle, xa_data_sel, 0, 1024, false, NULL,
 					&prop_type, &prop_format, items, &bytes_after, &data);
-
 				XDeleteProperty(win_display, win_handle, xa_data_sel);
-				if (items == 0) break;
 
-				if (prop_type == xa_utf8_string) {
-					String name = String_FromConst("Clipboard get");
-					struct Stream mem; Stream_ReadonlyMemory(&mem, data, items, &name);
-
+				if (data && items && prop_type == xa_utf8_string) {
 					String_Clear(&clipboard_paste_text);
-					UInt16 codepoint;
-					while (Stream_ReadUtf8Char(&mem, &codepoint)) {
-						String_Append(&clipboard_paste_text, Convert_UnicodeToCP437(codepoint));
-					}
+					String_DecodeUtf8(&clipboard_paste_text, data, items);
 				}
-				XFree(data);
+				if (data) XFree(data);
 			}
 			break;
 
@@ -737,10 +727,10 @@ static void GLContext_GetAttribs(struct GraphicsMode mode, Int32* attribs) {
 	attribs[i++] = GLX_BLUE_SIZE;  attribs[i++] = color.B;
 	attribs[i++] = GLX_ALPHA_SIZE; attribs[i++] = color.A;
 
-	if (mode.DepthBits > 0) {
+	if (mode.DepthBits) {
 		attribs[i++] = GLX_DEPTH_SIZE; attribs[i++] = mode.DepthBits;
 	}
-	if (mode.StencilBits > 0) {
+	if (mode.StencilBits) {
 		attribs[i++] = GLX_STENCIL_SIZE; attribs[i++] = mode.StencilBits;
 	}
 	if (mode.Buffers > 1) {
@@ -761,7 +751,7 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 	if (major >= 1 && minor >= 3) {
 		/* ChooseFBConfig returns an array of GLXFBConfig opaque structures */
 		GLXFBConfig* fbconfigs = glXChooseFBConfig(win_display, win_screen, attribs, &fbcount);
-		if (fbcount > 0 && fbconfigs != NULL) {
+		if (fbconfigs && fbcount) {
 			/* Use the first GLXFBConfig from the fbconfigs array (best match) */
 			visual = glXGetVisualFromFBConfig(win_display, *fbconfigs);
 			XFree(fbconfigs);

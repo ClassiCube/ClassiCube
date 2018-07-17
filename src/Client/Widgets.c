@@ -43,7 +43,7 @@ static void TextWidget_Init(struct GuiElem* elem) {
 
 static void TextWidget_Render(struct GuiElem* elem, Real64 delta) {
 	struct TextWidget* widget = (struct TextWidget*)elem;	
-	if (widget->Texture.ID != NULL) {
+	if (widget->Texture.ID) {
 		Texture_RenderShaded(&widget->Texture, widget->Col);
 	}
 }
@@ -713,7 +713,7 @@ static void TableWidget_Render(struct GuiElem* elem, Real64 delta) {
 	}
 	IsometricDrawer_EndBatch();
 
-	if (widget->DescTex.ID != NULL) {
+	if (widget->DescTex.ID) {
 		Texture_Render(&widget->DescTex);
 	}
 	Gfx_SetTexturing(false);
@@ -949,7 +949,7 @@ static UChar InputWidget_GetLastCol(struct InputWidget* widget, Int32 indexX, In
 		InputWidget_FormatLine(widget, y, &line);
 
 		UChar code = Drawer2D_LastCol(&line, x);
-		if (code != NULL) return code;
+		if (code) return code;
 		if (y > 0) { x = widget->Lines[y - 1].length; }
 	}
 	return NULL;
@@ -992,7 +992,7 @@ static void InputWidget_UpdateCaret(struct InputWidget* widget) {
 
 	/* Update the colour of the widget->CaretPos */
 	UChar code = InputWidget_GetLastCol(widget, widget->CaretX, widget->CaretY);
-	if (code != NULL) widget->CaretCol = Drawer2D_Cols[code];
+	if (code) widget->CaretCol = Drawer2D_Cols[code];
 }
 
 static void InputWidget_RenderCaret(struct InputWidget* widget, Real64 delta) {
@@ -2265,7 +2265,7 @@ static Int32 TextGroupWidget_CalcY(struct TextGroupWidget* widget, Int32 index, 
 
 void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* widget, Int32 index, bool placeHolder) {
 	widget->PlaceholderHeight[index] = placeHolder;
-	if (widget->Textures[index].ID != NULL) return;
+	if (widget->Textures[index].ID) return;
 
 	Int32 newHeight = placeHolder ? widget->DefaultHeight : 0;
 	widget->Textures[index].Y = TextGroupWidget_CalcY(widget, index, newHeight);
@@ -2277,7 +2277,7 @@ Int32 TextGroupWidget_UsedHeight(struct TextGroupWidget* widget) {
 	struct Texture* textures = widget->Textures;
 
 	for (i = 0; i < widget->LinesCount; i++) {
-		if (textures[i].ID != NULL) break;
+		if (textures[i].ID) break;
 	}
 	for (; i < widget->LinesCount; i++) {
 		height += textures[i].Height;

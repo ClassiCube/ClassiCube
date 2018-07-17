@@ -144,9 +144,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Noise.h">
-      <Filter>Header Files\Generator</Filter>
-    </ClInclude>
     <ClInclude Include="Typedefs.h">
       <Filter>Header Files\Defines</Filter>
     </ClInclude>
@@ -258,9 +255,6 @@
     <ClInclude Include="PickedPosRenderer.h">
       <Filter>Header Files\SelectionBox</Filter>
     </ClInclude>
-    <ClInclude Include="TreeGen.h">
-      <Filter>Header Files\Generator</Filter>
-    </ClInclude>
     <ClInclude Include="IsometricDrawer.h">
       <Filter>Header Files\2D</Filter>
     </ClInclude>
@@ -365,9 +359,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Noise.c">
-      <Filter>Source Files\Generator</Filter>
-    </ClCompile>
     <ClCompile Include="WinPlatform.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
@@ -439,9 +430,6 @@
     </ClCompile>
     <ClCompile Include="PickedPosRenderer.c">
       <Filter>Source Files\SelectionBox</Filter>
-    </ClCompile>
-    <ClCompile Include="TreeGen.c">
-      <Filter>Source Files\Generator</Filter>
     </ClCompile>
     <ClCompile Include="IsometricDrawer.c">
       <Filter>Source Files\2D</Filter>
@@ -572,10 +560,10 @@
     <ClCompile Include="WinDisplayDevice.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
-    <ClCompile Include="PosixPlatform.c">
+    <ClCompile Include="Socket.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
-    <ClCompile Include="Socket.c">
+    <ClCompile Include="X11Platform.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
   </ItemGroup>

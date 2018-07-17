@@ -68,8 +68,10 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		ButtonWidget MakeText(int i) {
 			string text = Get(currentIndex + i);
-			return ButtonWidget.Create(game, 300, text, font, TextButtonClick)
+			ButtonWidget btn = ButtonWidget.Create(game, 300, "", font, TextButtonClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, (i - 2) * 50);
+			UpdateText(btn, text);
+			return btn;
 		}
 		
 		ButtonWidget Make(int x, string text, ClickHandler onClick) {
@@ -89,9 +91,13 @@ namespace ClassicalSharp.Gui.Screens {
 			currentIndex = index;
 			
 			for (int i = 0; i < items; i++) {
-				((ButtonWidget)widgets[i]).SetText(Get(currentIndex + i));
+				UpdateText((ButtonWidget)widgets[i], Get(currentIndex + i));
 			}
 			UpdateArrows();
+		}
+		
+		protected virtual void UpdateText(ButtonWidget widget, string text) {
+			widget.SetText(text);
 		}
 		
 		void UpdateArrows() {

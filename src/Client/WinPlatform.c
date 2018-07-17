@@ -173,32 +173,31 @@ ReturnCode Platform_DirectoryCreate(STRING_PURE String* path) {
 }
 
 ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_EnumFilesCallback callback) {
-	/* Need to do directory\* to search for files in directory */
-	UChar searchPatternBuffer[FILENAME_SIZE + 10];
-	String searchPattern = String_InitAndClearArray(searchPatternBuffer);
-	String_Format1(&searchPattern, "%s\\*", path);
+	WCHAR data[512]; Platform_UnicodeExpand(data, path);
+	/* Need to append \* to search for files in directory */
+	data[path->length + 0] = '\\';
+	data[path->length + 1] = '*';
+	data[path->length + 2] = NULL;
 
-	WCHAR searchUnicode[String_BufferSize(FILENAME_SIZE)];
-	Platform_UnicodeExpand(searchUnicode, &searchPattern);
-
-	WIN32_FIND_DATAW data;
-	HANDLE find = FindFirstFileW(searchUnicode, &data);
+	WIN32_FIND_DATAW entry;
+	HANDLE find = FindFirstFileW(data, &entry);
 	if (find == INVALID_HANDLE_VALUE) return GetLastError();
 
+	UInt8 fileBuffer[String_BufferSize(MAX_PATH)];
+	String file = String_InitAndClearArray(fileBuffer);
+
 	do {
-		if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
-		String path = String_Init((UChar*)data.cFileName, 0, MAX_PATH);
+		if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
+		String_Clear(&file);
 		Int32 i;
 
-		/* unicode to code page 437*/
-		for (i = 0; i < MAX_PATH && data.cFileName[i] != NULL; i++) {
-			path.buffer[i] = Convert_UnicodeToCP437(data.cFileName[i]);
+		for (i = 0; i < MAX_PATH && entry.cFileName[i] != NULL; i++) {
+			String_Append(&file, Convert_UnicodeToCP437(entry.cFileName[i]));
 		}
-		path.length = i;
 
-		String filename = path; Utils_UNSAFE_GetFilename(&filename);
-		callback(&filename, obj);
-	}  while (FindNextFileW(find, &data));
+		Utils_UNSAFE_GetFilename(&file);
+		callback(&file, obj);
+	}  while (FindNextFileW(find, &entry));
 
 	ReturnCode code = GetLastError(); /* return code from FindNextFile */
 	FindClose(find);
@@ -308,17 +307,12 @@ void Platform_ThreadFreeHandle(void* handle) {
 	}
 }
 
-CRITICAL_SECTION mutexList[3];
-Int32 mutexIndex;
+CRITICAL_SECTION mutexList[3]; Int32 mutexIndex;
 void* Platform_MutexCreate(void) {
-	if (mutexIndex == Array_Elems(mutexList)) { 
-		ErrorHandler_Fail("Cannot allocate another mutex");
-		return NULL;
-	} else {
-		CRITICAL_SECTION* ptr = &mutexList[mutexIndex];
-		InitializeCriticalSection(ptr); mutexIndex++;
-		return ptr;
-	}
+	if (mutexIndex == Array_Elems(mutexList)) ErrorHandler_Fail("Cannot allocate mutex");
+	CRITICAL_SECTION* ptr = &mutexList[mutexIndex];
+	InitializeCriticalSection(ptr); mutexIndex++;
+	return ptr;
 }
 
 void Platform_MutexFree(void* handle) {

@@ -226,7 +226,7 @@ static Int32 Menu_HandleMouseDown(struct GuiElem* screen, struct Widget** widget
 		if (widget == NULL || !Widget_Contains(widget, x, y)) continue;
 		if (widget->Disabled) return i;
 
-		if (widget->MenuClick != NULL && btn == MouseButton_Left) {
+		if (widget->MenuClick && btn == MouseButton_Left) {
 			widget->MenuClick(screen, (struct GuiElem*)widget);
 		} else {
 			Elem_HandlesMouseDown(widget, x, y, btn);
@@ -240,7 +240,7 @@ static Int32 Menu_HandleMouseMove(struct Widget** widgets, Int32 count, Int32 x,
 	Int32 i;
 	for (i = 0; i < count; i++) {
 		struct Widget* widget = widgets[i];
-		if (widget != NULL) widget->Active = false;
+		if (widget) widget->Active = false;
 	}
 
 	for (i = count - 1; i >= 0; i--) {
@@ -494,7 +494,7 @@ static Int32 MenuScreen_Index(struct MenuScreen* screen, struct Widget* w) {
 
 static void MenuScreen_Remove(struct MenuScreen* screen, Int32 i) {
 	struct Widget** widgets = screen->Widgets;
-	if (widgets[i] != NULL) { Elem_TryFree(widgets[i]); }
+	if (widgets[i]) { Elem_TryFree(widgets[i]); }
 	widgets[i] = NULL;
 }
 
@@ -556,10 +556,10 @@ static void MenuScreen_Free(struct GuiElem* elem) {
 	struct MenuScreen* screen = (struct MenuScreen*)elem;
 	screen->ContextLost(screen);
 
-	if (screen->TitleFont.Handle != NULL) {
+	if (screen->TitleFont.Handle) {
 		Platform_FontFree(&screen->TitleFont);
 	}
-	if (screen->TextFont.Handle != NULL) {
+	if (screen->TextFont.Handle) {
 		Platform_FontFree(&screen->TextFont);
 	}
 
@@ -1103,7 +1103,7 @@ static void GenLevelScreen_Gen(struct GenLevelScreen* screen, bool vanilla) {
 		String msg = String_FromConst("&cOne of the map dimensions is invalid.");
 		Chat_Add(&msg);
 	} else {
-		Get_SetDimensions(width, height, length); 
+		Gen_SetDimensions(width, height, length); 
 		Gen_Vanilla = vanilla; Gen_Seed = seed;
 		Gui_ReplaceActive(GeneratingScreen_MakeInstance());
 	}
@@ -1121,7 +1121,7 @@ static void GenLevelScreen_Notchy(struct GuiElem* elem, struct GuiElem* widget) 
 
 static void GenLevelScreen_InputClick(struct GuiElem* elem, struct GuiElem* widget) {
 	struct GenLevelScreen* screen = (struct GenLevelScreen*)elem;
-	if (screen->Selected != NULL) screen->Selected->Base.ShowCaret = false;
+	if (screen->Selected) screen->Selected->Base.ShowCaret = false;
 
 	screen->Selected = (struct MenuInputWidget*)widget;
 	Elem_HandlesMouseDown(&screen->Selected->Base, Mouse_X, Mouse_Y, MouseButton_Left);
@@ -1167,7 +1167,7 @@ static void GenLevelScreen_Free(struct GuiElem* elem) {
 
 static bool GenLevelScreen_HandlesKeyDown(struct GuiElem* elem, Key key) {
 	struct GenLevelScreen* screen = (struct GenLevelScreen*)elem;
-	if (screen->Selected != NULL && Elem_HandlesKeyDown(&screen->Selected->Base, key)) return true;
+	if (screen->Selected && Elem_HandlesKeyDown(&screen->Selected->Base, key)) return true;
 	return MenuScreen_HandlesKeyDown(elem, key);
 }
 
@@ -1242,7 +1242,7 @@ struct GuiElementVTABLE ClassicGenScreen_VTABLE;
 struct ClassicGenScreen ClassicGenScreen_Instance;
 static void ClassicGenScreen_Gen(Int32 size) {
 	Random rnd; Random_InitFromCurrentTime(&rnd);
-	Get_SetDimensions(size, 64, size); Gen_Vanilla = true;
+	Gen_SetDimensions(size, 64, size); Gen_Vanilla = true;
 	Gen_Seed = Random_Next(&rnd, Int32_MaxValue);
 	Gui_ReplaceActive(GeneratingScreen_MakeInstance());
 }
@@ -1309,7 +1309,7 @@ static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* screen) {
 }
 
 static void SaveLevelScreen_MakeDesc(struct SaveLevelScreen* screen, STRING_PURE String* text) {
-	if (screen->Widgets[5] != NULL) { Elem_TryFree(screen->Widgets[5]); }
+	if (screen->Widgets[5]) { Elem_TryFree(screen->Widgets[5]); }
 
 	TextWidget_Create(&screen->Desc, text, &screen->TextFont);
 	Widget_SetLocation((struct Widget*)(&screen->Desc), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 65);
