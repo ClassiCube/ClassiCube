@@ -77,7 +77,7 @@ void Platform_MutexUnlock(void* handle);
 
 void* Platform_EventCreate(void);
 void Platform_EventFree(void* handle);
-void Platform_EventSet(void* handle);
+void Platform_EventSignal(void* handle);
 void Platform_EventWait(void* handle);
 
 typedef Int64 Stopwatch;

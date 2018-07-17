@@ -112,7 +112,7 @@ static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 ty
 		}
 	}
 	Platform_MutexUnlock(async_pendingMutex);
-	Platform_EventSet(async_eventHandle);
+	Platform_EventSignal(async_eventHandle);
 }
 
 void AsyncDownloader_GetSkin(STRING_PURE String* id, STRING_PURE String* skinName) {
@@ -355,7 +355,7 @@ static void AsyncDownloader_Reset(void) {
 		AsyncRequestList_Free(&async_pending);
 	}
 	Platform_MutexUnlock(async_pendingMutex);
-	Platform_EventSet(async_eventHandle);
+	Platform_EventSignal(async_eventHandle);
 }
 
 static void AsyncDownloader_Free(void) {

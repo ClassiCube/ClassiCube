@@ -28,7 +28,7 @@ namespace InteropPatcher {
 	
 	public static class Patcher {
 
-		public static int Main( string[] args ) {
+		public static int Main(string[] args) {
 			try {
 				if( args.Length == 0 ) {
 					Console.WriteLine( "Expecting single argument specifying the file to patch" );

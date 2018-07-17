@@ -9,6 +9,7 @@
 #include "Entity.h"
 #include "ExtMath.h"
 #include "Physics.h"
+#include "Game.h"
 
 void World_Reset(void) {
 	Platform_MemFree(&World_Blocks);
@@ -19,7 +20,12 @@ void World_Reset(void) {
 
 	Random rnd;
 	Random_InitFromCurrentTime(&rnd);
+	/* add a bit of randomness for uuid */
 	Int32 i;
+	for (i = 0; i < Game_Username.length; i++) {
+		Random_Next(&rnd, Game_Username.buffer[i] + 3);
+	}
+
 	for (i = 0; i < 16; i++) {
 		World_Uuid[i] = Random_Next(&rnd, 256);
 	}

@@ -44,7 +44,7 @@ namespace OpenTK.Platform.X11 {
 		IntPtr net_wm_state_minimized;
 		IntPtr net_wm_state_fullscreen;
 		IntPtr net_wm_state_maximized_horizontal;
-		IntPtr net_wm_state_maximized_vertical;	
+		IntPtr net_wm_state_maximized_vertical;
 		IntPtr net_wm_icon, net_frame_extents;
 
 		IntPtr xa_clipboard, xa_targets, xa_utf8_string, xa_data_sel;
@@ -270,6 +270,12 @@ namespace OpenTK.Platform.X11 {
 
 					case XEventName.ConfigureNotify:
 						RefreshWindowBounds(ref e);
+						break;
+						
+					case XEventName.Expose:
+						if (e.ExposeEvent.count == 0) {
+							RaiseRedraw();
+						}
 						break;
 						
 					case XEventName.KeyPress:

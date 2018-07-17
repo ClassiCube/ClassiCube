@@ -26,7 +26,7 @@ namespace Launcher {
 		public Screen Screen;
 		
 		/// <summary> Whether the client drawing area needs to be redrawn/presented to the screen. </summary>
-		public bool Dirty;
+		public bool Dirty, pendingRedraw;
 				/// <summary> The specific area/region of the window that needs to be redrawn. </summary>
 		public Rectangle DirtyArea;
 		
@@ -58,9 +58,9 @@ namespace Launcher {
 		PlatformDrawer platformDrawer;
 		public void Init() {
 			Window.Resize += Resize;
-			Window.FocusedChanged += ForceRedraw;
+			Window.FocusedChanged += RedrawAll;
 			Window.WindowStateChanged += Resize;
-			Window.Redraw += ForceRedraw;
+			Window.Redraw += RedrawPending;
 			Keyboard.KeyDown += KeyDown;
 			
 			ClassicalSharp.Program.CleanupMainDirectory();
@@ -103,10 +103,16 @@ namespace Launcher {
 		void Resize(object sender, EventArgs e) {
 			UpdateClientSize();
 			platformDrawer.Resize();
-			ForceRedraw(sender, e);
+			RedrawAll(sender, e);
 		}
 		
-		void ForceRedraw(object sender, EventArgs e) {
+		void RedrawPending(object sender, EventArgs e) {
+			// in case we get multiple of these events
+			pendingRedraw = true;
+			Dirty = true;
+		}
+		
+		void RedrawAll(object sender, EventArgs e) {
 			if (Program.ShowingErrorDialog) return;
 			RedrawBackground();			
 			if (Screen != null) Screen.Resize();
@@ -217,6 +223,11 @@ namespace Launcher {
 		}
 		
 		void Display() {
+			if (pendingRedraw) {
+				RedrawAll(null, null);
+				pendingRedraw = false;
+			}
+			
 			Screen.OnDisplay();
 			Dirty = false;
 			
@@ -235,9 +246,9 @@ namespace Launcher {
 		
 		public void Dispose() {
 			Window.Resize -= Resize;
-			Window.FocusedChanged -= ForceRedraw;
+			Window.FocusedChanged -= RedrawAll;
 			Window.WindowStateChanged -= Resize;
-			Window.Redraw -= ForceRedraw;
+			Window.Redraw -= RedrawPending;
 			Keyboard.KeyDown -= KeyDown;
 			
 			List<FastBitmap> bitmaps = FetchFlagsTask.Bitmaps;

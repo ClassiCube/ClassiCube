@@ -473,12 +473,18 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case ConfigureNotify:
-			RefreshWindowBounds(&e);
+			Window_RefreshBounds(&e);
+			break;
+
+		case Expose:
+			if (e.xexpose.count == 0) {
+				Event_RaiseVoid(&WindowEvents_Redraw);
+			}
 			break;
 
 		case KeyPress:
 		{
-			ToggleKey(&e.xkey, true);
+			Window_ToggleKey(&e.xkey, true);
 			UInt8 data[16]; UInt8 convBuffer[16];
 			int status = XLookupString(&e.xkey, data, Array_Elems(data), NULL, NULL);
 
@@ -493,7 +499,7 @@ void Window_ProcessEvents(void) {
 		case KeyRelease:
 			/* TODO: raise KeyPress event. Use code from */
 			/* http://anonsvn.mono-project.com/viewvc/trunk/mcs/class/Managed.Windows.Forms/System.Windows.Forms/X11Keyboard.cs?view=markup */
-			ToggleKey(&e.xkey, false);
+			Window_ToggleKey(&e.xkey, false);
 			break;
 
 		case ButtonPress:
@@ -538,7 +544,7 @@ void Window_ProcessEvents(void) {
 
 		case PropertyNotify:
 			if (e.xproperty.atom == net_wm_state) {
-				RaiseWindowStateChanged();
+				Event_RaiseVoid(&WindowEvents_StateChanged);
 			}
 
 			//if (e.xproperty.atom == net_frame_extents) {
@@ -763,7 +769,7 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 		visual = glXChooseVisual(win_display, win_screen, attribs);
 	}
 	if (visual == NULL) {
-		ErorrHandler_Fail("Requested GraphicsMode not available.");
+		ErrorHandler_Fail("Requested GraphicsMode not available.");
 	}
 
 	XVisualInfo info = *visual;

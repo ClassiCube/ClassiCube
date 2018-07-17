@@ -35,8 +35,14 @@ static void Platform_UnicodeExpand(UInt8* dst, STRING_PURE String* src) {
 	*dst = NULL;
 }
 
-void Platform_Init(void) { }
-void Platform_Free(void) { }
+pthread_mutex_t event_mutex;
+void Platform_Init(void) {
+	pthread_mutex_init(&event_mutex, NULL);
+}
+
+void Platform_Free(void) {
+	pthread_mutex_destroy(&event_mutex);
+}
 
 void Platform_Exit(ReturnCode code) { exit(code); }
 STRING_PURE String Platform_GetCommandLineArgs(void);
@@ -264,10 +270,30 @@ void Platform_MutexUnlock(void* handle) {
 	ErrorHandler_CheckOrFail(result, "Unlocking mutex");
 }
 
-void* Platform_EventCreate(void);
-void Platform_EventFree(void* handle);
-void Platform_EventSet(void* handle);
-void Platform_EventWait(void* handle);
+pthread_cond_t condList[2]; Int32 condIndex;
+void* Platform_EventCreate(void) {
+	if (condIndex == Array_Elems(condList)) ErrorHandler_Fail("Cannot allocate event");
+	pthread_cond_t* ptr = &condList[condIndex];
+	int result = pthread_cond_init(ptr, NULL);
+
+	ErrorHandler_CheckOrFail(result, "Creating event");
+	condIndex++; return ptr;
+}
+
+void Platform_EventFree(void* handle) {
+	int result = pthread_cond_destroy((pthread_cond_t*)handle);
+	ErrorHandler_CheckOrFail(result, "Destroying event");
+}
+
+void Platform_EventSignal(void* handle) {
+	int result = pthread_cond_signal((pthread_cond_t*)handle);
+	ErrorHandler_CheckOrFail(result, "Signalling event");
+}
+
+void Platform_EventWait(void* handle) {
+	int result = pthread_cond_wait((pthread_cond_t*)handle, event_mutex);
+	ErrorHandler_CheckOrFail(result, "Waiting event");
+}
 
 void Stopwatch_Start(Stopwatch* timer);
 Int32 Stopwatch_ElapsedMicroseconds(Stopwatch* timer);

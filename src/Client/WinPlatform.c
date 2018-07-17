@@ -341,7 +341,7 @@ void Platform_EventFree(void* handle) {
 	}
 }
 
-void Platform_EventSet(void* handle) {
+void Platform_EventSignal(void* handle) {
 	SetEvent((HANDLE)handle);
 }
 

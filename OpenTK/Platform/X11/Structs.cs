@@ -106,6 +106,20 @@ namespace OpenTK.Platform.X11 {
 		public IntPtr above;
 		public bool override_redirect;
 	}
+	
+	[StructLayout(LayoutKind.Sequential)]
+    public struct XExposeEvent {
+        public XEventName type;
+        public IntPtr serial;
+        public bool send_event;
+        public IntPtr display;
+        public IntPtr window;
+        public int x;
+        public int y;
+        public int width;
+        public int height;
+        public int count;
+    }
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct XPropertyEvent {
@@ -214,6 +228,8 @@ namespace OpenTK.Platform.X11 {
 		public XMotionEvent MotionEvent;
 		[FieldOffset(0)]
 		public XConfigureEvent ConfigureEvent;
+		[FieldOffset(0)]
+		public XExposeEvent ExposeEvent;
 		[FieldOffset(0)]
 		public XPropertyEvent PropertyEvent;
 		[FieldOffset(0)]
