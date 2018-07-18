@@ -1,3 +1,11 @@
+### Compiling on linux
+
+Install appropriate libs as required. Build steps are still WIP, but current way I'm using is:
+
+Cross compiling for windows: ```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lopengl32```
+
+Compiling for linux: ```gcc *.c -o Classicube -lX11 -lpthread -lGL -lm```
+
 ### Platform
 Although the majority of the code is designed to be platform-independent, some per-platform functionality is required.
 
@@ -15,7 +23,7 @@ Some of the per-platform functionality you'll be required to implement is:
 ### Types
 * Integers and real numbers are always of a fixed size, see ```Typedefs.h```
 * There are a few typedefs of integer types to provide better context in some functions
-* structs are always typedef-ed
+* structs are rarely typedef-ed
 * ```bool``` is an alias for 8 bit unsigned integer
 * ```GfxResourceID``` is not constant type - can be pointer or integer, depending on underlying 3D graphics API
 * ```PackedCol``` field order differs depending on the underlying 3D graphics API
