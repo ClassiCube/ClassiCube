@@ -314,7 +314,10 @@ Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {
 	Int64 startS = timer->Data[0], startNS = timer->Data[1];
 	Stopwatch_Measure(timer);
 	Int64 endS = timer->Data[0], endNS = timer->Data[1];
-	return (endS - startS) * (1000 * 1000) + (endNS - startNS) / 1000;
+
+	#define NS_PER_SEC 1000000000LL
+	Int64 elapsedNS = ((endS - startS) * NS_PER_SEC + endNS) - startNS;
+	return elapsedNS / 1000;
 }
 
 /* TODO: Implement these stubs */

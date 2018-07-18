@@ -80,7 +80,7 @@ void Platform_EventFree(void* handle);
 void Platform_EventSignal(void* handle);
 void Platform_EventWait(void* handle);
 
-struct Stopwatch { UInt16 Data[2]; };
+struct Stopwatch { Int64 Data[2]; };
 void Stopwatch_Start(struct Stopwatch* timer);
 Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer);
 ReturnCode Platform_StartShell(STRING_PURE String* args);
