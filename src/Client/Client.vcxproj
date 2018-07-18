@@ -298,6 +298,8 @@
     <ClCompile Include="BlockPhysics.c" />
     <ClCompile Include="PickedPosRenderer.c" />
     <ClCompile Include="Picking.c" />
+    <ClCompile Include="X11DisplayDevice.c" />
+    <ClCompile Include="X11ErrorHandler.c" />
     <ClCompile Include="X11Platform.c" />
     <ClCompile Include="Program.c" />
     <ClCompile Include="Random.c" />

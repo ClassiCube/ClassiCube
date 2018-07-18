@@ -19,10 +19,12 @@ struct DisplayDevice {
 	struct Rectangle2D Bounds;
 	void* Metadata;
 };
+
 /* The primary / default / main display device. */
 struct DisplayDevice DisplayDevice_Default;
 /* Initialises per-platform display device. */
 void DisplayDevice_Init(void);
+void* DisplayDevice_Meta[3];
 
 #if !CC_BUILD_D3D9
 struct ColorFormat {

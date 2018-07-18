@@ -3,6 +3,7 @@
 #include "PackedCol.h"
 #include "Drawer2D.h"
 #include "Stream.h"
+#include "Funcs.h"
 #include "ErrorHandler.h"
 #include "Constants.h"
 #include <stdlib.h>
@@ -45,7 +46,11 @@ void Platform_Free(void) {
 }
 
 void Platform_Exit(ReturnCode code) { exit(code); }
-STRING_PURE String Platform_GetCommandLineArgs(void);
+
+STRING_PURE String Platform_GetCommandLineArgs(void) {
+	/* TODO: Implement this */
+	return String_MakeNull();
+}
 
 void* Platform_MemAlloc(UInt32 numElems, UInt32 elemsSize) { 
 	return malloc(numElems * elemsSize); 
@@ -227,7 +232,7 @@ void* Platform_ThreadStartCallback(void* lpParam) {
 
 pthread_t threadList[3]; Int32 threadIndex;
 void* Platform_ThreadStart(Platform_ThreadFunc* func) {
-	if (threadIndex == Array_Elems(threadIndex)) ErrorHandler_Fail("Cannot allocate thread");
+	if (threadIndex == Array_Elems(threadList)) ErrorHandler_Fail("Cannot allocate thread");
 	pthread_t* ptr = &threadList[threadIndex];
 	int result = pthread_create(ptr, NULL, Platform_ThreadStartCallback, func);
 
@@ -291,24 +296,40 @@ void Platform_EventSignal(void* handle) {
 }
 
 void Platform_EventWait(void* handle) {
-	int result = pthread_cond_wait((pthread_cond_t*)handle, event_mutex);
+	int result = pthread_cond_wait((pthread_cond_t*)handle, &event_mutex);
 	ErrorHandler_CheckOrFail(result, "Waiting event");
 }
 
-void Stopwatch_Start(Stopwatch* timer);
-Int32 Stopwatch_ElapsedMicroseconds(Stopwatch* timer);
+void Stopwatch_Measure(struct Stopwatch* timer) {
+	struct timespec value;
+	/* TODO: CLOCK_MONOTONIC_RAW ?? */
+	clock_gettime(CLOCK_MONOTONIC, &value);
+	timer->Data[0] = value.tv_sec;
+	timer->Data[1] = value.tv_nsec;
+}
+void Stopwatch_Start(struct Stopwatch* timer) { Stopwatch_Measure(timer); }
 
-void Platform_FontMake(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
-void Platform_FontFree(struct FontDesc* desc);
-struct Size2D Platform_TextMeasure(struct DrawTextArgs* args);
-void Platform_SetBitmap(struct Bitmap* bmp);
-struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col);
-void Platform_ReleaseBitmap(void);
+/* TODO: check this is actually accurate */
+Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {
+	Int64 startS = timer->Data[0], startNS = timer->Data[1];
+	Stopwatch_Measure(timer);
+	Int64 endS = timer->Data[0], endNS = timer->Data[1];
+	return (endS - startS) * (1000 * 1000) + (endNS - startNS) / 1000;
+}
 
-void Platform_HttpInit(void);
-ReturnCode Platform_HttpMakeRequest(struct AsyncRequest* request, void** handle);
-ReturnCode Platform_HttpGetRequestHeaders(struct AsyncRequest* request, void* handle, UInt32* size);
-ReturnCode Platform_HttpGetRequestData(struct AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress);
-ReturnCode Platform_HttpFreeRequest(void* handle);
-ReturnCode Platform_HttpFree(void);
+/* TODO: Implement these stubs */
+void Platform_FontMake(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) { }
+void Platform_FontFree(struct FontDesc* desc) { }
+struct Size2D Platform_TextMeasure(struct DrawTextArgs* args) { }
+void Platform_SetBitmap(struct Bitmap* bmp) { }
+struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) { }
+void Platform_ReleaseBitmap(void) { }
+
+/* TODO: Implement these stubs */
+void Platform_HttpInit(void) { }
+ReturnCode Platform_HttpMakeRequest(struct AsyncRequest* request, void** handle) { return 1; }
+ReturnCode Platform_HttpGetRequestHeaders(struct AsyncRequest* request, void* handle, UInt32* size) { return 1; }
+ReturnCode Platform_HttpGetRequestData(struct AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress) { return 1; }
+ReturnCode Platform_HttpFreeRequest(void* handle) { return 1; }
+ReturnCode Platform_HttpFree(void) { return 1; }
 #endif

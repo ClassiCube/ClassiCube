@@ -80,9 +80,9 @@ void Platform_EventFree(void* handle);
 void Platform_EventSignal(void* handle);
 void Platform_EventWait(void* handle);
 
-typedef Int64 Stopwatch;
-void Stopwatch_Start(Stopwatch* timer);
-Int32 Stopwatch_ElapsedMicroseconds(Stopwatch* timer);
+struct Stopwatch { UInt16 Data[2]; };
+void Stopwatch_Start(struct Stopwatch* timer);
+Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer);
 ReturnCode Platform_StartShell(STRING_PURE String* args);
 
 void Platform_FontMake(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);

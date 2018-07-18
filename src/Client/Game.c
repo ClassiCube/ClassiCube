@@ -552,7 +552,7 @@ void Game_Load(void) {
 	ServerConnection_BeginConnect();
 }
 
-Stopwatch game_frameTimer;
+struct Stopwatch game_frameTimer;
 Real32 game_limitMs;
 void Game_SetFpsLimitMethod(FpsLimit method) {
 	Game_FpsLimit = method;
@@ -751,7 +751,7 @@ void Game_Free(void* obj) {
 	Options_Save();
 }
 
-Stopwatch game_renderTimer;
+struct Stopwatch game_renderTimer;
 void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct DisplayDevice* device) {
 	Int32 x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
 	Int32 y = device->Bounds.Y + (device->Bounds.Height - height) / 2;

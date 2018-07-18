@@ -566,5 +566,11 @@
     <ClCompile Include="X11Platform.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
+    <ClCompile Include="X11DisplayDevice.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="X11ErrorHandler.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

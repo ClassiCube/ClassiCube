@@ -14,10 +14,9 @@
 #define _NET_WM_STATE_ADD    1
 #define _NET_WM_STATE_TOGGLE 2
 
-/* TODO: Move to Platform code */
 Display* win_display;
-Window win_rootWin;
 int win_screen;
+Window win_rootWin;
 
 Window win_handle;
 XVisualInfo win_visual;
@@ -149,6 +148,10 @@ void Window_RegisterAtoms(void) {
 static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode);
 void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, 
 	struct GraphicsMode* mode, struct DisplayDevice* device) {
+	win_display = DisplayDevice_Meta[0];
+	win_screen  = DisplayDevice_Meta[1];
+	win_rootWin = DisplayDevice_Meta[2];
+
 	/* Open a display connection to the X server, and obtain the screen and root window */
 	UInt64 addr = (UInt64)win_display;
 	Platform_Log3("Display: %y, Screen %i, Root window: %y", &addr, &win_screen, &win_rootWin);
@@ -376,6 +379,12 @@ void Window_Close(void) {
 	XFlush(win_display);
 }
 
+void Window_Destroy(void) {
+	XSync(win_display, true);
+	XDestroyWindow(win_display, win_handle);
+	Window_Exists = false;
+}
+
 void Window_RefreshBorders(void) {
 	Atom prop_type;
 	int prop_format;
@@ -423,7 +432,7 @@ void Window_ToggleKey(XKeyEvent* keyEvent, bool pressed) {
 
 	Key key = Window_MapKey(keysym1);
 	if (key == Key_None) key = Window_MapKey(keysym2);
-	if (key != Key_None) Keyboard_Set(key, pressed);
+	if (key != Key_None) Key_SetPressed(key, pressed);
 }
 
 Atom Window_GetSelectionProperty(XEvent* e) {
@@ -460,11 +469,11 @@ void Window_ProcessEvents(void) {
 		case ClientMessage:
 			if (!win_isExiting && e.xclient.data.l[0] == wm_destroy) {
 				Platform_LogConst("Exit message received.");
-				RaiseClosing();
+				Event_RaiseVoid(&WindowEvents_Closing);
 
 				win_isExiting = true;
 				Window_Destroy();
-				RaiseClosed();
+				Event_RaiseVoid(&WindowEvents_Closed);
 			} break;
 
 		case DestroyNotify:
@@ -503,25 +512,25 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case ButtonPress:
-			if (e.xbutton.button == 1)      Mouse_Set(MouseButton_Left,   true);
-			else if (e.xbutton.button == 2) Mouse_Set(MouseButton_Middle, true);
-			else if (e.xbutton.button == 3) Mouse_Set(MouseButton_Right,  true);
+			if (e.xbutton.button == 1)      Mouse_SetPressed(MouseButton_Left,   true);
+			else if (e.xbutton.button == 2) Mouse_SetPressed(MouseButton_Middle, true);
+			else if (e.xbutton.button == 3) Mouse_SetPressed(MouseButton_Right,  true);
 			else if (e.xbutton.button == 4) Mouse_SetWheel(Mouse_Wheel + 1);
 			else if (e.xbutton.button == 5) Mouse_SetWheel(Mouse_Wheel - 1);
-			else if (e.xbutton.button == 6) Keyboard_Set(Key_XButton1, true);
-			else if (e.xbutton.button == 7) Keyboard_Set(Key_XButton2, true);
+			else if (e.xbutton.button == 6) Key_SetPressed(Key_XButton1, true);
+			else if (e.xbutton.button == 7) Key_SetPressed(Key_XButton2, true);
 			break;
 
 		case ButtonRelease:
-			if (e.xbutton.button == 1)      Mouse_Set(MouseButton_Left,   false);
-			else if (e.xbutton.button == 2) Mouse_Set(MouseButton_Middle, false);
-			else if (e.xbutton.button == 3) Mouse_Set(MouseButton_Right,  false);
-			else if (e.xbutton.button == 6) Keyboard_Set(Key_XButton1, false);
-			else if (e.xbutton.button == 7) Keyboard_Set(Key_XButton2, false);
+			if (e.xbutton.button == 1)      Mouse_SetPressed(MouseButton_Left, false);
+			else if (e.xbutton.button == 2) Mouse_SetPressed(MouseButton_Middle, false);
+			else if (e.xbutton.button == 3) Mouse_SetPressed(MouseButton_Right,  false);
+			else if (e.xbutton.button == 6) Key_SetPressed(Key_XButton1, false);
+			else if (e.xbutton.button == 7) Key_SetPressed(Key_XButton2, false);
 			break;
 
 		case MotionNotify:
-			Mouse_SetPos(e.xmotion.x, e.xmotion.y);
+			Mouse_SetPosition(e.xmotion.x, e.xmotion.y);
 			break;
 
 		case FocusIn:
@@ -544,7 +553,7 @@ void Window_ProcessEvents(void) {
 
 		case PropertyNotify:
 			if (e.xproperty.atom == net_wm_state) {
-				Event_RaiseVoid(&WindowEvents_StateChanged);
+				Event_RaiseVoid(&WindowEvents_WindowStateChanged);
 			}
 
 			//if (e.xproperty.atom == net_frame_extents) {

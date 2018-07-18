@@ -212,7 +212,7 @@ bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, Int32* progress) {
 static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	String url = String_FromRawArray(request->URL);
 	Platform_Log2("Downloading from %s (type %b)", &url, &request->RequestType);
-	Stopwatch stopwatch; UInt32 elapsedMS;
+	struct Stopwatch stopwatch; UInt32 elapsedMS;
 
 	void* handle;
 	ReturnCode result;

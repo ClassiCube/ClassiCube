@@ -349,22 +349,28 @@ void Platform_EventWait(void* handle) {
 	WaitForSingleObject((HANDLE)handle, INFINITE);
 }
 
-void Stopwatch_Start(Stopwatch* timer) {
+void Stopwatch_Measure(struct Stopwatch* timer) {
 	if (stopwatch_highResolution) {
-		QueryPerformanceCounter(timer);
+		LARGE_INTEGER value;
+		QueryPerformanceCounter(&value);
+		timer->Data[0] = value.QuadPart;
 	} else {
-		GetSystemTimeAsFileTime(timer);
+		FILETIME value;
+		GetSystemTimeAsFileTime(&value);
+		timer->Data[0] = (Int64)value.dwLowDateTime | ((Int64)value.dwHighDateTime << 32);
 	}
 }
+void Stopwatch_Start(struct Stopwatch* timer) { Stopwatch_Measure(timer); }
 
 /* TODO: check this is actually accurate */
-Int32 Stopwatch_ElapsedMicroseconds(Stopwatch* timer) {
-	Int64 start = *timer, end;
+Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {
+	Int64 start = timer->Data[0];
+	Stopwatch_Measure(timer);
+	Int64 end = timer->Data[0];
+
 	if (stopwatch_highResolution) {
-		QueryPerformanceCounter(&end);
 		return (Int32)(((end - start) * 1000 * 1000) / stopwatch_freq.QuadPart);
 	} else {
-		GetSystemTimeAsFileTime(&end);
 		return (Int32)((end - start) / 10);
 	}
 }
