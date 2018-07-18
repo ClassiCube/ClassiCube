@@ -38,7 +38,7 @@ static Key Window_MapKey(KeySym key) {
 	if (key >= XK_F1 && key <= XK_F35) { return Key_F1 + (key - XK_F1); }
 	if (key >= XK_0 && key <= XK_9) { return Key_0 + (key - XK_0); }
 	if (key >= XK_A && key <= XK_Z) { return Key_A + (key - XK_A); }
-	if (key >= XK_a && key <= XK_z) { return Key_A + (key - XK_z); }
+	if (key >= XK_a && key <= XK_z) { return Key_A + (key - XK_a); }
 
 	if (key >= XK_KP_0 && key <= XK_KP_9) {
 		return Key_Keypad0 + (key - XK_KP_9);

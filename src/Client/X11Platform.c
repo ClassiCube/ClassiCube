@@ -74,8 +74,8 @@ void Platform_MemCpy(void* dst, void* src, UInt32 numBytes) {
 	memcpy(dst, src, numBytes);
 }
 
-void Platform_Log(STRING_PURE String* message) { puts(message->buffer); puts("\n"); }
-void Platform_LogConst(const UChar* message) { puts(message); puts("\n"); }
+void Platform_Log(STRING_PURE String* message) { puts(message->buffer); }
+void Platform_LogConst(const UChar* message) { puts(message); }
 void Platform_Log4(const UChar* format, const void* a1, const void* a2, const void* a3, const void* a4) {
 	UChar msgBuffer[String_BufferSize(512)];
 	String msg = String_InitAndClearArray(msgBuffer);
@@ -318,7 +318,7 @@ Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {
 }
 
 /* TODO: Implement these stubs */
-void Platform_FontMake(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) { }
+void Platform_FontMake(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) { desc->Size = size; }
 void Platform_FontFree(struct FontDesc* desc) { }
 struct Size2D Platform_TextMeasure(struct DrawTextArgs* args) { }
 void Platform_SetBitmap(struct Bitmap* bmp) { }
