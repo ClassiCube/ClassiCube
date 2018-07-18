@@ -1,5 +1,2 @@
-*.csproj eol=crlf
-*.sln eol=crlf
-*.cs eol=crlf
 *.c linguist-language=C
 *.h linguist-language=C
