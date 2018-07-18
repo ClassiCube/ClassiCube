@@ -17,7 +17,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			for (int i = 0; i < count; i++) {
 				Hotkey hKey = HotkeyList.Hotkeys[i];
-				entries[i] = hKey.BaseKey + " |" + MakeFlagsString(hKey.Flags);
+				entries[i] = hKey.Trigger + " |" + MakeFlagsString(hKey.Flags);
 			}
 			for (int i = 0; i < items; i++)
 				entries[count + i] = empty;
@@ -51,7 +51,7 @@ namespace ClassicalSharp.Gui.Screens {
 			Key baseKey = (Key)Enum.Parse(typeof(Key), key);			
 			for (int i = 0; i < HotkeyList.Hotkeys.Count; i++) {
 				Hotkey h = HotkeyList.Hotkeys[i];
-				if (h.BaseKey == baseKey && h.Flags == flags) return h;
+				if (h.Trigger == baseKey && h.Flags == flags) return h;
 			}
 			return default(Hotkey);
 		}

@@ -13,10 +13,10 @@ namespace ClassicalSharp.Mode {
 		Game game;
 		
 		public bool HandlesKeyDown(Key key) {
-			if (key == game.Input.Keys[KeyBind.Inventory] && game.Gui.ActiveScreen == game.Gui.hudScreen) {
+			if (key == game.Mapping(KeyBind.Inventory) && game.Gui.ActiveScreen == game.Gui.hudScreen) {
 				game.Gui.SetNewScreen(new InventoryScreen(game));
 				return true;
-			} else if (key == game.Input.Keys[KeyBind.DropBlock] && !game.ClassicMode) {
+			} else if (key == game.Mapping(KeyBind.DropBlock) && !game.ClassicMode) {
 				Inventory inv = game.Inventory;
 				if (inv.CanChangeSelected() && inv.Selected != Block.Air) {
 					// Don't assign Selected directly, because we don't want held block

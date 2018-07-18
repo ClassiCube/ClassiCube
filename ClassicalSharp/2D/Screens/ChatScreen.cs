@@ -388,7 +388,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public override bool HandlesKeyUp(Key key) {
 			if (!HandlesAllInput) return false;
 			
-			if (game.Server.SupportsFullCP437 && key == game.Input.Keys[KeyBind.ExtInput]) {
+			if (game.Server.SupportsFullCP437 && key == game.Mapping(KeyBind.ExtInput)) {
 				if (game.window.Focused) altText.SetActive(!altText.Active);
 			}
 			return true;

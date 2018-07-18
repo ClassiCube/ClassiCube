@@ -197,22 +197,21 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public bool HandlesKey(Key key) {
-			KeyMap keys = game.Input.Keys;		
-			if (key == keys[KeyBind.Respawn] && Hacks.CanRespawn) {
+			if (key == game.Mapping(KeyBind.Respawn) && Hacks.CanRespawn) {
 				DoRespawn();
-			} else if (key == keys[KeyBind.SetSpawn] && Hacks.CanRespawn) {
+			} else if (key == game.Mapping(KeyBind.SetSpawn) && Hacks.CanRespawn) {
 				Spawn   = Position;
 				Spawn.X = Utils.Floor(Spawn.X) + 0.5f;
 				Spawn.Z = Utils.Floor(Spawn.Z) + 0.5f;
 				SpawnRotY  = RotY;
 				SpawnHeadX = HeadX;
 				DoRespawn();
-			} else if (key == keys[KeyBind.Fly] && Hacks.CanFly && Hacks.Enabled) {
+			} else if (key == game.Mapping(KeyBind.Fly) && Hacks.CanFly && Hacks.Enabled) {
 				Hacks.Flying = !Hacks.Flying;
-			} else if (key == keys[KeyBind.NoClip] && Hacks.CanNoclip && Hacks.Enabled && !Hacks.WOMStyleHacks) {
+			} else if (key == game.Mapping(KeyBind.NoClip) && Hacks.CanNoclip && Hacks.Enabled && !Hacks.WOMStyleHacks) {
 				if (Hacks.Noclip) Velocity.Y = 0;
 				Hacks.Noclip = !Hacks.Noclip;
-			} else if (key == keys[KeyBind.Jump] && !onGround && !(Hacks.Flying || Hacks.Noclip)) {
+			} else if (key == game.Mapping(KeyBind.Jump) && !onGround && !(Hacks.Flying || Hacks.Noclip)) {
 				int maxJumps = Hacks.CanDoubleJump && Hacks.WOMStyleHacks ? 2 : 0;
 				maxJumps = Math.Max(maxJumps, Hacks.MaxJumps - 1);
 				

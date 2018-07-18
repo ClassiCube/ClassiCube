@@ -153,7 +153,7 @@ enum INFLATE_STATE_ {
 };
 
 /* Insert this byte into the bit buffer */
-#define Inflate_GetByte(state) state->AvailIn--; state->Bits |= (UInt32)(*state->NextIn) << state->NumBits; state->NextIn++; state->NumBits += 8;
+#define Inflate_GetByte(state) state->AvailIn--; state->Bits |= (UInt32)(*state->NextIn++) << state->NumBits; state->NumBits += 8;
 /* Retrieves bits from the bit buffer */
 #define Inflate_PeekBits(state, bits) (state->Bits & ((1UL << (bits)) - 1UL))
 /* Consumes/eats up bits from the bit buffer */

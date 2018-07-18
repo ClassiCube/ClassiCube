@@ -68,7 +68,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		string ButtonText(int i) {
 			if (keyNames == null) keyNames = Enum.GetNames(typeof(Key));
-			Key key = game.Input.Keys[binds[i]];
+			Key key = game.Mapping(binds[i]);
 			return desc[i] + ": " + keyNames[(int)key];
 		}
 		

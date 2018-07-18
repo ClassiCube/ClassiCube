@@ -120,7 +120,7 @@ void KeyBind_Init(void);
 extern UInt8 Hotkeys_LWJGL[256];
 struct HotkeyData {
 	UInt32 TextIndex; /* contents to copy directly into the input bar */
-	UInt8 BaseKey;    /* Member of Key enumeration */
+	UInt8 Trigger;    /* Member of Key enumeration */
 	UInt8 Flags;      /* ctrl 1, shift 2, alt 4 */
 	bool StaysOpen;   /* whether the user is able to enter further input */
 };
@@ -132,10 +132,10 @@ StringsBuffer HotkeysText;
 #define HOTKEYS_FLAG_SHIFT 2
 #define HOTKEYS_FLAG_ALT   4
 
-void Hotkeys_Add(Key baseKey, UInt8 flags, STRING_PURE String* text, bool more);
-bool Hotkeys_Remove(Key baseKey, UInt8 flags);
+void Hotkeys_Add(Key trigger, UInt8 flags, STRING_PURE String* text, bool more);
+bool Hotkeys_Remove(Key trigger, UInt8 flags);
 bool Hotkeys_IsHotkey(Key key, STRING_TRANSIENT String* text, bool* moreInput);
 void Hotkeys_Init(void);
-void Hotkeys_UserRemovedHotkey(Key baseKey, UInt8 flags);
-void Hotkeys_UserAddedHotkey(Key baseKey, UInt8 flags, bool moreInput, STRING_PURE String* text);
+void Hotkeys_UserRemovedHotkey(Key trigger, UInt8 flags);
+void Hotkeys_UserAddedHotkey(Key trigger, UInt8 flags, bool moreInput, STRING_PURE String* text);
 #endif

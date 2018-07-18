@@ -109,7 +109,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			// a) user presses alt then number
 			// b) user presses alt
 			// thus we only do case b) if case a) did not happen
-			if (key != game.Input.Keys[KeyBind.HotbarSwitching]) return false;
+			if (key != game.Mapping(KeyBind.HotbarSwitching)) return false;
 			if (altHandled) { altHandled = false; return true; } // handled already
 			
 			// Don't switch hotbar when alt+tab

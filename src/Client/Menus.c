@@ -874,7 +874,7 @@ static void EditHotkeyScreen_MakeBaseKey(struct EditHotkeyScreen* screen, Widget
 	String text = String_InitAndClearArray(textBuffer);
 
 	String_AppendConst(&text, "Key: ");
-	String_AppendConst(&text, Key_Names[screen->CurHotkey.BaseKey]);
+	String_AppendConst(&text, Key_Names[screen->CurHotkey.Trigger]);
 	EditHotkeyScreen_Make(screen, 0, 0, -150, &text, onClick);
 }
 
@@ -931,16 +931,16 @@ static void EditHotkeyScreen_LeaveOpen(struct GuiElem* elem, struct GuiElem* wid
 static void EditHotkeyScreen_SaveChanges(struct GuiElem* elem, struct GuiElem* widget) {
 	struct EditHotkeyScreen* screen = (struct EditHotkeyScreen*)elem;
 	struct HotkeyData hotkey = screen->OrigHotkey;
-	if (hotkey.BaseKey != Key_None) {
-		Hotkeys_Remove(hotkey.BaseKey, hotkey.Flags);
-		Hotkeys_UserRemovedHotkey(hotkey.BaseKey, hotkey.Flags);
+	if (hotkey.Trigger != Key_None) {
+		Hotkeys_Remove(hotkey.Trigger, hotkey.Flags);
+		Hotkeys_UserRemovedHotkey(hotkey.Trigger, hotkey.Flags);
 	}
 
 	hotkey = screen->CurHotkey;
-	if (hotkey.BaseKey != Key_None) {
+	if (hotkey.Trigger != Key_None) {
 		String text = screen->Input.Base.Text;
-		Hotkeys_Add(hotkey.BaseKey, hotkey.Flags, &text, hotkey.StaysOpen);
-		Hotkeys_UserAddedHotkey(hotkey.BaseKey, hotkey.Flags, hotkey.StaysOpen, &text);
+		Hotkeys_Add(hotkey.Trigger, hotkey.Flags, &text, hotkey.StaysOpen);
+		Hotkeys_UserAddedHotkey(hotkey.Trigger, hotkey.Flags, hotkey.StaysOpen, &text);
 	}
 	Gui_ReplaceActive(HotkeyListScreen_MakeInstance());
 }
@@ -948,9 +948,9 @@ static void EditHotkeyScreen_SaveChanges(struct GuiElem* elem, struct GuiElem* w
 static void EditHotkeyScreen_RemoveHotkey(struct GuiElem* elem, struct GuiElem* widget) {
 	struct EditHotkeyScreen* screen = (struct EditHotkeyScreen*)elem;
 	struct HotkeyData hotkey = screen->OrigHotkey;
-	if (hotkey.BaseKey != Key_None) {
-		Hotkeys_Remove(hotkey.BaseKey, hotkey.Flags);
-		Hotkeys_UserRemovedHotkey(hotkey.BaseKey, hotkey.Flags);
+	if (hotkey.Trigger != Key_None) {
+		Hotkeys_Remove(hotkey.Trigger, hotkey.Flags);
+		Hotkeys_UserRemovedHotkey(hotkey.Trigger, hotkey.Flags);
 	}
 	Gui_ReplaceActive(HotkeyListScreen_MakeInstance());
 }
@@ -990,7 +990,7 @@ static bool EditHotkeyScreen_HandlesKeyDown(struct GuiElem* elem, Key key) {
 	struct EditHotkeyScreen* screen = (struct EditHotkeyScreen*)elem;
 	if (screen->SelectedI >= 0) {
 		if (screen->SelectedI == 0) {
-			screen->CurHotkey.BaseKey = key;
+			screen->CurHotkey.Trigger = key;
 			EditHotkeyScreen_MakeBaseKey(screen, EditHotkeyScreen_BaseKey);
 		} else if (screen->SelectedI == 1) {
 			if      (key == Key_ControlLeft || key == Key_ControlRight) screen->CurHotkey.Flags |= HOTKEYS_FLAG_CTRL;
@@ -1018,7 +1018,7 @@ static void EditHotkeyScreen_ContextRecreated(void* obj) {
 	struct MenuInputValidator validator = MenuInputValidator_String();
 	String text = String_MakeNull();
 
-	bool existed = screen->OrigHotkey.BaseKey != Key_None;
+	bool existed = screen->OrigHotkey.Trigger != Key_None;
 	if (existed) {
 		text = StringsBuffer_UNSAFE_Get(&HotkeysText, screen->OrigHotkey.TextIndex);
 	}
@@ -1540,7 +1540,7 @@ static void HotkeyListScreen_EntryClick(struct GuiElem* elem, struct GuiElem* w)
 	Int32 i;
 	for (i = 0; i < HotkeysText.Count; i++) {
 		struct HotkeyData h = HotkeysList[i];
-		if (h.BaseKey == baseKey && h.Flags == flags) { original = h; break; }
+		if (h.Trigger == baseKey && h.Flags == flags) { original = h; break; }
 	}
 	Gui_ReplaceActive(EditHotkeyScreen_MakeInstance(original));
 }
@@ -1558,7 +1558,7 @@ struct Screen* HotkeyListScreen_MakeInstance(void) {
 		struct HotkeyData hKey = HotkeysList[i];
 		String_Clear(&text);
 
-		String_AppendConst(&text, Key_Names[hKey.BaseKey]);
+		String_AppendConst(&text, Key_Names[hKey.Trigger]);
 		String_AppendConst(&text, " |");
 		EditHotkeyScreen_MakeFlags(hKey.Flags, &text);
 		StringsBuffer_Add(&screen->Entries, &text);

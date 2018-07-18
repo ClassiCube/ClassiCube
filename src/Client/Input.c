@@ -214,9 +214,9 @@ static void Hotkeys_QuickSort(Int32 left, Int32 right) {
 	}
 }
 
-void Hotkeys_AddNewHotkey(Key baseKey, UInt8 flags, STRING_PURE String* text, bool more) {
+void Hotkeys_AddNewHotkey(Key trigger, UInt8 flags, STRING_PURE String* text, bool more) {
 	struct HotkeyData hKey;
-	hKey.BaseKey = baseKey;
+	hKey.Trigger = trigger;
 	hKey.Flags = flags;
 	hKey.TextIndex = HotkeysText.Count;
 	hKey.StaysOpen = more;
@@ -231,11 +231,11 @@ void Hotkeys_AddNewHotkey(Key baseKey, UInt8 flags, STRING_PURE String* text, bo
 	Hotkeys_QuickSort(0, HotkeysText.Count - 1);
 }
 
-void Hotkeys_Add(Key baseKey, UInt8 flags, STRING_PURE String* text, bool more) {
+void Hotkeys_Add(Key trigger, UInt8 flags, STRING_PURE String* text, bool more) {
 	UInt32 i;
 	for (i = 0; i < HotkeysText.Count; i++) {
 		struct HotkeyData hKey = HotkeysList[i];
-		if (hKey.BaseKey == baseKey && hKey.Flags == flags) {
+		if (hKey.Trigger == trigger && hKey.Flags == flags) {
 			StringsBuffer_Remove(&HotkeysText, hKey.TextIndex);
 			HotkeysList[i].StaysOpen = more;
 			HotkeysList[i].TextIndex = HotkeysText.Count;
@@ -243,14 +243,14 @@ void Hotkeys_Add(Key baseKey, UInt8 flags, STRING_PURE String* text, bool more) 
 			return;
 		}
 	}
-	Hotkeys_AddNewHotkey(baseKey, flags, text, more);
+	Hotkeys_AddNewHotkey(trigger, flags, text, more);
 }
 
-bool Hotkeys_Remove(Key baseKey, UInt8 flags) {
+bool Hotkeys_Remove(Key trigger, UInt8 flags) {
 	UInt32 i, j;
 	for (i = 0; i < HotkeysText.Count; i++) {
 		struct HotkeyData hKey = HotkeysList[i];
-		if (hKey.BaseKey == baseKey && hKey.Flags == flags) {
+		if (hKey.Trigger == trigger && hKey.Flags == flags) {
 			for (j = i + 1; j < HotkeysText.Count; j++) { HotkeysList[j - 1] = HotkeysList[j]; }
 			StringsBuffer_Remove(&HotkeysText, hKey.TextIndex);
 			HotkeysList[i].TextIndex = UInt32_MaxValue;
@@ -272,7 +272,7 @@ bool Hotkeys_IsHotkey(Key key, STRING_TRANSIENT String* text, bool* moreInput) {
 	UInt32 i;
 	for (i = 0; i < HotkeysText.Count; i++) {
 		struct HotkeyData hKey = HotkeysList[i];
-		if ((hKey.Flags & flags) == hKey.Flags && hKey.BaseKey == key) {
+		if ((hKey.Flags & flags) == hKey.Flags && hKey.Trigger == key) {
 			String hkeyText = StringsBuffer_UNSAFE_Get(&HotkeysText, hKey.TextIndex);
 			String_AppendString(text, &hkeyText);
 			*moreInput = hKey.StaysOpen;
@@ -312,21 +312,21 @@ void Hotkeys_Init(void) {
 	}
 }
 
-void Hotkeys_UserRemovedHotkey(Key baseKey, UInt8 flags) {
+void Hotkeys_UserRemovedHotkey(Key trigger, UInt8 flags) {
 	UChar keyBuffer[String_BufferSize(STRING_SIZE)];
 	String key = String_InitAndClearArray(keyBuffer);
 
-	String_Format2(&key, "hotkey-%c&%b", Key_Names[baseKey], &flags);
+	String_Format2(&key, "hotkey-%c&%b", Key_Names[trigger], &flags);
 	Options_Set(key.buffer, NULL);
 }
 
-void Hotkeys_UserAddedHotkey(Key baseKey, UInt8 flags, bool moreInput, STRING_PURE String* text) {
+void Hotkeys_UserAddedHotkey(Key trigger, UInt8 flags, bool moreInput, STRING_PURE String* text) {
 	UChar keyBuffer[String_BufferSize(STRING_SIZE)];
 	String key = String_InitAndClearArray(keyBuffer);
 	UChar valueBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String value = String_InitAndClearArray(valueBuffer);
 
-	String_Format2(&key, "hotkey-%c&%b", Key_Names[baseKey], &flags);
+	String_Format2(&key, "hotkey-%c&%b", Key_Names[trigger], &flags);
 	String_Format2(&value, "%t&%s", &moreInput, text);
 	Options_Set(key.buffer, &value);
 }

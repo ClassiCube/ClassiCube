@@ -124,18 +124,15 @@ namespace ClassicalSharp {
 		
 		public void Render(double delta) {
 			game.Graphics.Mode2D(game.Width, game.Height);
-			bool showHUD = activeScreen == null || !activeScreen.HidesHud;		
+			bool showHUD   = activeScreen == null || !activeScreen.HidesHud;
+			bool hudBefore = activeScreen == null || !activeScreen.RenderHudOver;
 			if (showHUD) statusScreen.Render(delta);
 			
-			if (showHUD && !activeScreen.RenderHudOver)
-				hudScreen.Render(delta);
-			if (activeScreen != null)
-				activeScreen.Render(delta);
-			if (showHUD && activeScreen.RenderHudOver)
-				hudScreen.Render(delta);
+			if (showHUD && hudBefore) hudScreen.Render(delta);
+			if (activeScreen != null) activeScreen.Render(delta);
+			if (showHUD && !hudBefore) hudScreen.Render(delta);
 			
-			if (overlays.Count > 0)
-				overlays[0].Render(delta);
+			if (overlays.Count > 0) { overlays[0].Render(delta); }
 			game.Graphics.Mode3D();
 		}
 		

@@ -11,19 +11,15 @@ namespace ClassicalSharp.Hotkeys {
 		
 		public static List<Hotkey> Hotkeys = new List<Hotkey>();
 		
-		/// <summary> Creates or updates an existing hotkey with the given baseKey and modifier flags. </summary>
-		public static void Add(Key baseKey, byte flags, string text, bool more) {
-			if (!UpdateExistingHotkey(baseKey, flags, text, more))
-				AddNewHotkey(baseKey, flags, text, more);
+		public static void Add(Key trigger, byte flags, string text, bool more) {
+			if (!UpdateExistingHotkey(trigger, flags, text, more))
+				AddNewHotkey(trigger, flags, text, more);
 		}
 		
-		/// <summary> Removes an existing hotkey with the given baseKey and modifier flags. </summary>
-		/// <returns> Whether a hotkey with the given baseKey and modifier flags was found
-		/// and subsequently removed. </returns>
-		public static bool Remove(Key baseKey, byte flags) {
+		public static bool Remove(Key trigger, byte flags) {
 			for (int i = 0; i < Hotkeys.Count; i++) {
 				Hotkey hKey = Hotkeys[i];
-				if (hKey.BaseKey == baseKey && hKey.Flags == flags) {
+				if (hKey.Trigger == trigger && hKey.Flags == flags) {
 					Hotkeys.RemoveAt(i);
 					return true;
 				}
@@ -31,10 +27,10 @@ namespace ClassicalSharp.Hotkeys {
 			return false;
 		}
 		
-		static bool UpdateExistingHotkey(Key baseKey, byte flags, string text, bool more) {
+		static bool UpdateExistingHotkey(Key trigger, byte flags, string text, bool more) {
 			for (int i = 0; i < Hotkeys.Count; i++) {
 				Hotkey hKey = Hotkeys[i];
-				if (hKey.BaseKey == baseKey && hKey.Flags == flags) {
+				if (hKey.Trigger == trigger && hKey.Flags == flags) {
 					hKey.Text = text;
 					hKey.StaysOpen = more;
 					Hotkeys[i] = hKey;
@@ -44,9 +40,9 @@ namespace ClassicalSharp.Hotkeys {
 			return false;
 		}
 		
-		static void AddNewHotkey(Key baseKey, byte flags, string text, bool more) {
+		static void AddNewHotkey(Key trigger, byte flags, string text, bool more) {
 			Hotkey hotkey;
-			hotkey.BaseKey = baseKey;
+			hotkey.Trigger = trigger;
 			hotkey.Flags = flags;
 			hotkey.Text = text;
 			hotkey.StaysOpen = more;
@@ -68,7 +64,7 @@ namespace ClassicalSharp.Hotkeys {
 			
 			for (int i = 0; i < Hotkeys.Count; i++) {
 				Hotkey hKey = Hotkeys[i];
-				if ((hKey.Flags & flags) == hKey.Flags && hKey.BaseKey == key) {
+				if ((hKey.Flags & flags) == hKey.Flags && hKey.Trigger == key) {
 					text = hKey.Text;
 					moreInput = hKey.StaysOpen;
 					return true;
@@ -111,20 +107,20 @@ namespace ClassicalSharp.Hotkeys {
 			}
 		}
 		
-		public static void UserRemovedHotkey(Key baseKey, byte flags) {
-			string key = "hotkey-" + baseKey + "&" + flags;
+		public static void UserRemovedHotkey(Key trigger, byte flags) {
+			string key = "hotkey-" + trigger + "&" + flags;
 			Options.Set(key, null);
 		}
 		
-		public static void UserAddedHotkey(Key baseKey, byte flags, bool moreInput, string text) {
-			string key = "hotkey-" + baseKey + "&" + flags;
+		public static void UserAddedHotkey(Key trigger, byte flags, bool moreInput, string text) {
+			string key = "hotkey-" + trigger + "&" + flags;
 			string value = moreInput + "&" + text;
 			Options.Set(key, value);
 		}
 	}
 	
 	public struct Hotkey {
-		public Key BaseKey;
+		public Key Trigger;
 		public byte Flags; // ctrl 1, shift 2, alt 4
 		public bool StaysOpen; // whether the user is able to enter further input
 		public string Text; // contents to copy directly into the input bar

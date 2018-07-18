@@ -109,7 +109,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override bool HandlesKeyDown(Key key) {
-			if (key == game.Input.Keys[KeyBind.IDOverlay] || key == game.Input.Keys[KeyBind.PauseOrExit]) {
+			if (key == game.Mapping(KeyBind.IDOverlay) || key == game.Mapping(KeyBind.PauseOrExit)) {
 				game.Gui.DisposeOverlay(this);
 				return true;
 			}
