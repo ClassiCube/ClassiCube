@@ -15,7 +15,6 @@ Int32 Camera_ActiveIndex;
 #define Cam_IsForward_Third() (Camera_ActiveIndex == 2)
 
 static Vector3 PerspectiveCamera_GetDirVector(void) {
-	struct Entity* p = &LocalPlayer_Instance.Base;
 	Vector2 rot = Camera_Active->GetOrientation();
 	Vector3 dir = Vector3_GetDirVector(rot.X, rot.Y);
 
@@ -207,13 +206,6 @@ static Vector3 ThirdPersonCamera_GetPosition(Real32 t) {
 
 	Vector3_Sub(&cam_targetOffset, &target, &camPos);
 	return camPos;
-}
-
-static Vector3 ThirdPersonCamera_GetTarget(void) {
-	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vector3 eyePos = Entity_GetEyePosition(p);
-	eyePos.Y += Camera_BobbingVer;
-	return eyePos;
 }
 
 static bool ThirdPersonCamera_Zoom(Real32 amount) {

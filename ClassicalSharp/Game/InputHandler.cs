@@ -52,9 +52,9 @@ namespace ClassicalSharp {
 			if (down) return true;
 			
 			// Key --> mouse mappings
-			if (button == MouseButton.Left && IsKeyDown(KeyBind.MouseLeft)) return true;
+			if (button == MouseButton.Left   && IsKeyDown(KeyBind.MouseLeft)) return true;
 			if (button == MouseButton.Middle && IsKeyDown(KeyBind.MouseMiddle)) return true;
-			if (button == MouseButton.Right && IsKeyDown(KeyBind.MouseRight)) return true;
+			if (button == MouseButton.Right  && IsKeyDown(KeyBind.MouseRight)) return true;
 			return false;
 		}
 		

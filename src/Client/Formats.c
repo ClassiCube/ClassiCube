@@ -498,7 +498,6 @@ static bool Cw_Callback_4(struct NbtTag* tag) {
 static bool Cw_Callback_5(struct NbtTag* tag) {
 	if (!IsTag(tag->Parent->Parent->Parent, "CPE")) return false;
 	if (!IsTag(tag->Parent->Parent->Parent->Parent, "Metadata")) return false;
-	struct LocalPlayer*p = &LocalPlayer_Instance;
 
 	if (IsTag(tag->Parent->Parent, "EnvColors")) {
 		if (IsTag(tag, "R")) { cw_colR = NbtTag_I16(tag); return true; }

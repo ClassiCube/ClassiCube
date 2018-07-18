@@ -623,9 +623,9 @@ static void Game_Render3D(Real64 delta, Real32 t) {
 	Selections_Render(delta);
 	Entities_RenderHoveredNames(delta);
 
-	bool left   = Mouse_IsPressed(MouseButton_Left);
-	bool middle = Mouse_IsPressed(MouseButton_Middle);
-	bool right  = Mouse_IsPressed(MouseButton_Right);
+	bool left   = InputHandler_IsMousePressed(MouseButton_Left);
+	bool middle = InputHandler_IsMousePressed(MouseButton_Middle);
+	bool right  = InputHandler_IsMousePressed(MouseButton_Right);
 	InputHandler_PickBlocks(true, left, middle, right);
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
 }

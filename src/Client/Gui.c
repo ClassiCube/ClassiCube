@@ -209,17 +209,16 @@ void Gui_FreeOverlay(struct Screen* overlay) {
 
 void Gui_RenderGui(Real64 delta) {
 	GfxCommon_Mode2D(Game_Width, Game_Height);
-	if (Gui_Active == NULL || !Gui_Active->HidesHUD) {
-		Elem_Render(Gui_Status, delta);
-	}
+	bool showHUD = Gui_Active == NULL || !Gui_Active->HidesHUD;
+	if (showHUD) { Elem_Render(Gui_Status, delta); }
 
-	if (Gui_Active == NULL || !Gui_Active->HidesHUD && !Gui_Active->RenderHUDOver) {
+	if (showHUD && !Gui_Active->RenderHUDOver) {
 		Elem_Render(Gui_HUD, delta);
 	}
 	if (Gui_Active) {
 		Elem_Render(Gui_Active, delta);
 	}
-	if (Gui_Active && !Gui_Active->HidesHUD && Gui_Active->RenderHUDOver) {
+	if (showHUD && Gui_Active->RenderHUDOver) {
 		Elem_Render(Gui_HUD, delta);
 	}
 

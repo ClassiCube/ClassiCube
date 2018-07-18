@@ -25,7 +25,7 @@ Int32 input_classicViewDists[4] = { 8, 32, 128, 512 };
 DateTime input_lastClick;
 Real32 input_fovIndex = -1.0f;
 
-static bool InputHandler_IsMousePressed(MouseButton button) {
+bool InputHandler_IsMousePressed(MouseButton button) {
 	if (Mouse_IsPressed(button)) return true;
 
 	/* Key --> mouse mappings */
