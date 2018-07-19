@@ -1033,7 +1033,7 @@ static void EditHotkeyScreen_ContextRecreated(void* obj) {
 	EditHotkeyScreen_Make(screen, 4, 0, 130, &remText, EditHotkeyScreen_RemoveHotkey);
 
 	screen->Widgets[5] = (struct Widget*)(&screen->Buttons[5]);
-	Menu_MakeDefaultBack(&screen->Buttons[5], false, &screen->TitleFont, Menu_SwitchPause);
+	Menu_MakeDefaultBack(&screen->Buttons[5], false, &screen->TitleFont, Menu_SwitchHotkeys);
 
 	screen->Widgets[6] = (struct Widget*)(&screen->Input);
 	MenuInputWidget_Create(&screen->Input, 500, 30, &text, &screen->TextFont, &validator);

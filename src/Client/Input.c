@@ -231,31 +231,42 @@ void Hotkeys_AddNewHotkey(Key trigger, UInt8 flags, STRING_PURE String* text, bo
 	Hotkeys_QuickSort(0, HotkeysText.Count - 1);
 }
 
+
+void Hotkeys_RemoveText(UInt32 index) {
+	UInt32 i; struct HotkeyData* hKey = HotkeysList;
+
+	for (i = 0; i < HotkeysText.Count; i++, hKey++) {
+		if (hKey->TextIndex >= index) hKey->TextIndex--;
+	}
+	StringsBuffer_Remove(&HotkeysText, index);
+}
+
 void Hotkeys_Add(Key trigger, UInt8 flags, STRING_PURE String* text, bool more) {
-	UInt32 i;
-	for (i = 0; i < HotkeysText.Count; i++) {
-		struct HotkeyData hKey = HotkeysList[i];
-		if (hKey.Trigger == trigger && hKey.Flags == flags) {
-			StringsBuffer_Remove(&HotkeysText, hKey.TextIndex);
-			HotkeysList[i].StaysOpen = more;
-			HotkeysList[i].TextIndex = HotkeysText.Count;
-			StringsBuffer_Add(&HotkeysText, text);
-			return;
-		}
+	UInt32 i; struct HotkeyData* hKey = HotkeysList;
+
+	for (i = 0; i < HotkeysText.Count; i++, hKey++) {		
+		if (hKey->Trigger != trigger || hKey->Flags != flags) continue;
+		Hotkeys_RemoveText(hKey->TextIndex);
+
+		hKey->StaysOpen = more;
+		hKey->TextIndex = HotkeysText.Count;
+		StringsBuffer_Add(&HotkeysText, text);
+		return;
 	}
 	Hotkeys_AddNewHotkey(trigger, flags, text, more);
 }
 
 bool Hotkeys_Remove(Key trigger, UInt8 flags) {
-	UInt32 i, j;
-	for (i = 0; i < HotkeysText.Count; i++) {
-		struct HotkeyData hKey = HotkeysList[i];
-		if (hKey.Trigger == trigger && hKey.Flags == flags) {
-			for (j = i + 1; j < HotkeysText.Count; j++) { HotkeysList[j - 1] = HotkeysList[j]; }
-			StringsBuffer_Remove(&HotkeysText, hKey.TextIndex);
-			HotkeysList[i].TextIndex = UInt32_MaxValue;
-			return true;
+	UInt32 i, j; struct HotkeyData* hKey = HotkeysList;
+
+	for (i = 0; i < HotkeysText.Count; i++, hKey++) {
+		if (hKey->Trigger != trigger || hKey->Flags != flags) continue;
+		Hotkeys_RemoveText(hKey->TextIndex);
+
+		for (j = i; j < HotkeysText.Count; j++) {
+			HotkeysList[j] = HotkeysList[j + 1];
 		}
+		return true;
 	}
 	return false;
 }
