@@ -25,8 +25,9 @@ ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparen
 ReturnCode ReturnCode_FileNotFound = ENOENT;
 ReturnCode ReturnCode_NotSupported = EPERM;
 
-static void Platform_UnicodeExpand(UInt8* dst, STRING_PURE String* src) {
+void Platform_UnicodeExpand(void* dstPtr, STRING_PURE String* src) {
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
+	UInt8* dst = dstPtr;
 
 	Int32 i;
 	for (i = 0; i < src->length; i++) {

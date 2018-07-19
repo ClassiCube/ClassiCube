@@ -26,6 +26,7 @@ extern ReturnCode ReturnCode_NotSupported;
 extern ReturnCode ReturnCode_SocketInProgess;
 extern ReturnCode ReturnCode_SocketWouldBlock;
 
+void Platform_UnicodeExpand(void* dstPtr, STRING_PURE String* src);
 void Platform_Init(void);
 void Platform_Free(void);
 void Platform_Exit(ReturnCode code);

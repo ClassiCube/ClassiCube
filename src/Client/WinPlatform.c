@@ -31,8 +31,9 @@ ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
 ReturnCode ReturnCode_NotSupported = ERROR_NOT_SUPPORTED;
 
-static void Platform_UnicodeExpand(WCHAR* dst, STRING_PURE String* src) {
+void Platform_UnicodeExpand(void* dstPtr, STRING_PURE String* src) {
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
+	WCHAR* dst = dstPtr;
 
 	Int32 i;
 	for (i = 0; i < src->length; i++) {

@@ -12,7 +12,7 @@
 #include <windows.h>
 
 #define win_Style WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
-#define win_ClassName "ClassiCube_Window"
+#define win_ClassName L"ClassiCube_Window"
 #define RECT_WIDTH(rect) (rect.right - rect.left)
 #define RECT_HEIGHT(rect) (rect.bottom - rect.top)
 
@@ -72,7 +72,7 @@ static void Window_DoSetHiddenBorder(bool value) {
 	/* This avoids leaving garbage on the background window. */
 	if (was_visible) Window_SetVisible(false);
 
-	SetWindowLongA(win_Handle, GWL_STYLE, style);
+	SetWindowLongW(win_Handle, GWL_STYLE, style);
 	SetWindowPos(win_Handle, NULL, 0, 0, RECT_WIDTH(rect), RECT_HEIGHT(rect),
 		SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
@@ -379,18 +379,18 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_DESTROY:
 		Window_Exists = false;
-		UnregisterClassA(win_ClassName, win_Instance);
+		UnregisterClassW(win_ClassName, win_Instance);
 		if (win_DC) ReleaseDC(win_Handle, win_DC);
 		Event_RaiseVoid(&WindowEvents_Closed);
 		break;
 	}
-	return DefWindowProcA(handle, message, wParam, lParam);
+	return DefWindowProcW(handle, message, wParam, lParam);
 }
 
 
 void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, 
 	struct GraphicsMode* mode, struct DisplayDevice* device) {
-	win_Instance = GetModuleHandleA(NULL);
+	win_Instance = GetModuleHandleW(NULL);
 	/* TODO: UngroupFromTaskbar(); */
 
 	/* Find out the final window rectangle, after the WM has added its chrome (titlebar, sidebars etc). */
@@ -398,21 +398,22 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF Strin
 	rect.right = x + width; rect.bottom = y + height;
 	AdjustWindowRect(&rect, win_Style, false);
 
-	WNDCLASSEXA wc = { 0 };
-	wc.cbSize = sizeof(WNDCLASSEXA);
+	WNDCLASSEXW wc = { 0 };
+	wc.cbSize = sizeof(WNDCLASSEXW);
 	wc.style = CS_OWNDC;
 	wc.hInstance = win_Instance;
 	wc.lpfnWndProc = Window_Procedure;
 	wc.lpszClassName = win_ClassName;
 	/* TODO: Set window icons here */
-	wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
+	wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
 
-	ATOM atom = RegisterClassExA(&wc);
+	ATOM atom = RegisterClassExW(&wc);
 	if (atom == 0) {
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to register window class");
 	}
-	win_Handle = CreateWindowExA(
-		0, atom, title->buffer, win_Style,
+	WCHAR data[512]; Platform_UnicodeExpand(data, title);
+
+	win_Handle = CreateWindowExW(0, atom, data, win_Style,
 		rect.left, rect.top, RECT_WIDTH(rect), RECT_HEIGHT(rect),
 		NULL, NULL, win_Instance, NULL);
 
@@ -507,7 +508,7 @@ void Window_SetSize(struct Size2D size) {
 }
 
 void Window_SetClientSize(struct Size2D size) {
-	DWORD style = GetWindowLongA(win_Handle, GWL_STYLE);
+	DWORD style = GetWindowLongW(win_Handle, GWL_STYLE);
 	RECT rect; rect.left = 0; rect.top = 0;
 	rect.right = size.Width; rect.bottom = size.Height;
 
@@ -533,7 +534,7 @@ void Window_SetVisible(bool visible) {
 
 
 void Window_Close(void) {
-	PostMessageA(win_Handle, WM_CLOSE, NULL, NULL);
+	PostMessageW(win_Handle, WM_CLOSE, NULL, NULL);
 }
 
 UInt8 Window_GetWindowState(void) { return win_State; }
@@ -605,9 +606,9 @@ struct Point2D Window_PointToScreen(struct Point2D point) {
 
 void Window_ProcessEvents(void) {
 	MSG msg;
-	while (PeekMessageA(&msg, NULL, 0, 0, 1)) {
+	while (PeekMessageW(&msg, NULL, 0, 0, 1)) {
 		TranslateMessage(&msg);
-		DispatchMessageA(&msg);
+		DispatchMessageW(&msg);
 	}
 
 	HWND foreground = GetForegroundWindow();
