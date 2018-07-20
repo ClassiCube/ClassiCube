@@ -200,7 +200,7 @@ static void WoM_CheckMotd(void) {
 	applied in the new world if the async 'get env request' didn't complete before the old world was unloaded */
 	wom_counter++;
 	WoM_UpdateIdentifier();
-	AsyncDownloader_GetString(&url, true, &wom_identifier);
+	AsyncDownloader_GetData(&url, true, &wom_identifier);
 	wom_sendId = true;
 }
 
@@ -288,11 +288,13 @@ static void WoM_Reset(void) {
 
 static void WoM_Tick(void) {
 	struct AsyncRequest item;
-	bool success = AsyncDownloader_Get(&wom_identifier, &item);
-	if (success && item.ResultString.length > 0) {
-		Wom_ParseConfig(&item.ResultString);
-		ASyncRequest_Free(&item);
+	if (!AsyncDownloader_Get(&wom_identifier, &item)) return;
+
+	if (item.ResultData) {
+		String str = String_Init(item.ResultData, item.ResultSize, item.ResultSize);
+		Wom_ParseConfig(&str);
 	}
+	ASyncRequest_Free(&item);
 }
 
 

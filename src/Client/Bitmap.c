@@ -63,13 +63,20 @@ enum PNG_FILTER {
 typedef void(*Png_RowExpander)(UInt8 bpp, Int32 width, UInt32* palette, UInt8* src, UInt32* dst);
 UInt8 png_sig[PNG_SIG_SIZE] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
+bool Bitmap_DetectPng(UInt8* data, UInt32 len) {
+	if (len < PNG_SIG_SIZE) return false;
+	Int32 i;
+
+	for (i = 0; i < PNG_SIG_SIZE; i++) {
+		if (data[i] != png_sig[i]) return false;
+	}
+	return true;
+}
+
 static void Png_CheckHeader(struct Stream* stream) {
 	UInt8 header[PNG_SIG_SIZE];
 	Stream_Read(stream, header, PNG_SIG_SIZE);
-	Int32 i;
-	for (i = 0; i < PNG_SIG_SIZE; i++) {
-		if (header[i] != png_sig[i]) ErrorHandler_Fail("Invalid PNG header");
-	}
+	if (!Bitmap_DetectPng(header, PNG_SIG_SIZE)) ErrorHandler_Fail("Invalid PNG header");
 }
 
 static void Png_Reconstruct(UInt8 type, UInt8 bytesPerPixel, UInt8* line, UInt8* prior, UInt32 lineLen) {

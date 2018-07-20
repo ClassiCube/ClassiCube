@@ -25,6 +25,7 @@ void Bitmap_Allocate(struct Bitmap* bmp, Int32 width, Int32 height);
 /* Allocates a power-of-2 sized bitmap larger or equal to to the given size, and clears it to 0. You are responsible for freeing its memory! */
 void Bitmap_AllocateClearedPow2(struct Bitmap* bmp, Int32 width, Int32 height);
 
+bool Bitmap_DetectPng(UInt8* data, UInt32 len);
 /*
   Partially based off information from
      https://handmade.network/forums/wip/t/2363-implementing_a_basic_png_reader_the_handmade_way

@@ -354,39 +354,24 @@ void TextureCache_GetETag(STRING_PURE String* url, STRING_PURE String* etag) {
 	TexturePack_GetFromTags(url, etag, &cache_eTags);
 }
 
-static void* TextureCache_CreateFile(STRING_PURE String* path) {
-	String folder = String_FromConst(TEXCACHE_FOLDER);
-	if (!Platform_DirectoryExists(&folder)) {
-		ReturnCode dirResult = Platform_DirectoryCreate(&folder);
-		ErrorHandler_CheckOrFail(dirResult, "TextureCache_CreateFile - create directory");
-	}
-
-	void* file;
-	ReturnCode result = Platform_FileCreate(&file, path);
-	/* TODO: Should we just log failure to save? */
-	ErrorHandler_CheckOrFail(result, "TextureCache_CreateFile - open file");
-	return file;
-}
-
-void TextureCache_AddImage(STRING_PURE String* url, struct Bitmap* bmp) {
-	String path; TexCache_InitAndMakePath(url);
-	void* file = TextureCache_CreateFile(&path);
-	struct Stream stream; Stream_FromFile(&stream, file, &path);
-	{
-		Bitmap_EncodePng(bmp, &stream);
-	}
-	ReturnCode result = stream.Close(&stream);
-	ErrorHandler_CheckOrFail(result, "TextureCache_AddImage - close file");
-}
-
 void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length) {
 	String path; TexCache_InitAndMakePath(url);
-	void* file = TextureCache_CreateFile(&path);
+	ReturnCode result;
+
+	String folder = String_FromConst(TEXCACHE_FOLDER);
+	if (!Platform_DirectoryExists(&folder)) {
+		result = Platform_DirectoryCreate(&folder);
+		ErrorHandler_CheckOrFail(result, "TextureCache_AddData - create directory");
+	}
+
+	void* file; result = Platform_FileCreate(&file, &path);
+	/* TODO: Should we just log failure to save? */
+	ErrorHandler_CheckOrFail(result, "TextureCache_AddData - open file");
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		Stream_Write(&stream, data, length);
 	}
-	ReturnCode result = stream.Close(&stream);
+	result = stream.Close(&stream);
 	ErrorHandler_CheckOrFail(result, "TextureCache_AddData - close file");
 }
 
@@ -495,29 +480,15 @@ void TexturePack_ExtractCurrent(STRING_PURE String* url) {
 		}
 
 		ReturnCode result = stream.Close(&stream);
-		ErrorHandler_CheckOrFail(result, "TexturePack_ExtractCurrent - slow stream");
+		ErrorHandler_CheckOrFail(result, "TexturePack_ExtractCurrent - close stream");
 	}
 }
 
-void TexturePack_ExtractTerrainPng_Req(struct AsyncRequest* item) {
+void TexturePack_Extract_Req(struct AsyncRequest* item) {
 	String url = String_FromRawArray(item->URL);
 	String_Set(&World_TextureUrl, &url);
-	struct Bitmap bmp = item->ResultBitmap;
-
-	String etag = String_FromRawArray(item->Etag);
-	TextureCache_AddImage(&url, &bmp);
-	TextureCache_AddETag(&url, &etag);
-	TextureCache_AddLastModified(&url, &item->LastModified);
-
-	Event_RaiseVoid(&TextureEvents_PackChanged);
-	if (!Game_ChangeTerrainAtlas(&bmp)) ASyncRequest_Free(item);
-}
-
-void TexturePack_ExtractTexturePack_Req(struct AsyncRequest* item) {
-	String url = String_FromRawArray(item->URL);
-	String_Set(&World_TextureUrl, &url);
-	void* data = item->ResultData.Ptr;
-	UInt32 len = item->ResultData.Size;
+	void* data = item->ResultData;
+	UInt32 len = item->ResultSize;
 
 	String etag = String_FromRawArray(item->Etag);
 	TextureCache_AddData(&url, data, len);
@@ -525,7 +496,14 @@ void TexturePack_ExtractTexturePack_Req(struct AsyncRequest* item) {
 	TextureCache_AddLastModified(&url, &item->LastModified);
 
 	String id = String_FromRawArray(item->ID);
-	struct Stream stream; Stream_ReadonlyMemory(&stream, data, len, &id);
-	TexturePack_ExtractZip(&stream);
+	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len, &id);
+
+	if (Bitmap_DetectPng(data, len)) {
+		struct Bitmap bmp; Bitmap_DecodePng(&bmp, &mem);
+		Event_RaiseVoid(&TextureEvents_PackChanged);
+		if (!Game_ChangeTerrainAtlas(&bmp)) Platform_MemFree(&bmp.Scan0);
+	} else {
+		TexturePack_ExtractZip(&mem);
+	}
 	ASyncRequest_Free(item);
 }

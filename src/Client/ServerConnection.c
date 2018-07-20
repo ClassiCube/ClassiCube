@@ -60,47 +60,27 @@ void ServerConnection_DownloadTexturePack(STRING_PURE String* url) {
 		TextureCache_GetLastModified(url, &lastModified);
 		TextureCache_GetETag(url, &etag);
 	}
+
 	TexturePack_ExtractCurrent(url);
-
-	String zip = String_FromConst(".zip");
-	if (String_ContainsString(url, &zip)) {
-		String texPack = String_FromConst("texturePack");
-		AsyncDownloader_GetDataEx(url, true, &texPack, &lastModified, &etag);
-	} else {
-		String terrain = String_FromConst("terrain");
-		AsyncDownloader_GetImageEx(url, true, &terrain, &lastModified, &etag);
-	}
-}
-
-void ServerConnection_LogResourceFail(struct AsyncRequest* item) {
-	Int32 status = item->StatusCode;
-	if (status == 0 || status == 304) return;
-
-	UChar msgBuffer[String_BufferSize(STRING_SIZE)];
-	String msg = String_InitAndClearArray(msgBuffer);
-	String_Format1(&msg, "&c%i error when trying to download texture pack", &status);
-	Chat_Add(&msg);
+	String texPack = String_FromConst("texturePack");
+	AsyncDownloader_GetDataEx(url, true, &texPack, &lastModified, &etag);
 }
 
 void ServerConnection_CheckAsyncResources(void) {
 	struct AsyncRequest item;
-	String terrain = String_FromConst("terrain");
 	String texPack = String_FromConst("texturePack");
+	if (!AsyncDownloader_Get(&texPack, &item)) return;
 
-	if (AsyncDownloader_Get(&terrain, &item)) {
-		if (item.ResultBitmap.Scan0 != NULL) {
-			TexturePack_ExtractTerrainPng_Req(&item);
-		} else {
-			ServerConnection_LogResourceFail(&item);
-		}
-	}
+	if (item.ResultData) {
+		TexturePack_Extract_Req(&item);
+	} else {
+		Int32 status = item.StatusCode;
+		if (status == 0 || status == 304) return;
 
-	if (AsyncDownloader_Get(&texPack, &item)) {
-		if (item.ResultData.Ptr != NULL) {
-			TexturePack_ExtractTexturePack_Req(&item);
-		} else {
-			ServerConnection_LogResourceFail(&item);
-		}
+		UChar msgBuffer[String_BufferSize(STRING_SIZE)];
+		String msg = String_InitAndClearArray(msgBuffer);
+		String_Format1(&msg, "&c%i error when trying to download texture pack", &status);
+		Chat_Add(&msg);
 	}
 }
 

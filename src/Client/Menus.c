@@ -3324,7 +3324,7 @@ static void TexPackOverlay_Render(struct GuiElem* elem, Real64 delta) {
 	struct AsyncRequest item;
 	if (!AsyncDownloader_Get(&identifier, &item)) return;
 
-	screen->ContentLength = item.ResultContentLength;
+	screen->ContentLength = item.ResultSize;
 	if (screen->ContentLength == 0) return;
 
 	screen->ContextLost(elem);

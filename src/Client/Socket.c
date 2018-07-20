@@ -63,7 +63,7 @@ ReturnCode Platform_SocketConnect(SocketPtr socket, STRING_PURE String* ip, Int3
 
 ReturnCode Platform_SocketRead(SocketPtr socket, UInt8* buffer, UInt32 count, UInt32* modified) {
 	Int32 recvCount = recv(socket, buffer, count, 0);
-	if (recvCount == -1) { *modified = recvCount; return 0; }
+	if (recvCount != -1) { *modified = recvCount; return 0; }
 	*modified = 0; return Socket__Error();
 }
 

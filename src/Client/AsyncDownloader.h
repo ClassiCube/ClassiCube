@@ -9,10 +9,7 @@
 struct IGameComponent;
 struct ScheduledTask;
 
-enum REQUEST_TYPE {
-	REQUEST_TYPE_DATA, REQUEST_TYPE_IMAGE,
-	REQUEST_TYPE_STRING, REQUEST_TYPE_CONTENT_LENGTH,
-};
+enum REQUEST_TYPE { REQUEST_TYPE_DATA, REQUEST_TYPE_CONTENT_LENGTH };
 #define ASYNC_PROGRESS_NOTHING -3
 #define ASYNC_PROGRESS_MAKING_REQUEST -2
 #define ASYNC_PROGRESS_FETCHING_DATA -1
@@ -25,12 +22,8 @@ struct AsyncRequest {
 	DateTime TimeDownloaded;
 	UInt16 StatusCode;
 
-	union {
-		struct { void* Ptr; UInt32 Size; } ResultData;
-		struct Bitmap ResultBitmap;
-		String ResultString;
-		UInt32 ResultContentLength;
-	};
+	void* ResultData;
+	UInt32 ResultSize;
 
 	DateTime LastModified;   /* Time item cached at (if at all) */
 	UInt8 Etag[String_BufferSize(STRING_SIZE)]; /* ETag of cached item (if any) */
@@ -42,13 +35,10 @@ void ASyncRequest_Free(struct AsyncRequest* request);
 void AsyncDownloader_MakeComponent(struct IGameComponent* comp);
 void AsyncDownloader_GetSkin(STRING_PURE String* id, STRING_PURE String* skinName);
 void AsyncDownloader_GetData(STRING_PURE String* url, bool priority, STRING_PURE String* id);
-void AsyncDownloader_GetImage(STRING_PURE String* url, bool priority, STRING_PURE String* id);
-void AsyncDownloader_GetString(STRING_PURE String* url, bool priority, STRING_PURE String* id); 
 void AsyncDownloader_GetContentLength(STRING_PURE String* url, bool priority, STRING_PURE String* id);
 /* TODO: Implement post */
 //void AsyncDownloader_PostString(STRING_PURE String* url, bool priority, STRING_PURE String* id, STRING_PURE String* contents);
 void AsyncDownloader_GetDataEx(STRING_PURE String* url, bool priority, STRING_PURE String* id, DateTime* lastModified, STRING_PURE String* etag);
-void AsyncDownloader_GetImageEx(STRING_PURE String* url, bool priority, STRING_PURE String* id, DateTime* lastModified, STRING_PURE String* etag);
 
 bool AsyncDownloader_Get(STRING_PURE String* id, struct AsyncRequest* item);
 bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, Int32* progress);

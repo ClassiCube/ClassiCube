@@ -697,8 +697,12 @@ static void Player_CheckSkin(struct Player* player) {
 
 	struct AsyncRequest item;
 	if (!AsyncDownloader_Get(&skin, &item)) return;
-	struct Bitmap bmp = item.ResultBitmap;
-	if (bmp.Scan0 == NULL) { Player_SetSkinAll(player, true); return; }
+	if (item.ResultData == NULL) { Player_SetSkinAll(player, true); return; }
+
+	String url = String_FromRawArray(item.URL);
+	struct Stream mem; struct Bitmap bmp;
+	Stream_ReadonlyMemory(&mem, item.ResultData, item.ResultSize, &url);
+	Bitmap_DecodePng(&bmp, &mem);
 
 	Gfx_DeleteTexture(&entity->TextureId);
 	Player_SetSkinAll(player, true);

@@ -6,17 +6,7 @@
 #include "GameStructs.h"
 
 void ASyncRequest_Free(struct AsyncRequest* request) {
-	switch (request->RequestType) {
-	case REQUEST_TYPE_IMAGE:
-		Platform_MemFree(&request->ResultBitmap.Scan0);
-		break;
-	case REQUEST_TYPE_DATA:
-		Platform_MemFree(&request->ResultData.Ptr);
-		break;
-	case REQUEST_TYPE_STRING:
-		Platform_MemFree(&request->ResultString.buffer);
-		break;
-	}
+	Platform_MemFree(&request->ResultData);
 }
 
 #define ASYNCREQUESTLIST_DEFELEMS 10
@@ -127,19 +117,11 @@ void AsyncDownloader_GetSkin(STRING_PURE String* id, STRING_PURE String* skinNam
 		String_AppendConst(&url, ".png");
 	}
 
-	AsyncDownloader_Add(&url, false, id, REQUEST_TYPE_IMAGE, NULL, NULL, NULL);
+	AsyncDownloader_Add(&url, false, id, REQUEST_TYPE_DATA, NULL, NULL, NULL);
 }
 
 void AsyncDownloader_GetData(STRING_PURE String* url, bool priority, STRING_PURE String* id) {
 	AsyncDownloader_Add(url, priority, id, REQUEST_TYPE_DATA, NULL, NULL, NULL);
-}
-
-void AsyncDownloader_GetImage(STRING_PURE String* url, bool priority, STRING_PURE String* id) {
-	AsyncDownloader_Add(url, priority, id, REQUEST_TYPE_IMAGE, NULL, NULL, NULL);
-}
-
-void AsyncDownloader_GetString(STRING_PURE String* url, bool priority, STRING_PURE String* id) {
-	AsyncDownloader_Add(url, priority, id, REQUEST_TYPE_STRING, NULL, NULL, NULL);
 }
 
 void AsyncDownloader_GetContentLength(STRING_PURE String* url, bool priority, STRING_PURE String* id) {
@@ -147,15 +129,11 @@ void AsyncDownloader_GetContentLength(STRING_PURE String* url, bool priority, ST
 }
 
 void AsyncDownloader_PostString(STRING_PURE String* url, bool priority, STRING_PURE String* id, STRING_PURE String* contents) {
-	AsyncDownloader_Add(url, priority, id, REQUEST_TYPE_STRING, NULL, NULL, contents);
+	AsyncDownloader_Add(url, priority, id, REQUEST_TYPE_DATA, NULL, NULL, contents);
 }
 
 void AsyncDownloader_GetDataEx(STRING_PURE String* url, bool priority, STRING_PURE String* id, DateTime* lastModified, STRING_PURE String* etag) {
 	AsyncDownloader_Add(url, priority, id, REQUEST_TYPE_DATA, lastModified, etag, NULL);
-}
-
-void AsyncDownloader_GetImageEx(STRING_PURE String* url, bool priority, STRING_PURE String* id, DateTime* lastModified, STRING_PURE String* etag) {
-	AsyncDownloader_Add(url, priority, id, REQUEST_TYPE_IMAGE, lastModified, etag, NULL);
 }
 
 void AsyncDownloader_PurgeOldEntriesTask(struct ScheduledTask* task) {
@@ -247,27 +225,8 @@ static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 
 	UInt64 addr = (UInt64)data;
 	Platform_Log2("OK I got the DATA! %i bytes at %x", &size, &addr);
-
-	struct Stream memStream;
-	switch (request->RequestType) {
-	case REQUEST_TYPE_DATA:
-		request->ResultData.Ptr = data;
-		request->ResultData.Size = size;
-		break;
-
-	case REQUEST_TYPE_IMAGE:
-		Stream_ReadonlyMemory(&memStream, data, size, &url);
-		Bitmap_DecodePng(&request->ResultBitmap, &memStream);
-		break;
-
-	case REQUEST_TYPE_STRING:
-		request->ResultString = String_Init(data, size, size);
-		break;
-
-	case REQUEST_TYPE_CONTENT_LENGTH:
-		request->ResultContentLength = size;
-		break;
-	}
+	request->ResultData = data;
+	request->ResultSize = size;
 }
 
 static void AsyncDownloader_CompleteResult(struct AsyncRequest* request) {
