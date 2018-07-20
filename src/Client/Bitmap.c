@@ -429,7 +429,7 @@ void Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 
 				ReturnCode code = compStream.Read(&compStream, &buffer[bufferIdx], bufferLeft, &read);
 				ErrorHandler_CheckOrFail(code, "PNG - reading image bulk data");
-				if (read == 0) break;			
+				if (read == 0) break;
 
 				UInt32 startY = bufferIdx / scanlineBytes, rowY;
 				bufferIdx += read;

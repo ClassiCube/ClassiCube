@@ -99,6 +99,7 @@ static void Chat_OpenLog(DateTime* now) {
 			ErrorHandler_FailWithCode(code, "Chat - opening log file");
 		}
 
+		if (code == ReturnCode_FileShareViolation) continue;
 		Stream_FromFile(&Chat_LogStream, file, &path);
 		return;
 	}

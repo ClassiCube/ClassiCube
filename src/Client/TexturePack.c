@@ -499,9 +499,7 @@ void TexturePack_Extract_Req(struct AsyncRequest* item) {
 	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len, &id);
 
 	if (Bitmap_DetectPng(data, len)) {
-		struct Bitmap bmp; Bitmap_DecodePng(&bmp, &mem);
-		Event_RaiseVoid(&TextureEvents_PackChanged);
-		if (!Game_ChangeTerrainAtlas(&bmp)) Platform_MemFree(&bmp.Scan0);
+		TexturePack_ExtractTerrainPng(&mem);
 	} else {
 		TexturePack_ExtractZip(&mem);
 	}
