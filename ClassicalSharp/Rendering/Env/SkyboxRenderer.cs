@@ -11,12 +11,9 @@ namespace ClassicalSharp.Renderers {
 		
 		int tex, vb;
 		Game game;
-		const int count = 6 * 4;
-		
-		public bool ShouldRender {
-			get { return tex != 0 && !game.EnvRenderer.minimal; }
-		}
-		
+		const int count = 6 * 4;	
+		public bool ShouldRender { get { return tex != 0 && !game.EnvRenderer.minimal; } }
+		 
 		void IGameComponent.Init(Game game) {
 			this.game = game;
 			game.Events.TextureChanged += TextureChanged;

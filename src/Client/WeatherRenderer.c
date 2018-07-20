@@ -15,10 +15,7 @@
 #include "ErrorHandler.h"
 #include "Stream.h"
 
-GfxResourceID weather_rainTex;
-GfxResourceID weather_snowTex;
-GfxResourceID weather_vb;
-
+GfxResourceID weather_rainTex, weather_snowTex, weather_vb;
 #define WEATHER_EXTENT 4
 #define WEATHER_VERTS_COUNT 8 * (WEATHER_EXTENT * 2 + 1) * (WEATHER_EXTENT * 2 + 1)
 

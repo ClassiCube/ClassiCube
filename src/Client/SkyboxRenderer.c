@@ -4,7 +4,6 @@
 #include "Game.h"
 #include "GraphicsAPI.h"
 #include "PackedCol.h"
-#include "2DStructs.h"
 #include "VertexStructs.h"
 #include "World.h"
 #include "EnvRenderer.h"
@@ -13,10 +12,7 @@
 
 GfxResourceID skybox_tex, skybox_vb;
 #define SKYBOX_COUNT (6 * 4)
-
-bool SkyboxRenderer_ShouldRender(void) {
-	return skybox_tex && !EnvRenderer_Minimal;
-}
+bool SkyboxRenderer_ShouldRender(void) { return skybox_tex && !EnvRenderer_Minimal; }
 
 static void SkyboxRenderer_TexturePackChanged(void* obj) {
 	Gfx_DeleteTexture(&skybox_tex);
@@ -46,11 +42,11 @@ void SkyboxRenderer_Render(Real64 deltaTime) {
 	Matrix_MulBy(&m, &rotX);
 
 	/* Rotate around camera */
-	Vector3 camPos = Game_CurrentCameraPos, zero = Vector3_Zero;
+	Vector3 pos = Game_CurrentCameraPos, zero = Vector3_Zero;
 	Game_CurrentCameraPos = zero;
 	Camera_Active->GetView(&view);
 	Matrix_MulBy(&m, &view);
-	Game_CurrentCameraPos = camPos;
+	Game_CurrentCameraPos = pos;
 
 	Gfx_LoadMatrix(&m);
 	Gfx_BindVb(skybox_vb);
@@ -61,50 +57,34 @@ void SkyboxRenderer_Render(Real64 deltaTime) {
 	Gfx_SetDepthWrite(true);
 }
 
+VertexP3fT2fC4b skybox_vertices[SKYBOX_COUNT] = {
+	/* Front quad */
+	{  1, -1, -1, {0,0,0,0}, 0.25f, 1.00f }, { -1, -1, -1, {0,0,0,0}, 0.50f, 1.00f },
+	{ -1,  1, -1, {0,0,0,0}, 0.50f, 0.50f }, {  1,  1, -1, {0,0,0,0}, 0.25f, 0.50f },
+	/* Left quad */
+	{  1, -1,  1, {0,0,0,0}, 0.00f, 1.00f }, {  1, -1, -1, {0,0,0,0}, 0.25f, 1.00f },
+	{  1,  1, -1, {0,0,0,0}, 0.25f, 0.50f }, {  1,  1,  1, {0,0,0,0}, 0.00f, 0.50f },
+	/* Back quad */
+	{ -1, -1,  1, {0,0,0,0}, 0.75f, 1.00f }, {  1, -1,  1, {0,0,0,0}, 1.00f, 1.00f },
+	{  1,  1,  1, {0,0,0,0}, 1.00f, 0.50f }, { -1,  1,  1, {0,0,0,0}, 0.75f, 0.50f },
+	/* Right quad */
+	{ -1, -1, -1, {0,0,0,0}, 0.50f, 1.00f }, { -1, -1,  1, {0,0,0,0}, 0.75f, 1.00f },
+	{ -1,  1,  1, {0,0,0,0}, 0.75f, 0.50f }, { -1,  1, -1, {0,0,0,0}, 0.50f, 0.50f },
+	/* Top quad */
+	{ -1,  1, -1, {0,0,0,0}, 0.50f, 0.50f }, { -1,  1,  1, {0,0,0,0}, 0.50f, 0.00f },
+	{  1,  1,  1, {0,0,0,0}, 0.25f, 0.00f }, {  1,  1, -1, {0,0,0,0}, 0.25f, 0.50f },
+	/* Bottom quad */
+	{ -1, -1, -1, {0,0,0,0}, 0.75f, 0.50f }, { -1, -1,  1, {0,0,0,0}, 0.75f, 0.00f },
+	{  1, -1,  1, {0,0,0,0}, 0.50f, 0.00f }, {  1, -1, -1, {0,0,0,0}, 0.50f, 0.50f },
+};
+
 static void SkyboxRenderer_MakeVb(void) {
 	if (Gfx_LostContext) return;
 	Gfx_DeleteVb(&skybox_vb);
-	VertexP3fT2fC4b vertices[SKYBOX_COUNT];
-	#define pos 1.0f
-	VertexP3fT2fC4b v; v.Col = WorldEnv_CloudsCol;
 
-	/* Render the front quad */	                       
-	v.X =  pos; v.Y = -pos; v.Z = -pos; v.U = 0.25f; v.V = 1.00f; vertices[ 0] = v;
-	v.X = -pos;                         v.U = 0.50f;              vertices[ 1] = v;
-	            v.Y =  pos;                          v.V = 0.50f; vertices[ 2] = v;
-	v.X =  pos;                         v.U = 0.25f;              vertices[ 3] = v;
-	
-	/* Render the left quad */	
-	v.X =  pos; v.Y = -pos; v.Z =  pos; v.U = 0.00f; v.V = 1.00f; vertices[ 4] = v;
-	                        v.Z = -pos; v.U = 0.25f;              vertices[ 5] = v;
-	            v.Y =  pos;                          v.V = 0.50f; vertices[ 6] = v;
-	                        v.Z =  pos; v.U = 0.00f;              vertices[ 7] = v;
-	
-	/* Render the back quad */                        
-	v.X = -pos; v.Y = -pos; v.Z =  pos; v.U = 0.75f; v.V = 1.00f; vertices[ 8] = v;
-	v.X =  pos;                         v.U = 1.00f;              vertices[ 9] = v;
-	            v.Y =  pos;                          v.V = 0.50f; vertices[10] = v;
-	v.X = -pos;                         v.U = 0.75f;              vertices[11] = v;
-	
-	/* Render the right quad */	
-	v.X = -pos; v.Y = -pos; v.Z = -pos; v.U = 0.50f; v.V = 1.00f; vertices[12] = v;
-	                        v.Z =  pos; v.U = 0.75f;              vertices[13] = v;
-	            v.Y =  pos;                          v.V = 0.50f; vertices[14] = v;
-	                        v.Z = -pos; v.U = 0.50f;              vertices[15] = v;
-	
-	/* Render the top quad */	            
-	v.X = -pos; v.Y =  pos; v.Z = -pos;                           vertices[16] = v;
-	                        v.Z =  pos;              v.V = 0.00f; vertices[17] = v;
-	v.X =  pos;                         v.U = 0.25f;              vertices[18] = v;
-	                        v.Z = -pos;              v.V = 0.50f; vertices[19] = v;
-	
-	/* Render the bottom quad */	            
-	v.X = -pos; v.Y = -pos; v.Z = -pos; v.U = 0.75f;              vertices[20] = v;
-	                        v.Z =  pos;              v.V = 0.00f; vertices[21] = v;
-	v.X =  pos;                         v.U = 0.50f;              vertices[22] = v;
-	                        v.Z = -pos;              v.V = 0.50f; vertices[23] = v;
-
-	skybox_vb = Gfx_CreateVb(vertices, VERTEX_FORMAT_P3FT2FC4B, SKYBOX_COUNT);
+	Int32 i;
+	for (i = 0; i < SKYBOX_COUNT; i++) { skybox_vertices[i].Col = WorldEnv_CloudsCol; }
+	skybox_vb = Gfx_CreateVb(skybox_vertices, VERTEX_FORMAT_P3FT2FC4B, SKYBOX_COUNT);
 }
 
 static void SkyboxRenderer_ContextLost(void* obj) { Gfx_DeleteVb(&skybox_vb); }
