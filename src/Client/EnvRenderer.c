@@ -734,6 +734,8 @@ static void EnvRenderer_DeleteVbs(void) {
 
 static void EnvRenderer_ContextLost(void* obj) {
 	EnvRenderer_DeleteVbs();
+	Gfx_DeleteTexture(&sides_tex);
+	Gfx_DeleteTexture(&edges_tex);
 }
 
 static void EnvRenderer_UpdateAll(void) {
@@ -855,8 +857,6 @@ static void EnvRenderer_Free(void) {
 
 	Gfx_DeleteTexture(&clouds_tex);
 	Gfx_DeleteTexture(&skybox_tex);
-	Gfx_DeleteTexture(&sides_tex);
-	Gfx_DeleteTexture(&edges_tex);
 	Gfx_DeleteTexture(&rain_tex);
 	Gfx_DeleteTexture(&snow_tex);
 }
