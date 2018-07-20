@@ -1,7 +1,6 @@
 #include "Game.h"
 #include "Block.h"
 #include "World.h"
-#include "WeatherRenderer.h"
 #include "Lighting.h"
 #include "MapRenderer.h"
 #include "GraphicsAPI.h"
@@ -29,15 +28,14 @@
 #include "TexturePack.h"
 #include "Screens.h"
 #include "SelectionBox.h"
-#include "SkyboxRenderer.h"
 #include "AxisLinesRenderer.h"
 #include "EnvRenderer.h"
-#include "BordersRenderer.h"
 #include "HeldBlockRenderer.h"
 #include "PickedPosRenderer.h"
 #include "GraphicsCommon.h"
 #include "Menus.h"
 #include "Audio.h"
+#include "DisplayDevice.h"
 
 struct IGameComponent Game_Components[26];
 Int32 Game_ComponentsCount;
@@ -203,7 +201,7 @@ void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
 	World_SetBlock(x, y, z, block);
 
 	if (Weather_Heightmap) {
-		WeatherRenderer_OnBlockChanged(x, y, z, oldBlock, block);
+		EnvRenderer_OnBlockChanged(x, y, z, oldBlock, block);
 	}
 	Lighting_OnBlockChanged(x, y, z, oldBlock, block);
 
@@ -475,7 +473,6 @@ void Game_Load(void) {
 
 	ChunkUpdater_Init();
 	EnvRenderer_MakeComponent(&comp);     Game_AddComponent(&comp);
-	BordersRenderer_MakeComponent(&comp); Game_AddComponent(&comp);
 
 	UChar renderTypeBuffer[String_BufferSize(STRING_SIZE)];
 	String renderType = String_InitAndClearArray(renderTypeBuffer);
@@ -483,9 +480,8 @@ void Game_Load(void) {
 	Int32 flags = Game_CalcRenderType(&renderType);
 
 	if (flags == -1) flags = 0;
-	BordersRenderer_Legacy  = (flags & 1);
-	EnvRenderer_Legacy      = (flags & 1);
-	EnvRenderer_Minimal     = (flags & 2);
+	EnvRenderer_Legacy  = (flags & 1);
+	EnvRenderer_Minimal = (flags & 2);
 
 	if (Game_IPAddress.length == 0) {
 		ServerConnection_InitSingleplayer();
@@ -501,7 +497,6 @@ void Game_Load(void) {
 
 	Gui_MakeComponent(&comp);               Game_AddComponent(&comp);
 	Selections_MakeComponent(&comp);        Game_AddComponent(&comp);
-	WeatherRenderer_MakeComponent(&comp);   Game_AddComponent(&comp);
 	HeldBlockRenderer_MakeComponent(&comp); Game_AddComponent(&comp);
 
 	Gfx_SetDepthTest(true);
@@ -513,7 +508,6 @@ void Game_Load(void) {
 	PickedPosRenderer_MakeComponent(&comp); Game_AddComponent(&comp);
 	Audio_MakeComponent(&comp);             Game_AddComponent(&comp);
 	AxisLinesRenderer_MakeComponent(&comp); Game_AddComponent(&comp);
-	SkyboxRenderer_MakeComponent(&comp);    Game_AddComponent(&comp);
 
 	/* TODO: plugin dll support */
 	/* List<string> nonLoaded = PluginLoader.LoadAll(); */
@@ -537,10 +531,7 @@ void Game_Load(void) {
 		}
 	}*/
 
-	if (Gfx_WarnIfNecessary()) {
-		BordersRenderer_UseLegacyMode(true);
-		EnvRenderer_UseLegacyMode(true);
-	}
+	if (Gfx_WarnIfNecessary()) EnvRenderer_UseLegacyMode(true);
 
 	UChar loadTitleBuffer[String_BufferSize(STRING_SIZE)];
 	String loadTitle = String_InitAndClearArray(loadTitleBuffer);
@@ -583,19 +574,21 @@ static void Game_UpdateViewMatrix(void) {
 }
 
 static void Game_Render3D(Real64 delta, Real32 t) {
-	if (SkyboxRenderer_ShouldRender()) {
-		SkyboxRenderer_Render(delta);
-	}
+	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox(delta);
 	AxisLinesRenderer_Render(delta);
 	Entities_RenderModels(delta, t);
 	Entities_RenderNames(delta);
 
 	Particles_Render(delta, t);
 	Camera_Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
-	EnvRenderer_Render(delta);
+
+	EnvRenderer_RenderSky(delta);
+	EnvRenderer_RenderClouds(delta);
+	EnvRenderer_UpdateFog();
+
 	ChunkUpdater_Update(delta);
 	MapRenderer_RenderNormal(delta);
-	BordersRenderer_RenderSides(delta);
+	EnvRenderer_RenderMapSides(delta);
 
 	Entities_DrawShadows();
 	if (Game_SelectedPos.Valid && !Game_HideGui) {
@@ -608,9 +601,9 @@ static void Game_Render3D(Real64 delta, Real32 t) {
 	if (Game_CurrentCameraPos.Y < WorldEnv_EdgeHeight
 		&& (pos.X < 0 || pos.Z < 0 || pos.X > World_Width || pos.Z > World_Length)) {
 		MapRenderer_RenderTranslucent(delta);
-		BordersRenderer_RenderEdges(delta);
+		EnvRenderer_RenderMapEdges(delta);
 	} else {
-		BordersRenderer_RenderEdges(delta);
+		EnvRenderer_RenderMapEdges(delta);
 		MapRenderer_RenderTranslucent(delta);
 	}
 

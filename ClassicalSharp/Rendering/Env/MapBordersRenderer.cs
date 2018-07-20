@@ -17,7 +17,7 @@ namespace ClassicalSharp.Renderers {
 		Game game;
 		
 		int sidesVb, edgesVb;
-		int edgeTexId, sideTexId;
+		int edgesTex, sidesTex;
 		int sidesVertices, edgesVertices;
 		internal bool legacy;
 		bool fullBrightSides, fullBrightEdge;
@@ -38,47 +38,38 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.ContextRecreated += ContextRecreated;
 		}
 		
-		public void RenderSides(double delta) {
-			if (sidesVb == 0) return;
-			BlockID block = game.World.Env.SidesBlock;
+		void RenderBorders(BlockID block, int vb, int tex, int count) {
+			if (vb == 0) return;
 			IGraphicsApi gfx = game.Graphics;
-			
+
 			gfx.Texturing = true;
 			gfx.SetupAlphaState(BlockInfo.Draw[block]);
 			gfx.EnableMipmaps();
-			
-			gfx.BindTexture(sideTexId);
+
+			gfx.BindTexture(tex);
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
-			gfx.BindVb(sidesVb);
-			gfx.DrawVb_IndexedTris(sidesVertices);
-			
+			gfx.BindVb(vb);
+			if (count > 0) gfx.DrawVb_IndexedTris(count);
+
 			gfx.DisableMipmaps();
 			gfx.RestoreAlphaState(BlockInfo.Draw[block]);
 			gfx.Texturing = false;
 		}
 		
+		public void RenderSides(double delta) {
+			RenderBorders(game.World.Env.SidesBlock, sidesVb,
+			              sidesTex, sidesVertices);
+		}
+		
 		public void RenderEdges(double delta) {
-			if (edgesVb == 0) return;
-			BlockID block = game.World.Env.EdgeBlock;
-			IGraphicsApi gfx = game.Graphics;
-			
+			// Do not draw water when player cannot see it
+			// Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps
 			Vector3 camPos = game.CurrentCameraPos;
-			gfx.Texturing = true;
-			gfx.SetupAlphaState(BlockInfo.Draw[block]);
-			gfx.EnableMipmaps();
+			int vertices = 0, yVisible = Math.Min(0, map.Env.SidesHeight);
+			if (camPos.Y >= yVisible) vertices = edgesVertices;
 			
-			gfx.BindTexture(edgeTexId);
-			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
-			gfx.BindVb(edgesVb);
-			// Do not draw water when we cannot see it.
-			// Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps.
-			float yVisible = Math.Min(0, map.Env.SidesHeight);
-			if (camPos.Y >= yVisible)
-				gfx.DrawVb_IndexedTris(edgesVertices);
-			
-			gfx.DisableMipmaps();
-			gfx.RestoreAlphaState(BlockInfo.Draw[block]);
-			gfx.Texturing = false;
+			RenderBorders(game.World.Env.EdgeBlock, edgesVb,
+			              edgesTex, vertices);
 		}
 		
 		void IDisposable.Dispose() {
@@ -97,18 +88,18 @@ namespace ClassicalSharp.Renderers {
 		public void OnNewMap(Game game) {
 			game.Graphics.DeleteVb(ref sidesVb);
 			game.Graphics.DeleteVb(ref edgesVb);
-			MakeTexture(ref edgeTexId, ref lastEdgeTexLoc, map.Env.EdgeBlock);
-			MakeTexture(ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock);
+			MakeTexture(ref edgesTex, ref lastEdgeTexLoc, map.Env.EdgeBlock);
+			MakeTexture(ref sidesTex, ref lastSideTexLoc, map.Env.SidesBlock);
 		}
 		
 		void IGameComponent.OnNewMapLoaded(Game game) { ResetSidesAndEdges(null, null); }
 		
 		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
 			if (e.Var == EnvVar.EdgeBlock) {
-				MakeTexture(ref edgeTexId, ref lastEdgeTexLoc, map.Env.EdgeBlock);
+				MakeTexture(ref edgesTex, ref lastEdgeTexLoc, map.Env.EdgeBlock);
 				ResetEdges();
 			} else if (e.Var == EnvVar.SidesBlock) {
-				MakeTexture(ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock);
+				MakeTexture(ref sidesTex, ref lastSideTexLoc, map.Env.SidesBlock);
 				ResetSides();
 			} else if (e.Var == EnvVar.EdgeLevel || e.Var == EnvVar.SidesOffset) {
 				ResetSidesAndEdges(null, null);
@@ -121,12 +112,12 @@ namespace ClassicalSharp.Renderers {
 		
 		void ResetTextures(object sender, EventArgs e) {
 			lastEdgeTexLoc = -1; lastSideTexLoc = -1;
-			MakeTexture(ref edgeTexId, ref lastEdgeTexLoc, map.Env.EdgeBlock);
-			MakeTexture(ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock);
+			MakeTexture(ref edgesTex, ref lastEdgeTexLoc, map.Env.EdgeBlock);
+			MakeTexture(ref sidesTex, ref lastSideTexLoc, map.Env.SidesBlock);
 		}
 
 		void ResetSidesAndEdges(object sender, EventArgs e) {
-			CalculateRects(game.ViewDistance);
+			CalculateRects();
 			ContextRecreated();
 		}
 		
@@ -145,8 +136,8 @@ namespace ClassicalSharp.Renderers {
 		void ContextLost() {
 			game.Graphics.DeleteVb(ref sidesVb);
 			game.Graphics.DeleteVb(ref edgesVb);
-			game.Graphics.DeleteTexture(ref edgeTexId);
-			game.Graphics.DeleteTexture(ref sideTexId);
+			game.Graphics.DeleteTexture(ref edgesTex);
+			game.Graphics.DeleteTexture(ref sidesTex);
 		}
 		
 		void ContextRecreated() {
@@ -247,7 +238,7 @@ namespace ClassicalSharp.Renderers {
 					float u2 = z2 - z1, v2 = y2 - y1;
 					v.Y = y1; v.Z = z1; v.U = 0f; v.V = v2; vertices[i++] = v;
 					v.Y = y2;                     v.V = 0f; vertices[i++] = v;
-					          v.Z = z2; v.U = u2;           vertices[i++] = v;
+					v.Z = z2; v.U = u2;           vertices[i++] = v;
 					v.Y = y1;                     v.V = v2; vertices[i++] = v;
 				}
 			}
@@ -269,9 +260,9 @@ namespace ClassicalSharp.Renderers {
 					
 					float u2 = x2 - x1, v2 = y2 - y1;
 					v.X = x1; v.Y = y1; v.U = 0f; v.V = v2; vertices[i++] = v;
-					          v.Y = y2;           v.V = 0f; vertices[i++] = v;
+					v.Y = y2;           v.V = 0f; vertices[i++] = v;
 					v.X = x2;           v.U = u2;           vertices[i++] = v;
-					          v.Y = y1;           v.V = v2; vertices[i++] = v;
+					v.Y = y1;           v.V = v2; vertices[i++] = v;
 				}
 			}
 		}
@@ -292,16 +283,16 @@ namespace ClassicalSharp.Renderers {
 					
 					float u2 = x2 - x1, v2 = z2 - z1;
 					v.X = x1 + offset; v.Z = z1 + offset; v.U = 0f; v.V = 0f; vertices[i++] = v;
-					                   v.Z = z2 + offset;           v.V = v2; vertices[i++] = v;
+					v.Z = z2 + offset;           v.V = v2; vertices[i++] = v;
 					v.X = x2 + offset;                    v.U = u2;           vertices[i++] = v;
-					                   v.Z = z1 + offset;           v.V = 0f; vertices[i++] = v;
+					v.Z = z1 + offset;           v.V = 0f; vertices[i++] = v;
 				}
 			}
 		}
 		
 		Rectangle[] rects = new Rectangle[4];
-		void CalculateRects(int extent) {
-			extent = Utils.AdjViewDist(extent);
+		void CalculateRects() {
+			int extent = Utils.AdjViewDist(game.ViewDistance);
 			rects[0] = new Rectangle(-extent, -extent, extent + map.Width + extent, extent);
 			rects[1] = new Rectangle(-extent, map.Length, extent + map.Width + extent, extent);
 			

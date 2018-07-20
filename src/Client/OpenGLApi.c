@@ -189,7 +189,7 @@ void Gfx_SetFog(bool enabled) {
 }
 
 PackedCol gl_lastFogCol;
-void Gfx_SetFogColour(PackedCol col) {
+void Gfx_SetFogCol(PackedCol col) {
 	if (PackedCol_Equals(col, gl_lastFogCol)) return;
 	Real32 colRGBA[4] = { col.R / 255.0f, col.G / 255.0f, col.B / 255.0f, col.A / 255.0f };
 	glFogfv(GL_FOG_COLOR, colRGBA);
@@ -239,7 +239,7 @@ void Gfx_Clear(void) {
 }
 
 PackedCol gl_lastClearCol;
-void Gfx_ClearColour(PackedCol col) {
+void Gfx_ClearCol(PackedCol col) {
 	if (PackedCol_Equals(col, gl_lastClearCol)) return;
 	glClearColor(col.R / 255.0f, col.G / 255.0f, col.B / 255.0f, col.A / 255.0f);
 	gl_lastClearCol = col;

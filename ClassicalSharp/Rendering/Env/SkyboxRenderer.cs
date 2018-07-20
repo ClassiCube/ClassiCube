@@ -24,7 +24,7 @@ namespace ClassicalSharp.Renderers {
 			ContextRecreated();
 		}
 		
-		void IGameComponent.Reset(Game game) { game.Graphics.DeleteTexture(ref tex); }
+		void IGameComponent.Reset(Game game) { }
 		void IGameComponent.Ready(Game game) { }
 		void IGameComponent.OnNewMap(Game game) { MakeVb(); }
 		void IGameComponent.OnNewMapLoaded(Game game) { }

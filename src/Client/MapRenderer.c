@@ -2,7 +2,7 @@
 #include "Block.h"
 #include "Game.h"
 #include "GraphicsAPI.h"
-#include "WeatherRenderer.h"
+#include "EnvRenderer.h"
 #include "World.h"
 #include "Vectors.h"
 #include "ChunkUpdater.h"
@@ -34,7 +34,7 @@ static void MapRenderer_CheckWeather(Real64 deltaTime) {
 	/* If we are under water, render weather before to blend properly */
 	if (!inTranslucent || WorldEnv_Weather == WEATHER_SUNNY) return;
 	Gfx_SetAlphaBlending(true);
-	WeatherRenderer_Render(deltaTime);
+	EnvRenderer_RenderWeather(deltaTime);
 	Gfx_SetAlphaBlending(false);
 }
 
@@ -251,7 +251,7 @@ void MapRenderer_RenderTranslucent(Real64 deltaTime) {
 	/* If we weren't under water, render weather after to blend properly */
 	if (!inTranslucent && WorldEnv_Weather != WEATHER_SUNNY) {
 		Gfx_SetAlphaTest(true);
-		WeatherRenderer_Render(deltaTime);
+		EnvRenderer_RenderWeather(deltaTime);
 		Gfx_SetAlphaTest(false);
 	}
 	Gfx_SetAlphaBlending(false);

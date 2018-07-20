@@ -1,7 +1,5 @@
 #include "DisplayDevice.h"
 
-#if !CC_BUILD_D3D9
-
 struct ColorFormat ColorFormat_FromBPP(Int32 bpp) {
 	struct ColorFormat format = { 0 };
 	format.BitsPerPixel = bpp;
@@ -62,4 +60,3 @@ struct GraphicsMode GraphicsMode_MakeDefault(void) {
 	struct ColorFormat format = ColorFormat_FromBPP(bpp);
 	return GraphicsMode_Make(format, 24, 0, 2);
 }
-#endif

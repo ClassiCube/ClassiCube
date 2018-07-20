@@ -26,7 +26,6 @@ struct DisplayDevice DisplayDevice_Default;
 void DisplayDevice_Init(void);
 void* DisplayDevice_Meta[3];
 
-#if !CC_BUILD_D3D9
 struct ColorFormat {
 	UInt8 R, G, B, A;
 	bool IsIndexed;
@@ -46,5 +45,4 @@ struct GraphicsMode {
 struct GraphicsMode GraphicsMode_Make(struct ColorFormat color, UInt8 depth, UInt8 stencil, UInt8 buffers);
 /* Returns an GraphicsMode compatible with the underlying platform. */
 struct GraphicsMode GraphicsMode_MakeDefault(void);
-#endif
 #endif

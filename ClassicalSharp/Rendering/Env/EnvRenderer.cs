@@ -137,13 +137,9 @@ namespace ClassicalSharp.Renderers {
 			ContextLost();
 			game.Graphics.Fog = !minimal;
 			
-			if (minimal) {
-				game.Graphics.ClearCol(map.Env.SkyCol);
-			} else {
-				game.Graphics.SetFogStart(0);
-				ResetClouds();
-				ResetSky();
-			}
+			if (minimal) return;
+			ResetClouds();
+			ResetSky();
 		}
 		
 		void RenderMinimal(double deltaTime) {

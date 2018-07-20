@@ -214,7 +214,6 @@
     <ClInclude Include="Inventory.h" />
     <ClInclude Include="IsometricDrawer.h" />
     <ClInclude Include="Lighting.h" />
-    <ClInclude Include="BordersRenderer.h" />
     <ClInclude Include="Animations.h" />
     <ClInclude Include="MapGenerator.h" />
     <ClInclude Include="MapRenderer.h" />
@@ -227,13 +226,11 @@
     <ClInclude Include="Screens.h" />
     <ClInclude Include="SelectionBox.h" />
     <ClInclude Include="ServerConnection.h" />
-    <ClInclude Include="SkyboxRenderer.h" />
     <ClInclude Include="Stream.h" />
     <ClInclude Include="GameStructs.h" />
     <ClInclude Include="TerrainAtlas.h" />
     <ClInclude Include="TexturePack.h" />
     <ClInclude Include="Utils.h" />
-    <ClInclude Include="WeatherRenderer.h" />
     <ClInclude Include="PackedCol.h" />
     <ClInclude Include="Funcs.h" />
     <ClInclude Include="Game.h" />
@@ -257,7 +254,6 @@
     <ClCompile Include="Camera.c" />
     <ClCompile Include="AxisLinesRenderer.c" />
     <ClCompile Include="Block.c" />
-    <ClCompile Include="BordersRenderer.c" />
     <ClCompile Include="Builder.c" />
     <ClCompile Include="Chat.c" />
     <ClCompile Include="ChunkUpdater.c" />
@@ -306,7 +302,6 @@
     <ClCompile Include="Screens.c" />
     <ClCompile Include="SelectionBox.c" />
     <ClCompile Include="ServerConnection.c" />
-    <ClCompile Include="SkyboxRenderer.c" />
     <ClCompile Include="Socket.c" />
     <ClCompile Include="Stream.c" />
     <ClCompile Include="String.c" />
@@ -315,7 +310,6 @@
     <ClCompile Include="TexturePack.c" />
     <ClCompile Include="Utils.c" />
     <ClCompile Include="Vectors.c" />
-    <ClCompile Include="WeatherRenderer.c" />
     <ClCompile Include="Widgets.c" />
     <ClCompile Include="WinDisplayDevice.c" />
     <ClCompile Include="WinErrorHandler.c" />

@@ -54,7 +54,7 @@ void Gfx_DisableMipmaps(void);
 
 bool Gfx_GetFog(void);
 void Gfx_SetFog(bool enabled);
-void Gfx_SetFogColour(PackedCol col);
+void Gfx_SetFogCol(PackedCol col);
 void Gfx_SetFogDensity(Real32 value);
 void Gfx_SetFogStart(Real32 value);
 void Gfx_SetFogEnd(Real32 value);
@@ -69,7 +69,7 @@ void Gfx_SetAlphaBlendFunc(Int32 srcBlendFunc, Int32 dstBlendFunc);
 void Gfx_SetAlphaArgBlend(bool enabled);
 
 void Gfx_Clear(void);
-void Gfx_ClearColour(PackedCol col);
+void Gfx_ClearCol(PackedCol col);
 void Gfx_SetDepthTest(bool enabled);
 void Gfx_SetDepthTestFunc(Int32 compareFunc);
 void Gfx_SetColourWriteMask(bool r, bool g, bool b, bool a);

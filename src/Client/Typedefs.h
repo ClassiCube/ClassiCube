@@ -59,7 +59,7 @@ struct FontDesc { void* Handle; UInt16 Size, Style; };
 #define UInt32_MaxValue ((UInt32)4294967295UL)
 
 #define CC_BUILD_GL11 false
-#define CC_BUILD_D3D9 false
+#define CC_BUILD_D3D9 true
 
 #define CC_BUILD_WIN true
 #define CC_BUILD_OSX false

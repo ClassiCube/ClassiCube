@@ -13,7 +13,6 @@
 #include "Funcs.h"
 #include "Block.h"
 #include "EnvRenderer.h"
-#include "BordersRenderer.h"
 
 #define CHAT_LOGTIMES_DEF_ELEMS 256
 #define CHAT_LOGTIMES_EXPAND_ELEMS 512
@@ -334,9 +333,8 @@ static void RenderTypeCommand_Execute(STRING_PURE String* args, UInt32 argsCount
 
 	Int32 flags = Game_CalcRenderType(&args[1]);
 	if (flags >= 0) {
-		BordersRenderer_UseLegacyMode((flags & 1));
-		EnvRenderer_UseLegacyMode(    (flags & 1));
-		EnvRenderer_UseMinimalMode(   (flags & 2));
+		EnvRenderer_UseLegacyMode( flags & 1);
+		EnvRenderer_UseMinimalMode(flags & 2);
 
 		Options_Set(OPT_RENDER_TYPE, &args[1]);
 		Commands_Log("&e/client: &fRender type is now %s.", &args[1]);

@@ -41,9 +41,6 @@ Real32 Math_LerpAngle(Real32 leftAngle, Real32 rightAngle, Real32 t);
 Int32 Math_NextPowOf2(Int32 value);
 bool Math_IsPowOf2(Int32 value);
 
-/* Returns the number of vertices needed to subdivide a quad. */
-#define Math_CountVertices(axis1Len, axis2Len, axisSize) (Math_CeilDiv(axis1Len, axisSize) * Math_CeilDiv(axis2Len, axisSize) * 4)
-
 #define Math_Clamp(value, min, max)\
 value = value < (min) ? (min) : value;\
 value = value > (max) ? (max) : value;

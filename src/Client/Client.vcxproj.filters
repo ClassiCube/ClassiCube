@@ -103,9 +103,6 @@
     <Filter Include="Header Files\Rendering\Env">
       <UniqueIdentifier>{8ceea67c-909a-4224-824e-30407393055e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Rendering\Env">
-      <UniqueIdentifier>{8337186e-f012-4fe2-a630-692a9ce995ec}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Rendering\Map">
       <UniqueIdentifier>{7704f4d9-92d9-424b-904f-80ec51f313f6}</UniqueIdentifier>
     </Filter>
@@ -222,12 +219,6 @@
     <ClInclude Include="Entity.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
-    <ClInclude Include="SkyboxRenderer.h">
-      <Filter>Header Files\Rendering\Env</Filter>
-    </ClInclude>
-    <ClInclude Include="WeatherRenderer.h">
-      <Filter>Header Files\Rendering\Env</Filter>
-    </ClInclude>
     <ClInclude Include="MapRenderer.h">
       <Filter>Header Files\Rendering\Map</Filter>
     </ClInclude>
@@ -239,9 +230,6 @@
     </ClInclude>
     <ClInclude Include="2DStructs.h">
       <Filter>Header Files\2D\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="BordersRenderer.h">
-      <Filter>Header Files\Rendering\Env</Filter>
     </ClInclude>
     <ClInclude Include="EnvRenderer.h">
       <Filter>Header Files\Rendering\Env</Filter>
@@ -404,12 +392,6 @@
     <ClCompile Include="Lighting.c">
       <Filter>Source Files\Map</Filter>
     </ClCompile>
-    <ClCompile Include="SkyboxRenderer.c">
-      <Filter>Source Files\Rendering\Env</Filter>
-    </ClCompile>
-    <ClCompile Include="WeatherRenderer.c">
-      <Filter>Source Files\Rendering\Env</Filter>
-    </ClCompile>
     <ClCompile Include="MapRenderer.c">
       <Filter>Source Files\Rendering\Map</Filter>
     </ClCompile>
@@ -418,12 +400,6 @@
     </ClCompile>
     <ClCompile Include="2DStructs.c">
       <Filter>Source Files\2D\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="BordersRenderer.c">
-      <Filter>Source Files\Rendering\Env</Filter>
-    </ClCompile>
-    <ClCompile Include="EnvRenderer.c">
-      <Filter>Source Files\Rendering\Env</Filter>
     </ClCompile>
     <ClCompile Include="AxisLinesRenderer.c">
       <Filter>Source Files\SelectionBox</Filter>
@@ -571,6 +547,9 @@
     </ClCompile>
     <ClCompile Include="X11ErrorHandler.c">
       <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="EnvRenderer.c">
+      <Filter>Source Files\Rendering</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

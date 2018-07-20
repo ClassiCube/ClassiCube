@@ -295,7 +295,7 @@ void Gfx_SetFog(bool enabled) {
 }
 
 UInt32 d3d9_fogCol = 0xFF000000; /* black */
-void Gfx_SetFogColour(PackedCol col) {
+void Gfx_SetFogCol(PackedCol col) {
 	if (col.Packed == d3d9_fogCol) return;
 	d3d9_fogCol = col.Packed;
 	if (Gfx_LostContext) return;
@@ -391,7 +391,7 @@ void Gfx_Clear(void) {
 	ErrorHandler_CheckOrFail(hresult, "D3D9_Clear");
 }
 
-void Gfx_ClearColour(PackedCol col) {
+void Gfx_ClearCol(PackedCol col) {
 	d3d9_clearCol = col.Packed;
 }
 
