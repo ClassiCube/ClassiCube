@@ -582,9 +582,9 @@ static void Game_Render3D(Real64 delta, Real32 t) {
 	Particles_Render(delta, t);
 	Camera_Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
 
+	EnvRenderer_UpdateFog();
 	EnvRenderer_RenderSky(delta);
 	EnvRenderer_RenderClouds(delta);
-	EnvRenderer_UpdateFog();
 
 	ChunkUpdater_Update(delta);
 	MapRenderer_RenderNormal(delta);

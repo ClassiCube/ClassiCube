@@ -15,7 +15,7 @@ namespace ClassicalSharp.Renderers {
 		World map;
 		Game game;
 		internal bool legacy, minimal;
-	
+		
 		double BlendFactor(float x) {
 			//return -0.05 + 0.22 * (0.25 * Math.Log(x));
 			double blend = -0.13 + 0.28 * (0.25 * Math.Log(x));
@@ -24,7 +24,7 @@ namespace ClassicalSharp.Renderers {
 			return blend;
 		}
 		
-		void BlockOn(out float fogDensity, out PackedCol fogCol) {
+		void CalcFog(out float density, out PackedCol col) {
 			Vector3 pos = game.CurrentCameraPos;
 			Vector3I coords = Vector3I.Floor(pos);
 			
@@ -34,13 +34,13 @@ namespace ClassicalSharp.Renderers {
 				(Vector3)coords + BlockInfo.MaxBB[block]);
 			
 			if (blockBB.Contains(pos) && BlockInfo.FogDensity[block] != 0) {
-				fogDensity = BlockInfo.FogDensity[block];
-				fogCol = BlockInfo.FogCol[block];
+				density = BlockInfo.FogDensity[block];
+				col = BlockInfo.FogCol[block];
 			} else {
-				fogDensity = 0;
+				density = 0;
 				// Blend fog and sky together
 				float blend = (float)BlendFactor(game.ViewDistance);
-				fogCol = PackedCol.Lerp(map.Env.FogCol, map.Env.SkyCol, blend);
+				col = PackedCol.Lerp(map.Env.FogCol, map.Env.SkyCol, blend);
 			}
 		}
 		
@@ -58,12 +58,11 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void Render(double deltaTime) {
-			if (minimal) { RenderMinimal(deltaTime); return; }
-			if (skyVb == 0 || cloudsVb == 0) return;
+			UpdateFog();
+			if (minimal || skyVb == 0 || cloudsVb == 0) return;
 			
 			RenderSky(deltaTime);
 			RenderClouds(deltaTime);
-			UpdateFog();
 		}
 		
 		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
@@ -112,10 +111,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void ResetAllEnv(object sender, EventArgs e) {
-			UpdateFog();
-			ContextRecreated();
-		}
+		void ResetAllEnv(object sender, EventArgs e) { ContextRecreated(); }
 		
 		void IDisposable.Dispose() {
 			game.Graphics.DeleteTexture(ref cloudsTex);
@@ -136,31 +132,11 @@ namespace ClassicalSharp.Renderers {
 		void ContextRecreated() {
 			ContextLost();
 			game.Graphics.Fog = !minimal;
+			UpdateFog();
 			
 			if (minimal) return;
 			ResetClouds();
 			ResetSky();
-		}
-		
-		void RenderMinimal(double deltaTime) {
-			if (!map.HasBlocks) return;
-			PackedCol fogCol = PackedCol.White;
-			float fogDensity = 0;
-			BlockOn(out fogDensity, out fogCol);
-			game.Graphics.ClearCol(fogCol);
-			
-			// TODO: rewrite this to avoid raising the event? want to avoid recreating vbos too many times often
-			if (fogDensity != 0) {
-				// Exp fog mode: f = e^(-density*coord)
-				// Solve coord for f = 0.05 (good approx for fog end)
-				//   i.e. log(0.05) = -density * coord
-				
-				const double log005 = -2.99573227355399;
-				double dist = log005 / -fogDensity;
-				game.SetViewDistance((int)dist, false);
-			} else {
-				game.SetViewDistance(game.UserViewDistance, false);
-			}
 		}
 		
 		void RenderSky(double delta) {
@@ -211,13 +187,23 @@ namespace ClassicalSharp.Renderers {
 			gfx.SetMatrixMode(MatrixType.Modelview);
 		}
 		
-		void UpdateFog() {
-			if (!map.HasBlocks || minimal) return;
-			PackedCol fogCol = PackedCol.White;
-			float fogDensity = 0;
-			BlockOn(out fogDensity, out fogCol);
+		void UpdateFogMinimal(float fogDensity) {
+			// TODO: rewrite this to avoid raising the event? want to avoid recreating vbos too many times often
+			if (fogDensity != 0) {
+				// Exp fog mode: f = e^(-density*coord)
+				// Solve coord for f = 0.05 (good approx for fog end)
+				//   i.e. log(0.05) = -density * coord
+				
+				const double log005 = -2.99573227355399;
+				double dist = log005 / -fogDensity;
+				game.SetViewDistance((int)dist, false);
+			} else {
+				game.SetViewDistance(game.UserViewDistance, false);
+			}
+		}
+		
+		void UpdateFogNormal(float fogDensity, PackedCol fogCol) {
 			IGraphicsApi gfx = game.Graphics;
-			
 			if (fogDensity != 0) {
 				gfx.SetFogMode(Fog.Exp);
 				gfx.SetFogDensity(fogDensity);
@@ -237,8 +223,20 @@ namespace ClassicalSharp.Renderers {
 				gfx.SetFogMode(Fog.Linear);
 				gfx.SetFogEnd(game.ViewDistance);
 			}
-			gfx.ClearCol(fogCol);
 			gfx.SetFogCol(fogCol);
+		}
+		
+		void UpdateFog() {
+			float fogDensity; PackedCol fogCol;
+			CalcFog(out fogDensity, out fogCol);
+			game.Graphics.ClearCol(fogCol);
+			
+			if (!map.HasBlocks) return;
+			if (minimal) {
+				UpdateFogMinimal(fogDensity);
+			} else {
+				UpdateFogNormal(fogDensity, fogCol);
+			}
 		}
 		
 		void ResetClouds() {
@@ -281,7 +279,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void DrawSkyY(int x1, int z1, int x2, int z2, int y, int axisSize, 
+		void DrawSkyY(int x1, int z1, int x2, int z2, int y, int axisSize,
 		              PackedCol col, VertexP3fC4b[] vertices) {
 			int endX = x2, endZ = z2, startZ = z1;
 			int i = 0;
@@ -297,14 +295,14 @@ namespace ClassicalSharp.Renderers {
 					if (z2 > endZ) z2 = endZ;
 					
 					v.X = x1; v.Z = z1; vertices[i++] = v;
-					          v.Z = z2; vertices[i++] = v;
+					v.Z = z2; vertices[i++] = v;
 					v.X = x2;           vertices[i++] = v;
-					          v.Z = z1; vertices[i++] = v;
+					v.Z = z1; vertices[i++] = v;
 				}
 			}
 		}
 		
-		void DrawCloudsY(int x1, int z1, int x2, int z2, int y, int axisSize, 
+		void DrawCloudsY(int x1, int z1, int x2, int z2, int y, int axisSize,
 		                 PackedCol col, VertexP3fT2fC4b[] vertices) {
 			int endX = x2, endZ = z2, startZ = z1;
 			// adjust range so that largest negative uv coordinate is shifted to 0 or above.
@@ -324,9 +322,9 @@ namespace ClassicalSharp.Renderers {
 					float u1 = x1 / 2048f + offset, u2 = x2 / 2048f + offset;
 					float v1 = z1 / 2048f + offset, v2 = z2 / 2048f + offset;
 					v.X = x1; v.Z = z1; v.U = u1; v.V = v1; vertices[i++] = v;
-					          v.Z = z2;           v.V = v2; vertices[i++] = v;
+					v.Z = z2;           v.V = v2; vertices[i++] = v;
 					v.X = x2;           v.U = u2;           vertices[i++] = v;
-					          v.Z = z1;           v.V = v1; vertices[i++] = v;
+					v.Z = z1;           v.V = v1; vertices[i++] = v;
 				}
 			}
 		}

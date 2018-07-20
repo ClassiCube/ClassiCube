@@ -38,6 +38,27 @@ Int32 EnvRenderer_Vertices(Int32 axis1Len, Int32 axis2Len) {
 /*########################################################################################################################*
 *------------------------------------------------------------Fog----------------------------------------------------------*
 *#########################################################################################################################*/
+static void EnvRenderer_CalcFog(Real32* density, PackedCol* col) {
+	Vector3 pos = Game_CurrentCameraPos; Vector3I coords;
+	Vector3I_Floor(&coords, &pos);     /* coords = floor(pos); */
+	Vector3I_ToVector3(&pos, &coords); /* pos = coords; */
+
+	BlockID block = World_SafeGetBlock_3I(coords);
+	struct AABB blockBB;
+	Vector3_Add(&blockBB.Min, &pos, &Block_MinBB[block]);
+	Vector3_Add(&blockBB.Max, &pos, &Block_MaxBB[block]);
+
+	if (AABB_ContainsPoint(&blockBB, &pos) && Block_FogDensity[block] != 0.0f) {
+		*density = Block_FogDensity[block];
+		*col = Block_FogCol[block];
+	} else {
+		*density = 0.0f;
+		/* Blend fog and sky together */
+		Real32 blend = EnvRenderer_BlendFactor((Real32)Game_ViewDistance);
+		*col = PackedCol_Lerp(WorldEnv_FogCol, WorldEnv_SkyCol, blend);
+	}
+}
+
 static void EnvRenderer_UpdateFogMinimal(Real32 fogDensity) {
 	/* TODO: rewrite this to avoid raising the event? want to avoid recreating vbos too many times often */
 	if (fogDensity != 0.0f) {
@@ -77,29 +98,11 @@ static void EnvRenderer_UpdateFogNormal(Real32 fogDensity, PackedCol fogCol) {
 }
 
 void EnvRenderer_UpdateFog(void) {
-	if (World_Blocks == NULL) return;
-	Vector3 pos = Game_CurrentCameraPos; Vector3I coords;
-	Vector3I_Floor(&coords, &pos);     /* coords = floor(pos); */
-	Vector3I_ToVector3(&pos, &coords); /* pos = coords; */
-
-	BlockID block = World_SafeGetBlock_3I(coords); 
-	struct AABB blockBB;
-	Vector3_Add(&blockBB.Min, &pos, &Block_MinBB[block]);
-	Vector3_Add(&blockBB.Max, &pos, &Block_MaxBB[block]);
-
-	PackedCol fogCol;
-	Real32 fogDensity;
-	if (AABB_ContainsPoint(&blockBB, &pos) && Block_FogDensity[block] != 0.0f) {
-		fogDensity = Block_FogDensity[block];
-		fogCol = Block_FogCol[block];
-	} else {
-		fogDensity = 0.0f;
-		/* Blend fog and sky together */
-		Real32 blend = EnvRenderer_BlendFactor((Real32)Game_ViewDistance);
-		fogCol = PackedCol_Lerp(WorldEnv_FogCol, WorldEnv_SkyCol, blend);
-	}
-
+	Real32 fogDensity; PackedCol fogCol;
+	EnvRenderer_CalcFog(&fogDensity, &fogCol);
 	Gfx_ClearCol(fogCol);
+
+	if (World_Blocks == NULL) return;
 	if (EnvRenderer_Minimal) {
 		EnvRenderer_UpdateFogMinimal(fogDensity);
 	} else {
@@ -740,6 +743,7 @@ static void EnvRenderer_UpdateAll(void) {
 	EnvRenderer_UpdateClouds();
 	EnvRenderer_UpdateSky();
 	EnvRenderer_UpdateSkybox();
+	EnvRenderer_UpdateFog();
 
 	/* TODO: Don't allocate unless used? */
 	weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, WEATHER_VERTS_COUNT);
@@ -793,6 +797,7 @@ static void EnvRenderer_TexturePackChanged(void* obj) {
 static void EnvRenderer_TerrainAtlasChanged(void* obj) {
 	EnvRenderer_UpdateBorderTextures();
 }
+
 static void EnvRenderer_ViewDistanceChanged(void* obj) {
 	EnvRenderer_UpdateAll();
 }
