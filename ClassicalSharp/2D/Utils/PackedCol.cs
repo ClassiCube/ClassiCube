@@ -9,7 +9,8 @@ using AndroidColor = Android.Graphics.Color;
 namespace ClassicalSharp {
 	
 	/// <summary> Structure that can be used for quick manipulations of A/R/G/B colours. </summary>
-	/// <remarks> This structure is **not** suitable for interop with OpenGL or Direct3D. </remarks>
+	/// <remarks> This structure is suitable for interop with OpenGL or Direct3D.
+	/// The order of each colour component differs depending on the underlying API. </remarks>
 	[StructLayout(LayoutKind.Explicit)]
 	public struct PackedCol : IEquatable<PackedCol> {
 		
@@ -44,8 +45,8 @@ namespace ClassicalSharp {
 		public PackedCol(int r, int g, int b) {
 			Packed = 0;
 			A = 255; R = (byte)r; G = (byte)g; B = (byte)b;
-		}		
-	
+		}
+		
 		/// <summary> Multiplies the RGB components of this instance by the
 		/// specified t parameter, where 0 ≤ t ≤ 1 </summary>
 		public static PackedCol Scale(PackedCol value, float t) {
@@ -71,21 +72,21 @@ namespace ClassicalSharp {
 				lo * ((hex >> 0) & 1) + hi * (hex >> 3));
 		}
 
-#if !LAUNCHER		
+		#if !LAUNCHER
 		public const float ShadeX = 0.6f, ShadeZ = 0.8f, ShadeYBottom = 0.5f;
-		public static void GetShaded(PackedCol normal, out PackedCol xSide, 
+		public static void GetShaded(PackedCol normal, out PackedCol xSide,
 		                             out PackedCol zSide, out PackedCol yBottom) {
 			xSide = PackedCol.Scale(normal, ShadeX);
 			zSide = PackedCol.Scale(normal, ShadeZ);
 			yBottom = PackedCol.Scale(normal, ShadeYBottom);
 		}
-#endif
+		#endif
 
 		
 		/// <summary> Packs this instance into a 32 bit integer, where A occupies
 		/// the highest 8 bits and B occupies the lowest 8 bits. </summary>
-		public int ToArgb() { return A << 24 | R << 16 | G << 8 | B; }		
-				
+		public int ToArgb() { return A << 24 | R << 16 | G << 8 | B; }
+		
 		public static PackedCol Argb(int c) {
 			PackedCol col = default(PackedCol);
 			col.A = (byte)(c >> 24);
@@ -99,20 +100,19 @@ namespace ClassicalSharp {
 			return (obj is PackedCol) && Equals((PackedCol)obj);
 		}
 		
-		public bool Equals(PackedCol other) { return Packed == other.Packed; }	
+		public bool Equals(PackedCol other) { return Packed == other.Packed; }
 		public override int GetHashCode() { return (int)Packed; }
 		
 		public override string ToString() {
 			return R + ", " + G + ", " + B + " : " + A;
 		}
 		
-
 		public static bool operator == (PackedCol left, PackedCol right) {
-			return left.Equals(right);
+			return left.Packed == right.Packed;
 		}
 		
 		public static bool operator != (PackedCol left, PackedCol right) {
-			return !left.Equals(right);
+			return left.Packed != right.Packed;
 		}
 		
 		public static PackedCol operator * (PackedCol left, PackedCol right) {
@@ -142,14 +142,14 @@ namespace ClassicalSharp {
 		public static PackedCol Yellow  = new PackedCol(255, 255, 0);
 		public static PackedCol Magenta = new PackedCol(255, 0, 255);
 		public static PackedCol Cyan    = new PackedCol(0, 255, 255);
-			
+		
 		public string ToHex() {
 			byte[] array = new byte[] { R, G, B };
 			int len = array.Length;
 			char[] hex = new char[len * 2];
 			
 			for (int i = 0; i < array.Length; i++) {
-				int value = array[i], hi = value >> 4, lo = value & 0x0F;			
+				int value = array[i], hi = value >> 4, lo = value & 0x0F;
 				// 48 = index of 0, 55 = index of (A - 10)
 				hex[i * 2 + 0] = hi < 10 ? (char)(hi + 48) : (char)(hi + 55);
 				hex[i * 2 + 1] = lo < 10 ? (char)(lo + 48) : (char)(lo + 55);

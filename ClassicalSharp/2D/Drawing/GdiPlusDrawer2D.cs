@@ -117,32 +117,6 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public override void DrawClippedText(ref DrawTextArgs args, int x, int y, float maxWidth, float maxHeight) {
-			if (EmptyText(args.Text)) return;
-			if (!args.SkipPartsCheck)
-				GetTextParts(args.Text);
-			
-			Brush shadowBrush = GetOrCreateBrush(PackedCol.Black);
-			StringFormatFlags flags = format.FormatFlags;
-			format.FormatFlags |= StringFormatFlags.NoWrap;
-			format.Trimming = StringTrimming.EllipsisCharacter;
-			float textX = x;
-			
-			for (int i = 0; i < parts.Count; i++) {
-				TextPart part = parts[i];
-				Brush textBrush = GetOrCreateBrush(part.Col);
-				RectangleF rect = new RectangleF(textX + Offset, y + Offset, maxWidth, maxHeight);
-				if (args.UseShadow)
-					g.DrawString(part.Text, args.Font, shadowBrush, rect, format);
-				
-				rect = new RectangleF(textX, y, maxWidth, maxHeight);
-				g.DrawString(part.Text, args.Font, textBrush, rect, format);
-				textX += g.MeasureString(part.Text, args.Font, Int32.MaxValue, format).Width;
-			}
-			format.Trimming = StringTrimming.None;
-			format.FormatFlags = flags;
-		}
-		
 		FastBitmap bitmapWrapper = new FastBitmap();
 		protected override void DrawBitmappedText(ref DrawTextArgs args, int x, int y) {
 			using (bitmapWrapper) {

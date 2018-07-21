@@ -59,7 +59,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract bool Fog { get; set; }
 		public abstract void SetFogCol(PackedCol col);
 		public abstract void SetFogDensity(float value);
-		public abstract void SetFogStart(float value);
 		public abstract void SetFogEnd(float value);
 		public abstract void SetFogMode(Fog fogMode);
 		

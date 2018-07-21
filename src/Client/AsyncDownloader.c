@@ -92,7 +92,7 @@ static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 ty
 		if (etag) {
 			String reqEtag = String_FromEmptyArray(req.Etag); String_Set(&reqEtag, etag);
 		}
-		//request.Data = data; TODO: Implement this. do we need to copy or expect caller to malloc it? 
+		/* request.Data = data; TODO: Implement this. do we need to copy or expect caller to malloc it?  */
 
 		Platform_CurrentUTCTime(&req.TimeAdded);
 		if (priority) {

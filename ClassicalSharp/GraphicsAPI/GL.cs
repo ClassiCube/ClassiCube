@@ -353,7 +353,6 @@ namespace OpenTK.Graphics.OpenGL {
 
 	public enum FogParameter : int {
 		FogDensity = 0x0B62,
-		FogStart = 0x0B63,
 		FogEnd = 0x0B64,
 		FogMode = 0x0B65,
 		FogColor = 0x0B66,

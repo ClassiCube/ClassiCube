@@ -434,7 +434,6 @@ namespace SharpDX.Direct3D9 {
 		SpecularEnable = 29,
 		FogColor = 34,
 		FogTableMode = 35,
-		FogStart = 36,
 		FogEnd = 37,
 		FogDensity = 38,
 		Lighting = 137,

@@ -814,11 +814,10 @@ static void ChatScreen_CheckOtherStatuses(struct ChatScreen* screen) {
 	bool hasRequest = AsyncDownloader_GetCurrent(&request, &progress);
 
 	String id = String_FromRawArray(request.ID);
-	String terrain = String_FromConst("terrain");
 	String texPack = String_FromConst("texturePack");
 
 	/* Is terrain / texture pack currently being downloaded? */
-	if (!hasRequest || !(String_Equals(&id, &terrain) || String_Equals(&id, &texPack))) {
+	if (!hasRequest || !String_Equals(&id, &texPack)) {
 		if (screen->Status.Textures[1].ID) {
 			String empty = String_MakeNull();
 			TextGroupWidget_SetText(&screen->Status, 1, &empty);

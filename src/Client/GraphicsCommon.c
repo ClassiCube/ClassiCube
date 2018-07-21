@@ -167,7 +167,7 @@ static UInt32 GfxCommon_Average(UInt32 p1, UInt32 p2) {
 	UInt32 a1 = ((p1 & alphaMask) >> 24) & 0xFF;
 	UInt32 a2 = ((p2 & alphaMask) >> 24) & 0xFF;
 	UInt32 aSum = (a1 + a2);
-	aSum = aSum > 0 ? aSum : 1; // avoid divide by 0 below
+	aSum = aSum > 0 ? aSum : 1; /* avoid divide by 0 below */
 
 	/* Convert RGB to pre-multiplied form */
 	UInt32 r1 = ((p1 >> 16) & 0xFF) * a1, g1 = ((p1 >> 8) & 0xFF) * a1, b1 = (p1 & 0xFF) * a1;

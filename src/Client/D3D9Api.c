@@ -311,14 +311,6 @@ void Gfx_SetFogDensity(Real32 value) {
 	D3D9_SetRenderState(D3DRS_FOGDENSITY, raw.uVal, "D3D9_SetFogDensity");
 }
 
-Real32 d3d9_fogStart = -1.0f;
-void Gfx_SetFogStart(Real32 value) {
-	d3d9_fogStart = value;
-	if (Gfx_LostContext) return;
-	IntAndFloat raw; raw.fVal = value;
-	D3D9_SetRenderState(D3DRS_FOGSTART, raw.uVal, "D3D9_SetFogStart");
-}
-
 Real32 d3d9_fogEnd = -1.0f;
 void Gfx_SetFogEnd(Real32 value) {
 	if (value == d3d9_fogEnd) return;
@@ -656,8 +648,6 @@ static void D3D9_RestoreRenderStates(void) {
 	D3D9_SetRenderState2(D3DRS_FOGCOLOR, d3d9_fogCol, "D3D9_FogColor");
 	raw.fVal = d3d9_fogDensity;
 	D3D9_SetRenderState2(D3DRS_FOGDENSITY, raw.uVal, "D3D9_FogDensity");
-	raw.fVal = d3d9_fogStart;
-	D3D9_SetRenderState2(D3DRS_FOGSTART, raw.uVal, "D3D9_FogStart");
 	raw.fVal = d3d9_fogEnd;
 	D3D9_SetRenderState2(D3DRS_FOGEND, raw.uVal, "D3D9_FogEnd");
 	D3D9_SetRenderState2(D3DRS_FOGTABLEMODE, d3d9_fogTableMode, "D3D9_FogMode");

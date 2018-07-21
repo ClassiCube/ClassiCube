@@ -6,15 +6,13 @@
 */
 
 /* Represents an ARGB colour, in a format suitable for the native graphics api. */
-typedef struct PackedCol_ {
-	union {
+typedef union PackedCol_ {
 #if CC_BUILD_D3D9
-		struct { UInt8 B; UInt8 G; UInt8 R; UInt8 A; };
+	struct { UInt8 B; UInt8 G; UInt8 R; UInt8 A; };
 #else
-		struct { UInt8 R; UInt8 G; UInt8 B; UInt8 A; };
+	struct { UInt8 R; UInt8 G; UInt8 B; UInt8 A; };
 #endif
-		UInt32 Packed;
-	};
+	UInt32 Packed;
 } PackedCol;
 
 #if CC_BUILD_D3D9

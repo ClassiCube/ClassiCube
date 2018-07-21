@@ -128,18 +128,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			Device.SetRenderState(device, RenderState.FogColor, (int)fogCol.Packed);
 		}
 
-		float fogDensity = -1, fogStart = -1, fogEnd = -1;
+		float fogDensity = -1, fogEnd = -1;
 		public override void SetFogDensity(float value) {
 			if (value == fogDensity) return;
 			fogDensity = value;
 			if (LostContext) return;
 			Device.SetRenderState(device, RenderState.FogDensity, value);
-		}
-		
-		public override void SetFogStart(float value) {
-			fogStart = value;
-			if (LostContext) return;
-			Device.SetRenderState(device, RenderState.FogStart, value);
 		}
 
 		public override void SetFogEnd(float value) {
@@ -484,7 +478,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			Device.SetRenderState(device, RenderState.FogEnable, fogEnable);
 			Device.SetRenderState(device, RenderState.FogColor, (int)fogCol.Packed);
 			Device.SetRenderState(device, RenderState.FogDensity, fogDensity);
-			Device.SetRenderState(device, RenderState.FogStart, fogStart);
 			Device.SetRenderState(device, RenderState.FogEnd, fogEnd);
 			Device.SetRenderState(device, RenderState.FogTableMode, (int)fogTableMode);
 			Device.SetRenderState(device, RenderState.ZFunc, (int)depthTestFunc);

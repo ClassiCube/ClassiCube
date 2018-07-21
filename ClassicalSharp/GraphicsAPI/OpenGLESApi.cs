@@ -56,13 +56,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		float lastFogStart = -1, lastFogEnd = -1, lastFogDensity = -1;
+		float lastFogEnd = -1, lastFogDensity = -1;
 		public override void SetFogDensity(float value) {
 			FogParam(All.FogDensity, value, ref lastFogDensity);
-		}
-		
-		public override void SetFogStart(float value) {
-			FogParam(All.FogStart, value, ref lastFogStart);
 		}
 		
 		public override void SetFogEnd(float value) {

@@ -203,10 +203,6 @@ void Gfx_SetFogDensity(Real32 value) {
 	gl_lastFogDensity = value;
 }
 
-void Gfx_SetFogStart(Real32 value) {
-	glFogf(GL_FOG_START, value);
-}
-
 void Gfx_SetFogEnd(Real32 value) {
 	if (value == gl_lastFogEnd) return;
 	glFogf(GL_FOG_END, value);

@@ -10,9 +10,11 @@ struct IGameComponent;
 struct ScheduledTask;
 
 enum REQUEST_TYPE { REQUEST_TYPE_DATA, REQUEST_TYPE_CONTENT_LENGTH };
-#define ASYNC_PROGRESS_NOTHING -3
-#define ASYNC_PROGRESS_MAKING_REQUEST -2
-#define ASYNC_PROGRESS_FETCHING_DATA -1
+enum ASYNC_PROGRESS {
+	ASYNC_PROGRESS_NOTHING = -3,
+	ASYNC_PROGRESS_MAKING_REQUEST = -2,
+	ASYNC_PROGRESS_FETCHING_DATA = -1,
+};
 
 struct AsyncRequest {
 	UChar URL[String_BufferSize(STRING_SIZE)];
@@ -37,7 +39,7 @@ void AsyncDownloader_GetSkin(STRING_PURE String* id, STRING_PURE String* skinNam
 void AsyncDownloader_GetData(STRING_PURE String* url, bool priority, STRING_PURE String* id);
 void AsyncDownloader_GetContentLength(STRING_PURE String* url, bool priority, STRING_PURE String* id);
 /* TODO: Implement post */
-//void AsyncDownloader_PostString(STRING_PURE String* url, bool priority, STRING_PURE String* id, STRING_PURE String* contents);
+/* void AsyncDownloader_PostString(STRING_PURE String* url, bool priority, STRING_PURE String* id, STRING_PURE String* contents); */
 void AsyncDownloader_GetDataEx(STRING_PURE String* url, bool priority, STRING_PURE String* id, DateTime* lastModified, STRING_PURE String* etag);
 
 bool AsyncDownloader_Get(STRING_PURE String* id, struct AsyncRequest* item);

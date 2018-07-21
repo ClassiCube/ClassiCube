@@ -556,9 +556,9 @@ void Window_ProcessEvents(void) {
 				Event_RaiseVoid(&WindowEvents_WindowStateChanged);
 			}
 
-			//if (e.xproperty.atom == net_frame_extents) {
-			//    RefreshWindowBorders();
-			//}
+			/*if (e.xproperty.atom == net_frame_extents) {
+			     RefreshWindowBorders();
+			}*/
 			break;
 
 		case SelectionNotify:
@@ -721,10 +721,9 @@ void GLContext_SetVSync(bool enabled) {
 static void GLContext_GetAttribs(struct GraphicsMode mode, Int32* attribs) {
 	Int32 i = 0;
 	struct ColorFormat color = mode.Format;
-	// See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_61/com.ibm.aix.opengl/doc/openglrf/glXChooseFBConfig.htm%23glxchoosefbconfig
-	// See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_71/com.ibm.aix.opengl/doc/openglrf/glXChooseVisual.htm%23b5c84be452rree
-	// for the attribute declarations. Note that the attributes are different than those used in Glx.ChooseVisual.
-
+	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_61/com.ibm.aix.opengl/doc/openglrf/glXChooseFBConfig.htm%23glxchoosefbconfig */
+	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_71/com.ibm.aix.opengl/doc/openglrf/glXChooseVisual.htm%23b5c84be452rree */
+	/* for the attribute declarations. Note that the attributes are different than those used in Glx.ChooseVisual */
 
 	if (!color.IsIndexed) {
 		attribs[i++] = GLX_RGBA;

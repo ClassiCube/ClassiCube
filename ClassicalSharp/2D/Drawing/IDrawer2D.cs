@@ -68,10 +68,6 @@ namespace ClassicalSharp {
 
 		protected abstract void DrawSysText(ref DrawTextArgs args, int x, int y);
 		
-		/// <summary> Draws a string using the specified arguments and fonts at the
-		/// specified coordinates in the currently bound bitmap, clipping if necessary. </summary>
-		public abstract void DrawClippedText(ref DrawTextArgs args, int x, int y, float maxWidth, float maxHeight);
-
 		protected abstract void DrawBitmappedText(ref DrawTextArgs args, int x, int y);
 		
 		public void DrawText(ref DrawTextArgs args, int x, int y) {

@@ -56,7 +56,6 @@ bool Gfx_GetFog(void);
 void Gfx_SetFog(bool enabled);
 void Gfx_SetFogCol(PackedCol col);
 void Gfx_SetFogDensity(Real32 value);
-void Gfx_SetFogStart(Real32 value);
 void Gfx_SetFogEnd(Real32 value);
 void Gfx_SetFogMode(Int32 fogMode);
 

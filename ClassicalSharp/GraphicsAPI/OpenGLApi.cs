@@ -113,10 +113,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			lastFogDensity = value;
 		}
 		
-		public override void SetFogStart(float value) {
-			GL.Fogf(FogParameter.FogStart, value);
-		}
-		
 		public override void SetFogEnd(float value) {
 			if (value == lastFogEnd) return;
 			GL.Fogf(FogParameter.FogEnd, value);

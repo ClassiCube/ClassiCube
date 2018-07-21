@@ -295,7 +295,7 @@ static void Drawer2D_DrawUnderline(struct DrawTextArgs* args, Int32 x, Int32 y, 
 			UChar c = text.buffer[i];
 			if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
 				col = Drawer2D_Cols[text.buffer[i + 1]];
-				i++; continue; // Skip over the colour code.
+				i++; continue; /* Skip over the colour code */
 			}
 
 			Int32 dstWidth = Drawer2D_Width(point, c);

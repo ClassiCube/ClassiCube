@@ -154,10 +154,12 @@ String lines10[3] = { 0 };
 WordWrap_Do(&text10, lines10, 3, 4);
 */
 
-//#include <Windows.h>
 int main_test(int argc, char* argv[]) {
 	return 0;
-	/*void* file;
+	/*
+	#include <Windows.h>
+	
+	void* file;
 	String path = String_FromConstant("H:\\PortableApps\\GitPortable\\App\\Git\\ClassicalSharp\\output\\release\\texpacks\\skybox.png");
 	ReturnCode openCode = Platform_FileOpen(&file, &path);
 	Stream fileStream;
