@@ -180,7 +180,7 @@ namespace ClassicalSharp {
 			if (!HotkeyList.IsHotkey(key, game.Input, out text, out more)) return;
 			
 			if (!more) {
-				game.Server.SendChat(text);
+				game.Chat.Send(text, false);
 			} else if (game.Gui.activeScreen == null) {
 				game.Gui.hudScreen.OpenInput(text);
 			}

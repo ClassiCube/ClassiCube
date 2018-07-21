@@ -29,7 +29,7 @@ void Chat_GetLogTime(UInt32 index, Int64* timeMS);
 
 void Chat_MakeComponent(struct IGameComponent* comp);
 void Chat_SetLogName(STRING_PURE String* name);
-void Chat_Send(STRING_PURE String* text);
+void Chat_Send(STRING_PURE String* text, bool logUsage);
 void Chat_Add(STRING_PURE String* text);
 void Chat_AddOf(STRING_PURE String* text, Int32 messageType);
 #define Chat_AddRaw(str, raw) String str = String_FromConst(raw); Chat_Add(&str);

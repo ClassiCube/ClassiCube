@@ -1669,7 +1669,7 @@ static void ChatInputWidget_OnPressedEnter(struct GuiElem* elem) {
 	/* Don't want trailing spaces in output message */
 	String text = widget->Base.Text;
 	while (text.length > 0 && text.buffer[text.length - 1] == ' ') { text.length--; }
-	if (text.length > 0) { Chat_Send(&text); }
+	if (text.length > 0) { Chat_Send(&text, true); }
 
 	String orig = String_FromRawArray(widget->OrigBuffer);
 	String_Clear(&orig);

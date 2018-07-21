@@ -45,10 +45,17 @@ namespace ClassicalSharp.Events {
 		public event EventHandler BlockDefinitionChanged;
 		public void RaiseBlockDefinitionChanged() { Raise(BlockDefinitionChanged); }
 		
-		/// <summary> Raised when the server or a client-side command sends a message. </summary>
+		/// <summary> Raised when message is being added to chat. </summary>
 		public event EventHandler<ChatEventArgs> ChatReceived;	
-		public void RaiseChatReceived(string text, MessageType type) { 
-			chatArgs.Type = type; chatArgs.Text = text; Raise(ChatReceived, chatArgs); }
+		public void RaiseChatReceived(ref string text, MessageType type) { 
+			chatArgs.Type = type; chatArgs.Text = text; 
+			Raise(ChatReceived, chatArgs); text = chatArgs.Text; }
+		
+		/// <summary> Raised when user sends a message. </summary>
+		public event EventHandler<ChatEventArgs> ChatSending;
+		public void RaiseChatSending(ref string text) { 
+			chatArgs.Type = 0; chatArgs.Text = text; 
+			Raise(ChatSending, chatArgs); text = chatArgs.Text; }
 		
 		/// <summary> Raised when the user changes chat font to arial or back to bitmapped font,
 		/// also raised when the bitmapped font changes. </summary>

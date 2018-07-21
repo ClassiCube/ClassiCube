@@ -1047,8 +1047,10 @@ static void ChatScreen_ChatReceived(void* obj, String* msg, Int32 type) {
 		screen->ChatIndex++;
 		if (Game_ChatLines == 0) return;
 
-		Int32 index = screen->ChatIndex + (Game_ChatLines - 1);
-		String chatMsg = StringsBuffer_UNSAFE_Get(&Chat_Log, index);
+		Int32 i = screen->ChatIndex + (Game_ChatLines - 1);
+		String chatMsg = *msg;
+
+		if (i < Chat_Log.Count) { chatMsg = StringsBuffer_UNSAFE_Get(&Chat_Log, i); }
 		TextGroupWidget_PushUpAndReplaceLast(&screen->Chat, &chatMsg);
 	} else if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_3) {
 		TextGroupWidget_SetText(&screen->Status, 2 + (type - MSG_TYPE_STATUS_1), msg);

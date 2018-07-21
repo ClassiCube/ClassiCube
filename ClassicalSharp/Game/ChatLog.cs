@@ -26,10 +26,11 @@ namespace ClassicalSharp {
 		public List<ChatLine> Log = new List<ChatLine>();
 		public List<string> InputLog = new List<string>();
 		
-		public void Send(string text) {
+		public void Send(string text, bool logUsage) {
 			if (String.IsNullOrEmpty(text)) return;
+			game.Events.RaiseChatSending(ref text);
+			if (logUsage) InputLog.Add(text);
 			
-			InputLog.Add(text);
 			if (game.CommandList.IsCommandPrefix(text)) {
 				game.CommandList.Execute(text);
 			} else {
@@ -42,6 +43,8 @@ namespace ClassicalSharp {
 		public void Add(string text) { Add(text, MessageType.Normal); }
 		
 		public void Add(string text, MessageType type) {
+			game.Events.RaiseChatReceived(ref text, type);
+			
 			if (type == MessageType.Normal) {
 				Log.Add(text);
 				LogChatToFile(text);
@@ -62,7 +65,6 @@ namespace ClassicalSharp {
 			} else if (type >= MessageType.ClientStatus1 && type <= MessageType.ClientStatus3) {
 				ClientStatus[(int)(type - MessageType.ClientStatus1)] = text;
 			}
-			game.Events.RaiseChatReceived(text, type);
 		}
 		
 		public void Dispose() {

@@ -399,7 +399,7 @@ static void InputHandler_KeyDown(void* obj, Int32 key) {
 		if (!Hotkeys_IsHotkey(key, &text, &more)) return;
 
 		if (!more) {
-			ServerConnection_SendChat(&text);
+			Chat_Send(&text, false);
 		} else if (Gui_Active == NULL) {
 			HUDScreen_OpenInput(Gui_HUD, &text);
 		}

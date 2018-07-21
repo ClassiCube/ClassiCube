@@ -243,8 +243,10 @@ namespace ClassicalSharp.Gui.Screens {
 				if (game.ChatLines == 0) return;
 				
 				List<ChatLine> chat = game.Chat.Log;
-				normalChat.PushUpAndReplaceLast(chat[chatIndex + chatLines - 1].Text);
-
+				int i = chatIndex + chatLines - 1;
+				
+				string text = i < chat.Count ? chat[i].Text : e.Text;
+				normalChat.PushUpAndReplaceLast(text);
 			} else if (type >= MessageType.Status1 && type <= MessageType.Status3) {
 				status.SetText(2 + (int)(type - MessageType.Status1), e.Text);
 			} else if (type >= MessageType.BottomRight1 && type <= MessageType.BottomRight3) {

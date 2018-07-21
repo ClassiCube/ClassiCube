@@ -101,13 +101,14 @@ struct Event_Void UserEvents_HeldBlockChanged;       /* Held block in hotbar cha
 struct Event_Void BlockEvents_PermissionsChanged; /* Block permissions (can place/delete) for a block changes. */
 struct Event_Void BlockEvents_BlockDefChanged;    /* Block definition is changed or removed. */
 
-struct Event_Void WorldEvents_NewMap;         /* Player begins loading a new world. */
-struct Event_Real WorldEvents_Loading;   /* Portion of world is decompressed/generated. (Arg is progress from 0-1) */
-struct Event_Void WorldEvents_MapLoaded;      /* New world has finished loading, player can now interact with it. */
+struct Event_Void WorldEvents_NewMap;       /* Player begins loading a new world. */
+struct Event_Real WorldEvents_Loading;      /* Portion of world is decompressed/generated. (Arg is progress from 0-1) */
+struct Event_Void WorldEvents_MapLoaded;    /* New world has finished loading, player can now interact with it. */
 struct Event_Int WorldEvents_EnvVarChanged; /* World environment variable changed by player/CPE/WoM config. */
 
-struct Event_Void ChatEvents_FontChanged;     /* User changes whether system chat font used, and when the bitmapped font texture changes. */
-struct Event_Chat ChatEvents_ChatReceived;    /* Raised when the server or a client-side command sends a message */
+struct Event_Void ChatEvents_FontChanged;   /* User changes whether system chat font used, and when the bitmapped font texture changes. */
+struct Event_Chat ChatEvents_ChatReceived;  /* Raised when message is being added to chat */
+struct Event_Chat ChatEvents_ChatSending;   /* Raised when user sends a message */
 struct Event_Int ChatEvents_ColCodeChanged; /* Raised when a colour code changes */
 
 struct Event_Void WindowEvents_Redraw;             /* Window contents invalidated, should be redrawn */

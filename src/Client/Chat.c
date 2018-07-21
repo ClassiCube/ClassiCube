@@ -132,6 +132,8 @@ static void Chat_AppendLog(STRING_PURE String* text) {
 
 void Chat_Add(STRING_PURE String* text) { Chat_AddOf(text, MSG_TYPE_NORMAL); }
 void Chat_AddOf(STRING_PURE String* text, Int32 msgType) {
+	Event_RaiseChat(&ChatEvents_ChatReceived, text, msgType);
+
 	if (msgType == MSG_TYPE_NORMAL) {
 		StringsBuffer_Add(&Chat_Log, text);
 		Chat_AppendLog(text);
@@ -145,7 +147,6 @@ void Chat_AddOf(STRING_PURE String* text, Int32 msgType) {
 	} else if (msgType >= MSG_TYPE_CLIENTSTATUS_1 && msgType <= MSG_TYPE_CLIENTSTATUS_3) {
 		ChatLine_Make(&Chat_ClientStatus[msgType - MSG_TYPE_CLIENTSTATUS_1], text);
 	}
-	Event_RaiseChat(&ChatEvents_ChatReceived, text, msgType);
 }
 
 
@@ -541,9 +542,10 @@ static void TeleportCommand_Make(struct ChatCommand* cmd) {
 /*########################################################################################################################*
 *-------------------------------------------------------Generic chat------------------------------------------------------*
 *#########################################################################################################################*/
-void Chat_Send(STRING_PURE String* text) {
+void Chat_Send(STRING_PURE String* text, bool logUsage) {
 	if (text->length == 0) return;
-	StringsBuffer_Add(&Chat_InputLog, text);
+	Event_RaiseChat(&ChatEvents_ChatSending, text, 0);
+	if (logUsage) StringsBuffer_Add(&Chat_InputLog, text);
 
 	if (Commands_IsCommandPrefix(text)) {
 		Commands_Execute(text);
