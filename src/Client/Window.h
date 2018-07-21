@@ -33,10 +33,10 @@
    OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#define WINDOW_STATE_NORMAL 0
-#define WINDOW_STATE_MINIMISED 1
-#define WINDOW_STATE_MAXIMISED 2
-#define WINDOW_STATE_FULLSCREEN 3
+enum WINDOW_STATE {
+	WINDOW_STATE_NORMAL, WINDOW_STATE_MINIMISED,
+	WINDOW_STATE_MAXIMISED, WINDOW_STATE_FULLSCREEN,
+};
 
 void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, 
 	struct GraphicsMode* mode, struct DisplayDevice* device);
@@ -81,7 +81,6 @@ void GLContext_Free(void);
 #define GLContext_IsInvalidAddress(ptr) (ptr == (void*)0 || ptr == (void*)1 || ptr == (void*)-1 || ptr == (void*)2)
 void* GLContext_GetAddress(const UChar* function);
 void GLContext_SwapBuffers(void);
-bool GLContext_GetVSync(void);
 void GLContext_SetVSync(bool enabled);
 #endif
 #endif

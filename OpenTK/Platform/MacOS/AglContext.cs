@@ -10,7 +10,6 @@ namespace OpenTK.Platform.MacOS {
 
 	class AglContext : IGraphicsContext {
 		
-		bool mVSync = false;
 		// Todo: keep track of which display adapter was specified when the context was created.
 		// IntPtr displayID;
 		bool mIsFullscreen = false;
@@ -182,11 +181,9 @@ namespace OpenTK.Platform.MacOS {
 		}
 
 		public override bool VSync {
-			get { return mVSync; }
 			set {
 				int intVal = value ? 1 : 0;
 				Agl.aglSetInteger(ContextHandle, Agl.AGL_SWAP_INTERVAL, ref intVal);
-				mVSync = value;
 			}
 		}
 

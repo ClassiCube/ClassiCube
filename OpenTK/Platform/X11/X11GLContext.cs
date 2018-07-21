@@ -18,7 +18,6 @@ namespace OpenTK.Platform.X11 {
 		#if !USE_DX
 		X11Window cur;
 		bool vsync_supported;
-		int vsync_interval;
 
 		public X11GLContext(GraphicsMode mode, X11Window window) {
 			Debug.Print("Creating X11GLContext context: ");
@@ -54,14 +53,10 @@ namespace OpenTK.Platform.X11 {
 		}
 
 		public override bool VSync {
-			get { return vsync_supported && vsync_interval != 0; }
 			set {
-				if (vsync_supported) {
-					int result = Glx.glXSwapIntervalSGI(value ? 1 : 0);
-					if (result != 0)
-						Debug.Print("VSync = {0} failed, error code: {1}.", value, result);
-					vsync_interval = value ? 1 : 0;
-				}
+				if (!vsync_supported) return;
+				int result = Glx.glXSwapIntervalSGI(value ? 1 : 0);
+				if (result != 0) Debug.Print("VSync = {0} failed, error {1}.", value, result);
 			}
 		}
 

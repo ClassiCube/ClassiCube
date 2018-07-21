@@ -19,26 +19,16 @@ namespace OpenTK.Platform.Windows {
 		}
 		
 		internal static void LoadEntryPoints() {
-			IntPtr address = GetAddress("wglGetSwapIntervalEXT");
-			if (address != IntPtr.Zero) {
-				wglGetSwapIntervalEXT = (GetSwapIntervalEXT)Marshal.GetDelegateForFunctionPointer(
-					address, typeof(GetSwapIntervalEXT));
-			}
+			IntPtr address = GetAddress("wglSwapIntervalEXT");
+			if (address == IntPtr.Zero) return;
 			
-			address = GetAddress("wglSwapIntervalEXT");
-			if (address != IntPtr.Zero) {
-				wglSwapIntervalEXT = (SwapIntervalEXT)Marshal.GetDelegateForFunctionPointer(
-					address, typeof(SwapIntervalEXT));
-			}
+			wglSwapIntervalEXT = (SwapIntervalEXT)Marshal.GetDelegateForFunctionPointer(
+				address, typeof(SwapIntervalEXT));
 		}
 
 		[SuppressUnmanagedCodeSecurity]
 		internal delegate Boolean SwapIntervalEXT(int interval);
 		internal static SwapIntervalEXT wglSwapIntervalEXT;
-		
-		[SuppressUnmanagedCodeSecurity]
-		internal delegate int GetSwapIntervalEXT();
-		internal static GetSwapIntervalEXT wglGetSwapIntervalEXT;
 		
 		[DllImport("OPENGL32.DLL", SetLastError = true)]
 		internal extern static IntPtr wglCreateContext(IntPtr hDc);		

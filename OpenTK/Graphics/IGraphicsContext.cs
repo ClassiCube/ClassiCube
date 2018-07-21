@@ -17,7 +17,7 @@ namespace OpenTK.Graphics {
     	
         public abstract void SwapBuffers();
 
-        public abstract bool VSync { get; set; }
+        public abstract bool VSync { set; }
 
         public virtual void Update(INativeWindow window) { }
         

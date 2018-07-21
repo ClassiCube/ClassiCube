@@ -100,9 +100,6 @@
     <Filter Include="Header Files\Entities">
       <UniqueIdentifier>{dead5fb3-a62a-4eb7-8d74-ce73e66ab9e6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Rendering\Env">
-      <UniqueIdentifier>{8ceea67c-909a-4224-824e-30407393055e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Rendering\Map">
       <UniqueIdentifier>{7704f4d9-92d9-424b-904f-80ec51f313f6}</UniqueIdentifier>
     </Filter>
@@ -231,9 +228,6 @@
     <ClInclude Include="2DStructs.h">
       <Filter>Header Files\2D\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="EnvRenderer.h">
-      <Filter>Header Files\Rendering\Env</Filter>
-    </ClInclude>
     <ClInclude Include="MapGenerator.h">
       <Filter>Header Files\Generator</Filter>
     </ClInclude>
@@ -344,6 +338,9 @@
     </ClInclude>
     <ClInclude Include="Window.h">
       <Filter>Header Files\Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="EnvRenderer.h">
+      <Filter>Header Files\Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

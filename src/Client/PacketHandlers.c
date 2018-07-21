@@ -207,7 +207,7 @@ static void WoM_CheckMotd(void) {
 static void WoM_CheckSendWomID(void) {
 	if (wom_sendId && !wom_sentId) {
 		String msg = String_FromConst("/womid WoMClient-2.0.7");
-		ServerConnection_SendChat(&msg);
+		Chat_Send(&msg, false);
 		wom_sentId = true;
 	}
 }

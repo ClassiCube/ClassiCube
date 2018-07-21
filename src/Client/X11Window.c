@@ -668,7 +668,6 @@ GLXContext ctx_Handle;
 typedef int (*FN_GLXSWAPINTERVAL)(int interval);
 FN_GLXSWAPINTERVAL glXSwapIntervalSGI;
 bool ctx_supports_vSync;
-Int32 ctx_vsync_interval;
 
 void GLContext_Init(struct GraphicsMode mode) {
 	ctx_Handle = glXCreateContext(win_display, &win_visual, NULL, true);
@@ -712,18 +711,11 @@ void GLContext_SwapBuffers(void) {
 	glXSwapBuffers(win_display, win_handle);
 }
 
-bool GLContext_GetVSync(void) {
-	return ctx_supports_vSync && ctx_vsync_interval;
-}
-
 void GLContext_SetVSync(bool enabled) {
 	if (!ctx_supports_vSync) return;
 
 	int result = glXSwapIntervalSGI(enabled);
-	if (result != 0) {
-		Platform_Log1("Set VSync failed, error: %i", &result);
-	}
-	ctx_vsync_interval = enabled;
+	if (result != 0) {Platform_Log1("Set VSync failed, error: %i", &result); }
 }
 
 static void GLContext_GetAttribs(struct GraphicsMode mode, Int32* attribs) {

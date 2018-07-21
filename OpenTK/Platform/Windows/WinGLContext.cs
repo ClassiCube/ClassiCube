@@ -46,9 +46,9 @@ namespace OpenTK.Platform.Windows {
 				                                  "Error: " + Marshal.GetLastWin32Error());
 			}
 			
-			dc = Wgl.wglGetCurrentDC();		
+			dc = Wgl.wglGetCurrentDC();
 			Wgl.LoadEntryPoints();
-			vsync_supported = Wgl.wglGetSwapIntervalEXT != null && Wgl.wglSwapIntervalEXT != null;
+			vsync_supported = Wgl.wglSwapIntervalEXT != null;
 		}
 
 		public override void SwapBuffers() {
@@ -58,10 +58,8 @@ namespace OpenTK.Platform.Windows {
 		}
 
 		public override bool VSync {
-			get { return vsync_supported && Wgl.wglGetSwapIntervalEXT() != 0; }
 			set {
-				if (vsync_supported)
-					Wgl.wglSwapIntervalEXT(value ? 1 : 0);
+				if (vsync_supported) Wgl.wglSwapIntervalEXT(value ? 1 : 0);
 			}
 		}
 

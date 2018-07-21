@@ -673,9 +673,7 @@ void GLContext_SelectGraphicsMode(struct GraphicsMode mode) {
 HGLRC ctx_Handle;
 HDC ctx_DC;
 typedef BOOL (WINAPI *FN_WGLSWAPINTERVAL)(int interval);
-typedef int (WINAPI *FN_WGLGETSWAPINTERVAL)(void);
 FN_WGLSWAPINTERVAL wglSwapIntervalEXT;
-FN_WGLGETSWAPINTERVAL wglGetSwapIntervalEXT;
 bool ctx_supports_vSync;
 
 void GLContext_Init(struct GraphicsMode mode) {
@@ -691,11 +689,10 @@ void GLContext_Init(struct GraphicsMode mode) {
 	if (!wglMakeCurrent(win_DC, ctx_Handle)) {
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to make OpenGL context current");
 	}
-	ctx_DC = wglGetCurrentDC();
 
-	wglGetSwapIntervalEXT = (FN_WGLGETSWAPINTERVAL)GLContext_GetAddress("wglGetSwapIntervalEXT");
+	ctx_DC = wglGetCurrentDC();
 	wglSwapIntervalEXT = (FN_WGLSWAPINTERVAL)GLContext_GetAddress("wglSwapIntervalEXT");
-	ctx_supports_vSync = wglGetSwapIntervalEXT != NULL && wglSwapIntervalEXT != NULL;
+	ctx_supports_vSync = wglSwapIntervalEXT != NULL;
 }
 
 void GLContext_Update(void) { }
@@ -715,10 +712,6 @@ void GLContext_SwapBuffers(void) {
 	if (!SwapBuffers(ctx_DC)) {
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to swap buffers");
 	}
-}
-
-bool GLContext_GetVSync(void) {
-	return ctx_supports_vSync && wglGetSwapIntervalEXT();
 }
 
 void GLContext_SetVSync(bool enabled) {
