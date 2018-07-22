@@ -902,7 +902,7 @@ static void CPE_MakeSelection(struct Stream* stream) {
 	col.R = (UInt8)Stream_ReadU16_BE(stream);
 	col.G = (UInt8)Stream_ReadU16_BE(stream);
 	col.B = (UInt8)Stream_ReadU16_BE(stream);
-	col.A = (UInt8)Stream_Readu16_BE(stream);
+	col.A = (UInt8)Stream_ReadU16_BE(stream);
 
 	Selections_Add(selectionId, p1, p2, col);
 }

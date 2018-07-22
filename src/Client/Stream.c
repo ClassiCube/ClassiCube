@@ -272,6 +272,26 @@ void Stream_ReadonlyBuffered(struct Stream* stream, struct Stream* source, void*
 /*########################################################################################################################*
 *-------------------------------------------------Read/Write primitives---------------------------------------------------*
 *#########################################################################################################################*/
+UInt16 Stream_GetU16_LE(UInt8* data) {
+	return (UInt16)(data[0] | (data[1] << 8));
+}
+
+UInt16 Stream_GetU16_BE(UInt8* data) {
+	return (UInt16)((data[0] << 8) | data[1]);
+}
+
+UInt32 Stream_GetU32_LE(UInt8* data) {
+	return (UInt32)(
+		 (UInt32)data[0]        | ((UInt32)data[1] << 8) |
+		((UInt32)data[2] << 16) | ((UInt32)data[3] << 24));
+}
+
+UInt32 Stream_GetU32_BE(UInt8* data) {
+	return (UInt32)(
+		((UInt32)data[0] << 24) | ((UInt32)data[1] << 16) |
+		((UInt32)data[2] << 8)  |  (UInt32)data[3]);
+}
+
 UInt8 Stream_ReadU8(struct Stream* stream) {
 	UInt8 buffer;
 	UInt32 read;
@@ -283,29 +303,25 @@ UInt8 Stream_ReadU8(struct Stream* stream) {
 UInt16 Stream_ReadU16_LE(struct Stream* stream) {
 	UInt8 buffer[sizeof(UInt16)];
 	Stream_Read(stream, buffer, sizeof(UInt16));
-	return (UInt16)(buffer[0] | (buffer[1] << 8));
+	return Stream_GetU16_LE(buffer);
 }
 
 UInt16 Stream_ReadU16_BE(struct Stream* stream) {
 	UInt8 buffer[sizeof(UInt16)];
 	Stream_Read(stream, buffer, sizeof(UInt16));
-	return (UInt16)((buffer[0] << 8) | buffer[1]);
+	return Stream_GetU16_BE(buffer);
 }
 
 UInt32 Stream_ReadU32_LE(struct Stream* stream) {
 	UInt8 buffer[sizeof(UInt32)];
 	Stream_Read(stream, buffer, sizeof(UInt32));
-	return (UInt32)(
-		(UInt32)buffer[0]         | ((UInt32)buffer[1] << 8) | 
-		((UInt32)buffer[2] << 16) | ((UInt32)buffer[3] << 24));
+	return Stream_GetU32_LE(buffer);
 }
 
 UInt32 Stream_ReadU32_BE(struct Stream* stream) {
 	UInt8 buffer[sizeof(UInt32)];
 	Stream_Read(stream, buffer, sizeof(UInt32));
-	return (UInt32)(
-		((UInt32)buffer[0] << 24) | ((UInt32)buffer[1] << 16) |
-		((UInt32)buffer[2] << 8)  | (UInt32)buffer[3]);
+	return Stream_GetU32_BE(buffer);
 }
 
 void Stream_WriteU8(struct Stream* stream, UInt8 value) {

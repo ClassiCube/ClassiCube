@@ -61,6 +61,11 @@ void Stream_WriteonlyMemory(struct Stream* stream, void* data, UInt32 len, STRIN
 void Stream_ReadonlyBuffered(struct Stream* stream, struct Stream* source, void* data, UInt32 size);
 
 
+UInt16 Stream_GetU16_LE(UInt8* data);
+UInt16 Stream_GetU16_BE(UInt8* data);
+UInt32 Stream_GetU32_LE(UInt8* data);
+UInt32 Stream_GetU32_BE(UInt8* data);
+
 UInt8 Stream_ReadU8(struct Stream* stream);
 UInt16 Stream_ReadU16_LE(struct Stream* stream);
 UInt16 Stream_ReadU16_BE(struct Stream* stream);

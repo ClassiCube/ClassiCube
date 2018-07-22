@@ -353,7 +353,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 			static UInt32 samplesPerPixel[7] = { 1, 0, 3, 1, 2, 0, 4 };
 			bytesPerPixel = ((samplesPerPixel[col] * bitsPerSample) + 7) >> 3;
 			scanlineSize = ((samplesPerPixel[col] * bitsPerSample * bmp->Width) + 7) >> 3;
-			scanlineBytes = scanlineSize + 1; /* Add 1 byte for filter byte of each scanline */			
+			scanlineBytes = scanlineSize + 1; /* Add 1 byte for filter byte of each scanline */
 
 			Platform_MemSet(buffer, 0, scanlineBytes); /* Prior row should be 0 per PNG spec */
 			bufferIdx = scanlineBytes;
@@ -437,12 +437,12 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 
 				for (rowY = startY; rowY < endY; rowY++, curY++) {
 					UInt32 priorY = rowY == 0 ? bufferRows : rowY;
-					UInt8* prior    = &buffer[(priorY - 1) * scanlineBytes];
+					UInt8* prior = &buffer[(priorY - 1) * scanlineBytes];
 					UInt8* scanline = &buffer[rowY         * scanlineBytes];
 
 					Png_Reconstruct(scanline[0], bytesPerPixel, &scanline[1], &prior[1], scanlineSize);
 					rowExpander(bitsPerSample, bmp->Width, palette, &scanline[1], Bitmap_GetRow(bmp, curY));
-				}			
+				}
 			}
 		} break;
 
@@ -454,7 +454,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 		default:
 			Stream_Skip(stream, dataSize);
 			break;
-
+		}
 		Stream_ReadU32_BE(stream); /* Skip CRC32 */
 	}
 

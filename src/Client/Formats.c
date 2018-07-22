@@ -144,24 +144,26 @@ void Fcm_Load(struct Stream* stream) {
 	if (Stream_ReadU8(stream) != FCM_REVISION) {
 		ErrorHandler_Fail("Invalid revision in .fcm file");
 	}
+	UInt8 header[74];
+	Stream_Read(stream, header, (3 * 2) + (3 * 4) + (2 * 1)
+		+ (2 * 4) + 16 + 26 + 4);
 
-	World_Width  = Stream_ReadU16_LE(stream);
-	World_Length = Stream_ReadU16_LE(stream);
-	World_Height = Stream_ReadU16_LE(stream);
+	World_Width  = Stream_GetU16_LE(&header[0]);
+	World_Height = Stream_GetU16_LE(&header[2]);
+	World_Length = Stream_GetU16_LE(&header[4]);
 
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	p->Spawn.X = ((Int32)Stream_ReadU32_LE(stream)) / 32.0f;
-	p->Spawn.Y = ((Int32)Stream_ReadU32_LE(stream)) / 32.0f;
-	p->Spawn.Z = ((Int32)Stream_ReadU32_LE(stream)) / 32.0f;
-	p->SpawnRotY  = Math_Packed2Deg(Stream_ReadU8(stream));
-	p->SpawnHeadX = Math_Packed2Deg(Stream_ReadU8(stream));
+	p->Spawn.X = ((Int32)Stream_GetU32_LE(&header[ 6])) / 32.0f;
+	p->Spawn.Y = ((Int32)Stream_GetU32_LE(&header[10])) / 32.0f;
+	p->Spawn.Z = ((Int32)Stream_GetU32_LE(&header[14])) / 32.0f;
+	p->SpawnRotY  = Math_Packed2Deg(header[18]);
+	p->SpawnHeadX = Math_Packed2Deg(header[19]);
 
-	UInt8 tmp[26];
-	Stream_Read(stream, tmp, 4); /* date modified */
-	Stream_Read(stream, tmp, 4); /* date created */
-	Stream_Read(stream, World_Uuid, sizeof(World_Uuid));
-	Stream_Read(stream, tmp, 26); /* layer index */
-	Int32 metaSize = Stream_ReadU32_LE(stream);
+	/* (4) date modified */
+	/* (4) date created */
+	Platform_MemCpy(&World_Uuid, &header[28], sizeof(World_Uuid));
+	/* (26) layer index */
+	Int32 metaSize = (Int32)Stream_GetU32_LE(&header[70]);
 
 	struct Stream compStream;
 	struct InflateState state;
