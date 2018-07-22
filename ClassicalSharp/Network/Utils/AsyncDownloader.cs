@@ -82,12 +82,6 @@ public interface IGameComponent { }
 			           DateTime.MinValue, null, null);
 		}
 		
-		public void AsyncGetImage(string url, bool priority, string identifier,
-		                          DateTime lastModified, string etag) {
-			AddRequest(url, priority, identifier, RequestType.Bitmap,
-			           lastModified, etag, null);
-		}
-		
 		public void AsyncGetData(string url, bool priority, string identifier,
 		                         DateTime lastModified, string etag) {
 			AddRequest(url, priority, identifier, RequestType.ByteArray,

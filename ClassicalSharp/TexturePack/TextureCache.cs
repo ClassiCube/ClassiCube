@@ -75,19 +75,7 @@ namespace ClassicalSharp.Textures {
 			}
 			return null;
 		}
-		
-		
-		/// <summary> Adds the url and the bitmap associated with it to the cache. </summary>
-		public static void Add(string url, Bitmap bmp) {
-			string path = MakePath(url);
-			try {
-				using (Stream fs = Platform.FileCreate(path)) {
-					Platform.WriteBmp(bmp, fs);
-				}
-			} catch (IOException ex) {
-				ErrorHandler.LogError("Cache.AddToCache", ex);
-			}
-		}
+
 		
 		/// <summary> Adds the url and the data associated with it to the cache. </summary>
 		public static void Add(string url, byte[] data) {

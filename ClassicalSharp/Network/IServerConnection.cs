@@ -88,29 +88,17 @@ namespace ClassicalSharp {
 			}
 
 			TexturePack.ExtractCurrent(game, url);
-			if (url.Contains(".zip")) {
-				game.Downloader.AsyncGetData(url, true, "texturePack", lastModified, etag);
-			} else {
-				game.Downloader.AsyncGetImage(url, true, "terrain", lastModified, etag);
-			}
+			game.Downloader.AsyncGetData(url, true, "texturePack", lastModified, etag);
 		}
 		
 		protected void CheckAsyncResources() {
 			Request item;
-			if (game.Downloader.TryGetItem("terrain", out item)) {
-				if (item.Data != null) {
-					TexturePack.ExtractTerrainPng(game, item);
-				} else {
-					LogResourceFail(item);
-				}
-			}
+			if (!game.Downloader.TryGetItem("texturePack", out item)) return;
 			
-			if (game.Downloader.TryGetItem("texturePack", out item)) {
-				if (item.Data != null) {
-					TexturePack.ExtractTexturePack(game, item);
-				} else {
-					LogResourceFail(item);
-				}
+			if (item.Data != null) {
+				TexturePack.Extract(game, item);
+			} else {
+				LogResourceFail(item);
 			}
 		}
 		

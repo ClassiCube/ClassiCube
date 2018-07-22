@@ -53,13 +53,13 @@ namespace ClassicalSharp.Textures {
 			ZipReader reader = new ZipReader();
 			reader.ProcessZipEntry = ProcessZipEntry;
 			reader.Extract(stream);
-		}		
+		}
 		
 		static void ProcessZipEntry(string filename, byte[] data, ZipEntry entry) {
 			string name = Utils.ToLower(filename);
 			name = Utils.GetFilename(name);
 			game.Events.RaiseTextureChanged(name, data);
-		}	
+		}
 		
 		static void ExtractTerrainPng(Game game, Stream data, string url) {
 			// Must read into a MemoryStream, because stream duration must be lifetime of bitmap
@@ -77,29 +77,33 @@ namespace ClassicalSharp.Textures {
 			ms.Dispose();
 		}
 		
-		
-		internal static void ExtractTerrainPng(Game game, Request item) {
-			game.World.TextureUrl = item.Url;
-			game.Events.RaiseTexturePackChanged();
-			
-			Bitmap bmp = (Bitmap)item.Data;
-			TextureCache.Add(item.Url, bmp);
-			TextureCache.AddETag(item.Url, item.ETag);
-			TextureCache.AdddLastModified(item.Url, item.LastModified);
-			
-			if (!game.ChangeTerrainAtlas(bmp)) bmp.Dispose();
+		static byte[] png_sig = new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 };
+		static bool DetectPng(byte[] data) {
+			if (data.Length < png_sig.Length) return false;
+
+			for (int i = 0; i < png_sig.Length; i++) {
+				if (data[i] != png_sig[i]) return false;
+			}
+			return true;
 		}
 		
-		internal static void ExtractTexturePack(Game game, Request item) {
+		internal static void Extract(Game game, Request item) {
 			game.World.TextureUrl = item.Url;
 			byte[] data = (byte[])item.Data;
+			bool isPng = DetectPng(data);
 			
 			TextureCache.Add(item.Url, data);
 			TextureCache.AddETag(item.Url, item.ETag);
 			TextureCache.AdddLastModified(item.Url, item.LastModified);
 			
 			using (Stream ms = new MemoryStream(data)) {
-				ExtractZip(ms, game);
+				if (!isPng) {
+					ExtractZip(ms, game);
+				} else {
+					game.Events.RaiseTexturePackChanged();
+					Bitmap bmp = Platform.ReadBmp(game.Drawer2D, ms);					
+					if (!game.ChangeTerrainAtlas(bmp)) bmp.Dispose();
+				}
 			}
 		}
 

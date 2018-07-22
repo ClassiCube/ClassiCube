@@ -128,7 +128,7 @@ namespace ClassicalSharp.Gui.Screens {
 		StringBuffer lastDownload = new StringBuffer(48);
 		void CheckOtherStatuses() {
 			Request item = game.Downloader.CurrentItem;
-			if (item == null || !(item.Identifier == "terrain" || item.Identifier == "texturePack")) {
+			if (item == null || item.Identifier != "texturePack") {
 				if (status.Textures[1].IsValid) status.SetText(1, null);
 				lastDownloadStatus = int.MinValue;
 				return;
