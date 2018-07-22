@@ -166,6 +166,7 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 		if (sig != ZIP_SIG_LOCALFILEHEADER) return ZIP_ERR_INVALID_LOCAL_DIR;
 		Zip_ReadLocalFileHeader(state, entry);
 	}
+	return 0;
 }
 
 

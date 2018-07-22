@@ -154,7 +154,7 @@ void Fcm_Load(struct Stream* stream) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	p->Spawn.X = Stream_ReadI32_LE(stream) / 32.0f;
 	p->Spawn.Y = Stream_ReadI32_LE(stream) / 32.0f;
-	p->Spawn.Z = Stream_ReadI16_LE(stream) / 32.0f;
+	p->Spawn.Z = Stream_ReadI32_LE(stream) / 32.0f;
 	p->SpawnRotY = Math_Packed2Deg(Stream_ReadU8(stream));
 	p->SpawnHeadX = Math_Packed2Deg(Stream_ReadU8(stream));
 

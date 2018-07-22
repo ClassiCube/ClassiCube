@@ -463,7 +463,9 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 	if (transparentCol <= PNG_RGB_MASK) {
 		Png_ComputeTransparency(bmp, transparentCol);
 	}
+
 	if (bmp->Scan0 == NULL) ErrorHandler_Fail("Invalid PNG image");
+	return 0;
 }
 
 
