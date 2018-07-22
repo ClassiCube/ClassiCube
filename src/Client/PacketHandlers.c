@@ -512,9 +512,9 @@ static void Classic_EntityTeleport(struct Stream* stream) {
 static void Classic_RelPosAndOrientationUpdate(struct Stream* stream) {
 	EntityID id = Stream_ReadU8(stream);
 	Vector3 pos;
-	pos.X = Stream_ReadI8(stream) / 32.0f;
-	pos.Y = Stream_ReadI8(stream) / 32.0f;
-	pos.Z = Stream_ReadI8(stream) / 32.0f;
+	pos.X = ((Int8)Stream_ReadU8(stream)) / 32.0f;
+	pos.Y = ((Int8)Stream_ReadU8(stream)) / 32.0f;
+	pos.Z = ((Int8)Stream_ReadU8(stream)) / 32.0f;
 
 	Real32 rotY  = Math_Packed2Deg(Stream_ReadU8(stream));
 	Real32 headX = Math_Packed2Deg(Stream_ReadU8(stream));
@@ -525,9 +525,9 @@ static void Classic_RelPosAndOrientationUpdate(struct Stream* stream) {
 static void Classic_RelPositionUpdate(struct Stream* stream) {
 	EntityID id = Stream_ReadU8(stream);
 	Vector3 pos;
-	pos.X = Stream_ReadI8(stream) / 32.0f;
-	pos.Y = Stream_ReadI8(stream) / 32.0f;
-	pos.Z = Stream_ReadI8(stream) / 32.0f;
+	pos.X = ((Int8)Stream_ReadU8(stream)) / 32.0f;
+	pos.Y = ((Int8)Stream_ReadU8(stream)) / 32.0f;
+	pos.Z = ((Int8)Stream_ReadU8(stream)) / 32.0f;
 
 	struct LocationUpdate update; LocationUpdate_MakePos(&update, pos, true);
 	Handlers_UpdateLocation(id, &update, true);
@@ -749,7 +749,7 @@ static void CPE_ExtInfo(struct Stream* stream) {
 
 	/* Workaround for old MCGalaxy that send ExtEntry sync but ExtInfo async. This means
 	   ExtEntry may sometimes arrive before ExtInfo, thus have to use += instead of = */
-	cpe_serverExtensionsCount += Stream_ReadI16_BE(stream);
+	cpe_serverExtensionsCount += Stream_ReadU16_BE(stream);
 	CPE_SendCpeExtInfoReply();
 }
 
@@ -827,9 +827,9 @@ static void CPE_SetTextHotkey(struct Stream* stream) {
 	String label  = Handlers_ReadString(stream, labelBuffer);
 	String action = Handlers_ReadString(stream, actionBuffer);
 
-	Int32 keyCode = Stream_ReadI32_BE(stream);
-	UInt8 keyMods = Stream_ReadU8(stream);
-	if (keyCode < 0 || keyCode > 255) return;
+	UInt32 keyCode = Stream_ReadU32_BE(stream);
+	UInt8 keyMods  = Stream_ReadU8(stream);
+	if (keyCode > 255) return;
 
 	Key key = Hotkeys_LWJGL[keyCode];
 	if (key == Key_None) return;
@@ -850,7 +850,7 @@ static void CPE_ExtAddPlayerName(struct Stream* stream) {
 	UChar listNameBuffer[String_BufferSize(STRING_SIZE)];
 	UChar groupNameBuffer[String_BufferSize(STRING_SIZE)];
 
-	Int32 id = Stream_ReadI16_BE(stream) & 0xFF;
+	Int32 id = Stream_ReadU16_BE(stream) & 0xFF;
 	String playerName = Handlers_ReadString(stream, playerNameBuffer);
 	String listName   = Handlers_ReadString(stream, listNameBuffer);
 	String groupName  = Handlers_ReadString(stream, groupNameBuffer);
@@ -879,7 +879,7 @@ static void CPE_ExtAddEntity(struct Stream* stream) {
 }
 
 static void CPE_ExtRemovePlayerName(struct Stream* stream) {
-	Int32 id = Stream_ReadI16_BE(stream) & 0xFF;
+	Int32 id = Stream_ReadU16_BE(stream) & 0xFF;
 	Handlers_RemoveTablistEntry((EntityID)id);
 }
 
@@ -899,10 +899,10 @@ static void CPE_MakeSelection(struct Stream* stream) {
 	p2.Z = Stream_ReadI16_BE(stream);
 
 	PackedCol col;
-	col.R = (UInt8)Stream_ReadI16_BE(stream);
-	col.G = (UInt8)Stream_ReadI16_BE(stream);
-	col.B = (UInt8)Stream_ReadI16_BE(stream);
-	col.A = (UInt8)Stream_ReadI16_BE(stream);
+	col.R = (UInt8)Stream_ReadU16_BE(stream);
+	col.G = (UInt8)Stream_ReadU16_BE(stream);
+	col.B = (UInt8)Stream_ReadU16_BE(stream);
+	col.A = (UInt8)Stream_Readu16_BE(stream);
 
 	Selections_Add(selectionId, p1, p2, col);
 }
@@ -914,10 +914,10 @@ static void CPE_RemoveSelection(struct Stream* stream) {
 
 static void CPE_SetEnvCol(struct Stream* stream) {
 	UInt8 variable = Stream_ReadU8(stream);
-	Int16 r = Stream_ReadI16_BE(stream);
-	Int16 g = Stream_ReadI16_BE(stream);
-	Int16 b = Stream_ReadI16_BE(stream);
-	bool invalid = r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255;
+	UInt16 r = Stream_ReadU16_BE(stream);
+	UInt16 g = Stream_ReadU16_BE(stream);
+	UInt16 b = Stream_ReadU16_BE(stream);
+	bool invalid = r > 255 || g > 255 || b > 255;
 	PackedCol col = PACKEDCOL_CONST((UInt8)r, (UInt8)g, (UInt8)b, 255);
 
 	if (variable == 0) {

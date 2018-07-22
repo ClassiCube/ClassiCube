@@ -50,7 +50,7 @@ void Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count);
 ReturnCode Stream_TryWrite(struct Stream* stream, UInt8* buffer, UInt32 count);
 Int32 Stream_TryReadByte(struct Stream* stream);
 void Stream_SetName(struct Stream* stream, STRING_PURE String* name);
-ReturnCode Stream_Skip(struct Stream* stream, UInt32 count);
+void Stream_Skip(struct Stream* stream, UInt32 count);
 void Stream_SetDefaultOps(struct Stream* stream);
 
 void Stream_FromFile(struct Stream* stream, void* file, STRING_PURE String* name);
@@ -62,27 +62,18 @@ void Stream_ReadonlyBuffered(struct Stream* stream, struct Stream* source, void*
 
 
 UInt8 Stream_ReadU8(struct Stream* stream);
-#define Stream_ReadI8(stream) ((Int8)Stream_ReadU8(stream))
 UInt16 Stream_ReadU16_LE(struct Stream* stream);
-#define Stream_ReadI16_LE(stream) ((Int16)Stream_ReadU16_LE(stream))
 UInt16 Stream_ReadU16_BE(struct Stream* stream);
-#define Stream_ReadI16_BE(stream) ((Int16)Stream_ReadU16_BE(stream))
 UInt32 Stream_ReadU32_LE(struct Stream* stream);
-#define Stream_ReadI32_LE(stream) ((Int32)Stream_ReadU32_LE(stream))
 UInt32 Stream_ReadU32_BE(struct Stream* stream);
+#define Stream_ReadI16_BE(stream) ((Int16)Stream_ReadU16_BE(stream))
 #define Stream_ReadI32_BE(stream) ((Int32)Stream_ReadU32_BE(stream))
-UInt64 Stream_ReadU64_BE(struct Stream* stream);
-#define Stream_ReadI64_BE(stream) ((Int64)Stream_ReadU64_BE(stream))
 
 void Stream_WriteU8(struct Stream* stream, UInt8 value);
-#define Stream_WriteI8(stream, value) Stream_WriteU8(stream, (UInt8)(value))
-void Stream_WriteU16_LE(struct Stream* stream, UInt16 value);
-#define Stream_WriteI16_LE(stream, value) Stream_WriteU16_LE(stream, (UInt16)(value))
 void Stream_WriteU16_BE(struct Stream* stream, UInt16 value);
-#define Stream_WriteI16_BE(stream, value) Stream_WriteU16_BE(stream, (UInt16)(value))
 void Stream_WriteU32_LE(struct Stream* stream, UInt32 value);
-#define Stream_WriteI32_LE(stream, value) Stream_WriteU32_LE(stream, (UInt32)(value))
 void Stream_WriteU32_BE(struct Stream* stream, UInt32 value);
+#define Stream_WriteI16_BE(stream, value) Stream_WriteU16_BE(stream, (UInt16)(value))
 #define Stream_WriteI32_BE(stream, value) Stream_WriteU32_BE(stream, (UInt32)(value))
 
 /* Reads a UTF8 encoded character from the given stream. Returns false if end of stream. */

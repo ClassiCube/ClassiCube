@@ -29,16 +29,16 @@ static String Zip_ReadFixedString(struct Stream* stream, UChar* buffer, UInt16 l
 
 static void Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* entry) {
 	struct Stream* stream = state->Input;
-	UInt16 versionNeeded = Stream_ReadU16_LE(stream);
-	UInt16 flags = Stream_ReadU16_LE(stream);
+	Stream_ReadU16_LE(stream); /* version needed */
+	Stream_ReadU16_LE(stream); /* flags */
 	UInt16 compressionMethod = Stream_ReadU16_LE(stream);
 	Stream_ReadU32_LE(stream); /* last modified */
 	Stream_ReadU32_LE(stream); /* CRC32 */
 
-	Int32 compressedSize = Stream_ReadI32_LE(stream);
-	if (compressedSize == 0) compressedSize = entry->CompressedDataSize;
-	Int32 uncompressedSize = Stream_ReadI32_LE(stream);
-	if (uncompressedSize == 0) uncompressedSize = entry->UncompressedDataSize;
+	UInt32 compressedSize = Stream_ReadU32_LE(stream);
+	if (compressedSize == 0) compressedSize = entry->CompressedSize;
+	UInt32 uncompressedSize = Stream_ReadU32_LE(stream);
+	if (uncompressedSize == 0) uncompressedSize = entry->UncompressedSize;
 
 	UInt16 fileNameLen = Stream_ReadU16_LE(stream);
 	UInt16 extraFieldLen = Stream_ReadU16_LE(stream);
@@ -46,14 +46,9 @@ static void Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* ent
 	String filename = Zip_ReadFixedString(stream, filenameBuffer, fileNameLen);
 	if (!state->SelectEntry(&filename)) return;
 
-	ReturnCode code = Stream_Skip(stream, extraFieldLen);
-	ErrorHandler_CheckOrFail(code, "Zip - skipping local header extra");
-	if (versionNeeded > 20) {
-		Int32 version = versionNeeded;
-		Platform_Log1("May not be able to properly extract a .zip enty with version %i", &version);
-	}
-
+	Stream_Skip(stream, extraFieldLen);
 	struct Stream portion, compStream;
+
 	if (compressionMethod == 0) {
 		Stream_ReadonlyPortion(&portion, stream, uncompressedSize);
 		state->ProcessEntry(&filename, &portion, entry);
@@ -75,9 +70,9 @@ static void Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* en
 	Stream_ReadU16_LE(stream); /* flags */
 	Stream_ReadU16_LE(stream); /* compresssion method*/
 	Stream_ReadU32_LE(stream); /* last modified */
-	entry->Crc32 = Stream_ReadU32_LE(stream);
-	entry->CompressedDataSize = Stream_ReadI32_LE(stream);
-	entry->UncompressedDataSize = Stream_ReadI32_LE(stream);
+	entry->Crc32            = Stream_ReadU32_LE(stream);
+	entry->CompressedSize   = Stream_ReadU32_LE(stream);
+	entry->UncompressedSize = Stream_ReadU32_LE(stream);
 
 	UInt16 fileNameLen = Stream_ReadU16_LE(stream);
 	UInt16 extraFieldLen = Stream_ReadU16_LE(stream);
@@ -85,21 +80,20 @@ static void Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* en
 	Stream_ReadU16_LE(stream); /* disk number */
 	Stream_ReadU16_LE(stream); /* internal attributes */
 	Stream_ReadU32_LE(stream); /* external attributes */
-	entry->LocalHeaderOffset = Stream_ReadI32_LE(stream);
+	entry->LocalHeaderOffset = Stream_ReadU32_LE(stream);
 
 	UInt32 extraDataLen = fileNameLen + extraFieldLen + fileCommentLen;
-	ReturnCode code = Stream_Skip(stream, extraDataLen);
-	ErrorHandler_CheckOrFail(code, "Zip - skipping central header extra");
+	Stream_Skip(stream, extraDataLen);
 }
 
-static void Zip_ReadEndOfCentralDirectory(struct ZipState* state, Int32* centralDirectoryOffset) {
+static void Zip_ReadEndOfCentralDirectory(struct ZipState* state, UInt32* centralDirectoryOffset) {
 	struct Stream* stream = state->Input;
 	Stream_ReadU16_LE(stream); /* disk number */
 	Stream_ReadU16_LE(stream); /* disk number start */
 	Stream_ReadU16_LE(stream); /* disk entries */
 	state->EntriesCount = Stream_ReadU16_LE(stream);
 	Stream_ReadU32_LE(stream); /* central directory size */
-	*centralDirectoryOffset = Stream_ReadI32_LE(stream);
+	*centralDirectoryOffset = Stream_ReadU32_LE(stream);
 	Stream_ReadU16_LE(stream); /* comment length */
 }
 
@@ -135,7 +129,7 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 	}
 	if (sig != ZIP_SIG_ENDOFCENTRALDIR) return ZIP_ERR_NO_END_OF_CENTRAL_DIR;
 
-	Int32 centralDirectoryOffset;
+	UInt32 centralDirectoryOffset;
 	Zip_ReadEndOfCentralDirectory(state, &centralDirectoryOffset);
 	result = stream->Seek(stream, centralDirectoryOffset, STREAM_SEEKFROM_BEGIN);
 	if (result != 0) return ZIP_ERR_SEEK_CENTRAL_DIR;

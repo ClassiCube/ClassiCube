@@ -9,7 +9,7 @@ struct Stream;
 struct Bitmap;
 struct AsyncRequest;
 
-struct ZipEntry { Int32 CompressedDataSize, UncompressedDataSize, LocalHeaderOffset; UInt32 Crc32; };
+struct ZipEntry { UInt32 CompressedSize, UncompressedSize, LocalHeaderOffset, Crc32; };
 
 #define ZIP_MAX_ENTRIES 2048
 struct ZipState {

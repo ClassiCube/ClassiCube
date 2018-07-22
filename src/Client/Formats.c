@@ -110,14 +110,14 @@ void Lvl_Load(struct Stream* stream) {
 	World_Height  = Stream_ReadU16_LE(&compStream);
 
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	p->Spawn.X = (Real32)Stream_ReadU16_LE(&compStream);
-	p->Spawn.Z = (Real32)Stream_ReadU16_LE(&compStream);
-	p->Spawn.Y = (Real32)Stream_ReadU16_LE(&compStream);
+	p->Spawn.X = Stream_ReadU16_LE(&compStream);
+	p->Spawn.Z = Stream_ReadU16_LE(&compStream);
+	p->Spawn.Y = Stream_ReadU16_LE(&compStream);
 	p->SpawnRotY  = Math_Packed2Deg(Stream_ReadU8(&compStream));
 	p->SpawnHeadX = Math_Packed2Deg(Stream_ReadU8(&compStream));
 
 	if (header == LVL_VERSION) {
-		Stream_ReadU16_LE(&compStream); /* pervisit and perbuild perms */
+		Stream_Skip(&compStream, 1 + 1); /* permissions: (1) pervisit, (1) perbuild */
 	}
 	Map_ReadBlocks(&compStream);
 
@@ -134,9 +134,7 @@ void Lvl_Load(struct Stream* stream) {
 #define FCM_IDENTIFIER 0x0FC2AF40UL
 #define FCM_REVISION 13
 static void Fcm_ReadString(struct Stream* stream) {
-	UInt16 length = Stream_ReadU16_LE(stream);
-	ReturnCode code = Stream_Skip(stream, length);
-	ErrorHandler_CheckOrFail(code, "FCM import - skipping string");
+	Stream_Skip(stream, Stream_ReadU16_LE(stream));
 }
 
 void Fcm_Load(struct Stream* stream) {
@@ -152,10 +150,10 @@ void Fcm_Load(struct Stream* stream) {
 	World_Height = Stream_ReadU16_LE(stream);
 
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	p->Spawn.X = Stream_ReadI32_LE(stream) / 32.0f;
-	p->Spawn.Y = Stream_ReadI32_LE(stream) / 32.0f;
-	p->Spawn.Z = Stream_ReadI32_LE(stream) / 32.0f;
-	p->SpawnRotY = Math_Packed2Deg(Stream_ReadU8(stream));
+	p->Spawn.X = ((Int32)Stream_ReadU32_LE(stream)) / 32.0f;
+	p->Spawn.Y = ((Int32)Stream_ReadU32_LE(stream)) / 32.0f;
+	p->Spawn.Z = ((Int32)Stream_ReadU32_LE(stream)) / 32.0f;
+	p->SpawnRotY  = Math_Packed2Deg(Stream_ReadU8(stream));
 	p->SpawnHeadX = Math_Packed2Deg(Stream_ReadU8(stream));
 
 	UInt8 tmp[26];
@@ -210,9 +208,7 @@ struct NbtTag {
 		UInt8  Value_U8;
 		Int16  Value_I16;
 		Int32  Value_I32;
-		Int64  Value_I64;
 		Real32 Value_R32;
-		Real64 Value_R64;
 		UInt8  DataSmall[String_BufferSize(NBT_SMALL_SIZE)];
 		UInt8* DataBig; /* malloc for big byte arrays */
 	};
@@ -233,19 +229,9 @@ static Int32 NbtTag_I32(struct NbtTag* tag) {
 	return tag->Value_I32;
 }
 
-static Int64 NbtTag_I64(struct NbtTag* tag) {
-	if (tag->TagID != NBT_TAG_INT64) { ErrorHandler_Fail("Expected I64 NBT tag"); }
-	return tag->Value_I64;
-}
-
 static Real32 NbtTag_R32(struct NbtTag* tag) {
 	if (tag->TagID != NBT_TAG_REAL32) { ErrorHandler_Fail("Expected R32 NBT tag"); }
 	return tag->Value_R32;
-}
-
-static Real64 NbtTag_R64(struct NbtTag* tag) {
-	if (tag->TagID != NBT_TAG_REAL64) { ErrorHandler_Fail("Expected R64 NBT tag"); }
-	return tag->Value_R64;
 }
 
 static UInt8 NbtTag_U8_At(struct NbtTag* tag, Int32 i) {
@@ -293,13 +279,12 @@ static void Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* stream, s
 	case NBT_TAG_INT32:
 		tag.Value_I32 = Stream_ReadI32_BE(stream); break;
 	case NBT_TAG_INT64:
-		tag.Value_I64 = Stream_ReadI64_BE(stream); break;
+		Stream_Skip(stream, 8); break; /* (8) data */
 	case NBT_TAG_REAL32:
 		/* TODO: Is this union abuse even legal */
 		tag.Value_I32 = Stream_ReadI32_BE(stream); break;
 	case NBT_TAG_REAL64:
-		/* TODO: Is this union abuse even legal */
-		tag.Value_I64 = Stream_ReadI64_BE(stream); break;
+		Stream_Skip(stream, 8); break; /* (8) data */
 
 	case NBT_TAG_INT8_ARRAY:
 		count = Stream_ReadU32_BE(stream); 
@@ -617,9 +602,8 @@ struct JFieldDesc {
 	UInt8 Type;
 	UChar FieldName[String_BufferSize(JNAME_SIZE)];
 	union {
-		Int8   Value_I8;
+		UInt8  Value_U8;
 		Int32  Value_I32;
-		Int64  Value_I64;
 		Real32 Value_R32;
 		struct { UInt8* Value_Ptr; UInt32 Value_Size; };
 	};
@@ -649,7 +633,7 @@ static void Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* desc) {
 			UChar className1[String_BufferSize(JNAME_SIZE)];
 			Dat_ReadString(stream, className1);
 		} else if (typeCode == TC_REFERENCE) {
-			Stream_ReadI32_BE(stream); /* handle */
+			Stream_Skip(stream, 4); /* (4) handle */
 		} else {
 			ErrorHandler_Fail("Unsupported type code in FieldDesc class name");
 		}
@@ -662,8 +646,7 @@ static void Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* desc) {
 	if (typeCode != TC_CLASSDESC) ErrorHandler_Fail("Unsupported type code in ClassDesc header");
 
 	Dat_ReadString(stream, desc->ClassName);
-	Stream_ReadU64_BE(stream); /* serial version UID */
-	Stream_ReadU8(stream);     /* flags */
+	Stream_Skip(stream, 8 + 1); /* (8) serial version UID, (1) flags */
 
 	desc->FieldsCount = Stream_ReadU16_BE(stream);
 	if (desc->FieldsCount > Array_Elems(desc->Fields)) ErrorHandler_Fail("ClassDesc has too many fields");
@@ -681,14 +664,14 @@ static void Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* desc) {
 static void Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
 	switch (field->Type) {
 	case JFIELD_INT8:
-		field->Value_I8  = Stream_ReadI8(stream); break;
+		field->Value_U8  = Stream_ReadU8(stream); break;
 	case JFIELD_REAL32:
 		/* TODO: Is this union abuse even legal */
 		field->Value_I32 = Stream_ReadI32_BE(stream); break;
 	case JFIELD_INT32:
 		field->Value_I32 = Stream_ReadI32_BE(stream); break;
 	case JFIELD_INT64:
-		field->Value_I64 = Stream_ReadI64_BE(stream); break;
+		Stream_Skip(stream, 8); break; /* (8) data */
 	case JFIELD_BOOL:
 		field->Value_I32 = Stream_ReadU8(stream) != 0; break;
 
@@ -746,7 +729,7 @@ void Dat_Load(struct Stream* stream) {
 	Inflate_MakeStream(&compStream, &state, stream);
 
 	/* .dat header */
-	if (Stream_ReadI32_BE(&compStream) != 0x271BB788 || Stream_ReadU8(&compStream) != 0x02) {
+	if (Stream_ReadU32_BE(&compStream) != 0x271BB788 || Stream_ReadU8(&compStream) != 0x02) {
 		ErrorHandler_Fail("Unexpected constant in .dat file");
 	}
 

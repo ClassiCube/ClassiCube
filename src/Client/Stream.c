@@ -69,20 +69,21 @@ void Stream_SetName(struct Stream* stream, STRING_PURE String* name) {
 	String_AppendString(&stream->Name, name);
 }
 
-ReturnCode Stream_Skip(struct Stream* stream, UInt32 count) {
-	ReturnCode code = stream->Seek(stream, count, STREAM_SEEKFROM_CURRENT);
-	if (code == 0) return 0;
-	UInt8 tmp[4096];
+void Stream_Skip(struct Stream* stream, UInt32 count) {
+	ReturnCode result = stream->Seek(stream, count, STREAM_SEEKFROM_CURRENT);
+	if (result == 0) return;
+	UInt8 tmp[3584]; /* not quite 4 KB to avoid chkstk call */
 
-	while (count > 0) {
+	while (count) {
 		UInt32 toRead = min(count, sizeof(tmp)), read;
-		code = stream->Read(stream, tmp, toRead, &read);
+		result = stream->Read(stream, tmp, toRead, &read);
 
-		if (code != 0) return code;
+		if (result != 0) Stream_Fail(stream, result, "Skipping data from");
 		if (read == 0) break; /* end of stream */
 		count -= read;
 	}
-	return count > 0;
+
+	if (count) Stream_Fail(stream, 0, "Skipping data from");
 }
 
 static ReturnCode Stream_DefaultIO(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
@@ -307,23 +308,10 @@ UInt32 Stream_ReadU32_BE(struct Stream* stream) {
 		((UInt32)buffer[2] << 8)  | (UInt32)buffer[3]);
 }
 
-UInt64 Stream_ReadU64_BE(struct Stream* stream) {
-	/* infrequently called, so not bothering to optimise this. */
-	UInt32 hi = Stream_ReadU32_BE(stream);
-	UInt32 lo = Stream_ReadU32_LE(stream);
-	return (UInt64)(((UInt64)hi) << 32) | ((UInt64)lo);
-}
-
 void Stream_WriteU8(struct Stream* stream, UInt8 value) {
 	UInt32 write;
 	/* Inline 8 bit writing, because it is very frequently used. */
 	Stream_SafeWriteBlock(stream, &value, sizeof(UInt8), write);
-}
-
-void Stream_WriteU16_LE(struct Stream* stream, UInt16 value) {
-	UInt8 buffer[sizeof(UInt16)];
-	buffer[0] = (UInt8)(value      ); buffer[1] = (UInt8)(value >> 8 );
-	Stream_Write(stream, buffer, sizeof(UInt16));
 }
 
 void Stream_WriteU16_BE(struct Stream* stream, UInt16 value) {

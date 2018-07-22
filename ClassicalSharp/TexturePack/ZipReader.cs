@@ -79,8 +79,8 @@ namespace ClassicalSharp.Textures {
 		}
 		
 		void ReadLocalFileHeader(BinaryReader reader, ZipEntry entry) {
-			ushort versionNeeded = reader.ReadUInt16();
-			ushort flags = reader.ReadUInt16();
+			reader.ReadUInt16(); // version needed
+			reader.ReadUInt16(); // flags
 			ushort compressionMethod = reader.ReadUInt16();
 			reader.ReadUInt32(); // last modified
 			reader.ReadUInt32(); // CRC32
@@ -96,12 +96,8 @@ namespace ClassicalSharp.Textures {
 			if (SelectZipEntry != null && !SelectZipEntry(fileName)) return;
 			
 			reader.ReadBytes(extraFieldLen);
-			if (versionNeeded > 20)
-				Utils.LogDebug("May not be able to properly extract a .zip enty with a version later than 2.0");
-			
 			byte[] data = DecompressEntry(reader, compressionMethod, compressedSize, uncompressedSize);
-			if (data != null)
-				ProcessZipEntry(fileName, data, entry);
+			if (data != null) ProcessZipEntry(fileName, data, entry);
 		}
 		
 		void ReadCentralDirectory(BinaryReader reader, ZipEntry[] entries) {

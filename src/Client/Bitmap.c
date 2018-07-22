@@ -451,11 +451,9 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 			if (dataSize != 0) return PNG_ERR_INVALID_END_SIZE;
 		} break;
 
-		default: {
-			ReturnCode result = Stream_Skip(stream, dataSize);
-			if (result != 0) return PNG_ERR_SKIPPING_CHUNK;
-		} break;
-		}
+		default:
+			Stream_Skip(stream, dataSize);
+			break;
 
 		Stream_ReadU32_BE(stream); /* Skip CRC32 */
 	}
