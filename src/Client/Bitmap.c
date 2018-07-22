@@ -322,16 +322,18 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 	UInt32 bufferIdx, bufferRows;
 
 	while (readingChunks) {
-		UInt32 dataSize = Stream_ReadU32_BE(stream);
-		UInt32 fourCC   = Stream_ReadU32_BE(stream);
+		Stream_Read(stream, buffer, 4 + 4);
+		UInt32 dataSize = Stream_GetU32_BE(&buffer[0]);
+		UInt32 fourCC   = Stream_GetU32_BE(&buffer[4]);
 
 		switch (fourCC) {
 		case PNG_FourCC('I', 'H', 'D', 'R'): {
 			if (dataSize != PNG_IHDR_SIZE) return PNG_ERR_INVALID_HEADER_SIZE;
 			gotHeader = true;
+			Stream_Read(stream, buffer, PNG_IHDR_SIZE);
 
-			bmp->Width  = Stream_ReadI32_BE(stream);
-			bmp->Height = Stream_ReadI32_BE(stream);
+			bmp->Width  = (Int32)Stream_GetU32_BE(&buffer[0]);
+			bmp->Height = (Int32)Stream_GetU32_BE(&buffer[4]);
 			if (bmp->Width  < 0 || bmp->Width  > PNG_MAX_DIMS) return PNG_ERR_TOO_WIDE;
 			if (bmp->Height < 0 || bmp->Height > PNG_MAX_DIMS) return PNG_ERR_TOO_TALL;
 
@@ -339,16 +341,17 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 			bmp->Scan0 = Platform_MemAlloc(bmp->Width * bmp->Height, BITMAP_SIZEOF_PIXEL);
 			if (bmp->Scan0 == NULL) ErrorHandler_Fail("Failed to allocate memory for PNG bitmap");
 
-			bitsPerSample = Stream_ReadU8(stream);
+			bitsPerSample = buffer[8];
 			if (bitsPerSample > 16 || !Math_IsPowOf2(bitsPerSample)) return PNG_ERR_INVALID_BPP;
-			col = Stream_ReadU8(stream);
+			col = buffer[9];
 			if (col == 1 || col == 5 || col > 6) return PNG_ERR_INVALID_COL;
+
 			if (bitsPerSample < 8 && (col >= PNG_COL_RGB && col != PNG_COL_INDEXED)) return PNG_ERR_INVALID_COL_BPP;
 			if (bitsPerSample == 16 && col == PNG_COL_INDEXED) return PNG_ERR_INVALID_COL_BPP;
 
-			if (Stream_ReadU8(stream) != 0) return PNG_ERR_COMP_METHOD;
-			if (Stream_ReadU8(stream) != 0) return PNG_ERR_FILTER;
-			if (Stream_ReadU8(stream) != 0) return PNG_ERR_INTERLACED;
+			if (buffer[10] != 0) return PNG_ERR_COMP_METHOD;
+			if (buffer[11] != 0) return PNG_ERR_FILTER;
+			if (buffer[12] != 0) return PNG_ERR_INTERLACED;
 
 			static UInt32 samplesPerPixel[7] = { 1, 0, 3, 1, 2, 0, 4 };
 			bytesPerPixel = ((samplesPerPixel[col] * bitsPerSample) + 7) >> 3;

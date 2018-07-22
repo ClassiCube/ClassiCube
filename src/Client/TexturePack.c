@@ -29,19 +29,22 @@ static String Zip_ReadFixedString(struct Stream* stream, UChar* buffer, UInt16 l
 
 static void Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* entry) {
 	struct Stream* stream = state->Input;
-	Stream_ReadU16_LE(stream); /* version needed */
-	Stream_ReadU16_LE(stream); /* flags */
-	UInt16 compressionMethod = Stream_ReadU16_LE(stream);
-	Stream_ReadU32_LE(stream); /* last modified */
-	Stream_ReadU32_LE(stream); /* CRC32 */
+	UInt8 contents[(3 * 2) + (4 * 4) + (2 * 2)];
+	Stream_Read(stream, contents, sizeof(contents));
 
-	UInt32 compressedSize = Stream_ReadU32_LE(stream);
+	/* contents[0] (2) version needed */
+	/* contents[2] (2) flags */
+	UInt16 compressionMethod = Stream_GetU16_LE(&contents[4]);
+	/* contents[6]  (4) last modified */
+	/* contents[10] (4) CRC32 */
+
+	UInt32 compressedSize = Stream_GetU32_LE(&contents[14]);
 	if (compressedSize == 0) compressedSize = entry->CompressedSize;
-	UInt32 uncompressedSize = Stream_ReadU32_LE(stream);
+	UInt32 uncompressedSize = Stream_GetU32_LE(&contents[18]);
 	if (uncompressedSize == 0) uncompressedSize = entry->UncompressedSize;
 
-	UInt16 fileNameLen = Stream_ReadU16_LE(stream);
-	UInt16 extraFieldLen = Stream_ReadU16_LE(stream);
+	UInt16 fileNameLen   = Stream_GetU16_LE(&contents[22]);
+	UInt16 extraFieldLen = Stream_GetU16_LE(&contents[24]);
 	UChar filenameBuffer[String_BufferSize(ZIP_MAXNAMELEN)];
 	String filename = Zip_ReadFixedString(stream, filenameBuffer, fileNameLen);
 	if (!state->SelectEntry(&filename)) return;
@@ -65,22 +68,25 @@ static void Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* ent
 
 static void Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* entry) {
 	struct Stream* stream = state->Input;
-	Stream_ReadU16_LE(stream); /* OS */
-	Stream_ReadU16_LE(stream); /* version needed*/
-	Stream_ReadU16_LE(stream); /* flags */
-	Stream_ReadU16_LE(stream); /* compresssion method*/
-	Stream_ReadU32_LE(stream); /* last modified */
-	entry->Crc32            = Stream_ReadU32_LE(stream);
-	entry->CompressedSize   = Stream_ReadU32_LE(stream);
-	entry->UncompressedSize = Stream_ReadU32_LE(stream);
+	UInt8 contents[(4 * 2) + (4 * 4) + (3 * 2) + (2 * 2) + (2 * 4)];
+	Stream_Read(stream, contents, sizeof(contents));
 
-	UInt16 fileNameLen = Stream_ReadU16_LE(stream);
-	UInt16 extraFieldLen = Stream_ReadU16_LE(stream);
-	UInt16 fileCommentLen = Stream_ReadU16_LE(stream);
-	Stream_ReadU16_LE(stream); /* disk number */
-	Stream_ReadU16_LE(stream); /* internal attributes */
-	Stream_ReadU32_LE(stream); /* external attributes */
-	entry->LocalHeaderOffset = Stream_ReadU32_LE(stream);
+	/* contents[0] (2) OS */
+	/* contents[2] (2) version needed*/
+	/* contents[4] (2) flags */
+	/* contents[6] (2) compresssion method*/
+	/* contents[8] (4) last modified */
+	entry->Crc32            = Stream_GetU32_LE(&contents[12]);
+	entry->CompressedSize   = Stream_GetU32_LE(&contents[16]);
+	entry->UncompressedSize = Stream_GetU32_LE(&contents[20]);
+
+	UInt16 fileNameLen    = Stream_GetU16_LE(&contents[24]);
+	UInt16 extraFieldLen  = Stream_GetU16_LE(&contents[26]);
+	UInt16 fileCommentLen = Stream_GetU16_LE(&contents[28]);
+	/* contents[30] (2) disk number */
+	/* contents[32] (2) internal attributes */
+	/* contents[34] (4) external attributes */
+	entry->LocalHeaderOffset = Stream_GetU32_LE(&contents[38]);
 
 	UInt32 extraDataLen = fileNameLen + extraFieldLen + fileCommentLen;
 	Stream_Skip(stream, extraDataLen);
@@ -88,13 +94,16 @@ static void Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* en
 
 static void Zip_ReadEndOfCentralDirectory(struct ZipState* state, UInt32* centralDirectoryOffset) {
 	struct Stream* stream = state->Input;
-	Stream_ReadU16_LE(stream); /* disk number */
-	Stream_ReadU16_LE(stream); /* disk number start */
-	Stream_ReadU16_LE(stream); /* disk entries */
-	state->EntriesCount = Stream_ReadU16_LE(stream);
-	Stream_ReadU32_LE(stream); /* central directory size */
-	*centralDirectoryOffset = Stream_ReadU32_LE(stream);
-	Stream_ReadU16_LE(stream); /* comment length */
+	UInt8 contents[(3 * 2) + 2 + (2 * 4) + 2];
+	Stream_Read(stream, contents, sizeof(contents));
+
+	/* contents[0] (2) disk number */
+	/* contents[2] (2) disk number start */
+	/* contents[4] (2) disk entries */
+	state->EntriesCount = Stream_GetU16_LE(&contents[6]);
+	/* contents[8] (4) central directory size */
+	*centralDirectoryOffset = Stream_GetU32_LE(&contents[12]);
+	/* contents[16] (2) comment length */
 }
 
 enum ZIP_SIG {

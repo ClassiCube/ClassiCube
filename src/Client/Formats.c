@@ -144,9 +144,8 @@ void Fcm_Load(struct Stream* stream) {
 	if (Stream_ReadU8(stream) != FCM_REVISION) {
 		ErrorHandler_Fail("Invalid revision in .fcm file");
 	}
-	UInt8 header[74];
-	Stream_Read(stream, header, (3 * 2) + (3 * 4) + (2 * 1)
-		+ (2 * 4) + 16 + 26 + 4);
+	UInt8 header[(3 * 2) + (3 * 4) + (2 * 1)  + (2 * 4) + 16 + 26 + 4];
+	Stream_Read(stream, header, sizeof(header));
 
 	World_Width  = Stream_GetU16_LE(&header[0]);
 	World_Height = Stream_GetU16_LE(&header[2]);
@@ -159,10 +158,10 @@ void Fcm_Load(struct Stream* stream) {
 	p->SpawnRotY  = Math_Packed2Deg(header[18]);
 	p->SpawnHeadX = Math_Packed2Deg(header[19]);
 
-	/* (4) date modified */
-	/* (4) date created */
+	/* header[20] (4) date modified */
+	/* header[24] (4) date created */
 	Platform_MemCpy(&World_Uuid, &header[28], sizeof(World_Uuid));
-	/* (26) layer index */
+	/* header[44] (26) layer index */
 	Int32 metaSize = (Int32)Stream_GetU32_LE(&header[70]);
 
 	struct Stream compStream;
