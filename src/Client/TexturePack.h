@@ -9,9 +9,7 @@ struct Stream;
 struct Bitmap;
 struct AsyncRequest;
 
-struct ZipEntry {
-	Int32 CompressedDataSize, UncompressedDataSize, LocalHeaderOffset; UInt32 Crc32;
-};
+struct ZipEntry { Int32 CompressedDataSize, UncompressedDataSize, LocalHeaderOffset; UInt32 Crc32; };
 
 #define ZIP_MAX_ENTRIES 2048
 struct ZipState {
@@ -22,8 +20,15 @@ struct ZipState {
 	struct ZipEntry Entries[ZIP_MAX_ENTRIES];
 };
 
+enum ZIP_ERR {
+	ZIP_ERR_TOO_MANY_ENTRIES = 405001,
+	ZIP_ERR_SEEK_END_OF_CENTRAL_DIR, ZIP_ERR_NO_END_OF_CENTRAL_DIR,
+	ZIP_ERR_SEEK_CENTRAL_DIR, ZIP_ERR_INVALID_CENTRAL_DIR,
+	ZIP_ERR_SEEK_LOCAL_DIR, ZIP_ERR_INVALID_LOCAL_DIR,
+};
+
 void Zip_Init(struct ZipState* state, struct Stream* input);
-void Zip_Extract(struct ZipState* state);
+ReturnCode Zip_Extract(struct ZipState* state);
 
 void TextureCache_Init(void);
 bool TextureCache_HasAccepted(STRING_PURE String* url);

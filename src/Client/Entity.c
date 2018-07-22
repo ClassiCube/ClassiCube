@@ -702,7 +702,8 @@ static void Player_CheckSkin(struct Player* player) {
 	String url = String_FromRawArray(item.URL);
 	struct Stream mem; struct Bitmap bmp;
 	Stream_ReadonlyMemory(&mem, item.ResultData, item.ResultSize, &url);
-	Bitmap_DecodePng(&bmp, &mem);
+	ReturnCode result = Bitmap_DecodePng(&bmp, &mem);
+	ErrorHandler_CheckOrFail(result, "Decoding player skin");
 
 	Gfx_DeleteTexture(&entity->TextureId);
 	Player_SetSkinAll(player, true);

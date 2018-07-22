@@ -73,12 +73,6 @@ bool Bitmap_DetectPng(UInt8* data, UInt32 len) {
 	return true;
 }
 
-static void Png_CheckHeader(struct Stream* stream) {
-	UInt8 header[PNG_SIG_SIZE];
-	Stream_Read(stream, header, PNG_SIG_SIZE);
-	if (!Bitmap_DetectPng(header, PNG_SIG_SIZE)) ErrorHandler_Fail("Invalid PNG header");
-}
-
 static void Png_Reconstruct(UInt8 type, UInt8 bytesPerPixel, UInt8* line, UInt8* prior, UInt32 lineLen) {
 	UInt32 i, j;
 	switch (type) {
@@ -299,9 +293,13 @@ static void Png_ComputeTransparency(struct Bitmap* bmp, UInt32 transparentCol) {
 /* Most bits per sample is 16. Most samples per pixel is 4. Add 1 for filter byte. */
 #define PNG_BUFFER_SIZE ((PNG_MAX_DIMS * 2 * 4 + 1) * 2)
 /* TODO: Test a lot of .png files and ensure output is right */
-void Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
-	Png_CheckHeader(stream);
+ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 	Bitmap_Create(bmp, 0, 0, NULL);
+
+	UInt8 header[PNG_SIG_SIZE];
+	Stream_Read(stream, header, PNG_SIG_SIZE);
+	if (!Bitmap_DetectPng(header, PNG_SIG_SIZE)) return PNG_ERR_INVALID_SIG;
+
 	UInt32 transparentCol = PackedCol_ARGB(0, 0, 0, 255);
 	UInt8 col, bitsPerSample, bytesPerPixel;
 	Png_RowExpander rowExpander;
@@ -329,28 +327,28 @@ void Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 
 		switch (fourCC) {
 		case PNG_FourCC('I', 'H', 'D', 'R'): {
-			if (dataSize != PNG_IHDR_SIZE) ErrorHandler_Fail("PNG header chunk has invalid size");
+			if (dataSize != PNG_IHDR_SIZE) return PNG_ERR_INVALID_HEADER_SIZE;
 			gotHeader = true;
 
 			bmp->Width  = Stream_ReadI32_BE(stream);
 			bmp->Height = Stream_ReadI32_BE(stream);
-			if (bmp->Width  < 0 || bmp->Width  > PNG_MAX_DIMS) ErrorHandler_Fail("PNG image too wide");
-			if (bmp->Height < 0 || bmp->Height > PNG_MAX_DIMS) ErrorHandler_Fail("PNG image too tall");
+			if (bmp->Width  < 0 || bmp->Width  > PNG_MAX_DIMS) return PNG_ERR_TOO_WIDE;
+			if (bmp->Height < 0 || bmp->Height > PNG_MAX_DIMS) return PNG_ERR_TOO_TALL;
 
 			bmp->Stride = bmp->Width * BITMAP_SIZEOF_PIXEL;
 			bmp->Scan0 = Platform_MemAlloc(bmp->Width * bmp->Height, BITMAP_SIZEOF_PIXEL);
 			if (bmp->Scan0 == NULL) ErrorHandler_Fail("Failed to allocate memory for PNG bitmap");
 
 			bitsPerSample = Stream_ReadU8(stream);
-			if (bitsPerSample > 16 || !Math_IsPowOf2(bitsPerSample)) ErrorHandler_Fail("PNG has invalid bits per pixel");
+			if (bitsPerSample > 16 || !Math_IsPowOf2(bitsPerSample)) return PNG_ERR_INVALID_BPP;
 			col = Stream_ReadU8(stream);
-			if (col == 1 || col == 5 || col > 6) ErrorHandler_Fail("PNG has invalid colour type");
-			if (bitsPerSample < 8 && (col >= PNG_COL_RGB && col != PNG_COL_INDEXED)) ErrorHandler_Fail("PNG has invalid bpp for this colour type");
-			if (bitsPerSample == 16 && col == PNG_COL_INDEXED) ErrorHandler_Fail("PNG has invalid bpp for this colour type");
+			if (col == 1 || col == 5 || col > 6) return PNG_ERR_INVALID_COL;
+			if (bitsPerSample < 8 && (col >= PNG_COL_RGB && col != PNG_COL_INDEXED)) return PNG_ERR_INVALID_COL_BPP;
+			if (bitsPerSample == 16 && col == PNG_COL_INDEXED) return PNG_ERR_INVALID_COL_BPP;
 
-			if (Stream_ReadU8(stream) != 0) ErrorHandler_Fail("PNG compression method must be DEFLATE");
-			if (Stream_ReadU8(stream) != 0) ErrorHandler_Fail("PNG filter method must be ADAPTIVE");
-			if (Stream_ReadU8(stream) != 0) ErrorHandler_Fail("PNG interlacing not supported");
+			if (Stream_ReadU8(stream) != 0) return PNG_ERR_COMP_METHOD;
+			if (Stream_ReadU8(stream) != 0) return PNG_ERR_FILTER;
+			if (Stream_ReadU8(stream) != 0) return PNG_ERR_INTERLACED;
 
 			static UInt32 samplesPerPixel[7] = { 1, 0, 3, 1, 2, 0, 4 };
 			bytesPerPixel = ((samplesPerPixel[col] * bitsPerSample) + 7) >> 3;
@@ -371,8 +369,8 @@ void Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 		} break;
 
 		case PNG_FourCC('P', 'L', 'T', 'E'): {
-			if (dataSize > PNG_PALETTE * 3) ErrorHandler_Fail("PNG palette has too many entries");
-			if ((dataSize % 3) != 0) ErrorHandler_Fail("PNG palette chunk has invalid size");
+			if (dataSize > PNG_PALETTE * 3) return PNG_ERR_PAL_ENTRIES;
+			if ((dataSize % 3) != 0) return PNG_ERR_PAL_SIZE;
 
 			UInt8 palRGB[PNG_PALETTE * 3];
 			Stream_Read(stream, palRGB, dataSize);
@@ -383,11 +381,11 @@ void Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 
 		case PNG_FourCC('t', 'R', 'N', 'S'): {
 			if (col == PNG_COL_GRAYSCALE) {
-				if (dataSize != 2) ErrorHandler_Fail("PNG only allows one explicit transparency colour");
+				if (dataSize != 2) return PNG_ERR_TRANS_COUNT;
 				UInt8 palRGB = (UInt8)Stream_ReadU16_BE(stream);
 				transparentCol = PackedCol_ARGB(palRGB, palRGB, palRGB, 0);
 			} else if (col == PNG_COL_INDEXED) {
-				if (dataSize > PNG_PALETTE) ErrorHandler_Fail("PNG transparency palette has too many entries");
+				if (dataSize > PNG_PALETTE) return PNG_ERR_TRANS_COUNT;
 				UInt8 palA[PNG_PALETTE * 3];
 				Stream_Read(stream, palA, dataSize);
 
@@ -396,13 +394,13 @@ void Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 					palette[i] |= (UInt32)palA[i] << 24;
 				}
 			} else if (col == PNG_COL_RGB) {
-				if (dataSize != 6) ErrorHandler_Fail("PNG only allows one explicit transparency colour");
+				if (dataSize != 6) return PNG_ERR_TRANS_COUNT;
 				UInt8 palR = (UInt8)Stream_ReadU16_BE(stream);
 				UInt8 palG = (UInt8)Stream_ReadU16_BE(stream);
 				UInt8 palB = (UInt8)Stream_ReadU16_BE(stream);
 				transparentCol = PackedCol_ARGB(palR, palG, palB, 0);
 			} else {
-				ErrorHandler_Fail("PNG cannot have explicit transparency colour for this colour type");
+				return PNG_ERR_TRANS_INVALID;
 			}
 		} break;
 
@@ -450,12 +448,12 @@ void Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 
 		case PNG_FourCC('I', 'E', 'N', 'D'): {
 			readingChunks = false;
-			if (dataSize != 0) ErrorHandler_Fail("PNG end chunk must be empty");
+			if (dataSize != 0) return PNG_ERR_INVALID_END_SIZE;
 		} break;
 
 		default: {
-			ReturnCode code = Stream_Skip(stream, dataSize);
-			ErrorHandler_CheckOrFail(code, "PNG - skipping chunk");
+			ReturnCode result = Stream_Skip(stream, dataSize);
+			if (result != 0) return PNG_ERR_SKIPPING_CHUNK;
 		} break;
 		}
 

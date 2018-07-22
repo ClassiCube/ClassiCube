@@ -71,9 +71,9 @@ static void Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* ent
 static void Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* entry) {
 	struct Stream* stream = state->Input;
 	Stream_ReadU16_LE(stream); /* OS */
-	UInt16 versionNeeded = Stream_ReadU16_LE(stream);
-	UInt16 flags = Stream_ReadU16_LE(stream);
-	UInt16 compressionMethod = Stream_ReadU16_LE(stream);
+	Stream_ReadU16_LE(stream); /* version needed*/
+	Stream_ReadU16_LE(stream); /* flags */
+	Stream_ReadU16_LE(stream); /* compresssion method*/
 	Stream_ReadU32_LE(stream); /* last modified */
 	entry->Crc32 = Stream_ReadU32_LE(stream);
 	entry->CompressedDataSize = Stream_ReadI32_LE(stream);
@@ -82,9 +82,9 @@ static void Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* en
 	UInt16 fileNameLen = Stream_ReadU16_LE(stream);
 	UInt16 extraFieldLen = Stream_ReadU16_LE(stream);
 	UInt16 fileCommentLen = Stream_ReadU16_LE(stream);
-	UInt16 diskNum = Stream_ReadU16_LE(stream);
-	UInt16 internalAttributes = Stream_ReadU16_LE(stream);
-	UInt32 externalAttributes = Stream_ReadU32_LE(stream);
+	Stream_ReadU16_LE(stream); /* disk number */
+	Stream_ReadU16_LE(stream); /* internal attributes */
+	Stream_ReadU32_LE(stream); /* external attributes */
 	entry->LocalHeaderOffset = Stream_ReadI32_LE(stream);
 
 	UInt32 extraDataLen = fileNameLen + extraFieldLen + fileCommentLen;
@@ -94,18 +94,20 @@ static void Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* en
 
 static void Zip_ReadEndOfCentralDirectory(struct ZipState* state, Int32* centralDirectoryOffset) {
 	struct Stream* stream = state->Input;
-	UInt16 diskNum = Stream_ReadU16_LE(stream);
-	UInt16 diskNumStart = Stream_ReadU16_LE(stream);
-	UInt16 diskEntries = Stream_ReadU16_LE(stream);
+	Stream_ReadU16_LE(stream); /* disk number */
+	Stream_ReadU16_LE(stream); /* disk number start */
+	Stream_ReadU16_LE(stream); /* disk entries */
 	state->EntriesCount = Stream_ReadU16_LE(stream);
-	Int32 centralDirectorySize = Stream_ReadI32_LE(stream);
+	Stream_ReadU32_LE(stream); /* central directory size */
 	*centralDirectoryOffset = Stream_ReadI32_LE(stream);
-	UInt16 commentLength = Stream_ReadU16_LE(stream);
+	Stream_ReadU16_LE(stream); /* comment length */
 }
 
-#define ZIP_ENDOFCENTRALDIR 0x06054b50UL
-#define ZIP_CENTRALDIR      0x02014b50UL
-#define ZIP_LOCALFILEHEADER 0x04034b50UL
+enum ZIP_SIG {
+	ZIP_SIG_ENDOFCENTRALDIR = 0x06054b50,
+	ZIP_SIG_CENTRALDIR = 0x02014b50,
+	ZIP_SIG_LOCALFILEHEADER = 0x04034b50,
+};
 
 static void Zip_DefaultProcessor(STRING_TRANSIENT String* path, struct Stream* data, struct ZipEntry* entry) { }
 static bool Zip_DefaultSelector(STRING_TRANSIENT String* path) { return true; }
@@ -116,7 +118,7 @@ void Zip_Init(struct ZipState* state, struct Stream* input) {
 	state->SelectEntry  = Zip_DefaultSelector;
 }
 
-void Zip_Extract(struct ZipState* state) {
+ReturnCode Zip_Extract(struct ZipState* state) {
 	state->EntriesCount = 0;
 	struct Stream* stream = state->Input;
 	UInt32 sig = 0, stream_len = 0;
@@ -126,36 +128,31 @@ void Zip_Extract(struct ZipState* state) {
 	Int32 i, len = min(257, stream_len);
 	for (i = 22; i < len; i++) {
 		result = stream->Seek(stream, -i, STREAM_SEEKFROM_END);
-		ErrorHandler_CheckOrFail(result, "ZIP - Seek to end of central directory");
+		if (result != 0) return ZIP_ERR_SEEK_END_OF_CENTRAL_DIR;
+
 		sig = Stream_ReadU32_LE(stream);
-		if (sig == ZIP_ENDOFCENTRALDIR) break;
+		if (sig == ZIP_SIG_ENDOFCENTRALDIR) break;
 	}
-	if (sig != ZIP_ENDOFCENTRALDIR) {
-		ErrorHandler_Fail("ZIP - Failed to find end of central directory");
-		return;
-	}
+	if (sig != ZIP_SIG_ENDOFCENTRALDIR) return ZIP_ERR_NO_END_OF_CENTRAL_DIR;
 
 	Int32 centralDirectoryOffset;
 	Zip_ReadEndOfCentralDirectory(state, &centralDirectoryOffset);
 	result = stream->Seek(stream, centralDirectoryOffset, STREAM_SEEKFROM_BEGIN);
-	ErrorHandler_CheckOrFail(result, "ZIP - Seek to central directory");
-	if (state->EntriesCount > ZIP_MAX_ENTRIES) {
-		ErrorHandler_Fail("ZIP - Max of 2048 entries supported");
-	}
+	if (result != 0) return ZIP_ERR_SEEK_CENTRAL_DIR;
+
+	if (state->EntriesCount > ZIP_MAX_ENTRIES) return ZIP_ERR_TOO_MANY_ENTRIES;
 
 	/* Read all the central directory entries */
 	Int32 count = 0;
 	while (count < state->EntriesCount) {
 		sig = Stream_ReadU32_LE(stream);
-		if (sig == ZIP_CENTRALDIR) {
+		if (sig == ZIP_SIG_CENTRALDIR) {
 			Zip_ReadCentralDirectory(state, &state->Entries[count]);
 			count++;
-		} else if (sig == ZIP_ENDOFCENTRALDIR) {
+		} else if (sig == ZIP_SIG_ENDOFCENTRALDIR) {
 			break;
 		} else {
-			String sigMsg = String_FromConst("ZIP - Unsupported signature found, aborting");
-			ErrorHandler_Log(&sigMsg);
-			return;
+			return ZIP_ERR_INVALID_CENTRAL_DIR;
 		}
 	}
 
@@ -163,14 +160,10 @@ void Zip_Extract(struct ZipState* state) {
 	for (i = 0; i < count; i++) {
 		struct ZipEntry* entry = &state->Entries[i];
 		result = stream->Seek(stream, entry->LocalHeaderOffset, STREAM_SEEKFROM_BEGIN);
-		ErrorHandler_CheckOrFail(result, "ZIP - Seek to local file header");
+		if (result != 0) return ZIP_ERR_SEEK_LOCAL_DIR;
 
 		sig = Stream_ReadU32_LE(stream);
-		if (sig != ZIP_LOCALFILEHEADER) {
-			String sigMsg = String_FromConst("ZIP - Invalid entry found, skipping");
-			ErrorHandler_Log(&sigMsg);
-			continue;
-		}
+		if (sig != ZIP_SIG_LOCALFILEHEADER) return ZIP_ERR_INVALID_LOCAL_DIR;
 		Zip_ReadLocalFileHeader(state, entry);
 	}
 }
@@ -418,14 +411,14 @@ static void TexturePack_ProcessZipEntry(STRING_TRANSIENT String* path, struct St
 	Event_RaiseStream(&TextureEvents_FileChanged, stream);
 }
 
-static void TexturePack_ExtractZip(struct Stream* stream) {
+static ReturnCode TexturePack_ExtractZip(struct Stream* stream) {
 	Event_RaiseVoid(&TextureEvents_PackChanged);
-	if (Gfx_LostContext) return;
+	if (Gfx_LostContext) return 0;
 
 	struct ZipState state;
 	Zip_Init(&state, stream);
 	state.ProcessEntry = TexturePack_ProcessZipEntry;
-	Zip_Extract(&state);
+	return Zip_Extract(&state);
 }
 
 void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
@@ -438,18 +431,24 @@ void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
 	ErrorHandler_CheckOrFail(result, "TexturePack_Extract - opening file");
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
-		TexturePack_ExtractZip(&stream);
+		result = TexturePack_ExtractZip(&stream);
+		ErrorHandler_CheckOrFail(result, "TexturePack_Extract - extract content");
 	}
 	result = stream.Close(&stream);
 	ErrorHandler_CheckOrFail(result, "TexturePack_Extract - closing file");
 }
 
-void TexturePack_ExtractTerrainPng(struct Stream* stream) {
-	struct Bitmap bmp; Bitmap_DecodePng(&bmp, stream);
-	Event_RaiseVoid(&TextureEvents_PackChanged);
+ReturnCode TexturePack_ExtractTerrainPng(struct Stream* stream) {
+	struct Bitmap bmp; 
+	ReturnCode result = Bitmap_DecodePng(&bmp, stream);
 
-	if (Game_ChangeTerrainAtlas(&bmp)) return;
+	if (result == 0) {
+		Event_RaiseVoid(&TextureEvents_PackChanged);
+		if (Game_ChangeTerrainAtlas(&bmp)) return 0;
+	}
+
 	Platform_MemFree(&bmp.Scan0);
+	return result;
 }
 
 void TexturePack_ExtractDefault(void) {
@@ -470,16 +469,19 @@ void TexturePack_ExtractCurrent(STRING_PURE String* url) {
 		if (World_TextureUrl.length > 0) TexturePack_ExtractDefault();
 	} else {
 		String zip = String_FromConst(".zip");
+		ReturnCode result = 0;
+
 		if (String_Equals(url, &World_TextureUrl)) {
 		} else if (String_ContainsString(url, &zip)) {
 			String_Set(&World_TextureUrl, url);
-			TexturePack_ExtractZip(&stream);
+			result = TexturePack_ExtractZip(&stream);
 		} else {
 			String_Set(&World_TextureUrl, url);
-			TexturePack_ExtractTerrainPng(&stream);
+			result = TexturePack_ExtractTerrainPng(&stream);
 		}
+		ErrorHandler_CheckOrFail(result, "TexturePack_ExtractCurrent - extract content");
 
-		ReturnCode result = stream.Close(&stream);
+		result = stream.Close(&stream);
 		ErrorHandler_CheckOrFail(result, "TexturePack_ExtractCurrent - close stream");
 	}
 }
@@ -498,10 +500,13 @@ void TexturePack_Extract_Req(struct AsyncRequest* item) {
 	String id = String_FromRawArray(item->ID);
 	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len, &id);
 
+	ReturnCode result;
 	if (Bitmap_DetectPng(data, len)) {
-		TexturePack_ExtractTerrainPng(&mem);
+		result = TexturePack_ExtractTerrainPng(&mem);
 	} else {
-		TexturePack_ExtractZip(&mem);
+		result = TexturePack_ExtractZip(&mem);
 	}
+
+	ErrorHandler_CheckOrFail(result, "TexturePack_Extract_Req - extract content");
 	ASyncRequest_Free(item);
 }

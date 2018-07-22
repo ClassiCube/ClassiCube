@@ -26,7 +26,7 @@ namespace Launcher.Patcher {
 		public const string assetsUri = "http://resources.download.minecraft.net/";
 		
 		public void DownloadItems(AsyncDownloader downloader, Action<string> setStatus) {
-			this.downloader = downloader;		
+			this.downloader = downloader;
 			byte fetchFlags = ResourceList.GetFetchFlags();
 			
 			if ((fetchFlags & ResourceList.mask_classic) != 0)

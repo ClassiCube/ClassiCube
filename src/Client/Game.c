@@ -235,9 +235,11 @@ void Game_SetDefaultSkinType(struct Bitmap* bmp) {
 }
 
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, bool setSkinType) {
-	struct Bitmap bmp; Bitmap_DecodePng(&bmp, src);
-	bool success = Game_ValidateBitmap(&src->Name, &bmp);
+	struct Bitmap bmp; 
+	ReturnCode result = Bitmap_DecodePng(&bmp, src);
+	ErrorHandler_CheckOrFail(result, "Decoding texture");
 
+	bool success = Game_ValidateBitmap(&src->Name, &bmp);
 	if (success) {
 		Gfx_DeleteTexture(texId);
 		if (setSkinType) Game_SetDefaultSkinType(&bmp);
@@ -320,11 +322,16 @@ static void Game_OnNewMapLoadedCore(void* obj) {
 
 static void Game_TextureChangedCore(void* obj, struct Stream* src) {
 	if (String_CaselessEqualsConst(&src->Name, "terrain.png")) {
-		struct Bitmap atlas; Bitmap_DecodePng(&atlas, src);
+		struct Bitmap atlas; 
+		ReturnCode result = Bitmap_DecodePng(&atlas, src);
+		ErrorHandler_CheckOrFail(result, "Decoding terrain bitmap");
+
 		if (Game_ChangeTerrainAtlas(&atlas)) return;
 		Platform_MemFree(&atlas.Scan0);
 	} else if (String_CaselessEqualsConst(&src->Name, "default.png")) {
-		struct Bitmap bmp; Bitmap_DecodePng(&bmp, src);
+		struct Bitmap bmp; 
+		ReturnCode result = Bitmap_DecodePng(&bmp, src);
+		ErrorHandler_CheckOrFail(result, "Decoding font bitmap");
 		Drawer2D_SetFontBitmap(&bmp);
 		Event_RaiseVoid(&ChatEvents_FontChanged);
 	}

@@ -26,11 +26,19 @@ void Bitmap_Allocate(struct Bitmap* bmp, Int32 width, Int32 height);
 void Bitmap_AllocateClearedPow2(struct Bitmap* bmp, Int32 width, Int32 height);
 
 bool Bitmap_DetectPng(UInt8* data, UInt32 len);
+enum PNG_ERR {
+	PNG_ERR_INVALID_SIG = 307001,
+	PNG_ERR_INVALID_HEADER_SIZE, PNG_ERR_TOO_WIDE, PNG_ERR_TOO_TALL,
+	PNG_ERR_INVALID_BPP, PNG_ERR_INVALID_COL,  PNG_ERR_INVALID_COL_BPP,
+	PNG_ERR_COMP_METHOD, PNG_ERR_FILTER, PNG_ERR_INTERLACED,
+	PNG_ERR_PAL_ENTRIES, PNG_ERR_PAL_SIZE, PNG_ERR_TRANS_COUNT, PNG_ERR_TRANS_INVALID,
+	PNG_ERR_INVALID_END_SIZE, PNG_ERR_SKIPPING_CHUNK,
+};
 /*
   Partially based off information from
      https://handmade.network/forums/wip/t/2363-implementing_a_basic_png_reader_the_handmade_way
      https://github.com/nothings/stb/blob/master/stb_image.h
 */
-void Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream);
+ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream);
 void Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream);
 #endif

@@ -321,7 +321,8 @@ static void Animations_PackChanged(void* obj) {
 static void Animations_FileChanged(void* obj, struct Stream* stream) {
 	String* name = &stream->Name;
 	if (String_CaselessEqualsConst(name, "animation.png") || String_CaselessEqualsConst(name, "animations.png")) {
-		Bitmap_DecodePng(&anims_bmp, stream);
+		ReturnCode result = Bitmap_DecodePng(&anims_bmp, stream);
+		ErrorHandler_CheckOrFail(result, "Decoding animations bitmap");
 	} else if (String_CaselessEqualsConst(name, "animation.txt") || String_CaselessEqualsConst(name, "animations.txt")) {
 		Animations_ReadDescription(stream);
 	} else if (String_CaselessEqualsConst(name, "uselavaanim")) {

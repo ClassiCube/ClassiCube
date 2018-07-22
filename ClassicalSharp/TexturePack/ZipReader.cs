@@ -83,7 +83,7 @@ namespace ClassicalSharp.Textures {
 			ushort flags = reader.ReadUInt16();
 			ushort compressionMethod = reader.ReadUInt16();
 			reader.ReadUInt32(); // last modified
-			reader.ReadUInt32(); // CRC 32
+			reader.ReadUInt32(); // CRC32
 			
 			int compressedSize = reader.ReadInt32();
 			if (compressedSize == 0) compressedSize = entry.CompressedDataSize;
@@ -107,9 +107,9 @@ namespace ClassicalSharp.Textures {
 		void ReadCentralDirectory(BinaryReader reader, ZipEntry[] entries) {
 			ZipEntry entry;
 			reader.ReadUInt16(); // OS
-			ushort versionNeeded = reader.ReadUInt16();
-			ushort flags = reader.ReadUInt16();
-			ushort compressionMethod = reader.ReadUInt16();
+			reader.ReadUInt16(); // version neede
+			reader.ReadUInt16(); // flags
+			reader.ReadUInt16(); // compression method
 			reader.ReadUInt32(); // last modified
 			uint crc32 = reader.ReadUInt32();
 			int compressedSize = reader.ReadInt32();
@@ -118,9 +118,9 @@ namespace ClassicalSharp.Textures {
 			ushort extraFieldLen = reader.ReadUInt16();
 			
 			ushort fileCommentLen = reader.ReadUInt16();
-			ushort diskNum = reader.ReadUInt16();
-			ushort internalAttributes = reader.ReadUInt16();
-			uint externalAttributes = reader.ReadUInt32();
+			reader.ReadUInt16(); // disk number
+			reader.ReadUInt16(); // internal attributes
+			reader.ReadUInt32(); // external attributes
 			int localHeaderOffset = reader.ReadInt32();
 			string fileName = enc.GetString(reader.ReadBytes(fileNameLen));
 			reader.ReadBytes(extraFieldLen);
@@ -135,13 +135,13 @@ namespace ClassicalSharp.Textures {
 		}
 		
 		void ReadEndOfCentralDirectory(BinaryReader reader, out int entriesCount, out int centralDirectoryOffset) {
-			ushort diskNum = reader.ReadUInt16();
-			ushort diskNumStart = reader.ReadUInt16();
-			ushort diskEntries = reader.ReadUInt16();
+			reader.ReadUInt16(); // disk number
+			reader.ReadUInt16(); // disk number start
+			reader.ReadUInt16(); // disk entries
 			entriesCount = reader.ReadUInt16();
-			int centralDirectorySize = reader.ReadInt32();
+			reader.ReadInt32(); // central directory size
 			centralDirectoryOffset = reader.ReadInt32();
-			ushort commentLength = reader.ReadUInt16();
+			reader.ReadUInt16(); // comment length
 		}
 		
 		byte[] DecompressEntry(BinaryReader reader, ushort compressionMethod, int compressedSize, int uncompressedSize) {
