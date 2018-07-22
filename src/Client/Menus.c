@@ -40,8 +40,8 @@ struct ListScreen {
 	Widget_LeftClick EntryClick;
 	String TitleText;
 	struct ButtonWidget Buttons[LIST_SCREEN_BUTTONS];
-	struct TextWidget Title;
-	struct Widget* Widgets[LIST_SCREEN_BUTTONS + 1];
+	struct TextWidget Title, Page;
+	struct Widget* Widgets[LIST_SCREEN_BUTTONS + 2];
 	StringsBuffer Entries; /* NOTE: this is the last member so we can avoid memsetting it to 0 */
 };
 
@@ -327,10 +327,20 @@ static void ListScreen_Make(struct ListScreen* screen, Int32 i, Int32 x, STRING_
 	Widget_SetLocation((struct Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, x, 0);
 }
 
-static void ListScreen_UpdateArrows(struct ListScreen* screen) {
+static void ListScreen_UpdatePage(struct ListScreen* screen) {
 	Int32 start = LIST_SCREEN_ITEMS, end = screen->Entries.Count - LIST_SCREEN_ITEMS;
 	screen->Buttons[5].Disabled = screen->CurrentIndex < start;
 	screen->Buttons[6].Disabled = screen->CurrentIndex >= end;
+	if (Game_ClassicMode) return;
+
+	UInt8 pageBuffer[String_BufferSize(STRING_SIZE)];
+	String page = String_InitAndClearArray(pageBuffer);
+	Int32 num   = (screen->CurrentIndex  / LIST_SCREEN_ITEMS) + 1;
+	Int32 pages = Math_CeilDiv(screen->Entries.Count, LIST_SCREEN_ITEMS);
+	if (pages == 0) pages = 1;
+
+	String_Format2(&page, "&7Page %i of %i", &num, &pages);
+	TextWidget_SetText(&screen->Page, &page);
 }
 
 static void ListScreen_SetCurrentIndex(struct ListScreen* screen, Int32 index) {
@@ -344,7 +354,7 @@ static void ListScreen_SetCurrentIndex(struct ListScreen* screen, Int32 index) {
 	}
 
 	screen->CurrentIndex = index;
-	ListScreen_UpdateArrows(screen);
+	ListScreen_UpdatePage(screen);
 }
 
 static void ListScreen_PageClick(struct ListScreen* screen, bool forward) {
@@ -379,11 +389,17 @@ static void ListScreen_ContextRecreated(void* obj) {
 
 	Menu_MakeDefaultBack(&screen->Buttons[7], false, &screen->Font, Menu_SwitchPause);
 	screen->Widgets[7] = (struct Widget*)(&screen->Buttons[7]);
-	ListScreen_UpdateArrows(screen);
 
 	TextWidget_Create(&screen->Title, &screen->TitleText, &screen->Font);
 	Widget_SetLocation((struct Widget*)(&screen->Title), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -155);
 	screen->Widgets[8] = (struct Widget*)(&screen->Title);
+
+	String text = String_MakeNull();
+	TextWidget_Create(&screen->Page, &text, &screen->Font);
+	Widget_SetLocation((struct Widget*)(&screen->Page), ANCHOR_CENTRE, ANCHOR_MAX, 0, 75);
+	screen->Widgets[9] = (struct Widget*)(&screen->Page);
+
+	ListScreen_UpdatePage(screen);
 }
 
 static void ListScreen_QuickSort(Int32 left, Int32 right) {
@@ -412,6 +428,7 @@ static String ListScreen_UNSAFE_GetCur(struct ListScreen* screen, struct GuiElem
 static void ListScreen_Init(struct GuiElem* elem) {
 	struct ListScreen* screen = (struct ListScreen*)elem;
 	Platform_FontMake(&screen->Font, &Game_FontName, 16, FONT_STYLE_BOLD);
+	Key_KeyRepeat = true;
 	screen->WheelAcc = 0.0f;
 	ListScreen_ContextRecreated(screen);
 	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, ListScreen_ContextLost);
@@ -429,6 +446,7 @@ static void ListScreen_Render(struct GuiElem* elem, Real64 delta) {
 static void ListScreen_Free(struct GuiElem* elem) {
 	struct ListScreen* screen = (struct ListScreen*)elem;
 	Platform_FontFree(&screen->Font);
+	Key_KeyRepeat = false;
 	ListScreen_ContextLost(screen);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, ListScreen_ContextLost);
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, ListScreen_ContextRecreated);

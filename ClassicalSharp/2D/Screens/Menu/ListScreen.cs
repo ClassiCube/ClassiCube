@@ -21,6 +21,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			font = new Font(game.FontName, 16, FontStyle.Bold);
+			Keyboard.KeyRepeat = true;
 			ContextRecreated();
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
@@ -35,6 +36,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Dispose() {
 			font.Dispose();
+			Keyboard.KeyRepeat = false;
 			ContextLost();
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
@@ -53,8 +55,10 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeBack(false, font, SwitchPause),
 				TextWidget.Create(game, titleText, font)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -155),
+				TextWidget.Create(game, "", font)
+					.SetLocation(Anchor.Centre, Anchor.Max, 0, 75),
 			};
-			UpdateArrows();
+			UpdatePage();
 		}
 		
 		void MoveBackwards(Game g, Widget w) { PageClick(false); }
@@ -93,20 +97,24 @@ namespace ClassicalSharp.Gui.Screens {
 			for (int i = 0; i < items; i++) {
 				UpdateText((ButtonWidget)widgets[i], Get(currentIndex + i));
 			}
-			UpdateArrows();
+			UpdatePage();
 		}
 		
 		protected virtual void UpdateText(ButtonWidget widget, string text) {
 			widget.SetText(text);
 		}
 		
-		void UpdateArrows() {
-			widgets[5].Disabled = false;
-			widgets[6].Disabled = false;
-			if (currentIndex < items)
-				widgets[5].Disabled = true;
-			if (currentIndex >= entries.Length - items)
-				widgets[6].Disabled = true;
+		void UpdatePage() {
+			int start = items, end = entries.Length - items;
+			widgets[5].Disabled = currentIndex < start;
+			widgets[6].Disabled = currentIndex >= end;		
+			if (game.ClassicMode) return;
+			
+			TextWidget page = (TextWidget)widgets[9];
+			int num   = (currentIndex / items) + 1;
+			int pages = Utils.CeilDiv(entries.Length, items);
+			if (pages == 0) pages = 1;
+			page.SetText("&7Page " + num + " of " + pages);
 		}
 		
 		public override bool HandlesKeyDown(Key key) {
