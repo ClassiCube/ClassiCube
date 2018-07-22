@@ -35,6 +35,7 @@
 struct ListScreen {
 	Screen_Layout
 	struct FontDesc Font;
+	Real32 WheelAcc;
 	Int32 CurrentIndex;
 	Widget_LeftClick EntryClick;
 	String TitleText;
@@ -300,8 +301,9 @@ static void Menu_SwitchHotkeys(struct GuiElem* a, struct GuiElem* b)          { 
 struct GuiElementVTABLE ListScreen_VTABLE;
 struct ListScreen ListScreen_Instance;
 #define LIST_SCREEN_EMPTY "-----"
-STRING_REF String ListScreen_UNSAFE_Get(struct ListScreen* screen, UInt32 index) {
-	if (index < screen->Entries.Count) {
+
+STRING_REF String ListScreen_UNSAFE_Get(struct ListScreen* screen, Int32 index) {
+	if (index >= 0 && index < screen->Entries.Count) {
 		return StringsBuffer_UNSAFE_Get(&screen->Entries, index);
 	} else {
 		String str = String_FromConst(LIST_SCREEN_EMPTY); return str;
@@ -332,7 +334,7 @@ static void ListScreen_UpdateArrows(struct ListScreen* screen) {
 }
 
 static void ListScreen_SetCurrentIndex(struct ListScreen* screen, Int32 index) {
-	if (index >= screen->Entries.Count) index -= LIST_SCREEN_ITEMS;
+	if (index >= screen->Entries.Count) { index = screen->Entries.Count - 1; }
 	if (index < 0) index = 0;
 
 	Int32 i;
@@ -410,6 +412,7 @@ static String ListScreen_UNSAFE_GetCur(struct ListScreen* screen, struct GuiElem
 static void ListScreen_Init(struct GuiElem* elem) {
 	struct ListScreen* screen = (struct ListScreen*)elem;
 	Platform_FontMake(&screen->Font, &Game_FontName, 16, FONT_STYLE_BOLD);
+	screen->WheelAcc = 0.0f;
 	ListScreen_ContextRecreated(screen);
 	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, ListScreen_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, ListScreen_ContextRecreated);
@@ -455,6 +458,13 @@ static bool ListScreen_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y, 
 	return Menu_HandleMouseDown(elem, screen->Widgets, Array_Elems(screen->Widgets), x, y, btn) >= 0;
 }
 
+static bool ListScreen_HandlesMouseScroll(struct GuiElem* elem, Real32 delta) {
+	struct ListScreen* screen = (struct ListScreen*)elem;
+	Int32 steps = Utils_AccumulateWheelDelta(&screen->WheelAcc, delta);
+	if (steps) ListScreen_SetCurrentIndex(screen, screen->CurrentIndex + steps);
+	return true;
+}
+
 static void ListScreen_OnResize(struct GuiElem* elem) {
 	struct ListScreen* screen = (struct ListScreen*)elem;
 	Menu_RepositionWidgets(screen->Widgets, Array_Elems(screen->Widgets));
@@ -474,6 +484,7 @@ struct ListScreen* ListScreen_MakeInstance(void) {
 	screen->VTABLE->HandlesKeyDown   = ListScreen_HandlesKeyDown;
 	screen->VTABLE->HandlesMouseDown = ListScreen_HandlesMouseDown;
 	screen->VTABLE->HandlesMouseMove = ListScreen_HandlesMouseMove;
+	screen->VTABLE->HandlesMouseScroll = ListScreen_HandlesMouseScroll;
 
 	screen->OnResize       = ListScreen_OnResize;
 	screen->VTABLE->Init   = ListScreen_Init;

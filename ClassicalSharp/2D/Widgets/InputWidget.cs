@@ -413,8 +413,7 @@ namespace ClassicalSharp.Gui.Widgets {
 					text = game.window.GetClipboardText().Trim(trimChars);
 				} catch (Exception ex) {
 					ErrorHandler.LogError("Paste from clipboard", ex);
-					const string warning = "&cError while trying to paste from clipboard.";
-					game.Chat.Add(warning, MessageType.ClientStatus2);
+					game.Chat.Add("&cError while trying to paste from clipboard.");
 					return true;
 				}
 
@@ -427,8 +426,7 @@ namespace ClassicalSharp.Gui.Widgets {
 					game.window.SetClipboardText(Text.ToString());
 				} catch (Exception ex) {
 					ErrorHandler.LogError("Copy to clipboard", ex);
-					const string warning = "&cError while trying to copy to clipboard.";
-					game.Chat.Add(warning, MessageType.ClientStatus2);
+					game.Chat.Add("&cError while trying to copy to clipboard.");
 				}
 				return true;
 			}

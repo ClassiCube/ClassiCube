@@ -86,7 +86,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected void SetCurrentIndex(int index) {
-			if (index >= entries.Length) index -= items;
+			if (index >= entries.Length) { index = entries.Length - 1; }
 			if (index < 0) index = 0;
 			currentIndex = index;
 			
@@ -128,6 +128,13 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
 			return HandleMouseDown(widgets, mouseX, mouseY, button) >= 0;
+		}
+		
+		float wheelAcc;
+		public override bool HandlesMouseScroll(float delta) {
+			int steps = Utils.AccumulateWheelDelta(ref wheelAcc, delta);
+			if (steps != 0) SetCurrentIndex(currentIndex + steps);
+			return true;
 		}
 		
 		public override void OnResize() {

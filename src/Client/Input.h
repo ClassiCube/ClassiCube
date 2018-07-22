@@ -119,10 +119,10 @@ void KeyBind_Init(void);
 
 extern UInt8 Hotkeys_LWJGL[256];
 struct HotkeyData {
-	UInt32 TextIndex; /* contents to copy directly into the input bar */
-	UInt8 Trigger;    /* Member of Key enumeration */
-	UInt8 Flags;      /* ctrl 1, shift 2, alt 4 */
-	bool StaysOpen;   /* whether the user is able to enter further input */
+	Int32 TextIndex; /* contents to copy directly into the input bar */
+	UInt8 Trigger;   /* Member of Key enumeration */
+	UInt8 Flags;     /* ctrl 1, shift 2, alt 4 */
+	bool StaysOpen;  /* whether the user is able to enter further input */
 };
 
 #define HOTKEYS_MAX_COUNT 256

@@ -139,7 +139,7 @@ bool KeyBind_IsPressed(KeyBind binding) { return Key_States[KeyBind_Keys[binding
 #define KeyBind_MakeName(name) String_Clear(&name); String_AppendConst(&name, "key-"); String_AppendConst(&name, KeyBind_Names[i]);
 
 void KeyBind_Load(void) {
-	UInt32 i;
+	Int32 i;
 	UChar nameBuffer[String_BufferSize(STRING_SIZE)];
 	String name = String_InitAndClearArray(nameBuffer);
 
@@ -152,7 +152,7 @@ void KeyBind_Load(void) {
 }
 
 void KeyBind_Save(void) {
-	UInt32 i;
+	Int32 i;
 	UChar nameBuffer[String_BufferSize(STRING_SIZE)];
 	String name = String_InitAndClearArray(nameBuffer);
 
@@ -169,7 +169,7 @@ void KeyBind_Set(KeyBind binding, Key key) {
 }
 
 void KeyBind_Init(void) {
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < KeyBind_Count; i++) {
 		KeyBind_Keys[i] = KeyBind_Defaults[i];
 	}
@@ -232,8 +232,8 @@ void Hotkeys_AddNewHotkey(Key trigger, UInt8 flags, STRING_PURE String* text, bo
 }
 
 
-void Hotkeys_RemoveText(UInt32 index) {
-	UInt32 i; struct HotkeyData* hKey = HotkeysList;
+void Hotkeys_RemoveText(Int32 index) {
+	Int32 i; struct HotkeyData* hKey = HotkeysList;
 
 	for (i = 0; i < HotkeysText.Count; i++, hKey++) {
 		if (hKey->TextIndex >= index) hKey->TextIndex--;
@@ -242,7 +242,7 @@ void Hotkeys_RemoveText(UInt32 index) {
 }
 
 void Hotkeys_Add(Key trigger, UInt8 flags, STRING_PURE String* text, bool more) {
-	UInt32 i; struct HotkeyData* hKey = HotkeysList;
+	Int32 i; struct HotkeyData* hKey = HotkeysList;
 
 	for (i = 0; i < HotkeysText.Count; i++, hKey++) {		
 		if (hKey->Trigger != trigger || hKey->Flags != flags) continue;
@@ -257,7 +257,7 @@ void Hotkeys_Add(Key trigger, UInt8 flags, STRING_PURE String* text, bool more) 
 }
 
 bool Hotkeys_Remove(Key trigger, UInt8 flags) {
-	UInt32 i, j; struct HotkeyData* hKey = HotkeysList;
+	Int32 i, j; struct HotkeyData* hKey = HotkeysList;
 
 	for (i = 0; i < HotkeysText.Count; i++, hKey++) {
 		if (hKey->Trigger != trigger || hKey->Flags != flags) continue;
@@ -280,7 +280,7 @@ bool Hotkeys_IsHotkey(Key key, STRING_TRANSIENT String* text, bool* moreInput) {
 	String_Clear(text);
 	*moreInput = false;
 
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < HotkeysText.Count; i++) {
 		struct HotkeyData hKey = HotkeysList[i];
 		if ((hKey.Flags & flags) == hKey.Flags && hKey.Trigger == key) {
@@ -296,7 +296,8 @@ bool Hotkeys_IsHotkey(Key key, STRING_TRANSIENT String* text, bool* moreInput) {
 void Hotkeys_Init(void) {
 	StringsBuffer_Init(&HotkeysText);
 	String prefix = String_FromConst("hotkey-");
-	UInt32 i;
+	Int32 i;
+
 	for (i = 0; i < Options_Keys.Count; i++) {
 		String key = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
 		if (!String_CaselessStarts(&key, &prefix)) continue;

@@ -693,14 +693,14 @@ void StringsBuffer_Free(StringsBuffer* buffer) {
 	StringsBuffer_Init(buffer);
 }
 
-void StringsBuffer_Get(StringsBuffer* buffer, UInt32 index, STRING_TRANSIENT String* text) {
+void StringsBuffer_Get(StringsBuffer* buffer, Int32 index, STRING_TRANSIENT String* text) {
 	String raw = StringsBuffer_UNSAFE_Get(buffer, index);
 	String_Clear(text);
 	String_AppendString(text, &raw);
 }
 
-String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, UInt32 index) {
-	if (index >= buffer->Count) ErrorHandler_Fail("Tried to get String past StringsBuffer end");
+String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, Int32 index) {
+	if (index < 0 || index >= buffer->Count) ErrorHandler_Fail("Tried to get String past StringsBuffer end");
 
 	UInt32 flags  = buffer->FlagsBuffer[index];
 	UInt32 offset = flags >> STRINGSBUFFER_LEN_SHIFT;
@@ -741,7 +741,7 @@ void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text) {
 		ErrorHandler_Fail("String too big to insert into StringsBuffer");
 	}
 
-	UInt32 textOffset = buffer->UsedElems;
+	Int32 textOffset = buffer->UsedElems;
 	if (textOffset + text->length >= buffer->TextBufferElems) {
 		StringsBuffer_Resize(&buffer->TextBuffer, &buffer->TextBufferElems, sizeof(UChar),
 			STRINGSBUFFER_BUFFER_DEF_SIZE, STRINGSBUFFER_BUFFER_EXPAND_SIZE);
@@ -756,8 +756,8 @@ void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text) {
 	buffer->UsedElems += text->length;
 }
 
-void StringsBuffer_Remove(StringsBuffer* buffer, UInt32 index) {
-	if (index >= buffer->Count) ErrorHandler_Fail("Tried to remove String past StringsBuffer end");
+void StringsBuffer_Remove(StringsBuffer* buffer, Int32 index) {
+	if (index < 0 || index >= buffer->Count) ErrorHandler_Fail("Tried to remove String past StringsBuffer end");
 
 	UInt32 flags  = buffer->FlagsBuffer[index];
 	UInt32 offset = flags >> STRINGSBUFFER_LEN_SHIFT;

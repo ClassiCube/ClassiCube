@@ -59,7 +59,6 @@ namespace ClassicalSharp.Gui.Widgets {
 			originalText = null;
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
 			
-			game.Chat.Add(null, MessageType.ClientStatus2);
 			game.Chat.Add(null, MessageType.ClientStatus3);
 			base.EnterInput();
 		}

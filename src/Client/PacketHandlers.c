@@ -246,7 +246,7 @@ static bool WoM_ReadLine(STRING_REF String* page, Int32* start, STRING_TRANSIENT
 	return true;
 }
 
-static void Wom_ParseConfig(STRING_PURE String* page) {
+static void WoM_ParseConfig(STRING_PURE String* page) {
 	String line;
 	Int32 start = 0;
 
@@ -292,7 +292,7 @@ static void WoM_Tick(void) {
 
 	if (item.ResultData) {
 		String str = String_Init(item.ResultData, item.ResultSize, item.ResultSize);
-		Wom_ParseConfig(&str);
+		WoM_ParseConfig(&str);
 	}
 	ASyncRequest_Free(&item);
 }
@@ -340,9 +340,9 @@ void Classic_WritePosition(struct Stream* stream, Vector3 pos, Real32 rotY, Real
 
 void Classic_WriteSetBlock(struct Stream* stream, Int32 x, Int32 y, Int32 z, bool place, BlockID block) {
 	Stream_WriteU8(stream, OPCODE_SET_BLOCK_CLIENT);
-	Stream_WriteI16_BE(stream, x);
-	Stream_WriteI16_BE(stream, y);
-	Stream_WriteI16_BE(stream, z);
+	Stream_WriteU16_BE(stream, x);
+	Stream_WriteU16_BE(stream, y);
+	Stream_WriteU16_BE(stream, z);
 	Stream_WriteU8(stream, place ? 1 : 0);
 	Handlers_WriteBlock(stream, block);
 }

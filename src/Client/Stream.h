@@ -7,10 +7,7 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-enum STREAM_SEEKFROM {
-	STREAM_SEEKFROM_BEGIN, STREAM_SEEKFROM_CURRENT, STREAM_SEEKFROM_END,
-};
-
+enum STREAM_SEEKFROM { STREAM_SEEKFROM_BEGIN, STREAM_SEEKFROM_CURRENT, STREAM_SEEKFROM_END };
 struct Stream;
 /* Represents a stream that can be written to and/or read from. */
 struct Stream {

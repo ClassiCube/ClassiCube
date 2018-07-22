@@ -111,19 +111,19 @@ bool Convert_TryParseBool(STRING_PURE String* str, bool* value);
 typedef struct StringsBuffer_ {
 	UChar* TextBuffer; 
 	UInt32* FlagsBuffer;
-	UInt32 TextBufferElems, FlagsBufferElems;
-	UInt32 Count, UsedElems;
+	Int32 TextBufferElems, FlagsBufferElems;
+	Int32 Count, UsedElems;
 	UChar DefaultBuffer[STRINGSBUFFER_BUFFER_DEF_SIZE];
 	UInt32 DefaultFlags[STRINGSBUFFER_FLAGS_DEF_ELEMS];
 } StringsBuffer;
 
 void StringsBuffer_Init(StringsBuffer* buffer);
 void StringsBuffer_Free(StringsBuffer* buffer);
-void StringsBuffer_Get(StringsBuffer* buffer, UInt32 index, STRING_TRANSIENT String* text);
-STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, UInt32 index);
+void StringsBuffer_Get(StringsBuffer* buffer, Int32 index, STRING_TRANSIENT String* text);
+STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, Int32 index);
 void StringsBuffer_Resize(void** buffer, UInt32* elems, UInt32 elemSize, UInt32 defElems, UInt32 expandElems);
 void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text);
-void StringsBuffer_Remove(StringsBuffer* buffer, UInt32 index);
+void StringsBuffer_Remove(StringsBuffer* buffer, Int32 index);
 
 void WordWrap_Do(STRING_REF String* text, STRING_TRANSIENT String* lines, Int32 numLines, Int32 lineLen);
 void WordWrap_GetCoords(Int32 index, STRING_PURE String* lines, Int32 numLines, Int32* coordX, Int32* coordY);

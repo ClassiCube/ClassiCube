@@ -186,7 +186,7 @@ namespace ClassicalSharp.Gui.Screens {
 			int x = normalChat.X;
 			int y = normalChat.Y + normalChat.Height - chatHeight;
 			
-			int width = Math.Max(clientStatus.Width, normalChat.Width);			
+			int width = Math.Max(clientStatus.Width, normalChat.Width);
 			int height = chatHeight + clientStatus.GetUsedHeight();
 			
 			if (height > 0) {
