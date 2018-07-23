@@ -29,13 +29,12 @@ typedef void (*ButtonWidget_Set)(STRING_PURE String* raw);
 struct ButtonWidget {
 	Widget_Layout
 	struct Texture Texture;
-	Int32 DefaultHeight;
+	UInt16 DefaultHeight, MinWidth;
 	struct FontDesc Font;
 
 	const UChar* OptName;
 	ButtonWidget_Get GetValue;
 	ButtonWidget_Set SetValue;
-	Int32 MinWidth, MinHeight;
 };
 void ButtonWidget_Create(struct ButtonWidget* widget, Int32 minWidth, STRING_PURE String* text, struct FontDesc* font, Widget_LeftClick onClick);
 void ButtonWidget_SetText(struct ButtonWidget* widget, STRING_PURE String* text);

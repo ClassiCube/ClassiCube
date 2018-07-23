@@ -24,7 +24,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public static ButtonWidget Create(Game game, int width, string text, Font font, ClickHandler onClick) {
 			ButtonWidget widget = new ButtonWidget(game, font);
 			widget.Init();
-			widget.MinWidth = width; widget.MinHeight = 40;
+			widget.MinWidth = width;
 			widget.SetText(text);
 			widget.MenuClick = onClick;
 			return widget;
@@ -38,7 +38,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		Texture texture;
-		public int MinWidth, MinHeight;
+		public int MinWidth;
 		int defaultHeight;
 		internal Font font;
 		
@@ -48,6 +48,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		const float uWidth = 200/256f;
+		const int minHeight = 40;
 		static Texture shadowTex = new Texture(0, 0, 0, 0, 0,
 		                                       new TextureRec(0,   66/256f, uWidth, 20/256f));
 		static Texture selectedTex = new Texture(0, 0, 0, 0, 0,
@@ -63,8 +64,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			} else {
 				DrawTextArgs args = new DrawTextArgs(text, font, true);
 				texture = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
-				Width = Math.Max(texture.Width, MinWidth);
-				Height = Math.Max(texture.Height, MinHeight);
+				Width  = Math.Max(texture.Width,  MinWidth);
+				Height = Math.Max((int)texture.Height, minHeight);
 				
 				Reposition();
 				texture.X1 = X + (Width / 2 - texture.Width / 2);

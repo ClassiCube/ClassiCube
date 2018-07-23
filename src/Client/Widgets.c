@@ -104,6 +104,7 @@ void TextWidget_SetText(struct TextWidget* widget, STRING_PURE String* text) {
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
 *#########################################################################################################################*/
 #define BUTTON_uWIDTH (200.0f / 256.0f)
+#define BUTTON_MIN_WIDTH 40
 struct Texture Button_ShadowTex   = { 0, 0, 0, 0, 0,  0.0f, 66.0f / 256.0f, BUTTON_uWIDTH,  86.0f / 256.0f };
 struct Texture Button_SelectedTex = { 0, 0, 0, 0, 0,  0.0f, 86.0f / 256.0f, BUTTON_uWIDTH, 106.0f / 256.0f };
 struct Texture Button_DisabledTex = { 0, 0, 0, 0, 0,  0.0f, 46.0f / 256.0f, BUTTON_uWIDTH,  66.0f / 256.0f };
@@ -171,12 +172,12 @@ void ButtonWidget_Create(struct ButtonWidget* widget, Int32 minWidth, STRING_PUR
 	widget->VTABLE->Init   = ButtonWidget_Init;
 	widget->VTABLE->Render = ButtonWidget_Render;
 	widget->VTABLE->Free   = ButtonWidget_Free;
-	widget->Reposition     = ButtonWidget_Reposition;
+	widget->Reposition = ButtonWidget_Reposition;
 
 	widget->OptName = NULL;
 	widget->Font = *font;
 	Elem_Init(widget);
-	widget->MinWidth = minWidth; widget->MinHeight = 40;
+	widget->MinWidth = minWidth;
 	ButtonWidget_SetText(widget, text);
 	widget->MenuClick = onClick;
 }
@@ -191,7 +192,7 @@ void ButtonWidget_SetText(struct ButtonWidget* widget, STRING_PURE String* text)
 		DrawTextArgs_Make(&args, text, &widget->Font, true);
 		Drawer2D_MakeTextTexture(&widget->Texture, &args, 0, 0);
 		widget->Width  = max(widget->Texture.Width,  widget->MinWidth);
-		widget->Height = max(widget->Texture.Height, widget->MinHeight);
+		widget->Height = max(widget->Texture.Height, BUTTON_MIN_WIDTH);
 
 		Widget_Reposition(widget);
 		widget->Texture.X = widget->X + (widget->Width  / 2 - widget->Texture.Width  / 2);
@@ -2267,9 +2268,9 @@ void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* widget, Int32 ind
 	widget->PlaceholderHeight[index] = placeHolder;
 	if (widget->Textures[index].ID) return;
 
-	Int32 newHeight = placeHolder ? widget->DefaultHeight : 0;
+	UInt16 newHeight = placeHolder ? widget->DefaultHeight : 0;
 	widget->Textures[index].Y = TextGroupWidget_CalcY(widget, index, newHeight);
-	widget->Textures[index].Height = (UInt16)newHeight;
+	widget->Textures[index].Height = newHeight;
 }
 
 Int32 TextGroupWidget_UsedHeight(struct TextGroupWidget* widget) {
