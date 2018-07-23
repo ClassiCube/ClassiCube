@@ -53,7 +53,7 @@ String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 lengt
 #define String_UNSAFE_SubstringAt(str, offset) (String_UNSAFE_Substring(str, offset, (str)->length - (offset)))
 /* Splits a string into a sequence of substrings
 NOTE: THIS IS UNSAFE - IT MAINTAINS A REFERENCE TO THE ORIGINAL BUFFER, AND THE SUBSTRING IS NOT NULL TERMINATED */
-void String_UNSAFE_Split(STRING_REF String* str, UChar c, STRING_TRANSIENT String* subs, UInt32* subsCount);
+void String_UNSAFE_Split(STRING_REF String* str, UChar c, STRING_TRANSIENT String* subs, Int32* subsCount);
 
 bool String_Equals(STRING_PURE String* a, STRING_PURE String* b);
 bool String_CaselessEquals(STRING_PURE String* a, STRING_PURE String* b);

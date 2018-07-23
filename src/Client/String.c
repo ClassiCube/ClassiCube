@@ -84,9 +84,8 @@ String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 lengt
 	return String_Init(str->buffer + offset, length, length);
 }
 
-void String_UNSAFE_Split(STRING_REF String* str, UChar c, STRING_TRANSIENT String* subs, UInt32* subsCount) {
-	UInt32 maxSubs = *subsCount, i = 0;
-	Int32 start = 0;
+void String_UNSAFE_Split(STRING_REF String* str, UChar c, STRING_TRANSIENT String* subs, Int32* subsCount) {
+	Int32 maxSubs = *subsCount, i = 0, start = 0;
 	for (; i < maxSubs && start <= str->length; i++) {
 		Int32 end = String_IndexOf(str, c, start);
 		if (end == -1) end = str->length;

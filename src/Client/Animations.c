@@ -160,7 +160,7 @@ static void Animations_ReadDescription(struct Stream* stream) {
 		struct AnimationData data = { 0 };
 		UInt8 tileX, tileY;
 
-		UInt32 partsCount = Array_Elems(parts);	
+		Int32 partsCount = Array_Elems(parts);	
 		String_UNSAFE_Split(&line, ' ', parts, &partsCount);
 
 		if (partsCount < 7) {

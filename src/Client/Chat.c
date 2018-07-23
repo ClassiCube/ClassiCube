@@ -156,7 +156,7 @@ void Chat_AddOf(STRING_PURE String* text, Int32 msgType) {
 struct ChatCommand {
 	const UChar* Name;
 	const UChar* Help[5];
-	void (*Execute)(STRING_PURE String* args, UInt32 argsCount);
+	void (*Execute)(STRING_PURE String* args, Int32 argsCount);
 	bool SingleplayerOnly;
 };
 typedef void (*ChatCommandConstructor)(struct ChatCommand* cmd);
@@ -262,7 +262,7 @@ static void Commands_Execute(STRING_PURE String* input) {
 	}
 
 	String args[10];
-	UInt32 argsCount = Array_Elems(args);
+	Int32 argsCount = Array_Elems(args);
 	String_UNSAFE_Split(&text, ' ', args, &argsCount);
 
 	struct ChatCommand* cmd = Commands_GetMatch(&args[0]);
@@ -274,7 +274,7 @@ static void Commands_Execute(STRING_PURE String* input) {
 /*########################################################################################################################*
 *-------------------------------------------------------Help command------------------------------------------------------*
 *#########################################################################################################################*/
-static void HelpCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+static void HelpCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 	if (argsCount == 1) {
 		Chat_AddRaw(tmp1, "&eList of client commands:");
 		Commands_PrintDefined();
@@ -303,7 +303,7 @@ static void HelpCommand_Make(struct ChatCommand* cmd) {
 /*########################################################################################################################*
 *------------------------------------------------------GpuInfo command----------------------------------------------------*
 *#########################################################################################################################*/
-static void GpuInfoCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+static void GpuInfoCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 	Int32 i;
 	for (i = 0; i < Array_Elems(Gfx_ApiInfo); i++) {
 		if (Gfx_ApiInfo[i].length == 0) continue;
@@ -327,7 +327,7 @@ static void GpuInfoCommand_Make(struct ChatCommand* cmd) {
 /*########################################################################################################################*
 *----------------------------------------------------RenderType command---------------------------------------------------*
 *#########################################################################################################################*/
-static void RenderTypeCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+static void RenderTypeCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 	if (argsCount == 1) {
 		Chat_AddRaw(tmp, "&e/client: &cYou didn't specify a new render type."); return;
 	}
@@ -354,7 +354,7 @@ static void RenderTypeCommand_Make(struct ChatCommand* cmd) {
 	cmd->Execute = RenderTypeCommand_Execute;
 }
 
-static void ResolutionCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+static void ResolutionCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 	Int32 width, height;
 	if (argsCount < 3) {
 		Chat_AddRaw(tmp, "&e/client: &cYou didn't specify width and height");
@@ -377,7 +377,7 @@ static void ResolutionCommand_Make(struct ChatCommand* cmd) {
 	cmd->Execute = ResolutionCommand_Execute;
 }
 
-static void ModelCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+static void ModelCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 	if (argsCount == 1) {
 		Chat_AddRaw(tmp, "&e/client model: &cYou didn't specify a model name.");
 	} else {
@@ -405,7 +405,7 @@ Int32 cuboid_block = -1;
 Vector3I cuboid_mark1, cuboid_mark2;
 bool cuboid_persist, cuboid_hooked;
 
-static bool CuboidCommand_ParseBlock(STRING_PURE String* args, UInt32 argsCount) {
+static bool CuboidCommand_ParseBlock(STRING_PURE String* args, Int32 argsCount) {
 	if (argsCount == 1) return true;
 	if (String_CaselessEqualsConst(&args[1], "yes")) { cuboid_persist = true; return true; }
 
@@ -476,7 +476,7 @@ static void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID oldBl
 	}
 }
 
-static void CuboidCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+static void CuboidCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 	if (cuboid_hooked) {
 		Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
 		cuboid_hooked = false;
@@ -513,7 +513,7 @@ static void CuboidCommand_Make(struct ChatCommand* cmd) {
 /*########################################################################################################################*
 *------------------------------------------------------TeleportCommand----------------------------------------------------*
 *#########################################################################################################################*/
-static void TeleportCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+static void TeleportCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 	if (argsCount != 4) {
 		Chat_AddRaw(tmp, "&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
 	} else {
