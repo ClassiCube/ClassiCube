@@ -41,7 +41,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(1, -100, "Chat scale",          onClick, GetChatScale, SetChatScale),
 				MakeOpt(1,  -50, "Chat lines",          onClick, GetChatlines, SetChatlines),
 				MakeOpt(1,    0, "Use system font",     onBool,  GetUseFont,   SetUseFont),
-				MakeOpt(1,   50, "Font",                onClick, GetFont,      SetFont),
+				Make(   1,   50, "Select system font",  SwitchFont),
 				
 				MakeBack(false, titleFont, SwitchOptions),
 				null, null, null,
@@ -91,19 +91,10 @@ namespace ClassicalSharp.Gui.Screens {
 			HandleFontChange(); 
 		}
 		
-		static string GetFont(Game g) { return g.FontName; }
-		void SetFont(Game g, string v) {
-			g.FontName = v;
-			Options.Set(OptionsKey.FontName, v);
-			HandleFontChange();
-		}
-		
-		void HandleFontChange() {
-			game.Events.RaiseChatFontChanged();
-			Recreate();
-			game.Gui.RefreshHud();
-			selectedI = -1;
-			HandlesMouseMove(Mouse.X, Mouse.Y);
-		}
+		static void SwitchFont(Game g, Widget w) { g.Gui.SetNewScreen(new FontListScreen(g)); }
+		ButtonWidget Make(int dir, int y, string text, ClickHandler onClick) {
+			return ButtonWidget.Create(game, 300, text, titleFont, onClick)
+				.SetLocation(Anchor.Centre, Anchor.Centre, dir * 160, y);
+		}	
 	}
 }

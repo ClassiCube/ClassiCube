@@ -1,5 +1,5 @@
 #include "ErrorHandler.h"
-#if CC_BUILD_X11
+#if CC_BUILD_NIX
 #include "Platform.h"
 
 void ErrorHandler_Init(const UChar* logFile) {

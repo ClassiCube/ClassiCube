@@ -88,6 +88,7 @@
     <Compile Include="2D\Screens\DisconnectScreen.cs" />
     <Compile Include="2D\Screens\InventoryScreen.cs" />
     <Compile Include="2D\Screens\Menu\ClickableScreen.cs" />
+    <Compile Include="2D\Screens\Menu\FontListScreen.cs" />
     <Compile Include="2D\Screens\Overlays\Overlay.cs" />
     <Compile Include="2D\Screens\Overlays\TexIdsOverlay.cs" />
     <Compile Include="2D\Screens\Overlays\WarningOverlays.cs" />

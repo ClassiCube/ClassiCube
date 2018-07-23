@@ -7,38 +7,22 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 
 namespace OpenTK.Platform.Windows {
 	
 	internal static class WinDisplayDevice {
 
-		/// <summary>Queries available display devices and display resolutions.</summary>
 		internal static void Init() {
-			// Get available video adapters and enumerate all monitors
-			int displayNum = 0;
-			WindowsDisplayDevice display = new WindowsDisplayDevice();
+			IntPtr dc = API.GetDC(IntPtr.Zero);
+			const int SM_CXSCREEN = 0, SM_CYSCREEN = 1, BITSPIXEL = 12;
+			DisplayDevice device = new DisplayDevice();
 			
-			while (API.EnumDisplayDevices(null, displayNum++, display, 0)) {
-				if ((display.StateFlags & DisplayDeviceStateFlags.AttachedToDesktop) == 0) continue;
-				DeviceMode mode = new DeviceMode();
-
-				// The second function should only be executed when the first one fails (e.g. when the monitor is disabled)
-				if (API.EnumDisplaySettings(display.DeviceName, (int)DisplayModeSettings.Current, mode) ||
-				    API.EnumDisplaySettings(display.DeviceName, (int)DisplayModeSettings.Registry, mode)) {			
-				} else {
-					mode.BitsPerPel = 0;
-				}
-				
-				if (mode.BitsPerPel == 0) continue;
-				DisplayDevice device = new DisplayDevice();
-				
-				device.Bounds.Width = mode.PelsWidth;
-				device.Bounds.Height = mode.PelsHeight;
-				device.BitsPerPixel = mode.BitsPerPel;
-				device.RefreshRate = mode.DisplayFrequency;
-				device.IsPrimary = (display.StateFlags & DisplayDeviceStateFlags.PrimaryDevice) != 0;
-			}
+			device.Bounds.Width  = API.GetSystemMetrics(0);
+			device.Bounds.Height = API.GetSystemMetrics(1);
+			device.BitsPerPixel  = API.GetDeviceCaps(dc, BITSPIXEL);
+			DisplayDevice.Default = device;
+			
+			API.ReleaseDC(IntPtr.Zero, dc);
 		}
 	}
 }

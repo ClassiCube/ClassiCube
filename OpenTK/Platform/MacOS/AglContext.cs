@@ -63,12 +63,8 @@ namespace OpenTK.Platform.MacOS {
 			// Choose a pixel format with the attributes we specified.
 			if (fullscreen) {
 				IntPtr gdevice;
-				IntPtr cgdevice = GetQuartzDevice(wind);
-
-				if (cgdevice == IntPtr.Zero)
-					cgdevice = QuartzDisplayDevice.MainDisplay;
-
-				OSStatus status = API.DMGetGDeviceByDisplayID(cgdevice, out gdevice, false);
+				IntPtr display = CG.CGMainDisplayID();
+				OSStatus status = API.DMGetGDeviceByDisplayID(display, out gdevice, false);
 				
 				if (status != OSStatus.NoError)
 					throw new MacOSException(status, "DMGetGDeviceByDisplayID failed.");
@@ -105,7 +101,7 @@ namespace OpenTK.Platform.MacOS {
 			Debug.Print("context: {0}", ContextHandle);
 		}
 
-		IntPtr GetQuartzDevice(CarbonWindow window) { return window.Display.Metadata; }
+		IntPtr GetQuartzDevice(CarbonWindow window) { return CG.CGMainDisplayID(); }
 		
 		void SetDrawable(CarbonWindow window) {
 			IntPtr windowPort = API.GetWindowPort(window.WinHandle);
@@ -134,16 +130,18 @@ namespace OpenTK.Platform.MacOS {
 
 		bool firstFullScreen = false;
 		internal void SetFullScreen(CarbonWindow wind, out int width, out int height) {
+			int displayWidth = wind.Display.Bounds.Width;
+			int displayHeight = wind.Display.Bounds.Height;
 			Debug.Print("Switching to full screen {0}x{1} on context {2}",
-			            wind.Display.Width, wind.Display.Height, ContextHandle);
+			            displayWidth, displayHeight, ContextHandle);
 
-			CG.CGDisplayCapture(GetQuartzDevice(wind));
-			byte code = Agl.aglSetFullScreen(ContextHandle, wind.Display.Width, wind.Display.Height, 0, 0);
+			CG.CGDisplayCapture(CG.CGMainDisplayID());
+			byte code = Agl.aglSetFullScreen(ContextHandle, displayWidth, displayHeight, 0, 0);
 			Agl.CheckReturnValue(code, "aglSetFullScreen");
 			MakeCurrent(wind);
 
-			width = wind.Display.Width;
-			height = wind.Display.Height;
+			width  = displayWidth;
+			height = displayHeight;
 
 			// This is a weird hack to workaround a bug where the first time a context
 			// is made fullscreen, we just end up with a blank screen.  So we undo it as fullscreen
@@ -163,7 +161,7 @@ namespace OpenTK.Platform.MacOS {
 			code = Agl.aglUpdateContext(ContextHandle);
 			Agl.CheckReturnValue(code, "aglUpdateContext");
 			
-			CG.CGDisplayRelease(GetQuartzDevice(window));
+			CG.CGDisplayRelease(CG.CGMainDisplayID());
 			Debug.Print("Resetting drawable.");
 			SetDrawable(window);
 

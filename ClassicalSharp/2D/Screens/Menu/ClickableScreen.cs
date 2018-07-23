@@ -97,5 +97,12 @@ namespace ClassicalSharp.Gui.Screens {
 				if (widgets[i] != null) widgets[i].Render(delta);
 			}
 		}
+		
+		protected void HandleFontChange() {
+			game.Events.RaiseChatFontChanged();
+			Recreate();
+			game.Gui.RefreshHud();
+			HandlesMouseMove(Mouse.X, Mouse.Y);
+		}
 	}
 }

@@ -294,7 +294,6 @@
     <ClCompile Include="BlockPhysics.c" />
     <ClCompile Include="PickedPosRenderer.c" />
     <ClCompile Include="Picking.c" />
-    <ClCompile Include="X11DisplayDevice.c" />
     <ClCompile Include="X11ErrorHandler.c" />
     <ClCompile Include="X11Platform.c" />
     <ClCompile Include="Program.c" />
@@ -311,7 +310,6 @@
     <ClCompile Include="Utils.c" />
     <ClCompile Include="Vectors.c" />
     <ClCompile Include="Widgets.c" />
-    <ClCompile Include="WinDisplayDevice.c" />
     <ClCompile Include="WinErrorHandler.c" />
     <ClCompile Include="WinPlatform.c" />
     <ClCompile Include="WinWindow.c" />

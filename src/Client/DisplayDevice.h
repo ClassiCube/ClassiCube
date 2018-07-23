@@ -12,18 +12,8 @@
 * See license.txt for licensing detailed licensing details.
 */
 
-struct DisplayDevice {
-	Int32 Width, Height, BitsPerPixel;
-	/* The vertical refresh rate of this display. */
-	Int32 RefreshRate;
-	struct Rectangle2D Bounds;
-	void* Metadata;
-};
-
-/* The primary / default / main display device. */
+struct DisplayDevice { Int32 BitsPerPixel; struct Rectangle2D Bounds; };
 struct DisplayDevice DisplayDevice_Default;
-/* Initialises per-platform display device. */
-void DisplayDevice_Init(void);
 void* DisplayDevice_Meta[3];
 
 struct ColorFormat {

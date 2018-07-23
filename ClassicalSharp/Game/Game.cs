@@ -34,7 +34,7 @@ namespace ClassicalSharp {
 		
 		public Game(string username, string mppass, string skinServer, int width, int height) {
 			string title = Program.AppName + " (" + username + ")";
-			window = Factory.CreateWindow(width, height, title, GraphicsMode.Default, DisplayDevice.Primary);
+			window = Factory.CreateWindow(width, height, title, GraphicsMode.Default, DisplayDevice.Default);
 			window.Visible = true;
 			Username = username;
 			Mppass = mppass;

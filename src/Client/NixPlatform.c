@@ -1,8 +1,9 @@
 #include "Platform.h"
-#if CC_BUILD_X11
+#if CC_BUILD_NIX
 #include "PackedCol.h"
 #include "Drawer2D.h"
 #include "Stream.h"
+#include "DisplayDevice.h"
 #include "Funcs.h"
 #include "ErrorHandler.h"
 #include "Constants.h"
@@ -16,6 +17,7 @@
 #include <fcntl.h>
 #include <time.h>
 #include <pthread.h> 
+#include <X11/Xlib.h>
 
 #define UNIX_EPOCH 62135596800
 
@@ -37,8 +39,30 @@ void Platform_UnicodeExpand(void* dstPtr, STRING_PURE String* src) {
 	*dst = NULL;
 }
 
+static void Platform_InitDisplay(void) {
+	Display* display = XOpenDisplay(NULL);
+	if (display == NULL) {
+		ErrorHandler_Fail("Failed to open display");
+	}
+
+	int screen = XDefaultScreen(display);
+	Window rootWin = XRootWindow(display, screen);
+
+	/* TODO: Use Xinerama and XRandR for querying these */
+	struct DisplayDevice device = { 0 };
+	device.BoundsWidth   = DisplayWidth(display, screen);
+	device.Bounds.Height = DisplayHeight(display, screen);
+	device.BitsPerPixel  = DefaultDepth(display, screen);
+	DisplayDevice_Default = device;
+
+	DisplayDevice_Meta[0] = display;
+	DisplayDevice_Meta[1] = screen;
+	DisplayDevice_Meta[2] = rootWin;
+}
+
 pthread_mutex_t event_mutex;
 void Platform_Init(void) {
+	Platform_InitDisplay();
 	pthread_mutex_init(&event_mutex, NULL);
 }
 

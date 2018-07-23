@@ -16,16 +16,16 @@ namespace OpenTK.Platform.Windows {
 	internal static class API {
 		
 		[DllImport("shell32.dll", CharSet = CharSet.Unicode)]
-        public static extern int SetCurrentProcessExplicitAppUserModelID(string AppID);
+		public static extern int SetCurrentProcessExplicitAppUserModelID(string AppID);
 		
 		[DllImport("user32.dll")]
-		internal static extern bool SetWindowPos(IntPtr handle, IntPtr insertAfter, int x, int y, int cx, int cy, SetWindowPosFlags flags);	
+		internal static extern bool SetWindowPos(IntPtr handle, IntPtr insertAfter, int x, int y, int cx, int cy, SetWindowPosFlags flags);
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool AdjustWindowRect([In, Out] ref Win32Rectangle lpRect, WindowStyle dwStyle, bool bMenu);
 		
 		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
 		internal static extern IntPtr CreateWindowEx(int exStyle, IntPtr ClassAtom, IntPtr WindowName, WindowStyle Style,
-		                                             int X, int Y, int Width, int Height, IntPtr HandleToParentWindow, IntPtr Menu, IntPtr Instance, IntPtr Param);	
+		                                             int X, int Y, int Width, int Height, IntPtr HandleToParentWindow, IntPtr Menu, IntPtr Instance, IntPtr Param);
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool DestroyWindow(IntPtr windowHandle);
 		
@@ -54,29 +54,29 @@ namespace OpenTK.Platform.Windows {
 		[DllImport("User32.dll", CharSet = CharSet.Auto)]
 		internal static extern bool PeekMessage(ref MSG msg, IntPtr hWnd, int messageFilterMin, int messageFilterMax, int flags);
 		[DllImport("user32.dll", CharSet = CharSet.Auto)]
-		internal static extern IntPtr SendMessage(IntPtr hWnd, WindowMessage Msg, IntPtr wParam, IntPtr lParam);	
+		internal static extern IntPtr SendMessage(IntPtr hWnd, WindowMessage Msg, IntPtr wParam, IntPtr lParam);
 		[DllImport("user32.dll", CharSet = CharSet.Auto)]
-		internal static extern bool PostMessage(IntPtr hWnd, WindowMessage Msg, IntPtr wParam, IntPtr lParam);		
+		internal static extern bool PostMessage(IntPtr hWnd, WindowMessage Msg, IntPtr wParam, IntPtr lParam);
 		[DllImport("user32.dll", CharSet = CharSet.Auto)]
 		internal static extern IntPtr DispatchMessage(ref MSG msg);
 		[DllImport("user32.dll", CharSet = CharSet.Auto)]
 		internal static extern bool TranslateMessage(ref MSG lpMsg);
 		[DllImport("user32.dll", CharSet = CharSet.Auto)]
 		public extern static IntPtr DefWindowProc(IntPtr hWnd, WindowMessage msg, IntPtr wParam, IntPtr lParam);
-			
+		
 		[DllImport("user32.dll")]
 		internal static extern IntPtr GetDC(IntPtr hwnd);
 		[DllImport("user32.dll")]
 		internal static extern bool ReleaseDC(IntPtr hwnd, IntPtr DC);
 
 		[DllImport("gdi32.dll")]
-		internal static extern int ChoosePixelFormat(IntPtr dc, ref PixelFormatDescriptor pfd);		
+		internal static extern int ChoosePixelFormat(IntPtr dc, ref PixelFormatDescriptor pfd);
 		[DllImport("gdi32.dll")]
-		internal static extern int DescribePixelFormat(IntPtr deviceContext, int pixel, int pfdSize, ref PixelFormatDescriptor pixelFormat);		
+		internal static extern int DescribePixelFormat(IntPtr deviceContext, int pixel, int pfdSize, ref PixelFormatDescriptor pixelFormat);
 		[DllImport("gdi32.dll", SetLastError = true)]
-		internal static extern bool SetPixelFormat(IntPtr dc, int format, ref PixelFormatDescriptor pfd);		
+		internal static extern bool SetPixelFormat(IntPtr dc, int format, ref PixelFormatDescriptor pfd);
 		[DllImport("gdi32.dll", SetLastError = true)]
-		internal static extern bool SwapBuffers(IntPtr dc);		
+		internal static extern bool SwapBuffers(IntPtr dc);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern IntPtr LoadLibrary(string dllName);
@@ -85,40 +85,37 @@ namespace OpenTK.Platform.Windows {
 
 		[DllImport("user32.dll", SetLastError = true)]
 		//internal static extern bool ScreenToClient(IntPtr hWnd, ref POINT point);
-		internal static extern bool ScreenToClient(IntPtr hWnd, ref Point point);	
+		internal static extern bool ScreenToClient(IntPtr hWnd, ref Point point);
 		[DllImport("user32.dll", SetLastError = true)]
 		//internal static extern bool ClientToScreen(IntPtr hWnd, ref POINT point);
 		internal static extern bool ClientToScreen(IntPtr hWnd, ref Point point);
 		[DllImport("user32.dll", SetLastError = true)]
 		internal extern static bool GetClientRect(IntPtr windowHandle, out Win32Rectangle clientRectangle);
 		
-		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-		public static extern bool EnumDisplayDevices([MarshalAs(UnmanagedType.LPTStr)] string lpDevice,
-		                                             int iDevNum, [In, Out] WindowsDisplayDevice lpDisplayDevice, uint dwFlags);
-
-		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-		internal static extern bool EnumDisplaySettings([MarshalAs(UnmanagedType.LPTStr)] string device_name,
-		                                                int graphics_mode, [In, Out] DeviceMode device_mode);
-				
+		[DllImport("user32.dll", SetLastError = true)]
+		public static extern int GetSystemMetrics(int nIndex);
+		[DllImport("gdi32.dll", SetLastError = true)]
+		public static extern int GetDeviceCaps(IntPtr hDc, int nIndex);
+		
 		[DllImport("user32.dll", SetLastError = true)]
 		public static extern bool OpenClipboard(IntPtr hWndNewOwner);
 		[DllImport("user32.dll", SetLastError = true)]
-		public static extern bool EmptyClipboard();		
+		public static extern bool EmptyClipboard();
 		[DllImport("user32.dll", SetLastError = true)]
-		public static extern bool CloseClipboard();		
+		public static extern bool CloseClipboard();
 		[DllImport("user32.dll", SetLastError = true)]
-		public static extern IntPtr GetClipboardData(uint uFormat);		
+		public static extern IntPtr GetClipboardData(uint uFormat);
 		[DllImport("user32.dll", SetLastError = true)]
 		public static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
 		
 		[DllImport("kernel32.dll")]
-		public static extern IntPtr GlobalAlloc(uint uFlags, UIntPtr dwBytes);		
+		public static extern IntPtr GlobalAlloc(uint uFlags, UIntPtr dwBytes);
 		[DllImport("kernel32.dll")]
-		public static extern IntPtr GlobalFree(IntPtr hMem);		
+		public static extern IntPtr GlobalFree(IntPtr hMem);
 		[DllImport("kernel32.dll")]
-		public static extern IntPtr GlobalLock(IntPtr hMem);	
+		public static extern IntPtr GlobalLock(IntPtr hMem);
 		[DllImport("kernel32.dll")]
-		public static extern bool GlobalUnlock(IntPtr hMem);		
+		public static extern bool GlobalUnlock(IntPtr hMem);
 
 		[DllImport("user32.dll")]
 		public static extern IntPtr LoadCursor(IntPtr hInstance, IntPtr lpCursorName);

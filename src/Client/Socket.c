@@ -9,7 +9,7 @@
 ReturnCode ReturnCode_SocketInProgess = WSAEINPROGRESS;
 ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #define Socket__Error() WSAGetLastError()
-#elif CC_BUILD_X11
+#elif CC_BUILD_NIX
 #include <errno.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>

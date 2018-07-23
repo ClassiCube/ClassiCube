@@ -17,8 +17,6 @@ using Bool = System.Boolean;
 using Status = System.Int32;
 using Drawable = System.IntPtr;
 using Time = System.IntPtr;
-// Randr and Xrandr
-using XRRScreenConfiguration = System.IntPtr; // opaque datatype
 using KeyCode = System.Byte;    // Or maybe ushort?
 
 namespace OpenTK.Platform.X11 {
@@ -30,6 +28,10 @@ namespace OpenTK.Platform.X11 {
 		public extern static IntPtr XOpenDisplay(IntPtr display);
 		[DllImport("libX11")]
 		public extern static int XCloseDisplay(IntPtr display);
+		[DllImport("libX11")]
+		public extern static int XDefaultScreen(IntPtr display);
+		[DllImport("libX11")]
+		public static extern IntPtr XDefaultRootWindow(IntPtr display);
 
 		[DllImport("libX11")]
 		public extern static IntPtr XCreateWindow(IntPtr display, IntPtr parent, int x, int y, int width, int height, int border_width, int depth, int xclass, IntPtr visual, IntPtr valuemask, ref XSetWindowAttributes attributes);
@@ -95,11 +97,11 @@ namespace OpenTK.Platform.X11 {
 
 		// Colormaps
 		[DllImport("libX11")]
+		public extern static int XDisplayWidth(IntPtr display, int screen_number);
+		[DllImport("libX11")]
+		public extern static int XDisplayHeight(IntPtr display, int screen_number);
+		[DllImport("libX11")]
 		public extern static int XDefaultDepth(IntPtr display, int screen_number);
-		[DllImport("libX11")]
-		public extern static int XDefaultScreen(IntPtr display);
-		[DllImport("libX11")]
-		public static extern IntPtr XDefaultRootWindow(IntPtr display);
 		
 		[DllImport("libX11")]
 		public extern static int XChangeProperty(IntPtr display, IntPtr window, IntPtr property, IntPtr type, int format, PropertyMode mode, IntPtr[] data, int nelements);
@@ -217,45 +219,19 @@ namespace OpenTK.Platform.X11 {
 			return XCreatePixmapFromBitmapData(display, XDefaultRootWindow(display),
 			                                   mask, width, height, new IntPtr(1), IntPtr.Zero, 1);
 		}
-		
-		[DllImport("libX11")]
-		public static extern int XScreenCount(Display display);
-		
-		const string Xrandr = "libXrandr.so.2";
-		[DllImport(Xrandr)]
-		public static extern XRRScreenConfiguration XRRGetScreenInfo(Display dpy, Drawable draw);
-		[DllImport(Xrandr)]
-		public static extern void XRRFreeScreenConfigInfo(XRRScreenConfiguration config);
-		[DllImport(Xrandr)]
-		public static extern ushort XRRConfigCurrentConfiguration(XRRScreenConfiguration config, out ushort rotation);
-		[DllImport(Xrandr)]
-		public static extern short XRRConfigCurrentRate(XRRScreenConfiguration config);
-		// the following are always safe to call, even if RandR is not implemented on a screen
-		[DllImport(Xrandr)]
-		public unsafe static extern XRRScreenSize* XRRSizes(Display dpy, int screen, int* nsizes);
-		
-		const string Xinerama = "libXinerama";
-		[DllImport(Xinerama)]
-		public static extern bool XineramaQueryExtension(IntPtr dpy, out int event_basep, out int error_basep);
-		[DllImport(Xinerama)]
-		public static extern bool XineramaIsActive(IntPtr dpy);
-		[DllImport(Xinerama)]
-		public unsafe static extern XineramaScreenInfo* XineramaQueryScreens(IntPtr dpy, out int count);
 
 		public static Display DefaultDisplay;
 		public static int DefaultScreen;
 		public static IntPtr RootWindow;
-		public static int ScreenCount;
 
 		static API() {
 			DefaultDisplay = API.XOpenDisplay(IntPtr.Zero);
 			if (DefaultDisplay == IntPtr.Zero)
 				throw new PlatformException("Could not establish connection to the X-Server.");
 
-			ScreenCount = API.XScreenCount(DefaultDisplay);
 			DefaultScreen = API.XDefaultScreen(DefaultDisplay);
 			RootWindow = API.XRootWindow(DefaultDisplay, DefaultScreen);
-			Debug.Print("Display connection: {0}, Screen count: {1}", DefaultDisplay, ScreenCount);
+			Debug.Print("Display connection: {0}", DefaultDisplay);
 
 			//AppDomain.CurrentDomain.ProcessExit += new EventHandler(CurrentDomain_ProcessExit);
 		}

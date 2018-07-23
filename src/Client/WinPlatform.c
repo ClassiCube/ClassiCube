@@ -42,7 +42,20 @@ void Platform_UnicodeExpand(void* dstPtr, STRING_PURE String* src) {
 	*dst = NULL;
 }
 
+static void Platform_InitDisplay(void) {
+	HDC hdc = GetDC(NULL);
+	struct DisplayDevice device = { 0 };
+
+	device.Bounds.Width = GetSystemMetrics(SM_CXSCREEN);
+	device.Bounds.Height = GetSystemMetrics(SM_CYSCREEN);
+	device.BitsPerPixel = GetDeviceCaps(hdc, BITSPIXEL);
+	DisplayDevice_Default = device;
+
+	ReleaseDC(NULL, hdc);
+}
+
 void Platform_Init(void) {
+	Platform_InitDisplay();
 	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */
 	hdc = CreateCompatibleDC(NULL);
 	if (hdc == NULL) ErrorHandler_Fail("Failed to get screen DC");

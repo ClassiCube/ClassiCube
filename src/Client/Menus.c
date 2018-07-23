@@ -265,6 +265,14 @@ static Int32 Menu_Index(struct Widget** widgets, Int32 widgetsCount, struct Widg
 	}
 	return -1;
 }
+
+static void Menu_HandleFontChange(struct GuiElem* elem) {
+	Event_RaiseVoid(&ChatEvents_FontChanged);
+	Elem_Recreate(elem);
+	Gui_RefreshHud();
+	Elem_HandlesMouseMove(elem, Mouse_X, Mouse_Y);
+}
+
 static Int32 Menu_Int32(STRING_PURE String* v) { Int32 value; Convert_TryParseInt32(v, &value); return value; }
 static Real32 Menu_Real32(STRING_PURE String* v) { Real32 value; Convert_TryParseReal32(v, &value); return value; }
 static PackedCol Menu_HexCol(STRING_PURE String* v) { PackedCol value; PackedCol_TryParseHex(v, &value); return value; }
@@ -2051,6 +2059,7 @@ static void MenuOptionsScreen_Init(struct GuiElem* elem) {
 	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem;
 	MenuScreen_Init(elem);
 	Key_KeyRepeat = true;
+	screen->SelectedI = -1;
 	screen->ContextRecreated(elem);
 }
 	
@@ -2565,19 +2574,10 @@ struct Screen* GraphicsOptionsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------GuiOptionsScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-static void GuiOptionsScreen_HandleFontChange(void) {
-	struct MenuOptionsScreen* screen = &MenuOptionsScreen_Instance;
-	Event_RaiseVoid(&ChatEvents_FontChanged);
-	Elem_Recreate(screen);
-	Gui_RefreshHud();
-	screen->SelectedI = -1;
-	Elem_HandlesMouseMove(screen, Mouse_X, Mouse_Y);
-}
-
 static void GuiOptionsScreen_GetShadows(STRING_TRANSIENT String* v) { Menu_GetBool(v, Drawer2D_BlackTextShadows); }
 static void GuiOptionsScreen_SetShadows(STRING_PURE String* v) {
 	Drawer2D_BlackTextShadows = Menu_SetBool(v, OPT_BLACK_TEXT);
-	GuiOptionsScreen_HandleFontChange();
+	Menu_HandleFontChange(&MenuOptionsScreen_Instance);
 }
 
 static void GuiOptionsScreen_GetShowFPS(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ShowFPS); }
@@ -2614,14 +2614,14 @@ static void GuiOptionsScreen_SetChatlines(STRING_PURE String* v) {
 static void GuiOptionsScreen_GetUseFont(STRING_TRANSIENT String* v) { Menu_GetBool(v, !Drawer2D_UseBitmappedChat); }
 static void GuiOptionsScreen_SetUseFont(STRING_PURE String* v) {
 	Drawer2D_UseBitmappedChat = !Menu_SetBool(v, OPT_USE_CHAT_FONT);
-	GuiOptionsScreen_HandleFontChange();
+	Menu_HandleFontChange(&MenuOptionsScreen_Instance);
 }
 
 static void GuiOptionsScreen_GetFont(STRING_TRANSIENT String* v) { String_AppendString(v, &Game_FontName); }
 static void GuiOptionsScreen_SetFont(STRING_PURE String* v) {
 	String_Set(&Game_FontName, v);
 	Options_Set(OPT_FONT_NAME, v);
-	GuiOptionsScreen_HandleFontChange();
+	Menu_HandleFontChange(&MenuOptionsScreen_Instance);
 }
 
 static void GuiOptionsScreen_ContextRecreated(void* obj) {

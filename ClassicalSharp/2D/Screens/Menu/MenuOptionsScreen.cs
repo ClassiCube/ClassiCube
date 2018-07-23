@@ -19,6 +19,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			base.Init();
 			Keyboard.KeyRepeat = true;
+			selectedI = -1;
 			ContextRecreated();
 		}
 		

@@ -19,11 +19,11 @@ namespace ClassicalSharp.Gui.Screens {
 			string path = Path.Combine("texpacks", file);
 			if (!Platform.FileExists(path)) return;
 			
-			int curPage = currentIndex;
+			int cur = currentIndex;
 			game.DefaultTexturePack = file;
 			TexturePack.ExtractDefault(game);
 			Recreate();
-			SetCurrentIndex(curPage);
+			SetCurrentIndex(cur);
 		}
 	}
 }

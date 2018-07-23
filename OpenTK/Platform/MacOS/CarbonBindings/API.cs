@@ -44,26 +44,16 @@ namespace OpenTK.Platform.MacOS {
 		// CGRect -> HIRect
 
 		[DllImport(lib)]
-		internal unsafe static extern int CGGetActiveDisplayList(int maxDisplays, IntPtr* displays, out int count);
-		[DllImport(lib)]
 		internal static extern IntPtr CGMainDisplayID();
-
 		[DllImport(lib)]
 		internal unsafe static extern HIRect CGDisplayBounds(IntPtr display);
 		[DllImport(lib)]
-		internal static extern int CGDisplayPixelsWide(IntPtr display);
-		[DllImport(lib)]
-		internal static extern int CGDisplayPixelsHigh(IntPtr display);
+		internal static extern int CGDisplayBitsPerPixel(IntPtr display);
 
 		[DllImport(lib)]
 		internal static extern int CGDisplayCapture(IntPtr display);
 		[DllImport(lib)]
 		internal static extern int CGDisplayRelease(IntPtr display);
-
-		[DllImport(lib)]
-		internal static extern IntPtr CGDisplayAvailableModes(IntPtr display);
-		[DllImport(lib)]
-		internal static extern IntPtr CGDisplayCurrentMode(IntPtr display);
 		
 		[DllImport(lib)]
 		internal static extern int CGDisplayHideCursor(IntPtr display);	
