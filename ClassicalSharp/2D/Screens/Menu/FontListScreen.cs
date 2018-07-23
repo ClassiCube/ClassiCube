@@ -9,17 +9,24 @@ namespace ClassicalSharp.Gui.Screens {
 		public FontListScreen(Game game) : base(game) {
 			titleText = "Select a font";
 			FontFamily[] families = FontFamily.Families;
-			entries = new string[families.Length + 3];
+			entries = new string[families.Length];
 			
 			for (int i = 0; i < families.Length; i++) {
-				entries[i + 3] = families[i].Name;
+				entries[i] = families[i].Name;
 				families[i].Dispose();
 			}
 			Array.Sort(entries);
+		}
+		
+		public override void Init() {
+			base.Init();
+			string font = game.FontName;
 			
-			entries[0] = FontFamily.GenericMonospace.Name;
-			entries[1] = FontFamily.GenericSansSerif.Name;
-			entries[2] = FontFamily.GenericSerif.Name;
+			for (int i = 0; i < entries.Length; i++) {
+				if (!Utils.CaselessEq(font, entries[i])) continue;
+				SetCurrentIndex(i);
+				return;
+			}
 		}
 		
 		protected override void TextButtonClick(Game game, Widget widget) {			

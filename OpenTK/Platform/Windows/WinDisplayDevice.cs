@@ -17,8 +17,8 @@ namespace OpenTK.Platform.Windows {
 			const int SM_CXSCREEN = 0, SM_CYSCREEN = 1, BITSPIXEL = 12;
 			DisplayDevice device = new DisplayDevice();
 			
-			device.Bounds.Width  = API.GetSystemMetrics(0);
-			device.Bounds.Height = API.GetSystemMetrics(1);
+			device.Bounds.Width  = API.GetSystemMetrics(SM_CXSCREEN);
+			device.Bounds.Height = API.GetSystemMetrics(SM_CYSCREEN);
 			device.BitsPerPixel  = API.GetDeviceCaps(dc, BITSPIXEL);
 			DisplayDevice.Default = device;
 			

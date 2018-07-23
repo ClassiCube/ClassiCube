@@ -294,8 +294,8 @@
     <ClCompile Include="BlockPhysics.c" />
     <ClCompile Include="PickedPosRenderer.c" />
     <ClCompile Include="Picking.c" />
-    <ClCompile Include="X11ErrorHandler.c" />
-    <ClCompile Include="X11Platform.c" />
+    <ClCompile Include="NixErrorHandler.c" />
+    <ClCompile Include="NixPlatform.c" />
     <ClCompile Include="Program.c" />
     <ClCompile Include="Random.c" />
     <ClCompile Include="Screens.c" />
@@ -314,7 +314,7 @@
     <ClCompile Include="WinPlatform.c" />
     <ClCompile Include="WinWindow.c" />
     <ClCompile Include="World.c" />
-    <ClCompile Include="X11Window.c" />
+    <ClCompile Include="NixWindow.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
