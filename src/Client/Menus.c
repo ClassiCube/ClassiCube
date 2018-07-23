@@ -479,7 +479,7 @@ static bool ListScreen_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y, 
 static bool ListScreen_HandlesMouseScroll(struct GuiElem* elem, Real32 delta) {
 	struct ListScreen* screen = (struct ListScreen*)elem;
 	Int32 steps = Utils_AccumulateWheelDelta(&screen->WheelAcc, delta);
-	if (steps) ListScreen_SetCurrentIndex(screen, screen->CurrentIndex + steps);
+	if (steps) ListScreen_SetCurrentIndex(screen, screen->CurrentIndex - steps);
 	return true;
 }
 

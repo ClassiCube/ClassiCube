@@ -141,7 +141,7 @@ namespace ClassicalSharp.Gui.Screens {
 		float wheelAcc;
 		public override bool HandlesMouseScroll(float delta) {
 			int steps = Utils.AccumulateWheelDelta(ref wheelAcc, delta);
-			if (steps != 0) SetCurrentIndex(currentIndex + steps);
+			if (steps != 0) SetCurrentIndex(currentIndex - steps);
 			return true;
 		}
 		
