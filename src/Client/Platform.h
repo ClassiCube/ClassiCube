@@ -33,6 +33,7 @@ void Platform_Exit(ReturnCode code);
 STRING_PURE String Platform_GetCommandLineArgs(void);
 
 void* Platform_MemAlloc(UInt32 numElems, UInt32 elemsSize);
+void* Platform_MemAllocCleared(UInt32 numElems, UInt32 elemsSize);
 void* Platform_MemRealloc(void* mem, UInt32 numElems, UInt32 elemsSize);
 void Platform_MemFree(void** mem);
 void Platform_MemSet(void* dst, UInt8 value, UInt32 numBytes);

@@ -106,6 +106,11 @@ void* Platform_MemAlloc(UInt32 numElems, UInt32 elemsSize) {
 	return HeapAlloc(heap, 0, numBytes);
 }
 
+void* Platform_MemAllocCleared(UInt32 numElems, UInt32 elemsSize) {
+	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
+	return HeapAlloc(heap, HEAP_ZERO_MEMORY, numBytes);
+}
+
 void* Platform_MemRealloc(void* mem, UInt32 numElems, UInt32 elemsSize) {
 	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	return HeapReAlloc(heap, 0, mem, numBytes);
@@ -456,7 +461,7 @@ struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, Pac
 	Int32 xx, yy;
 	struct Bitmap* bmp = platform_bmp;
 	for (yy = 0; yy < area.cy; yy++) {
-		UInt8* src = (UInt8*)platform_bits + (yy * bmp->Stride);
+		UInt8* src = (UInt8*)platform_bits + (yy * (bmp->Width << 2));
 		UInt8* dst = (UInt8*)Bitmap_GetRow(bmp, y + yy); dst += x * BITMAP_SIZEOF_PIXEL;
 
 		for (xx = 0; xx < area.cx; xx++) {

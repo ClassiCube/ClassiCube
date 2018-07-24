@@ -7,9 +7,7 @@
 #include "Stream.h"
 
 void Bitmap_Create(struct Bitmap* bmp, Int32 width, Int32 height, UInt8* scan0) {
-	bmp->Width = width; bmp->Height = height;
-	bmp->Stride = width * BITMAP_SIZEOF_PIXEL;
-	bmp->Scan0 = scan0;
+	bmp->Width = width; bmp->Height = height; bmp->Scan0 = scan0;
 }
 
 void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, struct Bitmap* src, struct Bitmap* dst, Int32 size) {
@@ -25,19 +23,17 @@ void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, struct Bit
 
 void Bitmap_Allocate(struct Bitmap* bmp, Int32 width, Int32 height) {
 	bmp->Width = width; bmp->Height = height;
-	bmp->Stride = width * BITMAP_SIZEOF_PIXEL;
 	bmp->Scan0 = Platform_MemAlloc(width * height, BITMAP_SIZEOF_PIXEL);
-	
-	if (bmp->Scan0 == NULL) {
-		ErrorHandler_Fail("Bitmap - failed to allocate memory");
-	}
+	if (bmp->Scan0 == NULL) ErrorHandler_Fail("Bitmap - failed to allocate memory");
 }
 
 void Bitmap_AllocateClearedPow2(struct Bitmap* bmp, Int32 width, Int32 height) {
-	width = Math_NextPowOf2(width);
+	width  = Math_NextPowOf2(width);
 	height = Math_NextPowOf2(height);
-	Bitmap_Allocate(bmp, width, height);
-	Platform_MemSet(bmp->Scan0, 0, Bitmap_DataSize(width, height));
+
+	bmp->Width = width; bmp->Height = height;
+	bmp->Scan0 = Platform_MemAllocCleared(width * height, BITMAP_SIZEOF_PIXEL);
+	if (bmp->Scan0 == NULL) ErrorHandler_Fail("Bitmap - failed to allocate memory");
 }
 
 
@@ -337,7 +333,6 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 			if (bmp->Width  < 0 || bmp->Width  > PNG_MAX_DIMS) return PNG_ERR_TOO_WIDE;
 			if (bmp->Height < 0 || bmp->Height > PNG_MAX_DIMS) return PNG_ERR_TOO_TALL;
 
-			bmp->Stride = bmp->Width * BITMAP_SIZEOF_PIXEL;
 			bmp->Scan0 = Platform_MemAlloc(bmp->Width * bmp->Height, BITMAP_SIZEOF_PIXEL);
 			if (bmp->Scan0 == NULL) ErrorHandler_Fail("Failed to allocate memory for PNG bitmap");
 

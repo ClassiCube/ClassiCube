@@ -94,14 +94,12 @@ static void ChunkUpdater_FreeAllocations(void) {
 }
 
 static void ChunkUpdater_PerformPartsAllocations(void) {
-	UInt32 partsCount = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
-	MapRenderer_PartsBuffer_Raw = Platform_MemAlloc(partsCount * 2, sizeof(struct ChunkPartInfo));
-	if (MapRenderer_PartsBuffer_Raw == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk parts buffer");
+	UInt32 count = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
+	MapRenderer_PartsBuffer_Raw = Platform_MemAllocCleared(count * 2, sizeof(struct ChunkPartInfo));
+	if (MapRenderer_PartsBuffer_Raw == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk parts");
 
-	UInt32 partsSize = partsCount * 2 * (UInt32)sizeof(struct ChunkPartInfo);
-	Platform_MemSet(MapRenderer_PartsBuffer_Raw, 0, partsSize);
 	MapRenderer_PartsNormal = MapRenderer_PartsBuffer_Raw;
-	MapRenderer_PartsTranslucent = MapRenderer_PartsBuffer_Raw + partsCount;
+	MapRenderer_PartsTranslucent = MapRenderer_PartsBuffer_Raw + count;
 }
 
 static void ChunkUpdater_PerformAllocations(void) {

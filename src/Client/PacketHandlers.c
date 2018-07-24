@@ -404,7 +404,7 @@ static void Classic_LevelInit(struct Stream* stream) {
 
 	/* Fast map puts volume in header, doesn't bother with gzip */
 	if (cpe_fastMap) {
-		mapVolume = Stream_ReadI32_BE(stream);
+		mapVolume = Stream_ReadU32_BE(stream);
 		gzHeader.Done = true;
 		mapSizeIndex = sizeof(UInt32);
 		map = Platform_MemAlloc(mapVolume, sizeof(BlockID));
@@ -436,7 +436,7 @@ static void Classic_LevelDataChunk(struct Stream* stream) {
 
 		if (mapSizeIndex == sizeof(UInt32)) {
 			if (map == NULL) {
-				mapVolume = (mapSize[0] << 24) | (mapSize[1] << 16) | (mapSize[2] << 8) | mapSize[3];
+				mapVolume = Stream_GetU32_BE(mapSize);
 				map = Platform_MemAlloc(mapVolume, sizeof(BlockID));
 				if (map == NULL) ErrorHandler_Fail("Failed to allocate memory for map");
 			}

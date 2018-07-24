@@ -81,6 +81,10 @@ void* Platform_MemAlloc(UInt32 numElems, UInt32 elemsSize) {
 	return malloc(numElems * elemsSize); 
 }
 
+void* Platform_MemAllocCleared(UInt32 numElems, UInt32 elemsSize) {
+	return calloc(numElems, elemsSize);
+}
+
 void* Platform_MemRealloc(void* mem, UInt32 numElems, UInt32 elemsSize) {
 	return realloc(mem, numElems * elemsSize);
 }
