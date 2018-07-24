@@ -240,11 +240,11 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 		}
 		
-		unsafe static int NextUrl(char* chars, int i, int len) {
-			for (; i < len; i++) {
+		unsafe int NextUrl(char* chars, int i, int total) {
+			for (; i < total; i++) {
 				if (!(chars[i] == 'h' || chars[i] == '&')) continue;
-				int left = len - i;
-				if (left < prefixLen) return -1; // "http://".Length
+				int left = total - i;
+				if (left < prefixLen) return -1;
 				
 				// colour codes at start of URL
 				int start = i;
@@ -259,10 +259,33 @@ namespace ClassicalSharp.Gui.Widgets {
 				if (chars[i] == 's') { left--; i++; }
 				if (left >= 3 && chars[i] == ':' && chars[i + 1] == '/' && chars[i + 2] == '/') return start;
 			}
-			return -1;
+			return total;
 		}
 		
-		unsafe static void Output(Portion bit, int lineBeg, int lineEnd, ref Portion* portions) {
+		unsafe int UrlEnd(char* chars, int total, int* begs, int i) {
+			int start = i;
+			for (; i < total && chars[i] != ' '; i++) {
+				// Is this character the start of a line?
+				bool isBeg = false;
+				for (int j = 0; j < lines.Length; i++) {
+					if (j == begs[j]) { isBeg = true; break; }
+				}
+				
+				// Definitely not a multilined URL
+				if (!isBeg || i == start) continue;
+				if (chars[i] != '>') break;
+				
+				// Does this line start with "> ", making it a multiline ?
+				int next = i + 1, left = total - next;
+				while (left >= 2 && chars[next] == '&') { left -= 2; next += 2; }
+				if (left == 0 || chars[next] != ' ') break;
+				
+				i = next;
+			}
+			return i;
+		}
+		
+		unsafe void Output(Portion bit, int lineBeg, int lineEnd, ref Portion* portions) {
 			if (bit.Beg >= lineEnd || bit.Len == 0) return;
 			bit.LineBeg = bit.Beg;
 			bit.LineLen = bit.Len & 0x7FFF;
@@ -281,7 +304,6 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			bit.LineBeg -= lineBeg;
 			if (bit.LineLen == 0) return;
-			
 			*portions = bit; portions++;
 		}
 		
@@ -289,41 +311,30 @@ namespace ClassicalSharp.Gui.Widgets {
 		unsafe int Reduce(char* chars, int target, Portion* portions) {
 			Portion* start = portions;
 			int total = 0;
-			int[] begs = new int[lines.Length];
-			int[] ends = new int[lines.Length];
+			int* begs = stackalloc int[lines.Length];
+			int* ends = stackalloc int[lines.Length];
 
 			for (int i = 0; i < lines.Length; i++) {
 				string line = lines[i];
 				begs[i] = -1; ends[i] = -1;
-				if (line == null) continue;	
+				if (line == null) continue;
 				
 				begs[i] = total;
 				for (int j = 0; j < line.Length; j++) { chars[total + j] = line[j]; }
 				total += line.Length; ends[i] = total;
 			}
 			
-			// Now find http:// and https:// urls
 			int urlEnd = 0;
 			for (;;) {
 				int nextUrlStart = NextUrl(chars, urlEnd, total);
-				if (nextUrlStart == -1) nextUrlStart = total;
 				
 				// add normal portion between urls
 				Portion bit = default(Portion); bit.Beg = urlEnd;
 				bit.Len = nextUrlStart - urlEnd;
 				Output(bit, begs[target], ends[target], ref portions);
-				if (nextUrlStart == total) break;
 				
-				// work out how long this url is
-				urlEnd = nextUrlStart;
-				for (; urlEnd < total && chars[urlEnd] != ' '; urlEnd++) {
-					if (chars[urlEnd] != '>') { urlEnd++; continue; }
-					int left = total - urlEnd;
-					
-					// Skip "> "
-					while (left >= 2 && chars[urlEnd + 1] == '&') { left -= 2; urlEnd += 2; }
-					if (left > 0 && chars[urlEnd + 1] == ' ') urlEnd++;
-				}
+				if (nextUrlStart == total) break;
+				urlEnd = UrlEnd(chars, total, begs, nextUrlStart);
 				
 				// add this url portion
 				bit = default(Portion);
