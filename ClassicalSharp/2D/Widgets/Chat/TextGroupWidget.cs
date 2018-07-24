@@ -159,7 +159,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				
 				int width = game.Drawer2D.MeasureSize(ref args).Width;
 				if (args.Font != font && mouseX >= x && mouseX < x + width) {
-					return new string(chars, bit.ReducedBeg, bit.ReducedLen);
+					return new string(chars, bit.ReducedBeg, bit.ReducedLen & 0x7FFF);
 				}
 				x += width;
 			}
@@ -172,7 +172,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			if (IDrawer2D.EmptyText(text)) {
 				lines[index] = null;
-				tex = default(Texture); 
+				tex = default(Texture);
 				tex.Height = (ushort)(PlaceholderHeight[index] ? defaultHeight : 0);
 			} else {
 				lines[index] = text;
@@ -205,7 +205,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			Portion* portions = stackalloc Portion[(96 / 7) * 2];
 			int portionsCount = Reduce(chars, index, portions);
 			
-			Size total = Size.Empty;
+			Size total = Size.Empty; 
 			Size* partSizes = stackalloc Size[portionsCount];
 			
 			for (int i = 0; i < portionsCount; i++) {
@@ -242,13 +242,14 @@ namespace ClassicalSharp.Gui.Widgets {
 				int left = len - i;
 				if (left < 7) return -1; // "http://".Length
 				
+				int start = i;
 				// Starts with "http" ?
 				if (chars[i + 1] != 't' || chars[i + 2] != 't' || chars[i + 3] != 'p') continue;
 				left -= 4; i += 4;
 				
 				// And then with "s://" or "://" ?
 				if (chars[i] == 's') { left--; i++; }
-				if (left >= 3 && chars[i] == ':' && chars[i + 1] == '/' && chars[i + 2] == '/') return i;
+				if (left >= 3 && chars[i] == ':' && chars[i + 1] == '/' && chars[i + 2] == '/') return start;
 			}
 			return -1;
 		}
@@ -283,14 +284,15 @@ namespace ClassicalSharp.Gui.Widgets {
 				if (line == null) continue;
 				
 				if (i == target) {
-					lineBeg = total; lineLen = line.Length;
-					lineEnd = lineBeg + lineEnd;
+					lineBeg = total;
+					lineLen = line.Length;
+					lineEnd = lineBeg + lineLen;
 				}
 				total += line.Length;
 			}
 			
 			bit.Beg = mappings[bit.ReducedBeg];
-			if (bit.Beg >= lineEnd) return;
+			if (bit.Beg >= lineEnd || bit.ReducedLen == 0) return;
 			
 			// Map back this reduced portion to original lines
 			int end = bit.ReducedBeg + (bit.ReducedLen & 0x7FFF);
@@ -301,7 +303,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			if (bit.Beg >= lineBeg) {
 			} else if (bit.Beg + bit.Len > lineBeg) {
 				// Clamp start of portion to lie in this line
-				int underBy = (bit.Beg + bit.Len) - lineBeg;
+				int underBy = lineBeg - bit.Beg;
 				bit.Beg += underBy; bit.Len -= underBy;
 			} else {
 				return;
@@ -319,7 +321,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		struct Portion { public int ReducedBeg, ReducedLen, Beg, Len; }
 		unsafe int Reduce(char* chars, int target, Portion* portions) {
 			ushort* mappings = stackalloc ushort[lines.Length * 96];
-			Portion* portionsStart = portions;
+			Portion* start = portions;
 			int count = 0;
 
 			for (int i = 0, offset = 0; i < lines.Length; i++) {
@@ -351,7 +353,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				bit.ReducedLen = (urlEnd - nextUrlStart) | 0x8000;
 				Output(bit, mappings, count, target, lines, ref portions);
 			}
-			return (int)(portions - portionsStart);
+			return (int)(portions - start);
 		}
 	}
 }
