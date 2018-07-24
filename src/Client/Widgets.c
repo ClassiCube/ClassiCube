@@ -2315,6 +2315,111 @@ static void TextGroupWidget_UpdateDimensions(struct TextGroupWidget* widget) {
 	Widget_Reposition(widget);
 }
 
+Int32 TextGroupWidget_NextUrl(UChar* chars, Int32 i, Int32 total) {
+	for (; i < total; i++) {
+		if (!(chars[i] == 'h' || chars[i] == '&')) continue;
+		Int32 left = total - i;
+		if (left < prefixLen) return total;
+
+		/* colour codes at start of URL */
+		Int32 start = i;
+		while (left >= 2 && chars[i] == '&') { left -= 2; i += 2; }
+		if (left < prefixLen) continue;
+
+		/* Starts with "http" */
+		if (chars[i] != 'h' || chars[i + 1] != 't' || chars[i + 2] != 't' || chars[i + 3] != 'p') continue;
+		left -= 4; i += 4;
+
+		/* And then with "s://" or "://" */
+		if (chars[i] == 's') { left--; i++; }
+		if (left >= 3 && chars[i] == ':' && chars[i + 1] == '/' && chars[i + 2] == '/') return start;
+	}
+	return total;
+}
+
+Int32 TextGroupWidget_UrlEnd(UChar* chars, Int32 total, Int32* begs, Int32 i) {
+	Int32 start = i, j;
+	for (; i < total && chars[i] != ' '; i++) {
+		/* Is this character the start of a line */
+		bool isBeg = false;
+		for (j = 0; j < lines.Length; i++) {
+			if (j == begs[j]) { isBeg = true; break; }
+		}
+
+		/* Definitely not a multilined URL */
+		if (!isBeg || i == start) continue;
+		if (chars[i] != '>') break;
+
+		/* Does this line start with "> ", making it a multiline */
+		Int32 next = i + 1, left = total - next;
+		while (left >= 2 && chars[next] == '&') { left -= 2; next += 2; }
+		if (left == 0 || chars[next] != ' ') break;
+
+		i = next;
+	}
+	return i;
+}
+
+void TextGroupWidget_Output(struct Portion bit, Int32 lineBeg, Int32 lineEnd, struct Portion** portions) {
+	if (bit.Beg >= lineEnd || bit.Len == 0) return;
+	bit.LineBeg = bit.Beg;
+	bit.LineLen = bit.Len & 0x7FFF;
+
+	/* Adjust this portion to be within this line */
+	if (bit.Beg >= lineBeg) {
+	} else if (bit.Beg + bit.LineLen > lineBeg) {
+		/* Adjust start of portion to be within this line */
+		Int32 underBy = lineBeg - bit.Beg;
+		bit.LineBeg += underBy; bit.LineLen -= underBy;
+	} else { return; }
+
+	/* Limit length of portion to be within this line */
+	Int32 overBy = (bit.LineBeg + bit.LineLen) - lineEnd;
+	if (overBy > 0) bit.LineLen -= overBy;
+
+	bit.LineBeg -= lineBeg;
+	if (bit.LineLen == 0) return;
+
+	struct Portion* cur = *portions; *cur++ = bit; *portions = cur;
+}
+
+struct Portion { Int16 Beg, Len, LineBeg, LineLen; };
+Int32 TextGroupWidget_Reduce(UChar* chars, Int32 target, struct Portion* portions) {
+	struct Portion* start = portions;
+	Int32 total = 0, i, j;
+	Int32 begs[TEXTGROUPWIDGET_MAX_LINES];
+	Int32 ends[TEXTGROUPWIDGET_MAX_LINES];
+
+	for (i = 0; i < lines.Length; i++) {
+		string line = lines[i];
+		begs[i] = -1; ends[i] = -1;
+		if (line == null) continue;
+
+		begs[i] = total;
+		for (j = 0; j < line.Length; j++) { chars[total + j] = line[j]; }
+		total += line.Length; ends[i] = total;
+	}
+
+	Int32 end = 0; struct Portion bit;
+	for (;;) {
+		Int32 nextStart = NextUrl(chars, end, total);
+
+		/* add normal portion between urls */
+		bit.Beg = end;
+		bit.Len = nextStart - end;
+		Output(bit, begs[target], ends[target], &portions);
+
+		if (nextStart == total) break;
+		end = UrlEnd(chars, total, begs, nextStart);
+
+		/* add this url portion */
+		bit.Beg = nextStart;
+		bit.Len = (end - nextStart) | 0x8000;
+		Output(bit, begs[target], ends[target], &portions);
+	}
+	return (Int32)(portions - start);
+}
+
 String TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* widget, Int32 i) {
 	UChar* buffer = widget->Buffer + i * TEXTGROUPWIDGET_LEN;
 	UInt16 length = widget->LineLengths[i];

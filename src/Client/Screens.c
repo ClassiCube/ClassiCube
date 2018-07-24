@@ -1008,12 +1008,8 @@ static bool ChatScreen_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y, 
 	TextGroupWidget_GetSelected(&screen->Chat, &text, x, y);
 	if (text.length == 0) return false;
 
-	UChar urlBuffer[String_BufferSize(TEXTGROUPWIDGET_LEN)];
-	String url = String_InitAndClearArray(urlBuffer);
-	String_AppendColorless(&url, &text);
-
-	if (Utils_IsUrlPrefix(&url, 0)) {
-		struct Screen* overlay = UrlWarningOverlay_MakeInstance(&url);
+	if (Utils_IsUrlPrefix(&text, 0)) {
+		struct Screen* overlay = UrlWarningOverlay_MakeInstance(&text);
 		Gui_ShowOverlay(overlay, false);
 	} else if (Game_ClickableChat) {
 		InputWidget_AppendString(&screen->Input.Base, &text);

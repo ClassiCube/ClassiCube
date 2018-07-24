@@ -244,18 +244,18 @@ namespace ClassicalSharp.Gui.Widgets {
 			for (; i < total; i++) {
 				if (!(chars[i] == 'h' || chars[i] == '&')) continue;
 				int left = total - i;
-				if (left < prefixLen) return -1;
+				if (left < prefixLen) return total;
 				
 				// colour codes at start of URL
 				int start = i;
 				while (left >= 2 && chars[i] == '&') { left -= 2; i += 2; }
 				if (left < prefixLen) continue;
 				
-				// Starts with "http" ?
+				// Starts with "http"
 				if (chars[i] != 'h' || chars[i + 1] != 't' || chars[i + 2] != 't' || chars[i + 3] != 'p') continue;
 				left -= 4; i += 4;
 				
-				// And then with "s://" or "://" ?
+				// And then with "s://" or "://"
 				if (chars[i] == 's') { left--; i++; }
 				if (left >= 3 && chars[i] == ':' && chars[i + 1] == '/' && chars[i + 2] == '/') return start;
 			}
@@ -265,7 +265,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		unsafe int UrlEnd(char* chars, int total, int* begs, int i) {
 			int start = i;
 			for (; i < total && chars[i] != ' '; i++) {
-				// Is this character the start of a line?
+				// Is this character the start of a line
 				bool isBeg = false;
 				for (int j = 0; j < lines.Length; i++) {
 					if (j == begs[j]) { isBeg = true; break; }
@@ -275,7 +275,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				if (!isBeg || i == start) continue;
 				if (chars[i] != '>') break;
 				
-				// Does this line start with "> ", making it a multiline ?
+				// Does this line start with "> ", making it a multiline
 				int next = i + 1, left = total - next;
 				while (left >= 2 && chars[next] == '&') { left -= 2; next += 2; }
 				if (left == 0 || chars[next] != ' ') break;
@@ -324,22 +324,21 @@ namespace ClassicalSharp.Gui.Widgets {
 				total += line.Length; ends[i] = total;
 			}
 			
-			int urlEnd = 0;
+			int end = 0; Portion bit = default(Portion);
 			for (;;) {
-				int nextUrlStart = NextUrl(chars, urlEnd, total);
+				int nextStart = NextUrl(chars, end, total);
 				
 				// add normal portion between urls
-				Portion bit = default(Portion); bit.Beg = urlEnd;
-				bit.Len = nextUrlStart - urlEnd;
+				bit.Beg = end;
+				bit.Len = nextStart - end;
 				Output(bit, begs[target], ends[target], ref portions);
 				
-				if (nextUrlStart == total) break;
-				urlEnd = UrlEnd(chars, total, begs, nextUrlStart);
+				if (nextStart == total) break;
+				end = UrlEnd(chars, total, begs, nextStart);
 				
 				// add this url portion
-				bit = default(Portion);
-				bit.Beg = nextUrlStart;
-				bit.Len = (urlEnd - nextUrlStart) | 0x8000;
+				bit.Beg = nextStart;
+				bit.Len = (end - nextStart) | 0x8000;
 				Output(bit, begs[target], ends[target], ref portions);
 			}
 			return (int)(portions - start);
