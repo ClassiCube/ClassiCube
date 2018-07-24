@@ -24,6 +24,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		internal string[] lines;
 		int ElementsCount, defaultHeight;
 		readonly Font font, underlineFont;
+		const int prefixLen = 7; // "http://".Length
 		
 		public override void Init() {
 			Textures = new Texture[ElementsCount];
@@ -143,23 +144,26 @@ namespace ClassicalSharp.Gui.Widgets {
 			return null;
 		}
 		
-		unsafe string GetUrl(int index, int mouseX) {
-			Texture tex = Textures[index]; mouseX -= tex.X1;
+		unsafe string GetUrl(int index, int mX) {
+			Texture tex = Textures[index]; mX -= tex.X1;
 			DrawTextArgs args = default(DrawTextArgs);
 			string text = lines[index];
+			if (game.ClassicMode) return null;
 			
 			char* chars = stackalloc char[lines.Length * 96];
-			Portion* portions = stackalloc Portion[(96 / 7) * 2];
+			Portion* portions = stackalloc Portion[(96 / prefixLen) * 2];
 			int portionsCount = Reduce(chars, index, portions);
 			
 			for (int i = 0, x = 0; i < portionsCount; i++) {
 				Portion bit = portions[i];
-				args.Text = text.Substring(bit.Beg, bit.Len);
-				args.Font = (bit.ReducedLen & 0x8000) == 0 ? font : underlineFont;
+				args.Text = text.Substring(bit.LineBeg, bit.LineLen);
+				args.Font = (bit.Len & 0x8000) == 0 ? font : underlineFont;
 				
 				int width = game.Drawer2D.MeasureSize(ref args).Width;
-				if (args.Font != font && mouseX >= x && mouseX < x + width) {
-					return new string(chars, bit.ReducedBeg, bit.ReducedLen & 0x7FFF);
+				if (args.Font != font && mX >= x && mX < x + width) {
+					string url = new string(chars, bit.Beg, bit.Len & 0x7FFF);
+					// replace multiline bits
+					return Utils.StripColours(url).Replace("> ", "");
 				}
 				x += width;
 			}
@@ -202,16 +206,16 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		unsafe Texture DrawAdvanced(ref DrawTextArgs args, int index, string text) {
 			char* chars = stackalloc char[lines.Length * 96];
-			Portion* portions = stackalloc Portion[(96 / 7) * 2];
+			Portion* portions = stackalloc Portion[(96 / prefixLen) * 2];
 			int portionsCount = Reduce(chars, index, portions);
 			
-			Size total = Size.Empty; 
+			Size total = Size.Empty;
 			Size* partSizes = stackalloc Size[portionsCount];
 			
 			for (int i = 0; i < portionsCount; i++) {
 				Portion bit = portions[i];
-				args.Text = text.Substring(bit.Beg, bit.Len);
-				args.Font = (bit.ReducedLen & 0x8000) == 0 ? font : underlineFont;
+				args.Text = text.Substring(bit.LineBeg, bit.LineLen);
+				args.Font = (bit.Len & 0x8000) == 0 ? font : underlineFont;
 				
 				partSizes[i] = game.Drawer2D.MeasureSize(ref args);
 				total.Height = Math.Max(partSizes[i].Height, total.Height);
@@ -226,8 +230,8 @@ namespace ClassicalSharp.Gui.Widgets {
 				
 				for (int i = 0; i < portionsCount; i++) {
 					Portion bit = portions[i];
-					args.Text = text.Substring(bit.Beg, bit.Len);
-					args.Font = (bit.ReducedLen & 0x8000) == 0 ? font : underlineFont;
+					args.Text = text.Substring(bit.LineBeg, bit.LineLen);
+					args.Font = (bit.Len & 0x8000) == 0 ? font : underlineFont;
 					
 					drawer.DrawText(ref args, x, 0);
 					x += partSizes[i].Width;
@@ -238,13 +242,17 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		unsafe static int NextUrl(char* chars, int i, int len) {
 			for (; i < len; i++) {
-				if (chars[i] != 'h') continue;
+				if (!(chars[i] == 'h' || chars[i] == '&')) continue;
 				int left = len - i;
-				if (left < 7) return -1; // "http://".Length
+				if (left < prefixLen) return -1; // "http://".Length
 				
+				// colour codes at start of URL
 				int start = i;
+				while (left >= 2 && chars[i] == '&') { left -= 2; i += 2; }
+				if (left < prefixLen) continue;
+				
 				// Starts with "http" ?
-				if (chars[i + 1] != 't' || chars[i + 2] != 't' || chars[i + 3] != 'p') continue;
+				if (chars[i] != 'h' || chars[i + 1] != 't' || chars[i + 2] != 't' || chars[i + 3] != 'p') continue;
 				left -= 4; i += 4;
 				
 				// And then with "s://" or "://" ?
@@ -254,104 +262,74 @@ namespace ClassicalSharp.Gui.Widgets {
 			return -1;
 		}
 		
-		unsafe static int ReduceLine(char* chars, ushort* mappings,
-		                             int count, int offset, string line) {
-			bool lineStart = true;
-			for (int i = 0, last = line.Length - 1; i < line.Length;) {
-				char cur = line[i];
-				
-				// Trim colour codes and "> " line continues
-				if (cur == '&' && i < last && IDrawer2D.ValidColCode(line[i + 1])) {
-					i += 2; continue;
-				}
-				if (cur == '>' && i < last && lineStart && line[i + 1] == ' ') {
-					lineStart = false; i += 2; continue;
-				}
-				
-				lineStart = false;
-				chars[count] = cur;
-				mappings[count] = (ushort)(offset + i);
-				i++; count++;
-			}
-			return count;
-		}
-		
-		unsafe static void Output(Portion bit, ushort* mappings, int count,
-		                          int target, string[] lines, ref Portion* portions) {
-			int lineBeg = 0, lineLen = 0, lineEnd = 0, total = 0;
-			for (int i = 0; i < lines.Length; i++) {
-				string line = lines[i];
-				if (line == null) continue;
-				
-				if (i == target) {
-					lineBeg = total;
-					lineLen = line.Length;
-					lineEnd = lineBeg + lineLen;
-				}
-				total += line.Length;
-			}
+		unsafe static void Output(Portion bit, int lineBeg, int lineEnd, ref Portion* portions) {
+			if (bit.Beg >= lineEnd || bit.Len == 0) return;
+			bit.LineBeg = bit.Beg;
+			bit.LineLen = bit.Len & 0x7FFF;
 			
-			bit.Beg = mappings[bit.ReducedBeg];
-			if (bit.Beg >= lineEnd || bit.ReducedLen == 0) return;
-			
-			// Map back this reduced portion to original lines
-			int end = bit.ReducedBeg + (bit.ReducedLen & 0x7FFF);
-			end     = end < count ? mappings[end] : total;
-			bit.Len = end - bit.Beg;
-			
-			// Adjust this reduced portion to lie inside line we care about
+			// Adjust this portion to be within this line
 			if (bit.Beg >= lineBeg) {
-			} else if (bit.Beg + bit.Len > lineBeg) {
-				// Clamp start of portion to lie in this line
+			} else if (bit.Beg + bit.LineLen > lineBeg) {
+				// Adjust start of portion to be within this line
 				int underBy = lineBeg - bit.Beg;
-				bit.Beg += underBy; bit.Len -= underBy;
-			} else {
-				return;
-			}
+				bit.LineBeg += underBy; bit.LineLen -= underBy;
+			} else { return; }
 			
-			// Clamp length of portion to lie in this line
-			int overBy = (bit.Beg + bit.Len) - lineEnd;
-			if (overBy > 0) bit.Len -= overBy;
+			// Limit length of portion to be within this line
+			int overBy = (bit.LineBeg + bit.LineLen) - lineEnd;
+			if (overBy > 0) bit.LineLen -= overBy;
 			
-			bit.Beg -= lineBeg;
-			if (bit.Len == 0) return;
+			bit.LineBeg -= lineBeg;
+			if (bit.LineLen == 0) return;
+			
 			*portions = bit; portions++;
 		}
 		
-		struct Portion { public int ReducedBeg, ReducedLen, Beg, Len; }
+		struct Portion { public int Beg, Len, LineBeg, LineLen; }
 		unsafe int Reduce(char* chars, int target, Portion* portions) {
-			ushort* mappings = stackalloc ushort[lines.Length * 96];
 			Portion* start = portions;
-			int count = 0;
+			int total = 0;
+			int[] begs = new int[lines.Length];
+			int[] ends = new int[lines.Length];
 
-			for (int i = 0, offset = 0; i < lines.Length; i++) {
+			for (int i = 0; i < lines.Length; i++) {
 				string line = lines[i];
-				if (line == null) continue;
+				begs[i] = -1; ends[i] = -1;
+				if (line == null) continue;	
 				
-				count = ReduceLine(chars, mappings, count, offset, line);
-				offset += line.Length;
+				begs[i] = total;
+				for (int j = 0; j < line.Length; j++) { chars[total + j] = line[j]; }
+				total += line.Length; ends[i] = total;
 			}
 			
 			// Now find http:// and https:// urls
 			int urlEnd = 0;
 			for (;;) {
-				int nextUrlStart = NextUrl(chars, urlEnd, count);
-				if (nextUrlStart == -1) nextUrlStart = count;
+				int nextUrlStart = NextUrl(chars, urlEnd, total);
+				if (nextUrlStart == -1) nextUrlStart = total;
 				
 				// add normal portion between urls
-				Portion bit = default(Portion); bit.ReducedBeg = urlEnd;
-				bit.ReducedLen = nextUrlStart - urlEnd;
-				Output(bit, mappings, count, target, lines, ref portions);
+				Portion bit = default(Portion); bit.Beg = urlEnd;
+				bit.Len = nextUrlStart - urlEnd;
+				Output(bit, begs[target], ends[target], ref portions);
+				if (nextUrlStart == total) break;
 				
-				if (nextUrlStart == count) break;
 				// work out how long this url is
 				urlEnd = nextUrlStart;
-				for (; urlEnd < count && chars[urlEnd] != ' '; urlEnd++) { }
+				for (; urlEnd < total && chars[urlEnd] != ' '; urlEnd++) {
+					if (chars[urlEnd] != '>') { urlEnd++; continue; }
+					int left = total - urlEnd;
+					
+					// Skip "> "
+					while (left >= 2 && chars[urlEnd + 1] == '&') { left -= 2; urlEnd += 2; }
+					if (left > 0 && chars[urlEnd + 1] == ' ') urlEnd++;
+				}
 				
 				// add this url portion
-				bit = default(Portion); bit.ReducedBeg = nextUrlStart;
-				bit.ReducedLen = (urlEnd - nextUrlStart) | 0x8000;
-				Output(bit, mappings, count, target, lines, ref portions);
+				bit = default(Portion);
+				bit.Beg = nextUrlStart;
+				bit.Len = (urlEnd - nextUrlStart) | 0x8000;
+				Output(bit, begs[target], ends[target], ref portions);
 			}
 			return (int)(portions - start);
 		}

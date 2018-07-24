@@ -427,10 +427,9 @@ namespace ClassicalSharp.Gui.Screens {
 		bool HandlesChatClick(int mouseX, int mouseY) {
 			string text = normalChat.GetSelected(mouseX, mouseY);
 			if (text == null) return false;
-			string url = Utils.StripColours(text);
 			
-			if (Utils.IsUrlPrefix(url, 0)) {
-				Overlay overlay = new UrlWarningOverlay(game, url);
+			if (Utils.IsUrlPrefix(text, 0)) {
+				Overlay overlay = new UrlWarningOverlay(game, text);
 				game.Gui.ShowOverlay(overlay, false);
 			} else if (game.ClickableChat) {
 				input.Append(text);
