@@ -2342,8 +2342,8 @@ Int32 TextGroupWidget_UrlEnd(UChar* chars, Int32 total, Int32* begs, Int32 i) {
 	for (; i < total && chars[i] != ' '; i++) {
 		/* Is this character the start of a line */
 		bool isBeg = false;
-		for (j = 0; j < lines.Length; i++) {
-			if (j == begs[j]) { isBeg = true; break; }
+		for (j = 0; j < lines.Length; j++) {
+			if (i == begs[j]) { isBeg = true; break; }
 		}
 
 		/* Definitely not a multilined URL */
