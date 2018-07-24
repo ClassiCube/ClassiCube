@@ -147,7 +147,7 @@ namespace Launcher.Gui.Widgets {
 		
 		bool DrawColumnEntry(IDrawer2D drawer, ref DrawTextArgs args,
 		                     int maxWidth, int x, ref int y, ref TableEntry entry) {
-			Size size = drawer.MeasureSize(ref args);
+			Size size = drawer.MeasureText(ref args);
 			bool empty = args.Text == "";
 			if (empty)
 				size.Height = entryHeight;

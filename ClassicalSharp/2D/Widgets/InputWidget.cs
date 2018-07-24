@@ -23,7 +23,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			if (Prefix == null) return;
 			args = new DrawTextArgs(Prefix, font, true);
-			Size size = game.Drawer2D.MeasureSize(ref args);
+			Size size = game.Drawer2D.MeasureText(ref args);
 			prefixWidth = Width = size.Width;
 			prefixHeight = Height = size.Height;
 		}
@@ -109,7 +109,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			DrawTextArgs args = new DrawTextArgs(null, font, true);
 			for (int y = 0; y < UsedLines; y++) {
 				args.Text = lines[y];
-				lineSizes[y] += game.Drawer2D.MeasureSize(ref args);
+				lineSizes[y] += game.Drawer2D.MeasureText(ref args);
 			}
 			if (lineSizes[0].Height == 0) lineSizes[0].Height = prefixHeight;
 		}
@@ -129,7 +129,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				caretTex.Width = (ushort)caretWidth;
 			} else {
 				args.Text = lines[caretY].Substring(0, caretX);
-				Size trimmedSize = drawer.MeasureSize(ref args);
+				Size trimmedSize = drawer.MeasureText(ref args);
 				if (caretY == 0) trimmedSize.Width += prefixWidth;
 
 				caretTex.X1 = X + Padding + trimmedSize.Width;
@@ -139,7 +139,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				if (caretX < line.Length) {
 					args.Text = new String(line[caretX], 1);
 					args.UseShadow = true;
-					caretTex.Width = (ushort)drawer.MeasureSize(ref args).Width;
+					caretTex.Width = (ushort)drawer.MeasureText(ref args).Width;
 				} else {
 					caretTex.Width = (ushort)caretWidth;
 				}
@@ -446,11 +446,11 @@ namespace ClassicalSharp.Gui.Widgets {
 				
 				for (int x = 0; x < line.Length; x++) {
 					args.Text = line.Substring(0, x);
-					int charOffset = drawer.MeasureSize(ref args).Width;
+					int charOffset = drawer.MeasureText(ref args).Width;
 					if (y == 0) charOffset += prefixWidth;
 						
 					args.Text = new string(line[x], 1);
-					int charWidth = drawer.MeasureSize(ref args).Width;
+					int charWidth = drawer.MeasureText(ref args).Width;
 					
 					if (GuiElement.Contains(charOffset, y * charHeight, charWidth, charHeight, mouseX, mouseY)) {
 						caret = offset + x;

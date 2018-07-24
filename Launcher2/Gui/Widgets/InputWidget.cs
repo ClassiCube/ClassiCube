@@ -43,7 +43,7 @@ namespace Launcher.Gui.Widgets {
 			if (Password) text = new String('*', text.Length);
 			
 			DrawTextArgs args = new DrawTextArgs(text, font, true);
-			Size size = drawer.MeasureSize(ref args);
+			Size size = drawer.MeasureText(ref args);
 			RealWidth = Math.Max(ButtonWidth, size.Width + 15);
 			textHeight = size.Height;
 		}
@@ -53,7 +53,7 @@ namespace Launcher.Gui.Widgets {
 			if (Password) text = new String('*', text.Length);
 			DrawTextArgs args = new DrawTextArgs("&0" + text, font, false);
 			
-			Size size = drawer.MeasureSize(ref args);
+			Size size = drawer.MeasureText(ref args);
 			RealWidth = Math.Max(ButtonWidth, size.Width + 20);
 			textHeight = size.Height;
 			args.SkipPartsCheck = true;
@@ -119,7 +119,7 @@ namespace Launcher.Gui.Widgets {
 				args.Text = HintText;
 				args.Font = hintFont;
 				
-				Size hintSize = drawer.MeasureSize(ref args);
+				Size hintSize = drawer.MeasureText(ref args);
 				int y = Y + (Height - hintSize.Height) / 2;
 				args.SkipPartsCheck = true;
 				drawer.DrawText(ref args, X + 5, y);
@@ -134,13 +134,13 @@ namespace Launcher.Gui.Widgets {
 			DrawTextArgs args = new DrawTextArgs(text, font, true);
 			
 			if (Chars.CaretPos == -1) {
-				Size size = drawer.MeasureSize(ref args);
+				Size size = drawer.MeasureText(ref args);
 				r.X += size.Width; r.Width = 10;
 			} else {
 				args.Text = text.Substring(0, Chars.CaretPos);
-				int trimmedWidth = drawer.MeasureSize(ref args).Width;
+				int trimmedWidth = drawer.MeasureText(ref args).Width;
 				args.Text = new String(text[Chars.CaretPos], 1);
-				int charWidth = drawer.MeasureSize(ref args).Width;
+				int charWidth = drawer.MeasureText(ref args).Width;
 				r.X += trimmedWidth; r.Width = charWidth;
 			}
 			return r;
@@ -164,16 +164,16 @@ namespace Launcher.Gui.Widgets {
 			mouseX -= X; mouseY -= Y;
 			
 			DrawTextArgs args = new DrawTextArgs(text, font, true);
-			Size size = drawer.MeasureSize(ref args);
+			Size size = drawer.MeasureText(ref args);
 			if (mouseX >= size.Width) {
 				Chars.CaretPos = -1; return;
 			}
 			
 			for (int i = 0; i < Text.Length; i++) {
 				args.Text = text.Substring(0, i);
-				int trimmedWidth = drawer.MeasureSize(ref args).Width;
+				int trimmedWidth = drawer.MeasureText(ref args).Width;
 				args.Text = new String(text[i], 1);
-				int charWidth = drawer.MeasureSize(ref args).Width;
+				int charWidth = drawer.MeasureText(ref args).Width;
 				if (mouseX >= trimmedWidth && mouseX < trimmedWidth + charWidth) {
 					Chars.CaretPos = i; return;
 				}

@@ -168,7 +168,7 @@ namespace ClassicalSharp.Gui.Widgets {
 
 			for (int i = 0; i < e.Contents.Length; i += e.CharsPerItem) {
 				args.Text = e.Contents.Substring(i, e.CharsPerItem);
-				sizes[i / e.CharsPerItem] = game.Drawer2D.MeasureSize(ref args);
+				sizes[i / e.CharsPerItem] = game.Drawer2D.MeasureText(ref args);
 			}
 		}
 		
@@ -189,7 +189,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			DrawTextArgs args = new DrawTextArgs(null, font, false);
 			for (int i = 0; i < elements.Length; i++) {
 				args.Text = elements[i].Title;
-				elements[i].TitleSize = game.Drawer2D.MeasureSize(ref args);
+				elements[i].TitleSize = game.Drawer2D.MeasureText(ref args);
 				elements[i].TitleSize.Width += titleSpacing;
 				totalWidth += elements[i].TitleSize.Width;
 			}

@@ -81,7 +81,7 @@ namespace ClassicalSharp {
 		
 		protected abstract Size MeasureSysSize(ref DrawTextArgs args);
 		
-		public Size MeasureSize(ref DrawTextArgs args) {
+		public Size MeasureText(ref DrawTextArgs args) {
 			if (EmptyText(args.Text)) return Size.Empty;
 			if (!UseBitmappedChat) {
 				return MeasureSysSize(ref args);
@@ -92,12 +92,12 @@ namespace ClassicalSharp {
 		
 		public int FontHeight(Font font, bool useShadow) {
 			DrawTextArgs args = new DrawTextArgs("I", font, useShadow);
-			return MeasureSize(ref args).Height;
+			return MeasureText(ref args).Height;
 		}
 		
 		#if !LAUNCHER
 		public Texture MakeTextTexture(ref DrawTextArgs args, int windowX, int windowY) {
-			Size size = MeasureSize(ref args);
+			Size size = MeasureText(ref args);
 			if (size == Size.Empty)
 				return new Texture(0, windowX, windowY, 0, 0, 1, 1);
 			

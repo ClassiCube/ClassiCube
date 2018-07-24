@@ -23,7 +23,7 @@ namespace Launcher.Gui.Widgets {
 
 			Text = text;
 			DrawTextArgs args = new DrawTextArgs(text, font, true);
-			textSize = drawer.MeasureSize(ref args);
+			textSize = drawer.MeasureText(ref args);
 		}
 		
 		public override void Redraw(IDrawer2D drawer) {

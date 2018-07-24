@@ -2214,6 +2214,17 @@ void PlayerListWidget_Create(struct PlayerListWidget* widget, struct FontDesc* f
 /*########################################################################################################################*
 *-----------------------------------------------------TextGroupWidget-----------------------------------------------------*
 *#########################################################################################################################*/
+#define TextGroupWidget_LineBuffer(widget, i) ((widget)->Buffer + (i) * TEXTGROUPWIDGET_LEN)
+String TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* widget, Int32 i) {
+	UInt16 length = widget->LineLengths[i];
+	return String_Init(TextGroupWidget_LineBuffer(widget, i), length, length);
+}
+
+void TextGroupWidget_GetText(struct TextGroupWidget* widget, Int32 index, STRING_TRANSIENT String* text) {
+	String line = TextGroupWidget_UNSAFE_Get(widget, index);
+	String_Set(text, &line);
+}
+
 void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* widget, STRING_PURE String* text) {
 	Int32 y = widget->Y;
 	Gfx_DeleteTexture(&widget->Textures[0].ID);
@@ -2221,8 +2232,8 @@ void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* widget, STRING
 
 	/* Move contents of X line to X - 1 line */
 	for (i = 0; i < max_index; i++) {
-		UChar* dst = widget->Buffer + i       * TEXTGROUPWIDGET_LEN;
-		UChar* src = widget->Buffer + (i + 1) * TEXTGROUPWIDGET_LEN;
+		UChar* dst = TextGroupWidget_LineBuffer(widget, i);
+		UChar* src = TextGroupWidget_LineBuffer(widget, i + 1);
 		UInt8 lineLen = widget->LineLengths[i + 1];
 
 		if (lineLen > 0) Platform_MemCpy(dst, src, lineLen);
@@ -2315,16 +2326,18 @@ static void TextGroupWidget_UpdateDimensions(struct TextGroupWidget* widget) {
 	Widget_Reposition(widget);
 }
 
-Int32 TextGroupWidget_NextUrl(UChar* chars, Int32 i, Int32 total) {
-	for (; i < total; i++) {
+struct Portion { Int16 Beg, Len, LineBeg, LineLen; };
+#define TEXTGROUPWIDGET_HTTP_LEN 7 /* length of http:// */
+Int32 TextGroupWidget_NextUrl(UChar* chars, Int32 charsLen, Int32 i) {
+	for (; i < charsLen; i++) {
 		if (!(chars[i] == 'h' || chars[i] == '&')) continue;
-		Int32 left = total - i;
-		if (left < prefixLen) return total;
+		Int32 left = charsLen - i;
+		if (left < TEXTGROUPWIDGET_HTTP_LEN) return charsLen;
 
 		/* colour codes at start of URL */
 		Int32 start = i;
 		while (left >= 2 && chars[i] == '&') { left -= 2; i += 2; }
-		if (left < prefixLen) continue;
+		if (left < TEXTGROUPWIDGET_HTTP_LEN) continue;
 
 		/* Starts with "http" */
 		if (chars[i] != 'h' || chars[i + 1] != 't' || chars[i + 2] != 't' || chars[i + 3] != 'p') continue;
@@ -2334,15 +2347,15 @@ Int32 TextGroupWidget_NextUrl(UChar* chars, Int32 i, Int32 total) {
 		if (chars[i] == 's') { left--; i++; }
 		if (left >= 3 && chars[i] == ':' && chars[i + 1] == '/' && chars[i + 2] == '/') return start;
 	}
-	return total;
+	return charsLen;
 }
 
-Int32 TextGroupWidget_UrlEnd(UChar* chars, Int32 total, Int32* begs, Int32 i) {
+Int32 TextGroupWidget_UrlEnd(UChar* chars, Int32 charsLen, Int32* begs, Int32 begsLen, Int32 i) {
 	Int32 start = i, j;
-	for (; i < total && chars[i] != ' '; i++) {
+	for (; i < charsLen && chars[i] != ' '; i++) {
 		/* Is this character the start of a line */
 		bool isBeg = false;
-		for (j = 0; j < lines.Length; j++) {
+		for (j = 0; j < begsLen; j++) {
 			if (i == begs[j]) { isBeg = true; break; }
 		}
 
@@ -2351,7 +2364,7 @@ Int32 TextGroupWidget_UrlEnd(UChar* chars, Int32 total, Int32* begs, Int32 i) {
 		if (chars[i] != '>') break;
 
 		/* Does this line start with "> ", making it a multiline */
-		Int32 next = i + 1, left = total - next;
+		Int32 next = i + 1, left = charsLen - next;
 		while (left >= 2 && chars[next] == '&') { left -= 2; next += 2; }
 		if (left == 0 || chars[next] != ' ') break;
 
@@ -2383,47 +2396,81 @@ void TextGroupWidget_Output(struct Portion bit, Int32 lineBeg, Int32 lineEnd, st
 	struct Portion* cur = *portions; *cur++ = bit; *portions = cur;
 }
 
-struct Portion { Int16 Beg, Len, LineBeg, LineLen; };
-Int32 TextGroupWidget_Reduce(UChar* chars, Int32 target, struct Portion* portions) {
+Int32 TextGroupWidget_Reduce(struct TextGroupWidget* widget, UChar* chars, Int32 target, struct Portion* portions) {
 	struct Portion* start = portions;
-	Int32 total = 0, i, j;
+	Int32 total = 0, i;
 	Int32 begs[TEXTGROUPWIDGET_MAX_LINES];
 	Int32 ends[TEXTGROUPWIDGET_MAX_LINES];
 
-	for (i = 0; i < lines.Length; i++) {
-		string line = lines[i];
+	for (i = 0; i < widget->LinesCount; i++) {
+		UInt16 lineLen = widget->LineLengths[i];
 		begs[i] = -1; ends[i] = -1;
-		if (line == null) continue;
+		if (lineLen == 0) continue;
 
 		begs[i] = total;
-		for (j = 0; j < line.Length; j++) { chars[total + j] = line[j]; }
-		total += line.Length; ends[i] = total;
+		Platform_MemCpy(&chars[total], TextGroupWidget_LineBuffer(widget, i), lineLen);
+		total += lineLen; ends[i] = total;
 	}
 
 	Int32 end = 0; struct Portion bit;
 	for (;;) {
-		Int32 nextStart = NextUrl(chars, end, total);
+		Int32 nextStart = TextGroupWidget_NextUrl(chars, total, end);
 
 		/* add normal portion between urls */
 		bit.Beg = end;
 		bit.Len = nextStart - end;
-		Output(bit, begs[target], ends[target], &portions);
+		TextGroupWidget_Output(bit, begs[target], ends[target], &portions);
 
 		if (nextStart == total) break;
-		end = UrlEnd(chars, total, begs, nextStart);
+		end = TextGroupWidget_UrlEnd(chars, total, begs, widget->LinesCount, nextStart);
 
 		/* add this url portion */
 		bit.Beg = nextStart;
 		bit.Len = (end - nextStart) | 0x8000;
-		Output(bit, begs[target], ends[target], &portions);
+		TextGroupWidget_Output(bit, begs[target], ends[target], &portions);
 	}
 	return (Int32)(portions - start);
 }
 
-String TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* widget, Int32 i) {
-	UChar* buffer = widget->Buffer + i * TEXTGROUPWIDGET_LEN;
-	UInt16 length = widget->LineLengths[i];
-	return String_Init(buffer, length, length);
+void TextGroupWidget_FormatUrl(STRING_TRANSIENT String* text, STRING_PURE String* url) {
+	String_AppendColorless(text, url);
+	Int32 i;
+	UChar* dst = text->buffer;
+
+	/* Delete "> " multiline chars from URLs */
+	for (i = text->length - 2; i >= 0; i--) {
+		if (dst[i] != '>' || dst[i + 1] != ' ') continue;
+		String_DeleteAt(text, i + 1);
+		String_DeleteAt(text, i);
+	}
+}
+
+bool TextGroupWidget_GetUrl(struct TextGroupWidget* widget, STRING_TRANSIENT String* text, Int32 index, Int32 mouseX) {
+	mouseX -= widget->Textures[index].X;
+	struct DrawTextArgs args = { 0 }; args.UseShadow = true;
+	String line = TextGroupWidget_UNSAFE_Get(widget, index);
+	if (Game_ClassicMode) return false;
+
+	UChar chars[TEXTGROUPWIDGET_MAX_LINES * TEXTGROUPWIDGET_LEN];
+	struct Portion portions[2 * (TEXTGROUPWIDGET_LEN / TEXTGROUPWIDGET_HTTP_LEN)];
+	Int32 i, x, portionsCount = TextGroupWidget_Reduce(widget, chars, index, portions);
+
+	for (i = 0, x = 0; i < portionsCount; i++) {
+		struct Portion bit = portions[i];
+		args.Text = String_UNSAFE_Substring(&line, bit.LineBeg, bit.LineLen);
+		args.Font = (bit.Len & 0x8000) ? widget->UnderlineFont : widget->Font;
+
+		Int32 width = Drawer2D_MeasureText(&args).Width;
+		if ((bit.Len & 0x8000) && mouseX >= x && mouseX < x + width) {
+			bit.Len &= 0x7FFF; 
+			String url = String_Init(&chars[bit.Beg], bit.Len, bit.Len);
+
+			TextGroupWidget_FormatUrl(text, &url);
+			return true;
+		}
+		x += width;
+	}
+	return false;
 }
 
 void TextGroupWidget_GetSelected(struct TextGroupWidget* widget, STRING_TRANSIENT String* text, Int32 x, Int32 y) {
@@ -2431,32 +2478,79 @@ void TextGroupWidget_GetSelected(struct TextGroupWidget* widget, STRING_TRANSIEN
 	for (i = 0; i < widget->LinesCount; i++) {
 		if (widget->Textures[i].ID == NULL) continue;
 		struct Texture tex = widget->Textures[i];
-		/* TODO: Add support for URLS */
 		if (!Gui_Contains(tex.X, tex.Y, tex.Width, tex.Height, x, y)) continue;
 
-		String line = TextGroupWidget_UNSAFE_Get(widget, i);
-		String_AppendString(text, &line);
+		if (!TextGroupWidget_GetUrl(widget, text, i, x)) {
+			String line = TextGroupWidget_UNSAFE_Get(widget, i);
+			String_AppendString(text, &line);
+		}
 		return;
 	}
 }
 
-void TextGroupWidget_GetText(struct TextGroupWidget* widget, Int32 index, STRING_TRANSIENT String* text) {
-	String_Clear(text);
-	String line = TextGroupWidget_UNSAFE_Get(widget, index);
-	String_AppendString(text, &line);
+bool TextGroupWidget_MightHaveUrls(struct TextGroupWidget* widget) {
+	if (Game_ClassicMode) return false;
+	Int32 i;
+
+	for (i = 0; i < widget->LinesCount; i++) {
+		if (widget->LineLengths[i] == 0) continue;
+		String line = TextGroupWidget_UNSAFE_Get(widget, i);
+		if (String_IndexOf(&line, '/', 0) >= 0) return true;
+	}
+	return false;
+}
+
+void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* widget, struct Texture* tex, 
+	struct DrawTextArgs* args, Int32 index, STRING_PURE String* text) {
+	UChar chars[TEXTGROUPWIDGET_MAX_LINES * TEXTGROUPWIDGET_LEN];
+	struct Portion portions[2 * (TEXTGROUPWIDGET_LEN / TEXTGROUPWIDGET_HTTP_LEN)];
+	Int32 i, x, portionsCount = TextGroupWidget_Reduce(widget, chars, index, portions);
+
+	struct Size2D total = Size2D_Empty;
+	struct Size2D partSizes[Array_Elems(portions)];
+
+	for (i = 0; i < portionsCount; i++) {
+		struct Portion bit = portions[i];
+		args->Text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
+		args->Font = (bit.Len & 0x8000) ? widget->UnderlineFont : widget->Font;
+
+		partSizes[i] = Drawer2D_MeasureText(args);
+		total.Height = max(partSizes[i].Height, total.Height);
+		total.Width += partSizes[i].Width;
+	}
+
+	struct Bitmap bmp;
+	Bitmap_AllocateClearedPow2(&bmp, total.Width, total.Height);	
+	Drawer2D_Begin(&bmp);
+	{
+		for (i = 0, x = 0; i < portionsCount; i++) {
+			struct Portion bit = portions[i];
+			args->Text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
+			args->Font = (bit.Len & 0x8000) ? widget->UnderlineFont : widget->Font;
+
+			Drawer2D_DrawText(args, x, 0);
+			x += partSizes[i].Width;
+		}
+		Drawer2D_Make2DTexture(tex, &bmp, total, 0, 0);
+	}
+	Drawer2D_End();
 }
 
 void TextGroupWidget_SetText(struct TextGroupWidget* widget, Int32 index, STRING_PURE String* text) {
 	if (text->length > TEXTGROUPWIDGET_LEN) ErrorHandler_Fail("TextGroupWidget - too big text");
 	Gfx_DeleteTexture(&widget->Textures[index].ID);
-	Platform_MemCpy(widget->Buffer + index * TEXTGROUPWIDGET_LEN, text->buffer, text->length);
+	Platform_MemCpy(TextGroupWidget_LineBuffer(widget, index), text->buffer, text->length);
 	widget->LineLengths[index] = (UInt8)text->length;
 
 	struct Texture tex;
 	if (!Drawer2D_IsEmptyText(text)) {
-		/* TODO: Add support for URLs */
 		struct DrawTextArgs args; DrawTextArgs_Make(&args, text, &widget->Font, true);
-		Drawer2D_MakeTextTexture(&tex, &args, 0, 0);
+
+		if (!TextGroupWidget_MightHaveUrls(widget)) {
+			Drawer2D_MakeTextTexture(&tex, &args, 0, 0);
+		} else {
+			TextGroupWidget_DrawAdvanced(widget, &tex, &args, index, text);
+		}
 		Drawer2D_ReducePadding_Tex(&tex, widget->Font.Size, 3);
 	} else {
 		Texture_MakeInvalid(&tex);

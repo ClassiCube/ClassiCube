@@ -23,7 +23,7 @@ namespace ClassicalSharp {
 			
 			using (IDrawer2D drawer = game.Drawer2D) {
 				args.Text = prefix;
-				Size size = game.Drawer2D.MeasureSize(ref args);
+				Size size = game.Drawer2D.MeasureText(ref args);
 				offset = size.Width;
 				size.Width += fontSize * chars.Length;
 				
@@ -33,7 +33,7 @@ namespace ClassicalSharp {
 					
 					for (int i = 0; i < chars.Length; i++) {
 						args.Text = new String(chars[i], 1);
-						widths[i] = game.Drawer2D.MeasureSize(ref args).Width;
+						widths[i] = game.Drawer2D.MeasureText(ref args).Width;
 						drawer.DrawText(ref args, offset + fontSize * i, 0);
 					}
 					

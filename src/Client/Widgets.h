@@ -162,7 +162,7 @@ void ChatInputWidget_Create(struct ChatInputWidget* widget, struct FontDesc* fon
 
 
 #define TEXTGROUPWIDGET_MAX_LINES 30
-#define TEXTGROUPWIDGET_LEN (STRING_SIZE * 2)
+#define TEXTGROUPWIDGET_LEN (STRING_SIZE + (STRING_SIZE / 2))
 struct TextGroupWidget {
 	Widget_Layout
 	Int32 LinesCount, DefaultHeight;

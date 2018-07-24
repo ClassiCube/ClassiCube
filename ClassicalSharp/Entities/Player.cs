@@ -44,7 +44,7 @@ namespace ClassicalSharp.Entities {
 				DrawTextArgs args = new DrawTextArgs(DisplayName, font, false);
 				bool bitmapped = game.Drawer2D.UseBitmappedChat; // we want names to always be drawn without
 				game.Drawer2D.UseBitmappedChat = true;
-				Size size = game.Drawer2D.MeasureSize(ref args);
+				Size size = game.Drawer2D.MeasureText(ref args);
 				
 				if (size.Width == 0) {
 					nameTex = new Texture(-1, 0, 0, 0, 0, 1, 1);

@@ -17,7 +17,7 @@ namespace Launcher.Gui.Widgets {
 		
 		public void SetDrawData(IDrawer2D drawer, string text) {
 			DrawTextArgs args = new DrawTextArgs(text, font, true);
-			Size size = drawer.MeasureSize(ref args);
+			Size size = drawer.MeasureText(ref args);
 			Width = size.Width; Height = size.Height;
 			
 			CalculatePosition();

@@ -36,7 +36,7 @@ namespace Launcher.Drawing {
 		
 		static bool TryDraw(ref DrawTextArgs args, IDrawer2D drawer,
 		                    int x, int y, int maxWidth) {
-			Size size = drawer.MeasureSize(ref args);		
+			Size size = drawer.MeasureText(ref args);		
 			if (size.Width > maxWidth) return false;
 			
 			args.SkipPartsCheck = true;
@@ -46,7 +46,7 @@ namespace Launcher.Drawing {
 		
 		public static void DrawClippedText(ref DrawTextArgs args, IDrawer2D drawer,
 		                                   int x, int y, int maxWidth) {
-			Size size = drawer.MeasureSize(ref args);
+			Size size = drawer.MeasureText(ref args);
 			// No clipping needed
 			if (size.Width <= maxWidth) {
 				args.SkipPartsCheck = true;

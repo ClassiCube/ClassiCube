@@ -24,7 +24,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		internal string[] lines;
 		int ElementsCount, defaultHeight;
 		readonly Font font, underlineFont;
-		const int prefixLen = 7; // "http://".Length
+		const int httpLen = 7; // "http://".Length
 		
 		public override void Init() {
 			Textures = new Texture[ElementsCount];
@@ -144,14 +144,14 @@ namespace ClassicalSharp.Gui.Widgets {
 			return null;
 		}
 		
-		unsafe string GetUrl(int index, int mX) {
-			Texture tex = Textures[index]; mX -= tex.X1;
-			DrawTextArgs args = default(DrawTextArgs);
+		unsafe string GetUrl(int index, int mouseX) {
+			mouseX -= Textures[index].X1;
+			DrawTextArgs args = default(DrawTextArgs); args.UseShadow = true;
 			string text = lines[index];
 			if (game.ClassicMode) return null;
 			
 			char* chars = stackalloc char[lines.Length * 96];
-			Portion* portions = stackalloc Portion[(96 / prefixLen) * 2];
+			Portion* portions = stackalloc Portion[(96 / httpLen) * 2];
 			int portionsCount = Reduce(chars, index, portions);
 			
 			for (int i = 0, x = 0; i < portionsCount; i++) {
@@ -159,8 +159,8 @@ namespace ClassicalSharp.Gui.Widgets {
 				args.Text = text.Substring(bit.LineBeg, bit.LineLen);
 				args.Font = (bit.Len & 0x8000) == 0 ? font : underlineFont;
 				
-				int width = game.Drawer2D.MeasureSize(ref args).Width;
-				if (args.Font != font && mX >= x && mX < x + width) {
+				int width = game.Drawer2D.MeasureText(ref args).Width;
+				if (args.Font != font && mouseX >= x && mouseX < x + width) {
 					string url = new string(chars, bit.Beg, bit.Len & 0x7FFF);
 					// replace multiline bits
 					return Utils.StripColours(url).Replace("> ", "");
@@ -182,7 +182,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				lines[index] = text;
 				DrawTextArgs args = new DrawTextArgs(text, font, true);
 
-				if (game.ClassicMode || !MightHaveUrls()) {
+				if (!MightHaveUrls()) {
 					tex = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
 				} else {
 					tex = DrawAdvanced(ref args, index, text);
@@ -197,6 +197,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		bool MightHaveUrls() {
+			if (game.ClassicMode) return false;
 			for (int i = 0; i < lines.Length; i++) {
 				if (lines[i] == null) continue;
 				if (lines[i].IndexOf('/') >= 0) return true;
@@ -206,7 +207,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		unsafe Texture DrawAdvanced(ref DrawTextArgs args, int index, string text) {
 			char* chars = stackalloc char[lines.Length * 96];
-			Portion* portions = stackalloc Portion[(96 / prefixLen) * 2];
+			Portion* portions = stackalloc Portion[(96 / httpLen) * 2];
 			int portionsCount = Reduce(chars, index, portions);
 			
 			Size total = Size.Empty;
@@ -217,7 +218,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				args.Text = text.Substring(bit.LineBeg, bit.LineLen);
 				args.Font = (bit.Len & 0x8000) == 0 ? font : underlineFont;
 				
-				partSizes[i] = game.Drawer2D.MeasureSize(ref args);
+				partSizes[i] = game.Drawer2D.MeasureText(ref args);
 				total.Height = Math.Max(partSizes[i].Height, total.Height);
 				total.Width += partSizes[i].Width;
 			}
@@ -226,9 +227,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				using (Bitmap bmp = IDrawer2D.CreatePow2Bitmap(total))
 			{
 				drawer.SetBitmap(bmp);
-				int x = 0;
-				
-				for (int i = 0; i < portionsCount; i++) {
+				for (int i = 0, x = 0; i < portionsCount; i++) {
 					Portion bit = portions[i];
 					args.Text = text.Substring(bit.LineBeg, bit.LineLen);
 					args.Font = (bit.Len & 0x8000) == 0 ? font : underlineFont;
@@ -240,16 +239,16 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 		}
 		
-		unsafe int NextUrl(char* chars, int i, int total) {
-			for (; i < total; i++) {
+		unsafe int NextUrl(char* chars, int charsLen, int i) {
+			for (; i < charsLen; i++) {
 				if (!(chars[i] == 'h' || chars[i] == '&')) continue;
-				int left = total - i;
-				if (left < prefixLen) return total;
+				int left = charsLen - i;
+				if (left < httpLen) return charsLen;
 				
 				// colour codes at start of URL
 				int start = i;
 				while (left >= 2 && chars[i] == '&') { left -= 2; i += 2; }
-				if (left < prefixLen) continue;
+				if (left < httpLen) continue;
 				
 				// Starts with "http"
 				if (chars[i] != 'h' || chars[i + 1] != 't' || chars[i + 2] != 't' || chars[i + 3] != 'p') continue;
@@ -259,7 +258,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				if (chars[i] == 's') { left--; i++; }
 				if (left >= 3 && chars[i] == ':' && chars[i + 1] == '/' && chars[i + 2] == '/') return start;
 			}
-			return total;
+			return charsLen;
 		}
 		
 		unsafe int UrlEnd(char* chars, int total, int* begs, int i) {
@@ -310,7 +309,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		struct Portion { public int Beg, Len, LineBeg, LineLen; }
 		unsafe int Reduce(char* chars, int target, Portion* portions) {
 			Portion* start = portions;
-			int total = 0;
+			int charsLen = 0;
 			int* begs = stackalloc int[lines.Length];
 			int* ends = stackalloc int[lines.Length];
 
@@ -319,22 +318,22 @@ namespace ClassicalSharp.Gui.Widgets {
 				begs[i] = -1; ends[i] = -1;
 				if (line == null) continue;
 				
-				begs[i] = total;
-				for (int j = 0; j < line.Length; j++) { chars[total + j] = line[j]; }
-				total += line.Length; ends[i] = total;
+				begs[i] = charsLen;
+				for (int j = 0; j < line.Length; j++) { chars[charsLen + j] = line[j]; }
+				charsLen += line.Length; ends[i] = charsLen;
 			}
 			
 			int end = 0; Portion bit = default(Portion);
 			for (;;) {
-				int nextStart = NextUrl(chars, end, total);
+				int nextStart = NextUrl(chars, charsLen, end);
 				
 				// add normal portion between urls
 				bit.Beg = end;
 				bit.Len = nextStart - end;
 				Output(bit, begs[target], ends[target], ref portions);
 				
-				if (nextStart == total) break;
-				end = UrlEnd(chars, total, begs, nextStart);
+				if (nextStart == charsLen) break;
+				end = UrlEnd(chars, charsLen, begs, nextStart);
 				
 				// add this url portion
 				bit.Beg = nextStart;
