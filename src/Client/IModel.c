@@ -106,7 +106,7 @@ void IModel_SetupState(struct IModel* model, struct Entity* entity) {
 
 	bool _64x64 = entity->SkinType != SKIN_TYPE_64x32;
 	/* only apply when using humanoid skins */
-	_64x64 &= model->UsesHumanSkin || entity->MobTextureId != NULL;
+	_64x64 &= model->UsesHumanSkin || entity->MobTextureId;
 
 	IModel_uScale = entity->uScale * 0.015625f;
 	IModel_vScale = entity->vScale * (_64x64 ? 0.015625f : 0.03125f);
@@ -137,7 +137,7 @@ void IModel_UpdateVB(void) {
 GfxResourceID IModel_GetTexture(struct Entity* entity) {
 	struct IModel* model = IModel_ActiveModel;
 	GfxResourceID pTex = model->UsesHumanSkin ? entity->TextureId : entity->MobTextureId;
-	return pTex != NULL ? pTex : ModelCache_Textures[model->defaultTexIndex].TexID;
+	return pTex ? pTex : ModelCache_Textures[model->defaultTexIndex].TexID;
 }
 
 void IModel_DrawPart(struct ModelPart part) {

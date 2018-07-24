@@ -92,7 +92,7 @@ static void Builder_AddVertices(BlockID block, Face face) {
 static void Builder_SetPartInfo(struct Builder1DPart* part, Int32* offset, struct ChunkPartInfo* info, bool* hasParts) {
 	Int32 vCount = Builder1DPart_VerticesCount(part);
 	info->Offset = -1;
-	if (vCount == 0) return;
+	if (!vCount) return;
 
 	info->Offset = *offset;
 	*offset += vCount;
@@ -319,7 +319,7 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 	if (!hasMesh) return;
 
 	Int32 totalVerts = Builder_TotalVerticesCount();
-	if (totalVerts == 0) return;
+	if (!totalVerts) return;
 #if !CC_BUILD_GL11
 	/* add an extra element to fix crashing on some GPUs */
 	info->Vb = Gfx_CreateVb(Builder_Vertices, VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
@@ -371,9 +371,7 @@ static void Builder_DefaultPostStretchTiles(Int32 x1, Int32 y1, Int32 z1) {
 		Builder_Vertices = Platform_MemAlloc(vertsCount + 2, sizeof(VertexP3fT2fC4b));
 		Builder_VerticesElems = vertsCount;
 
-		if (Builder_Vertices == NULL) {
-			ErrorHandler_Fail("Builder1DPart_Prepare - failed to allocate memory");
-		}
+		if (!Builder_Vertices) ErrorHandler_Fail("Builder1DPart_Prepare - failed to allocate memory");
 	}
 
 	vertsCount = 0;

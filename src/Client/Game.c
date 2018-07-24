@@ -229,7 +229,7 @@ void Game_SetDefaultSkinType(struct Bitmap* bmp) {
 	Int32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		struct Entity* entity = Entities_List[i];
-		if (entity == NULL || entity->TextureId) continue;
+		if (!entity || entity->TextureId) continue;
 		entity->SkinType = Game_DefaultPlayerSkinType;
 	}
 }
@@ -254,7 +254,7 @@ bool Game_ValidateBitmap(STRING_PURE String* file, struct Bitmap* bmp) {
 	UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String msg = String_InitAndClearArray(msgBuffer);
 
-	if (bmp->Scan0 == NULL) {
+	if (!bmp->Scan0) {
 		String_Format1(&msg, "&cError loading %s from the texture pack.", file); Chat_Add(&msg);
 		return false;
 	}
@@ -490,7 +490,7 @@ void Game_Load(void) {
 	EnvRenderer_Legacy  = (flags & 1);
 	EnvRenderer_Minimal = (flags & 2);
 
-	if (Game_IPAddress.length == 0) {
+	if (!Game_IPAddress.length) {
 		ServerConnection_InitSingleplayer();
 	} else {
 		ServerConnection_InitMultiplayer();
@@ -710,7 +710,7 @@ static void Game_RenderFrame(Real64 delta) {
 	Game_UpdateViewMatrix();
 
 	bool visible = Gui_Active == NULL || !Gui_Active->BlocksWorld;
-	if (World_Blocks == NULL) visible = false;
+	if (!World_Blocks) visible = false;
 	if (visible) {
 		Game_Render3D(delta, t);
 	} else {

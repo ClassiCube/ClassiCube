@@ -173,8 +173,8 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF Strin
 	win_handle = XCreateWindow(win_display, win_rootWin, x, y, width, height,
 		0, win_visual.depth /* CopyFromParent*/, InputOutput, win_visual.visual, mask, &attributes);
 
-	if (win_handle == NULL) ErrorHandler_Fail("XCreateWindow call failed");
-	if (title->length > 0) {
+	if (!win_handle) ErrorHandler_Fail("XCreateWindow call failed");
+	if (title->length) {
 		XStoreName(win_display, win_handle, title->buffer);
 	}
 
@@ -213,7 +213,7 @@ String clipboard_paste_text = String_FromEmptyArray(clipboard_paste_buffer);
 
 void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 	Window owner = XGetSelectionOwner(win_display, xa_clipboard);
-	if (owner == NULL) return; /* no window owner */
+	if (!owner) return; /* no window owner */
 
 	XConvertSelection(win_display, xa_clipboard, xa_utf8_string, xa_data_sel, win_handle, NULL);
 	String_Clear(&clipboard_paste_text);
@@ -222,7 +222,7 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 	/* wait up to 1 second for SelectionNotify event to arrive */
 	for (i = 0; i < 10; i++) {
 		Window_ProcessEvents();
-		if (clipboard_paste_text.length > 0) {
+		if (clipboard_paste_text.length) {
 			String_Set(value, &clipboard_paste_text);
 			return;
 		} else {
@@ -394,7 +394,7 @@ void Window_RefreshBorders(void) {
 	XGetWindowProperty(win_display, win_handle, net_frame_extents, 0, 16, false,
 		xa_cardinal, &prop_type, &prop_format, &items, &bytes_after, &borders);
 
-	if (borders == NULL) return;
+	if (!borders) return;
 	if (items == 4) {
 		borderLeft = borders[0]; borderRight = borders[1];
 		borderTop = borders[2]; borderBottom = borders[3];
@@ -594,7 +594,7 @@ void Window_ProcessEvents(void) {
 			reply.xselection.property = NULL;
 			reply.xselection.time = e.xselectionrequest.time;
 
-			if (e.xselectionrequest.selection == xa_clipboard && e.xselectionrequest.target == xa_utf8_string && clipboard_copy_text.length > 0) {
+			if (e.xselectionrequest.selection == xa_clipboard && e.xselectionrequest.target == xa_utf8_string && clipboard_copy_text.length) {
 				reply.xselection.property = Window_GetSelectionProperty(&e);
 				UInt8 data[1024];
 				Int32 i, len = 0;
@@ -654,7 +654,7 @@ void Window_SetCursorVisible(bool visible) {
 	if (visible) {
 		XUndefineCursor(win_display, win_handle);
 	} else {
-		if (win_blankCursor == NULL) {
+		if (!win_blankCursor) {
 			XColor col = { 0 };
 			Pixmap pixmap = XCreatePixmap(win_display, win_rootWin, 1, 1, 1);
 			win_blankCursor = XCreatePixmapCursor(win_display, pixmap, pixmap, &col, &col, 0, 0);
@@ -672,13 +672,11 @@ bool ctx_supports_vSync;
 void GLContext_Init(struct GraphicsMode mode) {
 	ctx_Handle = glXCreateContext(win_display, &win_visual, NULL, true);
 
-	if (ctx_Handle == NULL) {
+	if (!ctx_Handle) {
 		Platform_LogConst("Context create failed. Trying indirect...");
 		ctx_Handle = glXCreateContext(win_display, &win_visual, NULL, false);
 	}
-	if (ctx_Handle == NULL) {
-		ErrorHandler_Fail("Failed to create context");
-	}
+	if (!ctx_Handle) ErrorHandler_Fail("Failed to create context");
 
 	if (!glXIsDirect(win_display, ctx_Handle)) {
 		Platform_LogConst("== WARNING: Context is not direct ==");
@@ -693,7 +691,7 @@ void GLContext_Init(struct GraphicsMode mode) {
 
 void GLContext_Update(void) { }
 void GLContext_Free(void) {
-	if (ctx_Handle == NULL) return;
+	if (!ctx_Handle) return;
 
 	if (glXGetCurrentContext() == ctx_Handle) {
 		glXMakeCurrent(win_display, NULL, NULL);
@@ -764,11 +762,11 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 		}
 	}
 
-	if (visual == NULL) {
+	if (!visual) {
 		Platform_LogConst("Falling back to glXChooseVisual.");
 		visual = glXChooseVisual(win_display, win_screen, attribs);
 	}
-	if (visual == NULL) {
+	if (!visual) {
 		ErrorHandler_Fail("Requested GraphicsMode not available.");
 	}
 

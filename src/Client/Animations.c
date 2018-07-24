@@ -156,7 +156,7 @@ static void Animations_ReadDescription(struct Stream* stream) {
 	Stream_ReadonlyBuffered(&buffered, stream, buffer, sizeof(buffer));
 
 	while (Stream_ReadLine(&buffered, &line)) {
-		if (line.length == 0 || line.buffer[0] == '#') continue;
+		if (!line.length || line.buffer[0] == '#') continue;
 		struct AnimationData data = { 0 };
 		UInt8 tileX, tileY;
 
@@ -204,14 +204,14 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, Int32
 	if (size > ANIMS_FAST_SIZE) {
 		/* cannot allocate memory on the stack for very big animation.png frames */
 		ptr = Platform_MemAlloc(size * size, BITMAP_SIZEOF_PIXEL);
-		if (ptr == NULL) ErrorHandler_Fail("Failed to allocate memory for anim frame");
+		if (!ptr) ErrorHandler_Fail("Failed to allocate memory for anim frame");
 	}
 
 	Int32 index_1D = Atlas1D_Index(texLoc);
 	Int32 rowId_1D = Atlas1D_RowId(texLoc);
 	struct Bitmap animPart; Bitmap_Create(&animPart, size, size, buffer);
 
-	if (data == NULL) {
+	if (!data) {
 		if (texLoc == 30) {
 			LavaAnimation_Tick((UInt32*)animPart.Scan0, size);
 		} else if (texLoc == 14) {
@@ -241,7 +241,7 @@ static void Animations_Apply(struct AnimationData* data) {
 }
 
 static bool Animations_IsDefaultZip(void) {
-	if (World_TextureUrl.length > 0) return false;
+	if (World_TextureUrl.length) return false;
 	UChar texPackBuffer[String_BufferSize(STRING_SIZE)];
 	String texPack = String_InitAndClearArray(texPackBuffer);
 
@@ -295,9 +295,9 @@ void Animations_Tick(struct ScheduledTask* task) {
 		Int32 size = min(Atlas2D_TileSize, 64);
 		Animations_Draw(NULL, 14, size);
 	}
-	if (anims_count == 0) return;
+	if (!anims_count) return;
 
-	if (anims_bmp.Scan0 == NULL) {
+	if (!anims_bmp.Scan0) {
 		String w1 = String_FromConst("&cCurrent texture pack specifies it uses animations,"); Chat_Add(&w1);
 		String w2 = String_FromConst("&cbut is missing animations.png");                      Chat_Add(&w2);
 		anims_count = 0;

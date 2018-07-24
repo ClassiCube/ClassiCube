@@ -189,7 +189,7 @@ static String HacksComp_UNSAFE_FlagValue(const UChar* flagRaw, struct HacksComp*
 
 static Real32 HacksComp_ParseFlagReal(const UChar* flagRaw, struct HacksComp* hacks) {
 	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
-	if (raw.length == 0 || Game_ClassicMode) return 1.0f;
+	if (!raw.length || Game_ClassicMode) return 1.0f;
 
 	Real32 value = 0.0f;
 	if (!Convert_TryParseReal32(&raw, &value)) return 1.0f;
@@ -198,7 +198,7 @@ static Real32 HacksComp_ParseFlagReal(const UChar* flagRaw, struct HacksComp* ha
 
 static Int32 HacksComp_ParseFlagInt(const UChar* flagRaw, struct HacksComp* hacks) {
 	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
-	if (raw.length == 0 || Game_ClassicMode) return 1;
+	if (!raw.length || Game_ClassicMode) return 1;
 
 	Int32 value = 0;
 	if (!Convert_TryParseInt32(&raw, &value)) return 1;
@@ -264,7 +264,7 @@ void HacksComp_CheckConsistency(struct HacksComp* hacks) {
 
 void HacksComp_UpdateState(struct HacksComp* hacks) {
 	HacksComp_SetAll(hacks, true);
-	if (hacks->HacksFlags.length == 0) return;
+	if (!hacks->HacksFlags.length) return;
 	hacks->CanBePushed = true;
 
 	/* By default (this is also the case with WoM), we can use hacks. */
@@ -311,7 +311,7 @@ static void InterpComp_AddRotY(struct InterpComp* interp, Real32 state) {
 
 static void InterpComp_AdvanceRotY(struct InterpComp* interp) {
 	interp->PrevRotY = interp->NextRotY;
-	if (interp->RotYCount == 0) return;
+	if (!interp->RotYCount) return;
 
 	interp->NextRotY = interp->RotYStates[0];
 	InterpComp_RemoveOldestRotY(interp);
@@ -648,9 +648,7 @@ void ShadowComponent_Draw(struct Entity* entity) {
 	}
 
 	if (ptr == vertices) return;
-	if (ShadowComponent_ShadowTex == NULL) {
-		ShadowComponent_MakeTex();
-	}
+	if (!ShadowComponent_ShadowTex) ShadowComponent_MakeTex();
 
 	if (!ShadowComponent_BoundShadowTex) {
 		Gfx_BindTexture(ShadowComponent_ShadowTex);
@@ -1165,7 +1163,7 @@ void PhysicsComp_DoEntityPush(struct Entity* entity) {
 
 	for (id = 0; id < ENTITIES_MAX_COUNT; id++) {
 		struct Entity* other = Entities_List[id];
-		if (other == NULL || other == entity) continue;
+		if (!other || other == entity) continue;
 		if (!other->Model->Pushes) continue;
 
 		bool yIntersects =

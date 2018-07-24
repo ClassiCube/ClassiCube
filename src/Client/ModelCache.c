@@ -1271,7 +1271,7 @@ static void BlockModel_DrawModel(struct Entity* p) {
 	BlockModel_lastTexIndex = -1;
 	bool sprite = Block_Draw[BlockModel_block] == DRAW_SPRITE;
 	BlockModel_DrawParts(sprite);
-	if (BlockModel.index == 0) return;
+	if (!BlockModel.index) return;
 
 	if (sprite) Gfx_SetFaceCulling(true);
 	BlockModel_lastTexIndex = BlockModel_texIndex;

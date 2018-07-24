@@ -188,7 +188,7 @@ static void Selections_QuickSort(Int32 left, Int32 right) {
 }
 
 void Selections_Render(Real64 delta) {
-	if (selections_count == 0 || Gfx_LostContext) return;
+	if (!selections_count || Gfx_LostContext) return;
 	/* TODO: Proper selection box sorting. But this is very difficult because
 	   we can have boxes within boxes, intersecting boxes, etc. Probably not worth it. */
 	Vector3 camPos = Game_CurrentCameraPos;
@@ -198,7 +198,7 @@ void Selections_Render(Real64 delta) {
 	}
 	Selections_QuickSort(0, selections_count - 1);
 
-	if (selections_VB == NULL) { /* lazy init as most servers don't use this */
+	if (!selections_VB) { /* lazy init as most servers don't use this */
 		selections_used = true;
 		Selections_ContextRecreated(NULL);
 	}

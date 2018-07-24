@@ -364,7 +364,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	case WM_CREATE:
 	{
 		CREATESTRUCT* cs = (CREATESTRUCT*)lParam;
-		if (cs->hwndParent == NULL) {
+		if (!cs->hwndParent) {
 			Window_Bounds.X = cs->x;      Window_Bounds.Y = cs->y;
 			Window_Bounds.Width = cs->cx; Window_Bounds.Height = cs->cy;
 			Window_UpdateClientSize(handle);
@@ -417,11 +417,11 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF Strin
 		rect.left, rect.top, RECT_WIDTH(rect), RECT_HEIGHT(rect),
 		NULL, NULL, win_Instance, NULL);
 
-	if (win_Handle == NULL) {
+	if (!win_Handle) {
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to create window");
 	}
 	win_DC = GetDC(win_Handle);
-	if (win_DC == NULL) {
+	if (!win_DC) {
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to get device context");
 	}
 	Window_Exists = true;
@@ -440,11 +440,11 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 
 		bool isUnicode = true;
 		HANDLE hGlobal = GetClipboardData(CF_UNICODETEXT);
-		if (hGlobal == NULL) {
+		if (!hGlobal) {
 			hGlobal = GetClipboardData(CF_TEXT);
 			isUnicode = false;
 		}
-		if (hGlobal == NULL) { CloseClipboard(); return; }
+		if (!hGlobal) { CloseClipboard(); return; }
 		LPVOID src = GlobalLock(hGlobal);
 
 		UInt8 c;
@@ -476,7 +476,7 @@ void Window_SetClipboardText(STRING_PURE String* value) {
 		}
 
 		HANDLE hGlobal = GlobalAlloc(GMEM_MOVEABLE, String_BufferSize(value->length) * sizeof(UInt16));
-		if (hGlobal == NULL) { CloseClipboard(); return; }
+		if (!hGlobal) { CloseClipboard(); return; }
 
 		LPVOID dst = GlobalLock(hGlobal);
 		UInt16* text = (UInt16*)dst;
@@ -679,10 +679,10 @@ bool ctx_supports_vSync;
 void GLContext_Init(struct GraphicsMode mode) {
 	GLContext_SelectGraphicsMode(mode);
 	ctx_Handle = wglCreateContext(win_DC);
-	if (ctx_Handle == NULL) {
+	if (!ctx_Handle) {
 		ctx_Handle = wglCreateContext(win_DC);
 	}
-	if (ctx_Handle == NULL) {
+	if (!ctx_Handle) {
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to create OpenGL context");
 	}
 

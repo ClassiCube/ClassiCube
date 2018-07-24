@@ -158,7 +158,7 @@ bool Drawer2D_ValidColCodeAt(STRING_PURE String* text, Int32 i) {
 bool Drawer2D_ValidColCode(UChar c) { return Drawer2D_Cols[c].A > 0; }
 
 bool Drawer2D_IsEmptyText(STRING_PURE String* text) {
-	if (text->length == 0) return true;
+	if (!text->length) return true;
 
 	Int32 i;
 	for (i = 0; i < text->length; i++) {
@@ -180,7 +180,7 @@ UChar Drawer2D_LastCol(STRING_PURE String* text, Int32 start) {
 	}
 	return NULL;
 }
-bool Drawer2D_IsWhiteCol(UChar c) { return c == NULL || c == 'f' || c == 'F'; }
+bool Drawer2D_IsWhiteCol(UChar c) { return c == '\0' || c == 'f' || c == 'F'; }
 
 #define Drawer2D_ShadowOffset(point) (point / 8)
 #define Drawer2D_XPadding(point) (Math_CeilDiv(point, 8))
@@ -375,7 +375,7 @@ void Drawer2D_DrawText(struct DrawTextArgs* args, Int32 x, Int32 y) {
 		UChar colCode = nextCol;
 		i = Drawer2D_NextPart(i, &value, &args->Text, &nextCol);
 		PackedCol col = Drawer2D_Cols[colCode];
-		if (args->Text.length == 0) continue;
+		if (!args->Text.length) continue;
 
 		if (args->UseShadow) {
 			PackedCol black = PACKEDCOL_BLACK;
@@ -401,7 +401,7 @@ struct Size2D Drawer2D_MeasureText(struct DrawTextArgs* args) {
 	while (i < value.length) {
 		UChar col = nextCol;
 		i = Drawer2D_NextPart(i, &value, &args->Text, &nextCol);
-		if (args->Text.length == 0) continue;
+		if (!args->Text.length) continue;
 
 		struct Size2D partSize = Platform_TextMeasure(args);
 		size.Width += partSize.Width;

@@ -135,7 +135,7 @@ Int32 PingList_AveragePingMs(void) {
 	Int32 i;
 	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
 		struct PingEntry entry = PingList_Entries[i];
-		if (entry.TimeSent == 0 || entry.TimeReceived == 0) continue;
+		if (!entry.TimeSent || !entry.TimeReceived) continue;
 
 		/* Half, because received->reply time is actually twice time it takes to send data */
 		totalMs += (entry.TimeReceived - entry.TimeSent) * 0.5;
@@ -198,7 +198,7 @@ static void SPConnection_AddPortion(STRING_PURE String* text) {
 }
 
 static void SPConnection_SendChat(STRING_PURE String* text) {
-	if (text->length == 0) return;
+	if (!text->length) return;
 	SPConnection_LastCol = NULL;
 
 	String part = *text;
@@ -351,7 +351,7 @@ static void MPConnection_BeginConnect(void) {
 }
 
 static void MPConnection_SendChat(STRING_PURE String* text) {
-	if (text->length == 0 || net_connecting) return;
+	if (!text->length || net_connecting) return;
 	String remaining = *text;
 
 	while (remaining.length > STRING_SIZE) {
@@ -444,7 +444,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 		Net_Handler handler = Net_Handlers[opcode];
 		Platform_CurrentUTCTime(&net_lastPacket);
 
-		if (handler == NULL) { ErrorHandler_Fail("Unsupported opcode"); }
+		if (!handler) { ErrorHandler_Fail("Unsupported opcode"); }
 		handler(&net_readStream);
 	}
 

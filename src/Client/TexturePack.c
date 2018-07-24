@@ -39,9 +39,9 @@ static void Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* ent
 	/* contents[10] (4) CRC32 */
 
 	UInt32 compressedSize = Stream_GetU32_LE(&contents[14]);
-	if (compressedSize == 0) compressedSize = entry->CompressedSize;
+	if (!compressedSize) compressedSize = entry->CompressedSize;
 	UInt32 uncompressedSize = Stream_GetU32_LE(&contents[18]);
-	if (uncompressedSize == 0) uncompressedSize = entry->UncompressedSize;
+	if (!uncompressedSize) uncompressedSize = entry->UncompressedSize;
 
 	UInt16 fileNameLen   = Stream_GetU16_LE(&contents[22]);
 	UInt16 extraFieldLen = Stream_GetU16_LE(&contents[24]);
@@ -204,7 +204,7 @@ static void EntryList_Load(struct EntryList* list) {
 			String_UNSAFE_TrimStart(&path);
 			String_UNSAFE_TrimEnd(&path);
 
-			if (path.length == 0) continue;
+			if (!path.length) continue;
 			StringsBuffer_Add(&list->Entries, &path);
 		}
 	}
@@ -338,7 +338,7 @@ void TextureCache_GetLastModified(STRING_PURE String* url, DateTime* time) {
 	TexturePack_GetFromTags(url, &entry, &cache_lastModified);
 
 	Int64 ticks;
-	if (entry.length > 0 && Convert_TryParseInt64(&entry, &ticks)) {
+	if (entry.length && Convert_TryParseInt64(&entry, &ticks)) {
 		DateTime_FromTotalMs(time, ticks / TEXCACHE_TICKS_PER_MS);
 	} else {
 		String path; TexCache_InitAndMakePath(url);
@@ -390,12 +390,12 @@ void TextureCache_AddToTags(STRING_PURE String* url, STRING_PURE String* data, s
 }
 
 void TextureCache_AddETag(STRING_PURE String* url, STRING_PURE String* etag) {
-	if (etag->length == 0) return;
+	if (!etag->length) return;
 	TextureCache_AddToTags(url, etag, &cache_eTags);
 }
 
 void TextureCache_AddLastModified(STRING_PURE String* url, DateTime* lastModified) {
-	if (lastModified->Year == 0 && lastModified->Month == 0) return;
+	if (!lastModified->Year && !lastModified->Month) return;
 	Int64 ticks = DateTime_TotalMs(lastModified) * TEXCACHE_TICKS_PER_MS;
 
 	UChar dataBuffer[String_BufferSize(STRING_SIZE)];
@@ -465,12 +465,12 @@ void TexturePack_ExtractDefault(void) {
 }
 
 void TexturePack_ExtractCurrent(STRING_PURE String* url) {
-	if (url->length == 0) { TexturePack_ExtractDefault(); return; }
+	if (!url->length) { TexturePack_ExtractDefault(); return; }
 
 	struct Stream stream;
 	if (!TextureCache_GetStream(url, &stream)) {
 		/* e.g. 404 errors */
-		if (World_TextureUrl.length > 0) TexturePack_ExtractDefault();
+		if (World_TextureUrl.length) TexturePack_ExtractDefault();
 	} else {
 		String zip = String_FromConst(".zip");
 		ReturnCode result = 0;

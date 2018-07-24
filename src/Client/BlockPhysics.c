@@ -34,7 +34,7 @@ static void TickQueue_Init(struct TickQueue* queue) {
 }
 
 static void TickQueue_Clear(struct TickQueue* queue) {
-	if (queue->Buffer == NULL) return;
+	if (!queue->Buffer) return;
 	Platform_MemFree(&queue->Buffer);
 	TickQueue_Init(queue);
 }
@@ -47,7 +47,7 @@ static void TickQueue_Resize(struct TickQueue* queue) {
 	if (capacity < 32) capacity = 32;
 
 	UInt32* newBuffer = Platform_MemAlloc(capacity, sizeof(UInt32));
-	if (newBuffer == NULL) {
+	if (!newBuffer) {
 		ErrorHandler_Fail("TickQueue - failed to allocate memory");
 	}
 
@@ -548,7 +548,7 @@ void Physics_Free(void) {
 }
 
 void Physics_Tick(void) {
-	if (!Physics_Enabled || World_Blocks == NULL) return;
+	if (!Physics_Enabled || !World_Blocks) return;
 
 	/*if ((tickCount % 5) == 0) {*/
 	Physics_TickLava();

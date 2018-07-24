@@ -317,7 +317,7 @@ void Hotkeys_Init(void) {
 		/* Then try to parse the key and value */
 		Key hotkey = Utils_ParseEnum(&strKey, Key_None, Key_Names, Array_Elems(Key_Names));
 		UInt8 flags; bool moreInput;
-		if (hotkey == Key_None || strText.length == 0 || !Convert_TryParseUInt8(&strFlags, &flags) 
+		if (hotkey == Key_None || !strText.length || !Convert_TryParseUInt8(&strFlags, &flags) 
 			|| !Convert_TryParseBool(&strMoreInput, &moreInput)) { continue; }
 
 		Hotkeys_Add(hotkey, flags, &strText, moreInput);

@@ -197,33 +197,33 @@ static void Menu_DefaultBack(void* elem, Int32 i, struct ButtonWidget* button, b
 
 static void Menu_Free(struct MenuBase* elem) {
 	struct Widget** widgets = elem->Widgets;
-	if (widgets == NULL) return;
+	if (!widgets) return;
 
 	Int32 i;
 	for (i = 0; i < elem->WidgetsCount; i++) {
-		if (widgets[i] == NULL) continue;
+		if (!widgets[i]) continue;
 		Elem_Free(widgets[i]);
 	}
 }
 
 static void Menu_Reposition(struct MenuBase* elem) {
 	struct Widget** widgets = elem->Widgets;
-	if (widgets == NULL) return;
+	if (!widgets) return;
 
 	Int32 i;
 	for (i = 0; i < elem->WidgetsCount; i++) {
-		if (widgets[i] == NULL) continue;
+		if (!widgets[i]) continue;
 		Widget_Reposition(widgets[i]);
 	}
 }
 
 static void Menu_Render(struct MenuBase* elem, Real64 delta) {
 	struct Widget** widgets = elem->Widgets;
-	if (widgets == NULL) return;
+	if (!widgets) return;
 
 	Int32 i;
 	for (i = 0; i < elem->WidgetsCount; i++) {
-		if (widgets[i] == NULL) continue;
+		if (!widgets[i]) continue;
 		Elem_Render(widgets[i], delta);
 	}
 }
@@ -244,7 +244,7 @@ static Int32 Menu_HandleMouseDown(struct MenuBase* elem, Int32 x, Int32 y, Mouse
 	/* iterate backwards (because last elements rendered are shown over others) */
 	for (i = count - 1; i >= 0; i--) {
 		struct Widget* widget = widgets[i];
-		if (widget == NULL || !Widget_Contains(widget, x, y)) continue;
+		if (!widget || !Widget_Contains(widget, x, y)) continue;
 		if (widget->Disabled) return i;
 
 		if (widget->MenuClick && btn == MouseButton_Left) {
@@ -268,7 +268,7 @@ static Int32 Menu_HandleMouseMove(struct MenuBase* elem, Int32 x, Int32 y) {
 
 	for (i = count - 1; i >= 0; i--) {
 		struct Widget* widget = widgets[i];
-		if (widget == NULL || !Widget_Contains(widget, x, y)) continue;
+		if (!widget || !Widget_Contains(widget, x, y)) continue;
 
 		widget->Active = true;
 		return i;
@@ -509,9 +509,7 @@ static void ListScreen_OnResize(struct GuiElem* elem) {
 struct ListScreen* ListScreen_MakeInstance(void) {
 	struct ListScreen* screen = &ListScreen_Instance;
 	Platform_MemSet(screen, 0, sizeof(struct ListScreen) - sizeof(StringsBuffer));
-	if (screen->Entries.TextBuffer != NULL) {
-		StringsBuffer_Free(&screen->Entries);
-	}
+	if (screen->Entries.TextBuffer) StringsBuffer_Free(&screen->Entries);
 	StringsBuffer_Init(&screen->Entries);
 
 	screen->VTABLE = &ListScreen_VTABLE;
@@ -572,10 +570,10 @@ static void MenuScreen_ContextRecreated_Callback(void* obj) {
 static void MenuScreen_Init(struct GuiElem* elem) {
 	struct MenuScreen* screen = (struct MenuScreen*)elem;
 
-	if (screen->TitleFont.Handle == NULL) {
+	if (!screen->TitleFont.Handle) {
 		Platform_FontMake(&screen->TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
 	}
-	if (screen->TextFont.Handle == NULL) {
+	if (!screen->TextFont.Handle) {
 		Platform_FontMake(&screen->TextFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	}
 
@@ -1043,7 +1041,7 @@ Int32 GenLevelScreen_GetSeedInt(struct GenLevelScreen* screen, Int32 index) {
 	struct MenuInputWidget* input = &screen->Inputs[index];
 	String text = input->Base.Text;
 
-	if (text.length == 0) {
+	if (!text.length) {
 		Random rnd; Random_InitFromCurrentTime(&rnd);
 		return Random_Next(&rnd, Int32_MaxValue);
 	}
@@ -1062,7 +1060,7 @@ static void GenLevelScreen_Gen(struct GenLevelScreen* screen, bool vanilla) {
 	if (volume > Int32_MaxValue) {
 		String msg = String_FromConst("&cThe generated map's volume is too big.");
 		Chat_Add(&msg);
-	} else if (width == 0 || height == 0 || length == 0) {
+	} else if (!width || !height || !length) {
 		String msg = String_FromConst("&cOne of the map dimensions is invalid.");
 		Chat_Add(&msg);
 	} else {
@@ -1135,12 +1133,12 @@ static bool GenLevelScreen_HandlesKeyDown(struct GuiElem* elem, Key key) {
 
 static bool GenLevelScreen_HandlesKeyUp(struct GuiElem* elem, Key key) {
 	struct GenLevelScreen* screen = (struct GenLevelScreen*)elem;
-	return screen->Selected == NULL || Elem_HandlesKeyUp(&screen->Selected->Base, key);
+	return !screen->Selected || Elem_HandlesKeyUp(&screen->Selected->Base, key);
 }
 
 static bool GenLevelScreen_HandlesKeyPress(struct GuiElem* elem, UChar key) {
 	struct GenLevelScreen* screen = (struct GenLevelScreen*)elem;
-	return screen->Selected == NULL || Elem_HandlesKeyPress(&screen->Selected->Base, key);
+	return !screen->Selected || Elem_HandlesKeyPress(&screen->Selected->Base, key);
 }
 
 static void GenLevelScreen_ContextRecreated(void* obj) {
@@ -1250,13 +1248,13 @@ struct SaveLevelScreen SaveLevelScreen_Instance;
 struct GuiElementVTABLE SaveLevelScreen_VTABLE;
 static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* screen) {
 	struct ButtonWidget* btn = &screen->Buttons[0];
-	if (btn->OptName != NULL) {
+	if (btn->OptName) {
 		btn->OptName = NULL; String save = String_FromConst("Save"); 
 		ButtonWidget_SetText(btn, &save);
 	}
 
 	btn = &screen->Buttons[1];
-	if (btn->OptName != NULL) {
+	if (btn->OptName) {
 		btn->OptName = NULL; String save = String_FromConst("Save schematic");
 		ButtonWidget_SetText(btn, &save);
 	}
@@ -1272,7 +1270,7 @@ static void SaveLevelScreen_MakeDesc(struct SaveLevelScreen* screen, STRING_PURE
 static void SaveLevelScreen_DoSave(struct GuiElem* elem, struct GuiElem* widget, const UChar* ext) {
 	struct SaveLevelScreen* screen = (struct SaveLevelScreen*)elem;
 	String file = screen->Input.Base.Text;
-	if (file.length == 0) {
+	if (!file.length) {
 		String msg = String_FromConst("&ePlease enter a filename")
 		SaveLevelScreen_MakeDesc(screen, &msg); return;
 	}
@@ -1282,7 +1280,7 @@ static void SaveLevelScreen_DoSave(struct GuiElem* elem, struct GuiElem* widget,
 	String_Format2(&path, "maps/%s%c", &file, ext);
 
 	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
-	if (Platform_FileExists(&path) && btn->OptName == NULL) {
+	if (Platform_FileExists(&path) && !btn->OptName) {
 		String warnMsg = String_FromConst("&cOverwrite existing?");
 		ButtonWidget_SetText(btn, &warnMsg);
 		btn->OptName = "O";
@@ -1320,7 +1318,7 @@ static void SaveLevelScreen_Render(struct GuiElem* elem, Real64 delta) {
 	GfxCommon_Draw2DFlat(cX - 250, cY + 90, 500, 2, grey);
 
 	struct SaveLevelScreen* screen = (struct SaveLevelScreen*)elem;
-	if (screen->TextPath.length == 0) return;
+	if (!screen->TextPath.length) return;
 	String path = screen->TextPath;
 
 	void* file;
@@ -1537,7 +1535,7 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
 
-	if (World_TextureUrl.length > 0) {
+	if (World_TextureUrl.length) {
 		TexturePack_ExtractDefault();
 		String_Clear(&World_TextureUrl);
 	}
@@ -1653,17 +1651,17 @@ static Int32 KeyBindingsScreen_MakeWidgets(struct KeyBindingsScreen* screen, Int
 
 	Widget_LeftClick backClick = Game_UseClassicOptions ? Menu_SwitchClassicOptions : Menu_SwitchOptions;
 	Menu_DefaultBack(screen, i, &screen->Back, false, &screen->TitleFont, backClick); i++;
-	if (screen->LeftPage == NULL && screen->RightPage == NULL) return i;
+	if (!screen->LeftPage && !screen->RightPage) return i;
 
 	String lArrow = String_FromConst("<");
 	Menu_Button(screen, i, &screen->Left, 40, &lArrow, &screen->TitleFont, screen->LeftPage,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, -btnWidth - 35, arrowsY); i++;
-	screen->Left.Disabled = screen->LeftPage == NULL;
+	screen->Left.Disabled = !screen->LeftPage;
 
 	String rArrow = String_FromConst(">");
 	Menu_Button(screen, i, &screen->Right, 40, &rArrow, &screen->TitleFont, screen->RightPage,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, btnWidth + 35, arrowsY); i++;
-	screen->Right.Disabled = screen->RightPage == NULL;
+	screen->Right.Disabled = !screen->RightPage;
 
 	return i;
 }
@@ -1902,7 +1900,7 @@ static void MenuOptionsScreen_Set(struct MenuOptionsScreen* screen, Int32 i, STR
 }
 
 static void MenuOptionsScreen_FreeExtHelp(struct MenuOptionsScreen* screen) {
-	if (screen->ExtHelp.LinesCount == 0) return;
+	if (!screen->ExtHelp.LinesCount) return;
 	Elem_TryFree(&screen->ExtHelp);
 	screen->ExtHelp.LinesCount = 0;
 }
@@ -1915,9 +1913,9 @@ static void MenuOptionsScreen_RepositionExtHelp(struct MenuOptionsScreen* screen
 
 static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* screen, Int32 idx) {
 	MenuOptionsScreen_FreeExtHelp(screen);
-	if (screen->Descriptions == NULL || screen->ActiveI >= 0) return;
+	if (!screen->Descriptions || screen->ActiveI >= 0) return;
 	const UChar* desc = screen->Descriptions[idx];
-	if (desc == NULL) return;
+	if (!desc) return;
 
 	String descRaw = String_FromReadonly(desc);
 	String descLines[5];
@@ -1940,7 +1938,7 @@ static void MenuOptionsScreen_FreeInput(struct MenuOptionsScreen* screen) {
 
 	Int32 i;
 	for (i = screen->WidgetsCount - 3; i < screen->WidgetsCount; i++) {
-		if (screen->Widgets[i] == NULL) continue;
+		if (!screen->Widgets[i]) continue;
 		Elem_TryFree(screen->Widgets[i]);
 		screen->Widgets[i] = NULL;
 	}
@@ -1970,7 +1968,7 @@ static void MenuOptionsScreen_Init(struct GuiElem* elem) {
 static void MenuOptionsScreen_Render(struct GuiElem* elem, Real64 delta) {
 	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem;
 	MenuScreen_Render(elem, delta);
-	if (screen->ExtHelp.LinesCount == 0) return;
+	if (!screen->ExtHelp.LinesCount) return;
 
 	struct TextGroupWidget* extHelp = &screen->ExtHelp;
 	Int32 x = extHelp->X - 5, y = extHelp->Y - 5;
@@ -1991,7 +1989,7 @@ static void MenuOptionsScreen_Free(struct GuiElem* elem) {
 static void MenuOptionsScreen_OnResize(struct GuiElem* elem) {
 	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem;
 	MenuScreen_OnResize(elem);
-	if (screen->ExtHelp.LinesCount == 0) return;
+	if (!screen->ExtHelp.LinesCount) return;
 	MenuOptionsScreen_RepositionExtHelp(screen);
 }
 
@@ -2029,7 +2027,7 @@ static bool MenuOptionsScreen_HandlesMouseMove(struct GuiElem* elem, Int32 x, In
 	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem;
 	Int32 i = Menu_HandleMouseMove((struct MenuBase*)elem, x, y);
 	if (i == -1 || i == screen->SelectedI) return true;
-	if (screen->Descriptions == NULL || i >= screen->DescriptionsCount) return true;
+	if (!screen->Descriptions || i >= screen->DescriptionsCount) return true;
 
 	screen->SelectedI = i;
 	if (screen->ActiveI == -1) MenuOptionsScreen_SelectExtHelp(screen, i);
@@ -2641,7 +2639,7 @@ static void HacksSettingsScreen_CheckHacksAllowed(void* obj) {
 	Int32 i;
 
 	for (i = 0; i < screen->WidgetsCount; i++) {
-		if (widgets[i] == NULL) continue;
+		if (!widgets[i]) continue;
 		widgets[i]->Disabled = false;
 	}
 
@@ -2906,7 +2904,7 @@ static void Overlay_MakeLabels(struct MenuScreen* screen, struct TextWidget* lab
 	PackedCol col = PACKEDCOL_CONST(224, 224, 224, 255);
 	Int32 i;
 	for (i = 1; i < 4; i++) {
-		if (lines[i].length == 0) continue;
+		if (!lines[i].length) continue;
 
 		Menu_Label(screen, i, &labels[i], &lines[i], &screen->TextFont,
 			ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -70 + 20 * i);
@@ -3237,7 +3235,7 @@ static void TexPackOverlay_Render(struct GuiElem* elem, Real64 delta) {
 	if (!AsyncDownloader_Get(&identifier, &item)) return;
 
 	screen->ContentLength = item.ResultSize;
-	if (screen->ContentLength == 0) return;
+	if (!screen->ContentLength) return;
 
 	screen->ContextLost(elem);
 	screen->ContextRecreated(elem);
@@ -3263,7 +3261,7 @@ static void TexPackOverlay_ContextRecreated(void* obj) {
 	lines[1] = String_FromReadonly("Texture pack url:");
 	lines[2] = url;
 
-	if (screen->ContentLength == 0) {
+	if (!screen->ContentLength) {
 		lines[3] = String_FromReadonly("Download size: Determining...");
 	} else {
 		UChar contentsBuffer[String_BufferSize(STRING_SIZE)];

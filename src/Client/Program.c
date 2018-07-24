@@ -77,7 +77,7 @@ int main(void) {
 
 	if (argsCount == 1) {
 		String name = args[0];
-		if (name.length == 0) name = String_FromReadonly("Singleplayer");
+		if (!name.length) name = String_FromReadonly("Singleplayer");
 		String_Set(&Game_Username, &name);
 	} else if (argsCount < 4) {
 		Platform_LogConst("ClassicalSharp.exe is only the raw client. You must either use the launcher or provide command line arguments to start the client.");

@@ -42,7 +42,7 @@ static void MapRenderer_RenderNormalBatch(UInt32 batch) {
 	UInt32 i, offset = MapRenderer_ChunksCount * batch;
 	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
 		struct ChunkInfo* info = MapRenderer_RenderChunks[i];
-		if (info->NormalParts == NULL) continue;
+		if (!info->NormalParts) continue;
 
 		struct ChunkPartInfo part = *(info->NormalParts + offset);
 		if (part.Offset < 0) continue;
@@ -102,7 +102,7 @@ static void MapRenderer_RenderNormalBatch(UInt32 batch) {
 			Game_Vertices += part.Counts[FACE_YMAX];
 		}
 
-		if (part.SpriteCount == 0) continue;
+		if (!part.SpriteCount) continue;
 		offset = part.Offset;
 		Int32 count = part.SpriteCount >> 2; /* 4 per sprite */
 
@@ -127,7 +127,7 @@ static void MapRenderer_RenderNormalBatch(UInt32 batch) {
 }
 
 void MapRenderer_RenderNormal(Real64 deltaTime) {
-	if (MapRenderer_Chunks == NULL) return;
+	if (!MapRenderer_Chunks) return;
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
@@ -156,7 +156,7 @@ static void MapRenderer_RenderTranslucentBatch(UInt32 batch) {
 	UInt32 i, offset = MapRenderer_ChunksCount * batch;
 	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
 		struct ChunkInfo* info = MapRenderer_RenderChunks[i];
-		if (info->TranslucentParts == NULL) continue;
+		if (!info->TranslucentParts) continue;
 
 		struct ChunkPartInfo part = *(info->TranslucentParts + offset);
 		if (part.Offset < 0) continue;
@@ -213,7 +213,7 @@ static void MapRenderer_RenderTranslucentBatch(UInt32 batch) {
 }
 
 void MapRenderer_RenderTranslucent(Real64 deltaTime) {
-	if (MapRenderer_Chunks == NULL) return;
+	if (!MapRenderer_Chunks) return;
 
 	/* First fill depth buffer */
 	UInt32 vertices = Game_Vertices;

@@ -128,10 +128,10 @@ bool String_CaselessEqualsConst(STRING_PURE String* a, STRING_PURE const UChar* 
 	for (i = 0; i < a->length; i++) {
 		UChar aCur = a->buffer[i]; Char_MakeLower(aCur);
 		UChar bCur = b[i];         Char_MakeLower(bCur);
-		if (aCur != bCur || bCur == NULL) return false;
+		if (aCur != bCur || bCur == '\0') return false;
 	}
 	/* ensure at end of string */
-	return b[a->length] == NULL;
+	return b[a->length] == '\0';
 }
 
 
@@ -348,7 +348,7 @@ void String_UNSAFE_TrimEnd(STRING_TRANSIENT String* str) {
 Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub) {
 	Int32 i, j;
 	/* Special case, sub is an empty string*/
-	if (sub->length == 0) return 0;
+	if (!sub->length) return 0;
 
 	UChar subFirst = sub->buffer[0];
 	for (i = 0; i < str->length; i++) {
@@ -545,7 +545,7 @@ bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value) {
 Int32 Convert_CompareDigits(const UChar* digits, const UChar* magnitude) {
 	Int32 i;
 	for (i = 0; ; i++) {
-		if (magnitude[i] == NULL)     return  0;
+		if (magnitude[i] == '\0')     return  0;
 		if (digits[i] > magnitude[i]) return  1;
 		if (digits[i] < magnitude[i]) return -1;
 	}
@@ -554,7 +554,7 @@ Int32 Convert_CompareDigits(const UChar* digits, const UChar* magnitude) {
 
 bool Convert_TryParseDigits(STRING_PURE String* str, bool* negative, UChar* digits, Int32 maxDigits) {
 	*negative = false;
-	if (str->length == 0) return false;
+	if (!str->length) return false;
 	UChar* start = digits; digits += (maxDigits - 1);
 
 	/* Handle number signs */
@@ -635,7 +635,7 @@ bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value) {
 
 	/* Handle number signs */
 	bool negate = false;
-	if (str->length == 0) return false;
+	if (!str->length) return false;
 	if (str->buffer[0] == '-') { negate = true; i++; }
 	if (str->buffer[0] == '+') { i++; }
 
@@ -722,11 +722,11 @@ void StringsBuffer_Resize(void** buffer, UInt32* elems, UInt32 elemSize, UInt32 
 
 	if (curElems <= defElems) {
 		dst = Platform_MemAlloc(curElems + expandElems, elemSize);
-		if (dst == NULL) ErrorHandler_Fail("Failed allocating memory for StringsBuffer");
+		if (!dst) ErrorHandler_Fail("Failed allocating memory for StringsBuffer");
 		Platform_MemCpy(dst, cur, curElems * elemSize);
 	} else {
 		dst = Platform_MemRealloc(cur, curElems + expandElems, elemSize);
-		if (dst == NULL) ErrorHandler_Fail("Failed allocating memory for resizing StringsBuffer");
+		if (!dst) ErrorHandler_Fail("Failed allocating memory for resizing StringsBuffer");
 	}
 
 	*buffer = dst;
@@ -753,7 +753,7 @@ void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text) {
 			STRINGSBUFFER_BUFFER_DEF_SIZE, STRINGSBUFFER_BUFFER_EXPAND_SIZE);
 	}
 
-	if (text->length > 0) {
+	if (text->length) {
 		Platform_MemCpy(&buffer->TextBuffer[textOffset], text->buffer, text->length);
 	}
 	buffer->FlagsBuffer[buffer->Count] = text->length | (textOffset << STRINGSBUFFER_LEN_SHIFT);
@@ -796,7 +796,7 @@ void StringsBuffer_Remove(StringsBuffer* buffer, Int32 index) {
 *------------------------------------------------------Word wrapper-------------------------------------------------------*
 *#########################################################################################################################*/
 bool WordWrap_IsWrapper(UChar c) {
-	return c == NULL || c == ' ' || c == '-' || c == '>' || c == '<' || c == '/' || c == '\\';
+	return c == '\0' || c == ' ' || c == '-' || c == '>' || c == '<' || c == '/' || c == '\\';
 }
 
 void WordWrap_Do(STRING_REF String* text, STRING_TRANSIENT String* lines, Int32 numLines, Int32 lineLen) {
@@ -842,7 +842,7 @@ void WordWrap_GetCoords(Int32 index, STRING_PURE String* lines, Int32 numLines, 
 	Int32 y;
 	for (y = 0; y < numLines; y++) {
 		Int32 lineLength = lines[y].length;
-		if (lineLength == 0) break;
+		if (!lineLength) break;
 
 		*coordY = y;
 		if (index < offset + lineLength) {

@@ -240,7 +240,7 @@ static bool InputHandler_IntersectsOthers(Vector3 pos, BlockID block) {
 	Int32 id;
 	for (id = 0; id < ENTITIES_SELF_ID; id++) {
 		struct Entity* entity = Entities_List[id];
-		if (entity == NULL) continue;
+		if (!entity) continue;
 
 		struct AABB bounds; Entity_GetBounds(entity, &bounds);
 		bounds.Min.Y += 1.0f / 32.0f; /* when player is exactly standing on top of ground */
@@ -400,7 +400,7 @@ static void InputHandler_KeyDown(void* obj, Int32 key) {
 
 		if (!more) {
 			Chat_Send(&text, false);
-		} else if (Gui_Active == NULL) {
+		} else if (!Gui_Active) {
 			HUDScreen_OpenInput(Gui_HUD, &text);
 		}
 	}

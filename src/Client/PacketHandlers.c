@@ -38,7 +38,7 @@ static String Handlers_ReadString(struct Stream* stream, STRING_REF UChar* strBu
 
 	for (i = STRING_SIZE - 1; i >= 0; i--) {
 		UChar code = buffer[i];
-		if (code == NULL || code == ' ') continue;
+		if (code == '\0' || code == ' ') continue;
 		length = i + 1; break;
 	}
 
@@ -64,7 +64,7 @@ static void Handlers_WriteString(struct Stream* stream, STRING_PURE String* valu
 static void Handlers_RemoveEndPlus(STRING_TRANSIENT String* value) {
 	/* Workaround for MCDzienny (and others) use a '+' at the end to distinguish classicube.net accounts */
 	/* from minecraft.net accounts. Unfortunately they also send this ending + to the client. */
-	if (value->length == 0) return;
+	if (!value->length) return;
 	if (value->buffer[value->length - 1] != '+') return;
 	String_DeleteAt(value, value->length - 1);
 }
@@ -106,7 +106,7 @@ static void Handlers_CheckName(EntityID id, STRING_TRANSIENT String* displayName
 	String_AppendColorless(&nameNoCols, displayName);
 
 	if (!String_Equals(&nameNoCols, &Game_Username)) { String_Set(displayName, &Game_Username); }
-	if (skinName->length == 0) { String_Set(skinName, &Game_Username); }
+	if (!skinName->length) { String_Set(skinName, &Game_Username); }
 }
 
 static void Classic_ReadAbsoluteLocation(struct Stream* stream, EntityID id, bool interpolate);
@@ -146,7 +146,7 @@ static void Handlers_AddEntity(EntityID id, STRING_TRANSIENT String* displayName
 
 void Handlers_RemoveEntity(EntityID id) {
 	struct Entity* entity = Entities_List[id];
-	if (entity == NULL) return;
+	if (!entity) return;
 	if (id != ENTITIES_SELF_ID) Entities_Remove(id);
 
 	/* See comment about some servers in Classic_AddEntity */
@@ -183,7 +183,7 @@ static void WoM_UpdateIdentifier(void) {
 
 static void WoM_CheckMotd(void) {
 	String motd = ServerConnection_ServerMOTD;
-	if (motd.length == 0) return;
+	if (!motd.length) return;
 
 	String cfg = String_FromConst("cfg=");
 	Int32 index = String_IndexOfString(&motd, &cfg);
@@ -408,7 +408,7 @@ static void Classic_LevelInit(struct Stream* stream) {
 		gzHeader.Done = true;
 		mapSizeIndex = sizeof(UInt32);
 		map = Platform_MemAlloc(mapVolume, sizeof(BlockID));
-		if (map == NULL) ErrorHandler_Fail("Failed to allocate memory for map");
+		if (!map) ErrorHandler_Fail("Failed to allocate memory for map");
 	}
 }
 
@@ -435,10 +435,10 @@ static void Classic_LevelDataChunk(struct Stream* stream) {
 		}
 
 		if (mapSizeIndex == sizeof(UInt32)) {
-			if (map == NULL) {
+			if (!map) {
 				mapVolume = Stream_GetU32_BE(mapSize);
 				map = Platform_MemAlloc(mapVolume, sizeof(BlockID));
-				if (map == NULL) ErrorHandler_Fail("Failed to allocate memory for map");
+				if (!map) ErrorHandler_Fail("Failed to allocate memory for map");
 			}
 
 			UInt8* src = map + mapIndex;
@@ -448,7 +448,7 @@ static void Classic_LevelDataChunk(struct Stream* stream) {
 		}
 	}
 
-	Real32 progress = map == NULL ? 0.0f : (Real32)mapIndex / mapVolume;
+	Real32 progress = !map ? 0.0f : (Real32)mapIndex / mapVolume;
 	Event_RaiseReal(&WorldEvents_Loading, progress);
 }
 
@@ -835,7 +835,7 @@ static void CPE_SetTextHotkey(struct Stream* stream) {
 	if (key == Key_None) return;
 	Platform_Log3("CPE hotkey added: %c, %b: %s", Key_Names[key], &keyMods, &action);
 
-	if (action.length == 0) {
+	if (!action.length) {
 		Hotkeys_Remove(key, keyMods);
 	} else if (action.buffer[action.length - 1] == '\n') {
 		action = String_UNSAFE_Substring(&action, 0, action.length - 1);
@@ -1047,9 +1047,9 @@ static void CPE_SetMapEnvUrl(struct Stream* stream) {
 	String url = Handlers_ReadString(stream, urlBuffer);
 	if (!Game_AllowServerTextures) return;
 
-	if (url.length == 0) {
+	if (!url.length) {
 		/* don't extract default texture pack if we can */
-		if (World_TextureUrl.length > 0) TexturePack_ExtractDefault();
+		if (World_TextureUrl.length) TexturePack_ExtractDefault();
 	} else if (Utils_IsUrlPrefix(&url, 0)) {
 		ServerConnection_RetrieveTexturePack(&url);
 	}
@@ -1101,7 +1101,7 @@ static void CPE_SetEntityProperty(struct Stream* stream) {
 	Int32 value = Stream_ReadI32_BE(stream);
 
 	struct Entity* entity = Entities_List[id];
-	if (entity == NULL) return;
+	if (!entity) return;
 	struct LocationUpdate update; LocationUpdate_Empty(&update);
 
 	Real32 scale;
@@ -1204,7 +1204,7 @@ static void CPE_Tick(void) {
 *------------------------------------------------------Custom blocks------------------------------------------------------*
 *#########################################################################################################################*/
 static void BlockDefs_OnBlockUpdated(BlockID block, bool didBlockLight) {
-	if (World_Blocks == NULL) return;
+	if (!World_Blocks) return;
 	/* Need to refresh lighting when a block's light blocking state changes */
 	if (Block_BlocksLight[block] != didBlockLight) { Lighting_Refresh(); }
 }

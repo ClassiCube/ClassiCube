@@ -40,7 +40,7 @@ void World_Reset(void) {
 void World_SetNewMap(BlockID* blocks, Int32 blocksSize, Int32 width, Int32 height, Int32 length) {
 	World_Width = width; World_Height = height; World_Length = length;
 	World_Blocks = blocks; World_BlocksSize = blocksSize;
-	if (World_BlocksSize == 0) World_Blocks = NULL;
+	if (!World_BlocksSize) World_Blocks = NULL;
 
 	if (blocksSize != (width * height * length)) {
 		ErrorHandler_Fail("Blocks array size does not match volume of map");

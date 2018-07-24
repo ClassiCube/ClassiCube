@@ -16,7 +16,7 @@ static void Gen_Init(void) {
 	Gen_CurrentState = "";
 
 	Gen_Blocks = Platform_MemAlloc(Gen_Width * Gen_Height * Gen_Length, sizeof(BlockID));
-	if (Gen_Blocks == NULL) {
+	if (!Gen_Blocks) {
 		ErrorHandler_Fail("MapGen - failed to allocate Blocks array");
 	}
 	Gen_Done = false;
@@ -471,7 +471,7 @@ static void NotchyGen_PlantTrees(void) {
 void NotchyGen_Generate(void) {
 	Gen_Init();
 	Heightmap = Platform_MemAlloc(Gen_Width * Gen_Length, sizeof(Int16));
-	if (Heightmap == NULL) {
+	if (!Heightmap) {
 		ErrorHandler_Fail("NotchyGen - Failed to allocate Heightmap array");
 	}
 

@@ -401,7 +401,7 @@ static void StatusScreen_Render(struct GuiElem* elem, Real64 delta) {
 	Gfx_SetTexturing(true);
 	Elem_Render(&screen->Status, delta);
 
-	if (!Game_ClassicMode && Gui_Active == NULL) {
+	if (!Game_ClassicMode && !Gui_Active) {
 		if (StatusScreen_HacksChanged(screen)) { StatusScreen_UpdateHackState(screen); }
 		StatusScreen_DrawPosition(screen);
 		Elem_Render(&screen->HackStates, delta);
@@ -544,7 +544,7 @@ static void LoadingScreen_DrawBackground(void) {
 		ptr = vertices;
 	}
 
-	if (count == 0) return;
+	if (!count) return;
 	LoadingScreen_UpdateBackgroundVB(vertices, count, atlasIndex, &bound);
 }
 
@@ -650,9 +650,8 @@ static void GeneratingScreen_EndGeneration(void) {
 	Gui_ReplaceActive(NULL);
 	Gen_Done = false;
 
-	if (Gen_Blocks == NULL) {
-		Chat_AddRaw(tmpStr, "&cFailed to generate the map.");
-		return;
+	if (!Gen_Blocks) {
+		Chat_AddRaw(tmpStr, "&cFailed to generate the map."); return;
 	}
 
 	World_BlocksSize = Gen_Width * Gen_Height * Gen_Length;
@@ -877,7 +876,7 @@ static void ChatElem_Recreate(struct TextGroupWidget* group, UChar code) {
 
 	for (i = 0; i < group->LinesCount; i++) {
 		TextGroupWidget_GetText(group, i, &line);
-		if (line.length == 0) continue;
+		if (!line.length) continue;
 
 		for (j = 0; j < line.length - 1; j++) {
 			if (line.buffer[j] == '&' && line.buffer[j + 1] == code) {
@@ -1006,7 +1005,7 @@ static bool ChatScreen_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y, 
 	UChar textBuffer[String_BufferSize(TEXTGROUPWIDGET_LEN)];
 	String text = String_InitAndClearArray(textBuffer);
 	TextGroupWidget_GetSelected(&screen->Chat, &text, x, y);
-	if (text.length == 0) return false;
+	if (!text.length) return false;
 
 	if (Utils_IsUrlPrefix(&text, 0)) {
 		struct Screen* overlay = UrlWarningOverlay_MakeInstance(&text);
@@ -1040,7 +1039,7 @@ static void ChatScreen_ChatReceived(void* obj, String* msg, Int32 type) {
 
 	if (type == MSG_TYPE_NORMAL) {
 		screen->ChatIndex++;
-		if (Game_ChatLines == 0) return;
+		if (!Game_ChatLines) return;
 
 		Int32 i = screen->ChatIndex + (Game_ChatLines - 1);
 		String chatMsg = *msg;
@@ -1127,7 +1126,7 @@ static void ChatScreen_Render(struct GuiElem* elem, Real64 delta) {
 	Int32 i, y = screen->ClientStatus.Y + screen->ClientStatus.Height;
 	for (i = 0; i < screen->ClientStatus.LinesCount; i++) {
 		struct Texture tex = screen->ClientStatus.Textures[i];
-		if (tex.ID == NULL) continue;
+		if (!tex.ID) continue;
 
 		y -= tex.Height; tex.Y = y;
 		Texture_Render(&tex);
@@ -1142,7 +1141,7 @@ static void ChatScreen_Render(struct GuiElem* elem, Real64 delta) {
 		for (i = 0; i < screen->Chat.LinesCount; i++) {
 			struct Texture tex = screen->Chat.Textures[i];
 			Int32 logIdx = screen->ChatIndex + i;
-			if (tex.ID == NULL) continue;
+			if (!tex.ID) continue;
 			if (logIdx < 0 || logIdx >= Chat_Log.Count) continue;
 
 			Int64 received; Chat_GetLogTime(logIdx, &received);
@@ -1158,7 +1157,7 @@ static void ChatScreen_Render(struct GuiElem* elem, Real64 delta) {
 		}
 	}
 
-	if (screen->Announcement.Texture.ID != NULL && DateTime_MsBetween(&Chat_Announcement.Received, &now) > 5 * 1000) {
+	if (screen->Announcement.Texture.ID && DateTime_MsBetween(&Chat_Announcement.Received, &now) > 5 * 1000) {
 		Elem_TryFree(&screen->Announcement);
 	}
 }
@@ -1209,7 +1208,7 @@ struct HUDScreen HUDScreen_Instance;
 #define CH_EXTENT 16
 #define CH_WEIGHT 2
 static void HUDScreen_DrawCrosshairs(void) {
-	if (Gui_IconsTex == NULL) return;
+	if (!Gui_IconsTex) return;
 	struct TextureRec chRec = { 0.0f, 0.0f, 15.0f / 256.0f, 15 / 256.0f };
 
 	Int32 extent = (Int32)(CH_EXTENT * Game_Scale(Game_Height / 480.0f));
@@ -1304,7 +1303,7 @@ static bool HUDScreen_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y, M
 	UChar nameBuffer[String_BufferSize(STRING_SIZE + 1)];
 	String name = String_InitAndClearArray(nameBuffer);
 	PlayerListWidget_GetNameUnder(&screen->PlayerList, x, y, &name);
-	if (name.length == 0) { return elem->VTABLE->HandlesMouseDown(elem, x, y, btn); }
+	if (!name.length) { return elem->VTABLE->HandlesMouseDown(elem, x, y, btn); }
 
 	String_Append(&name, ' ');
 	struct ChatScreen* chat = (struct ChatScreen*)screen->Chat;

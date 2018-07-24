@@ -154,7 +154,7 @@ static void RainParticle_Render(struct RainParticle* p, Real32 t, VertexP3fT2fC4
 }
 
 static void Rain_Render(Real32 t) {
-	if (Rain_Count == 0) return;
+	if (!Rain_Count) return;
 	VertexP3fT2fC4b vertices[PARTICLES_MAX * 4];
 	Int32 i;
 	VertexP3fT2fC4b* ptr = vertices;
@@ -242,7 +242,7 @@ static void Terrain_Update1DCounts(void) {
 }
 
 static void Terrain_Render(Real32 t) {
-	if (Terrain_Count == 0) return;
+	if (!Terrain_Count) return;
 	VertexP3fT2fC4b vertices[PARTICLES_MAX * 4];
 	Terrain_Update1DCounts();
 	Int32 i;
@@ -256,8 +256,8 @@ static void Terrain_Render(Real32 t) {
 	Gfx_SetDynamicVbData(Particles_VB, vertices, Terrain_Count * 4);
 	Int32 offset = 0;
 	for (i = 0; i < Atlas1D_Count; i++) {
-		UInt16 partCount = Terrain_1DCount[i];
-		if (partCount == 0) continue;
+		Int32 partCount = Terrain_1DCount[i];
+		if (!partCount) continue;
 
 		Gfx_BindTexture(Atlas1D_TexIds[i]);
 		Gfx_DrawVb_IndexedTris_Range(partCount, offset);
@@ -335,7 +335,7 @@ void Particles_MakeComponent(struct IGameComponent* comp) {
 }
 
 void Particles_Render(Real64 delta, Real32 t) {
-	if (Terrain_Count == 0 && Rain_Count == 0) return;
+	if (!Terrain_Count && !Rain_Count) return;
 	if (Gfx_LostContext) return;
 
 	Gfx_SetTexturing(true);

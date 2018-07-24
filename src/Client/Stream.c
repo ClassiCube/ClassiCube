@@ -8,13 +8,13 @@
 *#########################################################################################################################*/
 #define Stream_SafeReadBlock(stream, buffer, count, read)\
 ReturnCode result = stream->Read(stream, buffer, count, &read);\
-if (read == 0 || !ErrorHandler_Check(result)) {\
+if (!read || !ErrorHandler_Check(result)) {\
 	Stream_Fail(stream, result, "reading from");\
 }
 
 #define Stream_SafeWriteBlock(stream, buffer, count, write)\
 ReturnCode result = stream->Write(stream, buffer, count, &write);\
-if (write == 0 || !ErrorHandler_Check(result)) {\
+if (!write || !ErrorHandler_Check(result)) {\
 	Stream_Fail(stream, result, "writing to");\
 }
 
@@ -48,7 +48,7 @@ ReturnCode Stream_TryWrite(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	while (count > 0) {
 		ReturnCode result = stream->Write(stream, buffer, count, &write);
 		if (result != 0) return result;
-		if (write == 0)  return 1;
+		if (!write) return 1;
 
 		buffer += write;
 		count  -= write;
@@ -61,7 +61,7 @@ Int32 Stream_TryReadByte(struct Stream* stream) {
 	UInt32 read;
 	stream->Read(stream, &buffer, sizeof(buffer), &read);
 	/* TODO: Check return code here?? Fail if not EndOfStream ?? */
-	return read == 0 ? -1 : buffer;
+	return read ? buffer : -1;
 }
 
 void Stream_SetName(struct Stream* stream, STRING_PURE String* name) {
@@ -79,7 +79,7 @@ void Stream_Skip(struct Stream* stream, UInt32 count) {
 		result = stream->Read(stream, tmp, toRead, &read);
 
 		if (result != 0) Stream_Fail(stream, result, "Skipping data from");
-		if (read == 0) break; /* end of stream */
+		if (!read) break; /* end of stream */
 		count -= read;
 	}
 
@@ -359,7 +359,7 @@ bool Stream_ReadUtf8Char(struct Stream* stream, UInt16* codepoint) {
 	UInt8 data;
 	ReturnCode result = stream->Read(stream, &data, 1, &read);
 
-	if (read == 0) return false; /* end of stream */
+	if (!read) return false; /* end of stream */
 	if (!ErrorHandler_Check(result)) { Stream_Fail(stream, result, "reading utf8 from"); }
 	/* Header byte is just the raw codepoint (common case) */
 	if (data <= 0x7F) { *codepoint = data; return true; }
@@ -379,7 +379,7 @@ bool Stream_ReadUtf8Char(struct Stream* stream, UInt16* codepoint) {
 	*codepoint = data;
 	for (i = 0; i < byteCount - 1; i++) {
 		result = stream->Read(stream, &data, 1, &read);
-		if (read == 0) return false; /* end of stream */
+		if (!read) return false; /* end of stream */
 		if (!ErrorHandler_Check(result)) { Stream_Fail(stream, result, "reading utf8 from"); }
 
 		*codepoint <<= 6;

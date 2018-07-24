@@ -46,7 +46,7 @@ struct Stream Chat_LogStream;
 DateTime ChatLog_LastLogDate;
 
 static void Chat_CloseLog(void) {
-	if (Chat_LogStream.Meta_File == NULL) return;
+	if (!Chat_LogStream.Meta_File) return;
 	ReturnCode code = Chat_LogStream.Close(&Chat_LogStream);
 	ErrorHandler_CheckOrFail(code, "Chat - closing log file");
 }
@@ -58,7 +58,7 @@ static bool Chat_AllowedLogChar(UChar c) {
 }
 
 void Chat_SetLogName(STRING_PURE String* name) {
-	if (Chat_LogName.length > 0) return;
+	if (Chat_LogName.length) return;
 	String_Clear(&Chat_LogName);
 
 	UChar noColsBuffer[String_BufferSize(STRING_SIZE)];
@@ -109,7 +109,7 @@ static void Chat_OpenLog(DateTime* now) {
 }
 
 static void Chat_AppendLog(STRING_PURE String* text) {
-	if (Chat_LogName.length == 0 || !Game_ChatLogging) return;
+	if (!Chat_LogName.length || !Game_ChatLogging) return;
 	DateTime now; Platform_CurrentLocalTime(&now);
 
 	if (now.Day != ChatLog_LastLogDate.Day || now.Month != ChatLog_LastLogDate.Month || now.Year != ChatLog_LastLogDate.Year) {
@@ -118,7 +118,7 @@ static void Chat_AppendLog(STRING_PURE String* text) {
 	}
 
 	ChatLog_LastLogDate = now;
-	if (Chat_LogStream.Meta_File == NULL) return;
+	if (!Chat_LogStream.Meta_File) return;
 	UChar logBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String str = String_InitAndClearArray(logBuffer);
 
@@ -167,7 +167,7 @@ struct ChatCommand commands_list[8];
 Int32 commands_count;
 
 static bool Commands_IsCommandPrefix(STRING_PURE String* input) {
-	if (input->length == 0) return false;
+	if (!input->length) return false;
 	if (ServerConnection_IsSinglePlayer && input->buffer[0] == '/')
 		return true;
 
@@ -209,7 +209,7 @@ static struct ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
 		match = cmd;
 	}
 
-	if (match == NULL) {
+	if (!match) {
 		Commands_Log("&e/client: Unrecognised command: \"&f%s&e\".", cmdName);
 		Chat_AddRaw(tmp, "&e/client: Type &a/client &efor a list of commands.");
 		return NULL;
@@ -238,7 +238,7 @@ static void Commands_PrintDefined(void) {
 		String_AppendConst(&str, ", ");
 	}
 
-	if (str.length > 0) { Chat_Add(&str); }
+	if (str.length) { Chat_Add(&str); }
 }
 
 static void Commands_Execute(STRING_PURE String* input) {
@@ -254,7 +254,7 @@ static void Commands_Execute(STRING_PURE String* input) {
 		text = String_UNSAFE_SubstringAt(&text, 1);
 	}
 
-	if (text.length == 0) { /* only / or /client */
+	if (!text.length) { /* only / or /client */
 		Chat_AddRaw(tmp1, "&eList of client commands:");
 		Commands_PrintDefined();
 		Chat_AddRaw(tmp2, "&eTo see help for a command, type &a/client help [cmd name]");
@@ -266,7 +266,7 @@ static void Commands_Execute(STRING_PURE String* input) {
 	String_UNSAFE_Split(&text, ' ', args, &argsCount);
 
 	struct ChatCommand* cmd = Commands_GetMatch(&args[0]);
-	if (cmd == NULL) return;
+	if (!cmd) return;
 	cmd->Execute(args, argsCount);
 }
 
@@ -281,11 +281,11 @@ static void HelpCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 		Chat_AddRaw(tmp2, "&eTo see help for a command, type /client help [cmd name]");
 	} else {
 		struct ChatCommand* cmd = Commands_GetMatch(&args[1]);
-		if (cmd == NULL) return;
+		if (!cmd) return;
 
 		Int32 i;
 		for (i = 0; i < Array_Elems(cmd->Help); i++) {
-			if (cmd->Help[i] == NULL) continue;
+			if (!cmd->Help[i]) continue;
 			String help = String_FromReadonly(cmd->Help[i]);
 			Chat_Add(&help);
 		}
@@ -306,7 +306,7 @@ static void HelpCommand_Make(struct ChatCommand* cmd) {
 static void GpuInfoCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 	Int32 i;
 	for (i = 0; i < Array_Elems(Gfx_ApiInfo); i++) {
-		if (Gfx_ApiInfo[i].length == 0) continue;
+		if (!Gfx_ApiInfo[i].length) continue;
 		UInt8 msgBuffer[String_BufferSize(STRING_SIZE)];
 		String msg = String_InitAndClearArray(msgBuffer);
 
@@ -543,7 +543,7 @@ static void TeleportCommand_Make(struct ChatCommand* cmd) {
 *-------------------------------------------------------Generic chat------------------------------------------------------*
 *#########################################################################################################################*/
 void Chat_Send(STRING_PURE String* text, bool logUsage) {
-	if (text->length == 0) return;
+	if (!text->length) return;
 	Event_RaiseChat(&ChatEvents_ChatSending, text, 0);
 	if (logUsage) StringsBuffer_Add(&Chat_InputLog, text);
 

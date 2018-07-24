@@ -70,7 +70,7 @@ void GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
 			for (; ;) {
 				temp = Stream_TryReadByte(s);
 				if (temp == -1) return;
-				if (temp == NULL) break;
+				if (temp == '\0') break;
 			}
 		}
 		header->State++;
@@ -80,7 +80,7 @@ void GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
 			for (; ;) {
 				temp = Stream_TryReadByte(s);
 				if (temp == -1) return;
-				if (temp == NULL) break;
+				if (temp == '\0') break;
 			}
 		}
 		header->State++;
@@ -161,7 +161,7 @@ enum INFLATE_STATE_ {
 /* Aligns bit buffer to be on a byte boundary */
 #define Inflate_AlignBits(state) UInt32 alignSkip = state->NumBits & 7; Inflate_ConsumeBits(state, alignSkip);
 /* Ensures there are 'bitsCount' bits, or returns if not */
-#define Inflate_EnsureBits(state, bitsCount) while (state->NumBits < bitsCount) { if (state->AvailIn == 0) return; Inflate_GetByte(state); }
+#define Inflate_EnsureBits(state, bitsCount) while (state->NumBits < bitsCount) { if (!state->AvailIn) return; Inflate_GetByte(state); }
 /* Ensures there are 'bitsCount' bits */
 #define Inflate_UNSAFE_EnsureBits(state, bitsCount) while (state->NumBits < bitsCount) { Inflate_GetByte(state); }
 /* Peeks then consumes given bits */
@@ -223,7 +223,7 @@ static void Huffman_Build(struct HuffmanTable* table, UInt8* bitLens, Int32 coun
 	Platform_MemSet(table->Fast, UInt8_MaxValue, sizeof(table->Fast));
 	for (i = 0; i < count; i++, value++) {
 		Int32 len = bitLens[i];
-		if (len == 0) continue;
+		if (!len) continue;
 		table->Values[bl_offsets[len]] = value;
 
 		/* Computes the accelerated lookup table values for this codeword
@@ -250,7 +250,7 @@ static void Huffman_Build(struct HuffmanTable* table, UInt8* bitLens, Int32 coun
 static Int32 Huffman_Decode(struct InflateState* state, struct HuffmanTable* table) {
 	/* Buffer as many bits as possible */
 	while (state->NumBits <= INFLATE_MAX_BITS) {
-		if (state->AvailIn == 0) break;
+		if (!state->AvailIn) break;
 		Inflate_GetByte(state);
 	}
 
@@ -464,14 +464,15 @@ void Inflate_Process(struct InflateState* state) {
 		}
 
 		case INFLATE_STATE_UNCOMPRESSED_DATA: {
-			while (state->NumBits > 0 && state->AvailOut > 0 && state->Index > 0) {
+			/* read bits left in bit buffer (slow way) */
+			while (state->NumBits && state->AvailOut && state->Index) {
 				*state->Output = Inflate_ReadBits(state, 8);
 				state->Window[state->WindowIndex] = *state->Output;
 
 				state->WindowIndex = (state->WindowIndex + 1) & INFLATE_WINDOW_MASK;
 				state->Output++; state->AvailOut--;	state->Index--;
 			}
-			if (state->AvailIn == 0 || state->AvailOut == 0) return;
+			if (!state->AvailIn || !state->AvailOut) return;
 
 			UInt32 copyLen = min(state->AvailIn, state->AvailOut);
 			copyLen = min(copyLen, state->Index);
@@ -491,9 +492,7 @@ void Inflate_Process(struct InflateState* state) {
 				state->NextIn += copyLen; state->AvailIn -= copyLen;		
 			}
 
-			if (state->Index == 0) {
-				state->State = Inflate_NextBlockState(state);
-			}
+			if (!state->Index) { state->State = Inflate_NextBlockState(state); }
 			break;
 		}
 
@@ -555,9 +554,7 @@ void Inflate_Process(struct InflateState* state) {
 			case 16:
 				Inflate_EnsureBits(state, 2);
 				repeatCount = Inflate_ReadBits(state, 2);
-				if (state->Index == 0) {
-					ErrorHandler_Fail("DEFLATE - Tried to repeat invalid byte");
-				}
+				if (!state->Index) ErrorHandler_Fail("DEFLATE - Tried to repeat invalid byte");
 				repeatCount += 3; repeatValue = state->Buffer[state->Index - 1];
 				break;
 
@@ -586,7 +583,7 @@ void Inflate_Process(struct InflateState* state) {
 		}
 
 		case INFLATE_STATE_COMPRESSED_LIT: {
-			if (state->AvailOut == 0) return;
+			if (!state->AvailOut) return;
 
 			Int32 lit = Huffman_Decode(state, &state->LitsTable);
 			if (lit < 256) {
@@ -628,7 +625,7 @@ void Inflate_Process(struct InflateState* state) {
 		}
 
 		case INFLATE_STATE_COMPRESSED_DATA: {
-			if (state->AvailOut == 0) return;
+			if (!state->AvailOut) return;
 			UInt32 len = state->TmpLit, dist = state->TmpDist;
 			len = min(len, state->AvailOut);
 
@@ -645,7 +642,7 @@ void Inflate_Process(struct InflateState* state) {
 			state->WindowIndex = (curIdx + len) & INFLATE_WINDOW_MASK;
 			state->TmpLit -= len;
 			state->AvailOut -= len;
-			if (state->TmpLit == 0) { state->State = Inflate_NextCompressState(state); }
+			if (!state->TmpLit) { state->State = Inflate_NextCompressState(state); }
 			break;
 		}
 
@@ -672,7 +669,7 @@ static ReturnCode Inflate_StreamRead(struct Stream* stream, UInt8* data, UInt32 
 	bool hasInput = true;
 	while (state->AvailOut > 0 && hasInput) {
 		if (state->State == INFLATE_STATE_DONE) break;
-		if (state->AvailIn == 0) {
+		if (!state->AvailIn) {
 			/* Fully used up input buffer. Cycle back to start. */
 			UInt8* inputEnd = state->Input + INFLATE_MAX_INPUT;
 			if (state->NextIn == inputEnd) state->NextIn = state->Input;

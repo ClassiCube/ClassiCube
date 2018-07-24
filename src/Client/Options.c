@@ -71,7 +71,7 @@ void Options_Get(const UChar* key, STRING_TRANSIENT String* value, const UChar* 
 	Options_TryGetValue(key, &str);
 	String_Clear(value);
 
-	if (str.length > 0) {
+	if (str.length) {
 		String_AppendString(value, &str);
 	} else {
 		String_AppendConst(value, defValue);
@@ -182,7 +182,7 @@ void Options_Load(void) {
 	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
 
 	while (Stream_ReadLine(&buffered, &line)) {
-		if (line.length == 0 || line.buffer[0] == '#') continue;
+		if (!line.length || line.buffer[0] == '#') continue;
 
 		Int32 sepIndex = String_IndexOf(&line, '=', 0);
 		if (sepIndex <= 0) continue;

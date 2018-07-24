@@ -34,7 +34,7 @@ void AxisLinesRenderer_MakeComponent(struct IGameComponent* comp) {
 void AxisLinesRenderer_Render(Real64 delta) {
 	if (!Game_ShowAxisLines || Gfx_LostContext) return;
 	/* Don't do it in a ContextRecreated handler, because we only want VB recreated if ShowAxisLines in on. */
-	if (axisLines_vb == NULL) {
+	if (!axisLines_vb) {
 		axisLines_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, axisLines_numVertices);
 	}
 

@@ -58,7 +58,7 @@ void Platform_Init(void) {
 	Platform_InitDisplay();
 	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */
 	hdc = CreateCompatibleDC(NULL);
-	if (hdc == NULL) ErrorHandler_Fail("Failed to get screen DC");
+	if (!hdc) ErrorHandler_Fail("Failed to get screen DC");
 
 	SetTextColor(hdc, 0x00FFFFFF);
 	SetBkColor(hdc, 0x00000000);
@@ -95,7 +95,7 @@ STRING_PURE String Platform_GetCommandLineArgs(void) {
 	args = String_UNSAFE_SubstringAt(&args, argsStart);
 
 	/* get rid of duplicate leading spaces before first arg */
-	while (args.length > 0 && args.buffer[0] == ' ') {
+	while (args.length && args.buffer[0] == ' ') {
 		args = String_UNSAFE_SubstringAt(&args, 1);
 	}
 	return args;
@@ -210,7 +210,7 @@ ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_Enum
 		String_Clear(&file);
 		Int32 i;
 
-		for (i = 0; i < MAX_PATH && entry.cFileName[i] != NULL; i++) {
+		for (i = 0; i < MAX_PATH && entry.cFileName[i] != '\0'; i++) {
 			String_Append(&file, Convert_UnicodeToCP437(entry.cFileName[i]));
 		}
 
@@ -310,7 +310,7 @@ DWORD WINAPI Platform_ThreadStartCallback(LPVOID lpParam) {
 void* Platform_ThreadStart(Platform_ThreadFunc* func) {
 	DWORD threadID;
 	void* handle = CreateThread(NULL, 0, Platform_ThreadStartCallback, func, 0, &threadID);
-	if (handle == NULL) {
+	if (!handle) {
 		ErrorHandler_FailWithCode(GetLastError(), "Creating thread");
 	}
 	return handle;
@@ -348,7 +348,7 @@ void Platform_MutexUnlock(void* handle) {
 
 void* Platform_EventCreate(void) {
 	void* handle = CreateEventW(NULL, false, false, NULL);
-	if (handle == NULL) {
+	if (!handle) {
 		ErrorHandler_FailWithCode(GetLastError(), "Creating event");
 	}
 	return handle;
@@ -407,7 +407,7 @@ void Platform_FontMake(struct FontDesc* desc, STRING_PURE String* fontName, UInt
 	String dstName = String_Init(font.lfFaceName, 0, LF_FACESIZE);
 	String_AppendString(&dstName, fontName);
 	desc->Handle = CreateFontIndirectA(&font);
-	if (desc->Handle == NULL) ErrorHandler_Fail("Creating font handle failed");
+	if (!desc->Handle) ErrorHandler_Fail("Creating font handle failed");
 }
 
 void Platform_FontFree(struct FontDesc* desc) {
@@ -443,7 +443,7 @@ void Platform_SetBitmap(struct Bitmap* bmp) {
 	bmi.bmiHeader.biCompression = BI_RGB;
 
 	platform_dib = CreateDIBSection(hdc, &bmi, 0, &platform_bits, NULL, 0);
-	if (platform_dib == NULL) ErrorHandler_Fail("Failed to allocate DIB for text");
+	if (!platform_dib) ErrorHandler_Fail("Failed to allocate DIB for text");
 	platform_oldBmp = SelectObject(hdc, platform_dib);
 }
 
@@ -495,7 +495,7 @@ HINTERNET hInternet;
 void Platform_HttpInit(void) {
 	/* TODO: Should we use INTERNET_OPEN_TYPE_PRECONFIG instead? */
 	hInternet = InternetOpenA(PROGRAM_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
-	if (hInternet == NULL) ErrorHandler_FailWithCode(GetLastError(), "Failed to init WinINet");
+	if (!hInternet) ErrorHandler_FailWithCode(GetLastError(), "Failed to init WinINet");
 }
 
 ReturnCode Platform_HttpMakeRequest(struct AsyncRequest* request, void** handle) {
@@ -504,7 +504,7 @@ ReturnCode Platform_HttpMakeRequest(struct AsyncRequest* request, void** handle)
 	String headers = String_MakeNull();
 	
 	/* https://stackoverflow.com/questions/25308488/c-wininet-custom-http-headers */
-	if (request->Etag[0] != NULL || request->LastModified.Year > 0) {
+	if (request->Etag.length || request->LastModified.Year > 0) {
 		headers = String_InitAndClearArray(headersBuffer);
 		if (request->LastModified.Year > 0) {
 			String_AppendConst(&headers, "If-Modified-Since: ");
@@ -512,7 +512,7 @@ ReturnCode Platform_HttpMakeRequest(struct AsyncRequest* request, void** handle)
 			String_AppendConst(&headers, "\r\n");
 		}
 
-		if (request->Etag[0] != NULL) {
+		if (request->Etag.length) {
 			String etag = String_FromRawArray(request->Etag);
 			String_AppendConst(&headers, "If-None-Match: ");
 			String_AppendString(&headers, &etag);
@@ -571,7 +571,7 @@ ReturnCode Platform_HttpGetRequestData(struct AsyncRequest* request, void* handl
 		bool success = InternetReadFile(handle, buffer, toRead, &read);
 		if (!success) { Platform_MemFree(data); return GetLastError(); }
 
-		if (read == 0) break;
+		if (!read) break;
 		buffer += read; totalRead += read; left -= read;
 		*progress = (Int32)(100.0f * totalRead / size);
 	}

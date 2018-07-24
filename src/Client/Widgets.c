@@ -131,7 +131,7 @@ static void ButtonWidget_Reposition(struct GuiElem* elem) {
 
 static void ButtonWidget_Render(struct GuiElem* elem, Real64 delta) {
 	struct ButtonWidget* widget = (struct ButtonWidget*)elem;
-	if (widget->Texture.ID == NULL) return;
+	if (!widget->Texture.ID) return;
 	struct Texture back = widget->Active ? Button_SelectedTex : Button_ShadowTex;
 	if (widget->Disabled) back = Button_DisabledTex;
 
@@ -1052,7 +1052,7 @@ void InputWidget_AppendString(struct InputWidget* widget, STRING_PURE String* te
 		if (InputWidget_TryAppendChar(widget, text->buffer[i])) appended++;
 	}
 
-	if (appended == 0) return;
+	if (!appended) return;
 	Elem_Recreate(widget);
 }
 
@@ -1062,7 +1062,7 @@ void InputWidget_Append(struct InputWidget* widget, UChar c) {
 }
 
 static void InputWidget_DeleteChar(struct InputWidget* widget) {
-	if (widget->Text.length == 0) return;
+	if (!widget->Text.length) return;
 
 	if (widget->CaretPos == -1) {
 		String_DeleteAt(&widget->Text, widget->Text.length - 1);
@@ -1083,7 +1083,7 @@ static void InputWidget_BackspaceKey(struct InputWidget* widget) {
 	if (InputWidget_ControlDown()) {
 		if (widget->CaretPos == -1) { widget->CaretPos = widget->Text.length - 1; }
 		Int32 len = WordWrap_GetBackLength(&widget->Text, widget->CaretPos);
-		if (len == 0) return;
+		if (!len) return;
 
 		widget->CaretPos -= len;
 		if (widget->CaretPos < 0) { widget->CaretPos = 0; }
@@ -1153,7 +1153,7 @@ static void InputWidget_RightKey(struct InputWidget* widget) {
 }
 
 static void InputWidget_HomeKey(struct InputWidget* widget) {
-	if (widget->Text.length == 0) return;
+	if (!widget->Text.length) return;
 	widget->CaretPos = 0;
 	InputWidget_UpdateCaret(widget);
 }
@@ -1175,11 +1175,11 @@ static bool InputWidget_OtherKey(struct InputWidget* widget, Key key) {
 		String_UNSAFE_TrimStart(&text);
 		String_UNSAFE_TrimEnd(&text);
 
-		if (text.length == 0) return true;
+		if (!text.length) return true;
 		InputWidget_AppendString(widget, &text);
 		return true;
 	} else if (key == Key_C) {
-		if (widget->Text.length == 0) return true;
+		if (!widget->Text.length) return true;
 		Window_SetClipboardText(&widget->Text);
 		return true;
 	}
@@ -1265,7 +1265,7 @@ static bool InputWidget_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y,
 	for (charY = 0; charY < widget->GetMaxLines(); charY++) {
 		String_Clear(&line);
 		InputWidget_FormatLine(widget, charY, &line);
-		if (line.length == 0) continue;
+		if (!line.length) continue;
 
 		for (charX = 0; charX < line.length; charX++) {
 			args.Text = String_UNSAFE_Substring(&line, 0, charX);
@@ -1315,7 +1315,7 @@ void InputWidget_Create(struct InputWidget* widget, struct FontDesc* font, STRIN
 	widget->CaretTex.Width = (UInt16)((widget->CaretTex.Width * 3) / 4);
 	widget->CaretWidth     = (UInt16)widget->CaretTex.Width;
 
-	if (prefix->length == 0) return;
+	if (!prefix->length) return;
 	DrawTextArgs_Make(&args, prefix, font, true);
 	struct Size2D size = Drawer2D_MeasureText(&args);
 	widget->PrefixWidth  = size.Width;  widget->Width  = size.Width;
@@ -1601,7 +1601,7 @@ static void ChatInputWidget_RemakeTexture(struct GuiElem* elem) {
 	Drawer2D_Begin(&bmp);
 
 	struct DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, true);
-	if (widget->Prefix.length > 0) {
+	if (widget->Prefix.length) {
 		args.Text = widget->Prefix;
 		Drawer2D_DrawText(&args, 0, 0);
 	}
@@ -1610,7 +1610,7 @@ static void ChatInputWidget_RemakeTexture(struct GuiElem* elem) {
 	String line = String_InitAndClearArray(lineBuffer);	
 
 	for (i = 0; i < Array_Elems(widget->Lines); i++) {
-		if (widget->Lines[i].length == 0) break;
+		if (!widget->Lines[i].length) break;
 		String_Clear(&line);
 
 		/* Colour code goes to next line */
@@ -1669,8 +1669,8 @@ static void ChatInputWidget_OnPressedEnter(struct GuiElem* elem) {
 
 	/* Don't want trailing spaces in output message */
 	String text = widget->Base.Text;
-	while (text.length > 0 && text.buffer[text.length - 1] == ' ') { text.length--; }
-	if (text.length > 0) { Chat_Send(&text, true); }
+	while (text.length && text.buffer[text.length - 1] == ' ') { text.length--; }
+	if (text.length) { Chat_Send(&text, true); }
 
 	String orig = String_FromRawArray(widget->OrigBuffer);
 	String_Clear(&orig);
@@ -1700,7 +1700,7 @@ static void ChatInputWidget_UpKey(struct GuiElem* elem) {
 		String_Set(&orig, &input->Text);
 	}
 
-	if (Chat_InputLog.Count == 0) return;
+	if (!Chat_InputLog.Count) return;
 	widget->TypingLogPos--;
 	String_Clear(&input->Text);
 
@@ -1725,14 +1725,14 @@ static void ChatInputWidget_DownKey(struct GuiElem* elem) {
 		return;
 	}
 
-	if (Chat_InputLog.Count == 0) return;
+	if (!Chat_InputLog.Count) return;
 	widget->TypingLogPos++;
 	String_Clear(&input->Text);
 
 	if (widget->TypingLogPos >= Chat_InputLog.Count) {
 		widget->TypingLogPos = Chat_InputLog.Count;
 		String orig = String_FromRawArray(widget->OrigBuffer);
-		if (orig.length > 0) { String_AppendString(&input->Text, &orig); }
+		if (orig.length) { String_AppendString(&input->Text, &orig); }
 	} else {
 		String prevInput = StringsBuffer_UNSAFE_Get(&Chat_InputLog, widget->TypingLogPos);
 		String_AppendString(&input->Text, &prevInput);
@@ -1860,7 +1860,7 @@ static Int32 PlayerListWidget_HighlightedName(struct PlayerListWidget* widget, I
 	if (!widget->Active) return -1;
 	Int32 i;
 	for (i = 0; i < widget->NamesCount; i++) {
-		if (widget->Textures[i].ID == NULL || widget->IDs[i] == GROUP_NAME_ID) continue;
+		if (!widget->Textures[i].ID || widget->IDs[i] == GROUP_NAME_ID) continue;
 
 		struct Texture t = widget->Textures[i];
 		if (Gui_Contains(t.X, t.Y, t.Width, t.Height, mouseX, mouseY)) return i;
@@ -2069,7 +2069,7 @@ static void PlayerListWidget_QuickSort(Int32 left, Int32 right) {
 }
 
 static void PlayerListWidget_SortEntries(struct PlayerListWidget* widget) {
-	if (widget->NamesCount == 0) return;
+	if (!widget->NamesCount) return;
 	List_SortObj = widget;
 	if (widget->Classic) {
 		List_SortCompare = PlayerListWidget_PlayerCompare;
@@ -2172,7 +2172,7 @@ static void PlayerListWidget_Render(struct GuiElem* elem, Real64 delta) {
 
 	Int32 i, highlightedI = PlayerListWidget_HighlightedName(widget, Mouse_X, Mouse_Y);
 	for (i = 0; i < widget->NamesCount; i++) {
-		if (widget->Textures[i].ID == NULL) continue;
+		if (!widget->Textures[i].ID) continue;
 
 		struct Texture tex = widget->Textures[i];
 		if (i == highlightedI) tex.X += 4;
@@ -2304,7 +2304,7 @@ static void TextGroupWidget_Reposition(struct GuiElem* elem) {
 
 	Int32 oldY = widget->Y;
 	Widget_DoReposition(elem);
-	if (widget->LinesCount == 0) return;
+	if (!widget->LinesCount) return;
 
 	for (i = 0; i < widget->LinesCount; i++) {
 		textures[i].X = Gui_CalcPos(widget->HorAnchor, widget->XOffset, textures[i].Width, Game_Width);
@@ -2374,7 +2374,7 @@ Int32 TextGroupWidget_UrlEnd(UChar* chars, Int32 charsLen, Int32* begs, Int32 be
 }
 
 void TextGroupWidget_Output(struct Portion bit, Int32 lineBeg, Int32 lineEnd, struct Portion** portions) {
-	if (bit.Beg >= lineEnd || bit.Len == 0) return;
+	if (bit.Beg >= lineEnd || !bit.Len) return;
 	bit.LineBeg = bit.Beg;
 	bit.LineLen = bit.Len & 0x7FFF;
 
@@ -2391,7 +2391,7 @@ void TextGroupWidget_Output(struct Portion bit, Int32 lineBeg, Int32 lineEnd, st
 	if (overBy > 0) bit.LineLen -= overBy;
 
 	bit.LineBeg -= lineBeg;
-	if (bit.LineLen == 0) return;
+	if (!bit.LineLen) return;
 
 	struct Portion* cur = *portions; *cur++ = bit; *portions = cur;
 }
@@ -2403,9 +2403,9 @@ Int32 TextGroupWidget_Reduce(struct TextGroupWidget* widget, UChar* chars, Int32
 	Int32 ends[TEXTGROUPWIDGET_MAX_LINES];
 
 	for (i = 0; i < widget->LinesCount; i++) {
-		UInt16 lineLen = widget->LineLengths[i];
+		Int32 lineLen = widget->LineLengths[i];
 		begs[i] = -1; ends[i] = -1;
-		if (lineLen == 0) continue;
+		if (!lineLen) continue;
 
 		begs[i] = total;
 		Platform_MemCpy(&chars[total], TextGroupWidget_LineBuffer(widget, i), lineLen);
@@ -2476,7 +2476,7 @@ bool TextGroupWidget_GetUrl(struct TextGroupWidget* widget, STRING_TRANSIENT Str
 void TextGroupWidget_GetSelected(struct TextGroupWidget* widget, STRING_TRANSIENT String* text, Int32 x, Int32 y) {
 	Int32 i;
 	for (i = 0; i < widget->LinesCount; i++) {
-		if (widget->Textures[i].ID == NULL) continue;
+		if (!widget->Textures[i].ID) continue;
 		struct Texture tex = widget->Textures[i];
 		if (!Gui_Contains(tex.X, tex.Y, tex.Width, tex.Height, x, y)) continue;
 
@@ -2493,7 +2493,7 @@ bool TextGroupWidget_MightHaveUrls(struct TextGroupWidget* widget) {
 	Int32 i;
 
 	for (i = 0; i < widget->LinesCount; i++) {
-		if (widget->LineLengths[i] == 0) continue;
+		if (!widget->LineLengths[i]) continue;
 		String line = TextGroupWidget_UNSAFE_Get(widget, i);
 		if (String_IndexOf(&line, '/', 0) >= 0) return true;
 	}
@@ -2584,7 +2584,7 @@ static void TextGroupWidget_Render(struct GuiElem* elem, Real64 delta) {
 	struct Texture* textures = widget->Textures;
 
 	for (i = 0; i < widget->LinesCount; i++) {
-		if (textures[i].ID == NULL) continue;
+		if (!textures[i].ID) continue;
 		Texture_Render(&textures[i]);
 	}
 }

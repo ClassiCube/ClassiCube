@@ -148,10 +148,10 @@ void Gui_FreeActive(void) {
 void Gui_SetActive(struct Screen* screen) {
 	InputHandler_ScreenChanged(Gui_Active, screen);
 
-	if (screen == NULL) {
+	if (!screen) {
 		Game_SetCursorVisible(false);
 		if (Window_Focused) { Camera_Active->RegrabMouse(); }
-	} else if (Gui_Active == NULL) {
+	} else if (!Gui_Active) {
 		Game_SetCursorVisible(true);
 	}
 
@@ -165,7 +165,7 @@ void Gui_ShowOverlay(struct Screen* overlay, bool atFront) {
 		ErrorHandler_Fail("Cannot have more than 6 overlays");
 	}
 	bool visible = Game_GetCursorVisible();
-	if (Gui_OverlaysCount == 0) Game_SetCursorVisible(true);
+	if (!Gui_OverlaysCount) Game_SetCursorVisible(true);
 
 	if (atFront) {
 		Int32 i;
@@ -203,14 +203,14 @@ void Gui_FreeOverlay(struct Screen* overlay) {
 	Gui_OverlaysCount--;
 	Gui_Overlays[Gui_OverlaysCount] = NULL;
 
-	if (Gui_OverlaysCount == 0) { Game_SetCursorVisible(Game_GetRealCursorVisible()); }
+	if (!Gui_OverlaysCount) { Game_SetCursorVisible(Game_GetRealCursorVisible()); }
 	Camera_Active->RegrabMouse();
 }
 
 void Gui_RenderGui(Real64 delta) {
 	GfxCommon_Mode2D(Game_Width, Game_Height);
-	bool showHUD = Gui_Active == NULL || !Gui_Active->HidesHUD;
-	bool hudBefore = Gui_Active == NULL || !Gui_Active->RenderHUDOver;
+	bool showHUD   = !Gui_Active || !Gui_Active->HidesHUD;
+	bool hudBefore = !Gui_Active || !Gui_Active->RenderHUDOver;
 	if (showHUD) { Elem_Render(Gui_Status, delta); }
 
 	if (showHUD && hudBefore)  { Elem_Render(Gui_HUD, delta); }

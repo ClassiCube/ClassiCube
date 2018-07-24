@@ -85,7 +85,7 @@ static void ChunkUpdater_FreePartsAllocations(void) {
 }
 
 static void ChunkUpdater_FreeAllocations(void) {
-	if (MapRenderer_Chunks == NULL) return;
+	if (!MapRenderer_Chunks) return;
 	Platform_MemFree(&MapRenderer_Chunks);
 	Platform_MemFree(&MapRenderer_SortedChunks);
 	Platform_MemFree(&MapRenderer_RenderChunks);
@@ -96,7 +96,7 @@ static void ChunkUpdater_FreeAllocations(void) {
 static void ChunkUpdater_PerformPartsAllocations(void) {
 	UInt32 count = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
 	MapRenderer_PartsBuffer_Raw = Platform_MemAllocCleared(count * 2, sizeof(struct ChunkPartInfo));
-	if (MapRenderer_PartsBuffer_Raw == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk parts");
+	if (!MapRenderer_PartsBuffer_Raw) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk parts");
 
 	MapRenderer_PartsNormal = MapRenderer_PartsBuffer_Raw;
 	MapRenderer_PartsTranslucent = MapRenderer_PartsBuffer_Raw + count;
@@ -104,16 +104,16 @@ static void ChunkUpdater_PerformPartsAllocations(void) {
 
 static void ChunkUpdater_PerformAllocations(void) {
 	MapRenderer_Chunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo));
-	if (MapRenderer_Chunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk info");
+	if (!MapRenderer_Chunks) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk info");
 
 	MapRenderer_SortedChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*));
-	if (MapRenderer_Chunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate sorted chunk info");
+	if (!MapRenderer_Chunks) ErrorHandler_Fail("ChunkUpdater - failed to allocate sorted chunk info");
 
 	MapRenderer_RenderChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*));
-	if (MapRenderer_RenderChunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate render chunk info");
+	if (!MapRenderer_RenderChunks) ErrorHandler_Fail("ChunkUpdater - failed to allocate render chunk info");
 
 	ChunkUpdater_Distances = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(Int32));
-	if (ChunkUpdater_Distances == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk distances");
+	if (!ChunkUpdater_Distances) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk distances");
 
 	ChunkUpdater_PerformPartsAllocations();
 }
@@ -140,7 +140,7 @@ static void ChunkUpdater_Refresh_Handler(void* obj) {
 
 void ChunkUpdater_RefreshBorders(Int32 clipLevel) {
 	ChunkUpdater_ChunkPos = Vector3I_MaxValue();
-	if (MapRenderer_Chunks == NULL || World_Blocks == NULL) return;
+	if (!MapRenderer_Chunks || !World_Blocks) return;
 
 	Int32 cx, cy, cz;
 	for (cz = 0; cz < MapRenderer_ChunksZ; cz++) {
@@ -207,7 +207,7 @@ static Int32 ChunkUpdater_UpdateChunksAndVisibility(Int32* chunkUpdates) {
 		struct ChunkInfo* info = MapRenderer_SortedChunks[i];
 		if (info->Empty) { continue; }
 		Int32 distSqr = ChunkUpdater_Distances[i];
-		bool noData = info->NormalParts == NULL && info->TranslucentParts == NULL;
+		bool noData = !info->NormalParts && !info->TranslucentParts;
 		
 		/* Unload chunks beyond visible range */
 		if (!noData && distSqr >= userDistSqr + 32 * 16) {
@@ -236,7 +236,7 @@ static Int32 ChunkUpdater_UpdateChunksStill(Int32* chunkUpdates) {
 		struct ChunkInfo* info = MapRenderer_SortedChunks[i];
 		if (info->Empty) { continue; }
 		Int32 distSqr = ChunkUpdater_Distances[i];
-		bool noData = info->NormalParts == NULL && info->TranslucentParts == NULL;
+		bool noData = !info->NormalParts && !info->TranslucentParts;
 
 		/* Unload chunks beyond visible range */
 		if (!noData && distSqr >= userDistSqr + 32 * 16) {
@@ -329,7 +329,7 @@ void ChunkUpdater_ResetChunkCache(void) {
 }
 
 void ChunkUpdater_ClearChunkCache(void) {
-	if (MapRenderer_Chunks == NULL) return;
+	if (!MapRenderer_Chunks) return;
 
 	Int32 i;
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
@@ -384,9 +384,8 @@ void ChunkUpdater_BuildChunk(struct ChunkInfo* info, Int32* chunkUpdates) {
 	info->PendingDelete = false;
 	Builder_MakeChunk(info);
 
-	if (info->NormalParts == NULL && info->TranslucentParts == NULL) {
-		info->Empty = true;
-		return;
+	if (!info->NormalParts && !info->TranslucentParts) {
+		info->Empty = true; return;
 	}
 	Int32 i;
 
@@ -436,7 +435,7 @@ static void ChunkUpdater_UpdateSortOrder(void) {
 
 	Vector3I pPos = newChunkPos;
 	ChunkUpdater_ChunkPos = pPos;
-	if (MapRenderer_ChunksCount == 0) return;
+	if (!MapRenderer_ChunksCount) return;
 
 	Int32 i = 0;
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
@@ -466,7 +465,7 @@ static void ChunkUpdater_UpdateSortOrder(void) {
 }
 
 void ChunkUpdater_Update(Real64 deltaTime) {
-	if (MapRenderer_Chunks == NULL) return;
+	if (!MapRenderer_Chunks) return;
 	ChunkUpdater_UpdateSortOrder();
 	ChunkUpdater_UpdateChunks(deltaTime);
 }

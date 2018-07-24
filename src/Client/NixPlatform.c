@@ -41,9 +41,7 @@ void Platform_UnicodeExpand(void* dstPtr, STRING_PURE String* src) {
 
 static void Platform_InitDisplay(void) {
 	Display* display = XOpenDisplay(NULL);
-	if (display == NULL) {
-		ErrorHandler_Fail("Failed to open display");
-	}
+	if (!display) ErrorHandler_Fail("Failed to open display");
 
 	int screen = XDefaultScreen(display);
 	Window rootWin = XRootWindow(display, screen);
@@ -162,7 +160,7 @@ bool Platform_FileExists(STRING_PURE String* path) {
 ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_EnumFilesCallback callback) {
 	UInt8 data[1024]; Platform_UnicodeExpand(data, path);
 	DIR* dirPtr = opendir(data);
-	if (dirPtr == NULL) return errno;
+	if (!dirPtr) return errno;
 
 	UInt8 fileBuffer[String_BufferSize(FILENAME_SIZE)];
 	String file = String_InitAndClearArray(fileBuffer);

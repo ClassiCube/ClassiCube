@@ -102,7 +102,7 @@ void EnvRenderer_UpdateFog(void) {
 	EnvRenderer_CalcFog(&fogDensity, &fogCol);
 	Gfx_ClearCol(fogCol);
 
-	if (World_Blocks == NULL) return;
+	if (!World_Blocks) return;
 	if (EnvRenderer_Minimal) {
 		EnvRenderer_UpdateFogMinimal(fogDensity);
 	} else {
@@ -118,7 +118,7 @@ GfxResourceID clouds_vb, clouds_tex;
 Int32 clouds_vertices;
 
 void EnvRenderer_RenderClouds(Real64 deltaTime) {
-	if (clouds_vb == NULL || WorldEnv_CloudsHeight < -2000) return;
+	if (!clouds_vb || WorldEnv_CloudsHeight < -2000) return;
 	Real64 time = Game_Accumulator;
 	Real32 offset = (Real32)(time / 2048.0f * 0.6f * WorldEnv_CloudsSpeed);
 
@@ -167,7 +167,7 @@ static void EnvRenderer_DrawCloudsY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int3
 }
 
 static void EnvRenderer_UpdateClouds(void) {
-	if (World_Blocks == NULL || Gfx_LostContext) return;
+	if (!World_Blocks || Gfx_LostContext) return;
 	Gfx_DeleteVb(&clouds_vb);
 	if (EnvRenderer_Minimal) return;
 
@@ -180,7 +180,7 @@ static void EnvRenderer_UpdateClouds(void) {
 	VertexP3fT2fC4b* ptr = v;
 	if (clouds_vertices > 4096) {
 		ptr = Platform_MemAlloc(clouds_vertices, sizeof(VertexP3fT2fC4b));
-		if (ptr == NULL) ErrorHandler_Fail("EnvRenderer_Clouds - failed to allocate memory");
+		if (!ptr) ErrorHandler_Fail("EnvRenderer_Clouds - failed to allocate memory");
 	}
 
 	EnvRenderer_DrawCloudsY(x1, z1, x2, z2, WorldEnv_CloudsHeight, ptr);
@@ -197,7 +197,7 @@ GfxResourceID sky_vb;
 Int32 sky_vertices;
 
 void EnvRenderer_RenderSky(Real64 deltaTime) {
-	if (sky_vb == NULL || EnvRenderer_ShouldRenderSkybox()) return;
+	if (!sky_vb || EnvRenderer_ShouldRenderSkybox()) return;
 	Vector3 pos = Game_CurrentCameraPos;
 	Real32 normalY = (Real32)World_Height + 8.0f;
 	Real32 skyY = max(pos.Y + 8.0f, normalY);
@@ -240,7 +240,7 @@ static void EnvRenderer_DrawSkyY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y
 }
 
 static void EnvRenderer_UpdateSky(void) {
-	if (World_Blocks == NULL || Gfx_LostContext) return;
+	if (!World_Blocks || Gfx_LostContext) return;
 	Gfx_DeleteVb(&sky_vb);
 	if (EnvRenderer_Minimal) return;
 
@@ -253,7 +253,7 @@ static void EnvRenderer_UpdateSky(void) {
 	VertexP3fC4b* ptr = v;
 	if (sky_vertices > 4096) {
 		ptr = Platform_MemAlloc(sky_vertices, sizeof(VertexP3fC4b));
-		if (ptr == NULL) ErrorHandler_Fail("EnvRenderer_Sky - failed to allocate memory");
+		if (!ptr) ErrorHandler_Fail("EnvRenderer_Sky - failed to allocate memory");
 	}
 
 	Int32 height = max((World_Height + 2) + 6, WorldEnv_CloudsHeight + 6);
@@ -271,7 +271,7 @@ GfxResourceID skybox_tex, skybox_vb;
 bool EnvRenderer_ShouldRenderSkybox(void) { return skybox_tex && !EnvRenderer_Minimal; }
 
 void EnvRenderer_RenderSkybox(Real64 deltaTime) {
-	if (skybox_vb == NULL) return;
+	if (!skybox_vb) return;
 	Gfx_SetDepthWrite(false);
 	Gfx_SetTexturing(true);
 	Gfx_BindTexture(skybox_tex);
@@ -343,9 +343,7 @@ Vector3I weather_lastPos;
 
 static void EnvRenderer_InitWeatherHeightmap(void) {
 	Weather_Heightmap = Platform_MemAlloc(World_Width * World_Length, sizeof(Int16));
-	if (Weather_Heightmap == NULL) {
-		ErrorHandler_Fail("WeatherRenderer - Failed to allocate heightmap");
-	}
+	if (!Weather_Heightmap) ErrorHandler_Fail("WeatherRenderer - Failed to allocate heightmap");
 
 	Int32 i;
 	for (i = 0; i < World_Width * World_Length; i++) {
@@ -409,7 +407,7 @@ static Real32 EnvRenderer_RainAlphaAt(Real32 x) {
 void EnvRenderer_RenderWeather(Real64 deltaTime) {
 	Int32 weather = WorldEnv_Weather;
 	if (weather == WEATHER_SUNNY) return;
-	if (Weather_Heightmap == NULL) EnvRenderer_InitWeatherHeightmap();
+	if (!Weather_Heightmap) EnvRenderer_InitWeatherHeightmap();
 
 	Gfx_BindTexture(weather == WEATHER_RAINY ? rain_tex : snow_tex);
 	Vector3 camPos = Game_CurrentCameraPos;
@@ -499,7 +497,7 @@ bool sides_fullBright, edges_fullBright;
 TextureLoc edges_lastTexLoc, sides_lastTexLoc;
 
 void EnvRenderer_RenderBorders(BlockID block, GfxResourceID vb, GfxResourceID tex, Int32 count) {
-	if (vb == NULL) return;
+	if (!vb) return;
 
 	Gfx_SetTexturing(true);
 	GfxCommon_SetupAlphaState(Block_Draw[block]);
@@ -629,7 +627,7 @@ static void EnvRenderer_DrawBorderY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Real
 }
 
 static void EnvRenderer_UpdateMapSides(void) {
-	if (World_Blocks == NULL || Gfx_LostContext) return;
+	if (!World_Blocks || Gfx_LostContext) return;
 	Gfx_DeleteVb(&sides_vb);
 	BlockID block = WorldEnv_SidesBlock;
 
@@ -652,7 +650,7 @@ static void EnvRenderer_UpdateMapSides(void) {
 	VertexP3fT2fC4b* ptr = v;
 	if (sides_vertices > 4096) {
 		ptr = Platform_MemAlloc(sides_vertices, sizeof(VertexP3fT2fC4b));
-		if (ptr == NULL) ErrorHandler_Fail("BordersRenderer_Sides - failed to allocate memory");
+		if (!ptr) ErrorHandler_Fail("BordersRenderer_Sides - failed to allocate memory");
 	}
 	VertexP3fT2fC4b* temp = ptr;
 
@@ -681,7 +679,7 @@ static void EnvRenderer_UpdateMapSides(void) {
 }
 
 static void EnvRenderer_UpdateMapEdges(void) {
-	if (World_Blocks == NULL || Gfx_LostContext) return;
+	if (!World_Blocks || Gfx_LostContext) return;
 	Gfx_DeleteVb(&edges_vb);
 	BlockID block = WorldEnv_EdgeBlock;
 
@@ -699,7 +697,7 @@ static void EnvRenderer_UpdateMapEdges(void) {
 	VertexP3fT2fC4b* ptr = v;
 	if (edges_vertices > 4096) {
 		ptr = Platform_MemAlloc(edges_vertices, sizeof(VertexP3fT2fC4b));
-		if (ptr == NULL) ErrorHandler_Fail("BordersRenderer_Edges - failed to allocate memory");
+		if (!ptr) ErrorHandler_Fail("BordersRenderer_Edges - failed to allocate memory");
 	}
 	VertexP3fT2fC4b* temp = ptr;
 
