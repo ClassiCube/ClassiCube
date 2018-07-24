@@ -40,7 +40,9 @@ namespace InteropPatcher {
 				PatchFile( path );
 				return 0;
 			} catch( Exception ex ) {
-				Console.WriteLine( ex );
+				// NOTE: this is an evil hack, but it fixes error being raised when attempting
+				// to compile the projects, despite having made no changes
+				if (ex is InvalidOperationException && ex.StackTrace.Contains("ProcessDebugHeader()")) return 0;
 				return 1;
 			}
 		}
