@@ -192,18 +192,15 @@ ReturnCode Platform_DirectoryCreate(STRING_PURE String* path) {
 }
 
 ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_EnumFilesCallback callback) {
-	WCHAR data[512]; Platform_UnicodeExpand(data, path);
+	UChar fileBuffer[String_BufferSize(MAX_PATH + 10)];
+	String file = String_InitAndClearArray(fileBuffer);
 	/* Need to append \* to search for files in directory */
-	data[path->length + 0] = '\\';
-	data[path->length + 1] = '*';
-	data[path->length + 2] = NULL;
+	String_Format1(&file, "%s\\*", path);
+	WCHAR data[512]; Platform_UnicodeExpand(data, &file);
 
 	WIN32_FIND_DATAW entry;
 	HANDLE find = FindFirstFileW(data, &entry);
 	if (find == INVALID_HANDLE_VALUE) return GetLastError();
-
-	UInt8 fileBuffer[String_BufferSize(MAX_PATH)];
-	String file = String_InitAndClearArray(fileBuffer);
 
 	do {
 		if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
@@ -504,7 +501,7 @@ ReturnCode Platform_HttpMakeRequest(struct AsyncRequest* request, void** handle)
 	String headers = String_MakeNull();
 	
 	/* https://stackoverflow.com/questions/25308488/c-wininet-custom-http-headers */
-	if (request->Etag.length || request->LastModified.Year > 0) {
+	if (request->Etag[0] || request->LastModified.Year) {
 		headers = String_InitAndClearArray(headersBuffer);
 		if (request->LastModified.Year > 0) {
 			String_AppendConst(&headers, "If-Modified-Since: ");
@@ -512,7 +509,7 @@ ReturnCode Platform_HttpMakeRequest(struct AsyncRequest* request, void** handle)
 			String_AppendConst(&headers, "\r\n");
 		}
 
-		if (request->Etag.length) {
+		if (request->Etag[0]) {
 			String etag = String_FromRawArray(request->Etag);
 			String_AppendConst(&headers, "If-None-Match: ");
 			String_AppendString(&headers, &etag);

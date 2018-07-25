@@ -66,7 +66,7 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			// Workaround for old MCGalaxy that send ExtEntry sync but ExtInfo async. This means
 			// ExtEntry may sometimes arrive before ExtInfo, thus have to use += instead of =
-			net.cpeData.ServerExtensionsCount += reader.ReadInt16();
+			net.cpeData.ServerExtensionsCount += reader.ReadUInt16();
 			SendCpeExtInfoReply();
 		}
 		
@@ -125,7 +125,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleExtAddPlayerName() {
-			int id = reader.ReadInt16() & 0xFF;
+			byte id = (byte)reader.ReadUInt16();
 			string playerName = Utils.StripColours(reader.ReadString());
 			playerName = Utils.RemoveEndPlus(playerName);
 			string listName = reader.ReadString();
@@ -149,8 +149,8 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleExtRemovePlayerName() {
-			int id = reader.ReadInt16() & 0xFF;
-			RemoveTablistEntry((byte)id);
+			byte id = (byte)reader.ReadUInt16();
+			RemoveTablistEntry(id);
 		}
 		
 		void HandleMakeSelection() {
@@ -167,10 +167,10 @@ namespace ClassicalSharp.Network.Protocols {
 			p2.Y = reader.ReadInt16();
 			p2.Z = reader.ReadInt16();
 			
-			byte r = (byte)reader.ReadInt16();
-			byte g = (byte)reader.ReadInt16();
-			byte b = (byte)reader.ReadInt16();
-			byte a = (byte)reader.ReadInt16();
+			byte r = (byte)reader.ReadUInt16();
+			byte g = (byte)reader.ReadUInt16();
+			byte b = (byte)reader.ReadUInt16();
+			byte a = (byte)reader.ReadUInt16();
 			
 			PackedCol col = new PackedCol(r, g, b, a);
 			game.SelectionManager.AddSelection(selectionId, p1, p2, col);
@@ -183,10 +183,10 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleEnvColours() {
 			byte variable = reader.ReadUInt8();
-			short r = reader.ReadInt16();
-			short g = reader.ReadInt16();
-			short b = reader.ReadInt16();
-			bool invalid = r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255;
+			ushort r = reader.ReadUInt16();
+			ushort g = reader.ReadUInt16();
+			ushort b = reader.ReadUInt16();
+			bool invalid = r > 255 || g > 255 || b > 255;
 			PackedCol col = new PackedCol(r, g, b);
 
 			if (variable == 0) {
