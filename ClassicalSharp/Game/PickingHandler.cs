@@ -36,15 +36,18 @@ namespace ClassicalSharp {
 			if (game.Gui.ActiveScreen.HandlesAllInput || !inv.CanPick) return;
 
 			if (left) {
-				if (game.Mode.PickingLeft()) return;
+				// always play delete animations, even if we aren't picking a block.
+				game.HeldBlockRenderer.ClickAnim(true);
+				
 				Vector3I pos = game.SelectedPos.BlockPos;
 				if (!game.SelectedPos.Valid || !game.World.IsValidPos(pos)) return;
 				
 				BlockID old = game.World.GetBlock(pos);
 				if (BlockInfo.Draw[old] == DrawType.Gas || !BlockInfo.CanDelete[old]) return;
-				game.Mode.PickLeft(old);
+				
+				game.UpdateBlock(pos.X, pos.Y, pos.Z, Block.Air);
+				game.UserEvents.RaiseBlockChanged(pos, old, Block.Air);
 			} else if (right) {
-				if (game.Mode.PickingRight()) return;
 				Vector3I pos = game.SelectedPos.TranslatedPos;
 				if (!game.SelectedPos.Valid || !game.World.IsValidPos(pos)) return;
 				
@@ -58,13 +61,34 @@ namespace ClassicalSharp {
 				if (BlockInfo.Draw[block] == DrawType.Gas && BlockInfo.Draw[old] != DrawType.Gas) return;
 				
 				if (!PickingHandler.CheckIsFree(game, block)) return;
-				game.Mode.PickRight(old, block);
+				game.UpdateBlock(pos.X, pos.Y, pos.Z, block);
+				game.UserEvents.RaiseBlockChanged(pos, old, block);
 			} else if (middle) {
 				Vector3I pos = game.SelectedPos.BlockPos;
-				if (!game.SelectedPos.Valid || !game.World.IsValidPos(pos)) return;
+				if (!game.SelectedPos.Valid || !game.World.IsValidPos(pos)) return;				
+				BlockID cur = game.World.GetBlock(pos);
 				
-				BlockID old = game.World.GetBlock(pos);
-				game.Mode.PickMiddle(old);
+				if (BlockInfo.Draw[cur] == DrawType.Gas) return;
+				if (!(BlockInfo.CanPlace[cur] || BlockInfo.CanDelete[cur])) return;
+				if (!inv.CanChangeSelected() || inv.Selected == cur) return;
+				
+				// Is the currently selected block an empty slot
+				if (inv[inv.SelectedIndex] == Block.Air) {
+					inv.Selected = cur; return;
+				}				
+				// Try to replace same block
+				for (int i = 0; i < Inventory.BlocksPerRow; i++) {
+					if (inv[i] != cur) continue;
+					inv.SelectedIndex = i; return;
+				}				
+				// Try to replace empty slots
+				for (int i = 0; i < Inventory.BlocksPerRow; i++) {
+					if (inv[i] != Block.Air) continue;
+					inv[i] = cur;
+					inv.SelectedIndex = i; return;
+				}				
+				// Finally, replace the currently selected block.
+				inv.Selected = cur;
 			}
 		}
 		
@@ -117,7 +141,7 @@ namespace ClassicalSharp {
 			}
 
 			// exclude exact map boundaries, otherwise player can get stuck outside map
-			bool validPos = 
+			bool validPos =
 				adjPos.X > 0 && adjPos.Y >= 0 && adjPos.Z > 0 &&
 				adjPos.X < game.World.Width && adjPos.Z < game.World.Length;
 			if (!validPos) return false;
@@ -133,7 +157,7 @@ namespace ClassicalSharp {
 			p.SetLocation(update, false);
 			return true;
 		}
-				
+		
 		static Predicate<BlockID> touchesAnySolid = IsSolidCollide;
 		static bool IsSolidCollide(BlockID b) { return BlockInfo.Collide[b] == CollideType.Solid; }
 		

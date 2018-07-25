@@ -10,6 +10,9 @@ namespace ClassicalSharp {
 		void IGameComponent.Init(Game game) {
 			this.game = game;
 			Reset(game);
+			this[0] = Block.Stone;  this[1] = Block.Cobblestone; this[2] = Block.Brick;
+			this[3] = Block.Dirt;   this[4] = Block.Wood;        this[5] = Block.Log;
+			this[6] = Block.Leaves; this[7] = Block.Grass;       this[8] = Block.Slab;
 		}
 		
 		public void Reset(Game game) { 

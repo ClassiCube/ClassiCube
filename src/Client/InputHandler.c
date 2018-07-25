@@ -1,6 +1,7 @@
 #include "InputHandler.h"
 #include "Utils.h"
 #include "ServerConnection.h"
+#include "HeldBlockRenderer.h"
 #include "Game.h"
 #include "Platform.h"
 #include "ExtMath.h"
@@ -8,7 +9,6 @@
 #include "Inventory.h"
 #include "World.h"
 #include "Event.h"
-#include "GameMode.h"
 #include "Window.h"
 #include "Entity.h"
 #include "Chat.h"
@@ -139,44 +139,18 @@ static bool InputHandler_DoFovZoom(Real32 deltaPrecise) {
 	return InputHandler_SetFOV((Int32)input_fovIndex, true);
 }
 
-static bool InputHandler_HandleCoreKey(Key key) {
+static bool InputHandler_HandleNonClassicKey(Key key) {
 	if (key == KeyBind_Get(KeyBind_HideGui)) {
 		Game_HideGui = !Game_HideGui;
-	} else if (key == KeyBind_Get(KeyBind_HideFps)) {
-		Game_ShowFPS = !Game_ShowFPS;
-	} else if (key == KeyBind_Get(KeyBind_Fullscreen)) {
-		UInt8 state = Window_GetWindowState();
-		if (state != WINDOW_STATE_MAXIMISED) {
-			bool fullscreen = state == WINDOW_STATE_FULLSCREEN;
-			Window_SetWindowState(fullscreen ? WINDOW_STATE_NORMAL : WINDOW_STATE_FULLSCREEN);
-		}
-	} else if (key == KeyBind_Get(KeyBind_SmoothCamera)) {
-		InputHandler_Toggle(key, &Game_SmoothCamera,
-			"  &eSmooth camera is &aenabled",
-			"  &eSmooth camera is &cdisabled");
-	} else if (key == KeyBind_Get(KeyBind_AxisLines)) {
-		InputHandler_Toggle(key, &Game_ShowAxisLines,
-			"  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show",
-			"  &eAxis lines no longer show");
-	} else if (key == KeyBind_Get(KeyBind_Autorotate)) {
-		InputHandler_Toggle(key, &Game_AutoRotate,
-			"  &eAuto rotate is &aenabled",
-			"  &eAuto rotate is &cdisabled");
 	} else if (key == KeyBind_Get(KeyBind_ThirdPerson)) {
 		Camera_CycleActive();
-	} else if (key == KeyBind_Get(KeyBind_ToggleFog)) {
-		Int32* viewDists = Game_UseClassicOptions ? input_classicViewDists : input_normViewDists;
-		Int32 count = Game_UseClassicOptions ? Array_Elems(input_classicViewDists) : Array_Elems(input_normViewDists);
-
-		if (Key_IsShiftPressed()) {
-			InputHandler_CycleDistanceBackwards(viewDists, count);
-		} else {
-			InputHandler_CycleDistanceForwards(viewDists, count);
+	} else if (key == KeyBind_Get(KeyBind_DropBlock)) {
+		if (Inventory_CanChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {
+			/* Don't assign SelectedIndex directly, because we don't want held block
+			switching positions if they already have air in their inventory hotbar. */
+			Inventory_Set(Inventory_SelectedIndex, BLOCK_AIR);
+			Event_RaiseVoid(&UserEvents_HeldBlockChanged);
 		}
-	} else if ((key == KeyBind_Get(KeyBind_PauseOrExit) || key == Key_Pause) && !Gui_GetActiveScreen()->HandlesAllInput) {
-		Gui_FreeActive();
-		Gui_SetActive(PauseScreen_MakeInstance());
-	} else if (GameMode_HandlesKeyDown(key)) {
 	} else if (key == KeyBind_Get(KeyBind_IDOverlay)) {
 		if (Gui_OverlaysCount > 0) return true;
 		struct Screen* overlay = TexIdsOverlay_MakeInstance();
@@ -187,6 +161,40 @@ static bool InputHandler_HandleCoreKey(Key key) {
 			"  &eBreakable liquids is &cdisabled");
 	} else {
 		return false;
+	}
+	return true;
+}
+
+static bool InputHandler_HandleCoreKey(Key key) {
+	struct Screen* activeScreen = Gui_GetActiveScreen();
+
+	if (key == KeyBind_Get(KeyBind_HideFps)) {
+		Game_ShowFPS = !Game_ShowFPS;
+	} else if (key == KeyBind_Get(KeyBind_Fullscreen)) {
+		UInt8 state = Window_GetWindowState();
+		if (state != WINDOW_STATE_MAXIMISED) {
+			bool fullscreen = state == WINDOW_STATE_FULLSCREEN;
+			Window_SetWindowState(fullscreen ? WINDOW_STATE_NORMAL : WINDOW_STATE_FULLSCREEN);
+		}
+	} else if (key == KeyBind_Get(KeyBind_ToggleFog)) {
+		Int32* viewDists = Game_UseClassicOptions ? input_classicViewDists : input_normViewDists;
+		Int32 count = Game_UseClassicOptions ? Array_Elems(input_classicViewDists) : Array_Elems(input_normViewDists);
+
+		if (Key_IsShiftPressed()) {
+			InputHandler_CycleDistanceBackwards(viewDists, count);
+		} else {
+			InputHandler_CycleDistanceForwards(viewDists, count);
+		}
+	} else if ((key == KeyBind_Get(KeyBind_PauseOrExit) || key == Key_Pause) && !activeScreen->HandlesAllInput) {
+		Gui_FreeActive();
+		Gui_SetActive(PauseScreen_MakeInstance());
+	} else if (key == KeyBind_Get(KeyBind_Inventory) && activeScreen == Gui_HUD) {
+		Gui_ReplaceActive(InventoryScreen_MakeInstance());
+	} else if (key == Key_F5 && Game_ClassicMode) {
+		Int32 weather = WorldEnv_Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
+		WorldEnv_SetWeather(weather);
+	} else if (!Game_ClassicMode) {
+		return InputHandler_HandleNonClassicKey(key);
 	}
 	return true;
 }
@@ -298,15 +306,18 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 	if (Gui_GetActiveScreen()->HandlesAllInput || !Inventory_CanPick) return;
 
 	if (left) {
-		if (GameMode_PickingLeft()) return;
+		/* always play delete animations, even if we aren't picking a block */
+		HeldBlockRenderer_ClickAnim(true);
+
 		Vector3I pos = Game_SelectedPos.BlockPos;
 		if (!Game_SelectedPos.Valid || !World_IsValidPos_3I(pos)) return;
 
 		BlockID old = World_GetBlock_3I(pos);
 		if (Block_Draw[old] == DRAW_GAS || !Block_CanDelete[old]) return;
-		GameMode_PickLeft(old);
+
+		Game_UpdateBlock(pos.X, pos.Y, pos.Z, BLOCK_AIR);
+		Event_RaiseBlock(&UserEvents_BlockChanged, pos, old, BLOCK_AIR);
 	} else if (right) {
-		if (GameMode_PickingRight()) return;
 		Vector3I pos = Game_SelectedPos.TranslatedPos;
 		if (!Game_SelectedPos.Valid || !World_IsValidPos_3I(pos)) return;
 
@@ -317,15 +328,40 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		if (Game_CanPick(old) || !Block_CanPlace[block]) return;
 		/* air-ish blocks can only replace over other air-ish blocks */
 		if (Block_Draw[block] == DRAW_GAS && Block_Draw[old] != DRAW_GAS) return;
-
 		if (!InputHandler_CheckIsFree(block)) return;
-		GameMode_PickRight(old, block);
+
+		Game_UpdateBlock(pos.X, pos.Y, pos.Z, block);
+		Event_RaiseBlock(&UserEvents_BlockChanged, pos, old, block);
 	} else if (middle) {
 		Vector3I pos = Game_SelectedPos.BlockPos;
 		if (!Game_SelectedPos.Valid || !World_IsValidPos_3I(pos)) return;
 
-		BlockID old = World_GetBlock_3I(pos);
-		GameMode_PickMiddle(old);
+		BlockID cur = World_GetBlock_3I(pos);
+		if (Block_Draw[cur] == DRAW_GAS) return;
+		if (!(Block_CanPlace[cur] || Block_CanDelete[cur])) return;
+		if (!Inventory_CanChangeSelected() || Inventory_SelectedBlock == cur) return;
+		UInt32 i;
+
+		/* Is the currently selected block an empty slot */
+		if (Inventory_Get(Inventory_SelectedIndex) == BLOCK_AIR) {
+			Inventory_SetSelectedBlock(cur); return;
+		}
+
+		/* Try to replace same block */
+		for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
+			if (Inventory_Get(i) != cur) continue;
+			Inventory_SetSelectedIndex(i); return;
+		}
+
+		/* Try to replace empty slots */
+		for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
+			if (Inventory_Get(i) != BLOCK_AIR) continue;
+			Inventory_Set(i, cur);
+			Inventory_SetSelectedIndex(i); return;
+		}
+
+		/* Finally, replace the currently selected block */
+		Inventory_SetSelectedBlock(cur);
 	}
 }
 

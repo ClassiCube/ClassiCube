@@ -28,7 +28,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			int size = game.Drawer2D.UseBitmappedChat ? 16 : 11;
 			playerFont = new Font(game.FontName, size);
-			hotbar = game.Mode.MakeHotbar();
+			hotbar = new HotbarWidget(game);
 			hotbar.Init();
 			chat = new ChatScreen(game, this);
 			chat.Init();

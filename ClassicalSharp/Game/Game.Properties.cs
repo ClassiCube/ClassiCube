@@ -10,7 +10,6 @@ using ClassicalSharp.Entities;
 using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
-using ClassicalSharp.Mode;
 using ClassicalSharp.Model;
 using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
@@ -51,7 +50,6 @@ namespace ClassicalSharp {
 	public partial class Game {
 		
 		public IGraphicsApi Graphics;
-		public IGameMode Mode;
 		public World World;		
 		public IServerConnection Server;
 		

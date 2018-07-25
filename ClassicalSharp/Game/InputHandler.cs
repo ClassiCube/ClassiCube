@@ -4,6 +4,7 @@ using ClassicalSharp.Entities;
 using ClassicalSharp.Gui;
 using ClassicalSharp.Gui.Screens;
 using ClassicalSharp.Hotkeys;
+using ClassicalSharp.Map;
 using OpenTK;
 using OpenTK.Input;
 
@@ -162,7 +163,7 @@ namespace ClassicalSharp {
 			} else if (key == Keys[KeyBind.Screenshot]) {
 				game.screenshotRequested = true;
 			} else if (!game.Gui.ActiveScreen.HandlesKeyDown(key)) {
-				if (!HandleBuiltinKey(key) && !game.LocalPlayer.HandlesKey(key))
+				if (!HandleCoreKey(key) && !game.LocalPlayer.HandlesKey(key))
 					HandleHotkey(key);
 			}
 		}
@@ -199,17 +200,9 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		bool HandleBuiltinKey(Key key) {
+		bool HandleNonClassicKey(Key key) {
 			if (key == Keys[KeyBind.HideGui]) {
 				game.HideGui = !game.HideGui;
-			} else if (key == Keys[KeyBind.HideFps]) {
-				game.ShowFPS = !game.ShowFPS;
-			} else if (key == Keys[KeyBind.Fullscreen]) {
-				WindowState state = game.window.WindowState;
-				if (state != WindowState.Minimized) {
-					game.window.WindowState = state == WindowState.Fullscreen ?
-						WindowState.Normal : WindowState.Fullscreen;
-				}
 			} else if (key == Keys[KeyBind.SmoothCamera]) {
 				Toggle(key, ref game.SmoothCamera,
 				       "  &eSmooth camera is &aenabled",
@@ -224,16 +217,14 @@ namespace ClassicalSharp {
 				       "  &eAuto rotate is &cdisabled");
 			} else if (key == Keys[KeyBind.ThirdPerson]) {
 				game.CycleCamera();
-			} else if (key == Keys[KeyBind.ToggleFog]) {
-				int[] viewDists = game.UseClassicOptions ? classicViewDists : normViewDists;
-				if (game.Input.ShiftDown) {
-					CycleDistanceBackwards(viewDists);
-				} else {
-					CycleDistanceForwards(viewDists);
+			} else if (key == game.Mapping(KeyBind.DropBlock)) {
+				Inventory inv = game.Inventory;
+				if (inv.CanChangeSelected() && inv.Selected != Block.Air) {
+					// Don't assign Selected directly, because we don't want held block
+					// switching positions if they already have air in their inventory hotbar.
+					inv[inv.SelectedIndex] = Block.Air;
+					game.Events.RaiseHeldBlockChanged();
 				}
-			} else if ((key == Keys[KeyBind.PauseOrExit] || key == Key.Pause) && !game.Gui.ActiveScreen.HandlesAllInput) {
-				game.Gui.SetNewScreen(new PauseScreen(game));
-			} else if (game.Mode.HandlesKeyDown(key)) {
 			} else if (key == Keys[KeyBind.IDOverlay]) {
 				if (game.Gui.overlays.Count > 0) return true;
 				game.Gui.ShowOverlay(new TexIdsOverlay(game), false);
@@ -243,6 +234,35 @@ namespace ClassicalSharp {
 				       "  &eBreakable liquids is &cdisabled");
 			} else {
 				return false;
+			}
+			return true;
+		}
+		
+		bool HandleCoreKey(Key key) {
+			if (key == Keys[KeyBind.HideFps]) {
+				game.ShowFPS = !game.ShowFPS;
+			} else if (key == Keys[KeyBind.Fullscreen]) {
+				WindowState state = game.window.WindowState;
+				if (state != WindowState.Minimized) {
+					game.window.WindowState = state == WindowState.Fullscreen ?
+						WindowState.Normal : WindowState.Fullscreen;
+				}
+			} else if (key == Keys[KeyBind.ToggleFog]) {
+				int[] viewDists = game.UseClassicOptions ? classicViewDists : normViewDists;
+				if (game.Input.ShiftDown) {
+					CycleDistanceBackwards(viewDists);
+				} else {
+					CycleDistanceForwards(viewDists);
+				}
+			} else if ((key == Keys[KeyBind.PauseOrExit] || key == Key.Pause) && !game.Gui.ActiveScreen.HandlesAllInput) {
+				game.Gui.SetNewScreen(new PauseScreen(game));
+			} else if (key == game.Mapping(KeyBind.Inventory) && game.Gui.ActiveScreen == game.Gui.hudScreen) {
+				game.Gui.SetNewScreen(new InventoryScreen(game));
+			} else if (key == Key.F5 && game.ClassicMode) {
+				Weather weather = game.World.Env.Weather == Weather.Sunny ? Weather.Rainy : Weather.Sunny;
+				game.World.Env.SetWeather(weather);
+			} else if (!game.ClassicMode) {
+				return HandleNonClassicKey(key);
 			}
 			return true;
 		}

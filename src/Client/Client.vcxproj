@@ -202,7 +202,6 @@
     <ClInclude Include="Event.h" />
     <ClInclude Include="Formats.h" />
     <ClInclude Include="Deflate.h" />
-    <ClInclude Include="GameMode.h" />
     <ClInclude Include="Gui.h" />
     <ClInclude Include="HeldBlockRenderer.h" />
     <ClInclude Include="IModel.h" />
@@ -238,7 +237,6 @@
     <ClInclude Include="GraphicsAPI.h" />
     <ClInclude Include="GraphicsCommon.h" />
     <ClInclude Include="Platform.h" />
-    <ClInclude Include="Random.h" />
     <ClInclude Include="String.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Typedefs.h" />
@@ -268,7 +266,6 @@
     <ClCompile Include="ExtMath.c" />
     <ClCompile Include="Formats.c" />
     <ClCompile Include="Game.c" />
-    <ClCompile Include="GameMode.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />
     <ClCompile Include="InputHandler.c" />
@@ -297,7 +294,6 @@
     <ClCompile Include="NixErrorHandler.c" />
     <ClCompile Include="NixPlatform.c" />
     <ClCompile Include="Program.c" />
-    <ClCompile Include="Random.c" />
     <ClCompile Include="Screens.c" />
     <ClCompile Include="SelectionBox.c" />
     <ClCompile Include="ServerConnection.c" />

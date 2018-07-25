@@ -21,12 +21,12 @@ void GfxCommon_UpdateDynamicVb_Lines(GfxResourceID vb, void* vertices, Int32 vCo
 This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
 void GfxCommon_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, Int32 vCount);
 
-GfxResourceID GfxCommon_quadVb;
+GfxResourceID GfxCommon_quadVb, GfxCommon_texVb;
 void GfxCommon_Draw2DFlat(Int32 x, Int32 y, Int32 width, Int32 height, PackedCol col);
 void GfxCommon_Draw2DGradient(Int32 x, Int32 y, Int32 width, Int32 height, PackedCol top, PackedCol bottom);
-GfxResourceID GfxCommon_texVb;
 void GfxCommon_Draw2DTexture(struct Texture* tex, PackedCol col);
 void GfxCommon_Make2DQuad(struct Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices);
+
 void GfxCommon_Mode2D(Int32 width, Int32 height);
 void GfxCommon_Mode3D(void);
 

@@ -1,7 +1,8 @@
 #ifndef CC_MATH_H
 #define CC_MATH_H
 #include "Typedefs.h"
-/* Simple math functions and constants.
+/* Simple math functions and constants. Also implements a RNG algorithm, based on 
+      Java's implementation from https://docs.oracle.com/javase/7/docs/api/java/util/Random.html
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
@@ -40,8 +41,16 @@ Real32 Math_LerpAngle(Real32 leftAngle, Real32 rightAngle, Real32 t);
 
 Int32 Math_NextPowOf2(Int32 value);
 bool Math_IsPowOf2(Int32 value);
+#define Math_Clamp(val, min, max) val = val < (min) ? (min) : val;  val = val > (max) ? (max) : val;
 
-#define Math_Clamp(value, min, max)\
-value = value < (min) ? (min) : value;\
-value = value > (max) ? (max) : value;
+typedef UInt64 Random;
+void Random_Init(Random* rnd, Int32 seed);
+void Random_InitFromCurrentTime(Random* rnd);
+void Random_SetSeed(Random* rnd, Int32 seed);
+/* Returns integer from min inclusive to max exclusive */
+Int32 Random_Range(Random* rnd, Int32 min, Int32 max);
+/* Returns integer from 0 inclusive to n exclusive */
+Int32 Random_Next(Random* rnd, Int32 n);
+/* Returns real from 0 inclusive to 1 exclusive */
+Real32 Random_Float(Random* rnd);
 #endif

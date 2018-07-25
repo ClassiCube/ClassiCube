@@ -8,7 +8,7 @@
 #include "GraphicsAPI.h"
 #include "ErrorHandler.h"
 #include "Drawer.h"
-#include "Random.h"
+#include "ExtMath.h"
 #include "ChunkUpdater.h"
 #include "BlockID.h"
 #include "Block.h"

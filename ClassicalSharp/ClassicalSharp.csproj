@@ -201,8 +201,6 @@
     <Compile Include="MeshBuilder\NormalBuilder.cs" />
     <Compile Include="MeshBuilder\AdvLightingBuilder.cs" />
     <Compile Include="MeshBuilder\TileDrawer.cs" />
-    <Compile Include="Mode\Creative.cs" />
-    <Compile Include="Mode\IGameMode.cs" />
     <Compile Include="Mode\Survival.cs" />
     <Compile Include="Network\CPESupport.cs" />
     <Compile Include="Network\Protocols\BlockDefs.cs" />

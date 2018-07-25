@@ -222,9 +222,6 @@
     <ClInclude Include="Constants.h">
       <Filter>Header Files\Defines</Filter>
     </ClInclude>
-    <ClInclude Include="Random.h">
-      <Filter>Header Files\Math</Filter>
-    </ClInclude>
     <ClInclude Include="2DStructs.h">
       <Filter>Header Files\2D\Utils</Filter>
     </ClInclude>
@@ -290,9 +287,6 @@
     </ClInclude>
     <ClInclude Include="Screens.h">
       <Filter>Header Files\2D</Filter>
-    </ClInclude>
-    <ClInclude Include="GameMode.h">
-      <Filter>Header Files\Game</Filter>
     </ClInclude>
     <ClInclude Include="Chat.h">
       <Filter>Header Files\Game</Filter>
@@ -392,9 +386,6 @@
     <ClCompile Include="MapRenderer.c">
       <Filter>Source Files\Rendering\Map</Filter>
     </ClCompile>
-    <ClCompile Include="Random.c">
-      <Filter>Source Files\Math</Filter>
-    </ClCompile>
     <ClCompile Include="2DStructs.c">
       <Filter>Source Files\2D\Utils</Filter>
     </ClCompile>
@@ -481,9 +472,6 @@
     </ClCompile>
     <ClCompile Include="Screens.c">
       <Filter>Source Files\2D</Filter>
-    </ClCompile>
-    <ClCompile Include="GameMode.c">
-      <Filter>Source Files\Game</Filter>
     </ClCompile>
     <ClCompile Include="Chat.c">
       <Filter>Source Files\Game</Filter>

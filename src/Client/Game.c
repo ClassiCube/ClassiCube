@@ -16,7 +16,6 @@
 #include "Entity.h"
 #include "Chat.h"
 #include "Platform.h"
-#include "GameMode.h"
 #include "Drawer2D.h"
 #include "ModelCache.h"
 #include "Particle.h"
@@ -443,7 +442,6 @@ void Game_Load(void) {
 	Entities_Init();
 	TextureCache_Init();
 	/* TODO: Survival vs Creative game mode */
-	GameMode_MakeComponent(&comp); Game_AddComponent(&comp);
 
 	InputHandler_Init();
 	Particles_MakeComponent(&comp); Game_AddComponent(&comp);
@@ -687,7 +685,6 @@ static void Game_RenderFrame(Real64 delta) {
 	Gfx_BindIb(GfxCommon_defaultIb);
 	Game_Accumulator += delta;
 	Game_Vertices = 0;
-	GameMode_BeginFrame(delta);
 
 	Camera_Active->UpdateMouse();
 	if (!Window_Focused && !Gui_GetActiveScreen()->HandlesAllInput) {
@@ -720,7 +717,6 @@ static void Game_RenderFrame(Real64 delta) {
 	Gui_RenderGui(delta);
 	if (Game_ScreenshotRequested) Game_TakeScreenshot();
 
-	GameMode_EndFrame(delta);
 	Gfx_EndFrame();
 	Game_LimitFPS();
 }

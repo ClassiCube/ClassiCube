@@ -9,7 +9,6 @@ using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui.Screens;
 using ClassicalSharp.Map;
-using ClassicalSharp.Mode;
 using ClassicalSharp.Model;
 using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
@@ -53,10 +52,7 @@ namespace ClassicalSharp {
 			} else {
 				Mode = new CreativeGameMode();
 			}
-			#else
-			Mode = new CreativeGameMode();
 			#endif
-			Components.Add(Mode);
 			
 			Input = new InputHandler(this);
 			ParticleManager = new ParticleManager(); Components.Add(ParticleManager);

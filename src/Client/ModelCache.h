@@ -7,16 +7,8 @@
 */
 struct IModel;
 
-struct CachedModel {
-	String Name;      /* Name associated with the model, all lowercase. */
-	struct IModel* Instance; /* Pointer to the actual model instance. */
-};
-
-struct CachedTexture {	
-	String Name;         /* Filename of the texture. */
-	GfxResourceID TexID; /* Native texture ID. */
-};
-
+struct CachedModel { String Name; struct IModel* Instance; };
+struct CachedTexture { String Name; GfxResourceID TexID; };
 #if FALSE
 public CustomModel[] CustomModels = new CustomModel[256];
 #endif

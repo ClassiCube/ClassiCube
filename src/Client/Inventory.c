@@ -95,13 +95,21 @@ void Inventory_Remove(BlockID block) {
 	}
 }
 
-static void Inventory_ResetState(void) {
+static void Inventory_Reset(void) {
 	Inventory_SetDefaultMapping();
 	Inventory_CanChangeHeldBlock = true;
 	Inventory_CanPick = true;
 }
 
+static void Inventory_Init(void) {
+	Inventory_Reset();
+	BlockID* inv = Inventory_Table;
+	inv[0] = BLOCK_STONE;  inv[1] = BLOCK_COBBLE; inv[2] = BLOCK_BRICK;
+	inv[3] = BLOCK_DIRT;   inv[4] = BLOCK_WOOD;   inv[5] = BLOCK_LOG;
+	inv[6] = BLOCK_LEAVES; inv[7] = BLOCK_GRASS;  inv[8] = BLOCK_SLAB;
+}
+
 void Inventory_MakeComponent(struct IGameComponent* comp) {
-	comp->Init  = Inventory_ResetState;
-	comp->Reset = Inventory_ResetState;
+	comp->Init  = Inventory_Init;
+	comp->Reset = Inventory_Reset;
 }
