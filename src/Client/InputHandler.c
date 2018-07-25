@@ -142,6 +142,18 @@ static bool InputHandler_DoFovZoom(Real32 deltaPrecise) {
 static bool InputHandler_HandleNonClassicKey(Key key) {
 	if (key == KeyBind_Get(KeyBind_HideGui)) {
 		Game_HideGui = !Game_HideGui;
+	} else if (key == KeyBind_Get(KeyBind_SmoothCamera)) {
+		InputHandler_Toggle(key, &Game_SmoothCamera,
+			"  &eSmooth camera is &aenabled",
+			"  &eSmooth camera is &cdisabled");
+	} else if (key == KeyBind_Get(KeyBind_AxisLines)) {
+		InputHandler_Toggle(key, &Game_ShowAxisLines,
+			"  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show",
+			"  &eAxis lines no longer show");
+	} else if (key == KeyBind_Get(KeyBind_Autorotate)) {
+		InputHandler_Toggle(key, &Game_AutoRotate,
+			"  &eAuto rotate is &aenabled",
+			"  &eAuto rotate is &cdisabled");
 	} else if (key == KeyBind_Get(KeyBind_ThirdPerson)) {
 		Camera_CycleActive();
 	} else if (key == KeyBind_Get(KeyBind_DropBlock)) {
