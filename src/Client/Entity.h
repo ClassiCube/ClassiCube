@@ -49,7 +49,6 @@ struct LocationUpdate {
 
 /* Clamps the given angle so it lies between [0, 360). */
 Real32 LocationUpdate_Clamp(Real32 degrees);
-void LocationUpdate_Empty(struct LocationUpdate* update);
 void LocationUpdate_MakeOri(struct LocationUpdate* update, Real32 rotY, Real32 headX);
 void LocationUpdate_MakePos(struct LocationUpdate* update, Vector3 pos, bool rel);
 void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, Real32 rotY, Real32 headX, bool rel);

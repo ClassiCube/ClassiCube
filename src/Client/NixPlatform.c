@@ -48,9 +48,9 @@ static void Platform_InitDisplay(void) {
 
 	/* TODO: Use Xinerama and XRandR for querying these */
 	struct DisplayDevice device = { 0 };
-	device.BoundsWidth   = DisplayWidth(display, screen);
-	device.Bounds.Height = DisplayHeight(display, screen);
-	device.BitsPerPixel  = DefaultDepth(display, screen);
+	device.Bounds.Width   = DisplayWidth(display, screen);
+	device.Bounds.Height  = DisplayHeight(display, screen);
+	device.BitsPerPixel   = DefaultDepth(display, screen);
 	DisplayDevice_Default = device;
 
 	DisplayDevice_Meta[0] = display;

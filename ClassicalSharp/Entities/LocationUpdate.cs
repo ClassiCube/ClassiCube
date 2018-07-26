@@ -25,13 +25,6 @@ namespace ClassicalSharp.Entities {
 			if (degrees < 0) degrees += 360;
 			return degrees;
 		}
-		
-		const float NaN = float.NaN;
-		
-		/// <summary> Constructs a location update that does not have any position or orientation information. </summary>
-		public static LocationUpdate Empty() {
-			return default(LocationUpdate);
-		}
 
 		/// <summary> Constructs a location update that only consists of orientation information. </summary>		
 		public static LocationUpdate MakeOri(float rotY, float headX) {

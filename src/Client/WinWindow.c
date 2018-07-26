@@ -447,7 +447,7 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 		if (!hGlobal) { CloseClipboard(); return; }
 		LPVOID src = GlobalLock(hGlobal);
 
-		UInt8 c;
+		UChar c;
 		if (isUnicode) {
 			UInt16* text = (UInt16*)src;
 			for (; *text; text++) {

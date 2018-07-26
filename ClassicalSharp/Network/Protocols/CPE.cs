@@ -377,7 +377,7 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			Entity entity = game.Entities.List[id];
 			if (entity == null) return;
-			LocationUpdate update = LocationUpdate.Empty();
+			LocationUpdate update = default(LocationUpdate);
 			
 			switch (type) {
 				case 0:

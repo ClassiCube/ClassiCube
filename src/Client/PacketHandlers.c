@@ -1102,7 +1102,7 @@ static void CPE_SetEntityProperty(struct Stream* stream) {
 
 	struct Entity* entity = Entities_List[id];
 	if (!entity) return;
-	struct LocationUpdate update; LocationUpdate_Empty(&update);
+	struct LocationUpdate update = { 0 };
 
 	Real32 scale;
 	switch (type) {

@@ -32,10 +32,6 @@ Real32 LocationUpdate_Clamp(Real32 degrees) {
 }
 
 struct LocationUpdate loc_empty;
-void LocationUpdate_Empty(struct LocationUpdate* update) {
-	*update = loc_empty;
-}
-
 void LocationUpdate_MakeOri(struct LocationUpdate* update, Real32 rotY, Real32 headX) {
 	*update = loc_empty;
 	update->Flags = LOCATIONUPDATE_FLAG_HEADX | LOCATIONUPDATE_FLAG_HEADY;
