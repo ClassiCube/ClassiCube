@@ -273,7 +273,7 @@ static Real32 Block_GetSpriteBB_MinX(Int32 size, Int32 tileX, Int32 tileY, struc
 			}
 		}
 	}
-	return 1;
+	return 1.0f;
 }
 
 static Real32 Block_GetSpriteBB_MinY(Int32 size, Int32 tileX, Int32 tileY, struct Bitmap* bmp) {
@@ -282,11 +282,11 @@ static Real32 Block_GetSpriteBB_MinY(Int32 size, Int32 tileX, Int32 tileY, struc
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 		for (x = 0; x < size; x++) {
 			if (PackedCol_ARGB_A(row[x]) != 0) {
-				return 1 - (Real32)(y + 1) / size;
+				return 1.0f - (Real32)(y + 1) / size;
 			}
 		}
 	}
-	return 1;
+	return 1.0f;
 }
 
 static Real32 Block_GetSpriteBB_MaxX(Int32 size, Int32 tileX, Int32 tileY, struct Bitmap* bmp) {
@@ -299,7 +299,7 @@ static Real32 Block_GetSpriteBB_MaxX(Int32 size, Int32 tileX, Int32 tileY, struc
 			}
 		}
 	}
-	return 0;
+	return 0.0f;
 }
 
 static Real32 Block_GetSpriteBB_MaxY(Int32 size, Int32 tileX, Int32 tileY, struct Bitmap* bmp) {
@@ -308,11 +308,11 @@ static Real32 Block_GetSpriteBB_MaxY(Int32 size, Int32 tileX, Int32 tileY, struc
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 		for (x = 0; x < size; x++) {
 			if (PackedCol_ARGB_A(row[x]) != 0) {
-				return 1 - (Real32)y / size;
+				return 1.0f - (Real32)y / size;
 			}
 		}
 	}
-	return 0;
+	return 0.0f;
 }
 
 void Block_RecalculateBB(BlockID block) {

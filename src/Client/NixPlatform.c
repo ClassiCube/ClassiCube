@@ -26,6 +26,7 @@ UChar Platform_DirectorySeparator = '/';
 ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 ReturnCode ReturnCode_FileNotFound = ENOENT;
 ReturnCode ReturnCode_NotSupported = EPERM;
+ReturnCode ReturnCode_InvalidArg = EINVAL;
 
 void Platform_UnicodeExpand(void* dstPtr, STRING_PURE String* src) {
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");

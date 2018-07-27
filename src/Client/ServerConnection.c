@@ -279,8 +279,8 @@ static void MPConnection_FinishConnect(void) {
 	Stream_ReadonlyMemory(&net_readStream, net_readBuffer, sizeof(net_readBuffer), &streamName);
 	Stream_WriteonlyMemory(&net_writeStream, net_writeBuffer, sizeof(net_writeBuffer), &streamName);
 
-	net_readStream.Meta_Mem_Left   = 0; /* initally no memory to read */
-	net_readStream.Meta_Mem_Length = 0;
+	net_readStream.Meta.Mem.Left   = 0; /* initally no memory to read */
+	net_readStream.Meta.Mem.Length = 0;
 
 	Handlers_Reset();
 	Classic_WriteLogin(&net_writeStream, &Game_Username, &Game_Mppass);
@@ -404,10 +404,10 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	ReturnCode recvResult = Platform_SocketAvailable(net_socket, &modified);
 	if (recvResult == 0 && modified > 0) {
 		/* NOTE: Always using a read call that is a multiple of 4096 (appears to?) improve read performance */
-		UInt8* src = net_readBuffer + net_readStream.Meta_Mem_Left;
+		UInt8* src = net_readBuffer + net_readStream.Meta.Mem.Left;
 		recvResult = Platform_SocketRead(net_socket, src, 4096 * 4, &modified);
-		net_readStream.Meta_Mem_Left   += modified;
-		net_readStream.Meta_Mem_Length += modified;
+		net_readStream.Meta.Mem.Left   += modified;
+		net_readStream.Meta.Mem.Length += modified;
 	}
 
 	if (recvResult != 0) {
@@ -422,8 +422,8 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 		return;
 	}
 
-	while (net_readStream.Meta_Mem_Left > 0) {
-		UInt8 opcode = net_readStream.Meta_Mem_Cur[0];
+	while (net_readStream.Meta.Mem.Left > 0) {
+		UInt8 opcode = net_readStream.Meta.Mem.Cur[0];
 		/* Workaround for older D3 servers which wrote one byte too many for HackControl packets */
 		if (cpe_needD3Fix && net_lastOpcode == OPCODE_CPE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
 			Platform_LogConst("Skipping invalid HackControl byte from D3 server");
@@ -436,7 +436,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 		}
 
 		if (opcode > net_maxHandledPacket) { ErrorHandler_Fail("Invalid opcode"); }
-		if (net_readStream.Meta_Mem_Left < Net_PacketSizes[opcode]) break;
+		if (net_readStream.Meta.Mem.Left < Net_PacketSizes[opcode]) break;
 
 		Stream_Skip(&net_readStream, 1); /* remove opcode */
 		net_lastOpcode = opcode;
@@ -449,18 +449,18 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 
 	/* Keep last few unprocessed bytes, don't care about rest since they'll be overwritten on socket read */
 	Int32 i;
-	for (i = 0; i < net_readStream.Meta_Mem_Left; i++) {
-		net_readBuffer[i] = net_readStream.Meta_Mem_Cur[i];
+	for (i = 0; i < net_readStream.Meta.Mem.Left; i++) {
+		net_readBuffer[i] = net_readStream.Meta.Mem.Cur[i];
 	}
-	net_readStream.Meta_Mem_Cur    = net_readStream.Meta_Mem_Base;
-	net_readStream.Meta_Mem_Length = net_readStream.Meta_Mem_Left;
+	net_readStream.Meta.Mem.Cur    = net_readStream.Meta.Mem.Base;
+	net_readStream.Meta.Mem.Length = net_readStream.Meta.Mem.Left;
 
 	/* Network is ticked 60 times a second. We only send position updates 20 times a second */
 	if ((net_ticks % 3) == 0) {
 		ServerConnection_CheckAsyncResources();
 		Handlers_Tick();
 		/* Have any packets been written? */
-		if (net_writeStream.Meta_Mem_Cur != net_writeStream.Meta_Mem_Base) {
+		if (net_writeStream.Meta.Mem.Cur != net_writeStream.Meta.Mem.Base) {
 			Net_SendPacket();
 		}
 	}
@@ -476,7 +476,7 @@ void Net_Set(UInt8 opcode, Net_Handler handler, UInt16 packetSize) {
 void Net_SendPacket(void) {
 	if (!ServerConnection_Disconnected) {
 		/* NOTE: Not immediately disconnecting here, as otherwise we sometimes miss out on kick messages */
-		UInt32 count = (UInt32)(net_writeStream.Meta_Mem_Cur - net_writeStream.Meta_Mem_Base), modified = 0;
+		UInt32 count = (UInt32)(net_writeStream.Meta.Mem.Cur - net_writeStream.Meta.Mem.Base), modified = 0;
 
 		while (count > 0) {
 			ReturnCode result = Platform_SocketWrite(net_socket, net_writeBuffer, count, &modified);
@@ -485,8 +485,8 @@ void Net_SendPacket(void) {
 		}
 	}
 	
-	net_writeStream.Meta_Mem_Cur   = net_writeStream.Meta_Mem_Base;
-	net_writeStream.Meta_Mem_Left = net_writeStream.Meta_Mem_Length;
+	net_writeStream.Meta.Mem.Cur   = net_writeStream.Meta.Mem.Base;
+	net_writeStream.Meta.Mem.Left = net_writeStream.Meta.Mem.Length;
 }
 
 static struct Stream* MPConnection_ReadStream(void)  { return &net_readStream; }

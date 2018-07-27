@@ -417,10 +417,10 @@ static void Classic_LevelDataChunk(struct Stream* stream) {
 	if (!mapInflateInited) Classic_StartLoading(stream);
 
 	Int32 usedLength = Stream_ReadU16_BE(stream);
-	mapPartStream.Meta_Mem_Cur    = stream->Meta_Mem_Cur;
-	mapPartStream.Meta_Mem_Base   = stream->Meta_Mem_Cur;
-	mapPartStream.Meta_Mem_Left   = usedLength;
-	mapPartStream.Meta_Mem_Length = usedLength;
+	mapPartStream.Meta.Mem.Cur    = stream->Meta.Mem.Cur;
+	mapPartStream.Meta.Mem.Base   = stream->Meta.Mem.Cur;
+	mapPartStream.Meta.Mem.Left   = usedLength;
+	mapPartStream.Meta.Mem.Length = usedLength;
 
 	Stream_Skip(stream, 1024);
 	UInt8 value = Stream_ReadU8(stream); /* progress in original classic, but we ignore it */
@@ -1010,7 +1010,7 @@ static void CPE_BulkBlockUpdate(struct Stream* stream) {
 	Stream_Skip(stream, (BULK_MAX_BLOCKS - count) * (UInt32)sizeof(Int32));
 
 	BlockID blocks[BULK_MAX_BLOCKS];
-	UInt8* recvBuffer = stream->Meta_Mem_Cur;
+	UInt8* recvBuffer = stream->Meta.Mem.Cur;
 	for (i = 0; i < count; i++) { blocks[i] = recvBuffer[i]; }
 	Stream_Skip(stream, BULK_MAX_BLOCKS);
 

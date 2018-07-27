@@ -46,7 +46,7 @@ struct Stream Chat_LogStream;
 DateTime ChatLog_LastLogDate;
 
 static void Chat_CloseLog(void) {
-	if (!Chat_LogStream.Meta_File) return;
+	if (!Chat_LogStream.Meta.File) return;
 	ReturnCode code = Chat_LogStream.Close(&Chat_LogStream);
 	ErrorHandler_CheckOrFail(code, "Chat - closing log file");
 }
@@ -103,7 +103,7 @@ static void Chat_OpenLog(DateTime* now) {
 		return;
 	}
 
-	Chat_LogStream.Meta_File = NULL;
+	Chat_LogStream.Meta.File = NULL;
 	String failedMsg = String_FromConst("Failed to open chat log file after 20 tries, giving up");
 	ErrorHandler_Log(&failedMsg);
 }
@@ -118,7 +118,7 @@ static void Chat_AppendLog(STRING_PURE String* text) {
 	}
 
 	ChatLog_LastLogDate = now;
-	if (!Chat_LogStream.Meta_File) return;
+	if (!Chat_LogStream.Meta.File) return;
 	UChar logBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String str = String_InitAndClearArray(logBuffer);
 

@@ -25,6 +25,7 @@ extern ReturnCode ReturnCode_FileNotFound;
 extern ReturnCode ReturnCode_NotSupported;
 extern ReturnCode ReturnCode_SocketInProgess;
 extern ReturnCode ReturnCode_SocketWouldBlock;
+extern ReturnCode ReturnCode_InvalidArg;
 
 void Platform_UnicodeExpand(void* dstPtr, STRING_PURE String* src);
 void Platform_Init(void);

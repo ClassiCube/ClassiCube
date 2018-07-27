@@ -64,11 +64,6 @@ Int32 Stream_TryReadByte(struct Stream* stream) {
 	return read ? buffer : -1;
 }
 
-void Stream_SetName(struct Stream* stream, STRING_PURE String* name) {
-	stream->Name = String_InitAndClearArray(stream->NameBuffer);
-	String_AppendString(&stream->Name, name);
-}
-
 void Stream_Skip(struct Stream* stream, UInt32 count) {
 	ReturnCode result = stream->Seek(stream, count, STREAM_SEEKFROM_CURRENT);
 	if (result == 0) return;
@@ -97,13 +92,15 @@ static ReturnCode Stream_DefaultGet(struct Stream* stream, UInt32* value) {
 	*value = 0; return ReturnCode_NotSupported; 
 }
 
-void Stream_SetDefaultOps(struct Stream* stream) {
+void Stream_Init(struct Stream* stream, STRING_PURE String* name) {
 	stream->Read  = Stream_DefaultIO;
 	stream->Write = Stream_DefaultIO;
 	stream->Close = Stream_DefaultClose;
 	stream->Seek  = Stream_DefaultSeek;
 	stream->Position = Stream_DefaultGet;
 	stream->Length   = Stream_DefaultGet;
+	stream->Name = String_InitAndClearArray(stream->NameBuffer);
+	String_AppendString(&stream->Name, name);
 }
 
 
@@ -111,29 +108,29 @@ void Stream_SetDefaultOps(struct Stream* stream) {
 *-------------------------------------------------------FileStream--------------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode Stream_FileRead(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	return Platform_FileRead(stream->Meta_File, data, count, modified);
+	return Platform_FileRead(stream->Meta.File, data, count, modified);
 }
 static ReturnCode Stream_FileWrite(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	return Platform_FileWrite(stream->Meta_File, data, count, modified);
+	return Platform_FileWrite(stream->Meta.File, data, count, modified);
 }
 static ReturnCode Stream_FileClose(struct Stream* stream) {
-	ReturnCode code = Platform_FileClose(stream->Meta_File);
-	stream->Meta_File = NULL;
+	ReturnCode code = Platform_FileClose(stream->Meta.File);
+	stream->Meta.File = NULL;
 	return code;
 }
 static ReturnCode Stream_FileSeek(struct Stream* stream, Int32 offset, Int32 seekType) {
-	return Platform_FileSeek(stream->Meta_File, offset, seekType);
+	return Platform_FileSeek(stream->Meta.File, offset, seekType);
 }
 static ReturnCode Stream_FilePosition(struct Stream* stream, UInt32* position) {
-	return Platform_FilePosition(stream->Meta_File, position);
+	return Platform_FilePosition(stream->Meta.File, position);
 }
 static ReturnCode Stream_FileLength(struct Stream* stream, UInt32* length) {
-	return Platform_FileLength(stream->Meta_File, length);
+	return Platform_FileLength(stream->Meta.File, length);
 }
 
 void Stream_FromFile(struct Stream* stream, void* file, STRING_PURE String* name) {
-	Stream_SetName(stream, name);
-	stream->Meta_File = file;
+	Stream_Init(stream, name);
+	stream->Meta.File = file;
 
 	stream->Read  = Stream_FileRead;
 	stream->Write = Stream_FileWrite;
@@ -148,30 +145,29 @@ void Stream_FromFile(struct Stream* stream, void* file, STRING_PURE String* name
 *-----------------------------------------------------PortionStream-------------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode Stream_PortionRead(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	count = min(count, stream->Meta_Mem_Left);
-	struct Stream* underlying = stream->Meta_Portion_Source;
-	ReturnCode code = underlying->Read(underlying, data, count, modified);
-	stream->Meta_Mem_Left -= *modified;
+	count = min(count, stream->Meta.Mem.Left);
+	struct Stream* source = stream->Meta.Portion.Source;
+	ReturnCode code = source->Read(source, data, count, modified);
+	stream->Meta.Mem.Left -= *modified;
 	return code;
 }
 
 static ReturnCode Stream_PortionPosition(struct Stream* stream, UInt32* position) {
-	*position = stream->Meta_Mem_Length - stream->Meta_Mem_Left; return 0;
+	*position = stream->Meta.Portion.Length - stream->Meta.Portion.Left; return 0;
 }
 static ReturnCode Stream_PortionLength(struct Stream* stream, UInt32* length) {
-	*length = stream->Meta_Mem_Length; return 0;
+	*length = stream->Meta.Portion.Length; return 0;
 }
 
 void Stream_ReadonlyPortion(struct Stream* stream, struct Stream* source, UInt32 len) {
-	Stream_SetName(stream, &source->Name);
-	stream->Meta_Portion_Source = source;
-	stream->Meta_Mem_Left   = len;
-	stream->Meta_Mem_Length = len;
-
-	Stream_SetDefaultOps(stream);
+	Stream_Init(stream, &source->Name);
 	stream->Read     = Stream_PortionRead;
 	stream->Position = Stream_PortionPosition;
 	stream->Length   = Stream_PortionLength;
+
+	stream->Meta.Portion.Source = source;
+	stream->Meta.Portion.Left   = len;
+	stream->Meta.Portion.Length = len;
 }
 
 
@@ -179,28 +175,28 @@ void Stream_ReadonlyPortion(struct Stream* stream, struct Stream* source, UInt32
 *-----------------------------------------------------MemoryStream--------------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode Stream_MemoryRead(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	count = min(count, stream->Meta_Mem_Left);
-	if (count > 0) { Platform_MemCpy(data, stream->Meta_Mem_Cur, count); }
+	count = min(count, stream->Meta.Mem.Left);
+	if (count > 0) { Platform_MemCpy(data, stream->Meta.Mem.Cur, count); }
 	
-	stream->Meta_Mem_Cur  += count;
-	stream->Meta_Mem_Left -= count;
+	stream->Meta.Mem.Cur  += count;
+	stream->Meta.Mem.Left -= count;
 	*modified = count;
 	return 0;
 }
 
 static ReturnCode Stream_MemoryWrite(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	count = min(count, stream->Meta_Mem_Left);
-	if (count > 0) { Platform_MemCpy(stream->Meta_Mem_Cur, data, count); }
+	count = min(count, stream->Meta.Mem.Left);
+	if (count > 0) { Platform_MemCpy(stream->Meta.Mem.Cur, data, count); }
 
-	stream->Meta_Mem_Cur   += count;
-	stream->Meta_Mem_Left -= count;
+	stream->Meta.Mem.Cur   += count;
+	stream->Meta.Mem.Left -= count;
 	*modified = count;
 	return 0;
 }
 
 static ReturnCode Stream_MemorySeek(struct Stream* stream, Int32 offset, Int32 seekType) {
 	Int32 pos;
-	UInt32 curOffset = (UInt32)(stream->Meta_Mem_Cur - stream->Meta_Mem_Base);
+	UInt32 curOffset = (UInt32)(stream->Meta.Mem.Cur - stream->Meta.Mem.Base);
 
 	switch (seekType) {
 	case STREAM_SEEKFROM_BEGIN:
@@ -208,29 +204,28 @@ static ReturnCode Stream_MemorySeek(struct Stream* stream, Int32 offset, Int32 s
 	case STREAM_SEEKFROM_CURRENT:
 		pos = (Int32)curOffset + offset; break;
 	case STREAM_SEEKFROM_END:
-		pos = (Int32)stream->Meta_Mem_Length + offset; break;
+		pos = (Int32)stream->Meta.Mem.Length + offset; break;
 	default: return 2;
 	}
 
-	if (pos < 0 || pos >= stream->Meta_Mem_Length) return 1;
-	stream->Meta_Mem_Cur  = stream->Meta_Mem_Base   + pos;
-	stream->Meta_Mem_Left = stream->Meta_Mem_Length - pos;
+	if (pos < 0 || pos >= stream->Meta.Mem.Length) return ReturnCode_InvalidArg;
+	stream->Meta.Mem.Cur  = stream->Meta.Mem.Base   + pos;
+	stream->Meta.Mem.Left = stream->Meta.Mem.Length - pos;
 	return 0;
 }
 
 void Stream_ReadonlyMemory(struct Stream* stream, void* data, UInt32 len, STRING_PURE String* name) {
-	Stream_SetName(stream, name);
-	stream->Meta_Mem_Cur    = data;
-	stream->Meta_Mem_Left   = len;
-	stream->Meta_Mem_Length = len;
-	stream->Meta_Mem_Base   = data;
-
-	Stream_SetDefaultOps(stream);
+	Stream_Init(stream, name);
 	stream->Read     = Stream_MemoryRead;
 	stream->Seek     = Stream_MemorySeek;
 	/* TODO: Should we use separate Stream_MemoryPosition functions? */
 	stream->Position = Stream_PortionPosition;
 	stream->Length   = Stream_PortionLength;
+
+	stream->Meta.Mem.Cur    = data;
+	stream->Meta.Mem.Left   = len;
+	stream->Meta.Mem.Length = len;
+	stream->Meta.Mem.Base   = data;
 }
 
 void Stream_WriteonlyMemory(struct Stream* stream, void* data, UInt32 len, STRING_PURE String* name) {
@@ -244,28 +239,27 @@ void Stream_WriteonlyMemory(struct Stream* stream, void* data, UInt32 len, STRIN
 *----------------------------------------------------BufferedStream-------------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode Stream_BufferedRead(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	if (stream->Meta_Mem_Left == 0) {
-		struct Stream* source = stream->Meta_Buffered_Source; 
-		stream->Meta_Buffered_Cur = stream->Meta_Buffered_Base;
+	if (stream->Meta.Buffered.Left == 0) {
+		struct Stream* source = stream->Meta.Buffered.Source; 
+		stream->Meta.Buffered.Cur = stream->Meta.Buffered.Base;
 		UInt32 read = 0;
 
-		ReturnCode result = source->Read(source, stream->Meta_Buffered_Cur, stream->Meta_Mem_Length, &read);
+		ReturnCode result = source->Read(source, stream->Meta.Buffered.Cur, stream->Meta.Buffered.Length, &read);
 		if (result != 0) return result;
-		stream->Meta_Mem_Left = read;
+		stream->Meta.Mem.Left = read;
 	}
 	return Stream_MemoryRead(stream, data, count, modified);
 }
 
 void Stream_ReadonlyBuffered(struct Stream* stream, struct Stream* source, void* data, UInt32 size) {
-	Stream_SetName(stream, &source->Name);
-	stream->Meta_Buffered_Cur    = data;
-	stream->Meta_Mem_Left        = 0;
-	stream->Meta_Mem_Length      = size;
-	stream->Meta_Buffered_Base   = data;
-	stream->Meta_Buffered_Source = source;
-
-	Stream_SetDefaultOps(stream);
+	Stream_Init(stream, &source->Name);
 	stream->Read = Stream_BufferedRead;
+
+	stream->Meta.Buffered.Cur    = data;
+	stream->Meta.Mem.Left        = 0;
+	stream->Meta.Mem.Length      = size;
+	stream->Meta.Buffered.Base   = data;
+	stream->Meta.Buffered.Source = source;
 }
 
 

@@ -44,7 +44,7 @@ void Bitmap_AllocateClearedPow2(struct Bitmap* bmp, Int32 width, Int32 height) {
 #define PNG_IHDR_SIZE 13
 #define PNG_RGB_MASK 0xFFFFFFUL
 #define PNG_PALETTE 256
-#define PNG_FourCC(a, b, c, d) ((UInt32)a << 24) | ((UInt32)b << 16) | ((UInt32)c << 8) | (UInt32)d
+#define PNG_FourCC(a, b, c, d) (((UInt32)a << 24) | ((UInt32)b << 16) | ((UInt32)c << 8) | (UInt32)d)
 
 enum PNG_COL {
 	PNG_COL_GRAYSCALE = 0, PNG_COL_RGB = 2, PNG_COL_INDEXED = 3,
@@ -359,7 +359,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 		UInt32 fourCC   = Stream_GetU32_BE(&buffer[4]);
 
 		switch (fourCC) {
-		case PNG_FourCC('I', 'H', 'D', 'R'): {
+		case PNG_FourCC('I','H','D','R'): {
 			if (dataSize != PNG_IHDR_SIZE) return PNG_ERR_INVALID_HEADER_SIZE;
 			gotHeader = true;
 			Stream_Read(stream, buffer, PNG_IHDR_SIZE);
@@ -390,7 +390,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 			bufferRows = PNG_BUFFER_SIZE / scanlineBytes;
 		} break;
 
-		case PNG_FourCC('P', 'L', 'T', 'E'): {
+		case PNG_FourCC('P','L','T','E'): {
 			if (dataSize > PNG_PALETTE * 3) return PNG_ERR_PAL_ENTRIES;
 			if ((dataSize % 3) != 0) return PNG_ERR_PAL_SIZE;
 
@@ -401,7 +401,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 			}
 		} break;
 
-		case PNG_FourCC('t', 'R', 'N', 'S'): {
+		case PNG_FourCC('t','R','N','S'): {
 			if (col == PNG_COL_GRAYSCALE) {
 				if (dataSize != 2) return PNG_ERR_TRANS_COUNT;
 				UInt8 palRGB = (UInt8)Stream_ReadU16_BE(stream);
@@ -426,7 +426,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 			}
 		} break;
 
-		case PNG_FourCC('I', 'D', 'A', 'T'): {
+		case PNG_FourCC('I','D','A','T'): {
 			struct Stream datStream;
 			Stream_ReadonlyPortion(&datStream, stream, dataSize);
 			inflate.Source = &datStream;
@@ -468,7 +468,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 			}
 		} break;
 
-		case PNG_FourCC('I', 'E', 'N', 'D'): {
+		case PNG_FourCC('I','E','N','D'): {
 			readingChunks = false;
 			if (dataSize != 0) return PNG_ERR_INVALID_END_SIZE;
 		} break;
@@ -493,23 +493,21 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 *------------------------------------------------------PNG encoder--------------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode Bitmap_Crc32StreamWrite(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	UInt32 i, crc32 = stream->Meta_CRC32;
+	UInt32 i, crc32 = stream->Meta.CRC32.CRC32;
 	/* TODO: Optimise this calculation */
 	for (i = 0; i < count; i++) {
 		crc32 = Utils_Crc32Table[(crc32 ^ data[i]) & 0xFF] ^ (crc32 >> 8);
 	}
-	stream->Meta_CRC32 = crc32;
+	stream->Meta.CRC32.CRC32 = crc32;
 
-	struct Stream* underlying = stream->Meta_CRC32_Source;
+	struct Stream* underlying = stream->Meta.CRC32.Source;
 	return underlying->Write(underlying, data, count, modified);
 }
 
 static void Bitmap_Crc32Stream(struct Stream* stream, struct Stream* underlying) {
-	Stream_SetName(stream, &underlying->Name);
-	stream->Meta_CRC32_Source = underlying;
-	stream->Meta_CRC32 = 0xFFFFFFFFUL;
-
-	Stream_SetDefaultOps(stream);
+	Stream_Init(stream, &underlying->Name);
+	stream->Meta.CRC32.Source = underlying;
+	stream->Meta.CRC32.CRC32  = 0xFFFFFFFFUL;
 	stream->Write = Bitmap_Crc32StreamWrite;
 }
 
@@ -609,7 +607,7 @@ void Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 	Stream_WriteU32_BE(stream, PNG_IHDR_SIZE);
 	Bitmap_Crc32Stream(&crc32Stream, underlying);
 	stream = &crc32Stream;
-	Stream_WriteU32_BE(stream, PNG_FourCC('I', 'H', 'D', 'R'));
+	Stream_WriteU32_BE(stream, PNG_FourCC('I','H','D','R'));
 	{
 		Stream_WriteU32_BE(stream, bmp->Width);
 		Stream_WriteU32_BE(stream, bmp->Height);
@@ -620,7 +618,7 @@ void Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 		Stream_WriteU8(stream, 0); /* Not using interlacing */
 	}
 	stream = underlying;
-	Stream_WriteU32_BE(stream, crc32Stream.Meta_CRC32 ^ 0xFFFFFFFFUL);
+	Stream_WriteU32_BE(stream, crc32Stream.Meta.CRC32.CRC32 ^ 0xFFFFFFFFUL);
 
 	/* Write PNG body */
 	UInt8 prevLine[PNG_MAX_DIMS * 3];
@@ -631,7 +629,7 @@ void Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 	Stream_WriteU32_BE(stream, 0);
 	stream = &crc32Stream;
 	Bitmap_Crc32Stream(&crc32Stream, underlying);
-	Stream_WriteU32_BE(stream, PNG_FourCC('I', 'D', 'A', 'T'));
+	Stream_WriteU32_BE(stream, PNG_FourCC('I','D','A','T'));
 	{
 		Int32 y, lineSize = bmp->Width * 3;
 		struct ZLibState zlState;
@@ -650,11 +648,11 @@ void Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 	UInt32 dataEnd; ReturnCode result = underlying->Position(underlying, &dataEnd);
 	ErrorHandler_CheckOrFail(result, "PNG - getting position of data end");
 	stream = underlying;
-	Stream_WriteU32_BE(stream, crc32Stream.Meta_CRC32 ^ 0xFFFFFFFFUL);
+	Stream_WriteU32_BE(stream, crc32Stream.Meta.CRC32.CRC32 ^ 0xFFFFFFFFUL);
 
 	/* Write end chunk */
 	Stream_WriteU32_BE(stream, 0);
-	Stream_WriteU32_BE(stream, PNG_FourCC('I', 'E', 'N', 'D'));
+	Stream_WriteU32_BE(stream, PNG_FourCC('I','E','N','D'));
 	Stream_WriteU32_BE(stream, 0xAE426082UL); /* crc32 of iend */
 
 	/* Come back to write size of data chunk */

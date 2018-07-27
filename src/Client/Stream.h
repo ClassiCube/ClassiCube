@@ -19,25 +19,15 @@ struct Stream {
 	ReturnCode (*Length)(struct Stream* stream, UInt32* length);
 	
 	union {
-		void* Meta_File;
-		void* Meta_Inflate;
+		void* File;
+		void* Inflate;
 		/* NOTE: These structs rely on overlapping Meta_Mem fields being the same! Don't change them */
-		struct {
-			UInt8* Meta_Mem_Cur;                
-			UInt32 Meta_Mem_Left, Meta_Mem_Length; 
-			UInt8* Meta_Mem_Base; 
-		};
-		struct { 
-			struct Stream* Meta_Portion_Source; 
-			UInt32 Meta_MeM_Left, Meta_MeM_Length; 
-		};
-		struct { 
-			UInt8* Meta_Buffered_Cur;          
-			UInt32 Meta_MEM_Left, Meta_MEM_Length; 
-			UInt8* Meta_Buffered_Base; struct Stream* Meta_Buffered_Source; 
-		};
-		struct { struct Stream* Meta_CRC32_Source; UInt32 Meta_CRC32; };
-	};
+		struct { UInt8* Cur; UInt32 Left, Length; UInt8* Base; } Mem;
+		struct { struct Stream* Source; UInt32 Left, Length; } Portion;
+		struct { UInt8* Cur; UInt32 Left, Length; UInt8* Base; struct Stream* Source; } Buffered;
+		struct { UInt8* Cur; UInt32 Left, Last;   UInt8* Base; struct Stream* Source; } Ogg;
+		struct { struct Stream* Source; UInt32 CRC32; } CRC32;
+	} Meta;
 	UChar NameBuffer[String_BufferSize(FILENAME_SIZE)];
 	String Name;
 };
@@ -46,9 +36,8 @@ void Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count);
 void Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count);
 ReturnCode Stream_TryWrite(struct Stream* stream, UInt8* buffer, UInt32 count);
 Int32 Stream_TryReadByte(struct Stream* stream);
-void Stream_SetName(struct Stream* stream, STRING_PURE String* name);
+void Stream_Init(struct Stream* stream, STRING_PURE String* name);
 void Stream_Skip(struct Stream* stream, UInt32 count);
-void Stream_SetDefaultOps(struct Stream* stream);
 
 void Stream_FromFile(struct Stream* stream, void* file, STRING_PURE String* name);
 /* Readonly Stream wrapping another Stream, only allows reading up to 'len' bytes from the wrapped stream. */

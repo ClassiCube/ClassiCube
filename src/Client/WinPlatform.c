@@ -30,6 +30,7 @@ UChar Platform_DirectorySeparator = '\\';
 ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
 ReturnCode ReturnCode_NotSupported = ERROR_NOT_SUPPORTED;
+ReturnCode ReturnCode_InvalidArg   = ERROR_INVALID_PARAMETER;
 
 void Platform_UnicodeExpand(void* dstPtr, STRING_PURE String* src) {
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
