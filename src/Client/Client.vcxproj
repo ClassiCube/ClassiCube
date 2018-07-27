@@ -249,6 +249,7 @@
   <ItemGroup>
     <ClCompile Include="2DStructs.c" />
     <ClCompile Include="AsyncDownloader.c" />
+    <ClCompile Include="Audio.c" />
     <ClCompile Include="Camera.c" />
     <ClCompile Include="AxisLinesRenderer.c" />
     <ClCompile Include="Block.c" />
