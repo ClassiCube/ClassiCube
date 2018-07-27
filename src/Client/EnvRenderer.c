@@ -19,6 +19,7 @@
 #include "Camera.h"
 #include "Particle.h"
 
+#define ENV_SMALL_VERTICES 4096
 static Real32 EnvRenderer_BlendFactor(Real32 x) {
 	/* return -0.05 + 0.22 * (Math_Log(x) * 0.25f); */
 	Real64 blend = -0.13 + 0.28 * (Math_Log(x) * 0.25);
@@ -176,17 +177,16 @@ static void EnvRenderer_UpdateClouds(void) {
 	Int32 z1 = -extent, z2 = World_Length + extent;
 	clouds_vertices = EnvRenderer_Vertices(x2 - x1, z2 - z1);
 
-	VertexP3fT2fC4b v[4096];
+	VertexP3fT2fC4b v[ENV_SMALL_VERTICES];
 	VertexP3fT2fC4b* ptr = v;
-	if (clouds_vertices > 4096) {
-		ptr = Platform_MemAlloc(clouds_vertices, sizeof(VertexP3fT2fC4b));
-		if (!ptr) ErrorHandler_Fail("EnvRenderer_Clouds - failed to allocate memory");
+	if (clouds_vertices > ENV_SMALL_VERTICES) {
+		ptr = Platform_MemAlloc(clouds_vertices, sizeof(VertexP3fT2fC4b), "temp clouds vertices");
 	}
 
 	EnvRenderer_DrawCloudsY(x1, z1, x2, z2, WorldEnv_CloudsHeight, ptr);
 	clouds_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FT2FC4B, clouds_vertices);
 
-	if (clouds_vertices > 4096) Platform_MemFree(&ptr);
+	if (clouds_vertices > ENV_SMALL_VERTICES) Platform_MemFree(&ptr);
 }
 
 
@@ -249,18 +249,17 @@ static void EnvRenderer_UpdateSky(void) {
 	Int32 z1 = -extent, z2 = World_Length + extent;
 	sky_vertices = EnvRenderer_Vertices(x2 - x1, z2 - z1);
 
-	VertexP3fC4b v[4096];
+	VertexP3fC4b v[ENV_SMALL_VERTICES];
 	VertexP3fC4b* ptr = v;
-	if (sky_vertices > 4096) {
-		ptr = Platform_MemAlloc(sky_vertices, sizeof(VertexP3fC4b));
-		if (!ptr) ErrorHandler_Fail("EnvRenderer_Sky - failed to allocate memory");
+	if (sky_vertices > ENV_SMALL_VERTICES) {
+		ptr = Platform_MemAlloc(sky_vertices, sizeof(VertexP3fC4b), "temp sky vertices");
 	}
 
 	Int32 height = max((World_Height + 2) + 6, WorldEnv_CloudsHeight + 6);
 	EnvRenderer_DrawSkyY(x1, z1, x2, z2, height, ptr);
 	sky_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FC4B, sky_vertices);
 
-	if (sky_vertices > 4096) Platform_MemFree(&ptr);
+	if (sky_vertices > ENV_SMALL_VERTICES) Platform_MemFree(&ptr);
 }
 
 /*########################################################################################################################*
@@ -342,9 +341,7 @@ Real64 weather_accumulator;
 Vector3I weather_lastPos;
 
 static void EnvRenderer_InitWeatherHeightmap(void) {
-	Weather_Heightmap = Platform_MemAlloc(World_Width * World_Length, sizeof(Int16));
-	if (!Weather_Heightmap) ErrorHandler_Fail("WeatherRenderer - Failed to allocate heightmap");
-
+	Weather_Heightmap = Platform_MemAlloc(World_Width * World_Length, sizeof(Int16), "weather heightmap");
 	Int32 i;
 	for (i = 0; i < World_Width * World_Length; i++) {
 		Weather_Heightmap[i] = Int16_MaxValue;
@@ -646,11 +643,10 @@ static void EnvRenderer_UpdateMapSides(void) {
 	sides_vertices += 2 * EnvRenderer_Vertices(World_Width, Math_AbsI(y)); /* ZQuads */
 	sides_vertices += 2 * EnvRenderer_Vertices(World_Length, Math_AbsI(y)); /* XQuads */
 
-	VertexP3fT2fC4b v[4096];
+	VertexP3fT2fC4b v[ENV_SMALL_VERTICES];
 	VertexP3fT2fC4b* ptr = v;
-	if (sides_vertices > 4096) {
-		ptr = Platform_MemAlloc(sides_vertices, sizeof(VertexP3fT2fC4b));
-		if (!ptr) ErrorHandler_Fail("BordersRenderer_Sides - failed to allocate memory");
+	if (sides_vertices > ENV_SMALL_VERTICES) {
+		ptr = Platform_MemAlloc(sides_vertices, sizeof(VertexP3fT2fC4b), "temp sides vertices");
 	}
 	VertexP3fT2fC4b* temp = ptr;
 
@@ -675,7 +671,7 @@ static void EnvRenderer_UpdateMapSides(void) {
 	EnvRenderer_DrawBorderX(World_Width, 0, World_Length, y1, y2, col, &temp);
 
 	sides_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FT2FC4B, sides_vertices);
-	if (sides_vertices > 4096) Platform_MemFree(&ptr);
+	if (sides_vertices > ENV_SMALL_VERTICES) Platform_MemFree(&ptr);
 }
 
 static void EnvRenderer_UpdateMapEdges(void) {
@@ -693,11 +689,10 @@ static void EnvRenderer_UpdateMapEdges(void) {
 		edges_vertices += EnvRenderer_Vertices(r.Width, r.Height); /* YPlanes outside */
 	}
 
-	VertexP3fT2fC4b v[4096];
+	VertexP3fT2fC4b v[ENV_SMALL_VERTICES];
 	VertexP3fT2fC4b* ptr = v;
-	if (edges_vertices > 4096) {
-		ptr = Platform_MemAlloc(edges_vertices, sizeof(VertexP3fT2fC4b));
-		if (!ptr) ErrorHandler_Fail("BordersRenderer_Edges - failed to allocate memory");
+	if (edges_vertices > ENV_SMALL_VERTICES) {
+		ptr = Platform_MemAlloc(edges_vertices, sizeof(VertexP3fT2fC4b), "temp edge vertices");
 	}
 	VertexP3fT2fC4b* temp = ptr;
 
@@ -714,7 +709,7 @@ static void EnvRenderer_UpdateMapEdges(void) {
 	}
 
 	edges_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FT2FC4B, edges_vertices);
-	if (edges_vertices > 4096) Platform_MemFree(&ptr);
+	if (edges_vertices > ENV_SMALL_VERTICES) Platform_MemFree(&ptr);
 }
 
 

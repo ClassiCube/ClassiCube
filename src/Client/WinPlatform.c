@@ -102,19 +102,32 @@ STRING_PURE String Platform_GetCommandLineArgs(void) {
 	return args;
 }
 
-void* Platform_MemAlloc(UInt32 numElems, UInt32 elemsSize) {
-	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
-	return HeapAlloc(heap, 0, numBytes);
+static void Platform_AllocFailed(const UChar* place) {
+	UChar logBuffer[String_BufferSize(STRING_SIZE + 20)];
+	String log = String_InitAndClearArray(logBuffer);
+	String_Format1(&log, "Failed allocating memory for: %c", place);
+	ErrorHandler_Fail(log.buffer);
 }
 
-void* Platform_MemAllocCleared(UInt32 numElems, UInt32 elemsSize) {
+void* Platform_MemAlloc(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
 	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
-	return HeapAlloc(heap, HEAP_ZERO_MEMORY, numBytes);
+	void* ptr = HeapAlloc(heap, 0, numBytes);
+	if (!ptr) Platform_AllocFailed(place);
+	return ptr;
 }
 
-void* Platform_MemRealloc(void* mem, UInt32 numElems, UInt32 elemsSize) {
+void* Platform_MemAllocCleared(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
 	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
-	return HeapReAlloc(heap, 0, mem, numBytes);
+	void* ptr = HeapAlloc(heap, HEAP_ZERO_MEMORY, numBytes);
+	if (!ptr) Platform_AllocFailed(place);
+	return ptr;
+}
+
+void* Platform_MemRealloc(void* mem, UInt32 numElems, UInt32 elemsSize, const UChar* place) {
+	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
+	void* ptr = HeapReAlloc(heap, 0, mem, numBytes);
+	if (!ptr) Platform_AllocFailed(place);
+	return ptr;
 }
 
 void Platform_MemFree(void** mem) {
@@ -552,8 +565,7 @@ ReturnCode Platform_HttpGetRequestHeaders(struct AsyncRequest* request, void* ha
 
 ReturnCode Platform_HttpGetRequestData(struct AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress) {
 	if (size == 0) return ERROR_NOT_SUPPORTED;
-	*data = Platform_MemAlloc(size, 1);
-	if (*data == NULL) ErrorHandler_Fail("Failed to allocate memory for http get data");
+	*data = Platform_MemAlloc(size, sizeof(UInt8), "http get data");
 
 	*progress = 0;
 	UInt8* buffer = *data;

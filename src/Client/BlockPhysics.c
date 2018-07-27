@@ -42,13 +42,10 @@ static void TickQueue_Resize(struct TickQueue* queue) {
 	if (queue->BufferSize >= (Int32_MaxValue / 4)) {
 		ErrorHandler_Fail("TickQueue - too large to resize.");
 	}
+
 	UInt32 capacity = queue->BufferSize * 2;
 	if (capacity < 32) capacity = 32;
-
-	UInt32* newBuffer = Platform_MemAlloc(capacity, sizeof(UInt32));
-	if (!newBuffer) {
-		ErrorHandler_Fail("TickQueue - failed to allocate memory");
-	}
+	UInt32* newBuffer = Platform_MemAlloc(capacity, sizeof(UInt32), "physics tick queue");
 
 	UInt32 i, idx;
 	for (i = 0; i < queue->Size; i++) {

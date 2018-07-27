@@ -332,8 +332,7 @@ static void Lighting_OnNewMap(void) {
 }
 
 static void Lighting_OnNewMapLoaded(void) {
-	Lighting_heightmap = Platform_MemAlloc(World_Width * World_Length, sizeof(Int16));
-	if (!Lighting_heightmap) ErrorHandler_Fail("WorldLighting - failed to allocate heightmap");
+	Lighting_heightmap = Platform_MemAlloc(World_Width * World_Length, sizeof(Int16), "lighting heightmap");
 	Lighting_Refresh();
 }
 

@@ -76,16 +76,30 @@ STRING_PURE String Platform_GetCommandLineArgs(void) {
 	return String_MakeNull();
 }
 
-void* Platform_MemAlloc(UInt32 numElems, UInt32 elemsSize) { 
-	return malloc(numElems * elemsSize); 
+/* TODO: Not duplicate with windows*/
+static void Platform_AllocFailed(const UChar* place) {
+	UChar logBuffer[String_BufferSize(STRING_SIZE + 20)];
+	String log = String_InitAndClearArray(logBuffer);
+	String_Format1(&log, "Failed allocating memory for: %c", place);
+	ErrorHandler_Fail(&log.buffer);
 }
 
-void* Platform_MemAllocCleared(UInt32 numElems, UInt32 elemsSize) {
-	return calloc(numElems, elemsSize);
+void* Platform_MemAlloc(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
+	void* ptr = malloc(numElems * elemsSize); /* TODO: avoid overflow here */
+	if (!ptr) Platform_AllocFailed(place);
+	return ptr;
 }
 
-void* Platform_MemRealloc(void* mem, UInt32 numElems, UInt32 elemsSize) {
-	return realloc(mem, numElems * elemsSize);
+void* Platform_MemAllocCleared(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
+	void* ptr = calloc(numElems, elemsSize); /* TODO: avoid overflow here */
+	if (!ptr) Platform_AllocFailed(place);
+	return ptr;
+}
+
+void* Platform_MemRealloc(void* mem, UInt32 numElems, UInt32 elemsSize, const UChar* place) {
+	void* ptr = realloc(mem, numElems * elemsSize); /* TODO: avoid overflow here */
+	if (!ptr) Platform_AllocFailed(place);
+	return ptr;
 }
 
 void Platform_MemFree(void** mem) {

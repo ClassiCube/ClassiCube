@@ -368,10 +368,8 @@ static void Builder_DefaultPostStretchTiles(Int32 x1, Int32 y1, Int32 z1) {
 	if (vertsCount > Builder_VerticesElems) {
 		Platform_MemFree(&Builder_Vertices);
 		/* ensure buffer can be accessed with 64 bytes alignment by putting 2 extra vertices at end. */
-		Builder_Vertices = Platform_MemAlloc(vertsCount + 2, sizeof(VertexP3fT2fC4b));
+		Builder_Vertices = Platform_MemAlloc(vertsCount + 2, sizeof(VertexP3fT2fC4b), "chunk vertices");
 		Builder_VerticesElems = vertsCount;
-
-		if (!Builder_Vertices) ErrorHandler_Fail("Builder1DPart_Prepare - failed to allocate memory");
 	}
 
 	vertsCount = 0;

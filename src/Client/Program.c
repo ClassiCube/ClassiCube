@@ -11,10 +11,24 @@
 #include "Game.h"
 #include "Funcs.h"
 #include "AsyncDownloader.h"
+#include "Audio.h"
 
 int main(void) {
 	ErrorHandler_Init("client.log");
 	Platform_Init();
+
+	void* file;
+	String oggPath = String_FromConst("audio/calm1.ogg");
+	Platform_FileOpen(&file, &oggPath);
+	struct Stream oggBase;
+	Stream_FromFile(&oggBase, file, &oggPath);
+	struct Stream ogg;
+	UInt8 oggBuffer[OGG_BUFFER_SIZE];
+	Ogg_MakeStream(&ogg, oggBuffer, &oggBase);
+	
+	struct VorbisState state;
+	Vorbis_Init(&state, &ogg);
+	Vorbis_DecodeHeaders(&state);
 
 	/*Platform_HttpInit();
 	AsyncRequest req = { 0 };

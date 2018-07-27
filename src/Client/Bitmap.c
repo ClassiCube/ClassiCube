@@ -23,8 +23,7 @@ void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, struct Bit
 
 void Bitmap_Allocate(struct Bitmap* bmp, Int32 width, Int32 height) {
 	bmp->Width = width; bmp->Height = height;
-	bmp->Scan0 = Platform_MemAlloc(width * height, BITMAP_SIZEOF_PIXEL);
-	if (!bmp->Scan0) ErrorHandler_Fail("Bitmap - failed to allocate memory");
+	bmp->Scan0 = Platform_MemAlloc(width * height, BITMAP_SIZEOF_PIXEL, "bitmap data");
 }
 
 void Bitmap_AllocateClearedPow2(struct Bitmap* bmp, Int32 width, Int32 height) {
@@ -32,8 +31,7 @@ void Bitmap_AllocateClearedPow2(struct Bitmap* bmp, Int32 width, Int32 height) {
 	height = Math_NextPowOf2(height);
 
 	bmp->Width = width; bmp->Height = height;
-	bmp->Scan0 = Platform_MemAllocCleared(width * height, BITMAP_SIZEOF_PIXEL);
-	if (!bmp->Scan0) ErrorHandler_Fail("Bitmap - failed to allocate memory");
+	bmp->Scan0 = Platform_MemAllocCleared(width * height, BITMAP_SIZEOF_PIXEL, "bitmap data");
 }
 
 
@@ -369,9 +367,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 			if (bmp->Width  < 0 || bmp->Width  > PNG_MAX_DIMS) return PNG_ERR_TOO_WIDE;
 			if (bmp->Height < 0 || bmp->Height > PNG_MAX_DIMS) return PNG_ERR_TOO_TALL;
 
-			bmp->Scan0 = Platform_MemAlloc(bmp->Width * bmp->Height, BITMAP_SIZEOF_PIXEL);
-			if (!bmp->Scan0) ErrorHandler_Fail("Failed to allocate memory for PNG bitmap");
-
+			bmp->Scan0 = Platform_MemAlloc(bmp->Width * bmp->Height, BITMAP_SIZEOF_PIXEL, "PNG bitmap data");
 			bitsPerSample = buffer[8]; col = buffer[9];
 			rowExpander = Png_GetExpander(col, bitsPerSample);
 			if (rowExpander == NULL) return PNG_ERR_INVALID_COL_BPP;

@@ -13,10 +13,7 @@
 
 static void Map_ReadBlocks(struct Stream* stream) {
 	World_BlocksSize = World_Width * World_Length * World_Height;
-	World_Blocks = Platform_MemAlloc(World_BlocksSize, sizeof(BlockID));
-	if (!World_Blocks) {
-		ErrorHandler_Fail("Failed to allocate memory for reading blocks array from file");
-	}
+	World_Blocks = Platform_MemAlloc(World_BlocksSize, sizeof(BlockID), "map blocks for load");
 	Stream_Read(stream, World_Blocks, World_BlocksSize);
 }
 
@@ -294,8 +291,7 @@ static void Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* stream, s
 		if (count < NBT_SMALL_SIZE) {
 			Stream_Read(stream, tag.DataSmall, count);
 		} else {
-			tag.DataBig = Platform_MemAlloc(count, sizeof(UInt8));
-			if (!tag.DataBig) ErrorHandler_Fail("Nbt_ReadTag - allocating memory");
+			tag.DataBig = Platform_MemAlloc(count, sizeof(UInt8), "NBT tag data");
 			Stream_Read(stream, tag.DataBig, count);
 		}
 		break;
@@ -379,8 +375,7 @@ static bool Cw_Callback_1(struct NbtTag* tag) {
 	if (IsTag(tag, "BlockArray")) {
 		World_BlocksSize = tag->DataSize;
 		if (tag->DataSize < NBT_SMALL_SIZE) {
-			World_Blocks = Platform_MemAlloc(World_BlocksSize, sizeof(UInt8));
-			if (!World_Blocks) ErrorHandler_Fail("Failed to allocate memory for map");
+			World_Blocks = Platform_MemAlloc(World_BlocksSize, sizeof(UInt8), ".cw map blocks");
 			Platform_MemCpy(World_Blocks, tag->DataSmall, tag->DataSize);
 		} else {
 			World_Blocks = tag->DataBig;
@@ -706,8 +701,7 @@ static void Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
 		if (arrayClassDesc.ClassName[1] != JFIELD_INT8) ErrorHandler_Fail("Only byte array fields supported");
 
 		UInt32 size = Stream_ReadU32_BE(stream);
-		field->Value_Ptr = Platform_MemAlloc(size, sizeof(UInt8));
-		if (!field->Value_Ptr) ErrorHandler_Fail("Failed to allocate memory for map");
+		field->Value_Ptr = Platform_MemAlloc(size, sizeof(UInt8), ".dat map blocks");
 
 		Stream_Read(stream, field->Value_Ptr, size);
 		field->Value_Size = size;

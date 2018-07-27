@@ -95,26 +95,16 @@ static void ChunkUpdater_FreeAllocations(void) {
 
 static void ChunkUpdater_PerformPartsAllocations(void) {
 	UInt32 count = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
-	MapRenderer_PartsBuffer_Raw = Platform_MemAllocCleared(count * 2, sizeof(struct ChunkPartInfo));
-	if (!MapRenderer_PartsBuffer_Raw) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk parts");
-
-	MapRenderer_PartsNormal = MapRenderer_PartsBuffer_Raw;
+	MapRenderer_PartsBuffer_Raw  = Platform_MemAllocCleared(count * 2, sizeof(struct ChunkPartInfo), "chunk parts");
+	MapRenderer_PartsNormal      = MapRenderer_PartsBuffer_Raw;
 	MapRenderer_PartsTranslucent = MapRenderer_PartsBuffer_Raw + count;
 }
 
 static void ChunkUpdater_PerformAllocations(void) {
-	MapRenderer_Chunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo));
-	if (!MapRenderer_Chunks) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk info");
-
-	MapRenderer_SortedChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*));
-	if (!MapRenderer_Chunks) ErrorHandler_Fail("ChunkUpdater - failed to allocate sorted chunk info");
-
-	MapRenderer_RenderChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*));
-	if (!MapRenderer_RenderChunks) ErrorHandler_Fail("ChunkUpdater - failed to allocate render chunk info");
-
-	ChunkUpdater_Distances = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(Int32));
-	if (!ChunkUpdater_Distances) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk distances");
-
+	MapRenderer_Chunks       = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo), "chunk info");
+	MapRenderer_SortedChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "sorted chunk info");
+	MapRenderer_RenderChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "render chunk info");
+	ChunkUpdater_Distances   = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(Int32), "chunk distances");
 	ChunkUpdater_PerformPartsAllocations();
 }
 

@@ -721,12 +721,10 @@ void StringsBuffer_Resize(void** buffer, UInt32* elems, UInt32 elemSize, UInt32 
 	UInt32 curElems = *elems;
 
 	if (curElems <= defElems) {
-		dst = Platform_MemAlloc(curElems + expandElems, elemSize);
-		if (!dst) ErrorHandler_Fail("Failed allocating memory for StringsBuffer");
+		dst = Platform_MemAlloc(curElems + expandElems, elemSize, "StringsBuffer");
 		Platform_MemCpy(dst, cur, curElems * elemSize);
 	} else {
-		dst = Platform_MemRealloc(cur, curElems + expandElems, elemSize);
-		if (!dst) ErrorHandler_Fail("Failed allocating memory for resizing StringsBuffer");
+		dst = Platform_MemRealloc(cur, curElems + expandElems, elemSize, "resizing StringsBuffer");
 	}
 
 	*buffer = dst;

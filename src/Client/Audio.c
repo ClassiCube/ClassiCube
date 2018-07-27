@@ -85,6 +85,7 @@ void Ogg_MakeStream(struct Stream* stream, UInt8* buffer, struct Stream* source)
 /* Ensures there are 'bitsCount' bits */
 #define Vorbis_EnsureBits(state, bitsCount) while (state->NumBits < bitsCount) { Vorbis_GetByte(state); }
 /* Peeks then consumes given bits */
+/* TODO: COMPLETELY BROKEN */
 #define Vorbis_ReadBits(state, bitsCount) Vorbis_PeekBits(state, bitsCount); Vorbis_ConsumeBits(state, bitsCount);
 
 #define VORBIS_MAX_CHANS 8
@@ -130,7 +131,7 @@ UInt32 Codebook_Pow(UInt32 base, UInt32 exp) {
 }
 
 UInt32 lookup1_values(UInt32 entries, UInt32 dimensions) {
-	UInt32 i, j;
+	UInt32 i;
 	/* the greatest integer value for which [value] to the power of [dimensions] is less than or equal to [entries] */
 	/* TODO: verify this */
 	for (i = 1; ; i++) {
@@ -388,6 +389,7 @@ static ReturnCode Vorbis_DecodeHeader(struct VorbisState* state, UInt8 type) {
 
 static ReturnCode Vorbis_DecodeIdentifier(struct VorbisState* state) {
 	UInt8 header[23];
+	Stream_Read(state->Source, header, sizeof(header));
 	UInt32 version    = Stream_GetU32_LE(&header[0]);
 	if (version != 0) return VORBIS_ERR_VERSION;
 
@@ -424,6 +426,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* state) {
 	ReturnCode result;
 
 	count = Vorbis_ReadBits(state, 8); count++;
+	state->Codebooks = Platform_MemAlloc(count, sizeof(struct Codebook), "vorbis codebooks");
 	for (i = 0; i < count; i++) {
 		result = Codebook_DecodeSetup(state, &state->Codebooks[i]);
 		if (result) return result;
@@ -436,6 +439,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* state) {
 	}
 
 	count = Vorbis_ReadBits(state, 6); count++;
+	state->Floors = Platform_MemAlloc(count, sizeof(struct Floor), "vorbis floors");
 	for (i = 0; i < count; i++) {
 		UInt16 floor = Vorbis_ReadBits(state, 16);
 		if (floor != 1) return VORBIS_ERR_FLOOR_TYPE;
@@ -444,6 +448,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* state) {
 	}
 
 	count = Vorbis_ReadBits(state, 6); count++;
+	state->Residues = Platform_MemAlloc(count, sizeof(struct Residue), "vorbis residues");
 	for (i = 0; i < count; i++) {
 		UInt16 residue = Vorbis_ReadBits(state, 16);
 		if (residue > 2) return VORBIS_ERR_FLOOR_TYPE;
@@ -452,6 +457,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* state) {
 	}
 
 	count = Vorbis_ReadBits(state, 6); count++;
+	state->Mappings = Platform_MemAlloc(count, sizeof(struct Mapping), "vorbis mappings");
 	for (i = 0; i < count; i++) {
 		UInt16 mapping = Vorbis_ReadBits(state, 16);
 		if (mapping != 0) return VORBIS_ERR_FLOOR_TYPE;
@@ -460,6 +466,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* state) {
 	}
 
 	count = Vorbis_ReadBits(state, 6); count++;
+	state->Modes = Platform_MemAlloc(count, sizeof(struct Mode), "vorbis modes");
 	for (i = 0; i < count; i++) {
 		result = Mode_DecodeSetup(state, &state->Modes[i]);
 		if (result) return result;

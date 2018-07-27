@@ -43,4 +43,5 @@ struct VorbisState {
 	struct Mode* Modes;
 };
 void Vorbis_Init(struct VorbisState* state, struct Stream* source);
+ReturnCode Vorbis_DecodeHeaders(struct VorbisState* state);
 #endif

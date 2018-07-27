@@ -407,8 +407,7 @@ static void Classic_LevelInit(struct Stream* stream) {
 		mapVolume = Stream_ReadU32_BE(stream);
 		gzHeader.Done = true;
 		mapSizeIndex = sizeof(UInt32);
-		map = Platform_MemAlloc(mapVolume, sizeof(BlockID));
-		if (!map) ErrorHandler_Fail("Failed to allocate memory for map");
+		map = Platform_MemAlloc(mapVolume, sizeof(BlockID), "map blocks");
 	}
 }
 
@@ -437,8 +436,7 @@ static void Classic_LevelDataChunk(struct Stream* stream) {
 		if (mapSizeIndex == sizeof(UInt32)) {
 			if (!map) {
 				mapVolume = Stream_GetU32_BE(mapSize);
-				map = Platform_MemAlloc(mapVolume, sizeof(BlockID));
-				if (!map) ErrorHandler_Fail("Failed to allocate memory for map");
+				map = Platform_MemAlloc(mapVolume, sizeof(BlockID), "map blocks");
 			}
 
 			UInt8* src = map + mapIndex;

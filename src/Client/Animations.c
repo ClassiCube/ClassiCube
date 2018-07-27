@@ -202,8 +202,7 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, Int32
 	UInt8* ptr = buffer;
 	if (size > ANIMS_FAST_SIZE) {
 		/* cannot allocate memory on the stack for very big animation.png frames */
-		ptr = Platform_MemAlloc(size * size, BITMAP_SIZEOF_PIXEL);
-		if (!ptr) ErrorHandler_Fail("Failed to allocate memory for anim frame");
+		ptr = Platform_MemAlloc(size * size, BITMAP_SIZEOF_PIXEL, "anim frame");
 	}
 
 	Int32 index_1D = Atlas1D_Index(texLoc);

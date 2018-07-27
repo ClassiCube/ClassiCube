@@ -202,8 +202,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, Int32 x, Int32 y, struct 
 		if (width > 1)   width /= 2; 
 		if (height > 1) height /= 2;
 
-		UInt8* cur = Platform_MemAlloc(width * height, BITMAP_SIZEOF_PIXEL);
-		if (!cur) ErrorHandler_Fail("Allocating memory for mipmaps");
+		UInt8* cur = Platform_MemAlloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
 		GfxCommon_GenMipmaps(width, height, cur, prev);
 
 		struct Bitmap mipmap;

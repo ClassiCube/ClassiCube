@@ -169,11 +169,7 @@ Int32 Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB,
 			Platform_MemFree(&Searcher_States);
 		}
 		Searcher_StatesCount = elements;
-
-		Searcher_States = Platform_MemAlloc(elements, sizeof(struct SearcherState));
-		if (!Searcher_States) {
-			ErrorHandler_Fail("Failed to allocate memory for Searcher_FindReachableBlocks");
-		}
+		Searcher_States = Platform_MemAlloc(elements, sizeof(struct SearcherState), "collision search states");
 	}
 
 	/* Order loops so that we minimise cache misses */
