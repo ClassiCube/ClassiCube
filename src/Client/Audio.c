@@ -75,7 +75,7 @@ void Ogg_MakeStream(struct Stream* stream, UInt8* buffer, struct Stream* source)
 *------------------------------------------------------Vorbis utils-------------------------------------------------------*
 *#########################################################################################################################*/
 /* Insert next byte into the bit buffer */
-#define Vorbis_GetByte(state) state->Bits |= (UInt32)Stream_ReadUInt8(state->Source) << state->NumBits; state->NumBits += 8;
+#define Vorbis_GetByte(state) state->Bits |= (UInt32)Stream_ReadU8(state->Source) << state->NumBits; state->NumBits += 8;
 /* Retrieves bits from the bit buffer */
 #define Vorbis_PeekBits(state, bits) (state->Bits & ((1UL << (bits)) - 1UL))
 /* Consumes/eats up bits from the bit buffer */
@@ -85,8 +85,12 @@ void Ogg_MakeStream(struct Stream* stream, UInt8* buffer, struct Stream* source)
 /* Ensures there are 'bitsCount' bits */
 #define Vorbis_EnsureBits(state, bitsCount) while (state->NumBits < bitsCount) { Vorbis_GetByte(state); }
 /* Peeks then consumes given bits */
-/* TODO: COMPLETELY BROKEN */
-#define Vorbis_ReadBits(state, bitsCount) Vorbis_PeekBits(state, bitsCount); Vorbis_ConsumeBits(state, bitsCount);
+/* TODO: Make this an inline macro somehow */
+UInt32 Vorbis_ReadBits(struct VorbisState* state, UInt32 bitsCount) {
+	Vorbis_EnsureBits(state, bitsCount);
+	UInt32 result = Vorbis_PeekBits(state, bitsCount); Vorbis_ConsumeBits(state, bitsCount);
+	return result;
+}
 
 #define VORBIS_MAX_CHANS 8
 
@@ -108,7 +112,7 @@ Real32 float32_unpack(struct VorbisState* state) {
 
 	#define LOG_2 0.693147180559945
 	/* TODO: Can we make this more accurate? maybe ldexp ?? */
-	return (Real32)(mantissa * Math_Exp(LOG_2 * exponent)); /* pow(2, x) */
+	return (Real32)(mantissa * Math_Exp(LOG_2 * ((Int32)exponent - 788))); /* pow(2, x) */
 }
 
 
@@ -139,8 +143,8 @@ UInt32 lookup1_values(UInt32 entries, UInt32 dimensions) {
 		UInt32 next = Codebook_Pow(i + 1, dimensions);
 
 		if (next < pow)        return i; /* overflow */
-		if (pow == dimensions) return i;
-		if (next > dimensions) return i;
+		if (pow == entries) return i;
+		if (next > entries) return i;
 	}
 	return 0;
 }
@@ -338,7 +342,7 @@ ReturnCode Mapping_DecodeSetup(struct VorbisState* state, struct Mapping* mappin
 	}
 
 	for (i = 0; i < submaps; i++) {
-		Vorbis_ConsumeBits(state, 8); /* time value */
+		Vorbis_ReadBits(state, 8); /* time value */
 		mapping->FloorIdx[i]   = Vorbis_ReadBits(state, 8);
 		mapping->ResidueIdx[i] = Vorbis_ReadBits(state, 8);
 	}
@@ -428,7 +432,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* state) {
 	count = Vorbis_ReadBits(state, 8); count++;
 	state->Codebooks = Platform_MemAlloc(count, sizeof(struct Codebook), "vorbis codebooks");
 	for (i = 0; i < count; i++) {
-		result = Codebook_DecodeSetup(state, &state->Codebooks[i]);
+		result = Codebook_DecodeSetup(state, &state->Codebooks[i]);	
 		if (result) return result;
 	}
 
@@ -460,7 +464,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* state) {
 	state->Mappings = Platform_MemAlloc(count, sizeof(struct Mapping), "vorbis mappings");
 	for (i = 0; i < count; i++) {
 		UInt16 mapping = Vorbis_ReadBits(state, 16);
-		if (mapping != 0) return VORBIS_ERR_FLOOR_TYPE;
+		if (mapping != 0) return VORBIS_ERR_MAPPING_TYPE;
 		result = Mapping_DecodeSetup(state, &state->Mappings[i]);
 		if (result) return result;
 	}
