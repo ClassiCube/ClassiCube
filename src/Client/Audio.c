@@ -160,34 +160,56 @@ void Codebook_CalcCodewords(struct Codebook* codebook, UInt8* codewordLens, Int1
 	codebook->CodewordLens = Platform_MemAlloc(usedEntries, sizeof(UInt8), "raw codeword lens");
 
 	Int32 i, j;
-	UInt32 lastCodeword = UInt32_MaxValue;
-	UInt32 lastLen = 32; UInt8 len;
+	UInt32 masks[33];
+	UInt32 lastAssigned[33];
+	bool hasAssigned[33];
+	bool assignedFirst = false;
+
+	for (i = 0; i < 33; i++) {
+		UInt32 mask = ~(UInt32_MaxValue >> i); /* e.g. depth of 4, 0xF0 00 00 00 */
+		masks[i]        = mask;
+		lastAssigned[i] = 0;
+		hasAssigned[i]  = false;
+	}
 
 	for (i = 0, j = 0; i < codebook->Entries; i++) {
-		len = codewordLens[i];
+		UInt8 len = codewordLens[i];
 		if (len == UInt8_MaxValue) continue;
 		codebook->CodewordLens[j] = len;
 
+		/* assign first codeword to be 0 */
+		if (!assignedFirst) {
+			codebook->Codewords[0] = 0;
+			hasAssigned[len]       = true;
+			assignedFirst = true; continue;
+		}
+
 		/* work out where to start depth of next codeword */
-		UInt32 depth = min(lastLen, len);
-		UInt32 mask = ~(UInt32_MaxValue >> depth); /* e.g. depth of 4, 0xF0 00 00 00 */
+		UInt32 one = (1UL << (32 - len));
+		UInt32 codeword = lastAssigned[len];
+		for (;;) {
+			codeword += one;
 
-		/* for example, assume Tree is like this: 
-		      #
-		    0/ \
-			#
-		  0/ \1
-		  #   #
-		$3  0/                                               
-			
-		*/
+			/* has this branch be assigned been before higher in the tree? */
+			bool free = true;
+			for (j = 1; j < len; j++) {
+				if (!hasAssigned[j]) continue;
+				if ((lastAssigned[j] & masks[j]) != (codeword & masks[j])) continue;
+				free = false; break;
+			}
+			/* has this branch been assigned before further down the tree? */
+			for (j = len; j < 33; j++) {
+				if (!hasAssigned[j]) continue;
+				if ((lastAssigned[j] & masks[len]) != codeword) continue;
+				free = false; break;
+			}
+			if (free) break;
+		}
 
-		/* NOPE, THIS ASSUMPTION IS WRONG */
-		UInt32 nextCodeword = (lastCodeword & mask) + (1UL << (32 - depth));
-		codebook->Codewords[j] = nextCodeword;
-
-		lastCodeword = nextCodeword; 
-		lastLen = len;
+		codebook->Codewords[j] = codeword;
+		lastAssigned[len] = codeword;
+		hasAssigned[len]  = true;
+		j++;
 	}
 }
 
@@ -424,8 +446,24 @@ void render_line(Int32 x0, Int32 y0, Int32 x1, Int32 y1, Int32* v) {
 		} else {
 			y = y + base;
 		}
-v[x] = y;
+		v[x] = y;
 	}
+}
+
+Int32 low_neighbor(Int16* v, Int32 x) {
+	Int32 n = 0, i, max = Int32_MinValue;
+	for (i = 0; i < x; i++) {
+		if (v[i] < v[x] && v[i] > max) { n = i; max = v[i]; }
+	}
+	return n;
+}
+
+Int32 high_neighbor(Int16* v, Int32 x) {
+	Int32 n = 0, i, min = Int32_MaxValue;
+	for (i = 0; i < x; i++) {
+		if (v[i] > v[x] && v[i] < min) { n = i; min = v[i]; }
+	}
+	return n;
 }
 
 void Floor_Synthesis(struct VorbisState* state, struct Floor* floor) {
@@ -535,6 +573,7 @@ void Residue_DecodeFrame(struct VorbisState* state, struct Residue* residue, Int
 	UInt32 classwordsPerCodeword = classbook->Dimensions;
 	UInt32 pass, i, j, nToRead = residueEnd - residueBeg;
 	UInt32 partitionsToRead = nToRead / residue->PartitionSize;
+	UInt8* classifications[VORBIS_MAX_CHANS];
 
 /* TODO:  allocate and zero all vectors that will be returned. */
 	if (nToRead == 0) return;
@@ -547,7 +586,7 @@ void Residue_DecodeFrame(struct VorbisState* state, struct Residue* residue, Int
 				for (j = 0; j < ch; j++) {
 					if (doNotDecode[j]) continue;
 
-					UInt32 temp = Codebook_DecodeScalar(&classbook);
+					UInt32 temp = Codebook_DecodeScalar(classbook);
 					/* TODO: i must be signed, otherwise infinite loop */
 					for (i = classwordsPerCodeword - 1; i >= 0; i--) {
 						classifications[j][i + partitionCount] = temp % residue->Classifications;
@@ -564,9 +603,9 @@ void Residue_DecodeFrame(struct VorbisState* state, struct Residue* residue, Int
 					Int16 book = residue->Books[class][pass];
 
 					if (book >= 0) {
-						decode partition into output vector number[j], starting at scalar
-							offset[limit\_residue\_begin] + [partition\_count] * [residue\_partition\_size] using
-							codebook number[vqbook] in VQ context
+						UInt32 offset = residueBeg + partitionCount * residue->PartitionSize;
+						Real32* vectors = Codebook_DecodeVectors(&state->Codebooks[book]);
+						/* TODO: decode partition into output vector number[j]; */
 					}
 				}
 				partitionCount++;
@@ -841,7 +880,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* state) {
 
 		for (j = 0; j < state->Channels; j++) {
 			if (mapping->Mux[j] != i) continue;
-			residue vector for channel[j] is set to decoded residue vector[ch]
+			/* TODO: residue vector for channel[j] is set to decoded residue vector[ch] */
 			ch++;
 		}
 	}
