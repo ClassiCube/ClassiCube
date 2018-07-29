@@ -25,6 +25,7 @@ enum VORBIS_ERR {
 	VORBIS_ERR_CODEBOOK_SYNC, VORBIS_ERR_CODEBOOK_ENTRY, VORBIS_ERR_CODEBOOK_LOOKUP,
 	VORBIS_ERR_MODE_WINDOW, VORBIS_ERR_MODE_TRANSFORM,
 	VORBIS_ERR_MAPPING_CHANS, VORBIS_ERR_MAPPING_RESERVED,
+	VORBIS_ERR_FRAME_TYPE,
 };
 
 struct Codebook; struct Floor; struct Residue; struct Mapping; struct Mode;
@@ -33,8 +34,8 @@ struct VorbisState {
 	UInt32 NumBits; /* Number of bits in Bits buffer*/
 	struct Stream* Source;  /* Source for filling Input buffer */
 
-	Int32 Channels, SampleRate;
-	Int32 BlockSizes[2];
+	UInt8 Channels, ModeNumBits; UInt16 CurBlockSize;
+	Int32 SampleRate; Int32 BlockSizes[2];
 
 	struct Codebook* Codebooks;
 	struct Floor* Floors;
