@@ -159,18 +159,19 @@ void Codebook_CalcCodewords(struct Codebook* codebook, UInt8* codewordLens, Int1
 	codebook->Codewords    = Platform_MemAlloc(usedEntries, sizeof(UInt32), "codewords");
 	codebook->CodewordLens = Platform_MemAlloc(usedEntries, sizeof(UInt8), "raw codeword lens");
 
-	Int32 i, j;
+	Int32 i, j, depth;
 	UInt32 masks[33];
 	UInt32 lastAssigned[33];
 	bool hasAssigned[33];
 	bool assignedFirst = false;
 
-	for (i = 0; i < 33; i++) {
-		UInt32 mask = ~(UInt32_MaxValue >> i); /* e.g. depth of 4, 0xF0 00 00 00 */
-		masks[i]        = mask;
-		lastAssigned[i] = 0;
-		hasAssigned[i]  = false;
+	for (depth = 0; depth < 33; depth++) {
+		UInt32 mask = ~(UInt32_MaxValue >> depth); /* e.g. depth of 4, 0xF0 00 00 00 */
+		masks[depth]        = mask;
+		lastAssigned[depth] = 0;
+		hasAssigned[depth]  = false;
 	}
+	masks[32] = UInt32_MaxValue; /* shift by 32 is same as 0 on some processors */
 
 	for (i = 0, j = 0; i < codebook->Entries; i++) {
 		UInt8 len = codewordLens[i];
@@ -181,7 +182,8 @@ void Codebook_CalcCodewords(struct Codebook* codebook, UInt8* codewordLens, Int1
 		if (!assignedFirst) {
 			codebook->Codewords[0] = 0;
 			hasAssigned[len]       = true;
-			assignedFirst = true; continue;
+			assignedFirst = true; 
+			j++; continue;
 		}
 
 		/* work out where to start depth of next codeword */
@@ -192,15 +194,15 @@ void Codebook_CalcCodewords(struct Codebook* codebook, UInt8* codewordLens, Int1
 
 			/* has this branch be assigned been before higher in the tree? */
 			bool free = true;
-			for (j = 1; j < len; j++) {
-				if (!hasAssigned[j]) continue;
-				if ((lastAssigned[j] & masks[j]) != (codeword & masks[j])) continue;
+			for (depth = 1; depth < len; depth++) {
+				if (!hasAssigned[depth]) continue;
+				if ((lastAssigned[depth] & masks[depth]) != (codeword & masks[depth])) continue;
 				free = false; break;
 			}
 			/* has this branch been assigned before further down the tree? */
-			for (j = len; j < 33; j++) {
-				if (!hasAssigned[j]) continue;
-				if ((lastAssigned[j] & masks[len]) != codeword) continue;
+			for (depth = len; depth < 33; depth++) {
+				if (!hasAssigned[depth]) continue;
+				if ((lastAssigned[depth] & masks[len]) != codeword) continue;
 				free = false; break;
 			}
 			if (free) break;
