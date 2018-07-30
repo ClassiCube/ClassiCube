@@ -357,32 +357,6 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 	return 0;
 }
 
-static Real32* Codebook_DecodeVQ_Type1(struct Codebook* c, UInt32 lookupOffset) {
-	Real32 last = 0.0f;
-	UInt32 indexDivisor = 1, i;
-	Real32* values;
-
-	for (i = 0; i < c->Dimensions; i++) {
-		UInt32 offset = (lookupOffset / indexDivisor) % c->LookupValues;
-		values[i] = c->Multiplicands[offset] * c->DeltaValue + c->MinValue + last;
-		if (c->SequenceP) last = values[i];
-		indexDivisor *= c->LookupValues;
-	}
-	return values;
-}
-
-static Real32* Codebook_DecodeVQ_Type2(struct Codebook* c, UInt32 lookupOffset) {
-	Real32 last = 0.0f;
-	UInt32 i, offset = lookupOffset * c->Dimensions;
-	Real32* values;
-
-	for (i = 0; i < c->Dimensions; i++, offset++) {
-		values[i] = c->Multiplicands[offset] * c->DeltaValue + c->MinValue + last;
-		if (c->SequenceP) last = values[i];
-	}
-	return values;
-}
-
 static UInt32 Codebook_DecodeScalar(struct VorbisState* ctx, struct Codebook* c) {
 	UInt32 codeword = 0, shift = 31, depth, i;
 	/* TODO: This is so massively slow */
@@ -400,13 +374,32 @@ static UInt32 Codebook_DecodeScalar(struct VorbisState* ctx, struct Codebook* c)
 	return -1;
 }
 
-static Real32* Codebook_DecodeVectors(struct VorbisState* ctx, struct Codebook* c) {
+static void Codebook_DecodeVectors(struct VorbisState* ctx, struct Codebook* c, Real32* v, Int32 step) {
 	UInt32 lookupOffset = Codebook_DecodeScalar(ctx, c);
-	switch (c->LookupType) {
-	case 1: return Codebook_DecodeVQ_Type1(c, lookupOffset);
-	case 2: return Codebook_DecodeVQ_Type2(c, lookupOffset);
+	Real32 last = 0.0f, value;
+	UInt32 i, offset;
+
+	if (c->LookupType == 1) {		
+		UInt32 indexDivisor = 1;
+		for (i = 0; i < c->Dimensions; i++, v += step) {
+			offset = (lookupOffset / indexDivisor) % c->LookupValues;
+			value  = c->Multiplicands[offset] * c->DeltaValue + c->MinValue + last;
+
+			*v += value;
+			if (c->SequenceP) last = value;
+			indexDivisor *= c->LookupValues;
+		}
+	} else if (c->LookupType == 2) {
+		offset = lookupOffset * c->Dimensions;
+		for (i = 0; i < c->Dimensions; i++, offset++, v += step) {
+			value  = c->Multiplicands[offset] * c->DeltaValue + c->MinValue + last;
+
+			*v += value;
+			if (c->SequenceP) last = value;
+		}
+	} else {
+		ErrorHandler_Fail("???????");
 	}
-	return NULL;
 }
 
 /*########################################################################################################################*
@@ -702,20 +695,17 @@ static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r
 	return 0;
 }
 
-static void Residue_DecodeFrame(struct VorbisState* ctx, struct Residue* r, Int32 ch, bool* doNotDecode) {
-	UInt32 size = ctx->DataSize;
-	if (r->Type == 2) size *= ch;
-
-	UInt32 residueBeg = max(r->Begin, size);
-	UInt32 residueEnd = max(r->End,   size);
+static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, UInt32 size, Int32 ch, bool* doNotDecode, Real32** data) {
+	UInt32 residueBeg = min(r->Begin, size);
+	UInt32 residueEnd = min(r->End, size);
+	Int32 pass, i, j, k;
 
 	struct Codebook* classbook = &ctx->Codebooks[r->Classbook];
 	UInt32 classwordsPerCodeword = classbook->Dimensions;
-	UInt32 pass, i, j, nToRead = residueEnd - residueBeg;
+	UInt32 nToRead = residueEnd - residueBeg;
 	UInt32 partitionsToRead = nToRead / r->PartitionSize;
-	UInt8* classifications[VORBIS_MAX_CHANS];
+	UInt8* classifications[VORBIS_MAX_CHANS]; /* TODO ????? */
 
-/* TODO:  allocate and zero all vectors that will be returned. */
 	if (nToRead == 0) return;
 	for (pass = 0; pass < 8; pass++) {
 		UInt32 partitionCount = 0;
@@ -727,7 +717,6 @@ static void Residue_DecodeFrame(struct VorbisState* ctx, struct Residue* r, Int3
 					if (doNotDecode[j]) continue;
 
 					UInt32 temp = Codebook_DecodeScalar(ctx, classbook);
-					/* TODO: i must be signed, otherwise infinite loop */
 					for (i = classwordsPerCodeword - 1; i >= 0; i--) {
 						classifications[j][i + partitionCount] = temp % r->Classifications;
 						temp /= r->Classifications;
@@ -738,19 +727,54 @@ static void Residue_DecodeFrame(struct VorbisState* ctx, struct Residue* r, Int3
 			for (i = 0; i < classwordsPerCodeword && partitionCount < partitionsToRead; i++) {
 				for (j = 0; j < ch; j++) {
 					if (doNotDecode[j]) continue;
-
 					UInt8 class = classifications[j][partitionCount];
 					Int16 book = r->Books[class][pass];
+					if (book < 0) continue;
 
-					if (book >= 0) {
-						UInt32 offset = residueBeg + partitionCount * r->PartitionSize;
-						Real32* vectors = Codebook_DecodeVectors(ctx, &ctx->Codebooks[book]);
-						/* TODO: decode partition into output vector number[j]; */
+					UInt32 offset = residueBeg + partitionCount * r->PartitionSize;
+					Real32* v = data[j] + offset;
+					struct Codebook* c = &ctx->Codebooks[book];
+
+					if (r->Type == 0) {
+						Int32 step = r->PartitionSize / c->Dimensions;
+						for (k = 0; k < step; k++) {
+							Codebook_DecodeVectors(ctx, c, v, step); v++;
+						}
+					} else {
+						for (k = 0; k < r->PartitionSize; k += c->Dimensions) {
+							Codebook_DecodeVectors(ctx, c, v, 1); v += c->Dimensions;
+						}
 					}
 				}
 				partitionCount++;
 			}
 		}
+	}
+}
+
+static void Residue_DecodeFrame(struct VorbisState* ctx, struct Residue* r, Int32 ch, bool* doNotDecode, Real32** data) {
+	UInt32 size = ctx->DataSize;
+	if (r->Type == 2) {
+		bool decodeAny = false;
+		Int32 i, j;
+
+		/* type 2 decodes all channel vectors 2, if at least 1 channel to decode */
+		for (i = 0; i < ch; i++) {
+			if (!doNotDecode[i]) decodeAny = true;
+		}
+
+		if (!decodeAny) return;
+		Real32* interleaved = Platform_MemAllocCleared(ctx->DataSize * ctx->Channels, sizeof(Real32), "residue 2 temp");
+		Residue_DecodeCore(ctx, r, size * ch, 1, &decodeAny, &interleaved);
+
+		/* de interleave type 2 output */	
+		for (i = 0; i < size; i++) {
+			for (j = 0; j < ch; j++) {
+				data[j][i] = interleaved[i * ch + j];
+			}
+		}
+	} else {
+		Residue_DecodeCore(ctx, r, size, ch, doNotDecode, data);
 	}
 }
 
@@ -1010,22 +1034,17 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	for (i = 0; i < mapping->Submaps; i++) {
 		Int32 ch = 0;
 		bool doNotDecode[VORBIS_MAX_CHANS];
+		Real32* data[VORBIS_MAX_CHANS]; /* map residue data to actual channel data */
 		for (j = 0; j < ctx->Channels; j++) {
 			if (mapping->Mux[j] != i) continue;
 
 			doNotDecode[ch] = !hasResidue[j];
+			data[ch] = Vorbis_ChanData(ctx, j);
 			ch++;
 		}
 
 		Int32 residueIdx = mapping->FloorIdx[i];
-		Residue_DecodeFrame(ctx, &ctx->Residues[residueIdx], ch, doNotDecode);
-		ch = 0;
-
-		for (j = 0; j < ctx->Channels; j++) {
-			if (mapping->Mux[j] != i) continue;
-			/* TODO: residue vector for channel[j] is set to decoded residue vector[ch] */
-			ch++;
-		}
+		Residue_DecodeFrame(ctx, &ctx->Residues[residueIdx], ch, doNotDecode, data);
 	}
 
 	/* inverse coupling */
