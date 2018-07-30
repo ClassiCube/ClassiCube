@@ -424,7 +424,29 @@ struct Floor {
 	Int16 SubclassBooks[FLOOR_MAX_CLASSES][8];
 	Int16 XList[FLOOR_MAX_VALUES];
 	Int32 YList[FLOOR_MAX_VALUES];
+	UInt16 ListOrder[FLOOR_MAX_VALUES];
 };
+
+/* TODO: Make this thread safe */
+Int16* tmp_xlist;
+UInt16* tmp_order;
+static void Floor_SortXList(Int32 left, Int32 right) {
+	UInt16* values = tmp_order; UInt16 value;
+	Int16* keys = tmp_xlist;    Int16 key;
+	while (left < right) {
+		Int32 i = left, j = right;
+		Int16 pivot = keys[(i + j) / 2];
+
+		/* partition the list */
+		while (i <= j) {
+			while (pivot > keys[i]) i++;
+			while (pivot < keys[j]) j--;
+			QuickSort_Swap_KV_Maybe();
+		}
+		/* recurse into the smaller subset */
+		QuickSort_Recurse(Floor_SortXList)
+	}
+}
 
 static ReturnCode Floor_DecodeSetup(struct VorbisState* ctx, struct Floor* f) {
 	f->Partitions = Vorbis_ReadBits(ctx, 5);
@@ -460,7 +482,15 @@ static ReturnCode Floor_DecodeSetup(struct VorbisState* ctx, struct Floor* f) {
 			f->XList[idx++] = Vorbis_ReadBits(ctx, rangeBits);
 		}
 	}
+
 	f->Values = idx;
+	/* sort X list for curve computation later */
+	Int16 xlist_sorted[FLOOR_MAX_VALUES];
+	Platform_MemCpy(xlist_sorted, f->XList, idx * sizeof(Int16));
+
+	tmp_xlist = xlist_sorted; 
+	tmp_order = f->ListOrder;
+	Floor_SortXList(0, idx - 1);
 	return 0;
 }
 
@@ -511,7 +541,8 @@ static Int32 render_point(Int32 x0, Int32 y0, Int32 x1, Int32 y1, Int32 X) {
 	}
 }
 
-static void render_line(Int32 x0, Int32 y0, Int32 x1, Int32 y1, Int32* v) {
+static Real32 floor1_inverse_dB_table[256];
+static void render_line(Int32 x0, Int32 y0, Int32 x1, Int32 y1, Real32* data) {
 	Int32 dy = y1 - y0, adx = x1 - x0;
 	Int32 ady = Math_AbsI(dy);
 	Int32 base = dy / adx, sy;
@@ -524,7 +555,7 @@ static void render_line(Int32 x0, Int32 y0, Int32 x1, Int32 y1, Int32* v) {
 	}
 
 	ady = ady - Math_AbsI(base) * adx;
-	v[x] = y;
+	data[x] = floor1_inverse_dB_table[y];
 
 	for (x = x0 + 1; x < x1; x++) {
 		err = err + ady;
@@ -534,7 +565,7 @@ static void render_line(Int32 x0, Int32 y0, Int32 x1, Int32 y1, Int32* v) {
 		} else {
 			y = y + base;
 		}
-		v[x] = y;
+		data[x] *= floor1_inverse_dB_table[y];
 	}
 }
 
@@ -554,7 +585,6 @@ static Int32 high_neighbor(Int16* v, Int32 x) {
 	return n;
 }
 
-static Real32 floor1_inverse_dB_table[256];
 static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, Real32* data) {
 	/* amplitude value synthesis */
 	Int32 YFinal[FLOOR_MAX_VALUES];
@@ -608,27 +638,26 @@ static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, Real32* da
 	}
 
 	/* curve synthesis */
-	Int32 hx = 0, lx = 0, hy, rawI;
-	Int32 ly = YFinal[f->ListOrder[0]] * f->Multiplier;
+	Int32 hx = 0, lx = 0, rawI;
+	Int32 ly = YFinal[f->ListOrder[0]] * f->Multiplier, hy = ly;
 
 	for (rawI = 1; rawI < f->Values; rawI++) {
 		Int32 i = f->ListOrder[rawI];
 		if (!Step2[i]) continue;
 
 		hx = f->XList[i]; hy = YFinal[i] * f->Multiplier;
-		render_line(lx, ly, hx, hy, floor);
+		if (lx >= ctx->DataSize) return;
+
+		render_line(lx, ly, min(hx, ctx->DataSize), hy, data);
 		lx = hx; ly = hy;
 	}
 
-	if (hx < ctx->DataSize) {
-		render_line(hx, hy, ctx->DataSize, hy, floor);
-	}
-
-
-28   15) for each scalar in vector [floor], perform a lookup substitution using 
-29       the scalar value from [floor] as an offset into the vector [floor1_inverse_dB_static_table]
-30  
-31   16) done
+	/* fill remainder of floor with a flat line */
+	/* TODO: Is this right? should hy be 0, if Step2 is false for all */
+	if (hx >= ctx->DataSize) return;
+	lx = hx; hx = ctx->DataSize;
+	Real32 value = floor1_inverse_dB_table[hy];
+	for (; lx < hx; lx++) { data[lx] *= value; }
 }
 
 
@@ -1024,6 +1053,14 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	}
 
 	/* compute dot product of floor and residue, producing audio spectrum vector */
+	for (i = 0; i < ctx->Channels; i++) {
+		if (!hasFloor[i]) continue;
+		Int32 submap = mapping->Mux[i];
+		Int32 floorIdx = mapping->FloorIdx[submap];
+
+		Real32* data = Vorbis_ChanData(ctx, i);
+		Floor_Synthesis(ctx, &ctx->Floors[floorIdx], data);
+	}
 
 	/* inverse monolithic transform of audio spectrum vector */
 

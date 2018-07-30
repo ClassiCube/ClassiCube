@@ -179,8 +179,8 @@ namespace ClassicalSharp.Model {
 			return p.TransformMatrix(p.ModelScale, pos);
 		}
 		
-		protected internal ModelVertex[] vertices;
-		protected internal int index, texIndex;
+		public ModelVertex[] vertices;
+		public int index, texIndex;
 		
 		protected int GetTexture(Entity entity) {
 			int pTex = UsesHumanSkin ? entity.TextureId : entity.MobTextureId;
