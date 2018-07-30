@@ -1,6 +1,5 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using ClassicalSharp.Model;
 using ClassicalSharp.Physics;
 using OpenTK;
 using BlockID = System.UInt16;

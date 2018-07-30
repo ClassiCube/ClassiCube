@@ -1,18 +1,11 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using System.Drawing;
-using System.IO;
 using System.Net;
-using ClassicalSharp.Entities;
-using ClassicalSharp.Generator;
 using ClassicalSharp.Gui.Screens;
 using ClassicalSharp.Network;
 using ClassicalSharp.Textures;
 using OpenTK;
 using OpenTK.Input;
-#if ANDROID
-using Android.Graphics;
-#endif
 
 namespace ClassicalSharp {
 	
@@ -20,21 +13,14 @@ namespace ClassicalSharp {
 	public abstract class IServerConnection : IGameComponent {
 		
 		public bool IsSinglePlayer;
-		
-		/// <summary> Opens a connection to the server, and prepares the initial state of the client. </summary>
+		public bool Disconnected;
 		public abstract void BeginConnect();
-		
-		public abstract void SendChat(string text);
-		
-		/// <summary> Informs the server of the client's current position and orientation. </summary>
-		public abstract void SendPosition(Vector3 pos, float rotY, float headX);
-		
-		/// <summary> Informs the server that using the given mouse button,
-		/// the client clicked on a particular block or entity. </summary>
-		public abstract void SendPlayerClick(MouseButton button, bool buttonDown, byte targetId, PickedPos pos);
-		
 		public abstract void Tick(ScheduledTask task);
 		
+		public abstract void SendChat(string text);
+		public abstract void SendPosition(Vector3 pos, float rotY, float headX);
+		public abstract void SendPlayerClick(MouseButton button, bool buttonDown, byte targetId, PickedPos pos);
+
 		public virtual void Init(Game game) { }
 		public virtual void Ready(Game game) { }
 		public virtual void OnNewMapLoaded(Game game) { }
@@ -47,21 +33,10 @@ namespace ClassicalSharp {
 		public string ServerMotd;
 		public string AppName = Program.AppName;
 		
-		/// <summary> Whether the network processor is currently connected to a server. </summary>
-		public bool Disconnected;
-		
-		/// <summary> Whether the client should use extended player list management, with group names and ranks. </summary>
 		public bool UsingExtPlayerList;
-		
-		/// <summary> Whether the server supports handling PlayerClick packets from the client. </summary>
 		public bool UsingPlayerClick;
-		
-		/// <summary> Whether the server can handle partial message packets or not. </summary>
 		public bool SupportsPartialMessages;
-		
-		/// <summary> Whether the server supports receiving all code page 437 characters from this client. </summary>
 		public bool SupportsFullCP437;
-
 
 		protected Game game;
 		protected int netTicks;

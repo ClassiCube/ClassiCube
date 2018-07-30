@@ -1,18 +1,12 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using System.Drawing;
-using System.IO;
-using System.Net;
 using System.Net.Sockets;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Events;
-using ClassicalSharp.Gui;
-using ClassicalSharp.Network;
-using ClassicalSharp.Textures;
 using ClassicalSharp.Network.Protocols;
-using BlockID = System.UInt16;
 using OpenTK;
 using OpenTK.Input;
+using BlockID = System.UInt16;
 
 namespace ClassicalSharp.Network {
 

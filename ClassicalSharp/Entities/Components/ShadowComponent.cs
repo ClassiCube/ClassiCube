@@ -3,9 +3,6 @@ using System;
 using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
-#if ANDROID
-using Android.Graphics;
-#endif
 using BlockID = System.UInt16;
 
 namespace ClassicalSharp.Entities {

@@ -822,9 +822,9 @@ static void Cw_WriteBlockDefinitionCompound(struct Stream* stream, BlockID id) {
 
 	Nbt_WriteTag(stream, NBT_TAG_INT8, "CollideType");
 	Nbt_WriteU8(stream, Block_Collide[id]);
-	IntAndFloat speed; speed.fVal = Block_SpeedMultiplier[id];
+	union IntAndFloat speed; speed.f = Block_SpeedMultiplier[id];
 	Nbt_WriteTag(stream, NBT_TAG_REAL32, "Speed");
-	Nbt_WriteI32(stream, speed.iVal);
+	Nbt_WriteI32(stream, speed.i);
 
 	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "Textures");
 	Nbt_WriteI32(stream, 6);

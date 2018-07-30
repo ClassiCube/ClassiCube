@@ -65,6 +65,7 @@ void PingList_Update(UInt16 data);
 Int32 PingList_AveragePingMs(void);
 
 bool ServerConnection_IsSinglePlayer;
+bool ServerConnection_Disconnected;
 extern String ServerConnection_ServerName;
 extern String ServerConnection_ServerMOTD;
 extern String ServerConnection_AppName;
@@ -77,15 +78,9 @@ void (*ServerConnection_Tick)(struct ScheduledTask* task);
 struct Stream* (*ServerConnection_ReadStream)(void);
 struct Stream* (*ServerConnection_WriteStream)(void);
 
-/* Whether the network processor is currently disconnected from the server. */
-bool ServerConnection_Disconnected;
-/* Whether the client supports extended player list management, with group names and ranks. */
 bool ServerConnection_SupportsExtPlayerList;
-/* Whether the server supports handling PlayerClick packets from the client. */
 bool ServerConnection_SupportsPlayerClick;
-/* Whether the server can handle partial message packets or not. */
 bool ServerConnection_SupportsPartialMessages;
-/* Whether the server supports receiving all code page 437 characters from this client. */
 bool ServerConnection_SupportsFullCP437;
 
 void ServerConnection_RetrieveTexturePack(STRING_PURE String* url);

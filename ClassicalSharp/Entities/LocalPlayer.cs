@@ -2,7 +2,6 @@
 using System;
 using System.Drawing;
 using ClassicalSharp.Physics;
-using ClassicalSharp.Renderers;
 using OpenTK;
 using OpenTK.Input;
 using BlockID = System.UInt16;

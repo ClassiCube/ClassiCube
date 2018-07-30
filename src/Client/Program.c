@@ -29,6 +29,7 @@ int main(void) {
 	struct VorbisState state;
 	Vorbis_Init(&state, &ogg);
 	Vorbis_DecodeHeaders(&state);
+	Vorbis_DecodeFrame(&state);
 
 	/*Platform_HttpInit();
 	AsyncRequest req = { 0 };

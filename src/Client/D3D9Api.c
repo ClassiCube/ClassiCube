@@ -306,8 +306,8 @@ void Gfx_SetFogDensity(Real32 value) {
 	if (value == d3d9_fogDensity) return;
 	d3d9_fogDensity = value;
 	if (Gfx_LostContext) return;
-	IntAndFloat raw; raw.fVal = value;
-	D3D9_SetRenderState(D3DRS_FOGDENSITY, raw.uVal, "D3D9_SetFogDensity");
+	union IntAndFloat raw; raw.f = value;
+	D3D9_SetRenderState(D3DRS_FOGDENSITY, raw.u, "D3D9_SetFogDensity");
 }
 
 Real32 d3d9_fogEnd = -1.0f;
@@ -315,8 +315,8 @@ void Gfx_SetFogEnd(Real32 value) {
 	if (value == d3d9_fogEnd) return;
 	d3d9_fogEnd = value;
 	if (Gfx_LostContext) return;
-	IntAndFloat raw; raw.fVal = value;
-	D3D9_SetRenderState(D3DRS_FOGEND, raw.uVal, "D3D9_SetFogEnd");
+	union IntAndFloat raw; raw.f = value;
+	D3D9_SetRenderState(D3DRS_FOGEND, raw.u, "D3D9_SetFogEnd");
 }
 
 D3DFOGMODE d3d9_fogTableMode = D3DFOG_NONE;
@@ -636,7 +636,7 @@ static void D3D9_SetDefaultRenderStates(void) {
 }
 
 static void D3D9_RestoreRenderStates(void) {
-	IntAndFloat raw;
+	union IntAndFloat raw;
 	D3D9_SetRenderState(D3DRS_ALPHATESTENABLE, d3d9_alphaTest, "D3D9_AlphaTest");
 	D3D9_SetRenderState2(D3DRS_ALPHABLENDENABLE, d3d9_alphaBlend, "D3D9_AlphaBlend");
 	D3D9_SetRenderState2(D3DRS_ALPHAFUNC, d3d9_alphaTestFunc, "D3D9_AlphaTestFunc");
@@ -645,10 +645,10 @@ static void D3D9_RestoreRenderStates(void) {
 	D3D9_SetRenderState2(D3DRS_DESTBLEND, d3d9_dstBlendFunc, "D3D9_AlphaDstBlend");
 	D3D9_SetRenderState2(D3DRS_FOGENABLE, d3d9_fogEnable, "D3D9_Fog");
 	D3D9_SetRenderState2(D3DRS_FOGCOLOR, d3d9_fogCol, "D3D9_FogColor");
-	raw.fVal = d3d9_fogDensity;
-	D3D9_SetRenderState2(D3DRS_FOGDENSITY, raw.uVal, "D3D9_FogDensity");
-	raw.fVal = d3d9_fogEnd;
-	D3D9_SetRenderState2(D3DRS_FOGEND, raw.uVal, "D3D9_FogEnd");
+	raw.f = d3d9_fogDensity;
+	D3D9_SetRenderState2(D3DRS_FOGDENSITY, raw.u, "D3D9_FogDensity");
+	raw.f = d3d9_fogEnd;
+	D3D9_SetRenderState2(D3DRS_FOGEND, raw.u, "D3D9_FogEnd");
 	D3D9_SetRenderState2(D3DRS_FOGTABLEMODE, d3d9_fogTableMode, "D3D9_FogMode");
 	D3D9_SetRenderState2(D3DRS_ZFUNC, d3d9_depthTestFunc, "D3D9_DepthTestFunc");
 	D3D9_SetRenderState2(D3DRS_ZENABLE, d3d9_depthTest, "D3D9_DepthTest");

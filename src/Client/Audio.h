@@ -34,8 +34,10 @@ struct VorbisState {
 	UInt32 NumBits; /* Number of bits in Bits buffer*/
 	struct Stream* Source;  /* Source for filling Input buffer */
 
-	UInt8 Channels, ModeNumBits; UInt16 CurBlockSize;
+	UInt8 Channels, ModeNumBits; 
+	UInt16 CurBlockSize, DataSize;
 	Int32 SampleRate; Int32 BlockSizes[2];
+	Real32* Values;
 
 	struct Codebook* Codebooks;
 	struct Floor* Floors;
@@ -45,4 +47,5 @@ struct VorbisState {
 };
 void Vorbis_Init(struct VorbisState* state, struct Stream* source);
 ReturnCode Vorbis_DecodeHeaders(struct VorbisState* state);
+ReturnCode Vorbis_DecodeFrame(struct VorbisState* state);
 #endif

@@ -3,7 +3,6 @@ using System;
 using System.Drawing;
 using ClassicalSharp.Entities;
 using OpenTK;
-using OpenTK.Input;
 
 namespace ClassicalSharp {
 	

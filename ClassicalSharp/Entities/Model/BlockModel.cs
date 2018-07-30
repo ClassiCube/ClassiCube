@@ -3,7 +3,6 @@ using System;
 using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Physics;
-using ClassicalSharp.Renderers;
 using ClassicalSharp.Textures;
 using OpenTK;
 using BlockID = System.UInt16;
