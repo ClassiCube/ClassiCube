@@ -302,7 +302,7 @@ static UInt32 Codebook_DecodeScalar(struct VorbisState* ctx, struct Codebook* c)
 			if (codeword != c->Codewords[i]) continue;
 
 			UInt32 value = c->Values[i];
-			Platform_Log2("read value %i of len %i", &value, &depth);
+			//Platform_Log2("read value %i of len %i", &value, &depth);
 			return value;
 		}
 	}
@@ -1118,8 +1118,7 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 			combined[ch][j] += ctx->PrevOutput[ch][i];
 		}
 	}
-
-	j = (ctx->PrevBlockSize * 3 / 4) - (ctx->CurBlockSize / 4);
+	j = ctx->PrevBlockSize / 4;
 	for (i = 0; i < ctx->CurBlockSize / 4; i++, j++) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
 			combined[ch][j] += ctx->CurOutput[ch][i];
