@@ -262,7 +262,7 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 
 	static int booknummm;
 	Platform_Log1("### BUILDING %i ###", &booknummm);
-	Codebook_CalcCodewords(c, codewordLens, usedEntries);
+	Codebook_CalcCodewords(c, codewordLens);
 	Platform_MemFree(&codewordLens);
 	booknummm++;
 
@@ -948,7 +948,7 @@ Real32* imdct(Real32* v, Int32 N) {
 		for (k = 0; k < N; k++) {
 			sum += v[k] * Math_Cos((PI / N) * (i + 0.5 + N * 0.5) * (k + 0.5));
 		}
-		y[i] = (1.0 / N) * sum;
+		y[i] = sum;
 	}
 	return y;
 }
@@ -1063,7 +1063,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	} else {
 		right_window_beg = window_center;
 		right_window_end = n;
-		left_n = n / 2;
+		right_n = n / 2;
 	}
 
 	Real32* window = Platform_MemAlloc(n, sizeof(Real32), "temp window");
@@ -1081,7 +1081,10 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 
 	/* inverse monolithic transform of audio spectrum vector */
 	for (i = 0; i < ctx->Channels; i++) {
-		if (!hasFloor[i]) continue;
+		if (!hasFloor[i]) {
+			ctx->CurOutput[i] = Platform_MemAllocCleared(ctx->CurBlockSize, sizeof(Real32), "empty output");
+			continue;
+		}
 		Int32 submap = mapping->Mux[i];
 		Int32 floorIdx = mapping->FloorIdx[submap];
 
@@ -1093,7 +1096,50 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 		ctx->CurOutput[i] = output;
 	}
 
+	/* discard remaining bits at end of packet */
+	Vorbis_AlignBits(ctx);
+}
+
+Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
+	Int32 i, j = 0, ch, size = 0;
+	if (ctx->PrevBlockSize == 0) goto finish;
+	size = (ctx->PrevBlockSize / 4) + (ctx->CurBlockSize / 4);
+
+	Platform_LogConst("##### FRAME #####" );
+
+	Real32* combined[VORBIS_MAX_CHANS];
+	for (i = 0; i < ctx->Channels; i++) {
+		combined[i] = Platform_MemAllocCleared(size, sizeof(Real32), "temp combined");
+	}
+
 	/* overlap and add data */
+	for (i = ctx->PrevBlockSize / 2; i < ctx->PrevBlockSize * 3 / 4; i++, j++) {
+		for (ch = 0; ch < ctx->Channels; ch++) {
+			combined[ch][j] += ctx->PrevOutput[ch][i];
+		}
+	}
+
+	j = (ctx->PrevBlockSize * 3 / 4) - (ctx->CurBlockSize / 4);
+	for (i = 0; i < ctx->CurBlockSize / 4; i++, j++) {
+		for (ch = 0; ch < ctx->Channels; ch++) {
+			combined[ch][j] += ctx->CurOutput[ch][i];
+		}
+	}
+
+	for (i = 0; i < size; i++) {
+		for (ch = 0; ch < ctx->Channels; ch++) {
+			Real32 sample = combined[ch][i];
+			Math_Clamp(sample, -1.0f, 1.0f);
+			*data++ = (Int16)(sample * 32767);
+		}
+	}
+
+finish:
+	ctx->PrevBlockSize = ctx->CurBlockSize;
+	for (i = 0; i < VORBIS_MAX_CHANS; i++) {
+		ctx->PrevOutput[i] = ctx->CurOutput[i];
+	}
+	return size;
 }
 
 static Real32 floor1_inverse_dB_table[256] = {
