@@ -68,13 +68,14 @@ namespace ClassicalSharp.Renderers {
 			
 			IModel model;
 			if (BlockInfo.Draw[block] == DrawType.Gas) {
-				model = game.ModelCache.Get("arm");
+				model = game.LocalPlayer.Model;
 				held.ModelScale = new Vector3(1.0f);
+				model.RenderArm(held);
 			} else {
 				model = game.ModelCache.Get("block");
 				held.ModelScale = new Vector3(0.4f);
-			}
-			model.Render(held);
+				model.Render(held);
+			}		
 			
 			game.Graphics.Texturing = false;
 			game.Graphics.RestoreAlphaState(BlockInfo.Draw[block]);

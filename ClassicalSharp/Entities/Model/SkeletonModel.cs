@@ -28,7 +28,8 @@ namespace ClassicalSharp.Model {
 			                   .RotOrigin(-5, 23, 0));
 			RightArm = BuildBox(MakeBoxBounds(4, 12, -1, 6, 24, 1)
 			                    .TexOrigin(40, 16)
-			                    .RotOrigin(5, 23, 0));
+			                    .RotOrigin(5, 23, 0));			
+			armX = 5;
 		}
 		
 		public override float NameYOffset { get { return 2.075f; } }
@@ -52,6 +53,11 @@ namespace ClassicalSharp.Model {
 			DrawRotate(p.anim.rightLegX, 0, 0, RightLeg, false);
 			DrawRotate(90 * Utils.Deg2Rad, 0, p.anim.leftArmZ, LeftArm, false);
 			DrawRotate(90 * Utils.Deg2Rad, 0, p.anim.rightArmZ, RightArm, false);
+			UpdateVB();
+		}
+		
+		public override void DrawArm(Entity p) {
+			DrawArmPart(RightArm);
 			UpdateVB();
 		}
 		

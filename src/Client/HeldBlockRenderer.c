@@ -30,14 +30,15 @@ static void HeldBlockRenderer_RenderModel(void) {
 
 	struct IModel* model;
 	if (Block_Draw[held_block] == DRAW_GAS) {
-		String name = String_FromConst("arm"); model = ModelCache_Get(&name);
+		model = LocalPlayer_Instance.Base.Model;
 		held_entity.ModelScale = Vector3_Create1(1.0f);
+		IModel_RenderArm(model, &held_entity);
 	} else {
 		String name = String_FromConst("block"); model = ModelCache_Get(&name);
 		held_entity.ModelScale = Vector3_Create1(0.4f);
+		IModel_Render(model, &held_entity);
 	}
-	IModel_Render(model, &held_entity);
-
+	
 	Gfx_SetTexturing(false);
 	GfxCommon_RestoreAlphaState(Block_Draw[held_block]);
 	Gfx_SetDepthTest(true);

@@ -121,6 +121,18 @@ namespace ClassicalSharp.Model {
 			UpdateVB();
 		}
 		
+		public override void DrawArm(Entity p) {
+			SkinType skin = p.SkinType;
+			ModelSet model = skin == SkinType.Type64x64Slim ? SetSlim : 
+				(skin == SkinType.Type64x64 ? Set64 : Set);
+						
+			DrawArmPart(model.RightArm);
+			if (skin != SkinType.Type64x32) {
+				DrawArmPart(model.RightArmLayer);
+			}
+			UpdateVB();
+		}
+		
 		public class ModelSet {
 			public ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm, Hat,
 			TorsoLayer, LeftLegLayer, RightLegLayer, LeftArmLayer, RightArmLayer;

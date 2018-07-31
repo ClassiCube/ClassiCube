@@ -246,7 +246,6 @@ static struct IModel* CreeperModel_GetInstance(void) {
 	IModel_Init(&CreeperModel);
 	IModel_SetPointers(CreeperModel);
 	CreeperModel.vertices = CreeperModel_Vertices;
-	CreeperModel.SurvivalScore = 200;
 	CreeperModel.NameYOffset = 1.7f;
 	return &CreeperModel;
 }
@@ -315,7 +314,6 @@ static struct IModel* PigModel_GetInstance(void) {
 	IModel_Init(&PigModel);
 	IModel_SetPointers(PigModel);
 	PigModel.vertices = PigModel_Vertices;
-	PigModel.SurvivalScore = 10;
 	PigModel.NameYOffset = 1.075f;
 	return &PigModel;
 }
@@ -429,7 +427,6 @@ static struct IModel* SheepModel_GetInstance(void) {
 	IModel_Init(&SheepModel);
 	IModel_SetPointers(SheepModel);
 	SheepModel.vertices = SheepModel_Vertices;
-	SheepModel.SurvivalScore = 10;
 	SheepModel.NameYOffset = 1.48125f;
 
 	String sheep_fur = String_FromConst("sheep_fur.png");
@@ -497,11 +494,17 @@ static void SkeletonModel_DrawModel(struct Entity* entity) {
 	IModel_UpdateVB();
 }
 
+static void SkeletonModel_DrawArm(struct Entity* entity) {
+	IModel_DrawArmPart(Skeleton_RightArm);
+	IModel_UpdateVB();
+}
+
 static struct IModel* SkeletonModel_GetInstance(void) {
 	IModel_Init(&SkeletonModel);
 	IModel_SetPointers(SkeletonModel);
+	SkeletonModel.DrawArm = SkeletonModel_DrawArm;
+	SkeletonModel.armX = 5;
 	SkeletonModel.vertices = SkeletonModel_Vertices;
-	SkeletonModel.SurvivalScore = 120;
 	SkeletonModel.NameYOffset = 2.075f;
 	return &SkeletonModel;
 }
@@ -580,7 +583,6 @@ static struct IModel* SpiderModel_GetInstance(void) {
 	IModel_Init(&SpiderModel);
 	IModel_SetPointers(SpiderModel);
 	SpiderModel.vertices = SpiderModel_Vertices;
-	SpiderModel.SurvivalScore = 105;
 	SpiderModel.NameYOffset = 1.0125f;
 	return &SpiderModel;
 }
@@ -652,11 +654,16 @@ static void ZombieModel_DrawModel(struct Entity* entity) {
 	IModel_UpdateVB();
 }
 
+static void ZombieModel_DrawArm(struct Entity* entity) {
+	IModel_DrawArmPart(Zombie_RightArm);
+	IModel_UpdateVB();
+}
+
 static struct IModel* ZombieModel_GetInstance(void) {
 	IModel_Init(&ZombieModel);
 	IModel_SetPointers(ZombieModel);
+	ZombieModel.DrawArm = ZombieModel_DrawArm;
 	ZombieModel.vertices = ZombieModel_Vertices;
-	ZombieModel.SurvivalScore = 80;
 	ZombieModel.NameYOffset = 2.075f;
 	return &ZombieModel;
 }
@@ -761,7 +768,6 @@ static void HumanModel_SetupState(struct Entity* entity) {
 }
 
 static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) {
-	UInt8 skinType = entity->SkinType;
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, model->Head, true);
 	IModel_DrawPart(model->Torso);
 	IModel_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  model->LeftLeg,  false);
@@ -775,7 +781,7 @@ static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) 
 
 	Gfx_SetAlphaTest(true);
 	IModel_ActiveModel->index = 0;
-	if (skinType != SKIN_TYPE_64x32) {
+	if (entity->SkinType != SKIN_TYPE_64x32) {
 		IModel_DrawPart(model->TorsoLayer);
 		IModel_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  model->LeftLegLayer,  false);
 		IModel_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, model->RightLegLayer, false);
@@ -786,6 +792,14 @@ static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) 
 		IModel_Rotation = ROTATE_ORDER_ZYX;
 	}
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, model->Hat, true);
+	IModel_UpdateVB();
+}
+
+static void HumanModel_DrawArm(struct Entity* entity, struct ModelSet* model) {
+	IModel_DrawArmPart(model->RightArm);
+	if (entity->SkinType != SKIN_TYPE_64x32) {
+		IModel_DrawArmPart(model->RightArmLayer);
+	}
 	IModel_UpdateVB();
 }
 
@@ -834,9 +848,18 @@ static void HumanoidModel_DrawModel(struct Entity* entity) {
 	HumanModel_DrawModel(entity, model);
 }
 
+static void HumanoidModel_DrawArm(struct Entity* entity) {
+	UInt8 skinType = entity->SkinType;
+	struct ModelSet* model =
+		skinType == SKIN_TYPE_64x64_SLIM ? &Humanoid_SetSlim :
+		(skinType == SKIN_TYPE_64x64 ? &Humanoid_Set64 : &Humanoid_Set);
+	HumanModel_DrawArm(entity, model);
+}
+
 static struct IModel* HumanoidModel_GetInstance(void) {
 	IModel_Init(&HumanoidModel);
 	IModel_SetPointers(HumanoidModel);
+	HumanoidModel.DrawArm = HumanoidModel_DrawArm;
 	HumanoidModel.vertices = HumanoidModel_Vertices;
 	HumanoidModel.CalcHumanAnims = true;
 	HumanoidModel.UsesHumanSkin  = true;
@@ -886,9 +909,19 @@ static void ChibiModel_DrawModel(struct Entity* entity) {
 	HumanModel_DrawModel(entity, model);
 }
 
+static void ChibiModel_DrawArm(struct Entity* entity) {
+	UInt8 skinType = entity->SkinType;
+	struct ModelSet* model =
+		skinType == SKIN_TYPE_64x64_SLIM ? &Chibi_SetSlim :
+		(skinType == SKIN_TYPE_64x64 ? &Chibi_Set64 : &Chibi_Set);
+	HumanModel_DrawArm(entity, model);
+}
+
 static struct IModel* ChibiModel_GetInstance(void) {
 	IModel_Init(&ChibiModel);
 	IModel_SetPointers(ChibiModel);
+	ChibiModel.DrawArm = ChibiModel_DrawArm;
+	ChibiModel.armX = 3; ChibiModel.armY = 6;
 	ChibiModel.vertices = ChibiModel_Vertices;
 	ChibiModel.CalcHumanAnims = true;
 	ChibiModel.UsesHumanSkin  = true;
@@ -911,21 +944,22 @@ static void SittingModel_GetPickingBounds(struct AABB* bb) {
 		8.0f / 16.0f, (32.0f - SIT_OFFSET) / 16.0f, 4.0f / 16.0f);
 }
 
-static void SittingModel_GetTransform(struct Entity* entity, Vector3 pos) {
+static void SittingModel_GetTransform(struct Entity* entity, Vector3 pos, struct Matrix* m) {
 	pos.Y -= (SIT_OFFSET / 16.0f) * entity->ModelScale.Y;
-	Entity_GetTransform(entity, pos, entity->ModelScale);
+	Entity_GetTransform(entity, pos, entity->ModelScale, m);
 }
 
 static void SittingModel_DrawModel(struct Entity* entity) {
 	entity->Anim.LeftLegX = 1.5f;  entity->Anim.RightLegX = 1.5f;
 	entity->Anim.LeftLegZ = -0.1f; entity->Anim.RightLegZ = 0.1f;
 	IModel_SetupState(&HumanoidModel, entity);
-	HumanoidModel.DrawModel(entity);
+	HumanoidModel_DrawModel(entity);
 }
 
 static struct IModel* SittingModel_GetInstance(void) {
 	IModel_Init(&SittingModel);
 	IModel_SetPointers(SittingModel);
+	SittingModel.DrawArm = HumanoidModel_DrawArm;
 	SittingModel.vertices = HumanoidModel_Vertices;
 	SittingModel.CalcHumanAnims = true;
 	SittingModel.UsesHumanSkin  = true;
@@ -967,9 +1001,9 @@ static void HeadModel_GetPickingBounds(struct AABB* bb) {
 		4.0f / 16.0f, 8.0f / 16.0f, 4.0f / 16.0f);
 }
 
-static void HeadModel_GetTransform(struct Entity* entity, Vector3 pos) {
+static void HeadModel_GetTransform(struct Entity* entity, Vector3 pos, struct Matrix* m) {
 	pos.Y -= (24.0f / 16.0f) * entity->ModelScale.Y;
-	Entity_GetTransform(entity, pos, entity->ModelScale);
+	Entity_GetTransform(entity, pos, entity->ModelScale, m);
 }
 
 static void HeadModel_DrawModel(struct Entity* entity) {
@@ -996,81 +1030,6 @@ static struct IModel* HeadModel_GetInstance(void) {
 	HeadModel.GetTransform = HeadModel_GetTransform;
 	HeadModel.NameYOffset  = 32.5f / 16.0f;
 	return &HeadModel;
-}
-
-
-struct IModel ArmModel;
-bool arm_classic;
-struct Matrix arm_translate;
-
-static void ArmModel_SetTranslationMatrix(void) {
-	if (Game_ClassicArmModel) {
-		/* TODO: Position's not quite right.
-		Matrix_Translate(&arm_translate, -6.0f / 16.0f + 0.2f, -12.0f / 16.0f - 0.20f, 0.0f);
-		is better, but that breaks the dig animation */
-		Matrix_Translate(&arm_translate, -6.0f / 16.0f, -12.0f / 16.0f - 0.10f, 0.0f);
-	} else {
-		Matrix_Translate(&arm_translate, -6.0f / 16.0f + 0.10f, -12 / 16.0f - 0.26f, 0.0f);
-	}
-}
-
-static void ArmModel_CreateParts(void) {
-	arm_classic = Game_ClassicArmModel;
-	ArmModel_SetTranslationMatrix();
-}
-
-static Real32 ArmModel_GetEyeY(struct Entity* entity) { return 0.5f; }
-static void ArmModel_GetCollisionSize(Vector3* size) { MODEL_RET_SIZE(16.0f, 16.0f, 16.0f); }
-static void ArmModel_GetPickingBounds(struct AABB* bb) { AABB_FromCoords6(bb, -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f); }
-
-static void ArmModel_DrawPart(struct ModelPart part) {
-	part.RotX += 1.0f / 16.0f; part.RotY -= 4.0f / 16.0f;
-	if (Game_ClassicArmModel) {
-		IModel_DrawRotate(0, -90 * MATH_DEG2RAD, 120 * MATH_DEG2RAD, part, false);
-	} else {
-		IModel_DrawRotate(-20 * MATH_DEG2RAD, -70 * MATH_DEG2RAD, 135 * MATH_DEG2RAD, part, false);
-	}
-}
-
-static void ArmModel_DrawModel(struct Entity* entity) {
-	HumanModel_SetupState(entity);
-	/* If user changes option while game is running */
-	if (arm_classic != Game_ClassicArmModel) { ArmModel_CreateParts(); }
-
-	struct Matrix m;
-	Matrix_Mul(&m, &entity->Transform, &Gfx_View);
-	Matrix_Mul(&m, &arm_translate, &m);
-	Gfx_LoadMatrix(&m);
-
-	UInt8 skinType = entity->SkinType;
-	struct ModelSet* model =
-		skinType == SKIN_TYPE_64x64_SLIM ? &Humanoid_SetSlim :
-		(skinType == SKIN_TYPE_64x64 ? &Humanoid_Set64 : &Humanoid_Set);
-
-	IModel_Rotation = ROTATE_ORDER_YZX;
-	ArmModel_DrawPart(model->RightArm);
-	IModel_UpdateVB();
-
-	if (skinType != SKIN_TYPE_64x32) {
-		ArmModel.index = 0;
-		Gfx_SetAlphaTest(true);
-		ArmModel_DrawPart(model->RightArmLayer);
-		IModel_UpdateVB();
-		Gfx_SetAlphaTest(false);
-	}
-
-	IModel_Rotation = ROTATE_ORDER_ZYX;
-}
-
-static struct IModel* ArmModel_GetInstance(void) {
-	IModel_Init(&ArmModel);
-	IModel_SetPointers(ArmModel);
-	ArmModel.vertices = HumanoidModel_Vertices;
-	ArmModel.CalcHumanAnims = true;
-	ArmModel.UsesHumanSkin  = true;
-	ArmModel.Pushes         = false;
-	ArmModel.NameYOffset = 0.5f;
-	return &ArmModel;
 }
 
 
@@ -1295,7 +1254,6 @@ static void ModelCache_RegisterDefaultModels(void) {
 	ModelCache_Register("head", "char.png", HeadModel_GetInstance());
 	ModelCache_Register("sit", "char.png", SittingModel_GetInstance());
 	ModelCache_Register("sitting", "char.png", &SittingModel);
-	ModelCache_Register("arm", "char.png", ArmModel_GetInstance());
 	ModelCache_Register("corpse", "char.png", CorpseModel_GetInstance());
 }
 

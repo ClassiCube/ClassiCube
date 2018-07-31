@@ -86,8 +86,7 @@ Real32 Entity_GetEyeHeight(struct Entity* entity) {
 	return entity->Model->GetEyeY(entity) * entity->ModelScale.Y;
 }
 
-void Entity_GetTransform(struct Entity* entity, Vector3 pos, Vector3 scale) {
-	struct Matrix* m = &entity->Transform;
+void Entity_GetTransform(struct Entity* entity, Vector3 pos, Vector3 scale, struct Matrix* m) {
 	*m = Matrix_Identity;
 	struct Matrix tmp;
 

@@ -91,7 +91,7 @@ struct Entity {
 void Entity_Init(struct Entity* entity);
 Vector3 Entity_GetEyePosition(struct Entity* entity);
 Real32 Entity_GetEyeHeight(struct Entity* entity);
-void Entity_GetTransform(struct Entity* entity, Vector3 pos, Vector3 scale);
+void Entity_GetTransform(struct Entity* entity, Vector3 pos, Vector3 scale, struct Matrix* m);
 void Entity_GetPickingBounds(struct Entity* entity, struct AABB* bb);
 void Entity_GetBounds(struct Entity* entity, struct AABB* bb);
 void Entity_SetModel(struct Entity* entity, STRING_PURE String* model);

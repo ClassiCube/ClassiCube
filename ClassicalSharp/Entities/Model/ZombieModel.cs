@@ -59,6 +59,11 @@ namespace ClassicalSharp.Model {
 			UpdateVB();
 		}
 		
+		public override void DrawArm(Entity p) {
+			DrawArmPart(RightArm);
+			UpdateVB();
+		}
+		
 		ModelPart Head, Hat, Torso, LeftLeg, RightLeg, LeftArm, RightArm;
 	}
 }

@@ -24,18 +24,17 @@ void ModelPart_Init(struct ModelPart* part, Int32 offset, Int32 count, Real32 ro
 	part->RotX = rotX; part->RotY = rotY; part->RotZ = rotZ;
 }
 
-static void IModel_GetTransform(struct Entity* entity, Vector3 pos) {
-	Entity_GetTransform(entity, pos, entity->ModelScale);
+static void IModel_GetTransform(struct Entity* entity, Vector3 pos, struct Matrix* m) {
+	Entity_GetTransform(entity, pos, entity->ModelScale, m);
 }
 
-static void IModel_RecalcProperties(struct Entity* entity) { }
+static void IModel_NullFunc(struct Entity* entity) { }
 
 void IModel_Init(struct IModel* model) {
 	model->Bobbing = true;
 	model->UsesSkin = true;
 	model->CalcHumanAnims = false;
 	model->UsesHumanSkin = false;
-	model->SurvivalScore = 5;
 	model->Pushes = true;
 
 	model->Gravity = 0.08f;
@@ -45,9 +44,11 @@ void IModel_Init(struct IModel* model) {
 	model->MaxScale = 2.0f;
 	model->ShadowScale = 1.0f;
 	model->NameScale = 1.0f;
+	model->armX = 6; model->armY = 12;
 
 	model->GetTransform = IModel_GetTransform;
-	model->RecalcProperties = IModel_RecalcProperties;
+	model->RecalcProperties = IModel_NullFunc;
+	model->DrawArm = IModel_NullFunc;
 }
 
 bool IModel_ShouldRender(struct Entity* entity) {
@@ -91,7 +92,7 @@ void IModel_Render(struct IModel* model, struct Entity* entity) {
 	IModel_SetupState(model, entity);
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 
-	model->GetTransform(entity, pos);
+	model->GetTransform(entity, pos, &entity->Transform);
 	struct Matrix m;
 	Matrix_Mul(&m, &entity->Transform, &Gfx_View);
 
@@ -205,6 +206,48 @@ void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct Model
 	}
 	model->index += part.Count;
 }
+
+void IModel_RenderArm(struct IModel* model, struct Entity* entity) {
+	Vector3 pos = entity->Position;
+	if (model->Bobbing) pos.Y += entity->Anim.BobbingModel;
+	IModel_SetupState(model, entity);
+
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_BindTexture(IModel_GetTexture(entity));
+	struct Matrix translate;
+
+	if (Game_ClassicArmModel) {
+		// TODO: Position's not quite right.
+		// Matrix4.Translate(out m, -armX / 16f + 0.2f, -armY / 16f - 0.20f, 0);
+		// is better, but that breaks the dig animation
+		Matrix_Translate(&translate, -model->armX / 16.0f,         -model->armY / 16.0f - 0.10f, 0);
+	} else {
+		Matrix_Translate(&translate, -model->armX / 16.0f + 0.10f, -model->armY / 16.0f - 0.26f, 0);
+	}
+
+	struct Matrix m; model->GetTransform(entity, pos, &m);
+	Matrix_Mul(&m, &m,  &Gfx_View);
+	Matrix_Mul(&m, &translate, &m);
+
+	Gfx_LoadMatrix(&m);
+	IModel_Rotation = ROTATE_ORDER_YZX;
+	model->DrawArm(entity);
+	IModel_Rotation = ROTATE_ORDER_ZYX;
+	Gfx_LoadMatrix(&Gfx_View);
+}
+
+void IModel_DrawArmPart(struct ModelPart part) {
+	struct IModel* model = IModel_ActiveModel;
+	part.RotX = model->armX / 16.0f; 
+	part.RotY = (model->armY + model->armY / 2) / 16.0f;
+
+	if (Game_ClassicArmModel) {
+		IModel_DrawRotate(0, -90 * MATH_DEG2RAD, 120 * MATH_DEG2RAD, part, false);
+	} else {
+		IModel_DrawRotate(-20 * MATH_DEG2RAD, -70 * MATH_DEG2RAD, 135 * MATH_DEG2RAD, part, false);
+	}
+}
+
 
 void BoxDesc_TexOrigin(struct BoxDesc* desc, Int32 x, Int32 y) {
 	desc->TexX = x; desc->TexY = y;

@@ -11,10 +11,7 @@ struct AABB;
 
 #define IMODEL_QUAD_VERTICES 4
 #define IMODEL_BOX_VERTICES (FACE_COUNT * IMODEL_QUAD_VERTICES)
-
-#define ROTATE_ORDER_ZYX 0
-#define ROTATE_ORDER_XZY 1
-#define ROTATE_ORDER_YZX 2
+enum ROTATE_ORDER { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX };
 
 /* Describes a vertex within a model. */
 struct ModelVertex { Real32 X, Y, Z; UInt16 U, V; };
@@ -34,13 +31,13 @@ struct IModel {
 	Int32 index;
 	/* Index within ModelCache's textures of the default texture for this model. */
 	Int8 defaultTexIndex;
+	UInt8 armX, armY; /* these translate arm model part back to (0, 0) */
 
 	bool initalised;
 	/* Whether the entity should be slightly bobbed up and down when rendering.
 	e.g. for players when their legs are at the peak of their swing, the whole model will be moved slightly down. */
 	bool Bobbing;
 	bool UsesSkin, CalcHumanAnims, UsesHumanSkin, Pushes;
-	UInt8 SurvivalScore;
 
 	Real32 Gravity; Vector3 Drag, GroundFriction;
 
@@ -49,10 +46,11 @@ struct IModel {
 	void (*GetPickingBounds)(struct AABB* bb);
 	void (*CreateParts)(void);
 	void (*DrawModel)(struct Entity* entity);
-	void (*GetTransform)(struct Entity* entity, Vector3 pos);
+	void (*GetTransform)(struct Entity* entity, Vector3 pos, struct Matrix* m);
 	/* Recalculates properties such as name Y offset, collision size. 
 	Not used by majority of models. (BlockModel is the exception).*/
 	void (*RecalcProperties)(struct Entity* entity);
+	void (*DrawArm)(struct Entity* entity);
 
 	Real32 NameYOffset, MaxScale, ShadowScale, NameScale;
 };
@@ -80,6 +78,8 @@ void IModel_UpdateVB(void);
 GfxResourceID IModel_GetTexture(struct Entity* entity);
 void IModel_DrawPart(struct ModelPart part);
 void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct ModelPart part, bool head);
+void IModel_RenderArm(struct IModel* model, struct Entity* entity);
+void IModel_DrawArmPart(struct ModelPart part);
 
 /* Describes data for a box being built. */
 struct BoxDesc {

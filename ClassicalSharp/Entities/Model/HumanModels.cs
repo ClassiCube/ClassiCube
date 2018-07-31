@@ -23,6 +23,7 @@ namespace ClassicalSharp.Model {
 			lArm = lArm.Scale(size);
 			rArm = rArm.Scale(size);
 			offset = 0.5f * size;
+			armX = 3; armY = 6;
 		}
 		
 		public override float NameYOffset { get { return 20.2f/16; } }
@@ -110,77 +111,10 @@ namespace ClassicalSharp.Model {
 			DrawRotate(-p.HeadXRadians, 0, 0, part, true);
 			UpdateVB();
 		}
+		
+		public override void DrawArm(Entity p) { }
 	}
 
-	public class ArmModel : HumanoidModel {
-		
-		Matrix4 translate;
-		bool classicArms;
-		public ArmModel(Game game) : base(game) { Pushes = false; }
-		
-		public override void CreateParts() {
-			classicArms = game.ClassicArmModel;
-			SetTranslationMatrix();
-		}
-		
-		void SetTranslationMatrix() {
-			if (game.ClassicArmModel) {
-				// TODO: Position's not quite right.
-				// Matrix4.Translate(out m, -6 / 16f + 0.2f, -12 / 16f - 0.20f, 0);
-				// is better, but that breaks the dig animation
-				Matrix4.Translate(out translate, -6 / 16f,         -12 / 16f - 0.10f, 0);
-			} else {
-				Matrix4.Translate(out translate, -6 / 16f + 0.10f, -12 / 16f - 0.26f, 0);
-			}
-		}
-
-		public override float NameYOffset { get { return 0.5f; } }
-		public override float GetEyeY(Entity entity) { return 0.5f; }
-		public override Vector3 CollisionSize { get { return Vector3.One; } }
-		public override AABB PickingBounds { get { return new AABB(-0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f); } }
-		
-		protected override void RenderParts(Entity p) {
-			HumanoidModel human = (HumanoidModel)game.ModelCache.Models[0].Instance;
-			vertices = human.vertices;
-			// If user changes option while game is running
-			if (classicArms != game.ClassicArmModel) {
-				classicArms = game.ClassicArmModel;
-				SetTranslationMatrix();
-			}
-
-			Matrix4 m;
-			Matrix4.Mult(out m, ref p.transform, ref game.Graphics.View);
-			Matrix4.Mult(out m, ref translate, ref m);
-			game.Graphics.LoadMatrix(ref m);
-			
-			SkinType skinType = p.SkinType;
-			ModelSet model = skinType == SkinType.Type64x64Slim ? human.SetSlim :
-				(skinType == SkinType.Type64x64 ? human.Set64 : human.Set);
-			
-			Rotate = RotateOrder.YZX;
-			DrawArmPart(model.RightArm);
-			UpdateVB();
-			
-			if (skinType != SkinType.Type64x32) {
-				index = 0;
-				game.Graphics.AlphaTest = true;
-				DrawArmPart(model.RightArmLayer);
-				UpdateVB();
-				game.Graphics.AlphaTest = false;
-			}
-			Rotate = RotateOrder.ZYX;
-		}
-		
-		void DrawArmPart(ModelPart part) {
-			part.RotX += 1 / 16.0f; part.RotY -= 4 / 16.0f;
-			if (game.ClassicArmModel) {
-				DrawRotate(0, -90 * Utils.Deg2Rad, 120 * Utils.Deg2Rad, part, false);
-			} else {
-				DrawRotate(-20 * Utils.Deg2Rad, -70 * Utils.Deg2Rad, 135 * Utils.Deg2Rad, part, false);
-			}
-		}
-	}
-	
 	public class CorpseModel : IModel {
 		
 		public CorpseModel(Game game) : base(game) {
@@ -210,6 +144,10 @@ namespace ClassicalSharp.Model {
 			IModel model = game.ModelCache.Models[0].Instance;
 			model.SetupState(p);
 			model.DrawModel(p);
+		}
+		
+		public override void DrawArm(Entity p) {
+			game.ModelCache.Models[0].Instance.DrawArm(p);
 		}
 	}
 }

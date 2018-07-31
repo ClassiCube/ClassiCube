@@ -17,7 +17,7 @@ namespace ClassicalSharp.Model {
 		protected Game game;
 		protected const int quadVertices = 4;
 		protected const int boxVertices = 6 * quadVertices;
-		protected RotateOrder Rotate = RotateOrder.ZYX;
+		protected static RotateOrder Rotate = RotateOrder.ZYX;
 		internal bool initalised;
 		
 		public const ushort UVMask   = 0x7FFF;
@@ -181,6 +181,7 @@ namespace ClassicalSharp.Model {
 		
 		public ModelVertex[] vertices;
 		public int index, texIndex;
+		protected byte armX = 6, armY = 12; // these translate arm model part back to (0, 0) origin
 		
 		protected int GetTexture(Entity entity) {
 			int pTex = UsesHumanSkin ? entity.TextureId : entity.MobTextureId;
@@ -261,5 +262,45 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected enum RotateOrder { ZYX, XZY, YZX }
+		
+		public void RenderArm(Entity p) {
+			Vector3 pos = p.Position;
+			if (Bobbing) pos.Y += p.anim.bobbingModel;
+			SetupState(p);
+			
+			game.Graphics.SetBatchFormat(VertexFormat.P3fT2fC4b);
+			game.Graphics.BindTexture(GetTexture(p));		
+			Matrix4 translate;
+			
+			if (game.ClassicArmModel) {
+				// TODO: Position's not quite right.
+				// Matrix4.Translate(out m, -armX / 16f + 0.2f, -armY / 16f - 0.20f, 0);
+				// is better, but that breaks the dig animation
+				Matrix4.Translate(out translate, -armX / 16f,         -armY / 16f - 0.10f, 0);
+			} else {
+				Matrix4.Translate(out translate, -armX / 16f + 0.10f, -armY / 16f - 0.26f, 0);
+			}
+
+			Matrix4 m = TransformMatrix(p, pos);
+			Matrix4.Mult(out m, ref m, ref game.Graphics.View);
+			Matrix4.Mult(out m, ref translate, ref m);
+			
+			game.Graphics.LoadMatrix(ref m);
+			Rotate = RotateOrder.YZX;
+			DrawArm(p);
+			Rotate = RotateOrder.ZYX;
+			game.Graphics.LoadMatrix(ref game.Graphics.View);
+		}
+		
+		protected void DrawArmPart(ModelPart part) {
+			part.RotX = armX / 16.0f; part.RotY = (armY + armY / 2) / 16.0f;
+			if (game.ClassicArmModel) {
+				DrawRotate(0, -90 * Utils.Deg2Rad, 120 * Utils.Deg2Rad, part, false);
+			} else {
+				DrawRotate(-20 * Utils.Deg2Rad, -70 * Utils.Deg2Rad, 135 * Utils.Deg2Rad, part, false);
+			}
+		}
+		
+		public virtual void DrawArm(Entity p) { }	
 	}
 }
