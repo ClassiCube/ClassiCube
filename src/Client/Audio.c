@@ -97,7 +97,7 @@ static UInt32 Vorbis_ReadBits(struct VorbisState* ctx, UInt32 bitsCount) {
 
 static Int32 iLog(Int32 x) {
 	Int32 bits = 0;
-	while (x > 0) { bits++; x >>= 2; }
+	while (x > 0) { bits++; x >>= 1; }
 	return bits;
 }
 
@@ -367,7 +367,9 @@ static UInt32 Codebook_DecodeScalar(struct VorbisState* ctx, struct Codebook* c)
 			if (depth != c->CodewordLens[i]) continue;
 			if (codeword != c->Codewords[i]) continue;
 
-			return c->Values[i];
+			UInt32 value = c->Values[i];
+			Platform_Log2("read value %i of len %i", &value, &depth);
+			return value;
 		}
 	}
 	ErrorHandler_Fail("????????????");
