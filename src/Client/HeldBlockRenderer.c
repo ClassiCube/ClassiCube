@@ -25,22 +25,26 @@ BlockID held_lastBlock;
 static void HeldBlockRenderer_RenderModel(void) {
 	Gfx_SetFaceCulling(true);
 	Gfx_SetTexturing(true);
-	GfxCommon_SetupAlphaState(Block_Draw[held_block]);
 	Gfx_SetDepthTest(false);
 
 	struct IModel* model;
 	if (Block_Draw[held_block] == DRAW_GAS) {
 		model = LocalPlayer_Instance.Base.Model;
 		held_entity.ModelScale = Vector3_Create1(1.0f);
+
+		Gfx_SetAlphaTest(true);
 		IModel_RenderArm(model, &held_entity);
+		Gfx_SetAlphaTest(false);
 	} else {
 		String name = String_FromConst("block"); model = ModelCache_Get(&name);
 		held_entity.ModelScale = Vector3_Create1(0.4f);
+
+		GfxCommon_SetupAlphaState(Block_Draw[held_block]);
 		IModel_Render(model, &held_entity);
+		GfxCommon_RestoreAlphaState(Block_Draw[held_block]);
 	}
 	
 	Gfx_SetTexturing(false);
-	GfxCommon_RestoreAlphaState(Block_Draw[held_block]);
 	Gfx_SetDepthTest(true);
 	Gfx_SetFaceCulling(false);
 }

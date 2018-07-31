@@ -225,7 +225,8 @@ void IModel_RenderArm(struct IModel* model, struct Entity* entity) {
 		Matrix_Translate(&translate, -model->armX / 16.0f + 0.10f, -model->armY / 16.0f - 0.26f, 0);
 	}
 
-	struct Matrix m; model->GetTransform(entity, pos, &m);
+	struct Matrix m; 
+	Entity_GetTransform(entity, pos, entity->ModelScale, &m);
 	Matrix_Mul(&m, &m,  &Gfx_View);
 	Matrix_Mul(&m, &translate, &m);
 

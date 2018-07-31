@@ -281,7 +281,7 @@ namespace ClassicalSharp.Model {
 				Matrix4.Translate(out translate, -armX / 16f + 0.10f, -armY / 16f - 0.26f, 0);
 			}
 
-			Matrix4 m = TransformMatrix(p, pos);
+			Matrix4 m = p.TransformMatrix(p.ModelScale, pos);
 			Matrix4.Mult(out m, ref m, ref game.Graphics.View);
 			Matrix4.Mult(out m, ref translate, ref m);
 			

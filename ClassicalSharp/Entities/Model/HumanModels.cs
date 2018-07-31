@@ -75,6 +75,10 @@ namespace ClassicalSharp.Model {
 			model.SetupState(p);
 			model.DrawModel(p);
 		}
+		
+		public override void DrawArm(Entity p) {
+			game.ModelCache.Models[0].Instance.DrawArm(p);
+		}
 	}
 
 	public class HeadModel : HumanoidModel {

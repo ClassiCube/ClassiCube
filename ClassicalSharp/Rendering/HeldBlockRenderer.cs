@@ -62,23 +62,26 @@ namespace ClassicalSharp.Renderers {
 		
 		void RenderModel() {
 			game.Graphics.FaceCulling = true;
-			game.Graphics.Texturing = true;
-			game.Graphics.SetupAlphaState(BlockInfo.Draw[block]);
+			game.Graphics.Texturing = true;			
 			game.Graphics.DepthTest = false;
 			
 			IModel model;
 			if (BlockInfo.Draw[block] == DrawType.Gas) {
 				model = game.LocalPlayer.Model;
 				held.ModelScale = new Vector3(1.0f);
+				
+				game.Graphics.AlphaTest = true;
 				model.RenderArm(held);
+				game.Graphics.AlphaTest = false;
 			} else {
 				model = game.ModelCache.Get("block");
 				held.ModelScale = new Vector3(0.4f);
+				game.Graphics.SetupAlphaState(BlockInfo.Draw[block]);
 				model.Render(held);
+				game.Graphics.RestoreAlphaState(BlockInfo.Draw[block]);
 			}		
 			
-			game.Graphics.Texturing = false;
-			game.Graphics.RestoreAlphaState(BlockInfo.Draw[block]);
+			game.Graphics.Texturing = false;			
 			game.Graphics.DepthTest = true;
 			game.Graphics.FaceCulling = false;
 		}
