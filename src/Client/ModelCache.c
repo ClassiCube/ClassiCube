@@ -14,6 +14,7 @@
 #include "IModel.h"
 
 UInt32 ModelCache_texCount, ModelCache_modelCount;
+#define MODEL_RET_SIZE(x, y, z) *size = Vector3_Create3((x) / 16.0f, (y) / 16.0f, (z) / 16.0f);
 
 static void ModelCache_ContextLost(void* obj) {
 	Gfx_DeleteVb(&ModelCache_Vb);
@@ -146,9 +147,7 @@ static void ChickenModel_CreateParts(void) {
 }
 
 static Real32 ChickenModel_GetEyeY(struct Entity* entity) { return 14.0f / 16.0f; }
-static Vector3 ChickenModel_GetCollisionSize(void) {
-	return Vector3_Create3(8.0f / 16.0f, 12.0f / 16.0f, 8.0f / 16.0f);
-}
+static void ChickenModel_GetCollisionSize(Vector3* size) { MODEL_RET_SIZE(8.0f, 12.0f, 8.0f); }
 static void ChickenModel_GetPickingBounds(struct AABB* bb) {
 	AABB_FromCoords6(bb,
 		-4.0f / 16.0f, 0.0f, -8.0f / 16.0f,
@@ -224,9 +223,7 @@ static void CreeperModel_CreateParts(void) {
 }
 
 static Real32 CreeperModel_GetEyeY(struct Entity* entity) { return 22.0f / 16.0f; }
-static Vector3 CreeperModel_GetCollisionSize(void) {
-	return Vector3_Create3(8.0f / 16.0f, 26.0f / 16.0f, 8.0f / 16.0f);
-}
+static void CreeperModel_GetCollisionSize(Vector3* size) { MODEL_RET_SIZE(8.0f, 26.0f, 8.0f); }
 static void CreeperModel_GetPickingBounds(struct AABB* bb) {
 	AABB_FromCoords6(bb,
 		-4.0f / 16.0f, 0.0f, -6.0f / 16.0f,
@@ -294,9 +291,7 @@ static void PigModel_CreateParts(void) {
 }
 
 static Real32 PigModel_GetEyeY(struct Entity* entity) { return 12.0f / 16.0f; }
-static Vector3 PigModel_GetCollisionSize(void) {
-	return Vector3_Create3(14.0f / 16.0f, 14.0f / 16.0f, 14.0f / 16.0f);
-}
+static void PigModel_GetCollisionSize(Vector3* size) { MODEL_RET_SIZE(14.0f, 14.0f, 14.0f); }
 
 static void PigModel_GetPickingBounds(struct AABB* bb) {
 	AABB_FromCoords6(bb,
@@ -400,9 +395,7 @@ static void SheepModel_CreateParts(void) {
 }
 
 static Real32 SheepModel_GetEyeY(struct Entity* entity) { return 20.0f / 16.0f; }
-static Vector3 SheepModel_GetCollisionSize(void) {
-	return Vector3_Create3(10.0f / 16.0f, 20.0f / 16.0f, 10.0f / 16.0f);
-}
+static void SheepModel_GetCollisionSize(Vector3* size) { MODEL_RET_SIZE(10.0f, 20.0f, 10.0f); }
 static void SheepModel_GetPickingBounds(struct AABB* bb) {
 	AABB_FromCoords6(bb,
 		-6.0f / 16.0f, 0.0f, -13.0f / 16.0f,
@@ -484,9 +477,7 @@ static void SkeletonModel_CreateParts(void) {
 }
 
 static Real32 SkeletonModel_GetEyeY(struct Entity* entity) { return 26.0f / 16.0f; }
-static Vector3 SkeletonModel_GetCollisionSize(void) {
-	return Vector3_Create3(8.0f / 16.0f, 28.1f / 16.0f, 8.0f / 16.0f);
-}
+static void SkeletonModel_GetCollisionSize(Vector3* size) { MODEL_RET_SIZE(8.0f, 28.1f, 8.0f); }
 
 static void SkeletonModel_GetPickingBounds(struct AABB* bb) {
 	AABB_FromCoords6(bb,
@@ -549,9 +540,7 @@ static void SpiderModel_CreateParts(void) {
 }
 
 static Real32 SpiderModel_GetEyeY(struct Entity* entity) { return 8.0f / 16.0f; }
-static Vector3 SpiderModel_GetCollisionSize(void) {
-	return Vector3_Create3(15.0f / 16.0f, 12.0f / 16.0f, 15.0f / 16.0f);
-}
+static void SpiderModel_GetCollisionSize(Vector3* size) { MODEL_RET_SIZE(15.0f, 12.0f, 15.0f); }
 
 static void SpiderModel_GetPickingBounds(struct AABB* bb) {
 	AABB_FromCoords6(bb,
@@ -642,10 +631,7 @@ static void ZombieModel_CreateParts(void) {
 }
 
 static Real32 ZombieModel_GetEyeY(struct Entity* entity) { return 26.0f / 16.0f; }
-static Vector3 ZombieModel_GetCollisionSize(void) {
-	return Vector3_Create3((8.0f + 0.6f) / 16.0f, 28.1f / 16.0f, (8.0f + 0.6f) / 16.0f);
-}
-
+static void ZombieModel_GetCollisionSize(Vector3* size) { MODEL_RET_SIZE(8.6f, 28.1f, 8.6f); }
 static void ZombieModel_GetPickingBounds(struct AABB* bb) {
 	AABB_FromCoords6(bb,
 		-4.0f / 16.0f, 0.0f, -4.0f / 16.0f,
@@ -832,9 +818,7 @@ static void HumanoidModel_CreateParts(void) {
 }
 
 static Real32 HumanoidModel_GetEyeY(struct Entity* entity) { return 26.0f / 16.0f; }
-static Vector3 HumanoidModel_GetCollisionSize(void) {
-	return Vector3_Create3((8.0f + 0.6f) / 16.0f, 28.1f / 16.0f, (8.0f + 0.6f) / 16.0f);
-}
+static void HumanoidModel_GetCollisionSize(Vector3* size) { MODEL_RET_SIZE(8.6f, 28.1f, 8.6f); }
 static void HumanoidModel_GetPickingBounds(struct AABB* bb) {
 	AABB_FromCoords6(bb,
 		-8.0f / 16.0f, 0.0f, -4.0f / 16.0f,
@@ -886,9 +870,7 @@ static void ChibiModel_CreateParts(void) {
 }
 
 static Real32 ChibiModel_GetEyeY(struct Entity* entity) { return 14.0f / 16.0f; }
-static Vector3 ChibiModel_GetCollisionSize(void) {
-	return Vector3_Create3((4.0f + 0.6f) / 16.0f, 20.1f / 16.0f, (4.0f + 0.6f) / 16.0f);
-}
+static void ChibiModel_GetCollisionSize(Vector3* size) { MODEL_RET_SIZE(4.6f, 20.1f, 4.6f); }
 static void ChibiModel_GetPickingBounds(struct AABB* bb) {
 	AABB_FromCoords6(bb,
 		-4.0f / 16.0f, 0.0f, -4.0f / 16.0f,
@@ -922,9 +904,7 @@ struct IModel SittingModel;
 static void SittingModel_CreateParts(void) { }
 
 static Real32 SittingModel_GetEyeY(struct Entity* entity) { return (26.0f - SIT_OFFSET) / 16.0f; }
-static Vector3 SittingModel_GetCollisionSize(void) {
-	return Vector3_Create3((8.0f + 0.6f) / 16.0f, (28.1f - SIT_OFFSET) / 16.0f, (8.0f + 0.6f) / 16.0f);
-}
+static void SittingModel_GetCollisionSize(Vector3* size) { MODEL_RET_SIZE(8.6f, 28.1f - SIT_OFFSET, 8.6f); }
 static void SittingModel_GetPickingBounds(struct AABB* bb) {
 	AABB_FromCoords6(bb,
 		-8.0f / 16.0f, 0.0f, -4.0f / 16.0f,
@@ -980,9 +960,7 @@ struct IModel HeadModel;
 static void HeadModel_CreateParts(void) { }
 
 static Real32 HeadModel_GetEyeY(struct Entity* entity) { return 6.0f / 16.0f; }
-static Vector3 HeadModel_GetCollisionSize(void) {
-	return Vector3_Create3(7.9f / 16.0f, 7.9f / 16.0f, 7.9f / 16.0f);
-}
+static void HeadModel_GetCollisionSize(Vector3* size) { MODEL_RET_SIZE(7.9f, 7.9f, 7.9f); }
 static void HeadModel_GetPickingBounds(struct AABB* bb) {
 	AABB_FromCoords6(bb,
 		-4.0f / 16.0f, 0.0f, -4.0f / 16.0f,
@@ -1042,7 +1020,7 @@ static void ArmModel_CreateParts(void) {
 }
 
 static Real32 ArmModel_GetEyeY(struct Entity* entity) { return 0.5f; }
-static Vector3 ArmModel_GetCollisionSize(void) { return Vector3_Create3(1.0f, 1.0f, 1.0f); }
+static void ArmModel_GetCollisionSize(Vector3* size) { MODEL_RET_SIZE(16.0f, 16.0f, 16.0f); }
 static void ArmModel_GetPickingBounds(struct AABB* bb) { AABB_FromCoords6(bb, -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f); }
 
 static void ArmModel_DrawPart(struct ModelPart part) {
@@ -1110,13 +1088,11 @@ static Real32 BlockModel_GetEyeY(struct Entity* entity) {
 	return block == BLOCK_AIR ? 1 : (minY + maxY) / 2.0f;
 }
 
-static Vector3 BlockModel_GetCollisionSize(void) {
-	Vector3 size;
-	Vector3_Sub(&size, &BlockModel_maxBB, &BlockModel_minBB);
+static void BlockModel_GetCollisionSize(Vector3* size) {
+	Vector3_Sub(size, &BlockModel_maxBB, &BlockModel_minBB);
 	/* to fit slightly inside */
 	Vector3 sizeShrink = VECTOR3_CONST1(0.75f / 16.0f);
-	Vector3_SubBy(&size, &sizeShrink);
-	return size;
+	Vector3_SubBy(size, &sizeShrink);
 }
 
 static void BlockModel_GetPickingBounds(struct AABB* bb) {

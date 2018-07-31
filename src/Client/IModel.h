@@ -45,7 +45,7 @@ struct IModel {
 	Real32 Gravity; Vector3 Drag, GroundFriction;
 
 	Real32 (*GetEyeY)(struct Entity* entity);
-	Vector3 (*GetCollisionSize)(void);
+	void (*GetCollisionSize)(Vector3* size);
 	void (*GetPickingBounds)(struct AABB* bb);
 	void (*CreateParts)(void);
 	void (*DrawModel)(struct Entity* entity);

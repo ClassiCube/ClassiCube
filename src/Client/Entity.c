@@ -155,8 +155,8 @@ void Entity_SetModel(struct Entity* entity, STRING_PURE String* model) {
 
 void Entity_UpdateModelBounds(struct Entity* entity) {
 	struct IModel* model = entity->Model;
-	Vector3 baseSize = model->GetCollisionSize();
-	Vector3_Mul3(&entity->Size, &baseSize, &entity->ModelScale);
+	model->GetCollisionSize(&entity->Size);
+	Vector3_Mul3By(&entity->Size, &entity->ModelScale);
 
 	struct AABB* bb = &entity->ModelAABB;
 	model->GetPickingBounds(bb);

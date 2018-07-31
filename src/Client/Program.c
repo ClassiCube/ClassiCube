@@ -27,11 +27,11 @@ int main(void) {
 	Ogg_MakeStream(&ogg, oggBuffer, &oggBase);
 	
 	struct VorbisState state;
-	Vorbis_Init(&state, &ogg);
-	Vorbis_DecodeHeaders(&state);
-	for (int i = 0; i < 1000; i++) {
-		Vorbis_DecodeFrame(&state);
-	}
+	//Vorbis_Init(&state, &ogg);
+	//Vorbis_DecodeHeaders(&state);
+	//for (int i = 0; i < 1000; i++) {
+	//	Vorbis_DecodeFrame(&state);
+	//}
 
 	/*Platform_HttpInit();
 	AsyncRequest req = { 0 };
