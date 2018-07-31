@@ -28,6 +28,7 @@ enum VORBIS_ERR {
 	VORBIS_ERR_FRAME_TYPE,
 };
 
+#define VORBIS_MAX_CHANS 8
 struct Codebook; struct Floor; struct Residue; struct Mapping; struct Mode;
 struct VorbisState {
 	UInt32 Bits;    /* Holds bits across byte boundaries*/
@@ -38,6 +39,8 @@ struct VorbisState {
 	UInt16 CurBlockSize, DataSize;
 	Int32 SampleRate; Int32 BlockSizes[2];
 	Real32* Values;
+	Real32* PrevOutput[VORBIS_MAX_CHANS];
+	Real32* CurOutput[VORBIS_MAX_CHANS];
 
 	struct Codebook* Codebooks;
 	struct Floor* Floors;

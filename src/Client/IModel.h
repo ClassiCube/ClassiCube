@@ -35,7 +35,6 @@ struct IModel {
 	/* Index within ModelCache's textures of the default texture for this model. */
 	Int8 defaultTexIndex;
 
-	/* Whether the vertices of this model have actually been filled. */
 	bool initalised;
 	/* Whether the entity should be slightly bobbed up and down when rendering.
 	e.g. for players when their legs are at the peak of their swing, the whole model will be moved slightly down. */

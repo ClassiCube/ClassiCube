@@ -639,9 +639,9 @@ static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, Real32* da
 		if (!Step2[i]) continue;
 
 		hx = f->XList[i]; hy = YFinal[i] * f->Multiplier;
-		if (lx >= ctx->DataSize) return;
-
-		render_line(lx, ly, min(hx, ctx->DataSize), hy, data);
+		if (lx < hx) {
+			render_line(lx, ly, min(hx, ctx->DataSize), hy, data);
+		}
 		lx = hx; ly = hy;
 	}
 
@@ -704,7 +704,12 @@ static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, UInt3
 	UInt32 classwordsPerCodeword = classbook->Dimensions;
 	UInt32 nToRead = residueEnd - residueBeg;
 	UInt32 partitionsToRead = nToRead / r->PartitionSize;
+
+	UInt8* classifications_raw = Platform_MemAlloc(ch * partitionsToRead * classbook->Dimensions, sizeof(UInt8), "temp classicifcations");
 	UInt8* classifications[VORBIS_MAX_CHANS]; /* TODO ????? */
+	for (i = 0; i < ch; i++) {
+		classifications[i] = classifications_raw + (i * partitionsToRead * classbook->Dimensions);
+	}
 
 	if (nToRead == 0) return;
 	for (pass = 0; pass < 8; pass++) {
@@ -991,6 +996,21 @@ ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 /*########################################################################################################################*
 *-----------------------------------------------------Vorbis frame--------------------------------------------------------*
 *#########################################################################################################################*/
+#define PI MATH_PI
+Real32* imdct(Real32* v, Int32 N) {
+	Real32* y = Platform_MemAlloc(N * 2, sizeof(Real32), "temp imdct");
+	Int32 i, k;
+
+	for (i = 0; i < 2 * N; i++) {
+		Real64 sum = 0;
+		for (k = 0; k < N; k++) {
+			sum += v[k] * Math_Cos((PI / N) * (i + 0.5 + N * 0.5) * (k + 0.5));
+		}
+		y[i] = (1.0 / N) * sum;
+	}
+	return y;
+}
+
 ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	Int32 i, j, packetType = Vorbis_ReadBits(ctx, 1);
 	if (packetType) return VORBIS_ERR_FRAME_TYPE;
@@ -1081,8 +1101,59 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 		Floor_Synthesis(ctx, &ctx->Floors[floorIdx], data);
 	}
 
-	/* inverse monolithic transform of audio spectrum vector */
+	Int32 n = ctx->CurBlockSize;
+	Int32 window_center = n / 2;
+	Int32 left_window_beg, left_window_end, left_n;
+	Int32 right_window_beg, right_window_end, right_n;
 
+	if (mode->BlockSizeFlag && !prev_window) {
+		left_window_beg = n / 4 - ctx->BlockSizes[0] / 4;
+		left_window_end = n / 4 + ctx->BlockSizes[0] / 4;
+		left_n = ctx->BlockSizes[0] / 2;
+	} else {
+		left_window_beg = 0;
+		left_window_end = window_center;
+		left_n = n / 2;
+	}
+
+	if (mode->BlockSizeFlag && !next_window) {
+		right_window_beg = (n*3) / 4 - ctx->BlockSizes[0] / 4;
+		right_window_end = (n*3) / 4 + ctx->BlockSizes[0] / 4;
+		right_n = ctx->BlockSizes[0] / 2;
+	} else {
+		right_window_beg = window_center;
+		right_window_end = n;
+		left_n = n / 2;
+	}
+
+	Real32* window = Platform_MemAlloc(n, sizeof(Real32), "temp window");
+	for (i = 0; i < left_window_beg; i++) window[i] = 0;
+	for (i = left_window_beg; i < left_window_end; i++) {
+		Real64 inner = Math_Sin((i - left_window_beg + 0.5) / left_n * (PI/2));
+		window[i] = Math_Sin((PI/2) * inner * inner);
+	}
+	for (i = left_window_end; i < right_window_beg; i++) window[i] = 1;
+	for (i = right_window_beg; i < right_window_end; i++) {
+		Real64 inner = Math_Sin((i - right_window_beg + 0.5) / right_n * (PI/2) + (PI/2));
+		window[i] = Math_Sin((PI/2) * inner * inner);
+	}
+	for (i = right_window_end; i < n; i++) window[i] = 0;
+
+	/* inverse monolithic transform of audio spectrum vector */
+	for (i = 0; i < ctx->Channels; i++) {
+		if (!hasFloor[i]) continue;
+		Int32 submap = mapping->Mux[i];
+		Int32 floorIdx = mapping->FloorIdx[submap];
+
+		Real32* data = Vorbis_ChanData(ctx, i);
+		Real32* output = imdct(data, ctx->DataSize);
+
+		/* apply windowing */
+		for (j = 0; j < n; j++) { output[j] *= window[j]; }
+		ctx->CurOutput[i] = output;
+	}
+
+	/* overlap and add data */
 }
 
 static Real32 floor1_inverse_dB_table[256] = {
