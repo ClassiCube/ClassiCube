@@ -167,85 +167,17 @@ static void debug_entry(UInt32 codeword, Int16 len, UInt32 value) {
 	Platform_Log3("entry %p4: length %p2 codeword %c", &value, &len, binBuffer);
 }
 
-static void Codebook_CalcCodewordsFail(struct Codebook* codebook, UInt8* codewordLens, Int16 usedEntries) {
-	codebook->NumCodewords = usedEntries;
-	codebook->Codewords    = Platform_MemAlloc(usedEntries, sizeof(UInt32), "codewords");
-	codebook->CodewordLens = Platform_MemAlloc(usedEntries, sizeof(UInt8), "raw codeword lens");
-	codebook->Values       = Platform_MemAlloc(usedEntries, sizeof(UInt32), "values");
-
-	Int32 i, j, depth;
-	UInt32 masks[33];
-	UInt32 lastAssigned[33];
-	bool hasAssigned[33];
-	bool assignedFirst = false;
-
-	for (depth = 0; depth < 33; depth++) {
-		UInt32 mask = ~(UInt32_MaxValue >> depth); /* e.g. depth of 4, 0xF0 00 00 00 */
-		masks[depth]        = mask;
-		hasAssigned[depth]  = false;
-		lastAssigned[depth] = 0;	
-	}
-	masks[32] = UInt32_MaxValue; /* shift by 32 is same as 0 on some processors */
-
-	for (i = 0, j = 0; i < codebook->Entries; i++) {
-		UInt8 len = codewordLens[i];
-		if (len == UInt8_MaxValue) continue;
-		codebook->CodewordLens[j] = len;
-
-		/* assign first codeword to be 0 */
-		if (!assignedFirst) {
-			codebook->Values[j]    = i;
-			codebook->Codewords[j] = 0;	
-
-			hasAssigned[len] = true;
-			assignedFirst    = true; 
-			debug_entry(0, len, i);
-			j++; continue;
-		}
-
-		/* work out where to start depth of next codeword */
-		UInt32 one = (1UL << (32 - len));
-		UInt32 codeword = lastAssigned[len];
-		for (;;) {
-			codeword += one;
-
-			/* has this branch be assigned been before higher in the tree? */
-			bool free = true;
-			for (depth = 1; depth < len; depth++) {
-				if (!hasAssigned[depth]) continue;
-				if ((codeword & masks[depth]) != (lastAssigned[depth] & masks[depth])) continue;
-				free = false; break;
-			}
-			/* has this branch been assigned before further down the tree? */
-			for (depth = len; depth < 33; depth++) {
-				if (!hasAssigned[depth]) continue;
-				if (codeword != (lastAssigned[depth] & masks[len])) continue;
-				free = false; break;
-			}
-			if (free) break;
-		}
-
-		codebook->Values[j]    = i;
-		codebook->Codewords[j] = codeword;
-		debug_entry(codeword, len, i);
-		hasAssigned[len]  = true;
-		lastAssigned[len] = codeword;	
-		j++;
-	}
-}
-
-static bool Codebook_CalcCodewords(struct Codebook* c, UInt8* len, Int16 n) {
-	c->NumCodewords = n;
-	c->Codewords    = Platform_MemAlloc(n, sizeof(UInt32), "codewords");
-	c->CodewordLens = Platform_MemAlloc(n, sizeof(UInt8), "raw codeword lens");
-	c->Values       = Platform_MemAlloc(n, sizeof(UInt32), "values");
+static bool Codebook_CalcCodewords(struct Codebook* c, UInt8* len) {
+	c->Codewords    = Platform_MemAlloc(c->NumCodewords, sizeof(UInt32), "codewords");
+	c->CodewordLens = Platform_MemAlloc(c->NumCodewords, sizeof(UInt8), "raw codeword lens");
+	c->Values       = Platform_MemAlloc(c->NumCodewords, sizeof(UInt32), "values");
 
 	/* This is taken from stb_vorbis.c because I gave up trying */
 	UInt32 i, j, depth;
 	UInt32 next_codewords[33] = { 0 };
 
 	/* add codeword 0 to tree */
-	for (i = 0; i < n; i++) {
+	for (i = 0; i < c->Entries; i++) {
 		if (len[i] == UInt8_MaxValue) continue;
 
 		c->Codewords[0]    = 0;
@@ -260,7 +192,7 @@ static bool Codebook_CalcCodewords(struct Codebook* c, UInt8* len, Int16 n) {
 	}
 
 	i++; /* first codeword was already handled */
-	for (j = 1; i < n; i++) {
+	for (j = 1; i < c->Entries; i++) {
 		UInt32 root = len[i];
 		if (root == UInt8_MaxValue) continue;
 
@@ -326,12 +258,13 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 		}
 		usedEntries = c->Entries;
 	}
+	c->NumCodewords = usedEntries;
 
-	Platform_LogConst("### WORKING ###");
+	static int booknummm;
+	Platform_Log1("### BUILDING %i ###", &booknummm);
 	Codebook_CalcCodewords(c, codewordLens, usedEntries);
-	Platform_LogConst("### FAIL1 ###");
-	Codebook_CalcCodewordsFail(c, codewordLens, usedEntries);
 	Platform_MemFree(&codewordLens);
+	booknummm++;
 
 	c->LookupType = Vorbis_ReadBits(ctx, 4);
 	if (c->LookupType == 0) return 0;
@@ -361,8 +294,9 @@ static UInt32 Codebook_DecodeScalar(struct VorbisState* ctx, struct Codebook* c)
 	UInt32 codeword = 0, shift = 31, depth, i;
 	/* TODO: This is so massively slow */
 	for (depth = 1; depth <= 32; depth++, shift--) {
-		codeword >>= 1;
-		codeword |= Vorbis_ReadBits(ctx, 1) << 31;
+		//codeword >>= 1;
+		UInt32 bit = Vorbis_ReadBits(ctx, 1);
+		codeword |= bit << shift;
 		for (i = 0; i < c->NumCodewords; i++) {
 			if (depth != c->CodewordLens[i]) continue;
 			if (codeword != c->Codewords[i]) continue;
@@ -511,7 +445,7 @@ static bool Floor_DecodeFrame(struct VorbisState* ctx, struct Floor* f) {
 
 		for (j = 0; j < cdim; j++) {
 			Int16 bookNum = f->SubclassBooks[class][cval & csub];
-			cval <<= cbits;
+			cval >>= cbits;
 			if (bookNum >= 0) {
 				f->YList[idx + j] = Codebook_DecodeScalar(ctx, &ctx->Codebooks[bookNum]);
 			} else {
@@ -769,8 +703,9 @@ static void Residue_DecodeFrame(struct VorbisState* ctx, struct Residue* r, Int3
 		for (i = 0; i < ch; i++) {
 			if (!doNotDecode[i]) decodeAny = true;
 		}
-
 		if (!decodeAny) return;
+
+		decodeAny = false; /* because DecodeCore expects this to be 'false' for 'do not decode' */
 		Real32* interleaved = Platform_MemAllocCleared(ctx->DataSize * ctx->Channels, sizeof(Real32), "residue 2 temp");
 		Residue_DecodeCore(ctx, r, size * ch, 1, &decodeAny, &interleaved);
 
