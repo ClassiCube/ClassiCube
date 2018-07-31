@@ -352,8 +352,8 @@ struct Floor {
 	UInt8 ClassMasterbooks[FLOOR_MAX_CLASSES];
 	Int16 SubclassBooks[FLOOR_MAX_CLASSES][8];
 	Int16 XList[FLOOR_MAX_VALUES];
-	Int32 YList[FLOOR_MAX_VALUES];
 	UInt16 ListOrder[FLOOR_MAX_VALUES];
+	Int32 YList[VORBIS_MAX_CHANS][FLOOR_MAX_VALUES];
 };
 
 /* TODO: Make this thread safe */
@@ -411,11 +411,12 @@ static ReturnCode Floor_DecodeSetup(struct VorbisState* ctx, struct Floor* f) {
 			f->XList[idx++] = Vorbis_ReadBits(ctx, rangeBits);
 		}
 	}
-
 	f->Values = idx;
+
 	/* sort X list for curve computation later */
 	Int16 xlist_sorted[FLOOR_MAX_VALUES];
 	Platform_MemCpy(xlist_sorted, f->XList, idx * sizeof(Int16));
+	for (i = 0; i < idx; i++) { f->ListOrder[i] = i; }
 
 	tmp_xlist = xlist_sorted; 
 	tmp_order = f->ListOrder;
@@ -423,13 +424,14 @@ static ReturnCode Floor_DecodeSetup(struct VorbisState* ctx, struct Floor* f) {
 	return 0;
 }
 
-static bool Floor_DecodeFrame(struct VorbisState* ctx, struct Floor* f) {
+static bool Floor_DecodeFrame(struct VorbisState* ctx, struct Floor* f, Int32 ch) {
 	Int32 nonZero = Vorbis_ReadBits(ctx, 1);
 	if (!nonZero) return false;
+	Int32* yList = f->YList[ch];
 
 	Int32 i, j, idx, rangeBits = iLog(f->Range - 1);
-	f->YList[0] = Vorbis_ReadBits(ctx, rangeBits);
-	f->YList[1] = Vorbis_ReadBits(ctx, rangeBits);
+	yList[0] = Vorbis_ReadBits(ctx, rangeBits);
+	yList[1] = Vorbis_ReadBits(ctx, rangeBits);
 
 	for (i = 0, idx = 2; i < f->Partitions; i++) {
 		UInt8 class = f->PartitionClasses[i];
@@ -447,9 +449,9 @@ static bool Floor_DecodeFrame(struct VorbisState* ctx, struct Floor* f) {
 			Int16 bookNum = f->SubclassBooks[class][cval & csub];
 			cval >>= cbits;
 			if (bookNum >= 0) {
-				f->YList[idx + j] = Codebook_DecodeScalar(ctx, &ctx->Codebooks[bookNum]);
+				yList[idx + j] = Codebook_DecodeScalar(ctx, &ctx->Codebooks[bookNum]);
 			} else {
-				f->YList[idx + j] = 0;
+				yList[idx + j] = 0;
 			}
 		}
 		idx += cdim;
@@ -484,7 +486,7 @@ static void render_line(Int32 x0, Int32 y0, Int32 x1, Int32 y1, Real32* data) {
 	}
 
 	ady = ady - Math_AbsI(base) * adx;
-	data[x] = floor1_inverse_dB_table[y];
+	data[x] *= floor1_inverse_dB_table[y];
 
 	for (x = x0 + 1; x < x1; x++) {
 		err = err + ady;
@@ -514,15 +516,18 @@ static Int32 high_neighbor(Int16* v, Int32 x) {
 	return n;
 }
 
-static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, Real32* data) {
+static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, Int32 ch) {
 	/* amplitude value synthesis */
 	Int32 YFinal[FLOOR_MAX_VALUES];
 	bool Step2[FLOOR_MAX_VALUES];
 
+	Real32* data = Vorbis_ChanData(ctx, ch);
+	Int32* yList = f->YList[ch];
+
 	Step2[0] = true;
 	Step2[1] = true;
-	YFinal[0] = f->YList[0];
-	YFinal[1] = f->YList[1];
+	YFinal[0] = yList[0];
+	YFinal[1] = yList[1];
 
 	Int32 i;
 	for (i = 2; i < f->Values; i++) {
@@ -532,7 +537,7 @@ static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, Real32* da
 		Int32 predicted = render_point(f->XList[lo_offset], YFinal[lo_offset],
 			f->XList[hi_offset], YFinal[hi_offset], f->XList[i]);
 
-		Int32 val = f->YList[i];
+		Int32 val = yList[i];
 		Int32 highroom = f->Range - predicted;
 		Int32 lowroom = predicted, room;
 
@@ -571,7 +576,7 @@ static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, Real32* da
 	Int32 ly = YFinal[f->ListOrder[0]] * f->Multiplier, hy = ly;
 
 	for (rawI = 1; rawI < f->Values; rawI++) {
-		Int32 i = f->ListOrder[rawI];
+		i = f->ListOrder[rawI];
 		if (!Step2[i]) continue;
 
 		hx = f->XList[i]; hy = YFinal[i] * f->Multiplier;
@@ -973,7 +978,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	for (i = 0; i < ctx->Channels; i++) {
 		Int32 submap = mapping->Mux[i];
 		Int32 floorIdx = mapping->FloorIdx[submap];
-		hasFloor[i] = Floor_DecodeFrame(ctx, &ctx->Floors[floorIdx]);
+		hasFloor[i] = Floor_DecodeFrame(ctx, &ctx->Floors[floorIdx], i);
 		hasResidue[i] = hasFloor[i];
 	}
 
@@ -1010,7 +1015,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 		Real32* angValues = Vorbis_ChanData(ctx, mapping->Angle[i]);
 
 		for (j = 0; j < ctx->DataSize; j++) {
-			Real32 m = magValues[i], a = angValues[i];
+			Real32 m = magValues[j], a = angValues[j];
 
 			if (m > 0.0f) {
 				if (a > 0.0f) { angValues[j] = m - a; }
@@ -1033,9 +1038,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 		if (!hasFloor[i]) continue;
 		Int32 submap = mapping->Mux[i];
 		Int32 floorIdx = mapping->FloorIdx[submap];
-
-		Real32* data = Vorbis_ChanData(ctx, i);
-		Floor_Synthesis(ctx, &ctx->Floors[floorIdx], data);
+		Floor_Synthesis(ctx, &ctx->Floors[floorIdx], i);
 	}
 
 	Int32 n = ctx->CurBlockSize;
