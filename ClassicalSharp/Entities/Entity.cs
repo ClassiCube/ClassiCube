@@ -13,7 +13,6 @@ namespace ClassicalSharp.Entities {
 		
 		public Entity(Game game) {
 			this.game = game;
-			SkinType = game.DefaultPlayerSkinType;
 			anim = new AnimatedComponent(game, this);
 		}
 		

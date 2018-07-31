@@ -191,7 +191,7 @@ namespace ClassicalSharp.Entities {
 			uScale = 1; vScale = 1;
 			MobTextureId = 0;
 			TextureId = 0;
-			SkinType = game.DefaultPlayerSkinType;
+			SkinType = SkinType.Type64x32;
 		}
 		
 		unsafe static void ClearHat(Bitmap bmp, SkinType skinType) {

@@ -219,21 +219,7 @@ bool Game_CanPick(BlockID block) {
 	return Game_BreakableLiquids && Block_CanPlace[block] && Block_CanDelete[block];
 }
 
-void Game_SetDefaultSkinType(struct Bitmap* bmp) {
-	Game_DefaultPlayerSkinType = Utils_GetSkinType(bmp);
-	if (Game_DefaultPlayerSkinType == SKIN_TYPE_INVALID) {
-		ErrorHandler_Fail("char.png has invalid dimensions");
-	}
-
-	Int32 i;
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		struct Entity* entity = Entities_List[i];
-		if (!entity || entity->TextureId) continue;
-		entity->SkinType = Game_DefaultPlayerSkinType;
-	}
-}
-
-bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, bool setSkinType) {
+bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, UInt8* skinType) {
 	struct Bitmap bmp; 
 	ReturnCode result = Bitmap_DecodePng(&bmp, src);
 	ErrorHandler_CheckOrFail(result, "Decoding texture");
@@ -241,7 +227,7 @@ bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, bool setSkinTy
 	bool success = Game_ValidateBitmap(&src->Name, &bmp);
 	if (success) {
 		Gfx_DeleteTexture(texId);
-		if (setSkinType) Game_SetDefaultSkinType(&bmp);
+		if (skinType != NULL) { *skinType = Utils_GetSkinType(&bmp); }
 		*texId = Gfx_CreateTexture(&bmp, true, false);
 	}
 

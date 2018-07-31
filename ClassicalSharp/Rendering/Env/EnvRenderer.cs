@@ -107,7 +107,7 @@ namespace ClassicalSharp.Renderers {
 		
 		void TextureChanged(object sender, TextureEventArgs e) {
 			if (e.Name == "cloud.png" || e.Name == "clouds.png") {
-				game.UpdateTexture(ref cloudsTex, e.Name, e.Data, false);
+				game.LoadTexture(ref cloudsTex, e.Name, e.Data);
 			}
 		}
 		

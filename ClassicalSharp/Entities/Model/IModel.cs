@@ -84,6 +84,7 @@ namespace ClassicalSharp.Model {
 		/// assuming that the model is not rotated at all.</summary>
 		public abstract AABB PickingBounds { get; }
 		
+		protected static SkinType skinType;
 		protected static float cosHead, sinHead;
 		protected static float uScale, vScale;
 		protected static PackedCol[] cols = new PackedCol[Side.Sides];
@@ -136,13 +137,6 @@ namespace ClassicalSharp.Model {
 		public void SetupState(Entity p) {
 			index = 0;
 			PackedCol col = p.Colour();
-
-			bool _64x64 = p.SkinType != SkinType.Type64x32;
-			// only apply when using humanoid skins
-			_64x64 &= UsesHumanSkin || p.MobTextureId != 0;
-			
-			uScale = p.uScale * 0.015625f;
-			vScale = p.vScale * (_64x64 ? 0.015625f : 0.03125f);
 			
 			cols[0] = col;
 			if (!p.NoShade) {
@@ -183,9 +177,19 @@ namespace ClassicalSharp.Model {
 		public int index, texIndex;
 		protected byte armX = 6, armY = 12; // these translate arm model part back to (0, 0) origin
 		
-		protected int GetTexture(Entity entity) {
-			int pTex = UsesHumanSkin ? entity.TextureId : entity.MobTextureId;
-			return pTex != 0 ? pTex : game.ModelCache.Textures[texIndex].TexID;
+		public void ApplyTexture(Entity entity) {
+			int tex = UsesHumanSkin ? entity.TextureId : entity.MobTextureId;
+			if (tex != 0) {
+				skinType = entity.SkinType;
+			} else {
+				tex = game.ModelCache.Textures[texIndex].TexID;
+				skinType = game.ModelCache.Textures[texIndex].SkinType;
+			}
+			
+			game.Graphics.BindTexture(tex);
+			bool _64x64 = skinType != SkinType.Type64x32;
+			uScale = entity.uScale * 0.015625f;
+			vScale = entity.vScale * (_64x64 ? 0.015625f : 0.03125f);
 		}
 		
 		
@@ -269,7 +273,7 @@ namespace ClassicalSharp.Model {
 			SetupState(p);
 			
 			game.Graphics.SetBatchFormat(VertexFormat.P3fT2fC4b);
-			game.Graphics.BindTexture(GetTexture(p));		
+			ApplyTexture(p);	
 			Matrix4 translate;
 			
 			if (game.ClassicArmModel) {

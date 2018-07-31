@@ -775,13 +775,13 @@ void EnvRenderer_UseMinimalMode(bool minimal) {
 
 static void EnvRenderer_FileChanged(void* obj, struct Stream* src) {
 	if (String_CaselessEqualsConst(&src->Name, "cloud.png") || String_CaselessEqualsConst(&src->Name, "clouds.png")) {
-		Game_UpdateTexture(&clouds_tex, src, false);
+		Game_UpdateTexture(&clouds_tex, src, NULL);
 	} else if (String_CaselessEqualsConst(&src->Name, "skybox.png")) {
-		Game_UpdateTexture(&skybox_tex, src, false);
+		Game_UpdateTexture(&skybox_tex, src, NULL);
 	} else if (String_CaselessEqualsConst(&src->Name, "snow.png")) {
-		Game_UpdateTexture(&snow_tex, src, false);
+		Game_UpdateTexture(&snow_tex, src, NULL);
 	} else if (String_CaselessEqualsConst(&src->Name, "rain.png")) {
-		Game_UpdateTexture(&rain_tex, src, false);
+		Game_UpdateTexture(&rain_tex, src, NULL);
 	}
 }
 

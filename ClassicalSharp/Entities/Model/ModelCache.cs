@@ -112,8 +112,9 @@ namespace ClassicalSharp.Model {
 				CachedTexture tex = Textures[i];
 				if (tex.Name != e.Name) continue;
 				
-				game.UpdateTexture(ref tex.TexID, e.Name, e.Data, e.Name == "char.png");
-				Textures[i] = tex; break;
+				game.UpdateTexture(ref tex.TexID, e.Name, e.Data, ref tex.SkinType);	
+				Textures[i] = tex; 
+				break;
 			}
 		}
 		
@@ -125,12 +126,13 @@ namespace ClassicalSharp.Model {
 	}
 	
 	public struct CachedModel {
-		public string Name;
 		public IModel Instance;
+		public string Name;	
 	}
 	
 	public struct CachedTexture {
-		public string Name;
+		public SkinType SkinType;
 		public int TexID;
+		public string Name;		
 	}
 }

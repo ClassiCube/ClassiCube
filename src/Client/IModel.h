@@ -59,7 +59,7 @@ PackedCol IModel_Cols[FACE_COUNT];
 Real32 IModel_uScale, IModel_vScale;
 /* Angle of offset from head to body rotation. */
 Real32 IModel_cosHead, IModel_sinHead;
-UInt8 IModel_Rotation;
+UInt8 IModel_Rotation, IModel_skinType;
 struct IModel* IModel_ActiveModel;
 void IModel_Init(struct IModel* model);
 
@@ -75,7 +75,7 @@ Real32 IModel_RenderDistance(struct Entity* entity);
 void IModel_Render(struct IModel* model, struct Entity* entity);
 void IModel_SetupState(struct IModel* model, struct Entity* entity);
 void IModel_UpdateVB(void);
-GfxResourceID IModel_GetTexture(struct Entity* entity);
+void IModel_ApplyTexture(struct Entity* entity);
 void IModel_DrawPart(struct ModelPart part);
 void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct ModelPart part, bool head);
 void IModel_RenderArm(struct IModel* model, struct Entity* entity);

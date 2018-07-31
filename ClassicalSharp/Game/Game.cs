@@ -182,29 +182,20 @@ namespace ClassicalSharp {
 		}
 		
 		
-		/// <summary> Reads a bitmap from the stream (converting it to 32 bits per pixel if necessary),
-		/// and updates the native texture for it. </summary>
-		public bool UpdateTexture(ref int texId, string file, byte[] data, bool setSkinType) {
+		public bool LoadTexture(ref int texId, string file, byte[] data) {
+			SkinType type = SkinType.Invalid;
+			return UpdateTexture(ref texId, file, data, ref type);
+		}
+
+		public bool UpdateTexture(ref int texId, string file, byte[] data, ref SkinType type) {
+			bool calc = type != SkinType.Invalid;
 			using (Bitmap bmp = Platform.ReadBmp(Drawer2D, data)) {
-				if (!ValidateBitmap(file, bmp)) return false;
+				if (!ValidateBitmap(file, bmp)) return false;				
+				if (calc) type = Utils.GetSkinType(bmp);
 				
 				Graphics.DeleteTexture(ref texId);
-				if (setSkinType) SetDefaultSkinType(bmp);
-				
 				texId = Graphics.CreateTexture(bmp, true, false);
 				return true;
-			}
-		}
-		
-		void SetDefaultSkinType(Bitmap bmp) {
-			DefaultPlayerSkinType = Utils.GetSkinType(bmp);
-			if (DefaultPlayerSkinType == SkinType.Invalid)
-				throw new NotSupportedException("char.png has invalid dimensions");
-			
-			Entity[] entities = Entities.List;
-			for (int i = 0; i < EntityList.MaxCount; i++) {
-				if (entities[i] == null || entities[i].TextureId != 0) continue;
-				entities[i].SkinType = DefaultPlayerSkinType;
 			}
 		}
 		

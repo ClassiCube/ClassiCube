@@ -85,11 +85,11 @@ bool Gui_Contains(Int32 recX, Int32 recY, Int32 width, Int32 height, Int32 x, In
 
 static void Gui_FileChanged(void* obj, struct Stream* stream) {
 	if (String_CaselessEqualsConst(&stream->Name, "gui.png")) {
-		Game_UpdateTexture(&Gui_GuiTex, stream, false);
+		Game_UpdateTexture(&Gui_GuiTex, stream, NULL);
 	} else if (String_CaselessEqualsConst(&stream->Name, "gui_classic.png")) {
-		Game_UpdateTexture(&Gui_GuiClassicTex, stream, false);
+		Game_UpdateTexture(&Gui_GuiClassicTex, stream, NULL);
 	} else if (String_CaselessEqualsConst(&stream->Name, "icons.png")) {
-		Game_UpdateTexture(&Gui_IconsTex, stream, false);
+		Game_UpdateTexture(&Gui_IconsTex, stream, NULL);
 	}
 }
 

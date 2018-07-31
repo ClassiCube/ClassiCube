@@ -595,10 +595,10 @@ static void Player_ApplySkin(struct Player* player, struct Player* from) {
 
 void Player_ResetSkin(struct Player* player) {
 	struct Entity* entity = &player->Base;
-	entity->uScale = 1; entity->vScale = 1.0f;
+	entity->uScale = 1.0f; entity->vScale = 1.0f;
 	entity->MobTextureId = NULL;
 	entity->TextureId    = NULL;
-	entity->SkinType = Game_DefaultPlayerSkinType;
+	entity->SkinType = SKIN_TYPE_64x32;
 }
 
 /* Apply or reset skin, for all players with same skin */

@@ -62,7 +62,6 @@ namespace ClassicalSharp {
 		
 		/// <summary> Total rendering time(in seconds) elapsed since the client was started. </summary>
 		public double accumulator;
-		public SkinType DefaultPlayerSkinType;
 		
 		public int ChunkUpdates;
 		

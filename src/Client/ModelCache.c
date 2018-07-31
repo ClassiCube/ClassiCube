@@ -13,6 +13,10 @@
 #include "Entity.h"
 #include "IModel.h"
 
+
+/*########################################################################################################################*
+*---------------------------------------------------------ModelCache------------------------------------------------------*
+*#########################################################################################################################*/
 UInt32 ModelCache_texCount, ModelCache_modelCount;
 #define MODEL_RET_SIZE(x, y, z) *size = Vector3_Create3((x) / 16.0f, (y) / 16.0f, (z) / 16.0f);
 
@@ -82,13 +86,15 @@ static void ModelCache_TextureChanged(void* obj, struct Stream* stream) {
 		struct CachedTexture* tex = &ModelCache_Textures[i];
 		if (!String_CaselessEquals(&tex->Name, &stream->Name)) continue;
 
-		bool isCharPng = String_CaselessEquals(&stream->Name, &charPng);
-		Game_UpdateTexture(&tex->TexID, stream, isCharPng);
+		Game_UpdateTexture(&tex->TexID, stream, &tex->SkinType);
 		return;
 	}
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------------ChickenModel-----------------------------------------------------*
+*#########################################################################################################################*/
 struct ModelPart Chicken_Head, Chicken_Head2, Chicken_Head3, Chicken_Torso;
 struct ModelPart Chicken_LeftLeg, Chicken_RightLeg, Chicken_LeftWing, Chicken_RightWing;
 struct ModelVertex ChickenModel_Vertices[IMODEL_BOX_VERTICES * 6 + (IMODEL_QUAD_VERTICES * 2) * 2];
@@ -155,7 +161,7 @@ static void ChickenModel_GetPickingBounds(struct AABB* bb) {
 }
 
 static void ChickenModel_DrawModel(struct Entity* entity) {
-	Gfx_BindTexture(IModel_GetTexture(entity));
+	IModel_ApplyTexture(entity);
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Chicken_Head,  true);
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Chicken_Head2, true);
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Chicken_Head3, true);
@@ -184,6 +190,9 @@ static struct IModel* ChickenModel_GetInstance(void) {
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------------CreeperModel-----------------------------------------------------*
+*#########################################################################################################################*/
 struct ModelPart Creeper_Head, Creeper_Torso, Creeper_LeftLegFront;
 struct ModelPart Creeper_RightLegFront, Creeper_LeftLegBack, Creeper_RightLegBack;
 struct ModelVertex CreeperModel_Vertices[IMODEL_BOX_VERTICES * 6];
@@ -231,7 +240,7 @@ static void CreeperModel_GetPickingBounds(struct AABB* bb) {
 }
 
 static void CreeperModel_DrawModel(struct Entity* entity) {
-	Gfx_BindTexture(IModel_GetTexture(entity));
+	IModel_ApplyTexture(entity);
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0.0f, 0.0f, Creeper_Head, true);
 
 	IModel_DrawPart(Creeper_Torso);
@@ -251,6 +260,9 @@ static struct IModel* CreeperModel_GetInstance(void) {
 }
 
 
+/*########################################################################################################################*
+*----------------------------------------------------------PigModel-------------------------------------------------------*
+*#########################################################################################################################*/
 struct ModelPart Pig_Head, Pig_Torso, Pig_LeftLegFront, Pig_RightLegFront;
 struct ModelPart Pig_LeftLegBack, Pig_RightLegBack;
 struct ModelVertex PigModel_Vertices[IMODEL_BOX_VERTICES * 6];
@@ -299,7 +311,7 @@ static void PigModel_GetPickingBounds(struct AABB* bb) {
 }
 
 static void PigModel_DrawModel(struct Entity* entity) {
-	Gfx_BindTexture(IModel_GetTexture(entity));
+	IModel_ApplyTexture(entity);
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0.0f, 0.0f, Pig_Head, true);
 
 	IModel_DrawPart(Pig_Torso);
@@ -319,6 +331,9 @@ static struct IModel* PigModel_GetInstance(void) {
 }
 
 
+/*########################################################################################################################*
+*---------------------------------------------------------SheepModel------------------------------------------------------*
+*#########################################################################################################################*/
 struct ModelPart Sheep_Head, Sheep_Torso, Sheep_LeftLegFront;
 struct ModelPart Sheep_RightLegFront, Sheep_LeftLegBack, Sheep_RightLegBack;
 struct ModelPart Fur_Head, Fur_Torso, Fur_LeftLegFront, Fur_RightLegFront;
@@ -401,7 +416,7 @@ static void SheepModel_GetPickingBounds(struct AABB* bb) {
 }
 
 static void SheepModel_DrawModel(struct Entity* entity) {
-	Gfx_BindTexture(IModel_GetTexture(entity));
+	IModel_ApplyTexture(entity);
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Sheep_Head, true);
 
 	IModel_DrawPart(Sheep_Torso);
@@ -435,6 +450,9 @@ static struct IModel* SheepModel_GetInstance(void) {
 }
 
 
+/*########################################################################################################################*
+*-------------------------------------------------------SkeletonModel-----------------------------------------------------*
+*#########################################################################################################################*/
 struct ModelPart Skeleton_Head, Skeleton_Torso, Skeleton_LeftLeg;
 struct ModelPart Skeleton_RightLeg, Skeleton_LeftArm, Skeleton_RightArm;
 struct ModelVertex SkeletonModel_Vertices[IMODEL_BOX_VERTICES * 6];
@@ -483,7 +501,7 @@ static void SkeletonModel_GetPickingBounds(struct AABB* bb) {
 }
 
 static void SkeletonModel_DrawModel(struct Entity* entity) {
-	Gfx_BindTexture(IModel_GetTexture(entity));
+	IModel_ApplyTexture(entity);
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0.0f, 0.0f, Skeleton_Head, true);
 
 	IModel_DrawPart(Skeleton_Torso);
@@ -510,6 +528,9 @@ static struct IModel* SkeletonModel_GetInstance(void) {
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------------SpiderModel------------------------------------------------------*
+*#########################################################################################################################*/
 struct ModelPart Spider_Head, Spider_Link, Spider_End;
 struct ModelPart Spider_LeftLeg, Spider_RightLeg;
 struct ModelVertex SpiderModel_Vertices[IMODEL_BOX_VERTICES * 5];
@@ -555,7 +576,7 @@ static void SpiderModel_GetPickingBounds(struct AABB* bb) {
 #define eighthPi  (MATH_PI / 8.0f)
 
 static void SpiderModel_DrawModel(struct Entity* entity) {
-	Gfx_BindTexture(IModel_GetTexture(entity));
+	IModel_ApplyTexture(entity);
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Spider_Head, true);
 	IModel_DrawPart(Spider_Link);
 	IModel_DrawPart(Spider_End);
@@ -588,6 +609,9 @@ static struct IModel* SpiderModel_GetInstance(void) {
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------------ZombieModel------------------------------------------------------*
+*#########################################################################################################################*/
 struct ModelPart Zombie_Head, Zombie_Hat, Zombie_Torso, Zombie_LeftLeg;
 struct ModelPart Zombie_RightLeg, Zombie_LeftArm, Zombie_RightArm;
 struct ModelVertex ZombieModel_Vertices[IMODEL_BOX_VERTICES * 7];
@@ -641,7 +665,7 @@ static void ZombieModel_GetPickingBounds(struct AABB* bb) {
 }
 
 static void ZombieModel_DrawModel(struct Entity* entity) {
-	Gfx_BindTexture(IModel_GetTexture(entity));
+	IModel_ApplyTexture(entity);
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0.0f, 0.0f, Zombie_Head, true);
 
 	IModel_DrawPart(Zombie_Torso);
@@ -669,6 +693,9 @@ static struct IModel* ZombieModel_GetInstance(void) {
 }
 
 
+/*########################################################################################################################*
+*---------------------------------------------------------HumanModel------------------------------------------------------*
+*#########################################################################################################################*/
 struct ModelSet {
 	struct ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm, Hat,
 		TorsoLayer, LeftLegLayer, RightLegLayer, LeftArmLayer, RightArmLayer;
@@ -676,7 +703,7 @@ struct ModelSet {
 
 struct BoxDesc head, torso, lLeg, rLeg, lArm, rArm;
 Real32 offset;
-static void HumanModel_CreateParts(struct IModel* m, struct  ModelSet* set, struct ModelSet* set64, struct ModelSet* setSlim) {
+static void HumanModel_CreateParts(struct IModel* m, struct ModelSet* set, struct ModelSet* set64, struct ModelSet* setSlim) {
 	BoxDesc_TexOrigin(&head, 0, 0);
 	BoxDesc_BuildBox(&set->Head, m, &head);
 
@@ -763,7 +790,7 @@ static void HumanModel_CreateParts(struct IModel* m, struct  ModelSet* set, stru
 }
 
 static void HumanModel_SetupState(struct Entity* entity) {
-	Gfx_BindTexture(IModel_GetTexture(entity));
+	IModel_ApplyTexture(entity);
 	Gfx_SetAlphaTest(false);
 }
 
@@ -781,7 +808,7 @@ static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) 
 
 	Gfx_SetAlphaTest(true);
 	IModel_ActiveModel->index = 0;
-	if (entity->SkinType != SKIN_TYPE_64x32) {
+	if (IModel_skinType != SKIN_TYPE_64x32) {
 		IModel_DrawPart(model->TorsoLayer);
 		IModel_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  model->LeftLegLayer,  false);
 		IModel_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, model->RightLegLayer, false);
@@ -797,13 +824,16 @@ static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) 
 
 static void HumanModel_DrawArm(struct Entity* entity, struct ModelSet* model) {
 	IModel_DrawArmPart(model->RightArm);
-	if (entity->SkinType != SKIN_TYPE_64x32) {
+	if (IModel_skinType != SKIN_TYPE_64x32) {
 		IModel_DrawArmPart(model->RightArmLayer);
 	}
 	IModel_UpdateVB();
 }
 
 
+/*########################################################################################################################*
+*-------------------------------------------------------HumanoidModel-----------------------------------------------------*
+*#########################################################################################################################*/
 struct ModelSet Humanoid_Set, Humanoid_Set64, Humanoid_SetSlim;
 struct ModelVertex HumanoidModel_Vertices[IMODEL_BOX_VERTICES * (7 + 7 + 4)];
 struct IModel HumanoidModel;
@@ -841,7 +871,7 @@ static void HumanoidModel_GetPickingBounds(struct AABB* bb) {
 
 static void HumanoidModel_DrawModel(struct Entity* entity) {
 	HumanModel_SetupState(entity);
-	UInt8 skinType = entity->SkinType;
+	UInt8 skinType = IModel_skinType;
 	struct ModelSet* model =
 		skinType == SKIN_TYPE_64x64_SLIM ? &Humanoid_SetSlim :
 		(skinType == SKIN_TYPE_64x64 ? &Humanoid_Set64 : &Humanoid_Set);
@@ -849,7 +879,7 @@ static void HumanoidModel_DrawModel(struct Entity* entity) {
 }
 
 static void HumanoidModel_DrawArm(struct Entity* entity) {
-	UInt8 skinType = entity->SkinType;
+	UInt8 skinType = IModel_skinType;
 	struct ModelSet* model =
 		skinType == SKIN_TYPE_64x64_SLIM ? &Humanoid_SetSlim :
 		(skinType == SKIN_TYPE_64x64 ? &Humanoid_Set64 : &Humanoid_Set);
@@ -868,6 +898,9 @@ static struct IModel* HumanoidModel_GetInstance(void) {
 }
 
 
+/*########################################################################################################################*
+*---------------------------------------------------------ChibiModel------------------------------------------------------*
+*#########################################################################################################################*/
 struct ModelSet Chibi_Set, Chibi_Set64, Chibi_SetSlim;
 struct ModelVertex ChibiModel_Vertices[IMODEL_BOX_VERTICES * (7 + 7 + 4)];
 struct IModel ChibiModel;
@@ -902,7 +935,7 @@ static void ChibiModel_GetPickingBounds(struct AABB* bb) {
 
 static void ChibiModel_DrawModel(struct Entity* entity) {
 	HumanModel_SetupState(entity);
-	UInt8 skinType = entity->SkinType;
+	UInt8 skinType = IModel_skinType;
 	struct ModelSet* model =
 		skinType == SKIN_TYPE_64x64_SLIM ? &Chibi_SetSlim :
 		(skinType == SKIN_TYPE_64x64 ? &Chibi_Set64 : &Chibi_Set);
@@ -910,7 +943,7 @@ static void ChibiModel_DrawModel(struct Entity* entity) {
 }
 
 static void ChibiModel_DrawArm(struct Entity* entity) {
-	UInt8 skinType = entity->SkinType;
+	UInt8 skinType = IModel_skinType;
 	struct ModelSet* model =
 		skinType == SKIN_TYPE_64x64_SLIM ? &Chibi_SetSlim :
 		(skinType == SKIN_TYPE_64x64 ? &Chibi_Set64 : &Chibi_Set);
@@ -932,6 +965,9 @@ static struct IModel* ChibiModel_GetInstance(void) {
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------------SittingModel-----------------------------------------------------*
+*#########################################################################################################################*/
 struct IModel SittingModel;
 #define SIT_OFFSET 10.0f
 static void SittingModel_CreateParts(void) { }
@@ -952,7 +988,6 @@ static void SittingModel_GetTransform(struct Entity* entity, Vector3 pos, struct
 static void SittingModel_DrawModel(struct Entity* entity) {
 	entity->Anim.LeftLegX = 1.5f;  entity->Anim.RightLegX = 1.5f;
 	entity->Anim.LeftLegZ = -0.1f; entity->Anim.RightLegZ = 0.1f;
-	IModel_SetupState(&HumanoidModel, entity);
 	HumanoidModel_DrawModel(entity);
 }
 
@@ -970,6 +1005,9 @@ static struct IModel* SittingModel_GetInstance(void) {
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------------CorpseModel------------------------------------------------------*
+*#########################################################################################################################*/
 struct IModel CorpseModel;
 static void CorpseModel_CreateParts(void) { }
 static void CorpseModel_DrawModel(struct Entity* entity) {
@@ -977,9 +1015,7 @@ static void CorpseModel_DrawModel(struct Entity* entity) {
 	entity->Anim.LeftArmX = 0.025f; entity->Anim.RightArmX = 0.025f;
 	entity->Anim.LeftLegZ = -0.15f; entity->Anim.RightLegZ =  0.15f;
 	entity->Anim.LeftArmZ = -0.20f; entity->Anim.RightArmZ =  0.20f;
-
-	IModel_SetupState(&HumanoidModel, entity);
-	HumanoidModel.DrawModel(entity);
+	HumanoidModel_DrawModel(entity);
 }
 
 static struct IModel* CorpseModel_GetInstance(void) {
@@ -990,6 +1026,9 @@ static struct IModel* CorpseModel_GetInstance(void) {
 }
 
 
+/*########################################################################################################################*
+*---------------------------------------------------------HeadModel-------------------------------------------------------*
+*#########################################################################################################################*/
 struct IModel HeadModel;
 static void HeadModel_CreateParts(void) { }
 
@@ -1033,6 +1072,9 @@ static struct IModel* HeadModel_GetInstance(void) {
 }
 
 
+/*########################################################################################################################*
+*---------------------------------------------------------BlockModel------------------------------------------------------*
+*#########################################################################################################################*/
 struct IModel BlockModel;
 BlockID BlockModel_block = BLOCK_AIR;
 Vector3 BlockModel_minBB, BlockModel_maxBB;
@@ -1225,6 +1267,9 @@ static struct IModel* BlockModel_GetInstance(void) {
 }
 
 
+/*########################################################################################################################*
+*---------------------------------------------------------ModelCache------------------------------------------------------*
+*#########################################################################################################################*/
 static void ModelCache_RegisterDefaultModels(void) {
 	ModelCache_RegisterTexture("char.png");
 	ModelCache_RegisterTexture("chicken.png");

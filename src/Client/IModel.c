@@ -24,10 +24,13 @@ void ModelPart_Init(struct ModelPart* part, Int32 offset, Int32 count, Real32 ro
 	part->RotX = rotX; part->RotY = rotY; part->RotZ = rotZ;
 }
 
+
+/*########################################################################################################################*
+*------------------------------------------------------------IModel--------------------------------------------------------*
+*#########################################################################################################################*/
 static void IModel_GetTransform(struct Entity* entity, Vector3 pos, struct Matrix* m) {
 	Entity_GetTransform(entity, pos, entity->ModelScale, m);
 }
-
 static void IModel_NullFunc(struct Entity* entity) { }
 
 void IModel_Init(struct IModel* model) {
@@ -135,10 +138,21 @@ void IModel_UpdateVB(void) {
 	model->index = 0;
 }
 
-GfxResourceID IModel_GetTexture(struct Entity* entity) {
+void IModel_ApplyTexture(struct Entity* entity) {
 	struct IModel* model = IModel_ActiveModel;
-	GfxResourceID pTex = model->UsesHumanSkin ? entity->TextureId : entity->MobTextureId;
-	return pTex ? pTex : ModelCache_Textures[model->defaultTexIndex].TexID;
+	GfxResourceID tex = model->UsesHumanSkin ? entity->TextureId : entity->MobTextureId;
+	if (tex != NULL) {
+		IModel_skinType = entity->SkinType;
+	} else {
+		struct CachedTexture* data = &ModelCache_Textures[model->defaultTexIndex];
+		tex = data->TexID;
+		IModel_skinType = data->SkinType;
+	}
+
+	Gfx_BindTexture(tex);
+	bool _64x64 = IModel_skinType != SKIN_TYPE_64x32;
+	IModel_uScale = entity->uScale * 0.015625f;
+	IModel_vScale = entity->vScale * (_64x64 ? 0.015625f : 0.03125f);
 }
 
 void IModel_DrawPart(struct ModelPart part) {
@@ -213,7 +227,7 @@ void IModel_RenderArm(struct IModel* model, struct Entity* entity) {
 	IModel_SetupState(model, entity);
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
-	Gfx_BindTexture(IModel_GetTexture(entity));
+	IModel_ApplyTexture(entity);
 	struct Matrix translate;
 
 	if (Game_ClassicArmModel) {
@@ -250,6 +264,9 @@ void IModel_DrawArmPart(struct ModelPart part) {
 }
 
 
+/*########################################################################################################################*
+*----------------------------------------------------------BoxDesc--------------------------------------------------------*
+*#########################################################################################################################*/
 void BoxDesc_TexOrigin(struct BoxDesc* desc, Int32 x, Int32 y) {
 	desc->TexX = x; desc->TexY = y;
 }

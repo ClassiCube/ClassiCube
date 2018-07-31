@@ -127,9 +127,9 @@ namespace ClassicalSharp.Renderers {
 		
 		void TextureChanged(object sender, TextureEventArgs e) {
 			if (e.Name == "snow.png")
-				game.UpdateTexture(ref snowTexId, e.Name, e.Data, false);
+				game.LoadTexture(ref snowTexId, e.Name, e.Data);
 			else if (e.Name == "rain.png")
-				game.UpdateTexture(ref rainTexId, e.Name, e.Data, false);
+				game.LoadTexture(ref rainTexId, e.Name, e.Data);
 		}
 		
 		void IDisposable.Dispose() {

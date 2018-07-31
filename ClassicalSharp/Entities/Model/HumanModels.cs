@@ -69,11 +69,8 @@ namespace ClassicalSharp.Model {
 		
 		public override void DrawModel(Entity p) {
 			p.anim.leftLegX = 1.5f; p.anim.rightLegX = 1.5f;
-			p.anim.leftLegZ = -0.1f; p.anim.rightLegZ = 0.1f;
-			
-			IModel model = game.ModelCache.Models[0].Instance;
-			model.SetupState(p);
-			model.DrawModel(p);
+			p.anim.leftLegZ = -0.1f; p.anim.rightLegZ = 0.1f;			
+			game.ModelCache.Models[0].Instance.DrawModel(p);
 		}
 		
 		public override void DrawArm(Entity p) {
@@ -144,10 +141,7 @@ namespace ClassicalSharp.Model {
 			p.anim.leftArmX = 0.025f; p.anim.rightArmX = 0.025f;
 			p.anim.leftLegZ = -0.15f; p.anim.rightLegZ =  0.15f;
 			p.anim.leftArmZ = -0.20f; p.anim.rightArmZ =  0.20f;
-			
-			IModel model = game.ModelCache.Models[0].Instance;
-			model.SetupState(p);
-			model.DrawModel(p);
+			game.ModelCache.Models[0].Instance.DrawModel(p);
 		}
 		
 		public override void DrawArm(Entity p) {

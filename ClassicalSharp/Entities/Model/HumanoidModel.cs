@@ -85,13 +85,13 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override void DrawModel(Entity p) {
-			game.Graphics.BindTexture(GetTexture(p));
+			ApplyTexture(p);
 			game.Graphics.AlphaTest = false;
 			RenderParts(p);
 		}
 		
 		protected virtual void RenderParts(Entity p) {
-			SkinType skinType = p.SkinType;
+			SkinType skinType = IModel.skinType;
 			ModelSet model = skinType == SkinType.Type64x64Slim ? SetSlim :
 				(skinType == SkinType.Type64x64 ? Set64 : Set);
 			
@@ -122,7 +122,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override void DrawArm(Entity p) {
-			SkinType skin = p.SkinType;
+			SkinType skin = IModel.skinType;
 			ModelSet model = skin == SkinType.Type64x64Slim ? SetSlim : 
 				(skin == SkinType.Type64x64 ? Set64 : Set);
 						
