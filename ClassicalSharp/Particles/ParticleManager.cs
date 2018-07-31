@@ -40,7 +40,7 @@ namespace ClassicalSharp.Particles {
 		
 		void TextureChanged(object sender, TextureEventArgs e) {
 			if (e.Name == "particles.png")
-				game.Loadtexture(ref ParticlesTexId, e.Name, e.Data);
+				game.LoadTexture(ref ParticlesTexId, e.Name, e.Data);
 		}
 		
 		

@@ -2941,12 +2941,12 @@ static void TexIdsOverlay_ContextRecreated(void* obj) {
 	String prefix = String_FromConst("f");
 	TextAtlas_Make(&screen->IdAtlas, &chars, &screen->TextFont, &prefix);
 
-	Int32 size = Game_Height / ATLAS2D_ROWS_COUNT;
+	Int32 size = Game_Height / ATLAS2D_TILES_PER_ROW;
 	size = (size / 8) * 8;
 	Math_Clamp(size, 8, 40);
 
-	screen->XOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Game_Width);
-	screen->YOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_ROWS_COUNT,    Game_Height);
+	screen->XOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_ROWS_COUNT,   Game_Width);
+	screen->YOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Game_Height);
 	screen->TileSize = size;
 
 	String title = String_FromConst("Texture ID reference sheet");

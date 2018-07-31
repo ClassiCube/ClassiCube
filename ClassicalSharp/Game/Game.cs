@@ -43,9 +43,9 @@ namespace ClassicalSharp {
 		
 		public bool ChangeTerrainAtlas(Bitmap atlas) {
 			if (!ValidateBitmap("terrain.png", atlas)) return false;
-			if (atlas.Width != atlas.Height && (atlas.Width * 2 != atlas.Height)) {
+			if (atlas.Height < atlas.Width) {
 				Chat.Add("&cUnable to use terrain.png from the texture pack.");
-				Chat.Add("&c Its width is not the same as its height.");
+				Chat.Add("&c Its height is less than its width.");
 				return false;
 			}
 			if (Graphics.LostContext) return false;
@@ -190,7 +190,7 @@ namespace ClassicalSharp {
 		public bool UpdateTexture(ref int texId, string file, byte[] data, ref SkinType type) {
 			bool calc = type != SkinType.Invalid;
 			using (Bitmap bmp = Platform.ReadBmp(Drawer2D, data)) {
-				if (!ValidateBitmap(file, bmp)) return false;				
+				if (!ValidateBitmap(file, bmp)) return false;
 				if (calc) type = Utils.GetSkinType(bmp);
 				
 				Graphics.DeleteTexture(ref texId);

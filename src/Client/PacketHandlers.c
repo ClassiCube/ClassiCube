@@ -1145,9 +1145,7 @@ static void CPE_SetInventoryOrder(struct Stream* stream) {
 	BlockID order = Handlers_ReadBlock(stream);
 
 	Inventory_Remove(block);
-	if (order != 255 && order != 0) {
-		Inventory_Map[order - 1] = block;
-	}
+	if (order) { Inventory_Map[order - 1] = block; }
 }
 
 static void CPE_Reset(void) {

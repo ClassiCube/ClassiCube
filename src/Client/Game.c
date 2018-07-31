@@ -139,9 +139,9 @@ bool Game_ChangeTerrainAtlas(struct Bitmap* atlas) {
 	String terrain = String_FromConst("terrain.png");
 	if (!Game_ValidateBitmap(&terrain, atlas)) return false;
 
-	if (atlas->Width != atlas->Height) {
+	if (atlas->Height < atlas->Width) {
 		String m1 = String_FromConst("&cUnable to use terrain.png from the texture pack."); Chat_Add(&m1);
-		String m2 = String_FromConst("&c Its width is not the same as its height.");        Chat_Add(&m2);
+		String m2 = String_FromConst("&c Its height is less than its width.");              Chat_Add(&m2);
 		return false;
 	}
 	if (Gfx_LostContext) return false;

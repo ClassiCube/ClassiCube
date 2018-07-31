@@ -19,6 +19,7 @@ namespace ClassicalSharp.Textures {
 			Atlas = bmp;
 			TileSize = bmp.Width / TilesPerRow;
 			RowsCount = bmp.Height / TileSize;
+			RowsCount = Math.Min(RowsCount, MaxRowsCount);
 			BlockInfo.RecalculateSpriteBB();
 		}
 
