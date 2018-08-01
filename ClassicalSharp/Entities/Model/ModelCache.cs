@@ -79,6 +79,7 @@ namespace ClassicalSharp.Model {
 		
 		void InitModel(CachedModel m) {
 			m.Instance.CreateParts();
+			m.Instance.index = 0;
 			m.Instance.initalised = true;
 		}
 		

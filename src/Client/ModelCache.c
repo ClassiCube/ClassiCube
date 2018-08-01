@@ -28,6 +28,12 @@ static void ModelCache_ContextRecreated(void* obj) {
 	ModelCache_Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, MODELCACHE_MAX_VERTICES);
 }
 
+static void ModelCache_InitModel(struct IModel* model) {
+	model->CreateParts();
+	model->initalised = true;
+	model->index = 0;
+}
+
 struct IModel* ModelCache_Get(STRING_PURE String* name) {
 	UInt32 i;
 	for (i = 0; i < ModelCache_modelCount; i++) {
@@ -35,8 +41,7 @@ struct IModel* ModelCache_Get(STRING_PURE String* name) {
 		if (!String_CaselessEquals(&m->Name, name)) continue;
 		
 		if (!m->Instance->initalised) {
-			m->Instance->CreateParts();
-			m->Instance->initalised = true;
+			ModelCache_InitModel(m->Instance);
 		}
 		return m->Instance;
 	}
@@ -1282,8 +1287,7 @@ static void ModelCache_RegisterDefaultModels(void) {
 	ModelCache_RegisterTexture("zombie.png");
 
 	ModelCache_Register("humanoid", "char.png", HumanoidModel_GetInstance());
-	HumanoidModel_CreateParts();
-	HumanoidModel.initalised = true;
+	ModelCache_InitModel(&HumanoidModel);
 
 	ModelCache_Register("chicken", "chicken.png", ChickenModel_GetInstance());
 	ModelCache_Register("creeper", "creeper.png", CreeperModel_GetInstance());
