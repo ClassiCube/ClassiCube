@@ -36,7 +36,7 @@ struct VorbisState {
 	struct Stream* Source;  /* Source for filling Input buffer */
 
 	UInt8 Channels, ModeNumBits; 
-	UInt16 CurBlockSize, DataSize;
+	UInt16 CurBlockSize, PrevBlockSize, DataSize;
 	Int32 SampleRate; Int32 BlockSizes[2];
 	Real32* Values;
 	Real32* PrevOutput[VORBIS_MAX_CHANS];
@@ -48,7 +48,8 @@ struct VorbisState {
 	struct Mapping* Mappings;
 	struct Mode* Modes;
 };
-void Vorbis_Init(struct VorbisState* state, struct Stream* source);
-ReturnCode Vorbis_DecodeHeaders(struct VorbisState* state);
-ReturnCode Vorbis_DecodeFrame(struct VorbisState* state);
+void Vorbis_Init(struct VorbisState* ctx, struct Stream* source);
+ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx);
+ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx);
+Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data);
 #endif
