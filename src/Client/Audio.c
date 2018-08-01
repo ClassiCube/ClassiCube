@@ -1238,20 +1238,24 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 	size = (ctx->PrevBlockSize / 4) + (ctx->CurBlockSize / 4);
 
 	Platform_LogConst("##### FRAME #####" );
-
+	/* TODO: There's probably a nicer way of doing this.. */
 	Real32* combined[VORBIS_MAX_CHANS];
 	for (i = 0; i < ctx->Channels; i++) {
 		combined[i] = Platform_MemAllocCleared(size, sizeof(Real32), "temp combined");
 	}
 
+	Int32 prevHalf = ctx->PrevBlockSize / 2, curHalf = ctx->CurBlockSize / 2;
+	Int32 prevEnd = prevHalf + min(prevHalf, size);
+	Int32 curBeg  = curHalf - min(curHalf, size);
+
 	/* overlap and add data */
-	for (i = ctx->PrevBlockSize / 2; i < ctx->PrevBlockSize * 3 / 4; i++, j++) {
+	for (i = prevHalf; i < prevEnd; i++, j++) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
-			combined[ch][j] += ctx->PrevOutput[ch][i];
+			combined[ch][j] = ctx->PrevOutput[ch][i];
 		}
 	}
-	j = ctx->PrevBlockSize / 4;
-	for (i = 0; i < ctx->CurBlockSize / 4; i++, j++) {
+
+	for (i = curHalf - 1, j = size - 1; i >= curBeg; i--, j--) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
 			combined[ch][j] += ctx->CurOutput[ch][i];
 		}
