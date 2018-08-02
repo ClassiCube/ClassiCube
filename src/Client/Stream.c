@@ -176,7 +176,7 @@ void Stream_ReadonlyPortion(struct Stream* stream, struct Stream* source, UInt32
 *#########################################################################################################################*/
 static ReturnCode Stream_MemoryRead(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	count = min(count, stream->Meta.Mem.Left);
-	if (count > 0) { Platform_MemCpy(data, stream->Meta.Mem.Cur, count); }
+	if (count) { Platform_MemCpy(data, stream->Meta.Mem.Cur, count); }
 	
 	stream->Meta.Mem.Cur  += count;
 	stream->Meta.Mem.Left -= count;
@@ -186,7 +186,7 @@ static ReturnCode Stream_MemoryRead(struct Stream* stream, UInt8* data, UInt32 c
 
 static ReturnCode Stream_MemoryWrite(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	count = min(count, stream->Meta.Mem.Left);
-	if (count > 0) { Platform_MemCpy(stream->Meta.Mem.Cur, data, count); }
+	if (count) { Platform_MemCpy(stream->Meta.Mem.Cur, data, count); }
 
 	stream->Meta.Mem.Cur   += count;
 	stream->Meta.Mem.Left -= count;

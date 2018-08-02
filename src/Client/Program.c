@@ -12,11 +12,26 @@
 #include "Funcs.h"
 #include "AsyncDownloader.h"
 #include "Audio.h"
+#include "ExtMath.h"
 
-int main(void) {
-	ErrorHandler_Init("client.log");
-	Platform_Init();
+#ifdef CC_TEST_VORBIS
+#include <Windows.h>
+#pragma comment(lib, "Winmm.lib")
 
+int main_imdct() {
+	Real32 in[32], out[64], out2[64];
+	Random rng;
+	Random_Init(&rng, 2342334);
+	for (int ii = 0; ii < 32; ii++) {
+		in[ii] = Random_Float(&rng);
+	}
+
+	imdct(in, out, 32);
+	imdct_fast(in, out2, 64);
+	int fff = 0;
+}
+
+void vorbis_test() {
 	void* file;
 	String oggPath = String_FromConst("audio/calm1.ogg");
 	Platform_FileOpen(&file, &oggPath);
@@ -25,13 +40,51 @@ int main(void) {
 	struct Stream ogg;
 	UInt8 oggBuffer[OGG_BUFFER_SIZE];
 	Ogg_MakeStream(&ogg, oggBuffer, &oggBase);
-	
+
 	struct VorbisState state;
-	//Vorbis_Init(&state, &ogg);
-	//Vorbis_DecodeHeaders(&state);
-	//for (int i = 0; i < 1000; i++) {
-	//	Vorbis_DecodeFrame(&state);
-	//}
+	Vorbis_Init(&state, &ogg);
+	Vorbis_DecodeHeaders(&state);
+	Int32 size = 0, offset = 0;
+
+	Int16* chanData = Platform_MemAlloc(state.Channels * state.SampleRate * 1000, sizeof(Int16), "tmp data");
+	for (int i = 0; i < 1000; i++) {
+		Vorbis_DecodeFrame(&state);
+		Int32 read = Vorbis_OutputFrame(&state, &chanData[offset]);
+
+		size += read;
+		offset += read * state.Channels;
+	}
+
+	WAVEFORMATEX format = { 0 };
+	format.nChannels = state.Channels;
+	format.nSamplesPerSec = state.SampleRate;
+	format.wBitsPerSample = 16;
+	format.wFormatTag = WAVE_FORMAT_PCM;
+	format.nBlockAlign = format.nChannels * format.wBitsPerSample / 8;
+	format.nAvgBytesPerSec = format.nSamplesPerSec * format.nBlockAlign;
+
+	unsigned devices = waveOutGetNumDevs();
+	HWAVEOUT handle;
+	unsigned res1 = waveOutOpen(&handle, UINT_MAX, &format, 0, 0, 0);
+
+	WAVEHDR header = { 0 };
+	header.lpData = chanData;
+	header.dwBufferLength = offset * 2;
+
+	unsigned res2 = waveOutPrepareHeader(handle, &header, sizeof(header));
+	unsigned res3 = waveOutWrite(handle, &header, sizeof(header));
+	Platform_ThreadSleep(20000);
+	unsigned res4 = res3;
+}
+#endif
+
+int main(void) {
+	ErrorHandler_Init("client.log");
+	Platform_Init();
+#ifdef CC_TEST_VORBIS
+	//main_imdct();
+	vorbis_test();
+#endif
 
 	/*Platform_HttpInit();
 	AsyncRequest req = { 0 };
@@ -97,7 +150,7 @@ int main(void) {
 		if (!name.length) name = String_FromReadonly("Singleplayer");
 		String_Set(&Game_Username, &name);
 	} else if (argsCount < 4) {
-		Platform_LogConst("ClassicalSharp.exe is only the raw client. You must either use the launcher or provide command line arguments to start the client.");
+		Platform_LogConst("ClassiCube.exe is only the raw client. You must either use the launcher or provide command line arguments to start the client.");
 		return;
 	} else {
 		String_Set(&Game_Username,  &args[0]);

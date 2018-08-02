@@ -157,16 +157,6 @@ static UInt32 lookup1_values(UInt32 entries, UInt32 dimensions) {
 	return 0;
 }
 
-static void debug_entry(UInt32 codeword, Int16 len, UInt32 value) {
-	/* 2  entry 1: length 4 codeword 0100 */
-	UChar binBuffer[33];
-	for (int i = 0, shift = 31; i < len; i++, shift--) {
-		binBuffer[i] = (codeword & (1 << shift)) ? '1' : '0';
-	}
-	binBuffer[len] = '\0';
-	Platform_Log3("entry %p4: length %p2 codeword %c", &value, &len, binBuffer);
-}
-
 static bool Codebook_CalcCodewords(struct Codebook* c, UInt8* len) {
 	c->Codewords    = Platform_MemAlloc(c->NumCodewords, sizeof(UInt32), "codewords");
 	c->CodewordLens = Platform_MemAlloc(c->NumCodewords, sizeof(UInt8), "raw codeword lens");
@@ -206,8 +196,6 @@ static bool Codebook_CalcCodewords(struct Codebook* c, UInt8* len) {
 		c->Codewords[j]    = codeword;
 		c->CodewordLens[j] = len[i];
 		c->Values[j]       = i;
-
-		debug_entry(codeword, len[i], i);
 
 		for (depth = len[i]; depth > root; depth--) {
 			next_codewords[depth] = codeword + (1U << (32 - depth));
@@ -783,6 +771,156 @@ static ReturnCode Mapping_DecodeSetup(struct VorbisState* ctx, struct Mapping* m
 
 
 /*########################################################################################################################*
+*------------------------------------------------------imdct impl---------------------------------------------------------*
+*#########################################################################################################################*/
+#define PI MATH_PI
+void imdct(Real32* in, Real32* out, Int32 N) {
+	Int32 i, k;
+
+	for (i = 0; i < 2 * N; i++) {
+		Real64 sum = 0;
+		for (k = 0; k < N; k++) {
+			sum += in[k] * Math_Cos((PI / N) * (i + 0.5 + N * 0.5) * (k + 0.5));
+		}
+		out[i] = sum;
+	}
+}
+
+static UInt32 ReverseBits(UInt32 v) {
+	v = ((v >> 1) & 0x55555555) | ((v & 0x55555555) << 1);
+	v = ((v >> 2) & 0x33333333) | ((v & 0x33333333) << 2);
+	v = ((v >> 4) & 0x0F0F0F0F) | ((v & 0x0F0F0F0F) << 4);
+	v = ((v >> 8) & 0x00FF00FF) | ((v & 0x00FF00FF) << 8);
+	v = (v >> 16) | (v << 16);
+	return v;
+}
+
+static UInt32 Log2(UInt32 v) {
+	UInt32 r = 0;
+	while (v >>= 1) r++;
+	return r;
+}
+
+#define VORBIS_MAX_BLOCK_SIZE 8192
+void imdct_fast(Real32* in, Real32* out, Int32 n) {
+	Int32 n2 = n >> 1, n4 = n >> 2, n8 = n >> 3, n3_4 = n - n4;
+	Int32 k, k2, k4, i, j;
+
+	/* Optimised algorithm from "The use of multirate filter banks for coding of high quality digital audio" */
+	/* Uses a few fixes for the paper noted at http://www.nothings.org/stb_vorbis/mdct_01.txt */
+
+	Real32 A[VORBIS_MAX_BLOCK_SIZE / 2];
+	Real32 B[VORBIS_MAX_BLOCK_SIZE / 2];
+	Real32 C[VORBIS_MAX_BLOCK_SIZE / 4];
+	/* setup twiddle factors */
+	for (k = 0, k2 = 0; k < n4; k++, k2 += 2) {
+		A[k2]   =  Math_Cos((4*k * PI) / n);
+		A[k2+1] = -Math_Sin((4*k * PI) / n);
+		B[k2]   =  Math_Cos(((k2+1) * PI) / (2*n));
+		B[k2+1] =  Math_Sin(((k2+1) * PI) / (2*n));
+	}
+	for (k = 0, k2 = 0; k < n8; k++, k2 += 2) {
+		C[k2]   =  Math_Cos(((k2+1) * (2*PI)) / n);
+		C[k2+1] = -Math_Sin(((k2+1) * (2*PI)) / n);
+	}
+
+	Real32 u[VORBIS_MAX_BLOCK_SIZE];
+	Real32 v[VORBIS_MAX_BLOCK_SIZE];
+	Real32 w[VORBIS_MAX_BLOCK_SIZE];
+	Real32 X[VORBIS_MAX_BLOCK_SIZE];
+	/* spectral coefficients */
+	for (k = 0; k < n2; k++) u[k] = in[k];
+	for (     ; k < n;  k++) u[k] = -in[n-k-1];
+
+	/* step 1 */
+	for (k = 0, k2 = 0, k4 = 0; k < n4; k++, k2 += 2, k4 += 4) {
+		v[n-k4-1] = (u[k4] - u[n-k4-1]) * A[k2]   - (u[k4+2] - u[n-k4-3]) * A[k2 + 1];
+		v[n-k4-3] = (u[k4] - u[n-k4-1]) * A[k2+1] + (u[k4+2] - u[n-k4-3]) * A[k2];
+	}
+
+	/* step 2 */
+	for (k = 0, k4 = 0; k < n8; k++, k4 += 4) {
+		w[n2+3+k4] = v[n2+3+k4] + v[k4+3];
+		w[n2+1+k4] = v[n2+1+k4] + v[k4+1];
+
+		w[k4+3] = (v[n2+3+k4] - v[k4+3]) * A[n2-4-k4] - (v[n2+1+k4] - v[k4+1]) * A[n2-3-k4];
+		w[k4+1] = (v[n2+1+k4] - v[k4+1]) * A[n2-4-k4] + (v[n2+3+k4] - v[k4+3]) * A[n2-3-k4];
+	}
+
+	/* step 3*/
+	Int32 l, ld_n = Log2(n);
+	for (l = 0; l <= ld_n - 4; l++) {
+		Int32 k0 = n >> (l+2), k1 = 1 << (l+3);
+		Int32 r, r4, rMax = n >> (l+4), s2, s2Max = 1 << (l+2);
+
+		for (r = 0, r4 = 0; r < rMax; r++, r4 += 4) {
+			for (s2 = 0; s2 < s2Max; s2 += 2) {
+				u[n-1-k0*s2-r4] = w[n-1-k0*s2-r4] + w[n-1-k0*(s2+1)-r4];
+				u[n-3-k0*s2-r4] = w[n-3-k0*s2-r4] + w[n-3-k0*(s2+1)-r4];
+
+				u[n-1-k0*(s2+1)-r4] = (w[n-1-k0*s2-r4] - w[n-1-k0*(s2+1)-r4]) * A[r*k1]
+					                - (w[n-3-k0*s2-r4] - w[n-3-k0*(s2+1)-r4]) * A[r*k1+1];
+				u[n-3-k0*(s2+1)-r4] = (w[n-3-k0*s2-r4] - w[n-3-k0*(s2+1)-r4]) * A[r*k1]
+					                + (w[n-1-k0*s2-r4] - w[n-1-k0*(s2+1)-r4]) * A[r*k1+1];
+			}
+		}
+
+		if (l+1 <= ld_n - 4) {
+			Platform_MemCpy(w, u, sizeof(u));
+		}
+	}
+
+	/* step 4 */
+	for (i = 0; i < n8; i++) {
+		j = ReverseBits(i) >> (32-ld_n+3);
+		if (i == j) {
+			Int32 i8 = i << 3;
+			v[i8+1] = u[i8+1]; v[i8+3] = u[i8+3];
+			v[i8+5] = u[i8+5]; v[i8+7] = u[i8+7];
+		} else if (i < j) {
+			Int32 i8 = i << 3, j8 = j << 3;
+			v[j8+1] = u[i8+1]; v[i8+1] = u[j8+1];
+			v[j8+3] = u[i8+3]; v[i8+3] = u[j8+3];
+			v[j8+5] = u[i8+5]; v[i8+5] = u[j8+5];
+			v[j8+7] = u[i8+7]; v[i8+7] = u[j8+7];
+		}
+	}
+
+	/* step 5 */
+	for (k = 0, k2 = 0; k < n2; k++, k2 += 2) {
+		w[k] = v[k2+1];
+	}
+
+	/* step 6 */
+	for (k = 0, k2 = 0, k4 = 0; k < n8; k++, k2 += 2, k4 += 4) {
+		u[n-1-k2] = w[k4];
+		u[n-2-k2] = w[k4+1];
+		u[n3_4-1-k2] = w[k4+2];
+		u[n3_4-2-k2] = w[k4+3];
+	}
+
+	/* step 7 */
+	for (k = 0, k2 = 0; k < n8; k++, k2 += 2) {
+		v[n2+k2]   = ( u[n2+k2]   + u[n-2-k2] + C[k2+1] * (u[n2+k2]   - u[n-2-k2]) + C[k2] * (u[n2+k2+1] + u[n-2-k2+1])) * 0.5f;
+		v[n-2-k2]  = ( u[n2+k2]   + u[n-2-k2] - C[k2+1] * (u[n2+k2]   - u[n-2-k2]) - C[k2] * (u[n2+k2+1] + u[n-2-k2+1])) * 0.5f;
+		v[n2+k2+1] = ( u[n2+k2+1] - u[n-1-k2] + C[k2+1] * (u[n2+1+k2] + u[n-1-k2]) - C[k2] * (u[n2+k2]   - u[n-2-k2])) * 0.5f;
+		v[n-1-k2]  = (-u[n2+k2+1] + u[n-1-k2] + C[k2+1] * (u[n2+1+k2] + u[n-1-k2]) - C[k2] * (u[n2+k2]   - u[n-2-k2])) * 0.5f;
+	}
+
+	/* step 8 */
+	for (k = 0, k2 = 0; k < n4; k++, k2 += 2) {
+		X[k]      = v[k2+n2] * B[k2]   + v[k2+1+n2] * B[k2+1];
+		X[n2-1-k] = v[k2+n2] * B[k2+1] - v[k2+1+n2] * B[k2];
+	}
+
+	/* output */
+	for (k = 0; k < n4;   k++) out[k] = 0.5f * X[k+n4];
+	for (     ; k < n3_4; k++) out[k] = 0.5f * -X[n3_4-k-1];
+	for (     ; k < n;    k++) out[k] = 0.5f * -X[k-n3_4];
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Vorbis setup--------------------------------------------------------*
 *#########################################################################################################################*/
 struct Mode { UInt8 BlockSizeFlag, MappingIdx; };
@@ -938,152 +1076,6 @@ ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 /*########################################################################################################################*
 *-----------------------------------------------------Vorbis frame--------------------------------------------------------*
 *#########################################################################################################################*/
-#define PI MATH_PI
-void imdct(Real32* in, Real32* out, Int32 N) {
-	Int32 i, k;
-
-	for (i = 0; i < 2 * N; i++) {
-		Real64 sum = 0;
-		for (k = 0; k < N; k++) {
-			sum += in[k] * Math_Cos((PI / N) * (i + 0.5 + N * 0.5) * (k + 0.5));
-		}
-		out[i] = sum;
-	}
-}
-
-static UInt32 ReverseBits(UInt32 v) {
-	v = ((v >> 1) & 0x55555555) | ((v & 0x55555555) << 1);
-	v = ((v >> 2) & 0x33333333) | ((v & 0x33333333) << 2);
-	v = ((v >> 4) & 0x0F0F0F0F) | ((v & 0x0F0F0F0F) << 4);
-	v = ((v >> 8) & 0x00FF00FF) | ((v & 0x00FF00FF) << 8);
-	v = (v >> 16) | (v << 16);
-	return v;
-}
-
-static UInt32 Log2(UInt32 v) {
-	UInt32 r = 0;
-	while (v >>= 1) r++;
-	return r;
-}
-
-#define VORBIS_MAX_BLOCK_SIZE 8192
-void imdct_fast(Real32* in, Real32* out, Int32 n) {
-	Int32 n2 = n >> 1, n4 = n >> 2, n8 = n >> 3, n3_4 = n - n4;
-	Int32 k, k2, k4, i, j;
-
-	/* Optimised algorithm from "The use of multirate filter banks for coding of high quality digital audio" */
-	/* Uses a few fixes for the paper noted at http://www.nothings.org/stb_vorbis/mdct_01.txt */
-
-	Real32 A[VORBIS_MAX_BLOCK_SIZE / 2];
-	Real32 B[VORBIS_MAX_BLOCK_SIZE / 2];
-	Real32 C[VORBIS_MAX_BLOCK_SIZE / 4];
-	/* setup twiddle factors */
-	for (k = 0, k2 = 0; k < n4; k++, k2 += 2) {
-		A[k2]   =  Math_Cos((4*k * PI) / n);
-		A[k2+1] = -Math_Sin((4*k * PI) / n);
-		B[k2]   =  Math_Cos(((k2+1) * PI) / (2*n));
-		B[k2+1] =  Math_Sin(((k2+1) * PI) / (2*n));
-	}
-	for (k = 0, k2 = 0; k < n8; k++, k2 += 2) {
-		C[k2]   =  Math_Cos(((k2+1) * (2*PI)) / n);
-		C[k2+1] = -Math_Sin(((k2+1) * (2*PI)) / n);
-	}
-
-	Real32 u[VORBIS_MAX_BLOCK_SIZE];
-	Real32 v[VORBIS_MAX_BLOCK_SIZE];
-	Real32 w[VORBIS_MAX_BLOCK_SIZE];
-	Real32 X[VORBIS_MAX_BLOCK_SIZE];
-	/* spectral coefficients */
-	for (k = 0; k < n2; k++) u[k] = in[k];
-	for (     ; k < n;  k++) u[k] = -in[n-k-1];
-
-	/* step 1 */
-	for (k = 0, k2 = 0, k4 = 0; k < n4; k++, k2 += 2, k4 += 4) {
-		v[n-k4-1] = (u[k4] - u[n-k4-1]) * A[k2]   - (u[k4+2] - u[n-k4-3]) * A[k2 + 1];
-		v[n-k4-3] = (u[k4] - u[n-k4-1]) * A[k2+1] + (u[k4+2] - u[n-k4-3]) * A[k2];
-	}
-
-	/* step 2 */
-	for (k = 0, k4 = 0; k < n8; k++, k4 += 4) {
-		w[n2+3+k4] = v[n2+3+k4] + v[k4+3];
-		w[n2+1+k4] = v[n2+1+k4] + v[k4+1];
-
-		w[k4+3] = (v[n2+3+k4] - v[k4+3]) * A[n2-4-k4] - (v[n2+1+k4] - v[k4+1]) * A[n2-3-k4];
-		w[k4+1] = (v[n2+1+k4] - v[k4+1]) * A[n2-4-k4] + (v[n2+3+k4] - v[k4+3]) * A[n2-3-k4];
-	}
-
-	/* step 3*/
-	Int32 l, ld_n = Log2(n);
-	for (l = 0; l <= ld_n - 4; l++) {
-		Int32 k0 = n >> (l+2), k1 = 1 << (l+3);
-		Int32 r, r4, rMax = n >> (l+4), s2, s2Max = 1 << (l+2);
-
-		for (r = 0, r4 = 0; r < rMax; r++, r4 += 4) {
-			for (s2 = 0; s2 < s2Max; s2 += 2) {
-				u[n-1-k0*s2-r4] = w[n-1-k0*s2-r4] + w[n-1-k0*(s2+1)-r4];
-				u[n-3-k0*s2-r4] = w[n-3-k0*s2-r4] + w[n-3-k0*(s2+1)-r4];
-
-				u[n-1-k0*(s2+1)-r4] = (w[n-1-k0*s2-r4] - w[n-1-k0*(s2+1)-r4]) * A[r*k1]
-					                - (w[n-3-k0*s2-r4] - w[n-3-k0*(s2+1)-r4]) * A[r*k1+1];
-				u[n-3-k0*(s2+1)-r4] = (w[n-3-k0*s2-r4] - w[n-3-k0*(s2+1)-r4]) * A[r*k1]
-					                + (w[n-1-k0*s2-r4] - w[n-1-k0*(s2+1)-r4]) * A[r*k1+1];
-			}
-		}
-
-		if (l+1 <= ld_n - 4) {
-			Platform_MemCpy(w, u, sizeof(u));
-		}
-	}
-
-	/* step 4 */
-	for (i = 0; i < n8; i++) {
-		j = ReverseBits(i) >> (32-ld_n+3);
-		if (i == j) {
-			Int32 i8 = i << 3;
-			v[i8+1] = u[i8+1]; v[i8+3] = u[i8+3];
-			v[i8+5] = u[i8+5]; v[i8+7] = u[i8+7];
-		} else if (i < j) {
-			Int32 i8 = i << 3, j8 = j << 3;
-			v[j8+1] = u[i8+1]; v[i8+1] = u[j8+1];
-			v[j8+3] = u[i8+3]; v[i8+3] = u[j8+3];
-			v[j8+5] = u[i8+5]; v[i8+5] = u[j8+5];
-			v[j8+7] = u[i8+7]; v[i8+7] = u[j8+7];
-		}
-	}
-
-	/* step 5 */
-	for (k = 0, k2 = 0; k < n2; k++, k2 += 2) {
-		w[k] = v[k2+1];
-	}
-
-	/* step 6 */
-	for (k = 0, k2 = 0, k4 = 0; k < n8; k++, k2 += 2, k4 += 4) {
-		u[n-1-k2] = w[k4];
-		u[n-2-k2] = w[k4+1];
-		u[n3_4-1-k2] = w[k4+2];
-		u[n3_4-2-k2] = w[k4+3];
-	}
-
-	/* step 7 */
-	for (k = 0, k2 = 0; k < n8; k++, k2 += 2) {
-		v[n2+k2]   = ( u[n2+k2]   + u[n-2-k2] + C[k2+1] * (u[n2+k2]   - u[n-2-k2]) + C[k2] * (u[n2+k2+1] + u[n-2-k2+1])) * 0.5f;
-		v[n-2-k2]  = ( u[n2+k2]   + u[n-2-k2] - C[k2+1] * (u[n2+k2]   - u[n-2-k2]) - C[k2] * (u[n2+k2+1] + u[n-2-k2+1])) * 0.5f;
-		v[n2+k2+1] = ( u[n2+k2+1] - u[n-1-k2] + C[k2+1] * (u[n2+1+k2] + u[n-1-k2]) - C[k2] * (u[n2+k2]   - u[n-2-k2])) * 0.5f;
-		v[n-1-k2]  = (-u[n2+k2+1] + u[n-1-k2] + C[k2+1] * (u[n2+1+k2] + u[n-1-k2]) - C[k2] * (u[n2+k2]   - u[n-2-k2])) * 0.5f;
-	}
-
-	/* step 8 */
-	for (k = 0, k2 = 0; k < n4; k++, k2 += 2) {
-		X[k]      = v[k2+n2] * B[k2]   + v[k2+1+n2] * B[k2+1];
-		X[n2-1-k] = v[k2+n2] * B[k2+1] - v[k2+1+n2] * B[k2];
-	}
-
-	/* output */
-	for (k = 0; k < n4;   k++) out[k] = 0.5f * X[k+n4];
-	for (     ; k < n3_4; k++) out[k] = 0.5f * -X[n3_4-k-1];
-	for (     ; k < n;    k++) out[k] = 0.5f * -X[k-n3_4];
-}
-
 ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	Int32 i, j, packetType = Vorbis_ReadBits(ctx, 1);
 	if (packetType) return VORBIS_ERR_FRAME_TYPE;
