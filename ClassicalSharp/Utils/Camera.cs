@@ -31,25 +31,12 @@ namespace ClassicalSharp {
 	public abstract class PerspectiveCamera : Camera {
 		
 		protected static Vector2 rotOffset;
-		protected static Vector3 targetOffset;
 		protected LocalPlayer player;
 		
 		public PerspectiveCamera(Game game) {
 			this.game = game;
 			player = game.LocalPlayer;
 			tiltM = Matrix4.Identity;
-		}
-		
-		protected Vector3 GetDirVector() {
-			Vector2 rot = GetOrientation();
-			Vector3 dir = Utils.GetDirVector(rot.X, rot.Y);
-			
-			// Adjusts pitch of the player to avoid looking straight up or down,
-			// as pitch parallel to camera up vector causes rendering issues
-			if (dir.Y > +0.999998f) dir.Y = +0.999998f;
-			if (dir.Y < -0.999998f) dir.Y = -0.999998f;
-			
-			return dir;
 		}
 		
 		public override void GetProjection(out Matrix4 m) {
@@ -61,15 +48,13 @@ namespace ClassicalSharp {
 		
 		public override void GetView(out Matrix4 m) {
 			Vector3 pos = game.CurrentCameraPos;
-			Vector3 target = pos + targetOffset;
-			
-			Matrix4.LookAt(pos, target, Vector3.UnitY, out m);
+			Vector2 rot = GetOrientation();			
+			Matrix4.LookRot(pos, rot, out m);
 			Matrix4.Mult(out m, ref m, ref tiltM);
 		}
 		
 		public override void GetPickedBlock(PickedPos pos) {
 			Vector3 eyePos = player.EyePosition;
-			//Vector3 dir = GetDirVector();
 			Vector3 dir = Utils.GetDirVector(player.HeadYRadians, player.HeadXRadians);
 			float reach = game.LocalPlayer.ReachDistance;
 			
@@ -134,7 +119,7 @@ namespace ClassicalSharp {
 			
 			// Need to make sure we don't cross the vertical axes, because that gets weird.
 			if (update.HeadX >= 90 && update.HeadX <= 270) {
-				update.HeadX = player.interp.next.HeadX < 180 ? 89.9f : 270.1f;
+				update.HeadX = player.interp.next.HeadX < 180 ? 90.0f : 270.0f;
 			}
 			game.LocalPlayer.SetLocation(update, false);
 		}
@@ -193,12 +178,13 @@ namespace ClassicalSharp {
 			Vector3 target = player.EyePosition;
 			target.Y += bobbingVer;
 			
-			Vector3 dir = -GetDirVector();
-			Picking.ClipCameraPos(game, target, dir, dist, game.CameraClipPos);
-			Vector3 camPos = game.CameraClipPos.Intersect;
+			// cast ray from player position to camera position
+			// this way we can stop if we hit a block in the way
+			Vector2 rot = GetOrientation();
+			Vector3 dir = -Utils.GetDirVector(rot.X, rot.Y);
 			
-			targetOffset = target - camPos;
-			return camPos;
+			Picking.ClipCameraPos(game, target, dir, dist, game.CameraClipPos);
+			return game.CameraClipPos.Intersect;
 		}
 	}
 	
@@ -218,8 +204,6 @@ namespace ClassicalSharp {
 			double headY = player.HeadYRadians;
 			camPos.X += bobbingHor * (float)Math.Cos(headY);
 			camPos.Z += bobbingHor * (float)Math.Sin(headY);
-			
-			targetOffset = GetDirVector();
 			return camPos;
 		}
 	}

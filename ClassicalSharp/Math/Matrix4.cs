@@ -138,20 +138,15 @@ namespace OpenTK {
 			                     a, b, c, -1,
 			                     0, 0, d,  0);
 		}
-
-		public static void LookAt(Vector3 eye, Vector3 target, Vector3 up, out Matrix4 result) {
-			Vector3 z = Vector3.Normalize(eye - target);
-			Vector3 x = Vector3.Normalize(Vector3.Cross(up, z));
-			Vector3 y = Vector3.Normalize(Vector3.Cross(z, x));
-
-			Matrix4 rot = new Matrix4(new Vector4(x.X, y.X, z.X, 0.0f),
-			                          new Vector4(x.Y, y.Y, z.Y, 0.0f),
-			                          new Vector4(x.Z, y.Z, z.Z, 0.0f),
-			                          Vector4.UnitW);
+		
+		public static void LookRot(Vector3 pos, ClassicalSharp.Vector2 rot, out Matrix4 result) {
+			Matrix4 rotX, rotY, trans;
+			RotateX(out rotX, rot.Y);
+			RotateY(out rotY, rot.X);
+			Translate(out trans, -pos.X, -pos.Y, -pos.Z);
 			
-			Matrix4 trans;
-			Translate(out trans, -eye.X, -eye.Y, -eye.Z);
-			Mult(out result, ref trans, ref rot);
+			Mult(out result, ref rotY, ref rotX);
+			Mult(out result, ref trans, ref result);
 		}
 
 		public static void Mult(out Matrix4 result, ref Matrix4 left, ref Matrix4 right) {

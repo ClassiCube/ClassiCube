@@ -41,7 +41,6 @@ void Vector3_Negate(Vector3* result, Vector3* a);
 
 void Vector3_Lerp(Vector3* result, Vector3* a, Vector3* b, Real32 blend);
 Real32 Vector3_Dot(Vector3* left, Vector3* right);
-void Vector3_Cross(Vector3* result, Vector3* a, Vector3* b);
 void Vector3_Normalize(Vector3* result, Vector3* a);
 
 void Vector3_Transform(Vector3* result, Vector3* a, struct Matrix* mat);
@@ -81,7 +80,7 @@ void Matrix_Orthographic(struct Matrix* result, Real32 width, Real32 height, Rea
 void Matrix_OrthographicOffCenter(struct Matrix* result, Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar);
 void Matrix_PerspectiveFieldOfView(struct Matrix* result, Real32 fovy, Real32 aspect, Real32 zNear, Real32 zFar);
 void Matrix_PerspectiveOffCenter(struct Matrix* result, Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar);
-void Matrix_LookAt(struct Matrix* result, Vector3 eye, Vector3 target, Vector3 up);
+void Matrix_LookRot(struct Matrix* result, Vector3 pos, Vector2 rot);
 
 bool FrustumCulling_SphereInFrustum(Real32 x, Real32 y, Real32 z, Real32 radius);
 void FrustumCulling_CalcFrustumEquations(struct Matrix* projection, struct Matrix* modelView);

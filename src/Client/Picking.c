@@ -199,30 +199,21 @@ static bool Picking_ClipBlock(struct PickedPos* pos) {
 	return true;
 }
 
+static Vector3 picking_adjust = VECTOR3_CONST1(0.1f);
 static bool Picking_ClipCamera(struct PickedPos* pos) {
-	if (Block_Draw[tracer.Block] == DRAW_GAS || Block_Collide[tracer.Block] != COLLIDE_SOLID) {
-		return false;
-	}
-
+	if (Block_Draw[tracer.Block] == DRAW_GAS || Block_Collide[tracer.Block] != COLLIDE_SOLID) return false;
 	Real32 t0, t1;
-	if (!Intersection_RayIntersectsBox(tracer.Origin, tracer.Dir, tracer.Min, tracer.Max, &t0, &t1)) {
-		return false;
-	}
+	if (!Intersection_RayIntersectsBox(tracer.Origin, tracer.Dir, tracer.Min, tracer.Max, &t0, &t1)) return false;
+
+	/* Need to collide with slightly outside block, to avoid camera clipping issues */
+	Vector3_Sub(&tracer.Min, &tracer.Min, &picking_adjust);
+	Vector3_Add(&tracer.Max, &tracer.Max, &picking_adjust);
+	Intersection_RayIntersectsBox(tracer.Origin, tracer.Dir, tracer.Min, tracer.Max, &t0, &t1);
 
 	Vector3 intersect;
-	Vector3_Mul1(&intersect, &tracer.Dir, t0);      /* intersect = dir * t0 */
+	Vector3_Mul1(&intersect, &tracer.Dir, t0);           /* intersect = dir * t0 */
 	Vector3_Add(&intersect, &tracer.Origin, &intersect); /* intersect = origin + dir * t0 */
 	PickedPos_SetAsValid(pos, &tracer, intersect);
-
-#define PICKING_ADJUST 0.1f
-	switch (pos->ClosestFace) {
-	case FACE_XMIN: pos->Intersect.X -= PICKING_ADJUST; break;
-	case FACE_XMAX: pos->Intersect.X += PICKING_ADJUST; break;
-	case FACE_YMIN: pos->Intersect.Y -= PICKING_ADJUST; break;
-	case FACE_YMAX: pos->Intersect.Y += PICKING_ADJUST; break;
-	case FACE_ZMIN: pos->Intersect.Z -= PICKING_ADJUST; break;
-	case FACE_ZMAX: pos->Intersect.Z += PICKING_ADJUST; break;
-	}
 	return true;
 }
 
@@ -236,7 +227,7 @@ void Picking_ClipCameraPos(Vector3 origin, Vector3 dir, Real32 reach, struct Pic
 	bool noClip = !Game_CameraClipping || LocalPlayer_Instance.Hacks.Noclip;
 	if (noClip || !Picking_RayTrace(origin, dir, reach, pos, Picking_ClipCamera)) {
 		PickedPos_SetAsInvalid(pos);
-		Vector3_Mul1(&pos->Intersect, &dir, reach);        /* intersect = dir * reach */
+		Vector3_Mul1(&pos->Intersect, &dir, reach);             /* intersect = dir * reach */
 		Vector3_Add(&pos->Intersect, &origin, &pos->Intersect); /* intersect = origin + dir * reach */
 	}
 }

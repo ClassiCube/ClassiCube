@@ -52,18 +52,6 @@ void Vector3_Lerp(Vector3* result, Vector3* a, Vector3* b, Real32 blend) {
 	result->Z = blend * (b->Z - a->Z) + a->Z;
 }
 
-Real32 Vector3_Dot(Vector3* a, Vector3* b) {
-	return a->X * b->X + a->Y * b->Y + a->Z * b->Z;
-}
-
-void Vector3_Cross(Vector3* result, Vector3* a, Vector3* b) {
-	/* a or b could be pointing to result - can't directly assign X/Y/Z therefore */
-	Real32 x = a->Y * b->Z - a->Z * b->Y;
-	Real32 y = a->Z * b->X - a->X * b->Z;
-	Real32 z = a->X * b->Y - a->Y * b->X;
-	result->X = x; result->Y = y; result->Z = z;
-}
-
 void Vector3_Normalize(Vector3* result, Vector3* a) {
 	Real32 lenSquared = a->X * a->X + a->Y * a->Y + a->Z * a->Z;
 	Real32 scale = 1.0f / Math_SqrtF(lenSquared);
@@ -257,21 +245,14 @@ void Matrix_PerspectiveOffCenter(struct Matrix*  result, Real32 left, Real32 rig
 	result->Row2.W = -1.0f;
 }
 
-void Matrix_LookAt(struct Matrix*  result, Vector3 eye, Vector3 target, Vector3 up) {
-	/* Transposed, source https://msdn.microsoft.com/en-us/library/windows/desktop/bb281711(v=vs.85).aspx */
-	Vector3 x, y, z;
-	Vector3_Sub(&z, &eye, &target); Vector3_Normalize(&z, &z);
-	Vector3_Cross(&x, &up, &z);     Vector3_Normalize(&x, &x);
-	Vector3_Cross(&y, &z, &x);      Vector3_Normalize(&y, &y);
+void Matrix_LookRot(struct Matrix* result, Vector3 pos, Vector2 rot) {
+	struct Matrix rotX, rotY, trans;
+	Matrix_RotateX(&rotX, rot.Y);
+	Matrix_RotateY(&rotY, rot.X);
+	Matrix_Translate(&trans, -pos.X, -pos.Y, -pos.Z);
 
-	result->Row0.X = x.X; result->Row0.Y = y.X; result->Row0.Z = z.X; result->Row0.W = 0.0f;
-	result->Row1.X = x.Y; result->Row1.Y = y.Y; result->Row1.Z = z.Y; result->Row1.W = 0.0f;
-	result->Row2.X = x.Z; result->Row2.Y = y.Z; result->Row2.Z = z.Z; result->Row2.W = 0.0f;
-
-	result->Row3.X = -Vector3_Dot(&x, &eye);
-	result->Row3.Y = -Vector3_Dot(&y, &eye);
-	result->Row3.Z = -Vector3_Dot(&z, &eye);
-	result->Row3.W = 1.0f;
+	Matrix_Mul(result, &rotY, &rotX);
+	Matrix_Mul(result, &trans, result);
 }
 
 Real32

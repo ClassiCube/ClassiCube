@@ -61,26 +61,6 @@ namespace OpenTK {
 			result.Y = blend * (b.Y - a.Y) + a.Y;
 			result.Z = blend * (b.Z - a.Z) + a.Z;
 		}
-
-		public static float Dot(Vector3 left, Vector3 right) {
-			return left.X * right.X + left.Y * right.Y + left.Z * right.Z;
-		}
-
-		public static void Dot(ref Vector3 left, ref Vector3 right, out float result) {
-			result = left.X * right.X + left.Y * right.Y + left.Z * right.Z;
-		}
-		
-		public static Vector3 Cross(Vector3 left, Vector3 right) {
-			return new Vector3(left.Y * right.Z - left.Z * right.Y,
-			                   left.Z * right.X - left.X * right.Z,
-			                   left.X * right.Y - left.Y * right.X);
-		}
-
-		public static void Cross(ref Vector3 left, ref Vector3 right, out Vector3 result) {
-			result = new Vector3(left.Y * right.Z - left.Z * right.Y,
-			                     left.Z * right.X - left.X * right.Z,
-			                     left.X * right.Y - left.Y * right.X);
-		}
 		
 		public static Vector3 Normalize(Vector3 vec) {
 			float scale = 1f / (float)Math.Sqrt(vec.LengthSquared);

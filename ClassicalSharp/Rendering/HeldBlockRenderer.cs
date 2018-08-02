@@ -90,10 +90,10 @@ namespace ClassicalSharp.Renderers {
 		static Vector3 sOffset = new Vector3(0.46f, -0.52f, -0.72f);
 		void SetMatrix() {
 			Player p = game.LocalPlayer;
-			Vector3 eyePos = Vector3.Zero; eyePos.Y = p.EyeHeight;
+			Vector3 eye = Vector3.Zero; eye.Y = p.EyeHeight;
 			
-			Matrix4 m, lookAt;
-			Matrix4.LookAt(eyePos, eyePos - Vector3.UnitZ, Vector3.UnitY, out lookAt);
+			Matrix4 lookAt, m;
+			Matrix4.Translate(out lookAt, -eye.X, -eye.Y, -eye.Z);
 			Matrix4.Mult(out m, ref lookAt, ref Camera.tiltM);
 			game.Graphics.View = m;
 		}

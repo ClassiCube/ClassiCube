@@ -50,25 +50,21 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		static Vector3 adjust = new Vector3(0.1f);
 		static bool CameraClip(Game game, PickedPos pos) {
 			if (BlockInfo.Draw[t.Block] == DrawType.Gas || BlockInfo.Collide[t.Block] != CollideType.Solid)
 				return false;
 			
 			float t0, t1;
-			const float adjust = 0.1f;
 			if (!Intersection.RayIntersectsBox(t.Origin, t.Dir, t.Min, t.Max, out t0, out t1))
 				return false;
+			
+			// Need to collide with slightly outside block, to avoid camera clipping issues
+			t.Min -= adjust; t.Max += adjust;
+			Intersection.RayIntersectsBox(t.Origin, t.Dir, t.Min, t.Max, out t0, out t1);
+			
 			Vector3 I = t.Origin + t.Dir * t0;
 			pos.SetAsValid(t.X, t.Y, t.Z, t.Min, t.Max, t.Block, I);
-			
-			switch (pos.Face) {
-					case BlockFace.XMin: pos.Intersect.X -= adjust; break;
-					case BlockFace.XMax: pos.Intersect.X += adjust; break;
-					case BlockFace.YMin: pos.Intersect.Y -= adjust; break;
-					case BlockFace.YMax: pos.Intersect.Y += adjust; break;
-					case BlockFace.ZMin: pos.Intersect.Z -= adjust; break;
-					case BlockFace.ZMax: pos.Intersect.Z += adjust; break;
-			}
 			return true;
 		}
 

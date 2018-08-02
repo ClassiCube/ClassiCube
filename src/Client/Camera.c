@@ -9,22 +9,9 @@
 #include "Input.h"
 
 Vector2 cam_rotOffset;
-Vector3 cam_targetOffset;
 struct Camera Camera_Cameras[3];
 Int32 Camera_ActiveIndex;
 #define Cam_IsForward_Third() (Camera_ActiveIndex == 2)
-
-static Vector3 PerspectiveCamera_GetDirVector(void) {
-	Vector2 rot = Camera_Active->GetOrientation();
-	Vector3 dir = Vector3_GetDirVector(rot.X, rot.Y);
-
-	/* Adjusts pitch of the player to avoid looking straight up or down, */
-	/* as pitch parallel to camera up vector causes rendering issues */	
-	if (dir.Y > +0.999998f) dir.Y = +0.999998f;
-	if (dir.Y < -0.999998f) dir.Y = -0.999998f;
-
-	return dir;
-}
 
 static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
 	Real32 fovy = Game_Fov * MATH_DEG2RAD;
@@ -33,16 +20,14 @@ static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
 }
 
 static void PerspectiveCamera_GetView(struct Matrix* mat) {
-	Vector3 pos = Game_CurrentCameraPos, target, up = Vector3_UnitY;
-	Vector3_Add(&target, &pos, &cam_targetOffset);
-
-	Matrix_LookAt(mat, pos, target, up);
+	Vector3 pos = Game_CurrentCameraPos;
+	Vector2 rot = Camera_Active->GetOrientation();
+	Matrix_LookRot(mat, pos, rot);
 	Matrix_MulBy(mat, &Camera_TiltM);
 }
 
 static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	/* Vector3 dir = PerspectiveCamera_GetDirVector(); */
 	Vector3 dir = Vector3_GetDirVector(p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD);
 	Vector3 eyePos = Entity_GetEyePosition(p);
 	Real32 reach = LocalPlayer_Instance.ReachDistance;
@@ -104,7 +89,7 @@ static void PerspectiveCamera_UpdateMouseRotation(void) {
 
 	/* Need to make sure we don't cross the vertical axes, because that gets weird. */
 	if (update.HeadX >= 90.0f && update.HeadX <= 270.0f) {
-		update.HeadX = player->Interp.Next.HeadX < 180.0f ? 89.9f : 270.1f;
+		update.HeadX = player->Interp.Next.HeadX < 180.0f ? 90.0f : 270.0f;
 	}
 
 	struct Entity* e = &player->Base;
@@ -165,8 +150,6 @@ static Vector3 FirstPersonCamera_GetPosition(Real32 t) {
 	Real32 headY = (p->HeadY * MATH_DEG2RAD);
 	camPos.X += Camera_BobbingHor * Math_CosF(headY);
 	camPos.Z += Camera_BobbingHor * Math_SinF(headY);
-
-	cam_targetOffset = PerspectiveCamera_GetDirVector();
 	return camPos;
 }
 
@@ -200,19 +183,19 @@ static Vector3 ThirdPersonCamera_GetPosition(Real32 t) {
 	Vector3 target = Entity_GetEyePosition(p);
 	target.Y += Camera_BobbingVer;
 
-	Vector3 dir = PerspectiveCamera_GetDirVector(); Vector3_Negate(&dir, &dir);
-	Picking_ClipCameraPos(target, dir, dist, &Game_CameraClipPos);
-	Vector3 camPos = Game_CameraClipPos.Intersect;
+	Vector2 rot = Camera_Active->GetOrientation();
+	Vector3 dir = Vector3_GetDirVector(rot.X, rot.Y);
+	Vector3_Negate(&dir, &dir);
 
-	Vector3_Sub(&cam_targetOffset, &target, &camPos);
-	return camPos;
+	Picking_ClipCameraPos(target, dir, dist, &Game_CameraClipPos);
+	return Game_CameraClipPos.Intersect;
 }
 
 static bool ThirdPersonCamera_Zoom(Real32 amount) {
 	Real32* dist = Cam_IsForward_Third() ? &dist_forward : &dist_third;
 	Real32 newDist = *dist - amount;
 
-	newDist = min(newDist, 2.0f); *dist = newDist;
+	*dist = max(newDist, 2.0f); 
 	return true;
 }
 
