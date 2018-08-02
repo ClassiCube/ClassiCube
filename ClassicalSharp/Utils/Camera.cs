@@ -63,7 +63,7 @@ namespace ClassicalSharp {
 		
 		protected static Point previous, delta;
 		void CentreMousePosition() {
-			Point topLeft = game.PointToScreen(Point.Empty);
+			Point topLeft = game.window.PointToScreen(Point.Empty);
 			int cenX = topLeft.X + game.Width / 2;
 			int cenY = topLeft.Y + game.Height / 2;
 			
@@ -73,7 +73,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void RegrabMouse() {
-			if (!game.Exists) return;
+			if (!game.window.Exists) return;
 			delta = Point.Empty;
 			CentreMousePosition();
 		}

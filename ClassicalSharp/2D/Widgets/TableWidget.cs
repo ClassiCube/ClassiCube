@@ -94,7 +94,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			GetCoords(i, out x, out y);
 			x += blockSize / 2; y += blockSize / 2;
 			
-			Point topLeft = game.PointToScreen(Point.Empty);
+			Point topLeft = game.window.PointToScreen(Point.Empty);
 			x += topLeft.X; y += topLeft.Y;
 			return new Point(x, y);
 		}

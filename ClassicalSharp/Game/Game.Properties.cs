@@ -204,17 +204,11 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		internal INativeWindow window;
+		public INativeWindow window;
 		
 		public int Width, Height;
 		
 		public bool Focused { get { return window.Focused; } }
-		
-		public bool Exists { get { return window.Exists; } }
-		
-		public Point PointToScreen(Point coords) {
-			return window.PointToScreen(coords);
-		}
 		
 		bool visible = true;
 		internal bool realVisible = true;
