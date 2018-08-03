@@ -102,39 +102,39 @@ namespace ClassicalSharp.Renderers {
 			VertexP3fT2fC4b v; v.Col = game.World.Env.CloudsCol;
 			
 			// Render the front quad			                        
-			v.X =  pos; v.Y = -pos; v.Z = -pos; v.U = 0.25f; v.V = 1.00f; *vertices = v; vertices++;
-			v.X = -pos;                         v.U = 0.50f;              *vertices = v; vertices++;
+			v.X = -pos; v.Y = -pos; v.Z = -pos; v.U = 0.25f; v.V = 1.00f; *vertices = v; vertices++;
+			v.X =  pos;                         v.U = 0.50f;              *vertices = v; vertices++;
 			            v.Y =  pos;                          v.V = 0.50f; *vertices = v; vertices++;
-			v.X =  pos;                         v.U = 0.25f;              *vertices = v; vertices++;
+			v.X = -pos;                         v.U = 0.25f;              *vertices = v; vertices++;
 			
 			// Render the left quad
-			v.X =  pos; v.Y = -pos; v.Z =  pos; v.U = 0.00f; v.V = 1.00f; *vertices = v; vertices++;
+			v.X = -pos; v.Y = -pos; v.Z =  pos; v.U = 0.00f; v.V = 1.00f; *vertices = v; vertices++;
 			                        v.Z = -pos; v.U = 0.25f;              *vertices = v; vertices++;
 			            v.Y =  pos;                          v.V = 0.50f; *vertices = v; vertices++;
 			                        v.Z =  pos; v.U = 0.00f;              *vertices = v; vertices++;
 			
 			// Render the back quad			                       
-			v.X = -pos; v.Y = -pos; v.Z =  pos; v.U = 0.75f; v.V = 1.00f; *vertices = v; vertices++;
-			v.X =  pos;                         v.U = 1.00f;              *vertices = v; vertices++;
+			v.X =  pos; v.Y = -pos; v.Z =  pos; v.U = 0.75f; v.V = 1.00f; *vertices = v; vertices++;
+			v.X = -pos;                         v.U = 1.00f;              *vertices = v; vertices++;
 			            v.Y =  pos;                          v.V = 0.50f; *vertices = v; vertices++;
-			v.X = -pos;                         v.U = 0.75f;              *vertices = v; vertices++;
+			v.X =  pos;                         v.U = 0.75f;              *vertices = v; vertices++;
 			
 			// Render the right quad
-			v.X = -pos; v.Y = -pos; v.Z = -pos; v.U = 0.50f; v.V = 1.00f; *vertices = v; vertices++;
+			v.X =  pos; v.Y = -pos; v.Z = -pos; v.U = 0.50f; v.V = 1.00f; *vertices = v; vertices++;
 			                        v.Z =  pos; v.U = 0.75f;              *vertices = v; vertices++;
 			            v.Y =  pos;                          v.V = 0.50f; *vertices = v; vertices++;
 			                        v.Z = -pos; v.U = 0.50f;              *vertices = v; vertices++;
 			
 			// Render the top quad
-			v.X = -pos; v.Y =  pos; v.Z = -pos;                           *vertices = v; vertices++;
+			v.X =  pos; v.Y =  pos; v.Z = -pos;                           *vertices = v; vertices++;
 			                        v.Z =  pos;              v.V = 0.00f; *vertices = v; vertices++;
-			v.X =  pos;                         v.U = 0.25f;              *vertices = v; vertices++;
+			v.X = -pos;                         v.U = 0.25f;              *vertices = v; vertices++;
 			                        v.Z = -pos;              v.V = 0.50f; *vertices = v; vertices++;
 			
 			// Render the bottom quad
-			v.X = -pos; v.Y = -pos; v.Z = -pos; v.U = 0.75f;              *vertices = v; vertices++;
+			v.X =  pos; v.Y = -pos; v.Z = -pos; v.U = 0.75f;              *vertices = v; vertices++;
 			                        v.Z =  pos;              v.V = 0.00f; *vertices = v; vertices++;
-			v.X =  pos;                         v.U = 0.50f;              *vertices = v; vertices++;
+			v.X = -pos;                         v.U = 0.50f;              *vertices = v; vertices++;
 			                        v.Z = -pos;              v.V = 0.50f; *vertices = v; vertices++;
 			
 			vb = game.Graphics.CreateVb(start, VertexFormat.P3fT2fC4b, count);
