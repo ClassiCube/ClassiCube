@@ -226,6 +226,7 @@ static void HeldBlockRenderer_Init(void) {
 	held_entityVTABLE = *held_entity.VTABLE;
 	held_entityVTABLE.GetCol = HeldBlockRenderer_GetCol;
 	held_entity.VTABLE = &held_entityVTABLE;
+	held_entity.NoShade = true;
 
 	held_lastBlock = Inventory_SelectedBlock;
 	Event_RegisterVoid(&GfxEvents_ProjectionChanged, NULL, HeldBlockRenderer_ProjectionChanged);

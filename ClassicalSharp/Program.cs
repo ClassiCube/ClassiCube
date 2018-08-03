@@ -22,13 +22,6 @@ namespace ClassicalSharp {
 				return;
 			}
 			
-			// NOTE: we purposely put this in another method, as we need to ensure
-			// that we do not reference any OpenTK code directly in the main function
-			// (such as DisplayDevice), which otherwise causes native crash.
-			RunGame(args);
-		}
-		
-		static void RunGame(string[] args) {
 			ErrorHandler.InstallHandler("client.log");
 			OpenTK.Configuration.SkipPerfCountersHack();
 			Utils.LogDebug("Starting " + AppName + "..");
