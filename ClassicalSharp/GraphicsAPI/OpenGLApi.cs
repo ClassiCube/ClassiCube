@@ -548,7 +548,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.GetIntegerv(GetPName.DepthBits, &depthBits);
 			
 			ApiInfo = new string[] {
-				"--Using OpenGL --",
+				"-- Using OpenGL --",
 				"Vendor: " + vendor,
 				"Renderer: " + renderer,
 				"GL version: " + version,

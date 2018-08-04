@@ -8,7 +8,7 @@
 */
 struct Texture;
 
-extern String Gfx_ApiInfo[8];
+extern String Gfx_ApiInfo[7];
 GfxResourceID GfxCommon_defaultIb;
 
 void GfxCommon_Init(void);

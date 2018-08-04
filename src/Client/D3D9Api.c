@@ -606,17 +606,54 @@ void Gfx_BeginFrame(void) {
 
 void Gfx_EndFrame(void) {
 	IDirect3DDevice9_EndScene(device);
-	ReturnCode code = IDirect3DDevice9_Present(device, NULL, NULL, NULL, NULL);
-	if ((Int32)code >= 0) return;
-
-	if (code != D3DERR_DEVICELOST) {
-		ErrorHandler_FailWithCode(code, "D3D9_EndFrame");
-	}
+	ReturnCode result = IDirect3DDevice9_Present(device, NULL, NULL, NULL, NULL);
+	if ((Int32)result >= 0) return;
+	if (result != D3DERR_DEVICELOST) ErrorHandler_FailWithCode(result, "D3D9_EndFrame");
 
 	/* TODO: Make sure this actually works on all graphics cards.*/
 	GfxCommon_LoseContext(" (Direct3D9 device lost)");
 	D3D9_LoopUntilRetrieved();
 	D3D9_RecreateDevice();
+}
+
+const UChar* D3D9_StrFlags(void) {
+	if (createFlags & D3DCREATE_HARDWARE_VERTEXPROCESSING) return "HardwareVertexProcessing";
+	if (createFlags & D3DCREATE_MIXED_VERTEXPROCESSING)    return "MixedVertexProcessing";
+	if (createFlags & D3DCREATE_SOFTWARE_VERTEXPROCESSING) return "SoftwareVertexProcessing";
+	return "(none)";
+}
+
+const UChar* D3D9_StrFormat(D3DFORMAT format) {
+	switch (format) {
+	case D3DFMT_D32:     return "D32";
+	case D3DFMT_D24X8:   return "D24X8";
+	case D3DFMT_D24S8:   return "D24S8";
+	case D3DFMT_D24X4S4: return "D24X4S4";
+	case D3DFMT_D16:     return "D16";
+	case D3DFMT_D15S1:   return "D15S1";
+
+	case D3DFMT_X8R8G8B8: return "X8R8G8B8";
+	case D3DFMT_R8G8B8:   return "R8G8B8";
+	case D3DFMT_R5G6B5:   return "R5G6B5";
+	case D3DFMT_X1R5G5B5: return "X1R5G5B5";
+	}
+	return "(unknown)";
+}
+
+void Gfx_MakeApiInfo(void) {
+	D3DADAPTER_IDENTIFIER9 adapter;
+	ReturnCode result = IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter);
+	ErrorHandler_CheckOrFail(result, "D3D9_GetAdapterDetails");
+	UInt32 texMemBytes = IDirect3DDevice9_GetAvailableTextureMem(device);
+	Real32 texMem = texMemBytes / (1024.0f * 1024.0f);
+
+	String_AppendConst(&Gfx_ApiInfo[0],"-- Using Direct3D9 --");
+	String_Format1(&Gfx_ApiInfo[1],    "Adapter: %c", adapter.Description);
+	String_Format1(&Gfx_ApiInfo[2],    "Mode: %c", D3D9_StrFlags());
+	String_Format1(&Gfx_ApiInfo[3],    "Texture memory: %f2 MB", &texMem);
+	String_Format1(&Gfx_ApiInfo[4],    "Max 2D texture dimensions: %i", &Gfx_MaxTextureDimensions);
+	String_Format1(&Gfx_ApiInfo[5],    "Depth buffer format: %c", D3D9_StrFormat(d3d9_depthFormat));
+	String_Format1(&Gfx_ApiInfo[6],    "Back buffer format: %c", D3D9_StrFormat(d3d9_viewFormat));
 }
 
 void Gfx_OnWindowResize(void) {

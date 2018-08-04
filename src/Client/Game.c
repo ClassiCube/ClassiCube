@@ -765,8 +765,6 @@ void Audio_SetMusic(Int32 volume) { }
 void Audio_SetSounds(Int32 volume) { }
 void Audio_PlayDigSound(UInt8 type) { }
 void Audio_PlayStepSound(UInt8 type) { }
-
-void Gfx_MakeApiInfo(void) { }
 void AdvLightingBuilder_SetActive(void) { }
 
 /* TODO: Initalise Shell, see https://msdn.microsoft.com/en-us/library/windows/desktop/bb762153(v=vs.85).aspx 

@@ -539,6 +539,21 @@ void Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) {
 	Platform_MemFree(&bmp.Scan0);
 }
 
+void Gfx_MakeApiInfo(void) {
+	const UChar* vendor   = glGetString(GL_VENDOR);
+	const UChar* renderer = glGetString(GL_RENDERER);
+	const UChar* version  = glGetString(GL_VERSION);
+	Int32 depthBits = 0;
+	glGetIntegerv(GL_DEPTH_BITS, &depthBits);
+
+	String_AppendConst(&Gfx_ApiInfo[0],"-- Using OpenGL --");
+	String_Format1(&Gfx_ApiInfo[1],    "Vendor: %c", vendor);
+	String_Format1(&Gfx_ApiInfo[2],    "Renderer: %c", renderer);
+	String_Format1(&Gfx_ApiInfo[3],    "GL version: %c", version);
+	String_Format1(&Gfx_ApiInfo[4],    "Max 2D texture dimensions: %i", &Gfx_MaxTextureDimensions);
+	String_Format1(&Gfx_ApiInfo[5],    "Depth buffer bits: %i", &depthBits);
+}
+
 bool Gfx_WarnIfNecessary(void) {
 #if CC_BUILD_GL11
 	Chat_AddRaw(tmp1, "&cYou are using the very outdated OpenGL backend.");

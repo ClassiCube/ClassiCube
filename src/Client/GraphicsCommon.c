@@ -7,12 +7,12 @@
 #include "ExtMath.h"
 #include "Texture.h"
 
-UChar Gfx_ApiBuffer[8][String_BufferSize(STRING_SIZE)];
-String Gfx_ApiInfo[8] = {
+UChar Gfx_ApiBuffer[7][String_BufferSize(STRING_SIZE)];
+String Gfx_ApiInfo[7] = {
 	{ Gfx_ApiBuffer[0], 0, STRING_SIZE }, { Gfx_ApiBuffer[1], 0, STRING_SIZE },
 	{ Gfx_ApiBuffer[2], 0, STRING_SIZE }, { Gfx_ApiBuffer[3], 0, STRING_SIZE },
 	{ Gfx_ApiBuffer[4], 0, STRING_SIZE }, { Gfx_ApiBuffer[5], 0, STRING_SIZE },
-	{ Gfx_ApiBuffer[6], 0, STRING_SIZE }, { Gfx_ApiBuffer[7], 0, STRING_SIZE },
+	{ Gfx_ApiBuffer[6], 0, STRING_SIZE },
 };
 
 void GfxCommon_Init(void) {
