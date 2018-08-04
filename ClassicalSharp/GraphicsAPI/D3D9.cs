@@ -314,9 +314,9 @@ namespace SharpDX.Direct3D9 {
 		FpuPreserve = 2,
 		Multithreaded = 4,
 		PureDevice = 16,
-		SoftwareVertexProcessing = 32,
-		HardwareVertexProcessing = 64,
-		MixedVertexProcessing = 128,
+		Software = 32, // SoftwareVertexProcessing
+		Hardware = 64, // HardwareVertexProcessing
+		Mixed = 128, // MixedVertexProcessing
 		DisableDriverManagement = 256,
 		AdapterGroupDevice = 512,
 		DisableExtendedDriverManagement = 1024,

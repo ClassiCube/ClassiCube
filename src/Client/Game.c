@@ -244,12 +244,13 @@ bool Game_ValidateBitmap(STRING_PURE String* file, struct Bitmap* bmp) {
 		return false;
 	}
 
-	Int32 maxSize = Gfx_MaxTextureDimensions;
-	if (bmp->Width > maxSize || bmp->Height > maxSize) {
+	Int32 maxWidth = Gfx_MaxTexWidth, maxHeight = Gfx_MaxTexHeight;
+	if (bmp->Width > maxWidth || bmp->Height > maxHeight) {
 		String_Format1(&msg, "&cUnable to use %s from the texture pack.", file); Chat_Add(&msg);
 		String_Clear(&msg);
 
-		String_Format4(&msg, "&c Its size is (%i,%i), your GPU supports (%i, %i) at most.", &bmp->Width, &bmp->Height, &maxSize, &maxSize);
+		String_Format4(&msg, "&c Its size is (%i,%i), your GPU supports (%i,%i) at most.", 
+			&bmp->Width, &bmp->Height, &maxWidth, &maxHeight);
 		Chat_Add(&msg);
 		return false;
 	}
@@ -258,7 +259,8 @@ bool Game_ValidateBitmap(STRING_PURE String* file, struct Bitmap* bmp) {
 		String_Format1(&msg, "&cUnable to use %s from the texture pack.", file); Chat_Add(&msg);
 		String_Clear(&msg);
 
-		String_Format2(&msg, "&c Its size is (%i,%i), which is not power of two dimensions.", &bmp->Width, &bmp->Height);
+		String_Format2(&msg, "&c Its size is (%i,%i), which is not power of two dimensions.", 
+			&bmp->Width, &bmp->Height);
 		Chat_Add(&msg);
 		return false;
 	}

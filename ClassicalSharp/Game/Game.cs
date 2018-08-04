@@ -205,11 +205,11 @@ namespace ClassicalSharp {
 				return false;
 			}
 			
-			int maxSize = Graphics.MaxTextureDimensions;
-			if (bmp.Width > maxSize || bmp.Height > maxSize) {
+			int maxWidth = Graphics.MaxTexWidth, maxHeight = Graphics.MaxTexHeight;
+			if (bmp.Width > maxWidth || bmp.Height > maxHeight) {
 				Chat.Add("&cUnable to use " + file + " from the texture pack.");
 				Chat.Add("&c Its size is (" + bmp.Width + "," + bmp.Height
-				         + "), your GPU supports (" + maxSize + "," + maxSize + ") at most.");
+				         + "), your GPU supports (" + maxWidth + "," + maxHeight + ") at most.");
 				return false;
 			}
 

@@ -142,7 +142,8 @@ void Gfx_Init(void) {
 
 	D3DCAPS9 caps = { 0 };
 	IDirect3DDevice9_GetDeviceCaps(device, &caps);
-	Gfx_MaxTextureDimensions = min(caps.MaxTextureWidth, caps.MaxTextureHeight);
+	Gfx_MaxTexWidth  = caps.MaxTextureWidth;
+	Gfx_MaxTexHeight = caps.MaxTextureHeight;
 
 	Gfx_CustomMipmapsLevels = true;
 	D3D9_SetDefaultRenderStates();
@@ -617,9 +618,9 @@ void Gfx_EndFrame(void) {
 }
 
 const UChar* D3D9_StrFlags(void) {
-	if (createFlags & D3DCREATE_HARDWARE_VERTEXPROCESSING) return "HardwareVertexProcessing";
-	if (createFlags & D3DCREATE_MIXED_VERTEXPROCESSING)    return "MixedVertexProcessing";
-	if (createFlags & D3DCREATE_SOFTWARE_VERTEXPROCESSING) return "SoftwareVertexProcessing";
+	if (createFlags & D3DCREATE_HARDWARE_VERTEXPROCESSING) return "Hardware";
+	if (createFlags & D3DCREATE_MIXED_VERTEXPROCESSING)    return "Mixed";
+	if (createFlags & D3DCREATE_SOFTWARE_VERTEXPROCESSING) return "Software";
 	return "(none)";
 }
 
@@ -641,17 +642,16 @@ const UChar* D3D9_StrFormat(D3DFORMAT format) {
 }
 
 void Gfx_MakeApiInfo(void) {
-	D3DADAPTER_IDENTIFIER9 adapter;
-	ReturnCode result = IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter);
-	ErrorHandler_CheckOrFail(result, "D3D9_GetAdapterDetails");
+	D3DADAPTER_IDENTIFIER9 adapter = { 0 };
+	IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter);
 	UInt32 texMemBytes = IDirect3DDevice9_GetAvailableTextureMem(device);
 	Real32 texMem = texMemBytes / (1024.0f * 1024.0f);
 
 	String_AppendConst(&Gfx_ApiInfo[0],"-- Using Direct3D9 --");
 	String_Format1(&Gfx_ApiInfo[1],    "Adapter: %c", adapter.Description);
-	String_Format1(&Gfx_ApiInfo[2],    "Mode: %c", D3D9_StrFlags());
+	String_Format1(&Gfx_ApiInfo[2],    "Processing mode: %c", D3D9_StrFlags());
 	String_Format1(&Gfx_ApiInfo[3],    "Texture memory: %f2 MB", &texMem);
-	String_Format1(&Gfx_ApiInfo[4],    "Max 2D texture dimensions: %i", &Gfx_MaxTextureDimensions);
+	String_Format2(&Gfx_ApiInfo[4],    "Max texture size: (%i, %i)", &Gfx_MaxTexWidth, &Gfx_MaxTexHeight);
 	String_Format1(&Gfx_ApiInfo[5],    "Depth buffer format: %c", D3D9_StrFormat(d3d9_depthFormat));
 	String_Format1(&Gfx_ApiInfo[6],    "Back buffer format: %c", D3D9_StrFormat(d3d9_viewFormat));
 }

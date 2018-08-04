@@ -30,7 +30,7 @@ enum MATRIX_TYPE { MATRIX_TYPE_PROJECTION, MATRIX_TYPE_VIEW, MATRIX_TYPE_TEXTURE
 void Gfx_Init(void);
 void Gfx_Free(void);
 
-Int32 Gfx_MaxTextureDimensions;
+Int32 Gfx_MaxTexWidth, Gfx_MaxTexHeight;
 Real32 Gfx_MinZNear;
 bool Gfx_LostContext;
 bool Gfx_Mipmaps;

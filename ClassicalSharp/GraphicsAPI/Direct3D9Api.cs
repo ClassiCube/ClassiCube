@@ -17,7 +17,6 @@ namespace ClassicalSharp.GraphicsAPI {
 	public class Direct3D9Api : IGraphicsApi {
 
 		IntPtr device, d3d;
-		Capabilities caps;
 		const int texBufferSize = 512, iBufferSize = 4, vBufferSize = 2048;
 		
 		IntPtr[] textures = new IntPtr[texBufferSize];
@@ -28,7 +27,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		PrimitiveType[] modeMappings;
 		Format[] depthFormats, viewFormats;
 		Format depthFormat, viewFormat;
-		CreateFlags createFlags = CreateFlags.HardwareVertexProcessing;
+		CreateFlags createFlags = CreateFlags.Hardware;
 
 		public Direct3D9Api(INativeWindow window) {
 			MinZNear = 0.05f;
@@ -42,17 +41,20 @@ namespace ClassicalSharp.GraphicsAPI {
 			try {
 				device = Direct3D.CreateDevice(d3d, adapter, DeviceType.Hardware, winHandle, createFlags, args);
 			} catch (SharpDXException) {
-				createFlags = CreateFlags.MixedVertexProcessing;
+				createFlags = CreateFlags.Mixed;
 				try {
 					device = Direct3D.CreateDevice(d3d, adapter, DeviceType.Hardware, winHandle, createFlags, args);
 				} catch (SharpDXException) {
-					createFlags = CreateFlags.SoftwareVertexProcessing;
+					createFlags = CreateFlags.Software;
 					device = Direct3D.CreateDevice(d3d, adapter, DeviceType.Hardware, winHandle, createFlags, args);
 				}
 			}
+						
+			Capabilities caps = Device.GetCapabilities(device);
+			MaxTexWidth  = caps.MaxTextureWidth;
+			MaxTexHeight = caps.MaxTextureHeight;
 			
 			CustomMipmapsLevels = true;
-			caps = Device.GetCapabilities(device);
 			SetDefaultRenderStates();
 			InitCommon();
 		}
@@ -158,10 +160,6 @@ namespace ClassicalSharp.GraphicsAPI {
 				Cull mode = value ? Cull.Clockwise : Cull.None;
 				Device.SetRenderState(device, RenderState.CullMode, (int)mode);
 			}
-		}
-
-		public override int MaxTextureDimensions {
-			get { return Math.Min(caps.MaxTextureHeight, caps.MaxTextureWidth); }
 		}
 		
 		public override bool Texturing {
@@ -542,14 +540,15 @@ namespace ClassicalSharp.GraphicsAPI {
 		internal override void MakeApiInfo() {
 			AdapterDetails details = Direct3D.GetAdapterIdentifier(d3d, 0);
 			string adapter = details.Description;
+			uint memRaw = Device.GetAvailableTextureMemory(device);
 			float texMem = Device.GetAvailableTextureMemory(device) / 1024f / 1024f;
 			
 			ApiInfo = new string[] {
 				"-- Using Direct3D9 --",
 				"Adapter: " + adapter,
-				"Mode: " + createFlags,
+				"Processing mode: " + createFlags,
 				"Texture memory: " + texMem + " MB",
-				"Max 2D texture dimensions: " + MaxTextureDimensions,
+				"Max texture size: (" + MaxTexWidth + ", " + MaxTexHeight + ")",
 				"Depth buffer format: " + depthFormat,
 				"Back buffer format: " + viewFormat,
 			};

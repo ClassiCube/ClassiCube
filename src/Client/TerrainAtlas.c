@@ -85,7 +85,7 @@ static void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
 }
 
 void Atlas1D_UpdateState(void) {
-	Int32 maxAtlasHeight = min(4096, Gfx_MaxTextureDimensions);
+	Int32 maxAtlasHeight = min(4096, Gfx_MaxTexHeight);
 	Int32 maxTilesPerAtlas = maxAtlasHeight / Atlas2D_TileSize;
 	Int32 maxTiles = ATLAS2D_ROWS_COUNT * ATLAS2D_TILES_PER_ROW;
 

@@ -91,7 +91,8 @@ void Gfx_Init(void) {
 	Gfx_MinZNear = 0.1f;
 	struct GraphicsMode mode = GraphicsMode_MakeDefault();
 	GLContext_Init(mode);
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx_MaxTextureDimensions);
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx_MaxTexWidth);
+	Gfx_MaxTexHeight = Gfx_MaxTexWidth;
 
 #if !CC_BUILD_GL11
 	Gfx_CustomMipmapsLevels = true;
@@ -540,17 +541,14 @@ void Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) {
 }
 
 void Gfx_MakeApiInfo(void) {
-	const UChar* vendor   = glGetString(GL_VENDOR);
-	const UChar* renderer = glGetString(GL_RENDERER);
-	const UChar* version  = glGetString(GL_VERSION);
 	Int32 depthBits = 0;
 	glGetIntegerv(GL_DEPTH_BITS, &depthBits);
 
 	String_AppendConst(&Gfx_ApiInfo[0],"-- Using OpenGL --");
-	String_Format1(&Gfx_ApiInfo[1],    "Vendor: %c", vendor);
-	String_Format1(&Gfx_ApiInfo[2],    "Renderer: %c", renderer);
-	String_Format1(&Gfx_ApiInfo[3],    "GL version: %c", version);
-	String_Format1(&Gfx_ApiInfo[4],    "Max 2D texture dimensions: %i", &Gfx_MaxTextureDimensions);
+	String_Format1(&Gfx_ApiInfo[1],    "Vendor: %c", glGetString(GL_VENDOR);
+	String_Format1(&Gfx_ApiInfo[2],    "Renderer: %c", glGetString(GL_RENDERER);
+	String_Format1(&Gfx_ApiInfo[3],    "GL version: %c", glGetString(GL_VERSION);
+	String_Format2(&Gfx_ApiInfo[4],    "Max texture size: (%i, %i)", &Gfx_MaxTexWidth, &Gfx_MaxTexHeight);
 	String_Format1(&Gfx_ApiInfo[5],    "Depth buffer bits: %i", &depthBits);
 }
 

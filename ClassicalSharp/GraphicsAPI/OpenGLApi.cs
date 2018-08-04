@@ -31,9 +31,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			MinZNear = 0.1f;
 			InitFields();
-			int texDims;
-			GL.GetIntegerv(GetPName.MaxTextureSize, &texDims);
-			texDimensions = texDims;
+			
+			int size;
+			GL.GetIntegerv(GetPName.MaxTextureSize, &size);
+			MaxTexWidth = size; MaxTexHeight = size;
 			
 			#if !GL11
 			CustomMipmapsLevels = true;
@@ -163,9 +164,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override bool AlphaArgBlend { set { } }
 		
 		#region Texturing
-		
-		int texDimensions;
-		public override int MaxTextureDimensions { get { return texDimensions; } }
 		
 		public override bool Texturing {
 			set { if (value) GL.Enable(EnableCap.Texture2D);
@@ -552,7 +550,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				"Vendor: " + vendor,
 				"Renderer: " + renderer,
 				"GL version: " + version,
-				"Max 2D texture dimensions: " + MaxTextureDimensions,
+				"Max texture size: (" + MaxTexWidth + ", " + MaxTexHeight + ")",
 				"Depth buffer bits: " + depthBits,
 			};
 			isIntelRenderer = renderer.Contains("Intel");

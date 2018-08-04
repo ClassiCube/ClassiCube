@@ -66,7 +66,7 @@ namespace ClassicalSharp.Textures {
 		public static void UpdateState() {
 			int tileSize = Atlas2D.TileSize;
 			int maxTiles = Atlas2D.RowsCount * Atlas2D.TilesPerRow;
-			int maxAtlasHeight = Math.Min(4096, game.Graphics.MaxTextureDimensions);
+			int maxAtlasHeight = Math.Min(4096, game.Graphics.MaxTexHeight);
 			int maxTilesPerAtlas = maxAtlasHeight / tileSize;
 			
 			TilesPerAtlas = Math.Min(maxTilesPerAtlas, maxTiles);

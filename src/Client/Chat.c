@@ -299,12 +299,12 @@ static void HelpCommand_Make(struct ChatCommand* cmd) {
 	cmd->Execute = HelpCommand_Execute;
 }
 
-
 /*########################################################################################################################*
 *------------------------------------------------------GpuInfo command----------------------------------------------------*
 *#########################################################################################################################*/
 static void GpuInfoCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 	Int32 i;
+	
 	for (i = 0; i < Array_Elems(Gfx_ApiInfo); i++) {
 		if (!Gfx_ApiInfo[i].length) continue;
 		UInt8 msgBuffer[String_BufferSize(STRING_SIZE)];

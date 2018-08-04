@@ -13,13 +13,10 @@ namespace ClassicalSharp.GraphicsAPI {
 	
 	/// <summary> Abstracts a 3D graphics rendering API. </summary>
 	public abstract partial class IGraphicsApi {
-		
-		public abstract int MaxTextureDimensions { get; }
-		public abstract bool Texturing { set; }
-		
 		public Matrix4 Projection, View;
 		internal float MinZNear; // MinZNear = 0.1f;
 		
+		public int MaxTexWidth, MaxTexHeight;
 		public bool LostContext;
 		public event Action ContextLost;
 		public event Action ContextRecreated;
@@ -46,6 +43,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			return texId;
 		}
 		
+		public abstract bool Texturing { set; }
 		protected abstract int CreateTexture(int width, int height, IntPtr scan0, bool managedPool, bool mipmaps);
 		public abstract void UpdateTexturePart(int texId, int x, int y, FastBitmap part, bool mipmaps);
 		
