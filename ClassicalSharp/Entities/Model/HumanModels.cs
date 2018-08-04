@@ -31,7 +31,7 @@ namespace ClassicalSharp.Model {
 		public override float GetEyeY(Entity entity) { return 14/16f; }
 		
 		public override Vector3 CollisionSize {
-			get { return new Vector3(4/16f + 0.6f/16f, 20.1f/16f, 4/16f + 0.6f/16f); }
+			get { return new Vector3(4.6f/16f, 20.1f/16f, 4.6f/16f); }
 		}
 		
 		public override AABB PickingBounds {
@@ -50,12 +50,12 @@ namespace ClassicalSharp.Model {
 		const int sitOffset = 10;
 		public override void CreateParts() { }
 		
-		public override float NameYOffset { get { return 32/16f + 0.5f/16f; } }
+		public override float NameYOffset { get { return 32.5f/16f; } }
 		
 		public override float GetEyeY(Entity entity) { return (26 - sitOffset)/16f; }
 		
 		public override Vector3 CollisionSize {
-			get { return new Vector3(8/16f + 0.6f/16f, (28.1f - sitOffset)/16f, 8/16f + 0.6f/16f); }
+			get { return new Vector3(8.6f/16f, (28.1f - sitOffset)/16f, 8.6f/16f); }
 		}
 		
 		public override AABB PickingBounds {
@@ -68,7 +68,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override void DrawModel(Entity p) {
-			p.anim.leftLegX = 1.5f; p.anim.rightLegX = 1.5f;
+			p.anim.leftLegX =  1.5f; p.anim.rightLegX = 1.5f;
 			p.anim.leftLegZ = -0.1f; p.anim.rightLegZ = 0.1f;			
 			game.ModelCache.Models[0].Instance.DrawModel(p);
 		}
@@ -78,11 +78,15 @@ namespace ClassicalSharp.Model {
 		}
 	}
 
-	public class HeadModel : HumanoidModel {
+	public class HeadModel : IModel {
 		
-		public HeadModel(Game game) : base(game) { Pushes = false; }
+		public HeadModel(Game game) : base(game) {
+			UsesHumanSkin = true;
+			Pushes = false; 
+		}
+		
 		public override void CreateParts() { }
-		
+		public override float NameYOffset { get { return 32.5f/16f; } }
 		public override float GetEyeY(Entity entity) { return 6/16f; }
 		
 		public override Vector3 CollisionSize {
@@ -98,22 +102,18 @@ namespace ClassicalSharp.Model {
 			return p.TransformMatrix(p.ModelScale, pos);
 		}
 
-		protected override void RenderParts(Entity p) {
+		public override void DrawModel(Entity p) {
+			ApplyTexture(p);
 			HumanoidModel human = (HumanoidModel)game.ModelCache.Models[0].Instance;
 			vertices = human.vertices;
 			
 			ModelPart part = human.Set.Head; part.RotY += 4 / 16f;
 			DrawRotate(-p.HeadXRadians, 0, 0, part, true);
-			UpdateVB();
-			
-			game.Graphics.AlphaTest = true;
-			index = 0;
 			part = human.Set.Hat; part.RotY += 4 / 16f;
 			DrawRotate(-p.HeadXRadians, 0, 0, part, true);
+			
 			UpdateVB();
 		}
-		
-		public override void DrawArm(Entity p) { }
 	}
 
 	public class CorpseModel : IModel {
@@ -122,14 +122,12 @@ namespace ClassicalSharp.Model {
 			UsesHumanSkin = true;
 		}
 		
-		public override void CreateParts() { }
-		
-		public override float NameYOffset { get { return 32/16f + 0.5f/16f; } }
-		
+		public override void CreateParts() { }		
+		public override float NameYOffset { get { return 32.5f/16f; } }
 		public override float GetEyeY(Entity entity) { return 26/16f; }
 		
 		public override Vector3 CollisionSize {
-			get { return new Vector3(8/16f + 0.6f/16f, 28.1f/16f, 8/16f + 0.6f/16f); }
+			get { return new Vector3(8.6f/16f, 28.1f/16f, 8.6f/16f); }
 		}
 		
 		public override AABB PickingBounds {

@@ -76,10 +76,6 @@ namespace ClassicalSharp.Textures {
 				ApplyAnimation(animations[i]);
 		}
 		
-		/// <summary> Reads a text file that contains a number of lines, with each line describing:<br/>
-		/// 1) the target tile in the terrain atlas  2) the start location of animation frames<br/>
-		/// 3) the size of each animation frame      4) the number of animation frames<br/>
-		/// 5) the delay between advancing animation frames. </summary>
 		void ReadAnimationsDescription(StreamReader reader) {
 			string line;
 			while ((line = reader.ReadLine()) != null) {

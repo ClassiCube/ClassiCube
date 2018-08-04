@@ -8,7 +8,9 @@
 */
 struct Texture;
 
+extern String Gfx_ApiInfo[8];
 GfxResourceID GfxCommon_defaultIb;
+
 void GfxCommon_Init(void);
 void GfxCommon_Free(void);
 void GfxCommon_LoseContext(const UChar* reason);

@@ -545,7 +545,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			float texMem = Device.GetAvailableTextureMemory(device) / 1024f / 1024f;
 			
 			ApiInfo = new string[] {
-				"-- Using Direct3D9 api --",
+				"-- Using Direct3D9 --",
 				"Adapter: " + adapter,
 				"Mode: " + createFlags,
 				"Texture memory: " + texMem + " MB",

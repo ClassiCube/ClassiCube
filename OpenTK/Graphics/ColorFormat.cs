@@ -67,22 +67,8 @@ namespace OpenTK.Graphics {
             IsIndexed = BitsPerPixel < 15 && BitsPerPixel != 0;
         }
 
-        /// <summary> Gets the bits per pixel for the Red channel. </summary>
-        public byte Red;
-        
-        /// <summary> Gets the bits per pixel for the Green channel. </summary>
-        public byte Green;
-        
-        /// <summary>Gets the bits per pixel for the Blue channel.</summary>
-        public byte Blue;
-        
-        /// <summary>Gets the bits per pixel for the Alpha channel.</summary>
-        public byte Alpha;
-        
-        /// <summary> Gets a System.Boolean indicating whether this ColorFormat is indexed. </summary>
+        public byte Red, Green, Blue, Alpha;
         public bool IsIndexed;
-        
-        /// <summary> Gets the sum of Red, Green, Blue and Alpha bits per pixel.</summary>
         public int BitsPerPixel;
 
         public static implicit operator ColorFormat(int bpp) {

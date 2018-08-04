@@ -1051,16 +1051,14 @@ static void HeadModel_GetTransform(struct Entity* entity, Vector3 pos, struct Ma
 }
 
 static void HeadModel_DrawModel(struct Entity* entity) {
-	HumanModel_SetupState(entity);
+	IModel_ApplyTexture(entity);
+	struct ModelPart part;
 
-	struct ModelPart part = Humanoid_Set.Head; part.RotY += 4.0f / 16.0f;
+	part = Humanoid_Set.Head; part.RotY += 4.0f / 16.0f;
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, part, true);
-	IModel_UpdateVB();
+	part = Humanoid_Set.Hat;  part.RotY += 4.0f / 16.0f;
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, part, true);
 
-	Gfx_SetAlphaTest(true);
-	IModel_ActiveModel->index = 0;
-	part = Humanoid_Set.Hat; part.RotY += 4.0f / 16.0f;
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, part, true);
 	IModel_UpdateVB();
 }
 
@@ -1068,7 +1066,6 @@ static struct IModel* HeadModel_GetInstance(void) {
 	IModel_Init(&HeadModel);
 	IModel_SetPointers(HeadModel);
 	HeadModel.vertices = HumanoidModel_Vertices;
-	HeadModel.CalcHumanAnims = true;
 	HeadModel.UsesHumanSkin  = true;
 	HeadModel.Pushes         = false;
 	HeadModel.GetTransform = HeadModel_GetTransform;

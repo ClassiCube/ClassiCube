@@ -87,7 +87,7 @@ Real64 Math_FastTan(Real64 angle) {
 
 	/* tan line is parallel to y axis, infinite gradient */
 	Int32 sign = Math_Sign(sinA);
-	if (cosA != 0.0) sign *= Math_Sign(cosA);
+	if (cosA) sign *= Math_Sign(cosA);
 	return sign * MATH_POS_INF;
 }
 

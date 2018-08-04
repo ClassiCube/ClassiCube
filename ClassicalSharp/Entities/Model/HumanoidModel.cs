@@ -72,12 +72,11 @@ namespace ClassicalSharp.Model {
 			rArm = MakeBoxBounds(4, 12, -2, 8, 24, 2).RotOrigin(5, 22, 0);
 		}
 		
-		public override float NameYOffset { get { return 32/16f + 0.5f/16f; } }
-		
+		public override float NameYOffset { get { return 32.5f/16f; } }		
 		public override float GetEyeY(Entity entity) { return 26/16f; }
 		
 		public override Vector3 CollisionSize {
-			get { return new Vector3(8/16f + 0.6f/16f, 28.1f/16f, 8/16f + 0.6f/16f); }
+			get { return new Vector3(8.6f/16f, 28.1f/16f, 8.6f/16f); }
 		}
 		
 		public override AABB PickingBounds {
@@ -86,11 +85,9 @@ namespace ClassicalSharp.Model {
 		
 		public override void DrawModel(Entity p) {
 			ApplyTexture(p);
+			// players should not be able to use invisible skins
 			game.Graphics.AlphaTest = false;
-			RenderParts(p);
-		}
-		
-		protected virtual void RenderParts(Entity p) {
+			
 			SkinType skinType = IModel.skinType;
 			ModelSet model = skinType == SkinType.Type64x64Slim ? SetSlim :
 				(skinType == SkinType.Type64x64 ? Set64 : Set);

@@ -7,6 +7,14 @@
 #include "ExtMath.h"
 #include "Texture.h"
 
+UChar Gfx_ApiBuffer[8][String_BufferSize(STRING_SIZE)];
+String Gfx_ApiInfo[8] = {
+	{ Gfx_ApiBuffer[0], 0, STRING_SIZE }, { Gfx_ApiBuffer[1], 0, STRING_SIZE },
+	{ Gfx_ApiBuffer[2], 0, STRING_SIZE }, { Gfx_ApiBuffer[3], 0, STRING_SIZE },
+	{ Gfx_ApiBuffer[4], 0, STRING_SIZE }, { Gfx_ApiBuffer[5], 0, STRING_SIZE },
+	{ Gfx_ApiBuffer[6], 0, STRING_SIZE }, { Gfx_ApiBuffer[7], 0, STRING_SIZE },
+};
+
 void GfxCommon_Init(void) {
 	GfxCommon_quadVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, 4);
 	GfxCommon_texVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, 4);

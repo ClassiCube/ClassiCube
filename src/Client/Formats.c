@@ -748,7 +748,7 @@ void Dat_Load(struct Stream* stream) {
 		String fieldName = String_FromRawArray(field->FieldName);
 
 		if (String_CaselessEqualsConst(&fieldName, "width")) {
-			World_Width = Dat_I32(field);
+			World_Width  = Dat_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "height")) {
 			World_Length = Dat_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "depth")) {
