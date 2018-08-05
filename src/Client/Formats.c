@@ -178,19 +178,9 @@ void Fcm_Load(struct Stream* stream) {
 /*########################################################################################################################*
 *---------------------------------------------------------NBTFile---------------------------------------------------------*
 *#########################################################################################################################*/
-enum NBT_TAG {
-	NBT_TAG_END,
-	NBT_TAG_INT8,
-	NBT_TAG_INT16,
-	NBT_TAG_INT32,
-	NBT_TAG_INT64,
-	NBT_TAG_REAL32,
-	NBT_TAG_REAL64,
-	NBT_TAG_INT8_ARRAY,
-	NBT_TAG_STRING,
-	NBT_TAG_LIST,
-	NBT_TAG_COMPOUND,
-	NBT_TAG_INT32_ARRAY,
+enum NBT_TAG { 
+	NBT_TAG_END, NBT_TAG_INT8, NBT_TAG_INT16, NBT_TAG_INT32, NBT_TAG_INT64, NBT_TAG_REAL32, NBT_TAG_REAL64, 
+	NBT_TAG_INT8_ARRAY, NBT_TAG_STRING, NBT_TAG_LIST, NBT_TAG_COMPOUND, NBT_TAG_INT32_ARRAY, 
 };
 
 #define NBT_SMALL_SIZE STRING_SIZE
@@ -213,35 +203,34 @@ struct NbtTag {
 };
 
 static UInt8 NbtTag_U8(struct NbtTag* tag) {
-	if (tag->TagID != NBT_TAG_INT8) { ErrorHandler_Fail("Expected I8 NBT tag"); }
+	if (tag->TagID != NBT_TAG_INT8) ErrorHandler_Fail("Expected I8 NBT tag");
 	return tag->Value_U8;
 }
 
 static Int16 NbtTag_I16(struct NbtTag* tag) {
-	if (tag->TagID != NBT_TAG_INT16) { ErrorHandler_Fail("Expected I16 NBT tag"); }
+	if (tag->TagID != NBT_TAG_INT16) ErrorHandler_Fail("Expected I16 NBT tag");
 	return tag->Value_I16;
 }
 
 static Int32 NbtTag_I32(struct NbtTag* tag) {
-	if (tag->TagID != NBT_TAG_INT32) { ErrorHandler_Fail("Expected I32 NBT tag"); }
+	if (tag->TagID != NBT_TAG_INT32) ErrorHandler_Fail("Expected I32 NBT tag");
 	return tag->Value_I32;
 }
 
 static Real32 NbtTag_R32(struct NbtTag* tag) {
-	if (tag->TagID != NBT_TAG_REAL32) { ErrorHandler_Fail("Expected R32 NBT tag"); }
+	if (tag->TagID != NBT_TAG_REAL32) ErrorHandler_Fail("Expected R32 NBT tag");
 	return tag->Value_R32;
 }
 
-static UInt8 NbtTag_U8_At(struct NbtTag* tag, Int32 i) {
-	if (tag->TagID != NBT_TAG_INT8_ARRAY) { ErrorHandler_Fail("Expected I8_Array NBT tag"); }
-	if (i >= tag->DataSize) { ErrorHandler_Fail("Tried to access past bounds of I8_Array tag"); }
+static UInt8* NbtTag_U8_Array(struct NbtTag* tag, Int32 minSize) {
+	if (tag->TagID != NBT_TAG_INT8_ARRAY) ErrorHandler_Fail("Expected I8_Array NBT tag");
+	if (tag->DataSize < minSize) ErrorHandler_Fail("I8_Array NBT tag too small");
 
-	if (tag->DataSize < NBT_SMALL_SIZE) return tag->DataSmall[i];
-	return tag->DataBig[i];
+	return tag->DataSize < NBT_SMALL_SIZE ? tag->DataSmall : tag->DataBig;
 }
 
 static String NbtTag_String(struct NbtTag* tag) {
-	if (tag->TagID != NBT_TAG_STRING) { ErrorHandler_Fail("Expected String NBT tag"); }
+	if (tag->TagID != NBT_TAG_STRING) ErrorHandler_Fail("Expected String NBT tag");
 	return String_Init(tag->DataSmall, tag->DataSize, tag->DataSize);
 }
 
@@ -503,12 +492,13 @@ static bool Cw_Callback_5(struct NbtTag* tag) {
 		}
 
 		if (IsTag(tag, "Textures")) {
-			Block_SetTex(NbtTag_U8_At(tag, 0), FACE_YMAX, id);
-			Block_SetTex(NbtTag_U8_At(tag, 1), FACE_YMIN, id);
-			Block_SetTex(NbtTag_U8_At(tag, 2), FACE_XMIN, id);
-			Block_SetTex(NbtTag_U8_At(tag, 3), FACE_XMAX, id);
-			Block_SetTex(NbtTag_U8_At(tag, 4), FACE_ZMIN, id);
-			Block_SetTex(NbtTag_U8_At(tag, 5), FACE_ZMAX, id);
+			UInt8* tex = NbtTag_U8_Array(tag, 6);
+			Block_SetTex(tex[0], FACE_YMAX, id);
+			Block_SetTex(tex[1], FACE_YMIN, id);
+			Block_SetTex(tex[2], FACE_XMIN, id);
+			Block_SetTex(tex[3], FACE_XMAX, id);
+			Block_SetTex(tex[4], FACE_ZMIN, id);
+			Block_SetTex(tex[5], FACE_ZMAX, id);
 			return true;
 		}
 		
@@ -521,21 +511,23 @@ static bool Cw_Callback_5(struct NbtTag* tag) {
 		}
 
 		if (IsTag(tag, "Fog")) {
-			Block_FogDensity[id] = (NbtTag_U8_At(tag, 0) + 1) / 128.0f;
+			UInt8* fog = NbtTag_U8_Array(tag, 4);
+			Block_FogDensity[id] = (fog[0] + 1) / 128.0f;
 			/* Fix for older ClassicalSharp versions which saved wrong fog density value */
-			if (NbtTag_U8_At(tag, 0) == 0xFF) Block_FogDensity[id] = 0.0f;
+			if (fog[0] == 0xFF) Block_FogDensity[id] = 0.0f;
  
-			Block_FogCol[id].R = NbtTag_U8_At(tag, 1);
-			Block_FogCol[id].G = NbtTag_U8_At(tag, 2);
-			Block_FogCol[id].B = NbtTag_U8_At(tag, 3);
+			Block_FogCol[id].R = fog[1];
+			Block_FogCol[id].G = fog[2];
+			Block_FogCol[id].B = fog[3];
 			Block_FogCol[id].A = 255;
 			return true;
 		}
 
 		if (IsTag(tag, "Coords")) {
-			Block_MinBB[id].X = NbtTag_U8_At(tag, 0) / 16.0f; Block_MaxBB[id].X = NbtTag_U8_At(tag, 3) / 16.0f;
-			Block_MinBB[id].Y = NbtTag_U8_At(tag, 1) / 16.0f; Block_MaxBB[id].Y = NbtTag_U8_At(tag, 4) / 16.0f;
-			Block_MinBB[id].Z = NbtTag_U8_At(tag, 2) / 16.0f; Block_MaxBB[id].Z = NbtTag_U8_At(tag, 5) / 16.0f;
+			UInt8* coords = NbtTag_U8_Array(tag, 6);
+			Block_MinBB[id].X = coords[0] / 16.0f; Block_MaxBB[id].X = coords[3] / 16.0f;
+			Block_MinBB[id].Y = coords[1] / 16.0f; Block_MaxBB[id].Y = coords[4] / 16.0f;
+			Block_MinBB[id].Z = coords[2] / 16.0f; Block_MaxBB[id].Z = coords[5] / 16.0f;
 			return true;
 		}
 	}
