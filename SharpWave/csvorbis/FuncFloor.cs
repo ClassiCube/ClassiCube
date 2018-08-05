@@ -30,8 +30,6 @@ namespace csvorbis
 {
 	abstract class FuncFloor
 	{
-		public static FuncFloor[] floor_P = {null,new Floor1()};
-
 		public abstract Object unpack(Info vi, csBuffer opb);
 		public abstract Object look(DspState vd, InfoMode mi, Object i);
 		public abstract Object inverse1(Block vb, Object i, Object memo);
@@ -40,7 +38,7 @@ namespace csvorbis
 	
 	class Floor1 : FuncFloor
 	{
-		static int VIF_POSIT = 63;
+		const int VIF_POSIT = 63;
 
 		public override Object unpack(Info vi , csBuffer opb)
 		{
@@ -352,7 +350,7 @@ namespace csvorbis
 			return(null);
 		}
 
-		private static int render_point(int x0,int x1,int y0,int y1,int x)
+		private int render_point(int x0,int x1,int y0,int y1,int x)
 		{
 			y0 &= 0x7fff; /* mask off flag */
 			y1 &= 0x7fff;
@@ -467,7 +465,7 @@ namespace csvorbis
 			0.82788260F, 0.88168307F, 0.9389798F, 1.0F
 		};
 
-		private static void render_line(int x0, int x1,int y0,int y1,float[] d)
+		private void render_line(int x0, int x1,int y0,int y1,float[] d)
 		{
 			int dy = y1-y0;
 			int adx = x1-x0;
@@ -535,7 +533,7 @@ namespace csvorbis
 
 	class LookFloor1
 	{
-		static int VIF_POSIT = 63;
+		const int VIF_POSIT = 63;
 
 		internal int[] sorted_index = new int[VIF_POSIT+2];
 		internal int[] forward_index = new int[VIF_POSIT+2];

@@ -30,8 +30,11 @@ namespace csvorbis
 {
 	abstract class FuncResidue
 	{
-		public static FuncResidue[] residue_P = {new Residue0(), new Residue1(), new Residue2()};
-
+		public static FuncResidue make(int type) {
+			if (type == 0) return new Residue0();
+			if (type == 1) return new Residue1();
+			return new Residue2();
+		}
 		public abstract Object unpack(Info vi, csBuffer opb);
 		public abstract Object look(DspState vd, InfoMode vm, Object vr);
 
@@ -119,9 +122,9 @@ namespace csvorbis
 			return(look);
 		}
 
-		static int[][][] partword = new int[2][][];
+		int[][][] partword = new int[2][][];
 		
-		internal static int _01inverse(Block vb, Object vl, float[][] fin, int ch, int decodepart)
+		internal int _01inverse(Block vb, Object vl, float[][] fin, int ch, int decodepart)
 		{
 			int i,j,k,l,s;
 			LookResidue0 look = (LookResidue0 )vl;
@@ -190,7 +193,7 @@ namespace csvorbis
 			return(0);
 		}
 
-		internal static int _2inverse(Block vb, Object vl, float[][] fin, int ch)
+		internal int _2inverse(Block vb, Object vl, float[][] fin, int ch)
 		{
 			int i,k,l,s;
 			LookResidue0 look = (LookResidue0 )vl;

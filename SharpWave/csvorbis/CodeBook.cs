@@ -237,7 +237,7 @@ namespace csvorbis
 		// given a list of word lengths, generate a list of codewords.  Works
 		// for length ordered or unordered, always assigns the lowest valued
 		// codewords first.  Extended to handle unused entries (length 0)
-		internal static int[] make_words(int[] l, int n)
+		internal int[] make_words(int[] l, int n)
 		{
 			int[] marker = new int[33];
 			int[] r = new int[n];

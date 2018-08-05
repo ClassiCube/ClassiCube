@@ -83,8 +83,8 @@ namespace csvorbis
 			}
 
 			// unpack_header enforces range checking
-			int type = vi.map_type[vi.mode_param[mode].mapping];
-			return(FuncMapping.mapping_P[type].inverse(this, vd.mode[mode]));
+			FuncMapping mapping = vi.map_funcs[vi.mode_param[mode].mapping];
+			return mapping.inverse(this, vd.mode[mode]);
 		}
 	}
 }

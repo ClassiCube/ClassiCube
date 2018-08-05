@@ -30,8 +30,6 @@ namespace csvorbis
 {
 	abstract class FuncMapping
 	{
-		public static FuncMapping[] mapping_P = {new Mapping0()};
-
 		public abstract Object unpack(Info info , csBuffer buffer);
 		public abstract Object look(DspState vd, InfoMode vm, Object m);
 		public abstract int inverse(Block vd, Object lm);
@@ -58,11 +56,11 @@ namespace csvorbis
 				int floornum = info.floorsubmap[i];
 				int resnum = info.residuesubmap[i];
 				
-				looks.floor_func[i] = FuncFloor.floor_P[vi.floor_type[floornum]];
+				looks.floor_func[i] = vi.floor_funcs[floornum];
 				looks.floor_look[i] = looks.floor_func[i].
 					look(vd,vm,vi.floor_param[floornum]);
 
-				looks.residue_func[i] = FuncResidue.residue_P[vi.residue_type[resnum]];
+				looks.residue_func[i] = vi.residue_funcs[resnum];
 				looks.residue_look[i] = looks.residue_func[i].
 					look(vd,vm,vi.residue_param[resnum]);
 			}

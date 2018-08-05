@@ -38,7 +38,7 @@ namespace csvorbis
 	
 	public class Info
 	{
-		private static int OV_ENOTAUDIO = -135;
+		private const int OV_ENOTAUDIO = -135;
 
 		public int version, channels, rate;
 		
@@ -55,13 +55,13 @@ namespace csvorbis
 
 		internal InfoMode[] mode_param = null;
 
-		internal int[] map_type = null;
+		internal FuncMapping[] map_funcs = null;
 		internal Object[] map_param = null;
 
-		internal int[] floor_type = null;
+		internal Floor1[] floor_funcs = null;
 		internal Object[] floor_param = null;
 
-		internal int[] residue_type = null;
+		internal FuncResidue[] residue_funcs = null;
 		internal Object[] residue_param = null;
 
 		internal StaticCodeBook[] book_param = null;
@@ -96,7 +96,7 @@ namespace csvorbis
 		
 		void unpack_books(csBuffer opb) {
 			books = opb.read(8) + 1;
-			CheckEntries(ref book_param, books);
+			book_param = new StaticCodeBook[books];
 			for(int i = 0;i < books;i++) {
 				book_param[i] = new StaticCodeBook();
 				book_param[i].unpack(opb);
@@ -107,28 +107,37 @@ namespace csvorbis
 				opb.read(16);
 
 			floors = opb.read(6) + 1;
-			CheckEntries(ref floor_param, ref floor_type, floors);
+			floor_funcs = new Floor1[floors];
+			floor_param = new object[floors];
 			for(int i = 0;i<floors;i++) {
-				floor_type[i] = opb.read(16);
-				floor_param[i] = FuncFloor.floor_P[floor_type[i]].unpack(this,opb);
+				int type = opb.read(16);
+				if (type != 1) throw new csorbisException("floor type must be 1");
+				floor_funcs[i] = new Floor1();			
+				floor_param[i] = floor_funcs[i].unpack(this,opb);
 			}
 			
 			residues = opb.read(6) + 1;
-			CheckEntries(ref residue_param, ref residue_type, residues);
+			residue_funcs = new FuncResidue[residues];
+			residue_param = new object[residues];
 			for(int i = 0;i<residues;i++) {
-				residue_type[i] = opb.read(16);
-				residue_param[i] = FuncResidue.residue_P[residue_type[i]].unpack(this,opb);
+				int type = opb.read(16);
+				if (type > 2) throw new csorbisException("residue type must be <= 2");
+				residue_funcs[i] = FuncResidue.make(type);
+				residue_param[i] = residue_funcs[i].unpack(this,opb);
 			}
 
 			maps = opb.read(6) + 1;
-			CheckEntries(ref map_param, ref map_type, maps);
+			map_funcs = new FuncMapping[maps];
+			map_param = new object[maps];
 			for(int i = 0;i<maps;i++) {
-				map_type[i] = opb.read(16);
-				map_param[i] = FuncMapping.mapping_P[map_type[i]].unpack(this,opb);
+				int type = opb.read(16);
+				if (type != 0) throw new csorbisException("mapping type must be 0");
+				map_funcs[i] = new Mapping0();
+				map_param[i] = map_funcs[i].unpack(this,opb);
 			}
 			
 			modes = opb.read(6) + 1;
-			CheckEntries(ref mode_param, modes);
+			mode_param = new InfoMode[modes];
 			for(int i = 0;i<modes;i++) {
 				mode_param[i] = new InfoMode();
 				mode_param[i].blockflag = opb.read(1);
@@ -137,19 +146,6 @@ namespace csvorbis
 				mode_param[i].mapping = opb.read(8);
 			}
 			opb.read(1);
-		}
-		
-		void CheckEntries<T>(ref T[] array, int count) {
-			if(array == null || array.Length != count) {
-				array = new T[count];
-			}
-		}
-		
-		void CheckEntries<T>(ref T[] array, ref int[] types, int count) {
-			if(array == null || array.Length != count) {
-				array = new T[count];
-				types = new int[count];
-			}
 		}
 
 		public void synthesis_headerin(Comment vc, Packet op) {

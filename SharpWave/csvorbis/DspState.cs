@@ -31,7 +31,7 @@ namespace csvorbis
 {
 	public class DspState
 	{
-		static float M_PI = 3.1415926539f;
+		const float M_PI = 3.1415926539f;
 
 		internal Info vi;
 		internal int modebits;
@@ -78,7 +78,7 @@ namespace csvorbis
 			wnd[1][1][1] = new float[2];
 		}
 
-		internal static float[] window(int wnd, int left, int right)
+		internal float[] window(int wnd, int left, int right)
 		{
 			float[] ret = new float[wnd];
 			// The 'vorbis window' (window 0) is sin(sin(x)*sin(x)*2pi)
@@ -158,10 +158,9 @@ namespace csvorbis
 
 			for(int i = 0;i<vi.modes;i++) {
 				int mapnum = vi.mode_param[i].mapping;
-				int maptype = vi.map_type[mapnum];
+				FuncMapping mapping = vi.map_funcs[mapnum];
 
-				mode[i] = FuncMapping.mapping_P[maptype].look(this,vi.mode_param[i],
-				                                              vi.map_param[mapnum]);
+				mode[i] = mapping.look(this,vi.mode_param[i], vi.map_param[mapnum]);
 			}
 		}
 

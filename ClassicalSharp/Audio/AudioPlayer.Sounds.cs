@@ -69,7 +69,6 @@ namespace ClassicalSharp.Audio {
 			}
 		}
 		
-		IAudioOutput firstSoundOut;
 		void PlayCurrentSound(IAudioOutput[] outputs, float volume) {
 			for (int i = 0; i < monoOutputs.Length; i++) {
 				IAudioOutput output = outputs[i];
@@ -116,10 +115,6 @@ namespace ClassicalSharp.Audio {
 		void DisposeSound() {
 			DisposeOutputs(ref monoOutputs);
 			DisposeOutputs(ref stereoOutputs);
-			if (firstSoundOut != null) {
-				firstSoundOut.Dispose();
-				firstSoundOut = null;
-			}
 		}
 		
 		void DisposeOutputs(ref IAudioOutput[] outputs) {
