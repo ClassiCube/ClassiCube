@@ -85,10 +85,13 @@ namespace ClassicalSharp.Audio {
 						musicOut.PlayStreaming(container);
 					} catch (InvalidOperationException ex) {
 						HandleMusicError(ex);
+						try { musicOut.Dispose(); } catch { }
 						return;
 					} catch (Exception ex) {
 						ErrorHandler.LogError("AudioPlayer.DoMusicThread()", ex);
 						game.Chat.Add("&cError while trying to play music file " + file);
+						try { musicOut.Dispose(); } catch { }
+						return;
 					}
 				}
 				if (disposingMusic) break;
@@ -120,6 +123,7 @@ namespace ClassicalSharp.Audio {
 		void DisposeMusic() {
 			disposingMusic = true;
 			musicHandle.Set();
+			
 			DisposeOf(ref musicOut, ref musicThread);
 		}
 		

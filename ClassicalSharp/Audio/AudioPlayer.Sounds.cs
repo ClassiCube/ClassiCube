@@ -58,7 +58,7 @@ namespace ClassicalSharp.Audio {
 				if (type == SoundType.Metal) format.SampleRate = (format.SampleRate * 6) / 5;
 				else format.SampleRate = (format.SampleRate * 4) / 5;
 			} else {
-				volume *= 0.50f;			
+				volume *= 0.50f;
 				if (type == SoundType.Metal) format.SampleRate = (format.SampleRate * 7) / 5;
 			}
 			
@@ -74,8 +74,9 @@ namespace ClassicalSharp.Audio {
 			for (int i = 0; i < monoOutputs.Length; i++) {
 				IAudioOutput output = outputs[i];
 				if (output == null) {
-					outputs[i] = GetPlatformOut();
-					output = outputs[i];
+					output = GetPlatformOut();
+					output.Create(1);
+					outputs[i] = output;
 				}
 				
 				if (!output.IsFinished()) continue;				
@@ -93,14 +94,6 @@ namespace ClassicalSharp.Audio {
 				
 				PlaySound(output, volume); return;
 			}
-		}
-		
-		
-		IAudioOutput MakeSoundOutput(IAudioOutput[] outputs, int i) {
-			IAudioOutput output = GetPlatformOut();
-			output.Create(1);
-			outputs[i] = output;
-			return output;
 		}
 		
 		void PlaySound(IAudioOutput output, float volume) {
