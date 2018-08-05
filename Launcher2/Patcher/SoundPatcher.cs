@@ -64,6 +64,7 @@ namespace Launcher.Patcher {
 			{
 				dst.SetLength(44);
 				RawOut output = new RawOut((FileStream)dst, true);
+				output.Create(1);
 				OggContainer container = new OggContainer(src);
 				output.PlayStreaming(container);
 				
