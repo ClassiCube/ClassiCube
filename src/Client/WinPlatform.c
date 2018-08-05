@@ -16,6 +16,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <wininet.h>
+#include <mmsystem.h>
 
 /* Missing from some old MingW32 headers */
 #define HTTP_QUERY_ETAG 54
@@ -596,5 +597,98 @@ ReturnCode Platform_HttpFreeRequest(void* handle) {
 
 ReturnCode Platform_HttpFree(void) {
 	return InternetCloseHandle(hInternet) ? 0 : GetLastError();
+}
+
+
+struct AudioContext {
+	HWAVEOUT Handle;
+	WAVEHDR Headers[AUDIO_MAX_CHUNKS];
+	struct AudioFormat Format;
+	UInt8 NumBuffers, PlayingAsync;
+};
+struct AudioContext Audio_Contexts[20];
+
+void Platform_AudioInit(Int32* handle, UInt8 buffers) {
+	Int32 i;
+	for (i = 0; i < Array_Elems(Audio_Contexts); i++) {
+		struct AudioContext* ctx = &Audio_Contexts[i];
+		if (ctx->NumBuffers) continue;
+
+		ctx->NumBuffers = buffers;
+		*handle = i; return;
+	}
+	ErrorHandler_Fail("No free audio contexts");
+}
+
+void Platform_AudioFree(Int32 handle) {
+	struct AudioContext* ctx = &Audio_Contexts[handle];
+	if (!ctx->Handle) return;
+
+	ReturnCode result = waveOutClose(ctx->Handle);
+	Platform_MemSet(ctx, 0, sizeof(struct AudioContext));
+	ErrorHandler_CheckOrFail(result, "Audio - closing device");
+}
+
+void Platform_AudioSetFormat(Int32 handle, struct AudioFormat* format) {
+	struct AudioContext* ctx = &Audio_Contexts[handle];
+	struct AudioFormat* cur = &ctx->Format;
+
+	/* only recreate handle if we need to */
+	if (AudioFormat_Eq(cur, format)) return;
+	if (ctx->Handle) Platform_AudioFree(handle);
+
+	WAVEFORMATEX fmt = { 0 };
+	fmt.nChannels       = format->Channels;
+	fmt.wFormatTag      = WAVE_FORMAT_PCM;
+	fmt.wBitsPerSample  = format->BitsPerSample;
+	fmt.nBlockAlign     = fmt.nChannels * fmt.wBitsPerSample / 8;
+	fmt.nSamplesPerSec  = format->Frequency;
+	fmt.nAvgBytesPerSec = fmt.nSamplesPerSec * fmt.nBlockAlign;
+
+	if (waveOutGetNumDevs() == 0u) ErrorHandler_Fail("No audio devices found");
+	ReturnCode result = waveOutOpen(&ctx->Handle, UInt32_MaxValue, &fmt, NULL, NULL, CALLBACK_NULL);
+	ErrorHandler_CheckOrFail(result, "Audio - opening device");
+}
+
+void Platform_AudioPlayAsync(Int32 handle, void* data, UInt32 dataSize) {
+	struct AudioContext* ctx = &Audio_Contexts[handle];
+	WAVEHDR* hdr = &ctx->Headers[0];
+	Platform_MemSet(hdr, 0, sizeof(WAVEHDR));
+
+	hdr->lpData         = data;
+	hdr->dwBufferLength = dataSize;
+	hdr->dwLoops        = 1;
+	ctx->PlayingAsync   = true;
+
+	ReturnCode result = waveOutPrepareHeader(ctx->Handle, hdr, sizeof(WAVEHDR));
+	ErrorHandler_CheckOrFail(result, "Audio - prepare header");
+	result = waveOutWrite(ctx->Handle, hdr, sizeof(WAVEHDR));
+	ErrorHandler_CheckOrFail(result, "Audio - write header");
+}
+
+Int32 Platform_AudioNextFinishedAsync(Int32 handle) {
+	struct AudioContext* ctx = &Audio_Contexts[handle];
+	Int32 i;
+	for (i = 0; i < ctx->NumBuffers; i++) {
+		WAVEHDR* hdr = &ctx->Headers[i];
+		if (!(hdr->dwFlags & WHDR_DONE)) continue;
+
+		if (hdr->dwFlags & WHDR_PREPARED) {
+			ReturnCode result = waveOutUnprepareHeader(ctx->Handle, hdr, sizeof(WAVEHDR));
+			ErrorHandler_CheckOrFail(result, "Audio - unprepare header");
+		}
+		return i;
+	}
+	return -1;
+}
+
+bool Platform_AudioFinishedAsync(Int32 handle) {
+	struct AudioContext* ctx = &Audio_Contexts[handle];
+	if (!ctx->PlayingAsync) return true;
+	Int32 index = Platform_AudioNextFinishedAsync(handle);
+
+	if (index >= 0) return false;
+	ctx->PlayingAsync = false;
+	return true;
 }
 #endif

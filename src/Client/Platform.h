@@ -112,4 +112,15 @@ ReturnCode Platform_HttpGetRequestHeaders(struct AsyncRequest* request, void* ha
 ReturnCode Platform_HttpGetRequestData(struct AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress);
 ReturnCode Platform_HttpFreeRequest(void* handle);
 ReturnCode Platform_HttpFree(void);
+
+#define AUDIO_MAX_CHUNKS 5
+struct AudioFormat { UInt8 Channels, BitsPerSample; UInt16 Frequency };
+#define AudioFormat_Eq(a, b) (a->Channels == b->Channels && a->BitsPerSample == b->BitsPerSample && a->Frequency == b->Frequency)
+
+void Platform_AudioInit(Int32* handle, UInt8 buffers);
+void Platform_AudioFree(Int32 handle);
+void Platform_AudioSetFormat(Int32 handle, struct AudioFormat* format);
+void Platform_AudioPlayAsync(Int32 handle, void* data, UInt32 dataSize);
+Int32 Platform_AudioNextFinishedAsync(Int32 handle);
+bool Platform_AudioFinishedAsync(Int32 handle);
 #endif

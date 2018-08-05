@@ -99,7 +99,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>d3d9.lib;opengl32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;dbghelp.lib;ws2_32.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;opengl32.lib;ws2_32.lib;Wininet.lib;dbghelp.lib;Winmm.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -119,7 +119,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>d3d9.lib;opengl32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;dbghelp.lib;ws2_32.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;opengl32.lib;ws2_32.lib;Wininet.lib;dbghelp.lib;Winmm.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -148,7 +148,7 @@
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>d3d9.lib;opengl32.lib;libucrt.lib;libvcruntime.lib;dbghelp.lib;ws2_32.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;opengl32.lib;ws2_32.lib;Wininet.lib;dbghelp.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -175,7 +175,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>d3d9.lib;opengl32.lib;libucrt.lib;libvcruntime.lib;dbghelp.lib;ws2_32.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;opengl32.lib;ws2_32.lib;Wininet.lib;dbghelp.lib;Winmm.lib;libucrt.lib;libvcruntime.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -242,6 +242,7 @@
     <ClInclude Include="Typedefs.h" />
     <ClInclude Include="Vectors.h" />
     <ClInclude Include="VertexStructs.h" />
+    <ClInclude Include="Vorbis.h" />
     <ClInclude Include="Widgets.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="World.h" />
@@ -306,6 +307,7 @@
     <ClCompile Include="TexturePack.c" />
     <ClCompile Include="Utils.c" />
     <ClCompile Include="Vectors.c" />
+    <ClCompile Include="Vorbis.c" />
     <ClCompile Include="Widgets.c" />
     <ClCompile Include="WinErrorHandler.c" />
     <ClCompile Include="WinPlatform.c" />

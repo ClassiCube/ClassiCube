@@ -16,8 +16,6 @@ namespace ClassicalSharp.Audio {
 	}
 	
 	public class Soundboard {
-		
-		public byte[] Data;
 		List<SoundGroup> groups = new List<SoundGroup>();
 		Random rnd = new Random();
 

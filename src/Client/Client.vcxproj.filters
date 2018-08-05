@@ -136,6 +136,12 @@
     <Filter Include="Header Files\Game">
       <UniqueIdentifier>{570b92b8-b3df-40cb-a42a-da14c81c877a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Audio">
+      <UniqueIdentifier>{fee32b2d-e320-4681-9d5d-9904ca911271}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Audio">
+      <UniqueIdentifier>{b6f24d6b-c6f6-4909-9ae1-f0c478846c6e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Typedefs.h">
@@ -321,9 +327,6 @@
     <ClInclude Include="TexturePack.h">
       <Filter>Header Files\TexturePack</Filter>
     </ClInclude>
-    <ClInclude Include="Audio.h">
-      <Filter>Header Files\Game</Filter>
-    </ClInclude>
     <ClInclude Include="PacketHandlers.h">
       <Filter>Header Files\Network</Filter>
     </ClInclude>
@@ -335,6 +338,12 @@
     </ClInclude>
     <ClInclude Include="EnvRenderer.h">
       <Filter>Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Audio.h">
+      <Filter>Header Files\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Vorbis.h">
+      <Filter>Header Files\Audio</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -531,7 +540,10 @@
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
     <ClCompile Include="Audio.c">
-      <Filter>Source Files\Game</Filter>
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Vorbis.c">
+      <Filter>Source Files\Audio</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
