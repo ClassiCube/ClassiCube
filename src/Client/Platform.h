@@ -117,10 +117,11 @@ ReturnCode Platform_HttpFree(void);
 struct AudioFormat { UInt8 Channels, BitsPerSample; UInt16 Frequency };
 #define AudioFormat_Eq(a, b) (a->Channels == b->Channels && a->BitsPerSample == b->BitsPerSample && a->Frequency == b->Frequency)
 
-void Platform_AudioInit(Int32* handle, UInt8 buffers);
+void Platform_AudioInit(Int32* handle, Int32 buffers);
 void Platform_AudioFree(Int32 handle);
+struct AudioFormat* Platform_AudioGetFormat(Int32 handle);
 void Platform_AudioSetFormat(Int32 handle, struct AudioFormat* format);
-void Platform_AudioPlayAsync(Int32 handle, void* data, UInt32 dataSize);
-Int32 Platform_AudioNextFinishedAsync(Int32 handle);
-bool Platform_AudioFinishedAsync(Int32 handle);
+void Platform_AudioPlayData(Int32 handle, Int32 idx, void* data, UInt32 dataSize);
+bool Platform_AudioIsCompleted(Int32 handle, Int32 idx);
+bool Platform_AudioIsFinished(Int32 handle);
 #endif

@@ -42,32 +42,29 @@ namespace ClassicalSharp.Audio {
 		
 		public void PlayStepSound(byte type) { PlaySound(type, stepBoard); }
 		
+		AudioFormat format;
 		AudioChunk chunk = new AudioChunk();
 		void PlaySound(byte type, Soundboard board) {
 			if (type == SoundType.None || monoOutputs == null) return;
 			Sound snd = board.PickRandomSound(type);
 			if (snd == null) return;
 			
-			chunk.Channels = snd.Channels;
-			chunk.BitsPerSample = snd.BitsPerSample;
-			chunk.BytesOffset = 0;
-			chunk.BytesUsed = snd.Data.Length;
+			format = snd.Format;
 			chunk.Data = snd.Data;
+			chunk.Length = snd.Data.Length;
 			
 			float volume = game.SoundsVolume / 100.0f;
 			if (board == digBoard) {
-				if (type == SoundType.Metal) chunk.SampleRate = (snd.SampleRate * 6) / 5;
-				else chunk.SampleRate = (snd.SampleRate * 4) / 5;
+				if (type == SoundType.Metal) format.SampleRate = (format.SampleRate * 6) / 5;
+				else format.SampleRate = (format.SampleRate * 4) / 5;
 			} else {
-				volume *= 0.50f;
-				
-				if (type == SoundType.Metal) chunk.SampleRate = (snd.SampleRate * 7) / 5;
-				else chunk.SampleRate = snd.SampleRate;
+				volume *= 0.50f;			
+				if (type == SoundType.Metal) format.SampleRate = (format.SampleRate * 7) / 5;
 			}
 			
-			if (snd.Channels == 1) {
+			if (format.Channels == 1) {
 				PlayCurrentSound(monoOutputs, volume);
-			} else if (snd.Channels == 2) {
+			} else if (format.Channels == 2) {
 				PlayCurrentSound(stereoOutputs, volume);
 			}
 		}
@@ -76,12 +73,14 @@ namespace ClassicalSharp.Audio {
 		void PlayCurrentSound(IAudioOutput[] outputs, float volume) {
 			for (int i = 0; i < monoOutputs.Length; i++) {
 				IAudioOutput output = outputs[i];
-				if (output == null) output = MakeSoundOutput(outputs, i);
-				if (!output.DoneRawAsync()) continue;				
+				if (output == null) {
+					outputs[i] = GetPlatformOut();
+					output = outputs[i];
+				}
 				
-				LastChunk l = output.Last;
-				if (l.Channels == 0 || (l.Channels == chunk.Channels && l.BitsPerSample == chunk.BitsPerSample 
-				                        && l.SampleRate == chunk.SampleRate)) {
+				if (!output.IsFinished()) continue;				
+				AudioFormat fmt = output.Format;
+				if (fmt.Channels == 0 || fmt.Equals(format)) {
 					PlaySound(output, volume); return;
 				}
 			}
@@ -90,7 +89,7 @@ namespace ClassicalSharp.Audio {
 			// even if it requires the expensive case of recreating a device
 			for (int i = 0; i < monoOutputs.Length; i++) {
 				IAudioOutput output = outputs[i];
-				if (!output.DoneRawAsync()) continue;
+				if (!output.IsFinished()) continue;
 				
 				PlaySound(output, volume); return;
 			}
@@ -99,10 +98,7 @@ namespace ClassicalSharp.Audio {
 		
 		IAudioOutput MakeSoundOutput(IAudioOutput[] outputs, int i) {
 			IAudioOutput output = GetPlatformOut();
-			output.Create(1, firstSoundOut);
-			if (firstSoundOut == null)
-				firstSoundOut = output;
-			
+			output.Create(1);
 			outputs[i] = output;
 			return output;
 		}
@@ -110,7 +106,8 @@ namespace ClassicalSharp.Audio {
 		void PlaySound(IAudioOutput output, float volume) {
 			try {
 				output.SetVolume(volume);
-				output.PlayRawAsync(chunk);
+				output.SetFormat(format);
+				output.PlayData(0, chunk);
 			} catch (InvalidOperationException ex) {
 				ErrorHandler.LogError("AudioPlayer.PlayCurrentSound()", ex);
 				if (ex.Message == "No audio devices found")
@@ -140,14 +137,14 @@ namespace ClassicalSharp.Audio {
 				soundPlaying = false;
 				for (int i = 0; i < outputs.Length; i++) {
 					if (outputs[i] == null) continue;
-					soundPlaying |= !outputs[i].DoneRawAsync();
+					soundPlaying |= !outputs[i].IsFinished();
 				}
 				if (soundPlaying)
 					Thread.Sleep(1);
 			}
 			
 			for (int i = 0; i < outputs.Length; i++) {
-				if (outputs[i] == null || outputs[i] == firstSoundOut) continue;
+				if (outputs[i] == null) continue;
 				outputs[i].Dispose();
 			}
 			outputs = null;

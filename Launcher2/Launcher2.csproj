@@ -48,9 +48,6 @@
     <StartAction>Project</StartAction>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="SharpWave">
-      <HintPath>..\ClassicalSharp\SharpWave.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Security" />
@@ -264,6 +261,12 @@
     <Folder Include="Updater" />
     <Folder Include="Utils" />
     <Folder Include="Patcher" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SharpWave\SharpWave.csproj">
+      <Project>{77EA9D1E-4995-4D05-A9C7-29173CB5DC72}</Project>
+      <Name>SharpWave</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
 </Project>

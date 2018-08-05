@@ -139,7 +139,7 @@ namespace ClassicalSharp.Audio {
 		
 		void DisposeOf(ref IAudioOutput output, ref Thread thread) {
 			if (output == null) return;
-			output.Stop();
+			output.pendingStop = true;
 			thread.Join();
 			
 			output.Dispose();

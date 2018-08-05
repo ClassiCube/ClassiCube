@@ -77,15 +77,16 @@ namespace Launcher.Patcher {
 			WriteFourCC(w, "RIFF");
 			w.Write((int)(stream.Length - 8));
 			WriteFourCC(w, "WAVE");
+			AudioFormat format = data.Format;
 			
 			WriteFourCC(w, "fmt ");
 			w.Write(16);
 			w.Write((ushort)1); // audio format, PCM
-			w.Write((ushort)data.Last.Channels);
-			w.Write(data.Last.SampleRate);
-			w.Write((data.Last.SampleRate * data.Last.Channels * data.Last.BitsPerSample) / 8); // byte rate
-			w.Write((ushort)((data.Last.Channels * data.Last.BitsPerSample) / 8)); // block align
-			w.Write((ushort)data.Last.BitsPerSample);
+			w.Write((ushort)format.Channels);
+			w.Write(format.SampleRate);
+			w.Write((format.SampleRate * format.Channels * format.BitsPerSample) / 8); // byte rate
+			w.Write((ushort)((format.Channels * format.BitsPerSample) / 8)); // block align
+			w.Write((ushort)format.BitsPerSample);
 			
 			WriteFourCC(w, "data");
 			w.Write((int)(stream.Length - 44));

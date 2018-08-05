@@ -69,9 +69,6 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <ItemGroup>
-    <Reference Include="SharpWave">
-      <HintPath>SharpWave.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -449,6 +446,10 @@
     <ProjectReference Include="..\InteropPatcher\InteropPatcher.csproj">
       <Project>{4A4110EE-21CA-4715-AF67-0C8B7CE0642F}</Project>
       <Name>InteropPatcher</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SharpWave\SharpWave.csproj">
+      <Project>{77EA9D1E-4995-4D05-A9C7-29173CB5DC72}</Project>
+      <Name>SharpWave</Name>
     </ProjectReference>
   </ItemGroup>
   <Target Name="AfterBuild">

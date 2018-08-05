@@ -2,11 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using SharpWave;
 
 namespace ClassicalSharp.Audio {
 
 	public class Sound {
-		public int SampleRate, BitsPerSample, Channels;
+		public AudioFormat Format;
 		public byte[] Data;
 	}
 	
@@ -97,12 +98,12 @@ namespace ClassicalSharp.Audio {
 		static void HandleFormat(BinaryReader r, ref int size, Sound snd) {
 			if (r.ReadUInt16() != 1)
 				throw new InvalidDataException("Only PCM audio is supported.");
-			size -= 2;
 			
-			snd.Channels = r.ReadUInt16(); size -= 2;
-			snd.SampleRate = r.ReadInt32(); size -= 4;
-			r.ReadInt32(); r.ReadUInt16(); size -= 6;
-			snd.BitsPerSample = r.ReadUInt16(); size -= 2;
+			snd.Format.Channels = r.ReadUInt16();
+			snd.Format.SampleRate = r.ReadInt32();
+			r.ReadInt32(); r.ReadUInt16();
+			snd.Format.BitsPerSample = r.ReadUInt16();
+			size -= 16;
 		}
 		
 		unsafe string GetFourCC(BinaryReader r) {
