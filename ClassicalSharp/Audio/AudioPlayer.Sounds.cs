@@ -70,7 +70,7 @@ namespace ClassicalSharp.Audio {
 		}
 		
 		void PlayCurrentSound(IAudioOutput[] outputs, float volume) {
-			for (int i = 0; i < monoOutputs.Length; i++) {
+			for (int i = 0; i < outputs.Length; i++) {
 				IAudioOutput output = outputs[i];
 				if (output == null) {
 					output = GetPlatformOut();
@@ -87,7 +87,7 @@ namespace ClassicalSharp.Audio {
 			
 			// This time we try to play the sound on all possible devices,
 			// even if it requires the expensive case of recreating a device
-			for (int i = 0; i < monoOutputs.Length; i++) {
+			for (int i = 0; i < outputs.Length; i++) {
 				IAudioOutput output = outputs[i];
 				if (!output.IsFinished()) continue;
 				

@@ -608,7 +608,7 @@ struct AudioContext {
 };
 struct AudioContext Audio_Contexts[20];
 
-void Platform_AudioInit(Int32* handle, Int32 buffers) {
+void Platform_AudioInit(AudioHandle* handle, Int32 buffers) {
 	Int32 i, j;
 	for (i = 0; i < Array_Elems(Audio_Contexts); i++) {
 		struct AudioContext* ctx = &Audio_Contexts[i];
@@ -624,7 +624,7 @@ void Platform_AudioInit(Int32* handle, Int32 buffers) {
 	ErrorHandler_Fail("No free audio contexts");
 }
 
-void Platform_AudioFree(Int32 handle) {
+void Platform_AudioFree(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	if (!ctx->Handle) return;
 
@@ -633,12 +633,12 @@ void Platform_AudioFree(Int32 handle) {
 	ErrorHandler_CheckOrFail(result, "Audio - closing device");
 }
 
-struct AudioFormat* Platform_AudioGetFormat(Int32 handle) {
+struct AudioFormat* Platform_AudioGetFormat(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	return &ctx->Format;
 }
 
-void Platform_AudioSetFormat(Int32 handle, struct AudioFormat* format) {
+void Platform_AudioSetFormat(AudioHandle handle, struct AudioFormat* format) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	struct AudioFormat* cur = &ctx->Format;
 
@@ -651,7 +651,7 @@ void Platform_AudioSetFormat(Int32 handle, struct AudioFormat* format) {
 	fmt.wFormatTag      = WAVE_FORMAT_PCM;
 	fmt.wBitsPerSample  = format->BitsPerSample;
 	fmt.nBlockAlign     = fmt.nChannels * fmt.wBitsPerSample / 8;
-	fmt.nSamplesPerSec  = format->Frequency;
+	fmt.nSamplesPerSec  = format->SampleRate;
 	fmt.nAvgBytesPerSec = fmt.nSamplesPerSec * fmt.nBlockAlign;
 
 	if (waveOutGetNumDevs() == 0u) ErrorHandler_Fail("No audio devices found");
@@ -659,7 +659,7 @@ void Platform_AudioSetFormat(Int32 handle, struct AudioFormat* format) {
 	ErrorHandler_CheckOrFail(result, "Audio - opening device");
 }
 
-void Platform_AudioPlayData(Int32 handle, Int32 idx, void* data, UInt32 dataSize) {
+void Platform_AudioPlayData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	WAVEHDR* hdr = &ctx->Headers[idx];
 	Platform_MemSet(hdr, 0, sizeof(WAVEHDR));
@@ -674,7 +674,7 @@ void Platform_AudioPlayData(Int32 handle, Int32 idx, void* data, UInt32 dataSize
 	ErrorHandler_CheckOrFail(result, "Audio - write header");
 }
 
-bool Platform_AudioIsCompleted(Int32 handle, Int32 idx) {
+bool Platform_AudioIsCompleted(AudioHandle handle, Int32 idx) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	WAVEHDR* hdr = &ctx->Headers[idx];
 	if (!(hdr->dwFlags & WHDR_DONE)) return false;
@@ -686,7 +686,7 @@ bool Platform_AudioIsCompleted(Int32 handle, Int32 idx) {
 	return true;
 }
 
-bool Platform_AudioIsFinished(Int32 handle) {
+bool Platform_AudioIsFinished(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	Int32 i;
 	for (i = 0; i < ctx->NumBuffers; i++) {

@@ -114,14 +114,15 @@ ReturnCode Platform_HttpFreeRequest(void* handle);
 ReturnCode Platform_HttpFree(void);
 
 #define AUDIO_MAX_CHUNKS 5
-struct AudioFormat { UInt8 Channels, BitsPerSample; UInt16 Frequency };
-#define AudioFormat_Eq(a, b) (a->Channels == b->Channels && a->BitsPerSample == b->BitsPerSample && a->Frequency == b->Frequency)
+struct AudioFormat { UInt8 Channels, BitsPerSample; Int32 SampleRate; };
+#define AudioFormat_Eq(a, b) ((a)->Channels == (b)->Channels && (a)->BitsPerSample == (b)->BitsPerSample && (a)->SampleRate == (b)->SampleRate)
+typedef Int32 AudioHandle;
 
-void Platform_AudioInit(Int32* handle, Int32 buffers);
-void Platform_AudioFree(Int32 handle);
-struct AudioFormat* Platform_AudioGetFormat(Int32 handle);
-void Platform_AudioSetFormat(Int32 handle, struct AudioFormat* format);
-void Platform_AudioPlayData(Int32 handle, Int32 idx, void* data, UInt32 dataSize);
-bool Platform_AudioIsCompleted(Int32 handle, Int32 idx);
-bool Platform_AudioIsFinished(Int32 handle);
+void Platform_AudioInit(AudioHandle* handle, Int32 buffers);
+void Platform_AudioFree(AudioHandle handle);
+struct AudioFormat* Platform_AudioGetFormat(AudioHandle handle);
+void Platform_AudioSetFormat(AudioHandle handle, struct AudioFormat* format);
+void Platform_AudioPlayData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize);
+bool Platform_AudioIsCompleted(AudioHandle handle, Int32 idx);
+bool Platform_AudioIsFinished(AudioHandle handle);
 #endif

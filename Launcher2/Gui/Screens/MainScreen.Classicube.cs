@@ -112,7 +112,7 @@ namespace Launcher.Gui.Screens {
 			UpdateSignInInfo(Get(0), Get(1));
 			
 			CheckboxWidget skip = widgets[view.sslIndex] as CheckboxWidget;
-			if (skip != null && skip.Value) {
+			if (skip != null && skip.Visible && skip.Value) {
 				ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 				Options.Set("skip-ssl-check", true);
 			} else {

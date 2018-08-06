@@ -8,6 +8,7 @@
 #include "Block.h"
 #include "Game.h"
 
+StringsBuffer files;
 /*########################################################################################################################*
 *------------------------------------------------------Soundboard---------------------------------------------------------*
 *#########################################################################################################################*/
@@ -36,32 +37,32 @@ static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	UInt32 fourCC, size, pos, len;
 	ReturnCode res;
 
-	fourCC = Stream_ReadU32_LE(&stream);
+	fourCC = Stream_ReadU32_LE(stream);
 	if (fourCC != WAV_FourCC('R','I','F','F')) return WAV_ERR_STREAM_HDR;
-	Stream_ReadU32_LE(&stream); /* file size, but we don't care */
-	fourCC = Stream_ReadU32_LE(&stream);
+	Stream_ReadU32_LE(stream); /* file size, but we don't care */
+	fourCC = Stream_ReadU32_LE(stream);
 	if (fourCC != WAV_FourCC('W','A','V','E')) return WAV_ERR_STREAM_TYPE;
 
-	while (!(res = stream->Position(&stream, &pos)) && !(res = stream->Length(&stream, &len)) && len < pos) {
-		fourCC = Stream_ReadU32_LE(&stream);
-		size   = Stream_ReadU32_LE(&stream);
+	while (!(res = stream->Position(stream, &pos)) && !(res = stream->Length(stream, &len)) && len < pos) {
+		fourCC = Stream_ReadU32_LE(stream);
+		size   = Stream_ReadU32_LE(stream);
 
 		if (fourCC == WAV_FourCC('f','m','t',' ')) {
-			if (Stream_GetU16_LE(&stream) != 1) return WAV_ERR_DATA_TYPE;
+			if (Stream_GetU16_LE(stream) != 1) return WAV_ERR_DATA_TYPE;
 
-			snd->Format.Channels      = Stream_ReadU16_LE(&stream);
-			snd->Format.Frequency     = Stream_ReadU32_LE(&stream);
+			snd->Format.Channels      = Stream_ReadU16_LE(stream);
+			snd->Format.SampleRate    = Stream_ReadU32_LE(stream);
 			Stream_Skip(&stream, 6);
-			snd->Format.BitsPerSample = Stream_ReadU16_LE(&stream);
+			snd->Format.BitsPerSample = Stream_ReadU16_LE(stream);
 			size -= 16;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
 			snd->Data = Platform_MemAlloc(size, sizeof(UInt8), "WAV sound data");
-			Stream_Read(&stream, snd->Data, size);
+			Stream_Read(stream, snd->Data, size);
 			return 0;
 		}
 
 		/* Skip over unhandled data */
-		if (size) Stream_Skip(&stream, size);
+		if (size) Stream_Skip(stream, size);
 	}
 	return res ? res : WAV_ERR_NO_DATA;
 }
@@ -122,113 +123,31 @@ static void Soundboard_Init(struct Soundboard* board, STRING_PURE String* boardN
 	}
 }
 
+struct Sound* Soundboard_PickRandom(struct Soundboard* board, UInt8 type) {
+	if (type == SOUND_NONE || type >= SOUND_COUNT) return NULL;
+	if (type == SOUND_METAL) type = SOUND_STONE;
+	string name = SoundType.Names[type];
+
+	struct SoundGroup* group = Soundboard_Find(board, name);
+	if (group == NULL) return NULL;
+	return group.Sounds[rnd.Next(group.Sounds.Count)];
+}
+
 
 /*########################################################################################################################*
-*-----------------------------------------------------Audio sounds--------------------------------------------------------*
+*--------------------------------------------------------Sounds-----------------------------------------------------------*
 *#########################################################################################################################*/
 struct Soundboard digBoard, stepBoard;
 #define AUDIO_MAX_HANDLES 6
+AudioHandle monoOutputs[AUDIO_MAX_HANDLES]   = { -1, -1, -1, -1, -1, -1 };
+AudioHandle stereoOutputs[AUDIO_MAX_HANDLES] = { -1, -1, -1, -1, -1, -1 };
 
-void Audio_SetSounds(Int32 volume) {
-	if (volume > 0) InitSound();
-	else DisposeSound();
-}
-
-static void Audio_InitSound(void) {
-	if (digBoard == null) InitSoundboards();
-	monoOutputs = new IAudioOutput[maxSounds];
-	stereoOutputs = new IAudioOutput[maxSounds];
-}
-
-static void Audio_InitSoundboards(void) {
-	digBoard = new Soundboard();
-	digBoard.Init("dig_", files);
-	stepBoard = new Soundboard();
-	stepBoard.Init("step_", files);
-}
-
-static void Audio_PlayBlockSound(object sender, BlockChangedEventArgs e) {
-	if (e.Block == BLOCK_AIR) {
-		PlayDigSound(Block_DigSounds[e.OldBlock]);
-	} else if (!Game_ClassicMode) {
-		PlayDigSound(Block_StepSounds[e.Block]);
-	}
-}
-
-AudioChunk chunk = new AudioChunk();
-static void PlaySound(byte type, Soundboard board) {
-	if (type == SoundType.None || monoOutputs == null) return;
-	Sound snd = board.PickRandomSound(type);
-	if (snd == null) return;
-
-	chunk.Channels = snd.Channels;
-	chunk.BitsPerSample = snd.BitsPerSample;
-	chunk.BytesOffset = 0;
-	chunk.BytesUsed = snd.Data.Length;
-	chunk.Data = snd.Data;
-
-	float volume = game.SoundsVolume / 100.0f;
-	if (board == digBoard) {
-		if (type == SoundType.Metal) chunk.SampleRate = (snd.SampleRate * 6) / 5;
-		else chunk.SampleRate = (snd.SampleRate * 4) / 5;
-	} else {
-		volume *= 0.50f;
-
-		if (type == SoundType.Metal) chunk.SampleRate = (snd.SampleRate * 7) / 5;
-		else chunk.SampleRate = snd.SampleRate;
-	}
-
-	if (snd.Channels == 1) {
-		PlayCurrentSound(monoOutputs, volume);
-	} else if (snd.Channels == 2) {
-		PlayCurrentSound(stereoOutputs, volume);
-	}
-}
-
-void Audio_PlayDigSound(UInt8 type)  { Audio_PlaySound(type, &digBoard); }
-void Audio_PlayStepSound(UInt8 type) { Audio_PlaySound(type, &stepBoard); }
-
-
-IAudioOutput firstSoundOut;
-static void PlayCurrentSound(IAudioOutput[] outputs, float volume) {
-	for (int i = 0; i < monoOutputs.Length; i++) {
-		IAudioOutput output = outputs[i];
-		if (output == null) output = MakeSoundOutput(outputs, i);
-		if (!output.DoneRawAsync()) continue;
-
-		LastChunk l = output.Last;
-		if (l.Channels == 0 || (l.Channels == chunk.Channels && l.BitsPerSample == chunk.BitsPerSample
-			&& l.SampleRate == chunk.SampleRate)) {
-			PlaySound(output, volume); return;
-		}
-	}
-
-	// This time we try to play the sound on all possible devices,
-	// even if it requires the expensive case of recreating a device
-	for (int i = 0; i < monoOutputs.Length; i++) {
-		IAudioOutput output = outputs[i];
-		if (!output.DoneRawAsync()) continue;
-
-		PlaySound(output, volume); return;
-	}
-}
-
-
-static IAudioOutput MakeSoundOutput(IAudioOutput[] outputs, int i) {
-	IAudioOutput output = GetPlatformOut();
-	output.Create(1, firstSoundOut);
-	if (firstSoundOut == null)
-		firstSoundOut = output;
-
-	outputs[i] = output;
-	return output;
-}
-
-static void PlaySound(IAudioOutput output, float volume) {
+static void PlaySound(AudioHandle output, Real32 volume) {
 	try {
 		output.SetVolume(volume);
 		output.PlayRawAsync(chunk);
-	} catch (InvalidOperationException ex) {
+	}
+	catch (InvalidOperationException ex) {
 		ErrorHandler.LogError("AudioPlayer.PlayCurrentSound()", ex);
 		if (ex.Message == "No audio devices found")
 			game.Chat.Add("&cNo audio devices found, disabling sounds.");
@@ -240,178 +159,232 @@ static void PlaySound(IAudioOutput output, float volume) {
 	}
 }
 
-static void DisposeSound() {
-	DisposeOutputs(ref monoOutputs);
-	DisposeOutputs(ref stereoOutputs);
-	if (firstSoundOut != null) {
-		firstSoundOut.Dispose();
-		firstSoundOut = null;
+AudioChunk chunk = new AudioChunk();
+static void PlaySound(UInt8 type, struct Soundboard* board) {
+	if (type == SOUND_NONE || Game_SoundsVolume == 0) return;
+	struct Sound* snd = Soundboard_PickRandom(board, type);
+	if (snd == NULL) return;
+
+	struct AudioFormat fmt = snd->Format;
+	chunk.BytesUsed = snd.Data.Length;
+	chunk.Data = snd.Data;
+
+	Real32 volume = Game_SoundsVolume / 100.0f;
+	if (board == &digBoard) {
+		if (type == SOUND_METAL) fmt.SampleRate = (fmt.SampleRate * 6) / 5;
+		else fmt.SampleRate = (fmt.SampleRate * 4) / 5;
+	} else {
+		volume *= 0.50f;
+		if (type == SOUND_METAL) fmt.SampleRate = (fmt.SampleRate * 7) / 5;
+	}
+
+	AudioHandle* outputs = NULL;
+	if (fmt.Channels == 1) outputs = monoOutputs;
+	if (fmt.Channels == 2) outputs = stereoOutputs;
+	if (outputs == NULL) return; /* TODO: > 2 channel sound?? */
+	Int32 i;
+
+	/* Try to play on fresh device, or device with same data format */
+	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
+		AudioHandle output = outputs[i];
+		if (output == -1) {
+			Platform_AudioInit(&output, 1);
+			outputs[i] = output;
+		}
+		if (!Platform_AudioIsFinished(output)) continue;
+
+		struct AudioFormat* l = Platform_AudioGetFormat(output);
+		if (l->Channels == 0 || AudioFormat_Eq(l, &fmt)) {
+			PlaySound(output, volume); return;
+		}
+	}
+
+	/* Try again with all devices, even if need to recreate one (expensive) */
+	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
+		AudioHandle output = outputs[i];
+		if (!Platform_AudioIsFinished(output)) continue;
+
+		PlaySound(output, volume); return;
 	}
 }
 
-static void DisposeOutputs(ref IAudioOutput[] outputs) {
-	if (outputs == null) return;
-	bool soundPlaying = true;
-
-	while (soundPlaying) {
-		soundPlaying = false;
-		for (int i = 0; i < outputs.Length; i++) {
-			if (outputs[i] == null) continue;
-			soundPlaying |= !outputs[i].DoneRawAsync();
-		}
-		if (soundPlaying)
-			Thread.Sleep(1);
+static void Audio_PlayBlockSound(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
+	if (block == BLOCK_AIR) {
+		PlayDigSound(Block_DigSounds[oldBlock]);
+	} else if (!Game_ClassicMode) {
+		PlayDigSound(Block_StepSounds[block]);
 	}
-
-	for (int i = 0; i < outputs.Length; i++) {
-		if (outputs[i] == null || outputs[i] == firstSoundOut) continue;
-		outputs[i].Dispose();
-	}
-	outputs = null;
 }
 
-// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
-using System;
-using System.IO;
-using System.Threading;
-using SharpWave;
-using SharpWave.Codecs.Vorbis;
+static void Audio_FreeOutputs(AudioHandle* outputs) {
+	bool anyPlaying = true;
+	Int32 i;
 
-namespace ClassicalSharp.Audio{
-
-	public sealed partial class AudioPlayer : IGameComponent {
-
-	IAudioOutput musicOut;
-	IAudioOutput[] monoOutputs, stereoOutputs;
-	string[] files, musicFiles;
-	Thread musicThread;
-	Game game;
-
-	void IGameComponent.Init(Game game) {
-		this.game = game;
-		if (Platform.DirectoryExists("audio")) {
-			files = Platform.DirectoryFiles("audio");
-		} else {
-			files = new string[0];
+	while (anyPlaying) {
+		anyPlaying = false;
+		for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
+			if (outputs[i] == -1) continue;
+			anyPlaying |= !Platform_AudioIsFinished(outputs[i]);
 		}
-
-		game.MusicVolume = GetVolume(OptionsKey.MusicVolume, OptionsKey.UseMusic);
-		SetMusic(game.MusicVolume);
-		game.SoundsVolume = GetVolume(OptionsKey.SoundsVolume, OptionsKey.UseSound);
-		SetSounds(game.SoundsVolume);
-		game.UserEvents.BlockChanged += PlayBlockSound;
+		if (anyPlaying) Platform_ThreadSleep(1);
 	}
 
-	static int GetVolume(string volKey, string boolKey) {
-		int volume = Options.GetInt(volKey, 0, 100, 0);
-		if (volume != 0) return volume;
+	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
+		if (outputs[i] == -1) continue;
+		Platform_AudioFree(outputs[i]);
+		outputs[i] = -1;
+	}
+}
 
-		volume = Options.GetBool(boolKey, false) ? 100 : 0;
-		Options.Set(boolKey, null);
-		return volume;
+static void Audio_InitSounds(void) {
+	if (digBoard.Count || stepBoard.Count) return;
+	String dig  = String_FromConst("dig_");
+	Soundboard_Init(&digBoard, &dig, &files);
+	String step = String_FromConst("step_");
+	Soundboard_Init(&stepBoard, &step, &files);
+}
+
+static void Audio_FreeSounds(void) {
+	Audio_FreeOutputs(monoOutputs);
+	Audio_FreeOutputs(stereoOutputs);
+}
+
+void Audio_SetSounds(Int32 volume) {
+	if (volume) Audio_InitSounds();
+	else        Audio_FreeSounds();
+}
+
+void Audio_PlayDigSound(UInt8 type)  { Audio_PlaySound(type, &digBoard); }
+void Audio_PlayStepSound(UInt8 type) { Audio_PlaySound(type, &stepBoard); }
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Music------------------------------------------------------------*
+*#########################################################################################################################*/
+AudioHandle musicOut = -1;
+string[] files, musicFiles;
+Thread musicThread;
+
+void SetMusic(int volume) {
+	if (volume > 0) InitMusic();
+	else DisposeMusic();
+}
+
+void InitMusic() {
+	if (musicThread != null) { musicOut.SetVolume(game.MusicVolume / 100.0f); return; }
+
+	int musicCount = 0;
+	for (int i = 0; i < files.Length; i++) {
+		if (Utils.CaselessEnds(files[i], ".ogg")) musicCount++;
 	}
 
-	public void SetMusic(int volume) {
-		if (volume > 0) InitMusic();
-		else DisposeMusic();
+	musicFiles = new string[musicCount];
+	for (int i = 0, j = 0; i < files.Length; i++) {
+		if (!Utils.CaselessEnds(files[i], ".ogg")) continue;
+		musicFiles[j] = files[i]; j++;
 	}
 
-	void InitMusic() {
-		if (musicThread != null) { musicOut.SetVolume(game.MusicVolume / 100.0f); return; }
+	disposingMusic = false;
+	musicOut = GetPlatformOut();
+	musicOut.Create(10);
+	musicThread = MakeThread(DoMusicThread, "ClassicalSharp.DoMusic");
+}
 
-		int musicCount = 0;
-		for (int i = 0; i < files.Length; i++) {
-			if (Utils.CaselessEnds(files[i], ".ogg")) musicCount++;
-		}
+EventWaitHandle musicHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
+void DoMusicThread() {
+	if (musicFiles.Length == 0) return;
+	Random rnd = new Random();
+	while (!disposingMusic) {
+		string file = musicFiles[rnd.Next(0, musicFiles.Length)];
+		Utils.LogDebug("playing music file: " + file);
 
-		musicFiles = new string[musicCount];
-		for (int i = 0, j = 0; i < files.Length; i++) {
-			if (!Utils.CaselessEnds(files[i], ".ogg")) continue;
-			musicFiles[j] = files[i]; j++;
-		}
-
-		disposingMusic = false;
-		musicOut = GetPlatformOut();
-		musicOut.Create(10);
-		musicThread = MakeThread(DoMusicThread, "ClassicalSharp.DoMusic");
-	}
-
-	EventWaitHandle musicHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
-	void DoMusicThread() {
-		if (musicFiles.Length == 0) return;
-		Random rnd = new Random();
-		while (!disposingMusic) {
-			string file = musicFiles[rnd.Next(0, musicFiles.Length)];
-			Utils.LogDebug("playing music file: " + file);
-
-			string path = Path.Combine("audio", file);
-			using (Stream fs = Platform.FileOpen(path)) {
-				OggContainer container = new OggContainer(fs);
-				try {
-					musicOut.SetVolume(game.MusicVolume / 100.0f);
-					musicOut.PlayStreaming(container);
-				} catch (InvalidOperationException ex) {
-					HandleMusicError(ex);
-					return;
-				} catch (Exception ex) {
-					ErrorHandler.LogError("AudioPlayer.DoMusicThread()", ex);
-					game.Chat.Add("&cError while trying to play music file " + file);
-				}
+		string path = Path.Combine("audio", file);
+		using (Stream fs = Platform.FileOpen(path)) {
+			OggContainer container = new OggContainer(fs);
+			try {
+				musicOut.SetVolume(game.MusicVolume / 100.0f);
+				musicOut.PlayStreaming(container);
+			} catch (InvalidOperationException ex) {
+				HandleMusicError(ex);
+				return;
+			} catch (Exception ex) {
+				ErrorHandler.LogError("AudioPlayer.DoMusicThread()", ex);
+				game.Chat.Add("&cError while trying to play music file " + file);
 			}
-			if (disposingMusic) break;
-
-			int delay = 2000 * 60 + rnd.Next(0, 5000 * 60);
-			musicHandle.WaitOne(delay, false);
 		}
-	}
+		if (disposingMusic) break;
 
-	void HandleMusicError(InvalidOperationException ex) {
-		ErrorHandler.LogError("AudioPlayer.DoMusicThread()", ex);
-		if (ex.Message == "No audio devices found")
-			game.Chat.Add("&cNo audio devices found, disabling music.");
-		else
-			game.Chat.Add("&cAn error occured when trying to play music, disabling music.");
-
-		SetMusic(0);
-		game.MusicVolume = 0;
-	}
-
-	bool disposingMusic;
-	void IDisposable.Dispose() {
-		DisposeMusic();
-		DisposeSound();
-		musicHandle.Close();
-		game.UserEvents.BlockChanged -= PlayBlockSound;
-	}
-
-	void DisposeMusic() {
-		disposingMusic = true;
-		musicHandle.Set();
-		DisposeOf(ref musicOut, ref musicThread);
-	}
-
-	Thread MakeThread(ThreadStart func, string name) {
-		Thread thread = new Thread(func);
-		thread.Name = name;
-		thread.IsBackground = true;
-		thread.Start();
-		return thread;
-	}
-
-	IAudioOutput GetPlatformOut() {
-		if (OpenTK.Configuration.RunningOnWindows && !Options.GetBool(OptionsKey.ForceOpenAL, false))
-			return new WinMmOut();
-		return new OpenALOut();
-	}
-
-	void DisposeOf(ref IAudioOutput output, ref Thread thread) {
-		if (output == null) return;
-		output.Stop();
-		thread.Join();
-
-		output.Dispose();
-		output = null;
-		thread = null;
+		int delay = 2000 * 60 + rnd.Next(0, 5000 * 60);
+		musicHandle.WaitOne(delay, false);
 	}
 }
+
+void HandleMusicError(InvalidOperationException ex) {
+	ErrorHandler.LogError("AudioPlayer.DoMusicThread()", ex);
+	if (ex.Message == "No audio devices found")
+		game.Chat.Add("&cNo audio devices found, disabling music.");
+	else
+		game.Chat.Add("&cAn error occured when trying to play music, disabling music.");
+
+	SetMusic(0);
+	game.MusicVolume = 0;
+}
+bool disposingMusic;
+
+void DisposeMusic() {
+	disposingMusic = true;
+	musicHandle.Set();
+	DisposeOf(ref musicOut, ref musicThread);
+}
+
+Thread MakeThread(ThreadStart func, string name) {
+	Thread thread = new Thread(func);
+	thread.Name = name;
+	thread.IsBackground = true;
+	thread.Start();
+	return thread;
+}
+
+void DisposeOf(ref IAudioOutput output, ref Thread thread) {
+	if (output == null) return;
+	output.Stop();
+	thread.Join();
+
+	output.Dispose();
+	output = null;
+	thread = null;
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------General----------------------------------------------------------*
+*#########################################################################################################################*/
+static Int32 Audio_GetVolume(const UChar* volKey, const UChar* boolKey) {
+	Int32 volume = Options_GetInt(volKey, 0, 100, 0);
+	if (volume) return volume;
+
+	volume = Options_GetBool(boolKey, false) ? 100 : 0;
+	Options_Set(boolKey, NULL);
+	return volume;
+}
+
+static void Audio_Init(void) {
+	StringsBuffer_Init(&files);
+	String path = String_FromConst("audio");
+	if (Platform_DirectoryExists(&path)) {
+		files = Platform.DirectoryFiles("audio");
+	}
+
+	Game_MusicVolume = GetVolume(OPT_MUSIC_VOLUME, OPT_USE_MUSIC);
+	Audio_SetMusic(Game_MusicVolume);
+	Game_SoundsVolume = GetVolume(OPT_SOUND_VOLUME, OPT_USE_SOUND);
+	Audio_SetSounds(Game_SoundsVolume);
+	game.UserEvents.BlockChanged += PlayBlockSound;
+}
+
+static void Audio_Free(void) {
+	DisposeMusic();
+	DisposeSound();
+	musicHandle.Close();
+	game.UserEvents.BlockChanged -= PlayBlockSound;
 }
