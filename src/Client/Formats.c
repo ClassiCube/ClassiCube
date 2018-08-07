@@ -13,7 +13,7 @@
 
 static void Map_ReadBlocks(struct Stream* stream) {
 	World_BlocksSize = World_Width * World_Length * World_Height;
-	World_Blocks = Platform_MemAlloc(World_BlocksSize, sizeof(BlockID), "map blocks for load");
+	World_Blocks = Mem_Alloc(World_BlocksSize, sizeof(BlockID), "map blocks for load");
 	Stream_Read(stream, World_Blocks, World_BlocksSize);
 }
 
@@ -157,7 +157,7 @@ void Fcm_Load(struct Stream* stream) {
 
 	/* header[20] (4) date modified */
 	/* header[24] (4) date created */
-	Platform_MemCpy(&World_Uuid, &header[28], sizeof(World_Uuid));
+	Mem_Copy(&World_Uuid, &header[28], sizeof(World_Uuid));
 	/* header[44] (26) layer index */
 	Int32 metaSize = (Int32)Stream_GetU32_LE(&header[70]);
 
@@ -280,7 +280,7 @@ static void Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* stream, s
 		if (count < NBT_SMALL_SIZE) {
 			Stream_Read(stream, tag.DataSmall, count);
 		} else {
-			tag.DataBig = Platform_MemAlloc(count, sizeof(UInt8), "NBT tag data");
+			tag.DataBig = Mem_Alloc(count, sizeof(UInt8), "NBT tag data");
 			Stream_Read(stream, tag.DataBig, count);
 		}
 		break;
@@ -313,7 +313,7 @@ static void Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* stream, s
 
 	bool processed = callback(&tag);
 	/* don't leak memory for unprocessed tags */
-	if (!processed && tag.DataSize >= NBT_SMALL_SIZE) Platform_MemFree(&tag.DataBig);
+	if (!processed && tag.DataSize >= NBT_SMALL_SIZE) Mem_Free(&tag.DataBig);
 }
 
 static bool IsTag(struct NbtTag* tag, const UChar* tagName) {
@@ -358,14 +358,14 @@ static bool Cw_Callback_1(struct NbtTag* tag) {
 
 	if (IsTag(tag, "UUID")) {
 		if (tag->DataSize != sizeof(World_Uuid)) ErrorHandler_Fail("Map UUID must be 16 bytes");
-		Platform_MemCpy(World_Uuid, tag->DataSmall, sizeof(World_Uuid));
+		Mem_Copy(World_Uuid, tag->DataSmall, sizeof(World_Uuid));
 		return true;
 	}
 	if (IsTag(tag, "BlockArray")) {
 		World_BlocksSize = tag->DataSize;
 		if (tag->DataSize < NBT_SMALL_SIZE) {
-			World_Blocks = Platform_MemAlloc(World_BlocksSize, sizeof(UInt8), ".cw map blocks");
-			Platform_MemCpy(World_Blocks, tag->DataSmall, tag->DataSize);
+			World_Blocks = Mem_Alloc(World_BlocksSize, sizeof(UInt8), ".cw map blocks");
+			Mem_Copy(World_Blocks, tag->DataSmall, tag->DataSize);
 		} else {
 			World_Blocks = tag->DataBig;
 		}
@@ -604,7 +604,7 @@ struct JClassDesc {
 };
 
 static void Dat_ReadString(struct Stream* stream, UInt8* buffer) {
-	Platform_MemSet(buffer, 0, JNAME_SIZE);
+	Mem_Set(buffer, 0, JNAME_SIZE);
 	UInt16 len = Stream_ReadU16_BE(stream);
 
 	if (len > JNAME_SIZE) ErrorHandler_Fail("Dat string too long");
@@ -693,7 +693,7 @@ static void Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
 		if (arrayClassDesc.ClassName[1] != JFIELD_INT8) ErrorHandler_Fail("Only byte array fields supported");
 
 		UInt32 size = Stream_ReadU32_BE(stream);
-		field->Value_Ptr = Platform_MemAlloc(size, sizeof(UInt8), ".dat map blocks");
+		field->Value_Ptr = Mem_Alloc(size, sizeof(UInt8), ".dat map blocks");
 
 		Stream_Read(stream, field->Value_Ptr, size);
 		field->Value_Size = size;

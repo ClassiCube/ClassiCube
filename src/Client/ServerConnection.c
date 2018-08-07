@@ -94,7 +94,7 @@ struct PingEntry {
 struct PingEntry PingList_Entries[10];
 
 UInt16 PingList_Set(Int32 i, UInt16 prev) {
-	DateTime now; Platform_CurrentUTCTime(&now);
+	DateTime now; DateTime_CurrentUTC(&now);
 	PingList_Entries[i].Data = (UInt16)(prev + 1);
 	PingList_Entries[i].TimeSent = DateTime_TotalMs(&now);
 	PingList_Entries[i].TimeReceived = 0;
@@ -122,7 +122,7 @@ void PingList_Update(UInt16 data) {
 	Int32 i;
 	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
 		if (PingList_Entries[i].Data != data) continue;
-		DateTime now; Platform_CurrentUTCTime(&now);
+		DateTime now; DateTime_CurrentUTC(&now);
 		PingList_Entries[i].TimeReceived = DateTime_TotalMs(&now);
 		return;
 	}
@@ -161,7 +161,7 @@ static void SPConnection_BeginConnect(void) {
 
 	/* For when user drops a map file onto ClassicalSharp.exe */
 	String path = Game_Username;
-	if (String_IndexOf(&path, Platform_DirectorySeparator, 0) >= 0 && Platform_FileExists(&path)) {
+	if (String_IndexOf(&path, Directory_Separator, 0) >= 0 && File_Exists(&path)) {
 		LoadLevelScreen_LoadMap(&path);
 		Gui_ReplaceActive(NULL);
 		return;
@@ -285,7 +285,7 @@ static void MPConnection_FinishConnect(void) {
 	Handlers_Reset();
 	Classic_WriteLogin(&net_writeStream, &Game_Username, &Game_Mppass);
 	Net_SendPacket();
-	Platform_CurrentUTCTime(&net_lastPacket);
+	DateTime_CurrentUTC(&net_lastPacket);
 }
 
 static void MPConnection_FailConnect(ReturnCode result) {
@@ -308,21 +308,21 @@ static void MPConnection_FailConnect(ReturnCode result) {
 
 static void MPConnection_TickConnect(void) {
 	bool poll_error = false;
-	Platform_SocketSelect(net_socket, SOCKET_SELECT_ERROR, &poll_error);
+	Socket_Select(net_socket, SOCKET_SELECT_ERROR, &poll_error);
 	if (poll_error) {
-		ReturnCode err = 0; Platform_SocketGetError(net_socket, &err);
+		ReturnCode err = 0; Socket_GetError(net_socket, &err);
 		MPConnection_FailConnect(err);
 		return;
 	}
 
-	DateTime now; Platform_CurrentUTCTime(&now);
+	DateTime now; DateTime_CurrentUTC(&now);
 	Int64 nowMS = DateTime_TotalMs(&now);
 
 	bool poll_write = false;
-	Platform_SocketSelect(net_socket, SOCKET_SELECT_WRITE, &poll_write);
+	Socket_Select(net_socket, SOCKET_SELECT_WRITE, &poll_write);
 
 	if (poll_write) {
-		Platform_SocketSetBlocking(net_socket, true);
+		Socket_SetBlocking(net_socket, true);
 		MPConnection_FinishConnect();
 	} else if (nowMS > net_connectTimeout) {
 		MPConnection_FailConnect(0);
@@ -333,16 +333,16 @@ static void MPConnection_TickConnect(void) {
 }
 
 static void MPConnection_BeginConnect(void) {
-	Platform_SocketCreate(&net_socket);
+	Socket_Create(&net_socket);
 	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, MPConnection_BlockChanged);
 	ServerConnection_Disconnected = false;
 
-	Platform_SocketSetBlocking(net_socket, false);
+	Socket_SetBlocking(net_socket, false);
 	net_connecting = true;
-	DateTime now; Platform_CurrentUTCTime(&now);
+	DateTime now; DateTime_CurrentUTC(&now);
 	net_connectTimeout = DateTime_TotalMs(&now) + NET_TIMEOUT_MS;
 
-	ReturnCode result = Platform_SocketConnect(net_socket, &Game_IPAddress, Game_Port);
+	ReturnCode result = Socket_Connect(net_socket, &Game_IPAddress, Game_Port);
 	if (result == 0) return;
 	if (result != ReturnCode_SocketInProgess && result != ReturnCode_SocketWouldBlock) {
 		MPConnection_FailConnect(result);
@@ -380,8 +380,8 @@ static void MPConnection_CheckDisconnection(Real64 delta) {
 	net_discAccumulator = 0.0;
 
 	UInt32 available = 0; bool poll_success = false;
-	ReturnCode availResult  = Platform_SocketAvailable(net_socket, &available);
-	ReturnCode selectResult = Platform_SocketSelect(net_socket, SOCKET_SELECT_READ, &poll_success);
+	ReturnCode availResult  = Socket_Available(net_socket, &available);
+	ReturnCode selectResult = Socket_Select(net_socket, SOCKET_SELECT_READ, &poll_success);
 
 	if (net_writeFailed || availResult != 0 || selectResult != 0 || (available == 0 && poll_success)) {
 		String title  = String_FromConst("Disconnected!");
@@ -394,18 +394,18 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	if (ServerConnection_Disconnected) return;
 	if (net_connecting) { MPConnection_TickConnect(); return; }
 
-	DateTime now; Platform_CurrentUTCTime(&now);
+	DateTime now; DateTime_CurrentUTC(&now);
 	if (DateTime_MsBetween(&net_lastPacket, &now) >= 30 * 1000) {
 		MPConnection_CheckDisconnection(task->Interval);
 	}
 	if (ServerConnection_Disconnected) return;
 
 	UInt32 modified = 0;
-	ReturnCode recvResult = Platform_SocketAvailable(net_socket, &modified);
+	ReturnCode recvResult = Socket_Available(net_socket, &modified);
 	if (recvResult == 0 && modified > 0) {
 		/* NOTE: Always using a read call that is a multiple of 4096 (appears to?) improve read performance */
 		UInt8* src = net_readBuffer + net_readStream.Meta.Mem.Left;
-		recvResult = Platform_SocketRead(net_socket, src, 4096 * 4, &modified);
+		recvResult = Socket_Read(net_socket, src, 4096 * 4, &modified);
 		net_readStream.Meta.Mem.Left   += modified;
 		net_readStream.Meta.Mem.Length += modified;
 	}
@@ -441,7 +441,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 		Stream_Skip(&net_readStream, 1); /* remove opcode */
 		net_lastOpcode = opcode;
 		Net_Handler handler = Net_Handlers[opcode];
-		Platform_CurrentUTCTime(&net_lastPacket);
+		DateTime_CurrentUTC(&net_lastPacket);
 
 		if (!handler) { ErrorHandler_Fail("Unsupported opcode"); }
 		handler(&net_readStream);
@@ -479,7 +479,7 @@ void Net_SendPacket(void) {
 		UInt32 count = (UInt32)(net_writeStream.Meta.Mem.Cur - net_writeStream.Meta.Mem.Base), modified = 0;
 
 		while (count > 0) {
-			ReturnCode result = Platform_SocketWrite(net_socket, net_writeBuffer, count, &modified);
+			ReturnCode result = Socket_Write(net_socket, net_writeBuffer, count, &modified);
 			if (result != 0 || modified == 0) { net_writeFailed = true; break; }
 			count -= modified;
 		}
@@ -535,7 +535,7 @@ static void ServerConnection_Free(void) {
 	} else {
 		if (ServerConnection_Disconnected) return;
 		Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, MPConnection_BlockChanged);
-		Platform_SocketClose(net_socket);
+		Socket_Close(net_socket);
 		ServerConnection_Disconnected = true;
 	}
 }

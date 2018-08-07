@@ -79,32 +79,32 @@ static void ChunkUpdater_ViewDistanceChanged(void* obj) {
 
 
 static void ChunkUpdater_FreePartsAllocations(void) {
-	Platform_MemFree(&MapRenderer_PartsBuffer_Raw);
+	Mem_Free(&MapRenderer_PartsBuffer_Raw);
 	MapRenderer_PartsNormal = NULL;
 	MapRenderer_PartsTranslucent = NULL;
 }
 
 static void ChunkUpdater_FreeAllocations(void) {
 	if (!MapRenderer_Chunks) return;
-	Platform_MemFree(&MapRenderer_Chunks);
-	Platform_MemFree(&MapRenderer_SortedChunks);
-	Platform_MemFree(&MapRenderer_RenderChunks);
-	Platform_MemFree(&ChunkUpdater_Distances);
+	Mem_Free(&MapRenderer_Chunks);
+	Mem_Free(&MapRenderer_SortedChunks);
+	Mem_Free(&MapRenderer_RenderChunks);
+	Mem_Free(&ChunkUpdater_Distances);
 	ChunkUpdater_FreePartsAllocations();
 }
 
 static void ChunkUpdater_PerformPartsAllocations(void) {
 	UInt32 count = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
-	MapRenderer_PartsBuffer_Raw  = Platform_MemAllocCleared(count * 2, sizeof(struct ChunkPartInfo), "chunk parts");
+	MapRenderer_PartsBuffer_Raw  = Mem_AllocCleared(count * 2, sizeof(struct ChunkPartInfo), "chunk parts");
 	MapRenderer_PartsNormal      = MapRenderer_PartsBuffer_Raw;
 	MapRenderer_PartsTranslucent = MapRenderer_PartsBuffer_Raw + count;
 }
 
 static void ChunkUpdater_PerformAllocations(void) {
-	MapRenderer_Chunks       = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo), "chunk info");
-	MapRenderer_SortedChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "sorted chunk info");
-	MapRenderer_RenderChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "render chunk info");
-	ChunkUpdater_Distances   = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(Int32), "chunk distances");
+	MapRenderer_Chunks       = Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo), "chunk info");
+	MapRenderer_SortedChunks = Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "sorted chunk info");
+	MapRenderer_RenderChunks = Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "render chunk info");
+	ChunkUpdater_Distances   = Mem_Alloc(MapRenderer_ChunksCount, sizeof(Int32), "chunk distances");
 	ChunkUpdater_PerformPartsAllocations();
 }
 

@@ -241,7 +241,7 @@ void TextAtlas_Make(struct TextAtlas* atlas, STRING_PURE String* chars, struct F
 	atlas->FontSize = font->Size;
 	size.Width += 16 * chars->length;
 
-	Platform_MemSet(atlas->Widths, 0, sizeof(atlas->Widths));
+	Mem_Set(atlas->Widths, 0, sizeof(atlas->Widths));
 	struct Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
 	{
@@ -256,7 +256,7 @@ void TextAtlas_Make(struct TextAtlas* atlas, STRING_PURE String* chars, struct F
 	Drawer2D_End();
 
 	Drawer2D_Make2DTexture(&atlas->Tex, &bmp, size, 0, 0);
-	Platform_MemFree(&bmp.Scan0);
+	Mem_Free(&bmp.Scan0);
 
 	Drawer2D_ReducePadding_Tex(&atlas->Tex, Math_Floor(font->Size), 4);
 	atlas->uScale = 1.0f / (Real32)bmp.Width;

@@ -226,7 +226,7 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 			String_Set(value, &clipboard_paste_text);
 			return;
 		} else {
-			Platform_ThreadSleep(100);
+			Thread_Sleep(100);
 		}
 	}
 }

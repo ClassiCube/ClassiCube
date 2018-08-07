@@ -15,7 +15,7 @@ static void Gen_Init(void) {
 	Gen_CurrentProgress = 0.0f;
 	Gen_CurrentState = "";
 
-	Gen_Blocks = Platform_MemAlloc(Gen_Width * Gen_Height * Gen_Length, sizeof(BlockID), "map blocks for gen");
+	Gen_Blocks = Mem_Alloc(Gen_Width * Gen_Height * Gen_Length, sizeof(BlockID), "map blocks for gen");
 	Gen_Done = false;
 }
 
@@ -31,7 +31,7 @@ static void FlatgrassGen_MapSet(Int32 yStart, Int32 yEnd, BlockID block) {
 
 	Gen_CurrentProgress = 0.0f;
 	for (y = yStart; y <= yEnd; y++) {
-		Platform_MemSet(ptr + y * oneY, block, oneY * (UInt32)sizeof(BlockID));
+		Mem_Set(ptr + y * oneY, block, oneY * (UInt32)sizeof(BlockID));
 		Gen_CurrentProgress = (Real32)(y - yStart) / yHeight;
 	}
 }
@@ -156,20 +156,20 @@ static Int32 NotchyGen_CreateStrataFast(void) {
 	Gen_CurrentState = "Filling map";
 
 	/* Make lava layer at bottom */
-	Platform_MemSet(Gen_Blocks, BLOCK_LAVA, oneY * (UInt32)sizeof(BlockID));
+	Mem_Set(Gen_Blocks, BLOCK_LAVA, oneY * (UInt32)sizeof(BlockID));
 
 	/* Invariant: the lowest value dirtThickness can possible be is -14 */
 	Int32 stoneHeight = minHeight - 14;
 	/* We can quickly fill in bottom solid layers */
 	for (y = 1; y <= stoneHeight; y++) {
-		Platform_MemSet(Gen_Blocks + y * oneY, BLOCK_STONE, oneY * (UInt32)sizeof(BlockID));
+		Mem_Set(Gen_Blocks + y * oneY, BLOCK_STONE, oneY * (UInt32)sizeof(BlockID));
 		Gen_CurrentProgress = (Real32)y / Gen_Height;
 	}
 
 	/* Fill in rest of map wih air */
 	Int32 airHeight = max(0, stoneHeight) + 1;
 	for (y = airHeight; y < Gen_Height; y++) {
-		Platform_MemSet(Gen_Blocks + y * oneY, BLOCK_AIR, oneY * (UInt32)sizeof(BlockID));
+		Mem_Set(Gen_Blocks + y * oneY, BLOCK_AIR, oneY * (UInt32)sizeof(BlockID));
 		Gen_CurrentProgress = (Real32)y / Gen_Height;
 	}
 
@@ -467,7 +467,7 @@ static void NotchyGen_PlantTrees(void) {
 
 void NotchyGen_Generate(void) {
 	Gen_Init();
-	Heightmap = Platform_MemAlloc(Gen_Width * Gen_Length, sizeof(Int16), "gen heightmap");
+	Heightmap = Mem_Alloc(Gen_Width * Gen_Length, sizeof(Int16), "gen heightmap");
 
 	Random_Init(&rnd, Gen_Seed);
 	oneY = Gen_Width * Gen_Length;	
@@ -490,7 +490,7 @@ void NotchyGen_Generate(void) {
 	NotchyGen_PlantMushrooms();
 	NotchyGen_PlantTrees();
 
-	Platform_MemFree(&Heightmap);
+	Mem_Free(&Heightmap);
 	Gen_Done = true;
 }
 

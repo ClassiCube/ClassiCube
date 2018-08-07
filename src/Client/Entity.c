@@ -444,10 +444,10 @@ void TabList_Set(EntityID id, STRING_PURE String* player, STRING_PURE String* li
 static void TabList_Init(void) { StringsBuffer_Init(&TabList_Buffer); }
 static void TabList_Free(void) { StringsBuffer_Free(&TabList_Buffer); }
 static void TabList_Reset(void) {
-	Platform_MemSet(TabList_PlayerNames, 0, sizeof(TabList_PlayerNames));
-	Platform_MemSet(TabList_ListNames,   0, sizeof(TabList_ListNames));
-	Platform_MemSet(TabList_GroupNames,  0, sizeof(TabList_GroupNames));
-	Platform_MemSet(TabList_GroupRanks,  0, sizeof(TabList_GroupRanks));
+	Mem_Set(TabList_PlayerNames, 0, sizeof(TabList_PlayerNames));
+	Mem_Set(TabList_ListNames,   0, sizeof(TabList_ListNames));
+	Mem_Set(TabList_GroupNames,  0, sizeof(TabList_GroupNames));
+	Mem_Set(TabList_GroupRanks,  0, sizeof(TabList_GroupRanks));
 	StringsBuffer_Free(&TabList_Buffer);
 }
 
@@ -464,7 +464,7 @@ void TabList_MakeComponent(struct IGameComponent* comp) {
 #define PLAYER_NAME_EMPTY_TEX -30000
 static void Player_MakeNameTexture(struct Player* player) {
 	struct FontDesc font;
-	Platform_FontMake(&font, &Game_FontName, 24, FONT_STYLE_NORMAL);
+	Font_Make(&font, &Game_FontName, 24, FONT_STYLE_NORMAL);
 
 	String displayName = String_FromRawArray(player->DisplayNameRaw);
 	struct DrawTextArgs args;
@@ -500,7 +500,7 @@ static void Player_MakeNameTexture(struct Player* player) {
 		Drawer2D_End();
 
 		Drawer2D_Make2DTexture(&player->NameTex, &bmp, size, 0, 0);
-		Platform_MemFree(&bmp.Scan0);
+		Mem_Free(&bmp.Scan0);
 	}
 	Drawer2D_UseBitmappedChat = bitmapped;
 }
@@ -663,14 +663,14 @@ static void Player_EnsurePow2(struct Player* player, struct Bitmap* bmp) {
 	for (y = 0; y < bmp->Height; y++) {
 		UInt32* src = Bitmap_GetRow(bmp, y);
 		UInt32* dst = Bitmap_GetRow(&scaled, y);
-		Platform_MemCpy(dst, src, stride);
+		Mem_Copy(dst, src, stride);
 	}
 
 	struct Entity* entity = &player->Base;
 	entity->uScale = (Real32)bmp->Width  / width;
 	entity->vScale = (Real32)bmp->Height / height;
 
-	Platform_MemFree(&bmp->Scan0);
+	Mem_Free(&bmp->Scan0);
 	*bmp = scaled;
 }
 
@@ -712,7 +712,7 @@ static void Player_CheckSkin(struct Player* player) {
 		entity->TextureId = Gfx_CreateTexture(&bmp, true, false);
 		Player_SetSkinAll(player, false);
 	}
-	Platform_MemFree(&bmp.Scan0);
+	Mem_Free(&bmp.Scan0);
 }
 
 static void Player_Despawn(struct Entity* entity) {
@@ -898,7 +898,7 @@ void LocalPlayer_MakeComponent(struct IGameComponent* comp) {
 struct EntityVTABLE localplayer_VTABLE;
 void LocalPlayer_Init(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	Platform_MemSet(p, 0, sizeof(struct LocalPlayer));
+	Mem_Set(p, 0, sizeof(struct LocalPlayer));
 	Player_Init((struct Player*)p);
 	Player_SetName((struct Player*)p, &Game_Username, &Game_Username);
 
@@ -1026,7 +1026,7 @@ static void NetPlayer_RenderName(struct Entity* entity) {
 
 struct EntityVTABLE netplayer_VTABLE;
 void NetPlayer_Init(struct NetPlayer* player, STRING_PURE String* displayName, STRING_PURE String* skinName) {
-	Platform_MemSet(player, 0, sizeof(struct NetPlayer));
+	Mem_Set(player, 0, sizeof(struct NetPlayer));
 	Player_Init((struct Player*)player);
 	Player_SetName((struct Player*)player, displayName, skinName);
 

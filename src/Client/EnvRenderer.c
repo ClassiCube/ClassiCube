@@ -180,13 +180,13 @@ static void EnvRenderer_UpdateClouds(void) {
 	VertexP3fT2fC4b v[ENV_SMALL_VERTICES];
 	VertexP3fT2fC4b* ptr = v;
 	if (clouds_vertices > ENV_SMALL_VERTICES) {
-		ptr = Platform_MemAlloc(clouds_vertices, sizeof(VertexP3fT2fC4b), "temp clouds vertices");
+		ptr = Mem_Alloc(clouds_vertices, sizeof(VertexP3fT2fC4b), "temp clouds vertices");
 	}
 
 	EnvRenderer_DrawCloudsY(x1, z1, x2, z2, WorldEnv_CloudsHeight, ptr);
 	clouds_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FT2FC4B, clouds_vertices);
 
-	if (clouds_vertices > ENV_SMALL_VERTICES) Platform_MemFree(&ptr);
+	if (clouds_vertices > ENV_SMALL_VERTICES) Mem_Free(&ptr);
 }
 
 
@@ -252,14 +252,14 @@ static void EnvRenderer_UpdateSky(void) {
 	VertexP3fC4b v[ENV_SMALL_VERTICES];
 	VertexP3fC4b* ptr = v;
 	if (sky_vertices > ENV_SMALL_VERTICES) {
-		ptr = Platform_MemAlloc(sky_vertices, sizeof(VertexP3fC4b), "temp sky vertices");
+		ptr = Mem_Alloc(sky_vertices, sizeof(VertexP3fC4b), "temp sky vertices");
 	}
 
 	Int32 height = max((World_Height + 2) + 6, WorldEnv_CloudsHeight + 6);
 	EnvRenderer_DrawSkyY(x1, z1, x2, z2, height, ptr);
 	sky_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FC4B, sky_vertices);
 
-	if (sky_vertices > ENV_SMALL_VERTICES) Platform_MemFree(&ptr);
+	if (sky_vertices > ENV_SMALL_VERTICES) Mem_Free(&ptr);
 }
 
 /*########################################################################################################################*
@@ -341,7 +341,7 @@ Real64 weather_accumulator;
 Vector3I weather_lastPos;
 
 static void EnvRenderer_InitWeatherHeightmap(void) {
-	Weather_Heightmap = Platform_MemAlloc(World_Width * World_Length, sizeof(Int16), "weather heightmap");
+	Weather_Heightmap = Mem_Alloc(World_Width * World_Length, sizeof(Int16), "weather heightmap");
 	Int32 i;
 	for (i = 0; i < World_Width * World_Length; i++) {
 		Weather_Heightmap[i] = Int16_MaxValue;
@@ -646,7 +646,7 @@ static void EnvRenderer_UpdateMapSides(void) {
 	VertexP3fT2fC4b v[ENV_SMALL_VERTICES];
 	VertexP3fT2fC4b* ptr = v;
 	if (sides_vertices > ENV_SMALL_VERTICES) {
-		ptr = Platform_MemAlloc(sides_vertices, sizeof(VertexP3fT2fC4b), "temp sides vertices");
+		ptr = Mem_Alloc(sides_vertices, sizeof(VertexP3fT2fC4b), "temp sides vertices");
 	}
 	VertexP3fT2fC4b* temp = ptr;
 
@@ -671,7 +671,7 @@ static void EnvRenderer_UpdateMapSides(void) {
 	EnvRenderer_DrawBorderX(World_Width, 0, World_Length, y1, y2, col, &temp);
 
 	sides_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FT2FC4B, sides_vertices);
-	if (sides_vertices > ENV_SMALL_VERTICES) Platform_MemFree(&ptr);
+	if (sides_vertices > ENV_SMALL_VERTICES) Mem_Free(&ptr);
 }
 
 static void EnvRenderer_UpdateMapEdges(void) {
@@ -692,7 +692,7 @@ static void EnvRenderer_UpdateMapEdges(void) {
 	VertexP3fT2fC4b v[ENV_SMALL_VERTICES];
 	VertexP3fT2fC4b* ptr = v;
 	if (edges_vertices > ENV_SMALL_VERTICES) {
-		ptr = Platform_MemAlloc(edges_vertices, sizeof(VertexP3fT2fC4b), "temp edge vertices");
+		ptr = Mem_Alloc(edges_vertices, sizeof(VertexP3fT2fC4b), "temp edge vertices");
 	}
 	VertexP3fT2fC4b* temp = ptr;
 
@@ -709,7 +709,7 @@ static void EnvRenderer_UpdateMapEdges(void) {
 	}
 
 	edges_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FT2FC4B, edges_vertices);
-	if (edges_vertices > ENV_SMALL_VERTICES) Platform_MemFree(&ptr);
+	if (edges_vertices > ENV_SMALL_VERTICES) Mem_Free(&ptr);
 }
 
 
@@ -754,7 +754,7 @@ static void EnvRenderer_ContextRecreated(void* obj) {
 static void EnvRenderer_Reset(void) {
 	Gfx_SetFog(false);
 	EnvRenderer_DeleteVbs();
-	Platform_MemFree(&Weather_Heightmap);
+	Mem_Free(&Weather_Heightmap);
 	weather_lastPos = Vector3I_MaxValue();
 }
 
@@ -846,7 +846,7 @@ static void EnvRenderer_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated,    NULL, EnvRenderer_ContextRecreated);
 
 	EnvRenderer_ContextLost(NULL);
-	Platform_MemFree(&Weather_Heightmap);
+	Mem_Free(&Weather_Heightmap);
 
 	Gfx_DeleteTexture(&clouds_tex);
 	Gfx_DeleteTexture(&skybox_tex);

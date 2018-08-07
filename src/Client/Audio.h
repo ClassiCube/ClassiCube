@@ -11,5 +11,4 @@ void Audio_SetMusic(Int32 volume);
 void Audio_SetSounds(Int32 volume);
 void Audio_PlayDigSound(UInt8 type);
 void Audio_PlayStepSound(UInt8 type);
-
 #endif

@@ -128,7 +128,7 @@ static void InventoryScreen_ContextRecreated(void* obj) {
 
 static void InventoryScreen_Init(struct GuiElem* elem) {
 	struct InventoryScreen* screen = (struct InventoryScreen*)elem;
-	Platform_FontMake(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	Font_Make(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
 
 	TableWidget_Create(&screen->Table);
 	screen->Table.Font = screen->Font;
@@ -159,7 +159,7 @@ static void InventoryScreen_OnResize(struct GuiElem* elem) {
 
 static void InventoryScreen_Free(struct GuiElem* elem) {
 	struct InventoryScreen* screen = (struct InventoryScreen*)elem;
-	Platform_FontFree(&screen->Font);
+	Font_Free(&screen->Font);
 	Elem_TryFree(&screen->Table);
 
 	Key_KeyRepeat = false;
@@ -235,7 +235,7 @@ static bool InventoryScreen_HandlesMouseScroll(struct GuiElem* elem, Real32 delt
 
 struct Screen* InventoryScreen_MakeInstance(void) {
 	struct InventoryScreen* screen = &InventoryScreen_Instance;
-	Platform_MemSet(screen, 0, sizeof(struct InventoryScreen));
+	Mem_Set(screen, 0, sizeof(struct InventoryScreen));
 	screen->VTABLE = &InventoryScreen_VTABLE;
 	Screen_Reset((struct Screen*)screen);
 	screen->HandlesAllInput = true;
@@ -385,7 +385,7 @@ static void StatusScreen_ContextRecreated(void* obj) {
 
 static void StatusScreen_Init(struct GuiElem* elem) {
 	struct StatusScreen* screen = (struct StatusScreen*)elem;
-	Platform_FontMake(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	Font_Make(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	StatusScreen_ContextRecreated(screen);
 
 	Event_RegisterVoid(&ChatEvents_FontChanged,     screen, StatusScreen_FontChanged);
@@ -411,7 +411,7 @@ static void StatusScreen_Render(struct GuiElem* elem, Real64 delta) {
 
 static void StatusScreen_Free(struct GuiElem* elem) {
 	struct StatusScreen* screen = (struct StatusScreen*)elem;
-	Platform_FontFree(&screen->Font);
+	Font_Free(&screen->Font);
 	StatusScreen_ContextLost(screen);
 
 	Event_UnregisterVoid(&ChatEvents_FontChanged,     screen, StatusScreen_FontChanged);
@@ -421,7 +421,7 @@ static void StatusScreen_Free(struct GuiElem* elem) {
 
 struct Screen* StatusScreen_MakeInstance(void) {
 	struct StatusScreen* screen = &StatusScreen_Instance;
-	Platform_MemSet(screen, 0, sizeof(struct StatusScreen));
+	Mem_Set(screen, 0, sizeof(struct StatusScreen));
 	screen->VTABLE = &StatusScreen_VTABLE;
 	Screen_Reset((struct Screen*)screen);
 
@@ -580,7 +580,7 @@ static void LoadingScreen_Render(struct GuiElem* elem, Real64 delta) {
 
 static void LoadingScreen_Free(struct GuiElem* elem) {
 	struct LoadingScreen* screen = (struct LoadingScreen*)elem;
-	Platform_FontFree(&screen->Font);
+	Font_Free(&screen->Font);
 	LoadingScreen_ContextLost(screen);
 
 	Event_UnregisterReal(&WorldEvents_Loading,        screen, LoadingScreen_MapLoading);
@@ -589,7 +589,7 @@ static void LoadingScreen_Free(struct GuiElem* elem) {
 }
 
 static void LoadingScreen_Make(struct LoadingScreen* screen, struct GuiElementVTABLE* vtable, STRING_PURE String* title, STRING_PURE String* message) {
-	Platform_MemSet(screen, 0, sizeof(struct LoadingScreen));
+	Mem_Set(screen, 0, sizeof(struct LoadingScreen));
 	screen->VTABLE = vtable;
 	Screen_Reset((struct Screen*)screen);
 	screen->HandlesAllInput = true;
@@ -612,7 +612,7 @@ static void LoadingScreen_Make(struct LoadingScreen* screen, struct GuiElementVT
 	String messageScreen = String_InitAndClearArray(screen->MessageBuffer);
 	String_AppendString(&messageScreen, message);
 
-	Platform_FontMake(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	Font_Make(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	screen->BlocksWorld     = true;
 	screen->RenderHUDOver   = true;
 }
@@ -638,12 +638,12 @@ static void GeneratingScreen_Init(struct GuiElem* elem) {
 
 	void* threadHandle;
 	if (Gen_Vanilla) {
-		threadHandle = Platform_ThreadStart(&NotchyGen_Generate);
+		threadHandle = Thread_Start(&NotchyGen_Generate);
 	} else {
-		threadHandle = Platform_ThreadStart(&FlatgrassGen_Generate);
+		threadHandle = Thread_Start(&FlatgrassGen_Generate);
 	}
 	/* don't leak thread handle here */
-	Platform_ThreadFreeHandle(threadHandle);
+	Thread_FreeHandle(threadHandle);
 }
 
 static void GeneratingScreen_EndGeneration(void) {
@@ -651,7 +651,7 @@ static void GeneratingScreen_EndGeneration(void) {
 	Gen_Done = false;
 
 	if (!Gen_Blocks) {
-		Chat_AddRaw(tmpStr, "&cFailed to generate the map."); return;
+		Chat_AddRaw("&cFailed to generate the map."); return;
 	}
 
 	World_BlocksSize = Gen_Width * Gen_Height * Gen_Length;
@@ -1101,12 +1101,12 @@ static void ChatScreen_Init(struct GuiElem* elem) {
 
 	Int32 fontSize = (Int32)(8 * Game_GetChatScale());
 	Math_Clamp(fontSize, 8, 60);
-	Platform_FontMake(&screen->ChatFont, &Game_FontName, fontSize, FONT_STYLE_NORMAL);
-	Platform_FontMake(&screen->ChatUrlFont, &Game_FontName, fontSize, FONT_STYLE_UNDERLINE);
+	Font_Make(&screen->ChatFont, &Game_FontName, fontSize, FONT_STYLE_NORMAL);
+	Font_Make(&screen->ChatUrlFont, &Game_FontName, fontSize, FONT_STYLE_UNDERLINE);
 
 	fontSize = (Int32)(16 * Game_GetChatScale());
 	Math_Clamp(fontSize, 8, 60);
-	Platform_FontMake(&screen->AnnouncementFont, &Game_FontName, fontSize, FONT_STYLE_NORMAL);
+	Font_Make(&screen->AnnouncementFont, &Game_FontName, fontSize, FONT_STYLE_NORMAL);
 	ChatScreen_ContextRecreated(elem);
 
 	Event_RegisterChat(&ChatEvents_ChatReceived,    screen, ChatScreen_ChatReceived);
@@ -1132,7 +1132,7 @@ static void ChatScreen_Render(struct GuiElem* elem, Real64 delta) {
 		Texture_Render(&tex);
 	}
 
-	DateTime now; Platform_CurrentUTCTime(&now);
+	DateTime now; DateTime_CurrentUTC(&now);
 	if (screen->HandlesAllInput) {
 		Elem_Render(&screen->Chat, delta);
 	} else {
@@ -1165,9 +1165,9 @@ static void ChatScreen_Render(struct GuiElem* elem, Real64 delta) {
 static void ChatScreen_Free(struct GuiElem* elem) {
 	struct ChatScreen* screen = (struct ChatScreen*)elem;
 	ChatScreen_ContextLost(elem);
-	Platform_FontFree(&screen->ChatFont);
-	Platform_FontFree(&screen->ChatUrlFont);
-	Platform_FontFree(&screen->AnnouncementFont);
+	Font_Free(&screen->ChatFont);
+	Font_Free(&screen->ChatUrlFont);
+	Font_Free(&screen->AnnouncementFont);
 
 	Event_UnregisterChat(&ChatEvents_ChatReceived,    screen, ChatScreen_ChatReceived);
 	Event_UnregisterVoid(&ChatEvents_FontChanged,     screen, ChatScreen_FontChanged);
@@ -1178,7 +1178,7 @@ static void ChatScreen_Free(struct GuiElem* elem) {
 
 struct Screen* ChatScreen_MakeInstance(void) {
 	struct ChatScreen* screen = &ChatScreen_Instance;
-	Platform_MemSet(screen, 0, sizeof(struct ChatScreen));
+	Mem_Set(screen, 0, sizeof(struct ChatScreen));
 	screen->VTABLE = &ChatScreen_VTABLE;
 	Screen_Reset((struct Screen*)screen);
 
@@ -1314,7 +1314,7 @@ static bool HUDScreen_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y, M
 static void HUDScreen_Init(struct GuiElem* elem) {
 	struct HUDScreen* screen = (struct HUDScreen*)elem;
 	UInt16 size = Drawer2D_UseBitmappedChat ? 16 : 11;
-	Platform_FontMake(&screen->PlayerFont, &Game_FontName, size, FONT_STYLE_NORMAL);
+	Font_Make(&screen->PlayerFont, &Game_FontName, size, FONT_STYLE_NORMAL);
 
 	HotbarWidget_Create(&screen->Hotbar);
 	Elem_Init(&screen->Hotbar);
@@ -1365,7 +1365,7 @@ static void HUDScreen_Render(struct GuiElem* elem, Real64 delta) {
 
 static void HUDScreen_Free(struct GuiElem* elem) {
 	struct HUDScreen* screen = (struct HUDScreen*)elem;
-	Platform_FontFree(&screen->PlayerFont);
+	Font_Free(&screen->PlayerFont);
 	Elem_TryFree(screen->Chat);
 	HUDScreen_ContextLost(screen);
 
@@ -1375,7 +1375,7 @@ static void HUDScreen_Free(struct GuiElem* elem) {
 
 struct Screen* HUDScreen_MakeInstance(void) {
 	struct HUDScreen* screen = &HUDScreen_Instance;
-	Platform_MemSet(screen, 0, sizeof(struct HUDScreen));
+	Mem_Set(screen, 0, sizeof(struct HUDScreen));
 	screen->VTABLE = &HUDScreenVTABLE;
 	Screen_Reset((struct Screen*)screen);
 
@@ -1422,7 +1422,7 @@ struct DisconnectScreen DisconnectScreen_Instance;
 #define DISCONNECT_DELAY_MS 5000
 static void DisconnectScreen_ReconnectMessage(struct DisconnectScreen* screen, STRING_TRANSIENT String* msg) {
 	if (screen->CanReconnect) {
-		DateTime now; Platform_CurrentUTCTime(&now);
+		DateTime now; DateTime_CurrentUTC(&now);
 		Int32 elapsedMS = (Int32)(DateTime_TotalMs(&now) - screen->InitTime);
 		Int32 secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLISECS_PER_SECOND;
 
@@ -1447,7 +1447,7 @@ static void DisconnectScreen_Redraw(struct DisconnectScreen* screen, Real64 delt
 }
 
 static void DisconnectScreen_UpdateDelayLeft(struct DisconnectScreen* screen, Real64 delta) {
-	DateTime now; Platform_CurrentUTCTime(&now);
+	DateTime now; DateTime_CurrentUTC(&now);
 	Int32 elapsedMS = (Int32)(DateTime_TotalMs(&now) - screen->InitTime);
 	Int32 secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLISECS_PER_SECOND;
 	if (secsLeft < 0) secsLeft = 0;
@@ -1475,7 +1475,7 @@ static void DisconnectScreen_ContextLost(void* obj) {
 static void DisconnectScreen_ContextRecreated(void* obj) {
 	struct DisconnectScreen* screen = (struct DisconnectScreen*)obj;
 	if (Gfx_LostContext) return;
-	DateTime now; Platform_CurrentUTCTime(&now);
+	DateTime now; DateTime_CurrentUTC(&now);
 	screen->ClearTime = DateTime_TotalMs(&now) + 500;
 
 	String title = String_FromRawArray(screen->TitleBuffer);
@@ -1502,7 +1502,7 @@ static void DisconnectScreen_Init(struct GuiElem* elem) {
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, DisconnectScreen_ContextRecreated);
 
 	DisconnectScreen_ContextRecreated(screen);
-	DateTime now; Platform_CurrentUTCTime(&now);
+	DateTime now; DateTime_CurrentUTC(&now);
 	screen->InitTime = DateTime_TotalMs(&now);
 	screen->LastSecsLeft = DISCONNECT_DELAY_MS / DATETIME_MILLISECS_PER_SECOND;
 }
@@ -1515,7 +1515,7 @@ static void DisconnectScreen_Render(struct GuiElem* elem, Real64 delta) {
 
 	/* NOTE: We need to make sure that both the front and back buffers have
 	definitely been drawn over, so we redraw the background multiple times. */
-	DateTime now; Platform_CurrentUTCTime(&now);
+	DateTime now; DateTime_CurrentUTC(&now);
 	if (DateTime_TotalMs(&now) < screen->ClearTime) {
 		DisconnectScreen_Redraw(screen, delta);
 	}
@@ -1528,8 +1528,8 @@ static void DisconnectScreen_Free(struct GuiElem* elem) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, DisconnectScreen_ContextRecreated);
 
 	DisconnectScreen_ContextLost(screen);
-	Platform_FontFree(&screen->TitleFont);
-	Platform_FontFree(&screen->MessageFont);
+	Font_Free(&screen->TitleFont);
+	Font_Free(&screen->MessageFont);
 }
 
 static void DisconnectScreen_OnResize(struct GuiElem* elem) {
@@ -1537,7 +1537,7 @@ static void DisconnectScreen_OnResize(struct GuiElem* elem) {
 	Widget_Reposition(&screen->Title);
 	Widget_Reposition(&screen->Message);
 	Widget_Reposition(&screen->Reconnect);
-	DateTime now; Platform_CurrentUTCTime(&now);
+	DateTime now; DateTime_CurrentUTC(&now);
 	screen->ClearTime = DateTime_TotalMs(&now) + 500;
 }
 
@@ -1574,7 +1574,7 @@ static bool DisconnectScreen_HandlesMouseUp(struct GuiElem* elem, Int32 x, Int32
 
 struct Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message) {
 	struct DisconnectScreen* screen = &DisconnectScreen_Instance;
-	Platform_MemSet(screen, 0, sizeof(struct DisconnectScreen));
+	Mem_Set(screen, 0, sizeof(struct DisconnectScreen));
 	screen->VTABLE = &DisconnectScreen_VTABLE;
 	Screen_Reset((struct Screen*)screen);
 	screen->HandlesAllInput = true;
@@ -1592,8 +1592,8 @@ struct Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_P
 	String ban  = String_FromConst("Banned ");
 	screen->CanReconnect = !(String_StartsWith(&reason, &kick) || String_StartsWith(&reason, &ban));
 
-	Platform_FontMake(&screen->TitleFont,   &Game_FontName, 16, FONT_STYLE_BOLD);
-	Platform_FontMake(&screen->MessageFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	Font_Make(&screen->TitleFont,   &Game_FontName, 16, FONT_STYLE_BOLD);
+	Font_Make(&screen->MessageFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	screen->BlocksWorld     = true;
 	screen->HidesHUD        = true;
 

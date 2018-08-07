@@ -396,7 +396,7 @@ static void Classic_StartLoading(struct Stream* stream) {
 
 	mapSizeIndex = 0;
 	mapIndex = 0;
-	Platform_CurrentUTCTime(&mapReceiveStart);
+	DateTime_CurrentUTC(&mapReceiveStart);
 }
 
 static void Classic_LevelInit(struct Stream* stream) {
@@ -407,7 +407,7 @@ static void Classic_LevelInit(struct Stream* stream) {
 		mapVolume = Stream_ReadU32_BE(stream);
 		gzHeader.Done = true;
 		mapSizeIndex = sizeof(UInt32);
-		map = Platform_MemAlloc(mapVolume, sizeof(BlockID), "map blocks");
+		map = Mem_Alloc(mapVolume, sizeof(BlockID), "map blocks");
 	}
 }
 
@@ -436,7 +436,7 @@ static void Classic_LevelDataChunk(struct Stream* stream) {
 		if (mapSizeIndex == sizeof(UInt32)) {
 			if (!map) {
 				mapVolume = Stream_GetU32_BE(mapSize);
-				map = Platform_MemAlloc(mapVolume, sizeof(BlockID), "map blocks");
+				map = Mem_Alloc(mapVolume, sizeof(BlockID), "map blocks");
 			}
 
 			UInt8* src = map + mapIndex;
@@ -462,7 +462,7 @@ static void Classic_LevelFinalise(struct Stream* stream) {
 	Int32 mapHeight = Stream_ReadU16_BE(stream);
 	Int32 mapLength = Stream_ReadU16_BE(stream);
 
-	DateTime now; Platform_CurrentUTCTime(&now);
+	DateTime now; DateTime_CurrentUTC(&now);
 	Int32 loadingMs = (Int32)DateTime_MsBetween(&mapReceiveStart, &now);
 	Platform_Log1("map loading took: %i", &loadingMs);
 

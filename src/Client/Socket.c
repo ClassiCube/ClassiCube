@@ -23,7 +23,7 @@ ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #error "You're not using BSD sockets, define the interface in Socket.c"
 #endif
 
-void Platform_SocketCreate(SocketPtr* socketResult) {
+void Socket_Create(SocketPtr* socketResult) {
 	*socketResult = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (*socketResult == -1) {
 		ErrorHandler_FailWithCode(Socket__Error(), "Failed to create socket");
@@ -38,20 +38,20 @@ ReturnCode Platform_ioctl(SocketPtr socket, UInt32 cmd, Int32* data) {
 #endif
 }
 
-ReturnCode Platform_SocketAvailable(SocketPtr socket, UInt32* available) {
+ReturnCode Socket_Available(SocketPtr socket, UInt32* available) {
 	return Platform_ioctl(socket, FIONREAD, available);
 }
-ReturnCode Platform_SocketSetBlocking(SocketPtr socket, bool blocking) {
+ReturnCode Socket_SetBlocking(SocketPtr socket, bool blocking) {
 	Int32 blocking_raw = blocking ? 0 : -1;
 	return Platform_ioctl(socket, FIONBIO, &blocking_raw);
 }
 
-ReturnCode Platform_SocketGetError(SocketPtr socket, ReturnCode* result) {
+ReturnCode Socket_GetError(SocketPtr socket, ReturnCode* result) {
 	Int32 resultSize = sizeof(ReturnCode);
 	return getsockopt(socket, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
-ReturnCode Platform_SocketConnect(SocketPtr socket, STRING_PURE String* ip, Int32 port) {
+ReturnCode Socket_Connect(SocketPtr socket, STRING_PURE String* ip, Int32 port) {
 	struct sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = inet_addr(ip->buffer);
@@ -61,19 +61,19 @@ ReturnCode Platform_SocketConnect(SocketPtr socket, STRING_PURE String* ip, Int3
 	return result == -1 ? Socket__Error() : 0;
 }
 
-ReturnCode Platform_SocketRead(SocketPtr socket, UInt8* buffer, UInt32 count, UInt32* modified) {
+ReturnCode Socket_Read(SocketPtr socket, UInt8* buffer, UInt32 count, UInt32* modified) {
 	Int32 recvCount = recv(socket, buffer, count, 0);
 	if (recvCount != -1) { *modified = recvCount; return 0; }
 	*modified = 0; return Socket__Error();
 }
 
-ReturnCode Platform_SocketWrite(SocketPtr socket, UInt8* buffer, UInt32 count, UInt32* modified) {
+ReturnCode Socket_Write(SocketPtr socket, UInt8* buffer, UInt32 count, UInt32* modified) {
 	Int32 sentCount = send(socket, buffer, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return Socket__Error();
 }
 
-ReturnCode Platform_SocketClose(SocketPtr socket) {
+ReturnCode Socket_Close(SocketPtr socket) {
 	ReturnCode result = 0;
 #if CC_BUILD_WIN
 	ReturnCode result1 = shutdown(socket, SD_BOTH);
@@ -91,7 +91,7 @@ ReturnCode Platform_SocketClose(SocketPtr socket) {
 	return result;
 }
 
-ReturnCode Platform_SocketSelect(SocketPtr socket, Int32 selectMode, bool* success) {
+ReturnCode Socket_Select(SocketPtr socket, Int32 selectMode, bool* success) {
 	fd_set set;
 	FD_ZERO(&set);
 	FD_SET(socket, &set);

@@ -22,7 +22,7 @@
 #define UNIX_EPOCH 62135596800
 
 UChar* Platform_NewLine = "\n";
-UChar Platform_DirectorySeparator = '/';
+UChar Directory_Separator = '/';
 ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 ReturnCode ReturnCode_FileNotFound = ENOENT;
 ReturnCode ReturnCode_NotSupported = EPERM;
@@ -84,35 +84,35 @@ static void Platform_AllocFailed(const UChar* place) {
 	ErrorHandler_Fail(&log.buffer);
 }
 
-void* Platform_MemAlloc(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
+void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
 	void* ptr = malloc(numElems * elemsSize); /* TODO: avoid overflow here */
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void* Platform_MemAllocCleared(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
+void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
 	void* ptr = calloc(numElems, elemsSize); /* TODO: avoid overflow here */
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void* Platform_MemRealloc(void* mem, UInt32 numElems, UInt32 elemsSize, const UChar* place) {
+void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const UChar* place) {
 	void* ptr = realloc(mem, numElems * elemsSize); /* TODO: avoid overflow here */
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void Platform_MemFree(void** mem) {
+void Mem_Free(void** mem) {
 	if (mem == NULL || *mem == NULL) return;
 	free(*mem);
 	*mem = NULL;
 }
 
-void Platform_MemSet(void* dst, UInt8 value, UInt32 numBytes) {
+void Mem_Set(void* dst, UInt8 value, UInt32 numBytes) {
 	memset(dst, value, numBytes);
 }
 
-void Platform_MemCpy(void* dst, void* src, UInt32 numBytes) {
+void Mem_Copy(void* dst, void* src, UInt32 numBytes) {
 	memcpy(dst, src, numBytes);
 }
 
@@ -135,7 +135,7 @@ void Platform_FromSysTime(DateTime* time, struct tm* sysTime) {
 	time->Milli = 0;
 }
 
-void Platform_CurrentUTCTime(DateTime* time_) {
+void DateTime_CurrentUTC(DateTime* time_) {
 	struct timeval cur; struct tm utc_time;
 	gettimeofday(&cur, NULL);
 	time_->Milli = cur.tv_usec / 1000;
@@ -144,7 +144,7 @@ void Platform_CurrentUTCTime(DateTime* time_) {
 	Platform_FromSysTime(time_, &utc_time);
 }
 
-void Platform_CurrentLocalTime(DateTime* time_) {
+void DateTime_CurrentLocal(DateTime* time_) {
 	struct timeval cur; struct tm loc_time;
 	gettimeofday(&cur, NULL);
 	time_->Milli = cur.tv_usec / 1000;
@@ -153,26 +153,26 @@ void Platform_CurrentLocalTime(DateTime* time_) {
 	Platform_FromSysTime(time_, &loc_time);
 }
 
-bool Platform_DirectoryExists(STRING_PURE String* path) {
+bool Directory_Exists(STRING_PURE String* path) {
 	UInt8 data[1024]; Platform_UnicodeExpand(data, path);
 	struct stat sb;
 	return stat(data, &sb) == 0 && S_ISDIR(sb.st_mode);
 }
 
-ReturnCode Platform_DirectoryCreate(STRING_PURE String* path) {
+ReturnCode Directory_Create(STRING_PURE String* path) {
 	UInt8 data[1024]; Platform_UnicodeExpand(data, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
 	return mkdir(data, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
 }
 
-bool Platform_FileExists(STRING_PURE String* path) {
+bool File_Exists(STRING_PURE String* path) {
 	UInt8 data[1024]; Platform_UnicodeExpand(data, path);
 	struct stat sb;
 	return stat(data, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
-ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_EnumFilesCallback callback) {
+ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCallback callback) {
 	UInt8 data[1024]; Platform_UnicodeExpand(data, path);
 	DIR* dirPtr = opendir(data);
 	if (!dirPtr) return errno;
@@ -196,7 +196,7 @@ ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_Enum
 	return result;
 }
 
-ReturnCode Platform_FileGetModifiedTime(STRING_PURE String* path, DateTime* time) {
+ReturnCode File_GetModifiedTime(STRING_PURE String* path, DateTime* time) {
 	UInt8 data[1024]; Platform_UnicodeExpand(data, path);
 	struct stat sb;
 	if (stat(data, &sb) == -1) return errno;
@@ -205,41 +205,41 @@ ReturnCode Platform_FileGetModifiedTime(STRING_PURE String* path, DateTime* time
 	return 0;
 }
 
-ReturnCode Platform_FileDo(void** file, STRING_PURE String* path, int mode) {
+ReturnCode File_Do(void** file, STRING_PURE String* path, int mode) {
 	UInt8 data[1024]; Platform_UnicodeExpand(data, path);
 	*file = open(data, mode);
 	return *file == -1 ? errno : 0;
 }
 
-ReturnCode Platform_FileOpen(void** file, STRING_PURE String* path) {
-	return Platform_FileDo(file, path, O_RDONLY);
+ReturnCode File_Open(void** file, STRING_PURE String* path) {
+	return File_Do(file, path, O_RDONLY);
 }
-ReturnCode Platform_FileCreate(void** file, STRING_PURE String* path) {
-	return Platform_FileDo(file, path, O_WRONLY | O_CREAT | O_TRUNC);
+ReturnCode File_Create(void** file, STRING_PURE String* path) {
+	return File_Do(file, path, O_WRONLY | O_CREAT | O_TRUNC);
 }
-ReturnCode Platform_FileAppend(void** file, STRING_PURE String* path) {
-	ReturnCode code = Platform_FileDo(file, path, O_WRONLY | O_CREAT);
+ReturnCode File_Append(void** file, STRING_PURE String* path) {
+	ReturnCode code = File_Do(file, path, O_WRONLY | O_CREAT);
 	if (code != 0) return code;
-	return Platform_FileSeek(*file, 0, STREAM_SEEKFROM_END);
+	return File_Seek(*file, 0, STREAM_SEEKFROM_END);
 }
 
-ReturnCode Platform_FileRead(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead) {
+ReturnCode File_Read(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead) {
 	ssize_t bytes = read((int)file, buffer, count);
 	if (bytes == -1) { *bytesRead = 0; return errno; }
 	*bytesRead = bytes; return 0;
 }
 
-ReturnCode Platform_FileWrite(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWrote) {
+ReturnCode File_Write(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWrote) {
 	ssize_t bytes = write((int)file, buffer, count);
 	if (bytes == -1) { *bytesWrote = 0; return errno; }
 	*bytesWrote = bytes; return 0;
 }
 
-ReturnCode Platform_FileClose(void* file) {
+ReturnCode File_Close(void* file) {
 	return close((int)file) == -1 ? errno : 0;
 }
 
-ReturnCode Platform_FileSeek(void* file, Int32 offset, Int32 seekType) {
+ReturnCode File_Seek(void* file, Int32 offset, Int32 seekType) {
 	int mode = -1;
 	switch (seekType) {
 	case STREAM_SEEKFROM_BEGIN:   mode = SEEK_SET; break;
@@ -250,50 +250,50 @@ ReturnCode Platform_FileSeek(void* file, Int32 offset, Int32 seekType) {
 	return lseek((int)file, offset, mode) == -1 ? errno : 0;
 }
 
-ReturnCode Platform_FilePosition(void* file, UInt32* position) {
+ReturnCode File_Position(void* file, UInt32* position) {
 	off_t pos = lseek((int)file, 0, SEEK_CUR);
 	if (pos == -1) { *position = -1; return errno; }
 	*position = pos; return 0;
 }
 
-ReturnCode Platform_FileLength(void* file, UInt32* length) {
+ReturnCode File_Length(void* file, UInt32* length) {
 	struct stat st;
 	if (fstat((int)file, &st) == -1) { *length = -1; return errno; }
 	*length = st.st_size; return 0;
 }
 
-void Platform_ThreadSleep(UInt32 milliseconds) {
+void Thread_Sleep(UInt32 milliseconds) {
 	usleep(milliseconds * 1000);
 }
 
-void* Platform_ThreadStartCallback(void* lpParam) {
-	Platform_ThreadFunc* func = (Platform_ThreadFunc*)lpParam;
+void* Thread_StartCallback(void* lpParam) {
+	Thread_StartFunc* func = (Thread_StartFunc*)lpParam;
 	(*func)();
 	return NULL;
 }
 
 pthread_t threadList[3]; Int32 threadIndex;
-void* Platform_ThreadStart(Platform_ThreadFunc* func) {
+void* Thread_Start(Thread_StartFunc* func) {
 	if (threadIndex == Array_Elems(threadList)) ErrorHandler_Fail("Cannot allocate thread");
 	pthread_t* ptr = &threadList[threadIndex];
-	int result = pthread_create(ptr, NULL, Platform_ThreadStartCallback, func);
+	int result = pthread_create(ptr, NULL, Thread_StartCallback, func);
 
 	ErrorHandler_CheckOrFail(result, "Creating thread");
 	threadIndex++; return ptr;
 }
 
-void Platform_ThreadJoin(void* handle) {
+void Thread_Join(void* handle) {
 	int result = pthread_join(*((pthread_t*)handle), NULL);
 	ErrorHandler_CheckOrFail(result, "Joining thread");
 }
 
-void Platform_ThreadFreeHandle(void* handle) {
+void Thread_FreeHandle(void* handle) {
 	int result = pthread_detach(*((pthread_t*)handle));
 	ErrorHandler_CheckOrFail(result, "Detaching thread");
 }
 
 pthread_mutex_t mutexList[3]; Int32 mutexIndex;
-void* Platform_MutexCreate(void) {
+void* Mutex_Create(void) {
 	if (mutexIndex == Array_Elems(mutexList)) ErrorHandler_Fail("Cannot allocate mutex");
 	pthread_mutex_t* ptr = &mutexList[mutexIndex];
 	int result = pthread_mutex_init(ptr, NULL);
@@ -302,23 +302,23 @@ void* Platform_MutexCreate(void) {
 	mutexIndex++; return ptr;
 }
 
-void Platform_MutexFree(void* handle) {
+void Mutex_Free(void* handle) {
 	int result = pthread_mutex_destroy((pthread_mutex_t*)handle);
 	ErrorHandler_CheckOrFail(result, "Destroying mutex");
 }
 
-void Platform_MutexLock(void* handle) {
+void Mutex_Lock(void* handle) {
 	int result = pthread_mutex_lock((pthread_mutex_t*)handle);
 	ErrorHandler_CheckOrFail(result, "Locking mutex");
 }
 
-void Platform_MutexUnlock(void* handle) {
+void Mutex_Unlock(void* handle) {
 	int result = pthread_mutex_unlock((pthread_mutex_t*)handle);
 	ErrorHandler_CheckOrFail(result, "Unlocking mutex");
 }
 
 pthread_cond_t condList[2]; Int32 condIndex;
-void* Platform_EventCreate(void) {
+void* Waitable_Create(void) {
 	if (condIndex == Array_Elems(condList)) ErrorHandler_Fail("Cannot allocate event");
 	pthread_cond_t* ptr = &condList[condIndex];
 	int result = pthread_cond_init(ptr, NULL);
@@ -327,17 +327,17 @@ void* Platform_EventCreate(void) {
 	condIndex++; return ptr;
 }
 
-void Platform_EventFree(void* handle) {
+void Waitable_Free(void* handle) {
 	int result = pthread_cond_destroy((pthread_cond_t*)handle);
 	ErrorHandler_CheckOrFail(result, "Destroying event");
 }
 
-void Platform_EventSignal(void* handle) {
+void Waitable_Signal(void* handle) {
 	int result = pthread_cond_signal((pthread_cond_t*)handle);
 	ErrorHandler_CheckOrFail(result, "Signalling event");
 }
 
-void Platform_EventWait(void* handle) {
+void Waitable_Wait(void* handle) {
 	int result = pthread_cond_wait((pthread_cond_t*)handle, &event_mutex);
 	ErrorHandler_CheckOrFail(result, "Waiting event");
 }
@@ -363,18 +363,18 @@ Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {
 }
 
 /* TODO: Implement these stubs */
-void Platform_FontMake(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) { desc->Size = size; }
-void Platform_FontFree(struct FontDesc* desc) { }
+void Font_Make(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) { desc->Size = size; }
+void Font_Free(struct FontDesc* desc) { }
 struct Size2D Platform_TextMeasure(struct DrawTextArgs* args) { }
 void Platform_SetBitmap(struct Bitmap* bmp) { }
 struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) { }
 void Platform_ReleaseBitmap(void) { }
 
 /* TODO: Implement these stubs */
-void Platform_HttpInit(void) { }
-ReturnCode Platform_HttpMakeRequest(struct AsyncRequest* request, void** handle) { return 1; }
-ReturnCode Platform_HttpGetRequestHeaders(struct AsyncRequest* request, void* handle, UInt32* size) { return 1; }
-ReturnCode Platform_HttpGetRequestData(struct AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress) { return 1; }
-ReturnCode Platform_HttpFreeRequest(void* handle) { return 1; }
-ReturnCode Platform_HttpFree(void) { return 1; }
+void Http_Init(void) { }
+ReturnCode Http_MakeRequest(struct AsyncRequest* request, void** handle) { return 1; }
+ReturnCode Http_GetRequestHeaders(struct AsyncRequest* request, void* handle, UInt32* size) { return 1; }
+ReturnCode Http_GetRequestData(struct AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress) { return 1; }
+ReturnCode Http_FreeRequest(void* handle) { return 1; }
+ReturnCode Http_Free(void) { return 1; }
 #endif

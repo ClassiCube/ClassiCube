@@ -34,7 +34,7 @@ static void TickQueue_Init(struct TickQueue* queue) {
 
 static void TickQueue_Clear(struct TickQueue* queue) {
 	if (!queue->Buffer) return;
-	Platform_MemFree(&queue->Buffer);
+	Mem_Free(&queue->Buffer);
 	TickQueue_Init(queue);
 }
 
@@ -45,14 +45,14 @@ static void TickQueue_Resize(struct TickQueue* queue) {
 
 	UInt32 capacity = queue->BufferSize * 2;
 	if (capacity < 32) capacity = 32;
-	UInt32* newBuffer = Platform_MemAlloc(capacity, sizeof(UInt32), "physics tick queue");
+	UInt32* newBuffer = Mem_Alloc(capacity, sizeof(UInt32), "physics tick queue");
 
 	UInt32 i, idx;
 	for (i = 0; i < queue->Size; i++) {
 		idx = (queue->Head + i) & queue->BufferMask;
 		newBuffer[i] = queue->Buffer[idx];
 	}
-	Platform_MemFree(&queue->Buffer);
+	Mem_Free(&queue->Buffer);
 
 	queue->Buffer = newBuffer;
 	queue->BufferSize = capacity;

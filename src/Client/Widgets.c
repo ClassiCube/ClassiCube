@@ -1533,7 +1533,7 @@ static void MenuInputWidget_RemakeTexture(struct GuiElem* elem) {
 
 	struct Texture* tex = &widget->Base.InputTex;
 	Drawer2D_Make2DTexture(tex, &bmp, adjSize, 0, 0);
-	Platform_MemFree(&bmp.Scan0);
+	Mem_Free(&bmp.Scan0);
 
 	Widget_Reposition(&widget->Base);
 	tex->X = widget->Base.X; tex->Y = widget->Base.Y;
@@ -1629,7 +1629,7 @@ static void ChatInputWidget_RemakeTexture(struct GuiElem* elem) {
 	Drawer2D_End();
 
 	Drawer2D_Make2DTexture(&widget->InputTex, &bmp, size, 0, 0);
-	Platform_MemFree(&bmp.Scan0);
+	Mem_Free(&bmp.Scan0);
 
 	widget->Width = size.Width;
 	widget->Height = realHeight == 0 ? widget->PrefixHeight : realHeight;
@@ -2236,7 +2236,7 @@ void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* widget, STRING
 		UChar* src = TextGroupWidget_LineBuffer(widget, i + 1);
 		UInt8 lineLen = widget->LineLengths[i + 1];
 
-		if (lineLen > 0) Platform_MemCpy(dst, src, lineLen);
+		if (lineLen > 0) Mem_Copy(dst, src, lineLen);
 		widget->Textures[i]    = widget->Textures[i + 1];
 		widget->LineLengths[i] = lineLen;
 
@@ -2408,7 +2408,7 @@ Int32 TextGroupWidget_Reduce(struct TextGroupWidget* widget, UChar* chars, Int32
 		if (!lineLen) continue;
 
 		begs[i] = total;
-		Platform_MemCpy(&chars[total], TextGroupWidget_LineBuffer(widget, i), lineLen);
+		Mem_Copy(&chars[total], TextGroupWidget_LineBuffer(widget, i), lineLen);
 		total += lineLen; ends[i] = total;
 	}
 
@@ -2539,7 +2539,7 @@ void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* widget, struct Texture
 void TextGroupWidget_SetText(struct TextGroupWidget* widget, Int32 index, STRING_PURE String* text) {
 	if (text->length > TEXTGROUPWIDGET_LEN) ErrorHandler_Fail("TextGroupWidget - too big text");
 	Gfx_DeleteTexture(&widget->Textures[index].ID);
-	Platform_MemCpy(TextGroupWidget_LineBuffer(widget, index), text->buffer, text->length);
+	Mem_Copy(TextGroupWidget_LineBuffer(widget, index), text->buffer, text->length);
 	widget->LineLengths[index] = (UInt8)text->length;
 
 	struct Texture tex;
@@ -2798,7 +2798,7 @@ static void SpecialInputWidget_Make(struct SpecialInputWidget* widget, struct Sp
 	Drawer2D_End();
 
 	Drawer2D_Make2DTexture(&widget->Tex, &bmp, size, widget->X, widget->Y);
-	Platform_MemFree(&bmp.Scan0);
+	Mem_Free(&bmp.Scan0);
 }
 
 static void SpecialInputWidget_Redraw(struct SpecialInputWidget* widget) {

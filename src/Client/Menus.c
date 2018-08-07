@@ -448,7 +448,7 @@ static void ListScreen_Init(struct GuiElem* elem) {
 	screen->Widgets = screen->ListWidgets;
 	screen->WidgetsCount = Array_Elems(screen->ListWidgets);
 
-	Platform_FontMake(&screen->Font, &Game_FontName, 16, FONT_STYLE_BOLD);
+	Font_Make(&screen->Font, &Game_FontName, 16, FONT_STYLE_BOLD);
 	Key_KeyRepeat = true;
 	screen->WheelAcc = 0.0f;
 	ListScreen_ContextRecreated(screen);
@@ -465,7 +465,7 @@ static void ListScreen_Render(struct GuiElem* elem, Real64 delta) {
 
 static void ListScreen_Free(struct GuiElem* elem) {
 	struct ListScreen* screen = (struct ListScreen*)elem;
-	Platform_FontFree(&screen->Font);
+	Font_Free(&screen->Font);
 	Key_KeyRepeat = false;
 	ListScreen_ContextLost(screen);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, ListScreen_ContextLost);
@@ -507,7 +507,7 @@ static void ListScreen_OnResize(struct GuiElem* elem) {
 
 struct ListScreen* ListScreen_MakeInstance(void) {
 	struct ListScreen* screen = &ListScreen_Instance;
-	Platform_MemSet(screen, 0, sizeof(struct ListScreen) - sizeof(StringsBuffer));
+	Mem_Set(screen, 0, sizeof(struct ListScreen) - sizeof(StringsBuffer));
 	if (screen->Entries.TextBuffer) StringsBuffer_Free(&screen->Entries);
 	StringsBuffer_Init(&screen->Entries);
 
@@ -570,10 +570,10 @@ static void MenuScreen_Init(struct GuiElem* elem) {
 	struct MenuScreen* screen = (struct MenuScreen*)elem;
 
 	if (!screen->TitleFont.Handle) {
-		Platform_FontMake(&screen->TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
+		Font_Make(&screen->TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
 	}
 	if (!screen->TextFont.Handle) {
-		Platform_FontMake(&screen->TextFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
+		Font_Make(&screen->TextFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	}
 
 	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, MenuScreen_ContextLost_Callback);
@@ -592,10 +592,10 @@ static void MenuScreen_Free(struct GuiElem* elem) {
 	screen->ContextLost(screen);
 
 	if (screen->TitleFont.Handle) {
-		Platform_FontFree(&screen->TitleFont);
+		Font_Free(&screen->TitleFont);
 	}
 	if (screen->TextFont.Handle) {
-		Platform_FontFree(&screen->TextFont);
+		Font_Free(&screen->TextFont);
 	}
 
 	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, MenuScreen_ContextLost_Callback);
@@ -605,7 +605,7 @@ static void MenuScreen_Free(struct GuiElem* elem) {
 static void MenuScreen_OnResize(struct GuiElem* elem) { Menu_Reposition((struct MenuBase*)elem); }
 
 static void MenuScreen_MakeInstance(struct MenuScreen* screen, struct Widget** widgets, Int32 count, Menu_ContextFunc contextRecreated) {
-	Platform_MemSet(screen, 0, sizeof(struct MenuScreen));
+	Mem_Set(screen, 0, sizeof(struct MenuScreen));
 	screen->VTABLE = &MenuScreen_VTABLE;
 	Screen_Reset((struct Screen*)screen);
 
@@ -1279,7 +1279,7 @@ static void SaveLevelScreen_DoSave(struct GuiElem* elem, struct GuiElem* widget,
 	String_Format2(&path, "maps/%s%c", &file, ext);
 
 	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
-	if (Platform_FileExists(&path) && !btn->OptName) {
+	if (File_Exists(&path) && !btn->OptName) {
 		String warnMsg = String_FromConst("&cOverwrite existing?");
 		ButtonWidget_SetText(btn, &warnMsg);
 		btn->OptName = "O";
@@ -1321,7 +1321,7 @@ static void SaveLevelScreen_Render(struct GuiElem* elem, Real64 delta) {
 	String path = screen->TextPath;
 
 	void* file;
-	ReturnCode result = Platform_FileCreate(&file, &path);
+	ReturnCode result = File_Create(&file, &path);
 	ErrorHandler_CheckOrFail(result, "Saving map - opening file");
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
@@ -1422,8 +1422,8 @@ static void TexturePackScreen_EntryClick(struct GuiElem* elem, struct GuiElem* w
 	String path = String_InitAndClearArray(pathBuffer);
 
 	String filename = ListScreen_UNSAFE_GetCur(screen, w);
-	String_Format2(&path, "texpacks%r%s", &Platform_DirectorySeparator, &filename);
-	if (!Platform_FileExists(&path)) return;
+	String_Format2(&path, "texpacks%r%s", &Directory_Separator, &filename);
+	if (!File_Exists(&path)) return;
 	
 	Int32 curPage = screen->CurrentIndex;
 	Game_SetDefaultTexturePack(&filename);
@@ -1446,7 +1446,7 @@ struct Screen* TexturePackScreen_MakeInstance(void) {
 	screen->EntryClick = TexturePackScreen_EntryClick;
 
 	String path = String_FromConst("texpacks");
-	Platform_EnumFiles(&path, &screen->Entries, TexturePackScreen_SelectEntry);
+	Directory_Enum(&path, &screen->Entries, TexturePackScreen_SelectEntry);
 	if (screen->Entries.Count > 0) {
 		ListScreen_QuickSort(0, screen->Entries.Count - 1);
 	}
@@ -1543,7 +1543,7 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 	Inventory_SetDefaultMapping();
 
 	void* file;
-	ReturnCode result = Platform_FileOpen(&file, path);
+	ReturnCode result = File_Open(&file, path);
 	ErrorHandler_CheckOrFail(result, "Loading map - open file");
 	struct Stream stream; Stream_FromFile(&stream, file, path);
 	{
@@ -1576,8 +1576,8 @@ static void LoadLevelScreen_EntryClick(struct GuiElem* elem, struct GuiElem* w) 
 	String path = String_InitAndClearArray(pathBuffer);
 
 	String filename = ListScreen_UNSAFE_GetCur(screen, w);
-	String_Format2(&path, "maps%r%s", &Platform_DirectorySeparator, &filename);
-	if (!Platform_FileExists(&path)) return;
+	String_Format2(&path, "maps%r%s", &Directory_Separator, &filename);
+	if (!File_Exists(&path)) return;
 	LoadLevelScreen_LoadMap(&path);
 }
 
@@ -1587,7 +1587,7 @@ struct Screen* LoadLevelScreen_MakeInstance(void) {
 	screen->EntryClick = LoadLevelScreen_EntryClick;
 
 	String path = String_FromConst("maps");
-	Platform_EnumFiles(&path, &screen->Entries, LoadLevelScreen_SelectEntry);
+	Directory_Enum(&path, &screen->Entries, LoadLevelScreen_SelectEntry);
 	if (screen->Entries.Count > 0) {
 		ListScreen_QuickSort(0, screen->Entries.Count - 1);
 	}
@@ -2123,7 +2123,7 @@ static void MenuOptionsScreen_Input(struct GuiElem* elem, struct GuiElem* widget
 struct Screen* MenuOptionsScreen_MakeInstance(struct Widget** widgets, Int32 count, struct ButtonWidget* buttons, Menu_ContextFunc contextRecreated,
 	struct MenuInputValidator* validators, const UChar** defaultValues, const UChar** descriptions, Int32 descsCount) {
 	struct MenuOptionsScreen* screen = &MenuOptionsScreen_Instance;
-	Platform_MemSet(screen, 0, sizeof(struct MenuOptionsScreen));
+	Mem_Set(screen, 0, sizeof(struct MenuOptionsScreen));
 	MenuScreen_MakeInstance((struct MenuScreen*)screen, widgets, count, contextRecreated);
 	MenuOptionsScreen_VTABLE = *screen->VTABLE;
 	screen->VTABLE = &MenuOptionsScreen_VTABLE;
@@ -3006,7 +3006,7 @@ static void TexIdsOverlay_RenderTextOverlay(struct TexIdsOverlay* screen) {
 
 static void TexIdsOverlay_Init(struct GuiElem* elem) {
 	struct MenuScreen* screen = (struct MenuScreen*)elem;
-	Platform_FontMake(&screen->TextFont, &Game_FontName, 8, FONT_STYLE_NORMAL);
+	Font_Make(&screen->TextFont, &Game_FontName, 8, FONT_STYLE_NORMAL);
 	Overlay_Init(elem);
 }
 

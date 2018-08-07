@@ -7,6 +7,11 @@
 #include "Inventory.h"
 #include "Event.h"
 
+const UChar* Sound_Names[SOUND_COUNT] = {
+	"none", "wood", "gravel", "grass", "stone",
+	"metal", "glass", "cloth", "sand", "snow",
+};
+
 UInt32 Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
 UChar Block_NamesBuffer[String_BufferSize(STRING_SIZE) * BLOCK_COUNT];
 #define Block_NamePtr(i) &Block_NamesBuffer[String_BufferSize(STRING_SIZE) * i]

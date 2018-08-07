@@ -23,7 +23,7 @@ void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, struct Bit
 
 void Bitmap_Allocate(struct Bitmap* bmp, Int32 width, Int32 height) {
 	bmp->Width = width; bmp->Height = height;
-	bmp->Scan0 = Platform_MemAlloc(width * height, BITMAP_SIZEOF_PIXEL, "bitmap data");
+	bmp->Scan0 = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "bitmap data");
 }
 
 void Bitmap_AllocateClearedPow2(struct Bitmap* bmp, Int32 width, Int32 height) {
@@ -31,7 +31,7 @@ void Bitmap_AllocateClearedPow2(struct Bitmap* bmp, Int32 width, Int32 height) {
 	height = Math_NextPowOf2(height);
 
 	bmp->Width = width; bmp->Height = height;
-	bmp->Scan0 = Platform_MemAllocCleared(width * height, BITMAP_SIZEOF_PIXEL, "bitmap data");
+	bmp->Scan0 = Mem_AllocCleared(width * height, BITMAP_SIZEOF_PIXEL, "bitmap data");
 }
 
 
@@ -367,7 +367,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 			if (bmp->Width  < 0 || bmp->Width  > PNG_MAX_DIMS) return PNG_ERR_TOO_WIDE;
 			if (bmp->Height < 0 || bmp->Height > PNG_MAX_DIMS) return PNG_ERR_TOO_TALL;
 
-			bmp->Scan0 = Platform_MemAlloc(bmp->Width * bmp->Height, BITMAP_SIZEOF_PIXEL, "PNG bitmap data");
+			bmp->Scan0 = Mem_Alloc(bmp->Width * bmp->Height, BITMAP_SIZEOF_PIXEL, "PNG bitmap data");
 			bitsPerSample = buffer[8]; col = buffer[9];
 			rowExpander = Png_GetExpander(col, bitsPerSample);
 			if (rowExpander == NULL) return PNG_ERR_INVALID_COL_BPP;
@@ -381,7 +381,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 			scanlineSize = ((samplesPerPixel[col] * bitsPerSample * bmp->Width) + 7) >> 3;
 			scanlineBytes = scanlineSize + 1; /* Add 1 byte for filter byte of each scanline */
 
-			Platform_MemSet(buffer, 0, scanlineBytes); /* Prior row should be 0 per PNG spec */
+			Mem_Set(buffer, 0, scanlineBytes); /* Prior row should be 0 per PNG spec */
 			bufferIdx = scanlineBytes;
 			bufferRows = PNG_BUFFER_SIZE / scanlineBytes;
 		} break;
@@ -512,7 +512,7 @@ static void Png_Filter(UInt8 filter, UInt8* cur, UInt8* prior, UInt8* best, Int3
 	Int32 i;
 	switch (filter) {
 	case PNG_FILTER_NONE:
-		Platform_MemCpy(best, cur, lineLen);
+		Mem_Copy(best, cur, lineLen);
 		break;
 
 	case PNG_FILTER_SUB:
@@ -620,7 +620,7 @@ void Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 	UInt8 prevLine[PNG_MAX_DIMS * 3];
 	UInt8 curLine[PNG_MAX_DIMS * 3];
 	UInt8 bestLine[PNG_MAX_DIMS * 3 + 1];
-	Platform_MemSet(prevLine, 0, bmp->Width * 3);
+	Mem_Set(prevLine, 0, bmp->Width * 3);
 
 	Stream_WriteU32_BE(stream, 0);
 	stream = &crc32Stream;

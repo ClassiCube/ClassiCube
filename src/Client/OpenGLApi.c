@@ -123,7 +123,7 @@ static void GL_DoMipmaps(GfxResourceID texId, Int32 x, Int32 y, struct Bitmap* b
 		if (width > 1) width /= 2;
 		if (height > 1) height /= 2;
 
-		UInt8* cur = Platform_MemAlloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
+		UInt8* cur = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
 		GfxCommon_GenMipmaps(width, height, cur, prev);
 
 		if (partial) {
@@ -132,10 +132,10 @@ static void GL_DoMipmaps(GfxResourceID texId, Int32 x, Int32 y, struct Bitmap* b
 			glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, cur);
 		}
 
-		if (prev != bmp->Scan0) Platform_MemFree(&prev);
+		if (prev != bmp->Scan0) Mem_Free(&prev);
 		prev = cur;
 	}
-	if (prev != bmp->Scan0) Platform_MemFree(&prev);
+	if (prev != bmp->Scan0) Mem_Free(&prev);
 }
 
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, bool managedPool, bool mipmaps) {
@@ -528,16 +528,16 @@ void Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) {
 		UInt32* src = Bitmap_GetRow(&bmp, y);
 		UInt32* dst = Bitmap_GetRow(&bmp, (height - 1) - y);
 
-		Platform_MemCpy(tmp, src, stride);
-		Platform_MemCpy(src, dst, stride);
-		Platform_MemCpy(dst, tmp, stride);
+		Mem_Copy(tmp, src, stride);
+		Mem_Copy(src, dst, stride);
+		Mem_Copy(dst, tmp, stride);
 		/*for (x = 0; x < bmp.Width; x++) {
 			UInt32 temp = dst[x]; dst[x] = src[x]; src[x] = temp;
 		}*/
 	}
 
 	Bitmap_EncodePng(&bmp, output);
-	Platform_MemFree(&bmp.Scan0);
+	Mem_Free(&bmp.Scan0);
 }
 
 void Gfx_MakeApiInfo(void) {
@@ -554,18 +554,18 @@ void Gfx_MakeApiInfo(void) {
 
 bool Gfx_WarnIfNecessary(void) {
 #if CC_BUILD_GL11
-	Chat_AddRaw(tmp1, "&cYou are using the very outdated OpenGL backend.");
-	Chat_AddRaw(tmp2, "&cAs such you may experience poor performance.");
-	Chat_AddRaw(tmp3, "&cIt is likely you need to install video card drivers.");
+	Chat_AddRaw("&cYou are using the very outdated OpenGL backend.");
+	Chat_AddRaw("&cAs such you may experience poor performance.");
+	Chat_AddRaw("&cIt is likely you need to install video card drivers.");
 #endif
 
 	String renderer = String_FromReadonly(glGetString(GL_RENDERER));
 	String intel = String_FromConst("Intel");
 	if (!String_ContainsString(&renderer, &intel)) return false;
 
-	Chat_AddRaw(tmp4, "&cIntel graphics cards are known to have issues with the OpenGL build.");
-	Chat_AddRaw(tmp5, "&cVSync may not work, and you may see disappearing clouds and map edges.");
-	Chat_AddRaw(tmp6, "&cFor Windows, try downloading the Direct3D 9 build instead.");
+	Chat_AddRaw("&cIntel graphics cards are known to have issues with the OpenGL build.");
+	Chat_AddRaw("&cVSync may not work, and you may see disappearing clouds and map edges.");
+	Chat_AddRaw("&cFor Windows, try downloading the Direct3D 9 build instead.");
 	return true;
 }
 

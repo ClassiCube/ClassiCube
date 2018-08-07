@@ -42,7 +42,7 @@ static ReturnCode Ogg_Read(struct Stream* stream, UInt8* data, UInt32 count, UIn
 	for (;;) {
 		if (stream->Meta.Ogg.Left) {
 			count = min(count, stream->Meta.Ogg.Left);
-			Platform_MemCpy(data, stream->Meta.Ogg.Cur, count);
+			Mem_Copy(data, stream->Meta.Ogg.Cur, count);
 
 			*modified = count;
 			stream->Meta.Ogg.Cur  += count;
@@ -158,9 +158,9 @@ static UInt32 lookup1_values(UInt32 entries, UInt32 dimensions) {
 }
 
 static bool Codebook_CalcCodewords(struct Codebook* c, UInt8* len) {
-	c->Codewords    = Platform_MemAlloc(c->NumCodewords, sizeof(UInt32), "codewords");
-	c->CodewordLens = Platform_MemAlloc(c->NumCodewords, sizeof(UInt8), "raw codeword lens");
-	c->Values       = Platform_MemAlloc(c->NumCodewords, sizeof(UInt32), "values");
+	c->Codewords    = Mem_Alloc(c->NumCodewords, sizeof(UInt32), "codewords");
+	c->CodewordLens = Mem_Alloc(c->NumCodewords, sizeof(UInt8), "raw codeword lens");
+	c->Values       = Mem_Alloc(c->NumCodewords, sizeof(UInt32), "values");
 
 	/* This is taken from stb_vorbis.c because I gave up trying */
 	UInt32 i, j, depth;
@@ -211,7 +211,7 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 	c->Dimensions = Vorbis_ReadBits(ctx, 16);
 	c->Entries = Vorbis_ReadBits(ctx, 24);
 
-	UInt8* codewordLens = Platform_MemAlloc(c->Entries, sizeof(UInt8), "raw codeword lens");
+	UInt8* codewordLens = Mem_Alloc(c->Entries, sizeof(UInt8), "raw codeword lens");
 	Int32 i, ordered = Vorbis_ReadBits(ctx, 1), usedEntries = 0;
 
 	if (!ordered) {
@@ -251,7 +251,7 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 	static int booknummm;
 	Platform_Log1("### BUILDING %i ###", &booknummm);
 	Codebook_CalcCodewords(c, codewordLens);
-	Platform_MemFree(&codewordLens);
+	Mem_Free(&codewordLens);
 	booknummm++;
 
 	c->LookupType = Vorbis_ReadBits(ctx, 4);
@@ -271,7 +271,7 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 	}
 	c->LookupValues = lookupValues;
 
-	c->Multiplicands = Platform_MemAlloc(lookupValues, sizeof(UInt16), "multiplicands");
+	c->Multiplicands = Mem_Alloc(lookupValues, sizeof(UInt16), "multiplicands");
 	for (i = 0; i < lookupValues; i++) {
 		c->Multiplicands[i] = Vorbis_ReadBits(ctx, valueBits);
 	}
@@ -403,7 +403,7 @@ static ReturnCode Floor_DecodeSetup(struct VorbisState* ctx, struct Floor* f) {
 
 	/* sort X list for curve computation later */
 	Int16 xlist_sorted[FLOOR_MAX_VALUES];
-	Platform_MemCpy(xlist_sorted, f->XList, idx * sizeof(Int16));
+	Mem_Copy(xlist_sorted, f->XList, idx * sizeof(Int16));
 	for (i = 0; i < idx; i++) { f->ListOrder[i] = i; }
 
 	tmp_xlist = xlist_sorted; 
@@ -634,7 +634,7 @@ static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, UInt3
 	UInt32 nToRead = residueEnd - residueBeg;
 	UInt32 partitionsToRead = nToRead / r->PartitionSize;
 
-	UInt8* classifications_raw = Platform_MemAlloc(ch * partitionsToRead * classbook->Dimensions, sizeof(UInt8), "temp classicifcations");
+	UInt8* classifications_raw = Mem_Alloc(ch * partitionsToRead * classbook->Dimensions, sizeof(UInt8), "temp classicifcations");
 	UInt8* classifications[VORBIS_MAX_CHANS]; /* TODO ????? */
 	for (i = 0; i < ch; i++) {
 		classifications[i] = classifications_raw + (i * partitionsToRead * classbook->Dimensions);
@@ -699,7 +699,7 @@ static void Residue_DecodeFrame(struct VorbisState* ctx, struct Residue* r, Int3
 		if (!decodeAny) return;
 
 		decodeAny = false; /* because DecodeCore expects this to be 'false' for 'do not decode' */
-		Real32* interleaved = Platform_MemAllocCleared(ctx->DataSize * ctx->Channels, sizeof(Real32), "residue 2 temp");
+		Real32* interleaved = Mem_AllocCleared(ctx->DataSize * ctx->Channels, sizeof(Real32), "residue 2 temp");
 		Residue_DecodeCore(ctx, r, size * ch, 1, &decodeAny, &interleaved);
 
 		/* de interleave type 2 output */	
@@ -866,7 +866,7 @@ void imdct_fast(Real32* in, Real32* out, Int32 n) {
 		}
 
 		if (l+1 <= ld_n - 4) {
-			Platform_MemCpy(w, u, sizeof(u));
+			Mem_Copy(w, u, sizeof(u));
 		}
 	}
 
@@ -936,7 +936,7 @@ static ReturnCode Mode_DecodeSetup(struct VorbisState* ctx, struct Mode* m) {
 }
 
 void Vorbis_Init(struct VorbisState* ctx, struct Stream* source) {
-	Platform_MemSet(ctx, 0, sizeof(struct VorbisState));
+	Mem_Set(ctx, 0, sizeof(struct VorbisState));
 	ctx->Source = source;
 }
 
@@ -997,7 +997,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	ReturnCode result;
 
 	count = Vorbis_ReadBits(ctx, 8); count++;
-	ctx->Codebooks = Platform_MemAlloc(count, sizeof(struct Codebook), "vorbis codebooks");
+	ctx->Codebooks = Mem_Alloc(count, sizeof(struct Codebook), "vorbis codebooks");
 	for (i = 0; i < count; i++) {
 		result = Codebook_DecodeSetup(ctx, &ctx->Codebooks[i]);
 		if (result) return result;
@@ -1010,7 +1010,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	}
 
 	count = Vorbis_ReadBits(ctx, 6); count++;
-	ctx->Floors = Platform_MemAlloc(count, sizeof(struct Floor), "vorbis floors");
+	ctx->Floors = Mem_Alloc(count, sizeof(struct Floor), "vorbis floors");
 	for (i = 0; i < count; i++) {
 		UInt16 floor = Vorbis_ReadBits(ctx, 16);
 		if (floor != 1) return VORBIS_ERR_FLOOR_TYPE;
@@ -1019,7 +1019,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	}
 
 	count = Vorbis_ReadBits(ctx, 6); count++;
-	ctx->Residues = Platform_MemAlloc(count, sizeof(struct Residue), "vorbis residues");
+	ctx->Residues = Mem_Alloc(count, sizeof(struct Residue), "vorbis residues");
 	for (i = 0; i < count; i++) {
 		UInt16 residue = Vorbis_ReadBits(ctx, 16);
 		if (residue > 2) return VORBIS_ERR_FLOOR_TYPE;
@@ -1028,7 +1028,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	}
 
 	count = Vorbis_ReadBits(ctx, 6); count++;
-	ctx->Mappings = Platform_MemAlloc(count, sizeof(struct Mapping), "vorbis mappings");
+	ctx->Mappings = Mem_Alloc(count, sizeof(struct Mapping), "vorbis mappings");
 	for (i = 0; i < count; i++) {
 		UInt16 mapping = Vorbis_ReadBits(ctx, 16);
 		if (mapping != 0) return VORBIS_ERR_MAPPING_TYPE;
@@ -1037,7 +1037,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	}
 
 	count = Vorbis_ReadBits(ctx, 6); count++;
-	ctx->Modes = Platform_MemAlloc(count, sizeof(struct Mode), "vorbis modes");
+	ctx->Modes = Mem_Alloc(count, sizeof(struct Mode), "vorbis modes");
 	for (i = 0; i < count; i++) {
 		result = Mode_DecodeSetup(ctx, &ctx->Modes[i]);
 		if (result) return result;
@@ -1094,7 +1094,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 		next_window = Vorbis_ReadBits(ctx, 1);
 	}	
 
-	ctx->Values = Platform_MemAllocCleared(ctx->Channels * ctx->DataSize, sizeof(Real32), "audio values");
+	ctx->Values = Mem_AllocCleared(ctx->Channels * ctx->DataSize, sizeof(Real32), "audio values");
 
 	/* decode floor */
 	bool hasFloor[VORBIS_MAX_CHANS], hasResidue[VORBIS_MAX_CHANS];
@@ -1189,7 +1189,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 		right_n = n / 2;
 	}
 
-	Real32* window = Platform_MemAlloc(n, sizeof(Real32), "temp window");
+	Real32* window = Mem_Alloc(n, sizeof(Real32), "temp window");
 	for (i = 0; i < left_window_beg; i++) window[i] = 0;
 	for (i = left_window_beg; i < left_window_end; i++) {
 		Real64 inner = Math_Sin((i - left_window_beg + 0.5) / left_n * (PI/2));
@@ -1205,14 +1205,14 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	/* inverse monolithic transform of audio spectrum vector */
 	for (i = 0; i < ctx->Channels; i++) {
 		if (!hasFloor[i]) {
-			ctx->CurOutput[i] = Platform_MemAllocCleared(ctx->CurBlockSize, sizeof(Real32), "empty output");
+			ctx->CurOutput[i] = Mem_AllocCleared(ctx->CurBlockSize, sizeof(Real32), "empty output");
 			continue;
 		}
 		Int32 submap = mapping->Mux[i];
 		Int32 floorIdx = mapping->FloorIdx[submap];
 
 		Real32* data = Vorbis_ChanData(ctx, i);
-		Real32* output = Platform_MemAlloc(ctx->CurBlockSize, sizeof(Real32), "imdct output");
+		Real32* output = Mem_Alloc(ctx->CurBlockSize, sizeof(Real32), "imdct output");
 		imdct_fast(data, output, ctx->CurBlockSize);
 
 		/* apply windowing */
@@ -1233,7 +1233,7 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 	/* TODO: There's probably a nicer way of doing this.. */
 	Real32* combined[VORBIS_MAX_CHANS];
 	for (i = 0; i < ctx->Channels; i++) {
-		combined[i] = Platform_MemAllocCleared(size, sizeof(Real32), "temp combined");
+		combined[i] = Mem_AllocCleared(size, sizeof(Real32), "temp combined");
 	}
 
 	Int32 prevHalf = ctx->PrevBlockSize / 2, curHalf = ctx->CurBlockSize / 2;

@@ -272,7 +272,7 @@ static bool Builder_BuildChunk(Int32 x1, Int32 y1, Int32 z1, bool* allAir) {
 	UInt8 counts[CHUNK_SIZE_3 * FACE_COUNT]; Builder_Counts = counts;
 	Int32 bitFlags[EXTCHUNK_SIZE_3]; Builder_BitFlags = bitFlags;
 
-	Platform_MemSet(chunk, BLOCK_AIR, EXTCHUNK_SIZE_3 * sizeof(BlockID));
+	Mem_Set(chunk, BLOCK_AIR, EXTCHUNK_SIZE_3 * sizeof(BlockID));
 	bool allSolid;
 	Builder_ReadChunkData(x1, y1, z1, allAir, &allSolid);
 
@@ -282,7 +282,7 @@ static bool Builder_BuildChunk(Int32 x1, Int32 y1, Int32 z1, bool* allAir) {
 	if (*allAir || allSolid) return false;
 	Lighting_LightHint(x1 - 1, z1 - 1);
 
-	Platform_MemSet(counts, 1, CHUNK_SIZE_3 * FACE_COUNT);
+	Mem_Set(counts, 1, CHUNK_SIZE_3 * FACE_COUNT);
 	Int32 xMax = min(World_Width, x1 + CHUNK_SIZE);
 	Int32 yMax = min(World_Height, y1 + CHUNK_SIZE);
 	Int32 zMax = min(World_Length, z1 + CHUNK_SIZE);
@@ -360,15 +360,15 @@ static bool Builder_OccludedLiquid(Int32 chunkIndex) {
 }
 
 static void Builder_DefaultPreStretchTiles(Int32 x1, Int32 y1, Int32 z1) {
-	Platform_MemSet(Builder_Parts, 0, sizeof(Builder_Parts));
+	Mem_Set(Builder_Parts, 0, sizeof(Builder_Parts));
 }
 
 static void Builder_DefaultPostStretchTiles(Int32 x1, Int32 y1, Int32 z1) {
 	Int32 i, vertsCount = Builder_TotalVerticesCount();
 	if (vertsCount > Builder_VerticesElems) {
-		Platform_MemFree(&Builder_Vertices);
+		Mem_Free(&Builder_Vertices);
 		/* ensure buffer can be accessed with 64 bytes alignment by putting 2 extra vertices at end. */
-		Builder_Vertices = Platform_MemAlloc(vertsCount + 2, sizeof(VertexP3fT2fC4b), "chunk vertices");
+		Builder_Vertices = Mem_Alloc(vertsCount + 2, sizeof(VertexP3fT2fC4b), "chunk vertices");
 		Builder_VerticesElems = vertsCount;
 	}
 

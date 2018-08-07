@@ -202,7 +202,7 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, Int32
 	UInt8* ptr = buffer;
 	if (size > ANIMS_FAST_SIZE) {
 		/* cannot allocate memory on the stack for very big animation.png frames */
-		ptr = Platform_MemAlloc(size * size, BITMAP_SIZEOF_PIXEL, "anim frame");
+		ptr = Mem_Alloc(size * size, BITMAP_SIZEOF_PIXEL, "anim frame");
 	}
 
 	Int32 index_1D = Atlas1D_Index(texLoc);
@@ -222,7 +222,7 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, Int32
 
 	Int32 dstY = rowId_1D * Atlas2D_TileSize;
 	Gfx_UpdateTexturePart(Atlas1D_TexIds[index_1D], 0, dstY, &animPart, Gfx_Mipmaps);
-	if (size > ANIMS_FAST_SIZE) Platform_MemFree(&ptr);
+	if (size > ANIMS_FAST_SIZE) Mem_Free(&ptr);
 }
 
 static void Animations_Apply(struct AnimationData* data) {
@@ -249,7 +249,7 @@ static bool Animations_IsDefaultZip(void) {
 
 static void Animations_Clear(void) {
 	anims_count = 0;
-	Platform_MemFree(&anims_bmp.Scan0);
+	Mem_Free(&anims_bmp.Scan0);
 	anims_validated = false;
 }
 

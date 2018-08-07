@@ -57,7 +57,7 @@ static void D3D9_LoopUntilRetrieved(void) {
 	task.Callback = Gfx_LostContextFunction;
 
 	while (true) {
-		Platform_ThreadSleep(16);
+		Thread_Sleep(16);
 		ReturnCode code = IDirect3DDevice9_TestCooperativeLevel(device);
 		if (code == D3DERR_DEVICENOTRESET) return;
 
@@ -162,7 +162,7 @@ static void D3D9_SetTextureData(IDirect3DTexture9* texture, struct Bitmap* bmp, 
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTextureData - Lock");
 
 	UInt32 size = Bitmap_DataSize(bmp->Width, bmp->Height);
-	Platform_MemCpy(rect.pBits, bmp->Scan0, size);
+	Mem_Copy(rect.pBits, bmp->Scan0, size);
 
 	hresult = IDirect3DTexture9_UnlockRect(texture, lvl);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTextureData - Unlock");
@@ -184,7 +184,7 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, Int32 x, Int32 y
 	UInt32 stride = (UInt32)(bmp->Width) * BITMAP_SIZEOF_PIXEL;
 
 	for (yy = 0; yy < bmp->Height; yy++) {
-		Platform_MemCpy(dst, src, stride);
+		Mem_Copy(dst, src, stride);
 		src += stride; 
 		dst += rect.Pitch;
 	}
@@ -203,7 +203,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, Int32 x, Int32 y, struct 
 		if (width > 1)   width /= 2; 
 		if (height > 1) height /= 2;
 
-		UInt8* cur = Platform_MemAlloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
+		UInt8* cur = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
 		GfxCommon_GenMipmaps(width, height, cur, prev);
 
 		struct Bitmap mipmap;
@@ -214,10 +214,10 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, Int32 x, Int32 y, struct 
 			D3D9_SetTextureData(texture, &mipmap, lvl);
 		}
 
-		if (prev != bmp->Scan0) Platform_MemFree(&prev);
+		if (prev != bmp->Scan0) Mem_Free(&prev);
 		prev = cur;
 	}
-	if (prev != bmp->Scan0) Platform_MemFree(&prev);
+	if (prev != bmp->Scan0) Mem_Free(&prev);
 }
 
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, bool managedPool, bool mipmaps) {
@@ -426,7 +426,7 @@ static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 siz
 	ReturnCode hresult = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, lockFlags);
 	ErrorHandler_CheckOrFail(hresult, lockMsg);
 
-	Platform_MemCpy(dst, data, size);
+	Mem_Copy(dst, data, size);
 	hresult = IDirect3DVertexBuffer9_Unlock(buffer);
 	ErrorHandler_CheckOrFail(hresult, unlockMsg);
 }
@@ -447,7 +447,7 @@ static void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, Int32 size
 	ReturnCode hresult = IDirect3DIndexBuffer9_Lock(buffer, 0, size, &dst, 0);
 	ErrorHandler_CheckOrFail(hresult, lockMsg);
 
-	Platform_MemCpy(dst, data, size);
+	Mem_Copy(dst, data, size);
 	hresult = IDirect3DIndexBuffer9_Unlock(buffer);
 	ErrorHandler_CheckOrFail(hresult, unlockMsg);
 }

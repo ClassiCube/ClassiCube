@@ -322,7 +322,7 @@ static void Lighting_Init(void) {
 }
 
 static void Lighting_Reset(void) {
-	Platform_MemFree(&Lighting_heightmap);
+	Mem_Free(&Lighting_heightmap);
 }
 
 static void Lighting_OnNewMap(void) {
@@ -332,7 +332,7 @@ static void Lighting_OnNewMap(void) {
 }
 
 static void Lighting_OnNewMapLoaded(void) {
-	Lighting_heightmap = Platform_MemAlloc(World_Width * World_Length, sizeof(Int16), "lighting heightmap");
+	Lighting_heightmap = Mem_Alloc(World_Width * World_Length, sizeof(Int16), "lighting heightmap");
 	Lighting_Refresh();
 }
 

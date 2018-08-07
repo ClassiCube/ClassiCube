@@ -187,10 +187,10 @@ static void EntryList_Load(struct EntryList* list) {
 	String filename = String_FromRawArray(list->FileBuffer);
 	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
-	String_Format3(&path, "%s%r%s", &folder, &Platform_DirectorySeparator, &filename);
+	String_Format3(&path, "%s%r%s", &folder, &Directory_Separator, &filename);
 
 	void* file;
-	ReturnCode result = Platform_FileOpen(&file, &path);
+	ReturnCode result = File_Open(&file, &path);
 	if (result == ReturnCode_FileNotFound) return;
 	/* TODO: Should we just log failure to save? */
 	ErrorHandler_CheckOrFail(result, "EntryList_Load - open file");
@@ -217,15 +217,15 @@ static void EntryList_Save(struct EntryList* list) {
 	String filename = String_FromRawArray(list->FileBuffer);
 	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
-	String_Format3(&path, "%s%r%s", &folder, &Platform_DirectorySeparator, &filename);
+	String_Format3(&path, "%s%r%s", &folder, &Directory_Separator, &filename);
 
-	if (!Platform_DirectoryExists(&folder)) {
-		ReturnCode dirResult = Platform_DirectoryCreate(&folder);
+	if (!Directory_Exists(&folder)) {
+		ReturnCode dirResult = Directory_Create(&folder);
 		ErrorHandler_CheckOrFail(dirResult, "EntryList_Save - create directory");
 	}
 
 	void* file;
-	ReturnCode result = Platform_FileCreate(&file, &path);
+	ReturnCode result = File_Create(&file, &path);
 	/* TODO: Should we just log failure to save? */
 	ErrorHandler_CheckOrFail(result, "EntryList_Save - open file");
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
@@ -297,19 +297,19 @@ void TextureCache_Deny(STRING_PURE String* url)   { EntryList_Add(&cache_denied,
 
 static void TextureCache_MakePath(STRING_TRANSIENT String* path, STRING_PURE String* url) {
 	String crc32; TexCache_Crc32(url);
-	String_Format2(path, TEXCACHE_FOLDER "%r%s", &Platform_DirectorySeparator, &crc32);
+	String_Format2(path, TEXCACHE_FOLDER "%r%s", &Directory_Separator, &crc32);
 }
 
 bool TextureCache_HasUrl(STRING_PURE String* url) {
 	String path; TexCache_InitAndMakePath(url);
-	return Platform_FileExists(&path);
+	return File_Exists(&path);
 }
 
 bool TextureCache_GetStream(STRING_PURE String* url, struct Stream* stream) {
 	String path; TexCache_InitAndMakePath(url);
 
 	void* file;
-	ReturnCode result = Platform_FileOpen(&file, &path);
+	ReturnCode result = File_Open(&file, &path);
 	if (result == ReturnCode_FileNotFound) return false;
 
 	ErrorHandler_CheckOrFail(result, "TextureCache - GetStream");
@@ -342,7 +342,7 @@ void TextureCache_GetLastModified(STRING_PURE String* url, DateTime* time) {
 		DateTime_FromTotalMs(time, ticks / TEXCACHE_TICKS_PER_MS);
 	} else {
 		String path; TexCache_InitAndMakePath(url);
-		ReturnCode result = Platform_FileGetModifiedTime(&path, time);
+		ReturnCode result = File_GetModifiedTime(&path, time);
 		ErrorHandler_CheckOrFail(result, "TextureCache - get file last modified time")
 	}
 }
@@ -356,12 +356,12 @@ void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length) {
 	ReturnCode result;
 
 	String folder = String_FromConst(TEXCACHE_FOLDER);
-	if (!Platform_DirectoryExists(&folder)) {
-		result = Platform_DirectoryCreate(&folder);
+	if (!Directory_Exists(&folder)) {
+		result = Directory_Create(&folder);
 		ErrorHandler_CheckOrFail(result, "TextureCache_AddData - create directory");
 	}
 
-	void* file; result = Platform_FileCreate(&file, &path);
+	void* file; result = File_Create(&file, &path);
 	/* TODO: Should we just log failure to save? */
 	ErrorHandler_CheckOrFail(result, "TextureCache_AddData - open file");
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
@@ -428,10 +428,10 @@ static ReturnCode TexturePack_ExtractZip(struct Stream* stream) {
 void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
 	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
-	String_Format2(&path, "texpacks%r%s", &Platform_DirectorySeparator, filename);
+	String_Format2(&path, "texpacks%r%s", &Directory_Separator, filename);
 
 	void* file;
-	ReturnCode result = Platform_FileOpen(&file, &path);
+	ReturnCode result = File_Open(&file, &path);
 	ErrorHandler_CheckOrFail(result, "TexturePack_Extract - opening file");
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
@@ -451,7 +451,7 @@ ReturnCode TexturePack_ExtractTerrainPng(struct Stream* stream) {
 		if (Game_ChangeTerrainAtlas(&bmp)) return 0;
 	}
 
-	Platform_MemFree(&bmp.Scan0);
+	Mem_Free(&bmp.Scan0);
 	return result;
 }
 

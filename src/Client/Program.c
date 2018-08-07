@@ -34,7 +34,7 @@ int main_imdct() {
 void vorbis_test() {
 	void* file;
 	String oggPath = String_FromConst("audio/calm1.ogg");
-	Platform_FileOpen(&file, &oggPath);
+	File_Open(&file, &oggPath);
 	struct Stream oggBase;
 	Stream_FromFile(&oggBase, file, &oggPath);
 	struct Stream ogg;
@@ -46,7 +46,7 @@ void vorbis_test() {
 	Vorbis_DecodeHeaders(&state);
 	Int32 size = 0, offset = 0;
 
-	Int16* chanData = Platform_MemAlloc(state.Channels * state.SampleRate * 1000, sizeof(Int16), "tmp data");
+	Int16* chanData = Mem_Alloc(state.Channels * state.SampleRate * 1000, sizeof(Int16), "tmp data");
 	for (int i = 0; i < 1000; i++) {
 		Vorbis_DecodeFrame(&state);
 		Int32 read = Vorbis_OutputFrame(&state, &chanData[offset]);
@@ -73,7 +73,7 @@ void vorbis_test() {
 
 	unsigned res2 = waveOutPrepareHeader(handle, &header, sizeof(header));
 	unsigned res3 = waveOutWrite(handle, &header, sizeof(header));
-	Platform_ThreadSleep(20000);
+	Thread_Sleep(20000);
 	unsigned res4 = res3;
 }
 #endif
@@ -86,38 +86,38 @@ int main(void) {
 	vorbis_test();
 #endif
 
-	/*Platform_HttpInit();
+	/*Http_Init();
 	AsyncRequest req = { 0 };
 	String url = String_FromEmptyArray(req.URL);
 	String_AppendConst(&url, "http://static.classicube.net/skins/UnknownShadow200.png");
 	void* reqHandle = NULL;
-	ReturnCode ret = Platform_HttpMakeRequest(&req, &reqHandle);
-	ReturnCode ret2 = Platform_HttpFreeRequest(reqHandle);
-	ReturnCode ret3 = Platform_HttpFree();*/
+	ReturnCode ret = Http_MakeRequest(&req, &reqHandle);
+	ReturnCode ret2 = Http_FreeRequest(reqHandle);
+	ReturnCode ret3 = Http_Free();*/
 
 	String maps = String_FromConst("maps");
-	if (!Platform_DirectoryExists(&maps)) {
-		ReturnCode result = Platform_DirectoryCreate(&maps);
+	if (!Directory_Exists(&maps)) {
+		ReturnCode result = Directory_Create(&maps);
 		ErrorHandler_CheckOrFail(result, "Program - creating maps directory");
 	}
 
 	String texPacks = String_FromConst("texpacks");
-	if (!Platform_DirectoryExists(&texPacks)) {
-		ReturnCode result = Platform_DirectoryCreate(&texPacks);
+	if (!Directory_Exists(&texPacks)) {
+		ReturnCode result = Directory_Create(&texPacks);
 		ErrorHandler_CheckOrFail(result, "Program - creating texpacks directory");
 	}
 
 	String texCache = String_FromConst("texturecache");
-	if (!Platform_DirectoryExists(&texCache)) {
-		ReturnCode result = Platform_DirectoryCreate(&texCache);
+	if (!Directory_Exists(&texCache)) {
+		ReturnCode result = Directory_Create(&texCache);
 		ErrorHandler_CheckOrFail(result, "Program - creating texturecache directory");
 	}
 
 	UChar defPathBuffer[String_BufferSize(STRING_SIZE)];
 	String defPath = String_InitAndClearArray(defPathBuffer);
-	String_Format1(&defPath, "texpacks%rdefault.zip", &Platform_DirectorySeparator);
+	String_Format1(&defPath, "texpacks%rdefault.zip", &Directory_Separator);
 
-	if (!Platform_FileExists(&defPath)) {
+	if (!File_Exists(&defPath)) {
 		ErrorHandler_ShowDialog("Missing file", "default.zip missing, try running launcher first");
 		Platform_Exit(1);
 		return 1;
@@ -230,7 +230,7 @@ int main_test(int argc, char* argv[]) {
 	
 	void* file;
 	String path = String_FromConstant("H:\\PortableApps\\GitPortable\\App\\Git\\ClassicalSharp\\output\\release\\texpacks\\skybox.png");
-	ReturnCode openCode = Platform_FileOpen(&file, &path);
+	ReturnCode openCode = File_Open(&file, &path);
 	Stream fileStream;
 	Stream_FromFile(&fileStream, file, &path);
 	Bitmap bmp;
@@ -255,7 +255,7 @@ int main_test(int argc, char* argv[]) {
 
 	void* file2;
 	String path2 = String_FromConstant("H:\\PortableApps\\GitPortable\\App\\Git\\ClassicalSharp\\output\\release\\texpacks\\skybox8.bmp");
-	openCode = Platform_FileCreate(&file2, &path2);
+	openCode = File_Create(&file2, &path2);
 	Stream fileStream2;
 	Stream_FromFile(&fileStream2, file2, &path2);
 	Stream_Write(&fileStream2, &bmpfileheader, sizeof(bmpfileheader));
@@ -267,7 +267,7 @@ int main_test(int argc, char* argv[]) {
 
 	/*void* file;
 	String path = String_FromConstant("H:\\PortableApps\\GitPortable\\App\\Git\\ClassicalSharp\\output\\release\\texpacks\\default.zip");
-	ReturnCode openCode = Platform_FileOpen(&file, &path);
+	ReturnCode openCode = File_Open(&file, &path);
 	Stream fileStream;
 	Stream_FromFile(&fileStream, file, &path);
 	ZipState state;
@@ -277,7 +277,7 @@ int main_test(int argc, char* argv[]) {
 
 	/*void* file;
 	String path = String_FromConst("H:\\PortableApps\\GitPortable\\App\\Git\\ClassicalSharp\\src\\x64\\Release\\canyon.lvl");
-	ReturnCode openCode = Platform_FileOpen(&file, &path);
+	ReturnCode openCode = File_Open(&file, &path);
 	Stream fileStream;
 	Stream_FromFile(&fileStream, file, &path);
 	Lvl_Load(&fileStream);
@@ -285,14 +285,14 @@ int main_test(int argc, char* argv[]) {
 
 	/*void* file;
 	String path = String_FromConstant("H:\\PortableApps\\GitPortable\\App\\Git\\\ClassicalSharp\\src\\Debug\\gunzip.c.gz");
-	ReturnCode openCode = Platform_FileOpen(&file, &path);
+	ReturnCode openCode = File_Open(&file, &path);
 	Stream fileStream;
 	Stream_FromFile(&fileStream, file, &path);
 
 	GZipHeader gzip;
 	GZipHeader_Init(&gzip);
 	while (!gzip.Done) { GZipHeader_Read(&fileStream, &gzip); }
-	UInt32 pos = Platform_FilePosition(file);
+	UInt32 pos = File_Position(file);
 
 	InflateState deflate;
 	Inflate_Init(&deflate, &fileStream);
@@ -307,7 +307,7 @@ int main_test(int argc, char* argv[]) {
 	Inflate_Process(&deflate);
 
 	String path2 = String_FromConstant("H:\\PortableApps\\GitPortable\\App\\Git\\ClassicalSharp\\src\\x64\\Debug\\ffff.c");
-	openCode = Platform_FileCreate(&file, &path2);
+	openCode = File_Create(&file, &path2);
 	Stream_FromFile(&fileStream, file, &path);
 	UInt32 written;
 	fileStream.Write(&fileStream, out, 56000 - deflate.AvailOut, &written);
@@ -325,7 +325,7 @@ int main_test(int argc, char* argv[]) {
 		Gfx_ClearColour(PackedCol_Create3(RGB, RGB, RGB));
 		RGB++;
 		Window_ProcessEvents();
-		Platform_ThreadSleep(100);
+		Thread_Sleep(100);
 		Gfx_BeginFrame();
 		Gfx_Clear();
 		Gfx_EndFrame();

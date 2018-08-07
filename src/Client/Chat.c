@@ -26,7 +26,7 @@ void Chat_GetLogTime(UInt32 index, Int64* timeMs) {
 }
 
 static void Chat_AppendLogTime(void) {
-	DateTime now; Platform_CurrentUTCTime(&now);
+	DateTime now; DateTime_CurrentUTC(&now);
 	if (Chat_LogTimesCount == Chat_LogTimesMax) {
 		StringsBuffer_Resize(&Chat_LogTimes, &Chat_LogTimesMax, sizeof(Int64),
 			CHAT_LOGTIMES_DEF_ELEMS, CHAT_LOGTIMES_EXPAND_ELEMS);
@@ -37,7 +37,7 @@ static void Chat_AppendLogTime(void) {
 static void ChatLine_Make(struct ChatLine* line, STRING_TRANSIENT String* text) {
 	String dst = String_InitAndClearArray(line->Buffer);
 	String_AppendString(&dst, text);
-	Platform_CurrentUTCTime(&line->Received);
+	DateTime_CurrentUTC(&line->Received);
 }
 
 UChar Chat_LogNameBuffer[String_BufferSize(STRING_SIZE)];
@@ -75,8 +75,8 @@ void Chat_SetLogName(STRING_PURE String* name) {
 
 static void Chat_OpenLog(DateTime* now) {
 	String logsDir = String_FromConst("logs");
-	if (!Platform_DirectoryExists(&logsDir)) {
-		Platform_DirectoryCreate(&logsDir);
+	if (!Directory_Exists(&logsDir)) {
+		Directory_Create(&logsDir);
 	}
 
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
@@ -84,7 +84,7 @@ static void Chat_OpenLog(DateTime* now) {
 	for (i = 0; i < 20; i++) {
 		UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
 		String path = String_InitAndClearArray(pathBuffer);
-		String_Format4(&path, "logs%r%p4-%p2-%p2", &Platform_DirectorySeparator, &year, &month, &day);
+		String_Format4(&path, "logs%r%p4-%p2-%p2", &Directory_Separator, &year, &month, &day);
 
 		if (i > 0) {
 			String_Format2(&path, "%s _%i.log", &Chat_LogName, &i);
@@ -93,7 +93,7 @@ static void Chat_OpenLog(DateTime* now) {
 		}
 
 		void* file;
-		ReturnCode code = Platform_FileAppend(&file, &path);
+		ReturnCode code = File_Append(&file, &path);
 		if (code != 0 && code != ReturnCode_FileShareViolation) {
 			ErrorHandler_FailWithCode(code, "Chat - opening log file");
 		}
@@ -110,7 +110,7 @@ static void Chat_OpenLog(DateTime* now) {
 
 static void Chat_AppendLog(STRING_PURE String* text) {
 	if (!Chat_LogName.length || !Game_ChatLogging) return;
-	DateTime now; Platform_CurrentLocalTime(&now);
+	DateTime now; DateTime_CurrentLocal(&now);
 
 	if (now.Day != ChatLog_LastLogDate.Day || now.Month != ChatLog_LastLogDate.Month || now.Year != ChatLog_LastLogDate.Year) {
 		Chat_CloseLog();
@@ -130,7 +130,12 @@ static void Chat_AppendLog(STRING_PURE String* text) {
 	Stream_WriteLine(&Chat_LogStream, &str);
 }
 
+void Chat_AddRaw(const UChar* raw) {
+	String str = String_FromReadonly(raw);
+	Chat_AddOf(&str, MSG_TYPE_NORMAL);
+}
 void Chat_Add(STRING_PURE String* text) { Chat_AddOf(text, MSG_TYPE_NORMAL); }
+
 void Chat_AddOf(STRING_PURE String* text, Int32 msgType) {
 	Event_RaiseChat(&ChatEvents_ChatReceived, text, msgType);
 
@@ -211,7 +216,7 @@ static struct ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
 
 	if (!match) {
 		Commands_Log("&e/client: Unrecognised command: \"&f%s&e\".", cmdName);
-		Chat_AddRaw(tmp, "&e/client: Type &a/client &efor a list of commands.");
+		Chat_AddRaw("&e/client: Type &a/client &efor a list of commands.");
 		return NULL;
 	}
 	if (match->SingleplayerOnly && !ServerConnection_IsSinglePlayer) {
@@ -255,9 +260,9 @@ static void Commands_Execute(STRING_PURE String* input) {
 	}
 
 	if (!text.length) { /* only / or /client */
-		Chat_AddRaw(tmp1, "&eList of client commands:");
+		Chat_AddRaw("&eList of client commands:");
 		Commands_PrintDefined();
-		Chat_AddRaw(tmp2, "&eTo see help for a command, type &a/client help [cmd name]");
+		Chat_AddRaw("&eTo see help for a command, type &a/client help [cmd name]");
 		return;
 	}
 
@@ -276,9 +281,9 @@ static void Commands_Execute(STRING_PURE String* input) {
 *#########################################################################################################################*/
 static void HelpCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 	if (argsCount == 1) {
-		Chat_AddRaw(tmp1, "&eList of client commands:");
+		Chat_AddRaw("&eList of client commands:");
 		Commands_PrintDefined();
-		Chat_AddRaw(tmp2, "&eTo see help for a command, type /client help [cmd name]");
+		Chat_AddRaw("&eTo see help for a command, type /client help [cmd name]");
 	} else {
 		struct ChatCommand* cmd = Commands_GetMatch(&args[1]);
 		if (!cmd) return;
@@ -329,7 +334,7 @@ static void GpuInfoCommand_Make(struct ChatCommand* cmd) {
 *#########################################################################################################################*/
 static void RenderTypeCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 	if (argsCount == 1) {
-		Chat_AddRaw(tmp, "&e/client: &cYou didn't specify a new render type."); return;
+		Chat_AddRaw("&e/client: &cYou didn't specify a new render type."); return;
 	}
 
 	Int32 flags = Game_CalcRenderType(&args[1]);
@@ -357,11 +362,11 @@ static void RenderTypeCommand_Make(struct ChatCommand* cmd) {
 static void ResolutionCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 	Int32 width, height;
 	if (argsCount < 3) {
-		Chat_AddRaw(tmp, "&e/client: &cYou didn't specify width and height");
+		Chat_AddRaw("&e/client: &cYou didn't specify width and height");
 	} else if (!Convert_TryParseInt32(&args[1], &width) || !Convert_TryParseInt32(&args[2], &height)) {
-		Chat_AddRaw(tmp, "&e/client: &cWidth and height must be integers.");
+		Chat_AddRaw("&e/client: &cWidth and height must be integers.");
 	} else if (width <= 0 || height <= 0) {
-		Chat_AddRaw(tmp, "&e/client: &cWidth and height must be above 0.");
+		Chat_AddRaw("&e/client: &cWidth and height must be above 0.");
 	} else {
 		struct Size2D size = { width, height };
 		Window_SetClientSize(size);
@@ -379,7 +384,7 @@ static void ResolutionCommand_Make(struct ChatCommand* cmd) {
 
 static void ModelCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 	if (argsCount == 1) {
-		Chat_AddRaw(tmp, "&e/client model: &cYou didn't specify a model name.");
+		Chat_AddRaw("&e/client model: &cYou didn't specify a model name.");
 	} else {
 		UChar modelBuffer[String_BufferSize(STRING_SIZE)];
 		String model = String_InitAndClearArray(modelBuffer);
@@ -515,11 +520,11 @@ static void CuboidCommand_Make(struct ChatCommand* cmd) {
 *#########################################################################################################################*/
 static void TeleportCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 	if (argsCount != 4) {
-		Chat_AddRaw(tmp, "&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
+		Chat_AddRaw("&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
 	} else {
 		Real32 x, y, z;
 		if (!Convert_TryParseReal32(&args[1], &x) || !Convert_TryParseReal32(&args[2], &y) || !Convert_TryParseReal32(&args[3], &z)) {
-			Chat_AddRaw(tmp, "&e/client teleport: &cCoordinates must be decimals");
+			Chat_AddRaw("&e/client teleport: &cCoordinates must be decimals");
 			return;
 		}
 
@@ -575,7 +580,7 @@ static void Chat_Reset(void) {
 static void Chat_Free(void) {
 	Chat_CloseLog();
 	commands_count = 0;
-	if (Chat_LogTimes != Chat_DefaultLogTimes) Platform_MemFree(&Chat_LogTimes);
+	if (Chat_LogTimes != Chat_DefaultLogTimes) Mem_Free(&Chat_LogTimes);
 
 	StringsBuffer_Free(&Chat_Log);
 	StringsBuffer_Free(&Chat_InputLog);

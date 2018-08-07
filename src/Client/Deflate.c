@@ -220,7 +220,7 @@ static void Huffman_Build(struct HuffmanTable* table, UInt8* bitLens, Int32 coun
 	}
 
 	Int32 value = 0;
-	Platform_MemSet(table->Fast, UInt8_MaxValue, sizeof(table->Fast));
+	Mem_Set(table->Fast, UInt8_MaxValue, sizeof(table->Fast));
 	for (i = 0; i < count; i++, value++) {
 		Int32 len = bitLens[i];
 		if (!len) continue;
@@ -407,13 +407,13 @@ static void Inflate_InflateFast(struct InflateState* state) {
 	state->WindowIndex = curIdx;
 	if (copyLen > 0) {
 		if (copyStart + copyLen < INFLATE_WINDOW_SIZE) {
-			Platform_MemCpy(state->Output, &state->Window[copyStart], copyLen);
+			Mem_Copy(state->Output, &state->Window[copyStart], copyLen);
 			state->Output += copyLen;
 		} else {
 			UInt32 partLen = INFLATE_WINDOW_SIZE - copyStart;
-			Platform_MemCpy(state->Output, &state->Window[copyStart], partLen);
+			Mem_Copy(state->Output, &state->Window[copyStart], partLen);
 			state->Output += partLen;
-			Platform_MemCpy(state->Output, state->Window, copyLen - partLen);
+			Mem_Copy(state->Output, state->Window, copyLen - partLen);
 			state->Output += (copyLen - partLen);
 		}
 	}
@@ -477,14 +477,14 @@ void Inflate_Process(struct InflateState* state) {
 			UInt32 copyLen = min(state->AvailIn, state->AvailOut);
 			copyLen = min(copyLen, state->Index);
 			if (copyLen > 0) {
-				Platform_MemCpy(state->Output, state->NextIn, copyLen);
+				Mem_Copy(state->Output, state->NextIn, copyLen);
 				UInt32 windowCopyLen = INFLATE_WINDOW_SIZE - state->WindowIndex;
 				windowCopyLen = min(windowCopyLen, copyLen);
 
-				Platform_MemCpy(&state->Window[state->WindowIndex], state->Output, windowCopyLen);
+				Mem_Copy(&state->Window[state->WindowIndex], state->Output, windowCopyLen);
 				/* Wrap around remainder of copy to start from beginning of window */
 				if (windowCopyLen < copyLen) {
-					Platform_MemCpy(state->Window, &state->Output[windowCopyLen], copyLen - windowCopyLen);
+					Mem_Copy(state->Window, &state->Output[windowCopyLen], copyLen - windowCopyLen);
 				}
 
 				state->WindowIndex = (state->WindowIndex + copyLen) & INFLATE_WINDOW_MASK;
@@ -576,7 +576,7 @@ void Inflate_Process(struct InflateState* state) {
 				ErrorHandler_Fail("DEFLATE - Tried to repeat past end");
 			}
 
-			Platform_MemSet(&state->Buffer[state->Index], repeatValue, repeatCount);
+			Mem_Set(&state->Buffer[state->Index], repeatValue, repeatCount);
 			state->Index += repeatCount;
 			state->State = INFLATE_STATE_DYNAMIC_LITSDISTS;
 			break;
@@ -760,8 +760,8 @@ static ReturnCode Deflate_FlushBlock(struct DeflateState* state, Int32 len) {
 	}
 
 	/* TODO: Hash chains should persist past one block flush */
-	Platform_MemSet(state->Head, 0, sizeof(state->Head));
-	Platform_MemSet(state->Prev, 0, sizeof(state->Prev));
+	Mem_Set(state->Head, 0, sizeof(state->Head));
+	Mem_Set(state->Prev, 0, sizeof(state->Prev));
 
 	/* Based off descriptions from http://www.gzip.org/algorithm.txt and
 	https://github.com/nothings/stb/blob/master/stb_image_write.h */
@@ -841,7 +841,7 @@ static ReturnCode Deflate_StreamWrite(struct Stream* stream, UInt8* data, UInt32
 			toWrite = DEFLATE_BUFFER_SIZE - state->InputPosition;
 		}
 
-		Platform_MemCpy(dst, data, toWrite);
+		Mem_Copy(dst, data, toWrite);
 		count -= toWrite;
 		state->InputPosition += toWrite;
 		*modified += toWrite;
@@ -888,8 +888,8 @@ void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struc
 	state->Dest     = underlying;
 	state->WroteHeader = false;
 
-	Platform_MemSet(state->Head, 0, sizeof(state->Head));
-	Platform_MemSet(state->Prev, 0, sizeof(state->Prev));	
+	Mem_Set(state->Head, 0, sizeof(state->Head));
+	Mem_Set(state->Prev, 0, sizeof(state->Prev));	
 }
 
 

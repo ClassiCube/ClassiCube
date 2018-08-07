@@ -695,10 +695,10 @@ void StringsBuffer_Init(StringsBuffer* buffer) {
 
 void StringsBuffer_Free(StringsBuffer* buffer) {
 	if (buffer->TextBuffer != buffer->DefaultBuffer) {
-		Platform_MemFree(&buffer->TextBuffer);
+		Mem_Free(&buffer->TextBuffer);
 	}
 	if (buffer->FlagsBuffer != buffer->DefaultFlags) {
-		Platform_MemFree(&buffer->FlagsBuffer);
+		Mem_Free(&buffer->FlagsBuffer);
 	}
 	StringsBuffer_Init(buffer);
 }
@@ -725,10 +725,10 @@ void StringsBuffer_Resize(void** buffer, UInt32* elems, UInt32 elemSize, UInt32 
 	UInt32 curElems = *elems;
 
 	if (curElems <= defElems) {
-		dst = Platform_MemAlloc(curElems + expandElems, elemSize, "StringsBuffer");
-		Platform_MemCpy(dst, cur, curElems * elemSize);
+		dst = Mem_Alloc(curElems + expandElems, elemSize, "StringsBuffer");
+		Mem_Copy(dst, cur, curElems * elemSize);
 	} else {
-		dst = Platform_MemRealloc(cur, curElems + expandElems, elemSize, "resizing StringsBuffer");
+		dst = Mem_Realloc(cur, curElems + expandElems, elemSize, "resizing StringsBuffer");
 	}
 
 	*buffer = dst;
@@ -756,7 +756,7 @@ void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text) {
 	}
 
 	if (text->length) {
-		Platform_MemCpy(&buffer->TextBuffer[textOffset], text->buffer, text->length);
+		Mem_Copy(&buffer->TextBuffer[textOffset], text->buffer, text->length);
 	}
 	buffer->FlagsBuffer[buffer->Count] = text->length | (textOffset << STRINGSBUFFER_LEN_SHIFT);
 

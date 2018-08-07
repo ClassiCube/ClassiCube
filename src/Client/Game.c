@@ -106,9 +106,9 @@ String game_defTexPack = String_FromEmptyArray(game_defTexPackBuffer);
 void Game_GetDefaultTexturePack(STRING_TRANSIENT String* texPack) {
 	UChar texPathBuffer[String_BufferSize(STRING_SIZE)];
 	String texPath = String_InitAndClearArray(texPathBuffer);
-	String_Format2(&texPath, "texpacks%r%s", &Platform_DirectorySeparator, &game_defTexPack);
+	String_Format2(&texPath, "texpacks%r%s", &Directory_Separator, &game_defTexPack);
 
-	if (Platform_FileExists(&texPath) && !Game_ClassicMode) {
+	if (File_Exists(&texPath) && !Game_ClassicMode) {
 		String_AppendString(texPack, &game_defTexPack);
 	} else {
 		String_AppendConst(texPack, "default.zip");
@@ -231,7 +231,7 @@ bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, UInt8* skinTyp
 		*texId = Gfx_CreateTexture(&bmp, true, false);
 	}
 
-	Platform_MemFree(&bmp.Scan0);
+	Mem_Free(&bmp.Scan0);
 	return success;
 }
 
@@ -314,7 +314,7 @@ static void Game_TextureChangedCore(void* obj, struct Stream* src) {
 		ErrorHandler_CheckOrFail(result, "Decoding terrain bitmap");
 
 		if (Game_ChangeTerrainAtlas(&atlas)) return;
-		Platform_MemFree(&atlas.Scan0);
+		Mem_Free(&atlas.Scan0);
 	} else if (String_CaselessEqualsConst(&src->Name, "default.png")) {
 		struct Bitmap bmp; 
 		ReturnCode result = Bitmap_DecodePng(&bmp, src);
@@ -555,7 +555,7 @@ static void Game_LimitFPS(void) {
 
 	/* going faster than limit */
 	if (leftOver > 0.001f) {
-		Platform_ThreadSleep((Int32)(leftOver + 0.5f));
+		Thread_Sleep((Int32)(leftOver + 0.5f));
 	}
 }
 
@@ -632,12 +632,12 @@ static void Game_DoScheduledTasks(Real64 time) {
 
 void Game_TakeScreenshot(void) {
 	String dir = String_FromConst("screenshots");
-	if (!Platform_DirectoryExists(&dir)) {
-		ReturnCode result = Platform_DirectoryCreate(&dir);
+	if (!Directory_Exists(&dir)) {
+		ReturnCode result = Directory_Create(&dir);
 		ErrorHandler_CheckOrFail(result, "Creating screenshots directory");
 	}
 
-	DateTime now; Platform_CurrentLocalTime(&now);
+	DateTime now; DateTime_CurrentLocal(&now);
 	Int32 year = now.Year, month = now.Month, day = now.Day;
 	Int32 hour = now.Hour, min = now.Minute, sec = now.Second;
 
@@ -648,10 +648,10 @@ void Game_TakeScreenshot(void) {
 
 	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
-	String_Format2(&path, "screenshots%r%s", &Platform_DirectorySeparator, &filename);
+	String_Format2(&path, "screenshots%r%s", &Directory_Separator, &filename);
 
 	void* file;
-	ReturnCode result = Platform_FileCreate(&file, &path);
+	ReturnCode result = File_Create(&file, &path);
 	ErrorHandler_CheckOrFail(result, "Taking screenshot - opening file");
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
@@ -762,13 +762,8 @@ void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct Displa
 }
 
 /* TODO: fix all these stubs.... */
-void Audio_MakeComponent(struct IGameComponent* comp) { }
-void Audio_SetMusic(Int32 volume) { }
-void Audio_SetSounds(Int32 volume) { }
-void Audio_PlayDigSound(UInt8 type) { }
-void Audio_PlayStepSound(UInt8 type) { }
 void AdvLightingBuilder_SetActive(void) { }
-
+void Audio_SetVolume(AudioHandle handle, Real32 volume) { }
 /* TODO: Initalise Shell, see https://msdn.microsoft.com/en-us/library/windows/desktop/bb762153(v=vs.85).aspx 
 https://stackoverflow.com/questions/24590059/c-opening-a-url-in-default-browser-on-windows-without-admin-privileges */
 ReturnCode Platform_StartShell(STRING_PURE String* args) { return 0; }

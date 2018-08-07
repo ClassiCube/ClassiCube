@@ -56,7 +56,7 @@ static void Drawer2D_CalculateTextWidths(void) {
 }
 
 static void Drawer2D_FreeFontBitmap(void) {
-	Platform_MemFree(&Drawer2D_FontBitmap.Scan0);
+	Mem_Free(&Drawer2D_FontBitmap.Scan0);
 }
 
 void Drawer2D_SetFontBitmap(struct Bitmap* bmp) {
@@ -142,7 +142,7 @@ void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, In
 	Drawer2D_End();
 
 	Drawer2D_Make2DTexture(tex, &bmp, size, windowX, windowY);
-	Platform_MemFree(&bmp.Scan0);
+	Mem_Free(&bmp.Scan0);
 }
 
 void Drawer2D_Make2DTexture(struct Texture* tex, struct Bitmap* bmp, struct Size2D used, Int32 windowX, Int32 windowY) {

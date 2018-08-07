@@ -434,7 +434,7 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 
 	for (i = 0; i < 10; i++) {
 		if (!OpenClipboard(win_Handle)) {
-			Platform_ThreadSleep(100);
+			Thread_Sleep(100);
 			continue;
 		}
 
@@ -471,7 +471,7 @@ void Window_SetClipboardText(STRING_PURE String* value) {
 	Int32 i;
 	for (i = 0; i < 10; i++) {
 		if (!OpenClipboard(win_Handle)) {
-			Platform_ThreadSleep(100);
+			Thread_Sleep(100);
 			continue;
 		}
 
@@ -660,7 +660,7 @@ void GLContext_SelectGraphicsMode(struct GraphicsMode mode) {
 		ErrorHandler_Fail("Requested graphics mode not available");
 	}
 
-	Platform_MemSet(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
+	Mem_Set(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	pfd.nVersion = 1;
 

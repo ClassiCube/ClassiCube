@@ -27,7 +27,7 @@ bool stopwatch_highResolution;
 LARGE_INTEGER stopwatch_freq;
 
 UChar* Platform_NewLine = "\r\n";
-UChar Platform_DirectorySeparator = '\\';
+UChar Directory_Separator = '\\';
 ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
 ReturnCode ReturnCode_NotSupported = ERROR_NOT_SUPPORTED;
@@ -110,38 +110,38 @@ static void Platform_AllocFailed(const UChar* place) {
 	ErrorHandler_Fail(log.buffer);
 }
 
-void* Platform_MemAlloc(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
+void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
 	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	void* ptr = HeapAlloc(heap, 0, numBytes);
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void* Platform_MemAllocCleared(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
+void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
 	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	void* ptr = HeapAlloc(heap, HEAP_ZERO_MEMORY, numBytes);
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void* Platform_MemRealloc(void* mem, UInt32 numElems, UInt32 elemsSize, const UChar* place) {
+void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const UChar* place) {
 	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	void* ptr = HeapReAlloc(heap, 0, mem, numBytes);
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void Platform_MemFree(void** mem) {
+void Mem_Free(void** mem) {
 	if (mem == NULL || *mem == NULL) return;
 	HeapFree(heap, 0, *mem);
 	*mem = NULL;
 }
 
-void Platform_MemSet(void* dst, UInt8 value, UInt32 numBytes) {
+void Mem_Set(void* dst, UInt8 value, UInt32 numBytes) {
 	memset(dst, value, numBytes);
 }
 
-void Platform_MemCpy(void* dst, void* src, UInt32 numBytes) {
+void Mem_Copy(void* dst, void* src, UInt32 numBytes) {
 	memcpy(dst, src, numBytes);
 }
 
@@ -175,38 +175,38 @@ void Platform_FromSysTime(DateTime* time, SYSTEMTIME* sysTime) {
 	time->Milli  = sysTime->wMilliseconds;
 }
 
-void Platform_CurrentUTCTime(DateTime* time) {
+void DateTime_CurrentUTC(DateTime* time) {
 	SYSTEMTIME utcTime;
 	GetSystemTime(&utcTime);
 	Platform_FromSysTime(time, &utcTime);
 }
 
-void Platform_CurrentLocalTime(DateTime* time) {
+void DateTime_CurrentLocal(DateTime* time) {
 	SYSTEMTIME localTime;
 	GetLocalTime(&localTime);
 	Platform_FromSysTime(time, &localTime);
 }
 
 
-bool Platform_FileExists(STRING_PURE String* path) {
+bool File_Exists(STRING_PURE String* path) {
 	WCHAR data[512]; Platform_UnicodeExpand(data, path);
 	UInt32 attribs = GetFileAttributesW(data);
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-bool Platform_DirectoryExists(STRING_PURE String* path) {
+bool Directory_Exists(STRING_PURE String* path) {
 	WCHAR data[512]; Platform_UnicodeExpand(data, path);
 	UInt32 attribs = GetFileAttributesW(data);
 	return attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-ReturnCode Platform_DirectoryCreate(STRING_PURE String* path) {
+ReturnCode Directory_Create(STRING_PURE String* path) {
 	WCHAR data[512]; Platform_UnicodeExpand(data, path);
 	BOOL success = CreateDirectoryW(data, NULL);
 	return success ? 0 : GetLastError();
 }
 
-ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_EnumFilesCallback callback) {
+ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCallback callback) {
 	UChar fileBuffer[String_BufferSize(MAX_PATH + 10)];
 	String file = String_InitAndClearArray(fileBuffer);
 	/* Need to append \* to search for files in directory */
@@ -235,9 +235,9 @@ ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_Enum
 	return code == ERROR_NO_MORE_FILES ? 0 : code;
 }
 
-ReturnCode Platform_FileGetModifiedTime(STRING_PURE String* path, DateTime* time) {
+ReturnCode File_GetModifiedTime(STRING_PURE String* path, DateTime* time) {
 	void* file;
-	ReturnCode result = Platform_FileOpen(&file, path);
+	ReturnCode result = File_Open(&file, path);
 	if (result != 0) return result;
 
 	FILETIME writeTime;
@@ -249,44 +249,44 @@ ReturnCode Platform_FileGetModifiedTime(STRING_PURE String* path, DateTime* time
 		result = GetLastError();
 	}
 
-	Platform_FileClose(file);
+	File_Close(file);
 	return result;
 }
 
 
-ReturnCode Platform_FileDo(void** file, STRING_PURE String* path, DWORD access, DWORD createMode) {
+ReturnCode File_Do(void** file, STRING_PURE String* path, DWORD access, DWORD createMode) {
 	WCHAR data[512]; Platform_UnicodeExpand(data, path);
 	*file = CreateFileW(data, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
-ReturnCode Platform_FileOpen(void** file, STRING_PURE String* path) {
-	return Platform_FileDo(file, path, GENERIC_READ, OPEN_EXISTING);
+ReturnCode File_Open(void** file, STRING_PURE String* path) {
+	return File_Do(file, path, GENERIC_READ, OPEN_EXISTING);
 }
-ReturnCode Platform_FileCreate(void** file, STRING_PURE String* path) {
-	return Platform_FileDo(file, path, GENERIC_WRITE, CREATE_ALWAYS);
+ReturnCode File_Create(void** file, STRING_PURE String* path) {
+	return File_Do(file, path, GENERIC_WRITE, CREATE_ALWAYS);
 }
-ReturnCode Platform_FileAppend(void** file, STRING_PURE String* path) {
-	ReturnCode code = Platform_FileDo(file, path, GENERIC_WRITE, OPEN_ALWAYS);
+ReturnCode File_Append(void** file, STRING_PURE String* path) {
+	ReturnCode code = File_Do(file, path, GENERIC_WRITE, OPEN_ALWAYS);
 	if (code != 0) return code;
-	return Platform_FileSeek(*file, 0, STREAM_SEEKFROM_END);
+	return File_Seek(*file, 0, STREAM_SEEKFROM_END);
 }
 
-ReturnCode Platform_FileRead(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead) {
+ReturnCode File_Read(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead) {
 	BOOL success = ReadFile((HANDLE)file, buffer, count, bytesRead, NULL);
 	return success ? 0 : GetLastError();
 }
 
-ReturnCode Platform_FileWrite(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWrote) {
+ReturnCode File_Write(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWrote) {
 	BOOL success = WriteFile((HANDLE)file, buffer, count, bytesWrote, NULL);
 	return success ? 0 : GetLastError();
 }
 
-ReturnCode Platform_FileClose(void* file) {
+ReturnCode File_Close(void* file) {
 	return CloseHandle((HANDLE)file) ? 0 : GetLastError();
 }
 
-ReturnCode Platform_FileSeek(void* file, Int32 offset, Int32 seekType) {
+ReturnCode File_Seek(void* file, Int32 offset, Int32 seekType) {
 	DWORD mode = -1;
 	switch (seekType) {
 	case STREAM_SEEKFROM_BEGIN:   mode = FILE_BEGIN; break;
@@ -298,67 +298,67 @@ ReturnCode Platform_FileSeek(void* file, Int32 offset, Int32 seekType) {
 	return pos == INVALID_SET_FILE_POINTER ? GetLastError() : 0;
 }
 
-ReturnCode Platform_FilePosition(void* file, UInt32* position) {
+ReturnCode File_Position(void* file, UInt32* position) {
 	*position = SetFilePointer(file, 0, NULL, 1); /* SEEK_CUR */
 	return *position == INVALID_SET_FILE_POINTER ? GetLastError() : 0;
 }
 
-ReturnCode Platform_FileLength(void* file, UInt32* length) {
+ReturnCode File_Length(void* file, UInt32* length) {
 	*length = GetFileSize(file, NULL);
 	return *length == INVALID_FILE_SIZE ? GetLastError() : 0;
 }
 
 
-void Platform_ThreadSleep(UInt32 milliseconds) {
+void Thread_Sleep(UInt32 milliseconds) {
 	Sleep(milliseconds);
 }
 
-DWORD WINAPI Platform_ThreadStartCallback(LPVOID lpParam) {
-	Platform_ThreadFunc* func = (Platform_ThreadFunc*)lpParam;
+DWORD WINAPI Thread_StartCallback(LPVOID lpParam) {
+	Thread_StartFunc* func = (Thread_StartFunc*)lpParam;
 	(*func)();
 	return 0;
 }
 
-void* Platform_ThreadStart(Platform_ThreadFunc* func) {
+void* Thread_Start(Thread_StartFunc* func) {
 	DWORD threadID;
-	void* handle = CreateThread(NULL, 0, Platform_ThreadStartCallback, func, 0, &threadID);
+	void* handle = CreateThread(NULL, 0, Thread_StartCallback, func, 0, &threadID);
 	if (!handle) {
 		ErrorHandler_FailWithCode(GetLastError(), "Creating thread");
 	}
 	return handle;
 }
 
-void Platform_ThreadJoin(void* handle) {
+void Thread_Join(void* handle) {
 	WaitForSingleObject((HANDLE)handle, INFINITE);
 }
 
-void Platform_ThreadFreeHandle(void* handle) {
+void Thread_FreeHandle(void* handle) {
 	if (!CloseHandle((HANDLE)handle)) {
 		ErrorHandler_FailWithCode(GetLastError(), "Freeing thread handle");
 	}
 }
 
 CRITICAL_SECTION mutexList[3]; Int32 mutexIndex;
-void* Platform_MutexCreate(void) {
+void* Mutex_Create(void) {
 	if (mutexIndex == Array_Elems(mutexList)) ErrorHandler_Fail("Cannot allocate mutex");
 	CRITICAL_SECTION* ptr = &mutexList[mutexIndex];
 	InitializeCriticalSection(ptr); mutexIndex++;
 	return ptr;
 }
 
-void Platform_MutexFree(void* handle) {
+void Mutex_Free(void* handle) {
 	DeleteCriticalSection((CRITICAL_SECTION*)handle);
 }
 
-void Platform_MutexLock(void* handle) {
+void Mutex_Lock(void* handle) {
 	EnterCriticalSection((CRITICAL_SECTION*)handle);
 }
 
-void Platform_MutexUnlock(void* handle) {
+void Mutex_Unlock(void* handle) {
 	LeaveCriticalSection((CRITICAL_SECTION*)handle);
 }
 
-void* Platform_EventCreate(void) {
+void* Waitable_Create(void) {
 	void* handle = CreateEventW(NULL, false, false, NULL);
 	if (!handle) {
 		ErrorHandler_FailWithCode(GetLastError(), "Creating event");
@@ -366,18 +366,22 @@ void* Platform_EventCreate(void) {
 	return handle;
 }
 
-void Platform_EventFree(void* handle) {
+void Waitable_Free(void* handle) {
 	if (!CloseHandle((HANDLE)handle)) {
 		ErrorHandler_FailWithCode(GetLastError(), "Freeing event");
 	}
 }
 
-void Platform_EventSignal(void* handle) {
+void Waitable_Signal(void* handle) {
 	SetEvent((HANDLE)handle);
 }
 
-void Platform_EventWait(void* handle) {
+void Waitable_Wait(void* handle) {
 	WaitForSingleObject((HANDLE)handle, INFINITE);
+}
+
+void Waitable_WaitFor(void* handle, UInt32 milliseconds) {
+	WaitForSingleObject((HANDLE)handle, milliseconds);
 }
 
 void Stopwatch_Measure(struct Stopwatch* timer) {
@@ -406,7 +410,7 @@ Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {
 	}
 }
 
-void Platform_FontMake(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) {
+void Font_Make(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) {
 	desc->Size    = size; 
 	desc->Style   = style;
 	LOGFONTA font = { 0 };
@@ -422,7 +426,7 @@ void Platform_FontMake(struct FontDesc* desc, STRING_PURE String* fontName, UInt
 	if (!desc->Handle) ErrorHandler_Fail("Creating font handle failed");
 }
 
-void Platform_FontFree(struct FontDesc* desc) {
+void Font_Free(struct FontDesc* desc) {
 	if (!DeleteObject(desc->Handle)) ErrorHandler_Fail("Deleting font handle failed");
 	desc->Handle = NULL;
 }
@@ -504,13 +508,13 @@ void Platform_ReleaseBitmap(void) {
 }
 
 HINTERNET hInternet;
-void Platform_HttpInit(void) {
+void Http_Init(void) {
 	/* TODO: Should we use INTERNET_OPEN_TYPE_PRECONFIG instead? */
 	hInternet = InternetOpenA(PROGRAM_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
 	if (!hInternet) ErrorHandler_FailWithCode(GetLastError(), "Failed to init WinINet");
 }
 
-ReturnCode Platform_HttpMakeRequest(struct AsyncRequest* request, void** handle) {
+ReturnCode Http_MakeRequest(struct AsyncRequest* request, void** handle) {
 	String url = String_FromRawArray(request->URL);
 	UChar headersBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String headers = String_MakeNull();
@@ -540,7 +544,7 @@ ReturnCode Platform_HttpMakeRequest(struct AsyncRequest* request, void** handle)
 
 /* TODO: Test last modified and etag even work */
 #define Http_Query(flags, result) HttpQueryInfoA(handle, flags, result, &bufferLen, NULL)
-ReturnCode Platform_HttpGetRequestHeaders(struct AsyncRequest* request, void* handle, UInt32* size) {
+ReturnCode Http_GetRequestHeaders(struct AsyncRequest* request, void* handle, UInt32* size) {
 	DWORD bufferLen;
 
 	UInt32 status;
@@ -564,9 +568,9 @@ ReturnCode Platform_HttpGetRequestHeaders(struct AsyncRequest* request, void* ha
 	return 0;
 }
 
-ReturnCode Platform_HttpGetRequestData(struct AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress) {
+ReturnCode Http_GetRequestData(struct AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress) {
 	if (size == 0) return ERROR_NOT_SUPPORTED;
-	*data = Platform_MemAlloc(size, sizeof(UInt8), "http get data");
+	*data = Mem_Alloc(size, sizeof(UInt8), "http get data");
 
 	*progress = 0;
 	UInt8* buffer = *data;
@@ -580,7 +584,7 @@ ReturnCode Platform_HttpGetRequestData(struct AsyncRequest* request, void* handl
 		}
 
 		bool success = InternetReadFile(handle, buffer, toRead, &read);
-		if (!success) { Platform_MemFree(data); return GetLastError(); }
+		if (!success) { Mem_Free(data); return GetLastError(); }
 
 		if (!read) break;
 		buffer += read; totalRead += read; left -= read;
@@ -591,11 +595,11 @@ ReturnCode Platform_HttpGetRequestData(struct AsyncRequest* request, void* handl
 	return 0;
 }
 
-ReturnCode Platform_HttpFreeRequest(void* handle) {
+ReturnCode Http_FreeRequest(void* handle) {
 	return InternetCloseHandle(handle) ? 0 : GetLastError();
 }
 
-ReturnCode Platform_HttpFree(void) {
+ReturnCode Http_Free(void) {
 	return InternetCloseHandle(hInternet) ? 0 : GetLastError();
 }
 
@@ -608,7 +612,7 @@ struct AudioContext {
 };
 struct AudioContext Audio_Contexts[20];
 
-void Platform_AudioInit(AudioHandle* handle, Int32 buffers) {
+void Audio_Init(AudioHandle* handle, Int32 buffers) {
 	Int32 i, j;
 	for (i = 0; i < Array_Elems(Audio_Contexts); i++) {
 		struct AudioContext* ctx = &Audio_Contexts[i];
@@ -624,27 +628,28 @@ void Platform_AudioInit(AudioHandle* handle, Int32 buffers) {
 	ErrorHandler_Fail("No free audio contexts");
 }
 
-void Platform_AudioFree(AudioHandle handle) {
+void Audio_Free(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	if (!ctx->Handle) return;
 
 	ReturnCode result = waveOutClose(ctx->Handle);
-	Platform_MemSet(ctx, 0, sizeof(struct AudioContext));
+	Mem_Set(ctx, 0, sizeof(struct AudioContext));
 	ErrorHandler_CheckOrFail(result, "Audio - closing device");
 }
 
-struct AudioFormat* Platform_AudioGetFormat(AudioHandle handle) {
+struct AudioFormat* Audio_GetFormat(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	return &ctx->Format;
 }
 
-void Platform_AudioSetFormat(AudioHandle handle, struct AudioFormat* format) {
+void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	struct AudioFormat* cur = &ctx->Format;
 
 	/* only recreate handle if we need to */
 	if (AudioFormat_Eq(cur, format)) return;
-	if (ctx->Handle) Platform_AudioFree(handle);
+	if (ctx->Handle) Audio_Free(handle);
+	ctx->Format = *format;
 
 	WAVEFORMATEX fmt = { 0 };
 	fmt.nChannels       = format->Channels;
@@ -659,10 +664,10 @@ void Platform_AudioSetFormat(AudioHandle handle, struct AudioFormat* format) {
 	ErrorHandler_CheckOrFail(result, "Audio - opening device");
 }
 
-void Platform_AudioPlayData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize) {
+void Audio_PlayData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	WAVEHDR* hdr = &ctx->Headers[idx];
-	Platform_MemSet(hdr, 0, sizeof(WAVEHDR));
+	Mem_Set(hdr, 0, sizeof(WAVEHDR));
 
 	hdr->lpData         = data;
 	hdr->dwBufferLength = dataSize;
@@ -674,7 +679,7 @@ void Platform_AudioPlayData(AudioHandle handle, Int32 idx, void* data, UInt32 da
 	ErrorHandler_CheckOrFail(result, "Audio - write header");
 }
 
-bool Platform_AudioIsCompleted(AudioHandle handle, Int32 idx) {
+bool Audio_IsCompleted(AudioHandle handle, Int32 idx) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	WAVEHDR* hdr = &ctx->Headers[idx];
 	if (!(hdr->dwFlags & WHDR_DONE)) return false;
@@ -686,11 +691,11 @@ bool Platform_AudioIsCompleted(AudioHandle handle, Int32 idx) {
 	return true;
 }
 
-bool Platform_AudioIsFinished(AudioHandle handle) {
+bool Audio_IsFinished(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	Int32 i;
 	for (i = 0; i < ctx->NumBuffers; i++) {
-		if (!Platform_AudioIsCompleted(handle, i)) return false;
+		if (!Audio_IsCompleted(handle, i)) return false;
 	}
 	return true;
 }

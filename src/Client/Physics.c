@@ -166,10 +166,10 @@ Int32 Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB,
 	UInt32 elements = (max.X - min.X + 1) * (max.Y - min.Y + 1) * (max.Z - min.Z + 1);
 	if (elements > Searcher_StatesCount) {
 		if (Searcher_StatesCount > SEARCHER_STATES_MIN) {
-			Platform_MemFree(&Searcher_States);
+			Mem_Free(&Searcher_States);
 		}
 		Searcher_StatesCount = elements;
-		Searcher_States = Platform_MemAlloc(elements, sizeof(struct SearcherState), "collision search states");
+		Searcher_States = Mem_Alloc(elements, sizeof(struct SearcherState), "collision search states");
 	}
 
 	/* Order loops so that we minimise cache misses */
@@ -225,6 +225,6 @@ void Searcher_CalcTime(Vector3* vel, struct AABB *entityBB, struct AABB* blockBB
 
 void Searcher_Free(void) {
 	if (Searcher_StatesCount > SEARCHER_STATES_MIN) {
-		Platform_MemFree(&Searcher_States);
+		Mem_Free(&Searcher_States);
 	}
 }

@@ -55,7 +55,7 @@ static void AnimatedComp_CalcHumanAnim(struct AnimatedComp* anim, Real32 idleXRo
 }
 
 void AnimatedComp_Init(struct AnimatedComp* anim) {
-	Platform_MemSet(anim, 0, sizeof(struct AnimatedComp));
+	Mem_Set(anim, 0, sizeof(struct AnimatedComp));
 	anim->BobStrength = 1.0f; anim->BobStrengthO = 1.0f; anim->BobStrengthN = 1.0f;
 }
 
@@ -152,7 +152,7 @@ static void HacksComp_SetAll(struct HacksComp* hacks, bool allowed) {
 }
 
 void HacksComp_Init(struct HacksComp* hacks) {
-	Platform_MemSet(hacks, 0, sizeof(struct HacksComp));
+	Mem_Set(hacks, 0, sizeof(struct HacksComp));
 	HacksComp_SetAll(hacks, true);
 	hacks->SpeedMultiplier = 10.0f;
 	hacks->Enabled = true;
@@ -873,7 +873,7 @@ void Collisions_MoveAndWallSlide(struct CollisionsComp* comp) {
 *----------------------------------------------------PhysicsComponent-----------------------------------------------------*
 *#########################################################################################################################*/
 void PhysicsComp_Init(struct PhysicsComp* comp, struct Entity* entity) {
-	Platform_MemSet(comp, 0, sizeof(struct PhysicsComp));
+	Mem_Set(comp, 0, sizeof(struct PhysicsComp));
 	comp->CanLiquidJump = true;
 	comp->Entity = entity;
 	comp->JumpVel       = 0.42f;

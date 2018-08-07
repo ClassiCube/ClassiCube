@@ -159,7 +159,7 @@ void Options_Set(const UChar* keyRaw, STRING_PURE String* value) {
 void Options_Load(void) {
 	void* file;
 	String path = String_FromConst("options.txt");
-	ReturnCode result = Platform_FileOpen(&file, &path);
+	ReturnCode result = File_Open(&file, &path);
 
 	if (result == ReturnCode_FileNotFound) return;
 	/* TODO: Should we just log failure to open? */
@@ -204,7 +204,7 @@ void Options_Load(void) {
 void Options_Save(void) {
 	void* file;
 	String path = String_FromConst("options.txt");
-	ReturnCode result = Platform_FileCreate(&file, &path);
+	ReturnCode result = File_Create(&file, &path);
 
 	/* TODO: Should we just log failure to save? */
 	ErrorHandler_CheckOrFail(result, "Options - Saving");

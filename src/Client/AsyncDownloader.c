@@ -6,7 +6,7 @@
 #include "GameStructs.h"
 
 void ASyncRequest_Free(struct AsyncRequest* request) {
-	Platform_MemFree(&request->ResultData);
+	Mem_Free(&request->ResultData);
 }
 
 #define ASYNCREQUESTLIST_DEFELEMS 10
@@ -54,12 +54,12 @@ static void AsyncRequestList_Init(struct AsyncRequestList* list) {
 
 static void AsyncRequestList_Free(struct AsyncRequestList* list) {
 	if (list->Requests != list->DefaultRequests) {
-		Platform_MemFree(&list->Requests);
+		Mem_Free(&list->Requests);
 	}
 	AsyncRequestList_Init(list);
 }
 
-void* async_eventHandle;
+void* async_waitable;
 void* async_workerThread;
 void* async_pendingMutex;
 void* async_processedMutex;
@@ -77,7 +77,7 @@ bool KeepAlive;
 /* TODO: Connection pooling */
 
 static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 type, DateTime* lastModified, String* etag, String* data) {
-	Platform_MutexLock(async_pendingMutex);
+	Mutex_Lock(async_pendingMutex);
 	{
 		struct AsyncRequest req = { 0 };
 		String reqUrl = String_FromEmptyArray(req.URL); String_Set(&reqUrl, url);
@@ -94,15 +94,15 @@ static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 ty
 		}
 		/* request.Data = data; TODO: Implement this. do we need to copy or expect caller to malloc it?  */
 
-		Platform_CurrentUTCTime(&req.TimeAdded);
+		DateTime_CurrentUTC(&req.TimeAdded);
 		if (priority) {
 			AsyncRequestList_Prepend(&async_pending, &req);
 		} else {
 			AsyncRequestList_Append(&async_pending, &req);
 		}
 	}
-	Platform_MutexUnlock(async_pendingMutex);
-	Platform_EventSignal(async_eventHandle);
+	Mutex_Unlock(async_pendingMutex);
+	Waitable_Signal(async_waitable);
 }
 
 void AsyncDownloader_GetSkin(STRING_PURE String* id, STRING_PURE String* skinName) {
@@ -137,9 +137,9 @@ void AsyncDownloader_GetDataEx(STRING_PURE String* url, bool priority, STRING_PU
 }
 
 void AsyncDownloader_PurgeOldEntriesTask(struct ScheduledTask* task) {
-	Platform_MutexLock(async_processedMutex);
+	Mutex_Lock(async_processedMutex);
 	{
-		DateTime now; Platform_CurrentUTCTime(&now);
+		DateTime now; DateTime_CurrentUTC(&now);
 		Int32 i;
 		for (i = async_processed.Count - 1; i >= 0; i--) {
 			struct AsyncRequest* item = &async_processed.Requests[i];
@@ -149,7 +149,7 @@ void AsyncDownloader_PurgeOldEntriesTask(struct ScheduledTask* task) {
 			AsyncRequestList_RemoveAt(&async_processed, i);
 		}
 	}
-	Platform_MutexUnlock(async_processedMutex);
+	Mutex_Unlock(async_processedMutex);
 }
 
 static Int32 AsyncRequestList_Find(STRING_PURE String* id, struct AsyncRequest* item) {
@@ -167,23 +167,23 @@ static Int32 AsyncRequestList_Find(STRING_PURE String* id, struct AsyncRequest* 
 bool AsyncDownloader_Get(STRING_PURE String* id, struct AsyncRequest* item) {
 	bool success = false;
 
-	Platform_MutexLock(async_processedMutex);
+	Mutex_Lock(async_processedMutex);
 	{
 		Int32 i = AsyncRequestList_Find(id, item);
 		success = i >= 0;
 		if (success) AsyncRequestList_RemoveAt(&async_processed, i);
 	}
-	Platform_MutexUnlock(async_processedMutex);
+	Mutex_Unlock(async_processedMutex);
 	return success;
 }
 
 bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, Int32* progress) {
-	Platform_MutexLock(async_curRequestMutex);
+	Mutex_Lock(async_curRequestMutex);
 	{
 		*request   = async_curRequest;
 		*progress = async_curProgress;
 	}
-	Platform_MutexUnlock(async_curRequestMutex);
+	Mutex_Unlock(async_curRequestMutex);
 	return request->ID[0];
 }
 
@@ -195,7 +195,7 @@ static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	void* handle;
 	ReturnCode result;
 	Stopwatch_Start(&stopwatch);
-	result = Platform_HttpMakeRequest(request, &handle);
+	result = Http_MakeRequest(request, &handle);
 	elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
 	Platform_Log2("HTTP make request: ret code %i, in %i ms", &result, &elapsedMS);
 	if (!ErrorHandler_Check(result)) return;
@@ -203,24 +203,24 @@ static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	async_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
 	UInt32 size = 0;
 	Stopwatch_Start(&stopwatch);
-	result = Platform_HttpGetRequestHeaders(request, handle, &size);
+	result = Http_GetRequestHeaders(request, handle, &size);
 	elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
 	UInt32 status = request->StatusCode;
 	Platform_Log3("HTTP get headers: ret code %i (http %i), in %i ms", &result, &status, &elapsedMS);
 
 	if (!ErrorHandler_Check(result) || request->StatusCode != 200) {
-		Platform_HttpFreeRequest(handle); return;
+		Http_FreeRequest(handle); return;
 	}
 
 	void* data = NULL;
 	if (request->RequestType != REQUEST_TYPE_CONTENT_LENGTH) {
 		Stopwatch_Start(&stopwatch);
-		result = Platform_HttpGetRequestData(request, handle, &data, size, &async_curProgress);
+		result = Http_GetRequestData(request, handle, &data, size, &async_curProgress);
 		elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
 		Platform_Log3("HTTP get data: ret code %i (size %i), in %i ms", &result, &size, &elapsedMS);
 	}
 
-	Platform_HttpFreeRequest(handle);
+	Http_FreeRequest(handle);
 	if (!ErrorHandler_Check(result)) return;
 
 	UInt64 addr = (UInt64)data;
@@ -230,8 +230,8 @@ static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 }
 
 static void AsyncDownloader_CompleteResult(struct AsyncRequest* request) {
-	Platform_CurrentUTCTime(&request->TimeDownloaded);
-	Platform_MutexLock(async_processedMutex);
+	DateTime_CurrentUTC(&request->TimeDownloaded);
+	Mutex_Lock(async_processedMutex);
 	{
 		struct AsyncRequest older;
 		String id = String_FromRawArray(request->ID);
@@ -250,7 +250,7 @@ static void AsyncDownloader_CompleteResult(struct AsyncRequest* request) {
 			AsyncRequestList_Append(&async_processed, request);
 		}
 	}
-	Platform_MutexUnlock(async_processedMutex);
+	Mutex_Unlock(async_processedMutex);
 }
 
 static void AsyncDownloader_WorkerFunc(void) {
@@ -258,7 +258,7 @@ static void AsyncDownloader_WorkerFunc(void) {
 		struct AsyncRequest request;
 		bool hasRequest = false;
 
-		Platform_MutexLock(async_pendingMutex);
+		Mutex_Lock(async_pendingMutex);
 		{
 			if (async_terminate) return;
 			if (async_pending.Count > 0) {
@@ -267,30 +267,30 @@ static void AsyncDownloader_WorkerFunc(void) {
 				AsyncRequestList_RemoveAt(&async_pending, 0);
 			}
 		}
-		Platform_MutexUnlock(async_pendingMutex);
+		Mutex_Unlock(async_pendingMutex);
 
 		if (hasRequest) {
 			Platform_LogConst("Got something to do!");
-			Platform_MutexLock(async_curRequestMutex);
+			Mutex_Lock(async_curRequestMutex);
 			{
 				async_curRequest = request;
 				async_curProgress = ASYNC_PROGRESS_MAKING_REQUEST;
 			}
-			Platform_MutexUnlock(async_curRequestMutex);
+			Mutex_Unlock(async_curRequestMutex);
 
 			Platform_LogConst("Doing it");
 			AsyncDownloader_ProcessRequest(&request);
 			AsyncDownloader_CompleteResult(&request);
 
-			Platform_MutexLock(async_curRequestMutex);
+			Mutex_Lock(async_curRequestMutex);
 			{
 				async_curRequest.ID[0] = NULL;
 				async_curProgress = ASYNC_PROGRESS_NOTHING;
 			}
-			Platform_MutexUnlock(async_curRequestMutex);
+			Mutex_Unlock(async_curRequestMutex);
 		} else {
 			Platform_LogConst("Going back to sleep...");
-			Platform_EventWait(async_eventHandle);
+			Waitable_Wait(async_waitable);
 		}
 	}
 }
@@ -299,38 +299,38 @@ static void AsyncDownloader_WorkerFunc(void) {
 static void AsyncDownloader_Init(void) {
 	AsyncRequestList_Init(&async_pending);
 	AsyncRequestList_Init(&async_processed);
-	Platform_HttpInit();
+	Http_Init();
 
-	async_eventHandle = Platform_EventCreate();
-	async_pendingMutex = Platform_MutexCreate();
-	async_processedMutex = Platform_MutexCreate();
-	async_curRequestMutex = Platform_MutexCreate();
-	async_workerThread = Platform_ThreadStart(AsyncDownloader_WorkerFunc);
+	async_waitable = Waitable_Create();
+	async_pendingMutex = Mutex_Create();
+	async_processedMutex = Mutex_Create();
+	async_curRequestMutex = Mutex_Create();
+	async_workerThread = Thread_Start(AsyncDownloader_WorkerFunc);
 }
 
 static void AsyncDownloader_Reset(void) {
-	Platform_MutexLock(async_pendingMutex);
+	Mutex_Lock(async_pendingMutex);
 	{
 		AsyncRequestList_Free(&async_pending);
 	}
-	Platform_MutexUnlock(async_pendingMutex);
-	Platform_EventSignal(async_eventHandle);
+	Mutex_Unlock(async_pendingMutex);
+	Waitable_Signal(async_waitable);
 }
 
 static void AsyncDownloader_Free(void) {
 	async_terminate = true;
 	AsyncDownloader_Reset();
-	Platform_ThreadJoin(async_workerThread);
-	Platform_ThreadFreeHandle(async_workerThread);
+	Thread_Join(async_workerThread);
+	Thread_FreeHandle(async_workerThread);
 
 	AsyncRequestList_Free(&async_pending);
 	AsyncRequestList_Free(&async_processed);
-	Platform_HttpFree();
+	Http_Free();
 
-	Platform_EventFree(async_eventHandle);
-	Platform_MutexFree(async_pendingMutex);
-	Platform_MutexFree(async_processedMutex);
-	Platform_MutexFree(async_curRequestMutex);
+	Waitable_Free(async_waitable);
+	Mutex_Free(async_pendingMutex);
+	Mutex_Free(async_processedMutex);
+	Mutex_Free(async_curRequestMutex);
 }
 
 void AsyncDownloader_MakeComponent(struct IGameComponent* comp) {
