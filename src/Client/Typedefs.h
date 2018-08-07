@@ -36,7 +36,7 @@ typedef double Real64;
 typedef UInt8 bool;
 #define true 1
 #define false 0
-#define NULL 0
+#define NULL ((void*)0)
 
 #if USE16_BIT
 typedef UInt16 BlockID;

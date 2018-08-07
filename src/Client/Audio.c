@@ -359,7 +359,7 @@ static void AudioManager_Init(void) {
 static void AudioManager_Free(void) {
 	Music_Free();
 	Sounds_Free();
-	Waitable_Free(&music_waitable);
+	Waitable_Free(music_waitable);
 	Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, Audio_PlayBlockSound);
 }
 

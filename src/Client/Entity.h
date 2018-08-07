@@ -1,10 +1,9 @@
 #ifndef CC_ENTITY_H
 #define CC_ENTITY_H
-#include "Texture.h"
 #include "EntityComponents.h"
 #include "Physics.h"
-#include "GameStructs.h"
 #include "Constants.h"
+#include "GraphicsCommon.h"
 /* Represents an in-game entity.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

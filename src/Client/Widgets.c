@@ -953,7 +953,7 @@ static UChar InputWidget_GetLastCol(struct InputWidget* widget, Int32 indexX, In
 		if (code) return code;
 		if (y > 0) { x = widget->Lines[y - 1].length; }
 	}
-	return NULL;
+	return '\0';
 }
 
 static void InputWidget_UpdateCaret(struct InputWidget* widget) {

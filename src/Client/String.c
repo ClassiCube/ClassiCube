@@ -20,7 +20,7 @@ String String_InitAndClear(STRING_REF UChar* buffer, UInt16 capacity) {
 	Int32 i;
 
 	/* Need to set region occupied by string to NULL for interop with native APIs */
-	for (i = 0; i < capacity + 1; i++) { buffer[i] = NULL; }
+	for (i = 0; i < capacity + 1; i++) { buffer[i] = '\0'; }
 	return str;
 }
 
@@ -61,7 +61,7 @@ void String_StripCols(STRING_TRANSIENT String* str) {
 void String_Clear(STRING_TRANSIENT String* str) {
 	Int32 i;
 	for (i = 0; i < str->length; i++) { 
-		str->buffer[i] = NULL; 
+		str->buffer[i] = '\0';
 	}
 	str->length = 0;
 }
@@ -230,7 +230,7 @@ bool String_AppendReal32(STRING_TRANSIENT String* str, Real32 num, Int32 fracDig
 }
 
 bool String_Hex32(STRING_TRANSIENT String* str, UInt32 value) {
-	UChar hex[9]; hex[8] = NULL;
+	UChar hex[9]; hex[8] = '\0';
 	Int32 i;
 
 	for (i = 0; i < 8; i++) {
@@ -243,7 +243,7 @@ bool String_Hex32(STRING_TRANSIENT String* str, UInt32 value) {
 }
 
 bool String_Hex64(STRING_TRANSIENT String* str, UInt64 value) {
-	UChar hex[17]; hex[16] = NULL;
+	UChar hex[17]; hex[16] = '\0';
 	Int32 i;
 
 	for (i = 0; i < 16; i++) {
@@ -327,7 +327,7 @@ void String_DeleteAt(STRING_TRANSIENT String* str, Int32 offset) {
 		str->buffer[i] = str->buffer[i + 1];
 	}
 
-	str->buffer[str->length - 1] = NULL;
+	str->buffer[str->length - 1] = '\0';
 	str->length--;
 }
 

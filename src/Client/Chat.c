@@ -13,6 +13,7 @@
 #include "Funcs.h"
 #include "Block.h"
 #include "EnvRenderer.h"
+#include "GameStructs.h"
 
 #define CHAT_LOGTIMES_DEF_ELEMS 256
 #define CHAT_LOGTIMES_EXPAND_ELEMS 512

@@ -1,8 +1,7 @@
 #ifndef CC_GUI_H
 #define CC_GUI_H
 #include "Input.h"
-#include "Texture.h"
-#include "VertexStructs.h"
+#include "GraphicsCommon.h"
 /* Describes and manages 2D GUI elements on screen.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

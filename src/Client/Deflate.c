@@ -815,7 +815,7 @@ static ReturnCode Deflate_FlushBlock(struct DeflateState* state, Int32 len) {
 		ReturnCode result = Stream_TryWrite(state->Dest, state->Output, DEFLATE_OUT_SIZE - state->AvailOut);
 		state->NextOut = state->Output;
 		state->AvailOut = DEFLATE_OUT_SIZE;
-		if (result != 0) return result;
+		if (result) return result;
 	}
 
 	/* literals for last few bytes */
@@ -898,7 +898,7 @@ void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struc
 *#########################################################################################################################*/
 static ReturnCode GZip_StreamClose(struct Stream* stream) {
 	ReturnCode result = Deflate_StreamClose(stream);
-	if (result != 0) return result;
+	if (result) return result;
 
 	struct GZipState* state = stream->Meta.Inflate;
 	UInt32 crc32 = state->Crc32 ^ 0xFFFFFFFFUL;
@@ -926,7 +926,7 @@ static ReturnCode GZip_StreamWriteFirst(struct Stream* stream, UInt8* data, UInt
 	struct GZipState* state = stream->Meta.Inflate;
 
 	ReturnCode result = Stream_TryWrite(state->Base.Dest, gz_header, sizeof(gz_header));
-	if (result != 0) return result;
+	if (result) return result;
 
 	stream->Write = GZip_StreamWrite;
 	return GZip_StreamWrite(stream, data, count, modified);
@@ -946,7 +946,7 @@ void GZip_MakeStream(struct Stream* stream, struct GZipState* state, struct Stre
 *#########################################################################################################################*/
 static ReturnCode ZLib_StreamClose(struct Stream* stream) {
 	ReturnCode result = Deflate_StreamClose(stream);
-	if (result != 0) return result;
+	if (result) return result;
 
 	struct ZLibState* state = stream->Meta.Inflate;
 	Stream_WriteU32_BE(state->Base.Dest, state->Adler32);
@@ -974,7 +974,7 @@ static ReturnCode ZLib_StreamWriteFirst(struct Stream* stream, UInt8* data, UInt
 	struct ZLibState* state = stream->Meta.Inflate;
 
 	ReturnCode result = Stream_TryWrite(state->Base.Dest, zl_header, sizeof(zl_header));
-	if (result != 0) return result;
+	if (result) return result;
 
 	stream->Write = ZLib_StreamWrite;
 	return ZLib_StreamWrite(stream, data, count, modified);

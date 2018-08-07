@@ -63,7 +63,7 @@ void PackedCol_ToHex(STRING_TRANSIENT String* str, PackedCol value) {
 		hex[i * 2 + 1] = lo < 10 ? (lo + 48) : (lo + 55);
 	}
 
-	hex[6] = NULL; /* Null terminate hex characters */
+	hex[6] = '\0';
 	String_AppendConst(str, hex);
 }
 

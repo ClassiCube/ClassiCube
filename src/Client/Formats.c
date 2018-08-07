@@ -630,7 +630,7 @@ static void Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* desc) {
 
 static void Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* desc) {
 	UInt8 typeCode = Stream_ReadU8(stream);
-	if (typeCode == TC_NULL) { desc->ClassName[0] = NULL; desc->FieldsCount = 0; return; }
+	if (typeCode == TC_NULL) { desc->ClassName[0] = '\0'; desc->FieldsCount = 0; return; }
 	if (typeCode != TC_CLASSDESC) ErrorHandler_Fail("Unsupported type code in ClassDesc header");
 
 	Dat_ReadString(stream, desc->ClassName);

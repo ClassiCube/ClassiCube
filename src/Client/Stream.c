@@ -47,7 +47,7 @@ ReturnCode Stream_TryWrite(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	UInt32 write;
 	while (count > 0) {
 		ReturnCode result = stream->Write(stream, buffer, count, &write);
-		if (result != 0) return result;
+		if (result) return result;
 		if (!write) return 1;
 
 		buffer += write;
@@ -73,7 +73,7 @@ void Stream_Skip(struct Stream* stream, UInt32 count) {
 		UInt32 toRead = min(count, sizeof(tmp)), read;
 		result = stream->Read(stream, tmp, toRead, &read);
 
-		if (result != 0) Stream_Fail(stream, result, "Skipping data from");
+		if (result) Stream_Fail(stream, result, "Skipping data from");
 		if (!read) break; /* end of stream */
 		count -= read;
 	}

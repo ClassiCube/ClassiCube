@@ -284,7 +284,7 @@ static void AsyncDownloader_WorkerFunc(void) {
 
 			Mutex_Lock(async_curRequestMutex);
 			{
-				async_curRequest.ID[0] = NULL;
+				async_curRequest.ID[0] = '\0';
 				async_curProgress = ASYNC_PROGRESS_NOTHING;
 			}
 			Mutex_Unlock(async_curRequestMutex);

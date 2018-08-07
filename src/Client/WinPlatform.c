@@ -19,7 +19,9 @@
 #include <mmsystem.h>
 
 /* Missing from some old MingW32 headers */
+#ifndef HTTP_QUERY_ETAG
 #define HTTP_QUERY_ETAG 54
+#endif
 
 HDC hdc;
 HANDLE heap;
@@ -41,16 +43,16 @@ void Platform_UnicodeExpand(void* dstPtr, STRING_PURE String* src) {
 	for (i = 0; i < src->length; i++) {
 		*dst = Convert_CP437ToUnicode(src->buffer[i]); dst++;
 	}
-	*dst = NULL;
+	*dst = '\0';
 }
 
 static void Platform_InitDisplay(void) {
 	HDC hdc = GetDC(NULL);
 	struct DisplayDevice device = { 0 };
 
-	device.Bounds.Width = GetSystemMetrics(SM_CXSCREEN);
-	device.Bounds.Height = GetSystemMetrics(SM_CYSCREEN);
-	device.BitsPerPixel = GetDeviceCaps(hdc, BITSPIXEL);
+	device.Bounds.Width   = GetSystemMetrics(SM_CXSCREEN);
+	device.Bounds.Height  = GetSystemMetrics(SM_CYSCREEN);
+	device.BitsPerPixel   = GetDeviceCaps(hdc, BITSPIXEL);
 	DisplayDevice_Default = device;
 
 	ReleaseDC(NULL, hdc);
@@ -230,15 +232,15 @@ ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCal
 		callback(&file, obj);
 	}  while (FindNextFileW(find, &entry));
 
-	ReturnCode code = GetLastError(); /* return code from FindNextFile */
+	ReturnCode result = GetLastError(); /* return code from FindNextFile */
 	FindClose(find);
-	return code == ERROR_NO_MORE_FILES ? 0 : code;
+	return result == ERROR_NO_MORE_FILES ? 0 : result;
 }
 
 ReturnCode File_GetModifiedTime(STRING_PURE String* path, DateTime* time) {
 	void* file;
 	ReturnCode result = File_Open(&file, path);
-	if (result != 0) return result;
+	if (result) return result;
 
 	FILETIME writeTime;
 	if (GetFileTime(file, NULL, NULL, &writeTime)) {
@@ -361,14 +363,14 @@ void Mutex_Unlock(void* handle) {
 void* Waitable_Create(void) {
 	void* handle = CreateEventW(NULL, false, false, NULL);
 	if (!handle) {
-		ErrorHandler_FailWithCode(GetLastError(), "Creating event");
+		ErrorHandler_FailWithCode(GetLastError(), "Creating waitable");
 	}
 	return handle;
 }
 
 void Waitable_Free(void* handle) {
 	if (!CloseHandle((HANDLE)handle)) {
-		ErrorHandler_FailWithCode(GetLastError(), "Freeing event");
+		ErrorHandler_FailWithCode(GetLastError(), "Freeing waitable");
 	}
 }
 

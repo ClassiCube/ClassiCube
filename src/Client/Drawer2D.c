@@ -4,7 +4,7 @@
 #include "Platform.h"
 #include "ExtMath.h"
 #include "ErrorHandler.h"
-#include "Texture.h"
+#include "GraphicsCommon.h"
 
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF String* text, struct FontDesc* font, bool useShadow) {
 	args->Text = *text;
@@ -178,7 +178,7 @@ UChar Drawer2D_LastCol(STRING_PURE String* text, Int32 start) {
 			return text->buffer[i + 1];
 		}
 	}
-	return NULL;
+	return '\0';
 }
 bool Drawer2D_IsWhiteCol(UChar c) { return c == '\0' || c == 'f' || c == 'F'; }
 

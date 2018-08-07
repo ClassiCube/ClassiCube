@@ -23,7 +23,7 @@ static String Zip_ReadFixedString(struct Stream* stream, UChar* buffer, UInt16 l
 	if (length > ZIP_MAXNAMELEN) ErrorHandler_Fail("Zip string too long");
 	String fileName = String_Init(buffer, length, length);
 	Stream_Read(stream, buffer, length);
-	buffer[length] = NULL; /* Ensure null terminated */
+	buffer[length] = '\0';
 	return fileName;
 }
 

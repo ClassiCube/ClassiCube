@@ -4,6 +4,7 @@
 #include "BlockID.h"
 #include "Constants.h"
 #include "Entity.h"
+#include "2DStructs.h"
 /* Contains all 2D widget implementations.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

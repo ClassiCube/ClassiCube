@@ -177,9 +177,6 @@
     <ClInclude Include="GraphicsCommon.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Texture.h">
-      <Filter>Header Files\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="VertexStructs.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
@@ -493,9 +490,6 @@
     </ClCompile>
     <ClCompile Include="EntityComponents.c">
       <Filter>Source Files\Entities</Filter>
-    </ClCompile>
-    <ClCompile Include="Texture.c">
-      <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="HeldBlockRenderer.c">
       <Filter>Source Files\Rendering</Filter>

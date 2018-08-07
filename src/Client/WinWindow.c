@@ -483,7 +483,7 @@ void Window_SetClipboardText(STRING_PURE String* value) {
 		for (i = 0; i < value->length; i++) {
 			*text = Convert_CP437ToUnicode(value->buffer[i]); text++;
 		}
-		*text = NULL;
+		*text = '\0';
 
 		GlobalUnlock(hGlobal);
 		EmptyClipboard();

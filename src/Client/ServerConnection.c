@@ -173,7 +173,7 @@ static void SPConnection_BeginConnect(void) {
 	Gui_ReplaceActive(GeneratingScreen_MakeInstance());
 }
 
-UInt8 SPConnection_LastCol = NULL;
+UChar SPConnection_LastCol = '\0';
 static void SPConnection_AddPortion(STRING_PURE String* text) {
 	UChar tmpBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String tmp = String_InitAndClearArray(tmpBuffer);
@@ -191,14 +191,14 @@ static void SPConnection_AddPortion(STRING_PURE String* text) {
 	}
 	String_UNSAFE_TrimEnd(&tmp);
 
-	UInt8 col = Drawer2D_LastCol(&tmp, tmp.length);
+	UChar col = Drawer2D_LastCol(&tmp, tmp.length);
 	if (col) SPConnection_LastCol = col;
 	Chat_Add(&tmp);
 }
 
 static void SPConnection_SendChat(STRING_PURE String* text) {
 	if (!text->length) return;
-	SPConnection_LastCol = NULL;
+	SPConnection_LastCol = '\0';
 
 	String part = *text;
 	while (part.length > STRING_SIZE) {

@@ -37,7 +37,7 @@ void Platform_UnicodeExpand(void* dstPtr, STRING_PURE String* src) {
 		UInt16 codepoint = Convert_CP437ToUnicode(src->buffer[i]);
 		Int32 len = Stream_WriteUtf8(dst, codepoint); dst += len;
 	}
-	*dst = NULL;
+	*dst = '\0';
 }
 
 static void Platform_InitDisplay(void) {
