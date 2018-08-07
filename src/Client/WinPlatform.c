@@ -633,8 +633,8 @@ void Audio_Free(AudioHandle handle) {
 	if (!ctx->Handle) return;
 
 	ReturnCode result = waveOutClose(ctx->Handle);
-	Mem_Set(ctx, 0, sizeof(struct AudioContext));
 	ErrorHandler_CheckOrFail(result, "Audio - closing device");
+	Mem_Set(ctx, 0, sizeof(struct AudioContext));
 }
 
 struct AudioFormat* Audio_GetFormat(AudioHandle handle) {
@@ -648,9 +648,11 @@ void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 
 	/* only recreate handle if we need to */
 	if (AudioFormat_Eq(cur, format)) return;
-	if (ctx->Handle) Audio_Free(handle);
-	ctx->Format = *format;
-
+	if (ctx->Handle) {
+		ReturnCode result = waveOutClose(ctx->Handle);
+		ErrorHandler_CheckOrFail(result, "Audio - closing device");
+	}
+	
 	WAVEFORMATEX fmt = { 0 };
 	fmt.nChannels       = format->Channels;
 	fmt.wFormatTag      = WAVE_FORMAT_PCM;
@@ -662,6 +664,7 @@ void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	if (waveOutGetNumDevs() == 0u) ErrorHandler_Fail("No audio devices found");
 	ReturnCode result = waveOutOpen(&ctx->Handle, WAVE_MAPPER, &fmt, NULL, NULL, CALLBACK_NULL);
 	ErrorHandler_CheckOrFail(result, "Audio - opening device");
+	ctx->Format = *format;
 }
 
 void Audio_PlayData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize) {
