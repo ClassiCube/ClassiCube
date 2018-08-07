@@ -13,11 +13,11 @@ struct Stream;
 
 struct GZipHeader { UInt8 State; bool Done; UInt8 PartsRead; Int32 Flags; };
 void GZipHeader_Init(struct GZipHeader* header);
-void GZipHeader_Read(struct Stream* s, struct GZipHeader* header);
+ReturnCode GZipHeader_Read(struct Stream* s, struct GZipHeader* header);
 
 struct ZLibHeader { UInt8 State; bool Done; Int32 LZ77WindowSize; };
 void ZLibHeader_Init(struct ZLibHeader* header);
-void ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header);
+ReturnCode ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header);
 
 
 #define INFLATE_MAX_INPUT 8192

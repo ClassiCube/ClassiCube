@@ -22,7 +22,7 @@ Int64* Chat_LogTimes = Chat_DefaultLogTimes;
 UInt32 Chat_LogTimesMax = CHAT_LOGTIMES_DEF_ELEMS, Chat_LogTimesCount;
 
 void Chat_GetLogTime(UInt32 index, Int64* timeMs) {
-	if (index >= Chat_LogTimesCount) ErrorHandler_Fail("Tries to get time past LogTime end");
+	if (index >= Chat_LogTimesCount) ErrorHandler_Fail("Tried to get time past LogTime end");
 	*timeMs = Chat_LogTimes[index];
 }
 

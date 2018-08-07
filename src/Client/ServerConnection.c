@@ -448,7 +448,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	}
 
 	/* Keep last few unprocessed bytes, don't care about rest since they'll be overwritten on socket read */
-	Int32 i;
+	UInt32 i;
 	for (i = 0; i < net_readStream.Meta.Mem.Left; i++) {
 		net_readBuffer[i] = net_readStream.Meta.Mem.Cur[i];
 	}

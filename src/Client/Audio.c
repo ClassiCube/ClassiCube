@@ -8,6 +8,7 @@
 #include "Block.h"
 #include "Game.h"
 #include "GameStructs.h"
+#include "Errors.h"
 
 StringsBuffer files;
 /*########################################################################################################################*
@@ -31,32 +32,35 @@ struct Soundboard {
 };
 
 #define WAV_FourCC(a, b, c, d) (((UInt32)a << 24) | ((UInt32)b << 16) | ((UInt32)c << 8) | (UInt32)d)
-enum WAV_ERR {
-	WAV_ERR_STREAM_HDR = 329701, WAV_ERR_STREAM_TYPE, WAV_ERR_DATA_TYPE, WAV_ERR_NO_DATA
-};
+#define WAV_FMT_SIZE 16
 
 static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	UInt32 fourCC, size, pos, len;
 	ReturnCode res;
+	UInt8 tmp[WAV_FMT_SIZE];
 
-	fourCC = Stream_ReadU32_BE(stream);
+	Stream_Read(stream, tmp, 3 * sizeof(UInt32));
+	fourCC = Stream_GetU32_BE(&tmp[0]);
 	if (fourCC != WAV_FourCC('R','I','F','F')) return WAV_ERR_STREAM_HDR;
-	Stream_ReadU32_LE(stream); /* file size, but we don't care */
-	fourCC = Stream_ReadU32_BE(stream);
+
+	/* tmp[4] (4) file size */
+	fourCC = Stream_GetU32_BE(&tmp[8]);
 	if (fourCC != WAV_FourCC('W','A','V','E')) return WAV_ERR_STREAM_TYPE;
 
 	while (!(res = stream->Position(stream, &pos)) && !(res = stream->Length(stream, &len)) && pos < len) {
-		fourCC = Stream_ReadU32_BE(stream);
-		size   = Stream_ReadU32_LE(stream);
+		Stream_Read(stream, tmp, 2 * sizeof(UInt32));
+		fourCC = Stream_GetU32_BE(&tmp[0]);
+		size   = Stream_GetU32_BE(&tmp[4]);
 
 		if (fourCC == WAV_FourCC('f','m','t',' ')) {
-			if (Stream_ReadU16_LE(stream) != 1) return WAV_ERR_DATA_TYPE;
+			Stream_Read(stream, tmp, WAV_FMT_SIZE);
+			if (Stream_GetU16_LE(&tmp[0]) != 1) return WAV_ERR_DATA_TYPE;
 
-			snd->Format.Channels      = Stream_ReadU16_LE(stream);
-			snd->Format.SampleRate    = Stream_ReadU32_LE(stream);
-			Stream_Skip(stream, 6);
-			snd->Format.BitsPerSample = Stream_ReadU16_LE(stream);
-			size -= 16;
+			snd->Format.Channels      = Stream_GetU16_LE(&tmp[2]);
+			snd->Format.SampleRate    = Stream_GetU32_LE(&tmp[4]);
+			/* tmp[8] (6) alignment data and stuff */
+			snd->Format.BitsPerSample = Stream_GetU16_LE(&tmp[14]);
+			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
 			snd->Data = Mem_Alloc(size, sizeof(UInt8), "WAV sound data");
 			snd->DataSize = size;
@@ -264,7 +268,7 @@ volatile bool music_pendingStop;
 
 #define MUSIC_MAX_FILES 512
 static void Music_RunLoop(void) {
-	UInt32 i, count = 0;
+	Int32 i, count = 0;
 	UInt16 musicFiles[MUSIC_MAX_FILES];
 	String ogg = String_FromConst(".ogg");
 

@@ -3,6 +3,7 @@
 #include "Funcs.h"
 #include "Platform.h"
 #include "Stream.h"
+#include "Errors.h"
 
 static bool Header_ReadByte(struct Stream* s, UInt8* state, Int32* value) {
 	*value = Stream_TryReadByte(s);
@@ -31,45 +32,45 @@ void GZipHeader_Init(struct GZipHeader* header) {
 	header->PartsRead = 0;
 }
 
-void GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
+ReturnCode GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
 	Int32 temp;
 	switch (header->State) {
 
 	case GZIP_STATE_HEADER1:
-		if (!Header_ReadByte(s, &header->State, &temp)) return;
-		if (temp != 0x1F) { ErrorHandler_Fail("Byte 1 of GZIP header must be 1F"); }
+		if (!Header_ReadByte(s, &header->State, &temp)) return 0;
+		if (temp != 0x1F) return GZIP_ERR_HEADER1;
 
 	case GZIP_STATE_HEADER2:
-		if (!Header_ReadByte(s, &header->State, &temp)) return;
-		if (temp != 0x8B) { ErrorHandler_Fail("Byte 2 of GZIP header must be 8B"); }
+		if (!Header_ReadByte(s, &header->State, &temp)) return 0;
+		if (temp != 0x8B) return GZIP_ERR_HEADER2;
 
 	case GZIP_STATE_COMPRESSIONMETHOD:
-		if (!Header_ReadByte(s, &header->State, &temp)) return;
-		if (temp != 0x08) { ErrorHandler_Fail("Only DEFLATE compression supported"); }
+		if (!Header_ReadByte(s, &header->State, &temp)) return 0;
+		if (temp != 0x08) return GZIP_ERR_METHOD;
 
 	case GZIP_STATE_FLAGS:
-		if (!Header_ReadByte(s, &header->State, &header->Flags)) return;
-		if (header->Flags & 0x04) { ErrorHandler_Fail("Unsupported GZIP header flags"); }
+		if (!Header_ReadByte(s, &header->State, &header->Flags)) return 0;
+		if (header->Flags & 0x04) return GZIP_ERR_FLAGS;
 
 	case GZIP_STATE_LASTMODIFIEDTIME:
 		for (; header->PartsRead < 4; header->PartsRead++) {
 			temp = Stream_TryReadByte(s);
-			if (temp == -1) return;
+			if (temp == -1) return 0;
 		}
 		header->State++;
 		header->PartsRead = 0;
 
 	case GZIP_STATE_COMPRESSIONFLAGS:
-		if (!Header_ReadByte(s, &header->State, &temp)) return;
+		if (!Header_ReadByte(s, &header->State, &temp)) return 0;
 
 	case GZIP_STATE_OPERATINGSYSTEM:
-		if (!Header_ReadByte(s, &header->State, &temp)) return;
+		if (!Header_ReadByte(s, &header->State, &temp)) return 0;
 
 	case GZIP_STATE_FILENAME:
 		if (header->Flags & 0x08) {
 			for (; ;) {
 				temp = Stream_TryReadByte(s);
-				if (temp == -1) return;
+				if (temp == -1) return 0;
 				if (temp == '\0') break;
 			}
 		}
@@ -79,7 +80,7 @@ void GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
 		if (header->Flags & 0x10) {
 			for (; ;) {
 				temp = Stream_TryReadByte(s);
-				if (temp == -1) return;
+				if (temp == -1) return 0;
 				if (temp == '\0') break;
 			}
 		}
@@ -89,7 +90,7 @@ void GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
 		if (header->Flags & 0x02) {
 			for (; header->PartsRead < 2; header->PartsRead++) {
 				temp = Stream_TryReadByte(s);
-				if (temp == -1) return;
+				if (temp == -1) return 0;
 			}
 		}
 
@@ -97,6 +98,7 @@ void GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
 		header->PartsRead = 0;
 		header->Done = true;
 	}
+	return 0;
 }
 
 
@@ -113,29 +115,24 @@ void ZLibHeader_Init(struct ZLibHeader* header) {
 	header->LZ77WindowSize = 0;
 }
 
-void ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header) {
+ReturnCode ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header) {
 	Int32 temp;
 	switch (header->State) {
 
 	case ZLIB_STATE_COMPRESSIONMETHOD:
-		if (!Header_ReadByte(s, &header->State, &temp)) return;
-		if ((temp & 0x0F) != 0x08) {
-			ErrorHandler_Fail("Only DEFLATE compression supported");
-		}
+		if (!Header_ReadByte(s, &header->State, &temp)) return 0;
+		if ((temp & 0x0F) != 0x08) return ZLIB_ERR_METHOD;
 
 		Int32 log2Size = (temp >> 4) + 8;
 		header->LZ77WindowSize = 1L << log2Size;
-		if (header->LZ77WindowSize > 32768) {
-			ErrorHandler_Fail("LZ77 window size must be 32KB or less");
-		}
+		if (header->LZ77WindowSize > 32768) return ZLIB_ERR_WINDOW_SIZE;
 
 	case ZLIB_STATE_FLAGS:
-		if (!Header_ReadByte(s, &header->State, &temp)) return;
-		if ((temp & 0x20) != 0) {
-			ErrorHandler_Fail("Unsupported ZLIB header flags");
-		}
+		if (!Header_ReadByte(s, &header->State, &temp)) return 0;
+		if ((temp & 0x20) != 0) return ZLIB_ERR_FLAGS;
 		header->Done = true;
 	}
+	return 0;
 }
 
 

@@ -199,6 +199,7 @@
     <ClInclude Include="EntityComponents.h" />
     <ClInclude Include="EnvRenderer.h" />
     <ClInclude Include="ErrorHandler.h" />
+    <ClInclude Include="Errors.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="Formats.h" />
     <ClInclude Include="Deflate.h" />

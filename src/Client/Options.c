@@ -27,7 +27,7 @@ void Options_Free(void) {
 }
 
 bool Options_HasChanged(STRING_PURE String* key) {
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < Options_Changed.Count; i++) {
 		String curKey = StringsBuffer_UNSAFE_Get(&Options_Changed, i);
 		if (String_CaselessEquals(&curKey, key)) return true;
@@ -36,7 +36,7 @@ bool Options_HasChanged(STRING_PURE String* key) {
 }
 
 static UInt32 Options_Find(STRING_PURE String* key) {
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < Options_Keys.Count; i++) {
 		String curKey = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
 		if (String_CaselessEquals(&curKey, key)) return i;
@@ -212,7 +212,7 @@ void Options_Save(void) {
 	UChar lineBuffer[String_BufferSize(1024)];
 	String line = String_InitAndClearArray(lineBuffer);
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
-	UInt32 i;
+	Int32 i;
 
 	for (i = 0; i < Options_Keys.Count; i++) {
 		String key   = StringsBuffer_UNSAFE_Get(&Options_Keys,   i);

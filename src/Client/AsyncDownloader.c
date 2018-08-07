@@ -11,7 +11,7 @@ void ASyncRequest_Free(struct AsyncRequest* request) {
 
 #define ASYNCREQUESTLIST_DEFELEMS 10
 struct AsyncRequestList {
-	UInt32 MaxElems, Count;
+	Int32 MaxElems, Count;
 	struct AsyncRequest* Requests;
 	struct AsyncRequest DefaultRequests[ASYNCREQUESTLIST_DEFELEMS];
 };
@@ -29,7 +29,7 @@ static void AsyncRequestList_Append(struct AsyncRequestList* list, struct AsyncR
 
 static void AsyncRequestList_Prepend(struct AsyncRequestList* list, struct AsyncRequest* item) {
 	AsyncRequestList_EnsureSpace(list);
-	UInt32 i;
+	Int32 i;
 	for (i = list->Count; i > 0; i--) {
 		list->Requests[i] = list->Requests[i - 1];
 	}
@@ -37,8 +37,8 @@ static void AsyncRequestList_Prepend(struct AsyncRequestList* list, struct Async
 	list->Count++;
 }
 
-static void AsyncRequestList_RemoveAt(struct AsyncRequestList* list, UInt32 i) {
-	if (i >= list->Count) ErrorHandler_Fail("Tried to remove element at list end");
+static void AsyncRequestList_RemoveAt(struct AsyncRequestList* list, Int32 i) {
+	if (i < 0 || i >= list->Count) ErrorHandler_Fail("Tried to remove element at list end");
 
 	for (; i < list->Count - 1; i++) {
 		list->Requests[i] = list->Requests[i + 1];

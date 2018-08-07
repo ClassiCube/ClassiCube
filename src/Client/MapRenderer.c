@@ -132,7 +132,7 @@ void MapRenderer_RenderNormal(Real64 deltaTime) {
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
 
-	UInt32 batch;
+	Int32 batch;
 	Gfx_EnableMipmaps();
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
 		if (MapRenderer_NormalPartsCount[batch] <= 0) continue;
@@ -222,7 +222,7 @@ void MapRenderer_RenderTranslucent(Real64 deltaTime) {
 	Gfx_SetAlphaBlending(false);
 	Gfx_SetColourWriteMask(false, false, false, false);
 
-	UInt32 batch;
+	Int32 batch;
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
 		if (MapRenderer_TranslucentPartsCount[batch] <= 0) continue;
 		if (MapRenderer_HasTranslucentParts[batch] || MapRenderer_CheckingTranslucentParts[batch]) {

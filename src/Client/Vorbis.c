@@ -5,6 +5,7 @@
 #include "Block.h"
 #include "ExtMath.h"
 #include "Funcs.h"
+#include "Errors.h"
 
 /*########################################################################################################################*
 *-------------------------------------------------------Ogg stream--------------------------------------------------------*
@@ -1222,6 +1223,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 
 	/* discard remaining bits at end of packet */
 	Vorbis_AlignBits(ctx);
+	return 0;
 }
 
 Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {

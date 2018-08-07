@@ -22,6 +22,7 @@
 #include "ErrorHandler.h"
 #include "TexturePack.h"
 #include "Gui.h"
+#include "Errors.h"
 
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
@@ -424,7 +425,11 @@ static void Classic_LevelDataChunk(struct Stream* stream) {
 	Stream_Skip(stream, 1024);
 	UInt8 value = Stream_ReadU8(stream); /* progress in original classic, but we ignore it */
 
-	if (!gzHeader.Done) { GZipHeader_Read(&mapPartStream, &gzHeader); }
+	if (!gzHeader.Done) { 
+		ReturnCode result = GZipHeader_Read(&mapPartStream, &gzHeader);
+		if (result && result != ERR_END_OF_STREAM) ErrorHandler_FailWithCode(result, "reading map data");
+	}
+
 	if (gzHeader.Done) {
 		if (mapSizeIndex < sizeof(UInt32)) {
 			UInt8* src = mapSize + mapSizeIndex;

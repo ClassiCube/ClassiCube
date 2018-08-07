@@ -1549,15 +1549,17 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 	{
 		String cw = String_FromConst(".cw");   String lvl = String_FromConst(".lvl");
 		String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
+
 		if (String_CaselessEnds(path, &dat)) {
-			Dat_Load(&stream);
+			result = Dat_Load(&stream);
 		} else if (String_CaselessEnds(path, &fcm)) {
-			Fcm_Load(&stream);
+			result = Fcm_Load(&stream);
 		} else if (String_CaselessEnds(path, &cw)) {
-			Cw_Load(&stream);
+			result = Cw_Load(&stream);
 		} else if (String_CaselessEnds(path, &lvl)) {
-			Lvl_Load(&stream);
+			result = Lvl_Load(&stream);
 		}
+		ErrorHandler_CheckOrFail(result, "Loading map - reading data");
 	}
 	result = stream.Close(&stream);
 	ErrorHandler_CheckOrFail(result, "Loading map - close file");

@@ -10,11 +10,23 @@
 #include "ServerConnection.h"
 #include "Event.h"
 #include "Funcs.h"
+#include "Errors.h"
 
 static void Map_ReadBlocks(struct Stream* stream) {
 	World_BlocksSize = World_Width * World_Length * World_Height;
 	World_Blocks = Mem_Alloc(World_BlocksSize, sizeof(BlockID), "map blocks for load");
 	Stream_Read(stream, World_Blocks, World_BlocksSize);
+}
+
+static ReturnCode Map_SkipGZipHeader(struct Stream* stream) {
+	struct GZipHeader gzHeader;
+	GZipHeader_Init(&gzHeader);
+
+	while (!gzHeader.Done) {
+		ReturnCode result = GZipHeader_Read(stream, &gzHeader);
+		if (result) return result;
+	}
+	return 0;
 }
 
 
@@ -92,36 +104,38 @@ static void Lvl_ConvertPhysicsBlocks(void) {
 	}
 }
 
-void Lvl_Load(struct Stream* stream) {
-	struct GZipHeader gzHeader;
-	GZipHeader_Init(&gzHeader);
-	while (!gzHeader.Done) { GZipHeader_Read(stream, &gzHeader); }
+ReturnCode Lvl_Load(struct Stream* stream) {
+	ReturnCode result = Map_SkipGZipHeader(stream);
+	if (result) return result;
 	
 	struct Stream compStream;
 	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
-	UInt16 header = Stream_ReadU16_LE(&compStream);
-	World_Width   = header == LVL_VERSION ? Stream_ReadU16_LE(&compStream) : header;
-	World_Length  = Stream_ReadU16_LE(&compStream);
-	World_Height  = Stream_ReadU16_LE(&compStream);
+	UInt8 header[8 + 2];
+	Stream_Read(&compStream, header, 8);
+	if (Stream_GetU16_LE(&header[0]) != LVL_VERSION) return LVL_ERR_VERSION;
+
+	World_Width  = Stream_GetU16_LE(&header[2]);
+	World_Length = Stream_GetU16_LE(&header[4]);
+	World_Height = Stream_GetU16_LE(&header[6]);
+	Stream_Read(&compStream, header, sizeof(header));
 
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	p->Spawn.X = Stream_ReadU16_LE(&compStream);
-	p->Spawn.Z = Stream_ReadU16_LE(&compStream);
-	p->Spawn.Y = Stream_ReadU16_LE(&compStream);
-	p->SpawnRotY  = Math_Packed2Deg(Stream_ReadU8(&compStream));
-	p->SpawnHeadX = Math_Packed2Deg(Stream_ReadU8(&compStream));
+	p->Spawn.X = Stream_GetU16_LE(&header[0]);
+	p->Spawn.Z = Stream_GetU16_LE(&header[2]);
+	p->Spawn.Y = Stream_GetU16_LE(&header[4]);
+	p->SpawnRotY  = Math_Packed2Deg(header[6]);
+	p->SpawnHeadX = Math_Packed2Deg(header[7]);
 
-	if (header == LVL_VERSION) {
-		Stream_Skip(&compStream, 1 + 1); /* permissions: (1) pervisit, (1) perbuild */
-	}
+	/* (2) pervisit, perbuild permissions */
 	Map_ReadBlocks(&compStream);
-
 	Lvl_ConvertPhysicsBlocks();
+
 	if (Stream_TryReadByte(&compStream) == 0xBD) {
 		Lvl_ReadCustomBlocks(&compStream);
 	}
+	return 0;
 }
 
 
@@ -134,16 +148,14 @@ static void Fcm_ReadString(struct Stream* stream) {
 	Stream_Skip(stream, Stream_ReadU16_LE(stream));
 }
 
-void Fcm_Load(struct Stream* stream) {
-	if (Stream_ReadU32_LE(stream) != FCM_IDENTIFIER) {
-		ErrorHandler_Fail("Invalid identifier in .fcm file");
-	}
-	if (Stream_ReadU8(stream) != FCM_REVISION) {
-		ErrorHandler_Fail("Invalid revision in .fcm file");
-	}
-	UInt8 header[(3 * 2) + (3 * 4) + (2 * 1)  + (2 * 4) + 16 + 26 + 4];
-	Stream_Read(stream, header, sizeof(header));
+ReturnCode Fcm_Load(struct Stream* stream) {
+	UInt8 header[(3 * 2) + (3 * 4) + (2 * 1) + (2 * 4) + 16 + 26 + 4];
 
+	Stream_Read(stream, header, 4 + 1);
+	if (Stream_GetU32_LE(&header[0]) != FCM_IDENTIFIER) return FCM_ERR_IDENTIFIER;
+	if (header[4]                    != FCM_REVISION)   return FCM_ERR_REVISION;
+	
+	Stream_Read(stream, header, sizeof(header));
 	World_Width  = Stream_GetU16_LE(&header[0]);
 	World_Height = Stream_GetU16_LE(&header[2]);
 	World_Length = Stream_GetU16_LE(&header[4]);
@@ -172,6 +184,7 @@ void Fcm_Load(struct Stream* stream) {
 		Fcm_ReadString(&compStream); /* Value */
 	}
 	Map_ReadBlocks(&compStream);
+	return 0;
 }
 
 
@@ -551,10 +564,9 @@ static bool Cw_Callback(struct NbtTag* tag) {
 	        0             1         2        3          4   */
 }
 
-void Cw_Load(struct Stream* stream) {
-	struct GZipHeader gzHeader;
-	GZipHeader_Init(&gzHeader);
-	while (!gzHeader.Done) { GZipHeader_Read(stream, &gzHeader); }
+ReturnCode Cw_Load(struct Stream* stream) {
+	ReturnCode result = Map_SkipGZipHeader(stream);
+	if (result) return result;
 
 	struct Stream compStream;
 	struct InflateState state;
@@ -569,6 +581,7 @@ void Cw_Load(struct Stream* stream) {
 	Vector3* spawn = &LocalPlayer_Instance.Spawn;
 	Vector3I P; Vector3I_Floor(&P, spawn);
 	if (!World_IsValidPos_3I(P)) { spawn->X /= 32.0f; spawn->Y /= 32.0f; spawn->Z /= 32.0f; }
+	return 0;
 }
 
 
@@ -706,10 +719,9 @@ static Int32 Dat_I32(struct JFieldDesc* field) {
 	return field->Value_I32;
 }
 
-void Dat_Load(struct Stream* stream) {
-	struct GZipHeader gzHeader;
-	GZipHeader_Init(&gzHeader);
-	while (!gzHeader.Done) { GZipHeader_Read(stream, &gzHeader); }
+ReturnCode Dat_Load(struct Stream* stream) {
+	ReturnCode result = Map_SkipGZipHeader(stream);
+	if (result) return result;
 
 	struct Stream compStream;
 	struct InflateState state;
@@ -757,6 +769,7 @@ void Dat_Load(struct Stream* stream) {
 			spawn->Z = (Real32)Dat_I32(field);
 		}
 	}
+	return 0;
 }
 
 

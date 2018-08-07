@@ -5,6 +5,7 @@
 #include "Deflate.h"
 #include "ErrorHandler.h"
 #include "Stream.h"
+#include "Errors.h"
 
 void Bitmap_Create(struct Bitmap* bmp, Int32 width, Int32 height, UInt8* scan0) {
 	bmp->Width = width; bmp->Height = height; bmp->Scan0 = scan0;
@@ -426,8 +427,12 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 			struct Stream datStream;
 			Stream_ReadonlyPortion(&datStream, stream, dataSize);
 			inflate.Source = &datStream;
+
 			/* TODO: This assumes zlib header will be in 1 IDAT chunk */
-			while (!zlibHeader.Done) { ZLibHeader_Read(&datStream, &zlibHeader); }
+			while (!zlibHeader.Done) { 
+				ReturnCode result = ZLibHeader_Read(&datStream, &zlibHeader);
+				if (result) return result;
+			}
 
 			UInt32 bufferLen = bufferRows * scanlineBytes, bufferMax = bufferLen - scanlineBytes;
 			while (curY < bmp->Height) {

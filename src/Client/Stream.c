@@ -2,6 +2,7 @@
 #include "Platform.h"
 #include "Funcs.h"
 #include "ErrorHandler.h"
+#include "Errors.h"
 
 /*########################################################################################################################*
 *---------------------------------------------------------Stream----------------------------------------------------------*
@@ -27,7 +28,7 @@ void Stream_Fail(struct Stream* stream, ReturnCode result, const UChar* operatio
 
 void Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	UInt32 read;
-	while (count > 0) {
+	while (count) {
 		Stream_SafeReadBlock(stream, buffer, count, read);
 		buffer += read;
 		count  -= read;
@@ -36,7 +37,7 @@ void Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count) {
 
 void Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	UInt32 write;
-	while (count > 0) {
+	while (count) {
 		Stream_SafeWriteBlock(stream, buffer, count, write);
 		buffer += write;
 		count  -= write;
@@ -45,10 +46,10 @@ void Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count) {
 
 ReturnCode Stream_TryWrite(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	UInt32 write;
-	while (count > 0) {
+	while (count) {
 		ReturnCode result = stream->Write(stream, buffer, count, &write);
 		if (result) return result;
-		if (!write) return 1;
+		if (!write) return ERR_END_OF_STREAM;
 
 		buffer += write;
 		count  -= write;

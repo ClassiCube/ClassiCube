@@ -20,13 +20,6 @@ struct ZipState {
 	struct ZipEntry Entries[ZIP_MAX_ENTRIES];
 };
 
-enum ZIP_ERR {
-	ZIP_ERR_TOO_MANY_ENTRIES = 405001,
-	ZIP_ERR_SEEK_END_OF_CENTRAL_DIR, ZIP_ERR_NO_END_OF_CENTRAL_DIR,
-	ZIP_ERR_SEEK_CENTRAL_DIR, ZIP_ERR_INVALID_CENTRAL_DIR,
-	ZIP_ERR_SEEK_LOCAL_DIR, ZIP_ERR_INVALID_LOCAL_DIR,
-};
-
 void Zip_Init(struct ZipState* state, struct Stream* input);
 ReturnCode Zip_Extract(struct ZipState* state);
 
