@@ -2,9 +2,15 @@
 
 Install appropriate libs as required. Build steps are still WIP, but current way I'm using is:
 
-Cross compiling for windows: ```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lopengl32```
+Cross compiling for windows:
 
-Compiling for linux: ```gcc *.c -o Classicube -lX11 -lpthread -lGL -lm```
+```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -lopengl32```
+
+```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -ld3d9```
+
+Compiling for linux: 
+
+```gcc *.c -o Classicube -lX11 -lpthread -lGL -lm```
 
 ### Platform
 Although the majority of the code is designed to be platform-independent, some per-platform functionality is required.
