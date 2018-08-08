@@ -33,7 +33,6 @@ static ReturnCode Map_SkipGZipHeader(struct Stream* stream) {
 /*########################################################################################################################*
 *--------------------------------------------------MCSharp level Format---------------------------------------------------*
 *#########################################################################################################################*/
-#define LVL_VERSION 1874
 #define LVL_CUSTOMTILE 163
 #define LVL_CHUNKSIZE 16
 UInt8 Lvl_table[256 - BLOCK_CPE_COUNT] = { 0, 0, 0, 0, 39, 36, 36, 10, 46, 21, 22,
@@ -114,7 +113,7 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 
 	UInt8 header[8 + 2];
 	Stream_Read(&compStream, header, 8);
-	if (Stream_GetU16_LE(&header[0]) != LVL_VERSION) return LVL_ERR_VERSION;
+	if (Stream_GetU16_LE(&header[0]) != 1874) return LVL_ERR_VERSION;
 
 	World_Width  = Stream_GetU16_LE(&header[2]);
 	World_Length = Stream_GetU16_LE(&header[4]);
@@ -142,8 +141,6 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 /*########################################################################################################################*
 *----------------------------------------------------fCraft map format----------------------------------------------------*
 *#########################################################################################################################*/
-#define FCM_IDENTIFIER 0x0FC2AF40UL
-#define FCM_REVISION 13
 static void Fcm_ReadString(struct Stream* stream) {
 	Stream_Skip(stream, Stream_ReadU16_LE(stream));
 }
@@ -152,8 +149,8 @@ ReturnCode Fcm_Load(struct Stream* stream) {
 	UInt8 header[(3 * 2) + (3 * 4) + (2 * 1) + (2 * 4) + 16 + 26 + 4];
 
 	Stream_Read(stream, header, 4 + 1);
-	if (Stream_GetU32_LE(&header[0]) != FCM_IDENTIFIER) return FCM_ERR_IDENTIFIER;
-	if (header[4]                    != FCM_REVISION)   return FCM_ERR_REVISION;
+	if (Stream_GetU32_LE(&header[0]) != 0x0FC2AF40UL) return FCM_ERR_IDENTIFIER;
+	if (header[4] != 13) return FCM_ERR_REVISION;
 	
 	Stream_Read(stream, header, sizeof(header));
 	World_Width  = Stream_GetU16_LE(&header[0]);
@@ -727,15 +724,16 @@ ReturnCode Dat_Load(struct Stream* stream) {
 	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
+	UInt8 header[4 + 1 + 2 * 2];
+	Stream_Read(&compStream, header, sizeof(header));
+
 	/* .dat header */
-	if (Stream_ReadU32_BE(&compStream) != 0x271BB788 || Stream_ReadU8(&compStream) != 0x02) {
-		ErrorHandler_Fail("Unexpected constant in .dat file");
-	}
+	if (Stream_GetU32_BE(&header[0]) != 0x271BB788) return DAT_ERR_IDENTIFIER;
+	if (header[4] != 0x02) return DAT_ERR_VERSION;
 
 	/* Java seralisation headers */
-	if (Stream_ReadU16_BE(&compStream) != 0xACED || Stream_ReadU16_BE(&compStream) != 0x0005) {
-		ErrorHandler_Fail("Unexpected java serialisation constant(s)");
-	}
+	if (Stream_GetU16_BE(&header[5]) != 0xACED) return DAT_ERR_JIDENTIFIER;
+	if (Stream_GetU16_BE(&header[7]) != 0x0005) return DAT_ERR_JVERSION;
 
 	UInt8 typeCode = Stream_ReadU8(&compStream);
 	if (typeCode != TC_OBJECT) ErrorHandler_Fail("Unexpected type code for root class");

@@ -132,7 +132,7 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 	Int32 i, len = min(257, stream_len);
 	for (i = 22; i < len; i++) {
 		result = stream->Seek(stream, -i, STREAM_SEEKFROM_END);
-		if (result != 0) return ZIP_ERR_SEEK_END_OF_CENTRAL_DIR;
+		if (result) return ZIP_ERR_SEEK_END_OF_CENTRAL_DIR;
 
 		sig = Stream_ReadU32_LE(stream);
 		if (sig == ZIP_SIG_ENDOFCENTRALDIR) break;
@@ -142,7 +142,7 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 	UInt32 centralDirectoryOffset;
 	Zip_ReadEndOfCentralDirectory(state, &centralDirectoryOffset);
 	result = stream->Seek(stream, centralDirectoryOffset, STREAM_SEEKFROM_BEGIN);
-	if (result != 0) return ZIP_ERR_SEEK_CENTRAL_DIR;
+	if (result) return ZIP_ERR_SEEK_CENTRAL_DIR;
 
 	if (state->EntriesCount > ZIP_MAX_ENTRIES) return ZIP_ERR_TOO_MANY_ENTRIES;
 
@@ -164,7 +164,7 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 	for (i = 0; i < count; i++) {
 		struct ZipEntry* entry = &state->Entries[i];
 		result = stream->Seek(stream, entry->LocalHeaderOffset, STREAM_SEEKFROM_BEGIN);
-		if (result != 0) return ZIP_ERR_SEEK_LOCAL_DIR;
+		if (result) return ZIP_ERR_SEEK_LOCAL_DIR;
 
 		sig = Stream_ReadU32_LE(stream);
 		if (sig != ZIP_SIG_LOCALFILEHEADER) return ZIP_ERR_INVALID_LOCAL_DIR;
@@ -190,8 +190,7 @@ static void EntryList_Load(struct EntryList* list) {
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format3(&path, "%s%r%s", &folder, &Directory_Separator, &filename);
 
-	void* file;
-	ReturnCode result = File_Open(&file, &path);
+	void* file; ReturnCode result = File_Open(&file, &path);
 	if (result == ReturnCode_FileNotFound) return;
 	/* TODO: Should we just log failure to save? */
 	ErrorHandler_CheckOrFail(result, "EntryList_Load - open file");
@@ -225,8 +224,7 @@ static void EntryList_Save(struct EntryList* list) {
 		ErrorHandler_CheckOrFail(dirResult, "EntryList_Save - create directory");
 	}
 
-	void* file;
-	ReturnCode result = File_Create(&file, &path);
+	void* file; ReturnCode result = File_Create(&file, &path);
 	/* TODO: Should we just log failure to save? */
 	ErrorHandler_CheckOrFail(result, "EntryList_Save - open file");
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
@@ -309,8 +307,7 @@ bool TextureCache_HasUrl(STRING_PURE String* url) {
 bool TextureCache_GetStream(STRING_PURE String* url, struct Stream* stream) {
 	String path; TexCache_InitAndMakePath(url);
 
-	void* file;
-	ReturnCode result = File_Open(&file, &path);
+	void* file; ReturnCode result = File_Open(&file, &path);
 	if (result == ReturnCode_FileNotFound) return false;
 
 	ErrorHandler_CheckOrFail(result, "TextureCache - GetStream");
@@ -431,8 +428,7 @@ void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format2(&path, "texpacks%r%s", &Directory_Separator, filename);
 
-	void* file;
-	ReturnCode result = File_Open(&file, &path);
+	void* file; ReturnCode result = File_Open(&file, &path);
 	ErrorHandler_CheckOrFail(result, "TexturePack_Extract - opening file");
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{

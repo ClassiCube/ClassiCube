@@ -39,10 +39,10 @@ namespace SharpWave {
 			IEnumerator<AudioChunk> chunks =
 				codec.StreamData(container).GetEnumerator();
 			
-			bool noData = false;
+			bool reachedEnd = false;
 			for (;;) {
 				// Have any of the buffers finished playing
-				if (noData && IsFinished()) return;
+				if (reachedEnd && IsFinished()) return;
 
 				int next = -1;
 				for (int i = 0; i < NumBuffers; i++) {
@@ -51,7 +51,7 @@ namespace SharpWave {
 
 				if (next == -1) {
 				} else if (pendingStop || !chunks.MoveNext()) {
-					noData = true;
+					reachedEnd = true;
 				} else {
 					PlayData(next, chunks.Current);
 				}

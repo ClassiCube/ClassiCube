@@ -1320,8 +1320,7 @@ static void SaveLevelScreen_Render(struct GuiElem* elem, Real64 delta) {
 	if (!screen->TextPath.length) return;
 	String path = screen->TextPath;
 
-	void* file;
-	ReturnCode result = File_Create(&file, &path);
+	void* file; ReturnCode result = File_Create(&file, &path);
 	ErrorHandler_CheckOrFail(result, "Saving map - opening file");
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
@@ -1542,8 +1541,7 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 	Block_Reset();
 	Inventory_SetDefaultMapping();
 
-	void* file;
-	ReturnCode result = File_Open(&file, path);
+	void* file; ReturnCode result = File_Open(&file, path);
 	ErrorHandler_CheckOrFail(result, "Loading map - open file");
 	struct Stream stream; Stream_FromFile(&stream, file, path);
 	{

@@ -650,8 +650,7 @@ void Game_TakeScreenshot(void) {
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format2(&path, "screenshots%r%s", &Directory_Separator, &filename);
 
-	void* file;
-	ReturnCode result = File_Create(&file, &path);
+	void* file; ReturnCode result = File_Create(&file, &path);
 	ErrorHandler_CheckOrFail(result, "Taking screenshot - opening file");
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{

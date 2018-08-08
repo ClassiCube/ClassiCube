@@ -56,7 +56,7 @@ static ReturnCode Ogg_Read(struct Stream* stream, UInt8* data, UInt32 count, UIn
 		if (stream->Meta.Ogg.Last) return 0;
 
 		ReturnCode result = Ogg_NextPage(stream);
-		if (result != 0) return result;
+		if (result) return result;
 	}
 }
 

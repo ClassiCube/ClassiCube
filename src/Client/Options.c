@@ -156,10 +156,9 @@ void Options_Set(const UChar* keyRaw, STRING_PURE String* value) {
 	StringsBuffer_Add(&Options_Changed, &key);
 }
 
-void Options_Load(void) {
-	void* file;
+void Options_Load(void) {	
 	String path = String_FromConst("options.txt");
-	ReturnCode result = File_Open(&file, &path);
+	void* file; ReturnCode result = File_Open(&file, &path);
 
 	if (result == ReturnCode_FileNotFound) return;
 	/* TODO: Should we just log failure to open? */
@@ -201,10 +200,9 @@ void Options_Load(void) {
 	ErrorHandler_CheckOrFail(result, "Options load - close file");
 }
 
-void Options_Save(void) {
-	void* file;
+void Options_Save(void) {	
 	String path = String_FromConst("options.txt");
-	ReturnCode result = File_Create(&file, &path);
+	void* file; ReturnCode result = File_Create(&file, &path);
 
 	/* TODO: Should we just log failure to save? */
 	ErrorHandler_CheckOrFail(result, "Options - Saving");

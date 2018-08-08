@@ -9,6 +9,7 @@
 #include "Game.h"
 #include "GameStructs.h"
 #include "Errors.h"
+#include "Vorbis.h"
 
 StringsBuffer files;
 /*########################################################################################################################*
@@ -50,7 +51,7 @@ static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	while (!(res = stream->Position(stream, &pos)) && !(res = stream->Length(stream, &len)) && pos < len) {
 		Stream_Read(stream, tmp, 2 * sizeof(UInt32));
 		fourCC = Stream_GetU32_BE(&tmp[0]);
-		size   = Stream_GetU32_BE(&tmp[4]);
+		size   = Stream_GetU32_LE(&tmp[4]);
 
 		if (fourCC == WAV_FourCC('f','m','t',' ')) {
 			Stream_Read(stream, tmp, WAV_FMT_SIZE);
@@ -79,10 +80,9 @@ static ReturnCode Sound_ReadWave(STRING_PURE String* filename, struct Sound* snd
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format2(&path, "audio%r%s", &Directory_Separator, filename);
 
-	void* file = NULL;
-	ReturnCode result = File_Open(&file, &path);
-	if (result) return result;
 	ReturnCode fileResult = 0;
+	void* file = NULL; ReturnCode result = File_Open(&file, &path);
+	if (result) return result;
 
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
@@ -266,6 +266,62 @@ void* music_thread;
 void* music_waitable;
 volatile bool music_pendingStop;
 
+static ReturnCode Music_PlayOgg(struct Stream* source) {
+	UInt8 buffer[OGG_BUFFER_SIZE];
+	struct Stream stream;
+	Ogg_MakeStream(&stream, buffer, source);
+
+	struct VorbisState vorbis;
+	Vorbis_Init(&vorbis, &stream);
+	ReturnCode result = Vorbis_DecodeHeaders(&vorbis);
+	if (result) return result;
+
+	struct AudioFormat fmt;
+	fmt.Channels      = vorbis.Channels;
+	fmt.SampleRate    = vorbis.SampleRate;
+	fmt.BitsPerSample = 16;
+	Audio_SetFormat(music_out, &fmt);
+
+	/* max possible result of a vorbis decode is blocksize1 */
+	/* so we decode a bit over a second of audio each time */
+	Int32 offset = 0, size = (Math_CeilDiv(fmt.SampleRate, vorbis.BlockSizes[1]) + 1) * vorbis.BlockSizes[1];
+	Int16* data = Mem_Alloc((size * fmt.Channels) * AUDIO_MAX_CHUNKS, sizeof(Int16), "Ogg - final PCM output");
+
+	bool reachedEnd = false;
+	Int32 i, next;
+	for (;;) {
+		/* Have all of the buffers finished playing */
+		if (reachedEnd && Audio_IsFinished(music_out)) {
+			Mem_Free(&data); return result;
+		}
+
+		next = -1;
+		for (i = 0; i < AUDIO_MAX_CHUNKS; i++) {
+			if (Audio_IsCompleted(music_out, i)) { next = i; break; }
+		}
+
+		if (next == -1 || reachedEnd) {
+		} else if (music_pendingStop) {
+			reachedEnd = true;
+		} else {
+			/* decode up to around a second*/
+			Int16* base = data + (size * fmt.Channels) * next;
+
+			while (offset + vorbis.BlockSizes[1] < size) {
+				result = Vorbis_DecodeFrame(&vorbis);
+				if (result) { reachedEnd = true; break; }
+
+				Int16* cur = &base[offset * fmt.Channels];
+				offset += Vorbis_OutputFrame(&vorbis, cur);
+			}
+
+			if (!reachedEnd) Audio_PlayData(music_out, next, base, offset * fmt.Channels * sizeof(Int16));
+			offset = 0;
+		}
+		Thread_Sleep(1);
+	}
+}
+
 #define MUSIC_MAX_FILES 512
 static void Music_RunLoop(void) {
 	Int32 i, count = 0;
@@ -284,17 +340,20 @@ static void Music_RunLoop(void) {
 
 	while (!music_pendingStop) {
 		Int32 idx = Random_Range(&rnd, 0, count);
-		String file = StringsBuffer_UNSAFE_Get(&files, musicFiles[idx]);
+		String filename = StringsBuffer_UNSAFE_Get(&files, musicFiles[idx]);
 		String path = String_InitAndClearArray(pathBuffer);
-		String_Format2(&path, "audio%r%s", &Directory_Separator, &file);
+		String_Format2(&path, "audio%r%s", &Directory_Separator, &filename);
+		Platform_Log1("playing music file: %s", &filename);
 
-		Platform_Log1("playing music file: %s", &file);
-		//using (Stream fs = Platform.FileOpen(path)) {
-		//	OggContainer container = new OggContainer(fs);
-		//	musicOut.SetVolume(game.MusicVolume / 100.0f);
-		//	musicOut.PlayStreaming(container);
-		//	/* TODO: handle errors */
-		//}
+		void* file; ReturnCode result = File_Open(&file, &path);
+		ErrorHandler_CheckOrFail(result, "Music_RunLoop - opening file");
+		struct Stream stream; Stream_FromFile(&stream, file, &path);
+		{
+			result = Music_PlayOgg(&stream);
+			ErrorHandler_CheckOrFail(result, "Music_RunLoop - playing ogg");
+		}
+		result = stream.Close(&stream);
+		ErrorHandler_CheckOrFail(result, "Music_RunLoop - closing file");
 
 		if (music_pendingStop) break;
 		Int32 delay = 1000 * 120 + Random_Range(&rnd, 0, 1000 * 300);

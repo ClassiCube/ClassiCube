@@ -40,7 +40,7 @@ enum ERRORS_ALL {
 	/* LVL map decoding errors */
 	LVL_ERR_VERSION,
 	/* DAT map decoding errors */
+	DAT_ERR_IDENTIFIER, DAT_ERR_VERSION, DAT_ERR_JIDENTIFIER, DAT_ERR_JVERSION,
 	/* CW map decoding errors  */
-
 };
 #endif

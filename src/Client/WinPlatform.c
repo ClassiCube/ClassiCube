@@ -238,8 +238,7 @@ ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCal
 }
 
 ReturnCode File_GetModifiedTime(STRING_PURE String* path, DateTime* time) {
-	void* file;
-	ReturnCode result = File_Open(&file, path);
+	void* file; ReturnCode result = File_Open(&file, path);
 	if (result) return result;
 
 	FILETIME writeTime;

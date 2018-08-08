@@ -93,13 +93,12 @@ static void Chat_OpenLog(DateTime* now) {
 			String_Format1(&path, "%s.log", &Chat_LogName);
 		}
 
-		void* file;
-		ReturnCode code = File_Append(&file, &path);
-		if (code != 0 && code != ReturnCode_FileShareViolation) {
-			ErrorHandler_FailWithCode(code, "Chat - opening log file");
+		void* file; ReturnCode result = File_Append(&file, &path);
+		if (result && result != ReturnCode_FileShareViolation) {
+			ErrorHandler_FailWithCode(result, "Chat - opening log file");
 		}
 
-		if (code == ReturnCode_FileShareViolation) continue;
+		if (result == ReturnCode_FileShareViolation) continue;
 		Stream_FromFile(&Chat_LogStream, file, &path);
 		return;
 	}
