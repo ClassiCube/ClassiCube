@@ -29,7 +29,8 @@ struct VorbisState {
 	struct Mapping* Mappings;
 	struct Mode* Modes;
 };
-void Vorbis_Init(struct VorbisState* ctx, struct Stream* source);
+
+void Vorbis_Free(struct VorbisState* ctx);
 ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx);
 ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx);
 Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data);

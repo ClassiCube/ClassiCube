@@ -335,6 +335,7 @@ static bool IsTag(struct NbtTag* tag, const UChar* tagName) {
 #define Nbt_WriteU8(stream, value)  Stream_WriteU8(stream, value)
 #define Nbt_WriteI16(stream, value) Stream_WriteI16_BE(stream, value)
 #define Nbt_WriteI32(stream, value) Stream_WriteI32_BE(stream, value)
+#define Nbt_WriteU8_Array(stream, data, len) Nbt_WriteI32(stream, len); Stream_Write(stream, data, len)
 
 static void Nbt_WriteString(struct Stream* stream, STRING_PURE String* text) {
 	if (text->length > NBT_SMALL_SIZE) ErrorHandler_Fail("NBT String too long");
@@ -814,6 +815,7 @@ static void Cw_WriteColCompound(struct Stream* stream, const UChar* tagName, Pac
 }
 
 static void Cw_WriteBlockDefinitionCompound(struct Stream* stream, BlockID id) {
+	UInt8 tmp[6];
 	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "Block" + id);
 	bool sprite = Block_Draw[id] == DRAW_SPRITE;
 
@@ -830,13 +832,13 @@ static void Cw_WriteBlockDefinitionCompound(struct Stream* stream, BlockID id) {
 	Nbt_WriteI32(stream, speed.i);
 
 	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "Textures");
-	Nbt_WriteI32(stream, 6);
-	Nbt_WriteU8(stream, Block_GetTexLoc(id, FACE_YMAX));
-	Nbt_WriteU8(stream, Block_GetTexLoc(id, FACE_YMIN));
-	Nbt_WriteU8(stream, Block_GetTexLoc(id, FACE_XMIN));
-	Nbt_WriteU8(stream, Block_GetTexLoc(id, FACE_XMAX));
-	Nbt_WriteU8(stream, Block_GetTexLoc(id, FACE_ZMIN));
-	Nbt_WriteU8(stream, Block_GetTexLoc(id, FACE_ZMAX));
+	tmp[0] = Block_GetTexLoc(id, FACE_YMAX);
+	tmp[1] = Block_GetTexLoc(id, FACE_YMIN);
+	tmp[2] = Block_GetTexLoc(id, FACE_XMIN);
+	tmp[3] = Block_GetTexLoc(id, FACE_XMAX);
+	tmp[4] = Block_GetTexLoc(id, FACE_ZMIN);
+	tmp[5] = Block_GetTexLoc(id, FACE_ZMAX);
+	Nbt_WriteU8_Array(stream, tmp, 6);
 
 	Nbt_WriteTag(stream, NBT_TAG_INT8, "TransmitsLight");
 	Nbt_WriteU8(stream, Block_BlocksLight[id] ? 0 : 1);
@@ -852,19 +854,18 @@ static void Cw_WriteBlockDefinitionCompound(struct Stream* stream, BlockID id) {
 	UInt8 draw = sprite ? Block_SpriteOffset[id] : Block_Draw[id];
 	Nbt_WriteU8(stream, draw);
 
-	PackedCol col = Block_FogCol[id];
-	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "Fog");
-	Nbt_WriteI32(stream, 4);
 	UInt8 fog = (UInt8)(128 * Block_FogDensity[id] - 1);
-	Nbt_WriteU8(stream, Block_FogDensity[id] == 0 ? 0 : fog);
-	Nbt_WriteU8(stream, col.R); Nbt_WriteU8(stream, col.G); Nbt_WriteU8(stream, col.B);
+	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "Fog");
+	PackedCol col = Block_FogCol[id];	
+	tmp[0] = Block_FogDensity[id] ? fog : 0;
+	tmp[1] = col.R; tmp[2] = col.G; tmp[3] = col.B;
+	Nbt_WriteU8_Array(stream, tmp, 4);
 
 	Vector3 minBB = Block_MinBB[id], maxBB = Block_MaxBB[id];
 	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "Coords");
-	Nbt_WriteI32(stream, 6);
-	Nbt_WriteU8(stream, minBB.X * 16); Nbt_WriteU8(stream, minBB.Y * 16);
-	Nbt_WriteU8(stream, minBB.Z * 16); Nbt_WriteU8(stream, maxBB.X * 16);
-	Nbt_WriteU8(stream, maxBB.Y * 16); Nbt_WriteU8(stream, maxBB.Z * 16);
+	tmp[0] = (UInt8)(minBB.X * 16); tmp[1] = (UInt8)(minBB.Y * 16); tmp[2] = (UInt8)(minBB.Z * 16); 
+	tmp[3] = (UInt8)(maxBB.X * 16); tmp[4] = (UInt8)(maxBB.Y * 16); tmp[5] = (UInt8)(maxBB.Z * 16);
+	Nbt_WriteU8_Array(stream, tmp, 6);
 
 	Nbt_WriteU8(stream, NBT_TAG_END);
 }

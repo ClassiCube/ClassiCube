@@ -247,13 +247,10 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 		}
 		usedEntries = c->Entries;
 	}
-	c->NumCodewords = usedEntries;
 
-	static int booknummm;
-	Platform_Log1("### BUILDING %i ###", &booknummm);
+	c->NumCodewords = usedEntries;
 	Codebook_CalcCodewords(c, codewordLens);
 	Mem_Free(&codewordLens);
-	booknummm++;
 
 	c->LookupType = Vorbis_ReadBits(ctx, 4);
 	if (c->LookupType == 0) return 0;
@@ -283,9 +280,9 @@ static UInt32 Codebook_DecodeScalar(struct VorbisState* ctx, struct Codebook* c)
 	UInt32 codeword = 0, shift = 31, depth, i;
 	/* TODO: This is so massively slow */
 	for (depth = 1; depth <= 32; depth++, shift--) {
-		//codeword >>= 1;
 		UInt32 bit = Vorbis_ReadBits(ctx, 1);
 		codeword |= bit << shift;
+
 		for (i = 0; i < c->NumCodewords; i++) {
 			if (depth != c->CodewordLens[i]) continue;
 			if (codeword != c->Codewords[i]) continue;
@@ -915,7 +912,7 @@ void imdct_fast(Real32* in, Real32* out, Int32 n) {
 	}
 
 	/* output */
-	for (k = 0; k < n4;   k++) out[k] = 0.5f * X[k+n4];
+	for (k = 0; k < n4;   k++) out[k] = 0.5f *  X[k+n4];
 	for (     ; k < n3_4; k++) out[k] = 0.5f * -X[n3_4-k-1];
 	for (     ; k < n;    k++) out[k] = 0.5f * -X[k-n3_4];
 }
@@ -936,12 +933,14 @@ static ReturnCode Mode_DecodeSetup(struct VorbisState* ctx, struct Mode* m) {
 	return 0;
 }
 
-void Vorbis_Init(struct VorbisState* ctx, struct Stream* source) {
-	Mem_Set(ctx, 0, sizeof(struct VorbisState));
-	ctx->Source = source;
+void Vorbis_Free(struct VorbisState* ctx) {
+	Mem_Free(&ctx->Codebooks);
+	Mem_Free(&ctx->Floors);
+	Mem_Free(&ctx->Residues);
+	Mem_Free(&ctx->Mappings);
+	Mem_Free(&ctx->Modes);
+	/* TODO: free memory in codebooks, other bits, etc*/
 }
-
-/* TODO: Work out Vorbis_Free implementation */
 
 static bool Vorbis_ValidBlockSize(UInt32 blockSize) {
 	return blockSize >= 64 && blockSize <= 8192 && Math_IsPowOf2(blockSize);
@@ -1167,7 +1166,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 
 	Int32 n = ctx->CurBlockSize;
 	Int32 window_center = n / 2;
-	Int32 left_window_beg, left_window_end, left_n;
+	Int32 left_window_beg,  left_window_end,  left_n;
 	Int32 right_window_beg, right_window_end, right_n;
 
 	if (mode->BlockSizeFlag && !prev_window) {
@@ -1231,7 +1230,6 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 	if (ctx->PrevBlockSize == 0) goto finish;
 	size = (ctx->PrevBlockSize / 4) + (ctx->CurBlockSize / 4);
 
-	Platform_LogConst("##### FRAME #####" );
 	/* TODO: There's probably a nicer way of doing this.. */
 	Real32* combined[VORBIS_MAX_CHANS];
 	for (i = 0; i < ctx->Channels; i++) {

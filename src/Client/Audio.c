@@ -271,8 +271,8 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 	struct Stream stream;
 	Ogg_MakeStream(&stream, buffer, source);
 
-	struct VorbisState vorbis;
-	Vorbis_Init(&vorbis, &stream);
+	struct VorbisState vorbis = { 0 };
+	vorbis.Source = &stream;
 	ReturnCode result = Vorbis_DecodeHeaders(&vorbis);
 	if (result) return result;
 
@@ -287,39 +287,41 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 	Int32 offset = 0, size = (Math_CeilDiv(fmt.SampleRate, vorbis.BlockSizes[1]) + 1) * vorbis.BlockSizes[1];
 	Int16* data = Mem_Alloc((size * fmt.Channels) * AUDIO_MAX_CHUNKS, sizeof(Int16), "Ogg - final PCM output");
 
-	bool reachedEnd = false;
 	Int32 i, next;
 	for (;;) {
-		/* Have all of the buffers finished playing */
-		if (reachedEnd && Audio_IsFinished(music_out)) {
-			Mem_Free(&data); return result;
-		}
-
 		next = -1;
 		for (i = 0; i < AUDIO_MAX_CHUNKS; i++) {
 			if (Audio_IsCompleted(music_out, i)) { next = i; break; }
 		}
 
-		if (next == -1 || reachedEnd) {
+		if (next == -1) {
 		} else if (music_pendingStop) {
-			reachedEnd = true;
+			goto finished;
 		} else {
-			/* decode up to around a second*/
+			/* decode up to around a second */
 			Int16* base = data + (size * fmt.Channels) * next;
 
 			while (offset + vorbis.BlockSizes[1] < size) {
 				result = Vorbis_DecodeFrame(&vorbis);
-				if (result) { reachedEnd = true; break; }
+				if (result) goto finished;
 
 				Int16* cur = &base[offset * fmt.Channels];
 				offset += Vorbis_OutputFrame(&vorbis, cur);
 			}
 
-			if (!reachedEnd) Audio_PlayData(music_out, next, base, offset * fmt.Channels * sizeof(Int16));
+			Audio_PlayData(music_out, next, base, offset * fmt.Channels * sizeof(Int16));
 			offset = 0;
 		}
 		Thread_Sleep(1);
 	}
+
+finished:
+	/* Wait until the buffers finished playing */
+	while (!Audio_IsFinished(music_out)) { Thread_Sleep(1); }
+
+	Mem_Free(&data);
+	Vorbis_Free(&vorbis);
+	return result;
 }
 
 #define MUSIC_MAX_FILES 512
