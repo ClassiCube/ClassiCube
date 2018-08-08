@@ -46,9 +46,11 @@ UInt8 Lvl_table[256 - BLOCK_CPE_COUNT] = { 0, 0, 0, 0, 39, 36, 36, 10, 46, 21, 2
 47, 0, 0, 0, 0, 0, 27, 46, 48, 24, 22, 36, 34, 8, 10, 21, 29, 22, 10, 22, 22,
 41, 19, 35, 21, 29, 49, 34, 16, 41, 0, 22 };
 
-static void Lvl_ReadCustomBlocks(struct Stream* stream) {
+static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
 	Int32 x, y, z, i;
 	UInt8 chunk[LVL_CHUNKSIZE * LVL_CHUNKSIZE * LVL_CHUNKSIZE];
+	ReturnCode result; UInt8 hasCustom;
+
 	/* skip bounds checks when we know chunk is entirely inside map */
 	Int32 adjWidth  = World_Width  & ~0x0F;
 	Int32 adjHeight = World_Height & ~0x0F;
@@ -57,7 +59,10 @@ static void Lvl_ReadCustomBlocks(struct Stream* stream) {
 	for (y = 0; y < World_Height; y += LVL_CHUNKSIZE) {
 		for (z = 0; z < World_Length; z += LVL_CHUNKSIZE) {
 			for (x = 0; x < World_Width; x += LVL_CHUNKSIZE) {
-				if (Stream_TryReadByte(stream) != 1) continue;
+				result = stream->ReadU8(stream, &hasCustom);
+				if (result) return result;
+
+				if (hasCustom != 1) continue;
 				Stream_Read(stream, chunk, sizeof(chunk));
 
 				Int32 baseIndex = World_Pack(x, y, z);
@@ -79,6 +84,7 @@ static void Lvl_ReadCustomBlocks(struct Stream* stream) {
 			}
 		}
 	}
+	return 0;
 }
 
 static void Lvl_ConvertPhysicsBlocks(void) {
@@ -131,10 +137,12 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 	Map_ReadBlocks(&compStream);
 	Lvl_ConvertPhysicsBlocks();
 
-	if (Stream_TryReadByte(&compStream) == 0xBD) {
-		Lvl_ReadCustomBlocks(&compStream);
-	}
-	return 0;
+	/* 0xBD section type may not be present in older .lvl files */
+	UInt8 type; result = compStream.ReadU8(&compStream, &type);
+	if (result == ERR_END_OF_STREAM) return 0;
+
+	if (result) return result;
+	return type == 0xBD ? Lvl_ReadCustomBlocks(&compStream) : 0;
 }
 
 

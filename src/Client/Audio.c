@@ -303,6 +303,7 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 
 			while (offset + vorbis.BlockSizes[1] < size) {
 				result = Vorbis_DecodeFrame(&vorbis);
+				if (result == ERR_END_OF_STREAM) break;
 				if (result) goto finished;
 
 				Int16* cur = &base[offset * fmt.Channels];
@@ -311,6 +312,8 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 
 			Audio_PlayData(music_out, next, base, offset * fmt.Channels * sizeof(Int16));
 			offset = 0;
+			/* need to specially handle last bit of audio */
+			if (result == ERR_END_OF_STREAM) goto finished;
 		}
 		Thread_Sleep(1);
 	}
@@ -321,6 +324,8 @@ finished:
 
 	Mem_Free(&data);
 	Vorbis_Free(&vorbis);
+
+	if (result == ERR_END_OF_STREAM) result = 0;
 	return result;
 }
 

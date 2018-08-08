@@ -15,7 +15,7 @@ struct GZipHeader { UInt8 State; bool Done; UInt8 PartsRead; Int32 Flags; };
 void GZipHeader_Init(struct GZipHeader* header);
 ReturnCode GZipHeader_Read(struct Stream* s, struct GZipHeader* header);
 
-struct ZLibHeader { UInt8 State; bool Done; Int32 LZ77WindowSize; };
+struct ZLibHeader { UInt8 State; bool Done; };
 void ZLibHeader_Init(struct ZLibHeader* header);
 ReturnCode ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header);
 

@@ -5,24 +5,14 @@
 #include "Stream.h"
 #include "Errors.h"
 
-static bool Header_ReadByte(struct Stream* s, UInt8* state, Int32* value) {
-	*value = Stream_TryReadByte(s);
-	if (*value == -1) return false;
-
-	(*state)++;
-	return true;
-}
-
-
+#define Header_ReadU8(value) result = s->ReadU8(s, &value); if (result) return result;
 /*########################################################################################################################*
 *-------------------------------------------------------GZip header-------------------------------------------------------*
 *#########################################################################################################################*/
-enum GZIP_STATE_ {
-	GZIP_STATE_HEADER1, GZIP_STATE_HEADER2,
-	GZIP_STATE_COMPRESSIONMETHOD, GZIP_STATE_FLAGS,
-	GZIP_STATE_LASTMODIFIEDTIME, GZIP_STATE_COMPRESSIONFLAGS,
-	GZIP_STATE_OPERATINGSYSTEM, GZIP_STATE_HEADERCHECKSUM,
-	GZIP_STATE_FILENAME, GZIP_STATE_COMMENT, GZIP_STATE_DONE,
+enum GZIP_STATE {
+	GZIP_STATE_HEADER1, GZIP_STATE_HEADER2, GZIP_STATE_COMPRESSIONMETHOD, GZIP_STATE_FLAGS,
+	GZIP_STATE_LASTMODIFIED, GZIP_STATE_COMPRESSIONFLAGS, GZIP_STATE_OPERATINGSYSTEM, 
+	GZIP_STATE_HEADERCHECKSUM, GZIP_STATE_FILENAME, GZIP_STATE_COMMENT, GZIP_STATE_DONE,
 };
 
 void GZipHeader_Init(struct GZipHeader* header) {
@@ -33,45 +23,49 @@ void GZipHeader_Init(struct GZipHeader* header) {
 }
 
 ReturnCode GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
-	Int32 temp;
+	ReturnCode result; UInt8 tmp;
 	switch (header->State) {
 
 	case GZIP_STATE_HEADER1:
-		if (!Header_ReadByte(s, &header->State, &temp)) return 0;
-		if (temp != 0x1F) return GZIP_ERR_HEADER1;
+		Header_ReadU8(tmp);
+		if (tmp != 0x1F) return GZIP_ERR_HEADER1;
+		header->State++;
 
 	case GZIP_STATE_HEADER2:
-		if (!Header_ReadByte(s, &header->State, &temp)) return 0;
-		if (temp != 0x8B) return GZIP_ERR_HEADER2;
+		Header_ReadU8(tmp);
+		if (tmp != 0x8B) return GZIP_ERR_HEADER2;
+		header->State++;
 
 	case GZIP_STATE_COMPRESSIONMETHOD:
-		if (!Header_ReadByte(s, &header->State, &temp)) return 0;
-		if (temp != 0x08) return GZIP_ERR_METHOD;
+		Header_ReadU8(tmp);
+		if (tmp != 0x08) return GZIP_ERR_METHOD;
+		header->State++;
 
 	case GZIP_STATE_FLAGS:
-		if (!Header_ReadByte(s, &header->State, &header->Flags)) return 0;
+		Header_ReadU8(tmp);
 		if (header->Flags & 0x04) return GZIP_ERR_FLAGS;
+		header->State++;
 
-	case GZIP_STATE_LASTMODIFIEDTIME:
+	case GZIP_STATE_LASTMODIFIED:
 		for (; header->PartsRead < 4; header->PartsRead++) {
-			temp = Stream_TryReadByte(s);
-			if (temp == -1) return 0;
+			Header_ReadU8(tmp);
 		}
 		header->State++;
 		header->PartsRead = 0;
 
 	case GZIP_STATE_COMPRESSIONFLAGS:
-		if (!Header_ReadByte(s, &header->State, &temp)) return 0;
+		Header_ReadU8(tmp);
+		header->State++;
 
 	case GZIP_STATE_OPERATINGSYSTEM:
-		if (!Header_ReadByte(s, &header->State, &temp)) return 0;
+		Header_ReadU8(tmp);
+		header->State++;
 
 	case GZIP_STATE_FILENAME:
 		if (header->Flags & 0x08) {
 			for (; ;) {
-				temp = Stream_TryReadByte(s);
-				if (temp == -1) return 0;
-				if (temp == '\0') break;
+				Header_ReadU8(tmp);
+				if (tmp == '\0') break;
 			}
 		}
 		header->State++;
@@ -79,9 +73,8 @@ ReturnCode GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
 	case GZIP_STATE_COMMENT:
 		if (header->Flags & 0x10) {
 			for (; ;) {
-				temp = Stream_TryReadByte(s);
-				if (temp == -1) return 0;
-				if (temp == '\0') break;
+				Header_ReadU8(tmp);
+				if (tmp == '\0') break;
 			}
 		}
 		header->State++;
@@ -89,11 +82,9 @@ ReturnCode GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
 	case GZIP_STATE_HEADERCHECKSUM:
 		if (header->Flags & 0x02) {
 			for (; header->PartsRead < 2; header->PartsRead++) {
-				temp = Stream_TryReadByte(s);
-				if (temp == -1) return 0;
+				Header_ReadU8(tmp);
 			}
 		}
-
 		header->State++;
 		header->PartsRead = 0;
 		header->Done = true;
@@ -105,31 +96,28 @@ ReturnCode GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
 /*########################################################################################################################*
 *-------------------------------------------------------ZLib header-------------------------------------------------------*
 *#########################################################################################################################*/
-enum ZLIB_STATE_ {
-	ZLIB_STATE_COMPRESSIONMETHOD, ZLIB_STATE_FLAGS, ZLIB_STATE_DONE,
-};
+enum ZLIB_STATE { ZLIB_STATE_COMPRESSIONMETHOD, ZLIB_STATE_FLAGS, ZLIB_STATE_DONE };
 
 void ZLibHeader_Init(struct ZLibHeader* header) {
 	header->State = ZLIB_STATE_COMPRESSIONMETHOD;
 	header->Done = false;
-	header->LZ77WindowSize = 0;
 }
 
 ReturnCode ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header) {
-	Int32 temp;
+	ReturnCode result; UInt8 tmp;
 	switch (header->State) {
 
 	case ZLIB_STATE_COMPRESSIONMETHOD:
-		if (!Header_ReadByte(s, &header->State, &temp)) return 0;
-		if ((temp & 0x0F) != 0x08) return ZLIB_ERR_METHOD;
-
-		Int32 log2Size = (temp >> 4) + 8;
-		header->LZ77WindowSize = 1L << log2Size;
-		if (header->LZ77WindowSize > 32768) return ZLIB_ERR_WINDOW_SIZE;
+		Header_ReadU8(tmp);
+		if ((tmp & 0x0F) != 0x08) return ZLIB_ERR_METHOD;
+		if ((tmp >> 4) > 7) return ZLIB_ERR_WINDOW_SIZE;
+		/* 2^(size + 8) must be < 32768 for LZ77 window */
+		header->State++;
 
 	case ZLIB_STATE_FLAGS:
-		if (!Header_ReadByte(s, &header->State, &temp)) return 0;
-		if ((temp & 0x20) != 0) return ZLIB_ERR_FLAGS;
+		Header_ReadU8(tmp);
+		if (tmp & 0x20) return ZLIB_ERR_FLAGS;
+		header->State++;
 		header->Done = true;
 	}
 	return 0;

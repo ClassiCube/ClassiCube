@@ -12,11 +12,12 @@ struct Stream;
 /* Represents a stream that can be written to and/or read from. */
 struct Stream {
 	ReturnCode (*Read)(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified);
-	ReturnCode (*Write)(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified);
-	ReturnCode (*Close)(struct Stream* stream);
+	ReturnCode (*ReadU8)(struct Stream* stream, UInt8* data);
+	ReturnCode (*Write)(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified);	
 	ReturnCode (*Seek)(struct Stream* stream, Int32 offset, Int32 seekType);
 	ReturnCode (*Position)(struct Stream* stream, UInt32* pos);
 	ReturnCode (*Length)(struct Stream* stream, UInt32* length);
+	ReturnCode (*Close)(struct Stream* stream);
 	
 	union {
 		void* File;
@@ -35,9 +36,9 @@ struct Stream {
 void Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count);
 void Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count);
 ReturnCode Stream_TryWrite(struct Stream* stream, UInt8* buffer, UInt32 count);
-Int32 Stream_TryReadByte(struct Stream* stream);
 void Stream_Init(struct Stream* stream, STRING_PURE String* name);
 void Stream_Skip(struct Stream* stream, UInt32 count);
+ReturnCode Stream_DefaultReadU8(struct Stream* stream, UInt8* data);
 
 void Stream_FromFile(struct Stream* stream, void* file, STRING_PURE String* name);
 /* Readonly Stream wrapping another Stream, only allows reading up to 'len' bytes from the wrapped stream. */
@@ -45,7 +46,6 @@ void Stream_ReadonlyPortion(struct Stream* stream, struct Stream* source, UInt32
 void Stream_ReadonlyMemory(struct Stream* stream, void* data, UInt32 len, STRING_PURE String* name);
 void Stream_WriteonlyMemory(struct Stream* stream, void* data, UInt32 len, STRING_PURE String* name);
 void Stream_ReadonlyBuffered(struct Stream* stream, struct Stream* source, void* data, UInt32 size);
-
 
 UInt16 Stream_GetU16_LE(UInt8* data);
 UInt16 Stream_GetU16_BE(UInt8* data);
@@ -67,12 +67,8 @@ void Stream_WriteU32_BE(struct Stream* stream, UInt32 value);
 #define Stream_WriteI16_BE(stream, value) Stream_WriteU16_BE(stream, (UInt16)(value))
 #define Stream_WriteI32_BE(stream, value) Stream_WriteU32_BE(stream, (UInt32)(value))
 
-/* Reads a UTF8 encoded character from the given stream. Returns false if end of stream. */
-bool Stream_ReadUtf8Char(struct Stream* stream, UInt16* codepoint);
-/* Reads a line of UTF8 encoding text from the given stream. Returns false if end of stream. */
+ReturnCode Stream_ReadUtf8Char(struct Stream* stream, UInt16* codepoint);
 bool Stream_ReadLine(struct Stream* stream, STRING_TRANSIENT String* text);
-/* Writes a UTF8 encoded character to the given buffer. (max bytes written is 3) */
 Int32 Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint);
-/* Writes a line of UTF8 encoded text to the given stream. */
 void Stream_WriteLine(struct Stream* stream, STRING_TRANSIENT String* text);
 #endif

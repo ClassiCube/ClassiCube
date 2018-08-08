@@ -522,8 +522,9 @@ void String_DecodeUtf8(STRING_TRANSIENT String* str, UInt8* data, UInt32 len) {
 	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len, &name);
 	UInt16 codepoint;
 
-	while (mem.Meta.Mem.Left > 0) {
-		if (!Stream_ReadUtf8Char(&mem, &codepoint)) break;
+	while (mem.Meta.Mem.Left) {
+		ReturnCode result = Stream_ReadUtf8Char(&mem, &codepoint);
+		if (result) break; /* Memory read only returns ERR_END_OF_STREAM */
 		String_Append(str, Convert_UnicodeToCP437(codepoint));
 	}
 }

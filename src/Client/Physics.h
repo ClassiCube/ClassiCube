@@ -11,8 +11,6 @@ struct Entity;
 
 /* Descibes an axis aligned bounding box. */
 struct AABB { Vector3 Min, Max; };
-void AABB_FromCoords6(struct AABB* result, Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2);
-void AABB_FromCoords(struct AABB* result, Vector3* min, Vector3* max);
 void AABB_Make(struct AABB* result, Vector3* pos, Vector3* size);
 void AABB_Offset(struct AABB* result, struct AABB* bb, Vector3* amount);
 bool AABB_Intersects(struct AABB* bb, struct AABB* other);

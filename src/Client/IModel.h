@@ -124,7 +124,7 @@ let SW = sides width, BW = body width, BH = body height
 |H--------tex---------H|H--------tex---------H|H--------tex---------H|H--------tex---------H|
 |----------SW----------|----------BW----------|----------SW----------|----------BW----------|
 ********************************************************************************************* */
-void BoxDesc_BuildBox(struct ModelPart* part, struct IModel* m, struct BoxDesc* desc);
+void BoxDesc_BuildBox(struct ModelPart* part, struct BoxDesc* desc);
 
 /* Builds a box model assuming the follow texture layout:
 let SW = sides width, BW = body width, BH = body height
@@ -139,7 +139,7 @@ let SW = sides width, BW = body width, BH = body height
 |H--------tex---------H|H--------tex---------H|H--------tex---------H|H--------tex---------H|
 |----------SW----------|----------BW----------|----------BW----------|----------------------|
 ********************************************************************************************* */
-void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct IModel* m, struct BoxDesc* desc);
+void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc);
 
 void BoxDesc_XQuad(struct IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 z1, Real32 z2, Real32 y1, Real32 y2, Real32 x, bool swapU);

@@ -34,19 +34,19 @@ static void IModel_GetTransform(struct Entity* entity, Vector3 pos, struct Matri
 static void IModel_NullFunc(struct Entity* entity) { }
 
 void IModel_Init(struct IModel* model) {
-	model->Bobbing = true;
+	model->Bobbing  = true;
 	model->UsesSkin = true;
 	model->CalcHumanAnims = false;
-	model->UsesHumanSkin = false;
+	model->UsesHumanSkin  = false;
 	model->Pushes = true;
 
 	model->Gravity = 0.08f;
 	model->Drag = Vector3_Create3(0.91f, 0.98f, 0.91f);
 	model->GroundFriction = Vector3_Create3(0.6f, 1.0f, 0.6f);
 
-	model->MaxScale = 2.0f;
+	model->MaxScale    = 2.0f;
 	model->ShadowScale = 1.0f;
-	model->NameScale = 1.0f;
+	model->NameScale   = 1.0f;
 	model->armX = 6; model->armY = 12;
 
 	model->GetTransform = IModel_GetTransform;
@@ -63,7 +63,7 @@ bool IModel_ShouldRender(struct Entity* entity) {
 	Real32 bbHeight = AABB_Height(bbPtr);
 	Real32 bbLength = AABB_Length(bbPtr);
 
-	Real32 maxYZ = max(bbHeight, bbLength);
+	Real32 maxYZ  = max(bbHeight, bbLength);
 	Real32 maxXYZ = max(bbWidth, maxYZ);
 	pos.Y += AABB_Height(bbPtr) * 0.5f; /* Centre Y coordinate. */
 	return FrustumCulling_SphereInFrustum(pos.X, pos.Y, pos.Z, maxXYZ);
@@ -322,11 +322,12 @@ void BoxDesc_RotatedBox(struct BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int3
 }
 
 
-void BoxDesc_BuildBox(struct ModelPart* part, struct IModel* m, struct BoxDesc* desc) {
+void BoxDesc_BuildBox(struct ModelPart* part, struct BoxDesc* desc) {
 	Int32 sidesW = desc->SidesW, bodyW = desc->BodyW, bodyH = desc->BodyH;
 	Real32 x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
 	Int32 x = desc->TexX, y = desc->TexY;
+	struct IModel* m = IModel_ActiveModel;
 
 	BoxDesc_YQuad(m, x + sidesW, y, bodyW, sidesW, x1, x2, z2, z1, y2, true); /* top */
 	BoxDesc_YQuad(m, x + sidesW + bodyW, y, bodyW, sidesW, x2, x1, z2, z1, y1, false); /* bottom */
@@ -339,11 +340,12 @@ void BoxDesc_BuildBox(struct ModelPart* part, struct IModel* m, struct BoxDesc* 
 		desc->RotX, desc->RotY, desc->RotZ);
 }
 
-void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct IModel* m, struct BoxDesc* desc) {
+void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc) {
 	Int32 sidesW = desc->SidesW, bodyW = desc->BodyW, bodyH = desc->BodyH;
 	Real32 x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
 	Int32 x = desc->TexX, y = desc->TexY;
+	struct IModel* m = IModel_ActiveModel;
 
 	BoxDesc_YQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, z1, z2, y2, false); /* top */
 	BoxDesc_YQuad(m, x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, z1, z2, y1, false); /* bottom */

@@ -669,9 +669,9 @@ void CPE_WritePlayerClick(struct Stream* stream, MouseButton button, bool button
 	Stream_WriteI16_BE(stream, Ext_Deg2Packed(p->HeadX));
 
 	Stream_WriteU8(stream, targetId);
-	Stream_WriteI16_BE(stream, pos->BlockPos.X);
-	Stream_WriteI16_BE(stream, pos->BlockPos.Y);
-	Stream_WriteI16_BE(stream, pos->BlockPos.Z);
+	Stream_WriteU16_BE(stream, pos->BlockPos.X);
+	Stream_WriteU16_BE(stream, pos->BlockPos.Y);
+	Stream_WriteU16_BE(stream, pos->BlockPos.Z);
 
 	UInt8 face = 255;
 	/* Our own face values differ from CPE block face */

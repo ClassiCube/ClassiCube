@@ -8,14 +8,6 @@
 #include "ErrorHandler.h"
 #include "Entity.h"
 
-void AABB_FromCoords6(struct AABB* result, Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2) {
-	result->Min = Vector3_Create3(x1, y1, z1); result->Max = Vector3_Create3(x2, y2, z2);
-}
-
-void AABB_FromCoords(struct AABB* result, Vector3* min, Vector3* max) {
-	result->Min = *min; result->Max = *max;
-}
-
 void AABB_Make(struct AABB* result, Vector3* pos, Vector3* size) {
 	result->Min.X = pos->X - size->X * 0.5f;
 	result->Min.Y = pos->Y;

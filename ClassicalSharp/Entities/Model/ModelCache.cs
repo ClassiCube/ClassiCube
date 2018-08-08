@@ -69,7 +69,7 @@ namespace ClassicalSharp.Model {
 				CachedTexture tex = Textures[i];
 				game.Graphics.DeleteTexture(ref tex.TexID);
 				Textures[i] = tex;
-			}			
+			}
 			ContextLost();
 			
 			game.Events.TextureChanged -= TextureChanged;

@@ -60,9 +60,18 @@ static ReturnCode Ogg_Read(struct Stream* stream, UInt8* data, UInt32 count, UIn
 	}
 }
 
+static ReturnCode Ogg_ReadU8(struct Stream* stream, UInt8* data) {
+	if (!stream->Meta.Ogg.Left) return Stream_DefaultReadU8(stream, data);
+
+	*data = *stream->Meta.Ogg.Cur;
+	stream->Meta.Ogg.Cur++; stream->Meta.Ogg.Left--;
+	return 0;
+}
+
 void Ogg_MakeStream(struct Stream* stream, UInt8* buffer, struct Stream* source) {
 	Stream_Init(stream, &source->Name);
-	stream->Read = Ogg_Read;
+	stream->Read   = Ogg_Read;
+	stream->ReadU8 = Ogg_ReadU8;
 
 	stream->Meta.Ogg.Cur = buffer;
 	stream->Meta.Ogg.Base = buffer;
@@ -75,23 +84,31 @@ void Ogg_MakeStream(struct Stream* stream, UInt8* buffer, struct Stream* source)
 /*########################################################################################################################*
 *------------------------------------------------------Vorbis utils-------------------------------------------------------*
 *#########################################################################################################################*/
-/* Insert next byte into the bit buffer */
-#define Vorbis_GetByte(ctx) ctx->Bits |= (UInt32)Stream_ReadU8(ctx->Source) << ctx->NumBits; ctx->NumBits += 8;
-/* Retrieves bits from the bit buffer */
+#define Vorbis_PushByte(ctx, value) ctx->Bits |= (UInt32)(value) << ctx->NumBits; ctx->NumBits += 8;
 #define Vorbis_PeekBits(ctx, bits) (ctx->Bits & ((1UL << (bits)) - 1UL))
-/* Consumes/eats up bits from the bit buffer */
 #define Vorbis_ConsumeBits(ctx, bits) ctx->Bits >>= (bits); ctx->NumBits -= (bits);
 /* Aligns bit buffer to be on a byte boundary */
 #define Vorbis_AlignBits(ctx) UInt32 alignSkip = ctx->NumBits & 7; Vorbis_ConsumeBits(ctx, alignSkip);
-/* Ensures there are 'bitsCount' bits */
-#define Vorbis_EnsureBits(ctx, bitsCount) while (ctx->NumBits < bitsCount) { Vorbis_GetByte(ctx); }
-/* Peeks then consumes given bits */
-/* TODO: Make this an inline macro somehow */
+
+/* TODO: Make sure this is inlined */
 static UInt32 Vorbis_ReadBits(struct VorbisState* ctx, UInt32 bitsCount) {
-	Vorbis_EnsureBits(ctx, bitsCount);
-	UInt32 result = Vorbis_PeekBits(ctx, bitsCount); Vorbis_ConsumeBits(ctx, bitsCount);
-	return result;
+	while (ctx->NumBits < bitsCount) { Vorbis_PushByte(ctx, Stream_ReadU8(ctx->Source)); }
+	UInt32 data = Vorbis_PeekBits(ctx, bitsCount); Vorbis_ConsumeBits(ctx, bitsCount);
+	return data;
 }
+
+static ReturnCode Vorbis_TryReadBits(struct VorbisState* ctx, UInt32 bitsCount, UInt32* data) {
+	UInt8 portion;
+	while (ctx->NumBits < bitsCount) {
+		ReturnCode result = ctx->Source->ReadU8(ctx->Source, &portion);
+		if (result) return result;
+		Vorbis_PushByte(ctx, portion);
+	}
+
+	*data = Vorbis_PeekBits(ctx, bitsCount); Vorbis_ConsumeBits(ctx, bitsCount);
+	return 0;
+}
+
 
 #define VORBIS_MAX_CHANS 8
 #define Vorbis_ChanData(ctx, ch) (ctx->Values + (ch) * ctx->DataSize)
@@ -151,7 +168,7 @@ static UInt32 lookup1_values(UInt32 entries, UInt32 dimensions) {
 		UInt32 pow  = Codebook_Pow(i, dimensions);
 		UInt32 next = Codebook_Pow(i + 1, dimensions);
 
-		if (next < pow)        return i; /* overflow */
+		if (next < pow)     return i; /* overflow */
 		if (pow == entries) return i;
 		if (next > entries) return i;
 	}
@@ -923,7 +940,7 @@ void imdct_fast(Real32* in, Real32* out, Int32 n) {
 *#########################################################################################################################*/
 struct Mode { UInt8 BlockSizeFlag, MappingIdx; };
 static ReturnCode Mode_DecodeSetup(struct VorbisState* ctx, struct Mode* m) {
-	m->BlockSizeFlag = Vorbis_ReadBits(ctx, 1);
+	m->BlockSizeFlag  = Vorbis_ReadBits(ctx, 1);
 	UInt16 windowType = Vorbis_ReadBits(ctx, 16);
 	if (windowType != 0) return VORBIS_ERR_MODE_WINDOW;
 
@@ -1077,7 +1094,9 @@ ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 *-----------------------------------------------------Vorbis frame--------------------------------------------------------*
 *#########################################################################################################################*/
 ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
-	Int32 i, j, packetType = Vorbis_ReadBits(ctx, 1);
+	Int32 i, j, packetType;
+	ReturnCode result = Vorbis_TryReadBits(ctx, 1, &packetType);
+	if (result) return result;
 	if (packetType) return VORBIS_ERR_FRAME_TYPE;
 
 	Int32 modeIdx = Vorbis_ReadBits(ctx, ctx->ModeNumBits);
