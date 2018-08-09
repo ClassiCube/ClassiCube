@@ -857,14 +857,17 @@ void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
 
 	/* step 2 */
 	for (k = 0, k4 = 0; k < n8; k++, k4 += 4) {
-		w[n2+3+k4] = v[n2+3+k4] + v[k4+3];
-		w[n2+1+k4] = v[n2+1+k4] + v[k4+1];
+		Real32 e_1 = v[k4+1],    e_2 = v[k4+3];
+		Real32 f_1 = v[k4+1+n2], f_2 = v[k4+3+n2];
 
-		w[k4+3] = (v[n2+3+k4] - v[k4+3]) * A[n2-4-k4] - (v[n2+1+k4] - v[k4+1]) * A[n2-3-k4];
-		w[k4+1] = (v[n2+1+k4] - v[k4+1]) * A[n2-4-k4] + (v[n2+3+k4] - v[k4+3]) * A[n2-3-k4];
+		w[n2+3+k4] = f_2 + e_2;
+		w[n2+1+k4] = f_1 + v[k4+1];
+
+		w[k4+3] = (f_2 - e_2) * A[n2-4-k4] - (f_1 - e_1) * A[n2-3-k4];
+		w[k4+1] = (f_1 - e_1) * A[n2-4-k4] + (f_2 - e_2) * A[n2-3-k4];
 	}
 
-	/* step 3*/
+	/* step 3 */
 	Int32 l, ld_n = Log2(n);
 	for (l = 0; l <= ld_n - 4; l++) {
 		Int32 k0 = n >> (l+2), k1 = 1 << (l+3);
@@ -904,32 +907,33 @@ void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
 		}
 	}
 
-	/* step 5 and 6 */
-	for (k = 0, k2 = 0, k4 = 0, k8 = 0; k < n8; k++, k2 += 2, k4 += 4, k8 += 8) {
-		u[n-1-k2]    = v[k8+1]; u[n-2-k2]    = v[k8+3];
-		u[n3_4-1-k2] = v[k8+5]; u[n3_4-2-k2] = v[k8+7];
-	}
+	/* step 5, step 6, step 7, step 8, output */
+	for (k = 0, k2 = 0, k8 = 0; k < n8; k++, k2 += 2, k8 += 8) {
+		Real32 e_1 = v[n-k8-1], e_2 = v[n-k8-3];
+		Real32 f_1 = v[k8+3],   f_2 = v[k8+1];
 
-	/* step 7 */
-	for (k = 0, k2 = 0; k < n8; k++, k2 += 2) {
-		Real32 e_1 = u[n2+k2],  e_2 = u[n2+k2+1];
-		Real32 f_1 = u[n-2-k2], f_2 = u[n-1-k2];
+		Real32 g_1 = ( e_1 + f_1 + C[k2+1] * (e_1 - f_1) + C[k2] * (e_2 + f_2)) * 0.5f;
+		Real32 h_1 = ( e_1 + f_1 - C[k2+1] * (e_1 - f_1) - C[k2] * (e_2 + f_2)) * 0.5f;
+		Real32 g_2 = ( e_2 - f_2 + C[k2+1] * (e_2 + f_2) - C[k2] * (e_1 - f_1)) * 0.5f;
+		Real32 h_2 = (-e_2 + f_2 + C[k2+1] * (e_2 + f_2) - C[k2] * (e_1 - f_1)) * 0.5f;
 
-		v[n2+k2]   = ( e_1 + f_1 + C[k2+1] * (e_1 - f_1) + C[k2] * (e_2 + f_2)) * 0.5f;
-		v[n-2-k2]  = ( e_1 + f_1 - C[k2+1] * (e_1 - f_1) - C[k2] * (e_2 + f_2)) * 0.5f;
-		v[n2+k2+1] = ( e_2 - f_2 + C[k2+1] * (e_2 + f_2) - C[k2] * (e_1 - f_1)) * 0.5f;
-		v[n-1-k2]  = (-e_2 + f_2 + C[k2+1] * (e_2 + f_2) - C[k2] * (e_1 - f_1)) * 0.5f;
-	}
+		Real32 x_1 = g_1 * B[k2]   + g_2 * B[k2+1];
+		Real32 x_2 = g_1 * B[k2+1] - g_2 * B[k2];
+		out[n4-1-k]   = 0.5f *  x_2;
+		out[n4+k]     = 0.5f * -x_2;
+		out[n3_4-1-k] = 0.5f * -x_1;
+		out[n3_4+k]   = 0.5f * -x_1;
 
-	/* step 8, output */
-	for (k = 0, k2 = 0; k < n4; k++, k2 += 2) {
-		Real32 e_1 = v[k2+n2] * B[k2]   + v[k2+1+n2] * B[k2+1];
-		Real32 e_2 = v[k2+n2] * B[k2+1] - v[k2+1+n2] * B[k2];
+		Int32 tmp = k, tmp2 = k2;
+		k = n4-1-k; k2 = n2-2-k2;
 
-		out[n4-1-k]   = 0.5f *  e_2;
-		out[n4+k]     = 0.5f * -e_2;
-		out[n3_4-1-k] = 0.5f * -e_1;
-		out[n3_4+k]   = 0.5f * -e_1;
+		Real32 y_1 = h_1 * B[k2]   + h_2 * B[k2+1];
+		Real32 y_2 = h_1 * B[k2+1] - h_2 * B[k2];
+		out[n4-1-k]   = 0.5f *  y_2;
+		out[n4+k]     = 0.5f * -y_2;
+		out[n3_4-1-k] = 0.5f * -y_1;
+		out[n3_4+k]   = 0.5f * -y_1;
+		k = tmp; k2 = tmp2;
 	}
 }
 

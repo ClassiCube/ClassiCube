@@ -14,12 +14,12 @@
 #include "Audio.h"
 #include "ExtMath.h"
 
-#define CC_TEST_VORBIS
+//#define CC_TEST_VORBIS
 #ifdef CC_TEST_VORBIS
 #include "Vorbis.h"
 
 #define VORBIS_N 64
-#define VORBIS_N2 32
+#define VORBIS_N2 (VORBIS_N / 2)
 int main_imdct() {
 	Real32 in[VORBIS_N2], out[VORBIS_N], out2[VORBIS_N];
 	Real64 delta[VORBIS_N];
