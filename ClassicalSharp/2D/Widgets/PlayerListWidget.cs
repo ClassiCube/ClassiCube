@@ -43,7 +43,7 @@ namespace ClassicalSharp.Gui.Widgets {
 
 			overview = TextWidget.Create(game, "Connected players:", font)
 				.SetLocation(Anchor.Centre, Anchor.Min, 0, 0);
-			game.EntityEvents.TabListEntryAdded += TabEntryAdded;
+			game.EntityEvents.TabListEntryAdded   += TabEntryAdded;
 			game.EntityEvents.TabListEntryRemoved += TabEntryRemoved;
 			game.EntityEvents.TabListEntryChanged += TabEntryChanged;
 		}
@@ -77,7 +77,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 			
 			overview.Dispose();			
-			game.EntityEvents.TabListEntryAdded -= TabEntryAdded;
+			game.EntityEvents.TabListEntryAdded   -= TabEntryAdded;
 			game.EntityEvents.TabListEntryChanged -= TabEntryChanged;
 			game.EntityEvents.TabListEntryRemoved -= TabEntryRemoved;
 		}

@@ -6,11 +6,20 @@
 */
 struct IGameComponent;
 struct Stream;
-#define OGG_BUFFER_SIZE (255 * 256)
-void Ogg_MakeStream(struct Stream* stream, UInt8* buffer, struct Stream* source);
-
 #define VORBIS_MAX_CHANS 8
+#define VORBIS_MAX_BLOCK_SIZE 8192
+#define OGG_BUFFER_SIZE (255 * 256)
+
+void Ogg_MakeStream(struct Stream* stream, UInt8* buffer, struct Stream* source);
 struct Codebook; struct Floor; struct Residue; struct Mapping; struct Mode;
+
+struct imdct_state {
+	Int32 n;
+	Real32 A[VORBIS_MAX_BLOCK_SIZE / 2];
+	Real32 B[VORBIS_MAX_BLOCK_SIZE / 2];
+	Real32 C[VORBIS_MAX_BLOCK_SIZE / 4];
+};
+
 struct VorbisState {
 	UInt32 Bits;    /* Holds bits across byte boundaries*/
 	UInt32 NumBits; /* Number of bits in Bits buffer*/
@@ -28,6 +37,10 @@ struct VorbisState {
 	struct Residue* Residues;
 	struct Mapping* Mappings;
 	struct Mode* Modes;
+
+	Real32* WindowShort;
+	Real32* WindowLong[2][2];
+	struct imdct_state imdct[2];
 };
 
 void Vorbis_Free(struct VorbisState* ctx);

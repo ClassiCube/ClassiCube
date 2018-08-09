@@ -408,12 +408,8 @@ namespace SharpDX.Direct3D9 {
 	}
 	
 	public enum PrimitiveType : int {
-		PointList = 1,
 		LineList = 2,
-		LineStrip = 3,
 		TriangleList = 4,
-		TriangleStrip = 5,
-		TriangleFan = 6,
 	}
 	
 	public enum RenderState : int {

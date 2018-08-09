@@ -205,22 +205,10 @@ namespace OpenTK.Graphics.OpenGL {
 		public static void NewList(int list, int mode) {
 			Interop.Calli(list, mode, NewListAddress);
 		} static IntPtr NewListAddress;
-
-		public static void PopMatrix() {
-			Interop.Calli(PopMatrixAddress);
-		} static IntPtr PopMatrixAddress;
-		
-		public static void PushMatrix() {
-			Interop.Calli(PushMatrixAddress);
-		} static IntPtr PushMatrixAddress;
 		
 		public static void ReadPixels(int x, int y, int width, int height, PixelFormat format, PixelType type, IntPtr pixels) {
 			Interop.Calli(x, y, width, height, (int)format, (int)type, pixels, ReadPixelsAddress);
 		} static IntPtr ReadPixelsAddress;
-		
-		public static void ShadeModel(ShadingModel mode) {
-			Interop.Calli((int)mode, ShadeModelAddress);
-		} static IntPtr ShadeModelAddress;
 		
 		public static void TexCoord2f(float u, float v) {
 			Interop.Calli(u, v, TexCoord2fAddress);
@@ -404,11 +392,6 @@ namespace OpenTK.Graphics.OpenGL {
 		UnsignedByte = 0x1401,
 	}
 
-	public enum ShadingModel : int {
-		Flat = 0x1D00,
-		Smooth = 0x1D01,
-	}
-
 	public enum StringName : int {
 		Vendor = 0x1F00,
 		Renderer = 0x1F01,
@@ -493,11 +476,7 @@ namespace OpenTK.Graphics.OpenGL {
 			MatrixModeAddress = context.GetAddress("glMatrixMode");
 			MultMatrixfAddress = context.GetAddress("glMultMatrixf");
 			NewListAddress = context.GetAddress("glNewList");
-			
-			PopMatrixAddress = context.GetAddress("glPopMatrix");
-			PushMatrixAddress = context.GetAddress("glPushMatrix");
 			ReadPixelsAddress = context.GetAddress("glReadPixels");
-			ShadeModelAddress = context.GetAddress("glShadeModel");
 			
 			TexCoord2fAddress = context.GetAddress("glTexCoord2f");
 			TexCoordPointerAddress = context.GetAddress("glTexCoordPointer");

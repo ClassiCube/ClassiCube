@@ -111,7 +111,7 @@ static ReturnCode Vorbis_TryReadBits(struct VorbisState* ctx, UInt32 bitsCount, 
 
 
 #define VORBIS_MAX_CHANS 8
-#define Vorbis_ChanData(ctx, ch) (ctx->Values + (ch) * ctx->DataSize)
+#define Vorbis_ChanData(ctx, ch) (ctx->Values + (ch) * ctx->CurBlockSize)
 
 static Int32 iLog(Int32 x) {
 	Int32 bits = 0;
@@ -789,7 +789,7 @@ static ReturnCode Mapping_DecodeSetup(struct VorbisState* ctx, struct Mapping* m
 *------------------------------------------------------imdct impl---------------------------------------------------------*
 *#########################################################################################################################*/
 #define PI MATH_PI
-void imdct(Real32* in, Real32* out, Int32 N) {
+void imdct_slow(Real32* in, Real32* out, Int32 N) {
 	Int32 i, k;
 
 	for (i = 0; i < 2 * N; i++) {
@@ -816,17 +816,11 @@ static UInt32 Log2(UInt32 v) {
 	return r;
 }
 
-#define VORBIS_MAX_BLOCK_SIZE 8192
-void imdct_fast(Real32* in, Real32* out, Int32 n) {
-	Int32 n2 = n >> 1, n4 = n >> 2, n8 = n >> 3, n3_4 = n - n4;
-	Int32 k, k2, k4, i, j;
+void imdct_init(struct imdct_state* state, Int32 n) {
+	Int32 k, k2, n4 = n >> 2, n8 = n >> 3;
+	Real32 *A = state->A, *B = state->B, *C = state->C;
+	state->n = n;
 
-	/* Optimised algorithm from "The use of multirate filter banks for coding of high quality digital audio" */
-	/* Uses a few fixes for the paper noted at http://www.nothings.org/stb_vorbis/mdct_01.txt */
-
-	Real32 A[VORBIS_MAX_BLOCK_SIZE / 2];
-	Real32 B[VORBIS_MAX_BLOCK_SIZE / 2];
-	Real32 C[VORBIS_MAX_BLOCK_SIZE / 4];
 	/* setup twiddle factors */
 	for (k = 0, k2 = 0; k < n4; k++, k2 += 2) {
 		A[k2]   =  Math_Cos((4*k * PI) / n);
@@ -838,6 +832,15 @@ void imdct_fast(Real32* in, Real32* out, Int32 n) {
 		C[k2]   =  Math_Cos(((k2+1) * (2*PI)) / n);
 		C[k2+1] = -Math_Sin(((k2+1) * (2*PI)) / n);
 	}
+}
+
+void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
+	Int32 k, k2, k4, i, j, n = state->n;
+	Int32 n2 = n >> 1, n4 = n >> 2, n8 = n >> 3, n3_4 = n - n4;
+	
+	/* Optimised algorithm from "The use of multirate filter banks for coding of high quality digital audio" */
+	/* Uses a few fixes for the paper noted at http://www.nothings.org/stb_vorbis/mdct_01.txt */
+	Real32 *A = state->A, *B = state->B, *C = state->C;
 
 	Real32 u[VORBIS_MAX_BLOCK_SIZE];
 	Real32 v[VORBIS_MAX_BLOCK_SIZE];
@@ -950,12 +953,54 @@ static ReturnCode Mode_DecodeSetup(struct VorbisState* ctx, struct Mode* m) {
 	return 0;
 }
 
+static void Vorbis_CalcWindow(struct VorbisState* ctx, UInt32* offset, bool longBlock, bool prevLong, bool nextLong) {
+	Int32 i, n = ctx->BlockSizes[longBlock];
+	Int32 window_center = n / 2;
+	Int32 left_window_beg,  left_window_end,  left_n;
+	Int32 right_window_beg, right_window_end, right_n;
+
+	if (longBlock && !prevLong) {
+		left_window_beg = n / 4 - ctx->BlockSizes[0] / 4;
+		left_window_end = n / 4 + ctx->BlockSizes[0] / 4;
+		left_n = ctx->BlockSizes[0] / 2;
+	} else {
+		left_window_beg = 0;
+		left_window_end = window_center;
+		left_n = n / 2;
+	}
+
+	if (longBlock && !nextLong) {
+		right_window_beg = (n*3) / 4 - ctx->BlockSizes[0] / 4;
+		right_window_end = (n*3) / 4 + ctx->BlockSizes[0] / 4;
+		right_n = ctx->BlockSizes[0] / 2;
+	} else {
+		right_window_beg = window_center;
+		right_window_end = n;
+		right_n = n / 2;
+	}
+
+	Real32* window = ctx->WindowShort + *offset; (*offset) += n;
+
+	for (i = 0; i < left_window_beg; i++) window[i] = 0;
+	for (i = left_window_beg; i < left_window_end; i++) {
+		Real64 inner = Math_Sin((i - left_window_beg + 0.5) / left_n * (PI/2));
+		window[i] = Math_Sin((PI/2) * inner * inner);
+	}
+	for (i = left_window_end; i < right_window_beg; i++) window[i] = 1;
+	for (i = right_window_beg; i < right_window_end; i++) {
+		Real64 inner = Math_Sin((i - right_window_beg + 0.5) / right_n * (PI/2) + (PI/2));
+		window[i] = Math_Sin((PI/2) * inner * inner);
+	}
+	for (i = right_window_end; i < n; i++) window[i] = 0;
+}
+
 void Vorbis_Free(struct VorbisState* ctx) {
 	Mem_Free(&ctx->Codebooks);
 	Mem_Free(&ctx->Floors);
 	Mem_Free(&ctx->Residues);
 	Mem_Free(&ctx->Mappings);
 	Mem_Free(&ctx->Modes);
+	Mem_Free(&ctx->WindowShort);
 	/* TODO: free memory in codebooks, other bits, etc*/
 }
 
@@ -1086,6 +1131,22 @@ ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 	result = Vorbis_DecodeSetup(ctx);
 	if (result) return result;
 
+	/* window calculations can be pre-computed here */
+	UInt32 size = ctx->BlockSizes[0] + ctx->BlockSizes[1] * 4, offset = 0;
+	ctx->WindowShort = Mem_Alloc(size, sizeof(Real32), "Vorbis windows");
+	Vorbis_CalcWindow(ctx, &offset, false, false, false);
+
+	ctx->WindowLong[0][0] = ctx->WindowShort + offset;
+	Vorbis_CalcWindow(ctx, &offset, true, false, false);
+	ctx->WindowLong[1][0] = ctx->WindowShort + offset;
+	Vorbis_CalcWindow(ctx, &offset, true, false, true);
+	ctx->WindowLong[0][1] = ctx->WindowShort + offset;
+	Vorbis_CalcWindow(ctx, &offset, true, true,  false);
+	ctx->WindowLong[1][1] = ctx->WindowShort + offset;
+	Vorbis_CalcWindow(ctx, &offset, true, true,  true);
+
+	imdct_init(&ctx->imdct[0], ctx->BlockSizes[0]);
+	imdct_init(&ctx->imdct[1], ctx->BlockSizes[1]);
 	return 0;
 }
 
@@ -1106,14 +1167,17 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	/* decode window shape */
 	ctx->CurBlockSize = ctx->BlockSizes[mode->BlockSizeFlag];
 	ctx->DataSize = ctx->CurBlockSize / 2;
-	Int32 prev_window, next_window;
+	Int32 prev_window = 0, next_window = 0;
 	/* long window lapping*/
 	if (mode->BlockSizeFlag) {
 		prev_window = Vorbis_ReadBits(ctx, 1);
 		next_window = Vorbis_ReadBits(ctx, 1);
 	}	
 
-	ctx->Values = Mem_AllocCleared(ctx->Channels * ctx->DataSize, sizeof(Real32), "audio values");
+	ctx->Values = Mem_AllocCleared(ctx->Channels * ctx->CurBlockSize, sizeof(Real32), "audio values");
+	for (i = 0; i < ctx->Channels; i++) {
+		ctx->CurOutput[i] = Vorbis_ChanData(ctx, i);
+	}
 
 	/* decode floor */
 	bool hasFloor[VORBIS_MAX_CHANS], hasResidue[VORBIS_MAX_CHANS];
@@ -1184,59 +1248,23 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	}
 
 	Int32 n = ctx->CurBlockSize;
-	Int32 window_center = n / 2;
-	Int32 left_window_beg,  left_window_end,  left_n;
-	Int32 right_window_beg, right_window_end, right_n;
-
-	if (mode->BlockSizeFlag && !prev_window) {
-		left_window_beg = n / 4 - ctx->BlockSizes[0] / 4;
-		left_window_end = n / 4 + ctx->BlockSizes[0] / 4;
-		left_n = ctx->BlockSizes[0] / 2;
+	Real32* window;
+	if (mode->BlockSizeFlag) {
+		window = ctx->WindowLong[prev_window][next_window];
 	} else {
-		left_window_beg = 0;
-		left_window_end = window_center;
-		left_n = n / 2;
+		window = ctx->WindowShort;
 	}
-
-	if (mode->BlockSizeFlag && !next_window) {
-		right_window_beg = (n*3) / 4 - ctx->BlockSizes[0] / 4;
-		right_window_end = (n*3) / 4 + ctx->BlockSizes[0] / 4;
-		right_n = ctx->BlockSizes[0] / 2;
-	} else {
-		right_window_beg = window_center;
-		right_window_end = n;
-		right_n = n / 2;
-	}
-
-	Real32* window = Mem_Alloc(n, sizeof(Real32), "temp window");
-	for (i = 0; i < left_window_beg; i++) window[i] = 0;
-	for (i = left_window_beg; i < left_window_end; i++) {
-		Real64 inner = Math_Sin((i - left_window_beg + 0.5) / left_n * (PI/2));
-		window[i] = Math_Sin((PI/2) * inner * inner);
-	}
-	for (i = left_window_end; i < right_window_beg; i++) window[i] = 1;
-	for (i = right_window_beg; i < right_window_end; i++) {
-		Real64 inner = Math_Sin((i - right_window_beg + 0.5) / right_n * (PI/2) + (PI/2));
-		window[i] = Math_Sin((PI/2) * inner * inner);
-	}
-	for (i = right_window_end; i < n; i++) window[i] = 0;
 
 	/* inverse monolithic transform of audio spectrum vector */
 	for (i = 0; i < ctx->Channels; i++) {
-		if (!hasFloor[i]) {
-			ctx->CurOutput[i] = Mem_AllocCleared(ctx->CurBlockSize, sizeof(Real32), "empty output");
-			continue;
-		}
-		Int32 submap = mapping->Mux[i];
-		Int32 floorIdx = mapping->FloorIdx[submap];
-
 		Real32* data = Vorbis_ChanData(ctx, i);
-		Real32* output = Mem_Alloc(ctx->CurBlockSize, sizeof(Real32), "imdct output");
-		imdct_fast(data, output, ctx->CurBlockSize);
-
-		/* apply windowing */
-		for (j = 0; j < n; j++) { output[j] *= window[j]; }
-		ctx->CurOutput[i] = output;
+		if (!hasFloor[i]) {
+			/* TODO: Do we actually need to zero data here (residue type 2 maybe) */
+			Mem_Set(data, 0, ctx->CurBlockSize * sizeof(Real32));
+		} else {
+			imdct_calc(data, data, &ctx->imdct[mode->BlockSizeFlag]);
+			for (j = 0; j < n; j++) { data[j] *= window[j]; }
+		}
 	}
 
 	/* discard remaining bits at end of packet */
@@ -1257,7 +1285,7 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 
 	Int32 prevHalf = ctx->PrevBlockSize / 2, curHalf = ctx->CurBlockSize / 2;
 	Int32 prevEnd = prevHalf + min(prevHalf, size);
-	Int32 curBeg  = curHalf - min(curHalf, size);
+	Int32 curBeg  = curHalf  - min(curHalf, size);
 
 	/* overlap and add data */
 	for (i = prevHalf; i < prevEnd; i++, j++) {
