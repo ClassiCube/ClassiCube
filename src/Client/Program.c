@@ -14,67 +14,34 @@
 #include "Audio.h"
 #include "ExtMath.h"
 
+#define CC_TEST_VORBIS
 #ifdef CC_TEST_VORBIS
-#include <Windows.h>
-#pragma comment(lib, "Winmm.lib")
+#include "Vorbis.h"
 
+#define VORBIS_N 64
+#define VORBIS_N2 32
 int main_imdct() {
-	Real32 in[32], out[64], out2[64];
+	Real32 in[VORBIS_N2], out[VORBIS_N], out2[VORBIS_N];
+	Real64 delta[VORBIS_N];
+
 	Random rng;
 	Random_Init(&rng, 2342334);
-	for (int ii = 0; ii < 32; ii++) {
+	struct imdct_state imdct;
+	imdct_init(&imdct, VORBIS_N);
+
+	for (int ii = 0; ii < VORBIS_N2; ii++) {
 		in[ii] = Random_Float(&rng);
 	}
 
-	imdct(in, out, 32);
-	imdct_fast(in, out2, 64);
-	int fff = 0;
-}
+	imdct_slow(in, out, VORBIS_N2);
+	imdct_calc(in, out2, &imdct);
 
-void vorbis_test() {
-	void* file;
-	String oggPath = String_FromConst("audio/calm1.ogg");
-	File_Open(&file, &oggPath);
-	struct Stream oggBase;
-	Stream_FromFile(&oggBase, file, &oggPath);
-	struct Stream ogg;
-	UInt8 oggBuffer[OGG_BUFFER_SIZE];
-	Ogg_MakeStream(&ogg, oggBuffer, &oggBase);
-
-	struct VorbisState state;
-	Vorbis_Init(&state, &ogg);
-	Vorbis_DecodeHeaders(&state);
-	Int32 size = 0, offset = 0;
-
-	Int16* chanData = Mem_Alloc(state.Channels * state.SampleRate * 1000, sizeof(Int16), "tmp data");
-	for (int i = 0; i < 1000; i++) {
-		Vorbis_DecodeFrame(&state);
-		Int32 read = Vorbis_OutputFrame(&state, &chanData[offset]);
-
-		size += read;
-		offset += read * state.Channels;
+	Real64 sum = 0;
+	for (int ii = 0; ii < VORBIS_N; ii++) {
+		delta[ii] = out2[ii] - out[ii];
+		sum += delta[ii];
 	}
-
-	WAVEFORMATEX format = { 0 };
-	format.nChannels = state.Channels;
-	format.nSamplesPerSec = state.SampleRate;
-	format.wBitsPerSample = 16;
-	format.wFormatTag = WAVE_FORMAT_PCM;
-	format.nBlockAlign = format.nChannels * format.wBitsPerSample / 8;
-	format.nAvgBytesPerSec = format.nSamplesPerSec * format.nBlockAlign;
-
-	unsigned devices = waveOutGetNumDevs();
-	HWAVEOUT handle;
-	unsigned res1 = waveOutOpen(&handle, UINT_MAX, &format, 0, 0, 0);
-
-	WAVEHDR header = { 0 };
-	header.lpData = chanData;
-	header.dwBufferLength = offset * 2;
-
-	unsigned res2 = waveOutPrepareHeader(handle, &header, sizeof(header));
-	unsigned res3 = waveOutWrite(handle, &header, sizeof(header));
-	Thread_Sleep(20000);
-	unsigned res4 = res3;
+	int fff = 0;
 }
 #endif
 
@@ -82,8 +49,7 @@ int main(void) {
 	ErrorHandler_Init("client.log");
 	Platform_Init();
 #ifdef CC_TEST_VORBIS
-	//main_imdct();
-	vorbis_test();
+	main_imdct();
 #endif
 
 	/*Http_Init();

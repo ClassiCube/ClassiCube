@@ -835,7 +835,7 @@ void imdct_init(struct imdct_state* state, Int32 n) {
 }
 
 void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
-	Int32 k, k2, k4, i, j, n = state->n;
+	Int32 k, k2, k4, k8, i, j, n = state->n;
 	Int32 n2 = n >> 1, n4 = n >> 2, n8 = n >> 3, n3_4 = n - n4;
 	
 	/* Optimised algorithm from "The use of multirate filter banks for coding of high quality digital audio" */
@@ -845,7 +845,6 @@ void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
 	Real32 u[VORBIS_MAX_BLOCK_SIZE];
 	Real32 v[VORBIS_MAX_BLOCK_SIZE];
 	Real32 w[VORBIS_MAX_BLOCK_SIZE];
-	Real32 X[VORBIS_MAX_BLOCK_SIZE];
 	/* spectral coefficients */
 	for (k = 0; k < n2; k++) u[k] = in[k];
 	for (     ; k < n;  k++) u[k] = -in[n-k-1];
@@ -873,13 +872,14 @@ void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
 
 		for (r = 0, r4 = 0; r < rMax; r++, r4 += 4) {
 			for (s2 = 0; s2 < s2Max; s2 += 2) {
-				u[n-1-k0*s2-r4] = w[n-1-k0*s2-r4] + w[n-1-k0*(s2+1)-r4];
-				u[n-3-k0*s2-r4] = w[n-3-k0*s2-r4] + w[n-3-k0*(s2+1)-r4];
+				Real32 e_1 = w[n-1-k0*s2-r4],     e_2 = w[n-3-k0*s2-r4];
+				Real32 f_1 = w[n-1-k0*(s2+1)-r4], f_2 = w[n-3-k0*(s2+1)-r4];
 
-				u[n-1-k0*(s2+1)-r4] = (w[n-1-k0*s2-r4] - w[n-1-k0*(s2+1)-r4]) * A[r*k1]
-					                - (w[n-3-k0*s2-r4] - w[n-3-k0*(s2+1)-r4]) * A[r*k1+1];
-				u[n-3-k0*(s2+1)-r4] = (w[n-3-k0*s2-r4] - w[n-3-k0*(s2+1)-r4]) * A[r*k1]
-					                + (w[n-1-k0*s2-r4] - w[n-1-k0*(s2+1)-r4]) * A[r*k1+1];
+				u[n-1-k0*s2-r4] = e_1 + f_1;
+				u[n-3-k0*s2-r4] = e_2 + f_2;
+
+				u[n-1-k0*(s2+1)-r4] = (e_1 - f_1) * A[r*k1] - (e_2 - f_2) * A[r*k1+1];
+				u[n-3-k0*(s2+1)-r4] = (e_2 - f_2) * A[r*k1] + (e_1 - f_1) * A[r*k1+1];
 			}
 		}
 
@@ -904,37 +904,33 @@ void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
 		}
 	}
 
-	/* step 5 */
-	for (k = 0, k2 = 0; k < n2; k++, k2 += 2) {
-		w[k] = v[k2+1];
-	}
-
-	/* step 6 */
-	for (k = 0, k2 = 0, k4 = 0; k < n8; k++, k2 += 2, k4 += 4) {
-		u[n-1-k2] = w[k4];
-		u[n-2-k2] = w[k4+1];
-		u[n3_4-1-k2] = w[k4+2];
-		u[n3_4-2-k2] = w[k4+3];
+	/* step 5 and 6 */
+	for (k = 0, k2 = 0, k4 = 0, k8 = 0; k < n8; k++, k2 += 2, k4 += 4, k8 += 8) {
+		u[n-1-k2]    = v[k8+1]; u[n-2-k2]    = v[k8+3];
+		u[n3_4-1-k2] = v[k8+5]; u[n3_4-2-k2] = v[k8+7];
 	}
 
 	/* step 7 */
 	for (k = 0, k2 = 0; k < n8; k++, k2 += 2) {
-		v[n2+k2]   = ( u[n2+k2]   + u[n-2-k2] + C[k2+1] * (u[n2+k2]   - u[n-2-k2]) + C[k2] * (u[n2+k2+1] + u[n-2-k2+1])) * 0.5f;
-		v[n-2-k2]  = ( u[n2+k2]   + u[n-2-k2] - C[k2+1] * (u[n2+k2]   - u[n-2-k2]) - C[k2] * (u[n2+k2+1] + u[n-2-k2+1])) * 0.5f;
-		v[n2+k2+1] = ( u[n2+k2+1] - u[n-1-k2] + C[k2+1] * (u[n2+1+k2] + u[n-1-k2]) - C[k2] * (u[n2+k2]   - u[n-2-k2])) * 0.5f;
-		v[n-1-k2]  = (-u[n2+k2+1] + u[n-1-k2] + C[k2+1] * (u[n2+1+k2] + u[n-1-k2]) - C[k2] * (u[n2+k2]   - u[n-2-k2])) * 0.5f;
+		Real32 e_1 = u[n2+k2],  e_2 = u[n2+k2+1];
+		Real32 f_1 = u[n-2-k2], f_2 = u[n-1-k2];
+
+		v[n2+k2]   = ( e_1 + f_1 + C[k2+1] * (e_1 - f_1) + C[k2] * (e_2 + f_2)) * 0.5f;
+		v[n-2-k2]  = ( e_1 + f_1 - C[k2+1] * (e_1 - f_1) - C[k2] * (e_2 + f_2)) * 0.5f;
+		v[n2+k2+1] = ( e_2 - f_2 + C[k2+1] * (e_2 + f_2) - C[k2] * (e_1 - f_1)) * 0.5f;
+		v[n-1-k2]  = (-e_2 + f_2 + C[k2+1] * (e_2 + f_2) - C[k2] * (e_1 - f_1)) * 0.5f;
 	}
 
-	/* step 8 */
+	/* step 8, output */
 	for (k = 0, k2 = 0; k < n4; k++, k2 += 2) {
-		X[k]      = v[k2+n2] * B[k2]   + v[k2+1+n2] * B[k2+1];
-		X[n2-1-k] = v[k2+n2] * B[k2+1] - v[k2+1+n2] * B[k2];
-	}
+		Real32 e_1 = v[k2+n2] * B[k2]   + v[k2+1+n2] * B[k2+1];
+		Real32 e_2 = v[k2+n2] * B[k2+1] - v[k2+1+n2] * B[k2];
 
-	/* output */
-	for (k = 0; k < n4;   k++) out[k] = 0.5f *  X[k+n4];
-	for (     ; k < n3_4; k++) out[k] = 0.5f * -X[n3_4-k-1];
-	for (     ; k < n;    k++) out[k] = 0.5f * -X[k-n3_4];
+		out[n4-1-k]   = 0.5f *  e_2;
+		out[n4+k]     = 0.5f * -e_2;
+		out[n3_4-1-k] = 0.5f * -e_1;
+		out[n3_4+k]   = 0.5f * -e_1;
+	}
 }
 
 
