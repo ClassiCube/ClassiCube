@@ -850,21 +850,16 @@ void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
 	Real32 u[VORBIS_MAX_BLOCK_SIZE];
 	Real32 v[VORBIS_MAX_BLOCK_SIZE];
 	Real32 w[VORBIS_MAX_BLOCK_SIZE];
-	/* spectral coefficients */
-	for (k = 0; k < n2; k++) u[k] = in[k];
-	for (     ; k < n;  k++) u[k] = -in[n-k-1];
 
-	/* step 1 and step 2 */
+	/* spectral coefficients, step 1, step 2 */
 	for (k = 0, k2 = 0, k4 = 0; k < n8; k++, k2 += 2, k4 += 4) {
-		Real32 e_1 = u[n-4-k4], e_2 = u[n-2-k4];
-		Real32 f_1 = u[k4+3],   f_2 = u[k4+1];
-		Real32 g_1 = (e_1 - f_1) * A[n2-1-k2] + (e_2 - f_2) * A[n2-2-k2];
-		Real32 g_2 = (e_1 - f_1) * A[n2-2-k2] - (e_2 - f_2) * A[n2-1-k2];
+		Real32 e_1 = -in[k4+3], e_2 = -in[k4+1];
+		Real32 g_1 = 2*e_1 * A[n2-1-k2] + 2*e_2 * A[n2-2-k2];
+		Real32 g_2 = 2*e_1 * A[n2-2-k2] - 2*e_2 * A[n2-1-k2];
 
-		Real32 x_1 = u[n2-k4-4], x_2 = u[n2-k4-2];
-		Real32 y_1 = u[n2+k4+3], y_2 = u[n2+k4+1];
-		Real32 h_2 = (x_1 - y_1) * A[n4-2-k2] - (x_2 - y_2) * A[n4-1-k2];
-		Real32 h_1 = (x_1 - y_1) * A[n4-1-k2] + (x_2 - y_2) * A[n4-2-k2];
+		Real32 f_1 = in[n2-4-k4], f_2 = in[n2-2-k4];
+		Real32 h_2 = 2*f_1 * A[n4-2-k2] - 2*f_2 * A[n4-1-k2];
+		Real32 h_1 = 2*f_1 * A[n4-1-k2] + 2*f_2 * A[n4-2-k2];
 
 		w[n2+3+k4] = h_2 + g_2;
 		w[n2+1+k4] = h_1 + g_1;
@@ -916,16 +911,12 @@ void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
 		out[n3_4-1-k] = 0.5f * -x_1;
 		out[n3_4+k]   = 0.5f * -x_1;
 
-		Int32 tmp = k, tmp2 = k2;
-		k = n4-1-k; k2 = n2-2-k2;
-
-		Real32 y_1 = h_1 * B[k2]   + h_2 * B[k2+1];
-		Real32 y_2 = h_1 * B[k2+1] - h_2 * B[k2];
-		out[n4-1-k]   = 0.5f *  y_2;
-		out[n4+k]     = 0.5f * -y_2;
-		out[n3_4-1-k] = 0.5f * -y_1;
-		out[n3_4+k]   = 0.5f * -y_1;
-		k = tmp; k2 = tmp2;
+		Real32 y_1 = h_1 * B[n2-2-k2] + h_2 * B[n2-1-k2];
+		Real32 y_2 = h_1 * B[n2-1-k2] - h_2 * B[n2-2-k2];
+		out[k]      = 0.5f *  y_2;
+		out[n2-1-k] = 0.5f * -y_2;
+		out[n2+k]   = 0.5f * -y_1;
+		out[n-1-k]  = 0.5f * -y_1;
 	}
 }
 
