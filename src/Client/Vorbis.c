@@ -817,9 +817,9 @@ static UInt32 Log2(UInt32 v) {
 }
 
 void imdct_init(struct imdct_state* state, Int32 n) {
-	Int32 k, k2, n4 = n >> 2, n8 = n >> 3;
+	Int32 k, k2, n4 = n >> 2, n8 = n >> 3, ld_n = Log2(n);
 	Real32 *A = state->A, *B = state->B, *C = state->C;
-	state->n = n;
+	state->n = n; state->ld_n = ld_n;
 
 	/* setup twiddle factors */
 	for (k = 0, k2 = 0; k < n4; k++, k2 += 2) {
@@ -832,10 +832,15 @@ void imdct_init(struct imdct_state* state, Int32 n) {
 		C[k2]   =  Math_Cos(((k2+1) * (2*PI)) / n);
 		C[k2+1] = -Math_Sin(((k2+1) * (2*PI)) / n);
 	}
+
+	UInt32* reversed = state->Reversed;
+	for (k = 0; k < n8; k++) {
+		reversed[k] = ReverseBits(k) >> (32-ld_n+3);
+	}
 }
 
 void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
-	Int32 k, k2, k4, k8, i, j, n = state->n;
+	Int32 k, k2, k4, k8, n = state->n;
 	Int32 n2 = n >> 1, n4 = n >> 2, n8 = n >> 3, n3_4 = n - n4;
 	
 	/* Optimised algorithm from "The use of multirate filter banks for coding of high quality digital audio" */
@@ -849,26 +854,27 @@ void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
 	for (k = 0; k < n2; k++) u[k] = in[k];
 	for (     ; k < n;  k++) u[k] = -in[n-k-1];
 
-	/* step 1 */
-	for (k = 0, k2 = 0, k4 = 0; k < n4; k++, k2 += 2, k4 += 4) {
-		v[n-k4-1] = (u[k4] - u[n-k4-1]) * A[k2]   - (u[k4+2] - u[n-k4-3]) * A[k2 + 1];
-		v[n-k4-3] = (u[k4] - u[n-k4-1]) * A[k2+1] + (u[k4+2] - u[n-k4-3]) * A[k2];
-	}
+	/* step 1 and step 2 */
+	for (k = 0, k2 = 0, k4 = 0; k < n8; k++, k2 += 2, k4 += 4) {
+		Real32 e_1 = u[n-4-k4], e_2 = u[n-2-k4];
+		Real32 f_1 = u[k4+3],   f_2 = u[k4+1];
+		Real32 g_1 = (e_1 - f_1) * A[n2-1-k2] + (e_2 - f_2) * A[n2-2-k2];
+		Real32 g_2 = (e_1 - f_1) * A[n2-2-k2] - (e_2 - f_2) * A[n2-1-k2];
 
-	/* step 2 */
-	for (k = 0, k4 = 0; k < n8; k++, k4 += 4) {
-		Real32 e_1 = v[k4+1],    e_2 = v[k4+3];
-		Real32 f_1 = v[k4+1+n2], f_2 = v[k4+3+n2];
+		Real32 x_1 = u[n2-k4-4], x_2 = u[n2-k4-2];
+		Real32 y_1 = u[n2+k4+3], y_2 = u[n2+k4+1];
+		Real32 h_2 = (x_1 - y_1) * A[n4-2-k2] - (x_2 - y_2) * A[n4-1-k2];
+		Real32 h_1 = (x_1 - y_1) * A[n4-1-k2] + (x_2 - y_2) * A[n4-2-k2];
 
-		w[n2+3+k4] = f_2 + e_2;
-		w[n2+1+k4] = f_1 + v[k4+1];
+		w[n2+3+k4] = h_2 + g_2;
+		w[n2+1+k4] = h_1 + g_1;
 
-		w[k4+3] = (f_2 - e_2) * A[n2-4-k4] - (f_1 - e_1) * A[n2-3-k4];
-		w[k4+1] = (f_1 - e_1) * A[n2-4-k4] + (f_2 - e_2) * A[n2-3-k4];
+		w[k4+3] = (h_2 - g_2) * A[n2-4-k4] - (h_1 - g_1) * A[n2-3-k4];
+		w[k4+1] = (h_1 - g_1) * A[n2-4-k4] + (h_2 - g_2) * A[n2-3-k4];
 	}
 
 	/* step 3 */
-	Int32 l, ld_n = Log2(n);
+	Int32 l, ld_n = state->ld_n;
 	for (l = 0; l <= ld_n - 4; l++) {
 		Int32 k0 = n >> (l+2), k1 = 1 << (l+3);
 		Int32 r, r4, rMax = n >> (l+4), s2, s2Max = 1 << (l+2);
@@ -891,26 +897,12 @@ void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
 		}
 	}
 
-	/* step 4 */
-	for (i = 0; i < n8; i++) {
-		j = ReverseBits(i) >> (32-ld_n+3);
-		if (i == j) {
-			Int32 i8 = i << 3;
-			v[i8+1] = u[i8+1]; v[i8+3] = u[i8+3];
-			v[i8+5] = u[i8+5]; v[i8+7] = u[i8+7];
-		} else if (i < j) {
-			Int32 i8 = i << 3, j8 = j << 3;
-			v[j8+1] = u[i8+1]; v[i8+1] = u[j8+1];
-			v[j8+3] = u[i8+3]; v[i8+3] = u[j8+3];
-			v[j8+5] = u[i8+5]; v[i8+5] = u[j8+5];
-			v[j8+7] = u[i8+7]; v[i8+7] = u[j8+7];
-		}
-	}
-
-	/* step 5, step 6, step 7, step 8, output */
+	/* step 4, step 5, step 6, step 7, step 8, output */
+	UInt32* reversed = state->Reversed;
 	for (k = 0, k2 = 0, k8 = 0; k < n8; k++, k2 += 2, k8 += 8) {
-		Real32 e_1 = v[n-k8-1], e_2 = v[n-k8-3];
-		Real32 f_1 = v[k8+3],   f_2 = v[k8+1];
+		UInt32 j = reversed[k], j8 = j << 3;
+		Real32 e_1 = u[n-j8-1], e_2 = u[n-j8-3];
+		Real32 f_1 = u[j8+3],   f_2 = u[j8+1];
 
 		Real32 g_1 = ( e_1 + f_1 + C[k2+1] * (e_1 - f_1) + C[k2] * (e_2 + f_2)) * 0.5f;
 		Real32 h_1 = ( e_1 + f_1 - C[k2+1] * (e_1 - f_1) - C[k2] * (e_2 + f_2)) * 0.5f;
