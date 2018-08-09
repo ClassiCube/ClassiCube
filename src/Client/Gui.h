@@ -87,7 +87,7 @@ Int32 Gui_IndexOverlay(struct Screen* overlay);
 void Gui_FreeOverlay(struct Screen* overlay);
 void Gui_RenderGui(Real64 delta);
 void Gui_OnResize(void);
-
+void Gui_CalcCursorVisible(void);
 
 #define TEXTATLAS_MAX_WIDTHS 16
 struct TextAtlas {

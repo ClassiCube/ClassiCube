@@ -67,9 +67,9 @@ namespace ClassicalSharp {
 			int cenX = topLeft.X + game.Width / 2;
 			int cenY = topLeft.Y + game.Height / 2;
 			
-			game.DesktopCursorPos = new Point(cenX, cenY);
+			game.window.DesktopCursorPos = new Point(cenX, cenY);
 			// Fixes issues with large DPI displays on Windows >= 8.0.
-			previous = game.DesktopCursorPos;
+			previous = game.window.DesktopCursorPos;
 		}
 		
 		public override void RegrabMouse() {
@@ -127,8 +127,8 @@ namespace ClassicalSharp {
 		public override void UpdateMouse() {
 			if (game.Gui.ActiveScreen.HandlesAllInput) {
 				delta = Point.Empty;
-			} else if (game.Focused) {
-				Point pos = game.DesktopCursorPos;
+			} else if (game.window.Focused) {
+				Point pos = game.window.DesktopCursorPos;
 				delta = new Point(pos.X - previous.X, pos.Y - previous.Y);
 				CentreMousePosition();
 			}

@@ -5,13 +5,24 @@ using ClassicalSharp.Gui.Widgets;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
-	public partial class InventoryScreen : Screen {
+	public class InventoryScreen : Screen {
 		
 		TableWidget table;
 		Font font;
+		bool deferredSelect;
 		public InventoryScreen(Game game) : base(game) {
 			font = new Font(game.FontName, 16);
-			HandlesAllInput = true;
+		}
+		
+		void MoveToSelected() {
+			table.SetBlockTo(game.Inventory.Selected);
+			table.Recreate();
+			deferredSelect = false;
+			
+			// User is holding invalid block
+			if (table.SelectedIndex == -1) {
+				table.MakeDescTex(game.Inventory.Selected);
+			}
 		}
 
 		public override void Init() {
@@ -20,19 +31,22 @@ namespace ClassicalSharp.Gui.Screens {
 			table.ElementsPerRow = game.PureClassic ? 9 : 10;
 			table.Init();
 			
-			// User is holding invalid block
-			if (table.SelectedIndex == -1) {
-				table.MakeDescTex(game.Inventory.Selected);
-			}
-			
+			// Can't immediately move to selected here, because cursor visibility 
+			// might be toggled after Init() is called. This causes the cursor to 
+			// be moved back to the middle of the window.
+			deferredSelect = true;
+
 			game.Events.BlockPermissionsChanged += OnBlockChanged;
-			game.Events.BlockDefinitionChanged += OnBlockChanged;
+			game.Events.BlockDefinitionChanged  += OnBlockChanged;
 			Keyboard.KeyRepeat = true;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 		}
 		
-		public override void Render(double delta) { table.Render(delta); }
+		public override void Render(double delta) {
+			if (deferredSelect) MoveToSelected();
+			table.Render(delta); 
+		}
 		
 		public override void Dispose() {
 			font.Dispose();

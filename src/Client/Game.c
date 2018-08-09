@@ -120,21 +120,6 @@ void Game_SetDefaultTexturePack(STRING_PURE String* texPack) {
 	Options_Set(OPT_DEFAULT_TEX_PACK, texPack);
 }
 
-
-bool game_CursorVisible = true, game_realCursorVisible = true;
-bool Game_GetCursorVisible(void) { return game_CursorVisible; }
-bool Game_GetRealCursorVisible(void) { return game_realCursorVisible; }
-void Game_SetCursorVisible(bool visible) {
-	/* Defer mouse visibility changes */
-	game_realCursorVisible = visible;
-	if (Gui_OverlaysCount > 0) return;
-
-	/* Only set the value when it has changed */
-	if (game_CursorVisible == visible) return;
-	Window_SetCursorVisible(visible);
-	game_CursorVisible = visible;
-}
-
 bool Game_ChangeTerrainAtlas(struct Bitmap* atlas) {
 	String terrain = String_FromConst("terrain.png");
 	if (!Game_ValidateBitmap(&terrain, atlas)) return false;

@@ -42,7 +42,7 @@ void GuiElement_Reset(struct GuiElem* elem) {
 
 void Screen_Reset(struct Screen* screen) {
 	GuiElement_Reset((struct GuiElem*)screen);
-	screen->HandlesAllInput = false;
+	screen->HandlesAllInput = true;
 	screen->BlocksWorld     = false;
 	screen->HidesHUD        = false;
 	screen->RenderHUDOver   = false;
@@ -147,16 +147,10 @@ void Gui_FreeActive(void) {
 
 void Gui_SetActive(struct Screen* screen) {
 	InputHandler_ScreenChanged(Gui_Active, screen);
-
-	if (!screen) {
-		Game_SetCursorVisible(false);
-		if (Window_Focused) { Camera_Active->RegrabMouse(); }
-	} else if (!Gui_Active) {
-		Game_SetCursorVisible(true);
-	}
-
 	if (screen) { Elem_Init(screen); }
+
 	Gui_Active = screen;
+	Gui_CalcCursorVisible();
 }
 void Gui_RefreshHud(void) { Elem_Recreate(Gui_HUD); }
 
@@ -164,8 +158,6 @@ void Gui_ShowOverlay(struct Screen* overlay, bool atFront) {
 	if (Gui_OverlaysCount == GUI_MAX_OVERLAYS) {
 		ErrorHandler_Fail("Cannot have more than 6 overlays");
 	}
-	bool visible = Game_GetCursorVisible();
-	if (!Gui_OverlaysCount) Game_SetCursorVisible(true);
 
 	if (atFront) {
 		Int32 i;
@@ -179,8 +171,8 @@ void Gui_ShowOverlay(struct Screen* overlay, bool atFront) {
 	}
 	Gui_OverlaysCount++;
 
-	if (Gui_OverlaysCount == 1) Game_SetCursorVisible(visible); /* Save cursor visibility state */
 	Elem_Init(overlay);
+	Gui_CalcCursorVisible();
 }
 
 Int32 Gui_IndexOverlay(struct Screen* overlay) {
@@ -202,9 +194,7 @@ void Gui_FreeOverlay(struct Screen* overlay) {
 
 	Gui_OverlaysCount--;
 	Gui_Overlays[Gui_OverlaysCount] = NULL;
-
-	if (!Gui_OverlaysCount) { Game_SetCursorVisible(Game_GetRealCursorVisible()); }
-	Camera_Active->RegrabMouse();
+	Gui_CalcCursorVisible();
 }
 
 void Gui_RenderGui(Real64 delta) {
@@ -231,6 +221,17 @@ void Gui_OnResize(void) {
 	for (i = 0; i < Gui_OverlaysCount; i++) {
 		Gui_Overlays[i]->OnResize((struct GuiElem*)Gui_Overlays[i]);
 	}
+}
+
+bool gui_cursorVisible = true;
+void Gui_CalcCursorVisible(void) {
+	bool vis = Gui_GetActiveScreen()->HandlesAllInput;
+	if (vis == gui_cursorVisible) return;
+	gui_cursorVisible = vis;
+
+	Window_SetCursorVisible(vis);
+	if (Window_Focused)
+		Camera_Active->RegrabMouse();
 }
 
 

@@ -84,41 +84,28 @@ namespace ClassicalSharp {
 			if (activeScreen != null && disposeOld)
 				activeScreen.Dispose();
 			
-			if (screen == null) {
-				game.CursorVisible = false;
-				if (game.Focused) game.Camera.RegrabMouse();
-			} else if (activeScreen == null) {
-				game.CursorVisible = true;
-			}
-			
-			if (screen != null)
-				screen.Init();
+			if (screen != null) screen.Init();
 			activeScreen = screen;
+			CalcCursorVisible();
 		}
 		
 		public void RefreshHud() { hudScreen.Recreate(); }
 		
 		public void ShowOverlay(Overlay overlay, bool inFront) {
-			bool cursorVis = game.CursorVisible;
-			if (overlays.Count == 0) game.CursorVisible = true;
-			
 			if (inFront) {
 				overlays.Insert(0, overlay);
 			} else {
 				overlays.Add(overlay);
 			}
-			if (overlays.Count == 1) game.CursorVisible = cursorVis;
-			// Save cursor visibility state
+			
 			overlay.Init();
+			CalcCursorVisible();
 		}
 		
 		public void DisposeOverlay(Overlay overlay) {
 			overlay.Dispose();		
 			overlays.Remove(overlay);
-			
-			if (overlays.Count == 0)
-				game.CursorVisible = game.realVisible;
-			game.Camera.RegrabMouse();
+			CalcCursorVisible();
 		}
 		
 		
@@ -143,6 +130,17 @@ namespace ClassicalSharp {
 			for (int i = 0; i < overlays.Count; i++) {
 				overlays[i].OnResize();
 			}
+		}
+		
+		bool cursorVisible = true;
+		public void CalcCursorVisible() {
+			bool vis = ActiveScreen.HandlesAllInput;
+			if (vis == cursorVisible) return;
+			cursorVisible = vis;
+			
+			game.window.CursorVisible = vis;
+			if (game.window.Focused)
+				game.Camera.RegrabMouse();
 		}
 	}
 }

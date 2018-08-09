@@ -7,9 +7,7 @@ using OpenTK.Input;
 namespace ClassicalSharp.Gui.Screens {
 	public abstract class ListScreen : ClickableScreen {
 		
-		public ListScreen(Game game) : base(game) {
-			HandlesAllInput = true;
-		}
+		public ListScreen(Game game) : base(game) { }
 		
 		protected Font font;
 		protected string[] entries;

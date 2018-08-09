@@ -25,7 +25,7 @@ struct InventoryScreen {
 	Screen_Layout
 	struct FontDesc Font;
 	struct TableWidget Table;
-	bool ReleasedInv;
+	bool ReleasedInv, DeferredSelect;
 };
 
 struct StatusScreen {
@@ -126,6 +126,18 @@ static void InventoryScreen_ContextRecreated(void* obj) {
 	Elem_Recreate(&screen->Table);
 }
 
+static void InventoryScreen_MoveToSelected(struct InventoryScreen* screen) {
+	struct TableWidget* table = &screen->Table;
+	TableWidget_SetBlockTo(table, Inventory_SelectedBlock);
+	Elem_Recreate(table);
+	screen->DeferredSelect = false;
+
+	/* User is holding invalid block */
+	if (table->SelectedIndex == -1) {
+		TableWidget_MakeDescTex(table, Inventory_SelectedBlock);
+	}
+}
+
 static void InventoryScreen_Init(struct GuiElem* elem) {
 	struct InventoryScreen* screen = (struct InventoryScreen*)elem;
 	Font_Make(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
@@ -135,10 +147,10 @@ static void InventoryScreen_Init(struct GuiElem* elem) {
 	screen->Table.ElementsPerRow = Game_PureClassic ? 9 : 10;
 	Elem_Init(&screen->Table);
 
-	/* User is holding invalid block */
-	if (screen->Table.SelectedIndex == -1) {
-		TableWidget_MakeDescTex(&screen->Table, Inventory_SelectedBlock);
-	}
+	/* Can't immediately move to selected here, because cursor visibility 
+	   might be toggled after Init() is called. This causes the cursor to 
+	   be moved back to the middle of the window. */
+	screen->DeferredSelect = true;
 
 	Key_KeyRepeat = true;
 	Event_RegisterVoid(&BlockEvents_PermissionsChanged, screen, InventoryScreen_OnBlockChanged);
@@ -149,6 +161,7 @@ static void InventoryScreen_Init(struct GuiElem* elem) {
 
 static void InventoryScreen_Render(struct GuiElem* elem, Real64 delta) {
 	struct InventoryScreen* screen = (struct InventoryScreen*)elem;
+	if (screen->DeferredSelect) InventoryScreen_MoveToSelected(screen);
 	Elem_Render(&screen->Table, delta);
 }
 
@@ -238,7 +251,6 @@ struct Screen* InventoryScreen_MakeInstance(void) {
 	Mem_Set(screen, 0, sizeof(struct InventoryScreen));
 	screen->VTABLE = &InventoryScreen_VTABLE;
 	Screen_Reset((struct Screen*)screen);
-	screen->HandlesAllInput = true;
 
 	screen->VTABLE->HandlesKeyDown     = InventoryScreen_HandlesKeyDown;
 	screen->VTABLE->HandlesKeyUp       = InventoryScreen_HandlesKeyUp;
@@ -424,6 +436,7 @@ struct Screen* StatusScreen_MakeInstance(void) {
 	Mem_Set(screen, 0, sizeof(struct StatusScreen));
 	screen->VTABLE = &StatusScreen_VTABLE;
 	Screen_Reset((struct Screen*)screen);
+	screen->HandlesAllInput = false;
 
 	screen->OnResize       = StatusScreen_OnResize;
 	screen->VTABLE->Init   = StatusScreen_Init;
@@ -592,7 +605,6 @@ static void LoadingScreen_Make(struct LoadingScreen* screen, struct GuiElementVT
 	Mem_Set(screen, 0, sizeof(struct LoadingScreen));
 	screen->VTABLE = vtable;
 	Screen_Reset((struct Screen*)screen);
-	screen->HandlesAllInput = true;
 
 	screen->VTABLE->HandlesKeyDown     = LoadingScreen_HandlesKeyDown;
 	screen->VTABLE->HandlesKeyPress    = LoadingScreen_HandlesKeyPress;
@@ -721,10 +733,10 @@ static void ChatScreen_UpdateAltTextY(struct ChatScreen* screen) {
 static void ChatScreen_SetHandlesAllInput(struct ChatScreen* screen, bool handles) {
 	screen->HandlesAllInput  = handles;
 	Gui_HUD->HandlesAllInput = handles;
+	Gui_CalcCursorVisible();
 }
 
 static void ChatScreen_OpenInput(struct ChatScreen* screen, STRING_PURE String* initialText) {
-	Game_SetCursorVisible(true);
 	screen->SuppressNextPress = true;
 	ChatScreen_SetHandlesAllInput(screen, true);
 	Key_KeyRepeat = true;
@@ -908,9 +920,6 @@ static bool ChatScreen_HandlesKeyDown(struct GuiElem* elem, Key key) {
 	if (screen->HandlesAllInput) { /* text input bar */
 		if (key == KeyBind_Get(KeyBind_SendChat) || key == Key_KeypadEnter || key == KeyBind_Get(KeyBind_PauseOrExit)) {
 			ChatScreen_SetHandlesAllInput(screen, false);
-			/* when underlying screen is HUD, user is interacting with the world normally */
-			Game_SetCursorVisible(Gui_GetUnderlyingScreen() != Gui_HUD);
-			Camera_Active->RegrabMouse();
 			Key_KeyRepeat = false;
 
 			if (key == KeyBind_Get(KeyBind_PauseOrExit)) {
@@ -1064,7 +1073,7 @@ static void ChatScreen_ContextLost(void* obj) {
 
 	if (screen->HandlesAllInput) {
 		String_AppendString(&chatInInput, &screen->Input.Base.Text);
-		Game_SetCursorVisible(false);
+		Gui_CalcCursorVisible();
 	}
 
 	Elem_TryFree(&screen->Chat);
@@ -1181,6 +1190,7 @@ struct Screen* ChatScreen_MakeInstance(void) {
 	Mem_Set(screen, 0, sizeof(struct ChatScreen));
 	screen->VTABLE = &ChatScreen_VTABLE;
 	Screen_Reset((struct Screen*)screen);
+	screen->HandlesAllInput = false;
 
 	screen->InputOldHeight = -1;
 	screen->LastDownloadStatus = Int32_MinValue;
@@ -1378,6 +1388,7 @@ struct Screen* HUDScreen_MakeInstance(void) {
 	Mem_Set(screen, 0, sizeof(struct HUDScreen));
 	screen->VTABLE = &HUDScreenVTABLE;
 	Screen_Reset((struct Screen*)screen);
+	screen->HandlesAllInput = false;
 
 	screen->OnResize       = HUDScreen_OnResize;
 	screen->VTABLE->Init   = HUDScreen_Init;
@@ -1577,7 +1588,6 @@ struct Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_P
 	Mem_Set(screen, 0, sizeof(struct DisconnectScreen));
 	screen->VTABLE = &DisconnectScreen_VTABLE;
 	Screen_Reset((struct Screen*)screen);
-	screen->HandlesAllInput = true;
 
 	String titleScreen = String_InitAndClearArray(screen->TitleBuffer);
 	String_AppendString(&titleScreen, title);

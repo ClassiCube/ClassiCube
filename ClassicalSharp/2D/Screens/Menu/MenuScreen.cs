@@ -6,9 +6,7 @@ using OpenTK.Input;
 namespace ClassicalSharp.Gui.Screens {
 	public abstract class MenuScreen : ClickableScreen {
 		
-		public MenuScreen(Game game) : base(game) {
-			HandlesAllInput = true;
-		}
+		public MenuScreen(Game game) : base(game) { }
 		
 		protected Widget[] widgets;
 		protected Font titleFont, textFont;

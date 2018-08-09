@@ -306,7 +306,7 @@ namespace ClassicalSharp {
 			Vertices = 0;
 			
 			Camera.UpdateMouse();
-			if (!Focused && !Gui.ActiveScreen.HandlesAllInput) {
+			if (!window.Focused && !Gui.ActiveScreen.HandlesAllInput) {
 				Gui.SetNewScreen(new PauseScreen(this));
 			}
 			

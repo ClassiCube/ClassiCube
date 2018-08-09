@@ -8,7 +8,9 @@ using OpenTK.Input;
 namespace ClassicalSharp.Gui.Screens {
 	public class HudScreen : Screen, IGameComponent {
 		
-		public HudScreen(Game game) : base(game) { }
+		public HudScreen(Game game) : base(game) { 
+			HandlesAllInput = false;
+		}
 		
 		ChatScreen chat;
 		internal Widget hotbar;

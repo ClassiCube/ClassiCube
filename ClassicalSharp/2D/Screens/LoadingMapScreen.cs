@@ -21,7 +21,6 @@ namespace ClassicalSharp.Gui.Screens {
 			font = new Font(game.FontName, 16);
 			BlocksWorld = true;
 			RenderHudOver = true;
-			HandlesAllInput = true;
 		}
 		
 		string title, message;

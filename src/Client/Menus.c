@@ -523,7 +523,6 @@ struct ListScreen* ListScreen_MakeInstance(void) {
 	screen->VTABLE->Init   = ListScreen_Init;
 	screen->VTABLE->Render = ListScreen_Render;
 	screen->VTABLE->Free   = ListScreen_Free;
-	screen->HandlesAllInput = true;
 	return screen;
 }
 
@@ -622,7 +621,6 @@ static void MenuScreen_MakeInstance(struct MenuScreen* screen, struct Widget** w
 	screen->VTABLE->Render = MenuScreen_Render;
 	screen->VTABLE->Free   = MenuScreen_Free;
 
-	screen->HandlesAllInput  = true;
 	screen->Widgets          = widgets;
 	screen->WidgetsCount     = count;
 	screen->ContextLost      = MenuScreen_ContextLost;

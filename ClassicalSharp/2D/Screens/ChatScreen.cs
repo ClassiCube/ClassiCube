@@ -14,6 +14,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public ChatScreen(Game game, HudScreen hud) : base(game) {
 			chatLines = game.ChatLines;
 			this.hud = hud;
+			HandlesAllInput = false;
 		}
 		
 		HudScreen hud;
@@ -275,7 +276,6 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void ContextLost() {
 			if (HandlesAllInput) {
 				chatInInputBuffer = input.Text.ToString();
-				game.CursorVisible = false;
 			} else {
 				chatInInputBuffer = null;
 			}
@@ -330,7 +330,6 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public void OpenInput(string initialText) {
-			game.CursorVisible = true;
 			suppressNextPress = true;
 			SetHandlesAllInput(true);
 			Keyboard.KeyRepeat = true;
@@ -350,9 +349,6 @@ namespace ClassicalSharp.Gui.Screens {
 			if (HandlesAllInput) { // text input bar
 				if (key == game.Mapping(KeyBind.SendChat) || key == Key.KeypadEnter || key == game.Mapping(KeyBind.PauseOrExit)) {
 					SetHandlesAllInput(false);
-					// when underlying screen is HUD, user is interacting with the world normally
-					game.CursorVisible = game.Gui.UnderlyingScreen != game.Gui.hudScreen;
-					game.Camera.RegrabMouse();
 					Keyboard.KeyRepeat = false;
 					
 					if (key == game.Mapping(KeyBind.PauseOrExit))
@@ -466,6 +462,7 @@ namespace ClassicalSharp.Gui.Screens {
 		void SetHandlesAllInput(bool handles) {
 			HandlesAllInput = handles;
 			game.Gui.hudScreen.HandlesAllInput = handles;
+			game.Gui.CalcCursorVisible();
 		}
 	}
 }

@@ -106,8 +106,6 @@ namespace ClassicalSharp.Gui.Widgets {
 			scroll = new ScrollbarWidget(game);
 			RecreateElements();
 			Reposition();
-			SetBlockTo(game.Inventory.Selected);
-			Recreate();
 		}
 		
 		public override void Dispose() {
@@ -177,7 +175,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		void MoveCursorToSelected() {
 			if (SelectedIndex == -1) return;
-			game.DesktopCursorPos = GetMouseCoords(SelectedIndex);
+			game.window.DesktopCursorPos = GetMouseCoords(SelectedIndex);
 		}
 		
 		void UpdateBlockInfoString(BlockID block) {

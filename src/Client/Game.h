@@ -76,9 +76,6 @@ Real32 Game_GetChatScale(void);
 
 void Game_GetDefaultTexturePack(STRING_TRANSIENT String* texPack);
 void Game_SetDefaultTexturePack(STRING_PURE String* texPack);
-bool Game_GetCursorVisible(void);
-bool Game_GetRealCursorVisible(void);
-void Game_SetCursorVisible(bool visible);
 
 bool Game_ChangeTerrainAtlas(struct Bitmap* atlas);
 void Game_SetViewDistance(Int32 distance, bool userDist);

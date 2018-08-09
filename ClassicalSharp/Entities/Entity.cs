@@ -97,15 +97,12 @@ namespace ClassicalSharp.Entities {
 			return m;
 		}
 		
-		/// <summary> Gets the brightness colour of this entity. </summary>
 		public virtual PackedCol Colour() {
 			Vector3I P = Vector3I.Floor(EyePosition);
 			return game.World.IsValidPos(P) ? game.Lighting.LightCol(P.X, P.Y, P.Z) : game.Lighting.Outside;
 		}
 		
 		
-		/// <summary> Sets the model associated with this entity. </summary>
-		/// <param name="model"> Can be either 'name' or 'name'|'scale'. </param>
 		public void SetModel(string model) {
 			ModelScale = new Vector3(1.0f);
 			int sep = model.IndexOf('|');

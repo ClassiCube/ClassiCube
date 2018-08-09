@@ -658,8 +658,6 @@ static void TableWidget_Init(struct GuiElem* elem) {
 	ScrollbarWidget_Create(&widget->Scroll);
 	TableWidget_RecreateElements(widget);
 	Widget_Reposition(widget);
-	TableWidget_SetBlockTo(widget, Inventory_SelectedBlock);
-	Elem_Recreate(widget);
 }
 
 static void TableWidget_Render(struct GuiElem* elem, Real64 delta) {	

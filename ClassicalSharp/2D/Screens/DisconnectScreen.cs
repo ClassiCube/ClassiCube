@@ -25,7 +25,6 @@ namespace ClassicalSharp.Gui.Screens {
 			messageFont = new Font(game.FontName, 16);
 			BlocksWorld = true;
 			HidesHud = true;
-			HandlesAllInput = true;
 		}
 		
 		public override void Init() {

@@ -32,7 +32,7 @@ using OpenTK;
 namespace OpenTK.Graphics.OpenGL {
 	
 	[InteropPatch]
-	public unsafe static partial class GL {
+	public unsafe static class GL {
 		
 		public static void AlphaFunc(Compare func, float value) {
 			Interop.Calli((int)func, value, AlphaFuncAddress);
@@ -243,6 +243,83 @@ namespace OpenTK.Graphics.OpenGL {
 		public static void Viewport(int x, int y, int width, int height) {
 			Interop.Calli(x, y, width, height, ViewportAddress);
 		} static IntPtr ViewportAddress;
+		
+		
+		internal static void LoadEntryPoints(IGraphicsContext context) {
+			Debug.Print("Loading OpenGL function pointers... ");
+			AlphaFuncAddress = context.GetAddress("glAlphaFunc");
+			
+			BeginAddress = context.GetAddress("glBegin");
+			BindBufferAddress = context.GetAddress("glBindBuffer");
+			BindBufferARBAddress = context.GetAddress("glBindBufferARB");
+			BindTextureAddress = context.GetAddress("glBindTexture");
+			BlendFuncAddress = context.GetAddress("glBlendFunc");
+			BufferDataAddress = context.GetAddress("glBufferData");
+			BufferDataARBAddress = context.GetAddress("glBufferDataARB");
+			BufferSubDataAddress = context.GetAddress("glBufferSubData");
+			BufferSubDataARBAddress = context.GetAddress("glBufferSubDataARB");
+			
+			CallListAddress = context.GetAddress("glCallList");
+			ClearAddress = context.GetAddress("glClear");
+			ClearColorAddress = context.GetAddress("glClearColor");
+			Color4ubAddress = context.GetAddress("glColor4ub");
+			ColorMaskAddress = context.GetAddress("glColorMask");
+			ColorPointerAddress = context.GetAddress("glColorPointer");
+			CullFaceAddress = context.GetAddress("glCullFace");
+			
+			DeleteBuffersAddress = context.GetAddress("glDeleteBuffers");
+			DeleteBuffersARBAddress = context.GetAddress("glDeleteBuffersARB");
+			DeleteListsAddress = context.GetAddress("glDeleteLists");
+			DeleteTexturesAddress = context.GetAddress("glDeleteTextures");
+			DepthFuncAddress = context.GetAddress("glDepthFunc");
+			DepthMaskAddress = context.GetAddress("glDepthMask");
+			DisableAddress = context.GetAddress("glDisable");
+			DisableClientStateAddress = context.GetAddress("glDisableClientState");
+			DrawArraysAddress = context.GetAddress("glDrawArrays");
+			DrawElementsAddress = context.GetAddress("glDrawElements");
+			
+			EnableAddress = context.GetAddress("glEnable");
+			EnableClientStateAddress = context.GetAddress("glEnableClientState");
+			EndAddress = context.GetAddress("glEnd");
+			EndListAddress = context.GetAddress("glEndList");
+			FogfAddress = context.GetAddress("glFogf");
+			FogfvAddress = context.GetAddress("glFogfv");
+			FogiAddress = context.GetAddress("glFogi");
+			
+			GenBuffersAddress = context.GetAddress("glGenBuffers");
+			GenBuffersARBAddress = context.GetAddress("glGenBuffersARB");
+			GenListsAddress = context.GetAddress("glGenLists");
+			GenTexturesAddress = context.GetAddress("glGenTextures");
+			GetErrorAddress = context.GetAddress("glGetError");
+			GetIntegervAddress = context.GetAddress("glGetIntegerv");
+			GetStringAddress = context.GetAddress("glGetString");
+			GetTexImageAddress = context.GetAddress("glGetTexImage");
+			
+			HintAddress = context.GetAddress("glHint");
+			LoadIdentityAddress = context.GetAddress("glLoadIdentity");
+			LoadMatrixfAddress = context.GetAddress("glLoadMatrixf");
+			MatrixModeAddress = context.GetAddress("glMatrixMode");
+			MultMatrixfAddress = context.GetAddress("glMultMatrixf");
+			NewListAddress = context.GetAddress("glNewList");
+			ReadPixelsAddress = context.GetAddress("glReadPixels");
+			
+			TexCoord2fAddress = context.GetAddress("glTexCoord2f");
+			TexCoordPointerAddress = context.GetAddress("glTexCoordPointer");
+			TexImage2DAddress = context.GetAddress("glTexImage2D");
+			TexParameteriAddress = context.GetAddress("glTexParameteri");
+			TexSubImage2DAddress = context.GetAddress("glTexSubImage2D");
+			Vertex3fAddress = context.GetAddress("glVertex3f");
+			VertexPointerAddress = context.GetAddress("glVertexPointer");
+			ViewportAddress = context.GetAddress("glViewport");
+		}
+		
+		public static void UseArbVboAddresses() {
+			BindBufferAddress = BindBufferARBAddress;
+			BufferDataAddress = BufferDataARBAddress;
+			BufferSubDataAddress = BufferSubDataARBAddress;
+			DeleteBuffersAddress = DeleteBuffersARBAddress;
+			GenBuffersAddress = GenBuffersARBAddress;
+		}
 	}
 
 	public enum ArrayCap : int {
@@ -417,84 +494,6 @@ namespace OpenTK.Graphics.OpenGL {
 
 	public enum TextureTarget : int {
 		Texture2D = 0x0DE1,
-	}
-	
-	public unsafe static partial class GL {
-		internal static void LoadEntryPoints(IGraphicsContext context) {
-			Debug.Print("Loading OpenGL function pointers... ");
-			AlphaFuncAddress = context.GetAddress("glAlphaFunc");
-			
-			BeginAddress = context.GetAddress("glBegin");
-			BindBufferAddress = context.GetAddress("glBindBuffer");
-			BindBufferARBAddress = context.GetAddress("glBindBufferARB");
-			BindTextureAddress = context.GetAddress("glBindTexture");
-			BlendFuncAddress = context.GetAddress("glBlendFunc");
-			BufferDataAddress = context.GetAddress("glBufferData");
-			BufferDataARBAddress = context.GetAddress("glBufferDataARB");
-			BufferSubDataAddress = context.GetAddress("glBufferSubData");
-			BufferSubDataARBAddress = context.GetAddress("glBufferSubDataARB");
-			
-			CallListAddress = context.GetAddress("glCallList");
-			ClearAddress = context.GetAddress("glClear");
-			ClearColorAddress = context.GetAddress("glClearColor");
-			Color4ubAddress = context.GetAddress("glColor4ub");
-			ColorMaskAddress = context.GetAddress("glColorMask");
-			ColorPointerAddress = context.GetAddress("glColorPointer");
-			CullFaceAddress = context.GetAddress("glCullFace");
-			
-			DeleteBuffersAddress = context.GetAddress("glDeleteBuffers");
-			DeleteBuffersARBAddress = context.GetAddress("glDeleteBuffersARB");
-			DeleteListsAddress = context.GetAddress("glDeleteLists");
-			DeleteTexturesAddress = context.GetAddress("glDeleteTextures");
-			DepthFuncAddress = context.GetAddress("glDepthFunc");
-			DepthMaskAddress = context.GetAddress("glDepthMask");
-			DisableAddress = context.GetAddress("glDisable");
-			DisableClientStateAddress = context.GetAddress("glDisableClientState");
-			DrawArraysAddress = context.GetAddress("glDrawArrays");
-			DrawElementsAddress = context.GetAddress("glDrawElements");
-			
-			EnableAddress = context.GetAddress("glEnable");
-			EnableClientStateAddress = context.GetAddress("glEnableClientState");
-			EndAddress = context.GetAddress("glEnd");
-			EndListAddress = context.GetAddress("glEndList");
-			FogfAddress = context.GetAddress("glFogf");
-			FogfvAddress = context.GetAddress("glFogfv");
-			FogiAddress = context.GetAddress("glFogi");
-			
-			GenBuffersAddress = context.GetAddress("glGenBuffers");
-			GenBuffersARBAddress = context.GetAddress("glGenBuffersARB");
-			GenListsAddress = context.GetAddress("glGenLists");
-			GenTexturesAddress = context.GetAddress("glGenTextures");
-			GetErrorAddress = context.GetAddress("glGetError");
-			GetIntegervAddress = context.GetAddress("glGetIntegerv");
-			GetStringAddress = context.GetAddress("glGetString");
-			GetTexImageAddress = context.GetAddress("glGetTexImage");
-			
-			HintAddress = context.GetAddress("glHint");
-			LoadIdentityAddress = context.GetAddress("glLoadIdentity");
-			LoadMatrixfAddress = context.GetAddress("glLoadMatrixf");
-			MatrixModeAddress = context.GetAddress("glMatrixMode");
-			MultMatrixfAddress = context.GetAddress("glMultMatrixf");
-			NewListAddress = context.GetAddress("glNewList");
-			ReadPixelsAddress = context.GetAddress("glReadPixels");
-			
-			TexCoord2fAddress = context.GetAddress("glTexCoord2f");
-			TexCoordPointerAddress = context.GetAddress("glTexCoordPointer");
-			TexImage2DAddress = context.GetAddress("glTexImage2D");
-			TexParameteriAddress = context.GetAddress("glTexParameteri");
-			TexSubImage2DAddress = context.GetAddress("glTexSubImage2D");
-			Vertex3fAddress = context.GetAddress("glVertex3f");
-			VertexPointerAddress = context.GetAddress("glVertexPointer");
-			ViewportAddress = context.GetAddress("glViewport");
-		}
-		
-		public static void UseArbVboAddresses() {
-			BindBufferAddress = BindBufferARBAddress;
-			BufferDataAddress = BufferDataARBAddress;
-			BufferSubDataAddress = BufferSubDataARBAddress;
-			DeleteBuffersAddress = DeleteBuffersARBAddress;
-			GenBuffersAddress = GenBuffersARBAddress;
-		}
 	}
 }
 #endif

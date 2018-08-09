@@ -43,7 +43,7 @@ namespace ClassicalSharp.Gui {
 	public abstract class Screen : GuiElement {
 		public Screen(Game game) : base(game) { }
 		
-		public bool HandlesAllInput, BlocksWorld, HidesHud, RenderHudOver;
+		public bool HandlesAllInput = true, BlocksWorld, HidesHud, RenderHudOver;
 
 		public abstract void OnResize();	
 		protected abstract void ContextLost();

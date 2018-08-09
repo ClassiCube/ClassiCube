@@ -312,7 +312,7 @@ UInt8 mapSize[4];
 UInt8* map;
 struct Stream mapPartStream;
 struct Screen* prevScreen;
-bool prevCursorVisible, receivedFirstPosition;
+bool receivedFirstPosition;
 
 void Classic_WriteChat(struct Stream* stream, STRING_PURE String* text, bool partial) {
 	Int32 payload = !ServerConnection_SupportsPartialMessages ? ENTITIES_SELF_ID : (partial ? 1 : 0);
@@ -385,7 +385,6 @@ static void Classic_StartLoading(struct Stream* stream) {
 		Gui_FreeActive();
 		prevScreen = NULL;
 	}
-	prevCursorVisible = Game_GetCursorVisible();
 
 	Gui_SetActive(LoadingScreen_MakeInstance(&ServerConnection_ServerName, &ServerConnection_ServerMOTD));
 	WoM_CheckMotd();
@@ -458,10 +457,8 @@ static void Classic_LevelDataChunk(struct Stream* stream) {
 static void Classic_LevelFinalise(struct Stream* stream) {
 	Gui_ReplaceActive(NULL);
 	Gui_Active = prevScreen;
-	if (prevScreen && prevCursorVisible != Game_GetCursorVisible()) {
-		Game_SetCursorVisible(prevCursorVisible);
-	}
 	prevScreen = NULL;
+	Gui_CalcCursorVisible();
 
 	Int32 mapWidth  = Stream_ReadU16_BE(stream);
 	Int32 mapHeight = Stream_ReadU16_BE(stream);

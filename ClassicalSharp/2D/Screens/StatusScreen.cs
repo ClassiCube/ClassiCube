@@ -19,6 +19,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public StatusScreen(Game game) : base(game) {
 			statusBuffer = new StringBuffer(128);
+			HandlesAllInput = false;
 		}
 
 		void IGameComponent.Init(Game game) { }

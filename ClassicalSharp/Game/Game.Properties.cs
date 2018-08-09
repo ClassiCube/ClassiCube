@@ -204,31 +204,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public INativeWindow window;
-		
+		public INativeWindow window;		
 		public int Width, Height;
-		
-		public bool Focused { get { return window.Focused; } }
-		
-		bool visible = true;
-		internal bool realVisible = true;
-		public bool CursorVisible { 
-			get { return visible; }
-			set {
-				// Defer mouse visibility changes.
-				realVisible = value;
-				if (Gui.overlays.Count > 0) return;
-				   
-				// Only set the value when it has changes.
-				if (visible == value) return;
-				window.CursorVisible = value;
-				visible = value;
-			}
-		}
-		
-		public Point DesktopCursorPos {
-			get { return window.DesktopCursorPos; }
-			set { window.DesktopCursorPos = value; }
-		}
 	}
 }

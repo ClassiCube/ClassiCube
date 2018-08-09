@@ -25,7 +25,6 @@ namespace ClassicalSharp.Network.Protocols {
 		byte[] mapSize = new byte[4], map;
 		FixedBufferStream mapPartStream;
 		Screen prevScreen;
-		bool prevCursorVisible;
 		
 		public override void Reset() {
 			if (mapPartStream == null) mapPartStream = new FixedBufferStream(net.reader.buffer);
@@ -95,9 +94,7 @@ namespace ClassicalSharp.Network.Protocols {
 			game.WorldEvents.RaiseOnNewMap();
 			
 			prevScreen = game.Gui.activeScreen;
-			if (prevScreen is LoadingScreen)
-				prevScreen = null;
-			prevCursorVisible = game.CursorVisible;
+			if (prevScreen is LoadingScreen) prevScreen = null;
 			
 			game.Gui.SetNewScreen(new LoadingScreen(game, net.ServerName, net.ServerMotd), false);
 			net.wom.CheckMotd();
@@ -177,9 +174,7 @@ namespace ClassicalSharp.Network.Protocols {
 		void HandleLevelFinalise() {
 			game.Gui.SetNewScreen(null);
 			game.Gui.activeScreen = prevScreen;
-			if (prevScreen != null && prevCursorVisible != game.CursorVisible) {
-				game.CursorVisible = prevCursorVisible;
-			}
+			game.Gui.CalcCursorVisible();
 			prevScreen = null;
 			
 			int mapWidth  = reader.ReadUInt16();
