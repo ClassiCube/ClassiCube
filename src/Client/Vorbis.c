@@ -817,9 +817,9 @@ static UInt32 Log2(UInt32 v) {
 }
 
 void imdct_init(struct imdct_state* state, Int32 n) {
-	Int32 k, k2, n4 = n >> 2, n8 = n >> 3, ld_n = Log2(n);
+	Int32 k, k2, n4 = n >> 2, n8 = n >> 3, log2_n = Log2(n);
 	Real32 *A = state->A, *B = state->B, *C = state->C;
-	state->n = n; state->ld_n = ld_n;
+	state->n = n; state->log2_n = log2_n;
 
 	/* setup twiddle factors */
 	for (k = 0, k2 = 0; k < n4; k++, k2 += 2) {
@@ -835,7 +835,7 @@ void imdct_init(struct imdct_state* state, Int32 n) {
 
 	UInt32* reversed = state->Reversed;
 	for (k = 0; k < n8; k++) {
-		reversed[k] = ReverseBits(k) >> (32-ld_n+3);
+		reversed[k] = ReverseBits(k) >> (32-log2_n+3);
 	}
 }
 
@@ -848,18 +848,17 @@ void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
 	Real32 *A = state->A, *B = state->B, *C = state->C;
 
 	Real32 u[VORBIS_MAX_BLOCK_SIZE];
-	Real32 v[VORBIS_MAX_BLOCK_SIZE];
 	Real32 w[VORBIS_MAX_BLOCK_SIZE];
 
 	/* spectral coefficients, step 1, step 2 */
 	for (k = 0, k2 = 0, k4 = 0; k < n8; k++, k2 += 2, k4 += 4) {
 		Real32 e_1 = -in[k4+3], e_2 = -in[k4+1];
-		Real32 g_1 = 2*e_1 * A[n2-1-k2] + 2*e_2 * A[n2-2-k2];
-		Real32 g_2 = 2*e_1 * A[n2-2-k2] - 2*e_2 * A[n2-1-k2];
+		Real32 g_1 = e_1 * A[n2-1-k2] + e_2 * A[n2-2-k2];
+		Real32 g_2 = e_1 * A[n2-2-k2] - e_2 * A[n2-1-k2];
 
 		Real32 f_1 = in[n2-4-k4], f_2 = in[n2-2-k4];
-		Real32 h_2 = 2*f_1 * A[n4-2-k2] - 2*f_2 * A[n4-1-k2];
-		Real32 h_1 = 2*f_1 * A[n4-1-k2] + 2*f_2 * A[n4-2-k2];
+		Real32 h_2 = f_1 * A[n4-2-k2] - f_2 * A[n4-1-k2];
+		Real32 h_1 = f_1 * A[n4-1-k2] + f_2 * A[n4-2-k2];
 
 		w[n2+3+k4] = h_2 + g_2;
 		w[n2+1+k4] = h_1 + g_1;
@@ -869,8 +868,8 @@ void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
 	}
 
 	/* step 3 */
-	Int32 l, ld_n = state->ld_n;
-	for (l = 0; l <= ld_n - 4; l++) {
+	Int32 l, log2_n = state->log2_n;
+	for (l = 0; l <= log2_n - 4; l++) {
 		Int32 k0 = n >> (l+2), k1 = 1 << (l+3);
 		Int32 r, r4, rMax = n >> (l+4), s2, s2Max = 1 << (l+2);
 
@@ -887,7 +886,7 @@ void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
 			}
 		}
 
-		if (l+1 <= ld_n - 4) {
+		if (l+1 <= log2_n - 4) {
 			Mem_Copy(w, u, sizeof(u));
 		}
 	}
@@ -899,24 +898,24 @@ void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
 		Real32 e_1 = u[n-j8-1], e_2 = u[n-j8-3];
 		Real32 f_1 = u[j8+3],   f_2 = u[j8+1];
 
-		Real32 g_1 = ( e_1 + f_1 + C[k2+1] * (e_1 - f_1) + C[k2] * (e_2 + f_2)) * 0.5f;
-		Real32 h_1 = ( e_1 + f_1 - C[k2+1] * (e_1 - f_1) - C[k2] * (e_2 + f_2)) * 0.5f;
-		Real32 g_2 = ( e_2 - f_2 + C[k2+1] * (e_2 + f_2) - C[k2] * (e_1 - f_1)) * 0.5f;
-		Real32 h_2 = (-e_2 + f_2 + C[k2+1] * (e_2 + f_2) - C[k2] * (e_1 - f_1)) * 0.5f;
+		Real32 g_1 =  e_1 + f_1 + C[k2+1] * (e_1 - f_1) + C[k2] * (e_2 + f_2);
+		Real32 h_1 =  e_1 + f_1 - C[k2+1] * (e_1 - f_1) - C[k2] * (e_2 + f_2);
+		Real32 g_2 =  e_2 - f_2 + C[k2+1] * (e_2 + f_2) - C[k2] * (e_1 - f_1);
+		Real32 h_2 = -e_2 + f_2 + C[k2+1] * (e_2 + f_2) - C[k2] * (e_1 - f_1);
 
-		Real32 x_1 = g_1 * B[k2]   + g_2 * B[k2+1];
-		Real32 x_2 = g_1 * B[k2+1] - g_2 * B[k2];
-		out[n4-1-k]   = 0.5f *  x_2;
-		out[n4+k]     = 0.5f * -x_2;
-		out[n3_4-1-k] = 0.5f * -x_1;
-		out[n3_4+k]   = 0.5f * -x_1;
+		Real32 x_1 = -0.5f * (g_1 * B[k2]   + g_2 * B[k2+1]);
+		Real32 x_2 = -0.5f * (g_1 * B[k2+1] - g_2 * B[k2]);
+		out[n4-1-k]   = -x_2;
+		out[n4+k]     =  x_2;
+		out[n3_4-1-k] =  x_1;
+		out[n3_4+k]   =  x_1;
 
-		Real32 y_1 = h_1 * B[n2-2-k2] + h_2 * B[n2-1-k2];
-		Real32 y_2 = h_1 * B[n2-1-k2] - h_2 * B[n2-2-k2];
-		out[k]      = 0.5f *  y_2;
-		out[n2-1-k] = 0.5f * -y_2;
-		out[n2+k]   = 0.5f * -y_1;
-		out[n-1-k]  = 0.5f * -y_1;
+		Real32 y_1 = -0.5f * (h_1 * B[n2-2-k2] + h_2 * B[n2-1-k2]);
+		Real32 y_2 = -0.5f * (h_1 * B[n2-1-k2] - h_2 * B[n2-2-k2]);
+		out[k]      = -y_2;
+		out[n2-1-k] =  y_2;
+		out[n2+k]   =  y_1;
+		out[n-1-k]  =  y_1;
 	}
 }
 

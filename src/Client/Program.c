@@ -18,7 +18,7 @@
 #ifdef CC_TEST_VORBIS
 #include "Vorbis.h"
 
-#define VORBIS_N 8192
+#define VORBIS_N 1024
 #define VORBIS_N2 (VORBIS_N / 2)
 int main_imdct() {
 	Real32 in[VORBIS_N2], out[VORBIS_N], out2[VORBIS_N];

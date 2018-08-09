@@ -14,7 +14,7 @@ void Ogg_MakeStream(struct Stream* stream, UInt8* buffer, struct Stream* source)
 struct Codebook; struct Floor; struct Residue; struct Mapping; struct Mode;
 
 struct imdct_state {
-	Int32 n, ld_n;
+	Int32 n, log2_n;
 	Real32 A[VORBIS_MAX_BLOCK_SIZE / 2];
 	Real32 B[VORBIS_MAX_BLOCK_SIZE / 2];
 	Real32 C[VORBIS_MAX_BLOCK_SIZE / 4];
