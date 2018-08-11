@@ -22,6 +22,7 @@
 
 #define HTTP_QUERY_ETAG 54 /* Missing from some old MingW32 headers */
 #define Socket__Error() WSAGetLastError()
+#define Win_Return(success) ((success) ? 0 : GetLastError())
 
 HDC hdc;
 HANDLE heap;
@@ -53,6 +54,7 @@ ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 
 #define UNIX_EPOCH 62135596800
 #define Socket__Error() errno
+#define Nix_Return(success) ((success) ? 0 : errno)
 
 UChar* Platform_NewLine = "\n";
 UChar Directory_Separator = '/';
@@ -281,7 +283,7 @@ bool Directory_Exists(STRING_PURE String* path) {
 ReturnCode Directory_Create(STRING_PURE String* path) {
 	WCHAR data[512]; Platform_ConvertString(data, path);
 	BOOL success = CreateDirectoryW(data, NULL);
-	return success ? 0 : GetLastError();
+	return Win_Return(success);
 }
 
 bool File_Exists(STRING_PURE String* path) {
@@ -316,7 +318,7 @@ ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCal
 
 	ReturnCode result = GetLastError(); /* return code from FindNextFile */
 	FindClose(find);
-	return result == ERROR_NO_MORE_FILES ? 0 : result;
+	return Win_Return(result == ERROR_NO_MORE_FILES);
 }
 
 ReturnCode File_GetModifiedTime(STRING_PURE String* path, DateTime* time) {
@@ -339,7 +341,7 @@ ReturnCode File_GetModifiedTime(STRING_PURE String* path, DateTime* time) {
 ReturnCode File_Do(void** file, STRING_PURE String* path, DWORD access, DWORD createMode) {
 	WCHAR data[512]; Platform_ConvertString(data, path);
 	*file = CreateFileW(data, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
-	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
+	return Win_Return(*file != INVALID_HANDLE_VALUE);
 }
 
 ReturnCode File_Open(void** file, STRING_PURE String* path) {
@@ -356,32 +358,32 @@ ReturnCode File_Append(void** file, STRING_PURE String* path) {
 
 ReturnCode File_Read(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead) {
 	BOOL success = ReadFile((HANDLE)file, buffer, count, bytesRead, NULL);
-	return success ? 0 : GetLastError();
+	return Win_Return(success);
 }
 
 ReturnCode File_Write(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWrote) {
 	BOOL success = WriteFile((HANDLE)file, buffer, count, bytesWrote, NULL);
-	return success ? 0 : GetLastError();
+	return Win_Return(success);
 }
 
 ReturnCode File_Close(void* file) {
-	return CloseHandle((HANDLE)file) ? 0 : GetLastError();
+	return Win_Return(CloseHandle((HANDLE)file));
 }
 
 ReturnCode File_Seek(void* file, Int32 offset, Int32 seekType) {
 	static UInt8 modes[3] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
 	DWORD pos = SetFilePointer(file, offset, NULL, modes[seekType]);
-	return pos == INVALID_SET_FILE_POINTER ? GetLastError() : 0;
+	return Win_Return(pos != INVALID_SET_FILE_POINTER);
 }
 
 ReturnCode File_Position(void* file, UInt32* position) {
 	*position = SetFilePointer(file, 0, NULL, 1); /* SEEK_CUR */
-	return *position == INVALID_SET_FILE_POINTER ? GetLastError() : 0;
+	return Win_Return(*position != INVALID_SET_FILE_POINTER);
 }
 
 ReturnCode File_Length(void* file, UInt32* length) {
 	*length = GetFileSize(file, NULL);
-	return *length == INVALID_FILE_SIZE ? GetLastError() : 0;
+	return Win_Return(*length != INVALID_FILE_SIZE);
 }
 #elif CC_BUILD_NIX
 bool Directory_Exists(STRING_PURE String* path) {
@@ -394,7 +396,7 @@ ReturnCode Directory_Create(STRING_PURE String* path) {
 	UInt8 data[1024]; Platform_ConvertString(data, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
-	return mkdir(data, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
+	return Nix_Return(mkdir(data, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != -1);
 }
 
 bool File_Exists(STRING_PURE String* path) {
@@ -439,7 +441,7 @@ ReturnCode File_GetModifiedTime(STRING_PURE String* path, DateTime* time) {
 ReturnCode File_Do(void** file, STRING_PURE String* path, int mode) {
 	UInt8 data[1024]; Platform_ConvertString(data, path);
 	*file = open(data, mode);
-	return *file == -1 ? errno : 0;
+	return Nix_Return(*file != -1);
 }
 
 ReturnCode File_Open(void** file, STRING_PURE String* path) {
@@ -455,29 +457,26 @@ ReturnCode File_Append(void** file, STRING_PURE String* path) {
 }
 
 ReturnCode File_Read(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead) {
-	ssize_t bytes = read((int)file, buffer, count);
-	if (bytes == -1) { *bytesRead = 0; return errno; }
-	*bytesRead = bytes; return 0;
+	*bytesRead = read((int)file, buffer, count);
+	return Nix_Return(*bytesRead != -1);
 }
 
 ReturnCode File_Write(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWrote) {
-	ssize_t bytes = write((int)file, buffer, count);
-	if (bytes == -1) { *bytesWrote = 0; return errno; }
-	*bytesWrote = bytes; return 0;
+	*bytesWrote = write((int)file, buffer, count);
+	return Nix_Return(*bytesWrote != -1);
 }
 
 ReturnCode File_Close(void* file) {
-	return close((int)file) == -1 ? errno : 0;
+	return Nix_Return(close((int)file) != -1);
 }
 
 ReturnCode File_Seek(void* file, Int32 offset, Int32 seekType) {
-	return lseek((int)file, offset, modes[seektype]) == -1 ? errno : 0;
+	return Nix_Return(lseek((int)file, offset, modes[seektype]) != -1);
 }
 
 ReturnCode File_Position(void* file, UInt32* position) {
-	off_t pos = lseek((int)file, 0, SEEK_CUR);
-	if (pos == -1) { *position = -1; return errno; }
-	*position = pos; return 0;
+	*position = lseek((int)file, 0, SEEK_CUR);
+	return Nix_Return(*position != -1);
 }
 
 ReturnCode File_Length(void* file, UInt32* length) {
@@ -875,7 +874,7 @@ ReturnCode Http_MakeRequest(struct AsyncRequest* request, void** handle) {
 
 	*handle = InternetOpenUrlA(hInternet, url.buffer, headers.buffer, headers.length,
 		INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD, NULL);
-	return *handle == NULL ? GetLastError() : 0;
+	return Win_Return(*handle);
 }
 
 /* TODO: Test last modified and etag even work */
@@ -931,13 +930,8 @@ ReturnCode Http_GetRequestData(struct AsyncRequest* request, void* handle, void*
 	return 0;
 }
 
-ReturnCode Http_FreeRequest(void* handle) {
-	return InternetCloseHandle(handle) ? 0 : GetLastError();
-}
-
-ReturnCode Http_Free(void) {
-	return InternetCloseHandle(hInternet) ? 0 : GetLastError();
-}
+ReturnCode Http_FreeRequest(void* handle) { return Win_Return(InternetCloseHandle(handle)); }
+ReturnCode Http_Free(void) { return Win_Return(InternetCloseHandle(hInternet)); }
 #elif CC_BUILD_NIX
 void Http_Init(void) { }
 ReturnCode Http_MakeRequest(struct AsyncRequest* request, void** handle) { return 1; }
