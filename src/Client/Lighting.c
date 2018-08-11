@@ -94,6 +94,9 @@ void Lighting_Refresh(void) {
 }
 
 
+/*########################################################################################################################*
+*----------------------------------------------------Lighting update------------------------------------------------------*
+*#########################################################################################################################*/
 static void Lighting_UpdateLighting(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockID newBlock, Int32 index, Int32 lightH) {
 	bool didBlock = Block_BlocksLight[oldBlock];
 	bool nowBlocks = Block_BlocksLight[newBlock];
@@ -127,7 +130,6 @@ static void Lighting_UpdateLighting(Int32 x, Int32 y, Int32 z, BlockID oldBlock,
 		}
 	}
 }
-
 
 static bool Lighting_Needs(BlockID block, BlockID other) {
 	return Block_Draw[block] != DRAW_OPAQUE || Block_Draw[other] != DRAW_GAS;
@@ -217,6 +219,9 @@ void Lighting_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockI
 }
 
 
+/*########################################################################################################################*
+*---------------------------------------------------Lighting heightmap----------------------------------------------------*
+*#########################################################################################################################*/
 static Int32 Lighting_InitialHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32 zCount, Int32* skip) {
 	Int32 elemsLeft = 0, index = 0, curRunCount = 0;
 	Int32 x, z;
@@ -301,7 +306,6 @@ static void Lighting_FinishHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, I
 	}
 }
 
-
 void Lighting_LightHint(Int32 startX, Int32 startZ) {
 	Int32 x1 = max(startX, 0), x2 = min(World_Width, startX + 18);
 	Int32 z1 = max(startZ, 0), z2 = min(World_Length, startZ + 18);
@@ -315,6 +319,9 @@ void Lighting_LightHint(Int32 startX, Int32 startZ) {
 }
 
 
+/*########################################################################################################################*
+*---------------------------------------------------Lighting component----------------------------------------------------*
+*#########################################################################################################################*/
 static void Lighting_Init(void) {
 	Event_RegisterInt(&WorldEvents_EnvVarChanged, NULL, &Lighting_EnvVariableChanged);
 	Lighting_SetSun(WorldEnv_DefaultSunCol);
@@ -340,7 +347,6 @@ static void Lighting_Free(void) {
 	Event_UnregisterInt(&WorldEvents_EnvVarChanged, NULL, &Lighting_EnvVariableChanged);
 	Lighting_Reset();
 }
-
 
 void Lighting_MakeComponent(struct IGameComponent* comp) {
 	comp->Init = Lighting_Init;

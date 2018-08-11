@@ -27,7 +27,7 @@ extern ReturnCode ReturnCode_SocketInProgess;
 extern ReturnCode ReturnCode_SocketWouldBlock;
 extern ReturnCode ReturnCode_InvalidArg;
 
-void Platform_UnicodeExpand(void* dstPtr, STRING_PURE String* src);
+void Platform_ConvertString(void* dstPtr, STRING_PURE String* src);
 void Platform_Init(void);
 void Platform_Free(void);
 void Platform_Exit(ReturnCode code);
@@ -43,12 +43,16 @@ void Mem_Copy(void* dst, void* src, UInt32 numBytes);
 
 void Platform_Log(STRING_PURE String* message);
 void Platform_LogConst(const UChar* message);
-#define Platform_Log1(format, a1) Platform_Log4(format, a1, NULL, NULL, NULL)
-#define Platform_Log2(format, a1, a2) Platform_Log4(format, a1, a2, NULL, NULL)
-#define Platform_Log3(format, a1, a2, a3) Platform_Log4(format, a1, a2, a3, NULL)
+void Platform_Log1(const UChar* format, const void* a1);
+void Platform_Log2(const UChar* format, const void* a1, const void* a2);
+void Platform_Log3(const UChar* format, const void* a1, const void* a2, const void* a3);
 void Platform_Log4(const UChar* format, const void* a1, const void* a2, const void* a3, const void* a4);
+
 void DateTime_CurrentUTC(DateTime* time);
 void DateTime_CurrentLocal(DateTime* time);
+struct Stopwatch { Int64 Data[2]; };
+void Stopwatch_Start(struct Stopwatch* timer);
+Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer);
 
 bool Directory_Exists(STRING_PURE String* path);
 ReturnCode Directory_Create(STRING_PURE String* path);
@@ -84,10 +88,6 @@ void Waitable_Free(void* handle);
 void Waitable_Signal(void* handle);
 void Waitable_Wait(void* handle); 
 void Waitable_WaitFor(void* handle, UInt32 milliseconds);
-
-struct Stopwatch { Int64 Data[2]; };
-void Stopwatch_Start(struct Stopwatch* timer);
-Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer);
 
 void Font_Make(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
 void Font_Free(struct FontDesc* desc);

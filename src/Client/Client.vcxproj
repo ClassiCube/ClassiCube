@@ -294,12 +294,11 @@
     <ClCompile Include="PickedPosRenderer.c" />
     <ClCompile Include="Picking.c" />
     <ClCompile Include="NixErrorHandler.c" />
-    <ClCompile Include="NixPlatform.c" />
+    <ClCompile Include="Platform.c" />
     <ClCompile Include="Program.c" />
     <ClCompile Include="Screens.c" />
     <ClCompile Include="SelectionBox.c" />
     <ClCompile Include="ServerConnection.c" />
-    <ClCompile Include="Socket.c" />
     <ClCompile Include="Stream.c" />
     <ClCompile Include="String.c" />
     <ClCompile Include="TerrainAtlas.c" />
@@ -309,7 +308,6 @@
     <ClCompile Include="Vorbis.c" />
     <ClCompile Include="Widgets.c" />
     <ClCompile Include="WinErrorHandler.c" />
-    <ClCompile Include="WinPlatform.c" />
     <ClCompile Include="WinWindow.c" />
     <ClCompile Include="World.c" />
     <ClCompile Include="NixWindow.c" />

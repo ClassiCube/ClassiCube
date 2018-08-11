@@ -110,9 +110,6 @@ static ReturnCode Vorbis_TryReadBits(struct VorbisState* ctx, UInt32 bitsCount, 
 }
 
 
-#define VORBIS_MAX_CHANS 8
-#define Vorbis_ChanData(ctx, ch) (ctx->Values + (ch) * ctx->CurBlockSize)
-
 static Int32 iLog(Int32 x) {
 	Int32 bits = 0;
 	while (x > 0) { bits++; x >>= 1; }
@@ -524,7 +521,7 @@ static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, Int32 ch) 
 	Int32 YFinal[FLOOR_MAX_VALUES];
 	bool Step2[FLOOR_MAX_VALUES];
 
-	Real32* data = Vorbis_ChanData(ctx, ch);
+	Real32* data = ctx->CurOutput[ch];
 	Int32* yList = f->YList[ch];
 
 	Step2[0] = true;
@@ -886,6 +883,8 @@ void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
 			}
 		}
 
+		/* TODO: eliminate this, do w/u in-place */
+		/* TODO: dynamically allocate mem for imdct */
 		if (l+1 <= log2_n - 4) {
 			Mem_Copy(w, u, sizeof(u));
 		}
@@ -1158,7 +1157,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 
 	ctx->Values = Mem_AllocCleared(ctx->Channels * ctx->CurBlockSize, sizeof(Real32), "audio values");
 	for (i = 0; i < ctx->Channels; i++) {
-		ctx->CurOutput[i] = Vorbis_ChanData(ctx, i);
+		ctx->CurOutput[i] = ctx->Values + i * ctx->CurBlockSize;
 	}
 
 	/* decode floor */
@@ -1189,7 +1188,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 			if (mapping->Mux[j] != i) continue;
 
 			doNotDecode[ch] = !hasResidue[j];
-			data[ch] = Vorbis_ChanData(ctx, j);
+			data[ch] = ctx->CurOutput[j];
 			ch++;
 		}
 
@@ -1199,8 +1198,8 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 
 	/* inverse coupling */
 	for (i = mapping->CouplingSteps - 1; i >= 0; i--) {
-		Real32* magValues = Vorbis_ChanData(ctx, mapping->Magnitude[i]);
-		Real32* angValues = Vorbis_ChanData(ctx, mapping->Angle[i]);
+		Real32* magValues = ctx->CurOutput[mapping->Magnitude[i]];
+		Real32* angValues = ctx->CurOutput[mapping->Angle[i]];
 
 		for (j = 0; j < ctx->DataSize; j++) {
 			Real32 m = magValues[j], a = angValues[j];
@@ -1239,7 +1238,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 
 	/* inverse monolithic transform of audio spectrum vector */
 	for (i = 0; i < ctx->Channels; i++) {
-		Real32* data = Vorbis_ChanData(ctx, i);
+		Real32* data = ctx->CurOutput[i];
 		if (!hasFloor[i]) {
 			/* TODO: Do we actually need to zero data here (residue type 2 maybe) */
 			Mem_Set(data, 0, ctx->CurBlockSize * sizeof(Real32));
@@ -1260,6 +1259,7 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 	size = (ctx->PrevBlockSize / 4) + (ctx->CurBlockSize / 4);
 
 	/* TODO: There's probably a nicer way of doing this.. */
+	/* TODO: Do this in-place */
 	Real32* combined[VORBIS_MAX_CHANS];
 	for (i = 0; i < ctx->Channels; i++) {
 		combined[i] = Mem_AllocCleared(size, sizeof(Real32), "temp combined");

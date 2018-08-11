@@ -411,7 +411,7 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF Strin
 	if (atom == 0) {
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to register window class");
 	}
-	WCHAR data[512]; Platform_UnicodeExpand(data, title);
+	WCHAR data[512]; Platform_ConvertString(data, title);
 
 	win_Handle = CreateWindowExW(0, atom, data, win_Style,
 		rect.left, rect.top, RECT_WIDTH(rect), RECT_HEIGHT(rect),

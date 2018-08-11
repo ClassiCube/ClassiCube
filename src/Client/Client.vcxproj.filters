@@ -347,9 +347,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="WinPlatform.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="String.c">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
@@ -521,9 +518,6 @@
     <ClCompile Include="DisplayDevice.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
-    <ClCompile Include="Socket.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="EnvRenderer.c">
       <Filter>Source Files\Rendering</Filter>
     </ClCompile>
@@ -533,14 +527,14 @@
     <ClCompile Include="NixWindow.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
-    <ClCompile Include="NixPlatform.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="Audio.c">
       <Filter>Source Files\Audio</Filter>
     </ClCompile>
     <ClCompile Include="Vorbis.c">
       <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform.c">
+      <Filter>Source Files\Platform</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
