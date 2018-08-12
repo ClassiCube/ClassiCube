@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using SharpWave.Codecs;
-using SharpWave.Containers;
 
 namespace SharpWave {
 	
@@ -13,6 +11,11 @@ namespace SharpWave {
 		public bool Equals(AudioFormat a) {
 			return Channels == a.Channels && BitsPerSample == a.BitsPerSample && SampleRate == a.SampleRate;
 		}
+	}
+	
+	public sealed class AudioChunk {
+		public byte[] Data;
+		public int Length;
 	}
 	
 	public delegate void Action();
@@ -30,14 +33,12 @@ namespace SharpWave {
 		
 		public int NumBuffers;
 		public bool pendingStop;
-		public void PlayStreaming(IMediaContainer container) {
-			container.ReadMetadata();
-			ICodec codec = container.GetAudioCodec();
-			AudioFormat format = codec.ReadHeader(container);
+		public void PlayStreaming(Stream src) {
+			VorbisCodec codec = new VorbisCodec();
+			AudioFormat format = codec.ReadHeader(src);
 			
 			SetFormat(format);
-			IEnumerator<AudioChunk> chunks =
-				codec.StreamData(container).GetEnumerator();
+			IEnumerator<AudioChunk> chunks = codec.StreamData(src).GetEnumerator();
 			
 			bool reachedEnd = false;
 			for (;;) {
@@ -58,37 +59,5 @@ namespace SharpWave {
 				Thread.Sleep(1);
 			}
 		}
-	}
-	
-	/// <summary> Outputs raw audio to the given stream in the constructor. </summary>
-	public unsafe sealed partial class RawOut : IAudioOutput {
-		public readonly Stream OutStream;
-		public readonly bool LeaveOpen;
-		public Action OnGotMetadata;
-		
-		public RawOut(FileStream outStream, bool leaveOpen) {
-			OutStream = outStream;
-			LeaveOpen = leaveOpen;
-		}
-		
-		public override void Create(int numBuffers) { NumBuffers = numBuffers; }
-		public override void SetVolume(float volume) { }
-		
-		public override void SetFormat(AudioFormat format) {
-			Format = format;
-			if (OnGotMetadata != null) OnGotMetadata();
-		}
-		
-		public override void PlayData(int index, AudioChunk chunk) {
-			OutStream.Write(chunk.Data, 0, chunk.Length);
-		}
-		
-		public override void Dispose() {
-			if (LeaveOpen) return;
-			OutStream.Close();
-		}
-		
-		public override bool IsCompleted(int index) { return true; }
-		public override bool IsFinished() { return true; }
 	}
 }

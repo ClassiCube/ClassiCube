@@ -3,7 +3,6 @@ using System;
 using System.IO;
 using System.Threading;
 using SharpWave;
-using SharpWave.Codecs.Vorbis;
 
 namespace ClassicalSharp.Audio {
 	
@@ -79,10 +78,9 @@ namespace ClassicalSharp.Audio {
 				
 				string path = Path.Combine("audio", file);
 				using (Stream fs = Platform.FileOpen(path)) {
-					OggContainer container = new OggContainer(fs);
 					try {
 						musicOut.SetVolume(game.MusicVolume / 100.0f);
-						musicOut.PlayStreaming(container);
+						musicOut.PlayStreaming(fs);
 					} catch (InvalidOperationException ex) {
 						HandleMusicError(ex);
 						try { musicOut.Dispose(); } catch { }

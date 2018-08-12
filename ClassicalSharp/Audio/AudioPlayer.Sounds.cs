@@ -3,7 +3,6 @@ using System;
 using System.Threading;
 using ClassicalSharp.Events;
 using SharpWave;
-using SharpWave.Codecs;
 
 namespace ClassicalSharp.Audio {
 	

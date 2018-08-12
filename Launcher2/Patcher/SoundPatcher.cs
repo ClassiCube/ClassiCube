@@ -4,7 +4,6 @@ using System.IO;
 using ClassicalSharp;
 using ClassicalSharp.Network;
 using SharpWave;
-using SharpWave.Codecs.Vorbis;
 
 namespace Launcher.Patcher {
 	
@@ -60,25 +59,26 @@ namespace Launcher.Patcher {
 			string path = Path.Combine("audio", prefix + name + ".wav");
 			
 			using (Stream dst = Platform.FileCreate(path))
-				using (MemoryStream src = new MemoryStream(rawData)) 
+				using (MemoryStream src = new MemoryStream(rawData))
 			{
 				dst.SetLength(44);
-				RawOut output = new RawOut((FileStream)dst, true);
-				output.Create(1);
-				OggContainer container = new OggContainer(src);
-				output.PlayStreaming(container);
+				VorbisCodec codec = new VorbisCodec();
+				AudioFormat format = codec.ReadHeader(src);
+				
+				foreach (AudioChunk chunk in codec.StreamData(src)) {
+					dst.Write(chunk.Data, 0, chunk.Length);
+				}
 				
 				dst.Position = 0;
 				BinaryWriter w = new BinaryWriter(dst);
-				WriteWaveHeader(w, dst, output);
+				WriteWaveHeader(w, dst, format);
 			}
 		}
 		
-		void WriteWaveHeader(BinaryWriter w, Stream stream, RawOut data) {
+		void WriteWaveHeader(BinaryWriter w, Stream stream, AudioFormat format) {
 			WriteFourCC(w, "RIFF");
 			w.Write((int)(stream.Length - 8));
 			WriteFourCC(w, "WAVE");
-			AudioFormat format = data.Format;
 			
 			WriteFourCC(w, "fmt ");
 			w.Write(16);

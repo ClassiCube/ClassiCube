@@ -44,9 +44,9 @@ namespace OpenTK.Audio.OpenAL {
 		public static extern void alGenBuffers(int n, uint* bids);
 		[DllImport(lib, CallingConvention = style)]
 		public static extern void alDeleteBuffers(int n, uint* bids);
-
 		[DllImport(lib, CallingConvention = style)]
 		public static extern void alBufferData(uint bid, ALFormat format, IntPtr buffer, int size, int freq);
+		
 		[DllImport(lib, CallingConvention = style)]
 		public static extern IntPtr alcCreateContext(IntPtr device, int* attrlist);
 		[DllImport(lib, CallingConvention = style)]
@@ -79,7 +79,6 @@ namespace OpenTK.Audio.OpenAL {
 	public enum ALError {
 		NoError = 0,
 		InvalidName = 0xA001,
-		IllegalEnum = 0xA002,
 		InvalidEnum = 0xA002,
 		InvalidValue = 0xA003,
 		InvalidOperation = 0xA004,

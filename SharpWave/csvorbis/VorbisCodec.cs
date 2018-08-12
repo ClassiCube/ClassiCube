@@ -3,27 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using csogg;
 using csvorbis;
-using SharpWave.Containers;
 
-namespace SharpWave.Codecs.Vorbis {
+namespace SharpWave {
 	
-	public sealed class OggContainer : IMediaContainer {
-		
-		public OggContainer( Stream source ) : base( source ) {
-		}
-		
-		public override void ReadMetadata() {
-			// this would be a good place to read vorbis headers
-		}
-		
-		public override ICodec GetAudioCodec() {
-			return new VorbisCodec();
-		}
-	}
-	
-	public sealed class VorbisCodec : ICodec {
-		public string Name { get { return "Xiph.org Vorbis"; } }
-		
+	public sealed class VorbisCodec {
 		public VorbisCodec() {
 			chunk = new AudioChunk();
 		}

@@ -61,21 +61,17 @@
     <Compile Include="csvorbis\Ogg\SyncState.cs" />
     <Compile Include="csvorbis\StaticCodeBook.cs" />
     <Compile Include="csvorbis\VUtils.cs" />
-    <Compile Include="ICodec.cs" />
-    <Compile Include="IMediaContainer.cs" />
     <Compile Include="Backends\AL.cs" />
     <Compile Include="Backends\WinMM.cs" />
     <Compile Include="Backends\OpenALOut.cs" />
     <Compile Include="Backends\WinMmOut.cs" />
+    <Compile Include="Utils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils\MemUtils.cs" />
     <Compile Include="Backends\IAudioOutput.cs" />
-    <Compile Include="VolumeMixer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="csvorbis\Ogg" />
     <Folder Include="csvorbis" />
-    <Folder Include="Utils" />
     <Folder Include="Backends" />
   </ItemGroup>
   <ItemGroup>

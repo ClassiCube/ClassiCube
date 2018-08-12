@@ -28,8 +28,7 @@ namespace SharpWave {
 		internal static string GetErrorDescription(uint error) {
 			StringBuilder message = new StringBuilder(1024);
 			uint result = waveOutGetErrorText(error, message, message.Capacity);
-			if(result == 0)
-				return message.ToString();
+			if (result == 0) return message.ToString();
 			return "waveOutGetErrorText failed.";
 		}
 	}
@@ -61,8 +60,5 @@ namespace SharpWave {
 	public enum WaveHeaderFlags : uint {
 		Done = 0x01,
 		Prepared = 0x02,
-		BeginLoop = 0x04,
-		EndLoop = 0x08,
-		InQueue = 0x10,
 	}
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using OpenTK.Audio;
 using OpenTK.Audio.OpenAL;
-using SharpWave.Codecs;
 
 namespace SharpWave {
 	

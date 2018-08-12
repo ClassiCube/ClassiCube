@@ -27,9 +27,9 @@ struct VorbisState {
 	struct Stream* Source;  /* Source for filling Input buffer */
 
 	UInt8 Channels, ModeNumBits; 
-	UInt16 CurBlockSize, PrevBlockSize, DataSize;
+	UInt16 CurBlockSize, PrevBlockSize, DataSize, NumCodebooks;
 	Int32 SampleRate; Int32 BlockSizes[2];
-	Real32* Values;
+	Real32* Values[2]; /* swapped each frame */
 	Real32* PrevOutput[VORBIS_MAX_CHANS];
 	Real32* CurOutput[VORBIS_MAX_CHANS];
 
