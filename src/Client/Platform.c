@@ -639,6 +639,9 @@ int CALLBACK Font_GetNamesCallback(CONST LOGFONT* desc, CONST TEXTMETRIC* metric
 	UInt32 i;
 	UChar nameBuffer[String_BufferSize(LF_FACESIZE)];
 	String name = String_InitAndClearArray(nameBuffer);
+
+	/* don't want international variations of font names too */
+	if (desc->lfFaceName[0] == '@' || desc->lfCharSet != ANSI_CHARSET) return 1;
 	
 	if ((fontType & RASTER_FONTTYPE) || (fontType & TRUETYPE_FONTTYPE)) {
 		for (i = 0; i < LF_FACESIZE && desc->lfFaceName[i]; i++) {
