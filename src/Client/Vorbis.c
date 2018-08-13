@@ -117,7 +117,7 @@ static Int32 iLog(Int32 x) {
 }
 
 static Real32 float32_unpack(struct VorbisState* ctx) {
-	/* encoder macros can't reliably read over 24 bits */
+	/* ReadBits can't reliably read over 24 bits */
 	UInt32 lo = Vorbis_ReadBits(ctx, 16);
 	UInt32 hi = Vorbis_ReadBits(ctx, 16);
 	UInt32 x = (hi << 16) | lo;
@@ -646,7 +646,7 @@ static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r
 
 static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, UInt32 size, Int32 ch, bool* doNotDecode, Real32** data) {
 	UInt32 residueBeg = min(r->Begin, size);
-	UInt32 residueEnd = min(r->End, size);
+	UInt32 residueEnd = min(r->End,   size);
 	Int32 pass, i, j, k;
 
 	struct Codebook* classbook = &ctx->Codebooks[r->Classbook];
@@ -654,10 +654,12 @@ static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, UInt3
 	UInt32 nToRead = residueEnd - residueBeg;
 	UInt32 partitionsToRead = nToRead / r->PartitionSize;
 
-	UInt8* classifications_raw = Mem_Alloc(ch * partitionsToRead * classbook->Dimensions, sizeof(UInt8), "temp classicifcations");
-	UInt8* classifications[VORBIS_MAX_CHANS]; /* TODO ????? */
+	/* first half of temp array is used by residue type 2 for storing temp interleaved data */
+	UInt8* classifications_raw = ((UInt8*)ctx->Temp) + (ctx->DataSize * ctx->Channels * 5);
+	UInt8* classifications[VORBIS_MAX_CHANS];
 	for (i = 0; i < ch; i++) {
-		classifications[i] = classifications_raw + (i * partitionsToRead * classbook->Dimensions);
+		/* add a bit of space in case classwordsPerCodeword is > partitionsToRead*/
+		classifications[i] = classifications_raw + i * (partitionsToRead + 64);
 	}
 
 	if (nToRead == 0) return;
@@ -717,12 +719,15 @@ static void Residue_DecodeFrame(struct VorbisState* ctx, struct Residue* r, Int3
 			if (!doNotDecode[i]) decodeAny = true;
 		}
 		if (!decodeAny) return;
-
 		decodeAny = false; /* because DecodeCore expects this to be 'false' for 'do not decode' */
-		Real32* interleaved = Mem_AllocCleared(ctx->DataSize * ctx->Channels, sizeof(Real32), "residue 2 temp");
+
+		Real32* interleaved = ctx->Temp;
+		/* TODO: avoid using ctx->temp and deinterleaving at all */
+		/* TODO: avoid setting memory to 0 here */
+		Mem_Set(interleaved, 0, ctx->DataSize * ctx->Channels * sizeof(Real32));
 		Residue_DecodeCore(ctx, r, size * ch, 1, &decodeAny, &interleaved);
 
-		/* de interleave type 2 output */	
+		/* deinterleave type 2 output */	
 		for (i = 0; i < size; i++) {
 			for (j = 0; j < ch; j++) {
 				data[j][i] = interleaved[i * ch + j];
@@ -806,7 +811,7 @@ void imdct_slow(Real32* in, Real32* out, Int32 N) {
 	}
 }
 
-static UInt32 ReverseBits(UInt32 v) {
+static UInt32 Vorbis_ReverseBits(UInt32 v) {
 	v = ((v >> 1) & 0x55555555) | ((v & 0x55555555) << 1);
 	v = ((v >> 2) & 0x33333333) | ((v & 0x33333333) << 2);
 	v = ((v >> 4) & 0x0F0F0F0F) | ((v & 0x0F0F0F0F) << 4);
@@ -815,14 +820,14 @@ static UInt32 ReverseBits(UInt32 v) {
 	return v;
 }
 
-static UInt32 Log2(UInt32 v) {
+static UInt32 Vorbis_Log2(UInt32 v) {
 	UInt32 r = 0;
 	while (v >>= 1) r++;
 	return r;
 }
 
 void imdct_init(struct imdct_state* state, Int32 n) {
-	Int32 k, k2, n4 = n >> 2, n8 = n >> 3, log2_n = Log2(n);
+	Int32 k, k2, n4 = n >> 2, n8 = n >> 3, log2_n = Vorbis_Log2(n);
 	Real32 *A = state->A, *B = state->B, *C = state->C;
 	state->n = n; state->log2_n = log2_n;
 
@@ -840,7 +845,7 @@ void imdct_init(struct imdct_state* state, Int32 n) {
 
 	UInt32* reversed = state->Reversed;
 	for (k = 0; k < n8; k++) {
-		reversed[k] = ReverseBits(k) >> (32-log2_n+3);
+		reversed[k] = Vorbis_ReverseBits(k) >> (32-log2_n+3);
 	}
 }
 
@@ -996,9 +1001,9 @@ void Vorbis_Free(struct VorbisState* ctx) {
 	Mem_Free(&ctx->Modes);
 	Mem_Free(&ctx->WindowShort);
 
-	Mem_Free(&ctx->Values[0]);
-	Mem_Free(&ctx->Values[1]);
-	/* TODO: free other temp memory, etc*/
+	Mem_Free(&ctx->Temp);
+	ctx->Values[0] = NULL;
+	ctx->Values[1] = NULL;
 }
 
 static bool Vorbis_ValidBlockSize(UInt32 size) {
@@ -1144,8 +1149,9 @@ ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 	Vorbis_CalcWindow(ctx, &offset, true, true,  true);
 
 	count = ctx->Channels * ctx->BlockSizes[1];
-	ctx->Values[0] = Mem_AllocCleared(count, sizeof(Real32), "Vorbis values");
-	ctx->Values[1] = Mem_AllocCleared(count, sizeof(Real32), "Vorbis values");
+	ctx->Temp      = Mem_AllocCleared(count * 3, sizeof(Real32), "Vorbis values");
+	ctx->Values[0] = ctx->Temp + count;
+	ctx->Values[1] = ctx->Temp + count * 2;
 
 	imdct_init(&ctx->imdct[0], ctx->BlockSizes[0]);
 	imdct_init(&ctx->imdct[1], ctx->BlockSizes[1]);

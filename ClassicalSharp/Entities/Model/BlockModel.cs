@@ -114,11 +114,11 @@ namespace ClassicalSharp.Model {
 				drawer.TintCol = BlockInfo.FogCol[block];
 				
 				drawer.Bottom(1, cols[1], GetTex(Side.Bottom), cache.vertices, ref index);
-				drawer.Front(1, cols[3], GetTex(Side.Front), cache.vertices, ref index);
-				drawer.Right(1, cols[5], GetTex(Side.Right), cache.vertices, ref index);
-				drawer.Back(1,  cols[2], GetTex(Side.Back),  cache.vertices, ref index);
-				drawer.Left(1,  cols[4], GetTex(Side.Left),  cache.vertices, ref index);
-				drawer.Top(1, cols[0], GetTex(Side.Top), cache.vertices, ref index);
+				drawer.Front(1,  cols[3], GetTex(Side.Front),  cache.vertices, ref index);
+				drawer.Right(1,  cols[5], GetTex(Side.Right),  cache.vertices, ref index);
+				drawer.Back(1,   cols[2], GetTex(Side.Back),   cache.vertices, ref index);
+				drawer.Left(1,   cols[4], GetTex(Side.Left),   cache.vertices, ref index);
+				drawer.Top(1,    cols[0], GetTex(Side.Top),    cache.vertices, ref index);
 			}
 		}
 		

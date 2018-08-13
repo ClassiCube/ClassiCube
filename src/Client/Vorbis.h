@@ -29,6 +29,7 @@ struct VorbisState {
 	UInt8 Channels, ModeNumBits; 
 	UInt16 CurBlockSize, PrevBlockSize, DataSize, NumCodebooks;
 	Int32 SampleRate; Int32 BlockSizes[2];
+	Real32* Temp; /* temp array reused in places */
 	Real32* Values[2]; /* swapped each frame */
 	Real32* PrevOutput[VORBIS_MAX_CHANS];
 	Real32* CurOutput[VORBIS_MAX_CHANS];

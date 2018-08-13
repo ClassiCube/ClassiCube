@@ -185,7 +185,7 @@ ReturnCode Fcm_Load(struct Stream* stream) {
 	Int32 i;
 	for (i = 0; i < metaSize; i++) {
 		Fcm_ReadString(&compStream); /* Group */
-		Fcm_ReadString(&compStream); /* Key */
+		Fcm_ReadString(&compStream); /* Key   */
 		Fcm_ReadString(&compStream); /* Value */
 	}
 	Map_ReadBlocks(&compStream);

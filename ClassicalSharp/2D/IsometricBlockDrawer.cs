@@ -108,7 +108,7 @@ namespace ClassicalSharp {
 			if (BlockInfo.Tinted[block]) { v.Col *= BlockInfo.FogCol[block]; }
 			
 			float x1 = firstPart ? 0.5f : -0.1f, x2 = firstPart ? 1.1f : 0.5f;
-			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);
+			rec.U1   = firstPart ? 0.0f : 0.5f;  rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);
 			float minX = scale * (1 - x1 * 2) + pos.X, maxX = scale * (1 - x2 * 2)   + pos.X;
 			float minY = scale * (1 - 0 * 2)  + pos.Y, maxY = scale * (1 - 1.1f * 2) + pos.Y;
 			
@@ -154,14 +154,14 @@ namespace ClassicalSharp {
 		/// <summary> Rotates the given 3D coordinates around the x axis. </summary>
 		static void RotateX(float cosA, float sinA) {
 			float y = cosA * pos.Y + sinA * pos.Z;
-			pos.Z = -sinA * pos.Y + cosA * pos.Z;
+			pos.Z  = -sinA * pos.Y + cosA * pos.Z;
 			pos.Y = y;
 		}
 		
 		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
 		static void RotateY(float cosA, float sinA) {
 			float x = cosA * pos.X - sinA * pos.Z;
-			pos.Z = sinA * pos.X + cosA * pos.Z;
+			pos.Z   = sinA * pos.X + cosA * pos.Z;
 			pos.X = x;
 		}
 	}

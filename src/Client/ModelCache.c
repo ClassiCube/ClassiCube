@@ -785,12 +785,10 @@ static void HumanModel_CreateParts(struct ModelSet* set, struct ModelSet* set64,
 	BoxDesc_BuildBox(&setSlim->RightArmLayer, &rArm);
 }
 
-static void HumanModel_SetupState(struct Entity* entity) {
+static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) {
 	IModel_ApplyTexture(entity);
 	Gfx_SetAlphaTest(false);
-}
 
-static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) {
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, model->Head, true);
 	IModel_DrawPart(model->Torso);
 	IModel_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  model->LeftLeg,  false);
@@ -863,7 +861,6 @@ static void HumanoidModel_GetPickingBounds(struct AABB* bb) {
 }
 
 static void HumanoidModel_DrawModel(struct Entity* entity) {
-	HumanModel_SetupState(entity);
 	UInt8 skinType = IModel_skinType;
 	struct ModelSet* model =
 		skinType == SKIN_TYPE_64x64_SLIM ? &Humanoid_SetSlim :
@@ -924,7 +921,6 @@ static void ChibiModel_GetPickingBounds(struct AABB* bb) {
 }
 
 static void ChibiModel_DrawModel(struct Entity* entity) {
-	HumanModel_SetupState(entity);
 	UInt8 skinType = IModel_skinType;
 	struct ModelSet* model =
 		skinType == SKIN_TYPE_64x64_SLIM ? &Chibi_SetSlim :
