@@ -34,7 +34,7 @@ namespace ClassicalSharp.Gui.Screens {
 			Array.Sort(entries);
 		}
 		
-		protected override void TextButtonClick(Game game, Widget widget) {
+		protected override void EntryClick(Game game, Widget widget) {
 			string path = Path.Combine("maps", GetCur(widget));			
 			if (!Platform.FileExists(path)) return;
 			LoadMap(game, path);

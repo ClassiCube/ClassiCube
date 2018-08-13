@@ -168,13 +168,13 @@ void Platform_LogConst(const UChar* message) {
 }
 
 void Platform_FromSysTime(DateTime* time, SYSTEMTIME* sysTime) {
-	time->Year   = sysTime->wYear;
-	time->Month  = sysTime->wMonth;
-	time->Day    = sysTime->wDay;
-	time->Hour   = sysTime->wHour;
-	time->Minute = sysTime->wMinute;
-	time->Second = sysTime->wSecond;
-	time->Milli  = sysTime->wMilliseconds;
+	time->Year   = (UInt16)sysTime->wYear;
+	time->Month  =  (UInt8)sysTime->wMonth;
+	time->Day    =  (UInt8)sysTime->wDay;
+	time->Hour   =  (UInt8)sysTime->wHour;
+	time->Minute =  (UInt8)sysTime->wMinute;
+	time->Second =  (UInt8)sysTime->wSecond;
+	time->Milli  = (UInt16)sysTime->wMilliseconds;
 }
 
 void DateTime_CurrentUTC(DateTime* time) {
@@ -308,7 +308,7 @@ ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCal
 		String_Clear(&file);
 		Int32 i;
 
-		for (i = 0; i < MAX_PATH && entry.cFileName[i] != '\0'; i++) {
+		for (i = 0; i < MAX_PATH && entry.cFileName[i]; i++) {
 			String_Append(&file, Convert_UnicodeToCP437(entry.cFileName[i]));
 		}
 
@@ -635,6 +635,24 @@ void Waitable_Wait(void* handle) {
 *--------------------------------------------------------Font/Text--------------------------------------------------------*
 *#########################################################################################################################*/
 #if CC_BUILD_WIN
+int CALLBACK Font_GetNamesCallback(CONST LOGFONT* desc, CONST TEXTMETRIC* metrics, DWORD fontType, LPVOID obj) {
+	UInt32 i;
+	UChar nameBuffer[String_BufferSize(LF_FACESIZE)];
+	String name = String_InitAndClearArray(nameBuffer);
+	
+	if ((fontType & RASTER_FONTTYPE) || (fontType & TRUETYPE_FONTTYPE)) {
+		for (i = 0; i < LF_FACESIZE && desc->lfFaceName[i]; i++) {
+			String_Append(&name, Convert_UnicodeToCP437(desc->lfFaceName[i]));
+		}
+		StringsBuffer_Add((StringsBuffer*)obj, &name);
+	}
+	return 1;
+}
+
+void Font_GetNames(StringsBuffer* buffer) {
+	EnumFontFamiliesW(hdc, NULL, Font_GetNamesCallback, buffer);
+}
+
 void Font_Make(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) {
 	desc->Size    = size; 
 	desc->Style   = style;

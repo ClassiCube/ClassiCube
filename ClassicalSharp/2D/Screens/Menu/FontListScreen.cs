@@ -20,28 +20,27 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			string font = game.FontName;
-			
-			for (int i = 0; i < entries.Length; i++) {
-				if (!Utils.CaselessEq(font, entries[i])) continue;
-				SetCurrentIndex(i);
-				return;
-			}
+			Select(game.FontName);
 		}
 		
-		protected override void TextButtonClick(Game game, Widget widget) {			
-			string font = GetCur(widget);
-			if (font == empty) return;
+		protected override void EntryClick(Game game, Widget widget) {			
+			string fontName = GetCur(widget);
+			if (fontName == empty) return;
 			
-			game.FontName = font;
-			Options.Set(OptionsKey.FontName, font);
+			// Some fonts don't support Regular style
+			try {
+				using (Font tmp = new Font(fontName, font.Size)) { }
+			} catch { return; }
+			
+			game.FontName = fontName;
+			Options.Set(OptionsKey.FontName, fontName);
 			
 			int cur = currentIndex;
 			HandleFontChange();
 			SetCurrentIndex(cur);
 		}
 		
-		protected override void UpdateText(ButtonWidget widget, string text) {
+		protected override void UpdateEntry(ButtonWidget widget, string text) {
 			try {
 				using (Font tmp = new Font(text, font.Size)) {
 					widget.font = tmp;

@@ -89,6 +89,7 @@ void Waitable_Signal(void* handle);
 void Waitable_Wait(void* handle); 
 void Waitable_WaitFor(void* handle, UInt32 milliseconds);
 
+void Font_GetNames(StringsBuffer* buffer);
 void Font_Make(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
 void Font_Free(struct FontDesc* desc);
 struct Size2D Platform_TextMeasure(struct DrawTextArgs* args);

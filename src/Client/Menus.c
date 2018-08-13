@@ -41,6 +41,7 @@ struct ListScreen {
 	Real32 WheelAcc;
 	Int32 CurrentIndex;
 	Widget_LeftClick EntryClick;
+	void (*UpdateEntry)(struct ButtonWidget* button, STRING_PURE String* text);
 	String TitleText;
 	struct TextWidget Title, Page;
 	struct Widget* ListWidgets[LIST_SCREEN_BUTTONS + 2];
@@ -318,12 +319,13 @@ static void Menu_SwitchHacks(struct GuiElem* a, struct GuiElem* b)     { Gui_Rep
 static void Menu_SwitchEnv(struct GuiElem* a, struct GuiElem* b)       { Gui_ReplaceActive(EnvSettingsScreen_MakeInstance()); }
 static void Menu_SwitchNostalgia(struct GuiElem* a, struct GuiElem* b) { Gui_ReplaceActive(NostalgiaScreen_MakeInstance()); }
 
-static void Menu_SwitchGenLevel(struct GuiElem* a, struct GuiElem* b)         { Gui_ReplaceActive(GenLevelScreen_MakeInstance()); }
-static void Menu_SwitchClassicGenLevel(struct GuiElem* a, struct GuiElem* b)  { Gui_ReplaceActive(ClassicGenScreen_MakeInstance()); }
-static void Menu_SwitchLoadLevel(struct GuiElem* a, struct GuiElem* b)        { Gui_ReplaceActive(LoadLevelScreen_MakeInstance()); }
-static void Menu_SwitchSaveLevel(struct GuiElem* a, struct GuiElem* b)        { Gui_ReplaceActive(SaveLevelScreen_MakeInstance()); }
-static void Menu_SwitchTexPacks(struct GuiElem* a, struct GuiElem* b)         { Gui_ReplaceActive(TexturePackScreen_MakeInstance()); }
-static void Menu_SwitchHotkeys(struct GuiElem* a, struct GuiElem* b)          { Gui_ReplaceActive(HotkeyListScreen_MakeInstance()); }
+static void Menu_SwitchGenLevel(struct GuiElem* a, struct GuiElem* b)        { Gui_ReplaceActive(GenLevelScreen_MakeInstance()); }
+static void Menu_SwitchClassicGenLevel(struct GuiElem* a, struct GuiElem* b) { Gui_ReplaceActive(ClassicGenScreen_MakeInstance()); }
+static void Menu_SwitchLoadLevel(struct GuiElem* a, struct GuiElem* b)       { Gui_ReplaceActive(LoadLevelScreen_MakeInstance()); }
+static void Menu_SwitchSaveLevel(struct GuiElem* a, struct GuiElem* b)       { Gui_ReplaceActive(SaveLevelScreen_MakeInstance()); }
+static void Menu_SwitchTexPacks(struct GuiElem* a, struct GuiElem* b)        { Gui_ReplaceActive(TexturePackScreen_MakeInstance()); }
+static void Menu_SwitchHotkeys(struct GuiElem* a, struct GuiElem* b)         { Gui_ReplaceActive(HotkeyListScreen_MakeInstance()); }
+static void Menu_SwitchFont(struct GuiElem* a, struct GuiElem* b)            { Gui_ReplaceActive(FontListScreen_MakeInstance()); }
 
 
 /*########################################################################################################################*
@@ -368,6 +370,10 @@ static void ListScreen_UpdatePage(struct ListScreen* screen) {
 	TextWidget_SetText(&screen->Page, &page);
 }
 
+static void ListScreen_UpdateEntry(struct ButtonWidget* button, STRING_PURE String* text) {
+	ButtonWidget_SetText(button, text);
+}
+
 static void ListScreen_SetCurrentIndex(struct ListScreen* screen, Int32 index) {
 	if (index >= screen->Entries.Count) { index = screen->Entries.Count - 1; }
 	if (index < 0) index = 0;
@@ -375,7 +381,7 @@ static void ListScreen_SetCurrentIndex(struct ListScreen* screen, Int32 index) {
 	Int32 i;
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) {
 		String str = ListScreen_UNSAFE_Get(screen, index + i);
-		ButtonWidget_SetText(&screen->Buttons[i], &str);
+		screen->UpdateEntry(&screen->Buttons[i], &str);
 	}
 
 	screen->CurrentIndex = index;
@@ -441,6 +447,17 @@ static void ListScreen_QuickSort(Int32 left, Int32 right) {
 static String ListScreen_UNSAFE_GetCur(struct ListScreen* screen, struct GuiElem* w) {
 	Int32 i = Menu_Index((struct MenuBase*)screen, (struct Widget*)w);
 	return ListScreen_UNSAFE_Get(screen, screen->CurrentIndex + i);
+}
+
+static void ListScreen_Select(struct ListScreen* screen, STRING_PURE String* str) {
+	Int32 i;
+	for (i = 0; i < screen->Entries.Count; i++) {
+		String entry = StringsBuffer_UNSAFE_Get(&screen->Entries, i);
+		if (!String_CaselessEquals(&entry, str)) return;
+
+		ListScreen_SetCurrentIndex(screen, i);
+		return;
+	}
 }
 
 static void ListScreen_Init(struct GuiElem* elem) {
@@ -513,6 +530,7 @@ struct ListScreen* ListScreen_MakeInstance(void) {
 
 	screen->VTABLE = &ListScreen_VTABLE;
 	Screen_Reset((struct Screen*)screen);
+	screen->UpdateEntry = ListScreen_UpdateEntry;
 	
 	screen->VTABLE->HandlesKeyDown   = ListScreen_HandlesKeyDown;
 	screen->VTABLE->HandlesMouseDown = ListScreen_HandlesMouseDown;
@@ -1445,6 +1463,54 @@ struct Screen* TexturePackScreen_MakeInstance(void) {
 	String path = String_FromConst("texpacks");
 	Directory_Enum(&path, &screen->Entries, TexturePackScreen_SelectEntry);
 	if (screen->Entries.Count > 0) {
+		ListScreen_QuickSort(0, screen->Entries.Count - 1);
+	}
+	return (struct Screen*)screen;
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------FontListScreen-------------------------------------------------------*
+*#########################################################################################################################*/
+static void FontListScreen_EntryClick(struct GuiElem* elem, struct GuiElem* w) {
+	struct ListScreen* screen = (struct ListScreen*)elem;
+	String fontName = ListScreen_UNSAFE_GetCur(screen, w);
+	if (String_CaselessEqualsConst(&fontName, LIST_SCREEN_EMPTY)) return;
+
+	String_Set(&Game_FontName, &fontName);
+	Options_Set(OPT_FONT_NAME, &fontName);
+
+	Int32 cur = screen->CurrentIndex;
+	Menu_HandleFontChange(elem);
+	ListScreen_SetCurrentIndex(screen, cur);
+}
+
+static void FontListScreen_UpdateEntry(struct ButtonWidget* button, STRING_PURE String* text) {
+	struct FontDesc tmp = { 0 }, font = button->Font;
+	Font_Make(&tmp, text, 16, FONT_STYLE_NORMAL);
+	{
+		button->Font = tmp;
+		ButtonWidget_SetText(button, text);
+		button->Font = font;
+	}
+	Font_Free(&tmp);
+}
+
+static void FontListScreen_Init(struct GuiElem* elem) {
+	struct ListScreen* screen = (struct ListScreen*)elem;
+	ListScreen_Init(elem);
+	ListScreen_Select(screen, &Game_FontName);
+}
+
+struct Screen* FontListScreen_MakeInstance(void) {
+	struct ListScreen* screen = ListScreen_MakeInstance();
+	String title = String_FromConst("Select a font"); screen->TitleText = title;
+	screen->EntryClick   = FontListScreen_EntryClick;
+	screen->UpdateEntry  = FontListScreen_UpdateEntry;
+	screen->VTABLE->Init = FontListScreen_Init;
+
+	Font_GetNames(&screen->Entries);
+	if (screen->Entries.Count) {
 		ListScreen_QuickSort(0, screen->Entries.Count - 1);
 	}
 	return (struct Screen*)screen;
@@ -2527,16 +2593,15 @@ static void GuiOptionsScreen_ContextRecreated(void* obj) {
 	MenuOptionsScreen_Make(screen, 4, -1,   50, "Tab auto-complete",  MenuOptionsScreen_Bool,
 		GuiOptionsScreen_GetTabAuto,   GuiOptionsScreen_SetTabAuto);
 
-	MenuOptionsScreen_Make(screen, 5, 1, -150, "Clickable chat",  MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(screen, 5, 1, -150, "Clickable chat",     MenuOptionsScreen_Bool,
 		GuiOptionsScreen_GetClickable, GuiOptionsScreen_SetClickable);
-	MenuOptionsScreen_Make(screen, 6, 1, -100, "Chat scale",      MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(screen, 6, 1, -100, "Chat scale",         MenuOptionsScreen_Input,
 		GuiOptionsScreen_GetChatScale, GuiOptionsScreen_SetChatScale);
-	MenuOptionsScreen_Make(screen, 7, 1,  -50, "Chat lines",      MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(screen, 7, 1,  -50, "Chat lines",         MenuOptionsScreen_Input,
 		GuiOptionsScreen_GetChatlines, GuiOptionsScreen_SetChatlines);
-	MenuOptionsScreen_Make(screen, 8, 1,    0, "Use system font", MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(screen, 8, 1,    0, "Use system font",    MenuOptionsScreen_Bool,
 		GuiOptionsScreen_GetUseFont,   GuiOptionsScreen_SetUseFont);
-	MenuOptionsScreen_Make(screen, 9, 1,   50, "Font",            MenuOptionsScreen_Input,
-		GuiOptionsScreen_GetFont,      GuiOptionsScreen_SetFont);
+	OptionsGroupScreen_Make(screen, 9, 1,  50, "Select system font", Menu_SwitchFont);
 
 	Menu_DefaultBack(screen, 10, &screen->Buttons[10], false, &screen->TitleFont, Menu_SwitchOptions);
 	widgets[11] = NULL; widgets[12] = NULL; widgets[13] = NULL;

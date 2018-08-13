@@ -14,7 +14,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected int currentIndex;
 		protected Widget[] widgets;
 		protected const int items = 5;
-		protected const string empty = "-----";		
+		protected const string empty = "-----";
 		protected string titleText;
 		
 		public override void Init() {
@@ -70,9 +70,9 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		ButtonWidget MakeText(int i) {
 			string text = Get(currentIndex + i);
-			ButtonWidget btn = ButtonWidget.Create(game, 300, "", font, TextButtonClick)
+			ButtonWidget btn = ButtonWidget.Create(game, 300, "", font, EntryClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, (i - 2) * 50);
-			UpdateText(btn, text);
+			UpdateEntry(btn, text);
 			return btn;
 		}
 		
@@ -81,7 +81,7 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, 0);
 		}
 		
-		protected abstract void TextButtonClick(Game game, Widget widget);
+		protected abstract void EntryClick(Game game, Widget widget);
 		
 		void PageClick(bool forward) {
 			SetCurrentIndex(currentIndex + (forward ? items : -items));
@@ -93,19 +93,19 @@ namespace ClassicalSharp.Gui.Screens {
 			currentIndex = index;
 			
 			for (int i = 0; i < items; i++) {
-				UpdateText((ButtonWidget)widgets[i], Get(currentIndex + i));
+				UpdateEntry((ButtonWidget)widgets[i], Get(currentIndex + i));
 			}
 			UpdatePage();
 		}
 		
-		protected virtual void UpdateText(ButtonWidget widget, string text) {
+		protected virtual void UpdateEntry(ButtonWidget widget, string text) {
 			widget.SetText(text);
 		}
 		
 		void UpdatePage() {
 			int start = items, end = entries.Length - items;
 			widgets[5].Disabled = currentIndex < start;
-			widgets[6].Disabled = currentIndex >= end;		
+			widgets[6].Disabled = currentIndex >= end;
 			if (game.ClassicMode) return;
 			
 			TextWidget page = (TextWidget)widgets[9];
@@ -145,6 +145,14 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void OnResize() {
 			RepositionWidgets(widgets);
+		}
+		
+		protected void Select(string entry) {
+			for (int i = 0; i < entries.Length; i++) {
+				if (!Utils.CaselessEq(entry, entries[i])) continue;
+				SetCurrentIndex(i);
+				return;
+			}
 		}
 	}
 }

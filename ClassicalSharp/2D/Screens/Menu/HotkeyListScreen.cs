@@ -31,7 +31,7 @@ namespace ClassicalSharp.Gui.Screens {
 				((flags & 4) == 0 ? "" : " Alt");
 		}
 		
-		protected override void TextButtonClick(Game game, Widget widget) {
+		protected override void EntryClick(Game game, Widget widget) {
 			string text = GetCur(widget);
 			Hotkey original = default(Hotkey);
 			if (text != empty) original = Parse(text);

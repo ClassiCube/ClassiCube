@@ -14,7 +14,7 @@ namespace ClassicalSharp.Gui.Screens {
 			Array.Sort(entries);
 		}
 		
-		protected override void TextButtonClick(Game game, Widget widget) {
+		protected override void EntryClick(Game game, Widget widget) {
 			string file = GetCur(widget);
 			string path = Path.Combine("texpacks", file);
 			if (!Platform.FileExists(path)) return;

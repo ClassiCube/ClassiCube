@@ -24,6 +24,7 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path);
 struct Screen* LoadLevelScreen_MakeInstance(void);
 struct Screen* SaveLevelScreen_MakeInstance(void);
 struct Screen* TexturePackScreen_MakeInstance(void);
+struct Screen* FontListScreen_MakeInstance(void);
 struct Screen* HotkeyListScreen_MakeInstance(void);
 
 struct Screen* MiscOptionsScreen_MakeInstance(void);
