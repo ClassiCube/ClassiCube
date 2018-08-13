@@ -1279,45 +1279,68 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 }
 
 Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
-	Int32 i, j = 0, ch, size = 0;
-	if (ctx->PrevBlockSize == 0) goto finish;
-	size = (ctx->PrevBlockSize / 4) + (ctx->CurBlockSize / 4);
+	Int32 i, ch;
+	/* first frame decoded has no data */
+	if (ctx->PrevBlockSize == 0) {
+		ctx->PrevBlockSize = ctx->CurBlockSize;
+		return 0;
+	}
 
-	/* TODO: There's probably a nicer way of doing this.. */
-	/* TODO: Do this in-place */
-	Real32* combined[VORBIS_MAX_CHANS];
+	Int32 prevQrtr = ctx->PrevBlockSize / 4, curQrtr = ctx->CurBlockSize / 4;
+	Int32 prevHalf = prevQrtr * 2, curHalf = curQrtr * 2;
+	
+	Real32* prev[VORBIS_MAX_CHANS];
+	Real32*  cur[VORBIS_MAX_CHANS];
+	Int32 offset = curHalf - prevHalf; offset = max(offset, 0);
+
 	for (i = 0; i < ctx->Channels; i++) {
-		combined[i] = Mem_AllocCleared(size, sizeof(Real32), "temp combined");
+		prev[i] = ctx->PrevOutput[i] + prevHalf; /* data starts at halfway in previous block */
+		cur[i]   = ctx->CurOutput[i] + offset;   /* for when current block extends past prev block */
 	}
 
-	Int32 prevHalf = ctx->PrevBlockSize / 2, curHalf = ctx->CurBlockSize / 2;
-	Int32 prevEnd = prevHalf + min(prevHalf, size);
-	Int32 curBeg  = curHalf  - min(curHalf, size);
+	/* So for example, consider a short block overlapping with a long block
+	   a) we need to chop off 'prev' before its halfway point
+	   b) then need to chop off the 'cur' before the halfway point of 'prev'
+	             |-   ********|*****                     |-   ********|
+	            -| - *        |     ***                  | - *        |
+	           - |  #         |        ***         ===>  |  #         |
+	          -  | * -        |           ***            | * -        |
+	   ******-***|*   -       |              ***         |*   -       |
+	*/
 
-	/* overlap and add data */
-	for (i = prevHalf; i < prevEnd; i++, j++) {
-		for (ch = 0; ch < ctx->Channels; ch++) {
-			combined[ch][j] = ctx->PrevOutput[ch][i];
-		}
-	}
 
-	for (i = curHalf - 1, j = size - 1; i >= curBeg; i--, j--) {
-		for (ch = 0; ch < ctx->Channels; ch++) {
-			combined[ch][j] += ctx->CurOutput[ch][i];
-		}
-	}
+	/* data returned is from centre of previous block to centre of current block */
+	/* 3/4 point of previous block is aligned to 1/4 of current block */
+	Int32 overlapBeg = prevQrtr - curQrtr; overlapBeg = max(overlapBeg, 0);
+	Int32 overlapEnd = prevQrtr + curQrtr; overlapEnd = min(overlapEnd, curHalf);
 
-	for (i = 0; i < size; i++) {
+	for (i = 0; i < overlapBeg; i++) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
-			Real32 sample = combined[ch][i];
+			Real32 sample = prev[ch][i];
 			Math_Clamp(sample, -1.0f, 1.0f);
 			*data++ = (Int16)(sample * 32767);
 		}
 	}
 
-finish:
+	/* overlap and add data */
+	for (i = overlapBeg; i < overlapEnd; i++) {
+		for (ch = 0; ch < ctx->Channels; ch++) {
+			Real32 sample = prev[ch][i] + cur[ch][i];
+			Math_Clamp(sample, -1.0f, 1.0f);
+			*data++ = (Int16)(sample * 32767);
+		}
+	}
+
+	for (i = overlapEnd; i < curHalf; i++) {
+		for (ch = 0; ch < ctx->Channels; ch++) {
+			Real32 sample = cur[ch][i];
+			Math_Clamp(sample, -1.0f, 1.0f);
+			*data++ = (Int16)(sample * 32767);
+		}
+	}
+
 	ctx->PrevBlockSize = ctx->CurBlockSize;
-	return size;
+	return prevQrtr + curQrtr;
 }
 
 static Real32 floor1_inverse_dB_table[256] = {

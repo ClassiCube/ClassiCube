@@ -344,9 +344,11 @@ STRING_REF String ListScreen_UNSAFE_Get(struct ListScreen* screen, Int32 index) 
 }
 
 static void ListScreen_MakeText(struct ListScreen* screen, Int32 i) {
-	String text = ListScreen_UNSAFE_Get(screen, screen->CurrentIndex + i);
-	Menu_Button(screen, i, &screen->Buttons[i], 300, &text, &screen->Font, screen->EntryClick,
+	String text = ListScreen_UNSAFE_Get(screen, screen->CurrentIndex + i), empty = String_MakeNull();
+	Menu_Button(screen, i, &screen->Buttons[i], 300, &empty, &screen->Font, screen->EntryClick,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, (i - 2) * 50);
+	/* needed for font list menu */
+	screen->UpdateEntry(&screen->Buttons[i], &text);
 }
 
 static void ListScreen_Make(struct ListScreen* screen, Int32 i, Int32 x, STRING_PURE String* text, Widget_LeftClick onClick) {
@@ -453,7 +455,7 @@ static void ListScreen_Select(struct ListScreen* screen, STRING_PURE String* str
 	Int32 i;
 	for (i = 0; i < screen->Entries.Count; i++) {
 		String entry = StringsBuffer_UNSAFE_Get(&screen->Entries, i);
-		if (!String_CaselessEquals(&entry, str)) return;
+		if (!String_CaselessEquals(&entry, str)) continue;
 
 		ListScreen_SetCurrentIndex(screen, i);
 		return;
