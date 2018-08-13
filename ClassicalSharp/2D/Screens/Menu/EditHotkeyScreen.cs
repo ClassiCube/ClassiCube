@@ -18,6 +18,11 @@ namespace ClassicalSharp.Gui.Screens {
 			curHotkey = original;
 		}
 		
+		static string MakeFlagsString(byte flags) {
+			if (flags == 0) return " None";			
+			return HotkeyListScreen.MakeFlagsString(flags);
+		}
+		
 		public override void Render(double delta) {
 			base.Render(delta);
 			int cX = game.Width / 2, cY = game.Height / 2;
@@ -52,7 +57,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			string flags = HotkeyListScreen.MakeFlagsString(curHotkey.Flags);
+			string flags = MakeFlagsString(curHotkey.Flags);
 			if (curHotkey.Text == null) curHotkey.Text = "";
 			string staysOpen = curHotkey.StaysOpen ? "ON" : "OFF";
 			bool existed = origHotkey.Trigger != Key.None;
@@ -140,7 +145,7 @@ namespace ClassicalSharp.Gui.Screens {
 				else if (key == Key.AltLeft || key == Key.AltRight) curHotkey.Flags |= 4;
 				else curHotkey.Flags = 0;
 				
-				string flags = HotkeyListScreen.MakeFlagsString(curHotkey.Flags);
+				string flags = MakeFlagsString(curHotkey.Flags);
 				SetButton(modifyI, "Modifiers:" + flags);
 				supressNextPress = true;
 			}
@@ -153,7 +158,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if (selectedI == keyI) {
 				SetButton(keyI, "Key: " + curHotkey.Trigger);
 			} else if (selectedI == modifyI) {
-				string flags = HotkeyListScreen.MakeFlagsString(curHotkey.Flags);
+				string flags = MakeFlagsString(curHotkey.Flags);
 				SetButton(modifyI, "Modifiers:" + flags);
 			}
 			selectedI = -1;

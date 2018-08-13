@@ -843,11 +843,10 @@ static void EditHotkeyScreen_Make(struct EditHotkeyScreen* screen, Int32 i, Int3
 		ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
 }
 
+static void HotkeyListScreen_MakeFlags(UInt8 flags, STRING_TRANSIENT String* str);
 static void EditHotkeyScreen_MakeFlags(UInt8 flags, STRING_TRANSIENT String* str) {
 	if (flags == 0) String_AppendConst(str, " None");
-	if (flags & HOTKEYS_FLAG_CTRL)  String_AppendConst(str, " Ctrl");
-	if (flags & HOTKEYS_FLAG_SHIFT) String_AppendConst(str, " Shift");
-	if (flags & HOTKEYS_FLAG_ALT)   String_AppendConst(str, " Alt");
+	HotkeyListScreen_MakeFlags(flags, str);
 }
 
 static void EditHotkeyScreen_MakeBaseKey(struct EditHotkeyScreen* screen, Widget_LeftClick onClick) {
@@ -1532,18 +1531,22 @@ static void HotkeyListScreen_EntryClick(struct GuiElem* elem, struct GuiElem* w)
 		Gui_ReplaceActive(EditHotkeyScreen_MakeInstance(original)); return;
 	}
 
-	Int32 sepIndex = String_IndexOf(&text, '|', 0);
-	String key = String_UNSAFE_Substring(&text, 0, sepIndex - 1);
-	String value = String_UNSAFE_SubstringAt(&text, sepIndex + 1);
-	
-	String ctrl  = String_FromConst("Ctrl");
-	String shift = String_FromConst("Shift");
-	String alt   = String_FromConst("Alt");
-
+	Int32 sepIndex = String_IndexOf(&text, '+', 0);
+	String key = text, value;
 	UInt8 flags = 0;
-	if (String_ContainsString(&value, &ctrl))  flags |= HOTKEYS_FLAG_CTRL;
-	if (String_ContainsString(&value, &shift)) flags |= HOTKEYS_FLAG_SHIFT;
-	if (String_ContainsString(&value, &alt))   flags |= HOTKEYS_FLAG_ALT;
+
+	if (sepIndex >= 0) {
+		key   = String_UNSAFE_Substring(&text, 0, sepIndex - 1);
+		value = String_UNSAFE_SubstringAt(&text, sepIndex + 1);
+
+		String ctrl  = String_FromConst("Ctrl");
+		String shift = String_FromConst("Shift");
+		String alt   = String_FromConst("Alt");
+
+		if (String_ContainsString(&value, &ctrl))  flags |= HOTKEYS_FLAG_CTRL;
+		if (String_ContainsString(&value, &shift)) flags |= HOTKEYS_FLAG_SHIFT;
+		if (String_ContainsString(&value, &alt))   flags |= HOTKEYS_FLAG_ALT;
+	}
 
 	Key baseKey = Utils_ParseEnum(&key, Key_None, Key_Names, Key_Count);
 	Int32 i;
@@ -1552,6 +1555,12 @@ static void HotkeyListScreen_EntryClick(struct GuiElem* elem, struct GuiElem* w)
 		if (h.Trigger == baseKey && h.Flags == flags) { original = h; break; }
 	}
 	Gui_ReplaceActive(EditHotkeyScreen_MakeInstance(original));
+}
+
+static void HotkeyListScreen_MakeFlags(UInt8 flags, STRING_TRANSIENT String* str) {
+	if (flags & HOTKEYS_FLAG_CTRL)  String_AppendConst(str, " Ctrl");
+	if (flags & HOTKEYS_FLAG_SHIFT) String_AppendConst(str, " Shift");
+	if (flags & HOTKEYS_FLAG_ALT)   String_AppendConst(str, " Alt");
 }
 
 struct Screen* HotkeyListScreen_MakeInstance(void) {
@@ -1566,10 +1575,12 @@ struct Screen* HotkeyListScreen_MakeInstance(void) {
 	for (i = 0; i < HotkeysText.Count; i++) {
 		struct HotkeyData hKey = HotkeysList[i];
 		String_Clear(&text);
-
 		String_AppendConst(&text, Key_Names[hKey.Trigger]);
-		String_AppendConst(&text, " |");
-		EditHotkeyScreen_MakeFlags(hKey.Flags, &text);
+
+		if (hKey.Flags) {
+			String_AppendConst(&text, " +");
+			HotkeyListScreen_MakeFlags(hKey.Flags, &text);
+		}
 		StringsBuffer_Add(&screen->Entries, &text);
 	}
 
