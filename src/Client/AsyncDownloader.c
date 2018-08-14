@@ -261,7 +261,7 @@ static void AsyncDownloader_WorkerFunc(void) {
 		Mutex_Lock(async_pendingMutex);
 		{
 			if (async_terminate) return;
-			if (async_pending.Count > 0) {
+			if (async_pending.Count) {
 				request = async_pending.Requests[0];
 				hasRequest = true;
 				AsyncRequestList_RemoveAt(&async_pending, 0);

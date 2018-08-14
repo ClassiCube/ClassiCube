@@ -130,7 +130,7 @@ void Gui_MakeComponent(struct IGameComponent* comp) {
 }
 
 struct Screen* Gui_GetActiveScreen(void) {
-	return Gui_OverlaysCount > 0 ? Gui_Overlays[0] : Gui_GetUnderlyingScreen();
+	return Gui_OverlaysCount ? Gui_Overlays[0] : Gui_GetUnderlyingScreen();
 }
 
 struct Screen* Gui_GetUnderlyingScreen(void) {
@@ -207,7 +207,7 @@ void Gui_RenderGui(Real64 delta) {
 	if (Gui_Active)            { Elem_Render(Gui_Active, delta); }
 	if (showHUD && !hudBefore) { Elem_Render(Gui_HUD, delta); }
 
-	if (Gui_OverlaysCount > 0) { Elem_Render(Gui_Overlays[0], delta); }
+	if (Gui_OverlaysCount) { Elem_Render(Gui_Overlays[0], delta); }
 	GfxCommon_Mode3D();
 }
 

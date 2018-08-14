@@ -164,7 +164,7 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 			Event_RaiseVoid(&UserEvents_HeldBlockChanged);
 		}
 	} else if (key == KeyBind_Get(KeyBind_IDOverlay)) {
-		if (Gui_OverlaysCount > 0) return true;
+		if (Gui_OverlaysCount) return true;
 		struct Screen* overlay = TexIdsOverlay_MakeInstance();
 		Gui_ShowOverlay(overlay, false);
 	} else if (key == KeyBind_Get(KeyBind_BreakableLiquids)) {

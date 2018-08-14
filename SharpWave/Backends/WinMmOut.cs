@@ -70,7 +70,7 @@ namespace SharpWave {
 			CheckError(result, "Open");
 		}
 		
-		public override void PlayData(int index, AudioChunk chunk) {			
+		public override void PlayData(int index, AudioChunk chunk) {
 			if (chunk.Length > dataSizes[index]) {
 				IntPtr ptr = dataHandles[index];
 				if (ptr != IntPtr.Zero) Marshal.FreeHGlobal(ptr);

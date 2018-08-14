@@ -1463,7 +1463,7 @@ struct Screen* TexturePackScreen_MakeInstance(void) {
 
 	String path = String_FromConst("texpacks");
 	Directory_Enum(&path, &screen->Entries, TexturePackScreen_SelectEntry);
-	if (screen->Entries.Count > 0) {
+	if (screen->Entries.Count) {
 		ListScreen_QuickSort(0, screen->Entries.Count - 1);
 	}
 	return (struct Screen*)screen;
@@ -1665,7 +1665,7 @@ struct Screen* LoadLevelScreen_MakeInstance(void) {
 
 	String path = String_FromConst("maps");
 	Directory_Enum(&path, &screen->Entries, LoadLevelScreen_SelectEntry);
-	if (screen->Entries.Count > 0) {
+	if (screen->Entries.Count) {
 		ListScreen_QuickSort(0, screen->Entries.Count - 1);
 	}
 	return (struct Screen*)screen;

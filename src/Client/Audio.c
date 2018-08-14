@@ -281,45 +281,39 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 	fmt.BitsPerSample = 16;
 	Audio_SetFormat(music_out, &fmt);
 
-	/* max possible result of a vorbis decode is blocksize1 */
-	/* so we decode a bit over a second of audio each time */
-	Int32 offset = 0, size = (Math_CeilDiv(fmt.SampleRate, vorbis.BlockSizes[1]) + 1) * vorbis.BlockSizes[1];
-	Int16* data = Mem_Alloc((size * fmt.Channels) * AUDIO_MAX_CHUNKS, sizeof(Int16), "Ogg - final PCM output");
+	/* largest possible vorbis frame decodes to blocksize1 samples */
+	/* so we may end up decoding slightly over a second of audio */
+	Int32 chunkSize = (fmt.SampleRate + vorbis.BlockSizes[1]) * fmt.Channels;
+	Int16* data = Mem_Alloc(chunkSize * AUDIO_MAX_CHUNKS, sizeof(Int16), "Ogg - final PCM output");
 
-	Int32 i, next;
 	for (;;) {
-		next = -1;
+		Int32 i, next = -1;
 		for (i = 0; i < AUDIO_MAX_CHUNKS; i++) {
 			if (Audio_IsCompleted(music_out, i)) { next = i; break; }
 		}
 
-		if (next == -1) {
-		} else if (music_pendingStop) {
-			goto finished;
-		} else {
-			/* decode up to around a second */
-			Int16* base = data + (size * fmt.Channels) * next;
+		if (next == -1) { Thread_Sleep(10); continue; }
+		if (music_pendingStop) break;
 
-			while (offset + vorbis.BlockSizes[1] < size) {
-				result = Vorbis_DecodeFrame(&vorbis);
-				if (result == ERR_END_OF_STREAM) break;
-				if (result) goto finished;
+		/* decode up to around a second */
+		Int16* base = data + (chunkSize * next);
+		Int32 samples = 0;
 
-				Int16* cur = &base[offset * fmt.Channels];
-				offset += Vorbis_OutputFrame(&vorbis, cur);
-			}
+		while (samples < fmt.SampleRate) {
+			result = Vorbis_DecodeFrame(&vorbis);
+			if (result) break;
 
-			Audio_PlayData(music_out, next, base, offset * fmt.Channels * sizeof(Int16));
-			offset = 0;
-			/* need to specially handle last bit of audio */
-			if (result == ERR_END_OF_STREAM) goto finished;
+			Int16* cur = &base[samples * fmt.Channels];
+			samples += Vorbis_OutputFrame(&vorbis, cur);
 		}
-		Thread_Sleep(1);
+
+		Audio_PlayData(music_out, next, base, samples * fmt.Channels * sizeof(Int16));
+		/* need to specially handle last bit of audio */
+		if (result) break;
 	}
 
-finished:
 	/* Wait until the buffers finished playing */
-	while (!Audio_IsFinished(music_out)) { Thread_Sleep(1); }
+	while (!Audio_IsFinished(music_out)) { Thread_Sleep(10); }
 
 	Mem_Free(&data);
 	Vorbis_Free(&vorbis);

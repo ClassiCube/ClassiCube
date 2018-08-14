@@ -118,45 +118,6 @@ namespace SharpWave {
 		}
 		
 		public IEnumerable<AudioChunk> StreamData( Stream source ) {
-			// the original iterator may not always return enough samples,
-			// so we will do our own buffering here.
-			
-			rawChunk = new AudioChunk();
-			foreach( AudioChunk chunk in StreamDataCore( source ) ) {
-				if( rawPcm == null )
-					InitRaw( chunk );
-				if( rawIndex + chunk.Length > rawPcm.Length )
-					ResizeRaw( rawIndex + chunk.Length );
-				
-				Buffer.BlockCopy( chunk.Data, 0, rawPcm, rawIndex, chunk.Length );
-				rawIndex += chunk.Length;
-				if( rawIndex >= (vi.rate / 4) ) {
-					rawChunk.Length = rawIndex;
-					rawIndex = 0;
-					yield return rawChunk;
-				}
-			}
-			
-			rawChunk.Length = rawIndex;
-			yield return rawChunk;
-			yield break;
-		}
-		
-		void InitRaw(AudioChunk chunk) {
-			rawPcm = new byte[vi.rate / 4];
-			rawChunk.Data = rawPcm;
-			rawChunk.Length = rawPcm.Length;
-		}
-		
-		void ResizeRaw(int newLen) {
-			byte[] oldPcm = rawPcm;
-			rawPcm = new byte[rawIndex + chunk.Length];
-			Buffer.BlockCopy( oldPcm, 0, rawPcm, 0, rawIndex );
-			rawChunk.Data = rawPcm;
-			rawChunk.Length = rawPcm.Length;
-		}
-		
-		IEnumerable<AudioChunk> StreamDataCore( Stream source ) {
 			input = source;
 			int convsize = 4096 * 2;
 			byte[] convbuffer = new byte[convsize]; // take 8k out of the data segment, not the stack

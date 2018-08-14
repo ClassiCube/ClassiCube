@@ -716,7 +716,7 @@ static void CPE_WriteTwoWayPing(struct Stream* stream, bool serverToClient, UInt
 }
 
 static void CPE_SendCpeExtInfoReply(void) {
-	if (cpe_serverExtensionsCount != 0) return;
+	if (cpe_serverExtensionsCount) return;
 	Int32 count = Array_Elems(cpe_clientExtensions);
 	if (!Game_AllowCustomBlocks) count -= 2;
 	struct Stream* stream = ServerConnection_WriteStream();

@@ -503,7 +503,7 @@ void EnvRenderer_RenderBorders(BlockID block, GfxResourceID vb, GfxResourceID te
 	Gfx_BindTexture(tex);
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Gfx_BindVb(vb);
-	if (count > 0) Gfx_DrawVb_IndexedTris(count);
+	if (count) Gfx_DrawVb_IndexedTris(count);
 
 	Gfx_DisableMipmaps();
 	GfxCommon_RestoreAlphaState(Block_Draw[block]);

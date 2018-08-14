@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace SharpWave {
 	
-	public struct AudioFormat { 
+	public struct AudioFormat {
 		public int Channels, BitsPerSample, SampleRate;
 		
 		public bool Equals(AudioFormat a) {
@@ -33,31 +33,49 @@ namespace SharpWave {
 		
 		public int NumBuffers;
 		public bool pendingStop;
-		public void PlayStreaming(Stream src) {
+		public void PlayStreaming(Stream stream) {
 			VorbisCodec codec = new VorbisCodec();
-			AudioFormat format = codec.ReadHeader(src);
+			AudioFormat fmt = codec.ReadHeader(stream);
 			
-			SetFormat(format);
-			IEnumerator<AudioChunk> chunks = codec.StreamData(src).GetEnumerator();
+			SetFormat(fmt);
+			IEnumerator<AudioChunk> chunks = codec.StreamData(stream).GetEnumerator();
+			AudioChunk tmp = new AudioChunk();
 			
-			bool reachedEnd = false;
+			// largest possible vorbis frame decodes to blocksize1 samples
+			// so we may end up decoding slightly over a second of audio
+			int secondSize = fmt.SampleRate         * fmt.Channels * sizeof(short);
+			int chunkSize = (fmt.SampleRate + 8192) * fmt.Channels * sizeof(short);
+			byte[][] data = new byte[NumBuffers][];
+			for (int i = 0; i < NumBuffers; i++) { data[i] = new byte[chunkSize]; }			
+			
 			for (;;) {
-				// Have any of the buffers finished playing
-				if (reachedEnd && IsFinished()) return;
-
 				int next = -1;
 				for (int i = 0; i < NumBuffers; i++) {
 					if (IsCompleted(i)) { next = i; break; }
 				}
 
-				if (next == -1) {
-				} else if (pendingStop || !chunks.MoveNext()) {
-					reachedEnd = true;
-				} else {
-					PlayData(next, chunks.Current);
+				if (next == -1) { Thread.Sleep(10); continue; }
+				if (pendingStop) break;
+				
+				// decode up to around a second
+				tmp.Data = data[next];
+				tmp.Length = 0;
+				bool reachedEnd = false;
+
+				while (tmp.Length < secondSize) {
+					if (!chunks.MoveNext()) { reachedEnd = true; break; }
+
+					AudioChunk src = chunks.Current;
+					Buffer.BlockCopy(src.Data, 0, tmp.Data, tmp.Length, src.Length);
+					tmp.Length += src.Length;
 				}
-				Thread.Sleep(1);
+				
+				PlayData(next, tmp);
+				// need to specially handle last bit of audio
+				if (reachedEnd) break;
 			}
+
+			while (!IsFinished()) { Thread.Sleep(10); }
 		}
 	}
 }

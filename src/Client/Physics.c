@@ -197,7 +197,7 @@ Int32 Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB,
 	}
 
 	Int32 count = (Int32)(curState - Searcher_States);
-	if (count > 0) Searcher_QuickSort(0, count - 1);
+	if (count) Searcher_QuickSort(0, count - 1);
 	return count;
 }
 

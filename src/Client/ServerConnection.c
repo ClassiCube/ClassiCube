@@ -422,7 +422,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 		return;
 	}
 
-	while (net_readStream.Meta.Mem.Left > 0) {
+	while (net_readStream.Meta.Mem.Left) {
 		UInt8 opcode = net_readStream.Meta.Mem.Cur[0];
 		/* Workaround for older D3 servers which wrote one byte too many for HackControl packets */
 		if (cpe_needD3Fix && net_lastOpcode == OPCODE_CPE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
@@ -476,12 +476,12 @@ void Net_Set(UInt8 opcode, Net_Handler handler, UInt16 packetSize) {
 void Net_SendPacket(void) {
 	if (!ServerConnection_Disconnected) {
 		/* NOTE: Not immediately disconnecting here, as otherwise we sometimes miss out on kick messages */
-		UInt32 count = (UInt32)(net_writeStream.Meta.Mem.Cur - net_writeStream.Meta.Mem.Base), modified = 0;
+		UInt32 count = (UInt32)(net_writeStream.Meta.Mem.Cur - net_writeStream.Meta.Mem.Base), wrote = 0;
 
-		while (count > 0) {
-			ReturnCode result = Socket_Write(net_socket, net_writeBuffer, count, &modified);
-			if (result != 0 || modified == 0) { net_writeFailed = true; break; }
-			count -= modified;
+		while (count) {
+			ReturnCode result = Socket_Write(net_socket, net_writeBuffer, count, &wrote);
+			if (result || !wrote) { net_writeFailed = true; break; }
+			count -= wrote;
 		}
 	}
 	

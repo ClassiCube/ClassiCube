@@ -64,7 +64,7 @@ namespace ClassicalSharp.Audio {
 
 			disposingMusic = false;
 			musicOut = GetPlatformOut();
-			musicOut.Create(10);
+			musicOut.Create(4);
 			musicThread = MakeThread(DoMusicThread, "ClassicalSharp.DoMusic");
 		}
 		
