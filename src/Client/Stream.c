@@ -320,6 +320,20 @@ UInt32 Stream_GetU32_BE(UInt8* data) {
 		((UInt32)data[2] << 8)  |  (UInt32)data[3]);
 }
 
+void Stream_SetU16_BE(UInt8* data, UInt16 value) {
+	data[0] = (UInt8)(value >> 8 ); data[1] = (UInt8)(value      );
+}
+
+void Stream_SetU32_LE(UInt8* data, UInt32 value) {
+	data[0] = (UInt8)(value      ); data[1] = (UInt8)(value >> 8 );
+	data[2] = (UInt8)(value >> 16); data[3] = (UInt8)(value >> 24);
+}
+
+void Stream_SetU32_BE(UInt8* data, UInt32 value) {
+	data[0] = (UInt8)(value >> 24); data[1] = (UInt8)(value >> 16);
+	data[2] = (UInt8)(value >> 8 ); data[3] = (UInt8)(value);
+}
+
 UInt8 Stream_ReadU8(struct Stream* stream) {
 	UInt8 buffer;
 	ReturnCode result = stream->ReadU8(stream, &buffer);
@@ -355,13 +369,6 @@ void Stream_WriteU16_BE(struct Stream* stream, UInt16 value) {
 	UInt8 buffer[sizeof(UInt16)];
 	buffer[0] = (UInt8)(value >> 8 ); buffer[1] = (UInt8)(value      );
 	Stream_Write(stream, buffer, sizeof(UInt16));
-}
-
-void Stream_WriteU32_LE(struct Stream* stream, UInt32 value) {
-	UInt8 buffer[sizeof(UInt32)];
-	buffer[0] = (UInt8)(value      ); buffer[1] = (UInt8)(value >> 8 );
-	buffer[2] = (UInt8)(value >> 16); buffer[3] = (UInt8)(value >> 24);
-	Stream_Write(stream, buffer, sizeof(UInt32));
 }
 
 void Stream_WriteU32_BE(struct Stream* stream, UInt32 value) {

@@ -48,9 +48,7 @@ static String Handlers_ReadString(struct Stream* stream, STRING_REF UChar* strBu
 	return str;
 }
 
-static void Handlers_WriteString(struct Stream* stream, STRING_PURE String* value) {
-	UChar buffer[STRING_SIZE];
-
+static void Handlers_WriteString(UInt8* buffer, STRING_PURE String* value) {
 	Int32 i, count = min(value->length, STRING_SIZE);
 	for (i = 0; i < count; i++) {
 		UChar c = value->buffer[i];
@@ -59,7 +57,6 @@ static void Handlers_WriteString(struct Stream* stream, STRING_PURE String* valu
 	}
 
 	for (; i < STRING_SIZE; i++) { buffer[i] = ' '; }
-	Stream_Write(stream, buffer, STRING_SIZE);
 }
 
 static void Handlers_RemoveEndPlus(STRING_TRANSIENT String* value) {
@@ -315,47 +312,55 @@ struct Screen* prevScreen;
 bool receivedFirstPosition;
 
 void Classic_WriteChat(struct Stream* stream, STRING_PURE String* text, bool partial) {
-	Int32 payload = !ServerConnection_SupportsPartialMessages ? ENTITIES_SELF_ID : (partial ? 1 : 0);
-	Stream_WriteU8(stream, OPCODE_MESSAGE);
-	Stream_WriteU8(stream, (UInt8)payload);
-	Handlers_WriteString(stream, text);
+	UInt8 data[66]; data[0] = OPCODE_MESSAGE;
+	data[1] = ServerConnection_SupportsPartialMessages ? partial : ENTITIES_SELF_ID;
+	Handlers_WriteString(&data[2], text);
+	Stream_Write(stream, data, sizeof(data));
 }
 
 void Classic_WritePosition(struct Stream* stream, Vector3 pos, Real32 rotY, Real32 headX) {
-	Int32 payload = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID;
-	Stream_WriteU8(stream, OPCODE_ENTITY_TELEPORT);
-	Handlers_WriteBlock(stream, (BlockID)payload); /* held block when using HeldBlock, otherwise just 255 */
+	UInt8 data[16]; data[0] = OPCODE_ENTITY_TELEPORT;
+	data[1] = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID; /* TODO: extended blocks */	
+	Int32 x = (Int32)(pos.X * 32);
+	Int32 y = (Int32)(pos.Y * 32) + 51;
+	Int32 z = (Int32)(pos.Z * 32);
 
+	Int32 offset;
 	if (cpe_extEntityPos) {
-		Stream_WriteI32_BE(stream, (Int32)(pos.X * 32));
-		Stream_WriteI32_BE(stream, (Int32)((Int32)(pos.Y * 32) + 51));
-		Stream_WriteI32_BE(stream, (Int32)(pos.Z * 32));
+		Stream_SetU32_BE(&data[2],  x);
+		Stream_SetU32_BE(&data[6],  y);
+		Stream_SetU32_BE(&data[10], z);
+		offset = 14;
 	} else {
-		Stream_WriteI16_BE(stream, (Int16)(pos.X * 32));
-		Stream_WriteI16_BE(stream, (Int16)((Int32)(pos.Y * 32) + 51));
-		Stream_WriteI16_BE(stream, (Int16)(pos.Z * 32));
+		Stream_SetU16_BE(&data[2], x);
+		Stream_SetU16_BE(&data[4], y);
+		Stream_SetU16_BE(&data[6], z);
+		offset = 8;
 	}
-	Stream_WriteU8(stream, Math_Deg2Packed(rotY));
-	Stream_WriteU8(stream, Math_Deg2Packed(headX));
+
+	data[offset++] = Math_Deg2Packed(rotY);
+	data[offset++] = Math_Deg2Packed(headX);
+	Stream_Write(stream, data, offset);
 }
 
 void Classic_WriteSetBlock(struct Stream* stream, Int32 x, Int32 y, Int32 z, bool place, BlockID block) {
-	Stream_WriteU8(stream, OPCODE_SET_BLOCK_CLIENT);
-	Stream_WriteU16_BE(stream, x);
-	Stream_WriteU16_BE(stream, y);
-	Stream_WriteU16_BE(stream, z);
-	Stream_WriteU8(stream, place ? 1 : 0);
-	Handlers_WriteBlock(stream, block);
+	UInt8 data[9]; data[0] = OPCODE_SET_BLOCK_CLIENT;
+	Stream_SetU16_BE(&data[1], x);
+	Stream_SetU16_BE(&data[3], y);
+	Stream_SetU16_BE(&data[5], z);
+	data[7] = place;
+	data[8] = block; /* TODO: extended blocks */
+	Stream_Write(stream, data, sizeof(data));
 }
 
 void Classic_WriteLogin(struct Stream* stream, STRING_PURE String* username, STRING_PURE String* verKey) {
-	UInt8 payload = Game_UseCPE ? 0x42 : 0x00;
-	Stream_WriteU8(stream, OPCODE_HANDSHAKE);
+	UInt8 data[131]; data[0] = OPCODE_HANDSHAKE;
+	data[1] = 7; /* protocol version */
+	Handlers_WriteString(&data[2],  username);
+	Handlers_WriteString(&data[66], verKey);
 
-	Stream_WriteU8(stream, 7); /* protocol version */
-	Handlers_WriteString(stream, username);
-	Handlers_WriteString(stream, verKey);
-	Stream_WriteU8(stream, payload);
+	data[130] = Game_UseCPE ? 0x42 : 0x00;
+	Stream_Write(stream, data, sizeof(data));
 }
 
 static void Classic_Handshake(struct Stream* stream) {
@@ -659,51 +664,55 @@ static void CPE_SetMapEnvUrl(struct Stream* stream);
 #define Ext_Deg2Packed(x) ((Int16)((x) * 65536.0f / 360.0f))
 void CPE_WritePlayerClick(struct Stream* stream, MouseButton button, bool buttonDown, UInt8 targetId, struct PickedPos* pos) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Stream_WriteU8(stream, OPCODE_CPE_PLAYER_CLICK);
-	Stream_WriteU8(stream, button);
-	Stream_WriteU8(stream, buttonDown ? 0 : 1);
-	Stream_WriteI16_BE(stream, Ext_Deg2Packed(p->HeadY));
-	Stream_WriteI16_BE(stream, Ext_Deg2Packed(p->HeadX));
+	UInt8 data[15]; data[0] = OPCODE_CPE_PLAYER_CLICK;
+	data[1] = button;
+	data[2] = buttonDown;
+	Stream_SetU16_BE(&data[3], Ext_Deg2Packed(p->HeadY));
+	Stream_SetU16_BE(&data[5], Ext_Deg2Packed(p->HeadX));
 
-	Stream_WriteU8(stream, targetId);
-	Stream_WriteU16_BE(stream, pos->BlockPos.X);
-	Stream_WriteU16_BE(stream, pos->BlockPos.Y);
-	Stream_WriteU16_BE(stream, pos->BlockPos.Z);
+	data[7] = targetId;
+	Stream_SetU16_BE(&data[8], pos->BlockPos.X);
+	Stream_SetU16_BE(&data[10], pos->BlockPos.Y);
+	Stream_SetU16_BE(&data[12], pos->BlockPos.Z);
 
-	UInt8 face = 255;
+	data[14] = 255;
 	/* Our own face values differ from CPE block face */
 	switch (pos->ClosestFace) {
-	case FACE_XMAX: face = 0; break;
-	case FACE_XMIN: face = 1; break;
-	case FACE_YMAX: face = 2; break;
-	case FACE_YMIN: face = 3; break;
-	case FACE_ZMAX: face = 4; break;
-	case FACE_ZMIN: face = 5; break;
+	case FACE_XMAX: data[14] = 0; break;
+	case FACE_XMIN: data[14] = 1; break;
+	case FACE_YMAX: data[14] = 2; break;
+	case FACE_YMIN: data[14] = 3; break;
+	case FACE_ZMAX: data[14] = 4; break;
+	case FACE_ZMIN: data[14] = 5; break;
 	}
-	Stream_WriteU8(stream, face);
+	Stream_Write(stream, data, sizeof(data));
 }
 
 static void CPE_WriteExtInfo(struct Stream* stream, STRING_PURE String* appName, Int32 extensionsCount) {
-	Stream_WriteU8(stream, OPCODE_CPE_EXT_INFO);
-	Handlers_WriteString(stream, appName);
-	Stream_WriteU16_BE(stream, extensionsCount);
+	UInt8 data[67]; data[0] = OPCODE_CPE_EXT_INFO;
+	Handlers_WriteString(&data[1], appName);
+	Stream_SetU16_BE(&data[65], extensionsCount);
+	Stream_Write(stream, data, sizeof(data));
 }
 
 static void CPE_WriteExtEntry(struct Stream* stream, STRING_PURE String* extensionName, Int32 extensionVersion) {
-	Stream_WriteU8(stream, OPCODE_CPE_EXT_ENTRY);
-	Handlers_WriteString(stream, extensionName);
-	Stream_WriteI32_BE(stream, extensionVersion);
+	UInt8 data[69]; data[0] = OPCODE_CPE_EXT_ENTRY;
+	Handlers_WriteString(&data[1], extensionName);
+	Stream_SetU32_BE(&data[65], extensionVersion);
+	Stream_Write(stream, data, sizeof(data));
 }
 
 static void CPE_WriteCustomBlockLevel(struct Stream* stream, UInt8 version) {
-	Stream_WriteU8(stream, OPCODE_CPE_CUSTOM_BLOCK_LEVEL);
-	Stream_WriteU8(stream, version);
+	UInt8 data[2]; data[0] = OPCODE_CPE_CUSTOM_BLOCK_LEVEL;
+	data[1] = version;
+	Stream_Write(stream, data, sizeof(data));
 }
 
-static void CPE_WriteTwoWayPing(struct Stream* stream, bool serverToClient, UInt16 data) {
-	Stream_WriteU8(stream, OPCODE_CPE_TWO_WAY_PING);
-	Stream_WriteU8(stream, serverToClient ? 1 : 0);
-	Stream_WriteU16_BE(stream, data);
+static void CPE_WriteTwoWayPing(struct Stream* stream, bool serverToClient, UInt16 payload) {
+	UInt8 data[4]; data[0] = OPCODE_CPE_TWO_WAY_PING;
+	data[1] = serverToClient;
+	Stream_SetU16_BE(&data[2], payload);
+	Stream_Write(stream, data, sizeof(data));
 }
 
 static void CPE_SendCpeExtInfoReply(void) {

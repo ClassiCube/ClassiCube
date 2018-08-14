@@ -886,10 +886,11 @@ static ReturnCode GZip_StreamClose(struct Stream* stream) {
 	if (result) return result;
 
 	struct GZipState* state = stream->Meta.Inflate;
-	UInt32 crc32 = state->Crc32 ^ 0xFFFFFFFFUL;
-	Stream_WriteU32_LE(state->Base.Dest, crc32);
-	Stream_WriteU32_LE(state->Base.Dest, state->Size);
-	return 0;
+	UInt8 data[2 * sizeof(UInt32)];
+
+	Stream_SetU32_LE(&data[0], state->Crc32 ^ 0xFFFFFFFFUL);
+	Stream_SetU32_LE(&data[4], state->Size);
+	return Stream_TryWrite(state->Base.Dest, data, sizeof(data));
 }
 
 static ReturnCode GZip_StreamWrite(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
@@ -934,8 +935,10 @@ static ReturnCode ZLib_StreamClose(struct Stream* stream) {
 	if (result) return result;
 
 	struct ZLibState* state = stream->Meta.Inflate;
-	Stream_WriteU32_BE(state->Base.Dest, state->Adler32);
-	return 0;
+	UInt8 data[sizeof(UInt32)];
+
+	Stream_SetU32_BE(&data[0], state->Adler32);
+	return Stream_TryWrite(state->Base.Dest, data, sizeof(data));
 }
 
 static ReturnCode ZLib_StreamWrite(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {

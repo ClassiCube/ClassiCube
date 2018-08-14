@@ -352,8 +352,8 @@ static bool IsTag(struct NbtTag* tag, const UChar* tagName) {
 
 
 #define Nbt_WriteU8(stream, value)  Stream_WriteU8(stream, value)
-#define Nbt_WriteI16(stream, value) Stream_WriteI16_BE(stream, value)
-#define Nbt_WriteI32(stream, value) Stream_WriteI32_BE(stream, value)
+#define Nbt_WriteI16(stream, value) Stream_WriteU16_BE(stream, (Int16)(value))
+#define Nbt_WriteI32(stream, value) Stream_WriteU32_BE(stream, (Int32)(value))
 #define Nbt_WriteU8_Array(stream, data, len) Nbt_WriteI32(stream, len); Stream_Write(stream, data, len)
 
 static void Nbt_WriteString(struct Stream* stream, STRING_PURE String* text) {

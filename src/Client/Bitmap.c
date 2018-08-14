@@ -613,33 +613,32 @@ void Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 	Stream_Write(stream, png_sig, PNG_SIG_SIZE);
 	struct Stream* underlying = stream;
 	struct Stream crc32Stream;
+	Bitmap_Crc32Stream(&crc32Stream, underlying);
+	UInt8 tmp[32];
 
 	/* Write header chunk */
-	Stream_WriteU32_BE(stream, PNG_IHDR_SIZE);
-	Bitmap_Crc32Stream(&crc32Stream, underlying);
-	stream = &crc32Stream;
-	Stream_WriteU32_BE(stream, PNG_FourCC('I','H','D','R'));
+	Stream_SetU32_BE(&tmp[0], PNG_IHDR_SIZE);
+	Stream_SetU32_BE(&tmp[4], PNG_FourCC('I','H','D','R'));
 	{
-		Stream_WriteU32_BE(stream, bmp->Width);
-		Stream_WriteU32_BE(stream, bmp->Height);
-		Stream_WriteU8(stream, 8); /* bits per sample */
-		Stream_WriteU8(stream, PNG_COL_RGB); /* TODO: RGBA but mask all alpha to 255? */
-		Stream_WriteU8(stream, 0); /* DEFLATE compression method */
-		Stream_WriteU8(stream, 0); /* ADAPTIVE filter method */
-		Stream_WriteU8(stream, 0); /* Not using interlacing */
+		Stream_SetU32_BE(&tmp[8],  bmp->Width);
+		Stream_SetU32_BE(&tmp[12], bmp->Height);
+		tmp[16] = 8;           /* bits per sample */
+		tmp[17] = PNG_COL_RGB; /* TODO: RGBA but mask all alpha to 255? */
+		tmp[18] = 0;           /* DEFLATE compression method */
+		tmp[19] = 0;           /* ADAPTIVE filter method */
+		tmp[20] = 0;           /* Not using interlacing */
 	}
-	stream = underlying;
-	Stream_WriteU32_BE(stream, crc32Stream.Meta.CRC32.CRC32 ^ 0xFFFFFFFFUL);
+	Stream_SetU32_BE(&tmp[21], Utils_CRC32(&tmp[4], sizeof(UInt32) + PNG_IHDR_SIZE));
+	Stream_Write(stream, tmp, PNG_IHDR_SIZE + 3 * sizeof(UInt32));
 
 	/* Write PNG body */
 	UInt8 prevLine[PNG_MAX_DIMS * 3];
-	UInt8 curLine[PNG_MAX_DIMS * 3];
+	UInt8 curLine[PNG_MAX_DIMS  * 3];
 	UInt8 bestLine[PNG_MAX_DIMS * 3 + 1];
 	Mem_Set(prevLine, 0, bmp->Width * 3);
 
-	Stream_WriteU32_BE(stream, 0);
+	Stream_WriteU32_BE(stream, 0); /* size of IDAT, filled in later */
 	stream = &crc32Stream;
-	Bitmap_Crc32Stream(&crc32Stream, underlying);
 	Stream_WriteU32_BE(stream, PNG_FourCC('I','D','A','T'));
 	{
 		Int32 y, lineSize = bmp->Width * 3;
@@ -662,9 +661,10 @@ void Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 	Stream_WriteU32_BE(stream, crc32Stream.Meta.CRC32.CRC32 ^ 0xFFFFFFFFUL);
 
 	/* Write end chunk */
-	Stream_WriteU32_BE(stream, 0);
-	Stream_WriteU32_BE(stream, PNG_FourCC('I','E','N','D'));
-	Stream_WriteU32_BE(stream, 0xAE426082UL); /* crc32 of iend */
+	Stream_SetU32_BE(&tmp[0], 0);
+	Stream_SetU32_BE(&tmp[4], PNG_FourCC('I','E','N','D'));
+	Stream_SetU32_BE(&tmp[8], 0xAE426082UL); /* crc32 of iend */
+	Stream_Write(stream, tmp, 3 * sizeof(UInt32));
 
 	/* Come back to write size of data chunk */
 	result = stream->Seek(stream, 33, STREAM_SEEKFROM_BEGIN);
