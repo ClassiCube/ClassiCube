@@ -160,12 +160,20 @@ namespace ClassicalSharp.Network {
 					continue;
 				}
 				
-				if (opcode > maxHandledPacket) {
-					throw new InvalidOperationException("Invalid opcode: " + opcode);
+				if (opcode >= handlers.Length) {
+					game.Disconnect("Disconnected!", "Server sent invalid packet " + opcode + "!"); return;
 				}
-				
 				if ((reader.size - reader.index) < packetSizes[opcode]) break;
-				ReadPacket(opcode);
+				
+				reader.Skip(1); // remove opcode
+				lastOpcode = opcode;			
+				lastPacket = DateTime.UtcNow;
+				
+				Action handler = handlers[opcode];
+				if (handler == null) {
+					game.Disconnect("Disconnected!", "Server sent invalid packet " + opcode + "!"); return;
+				}
+				handler();
 			}
 			
 			reader.RemoveProcessed();
@@ -186,7 +194,6 @@ namespace ClassicalSharp.Network {
 		public void Set(byte opcode, Action handler, int packetSize) {
 			handlers[opcode] = handler;
 			packetSizes[opcode] = (ushort)packetSize;
-			maxHandledPacket = Math.Max(opcode, maxHandledPacket);
 		}
 		
 		public void SendPacket() {
@@ -203,17 +210,6 @@ namespace ClassicalSharp.Network {
 			}
 		}
 		
-		void ReadPacket(byte opcode) {
-			reader.Skip(1); // remove opcode
-			lastOpcode = opcode;
-			Action handler = handlers[opcode];
-			lastPacket = DateTime.UtcNow;
-			
-			if (handler == null) {
-				throw new InvalidOperationException("Unsupported opcode: " + opcode);
-			}
-			handler();
-		}
 		
 		public override void Reset(Game game) {
 			UsingExtPlayerList = false;
@@ -244,9 +240,8 @@ namespace ClassicalSharp.Network {
 			writer.ExtendedPositions = false; writer.ExtendedBlocks = false;
 		}
 		
-		internal Action[] handlers = new Action[256];
-		internal ushort[] packetSizes = new ushort[256];
-		int maxHandledPacket = 0;
+		internal Action[] handlers = new Action[Opcode.Count];
+		internal ushort[] packetSizes = new ushort[Opcode.Count];
 		
 		void BlockChanged(object sender, BlockChangedEventArgs e) {
 			Vector3I p = e.Coords;

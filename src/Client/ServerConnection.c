@@ -248,7 +248,6 @@ struct Stream net_writeStream;
 UInt8 net_readBuffer[4096 * 5];
 UInt8 net_writeBuffer[131];
 
-Int32 net_maxHandledPacket;
 bool net_writeFailed;
 Int32 net_ticks;
 DateTime net_lastPacket;
@@ -276,7 +275,7 @@ static void MPConnection_FinishConnect(void) {
 	Event_RaiseReal(&WorldEvents_Loading, 0.0f);
 
 	String streamName = String_FromConst("network socket");
-	Stream_ReadonlyMemory(&net_readStream, net_readBuffer, sizeof(net_readBuffer), &streamName);
+	Stream_ReadonlyMemory(&net_readStream,   net_readBuffer,  sizeof(net_readBuffer),  &streamName);
 	Stream_WriteonlyMemory(&net_writeStream, net_writeBuffer, sizeof(net_writeBuffer), &streamName);
 
 	net_readStream.Meta.Mem.Left   = 0; /* initally no memory to read */
@@ -435,15 +434,23 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 			continue;
 		}
 
-		if (opcode > net_maxHandledPacket) { ErrorHandler_Fail("Invalid opcode"); }
+		if (opcode >= OPCODE_COUNT) {
+			String title = String_FromConst("Disconnected");
+			String msg   = String_FromConst("Server sent invalid packet!");
+			Game_Disconnect(&title, &msg); return; 
+		}
 		if (net_readStream.Meta.Mem.Left < Net_PacketSizes[opcode]) break;
 
 		Stream_Skip(&net_readStream, 1); /* remove opcode */
 		net_lastOpcode = opcode;
-		Net_Handler handler = Net_Handlers[opcode];
 		DateTime_CurrentUTC(&net_lastPacket);
 
-		if (!handler) { ErrorHandler_Fail("Unsupported opcode"); }
+		Net_Handler handler = Net_Handlers[opcode];
+		if (!handler) { 
+			String title = String_FromConst("Disconnected");
+			String msg = String_FromConst("Server sent invalid packet!");
+			Game_Disconnect(&title, &msg); return;
+		}
 		handler(&net_readStream);
 	}
 
@@ -470,7 +477,6 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 void Net_Set(UInt8 opcode, Net_Handler handler, UInt16 packetSize) {
 	Net_Handlers[opcode] = handler;
 	Net_PacketSizes[opcode] = packetSize;
-	net_maxHandledPacket = max(opcode, net_maxHandledPacket);
 }
 
 void Net_SendPacket(void) {
@@ -485,7 +491,7 @@ void Net_SendPacket(void) {
 		}
 	}
 	
-	net_writeStream.Meta.Mem.Cur   = net_writeStream.Meta.Mem.Base;
+	net_writeStream.Meta.Mem.Cur  = net_writeStream.Meta.Mem.Base;
 	net_writeStream.Meta.Mem.Left = net_writeStream.Meta.Mem.Length;
 }
 
@@ -524,7 +530,6 @@ static void MPConnection_Reset(void) {
 	}
 
 	net_writeFailed = false;
-	net_maxHandledPacket = 0;
 	Handlers_Reset();
 	ServerConnection_Free();
 }

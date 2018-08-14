@@ -53,6 +53,8 @@ enum OPCODE_ {
 	OPCODE_CPE_SET_ENTITY_PROPERTY,
 	OPCODE_CPE_TWO_WAY_PING,
 	OPCODE_CPE_SET_INVENTORY_ORDER,
+
+	OPCODE_COUNT,
 };
 
 struct PickedPos;
@@ -90,7 +92,6 @@ void ServerConnection_InitMultiplayer(void);
 void ServerConnection_MakeComponent(struct IGameComponent* comp);
 
 typedef void (*Net_Handler)(struct Stream* stream);
-#define OPCODE_COUNT 45
 UInt16 Net_PacketSizes[OPCODE_COUNT];
 Net_Handler Net_Handlers[OPCODE_COUNT];
 void Net_Set(UInt8 opcode, Net_Handler handler, UInt16 size);
