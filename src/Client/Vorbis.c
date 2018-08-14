@@ -14,24 +14,27 @@
 static ReturnCode Ogg_NextPage(struct Stream* stream) {
 	UInt8 header[27];
 	struct Stream* source = stream->Meta.Ogg.Source;
-	Stream_Read(source, header, sizeof(header));
+	ReturnCode result = Stream_TryRead(source, header, sizeof(header));
+	if (result) return result;
 
 	UInt32 sig = Stream_GetU32_BE(&header[0]);
 	if (sig != OGG_FourCC('O','g','g','S')) return OGG_ERR_INVALID_SIG;
 	if (header[4] != 0) return OGG_ERR_VERSION;
 	UInt8 bitflags = header[5];
-	/* (8) granule position */
-	/* (4) serial number */
-	/* (4) page sequence number */
-	/* (4) page checksum */
+	/* header[6]  (8) granule position */
+	/* header[14] (4) serial number */
+	/* header[18] (4) page sequence number */
+	/* header[22] (4) page checksum */
 
 	Int32 i, numSegments = header[26];
 	UInt8 segments[255];
-	Stream_Read(source, segments, numSegments);
+	result = Stream_TryRead(source, segments, numSegments);
+	if (result) return result;
 
 	UInt32 dataSize = 0;
 	for (i = 0; i < numSegments; i++) { dataSize += segments[i]; }
-	Stream_Read(source, stream->Meta.Ogg.Base, dataSize);
+	result = Stream_TryRead(source, stream->Meta.Ogg.Base, dataSize);
+	if (result) return result;
 
 	stream->Meta.Ogg.Cur  = stream->Meta.Ogg.Base;
 	stream->Meta.Ogg.Left = dataSize;
@@ -1012,7 +1015,8 @@ static bool Vorbis_ValidBlockSize(UInt32 size) {
 
 static ReturnCode Vorbis_DecodeHeader(struct VorbisState* ctx, UInt8 type) {
 	UInt8 header[7];
-	Stream_Read(ctx->Source, header, sizeof(header));
+	ReturnCode result = Stream_TryRead(ctx->Source, header, sizeof(header));
+	if (result) return result;
 	if (header[0] != type) return VORBIS_ERR_WRONG_HEADER;
 
 	bool OK = 
@@ -1023,8 +1027,10 @@ static ReturnCode Vorbis_DecodeHeader(struct VorbisState* ctx, UInt8 type) {
 
 static ReturnCode Vorbis_DecodeIdentifier(struct VorbisState* ctx) {
 	UInt8 header[23];
-	Stream_Read(ctx->Source, header, sizeof(header));
-	UInt32 version    = Stream_GetU32_LE(&header[0]);
+	ReturnCode result = Stream_TryRead(ctx->Source, header, sizeof(header));
+	if (result) return result;
+
+	UInt32 version  = Stream_GetU32_LE(&header[0]);
 	if (version != 0) return VORBIS_ERR_VERSION;
 
 	ctx->Channels   = header[4];

@@ -115,7 +115,7 @@ ReturnCode Http_GetRequestData(struct AsyncRequest* request, void* handle, void*
 ReturnCode Http_FreeRequest(void* handle);
 ReturnCode Http_Free(void);
 
-#define AUDIO_MAX_CHUNKS 5
+#define AUDIO_MAX_CHUNKS 4
 struct AudioFormat { UInt8 Channels, BitsPerSample; Int32 SampleRate; };
 #define AudioFormat_Eq(a, b) ((a)->Channels == (b)->Channels && (a)->BitsPerSample == (b)->BitsPerSample && (a)->SampleRate == (b)->SampleRate)
 typedef Int32 AudioHandle;

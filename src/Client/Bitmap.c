@@ -326,10 +326,12 @@ static void Png_ComputeTransparency(struct Bitmap* bmp, UInt32 transparentCol) {
 /* TODO: Test a lot of .png files and ensure output is right */
 ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 	Bitmap_Create(bmp, 0, 0, NULL);
+	UInt8 tmp[PNG_PALETTE * 3];
+	ReturnCode result;
 
-	UInt8 header[PNG_SIG_SIZE];
-	Stream_Read(stream, header, PNG_SIG_SIZE);
-	if (!Bitmap_DetectPng(header, PNG_SIG_SIZE)) return PNG_ERR_INVALID_SIG;
+	result = Stream_TryRead(stream, tmp, PNG_SIG_SIZE);
+	if (result) return result;
+	if (!Bitmap_DetectPng(tmp, PNG_SIG_SIZE)) return PNG_ERR_INVALID_SIG;
 
 	UInt32 transparentCol = PackedCol_ARGB(0, 0, 0, 255);
 	UInt8 col, bitsPerSample, bytesPerPixel;
@@ -353,7 +355,8 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 	UInt32 bufferIdx, bufferRows;
 
 	while (readingChunks) {
-		Stream_Read(stream, buffer, 4 + 4);
+		result = Stream_TryRead(stream, buffer, 2 * sizeof(UInt32));
+		if (result) return result;
 		UInt32 dataSize = Stream_GetU32_BE(&buffer[0]);
 		UInt32 fourCC   = Stream_GetU32_BE(&buffer[4]);
 
@@ -361,7 +364,8 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 		case PNG_FourCC('I','H','D','R'): {
 			if (dataSize != PNG_IHDR_SIZE) return PNG_ERR_INVALID_HEADER_SIZE;
 			gotHeader = true;
-			Stream_Read(stream, buffer, PNG_IHDR_SIZE);
+			result = Stream_TryRead(stream, buffer, PNG_IHDR_SIZE);
+			if (result) return result;
 
 			bmp->Width  = (Int32)Stream_GetU32_BE(&buffer[0]);
 			bmp->Height = (Int32)Stream_GetU32_BE(&buffer[4]);
@@ -379,7 +383,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 
 			static UInt32 samplesPerPixel[7] = { 1, 0, 3, 1, 2, 0, 4 };
 			bytesPerPixel = ((samplesPerPixel[col] * bitsPerSample) + 7) >> 3;
-			scanlineSize = ((samplesPerPixel[col] * bitsPerSample * bmp->Width) + 7) >> 3;
+			scanlineSize  = ((samplesPerPixel[col] * bitsPerSample * bmp->Width) + 7) >> 3;
 			scanlineBytes = scanlineSize + 1; /* Add 1 byte for filter byte of each scanline */
 
 			Mem_Set(buffer, 0, scanlineBytes); /* Prior row should be 0 per PNG spec */
@@ -390,33 +394,39 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 		case PNG_FourCC('P','L','T','E'): {
 			if (dataSize > PNG_PALETTE * 3) return PNG_ERR_PAL_ENTRIES;
 			if ((dataSize % 3) != 0) return PNG_ERR_PAL_SIZE;
+			result = Stream_TryRead(stream, tmp, dataSize);
+			if (result) return result;
 
-			UInt8 palRGB[PNG_PALETTE * 3];
-			Stream_Read(stream, palRGB, dataSize);
 			for (i = 0; i < dataSize; i += 3) {
-				palette[i / 3] = PackedCol_ARGB(palRGB[i], palRGB[i + 1], palRGB[i + 2], 255);
+				palette[i / 3] = PackedCol_ARGB(tmp[i], tmp[i + 1], tmp[i + 2], 255);
 			}
 		} break;
 
 		case PNG_FourCC('t','R','N','S'): {
 			if (col == PNG_COL_GRAYSCALE) {
 				if (dataSize != 2) return PNG_ERR_TRANS_COUNT;
-				UInt8 palRGB = (UInt8)Stream_ReadU16_BE(stream);
+				result = Stream_TryRead(stream, tmp, sizeof(UInt16));
+				if (result) return result;
+
+				UInt8 palRGB = tmp[0]; /* RGB is 16 bits big endian, ignore least significant 8 bits */
 				transparentCol = PackedCol_ARGB(palRGB, palRGB, palRGB, 0);
 			} else if (col == PNG_COL_INDEXED) {
 				if (dataSize > PNG_PALETTE) return PNG_ERR_TRANS_COUNT;
-				UInt8 palA[PNG_PALETTE * 3];
-				Stream_Read(stream, palA, dataSize);
+				result = Stream_TryRead(stream, tmp, dataSize);
+				if (result) return result;
 
+				/* set alpha component of palette*/
 				for (i = 0; i < dataSize; i++) {
 					palette[i] &= PNG_RGB_MASK;
-					palette[i] |= (UInt32)palA[i] << 24;
+					palette[i] |= (UInt32)tmp[i] << 24;
 				}
 			} else if (col == PNG_COL_RGB) {
 				if (dataSize != 6) return PNG_ERR_TRANS_COUNT;
-				UInt8 palR = (UInt8)Stream_ReadU16_BE(stream);
-				UInt8 palG = (UInt8)Stream_ReadU16_BE(stream);
-				UInt8 palB = (UInt8)Stream_ReadU16_BE(stream);
+				result = Stream_TryRead(stream, tmp, 3 * sizeof(UInt16));
+				if (result) return result;
+
+				/* R,G,B is 16 bits big endian, ignore least significant 8 bits */
+				UInt8 palR = tmp[0], palG = tmp[2], palB = tmp[4];
 				transparentCol = PackedCol_ARGB(palR, palG, palB, 0);
 			} else {
 				return PNG_ERR_TRANS_INVALID;
@@ -460,7 +470,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 
 				for (rowY = startY; rowY < endY; rowY++, curY++) {
 					UInt32 priorY = rowY == 0 ? bufferRows : rowY;
-					UInt8* prior = &buffer[(priorY - 1) * scanlineBytes];
+					UInt8* prior    = &buffer[(priorY - 1) * scanlineBytes];
 					UInt8* scanline = &buffer[rowY         * scanlineBytes];
 
 					Png_Reconstruct(scanline[0], bytesPerPixel, &scanline[1], &prior[1], scanlineSize);
@@ -471,7 +481,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 
 		case PNG_FourCC('I','E','N','D'): {
 			readingChunks = false;
-			if (dataSize != 0) return PNG_ERR_INVALID_END_SIZE;
+			if (dataSize) return PNG_ERR_INVALID_END_SIZE;
 		} break;
 
 		default:

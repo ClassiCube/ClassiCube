@@ -36,25 +36,26 @@ struct Soundboard {
 #define WAV_FMT_SIZE 16
 
 static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
-	UInt32 fourCC, size, pos, len;
-	ReturnCode res;
+	UInt32 fourCC, size;
 	UInt8 tmp[WAV_FMT_SIZE];
+	ReturnCode result = Stream_TryRead(stream, tmp, 3 * sizeof(UInt32));
+	if (result) return result;
 
-	Stream_Read(stream, tmp, 3 * sizeof(UInt32));
 	fourCC = Stream_GetU32_BE(&tmp[0]);
 	if (fourCC != WAV_FourCC('R','I','F','F')) return WAV_ERR_STREAM_HDR;
-
 	/* tmp[4] (4) file size */
 	fourCC = Stream_GetU32_BE(&tmp[8]);
 	if (fourCC != WAV_FourCC('W','A','V','E')) return WAV_ERR_STREAM_TYPE;
 
-	while (!(res = stream->Position(stream, &pos)) && !(res = stream->Length(stream, &len)) && pos < len) {
-		Stream_Read(stream, tmp, 2 * sizeof(UInt32));
+	for (;;) {
+		result = Stream_TryRead(stream, tmp, 2 * sizeof(UInt32));
+		if (result) return result;
 		fourCC = Stream_GetU32_BE(&tmp[0]);
 		size   = Stream_GetU32_LE(&tmp[4]);
 
 		if (fourCC == WAV_FourCC('f','m','t',' ')) {
-			Stream_Read(stream, tmp, WAV_FMT_SIZE);
+			result = Stream_TryRead(stream, tmp, WAV_FMT_SIZE);
+			if (result) return result;
 			if (Stream_GetU16_LE(&tmp[0]) != 1) return WAV_ERR_DATA_TYPE;
 
 			snd->Format.Channels      = Stream_GetU16_LE(&tmp[2]);
@@ -65,14 +66,12 @@ static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
 			snd->Data = Mem_Alloc(size, sizeof(UInt8), "WAV sound data");
 			snd->DataSize = size;
-			Stream_Read(stream, snd->Data, size);
-			return 0;
+			return Stream_TryRead(stream, snd->Data, size);
 		}
 
 		/* Skip over unhandled data */
 		if (size) Stream_Skip(stream, size);
 	}
-	return res ? res : WAV_ERR_NO_DATA;
 }
 
 static ReturnCode Sound_ReadWave(STRING_PURE String* filename, struct Sound* snd) {

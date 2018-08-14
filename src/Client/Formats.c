@@ -12,10 +12,10 @@
 #include "Funcs.h"
 #include "Errors.h"
 
-static void Map_ReadBlocks(struct Stream* stream) {
+static ReturnCode Map_ReadBlocks(struct Stream* stream) {
 	World_BlocksSize = World_Width * World_Length * World_Height;
 	World_Blocks = Mem_Alloc(World_BlocksSize, sizeof(BlockID), "map blocks for load");
-	Stream_Read(stream, World_Blocks, World_BlocksSize);
+	return Stream_TryRead(stream, World_Blocks, World_BlocksSize);
 }
 
 static ReturnCode Map_SkipGZipHeader(struct Stream* stream) {
@@ -63,7 +63,8 @@ static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
 				if (result) return result;
 
 				if (hasCustom != 1) continue;
-				Stream_Read(stream, chunk, sizeof(chunk));
+				result = Stream_TryRead(stream, chunk, sizeof(chunk));
+				if (result) return result;
 
 				Int32 baseIndex = World_Pack(x, y, z);
 				if ((x + LVL_CHUNKSIZE) <= adjWidth && (y + LVL_CHUNKSIZE) <= adjHeight && (z + LVL_CHUNKSIZE) <= adjLength) {
@@ -118,15 +119,18 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 	Inflate_MakeStream(&compStream, &state, stream);
 
 	UInt8 header[8 + 2];
-	Stream_Read(&compStream, header, 8);
+	result = Stream_TryRead(&compStream, header, 8);
+	if (result) return result;
 	if (Stream_GetU16_LE(&header[0]) != 1874) return LVL_ERR_VERSION;
 
 	World_Width  = Stream_GetU16_LE(&header[2]);
 	World_Length = Stream_GetU16_LE(&header[4]);
 	World_Height = Stream_GetU16_LE(&header[6]);
-	Stream_Read(&compStream, header, sizeof(header));
 
+	result = Stream_TryRead(&compStream, header, sizeof(header));
+	if (result) return result;
 	struct LocalPlayer* p = &LocalPlayer_Instance;
+
 	p->Spawn.X = Stream_GetU16_LE(&header[0]);
 	p->Spawn.Z = Stream_GetU16_LE(&header[2]);
 	p->Spawn.Y = Stream_GetU16_LE(&header[4]);
@@ -134,7 +138,8 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 	p->SpawnHeadX = Math_Packed2Deg(header[7]);
 
 	/* (2) pervisit, perbuild permissions */
-	Map_ReadBlocks(&compStream);
+	result = Map_ReadBlocks(&compStream);
+	if (result) return result;
 	Lvl_ConvertPhysicsBlocks();
 
 	/* 0xBD section type may not be present in older .lvl files */
@@ -150,17 +155,24 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 *----------------------------------------------------fCraft map format----------------------------------------------------*
 *#########################################################################################################################*/
 static void Fcm_ReadString(struct Stream* stream) {
-	Stream_Skip(stream, Stream_ReadU16_LE(stream));
+	UInt8 buffer[sizeof(UInt16)];
+	Stream_Read(stream, buffer, sizeof(buffer));
+
+	UInt16 len = Stream_GetU16_LE(&buffer[0]);
+	Stream_Skip(stream, len);
 }
 
 ReturnCode Fcm_Load(struct Stream* stream) {
 	UInt8 header[(3 * 2) + (3 * 4) + (2 * 1) + (2 * 4) + 16 + 26 + 4];
+	ReturnCode result;
 
-	Stream_Read(stream, header, 4 + 1);
+	result = Stream_TryRead(stream, header, 4 + 1);
+	if (result) return result;
 	if (Stream_GetU32_LE(&header[0]) != 0x0FC2AF40UL) return FCM_ERR_IDENTIFIER;
 	if (header[4] != 13) return FCM_ERR_REVISION;
 	
-	Stream_Read(stream, header, sizeof(header));
+	result = Stream_TryRead(stream, header, sizeof(header));
+	if (result) return result;
 	World_Width  = Stream_GetU16_LE(&header[0]);
 	World_Height = Stream_GetU16_LE(&header[2]);
 	World_Length = Stream_GetU16_LE(&header[4]);
@@ -188,8 +200,7 @@ ReturnCode Fcm_Load(struct Stream* stream) {
 		Fcm_ReadString(&compStream); /* Key   */
 		Fcm_ReadString(&compStream); /* Value */
 	}
-	Map_ReadBlocks(&compStream);
-	return 0;
+	return Map_ReadBlocks(&compStream);
 }
 
 
@@ -766,7 +777,7 @@ ReturnCode Dat_Load(struct Stream* stream) {
 			World_Height = Dat_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "blocks")) {
 			if (field->Type != JFIELD_ARRAY) ErrorHandler_Fail("Blocks field must be Array");
-			World_Blocks = field->Value_Ptr;
+			World_Blocks     = field->Value_Ptr;
 			World_BlocksSize = field->Value_Size;
 		} else if (String_CaselessEqualsConst(&fieldName, "xSpawn")) {
 			spawn->X = (Real32)Dat_I32(field);

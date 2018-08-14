@@ -31,6 +31,19 @@ void Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	}
 }
 
+ReturnCode Stream_TryRead(struct Stream* stream, UInt8* buffer, UInt32 count) {
+	UInt32 read;
+	while (count) {
+		ReturnCode result = stream->Read(stream, buffer, count, &read);
+		if (result) return result;
+		if (!read) return ERR_END_OF_STREAM;
+
+		buffer += read;
+		count  -= read;
+	}
+	return 0;
+}
+
 void Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	UInt32 write;
 	while (count) {
@@ -312,12 +325,6 @@ UInt8 Stream_ReadU8(struct Stream* stream) {
 	ReturnCode result = stream->ReadU8(stream, &buffer);
 	if (result) { Stream_Fail(stream, result, "reading U8 from"); }
 	return buffer;
-}
-
-UInt16 Stream_ReadU16_LE(struct Stream* stream) {
-	UInt8 buffer[sizeof(UInt16)];
-	Stream_Read(stream, buffer, sizeof(UInt16));
-	return Stream_GetU16_LE(buffer);
 }
 
 UInt16 Stream_ReadU16_BE(struct Stream* stream) {
