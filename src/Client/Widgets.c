@@ -2033,16 +2033,9 @@ static Int32 PlayerListWidget_PlayerCompare(UInt16 x, UInt16 y) {
 }
 
 static Int32 PlayerListWidget_GroupCompare(UInt16 x, UInt16 y) {
-	UChar xGroupBuffer[String_BufferSize(STRING_SIZE)];
-	String xGroup    = String_InitAndClearArray(xGroupBuffer);
-	String xGroupRaw = TabList_UNSAFE_GetGroup(x);
-	String_AppendColorless(&xGroup, &xGroupRaw);
-
-	UChar yGroupBuffer[String_BufferSize(STRING_SIZE)];
-	String yGroup    = String_InitAndClearArray(yGroupBuffer);
-	String yGroupRaw = TabList_UNSAFE_GetGroup(y);
-	String_AppendColorless(&yGroup, &yGroupRaw);
-
+	/* TODO: should we use colourless comparison? ClassicalSharp sorts groups with colours */
+	String xGroup = TabList_UNSAFE_GetGroup(x);
+	String yGroup = TabList_UNSAFE_GetGroup(y);
 	return String_Compare(&xGroup, &yGroup);
 }
 
