@@ -1108,10 +1108,14 @@ static void BlockModel_Flush(void) {
 }
 
 #define BlockModel_FlushIfNotSame if (BlockModel_lastTexIndex != BlockModel_texIndex) { BlockModel_Flush(); }
-static TextureLoc BlockModel_GetTex(Face face) {
+static TextureLoc BlockModel_GetTex(Face face, VertexP3fT2fC4b** ptr) {
 	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, face);
 	BlockModel_texIndex = Atlas1D_Index(texLoc);
 	BlockModel_FlushIfNotSame;
+
+	/* Need to reload ptr, in case was flushed */
+	*ptr = &ModelCache_Vertices[BlockModel.index];
+	BlockModel.index += 4;
 	return texLoc;
 }
 
@@ -1199,15 +1203,15 @@ static void BlockModel_DrawParts(bool sprite) {
 
 		Drawer_Tinted = Block_Tinted[BlockModel_block];
 		Drawer_TintColour = Block_FogCol[BlockModel_block];
+		VertexP3fT2fC4b* ptr = NULL;
+		TextureLoc loc;
 
-		VertexP3fT2fC4b* ptr = &ModelCache_Vertices[BlockModel.index];
-		Drawer_YMin(1, IModel_Cols[1], BlockModel_GetTex(FACE_YMIN), &ptr);
-		Drawer_ZMin(1, IModel_Cols[3], BlockModel_GetTex(FACE_ZMIN), &ptr);
-		Drawer_XMax(1, IModel_Cols[5], BlockModel_GetTex(FACE_XMAX), &ptr);
-		Drawer_ZMax(1, IModel_Cols[2], BlockModel_GetTex(FACE_ZMAX), &ptr);
-		Drawer_XMin(1, IModel_Cols[4], BlockModel_GetTex(FACE_XMIN), &ptr);
-		Drawer_YMax(1, IModel_Cols[0], BlockModel_GetTex(FACE_YMAX), &ptr);
-		BlockModel.index += 4 * FACE_COUNT;
+		loc = BlockModel_GetTex(FACE_YMIN, &ptr); Drawer_YMin(1, IModel_Cols[1], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_ZMIN, &ptr); Drawer_ZMin(1, IModel_Cols[3], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_XMAX, &ptr); Drawer_XMax(1, IModel_Cols[5], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_ZMAX, &ptr); Drawer_ZMax(1, IModel_Cols[2], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_XMIN, &ptr); Drawer_XMin(1, IModel_Cols[4], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_YMAX, &ptr); Drawer_YMax(1, IModel_Cols[0], loc, &ptr);
 	}
 }
 
