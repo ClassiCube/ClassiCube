@@ -699,7 +699,11 @@ struct ModelSet {
 
 struct BoxDesc head, torso, lLeg, rLeg, lArm, rArm;
 Real32 offset;
-static void HumanModel_CreateParts(struct ModelSet* set, struct ModelSet* set64, struct ModelSet* setSlim) {
+static void HumanModel_CreateParts(struct ModelSet* models) {
+	struct ModelSet* set     = &models[0];
+	struct ModelSet* set64   = &models[1];
+	struct ModelSet* setSlim = &models[2];
+
 	BoxDesc_TexOrigin(&head, 0, 0);
 	BoxDesc_BuildBox(&set->Head, &head);
 
@@ -785,9 +789,12 @@ static void HumanModel_CreateParts(struct ModelSet* set, struct ModelSet* set64,
 	BoxDesc_BuildBox(&setSlim->RightArmLayer, &rArm);
 }
 
-static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) {
+static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* models) {
 	IModel_ApplyTexture(entity);
 	Gfx_SetAlphaTest(false);
+
+	UInt8 type = IModel_skinType;
+	struct ModelSet* model = &models[type == SKIN_TYPE_64x64_SLIM ? 2 : (type == SKIN_TYPE_64x64 ? 1 : 0)];
 
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, model->Head, true);
 	IModel_DrawPart(model->Torso);
@@ -816,7 +823,10 @@ static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) 
 	IModel_UpdateVB();
 }
 
-static void HumanModel_DrawArm(struct Entity* entity, struct ModelSet* model) {
+static void HumanModel_DrawArm(struct Entity* entity, struct ModelSet* models) {
+	UInt8 type = IModel_skinType;
+	struct ModelSet* model = &models[type == SKIN_TYPE_64x64_SLIM ? 2 : (type == SKIN_TYPE_64x64 ? 1 : 0)];
+
 	IModel_DrawArmPart(model->RightArm);
 	if (IModel_skinType != SKIN_TYPE_64x32) {
 		IModel_DrawArmPart(model->RightArmLayer);
@@ -828,7 +838,7 @@ static void HumanModel_DrawArm(struct Entity* entity, struct ModelSet* model) {
 /*########################################################################################################################*
 *-------------------------------------------------------HumanoidModel-----------------------------------------------------*
 *#########################################################################################################################*/
-struct ModelSet Humanoid_Set, Humanoid_Set64, Humanoid_SetSlim;
+struct ModelSet Humanoid_Set[3];
 struct ModelVertex HumanoidModel_Vertices[IMODEL_BOX_VERTICES * (7 + 7 + 4)];
 struct IModel HumanoidModel;
 
@@ -851,7 +861,7 @@ static void HumanoidModel_MakeBoxDescs(void) {
 static void HumanoidModel_CreateParts(void) {
 	HumanoidModel_MakeBoxDescs();
 	offset = 0.5f;
-	HumanModel_CreateParts(&Humanoid_Set, &Humanoid_Set64, &Humanoid_SetSlim);
+	HumanModel_CreateParts(Humanoid_Set);
 }
 
 static Real32 HumanoidModel_GetEyeY(struct Entity* entity) { return 26.0f / 16.0f; }
@@ -861,19 +871,11 @@ static void HumanoidModel_GetPickingBounds(struct AABB* bb) {
 }
 
 static void HumanoidModel_DrawModel(struct Entity* entity) {
-	UInt8 skinType = IModel_skinType;
-	struct ModelSet* model =
-		skinType == SKIN_TYPE_64x64_SLIM ? &Humanoid_SetSlim :
-		(skinType == SKIN_TYPE_64x64 ? &Humanoid_Set64 : &Humanoid_Set);
-	HumanModel_DrawModel(entity, model);
+	HumanModel_DrawModel(entity, Humanoid_Set);
 }
 
 static void HumanoidModel_DrawArm(struct Entity* entity) {
-	UInt8 skinType = IModel_skinType;
-	struct ModelSet* model =
-		skinType == SKIN_TYPE_64x64_SLIM ? &Humanoid_SetSlim :
-		(skinType == SKIN_TYPE_64x64 ? &Humanoid_Set64 : &Humanoid_Set);
-	HumanModel_DrawArm(entity, model);
+	HumanModel_DrawArm(entity, Humanoid_Set);
 }
 
 static struct IModel* HumanoidModel_GetInstance(void) {
@@ -891,7 +893,7 @@ static struct IModel* HumanoidModel_GetInstance(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------ChibiModel------------------------------------------------------*
 *#########################################################################################################################*/
-struct ModelSet Chibi_Set, Chibi_Set64, Chibi_SetSlim;
+struct ModelSet Chibi_Set[3];
 struct ModelVertex ChibiModel_Vertices[IMODEL_BOX_VERTICES * (7 + 7 + 4)];
 struct IModel ChibiModel;
 #define CHIBI_SIZE 0.5f
@@ -911,7 +913,7 @@ static void ChibiModel_MakeBoxDescs(void) {
 static void ChibiModel_CreateParts(void) {
 	ChibiModel_MakeBoxDescs();
 	offset = 0.5f * CHIBI_SIZE;
-	HumanModel_CreateParts(&Chibi_Set, &Chibi_Set64, &Chibi_SetSlim);
+	HumanModel_CreateParts(Chibi_Set);
 }
 
 static Real32 ChibiModel_GetEyeY(struct Entity* entity) { return 14.0f / 16.0f; }
@@ -921,19 +923,11 @@ static void ChibiModel_GetPickingBounds(struct AABB* bb) {
 }
 
 static void ChibiModel_DrawModel(struct Entity* entity) {
-	UInt8 skinType = IModel_skinType;
-	struct ModelSet* model =
-		skinType == SKIN_TYPE_64x64_SLIM ? &Chibi_SetSlim :
-		(skinType == SKIN_TYPE_64x64 ? &Chibi_Set64 : &Chibi_Set);
-	HumanModel_DrawModel(entity, model);
+	HumanModel_DrawModel(entity, Chibi_Set);
 }
 
 static void ChibiModel_DrawArm(struct Entity* entity) {
-	UInt8 skinType = IModel_skinType;
-	struct ModelSet* model =
-		skinType == SKIN_TYPE_64x64_SLIM ? &Chibi_SetSlim :
-		(skinType == SKIN_TYPE_64x64 ? &Chibi_Set64 : &Chibi_Set);
-	HumanModel_DrawArm(entity, model);
+	HumanModel_DrawArm(entity, Chibi_Set);
 }
 
 static struct IModel* ChibiModel_GetInstance(void) {
@@ -1031,9 +1025,9 @@ static void HeadModel_DrawModel(struct Entity* entity) {
 	IModel_ApplyTexture(entity);
 	struct ModelPart part;
 
-	part = Humanoid_Set.Head; part.RotY += 4.0f / 16.0f;
+	part = Humanoid_Set[0].Head; part.RotY += 4.0f / 16.0f;
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, part, true);
-	part = Humanoid_Set.Hat;  part.RotY += 4.0f / 16.0f;
+	part = Humanoid_Set[0].Hat;  part.RotY += 4.0f / 16.0f;
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, part, true);
 
 	IModel_UpdateVB();
