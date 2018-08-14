@@ -248,9 +248,9 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	case WM_MOUSEMOVE:
 	{
 		/* set before position change, in case mouse buttons changed when outside window */
-		Mouse_SetPressed(MouseButton_Left,   wParam & 0x01);
-		Mouse_SetPressed(MouseButton_Right,  wParam & 0x02);
-		Mouse_SetPressed(MouseButton_Middle, wParam & 0x10);
+		Mouse_SetPressed(MouseButton_Left,   (wParam & 0x01) != 0);
+		Mouse_SetPressed(MouseButton_Right,  (wParam & 0x02) != 0);
+		Mouse_SetPressed(MouseButton_Middle, (wParam & 0x10) != 0);
 		/* TODO: do we need to set XBUTTON1 / XBUTTON 2 here */
 
 		WORD mouse_x = LOWORD(lParam);
