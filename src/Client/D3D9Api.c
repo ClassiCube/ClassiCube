@@ -583,7 +583,9 @@ void Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) {
 	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Lock temp surface");
 
 	struct Bitmap bmp; Bitmap_Create(&bmp, width, height, rect.pBits);
-	Bitmap_EncodePng(&bmp, output);
+	hresult = Bitmap_EncodePng(&bmp, output);
+	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Writing .png");
+
 	hresult = IDirect3DSurface9_UnlockRect(temp);
 	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Unlock temp surface");
 

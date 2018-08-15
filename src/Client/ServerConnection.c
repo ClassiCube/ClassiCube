@@ -399,17 +399,17 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	}
 	if (ServerConnection_Disconnected) return;
 
-	UInt32 modified = 0;
-	ReturnCode recvResult = Socket_Available(net_socket, &modified);
-	if (recvResult == 0 && modified > 0) {
+	UInt32 pending = 0;
+	ReturnCode recvResult = Socket_Available(net_socket, &pending);
+	if (recvResult == 0 && pending) {
 		/* NOTE: Always using a read call that is a multiple of 4096 (appears to?) improve read performance */
 		UInt8* src = net_readBuffer + net_readStream.Meta.Mem.Left;
-		recvResult = Socket_Read(net_socket, src, 4096 * 4, &modified);
-		net_readStream.Meta.Mem.Left   += modified;
-		net_readStream.Meta.Mem.Length += modified;
+		recvResult = Socket_Read(net_socket, src, 4096 * 4, &pending);
+		net_readStream.Meta.Mem.Left   += pending;
+		net_readStream.Meta.Mem.Length += pending;
 	}
 
-	if (recvResult != 0) {
+	if (recvResult) {
 		UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 		String msg = String_InitAndClearArray(msgBuffer);
 		String_Format3(&msg, "Error reading from %s:%i: %i", &Game_IPAddress, &Game_Port, &recvResult);

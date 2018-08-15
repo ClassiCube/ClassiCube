@@ -374,9 +374,6 @@
     <ClCompile Include="PackedCol.c">
       <Filter>Source Files\2D\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="WinErrorHandler.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="Drawer.c">
       <Filter>Source Files\MeshBuilder</Filter>
     </ClCompile>
@@ -521,9 +518,6 @@
     <ClCompile Include="EnvRenderer.c">
       <Filter>Source Files\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="NixErrorHandler.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="NixWindow.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
@@ -534,6 +528,9 @@
       <Filter>Source Files\Audio</Filter>
     </ClCompile>
     <ClCompile Include="Platform.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="ErrorHandler.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
   </ItemGroup>

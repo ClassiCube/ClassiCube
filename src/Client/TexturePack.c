@@ -125,8 +125,10 @@ void Zip_Init(struct ZipState* state, struct Stream* input) {
 ReturnCode Zip_Extract(struct ZipState* state) {
 	state->EntriesCount = 0;
 	struct Stream* stream = state->Input;
-	UInt32 sig = 0, stream_len = 0;
+	UInt32 sig = 0, stream_len;
+	
 	ReturnCode result = stream->Length(stream, &stream_len);
+	if (result) return result;
 
 	/* At -22 for nearly all zips, but try a bit further back in case of comment */
 	Int32 i, len = min(257, stream_len);

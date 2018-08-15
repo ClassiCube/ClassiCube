@@ -27,5 +27,5 @@ bool Bitmap_DetectPng(UInt8* data, UInt32 len);
      https://github.com/nothings/stb/blob/master/stb_image.h
 */
 ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream);
-void Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream);
+ReturnCode Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream);
 #endif

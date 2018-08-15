@@ -536,7 +536,8 @@ void Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) {
 		}*/
 	}
 
-	Bitmap_EncodePng(&bmp, output);
+	ReturnCode hresult = Bitmap_EncodePng(&bmp, output);
+	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Writing .png");
 	Mem_Free(&bmp.Scan0);
 }
 

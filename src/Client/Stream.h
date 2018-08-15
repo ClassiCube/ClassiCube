@@ -67,8 +67,6 @@ UInt32 Stream_ReadU32_BE(struct Stream* stream);
 void Stream_WriteU8(struct Stream* stream, UInt8 value);
 void Stream_WriteU16_BE(struct Stream* stream, UInt16 value);
 void Stream_WriteU32_BE(struct Stream* stream, UInt32 value);
-#define Stream_WriteI16_BE(stream, value) Stream_WriteU16_BE(stream, (UInt16)(value))
-#define Stream_WriteI32_BE(stream, value) Stream_WriteU32_BE(stream, (UInt32)(value))
 
 ReturnCode Stream_ReadUtf8Char(struct Stream* stream, UInt16* codepoint);
 bool Stream_ReadLine(struct Stream* stream, STRING_TRANSIENT String* text);

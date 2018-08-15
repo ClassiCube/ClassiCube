@@ -293,7 +293,6 @@
     <ClCompile Include="BlockPhysics.c" />
     <ClCompile Include="PickedPosRenderer.c" />
     <ClCompile Include="Picking.c" />
-    <ClCompile Include="NixErrorHandler.c" />
     <ClCompile Include="Platform.c" />
     <ClCompile Include="Program.c" />
     <ClCompile Include="Screens.c" />
@@ -307,7 +306,7 @@
     <ClCompile Include="Vectors.c" />
     <ClCompile Include="Vorbis.c" />
     <ClCompile Include="Widgets.c" />
-    <ClCompile Include="WinErrorHandler.c" />
+    <ClCompile Include="ErrorHandler.c" />
     <ClCompile Include="WinWindow.c" />
     <ClCompile Include="World.c" />
     <ClCompile Include="NixWindow.c" />

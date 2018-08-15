@@ -609,12 +609,11 @@ static void Png_EncodeRow(UInt8* src, UInt8* cur, UInt8* prior, UInt8* best, Int
 	best[0] = bestFilter;
 }
 
-void Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
-	Stream_Write(stream, png_sig, PNG_SIG_SIZE);
-	struct Stream* underlying = stream;
-	struct Stream crc32Stream;
-	Bitmap_Crc32Stream(&crc32Stream, underlying);
+ReturnCode Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {	
+	ReturnCode result;
 	UInt8 tmp[32];
+	result = Stream_TryWrite(stream, png_sig, PNG_SIG_SIZE);
+	if (result) return result;
 
 	/* Write header chunk */
 	Stream_SetU32_BE(&tmp[0], PNG_IHDR_SIZE);
@@ -629,7 +628,12 @@ void Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 		tmp[20] = 0;           /* Not using interlacing */
 	}
 	Stream_SetU32_BE(&tmp[21], Utils_CRC32(&tmp[4], sizeof(UInt32) + PNG_IHDR_SIZE));
-	Stream_Write(stream, tmp, PNG_IHDR_SIZE + 3 * sizeof(UInt32));
+	result = Stream_TryWrite(stream, tmp, PNG_IHDR_SIZE + 3 * sizeof(UInt32));
+	if (result) return result;
+
+	struct Stream* underlying = stream;
+	struct Stream crc32Stream;
+	Bitmap_Crc32Stream(&crc32Stream, underlying);
 
 	/* Write PNG body */
 	UInt8 prevLine[PNG_MAX_DIMS * 3];
@@ -655,19 +659,23 @@ void Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 		}
 		zlStream.Close(&zlStream);
 	}
-	UInt32 dataEnd; ReturnCode result = underlying->Position(underlying, &dataEnd);
-	ErrorHandler_CheckOrFail(result, "PNG - getting position of data end");
 	stream = underlying;
 	Stream_WriteU32_BE(stream, crc32Stream.Meta.CRC32.CRC32 ^ 0xFFFFFFFFUL);
 
 	/* Write end chunk */
 	Stream_SetU32_BE(&tmp[0], 0);
 	Stream_SetU32_BE(&tmp[4], PNG_FourCC('I','E','N','D'));
-	Stream_SetU32_BE(&tmp[8], 0xAE426082UL); /* crc32 of iend */
-	Stream_Write(stream, tmp, 3 * sizeof(UInt32));
+	Stream_SetU32_BE(&tmp[8], 0xAE426082UL); /* CRC32 of iend */
+	result = Stream_TryWrite(stream, tmp, 3 * sizeof(UInt32));
+	if (result) return result;
 
 	/* Come back to write size of data chunk */
+	UInt32 stream_len;
+	result = stream->Length(stream, &stream_len);
+	if (result) return result;
 	result = stream->Seek(stream, 33, STREAM_SEEKFROM_BEGIN);
-	ErrorHandler_CheckOrFail(result, "PNG - seeking to write data size");
-	Stream_WriteU32_BE(stream, dataEnd - 41);
+	if (result) return result;
+
+	Stream_WriteU32_BE(stream, stream_len - 57);
+	return 0;
 }
