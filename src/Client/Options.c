@@ -158,15 +158,11 @@ void Options_Set(const UChar* keyRaw, STRING_PURE String* value) {
 
 void Options_Load(void) {	
 	String path = String_FromConst("options.txt");
-	void* file; ReturnCode result = File_Open(&file, &path);
+	ReturnCode result;
 
+	void* file; result = File_Open(&file, &path);
 	if (result == ReturnCode_FileNotFound) return;
-	/* TODO: Should we just log failure to open? */
-	ErrorHandler_CheckOrFail(result, "Options - Loading");
-
-	UChar lineBuffer[String_BufferSize(768)];
-	String line = String_InitAndClearArray(lineBuffer);
-	struct Stream stream; Stream_FromFile(&stream, file, &path);
+	if (result) { ErrorHandler_LogError_Path(result, "opening", &path); return; }
 
 	/* Remove all the unchanged options */
 	UInt32 i;
@@ -175,6 +171,10 @@ void Options_Load(void) {
 		if (Options_HasChanged(&key)) continue;
 		Options_Remove(i - 1);
 	}
+
+	UChar lineBuffer[String_BufferSize(768)];
+	String line = String_InitAndClearArray(lineBuffer);
+	struct Stream stream; Stream_FromFile(&stream, file, &path);
 
 	/* ReadLine reads single byte at a time */
 	UInt8 buffer[2048]; struct Stream buffered;
@@ -197,15 +197,15 @@ void Options_Load(void) {
 	}
 
 	result = stream.Close(&stream);
-	ErrorHandler_CheckOrFail(result, "Options load - close file");
+	if (result) { ErrorHandler_LogError_Path(result, "closing", &path); return; }
 }
 
 void Options_Save(void) {	
 	String path = String_FromConst("options.txt");
-	void* file; ReturnCode result = File_Create(&file, &path);
+	ReturnCode result;
 
-	/* TODO: Should we just log failure to save? */
-	ErrorHandler_CheckOrFail(result, "Options - Saving");
+	void* file; result = File_Create(&file, &path);
+	if (result) { ErrorHandler_LogError_Path(result, "creating", &path); return; }
 
 	UChar lineBuffer[String_BufferSize(1024)];
 	String line = String_InitAndClearArray(lineBuffer);
@@ -221,7 +221,7 @@ void Options_Save(void) {
 		String_Clear(&line);
 	}
 
-	result = stream.Close(&stream);
-	ErrorHandler_CheckOrFail(result, "Options save - close file");
 	StringsBuffer_Free(&Options_Changed);
+	result = stream.Close(&stream);
+	if (result) { ErrorHandler_LogError_Path(result, "closing", &path); return; }
 }

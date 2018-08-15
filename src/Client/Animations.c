@@ -188,8 +188,9 @@ static void Animations_ReadDescription(struct Stream* stream) {
 		}
 
 		if (anims_count == Array_Elems(anims_list)) {
-			ErrorHandler_Fail("Too many animations in animations.txt");
+			Chat_AddRaw("&cCannot show over 256 animations"); return;
 		}
+
 		data.TexLoc = tileX + (tileY * ATLAS2D_TILES_PER_ROW);
 		anims_list[anims_count++] = data;
 	}
@@ -320,7 +321,10 @@ static void Animations_FileChanged(void* obj, struct Stream* stream) {
 	String* name = &stream->Name;
 	if (String_CaselessEqualsConst(name, "animation.png") || String_CaselessEqualsConst(name, "animations.png")) {
 		ReturnCode result = Bitmap_DecodePng(&anims_bmp, stream);
-		ErrorHandler_CheckOrFail(result, "Decoding animations bitmap");
+		if (!result) return;
+
+		ErrorHandler_LogError_Path(result, "decoding", name);
+		Mem_Free(&anims_bmp.Scan0);
 	} else if (String_CaselessEqualsConst(name, "animation.txt") || String_CaselessEqualsConst(name, "animations.txt")) {
 		Animations_ReadDescription(stream);
 	} else if (String_CaselessEqualsConst(name, "uselavaanim")) {

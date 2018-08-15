@@ -73,7 +73,7 @@ static void D3D9_FindCompatibleFormat(void) {
 	for (i = 0; i < count; i++) {
 		d3d9_viewFormat = d3d9_viewFormats[i];
 		res = IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, true);
-		if (ErrorHandler_Check(res)) break;
+		if (!res) break;
 
 		if (i == count - 1) {
 			ErrorHandler_Fail("Unable to create a back buffer with sufficient precision.");
@@ -84,7 +84,7 @@ static void D3D9_FindCompatibleFormat(void) {
 	for (i = 0; i < count; i++) {
 		d3d9_depthFormat = d3d9_depthFormats[i];
 		res = IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, d3d9_depthFormat);
-		if (ErrorHandler_Check(res)) break;
+		if (!res) break;
 
 		if (i == count - 1) {
 			ErrorHandler_Fail("Unable to create a depth buffer with sufficient precision.");
@@ -130,11 +130,11 @@ void Gfx_Init(void) {
 
 	/* Try to create a device with as much hardware usage as possible. */
 	res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
-	if (!ErrorHandler_Check(res)) {
+	if (res) {
 		createFlags = D3DCREATE_MIXED_VERTEXPROCESSING;
 		res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
 	}
-	if (!ErrorHandler_Check(res)) {
+	if (res) {
 		createFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
 		res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
 	}
@@ -565,32 +565,33 @@ void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 z
 }
 
 
-void Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) {
-	IDirect3DSurface9* backbuffer;
-	IDirect3DSurface9* temp;
-	ReturnCode hresult;
+ReturnCode Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) {
+	IDirect3DSurface9* backbuffer = NULL;
+	IDirect3DSurface9* temp = NULL;
+	ReturnCode result;
 
-	hresult = IDirect3DDevice9_GetBackBuffer(device, 0, 0, D3DBACKBUFFER_TYPE_MONO, &backbuffer);
-	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Get back buffer");
-	hresult = IDirect3DDevice9_CreateOffscreenPlainSurface(device, width, height, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &temp, NULL);
-	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Create temp surface");
-	/* For DX 8 use IDirect3DDevice8::CreateImageSurface */
+	result = IDirect3DDevice9_GetBackBuffer(device, 0, 0, D3DBACKBUFFER_TYPE_MONO, &backbuffer);
+	if (result) goto finished;
+	result = IDirect3DDevice9_CreateOffscreenPlainSurface(device, width, height, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &temp, NULL);
+	if (result) goto finished; /* TODO: For DX 8 use IDirect3DDevice8::CreateImageSurface */
+	result = IDirect3DDevice9_GetRenderTargetData(device, backbuffer, temp);
+	if (result) goto finished;
 
-	hresult = IDirect3DDevice9_GetRenderTargetData(device, backbuffer, temp);
-	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Copying back buffer");
 	D3DLOCKED_RECT rect;
-	hresult = IDirect3DSurface9_LockRect(temp, &rect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
-	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Lock temp surface");
+	result = IDirect3DSurface9_LockRect(temp, &rect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
+	if (result) goto finished;
+	{
+		struct Bitmap bmp; Bitmap_Create(&bmp, width, height, rect.pBits);
+		result = Bitmap_EncodePng(&bmp, output);
+		if (result) { IDirect3DSurface9_UnlockRect(temp); goto finished; }
+	}
+	result = IDirect3DSurface9_UnlockRect(temp);
+	if (result) goto finished;
 
-	struct Bitmap bmp; Bitmap_Create(&bmp, width, height, rect.pBits);
-	hresult = Bitmap_EncodePng(&bmp, output);
-	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Writing .png");
-
-	hresult = IDirect3DSurface9_UnlockRect(temp);
-	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Unlock temp surface");
-
+finished:
 	D3D9_FreeResource(&backbuffer);
 	D3D9_FreeResource(&temp);
+	return result;
 }
 
 bool Gfx_WarnIfNecessary(void) { return false; }

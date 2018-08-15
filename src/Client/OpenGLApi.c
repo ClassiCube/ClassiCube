@@ -516,7 +516,7 @@ void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 z
 }
 
 
-void Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) {
+ReturnCode Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) {
 	struct Bitmap bmp; Bitmap_Allocate(&bmp, width, height);
 	glReadPixels(0, 0, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, bmp.Scan0);
 	UInt8 tmp[PNG_MAX_DIMS * BITMAP_SIZEOF_PIXEL];
@@ -536,9 +536,9 @@ void Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) {
 		}*/
 	}
 
-	ReturnCode hresult = Bitmap_EncodePng(&bmp, output);
-	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Writing .png");
+	ReturnCode result = Bitmap_EncodePng(&bmp, output);
 	Mem_Free(&bmp.Scan0);
+	return result;
 }
 
 void Gfx_MakeApiInfo(void) {

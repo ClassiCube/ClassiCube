@@ -207,9 +207,9 @@ bool Game_CanPick(BlockID block) {
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, UInt8* skinType) {
 	struct Bitmap bmp; 
 	ReturnCode result = Bitmap_DecodePng(&bmp, src);
-	ErrorHandler_CheckOrFail(result, "Decoding texture");
+	if (result) { ErrorHandler_LogError_Path(result, "decoding", &src->Name); }
 
-	bool success = Game_ValidateBitmap(&src->Name, &bmp);
+	bool success = !result && Game_ValidateBitmap(&src->Name, &bmp);
 	if (success) {
 		Gfx_DeleteTexture(texId);
 		if (skinType != NULL) { *skinType = Utils_GetSkinType(&bmp); }
@@ -293,19 +293,27 @@ static void Game_OnNewMapLoadedCore(void* obj) {
 }
 
 static void Game_TextureChangedCore(void* obj, struct Stream* src) {
-	if (String_CaselessEqualsConst(&src->Name, "terrain.png")) {
-		struct Bitmap atlas; 
-		ReturnCode result = Bitmap_DecodePng(&atlas, src);
-		ErrorHandler_CheckOrFail(result, "Decoding terrain bitmap");
-
-		if (Game_ChangeTerrainAtlas(&atlas)) return;
-		Mem_Free(&atlas.Scan0);
-	} else if (String_CaselessEqualsConst(&src->Name, "default.png")) {
-		struct Bitmap bmp; 
+	String* name = &src->Name;
+	struct Bitmap bmp;
+	if (String_CaselessEqualsConst(name, "terrain.png")) {
 		ReturnCode result = Bitmap_DecodePng(&bmp, src);
-		ErrorHandler_CheckOrFail(result, "Decoding font bitmap");
-		Drawer2D_SetFontBitmap(&bmp);
-		Event_RaiseVoid(&ChatEvents_FontChanged);
+
+		if (result) { 
+			ErrorHandler_LogError_Path(result, "decoding", name);
+			Mem_Free(&bmp.Scan0);
+		} else if (!Game_ChangeTerrainAtlas(&bmp)) {
+			Mem_Free(&bmp.Scan0);
+		}		
+	} else if (String_CaselessEqualsConst(name, "default.png")) {
+		ReturnCode result = Bitmap_DecodePng(&bmp, src);
+
+		if (result) { 
+			ErrorHandler_LogError_Path(result, "decoding", name);
+			Mem_Free(&bmp.Scan0);
+		} else {
+			Drawer2D_SetFontBitmap(&bmp);
+			Event_RaiseVoid(&ChatEvents_FontChanged);
+		}
 	}
 }
 
@@ -616,11 +624,9 @@ static void Game_DoScheduledTasks(Real64 time) {
 }
 
 void Game_TakeScreenshot(void) {
-	String dir = String_FromConst("screenshots");
-	if (!Directory_Exists(&dir)) {
-		ReturnCode result = Directory_Create(&dir);
-		ErrorHandler_CheckOrFail(result, "Creating screenshots directory");
-	}
+	ReturnCode result;
+	Game_ScreenshotRequested = false;
+	if (!Utils_EnsureDirectory("screenshots")) return;
 
 	DateTime now; DateTime_CurrentLocal(&now);
 	Int32 year = now.Year, month = now.Month, day = now.Day;
@@ -635,16 +641,20 @@ void Game_TakeScreenshot(void) {
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format2(&path, "screenshots%r%s", &Directory_Separator, &filename);
 
-	void* file; ReturnCode result = File_Create(&file, &path);
-	ErrorHandler_CheckOrFail(result, "Taking screenshot - opening file");
+	void* file; result = File_Create(&file, &path);
+	if (result) { ErrorHandler_LogError_Path(result, "creating", &path); return; }
+
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
-		Gfx_TakeScreenshot(&stream, Game_Width, Game_Height);
+		result = Gfx_TakeScreenshot(&stream, Game_Width, Game_Height);
+		if (result) { 
+			ErrorHandler_LogError(result, "saving screenshot"); 
+			stream.Close(&stream); return;
+		}
 	}
 	result = stream.Close(&stream);
-	ErrorHandler_CheckOrFail(result, "Taking screenshot - closing file");
+	if (result) { ErrorHandler_LogError_Path(result, "closing", &path); return; }
 
-	Game_ScreenshotRequested = false;
 	String_Clear(&path);
 	String_Format1(&path, "&eTaken screenshot as: %s", &filename);
 	Chat_Add(&path);

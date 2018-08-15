@@ -10,6 +10,7 @@
 #include "GameStructs.h"
 #include "Errors.h"
 #include "Vorbis.h"
+#include "Chat.h"
 
 StringsBuffer files;
 /*########################################################################################################################*
@@ -117,19 +118,26 @@ static void Soundboard_Init(struct Soundboard* board, STRING_PURE String* boardN
 
 		struct SoundGroup* group = Soundboard_Find(board, &name);
 		if (group == NULL) {
-			if (board->Count == Array_Elems(board->Groups)) ErrorHandler_Fail("Soundboard - too many groups");
+			if (board->Count == Array_Elems(board->Groups)) {
+				Chat_AddRaw("&cCannot have more than 10 sound groups"); return;
+			}
 
 			group = &board->Groups[board->Count++];
 			group->Name = String_InitAndClearArray(group->NameBuffer);
 			String_Set(&group->Name, &name);
 		}
 
-		if (group->Count == Array_Elems(group->Sounds)) ErrorHandler_Fail("Soundboard - too many sounds");
+		if (group->Count == Array_Elems(group->Sounds)) {
+			Chat_AddRaw("&cCannot have more than 10 sounds in a group"); return;
+		}
+
 		struct Sound* snd = &group->Sounds[group->Count];
 		ReturnCode result = Sound_ReadWave(&file, snd);
 
-		ErrorHandler_CheckOrFail(result, "Soundboard - reading WAV");
-		group->Count++;
+		if (result) {
+			ErrorHandler_LogError_Path(result, "decoding", &file);
+			Mem_Free(&snd->Data);
+		} else { group->Count++; }
 	}
 }
 
@@ -337,6 +345,7 @@ static void Music_RunLoop(void) {
 	if (!count) return;
 	Random rnd; Random_InitFromCurrentTime(&rnd);
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	ReturnCode result;
 
 	while (!music_pendingStop) {
 		Int32 idx = Random_Range(&rnd, 0, count);
@@ -345,17 +354,17 @@ static void Music_RunLoop(void) {
 		String_Format2(&path, "audio%r%s", &Directory_Separator, &filename);
 		Platform_Log1("playing music file: %s", &filename);
 
-		void* file; ReturnCode result = File_Open(&file, &path);
-		ErrorHandler_CheckOrFail(result, "Music_RunLoop - opening file");
+		void* file; result = File_Open(&file, &path);
+		if (result) { ErrorHandler_LogError_Path(result, "opening", &path); return; }
 		struct Stream stream; Stream_FromFile(&stream, file, &path);
 		{
 			result = Music_PlayOgg(&stream);
-			ErrorHandler_CheckOrFail(result, "Music_RunLoop - playing ogg");
+			if (result) { ErrorHandler_LogError_Path(result, "playing", &path); }
 		}
 		result = stream.Close(&stream);
-		ErrorHandler_CheckOrFail(result, "Music_RunLoop - closing file");
+		if (result) { ErrorHandler_LogError_Path(result, "closing", &path); }
 
-		if (music_pendingStop) break;
+		if (music_pendingStop) return;
 		Int32 delay = 1000 * 120 + Random_Range(&rnd, 0, 1000 * 300);
 		Waitable_WaitFor(music_waitable, delay);
 	}

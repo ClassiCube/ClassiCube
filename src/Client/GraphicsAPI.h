@@ -96,7 +96,7 @@ void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, struct Matrix* matrix);
 void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 zFar, struct Matrix* matrix);
 
 /* Outputs a .png screenshot of the backbuffer */
-void Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height);
+ReturnCode Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height);
 /* Adds a warning to game's chat if this graphics API has problems with the current user's GPU. 
 Returns boolean of whether legacy rendering mode is needed. */
 bool Gfx_WarnIfNecessary(void);

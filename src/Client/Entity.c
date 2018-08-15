@@ -656,8 +656,6 @@ static void Player_EnsurePow2(struct Player* player, struct Bitmap* bmp) {
 	if (width == bmp->Width && height == bmp->Height) return;
 
 	struct Bitmap scaled; Bitmap_Allocate(&scaled, width, height);
-	if (!scaled.Scan0) ErrorHandler_Fail("Failed to allocate memory for resizing player skin");
-
 	Int32 y;
 	UInt32 stride = (UInt32)(bmp->Width) * BITMAP_SIZEOF_PIXEL;
 	for (y = 0; y < bmp->Height; y++) {
@@ -695,8 +693,13 @@ static void Player_CheckSkin(struct Player* player) {
 	String url = String_FromRawArray(item.URL);
 	struct Stream mem; struct Bitmap bmp;
 	Stream_ReadonlyMemory(&mem, item.ResultData, item.ResultSize, &url);
+
 	ReturnCode result = Bitmap_DecodePng(&bmp, &mem);
-	ErrorHandler_CheckOrFail(result, "Decoding player skin");
+	if (result) {
+		ErrorHandler_LogError_Path(result, "decoding", &url);
+		Mem_Free(&bmp.Scan0);
+		return;
+	}
 
 	Gfx_DeleteTexture(&entity->TextureId);
 	Player_SetSkinAll(player, true);

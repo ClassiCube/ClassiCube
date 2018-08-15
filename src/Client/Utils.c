@@ -2,6 +2,8 @@
 #include "Constants.h"
 #include "Bitmap.h"
 #include "PackedCol.h"
+#include "ErrorHandler.h"
+#include "Platform.h"
 
 #define DATETIME_SECONDS_PER_MINUTE 60
 #define DATETIME_SECONDS_PER_HOUR (60 * 60)
@@ -117,6 +119,15 @@ bool Utils_IsUrlPrefix(STRING_PURE String* value, Int32 index) {
 	String https = String_FromConst("https://");
 	return String_IndexOfString(value, &http)  == index
 		|| String_IndexOfString(value, &https) == index;
+}
+
+bool Utils_EnsureDirectory(STRING_PURE const UChar* dirName) {
+	String dir = String_FromReadonly(dirName);
+	if (Directory_Exists(&dir)) return true;
+
+	ReturnCode result = Directory_Create(&dir);
+	if (result) { ErrorHandler_LogError_Path(result, "creating directory", &dir); }
+	return result == 0;
 }
 
 void Utils_UNSAFE_GetFilename(STRING_TRANSIENT String* str) {

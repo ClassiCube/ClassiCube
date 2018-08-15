@@ -11,8 +11,8 @@
 #include "Game.h"
 #include "Funcs.h"
 #include "AsyncDownloader.h"
-#include "Audio.h"
 #include "ExtMath.h"
+#include "Utils.h"
 
 //#define CC_TEST_VORBIS
 #ifdef CC_TEST_VORBIS
@@ -61,23 +61,9 @@ int main(void) {
 	ReturnCode ret2 = Http_FreeRequest(reqHandle);
 	ReturnCode ret3 = Http_Free();*/
 
-	String maps = String_FromConst("maps");
-	if (!Directory_Exists(&maps)) {
-		ReturnCode result = Directory_Create(&maps);
-		ErrorHandler_CheckOrFail(result, "Program - creating maps directory");
-	}
-
-	String texPacks = String_FromConst("texpacks");
-	if (!Directory_Exists(&texPacks)) {
-		ReturnCode result = Directory_Create(&texPacks);
-		ErrorHandler_CheckOrFail(result, "Program - creating texpacks directory");
-	}
-
-	String texCache = String_FromConst("texturecache");
-	if (!Directory_Exists(&texCache)) {
-		ReturnCode result = Directory_Create(&texCache);
-		ErrorHandler_CheckOrFail(result, "Program - creating texturecache directory");
-	}
+	Utils_EnsureDirectory("maps");
+	Utils_EnsureDirectory("texpacks");
+	Utils_EnsureDirectory("texturecache");
 
 	UChar defPathBuffer[String_BufferSize(STRING_SIZE)];
 	String defPath = String_InitAndClearArray(defPathBuffer);

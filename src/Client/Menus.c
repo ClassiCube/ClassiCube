@@ -1336,9 +1336,10 @@ static void SaveLevelScreen_Render(struct GuiElem* elem, Real64 delta) {
 	struct SaveLevelScreen* screen = (struct SaveLevelScreen*)elem;
 	if (!screen->TextPath.length) return;
 	String path = screen->TextPath;
+	ReturnCode result;
 
-	void* file; ReturnCode result = File_Create(&file, &path);
-	ErrorHandler_CheckOrFail(result, "Saving map - opening file");
+	void* file; result = File_Create(&file, &path);
+	if (result) { ErrorHandler_LogError_Path(result, "creating", &path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		String cw = String_FromConst(".cw");
@@ -1349,7 +1350,7 @@ static void SaveLevelScreen_Render(struct GuiElem* elem, Real64 delta) {
 		}
 	}
 	result = stream.Close(&stream);
-	ErrorHandler_CheckOrFail(result, "Saving map - closing file");
+	if (result) { ErrorHandler_LogError_Path(result, "closing", &path); return; }
 
 	UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String msg = String_InitAndClearArray(msgBuffer);
@@ -1619,7 +1620,7 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 	Inventory_SetDefaultMapping();
 
 	void* file; ReturnCode result = File_Open(&file, path);
-	ErrorHandler_CheckOrFail(result, "Loading map - open file");
+	if (result) { ErrorHandler_LogError_Path(result, "opening", path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, path);
 	{
 		String cw = String_FromConst(".cw");   String lvl = String_FromConst(".lvl");
@@ -1634,10 +1635,15 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 		} else if (String_CaselessEnds(path, &lvl)) {
 			result = Lvl_Load(&stream);
 		}
-		ErrorHandler_CheckOrFail(result, "Loading map - reading data");
+
+		if (result) { 
+			ErrorHandler_LogError_Path(result, "decoding", path);		
+			Mem_Free(&World_Blocks); World_BlocksSize = 0;
+			stream.Close(&stream); return;
+		}
 	}
 	result = stream.Close(&stream);
-	ErrorHandler_CheckOrFail(result, "Loading map - close file");
+	if (result) { ErrorHandler_LogError_Path(result, "closing", path); }
 
 	World_SetNewMap(World_Blocks, World_BlocksSize, World_Width, World_Height, World_Length);
 	Event_RaiseVoid(&WorldEvents_MapLoaded);

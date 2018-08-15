@@ -48,8 +48,8 @@ DateTime ChatLog_LastLogDate;
 
 static void Chat_CloseLog(void) {
 	if (!Chat_LogStream.Meta.File) return;
-	ReturnCode code = Chat_LogStream.Close(&Chat_LogStream);
-	ErrorHandler_CheckOrFail(code, "Chat - closing log file");
+	ReturnCode result = Chat_LogStream.Close(&Chat_LogStream);
+	if (result) ErrorHandler_LogError(result, "closing chat log file");
 }
 
 static bool Chat_AllowedLogChar(UChar c) {
@@ -74,11 +74,14 @@ void Chat_SetLogName(STRING_PURE String* name) {
 	}
 }
 
+static void Chat_DisableLogging(void) {
+	Game_ChatLogging = false;
+	Chat_AddRaw("&cDisabling chat logging as a result");
+}
+
 static void Chat_OpenLog(DateTime* now) {
-	String logsDir = String_FromConst("logs");
-	if (!Directory_Exists(&logsDir)) {
-		Directory_Create(&logsDir);
-	}
+	ReturnCode result;
+	if (!Utils_EnsureDirectory("logs")) { Chat_DisableLogging(); return; }
 
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
 	Int32 i, year = now->Year, month = now->Month, day = now->Day;
@@ -93,9 +96,10 @@ static void Chat_OpenLog(DateTime* now) {
 			String_Format1(&path, "%s.log", &Chat_LogName);
 		}
 
-		void* file; ReturnCode result = File_Append(&file, &path);
+		void* file; result = File_Append(&file, &path);
 		if (result && result != ReturnCode_FileShareViolation) {
-			ErrorHandler_FailWithCode(result, "Chat - opening log file");
+			ErrorHandler_LogError_Path(result, "appending to", &path);
+			Chat_DisableLogging(); return;
 		}
 
 		if (result == ReturnCode_FileShareViolation) continue;
@@ -104,8 +108,8 @@ static void Chat_OpenLog(DateTime* now) {
 	}
 
 	Chat_LogStream.Meta.File = NULL;
-	String failedMsg = String_FromConst("Failed to open chat log file after 20 tries, giving up");
-	ErrorHandler_Log(&failedMsg);
+	ErrorHandler_Log1("Failed to open a chat log file after %i tries, giving up", &i);
+	Chat_DisableLogging();
 }
 
 static void Chat_AppendLog(STRING_PURE String* text) {

@@ -156,7 +156,7 @@ void Gui_RefreshHud(void) { Elem_Recreate(Gui_HUD); }
 
 void Gui_ShowOverlay(struct Screen* overlay, bool atFront) {
 	if (Gui_OverlaysCount == GUI_MAX_OVERLAYS) {
-		ErrorHandler_Fail("Cannot have more than 6 overlays");
+		ErrorHandler_Fail("Gui_ShowOverlay - hit max count");
 	}
 
 	if (atFront) {

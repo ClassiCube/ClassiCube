@@ -198,7 +198,7 @@ static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	result = Http_MakeRequest(request, &handle);
 	elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
 	Platform_Log2("HTTP make request: ret code %i, in %i ms", &result, &elapsedMS);
-	if (!ErrorHandler_Check(result)) return;
+	if (result) return;
 
 	async_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
 	UInt32 size = 0;
@@ -208,7 +208,7 @@ static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	UInt32 status = request->StatusCode;
 	Platform_Log3("HTTP get headers: ret code %i (http %i), in %i ms", &result, &status, &elapsedMS);
 
-	if (!ErrorHandler_Check(result) || request->StatusCode != 200) {
+	if (result || request->StatusCode != 200) {
 		Http_FreeRequest(handle); return;
 	}
 
@@ -221,7 +221,7 @@ static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	}
 
 	Http_FreeRequest(handle);
-	if (!ErrorHandler_Check(result)) return;
+	if (result) return;
 
 	UInt64 addr = (UInt64)data;
 	Platform_Log2("OK I got the DATA! %i bytes at %x", &size, &addr);

@@ -30,6 +30,10 @@ void ErrorHandler_LogError(ReturnCode result, const UChar* place) {
 	ErrorHandler_Log4("&cError %y when %c", &result, place, NULL, NULL);
 }
 
+void ErrorHandler_LogError_Path(ReturnCode result, const UChar* place, STRING_PURE String* path) {
+	ErrorHandler_Log4("&cError %y when %c '%s'", &result, place, path, NULL);
+}
+
 void ErrorHandler_FailWithCode(ReturnCode result, const UChar* raw_msg) {
 	UChar logMsgBuffer[String_BufferSize(3071)];
 	String logMsg = String_InitAndClearArray(logMsgBuffer);

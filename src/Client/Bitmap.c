@@ -458,8 +458,8 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 				UInt32 bufferLeft = bufferLen - bufferIdx, read;
 				if (bufferLeft > bufferMax) bufferLeft = bufferMax;
 
-				ReturnCode code = compStream.Read(&compStream, &buffer[bufferIdx], bufferLeft, &read);
-				ErrorHandler_CheckOrFail(code, "PNG - reading image bulk data");
+				result = compStream.Read(&compStream, &buffer[bufferIdx], bufferLeft, &read);
+				if (result) return result;
 				if (!read) break;
 
 				UInt32 startY = bufferIdx / scanlineBytes, rowY;

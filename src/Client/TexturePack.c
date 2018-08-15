@@ -189,13 +189,14 @@ static void EntryList_Load(struct EntryList* list) {
 	String folder = String_FromRawArray(list->FolderBuffer);
 	String filename = String_FromRawArray(list->FileBuffer);
 	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
+
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format3(&path, "%s%r%s", &folder, &Directory_Separator, &filename);
+	ReturnCode result;
 
-	void* file; ReturnCode result = File_Open(&file, &path);
+	void* file; result = File_Open(&file, &path);
 	if (result == ReturnCode_FileNotFound) return;
-	/* TODO: Should we just log failure to save? */
-	ErrorHandler_CheckOrFail(result, "EntryList_Load - open file");
+	if (result) { ErrorHandler_LogError_Path(result, "opening", &path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		/* ReadLine reads single byte at a time */
@@ -211,24 +212,25 @@ static void EntryList_Load(struct EntryList* list) {
 		}
 	}
 	result = stream.Close(&stream);
-	ErrorHandler_CheckOrFail(result, "EntryList_Load - close file");
+	if (result) { ErrorHandler_LogError_Path(result, "closing", &path); }
 }
 
 static void EntryList_Save(struct EntryList* list) {
 	String folder = String_FromRawArray(list->FolderBuffer);
 	String filename = String_FromRawArray(list->FileBuffer);
 	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
+
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format3(&path, "%s%r%s", &folder, &Directory_Separator, &filename);
+	ReturnCode result;
 
 	if (!Directory_Exists(&folder)) {
-		ReturnCode dirResult = Directory_Create(&folder);
-		ErrorHandler_CheckOrFail(dirResult, "EntryList_Save - create directory");
+		result = Directory_Create(&folder);
+		if (result) { ErrorHandler_LogError_Path(result, "creating", &folder); return; }
 	}
 
-	void* file; ReturnCode result = File_Create(&file, &path);
-	/* TODO: Should we just log failure to save? */
-	ErrorHandler_CheckOrFail(result, "EntryList_Save - open file");
+	void* file; result = File_Create(&file, &path);
+	if (result) { ErrorHandler_LogError_Path(result, "creating", &path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		Int32 i;
@@ -238,7 +240,7 @@ static void EntryList_Save(struct EntryList* list) {
 		}
 	}
 	result = stream.Close(&stream);
-	ErrorHandler_CheckOrFail(result, "EntryList_Save - close file");
+	if (result) { ErrorHandler_LogError_Path(result, "closing", &path); }
 }
 
 static void EntryList_Add(struct EntryList* list, STRING_PURE String* entry) {
@@ -312,7 +314,7 @@ bool TextureCache_GetStream(STRING_PURE String* url, struct Stream* stream) {
 	void* file; ReturnCode result = File_Open(&file, &path);
 	if (result == ReturnCode_FileNotFound) return false;
 
-	ErrorHandler_CheckOrFail(result, "TextureCache - GetStream");
+	if (result) { ErrorHandler_LogError_Path(result, "opening cache for", url); return false; }
 	Stream_FromFile(stream, file, &path);
 	return true;
 }
@@ -338,12 +340,16 @@ void TextureCache_GetLastModified(STRING_PURE String* url, DateTime* time) {
 	TexturePack_GetFromTags(url, &entry, &cache_lastModified);
 
 	Int64 ticks;
+	DateTime temp;
+
 	if (entry.length && Convert_TryParseInt64(&entry, &ticks)) {
 		DateTime_FromTotalMs(time, ticks / TEXCACHE_TICKS_PER_MS);
 	} else {
 		String path; TexCache_InitAndMakePath(url);
-		ReturnCode result = File_GetModifiedTime(&path, time);
-		ErrorHandler_CheckOrFail(result, "TextureCache - get file last modified time")
+		ReturnCode result = File_GetModifiedTime(&path, &temp);
+
+		if (result) { ErrorHandler_LogError_Path(result, "getting last modified time of", url); return; }
+		*time = temp;
 	}
 }
 
@@ -354,22 +360,17 @@ void TextureCache_GetETag(STRING_PURE String* url, STRING_PURE String* etag) {
 void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length) {
 	String path; TexCache_InitAndMakePath(url);
 	ReturnCode result;
-
-	String folder = String_FromConst(TEXCACHE_FOLDER);
-	if (!Directory_Exists(&folder)) {
-		result = Directory_Create(&folder);
-		ErrorHandler_CheckOrFail(result, "TextureCache_AddData - create directory");
-	}
+	if (!Utils_EnsureDirectory(TEXCACHE_FOLDER)) return;
 
 	void* file; result = File_Create(&file, &path);
-	/* TODO: Should we just log failure to save? */
-	ErrorHandler_CheckOrFail(result, "TextureCache_AddData - open file");
+	if (result) { ErrorHandler_LogError_Path(result, "creating cache for", url); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
-		Stream_Write(&stream, data, length);
+		result = Stream_TryWrite(&stream, data, length);
+		if (result) { ErrorHandler_LogError_Path(result, "saving data for", url); }
 	}
 	result = stream.Close(&stream);
-	ErrorHandler_CheckOrFail(result, "TextureCache_AddData - close file");
+	if (result) { ErrorHandler_LogError_Path(result, "closing cache for", url); }
 }
 
 void TextureCache_AddToTags(STRING_PURE String* url, STRING_PURE String* data, struct EntryList* list) {
@@ -429,23 +430,24 @@ void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
 	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format2(&path, "texpacks%r%s", &Directory_Separator, filename);
+	ReturnCode result;
 
-	void* file; ReturnCode result = File_Open(&file, &path);
-	ErrorHandler_CheckOrFail(result, "TexturePack_Extract - opening file");
+	void* file; result = File_Open(&file, &path);
+	if (result) { ErrorHandler_LogError_Path(result, "opening", &path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		result = TexturePack_ExtractZip(&stream);
-		ErrorHandler_CheckOrFail(result, "TexturePack_Extract - extract content");
+		if (result) { ErrorHandler_LogError_Path(result, "extracting", &path); }
 	}
 	result = stream.Close(&stream);
-	ErrorHandler_CheckOrFail(result, "TexturePack_Extract - closing file");
+	if (result) { ErrorHandler_LogError_Path(result, "closing", &path); }
 }
 
 ReturnCode TexturePack_ExtractTerrainPng(struct Stream* stream) {
 	struct Bitmap bmp; 
 	ReturnCode result = Bitmap_DecodePng(&bmp, stream);
 
-	if (result == 0) {
+	if (!result) {
 		Event_RaiseVoid(&TextureEvents_PackChanged);
 		if (Game_ChangeTerrainAtlas(&bmp)) return 0;
 	}
@@ -475,17 +477,18 @@ void TexturePack_ExtractCurrent(STRING_PURE String* url) {
 		ReturnCode result = 0;
 
 		if (String_Equals(url, &World_TextureUrl)) {
-		} else if (String_ContainsString(url, &zip)) {
-			String_Set(&World_TextureUrl, url);
-			result = TexturePack_ExtractZip(&stream);
 		} else {
+			bool zip = String_ContainsString(url, &zip);
 			String_Set(&World_TextureUrl, url);
-			result = TexturePack_ExtractTerrainPng(&stream);
+			const UChar* operation = zip ? "extracting" : "decoding";
+			
+			ReturnCode result = zip ? TexturePack_ExtractZip(&stream) :
+									TexturePack_ExtractTerrainPng(&stream);		
+			if (result) { ErrorHandler_LogError_Path(result, operation, &url); }
 		}
-		ErrorHandler_CheckOrFail(result, "TexturePack_ExtractCurrent - extract content");
 
 		result = stream.Close(&stream);
-		ErrorHandler_CheckOrFail(result, "TexturePack_ExtractCurrent - close stream");
+		if (result) { ErrorHandler_LogError_Path(result, "closing cache for", url); }
 	}
 }
 
@@ -503,13 +506,10 @@ void TexturePack_Extract_Req(struct AsyncRequest* item) {
 	String id = String_FromRawArray(item->ID);
 	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len, &id);
 
-	ReturnCode result;
-	if (Bitmap_DetectPng(data, len)) {
-		result = TexturePack_ExtractTerrainPng(&mem);
-	} else {
-		result = TexturePack_ExtractZip(&mem);
-	}
+	bool png = Bitmap_DetectPng(data, len);
+	ReturnCode result = png ? TexturePack_ExtractTerrainPng(&mem) : TexturePack_ExtractZip(&mem);
+	const UChar* operation = png ? "decoding" : "extracting";
 
-	ErrorHandler_CheckOrFail(result, "TexturePack_Extract_Req - extract content");
+	if (result) { ErrorHandler_LogError_Path(result, operation, &url); }
 	ASyncRequest_Free(item);
 }

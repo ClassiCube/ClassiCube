@@ -9,7 +9,7 @@
 *#########################################################################################################################*/
 #define Stream_SafeWriteBlock(stream, buffer, count, write)\
 ReturnCode result = stream->Write(stream, buffer, count, &write);\
-if (!write || !ErrorHandler_Check(result)) {\
+if (!write || result) {\
 	Stream_Fail(stream, result, "writing to");\
 }
 
@@ -24,7 +24,7 @@ void Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	UInt32 read;
 	while (count) {
 		ReturnCode result = stream->Read(stream, buffer, count, &read);
-		if (!read || !ErrorHandler_Check(result)) { Stream_Fail(stream, result, "reading from"); }
+		if (!read || result) { Stream_Fail(stream, result, "reading from"); }
 
 		buffer += read;
 		count  -= read;
@@ -123,9 +123,9 @@ static ReturnCode Stream_FileWrite(struct Stream* stream, UInt8* data, UInt32 co
 	return File_Write(stream->Meta.File, data, count, modified);
 }
 static ReturnCode Stream_FileClose(struct Stream* stream) {
-	ReturnCode code = File_Close(stream->Meta.File);
+	ReturnCode result = File_Close(stream->Meta.File);
 	stream->Meta.File = NULL;
-	return code;
+	return result;
 }
 static ReturnCode Stream_FileSeek(struct Stream* stream, Int32 offset, Int32 seekType) {
 	return File_Seek(stream->Meta.File, offset, seekType);
@@ -422,7 +422,7 @@ bool Stream_ReadLine(struct Stream* stream, STRING_TRANSIENT String* text) {
 		ReturnCode result = Stream_ReadUtf8Char(stream, &codepoint);
 		if (result == ERR_END_OF_STREAM) break;
 
-		if (!ErrorHandler_Check(result)) { Stream_Fail(stream, result, "reading utf8 from"); }
+		if (result) { Stream_Fail(stream, result, "reading utf8 from"); }
 		readAny = true;
 
 		/* Handle \r\n or \n line endings */

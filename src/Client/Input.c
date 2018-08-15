@@ -5,6 +5,7 @@
 #include "Utils.h"
 #include "ErrorHandler.h"
 #include "Platform.h"
+#include "Chat.h"
 
 #define Key_Function_Names \
 "F1",  "F2",  "F3",  "F4",  "F5",  "F6",  "F7",  "F8",  "F9",  "F10",\
@@ -223,7 +224,8 @@ void Hotkeys_AddNewHotkey(Key trigger, UInt8 flags, STRING_PURE String* text, bo
 	hKey.StaysOpen = more;
 
 	if (HotkeysText.Count == HOTKEYS_MAX_COUNT) {
-		ErrorHandler_Fail("Cannot define more than 256 hotkeys");
+		Chat_AddRaw("&cCannot define more than 256 hotkeys");
+		return;
 	}
 
 	HotkeysList[HotkeysText.Count] = hKey;
