@@ -125,8 +125,8 @@ bool Game_ChangeTerrainAtlas(struct Bitmap* atlas) {
 	if (!Game_ValidateBitmap(&terrain, atlas)) return false;
 
 	if (atlas->Height < atlas->Width) {
-		String m1 = String_FromConst("&cUnable to use terrain.png from the texture pack."); Chat_Add(&m1);
-		String m2 = String_FromConst("&c Its height is less than its width.");              Chat_Add(&m2);
+		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
+		Chat_AddRaw("&c Its height is less than its width.");
 		return false;
 	}
 	if (Gfx_LostContext) return false;
@@ -207,7 +207,7 @@ bool Game_CanPick(BlockID block) {
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, UInt8* skinType) {
 	struct Bitmap bmp; 
 	ReturnCode res = Bitmap_DecodePng(&bmp, src);
-	if (res) { ErrorHandler_LogError_Path(res, "decoding", &src->Name); }
+	if (res) { Chat_LogError(res, "decoding", &src->Name); }
 
 	bool success = !res && Game_ValidateBitmap(&src->Name, &bmp);
 	if (success) {
@@ -221,32 +221,25 @@ bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, UInt8* skinTyp
 }
 
 bool Game_ValidateBitmap(STRING_PURE String* file, struct Bitmap* bmp) {
-	UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
-	String msg = String_InitAndClearArray(msgBuffer);
-
 	if (!bmp->Scan0) {
-		String_Format1(&msg, "&cError loading %s from the texture pack.", file); Chat_Add(&msg);
+		Chat_Add1("&cError loading %s from the texture pack.", file);
 		return false;
 	}
 
 	Int32 maxWidth = Gfx_MaxTexWidth, maxHeight = Gfx_MaxTexHeight;
 	if (bmp->Width > maxWidth || bmp->Height > maxHeight) {
-		String_Format1(&msg, "&cUnable to use %s from the texture pack.", file); Chat_Add(&msg);
-		String_Clear(&msg);
+		Chat_Add1("&cUnable to use %s from the texture pack.", file);
 
-		String_Format4(&msg, "&c Its size is (%i,%i), your GPU supports (%i,%i) at most.", 
+		Chat_Add4("&c Its size is (%i,%i), your GPU supports (%i,%i) at most.", 
 			&bmp->Width, &bmp->Height, &maxWidth, &maxHeight);
-		Chat_Add(&msg);
 		return false;
 	}
 
 	if (!Math_IsPowOf2(bmp->Width) || !Math_IsPowOf2(bmp->Height)) {
-		String_Format1(&msg, "&cUnable to use %s from the texture pack.", file); Chat_Add(&msg);
-		String_Clear(&msg);
+		Chat_Add1("&cUnable to use %s from the texture pack.", file);
 
-		String_Format2(&msg, "&c Its size is (%i,%i), which is not power of two dimensions.", 
+		Chat_Add2("&c Its size is (%i,%i), which is not power of two dimensions.", 
 			&bmp->Width, &bmp->Height);
-		Chat_Add(&msg);
 		return false;
 	}
 	return true;
@@ -299,7 +292,7 @@ static void Game_TextureChangedCore(void* obj, struct Stream* src) {
 		ReturnCode res = Bitmap_DecodePng(&bmp, src);
 
 		if (res) { 
-			ErrorHandler_LogError_Path(res, "decoding", name);
+			Chat_LogError(res, "decoding", name);
 			Mem_Free(&bmp.Scan0);
 		} else if (!Game_ChangeTerrainAtlas(&bmp)) {
 			Mem_Free(&bmp.Scan0);
@@ -308,7 +301,7 @@ static void Game_TextureChangedCore(void* obj, struct Stream* src) {
 		ReturnCode res = Bitmap_DecodePng(&bmp, src);
 
 		if (res) { 
-			ErrorHandler_LogError_Path(res, "decoding", name);
+			Chat_LogError(res, "decoding", name);
 			Mem_Free(&bmp.Scan0);
 		} else {
 			Drawer2D_SetFontBitmap(&bmp);
@@ -642,22 +635,20 @@ void Game_TakeScreenshot(void) {
 	String_Format2(&path, "screenshots%r%s", &Directory_Separator, &filename);
 
 	void* file; res = File_Create(&file, &path);
-	if (res) { ErrorHandler_LogError_Path(res, "creating", &path); return; }
+	if (res) { Chat_LogError(res, "creating", &path); return; }
 
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		res = Gfx_TakeScreenshot(&stream, Game_Width, Game_Height);
 		if (res) { 
-			ErrorHandler_LogError(res, "saving screenshot"); 
+			Chat_LogError(res, "saving to", &path);
 			stream.Close(&stream); return;
 		}
 	}
 	res = stream.Close(&stream);
-	if (res) { ErrorHandler_LogError_Path(res, "closing", &path); return; }
+	if (res) { Chat_LogError(res, "closing", &path); return; }
 
-	String_Clear(&path);
-	String_Format1(&path, "&eTaken screenshot as: %s", &filename);
-	Chat_Add(&path);
+	Chat_Add1("&eTaken screenshot as: %s", &filename);
 }
 
 static void Game_RenderFrame(Real64 delta) {

@@ -75,11 +75,7 @@ void ServerConnection_CheckAsyncResources(void) {
 	} else {
 		Int32 status = item.StatusCode;
 		if (status == 0 || status == 304) return;
-
-		UChar msgBuffer[String_BufferSize(STRING_SIZE)];
-		String msg = String_InitAndClearArray(msgBuffer);
-		String_Format1(&msg, "&c%i error when trying to download texture pack", &status);
-		Chat_Add(&msg);
+		Chat_Add1("&c%i error when trying to download texture pack", &status);
 	}
 }
 

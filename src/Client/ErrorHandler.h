@@ -8,13 +8,6 @@
 
 void ErrorHandler_Init(const UChar* logFile);
 void ErrorHandler_Log(STRING_PURE String* msg);
-void ErrorHandler_Log1(const UChar* format, const void* a1);
-void ErrorHandler_Log2(const UChar* format, const void* a1, const void* a2);
-void ErrorHandler_Log3(const UChar* format, const void* a1, const void* a2, const void* a3);
-void ErrorHandler_Log4(const UChar* format, const void* a1, const void* a2, const void* a3, const void* a4);
-void ErrorHandler_LogError(ReturnCode result, const UChar* place);
-void ErrorHandler_LogError_Path(ReturnCode result, const UChar* place, STRING_PURE String* path);
-
 void ErrorHandler_Fail(const UChar* raw_msg);
 void ErrorHandler_FailWithCode(ReturnCode returnCode, const UChar* raw_msg);
 #define ErrorHandler_CheckOrFail(returnCode, raw_msg) if (returnCode) { ErrorHandler_FailWithCode(returnCode, raw_msg); }

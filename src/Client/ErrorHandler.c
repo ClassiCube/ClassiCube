@@ -1,37 +1,9 @@
 #include "ErrorHandler.h"
 #include "Platform.h"
+#include "Chat.h"
 
 void ErrorHandler_Log(STRING_PURE String* msg) {
 	/* TODO: write to log file */
-}
-
-void ErrorHandler_Log1(const UChar* format, const void* a1) {
-	ErrorHandler_Log4(format, a1, NULL, NULL, NULL);
-}
-void ErrorHandler_Log2(const UChar* format, const void* a1, const void* a2) {
-	ErrorHandler_Log4(format, a1, a2, NULL, NULL);
-}
-void ErrorHandler_Log3(const UChar* format, const void* a1, const void* a2, const void* a3) {
-	ErrorHandler_Log4(format, a1, a2, a3, NULL);
-}
-
-void ErrorHandler_Log4(const UChar* format, const void* a1, const void* a2, const void* a3, const void* a4) {
-	UChar msgBuffer[String_BufferSize(3071)];
-	String msg = String_InitAndClearArray(msgBuffer);
-	String_Format4(&msg, format, a1, a2, a3, a4);
-	Chat_Add(&msg);
-
-	String_AppendConst(&msg, Platform_NewLine);
-	ErrorHandler_Backtrace(&msg);
-	ErrorHandler_Log(&msg);
-}
-
-void ErrorHandler_LogError(ReturnCode result, const UChar* place) {
-	ErrorHandler_Log4("&cError %y when %c", &result, place, NULL, NULL);
-}
-
-void ErrorHandler_LogError_Path(ReturnCode result, const UChar* place, STRING_PURE String* path) {
-	ErrorHandler_Log4("&cError %y when %c '%s'", &result, place, path, NULL);
 }
 
 void ErrorHandler_FailWithCode(ReturnCode result, const UChar* raw_msg) {

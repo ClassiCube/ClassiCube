@@ -1,10 +1,9 @@
 #include "Options.h"
 #include "ExtMath.h"
-#include "ErrorHandler.h"
-#include "Utils.h"
 #include "Funcs.h"
 #include "Platform.h"
 #include "Stream.h"
+#include "Chat.h"
 
 const UChar* FpsLimit_Names[FpsLimit_Count] = {
 	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "LimitNone",
@@ -162,7 +161,7 @@ void Options_Load(void) {
 
 	void* file; res = File_Open(&file, &path);
 	if (res == ReturnCode_FileNotFound) return;
-	if (res) { ErrorHandler_LogError_Path(res, "opening", &path); return; }
+	if (res) { Chat_LogError(res, "opening", &path); return; }
 
 	/* Remove all the unchanged options */
 	UInt32 i;
@@ -197,7 +196,7 @@ void Options_Load(void) {
 	}
 
 	res = stream.Close(&stream);
-	if (res) { ErrorHandler_LogError_Path(res, "closing", &path); return; }
+	if (res) { Chat_LogError(res, "closing", &path); return; }
 }
 
 void Options_Save(void) {	
@@ -205,7 +204,7 @@ void Options_Save(void) {
 	ReturnCode res;
 
 	void* file; res = File_Create(&file, &path);
-	if (res) { ErrorHandler_LogError_Path(res, "creating", &path); return; }
+	if (res) { Chat_LogError(res, "creating", &path); return; }
 
 	UChar lineBuffer[String_BufferSize(1024)];
 	String line = String_InitAndClearArray(lineBuffer);
@@ -218,11 +217,11 @@ void Options_Save(void) {
 		String_Format2(&line, "%s=%s", &key, &value);
 
 		res = Stream_WriteLine(&stream, &line);
-		if (res) { ErrorHandler_LogError_Path(res, "writing to", &path); break; }
+		if (res) { Chat_LogError(res, "writing to", &path); break; }
 		String_Clear(&line);
 	}
 
 	StringsBuffer_Free(&Options_Changed);
 	res = stream.Close(&stream);
-	if (res) { ErrorHandler_LogError_Path(res, "closing", &path); return; }
+	if (res) { Chat_LogError(res, "closing", &path); return; }
 }

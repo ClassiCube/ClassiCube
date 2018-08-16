@@ -280,7 +280,7 @@ static void StatusScreen_MakeText(struct StatusScreen* screen, STRING_TRANSIENT 
 	if (Game_ClassicMode) {
 		String_Format1(status, "%i chunk updates", &Game_ChunkUpdates);
 	} else {
-		if (Game_ChunkUpdates > 0) {
+		if (Game_ChunkUpdates) {
 			String_Format1(status, "%i chunks/s, ", &Game_ChunkUpdates);
 		}
 		Int32 indices = ICOUNT(Game_Vertices);

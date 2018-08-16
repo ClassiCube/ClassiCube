@@ -138,13 +138,6 @@ struct AnimationData anims_list[ATLAS1D_MAX_ATLASES];
 UInt32 anims_count;
 bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
 
-static void Animations_LogFail(STRING_TRANSIENT String* line, const UInt8* raw) {
-	UChar msgBuffer[String_BufferSize(128)];
-	String msg = String_InitAndClearArray(msgBuffer);
-	String_Format2(&msg, "&c%c: %s", raw, line);
-	Chat_Add(&msg);
-}
-
 static void Animations_ReadDescription(struct Stream* stream) {
 	UChar lineBuffer[String_BufferSize(128)];
 	String line = String_InitAndClearArray(lineBuffer);
@@ -163,28 +156,28 @@ static void Animations_ReadDescription(struct Stream* stream) {
 		String_UNSAFE_Split(&line, ' ', parts, &partsCount);
 
 		if (partsCount < 7) {
-			Animations_LogFail(&line, "Not enough arguments for anim"); continue;
+			Chat_Add1("&cNot enough arguments for anim: %s", &line); continue;
 		}		
 		if (!Convert_TryParseUInt8(&parts[0], &tileX) || tileX >= ATLAS2D_TILES_PER_ROW) {
-			Animations_LogFail(&line, "Invalid anim tile X coord"); continue;
+			Chat_Add1("&cInvalid anim tile X coord: %s", &line); continue;
 		}
 		if (!Convert_TryParseUInt8(&parts[1], &tileY) || tileY >= ATLAS2D_ROWS_COUNT) {
-			Animations_LogFail(&line, "Invalid anim tile Y coord"); continue;
+			Chat_Add1("&cInvalid anim tile Y coord: %s", &line); continue;
 		}
 		if (!Convert_TryParseUInt16(&parts[2], &data.FrameX)) {
-			Animations_LogFail(&line, "Invalid anim frame X coord"); continue;
+			Chat_Add1("&cInvalid anim frame X coord: %s", &line); continue;
 		}
 		if (!Convert_TryParseUInt16(&parts[3], &data.FrameY)) {
-			Animations_LogFail(&line, "Invalid anim frame Y coord"); continue;
+			Chat_Add1("&cInvalid anim frame Y coord: %s", &line); continue;
 		}
 		if (!Convert_TryParseUInt16(&parts[4], &data.FrameSize)) {
-			Animations_LogFail(&line, "Invalid anim frame size"); continue;
+			Chat_Add1("&cInvalid anim frame size: %s", &line); continue;
 		}
 		if (!Convert_TryParseUInt16(&parts[5], &data.StatesCount)) {
-			Animations_LogFail(&line, "Invalid anim states count"); continue;
+			Chat_Add1("&cInvalid anim states count: %s", &line); continue;
 		}
 		if (!Convert_TryParseInt16(&parts[6], &data.TickDelay)) {
-			Animations_LogFail(&line, "Invalid anim tick delay"); continue;
+			Chat_Add1("&cInvalid anim tick delay: %s", &line); continue;
 		}
 
 		if (anims_count == Array_Elems(anims_list)) {
@@ -256,21 +249,18 @@ static void Animations_Clear(void) {
 
 static void Animations_Validate(void) {
 	anims_validated = true;
-	UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
-	String msg = String_InitAndClearArray(msgBuffer);
 	UInt32 i, j;
 
 	for (i = 0; i < anims_count; i++) {
 		struct AnimationData data = anims_list[i];
 		Int32 maxY = data.FrameY + data.FrameSize;
 		Int32 maxX = data.FrameX + data.FrameSize * data.StatesCount;
-		String_Clear(&msg);
 
 		Int32 tileX = Atlas2D_TileX(data.TexLoc), tileY = Atlas2D_TileY(data.TexLoc);
 		if (data.FrameSize > Atlas2D_TileSize) {
-			String_Format2(&msg, "&cAnimation frames for tile (%i, %i) are bigger than the size of a tile in terrain.png", &tileX, &tileY);
+			Chat_Add2("&cAnimation frames for tile (%i, %i) are bigger than the size of a tile in terrain.png", &tileX, &tileY);
 		} else if (maxX > anims_bmp.Width || maxY > anims_bmp.Height) {
-			String_Format2(&msg, "&cSome of the animation frames for tile (%i, %i) are at coordinates outside animations.png", &tileX, &tileY);
+			Chat_Add2("&cSome of the animation frames for tile (%i, %i) are at coordinates outside animations.png", &tileX, &tileY);
 		} else {
 			continue;
 		}
@@ -280,7 +270,6 @@ static void Animations_Validate(void) {
 			anims_list[j] = anims_list[j + 1];
 		}
 		i--; anims_count--;
-		Chat_Add(&msg);
 	}
 }
 
@@ -297,8 +286,8 @@ void Animations_Tick(struct ScheduledTask* task) {
 	if (!anims_count) return;
 
 	if (!anims_bmp.Scan0) {
-		String w1 = String_FromConst("&cCurrent texture pack specifies it uses animations,"); Chat_Add(&w1);
-		String w2 = String_FromConst("&cbut is missing animations.png");                      Chat_Add(&w2);
+		Chat_AddRaw("&cCurrent texture pack specifies it uses animations,");
+		Chat_AddRaw("&cbut is missing animations.png");
 		anims_count = 0;
 		return;
 	}
@@ -323,7 +312,7 @@ static void Animations_FileChanged(void* obj, struct Stream* stream) {
 		ReturnCode res = Bitmap_DecodePng(&anims_bmp, stream);
 		if (!res) return;
 
-		ErrorHandler_LogError_Path(res, "decoding", name);
+		Chat_LogError(res, "decoding", name);
 		Mem_Free(&anims_bmp.Scan0);
 	} else if (String_CaselessEqualsConst(name, "animation.txt") || String_CaselessEqualsConst(name, "animations.txt")) {
 		Animations_ReadDescription(stream);

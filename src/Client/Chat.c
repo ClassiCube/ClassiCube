@@ -49,7 +49,7 @@ DateTime ChatLog_LastLogDate;
 static void Chat_CloseLog(void) {
 	if (!Chat_LogStream.Meta.File) return;
 	ReturnCode res = Chat_LogStream.Close(&Chat_LogStream);
-	if (res) ErrorHandler_LogError(res, "closing chat log file");
+	if (res) { Chat_LogError(res, "closing", &Chat_LogStream.Name); }
 }
 
 static bool Chat_AllowedLogChar(UChar c) {
@@ -99,7 +99,7 @@ static void Chat_OpenLog(DateTime* now) {
 		void* file; res = File_Append(&file, &path);
 		if (res && res != ReturnCode_FileShareViolation) {
 			Chat_DisableLogging();
-			ErrorHandler_LogError_Path(res, "appending to", &path); return;
+			Chat_LogError(res, "appending to", &path); return;
 		}
 
 		if (res == ReturnCode_FileShareViolation) continue;
@@ -109,7 +109,7 @@ static void Chat_OpenLog(DateTime* now) {
 
 	Chat_LogStream.Meta.File = NULL;
 	Chat_DisableLogging();
-	ErrorHandler_Log1("Failed to open a chat log file after %i tries, giving up", &i);	
+	Chat_Add1("&cFailed to open a chat log file after %i tries, giving up", &i);	
 }
 
 static void Chat_AppendLog(STRING_PURE String* text) {
@@ -134,7 +134,26 @@ static void Chat_AppendLog(STRING_PURE String* text) {
 	ReturnCode res = Stream_WriteLine(&Chat_LogStream, &str);
 	if (!res) return;
 	Chat_DisableLogging();
-	ErrorHandler_LogError_Path(res, "writing to", &Chat_LogStream.Name);
+	Chat_LogError(res, "writing to", &Chat_LogStream.Name);
+}
+
+void Chat_LogError(ReturnCode result, const UChar* place, STRING_PURE String* path) {
+	Chat_Add4("&cError %y when %c '%s'", &result, place, path, NULL);
+}
+void Chat_Add1(const UChar* format, const void* a1) {
+	Chat_Add4(format, a1, NULL, NULL, NULL);
+}
+void Chat_Add2(const UChar* format, const void* a1, const void* a2) {
+	Chat_Add4(format, a1, a2, NULL, NULL);
+}
+void Chat_Add3(const UChar* format, const void* a1, const void* a2, const void* a3) {
+	Chat_Add4(format, a1, a2, a3, NULL);
+}
+void Chat_Add4(const UChar* format, const void* a1, const void* a2, const void* a3, const void* a4) {
+	UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
+	String msg = String_InitAndClearArray(msgBuffer);
+	String_Format4(&msg, format, a1, a2, a3, a4);
+	Chat_AddOf(&msg, MSG_TYPE_NORMAL);
 }
 
 void Chat_AddRaw(const UChar* raw) {
@@ -199,13 +218,6 @@ static void Commands_Register(ChatCommandConstructor constructor) {
 	commands_list[commands_count++] = command;
 }
 
-static void Commands_Log(const UChar* format, void* a1) {
-	UChar strBuffer[String_BufferSize(STRING_SIZE * 2)];
-	String str = String_InitAndClearArray(strBuffer);
-	String_Format1(&str, format, a1);
-	Chat_Add(&str);
-}
-
 static struct ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
 	struct ChatCommand* match = NULL;
 	Int32 i;
@@ -215,19 +227,19 @@ static struct ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
 		if (!String_CaselessStarts(&name, cmdName)) continue;
 
 		if (match) {
-			Commands_Log("&e/client: Multiple commands found that start with: \"&f%s&e\".", cmdName);
+			Chat_Add1("&e/client: Multiple commands found that start with: \"&f%s&e\".", cmdName);
 			return NULL;
 		}
 		match = cmd;
 	}
 
 	if (!match) {
-		Commands_Log("&e/client: Unrecognised command: \"&f%s&e\".", cmdName);
+		Chat_Add1("&e/client: Unrecognised command: \"&f%s&e\".", cmdName);
 		Chat_AddRaw("&e/client: Type &a/client &efor a list of commands.");
 		return NULL;
 	}
 	if (match->SingleplayerOnly && !ServerConnection_IsSinglePlayer) {
-		Commands_Log("&e/client: \"&f%s&e\" can only be used in singleplayer.", cmdName);
+		Chat_Add1("&e/client: \"&f%s&e\" can only be used in singleplayer.", cmdName);
 		return NULL;
 	}
 	return match;
@@ -298,8 +310,7 @@ static void HelpCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 		Int32 i;
 		for (i = 0; i < Array_Elems(cmd->Help); i++) {
 			if (!cmd->Help[i]) continue;
-			String help = String_FromReadonly(cmd->Help[i]);
-			Chat_Add(&help);
+			Chat_AddRaw(cmd->Help[i]);
 		}
 	}
 }
@@ -316,15 +327,9 @@ static void HelpCommand_Make(struct ChatCommand* cmd) {
 *#########################################################################################################################*/
 static void GpuInfoCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 	Int32 i;
-	
 	for (i = 0; i < Array_Elems(Gfx_ApiInfo); i++) {
 		if (!Gfx_ApiInfo[i].length) continue;
-		UInt8 msgBuffer[String_BufferSize(STRING_SIZE)];
-		String msg = String_InitAndClearArray(msgBuffer);
-
-		String_AppendConst(&msg, "&a");
-		String_AppendString(&msg, &Gfx_ApiInfo[i]);
-		Chat_Add(&msg);
+		Chat_Add1("&a%s", &Gfx_ApiInfo[i]);
 	}
 }
 
@@ -350,9 +355,9 @@ static void RenderTypeCommand_Execute(STRING_PURE String* args, Int32 argsCount)
 		EnvRenderer_UseMinimalMode(flags & 2);
 
 		Options_Set(OPT_RENDER_TYPE, &args[1]);
-		Commands_Log("&e/client: &fRender type is now %s.", &args[1]);
+		Chat_Add1("&e/client: &fRender type is now %s.", &args[1]);
 	} else {
-		Commands_Log("&e/client: &cUnrecognised render type &f\"%s\"&c.", &args[1]);
+		Chat_Add1("&e/client: &cUnrecognised render type &f\"%s\"&c.", &args[1]);
 	}
 }
 
@@ -432,12 +437,12 @@ static bool CuboidCommand_ParseBlock(STRING_PURE String* args, Int32 argsCount) 
 		#else
 		if (!Convert_TryParseUInt8(&args[1], &block)) {
 		#endif		
-			Commands_Log("&eCuboid: &c\"%s\" is not a valid block name or id.", &args[1]); return false;
+			Chat_Add1("&eCuboid: &c\"%s\" is not a valid block name or id.", &args[1]); return false;
 		}
 	}
 
 	if (block >= BLOCK_CPE_COUNT && !Block_IsCustomDefined(block)) {
-		Commands_Log("&eCuboid: &cThere is no block with id \"%s\".", &args[1]); return false;
+		Chat_Add1("&eCuboid: &cThere is no block with id \"%s\".", &args[1]); return false;
 	}
 
 	cuboid_block = block;

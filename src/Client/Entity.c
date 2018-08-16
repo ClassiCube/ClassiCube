@@ -14,7 +14,7 @@
 #include "Particle.h"
 #include "GraphicsCommon.h"
 #include "AsyncDownloader.h"
-#include "ErrorHandler.h"
+#include "Chat.h"
 #include "IModel.h"
 #include "Input.h"
 #include "Gui.h"
@@ -696,7 +696,7 @@ static void Player_CheckSkin(struct Player* player) {
 
 	ReturnCode res = Bitmap_DecodePng(&bmp, &mem);
 	if (res) {
-		ErrorHandler_LogError_Path(res, "decoding", &url);
+		Chat_LogError(res, "decoding", &url);
 		Mem_Free(&bmp.Scan0);
 		return;
 	}

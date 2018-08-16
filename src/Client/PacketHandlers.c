@@ -772,11 +772,7 @@ static void CPE_SendCpeExtInfoReply(void) {
 static void CPE_ExtInfo(UInt8* data) {
 	UChar appNameBuffer[String_BufferSize(STRING_SIZE)];
 	String appName = Handlers_ReadString(&data, appNameBuffer);
-
-	UChar logMsgBuffer[String_BufferSize(STRING_SIZE)];
-	String logMsg = String_InitAndClearArray(logMsgBuffer);
-	String_Format1(&logMsg, "Server software: %s", &appName);
-	Chat_Add(&logMsg);
+	Chat_Add1("Server software: %s", &appName);
 
 	String d3Server = String_FromConst("D3 server");
 	if (String_CaselessStarts(&appName, &d3Server)) {

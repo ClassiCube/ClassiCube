@@ -83,15 +83,11 @@ static bool InputHandler_IsShutdown(Key key) {
 
 static void InputHandler_Toggle(Key key, bool* target, const UChar* enableMsg, const UChar* disableMsg) {
 	*target = !(*target);
-	UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
-	String msg = String_InitAndClearArray(msgBuffer);
-
 	if (*target) {
-		String_Format2(&msg, "%c. &ePress &a%c &eto disable.",   enableMsg,  Key_Names[key]);
+		Chat_Add2("%c. &ePress &a%c &eto disable.",   enableMsg,  Key_Names[key]);
 	} else {
-		String_Format2(&msg, "%c. &ePress &a%c &eto re-enable.", disableMsg, Key_Names[key]);
+		Chat_Add2("%c. &ePress &a%c &eto re-enable.", disableMsg, Key_Names[key]);
 	}
-	Chat_Add(&msg);
 }
 
 static void InputHandler_CycleDistanceForwards(Int32* viewDists, Int32 count) {

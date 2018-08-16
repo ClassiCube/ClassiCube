@@ -1075,11 +1075,9 @@ static void GenLevelScreen_Gen(struct GenLevelScreen* screen, bool vanilla) {
 
 	Int64 volume = (Int64)width * height * length;
 	if (volume > Int32_MaxValue) {
-		String msg = String_FromConst("&cThe generated map's volume is too big.");
-		Chat_Add(&msg);
+		Chat_AddRaw("&cThe generated map's volume is too big.");
 	} else if (!width || !height || !length) {
-		String msg = String_FromConst("&cOne of the map dimensions is invalid.");
-		Chat_Add(&msg);
+		Chat_AddRaw("&cOne of the map dimensions is invalid.");
 	} else {
 		Gen_SetDimensions(width, height, length); 
 		Gen_Vanilla = vanilla; Gen_Seed = seed;
@@ -1334,7 +1332,7 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* screen) {
 	struct Stream compStream;
 
 	void* file; res = File_Create(&file, &path);
-	if (res) { ErrorHandler_LogError_Path(res, "creating", &path); return; }
+	if (res) { Chat_LogError(res, "creating", &path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		String cw = String_FromConst(".cw");	
@@ -1349,21 +1347,17 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* screen) {
 
 		if (res) {
 			stream.Close(&stream);
-			ErrorHandler_LogError_Path(res, "encoding", &path); return; 
+			Chat_LogError(res, "encoding", &path); return;
 		}
 		if (res = compStream.Close(&compStream)) {
 			stream.Close(&stream);
-			ErrorHandler_LogError_Path(res, "closing", &path); return;
+			Chat_LogError(res, "closing", &path); return;
 		}
 	}
 	res = stream.Close(&stream);
-	if (res) { ErrorHandler_LogError_Path(res, "closing", &path); return; }
+	if (res) { Chat_LogError(res, "closing", &path); return; }
 
-	UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
-	String msg = String_InitAndClearArray(msgBuffer);
-	String_Format1(&msg, "&eSaved map to: %s", &path);
-	Chat_Add(&msg);
-
+	Chat_Add1("&eSaved map to: %s", &path);
 	Gui_ReplaceActive(PauseScreen_MakeInstance());
 	String_Clear(&path);
 }
@@ -1639,7 +1633,7 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 	ReturnCode res;
 
 	void* file; res = File_Open(&file, path);
-	if (res) { ErrorHandler_LogError_Path(res, "opening", path); return; }
+	if (res) { Chat_LogError(res, "opening", path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, path);
 	{
 		String cw = String_FromConst(".cw");   String lvl = String_FromConst(".lvl");
@@ -1656,13 +1650,13 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 		}
 
 		if (res) { 
-			ErrorHandler_LogError_Path(res, "decoding", path);		
+			Chat_LogError(res, "decoding", path);
 			Mem_Free(&World_Blocks); World_BlocksSize = 0;
 			stream.Close(&stream); return;
 		}
 	}
 	res = stream.Close(&stream);
-	if (res) { ErrorHandler_LogError_Path(res, "closing", path); }
+	if (res) { Chat_LogError(res, "closing", path); }
 
 	World_SetNewMap(World_Blocks, World_BlocksSize, World_Width, World_Height, World_Length);
 	Event_RaiseVoid(&WorldEvents_MapLoaded);

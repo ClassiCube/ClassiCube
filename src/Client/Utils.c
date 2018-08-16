@@ -1,8 +1,7 @@
 #include "Utils.h"
-#include "Constants.h"
 #include "Bitmap.h"
 #include "PackedCol.h"
-#include "ErrorHandler.h"
+#include "Chat.h"
 #include "Platform.h"
 
 #define DATETIME_SECONDS_PER_MINUTE 60
@@ -126,7 +125,7 @@ bool Utils_EnsureDirectory(STRING_PURE const UChar* dirName) {
 	if (Directory_Exists(&dir)) return true;
 
 	ReturnCode res = Directory_Create(&dir);
-	if (res) { ErrorHandler_LogError_Path(res, "creating directory", &dir); }
+	if (res) { Chat_LogError(res, "creating directory", &dir); }
 	return res == 0;
 }
 

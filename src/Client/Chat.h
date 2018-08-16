@@ -33,4 +33,10 @@ void Chat_Send(STRING_PURE String* text, bool logUsage);
 void Chat_Add(STRING_PURE String* text);
 void Chat_AddOf(STRING_PURE String* text, Int32 messageType);
 void Chat_AddRaw(const UChar* raw);
+
+void Chat_LogError(ReturnCode result, const UChar* place, STRING_PURE String* path);
+void Chat_Add1(const UChar* format, const void* a1);
+void Chat_Add2(const UChar* format, const void* a1, const void* a2);
+void Chat_Add3(const UChar* format, const void* a1, const void* a2, const void* a3);
+void Chat_Add4(const UChar* format, const void* a1, const void* a2, const void* a3, const void* a4);
 #endif

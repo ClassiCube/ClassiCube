@@ -132,7 +132,7 @@ static void Soundboard_Init(struct Soundboard* board, STRING_PURE String* boardN
 		ReturnCode res = Sound_ReadWave(&file, snd);
 
 		if (res) {
-			ErrorHandler_LogError_Path(res, "decoding", &file);
+			Chat_LogError(res, "decoding", &file);
 			Mem_Free(&snd->Data);
 		} else { group->Count++; }
 	}
@@ -352,14 +352,14 @@ static void Music_RunLoop(void) {
 		Platform_Log1("playing music file: %s", &filename);
 
 		void* file; res = File_Open(&file, &path);
-		if (res) { ErrorHandler_LogError_Path(res, "opening", &path); return; }
+		if (res) { Chat_LogError(res, "opening", &path); return; }
 		struct Stream stream; Stream_FromFile(&stream, file, &path);
 		{
 			res = Music_PlayOgg(&stream);
-			if (res) { ErrorHandler_LogError_Path(res, "playing", &path); }
+			if (res) { Chat_LogError(res, "playing", &path); }
 		}
 		res = stream.Close(&stream);
-		if (res) { ErrorHandler_LogError_Path(res, "closing", &path); }
+		if (res) { Chat_LogError(res, "closing", &path); }
 
 		if (music_pendingStop) return;
 		Int32 delay = 1000 * 120 + Random_Range(&rnd, 0, 1000 * 300);

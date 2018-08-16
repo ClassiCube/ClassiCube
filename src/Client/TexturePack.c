@@ -15,6 +15,7 @@
 #include "Stream.h"
 #include "Funcs.h"
 #include "Errors.h"
+#include "Chat.h"
 
 /*########################################################################################################################*
 *--------------------------------------------------------ZipEntry---------------------------------------------------------*
@@ -196,7 +197,7 @@ static void EntryList_Load(struct EntryList* list) {
 
 	void* file; res = File_Open(&file, &path);
 	if (res == ReturnCode_FileNotFound) return;
-	if (res) { ErrorHandler_LogError_Path(res, "opening", &path); return; }
+	if (res) { Chat_LogError(res, "opening", &path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		/* ReadLine reads single byte at a time */
@@ -212,7 +213,7 @@ static void EntryList_Load(struct EntryList* list) {
 		}
 	}
 	res = stream.Close(&stream);
-	if (res) { ErrorHandler_LogError_Path(res, "closing", &path); }
+	if (res) { Chat_LogError(res, "closing", &path); }
 }
 
 static void EntryList_Save(struct EntryList* list) {
@@ -226,22 +227,22 @@ static void EntryList_Save(struct EntryList* list) {
 
 	if (!Directory_Exists(&folder)) {
 		res = Directory_Create(&folder);
-		if (res) { ErrorHandler_LogError_Path(res, "creating", &folder); return; }
+		if (res) { Chat_LogError(res, "creating", &folder); return; }
 	}
 
 	void* file; res = File_Create(&file, &path);
-	if (res) { ErrorHandler_LogError_Path(res, "creating", &path); return; }
+	if (res) { Chat_LogError(res, "creating", &path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		Int32 i;
 		for (i = 0; i < list->Entries.Count; i++) {
 			String entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
 			res = Stream_WriteLine(&stream, &entry);
-			if (res) { ErrorHandler_LogError_Path(res, "writing to", &path); break; }
+			if (res) { Chat_LogError(res, "writing to", &path); break; }
 		}
 	}
 	res = stream.Close(&stream);
-	if (res) { ErrorHandler_LogError_Path(res, "closing", &path); }
+	if (res) { Chat_LogError(res, "closing", &path); }
 }
 
 static void EntryList_Add(struct EntryList* list, STRING_PURE String* entry) {
@@ -316,7 +317,7 @@ bool TextureCache_GetStream(STRING_PURE String* url, struct Stream* stream) {
 	void* file; res = File_Open(&file, &path);
 	if (res == ReturnCode_FileNotFound) return false;
 
-	if (res) { ErrorHandler_LogError_Path(res, "opening cache for", url); return false; }
+	if (res) { Chat_LogError(res, "opening cache for", url); return false; }
 	Stream_FromFile(stream, file, &path);
 	return true;
 }
@@ -350,7 +351,7 @@ void TextureCache_GetLastModified(STRING_PURE String* url, DateTime* time) {
 		String path; TexCache_InitAndMakePath(url);
 		ReturnCode res = File_GetModifiedTime(&path, &temp);
 
-		if (res) { ErrorHandler_LogError_Path(res, "getting last modified time of", url); return; }
+		if (res) { Chat_LogError(res, "getting last modified time of", url); return; }
 		*time = temp;
 	}
 }
@@ -365,14 +366,14 @@ void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length) {
 	if (!Utils_EnsureDirectory(TEXCACHE_FOLDER)) return;
 
 	void* file; res = File_Create(&file, &path);
-	if (res) { ErrorHandler_LogError_Path(res, "creating cache for", url); return; }
+	if (res) { Chat_LogError(res, "creating cache for", url); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		res = Stream_Write(&stream, data, length);
-		if (res) { ErrorHandler_LogError_Path(res, "saving data for", url); }
+		if (res) { Chat_LogError(res, "saving data for", url); }
 	}
 	res = stream.Close(&stream);
-	if (res) { ErrorHandler_LogError_Path(res, "closing cache for", url); }
+	if (res) { Chat_LogError(res, "closing cache for", url); }
 }
 
 void TextureCache_AddToTags(STRING_PURE String* url, STRING_PURE String* data, struct EntryList* list) {
@@ -435,14 +436,14 @@ void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
 	ReturnCode res;
 
 	void* file; res = File_Open(&file, &path);
-	if (res) { ErrorHandler_LogError_Path(res, "opening", &path); return; }
+	if (res) { Chat_LogError(res, "opening", &path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		res = TexturePack_ExtractZip(&stream);
-		if (res) { ErrorHandler_LogError_Path(res, "extracting", &path); }
+		if (res) { Chat_LogError(res, "extracting", &path); }
 	}
 	res = stream.Close(&stream);
-	if (res) { ErrorHandler_LogError_Path(res, "closing", &path); }
+	if (res) { Chat_LogError(res, "closing", &path); }
 }
 
 ReturnCode TexturePack_ExtractTerrainPng(struct Stream* stream) {
@@ -486,11 +487,11 @@ void TexturePack_ExtractCurrent(STRING_PURE String* url) {
 			
 			res = zip ? TexturePack_ExtractZip(&stream) :
 						TexturePack_ExtractTerrainPng(&stream);		
-			if (res) { ErrorHandler_LogError_Path(res, operation, url); }
+			if (res) { Chat_LogError(res, operation, url); }
 		}
 
 		res = stream.Close(&stream);
-		if (res) { ErrorHandler_LogError_Path(res, "closing cache for", url); }
+		if (res) { Chat_LogError(res, "closing cache for", url); }
 	}
 }
 
@@ -512,6 +513,6 @@ void TexturePack_Extract_Req(struct AsyncRequest* item) {
 	ReturnCode res = png ? TexturePack_ExtractTerrainPng(&mem) : TexturePack_ExtractZip(&mem);
 	const UChar* operation = png ? "decoding" : "extracting";
 
-	if (res) { ErrorHandler_LogError_Path(res, operation, &url); }
+	if (res) { Chat_LogError(res, operation, &url); }
 	ASyncRequest_Free(item);
 }
