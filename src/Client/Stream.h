@@ -35,7 +35,6 @@ struct Stream {
 
 void Stream_ReadOrFail(struct Stream* stream, UInt8* buffer, UInt32 count);
 ReturnCode Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count);
-void Stream_WriteOrFail(struct Stream* stream, UInt8* buffer, UInt32 count);
 ReturnCode Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count);
 void Stream_Init(struct Stream* stream, STRING_PURE String* name);
 void Stream_Skip(struct Stream* stream, UInt32 count);

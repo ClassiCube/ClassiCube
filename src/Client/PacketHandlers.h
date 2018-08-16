@@ -14,9 +14,9 @@ void Handlers_Reset(void);
 void Handlers_Tick(void);
 
 bool cpe_sendHeldBlock, cpe_useMessageTypes, cpe_needD3Fix, cpe_extEntityPos, cpe_blockPerms, cpe_fastMap;
-void Classic_WriteChat(struct Stream* stream, STRING_PURE String* text, bool partial);
-void Classic_WritePosition(struct Stream* stream, Vector3 pos, Real32 rotY, Real32 headX);
-void Classic_WriteSetBlock(struct Stream* stream, Int32 x, Int32 y, Int32 z, bool place, BlockID block);
-void Classic_WriteLogin(struct Stream* stream, STRING_PURE String* username, STRING_PURE String* verKey);
-void CPE_WritePlayerClick(struct Stream* stream, MouseButton button, bool buttonDown, UInt8 targetId, struct PickedPos* pos);
+void Classic_WriteChat(STRING_PURE String* text, bool partial);
+void Classic_WritePosition(Vector3 pos, Real32 rotY, Real32 headX);
+void Classic_WriteSetBlock(Int32 x, Int32 y, Int32 z, bool place, BlockID block);
+void Classic_WriteLogin(STRING_PURE String* username, STRING_PURE String* verKey);
+void CPE_WritePlayerClick(MouseButton button, bool buttonDown, UInt8 targetId, struct PickedPos* pos);
 #endif

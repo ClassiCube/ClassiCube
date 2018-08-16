@@ -475,18 +475,18 @@ void TexturePack_ExtractCurrent(STRING_PURE String* url) {
 		/* e.g. 404 errors */
 		if (World_TextureUrl.length) TexturePack_ExtractDefault();
 	} else {
-		String zip = String_FromConst(".zip");
+		String zipExt = String_FromConst(".zip");
 		ReturnCode res = 0;
 
 		if (String_Equals(url, &World_TextureUrl)) {
 		} else {
-			bool zip = String_ContainsString(url, &zip);
+			bool zip = String_ContainsString(url, &zipExt);
 			String_Set(&World_TextureUrl, url);
 			const UChar* operation = zip ? "extracting" : "decoding";
 			
 			res = zip ? TexturePack_ExtractZip(&stream) :
 						TexturePack_ExtractTerrainPng(&stream);		
-			if (res) { ErrorHandler_LogError_Path(res, operation, &url); }
+			if (res) { ErrorHandler_LogError_Path(res, operation, url); }
 		}
 
 		res = stream.Close(&stream);

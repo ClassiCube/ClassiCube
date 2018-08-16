@@ -234,8 +234,7 @@ void ServerConnection_InitSingleplayer(void) {
 	ServerConnection_SendPlayerClick = SPConnection_SendPlayerClick;
 	ServerConnection_Tick = SPConnection_Tick;
 
-	ServerConnection_ReadStream  = NULL;
-	ServerConnection_WriteStream = NULL;
+	ServerConnection_WriteBuffer = NULL;
 }
 
 
@@ -243,10 +242,9 @@ void ServerConnection_InitSingleplayer(void) {
 *--------------------------------------------------Multiplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
 SocketPtr net_socket;
-struct Stream net_readStream;
-struct Stream net_writeStream;
 UInt8 net_readBuffer[4096 * 5];
 UInt8 net_writeBuffer[131];
+UInt8* net_readCurrent;
 
 bool net_writeFailed;
 Int32 net_ticks;
@@ -262,9 +260,9 @@ static void MPConnection_BlockChanged(void* obj, Vector3I coords, BlockID oldBlo
 	Vector3I p = coords;
 	if (block == BLOCK_AIR) {
 		block = Inventory_SelectedBlock;
-		Classic_WriteSetBlock(&net_writeStream, p.X, p.Y, p.Z, false, block);
+		Classic_WriteSetBlock(p.X, p.Y, p.Z, false, block);
 	} else {
-		Classic_WriteSetBlock(&net_writeStream, p.X, p.Y, p.Z, true, block);
+		Classic_WriteSetBlock(p.X, p.Y, p.Z, true, block);
 	}
 	Net_SendPacket();
 }
@@ -273,16 +271,11 @@ static void ServerConnection_Free(void);
 static void MPConnection_FinishConnect(void) {
 	net_connecting = false;
 	Event_RaiseReal(&WorldEvents_Loading, 0.0f);
-
-	String streamName = String_FromConst("network socket");
-	Stream_ReadonlyMemory(&net_readStream,   net_readBuffer,  sizeof(net_readBuffer),  &streamName);
-	Stream_WriteonlyMemory(&net_writeStream, net_writeBuffer, sizeof(net_writeBuffer), &streamName);
-
-	net_readStream.Meta.Mem.Left   = 0; /* initally no memory to read */
-	net_readStream.Meta.Mem.Length = 0;
+	net_readCurrent = net_readBuffer;
+	ServerConnection_WriteBuffer = net_writeBuffer;
 
 	Handlers_Reset();
-	Classic_WriteLogin(&net_writeStream, &Game_Username, &Game_Mppass);
+	Classic_WriteLogin(&Game_Username, &Game_Mppass);
 	Net_SendPacket();
 	DateTime_CurrentUTC(&net_lastPacket);
 }
@@ -353,22 +346,22 @@ static void MPConnection_SendChat(STRING_PURE String* text) {
 
 	while (remaining.length > STRING_SIZE) {
 		String portion = String_UNSAFE_Substring(&remaining, 0, STRING_SIZE);
-		Classic_WriteChat(&net_writeStream, &portion, true);
+		Classic_WriteChat(&portion, true);
 		Net_SendPacket();
 		remaining = String_UNSAFE_SubstringAt(&remaining, STRING_SIZE);
 	}
 
-	Classic_WriteChat(&net_writeStream, &remaining, false);
+	Classic_WriteChat(&remaining, false);
 	Net_SendPacket();
 }
 
 static void MPConnection_SendPosition(Vector3 pos, Real32 rotY, Real32 headX) {
-	Classic_WritePosition(&net_writeStream, pos, rotY, headX);
+	Classic_WritePosition(pos, rotY, headX);
 	Net_SendPacket();
 }
 
 static void MPConnection_SendPlayerClick(MouseButton button, bool buttonDown, EntityID targetId, struct PickedPos* pos) {
-	CPE_WritePlayerClick(&net_writeStream, button, buttonDown, targetId, pos);
+	CPE_WritePlayerClick(button, buttonDown, targetId, pos);
 	Net_SendPacket();
 }
 
@@ -399,19 +392,19 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	if (ServerConnection_Disconnected) return;
 
 	UInt32 pending = 0;
-	ReturnCode recvResult = Socket_Available(net_socket, &pending);
-	if (recvResult == 0 && pending) {
-		/* NOTE: Always using a read call that is a multiple of 4096 (appears to?) improve read performance */
-		UInt8* src = net_readBuffer + net_readStream.Meta.Mem.Left;
-		recvResult = Socket_Read(net_socket, src, 4096 * 4, &pending);
-		net_readStream.Meta.Mem.Left   += pending;
-		net_readStream.Meta.Mem.Length += pending;
+	ReturnCode res = Socket_Available(net_socket, &pending);
+	UInt8* readEnd = net_readCurrent;
+
+	if (!res && pending) {
+		/* NOTE: Always using a read call that is a multiple of 4096 (appears to?) improve read performance */	
+		res = Socket_Read(net_socket, net_readCurrent, 4096 * 4, &pending);
+		readEnd += pending;
 	}
 
-	if (recvResult) {
+	if (res) {
 		UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 		String msg = String_InitAndClearArray(msgBuffer);
-		String_Format3(&msg, "Error reading from %s:%i: %i", &Game_IPAddress, &Game_Port, &recvResult);
+		String_Format3(&msg, "Error reading from %s:%i: %i", &Game_IPAddress, &Game_Port, &res);
 		ErrorHandler_Log(&msg);
 
 		String title  = String_FromConst("&eLost connection to the server");
@@ -420,12 +413,13 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 		return;
 	}
 
-	while (net_readStream.Meta.Mem.Left) {
-		UInt8 opcode = net_readStream.Meta.Mem.Cur[0];
+	net_readCurrent = net_readBuffer;
+	while (net_readCurrent < readEnd) {
+		UInt8 opcode = net_readCurrent[0];
 		/* Workaround for older D3 servers which wrote one byte too many for HackControl packets */
-		if (cpe_needD3Fix && net_lastOpcode == OPCODE_CPE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
+		if (cpe_needD3Fix && net_lastOpcode == OPCODE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
 			Platform_LogConst("Skipping invalid HackControl byte from D3 server");
-			Stream_Skip(&net_readStream, 1);
+			net_readCurrent++;
 
 			struct LocalPlayer* p = &LocalPlayer_Instance;
 			p->Physics.JumpVel = 0.42f; /* assume default jump height */
@@ -438,9 +432,8 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 			String msg   = String_FromConst("Server sent invalid packet!");
 			Game_Disconnect(&title, &msg); return; 
 		}
-		if (net_readStream.Meta.Mem.Left < Net_PacketSizes[opcode]) break;
 
-		Stream_Skip(&net_readStream, 1); /* remove opcode */
+		if (net_readCurrent + Net_PacketSizes[opcode] > readEnd) break;
 		net_lastOpcode = opcode;
 		DateTime_CurrentUTC(&net_lastPacket);
 
@@ -450,23 +443,24 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 			String msg = String_FromConst("Server sent invalid packet!");
 			Game_Disconnect(&title, &msg); return;
 		}
-		handler(&net_readStream);
+
+		handler(net_readCurrent + 1);  /* skip opcode */
+		net_readCurrent += Net_PacketSizes[opcode];
 	}
 
 	/* Keep last few unprocessed bytes, don't care about rest since they'll be overwritten on socket read */
-	UInt32 i;
-	for (i = 0; i < net_readStream.Meta.Mem.Left; i++) {
-		net_readBuffer[i] = net_readStream.Meta.Mem.Cur[i];
+	UInt32 i, remaining = (UInt32)(readEnd - net_readCurrent);
+	for (i = 0; i < remaining; i++) {
+		net_readBuffer[i] = net_readCurrent[i];
 	}
-	net_readStream.Meta.Mem.Cur    = net_readStream.Meta.Mem.Base;
-	net_readStream.Meta.Mem.Length = net_readStream.Meta.Mem.Left;
+	net_readCurrent = net_readBuffer + remaining;
 
 	/* Network is ticked 60 times a second. We only send position updates 20 times a second */
 	if ((net_ticks % 3) == 0) {
 		ServerConnection_CheckAsyncResources();
 		Handlers_Tick();
 		/* Have any packets been written? */
-		if (net_writeStream.Meta.Mem.Cur != net_writeStream.Meta.Mem.Base) {
+		if (ServerConnection_WriteBuffer != net_writeBuffer) {
 			Net_SendPacket();
 		}
 	}
@@ -479,23 +473,21 @@ void Net_Set(UInt8 opcode, Net_Handler handler, UInt16 packetSize) {
 }
 
 void Net_SendPacket(void) {
-	if (!ServerConnection_Disconnected) {
-		/* NOTE: Not immediately disconnecting here, as otherwise we sometimes miss out on kick messages */
-		UInt32 count = (UInt32)(net_writeStream.Meta.Mem.Cur - net_writeStream.Meta.Mem.Base), wrote = 0;
+	UInt32 count = (UInt32)(ServerConnection_WriteBuffer - net_writeBuffer);
+	ServerConnection_WriteBuffer = net_writeBuffer;
+	if (ServerConnection_Disconnected) return;
 
-		while (count) {
-			ReturnCode res = Socket_Write(net_socket, net_writeBuffer, count, &wrote);
-			if (res || !wrote) { net_writeFailed = true; break; }
-			count -= wrote;
-		}
+	/* NOTE: Not immediately disconnecting here, as otherwise we sometimes miss out on kick messages */
+	UInt32 wrote = 0;
+	UInt8* ptr = net_writeBuffer;
+
+	while (count) {
+		ReturnCode res = Socket_Write(net_socket, ptr, count, &wrote);
+		if (res || !wrote) { net_writeFailed = true; break; }
+		ptr += wrote; count -= wrote;
 	}
-	
-	net_writeStream.Meta.Mem.Cur  = net_writeStream.Meta.Mem.Base;
-	net_writeStream.Meta.Mem.Left = net_writeStream.Meta.Mem.Length;
 }
 
-static struct Stream* MPConnection_ReadStream(void)  { return &net_readStream; }
-static struct Stream* MPConnection_WriteStream(void) { return &net_writeStream; }
 void ServerConnection_InitMultiplayer(void) {
 	ServerConnection_ResetState();
 	ServerConnection_IsSinglePlayer = false;
@@ -506,8 +498,8 @@ void ServerConnection_InitMultiplayer(void) {
 	ServerConnection_SendPlayerClick = MPConnection_SendPlayerClick;
 	ServerConnection_Tick = MPConnection_Tick;
 
-	ServerConnection_ReadStream  = MPConnection_ReadStream;
-	ServerConnection_WriteStream = MPConnection_WriteStream;
+	net_readCurrent = net_readBuffer;
+	ServerConnection_WriteBuffer = net_writeBuffer;
 }
 
 

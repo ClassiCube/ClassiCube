@@ -28,34 +28,33 @@
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
 *#########################################################################################################################*/
 UInt8 classicTabList[256 >> 3];
+#define Handlers_ReadBlock(data) *data++;
 
-#define Handlers_ReadBlock(stream) Stream_ReadU8(stream)
-
-static String Handlers_ReadString(struct Stream* stream, STRING_REF UChar* strBuffer) {
-	UChar buffer[STRING_SIZE];
-	Stream_ReadOrFail(stream, buffer, sizeof(buffer));
+static String Handlers_ReadString(UInt8** ptr, STRING_REF UChar* strBuffer) {
 	Int32 i, length = 0;
-
+	UInt8* data = *ptr;
 	for (i = STRING_SIZE - 1; i >= 0; i--) {
-		UChar code = buffer[i];
+		UChar code = data[i];
 		if (code == '\0' || code == ' ') continue;
 		length = i + 1; break;
 	}
 
 	String str = String_InitAndClear(strBuffer, STRING_SIZE);
-	for (i = 0; i < length; i++) { String_Append(&str, buffer[i]); }
+	for (i = 0; i < length; i++) { String_Append(&str, data[i]); }
+
+	*ptr = data + STRING_SIZE;
 	return str;
 }
 
-static void Handlers_WriteString(UInt8* buffer, STRING_PURE String* value) {
+static void Handlers_WriteString(UInt8* data, STRING_PURE String* value) {
 	Int32 i, count = min(value->length, STRING_SIZE);
 	for (i = 0; i < count; i++) {
 		UChar c = value->buffer[i];
 		if (c == '&') c = '%'; /* escape colour codes */
-		buffer[i] = c;
+		data[i] = c;
 	}
 
-	for (; i < STRING_SIZE; i++) { buffer[i] = ' '; }
+	for (; i < STRING_SIZE; i++) { data[i] = ' '; }
 }
 
 static void Handlers_RemoveEndPlus(STRING_TRANSIENT String* value) {
@@ -106,8 +105,8 @@ static void Handlers_CheckName(EntityID id, STRING_TRANSIENT String* displayName
 	if (!skinName->length) { String_Set(skinName, &Game_Username); }
 }
 
-static void Classic_ReadAbsoluteLocation(struct Stream* stream, EntityID id, bool interpolate);
-static void Handlers_AddEntity(EntityID id, STRING_TRANSIENT String* displayName, STRING_TRANSIENT String* skinName, bool readPosition) {
+static void Classic_ReadAbsoluteLocation(UInt8* data, EntityID id, bool interpolate);
+static void Handlers_AddEntity(UInt8* data, EntityID id, STRING_TRANSIENT String* displayName, STRING_TRANSIENT String* skinName, bool readPosition) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (id != ENTITIES_SELF_ID) {
 		struct Entity* oldEntity = Entities_List[id];
@@ -132,12 +131,11 @@ static void Handlers_AddEntity(EntityID id, STRING_TRANSIENT String* displayName
 	}
 
 	if (!readPosition) return;
-	struct Stream* stream = ServerConnection_ReadStream();
-	Classic_ReadAbsoluteLocation(stream, id, false);
+	Classic_ReadAbsoluteLocation(data, id, false);
 	if (id != ENTITIES_SELF_ID) return;
 
-	p->Spawn = p->Base.Position;
-	p->SpawnRotY = p->Base.HeadY;
+	p->Spawn      = p->Base.Position;
+	p->SpawnRotY  = p->Base.HeadY;
 	p->SpawnHeadX = p->Base.HeadX;
 }
 
@@ -310,78 +308,90 @@ struct Stream mapPartStream;
 struct Screen* prevScreen;
 bool receivedFirstPosition;
 
-void Classic_WriteChat(struct Stream* stream, STRING_PURE String* text, bool partial) {
-	UInt8 data[66]; data[0] = OPCODE_MESSAGE;
-	data[1] = ServerConnection_SupportsPartialMessages ? partial : ENTITIES_SELF_ID;
-	Handlers_WriteString(&data[2], text);
-	Stream_WriteOrFail(stream, data, sizeof(data));
-}
-
-void Classic_WritePosition(struct Stream* stream, Vector3 pos, Real32 rotY, Real32 headX) {
-	UInt8 data[16]; data[0] = OPCODE_ENTITY_TELEPORT;
-	data[1] = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID; /* TODO: extended blocks */	
-	Int32 x = (Int32)(pos.X * 32);
-	Int32 y = (Int32)(pos.Y * 32) + 51;
-	Int32 z = (Int32)(pos.Z * 32);
-
-	Int32 offset;
-	if (cpe_extEntityPos) {
-		Stream_SetU32_BE(&data[2],  x);
-		Stream_SetU32_BE(&data[6],  y);
-		Stream_SetU32_BE(&data[10], z);
-		offset = 14;
-	} else {
-		Stream_SetU16_BE(&data[2], x);
-		Stream_SetU16_BE(&data[4], y);
-		Stream_SetU16_BE(&data[6], z);
-		offset = 8;
+void Classic_WriteChat(STRING_PURE String* text, bool partial) {
+	UInt8* data = ServerConnection_WriteBuffer;
+	data[0] = OPCODE_MESSAGE;
+	{
+		data[1] = ServerConnection_SupportsPartialMessages ? partial : ENTITIES_SELF_ID;
+		Handlers_WriteString(&data[2], text);
 	}
-
-	data[offset++] = Math_Deg2Packed(rotY);
-	data[offset++] = Math_Deg2Packed(headX);
-	Stream_WriteOrFail(stream, data, offset);
+	ServerConnection_WriteBuffer += 66;
 }
 
-void Classic_WriteSetBlock(struct Stream* stream, Int32 x, Int32 y, Int32 z, bool place, BlockID block) {
-	UInt8 data[9]; data[0] = OPCODE_SET_BLOCK_CLIENT;
-	Stream_SetU16_BE(&data[1], x);
-	Stream_SetU16_BE(&data[3], y);
-	Stream_SetU16_BE(&data[5], z);
-	data[7] = place;
-	data[8] = block; /* TODO: extended blocks */
-	Stream_WriteOrFail(stream, data, sizeof(data));
+void Classic_WritePosition(Vector3 pos, Real32 rotY, Real32 headX) {
+	UInt8* data = ServerConnection_WriteBuffer;
+	data[0] = OPCODE_ENTITY_TELEPORT;
+	Int32 len;
+	{
+		data[1] = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID; /* TODO: extended blocks */
+		Int32 x = (Int32)(pos.X * 32);
+		Int32 y = (Int32)(pos.Y * 32) + 51;
+		Int32 z = (Int32)(pos.Z * 32);
+
+		if (cpe_extEntityPos) {
+			Stream_SetU32_BE(&data[2],  x);
+			Stream_SetU32_BE(&data[6],  y);
+			Stream_SetU32_BE(&data[10], z);
+			len = 14;
+		} else {
+			Stream_SetU16_BE(&data[2], x);
+			Stream_SetU16_BE(&data[4], y);
+			Stream_SetU16_BE(&data[6], z);
+			len = 8;
+		}
+
+		data[len++] = Math_Deg2Packed(rotY);
+		data[len++] = Math_Deg2Packed(headX);
+	}
+	ServerConnection_WriteBuffer += len;
 }
 
-void Classic_WriteLogin(struct Stream* stream, STRING_PURE String* username, STRING_PURE String* verKey) {
-	UInt8 data[131]; data[0] = OPCODE_HANDSHAKE;
-	data[1] = 7; /* protocol version */
-	Handlers_WriteString(&data[2],  username);
-	Handlers_WriteString(&data[66], verKey);
-
-	data[130] = Game_UseCPE ? 0x42 : 0x00;
-	Stream_WriteOrFail(stream, data, sizeof(data));
+void Classic_WriteSetBlock(Int32 x, Int32 y, Int32 z, bool place, BlockID block) {
+	UInt8* data = ServerConnection_WriteBuffer;
+	data[0] = OPCODE_SET_BLOCK_CLIENT;
+	{
+		Stream_SetU16_BE(&data[1], x);
+		Stream_SetU16_BE(&data[3], y);
+		Stream_SetU16_BE(&data[5], z);
+		data[7] = place;
+		data[8] = block; /* TODO: extended blocks */
+	}
+	ServerConnection_WriteBuffer += 9;
 }
 
-static void Classic_Handshake(struct Stream* stream) {
-	UInt8 protocolVer = Stream_ReadU8(stream);
-	ServerConnection_ServerName = Handlers_ReadString(stream, ServerConnection_ServerName.buffer);
-	ServerConnection_ServerMOTD = Handlers_ReadString(stream, ServerConnection_ServerMOTD.buffer);
+void Classic_WriteLogin(STRING_PURE String* username, STRING_PURE String* verKey) {
+	UInt8* data = ServerConnection_WriteBuffer;
+	data[0] = OPCODE_HANDSHAKE;
+	{
+		data[1] = 7; /* protocol version */
+		Handlers_WriteString(&data[2], username);
+		Handlers_WriteString(&data[66], verKey);
+		data[130] = Game_UseCPE ? 0x42 : 0x00;
+	}
+	ServerConnection_WriteBuffer += 131;
+}
+
+static void Classic_Handshake(UInt8* data) {
+	UInt8 protocolVer = *data++;
+	ServerConnection_ServerName = Handlers_ReadString(&data, ServerConnection_ServerName.buffer);
+	ServerConnection_ServerMOTD = Handlers_ReadString(&data, ServerConnection_ServerMOTD.buffer);
 	Chat_SetLogName(&ServerConnection_ServerName);
 
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
-	HacksComp_SetUserType(hacks, Stream_ReadU8(stream), !cpe_blockPerms);
+	HacksComp_SetUserType(hacks, *data, !cpe_blockPerms);
 	
 	String_Set(&hacks->HacksFlags, &ServerConnection_ServerName);
 	String_AppendString(&hacks->HacksFlags, &ServerConnection_ServerMOTD);
 	HacksComp_UpdateState(hacks);
 }
 
-static void Classic_Ping(struct Stream* stream) { }
+static void Classic_Ping(UInt8* data) { }
 
-static void Classic_StartLoading(struct Stream* stream) {
+static void Classic_StartLoading(void) {
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
-	mapPartStream = *stream;
+	String name = String_FromConst("Map chunk");
+	Stream_ReadonlyMemory(&mapPartStream, NULL, 0, &name);
 
 	prevScreen = Gui_Active;
 	if (prevScreen == LoadingScreen_UNSAFE_RawPointer) {
@@ -403,30 +413,30 @@ static void Classic_StartLoading(struct Stream* stream) {
 	DateTime_CurrentUTC(&mapReceiveStart);
 }
 
-static void Classic_LevelInit(struct Stream* stream) {
-	if (!mapInflateInited) Classic_StartLoading(stream);
+static void Classic_LevelInit(UInt8* data) {
+	if (!mapInflateInited) Classic_StartLoading();
 
 	/* Fast map puts volume in header, doesn't bother with gzip */
 	if (cpe_fastMap) {
-		mapVolume = Stream_ReadU32_BE(stream);
+		mapVolume = Stream_GetU32_BE(data);
 		gzHeader.Done = true;
 		mapSizeIndex = sizeof(UInt32);
 		map = Mem_Alloc(mapVolume, sizeof(BlockID), "map blocks");
 	}
 }
 
-static void Classic_LevelDataChunk(struct Stream* stream) {
+static void Classic_LevelDataChunk(UInt8* data) {
 	/* Workaround for some servers that send LevelDataChunk before LevelInit due to their async sending behaviour */
-	if (!mapInflateInited) Classic_StartLoading(stream);
+	if (!mapInflateInited) Classic_StartLoading();
 
-	Int32 usedLength = Stream_ReadU16_BE(stream);
-	mapPartStream.Meta.Mem.Cur    = stream->Meta.Mem.Cur;
-	mapPartStream.Meta.Mem.Base   = stream->Meta.Mem.Cur;
+	Int32 usedLength = Stream_GetU16_BE(data); data += 2;
+	mapPartStream.Meta.Mem.Cur    = data;
+	mapPartStream.Meta.Mem.Base   = data;
 	mapPartStream.Meta.Mem.Left   = usedLength;
 	mapPartStream.Meta.Mem.Length = usedLength;
 
-	Stream_Skip(stream, 1024);
-	UInt8 value = Stream_ReadU8(stream); /* progress in original classic, but we ignore it */
+	data += 1024;
+	UInt8 value = *data; /* progress in original classic, but we ignore it */
 
 	if (!gzHeader.Done) { 
 		ReturnCode res = GZipHeader_Read(&mapPartStream, &gzHeader);
@@ -458,15 +468,15 @@ static void Classic_LevelDataChunk(struct Stream* stream) {
 	Event_RaiseReal(&WorldEvents_Loading, progress);
 }
 
-static void Classic_LevelFinalise(struct Stream* stream) {
+static void Classic_LevelFinalise(UInt8* data) {
 	Gui_ReplaceActive(NULL);
 	Gui_Active = prevScreen;
 	prevScreen = NULL;
 	Gui_CalcCursorVisible();
 
-	Int32 mapWidth  = Stream_ReadU16_BE(stream);
-	Int32 mapHeight = Stream_ReadU16_BE(stream);
-	Int32 mapLength = Stream_ReadU16_BE(stream);
+	Int32 mapWidth  = Stream_GetU16_BE(&data[0]);
+	Int32 mapHeight = Stream_GetU16_BE(&data[2]);
+	Int32 mapLength = Stream_GetU16_BE(&data[4]);
 
 	DateTime now; DateTime_CurrentUTC(&now);
 	Int32 loadingMs = (Int32)DateTime_MsBetween(&mapReceiveStart, &now);
@@ -480,27 +490,28 @@ static void Classic_LevelFinalise(struct Stream* stream) {
 	mapInflateInited = false;
 }
 
-static void Classic_SetBlock(struct Stream* stream) {
-	Int32 x = Stream_ReadU16_BE(stream);
-	Int32 y = Stream_ReadU16_BE(stream);
-	Int32 z = Stream_ReadU16_BE(stream);
+static void Classic_SetBlock(UInt8* data) {
+	Int32 x = Stream_GetU16_BE(&data[0]);
+	Int32 y = Stream_GetU16_BE(&data[2]);
+	Int32 z = Stream_GetU16_BE(&data[4]);
 
-	BlockID block = Handlers_ReadBlock(stream);
+	data += 6;
+	BlockID block = Handlers_ReadBlock(data);
 	if (World_IsValidPos(x, y, z)) {
 		Game_UpdateBlock(x, y, z, block);
 	}
 }
 
-static void Classic_AddEntity(struct Stream* stream) {
+static void Classic_AddEntity(UInt8* data) {
 	UChar nameBuffer[String_BufferSize(STRING_SIZE)];
 	UChar skinBuffer[String_BufferSize(STRING_SIZE)];
 
-	EntityID id = Stream_ReadU8(stream);
-	String name = Handlers_ReadString(stream, nameBuffer);
+	EntityID id = *data++;
+	String name = Handlers_ReadString(&data, nameBuffer);
 	String skin = String_InitAndClearArray(skinBuffer);
 
 	Handlers_CheckName(id, &name, &skin);
-	Handlers_AddEntity(id, &name, &skin, true);
+	Handlers_AddEntity(data, id, &name, &skin, true);
 
 	/* Workaround for some servers that declare support for ExtPlayerList but don't send ExtAddPlayerName */
 	String group = String_FromConst("Players");
@@ -508,53 +519,51 @@ static void Classic_AddEntity(struct Stream* stream) {
 	classicTabList[id >> 3] |= (UInt8)(1 << (id & 0x7));
 }
 
-static void Classic_EntityTeleport(struct Stream* stream) {
-	EntityID id = Stream_ReadU8(stream);
-	Classic_ReadAbsoluteLocation(stream, id, true);
+static void Classic_EntityTeleport(UInt8* data) {
+	EntityID id = *data++;
+	Classic_ReadAbsoluteLocation(data, id, true);
 }
 
-static void Classic_RelPosAndOrientationUpdate(struct Stream* stream) {
-	EntityID id = Stream_ReadU8(stream);
-	Vector3 pos;
-	pos.X = ((Int8)Stream_ReadU8(stream)) / 32.0f;
-	pos.Y = ((Int8)Stream_ReadU8(stream)) / 32.0f;
-	pos.Z = ((Int8)Stream_ReadU8(stream)) / 32.0f;
+static void Classic_RelPosAndOrientationUpdate(UInt8* data) {
+	EntityID id = *data++; Vector3 pos;
+	pos.X = (Int8)(*data++) / 32.0f;
+	pos.Y = (Int8)(*data++) / 32.0f;
+	pos.Z = (Int8)(*data++) / 32.0f;
 
-	Real32 rotY  = Math_Packed2Deg(Stream_ReadU8(stream));
-	Real32 headX = Math_Packed2Deg(Stream_ReadU8(stream));
+	Real32 rotY  = Math_Packed2Deg(*data++);
+	Real32 headX = Math_Packed2Deg(*data++);
 	struct LocationUpdate update; LocationUpdate_MakePosAndOri(&update, pos, rotY, headX, true);
 	Handlers_UpdateLocation(id, &update, true);
 }
 
-static void Classic_RelPositionUpdate(struct Stream* stream) {
-	EntityID id = Stream_ReadU8(stream);
-	Vector3 pos;
-	pos.X = ((Int8)Stream_ReadU8(stream)) / 32.0f;
-	pos.Y = ((Int8)Stream_ReadU8(stream)) / 32.0f;
-	pos.Z = ((Int8)Stream_ReadU8(stream)) / 32.0f;
+static void Classic_RelPositionUpdate(UInt8* data) {
+	EntityID id = *data++; Vector3 pos;
+	pos.X = (Int8)(*data++) / 32.0f;
+	pos.Y = (Int8)(*data++) / 32.0f;
+	pos.Z = (Int8)(*data++) / 32.0f;
 
 	struct LocationUpdate update; LocationUpdate_MakePos(&update, pos, true);
 	Handlers_UpdateLocation(id, &update, true);
 }
 
-static void Classic_OrientationUpdate(struct Stream* stream) {
-	EntityID id = Stream_ReadU8(stream);
-	Real32 rotY  = Math_Packed2Deg(Stream_ReadU8(stream));
-	Real32 headX = Math_Packed2Deg(Stream_ReadU8(stream));
+static void Classic_OrientationUpdate(UInt8* data) {
+	EntityID id = *data++;
+	Real32 rotY  = Math_Packed2Deg(*data++);
+	Real32 headX = Math_Packed2Deg(*data++);
 
 	struct LocationUpdate update; LocationUpdate_MakeOri(&update, rotY, headX);
 	Handlers_UpdateLocation(id, &update, true);
 }
 
-static void Classic_RemoveEntity(struct Stream* stream) {
-	EntityID id = Stream_ReadU8(stream);
+static void Classic_RemoveEntity(UInt8* data) {
+	EntityID id = *data;
 	Handlers_RemoveEntity(id);
 }
 
-static void Classic_Message(struct Stream* stream) {
+static void Classic_Message(UInt8* data) {
 	UChar textBuffer[String_BufferSize(STRING_SIZE) + 2];
-	UInt8 type = Stream_ReadU8(stream);
-	String text = Handlers_ReadString(stream, textBuffer);
+	UInt8 type  = *data++;
+	String text = Handlers_ReadString(&data, textBuffer);
 
 	/* Original vanilla server uses player ids for type, 255 for server messages (&e prefix) */
 	bool prepend = !cpe_useMessageTypes && type == 0xFF;
@@ -579,33 +588,39 @@ static void Classic_Message(struct Stream* stream) {
 	}
 }
 
-static void Classic_Kick(struct Stream* stream) {
+static void Classic_Kick(UInt8* data) {
 	UChar reasonBuffer[String_BufferSize(STRING_SIZE)];
-	String reason = Handlers_ReadString(stream, reasonBuffer);
+	String reason = Handlers_ReadString(&data, reasonBuffer);
 	String title = String_FromConst("&eLost connection to the server");
 	Game_Disconnect(&title, &reason);
 }
 
-static void Classic_SetPermission(struct Stream* stream) {
+static void Classic_SetPermission(UInt8* data) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
-	HacksComp_SetUserType(hacks, Stream_ReadU8(stream), !cpe_blockPerms);
+	HacksComp_SetUserType(hacks, *data, !cpe_blockPerms);
 	HacksComp_UpdateState(hacks);
 }
 
-static void Classic_ReadAbsoluteLocation(struct Stream* stream, EntityID id, bool interpolate) {
+static void Classic_ReadAbsoluteLocation(UInt8* data, EntityID id, bool interpolate) {
 	Int32 x, y, z;
 	if (cpe_extEntityPos) {
-		x = Stream_ReadI32_BE(stream); y = Stream_ReadI32_BE(stream); z = Stream_ReadI32_BE(stream);
+		x = (Int32)Stream_GetU32_BE(&data[0]);
+		y = (Int32)Stream_GetU32_BE(&data[4]);
+		z = (Int32)Stream_GetU32_BE(&data[8]);
+		data += 12;
 	} else {
-		x = Stream_ReadI16_BE(stream); y = Stream_ReadI16_BE(stream); z = Stream_ReadI16_BE(stream);
+		x = (Int16)Stream_GetU16_BE(&data[0]);
+		y = (Int16)Stream_GetU16_BE(&data[2]);
+		z = (Int16)Stream_GetU16_BE(&data[4]);
+		data += 6;
 	}
 
 	y -= 51; /* Convert to feet position */
 	if (id == ENTITIES_SELF_ID) y += 22;
 
 	Vector3 pos  = VECTOR3_CONST(x / 32.0f, y / 32.0f, z / 32.0f);
-	Real32 rotY  = Math_Packed2Deg(Stream_ReadU8(stream));
-	Real32 headX = Math_Packed2Deg(Stream_ReadU8(stream));
+	Real32 rotY  = Math_Packed2Deg(*data++);
+	Real32 headX = Math_Packed2Deg(*data++);
 
 	if (id == ENTITIES_SELF_ID) receivedFirstPosition = true;
 	struct LocationUpdate update; LocationUpdate_MakePosAndOri(&update, pos, rotY, headX, false);
@@ -618,16 +633,16 @@ static void Classic_Reset(void) {
 
 	Net_Set(OPCODE_HANDSHAKE, Classic_Handshake, 131);
 	Net_Set(OPCODE_PING, Classic_Ping, 1);
-	Net_Set(OPCODE_LEVEL_INIT, Classic_LevelInit, 1);
-	Net_Set(OPCODE_LEVEL_DATA_CHUNK, Classic_LevelDataChunk, 1028);
-	Net_Set(OPCODE_LEVEL_FINALISE, Classic_LevelFinalise, 7);
+	Net_Set(OPCODE_LEVEL_BEGIN, Classic_LevelInit, 1);
+	Net_Set(OPCODE_LEVEL_DATA, Classic_LevelDataChunk, 1028);
+	Net_Set(OPCODE_LEVEL_END, Classic_LevelFinalise, 7);
 	Net_Set(OPCODE_SET_BLOCK, Classic_SetBlock, 8);
 
 	Net_Set(OPCODE_ADD_ENTITY, Classic_AddEntity, 74);
 	Net_Set(OPCODE_ENTITY_TELEPORT, Classic_EntityTeleport, 10);
-	Net_Set(OPCODE_RELPOS_AND_ORIENTATION_UPDATE, Classic_RelPosAndOrientationUpdate, 7);
+	Net_Set(OPCODE_RELPOS_AND_ORI_UPDATE, Classic_RelPosAndOrientationUpdate, 7);
 	Net_Set(OPCODE_RELPOS_UPDATE, Classic_RelPositionUpdate, 5);
-	Net_Set(OPCODE_ORIENTATION_UPDATE, Classic_OrientationUpdate, 4);
+	Net_Set(OPCODE_ORI_UPDATE, Classic_OrientationUpdate, 4);
 	Net_Set(OPCODE_REMOVE_ENTITY, Classic_RemoveEntity, 2);
 
 	Net_Set(OPCODE_MESSAGE, Classic_Message, 66);
@@ -637,9 +652,8 @@ static void Classic_Reset(void) {
 
 static void Classic_Tick(void) {
 	if (!receivedFirstPosition) return;
-	struct Stream* stream = ServerConnection_WriteStream();
 	struct Entity* entity = &LocalPlayer_Instance.Base;
-	Classic_WritePosition(stream, entity->Position, entity->HeadY, entity->HeadX);
+	Classic_WritePosition(entity->Position, entity->HeadY, entity->HeadX);
 }
 
 
@@ -658,69 +672,83 @@ const UChar* cpe_clientExtensions[28] = {
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap",
 };
-static void CPE_SetMapEnvUrl(struct Stream* stream);
+static void CPE_SetMapEnvUrl(UInt8* data);
 
 #define Ext_Deg2Packed(x) ((Int16)((x) * 65536.0f / 360.0f))
-void CPE_WritePlayerClick(struct Stream* stream, MouseButton button, bool buttonDown, UInt8 targetId, struct PickedPos* pos) {
+void CPE_WritePlayerClick(MouseButton button, bool buttonDown, UInt8 targetId, struct PickedPos* pos) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	UInt8 data[15]; data[0] = OPCODE_CPE_PLAYER_CLICK;
-	data[1] = button;
-	data[2] = buttonDown;
-	Stream_SetU16_BE(&data[3], Ext_Deg2Packed(p->HeadY));
-	Stream_SetU16_BE(&data[5], Ext_Deg2Packed(p->HeadX));
+	UInt8* data = ServerConnection_WriteBuffer;
+	data[0] = OPCODE_PLAYER_CLICK;
+	{
+		data[1] = button;
+		data[2] = buttonDown;
+		Stream_SetU16_BE(&data[3], Ext_Deg2Packed(p->HeadY));
+		Stream_SetU16_BE(&data[5], Ext_Deg2Packed(p->HeadX));
 
-	data[7] = targetId;
-	Stream_SetU16_BE(&data[8], pos->BlockPos.X);
-	Stream_SetU16_BE(&data[10], pos->BlockPos.Y);
-	Stream_SetU16_BE(&data[12], pos->BlockPos.Z);
+		data[7] = targetId;
+		Stream_SetU16_BE(&data[8],  pos->BlockPos.X);
+		Stream_SetU16_BE(&data[10], pos->BlockPos.Y);
+		Stream_SetU16_BE(&data[12], pos->BlockPos.Z);
 
-	data[14] = 255;
-	/* Our own face values differ from CPE block face */
-	switch (pos->ClosestFace) {
-	case FACE_XMAX: data[14] = 0; break;
-	case FACE_XMIN: data[14] = 1; break;
-	case FACE_YMAX: data[14] = 2; break;
-	case FACE_YMIN: data[14] = 3; break;
-	case FACE_ZMAX: data[14] = 4; break;
-	case FACE_ZMIN: data[14] = 5; break;
+		data[14] = 255;
+		/* Our own face values differ from CPE block face */
+		switch (pos->ClosestFace) {
+		case FACE_XMAX: data[14] = 0; break;
+		case FACE_XMIN: data[14] = 1; break;
+		case FACE_YMAX: data[14] = 2; break;
+		case FACE_YMIN: data[14] = 3; break;
+		case FACE_ZMAX: data[14] = 4; break;
+		case FACE_ZMIN: data[14] = 5; break;
+		}
 	}
-	Stream_WriteOrFail(stream, data, sizeof(data));
+	ServerConnection_WriteBuffer += 15;
 }
 
-static void CPE_WriteExtInfo(struct Stream* stream, STRING_PURE String* appName, Int32 extensionsCount) {
-	UInt8 data[67]; data[0] = OPCODE_CPE_EXT_INFO;
-	Handlers_WriteString(&data[1], appName);
-	Stream_SetU16_BE(&data[65], extensionsCount);
-	Stream_WriteOrFail(stream, data, sizeof(data));
+static void CPE_WriteExtInfo(STRING_PURE String* appName, Int32 extensionsCount) {
+	UInt8* data = ServerConnection_WriteBuffer; 
+	data[0] = OPCODE_EXT_INFO;
+	{
+		Handlers_WriteString(&data[1], appName);
+		Stream_SetU16_BE(&data[65], extensionsCount);
+	}
+	ServerConnection_WriteBuffer += 67;
 }
 
-static void CPE_WriteExtEntry(struct Stream* stream, STRING_PURE String* extensionName, Int32 extensionVersion) {
-	UInt8 data[69]; data[0] = OPCODE_CPE_EXT_ENTRY;
-	Handlers_WriteString(&data[1], extensionName);
-	Stream_SetU32_BE(&data[65], extensionVersion);
-	Stream_WriteOrFail(stream, data, sizeof(data));
+static void CPE_WriteExtEntry(STRING_PURE String* extensionName, Int32 extensionVersion) {
+	UInt8* data = ServerConnection_WriteBuffer;
+	data[0] = OPCODE_EXT_ENTRY;
+	{
+		Handlers_WriteString(&data[1], extensionName);
+		Stream_SetU32_BE(&data[65], extensionVersion);
+	}
+	ServerConnection_WriteBuffer += 69;
 }
 
-static void CPE_WriteCustomBlockLevel(struct Stream* stream, UInt8 version) {
-	UInt8 data[2]; data[0] = OPCODE_CPE_CUSTOM_BLOCK_LEVEL;
-	data[1] = version;
-	Stream_WriteOrFail(stream, data, sizeof(data));
+static void CPE_WriteCustomBlockLevel(UInt8 version) {
+	UInt8* data = ServerConnection_WriteBuffer;
+	data[0] = OPCODE_CUSTOM_BLOCK_LEVEL;
+	{
+		data[1] = version;
+	}
+	ServerConnection_WriteBuffer += 2;
 }
 
-static void CPE_WriteTwoWayPing(struct Stream* stream, bool serverToClient, UInt16 payload) {
-	UInt8 data[4]; data[0] = OPCODE_CPE_TWO_WAY_PING;
-	data[1] = serverToClient;
-	Stream_SetU16_BE(&data[2], payload);
-	Stream_WriteOrFail(stream, data, sizeof(data));
+static void CPE_WriteTwoWayPing(bool serverToClient, UInt16 payload) {
+	UInt8* data = ServerConnection_WriteBuffer; 
+	data[0] = OPCODE_TWO_WAY_PING;
+	{
+		data[1] = serverToClient;
+		Stream_SetU16_BE(&data[2], payload);
+	}
+	ServerConnection_WriteBuffer += 4;
 }
 
 static void CPE_SendCpeExtInfoReply(void) {
 	if (cpe_serverExtensionsCount) return;
 	Int32 count = Array_Elems(cpe_clientExtensions);
 	if (!Game_AllowCustomBlocks) count -= 2;
-	struct Stream* stream = ServerConnection_WriteStream();
 
-	CPE_WriteExtInfo(stream, &ServerConnection_AppName, count);
+	CPE_WriteExtInfo(&ServerConnection_AppName, count);
 	Net_SendPacket();
 	Int32 i, ver;
 
@@ -736,14 +764,14 @@ static void CPE_SendCpeExtInfoReply(void) {
 			if (String_CaselessEqualsConst(&name, "BlockDefinitions"))    continue;
 		}
 
-		CPE_WriteExtEntry(stream, &name, ver);
+		CPE_WriteExtEntry(&name, ver);
 		Net_SendPacket();
 	}
 }
 
-static void CPE_ExtInfo(struct Stream* stream) {
+static void CPE_ExtInfo(UInt8* data) {
 	UChar appNameBuffer[String_BufferSize(STRING_SIZE)];
-	String appName = Handlers_ReadString(stream, appNameBuffer);
+	String appName = Handlers_ReadString(&data, appNameBuffer);
 
 	UChar logMsgBuffer[String_BufferSize(STRING_SIZE)];
 	String logMsg = String_InitAndClearArray(logMsgBuffer);
@@ -757,14 +785,14 @@ static void CPE_ExtInfo(struct Stream* stream) {
 
 	/* Workaround for old MCGalaxy that send ExtEntry sync but ExtInfo async. This means
 	   ExtEntry may sometimes arrive before ExtInfo, thus have to use += instead of = */
-	cpe_serverExtensionsCount += Stream_ReadU16_BE(stream);
+	cpe_serverExtensionsCount += Stream_GetU16_BE(data);
 	CPE_SendCpeExtInfoReply();
 }
 
-static void CPE_ExtEntry(struct Stream* stream) {
+static void CPE_ExtEntry(UInt8* data) {
 	UChar extNameBuffer[String_BufferSize(STRING_SIZE)];
-	String ext = Handlers_ReadString(stream, extNameBuffer);
-	Int32 extVersion = Stream_ReadI32_BE(stream);
+	String ext = Handlers_ReadString(&data, extNameBuffer);
+	Int32 extVersion = Stream_GetU32_BE(data);
 	Platform_Log2("cpe ext: %s, %i", &ext, &extVersion);
 
 	cpe_serverExtensionsCount--;
@@ -784,7 +812,7 @@ static void CPE_ExtEntry(struct Stream* stream) {
 	} else if (String_CaselessEqualsConst(&ext, "EnvMapAppearance")) {
 		cpe_envMapVer = extVersion;
 		if (extVersion == 1) return;
-		Net_PacketSizes[OPCODE_CPE_ENV_SET_MAP_APPEARANCE] += 4;
+		Net_PacketSizes[OPCODE_ENV_SET_MAP_APPEARANCE] += 4;
 	} else if (String_CaselessEqualsConst(&ext, "LongerMessages")) {
 		ServerConnection_SupportsPartialMessages = true;
 	} else if (String_CaselessEqualsConst(&ext, "FullCP437")) {
@@ -792,36 +820,34 @@ static void CPE_ExtEntry(struct Stream* stream) {
 	} else if (String_CaselessEqualsConst(&ext, "BlockDefinitionsExt")) {
 		cpe_blockDefsExtVer = extVersion;
 		if (extVersion == 1) return;
-		Net_PacketSizes[OPCODE_CPE_DEFINE_BLOCK_EXT] += 3;
+		Net_PacketSizes[OPCODE_DEFINE_BLOCK_EXT] += 3;
 	} else if (String_CaselessEqualsConst(&ext, "ExtEntityPositions")) {
 		Net_PacketSizes[OPCODE_ENTITY_TELEPORT] += 6;
 		Net_PacketSizes[OPCODE_ADD_ENTITY] += 6;
-		Net_PacketSizes[OPCODE_CPE_EXT_ADD_ENTITY2] += 6;
+		Net_PacketSizes[OPCODE_EXT_ADD_ENTITY2] += 6;
 		cpe_extEntityPos = true;
 	} else if (String_CaselessEqualsConst(&ext, "TwoWayPing")) {
 		cpe_twoWayPing = true;
 	} else if (String_CaselessEqualsConst(&ext, "FastMap")) {
-		Net_PacketSizes[OPCODE_LEVEL_INIT] += 4;
+		Net_PacketSizes[OPCODE_LEVEL_BEGIN] += 4;
 		cpe_fastMap = true;
 	}
 }
 
-static void CPE_SetClickDistance(struct Stream* stream) {
-	LocalPlayer_Instance.ReachDistance = Stream_ReadU16_BE(stream) / 32.0f;
+static void CPE_SetClickDistance(UInt8* data) {
+	LocalPlayer_Instance.ReachDistance = Stream_GetU16_BE(data) / 32.0f;
 }
 
-static void CPE_CustomBlockLevel(struct Stream* stream) {
-	UInt8 supportLevel = Stream_ReadU8(stream);
-	stream = ServerConnection_WriteStream();
-	CPE_WriteCustomBlockLevel(stream, 1);
+static void CPE_CustomBlockLevel(UInt8* data) {
+	CPE_WriteCustomBlockLevel(1);
 	Net_SendPacket();
 	Game_UseCPEBlocks = true;
 	Event_RaiseVoid(&BlockEvents_PermissionsChanged);
 }
 
-static void CPE_HoldThis(struct Stream* stream) {
-	BlockID block  = Handlers_ReadBlock(stream);
-	bool canChange = Stream_ReadU8(stream) == 0;
+static void CPE_HoldThis(UInt8* data) {
+	BlockID block  = Handlers_ReadBlock(data);
+	bool canChange = *data == 0;
 
 	Inventory_CanChangeHeldBlock = true;
 	Inventory_SetSelectedBlock(block);
@@ -829,14 +855,13 @@ static void CPE_HoldThis(struct Stream* stream) {
 	Inventory_CanPick = block != BLOCK_AIR;
 }
 
-static void CPE_SetTextHotkey(struct Stream* stream) {
-	UChar labelBuffer[String_BufferSize(STRING_SIZE)];
+static void CPE_SetTextHotkey(UInt8* data) {
 	UChar actionBuffer[String_BufferSize(STRING_SIZE)];
-	String label  = Handlers_ReadString(stream, labelBuffer);
-	String action = Handlers_ReadString(stream, actionBuffer);
+	data += STRING_SIZE; /* skip label */
+	String action = Handlers_ReadString(&data, actionBuffer);
 
-	UInt32 keyCode = Stream_ReadU32_BE(stream);
-	UInt8 keyMods  = Stream_ReadU8(stream);
+	UInt32 keyCode = Stream_GetU32_BE(data); data += 4;
+	UInt8 keyMods  = *data;
 	if (keyCode > 255) return;
 
 	Key key = Hotkeys_LWJGL[keyCode];
@@ -853,16 +878,16 @@ static void CPE_SetTextHotkey(struct Stream* stream) {
 	}
 }
 
-static void CPE_ExtAddPlayerName(struct Stream* stream) {
+static void CPE_ExtAddPlayerName(UInt8* data) {
 	UChar playerNameBuffer[String_BufferSize(STRING_SIZE)];
 	UChar listNameBuffer[String_BufferSize(STRING_SIZE)];
 	UChar groupNameBuffer[String_BufferSize(STRING_SIZE)];
 
-	Int32 id = Stream_ReadU16_BE(stream) & 0xFF;
-	String playerName = Handlers_ReadString(stream, playerNameBuffer);
-	String listName   = Handlers_ReadString(stream, listNameBuffer);
-	String groupName  = Handlers_ReadString(stream, groupNameBuffer);
-	UInt8 groupRank = Stream_ReadU8(stream);
+	EntityID id = data[1]; data += 2;
+	String playerName = Handlers_ReadString(&data, playerNameBuffer);
+	String listName   = Handlers_ReadString(&data, listNameBuffer);
+	String groupName  = Handlers_ReadString(&data, groupNameBuffer);
+	UInt8 groupRank   = *data;
 
 	String_StripCols(&playerName);
 	Handlers_RemoveEndPlus(&playerName);
@@ -871,60 +896,54 @@ static void CPE_ExtAddPlayerName(struct Stream* stream) {
 	/* Workarond for server software that declares support for ExtPlayerList, but sends AddEntity then AddPlayerName */
 	Int32 mask = id >> 3, bit = 1 << (id & 0x7);
 	classicTabList[mask] &= (UInt8)~bit;
-	Handlers_AddTablistEntry((EntityID)id, &playerName, &listName, &groupName, groupRank);
+	Handlers_AddTablistEntry(id, &playerName, &listName, &groupName, groupRank);
 }
 
-static void CPE_ExtAddEntity(struct Stream* stream) {
+static void CPE_ExtAddEntity(UInt8* data) {
 	UChar displayNameBuffer[String_BufferSize(STRING_SIZE)];
 	UChar skinNameBuffer[String_BufferSize(STRING_SIZE)];
 
-	UInt8 id = Stream_ReadU8(stream);	
-	String displayName = Handlers_ReadString(stream, displayNameBuffer);	
-	String skinName    = Handlers_ReadString(stream, skinNameBuffer);
+	UInt8 id = *data++;
+	String displayName = Handlers_ReadString(&data, displayNameBuffer);	
+	String skinName    = Handlers_ReadString(&data, skinNameBuffer);
 
 	Handlers_CheckName(id, &displayName, &skinName);
-	Handlers_AddEntity(id, &displayName, &skinName, false);
+	Handlers_AddEntity(data, id, &displayName, &skinName, false);
 }
 
-static void CPE_ExtRemovePlayerName(struct Stream* stream) {
-	Int32 id = Stream_ReadU16_BE(stream) & 0xFF;
-	Handlers_RemoveTablistEntry((EntityID)id);
+static void CPE_ExtRemovePlayerName(UInt8* data) {
+	EntityID id = data[1];
+	Handlers_RemoveTablistEntry(id);
 }
 
-static void CPE_MakeSelection(struct Stream* stream) {
-	UChar labelBuffer[String_BufferSize(STRING_SIZE)];
-	UInt8 selectionId = Stream_ReadU8(stream);
-	String label = Handlers_ReadString(stream, labelBuffer);
+static void CPE_MakeSelection(UInt8* data) {
+	UInt8 selectionId = *data++;
+	data += STRING_SIZE; /* label */
 
 	Vector3I p1;
-	p1.X = Stream_ReadI16_BE(stream);
-	p1.Y = Stream_ReadI16_BE(stream);
-	p1.Z = Stream_ReadI16_BE(stream);
+	p1.X = (Int16)Stream_GetU16_BE(&data[0]);
+	p1.Y = (Int16)Stream_GetU16_BE(&data[2]);
+	p1.Z = (Int16)Stream_GetU16_BE(&data[4]);
 
-	Vector3I p2;
-	p2.X = Stream_ReadI16_BE(stream);
-	p2.Y = Stream_ReadI16_BE(stream);
-	p2.Z = Stream_ReadI16_BE(stream);
+	Vector3I p2; data += 6;
+	p2.X = (Int16)Stream_GetU16_BE(&data[0]);
+	p2.Y = (Int16)Stream_GetU16_BE(&data[2]);
+	p2.Z = (Int16)Stream_GetU16_BE(&data[4]);
 
-	PackedCol col;
-	col.R = (UInt8)Stream_ReadU16_BE(stream);
-	col.G = (UInt8)Stream_ReadU16_BE(stream);
-	col.B = (UInt8)Stream_ReadU16_BE(stream);
-	col.A = (UInt8)Stream_ReadU16_BE(stream);
-
-	Selections_Add(selectionId, p1, p2, col);
+	PackedCol c; data += 6;
+	c.R = data[1]; c.G = data[3]; c.B = data[5]; c.A = data[7];
+	Selections_Add(selectionId, p1, p2, c);
 }
 
-static void CPE_RemoveSelection(struct Stream* stream) {
-	UInt8 selectionId = Stream_ReadU8(stream);
-	Selections_Remove(selectionId);
+static void CPE_RemoveSelection(UInt8* data) {
+	Selections_Remove(*data);
 }
 
-static void CPE_SetEnvCol(struct Stream* stream) {
-	UInt8 variable = Stream_ReadU8(stream);
-	UInt16 r = Stream_ReadU16_BE(stream);
-	UInt16 g = Stream_ReadU16_BE(stream);
-	UInt16 b = Stream_ReadU16_BE(stream);
+static void CPE_SetEnvCol(UInt8* data) {
+	UInt8 variable = *data++;
+	UInt16 r = Stream_GetU16_BE(&data[0]);
+	UInt16 g = Stream_GetU16_BE(&data[2]);
+	UInt16 b = Stream_GetU16_BE(&data[4]);
 	bool invalid = r > 255 || g > 255 || b > 255;
 	PackedCol col = PACKEDCOL_CONST((UInt8)r, (UInt8)g, (UInt8)b, 255);
 
@@ -941,50 +960,50 @@ static void CPE_SetEnvCol(struct Stream* stream) {
 	}
 }
 
-static void CPE_SetBlockPermission(struct Stream* stream) {
-	BlockID block = Handlers_ReadBlock(stream);
-	Block_CanPlace[block]  = Stream_ReadU8(stream) != 0;
-	Block_CanDelete[block] = Stream_ReadU8(stream) != 0;
+static void CPE_SetBlockPermission(UInt8* data) {
+	BlockID block = Handlers_ReadBlock(data);
+	Block_CanPlace[block]  = *data++ != 0;
+	Block_CanDelete[block] = *data++ != 0;
 	Event_RaiseVoid(&BlockEvents_PermissionsChanged);
 }
 
-static void CPE_ChangeModel(struct Stream* stream) {
+static void CPE_ChangeModel(UInt8* data) {
 	UChar modelNameBuffer[String_BufferSize(STRING_SIZE)];
-	UInt8 id = Stream_ReadU8(stream);
-	String modelName = Handlers_ReadString(stream, modelNameBuffer);
+	UInt8 id = *data++;
+	String modelName = Handlers_ReadString(&data, modelNameBuffer);
 
 	struct Entity* entity = Entities_List[id];
 	if (entity) { Entity_SetModel(entity, &modelName); }
 }
 
-static void CPE_EnvSetMapAppearance(struct Stream* stream) {
-	CPE_SetMapEnvUrl(stream);
-	WorldEnv_SetSidesBlock(Stream_ReadU8(stream));
-	WorldEnv_SetEdgeBlock(Stream_ReadU8(stream));
-	WorldEnv_SetEdgeHeight(Stream_ReadI16_BE(stream));
+static void CPE_EnvSetMapAppearance(UInt8* data) {
+	CPE_SetMapEnvUrl(data);
+	WorldEnv_SetSidesBlock(data[64]);
+	WorldEnv_SetEdgeBlock(data[65]);
+	WorldEnv_SetEdgeHeight((Int16)Stream_GetU16_BE(&data[66]));
 	if (cpe_envMapVer == 1) return;
 
 	/* Version 2 */
-	WorldEnv_SetCloudsHeight(Stream_ReadI16_BE(stream));
-	Int16 maxViewDist = Stream_ReadI16_BE(stream);
+	WorldEnv_SetCloudsHeight((Int16)Stream_GetU16_BE(&data[68]));
+	Int16 maxViewDist = (Int16)Stream_GetU16_BE(&data[70]);
 	Game_MaxViewDistance = maxViewDist <= 0 ? 32768 : maxViewDist;
 	Game_SetViewDistance(Game_UserViewDistance, false);
 }
 
-static void CPE_EnvWeatherType(struct Stream* stream) {
-	WorldEnv_SetWeather(Stream_ReadU8(stream));
+static void CPE_EnvWeatherType(UInt8* data) {
+	WorldEnv_SetWeather(*data);
 }
 
-static void CPE_HackControl(struct Stream* stream) {
+static void CPE_HackControl(UInt8* data) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	p->Hacks.CanFly                  = Stream_ReadU8(stream) != 0;
-	p->Hacks.CanNoclip               = Stream_ReadU8(stream) != 0;
-	p->Hacks.CanSpeed                = Stream_ReadU8(stream) != 0;
-	p->Hacks.CanRespawn              = Stream_ReadU8(stream) != 0;
-	p->Hacks.CanUseThirdPersonCamera = Stream_ReadU8(stream) != 0;
+	p->Hacks.CanFly                  = *data++ != 0;
+	p->Hacks.CanNoclip               = *data++ != 0;
+	p->Hacks.CanSpeed                = *data++ != 0;
+	p->Hacks.CanRespawn              = *data++ != 0;
+	p->Hacks.CanUseThirdPersonCamera = *data++ != 0;
 	LocalPlayer_CheckHacksConsistency();
 
-	UInt16 jumpHeight = Stream_ReadU16_BE(stream);
+	UInt16 jumpHeight = Stream_GetU16_BE(data);
 	struct PhysicsComp* physics = &p->Physics;
 	if (jumpHeight == UInt16_MaxValue) { /* special value of -1 to reset default */
 		physics->JumpVel = HacksComp_CanJumpHigher(&p->Hacks) ? physics->UserJumpVel : 0.42f;
@@ -996,31 +1015,26 @@ static void CPE_HackControl(struct Stream* stream) {
 	Event_RaiseVoid(&UserEvents_HackPermissionsChanged);
 }
 
-static void CPE_ExtAddEntity2(struct Stream* stream) {
+static void CPE_ExtAddEntity2(UInt8* data) {
 	UChar displayNameBuffer[String_BufferSize(STRING_SIZE)];
 	UChar skinNameBuffer[String_BufferSize(STRING_SIZE)];
-	UInt8 id = Stream_ReadU8(stream);
-	String displayName = Handlers_ReadString(stream, displayNameBuffer);
-	String skinName    = Handlers_ReadString(stream, skinNameBuffer);
+	UInt8 id = *data++;
+	String displayName = Handlers_ReadString(&data, displayNameBuffer);
+	String skinName    = Handlers_ReadString(&data, skinNameBuffer);
 
 	Handlers_CheckName(id, &displayName, &skinName);
-	Handlers_AddEntity(id, &displayName, &skinName, true);
+	Handlers_AddEntity(data, id, &displayName, &skinName, true);
 }
 
 #define BULK_MAX_BLOCKS 256
-static void CPE_BulkBlockUpdate(struct Stream* stream) {
-	Int32 i, count = Stream_ReadU8(stream) + 1;
+static void CPE_BulkBlockUpdate(UInt8* data) {
+	Int32 i, count = *data++ + 1;
 
-	Int32 indices[BULK_MAX_BLOCKS];
+	UInt32 indices[BULK_MAX_BLOCKS];
 	for (i = 0; i < count; i++) {
-		indices[i] = Stream_ReadI32_BE(stream);
+		indices[i] = Stream_GetU32_BE(data); data += 4;
 	}
-	Stream_Skip(stream, (BULK_MAX_BLOCKS - count) * (UInt32)sizeof(Int32));
-
-	BlockID blocks[BULK_MAX_BLOCKS];
-	UInt8* recvBuffer = stream->Meta.Mem.Cur;
-	for (i = 0; i < count; i++) { blocks[i] = recvBuffer[i]; }
-	Stream_Skip(stream, BULK_MAX_BLOCKS);
+	data += (BULK_MAX_BLOCKS - count) * sizeof(Int32);
 
 	Int32 x, y, z;
 	for (i = 0; i < count; i++) {
@@ -1029,30 +1043,27 @@ static void CPE_BulkBlockUpdate(struct Stream* stream) {
 		World_Unpack(index, x, y, z);
 
 		if (World_IsValidPos(x, y, z)) {
-			Game_UpdateBlock(x, y, z, blocks[i]);
+			Game_UpdateBlock(x, y, z, data[i]);
 		}
 	}
 }
 
-static void CPE_SetTextColor(struct Stream* stream) {
-	PackedCol col;
-	col.R = Stream_ReadU8(stream);
-	col.G = Stream_ReadU8(stream);
-	col.B = Stream_ReadU8(stream);
-	col.A = Stream_ReadU8(stream);
+static void CPE_SetTextColor(UInt8* data) {
+	PackedCol c;
+	c.R = *data++; c.G = *data++; c.B = *data++; c.A = *data++;
 
-	UInt8 code = Stream_ReadU8(stream);
+	UInt8 code = *data;
 	/* disallow space, null, and colour code specifiers */
 	if (code == '\0' || code == ' ' || code == 0xFF) return;
 	if (code == '%' || code == '&') return;
 
-	Drawer2D_Cols[code] = col;
+	Drawer2D_Cols[code] = c;
 	Event_RaiseInt(&ChatEvents_ColCodeChanged, code);
 }
 
-static void CPE_SetMapEnvUrl(struct Stream* stream) {
+static void CPE_SetMapEnvUrl(UInt8* data) {
 	UChar urlBuffer[String_BufferSize(STRING_SIZE)];
-	String url = Handlers_ReadString(stream, urlBuffer);
+	String url = Handlers_ReadString(&data, urlBuffer);
 	if (!Game_AllowServerTextures) return;
 
 	if (!url.length) {
@@ -1064,9 +1075,9 @@ static void CPE_SetMapEnvUrl(struct Stream* stream) {
 	Platform_Log1("Image url: %s", &url);
 }
 
-static void CPE_SetMapEnvProperty(struct Stream* stream) {
-	UInt8 type = Stream_ReadU8(stream);
-	Int32 value = Stream_ReadI32_BE(stream);
+static void CPE_SetMapEnvProperty(UInt8* data) {
+	UInt8 type  = *data++;
+	Int32 value = (Int32)Stream_GetU32_BE(data);
 	Math_Clamp(value, -0xFFFFFF, 0xFFFFFF);
 	Int32 maxBlock = BLOCK_COUNT - 1;
 
@@ -1103,10 +1114,10 @@ static void CPE_SetMapEnvProperty(struct Stream* stream) {
 	}
 }
 
-static void CPE_SetEntityProperty(struct Stream* stream) {
-	UInt8 id = Stream_ReadU8(stream);
-	UInt8 type = Stream_ReadU8(stream);
-	Int32 value = Stream_ReadI32_BE(stream);
+static void CPE_SetEntityProperty(UInt8* data) {
+	UInt8 id    = *data++;
+	UInt8 type  = *data++;
+	Int32 value = (Int32)Stream_GetU32_BE(data);
 
 	struct Entity* entity = Entities_List[id];
 	if (!entity) return;
@@ -1114,6 +1125,7 @@ static void CPE_SetEntityProperty(struct Stream* stream) {
 
 	Real32 scale;
 	switch (type) {
+	case 0:
 		update.Flags |= LOCATIONUPDATE_FLAG_ROTX;
 		update.RotX = LocationUpdate_Clamp((Real32)value); break;
 	case 1:
@@ -1140,19 +1152,19 @@ static void CPE_SetEntityProperty(struct Stream* stream) {
 	entity->VTABLE->SetLocation(entity, &update, true);
 }
 
-static void CPE_TwoWayPing(struct Stream* stream) {
-	bool serverToClient = Stream_ReadU8(stream) != 0;
-	UInt16 data = Stream_ReadU16_BE(stream);
-	if (!serverToClient) { PingList_Update(data); return; }
+static void CPE_TwoWayPing(UInt8* data) {
+	UInt8 serverToClient = *data++;
+	UInt16 payload       = Stream_GetU16_BE(data);
 
-	stream = ServerConnection_WriteStream();
-	CPE_WriteTwoWayPing(stream, true, data); /* server to client reply */
-	Net_SendPacket();
+	if (serverToClient) {
+		CPE_WriteTwoWayPing(true, payload); /* server to client reply */
+		Net_SendPacket();
+	} else { PingList_Update(payload); }
 }
 
-static void CPE_SetInventoryOrder(struct Stream* stream) {
-	BlockID block = Handlers_ReadBlock(stream);
-	BlockID order = Handlers_ReadBlock(stream);
+static void CPE_SetInventoryOrder(UInt8* data) {
+	BlockID block = Handlers_ReadBlock(data);
+	BlockID order = Handlers_ReadBlock(data);
 
 	Inventory_Remove(block);
 	if (order) { Inventory_Map[order - 1] = block; }
@@ -1166,41 +1178,40 @@ static void CPE_Reset(void) {
 	Game_UseCPEBlocks = false;
 	if (!Game_UseCPE) return;
 
-	Net_Set(OPCODE_CPE_EXT_INFO, CPE_ExtInfo, 67);
-	Net_Set(OPCODE_CPE_EXT_ENTRY, CPE_ExtEntry, 69);
-	Net_Set(OPCODE_CPE_SET_CLICK_DISTANCE, CPE_SetClickDistance, 3);
-	Net_Set(OPCODE_CPE_CUSTOM_BLOCK_LEVEL, CPE_CustomBlockLevel, 2);
-	Net_Set(OPCODE_CPE_HOLD_THIS, CPE_HoldThis, 3);
-	Net_Set(OPCODE_CPE_SET_TEXT_HOTKEY, CPE_SetTextHotkey, 134);
+	Net_Set(OPCODE_EXT_INFO, CPE_ExtInfo, 67);
+	Net_Set(OPCODE_EXT_ENTRY, CPE_ExtEntry, 69);
+	Net_Set(OPCODE_SET_REACH, CPE_SetClickDistance, 3);
+	Net_Set(OPCODE_CUSTOM_BLOCK_LEVEL, CPE_CustomBlockLevel, 2);
+	Net_Set(OPCODE_HOLD_THIS, CPE_HoldThis, 3);
+	Net_Set(OPCODE_SET_TEXT_HOTKEY, CPE_SetTextHotkey, 134);
 
-	Net_Set(OPCODE_CPE_EXT_ADD_PLAYER_NAME, CPE_ExtAddPlayerName, 196);
-	Net_Set(OPCODE_CPE_EXT_ADD_ENTITY, CPE_ExtAddEntity, 130);
-	Net_Set(OPCODE_CPE_EXT_REMOVE_PLAYER_NAME, CPE_ExtRemovePlayerName, 3);
+	Net_Set(OPCODE_EXT_ADD_PLAYER_NAME, CPE_ExtAddPlayerName, 196);
+	Net_Set(OPCODE_EXT_ADD_ENTITY, CPE_ExtAddEntity, 130);
+	Net_Set(OPCODE_EXT_REMOVE_PLAYER_NAME, CPE_ExtRemovePlayerName, 3);
 
-	Net_Set(OPCODE_CPE_ENV_SET_COLOR, CPE_SetEnvCol, 8);
-	Net_Set(OPCODE_CPE_MAKE_SELECTION, CPE_MakeSelection, 86);
-	Net_Set(OPCODE_CPE_REMOVE_SELECTION, CPE_RemoveSelection, 2);
-	Net_Set(OPCODE_CPE_SET_BLOCK_PERMISSION, CPE_SetBlockPermission, 4);
-	Net_Set(OPCODE_CPE_SET_MODEL, CPE_ChangeModel, 66);
-	Net_Set(OPCODE_CPE_ENV_SET_MAP_APPEARANCE, CPE_EnvSetMapAppearance, 69);
-	Net_Set(OPCODE_CPE_ENV_SET_WEATHER, CPE_EnvWeatherType, 2);
-	Net_Set(OPCODE_CPE_HACK_CONTROL, CPE_HackControl, 8);
-	Net_Set(OPCODE_CPE_EXT_ADD_ENTITY2, CPE_ExtAddEntity2, 138);
+	Net_Set(OPCODE_ENV_SET_COLOR, CPE_SetEnvCol, 8);
+	Net_Set(OPCODE_MAKE_SELECTION, CPE_MakeSelection, 86);
+	Net_Set(OPCODE_REMOVE_SELECTION, CPE_RemoveSelection, 2);
+	Net_Set(OPCODE_SET_BLOCK_PERMISSION, CPE_SetBlockPermission, 4);
+	Net_Set(OPCODE_SET_MODEL, CPE_ChangeModel, 66);
+	Net_Set(OPCODE_ENV_SET_MAP_APPEARANCE, CPE_EnvSetMapAppearance, 69);
+	Net_Set(OPCODE_ENV_SET_WEATHER, CPE_EnvWeatherType, 2);
+	Net_Set(OPCODE_HACK_CONTROL, CPE_HackControl, 8);
+	Net_Set(OPCODE_EXT_ADD_ENTITY2, CPE_ExtAddEntity2, 138);
 
-	Net_Set(OPCODE_CPE_BULK_BLOCK_UPDATE, CPE_BulkBlockUpdate, 1282);
-	Net_Set(OPCODE_CPE_SET_TEXT_COLOR, CPE_SetTextColor, 6);
-	Net_Set(OPCODE_CPE_ENV_SET_MAP_URL, CPE_SetMapEnvUrl, 65);
-	Net_Set(OPCODE_CPE_ENV_SET_MAP_PROPERTY, CPE_SetMapEnvProperty, 6);
-	Net_Set(OPCODE_CPE_SET_ENTITY_PROPERTY, CPE_SetEntityProperty, 7);
-	Net_Set(OPCODE_CPE_TWO_WAY_PING, CPE_TwoWayPing, 4);
-	Net_Set(OPCODE_CPE_SET_INVENTORY_ORDER, CPE_SetInventoryOrder, 3);
+	Net_Set(OPCODE_BULK_BLOCK_UPDATE, CPE_BulkBlockUpdate, 1282);
+	Net_Set(OPCODE_SET_TEXT_COLOR, CPE_SetTextColor, 6);
+	Net_Set(OPCODE_ENV_SET_MAP_URL, CPE_SetMapEnvUrl, 65);
+	Net_Set(OPCODE_ENV_SET_MAP_PROPERTY, CPE_SetMapEnvProperty, 6);
+	Net_Set(OPCODE_SET_ENTITY_PROPERTY, CPE_SetEntityProperty, 7);
+	Net_Set(OPCODE_TWO_WAY_PING, CPE_TwoWayPing, 4);
+	Net_Set(OPCODE_SET_INVENTORY_ORDER, CPE_SetInventoryOrder, 3);
 }
 
 static void CPE_Tick(void) {
 	cpe_pingTicks++;
 	if (cpe_pingTicks >= 20 && cpe_twoWayPing) {
-		struct Stream* stream = ServerConnection_WriteStream();
-		CPE_WriteTwoWayPing(stream, false, PingList_NextPingData());
+		CPE_WriteTwoWayPing(false, PingList_NextPingData());
 		cpe_pingTicks = 0;
 	}
 }
@@ -1215,78 +1226,79 @@ static void BlockDefs_OnBlockUpdated(BlockID block, bool didBlockLight) {
 	if (Block_BlocksLight[block] != didBlockLight) { Lighting_Refresh(); }
 }
 
-static BlockID BlockDefs_DefineBlockCommonStart(struct Stream* stream, bool uniqueSideTexs) {
-	BlockID block = Handlers_ReadBlock(stream);
+static BlockID BlockDefs_DefineBlockCommonStart(UInt8** ptr, bool uniqueSideTexs) {
+	UInt8* data = *ptr;
+	BlockID block = Handlers_ReadBlock(data);
 	bool didBlockLight = Block_BlocksLight[block];
 	Block_ResetProps(block);
 
 	UChar nameBuffer[String_BufferSize(STRING_SIZE)];
-	String name = Handlers_ReadString(stream, nameBuffer);
+	String name = Handlers_ReadString(&data, nameBuffer);
 	Block_SetName(block, &name);
-	Block_SetCollide(block, Stream_ReadU8(stream));
+	Block_SetCollide(block, *data++);
 
-	Real32 multiplierExponent = (Stream_ReadU8(stream) - 128) / 64.0f;
+	Real32 multiplierExponent = (*data++ - 128) / 64.0f;
 	#define LOG_2 0.693147180559945
 	Block_SpeedMultiplier[block] = (Real32)Math_Exp(LOG_2 * multiplierExponent); /* pow(2, x) */
 
-	Block_SetTex(Stream_ReadU8(stream), FACE_YMAX, block);
+	Block_SetTex(*data++, FACE_YMAX, block);
 	if (uniqueSideTexs) {
-		Block_SetTex(Stream_ReadU8(stream), FACE_XMIN, block);
-		Block_SetTex(Stream_ReadU8(stream), FACE_XMAX, block);
-		Block_SetTex(Stream_ReadU8(stream), FACE_ZMIN, block);
-		Block_SetTex(Stream_ReadU8(stream), FACE_ZMAX, block);
+		Block_SetTex(*data++, FACE_XMIN, block);
+		Block_SetTex(*data++, FACE_XMAX, block);
+		Block_SetTex(*data++, FACE_ZMIN, block);
+		Block_SetTex(*data++, FACE_ZMAX, block);
 	} else {
-		Block_SetSide(Stream_ReadU8(stream), block);
+		Block_SetSide(*data++, block);
 	}
-	Block_SetTex(Stream_ReadU8(stream), FACE_YMIN, block);
+	Block_SetTex(*data++, FACE_YMIN, block);
 
-	Block_BlocksLight[block] = Stream_ReadU8(stream) == 0;
+	Block_BlocksLight[block] = *data++ == 0;
 	BlockDefs_OnBlockUpdated(block, didBlockLight);
 
-	UInt8 sound = Stream_ReadU8(stream);
+	UInt8 sound = *data++;
 	Block_StepSounds[block] = sound;
 	Block_DigSounds[block] = sound;
 	if (sound == SOUND_GLASS) Block_StepSounds[block] = SOUND_STONE;
 
-	Block_FullBright[block] = Stream_ReadU8(stream) != 0;
+	Block_FullBright[block] = *data++ != 0;
+	*ptr = data;
 	return block;
 }
 
-static void BlockDefs_DefineBlockCommonEnd(struct Stream* stream, UInt8 shape, BlockID block) {
-	UInt8 blockDraw = Stream_ReadU8(stream);
+static void BlockDefs_DefineBlockCommonEnd(UInt8* data, UInt8 shape, BlockID block) {
+	UInt8 blockDraw = *data++;
 	if (shape == 0) {
 		Block_SpriteOffset[block] = blockDraw;
 		blockDraw = DRAW_SPRITE;
 	}
 	Block_Draw[block] = blockDraw;
-	UInt8 fogDensity = Stream_ReadU8(stream);
-	Block_FogDensity[block] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128.0f;
 
-	PackedCol col; col.A = 255;
-	col.R = Stream_ReadU8(stream);
-	col.G = Stream_ReadU8(stream);
-	col.B = Stream_ReadU8(stream);	
-	Block_FogCol[block] = col;
+	UInt8 density = *data++;
+	Block_FogDensity[block] = density == 0 ? 0.0f : (density + 1) / 128.0f;
+
+	PackedCol c;
+	c.R = *data++; c.G = *data++; c.B = *data++; c.A = 255;
+	Block_FogCol[block] = c;
 	Block_DefineCustom(block);
 }
 
-static void BlockDefs_DefineBlock(struct Stream* stream) {
-	BlockID block = BlockDefs_DefineBlockCommonStart(stream, false);
+static void BlockDefs_DefineBlock(UInt8* data) {
+	BlockID block = BlockDefs_DefineBlockCommonStart(&data, false);
 
-	UInt8 shape = Stream_ReadU8(stream);
+	UInt8 shape = *data++;
 	if (shape > 0 && shape <= 16) {
 		Block_MaxBB[block].Y = shape / 16.0f;
 	}
 
-	BlockDefs_DefineBlockCommonEnd(stream, shape, block);
+	BlockDefs_DefineBlockCommonEnd(data, shape, block);
 	/* Update sprite BoundingBox if necessary */
 	if (Block_Draw[block] == DRAW_SPRITE) {
 		Block_RecalculateBB(block);
 	}
 }
 
-static void BlockDefs_UndefineBlock(struct Stream* stream) {
-	BlockID block = Handlers_ReadBlock(stream);
+static void BlockDefs_UndefineBlock(UInt8* data) {
+	BlockID block = Handlers_ReadBlock(data);
 	bool didBlockLight = Block_BlocksLight[block];
 
 	Block_ResetProps(block);
@@ -1300,9 +1312,9 @@ static void BlockDefs_UndefineBlock(struct Stream* stream) {
 	Event_RaiseVoid(&BlockEvents_BlockDefChanged);
 }
 
-#define BlockDefs_ReadCoord(x) x = Stream_ReadU8(stream) / 16.0f; if (x > 1.0f) x = 1.0f;
-static void BlockDefs_DefineBlockExt(struct Stream* stream) {
-	BlockID block = BlockDefs_DefineBlockCommonStart(stream, cpe_blockDefsExtVer >= 2);
+#define BlockDefs_ReadCoord(x) x = *data++ / 16.0f; if (x > 1.0f) x = 1.0f;
+static void BlockDefs_DefineBlockExt(UInt8* data) {
+	BlockID block = BlockDefs_DefineBlockCommonStart(&data, cpe_blockDefsExtVer >= 2);
 
 	Vector3 minBB;
 	BlockDefs_ReadCoord(minBB.X);
@@ -1316,16 +1328,17 @@ static void BlockDefs_DefineBlockExt(struct Stream* stream) {
 
 	Block_MinBB[block] = minBB;
 	Block_MaxBB[block] = maxBB;
-	BlockDefs_DefineBlockCommonEnd(stream, 1, block);
+	BlockDefs_DefineBlockCommonEnd(data, 1, block);
 }
 
 #if FALSE
-void HandleDefineModel(void) {
+void HandleDefineModel(UInt8* data) {
 	int start = reader.index - 1;
-	UInt8 id = Stream_ReadU8(stream);
+	UInt8 id   = *data++;
+	UInt8 type = *data++;
 	CustomModel model = null;
 
-	switch (Stream_ReadU8(stream)) {
+	switch (type) {
 	case 0:
 		model = new CustomModel(game);
 		model.ReadSetupPacket(reader);
@@ -1350,9 +1363,9 @@ void HandleDefineModel(void) {
 #endif
 static void BlockDefs_Reset(void) {
 	if (!Game_UseCPE || !Game_AllowCustomBlocks) return;
-	Net_Set(OPCODE_CPE_DEFINE_BLOCK, BlockDefs_DefineBlock, 80);
-	Net_Set(OPCODE_CPE_UNDEFINE_BLOCK, BlockDefs_UndefineBlock, 2);
-	Net_Set(OPCODE_CPE_DEFINE_BLOCK_EXT, BlockDefs_DefineBlockExt, 85);
+	Net_Set(OPCODE_DEFINE_BLOCK, BlockDefs_DefineBlock, 80);
+	Net_Set(OPCODE_UNDEFINE_BLOCK, BlockDefs_UndefineBlock, 2);
+	Net_Set(OPCODE_DEFINE_BLOCK_EXT, BlockDefs_DefineBlockExt, 85);
 }
 
 

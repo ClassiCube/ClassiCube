@@ -254,7 +254,7 @@ void HacksComp_CheckConsistency(struct HacksComp* hacks) {
 		hacks->Speeding = false; hacks->HalfSpeeding = false;
 	}
 
-	hacks->CanDoubleJump = hacks->CanAnyHacks && hacks->Enabled && hacks->CanSpeed;
+	hacks->CanDoubleJump  = hacks->CanAnyHacks && hacks->Enabled && hacks->CanSpeed;
 	hacks->CanSeeAllNames = hacks->CanAnyHacks && hacks->CanSeeAllNames;
 
 	if (!hacks->CanUseThirdPersonCamera || !hacks->Enabled) {

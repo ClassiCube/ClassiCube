@@ -38,17 +38,6 @@ ReturnCode Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	return 0;
 }
 
-void Stream_WriteOrFail(struct Stream* stream, UInt8* buffer, UInt32 count) {
-	UInt32 write;
-	while (count) {
-		ReturnCode res = stream->Write(stream, buffer, count, &write);
-		if (!write || res) { Stream_Fail(stream, res, "writing to"); }
-
-		buffer += write;
-		count  -= write;
-	}
-}
-
 ReturnCode Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	UInt32 write;
 	while (count) {
