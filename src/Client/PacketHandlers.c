@@ -390,8 +390,7 @@ static void Classic_Ping(UInt8* data) { }
 static void Classic_StartLoading(void) {
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
-	String name = String_FromConst("Map chunk");
-	Stream_ReadonlyMemory(&mapPartStream, NULL, 0, &name);
+	Stream_ReadonlyMemory(&mapPartStream, NULL, 0);
 
 	prevScreen = Gui_Active;
 	if (prevScreen == LoadingScreen_UNSAFE_RawPointer) {

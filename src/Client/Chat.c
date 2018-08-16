@@ -106,7 +106,7 @@ static void Chat_OpenLog(DateTime* now) {
 		}
 
 		if (res == ReturnCode_FileShareViolation) continue;
-		Stream_FromFile(&Chat_LogStream, file, path);
+		Stream_FromFile(&Chat_LogStream, file);
 		return;
 	}
 

@@ -47,7 +47,7 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 	if (res = Stream_Read(stream, filenameBuffer, filenameLen)) return res;
 	filenameBuffer[filenameLen] = '\0';
 
-	if (!state->SelectEntry(&filename)) return;
+	if (!state->SelectEntry(&filename)) return 0;
 	if (res = Stream_Skip(stream, extraFieldLen)) return res;
 	struct Stream portion, compStream;
 
@@ -207,7 +207,7 @@ static void EntryList_Load(struct EntryList* list) {
 	void* file; res = File_Open(&file, &path);
 	if (res == ReturnCode_FileNotFound) return;
 	if (res) { Chat_LogError(res, "opening", &path); return; }
-	struct Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file);
 	{
 		/* ReadLine reads single byte at a time */
 		UInt8 buffer[2048]; struct Stream buffered;
@@ -245,7 +245,7 @@ static void EntryList_Save(struct EntryList* list) {
 
 	void* file; res = File_Create(&file, &path);
 	if (res) { Chat_LogError(res, "creating", &path); return; }
-	struct Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file);
 	{
 		Int32 i;
 		for (i = 0; i < list->Entries.Count; i++) {
@@ -331,7 +331,7 @@ bool TextureCache_GetStream(STRING_PURE String* url, struct Stream* stream) {
 	if (res == ReturnCode_FileNotFound) return false;
 
 	if (res) { Chat_LogError(res, "opening cache for", url); return false; }
-	Stream_FromFile(stream, file, &path);
+	Stream_FromFile(stream, file);
 	return true;
 }
 
@@ -380,7 +380,7 @@ void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length) {
 
 	void* file; res = File_Create(&file, &path);
 	if (res) { Chat_LogError(res, "creating cache for", url); return; }
-	struct Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file);
 	{
 		res = Stream_Write(&stream, data, length);
 		if (res) { Chat_LogError(res, "saving data for", url); }
@@ -428,7 +428,6 @@ void TextureCache_AddLastModified(STRING_PURE String* url, DateTime* lastModifie
 static void TexturePack_ProcessZipEntry(STRING_TRANSIENT String* path, struct Stream* stream, struct ZipEntry* entry) {
 	String_MakeLowercase(path);
 	String name = *path; Utils_UNSAFE_GetFilename(&name);
-	String_Set(&stream->Name, &name);
 	Event_RaiseEntry(&TextureEvents_FileChanged, stream, &name);
 }
 
@@ -450,7 +449,7 @@ void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
 
 	void* file; res = File_Open(&file, &path);
 	if (res) { Chat_LogError(res, "opening", &path); return; }
-	struct Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file);
 	{
 		res = TexturePack_ExtractZip(&stream);
 		if (res) { Chat_LogError(res, "extracting", &path); }
@@ -519,9 +518,7 @@ void TexturePack_Extract_Req(struct AsyncRequest* item) {
 	TextureCache_AddETag(&url, &etag);
 	TextureCache_AddLastModified(&url, &item->LastModified);
 
-	String id = String_FromRawArray(item->ID);
-	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len, &id);
-
+	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len);
 	bool png = Bitmap_DetectPng(data, len);
 	ReturnCode res = png ? TexturePack_ExtractTerrainPng(&mem) : TexturePack_ExtractZip(&mem);
 	const UChar* operation = png ? "decoding" : "extracting";

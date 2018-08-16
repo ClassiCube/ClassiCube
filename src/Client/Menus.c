@@ -1333,7 +1333,7 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* screen) {
 
 	void* file; res = File_Create(&file, &path);
 	if (res) { Chat_LogError(res, "creating", &path); return; }
-	struct Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file);
 	{
 		String cw = String_FromConst(".cw");	
 		struct GZipState state;
@@ -1634,7 +1634,7 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 
 	void* file; res = File_Open(&file, path);
 	if (res) { Chat_LogError(res, "opening", path); return; }
-	struct Stream stream; Stream_FromFile(&stream, file, path);
+	struct Stream stream; Stream_FromFile(&stream, file);
 	{
 		String cw = String_FromConst(".cw");   String lvl = String_FromConst(".lvl");
 		String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");

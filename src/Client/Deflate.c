@@ -679,7 +679,7 @@ static ReturnCode Inflate_StreamRead(struct Stream* stream, UInt8* data, UInt32 
 }
 
 void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struct Stream* underlying) {
-	Stream_Init(stream, &underlying->Name);
+	Stream_Init(stream);
 	Inflate_Init(state, underlying);
 	stream->Meta.Inflate = state;
 	stream->Read  = Inflate_StreamRead;
@@ -859,7 +859,7 @@ static ReturnCode Deflate_StreamClose(struct Stream* stream) {
 }
 
 void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struct Stream* underlying) {
-	Stream_Init(stream, &underlying->Name);
+	Stream_Init(stream);
 	stream->Meta.Inflate = state;
 	stream->Write = Deflate_StreamWrite;
 	stream->Close = Deflate_StreamClose;

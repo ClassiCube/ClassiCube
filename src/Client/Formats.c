@@ -264,7 +264,7 @@ static ReturnCode Nbt_ReadString(struct Stream* stream, UChar* strBuffer, UInt32
 	if (res = Stream_Read(stream, nameBuffer, 2)) return res;
 
 	UInt16 nameLen = Stream_GetU16_BE(nameBuffer);
-	if (nameLen > NBT_SMALL_SIZE * 4) ErrorHandler_Fail("NBT String too long");
+	if (nameLen > NBT_SMALL_SIZE * 4) return CW_ERR_STRING_LEN;
 	if (res = Stream_Read(stream, nameBuffer, nameLen)) return res;
 
 	String str = String_Init(strBuffer, 0, NBT_SMALL_SIZE);
@@ -274,7 +274,7 @@ static ReturnCode Nbt_ReadString(struct Stream* stream, UChar* strBuffer, UInt32
 
 typedef bool (*Nbt_Callback)(struct NbtTag* tag);
 static ReturnCode Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* stream, struct NbtTag* parent, Nbt_Callback callback) {
-	if (typeId == NBT_END) return;
+	if (typeId == NBT_END) return 0;
 
 	struct NbtTag tag;
 	tag.TagID = typeId; tag.Parent = parent;
@@ -708,18 +708,18 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 			if (res = Stream_Skip(stream, 152))        return res;
 		} else if (typeCode != TC_NULL) {
 			/* WoM maps have this field as null, which makes things easier for us */
-			ErrorHandler_Fail("Unsupported type code in Object field");
+			return DAT_ERR_JOBJECT_TYPE;
 		}
 	} break;
 
 	case JFIELD_ARRAY: {
 		if (res = stream->ReadU8(stream, &typeCode)) return res;
 		if (typeCode == TC_NULL) break;
-		if (typeCode != TC_ARRAY) ErrorHandler_Fail("Unsupported type code in Array field");
+		if (typeCode != TC_ARRAY) return DAT_ERR_JARRAY_TYPE;
 
 		struct JClassDesc arrayClassDesc;
 		if (res = Dat_ReadClassDesc(stream, &arrayClassDesc)) return res;
-		if (arrayClassDesc.ClassName[1] != JFIELD_INT8) ErrorHandler_Fail("Only byte array fields supported");
+		if (arrayClassDesc.ClassName[1] != JFIELD_INT8) return DAT_ERR_JARRAY_CONTENT;
 
 		if (res = Stream_ReadU32_BE(stream, &count)) return res;
 		field->Value_Size = count;

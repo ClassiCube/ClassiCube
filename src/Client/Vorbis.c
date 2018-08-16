@@ -71,7 +71,7 @@ static ReturnCode Ogg_ReadU8(struct Stream* stream, UInt8* data) {
 }
 
 void Ogg_MakeStream(struct Stream* stream, UInt8* buffer, struct Stream* source) {
-	Stream_Init(stream, &source->Name);
+	Stream_Init(stream);
 	stream->Read   = Ogg_Read;
 	stream->ReadU8 = Ogg_ReadU8;
 

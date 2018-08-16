@@ -66,7 +66,7 @@ static ReturnCode Stream_DefaultGet(struct Stream* stream, UInt32* value) {
 	*value = 0; return ReturnCode_NotSupported; 
 }
 
-void Stream_Init(struct Stream* stream, STRING_PURE String* name) {
+void Stream_Init(struct Stream* stream) {
 	stream->Read   = Stream_DefaultIO;
 	stream->ReadU8 = Stream_DefaultReadU8;
 	stream->Write  = Stream_DefaultIO;
@@ -74,8 +74,6 @@ void Stream_Init(struct Stream* stream, STRING_PURE String* name) {
 	stream->Seek   = Stream_DefaultSeek;
 	stream->Position = Stream_DefaultGet;
 	stream->Length   = Stream_DefaultGet;
-	stream->Name = String_InitAndClearArray(stream->NameBuffer);
-	String_AppendString(&stream->Name, name);
 }
 
 
@@ -103,8 +101,8 @@ static ReturnCode Stream_FileLength(struct Stream* stream, UInt32* length) {
 	return File_Length(stream->Meta.File, length);
 }
 
-void Stream_FromFile(struct Stream* stream, void* file, STRING_PURE String* name) {
-	Stream_Init(stream, name);
+void Stream_FromFile(struct Stream* stream, void* file) {
+	Stream_Init(stream);
 	stream->Meta.File = file;
 
 	stream->Read  = Stream_FileRead;
@@ -142,7 +140,6 @@ static ReturnCode Stream_PortionLength(struct Stream* stream, UInt32* length) {
 }
 
 void Stream_ReadonlyPortion(struct Stream* stream, struct Stream* source, UInt32 len) {
-	Stream_Init(stream, &source->Name);
 	stream->Read     = Stream_PortionRead;
 	stream->ReadU8   = Stream_PortionReadU8;
 	stream->Position = Stream_PortionPosition;
@@ -204,8 +201,8 @@ static ReturnCode Stream_MemorySeek(struct Stream* stream, Int32 offset, Int32 s
 	return 0;
 }
 
-static void Stream_CommonMemory(struct Stream* stream, void* data, UInt32 len, STRING_PURE String* name) {
-	Stream_Init(stream, name);
+static void Stream_CommonMemory(struct Stream* stream, void* data, UInt32 len) {
+	Stream_Init(stream);
 	stream->Seek = Stream_MemorySeek;
 	/* TODO: Should we use separate Stream_MemoryPosition functions? */
 	stream->Position = Stream_PortionPosition;
@@ -217,14 +214,14 @@ static void Stream_CommonMemory(struct Stream* stream, void* data, UInt32 len, S
 	stream->Meta.Mem.Base = data;
 }
 
-void Stream_ReadonlyMemory(struct Stream* stream, void* data, UInt32 len, STRING_PURE String* name) {
-	Stream_CommonMemory(stream, data, len, name);
+void Stream_ReadonlyMemory(struct Stream* stream, void* data, UInt32 len) {
+	Stream_CommonMemory(stream, data, len);
 	stream->Read   = Stream_MemoryRead;
 	stream->ReadU8 = Stream_MemoryReadU8;
 }
 
-void Stream_WriteonlyMemory(struct Stream* stream, void* data, UInt32 len, STRING_PURE String* name) {
-	Stream_CommonMemory(stream, data, len, name);
+void Stream_WriteonlyMemory(struct Stream* stream, void* data, UInt32 len) {
+	Stream_CommonMemory(stream, data, len);
 	stream->Write = Stream_MemoryWrite;
 }
 
@@ -251,7 +248,6 @@ static ReturnCode Stream_BufferedReadU8(struct Stream* stream, UInt8* data) {
 }
 
 void Stream_ReadonlyBuffered(struct Stream* stream, struct Stream* source, void* data, UInt32 size) {
-	Stream_Init(stream, &source->Name);
 	stream->Read   = Stream_BufferedRead;
 	stream->ReadU8 = Stream_BufferedReadU8;
 

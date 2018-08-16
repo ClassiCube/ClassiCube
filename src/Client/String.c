@@ -518,8 +518,7 @@ bool Convert_TryUnicodeToCP437(UInt16 c, UChar* value) {
 }
 
 void String_DecodeUtf8(STRING_TRANSIENT String* str, UInt8* data, UInt32 len) {
-	String name = String_FromConst("Decoding UTF8");
-	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len, &name);
+	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len);
 	UInt16 codepoint;
 
 	while (mem.Meta.Mem.Left) {

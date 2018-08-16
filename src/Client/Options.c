@@ -174,7 +174,7 @@ void Options_Load(void) {
 
 	UChar lineBuffer[String_BufferSize(768)];
 	String line = String_InitAndClearArray(lineBuffer);
-	struct Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file);
 
 	/* ReadLine reads single byte at a time */
 	UInt8 buffer[2048]; struct Stream buffered;
@@ -212,7 +212,7 @@ void Options_Save(void) {
 
 	UChar lineBuffer[String_BufferSize(1024)];
 	String line = String_InitAndClearArray(lineBuffer);
-	struct Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file);
 	Int32 i;
 
 	for (i = 0; i < Options_Keys.Count; i++) {

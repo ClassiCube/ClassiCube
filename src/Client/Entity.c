@@ -692,7 +692,7 @@ static void Player_CheckSkin(struct Player* player) {
 
 	String url = String_FromRawArray(item.URL);
 	struct Stream mem; struct Bitmap bmp;
-	Stream_ReadonlyMemory(&mem, item.ResultData, item.ResultSize, &url);
+	Stream_ReadonlyMemory(&mem, item.ResultData, item.ResultSize);
 
 	ReturnCode res = Bitmap_DecodePng(&bmp, &mem);
 	if (res) {

@@ -82,7 +82,7 @@ static ReturnCode Sound_ReadWave(STRING_PURE String* filename, struct Sound* snd
 	void* file; res = File_Open(&file, &path);
 	if (res) return res;
 
-	struct Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file);
 	{
 		res = Sound_ReadWaveData(&stream, snd);
 		if (res) { stream.Close(&stream); return res; }
@@ -353,7 +353,7 @@ static void Music_RunLoop(void) {
 
 		void* file; res = File_Open(&file, &path);
 		if (res) { Chat_LogError(res, "opening", &path); return; }
-		struct Stream stream; Stream_FromFile(&stream, file, &path);
+		struct Stream stream; Stream_FromFile(&stream, file);
 		{
 			res = Music_PlayOgg(&stream);
 			if (res) { Chat_LogError(res, "playing", &path); }

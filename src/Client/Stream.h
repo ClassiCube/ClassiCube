@@ -29,21 +29,19 @@ struct Stream {
 		struct { UInt8* Cur; UInt32 Left, Last;   UInt8* Base; struct Stream* Source; } Ogg;
 		struct { struct Stream* Source; UInt32 CRC32; } CRC32;
 	} Meta;
-	UChar NameBuffer[String_BufferSize(FILENAME_SIZE)];
-	String Name;
 };
 
 ReturnCode Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count);
 ReturnCode Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count);
-void Stream_Init(struct Stream* stream, STRING_PURE String* name);
+void Stream_Init(struct Stream* stream);
 ReturnCode Stream_Skip(struct Stream* stream, UInt32 count);
 ReturnCode Stream_DefaultReadU8(struct Stream* stream, UInt8* data);
 
-void Stream_FromFile(struct Stream* stream, void* file, STRING_PURE String* name);
+void Stream_FromFile(struct Stream* stream, void* file);
 /* Readonly Stream wrapping another Stream, only allows reading up to 'len' bytes from the wrapped stream. */
 void Stream_ReadonlyPortion(struct Stream* stream, struct Stream* source, UInt32 len);
-void Stream_ReadonlyMemory(struct Stream* stream, void* data, UInt32 len, STRING_PURE String* name);
-void Stream_WriteonlyMemory(struct Stream* stream, void* data, UInt32 len, STRING_PURE String* name);
+void Stream_ReadonlyMemory(struct Stream* stream, void* data, UInt32 len);
+void Stream_WriteonlyMemory(struct Stream* stream, void* data, UInt32 len);
 void Stream_ReadonlyBuffered(struct Stream* stream, struct Stream* source, void* data, UInt32 size);
 
 UInt16 Stream_GetU16_LE(UInt8* data);
@@ -54,10 +52,8 @@ UInt32 Stream_GetU32_BE(UInt8* data);
 void Stream_SetU16_BE(UInt8* data, UInt16 value);
 void Stream_SetU32_LE(UInt8* data, UInt32 value);
 void Stream_SetU32_BE(UInt8* data, UInt32 value);
-
 ReturnCode Stream_ReadU32_LE(struct Stream* stream, UInt32* value);
 ReturnCode Stream_ReadU32_BE(struct Stream* stream, UInt32* value);
-UInt8 Stream_ReadU8OrFail(struct Stream* stream);
 
 ReturnCode Stream_ReadUtf8Char(struct Stream* stream, UInt16* codepoint);
 ReturnCode Stream_ReadLine(struct Stream* stream, STRING_TRANSIENT String* text);

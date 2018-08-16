@@ -636,7 +636,7 @@ void Game_TakeScreenshot(void) {
 	void* file; res = File_Create(&file, &path);
 	if (res) { Chat_LogError(res, "creating", &path); return; }
 
-	struct Stream stream; Stream_FromFile(&stream, file, &path);
+	struct Stream stream; Stream_FromFile(&stream, file);
 	{
 		res = Gfx_TakeScreenshot(&stream, Game_Width, Game_Height);
 		if (res) { 

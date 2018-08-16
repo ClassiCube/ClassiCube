@@ -494,9 +494,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 	if (transparentCol <= PNG_RGB_MASK) {
 		Png_ComputeTransparency(bmp, transparentCol);
 	}
-
-	if (!bmp->Scan0) ErrorHandler_Fail("Invalid PNG image");
-	return 0;
+	return bmp->Scan0 ? 0 : PNG_ERR_NO_DATA;
 }
 
 
@@ -516,7 +514,7 @@ static ReturnCode Bitmap_Crc32StreamWrite(struct Stream* stream, UInt8* data, UI
 }
 
 static void Bitmap_Crc32Stream(struct Stream* stream, struct Stream* underlying) {
-	Stream_Init(stream, &underlying->Name);
+	Stream_Init(stream);
 	stream->Meta.CRC32.Source = underlying;
 	stream->Meta.CRC32.CRC32  = 0xFFFFFFFFUL;
 	stream->Write = Bitmap_Crc32StreamWrite;
