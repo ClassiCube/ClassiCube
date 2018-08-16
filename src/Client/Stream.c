@@ -7,12 +7,6 @@
 /*########################################################################################################################*
 *---------------------------------------------------------Stream----------------------------------------------------------*
 *#########################################################################################################################*/
-#define Stream_SafeWriteBlock(stream, buffer, count, write)\
-ReturnCode result = stream->Write(stream, buffer, count, &write);\
-if (!write || result) {\
-	Stream_Fail(stream, result, "writing to");\
-}
-
 void Stream_Fail(struct Stream* stream, ReturnCode result, const UChar* operation) {
 	UChar tmpBuffer[String_BufferSize(400)];
 	String tmp = String_InitAndClearArray(tmpBuffer);
@@ -47,7 +41,9 @@ ReturnCode Stream_TryRead(struct Stream* stream, UInt8* buffer, UInt32 count) {
 void Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	UInt32 write;
 	while (count) {
-		Stream_SafeWriteBlock(stream, buffer, count, write);
+		ReturnCode result = stream->Write(stream, buffer, count, &write);
+		if (!write || result) { Stream_Fail(stream, result, "writing to"); }
+
 		buffer += write;
 		count  -= write;
 	}
@@ -359,18 +355,6 @@ UInt32 Stream_ReadU32_BE(struct Stream* stream) {
 	return Stream_GetU32_BE(buffer);
 }
 
-void Stream_WriteU8(struct Stream* stream, UInt8 value) {
-	UInt32 write;
-	/* Inline 8 bit writing, because it is very frequently used. */
-	Stream_SafeWriteBlock(stream, &value, sizeof(UInt8), write);
-}
-
-void Stream_WriteU16_BE(struct Stream* stream, UInt16 value) {
-	UInt8 buffer[sizeof(UInt16)];
-	buffer[0] = (UInt8)(value >> 8 ); buffer[1] = (UInt8)(value      );
-	Stream_Write(stream, buffer, sizeof(UInt16));
-}
-
 void Stream_WriteU32_BE(struct Stream* stream, UInt32 value) {
 	UInt8 buffer[sizeof(UInt32)];
 	buffer[0] = (UInt8)(value >> 24); buffer[1] = (UInt8)(value >> 16);
@@ -449,14 +433,15 @@ Int32 Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint) {
 	}
 }
 
-void Stream_WriteLine(struct Stream* stream, STRING_TRANSIENT String* text) {
+ReturnCode Stream_WriteLine(struct Stream* stream, STRING_TRANSIENT String* text) {
 	UInt8 buffer[2048 + 10];
 	UInt32 i, j = 0;
 
 	for (i = 0; i < text->length; i++) {
 		/* For extremely large strings */
 		if (j >= 2048) {
-			Stream_Write(stream, buffer, j); j = 0;
+			ReturnCode result = Stream_TryWrite(stream, buffer, j); j = 0;
+			if (result) return result;
 		}
 
 		UInt8* cur = buffer + j;
@@ -466,5 +451,5 @@ void Stream_WriteLine(struct Stream* stream, STRING_TRANSIENT String* text) {
 	
 	UInt8* ptr = Platform_NewLine;
 	while (*ptr) { buffer[j++] = *ptr++; }
-	if (j > 0) Stream_Write(stream, buffer, j);
+	return Stream_TryWrite(stream, buffer, j);
 }

@@ -655,9 +655,12 @@ ReturnCode Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 			UInt8* prev = (y & 1) == 0 ? prevLine : curLine;
 			UInt8* cur  = (y & 1) == 0 ? curLine : prevLine;
 			Png_EncodeRow(src, cur, prev, bestLine, lineSize);
-			Stream_Write(&zlStream, bestLine, lineSize + 1); /* +1 for filter byte */
+
+			result = Stream_TryWrite(&zlStream, bestLine, lineSize + 1); /* +1 for filter byte */
+			if (result) return result;
 		}
-		zlStream.Close(&zlStream);
+		result = zlStream.Close(&zlStream);
+		if (result) return result;
 	}
 	stream = underlying;
 	Stream_WriteU32_BE(stream, crc32Stream.Meta.CRC32.CRC32 ^ 0xFFFFFFFFUL);
@@ -676,6 +679,6 @@ ReturnCode Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 	result = stream->Seek(stream, 33, STREAM_SEEKFROM_BEGIN);
 	if (result) return result;
 
-	Stream_WriteU32_BE(stream, stream_len - 57);
-	return 0;
+	Stream_SetU32_BE(&tmp[0], stream_len - 57);
+	return Stream_TryWrite(stream, tmp, sizeof(UInt32));
 }

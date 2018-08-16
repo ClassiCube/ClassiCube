@@ -208,8 +208,8 @@ ReturnCode Fcm_Load(struct Stream* stream) {
 *---------------------------------------------------------NBTFile---------------------------------------------------------*
 *#########################################################################################################################*/
 enum NBT_TAG { 
-	NBT_TAG_END, NBT_TAG_INT8, NBT_TAG_INT16, NBT_TAG_INT32, NBT_TAG_INT64, NBT_TAG_REAL32, NBT_TAG_REAL64, 
-	NBT_TAG_INT8_ARRAY, NBT_TAG_STRING, NBT_TAG_LIST, NBT_TAG_COMPOUND, NBT_TAG_INT32_ARRAY, 
+	NBT_END, NBT_I8, NBT_I16, NBT_I32, NBT_I64, NBT_R32, 
+	NBT_R64, NBT_I8S, NBT_STR, NBT_LIST, NBT_DICT, NBT_I32S, 
 };
 
 #define NBT_SMALL_SIZE STRING_SIZE
@@ -232,34 +232,34 @@ struct NbtTag {
 };
 
 static UInt8 NbtTag_U8(struct NbtTag* tag) {
-	if (tag->TagID != NBT_TAG_INT8) ErrorHandler_Fail("Expected I8 NBT tag");
+	if (tag->TagID != NBT_I8) ErrorHandler_Fail("Expected I8 NBT tag");
 	return tag->Value_U8;
 }
 
 static Int16 NbtTag_I16(struct NbtTag* tag) {
-	if (tag->TagID != NBT_TAG_INT16) ErrorHandler_Fail("Expected I16 NBT tag");
+	if (tag->TagID != NBT_I16) ErrorHandler_Fail("Expected I16 NBT tag");
 	return tag->Value_I16;
 }
 
 static Int32 NbtTag_I32(struct NbtTag* tag) {
-	if (tag->TagID != NBT_TAG_INT32) ErrorHandler_Fail("Expected I32 NBT tag");
+	if (tag->TagID != NBT_I32) ErrorHandler_Fail("Expected I32 NBT tag");
 	return tag->Value_I32;
 }
 
 static Real32 NbtTag_R32(struct NbtTag* tag) {
-	if (tag->TagID != NBT_TAG_REAL32) ErrorHandler_Fail("Expected R32 NBT tag");
+	if (tag->TagID != NBT_R32) ErrorHandler_Fail("Expected R32 NBT tag");
 	return tag->Value_R32;
 }
 
 static UInt8* NbtTag_U8_Array(struct NbtTag* tag, Int32 minSize) {
-	if (tag->TagID != NBT_TAG_INT8_ARRAY) ErrorHandler_Fail("Expected I8_Array NBT tag");
+	if (tag->TagID != NBT_I8S) ErrorHandler_Fail("Expected I8_Array NBT tag");
 	if (tag->DataSize < minSize) ErrorHandler_Fail("I8_Array NBT tag too small");
 
 	return tag->DataSize < NBT_SMALL_SIZE ? tag->DataSmall : tag->DataBig;
 }
 
 static String NbtTag_String(struct NbtTag* tag) {
-	if (tag->TagID != NBT_TAG_STRING) ErrorHandler_Fail("Expected String NBT tag");
+	if (tag->TagID != NBT_STR) ErrorHandler_Fail("Expected String NBT tag");
 	return String_Init(tag->DataSmall, tag->DataSize, tag->DataSize);
 }
 
@@ -276,7 +276,7 @@ static UInt32 Nbt_ReadString(struct Stream* stream, UChar* strBuffer) {
 
 typedef bool (*Nbt_Callback)(struct NbtTag* tag);
 static void Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* stream, struct NbtTag* parent, Nbt_Callback callback) {
-	if (typeId == NBT_TAG_END) return;
+	if (typeId == NBT_END) return;
 
 	struct NbtTag tag;
 	tag.TagID = typeId;
@@ -288,21 +288,21 @@ static void Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* stream, s
 	UInt32 i, count;
 
 	switch (typeId) {
-	case NBT_TAG_INT8:
+	case NBT_I8:
 		tag.Value_U8 = Stream_ReadU8(stream); break;
-	case NBT_TAG_INT16:
+	case NBT_I16:
 		tag.Value_I16 = Stream_ReadI16_BE(stream); break;
-	case NBT_TAG_INT32:
+	case NBT_I32:
 		tag.Value_I32 = Stream_ReadI32_BE(stream); break;
-	case NBT_TAG_INT64:
+	case NBT_I64:
 		Stream_Skip(stream, 8); break; /* (8) data */
-	case NBT_TAG_REAL32:
+	case NBT_R32:
 		/* TODO: Is this union abuse even legal */
 		tag.Value_I32 = Stream_ReadI32_BE(stream); break;
-	case NBT_TAG_REAL64:
+	case NBT_R64:
 		Stream_Skip(stream, 8); break; /* (8) data */
 
-	case NBT_TAG_INT8_ARRAY:
+	case NBT_I8S:
 		count = Stream_ReadU32_BE(stream); 
 		tag.DataSize = count;
 
@@ -314,11 +314,11 @@ static void Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* stream, s
 		}
 		break;
 
-	case NBT_TAG_STRING:
+	case NBT_STR:
 		tag.DataSize = Nbt_ReadString(stream, tag.DataSmall);
 		break;
 
-	case NBT_TAG_LIST:
+	case NBT_LIST:
 		childTagId = Stream_ReadU8(stream);
 		count = Stream_ReadU32_BE(stream);
 		for (i = 0; i < count; i++) {
@@ -326,13 +326,13 @@ static void Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* stream, s
 		}
 		break;
 
-	case NBT_TAG_COMPOUND:
-		while ((childTagId = Stream_ReadU8(stream)) != NBT_TAG_END) {
+	case NBT_DICT:
+		while ((childTagId = Stream_ReadU8(stream)) != NBT_END) {
 			Nbt_ReadTag(childTagId, true, stream, &tag, callback);
 		} 
 		break;
 
-	case NBT_TAG_INT32_ARRAY:
+	case NBT_I32S:
 		ErrorHandler_Fail("Nbt Tag Int32_Array not supported");
 		break;
 
@@ -348,33 +348,6 @@ static void Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* stream, s
 static bool IsTag(struct NbtTag* tag, const UChar* tagName) {
 	String name = { tag->NameBuffer, tag->NameSize, tag->NameSize };
 	return String_CaselessEqualsConst(&name, tagName);
-}
-
-
-#define Nbt_WriteU8(stream, value)  Stream_WriteU8(stream, value)
-#define Nbt_WriteI16(stream, value) Stream_WriteU16_BE(stream, (Int16)(value))
-#define Nbt_WriteI32(stream, value) Stream_WriteU32_BE(stream, (Int32)(value))
-#define Nbt_WriteU8_Array(stream, data, len) Nbt_WriteI32(stream, len); Stream_Write(stream, data, len)
-
-static void Nbt_WriteString(struct Stream* stream, STRING_PURE String* text) {
-	if (text->length > NBT_SMALL_SIZE) ErrorHandler_Fail("NBT String too long");
-	UInt8 buffer[NBT_SMALL_SIZE * 3];
-	Int32 i, len = 0;
-
-	for (i = 0; i < text->length; i++) {
-		UInt8* cur = buffer + len;
-		UInt16 codepoint = Convert_CP437ToUnicode(text->buffer[i]);
-		len += Stream_WriteUtf8(cur, codepoint);
-	}
-
-	Nbt_WriteI16(stream, len);
-	Stream_Write(stream, buffer, len);
-}
-
-static void Nbt_WriteTag(struct Stream* stream, UInt8 tagType, const UInt8* tagName) {
-	Nbt_WriteU8(stream, tagType);
-	String str = String_FromReadonly(tagName);
-	Nbt_WriteString(stream, &str);
 }
 
 
@@ -589,10 +562,10 @@ ReturnCode Cw_Load(struct Stream* stream) {
 	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
-	if (Stream_ReadU8(&compStream) != NBT_TAG_COMPOUND) {
+	if (Stream_ReadU8(&compStream) != NBT_DICT) {
 		ErrorHandler_Fail("NBT file most start with Compound Tag");
 	}
-	Nbt_ReadTag(NBT_TAG_COMPOUND, true, &compStream, NULL, Cw_Callback);
+	Nbt_ReadTag(NBT_DICT, true, &compStream, NULL, Cw_Callback);
 
 	/* Older versions incorrectly multiplied spawn coords by * 32, so we check for that */
 	Vector3* spawn = &LocalPlayer_Instance.Spawn;
@@ -794,145 +767,132 @@ ReturnCode Dat_Load(struct Stream* stream) {
 /*########################################################################################################################*
 *--------------------------------------------------ClassicWorld export----------------------------------------------------*
 *#########################################################################################################################*/
-static void Cw_WriteCpeExtCompound(struct Stream* stream, const UChar* tagName, Int32 version) {
-	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, tagName);
-	Nbt_WriteTag(stream, NBT_TAG_INT32, "ExtensionVersion");
-	Nbt_WriteI32(stream, version);
-}
+#define CW_META_VERSION 'E','x','t','e','n','s','i','o','n','V','e','r','s','i','o','n'
+#define CW_META_RGB NBT_I16,0,1,'R',0,0,  NBT_I16,0,1,'G',0,0,  NBT_I16,0,1,'B',0,0,
+static Int32 Cw_WriteEndString(UInt8* data, STRING_PURE String* text) {
+	Int32 i, len = 0;
+	UInt8* cur = data + 2;
 
-static void Cw_WriteSpawnCompound(struct Stream* stream) {
-	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "Spawn");
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	Vector3 spawn = p->Spawn; /* TODO: Maybe keep real spawn too? */
-
-	Nbt_WriteTag(stream, NBT_TAG_INT16, "X");
-	Nbt_WriteI16(stream, spawn.X);
-	Nbt_WriteTag(stream, NBT_TAG_INT16, "Y");
-	Nbt_WriteI16(stream, spawn.Y);
-	Nbt_WriteTag(stream, NBT_TAG_INT16, "Z");
-	Nbt_WriteI16(stream, spawn.Z);
-
-	Nbt_WriteTag(stream, NBT_TAG_INT8, "H");
-	Nbt_WriteU8(stream, Math_Deg2Packed(p->SpawnRotY));
-	Nbt_WriteTag(stream, NBT_TAG_INT8, "P");
-	Nbt_WriteU8(stream, Math_Deg2Packed(p->SpawnHeadX));
-
-	Nbt_WriteU8(stream, NBT_TAG_END);
-}
-
-static void Cw_WriteColCompound(struct Stream* stream, const UChar* tagName, PackedCol col) {
-	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, tagName);
-
-	Nbt_WriteTag(stream, NBT_TAG_INT16, "R");
-	Nbt_WriteI16(stream, col.R);
-	Nbt_WriteTag(stream, NBT_TAG_INT16, "G");
-	Nbt_WriteI16(stream, col.G);
-	Nbt_WriteTag(stream, NBT_TAG_INT16, "B");
-	Nbt_WriteI16(stream, col.B);
-
-	Nbt_WriteU8(stream, NBT_TAG_END);
-}
-
-static void Cw_WriteBlockDefinitionCompound(struct Stream* stream, BlockID id) {
-	UInt8 tmp[6];
-	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "Block" + id);
-	bool sprite = Block_Draw[id] == DRAW_SPRITE;
-
-	Nbt_WriteTag(stream, NBT_TAG_INT8, "ID");
-	Nbt_WriteU8(stream, id);
-	Nbt_WriteTag(stream, NBT_TAG_STRING, "Name");
-	String name = Block_UNSAFE_GetName(id);
-	Nbt_WriteString(stream, &name);
-
-	Nbt_WriteTag(stream, NBT_TAG_INT8, "CollideType");
-	Nbt_WriteU8(stream, Block_Collide[id]);
-	union IntAndFloat speed; speed.f = Block_SpeedMultiplier[id];
-	Nbt_WriteTag(stream, NBT_TAG_REAL32, "Speed");
-	Nbt_WriteI32(stream, speed.i);
-
-	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "Textures");
-	tmp[0] = Block_GetTexLoc(id, FACE_YMAX);
-	tmp[1] = Block_GetTexLoc(id, FACE_YMIN);
-	tmp[2] = Block_GetTexLoc(id, FACE_XMIN);
-	tmp[3] = Block_GetTexLoc(id, FACE_XMAX);
-	tmp[4] = Block_GetTexLoc(id, FACE_ZMIN);
-	tmp[5] = Block_GetTexLoc(id, FACE_ZMAX);
-	Nbt_WriteU8_Array(stream, tmp, 6);
-
-	Nbt_WriteTag(stream, NBT_TAG_INT8, "TransmitsLight");
-	Nbt_WriteU8(stream, Block_BlocksLight[id] ? 0 : 1);
-	Nbt_WriteTag(stream, NBT_TAG_INT8, "WalkSound");
-	Nbt_WriteU8(stream, Block_DigSounds[id]);
-	Nbt_WriteTag(stream, NBT_TAG_INT8, "FullBright");
-	Nbt_WriteU8(stream, Block_FullBright[id] ? 1 : 0);
-
-	Nbt_WriteTag(stream, NBT_TAG_INT8, "Shape");
-	UInt8 shape = sprite ? 0 : (UInt8)(Block_MaxBB[id].Y * 16);
-	Nbt_WriteU8(stream, shape);
-	Nbt_WriteTag(stream, NBT_TAG_INT8, "BlockDraw");
-	UInt8 draw = sprite ? Block_SpriteOffset[id] : Block_Draw[id];
-	Nbt_WriteU8(stream, draw);
-
-	UInt8 fog = (UInt8)(128 * Block_FogDensity[id] - 1);
-	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "Fog");
-	PackedCol col = Block_FogCol[id];	
-	tmp[0] = Block_FogDensity[id] ? fog : 0;
-	tmp[1] = col.R; tmp[2] = col.G; tmp[3] = col.B;
-	Nbt_WriteU8_Array(stream, tmp, 4);
-
-	Vector3 minBB = Block_MinBB[id], maxBB = Block_MaxBB[id];
-	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "Coords");
-	tmp[0] = (UInt8)(minBB.X * 16); tmp[1] = (UInt8)(minBB.Y * 16); tmp[2] = (UInt8)(minBB.Z * 16); 
-	tmp[3] = (UInt8)(maxBB.X * 16); tmp[4] = (UInt8)(maxBB.Y * 16); tmp[5] = (UInt8)(maxBB.Z * 16);
-	Nbt_WriteU8_Array(stream, tmp, 6);
-
-	Nbt_WriteU8(stream, NBT_TAG_END);
-}
-
-static void Cw_WriteMetadataCompound(struct Stream* stream) {
-	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "Metadata");
-	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "CPE");
-
-	Cw_WriteCpeExtCompound(stream, "ClickDistance", 1);
-	Nbt_WriteTag(stream, NBT_TAG_INT16, "Distance");
-	Nbt_WriteI16(stream, LocalPlayer_Instance.ReachDistance * 32);
-	Nbt_WriteU8(stream, NBT_TAG_END);
-
-	Cw_WriteCpeExtCompound(stream, "EnvWeatherType", 1);
-	Nbt_WriteTag(stream, NBT_TAG_INT8, "WeatherType");
-	Nbt_WriteU8(stream, WorldEnv_Weather);
-	Nbt_WriteU8(stream, NBT_TAG_END);
-
-	Cw_WriteCpeExtCompound(stream, "EnvMapAppearance", 1);
-	Nbt_WriteTag(stream, NBT_TAG_INT8, "SideBlock");
-	Nbt_WriteU8(stream, WorldEnv_SidesBlock);
-	Nbt_WriteTag(stream, NBT_TAG_INT8, "EdgeBlock");
-	Nbt_WriteU8(stream, WorldEnv_EdgeBlock);
-	Nbt_WriteTag(stream, NBT_TAG_INT16, "SideLevel");
-	Nbt_WriteI16(stream, WorldEnv_EdgeHeight);
-	Nbt_WriteTag(stream, NBT_TAG_STRING, "TextureURL");
-	Nbt_WriteString(stream, &World_TextureUrl);
-	Nbt_WriteU8(stream, NBT_TAG_END);
-
-	Cw_WriteCpeExtCompound(stream, "EnvColors", 1);
-	Cw_WriteColCompound(stream, "Sky", WorldEnv_SkyCol);
-	Cw_WriteColCompound(stream, "Cloud", WorldEnv_CloudsCol);
-	Cw_WriteColCompound(stream, "Fog", WorldEnv_FogCol);
-	Cw_WriteColCompound(stream, "Ambient", WorldEnv_ShadowCol);
-	Cw_WriteColCompound(stream, "Sunlight", WorldEnv_SunCol);
-	Nbt_WriteU8(stream, NBT_TAG_END);
-
-	Cw_WriteCpeExtCompound(stream, "BlockDefinitions", 1);
-	Int32 block;
-	for (block = 1; block < 256; block++) {
-		if (Block_IsCustomDefined((BlockID)block)) {
-			Cw_WriteBlockDefinitionCompound(stream, (BlockID)block);
-		}
+	for (i = 0; i < text->length; i++) {
+		UInt16 codepoint = Convert_CP437ToUnicode(text->buffer[i]);
+		Int32 bytes = Stream_WriteUtf8(cur, codepoint);
+		len += bytes; cur += bytes;
 	}
-	Nbt_WriteU8(stream, NBT_TAG_END);
 
-	Nbt_WriteU8(stream, NBT_TAG_END);
-	Nbt_WriteU8(stream, NBT_TAG_END);
+	Stream_SetU16_BE(data, len);
+	*cur = NBT_END;
+	return len + 1;
+}
+
+UInt8 cw_begin[131] = {
+NBT_DICT, 0,12, 'C','l','a','s','s','i','c','W','o','r','l','d',
+	NBT_I8,   0,13, 'F','o','r','m','a','t','V','e','r','s','i','o','n', 1,
+	NBT_I8S,  0,4,  'U','U','I','D', 0,0,0,16, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	NBT_I16,  0,1,  'X', 0,0,
+	NBT_I16,  0,1,  'Y', 0,0,
+	NBT_I16,  0,1,  'Z', 0,0,
+	NBT_DICT, 0,5,  'S','p','a','w','n',
+		NBT_I16,  0,1, 'X', 0,0,
+		NBT_I16,  0,1, 'Y', 0,0,
+		NBT_I16,  0,1, 'Z', 0,0,
+		NBT_I8,   0,1, 'H', 0,
+		NBT_I8,   0,1, 'P', 0,
+	NBT_END,
+	NBT_I8S,  0,10, 'B','l','o','c','k','A','r','r','a','y', 0,0,0,0,
+};
+UInt8 cw_meta_cpe[395] = {
+	NBT_DICT, 0,8,  'M','e','t','a','d','a','t','a',
+		NBT_DICT, 0,3, 'C','P','E',
+			NBT_DICT, 0,13, 'C','l','i','c','k','D','i','s','t','a','n','c','e',
+				NBT_I32,  0,16, CW_META_VERSION,                 0,0,0,1,
+				NBT_I16,  0,8,  'D','i','s','t','a','n','c','e', 0,0,
+			NBT_END,
+			NBT_DICT, 0,14, 'E','n','v','W','e','a','t','h','e','r','T','y','p','e',
+				NBT_I32,  0,16, CW_META_VERSION,                             0,0,0,1,
+				NBT_I8,   0,11, 'W','e','a','t','h','e','r','T','y','p','e', 0,
+			NBT_END,
+			NBT_DICT, 0,9,  'E','n','v','C','o','l','o','r','s',
+				NBT_I32,  0,16, CW_META_VERSION,                0,0,0,1,
+				NBT_DICT, 0,3, 'S','k','y',                     CW_META_RGB
+				NBT_END,
+				NBT_DICT, 0,5, 'C','l','o','u','d',             CW_META_RGB
+				NBT_END,
+				NBT_DICT, 0,3, 'F','o','g',                     CW_META_RGB
+				NBT_END,
+				NBT_DICT, 0,7, 'A','m','b','i','e','n','t',     CW_META_RGB
+				NBT_END,
+				NBT_DICT, 0,8, 'S','u','n','l','i','g','h','t', CW_META_RGB
+				NBT_END,
+			NBT_END,
+			NBT_DICT, 0,16, 'E','n','v','M','a','p','A','p','p','e','a','r','a','n','c','e',
+				NBT_I32,  0,16, CW_META_VERSION,                         0,0,0,1,
+				NBT_I8,   0,9,  'S','i','d','e','B','l','o','c','k',     0,
+				NBT_I8,   0,9,  'E','d','g','e','B','l','o','c','k',     0,
+				NBT_I16,  0,9,  'S','i','d','e','L','e','v','e','l',     0,0,
+				NBT_STR,  0,10, 'T','e','x','t','u','r','e','U','R','L', 0,0,
+};
+UInt8 cw_meta_defs[19] = {
+			NBT_DICT, 0,16, 'B','l','o','c','k','D','e','f','i','n','i','t','i','o','n','s',
+};
+UInt8 cw_meta_def[171] = {
+				NBT_DICT, 0,5,  'B','l','o','c','k',
+					NBT_I8,  0,2,  'I','D',                              0,
+					NBT_I8,  0,11, 'C','o','l','l','i','d','e','T','y','p','e', 0,
+					NBT_R32, 0,5,  'S','p','e','e','d',                  0,0,0,0,
+					NBT_I8S, 0,8,  'T','e','x','t','u','r','e','s',      0,0,0,6, 0,0,0,0,0,0,
+					NBT_I8,  0,14, 'T','r','a','n','s','m','i','t','s','L','i','g','h','t', 0,
+					NBT_I8,  0,9,  'W','a','l','k','S','o','u','n','d',  0,
+					NBT_I8,  0,10, 'F','u','l','l','B','r','i','g','h','t', 0,
+					NBT_I8,  0,5,  'S','h','a','p','e',                  0,
+					NBT_I8,  0,9,  'B','l','o','c','k','D','r','a','w',  0,
+					NBT_I8S, 0,3,  'F','o','g',                          0,0,0,4, 0,0,0,0,
+					NBT_I8S, 0,6,  'C','o','o','r','d','s',              0,0,0,6, 0,0,0,0,0,0,
+					NBT_STR, 0,4,  'N','a','m','e',                      0,0,
+};
+UInt8 cw_end[4] = {
+			NBT_END,
+		NBT_END,
+	NBT_END,
+NBT_END,
+};
+
+static void Cw_WriteBockDef(struct Stream* stream, Int32 b) {
+	UInt8 tmp[512];
+	bool sprite = Block_Draw[b] == DRAW_SPRITE;
+
+	Mem_Copy(tmp, cw_meta_def, sizeof(cw_meta_def));
+	{
+		tmp[13] = b;
+		tmp[28] = Block_Collide[b];
+		union IntAndFloat speed; speed.f = Block_SpeedMultiplier[b];
+		Stream_SetU32_BE(&tmp[37], speed.u);
+
+		tmp[56] = Block_GetTexLoc(b, FACE_YMAX);
+		tmp[57] = Block_GetTexLoc(b, FACE_YMIN);
+		tmp[58] = Block_GetTexLoc(b, FACE_XMIN);
+		tmp[59] = Block_GetTexLoc(b, FACE_XMAX);
+		tmp[60] = Block_GetTexLoc(b, FACE_ZMIN);
+		tmp[61] = Block_GetTexLoc(b, FACE_ZMAX);
+
+		tmp[79]  = Block_BlocksLight[b] ? 0 : 1;
+		tmp[92]  = Block_DigSounds[b];
+		tmp[106] = Block_FullBright[b] ? 1 : 0;
+		tmp[115] = sprite ? 0 : (UInt8)(Block_MaxBB[b].Y * 16);
+		tmp[128] = sprite ? Block_SpriteOffset[b] : Block_Draw[b];
+
+		UInt8 fog = (UInt8)(128 * Block_FogDensity[b] - 1);
+		PackedCol col = Block_FogCol[b];
+		tmp[139] = Block_FogDensity[b] ? fog : 0;
+		tmp[140] = col.R; tmp[141] = col.G; tmp[142] = col.B;
+
+		Vector3 minBB = Block_MinBB[b], maxBB = Block_MaxBB[b];
+		tmp[156] = (UInt8)(minBB.X * 16); tmp[157] = (UInt8)(minBB.Y * 16); tmp[158] = (UInt8)(minBB.Z * 16);
+		tmp[159] = (UInt8)(maxBB.X * 16); tmp[160] = (UInt8)(maxBB.Y * 16); tmp[161] = (UInt8)(maxBB.Z * 16);
+	}
+
+	String name   = Block_UNSAFE_GetName(b);
+	Int32 tailLen = Cw_WriteEndString(&tmp[169], &name);
+	Stream_Write(stream, tmp, sizeof(cw_meta_def) + tailLen);
 }
 
 void Cw_Save(struct Stream* stream) {
@@ -940,32 +900,52 @@ void Cw_Save(struct Stream* stream) {
 	struct Stream compStream;
 	GZip_MakeStream(&compStream, &state, stream);
 	stream = &compStream;
+	UInt8 tmp[768];
+	PackedCol col;
 
-	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "ClassicWorld");
+	Mem_Copy(tmp, cw_begin, sizeof(cw_begin));
+	{
+		Mem_Copy(&tmp[43], World_Uuid, sizeof(World_Uuid));
+		Stream_SetU16_BE(&tmp[63], World_Width);
+		Stream_SetU16_BE(&tmp[69], World_Height);
+		Stream_SetU16_BE(&tmp[75], World_Length);
+		Stream_SetU32_BE(&tmp[127], World_BlocksSize);
 
-	Nbt_WriteTag(stream, NBT_TAG_INT8, "FormatVersion");
-	Nbt_WriteU8(stream, 1);
-
-	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "UUID");
-	Nbt_WriteI32(stream, sizeof(World_Uuid));
-	Stream_Write(stream, World_Uuid, sizeof(World_Uuid));
-
-	Nbt_WriteTag(stream, NBT_TAG_INT16, "X");
-	Nbt_WriteI16(stream, World_Width);
-	Nbt_WriteTag(stream, NBT_TAG_INT16, "Y");
-	Nbt_WriteI16(stream, World_Height);
-	Nbt_WriteTag(stream, NBT_TAG_INT16, "Z");
-	Nbt_WriteI16(stream, World_Length);
-
-	Cw_WriteSpawnCompound(stream);
-
-	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "BlockArray");
-	Nbt_WriteI32(stream, World_BlocksSize);
+		struct LocalPlayer* p = &LocalPlayer_Instance;
+		Vector3 spawn = p->Spawn; /* TODO: Maybe keep real spawn too? */
+		Stream_SetU16_BE(&tmp[89],  (UInt16)spawn.X);
+		Stream_SetU16_BE(&tmp[95],  (UInt16)spawn.Y);
+		Stream_SetU16_BE(&tmp[101], (UInt16)spawn.Z);
+		tmp[107] = Math_Deg2Packed(p->SpawnRotY);
+		tmp[112] = Math_Deg2Packed(p->SpawnHeadX);
+	}
+	Stream_Write(stream, tmp, sizeof(cw_begin));
 	Stream_Write(stream, World_Blocks, World_BlocksSize);
 
-	Cw_WriteMetadataCompound(stream);
+	Mem_Copy(tmp, cw_meta_cpe, sizeof(cw_meta_cpe));
+	{
+		Stream_SetU16_BE(&tmp[67], (UInt16)(LocalPlayer_Instance.ReachDistance * 32));
+		tmp[124] = WorldEnv_Weather;
 
-	Nbt_WriteU8(stream, NBT_TAG_END);
+		col = WorldEnv_SkyCol;    tmp[172] = col.R; tmp[178] = col.G; tmp[184] = col.B;
+		col = WorldEnv_CloudsCol; tmp[199] = col.R; tmp[205] = col.G; tmp[211] = col.B;
+		col = WorldEnv_FogCol;    tmp[224] = col.R; tmp[230] = col.G; tmp[236] = col.B;
+		col = WorldEnv_ShadowCol; tmp[253] = col.R; tmp[259] = col.G; tmp[265] = col.B;
+		col = WorldEnv_SunCol;    tmp[283] = col.R; tmp[289] = col.G; tmp[295] = col.B;
+
+		tmp[352] = WorldEnv_SidesBlock;
+		tmp[365] = WorldEnv_EdgeBlock;
+		Stream_SetU16_BE(&tmp[378], WorldEnv_EdgeHeight);
+	}
+	Int32 b, tailLen = Cw_WriteEndString(&tmp[393], &World_TextureUrl);
+	Stream_Write(stream, tmp, sizeof(cw_meta_cpe) + tailLen);
+
+	Stream_Write(stream, cw_meta_defs, sizeof(cw_meta_defs));
+	for (b = 1; b < 256; b++) {
+		if (Block_IsCustomDefined(b)) Cw_WriteBockDef(stream, b);
+	}
+
+	Stream_Write(stream, cw_end, sizeof(cw_end));
 	stream->Close(stream);
 }
 
@@ -973,43 +953,53 @@ void Cw_Save(struct Stream* stream) {
 /*########################################################################################################################*
 *---------------------------------------------------Schematic export------------------------------------------------------*
 *#########################################################################################################################*/
+
+UInt8 schematic_begin[78] = {
+NBT_DICT, 0,9, 'S','c','h','e','m','a','t','i','c',
+	NBT_STR,  0,9,  'M','a','t','e','r','i','a','l','s', 0,7, 'C','l','a','s','s','i','c',
+	NBT_I16,  0,5,  'W','i','d','t','h',                 0,0,
+	NBT_I16,  0,6,  'H','e','i','g','h','t',             0,0,
+	NBT_I16,  0,6,  'L','e','n','g','t','h',             0,0,
+	NBT_I8S,  0,6,  'B','l','o','c','k','s',             0,0,0,0,
+};
+UInt8 schematic_data[11] = {
+	NBT_I8S,  0,4,  'D','a','t','a',                     0,0,0,0,
+};
+UInt8 schematic_end[37] = {
+	NBT_LIST, 0,8,  'E','n','t','i','t','i','e','s',                 NBT_DICT, 0,0,0,0,
+	NBT_LIST, 0,12, 'T','i','l','e','E','n','t','i','t','i','e','s', NBT_DICT, 0,0,0,0,
+NBT_END,
+};
+
 void Schematic_Save(struct Stream* stream) {
 	struct GZipState state;
 	struct Stream compStream;
 	GZip_MakeStream(&compStream, &state, stream);
 	stream = &compStream;
+	UInt8 tmp[256];
 
-	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "Schematic");
+	Mem_Copy(tmp, schematic_begin, sizeof(schematic_begin));
+	{
+		Stream_SetU16_BE(&tmp[41], World_Width);
+		Stream_SetU16_BE(&tmp[52], World_Height);
+		Stream_SetU16_BE(&tmp[63], World_Length);
+		Stream_SetU32_BE(&tmp[74], World_BlocksSize);
+	}
+	Stream_Write(stream, tmp, sizeof(schematic_begin));
 
-	Nbt_WriteTag(stream, NBT_TAG_STRING, "Materials");
-	String classic = String_FromConst("Classic");
-	Nbt_WriteString(stream, &classic);
-
-	Nbt_WriteTag(stream, NBT_TAG_INT16, "Width");
-	Nbt_WriteI16(stream, World_Width);
-	Nbt_WriteTag(stream, NBT_TAG_INT16, "Height");
-	Nbt_WriteI16(stream, World_Height);
-	Nbt_WriteTag(stream, NBT_TAG_INT16, "Length");
-	Nbt_WriteI16(stream, World_Length);
-
-	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "Blocks");
-	Nbt_WriteI32(stream, World_BlocksSize);
 	Stream_Write(stream, World_Blocks, World_BlocksSize);
+	Mem_Copy(tmp, schematic_data, sizeof(schematic_data));
+	{
+		Stream_SetU32_BE(&tmp[7], World_BlocksSize);
+	}
+	Stream_Write(stream, tmp, sizeof(schematic_data));
 
-	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "Data");
-	Nbt_WriteI32(stream, World_BlocksSize);
 	UInt8 chunk[8192] = { 0 };
 	Int32 i;
 	for (i = 0; i < World_BlocksSize; i += sizeof(chunk)) {
 		Int32 count = min(sizeof(chunk), World_BlocksSize - i);
 		Stream_Write(stream, chunk, count);
 	}
-
-	Nbt_WriteTag(stream, NBT_TAG_LIST, "Entities");
-	Nbt_WriteU8(stream, NBT_TAG_COMPOUND); Nbt_WriteI32(stream, 0);
-	Nbt_WriteTag(stream, NBT_TAG_LIST, "TileEntities");
-	Nbt_WriteU8(stream, NBT_TAG_COMPOUND); Nbt_WriteI32(stream, 0);
-
-	Nbt_WriteU8(stream, NBT_TAG_END);
+	Stream_Write(stream, schematic_end, sizeof(schematic_end));
 	stream->Close(stream);
 }

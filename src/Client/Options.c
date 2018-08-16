@@ -217,7 +217,8 @@ void Options_Save(void) {
 		String value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
 		String_Format2(&line, "%s=%s", &key, &value);
 
-		Stream_WriteLine(&stream, &line);
+		result = Stream_WriteLine(&stream, &line);
+		if (result) { ErrorHandler_LogError_Path(result, "writing to", &path); break; }
 		String_Clear(&line);
 	}
 

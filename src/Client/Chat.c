@@ -131,7 +131,10 @@ static void Chat_AppendLog(STRING_PURE String* text) {
 	String_Format3(&str, "[%p2:%p2:%p2] ", &hour, &minute, &second);
 	String_AppendColorless(&str, text);
 
-	Stream_WriteLine(&Chat_LogStream, &str);
+	ReturnCode result = Stream_WriteLine(&Chat_LogStream, &str);
+	if (!result) return;
+	ErrorHandler_LogError_Path(result, "appending to", &Chat_LogStream.Name);
+	Chat_DisableLogging(); return;
 }
 
 void Chat_AddRaw(const UChar* raw) {

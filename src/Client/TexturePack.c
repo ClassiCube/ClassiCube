@@ -236,7 +236,8 @@ static void EntryList_Save(struct EntryList* list) {
 		Int32 i;
 		for (i = 0; i < list->Entries.Count; i++) {
 			String entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
-			Stream_WriteLine(&stream, &entry);
+			result = Stream_WriteLine(&stream, &entry);
+			if (result) { ErrorHandler_LogError_Path(result, "writing to", &path); break; }
 		}
 	}
 	result = stream.Close(&stream);

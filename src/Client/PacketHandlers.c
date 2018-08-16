@@ -30,7 +30,6 @@
 UInt8 classicTabList[256 >> 3];
 
 #define Handlers_ReadBlock(stream) Stream_ReadU8(stream)
-#define Handlers_WriteBlock(stream, value) Stream_WriteU8(stream, value)
 
 static String Handlers_ReadString(struct Stream* stream, STRING_REF UChar* strBuffer) {
 	UChar buffer[STRING_SIZE];
