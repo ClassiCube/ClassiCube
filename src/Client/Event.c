@@ -77,16 +77,16 @@ void Event_UnregisterReal(struct Event_Real* handlers, void* obj, Event_Real_Cal
 	Event_UnregisterImpl((struct Event_Void*)handlers, obj, (Event_Void_Callback)handler);
 }
 
-void Event_RaiseStream(struct Event_Stream* handlers, struct Stream* stream) {
+void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, String* name) {
 	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
-		handlers->Handlers[i](handlers->Objs[i], stream);
+		handlers->Handlers[i](handlers->Objs[i], stream, name);
 	}
 }
-void Event_RegisterStream(struct Event_Stream* handlers, void* obj, Event_Stream_Callback handler) {
+void Event_RegisterEntry(struct Event_Entry* handlers, void* obj, Event_Entry_Callback handler) {
 	Event_RegisterImpl((struct Event_Void*)handlers, obj, (Event_Void_Callback)handler);
 }
-void Event_UnregisterStream(struct Event_Stream* handlers, void* obj, Event_Stream_Callback handler) {
+void Event_UnregisterEntry(struct Event_Entry* handlers, void* obj, Event_Entry_Callback handler) {
 	Event_UnregisterImpl((struct Event_Void*)handlers, obj, (Event_Void_Callback)handler);
 }
 

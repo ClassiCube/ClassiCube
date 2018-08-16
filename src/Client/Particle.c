@@ -287,9 +287,9 @@ static void Terrain_Tick(Real64 delta) {
 /*########################################################################################################################*
 *--------------------------------------------------------Particles--------------------------------------------------------*
 *#########################################################################################################################*/
-static void Particles_FileChanged(void* obj, struct Stream* stream) {
-	if (String_CaselessEqualsConst(&stream->Name, "particles.png")) {
-		Game_UpdateTexture(&Particles_TexId, stream, NULL);
+static void Particles_FileChanged(void* obj, struct Stream* stream, String* name) {
+	if (String_CaselessEqualsConst(name, "particles.png")) {
+		Game_UpdateTexture(&Particles_TexId, stream, name, NULL);
 	}
 }
 
@@ -308,10 +308,10 @@ static void Particles_Init(void) {
 	Random_InitFromCurrentTime(&rnd);
 	Particles_ContextRecreated(NULL);
 
-	Event_RegisterBlock(&UserEvents_BlockChanged,    NULL, Particles_BreakBlockEffect_Handler);
-	Event_RegisterStream(&TextureEvents_FileChanged, NULL, Particles_FileChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost,       NULL, Particles_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated,  NULL, Particles_ContextRecreated);
+	Event_RegisterBlock(&UserEvents_BlockChanged,   NULL, Particles_BreakBlockEffect_Handler);
+	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Particles_FileChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, Particles_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, Particles_ContextRecreated);
 }
 
 static void Particles_Reset(void) { Rain_Count = 0; Terrain_Count = 0; }
@@ -320,10 +320,10 @@ static void Particles_Free(void) {
 	Gfx_DeleteTexture(&Particles_TexId);
 	Particles_ContextLost(NULL);
 
-	Event_UnregisterBlock(&UserEvents_BlockChanged,    NULL, Particles_BreakBlockEffect_Handler);
-	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, Particles_FileChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,       NULL, Particles_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated,  NULL, Particles_ContextRecreated);
+	Event_UnregisterBlock(&UserEvents_BlockChanged,   NULL, Particles_BreakBlockEffect_Handler);
+	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Particles_FileChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, Particles_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, Particles_ContextRecreated);
 }
 
 void Particles_MakeComponent(struct IGameComponent* comp) {

@@ -69,7 +69,7 @@ static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 		}
 
 		/* Skip over unhandled data */
-		if (size) Stream_Skip(stream, size);
+		if (size && (res = Stream_Skip(stream, size))) return res;
 	}
 }
 

@@ -89,14 +89,14 @@ void ModelCache_RegisterTexture(STRING_REF const UChar* texName) {
 	}
 }
 
-static void ModelCache_TextureChanged(void* obj, struct Stream* stream) {
+static void ModelCache_TextureChanged(void* obj, struct Stream* stream, String* name) {
 	UInt32 i;
 	String charPng = String_FromConst("char.png");
 	for (i = 0; i < ModelCache_texCount; i++) {
 		struct CachedTexture* tex = &ModelCache_Textures[i];
-		if (!String_CaselessEquals(&tex->Name, &stream->Name)) continue;
+		if (!String_CaselessEquals(&tex->Name, name)) continue;
 
-		Game_UpdateTexture(&tex->TexID, stream, &tex->SkinType);
+		Game_UpdateTexture(&tex->TexID, stream, name, &tex->SkinType);
 		return;
 	}
 }
@@ -1282,9 +1282,9 @@ void ModelCache_Init(void) {
 	ModelCache_RegisterDefaultModels();
 	ModelCache_ContextRecreated(NULL);
 
-	Event_RegisterStream(&TextureEvents_FileChanged, NULL, ModelCache_TextureChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost,       NULL, ModelCache_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated,  NULL, ModelCache_ContextRecreated);
+	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, ModelCache_TextureChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, ModelCache_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, ModelCache_ContextRecreated);
 }
 
 void ModelCache_Free(void) {
@@ -1295,7 +1295,7 @@ void ModelCache_Free(void) {
 	}
 	ModelCache_ContextLost(NULL);
 
-	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, ModelCache_TextureChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,       NULL, ModelCache_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated,  NULL, ModelCache_ContextRecreated);
+	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, ModelCache_TextureChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, ModelCache_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, ModelCache_ContextRecreated);
 }

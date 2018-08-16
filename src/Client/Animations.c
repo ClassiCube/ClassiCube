@@ -9,6 +9,7 @@
 #include "World.h"
 #include "Options.h"
 #include "ErrorHandler.h"
+#include "Errors.h"
 #define LIQUID_ANIM_MAX 64
 
 Real32 L_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
@@ -138,16 +139,22 @@ struct AnimationData anims_list[ATLAS1D_MAX_ATLASES];
 UInt32 anims_count;
 bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
 
-static void Animations_ReadDescription(struct Stream* stream) {
+static void Animations_ReadDescription(struct Stream* stream, STRING_PURE String* path) {
 	UChar lineBuffer[String_BufferSize(128)];
 	String line = String_InitAndClearArray(lineBuffer);
 	String parts[7];
+	
 
 	/* ReadLine reads single byte at a time */
 	UInt8 buffer[2048]; struct Stream buffered;
 	Stream_ReadonlyBuffered(&buffered, stream, buffer, sizeof(buffer));
+	ReturnCode res;
 
-	while (Stream_ReadLine(&buffered, &line)) {
+	for (;;) {
+		res = Stream_ReadLine(&buffered, &line);
+		if (res == ERR_END_OF_STREAM) break;
+		if (res) { Chat_LogError(res, "reading from", path); break; }
+
 		if (!line.length || line.buffer[0] == '#') continue;
 		struct AnimationData data = { 0 };
 		UInt8 tileX, tileY;
@@ -306,8 +313,7 @@ static void Animations_PackChanged(void* obj) {
 	anims_useWaterAnim = anims_useLavaAnim;
 }
 
-static void Animations_FileChanged(void* obj, struct Stream* stream) {
-	String* name = &stream->Name;
+static void Animations_FileChanged(void* obj, struct Stream* stream, String* name) {
 	if (String_CaselessEqualsConst(name, "animation.png") || String_CaselessEqualsConst(name, "animations.png")) {
 		ReturnCode res = Bitmap_DecodePng(&anims_bmp, stream);
 		if (!res) return;
@@ -315,7 +321,7 @@ static void Animations_FileChanged(void* obj, struct Stream* stream) {
 		Chat_LogError(res, "decoding", name);
 		Mem_Free(&anims_bmp.Scan0);
 	} else if (String_CaselessEqualsConst(name, "animation.txt") || String_CaselessEqualsConst(name, "animations.txt")) {
-		Animations_ReadDescription(stream);
+		Animations_ReadDescription(stream, name);
 	} else if (String_CaselessEqualsConst(name, "uselavaanim")) {
 		anims_useLavaAnim = true;
 	} else if (String_CaselessEqualsConst(name, "usewateranim")) {
@@ -324,14 +330,14 @@ static void Animations_FileChanged(void* obj, struct Stream* stream) {
 }
 
 static void Animations_Init(void) {
-	Event_RegisterVoid(&TextureEvents_PackChanged,   NULL, Animations_PackChanged);
-	Event_RegisterStream(&TextureEvents_FileChanged, NULL, Animations_FileChanged);
+	Event_RegisterVoid(&TextureEvents_PackChanged,  NULL, Animations_PackChanged);
+	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Animations_FileChanged);
 }
 
 static void Animations_Free(void) {
 	Animations_Clear();
-	Event_UnregisterVoid(&TextureEvents_PackChanged,   NULL, Animations_PackChanged);
-	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, Animations_FileChanged);
+	Event_UnregisterVoid(&TextureEvents_PackChanged,  NULL, Animations_PackChanged);
+	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Animations_FileChanged);
 }
 
 void Animations_MakeComponent(struct IGameComponent* comp) {

@@ -27,9 +27,9 @@ struct Event_Real {
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
 };
 
-typedef void (*Event_Stream_Callback)(void* obj, struct Stream* stream);
-struct Event_Stream {
-	Event_Stream_Callback Handlers[EVENT_MAX_CALLBACKS];
+typedef void (*Event_Entry_Callback)(void* obj, struct Stream* stream, String* name);
+struct Event_Entry {
+	Event_Entry_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
 };
 
@@ -63,9 +63,9 @@ void Event_RaiseReal(struct Event_Real* handlers, Real32 arg);
 void Event_RegisterReal(struct Event_Real* handlers, void* obj, Event_Real_Callback handler);
 void Event_UnregisterReal(struct Event_Real* handlers, void* obj, Event_Real_Callback handler);
 
-void Event_RaiseStream(struct Event_Stream* handlers, struct Stream* stream);
-void Event_RegisterStream(struct Event_Stream* handlers, void* obj, Event_Stream_Callback handler);
-void Event_UnregisterStream(struct Event_Stream* handlers, void* obj, Event_Stream_Callback handler);
+void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, String* name);
+void Event_RegisterEntry(struct Event_Entry* handlers, void* obj, Event_Entry_Callback handler);
+void Event_UnregisterEntry(struct Event_Entry* handlers, void* obj, Event_Entry_Callback handler);
 
 void Event_RaiseBlock(struct Event_Block* handlers, Vector3I coords, BlockID oldBlock, BlockID block);
 void Event_RegisterBlock(struct Event_Block* handlers, void* obj, Event_Block_Callback handler);
@@ -87,7 +87,7 @@ struct Event_Int TabListEvents_Removed; /* Tab list entry is removed. */
 
 struct Event_Void TextureEvents_AtlasChanged;  /* Terrain atlas (terrain.png) is changed. */
 struct Event_Void TextureEvents_PackChanged;   /* Texture pack is changed. */
-struct Event_Stream TextureEvents_FileChanged; /* File in a texture pack is changed. (terrain.png, rain.png) */
+struct Event_Entry TextureEvents_FileChanged; /* File in a texture pack is changed. (terrain.png, rain.png) */
 
 struct Event_Void GfxEvents_ViewDistanceChanged; /* View/fog distance is changed. */
 struct Event_Void GfxEvents_ProjectionChanged;   /* Projection matrix has changed. */

@@ -355,7 +355,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 	UInt32 bufferIdx, bufferRows;
 
 	while (readingChunks) {
-		res = Stream_Read(stream, buffer, 2 * sizeof(UInt32));
+		res = Stream_Read(stream, buffer, 8);
 		if (res) return res;
 		UInt32 dataSize = Stream_GetU32_BE(&buffer[0]);
 		UInt32 fourCC   = Stream_GetU32_BE(&buffer[4]);
@@ -484,10 +484,11 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 		} break;
 
 		default:
-			Stream_Skip(stream, dataSize);
+			if (res = Stream_Skip(stream, dataSize)) return res;
 			break;
 		}
-		Stream_ReadU32_BE(stream); /* Skip CRC32 */
+
+		if (res = Stream_Read(stream, tmp, 4)) return res; /* Skip CRC32 */
 	}
 
 	if (transparentCol <= PNG_RGB_MASK) {

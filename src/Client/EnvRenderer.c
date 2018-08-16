@@ -773,15 +773,15 @@ void EnvRenderer_UseMinimalMode(bool minimal) {
 }
 
 
-static void EnvRenderer_FileChanged(void* obj, struct Stream* src) {
-	if (String_CaselessEqualsConst(&src->Name, "cloud.png") || String_CaselessEqualsConst(&src->Name, "clouds.png")) {
-		Game_UpdateTexture(&clouds_tex, src, NULL);
-	} else if (String_CaselessEqualsConst(&src->Name, "skybox.png")) {
-		Game_UpdateTexture(&skybox_tex, src, NULL);
-	} else if (String_CaselessEqualsConst(&src->Name, "snow.png")) {
-		Game_UpdateTexture(&snow_tex, src, NULL);
-	} else if (String_CaselessEqualsConst(&src->Name, "rain.png")) {
-		Game_UpdateTexture(&rain_tex, src, NULL);
+static void EnvRenderer_FileChanged(void* obj, struct Stream* src, String* name) {
+	if (String_CaselessEqualsConst(name, "cloud.png") || String_CaselessEqualsConst(name, "clouds.png")) {
+		Game_UpdateTexture(&clouds_tex, src, name, NULL);
+	} else if (String_CaselessEqualsConst(name, "skybox.png")) {
+		Game_UpdateTexture(&skybox_tex, src, name, NULL);
+	} else if (String_CaselessEqualsConst(name, "snow.png")) {
+		Game_UpdateTexture(&snow_tex, src, name, NULL);
+	} else if (String_CaselessEqualsConst(name, "rain.png")) {
+		Game_UpdateTexture(&rain_tex, src, name, NULL);
 	}
 }
 
@@ -823,9 +823,9 @@ static void EnvRenderer_EnvVariableChanged(void* obj, Int32 envVar) {
 }
 
 static void EnvRenderer_Init(void) {
-	Event_RegisterStream(&TextureEvents_FileChanged, NULL, EnvRenderer_FileChanged);
-	Event_RegisterVoid(&TextureEvents_PackChanged,   NULL, EnvRenderer_TexturePackChanged);
-	Event_RegisterVoid(&TextureEvents_AtlasChanged,  NULL, EnvRenderer_TerrainAtlasChanged);
+	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, EnvRenderer_FileChanged);
+	Event_RegisterVoid(&TextureEvents_PackChanged,  NULL, EnvRenderer_TexturePackChanged);
+	Event_RegisterVoid(&TextureEvents_AtlasChanged, NULL, EnvRenderer_TerrainAtlasChanged);
 
 	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, NULL, EnvRenderer_ViewDistanceChanged);
 	Event_RegisterInt(&WorldEvents_EnvVarChanged,      NULL, EnvRenderer_EnvVariableChanged);
@@ -836,9 +836,9 @@ static void EnvRenderer_Init(void) {
 }
 
 static void EnvRenderer_Free(void) {
-	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, EnvRenderer_FileChanged);
-	Event_UnregisterVoid(&TextureEvents_PackChanged,   NULL, EnvRenderer_TexturePackChanged);
-	Event_UnregisterVoid(&TextureEvents_AtlasChanged,  NULL, EnvRenderer_TerrainAtlasChanged);
+	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, EnvRenderer_FileChanged);
+	Event_UnregisterVoid(&TextureEvents_PackChanged,  NULL, EnvRenderer_TexturePackChanged);
+	Event_UnregisterVoid(&TextureEvents_AtlasChanged, NULL, EnvRenderer_TerrainAtlasChanged);
 
 	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, NULL, EnvRenderer_ViewDistanceChanged);
 	Event_UnregisterInt(&WorldEvents_EnvVarChanged,      NULL, EnvRenderer_EnvVariableChanged);

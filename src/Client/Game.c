@@ -204,12 +204,12 @@ bool Game_CanPick(BlockID block) {
 	return Game_BreakableLiquids && Block_CanPlace[block] && Block_CanDelete[block];
 }
 
-bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, UInt8* skinType) {
+bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, STRING_PURE String* file, UInt8* skinType) {
 	struct Bitmap bmp; 
 	ReturnCode res = Bitmap_DecodePng(&bmp, src);
-	if (res) { Chat_LogError(res, "decoding", &src->Name); }
+	if (res) { Chat_LogError(res, "decoding", file); }
 
-	bool success = !res && Game_ValidateBitmap(&src->Name, &bmp);
+	bool success = !res && Game_ValidateBitmap(file, &bmp);
 	if (success) {
 		Gfx_DeleteTexture(texId);
 		if (skinType != NULL) { *skinType = Utils_GetSkinType(&bmp); }
@@ -285,8 +285,7 @@ static void Game_OnNewMapLoadedCore(void* obj) {
 	}
 }
 
-static void Game_TextureChangedCore(void* obj, struct Stream* src) {
-	String* name = &src->Name;
+static void Game_TextureChangedCore(void* obj, struct Stream* src, String* name) {
 	struct Bitmap bmp;
 	if (String_CaselessEqualsConst(name, "terrain.png")) {
 		ReturnCode res = Bitmap_DecodePng(&bmp, src);
@@ -425,11 +424,11 @@ void Game_Load(void) {
 	Game_LoadGuiOptions();
 	Chat_MakeComponent(&comp); Game_AddComponent(&comp);
 
-	Event_RegisterVoid(&WorldEvents_NewMap,          NULL, Game_OnNewMapCore);
-	Event_RegisterVoid(&WorldEvents_MapLoaded,       NULL, Game_OnNewMapLoadedCore);
-	Event_RegisterStream(&TextureEvents_FileChanged, NULL, Game_TextureChangedCore);
-	Event_RegisterVoid(&WindowEvents_Resized,        NULL, Game_OnResize);
-	Event_RegisterVoid(&WindowEvents_Closed,         NULL, Game_Free);
+	Event_RegisterVoid(&WorldEvents_NewMap,         NULL, Game_OnNewMapCore);
+	Event_RegisterVoid(&WorldEvents_MapLoaded,      NULL, Game_OnNewMapLoadedCore);
+	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Game_TextureChangedCore);
+	Event_RegisterVoid(&WindowEvents_Resized,       NULL, Game_OnResize);
+	Event_RegisterVoid(&WindowEvents_Closed,        NULL, Game_Free);
 
 	Block_Init();
 	ModelCache_Init();
@@ -701,11 +700,11 @@ void Game_Free(void* obj) {
 	ModelCache_Free();
 	Entities_Free();
 
-	Event_UnregisterVoid(&WorldEvents_NewMap,          NULL, Game_OnNewMapCore);
-	Event_UnregisterVoid(&WorldEvents_MapLoaded,       NULL, Game_OnNewMapLoadedCore);
-	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, Game_TextureChangedCore);
-	Event_UnregisterVoid(&WindowEvents_Resized,        NULL, Game_OnResize);
-	Event_UnregisterVoid(&WindowEvents_Closed,         NULL, Game_Free);
+	Event_UnregisterVoid(&WorldEvents_NewMap,         NULL, Game_OnNewMapCore);
+	Event_UnregisterVoid(&WorldEvents_MapLoaded,      NULL, Game_OnNewMapLoadedCore);
+	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Game_TextureChangedCore);
+	Event_UnregisterVoid(&WindowEvents_Resized,       NULL, Game_OnResize);
+	Event_UnregisterVoid(&WindowEvents_Closed,        NULL, Game_Free);
 
 	Int32 i;
 	for (i = 0; i < Game_ComponentsCount; i++) {

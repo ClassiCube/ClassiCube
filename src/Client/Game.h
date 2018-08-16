@@ -83,7 +83,7 @@ void Game_UpdateProjection(void);
 void Game_Disconnect(STRING_PURE String* title, STRING_PURE String* reason);
 void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block);
 bool Game_CanPick(BlockID block);
-bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, UInt8* skinType);
+bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, STRING_PURE String* file, UInt8* skinType);
 bool Game_ValidateBitmap(STRING_PURE String* file, struct Bitmap* bmp);
 Int32 Game_CalcRenderType(STRING_PURE String* type);
 void Game_SetFpsLimitMethod(FpsLimit method);

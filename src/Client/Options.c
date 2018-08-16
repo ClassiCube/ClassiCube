@@ -4,6 +4,7 @@
 #include "Platform.h"
 #include "Stream.h"
 #include "Chat.h"
+#include "Errors.h"
 
 const UChar* FpsLimit_Names[FpsLimit_Count] = {
 	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "LimitNone",
@@ -179,9 +180,12 @@ void Options_Load(void) {
 	UInt8 buffer[2048]; struct Stream buffered;
 	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
 
-	while (Stream_ReadLine(&buffered, &line)) {
-		if (!line.length || line.buffer[0] == '#') continue;
+	for (;;) {
+		res = Stream_ReadLine(&buffered, &line);
+		if (res == ERR_END_OF_STREAM) break;
+		if (res) { Chat_LogError(res, "reading from", &path); break; }
 
+		if (!line.length || line.buffer[0] == '#') continue;
 		Int32 sepIndex = String_IndexOf(&line, '=', 0);
 		if (sepIndex <= 0) continue;
 		String key = String_UNSAFE_Substring(&line, 0, sepIndex);

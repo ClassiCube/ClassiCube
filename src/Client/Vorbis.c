@@ -94,7 +94,13 @@ void Ogg_MakeStream(struct Stream* stream, UInt8* buffer, struct Stream* source)
 
 /* TODO: Make sure this is inlined */
 static UInt32 Vorbis_ReadBits(struct VorbisState* ctx, UInt32 bitsCount) {
-	while (ctx->NumBits < bitsCount) { Vorbis_PushByte(ctx, Stream_ReadU8(ctx->Source)); }
+	UInt8 portion;
+	while (ctx->NumBits < bitsCount) {
+		ReturnCode res = ctx->Source->ReadU8(ctx->Source, &portion);
+		if (res) { ErrorHandler_FailWithCode(res, "Failed to read byte for vorbis"); }
+		Vorbis_PushByte(ctx, portion);
+	}
+
 	UInt32 data = Vorbis_PeekBits(ctx, bitsCount); Vorbis_ConsumeBits(ctx, bitsCount);
 	return data;
 }
@@ -1048,17 +1054,25 @@ static ReturnCode Vorbis_DecodeIdentifier(struct VorbisState* ctx) {
 }
 
 static ReturnCode Vorbis_DecodeComments(struct VorbisState* ctx) {
-	UInt32 vendorLen = Stream_ReadU32_LE(ctx->Source);
-	Stream_Skip(ctx->Source, vendorLen);
+	UInt32 i, len, comments;
+	ReturnCode res;
+	struct Stream* stream = ctx->Source;
 
-	UInt32 i, comments = Stream_ReadU32_LE(ctx->Source);
+	/* vendor name, followed by comments */
+	if (res = Stream_ReadU32_LE(stream, &len))      return res;
+	if (res = Stream_Skip(stream, len))             return res;
+	if (res = Stream_ReadU32_LE(stream, &comments)) return res;
+
 	for (i = 0; i < comments; i++) {
-		UInt32 commentLen = Stream_ReadU32_LE(ctx->Source);
-		Stream_Skip(ctx->Source, commentLen);
+		/* comments such as artist, year, etc */
+		if (res = Stream_ReadU32_LE(stream, &len)) return res;
+		if (res = Stream_Skip(stream, len))        return res;
 	}
 
 	/* check framing flag */
-	return (Stream_ReadU8(ctx->Source) & 1) ? 0 : VORBIS_ERR_FRAMING;
+	UInt8 flag;
+	if (res = stream->ReadU8(stream, &flag)) return res;
+	return (flag & 1) ? 0 : VORBIS_ERR_FRAMING;
 }
 
 static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {

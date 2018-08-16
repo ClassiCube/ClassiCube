@@ -21,18 +21,11 @@
 *--------------------------------------------------------ZipEntry---------------------------------------------------------*
 *#########################################################################################################################*/
 #define ZIP_MAXNAMELEN 512
-static String Zip_ReadFixedString(struct Stream* stream, UChar* buffer, UInt16 length) {
-	if (length > ZIP_MAXNAMELEN) ErrorHandler_Fail("Zip string too long");
-	String fileName = String_Init(buffer, length, length);
-	Stream_ReadOrFail(stream, buffer, length);
-	buffer[length] = '\0';
-	return fileName;
-}
-
-static void Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* entry) {
+static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* entry) {
 	struct Stream* stream = state->Input;
 	UInt8 contents[(3 * 2) + (4 * 4) + (2 * 2)];
-	Stream_ReadOrFail(stream, contents, sizeof(contents));
+	ReturnCode res;
+	if (res = Stream_Read(stream, contents, sizeof(contents))) return res;
 
 	/* contents[0] (2) version needed */
 	/* contents[2] (2) flags */
@@ -45,13 +38,17 @@ static void Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* ent
 	UInt32 uncompressedSize = Stream_GetU32_LE(&contents[18]);
 	if (!uncompressedSize) uncompressedSize = entry->UncompressedSize;
 
-	UInt16 fileNameLen   = Stream_GetU16_LE(&contents[22]);
+	UInt16 filenameLen   = Stream_GetU16_LE(&contents[22]);
 	UInt16 extraFieldLen = Stream_GetU16_LE(&contents[24]);
 	UChar filenameBuffer[String_BufferSize(ZIP_MAXNAMELEN)];
-	String filename = Zip_ReadFixedString(stream, filenameBuffer, fileNameLen);
-	if (!state->SelectEntry(&filename)) return;
 
-	Stream_Skip(stream, extraFieldLen);
+	if (filenameLen > ZIP_MAXNAMELEN) return ZIP_ERR_FILENAME_LEN;
+	String filename = String_Init(filenameBuffer, filenameLen, filenameLen);
+	if (res = Stream_Read(stream, filenameBuffer, filenameLen)) return res;
+	filenameBuffer[filenameLen] = '\0';
+
+	if (!state->SelectEntry(&filename)) return;
+	if (res = Stream_Skip(stream, extraFieldLen)) return res;
 	struct Stream portion, compStream;
 
 	if (compressionMethod == 0) {
@@ -66,12 +63,14 @@ static void Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* ent
 		Int32 method = compressionMethod;
 		Platform_Log1("Unsupported.zip entry compression method: %i", &method);
 	}
+	return 0;
 }
 
-static void Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* entry) {
+static ReturnCode Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* entry) {
 	struct Stream* stream = state->Input;
 	UInt8 contents[(4 * 2) + (4 * 4) + (3 * 2) + (2 * 2) + (2 * 4)];
-	Stream_ReadOrFail(stream, contents, sizeof(contents));
+	ReturnCode res;
+	if (res = Stream_Read(stream, contents, sizeof(contents))) return res;
 
 	/* contents[0] (2) OS */
 	/* contents[2] (2) version needed*/
@@ -82,7 +81,7 @@ static void Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* en
 	entry->CompressedSize   = Stream_GetU32_LE(&contents[16]);
 	entry->UncompressedSize = Stream_GetU32_LE(&contents[20]);
 
-	UInt16 fileNameLen    = Stream_GetU16_LE(&contents[24]);
+	UInt16 filenameLen    = Stream_GetU16_LE(&contents[24]);
 	UInt16 extraFieldLen  = Stream_GetU16_LE(&contents[26]);
 	UInt16 fileCommentLen = Stream_GetU16_LE(&contents[28]);
 	/* contents[30] (2) disk number */
@@ -90,14 +89,15 @@ static void Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* en
 	/* contents[34] (4) external attributes */
 	entry->LocalHeaderOffset = Stream_GetU32_LE(&contents[38]);
 
-	UInt32 extraDataLen = fileNameLen + extraFieldLen + fileCommentLen;
-	Stream_Skip(stream, extraDataLen);
+	UInt32 extraDataLen = filenameLen + extraFieldLen + fileCommentLen;
+	return Stream_Skip(stream, extraDataLen);
 }
 
-static void Zip_ReadEndOfCentralDirectory(struct ZipState* state, UInt32* centralDirectoryOffset) {
+static ReturnCode Zip_ReadEndOfCentralDirectory(struct ZipState* state, UInt32* centralDirectoryOffset) {
 	struct Stream* stream = state->Input;
 	UInt8 contents[(3 * 2) + 2 + (2 * 4) + 2];
-	Stream_ReadOrFail(stream, contents, sizeof(contents));
+	ReturnCode res;
+	if (res = Stream_Read(stream, contents, sizeof(contents))) return res;
 
 	/* contents[0] (2) disk number */
 	/* contents[2] (2) disk number start */
@@ -106,6 +106,7 @@ static void Zip_ReadEndOfCentralDirectory(struct ZipState* state, UInt32* centra
 	/* contents[8] (4) central directory size */
 	*centralDirectoryOffset = Stream_GetU32_LE(&contents[12]);
 	/* contents[16] (2) comment length */
+	return 0;
 }
 
 enum ZIP_SIG {
@@ -127,9 +128,9 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 	state->EntriesCount = 0;
 	struct Stream* stream = state->Input;
 	UInt32 sig = 0, stream_len;
-	
-	ReturnCode res = stream->Length(stream, &stream_len);
-	if (res) return res;
+
+	ReturnCode res;
+	if (res = stream->Length(stream, &stream_len)) return res;
 
 	/* At -22 for nearly all zips, but try a bit further back in case of comment */
 	Int32 i, len = min(257, stream_len);
@@ -137,24 +138,27 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 		res = stream->Seek(stream, -i, STREAM_SEEKFROM_END);
 		if (res) return ZIP_ERR_SEEK_END_OF_CENTRAL_DIR;
 
-		sig = Stream_ReadU32_LE(stream);
+		if (res = Stream_ReadU32_LE(stream, &sig)) return res;
 		if (sig == ZIP_SIG_ENDOFCENTRALDIR) break;
 	}
 	if (sig != ZIP_SIG_ENDOFCENTRALDIR) return ZIP_ERR_NO_END_OF_CENTRAL_DIR;
 
-	UInt32 centralDirectoryOffset;
-	Zip_ReadEndOfCentralDirectory(state, &centralDirectoryOffset);
-	res = stream->Seek(stream, centralDirectoryOffset, STREAM_SEEKFROM_BEGIN);
-	if (res) return ZIP_ERR_SEEK_CENTRAL_DIR;
+	UInt32 centralDirOffset;
+	res = Zip_ReadEndOfCentralDirectory(state, &centralDirOffset);
+	if (res) return res;
 
+	res = stream->Seek(stream, centralDirOffset, STREAM_SEEKFROM_BEGIN);
+	if (res) return ZIP_ERR_SEEK_CENTRAL_DIR;
 	if (state->EntriesCount > ZIP_MAX_ENTRIES) return ZIP_ERR_TOO_MANY_ENTRIES;
 
 	/* Read all the central directory entries */
 	Int32 count = 0;
 	while (count < state->EntriesCount) {
-		sig = Stream_ReadU32_LE(stream);
+		if (res = Stream_ReadU32_LE(stream, &sig)) return res;
+
 		if (sig == ZIP_SIG_CENTRALDIR) {
-			Zip_ReadCentralDirectory(state, &state->Entries[count]);
+			res = Zip_ReadCentralDirectory(state, &state->Entries[count]);
+			if (res) return res;
 			count++;
 		} else if (sig == ZIP_SIG_ENDOFCENTRALDIR) {
 			break;
@@ -169,9 +173,11 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 		res = stream->Seek(stream, entry->LocalHeaderOffset, STREAM_SEEKFROM_BEGIN);
 		if (res) return ZIP_ERR_SEEK_LOCAL_DIR;
 
-		sig = Stream_ReadU32_LE(stream);
+		if (res = Stream_ReadU32_LE(stream, &sig)) return res;
 		if (sig != ZIP_SIG_LOCALFILEHEADER) return ZIP_ERR_INVALID_LOCAL_DIR;
-		Zip_ReadLocalFileHeader(state, entry);
+
+		res = Zip_ReadLocalFileHeader(state, entry);
+		if (res) return res;
 	}
 	return 0;
 }
@@ -193,6 +199,9 @@ static void EntryList_Load(struct EntryList* list) {
 
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format3(&path, "%s%r%s", &folder, &Directory_Separator, &filename);
+
+	UChar lineBuffer[String_BufferSize(FILENAME_SIZE)];
+	String line = String_InitAndClearArray(lineBuffer);
 	ReturnCode res;
 
 	void* file; res = File_Open(&file, &path);
@@ -204,12 +213,16 @@ static void EntryList_Load(struct EntryList* list) {
 		UInt8 buffer[2048]; struct Stream buffered;
 		Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
 
-		while (Stream_ReadLine(&buffered, &path)) {
-			String_UNSAFE_TrimStart(&path);
-			String_UNSAFE_TrimEnd(&path);
+		for (;;) {
+			res = Stream_ReadLine(&buffered, &line);
+			if (res == ERR_END_OF_STREAM) break;
+			if (res) { Chat_LogError(res, "reading from", &path); break; }
 
-			if (!path.length) continue;
-			StringsBuffer_Add(&list->Entries, &path);
+			String_UNSAFE_TrimStart(&line);
+			String_UNSAFE_TrimEnd(&line);
+
+			if (!line.length) continue;
+			StringsBuffer_Add(&list->Entries, &line);
 		}
 	}
 	res = stream.Close(&stream);
@@ -416,7 +429,7 @@ static void TexturePack_ProcessZipEntry(STRING_TRANSIENT String* path, struct St
 	String_MakeLowercase(path);
 	String name = *path; Utils_UNSAFE_GetFilename(&name);
 	String_Set(&stream->Name, &name);
-	Event_RaiseStream(&TextureEvents_FileChanged, stream);
+	Event_RaiseEntry(&TextureEvents_FileChanged, stream, &name);
 }
 
 static ReturnCode TexturePack_ExtractZip(struct Stream* stream) {

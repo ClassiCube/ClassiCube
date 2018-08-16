@@ -150,12 +150,13 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 /*########################################################################################################################*
 *----------------------------------------------------fCraft map format----------------------------------------------------*
 *#########################################################################################################################*/
-static void Fcm_ReadString(struct Stream* stream) {
-	UInt8 buffer[sizeof(UInt16)];
-	Stream_ReadOrFail(stream, buffer, sizeof(buffer));
+static ReturnCode Fcm_ReadString(struct Stream* stream) {
+	UInt8 data[2];
+	ReturnCode res;
+	if (res = Stream_Read(stream, data, sizeof(data))) return res;
 
-	UInt16 len = Stream_GetU16_LE(&buffer[0]);
-	Stream_Skip(stream, len);
+	UInt16 len = Stream_GetU16_LE(data);
+	return Stream_Skip(stream, len);
 }
 
 ReturnCode Fcm_Load(struct Stream* stream) {
@@ -190,9 +191,9 @@ ReturnCode Fcm_Load(struct Stream* stream) {
 
 	Int32 i;
 	for (i = 0; i < metaSize; i++) {
-		Fcm_ReadString(&compStream); /* Group */
-		Fcm_ReadString(&compStream); /* Key   */
-		Fcm_ReadString(&compStream); /* Value */
+		if (res = Fcm_ReadString(&compStream)) return res; /* Group */
+		if (res = Fcm_ReadString(&compStream)) return res; /* Key   */
+		if (res = Fcm_ReadString(&compStream)) return res; /* Value */
 	}
 	return Map_ReadBlocks(&compStream);
 }
@@ -257,86 +258,100 @@ static String NbtTag_String(struct NbtTag* tag) {
 	return String_Init(tag->DataSmall, tag->DataSize, tag->DataSize);
 }
 
-static UInt32 Nbt_ReadString(struct Stream* stream, UChar* strBuffer) {
-	UInt16 nameLen = Stream_ReadU16_BE(stream);
-	if (nameLen > NBT_SMALL_SIZE * 4) ErrorHandler_Fail("NBT String too long");
+static ReturnCode Nbt_ReadString(struct Stream* stream, UChar* strBuffer, UInt32* strLen) {
+	ReturnCode res;
 	UChar nameBuffer[NBT_SMALL_SIZE * 4];
-	Stream_ReadOrFail(stream, nameBuffer, nameLen);
+	if (res = Stream_Read(stream, nameBuffer, 2)) return res;
+
+	UInt16 nameLen = Stream_GetU16_BE(nameBuffer);
+	if (nameLen > NBT_SMALL_SIZE * 4) ErrorHandler_Fail("NBT String too long");
+	if (res = Stream_Read(stream, nameBuffer, nameLen)) return res;
 
 	String str = String_Init(strBuffer, 0, NBT_SMALL_SIZE);
 	String_DecodeUtf8(&str, nameBuffer, nameLen);
-	return str.length;
+	*strLen = str.length; return 0;
 }
 
 typedef bool (*Nbt_Callback)(struct NbtTag* tag);
-static void Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* stream, struct NbtTag* parent, Nbt_Callback callback) {
+static ReturnCode Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* stream, struct NbtTag* parent, Nbt_Callback callback) {
 	if (typeId == NBT_END) return;
 
 	struct NbtTag tag;
-	tag.TagID = typeId;
-	tag.Parent = parent;
-	tag.NameSize = readTagName ? Nbt_ReadString(stream, tag.NameBuffer) : 0;
-	tag.DataSize = 0;
+	tag.TagID = typeId; tag.Parent = parent;
+	tag.NameSize = 0;   tag.DataSize = 0;
 
-	UInt8 childTagId;
+	UInt8 childType;
 	UInt32 i, count;
+	ReturnCode res;
+	UInt8 tmp[5];
+
+	if (readTagName) {
+		res = Nbt_ReadString(stream, tag.NameBuffer, &tag.NameSize);
+		if (res) return res;
+	}
 
 	switch (typeId) {
 	case NBT_I8:
-		tag.Value_U8 = Stream_ReadU8(stream); break;
+		res = stream->ReadU8(stream, &tag.Value_U8);
+		break;
 	case NBT_I16:
-		tag.Value_I16 = Stream_ReadI16_BE(stream); break;
+		res = Stream_Read(stream, tmp, 2);
+		tag.Value_I16 = Stream_GetU16_BE(tmp);
+		break;
 	case NBT_I32:
-		tag.Value_I32 = Stream_ReadI32_BE(stream); break;
-	case NBT_I64:
-		Stream_Skip(stream, 8); break; /* (8) data */
 	case NBT_R32:
-		/* TODO: Is this union abuse even legal */
-		tag.Value_I32 = Stream_ReadI32_BE(stream); break;
+		res = Stream_ReadU32_BE(stream, &tag.Value_I32);
+		break;
+	case NBT_I64:
 	case NBT_R64:
-		Stream_Skip(stream, 8); break; /* (8) data */
+		res = Stream_Skip(stream, 8); 
+		break; /* (8) data */
 
 	case NBT_I8S:
-		count = Stream_ReadU32_BE(stream); 
-		tag.DataSize = count;
+		if (res = Stream_ReadU32_BE(stream, &tag.DataSize)) break;
 
-		if (count < NBT_SMALL_SIZE) {
-			Stream_ReadOrFail(stream, tag.DataSmall, count);
+		if (tag.DataSize < NBT_SMALL_SIZE) {
+			res = Stream_Read(stream, tag.DataSmall, tag.DataSize);
 		} else {
-			tag.DataBig = Mem_Alloc(count, sizeof(UInt8), "NBT tag data");
-			Stream_ReadOrFail(stream, tag.DataBig, count);
+			tag.DataBig = Mem_Alloc(tag.DataSize, sizeof(UInt8), "NBT data");
+			res = Stream_Read(stream, tag.DataBig, tag.DataSize);
+			if (res) { Mem_Free(&tag.DataBig); }
 		}
 		break;
-
 	case NBT_STR:
-		tag.DataSize = Nbt_ReadString(stream, tag.DataSmall);
+		res = Nbt_ReadString(stream, tag.DataSmall, &tag.DataSize);
 		break;
 
 	case NBT_LIST:
-		childTagId = Stream_ReadU8(stream);
-		count = Stream_ReadU32_BE(stream);
+		if (res = Stream_Read(stream, tmp, 5)) break;
+		childType = tmp[0];
+		count = Stream_GetU32_BE(&tmp[1]);
+
 		for (i = 0; i < count; i++) {
-			Nbt_ReadTag(childTagId, false, stream, &tag, callback);
+			res = Nbt_ReadTag(childType, false, stream, &tag, callback);
+			if (res) break;
 		}
 		break;
 
 	case NBT_DICT:
-		while ((childTagId = Stream_ReadU8(stream)) != NBT_END) {
-			Nbt_ReadTag(childTagId, true, stream, &tag, callback);
-		} 
+		for (;;) {
+			if (res = stream->ReadU8(stream, &childType)) break;
+			if (childType == NBT_END) break;
+
+			res = Nbt_ReadTag(childType, true, stream, &tag, callback);
+			if (res) break;
+		}
 		break;
 
-	case NBT_I32S:
-		ErrorHandler_Fail("Nbt Tag Int32_Array not supported");
-		break;
-
-	default:
-		ErrorHandler_Fail("Unrecognised NBT tag");
+	case NBT_I32S: return NBT_ERR_INT32S;
+	default:       return NBT_ERR_UNKNOWN;
 	}
 
+	if (res) return res;
 	bool processed = callback(&tag);
 	/* don't leak memory for unprocessed tags */
 	if (!processed && tag.DataSize >= NBT_SMALL_SIZE) Mem_Free(&tag.DataBig);
+	return 0;
 }
 
 static bool IsTag(struct NbtTag* tag, const UChar* tagName) {
@@ -556,10 +571,12 @@ ReturnCode Cw_Load(struct Stream* stream) {
 	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
-	if (Stream_ReadU8(&compStream) != NBT_DICT) {
-		ErrorHandler_Fail("NBT file most start with Compound Tag");
-	}
-	Nbt_ReadTag(NBT_DICT, true, &compStream, NULL, Cw_Callback);
+	UInt8 tag;
+	if (res = compStream.ReadU8(&compStream, &tag)) return res;
+	if (tag != NBT_DICT) return CW_ERR_ROOT_TAG;
+
+	res = Nbt_ReadTag(NBT_DICT, true, &compStream, NULL, Cw_Callback);
+	if (res) return res;
 
 	/* Older versions incorrectly multiplied spawn coords by * 32, so we check for that */
 	Vector3* spawn = &LocalPlayer_Instance.Spawn;
@@ -600,80 +617,95 @@ struct JClassDesc {
 	struct JFieldDesc Fields[22];
 };
 
-static void Dat_ReadString(struct Stream* stream, UInt8* buffer) {
-	Mem_Set(buffer, 0, JNAME_SIZE);
-	UInt16 len = Stream_ReadU16_BE(stream);
+static ReturnCode Dat_ReadString(struct Stream* stream, UInt8* buffer) {
+	ReturnCode res;
+	if (res = Stream_Read(stream, buffer, 2)) return res;
+	UInt16 len = Stream_GetU16_BE(buffer);
 
-	if (len > JNAME_SIZE) ErrorHandler_Fail("Dat string too long");
-	Stream_ReadOrFail(stream, buffer, len);
+	Mem_Set(buffer, 0, JNAME_SIZE);
+	if (len > JNAME_SIZE) return DAT_ERR_JSTRING_LEN;
+	return Stream_Read(stream, buffer, len);
 }
 
-static void Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* desc) {
-	desc->Type = Stream_ReadU8(stream);
-	Dat_ReadString(stream, desc->FieldName);
+static ReturnCode Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* desc) {
+	ReturnCode res;
+	if (res = stream->ReadU8(stream, &desc->Type))     return res;
+	if (res = Dat_ReadString(stream, desc->FieldName)) return res;
 
 	if (desc->Type == JFIELD_ARRAY || desc->Type == JFIELD_OBJECT) {
-		UInt8 typeCode = Stream_ReadU8(stream);
+		UInt8 typeCode;
+		if (res = stream->ReadU8(stream, &typeCode)) return res;
+
 		if (typeCode == TC_STRING) {
 			UChar className1[String_BufferSize(JNAME_SIZE)];
-			Dat_ReadString(stream, className1);
+			return Dat_ReadString(stream, className1);
 		} else if (typeCode == TC_REFERENCE) {
-			Stream_Skip(stream, 4); /* (4) handle */
+			return Stream_Skip(stream, 4); /* (4) handle */
 		} else {
-			ErrorHandler_Fail("Unsupported type code in FieldDesc class name");
+			return DAT_ERR_JFIELD_CLASS_NAME;
 		}
 	}
+	return 0;
 }
 
-static void Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* desc) {
-	UInt8 typeCode = Stream_ReadU8(stream);
-	if (typeCode == TC_NULL) { desc->ClassName[0] = '\0'; desc->FieldsCount = 0; return; }
-	if (typeCode != TC_CLASSDESC) ErrorHandler_Fail("Unsupported type code in ClassDesc header");
+static ReturnCode Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* desc) {
+	ReturnCode res;
+	UInt8 typeCode;
+	UInt8 tmp[2];
 
-	Dat_ReadString(stream, desc->ClassName);
-	Stream_Skip(stream, 8 + 1); /* (8) serial version UID, (1) flags */
+	if (res = stream->ReadU8(stream, &typeCode)) return res;
+	if (typeCode == TC_NULL) { desc->ClassName[0] = '\0'; desc->FieldsCount = 0; return 0; }
+	if (typeCode != TC_CLASSDESC) return DAT_ERR_JCLASS_TYPE;
 
-	desc->FieldsCount = Stream_ReadU16_BE(stream);
-	if (desc->FieldsCount > Array_Elems(desc->Fields)) ErrorHandler_Fail("ClassDesc has too many fields");
+	if (res = Dat_ReadString(stream, desc->ClassName)) return res;
+	if (res = Stream_Skip(stream, 9)) return res; /* (8) serial version UID, (1) flags */
+
+	if (res = Stream_Read(stream, tmp, 2)) return res;
+	desc->FieldsCount = Stream_GetU16_BE(tmp);
+	if (desc->FieldsCount > Array_Elems(desc->Fields)) return DAT_ERR_JCLASS_FIELDS;
+
 	Int32 i;
 	for (i = 0; i < desc->FieldsCount; i++) {
-		Dat_ReadFieldDesc(stream, &desc->Fields[i]);
+		if (res = Dat_ReadFieldDesc(stream, &desc->Fields[i])) return res;
 	}
 
-	typeCode = Stream_ReadU8(stream);
-	if (typeCode != TC_ENDBLOCKDATA) ErrorHandler_Fail("Unsupported type code in ClassDesc footer");
+	if (res = stream->ReadU8(stream, &typeCode)) return res;
+	if (typeCode != TC_ENDBLOCKDATA) return DAT_ERR_JCLASS_ANNOTATION;
+
 	struct JClassDesc superClassDesc;
-	Dat_ReadClassDesc(stream, &superClassDesc);
+	return Dat_ReadClassDesc(stream, &superClassDesc);
 }
 
-static void Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
+static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
+	ReturnCode res;
+	UInt8 typeCode;
+	UInt32 count;
+
 	switch (field->Type) {
 	case JFIELD_INT8:
-		field->Value_U8  = Stream_ReadU8(stream); break;
-	case JFIELD_REAL32:
-		/* TODO: Is this union abuse even legal */
-		field->Value_I32 = Stream_ReadI32_BE(stream); break;
-	case JFIELD_INT32:
-		field->Value_I32 = Stream_ReadI32_BE(stream); break;
-	case JFIELD_INT64:
-		Stream_Skip(stream, 8); break; /* (8) data */
 	case JFIELD_BOOL:
-		field->Value_I32 = Stream_ReadU8(stream) != 0; break;
+		return stream->ReadU8(stream, &field->Value_U8);
+	case JFIELD_REAL32:
+	case JFIELD_INT32:
+		return Stream_ReadU32_BE(stream, &field->Value_I32);
+	case JFIELD_INT64:
+		return Stream_Skip(stream, 8); /* (8) data */
 
 	case JFIELD_OBJECT: {
 		/* Luckily for us, we only have to account for blockMap object */
 		/* Other objects (e.g. player) are stored after the fields we actually care about, so ignore them */
 		String fieldName = String_FromRawArray(field->FieldName);
-		if (!String_CaselessEqualsConst(&fieldName, "blockMap")) break;
+		if (!String_CaselessEqualsConst(&fieldName, "blockMap")) return 0;
+		if (res = stream->ReadU8(stream, &typeCode)) return res;
 
-		UInt8 typeCode = Stream_ReadU8(stream);
 		/* Skip all blockMap data with awful hacks */
 		/* These offsets were based on server_level.dat map from original minecraft classic server */
 		if (typeCode == TC_OBJECT) {
-			Stream_Skip(stream, 315);
-			UInt32 count = Stream_ReadU32_BE(stream);
-			Stream_Skip(stream, 17 * count);
-			Stream_Skip(stream, 152);
+			if (res = Stream_Skip(stream, 315))          return res;
+			if (res = Stream_ReadU32_BE(stream, &count)) return res;
+
+			if (res = Stream_Skip(stream, 17 * count)) return res;
+			if (res = Stream_Skip(stream, 152))        return res;
 		} else if (typeCode != TC_NULL) {
 			/* WoM maps have this field as null, which makes things easier for us */
 			ErrorHandler_Fail("Unsupported type code in Object field");
@@ -681,21 +713,23 @@ static void Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
 	} break;
 
 	case JFIELD_ARRAY: {
-		UInt8 typeCode = Stream_ReadU8(stream);
+		if (res = stream->ReadU8(stream, &typeCode)) return res;
 		if (typeCode == TC_NULL) break;
 		if (typeCode != TC_ARRAY) ErrorHandler_Fail("Unsupported type code in Array field");
 
 		struct JClassDesc arrayClassDesc;
-		Dat_ReadClassDesc(stream, &arrayClassDesc);
+		if (res = Dat_ReadClassDesc(stream, &arrayClassDesc)) return res;
 		if (arrayClassDesc.ClassName[1] != JFIELD_INT8) ErrorHandler_Fail("Only byte array fields supported");
 
-		UInt32 size = Stream_ReadU32_BE(stream);
-		field->Value_Ptr = Mem_Alloc(size, sizeof(UInt8), ".dat map blocks");
+		if (res = Stream_ReadU32_BE(stream, &count)) return res;
+		field->Value_Size = count;
 
-		Stream_ReadOrFail(stream, field->Value_Ptr, size);
-		field->Value_Size = size;
+		field->Value_Ptr = Mem_Alloc(count, sizeof(UInt8), ".dat map blocks");
+		res = Stream_Read(stream, field->Value_Ptr, count);	
+		if (res) { Mem_Free(&field->Value_Ptr); return res; }
 	} break;
 	}
+	return 0;
 }
 
 static Int32 Dat_I32(struct JFieldDesc* field) {
@@ -722,18 +756,19 @@ ReturnCode Dat_Load(struct Stream* stream) {
 	if (Stream_GetU16_BE(&header[5]) != 0xACED) return DAT_ERR_JIDENTIFIER;
 	if (Stream_GetU16_BE(&header[7]) != 0x0005) return DAT_ERR_JVERSION;
 
-	UInt8 typeCode = Stream_ReadU8(&compStream);
-	if (typeCode != TC_OBJECT) ErrorHandler_Fail("Unexpected type code for root class");
-	struct JClassDesc obj; Dat_ReadClassDesc(&compStream, &obj);
+	UInt8 typeCode;
+	if (res = compStream.ReadU8(&compStream, &typeCode)) return res;
+	if (typeCode != TC_OBJECT) return DAT_ERR_ROOT_TYPE;
+
+	struct JClassDesc obj; 
+	if (res = Dat_ReadClassDesc(&compStream, &obj)) return res;
 
 	Int32 i;
-	for (i = 0; i < obj.FieldsCount; i++) {
-		Dat_ReadFieldData(&compStream, &obj.Fields[i]);
-	}
-
 	Vector3* spawn = &LocalPlayer_Instance.Spawn;
 	for (i = 0; i < obj.FieldsCount; i++) {
 		struct JFieldDesc* field = &obj.Fields[i];
+
+		if (res = Dat_ReadFieldData(&compStream, field)) return res;
 		String fieldName = String_FromRawArray(field->FieldName);
 
 		if (String_CaselessEqualsConst(&fieldName, "width")) {

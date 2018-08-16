@@ -7,24 +7,6 @@
 /*########################################################################################################################*
 *---------------------------------------------------------Stream----------------------------------------------------------*
 *#########################################################################################################################*/
-void Stream_Fail(struct Stream* stream, ReturnCode result, const UChar* operation) {
-	UChar tmpBuffer[String_BufferSize(400)];
-	String tmp = String_InitAndClearArray(tmpBuffer);
-	String_Format2(&tmp, "Failed %c %s", operation, &stream->Name);
-	ErrorHandler_FailWithCode(result, tmpBuffer);
-}
-
-void Stream_ReadOrFail(struct Stream* stream, UInt8* buffer, UInt32 count) {
-	UInt32 read;
-	while (count) {
-		ReturnCode res = stream->Read(stream, buffer, count, &read);
-		if (!read || res) { Stream_Fail(stream, res, "reading from"); }
-
-		buffer += read;
-		count  -= read;
-	}
-}
-
 ReturnCode Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	UInt32 read;
 	while (count) {
@@ -51,21 +33,20 @@ ReturnCode Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	return 0;
 }
 
-void Stream_Skip(struct Stream* stream, UInt32 count) {
+ReturnCode Stream_Skip(struct Stream* stream, UInt32 count) {
 	ReturnCode res = stream->Seek(stream, count, STREAM_SEEKFROM_CURRENT);
-	if (!res) return;
+	if (!res) return 0;
 	UInt8 tmp[3584]; /* not quite 4 KB to avoid chkstk call */
 
 	while (count) {
 		UInt32 toRead = min(count, sizeof(tmp)), read;
 		res = stream->Read(stream, tmp, toRead, &read);
+		if (res) return res;
+		if (!read) return ERR_END_OF_STREAM;
 
-		if (res) Stream_Fail(stream, res, "Skipping data from");
-		if (!read) break; /* end of stream */
 		count -= read;
 	}
-
-	if (count) Stream_Fail(stream, 0, "Skipping data from");
+	return 0;
 }
 
 static ReturnCode Stream_DefaultIO(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
@@ -319,29 +300,16 @@ void Stream_SetU32_BE(UInt8* data, UInt32 value) {
 	data[2] = (UInt8)(value >> 8 ); data[3] = (UInt8)(value);
 }
 
-UInt8 Stream_ReadU8(struct Stream* stream) {
-	UInt8 buffer;
-	ReturnCode res = stream->ReadU8(stream, &buffer);
-	if (res) { Stream_Fail(stream, res, "reading U8 from"); }
-	return buffer;
+ReturnCode Stream_ReadU32_LE(struct Stream* stream, UInt32* value) {
+	UInt8 data[4]; ReturnCode res;
+	if (res = Stream_Read(stream, data, 4)) return res;
+	*value = Stream_GetU32_LE(data); return 0;
 }
 
-UInt16 Stream_ReadU16_BE(struct Stream* stream) {
-	UInt8 buffer[sizeof(UInt16)];
-	Stream_ReadOrFail(stream, buffer, sizeof(UInt16));
-	return Stream_GetU16_BE(buffer);
-}
-
-UInt32 Stream_ReadU32_LE(struct Stream* stream) {
-	UInt8 buffer[sizeof(UInt32)];
-	Stream_ReadOrFail(stream, buffer, sizeof(UInt32));
-	return Stream_GetU32_LE(buffer);
-}
-
-UInt32 Stream_ReadU32_BE(struct Stream* stream) {
-	UInt8 buffer[sizeof(UInt32)];
-	Stream_ReadOrFail(stream, buffer, sizeof(UInt32));
-	return Stream_GetU32_BE(buffer);
+ReturnCode Stream_ReadU32_BE(struct Stream* stream, UInt32* value) {
+	UInt8 data[4]; ReturnCode res;
+	if (res = Stream_Read(stream, data, 4)) return res;
+	*value = Stream_GetU32_BE(data); return 0;
 }
 
 
@@ -379,23 +347,23 @@ ReturnCode Stream_ReadUtf8Char(struct Stream* stream, UInt16* codepoint) {
 	return 0;
 }
 
-bool Stream_ReadLine(struct Stream* stream, STRING_TRANSIENT String* text) {
+ReturnCode Stream_ReadLine(struct Stream* stream, STRING_TRANSIENT String* text) {
 	String_Clear(text);
 	bool readAny = false;
-	for (;;) {
-		UInt16 codepoint;
+	UInt16 codepoint;
+
+	for (;;) {	
 		ReturnCode res = Stream_ReadUtf8Char(stream, &codepoint);
 		if (res == ERR_END_OF_STREAM) break;
+		if (res) return res;
 
-		if (res) { Stream_Fail(stream, res, "reading utf8 from"); }
 		readAny = true;
-
 		/* Handle \r\n or \n line endings */
 		if (codepoint == '\r') continue;
 		if (codepoint == '\n') return true;
 		String_Append(text, Convert_UnicodeToCP437(codepoint));
 	}
-	return readAny;
+	return readAny ? 0 : ERR_END_OF_STREAM;
 }
 
 Int32 Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint) {

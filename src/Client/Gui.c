@@ -83,18 +83,18 @@ bool Gui_Contains(Int32 recX, Int32 recY, Int32 width, Int32 height, Int32 x, In
 	return x >= recX && y >= recY && x < recX + width && y < recY + height;
 }
 
-static void Gui_FileChanged(void* obj, struct Stream* stream) {
-	if (String_CaselessEqualsConst(&stream->Name, "gui.png")) {
-		Game_UpdateTexture(&Gui_GuiTex, stream, NULL);
-	} else if (String_CaselessEqualsConst(&stream->Name, "gui_classic.png")) {
-		Game_UpdateTexture(&Gui_GuiClassicTex, stream, NULL);
-	} else if (String_CaselessEqualsConst(&stream->Name, "icons.png")) {
-		Game_UpdateTexture(&Gui_IconsTex, stream, NULL);
+static void Gui_FileChanged(void* obj, struct Stream* stream, String* name) {
+	if (String_CaselessEqualsConst(name, "gui.png")) {
+		Game_UpdateTexture(&Gui_GuiTex, stream, name, NULL);
+	} else if (String_CaselessEqualsConst(name, "gui_classic.png")) {
+		Game_UpdateTexture(&Gui_GuiClassicTex, stream, name, NULL);
+	} else if (String_CaselessEqualsConst(name, "icons.png")) {
+		Game_UpdateTexture(&Gui_IconsTex, stream, name, NULL);
 	}
 }
 
 static void Gui_Init(void) {
-	Event_RegisterStream(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
+	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
 	Gui_Status = StatusScreen_MakeInstance();
 	Gui_HUD = HUDScreen_MakeInstance();
 
@@ -112,7 +112,7 @@ static void Gui_Reset(void) {
 }
 
 static void Gui_Free(void) {
-	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
+	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
 	Gui_ReplaceActive(NULL);
 	Elem_TryFree(Gui_Status);
 

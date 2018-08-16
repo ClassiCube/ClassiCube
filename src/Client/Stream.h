@@ -33,11 +33,10 @@ struct Stream {
 	String Name;
 };
 
-void Stream_ReadOrFail(struct Stream* stream, UInt8* buffer, UInt32 count);
 ReturnCode Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count);
 ReturnCode Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count);
 void Stream_Init(struct Stream* stream, STRING_PURE String* name);
-void Stream_Skip(struct Stream* stream, UInt32 count);
+ReturnCode Stream_Skip(struct Stream* stream, UInt32 count);
 ReturnCode Stream_DefaultReadU8(struct Stream* stream, UInt8* data);
 
 void Stream_FromFile(struct Stream* stream, void* file, STRING_PURE String* name);
@@ -56,15 +55,12 @@ void Stream_SetU16_BE(UInt8* data, UInt16 value);
 void Stream_SetU32_LE(UInt8* data, UInt32 value);
 void Stream_SetU32_BE(UInt8* data, UInt32 value);
 
-UInt8 Stream_ReadU8(struct Stream* stream);
-UInt16 Stream_ReadU16_BE(struct Stream* stream);
-UInt32 Stream_ReadU32_LE(struct Stream* stream);
-UInt32 Stream_ReadU32_BE(struct Stream* stream);
-#define Stream_ReadI16_BE(stream) ((Int16)Stream_ReadU16_BE(stream))
-#define Stream_ReadI32_BE(stream) ((Int32)Stream_ReadU32_BE(stream))
+ReturnCode Stream_ReadU32_LE(struct Stream* stream, UInt32* value);
+ReturnCode Stream_ReadU32_BE(struct Stream* stream, UInt32* value);
+UInt8 Stream_ReadU8OrFail(struct Stream* stream);
 
 ReturnCode Stream_ReadUtf8Char(struct Stream* stream, UInt16* codepoint);
-bool Stream_ReadLine(struct Stream* stream, STRING_TRANSIENT String* text);
+ReturnCode Stream_ReadLine(struct Stream* stream, STRING_TRANSIENT String* text);
 Int32 Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint);
 ReturnCode Stream_WriteLine(struct Stream* stream, STRING_TRANSIENT String* text);
 #endif

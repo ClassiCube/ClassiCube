@@ -41,15 +41,18 @@ static void ChatLine_Make(struct ChatLine* line, STRING_TRANSIENT String* text) 
 	DateTime_CurrentUTC(&line->Received);
 }
 
-UChar Chat_LogNameBuffer[String_BufferSize(STRING_SIZE)];
+UChar  Chat_LogNameBuffer[String_BufferSize(STRING_SIZE)];
 String Chat_LogName = String_FromEmptyArray(Chat_LogNameBuffer);
+UChar  Chat_LogPathBuffer[String_BufferSize(FILENAME_SIZE)];
+String Chat_LogPath = String_FromEmptyArray(Chat_LogPathBuffer);
+
 struct Stream Chat_LogStream;
 DateTime ChatLog_LastLogDate;
 
 static void Chat_CloseLog(void) {
 	if (!Chat_LogStream.Meta.File) return;
 	ReturnCode res = Chat_LogStream.Close(&Chat_LogStream);
-	if (res) { Chat_LogError(res, "closing", &Chat_LogStream.Name); }
+	if (res) { Chat_LogError(res, "closing", &Chat_LogPath); }
 }
 
 static bool Chat_AllowedLogChar(UChar c) {
@@ -86,24 +89,24 @@ static void Chat_OpenLog(DateTime* now) {
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
 	Int32 i, year = now->Year, month = now->Month, day = now->Day;
 	for (i = 0; i < 20; i++) {
-		UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
-		String path = String_InitAndClearArray(pathBuffer);
-		String_Format4(&path, "logs%r%p4-%p2-%p2", &Directory_Separator, &year, &month, &day);
+		String* path = &Chat_LogPath;
+		String_Clear(path);
+		String_Format4(path, "logs%r%p4-%p2-%p2", &Directory_Separator, &year, &month, &day);
 
 		if (i > 0) {
-			String_Format2(&path, "%s _%i.log", &Chat_LogName, &i);
+			String_Format2(path, "%s _%i.log", &Chat_LogName, &i);
 		} else {
-			String_Format1(&path, "%s.log", &Chat_LogName);
+			String_Format1(path, "%s.log", &Chat_LogName);
 		}
 
-		void* file; res = File_Append(&file, &path);
+		void* file; res = File_Append(&file, path);
 		if (res && res != ReturnCode_FileShareViolation) {
 			Chat_DisableLogging();
-			Chat_LogError(res, "appending to", &path); return;
+			Chat_LogError(res, "appending to", path); return;
 		}
 
 		if (res == ReturnCode_FileShareViolation) continue;
-		Stream_FromFile(&Chat_LogStream, file, &path);
+		Stream_FromFile(&Chat_LogStream, file, path);
 		return;
 	}
 
@@ -134,7 +137,7 @@ static void Chat_AppendLog(STRING_PURE String* text) {
 	ReturnCode res = Stream_WriteLine(&Chat_LogStream, &str);
 	if (!res) return;
 	Chat_DisableLogging();
-	Chat_LogError(res, "writing to", &Chat_LogStream.Name);
+	Chat_LogError(res, "writing to", &Chat_LogPath);
 }
 
 void Chat_LogError(ReturnCode result, const UChar* place, STRING_PURE String* path) {
