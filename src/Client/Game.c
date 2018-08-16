@@ -206,10 +206,10 @@ bool Game_CanPick(BlockID block) {
 
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, UInt8* skinType) {
 	struct Bitmap bmp; 
-	ReturnCode result = Bitmap_DecodePng(&bmp, src);
-	if (result) { ErrorHandler_LogError_Path(result, "decoding", &src->Name); }
+	ReturnCode res = Bitmap_DecodePng(&bmp, src);
+	if (res) { ErrorHandler_LogError_Path(res, "decoding", &src->Name); }
 
-	bool success = !result && Game_ValidateBitmap(&src->Name, &bmp);
+	bool success = !res && Game_ValidateBitmap(&src->Name, &bmp);
 	if (success) {
 		Gfx_DeleteTexture(texId);
 		if (skinType != NULL) { *skinType = Utils_GetSkinType(&bmp); }
@@ -296,19 +296,19 @@ static void Game_TextureChangedCore(void* obj, struct Stream* src) {
 	String* name = &src->Name;
 	struct Bitmap bmp;
 	if (String_CaselessEqualsConst(name, "terrain.png")) {
-		ReturnCode result = Bitmap_DecodePng(&bmp, src);
+		ReturnCode res = Bitmap_DecodePng(&bmp, src);
 
-		if (result) { 
-			ErrorHandler_LogError_Path(result, "decoding", name);
+		if (res) { 
+			ErrorHandler_LogError_Path(res, "decoding", name);
 			Mem_Free(&bmp.Scan0);
 		} else if (!Game_ChangeTerrainAtlas(&bmp)) {
 			Mem_Free(&bmp.Scan0);
 		}		
 	} else if (String_CaselessEqualsConst(name, "default.png")) {
-		ReturnCode result = Bitmap_DecodePng(&bmp, src);
+		ReturnCode res = Bitmap_DecodePng(&bmp, src);
 
-		if (result) { 
-			ErrorHandler_LogError_Path(result, "decoding", name);
+		if (res) { 
+			ErrorHandler_LogError_Path(res, "decoding", name);
 			Mem_Free(&bmp.Scan0);
 		} else {
 			Drawer2D_SetFontBitmap(&bmp);
@@ -624,7 +624,7 @@ static void Game_DoScheduledTasks(Real64 time) {
 }
 
 void Game_TakeScreenshot(void) {
-	ReturnCode result;
+	ReturnCode res;
 	Game_ScreenshotRequested = false;
 	if (!Utils_EnsureDirectory("screenshots")) return;
 
@@ -641,19 +641,19 @@ void Game_TakeScreenshot(void) {
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format2(&path, "screenshots%r%s", &Directory_Separator, &filename);
 
-	void* file; result = File_Create(&file, &path);
-	if (result) { ErrorHandler_LogError_Path(result, "creating", &path); return; }
+	void* file; res = File_Create(&file, &path);
+	if (res) { ErrorHandler_LogError_Path(res, "creating", &path); return; }
 
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
-		result = Gfx_TakeScreenshot(&stream, Game_Width, Game_Height);
-		if (result) { 
-			ErrorHandler_LogError(result, "saving screenshot"); 
+		res = Gfx_TakeScreenshot(&stream, Game_Width, Game_Height);
+		if (res) { 
+			ErrorHandler_LogError(res, "saving screenshot"); 
 			stream.Close(&stream); return;
 		}
 	}
-	result = stream.Close(&stream);
-	if (result) { ErrorHandler_LogError_Path(result, "closing", &path); return; }
+	res = stream.Close(&stream);
+	if (res) { ErrorHandler_LogError_Path(res, "closing", &path); return; }
 
 	String_Clear(&path);
 	String_Format1(&path, "&eTaken screenshot as: %s", &filename);

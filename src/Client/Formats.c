@@ -15,16 +15,16 @@
 static ReturnCode Map_ReadBlocks(struct Stream* stream) {
 	World_BlocksSize = World_Width * World_Length * World_Height;
 	World_Blocks = Mem_Alloc(World_BlocksSize, sizeof(BlockID), "map blocks");
-	return Stream_TryRead(stream, World_Blocks, World_BlocksSize);
+	return Stream_Read(stream, World_Blocks, World_BlocksSize);
 }
 
 static ReturnCode Map_SkipGZipHeader(struct Stream* stream) {
 	struct GZipHeader gzHeader;
 	GZipHeader_Init(&gzHeader);
+	ReturnCode res;
 
 	while (!gzHeader.Done) {
-		ReturnCode result = GZipHeader_Read(stream, &gzHeader);
-		if (result) return result;
+		if (res = GZipHeader_Read(stream, &gzHeader)) return res;
 	}
 	return 0;
 }
@@ -49,7 +49,7 @@ UInt8 Lvl_table[256 - BLOCK_CPE_COUNT] = { 0, 0, 0, 0, 39, 36, 36, 10, 46, 21, 2
 static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
 	Int32 x, y, z, i;
 	UInt8 chunk[LVL_CHUNKSIZE * LVL_CHUNKSIZE * LVL_CHUNKSIZE];
-	ReturnCode result; UInt8 hasCustom;
+	ReturnCode res; UInt8 hasCustom;
 
 	/* skip bounds checks when we know chunk is entirely inside map */
 	Int32 adjWidth  = World_Width  & ~0x0F;
@@ -59,12 +59,10 @@ static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
 	for (y = 0; y < World_Height; y += LVL_CHUNKSIZE) {
 		for (z = 0; z < World_Length; z += LVL_CHUNKSIZE) {
 			for (x = 0; x < World_Width; x += LVL_CHUNKSIZE) {
-				result = stream->ReadU8(stream, &hasCustom);
-				if (result) return result;
 
+				if (res = stream->ReadU8(stream, &hasCustom)) return res;
 				if (hasCustom != 1) continue;
-				result = Stream_TryRead(stream, chunk, sizeof(chunk));
-				if (result) return result;
+				if (res = Stream_Read(stream, chunk, sizeof(chunk))) return res;
 
 				Int32 baseIndex = World_Pack(x, y, z);
 				if ((x + LVL_CHUNKSIZE) <= adjWidth && (y + LVL_CHUNKSIZE) <= adjHeight && (z + LVL_CHUNKSIZE) <= adjLength) {
@@ -111,24 +109,22 @@ static void Lvl_ConvertPhysicsBlocks(void) {
 }
 
 ReturnCode Lvl_Load(struct Stream* stream) {
-	ReturnCode result = Map_SkipGZipHeader(stream);
-	if (result) return result;
+	ReturnCode res = Map_SkipGZipHeader(stream);
+	if (res) return res;
 	
 	struct Stream compStream;
 	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
 	UInt8 header[8 + 2];
-	result = Stream_TryRead(&compStream, header, 8);
-	if (result) return result;
+	if (res = Stream_Read(&compStream, header, 8)) return res;
 	if (Stream_GetU16_LE(&header[0]) != 1874) return LVL_ERR_VERSION;
 
 	World_Width  = Stream_GetU16_LE(&header[2]);
 	World_Length = Stream_GetU16_LE(&header[4]);
 	World_Height = Stream_GetU16_LE(&header[6]);
 
-	result = Stream_TryRead(&compStream, header, sizeof(header));
-	if (result) return result;
+	if (res = Stream_Read(&compStream, header, sizeof(header))) return res;
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 
 	p->Spawn.X = Stream_GetU16_LE(&header[0]);
@@ -138,15 +134,15 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 	p->SpawnHeadX = Math_Packed2Deg(header[7]);
 
 	/* (2) pervisit, perbuild permissions */
-	result = Map_ReadBlocks(&compStream);
-	if (result) return result;
+	res = Map_ReadBlocks(&compStream);
+	if (res) return res;
 	Lvl_ConvertPhysicsBlocks();
 
 	/* 0xBD section type may not be present in older .lvl files */
-	UInt8 type; result = compStream.ReadU8(&compStream, &type);
-	if (result == ERR_END_OF_STREAM) return 0;
+	UInt8 type; res = compStream.ReadU8(&compStream, &type);
+	if (res == ERR_END_OF_STREAM) return 0;
 
-	if (result) return result;
+	if (res) return res;
 	return type == 0xBD ? Lvl_ReadCustomBlocks(&compStream) : 0;
 }
 
@@ -156,7 +152,7 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 *#########################################################################################################################*/
 static void Fcm_ReadString(struct Stream* stream) {
 	UInt8 buffer[sizeof(UInt16)];
-	Stream_Read(stream, buffer, sizeof(buffer));
+	Stream_ReadOrFail(stream, buffer, sizeof(buffer));
 
 	UInt16 len = Stream_GetU16_LE(&buffer[0]);
 	Stream_Skip(stream, len);
@@ -164,15 +160,13 @@ static void Fcm_ReadString(struct Stream* stream) {
 
 ReturnCode Fcm_Load(struct Stream* stream) {
 	UInt8 header[(3 * 2) + (3 * 4) + (2 * 1) + (2 * 4) + 16 + 26 + 4];
-	ReturnCode result;
+	ReturnCode res;
 
-	result = Stream_TryRead(stream, header, 4 + 1);
-	if (result) return result;
+	if (res = Stream_Read(stream, header, 4 + 1)) return res;
 	if (Stream_GetU32_LE(&header[0]) != 0x0FC2AF40UL) return FCM_ERR_IDENTIFIER;
 	if (header[4] != 13) return FCM_ERR_REVISION;
 	
-	result = Stream_TryRead(stream, header, sizeof(header));
-	if (result) return result;
+	if (res = Stream_Read(stream, header, sizeof(header))) return res;
 	World_Width  = Stream_GetU16_LE(&header[0]);
 	World_Height = Stream_GetU16_LE(&header[2]);
 	World_Length = Stream_GetU16_LE(&header[4]);
@@ -267,7 +261,7 @@ static UInt32 Nbt_ReadString(struct Stream* stream, UChar* strBuffer) {
 	UInt16 nameLen = Stream_ReadU16_BE(stream);
 	if (nameLen > NBT_SMALL_SIZE * 4) ErrorHandler_Fail("NBT String too long");
 	UChar nameBuffer[NBT_SMALL_SIZE * 4];
-	Stream_Read(stream, nameBuffer, nameLen);
+	Stream_ReadOrFail(stream, nameBuffer, nameLen);
 
 	String str = String_Init(strBuffer, 0, NBT_SMALL_SIZE);
 	String_DecodeUtf8(&str, nameBuffer, nameLen);
@@ -307,10 +301,10 @@ static void Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* stream, s
 		tag.DataSize = count;
 
 		if (count < NBT_SMALL_SIZE) {
-			Stream_Read(stream, tag.DataSmall, count);
+			Stream_ReadOrFail(stream, tag.DataSmall, count);
 		} else {
 			tag.DataBig = Mem_Alloc(count, sizeof(UInt8), "NBT tag data");
-			Stream_Read(stream, tag.DataBig, count);
+			Stream_ReadOrFail(stream, tag.DataBig, count);
 		}
 		break;
 
@@ -555,8 +549,8 @@ static bool Cw_Callback(struct NbtTag* tag) {
 }
 
 ReturnCode Cw_Load(struct Stream* stream) {
-	ReturnCode result = Map_SkipGZipHeader(stream);
-	if (result) return result;
+	ReturnCode res = Map_SkipGZipHeader(stream);
+	if (res) return res;
 
 	struct Stream compStream;
 	struct InflateState state;
@@ -611,7 +605,7 @@ static void Dat_ReadString(struct Stream* stream, UInt8* buffer) {
 	UInt16 len = Stream_ReadU16_BE(stream);
 
 	if (len > JNAME_SIZE) ErrorHandler_Fail("Dat string too long");
-	Stream_Read(stream, buffer, len);
+	Stream_ReadOrFail(stream, buffer, len);
 }
 
 static void Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* desc) {
@@ -698,7 +692,7 @@ static void Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
 		UInt32 size = Stream_ReadU32_BE(stream);
 		field->Value_Ptr = Mem_Alloc(size, sizeof(UInt8), ".dat map blocks");
 
-		Stream_Read(stream, field->Value_Ptr, size);
+		Stream_ReadOrFail(stream, field->Value_Ptr, size);
 		field->Value_Size = size;
 	} break;
 	}
@@ -710,15 +704,15 @@ static Int32 Dat_I32(struct JFieldDesc* field) {
 }
 
 ReturnCode Dat_Load(struct Stream* stream) {
-	ReturnCode result = Map_SkipGZipHeader(stream);
-	if (result) return result;
+	ReturnCode res = Map_SkipGZipHeader(stream);
+	if (res) return res;
 
 	struct Stream compStream;
 	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
 	UInt8 header[4 + 1 + 2 * 2];
-	Stream_Read(&compStream, header, sizeof(header));
+	if (res = Stream_Read(&compStream, header, sizeof(header))) return res;
 
 	/* .dat header */
 	if (Stream_GetU32_BE(&header[0]) != 0x271BB788) return DAT_ERR_IDENTIFIER;
@@ -856,7 +850,7 @@ UInt8 cw_end[4] = {
 NBT_END,
 };
 
-static void Cw_WriteBockDef(struct Stream* stream, Int32 b) {
+static ReturnCode Cw_WriteBockDef(struct Stream* stream, Int32 b) {
 	UInt8 tmp[512];
 	bool sprite = Block_Draw[b] == DRAW_SPRITE;
 
@@ -890,18 +884,15 @@ static void Cw_WriteBockDef(struct Stream* stream, Int32 b) {
 		tmp[159] = (UInt8)(maxBB.X * 16); tmp[160] = (UInt8)(maxBB.Y * 16); tmp[161] = (UInt8)(maxBB.Z * 16);
 	}
 
-	String name   = Block_UNSAFE_GetName(b);
-	Int32 tailLen = Cw_WriteEndString(&tmp[169], &name);
-	Stream_Write(stream, tmp, sizeof(cw_meta_def) + tailLen);
+	String name = Block_UNSAFE_GetName(b);
+	Int32 len   = Cw_WriteEndString(&tmp[169], &name);
+	return Stream_Write(stream, tmp, sizeof(cw_meta_def) + len);
 }
 
-void Cw_Save(struct Stream* stream) {
-	struct GZipState state;
-	struct Stream compStream;
-	GZip_MakeStream(&compStream, &state, stream);
-	stream = &compStream;
+ReturnCode Cw_Save(struct Stream* stream) {
 	UInt8 tmp[768];
 	PackedCol col;
+	ReturnCode res;
 
 	Mem_Copy(tmp, cw_begin, sizeof(cw_begin));
 	{
@@ -919,8 +910,8 @@ void Cw_Save(struct Stream* stream) {
 		tmp[107] = Math_Deg2Packed(p->SpawnRotY);
 		tmp[112] = Math_Deg2Packed(p->SpawnHeadX);
 	}
-	Stream_Write(stream, tmp, sizeof(cw_begin));
-	Stream_Write(stream, World_Blocks, World_BlocksSize);
+	if (res = Stream_Write(stream, tmp, sizeof(cw_begin))) return res;
+	if (res = Stream_Write(stream, World_Blocks, World_BlocksSize)) return res;
 
 	Mem_Copy(tmp, cw_meta_cpe, sizeof(cw_meta_cpe));
 	{
@@ -937,16 +928,15 @@ void Cw_Save(struct Stream* stream) {
 		tmp[365] = WorldEnv_EdgeBlock;
 		Stream_SetU16_BE(&tmp[378], WorldEnv_EdgeHeight);
 	}
-	Int32 b, tailLen = Cw_WriteEndString(&tmp[393], &World_TextureUrl);
-	Stream_Write(stream, tmp, sizeof(cw_meta_cpe) + tailLen);
+	Int32 b, len = Cw_WriteEndString(&tmp[393], &World_TextureUrl);
+	if (res = Stream_Write(stream, tmp, sizeof(cw_meta_cpe) + len)) return res;
 
-	Stream_Write(stream, cw_meta_defs, sizeof(cw_meta_defs));
+	if (res = Stream_Write(stream, cw_meta_defs, sizeof(cw_meta_defs))) return res;
 	for (b = 1; b < 256; b++) {
-		if (Block_IsCustomDefined(b)) Cw_WriteBockDef(stream, b);
+		if (!Block_IsCustomDefined(b)) continue;
+		if (res = Cw_WriteBockDef(stream, b)) return res;
 	}
-
-	Stream_Write(stream, cw_end, sizeof(cw_end));
-	stream->Close(stream);
+	return Stream_Write(stream, cw_end, sizeof(cw_end));
 }
 
 
@@ -954,7 +944,7 @@ void Cw_Save(struct Stream* stream) {
 *---------------------------------------------------Schematic export------------------------------------------------------*
 *#########################################################################################################################*/
 
-UInt8 schematic_begin[78] = {
+UInt8 sc_begin[78] = {
 NBT_DICT, 0,9, 'S','c','h','e','m','a','t','i','c',
 	NBT_STR,  0,9,  'M','a','t','e','r','i','a','l','s', 0,7, 'C','l','a','s','s','i','c',
 	NBT_I16,  0,5,  'W','i','d','t','h',                 0,0,
@@ -962,44 +952,40 @@ NBT_DICT, 0,9, 'S','c','h','e','m','a','t','i','c',
 	NBT_I16,  0,6,  'L','e','n','g','t','h',             0,0,
 	NBT_I8S,  0,6,  'B','l','o','c','k','s',             0,0,0,0,
 };
-UInt8 schematic_data[11] = {
+UInt8 sc_data[11] = {
 	NBT_I8S,  0,4,  'D','a','t','a',                     0,0,0,0,
 };
-UInt8 schematic_end[37] = {
+UInt8 sc_end[37] = {
 	NBT_LIST, 0,8,  'E','n','t','i','t','i','e','s',                 NBT_DICT, 0,0,0,0,
 	NBT_LIST, 0,12, 'T','i','l','e','E','n','t','i','t','i','e','s', NBT_DICT, 0,0,0,0,
 NBT_END,
 };
 
-void Schematic_Save(struct Stream* stream) {
-	struct GZipState state;
-	struct Stream compStream;
-	GZip_MakeStream(&compStream, &state, stream);
-	stream = &compStream;
+ReturnCode Schematic_Save(struct Stream* stream) {
 	UInt8 tmp[256];
+	ReturnCode res;
 
-	Mem_Copy(tmp, schematic_begin, sizeof(schematic_begin));
+	Mem_Copy(tmp, sc_begin, sizeof(sc_begin));
 	{
 		Stream_SetU16_BE(&tmp[41], World_Width);
 		Stream_SetU16_BE(&tmp[52], World_Height);
 		Stream_SetU16_BE(&tmp[63], World_Length);
 		Stream_SetU32_BE(&tmp[74], World_BlocksSize);
 	}
-	Stream_Write(stream, tmp, sizeof(schematic_begin));
+	if (res = Stream_Write(stream, sc_begin, sizeof(sc_begin))) return res;
+	if (res = Stream_Write(stream, World_Blocks, World_BlocksSize)) return res;
 
-	Stream_Write(stream, World_Blocks, World_BlocksSize);
-	Mem_Copy(tmp, schematic_data, sizeof(schematic_data));
+	Mem_Copy(tmp, sc_data, sizeof(sc_data));
 	{
 		Stream_SetU32_BE(&tmp[7], World_BlocksSize);
 	}
-	Stream_Write(stream, tmp, sizeof(schematic_data));
+	if (res = Stream_Write(stream, sc_data, sizeof(sc_data))) return res;
 
 	UInt8 chunk[8192] = { 0 };
 	Int32 i;
 	for (i = 0; i < World_BlocksSize; i += sizeof(chunk)) {
-		Int32 count = min(sizeof(chunk), World_BlocksSize - i);
-		Stream_Write(stream, chunk, count);
+		Int32 count = World_BlocksSize - i; count = min(count, sizeof(chunk));
+		if (res = Stream_Write(stream, chunk, count)) return res;
 	}
-	Stream_Write(stream, schematic_end, sizeof(schematic_end));
-	stream->Close(stream);
+	return Stream_Write(stream, sc_end, sizeof(sc_end));
 }

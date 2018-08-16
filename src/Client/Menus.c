@@ -27,6 +27,7 @@
 #include "Audio.h"
 #include "Screens.h"
 #include "Gui.h"
+#include "Deflate.h"
 
 #define MenuBase_Layout Screen_Layout struct Widget** Widgets; Int32 WidgetsCount;
 struct MenuBase { MenuBase_Layout struct ButtonWidget* Buttons; };
@@ -1327,30 +1328,36 @@ static void SaveLevelScreen_Init(struct GuiElem* elem) {
 	screen->ContextRecreated(elem);
 }
 
-static void SaveLevelScreen_Render(struct GuiElem* elem, Real64 delta) {
-	MenuScreen_Render(elem, delta);
-	Int32 cX = Game_Width / 2, cY = Game_Height / 2;
-	PackedCol grey = PACKEDCOL_CONST(150, 150, 150, 255);
-	GfxCommon_Draw2DFlat(cX - 250, cY + 90, 500, 2, grey);
-
-	struct SaveLevelScreen* screen = (struct SaveLevelScreen*)elem;
-	if (!screen->TextPath.length) return;
+static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* screen) {
 	String path = screen->TextPath;
-	ReturnCode result;
+	ReturnCode res;
+	struct Stream compStream;
 
-	void* file; result = File_Create(&file, &path);
-	if (result) { ErrorHandler_LogError_Path(result, "creating", &path); return; }
+	void* file; res = File_Create(&file, &path);
+	if (res) { ErrorHandler_LogError_Path(res, "creating", &path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
-		String cw = String_FromConst(".cw");
+		String cw = String_FromConst(".cw");	
+		struct GZipState state;
+		GZip_MakeStream(&compStream, &state, &stream);
+
 		if (String_CaselessEnds(&path, &cw)) {
-			Cw_Save(&stream);
+			res = Cw_Save(&compStream);
 		} else {
-			Schematic_Save(&stream);
+			res = Schematic_Save(&compStream);
+		}
+
+		if (res) {
+			stream.Close(&stream);
+			ErrorHandler_LogError_Path(res, "encoding", &path); return; 
+		}
+		if (res = compStream.Close(&compStream)) {
+			stream.Close(&stream);
+			ErrorHandler_LogError_Path(res, "closing", &path); return;
 		}
 	}
-	result = stream.Close(&stream);
-	if (result) { ErrorHandler_LogError_Path(result, "closing", &path); return; }
+	res = stream.Close(&stream);
+	if (res) { ErrorHandler_LogError_Path(res, "closing", &path); return; }
 
 	UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String msg = String_InitAndClearArray(msgBuffer);
@@ -1359,6 +1366,17 @@ static void SaveLevelScreen_Render(struct GuiElem* elem, Real64 delta) {
 
 	Gui_ReplaceActive(PauseScreen_MakeInstance());
 	String_Clear(&path);
+}
+
+static void SaveLevelScreen_Render(struct GuiElem* elem, Real64 delta) {
+	MenuScreen_Render(elem, delta);
+	Int32 cX = Game_Width / 2, cY = Game_Height / 2;
+	PackedCol grey = PACKEDCOL_CONST(150, 150, 150, 255);
+	GfxCommon_Draw2DFlat(cX - 250, cY + 90, 500, 2, grey);
+
+	struct SaveLevelScreen* screen = (struct SaveLevelScreen*)elem;
+	if (!screen->TextPath.length) return;
+	SaveLevelScreen_SaveMap(screen);
 }
 
 static void SaveLevelScreen_Free(struct GuiElem* elem) {
@@ -1618,32 +1636,33 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 
 	Block_Reset();
 	Inventory_SetDefaultMapping();
+	ReturnCode res;
 
-	void* file; ReturnCode result = File_Open(&file, path);
-	if (result) { ErrorHandler_LogError_Path(result, "opening", path); return; }
+	void* file; res = File_Open(&file, path);
+	if (res) { ErrorHandler_LogError_Path(res, "opening", path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, path);
 	{
 		String cw = String_FromConst(".cw");   String lvl = String_FromConst(".lvl");
 		String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
 
 		if (String_CaselessEnds(path, &dat)) {
-			result = Dat_Load(&stream);
+			res = Dat_Load(&stream);
 		} else if (String_CaselessEnds(path, &fcm)) {
-			result = Fcm_Load(&stream);
+			res = Fcm_Load(&stream);
 		} else if (String_CaselessEnds(path, &cw)) {
-			result = Cw_Load(&stream);
+			res = Cw_Load(&stream);
 		} else if (String_CaselessEnds(path, &lvl)) {
-			result = Lvl_Load(&stream);
+			res = Lvl_Load(&stream);
 		}
 
-		if (result) { 
-			ErrorHandler_LogError_Path(result, "decoding", path);		
+		if (res) { 
+			ErrorHandler_LogError_Path(res, "decoding", path);		
 			Mem_Free(&World_Blocks); World_BlocksSize = 0;
 			stream.Close(&stream); return;
 		}
 	}
-	result = stream.Close(&stream);
-	if (result) { ErrorHandler_LogError_Path(result, "closing", path); }
+	res = stream.Close(&stream);
+	if (res) { ErrorHandler_LogError_Path(res, "closing", path); }
 
 	World_SetNewMap(World_Blocks, World_BlocksSize, World_Width, World_Height, World_Length);
 	Event_RaiseVoid(&WorldEvents_MapLoaded);

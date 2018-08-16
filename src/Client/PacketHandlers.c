@@ -33,7 +33,7 @@ UInt8 classicTabList[256 >> 3];
 
 static String Handlers_ReadString(struct Stream* stream, STRING_REF UChar* strBuffer) {
 	UChar buffer[STRING_SIZE];
-	Stream_Read(stream, buffer, sizeof(buffer));
+	Stream_ReadOrFail(stream, buffer, sizeof(buffer));
 	Int32 i, length = 0;
 
 	for (i = STRING_SIZE - 1; i >= 0; i--) {
@@ -314,7 +314,7 @@ void Classic_WriteChat(struct Stream* stream, STRING_PURE String* text, bool par
 	UInt8 data[66]; data[0] = OPCODE_MESSAGE;
 	data[1] = ServerConnection_SupportsPartialMessages ? partial : ENTITIES_SELF_ID;
 	Handlers_WriteString(&data[2], text);
-	Stream_Write(stream, data, sizeof(data));
+	Stream_WriteOrFail(stream, data, sizeof(data));
 }
 
 void Classic_WritePosition(struct Stream* stream, Vector3 pos, Real32 rotY, Real32 headX) {
@@ -339,7 +339,7 @@ void Classic_WritePosition(struct Stream* stream, Vector3 pos, Real32 rotY, Real
 
 	data[offset++] = Math_Deg2Packed(rotY);
 	data[offset++] = Math_Deg2Packed(headX);
-	Stream_Write(stream, data, offset);
+	Stream_WriteOrFail(stream, data, offset);
 }
 
 void Classic_WriteSetBlock(struct Stream* stream, Int32 x, Int32 y, Int32 z, bool place, BlockID block) {
@@ -349,7 +349,7 @@ void Classic_WriteSetBlock(struct Stream* stream, Int32 x, Int32 y, Int32 z, boo
 	Stream_SetU16_BE(&data[5], z);
 	data[7] = place;
 	data[8] = block; /* TODO: extended blocks */
-	Stream_Write(stream, data, sizeof(data));
+	Stream_WriteOrFail(stream, data, sizeof(data));
 }
 
 void Classic_WriteLogin(struct Stream* stream, STRING_PURE String* username, STRING_PURE String* verKey) {
@@ -359,7 +359,7 @@ void Classic_WriteLogin(struct Stream* stream, STRING_PURE String* username, STR
 	Handlers_WriteString(&data[66], verKey);
 
 	data[130] = Game_UseCPE ? 0x42 : 0x00;
-	Stream_Write(stream, data, sizeof(data));
+	Stream_WriteOrFail(stream, data, sizeof(data));
 }
 
 static void Classic_Handshake(struct Stream* stream) {
@@ -429,8 +429,8 @@ static void Classic_LevelDataChunk(struct Stream* stream) {
 	UInt8 value = Stream_ReadU8(stream); /* progress in original classic, but we ignore it */
 
 	if (!gzHeader.Done) { 
-		ReturnCode result = GZipHeader_Read(&mapPartStream, &gzHeader);
-		if (result && result != ERR_END_OF_STREAM) ErrorHandler_FailWithCode(result, "reading map data");
+		ReturnCode res = GZipHeader_Read(&mapPartStream, &gzHeader);
+		if (res && res != ERR_END_OF_STREAM) ErrorHandler_FailWithCode(res, "reading map data");
 	}
 
 	if (gzHeader.Done) {
@@ -684,34 +684,34 @@ void CPE_WritePlayerClick(struct Stream* stream, MouseButton button, bool button
 	case FACE_ZMAX: data[14] = 4; break;
 	case FACE_ZMIN: data[14] = 5; break;
 	}
-	Stream_Write(stream, data, sizeof(data));
+	Stream_WriteOrFail(stream, data, sizeof(data));
 }
 
 static void CPE_WriteExtInfo(struct Stream* stream, STRING_PURE String* appName, Int32 extensionsCount) {
 	UInt8 data[67]; data[0] = OPCODE_CPE_EXT_INFO;
 	Handlers_WriteString(&data[1], appName);
 	Stream_SetU16_BE(&data[65], extensionsCount);
-	Stream_Write(stream, data, sizeof(data));
+	Stream_WriteOrFail(stream, data, sizeof(data));
 }
 
 static void CPE_WriteExtEntry(struct Stream* stream, STRING_PURE String* extensionName, Int32 extensionVersion) {
 	UInt8 data[69]; data[0] = OPCODE_CPE_EXT_ENTRY;
 	Handlers_WriteString(&data[1], extensionName);
 	Stream_SetU32_BE(&data[65], extensionVersion);
-	Stream_Write(stream, data, sizeof(data));
+	Stream_WriteOrFail(stream, data, sizeof(data));
 }
 
 static void CPE_WriteCustomBlockLevel(struct Stream* stream, UInt8 version) {
 	UInt8 data[2]; data[0] = OPCODE_CPE_CUSTOM_BLOCK_LEVEL;
 	data[1] = version;
-	Stream_Write(stream, data, sizeof(data));
+	Stream_WriteOrFail(stream, data, sizeof(data));
 }
 
 static void CPE_WriteTwoWayPing(struct Stream* stream, bool serverToClient, UInt16 payload) {
 	UInt8 data[4]; data[0] = OPCODE_CPE_TWO_WAY_PING;
 	data[1] = serverToClient;
 	Stream_SetU16_BE(&data[2], payload);
-	Stream_Write(stream, data, sizeof(data));
+	Stream_WriteOrFail(stream, data, sizeof(data));
 }
 
 static void CPE_SendCpeExtInfoReply(void) {

@@ -48,8 +48,8 @@ DateTime ChatLog_LastLogDate;
 
 static void Chat_CloseLog(void) {
 	if (!Chat_LogStream.Meta.File) return;
-	ReturnCode result = Chat_LogStream.Close(&Chat_LogStream);
-	if (result) ErrorHandler_LogError(result, "closing chat log file");
+	ReturnCode res = Chat_LogStream.Close(&Chat_LogStream);
+	if (res) ErrorHandler_LogError(res, "closing chat log file");
 }
 
 static bool Chat_AllowedLogChar(UChar c) {
@@ -76,11 +76,11 @@ void Chat_SetLogName(STRING_PURE String* name) {
 
 static void Chat_DisableLogging(void) {
 	Game_ChatLogging = false;
-	Chat_AddRaw("&cDisabling chat logging as a result");
+	Chat_AddRaw("&cDisabling chat logging");
 }
 
 static void Chat_OpenLog(DateTime* now) {
-	ReturnCode result;
+	ReturnCode res;
 	if (!Utils_EnsureDirectory("logs")) { Chat_DisableLogging(); return; }
 
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
@@ -96,20 +96,20 @@ static void Chat_OpenLog(DateTime* now) {
 			String_Format1(&path, "%s.log", &Chat_LogName);
 		}
 
-		void* file; result = File_Append(&file, &path);
-		if (result && result != ReturnCode_FileShareViolation) {
-			ErrorHandler_LogError_Path(result, "appending to", &path);
-			Chat_DisableLogging(); return;
+		void* file; res = File_Append(&file, &path);
+		if (res && res != ReturnCode_FileShareViolation) {
+			Chat_DisableLogging();
+			ErrorHandler_LogError_Path(res, "appending to", &path); return;
 		}
 
-		if (result == ReturnCode_FileShareViolation) continue;
+		if (res == ReturnCode_FileShareViolation) continue;
 		Stream_FromFile(&Chat_LogStream, file, &path);
 		return;
 	}
 
 	Chat_LogStream.Meta.File = NULL;
-	ErrorHandler_Log1("Failed to open a chat log file after %i tries, giving up", &i);
 	Chat_DisableLogging();
+	ErrorHandler_Log1("Failed to open a chat log file after %i tries, giving up", &i);	
 }
 
 static void Chat_AppendLog(STRING_PURE String* text) {
@@ -131,10 +131,10 @@ static void Chat_AppendLog(STRING_PURE String* text) {
 	String_Format3(&str, "[%p2:%p2:%p2] ", &hour, &minute, &second);
 	String_AppendColorless(&str, text);
 
-	ReturnCode result = Stream_WriteLine(&Chat_LogStream, &str);
-	if (!result) return;
-	ErrorHandler_LogError_Path(result, "appending to", &Chat_LogStream.Name);
-	Chat_DisableLogging(); return;
+	ReturnCode res = Stream_WriteLine(&Chat_LogStream, &str);
+	if (!res) return;
+	Chat_DisableLogging();
+	ErrorHandler_LogError_Path(res, "writing to", &Chat_LogStream.Name);
 }
 
 void Chat_AddRaw(const UChar* raw) {

@@ -23,7 +23,7 @@
 static String Zip_ReadFixedString(struct Stream* stream, UChar* buffer, UInt16 length) {
 	if (length > ZIP_MAXNAMELEN) ErrorHandler_Fail("Zip string too long");
 	String fileName = String_Init(buffer, length, length);
-	Stream_Read(stream, buffer, length);
+	Stream_ReadOrFail(stream, buffer, length);
 	buffer[length] = '\0';
 	return fileName;
 }
@@ -31,7 +31,7 @@ static String Zip_ReadFixedString(struct Stream* stream, UChar* buffer, UInt16 l
 static void Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* entry) {
 	struct Stream* stream = state->Input;
 	UInt8 contents[(3 * 2) + (4 * 4) + (2 * 2)];
-	Stream_Read(stream, contents, sizeof(contents));
+	Stream_ReadOrFail(stream, contents, sizeof(contents));
 
 	/* contents[0] (2) version needed */
 	/* contents[2] (2) flags */
@@ -70,7 +70,7 @@ static void Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* ent
 static void Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* entry) {
 	struct Stream* stream = state->Input;
 	UInt8 contents[(4 * 2) + (4 * 4) + (3 * 2) + (2 * 2) + (2 * 4)];
-	Stream_Read(stream, contents, sizeof(contents));
+	Stream_ReadOrFail(stream, contents, sizeof(contents));
 
 	/* contents[0] (2) OS */
 	/* contents[2] (2) version needed*/
@@ -96,7 +96,7 @@ static void Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* en
 static void Zip_ReadEndOfCentralDirectory(struct ZipState* state, UInt32* centralDirectoryOffset) {
 	struct Stream* stream = state->Input;
 	UInt8 contents[(3 * 2) + 2 + (2 * 4) + 2];
-	Stream_Read(stream, contents, sizeof(contents));
+	Stream_ReadOrFail(stream, contents, sizeof(contents));
 
 	/* contents[0] (2) disk number */
 	/* contents[2] (2) disk number start */
@@ -127,14 +127,14 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 	struct Stream* stream = state->Input;
 	UInt32 sig = 0, stream_len;
 	
-	ReturnCode result = stream->Length(stream, &stream_len);
-	if (result) return result;
+	ReturnCode res = stream->Length(stream, &stream_len);
+	if (res) return res;
 
 	/* At -22 for nearly all zips, but try a bit further back in case of comment */
 	Int32 i, len = min(257, stream_len);
 	for (i = 22; i < len; i++) {
-		result = stream->Seek(stream, -i, STREAM_SEEKFROM_END);
-		if (result) return ZIP_ERR_SEEK_END_OF_CENTRAL_DIR;
+		res = stream->Seek(stream, -i, STREAM_SEEKFROM_END);
+		if (res) return ZIP_ERR_SEEK_END_OF_CENTRAL_DIR;
 
 		sig = Stream_ReadU32_LE(stream);
 		if (sig == ZIP_SIG_ENDOFCENTRALDIR) break;
@@ -143,8 +143,8 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 
 	UInt32 centralDirectoryOffset;
 	Zip_ReadEndOfCentralDirectory(state, &centralDirectoryOffset);
-	result = stream->Seek(stream, centralDirectoryOffset, STREAM_SEEKFROM_BEGIN);
-	if (result) return ZIP_ERR_SEEK_CENTRAL_DIR;
+	res = stream->Seek(stream, centralDirectoryOffset, STREAM_SEEKFROM_BEGIN);
+	if (res) return ZIP_ERR_SEEK_CENTRAL_DIR;
 
 	if (state->EntriesCount > ZIP_MAX_ENTRIES) return ZIP_ERR_TOO_MANY_ENTRIES;
 
@@ -165,8 +165,8 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 	/* Now read the local file header entries */
 	for (i = 0; i < count; i++) {
 		struct ZipEntry* entry = &state->Entries[i];
-		result = stream->Seek(stream, entry->LocalHeaderOffset, STREAM_SEEKFROM_BEGIN);
-		if (result) return ZIP_ERR_SEEK_LOCAL_DIR;
+		res = stream->Seek(stream, entry->LocalHeaderOffset, STREAM_SEEKFROM_BEGIN);
+		if (res) return ZIP_ERR_SEEK_LOCAL_DIR;
 
 		sig = Stream_ReadU32_LE(stream);
 		if (sig != ZIP_SIG_LOCALFILEHEADER) return ZIP_ERR_INVALID_LOCAL_DIR;
@@ -192,11 +192,11 @@ static void EntryList_Load(struct EntryList* list) {
 
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format3(&path, "%s%r%s", &folder, &Directory_Separator, &filename);
-	ReturnCode result;
+	ReturnCode res;
 
-	void* file; result = File_Open(&file, &path);
-	if (result == ReturnCode_FileNotFound) return;
-	if (result) { ErrorHandler_LogError_Path(result, "opening", &path); return; }
+	void* file; res = File_Open(&file, &path);
+	if (res == ReturnCode_FileNotFound) return;
+	if (res) { ErrorHandler_LogError_Path(res, "opening", &path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		/* ReadLine reads single byte at a time */
@@ -211,8 +211,8 @@ static void EntryList_Load(struct EntryList* list) {
 			StringsBuffer_Add(&list->Entries, &path);
 		}
 	}
-	result = stream.Close(&stream);
-	if (result) { ErrorHandler_LogError_Path(result, "closing", &path); }
+	res = stream.Close(&stream);
+	if (res) { ErrorHandler_LogError_Path(res, "closing", &path); }
 }
 
 static void EntryList_Save(struct EntryList* list) {
@@ -222,26 +222,26 @@ static void EntryList_Save(struct EntryList* list) {
 
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format3(&path, "%s%r%s", &folder, &Directory_Separator, &filename);
-	ReturnCode result;
+	ReturnCode res;
 
 	if (!Directory_Exists(&folder)) {
-		result = Directory_Create(&folder);
-		if (result) { ErrorHandler_LogError_Path(result, "creating", &folder); return; }
+		res = Directory_Create(&folder);
+		if (res) { ErrorHandler_LogError_Path(res, "creating", &folder); return; }
 	}
 
-	void* file; result = File_Create(&file, &path);
-	if (result) { ErrorHandler_LogError_Path(result, "creating", &path); return; }
+	void* file; res = File_Create(&file, &path);
+	if (res) { ErrorHandler_LogError_Path(res, "creating", &path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
 		Int32 i;
 		for (i = 0; i < list->Entries.Count; i++) {
 			String entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
-			result = Stream_WriteLine(&stream, &entry);
-			if (result) { ErrorHandler_LogError_Path(result, "writing to", &path); break; }
+			res = Stream_WriteLine(&stream, &entry);
+			if (res) { ErrorHandler_LogError_Path(res, "writing to", &path); break; }
 		}
 	}
-	result = stream.Close(&stream);
-	if (result) { ErrorHandler_LogError_Path(result, "closing", &path); }
+	res = stream.Close(&stream);
+	if (res) { ErrorHandler_LogError_Path(res, "closing", &path); }
 }
 
 static void EntryList_Add(struct EntryList* list, STRING_PURE String* entry) {
@@ -311,11 +311,12 @@ bool TextureCache_HasUrl(STRING_PURE String* url) {
 
 bool TextureCache_GetStream(STRING_PURE String* url, struct Stream* stream) {
 	String path; TexCache_InitAndMakePath(url);
+	ReturnCode res;
 
-	void* file; ReturnCode result = File_Open(&file, &path);
-	if (result == ReturnCode_FileNotFound) return false;
+	void* file; res = File_Open(&file, &path);
+	if (res == ReturnCode_FileNotFound) return false;
 
-	if (result) { ErrorHandler_LogError_Path(result, "opening cache for", url); return false; }
+	if (res) { ErrorHandler_LogError_Path(res, "opening cache for", url); return false; }
 	Stream_FromFile(stream, file, &path);
 	return true;
 }
@@ -347,9 +348,9 @@ void TextureCache_GetLastModified(STRING_PURE String* url, DateTime* time) {
 		DateTime_FromTotalMs(time, ticks / TEXCACHE_TICKS_PER_MS);
 	} else {
 		String path; TexCache_InitAndMakePath(url);
-		ReturnCode result = File_GetModifiedTime(&path, &temp);
+		ReturnCode res = File_GetModifiedTime(&path, &temp);
 
-		if (result) { ErrorHandler_LogError_Path(result, "getting last modified time of", url); return; }
+		if (res) { ErrorHandler_LogError_Path(res, "getting last modified time of", url); return; }
 		*time = temp;
 	}
 }
@@ -360,18 +361,18 @@ void TextureCache_GetETag(STRING_PURE String* url, STRING_PURE String* etag) {
 
 void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length) {
 	String path; TexCache_InitAndMakePath(url);
-	ReturnCode result;
+	ReturnCode res;
 	if (!Utils_EnsureDirectory(TEXCACHE_FOLDER)) return;
 
-	void* file; result = File_Create(&file, &path);
-	if (result) { ErrorHandler_LogError_Path(result, "creating cache for", url); return; }
+	void* file; res = File_Create(&file, &path);
+	if (res) { ErrorHandler_LogError_Path(res, "creating cache for", url); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
-		result = Stream_TryWrite(&stream, data, length);
-		if (result) { ErrorHandler_LogError_Path(result, "saving data for", url); }
+		res = Stream_Write(&stream, data, length);
+		if (res) { ErrorHandler_LogError_Path(res, "saving data for", url); }
 	}
-	result = stream.Close(&stream);
-	if (result) { ErrorHandler_LogError_Path(result, "closing cache for", url); }
+	res = stream.Close(&stream);
+	if (res) { ErrorHandler_LogError_Path(res, "closing cache for", url); }
 }
 
 void TextureCache_AddToTags(STRING_PURE String* url, STRING_PURE String* data, struct EntryList* list) {
@@ -431,30 +432,30 @@ void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
 	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format2(&path, "texpacks%r%s", &Directory_Separator, filename);
-	ReturnCode result;
+	ReturnCode res;
 
-	void* file; result = File_Open(&file, &path);
-	if (result) { ErrorHandler_LogError_Path(result, "opening", &path); return; }
+	void* file; res = File_Open(&file, &path);
+	if (res) { ErrorHandler_LogError_Path(res, "opening", &path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
-		result = TexturePack_ExtractZip(&stream);
-		if (result) { ErrorHandler_LogError_Path(result, "extracting", &path); }
+		res = TexturePack_ExtractZip(&stream);
+		if (res) { ErrorHandler_LogError_Path(res, "extracting", &path); }
 	}
-	result = stream.Close(&stream);
-	if (result) { ErrorHandler_LogError_Path(result, "closing", &path); }
+	res = stream.Close(&stream);
+	if (res) { ErrorHandler_LogError_Path(res, "closing", &path); }
 }
 
 ReturnCode TexturePack_ExtractTerrainPng(struct Stream* stream) {
 	struct Bitmap bmp; 
-	ReturnCode result = Bitmap_DecodePng(&bmp, stream);
+	ReturnCode res = Bitmap_DecodePng(&bmp, stream);
 
-	if (!result) {
+	if (!res) {
 		Event_RaiseVoid(&TextureEvents_PackChanged);
 		if (Game_ChangeTerrainAtlas(&bmp)) return 0;
 	}
 
 	Mem_Free(&bmp.Scan0);
-	return result;
+	return res;
 }
 
 void TexturePack_ExtractDefault(void) {
@@ -475,7 +476,7 @@ void TexturePack_ExtractCurrent(STRING_PURE String* url) {
 		if (World_TextureUrl.length) TexturePack_ExtractDefault();
 	} else {
 		String zip = String_FromConst(".zip");
-		ReturnCode result = 0;
+		ReturnCode res = 0;
 
 		if (String_Equals(url, &World_TextureUrl)) {
 		} else {
@@ -483,13 +484,13 @@ void TexturePack_ExtractCurrent(STRING_PURE String* url) {
 			String_Set(&World_TextureUrl, url);
 			const UChar* operation = zip ? "extracting" : "decoding";
 			
-			ReturnCode result = zip ? TexturePack_ExtractZip(&stream) :
-									TexturePack_ExtractTerrainPng(&stream);		
-			if (result) { ErrorHandler_LogError_Path(result, operation, &url); }
+			res = zip ? TexturePack_ExtractZip(&stream) :
+						TexturePack_ExtractTerrainPng(&stream);		
+			if (res) { ErrorHandler_LogError_Path(res, operation, &url); }
 		}
 
-		result = stream.Close(&stream);
-		if (result) { ErrorHandler_LogError_Path(result, "closing cache for", url); }
+		res = stream.Close(&stream);
+		if (res) { ErrorHandler_LogError_Path(res, "closing cache for", url); }
 	}
 }
 
@@ -508,9 +509,9 @@ void TexturePack_Extract_Req(struct AsyncRequest* item) {
 	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len, &id);
 
 	bool png = Bitmap_DetectPng(data, len);
-	ReturnCode result = png ? TexturePack_ExtractTerrainPng(&mem) : TexturePack_ExtractZip(&mem);
+	ReturnCode res = png ? TexturePack_ExtractTerrainPng(&mem) : TexturePack_ExtractZip(&mem);
 	const UChar* operation = png ? "decoding" : "extracting";
 
-	if (result) { ErrorHandler_LogError_Path(result, operation, &url); }
+	if (res) { ErrorHandler_LogError_Path(res, operation, &url); }
 	ASyncRequest_Free(item);
 }

@@ -33,10 +33,10 @@ struct Stream {
 	String Name;
 };
 
-void Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count);
-ReturnCode Stream_TryRead(struct Stream* stream, UInt8* buffer, UInt32 count);
-void Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count);
-ReturnCode Stream_TryWrite(struct Stream* stream, UInt8* buffer, UInt32 count);
+void Stream_ReadOrFail(struct Stream* stream, UInt8* buffer, UInt32 count);
+ReturnCode Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count);
+void Stream_WriteOrFail(struct Stream* stream, UInt8* buffer, UInt32 count);
+ReturnCode Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count);
 void Stream_Init(struct Stream* stream, STRING_PURE String* name);
 void Stream_Skip(struct Stream* stream, UInt32 count);
 ReturnCode Stream_DefaultReadU8(struct Stream* stream, UInt8* data);
@@ -63,7 +63,6 @@ UInt32 Stream_ReadU32_LE(struct Stream* stream);
 UInt32 Stream_ReadU32_BE(struct Stream* stream);
 #define Stream_ReadI16_BE(stream) ((Int16)Stream_ReadU16_BE(stream))
 #define Stream_ReadI32_BE(stream) ((Int32)Stream_ReadU32_BE(stream))
-void Stream_WriteU32_BE(struct Stream* stream, UInt32 value);
 
 ReturnCode Stream_ReadUtf8Char(struct Stream* stream, UInt16* codepoint);
 bool Stream_ReadLine(struct Stream* stream, STRING_TRANSIENT String* text);

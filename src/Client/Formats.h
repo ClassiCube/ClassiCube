@@ -10,8 +10,8 @@ ReturnCode Lvl_Load(struct Stream* stream);
 /* Imports a world from a FCMv3 map file (fCraft server map)
    Part of fCraft | Copyright (c) 2009-2014 Matvei Stefarov <me@matvei.org> | BSD-3 | See LICENSE.txt */
 ReturnCode Fcm_Load(struct Stream* stream);
-void Cw_Save(struct Stream* stream);
+ReturnCode Cw_Save(struct Stream* stream);
 ReturnCode Cw_Load(struct Stream* stream);
 ReturnCode Dat_Load(struct Stream* stream);
-void Schematic_Save(struct Stream* stream);
+ReturnCode Schematic_Save(struct Stream* stream);
 #endif

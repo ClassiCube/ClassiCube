@@ -568,30 +568,30 @@ void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 z
 ReturnCode Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) {
 	IDirect3DSurface9* backbuffer = NULL;
 	IDirect3DSurface9* temp = NULL;
-	ReturnCode result;
+	ReturnCode res;
 
-	result = IDirect3DDevice9_GetBackBuffer(device, 0, 0, D3DBACKBUFFER_TYPE_MONO, &backbuffer);
-	if (result) goto finished;
-	result = IDirect3DDevice9_CreateOffscreenPlainSurface(device, width, height, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &temp, NULL);
-	if (result) goto finished; /* TODO: For DX 8 use IDirect3DDevice8::CreateImageSurface */
-	result = IDirect3DDevice9_GetRenderTargetData(device, backbuffer, temp);
-	if (result) goto finished;
+	res = IDirect3DDevice9_GetBackBuffer(device, 0, 0, D3DBACKBUFFER_TYPE_MONO, &backbuffer);
+	if (res) goto finished;
+	res = IDirect3DDevice9_CreateOffscreenPlainSurface(device, width, height, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &temp, NULL);
+	if (res) goto finished; /* TODO: For DX 8 use IDirect3DDevice8::CreateImageSurface */
+	res = IDirect3DDevice9_GetRenderTargetData(device, backbuffer, temp);
+	if (res) goto finished;
 
 	D3DLOCKED_RECT rect;
-	result = IDirect3DSurface9_LockRect(temp, &rect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
-	if (result) goto finished;
+	res = IDirect3DSurface9_LockRect(temp, &rect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
+	if (res) goto finished;
 	{
 		struct Bitmap bmp; Bitmap_Create(&bmp, width, height, rect.pBits);
-		result = Bitmap_EncodePng(&bmp, output);
-		if (result) { IDirect3DSurface9_UnlockRect(temp); goto finished; }
+		res = Bitmap_EncodePng(&bmp, output);
+		if (res) { IDirect3DSurface9_UnlockRect(temp); goto finished; }
 	}
-	result = IDirect3DSurface9_UnlockRect(temp);
-	if (result) goto finished;
+	res = IDirect3DSurface9_UnlockRect(temp);
+	if (res) goto finished;
 
 finished:
 	D3D9_FreeResource(&backbuffer);
 	D3D9_FreeResource(&temp);
-	return result;
+	return res;
 }
 
 bool Gfx_WarnIfNecessary(void) { return false; }
@@ -610,9 +610,9 @@ void Gfx_BeginFrame(void) {
 
 void Gfx_EndFrame(void) {
 	IDirect3DDevice9_EndScene(device);
-	ReturnCode result = IDirect3DDevice9_Present(device, NULL, NULL, NULL, NULL);
-	if ((Int32)result >= 0) return;
-	if (result != D3DERR_DEVICELOST) ErrorHandler_FailWithCode(result, "D3D9_EndFrame");
+	ReturnCode res = IDirect3DDevice9_Present(device, NULL, NULL, NULL, NULL);
+	if ((Int32)res >= 0) return;
+	if (res != D3DERR_DEVICELOST) ErrorHandler_FailWithCode(res, "D3D9_EndFrame");
 
 	/* TODO: Make sure this actually works on all graphics cards.*/
 	GfxCommon_LoseContext(" (Direct3D9 device lost)");

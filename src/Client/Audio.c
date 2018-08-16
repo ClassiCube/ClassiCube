@@ -39,9 +39,9 @@ struct Soundboard {
 static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	UInt32 fourCC, size;
 	UInt8 tmp[WAV_FMT_SIZE];
-	ReturnCode result = Stream_TryRead(stream, tmp, 3 * sizeof(UInt32));
-	if (result) return result;
+	ReturnCode res;
 
+	if (res = Stream_Read(stream, tmp, 12)) return res;
 	fourCC = Stream_GetU32_BE(&tmp[0]);
 	if (fourCC != WAV_FourCC('R','I','F','F')) return WAV_ERR_STREAM_HDR;
 	/* tmp[4] (4) file size */
@@ -49,14 +49,12 @@ static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	if (fourCC != WAV_FourCC('W','A','V','E')) return WAV_ERR_STREAM_TYPE;
 
 	for (;;) {
-		result = Stream_TryRead(stream, tmp, 2 * sizeof(UInt32));
-		if (result) return result;
+		if (res = Stream_Read(stream, tmp, 8)) return res;
 		fourCC = Stream_GetU32_BE(&tmp[0]);
 		size   = Stream_GetU32_LE(&tmp[4]);
 
 		if (fourCC == WAV_FourCC('f','m','t',' ')) {
-			result = Stream_TryRead(stream, tmp, WAV_FMT_SIZE);
-			if (result) return result;
+			if (res = Stream_Read(stream, tmp, sizeof(tmp))) return res;
 			if (Stream_GetU16_LE(&tmp[0]) != 1) return WAV_ERR_DATA_TYPE;
 
 			snd->Format.Channels      = Stream_GetU16_LE(&tmp[2]);
@@ -67,7 +65,7 @@ static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
 			snd->Data = Mem_Alloc(size, sizeof(UInt8), "WAV sound data");
 			snd->DataSize = size;
-			return Stream_TryRead(stream, snd->Data, size);
+			return Stream_Read(stream, snd->Data, size);
 		}
 
 		/* Skip over unhandled data */
@@ -80,17 +78,16 @@ static ReturnCode Sound_ReadWave(STRING_PURE String* filename, struct Sound* snd
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format2(&path, "audio%r%s", &Directory_Separator, filename);
 
-	ReturnCode fileResult = 0;
-	void* file = NULL; ReturnCode result = File_Open(&file, &path);
-	if (result) return result;
+	ReturnCode res;
+	void* file; res = File_Open(&file, &path);
+	if (res) return res;
 
 	struct Stream stream; Stream_FromFile(&stream, file, &path);
 	{
-		fileResult = Sound_ReadWaveData(&stream, snd);
+		res = Sound_ReadWaveData(&stream, snd);
+		if (res) { stream.Close(&stream); return res; }
 	}
-
-	result = stream.Close(&stream);
-	return fileResult ? fileResult : result;
+	return stream.Close(&stream);
 }
 
 static struct SoundGroup* Soundboard_Find(struct Soundboard* board, STRING_PURE String* name) {
@@ -132,10 +129,10 @@ static void Soundboard_Init(struct Soundboard* board, STRING_PURE String* boardN
 		}
 
 		struct Sound* snd = &group->Sounds[group->Count];
-		ReturnCode result = Sound_ReadWave(&file, snd);
+		ReturnCode res = Sound_ReadWave(&file, snd);
 
-		if (result) {
-			ErrorHandler_LogError_Path(result, "decoding", &file);
+		if (res) {
+			ErrorHandler_LogError_Path(res, "decoding", &file);
 			Mem_Free(&snd->Data);
 		} else { group->Count++; }
 	}
@@ -280,8 +277,8 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 
 	struct VorbisState vorbis = { 0 };
 	vorbis.Source = &stream;
-	ReturnCode result = Vorbis_DecodeHeaders(&vorbis);
-	if (result) return result;
+	ReturnCode res = Vorbis_DecodeHeaders(&vorbis);
+	if (res) return res;
 
 	struct AudioFormat fmt;
 	fmt.Channels      = vorbis.Channels;
@@ -308,8 +305,8 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 		Int32 samples = 0;
 
 		while (samples < fmt.SampleRate) {
-			result = Vorbis_DecodeFrame(&vorbis);
-			if (result) break;
+			res = Vorbis_DecodeFrame(&vorbis);
+			if (res) break;
 
 			Int16* cur = &base[samples * fmt.Channels];
 			samples += Vorbis_OutputFrame(&vorbis, cur);
@@ -317,7 +314,7 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 
 		Audio_PlayData(music_out, next, base, samples * fmt.Channels * sizeof(Int16));
 		/* need to specially handle last bit of audio */
-		if (result) break;
+		if (res) break;
 	}
 
 	/* Wait until the buffers finished playing */
@@ -326,8 +323,8 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 	Mem_Free(&data);
 	Vorbis_Free(&vorbis);
 
-	if (result == ERR_END_OF_STREAM) result = 0;
-	return result;
+	if (res == ERR_END_OF_STREAM) res = 0;
+	return res;
 }
 
 #define MUSIC_MAX_FILES 512
@@ -345,7 +342,7 @@ static void Music_RunLoop(void) {
 	if (!count) return;
 	Random rnd; Random_InitFromCurrentTime(&rnd);
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
-	ReturnCode result;
+	ReturnCode res;
 
 	while (!music_pendingStop) {
 		Int32 idx = Random_Range(&rnd, 0, count);
@@ -354,15 +351,15 @@ static void Music_RunLoop(void) {
 		String_Format2(&path, "audio%r%s", &Directory_Separator, &filename);
 		Platform_Log1("playing music file: %s", &filename);
 
-		void* file; result = File_Open(&file, &path);
-		if (result) { ErrorHandler_LogError_Path(result, "opening", &path); return; }
+		void* file; res = File_Open(&file, &path);
+		if (res) { ErrorHandler_LogError_Path(res, "opening", &path); return; }
 		struct Stream stream; Stream_FromFile(&stream, file, &path);
 		{
-			result = Music_PlayOgg(&stream);
-			if (result) { ErrorHandler_LogError_Path(result, "playing", &path); }
+			res = Music_PlayOgg(&stream);
+			if (res) { ErrorHandler_LogError_Path(res, "playing", &path); }
 		}
-		result = stream.Close(&stream);
-		if (result) { ErrorHandler_LogError_Path(result, "closing", &path); }
+		res = stream.Close(&stream);
+		if (res) { ErrorHandler_LogError_Path(res, "closing", &path); }
 
 		if (music_pendingStop) return;
 		Int32 delay = 1000 * 120 + Random_Range(&rnd, 0, 1000 * 300);

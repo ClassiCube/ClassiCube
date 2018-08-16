@@ -341,10 +341,9 @@ static void MPConnection_BeginConnect(void) {
 	DateTime now; DateTime_CurrentUTC(&now);
 	net_connectTimeout = DateTime_TotalMs(&now) + NET_TIMEOUT_MS;
 
-	ReturnCode result = Socket_Connect(net_socket, &Game_IPAddress, Game_Port);
-	if (result == 0) return;
-	if (result != ReturnCode_SocketInProgess && result != ReturnCode_SocketWouldBlock) {
-		MPConnection_FailConnect(result);
+	ReturnCode res = Socket_Connect(net_socket, &Game_IPAddress, Game_Port);
+	if (res && res != ReturnCode_SocketInProgess && res != ReturnCode_SocketWouldBlock) {
+		MPConnection_FailConnect(res);
 	}
 }
 
@@ -485,8 +484,8 @@ void Net_SendPacket(void) {
 		UInt32 count = (UInt32)(net_writeStream.Meta.Mem.Cur - net_writeStream.Meta.Mem.Base), wrote = 0;
 
 		while (count) {
-			ReturnCode result = Socket_Write(net_socket, net_writeBuffer, count, &wrote);
-			if (result || !wrote) { net_writeFailed = true; break; }
+			ReturnCode res = Socket_Write(net_socket, net_writeBuffer, count, &wrote);
+			if (res || !wrote) { net_writeFailed = true; break; }
 			count -= wrote;
 		}
 	}

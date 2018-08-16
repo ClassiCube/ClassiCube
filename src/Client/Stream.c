@@ -14,22 +14,22 @@ void Stream_Fail(struct Stream* stream, ReturnCode result, const UChar* operatio
 	ErrorHandler_FailWithCode(result, tmpBuffer);
 }
 
-void Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count) {
+void Stream_ReadOrFail(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	UInt32 read;
 	while (count) {
-		ReturnCode result = stream->Read(stream, buffer, count, &read);
-		if (!read || result) { Stream_Fail(stream, result, "reading from"); }
+		ReturnCode res = stream->Read(stream, buffer, count, &read);
+		if (!read || res) { Stream_Fail(stream, res, "reading from"); }
 
 		buffer += read;
 		count  -= read;
 	}
 }
 
-ReturnCode Stream_TryRead(struct Stream* stream, UInt8* buffer, UInt32 count) {
+ReturnCode Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	UInt32 read;
 	while (count) {
-		ReturnCode result = stream->Read(stream, buffer, count, &read);
-		if (result) return result;
+		ReturnCode res = stream->Read(stream, buffer, count, &read);
+		if (res) return res;
 		if (!read) return ERR_END_OF_STREAM;
 
 		buffer += read;
@@ -38,22 +38,22 @@ ReturnCode Stream_TryRead(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	return 0;
 }
 
-void Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count) {
+void Stream_WriteOrFail(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	UInt32 write;
 	while (count) {
-		ReturnCode result = stream->Write(stream, buffer, count, &write);
-		if (!write || result) { Stream_Fail(stream, result, "writing to"); }
+		ReturnCode res = stream->Write(stream, buffer, count, &write);
+		if (!write || res) { Stream_Fail(stream, res, "writing to"); }
 
 		buffer += write;
 		count  -= write;
 	}
 }
 
-ReturnCode Stream_TryWrite(struct Stream* stream, UInt8* buffer, UInt32 count) {
+ReturnCode Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	UInt32 write;
 	while (count) {
-		ReturnCode result = stream->Write(stream, buffer, count, &write);
-		if (result) return result;
+		ReturnCode res = stream->Write(stream, buffer, count, &write);
+		if (res) return res;
 		if (!write) return ERR_END_OF_STREAM;
 
 		buffer += write;
@@ -63,15 +63,15 @@ ReturnCode Stream_TryWrite(struct Stream* stream, UInt8* buffer, UInt32 count) {
 }
 
 void Stream_Skip(struct Stream* stream, UInt32 count) {
-	ReturnCode result = stream->Seek(stream, count, STREAM_SEEKFROM_CURRENT);
-	if (result == 0) return;
+	ReturnCode res = stream->Seek(stream, count, STREAM_SEEKFROM_CURRENT);
+	if (!res) return;
 	UInt8 tmp[3584]; /* not quite 4 KB to avoid chkstk call */
 
 	while (count) {
 		UInt32 toRead = min(count, sizeof(tmp)), read;
-		result = stream->Read(stream, tmp, toRead, &read);
+		res = stream->Read(stream, tmp, toRead, &read);
 
-		if (result) Stream_Fail(stream, result, "Skipping data from");
+		if (res) Stream_Fail(stream, res, "Skipping data from");
 		if (!read) break; /* end of stream */
 		count -= read;
 	}
@@ -84,8 +84,8 @@ static ReturnCode Stream_DefaultIO(struct Stream* stream, UInt8* data, UInt32 co
 }
 ReturnCode Stream_DefaultReadU8(struct Stream* stream, UInt8* data) {
 	UInt32 modified = 0;
-	ReturnCode result = stream->Read(stream, data, 1, &modified);
-	return result ? result : (modified ? 0 : ERR_END_OF_STREAM);
+	ReturnCode res = stream->Read(stream, data, 1, &modified);
+	return res ? res : (modified ? 0 : ERR_END_OF_STREAM);
 }
 
 static ReturnCode Stream_DefaultClose(struct Stream* stream) { return 0; }
@@ -119,9 +119,9 @@ static ReturnCode Stream_FileWrite(struct Stream* stream, UInt8* data, UInt32 co
 	return File_Write(stream->Meta.File, data, count, modified);
 }
 static ReturnCode Stream_FileClose(struct Stream* stream) {
-	ReturnCode result = File_Close(stream->Meta.File);
+	ReturnCode res = File_Close(stream->Meta.File);
 	stream->Meta.File = NULL;
-	return result;
+	return res;
 }
 static ReturnCode Stream_FileSeek(struct Stream* stream, Int32 offset, Int32 seekType) {
 	return File_Seek(stream->Meta.File, offset, seekType);
@@ -268,8 +268,8 @@ static ReturnCode Stream_BufferedRead(struct Stream* stream, UInt8* data, UInt32
 		stream->Meta.Buffered.Cur = stream->Meta.Buffered.Base;
 		UInt32 read = 0;
 
-		ReturnCode result = source->Read(source, stream->Meta.Buffered.Cur, stream->Meta.Buffered.Length, &read);
-		if (result != 0) return result;
+		ReturnCode res = source->Read(source, stream->Meta.Buffered.Cur, stream->Meta.Buffered.Length, &read);
+		if (res) return res;
 		stream->Meta.Mem.Left = read;
 	}
 	return Stream_MemoryRead(stream, data, count, modified);
@@ -332,34 +332,27 @@ void Stream_SetU32_BE(UInt8* data, UInt32 value) {
 
 UInt8 Stream_ReadU8(struct Stream* stream) {
 	UInt8 buffer;
-	ReturnCode result = stream->ReadU8(stream, &buffer);
-	if (result) { Stream_Fail(stream, result, "reading U8 from"); }
+	ReturnCode res = stream->ReadU8(stream, &buffer);
+	if (res) { Stream_Fail(stream, res, "reading U8 from"); }
 	return buffer;
 }
 
 UInt16 Stream_ReadU16_BE(struct Stream* stream) {
 	UInt8 buffer[sizeof(UInt16)];
-	Stream_Read(stream, buffer, sizeof(UInt16));
+	Stream_ReadOrFail(stream, buffer, sizeof(UInt16));
 	return Stream_GetU16_BE(buffer);
 }
 
 UInt32 Stream_ReadU32_LE(struct Stream* stream) {
 	UInt8 buffer[sizeof(UInt32)];
-	Stream_Read(stream, buffer, sizeof(UInt32));
+	Stream_ReadOrFail(stream, buffer, sizeof(UInt32));
 	return Stream_GetU32_LE(buffer);
 }
 
 UInt32 Stream_ReadU32_BE(struct Stream* stream) {
 	UInt8 buffer[sizeof(UInt32)];
-	Stream_Read(stream, buffer, sizeof(UInt32));
+	Stream_ReadOrFail(stream, buffer, sizeof(UInt32));
 	return Stream_GetU32_BE(buffer);
-}
-
-void Stream_WriteU32_BE(struct Stream* stream, UInt32 value) {
-	UInt8 buffer[sizeof(UInt32)];
-	buffer[0] = (UInt8)(value >> 24); buffer[1] = (UInt8)(value >> 16);
-	buffer[2] = (UInt8)(value >> 8 ); buffer[3] = (UInt8)(value);
-	Stream_Write(stream, buffer, sizeof(UInt32));
 }
 
 
@@ -368,8 +361,8 @@ void Stream_WriteU32_BE(struct Stream* stream, UInt32 value) {
 *#########################################################################################################################*/
 ReturnCode Stream_ReadUtf8Char(struct Stream* stream, UInt16* codepoint) {
 	UInt8 data;
-	ReturnCode result = stream->ReadU8(stream, &data);
-	if (result) return result;
+	ReturnCode res = stream->ReadU8(stream, &data);
+	if (res) return res;
 
 	/* Header byte is just the raw codepoint (common case) */
 	if (data <= 0x7F) { *codepoint = data; return 0; }
@@ -388,8 +381,7 @@ ReturnCode Stream_ReadUtf8Char(struct Stream* stream, UInt16* codepoint) {
 
 	*codepoint = data;
 	for (i = 0; i < byteCount - 1; i++) {
-		ReturnCode result = stream->ReadU8(stream, &data);
-		if (result) return result;
+		if (res = stream->ReadU8(stream, &data)) return res;
 
 		*codepoint <<= 6;
 		/* Top two bits of each are always 10 */
@@ -403,10 +395,10 @@ bool Stream_ReadLine(struct Stream* stream, STRING_TRANSIENT String* text) {
 	bool readAny = false;
 	for (;;) {
 		UInt16 codepoint;
-		ReturnCode result = Stream_ReadUtf8Char(stream, &codepoint);
-		if (result == ERR_END_OF_STREAM) break;
+		ReturnCode res = Stream_ReadUtf8Char(stream, &codepoint);
+		if (res == ERR_END_OF_STREAM) break;
 
-		if (result) { Stream_Fail(stream, result, "reading utf8 from"); }
+		if (res) { Stream_Fail(stream, res, "reading utf8 from"); }
 		readAny = true;
 
 		/* Handle \r\n or \n line endings */
@@ -436,12 +428,13 @@ Int32 Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint) {
 ReturnCode Stream_WriteLine(struct Stream* stream, STRING_TRANSIENT String* text) {
 	UInt8 buffer[2048 + 10];
 	UInt32 i, j = 0;
+	ReturnCode res;
 
 	for (i = 0; i < text->length; i++) {
 		/* For extremely large strings */
 		if (j >= 2048) {
-			ReturnCode result = Stream_TryWrite(stream, buffer, j); j = 0;
-			if (result) return result;
+			if (res = Stream_Write(stream, buffer, j)) return res;
+			j = 0;
 		}
 
 		UInt8* cur = buffer + j;
@@ -451,5 +444,5 @@ ReturnCode Stream_WriteLine(struct Stream* stream, STRING_TRANSIENT String* text
 	
 	UInt8* ptr = Platform_NewLine;
 	while (*ptr) { buffer[j++] = *ptr++; }
-	return Stream_TryWrite(stream, buffer, j);
+	return Stream_Write(stream, buffer, j);
 }

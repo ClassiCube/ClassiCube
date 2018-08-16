@@ -14,13 +14,14 @@
 static ReturnCode Ogg_NextPage(struct Stream* stream) {
 	UInt8 header[27];
 	struct Stream* source = stream->Meta.Ogg.Source;
-	ReturnCode result = Stream_TryRead(source, header, sizeof(header));
-	if (result) return result;
+	ReturnCode res;
 
+	if (res = Stream_Read(source, header, sizeof(header))) return res;
 	UInt32 sig = Stream_GetU32_BE(&header[0]);
 	if (sig != OGG_FourCC('O','g','g','S')) return OGG_ERR_INVALID_SIG;
 	if (header[4] != 0) return OGG_ERR_VERSION;
 	UInt8 bitflags = header[5];
+
 	/* header[6]  (8) granule position */
 	/* header[14] (4) serial number */
 	/* header[18] (4) page sequence number */
@@ -28,13 +29,11 @@ static ReturnCode Ogg_NextPage(struct Stream* stream) {
 
 	Int32 i, numSegments = header[26];
 	UInt8 segments[255];
-	result = Stream_TryRead(source, segments, numSegments);
-	if (result) return result;
+	if (res = Stream_Read(source, segments, numSegments)) return res;
 
 	UInt32 dataSize = 0;
 	for (i = 0; i < numSegments; i++) { dataSize += segments[i]; }
-	result = Stream_TryRead(source, stream->Meta.Ogg.Base, dataSize);
-	if (result) return result;
+	if (res = Stream_Read(source, stream->Meta.Ogg.Base, dataSize)) return res;
 
 	stream->Meta.Ogg.Cur  = stream->Meta.Ogg.Base;
 	stream->Meta.Ogg.Left = dataSize;
@@ -58,8 +57,8 @@ static ReturnCode Ogg_Read(struct Stream* stream, UInt8* data, UInt32 count, UIn
 		*modified = 0;
 		if (stream->Meta.Ogg.Last) return 0;
 
-		ReturnCode result = Ogg_NextPage(stream);
-		if (result) return result;
+		ReturnCode res;
+		if (res = Ogg_NextPage(stream)) return res;
 	}
 }
 
@@ -103,8 +102,8 @@ static UInt32 Vorbis_ReadBits(struct VorbisState* ctx, UInt32 bitsCount) {
 static ReturnCode Vorbis_TryReadBits(struct VorbisState* ctx, UInt32 bitsCount, UInt32* data) {
 	UInt8 portion;
 	while (ctx->NumBits < bitsCount) {
-		ReturnCode result = ctx->Source->ReadU8(ctx->Source, &portion);
-		if (result) return result;
+		ReturnCode res = ctx->Source->ReadU8(ctx->Source, &portion);
+		if (res) return res;
 		Vorbis_PushByte(ctx, portion);
 	}
 
@@ -1013,12 +1012,12 @@ static bool Vorbis_ValidBlockSize(UInt32 size) {
 	return size >= 64 && size <= VORBIS_MAX_BLOCK_SIZE && Math_IsPowOf2(size);
 }
 
-static ReturnCode Vorbis_DecodeHeader(struct VorbisState* ctx, UInt8 type) {
+static ReturnCode Vorbis_CheckHeader(struct VorbisState* ctx, UInt8 type) {
 	UInt8 header[7];
-	ReturnCode result = Stream_TryRead(ctx->Source, header, sizeof(header));
-	if (result) return result;
-	if (header[0] != type) return VORBIS_ERR_WRONG_HEADER;
+	ReturnCode res;
+	if (res = Stream_Read(ctx->Source, header, sizeof(header))) return res;
 
+	if (header[0] != type) return VORBIS_ERR_WRONG_HEADER;
 	bool OK = 
 		header[1] == 'v' && header[2] == 'o' && header[3] == 'r' &&
 		header[4] == 'b' && header[5] == 'i' && header[6] == 's';
@@ -1027,8 +1026,8 @@ static ReturnCode Vorbis_DecodeHeader(struct VorbisState* ctx, UInt8 type) {
 
 static ReturnCode Vorbis_DecodeIdentifier(struct VorbisState* ctx) {
 	UInt8 header[23];
-	ReturnCode result = Stream_TryRead(ctx->Source, header, sizeof(header));
-	if (result) return result;
+	ReturnCode res;
+	if (res = Stream_Read(ctx->Source, header, sizeof(header))) return res;
 
 	UInt32 version  = Stream_GetU32_LE(&header[0]);
 	if (version != 0) return VORBIS_ERR_VERSION;
@@ -1064,13 +1063,13 @@ static ReturnCode Vorbis_DecodeComments(struct VorbisState* ctx) {
 
 static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	Int32 i, count;
-	ReturnCode result;
+	ReturnCode res;
 
 	count = Vorbis_ReadBits(ctx, 8); count++;
 	ctx->Codebooks = Mem_Alloc(count, sizeof(struct Codebook), "vorbis codebooks");
 	for (i = 0; i < count; i++) {
-		result = Codebook_DecodeSetup(ctx, &ctx->Codebooks[i]);
-		if (result) return result;
+		res = Codebook_DecodeSetup(ctx, &ctx->Codebooks[i]);
+		if (res) return res;
 	}
 	ctx->NumCodebooks = count;
 
@@ -1085,8 +1084,8 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	for (i = 0; i < count; i++) {
 		UInt16 floor = Vorbis_ReadBits(ctx, 16);
 		if (floor != 1) return VORBIS_ERR_FLOOR_TYPE;
-		result = Floor_DecodeSetup(ctx, &ctx->Floors[i]);
-		if (result) return result;
+		res = Floor_DecodeSetup(ctx, &ctx->Floors[i]);
+		if (res) return res;
 	}
 
 	count = Vorbis_ReadBits(ctx, 6); count++;
@@ -1094,8 +1093,8 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	for (i = 0; i < count; i++) {
 		UInt16 residue = Vorbis_ReadBits(ctx, 16);
 		if (residue > 2) return VORBIS_ERR_FLOOR_TYPE;
-		result = Residue_DecodeSetup(ctx, &ctx->Residues[i], residue);
-		if (result) return result;
+		res = Residue_DecodeSetup(ctx, &ctx->Residues[i], residue);
+		if (res) return res;
 	}
 
 	count = Vorbis_ReadBits(ctx, 6); count++;
@@ -1103,15 +1102,15 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	for (i = 0; i < count; i++) {
 		UInt16 mapping = Vorbis_ReadBits(ctx, 16);
 		if (mapping != 0) return VORBIS_ERR_MAPPING_TYPE;
-		result = Mapping_DecodeSetup(ctx, &ctx->Mappings[i]);
-		if (result) return result;
+		res = Mapping_DecodeSetup(ctx, &ctx->Mappings[i]);
+		if (res) return res;
 	}
 
 	count = Vorbis_ReadBits(ctx, 6); count++;
 	ctx->Modes = Mem_Alloc(count, sizeof(struct Mode), "vorbis modes");
 	for (i = 0; i < count; i++) {
-		result = Mode_DecodeSetup(ctx, &ctx->Modes[i]);
-		if (result) return result;
+		res = Mode_DecodeSetup(ctx, &ctx->Modes[i]);
+		if (res) return res;
 	}
 	
 	ctx->ModeNumBits = iLog(count - 1); /* ilog([vorbis_mode_count]-1) bits */
@@ -1121,24 +1120,15 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	return (framing & 1) ? 0 : VORBIS_ERR_FRAMING;
 }
 
-enum VORBIS_PACKET { VORBIS_IDENTIFIER = 1, VORBIS_COMMENTS = 3, VORBIS_SETUP = 5, };
 ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
-	ReturnCode result;
+	ReturnCode res;
 	
-	result = Vorbis_DecodeHeader(ctx, VORBIS_IDENTIFIER);
-	if (result) return result;
-	result = Vorbis_DecodeIdentifier(ctx);
-	if (result) return result;
-
-	result = Vorbis_DecodeHeader(ctx, VORBIS_COMMENTS);
-	if (result) return result;
-	result = Vorbis_DecodeComments(ctx);
-	if (result) return result;
-
-	result = Vorbis_DecodeHeader(ctx, VORBIS_SETUP);
-	if (result) return result;
-	result = Vorbis_DecodeSetup(ctx);
-	if (result) return result;
+	if (res = Vorbis_CheckHeader(ctx, 1))   return res;
+	if (res = Vorbis_DecodeIdentifier(ctx)) return res;
+	if (res = Vorbis_CheckHeader(ctx, 3))   return res;
+	if (res = Vorbis_DecodeComments(ctx))   return res;
+	if (res = Vorbis_CheckHeader(ctx, 5))   return res;
+	if (res = Vorbis_DecodeSetup(ctx))      return res;
 
 	/* window calculations can be pre-computed here */
 	UInt32 count = ctx->BlockSizes[0] + ctx->BlockSizes[1] * 4, offset = 0;
@@ -1170,8 +1160,8 @@ ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 *#########################################################################################################################*/
 ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	Int32 i, j, packetType;
-	ReturnCode result = Vorbis_TryReadBits(ctx, 1, &packetType);
-	if (result) return result;
+	ReturnCode res = Vorbis_TryReadBits(ctx, 1, &packetType);
+	if (res) return res;
 	if (packetType) return VORBIS_ERR_FRAME_TYPE;
 
 	Int32 modeIdx = Vorbis_ReadBits(ctx, ctx->ModeNumBits);

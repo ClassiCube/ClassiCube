@@ -320,10 +320,10 @@ static void Animations_PackChanged(void* obj) {
 static void Animations_FileChanged(void* obj, struct Stream* stream) {
 	String* name = &stream->Name;
 	if (String_CaselessEqualsConst(name, "animation.png") || String_CaselessEqualsConst(name, "animations.png")) {
-		ReturnCode result = Bitmap_DecodePng(&anims_bmp, stream);
-		if (!result) return;
+		ReturnCode res = Bitmap_DecodePng(&anims_bmp, stream);
+		if (!res) return;
 
-		ErrorHandler_LogError_Path(result, "decoding", name);
+		ErrorHandler_LogError_Path(res, "decoding", name);
 		Mem_Free(&anims_bmp.Scan0);
 	} else if (String_CaselessEqualsConst(name, "animation.txt") || String_CaselessEqualsConst(name, "animations.txt")) {
 		Animations_ReadDescription(stream);

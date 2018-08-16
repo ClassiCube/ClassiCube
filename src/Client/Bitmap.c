@@ -327,10 +327,10 @@ static void Png_ComputeTransparency(struct Bitmap* bmp, UInt32 transparentCol) {
 ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 	Bitmap_Create(bmp, 0, 0, NULL);
 	UInt8 tmp[PNG_PALETTE * 3];
-	ReturnCode result;
+	ReturnCode res;
 
-	result = Stream_TryRead(stream, tmp, PNG_SIG_SIZE);
-	if (result) return result;
+	res = Stream_Read(stream, tmp, PNG_SIG_SIZE);
+	if (res) return res;
 	if (!Bitmap_DetectPng(tmp, PNG_SIG_SIZE)) return PNG_ERR_INVALID_SIG;
 
 	UInt32 transparentCol = PackedCol_ARGB(0, 0, 0, 255);
@@ -355,8 +355,8 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 	UInt32 bufferIdx, bufferRows;
 
 	while (readingChunks) {
-		result = Stream_TryRead(stream, buffer, 2 * sizeof(UInt32));
-		if (result) return result;
+		res = Stream_Read(stream, buffer, 2 * sizeof(UInt32));
+		if (res) return res;
 		UInt32 dataSize = Stream_GetU32_BE(&buffer[0]);
 		UInt32 fourCC   = Stream_GetU32_BE(&buffer[4]);
 
@@ -364,8 +364,8 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 		case PNG_FourCC('I','H','D','R'): {
 			if (dataSize != PNG_IHDR_SIZE) return PNG_ERR_INVALID_HEADER_SIZE;
 			gotHeader = true;
-			result = Stream_TryRead(stream, buffer, PNG_IHDR_SIZE);
-			if (result) return result;
+			res = Stream_Read(stream, buffer, PNG_IHDR_SIZE);
+			if (res) return res;
 
 			bmp->Width  = (Int32)Stream_GetU32_BE(&buffer[0]);
 			bmp->Height = (Int32)Stream_GetU32_BE(&buffer[4]);
@@ -394,8 +394,8 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 		case PNG_FourCC('P','L','T','E'): {
 			if (dataSize > PNG_PALETTE * 3) return PNG_ERR_PAL_ENTRIES;
 			if ((dataSize % 3) != 0) return PNG_ERR_PAL_SIZE;
-			result = Stream_TryRead(stream, tmp, dataSize);
-			if (result) return result;
+			res = Stream_Read(stream, tmp, dataSize);
+			if (res) return res;
 
 			for (i = 0; i < dataSize; i += 3) {
 				palette[i / 3] = PackedCol_ARGB(tmp[i], tmp[i + 1], tmp[i + 2], 255);
@@ -405,15 +405,15 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 		case PNG_FourCC('t','R','N','S'): {
 			if (col == PNG_COL_GRAYSCALE) {
 				if (dataSize != 2) return PNG_ERR_TRANS_COUNT;
-				result = Stream_TryRead(stream, tmp, sizeof(UInt16));
-				if (result) return result;
+				res = Stream_Read(stream, tmp, sizeof(UInt16));
+				if (res) return res;
 
 				UInt8 palRGB = tmp[0]; /* RGB is 16 bits big endian, ignore least significant 8 bits */
 				transparentCol = PackedCol_ARGB(palRGB, palRGB, palRGB, 0);
 			} else if (col == PNG_COL_INDEXED) {
 				if (dataSize > PNG_PALETTE) return PNG_ERR_TRANS_COUNT;
-				result = Stream_TryRead(stream, tmp, dataSize);
-				if (result) return result;
+				res = Stream_Read(stream, tmp, dataSize);
+				if (res) return res;
 
 				/* set alpha component of palette*/
 				for (i = 0; i < dataSize; i++) {
@@ -422,8 +422,8 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 				}
 			} else if (col == PNG_COL_RGB) {
 				if (dataSize != 6) return PNG_ERR_TRANS_COUNT;
-				result = Stream_TryRead(stream, tmp, 3 * sizeof(UInt16));
-				if (result) return result;
+				res = Stream_Read(stream, tmp, 3 * sizeof(UInt16));
+				if (res) return res;
 
 				/* R,G,B is 16 bits big endian, ignore least significant 8 bits */
 				UInt8 palR = tmp[0], palG = tmp[2], palB = tmp[4];
@@ -440,8 +440,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 
 			/* TODO: This assumes zlib header will be in 1 IDAT chunk */
 			while (!zlibHeader.Done) { 
-				ReturnCode result = ZLibHeader_Read(&datStream, &zlibHeader);
-				if (result) return result;
+				if (res = ZLibHeader_Read(&datStream, &zlibHeader)) return res;
 			}
 
 			UInt32 bufferLen = bufferRows * scanlineBytes, bufferMax = bufferLen - scanlineBytes;
@@ -458,8 +457,8 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 				UInt32 bufferLeft = bufferLen - bufferIdx, read;
 				if (bufferLeft > bufferMax) bufferLeft = bufferMax;
 
-				result = compStream.Read(&compStream, &buffer[bufferIdx], bufferLeft, &read);
-				if (result) return result;
+				res = compStream.Read(&compStream, &buffer[bufferIdx], bufferLeft, &read);
+				if (res) return res;
 				if (!read) break;
 
 				UInt32 startY = bufferIdx / scanlineBytes, rowY;
@@ -609,11 +608,19 @@ static void Png_EncodeRow(UInt8* src, UInt8* cur, UInt8* prior, UInt8* best, Int
 	best[0] = bestFilter;
 }
 
-ReturnCode Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {	
-	ReturnCode result;
+ReturnCode Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
+	ReturnCode res;
 	UInt8 tmp[32];
-	result = Stream_TryWrite(stream, png_sig, PNG_SIG_SIZE);
-	if (result) return result;
+	if (res = Stream_Write(stream, png_sig, PNG_SIG_SIZE)) return res;
+
+	struct Stream* underlying = stream; 
+	struct Stream crc32Stream;
+	Bitmap_Crc32Stream(&crc32Stream, underlying);
+
+	UInt8 prevLine[PNG_MAX_DIMS * 3], curLine[PNG_MAX_DIMS * 3];
+	UInt8 bestLine[PNG_MAX_DIMS * 3 + 1];
+	Mem_Set(prevLine, 0, bmp->Width * 3);
+
 
 	/* Write header chunk */
 	Stream_SetU32_BE(&tmp[0], PNG_IHDR_SIZE);
@@ -627,23 +634,15 @@ ReturnCode Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 		tmp[19] = 0;           /* ADAPTIVE filter method */
 		tmp[20] = 0;           /* Not using interlacing */
 	}
-	Stream_SetU32_BE(&tmp[21], Utils_CRC32(&tmp[4], sizeof(UInt32) + PNG_IHDR_SIZE));
-	result = Stream_TryWrite(stream, tmp, PNG_IHDR_SIZE + 3 * sizeof(UInt32));
-	if (result) return result;
-
-	struct Stream* underlying = stream;
-	struct Stream crc32Stream;
-	Bitmap_Crc32Stream(&crc32Stream, underlying);
+	Stream_SetU32_BE(&tmp[21], Utils_CRC32(&tmp[4], 17));
 
 	/* Write PNG body */
-	UInt8 prevLine[PNG_MAX_DIMS * 3];
-	UInt8 curLine[PNG_MAX_DIMS  * 3];
-	UInt8 bestLine[PNG_MAX_DIMS * 3 + 1];
-	Mem_Set(prevLine, 0, bmp->Width * 3);
+	Stream_SetU32_BE(&tmp[25], 0); /* size of IDAT, filled in later */
+	if (res = Stream_Write(stream, tmp, 29)) return res;
+	Stream_SetU32_BE(&tmp[0], PNG_FourCC('I','D','A','T'));
+	if (res = Stream_Write(&crc32Stream, tmp, 4)) return res;
 
-	Stream_WriteU32_BE(stream, 0); /* size of IDAT, filled in later */
 	stream = &crc32Stream;
-	Stream_WriteU32_BE(stream, PNG_FourCC('I','D','A','T'));
 	{
 		Int32 y, lineSize = bmp->Width * 3;
 		struct ZLibState zlState;
@@ -655,30 +654,25 @@ ReturnCode Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 			UInt8* prev = (y & 1) == 0 ? prevLine : curLine;
 			UInt8* cur  = (y & 1) == 0 ? curLine : prevLine;
 			Png_EncodeRow(src, cur, prev, bestLine, lineSize);
-
-			result = Stream_TryWrite(&zlStream, bestLine, lineSize + 1); /* +1 for filter byte */
-			if (result) return result;
+			/* +1 for filter byte */
+			if (res = Stream_Write(&zlStream, bestLine, lineSize + 1)) return res;
 		}
-		result = zlStream.Close(&zlStream);
-		if (result) return result;
+		if (res = zlStream.Close(&zlStream)) return res;
 	}
 	stream = underlying;
-	Stream_WriteU32_BE(stream, crc32Stream.Meta.CRC32.CRC32 ^ 0xFFFFFFFFUL);
+	Stream_SetU32_BE(&tmp[0], crc32Stream.Meta.CRC32.CRC32 ^ 0xFFFFFFFFUL);
 
 	/* Write end chunk */
-	Stream_SetU32_BE(&tmp[0], 0);
-	Stream_SetU32_BE(&tmp[4], PNG_FourCC('I','E','N','D'));
-	Stream_SetU32_BE(&tmp[8], 0xAE426082UL); /* CRC32 of iend */
-	result = Stream_TryWrite(stream, tmp, 3 * sizeof(UInt32));
-	if (result) return result;
+	Stream_SetU32_BE(&tmp[4],  0);
+	Stream_SetU32_BE(&tmp[8],  PNG_FourCC('I','E','N','D'));
+	Stream_SetU32_BE(&tmp[12], 0xAE426082UL); /* CRC32 of iend */
+	if (res = Stream_Write(stream, tmp, 16)) return res;
 
 	/* Come back to write size of data chunk */
 	UInt32 stream_len;
-	result = stream->Length(stream, &stream_len);
-	if (result) return result;
-	result = stream->Seek(stream, 33, STREAM_SEEKFROM_BEGIN);
-	if (result) return result;
+	if (res = stream->Length(stream, &stream_len))             return res;
+	if (res = stream->Seek(stream, 33, STREAM_SEEKFROM_BEGIN)) return res;
 
 	Stream_SetU32_BE(&tmp[0], stream_len - 57);
-	return Stream_TryWrite(stream, tmp, sizeof(UInt32));
+	return Stream_Write(stream, tmp, 4);
 }

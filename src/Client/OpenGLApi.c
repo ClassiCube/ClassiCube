@@ -536,9 +536,9 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) 
 		}*/
 	}
 
-	ReturnCode result = Bitmap_EncodePng(&bmp, output);
+	ReturnCode res = Bitmap_EncodePng(&bmp, output);
 	Mem_Free(&bmp.Scan0);
-	return result;
+	return res;
 }
 
 void Gfx_MakeApiInfo(void) {

@@ -125,9 +125,9 @@ bool Utils_EnsureDirectory(STRING_PURE const UChar* dirName) {
 	String dir = String_FromReadonly(dirName);
 	if (Directory_Exists(&dir)) return true;
 
-	ReturnCode result = Directory_Create(&dir);
-	if (result) { ErrorHandler_LogError_Path(result, "creating directory", &dir); }
-	return result == 0;
+	ReturnCode res = Directory_Create(&dir);
+	if (res) { ErrorHandler_LogError_Path(res, "creating directory", &dir); }
+	return res == 0;
 }
 
 void Utils_UNSAFE_GetFilename(STRING_TRANSIENT String* str) {

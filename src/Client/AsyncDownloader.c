@@ -193,35 +193,35 @@ static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	struct Stopwatch stopwatch; UInt32 elapsedMS;
 
 	void* handle;
-	ReturnCode result;
+	ReturnCode res;
 	Stopwatch_Start(&stopwatch);
-	result = Http_MakeRequest(request, &handle);
+	res = Http_MakeRequest(request, &handle);
 	elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
-	Platform_Log2("HTTP make request: ret code %i, in %i ms", &result, &elapsedMS);
-	if (result) return;
+	Platform_Log2("HTTP make request: ret code %i, in %i ms", &res, &elapsedMS);
+	if (res) return;
 
 	async_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
 	UInt32 size = 0;
 	Stopwatch_Start(&stopwatch);
-	result = Http_GetRequestHeaders(request, handle, &size);
+	res = Http_GetRequestHeaders(request, handle, &size);
 	elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
 	UInt32 status = request->StatusCode;
-	Platform_Log3("HTTP get headers: ret code %i (http %i), in %i ms", &result, &status, &elapsedMS);
+	Platform_Log3("HTTP get headers: ret code %i (http %i), in %i ms", &res, &status, &elapsedMS);
 
-	if (result || request->StatusCode != 200) {
+	if (res || request->StatusCode != 200) {
 		Http_FreeRequest(handle); return;
 	}
 
 	void* data = NULL;
 	if (request->RequestType != REQUEST_TYPE_CONTENT_LENGTH) {
 		Stopwatch_Start(&stopwatch);
-		result = Http_GetRequestData(request, handle, &data, size, &async_curProgress);
+		res = Http_GetRequestData(request, handle, &data, size, &async_curProgress);
 		elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
-		Platform_Log3("HTTP get data: ret code %i (size %i), in %i ms", &result, &size, &elapsedMS);
+		Platform_Log3("HTTP get data: ret code %i (size %i), in %i ms", &res, &size, &elapsedMS);
 	}
 
 	Http_FreeRequest(handle);
-	if (result) return;
+	if (res) return;
 
 	UInt64 addr = (UInt64)data;
 	Platform_Log2("OK I got the DATA! %i bytes at %x", &size, &addr);

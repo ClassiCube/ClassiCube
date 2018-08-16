@@ -158,11 +158,11 @@ void Options_Set(const UChar* keyRaw, STRING_PURE String* value) {
 
 void Options_Load(void) {	
 	String path = String_FromConst("options.txt");
-	ReturnCode result;
+	ReturnCode res;
 
-	void* file; result = File_Open(&file, &path);
-	if (result == ReturnCode_FileNotFound) return;
-	if (result) { ErrorHandler_LogError_Path(result, "opening", &path); return; }
+	void* file; res = File_Open(&file, &path);
+	if (res == ReturnCode_FileNotFound) return;
+	if (res) { ErrorHandler_LogError_Path(res, "opening", &path); return; }
 
 	/* Remove all the unchanged options */
 	UInt32 i;
@@ -196,16 +196,16 @@ void Options_Load(void) {
 		}
 	}
 
-	result = stream.Close(&stream);
-	if (result) { ErrorHandler_LogError_Path(result, "closing", &path); return; }
+	res = stream.Close(&stream);
+	if (res) { ErrorHandler_LogError_Path(res, "closing", &path); return; }
 }
 
 void Options_Save(void) {	
 	String path = String_FromConst("options.txt");
-	ReturnCode result;
+	ReturnCode res;
 
-	void* file; result = File_Create(&file, &path);
-	if (result) { ErrorHandler_LogError_Path(result, "creating", &path); return; }
+	void* file; res = File_Create(&file, &path);
+	if (res) { ErrorHandler_LogError_Path(res, "creating", &path); return; }
 
 	UChar lineBuffer[String_BufferSize(1024)];
 	String line = String_InitAndClearArray(lineBuffer);
@@ -217,12 +217,12 @@ void Options_Save(void) {
 		String value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
 		String_Format2(&line, "%s=%s", &key, &value);
 
-		result = Stream_WriteLine(&stream, &line);
-		if (result) { ErrorHandler_LogError_Path(result, "writing to", &path); break; }
+		res = Stream_WriteLine(&stream, &line);
+		if (res) { ErrorHandler_LogError_Path(res, "writing to", &path); break; }
 		String_Clear(&line);
 	}
 
 	StringsBuffer_Free(&Options_Changed);
-	result = stream.Close(&stream);
-	if (result) { ErrorHandler_LogError_Path(result, "closing", &path); return; }
+	res = stream.Close(&stream);
+	if (res) { ErrorHandler_LogError_Path(res, "closing", &path); return; }
 }
