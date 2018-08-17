@@ -30,6 +30,7 @@ extern ReturnCode ReturnCode_InvalidArg;
 void Platform_ConvertString(void* dstPtr, STRING_PURE String* src);
 void Platform_Init(void);
 void Platform_Free(void);
+void Platform_SetWorkingDir(void);
 void Platform_Exit(ReturnCode code);
 STRING_PURE String Platform_GetCommandLineArgs(void);
 ReturnCode Platform_StartShell(STRING_PURE String* args);

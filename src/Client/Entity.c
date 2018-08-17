@@ -441,19 +441,17 @@ void TabList_Set(EntityID id, STRING_PURE String* player, STRING_PURE String* li
 	TabList_GroupRanks[id]  = rank;
 }
 
-static void TabList_Init(void) { StringsBuffer_Init(&TabList_Buffer); }
-static void TabList_Free(void) { StringsBuffer_Free(&TabList_Buffer); }
+static void TabList_Free(void) { StringsBuffer_Clear(&TabList_Buffer); }
 static void TabList_Reset(void) {
 	Mem_Set(TabList_PlayerNames, 0, sizeof(TabList_PlayerNames));
 	Mem_Set(TabList_ListNames,   0, sizeof(TabList_ListNames));
 	Mem_Set(TabList_GroupNames,  0, sizeof(TabList_GroupNames));
 	Mem_Set(TabList_GroupRanks,  0, sizeof(TabList_GroupRanks));
-	StringsBuffer_Free(&TabList_Buffer);
+	StringsBuffer_Clear(&TabList_Buffer);
 }
 
 void TabList_MakeComponent(struct IGameComponent* comp) {
-	comp->Init = TabList_Init;
-	comp->Free = TabList_Free;
+	comp->Free  = TabList_Free;
 	comp->Reset = TabList_Reset;
 }
 

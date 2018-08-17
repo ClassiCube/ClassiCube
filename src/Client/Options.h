@@ -73,7 +73,6 @@ StringsBuffer Options_Keys;
 StringsBuffer Options_Values;
 
 bool Options_HasAnyChanged(void);
-void Options_Init(void);
 void Options_Free(void);
 
 void Options_Get(const UChar* key, STRING_TRANSIENT String* value, const UChar* defValue);

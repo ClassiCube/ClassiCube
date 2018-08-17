@@ -527,9 +527,8 @@ static void ListScreen_OnResize(struct GuiElem* elem) {
 
 struct ListScreen* ListScreen_MakeInstance(void) {
 	struct ListScreen* screen = &ListScreen_Instance;
+	StringsBuffer_Clear(&screen->Entries);
 	Mem_Set(screen, 0, sizeof(struct ListScreen) - sizeof(StringsBuffer));
-	if (screen->Entries.TextBuffer) StringsBuffer_Free(&screen->Entries);
-	StringsBuffer_Init(&screen->Entries);
 
 	screen->VTABLE = &ListScreen_VTABLE;
 	Screen_Reset((struct Screen*)screen);

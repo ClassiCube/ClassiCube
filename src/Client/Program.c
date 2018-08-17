@@ -46,6 +46,7 @@ int main_imdct() {
 #endif
 
 int main(void) {
+	Platform_SetWorkingDir();
 	ErrorHandler_Init("client.log");
 	Platform_Init();
 #ifdef CC_TEST_VORBIS
@@ -76,7 +77,6 @@ int main(void) {
 	}
 
 	Platform_LogConst("Starting " PROGRAM_APP_NAME " ..");
-	Options_Init();
 	Options_Load();
 
 	struct DisplayDevice device = DisplayDevice_Default;
@@ -92,7 +92,7 @@ int main(void) {
 	String title   = String_FromConst(PROGRAM_APP_NAME);
 	String rawArgs = Platform_GetCommandLineArgs();
 	/* NOTE: Make sure to comment this out before pushing a commit */
-	rawArgs = String_FromReadonly("UnknownShadow200 fff 127.0.0.1 25565");
+	//rawArgs = String_FromReadonly("UnknownShadow200 fff 127.0.0.1 25565");
 
 	String args[5]; Int32 argsCount = Array_Elems(args);
 	String_UNSAFE_Split(&rawArgs, ' ', args, &argsCount);

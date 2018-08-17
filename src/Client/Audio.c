@@ -410,9 +410,7 @@ static void AudioManager_FilesCallback(STRING_PURE String* filename, void* obj) 
 }
 
 static void AudioManager_Init(void) {
-	StringsBuffer_Init(&files);
 	music_waitable = Waitable_Create();
-
 	String path = String_FromConst("audio");
 	if (Directory_Exists(&path)) {
 		Directory_Enum(&path, NULL, AudioManager_FilesCallback);

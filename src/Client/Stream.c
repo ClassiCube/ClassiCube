@@ -140,6 +140,7 @@ static ReturnCode Stream_PortionLength(struct Stream* stream, UInt32* length) {
 }
 
 void Stream_ReadonlyPortion(struct Stream* stream, struct Stream* source, UInt32 len) {
+	Stream_Init(stream);
 	stream->Read     = Stream_PortionRead;
 	stream->ReadU8   = Stream_PortionReadU8;
 	stream->Position = Stream_PortionPosition;
@@ -248,6 +249,7 @@ static ReturnCode Stream_BufferedReadU8(struct Stream* stream, UInt8* data) {
 }
 
 void Stream_ReadonlyBuffered(struct Stream* stream, struct Stream* source, void* data, UInt32 size) {
+	Stream_Init(stream);
 	stream->Read   = Stream_BufferedRead;
 	stream->ReadU8 = Stream_BufferedReadU8;
 
@@ -356,7 +358,7 @@ ReturnCode Stream_ReadLine(struct Stream* stream, STRING_TRANSIENT String* text)
 		readAny = true;
 		/* Handle \r\n or \n line endings */
 		if (codepoint == '\r') continue;
-		if (codepoint == '\n') return true;
+		if (codepoint == '\n') return 0;
 		String_Append(text, Convert_UnicodeToCP437(codepoint));
 	}
 	return readAny ? 0 : ERR_END_OF_STREAM;

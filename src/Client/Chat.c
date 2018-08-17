@@ -29,7 +29,7 @@ void Chat_GetLogTime(UInt32 index, Int64* timeMs) {
 static void Chat_AppendLogTime(void) {
 	DateTime now; DateTime_CurrentUTC(&now);
 	if (Chat_LogTimesCount == Chat_LogTimesMax) {
-		StringsBuffer_Resize(&Chat_LogTimes, &Chat_LogTimesMax, sizeof(Int64),
+		Utils_Resize(&Chat_LogTimes, &Chat_LogTimesMax, sizeof(Int64),
 			CHAT_LOGTIMES_DEF_ELEMS, CHAT_LOGTIMES_EXPAND_ELEMS);
 	}
 	Chat_LogTimes[Chat_LogTimesCount++] = DateTime_TotalMs(&now);
@@ -582,9 +582,6 @@ static void Chat_Init(void) {
 	Commands_Register(ModelCommand_Make);
 	Commands_Register(CuboidCommand_Make);
 	Commands_Register(TeleportCommand_Make);
-
-	StringsBuffer_Init(&Chat_Log);
-	StringsBuffer_Init(&Chat_InputLog);
 }
 
 static void Chat_Reset(void) {
@@ -597,8 +594,8 @@ static void Chat_Free(void) {
 	commands_count = 0;
 	if (Chat_LogTimes != Chat_DefaultLogTimes) Mem_Free(&Chat_LogTimes);
 
-	StringsBuffer_Free(&Chat_Log);
-	StringsBuffer_Free(&Chat_InputLog);
+	StringsBuffer_Clear(&Chat_Log);
+	StringsBuffer_Clear(&Chat_InputLog);
 }
 
 void Chat_MakeComponent(struct IGameComponent* comp) {

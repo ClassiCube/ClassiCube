@@ -186,3 +186,20 @@ UInt32 Utils_Crc32Table[256] = {
 	0xA00AE278, 0xD70DD2EE, 0x4E048354, 0x3903B3C2, 0xA7672661, 0xD06016F7, 0x4969474D, 0x3E6E77DB, 0xAED16A4A, 0xD9D65ADC, 0x40DF0B66, 0x37D83BF0, 0xA9BCAE53, 0xDEBB9EC5, 0x47B2CF7F, 0x30B5FFE9,
 	0xBDBDF21C, 0xCABAC28A, 0x53B39330, 0x24B4A3A6, 0xBAD03605, 0xCDD70693, 0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D,
 };
+
+void Utils_Resize(void** buffer, UInt32* maxElems, UInt32 elemSize, UInt32 defElems, UInt32 expandElems) {
+	/* We use a statically allocated buffer initally, so can't realloc first time */
+	void* dst;
+	void* cur = *buffer;
+	UInt32 curElems = *maxElems;
+
+	if (curElems <= defElems) {
+		dst = Mem_Alloc(curElems + expandElems, elemSize, "initing array");
+		Mem_Copy(dst, cur, curElems * elemSize);
+	} else {
+		dst = Mem_Realloc(cur, curElems + expandElems, elemSize, "resizing array");
+	}
+
+	*buffer   = dst;
+	*maxElems = curElems + expandElems;
+}

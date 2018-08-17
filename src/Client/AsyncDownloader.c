@@ -18,7 +18,7 @@ struct AsyncRequestList {
 
 static void AsyncRequestList_EnsureSpace(struct AsyncRequestList* list) {
 	if (list->Count < list->MaxElems) return;
-	StringsBuffer_Resize(&list->Requests, &list->MaxElems, sizeof(struct AsyncRequest),
+	Utils_Resize(&list->Requests, &list->MaxElems, sizeof(struct AsyncRequest),
 		ASYNCREQUESTLIST_DEFELEMS, 10);
 }
 

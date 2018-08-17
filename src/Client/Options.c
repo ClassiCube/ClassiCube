@@ -14,16 +14,10 @@ StringsBuffer Options_Changed;
 
 bool Options_HasAnyChanged(void) { return Options_Changed.Count > 0;  }
 
-void Options_Init(void) {
-	StringsBuffer_Init(&Options_Keys);
-	StringsBuffer_Init(&Options_Values);
-	StringsBuffer_Init(&Options_Changed);
-}
-
 void Options_Free(void) {
-	StringsBuffer_Free(&Options_Keys);
-	StringsBuffer_Free(&Options_Values);
-	StringsBuffer_Free(&Options_Changed);
+	StringsBuffer_Clear(&Options_Keys);
+	StringsBuffer_Clear(&Options_Values);
+	StringsBuffer_Clear(&Options_Changed);
 }
 
 bool Options_HasChanged(STRING_PURE String* key) {
@@ -225,7 +219,7 @@ void Options_Save(void) {
 		String_Clear(&line);
 	}
 
-	StringsBuffer_Free(&Options_Changed);
+	StringsBuffer_Clear(&Options_Changed);
 	res = stream.Close(&stream);
 	if (res) { Chat_LogError(res, "closing", &path); return; }
 }

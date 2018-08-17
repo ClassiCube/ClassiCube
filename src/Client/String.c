@@ -686,18 +686,21 @@ bool Convert_TryParseBool(STRING_PURE String* str, bool* value) {
 #define STRINGSBUFFER_LEN_MASK  0x1FFUL
 void StringsBuffer_Init(StringsBuffer* buffer) {
 	buffer->Count     = 0;
-	buffer->UsedElems = 0;
-	buffer->TextBuffer  = buffer->DefaultBuffer;
-	buffer->FlagsBuffer = buffer->DefaultFlags;
-	buffer->TextBufferElems  = STRINGSBUFFER_BUFFER_DEF_SIZE;
-	buffer->FlagsBufferElems = STRINGSBUFFER_FLAGS_DEF_ELEMS;
+	buffer->TotalLength = 0;
+	buffer->TextBuffer  = buffer->_DefaultBuffer;
+	buffer->FlagsBuffer = buffer->_DefaultFlags;
+	buffer->_TextBufferSize  = STRINGSBUFFER_BUFFER_DEF_SIZE;
+	buffer->_FlagsBufferSize = STRINGSBUFFER_FLAGS_DEF_ELEMS;
 }
 
-void StringsBuffer_Free(StringsBuffer* buffer) {
-	if (buffer->TextBuffer != buffer->DefaultBuffer) {
+void StringsBuffer_Clear(StringsBuffer* buffer) {
+	/* never initialised to begin with */
+	if (!buffer->_FlagsBufferSize) return;
+
+	if (buffer->TextBuffer != buffer->_DefaultBuffer) {
 		Mem_Free(&buffer->TextBuffer);
 	}
-	if (buffer->FlagsBuffer != buffer->DefaultFlags) {
+	if (buffer->FlagsBuffer != buffer->_DefaultFlags) {
 		Mem_Free(&buffer->FlagsBuffer);
 	}
 	StringsBuffer_Init(buffer);
@@ -718,30 +721,12 @@ String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, Int32 index) {
 	return String_Init(&buffer->TextBuffer[offset], len, len);
 }
 
-void StringsBuffer_Resize(void** buffer, UInt32* elems, UInt32 elemSize, UInt32 defElems, UInt32 expandElems) {
-	/* We use a statically allocated buffer initally, so can't realloc first time */
-	void* dst;
-	void* cur = *buffer;
-	UInt32 curElems = *elems;
-
-	if (curElems <= defElems) {
-		dst = Mem_Alloc(curElems + expandElems, elemSize, "StringsBuffer");
-		Mem_Copy(dst, cur, curElems * elemSize);
-	} else {
-		dst = Mem_Realloc(cur, curElems + expandElems, elemSize, "resizing StringsBuffer");
-	}
-
-	*buffer = dst;
-	*elems  = curElems + expandElems;
-}
-
 void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text) {
-	if (buffer->Count == buffer->FlagsBufferElems) {
-		/* Someone forgot to initalise flags buffer, abort */
-		if (buffer->FlagsBufferElems == 0) {
-			ErrorHandler_Fail("StringsBuffer not properly initalised");
-		}
-		StringsBuffer_Resize(&buffer->FlagsBuffer, &buffer->FlagsBufferElems, sizeof(UInt32),
+	/* Forgot to initalise flags buffer, so do it here */
+	if (!buffer->_FlagsBufferSize) { StringsBuffer_Init(buffer); }
+
+	if (buffer->Count == buffer->_FlagsBufferSize) {
+		Utils_Resize(&buffer->FlagsBuffer, &buffer->_FlagsBufferSize, sizeof(UInt32),
 			STRINGSBUFFER_FLAGS_DEF_ELEMS, STRINGSBUFFER_FLAGS_EXPAND_ELEMS);
 	}
 
@@ -749,9 +734,9 @@ void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text) {
 		ErrorHandler_Fail("String too big to insert into StringsBuffer");
 	}
 
-	Int32 textOffset = buffer->UsedElems;
-	if (textOffset + text->length >= buffer->TextBufferElems) {
-		StringsBuffer_Resize(&buffer->TextBuffer, &buffer->TextBufferElems, sizeof(UChar),
+	Int32 textOffset = buffer->TotalLength;
+	if (textOffset + text->length >= buffer->_TextBufferSize) {
+		Utils_Resize(&buffer->TextBuffer, &buffer->_TextBufferSize, sizeof(UChar),
 			STRINGSBUFFER_BUFFER_DEF_SIZE, STRINGSBUFFER_BUFFER_EXPAND_SIZE);
 	}
 
@@ -761,7 +746,7 @@ void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text) {
 	buffer->FlagsBuffer[buffer->Count] = text->length | (textOffset << STRINGSBUFFER_LEN_SHIFT);
 
 	buffer->Count++;
-	buffer->UsedElems += text->length;
+	buffer->TotalLength += text->length;
 }
 
 void StringsBuffer_Remove(StringsBuffer* buffer, Int32 index) {
@@ -774,7 +759,7 @@ void StringsBuffer_Remove(StringsBuffer* buffer, Int32 index) {
 	/* Imagine buffer is this: AAXXYYZZ, and want to delete X */
 	/* Start points to first character of Y */
 	/* End points to character past last character of Z */
-	UInt32 i, start = offset + len, end = buffer->UsedElems;
+	UInt32 i, start = offset + len, end = buffer->TotalLength;
 	for (i = start; i < end; i++) { 
 		buffer->TextBuffer[i - len] = buffer->TextBuffer[i]; 
 	}
@@ -790,7 +775,7 @@ void StringsBuffer_Remove(StringsBuffer* buffer, Int32 index) {
 	}
 
 	buffer->Count--;
-	buffer->UsedElems -= len;
+	buffer->TotalLength -= len;
 }
 
 

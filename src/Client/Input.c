@@ -297,7 +297,6 @@ bool Hotkeys_IsHotkey(Key key, STRING_TRANSIENT String* text, bool* moreInput) {
 }
 
 void Hotkeys_Init(void) {
-	StringsBuffer_Init(&HotkeysText);
 	String prefix = String_FromConst("hotkey-");
 	Int32 i;
 

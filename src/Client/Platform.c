@@ -1118,6 +1118,20 @@ void Platform_Free(void) {
 	HeapDestroy(heap);
 }
 
+void Platform_SetWorkingDir(void) {
+	WCHAR dirName[FILENAME_SIZE + 1] = { 0 };
+	DWORD len = GetModuleFileNameW(NULL, dirName, FILENAME_SIZE);
+	if (len == 0) return;
+
+	/* get rid of filename at end of directory*/
+	for (; len > 0; len--) {
+		if (dirName[len] == '/' || dirName[len] == '\\') break;
+		dirName[len] = '\0';
+	}
+
+	SetCurrentDirectoryW(dirName);
+}
+
 void Platform_Exit(ReturnCode code) { ExitProcess(code); }
 
 STRING_PURE String Platform_GetCommandLineArgs(void) {
