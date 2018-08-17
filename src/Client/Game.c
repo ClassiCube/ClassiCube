@@ -61,11 +61,11 @@ void Game_AddComponent(struct IGameComponent* comp) {
 
 void IGameComponent_NullFunc(void) { }
 void IGameComponent_MakeEmpty(struct IGameComponent* comp) {
-	comp->Init = IGameComponent_NullFunc;
-	comp->Free = IGameComponent_NullFunc;
+	comp->Init  = IGameComponent_NullFunc;
+	comp->Free  = IGameComponent_NullFunc;
 	comp->Ready = IGameComponent_NullFunc;
 	comp->Reset = IGameComponent_NullFunc;
-	comp->OnNewMap = IGameComponent_NullFunc;
+	comp->OnNewMap       = IGameComponent_NullFunc;
 	comp->OnNewMapLoaded = IGameComponent_NullFunc;
 }
 
