@@ -16,17 +16,17 @@ UInt32 Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
 UChar Block_NamesBuffer[String_BufferSize(STRING_SIZE) * BLOCK_COUNT];
 #define Block_NamePtr(i) &Block_NamesBuffer[String_BufferSize(STRING_SIZE) * i]
 
-TextureLoc Block_TopTex[BLOCK_CPE_COUNT] = { 0,  1,  0,  2, 16,  4, 15, 17, 14, 14,
+UInt8 Block_TopTex[BLOCK_CPE_COUNT] = { 0,  1,  0,  2, 16,  4, 15, 17, 14, 14,
 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 24, 23,  6,  6,  7,  9,  4,
 36, 37, 16, 11, 25, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 26, 53, 52, };
 
-TextureLoc Block_SideTex[BLOCK_CPE_COUNT] = { 0,  1,  3,  2, 16,  4, 15, 17, 14, 14,
+UInt8 Block_SideTex[BLOCK_CPE_COUNT] = { 0,  1,  3,  2, 16,  4, 15, 17, 14, 14,
 30, 30, 18, 19, 32, 33, 34, 20, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 40, 39,  5,  5,  7,  8, 35,
 36, 37, 16, 11, 41, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 42, 53, 52, };
 
-TextureLoc Block_BottomTex[BLOCK_CPE_COUNT] = { 0,  1,  2,  2, 16,  4, 15, 17, 14, 14,
+UInt8 Block_BottomTex[BLOCK_CPE_COUNT] = { 0,  1,  2,  2, 16,  4, 15, 17, 14, 14,
 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 56, 55,  6,  6,  7, 10,  4,
 36, 37, 16, 11, 57, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 58, 53, 52 };

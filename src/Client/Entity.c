@@ -401,7 +401,7 @@ void Entities_DrawShadows(void) {
 *--------------------------------------------------------TabList----------------------------------------------------------*
 *#########################################################################################################################*/
 bool TabList_Valid(EntityID id) {
-	return TabList_PlayerNames[id] > 0 || TabList_ListNames[id] > 0 || TabList_GroupNames[id] > 0;
+	return TabList_PlayerNames[id] || TabList_ListNames[id] || TabList_GroupNames[id];
 }
 
 void TabList_RemoveAt(UInt32 index) {

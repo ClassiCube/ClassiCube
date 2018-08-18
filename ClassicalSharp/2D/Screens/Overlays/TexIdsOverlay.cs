@@ -70,18 +70,16 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void RenderTerrain() {
 			for (int i = 0; i < Atlas2D.TilesPerRow * Atlas2D.TilesPerRow;) {
-				int index = 0, texIdx = 0;
+				int index = 0, texIdx = 0, end = i + Atlas1D.TilesPerAtlas;
 				
-				for (int j = 0; j < Atlas1D.TilesPerAtlas; j++) {
-					TextureRec rec = Atlas1D.GetTexRec((i + j) + baseTexLoc, 1, out texIdx);
-					int x = (i + j) % Atlas2D.TilesPerRow;
-					int y = (i + j) / Atlas2D.TilesPerRow;
+				for (; i < end; i++) {
+					TextureRec rec = Atlas1D.GetTexRec(i + baseTexLoc, 1, out texIdx);
+					int x = i % Atlas2D.TilesPerRow, y = i / Atlas2D.TilesPerRow;
 					
 					Texture tex = new Texture(0, xOffset + x * tileSize, yOffset + y * tileSize,
 					                          tileSize, tileSize, rec);
 					IGraphicsApi.Make2DQuad(ref tex, PackedCol.White, vertices, ref index);
 				}
-				i += Atlas1D.TilesPerAtlas;
 				
 				game.Graphics.BindTexture(Atlas1D.TexIds[texIdx]);
 				game.Graphics.UpdateDynamicVb_IndexedTris(dynamicVb, vertices, index);

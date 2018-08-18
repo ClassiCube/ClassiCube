@@ -12,6 +12,9 @@
 #include "Errors.h"
 #define LIQUID_ANIM_MAX 64
 
+/*########################################################################################################################*
+*-----------------------------------------------------Lava animation------------------------------------------------------*
+*#########################################################################################################################*/
 Real32 L_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
 Real32 L_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
 Real32 L_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
@@ -77,6 +80,9 @@ static void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
 }
 
 
+/*########################################################################################################################*
+*----------------------------------------------------Water animation------------------------------------------------------*
+*#########################################################################################################################*/
 Real32 W_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
 Real32 W_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
 Real32 W_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
@@ -88,8 +94,7 @@ static void WaterAnimation_Tick(UInt32* ptr, Int32 size) {
 		Random_InitFromCurrentTime(&W_rnd);
 		W_rndInitalised = true;
 	}
-	Int32 mask = size - 1;
-	Int32 shift = Math_Log2(size);
+	Int32 mask = size - 1, shift = Math_Log2(size);
 
 	Int32 x, y, i = 0;
 	for (y = 0; y < size; y++) {
@@ -124,6 +129,9 @@ static void WaterAnimation_Tick(UInt32* ptr, Int32 size) {
 }
 
 
+/*########################################################################################################################*
+*-------------------------------------------------------Animations--------------------------------------------------------*
+*#########################################################################################################################*/
 struct AnimationData {
 	TextureLoc TexLoc;     /* Tile (not pixel) coordinates in terrain.png */
 	UInt16 FrameX, FrameY; /* Top left pixel coordinates of start frame in animatons.png */

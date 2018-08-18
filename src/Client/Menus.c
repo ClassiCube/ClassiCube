@@ -126,7 +126,7 @@ struct TexIdsOverlay {
 	MenuScreen_Layout
 	struct ButtonWidget* Buttons;
 	GfxResourceID DynamicVb;
-	Int32 XOffset, YOffset, TileSize;
+	Int32 XOffset, YOffset, TileSize, BaseTexLoc;
 	struct TextAtlas IdAtlas;
 	struct TextWidget Title;
 };
@@ -3017,7 +3017,7 @@ static void Overlay_UseVTABLE(struct MenuScreen* screen, struct GuiElementVTABLE
 /*########################################################################################################################*
 *------------------------------------------------------TexIdsOverlay------------------------------------------------------*
 *#########################################################################################################################*/
-#define TEXID_OVERLAY_VERTICES_COUNT (ATLAS2D_TILES_PER_ROW * ATLAS2D_MAX_ROWS_COUNT * 4)
+#define TEXID_OVERLAY_VERTICES_COUNT (ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW * 4)
 struct GuiElementVTABLE TexIdsOverlay_VTABLE;
 struct TexIdsOverlay TexIdsOverlay_Instance;
 static void TexIdsOverlay_ContextLost(void* obj) {
@@ -3039,7 +3039,7 @@ static void TexIdsOverlay_ContextRecreated(void* obj) {
 	size = (size / 8) * 8;
 	Math_Clamp(size, 8, 40);
 
-	screen->XOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_MAX_ROWS_COUNT,   Game_Width);
+	screen->XOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas2D_RowsCount,     Game_Width);
 	screen->YOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Game_Height);
 	screen->TileSize = size;
 
@@ -3050,15 +3050,14 @@ static void TexIdsOverlay_ContextRecreated(void* obj) {
 
 static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* screen) {
 	VertexP3fT2fC4b vertices[TEXID_OVERLAY_VERTICES_COUNT];
-	Int32 elemsPerAtlas = Atlas1D_TilesPerAtlas, i;
-	for (i = 0; i < ATLAS2D_TILES_PER_ROW * ATLAS2D_MAX_ROWS_COUNT;) {
+	Int32 i, texIdx;
+	for (i = 0; i < ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW;) {
 		VertexP3fT2fC4b* ptr = vertices;
-		Int32 j, ignored, size = screen->TileSize;
+		Int32 size = screen->TileSize, end = i + Atlas1D_TilesPerAtlas;
 
-		for (j = 0; j < elemsPerAtlas; j++) {
-			struct TextureRec rec = Atlas1D_TexRec(i + j, 1, &ignored);
-			Int32 x = (i + j) % ATLAS2D_TILES_PER_ROW;
-			Int32 y = (i + j) / ATLAS2D_TILES_PER_ROW;
+		for (; i < end; i++) {
+			struct TextureRec rec = Atlas1D_TexRec(i + screen->BaseTexLoc, 1, &texIdx);
+			Int32 x = Atlas2D_TileX(i), y = Atlas2D_TileY(i);
 
 			struct Texture tex;
 			Texture_FromRec(&tex, NULL, screen->XOffset + x * size,
@@ -3068,8 +3067,7 @@ static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* screen) {
 			GfxCommon_Make2DQuad(&tex, col, &ptr);
 		}
 
-		Gfx_BindTexture(Atlas1D_TexIds[i / elemsPerAtlas]);
-		i += elemsPerAtlas;
+		Gfx_BindTexture(Atlas1D_TexIds[texIdx]);
 		Int32 count = (Int32)(ptr - vertices);
 		GfxCommon_UpdateDynamicVb_IndexedTris(screen->DynamicVb, vertices, count);
 	}
@@ -3082,11 +3080,12 @@ static void TexIdsOverlay_RenderTextOverlay(struct TexIdsOverlay* screen) {
 
 	struct TextAtlas* idAtlas = &screen->IdAtlas;
 	idAtlas->Tex.Y = (screen->YOffset + (size - idAtlas->Tex.Height));
-	for (y = 0; y < ATLAS2D_MAX_ROWS_COUNT; y++) {
+
+	for (y = 0; y < ATLAS2D_TILES_PER_ROW; y++) {
 		for (x = 0; x < ATLAS2D_TILES_PER_ROW; x++) {
 			idAtlas->CurX = screen->XOffset + size * x + 3; /* offset text by 3 pixels */
 			Int32 id = x + y * ATLAS2D_TILES_PER_ROW;
-			TextAtlas_AddInt(idAtlas, id, &ptr);
+			TextAtlas_AddInt(idAtlas, id + screen->BaseTexLoc, &ptr);
 		}
 		idAtlas->Tex.Y += size;
 
@@ -3110,8 +3109,19 @@ static void TexIdsOverlay_Render(struct GuiElem* elem, Real64 delta) {
 	Gfx_SetTexturing(true);
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Menu_Render((struct MenuBase*)elem, delta);
-	TexIdsOverlay_RenderTerrain(screen);
-	TexIdsOverlay_RenderTextOverlay(screen);
+
+	Int32 rows = Atlas2D_RowsCount, origXOffset = screen->XOffset;
+	screen->BaseTexLoc = 0;
+	while (rows > 0) {
+		TexIdsOverlay_RenderTerrain(screen);
+		TexIdsOverlay_RenderTextOverlay(screen);
+		rows -= ATLAS2D_TILES_PER_ROW;
+
+		screen->XOffset    += screen->TileSize      * ATLAS2D_TILES_PER_ROW;
+		screen->BaseTexLoc += ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW;
+	}
+
+	screen->XOffset = origXOffset;
 	Gfx_SetTexturing(false);
 }
 

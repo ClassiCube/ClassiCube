@@ -23,6 +23,7 @@
 #include "TexturePack.h"
 #include "Gui.h"
 #include "Errors.h"
+#include "TerrainAtlas.h"	
 
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
@@ -662,14 +663,15 @@ static void Classic_Tick(void) {
 
 Int32 cpe_serverExtensionsCount, cpe_pingTicks;
 Int32 cpe_envMapVer = 2, cpe_blockDefsExtVer = 2;
-bool cpe_twoWayPing;
+bool cpe_twoWayPing, cpe_extTextures;
 
-const UChar* cpe_clientExtensions[28] = {
+const UChar* cpe_clientExtensions[29] = {
 	"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 	"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap",
+	"ExtendedTextures",
 };
 static void CPE_SetMapEnvUrl(UInt8* data);
 
@@ -818,7 +820,7 @@ static void CPE_ExtEntry(UInt8* data) {
 		Net_PacketSizes[OPCODE_DEFINE_BLOCK_EXT] += 3;
 	} else if (String_CaselessEqualsConst(&ext, "ExtEntityPositions")) {
 		Net_PacketSizes[OPCODE_ENTITY_TELEPORT] += 6;
-		Net_PacketSizes[OPCODE_ADD_ENTITY] += 6;
+		Net_PacketSizes[OPCODE_ADD_ENTITY]      += 6;
 		Net_PacketSizes[OPCODE_EXT_ADD_ENTITY2] += 6;
 		cpe_extEntityPos = true;
 	} else if (String_CaselessEqualsConst(&ext, "TwoWayPing")) {
@@ -826,6 +828,10 @@ static void CPE_ExtEntry(UInt8* data) {
 	} else if (String_CaselessEqualsConst(&ext, "FastMap")) {
 		Net_PacketSizes[OPCODE_LEVEL_BEGIN] += 4;
 		cpe_fastMap = true;
+	} else if (String_CaselessEqualsConst(&ext, "ExtendedTextures")) {
+		Net_PacketSizes[OPCODE_DEFINE_BLOCK]     += 3;
+		Net_PacketSizes[OPCODE_DEFINE_BLOCK_EXT] += 6;
+		cpe_extTextures = true;
 	}
 }
 
@@ -1169,7 +1175,8 @@ static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
 	cpe_envMapVer = 2; cpe_blockDefsExtVer = 2;
-	cpe_needD3Fix = false; cpe_extEntityPos = false; cpe_twoWayPing = false; cpe_fastMap = false;
+	cpe_needD3Fix = false; cpe_extEntityPos = false; cpe_twoWayPing = false; 
+	cpe_extTextures = false; cpe_fastMap = false;
 	Game_UseCPEBlocks = false;
 	if (!Game_UseCPE) return;
 
@@ -1221,6 +1228,18 @@ static void BlockDefs_OnBlockUpdated(BlockID block, bool didBlockLight) {
 	if (Block_BlocksLight[block] != didBlockLight) { Lighting_Refresh(); }
 }
 
+static TextureLoc BlockDefs_Tex(UInt8** ptr) {
+	TextureLoc loc; UInt8* data = *ptr;
+
+	if (!cpe_extTextures) {
+		loc = *data++;
+	} else {
+		loc = Stream_GetU16_BE(data) % ATLAS1D_MAX_ATLASES; data += 2;
+	}
+
+	*ptr = data; return loc;
+}
+
 static BlockID BlockDefs_DefineBlockCommonStart(UInt8** ptr, bool uniqueSideTexs) {
 	UInt8* data = *ptr;
 	BlockID block = Handlers_ReadBlock(data);
@@ -1236,16 +1255,16 @@ static BlockID BlockDefs_DefineBlockCommonStart(UInt8** ptr, bool uniqueSideTexs
 	#define LOG_2 0.693147180559945
 	Block_SpeedMultiplier[block] = (Real32)Math_Exp(LOG_2 * multiplierExponent); /* pow(2, x) */
 
-	Block_SetTex(*data++, FACE_YMAX, block);
+	Block_SetTex(BlockDefs_Tex(&data), FACE_YMAX, block);
 	if (uniqueSideTexs) {
-		Block_SetTex(*data++, FACE_XMIN, block);
-		Block_SetTex(*data++, FACE_XMAX, block);
-		Block_SetTex(*data++, FACE_ZMIN, block);
-		Block_SetTex(*data++, FACE_ZMAX, block);
+		Block_SetTex(BlockDefs_Tex(&data), FACE_XMIN, block);
+		Block_SetTex(BlockDefs_Tex(&data), FACE_XMAX, block);
+		Block_SetTex(BlockDefs_Tex(&data), FACE_ZMIN, block);
+		Block_SetTex(BlockDefs_Tex(&data), FACE_ZMAX, block);
 	} else {
-		Block_SetSide(*data++, block);
+		Block_SetSide(BlockDefs_Tex(&data), block);
 	}
-	Block_SetTex(*data++, FACE_YMIN, block);
+	Block_SetTex(BlockDefs_Tex(&data), FACE_YMIN, block);
 
 	Block_BlocksLight[block] = *data++ == 0;
 	BlockDefs_OnBlockUpdated(block, didBlockLight);

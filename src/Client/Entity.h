@@ -113,13 +113,13 @@ void Entities_DrawShadows(void);
 
 #define TABLIST_MAX_NAMES 256
 StringsBuffer TabList_Buffer;
-UInt32 TabList_PlayerNames[TABLIST_MAX_NAMES];
-UInt32 TabList_ListNames[TABLIST_MAX_NAMES];
-UInt32 TabList_GroupNames[TABLIST_MAX_NAMES];
-UInt8 TabList_GroupRanks[TABLIST_MAX_NAMES];
+UInt16 TabList_PlayerNames[TABLIST_MAX_NAMES];
+UInt16 TabList_ListNames[TABLIST_MAX_NAMES];
+UInt16 TabList_GroupNames[TABLIST_MAX_NAMES];
+UInt8  TabList_GroupRanks[TABLIST_MAX_NAMES];
 bool TabList_Valid(EntityID id);
 bool TabList_Remove(EntityID id);
-void TabList_Set(EntityID id, STRING_PURE String* player, STRING_PURE String* list,  STRING_PURE String* group, UInt8 rank);
+void TabList_Set(EntityID id, STRING_PURE String* player, STRING_PURE String* list, STRING_PURE String* group, UInt8 rank);
 void TabList_MakeComponent(struct IGameComponent* comp);
 
 #define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_PlayerNames[id]);

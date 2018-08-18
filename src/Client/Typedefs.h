@@ -44,7 +44,7 @@ typedef UInt16 BlockID;
 typedef UInt8 BlockID;
 #endif
 typedef UInt8 EntityID;
-typedef UInt8 TextureLoc;
+typedef UInt16 TextureLoc;
 typedef UInt8 Face;
 typedef UInt32 ReturnCode;
 
