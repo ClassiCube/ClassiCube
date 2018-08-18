@@ -43,39 +43,41 @@ namespace ClassicalSharp.Textures {
 	
 	/// <summary> Represents a 2D packed texture atlas that has been converted into an array of 1D atlases. </summary>
 	public static class Atlas1D {
-		public static int TilesPerAtlas, AtlasesCount;
+		public static int TilesPerAtlas, AtlasesCount, Mask, Shift;
 		public static float invTileSize;		
 		internal static Game game;
 		public const int MaxAtlases = Atlas2D.MaxRowsCount * Atlas2D.TilesPerRow;
 		public static int[] TexIds = new int[MaxAtlases];
 		
 		public static TextureRec GetTexRec(int texLoc, int uCount, out int index) {
-			index = texLoc / TilesPerAtlas;
-			int y = texLoc % TilesPerAtlas;
+			index = texLoc >> Shift;
+			int y = texLoc &  Mask;
 			// Adjust coords to be slightly inside - fixes issues with AMD/ATI cards.
 			return new TextureRec(0, y * invTileSize, (uCount - 1) + 15.99f/16f, (15.99f/16f) * invTileSize);
 		}
 		
 		/// <summary> Returns the index of the 1D texture within the array of 1D textures
 		/// containing the given texture id. </summary>
-		public static int Get1DIndex(int texLoc) { return texLoc / TilesPerAtlas; }
+		public static int Get1DIndex(int texLoc) { return texLoc >> Shift; } // texLoc / TilesPerAtlas;
 		
 		/// <summary> Returns the index of the given texture id within a 1D texture. </summary>
-		public static int Get1DRowId(int texLoc) { return texLoc % TilesPerAtlas; }
+		public static int Get1DRowId(int texLoc) { return texLoc &  Mask;  } // texLoc % TilesPerAtlas
 		
 		public static void UpdateState() {
-			int tileSize = Atlas2D.TileSize;
-			int maxTiles = Atlas2D.RowsCount * Atlas2D.TilesPerRow;
-			int maxAtlasHeight = Math.Min(4096, game.Graphics.MaxTexHeight);
-			int maxTilesPerAtlas = maxAtlasHeight / tileSize;
-			
-			TilesPerAtlas = Math.Min(maxTilesPerAtlas, maxTiles);
-			AtlasesCount = Utils.CeilDiv(maxTiles, TilesPerAtlas);
-			invTileSize = 1f / TilesPerAtlas;
-			
+			int maxAtlasHeight   = Math.Min(4096, game.Graphics.MaxTexHeight);
+			int maxTilesPerAtlas = maxAtlasHeight / Atlas2D.TileSize;
+			int maxTiles         = Atlas2D.RowsCount * Atlas2D.TilesPerRow;
+
+			TilesPerAtlas   = Math.Min(maxTilesPerAtlas, maxTiles);
+			AtlasesCount    = Utils.CeilDiv(maxTiles, TilesPerAtlas);
+			int atlasHeight = TilesPerAtlas * Atlas2D.TileSize;
+
+			invTileSize = 1.0f / TilesPerAtlas;
+			Mask        = TilesPerAtlas - 1;
+			Shift       = Utils.Log2(TilesPerAtlas);
+
 			Utils.LogDebug("Loaded new atlas: {0} bmps, {1} per bmp", AtlasesCount, TilesPerAtlas);
-			int index = 0, atlasHeight = TilesPerAtlas * tileSize;
-			
+			int index = 0;			
 			using (FastBitmap atlas = new FastBitmap(Atlas2D.Atlas, true, true)) {
 				for (int i = 0; i < AtlasesCount; i++) {
 					Make1DTexture(i, atlas, atlasHeight, ref index);

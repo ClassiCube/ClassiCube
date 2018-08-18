@@ -161,9 +161,9 @@ namespace ClassicalSharp.Gui.Screens {
 			if (game.Fov != game.DefaultFov) statusBuffer.Append("Zoom fov ").AppendNum(lastFov).Append("  ");
 			if (fly) statusBuffer.Append("Fly ON   ");
 			
-			bool speeding = (speed || halfSpeed) && (hacks.CanSpeed || hacks.BaseHorSpeed > 1);
+			bool speeding = (speed || halfSpeed) && hacks.CanSpeed;
 			if (speeding) statusBuffer.Append("Speed ON   ");
-			if (noclip) statusBuffer.Append("Noclip ON   ");
+			if (noclip)   statusBuffer.Append("Noclip ON   ");
 			hackStates.SetText(statusBuffer.ToString());
 		}
 	}

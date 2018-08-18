@@ -125,8 +125,8 @@ namespace ClassicalSharp {
 		
 		void DrawLeftFace(int count) {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Left];
-			int i = texId / Atlas1D.TilesPerAtlas;
-			float vOrigin = (texId % Atlas1D.TilesPerAtlas) * Atlas1D.invTileSize;
+			int i = texId >> Atlas1D.Shift;
+			float vOrigin = (texId & Atlas1D.Mask) * Atlas1D.invTileSize;
 			int offset = (lightFlags >> Side.Left) & 1;
 			
 			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
@@ -164,8 +164,8 @@ namespace ClassicalSharp {
 
 		void DrawRightFace(int count) {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Right];
-			int i = texId / Atlas1D.TilesPerAtlas;
-			float vOrigin = (texId % Atlas1D.TilesPerAtlas) * Atlas1D.invTileSize;
+			int i = texId >> Atlas1D.Shift;
+			float vOrigin = (texId & Atlas1D.Mask) * Atlas1D.invTileSize;
 			int offset = (lightFlags >> Side.Right) & 1;
 			
 			float u1 = (count - minBB.Z), u2 = (1 - maxBB.Z) * 15.99f/16f;
@@ -203,8 +203,8 @@ namespace ClassicalSharp {
 
 		void DrawFrontFace(int count) {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Front];
-			int i = texId / Atlas1D.TilesPerAtlas;
-			float vOrigin = (texId % Atlas1D.TilesPerAtlas) * Atlas1D.invTileSize;
+			int i = texId >> Atlas1D.Shift;
+			float vOrigin = (texId & Atlas1D.Mask) * Atlas1D.invTileSize;
 			int offset = (lightFlags >> Side.Front) & 1;
 			
 			float u1 = (count - minBB.X), u2 = (1 - maxBB.X) * 15.99f/16f;
@@ -242,8 +242,8 @@ namespace ClassicalSharp {
 		
 		void DrawBackFace(int count) {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Back];
-			int i = texId / Atlas1D.TilesPerAtlas;
-			float vOrigin = (texId % Atlas1D.TilesPerAtlas) * Atlas1D.invTileSize;
+			int i = texId >> Atlas1D.Shift;
+			float vOrigin = (texId & Atlas1D.Mask) * Atlas1D.invTileSize;
 			int offset = (lightFlags >> Side.Back) & 1;
 			
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
@@ -281,8 +281,8 @@ namespace ClassicalSharp {
 		
 		void DrawBottomFace(int count) {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Bottom];
-			int i = texId / Atlas1D.TilesPerAtlas;
-			float vOrigin = (texId % Atlas1D.TilesPerAtlas) * Atlas1D.invTileSize;
+			int i = texId >> Atlas1D.Shift;
+			float vOrigin = (texId & Atlas1D.Mask) * Atlas1D.invTileSize;
 			int offset = (lightFlags >> Side.Bottom) & 1;
 			
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
@@ -320,8 +320,8 @@ namespace ClassicalSharp {
 
 		void DrawTopFace(int count) {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Top];
-			int i = texId / Atlas1D.TilesPerAtlas;
-			float vOrigin = (texId % Atlas1D.TilesPerAtlas) * Atlas1D.invTileSize;
+			int i = texId >> Atlas1D.Shift;
+			float vOrigin = (texId & Atlas1D.Mask) * Atlas1D.invTileSize;
 			int offset = (lightFlags >> Side.Top) & 1;
 
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;

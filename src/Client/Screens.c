@@ -338,8 +338,8 @@ static void StatusScreen_UpdateHackState(struct StatusScreen* screen) {
 	}
 	if (hacks->Flying) String_AppendConst(&status, "Fly ON   ");
 
-	bool speeding = (hacks->Speeding || hacks->HalfSpeeding) && (hacks->CanSpeed || hacks->BaseHorSpeed > 1);
-	if (speeding) String_AppendConst(&status, "Speed ON   ");
+	bool speeding = (hacks->Speeding || hacks->HalfSpeeding) && hacks->CanSpeed;
+	if (speeding)      String_AppendConst(&status, "Speed ON   ");
 	if (hacks->Noclip) String_AppendConst(&status, "Noclip ON   ");
 
 	TextWidget_SetText(&screen->HackStates, &status);

@@ -106,8 +106,8 @@ namespace ClassicalSharp {
 		static JavaRandom spriteRng = new JavaRandom(0);
 		protected virtual void DrawSprite(int count) {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Right];
-			int i = texId / Atlas1D.TilesPerAtlas;
-			float vOrigin = (texId % Atlas1D.TilesPerAtlas) * Atlas1D.invTileSize;
+			int i = texId >> Atlas1D.Shift;
+			float vOrigin = (texId & Atlas1D.Mask) * Atlas1D.invTileSize;
 			
 			float x1 = X + 2.50f/16, y1 = Y,     z1 = Z + 2.50f/16;
 			float x2 = X + 13.5f/16, y2 = Y + 1, z2 = Z + 13.5f/16;

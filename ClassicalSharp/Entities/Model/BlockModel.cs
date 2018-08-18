@@ -124,7 +124,7 @@ namespace ClassicalSharp.Model {
 		
 		int GetTex(int side) {
 			int texLoc = BlockInfo.GetTextureLoc(block, side);
-			texIndex = texLoc / Atlas1D.TilesPerAtlas;
+			texIndex = texLoc >> Atlas1D.Shift;;
 			
 			if (lastTexIndex != texIndex) Flush();
 			return texLoc;
