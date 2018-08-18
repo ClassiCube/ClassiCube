@@ -828,14 +828,8 @@ static UInt32 Vorbis_ReverseBits(UInt32 v) {
 	return v;
 }
 
-static UInt32 Vorbis_Log2(UInt32 v) {
-	UInt32 r = 0;
-	while (v >>= 1) r++;
-	return r;
-}
-
 void imdct_init(struct imdct_state* state, Int32 n) {
-	Int32 k, k2, n4 = n >> 2, n8 = n >> 3, log2_n = Vorbis_Log2(n);
+	Int32 k, k2, n4 = n >> 2, n8 = n >> 3, log2_n = Math_Log2(n);
 	Real32 *A = state->A, *B = state->B, *C = state->C;
 	state->n = n; state->log2_n = log2_n;
 

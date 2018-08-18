@@ -23,8 +23,7 @@ static void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
 		Random_InitFromCurrentTime(&L_rnd);
 		L_rndInitalised = true;
 	}
-	Int32 mask = size - 1;
-	Int32 shift = Math_Log2(size);
+	Int32 mask = size - 1, shift = Math_Log2(size);
 
 	Int32 x, y, i = 0;
 	for (y = 0; y < size; y++) {
@@ -221,8 +220,9 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, Int32
 		Bitmap_CopyBlock(x, data->FrameY, 0, 0, &anims_bmp, &animPart, size);
 	}
 
+	GfxResourceID tex = Atlas1D_TexIds[index_1D];
 	Int32 dstY = rowId_1D * Atlas2D_TileSize;
-	Gfx_UpdateTexturePart(Atlas1D_TexIds[index_1D], 0, dstY, &animPart, Gfx_Mipmaps);
+	if (tex) { Gfx_UpdateTexturePart(tex, 0, dstY, &animPart, Gfx_Mipmaps); }
 	if (size > ANIMS_FAST_SIZE) Mem_Free(&ptr);
 }
 

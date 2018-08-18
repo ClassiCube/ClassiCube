@@ -31,7 +31,7 @@ Real64 Math_FastTan(Real64 x);
 
 Int32 Math_Floor(Real32 value);
 Int32 Math_Ceil(Real32 value);
-Int32 Math_Log2(Int32 value);
+Int32 Math_Log2(UInt32 value);
 Int32 Math_CeilDiv(Int32 a, Int32 b);
 Int32 Math_Sign(Real32 value);
 

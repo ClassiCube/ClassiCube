@@ -227,8 +227,8 @@ static void TerrainParticle_Render(struct TerrainParticle* p, Real32 t, VertexP3
 
 static void Terrain_Update1DCounts(void) {
 	Int32 i;
-	for (i = 0; i < Atlas1D_Count; i++) {
-		Terrain_1DCount[i] = 0;
+	for (i = 0; i < ATLAS1D_MAX_ATLASES; i++) {
+		Terrain_1DCount[i]   = 0;
 		Terrain_1DIndices[i] = 0;
 	}
 	for (i = 0; i < Terrain_Count; i++) {

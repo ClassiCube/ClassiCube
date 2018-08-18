@@ -97,6 +97,9 @@ void Atlas1D_UpdateState(void) {
 	Int32 atlasHeight     = Atlas1D_TilesPerAtlas * Atlas2D_TileSize;
 
 	Atlas1D_InvTileSize = 1.0f / Atlas1D_TilesPerAtlas;
+	Atlas1D_Mask        = Atlas1D_TilesPerAtlas - 1;
+	Atlas1D_Shift       = Math_Log2(Atlas1D_TilesPerAtlas);
+
 	Atlas1D_Convert2DTo1D(atlasesCount, atlasHeight);
 }
 

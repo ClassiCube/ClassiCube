@@ -28,10 +28,10 @@ Int32 Math_Ceil(Real32 value) {
 	return valueI < value ? valueI + 1 : valueI;
 }
 
-Int32 Math_Log2(Int32 value) {
-	Int32 shift = 0;
-	while (value > 1) { shift++; value >>= 1; }
-	return shift;
+Int32 Math_Log2(UInt32 value) {
+	UInt32 r = 0;
+	while (value >>= 1) r++;
+	return r;
 }
 
 Int32 Math_CeilDiv(Int32 a, Int32 b) {
