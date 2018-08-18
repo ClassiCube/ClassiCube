@@ -3050,18 +3050,22 @@ static void TexIdsOverlay_ContextRecreated(void* obj) {
 
 static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* screen) {
 	VertexP3fT2fC4b vertices[TEXID_OVERLAY_VERTICES_COUNT];
-	Int32 i, texIdx;
+	Int32 i, size = screen->TileSize;
+
+	struct Texture tex;
+	tex.U1 = 0.0f; tex.U2 = UV2_Scale;
+	tex.Width = size; tex.Height = size;
+
 	for (i = 0; i < ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW;) {
 		VertexP3fT2fC4b* ptr = vertices;
-		Int32 size = screen->TileSize, end = i + Atlas1D_TilesPerAtlas;
+		Int32 texIdx = Atlas1D_Index(i + screen->BaseTexLoc), end = i + Atlas1D_TilesPerAtlas;
 
 		for (; i < end; i++) {
-			struct TextureRec rec = Atlas1D_TexRec(i + screen->BaseTexLoc, 1, &texIdx);
-			Int32 x = Atlas2D_TileX(i), y = Atlas2D_TileY(i);
+			tex.X = screen->XOffset + Atlas2D_TileX(i) * size;
+			tex.Y = screen->YOffset + Atlas2D_TileY(i) * size;
 
-			struct Texture tex;
-			Texture_FromRec(&tex, NULL, screen->XOffset + x * size,
-				screen->YOffset + y * size, size, size, rec);
+			tex.V1 = Atlas1D_RowId(i + screen->BaseTexLoc) * Atlas1D_InvTileSize;
+			tex.V2 = tex.V1                    + UV2_Scale * Atlas1D_InvTileSize;
 
 			PackedCol col = PACKEDCOL_WHITE;
 			GfxCommon_Make2DQuad(&tex, col, &ptr);

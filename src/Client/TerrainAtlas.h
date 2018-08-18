@@ -7,6 +7,8 @@
 */
 
 #define ATLAS2D_TILES_PER_ROW 16
+#define ATLAS2D_MASK 15
+#define ATLAS2D_SHIFT 4
 #define ATLAS2D_MAX_ROWS_COUNT 32
 #define ATLAS1D_MAX_ATLASES (ATLAS2D_TILES_PER_ROW * ATLAS2D_MAX_ROWS_COUNT)
 
@@ -17,8 +19,8 @@ Int32 Atlas1D_Mask, Atlas1D_Shift;
 Real32 Atlas1D_InvTileSize;
 GfxResourceID Atlas1D_TexIds[ATLAS1D_MAX_ATLASES];
 
-#define Atlas2D_TileX(texLoc) ((texLoc) % ATLAS2D_TILES_PER_ROW)
-#define Atlas2D_TileY(texLoc) ((texLoc) / ATLAS2D_TILES_PER_ROW)
+#define Atlas2D_TileX(texLoc) ((texLoc) &  ATLAS2D_MASK)  /* texLoc % ATLAS2D_TILES_PER_ROW */
+#define Atlas2D_TileY(texLoc) ((texLoc) >> ATLAS2D_SHIFT) /* texLoc / ATLAS2D_TILES_PER_ROW */
 /* Returns the index of the given tile id within a 1D atlas */
 #define Atlas1D_RowId(texLoc) ((texLoc)  & Atlas1D_Mask)  /* texLoc % Atlas1D_TilesPerAtlas */
 /* Returns the index of the 1D atlas within the array of 1D atlases that contains the given tile id */

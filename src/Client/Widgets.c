@@ -2319,6 +2319,9 @@ static void TextGroupWidget_UpdateDimensions(struct TextGroupWidget* widget) {
 
 struct Portion { Int16 Beg, Len, LineBeg, LineLen; };
 #define TEXTGROUPWIDGET_HTTP_LEN 7 /* length of http:// */
+#define TEXTGROUPWIDGET_URL 0x8000
+#define TEXTGROUPWIDGET_PACKED_LEN 0x7FFF
+
 Int32 TextGroupWidget_NextUrl(UChar* chars, Int32 charsLen, Int32 i) {
 	for (; i < charsLen; i++) {
 		if (!(chars[i] == 'h' || chars[i] == '&')) continue;
@@ -2367,7 +2370,7 @@ Int32 TextGroupWidget_UrlEnd(UChar* chars, Int32 charsLen, Int32* begs, Int32 be
 void TextGroupWidget_Output(struct Portion bit, Int32 lineBeg, Int32 lineEnd, struct Portion** portions) {
 	if (bit.Beg >= lineEnd || !bit.Len) return;
 	bit.LineBeg = bit.Beg;
-	bit.LineLen = bit.Len & 0x7FFF;
+	bit.LineLen = bit.Len & TEXTGROUPWIDGET_PACKED_LEN;
 
 	/* Adjust this portion to be within this line */
 	if (bit.Beg >= lineBeg) {
@@ -2417,7 +2420,7 @@ Int32 TextGroupWidget_Reduce(struct TextGroupWidget* widget, UChar* chars, Int32
 
 		/* add this url portion */
 		bit.Beg = nextStart;
-		bit.Len = (end - nextStart) | 0x8000;
+		bit.Len = (end - nextStart) | TEXTGROUPWIDGET_URL;
 		TextGroupWidget_Output(bit, begs[target], ends[target], &portions);
 	}
 	return (Int32)(portions - start);
@@ -2449,11 +2452,11 @@ bool TextGroupWidget_GetUrl(struct TextGroupWidget* widget, STRING_TRANSIENT Str
 	for (i = 0, x = 0; i < portionsCount; i++) {
 		struct Portion bit = portions[i];
 		args.Text = String_UNSAFE_Substring(&line, bit.LineBeg, bit.LineLen);
-		args.Font = (bit.Len & 0x8000) ? widget->UnderlineFont : widget->Font;
+		args.Font = (bit.Len & TEXTGROUPWIDGET_URL) ? widget->UnderlineFont : widget->Font;
 
 		Int32 width = Drawer2D_MeasureText(&args).Width;
-		if ((bit.Len & 0x8000) && mouseX >= x && mouseX < x + width) {
-			bit.Len &= 0x7FFF; 
+		if ((bit.Len & TEXTGROUPWIDGET_URL) && mouseX >= x && mouseX < x + width) {
+			bit.Len &= TEXTGROUPWIDGET_PACKED_LEN;
 			String url = String_Init(&chars[bit.Beg], bit.Len, bit.Len);
 
 			TextGroupWidget_FormatUrl(text, &url);
@@ -2503,7 +2506,7 @@ void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* widget, struct Texture
 	for (i = 0; i < portionsCount; i++) {
 		struct Portion bit = portions[i];
 		args->Text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
-		args->Font = (bit.Len & 0x8000) ? widget->UnderlineFont : widget->Font;
+		args->Font = (bit.Len & TEXTGROUPWIDGET_URL) ? widget->UnderlineFont : widget->Font;
 
 		partSizes[i] = Drawer2D_MeasureText(args);
 		total.Height = max(partSizes[i].Height, total.Height);
@@ -2517,7 +2520,7 @@ void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* widget, struct Texture
 		for (i = 0, x = 0; i < portionsCount; i++) {
 			struct Portion bit = portions[i];
 			args->Text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
-			args->Font = (bit.Len & 0x8000) ? widget->UnderlineFont : widget->Font;
+			args->Font = (bit.Len & TEXTGROUPWIDGET_URL) ? widget->UnderlineFont : widget->Font;
 
 			Drawer2D_DrawText(args, x, 0);
 			x += partSizes[i].Width;
@@ -2527,20 +2530,22 @@ void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* widget, struct Texture
 	Drawer2D_End();
 }
 
-void TextGroupWidget_SetText(struct TextGroupWidget* widget, Int32 index, STRING_PURE String* text) {
-	if (text->length > TEXTGROUPWIDGET_LEN) ErrorHandler_Fail("TextGroupWidget - too big text");
+void TextGroupWidget_SetText(struct TextGroupWidget* widget, Int32 index, STRING_PURE String* text_orig) {
+	String text = *text_orig;
+	text.length = min(text.length, TEXTGROUPWIDGET_LEN);
+
 	Gfx_DeleteTexture(&widget->Textures[index].ID);
-	Mem_Copy(TextGroupWidget_LineBuffer(widget, index), text->buffer, text->length);
-	widget->LineLengths[index] = (UInt8)text->length;
+	Mem_Copy(TextGroupWidget_LineBuffer(widget, index), text.buffer, text.length);
+	widget->LineLengths[index] = (UInt8)text.length;
 
 	struct Texture tex;
-	if (!Drawer2D_IsEmptyText(text)) {
-		struct DrawTextArgs args; DrawTextArgs_Make(&args, text, &widget->Font, true);
+	if (!Drawer2D_IsEmptyText(&text)) {
+		struct DrawTextArgs args; DrawTextArgs_Make(&args, &text, &widget->Font, true);
 
 		if (!TextGroupWidget_MightHaveUrls(widget)) {
 			Drawer2D_MakeTextTexture(&tex, &args, 0, 0);
 		} else {
-			TextGroupWidget_DrawAdvanced(widget, &tex, &args, index, text);
+			TextGroupWidget_DrawAdvanced(widget, &tex, &args, index, &text);
 		}
 		Drawer2D_ReducePadding_Tex(&tex, widget->Font.Size, 3);
 	} else {

@@ -54,7 +54,7 @@ struct TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index) 
 	rec.U1 = 0.0f; 
 	rec.V1 = y * Atlas1D_InvTileSize;
 	rec.U2 = (uCount - 1) + UV2_Scale;
-	rec.V2 = rec.V1 + UV2_Scale * Atlas1D_InvTileSize;
+	rec.V2 = rec.V1       + UV2_Scale * Atlas1D_InvTileSize;
 	return rec;
 }
 
