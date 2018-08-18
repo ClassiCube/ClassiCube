@@ -171,10 +171,10 @@ namespace ClassicalSharp {
 		}
 		
 		void LoadOptions() {
-			ClassicMode = Options.GetBool("mode-classic", false);
-			ClassicHacks = Options.GetBool(OptionsKey.AllowClassicHacks, false);
-			AllowCustomBlocks = Options.GetBool(OptionsKey.UseCustomBlocks, true);
-			UseCPE = Options.GetBool(OptionsKey.UseCPE, true);
+			ClassicMode = Options.GetBool(OptionsKey.ClassicMode, false);
+			ClassicHacks = Options.GetBool(OptionsKey.ClassicHacks, false);
+			AllowCustomBlocks = Options.GetBool(OptionsKey.CustomBlocks, true);
+			UseCPE = Options.GetBool(OptionsKey.CPE, true);
 			SimpleArmsAnim = Options.GetBool(OptionsKey.SimpleArmsAnim, false);
 			ChatLogging = Options.GetBool(OptionsKey.ChatLogging, true);
 			ClassicArmModel = Options.GetBool(OptionsKey.ClassicArmModel, ClassicMode);
@@ -193,7 +193,7 @@ namespace ClassicalSharp {
 			CameraClipping = Options.GetBool(OptionsKey.CameraClipping, true);
 			MaxChunkUpdates = Options.GetInt(OptionsKey.MaxChunkUpdates, 4, 1024, 30);
 			
-			AllowServerTextures = Options.GetBool(OptionsKey.UseServerTextures, true);
+			AllowServerTextures = Options.GetBool(OptionsKey.ServerTextures, true);
 			MouseSensitivity = Options.GetInt(OptionsKey.Sensitivity, 1, 100, 30);
 			ShowBlockInHand = Options.GetBool(OptionsKey.ShowBlockInHand, true);
 			InvertMouse = Options.GetBool(OptionsKey.InvertMouse, false);
@@ -213,9 +213,9 @@ namespace ClassicalSharp {
 			ChatScale = Options.GetFloat(OptionsKey.ChatScale, 0.35f, 5f, 1f);
 			ShowFPS = Options.GetBool(OptionsKey.ShowFPS, true);
 
-			UseClassicGui     = Options.GetBool(OptionsKey.UseClassicGui, true)      || ClassicMode;
-			UseClassicTabList = Options.GetBool(OptionsKey.UseClassicTabList, false) || ClassicMode;
-			UseClassicOptions = Options.GetBool(OptionsKey.UseClassicOptions, false) || ClassicMode;
+			UseClassicGui     = Options.GetBool(OptionsKey.ClassicGui, true)      || ClassicMode;
+			UseClassicTabList = Options.GetBool(OptionsKey.ClassicTabList, false) || ClassicMode;
+			UseClassicOptions = Options.GetBool(OptionsKey.ClassicOptions, false) || ClassicMode;
 			
 			TabAutocomplete = Options.GetBool(OptionsKey.TabAutocomplete, false);
 			FontName = Options.Get(OptionsKey.FontName, "Arial");

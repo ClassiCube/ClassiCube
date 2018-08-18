@@ -21,7 +21,7 @@ namespace Launcher {
 			if (Options.Get("nostalgia-classicbg", null) != null) {
 				ClassicBackground = Options.GetBool("nostalgia-classicbg", false);
 			} else {
-				ClassicBackground = Options.GetBool("mode-classic", false);
+				ClassicBackground = Options.GetBool(OptionsKey.ClassicMode, false);
 			}
 			
 			string texPack = Options.Get(OptionsKey.DefaultTexturePack, "default.zip");

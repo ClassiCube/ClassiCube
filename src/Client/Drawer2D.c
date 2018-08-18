@@ -20,7 +20,7 @@ void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, bo
 
 struct Bitmap Drawer2D_FontBitmap;
 struct Bitmap* Drawer2D_Cur;
-Int32 Drawer2D_BoxSize;
+Int32 Drawer2D_BoxSize = 8; /* avoid divide by 0 if default.png missing */
 /* So really 16 characters per row */
 #define DRAWER2D_LOG2_CHARS_PER_ROW 4
 Int32 Drawer2D_Widths[256];

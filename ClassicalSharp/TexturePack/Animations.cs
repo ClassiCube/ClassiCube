@@ -208,18 +208,17 @@ namespace ClassicalSharp.Textures {
 			for (int i = animations.Count - 1; i >= 0; i--) {
 				AnimationData a = animations[i];
 				int tileX = a.TexLoc % Atlas2D.TilesPerRow, tileY = a.TexLoc / Atlas2D.TilesPerRow;
+				int maxY = a.FrameY + a.FrameSize;
+				int maxX = a.FrameX + a.FrameSize * a.StatesCount;
 				
 				if (a.FrameSize > Atlas2D.TileSize || tileY >= Atlas2D.RowsCount) {
 					game.Chat.Add(String.Format(terrainFormat, tileX, tileY));
-					animations.RemoveAt(i);
+				} else if (maxX > animsBuffer.Width || maxY > animsBuffer.Height) {
+					game.Chat.Add(String.Format(format, tileX, tileY));
+				} else {
 					continue;
 				}
 				
-				int maxY = a.FrameY + a.FrameSize;
-				int maxX = a.FrameX + a.FrameSize * a.StatesCount;
-				if (maxX <= animsBuffer.Width && maxY <= animsBuffer.Height) continue;
-				
-				game.Chat.Add(String.Format(format, tileX, tileY));
 				animations.RemoveAt(i);
 			}
 		}

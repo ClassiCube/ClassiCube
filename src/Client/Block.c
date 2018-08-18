@@ -326,10 +326,13 @@ void Block_RecalculateBB(BlockID block) {
 	TextureLoc texLoc = Block_GetTexLoc(block, FACE_XMAX);
 	Int32 x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
 
-	Real32 minX = Block_GetSpriteBB_MinX(tileSize, x, y, bmp);
-	Real32 minY = Block_GetSpriteBB_MinY(tileSize, x, y, bmp);
-	Real32 maxX = Block_GetSpriteBB_MaxX(tileSize, x, y, bmp);
-	Real32 maxY = Block_GetSpriteBB_MaxY(tileSize, x, y, bmp);
+	Real32 minX = 0.0f, minY = 0.0f, maxX = 1.0f, maxY = 1.0f;
+	if (y < Atlas2D_RowsCount) {
+		minX = Block_GetSpriteBB_MinX(tileSize, x, y, bmp);
+		minY = Block_GetSpriteBB_MinY(tileSize, x, y, bmp);
+		maxX = Block_GetSpriteBB_MaxX(tileSize, x, y, bmp);
+		maxY = Block_GetSpriteBB_MaxY(tileSize, x, y, bmp);
+	}
 
 	Vector3 centre = VECTOR3_CONST(0.5f, 0.0f, 0.5f);
 	Vector3 minRaw = Vector3_RotateY3(minX - 0.5f, minY, 0.0f, 45.0f * MATH_DEG2RAD);

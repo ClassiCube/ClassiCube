@@ -326,10 +326,10 @@ static void Game_ExtractInitialTexturePack(void) {
 }
 
 static void Game_LoadOptions(void) {
-	Game_ClassicMode       = Options_GetBool("mode-classic", false);
-	Game_ClassicHacks      = Options_GetBool(OPT_ALLOW_CLASSIC_HACKS, false);
-	Game_AllowCustomBlocks = Options_GetBool(OPT_USE_CUSTOM_BLOCKS, true);
-	Game_UseCPE            = Options_GetBool(OPT_USE_CPE, true);
+	Game_ClassicMode       = Options_GetBool(OPT_CLASSIC_MODE, false);
+	Game_ClassicHacks      = Options_GetBool(OPT_CLASSIC_HACKS, false);
+	Game_AllowCustomBlocks = Options_GetBool(OPT_CUSTOM_BLOCKS, true);
+	Game_UseCPE            = Options_GetBool(OPT_CPE, true);
 	Game_SimpleArmsAnim    = Options_GetBool(OPT_SIMPLE_ARMS_ANIM, false);
 	Game_ChatLogging       = Options_GetBool(OPT_CHAT_LOGGING, true);
 	Game_ClassicArmModel   = Options_GetBool(OPT_CLASSIC_ARM_MODEL, Game_ClassicMode);
@@ -349,7 +349,7 @@ static void Game_LoadOptions(void) {
 	Game_CameraClipping    = Options_GetBool(OPT_CAMERA_CLIPPING, true);
 	Game_MaxChunkUpdates   = Options_GetInt(OPT_MAX_CHUNK_UPDATES, 4, 1024, 30);
 
-	Game_AllowServerTextures = Options_GetBool(OPT_USE_SERVER_TEXTURES, true);
+	Game_AllowServerTextures = Options_GetBool(OPT_SERVER_TEXTURES, true);
 	Game_MouseSensitivity    = Options_GetInt(OPT_SENSITIVITY, 1, 100, 30);
 	Game_ShowBlockInHand     = Options_GetBool(OPT_SHOW_BLOCK_IN_HAND, true);
 	Game_InvertMouse         = Options_GetBool(OPT_INVERT_MOUSE, false);
@@ -370,9 +370,9 @@ static void Game_LoadGuiOptions(void) {
 	Game_RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.35f, 5.0f, 1.0f);
 	Game_ShowFPS           = Options_GetBool(OPT_SHOW_FPS, true);
 
-	Game_UseClassicGui     = Options_GetBool(OPT_USE_CLASSIC_GUI, true)      || Game_ClassicMode;
-	Game_UseClassicTabList = Options_GetBool(OPT_USE_CLASSIC_TABLIST, false) || Game_ClassicMode;
-	Game_UseClassicOptions = Options_GetBool(OPT_USE_CLASSIC_OPTIONS, false) || Game_ClassicMode;
+	Game_UseClassicGui     = Options_GetBool(OPT_CLASSIC_GUI, true)      || Game_ClassicMode;
+	Game_UseClassicTabList = Options_GetBool(OPT_CLASSIC_TABLIST, false) || Game_ClassicMode;
+	Game_UseClassicOptions = Options_GetBool(OPT_CLASSIC_OPTIONS, false) || Game_ClassicMode;
 
 	Game_TabAutocomplete = Options_GetBool(OPT_TAB_AUTOCOMPLETE, false);
 	Options_Get(OPT_FONT_NAME, &Game_FontName, "Arial");

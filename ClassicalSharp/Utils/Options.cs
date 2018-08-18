@@ -59,15 +59,18 @@ namespace ClassicalSharp {
 		public const string ShowFPS = "gui-showfps";
 		public const string FontName = "gui-fontname";
 		public const string BlackText = "gui-blacktextshadows";
+		#endif
 		
-		public const string UseCustomBlocks = "nostalgia-customblocks";
-		public const string UseCPE = "nostalgia-usecpe";
-		public const string UseServerTextures = "nostalgia-servertextures";
-		public const string UseClassicGui = "nostalgia-classicgui";
+		public const string ClassicMode = "mode-classic";
+		public const string CustomBlocks = "nostalgia-customblocks";
+		public const string CPE = "nostalgia-usecpe";		
+		public const string ServerTextures = "nostalgia-servertextures";
+		public const string ClassicGui = "nostalgia-classicgui";
 		public const string SimpleArmsAnim = "nostalgia-simplearms";
-		public const string UseClassicTabList = "nostalgia-classictablist";
-		public const string UseClassicOptions = "nostalgia-classicoptions";
-		public const string AllowClassicHacks = "nostalgia-hacks";
+		public const string ClassicTabList = "nostalgia-classictablist";
+		public const string ClassicOptions = "nostalgia-classicoptions";
+		public const string ClassicHacks = "nostalgia-hacks";
+		#if !LAUNCHER
 		public const string ClassicArmModel = "nostalgia-classicarm";
 		public const string MaxChunkUpdates = "gfx-maxchunkupdates";
 	}

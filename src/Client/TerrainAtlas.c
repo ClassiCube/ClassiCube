@@ -7,16 +7,19 @@
 #include "Platform.h"
 
 void Atlas2D_UpdateState(struct Bitmap* bmp) {
-	Atlas2D_Bitmap = *bmp;
-	Atlas2D_TileSize = bmp->Width / ATLAS2D_TILES_PER_ROW;
+	Atlas2D_Bitmap    = *bmp;
+	Atlas2D_TileSize  = bmp->Width  / ATLAS2D_TILES_PER_ROW;
+	Atlas2D_RowsCount = bmp->Height / Atlas2D_TileSize;
+	Atlas2D_RowsCount = min(Atlas2D_RowsCount, ATLAS2D_MAX_ROWS_COUNT);
 	Block_RecalculateSpriteBB();
 }
 
 static GfxResourceID Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, struct Bitmap* element) {
 	Int32 size = Atlas2D_TileSize;
 	Int32 x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
-	Bitmap_CopyBlock(x * size, y * size, 0, 0, &Atlas2D_Bitmap, element, size);
+	if (y >= Atlas2D_RowsCount) return NULL;
 
+	Bitmap_CopyBlock(x * size, y * size, 0, 0, &Atlas2D_Bitmap, element, size);
 	return Gfx_CreateTexture(element, false, Gfx_Mipmaps);
 }
 
@@ -62,8 +65,8 @@ static void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 
 	Int32 index1D;
 	for (index1D = 0; index1D < Atlas1D_TilesPerAtlas; index1D++) {
-		Int32 atlasX = (*index % ATLAS2D_TILES_PER_ROW) * tileSize;
-		Int32 atlasY = (*index / ATLAS2D_TILES_PER_ROW) * tileSize;
+		Int32 atlasX = Atlas2D_TileX(*index) * tileSize;
+		Int32 atlasY = Atlas2D_TileY(*index) * tileSize;
 
 		Bitmap_CopyBlock(atlasX, atlasY, 0, index1D * tileSize,
 			&Atlas2D_Bitmap, &atlas1D, tileSize);
@@ -85,13 +88,13 @@ static void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
 }
 
 void Atlas1D_UpdateState(void) {
-	Int32 maxAtlasHeight = min(4096, Gfx_MaxTexHeight);
+	Int32 maxAtlasHeight   = min(4096, Gfx_MaxTexHeight);
 	Int32 maxTilesPerAtlas = maxAtlasHeight / Atlas2D_TileSize;
-	Int32 maxTiles = ATLAS2D_ROWS_COUNT * ATLAS2D_TILES_PER_ROW;
+	Int32 maxTiles         = Atlas2D_RowsCount * ATLAS2D_TILES_PER_ROW;
 
 	Atlas1D_TilesPerAtlas = min(maxTilesPerAtlas, maxTiles);
-	Int32 atlasesCount = Math_CeilDiv(maxTiles, Atlas1D_TilesPerAtlas);
-	Int32 atlasHeight = Atlas1D_TilesPerAtlas * Atlas2D_TileSize;
+	Int32 atlasesCount    = Math_CeilDiv(maxTiles, Atlas1D_TilesPerAtlas);
+	Int32 atlasHeight     = Atlas1D_TilesPerAtlas * Atlas2D_TileSize;
 
 	Atlas1D_InvTileSize = 1.0f / Atlas1D_TilesPerAtlas;
 	Atlas1D_Convert2DTo1D(atlasesCount, atlasHeight);

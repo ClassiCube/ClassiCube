@@ -2917,22 +2917,22 @@ static void NostalgiaScreen_SetAnim(STRING_PURE String* v) {
 }
 
 static void NostalgiaScreen_GetGui(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_UseClassicGui); }
-static void NostalgiaScreen_SetGui(STRING_PURE String* v) { Game_UseClassicGui = Menu_SetBool(v, OPT_USE_CLASSIC_GUI); }
+static void NostalgiaScreen_SetGui(STRING_PURE String* v) { Game_UseClassicGui = Menu_SetBool(v, OPT_CLASSIC_GUI); }
 
 static void NostalgiaScreen_GetList(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_UseClassicTabList); }
-static void NostalgiaScreen_SetList(STRING_PURE String* v) { Game_UseClassicTabList = Menu_SetBool(v, OPT_USE_CLASSIC_TABLIST); }
+static void NostalgiaScreen_SetList(STRING_PURE String* v) { Game_UseClassicTabList = Menu_SetBool(v, OPT_CLASSIC_TABLIST); }
 
 static void NostalgiaScreen_GetOpts(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_UseClassicOptions); }
-static void NostalgiaScreen_SetOpts(STRING_PURE String* v) { Game_UseClassicOptions = Menu_SetBool(v, OPT_USE_CLASSIC_OPTIONS); }
+static void NostalgiaScreen_SetOpts(STRING_PURE String* v) { Game_UseClassicOptions = Menu_SetBool(v, OPT_CLASSIC_OPTIONS); }
 
 static void NostalgiaScreen_GetCustom(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_AllowCustomBlocks); }
-static void NostalgiaScreen_SetCustom(STRING_PURE String* v) { Game_AllowCustomBlocks = Menu_SetBool(v, OPT_USE_CUSTOM_BLOCKS); }
+static void NostalgiaScreen_SetCustom(STRING_PURE String* v) { Game_AllowCustomBlocks = Menu_SetBool(v, OPT_CUSTOM_BLOCKS); }
 
 static void NostalgiaScreen_GetCPE(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_UseCPE); }
-static void NostalgiaScreen_SetCPE(STRING_PURE String* v) { Game_UseCPE = Menu_SetBool(v, OPT_USE_CPE); }
+static void NostalgiaScreen_SetCPE(STRING_PURE String* v) { Game_UseCPE = Menu_SetBool(v, OPT_CPE); }
 
 static void NostalgiaScreen_GetTexs(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_AllowServerTextures); }
-static void NostalgiaScreen_SetTexs(STRING_PURE String* v) { Game_AllowServerTextures = Menu_SetBool(v, OPT_USE_SERVER_TEXTURES); }
+static void NostalgiaScreen_SetTexs(STRING_PURE String* v) { Game_AllowServerTextures = Menu_SetBool(v, OPT_SERVER_TEXTURES); }
 
 static void NostalgiaScreen_SwitchBack(struct GuiElem* a, struct GuiElem* b) {
 	if (Game_UseClassicOptions) { Menu_SwitchPause(a, b); } else { Menu_SwitchOptions(a, b); }
@@ -3017,7 +3017,7 @@ static void Overlay_UseVTABLE(struct MenuScreen* screen, struct GuiElementVTABLE
 /*########################################################################################################################*
 *------------------------------------------------------TexIdsOverlay------------------------------------------------------*
 *#########################################################################################################################*/
-#define TEXID_OVERLAY_VERTICES_COUNT (ATLAS2D_TILES_PER_ROW * ATLAS2D_ROWS_COUNT * 4)
+#define TEXID_OVERLAY_VERTICES_COUNT (ATLAS2D_TILES_PER_ROW * ATLAS2D_MAX_ROWS_COUNT * 4)
 struct GuiElementVTABLE TexIdsOverlay_VTABLE;
 struct TexIdsOverlay TexIdsOverlay_Instance;
 static void TexIdsOverlay_ContextLost(void* obj) {
@@ -3039,7 +3039,7 @@ static void TexIdsOverlay_ContextRecreated(void* obj) {
 	size = (size / 8) * 8;
 	Math_Clamp(size, 8, 40);
 
-	screen->XOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_ROWS_COUNT,   Game_Width);
+	screen->XOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_MAX_ROWS_COUNT,   Game_Width);
 	screen->YOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Game_Height);
 	screen->TileSize = size;
 
@@ -3051,7 +3051,7 @@ static void TexIdsOverlay_ContextRecreated(void* obj) {
 static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* screen) {
 	VertexP3fT2fC4b vertices[TEXID_OVERLAY_VERTICES_COUNT];
 	Int32 elemsPerAtlas = Atlas1D_TilesPerAtlas, i;
-	for (i = 0; i < ATLAS2D_TILES_PER_ROW * ATLAS2D_ROWS_COUNT;) {
+	for (i = 0; i < ATLAS2D_TILES_PER_ROW * ATLAS2D_MAX_ROWS_COUNT;) {
 		VertexP3fT2fC4b* ptr = vertices;
 		Int32 j, ignored, size = screen->TileSize;
 
@@ -3082,7 +3082,7 @@ static void TexIdsOverlay_RenderTextOverlay(struct TexIdsOverlay* screen) {
 
 	struct TextAtlas* idAtlas = &screen->IdAtlas;
 	idAtlas->Tex.Y = (screen->YOffset + (size - idAtlas->Tex.Height));
-	for (y = 0; y < ATLAS2D_ROWS_COUNT; y++) {
+	for (y = 0; y < ATLAS2D_MAX_ROWS_COUNT; y++) {
 		for (x = 0; x < ATLAS2D_TILES_PER_ROW; x++) {
 			idAtlas->CurX = screen->XOffset + size * x + 3; /* offset text by 3 pixels */
 			Int32 id = x + y * ATLAS2D_TILES_PER_ROW;

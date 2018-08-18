@@ -38,22 +38,22 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		static string GetGui(Game g) { return GetBool(g.UseClassicGui); }
-		static void SetGui(Game g, string v) { g.UseClassicGui = SetBool(v, OptionsKey.UseClassicGui); }
+		static void SetGui(Game g, string v) { g.UseClassicGui = SetBool(v, OptionsKey.ClassicGui); }
 		
 		static string GetList(Game g) { return GetBool(g.UseClassicTabList); }
-		static void SetList(Game g, string v) { g.UseClassicTabList = SetBool(v, OptionsKey.UseClassicTabList); }
+		static void SetList(Game g, string v) { g.UseClassicTabList = SetBool(v, OptionsKey.ClassicTabList); }
 		
 		static string GetOpts(Game g) { return GetBool(g.UseClassicOptions); }
-		static void SetOpts(Game g, string v) { g.UseClassicOptions = SetBool(v, OptionsKey.UseClassicOptions); }
+		static void SetOpts(Game g, string v) { g.UseClassicOptions = SetBool(v, OptionsKey.ClassicOptions); }
 		
 		static string GetCustom(Game g) { return GetBool(g.AllowCustomBlocks); }
-		static void SetCustom(Game g, string v) { g.AllowCustomBlocks = SetBool(v, OptionsKey.UseCustomBlocks); }
+		static void SetCustom(Game g, string v) { g.AllowCustomBlocks = SetBool(v, OptionsKey.CustomBlocks); }
 		
 		static string GetCPE(Game g) { return GetBool(g.UseCPE); }
-		static void SetCPE(Game g, string v) { g.UseCPE = SetBool(v, OptionsKey.UseCPE); }
+		static void SetCPE(Game g, string v) { g.UseCPE = SetBool(v, OptionsKey.CPE); }
 		
 		static string GetTexs(Game g) { return GetBool(g.AllowServerTextures); }
-		static void SetTexs(Game g, string v) { g.AllowServerTextures = SetBool(v, OptionsKey.UseServerTextures); }
+		static void SetTexs(Game g, string v) { g.AllowServerTextures = SetBool(v, OptionsKey.ServerTextures); }
 		
 		static void SwitchBack(Game g, Widget w) {
 			if (g.UseClassicOptions) {

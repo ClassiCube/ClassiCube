@@ -168,7 +168,7 @@ static void Animations_ReadDescription(struct Stream* stream, STRING_PURE String
 		if (!Convert_TryParseUInt8(&parts[0], &tileX) || tileX >= ATLAS2D_TILES_PER_ROW) {
 			Chat_Add1("&cInvalid anim tile X coord: %s", &line); continue;
 		}
-		if (!Convert_TryParseUInt8(&parts[1], &tileY) || tileY >= ATLAS2D_ROWS_COUNT) {
+		if (!Convert_TryParseUInt8(&parts[1], &tileY) || tileY >= ATLAS2D_MAX_ROWS_COUNT) {
 			Chat_Add1("&cInvalid anim tile Y coord: %s", &line); continue;
 		}
 		if (!Convert_TryParseUInt16(&parts[2], &data.FrameX)) {
@@ -262,9 +262,9 @@ static void Animations_Validate(void) {
 		struct AnimationData data = anims_list[i];
 		Int32 maxY = data.FrameY + data.FrameSize;
 		Int32 maxX = data.FrameX + data.FrameSize * data.StatesCount;
-
 		Int32 tileX = Atlas2D_TileX(data.TexLoc), tileY = Atlas2D_TileY(data.TexLoc);
-		if (data.FrameSize > Atlas2D_TileSize) {
+
+		if (data.FrameSize > Atlas2D_TileSize || tileY >= Atlas2D_RowsCount) {
 			Chat_Add2("&cAnimation frames for tile (%i, %i) are bigger than the size of a tile in terrain.png", &tileX, &tileY);
 		} else if (maxX > anims_bmp.Width || maxY > anims_bmp.Height) {
 			Chat_Add2("&cSome of the animation frames for tile (%i, %i) are at coordinates outside animations.png", &tileX, &tileY);
