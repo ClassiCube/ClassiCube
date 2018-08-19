@@ -70,7 +70,7 @@ namespace SharpWave {
 			CheckError(result, "Open");
 		}
 		
-		public override void PlayData(int index, AudioChunk chunk) {
+		public override void BufferData(int index, AudioChunk chunk) {
 			if (chunk.Length > dataSizes[index]) {
 				IntPtr ptr = dataHandles[index];
 				if (ptr != IntPtr.Zero) Marshal.FreeHGlobal(ptr);
@@ -96,6 +96,8 @@ namespace SharpWave {
 			result = WinMM.waveOutWrite(devHandle, (IntPtr)hdr, waveHeaderSize);
 			CheckError(result, "Write");
 		}
+		
+		public override void Play() { }
 		
 		void ApplyVolume(IntPtr handle, AudioChunk chunk) {
 			if (volumePercent == 100) return;

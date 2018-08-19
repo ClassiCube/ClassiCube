@@ -48,12 +48,12 @@ namespace SharpWave {
 		
 		public override bool IsCompleted(int index) {
 			int processed = 0;
-			uint buffer = 0;			
+			uint buffer = 0;
 			lock (contextLock) {
 				MakeContextCurrent();
 				
 				AL.alGetSourcei(source, ALGetSourcei.BuffersProcessed, &processed);
-				CheckError("GetSources");			
+				CheckError("GetSources");
 				if (processed == 0) return completed[index];
 				
 				AL.alSourceUnqueueBuffers(source, 1, &buffer);
@@ -80,7 +80,7 @@ namespace SharpWave {
 			}
 		}
 		
-		public override void PlayData(int index, AudioChunk chunk) {
+		public override void BufferData(int index, AudioChunk chunk) {
 			fixed (byte* data = chunk.Data) {
 				uint buffer = bufferIDs[index];
 				completed[index] = false;
@@ -88,14 +88,20 @@ namespace SharpWave {
 				lock (contextLock) {
 					MakeContextCurrent();
 					AL.alBufferData(buffer, dataFormat, (IntPtr)data,
-					              chunk.Length, Format.SampleRate);
+					                chunk.Length, Format.SampleRate);
 					CheckError("BufferData");
 					
 					AL.alSourceQueueBuffers(source, 1, &buffer);
-					CheckError("QueueBuffers");				
-					AL.alSourcePlay(source);
-					CheckError("SourcePlay");
+					CheckError("QueueBuffers");
 				}
+			}
+		}
+		
+		public override void Play() {
+			lock (contextLock) {
+				MakeContextCurrent();
+				AL.alSourcePlay(source);
+				CheckError("SourcePlay");
 			}
 		}
 		

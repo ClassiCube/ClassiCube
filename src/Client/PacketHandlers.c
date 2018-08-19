@@ -932,6 +932,7 @@ static void CPE_MakeSelection(UInt8* data) {
 	p2.Z = (Int16)Stream_GetU16_BE(&data[4]);
 
 	PackedCol c; data += 6;
+	/* R,G,B,A are actually 16 bit unsigned integers */
 	c.R = data[1]; c.G = data[3]; c.B = data[5]; c.A = data[7];
 	Selections_Add(selectionId, p1, p2, c);
 }

@@ -11,11 +11,9 @@ namespace SharpWave {
 			chunk = new AudioChunk();
 		}
 
-		AudioChunk chunk, rawChunk;
+		AudioChunk chunk;
 		Stream input;
-		byte[] rawPcm;
-		int rawIndex;
-		
+
 		SyncState oy = new SyncState(); // sync and verify incoming physical bitstream
 		StreamState os = new StreamState(); // take physical pages, weld into a logical stream of packets
 		Page og = new Page(); // one Ogg bitstream page.  Vorbis packets are inside
