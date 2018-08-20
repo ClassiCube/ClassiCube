@@ -76,10 +76,10 @@ void IModel_Render(struct IModel* model, struct Entity* entity);
 void IModel_SetupState(struct IModel* model, struct Entity* entity);
 void IModel_UpdateVB(void);
 void IModel_ApplyTexture(struct Entity* entity);
-void IModel_DrawPart(struct ModelPart part);
-void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct ModelPart part, bool head);
+void IModel_DrawPart(struct ModelPart* part);
+void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct ModelPart* part, bool head);
 void IModel_RenderArm(struct IModel* model, struct Entity* entity);
-void IModel_DrawArmPart(struct ModelPart part);
+void IModel_DrawArmPart(struct ModelPart* part);
 
 /* Describes data for a box being built. */
 struct BoxDesc {

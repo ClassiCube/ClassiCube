@@ -182,13 +182,13 @@ static void ChickenModel_GetPickingBounds(struct AABB* bb) {
 
 static void ChickenModel_DrawModel(struct Entity* entity) {
 	IModel_ApplyTexture(entity);
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Chicken_Head,  true);
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Chicken_Head2, true);
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Chicken_Head3, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Chicken_Head,  true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Chicken_Head2, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Chicken_Head3, true);
 
-	IModel_DrawPart(Chicken_Torso);
-	IModel_DrawRotate(0, 0, -Math_AbsF(entity->Anim.LeftArmX), Chicken_LeftWing,  false);
-	IModel_DrawRotate(0, 0,  Math_AbsF(entity->Anim.LeftArmX), Chicken_RightWing, false);
+	IModel_DrawPart(&Chicken_Torso);
+	IModel_DrawRotate(0, 0, -Math_AbsF(entity->Anim.LeftArmX), &Chicken_LeftWing,  false);
+	IModel_DrawRotate(0, 0,  Math_AbsF(entity->Anim.LeftArmX), &Chicken_RightWing, false);
 
 	PackedCol col = IModel_Cols[0];
 	UInt32 i;
@@ -196,8 +196,8 @@ static void ChickenModel_DrawModel(struct Entity* entity) {
 		IModel_Cols[i] = PackedCol_Scale(col, 0.7f);
 	}
 
-	IModel_DrawRotate(entity->Anim.LeftLegX, 0, 0, Chicken_LeftLeg, false);
-	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, Chicken_RightLeg, false);
+	IModel_DrawRotate(entity->Anim.LeftLegX,  0, 0, &Chicken_LeftLeg, false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, &Chicken_RightLeg, false);
 	IModel_UpdateVB();
 }
 
@@ -264,13 +264,13 @@ static void CreeperModel_GetPickingBounds(struct AABB* bb) {
 
 static void CreeperModel_DrawModel(struct Entity* entity) {
 	IModel_ApplyTexture(entity);
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0.0f, 0.0f, Creeper_Head, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Creeper_Head, true);
 
-	IModel_DrawPart(Creeper_Torso);
-	IModel_DrawRotate(entity->Anim.LeftLegX, 0.0f, 0.0f, Creeper_LeftLegFront, false);
-	IModel_DrawRotate(entity->Anim.RightLegX, 0.0f, 0.0f, Creeper_RightLegFront, false);
-	IModel_DrawRotate(entity->Anim.RightLegX, 0.0f, 0.0f, Creeper_LeftLegBack, false);
-	IModel_DrawRotate(entity->Anim.LeftLegX, 0.0f, 0.0f, Creeper_RightLegBack, false);
+	IModel_DrawPart(&Creeper_Torso);
+	IModel_DrawRotate(entity->Anim.LeftLegX,  0, 0, &Creeper_LeftLegFront,  false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, &Creeper_RightLegFront, false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, &Creeper_LeftLegBack,   false);
+	IModel_DrawRotate(entity->Anim.LeftLegX,  0, 0, &Creeper_RightLegBack,  false);
 	IModel_UpdateVB();
 }
 
@@ -338,13 +338,13 @@ static void PigModel_GetPickingBounds(struct AABB* bb) {
 
 static void PigModel_DrawModel(struct Entity* entity) {
 	IModel_ApplyTexture(entity);
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0.0f, 0.0f, Pig_Head, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Pig_Head, true);
 
-	IModel_DrawPart(Pig_Torso);
-	IModel_DrawRotate(entity->Anim.LeftLegX, 0, 0, Pig_LeftLegFront, false);
-	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, Pig_RightLegFront, false);
-	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, Pig_LeftLegBack, false);
-	IModel_DrawRotate(entity->Anim.LeftLegX, 0, 0, Pig_RightLegBack, false);
+	IModel_DrawPart(&Pig_Torso);
+	IModel_DrawRotate(entity->Anim.LeftLegX,  0, 0, &Pig_LeftLegFront,  false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, &Pig_RightLegFront, false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, &Pig_LeftLegBack,   false);
+	IModel_DrawRotate(entity->Anim.LeftLegX,  0, 0, &Pig_RightLegBack,  false);
 	IModel_UpdateVB();
 }
 
@@ -457,24 +457,24 @@ static void SheepModel_GetPickingBounds(struct AABB* bb) {
 
 static void SheepModel_DrawModel(struct Entity* entity) {
 	IModel_ApplyTexture(entity);
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Sheep_Head, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Sheep_Head, true);
 
-	IModel_DrawPart(Sheep_Torso);
-	IModel_DrawRotate(entity->Anim.LeftLegX, 0, 0, Sheep_LeftLegFront, false);
-	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, Sheep_RightLegFront, false);
-	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, Sheep_LeftLegBack, false);
-	IModel_DrawRotate(entity->Anim.LeftLegX, 0, 0, Sheep_RightLegBack, false);
+	IModel_DrawPart(&Sheep_Torso);
+	IModel_DrawRotate(entity->Anim.LeftLegX,  0, 0, &Sheep_LeftLegFront,  false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, &Sheep_RightLegFront, false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, &Sheep_LeftLegBack,   false);
+	IModel_DrawRotate(entity->Anim.LeftLegX,  0, 0, &Sheep_RightLegBack,  false);
 	IModel_UpdateVB();
 
 	if (entity->ModelIsSheepNoFur) return;
 	Gfx_BindTexture(ModelCache_Textures[fur_Index].TexID);
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Fur_Head, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Fur_Head, true);
 
-	IModel_DrawPart(Fur_Torso);
-	IModel_DrawRotate(entity->Anim.LeftLegX, 0, 0, Fur_LeftLegFront, false);
-	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, Fur_RightLegFront, false);
-	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, Fur_LeftLegBack, false);
-	IModel_DrawRotate(entity->Anim.LeftLegX, 0, 0, Fur_RightLegBack, false);
+	IModel_DrawPart(&Fur_Torso);
+	IModel_DrawRotate(entity->Anim.LeftLegX,  0, 0, &Fur_LeftLegFront,  false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, &Fur_RightLegFront, false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, &Fur_LeftLegBack,   false);
+	IModel_DrawRotate(entity->Anim.LeftLegX,  0, 0, &Fur_RightLegBack,  false);
 	IModel_UpdateVB();
 }
 
@@ -545,18 +545,18 @@ static void SkeletonModel_GetPickingBounds(struct AABB* bb) {
 
 static void SkeletonModel_DrawModel(struct Entity* entity) {
 	IModel_ApplyTexture(entity);
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0.0f, 0.0f, Skeleton_Head, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Skeleton_Head, true);
 
-	IModel_DrawPart(Skeleton_Torso);
-	IModel_DrawRotate(entity->Anim.LeftLegX, 0.0f, 0.0f, Skeleton_LeftLeg, false);
-	IModel_DrawRotate(entity->Anim.RightLegX, 0.0f, 0.0f, Skeleton_RightLeg, false);
-	IModel_DrawRotate(90.0f * MATH_DEG2RAD, 0.0f, entity->Anim.LeftArmZ, Skeleton_LeftArm, false);
-	IModel_DrawRotate(90.0f * MATH_DEG2RAD, 0.0f, entity->Anim.RightArmZ, Skeleton_RightArm, false);
+	IModel_DrawPart(&Skeleton_Torso);
+	IModel_DrawRotate(entity->Anim.LeftLegX,  0, 0,                      &Skeleton_LeftLeg, false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0,                      &Skeleton_RightLeg, false);
+	IModel_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.LeftArmZ,  &Skeleton_LeftArm,  false);
+	IModel_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.RightArmZ, &Skeleton_RightArm, false);
 	IModel_UpdateVB();
 }
 
 static void SkeletonModel_DrawArm(struct Entity* entity) {
-	IModel_DrawArmPart(Skeleton_RightArm);
+	IModel_DrawArmPart(&Skeleton_RightArm);
 	IModel_UpdateVB();
 }
 
@@ -623,24 +623,24 @@ static void SpiderModel_GetPickingBounds(struct AABB* bb) {
 
 static void SpiderModel_DrawModel(struct Entity* entity) {
 	IModel_ApplyTexture(entity);
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Spider_Head, true);
-	IModel_DrawPart(Spider_Link);
-	IModel_DrawPart(Spider_End);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Spider_Head, true);
+	IModel_DrawPart(&Spider_Link);
+	IModel_DrawPart(&Spider_End);
 
 	Real32 rotX = Math_SinF(entity->Anim.WalkTime)     * entity->Anim.Swing * MATH_PI;
 	Real32 rotZ = Math_CosF(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 16.0f;
 	Real32 rotY = Math_SinF(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 32.0f;
 	IModel_Rotation = ROTATE_ORDER_XZY;
 
-	IModel_DrawRotate(rotX, quarterPi + rotY, eighthPi + rotZ, Spider_LeftLeg, false);
-	IModel_DrawRotate(-rotX, eighthPi + rotY, eighthPi + rotZ, Spider_LeftLeg, false);
-	IModel_DrawRotate(rotX, -eighthPi - rotY, eighthPi - rotZ, Spider_LeftLeg, false);
-	IModel_DrawRotate(-rotX, -quarterPi - rotY, eighthPi - rotZ, Spider_LeftLeg, false);
+	IModel_DrawRotate(rotX,  quarterPi  + rotY, eighthPi + rotZ, &Spider_LeftLeg, false);
+	IModel_DrawRotate(-rotX,  eighthPi  + rotY, eighthPi + rotZ, &Spider_LeftLeg, false);
+	IModel_DrawRotate(rotX,  -eighthPi  - rotY, eighthPi - rotZ, &Spider_LeftLeg, false);
+	IModel_DrawRotate(-rotX, -quarterPi - rotY, eighthPi - rotZ, &Spider_LeftLeg, false);
 
-	IModel_DrawRotate(rotX, -quarterPi + rotY, -eighthPi + rotZ, Spider_RightLeg, false);
-	IModel_DrawRotate(-rotX, -eighthPi + rotY, -eighthPi + rotZ, Spider_RightLeg, false);
-	IModel_DrawRotate(rotX, eighthPi - rotY, -eighthPi - rotZ, Spider_RightLeg, false);
-	IModel_DrawRotate(-rotX, quarterPi - rotY, -eighthPi - rotZ, Spider_RightLeg, false);
+	IModel_DrawRotate(rotX, -quarterPi + rotY, -eighthPi + rotZ, &Spider_RightLeg, false);
+	IModel_DrawRotate(-rotX, -eighthPi + rotY, -eighthPi + rotZ, &Spider_RightLeg, false);
+	IModel_DrawRotate(rotX,   eighthPi - rotY, -eighthPi - rotZ, &Spider_RightLeg, false);
+	IModel_DrawRotate(-rotX, quarterPi - rotY, -eighthPi - rotZ, &Spider_RightLeg, false);
 
 	IModel_Rotation = ROTATE_ORDER_ZYX;
 	IModel_UpdateVB();
@@ -716,20 +716,20 @@ static void ZombieModel_GetPickingBounds(struct AABB* bb) {
 
 static void ZombieModel_DrawModel(struct Entity* entity) {
 	IModel_ApplyTexture(entity);
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0.0f, 0.0f, Zombie_Head, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Zombie_Head, true);
 
-	IModel_DrawPart(Zombie_Torso);
-	IModel_DrawRotate(entity->Anim.LeftLegX, 0.0f, 0.0f, Zombie_LeftLeg, false);
-	IModel_DrawRotate(entity->Anim.RightLegX, 0.0f, 0.0f, Zombie_RightLeg, false);
-	IModel_DrawRotate(90.0f * MATH_DEG2RAD, 0.0f, entity->Anim.LeftArmZ, Zombie_LeftArm, false);
-	IModel_DrawRotate(90.0f * MATH_DEG2RAD, 0.0f, entity->Anim.RightArmZ, Zombie_RightArm, false);
+	IModel_DrawPart(&Zombie_Torso);
+	IModel_DrawRotate(entity->Anim.LeftLegX,  0, 0,                      &Zombie_LeftLeg,  false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0,                      &Zombie_RightLeg, false);
+	IModel_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.LeftArmZ,  &Zombie_LeftArm,  false);
+	IModel_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.RightArmZ, &Zombie_RightArm, false);
 
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Zombie_Hat, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Zombie_Hat, true);
 	IModel_UpdateVB();
 }
 
 static void ZombieModel_DrawArm(struct Entity* entity) {
-	IModel_DrawArmPart(Zombie_RightArm);
+	IModel_DrawArmPart(&Zombie_RightArm);
 	IModel_UpdateVB();
 }
 
@@ -850,30 +850,30 @@ static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* models)
 	UInt8 type = IModel_skinType;
 	struct ModelSet* model = &models[type == SKIN_TYPE_64x64_SLIM ? 2 : (type == SKIN_TYPE_64x64 ? 1 : 0)];
 
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, model->Head, true);
-	IModel_DrawPart(model->Torso);
-	IModel_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  model->LeftLeg,  false);
-	IModel_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, model->RightLeg, false);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &model->Head, true);
+	IModel_DrawPart(&model->Torso);
+	IModel_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  &model->LeftLeg,  false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, &model->RightLeg, false);
 
 	IModel_Rotation = ROTATE_ORDER_XZY;
-	IModel_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  model->LeftArm,  false);
-	IModel_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, model->RightArm, false);
+	IModel_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  &model->LeftArm,  false);
+	IModel_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, &model->RightArm, false);
 	IModel_Rotation = ROTATE_ORDER_ZYX;
 	IModel_UpdateVB();
 
 	Gfx_SetAlphaTest(true);
 	IModel_ActiveModel->index = 0;
 	if (IModel_skinType != SKIN_TYPE_64x32) {
-		IModel_DrawPart(model->TorsoLayer);
-		IModel_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  model->LeftLegLayer,  false);
-		IModel_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, model->RightLegLayer, false);
+		IModel_DrawPart(&model->TorsoLayer);
+		IModel_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  &model->LeftLegLayer,  false);
+		IModel_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, &model->RightLegLayer, false);
 
 		IModel_Rotation = ROTATE_ORDER_XZY;
-		IModel_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  model->LeftArmLayer,  false);
-		IModel_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, model->RightArmLayer, false);
+		IModel_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  &model->LeftArmLayer,  false);
+		IModel_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, &model->RightArmLayer, false);
 		IModel_Rotation = ROTATE_ORDER_ZYX;
 	}
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, model->Hat, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &model->Hat, true);
 	IModel_UpdateVB();
 }
 
@@ -881,9 +881,9 @@ static void HumanModel_DrawArm(struct Entity* entity, struct ModelSet* models) {
 	UInt8 type = IModel_skinType;
 	struct ModelSet* model = &models[type == SKIN_TYPE_64x64_SLIM ? 2 : (type == SKIN_TYPE_64x64 ? 1 : 0)];
 
-	IModel_DrawArmPart(model->RightArm);
+	IModel_DrawArmPart(&model->RightArm);
 	if (IModel_skinType != SKIN_TYPE_64x32) {
-		IModel_DrawArmPart(model->RightArmLayer);
+		IModel_DrawArmPart(&model->RightArmLayer);
 	}
 	IModel_UpdateVB();
 }
@@ -1080,9 +1080,9 @@ static void HeadModel_DrawModel(struct Entity* entity) {
 	struct ModelPart part;
 
 	part = Humanoid_Set[0].Head; part.RotY += 4.0f / 16.0f;
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, part, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &part, true);
 	part = Humanoid_Set[0].Hat;  part.RotY += 4.0f / 16.0f;
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, part, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &part, true);
 
 	IModel_UpdateVB();
 }

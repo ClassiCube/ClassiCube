@@ -155,13 +155,13 @@ void IModel_ApplyTexture(struct Entity* entity) {
 	IModel_vScale = entity->vScale * (_64x64 ? 0.015625f : 0.03125f);
 }
 
-void IModel_DrawPart(struct ModelPart part) {
+void IModel_DrawPart(struct ModelPart* part) {
 	struct IModel* model = IModel_ActiveModel;
-	struct ModelVertex* src = &model->vertices[part.Offset];
+	struct ModelVertex* src = &model->vertices[part->Offset];
 	VertexP3fT2fC4b* dst = &ModelCache_Vertices[model->index];
-	Int32 i;
+	Int32 i, count = part->Count;
 
-	for (i = 0; i < part.Count; i++) {
+	for (i = 0; i < count; i++) {
 		struct ModelVertex v = *src;
 		dst->X = v.X; dst->Y = v.Y; dst->Z = v.Z;
 		dst->Col = IModel_Cols[i >> 2];
@@ -170,24 +170,25 @@ void IModel_DrawPart(struct ModelPart part) {
 		dst->V = (v.V & UV_POS_MASK) * IModel_vScale - (v.V >> UV_MAX_SHIFT) * 0.01f * IModel_vScale;
 		src++; dst++;
 	}
-	model->index += part.Count;
+	model->index += count;
 }
 
 #define IModel_RotateX t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t;
 #define IModel_RotateY t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z; v.X = t;
 #define IModel_RotateZ t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t;
 
-void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct ModelPart part, bool head) {
+void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct ModelPart* part, bool head) {
 	struct IModel* model = IModel_ActiveModel;
 	Real32 cosX = Math_CosF(-angleX), sinX = Math_SinF(-angleX);
 	Real32 cosY = Math_CosF(-angleY), sinY = Math_SinF(-angleY);
 	Real32 cosZ = Math_CosF(-angleZ), sinZ = Math_SinF(-angleZ);
-	Real32 x = part.RotX, y = part.RotY, z = part.RotZ;
+	Real32 x = part->RotX, y = part->RotY, z = part->RotZ;
 
-	struct ModelVertex* src = &model->vertices[part.Offset];
+	struct ModelVertex* src = &model->vertices[part->Offset];
 	VertexP3fT2fC4b* dst = &ModelCache_Vertices[model->index];
-	Int32 i;
-	for (i = 0; i < part.Count; i++) {
+	Int32 i, count = part->Count;
+
+	for (i = 0; i < count; i++) {
 		struct ModelVertex v = *src;
 		v.X -= x; v.Y -= y; v.Z -= z;
 		Real32 t = 0;
@@ -218,7 +219,7 @@ void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct Model
 		dst->V = (v.V & UV_POS_MASK) * IModel_vScale - (v.V >> UV_MAX_SHIFT) * 0.01f * IModel_vScale;
 		src++; dst++;
 	}
-	model->index += part.Count;
+	model->index += count;
 }
 
 void IModel_RenderArm(struct IModel* model, struct Entity* entity) {
@@ -251,15 +252,16 @@ void IModel_RenderArm(struct IModel* model, struct Entity* entity) {
 	Gfx_LoadMatrix(&Gfx_View);
 }
 
-void IModel_DrawArmPart(struct ModelPart part) {
+void IModel_DrawArmPart(struct ModelPart* part) {
 	struct IModel* model = IModel_ActiveModel;
-	part.RotX = model->armX / 16.0f; 
-	part.RotY = (model->armY + model->armY / 2) / 16.0f;
+	struct ModelPart arm = *part;
+	arm.RotX = model->armX / 16.0f; 
+	arm.RotY = (model->armY + model->armY / 2) / 16.0f;
 
 	if (Game_ClassicArmModel) {
-		IModel_DrawRotate(0, -90 * MATH_DEG2RAD, 120 * MATH_DEG2RAD, part, false);
+		IModel_DrawRotate(0, -90 * MATH_DEG2RAD, 120 * MATH_DEG2RAD, &arm, false);
 	} else {
-		IModel_DrawRotate(-20 * MATH_DEG2RAD, -70 * MATH_DEG2RAD, 135 * MATH_DEG2RAD, part, false);
+		IModel_DrawRotate(-20 * MATH_DEG2RAD, -70 * MATH_DEG2RAD, 135 * MATH_DEG2RAD, &arm, false);
 	}
 }
 
