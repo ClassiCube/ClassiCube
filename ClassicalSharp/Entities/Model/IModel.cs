@@ -197,10 +197,6 @@ namespace ClassicalSharp.Model {
 			return ModelBuilder.MakeBoxBounds(x1, y1, z1, x2, y2, z2);
 		}
 		
-		protected BoxDesc MakeRotatedBoxBounds(int x1, int y1, int z1, int x2, int y2, int z2) {
-			return ModelBuilder.MakeRotatedBoxBounds(x1, y1, z1, x2, y2, z2);
-		}
-		
 		protected ModelPart BuildBox(BoxDesc desc) {
 			return ModelBuilder.BuildBox(this, desc);
 		}

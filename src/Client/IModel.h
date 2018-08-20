@@ -104,12 +104,8 @@ void BoxDesc_RotOrigin(struct BoxDesc* desc, Int8 x, Int8 y, Int8 z);
 /* Swaps the min and max X around, resulting in the part being drawn mirrored. */
 void BoxDesc_MirrorX(struct BoxDesc* desc);
 
-/* Constructs a description of the given box, from two corners.
-See BoxDesc_BuildBox for details on texture layout. */
+/* Constructs a description of the given box, from two corners. */
 void BoxDesc_Box(struct BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2);
-/* Constructs a description of the given rotated box, from two corners.
-See BoxDesc_BuildRotatedBox for details on texture layout. */
-void BoxDesc_RotatedBox(struct BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2);
 
 /* Builds a box model assuming the follow texture layout:
 let SW = sides width, BW = body width, BH = body height

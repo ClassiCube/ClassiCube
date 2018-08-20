@@ -21,7 +21,7 @@ namespace ClassicalSharp.Model {
 			Head3 = BuildBox(MakeBoxBounds(-2, 11, -8, 2, 13, -6)
 			                 .TexOrigin(14, 0)
 			                 .RotOrigin(0, 9, -4));
-			Torso = BuildRotatedBox(MakeRotatedBoxBounds(-3, 5, -4, 3, 11, 3)
+			Torso = BuildRotatedBox(MakeBoxBounds(-3, 5, -4, 3, 11, 3)
 			                        .TexOrigin(0, 9));
 			
 			LeftWing = BuildBox(MakeBoxBounds(-4, 7, -3, -3, 11, 3)

@@ -301,24 +301,14 @@ void BoxDesc_MirrorX(struct BoxDesc* desc) {
 	Real32 temp = desc->X1; desc->X1 = desc->X2; desc->X2 = temp;
 }
 
-
-#define BoxDesc_InitBox(desc)\
-BoxDesc_TexOrigin(desc, 0, 0);\
-BoxDesc_RotOrigin(desc, 0, 0, 0);\
-BoxDesc_SetBounds(desc, (Real32)x1, (Real32)y1, (Real32)z1, (Real32)x2, (Real32)y2, (Real32)z2);\
-
 void BoxDesc_Box(struct BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2) {
-	BoxDesc_InitBox(desc);
-	desc->SidesW = Math_AbsI(z2 - z1);
-	desc->BodyW = Math_AbsI(x2 - x1);
-	desc->BodyH = Math_AbsI(y2 - y1);
-}
+	BoxDesc_TexOrigin(desc, 0, 0);
+	BoxDesc_RotOrigin(desc, 0, 0, 0);
+	BoxDesc_SetBounds(desc, (Real32)x1, (Real32)y1, (Real32)z1, (Real32)x2, (Real32)y2, (Real32)z2);
 
-void BoxDesc_RotatedBox(struct BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2) {
-	BoxDesc_InitBox(desc);
-	desc->SidesW = Math_AbsI(y2 - y1);
-	desc->BodyW = Math_AbsI(x2 - x1);
-	desc->BodyH = Math_AbsI(z2 - z1);
+	desc->SidesW = Math_AbsI(z2 - z1);
+	desc->BodyW  = Math_AbsI(x2 - x1);
+	desc->BodyH  = Math_AbsI(y2 - y1);
 }
 
 
@@ -341,7 +331,8 @@ void BoxDesc_BuildBox(struct ModelPart* part, struct BoxDesc* desc) {
 }
 
 void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc) {
-	Int32 sidesW = desc->SidesW, bodyW = desc->BodyW, bodyH = desc->BodyH;
+	/* need to swap SidesW and BodyH from MakeBoxBounds*/
+	Int32 sidesW = desc->BodyH, bodyW = desc->BodyW, bodyH = desc->SidesW;
 	Real32 x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
 	Int32 x = desc->TexX, y = desc->TexY;
