@@ -306,44 +306,43 @@ void BoxDesc_Box(struct BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, I
 	BoxDesc_RotOrigin(desc, 0, 0, 0);
 	BoxDesc_SetBounds(desc, (Real32)x1, (Real32)y1, (Real32)z1, (Real32)x2, (Real32)y2, (Real32)z2);
 
-	desc->SidesW = Math_AbsI(z2 - z1);
-	desc->BodyW  = Math_AbsI(x2 - x1);
-	desc->BodyH  = Math_AbsI(y2 - y1);
+	desc->SizeZ = Math_AbsI(z2 - z1);
+	desc->SizeX = Math_AbsI(x2 - x1);
+	desc->SizeY = Math_AbsI(y2 - y1);
 }
 
 
 void BoxDesc_BuildBox(struct ModelPart* part, struct BoxDesc* desc) {
-	Int32 sidesW = desc->SidesW, bodyW = desc->BodyW, bodyH = desc->BodyH;
+	Int32 sidesW = desc->SizeZ, bodyW = desc->SizeX, bodyH = desc->SizeY;
 	Real32 x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
 	Int32 x = desc->TexX, y = desc->TexY;
 	struct IModel* m = IModel_ActiveModel;
 
-	BoxDesc_YQuad(m, x + sidesW, y, bodyW, sidesW, x1, x2, z2, z1, y2, true); /* top */
-	BoxDesc_YQuad(m, x + sidesW + bodyW, y, bodyW, sidesW, x2, x1, z2, z1, y1, false); /* bottom */
-	BoxDesc_ZQuad(m, x + sidesW, y + sidesW, bodyW, bodyH, x1, x2, y1, y2, z1, true); /* front */
-	BoxDesc_ZQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x2, x1, y1, y2, z2, true); /* back */
-	BoxDesc_XQuad(m, x, y + sidesW, sidesW, bodyH, z1, z2, y1, y2, x2, true); /* left */
-	BoxDesc_XQuad(m, x + sidesW + bodyW, y + sidesW, sidesW, bodyH, z2, z1, y1, y2, x1, true); /* right */
+	BoxDesc_YQuad(m, x + sidesW,                  y,          bodyW, sidesW, x1, x2, z2, z1, y2, true);  /* top */
+	BoxDesc_YQuad(m, x + sidesW + bodyW,          y,          bodyW, sidesW, x2, x1, z2, z1, y1, false); /* bottom */
+	BoxDesc_ZQuad(m, x + sidesW,                  y + sidesW, bodyW,  bodyH, x1, x2, y1, y2, z1, true);  /* front */
+	BoxDesc_ZQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW,  bodyH, x2, x1, y1, y2, z2, true);  /* back */
+	BoxDesc_XQuad(m, x,                           y + sidesW, sidesW, bodyH, z1, z2, y1, y2, x2, true);  /* left */
+	BoxDesc_XQuad(m, x + sidesW + bodyW,          y + sidesW, sidesW, bodyH, z2, z1, y1, y2, x1, true);  /* right */
 
 	ModelPart_Init(part, m->index - IMODEL_BOX_VERTICES, IMODEL_BOX_VERTICES,
 		desc->RotX, desc->RotY, desc->RotZ);
 }
 
 void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc) {
-	/* need to swap SidesW and BodyH from MakeBoxBounds*/
-	Int32 sidesW = desc->BodyH, bodyW = desc->BodyW, bodyH = desc->SidesW;
+	Int32 sidesW = desc->SizeY, bodyW = desc->SizeX, bodyH = desc->SizeZ;
 	Real32 x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
 	Int32 x = desc->TexX, y = desc->TexY;
 	struct IModel* m = IModel_ActiveModel;
 
-	BoxDesc_YQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, z1, z2, y2, false); /* top */
-	BoxDesc_YQuad(m, x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, z1, z2, y1, false); /* bottom */
-	BoxDesc_ZQuad(m, x + sidesW, y, bodyW, sidesW, x2, x1, y1, y2, z1, false); /* front */
-	BoxDesc_ZQuad(m, x + sidesW + bodyW, y, bodyW, sidesW, x1, x2, y2, y1, z2, false); /* back */
-	BoxDesc_XQuad(m, x, y + sidesW, sidesW, bodyH, y2, y1, z2, z1, x2, false); /* left */
-	BoxDesc_XQuad(m, x + sidesW + bodyW, y + sidesW, sidesW, bodyH, y1, y2, z2, z1, x1, false); /* right */
+	BoxDesc_YQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW,  bodyH, x1, x2, z1, z2, y2, false); /* top */
+	BoxDesc_YQuad(m, x + sidesW,                  y + sidesW, bodyW,  bodyH, x2, x1, z1, z2, y1, false); /* bottom */
+	BoxDesc_ZQuad(m, x + sidesW,                  y,          bodyW, sidesW, x2, x1, y1, y2, z1, false); /* front */
+	BoxDesc_ZQuad(m, x + sidesW + bodyW,          y,          bodyW, sidesW, x1, x2, y2, y1, z2, false); /* back */
+	BoxDesc_XQuad(m, x,                           y + sidesW, sidesW, bodyH, y2, y1, z2, z1, x2, false); /* left */
+	BoxDesc_XQuad(m, x + sidesW + bodyW,          y + sidesW, sidesW, bodyH, y1, y2, z2, z1, x1, false); /* right */
 
 	/* rotate left and right 90 degrees	*/
 	Int32 i;

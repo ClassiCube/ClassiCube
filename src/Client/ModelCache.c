@@ -134,36 +134,41 @@ static void ChickenModel_MakeLeg(struct ModelPart* part, Int32 x1, Int32 x2, Int
 }
 
 static void ChickenModel_CreateParts(void) {
-	struct BoxDesc desc;
+	static struct BoxDesc head = {
+		BOXDESC_TEX(0,0),
+		BOXDESC_BOX(-2,9,-6, 2,15,-3),
+		BOXDESC_ROT(0,9,-4),
+	}; BoxDesc_BuildBox(&Chicken_Head, &head);
 
-	BoxDesc_Box(&desc, -2, 9, -6, 2, 15, -3);
-	BoxDesc_TexOrigin(&desc, 0, 0);
-	BoxDesc_RotOrigin(&desc, 0, 9, -4);
-	BoxDesc_BuildBox(&Chicken_Head, &desc);
+	static struct BoxDesc head2 = { /* TODO: Find a more appropriate name. */
+		BOXDESC_TEX(14,4),
+		BOXDESC_BOX(-1,9,-7, 1,11,-5),
+		BOXDESC_ROT(0,9,-4),
+	}; BoxDesc_BuildBox(&Chicken_Head2, &head2);
 
-	BoxDesc_Box(&desc, -1, 9, -7, 1, 11, -5);
-	BoxDesc_TexOrigin(&desc, 14, 4); /* TODO: Find a more appropriate name. */
-	BoxDesc_RotOrigin(&desc, 0, 9, -4);
-	BoxDesc_BuildBox(&Chicken_Head2, &desc);
+	static struct BoxDesc head3 = {
+		BOXDESC_TEX(14,0),
+		BOXDESC_BOX(-2,11,-8, 2,13,-6),
+		BOXDESC_ROT(0,9,-4),
+	}; BoxDesc_BuildBox(&Chicken_Head3, &head3);
 
-	BoxDesc_Box(&desc, -2, 11, -8, 2, 13, -6);
-	BoxDesc_TexOrigin(&desc, 14, 0);
-	BoxDesc_RotOrigin(&desc, 0, 9, -4);
-	BoxDesc_BuildBox(&Chicken_Head3, &desc);
+	static struct BoxDesc torso = {
+		BOXDESC_TEX(0,9),
+		BOXDESC_BOX(-3,5,-4, 3,11,3),
+		BOXDESC_ROT(0,5,0),
+	}; BoxDesc_BuildRotatedBox(&Chicken_Torso, &torso);
 
-	BoxDesc_Box(&desc, -3, 5, -4, 3, 11, 3);
-	BoxDesc_TexOrigin(&desc, 0, 9);
-	BoxDesc_BuildRotatedBox(&Chicken_Torso, &desc);
+	static struct BoxDesc lWing = {
+		BOXDESC_TEX(24,13),
+		BOXDESC_BOX(-4,7,-3, -3,11,3),
+		BOXDESC_ROT(-3,11,0),
+	}; BoxDesc_BuildBox(&Chicken_LeftWing, &lWing);
 
-	BoxDesc_Box(&desc, -4, 7, -3, -3, 11, 3);
-	BoxDesc_TexOrigin(&desc, 24, 13);
-	BoxDesc_RotOrigin(&desc, -3, 11, 0);
-	BoxDesc_BuildBox(&Chicken_LeftWing, &desc);
-
-	BoxDesc_Box(&desc, 3, 7, -3, 4, 11, 3);
-	BoxDesc_TexOrigin(&desc, 24, 13);
-	BoxDesc_RotOrigin(&desc, 3, 11, 0);
-	BoxDesc_BuildBox(&Chicken_RightWing, &desc);
+	static struct BoxDesc rWing = {
+		BOXDESC_TEX(24,13),
+		BOXDESC_BOX(3,7,-3, 4,11,3),
+		BOXDESC_ROT(3,11,0),
+	}; BoxDesc_BuildBox(&Chicken_RightWing, &rWing);
 
 	ChickenModel_MakeLeg(&Chicken_LeftLeg, -3, 0, -2, -1);
 	ChickenModel_MakeLeg(&Chicken_RightLeg, 0, 3, 1, 2);
@@ -287,8 +292,6 @@ struct ModelVertex PigModel_Vertices[IMODEL_BOX_VERTICES * 6];
 struct IModel PigModel;
 
 static void PigModel_CreateParts(void) {
-	struct BoxDesc desc;
-
 	static struct BoxDesc head = {
 		BOXDESC_TEX(0,0),
 		BOXDESC_BOX(-4,8,-14, 4,16,-6),
@@ -366,68 +369,84 @@ struct IModel SheepModel;
 Int32 fur_Index;
 
 static void SheepModel_CreateParts(void) {
-	struct BoxDesc desc;
+	static struct BoxDesc head = {
+		BOXDESC_TEX(0,0),
+		BOXDESC_BOX(-3,16,-14, 3,22,-6),
+		BOXDESC_ROT(0,18,-8),
+	}; BoxDesc_BuildBox(&Sheep_Head, &head);
 
-	BoxDesc_Box(&desc, -3, 16, -14, 3, 22, -6);
-	BoxDesc_TexOrigin(&desc, 0, 0);
-	BoxDesc_RotOrigin(&desc, 0, 18, -8);
-	BoxDesc_BuildBox(&Sheep_Head, &desc);
+	static struct BoxDesc torso = {
+		BOXDESC_TEX(28,8),
+		BOXDESC_BOX(-4,12,-8, 4,18,8),
+		BOXDESC_ROT(0,12,0),
+	}; BoxDesc_BuildRotatedBox(&Sheep_Torso, &torso);
+	
+	static struct BoxDesc lFront = {
+		BOXDESC_TEX(0,16),
+		BOXDESC_BOX(-5,0,-7, -1,12,-3),
+		BOXDESC_ROT(0,12,-5),
+	}; BoxDesc_BuildBox(&Sheep_LeftLegFront, &lFront);
 
-	BoxDesc_Box(&desc, -4, 12, -8, 4, 18, 8);
-	BoxDesc_TexOrigin(&desc, 28, 8);
-	BoxDesc_BuildRotatedBox(&Sheep_Torso, &desc);
+	static struct BoxDesc rFront = {
+		BOXDESC_TEX(0,16),
+		BOXDESC_BOX(1,0,-7, 5,12,-3),
+		BOXDESC_ROT(0,12,-5),
+	}; BoxDesc_BuildBox(&Sheep_RightLegFront, &rFront);
 
-	BoxDesc_Box(&desc, -5, 0, -7, -1, 12, -3);
-	BoxDesc_TexOrigin(&desc, 0, 16);
-	BoxDesc_RotOrigin(&desc, 0, 12, -5);
-	BoxDesc_BuildBox(&Sheep_LeftLegFront, &desc);
+	static struct BoxDesc lBack = {
+		BOXDESC_TEX(0,16),
+		BOXDESC_BOX(-5,0,5, -1,12,9),
+		BOXDESC_ROT(0,12,7),
+	}; BoxDesc_BuildBox(&Sheep_LeftLegBack, &lBack);
 
-	BoxDesc_Box(&desc, 1, 0, -7, 5, 12, -3);
-	BoxDesc_TexOrigin(&desc, 0, 16);
-	BoxDesc_RotOrigin(&desc, 0, 12, -5);
-	BoxDesc_BuildBox(&Sheep_RightLegFront, &desc);
-
-	BoxDesc_Box(&desc, -5, 0, 5, -1, 12, 9);
-	BoxDesc_TexOrigin(&desc, 0, 16);
-	BoxDesc_RotOrigin(&desc, 0, 12, 7);
-	BoxDesc_BuildBox(&Sheep_LeftLegBack, &desc);
-
-	BoxDesc_Box(&desc, 1, 0, 5, 5, 12, 9);
-	BoxDesc_TexOrigin(&desc, 0, 16);
-	BoxDesc_RotOrigin(&desc, 0, 12, 7);
-	BoxDesc_BuildBox(&Sheep_RightLegBack, &desc);
-
-
-	BoxDesc_Box(&desc, -3, -3, -3, 3, 3, 3);
-	BoxDesc_TexOrigin(&desc, 0, 0);
-	BoxDesc_SetBounds(&desc, -3.5f, 15.5f, -12.5f, 3.5f, 22.5f, -5.5f);
-	BoxDesc_RotOrigin(&desc, 0, 18, -8);
-	BoxDesc_BuildBox(&Fur_Head, &desc);
-
-	BoxDesc_Box(&desc, -4, 12, -8, 4, 18, 8);
-	BoxDesc_TexOrigin(&desc, 28, 8);
-	BoxDesc_SetBounds(&desc, -6.0f, 10.5f, -10.0f, 6.0f, 19.5f, 10.0f);
-	BoxDesc_BuildRotatedBox(&Fur_Torso, &desc);
+	static struct BoxDesc rBack = {
+		BOXDESC_TEX(0,16),
+		BOXDESC_BOX(1,0,5, 5,12,9),
+		BOXDESC_ROT(0,12,7),
+	}; BoxDesc_BuildBox(&Sheep_RightLegBack, &rBack);
 
 
-	BoxDesc_Box(&desc, -2, -3, -2, 2, 3, 2);
-	BoxDesc_TexOrigin(&desc, 0, 16);
+	static struct BoxDesc fHead = {
+		BOXDESC_TEX(0,0),
+		BOXDESC_DIMS(-3,16,-12, 3,22,-6),
+		BOXDESC_BOUNDS(-3.5f,15.5f,-12.5f, 3.5f,22.5f,-5.5f),
+		BOXDESC_ROT(0,18,-8),
+	}; BoxDesc_BuildBox(&Fur_Head, &fHead);
 
-	BoxDesc_SetBounds(&desc, -5.5f, 5.5f, -7.5f, -0.5f, 12.5f, -2.5f);
-	BoxDesc_RotOrigin(&desc, 0, 12, -5);
-	BoxDesc_BuildBox(&Fur_LeftLegFront, &desc);
+	static struct BoxDesc fTorso = {
+		BOXDESC_TEX(28,8),
+		BOXDESC_DIMS(-4,12,-8, 4,18,8),
+		BOXDESC_BOUNDS(-6.0f,10.5f,-10.0f, 6.0f,19.5f,10.0f),
+		BOXDESC_ROT(0,12,0),
+	}; BoxDesc_BuildRotatedBox(&Fur_Torso, &fTorso);
 
-	BoxDesc_SetBounds(&desc, 0.5f, 5.5f, -7.5f, 5.5f, 12.5f, -2.5f);
-	BoxDesc_RotOrigin(&desc, 0, 12, -5);
-	BoxDesc_BuildBox(&Fur_RightLegFront, &desc);
+	static struct BoxDesc flFront = {
+		BOXDESC_TEX(0,16),
+		BOXDESC_DIMS(-5,6,-7, -1,12,-3),
+		BOXDESC_BOUNDS(-5.5f,5.5f,-7.5f, -0.5f,12.5f,-2.5f),
+		BOXDESC_ROT(0,12,-5),
+	}; BoxDesc_BuildBox(&Fur_LeftLegFront, &flFront);
 
-	BoxDesc_SetBounds(&desc, -5.5f, 5.5f, 4.5f, -0.5f, 12.5f, 9.5f);
-	BoxDesc_RotOrigin(&desc, 0, 12, 7);
-	BoxDesc_BuildBox(&Fur_LeftLegBack, &desc);
+	static struct BoxDesc frFront = {
+		BOXDESC_TEX(0,16),
+		BOXDESC_DIMS(1,6,-7, 5,12,-3),
+		BOXDESC_BOUNDS(0.5f,5.5f,-7.5f, 5.5f,12.5f,-2.5f),
+		BOXDESC_ROT(0,12,-5),
+	}; BoxDesc_BuildBox(&Fur_RightLegFront, &frFront);
 
-	BoxDesc_SetBounds(&desc, 0.5f, 5.5f, 4.5f, 5.5f, 12.5f, 9.5f);
-	BoxDesc_RotOrigin(&desc, 0, 12, 7);
-	BoxDesc_BuildBox(&Fur_RightLegBack, &desc);
+	static struct BoxDesc flBack = {
+		BOXDESC_TEX(0,16),
+		BOXDESC_DIMS(-5,6,5, -1,12,9),
+		BOXDESC_BOUNDS(-5.5f,5.5f,4.5f, -0.5f,12.5f,9.5f),
+		BOXDESC_ROT(0,12,7),
+	}; BoxDesc_BuildBox(&Fur_LeftLegBack, &flBack);
+
+	static struct BoxDesc frBack = {
+		BOXDESC_TEX(0,16),
+		BOXDESC_DIMS(1,6,5, 5,12,9),
+		BOXDESC_BOUNDS(0.5f,5.5f,4.5f, 5.5f,12.5f,9.5f),
+		BOXDESC_ROT(0,12,7),
+	}; BoxDesc_BuildBox(&Fur_RightLegBack, &frBack);
 }
 
 static Real32 SheepModel_GetEyeY(struct Entity* entity) { return 20.0f / 16.0f; }
@@ -803,11 +822,11 @@ static void HumanModel_CreateParts(struct ModelSet* models) {
 	setSlim->LeftLeg  = set64->LeftLeg;
 	setSlim->RightLeg = set64->RightLeg;
 
-	lArm.BodyW -= 1; lArm.X1 += (offset * 2.0f) / 16.0f;
+	lArm.SizeX -= 1; lArm.X1 += (offset * 2.0f) / 16.0f;
 	BoxDesc_TexOrigin(&lArm, 32, 48);
 	BoxDesc_BuildBox(&setSlim->LeftArm, &lArm);
 
-	rArm.BodyW -= 1; rArm.X2 -= (offset * 2.0f) / 16.0f;
+	rArm.SizeX -= 1; rArm.X2 -= (offset * 2.0f) / 16.0f;
 	BoxDesc_TexOrigin(&rArm, 40, 16);
 	BoxDesc_BuildBox(&setSlim->RightArm, &rArm);
 
