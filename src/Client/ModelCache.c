@@ -23,7 +23,7 @@ UInt32 ModelCache_texCount, ModelCache_modelCount;
 #define BOXDESC_DIM(p1, p2) p1 < p2 ? p2 - p1 : p1 - p2
 
 #define BOXDESC_TEX(x, y)                 x,y
-#define BOXDESC_DIMS(x1,y1,z1,x2,y2,z2)   BOXDESC_DIM(z1,z2), BOXDESC_DIM(x1,x2), BOXDESC_DIM(y1,y2)
+#define BOXDESC_DIMS(x1,y1,z1,x2,y2,z2)   BOXDESC_DIM(x1,x2), BOXDESC_DIM(y1,y2), BOXDESC_DIM(z1,z2)
 #define BOXDESC_BOUNDS(x1,y1,z1,x2,y2,z2) x1/16.0f,x2/16.0f, y1/16.0f,y2/16.0f, z1/16.0f,z2/16.0f
 #define BOXDESC_ROT(x, y, z)              x/16.0f,y/16.0f,z/16.0f
 #define BOXDESC_BOX(x1,y1,z1,x2,y2,z2)    BOXDESC_DIMS(x1,y1,z1,x2,y2,z2), BOXDESC_BOUNDS(x1,y1,z1,x2,y2,z2)

@@ -84,7 +84,7 @@ void IModel_DrawArmPart(struct ModelPart* part);
 /* Describes data for a box being built. */
 struct BoxDesc {
 	/* Texture coordinates and dimensions. */
-	Int32 TexX, TexY, SizeZ, SizeX, SizeY;
+	Int32 TexX, TexY, SizeX, SizeY, SizeZ;
 	/* Box corner coordinates. */
 	Real32 X1, X2, Y1, Y2, Z1, Z2;
 	/* Coordinate around which this box is rotated. */

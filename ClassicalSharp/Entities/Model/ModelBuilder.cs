@@ -4,7 +4,7 @@ using System;
 namespace ClassicalSharp.Model {
 	
 	public struct BoxDesc {
-		public int TexX, TexY, SizeZ, SizeX, SizeY;
+		public int TexX, TexY, SidesW, BodyW, BodyH;
 		public float X1, X2, Y1, Y2, Z1, Z2;
 		public float RotX, RotY, RotZ;
 		
@@ -56,9 +56,9 @@ namespace ClassicalSharp.Model {
 		const ushort UVMaxBit = IModel.UVMaxBit;
 		public static BoxDesc MakeBoxBounds(int x1, int y1, int z1, int x2, int y2, int z2) {
 			BoxDesc desc = default(BoxDesc).SetModelBounds(x1, y1, z1, x2, y2, z2);
-			desc.SizeZ = Math.Abs(z2 - z1);
-			desc.SizeX = Math.Abs(x2 - x1);
-			desc.SizeY = Math.Abs(y2 - y1);
+			desc.SidesW = Math.Abs(z2 - z1);
+			desc.BodyW = Math.Abs(x2 - x1);
+			desc.BodyH = Math.Abs(y2 - y1);
 			return desc;
 		}
 		
@@ -76,7 +76,7 @@ namespace ClassicalSharp.Model {
 		/// ┃┈┈┈┈┈SW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┃┈┈┈┈┈SW┈┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┃ <br/>
 		/// ┗━━━━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━━━━━┛ </summary>
 		public static ModelPart BuildBox(IModel m, BoxDesc desc) {
-			int sidesW = desc.SizeZ, bodyW = desc.SizeX, bodyH = desc.SizeY;
+			int sidesW = desc.SidesW, bodyW = desc.BodyW, bodyH = desc.BodyH;
 			float x1 = desc.X1, y1 = desc.Y1, z1 = desc.Z1;
 			float x2 = desc.X2, y2 = desc.Y2, z2 = desc.Z2;
 			int x = desc.TexX, y = desc.TexY;
@@ -104,7 +104,7 @@ namespace ClassicalSharp.Model {
 		/// ┃┈┈┈┈┈SW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┃┈┈┈┈┈SW┈┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┃ <br/>
 		/// ┗━━━━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━━━━━┛ </summary>
 		public static ModelPart BuildRotatedBox(IModel m, BoxDesc desc) {
-			int sidesW = desc.SizeY, bodyW = desc.SizeX, bodyH = desc.SizeZ;
+			int sidesW = desc.BodyH, bodyW = desc.BodyW, bodyH = desc.SidesW;
 			float x1 = desc.X1, y1 = desc.Y1, z1 = desc.Z1;
 			float x2 = desc.X2, y2 = desc.Y2, z2 = desc.Z2;
 			int x = desc.TexX, y = desc.TexY;
