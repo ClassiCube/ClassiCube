@@ -24,7 +24,7 @@ UInt32 ModelCache_texCount, ModelCache_modelCount;
 
 #define BOXDESC_TEX(x, y)                 x,y
 #define BOXDESC_DIMS(x1,y1,z1,x2,y2,z2)   BOXDESC_DIM(x1,x2), BOXDESC_DIM(y1,y2), BOXDESC_DIM(z1,z2)
-#define BOXDESC_BOUNDS(x1,y1,z1,x2,y2,z2) x1/16.0f,x2/16.0f, y1/16.0f,y2/16.0f, z1/16.0f,z2/16.0f
+#define BOXDESC_BOUNDS(x1,y1,z1,x2,y2,z2) x1/16.0f,y1/16.0f,z1/16.0f, x2/16.0f,y2/16.0f,z2/16.0f
 #define BOXDESC_ROT(x, y, z)              x/16.0f,y/16.0f,z/16.0f
 #define BOXDESC_BOX(x1,y1,z1,x2,y2,z2)    BOXDESC_DIMS(x1,y1,z1,x2,y2,z2), BOXDESC_BOUNDS(x1,y1,z1,x2,y2,z2)
 
@@ -98,7 +98,6 @@ void ModelCache_RegisterTexture(STRING_REF const UChar* texName) {
 
 static void ModelCache_TextureChanged(void* obj, struct Stream* stream, String* name) {
 	UInt32 i;
-	String charPng = String_FromConst("char.png");
 	for (i = 0; i < ModelCache_texCount; i++) {
 		struct CachedTexture* tex = &ModelCache_Textures[i];
 		if (!String_CaselessEquals(&tex->Name, name)) continue;

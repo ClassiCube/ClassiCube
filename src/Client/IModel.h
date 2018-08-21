@@ -83,12 +83,10 @@ void IModel_DrawArmPart(struct ModelPart* part);
 
 /* Describes data for a box being built. */
 struct BoxDesc {
-	/* Texture coordinates and dimensions. */
-	Int32 TexX, TexY, SizeX, SizeY, SizeZ;
-	/* Box corner coordinates. */
-	Real32 X1, X2, Y1, Y2, Z1, Z2;
-	/* Coordinate around which this box is rotated. */
-	Real32 RotX, RotY, RotZ;
+	UInt16 TexX, TexY;         /* Texture origin */
+	UInt8 SizeX, SizeY, SizeZ; /* Texture dimensions */
+	Real32 X1,Y1,Z1, X2,Y2,Z2; /* Box corners coordinates */
+	Real32 RotX,RotY,RotZ;     /* Rotation origin point */
 };
 
 /* Sets the texture origin for this part within the texture atlas. */

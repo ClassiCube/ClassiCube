@@ -134,7 +134,7 @@ void Utils_UNSAFE_GetFilename(STRING_TRANSIENT String* str) {
 	for (i = str->length - 1; i >= 0; i--) {
 		UChar c = str->buffer[i];
 		if (c == '/' || c == '\\') { 
-			*str = String_UNSAFE_SubstringAt(str, i); return; 
+			*str = String_UNSAFE_SubstringAt(str, i + 1); return; 
 		}
 	}
 }
