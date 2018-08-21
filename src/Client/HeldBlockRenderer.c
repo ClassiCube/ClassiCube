@@ -71,11 +71,12 @@ static void HeldBlockRenderer_ResetHeldState(void) {
 
 	held_entity.HeadY = -45.0f; held_entity.RotY = -45.0f;
 	held_entity.HeadX = 0.0f;   held_entity.RotX = 0.0f;
-	held_entity.ModelBlock = held_block;
-	held_entity.SkinType   = player->SkinType;
-	held_entity.TextureId  = player->TextureId;
-	held_entity.uScale     = player->uScale;
-	held_entity.vScale     = player->vScale;
+	held_entity.ModelBlock   = held_block;
+	held_entity.SkinType     = player->SkinType;
+	held_entity.TextureId    = player->TextureId;
+	held_entity.MobTextureId = player->MobTextureId;
+	held_entity.uScale       = player->uScale;
+	held_entity.vScale       = player->vScale;
 }
 
 static void HeldBlockRenderer_SetBaseOffset(void) {

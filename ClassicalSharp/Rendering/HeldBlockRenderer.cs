@@ -110,9 +110,10 @@ namespace ClassicalSharp.Renderers {
 			
 			held.HeadY = -45; held.RotY = -45;
 			held.HeadX = 0; held.RotX = 0;
-			held.ModelBlock = block;
-			held.SkinType = p.SkinType;
-			held.TextureId = p.TextureId;
+			held.ModelBlock   = block;
+			held.SkinType     = p.SkinType;
+			held.TextureId    = p.TextureId;
+			held.MobTextureId = p.MobTextureId;
 			held.uScale = p.uScale;
 			held.vScale = p.vScale;
 		}
