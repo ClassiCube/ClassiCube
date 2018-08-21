@@ -23,10 +23,10 @@ namespace ClassicalSharp.Model {
 			
 			Set.Head = BuildBox(head.TexOrigin(0, 0));
 			Set.Torso = BuildBox(torso.TexOrigin(16, 16));
-			Set.LeftLeg = BuildBox(lLeg.MirrorX().TexOrigin(0, 16));
+			Set.LeftLeg = BuildBox(lLeg.TexOrigin(0, 16));
 			Set.RightLeg = BuildBox(rLeg.TexOrigin(0, 16));
 			Set.Hat = BuildBox(head.TexOrigin(32, 0).Expand(offset));
-			Set.LeftArm = BuildBox(lArm.MirrorX().TexOrigin(40, 16));
+			Set.LeftArm = BuildBox(lArm.TexOrigin(40, 16));
 			Set.RightArm = BuildBox(rArm.TexOrigin(40, 16));
 			lArm = lArm.MirrorX(); lLeg = lLeg.MirrorX();
 			
@@ -66,9 +66,9 @@ namespace ClassicalSharp.Model {
 		protected virtual void MakeDescriptions() {
 			head = MakeBoxBounds(-4, 24, -4, 4, 32, 4).RotOrigin(0, 24, 0);
 			torso = MakeBoxBounds(-4, 12, -2, 4, 24, 2);
-			lLeg = MakeBoxBounds(-4, 0, -2, 0, 12, 2).RotOrigin(0, 12, 0);
+			lLeg = MakeBoxBounds(0, 0, -2, -4, 12, 2).RotOrigin(0, 12, 0);
 			rLeg = MakeBoxBounds(0, 0, -2, 4, 12, 2).RotOrigin(0, 12, 0);
-			lArm = MakeBoxBounds(-8, 12, -2, -4, 24, 2).RotOrigin(-5, 22, 0);
+			lArm = MakeBoxBounds(-4, 12, -2, -8, 24, 2).RotOrigin(-5, 22, 0);
 			rArm = MakeBoxBounds(4, 12, -2, 8, 24, 2).RotOrigin(5, 22, 0);
 		}
 		
