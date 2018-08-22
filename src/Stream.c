@@ -314,7 +314,7 @@ ReturnCode Stream_ReadU32_BE(struct Stream* stream, UInt32* value) {
 /*########################################################################################################################*
 *--------------------------------------------------Read/Write strings-----------------------------------------------------*
 *#########################################################################################################################*/
-ReturnCode Stream_ReadUtf8Char(struct Stream* stream, UInt16* codepoint) {
+ReturnCode Stream_ReadUtf8(struct Stream* stream, UInt16* codepoint) {
 	UInt8 data;
 	ReturnCode res = stream->ReadU8(stream, &data);
 	if (res) return res;
@@ -326,7 +326,7 @@ ReturnCode Stream_ReadUtf8Char(struct Stream* stream, UInt16* codepoint) {
 	/* The remaining bits of the header form first part of the character */
 	Int32 byteCount = 0, i;
 	for (i = 7; i >= 0; i--) {
-		if ((data & (1 << i)) != 0) {
+		if (data & (1 << i)) {
 			byteCount++;
 			data &= (UInt8)~(1 << i);
 		} else {
@@ -351,7 +351,7 @@ ReturnCode Stream_ReadLine(struct Stream* stream, STRING_TRANSIENT String* text)
 	UInt16 codepoint;
 
 	for (;;) {	
-		ReturnCode res = Stream_ReadUtf8Char(stream, &codepoint);
+		ReturnCode res = Stream_ReadUtf8(stream, &codepoint);
 		if (res == ERR_END_OF_STREAM) break;
 		if (res) return res;
 
@@ -368,7 +368,7 @@ Int32 Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint) {
 	if (codepoint <= 0x7F) {
 		buffer[0] = codepoint;
 		return 1;
-	} else if (codepoint >= 0x80 && codepoint <= 0x7FF) {
+	} else if (codepoint <= 0x7FF) {
 		buffer[0] = 0xC0 | ((codepoint >> 6) & 0x1F);
 		buffer[1] = 0x80 | ((codepoint)      & 0x3F);
 		return 2;

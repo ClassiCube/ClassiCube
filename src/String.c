@@ -504,7 +504,7 @@ UChar Convert_UnicodeToCP437(UInt16 c) {
 }
 
 bool Convert_TryUnicodeToCP437(UInt16 c, UChar* value) {
-	if (c >= 0x20 && c < 0x7F) { *value = c; return true; }
+	if (c >= 0x20 && c < 0x7F) { *value = (UChar)c; return true; }
 	UInt32 i;
 
 	for (i = 0; i < Array_Elems(Convert_ControlChars); i++) {
@@ -522,7 +522,7 @@ void String_DecodeUtf8(STRING_TRANSIENT String* str, UInt8* data, UInt32 len) {
 	UInt16 codepoint;
 
 	while (mem.Meta.Mem.Left) {
-		ReturnCode res = Stream_ReadUtf8Char(&mem, &codepoint);
+		ReturnCode res = Stream_ReadUtf8(&mem, &codepoint);
 		if (res) break; /* Memory read only returns ERR_END_OF_STREAM */
 		String_Append(str, Convert_UnicodeToCP437(codepoint));
 	}
