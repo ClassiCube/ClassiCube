@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8A7D82BD-178A-4785-B41B-70EDE998920A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>Client</RootNamespace>
+    <RootNamespace>ClassiCube</RootNamespace>
     <WindowsTargetPlatformVersion>5.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -93,6 +93,8 @@
       <PrecompiledHeaderFile />
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <OutputPath>..\x86\Debug\</OutputPath>
+      <IntermediateOutputPath>..\x86\Debug\obj\</IntermediateOutputPath>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -114,6 +116,8 @@
       <PrecompiledHeaderFile />
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <OutputPath>..\x64\Debug\</OutputPath>
+      <IntermediateOutputPath>..\x64\Debug\obj\</IntermediateOutputPath>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -136,6 +140,8 @@
       <PrecompiledHeaderFile />
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <OutputPath>..\x86\Release\</OutputPath>
+      <IntermediateOutputPath>..\x86\Release\obj\</IntermediateOutputPath>
       <AdditionalOptions>
       </AdditionalOptions>
       <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
@@ -165,6 +171,8 @@
       <PrecompiledHeaderFile />
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <OutputPath>..\x64\Release\</OutputPath>
+      <IntermediateOutputPath>..\x64\Release\obj\</IntermediateOutputPath>
       <AdditionalOptions>
       </AdditionalOptions>
       <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
