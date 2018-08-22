@@ -1296,18 +1296,11 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 		return 0;
 	}
 
+	/* data returned is from centre of previous block to centre of current block */
+	/* data is aligned, such that 3/4 of prev block is aligned to 1/4 of cur block */
 	Int32 prevQrtr = ctx->PrevBlockSize / 4, curQrtr = ctx->CurBlockSize / 4;
-	Int32 prevHalf = prevQrtr * 2, curHalf = curQrtr * 2;
+	Int32 overlapQtr = min(curQrtr, prevQrtr);
 	
-	Real32* prev[VORBIS_MAX_CHANS];
-	Real32*  cur[VORBIS_MAX_CHANS];
-	Int32 offset = curHalf - prevHalf; offset = max(offset, 0);
-
-	for (i = 0; i < ctx->Channels; i++) {
-		prev[i] = ctx->PrevOutput[i] + prevHalf; /* data starts at halfway in previous block */
-		cur[i]   = ctx->CurOutput[i] + offset;   /* for when current block extends past prev block */
-	}
-
 	/* So for example, consider a short block overlapping with a long block
 	   a) we need to chop off 'prev' before its halfway point
 	   b) then need to chop off the 'cur' before the halfway point of 'prev'
@@ -1317,14 +1310,17 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 	          -  | * -        |           ***               | * -        |
 	   ******-***|*   -       |              ***            |*   -       |
 	*/
+	Real32* prev[VORBIS_MAX_CHANS];
+	Real32*  cur[VORBIS_MAX_CHANS];
+	Int32 curOffset = curQrtr - overlapQtr, prevOffset = prevQrtr - overlapQtr;
 
+	for (i = 0; i < ctx->Channels; i++) {
+		prev[i] = ctx->PrevOutput[i] + (prevQrtr * 2);
+		cur[i]  = ctx->CurOutput[i];
+	}
 
-	/* data returned is from centre of previous block to centre of current block */
-	/* 3/4 point of previous block is aligned to 1/4 of current block */
-	Int32 overlapBeg = prevQrtr - curQrtr; overlapBeg = max(overlapBeg, 0);
-	Int32 overlapEnd = prevQrtr + curQrtr; overlapEnd = min(overlapEnd, curHalf);
-
-	for (i = 0; i < overlapBeg; i++) {
+	/* for long prev and short cur block, there will be non-overlapped data before */
+	for (i = 0; i < prevOffset; i++) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
 			Real32 sample = prev[ch][i];
 			Math_Clamp(sample, -1.0f, 1.0f);
@@ -1332,8 +1328,14 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 		}
 	}
 
+	/* adjust pointers to start at 0 for overlapping */
+	for (i = 0; i < ctx->Channels; i++) {
+		prev[i] += prevOffset; cur[i] += curOffset;
+	}
+	Int32 overlapSize = overlapQtr * 2;
+
 	/* overlap and add data */
-	for (i = overlapBeg; i < overlapEnd; i++) {
+	for (i = 0; i < overlapSize; i++) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
 			Real32 sample = prev[ch][i] + cur[ch][i];
 			Math_Clamp(sample, -1.0f, 1.0f);
@@ -1341,7 +1343,9 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 		}
 	}
 
-	for (i = overlapEnd; i < curHalf; i++) {
+	/* for long cur and short prev block, there will be non-overlapped data after */
+	for (i = 0; i < ctx->Channels; i++) { cur[i] += overlapSize; }
+	for (i = 0; i < curOffset; i++) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
 			Real32 sample = cur[ch][i];
 			Math_Clamp(sample, -1.0f, 1.0f);
