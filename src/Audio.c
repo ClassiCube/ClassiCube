@@ -13,6 +13,33 @@
 #include "Chat.h"
 
 StringsBuffer files;
+static void Volume_Mix16(Int16* samples, Int32 count, Int32 volume) {
+	Int32 i;
+
+	for (i = 0; i < (count & ~0x07); i += 8, samples += 8) {
+		samples[0] = (samples[0] * volume / 100);
+		samples[1] = (samples[1] * volume / 100);
+		samples[2] = (samples[2] * volume / 100);
+		samples[3] = (samples[3] * volume / 100);
+
+		samples[4] = (samples[4] * volume / 100);
+		samples[5] = (samples[5] * volume / 100);
+		samples[6] = (samples[6] * volume / 100);
+		samples[7] = (samples[7] * volume / 100);
+	}
+
+	for (; i < count; i++, samples++) {
+		samples[0] = (samples[0] * volume / 100);
+	}
+}
+
+static void Volume_Mix8(UInt8* samples, Int32 count, Int32 volume) {
+	Int32 i;
+	for (i = 0; i < count; i++, samples++) {
+		samples[0] = (127 + (samples[0] - 127) * volume / 100);
+	}
+}
+
 /*########################################################################################################################*
 *------------------------------------------------------Soundboard---------------------------------------------------------*
 *#########################################################################################################################*/
@@ -153,15 +180,36 @@ struct Sound* Soundboard_PickRandom(struct Soundboard* board, UInt8 type) {
 /*########################################################################################################################*
 *--------------------------------------------------------Sounds-----------------------------------------------------------*
 *#########################################################################################################################*/
-struct Soundboard digBoard, stepBoard;
+struct SoundOutput { AudioHandle Handle; void* Buffer; UInt32 BufferSize; };
 #define AUDIO_MAX_HANDLES 6
-AudioHandle monoOutputs[AUDIO_MAX_HANDLES]   = { -1, -1, -1, -1, -1, -1 };
-AudioHandle stereoOutputs[AUDIO_MAX_HANDLES] = { -1, -1, -1, -1, -1, -1 };
+#define HANDLE_INV -1
+#define SOUND_INV { HANDLE_INV, NULL, 0 }
 
-static void Sounds_PlayRaw(AudioHandle output, struct Sound* snd, struct AudioFormat* fmt, Real32 volume) {
-	Audio_SetVolume(output, volume);
-	Audio_SetFormat(output, fmt);
-	Audio_PlayData(output, 0, snd->Data, snd->DataSize);
+struct Soundboard digBoard, stepBoard;
+struct SoundOutput monoOutputs[AUDIO_MAX_HANDLES]   = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
+struct SoundOutput stereoOutputs[AUDIO_MAX_HANDLES] = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
+
+static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct AudioFormat* fmt, Int32 volume) {
+	Audio_SetFormat(output->Handle, fmt);
+	void* buffer = snd->Data;
+	/* copy to temp buffer to apply volume */
+
+	if (volume < 100) {		
+		if (output->BufferSize < snd->DataSize) {
+			UInt32 expandBy = snd->DataSize - output->BufferSize;
+			Utils_Resize(&output->Buffer, &output->BufferSize, 1, 0, expandBy);
+		}
+		buffer = output->Buffer;
+
+		Mem_Copy(buffer, snd->Data, snd->DataSize);
+		if (fmt->BitsPerSample == 8) {
+			Volume_Mix8(buffer,  snd->DataSize,     volume);
+		} else {
+			Volume_Mix16(buffer, snd->DataSize / 2, volume);
+		}
+	}
+
+	Audio_PlayData(output->Handle, 0, buffer, snd->DataSize);
 	/* TODO: handle errors here */
 }
 
@@ -171,32 +219,28 @@ static void Sounds_Play(UInt8 type, struct Soundboard* board) {
 
 	if (snd == NULL) return;
 	struct AudioFormat fmt = snd->Format;
-	Real32 volume = Game_SoundsVolume / 100.0f;
+	Int32 volume = Game_SoundsVolume;
 
 	if (board == &digBoard) {
 		if (type == SOUND_METAL) fmt.SampleRate = (fmt.SampleRate * 6) / 5;
 		else fmt.SampleRate = (fmt.SampleRate * 4) / 5;
 	} else {
-		volume *= 0.50f;
+		volume /= 2;
 		if (type == SOUND_METAL) fmt.SampleRate = (fmt.SampleRate * 7) / 5;
 	}
 
-	AudioHandle* outputs = NULL;
-	if (fmt.Channels == 1) outputs = monoOutputs;
-	if (fmt.Channels == 2) outputs = stereoOutputs;
-	if (outputs == NULL) return; /* TODO: > 2 channel sound?? */
+	struct SoundOutput* outputs = fmt.Channels == 1 ? monoOutputs : stereoOutputs;
 	Int32 i;
 
 	/* Try to play on fresh device, or device with same data format */
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-		AudioHandle output = outputs[i];
-		if (output == -1) {
-			Audio_Init(&output, 1);
-			outputs[i] = output;
+		struct SoundOutput* output = &outputs[i];
+		if (output->Handle == HANDLE_INV) {
+			Audio_Init(&output->Handle, 1);
 		}
-		if (!Audio_IsFinished(output)) continue;
+		if (!Audio_IsFinished(output->Handle)) continue;
 
-		struct AudioFormat* l = Audio_GetFormat(output);
+		struct AudioFormat* l = Audio_GetFormat(output->Handle);
 		if (l->Channels == 0 || AudioFormat_Eq(l, &fmt)) {
 			Sounds_PlayRaw(output, snd, &fmt, volume); return;
 		}
@@ -204,8 +248,8 @@ static void Sounds_Play(UInt8 type, struct Soundboard* board) {
 
 	/* Try again with all devices, even if need to recreate one (expensive) */
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-		AudioHandle output = outputs[i];
-		if (!Audio_IsFinished(output)) continue;
+		struct SoundOutput* output = &outputs[i];
+		if (!Audio_IsFinished(output->Handle)) continue;
 
 		Sounds_PlayRaw(output, snd, &fmt, volume); return;
 	}
@@ -219,23 +263,26 @@ static void Audio_PlayBlockSound(void* obj, Vector3I coords, BlockID oldBlock, B
 	}
 }
 
-static void Sounds_FreeOutputs(AudioHandle* outputs) {
+static void Sounds_FreeOutputs(struct SoundOutput* outputs) {
 	bool anyPlaying = true;
 	Int32 i;
 
 	while (anyPlaying) {
 		anyPlaying = false;
 		for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-			if (outputs[i] == -1) continue;
-			anyPlaying |= !Audio_IsFinished(outputs[i]);
+			if (outputs[i].Handle == HANDLE_INV) continue;
+			anyPlaying |= !Audio_IsFinished(outputs[i].Handle);
 		}
 		if (anyPlaying) Thread_Sleep(1);
 	}
 
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-		if (outputs[i] == -1) continue;
-		Audio_Free(outputs[i]);
-		outputs[i] = -1;
+		if (outputs[i].Handle == HANDLE_INV) continue;
+		Audio_Free(outputs[i].Handle);
+		outputs[i].Handle = HANDLE_INV;
+
+		Mem_Free(&outputs[i].Buffer);
+		outputs[i].BufferSize = 0;
 	}
 }
 
@@ -286,9 +333,10 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 	fmt.BitsPerSample = 16;
 	Audio_SetFormat(music_out, &fmt);
 
-	/* largest possible vorbis frame decodes to blocksize1 samples */
+	/* largest possible vorbis frame decodes to blocksize1 * channels samples */
 	/* so we may end up decoding slightly over a second of audio */
-	Int32 chunkSize = (fmt.SampleRate + vorbis.BlockSizes[1]) * fmt.Channels;
+	Int32 chunkSize        = fmt.Channels * (fmt.SampleRate + vorbis.BlockSizes[1]);
+	Int32 samplesPerSecond = fmt.Channels * fmt.SampleRate;
 	Int16* data = Mem_Alloc(chunkSize * AUDIO_MAX_CHUNKS, sizeof(Int16), "Ogg - final PCM output");
 
 	for (;;) {
@@ -304,15 +352,16 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 		Int16* base = data + (chunkSize * next);
 		Int32 samples = 0;
 
-		while (samples < fmt.SampleRate) {
+		while (samples < samplesPerSecond) {
 			res = Vorbis_DecodeFrame(&vorbis);
 			if (res) break;
 
-			Int16* cur = &base[samples * fmt.Channels];
+			Int16* cur = &base[samples];
 			samples += Vorbis_OutputFrame(&vorbis, cur);
 		}
 
-		Audio_PlayData(music_out, next, base, samples * fmt.Channels * sizeof(Int16));
+		if (Game_MusicVolume < 100) { Volume_Mix16(base, samples, Game_MusicVolume); }
+		Audio_PlayData(music_out, next, base, samples * sizeof(Int16));
 		/* need to specially handle last bit of audio */
 		if (res) break;
 	}
@@ -368,8 +417,7 @@ static void Music_RunLoop(void) {
 }
 
 static void Music_Init(void) {
-	if (music_thread) { Audio_SetVolume(music_out, Game_MusicVolume / 100.0f); return; }
-
+	if (music_thread) return;
 	music_pendingStop = false;
 	Audio_Init(&music_out, AUDIO_MAX_CHUNKS);
 	music_thread = Thread_Start(Music_RunLoop);

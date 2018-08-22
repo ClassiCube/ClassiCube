@@ -894,7 +894,7 @@ ReturnCode Http_MakeRequest(struct AsyncRequest* request, void** handle) {
 	}
 
 	*handle = InternetOpenUrlA(hInternet, url.buffer, headers.buffer, headers.length,
-		INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD, NULL);
+		INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD, 0);
 	return Win_Return(*handle);
 }
 
@@ -935,7 +935,7 @@ ReturnCode Http_GetRequestData(struct AsyncRequest* request, void* handle, void*
 	while (left > 0) {
 		UInt32 toRead = left, avail = 0;
 		/* only read as much data that is pending */
-		if (InternetQueryDataAvailable(handle, &avail, 0, NULL)) {
+		if (InternetQueryDataAvailable(handle, &avail, 0, 0)) {
 			toRead = min(toRead, avail);
 		}
 
@@ -1025,7 +1025,7 @@ void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	fmt.nAvgBytesPerSec = fmt.nSamplesPerSec * fmt.nBlockAlign;
 
 	if (waveOutGetNumDevs() == 0u) ErrorHandler_Fail("No audio devices found");
-	ReturnCode result = waveOutOpen(&ctx->Handle, WAVE_MAPPER, &fmt, NULL, NULL, CALLBACK_NULL);
+	ReturnCode result = waveOutOpen(&ctx->Handle, WAVE_MAPPER, &fmt, 0, 0, CALLBACK_NULL);
 	ErrorHandler_CheckOrFail(result, "Audio - opening device");
 	ctx->Format = *format;
 }

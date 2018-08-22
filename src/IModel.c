@@ -273,12 +273,6 @@ void BoxDesc_TexOrigin(struct BoxDesc* desc, Int32 x, Int32 y) {
 	desc->TexX = x; desc->TexY = y;
 }
 
-void BoxDesc_SetBounds(struct BoxDesc* desc, Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2) {
-	desc->X1 = x1 / 16.0f; desc->X2 = x2 / 16.0f;
-	desc->Y1 = y1 / 16.0f; desc->Y2 = y2 / 16.0f;
-	desc->Z1 = z1 / 16.0f; desc->Z2 = z2 / 16.0f;
-}
-
 void BoxDesc_Expand(struct BoxDesc* desc, Real32 amount) {
 	amount /= 16.0f;
 	desc->X1 -= amount; desc->X2 += amount;
@@ -286,31 +280,8 @@ void BoxDesc_Expand(struct BoxDesc* desc, Real32 amount) {
 	desc->Z1 -= amount; desc->Z2 += amount;
 }
 
-void BoxDesc_Scale(struct BoxDesc* desc, Real32 scale) {
-	desc->X1 *= scale; desc->X2 *= scale;
-	desc->Y1 *= scale; desc->Y2 *= scale;
-	desc->Z1 *= scale; desc->Z2 *= scale;
-	desc->RotX *= scale; desc->RotY *= scale; desc->RotZ *= scale;
-}
-
-void BoxDesc_RotOrigin(struct BoxDesc* desc, Int8 x, Int8 y, Int8 z) {
-	desc->RotX = (Real32)x / 16.0f;
-	desc->RotY = (Real32)y / 16.0f;
-	desc->RotZ = (Real32)z / 16.0f;
-}
-
 void BoxDesc_MirrorX(struct BoxDesc* desc) {
 	Real32 temp = desc->X1; desc->X1 = desc->X2; desc->X2 = temp;
-}
-
-void BoxDesc_Box(struct BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2) {
-	BoxDesc_TexOrigin(desc, 0, 0);
-	BoxDesc_RotOrigin(desc, 0, 0, 0);
-	BoxDesc_SetBounds(desc, (Real32)x1, (Real32)y1, (Real32)z1, (Real32)x2, (Real32)y2, (Real32)z2);
-
-	desc->SizeZ = Math_AbsI(z2 - z1);
-	desc->SizeX = Math_AbsI(x2 - x1);
-	desc->SizeY = Math_AbsI(y2 - y1);
 }
 
 

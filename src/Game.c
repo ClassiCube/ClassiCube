@@ -748,7 +748,6 @@ void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct Displa
 /* TODO: fix all these stubs.... */
 #include "Builder.h"
 void AdvLightingBuilder_SetActive(void) { NormalBuilder_SetActive(); }
-void Audio_SetVolume(AudioHandle handle, Real32 volume) { }
 /* TODO: Initalise Shell, see https://msdn.microsoft.com/en-us/library/windows/desktop/bb762153(v=vs.85).aspx 
 https://stackoverflow.com/questions/24590059/c-opening-a-url-in-default-browser-on-windows-without-admin-privileges */
 ReturnCode Platform_StartShell(STRING_PURE String* args) { return 0; }

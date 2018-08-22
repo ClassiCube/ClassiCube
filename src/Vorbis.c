@@ -172,7 +172,7 @@ static UInt32 Codebook_Pow(UInt32 base, UInt32 exp) {
 	return result;
 }
 
-static UInt32 lookup1_values(UInt32 entries, UInt32 dimensions) {
+static UInt32 Codebook_Lookup1Values(UInt32 entries, UInt32 dimensions) {
 	UInt32 i;
 	/* the greatest integer value for which [value] to the power of [dimensions] is less than or equal to [entries] */
 	/* TODO: verify this */
@@ -286,14 +286,14 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 	if (c->LookupType == 0) return 0;
 	if (c->LookupType > 2)  return VORBIS_ERR_CODEBOOK_LOOKUP;
 
-	c->MinValue   = float32_unpack(ctx);
-	c->DeltaValue = float32_unpack(ctx);
+	c->MinValue     = float32_unpack(ctx);
+	c->DeltaValue   = float32_unpack(ctx);
 	Int32 valueBits = Vorbis_ReadBits(ctx, 4); valueBits++;
-	c->SequenceP  = Vorbis_ReadBits(ctx, 1);
+	c->SequenceP    = Vorbis_ReadBits(ctx, 1);
 
 	UInt32 lookupValues;
 	if (c->LookupType == 1) {
-		lookupValues = lookup1_values(c->Entries, c->Dimensions);
+		lookupValues = Codebook_Lookup1Values(c->Entries, c->Dimensions);
 	} else {
 		lookupValues = c->Entries * c->Dimensions;
 	}
@@ -1311,11 +1311,11 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 	/* So for example, consider a short block overlapping with a long block
 	   a) we need to chop off 'prev' before its halfway point
 	   b) then need to chop off the 'cur' before the halfway point of 'prev'
-	             |-   ********|*****                     |-   ********|
-	            -| - *        |     ***                  | - *        |
-	           - |  #         |        ***         ===>  |  #         |
-	          -  | * -        |           ***            | * -        |
-	   ******-***|*   -       |              ***         |*   -       |
+	             |-   ********|*****                        |-   ********|
+	            -| - *        |     ***                     | - *        |
+	           - |  #         |        ***          ===>    |  #         |
+	          -  | * -        |           ***               | * -        |
+	   ******-***|*   -       |              ***            |*   -       |
 	*/
 
 
@@ -1350,7 +1350,7 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 	}
 
 	ctx->PrevBlockSize = ctx->CurBlockSize;
-	return prevQrtr + curQrtr;
+	return (prevQrtr + curQrtr) * ctx->Channels;
 }
 
 static Real32 floor1_inverse_dB_table[256] = {

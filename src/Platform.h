@@ -117,7 +117,7 @@ ReturnCode Http_FreeRequest(void* handle);
 ReturnCode Http_Free(void);
 
 #define AUDIO_MAX_CHUNKS 4
-struct AudioFormat { UInt8 Channels, BitsPerSample; Int32 SampleRate; };
+struct AudioFormat { UInt16 Channels, BitsPerSample; Int32 SampleRate; };
 #define AudioFormat_Eq(a, b) ((a)->Channels == (b)->Channels && (a)->BitsPerSample == (b)->BitsPerSample && (a)->SampleRate == (b)->SampleRate)
 typedef Int32 AudioHandle;
 
@@ -125,7 +125,6 @@ void Audio_Init(AudioHandle* handle, Int32 buffers);
 void Audio_Free(AudioHandle handle);
 struct AudioFormat* Audio_GetFormat(AudioHandle handle);
 void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format);
-void Audio_SetVolume(AudioHandle handle, Real32 volume);
 void Audio_PlayData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize);
 bool Audio_IsCompleted(AudioHandle handle, Int32 idx);
 bool Audio_IsFinished(AudioHandle handle);
