@@ -38,16 +38,16 @@ namespace ClassicalSharp.Textures {
 		}
 		
 		void TextureChanged(object sender, TextureEventArgs e) {
-			if (e.Name == "animations.png" || e.Name == "animation.png") {
+			if (Utils.CaselessEq(e.Name, "animations.png")) {
 				animBmp = Platform.ReadBmp(game.Drawer2D, e.Data);
 				animsBuffer = new FastBitmap(animBmp, true, true);
-			} else if (e.Name == "animations.txt" || e.Name == "animation.txt") {
+			} else if (Utils.CaselessEq(e.Name, "animations.txt")) {
 				MemoryStream stream = new MemoryStream(e.Data);
 				StreamReader reader = new StreamReader(stream, false);
 				ReadAnimationsDescription(reader);
-			} else if (e.Name == "uselavaanim") {
+			} else if (Utils.CaselessEq(e.Name, "uselavaanim")) {
 				useLavaAnim = true;
-			} else if (e.Name == "usewateranim") {
+			} else if (Utils.CaselessEq(e.Name, "usewateranim")) {
 				useWaterAnim = true;
 			}
 		}
@@ -172,11 +172,9 @@ namespace ClassicalSharp.Textures {
 		bool IsDefaultZip() {
 			if (game.World.TextureUrl != null) return false;
 			string texPack = Options.Get(OptionsKey.DefaultTexturePack, "default.zip");
-			return texPack == "default.zip";
+			return Utils.CaselessEq(texPack, "default.zip");
 		}
 		
-		/// <summary> Disposes the atlas bitmap that contains animation frames, and clears
-		/// the list of defined animations. </summary>
 		void Clear() {
 			animations.Clear();
 			

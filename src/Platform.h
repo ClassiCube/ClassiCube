@@ -35,10 +35,10 @@ void Platform_Exit(ReturnCode code);
 STRING_PURE String Platform_GetCommandLineArgs(void);
 ReturnCode Platform_StartShell(STRING_PURE String* args);
 
-void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const UChar* place);
-void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const UChar* place);
-void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const UChar* place);
-void Mem_Free(void** mem);
+FUNC_ATTRIB(noinline) void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const UChar* place);
+FUNC_ATTRIB(noinline) void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const UChar* place);
+FUNC_ATTRIB(noinline) void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const UChar* place);
+FUNC_ATTRIB(noinline) void  Mem_Free(void** mem);
 void Mem_Set(void* dst, UInt8 value, UInt32 numBytes);
 void Mem_Copy(void* dst, void* src, UInt32 numBytes);
 
@@ -117,7 +117,7 @@ ReturnCode Http_FreeRequest(void* handle);
 ReturnCode Http_Free(void);
 
 #define AUDIO_MAX_CHUNKS 4
-struct AudioFormat { UInt8 Channels, BitsPerSample; Int32 SampleRate; };
+struct AudioFormat { UInt16 Channels, BitsPerSample; Int32 SampleRate; };
 #define AudioFormat_Eq(a, b) ((a)->Channels == (b)->Channels && (a)->BitsPerSample == (b)->BitsPerSample && (a)->SampleRate == (b)->SampleRate)
 typedef Int32 AudioHandle;
 

@@ -774,7 +774,7 @@ void EnvRenderer_UseMinimalMode(bool minimal) {
 
 
 static void EnvRenderer_FileChanged(void* obj, struct Stream* src, String* name) {
-	if (String_CaselessEqualsConst(name, "cloud.png") || String_CaselessEqualsConst(name, "clouds.png")) {
+	if (String_CaselessEqualsConst(name, "clouds.png")) {
 		Game_UpdateTexture(&clouds_tex, src, name, NULL);
 	} else if (String_CaselessEqualsConst(name, "skybox.png")) {
 		Game_UpdateTexture(&skybox_tex, src, name, NULL);

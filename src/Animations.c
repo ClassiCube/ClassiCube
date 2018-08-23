@@ -322,13 +322,13 @@ static void Animations_PackChanged(void* obj) {
 }
 
 static void Animations_FileChanged(void* obj, struct Stream* stream, String* name) {
-	if (String_CaselessEqualsConst(name, "animation.png") || String_CaselessEqualsConst(name, "animations.png")) {
+	if (String_CaselessEqualsConst(name, "animations.png")) {
 		ReturnCode res = Bitmap_DecodePng(&anims_bmp, stream);
 		if (!res) return;
 
 		Chat_LogError(res, "decoding", name);
 		Mem_Free(&anims_bmp.Scan0);
-	} else if (String_CaselessEqualsConst(name, "animation.txt") || String_CaselessEqualsConst(name, "animations.txt")) {
+	} else if (String_CaselessEqualsConst(name, "animations.txt")) {
 		Animations_ReadDescription(stream, name);
 	} else if (String_CaselessEqualsConst(name, "uselavaanim")) {
 		anims_useLavaAnim = true;

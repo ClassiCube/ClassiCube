@@ -49,19 +49,21 @@ namespace Launcher {
 			}
 		}
 		
-		bool SelectZipEntry(string filename) {
-			return filename == "default.png" || filename == "terrain.png";
+		bool SelectZipEntry(string path) {
+			return 
+				Utils.CaselessEq(path, "default.png") ||
+				Utils.CaselessEq(path, "terrain.png");
 		}
 		
-		void ProcessZipEntry(string filename, byte[] data, ZipEntry entry) {
-			if (filename == "default.png") {
+		void ProcessZipEntry(string path, byte[] data, ZipEntry entry) {
+			if (Utils.CaselessEq(path, "default.png")) {
 				if (fontPng) return;
 				
 				Bitmap bmp = Platform.ReadBmp(Drawer, data);
 				Drawer.SetFontBitmap(bmp);
 				useBitmappedFont = !Options.GetBool(OptionsKey.UseChatFont, false);
 				fontPng = true;
-			} else if (filename == "terrain.png") {
+			} else if (Utils.CaselessEq(path, "terrain.png")) {
 				if (terrainPng) return;
 				
 				Bitmap bmp = Platform.ReadBmp(Drawer, data);

@@ -11,11 +11,11 @@ namespace ClassicalSharp.Textures {
 		public int UncompressedDataSize;
 		public int LocalHeaderOffset;
 		public uint Crc32;
-		public string Filename;
+		public string Path;
 	}
 	
-	public delegate void ZipEntryProcessor(string filename, byte[] data, ZipEntry entry);	
-	public delegate bool ZipEntrySelector(string filename);	
+	public delegate void ZipEntryProcessor(string path, byte[] data, ZipEntry entry);	
+	public delegate bool ZipEntrySelector(string path);	
 	
 	/// <summary> Extracts files from a stream that represents a .zip file. </summary>
 	public sealed class ZipReader {
@@ -67,7 +67,7 @@ namespace ClassicalSharp.Textures {
 				sig = reader.ReadUInt32();
 				
 				if (sig != 0x04034b50) {
-					Utils.LogDebug(entry.Filename + " is an invalid entry");
+					Utils.LogDebug(entry.Path + " is an invalid entry");
 					continue;
 				}
 				ReadLocalFileHeader(reader, entry);
@@ -88,14 +88,14 @@ namespace ClassicalSharp.Textures {
 			int uncompressedSize = reader.ReadInt32();
 			if (uncompressedSize == 0) uncompressedSize = entry.UncompressedDataSize;
 			
-			ushort fileNameLen = reader.ReadUInt16();
-			ushort extraFieldLen = reader.ReadUInt16();
-			string fileName = enc.GetString(reader.ReadBytes(fileNameLen));
-			if (SelectZipEntry != null && !SelectZipEntry(fileName)) return;
+			ushort pathLen  = reader.ReadUInt16();
+			ushort extraLen = reader.ReadUInt16();
+			string path = enc.GetString(reader.ReadBytes(pathLen));
+			if (SelectZipEntry != null && !SelectZipEntry(path)) return;
 			
-			reader.ReadBytes(extraFieldLen);
+			reader.ReadBytes(extraLen);
 			byte[] data = DecompressEntry(reader, compressionMethod, compressedSize, uncompressedSize);
-			if (data != null) ProcessZipEntry(fileName, data, entry);
+			if (data != null) ProcessZipEntry(path, data, entry);
 		}
 		
 		void ReadCentralDirectory(BinaryReader reader, ZipEntry[] entries) {
@@ -106,24 +106,24 @@ namespace ClassicalSharp.Textures {
 			reader.ReadUInt16(); // compression method
 			reader.ReadUInt32(); // last modified
 			uint crc32 = reader.ReadUInt32();
-			int compressedSize = reader.ReadInt32();
+			int compressedSize   = reader.ReadInt32();
 			int uncompressedSize = reader.ReadInt32();
-			ushort fileNameLen = reader.ReadUInt16();
-			ushort extraFieldLen = reader.ReadUInt16();
+			ushort pathLen    = reader.ReadUInt16();
+			ushort extraLen   = reader.ReadUInt16();			
+			ushort commentLen = reader.ReadUInt16();
 			
-			ushort fileCommentLen = reader.ReadUInt16();
 			reader.ReadUInt16(); // disk number
 			reader.ReadUInt16(); // internal attributes
 			reader.ReadUInt32(); // external attributes
 			int localHeaderOffset = reader.ReadInt32();
-			string fileName = enc.GetString(reader.ReadBytes(fileNameLen));
-			reader.ReadBytes(extraFieldLen);
-			reader.ReadBytes(fileCommentLen);
+			string path = enc.GetString(reader.ReadBytes(pathLen));
+			reader.ReadBytes(extraLen);
+			reader.ReadBytes(commentLen);
 			
-			entry.CompressedDataSize = compressedSize;
+			entry.CompressedDataSize   = compressedSize;
 			entry.UncompressedDataSize = uncompressedSize;
 			entry.LocalHeaderOffset = localHeaderOffset;
-			entry.Filename = fileName;
+			entry.Path = path;
 			entry.Crc32 = crc32;
 			entries[index++] = entry;
 		}

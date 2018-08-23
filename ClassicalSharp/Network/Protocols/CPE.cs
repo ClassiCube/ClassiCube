@@ -113,7 +113,7 @@ namespace ClassicalSharp.Network.Protocols {
 			if (key == Key.None) return;
 			
 			Utils.LogDebug("CPE Hotkey added: " + key + "," + keyMods + " : " + action);
-			if (action == "") {
+			if (action.Length == 0) {
 				HotkeyList.Remove(key, keyMods);
 			} else if (action[action.Length - 1] == '◙') { // graphical form of \n
 				action = action.Substring(0, action.Length - 1);
@@ -322,7 +322,7 @@ namespace ClassicalSharp.Network.Protocols {
 			string url = reader.ReadString();
 			if (!game.AllowServerTextures) return;
 			
-			if (url == "") {
+			if (url.Length == 0) {
 				if (game.World.TextureUrl != null) TexturePack.ExtractDefault(game);
 			} else if (Utils.IsUrlPrefix(url, 0)) {
 				net.RetrieveTexturePack(url);

@@ -29,10 +29,10 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			// Server is only allowed to change our own name colours.
 			if (id != EntityList.SelfID) return;
-			if (Utils.StripColours(displayName) != game.Username)
+			if (Utils.StripColours(displayName) != game.Username) {
 				displayName = game.Username;
-			if (skinName == "")
-				skinName = game.Username;
+			}
+			if (skinName.Length == 0) skinName = game.Username;
 		}
 		
 		protected void AddEntity(byte id, string displayName, string skinName, bool readPosition) {

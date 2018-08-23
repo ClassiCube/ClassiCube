@@ -75,7 +75,7 @@ void Ogg_MakeStream(struct Stream* stream, UInt8* buffer, struct Stream* source)
 	stream->Read   = Ogg_Read;
 	stream->ReadU8 = Ogg_ReadU8;
 
-	stream->Meta.Ogg.Cur = buffer;
+	stream->Meta.Ogg.Cur  = buffer;
 	stream->Meta.Ogg.Base = buffer;
 	stream->Meta.Ogg.Left = 0;
 	stream->Meta.Ogg.Last = 0;
@@ -130,7 +130,7 @@ static Real32 float32_unpack(struct VorbisState* ctx) {
 	UInt32 hi = Vorbis_ReadBits(ctx, 16);
 	UInt32 x = (hi << 16) | lo;
 
-	Int32 mantissa = x & 0x1fffff;
+	Int32 mantissa  =  x & 0x1fffff;
 	UInt32 exponent = (x & 0x7fe00000) >> 21;
 	if (x & 0x80000000UL) mantissa = -mantissa;
 
@@ -189,7 +189,7 @@ static UInt32 Codebook_Lookup1Values(UInt32 entries, UInt32 dimensions) {
 
 static bool Codebook_CalcCodewords(struct Codebook* c, UInt8* len) {
 	c->Codewords    = Mem_Alloc(c->NumCodewords, sizeof(UInt32), "codewords");
-	c->CodewordLens = Mem_Alloc(c->NumCodewords, sizeof(UInt8), "raw codeword lens");
+	c->CodewordLens = Mem_Alloc(c->NumCodewords, sizeof(UInt8),  "raw codeword lens");
 	c->Values       = Mem_Alloc(c->NumCodewords, sizeof(UInt32), "values");
 
 	/* This is taken from stb_vorbis.c because I gave up trying */
@@ -1146,13 +1146,9 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 
 	/* decode window shape */
 	ctx->CurBlockSize = ctx->BlockSizes[mode->BlockSizeFlag];
-	ctx->DataSize = ctx->CurBlockSize / 2;
-	Int32 prev_window = 0, next_window = 0;
-	/* long window lapping*/
-	if (mode->BlockSizeFlag) {
-		prev_window = Vorbis_ReadBits(ctx, 1);
-		next_window = Vorbis_ReadBits(ctx, 1);
-	}	
+	ctx->DataSize     = ctx->CurBlockSize / 2;
+	/* long window lapping flags - we don't care about them though */
+	if (mode->BlockSizeFlag) { Vorbis_ReadBits(ctx, 2); } /* TODO: do we just SkipBits here */
 
 	/* swap prev and cur outputs around */
 	Real32* tmp = ctx->Values[1]; ctx->Values[1] = ctx->Values[0]; ctx->Values[0] = tmp;

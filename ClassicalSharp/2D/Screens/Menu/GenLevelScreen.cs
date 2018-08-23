@@ -120,7 +120,7 @@ namespace ClassicalSharp.Gui.Screens {
 		int GetSeedInt(int index) {
 			MenuInputWidget input = (MenuInputWidget)widgets[index];
 			string text = input.Text.ToString();
-			if (text == "") return new Random().Next();
+			if (text.Length == 0) return new Random().Next();
 			
 			if (!input.Validator.IsValidValue(text)) return 0;
 			return Int32.Parse(text);

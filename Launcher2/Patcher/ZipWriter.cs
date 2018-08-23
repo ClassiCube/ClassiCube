@@ -50,7 +50,7 @@ namespace Launcher.Patcher {
 			entry.CompressedDataSize = dataLength;
 			entry.LocalHeaderOffset = (int)stream.Position;
 			
-			entry.Filename = filename;
+			entry.Path = filename;
 			entries[entriesCount++] = entry;
 			WriteLocalFileEntry(entry, data, dataLength);
 		}
@@ -73,10 +73,10 @@ namespace Launcher.Patcher {
 			writer.Write(entry.Crc32);
 			writer.Write(entry.CompressedDataSize);
 			writer.Write(entry.UncompressedDataSize);
-			writer.Write((ushort)entry.Filename.Length);
+			writer.Write((ushort)entry.Path.Length);
 			writer.Write((ushort)0);  // extra field length
-			for (int i = 0; i < entry.Filename.Length; i++)
-				writer.Write((byte)entry.Filename[i]);
+			for (int i = 0; i < entry.Path.Length; i++)
+				writer.Write((byte)entry.Path[i]);
 			
 			writer.Write(data, 0, length);
 		}
@@ -92,15 +92,15 @@ namespace Launcher.Patcher {
 			writer.Write(entry.CompressedDataSize);
 			writer.Write(entry.UncompressedDataSize);
 			
-			writer.Write((ushort)entry.Filename.Length);
+			writer.Write((ushort)entry.Path.Length);
 			writer.Write((ushort)0);  // extra field length
 			writer.Write((ushort)0);  // file comment length
 			writer.Write((ushort)0);  // disk number
 			writer.Write((ushort)0);  // internal attributes
 			writer.Write(0);          // external attributes
 			writer.Write(entry.LocalHeaderOffset);
-			for (int i = 0; i < entry.Filename.Length; i++)
-				writer.Write((byte)entry.Filename[i]);
+			for (int i = 0; i < entry.Path.Length; i++)
+				writer.Write((byte)entry.Path[i]);
 		}
 		
 		void WriteCurrentDate(BinaryWriter writer) {

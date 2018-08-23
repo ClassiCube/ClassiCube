@@ -50,7 +50,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void TextureChanged(object sender, TextureEventArgs e) {
-			if (e.Name == "skybox.png") {
+			if (Utils.CaselessEq(e.Name, "skybox.png")) {
 				game.LoadTexture(ref tex, e.Name, e.Data);
 			}
 		}

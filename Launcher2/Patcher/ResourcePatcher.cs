@@ -67,8 +67,8 @@ namespace Launcher.Patcher {
 		List<byte[]> datas = new List<byte[]>();
 		
 		void ExtractExisting(string path, byte[] data, ZipEntry entry) {
-			entry.Filename = Utils.GetFilename(path);		
-			existing.Add(entry.Filename);
+			entry.Path = Utils.GetFilename(path);		
+			existing.Add(entry.Path);
 			entries.Add(entry);
 			datas.Add(data);
 		}
@@ -86,20 +86,22 @@ namespace Launcher.Patcher {
 			}
 		}
 		
-		bool SelectZipEntry_Classic(string filename) {
-			return filename.StartsWith("gui")
-				|| filename.StartsWith("mob") || filename.IndexOf('/') < 0;
+		bool SelectZipEntry_Classic(string path) {
+			return 
+				Utils.CaselessStarts(path, "gui") ||
+				Utils.CaselessStarts(path, "mob") || 
+				path.IndexOf('/') < 0;
 		}
 
 		void ProcessZipEntry_Classic(string path, byte[] data, ZipEntry entry) {
 			if (!Utils.CaselessEnds(path, ".png")) return;
-			entry.Filename = Utils.GetFilename(path);
+			entry.Path = Utils.GetFilename(path);
 			
-			if (entry.Filename != "terrain.png") {
-				if (entry.Filename == "gui.png")
-					entry.Filename = "gui_classic.png";
+			if (entry.Path != "terrain.png") {
+				if (entry.Path == "gui.png")
+					entry.Path = "gui_classic.png";
 				
-				if (!existing.Contains(entry.Filename))
+				if (!existing.Contains(entry.Path))
 					writer.WriteZipEntry(entry, data);
 			} else if (!existing.Contains("terrain.png")){
 				terrainBmp = Platform.ReadBmp(drawer, data);
@@ -159,7 +161,7 @@ namespace Launcher.Patcher {
 		}
 		
 		void ProcessZipEntry_Modern(string path, byte[] data, ZipEntry entry) {
-			entry.Filename = Utils.GetFilename(path);
+			entry.Path = Utils.GetFilename(path);
 			if (path == "assets/minecraft/textures/environment/snow.png") {
 				if (!existing.Contains("snow.png")) {
 					writer.WriteZipEntry(entry, data);

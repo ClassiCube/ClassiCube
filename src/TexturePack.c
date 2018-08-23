@@ -38,27 +38,27 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 	UInt32 uncompressedSize = Stream_GetU32_LE(&contents[18]);
 	if (!uncompressedSize) uncompressedSize = entry->UncompressedSize;
 
-	UInt16 filenameLen   = Stream_GetU16_LE(&contents[22]);
-	UInt16 extraFieldLen = Stream_GetU16_LE(&contents[24]);
-	UChar filenameBuffer[String_BufferSize(ZIP_MAXNAMELEN)];
+	UInt16 pathLen  = Stream_GetU16_LE(&contents[22]);
+	UInt16 extraLen = Stream_GetU16_LE(&contents[24]);
+	UChar pathBuffer[String_BufferSize(ZIP_MAXNAMELEN)];
 
-	if (filenameLen > ZIP_MAXNAMELEN) return ZIP_ERR_FILENAME_LEN;
-	String filename = String_Init(filenameBuffer, filenameLen, filenameLen);
-	if (res = Stream_Read(stream, filenameBuffer, filenameLen)) return res;
-	filenameBuffer[filenameLen] = '\0';
+	if (pathLen > ZIP_MAXNAMELEN) return ZIP_ERR_FILENAME_LEN;
+	String path = String_Init(pathBuffer, pathLen, pathLen);
+	if (res = Stream_Read(stream, pathBuffer, pathLen)) return res;
+	pathBuffer[pathLen] = '\0';
 
-	if (!state->SelectEntry(&filename)) return 0;
-	if (res = Stream_Skip(stream, extraFieldLen)) return res;
+	if (!state->SelectEntry(&path)) return 0;
+	if (res = Stream_Skip(stream, extraLen)) return res;
 	struct Stream portion, compStream;
 
 	if (compressionMethod == 0) {
 		Stream_ReadonlyPortion(&portion, stream, uncompressedSize);
-		state->ProcessEntry(&filename, &portion, entry);
+		state->ProcessEntry(&path, &portion, entry);
 	} else if (compressionMethod == 8) {
 		struct InflateState inflate;
 		Stream_ReadonlyPortion(&portion, stream, compressedSize);
 		Inflate_MakeStream(&compStream, &inflate, &portion);
-		state->ProcessEntry(&filename, &compStream, entry);
+		state->ProcessEntry(&path, &compStream, entry);
 	} else {
 		Int32 method = compressionMethod;
 		Platform_Log1("Unsupported.zip entry compression method: %i", &method);
@@ -81,15 +81,15 @@ static ReturnCode Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEnt
 	entry->CompressedSize   = Stream_GetU32_LE(&contents[16]);
 	entry->UncompressedSize = Stream_GetU32_LE(&contents[20]);
 
-	UInt16 filenameLen    = Stream_GetU16_LE(&contents[24]);
-	UInt16 extraFieldLen  = Stream_GetU16_LE(&contents[26]);
-	UInt16 fileCommentLen = Stream_GetU16_LE(&contents[28]);
+	UInt16 pathLen    = Stream_GetU16_LE(&contents[24]);
+	UInt16 extraLen   = Stream_GetU16_LE(&contents[26]);
+	UInt16 commentLen = Stream_GetU16_LE(&contents[28]);
 	/* contents[30] (2) disk number */
 	/* contents[32] (2) internal attributes */
 	/* contents[34] (4) external attributes */
 	entry->LocalHeaderOffset = Stream_GetU32_LE(&contents[38]);
 
-	UInt32 extraDataLen = filenameLen + extraFieldLen + fileCommentLen;
+	UInt32 extraDataLen = pathLen + extraLen + commentLen;
 	return Stream_Skip(stream, extraDataLen);
 }
 
@@ -426,7 +426,6 @@ void TextureCache_AddLastModified(STRING_PURE String* url, DateTime* lastModifie
 *-------------------------------------------------------TexturePack-------------------------------------------------------*
 *#########################################################################################################################*/
 static void TexturePack_ProcessZipEntry(STRING_TRANSIENT String* path, struct Stream* stream, struct ZipEntry* entry) {
-	String_MakeLowercase(path);
 	String name = *path; Utils_UNSAFE_GetFilename(&name);
 	Event_RaiseEntry(&TextureEvents_FileChanged, stream, &name);
 }
@@ -520,7 +519,8 @@ void TexturePack_Extract_Req(struct AsyncRequest* item) {
 
 	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len);
 	bool png = Bitmap_DetectPng(data, len);
-	ReturnCode res = png ? TexturePack_ExtractTerrainPng(&mem) : TexturePack_ExtractZip(&mem);
+	ReturnCode res = png ? TexturePack_ExtractTerrainPng(&mem) 
+						: TexturePack_ExtractZip(&mem);
 	const UChar* operation = png ? "decoding" : "extracting";
 
 	if (res) { Chat_LogError(res, operation, &url); }

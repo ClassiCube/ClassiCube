@@ -261,11 +261,11 @@ namespace ClassicalSharp {
 		}
 		
 		void TextureChangedCore(object sender, TextureEventArgs e) {
-			if (e.Name == "terrain.png") {
+			if (Utils.CaselessEq(e.Name, "terrain.png")) {
 				Bitmap atlas = Platform.ReadBmp(Drawer2D, e.Data);
 				if (ChangeTerrainAtlas(atlas)) return;
 				atlas.Dispose();
-			} else if (e.Name == "default.png") {
+			} else if (Utils.CaselessEq(e.Name, "default.png")) {
 				Bitmap bmp = Platform.ReadBmp(Drawer2D, e.Data);
 				Drawer2D.SetFontBitmap(bmp);
 				Events.RaiseChatFontChanged();

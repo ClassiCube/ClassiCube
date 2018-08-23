@@ -39,8 +39,9 @@ namespace ClassicalSharp.Particles {
 		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
 		void TextureChanged(object sender, TextureEventArgs e) {
-			if (e.Name == "particles.png")
+			if (Utils.CaselessEq(e.Name, "particles.png")) {
 				game.LoadTexture(ref ParticlesTexId, e.Name, e.Data);
+			}
 		}
 		
 		
