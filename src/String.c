@@ -667,6 +667,9 @@ bool Convert_TryParseBool(STRING_PURE String* str, bool* value) {
 *#########################################################################################################################*/
 #define STRINGSBUFFER_LEN_SHIFT 9
 #define STRINGSBUFFER_LEN_MASK  0x1FFUL
+#define STRINGSBUFFER_BUFFER_EXPAND_SIZE 8192
+#define STRINGSBUFFER_FLAGS_EXPAND_ELEMS 512
+
 void StringsBuffer_Init(StringsBuffer* buffer) {
 	buffer->Count     = 0;
 	buffer->TotalLength = 0;
@@ -691,8 +694,7 @@ void StringsBuffer_Clear(StringsBuffer* buffer) {
 
 void StringsBuffer_Get(StringsBuffer* buffer, Int32 index, STRING_TRANSIENT String* text) {
 	String raw = StringsBuffer_UNSAFE_Get(buffer, index);
-	String_Clear(text);
-	String_AppendString(text, &raw);
+	String_Set(text, &raw);
 }
 
 String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, Int32 index) {

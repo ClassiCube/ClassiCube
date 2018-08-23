@@ -12,6 +12,10 @@ const UChar* Sound_Names[SOUND_COUNT] = {
 	"metal", "glass", "cloth", "sand", "snow",
 };
 
+
+/*########################################################################################################################*
+*---------------------------------------------------------Block-----------------------------------------------------------*
+*#########################################################################################################################*/
 UInt32 Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
 UChar Block_NamesBuffer[String_BufferSize(STRING_SIZE) * BLOCK_COUNT];
 #define Block_NamePtr(i) &Block_NamesBuffer[String_BufferSize(STRING_SIZE) * i]
@@ -212,7 +216,6 @@ Int32 Block_FindID(STRING_PURE String* name) {
 	return -1;
 }
 
-
 void Block_SetSide(TextureLoc texLoc, BlockID blockId) {
 	Int32 index = blockId * FACE_COUNT;
 	Block_Textures[index + FACE_XMIN] = texLoc;
@@ -226,7 +229,9 @@ void Block_SetTex(TextureLoc texLoc, Face face, BlockID blockId) {
 }
 
 
-
+/*########################################################################################################################*
+*--------------------------------------------------Block bounds/culling---------------------------------------------------*
+*#########################################################################################################################*/
 void Block_CalcRenderBounds(BlockID block) {
 	Vector3 min = Block_MinBB[block], max = Block_MaxBB[block];
 
@@ -435,6 +440,9 @@ void Block_UpdateCulling(BlockID block) {
 }
 
 
+/*########################################################################################################################*
+*-------------------------------------------------------AutoRotate--------------------------------------------------------*
+*#########################################################################################################################*/
 #define AR_EQ1(s, x) (s.length >= 1 && Char_ToLower(s.buffer[0]) == x)
 #define AR_EQ2(s, x, y) (s.length >= 2 && Char_ToLower(s.buffer[0]) == x && Char_ToLower(s.buffer[1]) == y)
 
@@ -534,6 +542,9 @@ BlockID AutoRotate_RotateBlock(BlockID block) {
 }
 
 
+/*########################################################################################################################*
+*-------------------------------------------------------DefaultSet--------------------------------------------------------*
+*#########################################################################################################################*/
 Real32 DefaultSet_Height(BlockID b) {
 	if (b == BLOCK_SLAB) return 0.5f;
 	if (b == BLOCK_COBBLE_SLAB) return 0.5f;

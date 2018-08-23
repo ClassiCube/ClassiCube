@@ -76,7 +76,7 @@ namespace ClassicalSharp.Network.Protocols {
 					int waterLevel = 0;
 					if (Int32.TryParse(value, out waterLevel))
 						game.World.Env.SetEdgeLevel(waterLevel);
-				} else if (Utils.CaselessEq(key, "user.detail")) && !net.cpeData.useMessageTypes) {
+				} else if (Utils.CaselessEq(key, "user.detail") && !net.cpeData.useMessageTypes) {
 					game.Chat.Add(value, MessageType.Status2);
 				}
 			}

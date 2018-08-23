@@ -150,7 +150,7 @@ namespace ClassicalSharp.Gui.Screens {
 			SelectExtendedHelp(index);
 
 			string value = button.GetValue(game);
-			SetButtonValue(index, value == "ON" ? "OFF" : "ON");			
+			SetButtonValue(index, value == "ON" ? "OFF" : "ON");
 		}
 		
 		protected void OnEnumClick(Game game, Widget widget) {

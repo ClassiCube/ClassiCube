@@ -80,6 +80,7 @@ void String_UNSAFE_TrimEnd(STRING_TRANSIENT String* str);
 
 Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub);
 #define String_ContainsString(str, sub) (String_IndexOfString(str, sub) >= 0)
+bool String_StartsWith(STRING_PURE String* str, STRING_PURE String* sub);
 bool String_CaselessStarts(STRING_PURE String* str, STRING_PURE String* sub);
 bool String_CaselessEnds(STRING_PURE String* str, STRING_PURE String* sub);
 Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b);
@@ -103,9 +104,7 @@ bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value);
 bool Convert_TryParseBool(STRING_PURE String* str, bool* value);
 
 #define STRINGSBUFFER_BUFFER_DEF_SIZE 4096
-#define STRINGSBUFFER_BUFFER_EXPAND_SIZE 8192
 #define STRINGSBUFFER_FLAGS_DEF_ELEMS 256
-#define STRINGSBUFFER_FLAGS_EXPAND_ELEMS 512
 typedef struct StringsBuffer_ {
 	UChar*  TextBuffer; 
 	UInt32* FlagsBuffer;
