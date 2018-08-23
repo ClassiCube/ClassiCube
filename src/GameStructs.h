@@ -1,6 +1,6 @@
 #ifndef CC_GAMESTRUCTS_H
 #define CC_GAMESTRUCTS_H
-#include "Typedefs.h"
+#include "Core.h"
 /* Represents Game related structures.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

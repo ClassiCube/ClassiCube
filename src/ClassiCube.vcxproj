@@ -197,7 +197,6 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Chat.h" />
     <ClInclude Include="ChunkUpdater.h" />
-    <ClInclude Include="Compiler.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="Bitmap.h" />
     <ClInclude Include="DisplayDevice.h" />
@@ -247,7 +246,7 @@
     <ClInclude Include="GraphicsCommon.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="String.h" />
-    <ClInclude Include="Typedefs.h" />
+    <ClInclude Include="Core.h" />
     <ClInclude Include="Vectors.h" />
     <ClInclude Include="VertexStructs.h" />
     <ClInclude Include="Vorbis.h" />

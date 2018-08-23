@@ -1,4 +1,4 @@
-#include "Typedefs.h"
+#include "Core.h"
 #include "ErrorHandler.h"
 #include "Platform.h"
 #include "Window.h"

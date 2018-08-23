@@ -534,7 +534,7 @@ void Window_SetVisible(bool visible) {
 
 
 void Window_Close(void) {
-	PostMessageW(win_Handle, WM_CLOSE, NULL, NULL);
+	PostMessageW(win_Handle, WM_CLOSE, 0, 0);
 }
 
 UInt8 Window_GetWindowState(void) { return win_State; }

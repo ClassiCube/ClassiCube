@@ -1,6 +1,6 @@
 #ifndef CC_MATH_H
 #define CC_MATH_H
-#include "Typedefs.h"
+#include "Core.h"
 /* Simple math functions and constants. Also implements a RNG algorithm, based on 
       Java's implementation from https://docs.oracle.com/javase/7/docs/api/java/util/Random.html
    Copyright 2017 ClassicalSharp | Licensed under BSD-3

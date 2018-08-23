@@ -1,6 +1,6 @@
 #ifndef CC_BLOCKPHYSICS_H
 #define CC_BLOCKPHYSICS_H
-#include "Typedefs.h"
+#include "Core.h"
 #include "BlockID.h"
 /* Implements simple block physics.
    Copyright 2014 - 2017 ClassicalSharp | Licensed under BSD-3

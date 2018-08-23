@@ -144,12 +144,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Typedefs.h">
-      <Filter>Header Files\Defines</Filter>
-    </ClInclude>
-    <ClInclude Include="Compiler.h">
-      <Filter>Header Files\Defines</Filter>
-    </ClInclude>
     <ClInclude Include="Platform.h">
       <Filter>Header Files\Platform</Filter>
     </ClInclude>
@@ -344,6 +338,9 @@
     </ClInclude>
     <ClInclude Include="Errors.h">
       <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Core.h">
+      <Filter>Header Files\Defines</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

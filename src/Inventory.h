@@ -1,6 +1,6 @@
 #ifndef CC_INVENTORY_H
 #define CC_INVENTORY_H
-#include "Typedefs.h"
+#include "Core.h"
 #include "BlockID.h"
 
 /* Manages inventory hotbar, and ordering of blocks in the inventory menu.

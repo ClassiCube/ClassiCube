@@ -2,7 +2,7 @@
 #define CC_CHAT_H
 #include "Constants.h"
 #include "Utils.h"
-#include "Typedefs.h"
+#include "Core.h"
 /* Manages sending and logging chat.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

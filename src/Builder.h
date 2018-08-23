@@ -1,6 +1,6 @@
 #ifndef CC_BUILDER_H
 #define CC_BUILDER_H
-#include "Typedefs.h"
+#include "Core.h"
 /* Converts a 16x16x16 chunk into a mesh of vertices.
 NormalMeshBuilder:
    Implements a simple chunk mesh builder, where each block face is a single colour.

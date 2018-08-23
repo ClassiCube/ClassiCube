@@ -1,6 +1,6 @@
 #ifndef CC_CHUNKUPDATER_H
 #define CC_CHUNKUPDATER_H
-#include "Typedefs.h"
+#include "Core.h"
 #include "Constants.h"
 /* Manages the process of building/deleting chunk meshes.
    Also sorts chunks so nearest chunks are ordered first, and calculates chunk visibility.

@@ -1,6 +1,6 @@
 #ifndef CC_AXISLINESRENDERER_H
 #define CC_AXISLINESRENDERER_H
-#include "Typedefs.h"
+#include "Core.h"
 /* Renders 3 lines showing direction of each axis.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

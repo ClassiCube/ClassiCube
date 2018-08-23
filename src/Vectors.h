@@ -1,6 +1,6 @@
 #ifndef CC_VECTORS_H
 #define CC_VECTORS_H
-#include "Typedefs.h"
+#include "Core.h"
 /* Represents 2, 3 dimensional vectors, and 4 x 4 matrix.
    Frustum culling sourced from http://www.crownandcutlass.com/features/technicaldetails/frustum.html
    Copyright 2017 ClassicalSharp | Licensed under BSD-3

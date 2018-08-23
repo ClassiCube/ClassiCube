@@ -1,6 +1,6 @@
 #ifndef CC_VORBIS_H
 #define CC_VORBIS_H
-#include "Typedefs.h"
+#include "Core.h"
 /* Decodes ogg vorbis audio
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -21,6 +21,7 @@ struct imdct_state {
 	UInt32 Reversed[VORBIS_MAX_BLOCK_SIZE / 8];
 };
 
+struct VorbisWindow { Real32* Prev; Real32* Cur; };
 struct VorbisState {
 	UInt32 Bits;    /* Holds bits across byte boundaries*/
 	UInt32 NumBits; /* Number of bits in Bits buffer*/
@@ -40,8 +41,8 @@ struct VorbisState {
 	struct Mapping* Mappings;
 	struct Mode* Modes;
 
-	Real32* WindowShort;
-	Real32* WindowLong[2][2];
+	Real32* WindowRaw;
+	struct VorbisWindow Windows[2];
 	struct imdct_state imdct[2];
 };
 

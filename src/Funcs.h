@@ -1,6 +1,6 @@
 #ifndef CC_FUNCS_H
 #define CC_FUNCS_H
-#include "Typedefs.h"
+#include "Core.h"
 /* Simple function implementations
    NOTE: doing min(x++, y) etc will increment x twice!
    Copyright 2017 ClassicalSharp | Licensed under BSD-3

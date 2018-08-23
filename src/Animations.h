@@ -1,6 +1,6 @@
 #ifndef CC_ANIMS_H
 #define CC_ANIMS_H
-#include "Typedefs.h"
+#include "Core.h"
 /* Texture animations, and water and lava liquid animations.
    Copyright 2014 - 2017 ClassicalSharp | Licensed under BSD-3
    Based off the incredible work from https://dl.dropboxusercontent.com/u/12694594/lava.txt

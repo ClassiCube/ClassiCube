@@ -475,7 +475,7 @@ static bool Floor_DecodeFrame(struct VorbisState* ctx, struct Floor* f, Int32 ch
 	return true;
 }
 
-static Int32 render_point(Int32 x0, Int32 y0, Int32 x1, Int32 y1, Int32 X) {
+static Int32 Floor_RenderPoint(Int32 x0, Int32 y0, Int32 x1, Int32 y1, Int32 X) {
 	Int32 dy = y1 - y0, adx = x1 - x0;
 	Int32 ady = Math_AbsI(dy);
 	Int32 err = ady * (X - x0);
@@ -489,7 +489,7 @@ static Int32 render_point(Int32 x0, Int32 y0, Int32 x1, Int32 y1, Int32 X) {
 }
 
 static Real32 floor1_inverse_dB_table[256];
-static void render_line(Int32 x0, Int32 y0, Int32 x1, Int32 y1, Real32* data) {
+static void Floor_RenderLine(Int32 x0, Int32 y0, Int32 x1, Int32 y1, Real32* data) {
 	Int32 dy = y1 - y0, adx = x1 - x0;
 	Int32 ady = Math_AbsI(dy);
 	Int32 base = dy / adx, sy;
@@ -550,8 +550,8 @@ static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, Int32 ch) 
 		Int32 lo_offset = low_neighbor(f->XList, i);
 		Int32 hi_offset = high_neighbor(f->XList, i);
 
-		Int32 predicted = render_point(f->XList[lo_offset], YFinal[lo_offset],
-			f->XList[hi_offset], YFinal[hi_offset], f->XList[i]);
+		Int32 predicted = Floor_RenderPoint(f->XList[lo_offset], YFinal[lo_offset],
+											f->XList[hi_offset], YFinal[hi_offset], f->XList[i]);
 
 		Int32 val = yList[i];
 		Int32 highroom = f->Range - predicted;
@@ -582,7 +582,7 @@ static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, Int32 ch) 
 				}
 			}
 		} else {
-			Step2[i] = false;
+			Step2[i]  = false;
 			YFinal[i] = predicted;
 		}
 	}
@@ -597,7 +597,7 @@ static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, Int32 ch) 
 
 		hx = f->XList[i]; hy = YFinal[i] * f->Multiplier;
 		if (lx < hx) {
-			render_line(lx, ly, min(hx, ctx->DataSize), hy, data);
+			Floor_RenderLine(lx, ly, min(hx, ctx->DataSize), hy, data);
 		}
 		lx = hx; ly = hy;
 	}
@@ -949,45 +949,20 @@ static ReturnCode Mode_DecodeSetup(struct VorbisState* ctx, struct Mode* m) {
 	return 0;
 }
 
-static void Vorbis_CalcWindow(struct VorbisState* ctx, UInt32* offset, bool longBlock, bool prevLong, bool nextLong) {
-	Int32 i, n = ctx->BlockSizes[longBlock];
-	Int32 window_center = n / 2;
-	Int32 left_window_beg,  left_window_end,  left_n;
-	Int32 right_window_beg, right_window_end, right_n;
+static void Vorbis_CalcWindow(struct VorbisWindow* window, Int32 blockSize) {
+	Int32 i, n = blockSize / 2;
+	window->Cur = window->Prev + n;
+	Real32* cur_window  = window->Cur;
+	Real32* prev_window = window->Prev;
 
-	if (longBlock && !prevLong) {
-		left_window_beg = n / 4 - ctx->BlockSizes[0] / 4;
-		left_window_end = n / 4 + ctx->BlockSizes[0] / 4;
-		left_n = ctx->BlockSizes[0] / 2;
-	} else {
-		left_window_beg = 0;
-		left_window_end = window_center;
-		left_n = n / 2;
+	for (i = 0; i < n; i++) {
+		Real64 inner   = Math_Sin((i + 0.5) / n * (PI/2));
+		cur_window[i]  = Math_Sin((PI/2) * inner * inner);
 	}
-
-	if (longBlock && !nextLong) {
-		right_window_beg = (n*3) / 4 - ctx->BlockSizes[0] / 4;
-		right_window_end = (n*3) / 4 + ctx->BlockSizes[0] / 4;
-		right_n = ctx->BlockSizes[0] / 2;
-	} else {
-		right_window_beg = window_center;
-		right_window_end = n;
-		right_n = n / 2;
+	for (i = 0; i < n; i++) {
+		Real64 inner   = Math_Sin((i + 0.5) / n * (PI/2) + (PI/2));
+		prev_window[i] = Math_Sin((PI/2) * inner * inner);
 	}
-
-	Real32* window = ctx->WindowShort + *offset; (*offset) += n;
-
-	for (i = 0; i < left_window_beg; i++) window[i] = 0;
-	for (i = left_window_beg; i < left_window_end; i++) {
-		Real64 inner = Math_Sin((i - left_window_beg + 0.5) / left_n * (PI/2));
-		window[i] = Math_Sin((PI/2) * inner * inner);
-	}
-	for (i = left_window_end; i < right_window_beg; i++) window[i] = 1;
-	for (i = right_window_beg; i < right_window_end; i++) {
-		Real64 inner = Math_Sin((i - right_window_beg + 0.5) / right_n * (PI/2) + (PI/2));
-		window[i] = Math_Sin((PI/2) * inner * inner);
-	}
-	for (i = right_window_end; i < n; i++) window[i] = 0;
 }
 
 void Vorbis_Free(struct VorbisState* ctx) {
@@ -1001,11 +976,8 @@ void Vorbis_Free(struct VorbisState* ctx) {
 	Mem_Free(&ctx->Residues);
 	Mem_Free(&ctx->Mappings);
 	Mem_Free(&ctx->Modes);
-	Mem_Free(&ctx->WindowShort);
-
+	Mem_Free(&ctx->WindowRaw);
 	Mem_Free(&ctx->Temp);
-	ctx->Values[0] = NULL;
-	ctx->Values[1] = NULL;
 }
 
 static bool Vorbis_ValidBlockSize(UInt32 size) {
@@ -1130,6 +1102,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 
 ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 	ReturnCode res;
+	UInt32 count;
 	
 	if (res = Vorbis_CheckHeader(ctx, 1))   return res;
 	if (res = Vorbis_DecodeIdentifier(ctx)) return res;
@@ -1139,18 +1112,13 @@ ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 	if (res = Vorbis_DecodeSetup(ctx))      return res;
 
 	/* window calculations can be pre-computed here */
-	UInt32 count = ctx->BlockSizes[0] + ctx->BlockSizes[1] * 4, offset = 0;
-	ctx->WindowShort = Mem_Alloc(count, sizeof(Real32), "Vorbis windows");
-	Vorbis_CalcWindow(ctx, &offset, false, false, false);
+	count = ctx->BlockSizes[0] + ctx->BlockSizes[1];
+	ctx->WindowRaw = Mem_Alloc(count, sizeof(Real32), "Vorbis windows");
+	ctx->Windows[0].Prev = ctx->WindowRaw;
+	ctx->Windows[1].Prev = ctx->WindowRaw + ctx->BlockSizes[0];
 
-	ctx->WindowLong[0][0] = ctx->WindowShort + offset;
-	Vorbis_CalcWindow(ctx, &offset, true, false, false);
-	ctx->WindowLong[1][0] = ctx->WindowShort + offset;
-	Vorbis_CalcWindow(ctx, &offset, true, false, true);
-	ctx->WindowLong[0][1] = ctx->WindowShort + offset;
-	Vorbis_CalcWindow(ctx, &offset, true, true,  false);
-	ctx->WindowLong[1][1] = ctx->WindowShort + offset;
-	Vorbis_CalcWindow(ctx, &offset, true, true,  true);
+	Vorbis_CalcWindow(&ctx->Windows[0], ctx->BlockSizes[0]);
+	Vorbis_CalcWindow(&ctx->Windows[1], ctx->BlockSizes[1]);
 
 	count = ctx->Channels * ctx->BlockSizes[1];
 	ctx->Temp      = Mem_AllocCleared(count * 3, sizeof(Real32), "Vorbis values");
@@ -1263,14 +1231,6 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 		Floor_Synthesis(ctx, &ctx->Floors[floorIdx], i);
 	}
 
-	Int32 n = ctx->CurBlockSize;
-	Real32* window;
-	if (mode->BlockSizeFlag) {
-		window = ctx->WindowLong[prev_window][next_window];
-	} else {
-		window = ctx->WindowShort;
-	}
-
 	/* inverse monolithic transform of audio spectrum vector */
 	for (i = 0; i < ctx->Channels; i++) {
 		Real32* data = ctx->CurOutput[i];
@@ -1279,7 +1239,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 			Mem_Set(data, 0, ctx->CurBlockSize * sizeof(Real32));
 		} else {
 			imdct_calc(data, data, &ctx->imdct[mode->BlockSizeFlag]);
-			for (j = 0; j < n; j++) { data[j] *= window[j]; }
+			/* defer windowing until output */
 		}
 	}
 
@@ -1332,12 +1292,15 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 	for (i = 0; i < ctx->Channels; i++) {
 		prev[i] += prevOffset; cur[i] += curOffset;
 	}
+
 	Int32 overlapSize = overlapQtr * 2;
+	struct VorbisWindow window = ctx->Windows[(overlapQtr * 4) == ctx->BlockSizes[1]];
 
 	/* overlap and add data */
+	/* also perform windowing here */
 	for (i = 0; i < overlapSize; i++) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
-			Real32 sample = prev[ch][i] + cur[ch][i];
+			Real32 sample = prev[ch][i] * window.Prev[i] + cur[ch][i] * window.Cur[i];
 			Math_Clamp(sample, -1.0f, 1.0f);
 			*data++ = (Int16)(sample * 32767);
 		}

@@ -1,6 +1,6 @@
 #ifndef CC_ENVRENDERER_H
 #define CC_ENVRENDERER_H
-#include "Typedefs.h"
+#include "Core.h"
 /* Renders environment of the map. (clouds, sky, fog, map sides/edges, skybox, rain/snow)
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

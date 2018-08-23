@@ -1,6 +1,6 @@
 #ifndef CC_PICKEDPOSRENDERER_H
 #define CC_PICKEDPOSRENDERER_H
-#include "Typedefs.h"
+#include "Core.h"
 /* Renders an outline around the block the player is looking at.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

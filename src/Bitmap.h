@@ -1,6 +1,6 @@
 #ifndef CC_BITMAP_H
 #define CC_BITMAP_H
-#include "Typedefs.h"
+#include "Core.h"
 /* Represents a 2D array of pixels.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

@@ -14,7 +14,8 @@ typedef signed __int8  Int8;
 typedef signed __int16 Int16;
 typedef signed __int32 Int32;
 typedef signed __int64 Int64;
-#elif __GNUC__ || (__STDC_VERSION__ >= 199901L)
+#define FUNC_ATTRIB(args) __declspec(args)
+#elif __GNUC__
 #include <stdint.h>
 typedef uint8_t  UInt8;
 typedef uint16_t UInt16;
@@ -25,8 +26,9 @@ typedef int8_t Int8;
 typedef int16_t Int16;
 typedef int32_t Int32;
 typedef int64_t Int64;
+#define FUNC_ATTRIB(args) __attribute__((args))
 #else
-#error "I didn't add typedefs for this compiler. You'll need to define them in Typedefs.h!"
+#error "I don't recognise this compiler. You'll need to add required definitions in Core.h!
 #endif
 
 typedef unsigned char UChar;

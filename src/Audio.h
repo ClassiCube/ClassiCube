@@ -1,6 +1,6 @@
 #ifndef CC_AUDIO_H
 #define CC_AUDIO_H
-#include "Typedefs.h"
+#include "Core.h"
 /* Manages playing sound and music.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
