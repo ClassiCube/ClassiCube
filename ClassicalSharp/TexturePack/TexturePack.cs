@@ -55,9 +55,8 @@ namespace ClassicalSharp.Textures {
 			reader.Extract(stream);
 		}
 		
-		static void ProcessZipEntry(string filename, byte[] data, ZipEntry entry) {
-			string name = Utils.ToLower(filename);
-			name = Utils.GetFilename(name);
+		static void ProcessZipEntry(string path, byte[] data, ZipEntry entry) {
+			string name = Utils.GetFilename(path);
 			game.Events.RaiseTextureChanged(name, data);
 		}
 		

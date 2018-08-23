@@ -131,8 +131,8 @@ namespace ClassicalSharp.Gui.Screens {
 
 		public TexPackOverlay(Game game, string url) : base(game) {
 			string address = url;
-			if (url.StartsWith("https://")) address = url.Substring(8);
-			if (url.StartsWith("http://"))  address = url.Substring(7);
+			if (Utils.CaselessStarts(url, "https://")) address = url.Substring(8);
+			if (Utils.CaselessStarts(url, "http://"))  address = url.Substring(7);
 			Identifier = "CL_" + url;
 			game.Downloader.AsyncGetContentLength(url, true, Identifier);
 			

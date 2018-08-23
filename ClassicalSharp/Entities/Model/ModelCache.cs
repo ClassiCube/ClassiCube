@@ -111,7 +111,7 @@ namespace ClassicalSharp.Model {
 		void TextureChanged(object sender, TextureEventArgs e) {
 			for (int i = 0; i < Textures.Count; i++) {
 				CachedTexture tex = Textures[i];
-				if (tex.Name != e.Name) continue;
+				if (!Utils.CaselessEq(tex.Name, e.Name)) continue;
 				
 				game.UpdateTexture(ref tex.TexID, e.Name, e.Data, ref tex.SkinType);	
 				Textures[i] = tex; 

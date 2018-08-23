@@ -1594,13 +1594,14 @@ struct Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_P
 	String messageScreen = String_InitAndClearArray(screen->MessageBuffer);
 	String_AppendString(&messageScreen, message);
 
-	UChar reasonBuffer[String_BufferSize(STRING_SIZE)];
-	String reason = String_InitAndClearArray(reasonBuffer);
-	String_AppendColorless(&reason, message);
+	UChar whyBuffer[String_BufferSize(STRING_SIZE)];
+	String why = String_InitAndClearArray(whyBuffer);
+	String_AppendColorless(&why, message);
 
 	String kick = String_FromConst("Kicked ");
 	String ban  = String_FromConst("Banned ");
-	screen->CanReconnect = !(String_StartsWith(&reason, &kick) || String_StartsWith(&reason, &ban));
+	screen->CanReconnect = 
+		!(String_CaselessStarts(&why, &kick) || String_CaselessStarts(&why, &ban));
 
 	Font_Make(&screen->TitleFont,   &Game_FontName, 16, FONT_STYLE_BOLD);
 	Font_Make(&screen->MessageFont, &Game_FontName, 16, FONT_STYLE_NORMAL);

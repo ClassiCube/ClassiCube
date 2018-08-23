@@ -43,7 +43,6 @@ String String_FromReadonly(STRING_REF const UChar* buffer);
 /* Constructs a new string from a compile time array, that may have arbitary actual length of data at runtime */
 #define String_FromRawArray(buffer) String_FromRaw(buffer, (UInt16)(sizeof(buffer) - 1))
 
-void String_MakeLowercase(STRING_TRANSIENT String* str);
 void String_StripCols(STRING_TRANSIENT String* str);
 void String_Clear(STRING_TRANSIENT String* str);
 void String_Set(STRING_TRANSIENT String* str, STRING_PURE String* value);
@@ -81,7 +80,6 @@ void String_UNSAFE_TrimEnd(STRING_TRANSIENT String* str);
 
 Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub);
 #define String_ContainsString(str, sub) (String_IndexOfString(str, sub) >= 0)
-bool String_StartsWith(STRING_PURE String* str, STRING_PURE String* sub);
 bool String_CaselessStarts(STRING_PURE String* str, STRING_PURE String* sub);
 bool String_CaselessEnds(STRING_PURE String* str, STRING_PURE String* sub);
 Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b);

@@ -167,7 +167,7 @@ void Platform_LogConst(const UChar* message) {
 	OutputDebugStringA("\n");
 }
 
-void Platform_FromSysTime(DateTime* time, SYSTEMTIME* sysTime) {
+static void Platform_FromSysTime(DateTime* time, SYSTEMTIME* sysTime) {
 	time->Year   = (UInt16)sysTime->wYear;
 	time->Month  =  (UInt8)sysTime->wMonth;
 	time->Day    =  (UInt8)sysTime->wDay;
@@ -220,32 +220,31 @@ Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {
 void Platform_Log(STRING_PURE String* message) { puts(message->buffer); }
 void Platform_LogConst(const UChar* message) { puts(message); }
 
-void Platform_FromSysTime(DateTime* time, struct tm* sysTime) {
-	time->Year = sysTime->tm_year + 1900;
-	time->Month = sysTime->tm_mon + 1;
-	time->Day = sysTime->tm_mday;
-	time->Hour = sysTime->tm_hour;
+static void Platform_FromSysTime(DateTime* time, struct tm* sysTime) {
+	time->Year   = sysTime->tm_year + 1900;
+	time->Month  = sysTime->tm_mon + 1;
+	time->Day    = sysTime->tm_mday;
+	time->Hour   = sysTime->tm_hour;
 	time->Minute = sysTime->tm_min;
 	time->Second = sysTime->tm_sec;
-	time->Milli = 0;
 }
 
 void DateTime_CurrentUTC(DateTime* time_) {
 	struct timeval cur; struct tm utc_time;
 	gettimeofday(&cur, NULL);
-	time_->Milli = cur.tv_usec / 1000;
-
 	gmtime_r(&cur.tv_sec, &utc_time);
+
 	Platform_FromSysTime(time_, &utc_time);
+	time_->Milli = cur.tv_usec / 1000;
 }
 
 void DateTime_CurrentLocal(DateTime* time_) {
 	struct timeval cur; struct tm loc_time;
 	gettimeofday(&cur, NULL);
-	time_->Milli = cur.tv_usec / 1000;
-
 	localtime_r(&cur.tv_sec, &loc_time);
+
 	Platform_FromSysTime(time_, &loc_time);
+	time_->Milli = cur.tv_usec / 1000;
 }
 
 void Stopwatch_Measure(struct Stopwatch* timer) {

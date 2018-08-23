@@ -23,7 +23,7 @@ namespace Launcher.Patcher {
 		IDrawer2D drawer;
 		
 		Bitmap animsBmp;
-		List<string> existing = new List<string>();
+		List<string> filenames = new List<string>();
 		Bitmap terrainBmp;
 		bool patchedTerrain;
 		
@@ -67,8 +67,8 @@ namespace Launcher.Patcher {
 		List<byte[]> datas = new List<byte[]>();
 		
 		void ExtractExisting(string path, byte[] data, ZipEntry entry) {
-			entry.Path = Utils.GetFilename(path);		
-			existing.Add(entry.Path);
+			entry.Path = Utils.GetFilename(path);
+			filenames.Add(entry.Path);
 			entries.Add(entry);
 			datas.Add(data);
 		}
@@ -101,9 +101,9 @@ namespace Launcher.Patcher {
 				if (entry.Path == "gui.png")
 					entry.Path = "gui_classic.png";
 				
-				if (!existing.Contains(entry.Path))
+				if (!filenames.Contains(entry.Path))
 					writer.WriteZipEntry(entry, data);
-			} else if (!existing.Contains("terrain.png")){
+			} else if (!filenames.Contains("terrain.png")){
 				terrainBmp = Platform.ReadBmp(drawer, data);
 				using (Bitmap mask = Platform.ReadBmp(drawer, pngTerrainPatch)) {
 					CopyTile( 0,  0,  3 * 16, 3 * 16, mask, terrainBmp);
@@ -132,42 +132,42 @@ namespace Launcher.Patcher {
 				reader.ProcessZipEntry = ProcessZipEntry_Modern;
 				reader.Extract(src);
 				
-				if (!existing.Contains("animations.png"))
+				if (!filenames.Contains("animations.png"))
 					writer.WriteNewImage(animsBmp, "animations.png");
-				if (!existing.Contains("animations.txt"))
+				if (!filenames.Contains("animations.txt"))
 					writer.WriteNewString(animationsTxt, "animations.txt");
 				animsBmp.Dispose();
 			}
 		}
 		
-		bool SelectZipEntry_Modern(string filename) {
-			return filename.StartsWith("assets/minecraft/textures") &&
-				(filename == "assets/minecraft/textures/environment/snow.png"              ||
-				 filename == "assets/minecraft/textures/entity/chicken.png"                ||
-				 filename == "assets/minecraft/textures/blocks/fire_layer_1.png"           ||
-				 filename == "assets/minecraft/textures/blocks/sandstone_bottom.png"       ||
-				 filename == "assets/minecraft/textures/blocks/sandstone_normal.png"       ||
-				 filename == "assets/minecraft/textures/blocks/sandstone_top.png"          ||
-				 filename == "assets/minecraft/textures/blocks/quartz_block_lines_top.png" ||
-				 filename == "assets/minecraft/textures/blocks/quartz_block_lines.png"     ||
-				 filename == "assets/minecraft/textures/blocks/stonebrick.png"             ||
-				 filename == "assets/minecraft/textures/blocks/snow.png"                   ||
-				 filename == "assets/minecraft/textures/blocks/wool_colored_blue.png"      ||
-				 filename == "assets/minecraft/textures/blocks/wool_colored_brown.png"     ||
-				 filename == "assets/minecraft/textures/blocks/wool_colored_cyan.png"      ||
-				 filename == "assets/minecraft/textures/blocks/wool_colored_green.png"     ||
-				 filename == "assets/minecraft/textures/blocks/wool_colored_pink.png"
+		bool SelectZipEntry_Modern(string path) {
+			return path.StartsWith("assets/minecraft/textures") &&
+				(path == "assets/minecraft/textures/environment/snow.png"              ||
+				 path == "assets/minecraft/textures/entity/chicken.png"                ||
+				 path == "assets/minecraft/textures/blocks/fire_layer_1.png"           ||
+				 path == "assets/minecraft/textures/blocks/sandstone_bottom.png"       ||
+				 path == "assets/minecraft/textures/blocks/sandstone_normal.png"       ||
+				 path == "assets/minecraft/textures/blocks/sandstone_top.png"          ||
+				 path == "assets/minecraft/textures/blocks/quartz_block_lines_top.png" ||
+				 path == "assets/minecraft/textures/blocks/quartz_block_lines.png"     ||
+				 path == "assets/minecraft/textures/blocks/stonebrick.png"             ||
+				 path == "assets/minecraft/textures/blocks/snow.png"                   ||
+				 path == "assets/minecraft/textures/blocks/wool_colored_blue.png"      ||
+				 path == "assets/minecraft/textures/blocks/wool_colored_brown.png"     ||
+				 path == "assets/minecraft/textures/blocks/wool_colored_cyan.png"      ||
+				 path == "assets/minecraft/textures/blocks/wool_colored_green.png"     ||
+				 path == "assets/minecraft/textures/blocks/wool_colored_pink.png"
 				);
 		}
 		
 		void ProcessZipEntry_Modern(string path, byte[] data, ZipEntry entry) {
 			entry.Path = Utils.GetFilename(path);
 			if (path == "assets/minecraft/textures/environment/snow.png") {
-				if (!existing.Contains("snow.png")) {
+				if (!filenames.Contains("snow.png")) {
 					writer.WriteZipEntry(entry, data);
 				}
 			} else if (path == "assets/minecraft/textures/entity/chicken.png") {
-				if (!existing.Contains("chicken.png")) {
+				if (!filenames.Contains("chicken.png")) {
 					writer.WriteZipEntry(entry, data);
 				}
 			} else if (path == "assets/minecraft/textures/blocks/fire_layer_1.png") {

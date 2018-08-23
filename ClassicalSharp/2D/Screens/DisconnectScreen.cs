@@ -18,8 +18,9 @@ namespace ClassicalSharp.Gui.Screens {
 			this.title = title;
 			this.message = message;
 			
-			string reason = Utils.StripColours(message);
-			canReconnect = !(reason.StartsWith("Kicked ") || reason.StartsWith("Banned "));
+			string why = Utils.StripColours(message);
+			canReconnect = 
+				!(Utils.CaselessStarts(why, "Kicked ") || Utils.CaselessStarts(why, "Banned "));
 			
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			messageFont = new Font(game.FontName, 16);

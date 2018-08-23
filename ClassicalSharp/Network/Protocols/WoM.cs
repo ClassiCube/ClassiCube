@@ -63,20 +63,20 @@ namespace ClassicalSharp.Network.Protocols {
 				string key = line.Substring(0, sepIndex).TrimEnd();
 				string value = line.Substring(sepIndex + 1).TrimStart();
 				
-				if (key == "environment.cloud") {
+				if (Utils.CaselessEq(key, "environment.cloud")) {
 					PackedCol col = ParseWomCol(value, WorldEnv.DefaultCloudsCol);
 					game.World.Env.SetCloudsCol(col);
-				} else if (key == "environment.sky") {
+				} else if (Utils.CaselessEq(key, "environment.sky")) {
 					PackedCol col = ParseWomCol(value, WorldEnv.DefaultSkyCol);
 					game.World.Env.SetSkyCol(col);
-				} else if (key == "environment.fog") {
+				} else if (Utils.CaselessEq(key, "environment.fog")) {
 					PackedCol col = ParseWomCol(value, WorldEnv.DefaultFogCol);
 					game.World.Env.SetFogCol(col);
-				} else if (key == "environment.level") {
+				} else if (Utils.CaselessEq(key, "environment.level")) {
 					int waterLevel = 0;
 					if (Int32.TryParse(value, out waterLevel))
 						game.World.Env.SetEdgeLevel(waterLevel);
-				} else if (key == "user.detail" && !net.cpeData.useMessageTypes) {
+				} else if (Utils.CaselessEq(key, "user.detail")) && !net.cpeData.useMessageTypes) {
 					game.Chat.Add(value, MessageType.Status2);
 				}
 			}

@@ -42,13 +42,6 @@ String String_FromReadonly(STRING_REF const UChar* buffer) {
 }
 
 
-void String_MakeLowercase(STRING_TRANSIENT String* str) {
-	Int32 i;
-	for (i = 0; i < str->length; i++) {
-		str->buffer[i] = Char_ToLower(str->buffer[i]);
-	}
-}
-
 void String_StripCols(STRING_TRANSIENT String* str) {
 	Int32 i;
 	for (i = str->length - 1; i >= 0; i--) {
@@ -364,16 +357,6 @@ Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub) {
 		if (j == sub->length) return i;
 	}
 	return -1;
-}
-
-bool String_StartsWith(STRING_PURE String* str, STRING_PURE String* sub) {
-	if (str->length < sub->length) return false;
-	Int32 i;
-
-	for (i = 0; i < sub->length; i++) {
-		if (str->buffer[i] != sub->buffer[i]) return false;
-	}
-	return true;
 }
 
 bool String_CaselessStarts(STRING_PURE String* str, STRING_PURE String* sub) {

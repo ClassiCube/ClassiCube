@@ -24,29 +24,29 @@ namespace ClassicalSharp.Network {
 		public void HandleEntry(string ext, int version, NetworkProcessor net) {
 			ServerExtensionsCount--;
 			
-			if (ext == "HeldBlock") {
+			if (Utils.CaselessEq(ext, "HeldBlock")) {
 				sendHeldBlock = true;
-			} else if (ext == "MessageTypes") {
+			} else if (Utils.CaselessEq(ext, "MessageTypes")) {
 				useMessageTypes = true;
-			} else if (ext == "ExtPlayerList") {
+			} else if (Utils.CaselessEq(ext, "ExtPlayerList")) {
 				net.UsingExtPlayerList = true;
-			} else if (ext == "BlockPermissions") {
+			} else if (Utils.CaselessEq(ext, "BlockPermissions")) {
 				blockPerms = true;
-			} else if (ext == "PlayerClick") {
+			} else if (Utils.CaselessEq(ext, "PlayerClick")) {
 				net.UsingPlayerClick = true;
-			} else if (ext == "EnvMapAppearance") {
+			} else if (Utils.CaselessEq(ext, "EnvMapAppearance")) {
 				envMapVer = version;
 				if (version == 1) return;
 				net.packetSizes[Opcode.CpeEnvSetMapApperance] += 4;
-			} else if (ext == "LongerMessages") {
+			} else if (Utils.CaselessEq(ext, "LongerMessages")) {
 				net.SupportsPartialMessages = true;
-			} else if (ext == "FullCP437") {
+			} else if (Utils.CaselessEq(ext, "FullCP437")) {
 				net.SupportsFullCP437 = true;
-			} else if (ext == "BlockDefinitionsExt") {
+			} else if (Utils.CaselessEq(ext, "BlockDefinitionsExt")) {
 				blockDefsExtVer = version;
 				if (version == 1) return;
 				net.packetSizes[Opcode.CpeDefineBlockExt] += 3;
-			} else if (ext == "ExtEntityPositions") {
+			} else if (Utils.CaselessEq(ext, "ExtEntityPositions")) {
 				extEntityPos = true;
 				net.packetSizes[Opcode.EntityTeleport] += 6;
 				net.packetSizes[Opcode.AddEntity] += 6;
@@ -54,18 +54,18 @@ namespace ClassicalSharp.Network {
 				
 				net.reader.ExtendedPositions = true;
 				net.writer.ExtendedPositions = true;
-			} else if (ext == "TwoWayPing") {
+			} else if (Utils.CaselessEq(ext, "TwoWayPing")) {
 				twoWayPing = true;
-			} else if (ext == "FastMap") {
+			} else if (Utils.CaselessEq(ext, "FastMap")) {
 				net.packetSizes[Opcode.LevelInit] += 4;
 				fastMap = true;
-			} else if (ext == "ExtendedTextures") {
+			} else if (Utils.CaselessEq(ext, "ExtendedTextures")) {
 				net.packetSizes[Opcode.CpeDefineBlock] += 3;
 				net.packetSizes[Opcode.CpeDefineBlockExt] += 6;
 				extTexs = true;
 			}
 			#if !ONLY_8BIT
-			else if (ext == "ExtendedBlocks") {
+			else if (Utils.CaselessEq(ext, "ExtendedBlocks")) {
 				if (!game.AllowCustomBlocks) return;
 				net.packetSizes[Opcode.SetBlock] += 1;
 				net.packetSizes[Opcode.CpeHoldThis] += 1;

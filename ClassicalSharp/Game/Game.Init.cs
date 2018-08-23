@@ -164,9 +164,9 @@ namespace ClassicalSharp {
 			TexturePack.ExtractZip("default.zip", this);
 			
 			// in case the user's default texture pack doesn't have all required textures
-			string defTexPack = DefaultTexturePack;
-			if (defTexPack != "default.zip") {
-				TexturePack.ExtractZip(defTexPack, this);
+			string texPack = DefaultTexturePack;
+			if (!Utils.CaselessEq(texPack, "default.zip")) {
+				TexturePack.ExtractZip(texPack, this);
 			}
 		}
 		
