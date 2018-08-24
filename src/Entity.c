@@ -474,8 +474,8 @@ static void Player_MakeNameTexture(struct Player* player) {
 	struct Size2D size = Drawer2D_MeasureText(&args);
 
 	if (size.Width == 0) {
-		Texture_MakeInvalid(&player->NameTex);
-		player->NameTex.X = PLAYER_NAME_EMPTY_TEX;
+		player->NameTex.ID = NULL;
+		player->NameTex.X  = PLAYER_NAME_EMPTY_TEX;
 	} else {
 		UChar buffer[String_BufferSize(STRING_SIZE)];
 		String shadowName = String_InitAndClearArray(buffer);
@@ -729,7 +729,7 @@ static void Player_Despawn(struct Entity* entity) {
 static void Player_ContextLost(struct Entity* entity) {
 	struct Player* player = (struct Player*)entity;
 	Gfx_DeleteTexture(&player->NameTex.ID);
-	Texture_MakeInvalid(&player->NameTex);
+	player->NameTex.X = 0; /* X is used as an 'empty name' flag */
 }
 
 static void Player_ContextRecreated(struct Entity* entity) {

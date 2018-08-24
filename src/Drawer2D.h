@@ -38,8 +38,8 @@ void Drawer2D_DrawText(struct DrawTextArgs* args, Int32 x, Int32 y);
 struct Size2D Drawer2D_MeasureText(struct DrawTextArgs* args);
 Int32 Drawer2D_FontHeight(struct FontDesc* font, bool useShadow);
 
-void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, Int32 windowX, Int32 windowY);
-void Drawer2D_Make2DTexture(struct Texture* tex, struct Bitmap* bmp, struct Size2D used, Int32 windowX, Int32 windowY);
+void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, Int32 X, Int32 Y);
+void Drawer2D_Make2DTexture(struct Texture* tex, struct Bitmap* bmp, struct Size2D used, Int32 X, Int32 Y);
 
 bool Drawer2D_ValidColCodeAt(STRING_PURE String* text, Int32 i);
 bool Drawer2D_ValidColCode(UChar c);

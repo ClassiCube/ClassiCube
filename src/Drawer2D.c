@@ -128,10 +128,11 @@ Int32 Drawer2D_FontHeight(struct FontDesc* font, bool useShadow) {
 	return Drawer2D_MeasureText(&args).Height;
 }
 
-void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, Int32 windowX, Int32 windowY) {
+void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, Int32 X, Int32 Y) {
 	struct Size2D size = Drawer2D_MeasureText(args);
 	if (size.Width == 0 && size.Height == 0) {
-		Texture_FromOrigin(tex, NULL, windowX, windowY, 0, 0, 1.0f, 1.0f); return;
+		struct Texture empty = { NULL, TEX_RECT(X,Y, 0,0), TEX_UV(0,0, 1,1) };
+		*tex = empty; return;
 	}
 
 	struct Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
@@ -141,14 +142,17 @@ void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, In
 	}
 	Drawer2D_End();
 
-	Drawer2D_Make2DTexture(tex, &bmp, size, windowX, windowY);
+	Drawer2D_Make2DTexture(tex, &bmp, size, X, Y);
 	Mem_Free(&bmp.Scan0);
 }
 
-void Drawer2D_Make2DTexture(struct Texture* tex, struct Bitmap* bmp, struct Size2D used, Int32 windowX, Int32 windowY) {
+void Drawer2D_Make2DTexture(struct Texture* tex, struct Bitmap* bmp, struct Size2D used, Int32 X, Int32 Y) {
 	GfxResourceID texId = Gfx_CreateTexture(bmp, false, false);
-	Texture_FromOrigin(tex, texId, windowX, windowY, used.Width, used.Height,
-		(Real32)used.Width / (Real32)bmp->Width, (Real32)used.Height / (Real32)bmp->Height);
+	Real32 u2 = (Real32)used.Width  / (Real32)bmp->Width;
+	Real32 v2 = (Real32)used.Height / (Real32)bmp->Height;
+
+	struct Texture tmp = { texId, TEX_RECT(X,Y, used.Width,used.Height), TEX_UV(0,0, u2,v2) };
+	*tex = tmp;
 }
 
 bool Drawer2D_ValidColCodeAt(STRING_PURE String* text, Int32 i) {

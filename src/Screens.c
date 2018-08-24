@@ -540,14 +540,13 @@ static void LoadingScreen_DrawBackground(void) {
 	TextureLoc texLoc = Block_GetTexLoc(BLOCK_DIRT, FACE_YMAX);
 	struct TextureRec rec = Atlas1D_TexRec(texLoc, 1, &atlasIndex);
 
-	struct Texture tex;
-	Texture_FromRec(&tex, 0, 0, 0, Game_Width, LOADING_TILE_SIZE, rec);
-	tex.U2 = (Real32)Game_Width / (Real32)LOADING_TILE_SIZE;
+	Real32 u2 = (Real32)Game_Width / (Real32)LOADING_TILE_SIZE;
+	struct Texture tex = { NULL, TEX_RECT(0,0, Game_Width,LOADING_TILE_SIZE), TEX_UV(0,rec.V1, u2,rec.V2) };
 
 	bool bound = false;
 	while (y < Game_Height) {
 		tex.Y = y;
-		y += LOADING_TILE_SIZE;		
+		y += LOADING_TILE_SIZE;
 		GfxCommon_Make2DQuad(&tex, col, &ptr);
 		count += 4;
 
@@ -1216,17 +1215,15 @@ struct Screen* ChatScreen_MakeInstance(void) {
 struct GuiElementVTABLE HUDScreenVTABLE;
 struct HUDScreen HUDScreen_Instance;
 #define CH_EXTENT 16
-#define CH_WEIGHT 2
+
 static void HUDScreen_DrawCrosshairs(void) {
 	if (!Gui_IconsTex) return;
-	struct TextureRec chRec = { 0.0f, 0.0f, 15.0f / 256.0f, 15 / 256.0f };
 
-	Int32 extent = (Int32)(CH_EXTENT * Game_Scale(Game_Height / 480.0f));
+	Int32 extent = (Int32)(CH_EXTENT * Game_Scale(Game_Height / 480.0f)), size = extent * 2;
 	Int32 chX = (Game_Width / 2) - extent, chY = (Game_Height / 2) - extent;
 
-	struct Texture chTex;
-	Texture_FromRec(&chTex, Gui_IconsTex, chX, chY, extent * 2, extent * 2, chRec);
-	Texture_Render(&chTex);
+	struct Texture tex = { Gui_IconsTex, TEX_RECT(chX,chY, size, size), TEX_UV(0.0f,0.0f, 15/256.0f,15/256.0f) };
+	Texture_Render(&tex);
 }
 
 static void HUDScreen_ContextLost(void* obj) {

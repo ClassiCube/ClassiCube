@@ -14,6 +14,8 @@ struct Texture {
 	Int16 X, Y; UInt16 Width, Height;
 	Real32 U1, V1, U2, V2;
 };
+#define TEX_RECT(x,y, width,height) x,y,width,height
+#define TEX_UV(u1,v1, u2,v2)        u1,v1,u2,v2
 
 void GfxCommon_Init(void);
 void GfxCommon_Free(void);
@@ -42,11 +44,6 @@ void GfxCommon_RestoreAlphaState(UInt8 draw);
 
 void GfxCommon_GenMipmaps(Int32 width, Int32 height, UInt8* lvlScan0, UInt8* scan0);
 Int32 GfxCommon_MipmapsLevels(Int32 width, Int32 height);
-
-void Texture_FromOrigin(struct Texture* tex, GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height, Real32 u2, Real32 v2);
-void Texture_FromRec(struct Texture* tex, GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height, struct TextureRec rec);
-void Texture_From(struct Texture* tex, GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height, Real32 u1, Real32 u2, Real32 v1, Real32 v2);
-void Texture_MakeInvalid(struct Texture* tex);
 void Texture_Render(struct Texture* tex);
 void Texture_RenderShaded(struct Texture* tex, PackedCol shadeCol);
 #endif

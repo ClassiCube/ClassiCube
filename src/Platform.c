@@ -56,6 +56,8 @@ ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #define Socket__Error() errno
 #define Nix_Return(success) ((success) ? 0 : errno)
 
+pthread_mutex_t event_mutex;
+
 UChar* Platform_NewLine = "\n";
 UChar Directory_Separator = '/';
 ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
@@ -470,7 +472,8 @@ ReturnCode File_Close(void* file) {
 }
 
 ReturnCode File_Seek(void* file, Int32 offset, Int32 seekType) {
-	return Nix_Return(lseek((int)file, offset, modes[seektype]) != -1);
+	static UInt8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
+	return Nix_Return(lseek((int)file, offset, modes[seekType]) != -1);
 }
 
 ReturnCode File_Position(void* file, UInt32* position) {
@@ -1185,7 +1188,6 @@ static void Platform_InitDisplay(void) {
 	DisplayDevice_Meta[2] = rootWin;
 }
 
-pthread_mutex_t event_mutex;
 void Platform_Init(void) {
 	Platform_InitDisplay();
 	pthread_mutex_init(&event_mutex, NULL);

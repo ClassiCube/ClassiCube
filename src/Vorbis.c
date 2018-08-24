@@ -239,7 +239,7 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 	UInt32 sync = Vorbis_ReadBits(ctx, 24);
 	if (sync != CODEBOOK_SYNC) return VORBIS_ERR_CODEBOOK_SYNC;
 	c->Dimensions = Vorbis_ReadBits(ctx, 16);
-	c->Entries = Vorbis_ReadBits(ctx, 24);
+	c->Entries    = Vorbis_ReadBits(ctx, 24);
 
 	UInt8* codewordLens = Mem_Alloc(c->Entries, sizeof(UInt8), "raw codeword lens");
 	Int32 i, ordered = Vorbis_ReadBits(ctx, 1), usedEntries = 0;

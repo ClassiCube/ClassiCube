@@ -28,7 +28,7 @@ typedef int32_t Int32;
 typedef int64_t Int64;
 #define FUNC_ATTRIB(args) __attribute__((args))
 #else
-#error "I don't recognise this compiler. You'll need to add required definitions in Core.h!
+#error "I don't recognise this compiler. You'll need to add required definitions in Core.h!"
 #endif
 
 typedef unsigned char UChar;

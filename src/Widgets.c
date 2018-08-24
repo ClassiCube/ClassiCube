@@ -17,6 +17,7 @@
 #include "Game.h"
 #include "ErrorHandler.h"
 
+#define WIDGET_UV(u1,v1, u2,v2) u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f
 void Widget_SetLocation(struct Widget* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xOffset, Int32 yOffset) {
 	widget->HorAnchor = horAnchor; widget->VerAnchor = verAnchor;
 	widget->XOffset = xOffset; widget->YOffset = yOffset;
@@ -83,7 +84,6 @@ void TextWidget_Create(struct TextWidget* widget, STRING_PURE String* text, stru
 void TextWidget_SetText(struct TextWidget* widget, STRING_PURE String* text) {
 	Gfx_DeleteTexture(&widget->Texture.ID);
 	if (Drawer2D_IsEmptyText(text)) {
-		Texture_MakeInvalid(&widget->Texture);
 		widget->Width = 0; widget->Height = widget->DefaultHeight;
 	} else {
 		struct DrawTextArgs args;
@@ -105,9 +105,10 @@ void TextWidget_SetText(struct TextWidget* widget, STRING_PURE String* text) {
 *#########################################################################################################################*/
 #define BUTTON_uWIDTH (200.0f / 256.0f)
 #define BUTTON_MIN_WIDTH 40
-struct Texture Button_ShadowTex   = { 0, 0, 0, 0, 0,  0.0f, 66.0f / 256.0f, BUTTON_uWIDTH,  86.0f / 256.0f };
-struct Texture Button_SelectedTex = { 0, 0, 0, 0, 0,  0.0f, 86.0f / 256.0f, BUTTON_uWIDTH, 106.0f / 256.0f };
-struct Texture Button_DisabledTex = { 0, 0, 0, 0, 0,  0.0f, 46.0f / 256.0f, BUTTON_uWIDTH,  66.0f / 256.0f };
+
+struct Texture Button_ShadowTex   = { NULL, TEX_RECT(0,0, 0,0), WIDGET_UV(0,66, 200,86)  };
+struct Texture Button_SelectedTex = { NULL, TEX_RECT(0,0, 0,0), WIDGET_UV(0,86, 200,106) };
+struct Texture Button_DisabledTex = { NULL, TEX_RECT(0,0, 0,0), WIDGET_UV(0,46, 200,66)  };
 
 static void ButtonWidget_Init(struct GuiElem* elem) {
 	struct ButtonWidget* widget = (struct ButtonWidget*)elem;
@@ -141,7 +142,6 @@ static void ButtonWidget_Render(struct GuiElem* elem, Real64 delta) {
 
 	if (widget->Width == 400) {
 		/* Button can be drawn normally */
-		back.U1 = 0.0f; back.U2 = BUTTON_uWIDTH;
 		Texture_Render(&back);
 	} else {
 		/* Split button down the middle */
@@ -185,7 +185,6 @@ void ButtonWidget_Create(struct ButtonWidget* widget, Int32 minWidth, STRING_PUR
 void ButtonWidget_SetText(struct ButtonWidget* widget, STRING_PURE String* text) {
 	Gfx_DeleteTexture(&widget->Texture.ID);
 	if (Drawer2D_IsEmptyText(text)) {
-		Texture_MakeInvalid(&widget->Texture);
 		widget->Width = 0; widget->Height = widget->DefaultHeight;
 	} else {
 		struct DrawTextArgs args;
@@ -363,20 +362,19 @@ static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* widget) {
 	IsometricDrawer_EndBatch();
 }
 
-static void HotbarWidget_RepositonBackgroundTexture(struct HotbarWidget* widget) {
-	struct TextureRec rec = { 0.0f, 0.0f, 182.0f / 256.0f, 22.0f / 256.0f };
-	Texture_FromRec(&widget->BackTex, NULL, widget->X, widget->Y, widget->Width, widget->Height, rec);
+static void HotbarWidget_RepositonBackgroundTexture(struct HotbarWidget* w) {
+	struct Texture tex = { NULL, TEX_RECT(w->X,w->Y, w->Width,w->Height), WIDGET_UV(0,0, 182,22) };
+	w->BackTex = tex;
 }
 
-static void HotbarWidget_RepositionSelectionTexture(struct HotbarWidget* widget) {
-	Int32 hSize = (Int32)widget->SelBlockSize;
-
+static void HotbarWidget_RepositionSelectionTexture(struct HotbarWidget* w) {
 	Real32 scale = Game_GetHotbarScale();
+	Int32 hSize = (Int32)w->SelBlockSize;
 	Int32 vSize = (Int32)(22.0f * scale);
-	Int32 y = widget->Y + (widget->Height - (Int32)(23.0f * scale));
+	Int32 y = w->Y + (w->Height - (Int32)(23.0f * scale));
 
-	struct TextureRec rec = { 0.0f, 22.0f / 256.0f, 24.0f / 256.0f, 44.0f / 256.0f };
-	Texture_FromRec(&widget->SelTex, NULL, 0, y, hSize, vSize, rec);
+	struct Texture tex = { NULL, TEX_RECT(0,y, hSize,vSize), WIDGET_UV(0,22, 24,44) };
+	w->SelTex = tex;
 }
 
 static Int32 HotbarWidget_ScrolledIndex(struct HotbarWidget* widget, Real32 delta, Int32 index, Int32 dir) {
@@ -1971,14 +1969,15 @@ static void PlayerListWidget_AddName(struct PlayerListWidget* widget, EntityID i
 static void PlayerListWidget_DeleteAt(struct PlayerListWidget* widget, Int32 i) {
 	struct Texture tex = widget->Textures[i];
 	Gfx_DeleteTexture(&tex.ID);
+	struct Texture empty = { 0 };
 
 	for (; i < widget->NamesCount - 1; i++) {
 		widget->IDs[i]      = widget->IDs[i + 1];
 		widget->Textures[i] = widget->Textures[i + 1];
 	}
 
-	widget->IDs[widget->NamesCount] = 0;
-	Texture_MakeInvalid(&widget->Textures[widget->NamesCount]);
+	widget->IDs[widget->NamesCount]      = 0;
+	widget->Textures[widget->NamesCount] = empty;
 	widget->NamesCount--;
 }
 
@@ -2538,7 +2537,7 @@ void TextGroupWidget_SetText(struct TextGroupWidget* widget, Int32 index, STRING
 	Mem_Copy(TextGroupWidget_LineBuffer(widget, index), text.buffer, text.length);
 	widget->LineLengths[index] = (UInt8)text.length;
 
-	struct Texture tex;
+	struct Texture tex = { 0 };
 	if (!Drawer2D_IsEmptyText(&text)) {
 		struct DrawTextArgs args; DrawTextArgs_Make(&args, &text, &widget->Font, true);
 
@@ -2549,7 +2548,6 @@ void TextGroupWidget_SetText(struct TextGroupWidget* widget, Int32 index, STRING
 		}
 		Drawer2D_ReducePadding_Tex(&tex, widget->Font.Size, 3);
 	} else {
-		Texture_MakeInvalid(&tex);
 		tex.Height = widget->PlaceholderHeight[index] ? widget->DefaultHeight : 0;
 	}
 

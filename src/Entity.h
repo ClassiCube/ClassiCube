@@ -9,6 +9,7 @@
 */
 struct IModel;
 struct IGameComponent;
+struct ScheduledTask;
 
 /* Offset used to avoid floating point roundoff errors. */
 #define ENTITY_ADJUSTMENT 0.001f
