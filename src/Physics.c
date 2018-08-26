@@ -158,8 +158,8 @@ Int32 Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB,
 	UInt32 elements = (max.X - min.X + 1) * (max.Y - min.Y + 1) * (max.Z - min.Z + 1);
 	if (elements > Searcher_StatesMax) {
 		Searcher_Free();
-		Searcher_StatesCount = elements;
-		Searcher_States = Mem_Alloc(elements, sizeof(struct SearcherState), "collision search states");
+		Searcher_StatesMax = elements;
+		Searcher_States    = Mem_Alloc(elements, sizeof(struct SearcherState), "collision search states");
 	}
 
 	/* Order loops so that we minimise cache misses */

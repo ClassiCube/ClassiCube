@@ -127,7 +127,7 @@ void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const UChar* pla
 }
 
 void Mem_Free(void* mem) {
-	if (mem) free(*mem);
+	if (mem) free(mem);
 }
 #endif
 

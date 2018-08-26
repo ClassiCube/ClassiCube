@@ -12,6 +12,7 @@
 #include "Game.h"
 #include "ErrorHandler.h"
 #include "Vectors.h"
+#include "Chat.h"
 
 /* Data for a resizable queue, used for liquid physic tick entries. */
 struct TickQueue {
@@ -40,7 +41,9 @@ static void TickQueue_Clear(struct TickQueue* queue) {
 
 static void TickQueue_Resize(struct TickQueue* queue) {
 	if (queue->BufferSize >= (Int32_MaxValue / 4)) {
-		ErrorHandler_Fail("TickQueue - too large to resize.");
+		Chat_AddRaw("&cTickQueue too large, clearing");
+		TickQueue_Clear(queue);
+		return;
 	}
 
 	UInt32 capacity = queue->BufferSize * 2;
