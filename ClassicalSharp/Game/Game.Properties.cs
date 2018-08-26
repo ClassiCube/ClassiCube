@@ -152,7 +152,7 @@ namespace ClassicalSharp {
 		
 		public bool SmoothCamera;
 
-        public float CameraFriction;
+		public float CameraFriction;
 		
 		public string FontName = "Arial";
 		
