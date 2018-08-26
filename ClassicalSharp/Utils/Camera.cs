@@ -79,27 +79,27 @@ namespace ClassicalSharp {
 		}
 		
 		public override void ResetRotOffset() {
-            rotOffset.X = 0;
-            rotOffset.Y = 0;
+			rotOffset.X = 0;
+			rotOffset.Y = 0;
 		}
 		
 		static readonly float sensiFactor = 0.0002f / 3 * Utils.Rad2Deg;
 
-        static float speedX = 0, speedY = 0, accelX = 0, accelY = 0, newSpeedX = 0, newSpeedY = 0;
-        protected Vector2 CalcMouseDelta(double dt) {
+		static float speedX = 0, speedY = 0, accelX = 0, accelY = 0, newSpeedX = 0, newSpeedY = 0;
+		protected Vector2 CalcMouseDelta(double dt) {
 			float sensitivity = sensiFactor * game.MouseSensitivity;
 
 			if (game.SmoothCamera) {
-                accelX = game.CameraFriction * (delta.X - speedX);
-                accelY = game.CameraFriction * (delta.Y - speedY);
-                newSpeedX = accelX * (float)dt + speedX;
-                newSpeedY = accelY * (float)dt + speedY;
-                //NOTE: High acceleration means velocity "overshoots" on low fps, causing wiggling. If newSpeed has opposite sign of speed, set speed to 0;
-                if (Math.Sign(newSpeedX) != Math.Sign(speedX) && newSpeedX != 0f && speedX != 0) speedX = 0f;
-                else speedX = newSpeedX;
-                if (Math.Sign(newSpeedY) != Math.Sign(speedY) && newSpeedY != 0f && speedY != 0) speedY = 0f;
-                else speedY = newSpeedY;
-            } else {
+				accelX = game.CameraFriction * (delta.X - speedX);
+				accelY = game.CameraFriction * (delta.Y - speedY);
+				newSpeedX = accelX * (float)dt + speedX;
+				newSpeedY = accelY * (float)dt + speedY;
+				// NOTE: High acceleration means velocity "overshoots" on low fps, causing wiggling. If newSpeed has opposite sign of speed, set speed to 0
+				if (Math.Sign(newSpeedX) != Math.Sign(speedX) && newSpeedX != 0f && speedX != 0) speedX = 0f;
+				else speedX = newSpeedX;
+				if (Math.Sign(newSpeedY) != Math.Sign(speedY) && newSpeedY != 0f && speedY != 0) speedY = 0f;
+				else speedY = newSpeedY;
+			} else {
 				speedX = delta.X;
 				speedY = delta.Y;
 			}
@@ -127,7 +127,7 @@ namespace ClassicalSharp {
 			game.LocalPlayer.SetLocation(update, false);
 		}
 		
-		public override void UpdateMouse(doublt dt) {
+		public override void UpdateMouse(double dt) {
 			if (game.Gui.ActiveScreen.HandlesAllInput) {
 				delta = Point.Empty;
 			} else if (game.window.Focused) {
