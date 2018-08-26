@@ -2602,13 +2602,6 @@ static void GuiOptionsScreen_SetUseFont(STRING_PURE String* v) {
 	Menu_HandleFontChange((struct GuiElem*)&MenuOptionsScreen_Instance);
 }
 
-static void GuiOptionsScreen_GetFont(STRING_TRANSIENT String* v) { String_AppendString(v, &Game_FontName); }
-static void GuiOptionsScreen_SetFont(STRING_PURE String* v) {
-	String_Set(&Game_FontName, v);
-	Options_Set(OPT_FONT_NAME, v);
-	Menu_HandleFontChange((struct GuiElem*)&MenuOptionsScreen_Instance);
-}
-
 static void GuiOptionsScreen_ContextRecreated(void* obj) {
 	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)obj;
 	struct Widget** widgets = screen->Widgets;

@@ -339,7 +339,7 @@ void Block_RecalculateBB(BlockID block) {
 		maxY = Block_GetSpriteBB_MaxY(tileSize, x, y, bmp);
 	}
 
-	Vector3 centre = VECTOR3_CONST(0.5f, 0.0f, 0.5f);
+	static Vector3 centre = { 0.5f, 0.0f, 0.5f };
 	Vector3 minRaw = Vector3_RotateY3(minX - 0.5f, minY, 0.0f, 45.0f * MATH_DEG2RAD);
 	Vector3 maxRaw = Vector3_RotateY3(maxX - 0.5f, maxY, 0.0f, 45.0f * MATH_DEG2RAD);
 
@@ -529,13 +529,13 @@ BlockID AutoRotate_RotateBlock(BlockID block) {
 	Vector3I_ToVector3(&translated, &Game_SelectedPos.TranslatedPos);
 	Vector3_Sub(&offset, &Game_SelectedPos.Intersect, &translated);
 
-	if (AR_EQ2(dir, 'n', 'w') || AR_EQ2(dir, 'n', 'e') || AR_EQ2(dir, 's', 'w') || AR_EQ2(dir, 's', 'e')) {
+	if (AR_EQ2(dir, 'n','w') || AR_EQ2(dir, 'n','e') || AR_EQ2(dir, 's','w') || AR_EQ2(dir, 's','e')) {
 		return AutoRotate_RotateCorner(block, &baseName, offset);
 	} else if (AR_EQ1(dir, 'u') || AR_EQ1(dir, 'd')) {
 		return AutoRotate_RotateVertical(block, &baseName, offset);
 	} else if (AR_EQ1(dir, 'n') || AR_EQ1(dir, 'w') || AR_EQ1(dir, 's') || AR_EQ1(dir, 'e')) {
 		return AutoRotate_RotateDirection(block, &baseName, offset);
-	} else if (AR_EQ2(dir, 'u', 'd') || AR_EQ2(dir, 'w', 'e') || AR_EQ2(dir, 'n', 's')) {
+	} else if (AR_EQ2(dir, 'u','d') || AR_EQ2(dir, 'w','e') || AR_EQ2(dir, 'n','s')) {
 		return AutoRotate_RotateOther(block, &baseName, offset);
 	}
 	return block;

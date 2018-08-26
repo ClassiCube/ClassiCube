@@ -403,7 +403,6 @@ struct Size2D Drawer2D_MeasureText(struct DrawTextArgs* args) {
 	struct Size2D size = { 0, 0 };
 
 	while (i < value.length) {
-		UChar col = nextCol;
 		i = Drawer2D_NextPart(i, &value, &args->Text, &nextCol);
 		if (!args->Text.length) continue;
 

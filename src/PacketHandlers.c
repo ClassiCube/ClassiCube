@@ -618,7 +618,7 @@ static void Classic_ReadAbsoluteLocation(UInt8* data, EntityID id, bool interpol
 	y -= 51; /* Convert to feet position */
 	if (id == ENTITIES_SELF_ID) y += 22;
 
-	Vector3 pos  = VECTOR3_CONST(x / 32.0f, y / 32.0f, z / 32.0f);
+	Vector3 pos  = { x/32.0f, y/32.0f, z/32.0f };
 	Real32 rotY  = Math_Packed2Deg(*data++);
 	Real32 headX = Math_Packed2Deg(*data++);
 

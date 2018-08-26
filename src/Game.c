@@ -501,7 +501,7 @@ void Game_Load(void) {
 	}
 	Game_InitScheduledTasks();
 
-	/* TODO: plugin dll support * /
+	/* TODO: plugin dll support */
 	/* if (nonLoaded != null) {
 		for (int i = 0; i < nonLoaded.Count; i++) {
 			Overlay warning = new PluginOverlay(this, nonLoaded[i]);

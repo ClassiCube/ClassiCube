@@ -1110,8 +1110,8 @@ static Real32 BlockModel_GetEyeY(struct Entity* entity) {
 static void BlockModel_GetCollisionSize(Vector3* size) {
 	Vector3_Sub(size, &BlockModel_maxBB, &BlockModel_minBB);
 	/* to fit slightly inside */
-	Vector3 sizeShrink = VECTOR3_CONST1(0.75f / 16.0f);
-	Vector3_SubBy(size, &sizeShrink);
+	static Vector3 shrink = { 0.75f/16.0f, 0.75f/16.0f, 0.75f/16.0f };
+	Vector3_SubBy(size, &shrink);
 }
 
 static void BlockModel_GetPickingBounds(struct AABB* bb) {

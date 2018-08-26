@@ -112,18 +112,18 @@ int main(void) {
 		String bits[4]; UInt32 bitsCount = Array_Elems(bits);
 		String_UNSAFE_Split(&args[2], '.', bits, &bitsCount);
 		if (bitsCount != Array_Elems(bits)) {
-			Platform_LogConst("Invalid IP"); return;
+			Platform_LogConst("Invalid IP"); return 1;
 		}
 
 		UInt8 ipTmp;
 		if (!Convert_TryParseUInt8(&bits[0], &ipTmp) || !Convert_TryParseUInt8(&bits[1], &ipTmp) ||
 			!Convert_TryParseUInt8(&bits[2], &ipTmp) || !Convert_TryParseUInt8(&bits[3], &ipTmp)) {
-			Platform_LogConst("Invalid IP"); return;
+			Platform_LogConst("Invalid IP"); return 1;
 		}
 		
 		UInt16 portTmp;
 		if (!Convert_TryParseUInt16(&args[3], &portTmp)) {
-			Platform_LogConst("Invalid port"); return;
+			Platform_LogConst("Invalid port"); return 1;
 		}
 		Game_Port = portTmp;
 	}

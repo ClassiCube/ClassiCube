@@ -395,7 +395,7 @@ static void Music_RunLoop(void) {
 
 	while (!music_pendingStop) {
 		Int32 idx = Random_Range(&rnd, 0, count);
-		String filename = String_FromConst("hal2.ogg");
+		String filename = StringsBuffer_UNSAFE_Get(&files, idx);
 		String path = String_InitAndClearArray(pathBuffer);
 		String_Format2(&path, "audio%r%s", &Directory_Separator, &filename);
 		Platform_Log1("playing music file: %s", &filename);

@@ -199,7 +199,7 @@ static bool Picking_ClipBlock(struct PickedPos* pos) {
 	return true;
 }
 
-static Vector3 picking_adjust = VECTOR3_CONST1(0.1f);
+static Vector3 picking_adjust = { 0.1f, 0.1f, 0.1f };
 static bool Picking_ClipCamera(struct PickedPos* pos) {
 	if (Block_Draw[tracer.Block] == DRAW_GAS || Block_Collide[tracer.Block] != COLLIDE_SOLID) return false;
 	Real32 t0, t1;

@@ -19,7 +19,6 @@ Vector3I Vector3I_MaxValue(void);
 Vector3 Vector3_BigPos(void);
 Real32 Vector3_LengthSquared(Vector3* v);
 
-#define VECTOR3_CONST1(val) { val, val, val };
 #define VECTOR3_CONST(x, y, z) { x, y, z };
 #define Vector3_UnitX VECTOR3_CONST(1.0f, 0.0f, 0.0f)
 #define Vector3_UnitY VECTOR3_CONST(0.0f, 1.0f, 0.0f)
@@ -40,7 +39,6 @@ void Vector3_Negate(Vector3* result, Vector3* a);
 #define Vector3_Mul3By(dst, value) Vector3_Mul3(dst, dst, value)
 
 void Vector3_Lerp(Vector3* result, Vector3* a, Vector3* b, Real32 blend);
-Real32 Vector3_Dot(Vector3* left, Vector3* right);
 void Vector3_Normalize(Vector3* result, Vector3* a);
 
 void Vector3_Transform(Vector3* result, Vector3* a, struct Matrix* mat);

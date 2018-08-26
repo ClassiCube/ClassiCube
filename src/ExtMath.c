@@ -49,9 +49,9 @@ Real32 Math_Lerp(Real32 a, Real32 b, Real32 t) {
 }
 
 Real32 Math_LerpAngle(Real32 leftAngle, Real32 rightAngle, Real32 t) {
-	/* we have to cheat a bit for angles here. */
-	/* Consider 350* --> 0*, we only want to travel 10*, */
-	/* but without adjusting for this case, we would interpolate back the whole 350* degrees.*/
+	/* We have to cheat a bit for angles here */
+	/* Consider 350* --> 0*, we only want to travel 10* */
+	/* But without adjusting for this case, we would interpolate back the whole 350* degrees */
 	bool invertLeft  = leftAngle  > 270.0f && rightAngle < 90.0f;
 	bool invertRight = rightAngle > 270.0f && leftAngle  < 90.0f;
 	if (invertLeft)  leftAngle  = leftAngle  - 360.0f;

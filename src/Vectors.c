@@ -15,7 +15,7 @@ Vector3I Vector3I_MaxValue(void) {
 }
 
 Vector3 Vector3_BigPos(void) {
-	Vector3 v = VECTOR3_CONST1(1e25f); return v;
+	Vector3 v = { 1e25f, 1e25f, 1e25f }; return v;
 }
 
 Real32 Vector3_LengthSquared(Vector3* v) {

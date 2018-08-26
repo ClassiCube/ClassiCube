@@ -332,33 +332,33 @@ void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc) {
 
 void BoxDesc_XQuad(struct IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 z1, Real32 z2, Real32 y1, Real32 y2, Real32 x, bool swapU) {
-	Int32 u1 = texX, u2 = texX + texWidth | UV_MAX;
+	Int32 u1 = texX, u2 = (texX + texWidth) | UV_MAX;
 	if (swapU) { Int32 tmp = u1; u1 = u2; u2 = tmp; }
 
-	ModelVertex_Init(&m->vertices[m->index], x, y1, z1, u1, texY + texHeight | UV_MAX); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x, y1, z1, u1, (texY + texHeight) | UV_MAX); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x, y2, z1, u1, texY); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x, y2, z2, u2, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x, y1, z2, u2, texY + texHeight | UV_MAX); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x, y1, z2, u2, (texY + texHeight) | UV_MAX); m->index++;
 }
 
 void BoxDesc_YQuad(struct IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 x1, Real32 x2, Real32 z1, Real32 z2, Real32 y, bool swapU) {
-	Int32 u1 = texX, u2 = texX + texWidth | UV_MAX;
+	Int32 u1 = texX, u2 = (texX + texWidth) | UV_MAX;
 	if (swapU) { Int32 tmp = u1; u1 = u2; u2 = tmp; }
 
-	ModelVertex_Init(&m->vertices[m->index], x1, y, z2, u1, texY + texHeight | UV_MAX); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x1, y, z2, u1, (texY + texHeight) | UV_MAX); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x1, y, z1, u1, texY); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x2, y, z1, u2, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y, z2, u2, texY + texHeight | UV_MAX); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y, z2, u2, (texY + texHeight) | UV_MAX); m->index++;
 }
 
 void BoxDesc_ZQuad(struct IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 x1, Real32 x2, Real32 y1, Real32 y2, Real32 z, bool swapU) {
-	Int32 u1 = texX, u2 = texX + texWidth | UV_MAX;
+	Int32 u1 = texX, u2 = (texX + texWidth) | UV_MAX;
 	if (swapU) { Int32 tmp = u1; u1 = u2; u2 = tmp; }
 
-	ModelVertex_Init(&m->vertices[m->index], x1, y1, z, u1, texY + texHeight | UV_MAX); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x1, y1, z, u1, (texY + texHeight) | UV_MAX); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x1, y2, z, u1, texY); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x2, y2, z, u2, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y1, z, u2, texY + texHeight | UV_MAX); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y1, z, u2, (texY + texHeight) | UV_MAX); m->index++;
 }
