@@ -441,7 +441,7 @@ ReturnCode File_GetModifiedTime(STRING_PURE String* path, DateTime* time) {
 
 ReturnCode File_Do(void** file, STRING_PURE String* path, int mode) {
 	UInt8 data[1024]; Platform_ConvertString(data, path);
-	*file = open(data, mode);
+	*file = open(data, mode, (6 << 6) | (4 << 3) | 4); /* rw|r|r */
 	return Nix_Return(*file != -1);
 }
 
