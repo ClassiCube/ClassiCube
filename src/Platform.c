@@ -880,7 +880,7 @@ ReturnCode Http_MakeRequest(struct AsyncRequest* request, void** handle) {
 	/* https://stackoverflow.com/questions/25308488/c-wininet-custom-http-headers */
 	if (request->Etag[0] || request->LastModified.Year) {
 		headers = String_InitAndClearArray(headersBuffer);
-		if (request->LastModified.Year > 0) {
+		if (request->LastModified.Year) {
 			String_AppendConst(&headers, "If-Modified-Since: ");
 			DateTime_HttpDate(&request->LastModified, &headers);
 			String_AppendConst(&headers, "\r\n");

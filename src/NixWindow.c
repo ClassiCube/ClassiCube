@@ -494,15 +494,15 @@ void Window_ProcessEvents(void) {
 		case KeyPress:
 		{
 			Window_ToggleKey(&e.xkey, true);
-			UInt8 data[16]; UInt8 convBuffer[16];
+			UInt8 data[16];
 			int status = XLookupString(&e.xkey, data, Array_Elems(data), NULL, NULL);
 
-			/* TODO: Is this even right... */
-			String conv = String_FromEmptyArray(convBuffer);
-			String_DecodeUtf8(&conv, data, status);
-
-			Int32 i;
-			for (i = 0; i < conv.length; i++) { Event_RaiseInt(&KeyEvents_Press, conv.buffer[i]); }
+			/* TODO: Does this work for every non-english layout? works for latin keys (e.g. finnish) */
+			UInt8 raw; Int32 i;
+			for (i = 0; i < status; i++) {
+				if (!Convert_TryUnicodeToCP437(data[i], &raw)) continue;
+				Event_RaiseInt(&KeyEvents_Press, raw);
+			}
 		} break;
 
 		case KeyRelease:
