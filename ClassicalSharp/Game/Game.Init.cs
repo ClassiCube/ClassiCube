@@ -197,8 +197,10 @@ namespace ClassicalSharp {
 			MouseSensitivity = Options.GetInt(OptionsKey.Sensitivity, 1, 100, 30);
 			ShowBlockInHand = Options.GetBool(OptionsKey.ShowBlockInHand, true);
 			InvertMouse = Options.GetBool(OptionsKey.InvertMouse, false);
-			
-			bool skipSsl = Options.GetBool("skip-ssl-check", false);
+
+            CameraFriction = Options.GetFloat(OptionsKey.CameraFriction, 0.1f, 50f, 20f);
+
+            bool skipSsl = Options.GetBool("skip-ssl-check", false);
 			if (skipSsl) {
 				ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 				Options.Set("skip-ssl-check", false);

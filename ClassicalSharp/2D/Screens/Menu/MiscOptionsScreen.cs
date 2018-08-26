@@ -20,6 +20,8 @@ namespace ClassicalSharp.Gui.Screens {
 			defaultValues[1] = "0";
 			validators[2]    = new IntegerValidator(0, 100);
 			defaultValues[2] = "0";
+            validators[4]    = new RealValidator(0.1f, 50f);
+            defaultValues[4] = "20";
 			validators[7]    = new IntegerValidator(1, 200);
 			defaultValues[7] = "30";
 		}
@@ -34,6 +36,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(-1, -50, "Music volume",                   onClick, GetMusic,       SetMusic),
 				MakeOpt(-1, 0, "Sounds volume",                    onClick, GetSounds,      SetSounds),
 				MakeOpt(-1, 50, "View bobbing",                    onBool,  GetViewBob,     SetViewBob),
+                MakeOpt(-1, 100, "Camera friction",                onClick, GetCamFriction, SetCamFriction),
 
 				multi ? null : MakeOpt(1, -100, "Block physics",  onBool,  GetPhysics,     SetPhysics),
 				MakeOpt(1, -50, "Auto close launcher",            onBool,  GetAutoClose,   SetAutoClose),
@@ -64,6 +67,9 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		static string GetViewBob(Game g) { return GetBool(g.ViewBobbing); }
 		static void SetViewBob(Game g, string v) { g.ViewBobbing = SetBool(v, OptionsKey.ViewBobbing); }
+
+        static string GetCamFriction(Game g) { return g.CameraFriction.ToString(); }
+        static void SetCamFriction(Game g, string v) { g.CameraFriction = Utils.ParseDecimal(v); }
 		
 		static string GetPhysics(Game g) { return GetBool(((SinglePlayerServer)g.Server).physics.Enabled); }
 		static void SetPhysics(Game g, string v) { 

@@ -151,6 +151,8 @@ namespace ClassicalSharp {
 		public bool AutoRotate = true;
 		
 		public bool SmoothCamera;
+
+        public float CameraFriction;
 		
 		public string FontName = "Arial";
 		

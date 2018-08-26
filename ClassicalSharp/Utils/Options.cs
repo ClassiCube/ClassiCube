@@ -73,7 +73,8 @@ namespace ClassicalSharp {
 		#if !LAUNCHER
 		public const string ClassicArmModel = "nostalgia-classicarm";
 		public const string MaxChunkUpdates = "gfx-maxchunkupdates";
-	}
+        public const string CameraFriction = "camerafriction";
+    }
 	public enum FpsLimitMethod {
 		LimitVSync, Limit30FPS, Limit60FPS, Limit120FPS, LimitNone,
 		#endif

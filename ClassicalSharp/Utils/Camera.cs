@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 		public abstract bool IsThirdPerson { get; }
 		public virtual bool Zoom(float amount) { return false; }
 		
-		public abstract void UpdateMouse();
+		public abstract void UpdateMouse(double delta);
 		public abstract void RegrabMouse();
 		
 		public abstract void ResetRotOffset();
@@ -84,19 +84,22 @@ namespace ClassicalSharp {
 		}
 		
 		static readonly float sensiFactor = 0.0002f / 3 * Utils.Rad2Deg;
-		const float slippery = 0.97f;
-		const float adjust = 0.025f;
-		
-		static float speedX = 0, speedY = 0;
-		protected Vector2 CalcMouseDelta() {
+
+        static float speedX = 0, speedY = 0, accelX = 0, accelY = 0, newSpeedX = 0, newSpeedY = 0;
+        protected Vector2 CalcMouseDelta(double dt) {
 			float sensitivity = sensiFactor * game.MouseSensitivity;
 
 			if (game.SmoothCamera) {
-				speedX += delta.X * adjust;
-				speedX *= slippery;
-				speedY += delta.Y * adjust;
-				speedY *= slippery;
-			} else {
+                accelX = game.CameraFriction * (delta.X - speedX);
+                accelY = game.CameraFriction * (delta.Y - speedY);
+                newSpeedX = accelX * (float)dt + speedX;
+                newSpeedY = accelY * (float)dt + speedY;
+                //NOTE: High acceleration means velocity "overshoots" on low fps, causing wiggling. If newSpeed has opposite sign of speed, set speed to 0;
+                if (Math.Sign(newSpeedX) != Math.Sign(speedX) && newSpeedX != 0f && speedX != 0) speedX = 0f;
+                else speedX = newSpeedX;
+                if (Math.Sign(newSpeedY) != Math.Sign(speedY) && newSpeedY != 0f && speedY != 0) speedY = 0f;
+                else speedY = newSpeedY;
+            } else {
 				speedX = delta.X;
 				speedY = delta.Y;
 			}
@@ -106,8 +109,8 @@ namespace ClassicalSharp {
 			return new Vector2(dx, dy);
 		}
 		
-		void UpdateMouseRotation() {
-			Vector2 rot = CalcMouseDelta();
+		void UpdateMouseRotation(double dt) {
+			Vector2 rot = CalcMouseDelta(dt);
 			if (game.Input.AltDown && IsThirdPerson) {
 				rotOffset.X += rot.X; rotOffset.Y += rot.Y;
 				return;
@@ -124,7 +127,7 @@ namespace ClassicalSharp {
 			game.LocalPlayer.SetLocation(update, false);
 		}
 		
-		public override void UpdateMouse() {
+		public override void UpdateMouse(doublt dt) {
 			if (game.Gui.ActiveScreen.HandlesAllInput) {
 				delta = Point.Empty;
 			} else if (game.window.Focused) {
@@ -132,7 +135,7 @@ namespace ClassicalSharp {
 				delta = new Point(pos.X - previous.X, pos.Y - previous.Y);
 				CentreMousePosition();
 			}
-			UpdateMouseRotation();
+			UpdateMouseRotation(dt);
 		}
 		
 		protected void CalcViewBobbing(float t, float velTiltScale) {
