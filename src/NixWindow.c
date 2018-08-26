@@ -215,7 +215,7 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 	Window owner = XGetSelectionOwner(win_display, xa_clipboard);
 	if (!owner) return; /* no window owner */
 
-	XConvertSelection(win_display, xa_clipboard, xa_utf8_string, xa_data_sel, win_handle, NULL);
+	XConvertSelection(win_display, xa_clipboard, xa_utf8_string, xa_data_sel, win_handle, 0);
 	String_Clear(&clipboard_paste_text);
 	Int32 i;
 
@@ -233,7 +233,7 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 
 void Window_SetClipboardText(STRING_PURE String* value) {
 	String_Set(&clipboard_paste_text, value);
-	XSetSelectionOwner(win_display, xa_clipboard, win_handle, NULL);
+	XSetSelectionOwner(win_display, xa_clipboard, win_handle, 0);
 }
 
 bool win_visible;
@@ -309,7 +309,7 @@ void Window_SetWindowState(UInt8 state) {
 	if (current_state == WINDOW_STATE_MINIMISED) {
 		XMapWindow(win_display, win_handle);
 	} else if (current_state == WINDOW_STATE_FULLSCREEN) {
-		Window_SendNetWMState(_NET_WM_STATE_REMOVE, net_wm_state_fullscreen, NULL);
+		Window_SendNetWMState(_NET_WM_STATE_REMOVE, net_wm_state_fullscreen, 0);
 	} else if (current_state == WINDOW_STATE_MAXIMISED) {
 		Window_SendNetWMState(_NET_WM_STATE_TOGGLE, net_wm_state_maximized_horizontal, 
 			net_wm_state_maximized_vertical);
@@ -334,7 +334,7 @@ void Window_SetWindowState(UInt8 state) {
 		break;
 
 	case WINDOW_STATE_FULLSCREEN:
-		Window_SendNetWMState(_NET_WM_STATE_ADD, net_wm_state_fullscreen, NULL);
+		Window_SendNetWMState(_NET_WM_STATE_ADD, net_wm_state_fullscreen, 0);
 		XRaiseWindow(win_display, win_handle);
 		break;
 	}
@@ -570,8 +570,8 @@ void Window_ProcessEvents(void) {
 				long items, bytes_after;
 				UInt8* data = NULL;			
 
-				XGetWindowProperty(win_display, win_handle, xa_data_sel, 0, 1024, false, NULL,
-					&prop_type, &prop_format, items, &bytes_after, &data);
+				XGetWindowProperty(win_display, win_handle, xa_data_sel, 0, 1024, false, 0,
+					&prop_type, &prop_format, &items, &bytes_after, &data);
 				XDeleteProperty(win_display, win_handle, xa_data_sel);
 
 				if (data && items && prop_type == xa_utf8_string) {
