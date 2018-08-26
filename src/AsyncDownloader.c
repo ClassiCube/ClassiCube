@@ -6,7 +6,9 @@
 #include "GameStructs.h"
 
 void ASyncRequest_Free(struct AsyncRequest* request) {
-	Mem_Free(&request->ResultData);
+	Mem_Free(request->ResultData);
+	request->ResultData = NULL;
+	request->ResultSize = 0;
 }
 
 #define ASYNCREQUESTLIST_DEFELEMS 10
@@ -54,7 +56,7 @@ static void AsyncRequestList_Init(struct AsyncRequestList* list) {
 
 static void AsyncRequestList_Free(struct AsyncRequestList* list) {
 	if (list->Requests != list->DefaultRequests) {
-		Mem_Free(&list->Requests);
+		Mem_Free(list->Requests);
 	}
 	AsyncRequestList_Init(list);
 }

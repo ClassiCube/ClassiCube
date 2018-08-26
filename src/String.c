@@ -684,10 +684,10 @@ void StringsBuffer_Clear(StringsBuffer* buffer) {
 	if (!buffer->_FlagsBufferSize) return;
 
 	if (buffer->TextBuffer != buffer->_DefaultBuffer) {
-		Mem_Free(&buffer->TextBuffer);
+		Mem_Free(buffer->TextBuffer);
 	}
 	if (buffer->FlagsBuffer != buffer->_DefaultFlags) {
-		Mem_Free(&buffer->FlagsBuffer);
+		Mem_Free(buffer->FlagsBuffer);
 	}
 	StringsBuffer_Init(buffer);
 }

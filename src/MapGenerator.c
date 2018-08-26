@@ -490,8 +490,9 @@ void NotchyGen_Generate(void) {
 	NotchyGen_PlantMushrooms();
 	NotchyGen_PlantTrees();
 
-	Mem_Free(&Heightmap);
-	Gen_Done = true;
+	Mem_Free(Heightmap);
+	Heightmap = NULL;
+	Gen_Done  = true;
 }
 
 

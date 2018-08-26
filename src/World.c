@@ -11,10 +11,10 @@
 #include "Game.h"
 
 void World_Reset(void) {
-	Mem_Free(&World_Blocks);
+	Mem_Free(World_Blocks);
 	World_Width = 0; World_Height = 0; World_Length = 0;
 	World_MaxX = 0;  World_MaxY = 0;   World_MaxZ = 0;
-	World_BlocksSize = 0;
+	World_Blocks = NULL; World_BlocksSize = 0;
 	WorldEnv_Reset();
 
 	Random rnd;

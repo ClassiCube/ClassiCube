@@ -466,7 +466,7 @@ ReturnCode TexturePack_ExtractTerrainPng(struct Stream* stream) {
 		if (Game_ChangeTerrainAtlas(&bmp)) return 0;
 	}
 
-	Mem_Free(&bmp.Scan0);
+	Mem_Free(bmp.Scan0);
 	return res;
 }
 

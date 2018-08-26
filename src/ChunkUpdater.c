@@ -79,18 +79,25 @@ static void ChunkUpdater_ViewDistanceChanged(void* obj) {
 
 
 static void ChunkUpdater_FreePartsAllocations(void) {
-	Mem_Free(&MapRenderer_PartsBuffer_Raw);
-	MapRenderer_PartsNormal = NULL;
+	Mem_Free(MapRenderer_PartsBuffer_Raw);
+	MapRenderer_PartsBuffer_Raw  = NULL;
+	MapRenderer_PartsNormal      = NULL;
 	MapRenderer_PartsTranslucent = NULL;
 }
 
 static void ChunkUpdater_FreeAllocations(void) {
 	if (!MapRenderer_Chunks) return;
-	Mem_Free(&MapRenderer_Chunks);
-	Mem_Free(&MapRenderer_SortedChunks);
-	Mem_Free(&MapRenderer_RenderChunks);
-	Mem_Free(&ChunkUpdater_Distances);
 	ChunkUpdater_FreePartsAllocations();
+
+	Mem_Free(MapRenderer_Chunks);
+	Mem_Free(MapRenderer_SortedChunks);
+	Mem_Free(MapRenderer_RenderChunks);
+	Mem_Free(ChunkUpdater_Distances);
+
+	MapRenderer_Chunks       = NULL;
+	MapRenderer_SortedChunks = NULL;
+	MapRenderer_RenderChunks = NULL;
+	ChunkUpdater_Distances   = NULL;
 }
 
 static void ChunkUpdater_PerformPartsAllocations(void) {

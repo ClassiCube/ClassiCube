@@ -231,7 +231,7 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, Int32
 	GfxResourceID tex = Atlas1D_TexIds[index_1D];
 	Int32 dstY = rowId_1D * Atlas2D_TileSize;
 	if (tex) { Gfx_UpdateTexturePart(tex, 0, dstY, &animPart, Gfx_Mipmaps); }
-	if (size > ANIMS_FAST_SIZE) Mem_Free(&ptr);
+	if (size > ANIMS_FAST_SIZE) Mem_Free(ptr);
 }
 
 static void Animations_Apply(struct AnimationData* data) {
@@ -257,8 +257,9 @@ static bool Animations_IsDefaultZip(void) {
 }
 
 static void Animations_Clear(void) {
+	Mem_Free(anims_bmp.Scan0);
 	anims_count = 0;
-	Mem_Free(&anims_bmp.Scan0);
+	anims_bmp.Scan0 = NULL;
 	anims_validated = false;
 }
 
@@ -327,7 +328,8 @@ static void Animations_FileChanged(void* obj, struct Stream* stream, String* nam
 		if (!res) return;
 
 		Chat_LogError(res, "decoding", name);
-		Mem_Free(&anims_bmp.Scan0);
+		Mem_Free(anims_bmp.Scan0);
+		anims_bmp.Scan0 = NULL;
 	} else if (String_CaselessEqualsConst(name, "animations.txt")) {
 		Animations_ReadDescription(stream, name);
 	} else if (String_CaselessEqualsConst(name, "uselavaanim")) {

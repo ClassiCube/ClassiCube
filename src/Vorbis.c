@@ -156,10 +156,10 @@ struct Codebook {
 };
 
 static void Codebook_Free(struct Codebook* c) {
-	Mem_Free(&c->Codewords);
-	Mem_Free(&c->CodewordLens);
-	Mem_Free(&c->Values);
-	Mem_Free(&c->Multiplicands);
+	Mem_Free(c->Codewords);
+	Mem_Free(c->CodewordLens);
+	Mem_Free(c->Values);
+	Mem_Free(c->Multiplicands);
 }
 
 static UInt32 Codebook_Pow(UInt32 base, UInt32 exp) {
@@ -279,7 +279,7 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 
 	c->NumCodewords = usedEntries;
 	Codebook_CalcCodewords(c, codewordLens);
-	Mem_Free(&codewordLens);
+	Mem_Free(codewordLens);
 
 	c->LookupType = Vorbis_ReadBits(ctx, 4);
 	c->Multiplicands = NULL;
@@ -971,13 +971,13 @@ void Vorbis_Free(struct VorbisState* ctx) {
 		Codebook_Free(&ctx->Codebooks[i]);
 	}
 
-	Mem_Free(&ctx->Codebooks);
-	Mem_Free(&ctx->Floors);
-	Mem_Free(&ctx->Residues);
-	Mem_Free(&ctx->Mappings);
-	Mem_Free(&ctx->Modes);
-	Mem_Free(&ctx->WindowRaw);
-	Mem_Free(&ctx->Temp);
+	Mem_Free(ctx->Codebooks);
+	Mem_Free(ctx->Floors);
+	Mem_Free(ctx->Residues);
+	Mem_Free(ctx->Mappings);
+	Mem_Free(ctx->Modes);
+	Mem_Free(ctx->WindowRaw);
+	Mem_Free(ctx->Temp);
 }
 
 static bool Vorbis_ValidBlockSize(UInt32 size) {

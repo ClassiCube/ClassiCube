@@ -1529,7 +1529,7 @@ static void MenuInputWidget_RemakeTexture(struct GuiElem* elem) {
 
 	struct Texture* tex = &widget->Base.InputTex;
 	Drawer2D_Make2DTexture(tex, &bmp, adjSize, 0, 0);
-	Mem_Free(&bmp.Scan0);
+	Mem_Free(bmp.Scan0);
 
 	Widget_Reposition(&widget->Base);
 	tex->X = widget->Base.X; tex->Y = widget->Base.Y;
@@ -1625,7 +1625,7 @@ static void ChatInputWidget_RemakeTexture(struct GuiElem* elem) {
 	Drawer2D_End();
 
 	Drawer2D_Make2DTexture(&widget->InputTex, &bmp, size, 0, 0);
-	Mem_Free(&bmp.Scan0);
+	Mem_Free(bmp.Scan0);
 
 	widget->Width = size.Width;
 	widget->Height = realHeight == 0 ? widget->PrefixHeight : realHeight;
@@ -2792,7 +2792,7 @@ static void SpecialInputWidget_Make(struct SpecialInputWidget* widget, struct Sp
 	Drawer2D_End();
 
 	Drawer2D_Make2DTexture(&widget->Tex, &bmp, size, widget->X, widget->Y);
-	Mem_Free(&bmp.Scan0);
+	Mem_Free(bmp.Scan0);
 }
 
 static void SpecialInputWidget_Redraw(struct SpecialInputWidget* widget) {

@@ -104,10 +104,8 @@ void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const UChar* pla
 	return ptr;
 }
 
-void Mem_Free(void** mem) {
-	if (mem == NULL || *mem == NULL) return;
-	HeapFree(heap, 0, *mem);
-	*mem = NULL;
+void Mem_Free(void* mem) {
+	if (mem) HeapFree(heap, 0, mem);
 }
 #elif CC_BUILD_NIX
 void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
@@ -128,10 +126,8 @@ void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const UChar* pla
 	return ptr;
 }
 
-void Mem_Free(void** mem) {
-	if (mem == NULL || *mem == NULL) return;
-	free(*mem);
-	*mem = NULL;
+void Mem_Free(void* mem) {
+	if (mem) free(*mem);
 }
 #endif
 
@@ -927,14 +923,13 @@ ReturnCode Http_GetRequestHeaders(struct AsyncRequest* request, void* handle, UI
 }
 
 ReturnCode Http_GetRequestData(struct AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress) {
-	if (size == 0) return ERROR_NOT_SUPPORTED;
-	*data = Mem_Alloc(size, sizeof(UInt8), "http get data");
-
+	if (!size) return ERROR_NOT_SUPPORTED;
 	*progress = 0;
-	UInt8* buffer = *data;
-	UInt32 left = size, read, totalRead = 0;
 
-	while (left > 0) {
+	UInt8* buffer = Mem_Alloc(size, sizeof(UInt8), "http get data");
+	UInt32 left   = size, read, totalRead = 0;
+
+	while (left) {
 		UInt32 toRead = left, avail = 0;
 		/* only read as much data that is pending */
 		if (InternetQueryDataAvailable(handle, &avail, 0, 0)) {
@@ -942,13 +937,14 @@ ReturnCode Http_GetRequestData(struct AsyncRequest* request, void* handle, void*
 		}
 
 		bool success = InternetReadFile(handle, buffer, toRead, &read);
-		if (!success) { Mem_Free(data); return GetLastError(); }
+		if (!success) { Mem_Free(buffer); return GetLastError(); }
 
 		if (!read) break;
 		buffer += read; totalRead += read; left -= read;
 		*progress = (Int32)(100.0f * totalRead / size);
 	}
 
+	*data     = buffer;
 	*progress = 100;
 	return 0;
 }

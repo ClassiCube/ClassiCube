@@ -216,7 +216,7 @@ bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, STRING_PURE St
 		*texId = Gfx_CreateTexture(&bmp, true, false);
 	}
 
-	Mem_Free(&bmp.Scan0);
+	Mem_Free(bmp.Scan0);
 	return success;
 }
 
@@ -292,16 +292,16 @@ static void Game_TextureChangedCore(void* obj, struct Stream* src, String* name)
 
 		if (res) { 
 			Chat_LogError(res, "decoding", name);
-			Mem_Free(&bmp.Scan0);
+			Mem_Free(bmp.Scan0);
 		} else if (!Game_ChangeTerrainAtlas(&bmp)) {
-			Mem_Free(&bmp.Scan0);
+			Mem_Free(bmp.Scan0);
 		}		
 	} else if (String_CaselessEqualsConst(name, "default.png")) {
 		ReturnCode res = Bitmap_DecodePng(&bmp, src);
 
 		if (res) { 
 			Chat_LogError(res, "decoding", name);
-			Mem_Free(&bmp.Scan0);
+			Mem_Free(bmp.Scan0);
 		} else {
 			Drawer2D_SetFontBitmap(&bmp);
 			Event_RaiseVoid(&ChatEvents_FontChanged);

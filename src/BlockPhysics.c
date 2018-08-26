@@ -34,7 +34,7 @@ static void TickQueue_Init(struct TickQueue* queue) {
 
 static void TickQueue_Clear(struct TickQueue* queue) {
 	if (!queue->Buffer) return;
-	Mem_Free(&queue->Buffer);
+	Mem_Free(queue->Buffer);
 	TickQueue_Init(queue);
 }
 
@@ -52,7 +52,7 @@ static void TickQueue_Resize(struct TickQueue* queue) {
 		idx = (queue->Head + i) & queue->BufferMask;
 		newBuffer[i] = queue->Buffer[idx];
 	}
-	Mem_Free(&queue->Buffer);
+	Mem_Free(queue->Buffer);
 
 	queue->Buffer = newBuffer;
 	queue->BufferSize = capacity;

@@ -38,7 +38,7 @@ ReturnCode Platform_StartShell(STRING_PURE String* args);
 FUNC_ATTRIB(noinline) void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const UChar* place);
 FUNC_ATTRIB(noinline) void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const UChar* place);
 FUNC_ATTRIB(noinline) void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const UChar* place);
-FUNC_ATTRIB(noinline) void  Mem_Free(void** mem);
+FUNC_ATTRIB(noinline) void  Mem_Free(void* mem);
 void Mem_Set(void* dst, UInt8 value, UInt32 numBytes);
 void Mem_Copy(void* dst, void* src, UInt32 numBytes);
 

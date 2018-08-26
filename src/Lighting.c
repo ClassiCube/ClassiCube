@@ -329,7 +329,8 @@ static void Lighting_Init(void) {
 }
 
 static void Lighting_Reset(void) {
-	Mem_Free(&Lighting_heightmap);
+	Mem_Free(Lighting_heightmap);
+	Lighting_heightmap = NULL;
 }
 
 static void Lighting_OnNewMap(void) {

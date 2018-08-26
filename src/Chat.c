@@ -592,7 +592,10 @@ static void Chat_Reset(void) {
 static void Chat_Free(void) {
 	Chat_CloseLog();
 	commands_count = 0;
-	if (Chat_LogTimes != Chat_DefaultLogTimes) Mem_Free(&Chat_LogTimes);
+
+	if (Chat_LogTimes != Chat_DefaultLogTimes) Mem_Free(Chat_LogTimes);
+	Chat_LogTimes      = Chat_DefaultLogTimes;
+	Chat_LogTimesCount = 0;
 
 	StringsBuffer_Clear(&Chat_Log);
 	StringsBuffer_Clear(&Chat_InputLog);

@@ -160,7 +160,9 @@ static void Soundboard_Init(struct Soundboard* board, STRING_PURE String* boardN
 
 		if (res) {
 			Chat_LogError(res, "decoding", &file);
-			Mem_Free(&snd->Data);
+			Mem_Free(snd->Data);
+			snd->Data     = NULL;
+			snd->DataSize = 0;
 		} else { group->Count++; }
 	}
 }
@@ -281,7 +283,8 @@ static void Sounds_FreeOutputs(struct SoundOutput* outputs) {
 		Audio_Free(outputs[i].Handle);
 		outputs[i].Handle = HANDLE_INV;
 
-		Mem_Free(&outputs[i].Buffer);
+		Mem_Free(outputs[i].Buffer);
+		outputs[i].Buffer     = NULL;
 		outputs[i].BufferSize = 0;
 	}
 }
@@ -369,7 +372,7 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 	/* Wait until the buffers finished playing */
 	while (!Audio_IsFinished(music_out)) { Thread_Sleep(10); }
 
-	Mem_Free(&data);
+	Mem_Free(data);
 	Vorbis_Free(&vorbis);
 
 	if (res == ERR_END_OF_STREAM) res = 0;

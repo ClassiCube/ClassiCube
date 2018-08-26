@@ -498,7 +498,7 @@ static void Player_MakeNameTexture(struct Player* player) {
 		Drawer2D_End();
 
 		Drawer2D_Make2DTexture(&player->NameTex, &bmp, size, 0, 0);
-		Mem_Free(&bmp.Scan0);
+		Mem_Free(bmp.Scan0);
 	}
 	Drawer2D_UseBitmappedChat = bitmapped;
 }
@@ -666,7 +666,7 @@ static void Player_EnsurePow2(struct Player* player, struct Bitmap* bmp) {
 	entity->uScale = (Real32)bmp->Width  / width;
 	entity->vScale = (Real32)bmp->Height / height;
 
-	Mem_Free(&bmp->Scan0);
+	Mem_Free(bmp->Scan0);
 	*bmp = scaled;
 }
 
@@ -695,8 +695,7 @@ static void Player_CheckSkin(struct Player* player) {
 	ReturnCode res = Bitmap_DecodePng(&bmp, &mem);
 	if (res) {
 		Chat_LogError(res, "decoding", &url);
-		Mem_Free(&bmp.Scan0);
-		return;
+		Mem_Free(bmp.Scan0); return;
 	}
 
 	Gfx_DeleteTexture(&entity->TextureId);
@@ -713,7 +712,7 @@ static void Player_CheckSkin(struct Player* player) {
 		entity->TextureId = Gfx_CreateTexture(&bmp, true, false);
 		Player_SetSkinAll(player, false);
 	}
-	Mem_Free(&bmp.Scan0);
+	Mem_Free(bmp.Scan0);
 }
 
 static void Player_Despawn(struct Entity* entity) {

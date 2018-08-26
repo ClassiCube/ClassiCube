@@ -214,10 +214,10 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, Int32 x, Int32 y, struct 
 			D3D9_SetTextureData(texture, &mipmap, lvl);
 		}
 
-		if (prev != bmp->Scan0) Mem_Free(&prev);
+		if (prev != bmp->Scan0) Mem_Free(prev);
 		prev = cur;
 	}
-	if (prev != bmp->Scan0) Mem_Free(&prev);
+	if (prev != bmp->Scan0) Mem_Free(prev);
 }
 
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, bool managedPool, bool mipmaps) {

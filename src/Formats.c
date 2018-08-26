@@ -315,7 +315,7 @@ static ReturnCode Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* str
 		} else {
 			tag.DataBig = Mem_Alloc(tag.DataSize, sizeof(UInt8), "NBT data");
 			res = Stream_Read(stream, tag.DataBig, tag.DataSize);
-			if (res) { Mem_Free(&tag.DataBig); }
+			if (res) { Mem_Free(tag.DataBig); }
 		}
 		break;
 	case NBT_STR:
@@ -350,7 +350,7 @@ static ReturnCode Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* str
 	if (res) return res;
 	bool processed = callback(&tag);
 	/* don't leak memory for unprocessed tags */
-	if (!processed && tag.DataSize >= NBT_SMALL_SIZE) Mem_Free(&tag.DataBig);
+	if (!processed && tag.DataSize >= NBT_SMALL_SIZE) Mem_Free(tag.DataBig);
 	return 0;
 }
 
@@ -726,7 +726,7 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 
 		field->Value_Ptr = Mem_Alloc(count, sizeof(UInt8), ".dat map blocks");
 		res = Stream_Read(stream, field->Value_Ptr, count);	
-		if (res) { Mem_Free(&field->Value_Ptr); return res; }
+		if (res) { Mem_Free(field->Value_Ptr); return res; }
 	} break;
 	}
 	return 0;

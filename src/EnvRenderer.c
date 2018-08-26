@@ -186,7 +186,7 @@ static void EnvRenderer_UpdateClouds(void) {
 	EnvRenderer_DrawCloudsY(x1, z1, x2, z2, WorldEnv_CloudsHeight, ptr);
 	clouds_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FT2FC4B, clouds_vertices);
 
-	if (clouds_vertices > ENV_SMALL_VERTICES) Mem_Free(&ptr);
+	if (clouds_vertices > ENV_SMALL_VERTICES) Mem_Free(ptr);
 }
 
 
@@ -259,7 +259,7 @@ static void EnvRenderer_UpdateSky(void) {
 	EnvRenderer_DrawSkyY(x1, z1, x2, z2, height, ptr);
 	sky_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FC4B, sky_vertices);
 
-	if (sky_vertices > ENV_SMALL_VERTICES) Mem_Free(&ptr);
+	if (sky_vertices > ENV_SMALL_VERTICES) Mem_Free(ptr);
 }
 
 /*########################################################################################################################*
@@ -671,7 +671,7 @@ static void EnvRenderer_UpdateMapSides(void) {
 	EnvRenderer_DrawBorderX(World_Width, 0, World_Length, y1, y2, col, &temp);
 
 	sides_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FT2FC4B, sides_vertices);
-	if (sides_vertices > ENV_SMALL_VERTICES) Mem_Free(&ptr);
+	if (sides_vertices > ENV_SMALL_VERTICES) Mem_Free(ptr);
 }
 
 static void EnvRenderer_UpdateMapEdges(void) {
@@ -709,7 +709,7 @@ static void EnvRenderer_UpdateMapEdges(void) {
 	}
 
 	edges_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FT2FC4B, edges_vertices);
-	if (edges_vertices > ENV_SMALL_VERTICES) Mem_Free(&ptr);
+	if (edges_vertices > ENV_SMALL_VERTICES) Mem_Free(ptr);
 }
 
 
@@ -754,8 +754,9 @@ static void EnvRenderer_ContextRecreated(void* obj) {
 static void EnvRenderer_Reset(void) {
 	Gfx_SetFog(false);
 	EnvRenderer_DeleteVbs();
-	Mem_Free(&Weather_Heightmap);
-	weather_lastPos = Vector3I_MaxValue();
+	Mem_Free(Weather_Heightmap);
+	Weather_Heightmap = NULL;
+	weather_lastPos   = Vector3I_MaxValue();
 }
 
 static void EnvRenderer_OnNewMapLoaded(void) {
@@ -846,7 +847,8 @@ static void EnvRenderer_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated,    NULL, EnvRenderer_ContextRecreated);
 
 	EnvRenderer_ContextLost(NULL);
-	Mem_Free(&Weather_Heightmap);
+	Mem_Free(Weather_Heightmap);
+	Weather_Heightmap = NULL;
 
 	Gfx_DeleteTexture(&clouds_tex);
 	Gfx_DeleteTexture(&skybox_tex);

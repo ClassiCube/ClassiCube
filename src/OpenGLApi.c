@@ -132,10 +132,10 @@ static void GL_DoMipmaps(GfxResourceID texId, Int32 x, Int32 y, struct Bitmap* b
 			glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, cur);
 		}
 
-		if (prev != bmp->Scan0) Mem_Free(&prev);
+		if (prev != bmp->Scan0) Mem_Free(prev);
 		prev = cur;
 	}
-	if (prev != bmp->Scan0) Mem_Free(&prev);
+	if (prev != bmp->Scan0) Mem_Free(prev);
 }
 
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, bool managedPool, bool mipmaps) {
@@ -537,7 +537,7 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) 
 	}
 
 	ReturnCode res = Bitmap_EncodePng(&bmp, output);
-	Mem_Free(&bmp.Scan0);
+	Mem_Free(bmp.Scan0);
 	return res;
 }
 

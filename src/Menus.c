@@ -1650,7 +1650,8 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 
 		if (res) { 
 			Chat_LogError(res, "decoding", path);
-			Mem_Free(&World_Blocks); World_BlocksSize = 0;
+			Mem_Free(World_Blocks); 
+			World_Blocks = NULL; World_BlocksSize = 0;
 			stream.Close(&stream); return;
 		}
 	}
