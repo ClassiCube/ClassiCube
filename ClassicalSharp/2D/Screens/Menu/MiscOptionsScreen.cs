@@ -36,7 +36,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(-1, -50, "Music volume",                   onClick, GetMusic,       SetMusic),
 				MakeOpt(-1, 0, "Sounds volume",                    onClick, GetSounds,      SetSounds),
 				MakeOpt(-1, 50, "View bobbing",                    onBool,  GetViewBob,     SetViewBob),
-				MakeOpt(-1, 100, "Camera friction",                onClick, GetCamFriction, SetCamFriction),
+				MakeOpt(-1, 100, "Smooth camera friction",                onClick, GetCamFriction, SetCamFriction),
 
 				multi ? null : MakeOpt(1, -100, "Block physics",  onBool,  GetPhysics,     SetPhysics),
 				MakeOpt(1, -50, "Auto close launcher",            onBool,  GetAutoClose,   SetAutoClose),
