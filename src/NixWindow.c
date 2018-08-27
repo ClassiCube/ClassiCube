@@ -174,9 +174,8 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF Strin
 		0, win_visual.depth /* CopyFromParent*/, InputOutput, win_visual.visual, mask, &attributes);
 
 	if (!win_handle) ErrorHandler_Fail("XCreateWindow call failed");
-	if (title->length) {
-		XStoreName(win_display, win_handle, title->buffer);
-	}
+	UInt8 str[600]; Platform_ConvertString(str, title);
+	XStoreName(win_display, win_handle, str);
 
 	XSizeHints hints = { 0 };
 	hints.base_width = width;

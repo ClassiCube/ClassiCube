@@ -272,20 +272,20 @@ Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {
 *#########################################################################################################################*/
 #if CC_BUILD_WIN
 bool Directory_Exists(STRING_PURE String* path) {
-	WCHAR data[512]; Platform_ConvertString(data, path);
-	UInt32 attribs = GetFileAttributesW(data);
+	WCHAR str[300]; Platform_ConvertString(str, path);
+	UInt32 attribs = GetFileAttributesW(str);
 	return attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 ReturnCode Directory_Create(STRING_PURE String* path) {
-	WCHAR data[512]; Platform_ConvertString(data, path);
-	BOOL success = CreateDirectoryW(data, NULL);
+	WCHAR str[300]; Platform_ConvertString(str, path);
+	BOOL success = CreateDirectoryW(str, NULL);
 	return Win_Return(success);
 }
 
 bool File_Exists(STRING_PURE String* path) {
-	WCHAR data[512]; Platform_ConvertString(data, path);
-	UInt32 attribs = GetFileAttributesW(data);
+	WCHAR str[300]; Platform_ConvertString(str, path);
+	UInt32 attribs = GetFileAttributesW(str);
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
@@ -294,10 +294,10 @@ ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCal
 	String file = String_FromArray(fileBuffer);
 	/* Need to append \* to search for files in directory */
 	String_Format1(&file, "%s\\*", path);
-	WCHAR data[512]; Platform_ConvertString(data, &file);
+	WCHAR str[300]; Platform_ConvertString(str, &file);
 
 	WIN32_FIND_DATAW entry;
-	HANDLE find = FindFirstFileW(data, &entry);
+	HANDLE find = FindFirstFileW(str, &entry);
 	if (find == INVALID_HANDLE_VALUE) return GetLastError();
 
 	do {
@@ -336,8 +336,8 @@ ReturnCode File_GetModifiedTime(STRING_PURE String* path, DateTime* time) {
 }
 
 ReturnCode File_Do(void** file, STRING_PURE String* path, DWORD access, DWORD createMode) {
-	WCHAR data[512]; Platform_ConvertString(data, path);
-	*file = CreateFileW(data, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
+	WCHAR str[300]; Platform_ConvertString(str, path);
+	*file = CreateFileW(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return Win_Return(*file != INVALID_HANDLE_VALUE);
 }
 
@@ -384,27 +384,27 @@ ReturnCode File_Length(void* file, UInt32* length) {
 }
 #elif CC_BUILD_NIX
 bool Directory_Exists(STRING_PURE String* path) {
-	UInt8 data[1024]; Platform_ConvertString(data, path);
+	UInt8 str[600]; Platform_ConvertString(str, path);
 	struct stat sb;
-	return stat(data, &sb) == 0 && S_ISDIR(sb.st_mode);
+	return stat(str, &sb) == 0 && S_ISDIR(sb.st_mode);
 }
 
 ReturnCode Directory_Create(STRING_PURE String* path) {
-	UInt8 data[1024]; Platform_ConvertString(data, path);
+	UInt8 str[600]; Platform_ConvertString(str, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
-	return Nix_Return(mkdir(data, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != -1);
+	return Nix_Return(mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != -1);
 }
 
 bool File_Exists(STRING_PURE String* path) {
-	UInt8 data[1024]; Platform_ConvertString(data, path);
+	UInt8 str[600]; Platform_ConvertString(str, path);
 	struct stat sb;
-	return stat(data, &sb) == 0 && S_ISREG(sb.st_mode);
+	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCallback callback) {
-	UInt8 data[1024]; Platform_ConvertString(data, path);
-	DIR* dirPtr = opendir(data);
+	UInt8 str[600]; Platform_ConvertString(str, path);
+	DIR* dirPtr = opendir(str);
 	if (!dirPtr) return errno;
 
 	UInt8 fileBuffer[String_BufferSize(FILENAME_SIZE)];
@@ -427,17 +427,17 @@ ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCal
 }
 
 ReturnCode File_GetModifiedTime(STRING_PURE String* path, DateTime* time) {
-	UInt8 data[1024]; Platform_ConvertString(data, path);
+	UInt8 str[600]; Platform_ConvertString(str, path);
 	struct stat sb;
-	if (stat(data, &sb) == -1) return errno;
+	if (stat(str, &sb) == -1) return errno;
 
 	DateTime_FromTotalMs(time, UNIX_EPOCH + sb.st_mtime); 
 	return 0;
 }
 
 ReturnCode File_Do(void** file, STRING_PURE String* path, int mode) {
-	UInt8 data[1024]; Platform_ConvertString(data, path);
-	*file = open(data, mode, (6 << 6) | (4 << 3) | 4); /* rw|r|r */
+	UInt8 str[600]; Platform_ConvertString(str, path);
+	*file = open(str, mode, (6 << 6) | (4 << 3) | 4); /* rw|r|r */
 	return Nix_Return(*file != -1);
 }
 
@@ -677,9 +677,9 @@ void Font_Free(struct FontDesc* desc) {
 
 /* TODO: not associate font with device so much */
 struct Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
-	WCHAR data[512]; Platform_ConvertString(data, &args->Text);
+	WCHAR str[300]; Platform_ConvertString(str, &args->Text);
 	HGDIOBJ oldFont = SelectObject(hdc, args->Font.Handle);
-	SIZE area; GetTextExtentPointW(hdc, data, args->Text.length, &area);
+	SIZE area; GetTextExtentPointW(hdc, str, args->Text.length, &area);
 
 	SelectObject(hdc, oldFont);
 	return Size2D_Make(area.cx, area.cy);
@@ -711,12 +711,11 @@ void Platform_SetBitmap(struct Bitmap* bmp) {
 /* TODO: make text prettier.. somehow? */
 /* TODO: Do we need to / 255 instead of >> 8 ? */
 struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) {
-	WCHAR strUnicode[FILENAME_SIZE];
-	Platform_ConvertString(strUnicode, &args->Text);
+	WCHAR str[300]; Platform_ConvertString(str, &args->Text);
 
 	HGDIOBJ oldFont = (HFONT)SelectObject(hdc, (HFONT)args->Font.Handle);
-	SIZE area; GetTextExtentPointW(hdc, strUnicode, args->Text.length, &area);
-	TextOutW(hdc, 0, 0, strUnicode, args->Text.length);
+	SIZE area; GetTextExtentPointW(hdc, str, args->Text.length, &area);
+	TextOutW(hdc, 0, 0, str, args->Text.length);
 
 	Int32 xx, yy;
 	struct Bitmap* bmp = platform_bmp;
@@ -928,6 +927,7 @@ ReturnCode Http_GetRequestData(struct AsyncRequest* request, void* handle, void*
 
 	UInt8* buffer = Mem_Alloc(size, sizeof(UInt8), "http get data");
 	UInt32 left   = size, read, totalRead = 0;
+	*data = buffer;
 
 	while (left) {
 		UInt32 toRead = left, avail = 0;
@@ -944,7 +944,6 @@ ReturnCode Http_GetRequestData(struct AsyncRequest* request, void* handle, void*
 		*progress = (Int32)(100.0f * totalRead / size);
 	}
 
-	*data     = buffer;
 	*progress = 100;
 	return 0;
 }
