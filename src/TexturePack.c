@@ -40,7 +40,7 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 
 	UInt16 pathLen  = Stream_GetU16_LE(&contents[22]);
 	UInt16 extraLen = Stream_GetU16_LE(&contents[24]);
-	UChar pathBuffer[String_BufferSize(ZIP_MAXNAMELEN)];
+	char pathBuffer[ZIP_MAXNAMELEN];
 
 	if (pathLen > ZIP_MAXNAMELEN) return ZIP_ERR_FILENAME_LEN;
 	String path = String_Init(pathBuffer, pathLen, pathLen);
@@ -187,21 +187,18 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 *--------------------------------------------------------EntryList--------------------------------------------------------*
 *#########################################################################################################################*/
 struct EntryList {
-	UChar FolderBuffer[String_BufferSize(STRING_SIZE)];
-	UChar FileBuffer[String_BufferSize(STRING_SIZE)];
+	const char* Folder;
+	const char* Filename;
 	StringsBuffer Entries;
 };
 
 static void EntryList_Load(struct EntryList* list) {
-	String folder = String_FromRawArray(list->FolderBuffer);
-	String filename = String_FromRawArray(list->FileBuffer);
-	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	char pathBuffer[FILENAME_SIZE];
+	String path = String_FromArray(pathBuffer);
+	String_Format3(&path, "%c%r%c", list->Folder, &Directory_Separator, list->Filename);
 
-	String path = String_InitAndClearArray(pathBuffer);
-	String_Format3(&path, "%s%r%s", &folder, &Directory_Separator, &filename);
-
-	UChar lineBuffer[String_BufferSize(FILENAME_SIZE)];
-	String line = String_InitAndClearArray(lineBuffer);
+	char lineBuffer[FILENAME_SIZE];
+	String line = String_FromArray(lineBuffer);
 	ReturnCode res;
 
 	void* file; res = File_Open(&file, &path);
@@ -230,18 +227,12 @@ static void EntryList_Load(struct EntryList* list) {
 }
 
 static void EntryList_Save(struct EntryList* list) {
-	String folder = String_FromRawArray(list->FolderBuffer);
-	String filename = String_FromRawArray(list->FileBuffer);
-	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	char pathBuffer[FILENAME_SIZE];
+	String path = String_FromArray(pathBuffer);
+	String_Format3(&path, "%c%r%c", list->Folder, &Directory_Separator, list->Filename);
 
-	String path = String_InitAndClearArray(pathBuffer);
-	String_Format3(&path, "%s%r%s", &folder, &Directory_Separator, &filename);
 	ReturnCode res;
-
-	if (!Directory_Exists(&folder)) {
-		res = Directory_Create(&folder);
-		if (res) { Chat_LogError(res, "creating", &folder); return; }
-	}
+	if (!Utils_EnsureDirectory(list->Folder)) return;
 
 	void* file; res = File_Create(&file, &path);
 	if (res) { Chat_LogError(res, "creating", &path); return; }
@@ -272,13 +263,9 @@ static bool EntryList_Has(struct EntryList* list, STRING_PURE String* entry) {
 	return false;
 }
 
-static void EntryList_Make(struct EntryList* list, STRING_PURE const UChar* folder, STRING_PURE const UChar* file) {
-	String dstFolder = String_InitAndClearArray(list->FolderBuffer);
-	String_AppendConst(&dstFolder, folder);
-	String dstFile = String_InitAndClearArray(list->FileBuffer);
-	String_AppendConst(&dstFile, file);
-
-	StringsBuffer_Init(&list->Entries);
+static void EntryList_UNSAFE_Make(struct EntryList* list, STRING_REF const char* folder, STRING_REF const char* file) {
+	list->Folder = folder;
+	list->Filename = file;
 	EntryList_Load(list);
 }
 
@@ -291,21 +278,19 @@ static void EntryList_Make(struct EntryList* list, STRING_PURE const UChar* fold
 #define TEXCACHE_TICKS_PER_MS 10000LL
 struct EntryList cache_accepted, cache_denied, cache_eTags, cache_lastModified;
 
-#define TexCache_InitAndMakePath(url) \
-UChar pathBuffer[String_BufferSize(FILENAME_SIZE)]; \
-path = String_InitAndClearArray(pathBuffer); \
+#define TexCache_InitAndMakePath(url) char pathBuffer[FILENAME_SIZE]; \
+String path = String_FromArray(pathBuffer); \
 TextureCache_MakePath(&path, url);
 
-#define TexCache_Crc32(url) \
-UChar crc32Buffer[STRING_INT_CHARS];\
-crc32 = String_InitAndClearArray(crc32Buffer);\
+#define TexCache_Crc32(url) char crc32Buffer[STRING_INT_CHARS]; \
+String crc32 = String_FromArray(crc32Buffer);\
 String_AppendUInt32(&crc32, Utils_CRC32(url->buffer, url->length));
 
 void TextureCache_Init(void) {
-	EntryList_Make(&cache_accepted,     TEXCACHE_FOLDER, "acceptedurls.txt");
-	EntryList_Make(&cache_denied,       TEXCACHE_FOLDER, "deniedurls.txt");
-	EntryList_Make(&cache_eTags,        TEXCACHE_FOLDER, "etags.txt");
-	EntryList_Make(&cache_lastModified, TEXCACHE_FOLDER, "lastmodified.txt");
+	EntryList_UNSAFE_Make(&cache_accepted,     TEXCACHE_FOLDER, "acceptedurls.txt");
+	EntryList_UNSAFE_Make(&cache_denied,       TEXCACHE_FOLDER, "deniedurls.txt");
+	EntryList_UNSAFE_Make(&cache_eTags,        TEXCACHE_FOLDER, "etags.txt");
+	EntryList_UNSAFE_Make(&cache_lastModified, TEXCACHE_FOLDER, "lastmodified.txt");
 }
 
 bool TextureCache_HasAccepted(STRING_PURE String* url) { return EntryList_Has(&cache_accepted, url); }
@@ -314,17 +299,17 @@ void TextureCache_Accept(STRING_PURE String* url) { EntryList_Add(&cache_accepte
 void TextureCache_Deny(STRING_PURE String* url)   { EntryList_Add(&cache_denied,   url); }
 
 static void TextureCache_MakePath(STRING_TRANSIENT String* path, STRING_PURE String* url) {
-	String crc32; TexCache_Crc32(url);
+	TexCache_Crc32(url);
 	String_Format2(path, TEXCACHE_FOLDER "%r%s", &Directory_Separator, &crc32);
 }
 
 bool TextureCache_HasUrl(STRING_PURE String* url) {
-	String path; TexCache_InitAndMakePath(url);
+	TexCache_InitAndMakePath(url);
 	return File_Exists(&path);
 }
 
 bool TextureCache_GetStream(STRING_PURE String* url, struct Stream* stream) {
-	String path; TexCache_InitAndMakePath(url);
+	TexCache_InitAndMakePath(url);
 	ReturnCode res;
 
 	void* file; res = File_Open(&file, &path);
@@ -336,7 +321,7 @@ bool TextureCache_GetStream(STRING_PURE String* url, struct Stream* stream) {
 }
 
 void TexturePack_GetFromTags(STRING_PURE String* url, STRING_TRANSIENT String* result, struct EntryList* list) {
-	String crc32; TexCache_Crc32(url);
+	TexCache_Crc32(url);
 	Int32 i;
 	for (i = 0; i < list->Entries.Count; i++) {
 		String entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
@@ -351,8 +336,8 @@ void TexturePack_GetFromTags(STRING_PURE String* url, STRING_TRANSIENT String* r
 }
 
 void TextureCache_GetLastModified(STRING_PURE String* url, DateTime* time) {
-	UChar entryBuffer[String_BufferSize(STRING_SIZE)];
-	String entry = String_InitAndClearArray(entryBuffer);
+	char entryBuffer[STRING_SIZE];
+	String entry = String_FromArray(entryBuffer);
 	TexturePack_GetFromTags(url, &entry, &cache_lastModified);
 
 	Int64 ticks;
@@ -361,7 +346,7 @@ void TextureCache_GetLastModified(STRING_PURE String* url, DateTime* time) {
 	if (entry.length && Convert_TryParseInt64(&entry, &ticks)) {
 		DateTime_FromTotalMs(time, ticks / TEXCACHE_TICKS_PER_MS);
 	} else {
-		String path; TexCache_InitAndMakePath(url);
+		TexCache_InitAndMakePath(url);
 		ReturnCode res = File_GetModifiedTime(&path, &temp);
 
 		if (res) { Chat_LogError(res, "getting last modified time of", url); return; }
@@ -374,7 +359,7 @@ void TextureCache_GetETag(STRING_PURE String* url, STRING_PURE String* etag) {
 }
 
 void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length) {
-	String path; TexCache_InitAndMakePath(url);
+	TexCache_InitAndMakePath(url);
 	ReturnCode res;
 	if (!Utils_EnsureDirectory(TEXCACHE_FOLDER)) return;
 
@@ -390,9 +375,9 @@ void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length) {
 }
 
 void TextureCache_AddToTags(STRING_PURE String* url, STRING_PURE String* data, struct EntryList* list) {
-	String crc32; TexCache_Crc32(url);
-	UChar entryBuffer[String_BufferSize(2048)];
-	String entry = String_InitAndClearArray(entryBuffer);
+	TexCache_Crc32(url);
+	char entryBuffer[2048];
+	String entry = String_FromArray(entryBuffer);
 	String_Format2(&entry, "%s %s", &crc32, data);
 
 	Int32 i;
@@ -415,8 +400,8 @@ void TextureCache_AddLastModified(STRING_PURE String* url, DateTime* lastModifie
 	if (!lastModified->Year && !lastModified->Month) return;
 	Int64 ticks = DateTime_TotalMs(lastModified) * TEXCACHE_TICKS_PER_MS;
 
-	UChar dataBuffer[String_BufferSize(STRING_SIZE)];
-	String data = String_InitAndClearArray(dataBuffer);
+	char dataBuffer[STRING_SIZE];
+	String data = String_FromArray(dataBuffer);
 	String_AppendUInt64(&data, ticks);
 	TextureCache_AddToTags(url, &data, &cache_lastModified);
 }
@@ -441,8 +426,8 @@ static ReturnCode TexturePack_ExtractZip(struct Stream* stream) {
 }
 
 void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
-	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
-	String path = String_InitAndClearArray(pathBuffer);
+	char pathBuffer[FILENAME_SIZE];
+	String path = String_FromArray(pathBuffer);
 	String_Format2(&path, "texpacks%r%s", &Directory_Separator, filename);
 	ReturnCode res;
 
@@ -471,12 +456,12 @@ ReturnCode TexturePack_ExtractTerrainPng(struct Stream* stream) {
 }
 
 void TexturePack_ExtractDefault(void) {
-	UChar texPackBuffer[String_BufferSize(STRING_SIZE)];
-	String texPack = String_InitAndClearArray(texPackBuffer);
+	char texPackBuffer[STRING_SIZE];
+	String texPack = String_FromArray(texPackBuffer);
 	Game_GetDefaultTexturePack(&texPack);
 
 	TexturePack_ExtractZip_File(&texPack);
-	String_Clear(&World_TextureUrl);
+	World_TextureUrl.length = 0;
 }
 
 void TexturePack_ExtractCurrent(STRING_PURE String* url) {
@@ -494,7 +479,7 @@ void TexturePack_ExtractCurrent(STRING_PURE String* url) {
 		} else {
 			bool zip = String_ContainsString(url, &zipExt);
 			String_Set(&World_TextureUrl, url);
-			const UChar* operation = zip ? "extracting" : "decoding";
+			const char* operation = zip ? "extracting" : "decoding";
 			
 			res = zip ? TexturePack_ExtractZip(&stream) :
 						TexturePack_ExtractTerrainPng(&stream);		
@@ -521,7 +506,7 @@ void TexturePack_Extract_Req(struct AsyncRequest* item) {
 	bool png = Bitmap_DetectPng(data, len);
 	ReturnCode res = png ? TexturePack_ExtractTerrainPng(&mem) 
 						: TexturePack_ExtractZip(&mem);
-	const UChar* operation = png ? "decoding" : "extracting";
+	const char* operation = png ? "decoding" : "extracting";
 
 	if (res) { Chat_LogError(res, operation, &url); }
 	ASyncRequest_Free(item);

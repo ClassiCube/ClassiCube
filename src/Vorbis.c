@@ -623,7 +623,7 @@ struct Residue {
 };
 
 static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r, UInt16 type) {
-	r->Type  = type;
+	r->Type  = (UInt8)type;
 	r->Begin = Vorbis_ReadBits(ctx, 24);
 	r->End   = Vorbis_ReadBits(ctx, 24);
 	r->PartitionSize   = Vorbis_ReadBits(ctx, 24); r->PartitionSize++;

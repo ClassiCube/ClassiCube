@@ -250,7 +250,7 @@ static void NotchyGen_CarveCaves(void) {
 	}
 }
 
-static void NotchyGen_CarveOreVeins(Real32 abundance, const UChar* state, BlockID block) {
+static void NotchyGen_CarveOreVeins(Real32 abundance, const char* state, BlockID block) {
 	Int32 numVeins = (Int32)(Gen_Volume * abundance / 16384);
 	Gen_CurrentState = state;
 

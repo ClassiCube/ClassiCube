@@ -19,8 +19,8 @@
 #include "Input.h"
 #include "Gui.h"
 
-const UChar* NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
-const UChar* ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
+const char* NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
+const char* ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
 
 /*########################################################################################################################*
 *-----------------------------------------------------LocationUpdate------------------------------------------------------*
@@ -430,8 +430,8 @@ bool TabList_Remove(EntityID id) {
 }
 
 void TabList_Set(EntityID id, STRING_PURE String* player, STRING_PURE String* list, STRING_PURE String* group, UInt8 rank) {
-	UChar playerNameBuffer[String_BufferSize(STRING_SIZE)];
-	String playerName = String_InitAndClearArray(playerNameBuffer);
+	char playerNameBuffer[STRING_SIZE];
+	String playerName = String_FromArray(playerNameBuffer);
 	String_AppendColorless(&playerName, player);
 	TabList_Remove(id);
 
@@ -477,8 +477,8 @@ static void Player_MakeNameTexture(struct Player* player) {
 		player->NameTex.ID = NULL;
 		player->NameTex.X  = PLAYER_NAME_EMPTY_TEX;
 	} else {
-		UChar buffer[String_BufferSize(STRING_SIZE)];
-		String shadowName = String_InitAndClearArray(buffer);
+		char buffer[STRING_SIZE];
+		String shadowName = String_FromArray(buffer);
 
 		size.Width += 3; size.Height += 3;
 		struct Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
@@ -737,9 +737,9 @@ static void Player_ContextRecreated(struct Entity* entity) {
 }
 
 static void Player_SetName(struct Player* player, STRING_PURE String* displayName, STRING_PURE String* skinName) {
-	String dstDisplayName = String_FromEmptyArray(player->DisplayNameRaw);
+	String dstDisplayName = String_ClearedArray(player->DisplayNameRaw);
 	String_AppendString(&dstDisplayName, displayName);
-	String dstSkinName = String_FromEmptyArray(player->SkinNameRaw);
+	String dstSkinName = String_ClearedArray(player->SkinNameRaw);
 	String_AppendString(&dstSkinName, skinName);
 }
 

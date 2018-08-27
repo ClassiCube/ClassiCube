@@ -421,7 +421,7 @@ GfxResourceID Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices) {
 	return vbuffer;
 }
 
-static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 size, const UChar* lockMsg, const UChar* unlockMsg, Int32 lockFlags) {
+static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 size, const char* lockMsg, const char* unlockMsg, Int32 lockFlags) {
 	void* dst = NULL;
 	ReturnCode hresult = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, lockFlags);
 	ErrorHandler_CheckOrFail(hresult, lockMsg);
@@ -620,14 +620,14 @@ void Gfx_EndFrame(void) {
 	D3D9_RecreateDevice();
 }
 
-const UChar* D3D9_StrFlags(void) {
+const char* D3D9_StrFlags(void) {
 	if (createFlags & D3DCREATE_HARDWARE_VERTEXPROCESSING) return "Hardware";
 	if (createFlags & D3DCREATE_MIXED_VERTEXPROCESSING)    return "Mixed";
 	if (createFlags & D3DCREATE_SOFTWARE_VERTEXPROCESSING) return "Software";
 	return "(none)";
 }
 
-const UChar* D3D9_StrFormat(D3DFORMAT format) {
+const char* D3D9_StrFormat(D3DFORMAT format) {
 	switch (format) {
 	case D3DFMT_D32:     return "D32";
 	case D3DFMT_D24X8:   return "D24X8";

@@ -6,25 +6,23 @@
 #include "Stream.h"
 
 #define Char_MakeLower(ch) if ((ch) >= 'A' && (ch) <= 'Z') { (ch) += ' '; }
-UChar Char_ToLower(UChar c) {
+char Char_ToLower(char c) {
 	Char_MakeLower(c);
 	return c;
 }
 
-String String_Init(STRING_REF UChar* buffer, UInt16 length, UInt16 capacity) {
+String String_Init(STRING_REF char* buffer, UInt16 length, UInt16 capacity) {
 	String str = { buffer, length, capacity }; return str;
 }
 
-String String_InitAndClear(STRING_REF UChar* buffer, UInt16 capacity) {
+String String_InitAndClear(STRING_REF char* buffer, UInt16 capacity) {
 	String str = String_Init(buffer, 0, capacity);	
 	Int32 i;
-
-	/* Need to set region occupied by string to NULL for interop with native APIs */
-	for (i = 0; i < capacity + 1; i++) { buffer[i] = '\0'; }
+	for (i = 0; i < capacity; i++) { buffer[i] = '\0'; }
 	return str;
 }
 
-UInt16 String_CalcLen(STRING_PURE UChar* raw, UInt16 capacity) {
+UInt16 String_CalcLen(STRING_PURE char* raw, UInt16 capacity) {
 	UInt16 length = 0;
 	while (length < capacity && *raw) { raw++; length++; }
 	return length;
@@ -32,11 +30,11 @@ UInt16 String_CalcLen(STRING_PURE UChar* raw, UInt16 capacity) {
 
 String String_MakeNull(void) { return String_Init(NULL, 0, 0); }
 
-String String_FromRaw(STRING_REF UChar* buffer, UInt16 capacity) {
+String String_FromRaw(STRING_REF char* buffer, UInt16 capacity) {
 	return String_Init(buffer, String_CalcLen(buffer, capacity), capacity);
 }
 
-String String_FromReadonly(STRING_REF const UChar* buffer) {
+String String_FromReadonly(STRING_REF const char* buffer) {
 	UInt16 len = String_CalcLen(buffer, UInt16_MaxValue);
 	return String_Init(buffer, len, len);
 }
@@ -51,16 +49,8 @@ void String_StripCols(STRING_TRANSIENT String* str) {
 	}
 }
 
-void String_Clear(STRING_TRANSIENT String* str) {
-	Int32 i;
-	for (i = 0; i < str->length; i++) { 
-		str->buffer[i] = '\0';
-	}
-	str->length = 0;
-}
-
 void String_Set(STRING_TRANSIENT String* str, STRING_PURE String* value) {
-	String_Clear(str);
+	str->length = 0;
 	String_AppendString(str, value);
 }
 
@@ -77,7 +67,7 @@ String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 lengt
 	return String_Init(str->buffer + offset, length, length);
 }
 
-void String_UNSAFE_Split(STRING_REF String* str, UChar c, STRING_TRANSIENT String* subs, Int32* subsCount) {
+void String_UNSAFE_Split(STRING_REF String* str, char c, STRING_TRANSIENT String* subs, Int32* subsCount) {
 	Int32 maxSubs = *subsCount, i = 0, start = 0;
 	for (; i < maxSubs && start <= str->length; i++) {
 		Int32 end = String_IndexOf(str, c, start);
@@ -108,19 +98,19 @@ bool String_CaselessEquals(STRING_PURE String* a, STRING_PURE String* b) {
 	Int32 i;
 
 	for (i = 0; i < a->length; i++) {
-		UChar aCur = a->buffer[i]; Char_MakeLower(aCur);
-		UChar bCur = b->buffer[i]; Char_MakeLower(bCur);
+		char aCur = a->buffer[i]; Char_MakeLower(aCur);
+		char bCur = b->buffer[i]; Char_MakeLower(bCur);
 		if (aCur != bCur) return false;
 	}
 	return true;
 }
 
-bool String_CaselessEqualsConst(STRING_PURE String* a, STRING_PURE const UChar* b) {
+bool String_CaselessEqualsConst(STRING_PURE String* a, STRING_PURE const char* b) {
 	Int32 i;
 
 	for (i = 0; i < a->length; i++) {
-		UChar aCur = a->buffer[i]; Char_MakeLower(aCur);
-		UChar bCur = b[i];         Char_MakeLower(bCur);
+		char aCur = a->buffer[i]; Char_MakeLower(aCur);
+		char bCur = b[i];         Char_MakeLower(bCur);
 		if (aCur != bCur || bCur == '\0') return false;
 	}
 	/* ensure at end of string */
@@ -128,7 +118,7 @@ bool String_CaselessEqualsConst(STRING_PURE String* a, STRING_PURE const UChar* 
 }
 
 
-bool String_Append(STRING_TRANSIENT String* str, UChar c) {
+bool String_Append(STRING_TRANSIENT String* str, char c) {
 	if (str->length == str->capacity) return false;
 
 	str->buffer[str->length] = c;
@@ -137,11 +127,11 @@ bool String_Append(STRING_TRANSIENT String* str, UChar c) {
 }
 
 bool String_AppendBool(STRING_TRANSIENT String* str, bool value) {
-	UChar* text = value ? "True" : "False";
+	char* text = value ? "True" : "False";
 	return String_AppendConst(str, text);
 }
 
-Int32 String_MakeUInt32(UInt32 num, UChar* numBuffer) {
+Int32 String_MakeUInt32(UInt32 num, char* numBuffer) {
 	Int32 len = 0;
 	do {
 		numBuffer[len] = '0' + (num % 10); num /= 10; len++;
@@ -158,7 +148,7 @@ bool String_AppendInt32(STRING_TRANSIENT String* str, Int32 num) {
 }
 
 bool String_AppendUInt32(STRING_TRANSIENT String* str, UInt32 num) {
-	UChar numBuffer[STRING_INT_CHARS];
+	char numBuffer[STRING_INT_CHARS];
 	Int32 i, numLen = String_MakeUInt32(num, numBuffer);
 
 	for (i = numLen - 1; i >= 0; i--) {
@@ -169,7 +159,7 @@ bool String_AppendUInt32(STRING_TRANSIENT String* str, UInt32 num) {
 
 /* Attempts to append an integer value to the end of a string, padding left with 0. */
 bool String_AppendPaddedInt32(STRING_TRANSIENT String* str, Int32 num, Int32 minDigits) {
-	UChar numBuffer[STRING_INT_CHARS];
+	char numBuffer[STRING_INT_CHARS];
 	Int32 i;
 	for (i = 0; i < minDigits; i++) { numBuffer[i] = '0'; }
 
@@ -182,7 +172,7 @@ bool String_AppendPaddedInt32(STRING_TRANSIENT String* str, Int32 num, Int32 min
 	return true;
 }
 
-Int32 String_MakeUInt64(UInt64 num, UChar* numBuffer) {
+Int32 String_MakeUInt64(UInt64 num, char* numBuffer) {
 	Int32 len = 0;
 	do {
 		numBuffer[len] = '0' + (num % 10); num /= 10; len++;
@@ -191,7 +181,7 @@ Int32 String_MakeUInt64(UInt64 num, UChar* numBuffer) {
 }
 
 bool String_AppendUInt64(STRING_TRANSIENT String* str, UInt64 num) {
-	UChar numBuffer[STRING_INT_CHARS];
+	char numBuffer[STRING_INT_CHARS];
 	Int32 i, numLen = String_MakeUInt64(num, numBuffer);
 
 	for (i = numLen - 1; i >= 0; i--) {
@@ -223,7 +213,7 @@ bool String_AppendReal32(STRING_TRANSIENT String* str, Real32 num, Int32 fracDig
 }
 
 bool String_Hex32(STRING_TRANSIENT String* str, UInt32 value) {
-	UChar hex[9]; hex[8] = '\0';
+	char hex[9]; hex[8] = '\0';
 	Int32 i;
 
 	for (i = 0; i < 8; i++) {
@@ -236,7 +226,7 @@ bool String_Hex32(STRING_TRANSIENT String* str, UInt32 value) {
 }
 
 bool String_Hex64(STRING_TRANSIENT String* str, UInt64 value) {
-	UChar hex[17]; hex[16] = '\0';
+	char hex[17]; hex[16] = '\0';
 	Int32 i;
 
 	for (i = 0; i < 16; i++) {
@@ -248,7 +238,7 @@ bool String_Hex64(STRING_TRANSIENT String* str, UInt64 value) {
 	return String_AppendConst(str, hex);
 }
 
-bool String_AppendConst(STRING_TRANSIENT String* str, const UChar* src) {
+bool String_AppendConst(STRING_TRANSIENT String* str, const char* src) {
 	while (*src) {
 		if (!String_Append(str, *src)) return false;
 		src++;
@@ -269,7 +259,7 @@ bool String_AppendColorless(STRING_TRANSIENT String* str, STRING_PURE String* sr
 	Int32 i;
 
 	for (i = 0; i < src->length; i++) {
-		UChar c = src->buffer[i];
+		char c = src->buffer[i];
 		if (c == '&') { i++; continue; } /* Skip over the following colour code */
 		if (!String_Append(str, c)) return false;
 	}
@@ -277,7 +267,7 @@ bool String_AppendColorless(STRING_TRANSIENT String* str, STRING_PURE String* sr
 }
 
 
-Int32 String_IndexOf(STRING_PURE String* str, UChar c, Int32 offset) {
+Int32 String_IndexOf(STRING_PURE String* str, char c, Int32 offset) {
 	Int32 i;
 	for (i = offset; i < str->length; i++) {
 		if (str->buffer[i] == c) return i;
@@ -285,7 +275,7 @@ Int32 String_IndexOf(STRING_PURE String* str, UChar c, Int32 offset) {
 	return -1;
 }
 
-Int32 String_LastIndexOf(STRING_PURE String* str, UChar c) {
+Int32 String_LastIndexOf(STRING_PURE String* str, char c) {
 	Int32 i;
 	for (i = str->length - 1; i >= 0; i--) {
 		if (str->buffer[i] == c) return i;
@@ -293,7 +283,7 @@ Int32 String_LastIndexOf(STRING_PURE String* str, UChar c) {
 	return -1;
 }
 
-void String_InsertAt(STRING_TRANSIENT String* str, Int32 offset, UChar c) {
+void String_InsertAt(STRING_TRANSIENT String* str, Int32 offset, char c) {
 	if (offset < 0 || offset > str->length) {
 		ErrorHandler_Fail("Offset for InsertAt out of range");
 	}
@@ -347,7 +337,7 @@ Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub) {
 	/* Special case, sub is an empty string*/
 	if (!sub->length) return 0;
 
-	UChar subFirst = sub->buffer[0];
+	char subFirst = sub->buffer[0];
 	for (i = 0; i < str->length; i++) {
 		if (str->buffer[i] != subFirst) continue;
 		
@@ -364,8 +354,8 @@ bool String_CaselessStarts(STRING_PURE String* str, STRING_PURE String* sub) {
 	Int32 i;
 
 	for (i = 0; i < sub->length; i++) {
-		UChar strCur = str->buffer[i]; Char_MakeLower(strCur);
-		UChar subCur = sub->buffer[i]; Char_MakeLower(subCur);
+		char strCur = str->buffer[i]; Char_MakeLower(strCur);
+		char subCur = sub->buffer[i]; Char_MakeLower(subCur);
 		if (strCur != subCur) return false;
 	}
 	return true;
@@ -376,8 +366,8 @@ bool String_CaselessEnds(STRING_PURE String* str, STRING_PURE String* sub) {
 	Int32 i, j = str->length - sub->length;
 
 	for (i = 0; i < sub->length; i++) {
-		UChar strCur = str->buffer[j + i]; Char_MakeLower(strCur);
-		UChar subCur = sub->buffer[i];     Char_MakeLower(subCur);
+		char strCur = str->buffer[j + i]; Char_MakeLower(strCur);
+		char subCur = sub->buffer[i];     Char_MakeLower(subCur);
 		if (strCur != subCur) return false;
 	}
 	return true;
@@ -388,8 +378,8 @@ Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b) {
 	Int32 i;
 
 	for (i = 0; i < minLen; i++) {
-		UChar aCur = a->buffer[i]; Char_MakeLower(aCur);
-		UChar bCur = b->buffer[i]; Char_MakeLower(bCur);
+		char aCur = a->buffer[i]; Char_MakeLower(aCur);
+		char bCur = b->buffer[i]; Char_MakeLower(bCur);
 
 		if (aCur == bCur) continue;
 		return (Int32)aCur - (Int32)bCur;
@@ -399,16 +389,16 @@ Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b) {
 	return a->length - b->length;
 }
 
-void String_Format1(STRING_TRANSIENT String* str, const UChar* format, const void* a1) {
+void String_Format1(STRING_TRANSIENT String* str, const char* format, const void* a1) {
 	String_Format4(str, format, a1, NULL, NULL, NULL);
 }
-void String_Format2(STRING_TRANSIENT String* str, const UChar* format, const void* a1, const void* a2) {
+void String_Format2(STRING_TRANSIENT String* str, const char* format, const void* a1, const void* a2) {
 	String_Format4(str, format, a1, a2, NULL, NULL);
 }
-void String_Format3(STRING_TRANSIENT String* str, const UChar* format, const void* a1, const void* a2, const void* a3) {
+void String_Format3(STRING_TRANSIENT String* str, const char* format, const void* a1, const void* a2, const void* a3) {
 	String_Format4(str, format, a1, a2, a3, NULL);
 }
-void String_Format4(STRING_TRANSIENT String* str, const UChar* format, const void* a1, const void* a2, const void* a3, const void* a4) {
+void String_Format4(STRING_TRANSIENT String* str, const char* format, const void* a1, const void* a2, const void* a3, const void* a4) {
 	String formatStr = String_FromReadonly(format);
 	const void* args[4] = { a1, a2, a3, a4 };
 	Int32 i, j = 0, digits;
@@ -431,11 +421,11 @@ void String_Format4(STRING_TRANSIENT String* str, const UChar* format, const voi
 		case 't': 
 			String_AppendBool(str, *((bool*)arg)); break;
 		case 'c': 
-			String_AppendConst(str, (UChar*)arg);  break;
+			String_AppendConst(str, (char*)arg);  break;
 		case 's': 
 			String_AppendString(str, (String*)arg);  break;
 		case 'r':
-			String_Append(str, *((UChar*)arg)); break;
+			String_Append(str, *((char*)arg)); break;
 		case 'x':
 			String_Hex64(str, *((UInt64*)arg)); break;
 		case 'y':
@@ -476,18 +466,18 @@ UInt16 Convert_ExtendedChars[129] = { 0x2302,
 0x00B0, 0x2219, 0x00B7, 0x221A, 0x207F, 0x00B2, 0x25A0, 0x00A0
 };
 
-UInt16 Convert_CP437ToUnicode(UChar c) {
+UInt16 Convert_CP437ToUnicode(char c) {
 	if (c < 0x20) return Convert_ControlChars[c];
 	if (c < 0x7F) return c;
-	return Convert_ExtendedChars[c - 0x7F];
+	return Convert_ExtendedChars[(UInt8)c - 0x7F];
 }
 
-UChar Convert_UnicodeToCP437(UInt16 c) {
-	UChar value; Convert_TryUnicodeToCP437(c, &value); return value;
+char Convert_UnicodeToCP437(UInt16 c) {
+	char value; Convert_TryUnicodeToCP437(c, &value); return value;
 }
 
-bool Convert_TryUnicodeToCP437(UInt16 c, UChar* value) {
-	if (c >= 0x20 && c < 0x7F) { *value = (UChar)c; return true; }
+bool Convert_TryUnicodeToCP437(UInt16 c, char* value) {
+	if (c >= 0x20 && c < 0x7F) { *value = (char)c; return true; }
 	UInt32 i;
 
 	for (i = 0; i < Array_Elems(Convert_ControlChars); i++) {
@@ -529,7 +519,7 @@ bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value) {
 	*value = (UInt16)tmp; return true;
 }
 
-Int32 Convert_CompareDigits(const UChar* digits, const UChar* magnitude) {
+Int32 Convert_CompareDigits(const char* digits, const char* magnitude) {
 	Int32 i;
 	for (i = 0; ; i++) {
 		if (magnitude[i] == '\0')     return  0;
@@ -539,10 +529,10 @@ Int32 Convert_CompareDigits(const UChar* digits, const UChar* magnitude) {
 	return 0;
 }
 
-bool Convert_TryParseDigits(STRING_PURE String* str, bool* negative, UChar* digits, Int32 maxDigits) {
+bool Convert_TryParseDigits(STRING_PURE String* str, bool* negative, char* digits, Int32 maxDigits) {
 	*negative = false;
 	if (!str->length) return false;
-	UChar* start = digits; digits += (maxDigits - 1);
+	char* start = digits; digits += (maxDigits - 1);
 
 	/* Handle number signs */
 	Int32 offset = 0, i = 0;
@@ -551,7 +541,7 @@ bool Convert_TryParseDigits(STRING_PURE String* str, bool* negative, UChar* digi
 
 	/* add digits, starting at last digit */
 	for (i = str->length - 1; i >= offset; i--) {
-		UChar c = str->buffer[i];
+		char c = str->buffer[i];
 		if (c < '0' || c > '9' || digits < start) return false;
 		*digits-- = c;
 	}
@@ -564,7 +554,7 @@ bool Convert_TryParseInt32(STRING_PURE String* str, Int32* value) {
 	*value = 0;
 	#define INT32_DIGITS 10
 	bool negative;	
-	UChar digits[INT32_DIGITS];
+	char digits[INT32_DIGITS];
 	if (!Convert_TryParseDigits(str, &negative, digits, INT32_DIGITS)) return false;
 
 	Int32 i, compare;
@@ -591,7 +581,7 @@ bool Convert_TryParseInt64(STRING_PURE String* str, Int64* value) {
 	*value = 0;
 	#define INT64_DIGITS 19
 	bool negative;
-	UChar digits[INT64_DIGITS];
+	char digits[INT64_DIGITS];
 	if (!Convert_TryParseDigits(str, &negative, digits, INT64_DIGITS)) return false;
 
 	Int32 i, compare;
@@ -628,7 +618,7 @@ bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value) {
 
 	/* TODO: CHECK THIS WORKS!!! */
 	for (; i < str->length; i++) {
-		UChar c = str->buffer[i];
+		char c = str->buffer[i];
 		/* Floating point number can have . in it */
 		if (c == '.' || c == ',') {
 			if (foundDecimalPoint) return false;
@@ -721,7 +711,7 @@ void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text) {
 
 	Int32 textOffset = buffer->TotalLength;
 	if (textOffset + text->length >= buffer->_TextBufferSize) {
-		Utils_Resize(&buffer->TextBuffer, &buffer->_TextBufferSize, sizeof(UChar),
+		Utils_Resize(&buffer->TextBuffer, &buffer->_TextBufferSize, sizeof(char),
 			STRINGSBUFFER_BUFFER_DEF_SIZE, STRINGSBUFFER_BUFFER_EXPAND_SIZE);
 	}
 
@@ -767,7 +757,7 @@ void StringsBuffer_Remove(StringsBuffer* buffer, Int32 index) {
 /*########################################################################################################################*
 *------------------------------------------------------Word wrapper-------------------------------------------------------*
 *#########################################################################################################################*/
-bool WordWrap_IsWrapper(UChar c) {
+bool WordWrap_IsWrapper(char c) {
 	return c == '\0' || c == ' ' || c == '-' || c == '>' || c == '<' || c == '/' || c == '\\';
 }
 

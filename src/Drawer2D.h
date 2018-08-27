@@ -42,11 +42,11 @@ void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, In
 void Drawer2D_Make2DTexture(struct Texture* tex, struct Bitmap* bmp, struct Size2D used, Int32 X, Int32 Y);
 
 bool Drawer2D_ValidColCodeAt(STRING_PURE String* text, Int32 i);
-bool Drawer2D_ValidColCode(UChar c);
+bool Drawer2D_ValidColCode(char c);
 bool Drawer2D_IsEmptyText(STRING_PURE String* text);
 /* Returns the last valid colour code in the given input, or \0 if no valid colour code was found. */
-UChar Drawer2D_LastCol(STRING_PURE String* text, Int32 start);
-bool Drawer2D_IsWhiteCol(UChar c);
+char Drawer2D_LastCol(STRING_PURE String* text, Int32 start);
+bool Drawer2D_IsWhiteCol(char c);
 
 void Drawer2D_ReducePadding_Tex(struct Texture* tex, Int32 point, Int32 scale);
 void Drawer2D_ReducePadding_Height(Int32* height, Int32 point, Int32 scale);

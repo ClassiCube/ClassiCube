@@ -239,9 +239,9 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_CHAR:
 	{
-		UChar keyChar;
+		char keyChar;
 		if (Convert_TryUnicodeToCP437((UInt16)wParam, &keyChar)) {
-			Event_RaiseInt(&KeyEvents_Press, keyChar);
+			Event_RaiseInt(&KeyEvents_Press, (UInt8)keyChar);
 		}
 	} break;
 
@@ -430,7 +430,7 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF Strin
 void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 	/* retry up to 10 times*/
 	Int32 i;
-	String_Clear(value);
+	value->length = 0;
 
 	for (i = 0; i < 10; i++) {
 		if (!OpenClipboard(win_Handle)) {
@@ -447,14 +447,14 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 		if (!hGlobal) { CloseClipboard(); return; }
 		LPVOID src = GlobalLock(hGlobal);
 
-		UChar c;
+		char c;
 		if (isUnicode) {
 			UInt16* text = (UInt16*)src;
 			for (; *text; text++) {
 				if (Convert_TryUnicodeToCP437(*text, &c)) String_Append(value, c);
 			}
 		} else {
-			UChar* text = (UChar*)src;
+			char* text = (char*)src;
 			for (; *text; text++) {
 				if (Convert_TryUnicodeToCP437(*text, &c)) String_Append(value, c);
 			}
@@ -475,7 +475,7 @@ void Window_SetClipboardText(STRING_PURE String* value) {
 			continue;
 		}
 
-		HANDLE hGlobal = GlobalAlloc(GMEM_MOVEABLE, String_BufferSize(value->length) * sizeof(UInt16));
+		HANDLE hGlobal = GlobalAlloc(GMEM_MOVEABLE, (value->length + 1) * sizeof(UInt16));
 		if (!hGlobal) { CloseClipboard(); return; }
 
 		LPVOID dst = GlobalLock(hGlobal);
@@ -703,7 +703,7 @@ void GLContext_Free(void) {
 	ctx_Handle = NULL;
 }
 
-void* GLContext_GetAddress(const UChar* function) {
+void* GLContext_GetAddress(const char* function) {
 	void* address = wglGetProcAddress(function);
 	return GLContext_IsInvalidAddress(address) ? NULL : address;
 }

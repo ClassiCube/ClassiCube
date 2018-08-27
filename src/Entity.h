@@ -23,13 +23,13 @@ typedef enum NameMode_ {
 	NAME_MODE_NONE, NAME_MODE_HOVERED, NAME_MODE_ALL, NAME_MODE_ALL_HOVERED, NAME_MODE_ALL_UNSCALED, NAME_MODE_COUNT
 } NameMode;
 NameMode Entities_NameMode;
-extern const UChar* NameMode_Names[NAME_MODE_COUNT];
+extern const char* NameMode_Names[NAME_MODE_COUNT];
 
 typedef enum ShadowMode_ {
 	SHADOW_MODE_NONE, SHADOW_MODE_SNAP_TO_BLOCK, SHADOW_MODE_CIRCLE, SHADOW_MODE_CIRCLE_ALL, SHADOW_MODE_COUNT
 } ShadowMode;
 ShadowMode Entities_ShadowMode;
-extern const UChar* ShadowMode_Names[SHADOW_MODE_COUNT];
+extern const char* ShadowMode_Names[SHADOW_MODE_COUNT];
 
 #define ENTITY_TYPE_NONE 0
 #define ENTITY_TYPE_PLAYER 1
@@ -126,10 +126,7 @@ void TabList_MakeComponent(struct IGameComponent* comp);
 #define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_PlayerNames[id]);
 #define TabList_UNSAFE_GetList(id)   StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_ListNames[id]);
 #define TabList_UNSAFE_GetGroup(id)  StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_GroupNames[id]);
-
-
-#define Player_Layout struct Entity Base; UInt8 DisplayNameRaw[String_BufferSize(STRING_SIZE)]; \
-UChar SkinNameRaw[String_BufferSize(STRING_SIZE)]; bool FetchedSkin; struct Texture NameTex;
+#define Player_Layout struct Entity Base; char DisplayNameRaw[STRING_SIZE]; char SkinNameRaw[STRING_SIZE]; bool FetchedSkin; struct Texture NameTex;
 
 /* Represents a player entity. */
 struct Player { Player_Layout };

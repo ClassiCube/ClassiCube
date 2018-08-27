@@ -69,7 +69,7 @@ typedef enum Key_ {
 /* Gets whether key repeating is on or not. If on (desirable for text input), multiple KeyDowns (varies by OS) 
 are generated for the same key when it is held down for a period of time. Should be off for game input. */
 bool Key_KeyRepeat;
-extern const UChar* Key_Names[Key_Count];
+extern const char* Key_Names[Key_Count];
 
 #define Key_IsWinPressed()     (Key_IsPressed(Key_WinLeft)     || Key_IsPressed(Key_WinRight))
 #define Key_IsAltPressed()     (Key_IsPressed(Key_AltLeft)     || Key_IsPressed(Key_AltRight))

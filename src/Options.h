@@ -8,7 +8,7 @@
 typedef enum FpsLimit_ {
 	FpsLimit_VSync, FpsLimit_30FPS, FpsLimit_60FPS, FpsLimit_120FPS, FpsLimit_None, FpsLimit_Count,
 } FpsLimit;
-extern const UChar* FpsLimit_Names[FpsLimit_Count];
+extern const char* FpsLimit_Names[FpsLimit_Count];
 
 #define OPT_USE_MUSIC "usemusic"
 #define OPT_USE_SOUND "usesound"
@@ -76,15 +76,15 @@ StringsBuffer Options_Values;
 bool Options_HasAnyChanged(void);
 void Options_Free(void);
 
-void Options_Get(const UChar* key, STRING_TRANSIENT String* value, const UChar* defValue);
-Int32 Options_GetInt(const UChar* key, Int32 min, Int32 max, Int32 defValue);
-bool Options_GetBool(const UChar* key, bool defValue);
-Real32 Options_GetFloat(const UChar* key, Real32 min, Real32 max, Real32 defValue);
-UInt32 Options_GetEnum(const UChar* key, UInt32 defValue, const UChar** names, UInt32 namesCount);
+void Options_Get(const char* key, STRING_TRANSIENT String* value, const char* defValue);
+Int32 Options_GetInt(const char* key, Int32 min, Int32 max, Int32 defValue);
+bool Options_GetBool(const char* key, bool defValue);
+Real32 Options_GetFloat(const char* key, Real32 min, Real32 max, Real32 defValue);
+UInt32 Options_GetEnum(const char* key, UInt32 defValue, const char** names, UInt32 namesCount);
 
-void Options_SetBool(const UChar* keyRaw, bool value);
-void Options_SetInt32(const UChar* keyRaw, Int32 value);
-void Options_Set(const UChar* keyRaw, STRING_PURE String* value);
+void Options_SetBool(const char* keyRaw, bool value);
+void Options_SetInt32(const char* keyRaw, Int32 value);
+void Options_Set(const char* keyRaw, STRING_PURE String* value);
 void Options_Load(void);
 void Options_Save(void);
 #endif

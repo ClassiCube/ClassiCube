@@ -81,7 +81,7 @@ static bool InputHandler_IsShutdown(Key key) {
 #endif
 }
 
-static void InputHandler_Toggle(Key key, bool* target, const UChar* enableMsg, const UChar* disableMsg) {
+static void InputHandler_Toggle(Key key, bool* target, const char* enableMsg, const char* disableMsg) {
 	*target = !(*target);
 	if (*target) {
 		Chat_Add2("%c. &ePress &a%c &eto disable.",   enableMsg,  Key_Names[key]);
@@ -437,8 +437,8 @@ static void InputHandler_KeyDown(void* obj, Int32 key) {
 	} else if (InputHandler_HandleCoreKey(key)) {
 	} else if (LocalPlayer_HandlesKey(key)) {
 	} else {
-		UChar textBuffer[String_BufferSize(STRING_SIZE)];
-		String text = String_InitAndClearArray(textBuffer);
+		char textBuffer[STRING_SIZE];
+		String text = String_FromArray(textBuffer);
 		bool more;
 		if (!Hotkeys_IsHotkey(key, &text, &more)) return;
 

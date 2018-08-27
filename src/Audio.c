@@ -50,7 +50,7 @@ struct Sound {
 
 #define AUDIO_MAX_SOUNDS 10
 struct SoundGroup {
-	UChar NameBuffer[String_BufferSize(16)];
+	char NameBuffer[16];
 	String Name; UInt8 Count;
 	struct Sound Sounds[AUDIO_MAX_SOUNDS];
 };
@@ -101,8 +101,8 @@ static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 }
 
 static ReturnCode Sound_ReadWave(STRING_PURE String* filename, struct Sound* snd) {
-	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
-	String path = String_InitAndClearArray(pathBuffer);
+	char pathBuffer[FILENAME_SIZE];
+	String path = String_FromArray(pathBuffer);
 	String_Format2(&path, "audio%r%s", &Directory_Separator, filename);
 
 	ReturnCode res;
@@ -147,7 +147,7 @@ static void Soundboard_Init(struct Soundboard* board, STRING_PURE String* boardN
 			}
 
 			group = &board->Groups[board->Count++];
-			group->Name = String_InitAndClearArray(group->NameBuffer);
+			group->Name = String_ClearedArray(group->NameBuffer);
 			String_Set(&group->Name, &name);
 		}
 
@@ -393,13 +393,13 @@ static void Music_RunLoop(void) {
 
 	if (!count) return;
 	Random rnd; Random_InitFromCurrentTime(&rnd);
-	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	UInt8 pathBuffer[FILENAME_SIZE];
 	ReturnCode res;
 
 	while (!music_pendingStop) {
 		Int32 idx = Random_Range(&rnd, 0, count);
 		String filename = StringsBuffer_UNSAFE_Get(&files, idx);
-		String path = String_InitAndClearArray(pathBuffer);
+		String path = String_FromArray(pathBuffer);
 		String_Format2(&path, "audio%r%s", &Directory_Separator, &filename);
 		Platform_Log1("playing music file: %s", &filename);
 
@@ -447,7 +447,7 @@ void Audio_SetMusic(Int32 volume) {
 /*########################################################################################################################*
 *--------------------------------------------------------General----------------------------------------------------------*
 *#########################################################################################################################*/
-static Int32 AudioManager_GetVolume(const UChar* volKey, const UChar* boolKey) {
+static Int32 AudioManager_GetVolume(const char* volKey, const char* boolKey) {
 	Int32 volume = Options_GetInt(volKey, 0, 100, 0);
 	if (volume) return volume;
 

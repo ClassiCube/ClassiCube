@@ -206,17 +206,17 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF Strin
 	Window_Exists = true;
 }
 
-UChar clipboard_copy_buffer[String_BufferSize(256)];
-String clipboard_copy_text = String_FromEmptyArray(clipboard_copy_buffer);
-UChar clipboard_paste_buffer[String_BufferSize(256)];
-String clipboard_paste_text = String_FromEmptyArray(clipboard_paste_buffer);
+char clipboard_copy_buffer[String_BufferSize(256)];
+String clipboard_copy_text = String_FromArray(clipboard_copy_buffer);
+char clipboard_paste_buffer[String_BufferSize(256)];
+String clipboard_paste_text = String_FromArray(clipboard_paste_buffer);
 
 void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 	Window owner = XGetSelectionOwner(win_display, xa_clipboard);
 	if (!owner) return; /* no window owner */
 
 	XConvertSelection(win_display, xa_clipboard, xa_utf8_string, xa_data_sel, win_handle, 0);
-	String_Clear(&clipboard_paste_text);
+	clipboard_paste_text.length = 0;
 	Int32 i;
 
 	/* wait up to 1 second for SelectionNotify event to arrive */
@@ -562,7 +562,7 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case SelectionNotify:
-			String_Clear(&clipboard_paste_text);
+			clipboard_paste_text.length = 0;
 
 			if (e.xselection.selection == xa_clipboard && e.xselection.target == xa_utf8_string && e.xselection.property == xa_data_sel) {
 				Atom prop_type;
@@ -575,7 +575,7 @@ void Window_ProcessEvents(void) {
 				XDeleteProperty(win_display, win_handle, xa_data_sel);
 
 				if (data && items && prop_type == xa_utf8_string) {
-					String_Clear(&clipboard_paste_text);
+					clipboard_paste_text.length = 0;
 					String_DecodeUtf8(&clipboard_paste_text, data, items);
 				}
 				if (data) XFree(data);
@@ -700,7 +700,7 @@ void GLContext_Free(void) {
 	ctx_Handle = NULL;
 }
 
-void* GLContext_GetAddress(const UChar* function) {
+void* GLContext_GetAddress(const char* function) {
 	void* address = glXGetProcAddress(function);
 	return GLContext_IsInvalidAddress(address) ? NULL : address;
 }

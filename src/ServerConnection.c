@@ -24,12 +24,12 @@
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
 *#########################################################################################################################*/
-UChar ServerConnection_ServerNameBuffer[String_BufferSize(STRING_SIZE)];
-String ServerConnection_ServerName = String_FromEmptyArray(ServerConnection_ServerNameBuffer);
-UChar ServerConnection_ServerMOTDBuffer[String_BufferSize(STRING_SIZE)];
-String ServerConnection_ServerMOTD = String_FromEmptyArray(ServerConnection_ServerMOTDBuffer);
-UChar ServerConnection_AppNameBuffer[String_BufferSize(STRING_SIZE)];
-String ServerConnection_AppName = String_FromEmptyArray(ServerConnection_AppNameBuffer);
+char ServerConnection_ServerNameBuffer[STRING_SIZE];
+String ServerConnection_ServerName = String_FromArray(ServerConnection_ServerNameBuffer);
+char ServerConnection_ServerMOTDBuffer[STRING_SIZE];
+String ServerConnection_ServerMOTD = String_FromArray(ServerConnection_ServerMOTDBuffer);
+char ServerConnection_AppNameBuffer[STRING_SIZE];
+String ServerConnection_AppName = String_FromArray(ServerConnection_AppNameBuffer);
 Int32 ServerConnection_Ticks;
 
 static void ServerConnection_ResetState(void) {
@@ -51,8 +51,8 @@ void ServerConnection_RetrieveTexturePack(STRING_PURE String* url) {
 
 void ServerConnection_DownloadTexturePack(STRING_PURE String* url) {
 	if (TextureCache_HasDenied(url)) return;
-	UInt8 etagBuffer[String_BufferSize(STRING_SIZE)];
-	String etag = String_InitAndClearArray(etagBuffer);
+	UInt8 etagBuffer[STRING_SIZE] = { 0 };
+	String etag = String_FromArray(etagBuffer);
 	DateTime lastModified = { 0 };
 
 	if (TextureCache_HasUrl(url)) {
@@ -169,10 +169,10 @@ static void SPConnection_BeginConnect(void) {
 	Gui_ReplaceActive(GeneratingScreen_MakeInstance());
 }
 
-UChar SPConnection_LastCol = '\0';
+char SPConnection_LastCol = '\0';
 static void SPConnection_AddPortion(STRING_PURE String* text) {
-	UChar tmpBuffer[String_BufferSize(STRING_SIZE * 2)];
-	String tmp = String_InitAndClearArray(tmpBuffer);
+	char tmpBuffer[STRING_SIZE * 2];
+	String tmp = String_FromArray(tmpBuffer);
 	/* Prepend colour codes for subsequent lines of multi-line chat */
 	if (!Drawer2D_IsWhiteCol(SPConnection_LastCol)) {
 		String_Append(&tmp, '&');
@@ -187,7 +187,7 @@ static void SPConnection_AddPortion(STRING_PURE String* text) {
 	}
 	String_UNSAFE_TrimEnd(&tmp);
 
-	UChar col = Drawer2D_LastCol(&tmp, tmp.length);
+	char col = Drawer2D_LastCol(&tmp, tmp.length);
 	if (col) SPConnection_LastCol = col;
 	Chat_Add(&tmp);
 }
@@ -278,13 +278,13 @@ static void MPConnection_FinishConnect(void) {
 
 static void MPConnection_FailConnect(ReturnCode result) {
 	net_connecting = false;
-	UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
-	String msg = String_InitAndClearArray(msgBuffer);
+	char msgBuffer[STRING_SIZE * 2];
+	String msg = String_FromArray(msgBuffer);
 
-	if (result != 0) {
+	if (result) {
 		String_Format3(&msg, "Error connecting to %s:%i: %i", &Game_IPAddress, &Game_Port, &result);
 		ErrorHandler_Log(&msg);
-		String_Clear(&msg);
+		msg.length = 0;
 	}
 
 	String_Format2(&msg, "Failed to connect to %s:%i", &Game_IPAddress, &Game_Port);
@@ -398,8 +398,8 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	}
 
 	if (res) {
-		UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
-		String msg = String_InitAndClearArray(msgBuffer);
+		char msgBuffer[STRING_SIZE * 2];
+		String msg = String_FromArray(msgBuffer);
 		String_Format3(&msg, "Error reading from %s:%i: %i", &Game_IPAddress, &Game_Port, &res);
 		ErrorHandler_Log(&msg);
 

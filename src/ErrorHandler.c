@@ -6,9 +6,9 @@ void ErrorHandler_Log(STRING_PURE String* msg) {
 	/* TODO: write to log file */
 }
 
-void ErrorHandler_FailWithCode(ReturnCode result, const UChar* raw_msg) {
-	UChar logMsgBuffer[String_BufferSize(3071)];
-	String logMsg = String_InitAndClearArray(logMsgBuffer);
+void ErrorHandler_FailWithCode(ReturnCode result, const char* raw_msg) {
+	char logMsgBuffer[3070 + 1] = { 0 };
+	String logMsg = { logMsgBuffer, 0, 3070 };
 
 	String_Format3(&logMsg, "ClassiCube crashed.%cMessge: %c%c",
 		Platform_NewLine, raw_msg, Platform_NewLine);
@@ -25,7 +25,7 @@ void ErrorHandler_FailWithCode(ReturnCode result, const UChar* raw_msg) {
 	Platform_Exit(result);
 }
 
-void ErrorHandler_Fail(const UChar* raw_msg) { ErrorHandler_FailWithCode(0, raw_msg); }
+void ErrorHandler_Fail(const char* raw_msg) { ErrorHandler_FailWithCode(0, raw_msg); }
 
 #if CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
@@ -39,28 +39,28 @@ static LONG WINAPI ErrorHandler_UnhandledFilter(struct _EXCEPTION_POINTERS* pInf
 	/* TODO: Write processor state to file*/
 	/* TODO: Get address that caused the issue */
 	/* TODO: Don't Backtrace here, because it's not the actual useful stack */
-	UChar msgBuffer[String_BufferSize(128)];
-	String msg = String_InitAndClearArray(msgBuffer);
+	char msgBuffer[128 + 1] = { 0 };
+	String msg = { msgBuffer, 0, 128 };
 
 	UInt32 code = (UInt32)pInfo->ExceptionRecord->ExceptionCode;
 	UInt64 addr = (UInt64)pInfo->ExceptionRecord->ExceptionAddress;
 	String_Format2(&msg, "Unhandled exception 0x%y at 0x%x", &code, &addr);
 
-	ErrorHandler_Fail(msgBuffer);
+	ErrorHandler_Fail(msg.buffer);
 	return EXCEPTION_EXECUTE_HANDLER; /* TODO: different flag */
 }
 
-void ErrorHandler_Init(const UChar* logFile) {
+void ErrorHandler_Init(const char* logFile) {
 	SetUnhandledExceptionFilter(ErrorHandler_UnhandledFilter);
 	/* TODO: Open log file */
 }
 
-void ErrorHandler_ShowDialog(const UChar* title, const UChar* msg) {
+void ErrorHandler_ShowDialog(const char* title, const char* msg) {
 	HWND win = GetActiveWindow(); /* TODO: It's probably wrong to use GetActiveWindow() here */
 	MessageBoxA(win, msg, title, 0);
 }
 
-struct SymbolAndName { SYMBOL_INFO Symbol; UChar Name[256]; };
+struct SymbolAndName { SYMBOL_INFO Symbol; char Name[256]; };
 void ErrorHandler_Backtrace(STRING_TRANSIENT String* str) {
 	HANDLE process = GetCurrentProcess();
 	SymInitialize(process, NULL, TRUE);
@@ -88,11 +88,11 @@ void ErrorHandler_Backtrace(STRING_TRANSIENT String* str) {
 	String_AppendConst(str, "\r\n");
 }
 #elif CC_BUILD_NIX
-void ErrorHandler_Init(const UChar* logFile) {
+void ErrorHandler_Init(const char* logFile) {
 	/* TODO: Implement this */
 }
 
-void ErrorHandler_ShowDialog(const UChar* title, const UChar* msg) {
+void ErrorHandler_ShowDialog(const char* title, const char* msg) {
 	/* TODO: Implement this */
 }
 

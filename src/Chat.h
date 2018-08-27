@@ -22,7 +22,7 @@ enum MSG_TYPE {
 	MSG_TYPE_CLIENTSTATUS_3 = 258, /* Tab list matching names*/
 };
 
-struct ChatLine { UChar Buffer[String_BufferSize(STRING_SIZE)]; DateTime Received; };
+struct ChatLine { char Buffer[STRING_SIZE]; DateTime Received; };
 struct ChatLine Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
 StringsBuffer Chat_Log, Chat_InputLog;
 void Chat_GetLogTime(UInt32 index, Int64* timeMS);
@@ -32,11 +32,11 @@ void Chat_SetLogName(STRING_PURE String* name);
 void Chat_Send(STRING_PURE String* text, bool logUsage);
 void Chat_Add(STRING_PURE String* text);
 void Chat_AddOf(STRING_PURE String* text, Int32 messageType);
-void Chat_AddRaw(const UChar* raw);
+void Chat_AddRaw(const char* raw);
 
-void Chat_LogError(ReturnCode result, const UChar* place, STRING_PURE String* path);
-void Chat_Add1(const UChar* format, const void* a1);
-void Chat_Add2(const UChar* format, const void* a1, const void* a2);
-void Chat_Add3(const UChar* format, const void* a1, const void* a2, const void* a3);
-void Chat_Add4(const UChar* format, const void* a1, const void* a2, const void* a3, const void* a4);
+void Chat_LogError(ReturnCode result, const char* place, STRING_PURE String* path);
+void Chat_Add1(const char* format, const void* a1);
+void Chat_Add2(const char* format, const void* a1, const void* a2);
+void Chat_Add3(const char* format, const void* a1, const void* a2, const void* a3);
+void Chat_Add4(const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
 #endif

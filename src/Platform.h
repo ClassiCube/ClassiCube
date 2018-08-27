@@ -18,8 +18,8 @@ typedef void* SocketPtr;
 typedef Int32 SocketPtr;
 #endif
 
-extern UChar* Platform_NewLine; /* Newline for text */
-extern UChar Directory_Separator;
+extern char* Platform_NewLine; /* Newline for text */
+extern char Directory_Separator;
 extern ReturnCode ReturnCode_FileShareViolation;
 extern ReturnCode ReturnCode_FileNotFound;
 extern ReturnCode ReturnCode_NotSupported;
@@ -35,19 +35,19 @@ void Platform_Exit(ReturnCode code);
 STRING_PURE String Platform_GetCommandLineArgs(void);
 ReturnCode Platform_StartShell(STRING_PURE String* args);
 
-FUNC_ATTRIB(noinline) void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const UChar* place);
-FUNC_ATTRIB(noinline) void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const UChar* place);
-FUNC_ATTRIB(noinline) void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const UChar* place);
+FUNC_ATTRIB(noinline) void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const char* place);
+FUNC_ATTRIB(noinline) void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const char* place);
+FUNC_ATTRIB(noinline) void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const char* place);
 FUNC_ATTRIB(noinline) void  Mem_Free(void* mem);
 void Mem_Set(void* dst, UInt8 value, UInt32 numBytes);
 void Mem_Copy(void* dst, void* src, UInt32 numBytes);
 
 void Platform_Log(STRING_PURE String* message);
-void Platform_LogConst(const UChar* message);
-void Platform_Log1(const UChar* format, const void* a1);
-void Platform_Log2(const UChar* format, const void* a1, const void* a2);
-void Platform_Log3(const UChar* format, const void* a1, const void* a2, const void* a3);
-void Platform_Log4(const UChar* format, const void* a1, const void* a2, const void* a3, const void* a4);
+void Platform_LogConst(const char* message);
+void Platform_Log1(const char* format, const void* a1);
+void Platform_Log2(const char* format, const void* a1, const void* a2);
+void Platform_Log3(const char* format, const void* a1, const void* a2, const void* a3);
+void Platform_Log4(const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
 
 void DateTime_CurrentUTC(DateTime* time);
 void DateTime_CurrentLocal(DateTime* time);

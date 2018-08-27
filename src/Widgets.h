@@ -33,7 +33,7 @@ struct ButtonWidget {
 	UInt16 DefaultHeight, MinWidth;
 	struct FontDesc Font;
 
-	const UChar* OptName;
+	const char* OptName;
 	ButtonWidget_Get GetValue;
 	ButtonWidget_Set SetValue;
 };
@@ -92,7 +92,7 @@ struct InputWidget {
 	Int32 (*GetMaxLines)(void);
 	void (*RemakeTexture)(struct GuiElem* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
 	void (*OnPressedEnter)(struct GuiElem* elem); /* Invoked when the user presses enter. */
-	bool (*AllowedChar)(struct GuiElem* elem, UChar c);
+	bool (*AllowedChar)(struct GuiElem* elem, char c);
 
 	String Text;
 	String Lines[INPUTWIDGET_MAX_LINES];            /* raw text of each line */
@@ -118,13 +118,13 @@ void InputWidget_Clear(struct InputWidget* widget);
 /* Appends a sequence of characters to current text buffer. May recreate the native texture. */
 void InputWidget_AppendString(struct InputWidget* widget, STRING_PURE String* text);
 /* Appends a single character to current text buffer. May recreate the native texture. */
-void InputWidget_Append(struct InputWidget* widget, UChar c);
+void InputWidget_Append(struct InputWidget* widget, char c);
 
 
 struct MenuInputValidator;
 struct MenuInputValidator {
 	void (*GetRange)(struct MenuInputValidator* validator, STRING_TRANSIENT String* range);
-	bool (*IsValidChar)(struct MenuInputValidator* validator, UChar c);
+	bool (*IsValidChar)(struct MenuInputValidator* validator, char c);
 	bool (*IsValidString)(struct MenuInputValidator* validator, STRING_PURE String* s);
 	bool (*IsValidValue)(struct MenuInputValidator* validator, STRING_PURE String* s);
 
@@ -140,14 +140,14 @@ struct MenuInputValidator MenuInputValidator_Integer(Int32 min, Int32 max);
 struct MenuInputValidator MenuInputValidator_Seed(void);
 struct MenuInputValidator MenuInputValidator_Real(Real32 min, Real32 max);
 struct MenuInputValidator MenuInputValidator_Path(void);
-struct MenuInputValidator MenuInputValidator_Enum(const UChar** names, UInt32 namesCount);
+struct MenuInputValidator MenuInputValidator_Enum(const char** names, UInt32 namesCount);
 struct MenuInputValidator MenuInputValidator_String(void);
 
 struct MenuInputWidget {
 	struct InputWidget Base;
 	Int32 MinWidth, MinHeight;
 	struct MenuInputValidator Validator;
-	UChar TextBuffer[String_BufferSize(INPUTWIDGET_LEN)];
+	char __TextBuffer[INPUTWIDGET_LEN];
 };
 void MenuInputWidget_Create(struct MenuInputWidget* widget, Int32 width, Int32 height, STRING_PURE String* text, struct FontDesc* font, struct MenuInputValidator* validator);
 
@@ -155,8 +155,9 @@ void MenuInputWidget_Create(struct MenuInputWidget* widget, Int32 width, Int32 h
 struct ChatInputWidget {
 	struct InputWidget Base;
 	Int32 TypingLogPos;
-	UChar TextBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN)];
-	UChar OrigBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN)];
+	char __TextBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];
+	char __OrigBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];
+	String OrigStr;
 };
 
 void ChatInputWidget_Create(struct ChatInputWidget* widget, struct FontDesc* font);
@@ -171,10 +172,10 @@ struct TextGroupWidget {
 	bool PlaceholderHeight[TEXTGROUPWIDGET_MAX_LINES];
 	UInt8 LineLengths[TEXTGROUPWIDGET_MAX_LINES];
 	struct Texture* Textures;
-	UChar* Buffer;
+	char* Buffer;
 };
 
-void TextGroupWidget_Create(struct TextGroupWidget* widget, Int32 linesCount, struct FontDesc* font, struct FontDesc* underlineFont, STRING_REF struct Texture* textures, STRING_REF UChar* buffer);
+void TextGroupWidget_Create(struct TextGroupWidget* widget, Int32 linesCount, struct FontDesc* font, struct FontDesc* underlineFont, STRING_REF struct Texture* textures, STRING_REF char* buffer);
 void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* widget, Int32 index, bool placeHolder);
 void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* widget, STRING_PURE String* text);
 Int32 TextGroupWidget_UsedHeight(struct TextGroupWidget* widget);
@@ -197,7 +198,7 @@ void PlayerListWidget_Create(struct PlayerListWidget* widget, struct FontDesc* f
 void PlayerListWidget_GetNameUnder(struct PlayerListWidget* widget, Int32 mouseX, Int32 mouseY, STRING_TRANSIENT String* name);
 
 
-typedef void (*SpecialInputAppendFunc)(void* userData, UChar c);
+typedef void (*SpecialInputAppendFunc)(void* userData, char c);
 struct SpecialInputTab {
 	Int32 ItemsPerRow, CharsPerItem;
 	struct Size2D TitleSize;
@@ -213,7 +214,7 @@ struct SpecialInputWidget {
 	struct FontDesc Font;
 	struct SpecialInputTab Tabs[5];
 	String ColString;
-	UChar ColBuffer[String_BufferSize(DRAWER2D_MAX_COLS * 4)];
+	char __ColBuffer[DRAWER2D_MAX_COLS * 4];
 };
 
 void SpecialInputWidget_Create(struct SpecialInputWidget* widget, struct FontDesc* font, struct InputWidget* appendObj);

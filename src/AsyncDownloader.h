@@ -17,8 +17,8 @@ enum ASYNC_PROGRESS {
 };
 
 struct AsyncRequest {
-	UChar URL[String_BufferSize(STRING_SIZE)];
-	UChar ID[String_BufferSize(STRING_SIZE)];
+	char URL[STRING_SIZE];
+	char ID[STRING_SIZE];
 
 	DateTime TimeAdded;
 	DateTime TimeDownloaded;
@@ -28,7 +28,7 @@ struct AsyncRequest {
 	UInt32 ResultSize;
 
 	DateTime LastModified;   /* Time item cached at (if at all) */
-	UInt8 Etag[String_BufferSize(STRING_SIZE)]; /* ETag of cached item (if any) */
+	UInt8 Etag[STRING_SIZE]; /* ETag of cached item (if any) */
 	UInt8 RequestType;
 };
 

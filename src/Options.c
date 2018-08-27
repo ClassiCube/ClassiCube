@@ -6,7 +6,7 @@
 #include "Chat.h"
 #include "Errors.h"
 
-const UChar* FpsLimit_Names[FpsLimit_Count] = {
+const char* FpsLimit_Names[FpsLimit_Count] = {
 	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "LimitNone",
 };
 #define OPT_NOT_FOUND UInt32_MaxValue
@@ -38,7 +38,7 @@ static UInt32 Options_Find(STRING_PURE String* key) {
 	return OPT_NOT_FOUND;
 }
 
-static bool Options_TryGetValue(const UChar* keyRaw, STRING_TRANSIENT String* value) {
+static bool Options_TryGetValue(const char* keyRaw, STRING_TRANSIENT String* value) {
 	String key = String_FromReadonly(keyRaw);
 	*value = String_MakeNull();
 
@@ -60,10 +60,10 @@ static bool Options_TryGetValue(const UChar* keyRaw, STRING_TRANSIENT String* va
 	return false;
 }
 
-void Options_Get(const UChar* key, STRING_TRANSIENT String* value, const UChar* defValue) {
+void Options_Get(const char* key, STRING_TRANSIENT String* value, const char* defValue) {
 	String str;
 	Options_TryGetValue(key, &str);
-	String_Clear(value);
+	value->length = 0;
 
 	if (str.length) {
 		String_AppendString(value, &str);
@@ -72,7 +72,7 @@ void Options_Get(const UChar* key, STRING_TRANSIENT String* value, const UChar* 
 	}
 }
 
-Int32 Options_GetInt(const UChar* key, Int32 min, Int32 max, Int32 defValue) {
+Int32 Options_GetInt(const char* key, Int32 min, Int32 max, Int32 defValue) {
 	String str;
 	Int32 value;
 	if (!Options_TryGetValue(key, &str))      return defValue;
@@ -82,7 +82,7 @@ Int32 Options_GetInt(const UChar* key, Int32 min, Int32 max, Int32 defValue) {
 	return value;
 }
 
-bool Options_GetBool(const UChar* key, bool defValue) {
+bool Options_GetBool(const char* key, bool defValue) {
 	String str;
 	bool value;
 	if (!Options_TryGetValue(key, &str))     return defValue;
@@ -91,7 +91,7 @@ bool Options_GetBool(const UChar* key, bool defValue) {
 	return value;
 }
 
-Real32 Options_GetFloat(const UChar* key, Real32 min, Real32 max, Real32 defValue) {
+Real32 Options_GetFloat(const char* key, Real32 min, Real32 max, Real32 defValue) {
 	String str;
 	Real32 value;
 	if (!Options_TryGetValue(key, &str))      return defValue;
@@ -101,7 +101,7 @@ Real32 Options_GetFloat(const UChar* key, Real32 min, Real32 max, Real32 defValu
 	return value;
 }
 
-UInt32 Options_GetEnum(const UChar* key, UInt32 defValue, const UChar** names, UInt32 namesCount) {
+UInt32 Options_GetEnum(const char* key, UInt32 defValue, const char** names, UInt32 namesCount) {
 	String str;
 	if (!Options_TryGetValue(key, &str)) return defValue;
 	return Utils_ParseEnum(&str, defValue, names, namesCount);
@@ -121,7 +121,7 @@ static Int32 Options_Insert(STRING_PURE String* key, STRING_PURE String* value) 
 	return Options_Keys.Count;
 }
 
-void Options_SetBool(const UChar* keyRaw, bool value) {
+void Options_SetBool(const char* keyRaw, bool value) {
 	if (value) {
 		String str = String_FromConst("True");  Options_Set(keyRaw, &str);
 	} else {
@@ -129,14 +129,14 @@ void Options_SetBool(const UChar* keyRaw, bool value) {
 	}
 }
 
-void Options_SetInt32(const UChar* keyRaw, Int32 value) {
-	UChar numBuffer[String_BufferSize(STRING_INT_CHARS)];
-	String numStr = String_InitAndClearArray(numBuffer);
+void Options_SetInt32(const char* keyRaw, Int32 value) {
+	char numBuffer[STRING_INT_CHARS];
+	String numStr = String_FromArray(numBuffer);
 	String_AppendInt32(&numStr, value);
 	Options_Set(keyRaw, &numStr);
 }
 
-void Options_Set(const UChar* keyRaw, STRING_PURE String* value) {
+void Options_Set(const char* keyRaw, STRING_PURE String* value) {
 	String key = String_FromReadonly(keyRaw);
 	UInt32 i;
 	if (value == NULL || value->buffer == NULL) {
@@ -166,8 +166,8 @@ void Options_Load(void) {
 		Options_Remove(i - 1);
 	}
 
-	UChar lineBuffer[String_BufferSize(768)];
-	String line = String_InitAndClearArray(lineBuffer);
+	char lineBuffer[768];
+	String line = String_FromArray(lineBuffer);
 	struct Stream stream; Stream_FromFile(&stream, file);
 
 	/* ReadLine reads single byte at a time */
@@ -204,8 +204,8 @@ void Options_Save(void) {
 	void* file; res = File_Create(&file, &path);
 	if (res) { Chat_LogError(res, "creating", &path); return; }
 
-	UChar lineBuffer[String_BufferSize(1024)];
-	String line = String_InitAndClearArray(lineBuffer);
+	char lineBuffer[1024];
+	String line = String_FromArray(lineBuffer);
 	struct Stream stream; Stream_FromFile(&stream, file);
 	Int32 i;
 
@@ -216,7 +216,7 @@ void Options_Save(void) {
 
 		res = Stream_WriteLine(&stream, &line);
 		if (res) { Chat_LogError(res, "writing to", &path); break; }
-		String_Clear(&line);
+		line.length = 0;
 	}
 
 	StringsBuffer_Clear(&Options_Changed);

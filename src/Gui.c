@@ -285,7 +285,7 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** ve
 		TextAtlas_Add(atlas, 10, vertices); value = -value; /* - sign */
 	}
 
-	UChar digits[STRING_INT_CHARS];
+	char digits[STRING_INT_CHARS];
 	Int32 i, count = String_MakeUInt32((UInt32)value, digits);
 	for (i = count - 1; i >= 0; i--) {
 		TextAtlas_Add(atlas, digits[i] - '0' , vertices);

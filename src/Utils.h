@@ -23,11 +23,11 @@ Int64 DateTime_MsBetween(DateTime* start, DateTime* end);
 void DateTime_FromTotalMs(DateTime* time, Int64 ms);
 void DateTime_HttpDate(DateTime* value, STRING_TRANSIENT String* str);
 
-UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const UChar** names, UInt32 namesCount);
-bool Utils_IsValidInputChar(UChar c, bool supportsCP437);
+UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const char** names, UInt32 namesCount);
+bool Utils_IsValidInputChar(char c, bool supportsCP437);
 bool Utils_IsUrlPrefix(STRING_PURE String* value, Int32 index);
 
-bool Utils_EnsureDirectory(STRING_PURE const UChar* dirName);
+bool Utils_EnsureDirectory(STRING_PURE const char* dirName);
 void Utils_UNSAFE_GetFilename(STRING_TRANSIENT String* str);
 Int32 Utils_AccumulateWheelDelta(Real32* accmulator, Real32 delta);
 #define Utils_AdjViewDist(value) ((Int32)(1.4142135f * (value)))

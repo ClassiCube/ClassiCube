@@ -14,7 +14,7 @@ enum SOUND {
 	SOUND_STONE, SOUND_METAL, SOUND_GLASS,  SOUND_CLOTH, 
 	SOUND_SAND,  SOUND_SNOW,  SOUND_COUNT,
 };
-extern const UChar* Sound_Names[SOUND_COUNT];
+extern const char* Sound_Names[SOUND_COUNT];
 
 /* Describes how a block is rendered in the world. */
 enum DRAWTYPE {

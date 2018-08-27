@@ -31,7 +31,6 @@ typedef int64_t Int64;
 #error "I don't recognise this compiler. You'll need to add required definitions in Core.h!"
 #endif
 
-typedef unsigned char UChar;
 typedef float  Real32;
 typedef double Real64;
 

@@ -53,7 +53,7 @@ bool PackedCol_Unhex(UInt8 hex, Int32* value) {
 
 void PackedCol_ToHex(STRING_TRANSIENT String* str, PackedCol value) {
 	UInt8 input[3] = { value.R, value.G, value.B };
-	UChar hex[7];
+	char hex[7];
 	Int32 i;
 
 	for (i = 0; i < 3; i++) {
@@ -74,7 +74,7 @@ bool PackedCol_TryParseHex(STRING_PURE String* str, PackedCol* value) {
 	if (str->length > 6 && (str->buffer[0] != '#' || str->length > 7)) return false;
 
 	Int32 rH, rL, gH, gL, bH, bL;
-	UChar* buffer = str->buffer;
+	char* buffer = str->buffer;
 	if (buffer[0] == '#') buffer++;
 
 	if (!PackedCol_Unhex(buffer[0], &rH) || !PackedCol_Unhex(buffer[1], &rL)) return false;

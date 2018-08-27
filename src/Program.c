@@ -55,7 +55,7 @@ int main(void) {
 
 	/*Http_Init();
 	AsyncRequest req = { 0 };
-	String url = String_FromEmptyArray(req.URL);
+	String url = String_FromArray(req.URL);
 	String_AppendConst(&url, "http://static.classicube.net/skins/UnknownShadow200.png");
 	void* reqHandle = NULL;
 	ReturnCode ret = Http_MakeRequest(&req, &reqHandle);
@@ -66,8 +66,8 @@ int main(void) {
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("texturecache");
 
-	UChar defPathBuffer[String_BufferSize(STRING_SIZE)];
-	String defPath = String_InitAndClearArray(defPathBuffer);
+	char defPathBuffer[STRING_SIZE];
+	String defPath = String_FromArray(defPathBuffer);
 	String_Format1(&defPath, "texpacks%rdefault.zip", &Directory_Separator);
 
 	if (!File_Exists(&defPath)) {

@@ -19,7 +19,7 @@ struct Texture {
 
 void GfxCommon_Init(void);
 void GfxCommon_Free(void);
-void GfxCommon_LoseContext(const UChar* reason);
+void GfxCommon_LoseContext(const char* reason);
 void GfxCommon_RecreateContext(void);
 
 /* Binds and draws the specified subset of the vertices in the current dynamic vertex buffer

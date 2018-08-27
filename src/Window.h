@@ -79,7 +79,7 @@ void GLContext_Update(void);
 void GLContext_Free(void);
 
 #define GLContext_IsInvalidAddress(ptr) (ptr == (void*)0 || ptr == (void*)1 || ptr == (void*)-1 || ptr == (void*)2)
-void* GLContext_GetAddress(const UChar* function);
+void* GLContext_GetAddress(const char* function);
 void GLContext_SwapBuffers(void);
 void GLContext_SetVSync(bool enabled);
 #endif

@@ -6,8 +6,9 @@
 #include "Entity.h"
 #include "Inventory.h"
 #include "Event.h"
+#include "Platform.h"
 
-const UChar* Sound_Names[SOUND_COUNT] = {
+const char* Sound_Names[SOUND_COUNT] = {
 	"none", "wood", "gravel", "grass", "stone",
 	"metal", "glass", "cloth", "sand", "snow",
 };
@@ -17,8 +18,8 @@ const UChar* Sound_Names[SOUND_COUNT] = {
 *---------------------------------------------------------Block-----------------------------------------------------------*
 *#########################################################################################################################*/
 UInt32 Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
-UChar Block_NamesBuffer[String_BufferSize(STRING_SIZE) * BLOCK_COUNT];
-#define Block_NamePtr(i) &Block_NamesBuffer[String_BufferSize(STRING_SIZE) * i]
+char Block_NamesBuffer[STRING_SIZE * BLOCK_COUNT];
+#define Block_NamePtr(i) &Block_NamesBuffer[STRING_SIZE * i]
 
 UInt8 Block_TopTex[BLOCK_CPE_COUNT] = { 0,  1,  0,  2, 16,  4, 15, 17, 14, 14,
 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
@@ -203,8 +204,9 @@ STRING_REF String Block_UNSAFE_GetName(BlockID block) {
 }
 
 void Block_SetName(BlockID block, STRING_PURE String* name) {
-	String buffer = String_InitAndClear(Block_NamePtr(block), STRING_SIZE);
-	String_AppendString(&buffer, name);
+	String dst = { Block_NamePtr(block), 0, STRING_SIZE };
+	Mem_Set(dst.buffer, 0, STRING_SIZE);
+	String_AppendString(&dst, name);
 }
 
 Int32 Block_FindID(STRING_PURE String* name) {
@@ -446,9 +448,9 @@ void Block_UpdateCulling(BlockID block) {
 #define AR_EQ1(s, x) (s.length >= 1 && Char_ToLower(s.buffer[0]) == x)
 #define AR_EQ2(s, x, y) (s.length >= 2 && Char_ToLower(s.buffer[0]) == x && Char_ToLower(s.buffer[1]) == y)
 
-static BlockID AutoRotate_Find(BlockID block, String* name, const UChar* suffix) {
-	UChar buffer[String_BufferSize(STRING_SIZE * 2)];
-	String temp = String_InitAndClearArray(buffer);
+static BlockID AutoRotate_Find(BlockID block, String* name, const char* suffix) {
+	char buffer[STRING_SIZE * 2];
+	String temp = String_FromArray(buffer);
 	String_AppendString(&temp, name);
 	String_AppendConst(&temp, suffix);
 

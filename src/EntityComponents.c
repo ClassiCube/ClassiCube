@@ -162,7 +162,7 @@ void HacksComp_Init(struct HacksComp* hacks) {
 	hacks->MaxJumps = 1;
 	hacks->NoclipSlide = true;
 	hacks->CanBePushed = true;
-	hacks->HacksFlags = String_InitAndClearArray(hacks->HacksFlagsBuffer);
+	hacks->HacksFlags = String_ClearedArray(hacks->HacksFlagsBuffer);
 }
 
 bool HacksComp_CanJumpHigher(struct HacksComp* hacks) {
@@ -173,7 +173,7 @@ bool HacksComp_Floating(struct HacksComp* hacks) {
 	return hacks->Noclip || hacks->Flying;
 }
 
-static String HacksComp_UNSAFE_FlagValue(const UChar* flagRaw, struct HacksComp* hacks) {
+static String HacksComp_UNSAFE_FlagValue(const char* flagRaw, struct HacksComp* hacks) {
 	String* joined = &hacks->HacksFlags;
 	String flag = String_FromReadonly(flagRaw);
 
@@ -187,7 +187,7 @@ static String HacksComp_UNSAFE_FlagValue(const UChar* flagRaw, struct HacksComp*
 	return String_UNSAFE_Substring(joined, start, end - start);
 }
 
-static Real32 HacksComp_ParseFlagReal(const UChar* flagRaw, struct HacksComp* hacks) {
+static Real32 HacksComp_ParseFlagReal(const char* flagRaw, struct HacksComp* hacks) {
 	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
 	if (!raw.length || Game_ClassicMode) return 1.0f;
 
@@ -196,7 +196,7 @@ static Real32 HacksComp_ParseFlagReal(const UChar* flagRaw, struct HacksComp* ha
 	return value;
 }
 
-static Int32 HacksComp_ParseFlagInt(const UChar* flagRaw, struct HacksComp* hacks) {
+static Int32 HacksComp_ParseFlagInt(const char* flagRaw, struct HacksComp* hacks) {
 	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
 	if (!raw.length || Game_ClassicMode) return 1;
 
@@ -205,7 +205,7 @@ static Int32 HacksComp_ParseFlagInt(const UChar* flagRaw, struct HacksComp* hack
 	return value;
 }
 
-static void HacksComp_ParseFlag(struct HacksComp* hacks, const UChar* incFlag, const UChar* excFlag, bool* target) {
+static void HacksComp_ParseFlag(struct HacksComp* hacks, const char* incFlag, const char* excFlag, bool* target) {
 	String include = String_FromReadonly(incFlag);
 	String exclude = String_FromReadonly(excFlag);
 	String* joined = &hacks->HacksFlags;
@@ -217,7 +217,7 @@ static void HacksComp_ParseFlag(struct HacksComp* hacks, const UChar* incFlag, c
 	}
 }
 
-static void HacksComp_ParseAllFlag(struct HacksComp* hacks, const UChar* incFlag, const UChar* excFlag) {
+static void HacksComp_ParseAllFlag(struct HacksComp* hacks, const char* incFlag, const char* excFlag) {
 	String include = String_FromReadonly(incFlag);
 	String exclude = String_FromReadonly(excFlag);
 	String* joined = &hacks->HacksFlags;

@@ -26,8 +26,8 @@
 
 HDC hdc;
 HANDLE heap;
-UChar* Platform_NewLine = "\r\n";
-UChar Directory_Separator = '\\';
+char* Platform_NewLine = "\r\n";
+char Directory_Separator = '\\';
 
 ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
@@ -58,8 +58,8 @@ ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 
 pthread_mutex_t event_mutex;
 
-UChar* Platform_NewLine = "\n";
-UChar Directory_Separator = '/';
+char* Platform_NewLine = "\n";
+char Directory_Separator = '/';
 ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 ReturnCode ReturnCode_FileNotFound = ENOENT;
 ReturnCode ReturnCode_NotSupported = EPERM;
@@ -72,9 +72,9 @@ ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-static void Platform_AllocFailed(const UChar* place) {
-	UChar logBuffer[String_BufferSize(STRING_SIZE + 20)];
-	String log = String_InitAndClearArray(logBuffer);
+static void Platform_AllocFailed(const char* place) {
+	char logBuffer[STRING_SIZE + 20];
+	String log = String_FromArray(logBuffer);
 	String_Format1(&log, "Failed allocating memory for: %c", place);
 	ErrorHandler_Fail(log.buffer);
 }
@@ -83,21 +83,21 @@ void Mem_Set(void* dst, UInt8 value, UInt32 numBytes) { memset(dst, value, numBy
 void Mem_Copy(void* dst, void* src, UInt32 numBytes)  { memcpy(dst, src,   numBytes); }
 
 #if CC_BUILD_WIN
-void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
+void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const char* place) {
 	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	void* ptr = HeapAlloc(heap, 0, numBytes);
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
+void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const char* place) {
 	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	void* ptr = HeapAlloc(heap, HEAP_ZERO_MEMORY, numBytes);
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const UChar* place) {
+void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const char* place) {
 	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	void* ptr = HeapReAlloc(heap, 0, mem, numBytes);
 	if (!ptr) Platform_AllocFailed(place);
@@ -108,19 +108,19 @@ void Mem_Free(void* mem) {
 	if (mem) HeapFree(heap, 0, mem);
 }
 #elif CC_BUILD_NIX
-void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
+void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const char* place) {
 	void* ptr = malloc(numElems * elemsSize); /* TODO: avoid overflow here */
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const UChar* place) {
+void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const char* place) {
 	void* ptr = calloc(numElems, elemsSize); /* TODO: avoid overflow here */
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const UChar* place) {
+void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const char* place) {
 	void* ptr = realloc(mem, numElems * elemsSize); /* TODO: avoid overflow here */
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
@@ -135,19 +135,19 @@ void Mem_Free(void* mem) {
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-void Platform_Log1(const UChar* format, const void* a1) {
+void Platform_Log1(const char* format, const void* a1) {
 	Platform_Log4(format, a1, NULL, NULL, NULL);
 }
-void Platform_Log2(const UChar* format, const void* a1, const void* a2) {
+void Platform_Log2(const char* format, const void* a1, const void* a2) {
 	Platform_Log4(format, a1, a2, NULL, NULL);
 }
-void Platform_Log3(const UChar* format, const void* a1, const void* a2, const void* a3) {
+void Platform_Log3(const char* format, const void* a1, const void* a2, const void* a3) {
 	Platform_Log4(format, a1, a2, a3, NULL);
 }
 
-void Platform_Log4(const UChar* format, const void* a1, const void* a2, const void* a3, const void* a4) {
-	UChar msgBuffer[String_BufferSize(512)];
-	String msg = String_InitAndClearArray(msgBuffer);
+void Platform_Log4(const char* format, const void* a1, const void* a2, const void* a3, const void* a4) {
+	char msgBuffer[512];
+	String msg = String_FromArray(msgBuffer);
 	String_Format4(&msg, format, a1, a2, a3, a4);
 	Platform_Log(&msg);
 }
@@ -159,7 +159,7 @@ void Platform_Log(STRING_PURE String* message) {
 	OutputDebugStringA("\n");
 }
 
-void Platform_LogConst(const UChar* message) {
+void Platform_LogConst(const char* message) {
 	/* TODO: log to console */
 	OutputDebugStringA(message);
 	OutputDebugStringA("\n");
@@ -216,7 +216,7 @@ Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {
 }
 #elif CC_BUILD_NIX
 void Platform_Log(STRING_PURE String* message) { puts(message->buffer); }
-void Platform_LogConst(const UChar* message) { puts(message); }
+void Platform_LogConst(const char* message) { puts(message); }
 
 static void Platform_FromSysTime(DateTime* time, struct tm* sysTime) {
 	time->Year   = sysTime->tm_year + 1900;
@@ -290,8 +290,8 @@ bool File_Exists(STRING_PURE String* path) {
 }
 
 ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCallback callback) {
-	UChar fileBuffer[String_BufferSize(MAX_PATH + 10)];
-	String file = String_InitAndClearArray(fileBuffer);
+	char fileBuffer[MAX_PATH + 10];
+	String file = String_FromArray(fileBuffer);
 	/* Need to append \* to search for files in directory */
 	String_Format1(&file, "%s\\*", path);
 	WCHAR data[512]; Platform_ConvertString(data, &file);
@@ -302,7 +302,7 @@ ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCal
 
 	do {
 		if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
-		String_Clear(&file);
+		file.length = 0;
 		Int32 i;
 
 		for (i = 0; i < MAX_PATH && entry.cFileName[i]; i++) {
@@ -408,13 +408,13 @@ ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCal
 	if (!dirPtr) return errno;
 
 	UInt8 fileBuffer[String_BufferSize(FILENAME_SIZE)];
-	String file = String_InitAndClearArray(fileBuffer);
+	String file = String_FromArray(fileBuffer);
 	struct dirent* entry;
 
 	/* TODO: does this also include subdirectories */
 	while (entry = readdir(dirPtr)) {
 		UInt16 len = String_CalcLen(entry->d_name, UInt16_MaxValue);
-		String_Clear(&file);
+		file.length = 0;
 		String_DecodeUtf8(&file, entry->d_name, len);
 
 		Utils_UNSAFE_GetFilename(&file);
@@ -635,8 +635,8 @@ void Waitable_Wait(void* handle) {
 #if CC_BUILD_WIN
 int CALLBACK Font_GetNamesCallback(CONST LOGFONT* desc, CONST TEXTMETRIC* metrics, DWORD fontType, LPVOID obj) {
 	UInt32 i;
-	UChar nameBuffer[String_BufferSize(LF_FACESIZE)];
-	String name = String_InitAndClearArray(nameBuffer);
+	char nameBuffer[LF_FACESIZE];
+	String name = String_FromArray(nameBuffer);
 
 	/* don't want international variations of font names too */
 	if (desc->lfFaceName[0] == '@' || desc->lfCharSet != ANSI_CHARSET) return 1;
@@ -711,7 +711,7 @@ void Platform_SetBitmap(struct Bitmap* bmp) {
 /* TODO: make text prettier.. somehow? */
 /* TODO: Do we need to / 255 instead of >> 8 ? */
 struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) {
-	WCHAR strUnicode[String_BufferSize(FILENAME_SIZE)];
+	WCHAR strUnicode[FILENAME_SIZE];
 	Platform_ConvertString(strUnicode, &args->Text);
 
 	HGDIOBJ oldFont = (HFONT)SelectObject(hdc, (HFONT)args->Font.Handle);
@@ -870,12 +870,12 @@ void Http_Init(void) {
 
 ReturnCode Http_MakeRequest(struct AsyncRequest* request, void** handle) {
 	String url = String_FromRawArray(request->URL);
-	UChar headersBuffer[String_BufferSize(STRING_SIZE * 2)];
+	char headersBuffer[STRING_SIZE * 2];
 	String headers = String_MakeNull();
 
 	/* https://stackoverflow.com/questions/25308488/c-wininet-custom-http-headers */
 	if (request->Etag[0] || request->LastModified.Year) {
-		headers = String_InitAndClearArray(headersBuffer);
+		headers = String_ClearedArray(headersBuffer);
 		if (request->LastModified.Year) {
 			String_AppendConst(&headers, "If-Modified-Since: ");
 			DateTime_HttpDate(&request->LastModified, &headers);
@@ -915,7 +915,7 @@ ReturnCode Http_GetRequestHeaders(struct AsyncRequest* request, void* handle, UI
 		Platform_FromSysTime(&request->LastModified, &lastModified);
 	}
 
-	String etag = String_InitAndClearArray(request->Etag);
+	String etag = String_ClearedArray(request->Etag);
 	bufferLen = etag.capacity;
 	Http_Query(HTTP_QUERY_ETAG, etag.buffer);
 

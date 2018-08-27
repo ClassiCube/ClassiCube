@@ -346,7 +346,7 @@ ReturnCode Stream_ReadUtf8(struct Stream* stream, UInt16* codepoint) {
 }
 
 ReturnCode Stream_ReadLine(struct Stream* stream, STRING_TRANSIENT String* text) {
-	String_Clear(text);
+	text->length = 0;
 	bool readAny = false;
 	UInt16 codepoint;
 

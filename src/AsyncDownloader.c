@@ -82,8 +82,8 @@ static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 ty
 	Mutex_Lock(async_pendingMutex);
 	{
 		struct AsyncRequest req = { 0 };
-		String reqUrl = String_FromEmptyArray(req.URL); String_Set(&reqUrl, url);
-		String reqID  = String_FromEmptyArray(req.ID);  String_Set(&reqID, id);
+		String reqUrl = String_FromArray(req.URL); String_Set(&reqUrl, url);
+		String reqID  = String_FromArray(req.ID);  String_Set(&reqID, id);
 		req.RequestType = type;
 
 		Platform_Log2("Adding %s (type %b)", &reqUrl, &type);
@@ -92,7 +92,7 @@ static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 ty
 			req.LastModified = *lastModified;
 		}
 		if (etag) {
-			String reqEtag = String_FromEmptyArray(req.Etag); String_Set(&reqEtag, etag);
+			String reqEtag = String_FromArray(req.Etag); String_Set(&reqEtag, etag);
 		}
 		/* request.Data = data; TODO: Implement this. do we need to copy or expect caller to malloc it?  */
 
@@ -108,8 +108,8 @@ static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 ty
 }
 
 void AsyncDownloader_GetSkin(STRING_PURE String* id, STRING_PURE String* skinName) {
-	UChar urlBuffer[String_BufferSize(STRING_SIZE)];
-	String url = String_InitAndClearArray(urlBuffer);
+	char urlBuffer[STRING_SIZE];
+	String url = String_FromArray(urlBuffer);
 
 	if (Utils_IsUrlPrefix(skinName, 0)) {
 		String_Set(&url, skinName);

@@ -147,10 +147,9 @@ UInt32 anims_count;
 bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
 
 static void Animations_ReadDescription(struct Stream* stream, STRING_PURE String* path) {
-	UChar lineBuffer[String_BufferSize(128)];
-	String line = String_InitAndClearArray(lineBuffer);
+	char lineBuffer[STRING_SIZE * 2];
+	String line = String_FromArray(lineBuffer);
 	String parts[7];
-	
 
 	/* ReadLine reads single byte at a time */
 	UInt8 buffer[2048]; struct Stream buffered;
@@ -249,8 +248,8 @@ static void Animations_Apply(struct AnimationData* data) {
 
 static bool Animations_IsDefaultZip(void) {
 	if (World_TextureUrl.length) return false;
-	UChar texPackBuffer[String_BufferSize(STRING_SIZE)];
-	String texPack = String_InitAndClearArray(texPackBuffer);
+	char texPackBuffer[STRING_SIZE];
+	String texPack = String_FromArray(texPackBuffer);
 
 	Options_Get(OPT_DEFAULT_TEX_PACK, &texPack, "default.zip");
 	return String_CaselessEqualsConst(&texPack, "default.zip");

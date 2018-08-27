@@ -158,9 +158,9 @@ void Drawer2D_Make2DTexture(struct Texture* tex, struct Bitmap* bmp, struct Size
 
 bool Drawer2D_ValidColCodeAt(STRING_PURE String* text, Int32 i) {
 	if (i >= text->length) return false;
-	return Drawer2D_Cols[text->buffer[i]].A > 0;
+	return Drawer2D_Cols[(UInt8)text->buffer[i]].A > 0;
 }
-bool Drawer2D_ValidColCode(UChar c) { return Drawer2D_Cols[c].A > 0; }
+bool Drawer2D_ValidColCode(char c) { return Drawer2D_Cols[(UInt8)c].A > 0; }
 
 bool Drawer2D_IsEmptyText(STRING_PURE String* text) {
 	if (!text->length) return true;
@@ -174,7 +174,7 @@ bool Drawer2D_IsEmptyText(STRING_PURE String* text) {
 	return true;
 }
 
-UChar Drawer2D_LastCol(STRING_PURE String* text, Int32 start) {
+char Drawer2D_LastCol(STRING_PURE String* text, Int32 start) {
 	if (start >= text->length) start = text->length - 1;
 	Int32 i;
 	for (i = start; i >= 0; i--) {
@@ -185,12 +185,12 @@ UChar Drawer2D_LastCol(STRING_PURE String* text, Int32 start) {
 	}
 	return '\0';
 }
-bool Drawer2D_IsWhiteCol(UChar c) { return c == '\0' || c == 'f' || c == 'F'; }
+bool Drawer2D_IsWhiteCol(char c) { return c == '\0' || c == 'f' || c == 'F'; }
 
 #define Drawer2D_ShadowOffset(point) (point / 8)
 #define Drawer2D_XPadding(point) (Math_CeilDiv(point, 8))
-static Int32 Drawer2D_Width(Int32 point, Int32 value) { 
-	return Math_CeilDiv(Drawer2D_Widths[value] * point, Drawer2D_BoxSize); 
+static Int32 Drawer2D_Width(Int32 point, char c) { 
+	return Math_CeilDiv(Drawer2D_Widths[(UInt8)c] * point, Drawer2D_BoxSize); 
 }
 static Int32 Drawer2D_AdjHeight(Int32 point) { return Math_CeilDiv(point * 3, 2); }
 
@@ -225,9 +225,9 @@ static void Drawer2D_DrawCore(struct DrawTextArgs* args, Int32 x, Int32 y, bool 
 	UInt16 dstWidths[256];
 
 	for (i = 0; i < text.length; i++) {
-		UChar c = text.buffer[i];
+		char c = text.buffer[i];
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
-			col = Drawer2D_Cols[text.buffer[i + 1]];
+			col = Drawer2D_Cols[(UInt8)text.buffer[i + 1]];
 			if (shadow) {
 				col = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col, 0.25f);
 			}
@@ -297,9 +297,9 @@ static void Drawer2D_DrawUnderline(struct DrawTextArgs* args, Int32 x, Int32 y, 
 		String text = args->Text;
 
 		for (i = 0; i < text.length; i++) {
-			UChar c = text.buffer[i];
+			char c = text.buffer[i];
 			if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
-				col = Drawer2D_Cols[text.buffer[i + 1]];
+				col = Drawer2D_Cols[(UInt8)text.buffer[i + 1]];
 				i++; continue; /* Skip over the colour code */
 			}
 
@@ -336,7 +336,7 @@ struct Size2D Drawer2D_MeasureBitmapText(struct DrawTextArgs* args) {
 
 	String text = args->Text;
 	for (i = 0; i < text.length; i++) {
-		UChar c = text.buffer[i];
+		char c = text.buffer[i];
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
 			i++; continue; /* skip over the colour code */
 		}
@@ -354,7 +354,7 @@ struct Size2D Drawer2D_MeasureBitmapText(struct DrawTextArgs* args) {
 	return total;
 }
 
-static Int32 Drawer2D_NextPart(Int32 i, STRING_REF String* value, STRING_TRANSIENT String* part, UChar* nextCol) {
+static Int32 Drawer2D_NextPart(Int32 i, STRING_REF String* value, STRING_TRANSIENT String* part, char* nextCol) {
 	Int32 length = 0, start = i;
 	for (; i < value->length; i++) {
 		if (value->buffer[i] == '&' && Drawer2D_ValidColCodeAt(value, i + 1)) break;
@@ -373,13 +373,13 @@ void Drawer2D_DrawText(struct DrawTextArgs* args, Int32 x, Int32 y) {
 	if (Drawer2D_UseBitmappedChat) { Drawer2D_DrawBitmapText(args, x, y); return; }
 	
 	String value = args->Text;
-	UChar nextCol = 'f';
+	char nextCol = 'f';
 	Int32 i = 0;
 
 	while (i < value.length) {
-		UChar colCode = nextCol;
+		char colCode = nextCol;
 		i = Drawer2D_NextPart(i, &value, &args->Text, &nextCol);
-		PackedCol col = Drawer2D_Cols[colCode];
+		PackedCol col = Drawer2D_Cols[(UInt8)colCode];
 		if (!args->Text.length) continue;
 
 		if (args->UseShadow) {
@@ -399,7 +399,7 @@ struct Size2D Drawer2D_MeasureText(struct DrawTextArgs* args) {
 	if (Drawer2D_UseBitmappedChat) return Drawer2D_MeasureBitmapText(args);
 
 	String value = args->Text;
-	UChar nextCol = 'f';
+	char nextCol = 'f';
 	Int32 i = 0;
 	struct Size2D size = { 0, 0 };
 

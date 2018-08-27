@@ -6,12 +6,12 @@
 #include "Funcs.h"
 #include "ExtMath.h"
 
-UChar Gfx_ApiBuffer[7][String_BufferSize(STRING_SIZE)];
+char Gfx_ApiBuffer[7][STRING_SIZE];
 String Gfx_ApiInfo[7] = {
-	{ Gfx_ApiBuffer[0], 0, STRING_SIZE }, { Gfx_ApiBuffer[1], 0, STRING_SIZE },
-	{ Gfx_ApiBuffer[2], 0, STRING_SIZE }, { Gfx_ApiBuffer[3], 0, STRING_SIZE },
-	{ Gfx_ApiBuffer[4], 0, STRING_SIZE }, { Gfx_ApiBuffer[5], 0, STRING_SIZE },
-	{ Gfx_ApiBuffer[6], 0, STRING_SIZE },
+	String_FromArray(Gfx_ApiBuffer[0]), String_FromArray(Gfx_ApiBuffer[1]),
+	String_FromArray(Gfx_ApiBuffer[2]), String_FromArray(Gfx_ApiBuffer[3]),
+	String_FromArray(Gfx_ApiBuffer[4]), String_FromArray(Gfx_ApiBuffer[5]),
+	String_FromArray(Gfx_ApiBuffer[6]),
 };
 
 void GfxCommon_Init(void) {
@@ -29,7 +29,7 @@ void GfxCommon_Free(void) {
 	Gfx_DeleteIb(&GfxCommon_defaultIb);
 }
 
-void GfxCommon_LoseContext(const UChar* reason) {
+void GfxCommon_LoseContext(const char* reason) {
 	Gfx_LostContext = true;
 	Platform_Log1("Lost graphics context: %c", reason);
 

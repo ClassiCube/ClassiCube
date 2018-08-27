@@ -212,7 +212,7 @@ struct NbtTag;
 struct NbtTag {
 	struct NbtTag* Parent;
 	UInt8  TagID;
-	UChar  NameBuffer[String_BufferSize(NBT_SMALL_SIZE)];
+	char   NameBuffer[NBT_SMALL_SIZE];
 	UInt32 NameSize;
 	UInt32 DataSize; /* size of data for arrays */
 
@@ -221,7 +221,7 @@ struct NbtTag {
 		Int16  Value_I16;
 		Int32  Value_I32;
 		Real32 Value_R32;
-		UInt8  DataSmall[String_BufferSize(NBT_SMALL_SIZE)];
+		UInt8  DataSmall[NBT_SMALL_SIZE];
 		UInt8* DataBig; /* malloc for big byte arrays */
 	};
 };
@@ -258,9 +258,9 @@ static String NbtTag_String(struct NbtTag* tag) {
 	return String_Init(tag->DataSmall, tag->DataSize, tag->DataSize);
 }
 
-static ReturnCode Nbt_ReadString(struct Stream* stream, UChar* strBuffer, UInt32* strLen) {
+static ReturnCode Nbt_ReadString(struct Stream* stream, char* strBuffer, UInt32* strLen) {
 	ReturnCode res;
-	UChar nameBuffer[NBT_SMALL_SIZE * 4];
+	char nameBuffer[NBT_SMALL_SIZE * 4];
 	if (res = Stream_Read(stream, nameBuffer, 2)) return res;
 
 	UInt16 nameLen = Stream_GetU16_BE(nameBuffer);
@@ -354,7 +354,7 @@ static ReturnCode Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* str
 	return 0;
 }
 
-static bool IsTag(struct NbtTag* tag, const UChar* tagName) {
+static bool IsTag(struct NbtTag* tag, const char* tagName) {
 	String name = { tag->NameBuffer, tag->NameSize, tag->NameSize };
 	return String_CaselessEqualsConst(&name, tagName);
 }
@@ -602,7 +602,7 @@ enum JFieldType {
 #define JNAME_SIZE 48
 struct JFieldDesc {
 	UInt8 Type;
-	UChar FieldName[String_BufferSize(JNAME_SIZE)];
+	char FieldName[JNAME_SIZE];
 	union {
 		UInt8  Value_U8;
 		Int32  Value_I32;
@@ -612,7 +612,7 @@ struct JFieldDesc {
 };
 
 struct JClassDesc {
-	UChar ClassName[String_BufferSize(JNAME_SIZE)];
+	char ClassName[JNAME_SIZE];
 	UInt16 FieldsCount;
 	struct JFieldDesc Fields[22];
 };
@@ -637,7 +637,7 @@ static ReturnCode Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* de
 		if (res = stream->ReadU8(stream, &typeCode)) return res;
 
 		if (typeCode == TC_STRING) {
-			UChar className1[String_BufferSize(JNAME_SIZE)];
+			char className1[JNAME_SIZE];
 			return Dat_ReadString(stream, className1);
 		} else if (typeCode == TC_REFERENCE) {
 			return Stream_Skip(stream, 4); /* (4) handle */
@@ -896,12 +896,12 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, Int32 b) {
 		union IntAndFloat speed; speed.f = Block_SpeedMultiplier[b];
 		Stream_SetU32_BE(&tmp[37], speed.u);
 
-		tmp[56] = Block_GetTexLoc(b, FACE_YMAX);
-		tmp[57] = Block_GetTexLoc(b, FACE_YMIN);
-		tmp[58] = Block_GetTexLoc(b, FACE_XMIN);
-		tmp[59] = Block_GetTexLoc(b, FACE_XMAX);
-		tmp[60] = Block_GetTexLoc(b, FACE_ZMIN);
-		tmp[61] = Block_GetTexLoc(b, FACE_ZMAX);
+		tmp[56] = (UInt8)Block_GetTexLoc(b, FACE_YMAX);
+		tmp[57] = (UInt8)Block_GetTexLoc(b, FACE_YMIN);
+		tmp[58] = (UInt8)Block_GetTexLoc(b, FACE_XMIN);
+		tmp[59] = (UInt8)Block_GetTexLoc(b, FACE_XMAX);
+		tmp[60] = (UInt8)Block_GetTexLoc(b, FACE_ZMIN);
+		tmp[61] = (UInt8)Block_GetTexLoc(b, FACE_ZMAX);
 
 		tmp[79]  = Block_BlocksLight[b] ? 0 : 1;
 		tmp[92]  = Block_DigSounds[b];

@@ -88,20 +88,20 @@ void DateTime_FromTotalMs(DateTime* time, Int64 ms) {
 }
 
 void DateTime_HttpDate(DateTime* value, STRING_TRANSIENT String* str) {
-	static UChar* days_of_weeks[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
-	static UChar* month_names[13] = { NULL, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+	static char* days_of_weeks[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+	static char* month_names[13] = { NULL, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 	Int32 dow = DateTime_TotalDays(value) % 7;
 
-	UChar* dayOfWeek = days_of_weeks[dow];
+	char* dayOfWeek = days_of_weeks[dow];
 	Int32 day = value->Day, year = value->Year;
-	UChar* month = month_names[value->Month];
+	char* month = month_names[value->Month];
 	Int32 hour = value->Hour, min = value->Minute, sec = value->Second;
 
 	String_Format4(str, "%c, %p2 %c %p4", dayOfWeek, &day, month, &year);
 	String_Format3(str, " %p2:%p2:%p2 GMT", &hour, &min, &sec);
 }
 
-UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const UChar** names, UInt32 namesCount) {
+UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const char** names, UInt32 namesCount) {
 	UInt32 i;
 	for (i = 0; i < namesCount; i++) {
 		if (String_CaselessEqualsConst(text, names[i])) return i;
@@ -109,7 +109,7 @@ UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const UChar** 
 	return defValue;
 }
 
-bool Utils_IsValidInputChar(UChar c, bool supportsCP437) {
+bool Utils_IsValidInputChar(char c, bool supportsCP437) {
 	return supportsCP437 || (Convert_CP437ToUnicode(c) == c);
 }
 
@@ -120,7 +120,7 @@ bool Utils_IsUrlPrefix(STRING_PURE String* value, Int32 index) {
 		|| String_IndexOfString(value, &https) == index;
 }
 
-bool Utils_EnsureDirectory(STRING_PURE const UChar* dirName) {
+bool Utils_EnsureDirectory(STRING_PURE const char* dirName) {
 	String dir = String_FromReadonly(dirName);
 	if (Directory_Exists(&dir)) return true;
 
@@ -132,7 +132,7 @@ bool Utils_EnsureDirectory(STRING_PURE const UChar* dirName) {
 void Utils_UNSAFE_GetFilename(STRING_TRANSIENT String* str) {
 	Int32 i;
 	for (i = str->length - 1; i >= 0; i--) {
-		UChar c = str->buffer[i];
+		char c = str->buffer[i];
 		if (c == '/' || c == '\\') { 
 			*str = String_UNSAFE_SubstringAt(str, i + 1); return; 
 		}

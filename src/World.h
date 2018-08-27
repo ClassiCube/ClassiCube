@@ -48,7 +48,7 @@ Int32 WorldEnv_CloudsHeight;
 Real32 WorldEnv_CloudsSpeed;
 
 enum WEATHER { WEATHER_SUNNY, WEATHER_RAINY, WEATHER_SNOWY };
-extern const UChar* Weather_Names[3];
+extern const char* Weather_Names[3];
 Real32 WorldEnv_WeatherSpeed;
 Real32 WorldEnv_WeatherFade;
 Int32 WorldEnv_Weather;

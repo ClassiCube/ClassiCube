@@ -41,15 +41,15 @@ Int32 Game_ComponentsCount;
 struct ScheduledTask Game_Tasks[6];
 Int32 Game_TasksCount, entTaskI;
 
-UChar Game_UsernameBuffer[String_BufferSize(STRING_SIZE)];
-String Game_Username = String_FromEmptyArray(Game_UsernameBuffer);
-UChar Game_MppassBuffer[String_BufferSize(STRING_SIZE)];
-String Game_Mppass = String_FromEmptyArray(Game_MppassBuffer);
+char Game_UsernameBuffer[STRING_SIZE];
+String Game_Username = String_FromArray(Game_UsernameBuffer);
+char Game_MppassBuffer[STRING_SIZE];
+String Game_Mppass = String_FromArray(Game_MppassBuffer);
 
-UChar Game_IPAddressBuffer[String_BufferSize(STRING_SIZE)];
-String Game_IPAddress = String_FromEmptyArray(Game_IPAddressBuffer);
-UChar Game_FontNameBuffer[String_BufferSize(STRING_SIZE)];
-String Game_FontName = String_FromEmptyArray(Game_FontNameBuffer);
+char Game_IPAddressBuffer[STRING_SIZE];
+String Game_IPAddress = String_FromArray(Game_IPAddressBuffer);
+char Game_FontNameBuffer[STRING_SIZE];
+String Game_FontName = String_FromArray(Game_FontNameBuffer);
 
 void Game_AddComponent(struct IGameComponent* comp) {
 	if (Game_ComponentsCount == Array_Elems(Game_Components)) {
@@ -100,12 +100,12 @@ Real32 Game_GetChatScale(void) {
 	return Game_Scale(Game_GetWindowScale() * Game_RawChatScale);
 }
 
-UChar game_defTexPackBuffer[String_BufferSize(STRING_SIZE)];
-String game_defTexPack = String_FromEmptyArray(game_defTexPackBuffer);
+char game_defTexPackBuffer[STRING_SIZE];
+String game_defTexPack = String_FromArray(game_defTexPackBuffer);
 
 void Game_GetDefaultTexturePack(STRING_TRANSIENT String* texPack) {
-	UChar texPathBuffer[String_BufferSize(STRING_SIZE)];
-	String texPath = String_InitAndClearArray(texPathBuffer);
+	char texPathBuffer[STRING_SIZE];
+	String texPath = String_FromArray(texPathBuffer);
 	String_Format2(&texPath, "texpacks%r%s", &Directory_Separator, &game_defTexPack);
 
 	if (File_Exists(&texPath) && !Game_ClassicMode) {
@@ -310,13 +310,13 @@ static void Game_TextureChangedCore(void* obj, struct Stream* src, String* name)
 }
 
 static void Game_ExtractInitialTexturePack(void) {
-	UChar texPackBuffer[String_BufferSize(STRING_SIZE)];
-	String texPack = String_InitAndClearArray(texPackBuffer);
+	char texPackBuffer[STRING_SIZE];
+	String texPack = String_FromArray(texPackBuffer);
 	Options_Get(OPT_DEFAULT_TEX_PACK, &game_defTexPack, "default.zip");
 
 	String_AppendConst(&texPack, "default.zip");
 	TexturePack_ExtractZip_File(&texPack);
-	String_Clear(&texPack);
+	texPack.length = 0;
 
 	/* in case the user's default texture pack doesn't have all required textures */
 	Game_GetDefaultTexturePack(&texPack);
@@ -377,7 +377,7 @@ static void Game_LoadGuiOptions(void) {
 	Game_TabAutocomplete = Options_GetBool(OPT_TAB_AUTOCOMPLETE, false);
 	Options_Get(OPT_FONT_NAME, &Game_FontName, "Arial");
 	if (Game_ClassicMode) {
-		String_Clear(&Game_FontName);
+		Game_FontName.length = 0;
 		String_AppendConst(&Game_FontName, "Arial");
 	}
 
@@ -452,8 +452,8 @@ void Game_Load(void) {
 	ChunkUpdater_Init();
 	EnvRenderer_MakeComponent(&comp);     Game_AddComponent(&comp);
 
-	UChar renderTypeBuffer[String_BufferSize(STRING_SIZE)];
-	String renderType = String_InitAndClearArray(renderTypeBuffer);
+	char renderTypeBuffer[STRING_SIZE];
+	String renderType = String_FromArray(renderTypeBuffer);
 	Options_Get(OPT_RENDER_TYPE, &renderType, "normal");
 	Int32 flags = Game_CalcRenderType(&renderType);
 
@@ -511,8 +511,8 @@ void Game_Load(void) {
 
 	if (Gfx_WarnIfNecessary()) EnvRenderer_UseLegacyMode(true);
 
-	UChar loadTitleBuffer[String_BufferSize(STRING_SIZE)];
-	String loadTitle = String_InitAndClearArray(loadTitleBuffer);
+	char loadTitleBuffer[STRING_SIZE];
+	String loadTitle = String_FromArray(loadTitleBuffer);
 	String_Format2(&loadTitle, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
 	String loadMsg = String_MakeNull();
 
@@ -624,13 +624,13 @@ void Game_TakeScreenshot(void) {
 	Int32 year = now.Year, month = now.Month, day = now.Day;
 	Int32 hour = now.Hour, min = now.Minute, sec = now.Second;
 
-	UChar fileBuffer[String_BufferSize(STRING_SIZE)];
-	String filename = String_InitAndClearArray(fileBuffer);
+	char fileBuffer[STRING_SIZE];
+	String filename = String_FromArray(fileBuffer);
 	String_Format3(&filename, "screenshot_%p2-%p2-%p4", &day, &month, &year);
 	String_Format3(&filename, "-%p2-%p2-%p2.png", &hour, &min, &sec);
 
-	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
-	String path = String_InitAndClearArray(pathBuffer);
+	char pathBuffer[FILENAME_SIZE];
+	String path = String_FromArray(pathBuffer);
 	String_Format2(&path, "screenshots%r%s", &Directory_Separator, &filename);
 
 	void* file; res = File_Create(&file, &path);

@@ -17,7 +17,7 @@
 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",\
 "U", "V", "W", "X", "Y", "Z"
 
-const UChar* Key_Names[Key_Count] = {
+const char* Key_Names[Key_Count] = {
 	"None",
 	"ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight",
 	"AltLeft", "AltRight", "WinLeft", "WinRight", "Menu",
@@ -39,7 +39,7 @@ const UChar* Key_Names[Key_Count] = {
 };
 
 /* TODO: Should this only be shown in GUI? not saved to disc? */
-/*const UChar* Key_Names[Key_Count] = {
+/*const char* Key_Names[Key_Count] = {
 	"NONE",
 	"LSHIFT", "RSHIFT", "LCONTROL", "RCONTROL",
 	"LMENU", "RMENU", "LWIN", "RWIN", "MENU",
@@ -122,7 +122,7 @@ Key KeyBind_Defaults[KeyBind_Count] = {
 	Key_None, Key_None, Key_F6, Key_AltLeft, 
 	Key_F8, Key_G, Key_F10, Key_None,
 };
-const UChar* KeyBind_Names[KeyBind_Count] = {
+const char* KeyBind_Names[KeyBind_Count] = {
 	"Forward", "Back", "Left", "Right",
 	"Jump", "Respawn", "SetSpawn", "Chat",
 	"Inventory", "ToggleFog", "SendChat", "PauseOrExit",
@@ -138,15 +138,15 @@ Key KeyBind_Get(KeyBind binding) { return KeyBind_Keys[binding]; }
 Key KeyBind_GetDefault(KeyBind binding) { return KeyBind_Defaults[binding]; }
 bool KeyBind_IsPressed(KeyBind binding) { return Key_States[KeyBind_Keys[binding]]; }
 
-#define KeyBind_MakeName(name) String_Clear(&name); String_AppendConst(&name, "key-"); String_AppendConst(&name, KeyBind_Names[i]);
-
 void KeyBind_Load(void) {
 	Int32 i;
-	UChar nameBuffer[String_BufferSize(STRING_SIZE)];
-	String name = String_InitAndClearArray(nameBuffer);
+	char nameBuffer[STRING_SIZE];
+	String name = String_FromArray(nameBuffer);
 
 	for (i = 0; i < KeyBind_Count; i++) {
-		KeyBind_MakeName(name);
+		name.length = 0; 
+		String_Format1(&name, "key-%c", KeyBind_Names[i]);
+
 		Key mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Key_Names, Key_Count);
 		if (mapping != Key_Escape) KeyBind_Keys[i] = mapping;
 	}
@@ -155,11 +155,13 @@ void KeyBind_Load(void) {
 
 void KeyBind_Save(void) {
 	Int32 i;
-	UChar nameBuffer[String_BufferSize(STRING_SIZE)];
-	String name = String_InitAndClearArray(nameBuffer);
+	char nameBuffer[STRING_SIZE];
+	String name = String_FromArray(nameBuffer);
 
 	for (i = 0; i < KeyBind_Count; i++) {
-		KeyBind_MakeName(name);
+		name.length = 0; 
+		String_Format1(&name, "key-%c", KeyBind_Names[i]);
+
 		String value = String_FromReadonly(Key_Names[KeyBind_Keys[i]]);
 		Options_Set(name.buffer, &value);
 	}
@@ -280,7 +282,7 @@ bool Hotkeys_IsHotkey(Key key, STRING_TRANSIENT String* text, bool* moreInput) {
 	if (Key_IsShiftPressed())   flags |= HOTKEYS_FLAG_SHIFT;
 	if (Key_IsAltPressed())     flags |= HOTKEYS_FLAG_ALT;
 
-	String_Clear(text);
+	text->length = 0;
 	*moreInput = false;
 
 	Int32 i;
@@ -327,18 +329,18 @@ void Hotkeys_Init(void) {
 }
 
 void Hotkeys_UserRemovedHotkey(Key trigger, UInt8 flags) {
-	UChar keyBuffer[String_BufferSize(STRING_SIZE)];
-	String key = String_InitAndClearArray(keyBuffer);
+	char keyBuffer[STRING_SIZE];
+	String key = String_FromArray(keyBuffer);
 
 	String_Format2(&key, "hotkey-%c&%b", Key_Names[trigger], &flags);
 	Options_Set(key.buffer, NULL);
 }
 
 void Hotkeys_UserAddedHotkey(Key trigger, UInt8 flags, bool moreInput, STRING_PURE String* text) {
-	UChar keyBuffer[String_BufferSize(STRING_SIZE)];
-	String key = String_InitAndClearArray(keyBuffer);
-	UChar valueBuffer[String_BufferSize(STRING_SIZE * 2)];
-	String value = String_InitAndClearArray(valueBuffer);
+	char keyBuffer[STRING_SIZE];
+	String key = String_FromArray(keyBuffer);
+	char valueBuffer[STRING_SIZE * 2];
+	String value = String_FromArray(valueBuffer);
 
 	String_Format2(&key, "hotkey-%c&%b", Key_Names[trigger], &flags);
 	String_Format2(&value, "%t&%s", &moreInput, text);

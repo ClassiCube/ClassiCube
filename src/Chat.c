@@ -36,15 +36,15 @@ static void Chat_AppendLogTime(void) {
 }
 
 static void ChatLine_Make(struct ChatLine* line, STRING_TRANSIENT String* text) {
-	String dst = String_InitAndClearArray(line->Buffer);
+	String dst = String_ClearedArray(line->Buffer);
 	String_AppendString(&dst, text);
 	DateTime_CurrentUTC(&line->Received);
 }
 
-UChar  Chat_LogNameBuffer[String_BufferSize(STRING_SIZE)];
-String Chat_LogName = String_FromEmptyArray(Chat_LogNameBuffer);
-UChar  Chat_LogPathBuffer[String_BufferSize(FILENAME_SIZE)];
-String Chat_LogPath = String_FromEmptyArray(Chat_LogPathBuffer);
+char  Chat_LogNameBuffer[STRING_SIZE];
+String Chat_LogName = String_FromArray(Chat_LogNameBuffer);
+char  Chat_LogPathBuffer[FILENAME_SIZE];
+String Chat_LogPath = String_FromArray(Chat_LogPathBuffer);
 
 struct Stream Chat_LogStream;
 DateTime ChatLog_LastLogDate;
@@ -55,7 +55,7 @@ static void Chat_CloseLog(void) {
 	if (res) { Chat_LogError(res, "closing", &Chat_LogPath); }
 }
 
-static bool Chat_AllowedLogChar(UChar c) {
+static bool Chat_AllowedLogChar(char c) {
 	return
 		c == '{' || c == '}' || c == '[' || c == ']' || c == '(' || c == ')' ||
 		(c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
@@ -63,10 +63,10 @@ static bool Chat_AllowedLogChar(UChar c) {
 
 void Chat_SetLogName(STRING_PURE String* name) {
 	if (Chat_LogName.length) return;
-	String_Clear(&Chat_LogName);
+	Chat_LogName.length = 0;
 
-	UChar noColsBuffer[String_BufferSize(STRING_SIZE)];
-	String noColsName = String_InitAndClearArray(noColsBuffer);
+	char noColsBuffer[STRING_SIZE];
+	String noColsName = String_FromArray(noColsBuffer);
 	String_AppendColorless(&noColsName, name);
 
 	Int32 i;
@@ -90,7 +90,7 @@ static void Chat_OpenLog(DateTime* now) {
 	Int32 i, year = now->Year, month = now->Month, day = now->Day;
 	for (i = 0; i < 20; i++) {
 		String* path = &Chat_LogPath;
-		String_Clear(path);
+		path->length = 0;
 		String_Format4(path, "logs%r%p4-%p2-%p2", &Directory_Separator, &year, &month, &day);
 
 		if (i > 0) {
@@ -126,8 +126,8 @@ static void Chat_AppendLog(STRING_PURE String* text) {
 
 	ChatLog_LastLogDate = now;
 	if (!Chat_LogStream.Meta.File) return;
-	UChar logBuffer[String_BufferSize(STRING_SIZE * 2)];
-	String str = String_InitAndClearArray(logBuffer);
+	char logBuffer[STRING_SIZE * 2];
+	String str = String_FromArray(logBuffer);
 
 	/* [HH:mm:ss] text */
 	Int32 hour = now.Hour, minute = now.Minute, second = now.Second;
@@ -140,26 +140,26 @@ static void Chat_AppendLog(STRING_PURE String* text) {
 	Chat_LogError(res, "writing to", &Chat_LogPath);
 }
 
-void Chat_LogError(ReturnCode result, const UChar* place, STRING_PURE String* path) {
+void Chat_LogError(ReturnCode result, const char* place, STRING_PURE String* path) {
 	Chat_Add4("&cError %y when %c '%s'", &result, place, path, NULL);
 }
-void Chat_Add1(const UChar* format, const void* a1) {
+void Chat_Add1(const char* format, const void* a1) {
 	Chat_Add4(format, a1, NULL, NULL, NULL);
 }
-void Chat_Add2(const UChar* format, const void* a1, const void* a2) {
+void Chat_Add2(const char* format, const void* a1, const void* a2) {
 	Chat_Add4(format, a1, a2, NULL, NULL);
 }
-void Chat_Add3(const UChar* format, const void* a1, const void* a2, const void* a3) {
+void Chat_Add3(const char* format, const void* a1, const void* a2, const void* a3) {
 	Chat_Add4(format, a1, a2, a3, NULL);
 }
-void Chat_Add4(const UChar* format, const void* a1, const void* a2, const void* a3, const void* a4) {
-	UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
-	String msg = String_InitAndClearArray(msgBuffer);
+void Chat_Add4(const char* format, const void* a1, const void* a2, const void* a3, const void* a4) {
+	char msgBuffer[STRING_SIZE * 2];
+	String msg = String_FromArray(msgBuffer);
 	String_Format4(&msg, format, a1, a2, a3, a4);
 	Chat_AddOf(&msg, MSG_TYPE_NORMAL);
 }
 
-void Chat_AddRaw(const UChar* raw) {
+void Chat_AddRaw(const char* raw) {
 	String str = String_FromReadonly(raw);
 	Chat_AddOf(&str, MSG_TYPE_NORMAL);
 }
@@ -188,8 +188,8 @@ void Chat_AddOf(STRING_PURE String* text, Int32 msgType) {
 *---------------------------------------------------------Commands--------------------------------------------------------*
 *#########################################################################################################################*/
 struct ChatCommand {
-	const UChar* Name;
-	const UChar* Help[5];
+	const char* Name;
+	const char* Help[5];
 	void (*Execute)(STRING_PURE String* args, Int32 argsCount);
 	bool SingleplayerOnly;
 };
@@ -249,8 +249,8 @@ static struct ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
 }
 
 static void Commands_PrintDefined(void) {
-	UInt8 strBuffer[String_BufferSize(STRING_SIZE)];
-	String str = String_InitAndClearArray(strBuffer);
+	UInt8 strBuffer[STRING_SIZE];
+	String str = String_FromArray(strBuffer);
 	Int32 i;
 
 	for (i = 0; i < commands_count; i++) {
@@ -259,7 +259,7 @@ static void Commands_PrintDefined(void) {
 
 		if ((str.length + name.length + 2) > str.capacity) {
 			Chat_Add(&str);
-			String_Clear(&str);
+			str.length = 0;
 		}
 		String_AppendString(&str, &name);
 		String_AppendConst(&str, ", ");
@@ -401,8 +401,8 @@ static void ModelCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
 	if (argsCount == 1) {
 		Chat_AddRaw("&e/client model: &cYou didn't specify a model name.");
 	} else {
-		UChar modelBuffer[String_BufferSize(STRING_SIZE)];
-		String model = String_InitAndClearArray(modelBuffer);
+		char modelBuffer[STRING_SIZE];
+		String model = String_FromArray(modelBuffer);
 		String_AppendString(&model, &args[1]);
 		Entity_SetModel(&LocalPlayer_Instance.Base, &model);
 	}
@@ -475,8 +475,8 @@ static void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID oldBl
 	if (cuboid_mark1.X == Int32_MaxValue) {
 		cuboid_mark1 = coords;
 		Game_UpdateBlock(coords.X, coords.Y, coords.Z, oldBlock);
-		UChar msgBuffer[String_BufferSize(STRING_SIZE)];
-		String msg = String_InitAndClearArray(msgBuffer);
+		char msgBuffer[STRING_SIZE];
+		String msg = String_FromArray(msgBuffer);
 
 		String_Format3(&msg, "&eCuboid: &fMark 1 placed at (%i, %i, %i), place mark 2.", &coords.X, &coords.Y, &coords.Z);
 		Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_1);
@@ -586,7 +586,7 @@ static void Chat_Init(void) {
 
 static void Chat_Reset(void) {
 	Chat_CloseLog();
-	String_Clear(&Chat_LogName);
+	Chat_LogName.length = 0;
 }
 
 static void Chat_Free(void) {

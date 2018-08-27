@@ -2,6 +2,7 @@
 #define CC_ENTITY_COMPONENTS_H
 #include "Vectors.h"
 #include "String.h"
+#include "Constants.h"
 /* Various components for entities.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -60,7 +61,7 @@ struct HacksComp {
 
 	bool Noclip, Flying, FlyingUp, FlyingDown, Speeding, HalfSpeeding;
 	bool Floating; /* true if NoClip or Flying */
-	UChar HacksFlagsBuffer[String_BufferSize(128)];
+	char HacksFlagsBuffer[STRING_SIZE * 2];
 	String HacksFlags;
 };
 
