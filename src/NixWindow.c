@@ -205,9 +205,9 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF Strin
 	Window_Exists = true;
 }
 
-char clipboard_copy_buffer[String_BufferSize(256)];
+char clipboard_copy_buffer[256];
 String clipboard_copy_text = String_FromArray(clipboard_copy_buffer);
-char clipboard_paste_buffer[String_BufferSize(256)];
+char clipboard_paste_buffer[256];
 String clipboard_paste_text = String_FromArray(clipboard_paste_buffer);
 
 void Window_GetClipboardText(STRING_TRANSIENT String* value) {

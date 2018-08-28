@@ -435,7 +435,7 @@ ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCal
 	return result;
 }
 
-ReturnCode File_GetModifiedTime_MS(STRING_PURE String* path, DateTime* time) {
+ReturnCode File_GetModifiedTime_MS(STRING_PURE String* path, UInt64* time) {
 	char str[600]; Platform_ConvertString(str, path);
 	struct stat sb;
 	if (stat(str, &sb) == -1) return errno;

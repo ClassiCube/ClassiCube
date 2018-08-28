@@ -1320,9 +1320,8 @@ void InputWidget_Create(struct InputWidget* widget, struct FontDesc* font, STRIN
 
 
 /*########################################################################################################################*
-*---------------------------------------------------struct MenuInputValidator----------------------------------------------------*
+*---------------------------------------------------MenuInputValidator----------------------------------------------------*
 *#########################################################################################################################*/
-static bool MenuInputValidator_AlwaysValidChar(struct MenuInputValidator* v, char c) { return true; }
 static bool MenuInputValidator_AlwaysValidString(struct MenuInputValidator* v, STRING_PURE String* s) { return true; }
 
 static void HexColValidator_GetRange(struct MenuInputValidator* v, STRING_TRANSIENT String* range) {

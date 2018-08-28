@@ -366,7 +366,7 @@ static void ListScreen_UpdatePage(struct ListScreen* screen) {
 	screen->Buttons[6].Disabled = screen->CurrentIndex >= end;
 	if (Game_ClassicMode) return;
 
-	UInt8 pageBuffer[STRING_SIZE];
+	char pageBuffer[STRING_SIZE];
 	String page = String_FromArray(pageBuffer);
 	Int32 num   = (screen->CurrentIndex  / LIST_SCREEN_ITEMS) + 1;
 	Int32 pages = Math_CeilDiv(screen->Entries.Count, LIST_SCREEN_ITEMS);
@@ -2263,7 +2263,7 @@ static void ClassicOptionsScreen_GetMusic(STRING_TRANSIENT String* v) { Menu_Get
 static void ClassicOptionsScreen_SetMusic(STRING_PURE String* v) {
 	Game_MusicVolume = String_CaselessEqualsConst(v, "ON") ? 100 : 0;
 	Audio_SetMusic(Game_MusicVolume);
-	Options_SetInt32(OPT_MUSIC_VOLUME, Game_MusicVolume);
+	Options_SetInt(OPT_MUSIC_VOLUME, Game_MusicVolume);
 }
 
 static void ClassicOptionsScreen_GetInvert(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_InvertMouse); }
@@ -2295,7 +2295,7 @@ static void ClassicOptionsScreen_GetSounds(STRING_TRANSIENT String* v) { Menu_Ge
 static void ClassicOptionsScreen_SetSounds(STRING_PURE String* v) {
 	Game_SoundsVolume = String_CaselessEqualsConst(v, "ON") ? 100 : 0;
 	Audio_SetSounds(Game_SoundsVolume);
-	Options_SetInt32(OPT_SOUND_VOLUME, Game_SoundsVolume);
+	Options_SetInt(OPT_SOUND_VOLUME, Game_SoundsVolume);
 }
 
 static void ClassicOptionsScreen_GetShowFPS(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ShowFPS); }

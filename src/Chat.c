@@ -386,8 +386,8 @@ static void ResolutionCommand_Execute(STRING_PURE String* args, Int32 argsCount)
 	} else {
 		struct Size2D size = { width, height };
 		Window_SetClientSize(size);
-		Options_SetInt32(OPT_WINDOW_WIDTH, width);
-		Options_SetInt32(OPT_WINDOW_HEIGHT, height);
+		Options_SetInt(OPT_WINDOW_WIDTH, width);
+		Options_SetInt(OPT_WINDOW_HEIGHT, height);
 	}
 }
 

@@ -143,7 +143,7 @@ bool Game_ChangeTerrainAtlas(struct Bitmap* atlas) {
 void Game_SetViewDistance(Int32 distance, bool userDist) {
 	if (userDist) {
 		Game_UserViewDistance = distance;
-		Options_SetInt32(OPT_VIEW_DISTANCE, distance);
+		Options_SetInt(OPT_VIEW_DISTANCE, distance);
 	}
 
 	distance = min(distance, Game_MaxViewDistance);

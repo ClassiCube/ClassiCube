@@ -129,7 +129,7 @@ void Options_SetBool(const char* keyRaw, bool value) {
 	}
 }
 
-void Options_SetInt32(const char* keyRaw, Int32 value) {
+void Options_SetInt(const char* keyRaw, Int32 value) {
 	char numBuffer[STRING_INT_CHARS];
 	String numStr = String_FromArray(numBuffer);
 	String_AppendInt32(&numStr, value);
