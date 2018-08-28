@@ -165,7 +165,7 @@ void Platform_LogConst(const char* message) {
 }
 
 #define FILETIME_EPOCH 50491123200000ULL
-#define FileTime_TotalMS(time) (((time) / 10000) + FILETIME_EPOCH)
+#define FileTime_TotalMS(time) ((time / 10000) + FILETIME_EPOCH)
 UInt64 DateTime_CurrentUTC_MS(void) {
 	FILETIME ft; GetSystemTimeAsFileTime(&ft);
 	/* in 100 nanosecond units, since Jan 1 1601 */
@@ -226,7 +226,13 @@ Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {
 void Platform_Log(STRING_PURE String* message) { puts(message->buffer); }
 void Platform_LogConst(const char* message) { puts(message); }
 
-#define UNIX_EPOCH 62135596800ULL
+#define UNIX_EPOCH 62135596800000ULL
+#define UnixTime_TotalMS(time) ((UInt64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
+UInt64 DateTime_CurrentUTC_MS(void) {
+	struct timeval cur;
+	gettimeofday(&cur, NULL);
+	return UnixTime_TotalMS(cur);
+}
 
 static void Platform_FromSysTime(DateTime* time, struct tm* sysTime) {
 	time->Year   = sysTime->tm_year + 1900;
@@ -416,7 +422,7 @@ ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCal
 	DIR* dirPtr = opendir(str);
 	if (!dirPtr) return errno;
 
-	UInt8 fileBuffer[String_BufferSize(FILENAME_SIZE)];
+	char fileBuffer[FILENAME_SIZE];
 	String file = String_FromArray(fileBuffer);
 	struct dirent* entry;
 
@@ -440,7 +446,7 @@ ReturnCode File_GetModifiedTime_MS(STRING_PURE String* path, UInt64* time) {
 	struct stat sb;
 	if (stat(str, &sb) == -1) return errno;
 
-	*time = UNIX_EPOCH + sb.st_mtime; /* TODO: is this right */
+	*time = (UInt64)sb.st_mtime * 1000 + UNIX_EPOCH;
 	return 0;
 }
 
