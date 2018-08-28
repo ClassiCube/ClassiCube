@@ -36,4 +36,5 @@ UInt8 Utils_GetSkinType(struct Bitmap* bmp);
 UInt32 Utils_CRC32(UInt8* data, UInt32 length);
 extern UInt32 Utils_Crc32Table[256];
 void Utils_Resize(void** buffer, UInt32* maxElems, UInt32 elemSize, UInt32 defElems, UInt32 expandElems);
+bool Utils_ParseIP(STRING_PURE String* ip, UInt8* data);
 #endif

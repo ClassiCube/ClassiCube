@@ -19,17 +19,19 @@ bool Game_SkipClear;
 struct PickedPos Game_SelectedPos;
 struct PickedPos Game_CameraClipPos;
 GfxResourceID Game_DefaultIb;
-
 bool Game_UseCPEBlocks;
+
 extern String Game_Username;
 extern String Game_Mppass;
 extern String Game_IPAddress;
-Int32 Game_Port;
+UInt16        Game_Port;
+
 Int32 Game_ViewDistance;
 Int32 Game_MaxViewDistance;
 Int32 Game_UserViewDistance;
 Int32 Game_Fov;
 Int32 Game_DefaultFov, Game_ZoomFov;
+
 FpsLimit Game_FpsLimit;
 bool Game_ShowAxisLines;
 bool Game_SimpleArmsAnim;

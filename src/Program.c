@@ -92,7 +92,7 @@ int main(void) {
 	String title   = String_FromConst(PROGRAM_APP_NAME);
 	String rawArgs = Platform_GetCommandLineArgs();
 	/* NOTE: Make sure to comment this out before pushing a commit */
-	//rawArgs = String_FromReadonly("UnknownShadow200 fff 127.0.0.1 25565");
+	rawArgs = String_FromReadonly("UnknownShadow200 fff 127.0.0.1 25565");
 
 	String args[5]; Int32 argsCount = Array_Elems(args);
 	String_UNSAFE_Split(&rawArgs, ' ', args, &argsCount);
@@ -103,29 +103,20 @@ int main(void) {
 		String_Set(&Game_Username, &name);
 	} else if (argsCount < 4) {
 		Platform_LogConst("ClassiCube.exe is only the raw client. You must either use the launcher or provide command line arguments to start the client.");
-		return;
+		return 1;
 	} else {
 		String_Set(&Game_Username,  &args[0]);
 		String_Set(&Game_Mppass,    &args[1]);
 		String_Set(&Game_IPAddress, &args[2]);
 
-		String bits[4]; UInt32 bitsCount = Array_Elems(bits);
-		String_UNSAFE_Split(&args[2], '.', bits, &bitsCount);
-		if (bitsCount != Array_Elems(bits)) {
-			Platform_LogConst("Invalid IP"); return 1;
-		}
-
-		UInt8 ipTmp;
-		if (!Convert_TryParseUInt8(&bits[0], &ipTmp) || !Convert_TryParseUInt8(&bits[1], &ipTmp) ||
-			!Convert_TryParseUInt8(&bits[2], &ipTmp) || !Convert_TryParseUInt8(&bits[3], &ipTmp)) {
-			Platform_LogConst("Invalid IP"); return 1;
+		UInt8 ip[4];
+		if (!Utils_ParseIP(&args[2], ip)) { 
+			Platform_LogConst("Invalid IP"); return 1; 
 		}
 		
-		UInt16 portTmp;
-		if (!Convert_TryParseUInt16(&args[3], &portTmp)) {
-			Platform_LogConst("Invalid port"); return 1;
+		if (!Convert_TryParseUInt16(&args[3], &Game_Port)) { 
+			Platform_LogConst("Invalid port"); return 1; 
 		}
-		Game_Port = portTmp;
 	}
 
 	Game_Run(width, height, &title, &device);

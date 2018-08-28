@@ -384,26 +384,26 @@ ReturnCode File_Length(void* file, UInt32* length) {
 }
 #elif CC_BUILD_NIX
 bool Directory_Exists(STRING_PURE String* path) {
-	UInt8 str[600]; Platform_ConvertString(str, path);
+	char str[600]; Platform_ConvertString(str, path);
 	struct stat sb;
 	return stat(str, &sb) == 0 && S_ISDIR(sb.st_mode);
 }
 
 ReturnCode Directory_Create(STRING_PURE String* path) {
-	UInt8 str[600]; Platform_ConvertString(str, path);
+	char str[600]; Platform_ConvertString(str, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
 	return Nix_Return(mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != -1);
 }
 
 bool File_Exists(STRING_PURE String* path) {
-	UInt8 str[600]; Platform_ConvertString(str, path);
+	char str[600]; Platform_ConvertString(str, path);
 	struct stat sb;
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCallback callback) {
-	UInt8 str[600]; Platform_ConvertString(str, path);
+	char str[600]; Platform_ConvertString(str, path);
 	DIR* dirPtr = opendir(str);
 	if (!dirPtr) return errno;
 
@@ -427,7 +427,7 @@ ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCal
 }
 
 ReturnCode File_GetModifiedTime(STRING_PURE String* path, DateTime* time) {
-	UInt8 str[600]; Platform_ConvertString(str, path);
+	char str[600]; Platform_ConvertString(str, path);
 	struct stat sb;
 	if (stat(str, &sb) == -1) return errno;
 
@@ -436,7 +436,7 @@ ReturnCode File_GetModifiedTime(STRING_PURE String* path, DateTime* time) {
 }
 
 ReturnCode File_Do(void** file, STRING_PURE String* path, int mode) {
-	UInt8 str[600]; Platform_ConvertString(str, path);
+	char str[600]; Platform_ConvertString(str, path);
 	*file = open(str, mode, (6 << 6) | (4 << 3) | 4); /* rw|r|r */
 	return Nix_Return(*file != -1);
 }
@@ -792,10 +792,11 @@ ReturnCode Socket_GetError(SocketPtr socket, ReturnCode* result) {
 }
 
 ReturnCode Socket_Connect(SocketPtr socket, STRING_PURE String* ip, Int32 port) {
-	struct sockaddr_in addr;
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = inet_addr(ip->buffer);
-	addr.sin_port = htons((UInt16)port);
+	struct RAW_IPV4_ADDR { Int16 Family; UInt8 Port[2], IP[4], Pad[8]; } addr;
+	addr.Family = AF_INET;
+
+	Stream_SetU16_BE(addr.Port, port);
+	Utils_ParseIP(ip, addr.IP);
 
 	ReturnCode result = connect(socket, (struct sockaddr*)(&addr), sizeof(addr));
 	return result == -1 ? Socket__Error() : 0;

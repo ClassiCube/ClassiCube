@@ -519,7 +519,7 @@ bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value) {
 	*value = (UInt16)tmp; return true;
 }
 
-Int32 Convert_CompareDigits(const char* digits, const char* magnitude) {
+static Int32 Convert_CompareDigits(const char* digits, const char* magnitude) {
 	Int32 i;
 	for (i = 0; ; i++) {
 		if (magnitude[i] == '\0')     return  0;

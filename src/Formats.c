@@ -617,7 +617,7 @@ struct JClassDesc {
 	struct JFieldDesc Fields[22];
 };
 
-static ReturnCode Dat_ReadString(struct Stream* stream, UInt8* buffer) {
+static ReturnCode Dat_ReadString(struct Stream* stream, char* buffer) {
 	ReturnCode res;
 	if (res = Stream_Read(stream, buffer, 2)) return res;
 	UInt16 len = Stream_GetU16_BE(buffer);

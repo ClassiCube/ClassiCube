@@ -3238,6 +3238,7 @@ struct Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) {
 
 	String dstUrl = String_FromArray(screen->__UrlBuffer);
 	String_Set(&dstUrl, url);
+	screen->Url = dstUrl;
 
 	Overlay_UseVTABLE((struct MenuScreen*)screen, &WarningOverlay_VTABLE);
 	return (struct Screen*)screen;
@@ -3294,6 +3295,7 @@ struct Screen* ConfirmDenyOverlay_MakeInstance(STRING_PURE String* url, bool alw
 
 	String dstUrl = String_FromArray(screen->__UrlBuffer);
 	String_Set(&dstUrl, url);
+	screen->Url = dstUrl;
 	screen->AlwaysDeny = alwaysDeny;
 
 	Overlay_UseVTABLE((struct MenuScreen*)screen, &WarningOverlay_VTABLE);
@@ -3394,8 +3396,8 @@ struct Screen* TexPackOverlay_MakeInstance(STRING_PURE String* url) {
 		Array_Elems(widgets), TexPackOverlay_ContextRecreated);
 
 	String identifier = String_FromArray(screen->__IdentifierBuffer);
-	String_AppendConst(&identifier, "CL_");
-	String_AppendString(&identifier, url);
+	String_Format1(&identifier, "CL_%s", url);
+	screen->Identifier    = identifier;
 	screen->ContentLength = 0;
 
 	AsyncDownloader_GetContentLength(url, true, &identifier);

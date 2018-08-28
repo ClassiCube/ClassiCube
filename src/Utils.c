@@ -203,3 +203,13 @@ void Utils_Resize(void** buffer, UInt32* maxElems, UInt32 elemSize, UInt32 defEl
 	*buffer   = dst;
 	*maxElems = curElems + expandElems;
 }
+
+bool Utils_ParseIP(STRING_PURE String* ip, UInt8* data) {
+	String parts[4]; UInt32 count = 4;
+	String_UNSAFE_Split(ip, '.', parts, &count);
+	if (count != 4) return false;
+
+	return
+		Convert_TryParseUInt8(&parts[0], &data[0]) && Convert_TryParseUInt8(&parts[1], &data[1]) &&
+		Convert_TryParseUInt8(&parts[2], &data[2]) && Convert_TryParseUInt8(&parts[3], &data[3]);
+}

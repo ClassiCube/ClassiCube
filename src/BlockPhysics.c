@@ -16,66 +16,66 @@
 
 /* Data for a resizable queue, used for liquid physic tick entries. */
 struct TickQueue {
-	UInt32* Buffer;    /* Buffer holding the items in the tick queue. */
-	UInt32 BufferSize; /* Max number of elements in the buffer.*/
-	UInt32 BufferMask; /* BufferSize - 1, as BufferSize is always a power of two. */
-	UInt32 Size;       /* Number of used elements. */
-	UInt32 Head;       /* Head index into the buffer. */
-	UInt32 Tail;       /* Tail index into the buffer. */
+	UInt32* Entries;     /* Buffer holding the items in the tick queue */
+	UInt32  EntriesSize; /* Max number of elements in the buffer */
+	UInt32  EntriesMask; /* EntriesSize - 1, as EntriesSize is always a power of two */
+	UInt32  Size;        /* Number of used elements */
+	UInt32  Head;        /* Head index into the buffer */
+	UInt32  Tail;        /* Tail index into the buffer */
 };
 
 static void TickQueue_Init(struct TickQueue* queue) {
-	queue->Buffer = NULL;
-	queue->BufferSize = 0;
-	queue->BufferMask = 0;
+	queue->Entries     = NULL;
+	queue->EntriesSize = 0;
+	queue->EntriesMask = 0;
 	queue->Head = 0;
 	queue->Tail = 0;
 	queue->Size = 0;
 }
 
 static void TickQueue_Clear(struct TickQueue* queue) {
-	if (!queue->Buffer) return;
-	Mem_Free(queue->Buffer);
+	if (!queue->Entries) return;
+	Mem_Free(queue->Entries);
 	TickQueue_Init(queue);
 }
 
 static void TickQueue_Resize(struct TickQueue* queue) {
-	if (queue->BufferSize >= (Int32_MaxValue / 4)) {
+	if (queue->EntriesSize >= (Int32_MaxValue / 4)) {
 		Chat_AddRaw("&cTickQueue too large, clearing");
 		TickQueue_Clear(queue);
 		return;
 	}
 
-	UInt32 capacity = queue->BufferSize * 2;
+	UInt32 capacity = queue->EntriesSize * 2;
 	if (capacity < 32) capacity = 32;
-	UInt32* newBuffer = Mem_Alloc(capacity, sizeof(UInt32), "physics tick queue");
+	UInt32* entries = Mem_Alloc(capacity, sizeof(UInt32), "physics tick queue");
 
 	UInt32 i, idx;
 	for (i = 0; i < queue->Size; i++) {
-		idx = (queue->Head + i) & queue->BufferMask;
-		newBuffer[i] = queue->Buffer[idx];
+		idx = (queue->Head + i) & queue->EntriesMask;
+		entries[i] = queue->Entries[idx];
 	}
-	Mem_Free(queue->Buffer);
+	Mem_Free(queue->Entries);
 
-	queue->Buffer = newBuffer;
-	queue->BufferSize = capacity;
-	queue->BufferMask = capacity - 1; /* capacity is power of two */
+	queue->Entries     = entries;
+	queue->EntriesSize = capacity;
+	queue->EntriesMask = capacity - 1; /* capacity is power of two */
 	queue->Head = 0;
 	queue->Tail = queue->Size;
 }
 
 static void TickQueue_Enqueue(struct TickQueue* queue, UInt32 item) {
-	if (queue->Size == queue->BufferSize)
+	if (queue->Size == queue->EntriesSize)
 		TickQueue_Resize(queue);
 
-	queue->Buffer[queue->Tail] = item;
-	queue->Tail = (queue->Tail + 1) & queue->BufferMask;
+	queue->Entries[queue->Tail] = item;
+	queue->Tail = (queue->Tail + 1) & queue->EntriesMask;
 	queue->Size++;
 }
 
 static UInt32 TickQueue_Dequeue(struct TickQueue* queue) {
-	UInt32 result = queue->Buffer[queue->Head];
-	queue->Head = (queue->Head + 1) & queue->BufferMask;
+	UInt32 result = queue->Entries[queue->Head];
+	queue->Head = (queue->Head + 1) & queue->EntriesMask;
 	queue->Size--;
 	return result;
 }

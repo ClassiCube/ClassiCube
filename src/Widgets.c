@@ -1744,7 +1744,6 @@ static bool ChatInputWidget_IsNameChar(char c) {
 }
 
 static void ChatInputWidget_TabKey(struct GuiElem* elem) {
-	struct ChatInputWidget* widget = (struct ChatInputWidget*)elem;
 	struct InputWidget* input = (struct InputWidget*)elem;
 
 	Int32 end = input->CaretPos == -1 ? input->Text.length - 1 : input->CaretPos;
