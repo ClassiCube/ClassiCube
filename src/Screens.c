@@ -96,7 +96,7 @@ struct ChatScreen {
 
 struct DisconnectScreen {
 	Screen_Layout
-	Int64 InitTime, ClearTime;
+	UInt64 InitTime, ClearTime;
 	bool CanReconnect, LastActive;
 	Int32 LastSecsLeft;
 	struct ButtonWidget Reconnect;
@@ -1142,11 +1142,10 @@ static void ChatScreen_Render(struct GuiElem* elem, Real64 delta) {
 		Texture_Render(&tex);
 	}
 
-	DateTime now; DateTime_CurrentUTC(&now);
+	UInt64 now = DateTime_CurrentUTC_MS();
 	if (screen->HandlesAllInput) {
 		Elem_Render(&screen->Chat, delta);
 	} else {
-		Int64 nowMS = DateTime_TotalMs(&now);
 		/* Only render recent chat */
 		for (i = 0; i < screen->Chat.LinesCount; i++) {
 			struct Texture tex = screen->Chat.Textures[i];
@@ -1154,8 +1153,7 @@ static void ChatScreen_Render(struct GuiElem* elem, Real64 delta) {
 			if (!tex.ID) continue;
 			if (logIdx < 0 || logIdx >= Chat_Log.Count) continue;
 
-			Int64 received; Chat_GetLogTime(logIdx, &received);
-			if ((nowMS - received) <= 10 * 1000) Texture_Render(&tex);
+			if (Chat_GetLogTime(logIdx) + (10 * 1000) >= now) Texture_Render(&tex);
 		}
 	}
 
@@ -1167,7 +1165,7 @@ static void ChatScreen_Render(struct GuiElem* elem, Real64 delta) {
 		}
 	}
 
-	if (screen->Announcement.Texture.ID && DateTime_MsBetween(&Chat_Announcement.Received, &now) > 5 * 1000) {
+	if (screen->Announcement.Texture.ID && Chat_Announcement.Received + (5 * 1000) >= now) {
 		Elem_TryFree(&screen->Announcement);
 	}
 }
@@ -1432,13 +1430,11 @@ struct DisconnectScreen DisconnectScreen_Instance;
 #define DISCONNECT_DELAY_MS 5000
 static void DisconnectScreen_ReconnectMessage(struct DisconnectScreen* screen, STRING_TRANSIENT String* msg) {
 	if (screen->CanReconnect) {
-		DateTime now; DateTime_CurrentUTC(&now);
-		Int32 elapsedMS = (Int32)(DateTime_TotalMs(&now) - screen->InitTime);
-		Int32 secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLISECS_PER_SECOND;
+		Int32 elapsedMS = (Int32)(DateTime_CurrentUTC_MS() - screen->InitTime);
+		Int32 secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLIS_PER_SEC;
 
 		if (secsLeft > 0) {
-			String_Format1(msg, "Reconnect in %i", &secsLeft);
-			return;
+			String_Format1(msg, "Reconnect in %i", &secsLeft); return;
 		}
 	}
 	String_AppendConst(msg, "Reconnect");
@@ -1457,10 +1453,10 @@ static void DisconnectScreen_Redraw(struct DisconnectScreen* screen, Real64 delt
 }
 
 static void DisconnectScreen_UpdateDelayLeft(struct DisconnectScreen* screen, Real64 delta) {
-	DateTime now; DateTime_CurrentUTC(&now);
-	Int32 elapsedMS = (Int32)(DateTime_TotalMs(&now) - screen->InitTime);
-	Int32 secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLISECS_PER_SECOND;
+	Int32 elapsedMS = (Int32)(DateTime_CurrentUTC_MS() - screen->InitTime);
+	Int32 secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLIS_PER_SEC;
 	if (secsLeft < 0) secsLeft = 0;
+
 	if (screen->LastSecsLeft == secsLeft && screen->Reconnect.Active == screen->LastActive) return;
 
 	char msgBuffer[STRING_SIZE];
@@ -1472,7 +1468,7 @@ static void DisconnectScreen_UpdateDelayLeft(struct DisconnectScreen* screen, Re
 	DisconnectScreen_Redraw(screen, delta);
 	screen->LastSecsLeft = secsLeft;
 	screen->LastActive   = screen->Reconnect.Active;
-	screen->ClearTime = DateTime_TotalMs(&now) + 500;
+	screen->ClearTime    = DateTime_CurrentUTC_MS() + 500;
 }
 
 static void DisconnectScreen_ContextLost(void* obj) {
@@ -1485,8 +1481,7 @@ static void DisconnectScreen_ContextLost(void* obj) {
 static void DisconnectScreen_ContextRecreated(void* obj) {
 	struct DisconnectScreen* screen = (struct DisconnectScreen*)obj;
 	if (Gfx_LostContext) return;
-	DateTime now; DateTime_CurrentUTC(&now);
-	screen->ClearTime = DateTime_TotalMs(&now) + 500;
+	screen->ClearTime = DateTime_CurrentUTC_MS() + 500;
 
 	TextWidget_Create(&screen->Title, &screen->TitleStr, &screen->TitleFont);
 	Widget_SetLocation((struct Widget*)(&screen->Title), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
@@ -1510,9 +1505,8 @@ static void DisconnectScreen_Init(struct GuiElem* elem) {
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, DisconnectScreen_ContextRecreated);
 
 	DisconnectScreen_ContextRecreated(screen);
-	DateTime now; DateTime_CurrentUTC(&now);
-	screen->InitTime = DateTime_TotalMs(&now);
-	screen->LastSecsLeft = DISCONNECT_DELAY_MS / DATETIME_MILLISECS_PER_SECOND;
+	screen->InitTime = DateTime_CurrentUTC_MS();
+	screen->LastSecsLeft = DISCONNECT_DELAY_MS / DATETIME_MILLIS_PER_SEC;
 }
 
 static void DisconnectScreen_Render(struct GuiElem* elem, Real64 delta) {
@@ -1523,8 +1517,7 @@ static void DisconnectScreen_Render(struct GuiElem* elem, Real64 delta) {
 
 	/* NOTE: We need to make sure that both the front and back buffers have
 	definitely been drawn over, so we redraw the background multiple times. */
-	DateTime now; DateTime_CurrentUTC(&now);
-	if (DateTime_TotalMs(&now) < screen->ClearTime) {
+	if (DateTime_CurrentUTC_MS() < screen->ClearTime) {
 		DisconnectScreen_Redraw(screen, delta);
 	}
 }
@@ -1545,8 +1538,7 @@ static void DisconnectScreen_OnResize(struct GuiElem* elem) {
 	Widget_Reposition(&screen->Title);
 	Widget_Reposition(&screen->Message);
 	Widget_Reposition(&screen->Reconnect);
-	DateTime now; DateTime_CurrentUTC(&now);
-	screen->ClearTime = DateTime_TotalMs(&now) + 500;
+	screen->ClearTime = DateTime_CurrentUTC_MS() + 500;
 }
 
 static bool DisconnectScreen_HandlesKeyDown(struct GuiElem* elem, Key key) { return key < Key_F1 || key > Key_F35; }

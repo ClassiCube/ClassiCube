@@ -162,7 +162,9 @@ void HacksComp_Init(struct HacksComp* hacks) {
 	hacks->MaxJumps = 1;
 	hacks->NoclipSlide = true;
 	hacks->CanBePushed = true;
-	hacks->HacksFlags = String_ClearedArray(hacks->HacksFlagsBuffer);
+
+	String str = String_FromArray(hacks->__HacksFlagsBuffer);
+	hacks->HacksFlags = str;
 }
 
 bool HacksComp_CanJumpHigher(struct HacksComp* hacks) {

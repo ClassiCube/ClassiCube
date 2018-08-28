@@ -1075,7 +1075,7 @@ static void GenLevelScreen_Gen(struct GenLevelScreen* screen, bool vanilla) {
 	Int32 length = GenLevelScreen_GetInt(screen, 2);
 	Int32 seed   = GenLevelScreen_GetSeedInt(screen, 3);
 
-	Int64 volume = (Int64)width * height * length;
+	UInt64 volume = (UInt64)width * height * length;
 	if (volume > Int32_MaxValue) {
 		Chat_AddRaw("&cThe generated map's volume is too big.");
 	} else if (!width || !height || !length) {
@@ -3371,9 +3371,11 @@ static void TexPackOverlay_ContextRecreated(void* obj) {
 
 	if (screen->ContentLength) {
 		char contentsBuffer[STRING_SIZE];
-		lines[3] = String_ClearedArray(contentsBuffer);
+		String contents = String_FromArray(contentsBuffer);
 		Real32 contentLengthMB = screen->ContentLength / (1024.0f * 1024.0f);
-		String_Format1(&lines[3], "Download size: %f3 MB", &contentLengthMB);
+
+		String_Format1(&contents, "Download size: %f3 MB", &contentLengthMB);
+		lines[3] = contents;
 	}
 
 	Overlay_MakeLabels((struct MenuScreen*)screen, screen->Labels, lines);

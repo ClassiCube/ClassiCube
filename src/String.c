@@ -577,29 +577,21 @@ bool Convert_TryParseInt32(STRING_PURE String* str, Int32* value) {
 	return true;
 }
 
-bool Convert_TryParseInt64(STRING_PURE String* str, Int64* value) {
+bool Convert_TryParseUInt64(STRING_PURE String* str, UInt64* value) {
 	*value = 0;
-	#define INT64_DIGITS 19
+	#define UINT64_DIGITS 20
 	bool negative;
-	char digits[INT64_DIGITS];
-	if (!Convert_TryParseDigits(str, &negative, digits, INT64_DIGITS)) return false;
+	char digits[UINT64_DIGITS];
+	if (!Convert_TryParseDigits(str, &negative, digits, UINT64_DIGITS)) return false;
 
-	Int32 i, compare;
-	if (negative) {
-		compare = Convert_CompareDigits(digits, "9223372036854775808");
-		/* Special case, since |largest min value| is > |largest max value| */
-		if (compare == 0) { *value = -9223372036854775807LL - 1LL; return true; }
-	} else {
-		compare = Convert_CompareDigits(digits, "9223372036854775807");
-	}
+	Int32 i, compare = Convert_CompareDigits(digits, "18446744073709551615");
+	if (negative || compare > 0) return false;
 
-	if (compare > 0) return false;
-	Int64 sum = 0;
-	for (i = 0; i < INT64_DIGITS; i++) {
+	UInt64 sum = 0;
+	for (i = 0; i < UINT64_DIGITS; i++) {
 		sum *= 10; sum += digits[i] - '0';
 	}
 
-	if (negative) sum = -sum;
 	*value = sum;
 	return true;
 }

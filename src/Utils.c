@@ -38,34 +38,28 @@ Int32 DateTime_TotalDays(DateTime* time) {
 	return days;
 }
 
-Int64 DateTime_TotalMs(DateTime* time) {
+UInt64 DateTime_TotalMs(DateTime* time) {
 	Int32 days = DateTime_TotalDays(time);
-	Int64 seconds =
-		((Int64)days) * DATETIME_SECONDS_PER_DAY +
-		time->Hour    * DATETIME_SECONDS_PER_HOUR +
-		time->Minute  * DATETIME_SECONDS_PER_MINUTE +
+	UInt64 seconds =
+		(UInt64)days * DATETIME_SECONDS_PER_DAY +
+		time->Hour   * DATETIME_SECONDS_PER_HOUR +
+		time->Minute * DATETIME_SECONDS_PER_MINUTE +
 		time->Second;
-	return seconds * DATETIME_MILLISECS_PER_SECOND + time->Milli;
+	return seconds * DATETIME_MILLIS_PER_SEC + time->Milli;
 }
 
-Int64 DateTime_MsBetween(DateTime* start, DateTime* end) {
-	Int64 msStart = DateTime_TotalMs(start);
-	Int64 msEnd   = DateTime_TotalMs(end);
-	return msEnd - msStart;
-}
-
-void DateTime_FromTotalMs(DateTime* time, Int64 ms) {
+void DateTime_FromTotalMs(DateTime* time, UInt64 ms) {
 	/* Work out time component for just this day */
-	Int32 dayMS = ms % (Int64)DATETIME_MILLISECS_PER_DAY;
-	time->Milli  = dayMS % DATETIME_MILLISECS_PER_SECOND; dayMS /= DATETIME_MILLISECS_PER_SECOND;
-	time->Second = dayMS % DATETIME_SECONDS_PER_MINUTE;   dayMS /= DATETIME_SECONDS_PER_MINUTE;
-	time->Minute = dayMS % DATETIME_MINUTES_PER_HOUR;     dayMS /= DATETIME_MINUTES_PER_HOUR;
-	time->Hour   = dayMS % DATETIME_HOURS_PER_DAY;        dayMS /= DATETIME_HOURS_PER_DAY;
+	Int32 dayMS  = (Int32)(ms % DATETIME_MILLISECS_PER_DAY);
+	time->Milli  = dayMS % DATETIME_MILLIS_PER_SEC;     dayMS /= DATETIME_MILLIS_PER_SEC;
+	time->Second = dayMS % DATETIME_SECONDS_PER_MINUTE; dayMS /= DATETIME_SECONDS_PER_MINUTE;
+	time->Minute = dayMS % DATETIME_MINUTES_PER_HOUR;   dayMS /= DATETIME_MINUTES_PER_HOUR;
+	time->Hour   = dayMS % DATETIME_HOURS_PER_DAY;      dayMS /= DATETIME_HOURS_PER_DAY;
 
 	/* Then work out day/month/year component (inverse TotalDays operation) */
 	/* Probably not the most efficient way of doing this. But it passes my tests at */
 	/* https://gist.github.com/UnknownShadow200/30993c66464bb03ead01577f3ab2a653 */
-	Int32 days = ms / (Int64)DATETIME_MILLISECS_PER_DAY;
+	Int32 days = (Int32)(ms / DATETIME_MILLISECS_PER_DAY);
 	Int32 year = 1 + ((days / DAYS_IN_400_YEARS) * 400); days %= DAYS_IN_400_YEARS;
 	bool leap;
 
@@ -87,15 +81,18 @@ void DateTime_FromTotalMs(DateTime* time, Int64 ms) {
 	}
 }
 
-void DateTime_HttpDate(DateTime* value, STRING_TRANSIENT String* str) {
+void DateTime_HttpDate(UInt64 ms, STRING_TRANSIENT String* str) {
 	static char* days_of_weeks[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
 	static char* month_names[13] = { NULL, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-	Int32 dow = DateTime_TotalDays(value) % 7;
 
-	char* dayOfWeek = days_of_weeks[dow];
-	Int32 day = value->Day, year = value->Year;
-	char* month = month_names[value->Month];
-	Int32 hour = value->Hour, min = value->Minute, sec = value->Second;
+	DateTime value;
+	DateTime_FromTotalMs(&value, ms);
+	Int32 days = DateTime_TotalDays(&value);
+
+	char* dayOfWeek = days_of_weeks[days % 7];
+	Int32 day   = value.Day, year = value.Year;
+	char* month = month_names[value.Month];
+	Int32 hour  = value.Hour, min = value.Minute, sec = value.Second;
 
 	String_Format4(str, "%c, %p2 %c %p4", dayOfWeek, &day, month, &year);
 	String_Format3(str, " %p2:%p2:%p2 GMT", &hour, &min, &sec);

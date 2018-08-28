@@ -92,13 +92,13 @@ char Convert_UnicodeToCP437(UInt16 c);
 bool Convert_TryUnicodeToCP437(UInt16 c, char* value);
 void String_DecodeUtf8(STRING_TRANSIENT String* str, UInt8* data, UInt32 len);
 
-bool Convert_TryParseUInt8(STRING_PURE String* str, UInt8* value);
-bool Convert_TryParseInt16(STRING_PURE String* str, Int16* value);
+bool Convert_TryParseUInt8(STRING_PURE String*  str, UInt8* value);
+bool Convert_TryParseInt16(STRING_PURE String*  str, Int16* value);
 bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value);
-bool Convert_TryParseInt32(STRING_PURE String* str, Int32* value);
-bool Convert_TryParseInt64(STRING_PURE String* str, Int64* value);
+bool Convert_TryParseInt32(STRING_PURE String*  str, Int32* value);
+bool Convert_TryParseUInt64(STRING_PURE String* str, UInt64* value);
 bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value);
-bool Convert_TryParseBool(STRING_PURE String* str, bool* value);
+bool Convert_TryParseBool(STRING_PURE String*   str, bool* value);
 
 #define STRINGSBUFFER_BUFFER_DEF_SIZE 4096
 #define STRINGSBUFFER_FLAGS_DEF_ELEMS 256

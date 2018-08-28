@@ -124,11 +124,8 @@ static void Handlers_AddEntity(UInt8* data, EntityID id, STRING_TRANSIENT String
 		Player_ResetSkin((struct Player*)p);
 		p->FetchedSkin = false;
 
-		String player_name = String_ClearedArray(p->DisplayNameRaw);
-		String_Copy(&player_name, displayName);
-		String player_skin = String_ClearedArray(p->SkinNameRaw);
-		String_Copy(&player_skin, skinName);
-		Player_UpdateName((struct Player*)p);
+		Player_SetName((struct Player*)p, displayName, skinName);
+		Player_UpdateNameTex((struct Player*)p);
 	}
 
 	if (!readPosition) return;
@@ -297,7 +294,7 @@ static void WoM_Tick(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Classic protocol-----------------------------------------------------*
 *#########################################################################################################################*/
-DateTime mapReceiveStart;
+UInt64 mapReceiveStart;
 struct InflateState mapInflateState;
 struct Stream mapInflateStream;
 bool mapInflateInited;
@@ -409,8 +406,8 @@ static void Classic_StartLoading(void) {
 	mapInflateInited = true;
 
 	mapSizeIndex = 0;
-	mapIndex = 0;
-	DateTime_CurrentUTC(&mapReceiveStart);
+	mapIndex     = 0;
+	mapReceiveStart = DateTime_CurrentUTC_MS();
 }
 
 static void Classic_LevelInit(UInt8* data) {
@@ -478,8 +475,7 @@ static void Classic_LevelFinalise(UInt8* data) {
 	Int32 mapHeight = Stream_GetU16_BE(&data[2]);
 	Int32 mapLength = Stream_GetU16_BE(&data[4]);
 
-	DateTime now; DateTime_CurrentUTC(&now);
-	Int32 loadingMs = (Int32)DateTime_MsBetween(&mapReceiveStart, &now);
+	Int32 loadingMs = (Int32)(DateTime_CurrentUTC_MS() - mapReceiveStart);
 	Platform_Log1("map loading took: %i", &loadingMs);
 
 	World_SetNewMap(map, mapVolume, mapWidth, mapHeight, mapLength);

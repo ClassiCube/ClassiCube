@@ -31,11 +31,11 @@ void TextureCache_Deny(STRING_PURE String* url);
 
 bool TextureCache_HasUrl(STRING_PURE String* url);
 bool TextureCache_GetStream(STRING_PURE String* url, struct Stream* stream);
-void TextureCache_GetLastModified(STRING_PURE String* url, DateTime* time);
+void TextureCache_GetLastModified(STRING_PURE String* url, UInt64* time);
 void TextureCache_GetETag(STRING_PURE String* url, STRING_PURE String* etag);
 void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length);
 void TextureCache_AddETag(STRING_PURE String* url, STRING_PURE String* etag);
-void TextureCache_AddLastModified(STRING_PURE String* url, DateTime* lastModified);
+void TextureCache_AddLastModified(STRING_PURE String* url, UInt64* lastModified);
 
 void TexturePack_ExtractZip_File(STRING_PURE String* filename);
 void TexturePack_ExtractDefault(void);

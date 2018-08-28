@@ -52,7 +52,6 @@ ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <sys/stat.h>
 #include <X11/Xlib.h>
 
-#define UNIX_EPOCH 62135596800
 #define Socket__Error() errno
 #define Nix_Return(success) ((success) ? 0 : errno)
 
@@ -165,6 +164,15 @@ void Platform_LogConst(const char* message) {
 	OutputDebugStringA("\n");
 }
 
+#define FILETIME_EPOCH 50491123200000ULL
+#define FileTime_TotalMS(time) (((time) / 10000) + FILETIME_EPOCH)
+UInt64 DateTime_CurrentUTC_MS(void) {
+	FILETIME ft; GetSystemTimeAsFileTime(&ft);
+	/* in 100 nanosecond units, since Jan 1 1601 */
+	UInt64 raw = ft.dwLowDateTime | ((UInt64)ft.dwHighDateTime << 32);
+	return FileTime_TotalMS(raw);
+}
+
 static void Platform_FromSysTime(DateTime* time, SYSTEMTIME* sysTime) {
 	time->Year   = (UInt16)sysTime->wYear;
 	time->Month  =  (UInt8)sysTime->wMonth;
@@ -187,10 +195,10 @@ void DateTime_CurrentLocal(DateTime* time) {
 	Platform_FromSysTime(time, &localTime);
 }
 
-bool stopwatch_highResolution;
-LARGE_INTEGER stopwatch_freq;
+bool sw_highRes;
+LARGE_INTEGER sw_freq;
 void Stopwatch_Measure(struct Stopwatch* timer) {
-	if (stopwatch_highResolution) {
+	if (sw_highRes) {
 		LARGE_INTEGER value;
 		QueryPerformanceCounter(&value);
 		timer->Data[0] = value.QuadPart;
@@ -208,8 +216,8 @@ Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {
 	Stopwatch_Measure(timer);
 	Int64 end = timer->Data[0];
 
-	if (stopwatch_highResolution) {
-		return (Int32)(((end - start) * 1000 * 1000) / stopwatch_freq.QuadPart);
+	if (sw_highRes) {
+		return (Int32)(((end - start) * 1000 * 1000) / sw_freq.QuadPart);
 	} else {
 		return (Int32)((end - start) / 10);
 	}
@@ -217,6 +225,8 @@ Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {
 #elif CC_BUILD_NIX
 void Platform_Log(STRING_PURE String* message) { puts(message->buffer); }
 void Platform_LogConst(const char* message) { puts(message); }
+
+#define UNIX_EPOCH 62135596800ULL
 
 static void Platform_FromSysTime(DateTime* time, struct tm* sysTime) {
 	time->Year   = sysTime->tm_year + 1900;
@@ -318,15 +328,14 @@ ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCal
 	return Win_Return(result == ERROR_NO_MORE_FILES);
 }
 
-ReturnCode File_GetModifiedTime(STRING_PURE String* path, DateTime* time) {
+ReturnCode File_GetModifiedTime_MS(STRING_PURE String* path, UInt64* time) {
 	void* file; ReturnCode result = File_Open(&file, path);
 	if (result) return result;
 
-	FILETIME writeTime;
-	if (GetFileTime(file, NULL, NULL, &writeTime)) {
-		SYSTEMTIME sysTime;
-		FileTimeToSystemTime(&writeTime, &sysTime);
-		Platform_FromSysTime(time, &sysTime);
+	FILETIME ft;
+	if (GetFileTime(file, NULL, NULL, &ft)) {
+		UInt64 raw = ft.dwLowDateTime | ((UInt64)ft.dwHighDateTime << 32);
+		*time = FileTime_TotalMS(raw);
 	} else {
 		result = GetLastError();
 	}
@@ -426,12 +435,12 @@ ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCal
 	return result;
 }
 
-ReturnCode File_GetModifiedTime(STRING_PURE String* path, DateTime* time) {
+ReturnCode File_GetModifiedTime_MS(STRING_PURE String* path, DateTime* time) {
 	char str[600]; Platform_ConvertString(str, path);
 	struct stat sb;
 	if (stat(str, &sb) == -1) return errno;
 
-	DateTime_FromTotalMs(time, UNIX_EPOCH + sb.st_mtime); 
+	*time = UNIX_EPOCH + sb.st_mtime; /* TODO: is this right */
 	return 0;
 }
 
@@ -875,15 +884,14 @@ void Http_Init(void) {
 
 static ReturnCode Http_Make(struct AsyncRequest* req, HINTERNET* handle) {
 	String url = String_FromRawArray(req->URL);
-	char headersBuffer[STRING_SIZE * 2];
-	String headers = String_MakeNull();
+	char headersBuffer[STRING_SIZE * 2] = { 0 };
+	String headers = String_FromArray(headersBuffer);
 
 	/* https://stackoverflow.com/questions/25308488/c-wininet-custom-http-headers */
-	if (req->Etag[0] || req->LastModified.Year) {
-		headers = String_ClearedArray(headersBuffer);
-		if (req->LastModified.Year) {
+	if (req->Etag[0] || req->LastModified) {
+		if (req->LastModified) {
 			String_AppendConst(&headers, "If-Modified-Since: ");
-			DateTime_HttpDate(&req->LastModified, &headers);
+			DateTime_HttpDate(req->LastModified, &headers);
 			String_AppendConst(&headers, "\r\n");
 		}
 
@@ -894,7 +902,7 @@ static ReturnCode Http_Make(struct AsyncRequest* req, HINTERNET* handle) {
 			String_AppendConst(&headers, "\r\n");
 		}
 		String_AppendConst(&headers, "\r\n\r\n");
-	}
+	} else { headers.buffer = NULL; }
 
 	*handle = InternetOpenUrlA(hInternet, url.buffer, headers.buffer, headers.length,
 		INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD, 0);
@@ -906,16 +914,17 @@ static ReturnCode Http_GetHeaders(struct AsyncRequest* req, HINTERNET handle) {
 
 	UInt32 status;
 	len = sizeof(DWORD);
-	if (!HttpQueryInfoA(handle, FLAG_STATUS, &status, &len, NULL)) return GetLastError();
-	req->StatusCode = status;
+	if (!HttpQueryInfoA(handle, FLAG_STATUS, &req->StatusCode, &len, NULL)) return GetLastError();
 
 	len = sizeof(DWORD);
 	if (!HttpQueryInfoA(handle, FLAG_LENGTH, &req->ResultSize, &len, NULL)) return GetLastError();
 
-	SYSTEMTIME time;
+	SYSTEMTIME sysTime;
 	len = sizeof(SYSTEMTIME);
-	if (HttpQueryInfoA(handle, FLAG_LASTMOD, &time, &len, NULL)) {
-		Platform_FromSysTime(&req->LastModified, &time);
+	if (HttpQueryInfoA(handle, FLAG_LASTMOD, &sysTime, &len, NULL)) {
+		DateTime time;
+		Platform_FromSysTime(&time, &sysTime);
+		req->LastModified = DateTime_TotalMs(&time);
 	}
 
 	String etag = String_ClearedArray(req->Etag);
@@ -1126,7 +1135,7 @@ void Platform_Init(void) {
 	SetBkColor(hdc, 0x00000000);
 	SetBkMode(hdc, OPAQUE);
 
-	stopwatch_highResolution = QueryPerformanceFrequency(&stopwatch_freq);
+	sw_highRes = QueryPerformanceFrequency(&sw_freq);
 	WSADATA wsaData;
 	ReturnCode wsaResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	ErrorHandler_CheckOrFail(wsaResult, "WSAStartup failed");

@@ -61,8 +61,8 @@ struct HacksComp {
 
 	bool Noclip, Flying, FlyingUp, FlyingDown, Speeding, HalfSpeeding;
 	bool Floating; /* true if NoClip or Flying */
-	char HacksFlagsBuffer[STRING_SIZE * 2];
 	String HacksFlags;
+	char __HacksFlagsBuffer[STRING_SIZE * 2];	
 };
 
 void HacksComp_Init(struct HacksComp* hacks);

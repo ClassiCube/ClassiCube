@@ -49,6 +49,7 @@ void Platform_Log2(const char* format, const void* a1, const void* a2);
 void Platform_Log3(const char* format, const void* a1, const void* a2, const void* a3);
 void Platform_Log4(const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
 
+UInt64 DateTime_CurrentUTC_MS(void);
 void DateTime_CurrentUTC(DateTime* time);
 void DateTime_CurrentLocal(DateTime* time);
 struct Stopwatch { Int64 Data[2]; };
@@ -60,7 +61,7 @@ ReturnCode Directory_Create(STRING_PURE String* path);
 typedef void Directory_EnumCallback(STRING_PURE String* filename, void* obj);
 ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCallback callback);
 bool File_Exists(STRING_PURE String* path);
-ReturnCode File_GetModifiedTime(STRING_PURE String* path, DateTime* time);
+ReturnCode File_GetModifiedTime_MS(STRING_PURE String* path, UInt64* ms);
 
 ReturnCode File_Create(void** file, STRING_PURE String* path);
 ReturnCode File_Open(void** file, STRING_PURE String* path);

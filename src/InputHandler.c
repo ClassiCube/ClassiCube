@@ -22,7 +22,7 @@ bool input_buttonsDown[3];
 Int32 input_pickingId = -1;
 Int32 input_normViewDists[10] = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
 Int32 input_classicViewDists[4] = { 8, 32, 128, 512 };
-DateTime input_lastClick;
+UInt64 input_lastClick;
 Real32 input_fovIndex = -1.0f;
 
 bool InputHandler_IsMousePressed(MouseButton button) {
@@ -59,7 +59,7 @@ static void InputHandler_ButtonStateChanged(MouseButton button, bool pressed) {
 
 void InputHandler_ScreenChanged(struct Screen* oldScreen, struct Screen* newScreen) {
 	if (oldScreen && oldScreen->HandlesAllInput) {
-		DateTime_CurrentUTC(&input_lastClick);
+		input_lastClick = DateTime_CurrentUTC_MS();
 	}
 
 	if (ServerConnection_SupportsPlayerClick) {
@@ -299,8 +299,8 @@ static bool InputHandler_CheckIsFree(BlockID block) {
 }
 
 void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) {
-	DateTime now; DateTime_CurrentUTC(&now);
-	Int64 delta = DateTime_MsBetween(&input_lastClick, &now);
+	UInt64 now = DateTime_CurrentUTC_MS();
+	Int32 delta = (Int32)(now - input_lastClick);
 	if (cooldown && delta < 250) return; /* 4 times per second */
 
 	input_lastClick = now;
@@ -398,7 +398,7 @@ static void InputHandler_MouseDown(void* obj, Int32 button) {
 		bool right  = button == MouseButton_Right;
 		InputHandler_PickBlocks(false, left, middle, right);
 	} else {
-		DateTime_CurrentUTC(&input_lastClick);
+		input_lastClick = DateTime_CurrentUTC_MS();
 	}
 }
 

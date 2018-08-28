@@ -53,7 +53,7 @@ void ServerConnection_DownloadTexturePack(STRING_PURE String* url) {
 	if (TextureCache_HasDenied(url)) return;
 	UInt8 etagBuffer[STRING_SIZE] = { 0 };
 	String etag = String_FromArray(etagBuffer);
-	DateTime lastModified = { 0 };
+	UInt64 lastModified = 0;
 
 	if (TextureCache_HasUrl(url)) {
 		TextureCache_GetLastModified(url, &lastModified);
@@ -84,15 +84,13 @@ void ServerConnection_CheckAsyncResources(void) {
 *--------------------------------------------------------PingList---------------------------------------------------------*
 *#########################################################################################################################*/
 struct PingEntry {
-	Int64 TimeSent, TimeReceived;
-	UInt16 Data;
+	Int64 TimeSent, TimeReceived; UInt16 Data;
 };
 struct PingEntry PingList_Entries[10];
 
 UInt16 PingList_Set(Int32 i, UInt16 prev) {
-	DateTime now; DateTime_CurrentUTC(&now);
 	PingList_Entries[i].Data = (UInt16)(prev + 1);
-	PingList_Entries[i].TimeSent = DateTime_TotalMs(&now);
+	PingList_Entries[i].TimeSent = DateTime_CurrentUTC_MS();
 	PingList_Entries[i].TimeReceived = 0;
 	return (UInt16)(prev + 1);
 }
@@ -101,7 +99,8 @@ UInt16 PingList_NextPingData(void) {
 	/* Find free ping slot */
 	Int32 i;
 	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
-		if (PingList_Entries[i].TimeSent != 0) continue;
+		if (PingList_Entries[i].TimeSent) continue;
+
 		UInt16 prev = i > 0 ? PingList_Entries[i - 1].Data : 0;
 		return PingList_Set(i, prev);
 	}
@@ -118,8 +117,8 @@ void PingList_Update(UInt16 data) {
 	Int32 i;
 	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
 		if (PingList_Entries[i].Data != data) continue;
-		DateTime now; DateTime_CurrentUTC(&now);
-		PingList_Entries[i].TimeReceived = DateTime_TotalMs(&now);
+
+		PingList_Entries[i].TimeReceived = DateTime_CurrentUTC_MS();
 		return;
 	}
 }
@@ -244,12 +243,12 @@ UInt8* net_readCurrent;
 
 bool net_writeFailed;
 Int32 net_ticks;
-DateTime net_lastPacket;
+UInt64 net_lastPacket;
 UInt8 net_lastOpcode;
 Real64 net_discAccumulator;
 
 bool net_connecting;
-Int64 net_connectTimeout;
+UInt64 net_connectTimeout;
 #define NET_TIMEOUT_MS (15 * 1000)
 
 static void MPConnection_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
@@ -273,7 +272,7 @@ static void MPConnection_FinishConnect(void) {
 	Handlers_Reset();
 	Classic_WriteLogin(&Game_Username, &Game_Mppass);
 	Net_SendPacket();
-	DateTime_CurrentUTC(&net_lastPacket);
+	net_lastPacket = DateTime_CurrentUTC_MS();
 }
 
 static void MPConnection_FailConnect(ReturnCode result) {
@@ -303,19 +302,17 @@ static void MPConnection_TickConnect(void) {
 		return;
 	}
 
-	DateTime now; DateTime_CurrentUTC(&now);
-	Int64 nowMS = DateTime_TotalMs(&now);
-
+	UInt64 now = DateTime_CurrentUTC_MS();
 	bool poll_write = false;
 	Socket_Select(net_socket, SOCKET_SELECT_WRITE, &poll_write);
 
 	if (poll_write) {
 		Socket_SetBlocking(net_socket, true);
 		MPConnection_FinishConnect();
-	} else if (nowMS > net_connectTimeout) {
+	} else if (now > net_connectTimeout) {
 		MPConnection_FailConnect(0);
 	} else {
-		Int64 leftMS = net_connectTimeout - nowMS;
+		Int32 leftMS = (Int32)(net_connectTimeout - now);
 		Event_RaiseReal(&WorldEvents_Loading, (Real32)leftMS / NET_TIMEOUT_MS);
 	}
 }
@@ -327,8 +324,7 @@ static void MPConnection_BeginConnect(void) {
 
 	Socket_SetBlocking(net_socket, false);
 	net_connecting = true;
-	DateTime now; DateTime_CurrentUTC(&now);
-	net_connectTimeout = DateTime_TotalMs(&now) + NET_TIMEOUT_MS;
+	net_connectTimeout = DateTime_CurrentUTC_MS() + NET_TIMEOUT_MS;
 
 	ReturnCode res = Socket_Connect(net_socket, &Game_IPAddress, Game_Port);
 	if (res && res != ReturnCode_SocketInProgess && res != ReturnCode_SocketWouldBlock) {
@@ -381,8 +377,9 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	if (ServerConnection_Disconnected) return;
 	if (net_connecting) { MPConnection_TickConnect(); return; }
 
-	DateTime now; DateTime_CurrentUTC(&now);
-	if (DateTime_MsBetween(&net_lastPacket, &now) >= 30 * 1000) {
+	/* over 30 seconds since last packet */
+	UInt64 now = DateTime_CurrentUTC_MS();
+	if (net_lastPacket + (30 * 1000) < now) {
 		MPConnection_CheckDisconnection(task->Interval);
 	}
 	if (ServerConnection_Disconnected) return;
@@ -431,7 +428,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 
 		if (net_readCurrent + Net_PacketSizes[opcode] > readEnd) break;
 		net_lastOpcode = opcode;
-		DateTime_CurrentUTC(&net_lastPacket);
+		net_lastPacket = DateTime_CurrentUTC_MS();
 
 		Net_Handler handler = Net_Handlers[opcode];
 		if (!handler) { 

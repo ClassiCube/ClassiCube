@@ -145,10 +145,11 @@ static void Soundboard_Init(struct Soundboard* board, STRING_PURE String* boardN
 			if (board->Count == Array_Elems(board->Groups)) {
 				Chat_AddRaw("&cCannot have more than 10 sound groups"); return;
 			}
-
 			group = &board->Groups[board->Count++];
-			group->Name = String_ClearedArray(group->NameBuffer);
-			String_Copy(&group->Name, &name);
+
+			String str = String_FromArray(group->NameBuffer);
+			String_Copy(&str, &name);
+			group->Name = str;
 		}
 
 		if (group->Count == Array_Elems(group->Sounds)) {

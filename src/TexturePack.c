@@ -275,7 +275,7 @@ static void EntryList_UNSAFE_Make(struct EntryList* list, STRING_REF const char*
 *#########################################################################################################################*/
 #define TEXCACHE_FOLDER "texturecache"
 /* Because I didn't store milliseconds in original C# client */
-#define TEXCACHE_TICKS_PER_MS 10000LL
+#define TEXCACHE_TICKS_PER_MS 10000
 struct EntryList cache_accepted, cache_denied, cache_eTags, cache_lastModified;
 
 #define TexCache_InitAndMakePath(url) char pathBuffer[FILENAME_SIZE]; \
@@ -335,19 +335,17 @@ void TexturePack_GetFromTags(STRING_PURE String* url, STRING_TRANSIENT String* r
 	}
 }
 
-void TextureCache_GetLastModified(STRING_PURE String* url, DateTime* time) {
+void TextureCache_GetLastModified(STRING_PURE String* url, UInt64* time) {
 	char entryBuffer[STRING_SIZE];
 	String entry = String_FromArray(entryBuffer);
 	TexturePack_GetFromTags(url, &entry, &cache_lastModified);
+	UInt64 temp;
 
-	Int64 ticks;
-	DateTime temp;
-
-	if (entry.length && Convert_TryParseInt64(&entry, &ticks)) {
-		DateTime_FromTotalMs(time, ticks / TEXCACHE_TICKS_PER_MS);
+	if (entry.length && Convert_TryParseUInt64(&entry, &temp)) {
+		*time = temp / TEXCACHE_TICKS_PER_MS;
 	} else {
 		TexCache_InitAndMakePath(url);
-		ReturnCode res = File_GetModifiedTime(&path, &temp);
+		ReturnCode res = File_GetModifiedTime_MS(&path, &temp);
 
 		if (res) { Chat_LogError(res, "getting last modified time of", url); return; }
 		*time = temp;
@@ -396,9 +394,9 @@ void TextureCache_AddETag(STRING_PURE String* url, STRING_PURE String* etag) {
 	TextureCache_AddToTags(url, etag, &cache_eTags);
 }
 
-void TextureCache_AddLastModified(STRING_PURE String* url, DateTime* lastModified) {
-	if (!lastModified->Year && !lastModified->Month) return;
-	Int64 ticks = DateTime_TotalMs(lastModified) * TEXCACHE_TICKS_PER_MS;
+void TextureCache_AddLastModified(STRING_PURE String* url, UInt64* lastModified) {
+	if (!lastModified) return;
+	UInt64 ticks = (*lastModified) * TEXCACHE_TICKS_PER_MS;
 
 	char dataBuffer[STRING_SIZE];
 	String data = String_FromArray(dataBuffer);

@@ -130,7 +130,8 @@ void TabList_MakeComponent(struct IGameComponent* comp);
 
 /* Represents a player entity. */
 struct Player { Player_Layout };
-void Player_UpdateName(struct Player* player);
+void Player_SetName(struct Player* player, STRING_PURE String* name, STRING_PURE String* skin);
+void Player_UpdateNameTex(struct Player* player);
 void Player_ResetSkin(struct Player* player);
 
 /* Represents another entity in multiplayer */

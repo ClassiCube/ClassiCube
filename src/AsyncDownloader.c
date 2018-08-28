@@ -78,7 +78,7 @@ bool ManageCookies;
 bool KeepAlive;
 /* TODO: Connection pooling */
 
-static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 type, DateTime* lastModified, String* etag, String* data) {
+static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 type, UInt64* lastModified, String* etag, String* data) {
 	Mutex_Lock(async_pendingMutex);
 	{
 		struct AsyncRequest req = { 0 };
@@ -96,7 +96,7 @@ static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 ty
 		}
 		/* request.Data = data; TODO: Implement this. do we need to copy or expect caller to malloc it?  */
 
-		DateTime_CurrentUTC(&req.TimeAdded);
+		req.TimeAdded = DateTime_CurrentUTC_MS();
 		if (priority) {
 			AsyncRequestList_Prepend(&async_pending, &req);
 		} else {
@@ -134,18 +134,19 @@ void AsyncDownloader_PostString(STRING_PURE String* url, bool priority, STRING_P
 	AsyncDownloader_Add(url, priority, id, REQUEST_TYPE_DATA, NULL, NULL, contents);
 }
 
-void AsyncDownloader_GetDataEx(STRING_PURE String* url, bool priority, STRING_PURE String* id, DateTime* lastModified, STRING_PURE String* etag) {
+void AsyncDownloader_GetDataEx(STRING_PURE String* url, bool priority, STRING_PURE String* id, UInt64* lastModified, STRING_PURE String* etag) {
 	AsyncDownloader_Add(url, priority, id, REQUEST_TYPE_DATA, lastModified, etag, NULL);
 }
 
 void AsyncDownloader_PurgeOldEntriesTask(struct ScheduledTask* task) {
 	Mutex_Lock(async_processedMutex);
 	{
-		DateTime now; DateTime_CurrentUTC(&now);
+		UInt64 now = DateTime_CurrentUTC_MS();
 		Int32 i;
+
 		for (i = async_processed.Count - 1; i >= 0; i--) {
 			struct AsyncRequest* item = &async_processed.Requests[i];
-			if (DateTime_MsBetween(&item->TimeDownloaded, &now) <= 10 * 1000) continue;
+			if (item->TimeDownloaded + (10 * 1000) >= now) continue;
 
 			ASyncRequest_Free(item);
 			AsyncRequestList_RemoveAt(&async_processed, i);
@@ -198,7 +199,7 @@ static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	ReturnCode res = Http_Do(request, &async_curProgress);
 	UInt32 elapsed = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
 
-	UInt32 status = request->StatusCode;
+	Int32 status = request->StatusCode;
 	Platform_Log3("HTTP: return code %i (http %i), in %i ms", &res, &status, &elapsed);
 
 	if (request->ResultData) {
@@ -209,7 +210,7 @@ static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 }
 
 static void AsyncDownloader_CompleteResult(struct AsyncRequest* request) {
-	DateTime_CurrentUTC(&request->TimeDownloaded);
+	request->TimeDownloaded = DateTime_CurrentUTC_MS();
 	Mutex_Lock(async_processedMutex);
 	{
 		struct AsyncRequest older;
@@ -219,7 +220,7 @@ static void AsyncDownloader_CompleteResult(struct AsyncRequest* request) {
 		if (index >= 0) {
 			/* very rare case - priority item was inserted, then inserted again (so put before first item), */
 			/* and both items got downloaded before an external function removed them from the queue */
-			if (DateTime_TotalMs(&older.TimeAdded) > DateTime_TotalMs(&request->TimeAdded)) {
+			if (older.TimeAdded > request->TimeAdded) {
 				struct AsyncRequest tmp = older; older = *request; *request = tmp;
 			}
 

@@ -310,7 +310,7 @@ static void Entities_ChatFontChanged(void* obj) {
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
-		Player_UpdateName((struct Player*)Entities_List[i]);
+		Player_UpdateNameTex((struct Player*)Entities_List[i]);
 	}
 }
 
@@ -503,7 +503,7 @@ static void Player_MakeNameTexture(struct Player* player) {
 	Drawer2D_UseBitmappedChat = bitmapped;
 }
 
-void Player_UpdateName(struct Player* player) {
+void Player_UpdateNameTex(struct Player* player) {
 	struct Entity* entity = &player->Base;
 	entity->VTABLE->ContextLost(entity);
 
@@ -733,14 +733,14 @@ static void Player_ContextLost(struct Entity* entity) {
 
 static void Player_ContextRecreated(struct Entity* entity) {
 	struct Player* player = (struct Player*)entity;
-	Player_UpdateName(player);
+	Player_UpdateNameTex(player);
 }
 
-static void Player_SetName(struct Player* player, STRING_PURE String* displayName, STRING_PURE String* skinName) {
-	String dstDisplayName = String_ClearedArray(player->DisplayNameRaw);
-	String_AppendString(&dstDisplayName, displayName);
-	String dstSkinName = String_ClearedArray(player->SkinNameRaw);
-	String_AppendString(&dstSkinName, skinName);
+void Player_SetName(struct Player* player, STRING_PURE String* name, STRING_PURE String* skin) {
+	String p_name = String_ClearedArray(player->DisplayNameRaw);
+	String_AppendString(&p_name, name);
+	String p_skin = String_ClearedArray(player->SkinNameRaw);
+	String_AppendString(&p_skin, skin);
 }
 
 struct EntityVTABLE player_VTABLE;

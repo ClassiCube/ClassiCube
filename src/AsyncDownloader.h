@@ -20,14 +20,13 @@ struct AsyncRequest {
 	char URL[STRING_SIZE];
 	char ID[STRING_SIZE];
 
-	DateTime TimeAdded;
-	DateTime TimeDownloaded;
-	UInt16 StatusCode;
+	UInt64 TimeAdded, TimeDownloaded;
+	Int32  StatusCode;
 
 	void* ResultData;
 	UInt32 ResultSize;
 
-	DateTime LastModified;   /* Time item cached at (if at all) */
+	UInt64 LastModified;     /* Time item cached at (if at all) */
 	UInt8 Etag[STRING_SIZE]; /* ETag of cached item (if any) */
 	UInt8 RequestType;
 };
@@ -40,7 +39,7 @@ void AsyncDownloader_GetData(STRING_PURE String* url, bool priority, STRING_PURE
 void AsyncDownloader_GetContentLength(STRING_PURE String* url, bool priority, STRING_PURE String* id);
 /* TODO: Implement post */
 /* void AsyncDownloader_PostString(STRING_PURE String* url, bool priority, STRING_PURE String* id, STRING_PURE String* contents); */
-void AsyncDownloader_GetDataEx(STRING_PURE String* url, bool priority, STRING_PURE String* id, DateTime* lastModified, STRING_PURE String* etag);
+void AsyncDownloader_GetDataEx(STRING_PURE String* url, bool priority, STRING_PURE String* id, UInt64* lastModified, STRING_PURE String* etag);
 
 bool AsyncDownloader_Get(STRING_PURE String* id, struct AsyncRequest* item);
 bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, Int32* progress);

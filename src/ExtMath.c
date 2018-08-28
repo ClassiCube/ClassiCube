@@ -116,9 +116,8 @@ Real64 Math_FastExp(Real64 x) {
 
 void Random_Init(Random* seed, Int32 seedInit) { Random_SetSeed(seed, seedInit); }
 void Random_InitFromCurrentTime(Random* rnd) {
-	DateTime now; DateTime_CurrentUTC(&now);
-	Int64 totalMs = DateTime_TotalMs(&now);
-	Random_Init(rnd, (Int32)totalMs);
+	UInt64 now = DateTime_CurrentUTC_MS();
+	Random_Init(rnd, (Int32)now);
 }
 
 void Random_SetSeed(Random* seed, Int32 seedInit) {

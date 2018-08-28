@@ -17,28 +17,29 @@
 
 #define CHAT_LOGTIMES_DEF_ELEMS 256
 #define CHAT_LOGTIMES_EXPAND_ELEMS 512
-Int64 Chat_DefaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
-Int64* Chat_LogTimes = Chat_DefaultLogTimes;
+UInt64 Chat_DefaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
+UInt64* Chat_LogTimes = Chat_DefaultLogTimes;
 UInt32 Chat_LogTimesMax = CHAT_LOGTIMES_DEF_ELEMS, Chat_LogTimesCount;
 
-void Chat_GetLogTime(UInt32 index, Int64* timeMs) {
+UInt64 Chat_GetLogTime(UInt32 index) {
 	if (index >= Chat_LogTimesCount) ErrorHandler_Fail("Tried to get time past LogTime end");
-	*timeMs = Chat_LogTimes[index];
+	return Chat_LogTimes[index];
 }
 
-static void Chat_AppendLogTime(void) {
-	DateTime now; DateTime_CurrentUTC(&now);
+static void Chat_AppendLogTime(void) {	
 	if (Chat_LogTimesCount == Chat_LogTimesMax) {
-		Utils_Resize(&Chat_LogTimes, &Chat_LogTimesMax, sizeof(Int64),
+		Utils_Resize(&Chat_LogTimes, &Chat_LogTimesMax, sizeof(UInt64),
 			CHAT_LOGTIMES_DEF_ELEMS, CHAT_LOGTIMES_EXPAND_ELEMS);
 	}
-	Chat_LogTimes[Chat_LogTimesCount++] = DateTime_TotalMs(&now);
+
+	UInt64 now = DateTime_CurrentUTC_MS();
+	Chat_LogTimes[Chat_LogTimesCount++] = now;
 }
 
 static void ChatLine_Make(struct ChatLine* line, STRING_TRANSIENT String* text) {
 	String dst = String_ClearedArray(line->Buffer);
 	String_AppendString(&dst, text);
-	DateTime_CurrentUTC(&line->Received);
+	line->Received = DateTime_CurrentUTC_MS();
 }
 
 char  Chat_LogNameBuffer[STRING_SIZE];
