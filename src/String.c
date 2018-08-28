@@ -49,9 +49,9 @@ void String_StripCols(STRING_TRANSIENT String* str) {
 	}
 }
 
-void String_Set(STRING_TRANSIENT String* str, STRING_PURE String* value) {
-	str->length = 0;
-	String_AppendString(str, value);
+void String_Copy(STRING_TRANSIENT String* dst, STRING_PURE String* src) {
+	dst->length = 0;
+	String_AppendString(dst, src);
 }
 
 String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 length) {
@@ -684,7 +684,7 @@ void StringsBuffer_Clear(StringsBuffer* buffer) {
 
 void StringsBuffer_Get(StringsBuffer* buffer, Int32 index, STRING_TRANSIENT String* text) {
 	String raw = StringsBuffer_UNSAFE_Get(buffer, index);
-	String_Set(text, &raw);
+	String_Copy(text, &raw);
 }
 
 String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, Int32 index) {

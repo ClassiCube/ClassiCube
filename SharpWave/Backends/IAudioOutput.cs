@@ -39,19 +39,20 @@ namespace SharpWave {
 			Play();
 		}
 		
-		bool BufferBlock(AudioChunk tmp, AudioFormat fmt, IEnumerator<AudioChunk> chunks) {
-			// decode up to around a second
-			int secondSize = fmt.SampleRate * fmt.Channels * sizeof(short);
-			tmp.Length = 0;			
+		bool BufferBlock(int i, AudioChunk tmp, int size, IEnumerator<AudioChunk> chunks) {
+			tmp.Length = 0;
+			bool end = false;
 			
-			while (tmp.Length < secondSize) {
-				if (!chunks.MoveNext()) return true;
+			while (tmp.Length < size) {
+				if (!chunks.MoveNext()) { end = true; break; }
 				AudioChunk src = chunks.Current;
 				
 				Buffer.BlockCopy(src.Data, 0, tmp.Data, tmp.Length, src.Length);
 				tmp.Length += src.Length;
 			}
-			return false;
+			
+			BufferData(i, tmp);
+			return end;
 		}
 		
 		public void PlayStreaming(Stream stream) {
@@ -64,19 +65,19 @@ namespace SharpWave {
 			
 			// largest possible vorbis frame decodes to blocksize1 samples
 			// so we may end up decoding slightly over a second of audio
-			int chunkSize = (fmt.SampleRate + 8192) * fmt.Channels * sizeof(short);
+			int chunkSize  = (fmt.SampleRate + 8192) * fmt.Channels * sizeof(short);
+			int secondSize = fmt.SampleRate * fmt.Channels * sizeof(short);
 			byte[][] data = new byte[NumBuffers][];
 			for (int i = 0; i < NumBuffers; i++) { data[i] = new byte[chunkSize]; }
 			
-			bool reachedEnd = false;
-			for (int i = 0; i < NumBuffers && !reachedEnd; i++) {
+			bool end = false;
+			for (int i = 0; i < NumBuffers && !end; i++) {
 				tmp.Data = data[i];
-				reachedEnd = BufferBlock(tmp, fmt, chunks);
-				BufferData(i, tmp);
+				end = BufferBlock(i, tmp, secondSize, chunks);
 			}
 			Play();
 			
-			for (; !reachedEnd;) {
+			for (; !end;) {
 				int next = -1;
 				for (int i = 0; i < NumBuffers; i++) {
 					if (IsCompleted(i)) { next = i; break; }
@@ -86,8 +87,7 @@ namespace SharpWave {
 				if (pendingStop) break;
 
 				tmp.Data = data[next];
-				reachedEnd = BufferBlock(tmp, fmt, chunks);
-				BufferData(next, tmp);
+				end = BufferBlock(next, tmp, secondSize, chunks);
 			}
 
 			while (!IsFinished()) { Thread.Sleep(10); }

@@ -82,8 +82,8 @@ static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 ty
 	Mutex_Lock(async_pendingMutex);
 	{
 		struct AsyncRequest req = { 0 };
-		String reqUrl = String_FromArray(req.URL); String_Set(&reqUrl, url);
-		String reqID  = String_FromArray(req.ID);  String_Set(&reqID, id);
+		String reqUrl = String_FromArray(req.URL); String_Copy(&reqUrl, url);
+		String reqID  = String_FromArray(req.ID);  String_Copy(&reqID, id);
 		req.RequestType = type;
 
 		Platform_Log2("Adding %s (type %b)", &reqUrl, &type);
@@ -92,7 +92,7 @@ static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 ty
 			req.LastModified = *lastModified;
 		}
 		if (etag) {
-			String reqEtag = String_FromArray(req.Etag); String_Set(&reqEtag, etag);
+			String reqEtag = String_FromArray(req.Etag); String_Copy(&reqEtag, etag);
 		}
 		/* request.Data = data; TODO: Implement this. do we need to copy or expect caller to malloc it?  */
 
@@ -112,7 +112,7 @@ void AsyncDownloader_GetSkin(STRING_PURE String* id, STRING_PURE String* skinNam
 	String url = String_FromArray(urlBuffer);
 
 	if (Utils_IsUrlPrefix(skinName, 0)) {
-		String_Set(&url, skinName);
+		String_Copy(&url, skinName);
 	} else {
 		String_AppendString(&url, &async_skinServer);
 		String_AppendColorless(&url, skinName);
@@ -192,43 +192,20 @@ bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, Int32* progress) {
 static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	String url = String_FromRawArray(request->URL);
 	Platform_Log2("Downloading from %s (type %b)", &url, &request->RequestType);
-	struct Stopwatch stopwatch; UInt32 elapsedMS;
+	struct Stopwatch stopwatch;
 
-	void* handle;
-	ReturnCode res;
 	Stopwatch_Start(&stopwatch);
-	res = Http_MakeRequest(request, &handle);
-	elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
-	Platform_Log2("HTTP make request: ret code %i, in %i ms", &res, &elapsedMS);
-	if (res) return;
+	ReturnCode res = Http_Do(request, &async_curProgress);
+	UInt32 elapsed = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
 
-	async_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
-	UInt32 size = 0;
-	Stopwatch_Start(&stopwatch);
-	res = Http_GetRequestHeaders(request, handle, &size);
-	elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
 	UInt32 status = request->StatusCode;
-	Platform_Log3("HTTP get headers: ret code %i (http %i), in %i ms", &res, &status, &elapsedMS);
+	Platform_Log3("HTTP: return code %i (http %i), in %i ms", &res, &status, &elapsed);
 
-	if (res || request->StatusCode != 200) {
-		Http_FreeRequest(handle); return;
+	if (request->ResultData) {
+		UInt32 size = request->ResultSize;
+		UInt64 addr = (UInt64)request->ResultData;
+		Platform_Log2("HTTP returned data: %i bytes at %x", &size, &addr);
 	}
-
-	void* data = NULL;
-	if (request->RequestType != REQUEST_TYPE_CONTENT_LENGTH) {
-		Stopwatch_Start(&stopwatch);
-		res = Http_GetRequestData(request, handle, &data, size, &async_curProgress);
-		elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
-		Platform_Log3("HTTP get data: ret code %i (size %i), in %i ms", &res, &size, &elapsedMS);
-	}
-
-	Http_FreeRequest(handle);
-	if (res) return;
-
-	UInt64 addr = (UInt64)data;
-	Platform_Log2("OK I got the DATA! %i bytes at %x", &size, &addr);
-	request->ResultData = data;
-	request->ResultSize = size;
 }
 
 static void AsyncDownloader_CompleteResult(struct AsyncRequest* request) {

@@ -102,8 +102,8 @@ static void Handlers_CheckName(EntityID id, STRING_TRANSIENT String* displayName
 	String nameNoCols = String_FromArray(nameNoColsBuffer);
 	String_AppendColorless(&nameNoCols, displayName);
 
-	if (!String_Equals(&nameNoCols, &Game_Username)) { String_Set(displayName, &Game_Username); }
-	if (!skinName->length) { String_Set(skinName, &Game_Username); }
+	if (!String_Equals(&nameNoCols, &Game_Username)) { String_Copy(displayName, &Game_Username); }
+	if (!skinName->length) { String_Copy(skinName, &Game_Username); }
 }
 
 static void Classic_ReadAbsoluteLocation(UInt8* data, EntityID id, bool interpolate);
@@ -125,9 +125,9 @@ static void Handlers_AddEntity(UInt8* data, EntityID id, STRING_TRANSIENT String
 		p->FetchedSkin = false;
 
 		String player_name = String_ClearedArray(p->DisplayNameRaw);
-		String_Set(&player_name, displayName);
+		String_Copy(&player_name, displayName);
 		String player_skin = String_ClearedArray(p->SkinNameRaw);
-		String_Set(&player_skin, skinName);
+		String_Copy(&player_skin, skinName);
 		Player_UpdateName((struct Player*)p);
 	}
 
@@ -381,7 +381,7 @@ static void Classic_Handshake(UInt8* data) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 	HacksComp_SetUserType(hacks, *data, !cpe_blockPerms);
 	
-	String_Set(&hacks->HacksFlags, &ServerConnection_ServerName);
+	String_Copy(&hacks->HacksFlags, &ServerConnection_ServerName);
 	String_AppendString(&hacks->HacksFlags, &ServerConnection_ServerMOTD);
 	HacksComp_UpdateState(hacks);
 }

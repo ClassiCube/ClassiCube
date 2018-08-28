@@ -222,7 +222,7 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 	for (i = 0; i < 10; i++) {
 		Window_ProcessEvents();
 		if (clipboard_paste_text.length) {
-			String_Set(value, &clipboard_paste_text);
+			String_Copy(value, &clipboard_paste_text);
 			return;
 		} else {
 			Thread_Sleep(100);
@@ -231,7 +231,7 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 }
 
 void Window_SetClipboardText(STRING_PURE String* value) {
-	String_Set(&clipboard_paste_text, value);
+	String_Copy(&clipboard_paste_text, value);
 	XSetSelectionOwner(win_display, xa_clipboard, win_handle, 0);
 }
 

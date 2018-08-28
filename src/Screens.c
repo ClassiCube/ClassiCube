@@ -743,7 +743,7 @@ static void ChatScreen_OpenInput(struct ChatScreen* screen, STRING_PURE String* 
 	ChatScreen_SetHandlesAllInput(screen, true);
 	Key_KeyRepeat = true;
 
-	String_Set(&screen->Input.Base.Text, initialText);
+	String_Copy(&screen->Input.Base.Text, initialText);
 	Elem_Recreate(&screen->Input.Base);
 }
 
@@ -1071,7 +1071,7 @@ static void ChatScreen_ChatReceived(void* obj, String* msg, Int32 type) {
 static void ChatScreen_ContextLost(void* obj) {
 	struct ChatScreen* screen = (struct ChatScreen*)obj;
 	if (screen->HandlesAllInput) {
-		String_Set(&screen->ChatInInputStr, &screen->Input.Base.Text);
+		String_Copy(&screen->ChatInInputStr, &screen->Input.Base.Text);
 		Gui_CalcCursorVisible();
 	}
 

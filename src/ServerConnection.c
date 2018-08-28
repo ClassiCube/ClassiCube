@@ -321,8 +321,8 @@ static void MPConnection_TickConnect(void) {
 }
 
 static void MPConnection_BeginConnect(void) {
-	Socket_Create(&net_socket);
 	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, MPConnection_BlockChanged);
+	Socket_Create(&net_socket);
 	ServerConnection_Disconnected = false;
 
 	Socket_SetBlocking(net_socket, false);

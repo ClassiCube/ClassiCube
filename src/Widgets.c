@@ -1693,7 +1693,7 @@ static void ChatInputWidget_UpKey(struct GuiElem* elem) {
 	}
 
 	if (widget->TypingLogPos == Chat_InputLog.Count) {
-		String_Set(&widget->OrigStr, &input->Text);
+		String_Copy(&widget->OrigStr, &input->Text);
 	}
 
 	if (!Chat_InputLog.Count) return;
@@ -2213,7 +2213,7 @@ String TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* widget, Int32 i) {
 
 void TextGroupWidget_GetText(struct TextGroupWidget* widget, Int32 index, STRING_TRANSIENT String* text) {
 	String line = TextGroupWidget_UNSAFE_Get(widget, index);
-	String_Set(text, &line);
+	String_Copy(text, &line);
 }
 
 void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* widget, STRING_PURE String* text) {

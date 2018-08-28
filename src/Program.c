@@ -92,7 +92,7 @@ int main(void) {
 	String title   = String_FromConst(PROGRAM_APP_NAME);
 	String rawArgs = Platform_GetCommandLineArgs();
 	/* NOTE: Make sure to comment this out before pushing a commit */
-	rawArgs = String_FromReadonly("UnknownShadow200 fff 127.0.0.1 25565");
+	//rawArgs = String_FromReadonly("UnknownShadow200 fff 127.0.0.1 25565");
 
 	String args[5]; Int32 argsCount = Array_Elems(args);
 	String_UNSAFE_Split(&rawArgs, ' ', args, &argsCount);
@@ -100,14 +100,14 @@ int main(void) {
 	if (argsCount == 1) {
 		String name = args[0];
 		if (!name.length) name = String_FromReadonly("Singleplayer");
-		String_Set(&Game_Username, &name);
+		String_Copy(&Game_Username, &name);
 	} else if (argsCount < 4) {
 		Platform_LogConst("ClassiCube.exe is only the raw client. You must either use the launcher or provide command line arguments to start the client.");
 		return 1;
 	} else {
-		String_Set(&Game_Username,  &args[0]);
-		String_Set(&Game_Mppass,    &args[1]);
-		String_Set(&Game_IPAddress, &args[2]);
+		String_Copy(&Game_Username,  &args[0]);
+		String_Copy(&Game_Mppass,    &args[1]);
+		String_Copy(&Game_IPAddress, &args[2]);
 
 		UInt8 ip[4];
 		if (!Utils_ParseIP(&args[2], ip)) { 

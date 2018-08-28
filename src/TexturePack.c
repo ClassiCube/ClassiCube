@@ -478,7 +478,7 @@ void TexturePack_ExtractCurrent(STRING_PURE String* url) {
 		if (String_Equals(url, &World_TextureUrl)) {
 		} else {
 			bool zip = String_ContainsString(url, &zipExt);
-			String_Set(&World_TextureUrl, url);
+			String_Copy(&World_TextureUrl, url);
 			const char* operation = zip ? "extracting" : "decoding";
 			
 			res = zip ? TexturePack_ExtractZip(&stream) :
@@ -493,7 +493,7 @@ void TexturePack_ExtractCurrent(STRING_PURE String* url) {
 
 void TexturePack_Extract_Req(struct AsyncRequest* item) {
 	String url = String_FromRawArray(item->URL);
-	String_Set(&World_TextureUrl, &url);
+	String_Copy(&World_TextureUrl, &url);
 	void* data = item->ResultData;
 	UInt32 len = item->ResultSize;
 

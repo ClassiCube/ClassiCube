@@ -862,28 +862,33 @@ ReturnCode Socket_Select(SocketPtr socket, Int32 selectMode, bool* success) {
 *#########################################################################################################################*/
 #if CC_BUILD_WIN
 HINTERNET hInternet;
+/* TODO: Test last modified and etag even work */
+#define FLAG_STATUS  HTTP_QUERY_STATUS_CODE    | HTTP_QUERY_FLAG_NUMBER
+#define FLAG_LENGTH  HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER
+#define FLAG_LASTMOD HTTP_QUERY_LAST_MODIFIED  | HTTP_QUERY_FLAG_SYSTEMTIME
+
 void Http_Init(void) {
 	/* TODO: Should we use INTERNET_OPEN_TYPE_PRECONFIG instead? */
 	hInternet = InternetOpenA(PROGRAM_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
 	if (!hInternet) ErrorHandler_FailWithCode(GetLastError(), "Failed to init WinINet");
 }
 
-ReturnCode Http_MakeRequest(struct AsyncRequest* request, void** handle) {
-	String url = String_FromRawArray(request->URL);
+static ReturnCode Http_Make(struct AsyncRequest* req, HINTERNET* handle) {
+	String url = String_FromRawArray(req->URL);
 	char headersBuffer[STRING_SIZE * 2];
 	String headers = String_MakeNull();
 
 	/* https://stackoverflow.com/questions/25308488/c-wininet-custom-http-headers */
-	if (request->Etag[0] || request->LastModified.Year) {
+	if (req->Etag[0] || req->LastModified.Year) {
 		headers = String_ClearedArray(headersBuffer);
-		if (request->LastModified.Year) {
+		if (req->LastModified.Year) {
 			String_AppendConst(&headers, "If-Modified-Since: ");
-			DateTime_HttpDate(&request->LastModified, &headers);
+			DateTime_HttpDate(&req->LastModified, &headers);
 			String_AppendConst(&headers, "\r\n");
 		}
 
-		if (request->Etag[0]) {
-			String etag = String_FromRawArray(request->Etag);
+		if (req->Etag[0]) {
+			String etag = String_FromRawArray(req->Etag);
 			String_AppendConst(&headers, "If-None-Match: ");
 			String_AppendString(&headers, &etag);
 			String_AppendConst(&headers, "\r\n");
@@ -896,39 +901,38 @@ ReturnCode Http_MakeRequest(struct AsyncRequest* request, void** handle) {
 	return Win_Return(*handle);
 }
 
-/* TODO: Test last modified and etag even work */
-#define Http_Query(flags, result) HttpQueryInfoA(handle, flags, result, &bufferLen, NULL)
-ReturnCode Http_GetRequestHeaders(struct AsyncRequest* request, void* handle, UInt32* size) {
-	DWORD bufferLen;
+static ReturnCode Http_GetHeaders(struct AsyncRequest* req, HINTERNET handle) {
+	DWORD len;
 
 	UInt32 status;
-	bufferLen = sizeof(DWORD);
-	if (!Http_Query(HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status)) return GetLastError();
-	request->StatusCode = status;
+	len = sizeof(DWORD);
+	if (!HttpQueryInfoA(handle, FLAG_STATUS, &status, &len, NULL)) return GetLastError();
+	req->StatusCode = status;
 
-	bufferLen = sizeof(DWORD);
-	if (!Http_Query(HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, size)) return GetLastError();
+	len = sizeof(DWORD);
+	if (!HttpQueryInfoA(handle, FLAG_LENGTH, &req->ResultSize, &len, NULL)) return GetLastError();
 
-	SYSTEMTIME lastModified;
-	bufferLen = sizeof(SYSTEMTIME);
-	if (Http_Query(HTTP_QUERY_LAST_MODIFIED | HTTP_QUERY_FLAG_SYSTEMTIME, &lastModified)) {
-		Platform_FromSysTime(&request->LastModified, &lastModified);
+	SYSTEMTIME time;
+	len = sizeof(SYSTEMTIME);
+	if (HttpQueryInfoA(handle, FLAG_LASTMOD, &time, &len, NULL)) {
+		Platform_FromSysTime(&req->LastModified, &time);
 	}
 
-	String etag = String_ClearedArray(request->Etag);
-	bufferLen = etag.capacity;
-	Http_Query(HTTP_QUERY_ETAG, etag.buffer);
+	String etag = String_ClearedArray(req->Etag);
+	len = etag.capacity;
+	HttpQueryInfoA(handle, HTTP_QUERY_ETAG, etag.buffer, &len, NULL);
 
 	return 0;
 }
 
-ReturnCode Http_GetRequestData(struct AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress) {
-	if (!size) return ERROR_NOT_SUPPORTED;
+static ReturnCode Http_GetData(struct AsyncRequest* req, HINTERNET handle, volatile Int32* progress) {
+	UInt32 size = req->ResultSize;
+	if (size) return ERROR_NOT_SUPPORTED;
 	*progress = 0;
 
 	UInt8* buffer = Mem_Alloc(size, sizeof(UInt8), "http get data");
-	UInt32 left   = size, read, totalRead = 0;
-	*data = buffer;
+	UInt32 left = size, read, totalRead = 0;
+	req->ResultData = buffer;
 
 	while (left) {
 		UInt32 toRead = left, avail = 0;
@@ -949,7 +953,23 @@ ReturnCode Http_GetRequestData(struct AsyncRequest* request, void* handle, void*
 	return 0;
 }
 
-ReturnCode Http_FreeRequest(void* handle) { return Win_Return(InternetCloseHandle(handle)); }
+ReturnCode Http_Do(struct AsyncRequest* req, volatile Int32* progress) {
+	HINTERNET handle;
+	ReturnCode res = Http_Make(req, &handle);
+	if (res) return res;
+
+	*progress = ASYNC_PROGRESS_FETCHING_DATA;
+	res = Http_GetHeaders(req, handle);
+	if (res) { InternetCloseHandle(handle); return res; }
+
+	if (req->RequestType != REQUEST_TYPE_CONTENT_LENGTH && req->StatusCode == 200) {
+		res = Http_GetData(req, handle, progress);
+		if (res) { InternetCloseHandle(handle); return res; }
+	}
+
+	return Win_Return(InternetCloseHandle(handle));
+}
+
 ReturnCode Http_Free(void) { return Win_Return(InternetCloseHandle(hInternet)); }
 #elif CC_BUILD_NIX
 void Http_Init(void) { }
@@ -1028,7 +1048,7 @@ void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	ctx->Format = *format;
 }
 
-void Audio_PlayData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize) {
+void Audio_BufferData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	WAVEHDR* hdr = &ctx->Headers[idx];
 	Mem_Set(hdr, 0, sizeof(WAVEHDR));
@@ -1042,6 +1062,8 @@ void Audio_PlayData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize) 
 	result = waveOutWrite(ctx->Handle, hdr, sizeof(WAVEHDR));
 	ErrorHandler_CheckOrFail(result, "Audio - write header");
 }
+
+void Audio_Play(AudioHandle handle) { }
 
 bool Audio_IsCompleted(AudioHandle handle, Int32 idx) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];

@@ -42,7 +42,7 @@ String String_FromReadonly(STRING_REF const char* buffer);
 #define String_FromRawArray(buffer) String_FromRaw(buffer, (UInt16)sizeof(buffer))
 
 void String_StripCols(STRING_TRANSIENT String* str);
-void String_Set(STRING_TRANSIENT String* str, STRING_PURE String* value);
+void String_Copy(STRING_TRANSIENT String* dst, STRING_PURE String* src);
 /* Returns a string that points directly to a substring of the given string.
 NOTE: THIS IS UNSAFE - IT MAINTAINS A REFERENCE TO THE ORIGINAL BUFFER, AND THE SUBSTRING IS NOT NULL TERMINATED */
 String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 length);

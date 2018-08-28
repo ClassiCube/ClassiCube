@@ -80,15 +80,15 @@ void Thread_Join(void* handle);
 void Thread_FreeHandle(void* handle);
 
 void* Mutex_Create(void);
-void Mutex_Free(void* handle);
-void Mutex_Lock(void* handle);
-void Mutex_Unlock(void* handle);
+void  Mutex_Free(void* handle);
+void  Mutex_Lock(void* handle);
+void  Mutex_Unlock(void* handle);
 
 void* Waitable_Create(void);
-void Waitable_Free(void* handle);
-void Waitable_Signal(void* handle);
-void Waitable_Wait(void* handle); 
-void Waitable_WaitFor(void* handle, UInt32 milliseconds);
+void  Waitable_Free(void* handle);
+void  Waitable_Signal(void* handle);
+void  Waitable_Wait(void* handle); 
+void  Waitable_WaitFor(void* handle, UInt32 milliseconds);
 
 void Font_GetNames(StringsBuffer* buffer);
 void Font_Make(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
@@ -110,10 +110,7 @@ ReturnCode Socket_Close(SocketPtr socket);
 ReturnCode Socket_Select(SocketPtr socket, Int32 selectMode, bool* success);
 
 void Http_Init(void);
-ReturnCode Http_MakeRequest(struct AsyncRequest* request, void** handle);
-ReturnCode Http_GetRequestHeaders(struct AsyncRequest* request, void* handle, UInt32* size);
-ReturnCode Http_GetRequestData(struct AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress);
-ReturnCode Http_FreeRequest(void* handle);
+ReturnCode Http_Do(struct AsyncRequest* req, volatile Int32* progress);
 ReturnCode Http_Free(void);
 
 #define AUDIO_MAX_CHUNKS 4
@@ -126,7 +123,8 @@ void Audio_Free(AudioHandle handle);
 struct AudioFormat* Audio_GetFormat(AudioHandle handle);
 void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format);
 void Audio_SetVolume(AudioHandle handle, Real32 volume);
-void Audio_PlayData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize);
+void Audio_BufferData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize);
+void Audio_Play(AudioHandle handle);
 bool Audio_IsCompleted(AudioHandle handle, Int32 idx);
 bool Audio_IsFinished(AudioHandle handle);
 #endif

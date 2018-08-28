@@ -1307,7 +1307,7 @@ static void SaveLevelScreen_DoSave(struct GuiElem* elem, struct GuiElem* widget,
 		String warnMsg = String_FromConst("Saving..");
 		SaveLevelScreen_MakeDesc(screen, &warnMsg);
 
-		String_Set(&screen->TextPath, &path);
+		String_Copy(&screen->TextPath, &path);
 		SaveLevelScreen_RemoveOverwrites(screen);
 	}
 }
@@ -1495,7 +1495,7 @@ static void FontListScreen_EntryClick(struct GuiElem* elem, struct GuiElem* w) {
 	String fontName = ListScreen_UNSAFE_GetCur(screen, w);
 	if (String_CaselessEqualsConst(&fontName, LIST_SCREEN_EMPTY)) return;
 
-	String_Set(&Game_FontName, &fontName);
+	String_Copy(&Game_FontName, &fontName);
 	Options_Set(OPT_FONT_NAME, &fontName);
 
 	Int32 cur = screen->CurrentIndex;
@@ -2494,14 +2494,14 @@ static void GraphicsOptionsScreen_SetMipmaps(STRING_PURE String* v) {
 	Gfx_Mipmaps = Menu_SetBool(v, OPT_MIPMAPS);
 	char urlBuffer[STRING_SIZE];
 	String url = String_FromArray(urlBuffer);
-	String_Set(&url, &World_TextureUrl);
+	String_Copy(&url, &World_TextureUrl);
 
 	/* always force a reload from cache */
 	World_TextureUrl.length = 0;
 	String_AppendConst(&World_TextureUrl, "~`#$_^*()@");
 	TexturePack_ExtractCurrent(&url);
 
-	String_Set(&World_TextureUrl, &url);
+	String_Copy(&World_TextureUrl, &url);
 }
 
 static void GraphicsOptionsScreen_ContextRecreated(void* obj) {
@@ -3237,7 +3237,7 @@ struct Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) {
 		Array_Elems(widgets), UrlWarningOverlay_ContextRecreated);
 
 	String dstUrl = String_FromArray(screen->__UrlBuffer);
-	String_Set(&dstUrl, url);
+	String_Copy(&dstUrl, url);
 	screen->Url = dstUrl;
 
 	Overlay_UseVTABLE((struct MenuScreen*)screen, &WarningOverlay_VTABLE);
@@ -3294,7 +3294,7 @@ struct Screen* ConfirmDenyOverlay_MakeInstance(STRING_PURE String* url, bool alw
 		Array_Elems(widgets), ConfirmDenyOverlay_ContextRecreated);
 
 	String dstUrl = String_FromArray(screen->__UrlBuffer);
-	String_Set(&dstUrl, url);
+	String_Copy(&dstUrl, url);
 	screen->Url = dstUrl;
 	screen->AlwaysDeny = alwaysDeny;
 

@@ -148,7 +148,7 @@ static void Soundboard_Init(struct Soundboard* board, STRING_PURE String* boardN
 
 			group = &board->Groups[board->Count++];
 			group->Name = String_ClearedArray(group->NameBuffer);
-			String_Set(&group->Name, &name);
+			String_Copy(&group->Name, &name);
 		}
 
 		if (group->Count == Array_Elems(group->Sounds)) {
@@ -211,7 +211,8 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 		}
 	}
 
-	Audio_PlayData(output->Handle, 0, buffer, snd->DataSize);
+	Audio_BufferData(output->Handle, 0, buffer, snd->DataSize);
+	Audio_Play(output->Handle);
 	/* TODO: handle errors here */
 }
 
@@ -320,6 +321,23 @@ void* music_thread;
 void* music_waitable;
 volatile bool music_pendingStop;
 
+static ReturnCode Music_BufferBlock(Int32 i, Int16* data, Int32 maxSamples, struct VorbisState* ctx) {
+	Int32 samples = 0;
+	ReturnCode res = 0;
+
+	while (samples < maxSamples) {
+		res = Vorbis_DecodeFrame(ctx);
+		if (res) break;
+
+		Int16* cur = &data[samples];
+		samples += Vorbis_OutputFrame(ctx, cur);
+	}
+
+	if (Game_MusicVolume < 100) { Volume_Mix16(data, samples, Game_MusicVolume); }
+	Audio_BufferData(music_out, i, data, samples * sizeof(Int16));
+	return res;
+}
+
 static ReturnCode Music_PlayOgg(struct Stream* source) {
 	UInt8 buffer[OGG_BUFFER_SIZE];
 	struct Stream stream;
@@ -338,12 +356,19 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 
 	/* largest possible vorbis frame decodes to blocksize1 * channels samples */
 	/* so we may end up decoding slightly over a second of audio */
-	Int32 chunkSize        = fmt.Channels * (fmt.SampleRate + vorbis.BlockSizes[1]);
+	Int32 i, chunkSize     = fmt.Channels * (fmt.SampleRate + vorbis.BlockSizes[1]);
 	Int32 samplesPerSecond = fmt.Channels * fmt.SampleRate;
 	Int16* data = Mem_Alloc(chunkSize * AUDIO_MAX_CHUNKS, sizeof(Int16), "Ogg - final PCM output");
 
+	/* fill up with some samples before playing */
+	for (i = 0; i < AUDIO_MAX_CHUNKS && !res; i++) {
+		Int16* base = data + (chunkSize * i);
+		res = Music_BufferBlock(i, base, samplesPerSecond, &vorbis);
+	}
+	Audio_Play(music_out);
+
 	for (;;) {
-		Int32 i, next = -1;
+		Int32 next = -1;
 		for (i = 0; i < AUDIO_MAX_CHUNKS; i++) {
 			if (Audio_IsCompleted(music_out, i)) { next = i; break; }
 		}
@@ -351,20 +376,8 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 		if (next == -1) { Thread_Sleep(10); continue; }
 		if (music_pendingStop) break;
 
-		/* decode up to around a second */
 		Int16* base = data + (chunkSize * next);
-		Int32 samples = 0;
-
-		while (samples < samplesPerSecond) {
-			res = Vorbis_DecodeFrame(&vorbis);
-			if (res) break;
-
-			Int16* cur = &base[samples];
-			samples += Vorbis_OutputFrame(&vorbis, cur);
-		}
-
-		if (Game_MusicVolume < 100) { Volume_Mix16(base, samples, Game_MusicVolume); }
-		Audio_PlayData(music_out, next, base, samples * sizeof(Int16));
+		res = Music_BufferBlock(next, base, samplesPerSecond, &vorbis);
 		/* need to specially handle last bit of audio */
 		if (res) break;
 	}
