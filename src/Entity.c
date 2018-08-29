@@ -125,14 +125,10 @@ void Entity_SetModel(struct Entity* entity, STRING_PURE String* model) {
 	entity->ModelScale = Vector3_Create1(1.0f);
 	entity->ModelBlock = BLOCK_AIR;
 
-	Int32 sep = String_IndexOf(model, '|', 0);
 	String name, scale;
-	if (sep == -1) {
+	if (!String_UNSAFE_Split_KV(model, '|', &name, &scale)) {
 		name  = *model;
 		scale = String_MakeNull();	
-	} else {
-		name  = String_UNSAFE_Substring(model, 0, sep);
-		scale = String_UNSAFE_SubstringAt(model, sep + 1);
 	}
 
 	/* 'giant' model kept for backwards compatibility */

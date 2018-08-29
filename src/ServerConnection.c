@@ -154,7 +154,7 @@ static void SPConnection_BeginConnect(void) {
 	}
 	Event_RaiseVoid(&BlockEvents_PermissionsChanged);
 
-	/* For when user drops a map file onto ClassicalSharp.exe */
+	/* For when user drops a map file onto ClassiCube.exe */
 	String path = Game_Username;
 	if (String_IndexOf(&path, Directory_Separator, 0) >= 0 && File_Exists(&path)) {
 		LoadLevelScreen_LoadMap(&path);

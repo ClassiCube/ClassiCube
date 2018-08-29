@@ -240,18 +240,12 @@ static bool WoM_ReadLine(STRING_REF String* page, Int32* start, STRING_TRANSIENT
 }
 
 static void WoM_ParseConfig(STRING_PURE String* page) {
-	String line;
+	String line, key, value;
 	Int32 start = 0;
 
 	while (WoM_ReadLine(page, &start, &line)) {
 		Platform_Log(&line);
-		Int32 sepIndex = String_IndexOf(&line, '=', 0);
-		if (sepIndex == -1) continue;
-
-		String key = String_UNSAFE_Substring(&line, 0, sepIndex);
-		String_UNSAFE_TrimEnd(&key);
-		String value = String_UNSAFE_SubstringAt(&line, sepIndex + 1);
-		String_UNSAFE_TrimStart(&value);
+		if (!String_UNSAFE_Split_KV(&line, '=', &key, &value)) continue;
 
 		if (String_CaselessEqualsConst(&key, "environment.cloud")) {
 			PackedCol col = WoM_ParseCol(&value, WorldEnv_DefaultCloudsCol);

@@ -1548,14 +1548,10 @@ static void HotkeyListScreen_EntryClick(struct GuiElem* elem, struct GuiElem* w)
 		Gui_ReplaceActive(EditHotkeyScreen_MakeInstance(original)); return;
 	}
 
-	Int32 sepIndex = String_IndexOf(&text, '+', 0);
 	String key = text, value;
 	UInt8 flags = 0;
 
-	if (sepIndex >= 0) {
-		key   = String_UNSAFE_Substring(&text, 0, sepIndex - 1);
-		value = String_UNSAFE_SubstringAt(&text, sepIndex + 1);
-
+	if (String_UNSAFE_Split_KV(&text, '+', &key, &value)) {
 		String ctrl  = String_FromConst("Ctrl");
 		String shift = String_FromConst("Shift");
 		String alt   = String_FromConst("Alt");

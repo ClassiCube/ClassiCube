@@ -305,26 +305,21 @@ void Hotkeys_Init(void) {
 	for (i = 0; i < Options_Keys.Count; i++) {
 		String key = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
 		if (!String_CaselessStarts(&key, &prefix)) continue;
-		Int32 keySplit = String_IndexOf(&key, '&', prefix.length);
-		if (keySplit < 0) continue; /* invalid key */
 
-		String strKey   = String_UNSAFE_Substring(&key, prefix.length, keySplit - prefix.length);
-		String strFlags = String_UNSAFE_SubstringAt(&key, keySplit + 1);
-
+		/* key&modifiers = more-input&text */
+		key.length -= prefix.length; key.buffer += prefix.length;
 		String value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
-		Int32 valueSplit = String_IndexOf(&value, '&', 0);
-		if (valueSplit < 0) continue; /* invalid value */
 
-		String strMoreInput = String_UNSAFE_Substring(&value, 0, valueSplit - 0);
-		String strText      = String_UNSAFE_SubstringAt(&value, valueSplit + 1);
+		String strKey, strFlags, strMore, strText;
+		if (!String_UNSAFE_Split_KV(&key,   '&', &strKey, &strFlags)) continue;
+		if (!String_UNSAFE_Split_KV(&value, '&', &strMore, &strText)) continue;
 
-		/* Then try to parse the key and value */
 		Key hotkey = Utils_ParseEnum(&strKey, Key_None, Key_Names, Array_Elems(Key_Names));
-		UInt8 flags; bool moreInput;
-		if (hotkey == Key_None || !strText.length || !Convert_TryParseUInt8(&strFlags, &flags) 
-			|| !Convert_TryParseBool(&strMoreInput, &moreInput)) { continue; }
+		UInt8 flags; bool more;
+		if (hotkey == Key_None || !Convert_TryParseUInt8(&strFlags, &flags) 
+			|| !Convert_TryParseBool(&strMore, &more)) { continue; }
 
-		Hotkeys_Add(hotkey, flags, &strText, moreInput);
+		Hotkeys_Add(hotkey, flags, &strText, more);
 	}
 }
 

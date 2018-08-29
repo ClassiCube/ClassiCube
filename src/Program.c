@@ -115,7 +115,7 @@ int main(void) {
 		}
 		
 		UInt16 port;
-		if (!Convert_TryParseUInt16(&args[3], &Game_Port)) { 
+		if (!Convert_TryParseUInt16(&args[3], &port)) { 
 			Platform_LogConst("Invalid port"); return 1; 
 		}
 		Game_Port = port;

@@ -323,14 +323,13 @@ bool TextureCache_GetStream(STRING_PURE String* url, struct Stream* stream) {
 void TexturePack_GetFromTags(STRING_PURE String* url, STRING_TRANSIENT String* result, struct EntryList* list) {
 	TexCache_Crc32(url);
 	Int32 i;
-	for (i = 0; i < list->Entries.Count; i++) {
-		String entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
-		if (!String_CaselessStarts(&entry, &crc32)) continue;
+	String line, key, value;
 
-		Int32 sepIndex = String_IndexOf(&entry, ' ', 0);
-		if (sepIndex == -1) continue;
-		
-		String value = String_UNSAFE_SubstringAt(&entry, sepIndex + 1);
+	for (i = 0; i < list->Entries.Count; i++) {
+		line = StringsBuffer_UNSAFE_Get(&list->Entries, i);
+		if (!String_UNSAFE_Split_KV(&line, ' ', &key, &value)) continue;
+
+		if (!String_CaselessEquals(&key, &crc32)) continue;
 		String_AppendString(result, &value);
 	}
 }

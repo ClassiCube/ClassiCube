@@ -173,6 +173,7 @@ void Options_Load(void) {
 	/* ReadLine reads single byte at a time */
 	UInt8 buffer[2048]; struct Stream buffered;
 	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
+	String key, value;
 
 	for (;;) {
 		res = Stream_ReadLine(&buffered, &line);
@@ -180,13 +181,7 @@ void Options_Load(void) {
 		if (res) { Chat_LogError(res, "reading from", &path); break; }
 
 		if (!line.length || line.buffer[0] == '#') continue;
-		Int32 sepIndex = String_IndexOf(&line, '=', 0);
-		if (sepIndex <= 0) continue;
-		String key = String_UNSAFE_Substring(&line, 0, sepIndex);
-
-		sepIndex++;
-		if (sepIndex == line.length) continue;
-		String value = String_UNSAFE_SubstringAt(&line, sepIndex);
+		if (!String_UNSAFE_Split_KV(&line, '=', &key, &value)) continue;
 
 		if (!Options_HasChanged(&key)) {
 			Options_Insert(&key, &value);

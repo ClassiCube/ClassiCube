@@ -43,13 +43,10 @@ String String_FromReadonly(STRING_REF const char* buffer);
 
 void String_StripCols(STRING_TRANSIENT String* str);
 void String_Copy(STRING_TRANSIENT String* dst, STRING_PURE String* src);
-/* Returns a string that points directly to a substring of the given string.
-NOTE: THIS IS UNSAFE - IT MAINTAINS A REFERENCE TO THE ORIGINAL BUFFER, AND THE SUBSTRING IS NOT NULL TERMINATED */
 String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 length);
 #define String_UNSAFE_SubstringAt(str, offset) (String_UNSAFE_Substring(str, offset, (str)->length - (offset)))
-/* Splits a string into a sequence of substrings
-NOTE: THIS IS UNSAFE - IT MAINTAINS A REFERENCE TO THE ORIGINAL BUFFER, AND THE SUBSTRING IS NOT NULL TERMINATED */
 void String_UNSAFE_Split(STRING_REF String* str, char c, STRING_TRANSIENT String* subs, Int32* subsCount);
+bool String_UNSAFE_Split_KV(STRING_REF String* str, char c, STRING_TRANSIENT String* key, STRING_TRANSIENT String* value);
 
 bool String_Equals(STRING_PURE String* a, STRING_PURE String* b);
 bool String_CaselessEquals(STRING_PURE String* a, STRING_PURE String* b);
