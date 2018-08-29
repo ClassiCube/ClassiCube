@@ -664,7 +664,7 @@ static ReturnCode Inflate_StreamRead(struct Stream* stream, UInt8* data, UInt32 
 			ReturnCode code = state->Source->Read(state->Source, cur, remaining, &read);
 			if (code != 0) return code;
 
-			/* Did we fail to read in more input data? Can't immediately return here, 
+			/* Did we fail to read in more input data? Can't immediately return here, */
 			/* because there might be a few bits of data left in the bit buffer */
 			hasInput = read > 0;
 			state->AvailIn += read;

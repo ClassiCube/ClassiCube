@@ -251,13 +251,13 @@ void* Window_GetWindowHandle(void) { return win_handle; }
 
 UInt8 Window_GetWindowState(void) {
 	Atom prop_type;
-	long items, bytes_after;
+	unsigned long items, after;
 	int prop_format;
 	Atom* data = NULL;
 
 	XGetWindowProperty(win_display, win_handle,
 		net_wm_state, 0, 256, false, xa_atom, &prop_type,
-		&prop_format, &items, &bytes_after, &data);
+		&prop_format, &items, &after, &data);
 
 	bool fullscreen = false, minimised = false;
 	Int32 maximised = 0, i;
@@ -387,11 +387,11 @@ void Window_Destroy(void) {
 void Window_RefreshBorders(void) {
 	Atom prop_type;
 	int prop_format;
-	long items, bytes_after;
+	unsigned long items, after;
 	long* borders = NULL;
 	
 	XGetWindowProperty(win_display, win_handle, net_frame_extents, 0, 16, false,
-		xa_cardinal, &prop_type, &prop_format, &items, &bytes_after, &borders);
+		xa_cardinal, &prop_type, &prop_format, &items, &after, &borders);
 
 	if (!borders) return;
 	if (items == 4) {
@@ -566,11 +566,11 @@ void Window_ProcessEvents(void) {
 			if (e.xselection.selection == xa_clipboard && e.xselection.target == xa_utf8_string && e.xselection.property == xa_data_sel) {
 				Atom prop_type;
 				int prop_format;
-				long items, bytes_after;
+				unsigned long items, after;
 				UInt8* data = NULL;			
 
 				XGetWindowProperty(win_display, win_handle, xa_data_sel, 0, 1024, false, 0,
-					&prop_type, &prop_format, &items, &bytes_after, &data);
+					&prop_type, &prop_format, &items, &after, &data);
 				XDeleteProperty(win_display, win_handle, xa_data_sel);
 
 				if (data && items && prop_type == xa_utf8_string) {

@@ -989,7 +989,7 @@ static void InputWidget_UpdateCaret(struct InputWidget* widget) {
 
 	/* Update the colour of the widget->CaretPos */
 	char code = InputWidget_GetLastCol(widget, widget->CaretX, widget->CaretY);
-	if (code) widget->CaretCol = Drawer2D_Cols[code];
+	if (code) widget->CaretCol = Drawer2D_Cols[(UInt8)code];
 }
 
 static void InputWidget_RenderCaret(struct InputWidget* widget, Real64 delta) {
@@ -1636,7 +1636,6 @@ static void ChatInputWidget_RemakeTexture(struct GuiElem* elem) {
 }
 
 static void ChatInputWidget_Render(struct GuiElem* elem, Real64 delta) {
-	struct ChatInputWidget* widget = (struct ChatInputWidget*)elem;
 	struct InputWidget* input = (struct InputWidget*)elem;
 	Gfx_SetTexturing(false);
 	Int32 x = input->X, y = input->Y;

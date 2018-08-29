@@ -11,7 +11,7 @@ struct FontDesc;
 struct Bitmap;
 struct AsyncRequest;
 
-enum SOCKET_SELECT { SOCKET_SELECT_READ, SOCKET_SELECT_WRITE, SOCKET_SELECT_ERROR };
+enum SOCKET_SELECT { SOCKET_SELECT_READ, SOCKET_SELECT_WRITE };
 #if CC_BUILD_WIN
 typedef void* SocketPtr;
 #else

@@ -855,12 +855,16 @@ ReturnCode Socket_Select(SocketPtr socket, Int32 selectMode, bool* success) {
 	struct timeval time = { 0 };
 	Int32 selectCount = -1;
 
+	#if CC_BUILD_WIN
+	int nfds = 1;
+	#else
+	int nfds = socket + 1;
+	#endif
+
 	if (selectMode == SOCKET_SELECT_READ) {
-		selectCount = select(1, &set, NULL, NULL, &time);
+		selectCount = select(nfds, &set, NULL, NULL, &time);
 	} else if (selectMode == SOCKET_SELECT_WRITE) {
-		selectCount = select(1, NULL, &set, NULL, &time);
-	} else if (selectMode == SOCKET_SELECT_ERROR) {
-		selectCount = select(1, NULL, NULL, &set, &time);
+		selectCount = select(nfds, NULL, &set, NULL, &time);
 	}
 
 	if (selectCount == -1) { *success = false; return Socket__Error(); }

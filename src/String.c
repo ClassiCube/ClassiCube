@@ -467,7 +467,7 @@ UInt16 Convert_ExtendedChars[129] = { 0x2302,
 };
 
 UInt16 Convert_CP437ToUnicode(char c) {
-	if (c < 0x20) return Convert_ControlChars[c];
+	if (c < 0x20) return Convert_ControlChars[(UInt8)c];
 	if (c < 0x7F) return c;
 	return Convert_ExtendedChars[(UInt8)c - 0x7F];
 }

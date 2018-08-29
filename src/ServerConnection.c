@@ -294,12 +294,9 @@ static void MPConnection_FailConnect(ReturnCode result) {
 }
 
 static void MPConnection_TickConnect(void) {
-	bool poll_error = false;
-	Socket_Select(net_socket, SOCKET_SELECT_ERROR, &poll_error);
-	if (poll_error) {
-		ReturnCode err = 0; Socket_GetError(net_socket, &err);
-		MPConnection_FailConnect(err);
-		return;
+	ReturnCode err = 0; Socket_GetError(net_socket, &err);
+	if (err) {
+		MPConnection_FailConnect(err); return;
 	}
 
 	UInt64 now = DateTime_CurrentUTC_MS();
@@ -366,7 +363,7 @@ static void MPConnection_CheckDisconnection(Real64 delta) {
 	ReturnCode availResult  = Socket_Available(net_socket, &available);
 	ReturnCode selectResult = Socket_Select(net_socket, SOCKET_SELECT_READ, &poll_success);
 
-	if (net_writeFailed || availResult != 0 || selectResult != 0 || (available == 0 && poll_success)) {
+	if (net_writeFailed || availResult || selectResult || (available == 0 && poll_success)) {
 		String title  = String_FromConst("Disconnected!");
 		String reason = String_FromConst("You've lost connection to the server");
 		Game_Disconnect(&title, &reason);

@@ -1729,7 +1729,6 @@ static Int32 KeyBindingsScreen_MakeWidgets(struct KeyBindingsScreen* screen, Int
 	Int32 i, origin = y, xOffset = btnWidth / 2 + 5;
 	screen->CurI = -1;
 
-	struct Widget** widgets = screen->Widgets;
 	char textBuffer[STRING_SIZE];
 	String text = String_FromArray(textBuffer);
 
@@ -2939,7 +2938,6 @@ static void NostalgiaScreen_SwitchBack(struct GuiElem* a, struct GuiElem* b) {
 
 static void NostalgiaScreen_ContextRecreated(void* obj) {
 	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)obj;
-	struct Widget** widgets = screen->Widgets;
 	static struct TextWidget desc;
 
 	MenuOptionsScreen_Make(screen, 0, -1, -150, "Classic hand model",   MenuOptionsScreen_Bool,

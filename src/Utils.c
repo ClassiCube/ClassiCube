@@ -202,7 +202,7 @@ void Utils_Resize(void** buffer, UInt32* maxElems, UInt32 elemSize, UInt32 defEl
 }
 
 bool Utils_ParseIP(STRING_PURE String* ip, UInt8* data) {
-	String parts[4]; UInt32 count = 4;
+	String parts[4]; Int32 count = 4;
 	String_UNSAFE_Split(ip, '.', parts, &count);
 	if (count != 4) return false;
 

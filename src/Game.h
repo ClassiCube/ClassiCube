@@ -24,7 +24,7 @@ bool Game_UseCPEBlocks;
 extern String Game_Username;
 extern String Game_Mppass;
 extern String Game_IPAddress;
-UInt16        Game_Port;
+Int32         Game_Port;
 
 Int32 Game_ViewDistance;
 Int32 Game_MaxViewDistance;

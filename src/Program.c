@@ -114,9 +114,11 @@ int main(void) {
 			Platform_LogConst("Invalid IP"); return 1; 
 		}
 		
+		UInt16 port;
 		if (!Convert_TryParseUInt16(&args[3], &Game_Port)) { 
 			Platform_LogConst("Invalid port"); return 1; 
 		}
+		Game_Port = port;
 	}
 
 	Game_Run(width, height, &title, &device);
