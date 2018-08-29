@@ -10,7 +10,7 @@ namespace ClassicalSharp.Entities {
 	
 	public class LocalPlayer : Player, IGameComponent {
 		
-		public Vector3 Spawn;
+		public Vector3 Spawn, OldVelocity;
 		public float SpawnRotY, SpawnHeadX;
 		
 		/// <summary> The distance (in blocks) that players are allowed to
@@ -150,7 +150,11 @@ namespace ClassicalSharp.Entities {
 		void IGameComponent.Ready(Game game) { }
 		void IGameComponent.OnNewMapLoaded(Game game) { }
 		void IDisposable.Dispose() { }
-		void IGameComponent.OnNewMap(Game game) { }
+		
+		void IGameComponent.OnNewMap(Game game) {
+			Velocity    = Vector3.Zero;
+			OldVelocity = Vector3.Zero;
+		}
 		
 		void IGameComponent.Reset(Game game) {
 			ReachDistance = 5;

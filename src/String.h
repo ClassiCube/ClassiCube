@@ -46,7 +46,7 @@ void String_Copy(STRING_TRANSIENT String* dst, STRING_PURE String* src);
 String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 length);
 #define String_UNSAFE_SubstringAt(str, offset) (String_UNSAFE_Substring(str, offset, (str)->length - (offset)))
 void String_UNSAFE_Split(STRING_REF String* str, char c, STRING_TRANSIENT String* subs, Int32* subsCount);
-bool String_UNSAFE_Split_KV(STRING_REF String* str, char c, STRING_TRANSIENT String* key, STRING_TRANSIENT String* value);
+bool String_UNSAFE_Separate(STRING_REF String* str, char c, STRING_TRANSIENT String* key, STRING_TRANSIENT String* value);
 
 bool String_Equals(STRING_PURE String* a, STRING_PURE String* b);
 bool String_CaselessEquals(STRING_PURE String* a, STRING_PURE String* b);
@@ -74,7 +74,6 @@ void String_UNSAFE_TrimEnd(STRING_TRANSIENT String* str);
 
 Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub);
 #define String_ContainsString(str, sub) (String_IndexOfString(str, sub) >= 0)
-bool String_StartsWith(STRING_PURE String* str, STRING_PURE String* sub);
 bool String_CaselessStarts(STRING_PURE String* str, STRING_PURE String* sub);
 bool String_CaselessEnds(STRING_PURE String* str, STRING_PURE String* sub);
 Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b);

@@ -311,8 +311,8 @@ void Hotkeys_Init(void) {
 		String value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
 
 		String strKey, strFlags, strMore, strText;
-		if (!String_UNSAFE_Split_KV(&key,   '&', &strKey, &strFlags)) continue;
-		if (!String_UNSAFE_Split_KV(&value, '&', &strMore, &strText)) continue;
+		if (!String_UNSAFE_Separate(&key,   '&', &strKey, &strFlags)) continue;
+		if (!String_UNSAFE_Separate(&value, '&', &strMore, &strText)) continue;
 
 		Key hotkey = Utils_ParseEnum(&strKey, Key_None, Key_Names, Array_Elems(Key_Names));
 		UInt8 flags; bool more;

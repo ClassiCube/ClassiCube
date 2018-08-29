@@ -70,7 +70,7 @@ struct Entity {
 	struct EntityVTABLE* VTABLE;
 	Vector3 Position;
 	Real32 HeadX, HeadY, RotX, RotY, RotZ;
-	Vector3 Velocity, OldVelocity;
+	Vector3 Velocity;
 
 	struct IModel* Model;
 	BlockID ModelBlock; /* BlockID, if model name was originally a vaid block id. */
@@ -146,7 +146,7 @@ struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 /* Represents the user/player's own entity. */
 struct LocalPlayer {
 	Player_Layout
-	Vector3 Spawn;
+	Vector3 Spawn, OldVelocity;
 	Real32 SpawnRotY, SpawnHeadX, ReachDistance;
 	struct HacksComp Hacks;
 	struct TiltComp Tilt;

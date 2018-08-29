@@ -1121,7 +1121,7 @@ static void ChatScreen_Init(struct GuiElem* elem) {
 
 	Event_RegisterChat(&ChatEvents_ChatReceived,    screen, ChatScreen_ChatReceived);
 	Event_RegisterVoid(&ChatEvents_FontChanged,     screen, ChatScreen_FontChanged);
-	Event_RegisterInt(&ChatEvents_ColCodeChanged, screen, ChatScreen_ColCodeChanged);
+	Event_RegisterInt(&ChatEvents_ColCodeChanged,   screen, ChatScreen_ColCodeChanged);
 	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, ChatScreen_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, ChatScreen_ContextRecreated);
 }
@@ -1179,7 +1179,7 @@ static void ChatScreen_Free(struct GuiElem* elem) {
 
 	Event_UnregisterChat(&ChatEvents_ChatReceived,    screen, ChatScreen_ChatReceived);
 	Event_UnregisterVoid(&ChatEvents_FontChanged,     screen, ChatScreen_FontChanged);
-	Event_UnregisterInt(&ChatEvents_ColCodeChanged, screen, ChatScreen_ColCodeChanged);
+	Event_UnregisterInt(&ChatEvents_ColCodeChanged,   screen, ChatScreen_ColCodeChanged);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, ChatScreen_ContextLost);
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, ChatScreen_ContextRecreated);
 }

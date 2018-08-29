@@ -126,7 +126,7 @@ void Entity_SetModel(struct Entity* entity, STRING_PURE String* model) {
 	entity->ModelBlock = BLOCK_AIR;
 
 	String name, scale;
-	if (!String_UNSAFE_Split_KV(model, '|', &name, &scale)) {
+	if (!String_UNSAFE_Separate(model, '|', &name, &scale)) {
 		name  = *model;
 		scale = String_MakeNull();	
 	}
@@ -817,8 +817,8 @@ void LocalPlayer_Tick(struct Entity* entity, Real64 delta) {
 	struct HacksComp* hacks = &p->Hacks;
 
 	entity->StepSize = hacks->FullBlockStep && hacks->Enabled && hacks->CanAnyHacks && hacks->CanSpeed ? 1.0f : 0.5f;
-	entity->OldVelocity = entity->Velocity;
-	Real32 xMoving = 0.0f, zMoving = 0.0f;
+	p->OldVelocity   = entity->Velocity;
+	Real32 xMoving = 0, zMoving = 0;
 	LocalInterpComp_AdvanceState(&p->Interp);
 	bool wasOnGround = entity->OnGround;
 
@@ -827,7 +827,7 @@ void LocalPlayer_Tick(struct Entity* entity, Real64 delta) {
 	if (!hacks->Floating && hacks->CanBePushed) PhysicsComp_DoEntityPush(entity);
 
 	/* Immediate stop in noclip mode */
-	if (!hacks->NoclipSlide && (hacks->Noclip && xMoving == 0.0f && zMoving == 0.0f)) {
+	if (!hacks->NoclipSlide && (hacks->Noclip && xMoving == 0 && zMoving == 0)) {
 		Vector3 zero = Vector3_Zero; entity->Velocity = zero;
 	}
 
@@ -886,9 +886,16 @@ static void LocalPlayer_Reset(void) {
 	/* p->Base.Health = 20; TODO: survival mode stuff */
 }
 
+static void LocalPlayer_OnNewMap(void) {
+	Vector3 zero = Vector3_Zero; 
+	LocalPlayer_Instance.Base.Velocity = zero;
+	LocalPlayer_Instance.OldVelocity   = zero;
+}
+
 void LocalPlayer_MakeComponent(struct IGameComponent* comp) {
-	comp->Init  = LocalPlayer_Init_;
-	comp->Ready = LocalPlayer_Reset;
+	comp->Init     = LocalPlayer_Init_;
+	comp->Ready    = LocalPlayer_Reset;
+	comp->OnNewMap = LocalPlayer_OnNewMap;
 }
 
 struct EntityVTABLE localplayer_VTABLE;

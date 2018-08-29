@@ -245,7 +245,7 @@ static void WoM_ParseConfig(STRING_PURE String* page) {
 
 	while (WoM_ReadLine(page, &start, &line)) {
 		Platform_Log(&line);
-		if (!String_UNSAFE_Split_KV(&line, '=', &key, &value)) continue;
+		if (!String_UNSAFE_Separate(&line, '=', &key, &value)) continue;
 
 		if (String_CaselessEqualsConst(&key, "environment.cloud")) {
 			PackedCol col = WoM_ParseCol(&value, WorldEnv_DefaultCloudsCol);

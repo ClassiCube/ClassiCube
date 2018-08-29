@@ -37,7 +37,6 @@ namespace ClassicalSharp.Entities {
 		
 		public Vector3 Position;
 		public Vector3 Velocity;
-		public Vector3 OldVelocity;
 		public float HeadX, HeadY, RotX, RotY, RotZ;
 		
 		protected Game game;

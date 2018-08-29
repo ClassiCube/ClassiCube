@@ -181,7 +181,7 @@ void Options_Load(void) {
 		if (res) { Chat_LogError(res, "reading from", &path); break; }
 
 		if (!line.length || line.buffer[0] == '#') continue;
-		if (!String_UNSAFE_Split_KV(&line, '=', &key, &value)) continue;
+		if (!String_UNSAFE_Separate(&line, '=', &key, &value)) continue;
 
 		if (!Options_HasChanged(&key)) {
 			Options_Insert(&key, &value);

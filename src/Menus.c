@@ -1551,7 +1551,7 @@ static void HotkeyListScreen_EntryClick(struct GuiElem* elem, struct GuiElem* w)
 	String key = text, value;
 	UInt8 flags = 0;
 
-	if (String_UNSAFE_Split_KV(&text, '+', &key, &value)) {
+	if (String_UNSAFE_Separate(&text, '+', &key, &value)) {
 		String ctrl  = String_FromConst("Ctrl");
 		String shift = String_FromConst("Shift");
 		String alt   = String_FromConst("Alt");

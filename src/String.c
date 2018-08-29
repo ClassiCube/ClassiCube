@@ -82,7 +82,7 @@ void String_UNSAFE_Split(STRING_REF String* str, char c, STRING_TRANSIENT String
 	for (; i < maxSubs; i++) { subs[i] = String_MakeNull(); }
 }
 
-bool String_UNSAFE_Split_KV(STRING_REF String* str, char c, STRING_TRANSIENT String* key, STRING_TRANSIENT String* value) {
+bool String_UNSAFE_Separate(STRING_REF String* str, char c, STRING_TRANSIENT String* key, STRING_TRANSIENT String* value) {
 	/* key [c] value or key[c]value */
 	Int32 idx = String_IndexOf(str, c, 0);
 	if (idx <= 0) return false;                 /* missing [c] or no key */

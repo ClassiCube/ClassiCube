@@ -922,7 +922,6 @@ static ReturnCode Http_Make(struct AsyncRequest* req, HINTERNET* handle) {
 static ReturnCode Http_GetHeaders(struct AsyncRequest* req, HINTERNET handle) {
 	DWORD len;
 
-	UInt32 status;
 	len = sizeof(DWORD);
 	if (!HttpQueryInfoA(handle, FLAG_STATUS, &req->StatusCode, &len, NULL)) return GetLastError();
 
