@@ -43,12 +43,10 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void UpdateEntry(ButtonWidget widget, string text) {
 			try {
 				using (Font tmp = new Font(text, font.Size)) {
-					widget.font = tmp;
-					widget.SetText(text);
-					widget.font = font;
+					widget.Set(text, tmp);
 				}
 			} catch {
-				widget.SetText(empty);
+				widget.Set(empty, font);
 			}
 		}
 	}

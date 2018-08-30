@@ -166,7 +166,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void SetButton(int i, string text) {
-			((ButtonWidget)widgets[i]).SetText(text);
+			((ButtonWidget)widgets[i]).Set(text, titleFont);
 		}
 	}
 }

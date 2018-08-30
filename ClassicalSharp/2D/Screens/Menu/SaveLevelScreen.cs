@@ -99,7 +99,7 @@ namespace ClassicalSharp.Gui.Screens {
 			ButtonWidget btn = (ButtonWidget)widget;
 			
 			if (Platform.FileExists(path) && btn.OptName == null) {
-				btn.SetText("&cOverwrite existing?");
+				btn.Set("&cOverwrite existing?", titleFont);
 				btn.OptName = "O";
 			} else {
 				// NOTE: We don't immediately save here, because otherwise the 'saving...'
@@ -120,7 +120,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if (button.OptName == null) return;
 			
 			button.OptName = null;
-			button.SetText(defaultText);
+			button.Set(defaultText, titleFont);
 		}
 		
 		void MakeDescWidget(string text) {

@@ -58,12 +58,12 @@ namespace ClassicalSharp.Gui.Screens {
 		void OnBindingClick(Game game, Widget widget) {
 			if (curI >= 0) {
 				ButtonWidget curButton = (ButtonWidget)widgets[curI];
-				curButton.SetText(ButtonText(curI));
+				curButton.Set(ButtonText(curI), titleFont);
 			}
 			
 			curI = IndexWidget(widget);
 			string text = ButtonText(curI);
-			((ButtonWidget)widget).SetText("> " + text + " <");
+			((ButtonWidget)widget).Set("> " + text + " <", titleFont);
 		}
 		
 		string ButtonText(int i) {
@@ -80,7 +80,7 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Input.Keys[bind] = key;
 			
 			ButtonWidget curButton = (ButtonWidget)widgets[curI];
-			curButton.SetText(ButtonText(curI));
+			curButton.Set(ButtonText(curI), titleFont);
 			curI = -1;
 			return true;
 		}

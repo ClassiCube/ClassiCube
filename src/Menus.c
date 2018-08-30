@@ -30,11 +30,12 @@
 #include "Deflate.h"
 
 #define MenuBase_Layout Screen_Layout struct Widget** Widgets; Int32 WidgetsCount;
-struct MenuBase { MenuBase_Layout struct ButtonWidget* Buttons; };
+struct MenuBase { MenuBase_Layout };
 
 #define LIST_SCREEN_ITEMS 5
 #define LIST_SCREEN_BUTTONS (LIST_SCREEN_ITEMS + 3)
 
+struct ListScreen;
 struct ListScreen {
 	MenuBase_Layout
 	struct ButtonWidget Buttons[LIST_SCREEN_BUTTONS];
@@ -42,14 +43,13 @@ struct ListScreen {
 	Real32 WheelAcc;
 	Int32 CurrentIndex;
 	Widget_LeftClick EntryClick;
-	void (*UpdateEntry)(struct ButtonWidget* button, STRING_PURE String* text);
+	void (*UpdateEntry)(struct ListScreen* screen, struct ButtonWidget* button, STRING_PURE String* text);
 	String TitleText;
 	struct TextWidget Title, Page;
 	struct Widget* ListWidgets[LIST_SCREEN_BUTTONS + 2];
 	StringsBuffer Entries; /* NOTE: this is the last member so we can avoid memsetting it to 0 */
 };
 
-typedef void (*Menu_ContextFunc)(void* obj);
 #define MenuScreen_Layout MenuBase_Layout struct FontDesc TitleFont, TextFont;
 struct MenuScreen { MenuScreen_Layout };
 
@@ -352,7 +352,7 @@ static void ListScreen_MakeText(struct ListScreen* screen, Int32 i) {
 	Menu_Button(screen, i, &screen->Buttons[i], 300, &empty, &screen->Font, screen->EntryClick,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, (i - 2) * 50);
 	/* needed for font list menu */
-	screen->UpdateEntry(&screen->Buttons[i], &text);
+	screen->UpdateEntry(screen, &screen->Buttons[i], &text);
 }
 
 static void ListScreen_Make(struct ListScreen* screen, Int32 i, Int32 x, STRING_PURE String* text, Widget_LeftClick onClick) {
@@ -373,11 +373,11 @@ static void ListScreen_UpdatePage(struct ListScreen* screen) {
 	if (pages == 0) pages = 1;
 
 	String_Format2(&page, "&7Page %i of %i", &num, &pages);
-	TextWidget_SetText(&screen->Page, &page);
+	TextWidget_Set(&screen->Page, &page, &screen->Font);
 }
 
-static void ListScreen_UpdateEntry(struct ButtonWidget* button, STRING_PURE String* text) {
-	ButtonWidget_SetText(button, text);
+static void ListScreen_UpdateEntry(struct ListScreen* screen, struct ButtonWidget* button, STRING_PURE String* text) {
+	ButtonWidget_Set(button, text, &screen->Font);
 }
 
 static void ListScreen_SetCurrentIndex(struct ListScreen* screen, Int32 index) {
@@ -387,7 +387,7 @@ static void ListScreen_SetCurrentIndex(struct ListScreen* screen, Int32 index) {
 	Int32 i;
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) {
 		String str = ListScreen_UNSAFE_Get(screen, index + i);
-		screen->UpdateEntry(&screen->Buttons[i], &str);
+		screen->UpdateEntry(screen, &screen->Buttons[i], &str);
 	}
 
 	screen->CurrentIndex = index;
@@ -835,7 +835,7 @@ static void EditHotkeyScreen_BaseKey(struct GuiElem* elem, struct GuiElem* widge
 	screen->SelectedI = 0;
 	screen->SupressNextPress = true;
 	String msg = String_FromConst("Key: press a key..");
-	ButtonWidget_SetText(&screen->Buttons[0], &msg);
+	ButtonWidget_Set(&screen->Buttons[0], &msg, &screen->TitleFont);
 }
 
 static void EditHotkeyScreen_Modifiers(struct GuiElem* elem, struct GuiElem* widget) {
@@ -843,7 +843,7 @@ static void EditHotkeyScreen_Modifiers(struct GuiElem* elem, struct GuiElem* wid
 	screen->SelectedI = 1;
 	screen->SupressNextPress = true;
 	String msg = String_FromConst("Modifiers: press a key..");
-	ButtonWidget_SetText(&screen->Buttons[1], &msg);
+	ButtonWidget_Set(&screen->Buttons[1], &msg, &screen->TitleFont);
 }
 
 static void EditHotkeyScreen_LeaveOpen(struct GuiElem* elem, struct GuiElem* widget) {
@@ -1220,13 +1220,13 @@ static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* screen) {
 	struct ButtonWidget* btn = &screen->Buttons[0];
 	if (btn->OptName) {
 		btn->OptName = NULL; String save = String_FromConst("Save"); 
-		ButtonWidget_SetText(btn, &save);
+		ButtonWidget_Set(btn, &save, &screen->TitleFont);
 	}
 
 	btn = &screen->Buttons[1];
 	if (btn->OptName) {
 		btn->OptName = NULL; String save = String_FromConst("Save schematic");
-		ButtonWidget_SetText(btn, &save);
+		ButtonWidget_Set(btn, &save, &screen->TitleFont);
 	}
 }
 
@@ -1252,7 +1252,7 @@ static void SaveLevelScreen_DoSave(struct GuiElem* elem, struct GuiElem* widget,
 	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
 	if (File_Exists(&path) && !btn->OptName) {
 		String warnMsg = String_FromConst("&cOverwrite existing?");
-		ButtonWidget_SetText(btn, &warnMsg);
+		ButtonWidget_Set(btn, &warnMsg, &screen->TitleFont);
 		btn->OptName = "O";
 	} else {
 		/* NOTE: We don't immediately save here, because otherwise the 'saving...'
@@ -1455,15 +1455,11 @@ static void FontListScreen_EntryClick(struct GuiElem* elem, struct GuiElem* w) {
 	ListScreen_SetCurrentIndex(screen, cur);
 }
 
-static void FontListScreen_UpdateEntry(struct ButtonWidget* button, STRING_PURE String* text) {
-	struct FontDesc tmp = { 0 }, font = button->Font;
-	Font_Make(&tmp, text, 16, FONT_STYLE_NORMAL);
-	{
-		button->Font = tmp;
-		ButtonWidget_SetText(button, text);
-		button->Font = font;
-	}
-	Font_Free(&tmp);
+static void FontListScreen_UpdateEntry(struct ListScreen* screen, struct ButtonWidget* button, STRING_PURE String* text) {
+	struct FontDesc font = { 0 };
+	Font_Make(&font, text, 16, FONT_STYLE_NORMAL);
+	ButtonWidget_Set(button, text, &font);
+	Font_Free(&font);
 }
 
 static void FontListScreen_Init(struct GuiElem* elem) {
@@ -1654,7 +1650,7 @@ struct Screen* LoadLevelScreen_MakeInstance(void) {
 *---------------------------------------------------KeyBindingsScreen-----------------------------------------------------*
 *#########################################################################################################################*/
 struct KeyBindingsScreen KeyBindingsScreen_Instance;
-static void KeyBindingsScreen_ButtonText(struct KeyBindingsScreen* screen, Int32 i, STRING_TRANSIENT String* text) {
+static void KeyBindingsScreen_GetText(struct KeyBindingsScreen* screen, Int32 i, STRING_TRANSIENT String* text) {
 	Key key = KeyBind_Get(screen->Binds[i]);
 	String_Format2(text, "%c: %c", screen->Descs[i], Key_Names[key]);
 }
@@ -1665,17 +1661,17 @@ static void KeyBindingsScreen_OnBindingClick(struct GuiElem* elem, struct GuiEle
 	String text = String_FromArray(textBuffer);
 
 	if (screen->CurI >= 0) {
-		KeyBindingsScreen_ButtonText(screen, screen->CurI, &text);
+		KeyBindingsScreen_GetText(screen, screen->CurI, &text);
 		struct ButtonWidget* curButton = (struct ButtonWidget*)screen->Widgets[screen->CurI];
-		ButtonWidget_SetText(curButton, &text);
+		ButtonWidget_Set(curButton, &text, &screen->TitleFont);
 	}
 	screen->CurI = Menu_Index((struct MenuBase*)screen, (struct Widget*)widget);
 
 	text.length = 0;
 	String_AppendConst(&text, "> ");
-	KeyBindingsScreen_ButtonText(screen, screen->CurI, &text);
+	KeyBindingsScreen_GetText(screen, screen->CurI, &text);
 	String_AppendConst(&text, " <");
-	ButtonWidget_SetText((struct ButtonWidget*)widget, &text);
+	ButtonWidget_Set((struct ButtonWidget*)widget, &text, &screen->TitleFont);
 }
 
 static Int32 KeyBindingsScreen_MakeWidgets(struct KeyBindingsScreen* screen, Int32 y, Int32 arrowsY, Int32 leftLength, STRING_PURE const char* title, Int32 btnWidth) {
@@ -1690,7 +1686,7 @@ static Int32 KeyBindingsScreen_MakeWidgets(struct KeyBindingsScreen* screen, Int
 		Int32 xDir = leftLength == -1 ? 0 : (i < leftLength ? -1 : 1);
 
 		text.length = 0;
-		KeyBindingsScreen_ButtonText(screen, i, &text);
+		KeyBindingsScreen_GetText(screen, i, &text);
 
 		Menu_Button(screen, i, &screen->Buttons[i], btnWidth, &text, &screen->TitleFont, KeyBindingsScreen_OnBindingClick,
 			ANCHOR_CENTRE, ANCHOR_CENTRE, xDir * xOffset, y);
@@ -1733,10 +1729,10 @@ static bool KeyBindingsScreen_KeyDown(struct GuiElem* elem, Key key) {
 
 	char textBuffer[STRING_SIZE];
 	String text = String_FromArray(textBuffer);
-	KeyBindingsScreen_ButtonText(screen, screen->CurI, &text);
+	KeyBindingsScreen_GetText(screen, screen->CurI, &text);
 
 	struct ButtonWidget* curButton = (struct ButtonWidget*)screen->Widgets[screen->CurI];
-	ButtonWidget_SetText(curButton, &text);
+	ButtonWidget_Set(curButton, &text, &screen->TitleFont);
 	screen->CurI = -1;
 	return true;
 }
@@ -1764,7 +1760,7 @@ struct ScreenVTABLE KeyBindingsScreen_VTABLE = {
 	KeyBindingsScreen_MouseDown, MenuScreen_MouseUp, MenuScreen_MouseMove, MenuScreen_MouseScroll,
 	MenuScreen_OnResize,         Menu_ContextLost, NULL,
 };
-static struct KeyBindingsScreen* KeyBindingsScreen_Make(Int32 bindsCount, UInt8* binds, const char** descs, struct ButtonWidget* buttons, struct Widget** widgets, Menu_ContextFunc contextRecreated) {
+static struct KeyBindingsScreen* KeyBindingsScreen_Make(Int32 bindsCount, UInt8* binds, const char** descs, struct ButtonWidget* buttons, struct Widget** widgets, Event_Void_Callback contextRecreated) {
 	struct KeyBindingsScreen* screen = &KeyBindingsScreen_Instance;
 	screen->HandlesAllInput = true;
 	screen->Widgets         = widgets;
@@ -1773,10 +1769,10 @@ static struct KeyBindingsScreen* KeyBindingsScreen_Make(Int32 bindsCount, UInt8*
 	screen->VTABLE = &KeyBindingsScreen_VTABLE;
 	screen->VTABLE->ContextRecreated = contextRecreated;
 
-	screen->BindsCount       = bindsCount;
-	screen->Binds            = binds;
-	screen->Descs            = descs;
-	screen->Buttons          = buttons;
+	screen->BindsCount = bindsCount;
+	screen->Binds      = binds;
+	screen->Descs      = descs;
+	screen->Buttons    = buttons;
 
 	screen->CurI      = -1;
 	screen->LeftPage  = NULL;
@@ -1950,7 +1946,7 @@ static void MenuOptionsScreen_Set(struct MenuOptionsScreen* screen, Int32 i, STR
 	String_AppendConst(&title, screen->Buttons[i].OptName);
 	String_AppendConst(&title, ": ");
 	screen->Buttons[i].GetValue(&title);
-	ButtonWidget_SetText(&screen->Buttons[i], &title);
+	ButtonWidget_Set(&screen->Buttons[i], &title, &screen->TitleFont);
 }
 
 static void MenuOptionsScreen_FreeExtHelp(struct MenuOptionsScreen* screen) {
@@ -2087,7 +2083,7 @@ static bool MenuOptionsScreen_MouseMove(struct GuiElem* elem, Int32 x, Int32 y) 
 	return true;
 }
 
-static void MenuOptionsScreen_Make(struct MenuOptionsScreen* screen, Int32 i, Int32 dir, Int32 y, const char* optName, Widget_LeftClick onClick, ButtonWidget_Get getter, ButtonWidget_Set setter) {
+static void MenuOptionsScreen_Make(struct MenuOptionsScreen* screen, Int32 i, Int32 dir, Int32 y, const char* optName, Widget_LeftClick onClick, Button_Get getter, Button_Set setter) {
 	char titleBuffer[STRING_SIZE];
 	String title = String_FromArray(titleBuffer);
 	String_AppendConst(&title, optName);
@@ -2101,6 +2097,12 @@ static void MenuOptionsScreen_Make(struct MenuOptionsScreen* screen, Int32 i, In
 	btn->OptName  = optName;
 	btn->GetValue = getter;
 	btn->SetValue = setter;
+}
+
+static void MenuOptionsScreen_MakeSimple(struct MenuOptionsScreen* screen, Int32 i, Int32 dir, Int32 y, const char* title, Widget_LeftClick onClick) {
+	String text = String_FromReadonly(title);
+	Menu_Button(screen, i, &screen->Buttons[i], 300, &text, &screen->TitleFont, onClick,
+		ANCHOR_CENTRE, ANCHOR_CENTRE, dir * 160, y);
 }
 
 static void MenuOptionsScreen_OK(struct GuiElem* elem, struct GuiElem* widget) {
@@ -2180,7 +2182,7 @@ struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
 	MenuScreen_MouseDown,      MenuScreen_MouseUp,       MenuOptionsScreen_MouseMove, MenuScreen_MouseScroll,
 	MenuScreen_OnResize, MenuOptionsScreen_ContextLost, NULL,
 };
-struct Screen* MenuOptionsScreen_MakeInstance(struct Widget** widgets, Int32 count, struct ButtonWidget* buttons, Menu_ContextFunc contextRecreated,
+struct Screen* MenuOptionsScreen_MakeInstance(struct Widget** widgets, Int32 count, struct ButtonWidget* buttons, Event_Void_Callback contextRecreated,
 	struct MenuInputValidator* validators, const char** defaultValues, const char** descriptions, Int32 descsCount) {
 	struct MenuOptionsScreen* screen = &MenuOptionsScreen_Instance;
 	screen->HandlesAllInput = true;
@@ -2583,7 +2585,7 @@ static void GuiOptionsScreen_ContextRecreated(void* obj) {
 		GuiOptionsScreen_GetChatlines, GuiOptionsScreen_SetChatlines);
 	MenuOptionsScreen_Make(screen, 8, 1,    0, "Use system font",    MenuOptionsScreen_Bool,
 		GuiOptionsScreen_GetUseFont,   GuiOptionsScreen_SetUseFont);
-	OptionsGroupScreen_Make(screen, 9, 1,  50, "Select system font", Menu_SwitchFont);
+	MenuOptionsScreen_MakeSimple(screen, 9, 1,  50, "Select system font", Menu_SwitchFont);
 
 	Menu_DefaultBack(screen, 10, &screen->Buttons[10], false, &screen->TitleFont, Menu_SwitchOptions);
 	widgets[11] = NULL; widgets[12] = NULL; widgets[13] = NULL;
@@ -2760,7 +2762,7 @@ struct Screen* HacksSettingsScreen_MakeInstance(void) {
 
 	struct Screen* screen = MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
 		HacksSettingsScreen_ContextRecreated, validators, defaultValues, descs, Array_Elems(buttons));
-	((struct MenuOptionsScreen*)screen)->VTABLE->ContextLost = HacksSettingsScreen_ContextLost;
+	screen->VTABLE->ContextLost = HacksSettingsScreen_ContextLost;
 	return screen;
 }
 

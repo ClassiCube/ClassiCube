@@ -14,31 +14,28 @@ void Widget_SetLocation(struct Widget* widget, UInt8 horAnchor, UInt8 verAnchor,
 struct TextWidget {
 	Widget_Layout
 	struct Texture Texture;
-	Int32 DefaultHeight;
-	struct FontDesc Font;
 
 	bool ReducePadding;
 	PackedCol Col;
 };
-void TextWidget_Make(struct TextWidget* widget, struct FontDesc* font);
+void TextWidget_Make(struct TextWidget* widget);
 void TextWidget_Create(struct TextWidget* widget, STRING_PURE String* text, struct FontDesc* font);
-void TextWidget_SetText(struct TextWidget* widget, STRING_PURE String* text);
+void TextWidget_Set(struct TextWidget* widget, STRING_PURE String* text, struct FontDesc* font);
 
 
-typedef void (*ButtonWidget_Get)(STRING_TRANSIENT String* raw);
-typedef void (*ButtonWidget_Set)(STRING_PURE String* raw);
+typedef void (*Button_Get)(STRING_TRANSIENT String* raw);
+typedef void (*Button_Set)(STRING_PURE String* raw);
 struct ButtonWidget {
 	Widget_Layout
 	struct Texture Texture;
-	UInt16 DefaultHeight, MinWidth;
-	struct FontDesc Font;
+	UInt16 MinWidth;
 
 	const char* OptName;
-	ButtonWidget_Get GetValue;
-	ButtonWidget_Set SetValue;
+	Button_Get GetValue;
+	Button_Set SetValue;
 };
 void ButtonWidget_Create(struct ButtonWidget* widget, Int32 minWidth, STRING_PURE String* text, struct FontDesc* font, Widget_LeftClick onClick);
-void ButtonWidget_SetText(struct ButtonWidget* widget, STRING_PURE String* text);
+void ButtonWidget_Set(struct ButtonWidget* widget, STRING_PURE String* text, struct FontDesc* font);
 
 
 struct ScrollbarWidget {

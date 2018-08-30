@@ -98,7 +98,7 @@ namespace ClassicalSharp.Gui.Screens {
 			int secsLeft = Math.Max(0, (int)(delay - elapsed));
 			if (lastSecsLeft == secsLeft && reconnect.Active == lastActive) return;
 			
-			reconnect.SetText(ReconnectMessage());
+			reconnect.Set(ReconnectMessage(), titleFont);
 			reconnect.Disabled = secsLeft != 0;
 			
 			Redraw(delta);

@@ -28,9 +28,8 @@ struct GuiElem;
 	bool (*HandlesMouseScroll)(struct GuiElem* elem, Real32 delta);
 
 struct GuiElemVTABLE { GuiElemVTABLE_Layout };
-
 struct GuiElem { struct GuiElemVTABLE* VTABLE; };
-void GuiElem_Reset(struct GuiElem* elem);
+
 void Gui_DefaultRecreate(struct GuiElem* elem);
 bool Gui_DefaultMouse(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn);
 bool Gui_DefaultKey(struct GuiElem* elem, Key key);
@@ -58,18 +57,21 @@ void Screen_CommonFree(struct GuiElem* elem);
 
 
 typedef void (*Widget_LeftClick)(struct GuiElem* screenElem, struct GuiElem* widget);
-#define Widget_Layout struct GuiElemVTABLE* VTABLE; \
+struct WidgetVTABLE {
+	GuiElemVTABLE_Layout
+	void (*Reposition)(struct GuiElem* elem);
+};
+#define Widget_Layout struct WidgetVTABLE* VTABLE; \
 	Int32 X, Y, Width, Height;  /* Top left corner, and dimensions, of this widget */ \
 	bool Active;                /* Whether this widget is currently being moused over*/ \
 	bool Disabled;              /* Whether widget is prevented from being interacted with */ \
 	UInt8 HorAnchor, VerAnchor; /* Specifies the reference point for when this widget is resized */ \
 	Int32 XOffset, YOffset;     /* Offset from the reference point */ \
-	void (*Reposition)(struct GuiElem* elem); \
 	Widget_LeftClick MenuClick;
 
 /* Represents an individual 2D gui component. */
 struct Widget { Widget_Layout };
-void Widget_DoReposition(struct GuiElem* elem);
+void Widget_CalcPosition(struct GuiElem* elem);
 void Widget_Init(struct Widget* widget);
 bool Widget_Contains(struct Widget* widget, Int32 x, Int32 y);
 
@@ -129,6 +131,6 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** ve
 #define Elem_HandlesMouseScroll(elem, delta)   (elem)->VTABLE->HandlesMouseScroll((struct GuiElem*)(elem), delta)
 
 #define Screen_OnResize(screen)   (screen)->VTABLE->OnResize((struct GuiElem*)(screen));
-#define Widget_Reposition(widget) (widget)->Reposition((struct GuiElem*)(widget));
+#define Widget_Reposition(widget) (widget)->VTABLE->Reposition((struct GuiElem*)(widget));
 #define Elem_TryFree(elem)        if ((elem)->VTABLE) { Elem_Free(elem); }
 #endif

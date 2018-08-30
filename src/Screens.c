@@ -330,7 +330,7 @@ static void StatusScreen_UpdateHackState(struct StatusScreen* screen) {
 	if (speeding)      String_AppendConst(&status, "Speed ON   ");
 	if (hacks->Noclip) String_AppendConst(&status, "Noclip ON   ");
 
-	TextWidget_SetText(&screen->HackStates, &status);
+	TextWidget_Set(&screen->HackStates, &status, &screen->Font);
 }
 
 static void StatusScreen_Update(struct StatusScreen* screen, Real64 delta) {
@@ -342,7 +342,7 @@ static void StatusScreen_Update(struct StatusScreen* screen, Real64 delta) {
 	String status = String_FromArray(statusBuffer);
 	StatusScreen_MakeText(screen, &status);
 
-	TextWidget_SetText(&screen->Status, &status);
+	TextWidget_Set(&screen->Status, &status, &screen->Font);
 	screen->Accumulator = 0.0;
 	screen->Frames = 0;
 	Game_ChunkUpdates = 0;
@@ -364,10 +364,9 @@ static void StatusScreen_ContextLost(void* obj) {
 static void StatusScreen_ContextRecreated(void* obj) {
 	struct StatusScreen* screen = (struct StatusScreen*)obj;
 
-	struct TextWidget* status = &screen->Status; TextWidget_Make(status, &screen->Font);
+	struct TextWidget* status = &screen->Status; TextWidget_Make(status);
 	Widget_SetLocation((struct Widget*)status, ANCHOR_MIN, ANCHOR_MIN, 2, 2);
 	status->ReducePadding = true;
-	Elem_Init(status);
 	StatusScreen_Update(screen, 1.0);
 
 	String chars = String_FromConst("0123456789-, ()");
@@ -376,10 +375,9 @@ static void StatusScreen_ContextRecreated(void* obj) {
 	screen->PosAtlas.Tex.Y = status->Height + 2;
 
 	Int32 yOffset = status->Height + screen->PosAtlas.Tex.Height + 2;
-	struct TextWidget* hacks = &screen->HackStates; TextWidget_Make(hacks, &screen->Font);
+	struct TextWidget* hacks = &screen->HackStates; TextWidget_Make(hacks);
 	Widget_SetLocation((struct Widget*)hacks, ANCHOR_MIN, ANCHOR_MIN, 2, yOffset);
 	hacks->ReducePadding = true;
-	Elem_Init(hacks);
 	StatusScreen_UpdateHackState(screen);
 }
 
@@ -771,7 +769,7 @@ static void ChatScreen_SetInitialMessages(struct ChatScreen* screen) {
 	ChatScreen_Set(&screen->BottomRight, 0, Chat_BottomRight[2]);
 
 	msg = String_FromRawArray(Chat_Announcement.Buffer);
-	TextWidget_SetText(&screen->Announcement, &msg);
+	TextWidget_Set(&screen->Announcement, &msg, &screen->AnnouncementFont);
 
 	Int32 i;
 	for (i = 0; i < screen->ClientStatus.LinesCount; i++) {
@@ -1025,7 +1023,7 @@ static void ChatScreen_ChatReceived(void* obj, String* msg, Int32 type) {
 	} else if (type >= MSG_TYPE_BOTTOMRIGHT_1 && type <= MSG_TYPE_BOTTOMRIGHT_3) {
 		TextGroupWidget_SetText(&screen->BottomRight, 2 - (type - MSG_TYPE_BOTTOMRIGHT_1), msg);
 	} else if (type == MSG_TYPE_ANNOUNCEMENT) {
-		TextWidget_SetText(&screen->Announcement, msg);
+		TextWidget_Set(&screen->Announcement, msg, &screen->AnnouncementFont);
 	} else if (type >= MSG_TYPE_CLIENTSTATUS_1 && type <= MSG_TYPE_CLIENTSTATUS_3) {
 		TextGroupWidget_SetText(&screen->ClientStatus, type - MSG_TYPE_CLIENTSTATUS_1, msg);
 		ChatScreen_UpdateChatYOffset(screen, true);
@@ -1400,7 +1398,7 @@ static void DisconnectScreen_UpdateDelayLeft(struct DisconnectScreen* screen, Re
 	char msgBuffer[STRING_SIZE];
 	String msg = String_FromArray(msgBuffer);
 	DisconnectScreen_ReconnectMessage(screen, &msg);
-	ButtonWidget_SetText(&screen->Reconnect, &msg);
+	ButtonWidget_Set(&screen->Reconnect, &msg, &screen->TitleFont);
 	screen->Reconnect.Disabled = secsLeft != 0;
 
 	DisconnectScreen_Redraw(screen, delta);

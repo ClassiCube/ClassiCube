@@ -87,7 +87,7 @@ namespace ClassicalSharp.Gui.Screens {
 				}
 			}
 			
-			status.SetText(statusBuffer.ToString());
+			status.Set(statusBuffer.ToString(), font);
 			accumulator = 0;
 			frames = 0;
 			game.ChunkUpdates = 0;
@@ -100,22 +100,20 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			status = new TextWidget(game, font)
+			status = new TextWidget(game)
 				.SetLocation(Anchor.Min, Anchor.Min, 2, 2);
 			status.ReducePadding = true;
-			status.Init();
 			string msg = statusBuffer.Length > 0 ? statusBuffer.ToString() : "FPS: no data yet";
-			status.SetText(msg);
+			status.Set(msg, font);
 			
 			posAtlas = new TextAtlas(game, 16);
 			posAtlas.Pack("0123456789-, ()", font, "Position: ");
 			posAtlas.tex.Y = (short)(status.Height + 2);
 			
 			int yOffset = status.Height + posAtlas.tex.Height + 2;
-			hackStates = new TextWidget(game, font)
+			hackStates = new TextWidget(game)
 				.SetLocation(Anchor.Min, Anchor.Min, 2, yOffset);
 			hackStates.ReducePadding = true;
-			hackStates.Init();
 			UpdateHackState();
 		}
 		
@@ -149,7 +147,7 @@ namespace ClassicalSharp.Gui.Screens {
 		bool HacksChanged()  {
 			HacksComponent hacks = game.LocalPlayer.Hacks;
 			return hacks.Speeding != speed || hacks.HalfSpeeding != halfSpeed || hacks.Flying != fly
-				|| hacks.Noclip != noclip || game.Fov != lastFov || hacks.CanSpeed != canSpeed;
+				 || hacks.Noclip != noclip || game.Fov != lastFov || hacks.CanSpeed != canSpeed;
 		}
 		
 		void UpdateHackState() {
@@ -164,7 +162,7 @@ namespace ClassicalSharp.Gui.Screens {
 			bool speeding = (speed || halfSpeed) && hacks.CanSpeed;
 			if (speeding) statusBuffer.Append("Speed ON   ");
 			if (noclip)   statusBuffer.Append("Noclip ON   ");
-			hackStates.SetText(statusBuffer.ToString());
+			hackStates.Set(statusBuffer.ToString(), font);
 		}
 	}
 }

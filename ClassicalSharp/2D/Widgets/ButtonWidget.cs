@@ -9,24 +9,20 @@ using Android.Graphics;
 
 namespace ClassicalSharp.Gui.Widgets {
 	
-	public delegate void ButtonValueSetter(Game game, string raw);	
-	public delegate string ButtonValueGetter(Game game);	
+	public delegate void ButtonValueSetter(Game game, string raw);
+	public delegate string ButtonValueGetter(Game game);
 	
 	public class ButtonWidget : Widget {
-		public string OptName;		
+		public string OptName;
 		public ButtonValueGetter GetValue;
-		public ButtonValueSetter SetValue;
-		
-		public ButtonWidget(Game game, Font font) : base(game) {
-			this.font = font;
-		}
+		public ButtonValueSetter SetValue;		
+		public ButtonWidget(Game game) : base(game) { }
 		
 		public static ButtonWidget Create(Game game, int width, string text, Font font, ClickHandler onClick) {
-			ButtonWidget widget = new ButtonWidget(game, font);
-			widget.Init();
-			widget.MinWidth = width;
-			widget.SetText(text);
+			ButtonWidget widget = new ButtonWidget(game);
+			widget.MinWidth  = width;
 			widget.MenuClick = onClick;
+			widget.Set(text, font);			
 			return widget;
 		}
 		
@@ -38,14 +34,8 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		Texture texture;
-		public int MinWidth;
-		int defaultHeight;
-		internal Font font;
-		
-		public override void Init() {
-			defaultHeight = game.Drawer2D.FontHeight(font, true);
-			Height = defaultHeight;
-		}
+		public int MinWidth;	
+		public override void Init() { }
 		
 		const float uWidth = 200/256f;
 		const int minHeight = 40;
@@ -56,21 +46,23 @@ namespace ClassicalSharp.Gui.Widgets {
 		static Texture disabledTex = new Texture(0, 0, 0, 0, 0,
 		                                         new TextureRec(0, 46/256f, uWidth, 20/256f));
 
-		public void SetText(string text) {
+		public void Set(string text, Font font) {
 			game.Graphics.DeleteTexture(ref texture);
 			if (IDrawer2D.EmptyText(text)) {
 				texture = default(Texture);
-				Width = 0; Height = defaultHeight;
+				int height = game.Drawer2D.FontHeight(font, true);
+				texture.Height = (ushort)height;
 			} else {
 				DrawTextArgs args = new DrawTextArgs(text, font, true);
 				texture = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
-				Width  = Math.Max(texture.Width,  MinWidth);
-				Height = Math.Max((int)texture.Height, minHeight);
-				
-				Reposition();
-				texture.X1 = X + (Width / 2 - texture.Width / 2);
-				texture.Y1 = Y + (Height / 2 - texture.Height / 2);
 			}
+			
+			Width  = Math.Max(texture.Width,       MinWidth);
+			Height = Math.Max((int)texture.Height, minHeight);
+			
+			Reposition();		
+			texture.X1 = X + (Width  / 2 - texture.Width  / 2);
+			texture.Y1 = Y + (Height / 2 - texture.Height / 2);
 		}
 		
 		static PackedCol normCol = new PackedCol(224, 224, 224),
@@ -79,32 +71,32 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override void Render(double delta) {
 			IGraphicsApi gfx = game.Graphics;
-			if (!texture.IsValid) return;
 			Texture back = Active ? selectedTex : shadowTex;
 			if (Disabled) back = disabledTex;
 			
 			back.ID = game.UseClassicGui ? game.Gui.GuiClassicTex : game.Gui.GuiTex;
 			back.X1 = X; back.Y1 = Y;
-			back.Width = (ushort)Width; back.Height = (ushort)Height;			
+			back.Width = (ushort)Width; back.Height = (ushort)Height;
 			
 			if (Width == 400) {
 				// Button can be drawn normally
 				back.U1 = 0; back.U2 = uWidth;
 				back.Render(gfx);
-			} else {				
+			} else {
 				// Split button down the middle
 				float scale = (Width / 400f) * 0.5f;
 				gfx.BindTexture(back.ID); // avoid bind twice
 				
-				back.Width = (ushort)(Width / 2); 
+				back.Width = (ushort)(Width / 2);
 				back.U1 = 0; back.U2 = uWidth * scale;
 				gfx.Draw2DTexture(ref back, PackedCol.White);
 				
-				back.X1 += (short)(Width / 2); 
+				back.X1 += (short)(Width / 2);
 				back.U1 = uWidth - uWidth * scale; back.U2 = uWidth;
 				gfx.Draw2DTexture(ref back, PackedCol.White);
 			}
 			
+			if (!texture.IsValid) return;
 			PackedCol col = Disabled ? disabledCol : (Active ? activeCol : normCol);
 			texture.Render(gfx, col);
 		}

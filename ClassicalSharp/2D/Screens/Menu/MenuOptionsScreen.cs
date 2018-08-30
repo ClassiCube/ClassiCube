@@ -141,7 +141,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			// need to get btn again here (e.g. changing FPS invalidates all widgets)
 			btn = (ButtonWidget)widgets[index];
-			btn.SetText(btn.OptName + ": " + btn.GetValue(game));
+			btn.Set(btn.OptName + ": " + btn.GetValue(game), titleFont);
 		}
 		
 		protected void OnBoolClick(Game game, Widget widget) {

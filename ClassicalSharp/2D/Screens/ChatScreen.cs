@@ -88,7 +88,8 @@ namespace ClassicalSharp.Gui.Screens {
 			bottomRight.SetText(2, chat.BottomRight1.Text);
 			bottomRight.SetText(1, chat.BottomRight2.Text);
 			bottomRight.SetText(0, chat.BottomRight3.Text);
-			announcement.SetText(chat.Announcement.Text);
+			announcement.Set(chat.Announcement.Text, announcementFont);
+			
 			for (int i = 0; i < chat.ClientStatus.Length; i++) {
 				clientStatus.SetText(i, chat.ClientStatus[i].Text);
 			}
@@ -253,7 +254,7 @@ namespace ClassicalSharp.Gui.Screens {
 			} else if (type >= MessageType.BottomRight1 && type <= MessageType.BottomRight3) {
 				bottomRight.SetText(2 - (int)(type - MessageType.BottomRight1), e.Text);
 			} else if (type == MessageType.Announcement) {
-				announcement.SetText(e.Text);
+				announcement.Set(e.Text, announcementFont);
 			} else if (type >= MessageType.ClientStatus1 && type <= MessageType.ClientStatus3) {
 				clientStatus.SetText((int)(type - MessageType.ClientStatus1), e.Text);
 				UpdateChatYOffset(true);

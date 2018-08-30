@@ -99,7 +99,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected virtual void UpdateEntry(ButtonWidget widget, string text) {
-			widget.SetText(text);
+			widget.Set(text, font);
 		}
 		
 		void UpdatePage() {
@@ -112,7 +112,7 @@ namespace ClassicalSharp.Gui.Screens {
 			int num   = (currentIndex / items) + 1;
 			int pages = Utils.CeilDiv(entries.Length, items);
 			if (pages == 0) pages = 1;
-			page.SetText("&7Page " + num + " of " + pages);
+			page.Set("&7Page " + num + " of " + pages, font);
 		}
 		
 		public override bool HandlesKeyDown(Key key) {

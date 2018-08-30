@@ -20,28 +20,15 @@
 #define WIDGET_UV(u1,v1, u2,v2) u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f
 void Widget_SetLocation(struct Widget* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xOffset, Int32 yOffset) {
 	widget->HorAnchor = horAnchor; widget->VerAnchor = verAnchor;
-	widget->XOffset = xOffset; widget->YOffset = yOffset;
-	widget->Reposition((struct GuiElem*)widget);
+	widget->XOffset   = xOffset;   widget->YOffset   = yOffset;
+	Widget_Reposition(widget);
 }
 
 
 /*########################################################################################################################*
 *-------------------------------------------------------TextWidget--------------------------------------------------------*
 *#########################################################################################################################*/
-static void TextWidget_SetHeight(struct TextWidget* widget, Int32 height) {
-	if (widget->ReducePadding) {
-		Drawer2D_ReducePadding_Height(&height, widget->Font.Size, 4);
-	}
-	widget->DefaultHeight = height;
-	widget->Height = height;
-}
-
-static void TextWidget_Init(struct GuiElem* elem) {
-	struct TextWidget* widget = (struct TextWidget*)elem;
-	Int32 height = Drawer2D_FontHeight(&widget->Font, true);
-	TextWidget_SetHeight(widget, height);
-}
-
+static void TextWidget_Init(struct GuiElem* elem) { }
 static void TextWidget_Render(struct GuiElem* elem, Real64 delta) {
 	struct TextWidget* widget = (struct TextWidget*)elem;	
 	if (widget->Texture.ID) {
@@ -57,46 +44,47 @@ static void TextWidget_Free(struct GuiElem* elem) {
 static void TextWidget_Reposition(struct GuiElem* elem) {
 	struct TextWidget* widget = (struct TextWidget*)elem;
 	Int32 oldX = widget->X, oldY = widget->Y;
-	Widget_DoReposition(elem);
+	Widget_CalcPosition(elem);
 	widget->Texture.X += widget->X - oldX;
 	widget->Texture.Y += widget->Y - oldY;
 }
 
-struct GuiElemVTABLE TextWidget_VTABLE;
-void TextWidget_Make(struct TextWidget* widget, struct FontDesc* font) {
+struct WidgetVTABLE TextWidget_VTABLE;
+void TextWidget_Make(struct TextWidget* widget) {
 	widget->VTABLE = &TextWidget_VTABLE;
 	Widget_Init((struct Widget*)widget);
 	PackedCol col = PACKEDCOL_WHITE;
 	widget->Col = col;
-	widget->Font = *font;
-	widget->Reposition     = TextWidget_Reposition;
+
 	widget->VTABLE->Init   = TextWidget_Init;
 	widget->VTABLE->Render = TextWidget_Render;
 	widget->VTABLE->Free   = TextWidget_Free;
+	widget->VTABLE->Reposition = TextWidget_Reposition;
 }
 
 void TextWidget_Create(struct TextWidget* widget, STRING_PURE String* text, struct FontDesc* font) {
-	TextWidget_Make(widget, font);
-	Elem_Init(widget);
-	TextWidget_SetText(widget, text);
+	TextWidget_Make(widget);
+	TextWidget_Set(widget,  text, font);
 }
 
-void TextWidget_SetText(struct TextWidget* widget, STRING_PURE String* text) {
+void TextWidget_Set(struct TextWidget* widget, STRING_PURE String* text, struct FontDesc* font) {
 	Gfx_DeleteTexture(&widget->Texture.ID);
 	if (Drawer2D_IsEmptyText(text)) {
-		widget->Width = 0; widget->Height = widget->DefaultHeight;
+		widget->Texture.Width  = 0; 
+		widget->Texture.Height = Drawer2D_FontHeight(font, true);
 	} else {
 		struct DrawTextArgs args;
-		DrawTextArgs_Make(&args, text, &widget->Font, true);
+		DrawTextArgs_Make(&args, text, font, true);
 		Drawer2D_MakeTextTexture(&widget->Texture, &args, 0, 0);
-		if (widget->ReducePadding) {
-			Drawer2D_ReducePadding_Tex(&widget->Texture, widget->Font.Size, 4);
-		}
-
-		widget->Width = widget->Texture.Width; widget->Height = widget->Texture.Height;
-		Widget_Reposition(widget);
-		widget->Texture.X = widget->X; widget->Texture.Y = widget->Y;
 	}
+
+	if (widget->ReducePadding) {
+		Drawer2D_ReducePadding_Tex(&widget->Texture, font->Size, 4);
+	}
+
+	widget->Width = widget->Texture.Width; widget->Height = widget->Texture.Height;
+	Widget_Reposition(widget);
+	widget->Texture.X = widget->X; widget->Texture.Y = widget->Y;
 }
 
 
@@ -110,12 +98,7 @@ struct Texture Button_ShadowTex   = { NULL, TEX_RECT(0,0, 0,0), WIDGET_UV(0,66, 
 struct Texture Button_SelectedTex = { NULL, TEX_RECT(0,0, 0,0), WIDGET_UV(0,86, 200,106) };
 struct Texture Button_DisabledTex = { NULL, TEX_RECT(0,0, 0,0), WIDGET_UV(0,46, 200,66)  };
 
-static void ButtonWidget_Init(struct GuiElem* elem) {
-	struct ButtonWidget* widget = (struct ButtonWidget*)elem;
-	widget->DefaultHeight = Drawer2D_FontHeight(&widget->Font, true);
-	widget->Height = widget->DefaultHeight;
-}
-
+static void ButtonWidget_Init(struct GuiElem* elem) { }
 static void ButtonWidget_Free(struct GuiElem* elem) {
 	struct ButtonWidget* widget = (struct ButtonWidget*)elem;
 	Gfx_DeleteTexture(&widget->Texture.ID);
@@ -124,7 +107,7 @@ static void ButtonWidget_Free(struct GuiElem* elem) {
 static void ButtonWidget_Reposition(struct GuiElem* elem) {
 	struct ButtonWidget* widget = (struct ButtonWidget*)elem;
 	Int32 oldX = widget->X, oldY = widget->Y;
-	Widget_DoReposition(elem);
+	Widget_CalcPosition(elem);
 	
 	widget->Texture.X += widget->X - oldX;
 	widget->Texture.Y += widget->Y - oldY;
@@ -132,7 +115,6 @@ static void ButtonWidget_Reposition(struct GuiElem* elem) {
 
 static void ButtonWidget_Render(struct GuiElem* elem, Real64 delta) {
 	struct ButtonWidget* widget = (struct ButtonWidget*)elem;
-	if (!widget->Texture.ID) return;
 	struct Texture back = widget->Active ? Button_SelectedTex : Button_ShadowTex;
 	if (widget->Disabled) back = Button_DisabledTex;
 
@@ -157,46 +139,49 @@ static void ButtonWidget_Render(struct GuiElem* elem, Real64 delta) {
 		back.U1 = BUTTON_uWIDTH * (1.0f - scale); back.U2 = BUTTON_uWIDTH;
 		GfxCommon_Draw2DTexture(&back, white);
 	}
-
+	
 	PackedCol normCol     = PACKEDCOL_CONST(224, 224, 244, 255);
 	PackedCol activeCol   = PACKEDCOL_CONST(255, 255, 160, 255);
 	PackedCol disabledCol = PACKEDCOL_CONST(160, 160, 160, 255);
+
+	if (!widget->Texture.ID) return;
 	PackedCol col = widget->Disabled ? disabledCol : (widget->Active ? activeCol : normCol);
 	Texture_RenderShaded(&widget->Texture, col);
 }
 
-struct GuiElemVTABLE ButtonWidget_VTABLE;
+struct WidgetVTABLE ButtonWidget_VTABLE;
 void ButtonWidget_Create(struct ButtonWidget* widget, Int32 minWidth, STRING_PURE String* text, struct FontDesc* font, Widget_LeftClick onClick) {
 	widget->VTABLE = &ButtonWidget_VTABLE;
 	Widget_Init((struct Widget*)widget);
+
 	widget->VTABLE->Init   = ButtonWidget_Init;
 	widget->VTABLE->Render = ButtonWidget_Render;
 	widget->VTABLE->Free   = ButtonWidget_Free;
-	widget->Reposition = ButtonWidget_Reposition;
+	widget->VTABLE->Reposition = ButtonWidget_Reposition;
 
-	widget->OptName = NULL;
-	widget->Font = *font;
-	Elem_Init(widget);
-	widget->MinWidth = minWidth;
-	ButtonWidget_SetText(widget, text);
+	widget->OptName   = NULL;
+	widget->MinWidth  = minWidth;
 	widget->MenuClick = onClick;
+	ButtonWidget_Set(widget, text, font);
 }
 
-void ButtonWidget_SetText(struct ButtonWidget* widget, STRING_PURE String* text) {
+void ButtonWidget_Set(struct ButtonWidget* widget, STRING_PURE String* text, struct FontDesc* font) {
 	Gfx_DeleteTexture(&widget->Texture.ID);
 	if (Drawer2D_IsEmptyText(text)) {
-		widget->Width = 0; widget->Height = widget->DefaultHeight;
+		widget->Texture.Width  = 0;
+		widget->Texture.Height = Drawer2D_FontHeight(font, true);
 	} else {
 		struct DrawTextArgs args;
-		DrawTextArgs_Make(&args, text, &widget->Font, true);
+		DrawTextArgs_Make(&args, text, font, true);
 		Drawer2D_MakeTextTexture(&widget->Texture, &args, 0, 0);
-		widget->Width  = max(widget->Texture.Width,  widget->MinWidth);
-		widget->Height = max(widget->Texture.Height, BUTTON_MIN_WIDTH);
-
-		Widget_Reposition(widget);
-		widget->Texture.X = widget->X + (widget->Width  / 2 - widget->Texture.Width  / 2);
-		widget->Texture.Y = widget->Y + (widget->Height / 2 - widget->Texture.Height / 2);
 	}
+
+	widget->Width  = max(widget->Texture.Width,  widget->MinWidth);
+	widget->Height = max(widget->Texture.Height, BUTTON_MIN_WIDTH);
+
+	Widget_Reposition(widget);
+	widget->Texture.X = widget->X + (widget->Width  / 2 - widget->Texture.Width  / 2);
+	widget->Texture.Y = widget->Y + (widget->Height / 2 - widget->Texture.Height / 2);
 }
 
 
@@ -304,7 +289,7 @@ static bool ScrollbarWidget_HandlesMouseMove(struct GuiElem* elem, Int32 x, Int3
 	return false;
 }
 
-struct GuiElemVTABLE ScrollbarWidget_VTABLE;
+struct WidgetVTABLE ScrollbarWidget_VTABLE;
 void ScrollbarWidget_Create(struct ScrollbarWidget* widget) {
 	widget->VTABLE = &ScrollbarWidget_VTABLE;
 	Widget_Init((struct Widget*)widget);
@@ -401,7 +386,7 @@ static void HotbarWidget_Reposition(struct GuiElem* elem) {
 	widget->BarXOffset   = 3.1f * scale;
 	widget->BorderSize   = 4.0f * scale;
 
-	Widget_DoReposition(elem);
+	Widget_CalcPosition(elem);
 	HotbarWidget_RepositonBackgroundTexture(widget);
 	HotbarWidget_RepositionSelectionTexture(widget);
 }
@@ -488,7 +473,7 @@ static bool HotbarWidget_HandlesMouseScroll(struct GuiElem* elem, Real32 delta) 
 	return true;
 }
 
-struct GuiElemVTABLE HotbarWidget_VTABLE;
+struct WidgetVTABLE HotbarWidget_VTABLE;
 void HotbarWidget_Create(struct HotbarWidget* widget) {
 	widget->VTABLE = &HotbarWidget_VTABLE;
 	Widget_Init((struct Widget*)widget);
@@ -498,7 +483,7 @@ void HotbarWidget_Create(struct HotbarWidget* widget) {
 	widget->VTABLE->Init   = HotbarWidget_Init;
 	widget->VTABLE->Render = HotbarWidget_Render;
 	widget->VTABLE->Free   = HotbarWidget_Free;
-	widget->Reposition     = HotbarWidget_Reposition;
+	widget->VTABLE->Reposition = HotbarWidget_Reposition;
 
 	widget->VTABLE->HandlesKeyDown     = HotbarWidget_HandlesKeyDown;
 	widget->VTABLE->HandlesKeyUp       = HotbarWidget_HandlesKeyUp;
@@ -840,7 +825,7 @@ static bool TableWidget_HandlesKeyDown(struct GuiElem* elem, Key key) {
 	return true;
 }
 
-struct GuiElemVTABLE TableWidget_VTABLE;
+struct WidgetVTABLE TableWidget_VTABLE;
 void TableWidget_Create(struct TableWidget* widget) {
 	widget->VTABLE = &TableWidget_VTABLE;
 	Widget_Init((struct Widget*)widget);
@@ -850,7 +835,7 @@ void TableWidget_Create(struct TableWidget* widget) {
 	widget->VTABLE->Render   = TableWidget_Render;
 	widget->VTABLE->Free     = TableWidget_Free;
 	widget->VTABLE->Recreate = TableWidget_Recreate;
-	widget->Reposition       = TableWidget_Reposition;
+	widget->VTABLE->Reposition = TableWidget_Reposition;
 	
 	widget->VTABLE->HandlesMouseDown   = TableWidget_HandlesMouseDown;
 	widget->VTABLE->HandlesMouseUp     = TableWidget_HandlesMouseUp;
@@ -1211,7 +1196,7 @@ static void InputWidget_Recreate(struct GuiElem* elem) {
 static void InputWidget_Reposition(struct GuiElem* elem) {
 	struct InputWidget* widget = (struct InputWidget*)elem;
 	Int32 oldX = widget->X, oldY = widget->Y;
-	Widget_DoReposition(elem);
+	Widget_CalcPosition(elem);
 	
 	widget->CaretTex.X += widget->X - oldX; widget->CaretTex.Y += widget->Y - oldY;
 	widget->InputTex.X += widget->X - oldX; widget->InputTex.Y += widget->Y - oldY;
@@ -1285,7 +1270,7 @@ static bool InputWidget_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y,
 	return true;
 }
 
-struct GuiElemVTABLE InputWidget_VTABLE;
+struct WidgetVTABLE InputWidget_VTABLE;
 void InputWidget_Create(struct InputWidget* widget, struct FontDesc* font, STRING_REF String* prefix) {
 	widget->VTABLE = &InputWidget_VTABLE;
 	Widget_Init((struct Widget*)widget);
@@ -1298,7 +1283,7 @@ void InputWidget_Create(struct InputWidget* widget, struct FontDesc* font, STRIN
 	widget->VTABLE->Init     = InputWidget_Init;
 	widget->VTABLE->Free     = InputWidget_Free;
 	widget->VTABLE->Recreate = InputWidget_Recreate;
-	widget->Reposition       = InputWidget_Reposition;
+	widget->VTABLE->Reposition = InputWidget_Reposition;
 
 	widget->VTABLE->HandlesKeyDown   = InputWidget_HandlesKeyDown;
 	widget->VTABLE->HandlesKeyUp     = InputWidget_HandlesKeyUp;
@@ -1555,7 +1540,7 @@ static bool MenuInputWidget_AllowedChar(struct GuiElem* elem, char c) {
 }
 
 static Int32 MenuInputWidget_GetMaxLines(void) { return 1; }
-struct GuiElemVTABLE MenuInputWidget_VTABLE;
+struct WidgetVTABLE MenuInputWidget_VTABLE;
 void MenuInputWidget_Create(struct MenuInputWidget* widget, Int32 width, Int32 height, STRING_PURE String* text, struct FontDesc* font, struct MenuInputValidator* validator) {
 	String empty = String_MakeNull();
 	InputWidget_Create(&widget->Base, font, &empty);
@@ -1805,7 +1790,7 @@ static Int32 ChatInputWidget_GetMaxLines(void) {
 	return !Game_ClassicMode && ServerConnection_SupportsPartialMessages ? 3 : 1;
 }
 
-struct GuiElemVTABLE ChatInputWidget_VTABLE;
+struct WidgetVTABLE ChatInputWidget_VTABLE;
 void ChatInputWidget_Create(struct ChatInputWidget* widget, struct FontDesc* font) {
 	String prefix = String_FromConst("> ");
 	InputWidget_Create(&widget->Base, font, &prefix);
@@ -1947,7 +1932,7 @@ static void PlayerListWidget_Reposition(struct GuiElem* elem) {
 	widget->YOffset = -max(0, yPosition);
 
 	Int32 oldX = widget->X, oldY = widget->Y;
-	Widget_DoReposition(elem);	
+	Widget_CalcPosition(elem);	
 
 	Int32 i;
 	for (i = 0; i < widget->NamesCount; i++) {
@@ -2182,14 +2167,14 @@ static void PlayerListWidget_Free(struct GuiElem* elem) {
 	Event_UnregisterInt(&TabListEvents_Removed, widget, PlayerListWidget_TabEntryRemoved);
 }
 
-struct GuiElemVTABLE PlayerListWidgetVTABLE;
+struct WidgetVTABLE PlayerListWidgetVTABLE;
 void PlayerListWidget_Create(struct PlayerListWidget* widget, struct FontDesc* font, bool classic) {
 	widget->VTABLE = &PlayerListWidgetVTABLE;
 	Widget_Init((struct Widget*)widget);
 	widget->VTABLE->Init   = PlayerListWidget_Init;
 	widget->VTABLE->Render = PlayerListWidget_Render;
 	widget->VTABLE->Free   = PlayerListWidget_Free;
-	widget->Reposition = PlayerListWidget_Reposition;
+	widget->VTABLE->Reposition = PlayerListWidget_Reposition;
 	widget->HorAnchor  = ANCHOR_CENTRE;
 	widget->VerAnchor  = ANCHOR_CENTRE;
 
@@ -2292,7 +2277,7 @@ static void TextGroupWidget_Reposition(struct GuiElem* elem) {
 	struct Texture* textures = widget->Textures;
 
 	Int32 oldY = widget->Y;
-	Widget_DoReposition(elem);
+	Widget_CalcPosition(elem);
 	if (!widget->LinesCount) return;
 
 	for (i = 0; i < widget->LinesCount; i++) {
@@ -2592,14 +2577,14 @@ static void TextGroupWidget_Free(struct GuiElem* elem) {
 	}
 }
 
-struct GuiElemVTABLE TextGroupWidget_VTABLE;
+struct WidgetVTABLE TextGroupWidget_VTABLE;
 void TextGroupWidget_Create(struct TextGroupWidget* widget, Int32 linesCount, struct FontDesc* font, struct FontDesc* underlineFont, STRING_REF struct Texture* textures, STRING_REF char* buffer) {
 	widget->VTABLE = &TextGroupWidget_VTABLE;
 	Widget_Init((struct Widget*)widget);
 	widget->VTABLE->Init   = TextGroupWidget_Init;
 	widget->VTABLE->Render = TextGroupWidget_Render;
 	widget->VTABLE->Free   = TextGroupWidget_Free;
-	widget->Reposition     = TextGroupWidget_Reposition;
+	widget->VTABLE->Reposition = TextGroupWidget_Reposition;
 
 	widget->LinesCount = linesCount;
 	widget->Font = *font;
@@ -2841,7 +2826,7 @@ void SpecialInputWidget_SetActive(struct SpecialInputWidget* widget, bool active
 	widget->Height = active ? widget->Tex.Height : 0;
 }
 
-struct GuiElemVTABLE SpecialInputWidget_VTABLE;
+struct WidgetVTABLE SpecialInputWidget_VTABLE;
 void SpecialInputWidget_Create(struct SpecialInputWidget* widget, struct FontDesc* font, struct InputWidget* appendObj) {
 	widget->VTABLE = &SpecialInputWidget_VTABLE;
 	Widget_Init((struct Widget*)widget);

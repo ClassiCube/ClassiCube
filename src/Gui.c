@@ -24,22 +24,6 @@ bool Gui_DefaultKeyPress(struct GuiElem* elem, UInt8 keyChar)     { return false
 bool Gui_DefaultMouseMove(struct GuiElem* elem, Int32 x, Int32 y) { return false; }
 bool Gui_DefaultMouseScroll(struct GuiElem* elem, Real32 delta)   { return false; }
 
-void GuiElem_Reset(struct GuiElem* elem) {
-	elem->VTABLE->Init     = NULL;
-	elem->VTABLE->Render   = NULL;
-	elem->VTABLE->Free     = NULL;
-	elem->VTABLE->Recreate = Gui_DefaultRecreate;
-
-	elem->VTABLE->HandlesKeyDown     = Gui_DefaultKey;
-	elem->VTABLE->HandlesKeyUp       = Gui_DefaultKey;
-	elem->VTABLE->HandlesKeyPress    = Gui_DefaultKeyPress;
-
-	elem->VTABLE->HandlesMouseDown   = Gui_DefaultMouse;
-	elem->VTABLE->HandlesMouseUp     = Gui_DefaultMouse;
-	elem->VTABLE->HandlesMouseMove   = Gui_DefaultMouseMove;
-	elem->VTABLE->HandlesMouseScroll = Gui_DefaultMouseScroll;
-}
-
 void Screen_CommonInit(struct GuiElem* elem) {
 	struct Screen* screen = (struct Screen*)elem;
 	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, screen->VTABLE->ContextLost);
@@ -57,14 +41,27 @@ void Screen_CommonFree(struct GuiElem* elem) {
 	screen->VTABLE->ContextLost(screen);
 }
 
-void Widget_DoReposition(struct GuiElem* elem) {
+void Widget_CalcPosition(struct GuiElem* elem) {
 	struct Widget* w = (struct Widget*)elem;
 	w->X = Gui_CalcPos(w->HorAnchor, w->XOffset, w->Width , Game_Width );
 	w->Y = Gui_CalcPos(w->VerAnchor, w->YOffset, w->Height, Game_Height);
 }
 
 void Widget_Init(struct Widget* widget) {
-	GuiElem_Reset((struct GuiElem*)widget);
+	widget->VTABLE->Init     = NULL;
+	widget->VTABLE->Render   = NULL;
+	widget->VTABLE->Free     = NULL;
+	widget->VTABLE->Recreate = Gui_DefaultRecreate;
+
+	widget->VTABLE->HandlesKeyDown     = Gui_DefaultKey;
+	widget->VTABLE->HandlesKeyUp       = Gui_DefaultKey;
+	widget->VTABLE->HandlesKeyPress    = Gui_DefaultKeyPress;
+
+	widget->VTABLE->HandlesMouseDown   = Gui_DefaultMouse;
+	widget->VTABLE->HandlesMouseUp     = Gui_DefaultMouse;
+	widget->VTABLE->HandlesMouseMove   = Gui_DefaultMouseMove;
+	widget->VTABLE->HandlesMouseScroll = Gui_DefaultMouseScroll;
+
 	widget->Active = false;
 	widget->Disabled = false;
 	widget->X = 0; widget->Y = 0;
@@ -72,7 +69,7 @@ void Widget_Init(struct Widget* widget) {
 	widget->HorAnchor = ANCHOR_MIN;
 	widget->VerAnchor = ANCHOR_MIN;
 	widget->XOffset = 0; widget->YOffset = 0;
-	widget->Reposition = Widget_DoReposition;
+	widget->VTABLE->Reposition = Widget_CalcPosition;
 	widget->MenuClick = NULL;
 }
 
