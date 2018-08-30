@@ -62,7 +62,7 @@ static void TextWidget_Reposition(struct GuiElem* elem) {
 	widget->Texture.Y += widget->Y - oldY;
 }
 
-struct GuiElementVTABLE TextWidget_VTABLE;
+struct GuiElemVTABLE TextWidget_VTABLE;
 void TextWidget_Make(struct TextWidget* widget, struct FontDesc* font) {
 	widget->VTABLE = &TextWidget_VTABLE;
 	Widget_Init((struct Widget*)widget);
@@ -165,7 +165,7 @@ static void ButtonWidget_Render(struct GuiElem* elem, Real64 delta) {
 	Texture_RenderShaded(&widget->Texture, col);
 }
 
-struct GuiElementVTABLE ButtonWidget_VTABLE;
+struct GuiElemVTABLE ButtonWidget_VTABLE;
 void ButtonWidget_Create(struct ButtonWidget* widget, Int32 minWidth, STRING_PURE String* text, struct FontDesc* font, Widget_LeftClick onClick) {
 	widget->VTABLE = &ButtonWidget_VTABLE;
 	Widget_Init((struct Widget*)widget);
@@ -304,7 +304,7 @@ static bool ScrollbarWidget_HandlesMouseMove(struct GuiElem* elem, Int32 x, Int3
 	return false;
 }
 
-struct GuiElementVTABLE ScrollbarWidget_VTABLE;
+struct GuiElemVTABLE ScrollbarWidget_VTABLE;
 void ScrollbarWidget_Create(struct ScrollbarWidget* widget) {
 	widget->VTABLE = &ScrollbarWidget_VTABLE;
 	Widget_Init((struct Widget*)widget);
@@ -488,7 +488,7 @@ static bool HotbarWidget_HandlesMouseScroll(struct GuiElem* elem, Real32 delta) 
 	return true;
 }
 
-struct GuiElementVTABLE HotbarWidget_VTABLE;
+struct GuiElemVTABLE HotbarWidget_VTABLE;
 void HotbarWidget_Create(struct HotbarWidget* widget) {
 	widget->VTABLE = &HotbarWidget_VTABLE;
 	Widget_Init((struct Widget*)widget);
@@ -840,7 +840,7 @@ static bool TableWidget_HandlesKeyDown(struct GuiElem* elem, Key key) {
 	return true;
 }
 
-struct GuiElementVTABLE TableWidget_VTABLE;
+struct GuiElemVTABLE TableWidget_VTABLE;
 void TableWidget_Create(struct TableWidget* widget) {
 	widget->VTABLE = &TableWidget_VTABLE;
 	Widget_Init((struct Widget*)widget);
@@ -1285,7 +1285,7 @@ static bool InputWidget_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y,
 	return true;
 }
 
-struct GuiElementVTABLE InputWidget_VTABLE;
+struct GuiElemVTABLE InputWidget_VTABLE;
 void InputWidget_Create(struct InputWidget* widget, struct FontDesc* font, STRING_REF String* prefix) {
 	widget->VTABLE = &InputWidget_VTABLE;
 	Widget_Init((struct Widget*)widget);
@@ -1555,7 +1555,7 @@ static bool MenuInputWidget_AllowedChar(struct GuiElem* elem, char c) {
 }
 
 static Int32 MenuInputWidget_GetMaxLines(void) { return 1; }
-struct GuiElementVTABLE MenuInputWidget_VTABLE;
+struct GuiElemVTABLE MenuInputWidget_VTABLE;
 void MenuInputWidget_Create(struct MenuInputWidget* widget, Int32 width, Int32 height, STRING_PURE String* text, struct FontDesc* font, struct MenuInputValidator* validator) {
 	String empty = String_MakeNull();
 	InputWidget_Create(&widget->Base, font, &empty);
@@ -1805,7 +1805,7 @@ static Int32 ChatInputWidget_GetMaxLines(void) {
 	return !Game_ClassicMode && ServerConnection_SupportsPartialMessages ? 3 : 1;
 }
 
-struct GuiElementVTABLE ChatInputWidget_VTABLE;
+struct GuiElemVTABLE ChatInputWidget_VTABLE;
 void ChatInputWidget_Create(struct ChatInputWidget* widget, struct FontDesc* font) {
 	String prefix = String_FromConst("> ");
 	InputWidget_Create(&widget->Base, font, &prefix);
@@ -2182,7 +2182,7 @@ static void PlayerListWidget_Free(struct GuiElem* elem) {
 	Event_UnregisterInt(&TabListEvents_Removed, widget, PlayerListWidget_TabEntryRemoved);
 }
 
-struct GuiElementVTABLE PlayerListWidgetVTABLE;
+struct GuiElemVTABLE PlayerListWidgetVTABLE;
 void PlayerListWidget_Create(struct PlayerListWidget* widget, struct FontDesc* font, bool classic) {
 	widget->VTABLE = &PlayerListWidgetVTABLE;
 	Widget_Init((struct Widget*)widget);
@@ -2592,7 +2592,7 @@ static void TextGroupWidget_Free(struct GuiElem* elem) {
 	}
 }
 
-struct GuiElementVTABLE TextGroupWidget_VTABLE;
+struct GuiElemVTABLE TextGroupWidget_VTABLE;
 void TextGroupWidget_Create(struct TextGroupWidget* widget, Int32 linesCount, struct FontDesc* font, struct FontDesc* underlineFont, STRING_REF struct Texture* textures, STRING_REF char* buffer) {
 	widget->VTABLE = &TextGroupWidget_VTABLE;
 	Widget_Init((struct Widget*)widget);
@@ -2841,7 +2841,7 @@ void SpecialInputWidget_SetActive(struct SpecialInputWidget* widget, bool active
 	widget->Height = active ? widget->Tex.Height : 0;
 }
 
-struct GuiElementVTABLE SpecialInputWidget_VTABLE;
+struct GuiElemVTABLE SpecialInputWidget_VTABLE;
 void SpecialInputWidget_Create(struct SpecialInputWidget* widget, struct FontDesc* font, struct InputWidget* appendObj) {
 	widget->VTABLE = &SpecialInputWidget_VTABLE;
 	Widget_Init((struct Widget*)widget);

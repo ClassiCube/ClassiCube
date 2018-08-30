@@ -112,7 +112,6 @@ struct DisconnectScreen {
 /*########################################################################################################################*
 *-----------------------------------------------------InventoryScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-struct GuiElementVTABLE InventoryScreen_VTABLE;
 struct InventoryScreen InventoryScreen_Instance;
 static void InventoryScreen_OnBlockChanged(void* obj) {
 	struct InventoryScreen* screen = (struct InventoryScreen*)obj;
@@ -185,7 +184,7 @@ static void InventoryScreen_Free(struct GuiElem* elem) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated,     screen, InventoryScreen_ContextRecreated);
 }
 
-static bool InventoryScreen_HandlesKeyDown(struct GuiElem* elem, Key key) {
+static bool InventoryScreen_KeyDown(struct GuiElem* elem, Key key) {
 	struct InventoryScreen* screen = (struct InventoryScreen*)elem;
 	struct TableWidget* table = &screen->Table;
 
@@ -204,7 +203,7 @@ static bool InventoryScreen_HandlesKeyDown(struct GuiElem* elem, Key key) {
 	return true;
 }
 
-static bool InventoryScreen_HandlesKeyUp(struct GuiElem* elem, Key key) {
+static bool InventoryScreen_KeyUp(struct GuiElem* elem, Key key) {
 	struct InventoryScreen* screen = (struct InventoryScreen*)elem;
 	if (key == KeyBind_Get(KeyBind_Inventory)) {
 		screen->ReleasedInv = true; return true;
@@ -214,7 +213,7 @@ static bool InventoryScreen_HandlesKeyUp(struct GuiElem* elem, Key key) {
 	return Elem_HandlesKeyUp(&hud->Hotbar, key);
 }
 
-static bool InventoryScreen_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
+static bool InventoryScreen_MouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
 	struct InventoryScreen* screen = (struct InventoryScreen*)elem;
 	struct TableWidget* table = &screen->Table;
 	struct HUDScreen* hud = (struct HUDScreen*)Gui_HUD;
@@ -228,19 +227,19 @@ static bool InventoryScreen_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int3
 	return true;
 }
 
-static bool InventoryScreen_HandlesMouseUp(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
+static bool InventoryScreen_MouseUp(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
 	struct InventoryScreen* screen = (struct InventoryScreen*)elem;
 	struct TableWidget* table = &screen->Table;
 	return Elem_HandlesMouseUp(table, x, y, btn);
 }
 
-static bool InventoryScreen_HandlesMouseMove(struct GuiElem* elem, Int32 x, Int32 y) {
+static bool InventoryScreen_MouseMove(struct GuiElem* elem, Int32 x, Int32 y) {
 	struct InventoryScreen* screen = (struct InventoryScreen*)elem;
 	struct TableWidget* table = &screen->Table;
 	return Elem_HandlesMouseMove(table, x, y);
 }
 
-static bool InventoryScreen_HandlesMouseScroll(struct GuiElem* elem, Real32 delta) {
+static bool InventoryScreen_MouseScroll(struct GuiElem* elem, Real32 delta) {
 	struct InventoryScreen* screen = (struct InventoryScreen*)elem;
 	struct TableWidget* table = &screen->Table;
 
@@ -249,23 +248,17 @@ static bool InventoryScreen_HandlesMouseScroll(struct GuiElem* elem, Real32 delt
 	return Elem_HandlesMouseScroll(table, delta);
 }
 
+struct ScreenVTABLE InventoryScreen_VTABLE = {
+	InventoryScreen_Init,      InventoryScreen_Render,  InventoryScreen_Free,      Gui_DefaultRecreate,
+	InventoryScreen_KeyDown,   InventoryScreen_KeyUp,   Gui_DefaultKeyPress,
+	InventoryScreen_MouseDown, InventoryScreen_MouseUp, InventoryScreen_MouseMove, InventoryScreen_MouseScroll,
+	InventoryScreen_OnResize,
+};
 struct Screen* InventoryScreen_MakeInstance(void) {
 	struct InventoryScreen* screen = &InventoryScreen_Instance;
-	Mem_Set(screen, 0, sizeof(struct InventoryScreen));
+	screen->HandlesAllInput = true;
+
 	screen->VTABLE = &InventoryScreen_VTABLE;
-	Screen_Reset((struct Screen*)screen);
-
-	screen->VTABLE->HandlesKeyDown     = InventoryScreen_HandlesKeyDown;
-	screen->VTABLE->HandlesKeyUp       = InventoryScreen_HandlesKeyUp;
-	screen->VTABLE->HandlesMouseDown   = InventoryScreen_HandlesMouseDown;
-	screen->VTABLE->HandlesMouseUp     = InventoryScreen_HandlesMouseUp;
-	screen->VTABLE->HandlesMouseMove   = InventoryScreen_HandlesMouseMove;
-	screen->VTABLE->HandlesMouseScroll = InventoryScreen_HandlesMouseScroll;
-
-	screen->OnResize       = InventoryScreen_OnResize;
-	screen->VTABLE->Init   = InventoryScreen_Init;
-	screen->VTABLE->Render = InventoryScreen_Render;
-	screen->VTABLE->Free   = InventoryScreen_Free;
 	return (struct Screen*)screen;
 }
 struct Screen* InventoryScreen_UNSAFE_RawPointer = (struct Screen*)&InventoryScreen_Instance;
@@ -274,7 +267,6 @@ struct Screen* InventoryScreen_UNSAFE_RawPointer = (struct Screen*)&InventoryScr
 /*########################################################################################################################*
 *-------------------------------------------------------StatusScreen------------------------------------------------------*
 *#########################################################################################################################*/
-struct GuiElementVTABLE StatusScreen_VTABLE;
 struct StatusScreen StatusScreen_Instance;
 static void StatusScreen_MakeText(struct StatusScreen* screen, STRING_TRANSIENT String* status) {
 	screen->FPS = (Int32)(screen->Frames / screen->Accumulator);
@@ -434,17 +426,17 @@ static void StatusScreen_Free(struct GuiElem* elem) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, StatusScreen_ContextRecreated);
 }
 
+struct ScreenVTABLE StatusScreen_VTABLE = {
+	StatusScreen_Init,     StatusScreen_Render, StatusScreen_Free,    Gui_DefaultRecreate,
+	Gui_DefaultKey,        Gui_DefaultKey,      Gui_DefaultKeyPress,
+	Gui_DefaultMouse,      Gui_DefaultMouse,    Gui_DefaultMouseMove, Gui_DefaultMouseScroll,
+	StatusScreen_OnResize,
+};
 struct Screen* StatusScreen_MakeInstance(void) {
 	struct StatusScreen* screen = &StatusScreen_Instance;
-	Mem_Set(screen, 0, sizeof(struct StatusScreen));
-	screen->VTABLE = &StatusScreen_VTABLE;
-	Screen_Reset((struct Screen*)screen);
 	screen->HandlesAllInput = false;
 
-	screen->OnResize       = StatusScreen_OnResize;
-	screen->VTABLE->Init   = StatusScreen_Init;
-	screen->VTABLE->Render = StatusScreen_Render;
-	screen->VTABLE->Free   = StatusScreen_Free;
+	screen->VTABLE = &StatusScreen_VTABLE;
 	return (struct Screen*)screen;
 }
 
@@ -457,7 +449,6 @@ void StatusScreen_MakeComponent(struct IGameComponent* comp) {
 /*########################################################################################################################*
 *------------------------------------------------------LoadingScreen------------------------------------------------------*
 *#########################################################################################################################*/
-struct GuiElementVTABLE LoadingScreen_VTABLE;
 struct LoadingScreen LoadingScreen_Instance;
 static void LoadingScreen_SetTitle(struct LoadingScreen* screen) {
 	Elem_TryFree(&screen->Title);
@@ -495,28 +486,28 @@ static void LoadingScreen_ContextRecreated(void* obj) {
 	LoadingScreen_SetMessage(screen);
 }
 
-static bool LoadingScreen_HandlesKeyDown(struct GuiElem* elem, Key key) {
+static bool LoadingScreen_KeyDown(struct GuiElem* elem, Key key) {
 	if (key == Key_Tab) return true;
 	return Elem_HandlesKeyDown(Gui_HUD, key);
 }
 
-static bool LoadingScreen_HandlesKeyPress(struct GuiElem* elem, UInt8 key) {
+static bool LoadingScreen_KeyPress(struct GuiElem* elem, UInt8 key) {
 	return Elem_HandlesKeyPress(Gui_HUD, key);
 }
 
-static bool LoadingScreen_HandlesKeyUp(struct GuiElem* elem, Key key) {
+static bool LoadingScreen_KeyUp(struct GuiElem* elem, Key key) {
 	if (key == Key_Tab) return true;
 	return Elem_HandlesKeyUp(Gui_HUD, key);
 }
 
-static bool LoadingScreen_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
+static bool LoadingScreen_MouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
 	if (Gui_HUD->HandlesAllInput) { Elem_HandlesMouseDown(Gui_HUD, x, y, btn); }
 	return true;
 }
 
-static bool LoadingScreen_HandlesMouseUp(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) { return true; }
-static bool LoadingScreen_HandlesMouseMove(struct GuiElem* elem, Int32 x, Int32 y) { return true; }
-static bool LoadingScreen_HandlesMouseScroll(struct GuiElem* elem, Real32 delta) { return true; }
+static bool LoadingScreen_MouseUp(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) { return true; }
+static bool LoadingScreen_MouseMove(struct GuiElem* elem, Int32 x, Int32 y) { return true; }
+static bool LoadingScreen_MouseScroll(struct GuiElem* elem, Real32 delta) { return true; }
 
 static void LoadingScreen_UpdateBackgroundVB(VertexP3fT2fC4b* vertices, Int32 count, Int32 atlasIndex, bool* bound) {
 	if (!(*bound)) {
@@ -599,40 +590,33 @@ static void LoadingScreen_Free(struct GuiElem* elem) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, LoadingScreen_ContextRecreated);
 }
 
-static void LoadingScreen_Make(struct LoadingScreen* screen, struct GuiElementVTABLE* vtable, STRING_PURE String* title, STRING_PURE String* message) {
-	Mem_Set(screen, 0, sizeof(struct LoadingScreen));
-	screen->VTABLE = vtable;
-	Screen_Reset((struct Screen*)screen);
-
-	screen->VTABLE->HandlesKeyDown     = LoadingScreen_HandlesKeyDown;
-	screen->VTABLE->HandlesKeyPress    = LoadingScreen_HandlesKeyPress;
-	screen->VTABLE->HandlesKeyUp       = LoadingScreen_HandlesKeyUp;
-	screen->VTABLE->HandlesMouseDown   = LoadingScreen_HandlesMouseDown;
-	screen->VTABLE->HandlesMouseUp     = LoadingScreen_HandlesMouseUp;
-	screen->VTABLE->HandlesMouseMove   = LoadingScreen_HandlesMouseMove;
-	screen->VTABLE->HandlesMouseScroll = LoadingScreen_HandlesMouseScroll;
-
-	screen->OnResize       = LoadingScreen_OnResize;
-	screen->VTABLE->Init   = LoadingScreen_Init;
-	screen->VTABLE->Render = LoadingScreen_Render;
-	screen->VTABLE->Free   = LoadingScreen_Free;
+static void LoadingScreen_Make(struct LoadingScreen* screen, STRING_PURE String* title, STRING_PURE String* message) {
+	Font_Make(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
 
 	String title_copy = String_FromArray(screen->__TitleBuffer);
 	String_AppendString(&title_copy, title);
-	screen->TitleStr = title_copy;
+	screen->TitleStr  = title_copy;
 
 	String message_copy = String_FromArray(screen->__MessageBuffer);
 	String_AppendString(&message_copy, message);
-	screen->MessageStr = message_copy;
-
-	Font_Make(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	screen->MessageStr  = message_copy;
+	
+	screen->HandlesAllInput = true;
 	screen->BlocksWorld     = true;
 	screen->RenderHUDOver   = true;
 }
 
+struct ScreenVTABLE LoadingScreen_VTABLE = {
+	LoadingScreen_Init,      LoadingScreen_Render,  LoadingScreen_Free,      Gui_DefaultRecreate,
+	LoadingScreen_KeyDown,   LoadingScreen_KeyUp,   LoadingScreen_KeyPress,
+	LoadingScreen_MouseDown, LoadingScreen_MouseUp, LoadingScreen_MouseMove, LoadingScreen_MouseScroll,
+	LoadingScreen_OnResize,
+};
 struct Screen* LoadingScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message) {
 	struct LoadingScreen* screen = &LoadingScreen_Instance;
-	LoadingScreen_Make(screen, &LoadingScreen_VTABLE, title, message);
+	LoadingScreen_Make(screen, title, message);
+
+	screen->VTABLE = &LoadingScreen_VTABLE;
 	return (struct Screen*)screen;
 }
 struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen_Instance;
@@ -641,7 +625,6 @@ struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen_
 /*########################################################################################################################*
 *--------------------------------------------------GeneratingMapScreen----------------------------------------------------*
 *#########################################################################################################################*/
-struct GuiElementVTABLE GeneratingScreen_VTABLE;
 struct GeneratingScreen GeneratingScreen_Instance;
 static void GeneratingScreen_Init(struct GuiElem* elem) {
 	World_Reset();
@@ -696,15 +679,20 @@ static void GeneratingScreen_Render(struct GuiElem* elem, Real64 delta) {
 	LoadingScreen_SetMessage(&screen->Base);
 }
 
+struct ScreenVTABLE GeneratingScreen_VTABLE = {
+	GeneratingScreen_Init,   GeneratingScreen_Render, LoadingScreen_Free,      Gui_DefaultRecreate,
+	LoadingScreen_KeyDown,   LoadingScreen_KeyUp,     LoadingScreen_KeyPress,
+	LoadingScreen_MouseDown, LoadingScreen_MouseUp,   LoadingScreen_MouseMove, LoadingScreen_MouseScroll,
+	LoadingScreen_OnResize,
+};
 struct Screen* GeneratingScreen_MakeInstance(void) {
 	struct GeneratingScreen* screen = &GeneratingScreen_Instance;
 	String title   = String_FromConst("Generating level");
 	String message = String_FromConst("Generating..");
-	LoadingScreen_Make(&screen->Base, &GeneratingScreen_VTABLE, &title, &message);
+	LoadingScreen_Make(&screen->Base, &title, &message);
 
-	screen->Base.VTABLE->Init   = GeneratingScreen_Init;
-	screen->Base.VTABLE->Render = GeneratingScreen_Render;
-	screen->LastState = NULL;
+	screen->LastState   = NULL;
+	screen->Base.VTABLE = &GeneratingScreen_VTABLE;
 	return (struct Screen*)screen;
 }
 
@@ -712,7 +700,6 @@ struct Screen* GeneratingScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------ChatScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-struct GuiElementVTABLE ChatScreen_VTABLE;
 struct ChatScreen ChatScreen_Instance;
 static Int32 ChatScreen_BottomOffset(void) { return ((struct HUDScreen*)Gui_HUD)->Hotbar.Height; }
 static Int32 ChatScreen_InputUsedHeight(struct ChatScreen* screen) {
@@ -915,7 +902,7 @@ static void ChatScreen_ScrollHistoryBy(struct ChatScreen* screen, Int32 delta) {
 	ChatScreen_ResetChat(screen);
 }
 
-static bool ChatScreen_HandlesKeyDown(struct GuiElem* elem, Key key) {
+static bool ChatScreen_KeyDown(struct GuiElem* elem, Key key) {
 	struct ChatScreen* screen = (struct ChatScreen*)elem;
 	screen->SuppressNextPress = false;
 	if (screen->HandlesAllInput) { /* text input bar */
@@ -959,7 +946,7 @@ static bool ChatScreen_HandlesKeyDown(struct GuiElem* elem, Key key) {
 	return true;
 }
 
-static bool ChatScreen_HandlesKeyUp(struct GuiElem* elem, Key key) {
+static bool ChatScreen_KeyUp(struct GuiElem* elem, Key key) {
 	struct ChatScreen* screen = (struct ChatScreen*)elem;
 	if (!screen->HandlesAllInput) return false;
 
@@ -972,7 +959,7 @@ static bool ChatScreen_HandlesKeyUp(struct GuiElem* elem, Key key) {
 	return true;
 }
 
-static bool ChatScreen_HandlesKeyPress(struct GuiElem* elem, UInt8 key) {
+static bool ChatScreen_KeyPress(struct GuiElem* elem, UInt8 key) {
 	struct ChatScreen* screen = (struct ChatScreen*)elem;
 	if (!screen->HandlesAllInput) return false;
 	if (screen->SuppressNextPress) {
@@ -985,7 +972,7 @@ static bool ChatScreen_HandlesKeyPress(struct GuiElem* elem, UInt8 key) {
 	return handled;
 }
 
-static bool ChatScreen_HandlesMouseScroll(struct GuiElem* elem, Real32 delta) {
+static bool ChatScreen_MouseScroll(struct GuiElem* elem, Real32 delta) {
 	struct ChatScreen* screen = (struct ChatScreen*)elem;
 	if (!screen->HandlesAllInput) return false;
 
@@ -994,7 +981,7 @@ static bool ChatScreen_HandlesMouseScroll(struct GuiElem* elem, Real32 delta) {
 	return true;
 }
 
-static bool ChatScreen_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
+static bool ChatScreen_MouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
 	struct ChatScreen* screen = (struct ChatScreen*)elem;
 	if (!screen->HandlesAllInput || Game_HideGui) return false;
 
@@ -1184,27 +1171,19 @@ static void ChatScreen_Free(struct GuiElem* elem) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, ChatScreen_ContextRecreated);
 }
 
+struct ScreenVTABLE ChatScreen_VTABLE = {
+	ChatScreen_Init,      ChatScreen_Render, ChatScreen_Free,      Gui_DefaultRecreate,
+	ChatScreen_KeyDown,   ChatScreen_KeyUp,  ChatScreen_KeyPress,
+	ChatScreen_MouseDown, Gui_DefaultMouse,  Gui_DefaultMouseMove, ChatScreen_MouseScroll,
+	ChatScreen_OnResize,
+};
 struct Screen* ChatScreen_MakeInstance(void) {
 	struct ChatScreen* screen = &ChatScreen_Instance;
-	Mem_Set(screen, 0, sizeof(struct ChatScreen));
-	screen->VTABLE = &ChatScreen_VTABLE;
-	Screen_Reset((struct Screen*)screen);
-	screen->HandlesAllInput = false;
-
-	screen->InputOldHeight = -1;
+	screen->InputOldHeight     = -1;
 	screen->LastDownloadStatus = Int32_MinValue;
 	screen->HUD = Gui_HUD;
 
-	screen->OnResize       = ChatScreen_OnResize;
-	screen->VTABLE->Init   = ChatScreen_Init;
-	screen->VTABLE->Render = ChatScreen_Render;
-	screen->VTABLE->Free   = ChatScreen_Free;
-
-	screen->VTABLE->HandlesKeyDown     = ChatScreen_HandlesKeyDown;
-	screen->VTABLE->HandlesKeyUp       = ChatScreen_HandlesKeyUp;
-	screen->VTABLE->HandlesKeyPress    = ChatScreen_HandlesKeyPress;
-	screen->VTABLE->HandlesMouseDown   = ChatScreen_HandlesMouseDown;
-	screen->VTABLE->HandlesMouseScroll = ChatScreen_HandlesMouseScroll;
+	screen->VTABLE = &ChatScreen_VTABLE;
 	return (struct Screen*)screen;
 }
 
@@ -1212,7 +1191,6 @@ struct Screen* ChatScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------HUDScreen--------------------------------------------------------*
 *#########################################################################################################################*/
-struct GuiElementVTABLE HUDScreenVTABLE;
 struct HUDScreen HUDScreen_Instance;
 #define CH_EXTENT 16
 
@@ -1252,7 +1230,7 @@ static void HUDScreen_ContextRecreated(void* obj) {
 
 static void HUDScreen_OnResize(struct GuiElem* elem) {
 	struct HUDScreen* screen = (struct HUDScreen*)elem;
-	screen->Chat->OnResize((struct GuiElem*)screen->Chat);
+	Screen_OnResize(screen->Chat);
 
 	Widget_Reposition(&screen->Hotbar);
 	if (screen->ShowingList) {
@@ -1260,12 +1238,12 @@ static void HUDScreen_OnResize(struct GuiElem* elem) {
 	}
 }
 
-static bool HUDScreen_HandlesKeyPress(struct GuiElem* elem, UInt8 key) {
+static bool HUDScreen_KeyPress(struct GuiElem* elem, UInt8 key) {
 	struct HUDScreen* screen = (struct HUDScreen*)elem;
 	return Elem_HandlesKeyPress(screen->Chat, key); 
 }
 
-static bool HUDScreen_HandlesKeyDown(struct GuiElem* elem, Key key) {
+static bool HUDScreen_KeyDown(struct GuiElem* elem, Key key) {
 	struct HUDScreen* screen = (struct HUDScreen*)elem;
 	Key playerListKey = KeyBind_Get(KeyBind_PlayerList);
 	bool handles = playerListKey != Key_Tab || !Game_TabAutocomplete || !screen->Chat->HandlesAllInput;
@@ -1281,7 +1259,7 @@ static bool HUDScreen_HandlesKeyDown(struct GuiElem* elem, Key key) {
 	return Elem_HandlesKeyDown(screen->Chat, key) || Elem_HandlesKeyDown(&screen->Hotbar, key);
 }
 
-static bool HUDScreen_HandlesKeyUp(struct GuiElem* elem, Key key) {
+static bool HUDScreen_KeyUp(struct GuiElem* elem, Key key) {
 	struct HUDScreen* screen = (struct HUDScreen*)elem;
 	if (key == KeyBind_Get(KeyBind_PlayerList)) {
 		if (screen->ShowingList) {
@@ -1295,12 +1273,12 @@ static bool HUDScreen_HandlesKeyUp(struct GuiElem* elem, Key key) {
 	return Elem_HandlesKeyUp(screen->Chat, key) || Elem_HandlesKeyUp(&screen->Hotbar, key);
 }
 
-static bool HUDScreen_HandlesMouseScroll(struct GuiElem* elem, Real32 delta) {
+static bool HUDScreen_MouseScroll(struct GuiElem* elem, Real32 delta) {
 	struct HUDScreen* screen = (struct HUDScreen*)elem;
 	return Elem_HandlesMouseScroll(screen->Chat, delta);
 }
 
-static bool HUDScreen_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
+static bool HUDScreen_MouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
 	struct HUDScreen* screen = (struct HUDScreen*)elem;
 	if (btn != MouseButton_Left || !screen->HandlesAllInput) return false;
 
@@ -1380,23 +1358,15 @@ static void HUDScreen_Free(struct GuiElem* elem) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, HUDScreen_ContextRecreated);
 }
 
+struct ScreenVTABLE HUDScreen_VTABLE = {
+	HUDScreen_Init,      HUDScreen_Render, HUDScreen_Free,       Gui_DefaultRecreate,
+	HUDScreen_KeyDown,   HUDScreen_KeyUp,  HUDScreen_KeyPress,
+	HUDScreen_MouseDown, Gui_DefaultMouse, Gui_DefaultMouseMove, HUDScreen_MouseScroll,
+	HUDScreen_OnResize,
+};
 struct Screen* HUDScreen_MakeInstance(void) {
 	struct HUDScreen* screen = &HUDScreen_Instance;
-	Mem_Set(screen, 0, sizeof(struct HUDScreen));
-	screen->VTABLE = &HUDScreenVTABLE;
-	Screen_Reset((struct Screen*)screen);
-	screen->HandlesAllInput = false;
-
-	screen->OnResize       = HUDScreen_OnResize;
-	screen->VTABLE->Init   = HUDScreen_Init;
-	screen->VTABLE->Render = HUDScreen_Render;
-	screen->VTABLE->Free   = HUDScreen_Free;
-
-	screen->VTABLE->HandlesKeyDown     = HUDScreen_HandlesKeyDown;
-	screen->VTABLE->HandlesKeyUp       = HUDScreen_HandlesKeyUp;
-	screen->VTABLE->HandlesKeyPress    = HUDScreen_HandlesKeyPress;
-	screen->VTABLE->HandlesMouseDown   = HUDScreen_HandlesMouseDown;
-	screen->VTABLE->HandlesMouseScroll = HUDScreen_HandlesMouseScroll;
+	screen->VTABLE = &HUDScreen_VTABLE;
 	return (struct Screen*)screen;
 }
 
@@ -1425,7 +1395,6 @@ struct Widget* HUDScreen_GetHotbar(struct Screen* hud) {
 /*########################################################################################################################*
 *----------------------------------------------------DisconnectScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-struct GuiElementVTABLE DisconnectScreen_VTABLE;
 struct DisconnectScreen DisconnectScreen_Instance;
 #define DISCONNECT_DELAY_MS 5000
 static void DisconnectScreen_ReconnectMessage(struct DisconnectScreen* screen, STRING_TRANSIENT String* msg) {
@@ -1541,11 +1510,11 @@ static void DisconnectScreen_OnResize(struct GuiElem* elem) {
 	screen->ClearTime = DateTime_CurrentUTC_MS() + 500;
 }
 
-static bool DisconnectScreen_HandlesKeyDown(struct GuiElem* elem, Key key) { return key < Key_F1 || key > Key_F35; }
-static bool DisconnectScreen_HandlesKeyPress(struct GuiElem* elem, UInt8 keyChar) { return true; }
-static bool DisconnectScreen_HandlesKeyUp(struct GuiElem* elem, Key key) { return true; }
+static bool DisconnectScreen_KeyDown(struct GuiElem* elem, Key key) { return key < Key_F1 || key > Key_F35; }
+static bool DisconnectScreen_KeyPress(struct GuiElem* elem, UInt8 keyChar) { return true; }
+static bool DisconnectScreen_KeyUp(struct GuiElem* elem, Key key) { return true; }
 
-static bool DisconnectScreen_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
+static bool DisconnectScreen_MouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
 	struct DisconnectScreen* screen = (struct DisconnectScreen*)elem;
 	struct ButtonWidget* widget = &screen->Reconnect;
 	if (btn != MouseButton_Left) return true;
@@ -1562,21 +1531,27 @@ static bool DisconnectScreen_HandlesMouseDown(struct GuiElem* elem, Int32 x, Int
 	return true;
 }
 
-static bool DisconnectScreen_HandlesMouseMove(struct GuiElem* elem, Int32 x, Int32 y) {
+static bool DisconnectScreen_MouseMove(struct GuiElem* elem, Int32 x, Int32 y) {
 	struct DisconnectScreen* screen = (struct DisconnectScreen*)elem;
 	struct ButtonWidget* widget = &screen->Reconnect;
 	widget->Active = !widget->Disabled && Widget_Contains((struct Widget*)widget, x, y);
 	return true;
 }
 
-static bool DisconnectScreen_HandlesMouseScroll(struct GuiElem* elem, Real32 delta) { return true; }
-static bool DisconnectScreen_HandlesMouseUp(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) { return true; }
+static bool DisconnectScreen_MouseScroll(struct GuiElem* elem, Real32 delta) { return true; }
+static bool DisconnectScreen_MouseUp(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) { return true; }
 
+struct ScreenVTABLE DisconnectScreen_VTABLE = {
+	DisconnectScreen_Init,      DisconnectScreen_Render,  DisconnectScreen_Free,      Gui_DefaultRecreate,
+	DisconnectScreen_KeyDown,   DisconnectScreen_KeyUp,   DisconnectScreen_KeyPress,
+	DisconnectScreen_MouseDown, DisconnectScreen_MouseUp, DisconnectScreen_MouseMove, DisconnectScreen_MouseScroll,
+	DisconnectScreen_OnResize,
+};
 struct Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message) {
 	struct DisconnectScreen* screen = &DisconnectScreen_Instance;
-	Mem_Set(screen, 0, sizeof(struct DisconnectScreen));
-	screen->VTABLE = &DisconnectScreen_VTABLE;
-	Screen_Reset((struct Screen*)screen);
+	screen->HandlesAllInput = true;
+	screen->BlocksWorld     = true;
+	screen->HidesHUD        = true;
 
 	String title_copy = String_FromArray(screen->__TitleBuffer);
 	String_AppendString(&title_copy, title);
@@ -1597,20 +1572,7 @@ struct Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_P
 
 	Font_Make(&screen->TitleFont,   &Game_FontName, 16, FONT_STYLE_BOLD);
 	Font_Make(&screen->MessageFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
-	screen->BlocksWorld     = true;
-	screen->HidesHUD        = true;
 
-	screen->OnResize       = DisconnectScreen_OnResize;
-	screen->VTABLE->Init   = DisconnectScreen_Init;
-	screen->VTABLE->Render = DisconnectScreen_Render;
-	screen->VTABLE->Free   = DisconnectScreen_Free;
-
-	screen->VTABLE->HandlesKeyDown     = DisconnectScreen_HandlesKeyDown;
-	screen->VTABLE->HandlesKeyUp       = DisconnectScreen_HandlesKeyUp;
-	screen->VTABLE->HandlesKeyPress    = DisconnectScreen_HandlesKeyPress;
-	screen->VTABLE->HandlesMouseDown   = DisconnectScreen_HandlesMouseDown;
-	screen->VTABLE->HandlesMouseMove   = DisconnectScreen_HandlesMouseMove;
-	screen->VTABLE->HandlesMouseScroll = DisconnectScreen_HandlesMouseScroll;
-	screen->VTABLE->HandlesMouseUp     = DisconnectScreen_HandlesMouseUp;
+	screen->VTABLE = &DisconnectScreen_VTABLE;
 	return (struct Screen*)screen;
 }

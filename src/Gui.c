@@ -13,40 +13,31 @@
 #include "Platform.h"
 
 struct Screen* Gui_Status;
-void GuiElement_Recreate(struct GuiElem* elem) {
+void Gui_DefaultRecreate(struct GuiElem* elem) {
 	elem->VTABLE->Free(elem);
 	elem->VTABLE->Init(elem);
 }
 
-bool Gui_FalseMouse(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) { return false; }
-bool Gui_FalseKey(struct GuiElem* elem, Key key)                { return false; }
-bool Gui_FalseKeyPress(struct GuiElem* elem, UInt8 keyChar)     { return false; }
-bool Gui_FalseMouseMove(struct GuiElem* elem, Int32 x, Int32 y) { return false; }
-bool Gui_FalseMouseScroll(struct GuiElem* elem, Real32 delta)   { return false; }
+bool Gui_DefaultMouse(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) { return false; }
+bool Gui_DefaultKey(struct GuiElem* elem, Key key)                { return false; }
+bool Gui_DefaultKeyPress(struct GuiElem* elem, UInt8 keyChar)     { return false; }
+bool Gui_DefaultMouseMove(struct GuiElem* elem, Int32 x, Int32 y) { return false; }
+bool Gui_DefaultMouseScroll(struct GuiElem* elem, Real32 delta)   { return false; }
 
-void GuiElement_Reset(struct GuiElem* elem) {
+void GuiElem_Reset(struct GuiElem* elem) {
 	elem->VTABLE->Init     = NULL;
 	elem->VTABLE->Render   = NULL;
 	elem->VTABLE->Free     = NULL;
-	elem->VTABLE->Recreate = GuiElement_Recreate;
+	elem->VTABLE->Recreate = Gui_DefaultRecreate;
 
-	elem->VTABLE->HandlesKeyDown     = Gui_FalseKey;
-	elem->VTABLE->HandlesKeyUp       = Gui_FalseKey;
-	elem->VTABLE->HandlesKeyPress    = Gui_FalseKeyPress;
+	elem->VTABLE->HandlesKeyDown     = Gui_DefaultKey;
+	elem->VTABLE->HandlesKeyUp       = Gui_DefaultKey;
+	elem->VTABLE->HandlesKeyPress    = Gui_DefaultKeyPress;
 
-	elem->VTABLE->HandlesMouseDown   = Gui_FalseMouse;
-	elem->VTABLE->HandlesMouseUp     = Gui_FalseMouse;
-	elem->VTABLE->HandlesMouseMove   = Gui_FalseMouseMove;
-	elem->VTABLE->HandlesMouseScroll = Gui_FalseMouseScroll;
-}
-
-void Screen_Reset(struct Screen* screen) {
-	GuiElement_Reset((struct GuiElem*)screen);
-	screen->HandlesAllInput = true;
-	screen->BlocksWorld     = false;
-	screen->HidesHUD        = false;
-	screen->RenderHUDOver   = false;
-	screen->OnResize        = NULL;
+	elem->VTABLE->HandlesMouseDown   = Gui_DefaultMouse;
+	elem->VTABLE->HandlesMouseUp     = Gui_DefaultMouse;
+	elem->VTABLE->HandlesMouseMove   = Gui_DefaultMouseMove;
+	elem->VTABLE->HandlesMouseScroll = Gui_DefaultMouseScroll;
 }
 
 void Widget_DoReposition(struct GuiElem* elem) {
@@ -56,7 +47,7 @@ void Widget_DoReposition(struct GuiElem* elem) {
 }
 
 void Widget_Init(struct Widget* widget) {
-	GuiElement_Reset((struct GuiElem*)widget);
+	GuiElem_Reset((struct GuiElem*)widget);
 	widget->Active = false;
 	widget->Disabled = false;
 	widget->X = 0; widget->Y = 0;
@@ -212,14 +203,12 @@ void Gui_RenderGui(Real64 delta) {
 }
 
 void Gui_OnResize(void) {
-	if (Gui_Active) {
-		Gui_Active->OnResize((struct GuiElem*)Gui_Active);
-	}
-	Gui_HUD->OnResize((struct GuiElem*)Gui_HUD);
+	if (Gui_Active) { Screen_OnResize(Gui_Active); }
+	Screen_OnResize(Gui_HUD);
 
 	Int32 i;
 	for (i = 0; i < Gui_OverlaysCount; i++) {
-		Gui_Overlays[i]->OnResize((struct GuiElem*)Gui_Overlays[i]);
+		Screen_OnResize(Gui_Overlays[i]);
 	}
 }
 

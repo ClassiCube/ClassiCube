@@ -12,46 +12,55 @@
 
 struct IGameComponent;
 struct GuiElem;
-struct GuiElementVTABLE {
-	void (*Init)(struct GuiElem* elem);
-	void (*Render)(struct GuiElem* elem, Real64 delta);
-	void (*Free)(struct GuiElem* elem);
-	/* Recreates all sub-elements and/or textures. (e.g. for when bitmap font changes) */
-	void (*Recreate)(struct GuiElem* elem);
-	bool (*HandlesKeyDown)(struct GuiElem* elem, Key key);
-	bool (*HandlesKeyUp)(struct GuiElem* elem, Key key);
-	bool (*HandlesKeyPress)(struct GuiElem* elem, UInt8 keyChar);
-	bool (*HandlesMouseDown)(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn);
-	bool (*HandlesMouseUp)(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn);
-	bool (*HandlesMouseMove)(struct GuiElem* elem, Int32 x, Int32 y);
+
+#define GuiElemVTABLE_Layout \
+	void (*Init)(struct GuiElem*     elem); \
+	void (*Render)(struct GuiElem*   elem, Real64 delta); \
+	void (*Free)(struct GuiElem*     elem); \
+	void (*Recreate)(struct GuiElem* elem); \
+	bool (*HandlesKeyDown)(struct GuiElem*  elem, Key key); \
+	bool (*HandlesKeyUp)(struct GuiElem*    elem, Key key); \
+	bool (*HandlesKeyPress)(struct GuiElem* elem, UInt8 keyChar); \
+	bool (*HandlesMouseDown)(struct GuiElem*   elem, Int32 x, Int32 y, MouseButton btn); \
+	bool (*HandlesMouseUp)(struct GuiElem*     elem, Int32 x, Int32 y, MouseButton btn); \
+	bool (*HandlesMouseMove)(struct GuiElem*   elem, Int32 x, Int32 y); \
 	bool (*HandlesMouseScroll)(struct GuiElem* elem, Real32 delta);
+
+struct GuiElemVTABLE { GuiElemVTABLE_Layout };
+
+struct GuiElem { struct GuiElemVTABLE* VTABLE; };
+void GuiElem_Reset(struct GuiElem* elem);
+void Gui_DefaultRecreate(struct GuiElem* elem);
+bool Gui_DefaultMouse(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn);
+bool Gui_DefaultKey(struct GuiElem* elem, Key key);
+bool Gui_DefaultKeyPress(struct GuiElem* elem, UInt8 keyChar);
+bool Gui_DefaultMouseMove(struct GuiElem* elem, Int32 x, Int32 y);
+bool Gui_DefaultMouseScroll(struct GuiElem* elem, Real32 delta);
+
+
+struct ScreenVTABLE { 
+	GuiElemVTABLE_Layout
+	void (*OnResize)(struct GuiElem* elem);
 };
-
-struct GuiElem { struct GuiElementVTABLE* VTABLE; };
-void GuiElement_Reset(struct GuiElem* elem);
-
-
-#define Screen_Layout struct GuiElementVTABLE* VTABLE; \
-bool HandlesAllInput; /* Whether this screen handles all input. Prevents user interacting with the world */ \
-bool BlocksWorld;     /* Whether this screen completely and opaquely covers the game world behind it */ \
-bool HidesHUD;        /* Whether this screen hides the normal in-game HUD */ \
-bool RenderHUDOver;   /* Whether the normal in-game HUD should be drawn over the top of this screen */ \
-void (*OnResize)(struct GuiElem* elem);
+#define Screen_Layout struct ScreenVTABLE* VTABLE; \
+	bool HandlesAllInput; /* Whether this screen handles all input. Prevents user interacting with the world */ \
+	bool BlocksWorld;     /* Whether this screen completely and opaquely covers the game world behind it */ \
+	bool HidesHUD;        /* Whether this screen hides the normal in-game HUD */ \
+	bool RenderHUDOver;   /* Whether the normal in-game HUD should be drawn over the top of this screen */
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Layout };
-void Screen_Reset(struct Screen* screen);
 
 
 typedef void (*Widget_LeftClick)(struct GuiElem* screenElem, struct GuiElem* widget);
-#define Widget_Layout struct GuiElementVTABLE* VTABLE; \
-Int32 X, Y, Width, Height;  /* Top left corner, and dimensions, of this widget */ \
-bool Active;                /* Whether this widget is currently being moused over*/ \
-bool Disabled;              /* Whether widget is prevented from being interacted with */ \
-UInt8 HorAnchor, VerAnchor; /* Specifies the reference point for when this widget is resized */ \
-Int32 XOffset, YOffset;     /* Offset from the reference point */ \
-void (*Reposition)(struct GuiElem* elem); \
-Widget_LeftClick MenuClick;
+#define Widget_Layout struct GuiElemVTABLE* VTABLE; \
+	Int32 X, Y, Width, Height;  /* Top left corner, and dimensions, of this widget */ \
+	bool Active;                /* Whether this widget is currently being moused over*/ \
+	bool Disabled;              /* Whether widget is prevented from being interacted with */ \
+	UInt8 HorAnchor, VerAnchor; /* Specifies the reference point for when this widget is resized */ \
+	Int32 XOffset, YOffset;     /* Offset from the reference point */ \
+	void (*Reposition)(struct GuiElem* elem); \
+	Widget_LeftClick MenuClick;
 
 /* Represents an individual 2D gui component. */
 struct Widget { Widget_Layout };
@@ -114,6 +123,7 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** ve
 #define Elem_HandlesMouseMove(elem, x, y)      (elem)->VTABLE->HandlesMouseMove((struct GuiElem*)(elem), x, y)
 #define Elem_HandlesMouseScroll(elem, delta)   (elem)->VTABLE->HandlesMouseScroll((struct GuiElem*)(elem), delta)
 
+#define Screen_OnResize(screen)   (screen)->VTABLE->OnResize((struct GuiElem*)(screen));
 #define Widget_Reposition(widget) (widget)->Reposition((struct GuiElem*)(widget));
 #define Elem_TryFree(elem)        if ((elem)->VTABLE) { Elem_Free(elem); }
 #endif
