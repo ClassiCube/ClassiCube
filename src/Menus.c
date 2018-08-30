@@ -30,7 +30,7 @@
 #include "Deflate.h"
 
 #define MenuBase_Layout Screen_Layout struct Widget** Widgets; Int32 WidgetsCount;
-struct MenuBase { MenuBase_Layout };
+struct Menu { MenuBase_Layout };
 
 #define LIST_SCREEN_ITEMS 5
 #define LIST_SCREEN_BUTTONS (LIST_SCREEN_ITEMS + 3)
@@ -43,7 +43,7 @@ struct ListScreen {
 	Real32 WheelAcc;
 	Int32 CurrentIndex;
 	Widget_LeftClick EntryClick;
-	void (*UpdateEntry)(struct ListScreen* screen, struct ButtonWidget* button, STRING_PURE String* text);
+	void (*UpdateEntry)(struct ListScreen* s, struct ButtonWidget* btn, STRING_PURE String* text);
 	String TitleText;
 	struct TextWidget Title, Page;
 	struct Widget* ListWidgets[LIST_SCREEN_BUTTONS + 2];
@@ -161,73 +161,72 @@ struct TexPackOverlay {
 /*########################################################################################################################*
 *--------------------------------------------------------Menu base--------------------------------------------------------*
 *#########################################################################################################################*/
-static void Menu_Button(void* elem, Int32 i, struct ButtonWidget* button, Int32 width, String* text, struct FontDesc* font, 
-	Widget_LeftClick onClick, UInt8 horAnchor, UInt8 verAnchor, Int32 x, Int32 y) {
-	struct MenuBase* screen = (struct MenuBase*)elem;
+static void Menu_Button(void* s, Int32 i, struct ButtonWidget* btn, Int32 width, String* text, struct FontDesc* font, Widget_LeftClick onClick, UInt8 horAnchor, UInt8 verAnchor, Int32 x, Int32 y) {
+	struct Menu* menu = (struct Menu*)s;
+	ButtonWidget_Create(btn, width, text, font, onClick);
 
-	ButtonWidget_Create(button, width, text, font, onClick);
-	screen->Widgets[i] = (struct Widget*)button;
-	Widget_SetLocation(screen->Widgets[i], horAnchor, verAnchor, x, y);
+	menu->Widgets[i] = (struct Widget*)btn;
+	Widget_SetLocation(menu->Widgets[i], horAnchor, verAnchor, x, y);
 }
 
-static void Menu_Label(void* elem, Int32 i, struct TextWidget* label, String* text, struct FontDesc* font, 
-	UInt8 horAnchor, UInt8 verAnchor, Int32 x, Int32 y) {
-	struct MenuBase* screen = (struct MenuBase*)elem;
-
+static void Menu_Label(void* s, Int32 i, struct TextWidget* label, String* text, struct FontDesc* font, UInt8 horAnchor, UInt8 verAnchor, Int32 x, Int32 y) {
+	struct Menu* menu = (struct Menu*)s;
 	TextWidget_Create(label, text, font);
-	screen->Widgets[i] = (struct Widget*)label;
-	Widget_SetLocation(screen->Widgets[i], horAnchor, verAnchor, x, y);
+
+	menu->Widgets[i] = (struct Widget*)label;
+	Widget_SetLocation(menu->Widgets[i], horAnchor, verAnchor, x, y);
 }
 
-static void Menu_Input(void* elem, Int32 i, struct MenuInputWidget* input, Int32 width, String* text, struct FontDesc* font, 
-	struct MenuInputValidator* validator, UInt8 horAnchor, UInt8 verAnchor, Int32 x, Int32 y) {
-	struct MenuBase* screen = (struct MenuBase*)elem;
+static void Menu_Input(void* s, Int32 i, struct MenuInputWidget* input, Int32 width, String* text, struct FontDesc* font, struct MenuInputValidator* v, UInt8 horAnchor, UInt8 verAnchor, Int32 x, Int32 y) {
+	struct Menu* menu = (struct Menu*)s;
+	MenuInputWidget_Create(input, width, 30, text, font, v);
 
-	MenuInputWidget_Create(input, width, 30, text, font, validator);
-	screen->Widgets[i] = (struct Widget*)input;
-	Widget_SetLocation(screen->Widgets[i], horAnchor, verAnchor, x, y);
+	menu->Widgets[i] = (struct Widget*)input;
+	Widget_SetLocation(menu->Widgets[i], horAnchor, verAnchor, x, y);
 	input->Base.ShowCaret = true;
 }
 
-static void Menu_Back(void* elem, Int32 i, struct ButtonWidget* button, Int32 width, String* text, Int32 y, struct FontDesc* font, Widget_LeftClick onClick) {
-	Menu_Button(elem, i, button, width, text, font, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, y);
+static void Menu_Back(void* s, Int32 i, struct ButtonWidget* btn, Int32 width, String* text, Int32 y, struct FontDesc* font, Widget_LeftClick onClick) {
+	Menu_Button(s, i, btn, width, text, font, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, y);
 }
 
-static void Menu_DefaultBack(void* elem, Int32 i, struct ButtonWidget* button, bool toGame, struct FontDesc* font, Widget_LeftClick onClick) {
+static void Menu_DefaultBack(void* s, Int32 i, struct ButtonWidget* btn, bool toGame, struct FontDesc* font, Widget_LeftClick onClick) {
 	Int32 width = Game_UseClassicOptions ? 400 : 200;
 	String msg = String_FromReadonly(toGame ? "Back to game" : "Cancel");
-	Menu_Button(elem, i, button, width, &msg, font, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
+	Menu_Button(s, i, btn, width, &msg, font, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
 }
 
-static void Menu_ContextLost(void* obj) {
-	struct MenuBase* elem = (struct MenuBase*)obj;
-	struct Widget** widgets = elem->Widgets;
+static void Menu_ContextLost(void* s) {
+	struct Menu* menu = (struct Menu*)s;
+	struct Widget** widgets = menu->Widgets;
 	if (!widgets) return;
 
 	Int32 i;
-	for (i = 0; i < elem->WidgetsCount; i++) {
+	for (i = 0; i < menu->WidgetsCount; i++) {
 		if (!widgets[i]) continue;
 		Elem_Free(widgets[i]);
 	}
 }
 
-static void Menu_Reposition(struct MenuBase* elem) {
-	struct Widget** widgets = elem->Widgets;
+static void Menu_OnResize(void* s) {
+	struct Menu* menu = (struct Menu*)s;
+	struct Widget** widgets = menu->Widgets;
 	if (!widgets) return;
 
 	Int32 i;
-	for (i = 0; i < elem->WidgetsCount; i++) {
+	for (i = 0; i < menu->WidgetsCount; i++) {
 		if (!widgets[i]) continue;
 		Widget_Reposition(widgets[i]);
 	}
 }
 
-static void Menu_Render(struct MenuBase* elem, Real64 delta) {
-	struct Widget** widgets = elem->Widgets;
+static void Menu_Render(void* s, Real64 delta) {
+	struct Menu* menu = (struct Menu*)s;
+	struct Widget** widgets = menu->Widgets;
 	if (!widgets) return;
 
 	Int32 i;
-	for (i = 0; i < elem->WidgetsCount; i++) {
+	for (i = 0; i < menu->WidgetsCount; i++) {
 		if (!widgets[i]) continue;
 		Elem_Render(widgets[i], delta);
 	}
@@ -242,95 +241,118 @@ static void Menu_RenderBounds(void) {
 	GfxCommon_Draw2DGradient(0, 0, Game_Width, Game_Height, topCol, bottomCol);
 }
 
-static Int32 Menu_HandleMouseDown(struct MenuBase* elem, Int32 x, Int32 y, MouseButton btn) {
-	struct Widget** widgets = elem->Widgets;
-	Int32 i, count = elem->WidgetsCount;
+static Int32 Menu_DoMouseDown(void* s, Int32 x, Int32 y, MouseButton btn) {
+	struct Menu* menu = (struct Menu*)s;
+	struct Widget** widgets = menu->Widgets;
+	Int32 i, count = menu->WidgetsCount;
 
 	/* iterate backwards (because last elements rendered are shown over others) */
 	for (i = count - 1; i >= 0; i--) {
-		struct Widget* widget = widgets[i];
-		if (!widget || !Widget_Contains(widget, x, y)) continue;
-		if (widget->Disabled) return i;
+		struct Widget* w = widgets[i];
+		if (!w || !Widget_Contains(w, x, y)) continue;
+		if (w->Disabled) return i;
 
-		if (widget->MenuClick && btn == MouseButton_Left) {
-			widget->MenuClick((struct GuiElem*)elem, (struct GuiElem*)widget);
+		if (w->MenuClick && btn == MouseButton_Left) {
+			w->MenuClick(s, w);
 		} else {
-			Elem_HandlesMouseDown(widget, x, y, btn);
+			Elem_HandlesMouseDown(w, x, y, btn);
 		}
 		return i;
 	}
 	return -1;
 }
+static bool Menu_MouseDown(void* s, Int32 x, Int32 y, MouseButton btn) { 
+	return Menu_DoMouseDown(s, x, y, btn) >= 0;
+}
 
-static Int32 Menu_HandleMouseMove(struct MenuBase* elem, Int32 x, Int32 y) {
-	struct Widget** widgets = elem->Widgets;
-	Int32 i, count = elem->WidgetsCount;
+static Int32 Menu_DoMouseMove(void* s, Int32 x, Int32 y) {
+	struct Menu* menu = (struct Menu*)s;
+	struct Widget** widgets = menu->Widgets;
+	Int32 i, count = menu->WidgetsCount;
 
 	for (i = 0; i < count; i++) {
-		struct Widget* widget = widgets[i];
-		if (widget) widget->Active = false;
+		struct Widget* w = widgets[i];
+		if (w) w->Active = false;
 	}
 
 	for (i = count - 1; i >= 0; i--) {
-		struct Widget* widget = widgets[i];
-		if (!widget || !Widget_Contains(widget, x, y)) continue;
+		struct Widget* w = widgets[i];
+		if (!w || !Widget_Contains(w, x, y)) continue;
 
-		widget->Active = true;
+		w->Active = true;
 		return i;
 	}
 	return -1;
 }
 
+static bool Menu_MouseMove(void* s, Int32 x, Int32 y) {
+	return Menu_DoMouseMove(s, x, y) >= 0;
+}
+
+static bool Menu_MouseUp(void* s, Int32 x, Int32 y, MouseButton btn) { return true; }
+static bool Menu_KeyPress(void* s, UInt8 key) { return true; }
+static bool Menu_KeyUp(void* s, Key key) { return true; }
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Menu utilities-----------------------------------------------------*
 *#########################################################################################################################*/
-static Int32 Menu_Index(struct MenuBase* elem, struct Widget* w) {
-	struct Widget** widgets = elem->Widgets;
+static Int32 Menu_Index(void* s, void* widget) {
+	struct Menu* menu = (struct Menu*)s;
+	struct Widget** widgets = menu->Widgets;
 	Int32 i;
 
-	for (i = 0; i < elem->WidgetsCount; i++) {
+	struct Widget* w = (struct Widget*)widget;
+	for (i = 0; i < menu->WidgetsCount; i++) {
 		if (widgets[i] == w) return i;
 	}
 	return -1;
 }
 
-static void Menu_HandleFontChange(struct GuiElem* elem) {
-	Event_RaiseVoid(&ChatEvents_FontChanged);
-	Elem_Recreate(elem);
-	Gui_RefreshHud();
-	Elem_HandlesMouseMove(elem, Mouse_X, Mouse_Y);
+static void Menu_Remove(void* s, Int32 i) {
+	struct Menu* menu = (struct Menu*)s;
+	struct Widget** widgets = menu->Widgets;
+
+	if (widgets[i]) { Elem_TryFree(widgets[i]); }
+	widgets[i] = NULL;
 }
 
-static Int32 Menu_Int32(STRING_PURE String* v) { Int32 value; Convert_TryParseInt32(v, &value); return value; }
-static Real32 Menu_Real32(STRING_PURE String* v) { Real32 value; Convert_TryParseReal32(v, &value); return value; }
+static void Menu_HandleFontChange(struct Screen* s) {
+	Event_RaiseVoid(&ChatEvents_FontChanged);
+	Elem_Recreate(s);
+	Gui_RefreshHud();
+	Elem_HandlesMouseMove(s, Mouse_X, Mouse_Y);
+}
+
+static Int32 Menu_Int32(STRING_PURE String* v)      { Int32 value; Convert_TryParseInt32(v, &value); return value; }
+static Real32 Menu_Real32(STRING_PURE String* v)    { Real32 value; Convert_TryParseReal32(v, &value); return value; }
 static PackedCol Menu_HexCol(STRING_PURE String* v) { PackedCol value; PackedCol_TryParseHex(v, &value); return value; }
 
-static void Menu_SwitchOptions(struct GuiElem* a, struct GuiElem* b)        { Gui_ReplaceActive(OptionsGroupScreen_MakeInstance()); }
-static void Menu_SwitchPause(struct GuiElem* a, struct GuiElem* b)          { Gui_ReplaceActive(PauseScreen_MakeInstance()); }
-static void Menu_SwitchClassicOptions(struct GuiElem* a, struct GuiElem* b) { Gui_ReplaceActive(ClassicOptionsScreen_MakeInstance()); }
+static void Menu_SwitchOptions(void* a, void* b)        { Gui_ReplaceActive(OptionsGroupScreen_MakeInstance()); }
+static void Menu_SwitchPause(void* a, void* b)          { Gui_ReplaceActive(PauseScreen_MakeInstance()); }
+static void Menu_SwitchClassicOptions(void* a, void* b) { Gui_ReplaceActive(ClassicOptionsScreen_MakeInstance()); }
 
-static void Menu_SwitchKeysClassic(struct GuiElem* a, struct GuiElem* b)      { Gui_ReplaceActive(ClassicKeyBindingsScreen_MakeInstance()); }
-static void Menu_SwitchKeysClassicHacks(struct GuiElem* a, struct GuiElem* b) { Gui_ReplaceActive(ClassicHacksKeyBindingsScreen_MakeInstance()); }
-static void Menu_SwitchKeysNormal(struct GuiElem* a, struct GuiElem* b)       { Gui_ReplaceActive(NormalKeyBindingsScreen_MakeInstance()); }
-static void Menu_SwitchKeysHacks(struct GuiElem* a, struct GuiElem* b)        { Gui_ReplaceActive(HacksKeyBindingsScreen_MakeInstance()); }
-static void Menu_SwitchKeysOther(struct GuiElem* a, struct GuiElem* b)        { Gui_ReplaceActive(OtherKeyBindingsScreen_MakeInstance()); }
-static void Menu_SwitchKeysMouse(struct GuiElem* a, struct GuiElem* b)        { Gui_ReplaceActive(MouseKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysClassic(void* a, void* b)      { Gui_ReplaceActive(ClassicKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysClassicHacks(void* a, void* b) { Gui_ReplaceActive(ClassicHacksKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysNormal(void* a, void* b)       { Gui_ReplaceActive(NormalKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysHacks(void* a, void* b)        { Gui_ReplaceActive(HacksKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysOther(void* a, void* b)        { Gui_ReplaceActive(OtherKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysMouse(void* a, void* b)        { Gui_ReplaceActive(MouseKeyBindingsScreen_MakeInstance()); }
 
-static void Menu_SwitchMisc(struct GuiElem* a, struct GuiElem* b)      { Gui_ReplaceActive(MiscOptionsScreen_MakeInstance()); }
-static void Menu_SwitchGui(struct GuiElem* a, struct GuiElem* b)       { Gui_ReplaceActive(GuiOptionsScreen_MakeInstance()); }
-static void Menu_SwitchGfx(struct GuiElem* a, struct GuiElem* b)       { Gui_ReplaceActive(GraphicsOptionsScreen_MakeInstance()); }
-static void Menu_SwitchHacks(struct GuiElem* a, struct GuiElem* b)     { Gui_ReplaceActive(HacksSettingsScreen_MakeInstance()); }
-static void Menu_SwitchEnv(struct GuiElem* a, struct GuiElem* b)       { Gui_ReplaceActive(EnvSettingsScreen_MakeInstance()); }
-static void Menu_SwitchNostalgia(struct GuiElem* a, struct GuiElem* b) { Gui_ReplaceActive(NostalgiaScreen_MakeInstance()); }
+static void Menu_SwitchMisc(void* a, void* b)      { Gui_ReplaceActive(MiscOptionsScreen_MakeInstance()); }
+static void Menu_SwitchGui(void* a, void* b)       { Gui_ReplaceActive(GuiOptionsScreen_MakeInstance()); }
+static void Menu_SwitchGfx(void* a, void* b)       { Gui_ReplaceActive(GraphicsOptionsScreen_MakeInstance()); }
+static void Menu_SwitchHacks(void* a, void* b)     { Gui_ReplaceActive(HacksSettingsScreen_MakeInstance()); }
+static void Menu_SwitchEnv(void* a, void* b)       { Gui_ReplaceActive(EnvSettingsScreen_MakeInstance()); }
+static void Menu_SwitchNostalgia(void* a, void* b) { Gui_ReplaceActive(NostalgiaScreen_MakeInstance()); }
 
-static void Menu_SwitchGenLevel(struct GuiElem* a, struct GuiElem* b)        { Gui_ReplaceActive(GenLevelScreen_MakeInstance()); }
-static void Menu_SwitchClassicGenLevel(struct GuiElem* a, struct GuiElem* b) { Gui_ReplaceActive(ClassicGenScreen_MakeInstance()); }
-static void Menu_SwitchLoadLevel(struct GuiElem* a, struct GuiElem* b)       { Gui_ReplaceActive(LoadLevelScreen_MakeInstance()); }
-static void Menu_SwitchSaveLevel(struct GuiElem* a, struct GuiElem* b)       { Gui_ReplaceActive(SaveLevelScreen_MakeInstance()); }
-static void Menu_SwitchTexPacks(struct GuiElem* a, struct GuiElem* b)        { Gui_ReplaceActive(TexturePackScreen_MakeInstance()); }
-static void Menu_SwitchHotkeys(struct GuiElem* a, struct GuiElem* b)         { Gui_ReplaceActive(HotkeyListScreen_MakeInstance()); }
-static void Menu_SwitchFont(struct GuiElem* a, struct GuiElem* b)            { Gui_ReplaceActive(FontListScreen_MakeInstance()); }
+static void Menu_SwitchGenLevel(void* a, void* b)        { Gui_ReplaceActive(GenLevelScreen_MakeInstance()); }
+static void Menu_SwitchClassicGenLevel(void* a, void* b) { Gui_ReplaceActive(ClassicGenScreen_MakeInstance()); }
+static void Menu_SwitchLoadLevel(void* a, void* b)       { Gui_ReplaceActive(LoadLevelScreen_MakeInstance()); }
+static void Menu_SwitchSaveLevel(void* a, void* b)       { Gui_ReplaceActive(SaveLevelScreen_MakeInstance()); }
+static void Menu_SwitchTexPacks(void* a, void* b)        { Gui_ReplaceActive(TexturePackScreen_MakeInstance()); }
+static void Menu_SwitchHotkeys(void* a, void* b)         { Gui_ReplaceActive(HotkeyListScreen_MakeInstance()); }
+static void Menu_SwitchFont(void* a, void* b)            { Gui_ReplaceActive(FontListScreen_MakeInstance()); }
 
 
 /*########################################################################################################################*
@@ -339,96 +361,93 @@ static void Menu_SwitchFont(struct GuiElem* a, struct GuiElem* b)            { G
 struct ListScreen ListScreen_Instance;
 #define LIST_SCREEN_EMPTY "-----"
 
-STRING_REF String ListScreen_UNSAFE_Get(struct ListScreen* screen, Int32 index) {
-	if (index >= 0 && index < screen->Entries.Count) {
-		return StringsBuffer_UNSAFE_Get(&screen->Entries, index);
+STRING_REF String ListScreen_UNSAFE_Get(struct ListScreen* s, Int32 index) {
+	if (index >= 0 && index < s->Entries.Count) {
+		return StringsBuffer_UNSAFE_Get(&s->Entries, index);
 	} else {
 		String str = String_FromConst(LIST_SCREEN_EMPTY); return str;
 	}
 }
 
-static void ListScreen_MakeText(struct ListScreen* screen, Int32 i) {
-	String text = ListScreen_UNSAFE_Get(screen, screen->CurrentIndex + i), empty = String_MakeNull();
-	Menu_Button(screen, i, &screen->Buttons[i], 300, &empty, &screen->Font, screen->EntryClick,
+static void ListScreen_MakeText(struct ListScreen* s, Int32 i) {
+	String text = ListScreen_UNSAFE_Get(s, s->CurrentIndex + i), empty = String_MakeNull();
+	Menu_Button(s, i, &s->Buttons[i], 300, &empty, &s->Font, s->EntryClick,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, (i - 2) * 50);
 	/* needed for font list menu */
-	screen->UpdateEntry(screen, &screen->Buttons[i], &text);
+	s->UpdateEntry(s, &s->Buttons[i], &text);
 }
 
-static void ListScreen_Make(struct ListScreen* screen, Int32 i, Int32 x, STRING_PURE String* text, Widget_LeftClick onClick) {
-	Menu_Button(screen, i, &screen->Buttons[i], 40, text, &screen->Font, onClick,
+static void ListScreen_Make(struct ListScreen* s, Int32 i, Int32 x, STRING_PURE String* text, Widget_LeftClick onClick) {
+	Menu_Button(s, i, &s->Buttons[i], 40, text, &s->Font, onClick,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, x, 0);
 }
 
-static void ListScreen_UpdatePage(struct ListScreen* screen) {
-	Int32 start = LIST_SCREEN_ITEMS, end = screen->Entries.Count - LIST_SCREEN_ITEMS;
-	screen->Buttons[5].Disabled = screen->CurrentIndex < start;
-	screen->Buttons[6].Disabled = screen->CurrentIndex >= end;
+static void ListScreen_UpdatePage(struct ListScreen* s) {
+	Int32 start = LIST_SCREEN_ITEMS, end = s->Entries.Count - LIST_SCREEN_ITEMS;
+	s->Buttons[5].Disabled = s->CurrentIndex < start;
+	s->Buttons[6].Disabled = s->CurrentIndex >= end;
 	if (Game_ClassicMode) return;
 
 	char pageBuffer[STRING_SIZE];
 	String page = String_FromArray(pageBuffer);
-	Int32 num   = (screen->CurrentIndex  / LIST_SCREEN_ITEMS) + 1;
-	Int32 pages = Math_CeilDiv(screen->Entries.Count, LIST_SCREEN_ITEMS);
+	Int32 num   = (s->CurrentIndex  / LIST_SCREEN_ITEMS) + 1;
+	Int32 pages = Math_CeilDiv(s->Entries.Count, LIST_SCREEN_ITEMS);
 	if (pages == 0) pages = 1;
 
 	String_Format2(&page, "&7Page %i of %i", &num, &pages);
-	TextWidget_Set(&screen->Page, &page, &screen->Font);
+	TextWidget_Set(&s->Page, &page, &s->Font);
 }
 
-static void ListScreen_UpdateEntry(struct ListScreen* screen, struct ButtonWidget* button, STRING_PURE String* text) {
-	ButtonWidget_Set(button, text, &screen->Font);
+static void ListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* button, STRING_PURE String* text) {
+	ButtonWidget_Set(button, text, &s->Font);
 }
 
-static void ListScreen_SetCurrentIndex(struct ListScreen* screen, Int32 index) {
-	if (index >= screen->Entries.Count) { index = screen->Entries.Count - 1; }
+static void ListScreen_SetCurrentIndex(struct ListScreen* s, Int32 index) {
+	if (index >= s->Entries.Count) { index = s->Entries.Count - 1; }
 	if (index < 0) index = 0;
 
 	Int32 i;
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) {
-		String str = ListScreen_UNSAFE_Get(screen, index + i);
-		screen->UpdateEntry(screen, &screen->Buttons[i], &str);
+		String str = ListScreen_UNSAFE_Get(s, index + i);
+		s->UpdateEntry(s, &s->Buttons[i], &str);
 	}
 
-	screen->CurrentIndex = index;
-	ListScreen_UpdatePage(screen);
+	s->CurrentIndex = index;
+	ListScreen_UpdatePage(s);
 }
 
-static void ListScreen_PageClick(struct ListScreen* screen, bool forward) {
+static void ListScreen_PageClick(struct ListScreen* s, bool forward) {
 	Int32 delta = forward ? LIST_SCREEN_ITEMS : -LIST_SCREEN_ITEMS;
-	ListScreen_SetCurrentIndex(screen, screen->CurrentIndex + delta);
+	ListScreen_SetCurrentIndex(s, s->CurrentIndex + delta);
 }
 
-static void ListScreen_MoveBackwards(struct GuiElem* elem, struct GuiElem* widget) {
-	struct ListScreen* screen = (struct ListScreen*)elem;
-	ListScreen_PageClick(screen, false);
+static void ListScreen_MoveBackwards(struct ListScreen* s, void* b) {
+	ListScreen_PageClick(s, false);
 }
 
-static void ListScreen_MoveForwards(struct GuiElem* elem, struct GuiElem* widget) {
-	struct ListScreen* screen = (struct ListScreen*)elem;
-	ListScreen_PageClick(screen, true);
+static void ListScreen_MoveForwards(struct ListScreen* s, void* b) {
+	ListScreen_PageClick(s, true);
 }
 
-static void ListScreen_ContextRecreated(void* obj) {
-	struct ListScreen* screen = (struct ListScreen*)obj;
+static void ListScreen_ContextRecreated(struct ListScreen* s) {
 	Int32 i;
-	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { ListScreen_MakeText(screen, i); }
+	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { ListScreen_MakeText(s, i); }
 
 	String lArrow = String_FromConst("<");
-	ListScreen_Make(screen, 5, -220, &lArrow, ListScreen_MoveBackwards);
+	ListScreen_Make(s, 5, -220, &lArrow, ListScreen_MoveBackwards);
 	String rArrow = String_FromConst(">");
-	ListScreen_Make(screen, 6,  220, &rArrow, ListScreen_MoveForwards);
+	ListScreen_Make(s, 6,  220, &rArrow, ListScreen_MoveForwards);
 
-	Menu_DefaultBack(screen, 7, &screen->Buttons[7], false, &screen->Font, Menu_SwitchPause);
+	Menu_DefaultBack(s, 7, &s->Buttons[7], false, &s->Font, Menu_SwitchPause);
 
-	Menu_Label(screen, 8, &screen->Title, &screen->TitleText, &screen->Font,
+	Menu_Label(s, 8, &s->Title, &s->TitleText, &s->Font,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -155);
 
 	String empty = String_MakeNull();
-	Menu_Label(screen, 9, &screen->Page, &empty, &screen->Font,
+	Menu_Label(s, 9, &s->Page, &empty, &s->Font,
 		ANCHOR_CENTRE, ANCHOR_MAX, 0, 75);
 
-	ListScreen_UpdatePage(screen);
+	ListScreen_UpdatePage(s);
 }
 
 static void ListScreen_QuickSort(Int32 left, Int32 right) {
@@ -449,249 +468,208 @@ static void ListScreen_QuickSort(Int32 left, Int32 right) {
 	}
 }
 
-static String ListScreen_UNSAFE_GetCur(struct ListScreen* screen, struct GuiElem* w) {
-	Int32 i = Menu_Index((struct MenuBase*)screen, (struct Widget*)w);
-	return ListScreen_UNSAFE_Get(screen, screen->CurrentIndex + i);
+static String ListScreen_UNSAFE_GetCur(struct ListScreen* s, struct Widget* w) {
+	Int32 i = Menu_Index(s, w);
+	return ListScreen_UNSAFE_Get(s, s->CurrentIndex + i);
 }
 
-static void ListScreen_Select(struct ListScreen* screen, STRING_PURE String* str) {
+static void ListScreen_Select(struct ListScreen* s, STRING_PURE String* str) {
 	Int32 i;
-	for (i = 0; i < screen->Entries.Count; i++) {
-		String entry = StringsBuffer_UNSAFE_Get(&screen->Entries, i);
+	for (i = 0; i < s->Entries.Count; i++) {
+		String entry = StringsBuffer_UNSAFE_Get(&s->Entries, i);
 		if (!String_CaselessEquals(&entry, str)) continue;
 
-		ListScreen_SetCurrentIndex(screen, i);
+		ListScreen_SetCurrentIndex(s, i);
 		return;
 	}
 }
 
-static void ListScreen_Init(struct GuiElem* elem) {
-	struct ListScreen* screen = (struct ListScreen*)elem;
-	screen->Widgets = screen->ListWidgets;
-	screen->WidgetsCount = Array_Elems(screen->ListWidgets);
-	Font_Make(&screen->Font, &Game_FontName, 16, FONT_STYLE_BOLD);
+static void ListScreen_Init(struct ListScreen* s) {
+	s->Widgets      = s->ListWidgets;
+	s->WidgetsCount = Array_Elems(s->ListWidgets);
+	Font_Make(&s->Font, &Game_FontName, 16, FONT_STYLE_BOLD);
 
 	Key_KeyRepeat = true;
-	screen->WheelAcc = 0.0f;
-	Screen_CommonInit(elem);
+	s->WheelAcc   = 0.0f;
+	Screen_CommonInit(s);
 }
 
-static void ListScreen_Render(struct GuiElem* elem, Real64 delta) {
+static void ListScreen_Render(struct ListScreen* s, Real64 delta) {
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
-	Menu_Render((struct MenuBase*)elem, delta);
+	Menu_Render(s, delta);
 	Gfx_SetTexturing(false);
 }
 
-static void ListScreen_Free(struct GuiElem* elem) {
-	struct ListScreen* screen = (struct ListScreen*)elem;
-	Font_Free(&screen->Font);
-
+static void ListScreen_Free(struct ListScreen* s) {
+	Font_Free(&s->Font);
 	Key_KeyRepeat = false;
-	Screen_CommonFree(elem);
+	Screen_CommonFree(s);
 }
 
-static bool ListScreen_KeyDown(struct GuiElem* elem, Key key) {
-	struct ListScreen* screen = (struct ListScreen*)elem;
+static bool ListScreen_KeyDown(struct ListScreen* s, Key key) {
 	if (key == Key_Escape) {
 		Gui_ReplaceActive(NULL);
 	} else if (key == Key_Left) {
-		ListScreen_PageClick(screen, false);
+		ListScreen_PageClick(s, false);
 	} else if (key == Key_Right) {
-		ListScreen_PageClick(screen, true);
+		ListScreen_PageClick(s, true);
 	} else {
 		return false;
 	}
 	return true;
 }
 
-static bool ListScreen_MouseMove(struct GuiElem* elem, Int32 x, Int32 y) {
-	return Menu_HandleMouseMove((struct MenuBase*)elem, x, y) >= 0;
-}
-
-static bool ListScreen_MouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
-	return Menu_HandleMouseDown((struct MenuBase*)elem, x, y, btn) >= 0;
-}
-
-static bool ListScreen_MouseScroll(struct GuiElem* elem, Real32 delta) {
-	struct ListScreen* screen = (struct ListScreen*)elem;
-	Int32 steps = Utils_AccumulateWheelDelta(&screen->WheelAcc, delta);
-	if (steps) ListScreen_SetCurrentIndex(screen, screen->CurrentIndex - steps);
+static bool ListScreen_MouseScroll(struct ListScreen* s, Real32 delta) {
+	Int32 steps = Utils_AccumulateWheelDelta(&s->WheelAcc, delta);
+	if (steps) ListScreen_SetCurrentIndex(s, s->CurrentIndex - steps);
 	return true;
 }
 
-static void ListScreen_OnResize(struct GuiElem* elem) {
-	Menu_Reposition((struct MenuBase*)elem);
-}
-
 struct ScreenVTABLE ListScreen_VTABLE = {
-	ListScreen_Init,      ListScreen_Render, ListScreen_Free,      Gui_DefaultRecreate,
-	ListScreen_KeyDown,   Gui_DefaultKey,    Gui_DefaultKeyPress,
-	ListScreen_MouseDown, Gui_DefaultMouse,  ListScreen_MouseMove, ListScreen_MouseScroll,
-	ListScreen_OnResize,  Menu_ContextLost,  ListScreen_ContextRecreated,
+	ListScreen_Init,    ListScreen_Render, ListScreen_Free, Gui_DefaultRecreate,
+	ListScreen_KeyDown, Menu_KeyUp,        Menu_KeyPress,
+	Menu_MouseDown,     Menu_MouseUp,      Menu_MouseMove,  ListScreen_MouseScroll,
+	Menu_OnResize,      Menu_ContextLost,  ListScreen_ContextRecreated,
 };
 struct ListScreen* ListScreen_MakeInstance(void) {
-	struct ListScreen* screen = &ListScreen_Instance;
-	StringsBuffer_Clear(&screen->Entries);
-	screen->HandlesAllInput = true;
-	screen->WidgetsCount    = 0;
+	struct ListScreen* s = &ListScreen_Instance;
+	StringsBuffer_Clear(&s->Entries);
+	s->HandlesAllInput = true;
+	s->WidgetsCount    = 0;
 
-	screen->UpdateEntry = ListScreen_UpdateEntry;
-	screen->VTABLE      = &ListScreen_VTABLE;
-	return screen;
+	s->UpdateEntry = ListScreen_UpdateEntry;
+	s->VTABLE      = &ListScreen_VTABLE;
+	return s;
 }
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------MenuScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-static void MenuScreen_Remove(struct MenuScreen* screen, Int32 i) {
-	struct Widget** widgets = screen->Widgets;
-	if (widgets[i]) { Elem_TryFree(widgets[i]); }
-	widgets[i] = NULL;
-}
-
-static bool MenuScreen_MouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
-	return Menu_HandleMouseDown((struct MenuBase*)elem, x, y, btn) >= 0;
-}
-static bool MenuScreen_MouseMove(struct GuiElem* elem, Int32 x, Int32 y) {
-	return Menu_HandleMouseMove((struct MenuBase*)elem, x, y) >= 0;
-}
-
-static bool MenuScreen_MouseUp(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) { return true; }
-static bool MenuScreen_MouseScroll(struct GuiElem* elem, Real32 delta) { return true; }
-
-static bool MenuScreen_KeyDown(struct GuiElem* elem, Key key) {
+static bool MenuScreen_KeyDown(void* s, Key key) {
 	if (key == Key_Escape) { Gui_ReplaceActive(NULL); }
 	return key < Key_F1 || key > Key_F35;
 }
-static bool MenuScreen_KeyPress(struct GuiElem* elem, UInt8 key) { return true; }
-static bool MenuScreen_KeyUp(struct GuiElem* elem, Key key) { return true; }
+static bool MenuScreen_MouseScroll(void* s, Real32 delta) { return true; }
 
-static void MenuScreen_Init(struct GuiElem* elem) {
-	struct MenuScreen* screen = (struct MenuScreen*)elem;
-
-	if (!screen->TitleFont.Handle) {
-		Font_Make(&screen->TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
+static void MenuScreen_Init(void* s) {
+	struct MenuScreen* menu = s;
+	if (!menu->TitleFont.Handle) {
+		Font_Make(&menu->TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
 	}
-	if (!screen->TextFont.Handle) {
-		Font_Make(&screen->TextFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	if (!menu->TextFont.Handle) {
+		Font_Make(&menu->TextFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	}
 
-	Screen_CommonInit(elem);
+	Screen_CommonInit(s);
 }
 
-static void MenuScreen_Render(struct GuiElem* elem, Real64 delta) {
+static void MenuScreen_Render(void* s, Real64 delta) {
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
-	Menu_Render((struct MenuBase*)elem, delta);
+	Menu_Render(s, delta);
 	Gfx_SetTexturing(false);
 }
 
-static void MenuScreen_Free(struct GuiElem* elem) {
-	struct MenuScreen* screen = (struct MenuScreen*)elem;
-	if (screen->TitleFont.Handle) Font_Free(&screen->TitleFont);
-	if (screen->TextFont.Handle)  Font_Free(&screen->TextFont);
+static void MenuScreen_Free(void* s) {
+	struct MenuScreen* menu = s;
+	if (menu->TitleFont.Handle) Font_Free(&menu->TitleFont);
+	if (menu->TextFont.Handle)  Font_Free(&menu->TextFont);
 
-	Screen_CommonFree(elem);
+	Screen_CommonFree(s);
 }
-
-static void MenuScreen_OnResize(struct GuiElem* elem) { Menu_Reposition((struct MenuBase*)elem); }
 
 
 /*########################################################################################################################*
 *-------------------------------------------------------PauseScreen-------------------------------------------------------*
 *#########################################################################################################################*/
 struct PauseScreen PauseScreen_Instance;
-static void PauseScreen_Make(struct PauseScreen* screen, Int32 i, Int32 dir, Int32 y, const char* title, Widget_LeftClick onClick) {
+static void PauseScreen_Make(struct PauseScreen* s, Int32 i, Int32 dir, Int32 y, const char* title, Widget_LeftClick onClick) {
 	String text = String_FromReadonly(title);
-	Menu_Button(screen, i, &screen->Buttons[i], 300, &text, &screen->TitleFont, onClick,
+	Menu_Button(s, i, &s->Buttons[i], 300, &text, &s->TitleFont, onClick,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, dir * 160, y);
 }
 
-static void PauseScreen_MakeClassic(struct PauseScreen* screen, Int32 i, Int32 y, const char* title, Widget_LeftClick onClick) {
+static void PauseScreen_MakeClassic(struct PauseScreen* s, Int32 i, Int32 y, const char* title, Widget_LeftClick onClick) {
 	String text = String_FromReadonly(title);
-	Menu_Button(screen, i, &screen->Buttons[i], 400, &text, &screen->TitleFont, onClick,
+	Menu_Button(s, i, &s->Buttons[i], 400, &text, &s->TitleFont, onClick,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
 }
 
-static void PauseScreen_Quit(struct GuiElem* a, struct GuiElem* b) { Window_Close(); }
-static void PauseScreen_Game(struct GuiElem* a, struct GuiElem* b) { Gui_ReplaceActive(NULL); }
+static void PauseScreen_Quit(void* a, void* b) { Window_Close(); }
+static void PauseScreen_Game(void* a, void* b) { Gui_ReplaceActive(NULL); }
 
-static void PauseScreen_CheckHacksAllowed(void* obj) {
+static void PauseScreen_CheckHacksAllowed(struct PauseScreen* s) {
 	if (Game_UseClassicOptions) return;
-	struct PauseScreen* screen = (struct PauseScreen*)obj;
-	screen->Buttons[4].Disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* select texture pack */
+	s->Buttons[4].Disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* select texture pack */
 }
 
-static void PauseScreen_ContextRecreated(void* obj) {
-	struct PauseScreen* screen = (struct PauseScreen*)obj;
-	struct FontDesc* font = &screen->TitleFont;
+static void PauseScreen_ContextRecreated(struct PauseScreen* s) {
+	struct FontDesc* font = &s->TitleFont;
 
 	if (Game_UseClassicOptions) {
-		PauseScreen_MakeClassic(screen, 0, -100, "Options...",            Menu_SwitchClassicOptions);
-		PauseScreen_MakeClassic(screen, 1,  -50, "Generate new level...", Menu_SwitchClassicGenLevel);
-		PauseScreen_MakeClassic(screen, 2,    0, "Load level...",         Menu_SwitchLoadLevel);
-		PauseScreen_MakeClassic(screen, 3,   50, "Save level...",         Menu_SwitchSaveLevel);
-		PauseScreen_MakeClassic(screen, 4,  150, "Nostalgia options...",  Menu_SwitchNostalgia);
+		PauseScreen_MakeClassic(s, 0, -100, "Options...",            Menu_SwitchClassicOptions);
+		PauseScreen_MakeClassic(s, 1,  -50, "Generate new level...", Menu_SwitchClassicGenLevel);
+		PauseScreen_MakeClassic(s, 2,    0, "Load level...",         Menu_SwitchLoadLevel);
+		PauseScreen_MakeClassic(s, 3,   50, "Save level...",         Menu_SwitchSaveLevel);
+		PauseScreen_MakeClassic(s, 4,  150, "Nostalgia options...",  Menu_SwitchNostalgia);
 
 		String back = String_FromConst("Back to game");
-		Menu_Back(screen, 5, &screen->Buttons[5], 400, &back, 25, font, PauseScreen_Game);	
+		Menu_Back(s, 5, &s->Buttons[5], 400, &back, 25, font, PauseScreen_Game);	
 
-		/* Disable nostalgia options in classic mode*/
-		if (Game_ClassicMode) MenuScreen_Remove((struct MenuScreen*)screen, 4);
-		screen->Widgets[6] = NULL;
-		screen->Widgets[7] = NULL;
+		/* Disable nostalgia options in classic mode */
+		if (Game_ClassicMode) Menu_Remove(s, 4);
+		s->Widgets[6] = NULL;
+		s->Widgets[7] = NULL;
 	} else {
-		PauseScreen_Make(screen, 0, -1, -50, "Options...",             Menu_SwitchOptions);
-		PauseScreen_Make(screen, 1,  1, -50, "Generate new level...",  Menu_SwitchGenLevel);
-		PauseScreen_Make(screen, 2,  1,   0, "Load level...",          Menu_SwitchLoadLevel);
-		PauseScreen_Make(screen, 3,  1,  50, "Save level...",          Menu_SwitchSaveLevel);
-		PauseScreen_Make(screen, 4, -1,   0, "Change texture pack...", Menu_SwitchTexPacks);
-		PauseScreen_Make(screen, 5, -1,  50, "Hotkeys...",             Menu_SwitchHotkeys);
+		PauseScreen_Make(s, 0, -1, -50, "Options...",             Menu_SwitchOptions);
+		PauseScreen_Make(s, 1,  1, -50, "Generate new level...",  Menu_SwitchGenLevel);
+		PauseScreen_Make(s, 2,  1,   0, "Load level...",          Menu_SwitchLoadLevel);
+		PauseScreen_Make(s, 3,  1,  50, "Save level...",          Menu_SwitchSaveLevel);
+		PauseScreen_Make(s, 4, -1,   0, "Change texture pack...", Menu_SwitchTexPacks);
+		PauseScreen_Make(s, 5, -1,  50, "Hotkeys...",             Menu_SwitchHotkeys);
 
 		String quitMsg = String_FromConst("Quit game");
-		Menu_Button(screen, 6, &screen->Buttons[6], 120, &quitMsg, font, PauseScreen_Quit,
+		Menu_Button(s, 6, &s->Buttons[6], 120, &quitMsg, font, PauseScreen_Quit,
 			ANCHOR_MAX, ANCHOR_MAX, 5, 5);
 
-		Menu_DefaultBack(screen, 7, &screen->Buttons[7], true, font, PauseScreen_Game);
+		Menu_DefaultBack(s, 7, &s->Buttons[7], true, font, PauseScreen_Game);
 	}
 
 	if (!ServerConnection_IsSinglePlayer) {
-		screen->Buttons[1].Disabled = true;
-		screen->Buttons[2].Disabled = true;
+		s->Buttons[1].Disabled = true;
+		s->Buttons[2].Disabled = true;
 	}
-	PauseScreen_CheckHacksAllowed(obj);
+	PauseScreen_CheckHacksAllowed(s);
 }
 
-static void PauseScreen_Init(struct GuiElem* elem) {
-	struct PauseScreen* screen = (struct PauseScreen*)elem;
-	MenuScreen_Init(elem);
-	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, screen, PauseScreen_CheckHacksAllowed);
+static void PauseScreen_Init(struct PauseScreen* s) {
+	MenuScreen_Init(s);
+	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
 }
 
-static void PauseScreen_Free(struct GuiElem* elem) {
-	struct PauseScreen* screen = (struct PauseScreen*)elem;
-	MenuScreen_Free(elem);
-	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, screen, PauseScreen_CheckHacksAllowed);
+static void PauseScreen_Free(struct PauseScreen* s) {
+	MenuScreen_Free(s);
+	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
 }
 
 struct ScreenVTABLE PauseScreen_VTABLE = {
-	PauseScreen_Init,     MenuScreen_Render,  PauseScreen_Free,     Gui_DefaultRecreate,
-	MenuScreen_KeyDown,   MenuScreen_KeyUp,   MenuScreen_KeyPress,
-	MenuScreen_MouseDown, MenuScreen_MouseUp, MenuScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize,  Menu_ContextLost,   PauseScreen_ContextRecreated,
+	PauseScreen_Init,   MenuScreen_Render,  PauseScreen_Free, Gui_DefaultRecreate,
+	MenuScreen_KeyDown, Menu_KeyUp,         Menu_KeyPress,
+	Menu_MouseDown,     Menu_MouseUp,       Menu_MouseMove,   MenuScreen_MouseScroll,
+	Menu_OnResize,      Menu_ContextLost,   PauseScreen_ContextRecreated,
 };
 struct Screen* PauseScreen_MakeInstance(void) {
 	static struct Widget* widgets[8];
-	struct PauseScreen* screen = &PauseScreen_Instance;
+	struct PauseScreen* s = &PauseScreen_Instance;
 
-	screen->HandlesAllInput = true;
-	screen->Widgets         = widgets;
-	screen->WidgetsCount    = Array_Elems(widgets);
+	s->HandlesAllInput = true;
+	s->Widgets         = widgets;
+	s->WidgetsCount    = Array_Elems(widgets);
 
-	screen->VTABLE = &PauseScreen_VTABLE;
-	return (struct Screen*)screen;
+	s->VTABLE = &PauseScreen_VTABLE;
+	return (struct Screen*)s;
 }
 
 
@@ -709,82 +687,76 @@ const char* optsGroup_descs[7] = {
 	"&eSettings for resembling the original classic",
 };
 
-static void OptionsGroupScreen_CheckHacksAllowed(void* obj) {
-	struct OptionsGroupScreen* screen = (struct OptionsGroupScreen*)obj;
-	screen->Buttons[5].Disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* env settings */
+static void OptionsGroupScreen_CheckHacksAllowed(struct OptionsGroupScreen* s) {
+	s->Buttons[5].Disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* env settings */
 }
 
-static void OptionsGroupScreen_Make(struct OptionsGroupScreen* screen, Int32 i, Int32 dir, Int32 y, const char* title, Widget_LeftClick onClick) {
+static void OptionsGroupScreen_Make(struct OptionsGroupScreen* s, Int32 i, Int32 dir, Int32 y, const char* title, Widget_LeftClick onClick) {
 	String text = String_FromReadonly(title);
-	Menu_Button(screen, i, &screen->Buttons[i], 300, &text, &screen->TitleFont, onClick,
+	Menu_Button(s, i, &s->Buttons[i], 300, &text, &s->TitleFont, onClick,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, dir * 160, y);
 }
 
-static void OptionsGroupScreen_MakeDesc(struct OptionsGroupScreen* screen) {
-	String text = String_FromReadonly(optsGroup_descs[screen->SelectedI]);
-	Menu_Label(screen, 8, &screen->Desc, &text, &screen->TextFont,
+static void OptionsGroupScreen_MakeDesc(struct OptionsGroupScreen* s) {
+	String text = String_FromReadonly(optsGroup_descs[s->SelectedI]);
+	Menu_Label(s, 8, &s->Desc, &text, &s->TextFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
 }
 
-static void OptionsGroupScreen_ContextRecreated(void* obj) {
-	struct OptionsGroupScreen* screen = (struct OptionsGroupScreen*)obj;
+static void OptionsGroupScreen_ContextRecreated(struct OptionsGroupScreen* s) {
+	OptionsGroupScreen_Make(s, 0, -1, -100, "Misc options...",      Menu_SwitchMisc);
+	OptionsGroupScreen_Make(s, 1, -1,  -50, "Gui options...",       Menu_SwitchGui);
+	OptionsGroupScreen_Make(s, 2, -1,    0, "Graphics options...",  Menu_SwitchGfx);
+	OptionsGroupScreen_Make(s, 3, -1,   50, "Controls...",          Menu_SwitchKeysNormal);
+	OptionsGroupScreen_Make(s, 4,  1,  -50, "Hacks settings...",    Menu_SwitchHacks);
+	OptionsGroupScreen_Make(s, 5,  1,    0, "Env settings...",      Menu_SwitchEnv);
+	OptionsGroupScreen_Make(s, 6,  1,   50, "Nostalgia options...", Menu_SwitchNostalgia);
 
-	OptionsGroupScreen_Make(screen, 0, -1, -100, "Misc options...",      Menu_SwitchMisc);
-	OptionsGroupScreen_Make(screen, 1, -1,  -50, "Gui options...",       Menu_SwitchGui);
-	OptionsGroupScreen_Make(screen, 2, -1,    0, "Graphics options...",  Menu_SwitchGfx);
-	OptionsGroupScreen_Make(screen, 3, -1,   50, "Controls...",          Menu_SwitchKeysNormal);
-	OptionsGroupScreen_Make(screen, 4,  1,  -50, "Hacks settings...",    Menu_SwitchHacks);
-	OptionsGroupScreen_Make(screen, 5,  1,    0, "Env settings...",      Menu_SwitchEnv);
-	OptionsGroupScreen_Make(screen, 6,  1,   50, "Nostalgia options...", Menu_SwitchNostalgia);
+	Menu_DefaultBack(s, 7, &s->Buttons[7], false, &s->TitleFont, Menu_SwitchPause);	
+	s->Widgets[8] = NULL; /* Description text widget placeholder */
 
-	Menu_DefaultBack(screen, 7, &screen->Buttons[7], false, &screen->TitleFont, Menu_SwitchPause);	
-	screen->Widgets[8] = NULL; /* Description text widget placeholder */
-
-	if (screen->SelectedI >= 0) { OptionsGroupScreen_MakeDesc(screen); }
-	OptionsGroupScreen_CheckHacksAllowed(obj);
+	if (s->SelectedI >= 0) { OptionsGroupScreen_MakeDesc(s); }
+	OptionsGroupScreen_CheckHacksAllowed(s);
 }
 
-static void OptionsGroupScreen_Init(struct GuiElem* elem) {
-	struct OptionsGroupScreen* screen = (struct OptionsGroupScreen*)elem;
-	MenuScreen_Init(elem);
-	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, screen, OptionsGroupScreen_CheckHacksAllowed);
+static void OptionsGroupScreen_Init(struct OptionsGroupScreen* s) {
+	MenuScreen_Init(s);
+	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
 }
 
-static void OptionsGroupScreen_Free(struct GuiElem* elem) {
-	struct OptionsGroupScreen* screen = (struct OptionsGroupScreen*)elem;
-	MenuScreen_Free(elem);
-	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, screen, OptionsGroupScreen_CheckHacksAllowed);
+static void OptionsGroupScreen_Free(struct OptionsGroupScreen* s) {
+	MenuScreen_Free(s);
+	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
 }
 
-static bool OptionsGroupScreen_MouseMove(struct GuiElem* elem, Int32 x, Int32 y) {
-	struct OptionsGroupScreen* screen = (struct OptionsGroupScreen*)elem;
-	Int32 i = Menu_HandleMouseMove((struct MenuBase*)elem, x, y);
-	if (i == -1 || i == screen->SelectedI) return true;
+static bool OptionsGroupScreen_MouseMove(struct OptionsGroupScreen* s, Int32 x, Int32 y) {
+	Int32 i = Menu_DoMouseMove(s, x, y);
+	if (i == -1 || i == s->SelectedI) return true;
 	if (i >= Array_Elems(optsGroup_descs)) return true;
 
-	screen->SelectedI = i;
-	Elem_TryFree(&screen->Desc);
-	OptionsGroupScreen_MakeDesc(screen);
+	s->SelectedI = i;
+	Elem_TryFree(&s->Desc);
+	OptionsGroupScreen_MakeDesc(s);
 	return true;
 }
 
 struct ScreenVTABLE OptionsGroupScreen_VTABLE = {
 	OptionsGroupScreen_Init, MenuScreen_Render,  OptionsGroupScreen_Free,      Gui_DefaultRecreate,
-	MenuScreen_KeyDown,      MenuScreen_KeyUp,   MenuScreen_KeyPress,
-	MenuScreen_MouseDown,    MenuScreen_MouseUp, OptionsGroupScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize,     Menu_ContextLost,   OptionsGroupScreen_ContextRecreated,
+	MenuScreen_KeyDown,      Menu_KeyUp,         Menu_KeyPress,
+	Menu_MouseDown,          Menu_MouseUp,       OptionsGroupScreen_MouseMove, MenuScreen_MouseScroll,
+	Menu_OnResize,           Menu_ContextLost,   OptionsGroupScreen_ContextRecreated,
 };
 struct Screen* OptionsGroupScreen_MakeInstance(void) {
 	static struct Widget* widgets[9];
-	struct OptionsGroupScreen* screen = &OptionsGroupScreen_Instance;
+	struct OptionsGroupScreen* s = &OptionsGroupScreen_Instance;
 	
-	screen->HandlesAllInput = true;
-	screen->Widgets         = widgets;
-	screen->WidgetsCount    = Array_Elems(widgets);
+	s->HandlesAllInput = true;
+	s->Widgets         = widgets;
+	s->WidgetsCount    = Array_Elems(widgets);
 
-	screen->VTABLE = &OptionsGroupScreen_VTABLE;
-	screen->SelectedI = -1;
-	return (struct Screen*)screen;
+	s->VTABLE = &OptionsGroupScreen_VTABLE;
+	s->SelectedI = -1;
+	return (struct Screen*)s;
 }
 
 
@@ -792,8 +764,8 @@ struct Screen* OptionsGroupScreen_MakeInstance(void) {
 *----------------------------------------------------EditHotkeyScreen-----------------------------------------------------*
 *#########################################################################################################################*/
 struct EditHotkeyScreen EditHotkeyScreen_Instance;
-static void EditHotkeyScreen_Make(struct EditHotkeyScreen* screen, Int32 i, Int32 x, Int32 y, STRING_PURE String* text, Widget_LeftClick onClick) {
-	Menu_Button(screen, i, &screen->Buttons[i], 300, text, &screen->TitleFont, onClick,
+static void EditHotkeyScreen_Make(struct EditHotkeyScreen* s, Int32 i, Int32 x, Int32 y, STRING_PURE String* text, Widget_LeftClick onClick) {
+	Menu_Button(s, i, &s->Buttons[i], 300, text, &s->TitleFont, onClick,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
 }
 
@@ -803,85 +775,80 @@ static void EditHotkeyScreen_MakeFlags(UInt8 flags, STRING_TRANSIENT String* str
 	HotkeyListScreen_MakeFlags(flags, str);
 }
 
-static void EditHotkeyScreen_MakeBaseKey(struct EditHotkeyScreen* screen, Widget_LeftClick onClick) {
+static void EditHotkeyScreen_MakeBaseKey(struct EditHotkeyScreen* s, Widget_LeftClick onClick) {
 	char textBuffer[STRING_SIZE];
 	String text = String_FromArray(textBuffer);
 
 	String_AppendConst(&text, "Key: ");
-	String_AppendConst(&text, Key_Names[screen->CurHotkey.Trigger]);
-	EditHotkeyScreen_Make(screen, 0, 0, -150, &text, onClick);
+	String_AppendConst(&text, Key_Names[s->CurHotkey.Trigger]);
+	EditHotkeyScreen_Make(s, 0, 0, -150, &text, onClick);
 }
 
-static void EditHotkeyScreen_MakeModifiers(struct EditHotkeyScreen* screen, Widget_LeftClick onClick) {
+static void EditHotkeyScreen_MakeModifiers(struct EditHotkeyScreen* s, Widget_LeftClick onClick) {
 	char textBuffer[STRING_SIZE];
 	String text = String_FromArray(textBuffer);
 
 	String_AppendConst(&text, "Modifiers:");
-	EditHotkeyScreen_MakeFlags(screen->CurHotkey.Flags, &text);
-	EditHotkeyScreen_Make(screen, 1, 0, -100, &text, onClick);
+	EditHotkeyScreen_MakeFlags(s->CurHotkey.Flags, &text);
+	EditHotkeyScreen_Make(s, 1, 0, -100, &text, onClick);
 }
 
-static void EditHotkeyScreen_MakeLeaveOpen(struct EditHotkeyScreen* screen, Widget_LeftClick onClick) {
+static void EditHotkeyScreen_MakeLeaveOpen(struct EditHotkeyScreen* s, Widget_LeftClick onClick) {
 	char textBuffer[STRING_SIZE];
 	String text = String_FromArray(textBuffer);
 
 	String_AppendConst(&text, "Input stays open: ");
-	String_AppendConst(&text, screen->CurHotkey.StaysOpen ? "ON" : "OFF");
-	EditHotkeyScreen_Make(screen, 2, -100, 10, &text, onClick);
+	String_AppendConst(&text, s->CurHotkey.StaysOpen ? "ON" : "OFF");
+	EditHotkeyScreen_Make(s, 2, -100, 10, &text, onClick);
 }
 
-static void EditHotkeyScreen_BaseKey(struct GuiElem* elem, struct GuiElem* widget) {
-	struct EditHotkeyScreen* screen = (struct EditHotkeyScreen*)elem;
-	screen->SelectedI = 0;
-	screen->SupressNextPress = true;
+static void EditHotkeyScreen_BaseKey(struct EditHotkeyScreen* s, void* b) {
+	s->SelectedI = 0;
+	s->SupressNextPress = true;
 	String msg = String_FromConst("Key: press a key..");
-	ButtonWidget_Set(&screen->Buttons[0], &msg, &screen->TitleFont);
+	ButtonWidget_Set(&s->Buttons[0], &msg, &s->TitleFont);
 }
 
-static void EditHotkeyScreen_Modifiers(struct GuiElem* elem, struct GuiElem* widget) {
-	struct EditHotkeyScreen* screen = (struct EditHotkeyScreen*)elem;
-	screen->SelectedI = 1;
-	screen->SupressNextPress = true;
+static void EditHotkeyScreen_Modifiers(struct EditHotkeyScreen* s, void* b) {
+	s->SelectedI = 1;
+	s->SupressNextPress = true;
 	String msg = String_FromConst("Modifiers: press a key..");
-	ButtonWidget_Set(&screen->Buttons[1], &msg, &screen->TitleFont);
+	ButtonWidget_Set(&s->Buttons[1], &msg, &s->TitleFont);
 }
 
-static void EditHotkeyScreen_LeaveOpen(struct GuiElem* elem, struct GuiElem* widget) {
-	struct EditHotkeyScreen* screen = (struct EditHotkeyScreen*)elem;
+static void EditHotkeyScreen_LeaveOpen(struct EditHotkeyScreen* s, void* b) {
 	/* Reset 'waiting for key..' state of two other buttons */
-	if (screen->SelectedI == 0) {
-		EditHotkeyScreen_MakeBaseKey(screen, EditHotkeyScreen_BaseKey);
-		screen->SupressNextPress = false;
-	} else if (screen->SelectedI == 1) {
-		EditHotkeyScreen_MakeModifiers(screen, EditHotkeyScreen_Modifiers);
-		screen->SupressNextPress = false;
+	if (s->SelectedI == 0) {
+		EditHotkeyScreen_MakeBaseKey(s, EditHotkeyScreen_BaseKey);
+		s->SupressNextPress = false;
+	} else if (s->SelectedI == 1) {
+		EditHotkeyScreen_MakeModifiers(s, EditHotkeyScreen_Modifiers);
+		s->SupressNextPress = false;
 	}
 
-	screen->SelectedI = -1;
-	screen->CurHotkey.StaysOpen = !screen->CurHotkey.StaysOpen;
-	EditHotkeyScreen_MakeLeaveOpen(screen, EditHotkeyScreen_LeaveOpen);
+	s->SelectedI = -1;
+	s->CurHotkey.StaysOpen = !s->CurHotkey.StaysOpen;
+	EditHotkeyScreen_MakeLeaveOpen(s, EditHotkeyScreen_LeaveOpen);
 }
 
-static void EditHotkeyScreen_SaveChanges(struct GuiElem* elem, struct GuiElem* widget) {
-	struct EditHotkeyScreen* screen = (struct EditHotkeyScreen*)elem;
-	struct HotkeyData hotkey = screen->OrigHotkey;
+static void EditHotkeyScreen_SaveChanges(struct EditHotkeyScreen* s, void* b) {
+	struct HotkeyData hotkey = s->OrigHotkey;
 	if (hotkey.Trigger != Key_None) {
 		Hotkeys_Remove(hotkey.Trigger, hotkey.Flags);
 		Hotkeys_UserRemovedHotkey(hotkey.Trigger, hotkey.Flags);
 	}
 
-	hotkey = screen->CurHotkey;
+	hotkey = s->CurHotkey;
 	if (hotkey.Trigger != Key_None) {
-		String text = screen->Input.Base.Text;
+		String text = s->Input.Base.Text;
 		Hotkeys_Add(hotkey.Trigger, hotkey.Flags, &text, hotkey.StaysOpen);
 		Hotkeys_UserAddedHotkey(hotkey.Trigger, hotkey.Flags, hotkey.StaysOpen, &text);
 	}
 	Gui_ReplaceActive(HotkeyListScreen_MakeInstance());
 }
 
-static void EditHotkeyScreen_RemoveHotkey(struct GuiElem* elem, struct GuiElem* widget) {
-	struct EditHotkeyScreen* screen = (struct EditHotkeyScreen*)elem;
-	struct HotkeyData hotkey = screen->OrigHotkey;
+static void EditHotkeyScreen_RemoveHotkey(struct EditHotkeyScreen* s, void* b) {
+	struct HotkeyData hotkey = s->OrigHotkey;
 	if (hotkey.Trigger != Key_None) {
 		Hotkeys_Remove(hotkey.Trigger, hotkey.Flags);
 		Hotkeys_UserRemovedHotkey(hotkey.Trigger, hotkey.Flags);
@@ -889,107 +856,101 @@ static void EditHotkeyScreen_RemoveHotkey(struct GuiElem* elem, struct GuiElem* 
 	Gui_ReplaceActive(HotkeyListScreen_MakeInstance());
 }
 
-static void EditHotkeyScreen_Init(struct GuiElem* elem) {
-	struct EditHotkeyScreen* screen = (struct EditHotkeyScreen*)elem;
-	MenuScreen_Init(elem);
+static void EditHotkeyScreen_Init(struct EditHotkeyScreen* s) {
+	MenuScreen_Init(s);
 	Key_KeyRepeat = true;
 }
 
-static void EditHotkeyScreen_Render(struct GuiElem* elem, Real64 delta) {
-	MenuScreen_Render(elem, delta);
+static void EditHotkeyScreen_Render(struct EditHotkeyScreen* s, Real64 delta) {
+	MenuScreen_Render(s, delta);
 	Int32 cX = Game_Width / 2, cY = Game_Height / 2;
 	PackedCol grey = PACKEDCOL_CONST(150, 150, 150, 255);
 	GfxCommon_Draw2DFlat(cX - 250, cY - 65, 500, 2, grey);
 	GfxCommon_Draw2DFlat(cX - 250, cY + 45, 500, 2, grey);
 }
 
-static void EditHotkeyScreen_Free(struct GuiElem* elem) {
-	struct EditHotkeyScreen* screen = (struct EditHotkeyScreen*)elem;
+static void EditHotkeyScreen_Free(struct EditHotkeyScreen* s) {
 	Key_KeyRepeat = false;
-	screen->SelectedI = -1;
-	MenuScreen_Free(elem);
+	s->SelectedI = -1;
+	MenuScreen_Free(s);
 }
 
-static bool EditHotkeyScreen_KeyPress(struct GuiElem* elem, UInt8 key) {
-	struct EditHotkeyScreen* screen = (struct EditHotkeyScreen*)elem;
-	if (screen->SupressNextPress) {
-		screen->SupressNextPress = false;
+static bool EditHotkeyScreen_KeyPress(struct EditHotkeyScreen* s, UInt8 key) {
+	if (s->SupressNextPress) {
+		s->SupressNextPress = false;
 		return true;
 	}
-	return Elem_HandlesKeyPress(&screen->Input.Base, key);
+	return Elem_HandlesKeyPress(&s->Input.Base, key);
 }
 
-static bool EditHotkeyScreen_KeyDown(struct GuiElem* elem, Key key) {
-	struct EditHotkeyScreen* screen = (struct EditHotkeyScreen*)elem;
-	if (screen->SelectedI >= 0) {
-		if (screen->SelectedI == 0) {
-			screen->CurHotkey.Trigger = key;
-			EditHotkeyScreen_MakeBaseKey(screen, EditHotkeyScreen_BaseKey);
-		} else if (screen->SelectedI == 1) {
-			if      (key == Key_ControlLeft || key == Key_ControlRight) screen->CurHotkey.Flags |= HOTKEYS_FLAG_CTRL;
-			else if (key == Key_ShiftLeft   || key == Key_ShiftRight)   screen->CurHotkey.Flags |= HOTKEYS_FLAG_SHIFT;
-			else if (key == Key_AltLeft     || key == Key_AltRight)     screen->CurHotkey.Flags |= HOTKEYS_FLAG_ALT;
-			else screen->CurHotkey.Flags = 0;
+static bool EditHotkeyScreen_KeyDown(struct EditHotkeyScreen* s, Key key) {
+	if (s->SelectedI >= 0) {
+		if (s->SelectedI == 0) {
+			s->CurHotkey.Trigger = key;
+			EditHotkeyScreen_MakeBaseKey(s, EditHotkeyScreen_BaseKey);
+		} else if (s->SelectedI == 1) {
+			if      (key == Key_ControlLeft || key == Key_ControlRight) s->CurHotkey.Flags |= HOTKEYS_FLAG_CTRL;
+			else if (key == Key_ShiftLeft   || key == Key_ShiftRight)   s->CurHotkey.Flags |= HOTKEYS_FLAG_SHIFT;
+			else if (key == Key_AltLeft     || key == Key_AltRight)     s->CurHotkey.Flags |= HOTKEYS_FLAG_ALT;
+			else s->CurHotkey.Flags = 0;
 
-			EditHotkeyScreen_MakeModifiers(screen, EditHotkeyScreen_Modifiers);
+			EditHotkeyScreen_MakeModifiers(s, EditHotkeyScreen_Modifiers);
 		}
 
-		screen->SupressNextPress = true;
-		screen->SelectedI = -1;
+		s->SupressNextPress = true;
+		s->SelectedI = -1;
 		return true;
 	}
-	return Elem_HandlesKeyDown(&screen->Input.Base, key) || MenuScreen_KeyDown(elem, key);
+	return Elem_HandlesKeyDown(&s->Input.Base, key) || MenuScreen_KeyDown(s, key);
 }
 
-static bool EditHotkeyScreen_KeyUp(struct GuiElem* elem, Key key) {
-	struct EditHotkeyScreen* screen = (struct EditHotkeyScreen*)elem;
-	return Elem_HandlesKeyUp(&screen->Input.Base, key);
+static bool EditHotkeyScreen_KeyUp(struct EditHotkeyScreen* s, Key key) {
+	return Elem_HandlesKeyUp(&s->Input.Base, key);
 }
 
-static void EditHotkeyScreen_ContextRecreated(void* obj) {
-	struct EditHotkeyScreen* screen = (struct EditHotkeyScreen*)obj;
-	struct MenuInputValidator validator = MenuInputValidator_String();
+static void EditHotkeyScreen_ContextRecreated(struct EditHotkeyScreen* s) {
+	struct MenuInputValidator v = MenuInputValidator_String();
 	String text = String_MakeNull();
 
-	bool existed = screen->OrigHotkey.Trigger != Key_None;
+	bool existed = s->OrigHotkey.Trigger != Key_None;
 	if (existed) {
-		text = StringsBuffer_UNSAFE_Get(&HotkeysText, screen->OrigHotkey.TextIndex);
+		text = StringsBuffer_UNSAFE_Get(&HotkeysText, s->OrigHotkey.TextIndex);
 	}
 
-	EditHotkeyScreen_MakeBaseKey(screen, EditHotkeyScreen_BaseKey);
-	EditHotkeyScreen_MakeModifiers(screen, EditHotkeyScreen_Modifiers);
-	EditHotkeyScreen_MakeLeaveOpen(screen, EditHotkeyScreen_LeaveOpen);
+	EditHotkeyScreen_MakeBaseKey(s,   EditHotkeyScreen_BaseKey);
+	EditHotkeyScreen_MakeModifiers(s, EditHotkeyScreen_Modifiers);
+	EditHotkeyScreen_MakeLeaveOpen(s, EditHotkeyScreen_LeaveOpen);
 
 	String addText = String_FromReadonly(existed ? "Save changes" : "Add hotkey");
-	EditHotkeyScreen_Make(screen, 3, 0, 80, &addText, EditHotkeyScreen_SaveChanges);
+	EditHotkeyScreen_Make(s, 3, 0, 80, &addText, EditHotkeyScreen_SaveChanges);
 	String remText = String_FromReadonly(existed ? "Remove hotkey" : "Cancel");
-	EditHotkeyScreen_Make(screen, 4, 0, 130, &remText, EditHotkeyScreen_RemoveHotkey);
+	EditHotkeyScreen_Make(s, 4, 0, 130, &remText, EditHotkeyScreen_RemoveHotkey);
 
-	Menu_DefaultBack(screen, 5, &screen->Buttons[5], false, &screen->TitleFont, Menu_SwitchHotkeys);
+	Menu_DefaultBack(s, 5, &s->Buttons[5], false, &s->TitleFont, Menu_SwitchHotkeys);
 
-	Menu_Input(screen, 6, &screen->Input, 500, &text, &screen->TextFont, &validator,
+	Menu_Input(s, 6, &s->Input, 500, &text, &s->TextFont, &v,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -35);
 }
 
 struct ScreenVTABLE EditHotkeyScreen_VTABLE = {
 	EditHotkeyScreen_Init,    EditHotkeyScreen_Render, EditHotkeyScreen_Free,     Gui_DefaultRecreate,
 	EditHotkeyScreen_KeyDown, EditHotkeyScreen_KeyUp,  EditHotkeyScreen_KeyPress,
-	MenuScreen_MouseDown,     MenuScreen_MouseUp,      MenuScreen_MouseMove,      MenuScreen_MouseScroll,
-	MenuScreen_OnResize,      Menu_ContextLost,        EditHotkeyScreen_ContextRecreated,
+	Menu_MouseDown,           Menu_MouseUp,            Menu_MouseMove,            MenuScreen_MouseScroll,
+	Menu_OnResize,            Menu_ContextLost,        EditHotkeyScreen_ContextRecreated,
 };
 struct Screen* EditHotkeyScreen_MakeInstance(struct HotkeyData original) {
 	static struct Widget* widgets[7];
-	struct EditHotkeyScreen* screen = &EditHotkeyScreen_Instance;
+	struct EditHotkeyScreen* s = &EditHotkeyScreen_Instance;
 
-	screen->HandlesAllInput = true;
-	screen->Widgets         = widgets;
-	screen->WidgetsCount    = Array_Elems(widgets);
+	s->HandlesAllInput = true;
+	s->Widgets         = widgets;
+	s->WidgetsCount    = Array_Elems(widgets);
 
-	screen->VTABLE    = &EditHotkeyScreen_VTABLE;
-	screen->SelectedI = -1;
-	screen->OrigHotkey = original;
-	screen->CurHotkey  = original;
-	return (struct Screen*)screen;
+	s->VTABLE    = &EditHotkeyScreen_VTABLE;
+	s->SelectedI = -1;
+	s->OrigHotkey = original;
+	s->CurHotkey  = original;
+	return (struct Screen*)s;
 }
 
 
@@ -997,16 +958,16 @@ struct Screen* EditHotkeyScreen_MakeInstance(struct HotkeyData original) {
 *-----------------------------------------------------GenLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
 struct GenLevelScreen GenLevelScreen_Instance;
-Int32 GenLevelScreen_GetInt(struct GenLevelScreen* screen, Int32 index) {
-	struct MenuInputWidget* input = &screen->Inputs[index];
+Int32 GenLevelScreen_GetInt(struct GenLevelScreen* s, Int32 index) {
+	struct MenuInputWidget* input = &s->Inputs[index];
 	String text = input->Base.Text;
 
 	if (!input->Validator.IsValidValue(&input->Validator, &text)) return 0;
 	Int32 value; Convert_TryParseInt32(&text, &value); return value;
 }
 
-Int32 GenLevelScreen_GetSeedInt(struct GenLevelScreen* screen, Int32 index) {
-	struct MenuInputWidget* input = &screen->Inputs[index];
+Int32 GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, Int32 index) {
+	struct MenuInputWidget* input = &s->Inputs[index];
 	String text = input->Base.Text;
 
 	if (!text.length) {
@@ -1018,11 +979,11 @@ Int32 GenLevelScreen_GetSeedInt(struct GenLevelScreen* screen, Int32 index) {
 	Int32 value; Convert_TryParseInt32(&text, &value); return value;
 }
 
-static void GenLevelScreen_Gen(struct GenLevelScreen* screen, bool vanilla) {
-	Int32 width  = GenLevelScreen_GetInt(screen, 0);
-	Int32 height = GenLevelScreen_GetInt(screen, 1);
-	Int32 length = GenLevelScreen_GetInt(screen, 2);
-	Int32 seed   = GenLevelScreen_GetSeedInt(screen, 3);
+static void GenLevelScreen_Gen(struct GenLevelScreen* s, bool vanilla) {
+	Int32 width  = GenLevelScreen_GetInt(s, 0);
+	Int32 height = GenLevelScreen_GetInt(s, 1);
+	Int32 length = GenLevelScreen_GetInt(s, 2);
+	Int32 seed   = GenLevelScreen_GetSeedInt(s, 3);
 
 	UInt64 volume = (UInt64)width * height * length;
 	if (volume > Int32_MaxValue) {
@@ -1036,30 +997,27 @@ static void GenLevelScreen_Gen(struct GenLevelScreen* screen, bool vanilla) {
 	}
 }
 
-static void GenLevelScreen_Flatgrass(struct GuiElem* elem, struct GuiElem* widget) {
-	struct GenLevelScreen* screen = (struct GenLevelScreen*)elem;
-	GenLevelScreen_Gen(screen, false);
+static void GenLevelScreen_Flatgrass(struct GenLevelScreen* s, void* b) {
+	GenLevelScreen_Gen(s, false);
 }
 
-static void GenLevelScreen_Notchy(struct GuiElem* elem, struct GuiElem* widget) {
-	struct GenLevelScreen* screen = (struct GenLevelScreen*)elem;
-	GenLevelScreen_Gen(screen, true);
+static void GenLevelScreen_Notchy(struct GenLevelScreen* s, void* b) {
+	GenLevelScreen_Gen(s, true);
 }
 
-static void GenLevelScreen_InputClick(struct GuiElem* elem, struct GuiElem* widget) {
-	struct GenLevelScreen* screen = (struct GenLevelScreen*)elem;
-	if (screen->Selected) screen->Selected->Base.ShowCaret = false;
+static void GenLevelScreen_InputClick(struct GenLevelScreen* s, struct MenuInputWidget* input) {
+	if (s->Selected) s->Selected->Base.ShowCaret = false;
 
-	screen->Selected = (struct MenuInputWidget*)widget;
-	Elem_HandlesMouseDown(&screen->Selected->Base, Mouse_X, Mouse_Y, MouseButton_Left);
-	screen->Selected->Base.ShowCaret = true;
+	s->Selected = input;
+	Elem_HandlesMouseDown(&s->Selected->Base, Mouse_X, Mouse_Y, MouseButton_Left);
+	s->Selected->Base.ShowCaret = true;
 }
 
-static void GenLevelScreen_Input(struct GenLevelScreen* screen, Int32 i, Int32 y, bool seed, STRING_TRANSIENT String* value) {
-	struct MenuInputWidget* input = &screen->Inputs[i];
-	struct MenuInputValidator validator = seed ? MenuInputValidator_Seed() : MenuInputValidator_Integer(1, 8192);
+static void GenLevelScreen_Input(struct GenLevelScreen* s, Int32 i, Int32 y, bool seed, STRING_TRANSIENT String* value) {
+	struct MenuInputWidget* input = &s->Inputs[i];
+	struct MenuInputValidator v = seed ? MenuInputValidator_Seed() : MenuInputValidator_Integer(1, 8192);
 
-	Menu_Input(screen, i, input, 200, value, &screen->TextFont, &validator,
+	Menu_Input(s, i, input, 200, value, &s->TextFont, &v,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
 
 	input->Base.ShowCaret = false;
@@ -1067,11 +1025,11 @@ static void GenLevelScreen_Input(struct GenLevelScreen* screen, Int32 i, Int32 y
 	value->length = 0;
 }
 
-static void GenLevelScreen_Label(struct GenLevelScreen* screen, Int32 i, Int32 x, Int32 y, const char* title) {
-	struct TextWidget* label = &screen->Labels[i];
+static void GenLevelScreen_Label(struct GenLevelScreen* s, Int32 i, Int32 x, Int32 y, const char* title) {
+	struct TextWidget* label = &s->Labels[i];
 
 	String text = String_FromReadonly(title);
-	Menu_Label(screen, i + 4, label, &text, &screen->TextFont,
+	Menu_Label(s, i + 4, label, &text, &s->TextFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
 
 	label->XOffset = -110 - label->Width / 2;
@@ -1079,82 +1037,77 @@ static void GenLevelScreen_Label(struct GenLevelScreen* screen, Int32 i, Int32 x
 	PackedCol col = PACKEDCOL_CONST(224, 224, 224, 255); label->Col = col;
 }
 
-static void GenLevelScreen_Init(struct GuiElem* elem) {
-	struct GenLevelScreen* screen = (struct GenLevelScreen*)elem;
+static void GenLevelScreen_Init(struct GenLevelScreen* s) {
 	Key_KeyRepeat = true;
-	MenuScreen_Init(elem);
+	MenuScreen_Init(s);
 }
 
-static void GenLevelScreen_Free(struct GuiElem* elem) {
+static void GenLevelScreen_Free(struct GenLevelScreen* s) {
 	Key_KeyRepeat = false;
-	MenuScreen_Free(elem);
+	MenuScreen_Free(s);
 }
 
-static bool GenLevelScreen_KeyDown(struct GuiElem* elem, Key key) {
-	struct GenLevelScreen* screen = (struct GenLevelScreen*)elem;
-	if (screen->Selected && Elem_HandlesKeyDown(&screen->Selected->Base, key)) return true;
-	return MenuScreen_KeyDown(elem, key);
+static bool GenLevelScreen_KeyDown(struct GenLevelScreen* s, Key key) {
+	if (s->Selected && Elem_HandlesKeyDown(&s->Selected->Base, key)) return true;
+	return MenuScreen_KeyDown(s, key);
 }
 
-static bool GenLevelScreen_KeyUp(struct GuiElem* elem, Key key) {
-	struct GenLevelScreen* screen = (struct GenLevelScreen*)elem;
-	return !screen->Selected || Elem_HandlesKeyUp(&screen->Selected->Base, key);
+static bool GenLevelScreen_KeyUp(struct GenLevelScreen* s, Key key) {
+	return !s->Selected || Elem_HandlesKeyUp(&s->Selected->Base, key);
 }
 
-static bool GenLevelScreen_KeyPress(struct GuiElem* elem, UInt8 key) {
-	struct GenLevelScreen* screen = (struct GenLevelScreen*)elem;
-	return !screen->Selected || Elem_HandlesKeyPress(&screen->Selected->Base, key);
+static bool GenLevelScreen_KeyPress(struct GenLevelScreen* s, UInt8 key) {
+	return !s->Selected || Elem_HandlesKeyPress(&s->Selected->Base, key);
 }
 
-static void GenLevelScreen_ContextRecreated(void* obj) {
-	struct GenLevelScreen* screen = (struct GenLevelScreen*)obj;
+static void GenLevelScreen_ContextRecreated(struct GenLevelScreen* s) {
 	char tmpBuffer[STRING_SIZE];
 	String tmp = String_FromArray(tmpBuffer);
 
 	String_AppendInt32(&tmp, World_Width);
-	GenLevelScreen_Input(screen, 0, -80, false, &tmp);
+	GenLevelScreen_Input(s, 0, -80, false, &tmp);
 	String_AppendInt32(&tmp, World_Height);
-	GenLevelScreen_Input(screen, 1, -40, false, &tmp);
+	GenLevelScreen_Input(s, 1, -40, false, &tmp);
 	String_AppendInt32(&tmp, World_Length);
-	GenLevelScreen_Input(screen, 2,   0, false, &tmp);
-	GenLevelScreen_Input(screen, 3,  40, true,  &tmp);
+	GenLevelScreen_Input(s, 2,   0, false, &tmp);
+	GenLevelScreen_Input(s, 3,  40, true,  &tmp);
 
-	GenLevelScreen_Label(screen, 0, -150, -80, "Width:");
-	GenLevelScreen_Label(screen, 1, -150, -40, "Height:");
-	GenLevelScreen_Label(screen, 2, -150,   0, "Length:");
-	GenLevelScreen_Label(screen, 3, -140,  40, "Seed:");
+	GenLevelScreen_Label(s, 0, -150, -80, "Width:");
+	GenLevelScreen_Label(s, 1, -150, -40, "Height:");
+	GenLevelScreen_Label(s, 2, -150,   0, "Length:");
+	GenLevelScreen_Label(s, 3, -140,  40, "Seed:");
 
 	String gen = String_FromConst("Generate new level");
-	Menu_Label(screen, 8, &screen->Labels[4], &gen, &screen->TextFont,
+	Menu_Label(s, 8, &s->Labels[4], &gen, &s->TextFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -130);
 
 	String flatgrass = String_FromConst("Flatgrass");
-	Menu_Button(screen, 9, &screen->Buttons[0], 200, &flatgrass, &screen->TitleFont, GenLevelScreen_Flatgrass,
+	Menu_Button(s, 9, &s->Buttons[0], 200, &flatgrass, &s->TitleFont, GenLevelScreen_Flatgrass,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, -120, 100);
 
 	String vanilla = String_FromConst("Vanilla");
-	Menu_Button(screen, 10, &screen->Buttons[1], 200, &vanilla, &screen->TitleFont, GenLevelScreen_Notchy,
+	Menu_Button(s, 10, &s->Buttons[1], 200, &vanilla, &s->TitleFont, GenLevelScreen_Notchy,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 120, 100);
 
-	Menu_DefaultBack(screen, 11, &screen->Buttons[2], false, &screen->TitleFont, Menu_SwitchPause);
+	Menu_DefaultBack(s, 11, &s->Buttons[2], false, &s->TitleFont, Menu_SwitchPause);
 }
 
 struct ScreenVTABLE GenLevelScreen_VTABLE = {
 	GenLevelScreen_Init,    MenuScreen_Render,    GenLevelScreen_Free,     Gui_DefaultRecreate,
 	GenLevelScreen_KeyDown, GenLevelScreen_KeyUp, GenLevelScreen_KeyPress,
-	MenuScreen_MouseDown,   MenuScreen_MouseUp,   MenuScreen_MouseMove,    MenuScreen_MouseScroll,
-	MenuScreen_OnResize,    Menu_ContextLost,     GenLevelScreen_ContextRecreated,
+	Menu_MouseDown,         Menu_MouseUp,         Menu_MouseMove,          MenuScreen_MouseScroll,
+	Menu_OnResize,          Menu_ContextLost,     GenLevelScreen_ContextRecreated,
 };
 struct Screen* GenLevelScreen_MakeInstance(void) {
 	static struct Widget* widgets[12];
-	struct GenLevelScreen* screen = &GenLevelScreen_Instance;
+	struct GenLevelScreen* s = &GenLevelScreen_Instance;
 
-	screen->HandlesAllInput = true;
-	screen->Widgets         = widgets;
-	screen->WidgetsCount    = Array_Elems(widgets);
+	s->HandlesAllInput = true;
+	s->Widgets         = widgets;
+	s->WidgetsCount    = Array_Elems(widgets);
 
-	screen->VTABLE = &GenLevelScreen_VTABLE;
-	return (struct Screen*)screen;
+	s->VTABLE = &GenLevelScreen_VTABLE;
+	return (struct Screen*)s;
 }
 
 
@@ -1169,46 +1122,40 @@ static void ClassicGenScreen_Gen(Int32 size) {
 	Gui_ReplaceActive(GeneratingScreen_MakeInstance());
 }
 
-static void ClassicGenScreen_Small(struct GuiElem* a, struct GuiElem* b)  { ClassicGenScreen_Gen(128); }
-static void ClassicGenScreen_Medium(struct GuiElem* a, struct GuiElem* b) { ClassicGenScreen_Gen(256); }
-static void ClassicGenScreen_Huge(struct GuiElem* a, struct GuiElem* b)   { ClassicGenScreen_Gen(512); }
+static void ClassicGenScreen_Small(void* a, void* b)  { ClassicGenScreen_Gen(128); }
+static void ClassicGenScreen_Medium(void* a, void* b) { ClassicGenScreen_Gen(256); }
+static void ClassicGenScreen_Huge(void* a, void* b)   { ClassicGenScreen_Gen(512); }
 
-static void ClassicGenScreen_Make(struct ClassicGenScreen* screen, Int32 i, Int32 y, const char* title, Widget_LeftClick onClick) {
+static void ClassicGenScreen_Make(struct ClassicGenScreen* s, Int32 i, Int32 y, const char* title, Widget_LeftClick onClick) {
 	String text = String_FromReadonly(title);
-	Menu_Button(screen, i, &screen->Buttons[i], 400, &text, &screen->TitleFont, onClick,
+	Menu_Button(s, i, &s->Buttons[i], 400, &text, &s->TitleFont, onClick,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
 }
 
-static void ClassicGenScreen_Init(struct GuiElem* elem) {
-	struct ClassicGenScreen* screen = (struct ClassicGenScreen*)elem;
-	MenuScreen_Init(elem);
-}
+static void ClassicGenScreen_ContextRecreated(struct ClassicGenScreen* s) {
+	ClassicGenScreen_Make(s, 0, -100, "Small",  ClassicGenScreen_Small);
+	ClassicGenScreen_Make(s, 1,  -50, "Normal", ClassicGenScreen_Medium);
+	ClassicGenScreen_Make(s, 2,    0, "Huge",   ClassicGenScreen_Huge);
 
-static void ClassicGenScreen_ContextRecreated(void* obj) {
-	struct ClassicGenScreen* screen = (struct ClassicGenScreen*)obj;
-	ClassicGenScreen_Make(screen, 0, -100, "Small",  ClassicGenScreen_Small);
-	ClassicGenScreen_Make(screen, 1,  -50, "Normal", ClassicGenScreen_Medium);
-	ClassicGenScreen_Make(screen, 2,    0, "Huge",   ClassicGenScreen_Huge);
-
-	Menu_DefaultBack(screen, 3, &screen->Buttons[3], false, &screen->TitleFont, Menu_SwitchPause);
+	Menu_DefaultBack(s, 3, &s->Buttons[3], false, &s->TitleFont, Menu_SwitchPause);
 }
 
 struct ScreenVTABLE ClassicGenScreen_VTABLE = {
-	ClassicGenScreen_Init, MenuScreen_Render,  MenuScreen_Free,      Gui_DefaultRecreate,
-	MenuScreen_KeyDown,    MenuScreen_KeyUp,   MenuScreen_KeyPress,
-	MenuScreen_MouseDown,  MenuScreen_MouseUp, MenuScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize,   Menu_ContextLost,   ClassicGenScreen_ContextRecreated,
+	MenuScreen_Init,    MenuScreen_Render,  MenuScreen_Free, Gui_DefaultRecreate,
+	MenuScreen_KeyDown, Menu_KeyUp,         Menu_KeyPress,
+	Menu_MouseDown,     Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
+	Menu_OnResize,      Menu_ContextLost,   ClassicGenScreen_ContextRecreated,
 };
 struct Screen* ClassicGenScreen_MakeInstance(void) {
 	static struct Widget* widgets[4];
-	struct ClassicGenScreen* screen = &ClassicGenScreen_Instance;
+	struct ClassicGenScreen* s = &ClassicGenScreen_Instance;
 
-	screen->HandlesAllInput = true;
-	screen->Widgets         = widgets;
-	screen->WidgetsCount    = Array_Elems(widgets);
+	s->HandlesAllInput = true;
+	s->Widgets         = widgets;
+	s->WidgetsCount    = Array_Elems(widgets);
 
-	screen->VTABLE = &ClassicGenScreen_VTABLE;
-	return (struct Screen*)screen;
+	s->VTABLE = &ClassicGenScreen_VTABLE;
+	return (struct Screen*)s;
 }
 
 
@@ -1216,74 +1163,71 @@ struct Screen* ClassicGenScreen_MakeInstance(void) {
 *----------------------------------------------------SaveLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
 struct SaveLevelScreen SaveLevelScreen_Instance;
-static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* screen) {
-	struct ButtonWidget* btn = &screen->Buttons[0];
+static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* s) {
+	struct ButtonWidget* btn = &s->Buttons[0];
 	if (btn->OptName) {
 		btn->OptName = NULL; String save = String_FromConst("Save"); 
-		ButtonWidget_Set(btn, &save, &screen->TitleFont);
+		ButtonWidget_Set(btn, &save, &s->TitleFont);
 	}
 
-	btn = &screen->Buttons[1];
+	btn = &s->Buttons[1];
 	if (btn->OptName) {
 		btn->OptName = NULL; String save = String_FromConst("Save schematic");
-		ButtonWidget_Set(btn, &save, &screen->TitleFont);
+		ButtonWidget_Set(btn, &save, &s->TitleFont);
 	}
 }
 
-static void SaveLevelScreen_MakeDesc(struct SaveLevelScreen* screen, STRING_PURE String* text) {
-	if (screen->Widgets[5]) { Elem_TryFree(screen->Widgets[5]); }
+static void SaveLevelScreen_MakeDesc(struct SaveLevelScreen* s, STRING_PURE String* text) {
+	if (s->Widgets[5]) { Elem_TryFree(s->Widgets[5]); }
 
-	Menu_Label(screen, 5, &screen->Desc, text, &screen->TextFont,
+	Menu_Label(s, 5, &s->Desc, text, &s->TextFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 65);
 }
 
-static void SaveLevelScreen_DoSave(struct GuiElem* elem, struct GuiElem* widget, const char* ext) {
-	struct SaveLevelScreen* screen = (struct SaveLevelScreen*)elem;
-	String file = screen->Input.Base.Text;
+static void SaveLevelScreen_DoSave(struct SaveLevelScreen* s, struct ButtonWidget* btn, const char* ext) {
+	String file = s->Input.Base.Text;
 	if (!file.length) {
 		String msg = String_FromConst("&ePlease enter a filename");
-		SaveLevelScreen_MakeDesc(screen, &msg); return;
+		SaveLevelScreen_MakeDesc(s, &msg); return;
 	}
 
 	char pathBuffer[FILENAME_SIZE];
 	String path = String_FromArray(pathBuffer);
 	String_Format2(&path, "maps/%s%c", &file, ext);
 
-	struct ButtonWidget* btn = (struct ButtonWidget*)widget;
 	if (File_Exists(&path) && !btn->OptName) {
 		String warnMsg = String_FromConst("&cOverwrite existing?");
-		ButtonWidget_Set(btn, &warnMsg, &screen->TitleFont);
+		ButtonWidget_Set(btn, &warnMsg, &s->TitleFont);
 		btn->OptName = "O";
 	} else {
 		/* NOTE: We don't immediately save here, because otherwise the 'saving...'
 		will not be rendered in time because saving is done on the main thread. */
 		String warnMsg = String_FromConst("Saving..");
-		SaveLevelScreen_MakeDesc(screen, &warnMsg);
+		SaveLevelScreen_MakeDesc(s, &warnMsg);
 
-		String_Copy(&screen->TextPath, &path);
-		SaveLevelScreen_RemoveOverwrites(screen);
+		String_Copy(&s->TextPath, &path);
+		SaveLevelScreen_RemoveOverwrites(s);
 	}
 }
 
-static void SaveLevelScreen_Classic(struct GuiElem* elem, struct GuiElem* widget) {
-	SaveLevelScreen_DoSave(elem, widget, ".cw");
+static void SaveLevelScreen_Classic(struct SaveLevelScreen* s, struct ButtonWidget* btn) {
+	SaveLevelScreen_DoSave(s, btn, ".cw");
 }
 
-static void SaveLevelScreen_Schematic(struct GuiElem* elem, struct GuiElem* widget) {
-	SaveLevelScreen_DoSave(elem, widget, ".schematic");
+static void SaveLevelScreen_Schematic(struct SaveLevelScreen* s, struct ButtonWidget* btn) {
+	SaveLevelScreen_DoSave(s, btn, ".schematic");
 }
 
-static void SaveLevelScreen_Init(struct GuiElem* elem) {
-	struct SaveLevelScreen* screen = (struct SaveLevelScreen*)elem;
-	String str = String_FromArray(screen->__TextPathBuffer);
-	screen->TextPath = str;
+static void SaveLevelScreen_Init(struct SaveLevelScreen* s) {
+	String str = String_FromArray(s->__TextPathBuffer);
+	s->TextPath = str;
 
 	Key_KeyRepeat = true;
-	MenuScreen_Init(elem);
+	MenuScreen_Init(s);
 }
 
-static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* screen) {
-	String path = screen->TextPath;
+static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s) {
+	String path = s->TextPath;
 	ReturnCode res;
 	struct Stream compStream;
 
@@ -1315,177 +1259,164 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* screen) {
 
 	Chat_Add1("&eSaved map to: %s", &path);
 	Gui_ReplaceActive(PauseScreen_MakeInstance());
-	screen->TextPath.length = 0;
+	s->TextPath.length = 0;
 }
 
-static void SaveLevelScreen_Render(struct GuiElem* elem, Real64 delta) {
-	MenuScreen_Render(elem, delta);
+static void SaveLevelScreen_Render(struct SaveLevelScreen* s, Real64 delta) {
+	MenuScreen_Render(s, delta);
 	Int32 cX = Game_Width / 2, cY = Game_Height / 2;
 	PackedCol grey = PACKEDCOL_CONST(150, 150, 150, 255);
 	GfxCommon_Draw2DFlat(cX - 250, cY + 90, 500, 2, grey);
 
-	struct SaveLevelScreen* screen = (struct SaveLevelScreen*)elem;
-	if (!screen->TextPath.length) return;
-	SaveLevelScreen_SaveMap(screen);
+	if (!s->TextPath.length) return;
+	SaveLevelScreen_SaveMap(s);
 }
 
-static void SaveLevelScreen_Free(struct GuiElem* elem) {
+static void SaveLevelScreen_Free(struct SaveLevelScreen* s) {
 	Key_KeyRepeat = false;
-	MenuScreen_Free(elem);
+	MenuScreen_Free(s);
 }
 
-static bool SaveLevelScreen_KeyPress(struct GuiElem* elem, UInt8 key) {
-	struct SaveLevelScreen* screen = (struct SaveLevelScreen*)elem;
-	SaveLevelScreen_RemoveOverwrites(screen);
-
-	return Elem_HandlesKeyPress(&screen->Input.Base, key);
+static bool SaveLevelScreen_KeyPress(struct SaveLevelScreen* s, UInt8 key) {
+	SaveLevelScreen_RemoveOverwrites(s);
+	return Elem_HandlesKeyPress(&s->Input.Base, key);
 }
 
-static bool SaveLevelScreen_KeyDown(struct GuiElem* elem, Key key) {
-	struct SaveLevelScreen* screen = (struct SaveLevelScreen*)elem;
-	SaveLevelScreen_RemoveOverwrites(screen);
-
-	if (Elem_HandlesKeyDown(&screen->Input.Base, key)) return true;
-	return MenuScreen_KeyDown(elem, key);
+static bool SaveLevelScreen_KeyDown(struct SaveLevelScreen* s, Key key) {
+	SaveLevelScreen_RemoveOverwrites(s);
+	if (Elem_HandlesKeyDown(&s->Input.Base, key)) return true;
+	return MenuScreen_KeyDown(s, key);
 }
 
-static bool SaveLevelScreen_KeyUp(struct GuiElem* elem, Key key) {
-	struct SaveLevelScreen* screen = (struct SaveLevelScreen*)elem;
-	return Elem_HandlesKeyUp(&screen->Input.Base, key);
+static bool SaveLevelScreen_KeyUp(struct SaveLevelScreen* s, Key key) {
+	return Elem_HandlesKeyUp(&s->Input.Base, key);
 }
 
-static void SaveLevelScreen_ContextRecreated(void* obj) {
-	struct SaveLevelScreen* screen = (struct SaveLevelScreen*)obj;
-
+static void SaveLevelScreen_ContextRecreated(struct SaveLevelScreen* s) {
 	String save = String_FromConst("Save");
-	Menu_Button(screen, 0, &screen->Buttons[0], 300, &save, &screen->TitleFont, SaveLevelScreen_Classic,
+	Menu_Button(s, 0, &s->Buttons[0], 300, &save, &s->TitleFont, SaveLevelScreen_Classic,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 20);
 
 	String schematic = String_FromConst("Save schematic");
-	Menu_Button(screen, 1, &screen->Buttons[1], 200, &schematic, &screen->TitleFont, SaveLevelScreen_Schematic,
+	Menu_Button(s, 1, &s->Buttons[1], 200, &schematic, &s->TitleFont, SaveLevelScreen_Schematic,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, -150, 120);
 
 	String mcEdit = String_FromConst("&eCan be imported into MCEdit");
-	Menu_Label(screen, 2, &screen->MCEdit, &mcEdit, &screen->TextFont,
+	Menu_Label(s, 2, &s->MCEdit, &mcEdit, &s->TextFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 110, 120);
 
-	Menu_DefaultBack(screen, 3, &screen->Buttons[2], false, &screen->TitleFont, Menu_SwitchPause);
+	Menu_DefaultBack(s, 3, &s->Buttons[2], false, &s->TitleFont, Menu_SwitchPause);
 
 	struct MenuInputValidator validator = MenuInputValidator_Path();
 	String empty = String_MakeNull();
-	Menu_Input(screen, 4, &screen->Input, 500, &empty, &screen->TextFont, &validator,
+	Menu_Input(s, 4, &s->Input, 500, &empty, &s->TextFont, &validator,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
 
-	screen->Widgets[5] = NULL; /* description widget placeholder */
+	s->Widgets[5] = NULL; /* description widget placeholder */
 }
 
 struct ScreenVTABLE SaveLevelScreen_VTABLE = {
 	SaveLevelScreen_Init,    SaveLevelScreen_Render, SaveLevelScreen_Free,     Gui_DefaultRecreate,
 	SaveLevelScreen_KeyDown, SaveLevelScreen_KeyUp,  SaveLevelScreen_KeyPress,
-	MenuScreen_MouseDown,    MenuScreen_MouseUp,     MenuScreen_MouseMove,     MenuScreen_MouseScroll,
-	MenuScreen_OnResize,     Menu_ContextLost,       SaveLevelScreen_ContextRecreated,
+	Menu_MouseDown,          Menu_MouseUp,           Menu_MouseMove,           MenuScreen_MouseScroll,
+	Menu_OnResize,           Menu_ContextLost,       SaveLevelScreen_ContextRecreated,
 };
 struct Screen* SaveLevelScreen_MakeInstance(void) {
 	static struct Widget* widgets[6];
-	struct SaveLevelScreen* screen = &SaveLevelScreen_Instance;
+	struct SaveLevelScreen* s = &SaveLevelScreen_Instance;
 	
-	screen->HandlesAllInput = true;
-	screen->Widgets         = widgets;
-	screen->WidgetsCount    = Array_Elems(widgets);
+	s->HandlesAllInput = true;
+	s->Widgets         = widgets;
+	s->WidgetsCount    = Array_Elems(widgets);
 
-	screen->VTABLE = &SaveLevelScreen_VTABLE;
-	return (struct Screen*)screen;
+	s->VTABLE = &SaveLevelScreen_VTABLE;
+	return (struct Screen*)s;
 }
 
 
 /*########################################################################################################################*
 *---------------------------------------------------TexturePackScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-static void TexturePackScreen_EntryClick(struct GuiElem* elem, struct GuiElem* w) {
-	struct ListScreen* screen = (struct ListScreen*)elem;
+static void TexturePackScreen_EntryClick(struct ListScreen* s, struct Widget* w) {
 	char pathBuffer[FILENAME_SIZE];
 	String path = String_FromArray(pathBuffer);
 
-	String filename = ListScreen_UNSAFE_GetCur(screen, w);
+	String filename = ListScreen_UNSAFE_GetCur(s, w);
 	String_Format2(&path, "texpacks%r%s", &Directory_Separator, &filename);
 	if (!File_Exists(&path)) return;
 	
-	Int32 curPage = screen->CurrentIndex;
+	Int32 idx = s->CurrentIndex;
 	Game_SetDefaultTexturePack(&filename);
 	TexturePack_ExtractDefault();
-	Elem_Recreate(screen);
-	ListScreen_SetCurrentIndex(screen, curPage);
+	Elem_Recreate(s);
+	ListScreen_SetCurrentIndex(s, idx);
 }
 
-static void TexturePackScreen_SelectEntry(STRING_PURE String* filename, void* obj) {
+static void TexturePackScreen_SelectEntry(STRING_PURE String* filename, StringsBuffer* entries) {
 	String zip = String_FromConst(".zip");
 	if (!String_CaselessEnds(filename, &zip)) return;
-
-	StringsBuffer* entries = (StringsBuffer*)obj;
 	StringsBuffer_Add(entries, filename);
 }
 
 struct Screen* TexturePackScreen_MakeInstance(void) {
-	struct ListScreen* screen = ListScreen_MakeInstance();
-	String title = String_FromConst("Select a texture pack zip"); screen->TitleText = title;
-	screen->EntryClick = TexturePackScreen_EntryClick;
+	struct ListScreen* s = ListScreen_MakeInstance();
+	String title = String_FromConst("Select a texture pack zip"); s->TitleText = title;
+	s->EntryClick = TexturePackScreen_EntryClick;
 
 	String path = String_FromConst("texpacks");
-	Directory_Enum(&path, &screen->Entries, TexturePackScreen_SelectEntry);
-	if (screen->Entries.Count) {
-		ListScreen_QuickSort(0, screen->Entries.Count - 1);
+	Directory_Enum(&path, &s->Entries, TexturePackScreen_SelectEntry);
+	if (s->Entries.Count) {
+		ListScreen_QuickSort(0, s->Entries.Count - 1);
 	}
-	return (struct Screen*)screen;
+	return (struct Screen*)s;
 }
 
 
 /*########################################################################################################################*
 *----------------------------------------------------FontListScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-static void FontListScreen_EntryClick(struct GuiElem* elem, struct GuiElem* w) {
-	struct ListScreen* screen = (struct ListScreen*)elem;
-	String fontName = ListScreen_UNSAFE_GetCur(screen, w);
+static void FontListScreen_EntryClick(struct ListScreen* s, struct Widget* w) {
+	String fontName = ListScreen_UNSAFE_GetCur(s, w);
 	if (String_CaselessEqualsConst(&fontName, LIST_SCREEN_EMPTY)) return;
 
 	String_Copy(&Game_FontName, &fontName);
 	Options_Set(OPT_FONT_NAME, &fontName);
 
-	Int32 cur = screen->CurrentIndex;
-	Menu_HandleFontChange(elem);
-	ListScreen_SetCurrentIndex(screen, cur);
+	Int32 cur = s->CurrentIndex;
+	Menu_HandleFontChange(s);
+	ListScreen_SetCurrentIndex(s, cur);
 }
 
-static void FontListScreen_UpdateEntry(struct ListScreen* screen, struct ButtonWidget* button, STRING_PURE String* text) {
+static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* button, STRING_PURE String* text) {
 	struct FontDesc font = { 0 };
 	Font_Make(&font, text, 16, FONT_STYLE_NORMAL);
 	ButtonWidget_Set(button, text, &font);
 	Font_Free(&font);
 }
 
-static void FontListScreen_Init(struct GuiElem* elem) {
-	struct ListScreen* screen = (struct ListScreen*)elem;
-	ListScreen_Init(elem);
-	ListScreen_Select(screen, &Game_FontName);
+static void FontListScreen_Init(struct ListScreen* s) {
+	ListScreen_Init(s);
+	ListScreen_Select(s, &Game_FontName);
 }
 
 struct ScreenVTABLE FontListScreen_VTABLE = {
-	FontListScreen_Init,  ListScreen_Render, ListScreen_Free,      Gui_DefaultRecreate,
-	ListScreen_KeyDown,   Gui_DefaultKey,    Gui_DefaultKeyPress,
-	ListScreen_MouseDown, Gui_DefaultMouse,  ListScreen_MouseMove, ListScreen_MouseScroll,
-	MenuScreen_OnResize,  Menu_ContextLost,  ListScreen_ContextRecreated,
+	FontListScreen_Init, ListScreen_Render, ListScreen_Free,     Gui_DefaultRecreate,
+	ListScreen_KeyDown,  Menu_KeyUp,        Menu_KeyPress,
+	Menu_MouseDown,      Menu_MouseUp,      Menu_MouseMove,      ListScreen_MouseScroll,
+	Menu_OnResize,       Menu_ContextLost,  ListScreen_ContextRecreated,
 };
 struct Screen* FontListScreen_MakeInstance(void) {
-	struct ListScreen* screen = ListScreen_MakeInstance();
-	String title = String_FromConst("Select a font"); screen->TitleText = title;
-	screen->EntryClick   = FontListScreen_EntryClick;
-	screen->UpdateEntry  = FontListScreen_UpdateEntry;
-	screen->VTABLE = &FontListScreen_VTABLE;
+	struct ListScreen* s = ListScreen_MakeInstance();
+	String title = String_FromConst("Select a font"); s->TitleText = title;
+	s->EntryClick   = FontListScreen_EntryClick;
+	s->UpdateEntry  = FontListScreen_UpdateEntry;
+	s->VTABLE = &FontListScreen_VTABLE;
 
-	Font_GetNames(&screen->Entries);
-	if (screen->Entries.Count) {
-		ListScreen_QuickSort(0, screen->Entries.Count - 1);
+	Font_GetNames(&s->Entries);
+	if (s->Entries.Count) {
+		ListScreen_QuickSort(0, s->Entries.Count - 1);
 	}
-	return (struct Screen*)screen;
+	return (struct Screen*)s;
 }
 
 
@@ -1493,9 +1424,8 @@ struct Screen* FontListScreen_MakeInstance(void) {
 *---------------------------------------------------HotkeyListScreen------------------------------------------------------*
 *#########################################################################################################################*/
 /* TODO: Hotkey added event for CPE */
-static void HotkeyListScreen_EntryClick(struct GuiElem* elem, struct GuiElem* w) {
-	struct ListScreen* screen = (struct ListScreen*)elem;
-	String text = ListScreen_UNSAFE_GetCur(screen, w);
+static void HotkeyListScreen_EntryClick(struct ListScreen* s, struct Widget* w) {
+	String text = ListScreen_UNSAFE_GetCur(s, w);
 	struct HotkeyData original = { 0 };
 
 	if (String_CaselessEqualsConst(&text, LIST_SCREEN_EMPTY)) {
@@ -1531,9 +1461,9 @@ static void HotkeyListScreen_MakeFlags(UInt8 flags, STRING_TRANSIENT String* str
 }
 
 struct Screen* HotkeyListScreen_MakeInstance(void) {
-	struct ListScreen* screen = ListScreen_MakeInstance();
-	String title = String_FromConst("Modify hotkeys"); screen->TitleText = title;
-	screen->EntryClick = HotkeyListScreen_EntryClick;
+	struct ListScreen* s = ListScreen_MakeInstance();
+	String title = String_FromConst("Modify hotkeys"); s->TitleText = title;
+	s->EntryClick = HotkeyListScreen_EntryClick;
 
 	char textBuffer[STRING_SIZE];
 	String text = String_FromArray(textBuffer);
@@ -1548,28 +1478,26 @@ struct Screen* HotkeyListScreen_MakeInstance(void) {
 			String_AppendConst(&text, " +");
 			HotkeyListScreen_MakeFlags(hKey.Flags, &text);
 		}
-		StringsBuffer_Add(&screen->Entries, &text);
+		StringsBuffer_Add(&s->Entries, &text);
 	}
 
 	String empty = String_FromConst(LIST_SCREEN_EMPTY);
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) {
-		StringsBuffer_Add(&screen->Entries, &empty);
+		StringsBuffer_Add(&s->Entries, &empty);
 	}
-	return (struct Screen*)screen;
+	return (struct Screen*)s;
 }
 
 
 /*########################################################################################################################*
 *----------------------------------------------------LoadLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
-static void LoadLevelScreen_SelectEntry(STRING_PURE String* filename, void* obj) {
+static void LoadLevelScreen_SelectEntry(STRING_PURE String* filename, StringsBuffer* entries) {
 	String cw = String_FromConst(".cw");  String lvl = String_FromConst(".lvl");
 	String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
 
-	if (!(String_CaselessEnds(filename, &cw) || String_CaselessEnds(filename, &lvl)
+	if (!(String_CaselessEnds(filename, &cw)   || String_CaselessEnds(filename, &lvl)
 		|| String_CaselessEnds(filename, &fcm) || String_CaselessEnds(filename, &dat))) return;
-
-	StringsBuffer* entries = (StringsBuffer*)obj;
 	StringsBuffer_Add(entries, filename);
 }
 
@@ -1621,28 +1549,27 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
 }
 
-static void LoadLevelScreen_EntryClick(struct GuiElem* elem, struct GuiElem* w) {
-	struct ListScreen* screen = (struct ListScreen*)elem;
+static void LoadLevelScreen_EntryClick(struct ListScreen* s, struct Widget* w) {
 	char pathBuffer[FILENAME_SIZE];
 	String path = String_FromArray(pathBuffer);
 
-	String filename = ListScreen_UNSAFE_GetCur(screen, w);
+	String filename = ListScreen_UNSAFE_GetCur(s, w);
 	String_Format2(&path, "maps%r%s", &Directory_Separator, &filename);
 	if (!File_Exists(&path)) return;
 	LoadLevelScreen_LoadMap(&path);
 }
 
 struct Screen* LoadLevelScreen_MakeInstance(void) {
-	struct ListScreen* screen = ListScreen_MakeInstance();
-	String title = String_FromConst("Select a level"); screen->TitleText = title;
-	screen->EntryClick = LoadLevelScreen_EntryClick;
+	struct ListScreen* s = ListScreen_MakeInstance();
+	String title = String_FromConst("Select a level"); s->TitleText = title;
+	s->EntryClick = LoadLevelScreen_EntryClick;
 
 	String path = String_FromConst("maps");
-	Directory_Enum(&path, &screen->Entries, LoadLevelScreen_SelectEntry);
-	if (screen->Entries.Count) {
-		ListScreen_QuickSort(0, screen->Entries.Count - 1);
+	Directory_Enum(&path, &s->Entries, LoadLevelScreen_SelectEntry);
+	if (s->Entries.Count) {
+		ListScreen_QuickSort(0, s->Entries.Count - 1);
 	}
-	return (struct Screen*)screen;
+	return (struct Screen*)s;
 }
 
 
@@ -1650,146 +1577,135 @@ struct Screen* LoadLevelScreen_MakeInstance(void) {
 *---------------------------------------------------KeyBindingsScreen-----------------------------------------------------*
 *#########################################################################################################################*/
 struct KeyBindingsScreen KeyBindingsScreen_Instance;
-static void KeyBindingsScreen_GetText(struct KeyBindingsScreen* screen, Int32 i, STRING_TRANSIENT String* text) {
-	Key key = KeyBind_Get(screen->Binds[i]);
-	String_Format2(text, "%c: %c", screen->Descs[i], Key_Names[key]);
+static void KeyBindingsScreen_GetText(struct KeyBindingsScreen* s, Int32 i, STRING_TRANSIENT String* text) {
+	Key key = KeyBind_Get(s->Binds[i]);
+	String_Format2(text, "%c: %c", s->Descs[i], Key_Names[key]);
 }
 
-static void KeyBindingsScreen_OnBindingClick(struct GuiElem* elem, struct GuiElem* widget) {
-	struct KeyBindingsScreen* screen = (struct KeyBindingsScreen*)elem;
+static void KeyBindingsScreen_OnBindingClick(struct KeyBindingsScreen* s, struct ButtonWidget* btn) {
 	char textBuffer[STRING_SIZE];
 	String text = String_FromArray(textBuffer);
 
-	if (screen->CurI >= 0) {
-		KeyBindingsScreen_GetText(screen, screen->CurI, &text);
-		struct ButtonWidget* curButton = (struct ButtonWidget*)screen->Widgets[screen->CurI];
-		ButtonWidget_Set(curButton, &text, &screen->TitleFont);
+	/* previously selected a different button for binding */
+	if (s->CurI >= 0) {
+		KeyBindingsScreen_GetText(s, s->CurI, &text);
+		struct ButtonWidget* cur = (struct ButtonWidget*)s->Widgets[s->CurI];
+		ButtonWidget_Set(cur, &text, &s->TitleFont);
 	}
-	screen->CurI = Menu_Index((struct MenuBase*)screen, (struct Widget*)widget);
+	s->CurI = Menu_Index(s, btn);
 
 	text.length = 0;
 	String_AppendConst(&text, "> ");
-	KeyBindingsScreen_GetText(screen, screen->CurI, &text);
+	KeyBindingsScreen_GetText(s, s->CurI, &text);
 	String_AppendConst(&text, " <");
-	ButtonWidget_Set((struct ButtonWidget*)widget, &text, &screen->TitleFont);
+	ButtonWidget_Set(btn, &text, &s->TitleFont);
 }
 
-static Int32 KeyBindingsScreen_MakeWidgets(struct KeyBindingsScreen* screen, Int32 y, Int32 arrowsY, Int32 leftLength, STRING_PURE const char* title, Int32 btnWidth) {
+static Int32 KeyBindingsScreen_MakeWidgets(struct KeyBindingsScreen* s, Int32 y, Int32 arrowsY, Int32 leftLength, STRING_PURE const char* title, Int32 btnWidth) {
 	Int32 i, origin = y, xOffset = btnWidth / 2 + 5;
-	screen->CurI = -1;
+	s->CurI = -1;
 
 	char textBuffer[STRING_SIZE];
 	String text = String_FromArray(textBuffer);
 
-	for (i = 0; i < screen->BindsCount; i++) {
+	for (i = 0; i < s->BindsCount; i++) {
 		if (i == leftLength) y = origin; /* reset y for next column */
 		Int32 xDir = leftLength == -1 ? 0 : (i < leftLength ? -1 : 1);
 
 		text.length = 0;
-		KeyBindingsScreen_GetText(screen, i, &text);
+		KeyBindingsScreen_GetText(s, i, &text);
 
-		Menu_Button(screen, i, &screen->Buttons[i], btnWidth, &text, &screen->TitleFont, KeyBindingsScreen_OnBindingClick,
+		Menu_Button(s, i, &s->Buttons[i], btnWidth, &text, &s->TitleFont, KeyBindingsScreen_OnBindingClick,
 			ANCHOR_CENTRE, ANCHOR_CENTRE, xDir * xOffset, y);
 		y += 50; /* distance between buttons */
 	}
 
 	String titleText = String_FromReadonly(title);
-	Menu_Label(screen, i, &screen->Title, &titleText, &screen->TitleFont,
+	Menu_Label(s, i, &s->Title, &titleText, &s->TitleFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -180); i++;
 
 	Widget_LeftClick backClick = Game_UseClassicOptions ? Menu_SwitchClassicOptions : Menu_SwitchOptions;
-	Menu_DefaultBack(screen, i, &screen->Back, false, &screen->TitleFont, backClick); i++;
-	if (!screen->LeftPage && !screen->RightPage) return i;
+	Menu_DefaultBack(s, i, &s->Back, false, &s->TitleFont, backClick); i++;
+	if (!s->LeftPage && !s->RightPage) return i;
 
 	String lArrow = String_FromConst("<");
-	Menu_Button(screen, i, &screen->Left, 40, &lArrow, &screen->TitleFont, screen->LeftPage,
+	Menu_Button(s, i, &s->Left, 40, &lArrow, &s->TitleFont, s->LeftPage,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, -btnWidth - 35, arrowsY); i++;
-	screen->Left.Disabled = !screen->LeftPage;
+	s->Left.Disabled = !s->LeftPage;
 
 	String rArrow = String_FromConst(">");
-	Menu_Button(screen, i, &screen->Right, 40, &rArrow, &screen->TitleFont, screen->RightPage,
+	Menu_Button(s, i, &s->Right, 40, &rArrow, &s->TitleFont, s->RightPage,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, btnWidth + 35, arrowsY); i++;
-	screen->Right.Disabled = !screen->RightPage;
+	s->Right.Disabled = !s->RightPage;
 
 	return i;
 }
 
-static void KeyBindingsScreen_Init(struct GuiElem* elem) {
-	struct KeyBindingsScreen* screen = (struct KeyBindingsScreen*)elem;
-	MenuScreen_Init(elem);
-}
+static bool KeyBindingsScreen_KeyDown(struct KeyBindingsScreen* s, Key key) {
+	if (s->CurI == -1) return MenuScreen_KeyDown(s, key);
 
-static bool KeyBindingsScreen_KeyDown(struct GuiElem* elem, Key key) {
-	struct KeyBindingsScreen* screen = (struct KeyBindingsScreen*)elem;
-	if (screen->CurI == -1) return MenuScreen_KeyDown(elem, key);
-
-	KeyBind bind = screen->Binds[screen->CurI];
+	KeyBind bind = s->Binds[s->CurI];
 	if (key == Key_Escape) key = KeyBind_GetDefault(bind);
 	KeyBind_Set(bind, key);
 
 	char textBuffer[STRING_SIZE];
 	String text = String_FromArray(textBuffer);
-	KeyBindingsScreen_GetText(screen, screen->CurI, &text);
+	KeyBindingsScreen_GetText(s, s->CurI, &text);
 
-	struct ButtonWidget* curButton = (struct ButtonWidget*)screen->Widgets[screen->CurI];
-	ButtonWidget_Set(curButton, &text, &screen->TitleFont);
-	screen->CurI = -1;
+	struct ButtonWidget* cur = (struct ButtonWidget*)s->Widgets[s->CurI];
+	ButtonWidget_Set(cur, &text, &s->TitleFont);
+	s->CurI = -1;
 	return true;
 }
 
-static bool KeyBindingsScreen_MouseDown(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) {
-	if (btn != MouseButton_Right) {
-		return MenuScreen_MouseDown(elem, x, y, btn);
-	}
-
-	struct KeyBindingsScreen* screen = (struct KeyBindingsScreen*)elem;
-	Int32 i = Menu_HandleMouseDown((struct MenuBase*)elem, x, y, btn);
+static bool KeyBindingsScreen_MouseDown(struct KeyBindingsScreen* s, Int32 x, Int32 y, MouseButton btn) {
+	if (btn != MouseButton_Right) { return Menu_MouseDown(s, x, y, btn); }
+	Int32 i = Menu_DoMouseDown(s, x, y, btn);
 	if (i == -1) return false;
 
 	/* Reset a key binding */
-	if ((screen->CurI == -1 || screen->CurI == i) && i < screen->BindsCount) {
-		screen->CurI = i;
-		Elem_HandlesKeyDown(elem, KeyBind_GetDefault(screen->Binds[i]));
+	if ((s->CurI == -1 || s->CurI == i) && i < s->BindsCount) {
+		s->CurI = i;
+		Elem_HandlesKeyDown(s, KeyBind_GetDefault(s->Binds[i]));
 	}
 	return true;
 }
 
 struct ScreenVTABLE KeyBindingsScreen_VTABLE = {
-	KeyBindingsScreen_Init,      MenuScreen_Render,  MenuScreen_Free,      Gui_DefaultRecreate,
-	KeyBindingsScreen_KeyDown,   MenuScreen_KeyUp,   MenuScreen_KeyPress,
-	KeyBindingsScreen_MouseDown, MenuScreen_MouseUp, MenuScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize,         Menu_ContextLost, NULL,
+	MenuScreen_Init,             MenuScreen_Render,  MenuScreen_Free, Gui_DefaultRecreate,
+	KeyBindingsScreen_KeyDown,   Menu_KeyUp,         Menu_KeyPress,
+	KeyBindingsScreen_MouseDown, Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
+	Menu_OnResize,               Menu_ContextLost,   NULL,
 };
 static struct KeyBindingsScreen* KeyBindingsScreen_Make(Int32 bindsCount, UInt8* binds, const char** descs, struct ButtonWidget* buttons, struct Widget** widgets, Event_Void_Callback contextRecreated) {
-	struct KeyBindingsScreen* screen = &KeyBindingsScreen_Instance;
-	screen->HandlesAllInput = true;
-	screen->Widgets         = widgets;
-	screen->WidgetsCount    = bindsCount + 4;
+	struct KeyBindingsScreen* s = &KeyBindingsScreen_Instance;
+	s->HandlesAllInput = true;
+	s->Widgets         = widgets;
+	s->WidgetsCount    = bindsCount + 4;
 
-	screen->VTABLE = &KeyBindingsScreen_VTABLE;
-	screen->VTABLE->ContextRecreated = contextRecreated;
+	s->VTABLE = &KeyBindingsScreen_VTABLE;
+	s->VTABLE->ContextRecreated = contextRecreated;
 
-	screen->BindsCount = bindsCount;
-	screen->Binds      = binds;
-	screen->Descs      = descs;
-	screen->Buttons    = buttons;
+	s->BindsCount = bindsCount;
+	s->Binds      = binds;
+	s->Descs      = descs;
+	s->Buttons    = buttons;
 
-	screen->CurI      = -1;
-	screen->LeftPage  = NULL;
-	screen->RightPage = NULL;
-	return screen;
+	s->CurI      = -1;
+	s->LeftPage  = NULL;
+	s->RightPage = NULL;
+	return s;
 }
 
 
 /*########################################################################################################################*
 *-----------------------------------------------ClassicKeyBindingsScreen--------------------------------------------------*
 *#########################################################################################################################*/
-static void ClassicKeyBindingsScreen_ContextRecreated(void* obj) {
-	struct KeyBindingsScreen* screen = (struct KeyBindingsScreen*)obj;
+static void ClassicKeyBindingsScreen_ContextRecreated(struct KeyBindingsScreen* s) {
 	if (Game_ClassicHacks) {
-		KeyBindingsScreen_MakeWidgets(screen, -140, -40, 5, "Normal controls", 260);
+		KeyBindingsScreen_MakeWidgets(s, -140, -40, 5, "Normal controls", 260);
 	} else {
-		KeyBindingsScreen_MakeWidgets(screen, -140, -40, 5, "Controls", 300);
+		KeyBindingsScreen_MakeWidgets(s, -140, -40, 5, "Controls", 300);
 	}
 }
 
@@ -1799,18 +1715,17 @@ struct Screen* ClassicKeyBindingsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[10];
 	static struct Widget* widgets[10 + 4];
 
-	struct KeyBindingsScreen* screen = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, ClassicKeyBindingsScreen_ContextRecreated);
-	if (Game_ClassicHacks) screen->RightPage = Menu_SwitchKeysClassicHacks;
-	return (struct Screen*)screen;
+	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, ClassicKeyBindingsScreen_ContextRecreated);
+	if (Game_ClassicHacks) s->RightPage = Menu_SwitchKeysClassicHacks;
+	return (struct Screen*)s;
 }
 
 
 /*########################################################################################################################*
 *--------------------------------------------ClassicHacksKeyBindingsScreen------------------------------------------------*
 *#########################################################################################################################*/
-static void ClassicHacksKeyBindingsScreen_ContextRecreated(void* obj) {
-	struct KeyBindingsScreen* screen = (struct KeyBindingsScreen*)obj;
-	KeyBindingsScreen_MakeWidgets(screen, -90, -40, 3, "Hacks controls", 260);
+static void ClassicHacksKeyBindingsScreen_ContextRecreated(struct KeyBindingsScreen* s) {
+	KeyBindingsScreen_MakeWidgets(s, -90, -40, 3, "Hacks controls", 260);
 }
 
 struct Screen* ClassicHacksKeyBindingsScreen_MakeInstance(void) {
@@ -1819,18 +1734,17 @@ struct Screen* ClassicHacksKeyBindingsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[6];
 	static struct Widget* widgets[6 + 4];
 
-	struct KeyBindingsScreen* screen = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, ClassicHacksKeyBindingsScreen_ContextRecreated);
-	screen->LeftPage = Menu_SwitchKeysClassic;
-	return (struct Screen*)screen;
+	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, ClassicHacksKeyBindingsScreen_ContextRecreated);
+	s->LeftPage = Menu_SwitchKeysClassic;
+	return (struct Screen*)s;
 }
 
 
 /*########################################################################################################################*
 *-----------------------------------------------NormalKeyBindingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
-static void NormalKeyBindingsScreen_ContextRecreated(void* obj) {
-	struct KeyBindingsScreen* screen = (struct KeyBindingsScreen*)obj;
-	KeyBindingsScreen_MakeWidgets(screen, -140, 10, 6, "Normal controls", 260);
+static void NormalKeyBindingsScreen_ContextRecreated(struct KeyBindingsScreen* s) {
+	KeyBindingsScreen_MakeWidgets(s, -140, 10, 6, "Normal controls", 260);
 }
 
 struct Screen* NormalKeyBindingsScreen_MakeInstance(void) {
@@ -1839,18 +1753,17 @@ struct Screen* NormalKeyBindingsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[12];
 	static struct Widget* widgets[12 + 4];
 
-	struct KeyBindingsScreen* screen = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, NormalKeyBindingsScreen_ContextRecreated);
-	screen->RightPage = Menu_SwitchKeysHacks;
-	return (struct Screen*)screen;
+	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, NormalKeyBindingsScreen_ContextRecreated);
+	s->RightPage = Menu_SwitchKeysHacks;
+	return (struct Screen*)s;
 }
 
 
 /*########################################################################################################################*
 *------------------------------------------------HacksKeyBindingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
-static void HacksKeyBindingsScreen_ContextRecreated(void* obj) {
-	struct KeyBindingsScreen* screen = (struct KeyBindingsScreen*)obj;
-	KeyBindingsScreen_MakeWidgets(screen, -40, 10, 4, "Hacks controls", 260);
+static void HacksKeyBindingsScreen_ContextRecreated(struct KeyBindingsScreen* s) {
+	KeyBindingsScreen_MakeWidgets(s, -40, 10, 4, "Hacks controls", 260);
 }
 
 struct Screen* HacksKeyBindingsScreen_MakeInstance(void) {
@@ -1859,19 +1772,18 @@ struct Screen* HacksKeyBindingsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[8];
 	static struct Widget* widgets[8 + 4];
 
-	struct KeyBindingsScreen* screen = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, HacksKeyBindingsScreen_ContextRecreated);
-	screen->LeftPage  = Menu_SwitchKeysNormal;
-	screen->RightPage = Menu_SwitchKeysOther;
-	return (struct Screen*)screen;
+	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, HacksKeyBindingsScreen_ContextRecreated);
+	s->LeftPage  = Menu_SwitchKeysNormal;
+	s->RightPage = Menu_SwitchKeysOther;
+	return (struct Screen*)s;
 }
 
 
 /*########################################################################################################################*
 *------------------------------------------------OtherKeyBindingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
-static void OtherKeyBindingsScreen_ContextRecreated(void* obj) {
-	struct KeyBindingsScreen* screen = (struct KeyBindingsScreen*)obj;
-	KeyBindingsScreen_MakeWidgets(screen, -140, 10, 6, "Other controls", 260);
+static void OtherKeyBindingsScreen_ContextRecreated(struct KeyBindingsScreen* s) {
+	KeyBindingsScreen_MakeWidgets(s, -140, 10, 6, "Other controls", 260);
 }
 
 struct Screen* OtherKeyBindingsScreen_MakeInstance(void) {
@@ -1880,23 +1792,22 @@ struct Screen* OtherKeyBindingsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[12];
 	static struct Widget* widgets[12 + 4];
 
-	struct KeyBindingsScreen* screen = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, OtherKeyBindingsScreen_ContextRecreated);
-	screen->LeftPage  = Menu_SwitchKeysHacks;
-	screen->RightPage = Menu_SwitchKeysMouse;
-	return (struct Screen*)screen;
+	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, OtherKeyBindingsScreen_ContextRecreated);
+	s->LeftPage  = Menu_SwitchKeysHacks;
+	s->RightPage = Menu_SwitchKeysMouse;
+	return (struct Screen*)s;
 }
 
 
 /*########################################################################################################################*
 *------------------------------------------------MouseKeyBindingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
-static void MouseKeyBindingsScreen_ContextRecreated(void* obj) {
-	struct KeyBindingsScreen* screen = (struct KeyBindingsScreen*)obj;
-	Int32 i = KeyBindingsScreen_MakeWidgets(screen, -40, 10, -1, "Mouse key bindings", 260);
+static void MouseKeyBindingsScreen_ContextRecreated(struct KeyBindingsScreen* s) {
+	Int32 i = KeyBindingsScreen_MakeWidgets(s, -40, 10, -1, "Mouse key bindings", 260);
 
 	static struct TextWidget text;
 	String msg = String_FromConst("&eRight click to remove the key binding");
-	Menu_Label(screen, i, &text, &msg, &screen->TextFont,
+	Menu_Label(s, i, &text, &msg, &s->TextFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
 }
 
@@ -1906,10 +1817,10 @@ struct Screen* MouseKeyBindingsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[3];
 	static struct Widget* widgets[3 + 4 + 1];
 
-	struct KeyBindingsScreen* screen = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, MouseKeyBindingsScreen_ContextRecreated);
-	screen->LeftPage = Menu_SwitchKeysOther;
-	screen->WidgetsCount++; /* Extra text widget for 'right click' message */
-	return (struct Screen*)screen;
+	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, MouseKeyBindingsScreen_ContextRecreated);
+	s->LeftPage = Menu_SwitchKeysOther;
+	s->WidgetsCount++; /* Extra text widget for 'right click' message */
+	return (struct Screen*)s;
 }
 
 
@@ -1937,34 +1848,34 @@ static void MenuOptionsScreen_SetFPS(STRING_PURE String* raw) {
 	Options_Set(OPT_FPS_LIMIT, &value);
 }
 
-static void MenuOptionsScreen_Set(struct MenuOptionsScreen* screen, Int32 i, STRING_PURE String* text) {
-	screen->Buttons[i].SetValue(text);
+static void MenuOptionsScreen_Set(struct MenuOptionsScreen* s, Int32 i, STRING_PURE String* text) {
+	s->Buttons[i].SetValue(text);
 	/* need to get btn again here (e.g. changing FPS invalidates all widgets) */
 
 	char titleBuffer[STRING_SIZE];
 	String title = String_FromArray(titleBuffer);
-	String_AppendConst(&title, screen->Buttons[i].OptName);
+	String_AppendConst(&title, s->Buttons[i].OptName);
 	String_AppendConst(&title, ": ");
-	screen->Buttons[i].GetValue(&title);
-	ButtonWidget_Set(&screen->Buttons[i], &title, &screen->TitleFont);
+	s->Buttons[i].GetValue(&title);
+	ButtonWidget_Set(&s->Buttons[i], &title, &s->TitleFont);
 }
 
-static void MenuOptionsScreen_FreeExtHelp(struct MenuOptionsScreen* screen) {
-	if (!screen->ExtHelp.LinesCount) return;
-	Elem_TryFree(&screen->ExtHelp);
-	screen->ExtHelp.LinesCount = 0;
+static void MenuOptionsScreen_FreeExtHelp(struct MenuOptionsScreen* s) {
+	if (!s->ExtHelp.LinesCount) return;
+	Elem_TryFree(&s->ExtHelp);
+	s->ExtHelp.LinesCount = 0;
 }
 
-static void MenuOptionsScreen_RepositionExtHelp(struct MenuOptionsScreen* screen) {
-	screen->ExtHelp.XOffset = Game_Width / 2 - screen->ExtHelp.Width / 2;
-	screen->ExtHelp.YOffset = Game_Height / 2 + 100;
-	Widget_Reposition(&screen->ExtHelp);
+static void MenuOptionsScreen_RepositionExtHelp(struct MenuOptionsScreen* s) {
+	s->ExtHelp.XOffset = Game_Width  / 2 - s->ExtHelp.Width / 2;
+	s->ExtHelp.YOffset = Game_Height / 2 + 100;
+	Widget_Reposition(&s->ExtHelp);
 }
 
-static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* screen, Int32 idx) {
-	MenuOptionsScreen_FreeExtHelp(screen);
-	if (!screen->Descriptions || screen->ActiveI >= 0) return;
-	const char* desc = screen->Descriptions[idx];
+static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* s, Int32 idx) {
+	MenuOptionsScreen_FreeExtHelp(s);
+	if (!s->Descriptions || s->ActiveI >= 0) return;
+	const char* desc = s->Descriptions[idx];
 	if (!desc) return;
 
 	String descRaw = String_FromReadonly(desc);
@@ -1972,126 +1883,118 @@ static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* screen, In
 	Int32 descLinesCount = Array_Elems(descLines);
 	String_UNSAFE_Split(&descRaw, '%', descLines, &descLinesCount);
 
-	TextGroupWidget_Create(&screen->ExtHelp, descLinesCount, &screen->TextFont, &screen->TextFont, screen->ExtHelp_Textures, screen->ExtHelp_Buffer);
-	Widget_SetLocation((struct Widget*)(&screen->ExtHelp), ANCHOR_MIN, ANCHOR_MIN, 0, 0);
-	Elem_Init(&screen->ExtHelp);
+	TextGroupWidget_Create(&s->ExtHelp, descLinesCount, &s->TextFont, &s->TextFont, s->ExtHelp_Textures, s->ExtHelp_Buffer);
+	Widget_SetLocation((struct Widget*)(&s->ExtHelp), ANCHOR_MIN, ANCHOR_MIN, 0, 0);
+	Elem_Init(&s->ExtHelp);
 
 	Int32 i;
 	for (i = 0; i < descLinesCount; i++) {
-		TextGroupWidget_SetText(&screen->ExtHelp, i, &descLines[i]);
+		TextGroupWidget_SetText(&s->ExtHelp, i, &descLines[i]);
 	}
-	MenuOptionsScreen_RepositionExtHelp(screen);
+	MenuOptionsScreen_RepositionExtHelp(s);
 }
 
-static void MenuOptionsScreen_FreeInput(struct MenuOptionsScreen* screen) {
-	if (screen->ActiveI == -1) return;
+static void MenuOptionsScreen_FreeInput(struct MenuOptionsScreen* s) {
+	if (s->ActiveI == -1) return;
 
 	Int32 i;
-	for (i = screen->WidgetsCount - 3; i < screen->WidgetsCount; i++) {
-		if (!screen->Widgets[i]) continue;
-		Elem_TryFree(screen->Widgets[i]);
-		screen->Widgets[i] = NULL;
+	for (i = s->WidgetsCount - 3; i < s->WidgetsCount; i++) {
+		if (!s->Widgets[i]) continue;
+		Elem_TryFree(s->Widgets[i]);
+		s->Widgets[i] = NULL;
 	}
 }
 
-static void MenuOptionsScreen_EnterInput(struct MenuOptionsScreen* screen) {
-	String text = screen->Input.Base.Text;
-	struct MenuInputValidator* validator = &screen->Input.Validator;
+static void MenuOptionsScreen_EnterInput(struct MenuOptionsScreen* s) {
+	String text = s->Input.Base.Text;
+	struct MenuInputValidator* validator = &s->Input.Validator;
 
 	if (validator->IsValidValue(validator, &text)) {
-		MenuOptionsScreen_Set(screen, screen->ActiveI, &text);
+		MenuOptionsScreen_Set(s, s->ActiveI, &text);
 	}
 
-	MenuOptionsScreen_SelectExtHelp(screen, screen->ActiveI);
-	MenuOptionsScreen_FreeInput(screen);
-	screen->ActiveI = -1;
+	MenuOptionsScreen_SelectExtHelp(s, s->ActiveI);
+	MenuOptionsScreen_FreeInput(s);
+	s->ActiveI = -1;
 }
 
-static void MenuOptionsScreen_Init(struct GuiElem* elem) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem;
+static void MenuOptionsScreen_Init(struct MenuOptionsScreen* s) {
 	Key_KeyRepeat = true;
-	MenuScreen_Init(elem);
-	screen->SelectedI = -1;
+	MenuScreen_Init(s);
+	s->SelectedI = -1;
 }
 	
-static void MenuOptionsScreen_Render(struct GuiElem* elem, Real64 delta) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem;
-	MenuScreen_Render(elem, delta);
-	if (!screen->ExtHelp.LinesCount) return;
+static void MenuOptionsScreen_Render(struct MenuOptionsScreen* s, Real64 delta) {
+	MenuScreen_Render(s, delta);
+	if (!s->ExtHelp.LinesCount) return;
 
-	struct TextGroupWidget* extHelp = &screen->ExtHelp;
+	struct TextGroupWidget* extHelp = &s->ExtHelp;
 	Int32 x = extHelp->X - 5, y = extHelp->Y - 5;
 	Int32 width = extHelp->Width, height = extHelp->Height;
 	PackedCol tableCol = PACKEDCOL_CONST(20, 20, 20, 200);
 	GfxCommon_Draw2DFlat(x, y, width + 10, height + 10, tableCol);
 
 	Gfx_SetTexturing(true);
-	Elem_Render(&screen->ExtHelp, delta);
+	Elem_Render(&s->ExtHelp, delta);
 	Gfx_SetTexturing(false);
 }
 
-static void MenuOptionsScreen_Free(struct GuiElem* elem) {
+static void MenuOptionsScreen_Free(struct MenuOptionsScreen* s) {
 	Key_KeyRepeat = false;
-	MenuScreen_Free(elem);
+	MenuScreen_Free(s);
 }
 
-static void MenuOptionsScreen_OnResize(struct GuiElem* elem) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem;
-	MenuScreen_OnResize(elem);
-	if (!screen->ExtHelp.LinesCount) return;
-	MenuOptionsScreen_RepositionExtHelp(screen);
+static void MenuOptionsScreen_OnResize(struct MenuOptionsScreen* s) {
+	Menu_OnResize(s);
+	if (!s->ExtHelp.LinesCount) return;
+	MenuOptionsScreen_RepositionExtHelp(s);
 }
 
-static void MenuOptionsScreen_ContextLost(void* obj) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)obj;
-	Menu_ContextLost(obj);
-	screen->ActiveI = -1;
-	MenuOptionsScreen_FreeExtHelp(screen);
+static void MenuOptionsScreen_ContextLost(struct MenuOptionsScreen* s) {
+	Menu_ContextLost(s);
+	s->ActiveI = -1;
+	MenuOptionsScreen_FreeExtHelp(s);
 }
 
-static bool MenuOptionsScreen_KeyPress(struct GuiElem* elem, UInt8 key) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem;
-	if (screen->ActiveI == -1) return true;
-	return Elem_HandlesKeyPress(&screen->Input.Base, key);
+static bool MenuOptionsScreen_KeyPress(struct MenuOptionsScreen* s, UInt8 key) {
+	if (s->ActiveI == -1) return true;
+	return Elem_HandlesKeyPress(&s->Input.Base, key);
 }
 
-static bool MenuOptionsScreen_KeyDown(struct GuiElem* elem, Key key) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem;
-	if (screen->ActiveI >= 0) {
-		if (Elem_HandlesKeyDown(&screen->Input.Base, key)) return true;
+static bool MenuOptionsScreen_KeyDown(struct MenuOptionsScreen* s, Key key) {
+	if (s->ActiveI >= 0) {
+		if (Elem_HandlesKeyDown(&s->Input.Base, key)) return true;
 		if (key == Key_Enter || key == Key_KeypadEnter) {
-			MenuOptionsScreen_EnterInput(screen); return true;
+			MenuOptionsScreen_EnterInput(s); return true;
 		}
 	}
-	return MenuScreen_KeyDown(elem, key);
+	return MenuScreen_KeyDown(s, key);
 }
 
-static bool MenuOptionsScreen_KeyUp(struct GuiElem* elem, Key key) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem;
-	if (screen->ActiveI == -1) return true;
-	return Elem_HandlesKeyUp(&screen->Input.Base, key);
+static bool MenuOptionsScreen_KeyUp(struct MenuOptionsScreen* s, Key key) {
+	if (s->ActiveI == -1) return true;
+	return Elem_HandlesKeyUp(&s->Input.Base, key);
 }
 
-static bool MenuOptionsScreen_MouseMove(struct GuiElem* elem, Int32 x, Int32 y) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem;
-	Int32 i = Menu_HandleMouseMove((struct MenuBase*)elem, x, y);
-	if (i == -1 || i == screen->SelectedI) return true;
-	if (!screen->Descriptions || i >= screen->DescriptionsCount) return true;
+static bool MenuOptionsScreen_MouseMove(struct MenuOptionsScreen* s, Int32 x, Int32 y) {
+	Int32 i = Menu_DoMouseMove(s, x, y);
+	if (i == -1 || i == s->SelectedI) return true;
+	if (!s->Descriptions || i >= s->DescriptionsCount) return true;
 
-	screen->SelectedI = i;
-	if (screen->ActiveI == -1) MenuOptionsScreen_SelectExtHelp(screen, i);
+	s->SelectedI = i;
+	if (s->ActiveI == -1) MenuOptionsScreen_SelectExtHelp(s, i);
 	return true;
 }
 
-static void MenuOptionsScreen_Make(struct MenuOptionsScreen* screen, Int32 i, Int32 dir, Int32 y, const char* optName, Widget_LeftClick onClick, Button_Get getter, Button_Set setter) {
+static void MenuOptionsScreen_Make(struct MenuOptionsScreen* s, Int32 i, Int32 dir, Int32 y, const char* optName, Widget_LeftClick onClick, Button_Get getter, Button_Set setter) {
 	char titleBuffer[STRING_SIZE];
 	String title = String_FromArray(titleBuffer);
 	String_AppendConst(&title, optName);
 	String_AppendConst(&title, ": ");
 	getter(&title);
 
-	struct ButtonWidget* btn = &screen->Buttons[i];
-	Menu_Button(screen, i, btn, 300, &title, &screen->TitleFont, onClick,
+	struct ButtonWidget* btn = &s->Buttons[i];
+	Menu_Button(s, i, btn, 300, &title, &s->TitleFont, onClick,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 160 * dir, y);
 
 	btn->OptName  = optName;
@@ -2099,109 +2002,102 @@ static void MenuOptionsScreen_Make(struct MenuOptionsScreen* screen, Int32 i, In
 	btn->SetValue = setter;
 }
 
-static void MenuOptionsScreen_MakeSimple(struct MenuOptionsScreen* screen, Int32 i, Int32 dir, Int32 y, const char* title, Widget_LeftClick onClick) {
+static void MenuOptionsScreen_MakeSimple(struct MenuOptionsScreen* s, Int32 i, Int32 dir, Int32 y, const char* title, Widget_LeftClick onClick) {
 	String text = String_FromReadonly(title);
-	Menu_Button(screen, i, &screen->Buttons[i], 300, &text, &screen->TitleFont, onClick,
+	Menu_Button(s, i, &s->Buttons[i], 300, &text, &s->TitleFont, onClick,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, dir * 160, y);
 }
 
-static void MenuOptionsScreen_OK(struct GuiElem* elem, struct GuiElem* widget) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem; 
-	MenuOptionsScreen_EnterInput(screen);
+static void MenuOptionsScreen_OK(struct MenuOptionsScreen* s, void* b) {
+	MenuOptionsScreen_EnterInput(s);
 }
 
-static void MenuOptionsScreen_Default(struct GuiElem* elem, struct GuiElem* widget) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem;
-	String text = String_FromReadonly(screen->DefaultValues[screen->ActiveI]);
-	InputWidget_Clear(&screen->Input.Base);
-	InputWidget_AppendString(&screen->Input.Base, &text);
+static void MenuOptionsScreen_Default(struct MenuOptionsScreen* s, void* b) {
+	String text = String_FromReadonly(s->DefaultValues[s->ActiveI]);
+	InputWidget_Clear(&s->Input.Base);
+	InputWidget_AppendString(&s->Input.Base, &text);
 }
 
-static void MenuOptionsScreen_Bool(struct GuiElem* elem, struct GuiElem* widget) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem;
-	struct ButtonWidget* button = (struct ButtonWidget*)widget;
-	Int32 index = Menu_Index((struct MenuBase*)screen, (struct Widget*)widget);
-	MenuOptionsScreen_SelectExtHelp(screen, index);
+static void MenuOptionsScreen_Bool(struct MenuOptionsScreen* s, struct ButtonWidget* btn) {
+	Int32 index = Menu_Index(s, btn);
+	MenuOptionsScreen_SelectExtHelp(s, index);
 
 	char valueBuffer[STRING_SIZE];
 	String value = String_FromArray(valueBuffer);
-	button->GetValue(&value);
+	btn->GetValue(&value);
 
 	bool isOn = String_CaselessEqualsConst(&value, "ON");
 	String newValue = String_FromReadonly(isOn ? "OFF" : "ON");
-	MenuOptionsScreen_Set(screen, index, &newValue);
+	MenuOptionsScreen_Set(s, index, &newValue);
 }
 
-static void MenuOptionsScreen_Enum(struct GuiElem* elem, struct GuiElem* widget) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem;
-	struct ButtonWidget* button = (struct ButtonWidget*)widget;
-	Int32 index = Menu_Index((struct MenuBase*)screen, (struct Widget*)widget);
-	MenuOptionsScreen_SelectExtHelp(screen, index);
+static void MenuOptionsScreen_Enum(struct MenuOptionsScreen* s, struct ButtonWidget* btn) {
+	Int32 index = Menu_Index(s, btn);
+	MenuOptionsScreen_SelectExtHelp(s, index);
 
-	struct MenuInputValidator* validator = &screen->Validators[index];
-	const char** names = (const char**)validator->Meta_Ptr[0];
-	UInt32 count = (UInt32)validator->Meta_Ptr[1];
+	struct MenuInputValidator* v = &s->Validators[index];
+	const char** names = (const char**)v->Meta_Ptr[0];
+	UInt32 count = (UInt32)v->Meta_Ptr[1];
 
 	char valueBuffer[STRING_SIZE];
 	String value = String_FromArray(valueBuffer);
-	button->GetValue(&value);
+	btn->GetValue(&value);
 
 	UInt32 raw = (Utils_ParseEnum(&value, 0, names, count) + 1) % count;
 	String newValue = String_FromReadonly(names[raw]);
-	MenuOptionsScreen_Set(screen, index, &newValue);
+	MenuOptionsScreen_Set(s, index, &newValue);
 }
 
-static void MenuOptionsScreen_Input(struct GuiElem* elem, struct GuiElem* widget) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem;
-	struct ButtonWidget* button = (struct ButtonWidget*)widget;
-	screen->ActiveI = Menu_Index((struct MenuBase*)screen, (struct Widget*)widget);
-	MenuOptionsScreen_FreeExtHelp(screen);
-	MenuOptionsScreen_FreeInput(screen);
+static void MenuOptionsScreen_Input(struct MenuOptionsScreen* s, struct ButtonWidget* btn) {
+	s->ActiveI = Menu_Index(s, btn);
+	MenuOptionsScreen_FreeExtHelp(s);
+	MenuOptionsScreen_FreeInput(s);
 
 	char valueBuffer[STRING_SIZE];
 	String value = String_FromArray(valueBuffer);
-	button->GetValue(&value);
-	Int32 count = screen->WidgetsCount;
+	btn->GetValue(&value);
+	Int32 count = s->WidgetsCount;
 
-	struct MenuInputValidator* validator = &screen->Validators[screen->ActiveI];
-	Menu_Input(screen, count - 1, &screen->Input, 400, &value, &screen->TextFont, validator,
+	struct MenuInputValidator* validator = &s->Validators[s->ActiveI];
+	Menu_Input(s, count - 1, &s->Input, 400, &value, &s->TextFont, validator,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 110);
 
 	String okMsg = String_FromConst("OK");
-	Menu_Button(screen, count - 2, &screen->OK, 40, &okMsg, &screen->TitleFont, MenuOptionsScreen_OK,
+	Menu_Button(s, count - 2, &s->OK, 40, &okMsg, &s->TitleFont, MenuOptionsScreen_OK,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 240, 110);
 
 	String defMsg = String_FromConst("Default value");
-	Menu_Button(screen, count - 3, &screen->Default, 200, &defMsg, &screen->TitleFont, MenuOptionsScreen_Default,
+	Menu_Button(s, count - 3, &s->Default, 200, &defMsg, &s->TitleFont, MenuOptionsScreen_Default,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 150);
 }
 
 struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
-	MenuOptionsScreen_Init,    MenuOptionsScreen_Render, MenuOptionsScreen_Free,      Gui_DefaultRecreate,
-	MenuOptionsScreen_KeyDown, MenuOptionsScreen_KeyUp,  MenuOptionsScreen_KeyPress,
-	MenuScreen_MouseDown,      MenuScreen_MouseUp,       MenuOptionsScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize, MenuOptionsScreen_ContextLost, NULL,
+	MenuOptionsScreen_Init,     MenuOptionsScreen_Render, MenuOptionsScreen_Free,      Gui_DefaultRecreate,
+	MenuOptionsScreen_KeyDown,  MenuOptionsScreen_KeyUp,  MenuOptionsScreen_KeyPress,
+	Menu_MouseDown,             Menu_MouseUp,             MenuOptionsScreen_MouseMove, MenuScreen_MouseScroll,
+	MenuOptionsScreen_OnResize, MenuOptionsScreen_ContextLost, NULL,
 };
 struct Screen* MenuOptionsScreen_MakeInstance(struct Widget** widgets, Int32 count, struct ButtonWidget* buttons, Event_Void_Callback contextRecreated,
 	struct MenuInputValidator* validators, const char** defaultValues, const char** descriptions, Int32 descsCount) {
-	struct MenuOptionsScreen* screen = &MenuOptionsScreen_Instance;
-	screen->HandlesAllInput = true;
-	screen->Widgets         = widgets;
-	screen->WidgetsCount    = count;
+	struct MenuOptionsScreen* s = &MenuOptionsScreen_Instance;
+	s->HandlesAllInput = true;
+	s->Widgets         = widgets;
+	s->WidgetsCount    = count;
 
-	screen->VTABLE = &MenuOptionsScreen_VTABLE;
-	screen->VTABLE->ContextLost = MenuOptionsScreen_ContextLost;
-	screen->VTABLE->ContextRecreated = contextRecreated;
+	s->ExtHelp.LinesCount = 0;
+	s->VTABLE = &MenuOptionsScreen_VTABLE;
+	s->VTABLE->ContextLost = MenuOptionsScreen_ContextLost;
+	s->VTABLE->ContextRecreated = contextRecreated;
 
-	screen->Buttons           = buttons;
-	screen->Validators        = validators;
-	screen->DefaultValues     = defaultValues;
-	screen->Descriptions      = descriptions;
-	screen->DescriptionsCount = descsCount;
+	s->Buttons           = buttons;
+	s->Validators        = validators;
+	s->DefaultValues     = defaultValues;
+	s->Descriptions      = descriptions;
+	s->DescriptionsCount = descsCount;
 
-	screen->ActiveI   = -1;
-	screen->SelectedI = -1;
-	return (struct Screen*)screen;
+	s->ActiveI   = -1;
+	s->SelectedI = -1;
+	return (struct Screen*)s;
 }
 
 
@@ -2264,39 +2160,37 @@ static void ClassicOptionsScreen_SetHacks(STRING_PURE String* v) {
 	LocalPlayer_CheckHacksConsistency();
 }
 
-static void ClassicOptionsScreen_ContextRecreated(void* obj) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)obj;
-
-	MenuOptionsScreen_Make(screen, 0, -1, -150, "Music",           MenuOptionsScreen_Bool, 
+static void ClassicOptionsScreen_ContextRecreated(struct MenuOptionsScreen* s) {
+	MenuOptionsScreen_Make(s, 0, -1, -150, "Music",           MenuOptionsScreen_Bool, 
 		ClassicOptionsScreen_GetMusic,    ClassicOptionsScreen_SetMusic);
-	MenuOptionsScreen_Make(screen, 1, -1, -100, "Invert mouse",    MenuOptionsScreen_Bool, 
+	MenuOptionsScreen_Make(s, 1, -1, -100, "Invert mouse",    MenuOptionsScreen_Bool, 
 		ClassicOptionsScreen_GetInvert,   ClassicOptionsScreen_SetInvert);
-	MenuOptionsScreen_Make(screen, 2, -1,  -50, "Render distance", MenuOptionsScreen_Enum, 
+	MenuOptionsScreen_Make(s, 2, -1,  -50, "Render distance", MenuOptionsScreen_Enum, 
 		ClassicOptionsScreen_GetViewDist, ClassicOptionsScreen_SetViewDist);
-	MenuOptionsScreen_Make(screen, 3, -1,    0, "Block physics",   MenuOptionsScreen_Bool, 
+	MenuOptionsScreen_Make(s, 3, -1,    0, "Block physics",   MenuOptionsScreen_Bool, 
 		ClassicOptionsScreen_GetPhysics,  ClassicOptionsScreen_SetPhysics);
 
-	MenuOptionsScreen_Make(screen, 4, 1, -150, "Sound",         MenuOptionsScreen_Bool, 
+	MenuOptionsScreen_Make(s, 4, 1, -150, "Sound",         MenuOptionsScreen_Bool, 
 		ClassicOptionsScreen_GetSounds,  ClassicOptionsScreen_SetSounds);
-	MenuOptionsScreen_Make(screen, 5, 1, -100, "Show FPS",      MenuOptionsScreen_Bool, 
+	MenuOptionsScreen_Make(s, 5, 1, -100, "Show FPS",      MenuOptionsScreen_Bool, 
 		ClassicOptionsScreen_GetShowFPS, ClassicOptionsScreen_SetShowFPS);
-	MenuOptionsScreen_Make(screen, 6, 1,  -50, "View bobbing",  MenuOptionsScreen_Bool, 
+	MenuOptionsScreen_Make(s, 6, 1,  -50, "View bobbing",  MenuOptionsScreen_Bool, 
 		ClassicOptionsScreen_GetViewBob, ClassicOptionsScreen_SetViewBob);
-	MenuOptionsScreen_Make(screen, 7, 1,    0, "FPS mode",      MenuOptionsScreen_Enum, 
+	MenuOptionsScreen_Make(s, 7, 1,    0, "FPS mode",      MenuOptionsScreen_Enum, 
 		MenuOptionsScreen_GetFPS,        MenuOptionsScreen_SetFPS);
-	MenuOptionsScreen_Make(screen, 8, 0,   60, "Hacks enabled", MenuOptionsScreen_Bool, 
+	MenuOptionsScreen_Make(s, 8, 0,   60, "Hacks enabled", MenuOptionsScreen_Bool, 
 		ClassicOptionsScreen_GetHacks,   ClassicOptionsScreen_SetHacks);
 
 	String controls = String_FromConst("Controls...");
-	Menu_Button(screen, 9, &screen->Buttons[9], 400, &controls, &screen->TitleFont, Menu_SwitchKeysClassic,
+	Menu_Button(s, 9, &s->Buttons[9], 400, &controls, &s->TitleFont, Menu_SwitchKeysClassic,
 		ANCHOR_CENTRE, ANCHOR_MAX, 0, 95);
 
 	String done = String_FromConst("Done");
-	Menu_Back(screen, 10, &screen->Buttons[10], 400, &done, 25, &screen->TitleFont, Menu_SwitchPause);
+	Menu_Back(s, 10, &s->Buttons[10], 400, &done, 25, &s->TitleFont, Menu_SwitchPause);
 
 	/* Disable certain options */
-	if (!ServerConnection_IsSinglePlayer) MenuScreen_Remove((struct MenuScreen*)screen, 3);
-	if (!Game_ClassicHacks)               MenuScreen_Remove((struct MenuScreen*)screen, 8);
+	if (!ServerConnection_IsSinglePlayer) Menu_Remove(s, 3);
+	if (!Game_ClassicHacks)               Menu_Remove(s, 8);
 }
 
 struct Screen* ClassicOptionsScreen_MakeInstance(void) {
@@ -2348,33 +2242,32 @@ static void EnvSettingsScreen_SetWeatherSpeed(STRING_PURE String* v) { WorldEnv_
 static void EnvSettingsScreen_GetEdgeHeight(STRING_TRANSIENT String* v) { String_AppendInt32(v, WorldEnv_EdgeHeight); }
 static void EnvSettingsScreen_SetEdgeHeight(STRING_PURE String* v) { WorldEnv_SetEdgeHeight(Menu_Int32(v)); }
 
-static void EnvSettingsScreen_ContextRecreated(void* obj) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)obj;
-	struct Widget** widgets = screen->Widgets;
+static void EnvSettingsScreen_ContextRecreated(struct MenuOptionsScreen* s) {
+	struct Widget** widgets = s->Widgets;
 
-	MenuOptionsScreen_Make(screen, 0, -1, -150, "Clouds col",    MenuOptionsScreen_Input, 
+	MenuOptionsScreen_Make(s, 0, -1, -150, "Clouds col",    MenuOptionsScreen_Input, 
 		EnvSettingsScreen_GetCloudsCol,    EnvSettingsScreen_SetCloudsCol);
-	MenuOptionsScreen_Make(screen, 1, -1, -100, "Sky col",       MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 1, -1, -100, "Sky col",       MenuOptionsScreen_Input,
 		EnvSettingsScreen_GetSkyCol,       EnvSettingsScreen_SetSkyCol);
-	MenuOptionsScreen_Make(screen, 2, -1,  -50, "Fog col",       MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 2, -1,  -50, "Fog col",       MenuOptionsScreen_Input,
 		EnvSettingsScreen_GetFogCol,       EnvSettingsScreen_SetFogCol);
-	MenuOptionsScreen_Make(screen, 3, -1,    0, "Clouds speed",  MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 3, -1,    0, "Clouds speed",  MenuOptionsScreen_Input,
 		EnvSettingsScreen_GetCloudsSpeed,  EnvSettingsScreen_SetCloudsSpeed);
-	MenuOptionsScreen_Make(screen, 4, -1,   50, "Clouds height", MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 4, -1,   50, "Clouds height", MenuOptionsScreen_Input,
 		EnvSettingsScreen_GetCloudsHeight, EnvSettingsScreen_SetCloudsHeight);
 
-	MenuOptionsScreen_Make(screen, 5, 1, -150, "Sunlight col",    MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 5, 1, -150, "Sunlight col",    MenuOptionsScreen_Input,
 		EnvSettingsScreen_GetSunCol,       EnvSettingsScreen_SetSunCol);
-	MenuOptionsScreen_Make(screen, 6, 1, -100, "Shadow col",      MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 6, 1, -100, "Shadow col",      MenuOptionsScreen_Input,
 		EnvSettingsScreen_GetShadowCol,    EnvSettingsScreen_SetShadowCol);
-	MenuOptionsScreen_Make(screen, 7, 1,  -50, "Weather",         MenuOptionsScreen_Enum,
+	MenuOptionsScreen_Make(s, 7, 1,  -50, "Weather",         MenuOptionsScreen_Enum,
 		EnvSettingsScreen_GetWeather,      EnvSettingsScreen_SetWeather);
-	MenuOptionsScreen_Make(screen, 8, 1,    0, "Rain/Snow speed", MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 8, 1,    0, "Rain/Snow speed", MenuOptionsScreen_Input,
 		EnvSettingsScreen_GetWeatherSpeed, EnvSettingsScreen_SetWeatherSpeed);
-	MenuOptionsScreen_Make(screen, 9, 1, 50, "Water level",       MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 9, 1, 50, "Water level",       MenuOptionsScreen_Input,
 		EnvSettingsScreen_GetEdgeHeight,   EnvSettingsScreen_SetEdgeHeight);
 
-	Menu_DefaultBack(screen, 10, &screen->Buttons[10], false, &screen->TitleFont, Menu_SwitchOptions);
+	Menu_DefaultBack(s, 10, &s->Buttons[10], false, &s->TitleFont, Menu_SwitchOptions);
 	widgets[11] = NULL; widgets[12] = NULL; widgets[13] = NULL;
 }
 
@@ -2458,25 +2351,24 @@ static void GraphicsOptionsScreen_SetMipmaps(STRING_PURE String* v) {
 	String_Copy(&World_TextureUrl, &url);
 }
 
-static void GraphicsOptionsScreen_ContextRecreated(void* obj) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)obj;
-	struct Widget** widgets = screen->Widgets;
+static void GraphicsOptionsScreen_ContextRecreated(struct MenuOptionsScreen* s) {
+	struct Widget** widgets = s->Widgets;
 
-	MenuOptionsScreen_Make(screen, 0, -1, -50, "FPS mode",          MenuOptionsScreen_Enum, 
+	MenuOptionsScreen_Make(s, 0, -1, -50, "FPS mode",          MenuOptionsScreen_Enum, 
 		MenuOptionsScreen_GetFPS,          MenuOptionsScreen_SetFPS);
-	MenuOptionsScreen_Make(screen, 1, -1,   0, "View distance",     MenuOptionsScreen_Input, 
+	MenuOptionsScreen_Make(s, 1, -1,   0, "View distance",     MenuOptionsScreen_Input, 
 		GraphicsOptionsScreen_GetViewDist, GraphicsOptionsScreen_SetViewDist);
-	MenuOptionsScreen_Make(screen, 2, -1,  50, "Advanced lighting", MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 2, -1,  50, "Advanced lighting", MenuOptionsScreen_Bool,
 		GraphicsOptionsScreen_GetSmooth,   GraphicsOptionsScreen_SetSmooth);
 
-	MenuOptionsScreen_Make(screen, 3, 1, -50, "Names",   MenuOptionsScreen_Enum, 
+	MenuOptionsScreen_Make(s, 3, 1, -50, "Names",   MenuOptionsScreen_Enum, 
 		GraphicsOptionsScreen_GetNames,    GraphicsOptionsScreen_SetNames);
-	MenuOptionsScreen_Make(screen, 4, 1,   0, "Shadows", MenuOptionsScreen_Enum, 
+	MenuOptionsScreen_Make(s, 4, 1,   0, "Shadows", MenuOptionsScreen_Enum, 
 		GraphicsOptionsScreen_GetShadows, GraphicsOptionsScreen_SetShadows);
-	MenuOptionsScreen_Make(screen, 5, 1,  50, "Mipmaps", MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 5, 1,  50, "Mipmaps", MenuOptionsScreen_Bool,
 		GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps);
 
-	Menu_DefaultBack(screen, 6, &screen->Buttons[6], false, &screen->TitleFont, Menu_SwitchOptions);
+	Menu_DefaultBack(s, 6, &s->Buttons[6], false, &s->TitleFont, Menu_SwitchOptions);
 	widgets[7] = NULL; widgets[8] = NULL; widgets[9] = NULL;
 }
 
@@ -2522,7 +2414,7 @@ struct Screen* GraphicsOptionsScreen_MakeInstance(void) {
 static void GuiOptionsScreen_GetShadows(STRING_TRANSIENT String* v) { Menu_GetBool(v, Drawer2D_BlackTextShadows); }
 static void GuiOptionsScreen_SetShadows(STRING_PURE String* v) {
 	Drawer2D_BlackTextShadows = Menu_SetBool(v, OPT_BLACK_TEXT);
-	Menu_HandleFontChange((struct GuiElem*)&MenuOptionsScreen_Instance);
+	Menu_HandleFontChange((struct Screen*)&MenuOptionsScreen_Instance);
 }
 
 static void GuiOptionsScreen_GetShowFPS(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ShowFPS); }
@@ -2559,35 +2451,34 @@ static void GuiOptionsScreen_SetChatlines(STRING_PURE String* v) {
 static void GuiOptionsScreen_GetUseFont(STRING_TRANSIENT String* v) { Menu_GetBool(v, !Drawer2D_UseBitmappedChat); }
 static void GuiOptionsScreen_SetUseFont(STRING_PURE String* v) {
 	Drawer2D_UseBitmappedChat = !Menu_SetBool(v, OPT_USE_CHAT_FONT);
-	Menu_HandleFontChange((struct GuiElem*)&MenuOptionsScreen_Instance);
+	Menu_HandleFontChange((struct Screen*)&MenuOptionsScreen_Instance);
 }
 
-static void GuiOptionsScreen_ContextRecreated(void* obj) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)obj;
-	struct Widget** widgets = screen->Widgets;
+static void GuiOptionsScreen_ContextRecreated(struct MenuOptionsScreen* s) {
+	struct Widget** widgets = s->Widgets;
 
-	MenuOptionsScreen_Make(screen, 0, -1, -150, "Black text shadows", MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 0, -1, -150, "Black text shadows", MenuOptionsScreen_Bool,
 		GuiOptionsScreen_GetShadows,   GuiOptionsScreen_SetShadows);
-	MenuOptionsScreen_Make(screen, 1, -1, -100, "Show FPS",           MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 1, -1, -100, "Show FPS",           MenuOptionsScreen_Bool,
 		GuiOptionsScreen_GetShowFPS,   GuiOptionsScreen_SetShowFPS);
-	MenuOptionsScreen_Make(screen, 2, -1,  -50, "Hotbar scale",       MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 2, -1,  -50, "Hotbar scale",       MenuOptionsScreen_Input,
 		GuiOptionsScreen_GetHotbar,    GuiOptionsScreen_SetHotbar);
-	MenuOptionsScreen_Make(screen, 3, -1,    0, "Inventory scale",    MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 3, -1,    0, "Inventory scale",    MenuOptionsScreen_Input,
 		GuiOptionsScreen_GetInventory, GuiOptionsScreen_SetInventory);
-	MenuOptionsScreen_Make(screen, 4, -1,   50, "Tab auto-complete",  MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 4, -1,   50, "Tab auto-complete",  MenuOptionsScreen_Bool,
 		GuiOptionsScreen_GetTabAuto,   GuiOptionsScreen_SetTabAuto);
 
-	MenuOptionsScreen_Make(screen, 5, 1, -150, "Clickable chat",     MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 5, 1, -150, "Clickable chat",     MenuOptionsScreen_Bool,
 		GuiOptionsScreen_GetClickable, GuiOptionsScreen_SetClickable);
-	MenuOptionsScreen_Make(screen, 6, 1, -100, "Chat scale",         MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 6, 1, -100, "Chat scale",         MenuOptionsScreen_Input,
 		GuiOptionsScreen_GetChatScale, GuiOptionsScreen_SetChatScale);
-	MenuOptionsScreen_Make(screen, 7, 1,  -50, "Chat lines",         MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 7, 1,  -50, "Chat lines",         MenuOptionsScreen_Input,
 		GuiOptionsScreen_GetChatlines, GuiOptionsScreen_SetChatlines);
-	MenuOptionsScreen_Make(screen, 8, 1,    0, "Use system font",    MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 8, 1,    0, "Use system font",    MenuOptionsScreen_Bool,
 		GuiOptionsScreen_GetUseFont,   GuiOptionsScreen_SetUseFont);
-	MenuOptionsScreen_MakeSimple(screen, 9, 1,  50, "Select system font", Menu_SwitchFont);
+	MenuOptionsScreen_MakeSimple(s, 9, 1,  50, "Select system font", Menu_SwitchFont);
 
-	Menu_DefaultBack(screen, 10, &screen->Buttons[10], false, &screen->TitleFont, Menu_SwitchOptions);
+	Menu_DefaultBack(s, 10, &s->Buttons[10], false, &s->TitleFont, Menu_SwitchOptions);
 	widgets[11] = NULL; widgets[12] = NULL; widgets[13] = NULL;
 }
 
@@ -2679,12 +2570,11 @@ static void HacksSettingsScreen_SetFOV(STRING_PURE String* v) {
 	Game_UpdateProjection();
 }
 
-static void HacksSettingsScreen_CheckHacksAllowed(void* obj) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)obj;
-	struct Widget** widgets = screen->Widgets;
+static void HacksSettingsScreen_CheckHacksAllowed(struct MenuOptionsScreen* s) {
+	struct Widget** widgets = s->Widgets;
 	Int32 i;
 
-	for (i = 0; i < screen->WidgetsCount; i++) {
+	for (i = 0; i < s->WidgetsCount; i++) {
 		if (!widgets[i]) continue;
 		widgets[i]->Disabled = false;
 	}
@@ -2697,39 +2587,38 @@ static void HacksSettingsScreen_CheckHacksAllowed(void* obj) {
 	widgets[7]->Disabled = noGlobalHacks || !p->Hacks.CanPushbackBlocks;
 }
 
-static void HacksSettingsScreen_ContextLost(void* obj) {
-	MenuOptionsScreen_ContextLost(obj);
-	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, obj, HacksSettingsScreen_CheckHacksAllowed);
+static void HacksSettingsScreen_ContextLost(struct MenuOptionsScreen* s) {
+	MenuOptionsScreen_ContextLost(s);
+	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, s, HacksSettingsScreen_CheckHacksAllowed);
 }
 
-static void HacksSettingsScreen_ContextRecreated(void* obj) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)obj;
-	struct Widget** widgets = screen->Widgets;
-	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, obj, HacksSettingsScreen_CheckHacksAllowed);
+static void HacksSettingsScreen_ContextRecreated(struct MenuOptionsScreen* s) {
+	struct Widget** widgets = s->Widgets;
+	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, s, HacksSettingsScreen_CheckHacksAllowed);
 
-	MenuOptionsScreen_Make(screen, 0, -1, -150, "Hacks enabled",    MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 0, -1, -150, "Hacks enabled",    MenuOptionsScreen_Bool,
 		HacksSettingsScreen_GetHacks,    HacksSettingsScreen_SetHacks);
-	MenuOptionsScreen_Make(screen, 1, -1, -100, "Speed multiplier", MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 1, -1, -100, "Speed multiplier", MenuOptionsScreen_Input,
 		HacksSettingsScreen_GetSpeed,    HacksSettingsScreen_SetSpeed);
-	MenuOptionsScreen_Make(screen, 2, -1,  -50, "Camera clipping",  MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 2, -1,  -50, "Camera clipping",  MenuOptionsScreen_Bool,
 		HacksSettingsScreen_GetClipping, HacksSettingsScreen_SetClipping);
-	MenuOptionsScreen_Make(screen, 3, -1,    0, "Jump height",      MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 3, -1,    0, "Jump height",      MenuOptionsScreen_Input,
 		HacksSettingsScreen_GetJump,     HacksSettingsScreen_SetJump);
-	MenuOptionsScreen_Make(screen, 4, -1,   50, "WOM style hacks",  MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 4, -1,   50, "WOM style hacks",  MenuOptionsScreen_Bool,
 		HacksSettingsScreen_GetWOMHacks, HacksSettingsScreen_SetWOMHacks);
 
-	MenuOptionsScreen_Make(screen, 5, 1, -150, "Full block stepping", MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 5, 1, -150, "Full block stepping", MenuOptionsScreen_Bool,
 		HacksSettingsScreen_GetFullStep, HacksSettingsScreen_SetFullStep);
-	MenuOptionsScreen_Make(screen, 6, 1, -100, "Breakable liquids",   MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 6, 1, -100, "Breakable liquids",   MenuOptionsScreen_Bool,
 		HacksSettingsScreen_GetLiquids,  HacksSettingsScreen_SetLiquids);
-	MenuOptionsScreen_Make(screen, 7, 1,  -50, "Pushback placing",    MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 7, 1,  -50, "Pushback placing",    MenuOptionsScreen_Bool,
 		HacksSettingsScreen_GetPushback, HacksSettingsScreen_SetPushback);
-	MenuOptionsScreen_Make(screen, 8, 1,    0, "Noclip slide",        MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 8, 1,    0, "Noclip slide",        MenuOptionsScreen_Bool,
 		HacksSettingsScreen_GetSlide,    HacksSettingsScreen_SetSlide);
-	MenuOptionsScreen_Make(screen, 9, 1,   50, "Field of view",       MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 9, 1,   50, "Field of view",       MenuOptionsScreen_Input,
 		HacksSettingsScreen_GetFOV,      HacksSettingsScreen_SetFOV);
 
-	Menu_DefaultBack(screen, 10, &screen->Buttons[10], false, &screen->TitleFont, Menu_SwitchOptions);
+	Menu_DefaultBack(s, 10, &s->Buttons[10], false, &s->TitleFont, Menu_SwitchOptions);
 	widgets[11] = NULL; widgets[12] = NULL; widgets[13] = NULL;
 }
 
@@ -2760,10 +2649,10 @@ struct Screen* HacksSettingsScreen_MakeInstance(void) {
 		"&fThis is mainly useful for quick pillaring/towering.";
 	descs[8] = "&eIf &fOFF&e, you will immediately stop when in noclip%"   "&emode and no movement keys are held down.";
 
-	struct Screen* screen = MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
+	struct Screen* s = MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
 		HacksSettingsScreen_ContextRecreated, validators, defaultValues, descs, Array_Elems(buttons));
-	screen->VTABLE->ContextLost = HacksSettingsScreen_ContextLost;
-	return screen;
+	s->VTABLE->ContextLost = HacksSettingsScreen_ContextLost;
+	return s;
 }
 
 
@@ -2807,34 +2696,33 @@ static void MiscOptionsScreen_SetSensitivity(STRING_PURE String* v) {
 	Options_Set(OPT_SENSITIVITY, v);
 }
 
-static void MiscOptionsScreen_ContextRecreated(void* obj) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)obj;
-	struct Widget** widgets = screen->Widgets;
+static void MiscOptionsScreen_ContextRecreated(struct MenuOptionsScreen* s) {
+	struct Widget** widgets = s->Widgets;
 
-	MenuOptionsScreen_Make(screen, 0, -1, -100, "Reach distance", MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 0, -1, -100, "Reach distance", MenuOptionsScreen_Input,
 		MiscOptionsScreen_GetReach,       MiscOptionsScreen_SetReach);
-	MenuOptionsScreen_Make(screen, 1, -1,  -50, "Music volume",   MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 1, -1,  -50, "Music volume",   MenuOptionsScreen_Input,
 		MiscOptionsScreen_GetMusic,       MiscOptionsScreen_SetMusic);
-	MenuOptionsScreen_Make(screen, 2, -1,    0, "Sounds volume",  MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 2, -1,    0, "Sounds volume",  MenuOptionsScreen_Input,
 		MiscOptionsScreen_GetSounds,      MiscOptionsScreen_SetSounds);
-	MenuOptionsScreen_Make(screen, 3, -1,   50, "View bobbing",   MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 3, -1,   50, "View bobbing",   MenuOptionsScreen_Bool,
 		MiscOptionsScreen_GetViewBob,     MiscOptionsScreen_SetViewBob);
 
-	MenuOptionsScreen_Make(screen, 4, 1, -100, "Block physics",       MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 4, 1, -100, "Block physics",       MenuOptionsScreen_Bool,
 		MiscOptionsScreen_GetPhysics,     MiscOptionsScreen_SetPhysics);
-	MenuOptionsScreen_Make(screen, 5, 1,  -50, "Auto close launcher", MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 5, 1,  -50, "Auto close launcher", MenuOptionsScreen_Bool,
 		MiscOptionsScreen_GetAutoClose,   MiscOptionsScreen_SetAutoClose);
-	MenuOptionsScreen_Make(screen, 6, 1,    0, "Invert mouse",        MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 6, 1,    0, "Invert mouse",        MenuOptionsScreen_Bool,
 		MiscOptionsScreen_GetInvert,      MiscOptionsScreen_SetInvert);
-	MenuOptionsScreen_Make(screen, 7, 1,   50, "Mouse sensitivity",   MenuOptionsScreen_Input,
+	MenuOptionsScreen_Make(s, 7, 1,   50, "Mouse sensitivity",   MenuOptionsScreen_Input,
 		MiscOptionsScreen_GetSensitivity, MiscOptionsScreen_SetSensitivity);
 
-	Menu_DefaultBack(screen, 8, &screen->Buttons[8], false, &screen->TitleFont, Menu_SwitchOptions);
+	Menu_DefaultBack(s, 8, &s->Buttons[8], false, &s->TitleFont, Menu_SwitchOptions);
 	widgets[9] = NULL; widgets[10] = NULL; widgets[11] = NULL;
 
 	/* Disable certain options */
-	if (!ServerConnection_IsSinglePlayer) MenuScreen_Remove((struct MenuScreen*)screen, 0);
-	if (!ServerConnection_IsSinglePlayer) MenuScreen_Remove((struct MenuScreen*)screen, 4);
+	if (!ServerConnection_IsSinglePlayer) Menu_Remove(s, 0);
+	if (!ServerConnection_IsSinglePlayer) Menu_Remove(s, 4);
 }
 
 struct Screen* MiscOptionsScreen_MakeInstance(void) {
@@ -2887,37 +2775,36 @@ static void NostalgiaScreen_SetCPE(STRING_PURE String* v) { Game_UseCPE = Menu_S
 static void NostalgiaScreen_GetTexs(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_AllowServerTextures); }
 static void NostalgiaScreen_SetTexs(STRING_PURE String* v) { Game_AllowServerTextures = Menu_SetBool(v, OPT_SERVER_TEXTURES); }
 
-static void NostalgiaScreen_SwitchBack(struct GuiElem* a, struct GuiElem* b) {
+static void NostalgiaScreen_SwitchBack(void* a, void* b) {
 	if (Game_UseClassicOptions) { Menu_SwitchPause(a, b); } else { Menu_SwitchOptions(a, b); }
 }
 
-static void NostalgiaScreen_ContextRecreated(void* obj) {
-	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)obj;
+static void NostalgiaScreen_ContextRecreated(struct MenuOptionsScreen* s) {
 	static struct TextWidget desc;
 
-	MenuOptionsScreen_Make(screen, 0, -1, -150, "Classic hand model",   MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 0, -1, -150, "Classic hand model",   MenuOptionsScreen_Bool,
 		NostalgiaScreen_GetHand,   NostalgiaScreen_SetHand);
-	MenuOptionsScreen_Make(screen, 1, -1, -100, "Classic walk anim",    MenuOptionsScreen_Bool, 
+	MenuOptionsScreen_Make(s, 1, -1, -100, "Classic walk anim",    MenuOptionsScreen_Bool, 
 		NostalgiaScreen_GetAnim,   NostalgiaScreen_SetAnim);
-	MenuOptionsScreen_Make(screen, 2, -1,  -50, "Classic gui textures", MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 2, -1,  -50, "Classic gui textures", MenuOptionsScreen_Bool,
 		NostalgiaScreen_GetGui,    NostalgiaScreen_SetGui);
-	MenuOptionsScreen_Make(screen, 3, -1,    0, "Classic player list",  MenuOptionsScreen_Bool, 
+	MenuOptionsScreen_Make(s, 3, -1,    0, "Classic player list",  MenuOptionsScreen_Bool, 
 		NostalgiaScreen_GetList,   NostalgiaScreen_SetList);
-	MenuOptionsScreen_Make(screen, 4, -1,   50, "Classic options",      MenuOptionsScreen_Bool, 
+	MenuOptionsScreen_Make(s, 4, -1,   50, "Classic options",      MenuOptionsScreen_Bool, 
 		NostalgiaScreen_GetOpts,   NostalgiaScreen_SetOpts);
 
-	MenuOptionsScreen_Make(screen, 5, 1, -150, "Allow custom blocks", MenuOptionsScreen_Bool, 
+	MenuOptionsScreen_Make(s, 5, 1, -150, "Allow custom blocks", MenuOptionsScreen_Bool, 
 		NostalgiaScreen_GetCustom, NostalgiaScreen_SetCustom);
-	MenuOptionsScreen_Make(screen, 6, 1, -100, "Use CPE",             MenuOptionsScreen_Bool, 
+	MenuOptionsScreen_Make(s, 6, 1, -100, "Use CPE",             MenuOptionsScreen_Bool, 
 		NostalgiaScreen_GetCPE,    NostalgiaScreen_SetCPE);
-	MenuOptionsScreen_Make(screen, 7, 1,  -50, "Use server textures", MenuOptionsScreen_Bool, 
+	MenuOptionsScreen_Make(s, 7, 1,  -50, "Use server textures", MenuOptionsScreen_Bool, 
 		NostalgiaScreen_GetTexs,   NostalgiaScreen_SetTexs);
 
 
-	Menu_DefaultBack(screen, 8, &screen->Buttons[8], false, &screen->TitleFont, NostalgiaScreen_SwitchBack);
+	Menu_DefaultBack(s, 8, &s->Buttons[8], false, &s->TitleFont, NostalgiaScreen_SwitchBack);
 
 	String descText = String_FromConst("&eButtons on the right require restarting game");
-	Menu_Label(screen, 9, &desc, &descText, &screen->TextFont,
+	Menu_Label(s, 9, &desc, &descText, &s->TextFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
 }
 
@@ -2933,10 +2820,11 @@ struct Screen* NostalgiaScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Overlay---------------------------------------------------------*
 *#########################################################################################################################*/
-static bool Overlay_KeyDown(struct GuiElem* elem, Key key) { return true; }
+static bool Overlay_KeyDown(void* s, Key key) { return true; }
 
-static void Overlay_MakeLabels(struct MenuScreen* screen, struct TextWidget* labels, STRING_PURE String* lines) {
-	Menu_Label(screen, 0, &labels[0], &lines[0], &screen->TitleFont, 
+static void Overlay_MakeLabels(void* menu, struct TextWidget* labels, STRING_PURE String* lines) {
+	struct MenuScreen* s = menu;
+	Menu_Label(s, 0, &labels[0], &lines[0], &s->TitleFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -120);
 
 	PackedCol col = PACKEDCOL_CONST(224, 224, 224, 255);
@@ -2944,22 +2832,19 @@ static void Overlay_MakeLabels(struct MenuScreen* screen, struct TextWidget* lab
 	for (i = 1; i < 4; i++) {
 		if (!lines[i].length) continue;
 
-		Menu_Label(screen, i, &labels[i], &lines[i], &screen->TextFont,
+		Menu_Label(s, i, &labels[i], &lines[i], &s->TextFont,
 			ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -70 + 20 * i);
 		labels[i].Col = col;
 	}
 }
 
-#define WarningOverlay_MakeLeft(buttonI, widgetI, titleText, yPos) \
-	Menu_Button(screen, widgetI, &buttons[buttonI], 160, titleText, &screen->TitleFont, yesClick,\
-		ANCHOR_CENTRE, ANCHOR_CENTRE, -110, yPos);
+#define WarningOverlay_MakeLeft(btnI, idx, title, yPos) \
+	Menu_Button(s, idx, &btns[btnI], 160, title, &s->TitleFont, yesClick, ANCHOR_CENTRE, ANCHOR_CENTRE, -110, yPos);
+#define WarningOverlay_MakeRight(btnI, idx, title, yPos) \
+	Menu_Button(s, idx, &btns[btnI], 160, title, &s->TitleFont, noClick,  ANCHOR_CENTRE, ANCHOR_CENTRE,  110, yPos);
 
-#define WarningOverlay_MakeRight(buttonI, widgetI, titleText, yPos) \
-	Menu_Button(screen, widgetI, &buttons[buttonI], 160, titleText, &screen->TitleFont, noClick,\
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 110, yPos);
-
-static void WarningOverlay_MakeButtons(struct MenuScreen* screen, struct ButtonWidget* buttons, bool always, 
-	Widget_LeftClick yesClick, Widget_LeftClick noClick) {
+static void WarningOverlay_MakeButtons(void* menu, struct ButtonWidget* btns, bool always, Widget_LeftClick yesClick, Widget_LeftClick noClick) {
+	struct MenuScreen* s = menu;
 
 	String yes = String_FromConst("Yes"); 
 	WarningOverlay_MakeLeft(0, 4, &yes, 30);
@@ -2974,8 +2859,8 @@ static void WarningOverlay_MakeButtons(struct MenuScreen* screen, struct ButtonW
 	WarningOverlay_MakeRight(3, 7, &alwaysNo, 85);
 }
 
-bool WarningOverlay_IsAlways(struct GuiElem* screen, struct Widget* w) {
-	return Menu_Index((struct MenuBase*)screen, w) >= 6;
+bool WarningOverlay_IsAlways(void* s, struct Widget* w) {
+	return Menu_Index(s, w) >= 6;
 }
 
 
@@ -2984,37 +2869,35 @@ bool WarningOverlay_IsAlways(struct GuiElem* screen, struct Widget* w) {
 *#########################################################################################################################*/
 #define TEXID_OVERLAY_VERTICES_COUNT (ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW * 4)
 struct TexIdsOverlay TexIdsOverlay_Instance;
-static void TexIdsOverlay_ContextLost(void* obj) {
-	struct TexIdsOverlay* screen = (struct TexIdsOverlay*)obj;
-	Menu_ContextLost(obj);
-	Gfx_DeleteVb(&screen->DynamicVb);
-	TextAtlas_Free(&screen->IdAtlas);
+static void TexIdsOverlay_ContextLost(struct TexIdsOverlay* s) {
+	Menu_ContextLost(s);
+	Gfx_DeleteVb(&s->DynamicVb);
+	TextAtlas_Free(&s->IdAtlas);
 }
 
-static void TexIdsOverlay_ContextRecreated(void* obj) {
-	struct TexIdsOverlay* screen = (struct TexIdsOverlay*)obj;
-	screen->DynamicVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TEXID_OVERLAY_VERTICES_COUNT);
+static void TexIdsOverlay_ContextRecreated(struct TexIdsOverlay* s) {
+	s->DynamicVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TEXID_OVERLAY_VERTICES_COUNT);
 
 	String chars = String_FromConst("0123456789");
 	String prefix = String_FromConst("f");
-	TextAtlas_Make(&screen->IdAtlas, &chars, &screen->TextFont, &prefix);
+	TextAtlas_Make(&s->IdAtlas, &chars, &s->TextFont, &prefix);
 
 	Int32 size = Game_Height / ATLAS2D_TILES_PER_ROW;
 	size = (size / 8) * 8;
 	Math_Clamp(size, 8, 40);
 
-	screen->XOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas2D_RowsCount,     Game_Width);
-	screen->YOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Game_Height);
-	screen->TileSize = size;
+	s->XOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas2D_RowsCount,     Game_Width);
+	s->YOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Game_Height);
+	s->TileSize = size;
 
 	String title = String_FromConst("Texture ID reference sheet");
-	Menu_Label(screen, 0, &screen->Title, &title, &screen->TitleFont,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, screen->YOffset - 30);
+	Menu_Label(s, 0, &s->Title, &title, &s->TitleFont,
+		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, s->YOffset - 30);
 }
 
-static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* screen) {
+static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s) {
 	VertexP3fT2fC4b vertices[TEXID_OVERLAY_VERTICES_COUNT];
-	Int32 i, size = screen->TileSize;
+	Int32 i, size = s->TileSize;
 
 	struct Texture tex;
 	tex.U1 = 0.0f; tex.U2 = UV2_Scale;
@@ -3022,13 +2905,13 @@ static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* screen) {
 
 	for (i = 0; i < ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW;) {
 		VertexP3fT2fC4b* ptr = vertices;
-		Int32 texIdx = Atlas1D_Index(i + screen->BaseTexLoc), end = i + Atlas1D_TilesPerAtlas;
+		Int32 texIdx = Atlas1D_Index(i + s->BaseTexLoc), end = i + Atlas1D_TilesPerAtlas;
 
 		for (; i < end; i++) {
-			tex.X = screen->XOffset + Atlas2D_TileX(i) * size;
-			tex.Y = screen->YOffset + Atlas2D_TileY(i) * size;
+			tex.X = s->XOffset + Atlas2D_TileX(i) * size;
+			tex.Y = s->YOffset + Atlas2D_TileY(i) * size;
 
-			tex.V1 = Atlas1D_RowId(i + screen->BaseTexLoc) * Atlas1D_InvTileSize;
+			tex.V1 = Atlas1D_RowId(i + s->BaseTexLoc) * Atlas1D_InvTileSize;
 			tex.V2 = tex.V1                    + UV2_Scale * Atlas1D_InvTileSize;
 
 			PackedCol col = PACKEDCOL_WHITE;
@@ -3037,97 +2920,95 @@ static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* screen) {
 
 		Gfx_BindTexture(Atlas1D_TexIds[texIdx]);
 		Int32 count = (Int32)(ptr - vertices);
-		GfxCommon_UpdateDynamicVb_IndexedTris(screen->DynamicVb, vertices, count);
+		GfxCommon_UpdateDynamicVb_IndexedTris(s->DynamicVb, vertices, count);
 	}
 }
 
-static void TexIdsOverlay_RenderTextOverlay(struct TexIdsOverlay* screen) {
-	Int32 x, y, size = screen->TileSize;
+static void TexIdsOverlay_RenderTextOverlay(struct TexIdsOverlay* s) {
+	Int32 x, y, size = s->TileSize;
 	VertexP3fT2fC4b vertices[TEXID_OVERLAY_VERTICES_COUNT];
 	VertexP3fT2fC4b* ptr = vertices;
 
-	struct TextAtlas* idAtlas = &screen->IdAtlas;
-	idAtlas->Tex.Y = (screen->YOffset + (size - idAtlas->Tex.Height));
+	struct TextAtlas* idAtlas = &s->IdAtlas;
+	idAtlas->Tex.Y = (s->YOffset + (size - idAtlas->Tex.Height));
 
 	for (y = 0; y < ATLAS2D_TILES_PER_ROW; y++) {
 		for (x = 0; x < ATLAS2D_TILES_PER_ROW; x++) {
-			idAtlas->CurX = screen->XOffset + size * x + 3; /* offset text by 3 pixels */
+			idAtlas->CurX = s->XOffset + size * x + 3; /* offset text by 3 pixels */
 			Int32 id = x + y * ATLAS2D_TILES_PER_ROW;
-			TextAtlas_AddInt(idAtlas, id + screen->BaseTexLoc, &ptr);
+			TextAtlas_AddInt(idAtlas, id + s->BaseTexLoc, &ptr);
 		}
 		idAtlas->Tex.Y += size;
 
 		if ((y % 4) != 3) continue;
 		Gfx_BindTexture(idAtlas->Tex.ID);
 		Int32 count = (Int32)(ptr - vertices);
-		GfxCommon_UpdateDynamicVb_IndexedTris(screen->DynamicVb, vertices, count);
+		GfxCommon_UpdateDynamicVb_IndexedTris(s->DynamicVb, vertices, count);
 		ptr = vertices;
 	}
 }
 
-static void TexIdsOverlay_Init(struct GuiElem* elem) {
-	struct MenuScreen* screen = (struct MenuScreen*)elem;
-	Font_Make(&screen->TextFont, &Game_FontName, 8, FONT_STYLE_NORMAL);
-	MenuScreen_Init(elem);
+static void TexIdsOverlay_Init(struct TexIdsOverlay* s) {
+	Font_Make(&s->TextFont, &Game_FontName, 8, FONT_STYLE_NORMAL);
+	MenuScreen_Init(s);
 }
 
-static void TexIdsOverlay_Render(struct GuiElem* elem, Real64 delta) {
-	struct TexIdsOverlay* screen = (struct TexIdsOverlay*)elem;
+static void TexIdsOverlay_Render(struct TexIdsOverlay* s, Real64 delta) {
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
-	Menu_Render((struct MenuBase*)elem, delta);
+	Menu_Render(s, delta);
 
-	Int32 rows = Atlas2D_RowsCount, origXOffset = screen->XOffset;
-	screen->BaseTexLoc = 0;
+	Int32 rows = Atlas2D_RowsCount, origXOffset = s->XOffset;
+	s->BaseTexLoc = 0;
 	while (rows > 0) {
-		TexIdsOverlay_RenderTerrain(screen);
-		TexIdsOverlay_RenderTextOverlay(screen);
+		TexIdsOverlay_RenderTerrain(s);
+		TexIdsOverlay_RenderTextOverlay(s);
 		rows -= ATLAS2D_TILES_PER_ROW;
 
-		screen->XOffset    += screen->TileSize      * ATLAS2D_TILES_PER_ROW;
-		screen->BaseTexLoc += ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW;
+		s->XOffset    += s->TileSize      * ATLAS2D_TILES_PER_ROW;
+		s->BaseTexLoc += ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW;
 	}
 
-	screen->XOffset = origXOffset;
+	s->XOffset = origXOffset;
 	Gfx_SetTexturing(false);
 }
 
-static bool TexIdsOverlay_KeyDown(struct GuiElem* elem, Key key) {
+static bool TexIdsOverlay_KeyDown(struct TexIdsOverlay* s, Key key) {
 	if (key == KeyBind_Get(KeyBind_IDOverlay) || key == KeyBind_Get(KeyBind_PauseOrExit)) {
-		Gui_FreeOverlay((struct Screen*)elem);
+		Gui_FreeOverlay(s);
 		return true;
 	}
-	struct Screen* screen = Gui_GetUnderlyingScreen();
-	return Elem_HandlesKeyDown(screen, key);
+	struct Screen* active = Gui_GetUnderlyingScreen();
+	return Elem_HandlesKeyDown(active, key);
 }
 
-static bool TexIdsOverlay_KeyPress(struct GuiElem* elem, UInt8 key) {
-	struct Screen* screen = Gui_GetUnderlyingScreen();
-	return Elem_HandlesKeyPress(screen, key);
+static bool TexIdsOverlay_KeyPress(void* s, UInt8 key) {
+	struct Screen* active = Gui_GetUnderlyingScreen();
+	return Elem_HandlesKeyPress(active, key);
 }
 
-static bool TexIdsOverlay_KeyUp(struct GuiElem* elem, Key key) {
-	struct Screen* screen = Gui_GetUnderlyingScreen();
-	return Elem_HandlesKeyUp(screen, key);
+static bool TexIdsOverlay_KeyUp(void* s, Key key) {
+	struct Screen* active = Gui_GetUnderlyingScreen();
+	return Elem_HandlesKeyUp(active, key);
 }
 
 struct ScreenVTABLE TexIdsOverlay_VTABLE = {
-	TexIdsOverlay_Init,    TexIdsOverlay_Render, MenuScreen_Free,       Gui_DefaultRecreate,
+	TexIdsOverlay_Init,    TexIdsOverlay_Render, MenuScreen_Free,        Gui_DefaultRecreate,
 	TexIdsOverlay_KeyDown, TexIdsOverlay_KeyUp,  TexIdsOverlay_KeyPress,
-	MenuScreen_MouseDown,  MenuScreen_MouseUp,   MenuScreen_MouseMove,  MenuScreen_MouseScroll,
-	MenuScreen_OnResize,   TexIdsOverlay_ContextLost, TexIdsOverlay_ContextRecreated,
+	Menu_MouseDown,        Menu_MouseUp,         Menu_MouseMove,         MenuScreen_MouseScroll,
+	Menu_OnResize,         TexIdsOverlay_ContextLost, TexIdsOverlay_ContextRecreated,
 };
 struct Screen* TexIdsOverlay_MakeInstance(void) {
 	static struct Widget* widgets[1];
-	struct TexIdsOverlay* screen = &TexIdsOverlay_Instance;
+	struct TexIdsOverlay* s = &TexIdsOverlay_Instance;
 	
-	screen->HandlesAllInput = true;
-	screen->Widgets         = widgets;
-	screen->WidgetsCount    = Array_Elems(widgets);
+	s->HandlesAllInput = true;
+	s->Widgets         = widgets;
+	s->WidgetsCount    = Array_Elems(widgets);
 
-	screen->VTABLE = &TexIdsOverlay_VTABLE;
-	return (struct Screen*)screen;
+	s->VTABLE = &TexIdsOverlay_VTABLE;
+	return (struct Screen*)s;
 }
 
 
@@ -3135,53 +3016,48 @@ struct Screen* TexIdsOverlay_MakeInstance(void) {
 *----------------------------------------------------UrlWarningOverlay----------------------------------------------------*
 *#########################################################################################################################*/
 struct UrlWarningOverlay UrlWarningOverlay_Instance;
-static void UrlWarningOverlay_OpenUrl(struct GuiElem* elem, struct GuiElem* widget) {
-	Gui_FreeOverlay((struct Screen*)elem);
-	struct UrlWarningOverlay* screen = (struct UrlWarningOverlay*)elem;
-	Platform_StartShell(&screen->Url);
+static void UrlWarningOverlay_OpenUrl(struct UrlWarningOverlay* s, void* b) {
+	Gui_FreeOverlay(s);
+	Platform_StartShell(&s->Url);
 }
 
-static void UrlWarningOverlay_AppendUrl(struct GuiElem* elem, struct GuiElem* widget) {
-	Gui_FreeOverlay((struct Screen*)elem);
-	if (Game_ClickableChat) {
-		struct UrlWarningOverlay* screen = (struct UrlWarningOverlay*)elem;
-		HUDScreen_AppendInput(Gui_HUD, &screen->Url);
-	}
+static void UrlWarningOverlay_AppendUrl(struct UrlWarningOverlay* s, void* b) {
+	Gui_FreeOverlay(s);
+	if (Game_ClickableChat) { HUDScreen_AppendInput(Gui_HUD, &s->Url); }
 }
 
-static void UrlWarningOverlay_ContextRecreated(void* obj) {
-	struct UrlWarningOverlay* screen = (struct UrlWarningOverlay*)obj;
+static void UrlWarningOverlay_ContextRecreated(struct UrlWarningOverlay* s) {
 	String lines[4] = {
-		String_FromConst("&eAre you sure you want to open this link?"), screen->Url,
+		String_FromConst("&eAre you sure you want to open this link?"), s->Url,
 		String_FromConst("Be careful - links from strangers may be websites that"),
 		String_FromConst(" have viruses, or things you may not want to open/see."),
 	};
 
-	Overlay_MakeLabels((struct MenuScreen*)screen, screen->Labels, lines);
-	WarningOverlay_MakeButtons((struct MenuScreen*)screen, screen->Buttons, false,
+	Overlay_MakeLabels(s, s->Labels, lines);
+	WarningOverlay_MakeButtons((struct MenuScreen*)s, s->Buttons, false,
 		UrlWarningOverlay_OpenUrl, UrlWarningOverlay_AppendUrl);
 }
 
 struct ScreenVTABLE UrlWarningOverlay_VTABLE = {
-	MenuScreen_Init,      MenuScreen_Render,  MenuScreen_Free,      Gui_DefaultRecreate,
-	Overlay_KeyDown,      MenuScreen_KeyUp,   MenuScreen_KeyPress,
-	MenuScreen_MouseDown, MenuScreen_MouseUp, MenuScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize,  Menu_ContextLost,   UrlWarningOverlay_ContextRecreated,
+	MenuScreen_Init, MenuScreen_Render,  MenuScreen_Free, Gui_DefaultRecreate,
+	Overlay_KeyDown, Menu_KeyUp,         Menu_KeyPress,
+	Menu_MouseDown,  Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
+	Menu_OnResize,   Menu_ContextLost,   UrlWarningOverlay_ContextRecreated,
 };
 struct Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) {
 	static struct Widget* widgets[6];
-	struct UrlWarningOverlay* screen = &UrlWarningOverlay_Instance;
+	struct UrlWarningOverlay* s = &UrlWarningOverlay_Instance;
 
-	screen->HandlesAllInput = true;
-	screen->Widgets         = widgets;
-	screen->WidgetsCount    = Array_Elems(widgets);
+	s->HandlesAllInput = true;
+	s->Widgets         = widgets;
+	s->WidgetsCount    = Array_Elems(widgets);
 
-	String dstUrl = String_FromArray(screen->__UrlBuffer);
+	String dstUrl = String_FromArray(s->__UrlBuffer);
 	String_Copy(&dstUrl, url);
-	screen->Url = dstUrl;
+	s->Url = dstUrl;
 
-	screen->VTABLE = &UrlWarningOverlay_VTABLE;
-	return (struct Screen*)screen;
+	s->VTABLE = &UrlWarningOverlay_VTABLE;
+	return (struct Screen*)s;
 }
 
 
@@ -3189,26 +3065,22 @@ struct Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) {
 *----------------------------------------------------ConfirmDenyOverlay---------------------------------------------------*
 *#########################################################################################################################*/
 struct ConfirmDenyOverlay ConfirmDenyOverlay_Instance;
-static void ConfirmDenyOverlay_ConfirmNoClick(struct GuiElem* elem, struct GuiElem* widget) {
-	Gui_FreeOverlay((struct Screen*)elem);
-	struct ConfirmDenyOverlay* screen = (struct ConfirmDenyOverlay*)elem;
-	String url = screen->Url;
+static void ConfirmDenyOverlay_ConfirmNoClick(struct ConfirmDenyOverlay* s, void* b) {
+	Gui_FreeOverlay(s);
+	String url = s->Url;
 
-	if (screen->AlwaysDeny && !TextureCache_HasDenied(&url)) {
+	if (s->AlwaysDeny && !TextureCache_HasDenied(&url)) {
 		TextureCache_Deny(&url);
 	}
 }
 
-static void ConfirmDenyOverlay_GoBackClick(struct GuiElem* elem, struct GuiElem* widget) {
-	Gui_FreeOverlay((struct Screen*)elem);
-	struct ConfirmDenyOverlay* screen = (struct ConfirmDenyOverlay*)elem;
-
-	struct Screen* overlay = TexPackOverlay_MakeInstance(&screen->Url);
+static void ConfirmDenyOverlay_GoBackClick(struct ConfirmDenyOverlay* s, void* b) {
+	Gui_FreeOverlay(s);
+	struct Screen* overlay = TexPackOverlay_MakeInstance(&s->Url);
 	Gui_ShowOverlay(overlay, true);
 }
 
-static void ConfirmDenyOverlay_ContextRecreated(void* obj) {
-	struct ConfirmDenyOverlay* screen = (struct ConfirmDenyOverlay*)obj;
+static void ConfirmDenyOverlay_ContextRecreated(struct ConfirmDenyOverlay* s) {
 	String lines[4] = {
 		String_FromConst("&eYou might be missing out."),
 		String_FromConst("Texture packs can play a vital role in the look and feel of maps."),
@@ -3216,8 +3088,8 @@ static void ConfirmDenyOverlay_ContextRecreated(void* obj) {
 		String_FromConst("Sure you don't want to download the texture pack?")
 	};
 
-	Overlay_MakeLabels((struct MenuScreen*)screen, screen->Labels, lines);
-	struct ButtonWidget* buttons = screen->Buttons;
+	Overlay_MakeLabels(s, s->Labels, lines);
+	struct ButtonWidget* btns = s->Buttons;
 	Widget_LeftClick yesClick = ConfirmDenyOverlay_ConfirmNoClick;
 	Widget_LeftClick noClick  = ConfirmDenyOverlay_GoBackClick;
 
@@ -3228,26 +3100,26 @@ static void ConfirmDenyOverlay_ContextRecreated(void* obj) {
 }
 
 struct ScreenVTABLE ConfirmDenyOverlay_VTABLE = {
-	MenuScreen_Init,      MenuScreen_Render,  MenuScreen_Free,      Gui_DefaultRecreate,
-	Overlay_KeyDown,      MenuScreen_KeyUp,   MenuScreen_KeyPress,
-	MenuScreen_MouseDown, MenuScreen_MouseUp, MenuScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize,  Menu_ContextLost,   ConfirmDenyOverlay_ContextRecreated,
+	MenuScreen_Init, MenuScreen_Render,  MenuScreen_Free, Gui_DefaultRecreate,
+	Overlay_KeyDown, Menu_KeyUp,         Menu_KeyPress,
+	Menu_MouseDown,  Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
+	Menu_OnResize,   Menu_ContextLost,   ConfirmDenyOverlay_ContextRecreated,
 };
 struct Screen* ConfirmDenyOverlay_MakeInstance(STRING_PURE String* url, bool alwaysDeny) {
 	static struct Widget* widgets[6];
-	struct ConfirmDenyOverlay* screen = &ConfirmDenyOverlay_Instance;
+	struct ConfirmDenyOverlay* s = &ConfirmDenyOverlay_Instance;
 	
-	screen->HandlesAllInput = true;
-	screen->Widgets         = widgets;
-	screen->WidgetsCount    = Array_Elems(widgets);
+	s->HandlesAllInput = true;
+	s->Widgets         = widgets;
+	s->WidgetsCount    = Array_Elems(widgets);
 
-	String dstUrl = String_FromArray(screen->__UrlBuffer);
+	String dstUrl = String_FromArray(s->__UrlBuffer);
 	String_Copy(&dstUrl, url);
-	screen->Url = dstUrl;
-	screen->AlwaysDeny = alwaysDeny;
+	s->Url = dstUrl;
+	s->AlwaysDeny = alwaysDeny;
 
-	screen->VTABLE = &ConfirmDenyOverlay_VTABLE;
-	return (struct Screen*)screen;
+	s->VTABLE = &ConfirmDenyOverlay_VTABLE;
+	return (struct Screen*)s;
 }
 
 
@@ -3255,46 +3127,40 @@ struct Screen* ConfirmDenyOverlay_MakeInstance(STRING_PURE String* url, bool alw
 *-----------------------------------------------------TexPackOverlay------------------------------------------------------*
 *#########################################################################################################################*/
 struct TexPackOverlay TexPackOverlay_Instance;
-static void TexPackOverlay_YesClick(struct GuiElem* elem, struct GuiElem* widget) {
-	Gui_FreeOverlay((struct Screen*)elem);
-	struct TexPackOverlay* screen = (struct TexPackOverlay*)elem;
-	String url = screen->Identifier;
+static void TexPackOverlay_YesClick(struct TexPackOverlay* s, struct Widget* w) {
+	Gui_FreeOverlay(s);
+	String url = s->Identifier;
 	url = String_UNSAFE_SubstringAt(&url, 3);
 
 	ServerConnection_DownloadTexturePack(&url);
-	bool isAlways = WarningOverlay_IsAlways(elem, (struct Widget*)widget);
+	bool isAlways = WarningOverlay_IsAlways(s, w);
 	if (isAlways && !TextureCache_HasAccepted(&url)) {
 		TextureCache_Accept(&url);
 	}
 }
 
-static void TexPackOverlay_NoClick(struct GuiElem* elem, struct GuiElem* widget) {
-	Gui_FreeOverlay((struct Screen*)elem);
-	struct TexPackOverlay* screen = (struct TexPackOverlay*)elem;
-	String url = screen->Identifier;
+static void TexPackOverlay_NoClick(struct TexPackOverlay* s, struct Widget* w) {
+	Gui_FreeOverlay(s);
+	String url = s->Identifier;
 	url = String_UNSAFE_SubstringAt(&url, 3);
 
-	bool isAlways = WarningOverlay_IsAlways(elem, (struct Widget*)widget);
+	bool isAlways = WarningOverlay_IsAlways(s, w);
 	struct Screen* overlay = ConfirmDenyOverlay_MakeInstance(&url, isAlways);
 	Gui_ShowOverlay(overlay, true);
 }
 
-static void TexPackOverlay_Render(struct GuiElem* elem, Real64 delta) {
-	struct TexPackOverlay* screen = (struct TexPackOverlay*)elem;
-	String identifier = screen->Identifier;
-
-	MenuScreen_Render(elem, delta);
+static void TexPackOverlay_Render(struct TexPackOverlay* s, Real64 delta) {
+	MenuScreen_Render(s, delta);
 	struct AsyncRequest item;
-	if (!AsyncDownloader_Get(&identifier, &item)) return;
+	if (!AsyncDownloader_Get(&s->Identifier, &item)) return;
 
-	screen->ContentLength = item.ResultSize;
-	if (!screen->ContentLength) return;
-	Elem_Recreate(elem);
+	s->ContentLength = item.ResultSize;
+	if (!s->ContentLength) return;
+	Elem_Recreate(s);
 }
 
-static void TexPackOverlay_ContextRecreated(void* obj) {
-	struct TexPackOverlay* screen = (struct TexPackOverlay*)obj;
-	String url = screen->Identifier;
+static void TexPackOverlay_ContextRecreated(struct TexPackOverlay* s) {
+	String url = s->Identifier;
 	url = String_UNSAFE_SubstringAt(&url, 3);
 
 	String https = String_FromConst("https://");
@@ -3314,48 +3180,49 @@ static void TexPackOverlay_ContextRecreated(void* obj) {
 		String_FromConst("Download size: Determining..."),
 	};
 
-	if (screen->ContentLength) {
+	if (s->ContentLength) {
 		char contentsBuffer[STRING_SIZE];
 		String contents = String_FromArray(contentsBuffer);
-		Real32 contentLengthMB = screen->ContentLength / (1024.0f * 1024.0f);
+		Real32 contentLengthMB = s->ContentLength / (1024.0f * 1024.0f);
 
 		String_Format1(&contents, "Download size: %f3 MB", &contentLengthMB);
 		lines[3] = contents;
 	}
 
-	Overlay_MakeLabels((struct MenuScreen*)screen, screen->Labels, lines);
-	WarningOverlay_MakeButtons((struct MenuScreen*)screen, screen->Buttons, true,
+	Overlay_MakeLabels(s, s->Labels, lines);
+	WarningOverlay_MakeButtons((struct MenuScreen*)s, s->Buttons, true,
 		TexPackOverlay_YesClick, TexPackOverlay_NoClick);
 }
 
 struct ScreenVTABLE TexPackOverlay_VTABLE = {
-	MenuScreen_Init,      TexPackOverlay_Render, MenuScreen_Free,      Gui_DefaultRecreate,
-	Overlay_KeyDown,      MenuScreen_KeyUp,      MenuScreen_KeyPress,
-	MenuScreen_MouseDown, MenuScreen_MouseUp,    MenuScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize,  Menu_ContextLost,      TexPackOverlay_ContextRecreated,
+	MenuScreen_Init, TexPackOverlay_Render, MenuScreen_Free, Gui_DefaultRecreate,
+	Overlay_KeyDown, Menu_KeyUp,            Menu_KeyPress,
+	Menu_MouseDown,  Menu_MouseUp,          Menu_MouseMove,  MenuScreen_MouseScroll,
+	Menu_OnResize,   Menu_ContextLost,      TexPackOverlay_ContextRecreated,
 };
 struct Screen* TexPackOverlay_MakeInstance(STRING_PURE String* url) {
 	/* If we are showing a texture pack overlay, completely free that overlay */
 	/* - it doesn't matter anymore, because the new texture pack URL will always */
 	/* replace/override the old texture pack URL associated with that overlay */
-	struct Screen* elem = (struct Screen*)(&TexPackOverlay_Instance);
-	if (Gui_IndexOverlay(elem) >= 0) { Gui_FreeOverlay(elem); }
-	elem = (struct Screen*)(&ConfirmDenyOverlay_Instance);
-	if (Gui_IndexOverlay(elem) >= 0) { Gui_FreeOverlay(elem); }
+	void* overlay;
+	overlay = &TexPackOverlay_Instance;
+	if (Gui_IndexOverlay(overlay) >= 0) { Gui_FreeOverlay(overlay); }
+	overlay = &ConfirmDenyOverlay_Instance;
+	if (Gui_IndexOverlay(overlay) >= 0) { Gui_FreeOverlay(overlay); }
 
 	static struct Widget* widgets[8];
-	struct TexPackOverlay* screen = &TexPackOverlay_Instance;
+	struct TexPackOverlay* s = &TexPackOverlay_Instance;
 
-	screen->HandlesAllInput = true;
-	screen->Widgets         = widgets;
-	screen->WidgetsCount    = Array_Elems(widgets);
+	s->HandlesAllInput = true;
+	s->Widgets         = widgets;
+	s->WidgetsCount    = Array_Elems(widgets);
 
-	String identifier = String_FromArray(screen->__IdentifierBuffer);
+	String identifier = String_FromArray(s->__IdentifierBuffer);
 	String_Format1(&identifier, "CL_%s", url);
-	screen->Identifier    = identifier;
-	screen->ContentLength = 0;
+	s->Identifier    = identifier;
+	s->ContentLength = 0;
 
 	AsyncDownloader_GetContentLength(url, true, &identifier);
-	screen->VTABLE = &TexPackOverlay_VTABLE;
-	return (struct Screen*)screen;
+	s->VTABLE = &TexPackOverlay_VTABLE;
+	return (struct Screen*)s;
 }

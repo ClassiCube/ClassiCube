@@ -18,63 +18,72 @@ void Gui_DefaultRecreate(struct GuiElem* elem) {
 	elem->VTABLE->Init(elem);
 }
 
-bool Gui_DefaultMouse(struct GuiElem* elem, Int32 x, Int32 y, MouseButton btn) { return false; }
-bool Gui_DefaultKey(struct GuiElem* elem, Key key)                { return false; }
-bool Gui_DefaultKeyPress(struct GuiElem* elem, UInt8 keyChar)     { return false; }
-bool Gui_DefaultMouseMove(struct GuiElem* elem, Int32 x, Int32 y) { return false; }
-bool Gui_DefaultMouseScroll(struct GuiElem* elem, Real32 delta)   { return false; }
+bool Gui_DefaultMouse(void* elem, Int32 x, Int32 y, MouseButton btn) { return false; }
+bool Gui_DefaultKey(void* elem, Key key)                { return false; }
+bool Gui_DefaultKeyPress(void* elem, UInt8 keyChar)     { return false; }
+bool Gui_DefaultMouseMove(void* elem, Int32 x, Int32 y) { return false; }
+bool Gui_DefaultMouseScroll(void* elem, Real32 delta)   { return false; }
 
-void Screen_CommonInit(struct GuiElem* elem) {
-	struct Screen* screen = (struct Screen*)elem;
-	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, screen->VTABLE->ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, screen->VTABLE->ContextRecreated);
+void Screen_CommonInit(void* screen) {
+	struct Screen* s = (struct Screen*)screen;
+	Event_RegisterVoid(&GfxEvents_ContextLost,      s, s->VTABLE->ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, s, s->VTABLE->ContextRecreated);
 
 	if (Gfx_LostContext) return;
-	screen->VTABLE->ContextRecreated(screen);
+	s->VTABLE->ContextRecreated(screen);
 }
 
-void Screen_CommonFree(struct GuiElem* elem) {
-	struct Screen* screen = (struct Screen*)elem;
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, screen->VTABLE->ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, screen->VTABLE->ContextRecreated);
+void Screen_CommonFree(void* screen) {
+	struct Screen* s = (struct Screen*)screen;
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      s, s->VTABLE->ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, s, s->VTABLE->ContextRecreated);
 
-	screen->VTABLE->ContextLost(screen);
+	s->VTABLE->ContextLost(screen);
 }
 
-void Widget_CalcPosition(struct GuiElem* elem) {
-	struct Widget* w = (struct Widget*)elem;
+void Widget_SetLocation(void* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xOffset, Int32 yOffset) {
+	struct Widget* w = (struct Widget*)widget;
+	w->HorAnchor = horAnchor; w->VerAnchor = verAnchor;
+	w->XOffset   = xOffset;   w->YOffset = yOffset;
+	Widget_Reposition(w);
+}
+
+void Widget_CalcPosition(void* widget) {
+	struct Widget* w = (struct Widget*)widget;
 	w->X = Gui_CalcPos(w->HorAnchor, w->XOffset, w->Width , Game_Width );
 	w->Y = Gui_CalcPos(w->VerAnchor, w->YOffset, w->Height, Game_Height);
 }
 
-void Widget_Init(struct Widget* widget) {
-	widget->VTABLE->Init     = NULL;
-	widget->VTABLE->Render   = NULL;
-	widget->VTABLE->Free     = NULL;
-	widget->VTABLE->Recreate = Gui_DefaultRecreate;
+void Widget_Init(void* widget) {
+	struct Widget* w = (struct Widget*)widget;
+	w->VTABLE->Init   = NULL;
+	w->VTABLE->Render = NULL;
+	w->VTABLE->Free   = NULL;
+	w->VTABLE->Recreate   = Gui_DefaultRecreate;
+	w->VTABLE->Reposition = Widget_CalcPosition;
 
-	widget->VTABLE->HandlesKeyDown     = Gui_DefaultKey;
-	widget->VTABLE->HandlesKeyUp       = Gui_DefaultKey;
-	widget->VTABLE->HandlesKeyPress    = Gui_DefaultKeyPress;
+	w->VTABLE->HandlesKeyDown     = Gui_DefaultKey;
+	w->VTABLE->HandlesKeyUp       = Gui_DefaultKey;
+	w->VTABLE->HandlesKeyPress    = Gui_DefaultKeyPress;
 
-	widget->VTABLE->HandlesMouseDown   = Gui_DefaultMouse;
-	widget->VTABLE->HandlesMouseUp     = Gui_DefaultMouse;
-	widget->VTABLE->HandlesMouseMove   = Gui_DefaultMouseMove;
-	widget->VTABLE->HandlesMouseScroll = Gui_DefaultMouseScroll;
+	w->VTABLE->HandlesMouseDown   = Gui_DefaultMouse;
+	w->VTABLE->HandlesMouseUp     = Gui_DefaultMouse;
+	w->VTABLE->HandlesMouseMove   = Gui_DefaultMouseMove;
+	w->VTABLE->HandlesMouseScroll = Gui_DefaultMouseScroll;
 
-	widget->Active = false;
-	widget->Disabled = false;
-	widget->X = 0; widget->Y = 0;
-	widget->Width = 0; widget->Height = 0;
-	widget->HorAnchor = ANCHOR_MIN;
-	widget->VerAnchor = ANCHOR_MIN;
-	widget->XOffset = 0; widget->YOffset = 0;
-	widget->VTABLE->Reposition = Widget_CalcPosition;
-	widget->MenuClick = NULL;
+	w->Active = false;
+	w->Disabled = false;
+	w->X = 0; w->Y = 0;
+	w->Width = 0; w->Height = 0;
+	w->HorAnchor = ANCHOR_MIN;
+	w->VerAnchor = ANCHOR_MIN;
+	w->XOffset = 0; w->YOffset = 0;
+	w->MenuClick = NULL;
 }
 
-bool Widget_Contains(struct Widget* widget, Int32 x, Int32 y) {
-	return Gui_Contains(widget->X, widget->Y, widget->Width, widget->Height, x, y);
+bool Widget_Contains(void* widget, Int32 x, Int32 y) {
+	struct Widget* w = (struct Widget*)widget;
+	return Gui_Contains(w->X, w->Y, w->Width, w->Height, x, y);
 }
 
 
@@ -180,17 +189,19 @@ void Gui_ShowOverlay(struct Screen* overlay, bool atFront) {
 	Gui_CalcCursorVisible();
 }
 
-Int32 Gui_IndexOverlay(struct Screen* overlay) {
+Int32 Gui_IndexOverlay(void* overlay) {
+	struct Screen* s = (struct Screen*)overlay;
 	Int32 i;
 	for (i = 0; i < Gui_OverlaysCount; i++) {
-		if (Gui_Overlays[i] == overlay) return i;
+		if (Gui_Overlays[i] == s) return i;
 	}
 	return -1;
 }
 
-void Gui_FreeOverlay(struct Screen* overlay) {
+void Gui_FreeOverlay(void* overlay) {
+	struct Screen* s = (struct Screen*)overlay;
+	Elem_Free(s);
 	Int32 i = Gui_IndexOverlay(overlay);
-	Elem_Free(overlay);
 	if (i == -1) return;
 
 	for (; i < Gui_OverlaysCount - 1; i++) {

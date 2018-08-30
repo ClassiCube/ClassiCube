@@ -374,8 +374,8 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 }
 
 static void InputHandler_MouseWheel(void* obj, Real32 delta) {
-	struct GuiElem* active = (struct GuiElem*)Gui_GetActiveScreen();
-	if (active->VTABLE->HandlesMouseScroll(active, delta)) return;
+	struct Screen* active = Gui_GetActiveScreen();
+	if (Elem_HandlesMouseScroll(active, delta)) return;
 
 	bool hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
 	if (!hotbar && Camera_Active->Zoom(delta)) return;
@@ -386,13 +386,13 @@ static void InputHandler_MouseWheel(void* obj, Real32 delta) {
 }
 
 static void InputHandler_MouseMove(void* obj, Int32 xDelta, Int32 yDelta) {
-	struct GuiElem* active = (struct GuiElem*)Gui_GetActiveScreen();
-	active->VTABLE->HandlesMouseMove(active, Mouse_X, Mouse_Y);
+	struct Screen* active = Gui_GetActiveScreen();
+	Elem_HandlesMouseMove(active, Mouse_X, Mouse_Y);
 }
 
 static void InputHandler_MouseDown(void* obj, Int32 button) {
-	struct GuiElem* active = (struct GuiElem*)Gui_GetActiveScreen();
-	if (!active->VTABLE->HandlesMouseDown(active, Mouse_X, Mouse_Y, button)) {
+	struct Screen* active = Gui_GetActiveScreen();
+	if (!Elem_HandlesMouseDown(active, Mouse_X, Mouse_Y, button)) {
 		bool left   = button == MouseButton_Left;
 		bool middle = button == MouseButton_Middle;
 		bool right  = button == MouseButton_Right;
@@ -403,8 +403,8 @@ static void InputHandler_MouseDown(void* obj, Int32 button) {
 }
 
 static void InputHandler_MouseUp(void* obj, Int32 button) {
-	struct GuiElem* active = (struct GuiElem*)Gui_GetActiveScreen();
-	if (!active->VTABLE->HandlesMouseUp(active, Mouse_X, Mouse_Y, button)) {
+	struct Screen* active = Gui_GetActiveScreen();
+	if (!Elem_HandlesMouseUp(active, Mouse_X, Mouse_Y, button)) {
 		if (ServerConnection_SupportsPlayerClick && button <= MouseButton_Middle) {
 			input_pickingId = -1;
 			InputHandler_ButtonStateChanged(button, false);
@@ -426,14 +426,14 @@ static bool InputHandler_SimulateMouse(Key key, bool pressed) {
 
 static void InputHandler_KeyDown(void* obj, Int32 key) {
 	if (InputHandler_SimulateMouse(key, true)) return;
-	struct GuiElem* active = (struct GuiElem*)Gui_GetActiveScreen();
+	struct Screen* active = Gui_GetActiveScreen();
 
 	if (InputHandler_IsShutdown(key)) {
 		/* TODO: Do we need a separate exit function in Game class? */
 		Window_Close();
 	} else if (key == KeyBind_Get(KeyBind_Screenshot)) {
 		Game_ScreenshotRequested = true;
-	} else if (active->VTABLE->HandlesKeyDown(active, key)) {
+	} else if (Elem_HandlesKeyDown(active, key)) {
 	} else if (InputHandler_HandleCoreKey(key)) {
 	} else if (LocalPlayer_HandlesKey(key)) {
 	} else {
@@ -457,13 +457,13 @@ static void InputHandler_KeyUp(void* obj, Int32 key) {
 		InputHandler_SetFOV(Game_DefaultFov, false);
 	}
 
-	struct GuiElem* active = (struct GuiElem*)Gui_GetActiveScreen();
-	active->VTABLE->HandlesKeyUp(active, key);
+	struct Screen* active = Gui_GetActiveScreen();
+	Elem_HandlesKeyUp(active, key);
 }
 
 static void InputHandler_KeyPress(void* obj, Int32 keyChar) {
-	struct GuiElem* active = (struct GuiElem*)Gui_GetActiveScreen();
-	active->VTABLE->HandlesKeyPress(active, keyChar);
+	struct Screen* active = Gui_GetActiveScreen();
+	Elem_HandlesKeyPress(active, keyChar);
 }
 
 void InputHandler_Init(void) {

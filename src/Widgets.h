@@ -9,8 +9,6 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-void Widget_SetLocation(struct Widget* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xOffset, Int32 yOffset);
-
 struct TextWidget {
 	Widget_Layout
 	struct Texture Texture;
@@ -87,9 +85,9 @@ struct InputWidget {
 	Widget_Layout
 	struct FontDesc Font;		
 	Int32 (*GetMaxLines)(void);
-	void (*RemakeTexture)(struct GuiElem* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
-	void (*OnPressedEnter)(struct GuiElem* elem); /* Invoked when the user presses enter. */
-	bool (*AllowedChar)(struct GuiElem* elem, char c);
+	void (*RemakeTexture)(void* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
+	void (*OnPressedEnter)(void* elem); /* Invoked when the user presses enter. */
+	bool (*AllowedChar)(void* elem, char c);
 
 	String Text;
 	String Lines[INPUTWIDGET_MAX_LINES];            /* raw text of each line */
