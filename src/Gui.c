@@ -40,6 +40,23 @@ void GuiElem_Reset(struct GuiElem* elem) {
 	elem->VTABLE->HandlesMouseScroll = Gui_DefaultMouseScroll;
 }
 
+void Screen_CommonInit(struct GuiElem* elem) {
+	struct Screen* screen = (struct Screen*)elem;
+	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, screen->VTABLE->ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, screen->VTABLE->ContextRecreated);
+
+	if (Gfx_LostContext) return;
+	screen->VTABLE->ContextRecreated(screen);
+}
+
+void Screen_CommonFree(struct GuiElem* elem) {
+	struct Screen* screen = (struct Screen*)elem;
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, screen->VTABLE->ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, screen->VTABLE->ContextRecreated);
+
+	screen->VTABLE->ContextLost(screen);
+}
+
 void Widget_DoReposition(struct GuiElem* elem) {
 	struct Widget* w = (struct Widget*)elem;
 	w->X = Gui_CalcPos(w->HorAnchor, w->XOffset, w->Width , Game_Width );

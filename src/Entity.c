@@ -18,6 +18,7 @@
 #include "IModel.h"
 #include "Input.h"
 #include "Gui.h"
+#include "Stream.h"
 
 const char* NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const char* ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };

@@ -1248,11 +1248,11 @@ static bool SoundComp_DoPlaySound(struct LocalPlayer* p, Vector3 soundPos) {
 	/* have our legs just crossed over the '0' point? */
 	Real32 oldLegRot, newLegRot;
 	if (Camera_Active->IsThirdPerson) {
-		oldLegRot = Math_CosF(p->Base.Anim.WalkTimeO);
-		newLegRot = Math_CosF(p->Base.Anim.WalkTimeN);
+		oldLegRot = (Real32)Math_Cos(p->Base.Anim.WalkTimeO);
+		newLegRot = (Real32)Math_Cos(p->Base.Anim.WalkTimeN);
 	} else {
-		oldLegRot = Math_SinF(p->Base.Anim.WalkTimeO);
-		newLegRot = Math_SinF(p->Base.Anim.WalkTimeN);
+		oldLegRot = (Real32)Math_Sin(p->Base.Anim.WalkTimeO);
+		newLegRot = (Real32)Math_Sin(p->Base.Anim.WalkTimeN);
 	}
 	return Math_Sign(oldLegRot) != Math_Sign(newLegRot);
 }

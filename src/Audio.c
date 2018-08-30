@@ -11,6 +11,7 @@
 #include "Errors.h"
 #include "Vorbis.h"
 #include "Chat.h"
+#include "Stream.h"
 
 StringsBuffer files;
 static void Volume_Mix16(Int16* samples, Int32 count, Int32 volume) {

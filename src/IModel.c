@@ -127,8 +127,8 @@ void IModel_SetupState(struct IModel* model, struct Entity* entity) {
 	IModel_Cols[5] = IModel_Cols[4];
 
 	Real32 yawDelta = entity->HeadY - entity->RotY;
-	IModel_cosHead = Math_CosF(yawDelta * MATH_DEG2RAD);
-	IModel_sinHead = Math_SinF(yawDelta * MATH_DEG2RAD);
+	IModel_cosHead = (Real32)Math_Cos(yawDelta * MATH_DEG2RAD);
+	IModel_sinHead = (Real32)Math_Sin(yawDelta * MATH_DEG2RAD);
 	IModel_ActiveModel = model;
 }
 

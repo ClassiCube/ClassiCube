@@ -14,10 +14,10 @@ GfxResourceID iso_vb;
 
 bool iso_cacheInitalisesd;
 PackedCol iso_colNormal, iso_colXSide, iso_colZSide, iso_colYBottom;
-#define iso_cosX  (0.86602540378443864f) /* Math_CosF(30.0f  * MATH_DEG2RAD); */
-#define iso_sinX  (0.50000000000000000f) /* Math_SinF(30.0f  * MATH_DEG2RAD); */
-#define iso_cosY  (0.70710678118654752f) /* Math_CosF(-45.0f * MATH_DEG2RAD); */
-#define iso_sinY (-0.70710678118654752f) /* Math_SinF(-45.0f * MATH_DEG2RAD); */
+#define iso_cosX  (0.86602540378443864f) /* Math_Cos(30.0  * MATH_DEG2RAD); */
+#define iso_sinX  (0.50000000000000000f) /* Math_Sin(30.0  * MATH_DEG2RAD); */
+#define iso_cosY  (0.70710678118654752f) /* Math_Cos(-45.0 * MATH_DEG2RAD); */
+#define iso_sinY (-0.70710678118654752f) /* Math_Sin(-45.0 * MATH_DEG2RAD); */
 
 struct Matrix iso_transform;
 Vector3 iso_pos;

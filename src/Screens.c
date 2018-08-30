@@ -54,14 +54,11 @@ struct LoadingScreen {
 	Real32 Progress;
 	
 	struct TextWidget Title, Message;
+	String TitleStr, MessageStr;
+	const char* LastState;
+
 	char __TitleBuffer[STRING_SIZE];
 	char __MessageBuffer[STRING_SIZE];
-	String TitleStr, MessageStr;
-};
-
-struct GeneratingScreen {
-	struct LoadingScreen Base;
-	const char* LastState;
 };
 
 #define CHATSCREEN_MAX_STATUS 5
@@ -147,18 +144,16 @@ static void InventoryScreen_Init(struct GuiElem* elem) {
 	TableWidget_Create(&screen->Table);
 	screen->Table.Font = screen->Font;
 	screen->Table.ElementsPerRow = Game_PureClassic ? 9 : 10;
-	Elem_Init(&screen->Table);
 
 	/* Can't immediately move to selected here, because cursor visibility 
 	   might be toggled after Init() is called. This causes the cursor to 
 	   be moved back to the middle of the window. */
 	screen->DeferredSelect = true;
-
 	Key_KeyRepeat = true;
+	Screen_CommonInit(elem);
+
 	Event_RegisterVoid(&BlockEvents_PermissionsChanged, screen, InventoryScreen_OnBlockChanged);
-	Event_RegisterVoid(&BlockEvents_BlockDefChanged,    screen, InventoryScreen_OnBlockChanged);	
-	Event_RegisterVoid(&GfxEvents_ContextLost,          screen, InventoryScreen_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated,     screen, InventoryScreen_ContextRecreated);
+	Event_RegisterVoid(&BlockEvents_BlockDefChanged,    screen, InventoryScreen_OnBlockChanged);
 }
 
 static void InventoryScreen_Render(struct GuiElem* elem, Real64 delta) {
@@ -175,13 +170,11 @@ static void InventoryScreen_OnResize(struct GuiElem* elem) {
 static void InventoryScreen_Free(struct GuiElem* elem) {
 	struct InventoryScreen* screen = (struct InventoryScreen*)elem;
 	Font_Free(&screen->Font);
-	Elem_TryFree(&screen->Table);
-
 	Key_KeyRepeat = false;
+	Screen_CommonFree(elem);
+	
 	Event_UnregisterVoid(&BlockEvents_PermissionsChanged, screen, InventoryScreen_OnBlockChanged);
 	Event_UnregisterVoid(&BlockEvents_BlockDefChanged,    screen, InventoryScreen_OnBlockChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,          screen, InventoryScreen_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated,     screen, InventoryScreen_ContextRecreated);
 }
 
 static bool InventoryScreen_KeyDown(struct GuiElem* elem, Key key) {
@@ -252,7 +245,7 @@ struct ScreenVTABLE InventoryScreen_VTABLE = {
 	InventoryScreen_Init,      InventoryScreen_Render,  InventoryScreen_Free,      Gui_DefaultRecreate,
 	InventoryScreen_KeyDown,   InventoryScreen_KeyUp,   Gui_DefaultKeyPress,
 	InventoryScreen_MouseDown, InventoryScreen_MouseUp, InventoryScreen_MouseMove, InventoryScreen_MouseScroll,
-	InventoryScreen_OnResize,
+	InventoryScreen_OnResize,  InventoryScreen_ContextLost, InventoryScreen_ContextRecreated,
 };
 struct Screen* InventoryScreen_MakeInstance(void) {
 	struct InventoryScreen* screen = &InventoryScreen_Instance;
@@ -393,11 +386,9 @@ static void StatusScreen_ContextRecreated(void* obj) {
 static void StatusScreen_Init(struct GuiElem* elem) {
 	struct StatusScreen* screen = (struct StatusScreen*)elem;
 	Font_Make(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
-	StatusScreen_ContextRecreated(screen);
+	Screen_CommonInit(elem);
 
-	Event_RegisterVoid(&ChatEvents_FontChanged,     screen, StatusScreen_FontChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, StatusScreen_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, StatusScreen_ContextRecreated);
+	Event_RegisterVoid(&ChatEvents_FontChanged, screen, StatusScreen_FontChanged);
 }
 
 static void StatusScreen_Render(struct GuiElem* elem, Real64 delta) {
@@ -419,18 +410,16 @@ static void StatusScreen_Render(struct GuiElem* elem, Real64 delta) {
 static void StatusScreen_Free(struct GuiElem* elem) {
 	struct StatusScreen* screen = (struct StatusScreen*)elem;
 	Font_Free(&screen->Font);
-	StatusScreen_ContextLost(screen);
+	Screen_CommonFree(elem);
 
-	Event_UnregisterVoid(&ChatEvents_FontChanged,     screen, StatusScreen_FontChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, StatusScreen_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, StatusScreen_ContextRecreated);
+	Event_UnregisterVoid(&ChatEvents_FontChanged, screen, StatusScreen_FontChanged);
 }
 
 struct ScreenVTABLE StatusScreen_VTABLE = {
 	StatusScreen_Init,     StatusScreen_Render, StatusScreen_Free,    Gui_DefaultRecreate,
 	Gui_DefaultKey,        Gui_DefaultKey,      Gui_DefaultKeyPress,
 	Gui_DefaultMouse,      Gui_DefaultMouse,    Gui_DefaultMouseMove, Gui_DefaultMouseScroll,
-	StatusScreen_OnResize,
+	StatusScreen_OnResize, StatusScreen_ContextLost, StatusScreen_ContextRecreated,
 };
 struct Screen* StatusScreen_MakeInstance(void) {
 	struct StatusScreen* screen = &StatusScreen_Instance;
@@ -481,7 +470,6 @@ static void LoadingScreen_ContextLost(void* obj) {
 
 static void LoadingScreen_ContextRecreated(void* obj) {
 	struct LoadingScreen* screen = (struct LoadingScreen*)obj;
-	if (Gfx_LostContext) return;
 	LoadingScreen_SetTitle(screen);
 	LoadingScreen_SetMessage(screen);
 }
@@ -552,12 +540,11 @@ static void LoadingScreen_DrawBackground(void) {
 
 static void LoadingScreen_Init(struct GuiElem* elem) {
 	struct LoadingScreen* screen = (struct LoadingScreen*)elem;
-	Gfx_SetFog(false);
-	LoadingScreen_ContextRecreated(screen);
+	Font_Make(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	Screen_CommonInit(elem);
 
-	Event_RegisterReal(&WorldEvents_Loading,        screen, LoadingScreen_MapLoading);
-	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, LoadingScreen_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, LoadingScreen_ContextRecreated);
+	Gfx_SetFog(false);
+	Event_RegisterReal(&WorldEvents_Loading, screen, LoadingScreen_MapLoading);
 }
 
 #define PROG_BAR_WIDTH 200
@@ -583,15 +570,21 @@ static void LoadingScreen_Render(struct GuiElem* elem, Real64 delta) {
 static void LoadingScreen_Free(struct GuiElem* elem) {
 	struct LoadingScreen* screen = (struct LoadingScreen*)elem;
 	Font_Free(&screen->Font);
-	LoadingScreen_ContextLost(screen);
+	Screen_CommonFree(elem);
 
-	Event_UnregisterReal(&WorldEvents_Loading,        screen, LoadingScreen_MapLoading);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, LoadingScreen_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, LoadingScreen_ContextRecreated);
+	Event_UnregisterReal(&WorldEvents_Loading, screen, LoadingScreen_MapLoading);
 }
 
-static void LoadingScreen_Make(struct LoadingScreen* screen, STRING_PURE String* title, STRING_PURE String* message) {
-	Font_Make(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
+struct ScreenVTABLE LoadingScreen_VTABLE = {
+	LoadingScreen_Init,      LoadingScreen_Render,  LoadingScreen_Free,      Gui_DefaultRecreate,
+	LoadingScreen_KeyDown,   LoadingScreen_KeyUp,   LoadingScreen_KeyPress,
+	LoadingScreen_MouseDown, LoadingScreen_MouseUp, LoadingScreen_MouseMove, LoadingScreen_MouseScroll,
+	LoadingScreen_OnResize,  LoadingScreen_ContextLost, LoadingScreen_ContextRecreated,
+};
+struct Screen* LoadingScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message) {
+	struct LoadingScreen* screen = &LoadingScreen_Instance;
+	screen->LastState = NULL;
+	screen->VTABLE    = &LoadingScreen_VTABLE;
 
 	String title_copy = String_FromArray(screen->__TitleBuffer);
 	String_AppendString(&title_copy, title);
@@ -604,19 +597,6 @@ static void LoadingScreen_Make(struct LoadingScreen* screen, STRING_PURE String*
 	screen->HandlesAllInput = true;
 	screen->BlocksWorld     = true;
 	screen->RenderHUDOver   = true;
-}
-
-struct ScreenVTABLE LoadingScreen_VTABLE = {
-	LoadingScreen_Init,      LoadingScreen_Render,  LoadingScreen_Free,      Gui_DefaultRecreate,
-	LoadingScreen_KeyDown,   LoadingScreen_KeyUp,   LoadingScreen_KeyPress,
-	LoadingScreen_MouseDown, LoadingScreen_MouseUp, LoadingScreen_MouseMove, LoadingScreen_MouseScroll,
-	LoadingScreen_OnResize,
-};
-struct Screen* LoadingScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message) {
-	struct LoadingScreen* screen = &LoadingScreen_Instance;
-	LoadingScreen_Make(screen, title, message);
-
-	screen->VTABLE = &LoadingScreen_VTABLE;
 	return (struct Screen*)screen;
 }
 struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen_Instance;
@@ -625,7 +605,6 @@ struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen_
 /*########################################################################################################################*
 *--------------------------------------------------GeneratingMapScreen----------------------------------------------------*
 *#########################################################################################################################*/
-struct GeneratingScreen GeneratingScreen_Instance;
 static void GeneratingScreen_Init(struct GuiElem* elem) {
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
@@ -665,35 +644,33 @@ static void GeneratingScreen_EndGeneration(void) {
 }
 
 static void GeneratingScreen_Render(struct GuiElem* elem, Real64 delta) {
-	struct GeneratingScreen* screen = (struct GeneratingScreen*)elem;
+	struct LoadingScreen* screen = (struct LoadingScreen*)elem;
 	LoadingScreen_Render(elem, delta);
 	if (Gen_Done) { GeneratingScreen_EndGeneration(); return; }
 
 	const volatile char* state = Gen_CurrentState;
-	screen->Base.Progress = Gen_CurrentProgress;
+	screen->Progress = Gen_CurrentProgress;
 	if (state == screen->LastState) return;
 
-	String message = screen->Base.MessageStr;
+	String message = screen->MessageStr;
 	message.length = 0;
 	String_AppendConst(&message, state);
-	LoadingScreen_SetMessage(&screen->Base);
+	LoadingScreen_SetMessage(screen);
 }
 
 struct ScreenVTABLE GeneratingScreen_VTABLE = {
 	GeneratingScreen_Init,   GeneratingScreen_Render, LoadingScreen_Free,      Gui_DefaultRecreate,
 	LoadingScreen_KeyDown,   LoadingScreen_KeyUp,     LoadingScreen_KeyPress,
 	LoadingScreen_MouseDown, LoadingScreen_MouseUp,   LoadingScreen_MouseMove, LoadingScreen_MouseScroll,
-	LoadingScreen_OnResize,
+	LoadingScreen_OnResize,  LoadingScreen_ContextLost, LoadingScreen_ContextRecreated,
 };
 struct Screen* GeneratingScreen_MakeInstance(void) {
-	struct GeneratingScreen* screen = &GeneratingScreen_Instance;
 	String title   = String_FromConst("Generating level");
 	String message = String_FromConst("Generating..");
-	LoadingScreen_Make(&screen->Base, &title, &message);
 
-	screen->LastState   = NULL;
-	screen->Base.VTABLE = &GeneratingScreen_VTABLE;
-	return (struct Screen*)screen;
+	struct Screen* screen = LoadingScreen_MakeInstance(&title, &message);
+	screen->VTABLE = &GeneratingScreen_VTABLE;
+	return screen;
 }
 
 
@@ -1098,19 +1075,17 @@ static void ChatScreen_Init(struct GuiElem* elem) {
 
 	Int32 fontSize = (Int32)(8 * Game_GetChatScale());
 	Math_Clamp(fontSize, 8, 60);
-	Font_Make(&screen->ChatFont, &Game_FontName, fontSize, FONT_STYLE_NORMAL);
-	Font_Make(&screen->ChatUrlFont, &Game_FontName, fontSize, FONT_STYLE_UNDERLINE);
+	Int32 announceSize = (Int32)(16 * Game_GetChatScale());
+	Math_Clamp(announceSize, 8, 60);
 
-	fontSize = (Int32)(16 * Game_GetChatScale());
-	Math_Clamp(fontSize, 8, 60);
-	Font_Make(&screen->AnnouncementFont, &Game_FontName, fontSize, FONT_STYLE_NORMAL);
-	ChatScreen_ContextRecreated(elem);
+	Font_Make(&screen->ChatFont,         &Game_FontName, fontSize,     FONT_STYLE_NORMAL);
+	Font_Make(&screen->ChatUrlFont,      &Game_FontName, fontSize,     FONT_STYLE_UNDERLINE);
+	Font_Make(&screen->AnnouncementFont, &Game_FontName, announceSize, FONT_STYLE_NORMAL);
+	Screen_CommonInit(elem);
 
 	Event_RegisterChat(&ChatEvents_ChatReceived,    screen, ChatScreen_ChatReceived);
 	Event_RegisterVoid(&ChatEvents_FontChanged,     screen, ChatScreen_FontChanged);
 	Event_RegisterInt(&ChatEvents_ColCodeChanged,   screen, ChatScreen_ColCodeChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, ChatScreen_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, ChatScreen_ContextRecreated);
 }
 
 static void ChatScreen_Render(struct GuiElem* elem, Real64 delta) {
@@ -1159,23 +1134,21 @@ static void ChatScreen_Render(struct GuiElem* elem, Real64 delta) {
 
 static void ChatScreen_Free(struct GuiElem* elem) {
 	struct ChatScreen* screen = (struct ChatScreen*)elem;
-	ChatScreen_ContextLost(elem);
 	Font_Free(&screen->ChatFont);
 	Font_Free(&screen->ChatUrlFont);
 	Font_Free(&screen->AnnouncementFont);
+	Screen_CommonFree(elem);
 
 	Event_UnregisterChat(&ChatEvents_ChatReceived,    screen, ChatScreen_ChatReceived);
 	Event_UnregisterVoid(&ChatEvents_FontChanged,     screen, ChatScreen_FontChanged);
 	Event_UnregisterInt(&ChatEvents_ColCodeChanged,   screen, ChatScreen_ColCodeChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, ChatScreen_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, ChatScreen_ContextRecreated);
 }
 
 struct ScreenVTABLE ChatScreen_VTABLE = {
 	ChatScreen_Init,      ChatScreen_Render, ChatScreen_Free,      Gui_DefaultRecreate,
 	ChatScreen_KeyDown,   ChatScreen_KeyUp,  ChatScreen_KeyPress,
 	ChatScreen_MouseDown, Gui_DefaultMouse,  Gui_DefaultMouseMove, ChatScreen_MouseScroll,
-	ChatScreen_OnResize,
+	ChatScreen_OnResize,  ChatScreen_ContextLost, ChatScreen_ContextRecreated,
 };
 struct Screen* ChatScreen_MakeInstance(void) {
 	struct ChatScreen* screen = &ChatScreen_Instance;
@@ -1226,7 +1199,6 @@ static void HUDScreen_ContextRecreated(void* obj) {
 	Elem_Init(&screen->PlayerList);
 	Widget_Reposition(&screen->PlayerList);
 }
-
 
 static void HUDScreen_OnResize(struct GuiElem* elem) {
 	struct HUDScreen* screen = (struct HUDScreen*)elem;
@@ -1301,15 +1273,13 @@ static void HUDScreen_Init(struct GuiElem* elem) {
 	UInt16 size = Drawer2D_UseBitmappedChat ? 16 : 11;
 	Font_Make(&screen->PlayerFont, &Game_FontName, size, FONT_STYLE_NORMAL);
 
-	HotbarWidget_Create(&screen->Hotbar);
-	Elem_Init(&screen->Hotbar);
-
 	ChatScreen_MakeInstance();
 	screen->Chat = (struct Screen*)&ChatScreen_Instance;
 	Elem_Init(screen->Chat);
 
-	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, HUDScreen_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, HUDScreen_ContextRecreated);
+	HotbarWidget_Create(&screen->Hotbar);
+	screen->WasShowingList = false;
+	Screen_CommonInit(elem);
 }
 
 static void HUDScreen_Render(struct GuiElem* elem, Real64 delta) {
@@ -1352,20 +1322,19 @@ static void HUDScreen_Free(struct GuiElem* elem) {
 	struct HUDScreen* screen = (struct HUDScreen*)elem;
 	Font_Free(&screen->PlayerFont);
 	Elem_TryFree(screen->Chat);
-	HUDScreen_ContextLost(screen);
 
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, HUDScreen_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, HUDScreen_ContextRecreated);
+	Screen_CommonFree(elem);
 }
 
 struct ScreenVTABLE HUDScreen_VTABLE = {
 	HUDScreen_Init,      HUDScreen_Render, HUDScreen_Free,       Gui_DefaultRecreate,
 	HUDScreen_KeyDown,   HUDScreen_KeyUp,  HUDScreen_KeyPress,
 	HUDScreen_MouseDown, Gui_DefaultMouse, Gui_DefaultMouseMove, HUDScreen_MouseScroll,
-	HUDScreen_OnResize,
+	HUDScreen_OnResize,  HUDScreen_ContextLost, HUDScreen_ContextRecreated,
 };
 struct Screen* HUDScreen_MakeInstance(void) {
 	struct HUDScreen* screen = &HUDScreen_Instance;
+	screen->WasShowingList = false;
 	screen->VTABLE = &HUDScreen_VTABLE;
 	return (struct Screen*)screen;
 }
@@ -1449,7 +1418,6 @@ static void DisconnectScreen_ContextLost(void* obj) {
 
 static void DisconnectScreen_ContextRecreated(void* obj) {
 	struct DisconnectScreen* screen = (struct DisconnectScreen*)obj;
-	if (Gfx_LostContext) return;
 	screen->ClearTime = DateTime_CurrentUTC_MS() + 500;
 
 	TextWidget_Create(&screen->Title, &screen->TitleStr, &screen->TitleFont);
@@ -1469,12 +1437,12 @@ static void DisconnectScreen_ContextRecreated(void* obj) {
 
 static void DisconnectScreen_Init(struct GuiElem* elem) {
 	struct DisconnectScreen* screen = (struct DisconnectScreen*)elem;
-	Game_SkipClear = true;
-	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, DisconnectScreen_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, DisconnectScreen_ContextRecreated);
+	Font_Make(&screen->TitleFont,   &Game_FontName, 16, FONT_STYLE_BOLD);
+	Font_Make(&screen->MessageFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	Screen_CommonInit(elem);
 
-	DisconnectScreen_ContextRecreated(screen);
-	screen->InitTime = DateTime_CurrentUTC_MS();
+	Game_SkipClear = true;
+	screen->InitTime     = DateTime_CurrentUTC_MS();
 	screen->LastSecsLeft = DISCONNECT_DELAY_MS / DATETIME_MILLIS_PER_SEC;
 }
 
@@ -1493,13 +1461,11 @@ static void DisconnectScreen_Render(struct GuiElem* elem, Real64 delta) {
 
 static void DisconnectScreen_Free(struct GuiElem* elem) {
 	struct DisconnectScreen* screen = (struct DisconnectScreen*)elem;
-	Game_SkipClear = false;
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, DisconnectScreen_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, DisconnectScreen_ContextRecreated);
-
-	DisconnectScreen_ContextLost(screen);
 	Font_Free(&screen->TitleFont);
 	Font_Free(&screen->MessageFont);
+	Screen_CommonFree(elem);
+
+	Game_SkipClear = false;
 }
 
 static void DisconnectScreen_OnResize(struct GuiElem* elem) {
@@ -1545,7 +1511,7 @@ struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_Init,      DisconnectScreen_Render,  DisconnectScreen_Free,      Gui_DefaultRecreate,
 	DisconnectScreen_KeyDown,   DisconnectScreen_KeyUp,   DisconnectScreen_KeyPress,
 	DisconnectScreen_MouseDown, DisconnectScreen_MouseUp, DisconnectScreen_MouseMove, DisconnectScreen_MouseScroll,
-	DisconnectScreen_OnResize,
+	DisconnectScreen_OnResize,  DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
 struct Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message) {
 	struct DisconnectScreen* screen = &DisconnectScreen_Instance;
@@ -1569,9 +1535,6 @@ struct Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_P
 	String ban  = String_FromConst("Banned ");
 	screen->CanReconnect = 
 		!(String_CaselessStarts(&why, &kick) || String_CaselessStarts(&why, &ban));
-
-	Font_Make(&screen->TitleFont,   &Game_FontName, 16, FONT_STYLE_BOLD);
-	Font_Make(&screen->MessageFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
 
 	screen->VTABLE = &DisconnectScreen_VTABLE;
 	return (struct Screen*)screen;

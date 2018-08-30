@@ -1,6 +1,6 @@
 #ifndef CC_EVENT_H
 #define CC_EVENT_H
-#include "Stream.h"
+#include "String.h"
 #include "Vectors.h"
 /* Helper method for managing events, and contains all events.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
@@ -8,6 +8,7 @@
 
 /* Maximum number of event handlers that can be registered. */
 #define EVENT_MAX_CALLBACKS 32
+struct Stream;
 
 typedef void (*Event_Void_Callback)(void* obj);
 struct Event_Void {

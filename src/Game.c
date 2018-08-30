@@ -35,6 +35,7 @@
 #include "Menus.h"
 #include "Audio.h"
 #include "DisplayDevice.h"
+#include "Stream.h"
 
 struct IGameComponent Game_Components[26];
 Int32 Game_ComponentsCount;

@@ -6,6 +6,7 @@
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Errors.h"
+#include "Stream.h"
 
 /*########################################################################################################################*
 *-------------------------------------------------------Ogg stream--------------------------------------------------------*
@@ -835,14 +836,14 @@ void imdct_init(struct imdct_state* state, Int32 n) {
 
 	/* setup twiddle factors */
 	for (k = 0, k2 = 0; k < n4; k++, k2 += 2) {
-		A[k2]   =  Math_Cos((4*k * PI) / n);
-		A[k2+1] = -Math_Sin((4*k * PI) / n);
-		B[k2]   =  Math_Cos(((k2+1) * PI) / (2*n));
-		B[k2+1] =  Math_Sin(((k2+1) * PI) / (2*n));
+		A[k2]   =  (Real32)Math_Cos((4*k * PI) / n);
+		A[k2+1] = -(Real32)Math_Sin((4*k * PI) / n);
+		B[k2]   =  (Real32)Math_Cos(((k2+1) * PI) / (2*n));
+		B[k2+1] =  (Real32)Math_Sin(((k2+1) * PI) / (2*n));
 	}
 	for (k = 0, k2 = 0; k < n8; k++, k2 += 2) {
-		C[k2]   =  Math_Cos(((k2+1) * (2*PI)) / n);
-		C[k2+1] = -Math_Sin(((k2+1) * (2*PI)) / n);
+		C[k2]   =  (Real32)Math_Cos(((k2+1) * (2*PI)) / n);
+		C[k2+1] = -(Real32)Math_Sin(((k2+1) * (2*PI)) / n);
 	}
 
 	UInt32* reversed = state->Reversed;

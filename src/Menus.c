@@ -50,7 +50,7 @@ struct ListScreen {
 };
 
 typedef void (*Menu_ContextFunc)(void* obj);
-#define MenuScreen_Layout MenuBase_Layout struct FontDesc TitleFont, TextFont; Menu_ContextFunc ContextLost, ContextRecreated;
+#define MenuScreen_Layout MenuBase_Layout struct FontDesc TitleFont, TextFont;
 struct MenuScreen { MenuScreen_Layout };
 
 struct PauseScreen {
@@ -134,18 +134,18 @@ struct TexIdsOverlay {
 struct UrlWarningOverlay {
 	MenuScreen_Layout
 	struct ButtonWidget Buttons[2];
-	struct TextWidget Labels[4];
-	char __UrlBuffer[STRING_SIZE * 4];
+	struct TextWidget   Labels[4];
 	String Url;
+	char __UrlBuffer[STRING_SIZE * 4];
 };
 
 struct ConfirmDenyOverlay {
 	MenuScreen_Layout
 	struct ButtonWidget Buttons[2];
-	struct TextWidget Labels[4];
+	struct TextWidget   Labels[4];
 	bool AlwaysDeny;
-	char __UrlBuffer[STRING_SIZE];
 	String Url;
+	char __UrlBuffer[STRING_SIZE];
 };
 
 struct TexPackOverlay {
@@ -153,8 +153,8 @@ struct TexPackOverlay {
 	struct ButtonWidget Buttons[4];
 	struct TextWidget Labels[4];
 	UInt32 ContentLength;
-	char __IdentifierBuffer[STRING_SIZE + 4];
 	String Identifier;
+	char __IdentifierBuffer[STRING_SIZE + 4];
 };
 
 
@@ -199,7 +199,8 @@ static void Menu_DefaultBack(void* elem, Int32 i, struct ButtonWidget* button, b
 	Menu_Button(elem, i, button, width, &msg, font, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
 }
 
-static void Menu_Free(struct MenuBase* elem) {
+static void Menu_ContextLost(void* obj) {
+	struct MenuBase* elem = (struct MenuBase*)obj;
 	struct Widget** widgets = elem->Widgets;
 	if (!widgets) return;
 
@@ -408,7 +409,6 @@ static void ListScreen_MoveForwards(struct GuiElem* elem, struct GuiElem* widget
 	ListScreen_PageClick(screen, true);
 }
 
-static void ListScreen_ContextLost(void* obj) { Menu_Free((struct MenuBase*)obj); }
 static void ListScreen_ContextRecreated(void* obj) {
 	struct ListScreen* screen = (struct ListScreen*)obj;
 	Int32 i;
@@ -469,13 +469,11 @@ static void ListScreen_Init(struct GuiElem* elem) {
 	struct ListScreen* screen = (struct ListScreen*)elem;
 	screen->Widgets = screen->ListWidgets;
 	screen->WidgetsCount = Array_Elems(screen->ListWidgets);
-
 	Font_Make(&screen->Font, &Game_FontName, 16, FONT_STYLE_BOLD);
+
 	Key_KeyRepeat = true;
 	screen->WheelAcc = 0.0f;
-	ListScreen_ContextRecreated(screen);
-	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, ListScreen_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, ListScreen_ContextRecreated);
+	Screen_CommonInit(elem);
 }
 
 static void ListScreen_Render(struct GuiElem* elem, Real64 delta) {
@@ -488,10 +486,9 @@ static void ListScreen_Render(struct GuiElem* elem, Real64 delta) {
 static void ListScreen_Free(struct GuiElem* elem) {
 	struct ListScreen* screen = (struct ListScreen*)elem;
 	Font_Free(&screen->Font);
+
 	Key_KeyRepeat = false;
-	ListScreen_ContextLost(screen);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, ListScreen_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, ListScreen_ContextRecreated);
+	Screen_CommonFree(elem);
 }
 
 static bool ListScreen_KeyDown(struct GuiElem* elem, Key key) {
@@ -531,7 +528,7 @@ struct ScreenVTABLE ListScreen_VTABLE = {
 	ListScreen_Init,      ListScreen_Render, ListScreen_Free,      Gui_DefaultRecreate,
 	ListScreen_KeyDown,   Gui_DefaultKey,    Gui_DefaultKeyPress,
 	ListScreen_MouseDown, Gui_DefaultMouse,  ListScreen_MouseMove, ListScreen_MouseScroll,
-	ListScreen_OnResize,
+	ListScreen_OnResize,  Menu_ContextLost,  ListScreen_ContextRecreated,
 };
 struct ListScreen* ListScreen_MakeInstance(void) {
 	struct ListScreen* screen = &ListScreen_Instance;
@@ -571,16 +568,6 @@ static bool MenuScreen_KeyDown(struct GuiElem* elem, Key key) {
 static bool MenuScreen_KeyPress(struct GuiElem* elem, UInt8 key) { return true; }
 static bool MenuScreen_KeyUp(struct GuiElem* elem, Key key) { return true; }
 
-static void MenuScreen_ContextLost(void* obj) { Menu_Free((struct MenuBase*)obj); }
-
-static void MenuScreen_ContextLost_Callback(void* obj) {
-	((struct MenuScreen*)obj)->ContextLost(obj);
-}
-
-static void MenuScreen_ContextRecreated_Callback(void* obj) {
-	((struct MenuScreen*)obj)->ContextRecreated(obj);
-}
-
 static void MenuScreen_Init(struct GuiElem* elem) {
 	struct MenuScreen* screen = (struct MenuScreen*)elem;
 
@@ -591,8 +578,7 @@ static void MenuScreen_Init(struct GuiElem* elem) {
 		Font_Make(&screen->TextFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	}
 
-	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, MenuScreen_ContextLost_Callback);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, MenuScreen_ContextRecreated_Callback);
+	Screen_CommonInit(elem);
 }
 
 static void MenuScreen_Render(struct GuiElem* elem, Real64 delta) {
@@ -604,36 +590,13 @@ static void MenuScreen_Render(struct GuiElem* elem, Real64 delta) {
 
 static void MenuScreen_Free(struct GuiElem* elem) {
 	struct MenuScreen* screen = (struct MenuScreen*)elem;
-	screen->ContextLost(screen);
+	if (screen->TitleFont.Handle) Font_Free(&screen->TitleFont);
+	if (screen->TextFont.Handle)  Font_Free(&screen->TextFont);
 
-	if (screen->TitleFont.Handle) {
-		Font_Free(&screen->TitleFont);
-	}
-	if (screen->TextFont.Handle) {
-		Font_Free(&screen->TextFont);
-	}
-
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, MenuScreen_ContextLost_Callback);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, MenuScreen_ContextRecreated_Callback);
+	Screen_CommonFree(elem);
 }
 
 static void MenuScreen_OnResize(struct GuiElem* elem) { Menu_Reposition((struct MenuBase*)elem); }
-
-struct ScreenVTABLE MenuScreen_VTABLE = {
-	MenuScreen_Init,      MenuScreen_Render,  MenuScreen_Free,      Gui_DefaultRecreate,
-	MenuScreen_KeyDown,   MenuScreen_KeyUp,   MenuScreen_KeyPress,
-	MenuScreen_MouseDown, MenuScreen_MouseUp, MenuScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize,
-};
-static void MenuScreen_MakeInstance(struct MenuScreen* screen, struct Widget** widgets, Int32 count, Menu_ContextFunc contextRecreated) {
-	screen->HandlesAllInput = true;
-	screen->Widgets         = widgets;
-	screen->WidgetsCount    = count;
-
-	screen->VTABLE = &MenuScreen_VTABLE;
-	screen->ContextLost      = MenuScreen_ContextLost;
-	screen->ContextRecreated = contextRecreated;
-}
 
 
 /*########################################################################################################################*
@@ -705,7 +668,6 @@ static void PauseScreen_Init(struct GuiElem* elem) {
 	struct PauseScreen* screen = (struct PauseScreen*)elem;
 	MenuScreen_Init(elem);
 	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, screen, PauseScreen_CheckHacksAllowed);
-	screen->ContextRecreated(elem);
 }
 
 static void PauseScreen_Free(struct GuiElem* elem) {
@@ -718,13 +680,15 @@ struct ScreenVTABLE PauseScreen_VTABLE = {
 	PauseScreen_Init,     MenuScreen_Render,  PauseScreen_Free,     Gui_DefaultRecreate,
 	MenuScreen_KeyDown,   MenuScreen_KeyUp,   MenuScreen_KeyPress,
 	MenuScreen_MouseDown, MenuScreen_MouseUp, MenuScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize,
+	MenuScreen_OnResize,  Menu_ContextLost,   PauseScreen_ContextRecreated,
 };
 struct Screen* PauseScreen_MakeInstance(void) {
 	static struct Widget* widgets[8];
 	struct PauseScreen* screen = &PauseScreen_Instance;
-	MenuScreen_MakeInstance((struct MenuScreen*)screen, widgets, 
-		Array_Elems(widgets), PauseScreen_ContextRecreated);
+
+	screen->HandlesAllInput = true;
+	screen->Widgets         = widgets;
+	screen->WidgetsCount    = Array_Elems(widgets);
 
 	screen->VTABLE = &PauseScreen_VTABLE;
 	return (struct Screen*)screen;
@@ -784,7 +748,6 @@ static void OptionsGroupScreen_Init(struct GuiElem* elem) {
 	struct OptionsGroupScreen* screen = (struct OptionsGroupScreen*)elem;
 	MenuScreen_Init(elem);
 	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, screen, OptionsGroupScreen_CheckHacksAllowed);
-	screen->ContextRecreated(elem);
 }
 
 static void OptionsGroupScreen_Free(struct GuiElem* elem) {
@@ -809,13 +772,15 @@ struct ScreenVTABLE OptionsGroupScreen_VTABLE = {
 	OptionsGroupScreen_Init, MenuScreen_Render,  OptionsGroupScreen_Free,      Gui_DefaultRecreate,
 	MenuScreen_KeyDown,      MenuScreen_KeyUp,   MenuScreen_KeyPress,
 	MenuScreen_MouseDown,    MenuScreen_MouseUp, OptionsGroupScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize,
+	MenuScreen_OnResize,     Menu_ContextLost,   OptionsGroupScreen_ContextRecreated,
 };
 struct Screen* OptionsGroupScreen_MakeInstance(void) {
 	static struct Widget* widgets[9];
 	struct OptionsGroupScreen* screen = &OptionsGroupScreen_Instance;
-	MenuScreen_MakeInstance((struct MenuScreen*)screen, widgets, 
-		Array_Elems(widgets), OptionsGroupScreen_ContextRecreated);
+	
+	screen->HandlesAllInput = true;
+	screen->Widgets         = widgets;
+	screen->WidgetsCount    = Array_Elems(widgets);
 
 	screen->VTABLE = &OptionsGroupScreen_VTABLE;
 	screen->SelectedI = -1;
@@ -928,7 +893,6 @@ static void EditHotkeyScreen_Init(struct GuiElem* elem) {
 	struct EditHotkeyScreen* screen = (struct EditHotkeyScreen*)elem;
 	MenuScreen_Init(elem);
 	Key_KeyRepeat = true;
-	screen->ContextRecreated(elem);
 }
 
 static void EditHotkeyScreen_Render(struct GuiElem* elem, Real64 delta) {
@@ -1008,16 +972,18 @@ static void EditHotkeyScreen_ContextRecreated(void* obj) {
 }
 
 struct ScreenVTABLE EditHotkeyScreen_VTABLE = {
-	EditHotkeyScreen_Init,    EditHotkeyScreen_Render, EditHotkeyScreen_Free,      Gui_DefaultRecreate,
+	EditHotkeyScreen_Init,    EditHotkeyScreen_Render, EditHotkeyScreen_Free,     Gui_DefaultRecreate,
 	EditHotkeyScreen_KeyDown, EditHotkeyScreen_KeyUp,  EditHotkeyScreen_KeyPress,
-	MenuScreen_MouseDown,     MenuScreen_MouseUp,      MenuScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize,
+	MenuScreen_MouseDown,     MenuScreen_MouseUp,      MenuScreen_MouseMove,      MenuScreen_MouseScroll,
+	MenuScreen_OnResize,      Menu_ContextLost,        EditHotkeyScreen_ContextRecreated,
 };
 struct Screen* EditHotkeyScreen_MakeInstance(struct HotkeyData original) {
 	static struct Widget* widgets[7];
 	struct EditHotkeyScreen* screen = &EditHotkeyScreen_Instance;
-	MenuScreen_MakeInstance((struct MenuScreen*)screen, widgets, 
-		Array_Elems(widgets), EditHotkeyScreen_ContextRecreated);
+
+	screen->HandlesAllInput = true;
+	screen->Widgets         = widgets;
+	screen->WidgetsCount    = Array_Elems(widgets);
 
 	screen->VTABLE    = &EditHotkeyScreen_VTABLE;
 	screen->SelectedI = -1;
@@ -1115,9 +1081,8 @@ static void GenLevelScreen_Label(struct GenLevelScreen* screen, Int32 i, Int32 x
 
 static void GenLevelScreen_Init(struct GuiElem* elem) {
 	struct GenLevelScreen* screen = (struct GenLevelScreen*)elem;
-	MenuScreen_Init(elem);
 	Key_KeyRepeat = true;
-	screen->ContextRecreated(elem);
+	MenuScreen_Init(elem);
 }
 
 static void GenLevelScreen_Free(struct GuiElem* elem) {
@@ -1178,13 +1143,15 @@ struct ScreenVTABLE GenLevelScreen_VTABLE = {
 	GenLevelScreen_Init,    MenuScreen_Render,    GenLevelScreen_Free,     Gui_DefaultRecreate,
 	GenLevelScreen_KeyDown, GenLevelScreen_KeyUp, GenLevelScreen_KeyPress,
 	MenuScreen_MouseDown,   MenuScreen_MouseUp,   MenuScreen_MouseMove,    MenuScreen_MouseScroll,
-	MenuScreen_OnResize,
+	MenuScreen_OnResize,    Menu_ContextLost,     GenLevelScreen_ContextRecreated,
 };
 struct Screen* GenLevelScreen_MakeInstance(void) {
 	static struct Widget* widgets[12];
 	struct GenLevelScreen* screen = &GenLevelScreen_Instance;
-	MenuScreen_MakeInstance((struct MenuScreen*)screen, widgets,
-		Array_Elems(widgets), GenLevelScreen_ContextRecreated);
+
+	screen->HandlesAllInput = true;
+	screen->Widgets         = widgets;
+	screen->WidgetsCount    = Array_Elems(widgets);
 
 	screen->VTABLE = &GenLevelScreen_VTABLE;
 	return (struct Screen*)screen;
@@ -1215,7 +1182,6 @@ static void ClassicGenScreen_Make(struct ClassicGenScreen* screen, Int32 i, Int3
 static void ClassicGenScreen_Init(struct GuiElem* elem) {
 	struct ClassicGenScreen* screen = (struct ClassicGenScreen*)elem;
 	MenuScreen_Init(elem);
-	screen->ContextRecreated(elem);
 }
 
 static void ClassicGenScreen_ContextRecreated(void* obj) {
@@ -1231,13 +1197,15 @@ struct ScreenVTABLE ClassicGenScreen_VTABLE = {
 	ClassicGenScreen_Init, MenuScreen_Render,  MenuScreen_Free,      Gui_DefaultRecreate,
 	MenuScreen_KeyDown,    MenuScreen_KeyUp,   MenuScreen_KeyPress,
 	MenuScreen_MouseDown,  MenuScreen_MouseUp, MenuScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize,
+	MenuScreen_OnResize,   Menu_ContextLost,   ClassicGenScreen_ContextRecreated,
 };
 struct Screen* ClassicGenScreen_MakeInstance(void) {
 	static struct Widget* widgets[4];
 	struct ClassicGenScreen* screen = &ClassicGenScreen_Instance;
-	MenuScreen_MakeInstance((struct MenuScreen*)screen, widgets, 
-		Array_Elems(widgets), ClassicGenScreen_ContextRecreated);
+
+	screen->HandlesAllInput = true;
+	screen->Widgets         = widgets;
+	screen->WidgetsCount    = Array_Elems(widgets);
 
 	screen->VTABLE = &ClassicGenScreen_VTABLE;
 	return (struct Screen*)screen;
@@ -1310,9 +1278,8 @@ static void SaveLevelScreen_Init(struct GuiElem* elem) {
 	String str = String_FromArray(screen->__TextPathBuffer);
 	screen->TextPath = str;
 
-	MenuScreen_Init(elem);
 	Key_KeyRepeat = true;
-	screen->ContextRecreated(elem);
+	MenuScreen_Init(elem);
 }
 
 static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* screen) {
@@ -1416,13 +1383,15 @@ struct ScreenVTABLE SaveLevelScreen_VTABLE = {
 	SaveLevelScreen_Init,    SaveLevelScreen_Render, SaveLevelScreen_Free,     Gui_DefaultRecreate,
 	SaveLevelScreen_KeyDown, SaveLevelScreen_KeyUp,  SaveLevelScreen_KeyPress,
 	MenuScreen_MouseDown,    MenuScreen_MouseUp,     MenuScreen_MouseMove,     MenuScreen_MouseScroll,
-	MenuScreen_OnResize,
+	MenuScreen_OnResize,     Menu_ContextLost,       SaveLevelScreen_ContextRecreated,
 };
 struct Screen* SaveLevelScreen_MakeInstance(void) {
 	static struct Widget* widgets[6];
 	struct SaveLevelScreen* screen = &SaveLevelScreen_Instance;
-	MenuScreen_MakeInstance((struct MenuScreen*)screen, widgets, 
-		Array_Elems(widgets), SaveLevelScreen_ContextRecreated);
+	
+	screen->HandlesAllInput = true;
+	screen->Widgets         = widgets;
+	screen->WidgetsCount    = Array_Elems(widgets);
 
 	screen->VTABLE = &SaveLevelScreen_VTABLE;
 	return (struct Screen*)screen;
@@ -1507,7 +1476,7 @@ struct ScreenVTABLE FontListScreen_VTABLE = {
 	FontListScreen_Init,  ListScreen_Render, ListScreen_Free,      Gui_DefaultRecreate,
 	ListScreen_KeyDown,   Gui_DefaultKey,    Gui_DefaultKeyPress,
 	ListScreen_MouseDown, Gui_DefaultMouse,  ListScreen_MouseMove, ListScreen_MouseScroll,
-	MenuScreen_OnResize,
+	MenuScreen_OnResize,  Menu_ContextLost,  ListScreen_ContextRecreated,
 };
 struct Screen* FontListScreen_MakeInstance(void) {
 	struct ListScreen* screen = ListScreen_MakeInstance();
@@ -1752,7 +1721,6 @@ static Int32 KeyBindingsScreen_MakeWidgets(struct KeyBindingsScreen* screen, Int
 static void KeyBindingsScreen_Init(struct GuiElem* elem) {
 	struct KeyBindingsScreen* screen = (struct KeyBindingsScreen*)elem;
 	MenuScreen_Init(elem);
-	screen->ContextRecreated(elem);
 }
 
 static bool KeyBindingsScreen_KeyDown(struct GuiElem* elem, Key key) {
@@ -1794,12 +1762,16 @@ struct ScreenVTABLE KeyBindingsScreen_VTABLE = {
 	KeyBindingsScreen_Init,      MenuScreen_Render,  MenuScreen_Free,      Gui_DefaultRecreate,
 	KeyBindingsScreen_KeyDown,   MenuScreen_KeyUp,   MenuScreen_KeyPress,
 	KeyBindingsScreen_MouseDown, MenuScreen_MouseUp, MenuScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize,
+	MenuScreen_OnResize,         Menu_ContextLost, NULL,
 };
 static struct KeyBindingsScreen* KeyBindingsScreen_Make(Int32 bindsCount, UInt8* binds, const char** descs, struct ButtonWidget* buttons, struct Widget** widgets, Menu_ContextFunc contextRecreated) {
 	struct KeyBindingsScreen* screen = &KeyBindingsScreen_Instance;
-	MenuScreen_MakeInstance((struct MenuScreen*)screen, widgets, bindsCount + 4, contextRecreated);
+	screen->HandlesAllInput = true;
+	screen->Widgets         = widgets;
+	screen->WidgetsCount    = bindsCount + 4;
+
 	screen->VTABLE = &KeyBindingsScreen_VTABLE;
+	screen->VTABLE->ContextRecreated = contextRecreated;
 
 	screen->BindsCount       = bindsCount;
 	screen->Binds            = binds;
@@ -2041,10 +2013,9 @@ static void MenuOptionsScreen_EnterInput(struct MenuOptionsScreen* screen) {
 
 static void MenuOptionsScreen_Init(struct GuiElem* elem) {
 	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)elem;
-	MenuScreen_Init(elem);
 	Key_KeyRepeat = true;
+	MenuScreen_Init(elem);
 	screen->SelectedI = -1;
-	screen->ContextRecreated(elem);
 }
 	
 static void MenuOptionsScreen_Render(struct GuiElem* elem, Real64 delta) {
@@ -2064,8 +2035,8 @@ static void MenuOptionsScreen_Render(struct GuiElem* elem, Real64 delta) {
 }
 
 static void MenuOptionsScreen_Free(struct GuiElem* elem) {
-	MenuScreen_Free(elem);
 	Key_KeyRepeat = false;
+	MenuScreen_Free(elem);
 }
 
 static void MenuOptionsScreen_OnResize(struct GuiElem* elem) {
@@ -2077,7 +2048,7 @@ static void MenuOptionsScreen_OnResize(struct GuiElem* elem) {
 
 static void MenuOptionsScreen_ContextLost(void* obj) {
 	struct MenuOptionsScreen* screen = (struct MenuOptionsScreen*)obj;
-	MenuScreen_ContextLost(obj);
+	Menu_ContextLost(obj);
 	screen->ActiveI = -1;
 	MenuOptionsScreen_FreeExtHelp(screen);
 }
@@ -2207,15 +2178,18 @@ struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
 	MenuOptionsScreen_Init,    MenuOptionsScreen_Render, MenuOptionsScreen_Free,      Gui_DefaultRecreate,
 	MenuOptionsScreen_KeyDown, MenuOptionsScreen_KeyUp,  MenuOptionsScreen_KeyPress,
 	MenuScreen_MouseDown,      MenuScreen_MouseUp,       MenuOptionsScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize,
+	MenuScreen_OnResize, MenuOptionsScreen_ContextLost, NULL,
 };
 struct Screen* MenuOptionsScreen_MakeInstance(struct Widget** widgets, Int32 count, struct ButtonWidget* buttons, Menu_ContextFunc contextRecreated,
 	struct MenuInputValidator* validators, const char** defaultValues, const char** descriptions, Int32 descsCount) {
 	struct MenuOptionsScreen* screen = &MenuOptionsScreen_Instance;
-	MenuScreen_MakeInstance((struct MenuScreen*)screen, widgets, count, contextRecreated);
+	screen->HandlesAllInput = true;
+	screen->Widgets         = widgets;
+	screen->WidgetsCount    = count;
 
-	screen->VTABLE       = &MenuOptionsScreen_VTABLE;
-	screen->ContextLost  = MenuOptionsScreen_ContextLost;
+	screen->VTABLE = &MenuOptionsScreen_VTABLE;
+	screen->VTABLE->ContextLost = MenuOptionsScreen_ContextLost;
+	screen->VTABLE->ContextRecreated = contextRecreated;
 
 	screen->Buttons           = buttons;
 	screen->Validators        = validators;
@@ -2786,7 +2760,7 @@ struct Screen* HacksSettingsScreen_MakeInstance(void) {
 
 	struct Screen* screen = MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
 		HacksSettingsScreen_ContextRecreated, validators, defaultValues, descs, Array_Elems(buttons));
-	((struct MenuOptionsScreen*)screen)->ContextLost = HacksSettingsScreen_ContextLost;
+	((struct MenuOptionsScreen*)screen)->VTABLE->ContextLost = HacksSettingsScreen_ContextLost;
 	return screen;
 }
 
@@ -2957,13 +2931,6 @@ struct Screen* NostalgiaScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Overlay---------------------------------------------------------*
 *#########################################################################################################################*/
-static void Overlay_Init(struct GuiElem* elem) {
-	MenuScreen_Init(elem);
-	if (Gfx_LostContext) return;
-	struct MenuScreen* screen = (struct MenuScreen*)elem;
-	screen->ContextRecreated(elem);
-}
-
 static bool Overlay_KeyDown(struct GuiElem* elem, Key key) { return true; }
 
 static void Overlay_MakeLabels(struct MenuScreen* screen, struct TextWidget* labels, STRING_PURE String* lines) {
@@ -2980,12 +2947,34 @@ static void Overlay_MakeLabels(struct MenuScreen* screen, struct TextWidget* lab
 		labels[i].Col = col;
 	}
 }
-struct ScreenVTABLE Overlay_VTABLE = {
-	Overlay_Init,         MenuScreen_Render,  MenuScreen_Free,      Gui_DefaultRecreate,
-	Overlay_KeyDown,      MenuScreen_KeyUp,   MenuScreen_KeyPress,
-	MenuScreen_MouseDown, MenuScreen_MouseUp, MenuScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize,
-};
+
+#define WarningOverlay_MakeLeft(buttonI, widgetI, titleText, yPos) \
+	Menu_Button(screen, widgetI, &buttons[buttonI], 160, titleText, &screen->TitleFont, yesClick,\
+		ANCHOR_CENTRE, ANCHOR_CENTRE, -110, yPos);
+
+#define WarningOverlay_MakeRight(buttonI, widgetI, titleText, yPos) \
+	Menu_Button(screen, widgetI, &buttons[buttonI], 160, titleText, &screen->TitleFont, noClick,\
+		ANCHOR_CENTRE, ANCHOR_CENTRE, 110, yPos);
+
+static void WarningOverlay_MakeButtons(struct MenuScreen* screen, struct ButtonWidget* buttons, bool always, 
+	Widget_LeftClick yesClick, Widget_LeftClick noClick) {
+
+	String yes = String_FromConst("Yes"); 
+	WarningOverlay_MakeLeft(0, 4, &yes, 30);
+	String no = String_FromConst("No"); 
+	WarningOverlay_MakeRight(1, 5, &no, 30);
+
+	if (!always) return;
+
+	String alwaysYes = String_FromConst("Always yes"); 
+	WarningOverlay_MakeLeft(2, 6, &alwaysYes, 85);
+	String alwaysNo = String_FromConst("Always no");  
+	WarningOverlay_MakeRight(3, 7, &alwaysNo, 85);
+}
+
+bool WarningOverlay_IsAlways(struct GuiElem* screen, struct Widget* w) {
+	return Menu_Index((struct MenuBase*)screen, w) >= 6;
+}
 
 
 /*########################################################################################################################*
@@ -2995,7 +2984,7 @@ struct ScreenVTABLE Overlay_VTABLE = {
 struct TexIdsOverlay TexIdsOverlay_Instance;
 static void TexIdsOverlay_ContextLost(void* obj) {
 	struct TexIdsOverlay* screen = (struct TexIdsOverlay*)obj;
-	MenuScreen_ContextLost(obj);
+	Menu_ContextLost(obj);
 	Gfx_DeleteVb(&screen->DynamicVb);
 	TextAtlas_Free(&screen->IdAtlas);
 }
@@ -3077,7 +3066,7 @@ static void TexIdsOverlay_RenderTextOverlay(struct TexIdsOverlay* screen) {
 static void TexIdsOverlay_Init(struct GuiElem* elem) {
 	struct MenuScreen* screen = (struct MenuScreen*)elem;
 	Font_Make(&screen->TextFont, &Game_FontName, 8, FONT_STYLE_NORMAL);
-	Overlay_Init(elem);
+	MenuScreen_Init(elem);
 }
 
 static void TexIdsOverlay_Render(struct GuiElem* elem, Real64 delta) {
@@ -3125,49 +3114,18 @@ struct ScreenVTABLE TexIdsOverlay_VTABLE = {
 	TexIdsOverlay_Init,    TexIdsOverlay_Render, MenuScreen_Free,       Gui_DefaultRecreate,
 	TexIdsOverlay_KeyDown, TexIdsOverlay_KeyUp,  TexIdsOverlay_KeyPress,
 	MenuScreen_MouseDown,  MenuScreen_MouseUp,   MenuScreen_MouseMove,  MenuScreen_MouseScroll,
-	MenuScreen_OnResize,
+	MenuScreen_OnResize,   TexIdsOverlay_ContextLost, TexIdsOverlay_ContextRecreated,
 };
 struct Screen* TexIdsOverlay_MakeInstance(void) {
 	static struct Widget* widgets[1];
 	struct TexIdsOverlay* screen = &TexIdsOverlay_Instance;
-	MenuScreen_MakeInstance((struct MenuScreen*)screen, widgets,
-		Array_Elems(widgets), TexIdsOverlay_ContextRecreated);
+	
+	screen->HandlesAllInput = true;
+	screen->Widgets         = widgets;
+	screen->WidgetsCount    = Array_Elems(widgets);
 
-	screen->ContextLost = TexIdsOverlay_ContextLost;
 	screen->VTABLE = &TexIdsOverlay_VTABLE;
 	return (struct Screen*)screen;
-}
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------WarningOverlay------------------------------------------------------*
-*#########################################################################################################################*/
-#define WarningOverlay_MakeLeft(buttonI, widgetI, titleText, yPos) \
-	Menu_Button(screen, widgetI, &buttons[buttonI], 160, titleText, &screen->TitleFont, yesClick,\
-		ANCHOR_CENTRE, ANCHOR_CENTRE, -110, yPos);
-
-#define WarningOverlay_MakeRight(buttonI, widgetI, titleText, yPos) \
-	Menu_Button(screen, widgetI, &buttons[buttonI], 160, titleText, &screen->TitleFont, noClick,\
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 110, yPos);
-
-static void WarningOverlay_MakeButtons(struct MenuScreen* screen, struct ButtonWidget* buttons, bool always, 
-	Widget_LeftClick yesClick, Widget_LeftClick noClick) {
-
-	String yes = String_FromConst("Yes"); 
-	WarningOverlay_MakeLeft(0, 4, &yes, 30);
-	String no = String_FromConst("No"); 
-	WarningOverlay_MakeRight(1, 5, &no, 30);
-
-	if (!always) return;
-
-	String alwaysYes = String_FromConst("Always yes"); 
-	WarningOverlay_MakeLeft(2, 6, &alwaysYes, 85);
-	String alwaysNo = String_FromConst("Always no");  
-	WarningOverlay_MakeRight(3, 7, &alwaysNo, 85);
-}
-
-bool WarningOverlay_IsAlways(struct GuiElem* screen, struct Widget* w) {
-	return Menu_Index((struct MenuBase*)screen, w) >= 6;
 }
 
 
@@ -3202,17 +3160,25 @@ static void UrlWarningOverlay_ContextRecreated(void* obj) {
 		UrlWarningOverlay_OpenUrl, UrlWarningOverlay_AppendUrl);
 }
 
+struct ScreenVTABLE UrlWarningOverlay_VTABLE = {
+	MenuScreen_Init,      MenuScreen_Render,  MenuScreen_Free,      Gui_DefaultRecreate,
+	Overlay_KeyDown,      MenuScreen_KeyUp,   MenuScreen_KeyPress,
+	MenuScreen_MouseDown, MenuScreen_MouseUp, MenuScreen_MouseMove, MenuScreen_MouseScroll,
+	MenuScreen_OnResize,  Menu_ContextLost,   UrlWarningOverlay_ContextRecreated,
+};
 struct Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) {
 	static struct Widget* widgets[6];
 	struct UrlWarningOverlay* screen = &UrlWarningOverlay_Instance;
-	MenuScreen_MakeInstance((struct MenuScreen*)screen, widgets,
-		Array_Elems(widgets), UrlWarningOverlay_ContextRecreated);
+
+	screen->HandlesAllInput = true;
+	screen->Widgets         = widgets;
+	screen->WidgetsCount    = Array_Elems(widgets);
 
 	String dstUrl = String_FromArray(screen->__UrlBuffer);
 	String_Copy(&dstUrl, url);
 	screen->Url = dstUrl;
 
-	screen->VTABLE = &Overlay_VTABLE;
+	screen->VTABLE = &UrlWarningOverlay_VTABLE;
 	return (struct Screen*)screen;
 }
 
@@ -3259,18 +3225,26 @@ static void ConfirmDenyOverlay_ContextRecreated(void* obj) {
 	WarningOverlay_MakeRight(1, 5, &goBack, 30);
 }
 
+struct ScreenVTABLE ConfirmDenyOverlay_VTABLE = {
+	MenuScreen_Init,      MenuScreen_Render,  MenuScreen_Free,      Gui_DefaultRecreate,
+	Overlay_KeyDown,      MenuScreen_KeyUp,   MenuScreen_KeyPress,
+	MenuScreen_MouseDown, MenuScreen_MouseUp, MenuScreen_MouseMove, MenuScreen_MouseScroll,
+	MenuScreen_OnResize,  Menu_ContextLost,   ConfirmDenyOverlay_ContextRecreated,
+};
 struct Screen* ConfirmDenyOverlay_MakeInstance(STRING_PURE String* url, bool alwaysDeny) {
 	static struct Widget* widgets[6];
 	struct ConfirmDenyOverlay* screen = &ConfirmDenyOverlay_Instance;
-	MenuScreen_MakeInstance((struct MenuScreen*)screen, widgets,
-		Array_Elems(widgets), ConfirmDenyOverlay_ContextRecreated);
+	
+	screen->HandlesAllInput = true;
+	screen->Widgets         = widgets;
+	screen->WidgetsCount    = Array_Elems(widgets);
 
 	String dstUrl = String_FromArray(screen->__UrlBuffer);
 	String_Copy(&dstUrl, url);
 	screen->Url = dstUrl;
 	screen->AlwaysDeny = alwaysDeny;
 
-	screen->VTABLE = &Overlay_VTABLE;
+	screen->VTABLE = &ConfirmDenyOverlay_VTABLE;
 	return (struct Screen*)screen;
 }
 
@@ -3313,9 +3287,7 @@ static void TexPackOverlay_Render(struct GuiElem* elem, Real64 delta) {
 
 	screen->ContentLength = item.ResultSize;
 	if (!screen->ContentLength) return;
-
-	screen->ContextLost(elem);
-	screen->ContextRecreated(elem);
+	Elem_Recreate(elem);
 }
 
 static void TexPackOverlay_ContextRecreated(void* obj) {
@@ -3355,10 +3327,10 @@ static void TexPackOverlay_ContextRecreated(void* obj) {
 }
 
 struct ScreenVTABLE TexPackOverlay_VTABLE = {
-	Overlay_Init,         TexPackOverlay_Render, MenuScreen_Free,      Gui_DefaultRecreate,
+	MenuScreen_Init,      TexPackOverlay_Render, MenuScreen_Free,      Gui_DefaultRecreate,
 	Overlay_KeyDown,      MenuScreen_KeyUp,      MenuScreen_KeyPress,
 	MenuScreen_MouseDown, MenuScreen_MouseUp,    MenuScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuScreen_OnResize,
+	MenuScreen_OnResize,  Menu_ContextLost,      TexPackOverlay_ContextRecreated,
 };
 struct Screen* TexPackOverlay_MakeInstance(STRING_PURE String* url) {
 	/* If we are showing a texture pack overlay, completely free that overlay */
@@ -3371,8 +3343,10 @@ struct Screen* TexPackOverlay_MakeInstance(STRING_PURE String* url) {
 
 	static struct Widget* widgets[8];
 	struct TexPackOverlay* screen = &TexPackOverlay_Instance;
-	MenuScreen_MakeInstance((struct MenuScreen*)screen, widgets,
-		Array_Elems(widgets), TexPackOverlay_ContextRecreated);
+
+	screen->HandlesAllInput = true;
+	screen->Widgets         = widgets;
+	screen->WidgetsCount    = Array_Elems(widgets);
 
 	String identifier = String_FromArray(screen->__IdentifierBuffer);
 	String_Format1(&identifier, "CL_%s", url);

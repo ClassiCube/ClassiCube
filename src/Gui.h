@@ -2,6 +2,7 @@
 #define CC_GUI_H
 #include "Input.h"
 #include "GraphicsCommon.h"
+#include "Event.h"
 /* Describes and manages 2D GUI elements on screen.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -38,9 +39,11 @@ bool Gui_DefaultMouseMove(struct GuiElem* elem, Int32 x, Int32 y);
 bool Gui_DefaultMouseScroll(struct GuiElem* elem, Real32 delta);
 
 
-struct ScreenVTABLE { 
+struct ScreenVTABLE {
 	GuiElemVTABLE_Layout
 	void (*OnResize)(struct GuiElem* elem);
+	Event_Void_Callback ContextLost;
+	Event_Void_Callback ContextRecreated;
 };
 #define Screen_Layout struct ScreenVTABLE* VTABLE; \
 	bool HandlesAllInput; /* Whether this screen handles all input. Prevents user interacting with the world */ \
@@ -50,6 +53,8 @@ struct ScreenVTABLE {
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Layout };
+void Screen_CommonInit(struct GuiElem* elem);
+void Screen_CommonFree(struct GuiElem* elem);
 
 
 typedef void (*Widget_LeftClick)(struct GuiElem* screenElem, struct GuiElem* widget);

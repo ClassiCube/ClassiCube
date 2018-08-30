@@ -75,22 +75,26 @@ void Vector3_TransformY(Vector3* result, Real32 y, struct Matrix*  mat) {
 }
 
 Vector3 Vector3_RotateX(Vector3 v, Real32 angle) {
-	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
+	Real32 cosA = (Real32)Math_Cos(angle);
+	Real32 sinA = (Real32)Math_Sin(angle);
 	return Vector3_Create3(v.X, cosA * v.Y + sinA * v.Z, -sinA * v.Y + cosA * v.Z);
 }
 
 Vector3 Vector3_RotateY(Vector3 v, Real32 angle) {
-	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
+	Real32 cosA = (Real32)Math_Cos(angle);
+	Real32 sinA = (Real32)Math_Sin(angle);
 	return Vector3_Create3(cosA * v.X - sinA * v.Z, v.Y, sinA * v.X + cosA * v.Z);
 }
 
 Vector3 Vector3_RotateY3(Real32 x, Real32 y, Real32 z, Real32 angle) {
-	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
+	Real32 cosA = (Real32)Math_Cos(angle);
+	Real32 sinA = (Real32)Math_Sin(angle);
 	return Vector3_Create3(cosA * x - sinA * z, y, sinA * x + cosA * z);
 }
 
 Vector3 Vector3_RotateZ(Vector3 v, Real32 angle) {
-	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
+	Real32 cosA = (Real32)Math_Cos(angle);
+	Real32 sinA = (Real32)Math_Sin(angle);
 	return Vector3_Create3(cosA * v.X + sinA * v.Y, -sinA * v.X + cosA * v.Y, v.Z);
 }
 
@@ -144,22 +148,28 @@ struct Matrix Matrix_Identity = {
 /* Transposed, source https://open.gl/transformations */
 
 void Matrix_RotateX(struct Matrix*  result, Real32 angle) {
-	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
+	Real32 cosA = (Real32)Math_Cos(angle);
+	Real32 sinA = (Real32)Math_Sin(angle);
 	*result = Matrix_Identity;
+
 	result->Row1.Y = cosA;  result->Row1.Z = sinA;
 	result->Row2.Y = -sinA; result->Row2.Z = cosA;
 }
 
 void Matrix_RotateY(struct Matrix*  result, Real32 angle) {
-	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
+	Real32 cosA = (Real32)Math_Cos(angle);
+	Real32 sinA = (Real32)Math_Sin(angle);
 	*result = Matrix_Identity;
+
 	result->Row0.X = cosA; result->Row0.Z = -sinA;
 	result->Row2.X = sinA; result->Row2.Z = cosA;
 }
 
 void Matrix_RotateZ(struct Matrix*  result, Real32 angle) {
-	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
+	Real32 cosA = (Real32)Math_Cos(angle);
+	Real32 sinA = (Real32)Math_Sin(angle);
 	*result = Matrix_Identity;
+
 	result->Row0.X = cosA;  result->Row0.Y = sinA;
 	result->Row1.X = -sinA; result->Row1.Y = cosA;
 }

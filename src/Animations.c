@@ -10,6 +10,7 @@
 #include "Options.h"
 #include "ErrorHandler.h"
 #include "Errors.h"
+#include "Stream.h"
 #define LIQUID_ANIM_MAX 64
 
 /*########################################################################################################################*
