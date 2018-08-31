@@ -35,10 +35,10 @@ void Platform_Exit(ReturnCode code);
 STRING_PURE String Platform_GetCommandLineArgs(void);
 ReturnCode Platform_StartShell(STRING_PURE String* args);
 
-FUNC_ATTRIB(noinline) void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const char* place);
-FUNC_ATTRIB(noinline) void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const char* place);
-FUNC_ATTRIB(noinline) void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const char* place);
-FUNC_ATTRIB(noinline) void  Mem_Free(void* mem);
+FUNC_NOINLINE void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const char* place);
+FUNC_NOINLINE void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const char* place);
+FUNC_NOINLINE void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const char* place);
+FUNC_NOINLINE void  Mem_Free(void* mem);
 void Mem_Set(void* dst, UInt8 value, UInt32 numBytes);
 void Mem_Copy(void* dst, void* src, UInt32 numBytes);
 
@@ -123,7 +123,6 @@ void Audio_Init(AudioHandle* handle, Int32 buffers);
 void Audio_Free(AudioHandle handle);
 struct AudioFormat* Audio_GetFormat(AudioHandle handle);
 void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format);
-void Audio_SetVolume(AudioHandle handle, Real32 volume);
 void Audio_BufferData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize);
 void Audio_Play(AudioHandle handle);
 bool Audio_IsCompleted(AudioHandle handle, Int32 idx);

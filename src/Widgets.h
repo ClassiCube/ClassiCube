@@ -16,9 +16,9 @@ struct TextWidget {
 	bool ReducePadding;
 	PackedCol Col;
 };
-void TextWidget_Make(struct TextWidget* widget);
-void TextWidget_Create(struct TextWidget* widget, STRING_PURE String* text, struct FontDesc* font);
-void TextWidget_Set(struct TextWidget* widget, STRING_PURE String* text, struct FontDesc* font);
+void TextWidget_Make(struct TextWidget* w);
+void TextWidget_Create(struct TextWidget* w, STRING_PURE String* text, struct FontDesc* font);
+void TextWidget_Set(struct TextWidget* w, STRING_PURE String* text, struct FontDesc* font);
 
 
 typedef void (*Button_Get)(STRING_TRANSIENT String* raw);
@@ -32,8 +32,8 @@ struct ButtonWidget {
 	Button_Get GetValue;
 	Button_Set SetValue;
 };
-void ButtonWidget_Create(struct ButtonWidget* widget, Int32 minWidth, STRING_PURE String* text, struct FontDesc* font, Widget_LeftClick onClick);
-void ButtonWidget_Set(struct ButtonWidget* widget, STRING_PURE String* text, struct FontDesc* font);
+void ButtonWidget_Create(struct ButtonWidget* w, Int32 minWidth, STRING_PURE String* text, struct FontDesc* font, Widget_LeftClick onClick);
+void ButtonWidget_Set(struct ButtonWidget* w, STRING_PURE String* text, struct FontDesc* font);
 
 
 struct ScrollbarWidget {
@@ -43,7 +43,7 @@ struct ScrollbarWidget {
 	Int32 MouseOffset;
 	bool DraggingMouse;
 };
-void ScrollbarWidget_Create(struct ScrollbarWidget* widget);
+void ScrollbarWidget_Create(struct ScrollbarWidget* w);
 
 
 struct HotbarWidget {
@@ -54,7 +54,7 @@ struct HotbarWidget {
 	Real32 ScrollAcc;
 	bool AltHandled;
 };
-void HotbarWidget_Create(struct HotbarWidget* widget);
+void HotbarWidget_Create(struct HotbarWidget* w);
 
 
 struct TableWidget {
@@ -73,10 +73,10 @@ struct TableWidget {
 	Int32 LastX, LastY;
 };
 
-void TableWidget_Create(struct TableWidget* widget);
-void TableWidget_SetBlockTo(struct TableWidget* widget, BlockID block);
-void TableWidget_OnInventoryChanged(struct TableWidget* widget);
-void TableWidget_MakeDescTex(struct TableWidget* widget, BlockID block);
+void TableWidget_Create(struct TableWidget* w);
+void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block);
+void TableWidget_OnInventoryChanged(struct TableWidget* w);
+void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block);
 
 
 #define INPUTWIDGET_MAX_LINES 3
@@ -107,22 +107,25 @@ struct InputWidget {
 	Real64 CaretAccumulator;
 };
 
-void InputWidget_Create(struct InputWidget* widget, struct FontDesc* font, STRING_REF String* prefix);
+void InputWidget_Create(struct InputWidget* w, struct FontDesc* font, STRING_REF String* prefix);
 /* Clears all the characters from the text buffer. Deletes the native texture. */
-void InputWidget_Clear(struct InputWidget* widget);
+void InputWidget_Clear(struct InputWidget* w);
 /* Appends a sequence of characters to current text buffer. May recreate the native texture. */
-void InputWidget_AppendString(struct InputWidget* widget, STRING_PURE String* text);
+void InputWidget_AppendString(struct InputWidget* w, STRING_PURE String* text);
 /* Appends a single character to current text buffer. May recreate the native texture. */
-void InputWidget_Append(struct InputWidget* widget, char c);
+void InputWidget_Append(struct InputWidget* w, char c);
 
 
 struct MenuInputValidator;
-struct MenuInputValidator {
-	void (*GetRange)(struct MenuInputValidator* validator, STRING_TRANSIENT String* range);
-	bool (*IsValidChar)(struct MenuInputValidator* validator, char c);
-	bool (*IsValidString)(struct MenuInputValidator* validator, STRING_PURE String* s);
-	bool (*IsValidValue)(struct MenuInputValidator* validator, STRING_PURE String* s);
+struct MenuInputValidatorVTABLE {
+	void (*GetRange)(struct MenuInputValidator*      v, STRING_TRANSIENT String* range);
+	bool (*IsValidChar)(struct MenuInputValidator*   v, char c);
+	bool (*IsValidString)(struct MenuInputValidator* v, STRING_PURE String* s);
+	bool (*IsValidValue)(struct MenuInputValidator*  v, STRING_PURE String* s);
+};
 
+struct MenuInputValidator {
+	struct MenuInputValidatorVTABLE* VTABLE;
 	union {
 		void* Meta_Ptr[2];
 		Int32 Meta_Int[2];
@@ -144,7 +147,7 @@ struct MenuInputWidget {
 	struct MenuInputValidator Validator;
 	char __TextBuffer[INPUTWIDGET_LEN];
 };
-void MenuInputWidget_Create(struct MenuInputWidget* widget, Int32 width, Int32 height, STRING_PURE String* text, struct FontDesc* font, struct MenuInputValidator* validator);
+void MenuInputWidget_Create(struct MenuInputWidget* w, Int32 width, Int32 height, STRING_PURE String* text, struct FontDesc* font, struct MenuInputValidator* validator);
 
 
 struct ChatInputWidget {
@@ -155,7 +158,7 @@ struct ChatInputWidget {
 	String OrigStr;
 };
 
-void ChatInputWidget_Create(struct ChatInputWidget* widget, struct FontDesc* font);
+void ChatInputWidget_Create(struct ChatInputWidget* w, struct FontDesc* font);
 
 
 #define TEXTGROUPWIDGET_MAX_LINES 30
@@ -170,13 +173,13 @@ struct TextGroupWidget {
 	char* Buffer;
 };
 
-void TextGroupWidget_Create(struct TextGroupWidget* widget, Int32 linesCount, struct FontDesc* font, struct FontDesc* underlineFont, STRING_REF struct Texture* textures, STRING_REF char* buffer);
-void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* widget, Int32 index, bool placeHolder);
-void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* widget, STRING_PURE String* text);
-Int32 TextGroupWidget_UsedHeight(struct TextGroupWidget* widget);
-void TextGroupWidget_GetSelected(struct TextGroupWidget* widget, STRING_TRANSIENT String* text, Int32 mouseX, Int32 mouseY);
-void TextGroupWidget_GetText(struct TextGroupWidget* widget, Int32 index, STRING_TRANSIENT String* text);
-void TextGroupWidget_SetText(struct TextGroupWidget* widget, Int32 index, STRING_PURE String* text);
+void TextGroupWidget_Create(struct TextGroupWidget* w, Int32 linesCount, struct FontDesc* font, struct FontDesc* underlineFont, STRING_REF struct Texture* textures, STRING_REF char* buffer);
+void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* w, Int32 index, bool placeHolder);
+void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* w, STRING_PURE String* text);
+Int32 TextGroupWidget_UsedHeight(struct TextGroupWidget* w);
+void TextGroupWidget_GetSelected(struct TextGroupWidget* w, STRING_TRANSIENT String* text, Int32 mouseX, Int32 mouseY);
+void TextGroupWidget_GetText(struct TextGroupWidget* w, Int32 index, STRING_TRANSIENT String* text);
+void TextGroupWidget_SetText(struct TextGroupWidget* w, Int32 index, STRING_PURE String* text);
 
 
 struct PlayerListWidget {
@@ -189,8 +192,8 @@ struct PlayerListWidget {
 	UInt16 IDs[TABLIST_MAX_NAMES * 2];
 	struct Texture Textures[TABLIST_MAX_NAMES * 2];
 };
-void PlayerListWidget_Create(struct PlayerListWidget* widget, struct FontDesc* font, bool classic);
-void PlayerListWidget_GetNameUnder(struct PlayerListWidget* widget, Int32 mouseX, Int32 mouseY, STRING_TRANSIENT String* name);
+void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, bool classic);
+void PlayerListWidget_GetNameUnder(struct PlayerListWidget* w, Int32 mouseX, Int32 mouseY, STRING_TRANSIENT String* name);
 
 
 typedef void (*SpecialInputAppendFunc)(void* userData, char c);
@@ -212,7 +215,7 @@ struct SpecialInputWidget {
 	char __ColBuffer[DRAWER2D_MAX_COLS * 4];
 };
 
-void SpecialInputWidget_Create(struct SpecialInputWidget* widget, struct FontDesc* font, struct InputWidget* appendObj);
-void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* widget);
-void SpecialInputWidget_SetActive(struct SpecialInputWidget* widget, bool active);
+void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* font, struct InputWidget* appendObj);
+void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w);
+void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active);
 #endif

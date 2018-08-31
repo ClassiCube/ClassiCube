@@ -993,7 +993,8 @@ Int32 GenLevelScreen_GetInt(struct GenLevelScreen* s, Int32 index) {
 	struct MenuInputWidget* input = &s->Inputs[index];
 	String text = input->Base.Text;
 
-	if (!input->Validator.IsValidValue(&input->Validator, &text)) return 0;
+	struct MenuInputValidator* v = &input->Validator;
+	if (!v->VTABLE->IsValidValue(v, &text)) return 0;
 	Int32 value; Convert_TryParseInt32(&text, &value); return value;
 }
 
@@ -1006,7 +1007,8 @@ Int32 GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, Int32 index) {
 		return Random_Next(&rnd, Int32_MaxValue);
 	}
 
-	if (!input->Validator.IsValidValue(&input->Validator, &text)) return 0;
+	struct MenuInputValidator* v = &input->Validator;
+	if (!v->VTABLE->IsValidValue(v, &text)) return 0;
 	Int32 value; Convert_TryParseInt32(&text, &value); return value;
 }
 
@@ -1961,9 +1963,9 @@ static void MenuOptionsScreen_FreeInput(struct MenuOptionsScreen* s) {
 
 static void MenuOptionsScreen_EnterInput(struct MenuOptionsScreen* s) {
 	String text = s->Input.Base.Text;
-	struct MenuInputValidator* validator = &s->Input.Validator;
+	struct MenuInputValidator* v = &s->Input.Validator;
 
-	if (validator->IsValidValue(validator, &text)) {
+	if (v->VTABLE->IsValidValue(v, &text)) {
 		MenuOptionsScreen_Set(s, s->ActiveI, &text);
 	}
 
