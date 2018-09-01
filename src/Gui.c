@@ -46,28 +46,14 @@ void Widget_SetLocation(void* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xO
 	Widget_Reposition(w);
 }
 
-void Widget_CalcPosition(void* widget) { struct Widget* w = widget;
+void Widget_CalcPosition(void* widget) {
+	struct Widget* w = widget;
 	w->X = Gui_CalcPos(w->HorAnchor, w->XOffset, w->Width , Game_Width );
 	w->Y = Gui_CalcPos(w->VerAnchor, w->YOffset, w->Height, Game_Height);
 }
 
-void Widget_Init(void* widget) {
+void Widget_Reset(void* widget) {
 	struct Widget* w = widget;
-	w->VTABLE->Init   = NULL;
-	w->VTABLE->Render = NULL;
-	w->VTABLE->Free   = NULL;
-	w->VTABLE->Recreate   = Gui_DefaultRecreate;
-	w->VTABLE->Reposition = Widget_CalcPosition;
-
-	w->VTABLE->HandlesKeyDown     = Gui_DefaultKey;
-	w->VTABLE->HandlesKeyUp       = Gui_DefaultKey;
-	w->VTABLE->HandlesKeyPress    = Gui_DefaultKeyPress;
-
-	w->VTABLE->HandlesMouseDown   = Gui_DefaultMouse;
-	w->VTABLE->HandlesMouseUp     = Gui_DefaultMouse;
-	w->VTABLE->HandlesMouseMove   = Gui_DefaultMouseMove;
-	w->VTABLE->HandlesMouseScroll = Gui_DefaultMouseScroll;
-
 	w->Active = false;
 	w->Disabled = false;
 	w->X = 0; w->Y = 0;

@@ -43,17 +43,16 @@ static void TextWidget_Reposition(void* widget) {
 	w->Texture.Y += w->Y - oldY;
 }
 
-struct WidgetVTABLE TextWidget_VTABLE;
+struct WidgetVTABLE TextWidget_VTABLE = {
+	Widget_NullFunc,  TextWidget_Render, TextWidget_Free,      Gui_DefaultRecreate,
+	Gui_DefaultKey,	  Gui_DefaultKey,    Gui_DefaultKeyPress,
+	Gui_DefaultMouse, Gui_DefaultMouse,  Gui_DefaultMouseMove, Gui_DefaultMouseScroll,
+	TextWidget_Reposition,
+};
 void TextWidget_Make(struct TextWidget* w) {
+	Widget_Reset(w);
 	w->VTABLE = &TextWidget_VTABLE;
-	Widget_Init(w);
-	PackedCol col = PACKEDCOL_WHITE;
-	w->Col = col;
-
-	w->VTABLE->Init   = Widget_NullFunc;
-	w->VTABLE->Render = TextWidget_Render;
-	w->VTABLE->Free   = TextWidget_Free;
-	w->VTABLE->Reposition = TextWidget_Reposition;
+	PackedCol col = PACKEDCOL_WHITE; w->Col = col;
 }
 
 void TextWidget_Create(struct TextWidget* w, STRING_PURE String* text, struct FontDesc* font) {
@@ -142,16 +141,15 @@ static void ButtonWidget_Render(void* widget, Real64 delta) {
 	Texture_RenderShaded(&w->Texture, col);
 }
 
-struct WidgetVTABLE ButtonWidget_VTABLE;
-void ButtonWidget_Create(struct ButtonWidget* w, Int32 minWidth, STRING_PURE String* text, struct FontDesc* font, Widget_LeftClick onClick) {
-	w->VTABLE = &ButtonWidget_VTABLE;
-	Widget_Init(w);
-
-	w->VTABLE->Init   = Widget_NullFunc;
-	w->VTABLE->Render = ButtonWidget_Render;
-	w->VTABLE->Free   = ButtonWidget_Free;
-	w->VTABLE->Reposition = ButtonWidget_Reposition;
-
+struct WidgetVTABLE ButtonWidget_VTABLE = {
+	Widget_NullFunc,  ButtonWidget_Render, ButtonWidget_Free,    Gui_DefaultRecreate,
+	Gui_DefaultKey,	  Gui_DefaultKey,      Gui_DefaultKeyPress,
+	Gui_DefaultMouse, Gui_DefaultMouse,    Gui_DefaultMouseMove, Gui_DefaultMouseScroll,
+	ButtonWidget_Reposition,
+};
+void ButtonWidget_Create(struct ButtonWidget* w, Int32 minWidth, STRING_PURE String* text, struct FontDesc* font, Widget_LeftClick onClick) {	
+	Widget_Reset(w);
+	w->VTABLE    = &ButtonWidget_VTABLE;
 	w->OptName   = NULL;
 	w->MinWidth  = minWidth;
 	w->MenuClick = onClick;
@@ -230,7 +228,7 @@ static void ScrollbarWidget_Render(void* widget, Real64 delta) {
 	GfxCommon_Draw2DFlat(x, y - 1 + 4, width, SCROLL_BORDER, Scroll_BackCol);
 }
 
-static bool ScrollbarWidget_HandlesMouseDown(void* widget, Int32 x, Int32 y, MouseButton btn) {
+static bool ScrollbarWidget_MouseDown(void* widget, Int32 x, Int32 y, MouseButton btn) {
 	struct ScrollbarWidget* w = widget;
 	if (w->DraggingMouse) return true;
 	if (btn != MouseButton_Left) return false;
@@ -252,14 +250,14 @@ static bool ScrollbarWidget_HandlesMouseDown(void* widget, Int32 x, Int32 y, Mou
 	return true;
 }
 
-static bool ScrollbarWidget_HandlesMouseUp(void* widget, Int32 x, Int32 y, MouseButton btn) {
+static bool ScrollbarWidget_MouseUp(void* widget, Int32 x, Int32 y, MouseButton btn) {
 	struct ScrollbarWidget* w = widget;
 	w->DraggingMouse = false;
 	w->MouseOffset = 0;
 	return true;
 }
 
-static bool ScrollbarWidget_HandlesMouseScroll(void* widget, Real32 delta) {
+static bool ScrollbarWidget_MouseScroll(void* widget, Real32 delta) {
 	struct ScrollbarWidget* w = widget;
 	Int32 steps = Utils_AccumulateWheelDelta(&w->ScrollingAcc, delta);
 
@@ -268,7 +266,7 @@ static bool ScrollbarWidget_HandlesMouseScroll(void* widget, Real32 delta) {
 	return true;
 }
 
-static bool ScrollbarWidget_HandlesMouseMove(void* widget, Int32 x, Int32 y) {
+static bool ScrollbarWidget_MouseMove(void* widget, Int32 x, Int32 y) {
 	struct ScrollbarWidget* w = widget;
 	if (w->DraggingMouse) {
 		y -= w->Y;
@@ -280,25 +278,21 @@ static bool ScrollbarWidget_HandlesMouseMove(void* widget, Int32 x, Int32 y) {
 	return false;
 }
 
-struct WidgetVTABLE ScrollbarWidget_VTABLE;
+struct WidgetVTABLE ScrollbarWidget_VTABLE = {
+	Widget_NullFunc,           ScrollbarWidget_Render,  Widget_NullFunc,           Gui_DefaultRecreate,
+	Gui_DefaultKey,	           Gui_DefaultKey,          Gui_DefaultKeyPress,
+	ScrollbarWidget_MouseDown, ScrollbarWidget_MouseUp, ScrollbarWidget_MouseMove, ScrollbarWidget_MouseScroll,
+	Widget_CalcPosition,
+};
 void ScrollbarWidget_Create(struct ScrollbarWidget* w) {
+	Widget_Reset(w);
 	w->VTABLE = &ScrollbarWidget_VTABLE;
-	Widget_Init(w);
-	w->VTABLE->Init   = Widget_NullFunc;
-	w->VTABLE->Render = ScrollbarWidget_Render;
-	w->VTABLE->Free   = Widget_NullFunc;
-
-	w->VTABLE->HandlesMouseDown   = ScrollbarWidget_HandlesMouseDown;
-	w->VTABLE->HandlesMouseUp     = ScrollbarWidget_HandlesMouseUp;
-	w->VTABLE->HandlesMouseScroll = ScrollbarWidget_HandlesMouseScroll;
-	w->VTABLE->HandlesMouseMove   = ScrollbarWidget_HandlesMouseMove;	
-
-	w->Width = SCROLL_WIDTH;
-	w->TotalRows = 0;
-	w->ScrollY = 0;
-	w->ScrollingAcc = 0.0f;
+	w->Width  = SCROLL_WIDTH;
+	w->TotalRows     = 0;
+	w->ScrollY       = 0;
+	w->ScrollingAcc  = 0.0f;
 	w->DraggingMouse = false;
-	w->MouseOffset = 0;
+	w->MouseOffset   = 0;
 }
 
 
@@ -393,7 +387,7 @@ static void HotbarWidget_Render(void* widget, Real64 delta) {
 	HotbarWidget_RenderHotbarBlocks(w);
 }
 
-static bool HotbarWidget_HandlesKeyDown(void* widget, Key key) {
+static bool HotbarWidget_KeyDown(void* widget, Key key) {
 	struct HotbarWidget* w = widget;
 	if (key < Key_1 || key > Key_9) return false;
 
@@ -408,7 +402,7 @@ static bool HotbarWidget_HandlesKeyDown(void* widget, Key key) {
 	return true;
 }
 
-static bool HotbarWidget_HandlesKeyUp(void* widget, Key key) {
+static bool HotbarWidget_KeyUp(void* widget, Key key) {
 	struct HotbarWidget* w = widget;
 	/* Need to handle these cases:
 	     a) user presses alt then number
@@ -426,7 +420,7 @@ static bool HotbarWidget_HandlesKeyUp(void* widget, Key key) {
 	return true;
 }
 
-static bool HotbarWidget_HandlesMouseDown(void* widget, Int32 x, Int32 y, MouseButton btn) {
+static bool HotbarWidget_MouseDown(void* widget, Int32 x, Int32 y, MouseButton btn) {
 	struct HotbarWidget* w = widget;
 	if (btn != MouseButton_Left || !Widget_Contains(w, x, y)) return false;
 
@@ -449,7 +443,7 @@ static bool HotbarWidget_HandlesMouseDown(void* widget, Int32 x, Int32 y, MouseB
 	return false;
 }
 
-static bool HotbarWidget_HandlesMouseScroll(void* widget, Real32 delta) {
+static bool HotbarWidget_MouseScroll(void* widget, Real32 delta) {
 	struct HotbarWidget* w = widget;
 	if (KeyBind_IsPressed(KeyBind_HotbarSwitching)) {
 		Int32 index = Inventory_Offset / INVENTORY_BLOCKS_PER_HOTBAR;
@@ -463,22 +457,17 @@ static bool HotbarWidget_HandlesMouseScroll(void* widget, Real32 delta) {
 	return true;
 }
 
-struct WidgetVTABLE HotbarWidget_VTABLE;
+struct WidgetVTABLE HotbarWidget_VTABLE = {
+	HotbarWidget_Init,      HotbarWidget_Render, Widget_NullFunc,      Gui_DefaultRecreate,
+	HotbarWidget_KeyDown,	HotbarWidget_KeyUp,  Gui_DefaultKeyPress,
+	HotbarWidget_MouseDown, Gui_DefaultMouse,    Gui_DefaultMouseMove, HotbarWidget_MouseScroll,
+	HotbarWidget_Reposition,
+};
 void HotbarWidget_Create(struct HotbarWidget* w) {
+	Widget_Reset(w);
 	w->VTABLE = &HotbarWidget_VTABLE;
-	Widget_Init(w);
 	w->HorAnchor = ANCHOR_CENTRE;
 	w->VerAnchor = ANCHOR_MAX;
-
-	w->VTABLE->Init   = HotbarWidget_Init;
-	w->VTABLE->Render = HotbarWidget_Render;
-	w->VTABLE->Free   = Widget_NullFunc;
-	w->VTABLE->Reposition = HotbarWidget_Reposition;
-
-	w->VTABLE->HandlesKeyDown     = HotbarWidget_HandlesKeyDown;
-	w->VTABLE->HandlesKeyUp       = HotbarWidget_HandlesKeyUp;
-	w->VTABLE->HandlesMouseDown   = HotbarWidget_HandlesMouseDown;
-	w->VTABLE->HandlesMouseScroll = HotbarWidget_HandlesMouseScroll;
 }
 
 
@@ -727,7 +716,7 @@ static void TableWidget_ScrollRelative(struct TableWidget* w, Int32 delta) {
 	TableWidget_MoveCursorToSelected(w);
 }
 
-static bool TableWidget_HandlesMouseDown(void* widget, Int32 x, Int32 y, MouseButton btn) {
+static bool TableWidget_MouseDown(void* widget, Int32 x, Int32 y, MouseButton btn) {
 	struct TableWidget* w = widget;
 	w->PendingClose = false;
 	if (btn != MouseButton_Left) return false;
@@ -744,12 +733,12 @@ static bool TableWidget_HandlesMouseDown(void* widget, Int32 x, Int32 y, MouseBu
 	return false;
 }
 
-static bool TableWidget_HandlesMouseUp(void* widget, Int32 x, Int32 y, MouseButton btn) {
+static bool TableWidget_MouseUp(void* widget, Int32 x, Int32 y, MouseButton btn) {
 	struct TableWidget* w = widget;
 	return Elem_HandlesMouseUp(&w->Scroll, x, y, btn);
 }
 
-static bool TableWidget_HandlesMouseScroll(void* widget, Real32 delta) {
+static bool TableWidget_MouseScroll(void* widget, Real32 delta) {
 	struct TableWidget* w = widget;
 	Int32 scrollWidth = w->Scroll.Width;
 
@@ -770,7 +759,7 @@ static bool TableWidget_HandlesMouseScroll(void* widget, Real32 delta) {
 	return true;
 }
 
-static bool TableWidget_HandlesMouseMove(void* widget, Int32 x, Int32 y) {
+static bool TableWidget_MouseMove(void* widget, Int32 x, Int32 y) {
 	struct TableWidget* w = widget;
 	if (Elem_HandlesMouseMove(&w->Scroll, x, y)) return true;
 
@@ -797,7 +786,7 @@ static bool TableWidget_HandlesMouseMove(void* widget, Int32 x, Int32 y) {
 	return true;
 }
 
-static bool TableWidget_HandlesKeyDown(void* widget, Key key) {
+static bool TableWidget_KeyDown(void* widget, Key key) {
 	struct TableWidget* w = widget;
 	if (w->SelectedIndex == -1) return false;
 
@@ -815,23 +804,16 @@ static bool TableWidget_HandlesKeyDown(void* widget, Key key) {
 	return true;
 }
 
-struct WidgetVTABLE TableWidget_VTABLE;
-void TableWidget_Create(struct TableWidget* w) {
+struct WidgetVTABLE TableWidget_VTABLE = {
+	TableWidget_Init,      TableWidget_Render,  TableWidget_Free,      TableWidget_Recreate,
+	TableWidget_KeyDown,   Gui_DefaultKey,      Gui_DefaultKeyPress,
+	TableWidget_MouseDown, TableWidget_MouseUp, TableWidget_MouseMove, TableWidget_MouseScroll,
+	TableWidget_Reposition,
+};
+void TableWidget_Create(struct TableWidget* w) {	
+	Widget_Reset(w);
 	w->VTABLE = &TableWidget_VTABLE;
-	Widget_Init(w);
 	w->LastCreatedIndex = -1000;
-
-	w->VTABLE->Init     = TableWidget_Init;
-	w->VTABLE->Render   = TableWidget_Render;
-	w->VTABLE->Free     = TableWidget_Free;
-	w->VTABLE->Recreate = TableWidget_Recreate;
-	w->VTABLE->Reposition = TableWidget_Reposition;
-	
-	w->VTABLE->HandlesMouseDown   = TableWidget_HandlesMouseDown;
-	w->VTABLE->HandlesMouseUp     = TableWidget_HandlesMouseUp;
-	w->VTABLE->HandlesMouseScroll = TableWidget_HandlesMouseScroll;
-	w->VTABLE->HandlesMouseMove   = TableWidget_HandlesMouseMove;
-	w->VTABLE->HandlesKeyDown     = TableWidget_HandlesKeyDown;
 }
 
 void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block) {
@@ -1193,7 +1175,7 @@ static void InputWidget_Reposition(void* widget) {
 	w->InputTex.X += w->X - oldX; w->InputTex.Y += w->Y - oldY;
 }
 
-static bool InputWidget_HandlesKeyDown(void* widget, Key key) {
+static bool InputWidget_KeyDown(void* widget, Key key) {
 	struct InputWidget* w = widget;
 	if (key == Key_Left) {
 		InputWidget_LeftKey(w);
@@ -1213,15 +1195,15 @@ static bool InputWidget_HandlesKeyDown(void* widget, Key key) {
 	return true;
 }
 
-static bool InputWidget_HandlesKeyUp(void* widget, Key key) { return true; }
+static bool InputWidget_KeyUp(void* widget, Key key) { return true; }
 
-static bool InputWidget_HandlesKeyPress(void* widget, UInt8 key) {
+static bool InputWidget_KeyPress(void* widget, UInt8 key) {
 	struct InputWidget* w = widget;
 	InputWidget_Append(w, key);
 	return true;
 }
 
-static bool InputWidget_HandlesMouseDown(void* widget, Int32 x, Int32 y, MouseButton button) {
+static bool InputWidget_MouseDown(void* widget, Int32 x, Int32 y, MouseButton button) {
 	struct InputWidget* w = widget;
 	if (button != MouseButton_Left) return true;
 
@@ -1260,25 +1242,13 @@ static bool InputWidget_HandlesMouseDown(void* widget, Int32 x, Int32 y, MouseBu
 	return true;
 }
 
-struct WidgetVTABLE InputWidget_VTABLE;
-void InputWidget_Create(struct InputWidget* w, struct FontDesc* font, STRING_REF String* prefix) {
-	w->VTABLE = &InputWidget_VTABLE;
-	Widget_Init(w);
+FUNC_NOINLINE static void InputWidget_Create(struct InputWidget* w, struct FontDesc* font, STRING_REF String* prefix) {
+	Widget_Reset(w);
 	w->Font            = *font;
 	w->Prefix          = *prefix;
 	w->CaretPos        = -1;
 	w->OnPressedEnter  = InputWidget_OnPressedEnter;
-	w->AllowedChar     = InputWidget_AllowedChar;	
-
-	w->VTABLE->Init     = InputWidget_Init;
-	w->VTABLE->Free     = InputWidget_Free;
-	w->VTABLE->Recreate = InputWidget_Recreate;
-	w->VTABLE->Reposition = InputWidget_Reposition;
-
-	w->VTABLE->HandlesKeyDown   = InputWidget_HandlesKeyDown;
-	w->VTABLE->HandlesKeyUp     = InputWidget_HandlesKeyUp;
-	w->VTABLE->HandlesKeyPress  = InputWidget_HandlesKeyPress;
-	w->VTABLE->HandlesMouseDown = InputWidget_HandlesMouseDown;
+	w->AllowedChar     = InputWidget_AllowedChar;
 
 	String caret = String_FromConst("_");
 	struct DrawTextArgs args; DrawTextArgs_Make(&args, &caret, font, true);
@@ -1529,10 +1499,17 @@ static bool MenuInputWidget_AllowedChar(void* widget, char c) {
 }
 
 static Int32 MenuInputWidget_GetMaxLines(void) { return 1; }
-struct WidgetVTABLE MenuInputWidget_VTABLE;
+struct WidgetVTABLE MenuInputWidget_VTABLE = {
+	InputWidget_Init,      MenuInputWidget_Render, InputWidget_Free,     InputWidget_Recreate,
+	InputWidget_KeyDown,   InputWidget_KeyUp,      InputWidget_KeyPress,
+	InputWidget_MouseDown, Gui_DefaultMouse,       Gui_DefaultMouseMove, Gui_DefaultMouseScroll,
+	InputWidget_Reposition,
+};
 void MenuInputWidget_Create(struct MenuInputWidget* w, Int32 width, Int32 height, STRING_PURE String* text, struct FontDesc* font, struct MenuInputValidator* validator) {
 	String empty = String_MakeNull();
 	InputWidget_Create(&w->Base, font, &empty);
+	w->Base.VTABLE = &MenuInputWidget_VTABLE;
+
 	w->MinWidth  = width;
 	w->MinHeight = height;
 	w->Validator = *validator;
@@ -1546,9 +1523,6 @@ void MenuInputWidget_Create(struct MenuInputWidget* w, Int32 width, Int32 height
 	w->Base.RemakeTexture = MenuInputWidget_RemakeTexture;
 	w->Base.AllowedChar   = MenuInputWidget_AllowedChar;
 
-	MenuInputWidget_VTABLE = *w->Base.VTABLE;
-	w->Base.VTABLE = &MenuInputWidget_VTABLE;
-	w->Base.VTABLE->Render = MenuInputWidget_Render;
 	Elem_Init(&w->Base);
 	InputWidget_AppendString(&w->Base, text);
 }
@@ -1762,23 +1736,29 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 	}
 }
 
-static bool ChatInputWidget_HandlesKeyDown(void* widget, Key key) {
+static bool ChatInputWidget_KeyDown(void* widget, Key key) {
 	struct InputWidget* w = widget;
 	if (key == Key_Tab)  { ChatInputWidget_TabKey(w);  return true; }
 	if (key == Key_Up)   { ChatInputWidget_UpKey(w);   return true; }
 	if (key == Key_Down) { ChatInputWidget_DownKey(w); return true; }
-	return InputWidget_HandlesKeyDown(w, key);
+	return InputWidget_KeyDown(w, key);
 }
 
 static Int32 ChatInputWidget_GetMaxLines(void) {
 	return !Game_ClassicMode && ServerConnection_SupportsPartialMessages ? 3 : 1;
 }
 
-struct WidgetVTABLE ChatInputWidget_VTABLE;
+struct WidgetVTABLE ChatInputWidget_VTABLE = {
+	InputWidget_Init,        ChatInputWidget_Render, InputWidget_Free,     InputWidget_Recreate,
+	ChatInputWidget_KeyDown, InputWidget_KeyUp,      InputWidget_KeyPress,
+	InputWidget_MouseDown,   Gui_DefaultMouse,       Gui_DefaultMouseMove, Gui_DefaultMouseScroll,
+	InputWidget_Reposition,
+};
 void ChatInputWidget_Create(struct ChatInputWidget* w, struct FontDesc* font) {
 	String prefix = String_FromConst("> ");
 	InputWidget_Create(&w->Base, font, &prefix);
 	w->TypingLogPos = Chat_InputLog.Count; /* Index of newest entry + 1. */
+	w->Base.VTABLE  = &ChatInputWidget_VTABLE;
 
 	w->Base.ConvertPercents = true;
 	w->Base.ShowCaret       = true;
@@ -1791,12 +1771,7 @@ void ChatInputWidget_Create(struct ChatInputWidget* w, struct FontDesc* font) {
 	w->Base.Text = inputStr;
 	String origStr    = String_FromArray(w->__OrigBuffer);
 	w->OrigStr   = origStr;
-
-	ChatInputWidget_VTABLE = *w->Base.VTABLE;
-	w->Base.VTABLE = &ChatInputWidget_VTABLE;
-	w->Base.VTABLE->Render         = ChatInputWidget_Render;
-	w->Base.VTABLE->HandlesKeyDown = ChatInputWidget_HandlesKeyDown;
-}
+}	
 
 
 /*########################################################################################################################*
@@ -2151,20 +2126,21 @@ static void PlayerListWidget_Free(void* widget) {
 	Event_UnregisterInt(&TabListEvents_Removed, w, PlayerListWidget_TabEntryRemoved);
 }
 
-struct WidgetVTABLE PlayerListWidgetVTABLE;
+struct WidgetVTABLE PlayerListWidget_VTABLE = {
+	PlayerListWidget_Init, PlayerListWidget_Render, PlayerListWidget_Free, Gui_DefaultRecreate,
+	Gui_DefaultKey,	       Gui_DefaultKey,          Gui_DefaultKeyPress,
+	Gui_DefaultMouse,      Gui_DefaultMouse,        Gui_DefaultMouseMove,  Gui_DefaultMouseScroll,
+	PlayerListWidget_Reposition,
+};
 void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, bool classic) {
-	w->VTABLE = &PlayerListWidgetVTABLE;
-	Widget_Init(w);
-	w->VTABLE->Init   = PlayerListWidget_Init;
-	w->VTABLE->Render = PlayerListWidget_Render;
-	w->VTABLE->Free   = PlayerListWidget_Free;
-	w->VTABLE->Reposition = PlayerListWidget_Reposition;
+	Widget_Reset(w);
+	w->VTABLE     = &PlayerListWidget_VTABLE;
 	w->HorAnchor  = ANCHOR_CENTRE;
 	w->VerAnchor  = ANCHOR_CENTRE;
 
 	w->NamesCount = 0;
-	w->Font = *font;
-	w->Classic = classic;
+	w->Font       = *font;
+	w->Classic    = classic;
 	w->ElementOffset = classic ? 0 : 10;
 }
 
@@ -2562,20 +2538,21 @@ static void TextGroupWidget_Free(void* widget) {
 	}
 }
 
-struct WidgetVTABLE TextGroupWidget_VTABLE;
+struct WidgetVTABLE TextGroupWidget_VTABLE = {
+	TextGroupWidget_Init, TextGroupWidget_Render, TextGroupWidget_Free, Gui_DefaultRecreate,
+	Gui_DefaultKey,	      Gui_DefaultKey,         Gui_DefaultKeyPress,
+	Gui_DefaultMouse,     Gui_DefaultMouse,       Gui_DefaultMouseMove,  Gui_DefaultMouseScroll,
+	TextGroupWidget_Reposition,
+};
 void TextGroupWidget_Create(struct TextGroupWidget* w, Int32 linesCount, struct FontDesc* font, struct FontDesc* underlineFont, STRING_REF struct Texture* textures, STRING_REF char* buffer) {
+	Widget_Reset(w);
 	w->VTABLE = &TextGroupWidget_VTABLE;
-	Widget_Init(w);
-	w->VTABLE->Init   = TextGroupWidget_Init;
-	w->VTABLE->Render = TextGroupWidget_Render;
-	w->VTABLE->Free   = TextGroupWidget_Free;
-	w->VTABLE->Reposition = TextGroupWidget_Reposition;
 
 	w->LinesCount = linesCount;
-	w->Font = *font;
+	w->Font       = *font;
 	w->UnderlineFont = *underlineFont;
-	w->Textures = textures;
-	w->Buffer = buffer;
+	w->Textures   = textures;
+	w->Buffer     = buffer;
 }
 
 
@@ -2787,7 +2764,7 @@ static void SpecialInputWidget_Free(void* widget) {
 	Gfx_DeleteTexture(&w->Tex.ID);
 }
 
-static bool SpecialInputWidget_HandlesMouseDown(void* widget, Int32 x, Int32 y, MouseButton btn) {
+static bool SpecialInputWidget_MouseDown(void* widget, Int32 x, Int32 y, MouseButton btn) {
 	struct SpecialInputWidget* w = widget;
 	x -= w->X; y -= w->Y;
 
@@ -2811,16 +2788,16 @@ void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active) {
 	w->Height = active ? w->Tex.Height : 0;
 }
 
-struct WidgetVTABLE SpecialInputWidget_VTABLE;
+struct WidgetVTABLE SpecialInputWidget_VTABLE = {
+	SpecialInputWidget_Init,      SpecialInputWidget_Render, SpecialInputWidget_Free, Gui_DefaultRecreate,
+	Gui_DefaultKey,               Gui_DefaultKey,            Gui_DefaultKeyPress,
+	SpecialInputWidget_MouseDown, Gui_DefaultMouse,          Gui_DefaultMouseMove,    Gui_DefaultMouseScroll,
+	Widget_CalcPosition,
+};
 void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* font, struct InputWidget* appendObj) {
-	w->VTABLE = &SpecialInputWidget_VTABLE;
-	Widget_Init(w);
+	Widget_Reset(w);
+	w->VTABLE    = &SpecialInputWidget_VTABLE;
 	w->VerAnchor = ANCHOR_MAX;
-	w->Font = *font;
+	w->Font      = *font;
 	w->AppendObj = appendObj;
-
-	w->VTABLE->Init   = SpecialInputWidget_Init;
-	w->VTABLE->Render = SpecialInputWidget_Render;
-	w->VTABLE->Free   = SpecialInputWidget_Free;
-	w->VTABLE->HandlesMouseDown = SpecialInputWidget_HandlesMouseDown;
 }

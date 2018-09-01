@@ -17,7 +17,7 @@
 /*########################################################################################################################*
 *---------------------------------------------------------ModelCache------------------------------------------------------*
 *#########################################################################################################################*/
-UInt32 ModelCache_texCount, ModelCache_modelCount;
+Int32 ModelCache_texCount, ModelCache_modelCount;
 #define MODEL_RET_SIZE(x,y,z) static Vector3 P = { (x)/16.0f,(y)/16.0f,(z)/16.0f }; *size = P;
 #define MODEL_RET_AABB(x1,y1,z1, x2,y2,z2) static struct AABB BB = { (x1)/16.0f,(y1)/16.0f,(z1)/16.0f, (x2)/16.0f,(y2)/16.0f,(z2)/16.0f }; *bb = BB;
 #define BOXDESC_DIM(p1, p2) p1 < p2 ? p2 - p1 : p1 - p2
@@ -47,7 +47,7 @@ static void ModelCache_InitModel(struct IModel* model) {
 }
 
 struct IModel* ModelCache_Get(STRING_PURE String* name) {
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < ModelCache_modelCount; i++) {
 		struct CachedModel* m = &ModelCache_Models[i];
 		if (!String_CaselessEquals(&m->Name, name)) continue;
@@ -61,7 +61,7 @@ struct IModel* ModelCache_Get(STRING_PURE String* name) {
 }
 
 Int32 ModelCache_GetTextureIndex(STRING_PURE String* texName) {
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < ModelCache_texCount; i++) {
 		struct CachedTexture* tex = &ModelCache_Textures[i];
 		if (String_CaselessEquals(&tex->Name, texName)) return i;
@@ -72,12 +72,12 @@ Int32 ModelCache_GetTextureIndex(STRING_PURE String* texName) {
 void ModelCache_Register(STRING_REF const char* name, STRING_PURE const char* defaultTexName, struct IModel* instance) {
 	if (ModelCache_modelCount < MODELCACHE_MAX_MODELS) {
 		struct CachedModel model;
-		model.Name = String_FromReadonly(name);
+		model.Name     = String_FromReadonly(name);
 		model.Instance = instance;
 		ModelCache_Models[ModelCache_modelCount++] = model;
 
 		if (defaultTexName) {
-			String defaultTex = String_FromReadonly(defaultTexName);
+			String defaultTex         = String_FromReadonly(defaultTexName);
 			instance->defaultTexIndex = ModelCache_GetTextureIndex(&defaultTex);
 		}		
 	} else {
@@ -88,7 +88,7 @@ void ModelCache_Register(STRING_REF const char* name, STRING_PURE const char* de
 void ModelCache_RegisterTexture(STRING_REF const char* texName) {
 	if (ModelCache_texCount < MODELCACHE_MAX_MODELS) {
 		struct CachedTexture tex;
-		tex.Name = String_FromReadonly(texName);
+		tex.Name  = String_FromReadonly(texName);
 		tex.TexID = NULL;
 		ModelCache_Textures[ModelCache_texCount++] = tex;
 	} else {
@@ -97,7 +97,7 @@ void ModelCache_RegisterTexture(STRING_REF const char* texName) {
 }
 
 static void ModelCache_TextureChanged(void* obj, struct Stream* stream, String* name) {
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < ModelCache_texCount; i++) {
 		struct CachedTexture* tex = &ModelCache_Textures[i];
 		if (!String_CaselessEquals(&tex->Name, name)) continue;

@@ -74,7 +74,7 @@ struct WidgetVTABLE {
 struct Widget { Widget_Layout };
 void Widget_SetLocation(void* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xOffset, Int32 yOffset);
 void Widget_CalcPosition(void* widget);
-void Widget_Init(void* widget);
+void Widget_Reset(void* widget);
 bool Widget_Contains(void* widget, Int32 x, Int32 y);
 
 
