@@ -15,7 +15,7 @@
 #include "GraphicsCommon.h"
 #include "AsyncDownloader.h"
 #include "Chat.h"
-#include "IModel.h"
+#include "Model.h"
 #include "Input.h"
 #include "Gui.h"
 #include "Stream.h"
@@ -150,7 +150,7 @@ void Entity_SetModel(struct Entity* entity, STRING_PURE String* model) {
 }
 
 void Entity_UpdateModelBounds(struct Entity* entity) {
-	struct IModel* model = entity->Model;
+	struct Model* model = entity->Model;
 	model->GetCollisionSize(&entity->Size);
 	Vector3_Mul3By(&entity->Size, &entity->ModelScale);
 
@@ -510,7 +510,7 @@ void Player_UpdateNameTex(struct Player* player) {
 
 static void Player_DrawName(struct Player* player) {
 	struct Entity* entity = &player->Base;
-	struct IModel* model = entity->Model;
+	struct Model* model = entity->Model;
 
 	if (player->NameTex.X == PLAYER_NAME_EMPTY_TEX) return;
 	if (!player->NameTex.ID) Player_MakeNameTexture(player);
@@ -853,7 +853,7 @@ static void LocalPlayer_RenderModel(struct Entity* entity, Real64 deltaTime, Rea
 	TiltComp_GetCurrent(&p->Tilt, t);
 
 	if (!Camera_Active->IsThirdPerson) return;
-	IModel_Render(entity->Model, entity);
+	Model_Render(entity->Model, entity);
 }
 
 static void LocalPlayer_RenderName(struct Entity* entity) {
@@ -1015,15 +1015,15 @@ static void NetPlayer_RenderModel(struct Entity* entity, Real64 deltaTime, Real3
 	InterpComp_LerpAngles((struct InterpComp*)(&p->Interp), entity, t);
 
 	AnimatedComp_GetCurrent(entity, t);
-	p->ShouldRender = IModel_ShouldRender(entity);
-	if (p->ShouldRender) IModel_Render(entity->Model, entity);
+	p->ShouldRender = Model_ShouldRender(entity);
+	if (p->ShouldRender) Model_Render(entity->Model, entity);
 }
 
 static void NetPlayer_RenderName(struct Entity* entity) {
 	struct NetPlayer* p = (struct NetPlayer*)entity;
 	if (!p->ShouldRender) return;
 
-	Real32 dist = IModel_RenderDistance(entity);
+	Real32 dist = Model_RenderDistance(entity);
 	Int32 threshold = Entities_NameMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
 	if (dist <= (Real32)threshold) Player_DrawName((struct Player*)p);
 }

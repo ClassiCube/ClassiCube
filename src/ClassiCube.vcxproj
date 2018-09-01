@@ -212,7 +212,7 @@
     <ClInclude Include="Deflate.h" />
     <ClInclude Include="Gui.h" />
     <ClInclude Include="HeldBlockRenderer.h" />
-    <ClInclude Include="IModel.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="InputHandler.h" />
     <ClInclude Include="Menus.h" />
@@ -281,7 +281,7 @@
     <ClCompile Include="Inventory.c" />
     <ClCompile Include="MapGenerator.c" />
     <ClCompile Include="Deflate.c" />
-    <ClCompile Include="IModel.c" />
+    <ClCompile Include="Model.c" />
     <ClCompile Include="Menus.c" />
     <ClCompile Include="PacketHandlers.c" />
     <ClCompile Include="Physics.c" />

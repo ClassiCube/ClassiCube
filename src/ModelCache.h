@@ -5,9 +5,9 @@
 /* Contains a cache of model instances and default textures for models.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
-struct IModel;
+struct Model;
 
-struct CachedModel { struct IModel* Instance; String Name;  };
+struct CachedModel { struct Model* Instance; String Name;  };
 struct CachedTexture { UInt8 SkinType; GfxResourceID TexID; String Name; };
 #if FALSE
 public CustomModel[] CustomModels = new CustomModel[256];
@@ -23,8 +23,8 @@ VertexP3fT2fC4b ModelCache_Vertices[MODELCACHE_MAX_VERTICES];
 
 void ModelCache_Init(void);
 void ModelCache_Free(void);
-struct IModel* ModelCache_Get(STRING_PURE String* name);
-Int32 ModelCache_GetTextureIndex(STRING_PURE String* texName);
-void ModelCache_Register(STRING_REF const char* name, STRING_PURE const char* defaultTexName, struct IModel* instance);
-void ModelCache_RegisterTexture(STRING_REF const char* texName);
+FUNC_NOINLINE struct Model* ModelCache_Get(STRING_PURE String* name);
+FUNC_NOINLINE Int32 ModelCache_GetTextureIndex(STRING_PURE String* texName);
+FUNC_NOINLINE void ModelCache_Register(STRING_REF const char* name, STRING_PURE const char* defaultTexName, struct Model* instance);
+FUNC_NOINLINE void ModelCache_RegisterTexture(STRING_REF const char* texName);
 #endif

@@ -14,7 +14,7 @@
 #include "Chat.h"
 #include "Inventory.h"
 #include "Block.h"
-#include "IModel.h"
+#include "Model.h"
 #include "Funcs.h"
 #include "Lighting.h"
 #include "AsyncDownloader.h"

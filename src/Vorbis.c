@@ -323,7 +323,7 @@ static UInt32 Codebook_DecodeScalar(struct VorbisState* ctx, struct Codebook* c)
 			return value;
 		}
 	}
-	ErrorHandler_Fail("????????????");
+	ErrorHandler_Fail("Invalid huffman code");
 	return -1;
 }
 
@@ -351,7 +351,7 @@ static void Codebook_DecodeVectors(struct VorbisState* ctx, struct Codebook* c, 
 			if (c->SequenceP) last = value;
 		}
 	} else {
-		ErrorHandler_Fail("???????");
+		ErrorHandler_Fail("Invalid huffman code");
 	}
 }
 

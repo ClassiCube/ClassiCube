@@ -9,8 +9,8 @@
 struct Entity;
 struct AABB;
 
-#define IMODEL_QUAD_VERTICES 4
-#define IMODEL_BOX_VERTICES (FACE_COUNT * IMODEL_QUAD_VERTICES)
+#define MODEL_QUAD_VERTICES 4
+#define MODEL_BOX_VERTICES (FACE_COUNT * MODEL_QUAD_VERTICES)
 enum ROTATE_ORDER { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX };
 
 /* Describes a vertex within a model. */
@@ -24,7 +24,7 @@ void ModelPart_Init(struct ModelPart* part, Int32 offset, Int32 count, Real32 ro
 
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
 the bounding boxes that contain the entire set of quads and/or boxes. */
-struct IModel {
+struct Model {
 	/* Pointer to the raw vertices of the model.*/
 	struct ModelVertex* vertices;
 	/* Count of assigned vertices within the raw vertices array. */
@@ -55,31 +55,31 @@ struct IModel {
 	Real32 NameYOffset, MaxScale, ShadowScale, NameScale;
 };
 
-PackedCol IModel_Cols[FACE_COUNT];
-Real32 IModel_uScale, IModel_vScale;
+PackedCol Model_Cols[FACE_COUNT];
+Real32 Model_uScale, Model_vScale;
 /* Angle of offset from head to body rotation. */
-Real32 IModel_cosHead, IModel_sinHead;
-UInt8 IModel_Rotation, IModel_skinType;
-struct IModel* IModel_ActiveModel;
-void IModel_Init(struct IModel* model);
+Real32 Model_cosHead, Model_sinHead;
+UInt8 Model_Rotation, Model_skinType;
+struct Model* Model_ActiveModel;
+void Model_Init(struct Model* model);
 
-#define IModel_SetPointers(typeName)\
+#define Model_SetPointers(typeName)\
 typeName.GetEyeY = typeName ## _GetEyeY;\
 typeName.GetCollisionSize = typeName ## _GetCollisionSize; \
 typeName.GetPickingBounds = typeName ## _GetPickingBounds;\
 typeName.CreateParts = typeName ## _CreateParts;\
 typeName.DrawModel = typeName ## _DrawModel;
 
-bool IModel_ShouldRender(struct Entity* entity);
-Real32 IModel_RenderDistance(struct Entity* entity);
-void IModel_Render(struct IModel* model, struct Entity* entity);
-void IModel_SetupState(struct IModel* model, struct Entity* entity);
-void IModel_UpdateVB(void);
-void IModel_ApplyTexture(struct Entity* entity);
-void IModel_DrawPart(struct ModelPart* part);
-void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct ModelPart* part, bool head);
-void IModel_RenderArm(struct IModel* model, struct Entity* entity);
-void IModel_DrawArmPart(struct ModelPart* part);
+bool Model_ShouldRender(struct Entity* entity);
+Real32 Model_RenderDistance(struct Entity* entity);
+void Model_Render(struct Model* model, struct Entity* entity);
+void Model_SetupState(struct Model* model, struct Entity* entity);
+void Model_UpdateVB(void);
+void Model_ApplyTexture(struct Entity* entity);
+void Model_DrawPart(struct ModelPart* part);
+void Model_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct ModelPart* part, bool head);
+void Model_RenderArm(struct Model* model, struct Entity* entity);
+void Model_DrawArmPart(struct ModelPart* part);
 
 /* Describes data for a box being built. */
 struct BoxDesc {
@@ -126,10 +126,10 @@ let SW = sides width, BW = body width, BH = body height
 ********************************************************************************************* */
 void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc);
 
-void BoxDesc_XQuad(struct IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
+void BoxDesc_XQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 z1, Real32 z2, Real32 y1, Real32 y2, Real32 x, bool swapU);
-void BoxDesc_YQuad(struct IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
+void BoxDesc_YQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 x1, Real32 x2, Real32 z1, Real32 z2, Real32 y, bool swapU);
-void BoxDesc_ZQuad(struct IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
+void BoxDesc_ZQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 x1, Real32 x2, Real32 y1, Real32 y2, Real32 z, bool swapU);
 #endif

@@ -9,7 +9,7 @@
 #include "ExtMath.h"
 #include "Event.h"
 #include "Entity.h"
-#include "IModel.h"
+#include "Model.h"
 #include "GameStructs.h"
 
 BlockID held_block;
@@ -27,20 +27,20 @@ static void HeldBlockRenderer_RenderModel(void) {
 	Gfx_SetTexturing(true);
 	Gfx_SetDepthTest(false);
 
-	struct IModel* model;
+	struct Model* model;
 	if (Block_Draw[held_block] == DRAW_GAS) {
 		model = LocalPlayer_Instance.Base.Model;
 		held_entity.ModelScale = Vector3_Create1(1.0f);
 
 		Gfx_SetAlphaTest(true);
-		IModel_RenderArm(model, &held_entity);
+		Model_RenderArm(model, &held_entity);
 		Gfx_SetAlphaTest(false);
 	} else {
 		String name = String_FromConst("block"); model = ModelCache_Get(&name);
 		held_entity.ModelScale = Vector3_Create1(0.4f);
 
 		GfxCommon_SetupAlphaState(Block_Draw[held_block]);
-		IModel_Render(model, &held_entity);
+		Model_Render(model, &held_entity);
 		GfxCommon_RestoreAlphaState(Block_Draw[held_block]);
 	}
 	

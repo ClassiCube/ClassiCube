@@ -7,7 +7,7 @@
 /* Represents an in-game entity.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
-struct IModel;
+struct Model;
 struct IGameComponent;
 struct ScheduledTask;
 
@@ -72,7 +72,7 @@ struct Entity {
 	Real32 HeadX, HeadY, RotX, RotY, RotZ;
 	Vector3 Velocity;
 
-	struct IModel* Model;
+	struct Model* Model;
 	BlockID ModelBlock; /* BlockID, if model name was originally a vaid block id. */
 	bool ModelIsSheepNoFur; /* Hacky, but only sheep model relies on model name. So use just 1 byte. */
 	struct AABB ModelAABB;

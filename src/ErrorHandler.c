@@ -1,6 +1,7 @@
 #include "ErrorHandler.h"
 #include "Platform.h"
 #include "Chat.h"
+#include "Window.h"
 
 void ErrorHandler_Log(STRING_PURE String* msg) {
 	/* TODO: write to log file */
@@ -56,8 +57,7 @@ void ErrorHandler_Init(const char* logFile) {
 }
 
 void ErrorHandler_ShowDialog(const char* title, const char* msg) {
-	HWND win = GetActiveWindow(); /* TODO: It's probably wrong to use GetActiveWindow() here */
-	MessageBoxA(win, msg, title, 0);
+	MessageBoxA(Window_GetWindowHandle(), msg, title, 0);
 }
 
 struct SymbolAndName { SYMBOL_INFO Symbol; char Name[256]; };

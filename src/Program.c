@@ -111,12 +111,14 @@ int main(void) {
 
 		UInt8 ip[4];
 		if (!Utils_ParseIP(&args[2], ip)) { 
-			Platform_LogConst("Invalid IP"); return 1; 
+			Platform_LogConst("Invalid IP"); 
+			return 1; 
 		}
 		
 		UInt16 port;
 		if (!Convert_TryParseUInt16(&args[3], &port)) { 
-			Platform_LogConst("Invalid port"); return 1; 
+			Platform_LogConst("Invalid port"); 
+			return 1; 
 		}
 		Game_Port = port;
 	}
@@ -124,25 +126,4 @@ int main(void) {
 	Game_Run(width, height, &title, &device);
 	Platform_Exit(0);
 	return 0;
-}
-
-int main_test(int argc, char* argv[]) {
-	return 0;
-	/*
-	/*BITMAPFILEHEADER bmpfileheader = { 0 };
-	BITMAPV5HEADER bmpinfoheader = { 0 };
-	bmpfileheader.bfType = (Int16)(('B' << 0) | ('M' << 8));
-	bmpfileheader.bfOffBits = sizeof(bmpfileheader) + sizeof(bmpinfoheader);
-	bmpfileheader.bfSize = Bitmap_DataSize(bmp.Width, bmp.Height) + bmpfileheader.bfOffBits;
-
-	bmpinfoheader.bV5Size = sizeof(bmpinfoheader);
-	bmpinfoheader.bV5BitCount = 32;
-	bmpinfoheader.bV5Planes = 1;
-	bmpinfoheader.bV5Width = bmp.Width;
-	bmpinfoheader.bV5Height = -bmp.Height;
-	bmpinfoheader.bV5Compression = BI_BITFIELDS;
-	bmpinfoheader.bV5AlphaMask = 0xFF000000UL;
-	bmpinfoheader.bV5RedMask   = 0x00FF0000UL;
-	bmpinfoheader.bV5GreenMask = 0x0000FF00UL;
-	bmpinfoheader.bV5BlueMask  = 0x000000FFUL; */
 }

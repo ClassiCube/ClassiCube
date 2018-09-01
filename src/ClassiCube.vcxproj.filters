@@ -240,9 +240,6 @@
     <ClInclude Include="ChunkUpdater.h">
       <Filter>Header Files\Rendering\Map</Filter>
     </ClInclude>
-    <ClInclude Include="IModel.h">
-      <Filter>Header Files\Entities\Model</Filter>
-    </ClInclude>
     <ClInclude Include="ModelCache.h">
       <Filter>Header Files\Entities\Model</Filter>
     </ClInclude>
@@ -342,6 +339,9 @@
     <ClInclude Include="Core.h">
       <Filter>Header Files\Defines</Filter>
     </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Header Files\Entities\Model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -403,9 +403,6 @@
     </ClCompile>
     <ClCompile Include="ChunkUpdater.c">
       <Filter>Source Files\Rendering\Map</Filter>
-    </ClCompile>
-    <ClCompile Include="IModel.c">
-      <Filter>Source Files\Entities\Model</Filter>
     </ClCompile>
     <ClCompile Include="ModelCache.c">
       <Filter>Source Files\Entities\Model</Filter>
@@ -529,6 +526,9 @@
     </ClCompile>
     <ClCompile Include="ErrorHandler.c">
       <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.c">
+      <Filter>Source Files\Entities\Model</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

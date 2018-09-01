@@ -1,4 +1,4 @@
-#include "IModel.h"
+#include "Model.h"
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Game.h"
@@ -26,14 +26,14 @@ void ModelPart_Init(struct ModelPart* part, Int32 offset, Int32 count, Real32 ro
 
 
 /*########################################################################################################################*
-*------------------------------------------------------------IModel--------------------------------------------------------*
+*------------------------------------------------------------Model--------------------------------------------------------*
 *#########################################################################################################################*/
-static void IModel_GetTransform(struct Entity* entity, Vector3 pos, struct Matrix* m) {
+static void Model_GetTransform(struct Entity* entity, Vector3 pos, struct Matrix* m) {
 	Entity_GetTransform(entity, pos, entity->ModelScale, m);
 }
-static void IModel_NullFunc(struct Entity* entity) { }
+static void Model_NullFunc(struct Entity* entity) { }
 
-void IModel_Init(struct IModel* model) {
+void Model_Init(struct Model* model) {
 	model->Bobbing  = true;
 	model->UsesSkin = true;
 	model->CalcHumanAnims = false;
@@ -49,12 +49,12 @@ void IModel_Init(struct IModel* model) {
 	model->NameScale   = 1.0f;
 	model->armX = 6; model->armY = 12;
 
-	model->GetTransform = IModel_GetTransform;
-	model->RecalcProperties = IModel_NullFunc;
-	model->DrawArm = IModel_NullFunc;
+	model->GetTransform = Model_GetTransform;
+	model->RecalcProperties = Model_NullFunc;
+	model->DrawArm = Model_NullFunc;
 }
 
-bool IModel_ShouldRender(struct Entity* entity) {
+bool Model_ShouldRender(struct Entity* entity) {
 	Vector3 pos = entity->Position;
 	struct AABB bb; Entity_GetPickingBounds(entity, &bb);
 
@@ -69,30 +69,30 @@ bool IModel_ShouldRender(struct Entity* entity) {
 	return FrustumCulling_SphereInFrustum(pos.X, pos.Y, pos.Z, maxXYZ);
 }
 
-static Real32 IModel_MinDist(Real32 dist, Real32 extent) {
+static Real32 Model_MinDist(Real32 dist, Real32 extent) {
 	/* Compare min coord, centre coord, and max coord */
 	Real32 dMin = Math_AbsF(dist - extent), dMax = Math_AbsF(dist + extent);
 	Real32 dMinMax = min(dMin, dMax);
 	return min(Math_AbsF(dist), dMinMax);
 }
 
-Real32 IModel_RenderDistance(struct Entity* entity) {
+Real32 Model_RenderDistance(struct Entity* entity) {
 	Vector3 pos = entity->Position;
 	struct AABB* bb = &entity->ModelAABB;
 	pos.Y += AABB_Height(bb) * 0.5f; /* Centre Y coordinate. */
 	Vector3 camPos = Game_CurrentCameraPos;
 
-	Real32 dx = IModel_MinDist(camPos.X - pos.X, AABB_Width(bb) * 0.5f);
-	Real32 dy = IModel_MinDist(camPos.Y - pos.Y, AABB_Height(bb) * 0.5f);
-	Real32 dz = IModel_MinDist(camPos.Z - pos.Z, AABB_Length(bb) * 0.5f);
+	Real32 dx = Model_MinDist(camPos.X - pos.X, AABB_Width(bb) * 0.5f);
+	Real32 dy = Model_MinDist(camPos.Y - pos.Y, AABB_Height(bb) * 0.5f);
+	Real32 dz = Model_MinDist(camPos.Z - pos.Z, AABB_Length(bb) * 0.5f);
 	return dx * dx + dy * dy + dz * dz;
 }
 
-struct Matrix IModel_transform;
-void IModel_Render(struct IModel* model, struct Entity* entity) {
+struct Matrix Model_transform;
+void Model_Render(struct Model* model, struct Entity* entity) {
 	Vector3 pos = entity->Position;
 	if (model->Bobbing) pos.Y += entity->Anim.BobbingModel;
-	IModel_SetupState(model, entity);
+	Model_SetupState(model, entity);
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 
 	model->GetTransform(entity, pos, &entity->Transform);
@@ -104,7 +104,7 @@ void IModel_Render(struct IModel* model, struct Entity* entity) {
 	Gfx_LoadMatrix(&Gfx_View);
 }
 
-void IModel_SetupState(struct IModel* model, struct Entity* entity) {
+void Model_SetupState(struct Model* model, struct Entity* entity) {
 	model->index = 0;
 	PackedCol col = entity->VTABLE->GetCol(entity);
 
@@ -112,51 +112,51 @@ void IModel_SetupState(struct IModel* model, struct Entity* entity) {
 	/* only apply when using humanoid skins */
 	_64x64 &= model->UsesHumanSkin || entity->MobTextureId;
 
-	IModel_uScale = entity->uScale * 0.015625f;
-	IModel_vScale = entity->vScale * (_64x64 ? 0.015625f : 0.03125f);
+	Model_uScale = entity->uScale * 0.015625f;
+	Model_vScale = entity->vScale * (_64x64 ? 0.015625f : 0.03125f);
 
-	IModel_Cols[0] = col;
+	Model_Cols[0] = col;
 	if (!entity->NoShade) {
-		IModel_Cols[1] = PackedCol_Scale(col, PACKEDCOL_SHADE_YMIN);
-		IModel_Cols[2] = PackedCol_Scale(col, PACKEDCOL_SHADE_Z);
-		IModel_Cols[4] = PackedCol_Scale(col, PACKEDCOL_SHADE_X);
+		Model_Cols[1] = PackedCol_Scale(col, PACKEDCOL_SHADE_YMIN);
+		Model_Cols[2] = PackedCol_Scale(col, PACKEDCOL_SHADE_Z);
+		Model_Cols[4] = PackedCol_Scale(col, PACKEDCOL_SHADE_X);
 	} else {
-		IModel_Cols[1] = col; IModel_Cols[2] = col; IModel_Cols[4] = col;
+		Model_Cols[1] = col; Model_Cols[2] = col; Model_Cols[4] = col;
 	}
-	IModel_Cols[3] = IModel_Cols[2]; 
-	IModel_Cols[5] = IModel_Cols[4];
+	Model_Cols[3] = Model_Cols[2]; 
+	Model_Cols[5] = Model_Cols[4];
 
 	Real32 yawDelta = entity->HeadY - entity->RotY;
-	IModel_cosHead = (Real32)Math_Cos(yawDelta * MATH_DEG2RAD);
-	IModel_sinHead = (Real32)Math_Sin(yawDelta * MATH_DEG2RAD);
-	IModel_ActiveModel = model;
+	Model_cosHead = (Real32)Math_Cos(yawDelta * MATH_DEG2RAD);
+	Model_sinHead = (Real32)Math_Sin(yawDelta * MATH_DEG2RAD);
+	Model_ActiveModel = model;
 }
 
-void IModel_UpdateVB(void) {
-	struct IModel* model = IModel_ActiveModel;
+void Model_UpdateVB(void) {
+	struct Model* model = Model_ActiveModel;
 	GfxCommon_UpdateDynamicVb_IndexedTris(ModelCache_Vb, ModelCache_Vertices, model->index);
 	model->index = 0;
 }
 
-void IModel_ApplyTexture(struct Entity* entity) {
-	struct IModel* model = IModel_ActiveModel;
+void Model_ApplyTexture(struct Entity* entity) {
+	struct Model* model = Model_ActiveModel;
 	GfxResourceID tex = model->UsesHumanSkin ? entity->TextureId : entity->MobTextureId;
 	if (tex != NULL) {
-		IModel_skinType = entity->SkinType;
+		Model_skinType = entity->SkinType;
 	} else {
 		struct CachedTexture* data = &ModelCache_Textures[model->defaultTexIndex];
 		tex = data->TexID;
-		IModel_skinType = data->SkinType;
+		Model_skinType = data->SkinType;
 	}
 
 	Gfx_BindTexture(tex);
-	bool _64x64 = IModel_skinType != SKIN_TYPE_64x32;
-	IModel_uScale = entity->uScale * 0.015625f;
-	IModel_vScale = entity->vScale * (_64x64 ? 0.015625f : 0.03125f);
+	bool _64x64 = Model_skinType != SKIN_TYPE_64x32;
+	Model_uScale = entity->uScale * 0.015625f;
+	Model_vScale = entity->vScale * (_64x64 ? 0.015625f : 0.03125f);
 }
 
-void IModel_DrawPart(struct ModelPart* part) {
-	struct IModel* model = IModel_ActiveModel;
+void Model_DrawPart(struct ModelPart* part) {
+	struct Model* model = Model_ActiveModel;
 	struct ModelVertex* src = &model->vertices[part->Offset];
 	VertexP3fT2fC4b* dst = &ModelCache_Vertices[model->index];
 	Int32 i, count = part->Count;
@@ -164,21 +164,21 @@ void IModel_DrawPart(struct ModelPart* part) {
 	for (i = 0; i < count; i++) {
 		struct ModelVertex v = *src;
 		dst->X = v.X; dst->Y = v.Y; dst->Z = v.Z;
-		dst->Col = IModel_Cols[i >> 2];
+		dst->Col = Model_Cols[i >> 2];
 
-		dst->U = (v.U & UV_POS_MASK) * IModel_uScale - (v.U >> UV_MAX_SHIFT) * 0.01f * IModel_uScale;
-		dst->V = (v.V & UV_POS_MASK) * IModel_vScale - (v.V >> UV_MAX_SHIFT) * 0.01f * IModel_vScale;
+		dst->U = (v.U & UV_POS_MASK) * Model_uScale - (v.U >> UV_MAX_SHIFT) * 0.01f * Model_uScale;
+		dst->V = (v.V & UV_POS_MASK) * Model_vScale - (v.V >> UV_MAX_SHIFT) * 0.01f * Model_vScale;
 		src++; dst++;
 	}
 	model->index += count;
 }
 
-#define IModel_RotateX t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t;
-#define IModel_RotateY t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z; v.X = t;
-#define IModel_RotateZ t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t;
+#define Model_RotateX t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t;
+#define Model_RotateY t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z;  v.X = t;
+#define Model_RotateZ t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t;
 
-void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct ModelPart* part, bool head) {
-	struct IModel* model = IModel_ActiveModel;
+void Model_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct ModelPart* part, bool head) {
+	struct Model* model = Model_ActiveModel;
 	Real32 cosX = Math_CosF(-angleX), sinX = Math_SinF(-angleX);
 	Real32 cosY = Math_CosF(-angleY), sinY = Math_SinF(-angleY);
 	Real32 cosZ = Math_CosF(-angleZ), sinZ = Math_SinF(-angleZ);
@@ -194,41 +194,41 @@ void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct Model
 		Real32 t = 0;
 
 		/* Rotate locally */
-		if (IModel_Rotation == ROTATE_ORDER_ZYX) {
-			IModel_RotateZ
-			IModel_RotateY
-			IModel_RotateX
-		} else if (IModel_Rotation == ROTATE_ORDER_XZY) {
-			IModel_RotateX
-			IModel_RotateZ
-			IModel_RotateY
-		} else if (IModel_Rotation == ROTATE_ORDER_YZX) {
-			IModel_RotateY
-			IModel_RotateZ
-			IModel_RotateX
+		if (Model_Rotation == ROTATE_ORDER_ZYX) {
+			Model_RotateZ
+			Model_RotateY
+			Model_RotateX
+		} else if (Model_Rotation == ROTATE_ORDER_XZY) {
+			Model_RotateX
+			Model_RotateZ
+			Model_RotateY
+		} else if (Model_Rotation == ROTATE_ORDER_YZX) {
+			Model_RotateY
+			Model_RotateZ
+			Model_RotateX
 		}
 
 		/* Rotate globally */
 		if (head) {
-			t = IModel_cosHead * v.X - IModel_sinHead * v.Z; v.Z = IModel_sinHead * v.X + IModel_cosHead * v.Z; v.X = t; /* Inlined RotY */
+			t = Model_cosHead * v.X - Model_sinHead * v.Z; v.Z = Model_sinHead * v.X + Model_cosHead * v.Z; v.X = t; /* Inlined RotY */
 		}
 		dst->X = v.X + x; dst->Y = v.Y + y; dst->Z = v.Z + z;
-		dst->Col = IModel_Cols[i >> 2];
+		dst->Col = Model_Cols[i >> 2];
 
-		dst->U = (v.U & UV_POS_MASK) * IModel_uScale - (v.U >> UV_MAX_SHIFT) * 0.01f * IModel_uScale;
-		dst->V = (v.V & UV_POS_MASK) * IModel_vScale - (v.V >> UV_MAX_SHIFT) * 0.01f * IModel_vScale;
+		dst->U = (v.U & UV_POS_MASK) * Model_uScale - (v.U >> UV_MAX_SHIFT) * 0.01f * Model_uScale;
+		dst->V = (v.V & UV_POS_MASK) * Model_vScale - (v.V >> UV_MAX_SHIFT) * 0.01f * Model_vScale;
 		src++; dst++;
 	}
 	model->index += count;
 }
 
-void IModel_RenderArm(struct IModel* model, struct Entity* entity) {
+void Model_RenderArm(struct Model* model, struct Entity* entity) {
 	Vector3 pos = entity->Position;
 	if (model->Bobbing) pos.Y += entity->Anim.BobbingModel;
-	IModel_SetupState(model, entity);
+	Model_SetupState(model, entity);
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
-	IModel_ApplyTexture(entity);
+	Model_ApplyTexture(entity);
 	struct Matrix translate;
 
 	if (Game_ClassicArmModel) {
@@ -246,22 +246,22 @@ void IModel_RenderArm(struct IModel* model, struct Entity* entity) {
 	Matrix_Mul(&m, &translate, &m);
 
 	Gfx_LoadMatrix(&m);
-	IModel_Rotation = ROTATE_ORDER_YZX;
+	Model_Rotation = ROTATE_ORDER_YZX;
 	model->DrawArm(entity);
-	IModel_Rotation = ROTATE_ORDER_ZYX;
+	Model_Rotation = ROTATE_ORDER_ZYX;
 	Gfx_LoadMatrix(&Gfx_View);
 }
 
-void IModel_DrawArmPart(struct ModelPart* part) {
-	struct IModel* model = IModel_ActiveModel;
+void Model_DrawArmPart(struct ModelPart* part) {
+	struct Model* model = Model_ActiveModel;
 	struct ModelPart arm = *part;
 	arm.RotX = model->armX / 16.0f; 
 	arm.RotY = (model->armY + model->armY / 2) / 16.0f;
 
 	if (Game_ClassicArmModel) {
-		IModel_DrawRotate(0, -90 * MATH_DEG2RAD, 120 * MATH_DEG2RAD, &arm, false);
+		Model_DrawRotate(0, -90 * MATH_DEG2RAD, 120 * MATH_DEG2RAD, &arm, false);
 	} else {
-		IModel_DrawRotate(-20 * MATH_DEG2RAD, -70 * MATH_DEG2RAD, 135 * MATH_DEG2RAD, &arm, false);
+		Model_DrawRotate(-20 * MATH_DEG2RAD, -70 * MATH_DEG2RAD, 135 * MATH_DEG2RAD, &arm, false);
 	}
 }
 
@@ -290,7 +290,7 @@ void BoxDesc_BuildBox(struct ModelPart* part, struct BoxDesc* desc) {
 	Real32 x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
 	Int32 x = desc->TexX, y = desc->TexY;
-	struct IModel* m = IModel_ActiveModel;
+	struct Model* m = Model_ActiveModel;
 
 	BoxDesc_YQuad(m, x + sidesW,                  y,          bodyW, sidesW, x1, x2, z2, z1, y2, true);  /* top */
 	BoxDesc_YQuad(m, x + sidesW + bodyW,          y,          bodyW, sidesW, x2, x1, z2, z1, y1, false); /* bottom */
@@ -299,7 +299,7 @@ void BoxDesc_BuildBox(struct ModelPart* part, struct BoxDesc* desc) {
 	BoxDesc_XQuad(m, x,                           y + sidesW, sidesW, bodyH, z1, z2, y1, y2, x2, true);  /* left */
 	BoxDesc_XQuad(m, x + sidesW + bodyW,          y + sidesW, sidesW, bodyH, z2, z1, y1, y2, x1, true);  /* right */
 
-	ModelPart_Init(part, m->index - IMODEL_BOX_VERTICES, IMODEL_BOX_VERTICES,
+	ModelPart_Init(part, m->index - MODEL_BOX_VERTICES, MODEL_BOX_VERTICES,
 		desc->RotX, desc->RotY, desc->RotZ);
 }
 
@@ -308,7 +308,7 @@ void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc) {
 	Real32 x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
 	Int32 x = desc->TexX, y = desc->TexY;
-	struct IModel* m = IModel_ActiveModel;
+	struct Model* m = Model_ActiveModel;
 
 	BoxDesc_YQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW,  bodyH, x1, x2, z1, z2, y2, false); /* top */
 	BoxDesc_YQuad(m, x + sidesW,                  y + sidesW, bodyW,  bodyH, x2, x1, z1, z2, y1, false); /* bottom */
@@ -325,12 +325,12 @@ void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc) {
 		m->vertices[i] = vertex;
 	}
 
-	ModelPart_Init(part, m->index - IMODEL_BOX_VERTICES, IMODEL_BOX_VERTICES,
+	ModelPart_Init(part, m->index - MODEL_BOX_VERTICES, MODEL_BOX_VERTICES,
 		desc->RotX, desc->RotY, desc->RotZ);
 }
 
 
-void BoxDesc_XQuad(struct IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
+void BoxDesc_XQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 z1, Real32 z2, Real32 y1, Real32 y2, Real32 x, bool swapU) {
 	Int32 u1 = texX, u2 = (texX + texWidth) | UV_MAX;
 	if (swapU) { Int32 tmp = u1; u1 = u2; u2 = tmp; }
@@ -341,7 +341,7 @@ void BoxDesc_XQuad(struct IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int
 	ModelVertex_Init(&m->vertices[m->index], x, y1, z2, u2, (texY + texHeight) | UV_MAX); m->index++;
 }
 
-void BoxDesc_YQuad(struct IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
+void BoxDesc_YQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 x1, Real32 x2, Real32 z1, Real32 z2, Real32 y, bool swapU) {
 	Int32 u1 = texX, u2 = (texX + texWidth) | UV_MAX;
 	if (swapU) { Int32 tmp = u1; u1 = u2; u2 = tmp; }
@@ -352,7 +352,7 @@ void BoxDesc_YQuad(struct IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int
 	ModelVertex_Init(&m->vertices[m->index], x2, y, z2, u2, (texY + texHeight) | UV_MAX); m->index++;
 }
 
-void BoxDesc_ZQuad(struct IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
+void BoxDesc_ZQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 x1, Real32 x2, Real32 y1, Real32 y2, Real32 z, bool swapU) {
 	Int32 u1 = texX, u2 = (texX + texWidth) | UV_MAX;
 	if (swapU) { Int32 tmp = u1; u1 = u2; u2 = tmp; }

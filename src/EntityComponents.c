@@ -13,7 +13,7 @@
 #include "GraphicsCommon.h"
 #include "ModelCache.h"
 #include "Physics.h"
-#include "IModel.h"
+#include "Model.h"
 #include "Audio.h"
 
 /*########################################################################################################################*
