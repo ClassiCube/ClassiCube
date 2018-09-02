@@ -18,13 +18,37 @@ namespace ClassicalSharp {
 			
 			string defPath = Path.Combine("texpacks", "default.zip");
 			if (!Platform.FileExists(defPath)) {
-				ErrorHandler.ShowDialog("Missing file", "default.zip not found, try running the launcher first.");
+				ErrorHandler.ShowDialog("Failed to start", "default.zip is missing, try running the launcher first.");
 				return;
 			}
 			
 			ErrorHandler.InstallHandler("client.log");
 			OpenTK.Configuration.SkipPerfCountersHack();
 			Utils.LogDebug("Starting " + AppName + "..");
+
+			IPAddress ip = null;
+			int port = 0;
+			string user = null, mppass = null;
+			string skinServer = "http://static.classicube.net/skins/";
+			
+			if (args.Length == 0 || args.Length == 1) {
+				user = args.Length > 0 ? args[0] : "Singleplayer";
+			} else if (args.Length < 4) {
+				ErrorHandler.ShowDialog("Failed to start", "ClassicalSharp.exe is only the raw client\n\n." +
+				                        "Use the launcher instead, or provide command line arguments.");
+				return;
+			} else {
+				user   = args[0];
+				mppass = args[1];
+				if (args.Length > 4) skinServer = args[4];
+				
+				if (!IPAddress.TryParse(args[2], out ip)) {
+					ErrorHandler.ShowDialog("Failed to start", "Invalid IP " + args[2]); return;
+				}
+				if (!Int32.TryParse(args[3], out port) || port < 0 || port > ushort.MaxValue) {
+					ErrorHandler.ShowDialog("Failed to start", "Invalid port " + args[3]); return;
+				}
+			}
 			
 			Options.Load();
 			DisplayDevice device = DisplayDevice.Default;
@@ -37,36 +61,7 @@ namespace ClassicalSharp {
 				if (device.Bounds.Width < 854) width = 640;
 			}
 			
-			if (args.Length == 0 || args.Length == 1) {
-				const string skinServer = "http://static.classicube.net/skins/";
-				string user = args.Length > 0 ? args[0] : "Singleplayer";
-				using (Game game = new Game(user, null, skinServer, width, height))
-					game.Run();
-			} else if (args.Length < 4) {
-				Utils.LogDebug("ClassicalSharp.exe is only the raw client. You must either use the launcher or"
-				               + " provide command line arguments to start the client.");
-			} else {
-				RunMultiplayer(args, width, height);
-			}
-		}
-		
-		static void RunMultiplayer(string[] args, int width, int height) {
-			IPAddress ip = null;
-			if (!IPAddress.TryParse(args[2], out ip)) {
-				Utils.LogDebug("Invalid IP \"" + args[2] + '"'); return;
-			}
-
-			int port = 0;
-			if (!Int32.TryParse(args[3], out port)) {
-				Utils.LogDebug("Invalid port \"" + args[3] + '"');
-				return;
-			} else if (port < ushort.MinValue || port > ushort.MaxValue) {
-				Utils.LogDebug("Specified port " + port + " is out of valid range.");
-				return;
-			}
-
-			string skinServer = args.Length >= 5 ? args[4] : "http://static.classicube.net/skins/";
-			using (Game game = new Game(args[0], args[1], skinServer, width, height)) {
+			using (Game game = new Game(user, mppass, skinServer, width, height)) {
 				game.IPAddress = ip;
 				game.Port = port;
 				game.Run();

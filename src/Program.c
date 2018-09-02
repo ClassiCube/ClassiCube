@@ -53,15 +53,6 @@ int main(void) {
 	main_imdct();
 #endif
 
-	/*Http_Init();
-	AsyncRequest req = { 0 };
-	String url = String_FromArray(req.URL);
-	String_AppendConst(&url, "http://static.classicube.net/skins/UnknownShadow200.png");
-	void* reqHandle = NULL;
-	ReturnCode ret = Http_MakeRequest(&req, &reqHandle);
-	ReturnCode ret2 = Http_FreeRequest(reqHandle);
-	ReturnCode ret3 = Http_Free();*/
-
 	Utils_EnsureDirectory("maps");
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("texturecache");
@@ -71,28 +62,15 @@ int main(void) {
 	String_Format1(&defPath, "texpacks%rdefault.zip", &Directory_Separator);
 
 	if (!File_Exists(&defPath)) {
-		ErrorHandler_ShowDialog("Missing file", "default.zip missing, try running launcher first");
-		Platform_Exit(1);
-		return 1;
+		ErrorHandler_ShowDialog("Failed to start", "default.zip is missing, try running launcher first");
+		Platform_Exit(1); return 1;
 	}
 
 	Platform_LogConst("Starting " PROGRAM_APP_NAME " ..");
-	Options_Load();
-
-	struct DisplayDevice device = DisplayDevice_Default;
-	Int32 width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, device.Bounds.Width,  0);
-	Int32 height = Options_GetInt(OPT_WINDOW_HEIGHT, 0, device.Bounds.Height, 0);
-
-	/* No custom resolution has been set */
-	if (width == 0 || height == 0) {
-		width = 854; height = 480;
-		if (device.Bounds.Width < 854) width = 640;
-	}
-
 	String title   = String_FromConst(PROGRAM_APP_NAME);
 	String rawArgs = Platform_GetCommandLineArgs();
 	/* NOTE: Make sure to comment this out before pushing a commit */
-	//rawArgs = String_FromReadonly("UnknownShadow200 fff 127.0.0.1 25565");
+	//rawArgs = String_FromReadonly("UnknownShadow200 fff 127.0.1 25565");
 
 	String args[5]; Int32 argsCount = Array_Elems(args);
 	String_UNSAFE_Split(&rawArgs, ' ', args, &argsCount);
@@ -102,7 +80,9 @@ int main(void) {
 		if (!name.length) name = String_FromReadonly("Singleplayer");
 		String_Copy(&Game_Username, &name);
 	} else if (argsCount < 4) {
-		Platform_LogConst("ClassiCube.exe is only the raw client. You must either use the launcher or provide command line arguments to start the client.");
+		ErrorHandler_ShowDialog("Failed to start", "ClassiCube.exe is only the raw client.\n\n" \
+			"Use the launcher instead, or provide command line arguments");
+		Platform_Exit(1);
 		return 1;
 	} else {
 		String_Copy(&Game_Username,  &args[0]);
@@ -111,16 +91,27 @@ int main(void) {
 
 		UInt8 ip[4];
 		if (!Utils_ParseIP(&args[2], ip)) { 
-			Platform_LogConst("Invalid IP"); 
-			return 1; 
+			ErrorHandler_ShowDialog("Failed to start", "Invalid IP");
+			Platform_Exit(1); return 1; 
 		}
 		
 		UInt16 port;
 		if (!Convert_TryParseUInt16(&args[3], &port)) { 
-			Platform_LogConst("Invalid port"); 
-			return 1; 
+			ErrorHandler_ShowDialog("Failed to start", "Invalid port");
+			Platform_Exit(1); return 1;
 		}
 		Game_Port = port;
+	}
+
+	Options_Load();
+	struct DisplayDevice device = DisplayDevice_Default;
+	Int32 width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, device.Bounds.Width,  0);
+	Int32 height = Options_GetInt(OPT_WINDOW_HEIGHT, 0, device.Bounds.Height, 0);
+
+	/* No custom resolution has been set */
+	if (width == 0 || height == 0) {
+		width = 854; height = 480;
+		if (device.Bounds.Width < 854) width = 640;
 	}
 
 	Game_Run(width, height, &title, &device);

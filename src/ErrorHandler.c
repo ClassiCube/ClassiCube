@@ -11,11 +11,9 @@ void ErrorHandler_FailWithCode(ReturnCode result, const char* raw_msg) {
 	char logMsgBuffer[3070 + 1] = { 0 };
 	String logMsg = { logMsgBuffer, 0, 3070 };
 
-	String_Format3(&logMsg, "ClassiCube crashed.%cMessge: %c%c",
-		Platform_NewLine, raw_msg, Platform_NewLine);
-	if (result) {
-		String_Format2(&logMsg, "%y%c", &result, Platform_NewLine);
-	} else { result = 1; }
+	String_Format1(&logMsg, "ClassiCube crashed.\nMessge: %c\n", raw_msg);
+	if (result) { String_Format1(&logMsg, "%y\n", &result); } 
+	else { result = 1; }
 
 	ErrorHandler_Backtrace(&logMsg);
 	/* TODO: write to log file */
