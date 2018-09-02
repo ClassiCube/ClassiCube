@@ -990,11 +990,9 @@ ReturnCode Http_Do(struct AsyncRequest* req, volatile Int32* progress) {
 
 ReturnCode Http_Free(void) { return Win_Return(InternetCloseHandle(hInternet)); }
 #elif CC_BUILD_NIX
+/* TODO: Implement these */
 void Http_Init(void) { }
-ReturnCode Http_MakeRequest(struct AsyncRequest* request, void** handle) { return 1; }
-ReturnCode Http_GetRequestHeaders(struct AsyncRequest* request, void* handle, UInt32* size) { return 1; }
-ReturnCode Http_GetRequestData(struct AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress) { return 1; }
-ReturnCode Http_FreeRequest(void* handle) { return 1; }
+ReturnCode Http_Do(struct AsyncRequest* req, volatile Int32* progress) { return 1; }
 ReturnCode Http_Free(void) { return 1; }
 #endif
 
@@ -1104,6 +1102,16 @@ bool Audio_IsFinished(AudioHandle handle) {
 	return true;
 }
 #elif CC_BUILD_NIX
+/* TODO: Implement these */
+void Audio_Init(AudioHandle* handle, Int32 buffers) { }
+void Audio_Free(AudioHandle handle) { }
+struct AudioFormat* Audio_GetFormat(AudioHandle handle) { return NULL; }
+void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) { }
+void Audio_BufferData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize) { }
+void Audio_Play(AudioHandle handle) { }
+
+bool Audio_IsCompleted(AudioHandle handle, Int32 idx) { return true; }
+bool Audio_IsFinished(AudioHandle handle) { return true; }
 #endif
 
 
@@ -1231,6 +1239,19 @@ void Platform_Init(void) {
 
 void Platform_Free(void) {
 	pthread_mutex_destroy(&event_mutex);
+}
+
+void Platform_SetWorkingDir(void) {
+	char path[FILENAME_SIZE + 1] = { 0 };
+	int len = readlink("/proc/self/exe", path, FILENAME_SIZE);
+	if (len <= 0) return;
+
+	/* get rid of filename at end of directory*/
+	for (; len > 0; len--) {
+		if (path[len] == '/' || path[len] == '\\') break;
+		path[len] = '\0';
+	}
+	chdir(path);
 }
 
 void Platform_Exit(ReturnCode code) { exit(code); }

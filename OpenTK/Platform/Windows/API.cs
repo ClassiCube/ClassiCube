@@ -51,7 +51,7 @@ namespace OpenTK.Platform.Windows {
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool ShowWindow(IntPtr hWnd, ShowWindowCommand nCmdShow);
 		
-		[DllImport("User32.dll", CharSet = CharSet.Auto)]
+		[DllImport("user32.dll", CharSet = CharSet.Auto)]
 		internal static extern bool PeekMessage(ref MSG msg, IntPtr hWnd, int messageFilterMin, int messageFilterMax, int flags);
 		[DllImport("user32.dll", CharSet = CharSet.Auto)]
 		internal static extern IntPtr SendMessage(IntPtr hWnd, WindowMessage Msg, IntPtr wParam, IntPtr lParam);
@@ -80,7 +80,7 @@ namespace OpenTK.Platform.Windows {
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern IntPtr LoadLibrary(string dllName);
-		[DllImport("kernel32", SetLastError = true)]
+		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
 		[DllImport("user32.dll", SetLastError = true)]

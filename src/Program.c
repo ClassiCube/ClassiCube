@@ -46,6 +46,7 @@ int main(void) {
 #ifdef CC_TEST_VORBIS
 	main_imdct();
 #endif
+	Platform_LogConst("Starting " PROGRAM_APP_NAME " ..");
 
 	Utils_EnsureDirectory("maps");
 	Utils_EnsureDirectory("texpacks");
@@ -60,11 +61,10 @@ int main(void) {
 		Platform_Exit(1); return 1;
 	}
 
-	Platform_LogConst("Starting " PROGRAM_APP_NAME " ..");
 	String title   = String_FromConst(PROGRAM_APP_NAME);
 	String rawArgs = Platform_GetCommandLineArgs();
 	/* NOTE: Make sure to comment this out before pushing a commit */
-	rawArgs = String_FromReadonly("UnknownShadow200 fff 127.0.0.1 25566");
+	//rawArgs = String_FromReadonly("UnknownShadow200 fff 127.0.0.1 25566");
 
 	String args[5]; Int32 argsCount = Array_Elems(args);
 	String_UNSAFE_Split(&rawArgs, ' ', args, &argsCount);

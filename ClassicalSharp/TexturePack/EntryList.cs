@@ -48,11 +48,9 @@ namespace ClassicalSharp.Textures {
 		
 		public bool Save() {
 			try {				
-				if (!Platform.DirectoryExists(folder)) {
-					Platform.DirectoryCreate(folder);
-				}
-				
+				Utils.EnsureDirectory(folder);
 				string path = Path.Combine(folder, file);
+				
 				using (Stream fs = Platform.FileCreate(path))
 					using (StreamWriter writer = new StreamWriter(fs))
 				{

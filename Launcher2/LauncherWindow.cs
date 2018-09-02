@@ -63,7 +63,6 @@ namespace Launcher {
 			Window.Redraw += RedrawPending;
 			Keyboard.KeyDown += KeyDown;
 			
-			ClassicalSharp.Program.CleanupMainDirectory();
 			LoadFont();
 			logoFont = new Font(FontName, 32, FontStyle.Regular);
 			

@@ -14,17 +14,20 @@ namespace ClassicalSharp {
 		[STAThread]
 		static void Main(string[] args) {
 			Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-			CleanupMainDirectory();
+			ErrorHandler.InstallHandler("client.log");
+			Utils.LogDebug("Starting " + AppName + "..");
+			
+			Utils.EnsureDirectory("maps");
+			Utils.EnsureDirectory("texpacks");
+			Utils.EnsureDirectory("texturecache");
 			
 			string defPath = Path.Combine("texpacks", "default.zip");
 			if (!Platform.FileExists(defPath)) {
 				ErrorHandler.ShowDialog("Failed to start", "default.zip is missing, try running the launcher first.");
 				return;
 			}
-			
-			ErrorHandler.InstallHandler("client.log");
 			OpenTK.Configuration.SkipPerfCountersHack();
-			Utils.LogDebug("Starting " + AppName + "..");
+			
 
 			IPAddress ip = null;
 			int port = 0;
@@ -35,7 +38,7 @@ namespace ClassicalSharp {
 				user = args.Length > 0 ? args[0] : "Singleplayer";
 			} else if (args.Length < 4) {
 				ErrorHandler.ShowDialog("Failed to start", "ClassicalSharp.exe is only the raw client\n\n." +
-				                        "Use the launcher instead, or provide command line arguments.");
+				                        "Use the launcher instead, or provide command line arguments");
 				return;
 			} else {
 				user   = args[0];
@@ -68,19 +71,5 @@ namespace ClassicalSharp {
 			}
 		}
 		#endif
-		
-		public static void CleanupMainDirectory() {
-			if (!Platform.DirectoryExists("maps")) {
-				Platform.DirectoryCreate("maps");
-			}
-
-			if (!Platform.DirectoryExists("texpacks")) {
-				Platform.DirectoryCreate("texpacks");
-			}
-			
-			if (!Platform.DirectoryExists("texturecache")) {
-				Platform.DirectoryCreate("texturecache");
-			}
-		}
 	}
 }

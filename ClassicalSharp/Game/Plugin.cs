@@ -21,9 +21,7 @@ namespace ClassicalSharp {
 		internal static Game game;
 		
 		internal static List<string> LoadAll() {
-			if (!Platform.DirectoryExists("plugins")) {
-				Platform.DirectoryCreate("plugins");
-			}
+			Utils.EnsureDirectory("plugins");
 			
 			Accepted = new EntryList("plugins", "accepted.txt");
 			Denied = new EntryList("plugins", "denied.txt");

@@ -121,11 +121,9 @@ namespace ClassicalSharp {
 		}
 		
 		void OpenChatFile(DateTime now) {
-			if (!Platform.DirectoryExists("logs")) {
-				Platform.DirectoryCreate("logs");
-			}
-
+			Utils.EnsureDirectory("logs");
 			string date = now.ToString("yyyy-MM-dd");
+			
 			// Ensure multiple instances do not end up overwriting each other's log entries.
 			for (int i = 0; i < 20; i++) {
 				string id = i == 0 ? "" : " _" + i;

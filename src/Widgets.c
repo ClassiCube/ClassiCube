@@ -1242,7 +1242,7 @@ static bool InputWidget_MouseDown(void* widget, Int32 x, Int32 y, MouseButton bu
 	return true;
 }
 
-FUNC_NOINLINE static void InputWidget_Create(struct InputWidget* w, struct FontDesc* font, STRING_REF String* prefix) {
+NOINLINE_ static void InputWidget_Create(struct InputWidget* w, struct FontDesc* font, STRING_REF String* prefix) {
 	Widget_Reset(w);
 	w->Font            = *font;
 	w->Prefix          = *prefix;

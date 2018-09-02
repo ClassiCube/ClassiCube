@@ -16,9 +16,9 @@ struct TextWidget {
 	bool ReducePadding;
 	PackedCol Col;
 };
-FUNC_NOINLINE void TextWidget_Make(struct TextWidget* w);
-FUNC_NOINLINE void TextWidget_Create(struct TextWidget* w, STRING_PURE String* text, struct FontDesc* font);
-FUNC_NOINLINE void TextWidget_Set(struct TextWidget* w, STRING_PURE String* text, struct FontDesc* font);
+NOINLINE_ void TextWidget_Make(struct TextWidget* w);
+NOINLINE_ void TextWidget_Create(struct TextWidget* w, STRING_PURE String* text, struct FontDesc* font);
+NOINLINE_ void TextWidget_Set(struct TextWidget* w, STRING_PURE String* text, struct FontDesc* font);
 
 
 typedef void (*Button_Get)(STRING_TRANSIENT String* raw);
@@ -32,8 +32,8 @@ struct ButtonWidget {
 	Button_Get GetValue;
 	Button_Set SetValue;
 };
-FUNC_NOINLINE void ButtonWidget_Create(struct ButtonWidget* w, Int32 minWidth, STRING_PURE String* text, struct FontDesc* font, Widget_LeftClick onClick);
-FUNC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, STRING_PURE String* text, struct FontDesc* font);
+NOINLINE_ void ButtonWidget_Create(struct ButtonWidget* w, Int32 minWidth, STRING_PURE String* text, struct FontDesc* font, Widget_LeftClick onClick);
+NOINLINE_ void ButtonWidget_Set(struct ButtonWidget* w, STRING_PURE String* text, struct FontDesc* font);
 
 
 struct ScrollbarWidget {
@@ -43,7 +43,7 @@ struct ScrollbarWidget {
 	Int32 MouseOffset;
 	bool DraggingMouse;
 };
-FUNC_NOINLINE void ScrollbarWidget_Create(struct ScrollbarWidget* w);
+NOINLINE_ void ScrollbarWidget_Create(struct ScrollbarWidget* w);
 
 
 struct HotbarWidget {
@@ -54,7 +54,7 @@ struct HotbarWidget {
 	Real32 ScrollAcc;
 	bool AltHandled;
 };
-FUNC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
+NOINLINE_ void HotbarWidget_Create(struct HotbarWidget* w);
 
 
 struct TableWidget {
@@ -73,10 +73,10 @@ struct TableWidget {
 	Int32 LastX, LastY;
 };
 
-FUNC_NOINLINE void TableWidget_Create(struct TableWidget* w);
-FUNC_NOINLINE void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block);
-FUNC_NOINLINE void TableWidget_OnInventoryChanged(struct TableWidget* w);
-FUNC_NOINLINE void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block);
+NOINLINE_ void TableWidget_Create(struct TableWidget* w);
+NOINLINE_ void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block);
+NOINLINE_ void TableWidget_OnInventoryChanged(struct TableWidget* w);
+NOINLINE_ void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block);
 
 
 #define INPUTWIDGET_MAX_LINES 3
@@ -107,9 +107,9 @@ struct InputWidget {
 	Real64 CaretAccumulator;
 };
 
-FUNC_NOINLINE void InputWidget_Clear(struct InputWidget* w);
-FUNC_NOINLINE void InputWidget_AppendString(struct InputWidget* w, STRING_PURE String* text);
-FUNC_NOINLINE void InputWidget_Append(struct InputWidget* w, char c);
+NOINLINE_ void InputWidget_Clear(struct InputWidget* w);
+NOINLINE_ void InputWidget_AppendString(struct InputWidget* w, STRING_PURE String* text);
+NOINLINE_ void InputWidget_Append(struct InputWidget* w, char c);
 
 
 struct MenuInputValidator;
@@ -143,7 +143,7 @@ struct MenuInputWidget {
 	struct MenuInputValidator Validator;
 	char __TextBuffer[INPUTWIDGET_LEN];
 };
-FUNC_NOINLINE void MenuInputWidget_Create(struct MenuInputWidget* w, Int32 width, Int32 height, STRING_PURE String* text, struct FontDesc* font, struct MenuInputValidator* v);
+NOINLINE_ void MenuInputWidget_Create(struct MenuInputWidget* w, Int32 width, Int32 height, STRING_PURE String* text, struct FontDesc* font, struct MenuInputValidator* v);
 
 
 struct ChatInputWidget {
@@ -154,7 +154,7 @@ struct ChatInputWidget {
 	String OrigStr;
 };
 
-FUNC_NOINLINE void ChatInputWidget_Create(struct ChatInputWidget* w, struct FontDesc* font);
+NOINLINE_ void ChatInputWidget_Create(struct ChatInputWidget* w, struct FontDesc* font);
 
 
 #define TEXTGROUPWIDGET_MAX_LINES 30
@@ -169,13 +169,13 @@ struct TextGroupWidget {
 	char* Buffer;
 };
 
-FUNC_NOINLINE void TextGroupWidget_Create(struct TextGroupWidget* w, Int32 linesCount, struct FontDesc* font, struct FontDesc* underlineFont, STRING_REF struct Texture* textures, STRING_REF char* buffer);
-FUNC_NOINLINE void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* w, Int32 index, bool placeHolder);
-FUNC_NOINLINE void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* w, STRING_PURE String* text);
-FUNC_NOINLINE Int32 TextGroupWidget_UsedHeight(struct TextGroupWidget* w);
-FUNC_NOINLINE void TextGroupWidget_GetSelected(struct TextGroupWidget* w, STRING_TRANSIENT String* text, Int32 mouseX, Int32 mouseY);
-FUNC_NOINLINE void TextGroupWidget_GetText(struct TextGroupWidget* w, Int32 index, STRING_TRANSIENT String* text);
-FUNC_NOINLINE void TextGroupWidget_SetText(struct TextGroupWidget* w, Int32 index, STRING_PURE String* text);
+NOINLINE_ void TextGroupWidget_Create(struct TextGroupWidget* w, Int32 linesCount, struct FontDesc* font, struct FontDesc* underlineFont, STRING_REF struct Texture* textures, STRING_REF char* buffer);
+NOINLINE_ void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* w, Int32 index, bool placeHolder);
+NOINLINE_ void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* w, STRING_PURE String* text);
+NOINLINE_ Int32 TextGroupWidget_UsedHeight(struct TextGroupWidget* w);
+NOINLINE_ void TextGroupWidget_GetSelected(struct TextGroupWidget* w, STRING_TRANSIENT String* text, Int32 mouseX, Int32 mouseY);
+NOINLINE_ void TextGroupWidget_GetText(struct TextGroupWidget* w, Int32 index, STRING_TRANSIENT String* text);
+NOINLINE_ void TextGroupWidget_SetText(struct TextGroupWidget* w, Int32 index, STRING_PURE String* text);
 
 
 struct PlayerListWidget {
@@ -188,8 +188,8 @@ struct PlayerListWidget {
 	UInt16 IDs[TABLIST_MAX_NAMES * 2];
 	struct Texture Textures[TABLIST_MAX_NAMES * 2];
 };
-FUNC_NOINLINE void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, bool classic);
-FUNC_NOINLINE void PlayerListWidget_GetNameUnder(struct PlayerListWidget* w, Int32 mouseX, Int32 mouseY, STRING_TRANSIENT String* name);
+NOINLINE_ void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, bool classic);
+NOINLINE_ void PlayerListWidget_GetNameUnder(struct PlayerListWidget* w, Int32 mouseX, Int32 mouseY, STRING_TRANSIENT String* name);
 
 
 typedef void (*SpecialInputAppendFunc)(void* userData, char c);
@@ -211,7 +211,7 @@ struct SpecialInputWidget {
 	char __ColBuffer[DRAWER2D_MAX_COLS * 4];
 };
 
-FUNC_NOINLINE void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* font, struct InputWidget* appendObj);
-FUNC_NOINLINE void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w);
-FUNC_NOINLINE void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active);
+NOINLINE_ void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* font, struct InputWidget* appendObj);
+NOINLINE_ void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w);
+NOINLINE_ void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active);
 #endif

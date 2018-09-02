@@ -90,6 +90,11 @@ namespace ClassicalSharp {
 		public static bool CaselessStarts(string a, string b) { return a.StartsWith(b, comp); }
 		public static bool CaselessEnds(string a, string b)   { return a.EndsWith(b, comp); }
 		
+		public static void EnsureDirectory(string path) {
+			if (Platform.DirectoryExists(path)) return;
+			Platform.DirectoryCreate(path);
+		}
+		
 		public static void LogDebug(string text) {
 			try { Console.WriteLine(text); } catch { }
 		}

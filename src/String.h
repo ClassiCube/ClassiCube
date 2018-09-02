@@ -115,8 +115,8 @@ STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, Int32 index);
 void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text);
 void StringsBuffer_Remove(StringsBuffer* buffer, Int32 index);
 
-void WordWrap_Do(STRING_REF String* text, STRING_TRANSIENT String* lines, Int32 numLines, Int32 lineLen);
-void WordWrap_GetCoords(Int32 index, STRING_PURE String* lines, Int32 numLines, Int32* coordX, Int32* coordY);
+void  WordWrap_Do(STRING_REF String* text, STRING_TRANSIENT String* lines, Int32 numLines, Int32 lineLen);
+void  WordWrap_GetCoords(Int32 index, STRING_PURE String* lines, Int32 numLines, Int32* coordX, Int32* coordY);
 Int32 WordWrap_GetBackLength(STRING_PURE String* text, Int32 index);
 Int32 WordWrap_GetForwardLength(STRING_PURE String* text, Int32 index);
 #endif

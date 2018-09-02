@@ -14,7 +14,7 @@ typedef signed __int8  Int8;
 typedef signed __int16 Int16;
 typedef signed __int32 Int32;
 typedef signed __int64 Int64;
-#define FUNC_NOINLINE __declspec(noinline)
+#define NOINLINE_ __declspec(noinline)
 #elif __GNUC__
 #include <stdint.h>
 typedef uint8_t  UInt8;
@@ -26,7 +26,7 @@ typedef int8_t Int8;
 typedef int16_t Int16;
 typedef int32_t Int32;
 typedef int64_t Int64;
-#define FUNC_NOINLINE __attribute__((noinline))
+#define NOINLINE_ __attribute__((noinline))
 #else
 #error "I don't recognise this compiler. You'll need to add required definitions in Core.h!"
 #endif

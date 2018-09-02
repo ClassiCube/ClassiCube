@@ -35,10 +35,10 @@ void Platform_Exit(ReturnCode code);
 STRING_PURE String Platform_GetCommandLineArgs(void);
 ReturnCode Platform_StartShell(STRING_PURE String* args);
 
-FUNC_NOINLINE void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const char* place);
-FUNC_NOINLINE void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const char* place);
-FUNC_NOINLINE void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const char* place);
-FUNC_NOINLINE void  Mem_Free(void* mem);
+NOINLINE_ void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const char* place);
+NOINLINE_ void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const char* place);
+NOINLINE_ void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const char* place);
+NOINLINE_ void  Mem_Free(void* mem);
 void Mem_Set(void* dst, UInt8 value, UInt32 numBytes);
 void Mem_Copy(void* dst, void* src, UInt32 numBytes);
 

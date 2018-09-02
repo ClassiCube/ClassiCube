@@ -6,22 +6,25 @@ namespace Launcher {
 
 	internal static class Program {
 		
-		public const string AppName = "ClassicalSharp Launcher 0.99.9.96";	
+		public const string AppName = "ClassicalSharp Launcher 0.99.9.96";
 		public static bool ShowingErrorDialog = false;
 		
 		[STAThread]
 		static void Main(string[] args) {
 			Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+			ErrorHandler.InstallHandler("launcher.log");
 
-			if (!Platform.FileExists("ClassicalSharp.exe")) { 
-				ErrorHandler.ShowDialog("Missing file", "ClassicalSharp.exe needs to be in the same folder as the launcher."); 
+			if (!Platform.FileExists("ClassicalSharp.exe")) {
+				ErrorHandler.ShowDialog("Missing file", "ClassicalSharp.exe needs to be in the same folder as the launcher.");
 				return;
 			}
-					
-			ErrorHandler.InstallHandler("launcher.log");
 			OpenTK.Configuration.SkipPerfCountersHack();
-			AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
 			
+			Utils.EnsureDirectory("maps");
+			Utils.EnsureDirectory("texpacks");
+			Utils.EnsureDirectory("texturecache");
+			
+			AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;			
 			LauncherWindow window = new LauncherWindow();
 			window.Run();
 		}

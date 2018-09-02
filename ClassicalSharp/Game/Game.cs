@@ -405,10 +405,7 @@ namespace ClassicalSharp {
 		}
 		
 		void TakeScreenshot() {
-			if (!Platform.DirectoryExists("screenshots")) {
-				Platform.DirectoryCreate("screenshots");
-			}
-			
+			Utils.EnsureDirectory("screenshots");
 			string timestamp = Utils.LocalNow().ToString("dd-MM-yyyy-HH-mm-ss");
 			string file = "screenshot_" + timestamp + ".png";
 			string path = PathIO.Combine("screenshots", file);

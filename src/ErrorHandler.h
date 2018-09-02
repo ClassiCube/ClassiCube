@@ -9,8 +9,8 @@
 void ErrorHandler_Init(const char* logFile);
 void ErrorHandler_Log(STRING_PURE String* msg);
 void ErrorHandler_Fail(const char* raw_msg);
-FUNC_NOINLINE void ErrorHandler_FailWithCode(ReturnCode result, const char* raw_msg);
+NOINLINE_ void ErrorHandler_FailWithCode(ReturnCode result, const char* raw_msg);
 #define ErrorHandler_CheckOrFail(result, raw_msg) if (result) { ErrorHandler_FailWithCode(result, raw_msg); }
-FUNC_NOINLINE void ErrorHandler_ShowDialog(const char* title, const char* msg);
-FUNC_NOINLINE void ErrorHandler_Backtrace(STRING_TRANSIENT String* str);
+NOINLINE_ void ErrorHandler_ShowDialog(const char* title, const char* msg);
+NOINLINE_ void ErrorHandler_Backtrace(STRING_TRANSIENT String* str);
 #endif
