@@ -22,6 +22,7 @@ struct AsyncRequest {
 
 	UInt64 TimeAdded, TimeDownloaded;
 	Int32  StatusCode;
+	ReturnCode Result;
 
 	void* ResultData;
 	UInt32 ResultSize;

@@ -72,6 +72,8 @@ void ServerConnection_CheckAsyncResources(void) {
 
 	if (item.ResultData) {
 		TexturePack_Extract_Req(&item);
+	} else if (item.Result) {
+		Chat_Add1("&cError %i when trying to download texture pack", &item.Result);
 	} else {
 		Int32 status = item.StatusCode;
 		if (status == 0 || status == 304) return;

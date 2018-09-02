@@ -926,7 +926,7 @@ static ReturnCode Http_GetHeaders(struct AsyncRequest* req, HINTERNET handle) {
 	if (!HttpQueryInfoA(handle, FLAG_STATUS, &req->StatusCode, &len, NULL)) return GetLastError();
 
 	len = sizeof(DWORD);
-	if (!HttpQueryInfoA(handle, FLAG_LENGTH, &req->ResultSize, &len, NULL)) return GetLastError();
+	HttpQueryInfoA(handle, FLAG_LENGTH, &req->ResultSize, &len, NULL);
 
 	SYSTEMTIME sysTime;
 	len = sizeof(SYSTEMTIME);
@@ -945,7 +945,7 @@ static ReturnCode Http_GetHeaders(struct AsyncRequest* req, HINTERNET handle) {
 
 static ReturnCode Http_GetData(struct AsyncRequest* req, HINTERNET handle, volatile Int32* progress) {
 	UInt32 size = req->ResultSize;
-	if (size) return ERROR_NOT_SUPPORTED;
+	if (!size) return ERROR_NOT_SUPPORTED;
 	*progress = 0;
 
 	UInt8* buffer = Mem_Alloc(size, sizeof(UInt8), "http get data");
