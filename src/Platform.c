@@ -51,6 +51,7 @@ ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <X11/Xlib.h>
+#include <curl/curl.h>
 
 #define Socket__Error() errno
 #define Nix_Return(success) ((success) ? 0 : errno)
@@ -990,10 +991,126 @@ ReturnCode Http_Do(struct AsyncRequest* req, volatile Int32* progress) {
 
 ReturnCode Http_Free(void) { return Win_Return(InternetCloseHandle(hInternet)); }
 #elif CC_BUILD_NIX
-/* TODO: Implement these */
-void Http_Init(void) { }
-ReturnCode Http_Do(struct AsyncRequest* req, volatile Int32* progress) { return 1; }
-ReturnCode Http_Free(void) { return 1; }
+CURL* curl;
+
+void Http_Init(void) {
+    CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
+    if (res) ErrorHandler_FailWithCode(res, "Failed to init curl");
+
+    curl = curl_easy_init();
+    if (!curl) ErrorHandler_Fail("Failed to init easy curl");
+}
+
+static int Http_Progress(Int32* progress, double total, double received, double a, double b) {
+    if (total == 0) return 0;
+    *progress = (Int32)(100 * received / total);
+    return 0;
+}
+
+static struct curl_slist* Http_Make(struct AsyncRequest* req) {
+    struct curl_slist* list = NULL;
+    char buffer1[STRING_SIZE + 1] = { 0 };
+    char buffer2[STRING_SIZE + 1] = { 0 };
+
+    if (req->Etag[0]) {
+        String tmp = { buffer1, 0, STRING_SIZE };
+        String_AppendConst(&tmp, "If-None-Match: ");
+
+        String etag = String_FromRawArray(req->Etag);
+        String_AppendString(&tmp, &etag);
+        list = curl_slist_append(list, tmp.buffer);
+    }
+
+    if (req->LastModified) {
+        String tmp = { buffer2, 0, STRING_SIZE };
+         String_AppendConst(&tmp, "Last-Modified: ");
+
+         DateTime_HttpDate(req->LastModified, &tmp);
+         list = curl_slist_append(list, tmp.buffer);
+    }
+    return list;
+}
+
+static size_t Http_GetHeaders(char *buffer, size_t size, size_t nitems, struct AsyncRequest* req) {
+    size_t total = size * nitems;
+    if (size != 1) return total; /* non byte header */
+    String line = String_Init(buffer, nitems, nitems), name, value;
+    if (!String_UNSAFE_Separate(&line, ':', &name, &value)) return total;
+
+    /* value usually has \r\n at end */
+    if (value.length && value.buffer[value.length - 1] == '\n') value.length--;
+    if (value.length && value.buffer[value.length - 1] == '\r') value.length--;
+    if (!value.length) return total;
+
+    if (String_CaselessEqualsConst(&name, "ETag")) {
+        String etag = String_ClearedArray(req->Etag);
+        String_AppendString(&etag, &value);
+    } else if (String_CaselessEqualsConst(&name, "Content-Length")) {
+        Convert_TryParseInt32(&value, &req->ResultSize);
+    } else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
+        char tmpBuffer[STRING_SIZE + 1] = { 0 };
+        String tmp = { tmpBuffer, 0, STRING_SIZE };
+        String_AppendString(&tmp, &value);
+
+        time_t time = curl_getdate(tmp.buffer, NULL);
+        if (time == -1) return total;
+        req->LastModified = (UInt64)time * 1000 + UNIX_EPOCH;
+    }
+    return total;
+}
+
+static size_t Http_GetData(char *buffer, size_t size, size_t nitems, struct AsyncRequest* req) {
+    UInt32 total = req->ResultSize;
+    if (!total || req->RequestType == REQUEST_TYPE_CONTENT_LENGTH) return 0;
+    if (!req->ResultData) req->ResultData = Mem_Alloc(total, 1, "http get data");
+
+    /* reuse Result as an offset */
+    UInt32 left = total - req->Result;
+    left        = min(left, nitems);
+
+    UInt8* dst = (UInt8*)req->ResultData + req->Result;
+    Mem_Copy(dst, buffer, left);
+    req->Result += left;
+
+    return nitems;
+}
+
+ReturnCode Http_Do(struct AsyncRequest* req, volatile Int32* progress) {
+    curl_easy_reset(curl);
+    String url = String_FromRawArray(req->URL);
+    struct curl_slist* list = Http_Make(req);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
+
+    curl_easy_setopt(curl, CURLOPT_URL,            url.buffer);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT,      PROGRAM_APP_NAME);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+
+    curl_easy_setopt(curl, CURLOPT_NOPROGRESS,       0L);
+    curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, Http_Progress);
+    curl_easy_setopt(curl, CURLOPT_PROGRESSDATA,     progress);
+
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, Http_GetHeaders);
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA,     req);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,  Http_GetData);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
+
+    *progress = ASYNC_PROGRESS_FETCHING_DATA;
+    CURLcode res = curl_easy_perform(curl);
+    *progress = 100;
+
+    long status = 0;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+    req->StatusCode = status;
+
+    curl_slist_free_all(list);
+    return res;
+}
+
+ReturnCode Http_Free(void) {
+    curl_easy_cleanup(curl);
+    curl_global_cleanup();
+    return 0;
+}
 #endif
 
 
