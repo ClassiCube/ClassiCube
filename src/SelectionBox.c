@@ -123,7 +123,7 @@ static void SelectionBox_Intersect(struct SelectionBox* box, Vector3 origin) {
 #define SELECTIONS_VERTICES 24
 #define SELECTIONS_MAX_VERTICES SELECTIONS_MAX * SELECTIONS_VERTICES
 
-UInt32 selections_count;
+Int32 selections_count;
 struct SelectionBox selections_list[SELECTIONS_MAX];
 UInt8 selections_ids[SELECTIONS_MAX];
 GfxResourceID selections_VB, selections_LineVB;
@@ -138,12 +138,12 @@ void Selections_Add(UInt8 id, Vector3I p1, Vector3I p2, PackedCol col) {
 
 	Selections_Remove(id);
 	selections_list[selections_count] = sel;
-	selections_ids[selections_count] = id;
+	selections_ids[selections_count]  = id;
 	selections_count++;
 }
 
 void Selections_Remove(UInt8 id) {
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < selections_count; i++) {
 		if (selections_ids[i] != id) continue;
 
@@ -192,7 +192,7 @@ void Selections_Render(Real64 delta) {
 	/* TODO: Proper selection box sorting. But this is very difficult because
 	   we can have boxes within boxes, intersecting boxes, etc. Probably not worth it. */
 	Vector3 camPos = Game_CurrentCameraPos;
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < selections_count; i++) {
 		SelectionBox_Intersect(&selections_list[i], camPos);
 	}

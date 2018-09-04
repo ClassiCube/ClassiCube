@@ -522,7 +522,7 @@ void Game_Load(void) {
 	ServerConnection_BeginConnect();
 }
 
-struct Stopwatch game_frameTimer;
+UInt64 game_frameTimer;
 Real32 game_limitMs;
 void Game_SetFpsLimitMethod(FpsLimit method) {
 	Game_FpsLimit = method;
@@ -720,7 +720,7 @@ void Game_Free(void* obj) {
 	Options_Save();
 }
 
-struct Stopwatch game_renderTimer;
+UInt64 game_renderTimer;
 void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct DisplayDevice* device) {
 	Int32 x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
 	Int32 y = device->Bounds.Y + (device->Bounds.Height - height) / 2;
@@ -746,9 +746,30 @@ void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct Displa
 	}
 }
 
-/* TODO: fix all these stubs.... */
+/* TODO: Implement all these stubs.... */
 #include "Builder.h"
 void AdvLightingBuilder_SetActive(void) { NormalBuilder_SetActive(); }
 /* TODO: Initalise Shell, see https://msdn.microsoft.com/en-us/library/windows/desktop/bb762153(v=vs.85).aspx 
 https://stackoverflow.com/questions/24590059/c-opening-a-url-in-default-browser-on-windows-without-admin-privileges */
 ReturnCode Platform_StartShell(STRING_PURE String* args) { return 0; }
+#if CC_BUILD_NIX
+void Waitable_WaitFor(void* handle, UInt32 milliseconds) { }
+STRING_PURE String Platform_GetCommandLineArgs(void) { return String_MakeNull(); }
+
+void Audio_Init(AudioHandle* handle, Int32 buffers) { }
+void Audio_Free(AudioHandle handle) { }
+struct AudioFormat* Audio_GetFormat(AudioHandle handle) { return NULL; }
+void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) { }
+void Audio_BufferData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize) { }
+void Audio_Play(AudioHandle handle) { }
+bool Audio_IsCompleted(AudioHandle handle, Int32 idx) { return true; }
+bool Audio_IsFinished(AudioHandle handle) { return true; }
+
+void Font_Make(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) { desc->Size = size; desc->Style = style; }
+void Font_Free(struct FontDesc* desc) { }
+void Font_GetNames(StringsBuffer* buffer) { }
+struct Size2D Platform_TextMeasure(struct DrawTextArgs* args) { }
+void Platform_SetBitmap(struct Bitmap* bmp) { }
+struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) { }
+void Platform_ReleaseBitmap(void) { }
+#endif

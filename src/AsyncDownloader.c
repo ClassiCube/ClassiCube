@@ -193,11 +193,11 @@ bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, Int32* progress) {
 static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	String url = String_FromRawArray(request->URL);
 	Platform_Log2("Downloading from %s (type %b)", &url, &request->RequestType);
-	struct Stopwatch stopwatch;
+	UInt64 timer;
 
-	Stopwatch_Measure(&stopwatch);
+	Stopwatch_Measure(&timer);
 	request->Result = Http_Do(request, &async_curProgress);
-	UInt32 elapsed  = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
+	UInt32 elapsed  = Stopwatch_ElapsedMicroseconds(&timer) / 1000;
 
 	Int32 status = request->StatusCode;
 	Platform_Log3("HTTP: return code %i (http %i), in %i ms", 

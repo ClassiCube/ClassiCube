@@ -22,7 +22,7 @@ String String_InitAndClear(STRING_REF char* buffer, UInt16 capacity) {
 	return str;
 }
 
-UInt16 String_CalcLen(STRING_PURE char* raw, UInt16 capacity) {
+UInt16 String_CalcLen(STRING_PURE const char* raw, UInt16 capacity) {
 	UInt16 length = 0;
 	while (length < capacity && *raw) { raw++; length++; }
 	return length;
@@ -689,15 +689,15 @@ void StringsBuffer_Clear(StringsBuffer* buffer) {
 	StringsBuffer_Init(buffer);
 }
 
-void StringsBuffer_Get(StringsBuffer* buffer, Int32 index, STRING_TRANSIENT String* text) {
-	String raw = StringsBuffer_UNSAFE_Get(buffer, index);
+void StringsBuffer_Get(StringsBuffer* buffer, Int32 i, STRING_TRANSIENT String* text) {
+	String raw = StringsBuffer_UNSAFE_Get(buffer, i);
 	String_Copy(text, &raw);
 }
 
-String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, Int32 index) {
-	if (index < 0 || index >= buffer->Count) ErrorHandler_Fail("Tried to get String past StringsBuffer end");
+String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, Int32 i) {
+	if (i < 0 || i >= buffer->Count) ErrorHandler_Fail("Tried to get String past StringsBuffer end");
 
-	UInt32 flags  = buffer->FlagsBuffer[index];
+	UInt32 flags  = buffer->FlagsBuffer[i];
 	UInt32 offset = flags >> STRINGSBUFFER_LEN_SHIFT;
 	UInt32 len    = flags  & STRINGSBUFFER_LEN_MASK;
 	return String_Init(&buffer->TextBuffer[offset], len, len);

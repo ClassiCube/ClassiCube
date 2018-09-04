@@ -348,7 +348,7 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		if (Block_Draw[cur] == DRAW_GAS) return;
 		if (!(Block_CanPlace[cur] || Block_CanDelete[cur])) return;
 		if (!Inventory_CanChangeSelected() || Inventory_SelectedBlock == cur) return;
-		UInt32 i;
+		Int32 i;
 
 		/* Is the currently selected block an empty slot */
 		if (Inventory_Get(Inventory_SelectedIndex) == BLOCK_AIR) {

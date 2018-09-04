@@ -144,7 +144,7 @@ struct AnimationData {
 
 struct Bitmap anims_bmp;
 struct AnimationData anims_list[ATLAS1D_MAX_ATLASES];
-UInt32 anims_count;
+Int32 anims_count;
 bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
 
 static void Animations_ReadDescription(struct Stream* stream, STRING_PURE String* path) {
@@ -265,7 +265,7 @@ static void Animations_Clear(void) {
 
 static void Animations_Validate(void) {
 	anims_validated = true;
-	UInt32 i, j;
+	Int32 i, j;
 
 	for (i = 0; i < anims_count; i++) {
 		struct AnimationData data = anims_list[i];
@@ -310,7 +310,7 @@ void Animations_Tick(struct ScheduledTask* task) {
 
 	/* deferred, because when reading animations.txt, might not have read animations.png yet */
 	if (!anims_validated) Animations_Validate();
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < anims_count; i++) {
 		Animations_Apply(&anims_list[i]);
 	}

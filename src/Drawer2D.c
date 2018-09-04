@@ -77,7 +77,7 @@ void Drawer2D_HexEncodedCol(Int32 i, Int32 hex, UInt8 lo, UInt8 hi) {
 }
 
 void Drawer2D_Init(void) {
-	UInt32 i;
+	Int32 i;
 	PackedCol col = PACKEDCOL_CONST(0, 0, 0, 0);
 	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
 		Drawer2D_Cols[i] = col;

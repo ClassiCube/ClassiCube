@@ -25,7 +25,7 @@ typedef struct String_ {
 	UInt16 capacity; /* Max number of characters  */
 } String;
 
-UInt16 String_CalcLen(STRING_PURE char* raw, UInt16 capacity);
+UInt16 String_CalcLen(STRING_PURE const char* raw, UInt16 capacity);
 String String_MakeNull(void);
 String String_Init(STRING_REF char* buffer, UInt16 length, UInt16 capacity);
 String String_InitAndClear(STRING_REF char* buffer, UInt16 capacity);
@@ -110,8 +110,8 @@ typedef struct StringsBuffer_ {
 
 void StringsBuffer_Init(StringsBuffer* buffer);
 void StringsBuffer_Clear(StringsBuffer* buffer);
-void StringsBuffer_Get(StringsBuffer* buffer, Int32 index, STRING_TRANSIENT String* text);
-STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, Int32 index);
+void StringsBuffer_Get(StringsBuffer* buffer, Int32 i, STRING_TRANSIENT String* text);
+STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, Int32 i);
 void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text);
 void StringsBuffer_Remove(StringsBuffer* buffer, Int32 index);
 

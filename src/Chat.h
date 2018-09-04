@@ -25,7 +25,7 @@ enum MSG_TYPE {
 struct ChatLine { char Buffer[STRING_SIZE]; UInt64 Received; };
 struct ChatLine Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
 StringsBuffer Chat_Log, Chat_InputLog;
-UInt64 Chat_GetLogTime(UInt32 index);
+UInt64 Chat_GetLogTime(Int32 i);
 
 void Chat_MakeComponent(struct IGameComponent* comp);
 void Chat_SetLogName(STRING_PURE String* name);

@@ -15,7 +15,6 @@ struct Size2D { Int32 Width, Height; };
 struct Size2D Size2D_Empty;
 
 struct Rectangle2D Rectangle2D_Make(Int32 x, Int32 y, Int32 width, Int32 height);
-bool Rectangle2D_Contains(struct Rectangle2D a, Int32 x, Int32 y);
 bool Rectangle2D_Equals(struct Rectangle2D a, struct Rectangle2D b);
 
 struct Size2D Size2D_Make(Int32 width, Int32 height);

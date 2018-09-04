@@ -215,7 +215,7 @@ bool Entity_TouchesAnyWater(struct Entity* entity) {
 *#########################################################################################################################*/
 EntityID entities_closestId;
 void Entities_Tick(struct ScheduledTask* task) {
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		Entities_List[i]->VTABLE->Tick(Entities_List[i], task->Interval);
@@ -225,7 +225,7 @@ void Entities_Tick(struct ScheduledTask* task) {
 void Entities_RenderModels(Real64 delta, Real32 t) {
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		Entities_List[i]->VTABLE->RenderModel(Entities_List[i], delta, t);
@@ -246,7 +246,7 @@ void Entities_RenderNames(Real64 delta) {
 	bool hadFog = Gfx_GetFog();
 	if (hadFog) Gfx_SetFog(false);
 
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		if (i != entities_closestId || i == ENTITIES_SELF_ID) {
@@ -271,7 +271,7 @@ void Entities_RenderHoveredNames(Real64 delta) {
 	bool hadFog = Gfx_GetFog();
 	if (hadFog) Gfx_SetFog(false);
 
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		if ((i == entities_closestId || allNames) && i != ENTITIES_SELF_ID) {
@@ -286,7 +286,7 @@ void Entities_RenderHoveredNames(Real64 delta) {
 }
 
 static void Entities_ContextLost(void* obj) {
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		Entities_List[i]->VTABLE->ContextLost(Entities_List[i]);
@@ -295,7 +295,7 @@ static void Entities_ContextLost(void* obj) {
 }
 
 static void Entities_ContextRecreated(void* obj) {
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		Entities_List[i]->VTABLE->ContextRecreated(Entities_List[i]);
@@ -303,7 +303,7 @@ static void Entities_ContextRecreated(void* obj) {
 }
 
 static void Entities_ChatFontChanged(void* obj) {
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
@@ -326,7 +326,7 @@ void Entities_Init(void) {
 }
 
 void Entities_Free(void) {
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		Entities_Remove((EntityID)i);
@@ -353,7 +353,7 @@ EntityID Entities_GetCloset(struct Entity* src) {
 	Real32 closestDist = MATH_POS_INF;
 	EntityID targetId = ENTITIES_SELF_ID;
 
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < ENTITIES_SELF_ID; i++) { /* because we don't want to pick against local player */
 		struct Entity* entity = Entities_List[i];
 		if (!entity) continue;
@@ -379,7 +379,7 @@ void Entities_DrawShadows(void) {
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	ShadowComponent_Draw(Entities_List[ENTITIES_SELF_ID]);
 	if (Entities_ShadowMode == SHADOW_MODE_CIRCLE_ALL) {
-		UInt32 i;
+		Int32 i;
 		for (i = 0; i < ENTITIES_SELF_ID; i++) {
 			if (!Entities_List[i]) continue;
 			if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
@@ -544,7 +544,7 @@ static void Player_DrawName(struct Player* player) {
 static struct Player* Player_FirstOtherWithSameSkin(struct Player* player) {
 	struct Entity* entity = &player->Base;
 	String skin = String_FromRawArray(player->SkinNameRaw);
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i] || Entities_List[i] == entity) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
@@ -559,7 +559,7 @@ static struct Player* Player_FirstOtherWithSameSkin(struct Player* player) {
 static struct Player* Player_FirstOtherWithSameSkinAndFetchedSkin(struct Player* player) {
 	struct Entity* entity = &player->Base;
 	String skin = String_FromRawArray(player->SkinNameRaw);
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i] || Entities_List[i] == entity) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
@@ -599,7 +599,7 @@ void Player_ResetSkin(struct Player* player) {
 /* Apply or reset skin, for all players with same skin */
 static void Player_SetSkinAll(struct Player* player, bool reset) {
 	String skin = String_FromRawArray(player->SkinNameRaw);
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;

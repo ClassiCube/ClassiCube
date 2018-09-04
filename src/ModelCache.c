@@ -187,7 +187,7 @@ static void ChickenModel_DrawModel(struct Entity* entity) {
 	Model_DrawRotate(0, 0,  Math_AbsF(entity->Anim.LeftArmX), &Chicken_RightWing, false);
 
 	PackedCol col = Model_Cols[0];
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < FACE_COUNT; i++) {
 		Model_Cols[i] = PackedCol_Scale(col, 0.7f);
 	}
@@ -1259,7 +1259,7 @@ static void BlockModel_DrawModel(struct Entity* p) {
 	if (Block_Draw[BlockModel_block] == DRAW_GAS) return;
 
 	if (Block_FullBright[BlockModel_block]) {
-		UInt32 i;
+		Int32 i;
 		PackedCol white = PACKEDCOL_WHITE;
 		for (i = 0; i < FACE_COUNT; i++) {
 			Model_Cols[i] = white;
@@ -1332,7 +1332,7 @@ void ModelCache_Init(void) {
 }
 
 void ModelCache_Free(void) {
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < ModelCache_texCount; i++) {
 		struct CachedTexture* tex = &ModelCache_Textures[i];
 		Gfx_DeleteTexture(&tex->TexID);

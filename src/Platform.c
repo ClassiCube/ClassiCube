@@ -152,6 +152,18 @@ void Platform_Log4(const char* format, const void* a1, const void* a2, const voi
 	Platform_Log(&msg);
 }
 
+/* TODO: check this is actually accurate */
+UInt64 sw_freqMul = 1, sw_freqDiv = 1;
+Int32 Stopwatch_ElapsedMicroseconds(UInt64* timer) {
+	UInt64 beg = *timer;
+	Stopwatch_Measure(timer);
+	UInt64 end = *timer;
+
+	if (end < beg) return 0;
+	UInt64 delta = ((end - beg) * sw_freqMul) / sw_freqDiv;
+	return (Int32)delta;
+}
+
 #if CC_BUILD_WIN
 void Platform_Log(STRING_PURE String* message) {
 	/* TODO: log to console */
@@ -197,29 +209,15 @@ void DateTime_CurrentLocal(DateTime* time) {
 }
 
 bool sw_highRes;
-LARGE_INTEGER sw_freq;
-void Stopwatch_Measure(struct Stopwatch* timer) {
+void Stopwatch_Measure(UInt64* timer) {
 	if (sw_highRes) {
-		LARGE_INTEGER value;
-		QueryPerformanceCounter(&value);
-		timer->Data[0] = value.QuadPart;
+		LARGE_INTEGER t;
+		QueryPerformanceCounter(&t);
+		*timer = (UInt64)t.QuadPart;
 	} else {
-		FILETIME value;
-		GetSystemTimeAsFileTime(&value);
-		timer->Data[0] = (Int64)value.dwLowDateTime | ((Int64)value.dwHighDateTime << 32);
-	}
-}
-
-/* TODO: check this is actually accurate */
-Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {
-	Int64 start = timer->Data[0];
-	Stopwatch_Measure(timer);
-	Int64 end = timer->Data[0];
-
-	if (sw_highRes) {
-		return (Int32)(((end - start) * 1000 * 1000) / sw_freq.QuadPart);
-	} else {
-		return (Int32)((end - start) / 10);
+		FILETIME ft;
+		GetSystemTimeAsFileTime(&ft);
+		*timer = (UInt64)ft.dwLowDateTime | ((UInt64)ft.dwHighDateTime << 32);
 	}
 }
 #elif CC_BUILD_NIX
@@ -261,23 +259,12 @@ void DateTime_CurrentLocal(DateTime* time_) {
 	time_->Milli = cur.tv_usec / 1000;
 }
 
-void Stopwatch_Measure(struct Stopwatch* timer) {
-	struct timespec value;
+#define NS_PER_SEC 1000000000ULL
+void Stopwatch_Measure(UInt64* timer) {
+	struct timespec t;
 	/* TODO: CLOCK_MONOTONIC_RAW ?? */
-	clock_gettime(CLOCK_MONOTONIC, &value);
-	timer->Data[0] = value.tv_sec;
-	timer->Data[1] = value.tv_nsec;
-}
-
-/* TODO: check this is actually accurate */
-Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {
-	Int64 startS = timer->Data[0], startNS = timer->Data[1];
-	Stopwatch_Measure(timer);
-	Int64 endS = timer->Data[0], endNS = timer->Data[1];
-
-#define NS_PER_SEC 1000000000LL
-	Int64 elapsedNS = ((endS - startS) * NS_PER_SEC + endNS) - startNS;
-	return elapsedNS / 1000;
+	clock_gettime(CLOCK_MONOTONIC, &t);
+	*timer = (UInt64)t.tv_sec * NS_PER_SEC + t.tv_nsec;
 }
 #endif
 
@@ -288,7 +275,7 @@ Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {
 #if CC_BUILD_WIN
 bool Directory_Exists(STRING_PURE String* path) {
 	WCHAR str[300]; Platform_ConvertString(str, path);
-	UInt32 attribs = GetFileAttributesW(str);
+	DWORD attribs = GetFileAttributesW(str);
 	return attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
@@ -300,7 +287,7 @@ ReturnCode Directory_Create(STRING_PURE String* path) {
 
 bool File_Exists(STRING_PURE String* path) {
 	WCHAR str[300]; Platform_ConvertString(str, path);
-	UInt32 attribs = GetFileAttributesW(str);
+	DWORD attribs = GetFileAttributesW(str);
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
@@ -648,7 +635,7 @@ void Waitable_Wait(void* handle) {
 *#########################################################################################################################*/
 #if CC_BUILD_WIN
 int CALLBACK Font_GetNamesCallback(CONST LOGFONT* desc, CONST TEXTMETRIC* metrics, DWORD fontType, LPVOID obj) {
-	UInt32 i;
+	Int32 i;
 	char nameBuffer[LF_FACESIZE];
 	String name = String_FromArray(nameBuffer);
 
@@ -764,13 +751,6 @@ void Platform_ReleaseBitmap(void) {
 	platform_bmp = NULL;
 }
 #elif CC_BUILD_NIX
-/* TODO: Implement these stubs */
-void Font_Make(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) { desc->Size = size; }
-void Font_Free(struct FontDesc* desc) { }
-struct Size2D Platform_TextMeasure(struct DrawTextArgs* args) { }
-void Platform_SetBitmap(struct Bitmap* bmp) { }
-struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) { }
-void Platform_ReleaseBitmap(void) { }
 #endif
 
 
@@ -1217,16 +1197,6 @@ bool Audio_IsFinished(AudioHandle handle) {
 	return true;
 }
 #elif CC_BUILD_NIX
-/* TODO: Implement these */
-void Audio_Init(AudioHandle* handle, Int32 buffers) { }
-void Audio_Free(AudioHandle handle) { }
-struct AudioFormat* Audio_GetFormat(AudioHandle handle) { return NULL; }
-void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) { }
-void Audio_BufferData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize) { }
-void Audio_Play(AudioHandle handle) { }
-
-bool Audio_IsCompleted(AudioHandle handle, Int32 idx) { return true; }
-bool Audio_IsFinished(AudioHandle handle) { return true; }
 #endif
 
 
@@ -1267,7 +1237,13 @@ void Platform_Init(void) {
 	SetBkColor(hdc, 0x00000000);
 	SetBkMode(hdc, OPAQUE);
 
-	sw_highRes = QueryPerformanceFrequency(&sw_freq);
+	LARGE_INTEGER freq;
+	sw_highRes = QueryPerformanceFrequency(&freq);
+	if (sw_highRes) {
+		sw_freqMul = 1000 * 1000;
+		sw_freqDiv = freq.QuadPart;
+	} else { sw_freqDiv = 10; }
+
 	WSADATA wsaData;
 	ReturnCode wsaResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	ErrorHandler_CheckOrFail(wsaResult, "WSAStartup failed");
@@ -1334,6 +1310,7 @@ static void Platform_InitDisplay(void) {
 
 	int screen = XDefaultScreen(display);
 	Window rootWin = XRootWindow(display, screen);
+	sw_freqDiv = 1000;
 
 	/* TODO: Use Xinerama and XRandR for querying these */
 	struct DisplayDevice device = { 0 };
@@ -1370,9 +1347,4 @@ void Platform_SetWorkingDir(void) {
 }
 
 void Platform_Exit(ReturnCode code) { exit(code); }
-
-STRING_PURE String Platform_GetCommandLineArgs(void) {
-	/* TODO: Implement this */
-	return String_MakeNull();
-}
 #endif

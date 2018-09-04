@@ -19,11 +19,11 @@
 #define CHAT_LOGTIMES_EXPAND_ELEMS 512
 UInt64 Chat_DefaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
 UInt64* Chat_LogTimes = Chat_DefaultLogTimes;
-UInt32 Chat_LogTimesMax = CHAT_LOGTIMES_DEF_ELEMS, Chat_LogTimesCount;
+Int32 Chat_LogTimesMax = CHAT_LOGTIMES_DEF_ELEMS, Chat_LogTimesCount;
 
-UInt64 Chat_GetLogTime(UInt32 index) {
-	if (index >= Chat_LogTimesCount) ErrorHandler_Fail("Tried to get time past LogTime end");
-	return Chat_LogTimes[index];
+UInt64 Chat_GetLogTime(Int32 i) {
+	if (i < 0 || i >= Chat_LogTimesCount) ErrorHandler_Fail("Tried to get time past LogTime end");
+	return Chat_LogTimes[i];
 }
 
 static void Chat_AppendLogTime(void) {	

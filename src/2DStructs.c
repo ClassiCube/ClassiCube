@@ -6,10 +6,6 @@ struct Rectangle2D Rectangle2D_Make(Int32 x, Int32 y, Int32 width, Int32 height)
 	return r;
 }
 
-bool Rectangle2D_Contains(struct Rectangle2D a, Int32 x, Int32 y) {
-	return x >= a.X && y >= a.Y && x < (a.X + a.Width) && y < (a.Y + a.Height);
-}
-
 bool Rectangle2D_Equals(struct Rectangle2D a, struct Rectangle2D b) {
 	return a.X == b.X && a.Y == b.Y && a.Width == b.Width && a.Height == b.Height;
 }
