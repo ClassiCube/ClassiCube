@@ -138,6 +138,10 @@ void Options_SetInt(const char* keyRaw, Int32 value) {
 
 void Options_Set(const char* keyRaw, STRING_PURE String* value) {
 	String key = String_FromReadonly(keyRaw);
+	Options_SetString(&key, value);
+}
+
+void Options_SetString(STRING_PURE String* key, STRING_PURE String* value) {
 	UInt32 i;
 	if (value == NULL || value->buffer == NULL) {
 		i = Options_Find(&key);

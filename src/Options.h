@@ -73,18 +73,19 @@ extern const char* FpsLimit_Names[FpsLimit_Count];
 StringsBuffer Options_Keys;
 StringsBuffer Options_Values;
 
-bool Options_HasAnyChanged(void);
-void Options_Free(void);
+NOINLINE_ bool Options_HasAnyChanged(void);
+NOINLINE_ void Options_Free(void);
 
-void Options_Get(const char*        key, STRING_TRANSIENT String* value, const char* defValue);
-Int32 Options_GetInt(const char*    key, Int32 min, Int32 max, Int32 defValue);
-bool Options_GetBool(const char*    key, bool defValue);
-Real32 Options_GetFloat(const char* key, Real32 min, Real32 max, Real32 defValue);
-UInt32 Options_GetEnum(const char*  key, UInt32 defValue, const char** names, UInt32 namesCount);
+NOINLINE_ void Options_Get(const char*        key, STRING_TRANSIENT String* value, const char* defValue);
+NOINLINE_ Int32 Options_GetInt(const char*    key, Int32 min, Int32 max, Int32 defValue);
+NOINLINE_ bool Options_GetBool(const char*    key, bool defValue);
+NOINLINE_ Real32 Options_GetFloat(const char* key, Real32 min, Real32 max, Real32 defValue);
+NOINLINE_ UInt32 Options_GetEnum(const char*  key, UInt32 defValue, const char** names, UInt32 namesCount);
 
-void Options_SetBool(const char* keyRaw, bool value);
-void Options_SetInt(const char*  keyRaw, Int32 value);
-void Options_Set(const char*     keyRaw, STRING_PURE String* value);
-void Options_Load(void);
-void Options_Save(void);
+NOINLINE_ void Options_SetBool(const char* keyRaw, bool value);
+NOINLINE_ void Options_SetInt(const char*  keyRaw, Int32 value);
+NOINLINE_ void Options_Set(const char*     keyRaw, STRING_PURE String* value);
+NOINLINE_ void Options_SetString(STRING_PURE String* key, STRING_PURE String* value);
+NOINLINE_ void Options_Load(void);
+NOINLINE_ void Options_Save(void);
 #endif

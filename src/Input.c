@@ -140,13 +140,11 @@ bool KeyBind_IsPressed(KeyBind binding) { return Key_States[KeyBind_Keys[binding
 
 void KeyBind_Load(void) {
 	Int32 i;
-	char nameBuffer[STRING_SIZE];
-	String name = String_FromArray(nameBuffer);
-
 	for (i = 0; i < KeyBind_Count; i++) {
-		name.length = 0; 
-		String_Format1(&name, "key-%c", KeyBind_Names[i]);
+		char nameBuffer[STRING_SIZE] = { 0 };
+		String name = String_FromArray(nameBuffer);
 
+		String_Format1(&name, "key-%c", KeyBind_Names[i]);
 		Key mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Key_Names, Key_Count);
 		if (mapping != Key_Escape) KeyBind_Keys[i] = mapping;
 	}
@@ -157,13 +155,12 @@ void KeyBind_Save(void) {
 	Int32 i;
 	char nameBuffer[STRING_SIZE];
 	String name = String_FromArray(nameBuffer);
-
 	for (i = 0; i < KeyBind_Count; i++) {
 		name.length = 0; 
-		String_Format1(&name, "key-%c", KeyBind_Names[i]);
 
+		String_Format1(&name, "key-%c", KeyBind_Names[i]);
 		String value = String_FromReadonly(Key_Names[KeyBind_Keys[i]]);
-		Options_Set(name.buffer, &value);
+		Options_SetString(&name, &value);
 	}
 }
 
@@ -328,7 +325,7 @@ void Hotkeys_UserRemovedHotkey(Key trigger, UInt8 flags) {
 	String key = String_FromArray(keyBuffer);
 
 	String_Format2(&key, "hotkey-%c&%b", Key_Names[trigger], &flags);
-	Options_Set(key.buffer, NULL);
+	Options_SetString(&key, NULL);
 }
 
 void Hotkeys_UserAddedHotkey(Key trigger, UInt8 flags, bool moreInput, STRING_PURE String* text) {
@@ -339,5 +336,5 @@ void Hotkeys_UserAddedHotkey(Key trigger, UInt8 flags, bool moreInput, STRING_PU
 
 	String_Format2(&key, "hotkey-%c&%b", Key_Names[trigger], &flags);
 	String_Format2(&value, "%t&%s", &moreInput, text);
-	Options_Set(key.buffer, &value);
+	Options_SetString(&key, &value);
 }

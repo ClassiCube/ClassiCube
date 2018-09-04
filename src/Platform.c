@@ -73,7 +73,7 @@ ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
 static void Platform_AllocFailed(const char* place) {
-	char logBuffer[STRING_SIZE + 20];
+	char logBuffer[STRING_SIZE + 20] = { 0 };
 	String log = String_FromArray(logBuffer);
 	String_Format1(&log, "Failed allocating memory for: %c", place);
 	ErrorHandler_Fail(log.buffer);
