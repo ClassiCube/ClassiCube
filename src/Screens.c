@@ -144,6 +144,7 @@ static void InventoryScreen_Init(void* screen) {
 	TableWidget_Create(&s->Table);
 	s->Table.Font = s->Font;
 	s->Table.ElementsPerRow = Game_PureClassic ? 9 : 10;
+	Elem_Init(&s->Table);
 
 	/* Can't immediately move to selected here, because cursor visibility 
 	   might be toggled after Init() is called. This causes the cursor to 

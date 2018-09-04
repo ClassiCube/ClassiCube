@@ -58,7 +58,7 @@ void ErrorHandler_ShowDialog(const char* title, const char* msg) {
 	MessageBoxA(Window_GetWindowHandle(), msg, title, 0);
 }
 
-struct SymbolAndName { SYMBOL_INFO Symbol; char Name[256]; };
+struct SymbolAndName { IMAGEHLP_SYMBOL64 Symbol; char Name[256]; };
 void ErrorHandler_Backtrace(STRING_TRANSIENT String* str) {
 	HANDLE process = GetCurrentProcess();
 	SymInitialize(process, NULL, TRUE);
@@ -66,8 +66,8 @@ void ErrorHandler_Backtrace(STRING_TRANSIENT String* str) {
 	UInt16 frames = CaptureStackBackTrace(0, 56, stack, NULL);
 
 	struct SymbolAndName sym = { 0 };
-	sym.Symbol.MaxNameLen = 255;
-	sym.Symbol.SizeOfStruct = sizeof(SYMBOL_INFO);
+	sym.Symbol.MaxNameLength = 255;
+	sym.Symbol.SizeOfStruct = sizeof(IMAGEHLP_SYMBOL64);
 
 	String_AppendConst(str, "\r\nBacktrace: \r\n");
 	UInt32 i;
@@ -77,7 +77,7 @@ void ErrorHandler_Backtrace(STRING_TRANSIENT String* str) {
 		UInt64 addr = (UInt64)stack[i];
 
 		/* TODO: SymGetLineFromAddr64 as well? */
-		if (SymFromAddr(process, addr, NULL, &sym.Symbol)) {
+		if (SymGetSymFromAddr64(process, addr, NULL, &sym.Symbol)) {
 			String_Format3(str, "%i) 0x%x - %c\r\n", &number, &addr, sym.Symbol.Name);
 		} else {
 			String_Format2(str, "%i) 0x%x\r\n", &number, &addr);
