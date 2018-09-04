@@ -144,14 +144,14 @@ void Options_Set(const char* keyRaw, STRING_PURE String* value) {
 void Options_SetString(STRING_PURE String* key, STRING_PURE String* value) {
 	UInt32 i;
 	if (value == NULL || value->buffer == NULL) {
-		i = Options_Find(&key);
+		i = Options_Find(key);
 		if (i != OPT_NOT_FOUND) Options_Remove(i);
 	} else {
-		i = Options_Insert(&key, value);
+		i = Options_Insert(key, value);
 	}
 
-	if (i == OPT_NOT_FOUND || Options_HasChanged(&key)) return;
-	StringsBuffer_Add(&Options_Changed, &key);
+	if (i == OPT_NOT_FOUND || Options_HasChanged(key)) return;
+	StringsBuffer_Add(&Options_Changed, key);
 }
 
 void Options_Load(void) {	

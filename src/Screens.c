@@ -477,8 +477,8 @@ static bool LoadingScreen_KeyDown(void* sceen, Key key) {
 	return Elem_HandlesKeyDown(Gui_HUD, key);
 }
 
-static bool LoadingScreen_KeyPress(void* scren, UInt8 key) {
-	return Elem_HandlesKeyPress(Gui_HUD, key);
+static bool LoadingScreen_KeyPress(void* scren, char keyChar) {
+	return Elem_HandlesKeyPress(Gui_HUD, keyChar);
 }
 
 static bool LoadingScreen_KeyUp(void* screen, Key key) {
@@ -936,7 +936,7 @@ static bool ChatScreen_KeyUp(void* screen, Key key) {
 	return true;
 }
 
-static bool ChatScreen_KeyPress(void* screen, UInt8 key) {
+static bool ChatScreen_KeyPress(void* screen, char keyChar) {
 	struct ChatScreen* s = screen;
 	if (!s->HandlesAllInput) return false;
 
@@ -945,7 +945,7 @@ static bool ChatScreen_KeyPress(void* screen, UInt8 key) {
 		return false;
 	}
 
-	bool handled = Elem_HandlesKeyPress(&s->Input.Base, key);
+	bool handled = Elem_HandlesKeyPress(&s->Input.Base, keyChar);
 	ChatScreen_UpdateAltTextY(s);
 	return handled;
 }
@@ -1209,9 +1209,9 @@ static void HUDScreen_OnResize(void* screen) {
 	if (s->ShowingList) { Widget_Reposition(&s->PlayerList); }
 }
 
-static bool HUDScreen_KeyPress(void* screen, UInt8 key) {
+static bool HUDScreen_KeyPress(void* screen, char keyChar) {
 	struct HUDScreen* s = screen;
-	return Elem_HandlesKeyPress(s->Chat, key); 
+	return Elem_HandlesKeyPress(s->Chat, keyChar); 
 }
 
 static bool HUDScreen_KeyDown(void* screen, Key key) {
@@ -1468,7 +1468,7 @@ static void DisconnectScreen_OnResize(void* screen) {
 }
 
 static bool DisconnectScreen_KeyDown(void* s, Key key) { return key < Key_F1 || key > Key_F35; }
-static bool DisconnectScreen_KeyPress(void* s, UInt8 keyChar) { return true; }
+static bool DisconnectScreen_KeyPress(void* s, char keyChar) { return true; }
 static bool DisconnectScreen_KeyUp(void* s, Key key) { return true; }
 
 static bool DisconnectScreen_MouseDown(void* screen, Int32 x, Int32 y, MouseButton btn) {

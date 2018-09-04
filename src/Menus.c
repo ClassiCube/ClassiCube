@@ -290,7 +290,7 @@ static bool Menu_MouseMove(void* screen, Int32 x, Int32 y) {
 }
 
 static bool Menu_MouseUp(void* screen, Int32 x, Int32 y, MouseButton btn) { return true; }
-static bool Menu_KeyPress(void* screen, UInt8 key) { return true; }
+static bool Menu_KeyPress(void* screen, char keyChar) { return true; }
 static bool Menu_KeyUp(void* screen, Key key) { return true; }
 
 
@@ -902,13 +902,13 @@ static void EditHotkeyScreen_Free(void* screen) {
 	MenuScreen_Free(s);
 }
 
-static bool EditHotkeyScreen_KeyPress(void* screen, UInt8 key) {
+static bool EditHotkeyScreen_KeyPress(void* screen, char keyChar) {
 	struct EditHotkeyScreen* s = screen;
 	if (s->SupressNextPress) {
 		s->SupressNextPress = false;
 		return true;
 	}
-	return Elem_HandlesKeyPress(&s->Input.Base, key);
+	return Elem_HandlesKeyPress(&s->Input.Base, keyChar);
 }
 
 static bool EditHotkeyScreen_KeyDown(void* screen, Key key) {
@@ -1090,9 +1090,9 @@ static bool GenLevelScreen_KeyUp(void* screen, Key key) {
 	return !s->Selected || Elem_HandlesKeyUp(&s->Selected->Base, key);
 }
 
-static bool GenLevelScreen_KeyPress(void* screen, UInt8 key) {
+static bool GenLevelScreen_KeyPress(void* screen, char keyChar) {
 	struct GenLevelScreen* s = screen;
-	return !s->Selected || Elem_HandlesKeyPress(&s->Selected->Base, key);
+	return !s->Selected || Elem_HandlesKeyPress(&s->Selected->Base, keyChar);
 }
 
 static void GenLevelScreen_ContextRecreated(void* screen) {
@@ -1314,10 +1314,10 @@ static void SaveLevelScreen_Free(void* screen) {
 	MenuScreen_Free(s);
 }
 
-static bool SaveLevelScreen_KeyPress(void* screen, UInt8 key) {
+static bool SaveLevelScreen_KeyPress(void* screen, char keyChar) {
 	struct SaveLevelScreen* s = screen;
 	SaveLevelScreen_RemoveOverwrites(s);
-	return Elem_HandlesKeyPress(&s->Input.Base, key);
+	return Elem_HandlesKeyPress(&s->Input.Base, keyChar);
 }
 
 static bool SaveLevelScreen_KeyDown(void* screen, Key key) {
@@ -2017,10 +2017,10 @@ static void MenuOptionsScreen_ContextLost(void* screen) {
 	MenuOptionsScreen_FreeExtHelp(s);
 }
 
-static bool MenuOptionsScreen_KeyPress(void* screen, UInt8 key) {
+static bool MenuOptionsScreen_KeyPress(void* screen, char keyChar) {
 	struct MenuOptionsScreen* s = screen;
 	if (s->ActiveI == -1) return true;
-	return Elem_HandlesKeyPress(&s->Input.Base, key);
+	return Elem_HandlesKeyPress(&s->Input.Base, keyChar);
 }
 
 static bool MenuOptionsScreen_KeyDown(void* screen, Key key) {
@@ -3068,9 +3068,9 @@ static bool TexIdsOverlay_KeyDown(void* screen, Key key) {
 	return Elem_HandlesKeyDown(active, key);
 }
 
-static bool TexIdsOverlay_KeyPress(void* screen, UInt8 key) {
+static bool TexIdsOverlay_KeyPress(void* screen, char keyChar) {
 	struct Screen* active = Gui_GetUnderlyingScreen();
-	return Elem_HandlesKeyPress(active, key);
+	return Elem_HandlesKeyPress(active, keyChar);
 }
 
 static bool TexIdsOverlay_KeyUp(void* screen, Key key) {

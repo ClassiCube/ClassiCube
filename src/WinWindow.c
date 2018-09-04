@@ -241,7 +241,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	{
 		char keyChar;
 		if (Convert_TryUnicodeToCP437((UInt16)wParam, &keyChar)) {
-			Event_RaiseInt(&KeyEvents_Press, (UInt8)keyChar);
+			Event_RaiseInt(&KeyEvents_Press, keyChar);
 		}
 	} break;
 

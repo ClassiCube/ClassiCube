@@ -1197,9 +1197,9 @@ static bool InputWidget_KeyDown(void* widget, Key key) {
 
 static bool InputWidget_KeyUp(void* widget, Key key) { return true; }
 
-static bool InputWidget_KeyPress(void* widget, UInt8 key) {
+static bool InputWidget_KeyPress(void* widget, char keyChar) {
 	struct InputWidget* w = widget;
-	InputWidget_Append(w, key);
+	InputWidget_Append(w, keyChar);
 	return true;
 }
 

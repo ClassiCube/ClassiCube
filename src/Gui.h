@@ -21,7 +21,7 @@ struct GuiElem;
 	void (*Recreate)(void* elem); \
 	bool (*HandlesKeyDown)(void* elem, Key key); \
 	bool (*HandlesKeyUp)(void* elem, Key key); \
-	bool (*HandlesKeyPress)(void* elem, UInt8 keyChar); \
+	bool (*HandlesKeyPress)(void* elem, char keyChar); \
 	bool (*HandlesMouseDown)(void* elem, Int32 x, Int32 y, MouseButton btn); \
 	bool (*HandlesMouseUp)(void* elem, Int32 x, Int32 y, MouseButton btn); \
 	bool (*HandlesMouseMove)(void* elem, Int32 x, Int32 y); \
@@ -33,7 +33,7 @@ struct GuiElem { struct GuiElemVTABLE* VTABLE; };
 void Gui_DefaultRecreate(void* elem);
 bool Gui_DefaultMouse(void* elem, Int32 x, Int32 y, MouseButton btn);
 bool Gui_DefaultKey(void* elem, Key key);
-bool Gui_DefaultKeyPress(void* elem, UInt8 keyChar);
+bool Gui_DefaultKeyPress(void* elem, char keyChar);
 bool Gui_DefaultMouseMove(void* elem, Int32 x, Int32 y);
 bool Gui_DefaultMouseScroll(void* elem, Real32 delta);
 

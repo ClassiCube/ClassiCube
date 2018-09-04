@@ -83,13 +83,12 @@ enum BLOCKID {
 	BLOCK_MAX_CPE  = BLOCK_STONE_BRICK,
 	/* Number of blocks in original classic plus CPE blocks. */
 	BLOCK_CPE_COUNT = (BLOCK_MAX_CPE + 1),
-};
 
 #if USE16_BIT
-#define BLOCK_MAX_DEFINED 0x3FF
+	BLOCK_MAX_DEFINED = 0x3FF,
 #else
-#define BLOCK_MAX_DEFINED 0xFF
+	BLOCK_MAX_DEFINED = 0xFF,
 #endif
-
-#define BLOCK_COUNT (BLOCK_MAX_DEFINED + 1)
+	BLOCK_COUNT = (BLOCK_MAX_DEFINED + 1),
+};
 #endif
