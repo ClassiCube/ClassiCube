@@ -652,7 +652,7 @@ void Game_TakeScreenshot(void) {
 }
 
 static void Game_RenderFrame(Real64 delta) {
-	Stopwatch_Start(&game_frameTimer);
+	Stopwatch_Measure(&game_frameTimer);
 
 	Gfx_BeginFrame();
 	Gfx_BindIb(GfxCommon_defaultIb);
@@ -731,7 +731,7 @@ void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct Displa
 	Game_Load();
 	Event_RaiseVoid(&WindowEvents_Resized);
 
-	Stopwatch_Start(&game_renderTimer);
+	Stopwatch_Measure(&game_renderTimer);
 	for (;;) {
 		Window_ProcessEvents();
 		if (!Window_Exists) break;
@@ -741,7 +741,7 @@ void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct Displa
 		if (time > 1.0) time = 1.0;
 		if (time <= 0.0) continue;
 
-		Stopwatch_Start(&game_renderTimer);
+		Stopwatch_Measure(&game_renderTimer);
 		Game_RenderFrame(time);
 	}
 }

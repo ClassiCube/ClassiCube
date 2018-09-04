@@ -209,7 +209,6 @@ void Stopwatch_Measure(struct Stopwatch* timer) {
 		timer->Data[0] = (Int64)value.dwLowDateTime | ((Int64)value.dwHighDateTime << 32);
 	}
 }
-void Stopwatch_Start(struct Stopwatch* timer) { Stopwatch_Measure(timer); }
 
 /* TODO: check this is actually accurate */
 Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {
@@ -269,7 +268,6 @@ void Stopwatch_Measure(struct Stopwatch* timer) {
 	timer->Data[0] = value.tv_sec;
 	timer->Data[1] = value.tv_nsec;
 }
-void Stopwatch_Start(struct Stopwatch* timer) { Stopwatch_Measure(timer); }
 
 /* TODO: check this is actually accurate */
 Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer) {

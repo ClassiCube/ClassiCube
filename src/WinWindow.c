@@ -478,10 +478,9 @@ void Window_SetClipboardText(STRING_PURE String* value) {
 		HANDLE hGlobal = GlobalAlloc(GMEM_MOVEABLE, (value->length + 1) * sizeof(UInt16));
 		if (!hGlobal) { CloseClipboard(); return; }
 
-		LPVOID dst = GlobalLock(hGlobal);
-		UInt16* text = (UInt16*)dst;
-		for (i = 0; i < value->length; i++) {
-			*text = Convert_CP437ToUnicode(value->buffer[i]); text++;
+		UInt16* text = GlobalLock(hGlobal);
+		for (i = 0; i < value->length; i++, text++) {
+			*text = Convert_CP437ToUnicode(value->buffer[i]);
 		}
 		*text = '\0';
 

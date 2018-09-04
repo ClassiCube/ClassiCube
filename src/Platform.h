@@ -53,7 +53,7 @@ UInt64 DateTime_CurrentUTC_MS(void);
 void DateTime_CurrentUTC(DateTime* time);
 void DateTime_CurrentLocal(DateTime* time);
 struct Stopwatch { Int64 Data[2]; };
-void Stopwatch_Start(struct Stopwatch* timer);
+void Stopwatch_Measure(struct Stopwatch* timer);
 Int32 Stopwatch_ElapsedMicroseconds(struct Stopwatch* timer);
 
 bool Directory_Exists(STRING_PURE String* path);

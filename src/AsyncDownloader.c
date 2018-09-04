@@ -195,7 +195,7 @@ static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	Platform_Log2("Downloading from %s (type %b)", &url, &request->RequestType);
 	struct Stopwatch stopwatch;
 
-	Stopwatch_Start(&stopwatch);
+	Stopwatch_Measure(&stopwatch);
 	request->Result = Http_Do(request, &async_curProgress);
 	UInt32 elapsed  = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
 
