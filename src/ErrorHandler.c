@@ -107,7 +107,9 @@ static void ErrorHandler_Backtrace(STRING_TRANSIENT String* str, void* ctx) {
 		Int32 number = i + 1;
 		UInt64 addr = (UInt64)pointers[i].Instruction;
 
+		/* TODO: Log ESP and EBP here too */
 		/* TODO: SymGetLineFromAddr64 as well? */
+		/* TODO: Log module here too */
 		if (SymGetSymFromAddr64(process, addr, NULL, &sym.Symbol)) {
 			String_Format3(str, "%i) 0x%x - %c\r\n", &number, &addr, sym.Symbol.Name);
 		} else {

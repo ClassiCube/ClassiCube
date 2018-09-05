@@ -15,34 +15,48 @@ struct SelectionBox {
 
 void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** vertices, VertexP3fC4b** lineVertices) {
 	Real32 offset = box->MinDist < 32.0f * 32.0f ? (1.0f / 32.0f) : (1.0f / 16.0f);
-	Vector3 p1 = box->Min, p2 = box->Max;
-	Vector3_Add1(&p1, &p1, -offset);
-	Vector3_Add1(&p2, &p2,  offset);
+	Vector3 coords[2];
+	Vector3_Add1(&coords[0], &box->Min, -offset);
+	Vector3_Add1(&coords[1], &box->Max, offset);
+
+	Int32 i;
+	VertexP3fC4b* ptr;
 	PackedCol col = box->Col;
 
-	SelectionBox_HorQuad(vertices, col, p1.X, p1.Z, p2.X, p2.Z, p1.Y);       /* bottom */
-	SelectionBox_HorQuad(vertices, col, p1.X, p1.Z, p2.X, p2.Z, p2.Y);       /* top */
-	SelectionBox_VerQuad(vertices, col, p1.X, p1.Y, p1.Z, p2.X, p2.Y, p1.Z); /* sides */
-	SelectionBox_VerQuad(vertices, col, p1.X, p1.Y, p2.Z, p2.X, p2.Y, p2.Z);
-	SelectionBox_VerQuad(vertices, col, p1.X, p1.Y, p1.Z, p1.X, p2.Y, p2.Z);
-	SelectionBox_VerQuad(vertices, col, p2.X, p1.Y, p1.Z, p2.X, p2.Y, p2.Z);
+#define SelectionBox_Y(y) 0,y,0, 0,y,1, 1,y,1, 1,y,0,
+#define SelectionBox_Z(z) 0,0,z, 0,1,z, 1,1,z, 1,0,z,
+#define SelectionBox_X(x) x,0,0, x,1,0, x,1,1, x,0,1,
+
+	static UInt8 faceIndices[72] = {
+		SelectionBox_Y(0) SelectionBox_Y(1) /* YMin, YMax */
+		SelectionBox_Z(0) SelectionBox_Z(1) /* ZMin, ZMax */
+		SelectionBox_X(0) SelectionBox_X(1) /* XMin, XMax */
+	};
+
+	ptr = *vertices;
+	for (i = 0; i < Array_Elems(faceIndices); i += 3, ptr++) {
+		ptr->X   = coords[faceIndices[i + 0]].X;
+		ptr->Y   = coords[faceIndices[i + 1]].Y;
+		ptr->Z   = coords[faceIndices[i + 2]].Z;
+		ptr->Col = col;
+	}
+	*vertices = ptr;
 
 	col.R = ~col.R; col.G = ~col.G; col.B = ~col.B;
-	/* bottom face */
-	SelectionBox_Line(lineVertices, col, p1.X, p1.Y, p1.Z, p2.X, p1.Y, p1.Z);
-	SelectionBox_Line(lineVertices, col, p2.X, p1.Y, p1.Z, p2.X, p1.Y, p2.Z);
-	SelectionBox_Line(lineVertices, col, p2.X, p1.Y, p2.Z, p1.X, p1.Y, p2.Z);
-	SelectionBox_Line(lineVertices, col, p1.X, p1.Y, p2.Z, p1.X, p1.Y, p1.Z);
-	/* top face */
-	SelectionBox_Line(lineVertices, col, p1.X, p2.Y, p1.Z, p2.X, p2.Y, p1.Z);
-	SelectionBox_Line(lineVertices, col, p2.X, p2.Y, p1.Z, p2.X, p2.Y, p2.Z);
-	SelectionBox_Line(lineVertices, col, p2.X, p2.Y, p2.Z, p1.X, p2.Y, p2.Z);
-	SelectionBox_Line(lineVertices, col, p1.X, p2.Y, p2.Z, p1.X, p2.Y, p1.Z);
-	/* side faces */
-	SelectionBox_Line(lineVertices, col, p1.X, p1.Y, p1.Z, p1.X, p2.Y, p1.Z);
-	SelectionBox_Line(lineVertices, col, p2.X, p1.Y, p1.Z, p2.X, p2.Y, p1.Z);
-	SelectionBox_Line(lineVertices, col, p2.X, p1.Y, p2.Z, p2.X, p2.Y, p2.Z);
-	SelectionBox_Line(lineVertices, col, p1.X, p1.Y, p2.Z, p1.X, p2.Y, p2.Z);
+	static UInt8 edgeIndices[72] = {
+		0,0,0, 1,0,0,  1,0,0, 1,0,1,  1,0,1, 0,0,1,  0,0,1, 0,0,0, /* YMin */
+		0,1,0, 1,1,0,  1,1,0, 1,1,1,  1,1,1, 0,1,1,  0,1,1, 0,1,0, /* YMax */
+		0,0,0, 0,1,0,  1,0,0, 1,1,0,  1,0,1, 1,1,1,  0,0,1, 0,1,1, /* X/Z  */
+	};
+
+	ptr = *lineVertices;
+	for (i = 0; i < Array_Elems(edgeIndices); i += 3, ptr++) {
+		ptr->X   = coords[edgeIndices[i + 0]].X;
+		ptr->Y   = coords[edgeIndices[i + 1]].Y;
+		ptr->Z   = coords[edgeIndices[i + 2]].Z;
+		ptr->Col = col;
+	}
+	*lineVertices = ptr;
 }
 
 void SelectionBox_VerQuad(VertexP3fC4b** vertices, PackedCol col,
@@ -66,16 +80,6 @@ void SelectionBox_HorQuad(VertexP3fC4b** vertices, PackedCol col,
 			  v.Z = z2; *ptr++ = v;
 	v.X = x2;           *ptr++ = v;
 			  v.Z = z1; *ptr++ = v;
-	*vertices = ptr;
-}
-
-void SelectionBox_Line(VertexP3fC4b** vertices, PackedCol col,
-	Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2) {
-	VertexP3fC4b* ptr = *vertices;  
-	VertexP3fC4b v; v.Col = col;
-
-	v.X = x1; v.Y = y1; v.Z = z1; *ptr++ = v;
-	v.X = x2; v.Y = y2; v.Z = z2; *ptr++ = v;
 	*vertices = ptr;
 }
 
@@ -205,7 +209,7 @@ void Selections_Render(Real64 delta) {
 
 	VertexP3fC4b vertices[SELECTIONS_MAX_VERTICES]; VertexP3fC4b* ptr = vertices;
 	VertexP3fC4b lineVertices[SELECTIONS_MAX_VERTICES]; VertexP3fC4b* linePtr = lineVertices;
-	for (i = 0; i < selections_count; i++) {
+	for (i = 0; i < selections_count; i++) {	
 		SelectionBox_Render(&selections_list[i], &ptr, &linePtr);
 	}
 

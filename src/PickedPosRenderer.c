@@ -6,12 +6,11 @@
 #include "Game.h"
 #include "Event.h"
 #include "Picking.h"
+#include "Funcs.h"
 
 GfxResourceID pickedPos_vb;
-PackedCol pickedPos_col = PACKEDCOL_CONST(0, 0, 0, 102);
 #define pickedPos_numVertices (16 * 6)
 VertexP3fC4b pickedPos_vertices[pickedPos_numVertices];
-VertexP3fC4b* pickedPos_ptr;
 
 static void PickedPosRenderer_ContextLost(void* obj) {
 	Gfx_DeleteVb(&pickedPos_vb);
@@ -45,32 +44,7 @@ void PickedPosRenderer_Render(Real64 delta) {
 	Gfx_SetAlphaBlending(false);
 }
 
-static void PickedPosRenderer_XQuad(Real32 x, Real32 z1, Real32 y1, Real32 z2, Real32 y2) {
-	VertexP3fC4b v; v.X = x; v.Col = pickedPos_col;
-	v.Y = y1; v.Z = z1; *pickedPos_ptr++ = v;
-	v.Y = y2;           *pickedPos_ptr++ = v;
-	          v.Z = z2; *pickedPos_ptr++ = v;
-	v.Y = y1;           *pickedPos_ptr++ = v;
-}
-
-static void PickedPosRenderer_YQuad(Real32 y, Real32 x1, Real32 z1, Real32 x2, Real32 z2) {
-	VertexP3fC4b v; v.Y = y; v.Col = pickedPos_col;
-	v.X = x1; v.Z = z1; *pickedPos_ptr++ = v;
-	          v.Z = z2; *pickedPos_ptr++ = v;
-	v.X = x2;           *pickedPos_ptr++ = v;
-	          v.Z = z1; *pickedPos_ptr++ = v;
-}
-
-static void PickedPosRenderer_ZQuad(Real32 z, Real32 x1, Real32 y1, Real32 x2, Real32 y2) {
-	VertexP3fC4b v; v.Z = z; v.Col = pickedPos_col;
-	v.X = x1; v.Y = y1; *pickedPos_ptr++ = v;
-	          v.Y = y2; *pickedPos_ptr++ = v;
-	v.X = x2;           *pickedPos_ptr++ = v;
-	          v.Y = y1; *pickedPos_ptr++ = v;
-}
-
 void PickedPosRenderer_Update(struct PickedPos* selected) {
-	pickedPos_ptr = pickedPos_vertices;
 	Vector3 delta;
 	Vector3_Sub(&delta, &Game_CurrentCameraPos, &selected->Min);
 	Real32 dist = Vector3_LengthSquared(&delta);
@@ -79,52 +53,66 @@ void PickedPosRenderer_Update(struct PickedPos* selected) {
 	if (dist < 4.0f * 4.0f) offset = 0.00625f;
 	if (dist < 2.0f * 2.0f) offset = 0.00500f;
 
-	Vector3 p1, p2;
-	Vector3_Add1(&p1, &selected->Min, -offset);
-	Vector3_Add1(&p2, &selected->Max, offset);
-
 	Real32 size = 1.0f / 16.0f;
 	if (dist < 32.0f * 32.0f) size = 1.0f / 32.0f;
 	if (dist < 16.0f * 16.0f) size = 1.0f / 64.0f;
 	if (dist <  8.0f *  8.0f) size = 1.0f / 96.0f;
 	if (dist <  4.0f *  4.0f) size = 1.0f / 128.0f;
 	if (dist <  2.0f *  2.0f) size = 1.0f / 192.0f;
+	
+	/*  How a face is laid out: 
+	                 #--#-------#--#<== OUTER_MAX (3)
+	                 |  |       |  |
+	                 |  #-------#<===== INNER_MAX (2)
+	                 |  |       |  |
+					 |  |       |  |
+	                 |  |       |  |
+	(1) INNER_MIN =====>#-------#  |
+	                 |  |       |  |
+	(0) OUTER_MIN ==>#--#-------#--#
 
-	/* bottom face */
-	PickedPosRenderer_YQuad(p1.Y, p1.X, p1.Z + size, p1.X + size, p2.Z - size);
-	PickedPosRenderer_YQuad(p1.Y, p2.X, p1.Z + size, p2.X - size, p2.Z - size);
-	PickedPosRenderer_YQuad(p1.Y, p1.X, p1.Z, p2.X, p1.Z + size);
-	PickedPosRenderer_YQuad(p1.Y, p1.X, p2.Z, p2.X, p2.Z - size);
+	- these are used to fake thick lines, by making the lines appear slightly inset
+	- note: actual difference between inner and outer is much smaller then the diagram
+	*/
+	Vector3 coords[4];
+	Vector3_Add1(&coords[0], &selected->Min, -offset);
+	Vector3_Add1(&coords[1], &coords[0],      size);
+	Vector3_Add1(&coords[3], &selected->Max,  offset);
+	Vector3_Add1(&coords[2], &coords[3],     -size);
 
-	/* top face */
-	PickedPosRenderer_YQuad(p2.Y, p1.X, p1.Z + size, p1.X + size, p2.Z - size);
-	PickedPosRenderer_YQuad(p2.Y, p2.X, p1.Z + size, p2.X - size, p2.Z - size);
-	PickedPosRenderer_YQuad(p2.Y, p1.X, p1.Z, p2.X, p1.Z + size);
-	PickedPosRenderer_YQuad(p2.Y, p1.X, p2.Z, p2.X, p2.Z - size);
+#define PickedPos_Y(y)\
+0,y,1,  0,y,2,  1,y,2,  1,y,1,\
+3,y,1,  3,y,2,  2,y,2,  2,y,1,\
+0,y,0,  0,y,1,  3,y,1,  3,y,0,\
+0,y,3,  0,y,2,  3,y,2,  3,y,3,
 
-	/* left face */
-	PickedPosRenderer_XQuad(p1.X, p1.Z, p1.Y + size, p1.Z + size, p2.Y - size);
-	PickedPosRenderer_XQuad(p1.X, p2.Z, p1.Y + size, p2.Z - size, p2.Y - size);
-	PickedPosRenderer_XQuad(p1.X, p1.Z, p1.Y, p2.Z, p1.Y + size);
-	PickedPosRenderer_XQuad(p1.X, p1.Z, p2.Y, p2.Z, p2.Y - size);
+#define PickedPos_X(x)\
+x,1,0,  x,2,0,  x,2,1,  x,1,1,\
+x,1,3,  x,2,3,  x,2,2,  x,1,2,\
+x,0,0,  x,1,0,  x,1,3,  x,0,3,\
+x,3,0,  x,2,0,  x,2,3,  x,3,3,
 
-	/* right face */
-	PickedPosRenderer_XQuad(p2.X, p1.Z, p1.Y + size, p1.Z + size, p2.Y - size);
-	PickedPosRenderer_XQuad(p2.X, p2.Z, p1.Y + size, p2.Z - size, p2.Y - size);
-	PickedPosRenderer_XQuad(p2.X, p1.Z, p1.Y, p2.Z, p1.Y + size);
-	PickedPosRenderer_XQuad(p2.X, p1.Z, p2.Y, p2.Z, p2.Y - size);
+#define PickedPos_Z(z)\
+0,1,z,  0,2,z,  1,2,z,  1,1,z,\
+3,1,z,  3,2,z,  2,2,z,  2,1,z,\
+0,0,z,  0,1,z,  3,1,z,  3,0,z,\
+0,3,z,  0,2,z,  3,2,z,  3,3,z,
 
-	/* front face */
-	PickedPosRenderer_ZQuad(p1.Z, p1.X, p1.Y + size, p1.X + size, p2.Y - size);
-	PickedPosRenderer_ZQuad(p1.Z, p2.X, p1.Y + size, p2.X - size, p2.Y - size);
-	PickedPosRenderer_ZQuad(p1.Z, p1.X, p1.Y, p2.X, p1.Y + size);
-	PickedPosRenderer_ZQuad(p1.Z, p1.X, p2.Y, p2.X, p2.Y - size);
+	static UInt8 faces[288] = {
+		PickedPos_Y(0) PickedPos_Y(3) /* YMin, YMax */
+		PickedPos_X(0) PickedPos_X(3) /* XMin, XMax */
+		PickedPos_Z(0) PickedPos_Z(3) /* ZMin, ZMax */
+	};
+	PackedCol col = PACKEDCOL_CONST(0, 0, 0, 102);
+	VertexP3fC4b* ptr = pickedPos_vertices;
+	Int32 i;
 
-	/* back face */
-	PickedPosRenderer_ZQuad(p2.Z, p1.X, p1.Y + size, p1.X + size, p2.Y - size);
-	PickedPosRenderer_ZQuad(p2.Z, p2.X, p1.Y + size, p2.X - size, p2.Y - size);
-	PickedPosRenderer_ZQuad(p2.Z, p1.X, p1.Y, p2.X, p1.Y + size);
-	PickedPosRenderer_ZQuad(p2.Z, p1.X, p2.Y, p2.X, p2.Y - size);
+	for (i = 0; i < Array_Elems(faces); i += 3, ptr++) {
+		ptr->X   = coords[faces[i + 0]].X;
+		ptr->Y   = coords[faces[i + 1]].Y;
+		ptr->Z   = coords[faces[i + 2]].Z;
+		ptr->Col = col;
+	}
 }
 
 void PickedPosRenderer_MakeComponent(struct IGameComponent* comp) {

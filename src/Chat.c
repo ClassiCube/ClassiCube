@@ -535,7 +535,6 @@ static void CuboidCommand_Make(struct ChatCommand* cmd) {
 *------------------------------------------------------TeleportCommand----------------------------------------------------*
 *#########################################################################################################################*/
 static void TeleportCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
-	ErrorHandler_Fail("DED");
 	if (argsCount != 4) {
 		Chat_AddRaw("&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
 	} else {
