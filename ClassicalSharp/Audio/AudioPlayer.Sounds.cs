@@ -1,7 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using System.Threading;
-using ClassicalSharp.Events;
 using SharpWave;
 
 namespace ClassicalSharp.Audio {
@@ -29,7 +28,7 @@ namespace ClassicalSharp.Audio {
 			stepBoard.Init("step_", files);
 		}
 
-		void PlayBlockSound(object sender, BlockChangedEventArgs e) {
+		void PlayBlockSound(object nill, BlockChangedEventArgs e) {
 			if (e.Block == 0) {
 				PlayDigSound(BlockInfo.DigSounds[e.OldBlock]);
 			} else if (!game.ClassicMode) {

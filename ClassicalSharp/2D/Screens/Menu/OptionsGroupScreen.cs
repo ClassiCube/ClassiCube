@@ -12,7 +12,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			game.Events.HackPermissionsChanged += CheckHacksAllowed;
+			Events.HackPermissionsChanged += CheckHacksAllowed;
 			ContextRecreated();
 		}
 		
@@ -41,7 +41,7 @@ namespace ClassicalSharp.Gui.Screens {
 		static void SwitchEnvOptions(Game g, Widget w) { g.Gui.SetNewScreen(new EnvSettingsScreen(g)); }
 		static void SwitchNostalgiaOptions(Game g, Widget w) { g.Gui.SetNewScreen(new NostalgiaScreen(g)); }
 		
-		void CheckHacksAllowed(object sender, EventArgs e) {
+		void CheckHacksAllowed(object nill, EventArgs e) {
 			widgets[5].Disabled = !game.LocalPlayer.Hacks.CanAnyHacks; // env settings
 		}
 		
@@ -70,7 +70,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Dispose() {
 			base.Dispose();
-			game.Events.HackPermissionsChanged -= CheckHacksAllowed;
+			Events.HackPermissionsChanged -= CheckHacksAllowed;
 		}
 		
 		static string[] descriptions = new string[] {

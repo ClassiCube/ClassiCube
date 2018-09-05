@@ -42,7 +42,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		internal static void LoadMap(Game game, string path) {	
 			game.World.Reset();
-			game.WorldEvents.RaiseOnNewMap();
+			Events.RaiseOnNewMap();
 			
 			if (game.World.TextureUrl != null) {
 				TexturePack.ExtractDefault(game);
@@ -75,7 +75,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 			
 			game.World.SetNewMap(blocks, width, height, length);
-			game.WorldEvents.RaiseOnNewMapLoaded();
+			Events.RaiseOnNewMapLoaded();
 			
 			LocalPlayer p = game.LocalPlayer;
 			LocationUpdate update = LocationUpdate.MakePosAndOri(p.Spawn, p.SpawnRotY, p.SpawnHeadX, false);

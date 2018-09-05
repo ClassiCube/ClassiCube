@@ -1,7 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Entities;
-using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Model;
 using OpenTK;
@@ -21,9 +20,9 @@ namespace ClassicalSharp.Renderers {
 			held = new FakeHeldEntity(game);
 			lastBlock = game.Inventory.Selected;
 			
-			game.Events.ProjectionChanged += ProjectionChanged;
-			game.Events.HeldBlockChanged += DoSwitchBlockAnim;
-			game.UserEvents.BlockChanged += BlockChanged;
+			Events.ProjectionChanged += ProjectionChanged;
+			Events.HeldBlockChanged += DoSwitchBlockAnim;
+			Events.BlockChanged += BlockChanged;
 		}
 
 		void IGameComponent.Ready(Game game) { }
@@ -32,9 +31,9 @@ namespace ClassicalSharp.Renderers {
 		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
 		void IDisposable.Dispose() {
-			game.Events.ProjectionChanged -= ProjectionChanged;
-			game.Events.HeldBlockChanged -= DoSwitchBlockAnim;
-			game.UserEvents.BlockChanged -= BlockChanged;
+			Events.ProjectionChanged -= ProjectionChanged;
+			Events.HeldBlockChanged -= DoSwitchBlockAnim;
+			Events.BlockChanged -= BlockChanged;
 		}
 		
 		public void Render(double delta) {
@@ -129,7 +128,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void ProjectionChanged(object sender, EventArgs e) {
+		void ProjectionChanged(object nill, EventArgs e) {
 			float fov = 70 * Utils.Deg2Rad;
 			float aspectRatio = (float)game.Width / game.Height;
 			float zNear = game.Graphics.MinZNear;
@@ -152,7 +151,7 @@ namespace ClassicalSharp.Renderers {
 			if (!digging) time = period / 2;
 		}
 		
-		void DoSwitchBlockAnim(object sender, EventArgs e) {
+		void DoSwitchBlockAnim(object nill, EventArgs e) {
 			if (swinging) {
 				// Like graph -sin(x) : x=0.5 and x=2.5 have same y values
 				// but increasing x causes y to change in opposite directions
@@ -166,7 +165,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void BlockChanged(object sender, BlockChangedEventArgs e) {
+		void BlockChanged(object nill, BlockChangedEventArgs e) {
 			if (e.Block == 0) return;
 			ClickAnim(false);
 		}

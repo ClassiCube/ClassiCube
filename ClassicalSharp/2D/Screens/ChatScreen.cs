@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using ClassicalSharp.Events;
 using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Network;
 using OpenTK.Input;
@@ -41,9 +40,9 @@ namespace ClassicalSharp.Gui.Screens {
 			announcementFont = new Font(game.FontName, fontSize);
 			ContextRecreated();
 			
-			game.Events.ChatReceived += ChatReceived;
-			game.Events.ChatFontChanged += ChatFontChanged;
-			game.Events.ColCodeChanged += ColCodeChanged;
+			Events.ChatReceived += ChatReceived;
+			Events.ChatFontChanged += ChatFontChanged;
+			Events.ColCodeChanged += ColCodeChanged;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 		}
@@ -209,7 +208,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 
-		void ColCodeChanged(object sender, ColourCodeEventArgs e) {
+		void ColCodeChanged(object nill, ColourCodeEventArgs e) {
 			if (game.Graphics.LostContext) return;
 			
 			altText.UpdateCols();
@@ -236,7 +235,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 
-		void ChatReceived(object sender, ChatEventArgs e) {
+		void ChatReceived(object nill, ChatEventArgs e) {
 			MessageType type = e.Type;
 			if (game.Graphics.LostContext) return;
 			
@@ -267,9 +266,9 @@ namespace ClassicalSharp.Gui.Screens {
 			chatUrlFont.Dispose();
 			announcementFont.Dispose();
 			
-			game.Events.ChatReceived -= ChatReceived;
-			game.Events.ChatFontChanged -= ChatFontChanged;
-			game.Events.ColCodeChanged -= ColCodeChanged;
+			Events.ChatReceived -= ChatReceived;
+			Events.ChatFontChanged -= ChatFontChanged;
+			Events.ColCodeChanged -= ColCodeChanged;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
@@ -295,7 +294,7 @@ namespace ClassicalSharp.Gui.Screens {
 			SetInitialMessages();
 		}
 		
-		void ChatFontChanged(object sender, EventArgs e) {
+		void ChatFontChanged(object nill, EventArgs e) {
 			if (!game.Drawer2D.UseBitmappedChat) return;
 			Recreate();
 			UpdateChatYOffset(true);

@@ -50,7 +50,7 @@ namespace ClassicalSharp.Network.Protocols {
 			}
 			
 			BlockInfo.SetCustomDefined(block, false);
-			game.Events.RaiseBlockDefinitionChanged();
+			Events.RaiseBlockDefinitionChanged();
 		}
 		
 		void OnBlockUpdated(BlockID block, bool didBlockLight) {

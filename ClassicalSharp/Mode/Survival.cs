@@ -48,7 +48,7 @@ namespace ClassicalSharp.Mode {
 		public void PickLeft(BlockID old) {
 			Vector3I pos = game.SelectedPos.BlockPos;
 			game.UpdateBlock(pos.X, pos.Y, pos.Z, Block.Air);
-			game.UserEvents.RaiseBlockChanged(pos, old, Block.Air);
+			Events.RaiseBlockChanged(pos, old, Block.Air);
 			HandleDelete(old);
 		}
 		
@@ -60,7 +60,7 @@ namespace ClassicalSharp.Mode {
 			
 			Vector3I pos = game.SelectedPos.TranslatedPos;
 			game.UpdateBlock(pos.X, pos.Y, pos.Z, block);
-			game.UserEvents.RaiseBlockChanged(pos, old, block);
+			Events.RaiseBlockChanged(pos, old, block);
 			DepleteInventoryHeld();
 		}
 		
@@ -71,7 +71,7 @@ namespace ClassicalSharp.Mode {
 			
 			// bypass HeldBlock's normal behaviour
 			game.Inventory[index] = Block.Air;
-			game.Events.RaiseHeldBlockChanged();
+			Events.RaiseHeldBlockChanged();
 		}
 		
 		bool PickEntity(byte id) {

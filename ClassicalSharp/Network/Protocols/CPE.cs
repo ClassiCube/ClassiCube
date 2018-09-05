@@ -88,7 +88,7 @@ namespace ClassicalSharp.Network.Protocols {
 			WriteCustomBlockSupportLevel(1);
 			net.SendPacket();
 			game.SupportsCPEBlocks = true;
-			game.Events.RaiseBlockPermissionsChanged();
+			Events.RaiseBlockPermissionsChanged();
 		}
 		
 		void HandleHoldThis() {
@@ -206,7 +206,7 @@ namespace ClassicalSharp.Network.Protocols {
 			BlockID block = reader.ReadBlock();
 			BlockInfo.CanPlace[block]  = reader.ReadUInt8() != 0;
 			BlockInfo.CanDelete[block] = reader.ReadUInt8() != 0;
-			game.Events.RaiseBlockPermissionsChanged();
+			Events.RaiseBlockPermissionsChanged();
 		}
 		
 		void HandleChangeModel() {
@@ -251,7 +251,7 @@ namespace ClassicalSharp.Network.Protocols {
 			}
 			
 			p.physics.serverJumpVel = p.physics.jumpVel;
-			game.Events.RaiseHackPermissionsChanged();
+			Events.RaiseHackPermissionsChanged();
 		}
 		
 		void HandleExtAddEntity2() {
@@ -315,7 +315,7 @@ namespace ClassicalSharp.Network.Protocols {
 			if (code == '%' || code == '&') return;
 			
 			IDrawer2D.Cols[code] = col;
-			game.Events.RaiseColourCodeChanged((char)code);
+			Events.RaiseColourCodeChanged((char)code);
 		}
 		
 		void HandleSetMapEnvUrl() {

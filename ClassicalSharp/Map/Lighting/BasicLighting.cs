@@ -1,6 +1,5 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using ClassicalSharp.Events;
 using BlockID = System.UInt16;
 using BlockRaw = System.Byte;
 
@@ -34,18 +33,18 @@ namespace ClassicalSharp.Map {
 		
 		public override void Init(Game game) {
 			this.game = game;
-			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
+			Events.EnvVariableChanged += EnvVariableChanged;
 			SetSun(WorldEnv.DefaultSunlight);
 			SetShadow(WorldEnv.DefaultShadowlight);
 		}
 		
 		public override void Dispose() {
 			if (game != null)
-				game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
+				Events.EnvVariableChanged -= EnvVariableChanged;
 			heightmap = null;
 		}
 
-		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
+		void EnvVariableChanged(object nill, EnvVarEventArgs e) {
 			if (e.Var == EnvVar.SunCol) {
 				SetSun(game.World.Env.Sun);
 			} else if (e.Var == EnvVar.ShadowCol) {

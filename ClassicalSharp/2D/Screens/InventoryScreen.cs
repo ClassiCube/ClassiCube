@@ -36,8 +36,8 @@ namespace ClassicalSharp.Gui.Screens {
 			// be moved back to the middle of the window.
 			deferredSelect = true;
 
-			game.Events.BlockPermissionsChanged += OnBlockChanged;
-			game.Events.BlockDefinitionChanged  += OnBlockChanged;
+			Events.BlockPermissionsChanged += OnBlockChanged;
+			Events.BlockDefinitionChanged  += OnBlockChanged;
 			Keyboard.KeyRepeat = true;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
@@ -51,8 +51,8 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Dispose() {
 			font.Dispose();
 			table.Dispose();
-			game.Events.BlockPermissionsChanged -= OnBlockChanged;
-			game.Events.BlockDefinitionChanged -= OnBlockChanged;
+			Events.BlockPermissionsChanged -= OnBlockChanged;
+			Events.BlockDefinitionChanged -= OnBlockChanged;
 			Keyboard.KeyRepeat = false;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
@@ -60,7 +60,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void OnResize() { table.Reposition(); }
 		
-		void OnBlockChanged(object sender, EventArgs e) {
+		void OnBlockChanged(object nill, EventArgs e) {
 			table.OnInventoryChanged();
 		}
 

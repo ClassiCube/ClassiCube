@@ -1,6 +1,5 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
 using OpenTK;
@@ -25,7 +24,7 @@ namespace ClassicalSharp.Renderers {
 		void IGameComponent.Init(Game game) {
 			this.game = game;
 			map = game.World;
-			game.Events.TextureChanged += TextureChanged;
+			Events.TextureChanged += TextureChanged;
 			
 			ContextRecreated();
 			game.Graphics.ContextLost += ContextLost;
@@ -125,7 +124,7 @@ namespace ClassicalSharp.Renderers {
 			oneY = length * width;
 		}
 		
-		void TextureChanged(object sender, TextureEventArgs e) {
+		void TextureChanged(object nill, TextureEventArgs e) {
 			if (Utils.CaselessEq(e.Name, "snow.png")) {
 				game.LoadTexture(ref snowTexId, e.Name, e.Data);
 			} else if (Utils.CaselessEq(e.Name, "rain.png")) {
@@ -138,7 +137,7 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.DeleteTexture(ref snowTexId);
 			ContextLost();
 			
-			game.Events.TextureChanged -= TextureChanged;
+			Events.TextureChanged -= TextureChanged;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}

@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using ClassicalSharp.Entities;
-using ClassicalSharp.Events;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Widgets {
@@ -43,9 +42,9 @@ namespace ClassicalSharp.Gui.Widgets {
 
 			overview = TextWidget.Create(game, "Connected players:", font)
 				.SetLocation(Anchor.Centre, Anchor.Min, 0, 0);
-			game.EntityEvents.TabListEntryAdded   += TabEntryAdded;
-			game.EntityEvents.TabListEntryRemoved += TabEntryRemoved;
-			game.EntityEvents.TabListEntryChanged += TabEntryChanged;
+			Events.TabListEntryAdded   += TabEntryAdded;
+			Events.TabListEntryRemoved += TabEntryRemoved;
+			Events.TabListEntryChanged += TabEntryChanged;
 		}
 		
 		public override void Render(double delta) {
@@ -77,9 +76,9 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 			
 			overview.Dispose();			
-			game.EntityEvents.TabListEntryAdded   -= TabEntryAdded;
-			game.EntityEvents.TabListEntryChanged -= TabEntryChanged;
-			game.EntityEvents.TabListEntryRemoved -= TabEntryRemoved;
+			Events.TabListEntryAdded   -= TabEntryAdded;
+			Events.TabListEntryChanged -= TabEntryChanged;
+			Events.TabListEntryRemoved -= TabEntryRemoved;
 		}
 		
 		int HighlightedName(int mouseX, int mouseY) {
@@ -188,12 +187,12 @@ namespace ClassicalSharp.Gui.Widgets {
 			textures[index] = tex;
 		}
 		
-		void TabEntryAdded(object sender, IdEventArgs e) {
+		void TabEntryAdded(object nill, IdEventArgs e) {
 			AddName(e.Id, -1);
 			SortAndReposition();
 		}
 		
-		void TabEntryChanged(object sender, IdEventArgs e) {
+		void TabEntryChanged(object nill, IdEventArgs e) {
 			for (int i = 0; i < namesCount; i++) {
 				if (IDs[i] != e.Id) continue;
 				
@@ -205,7 +204,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 		}
 		
-		void TabEntryRemoved(object sender, IdEventArgs e) {
+		void TabEntryRemoved(object nill, IdEventArgs e) {
 			for (int i = 0; i < namesCount; i++) {
 				if (IDs[i] != e.Id) continue;
 				DeleteAt(i);

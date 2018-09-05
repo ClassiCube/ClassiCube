@@ -223,7 +223,7 @@ namespace ClassicalSharp {
 					// Don't assign Selected directly, because we don't want held block
 					// switching positions if they already have air in their inventory hotbar.
 					inv[inv.SelectedIndex] = Block.Air;
-					game.Events.RaiseHeldBlockChanged();
+					Events.RaiseHeldBlockChanged();
 				}
 			} else if (key == Keys[KeyBind.IDOverlay]) {
 				if (game.Gui.overlays.Count > 0) return true;

@@ -28,7 +28,7 @@ namespace ClassicalSharp {
 		
 		public void Send(string text, bool logUsage) {
 			if (String.IsNullOrEmpty(text)) return;
-			game.Events.RaiseChatSending(ref text);
+			Events.RaiseChatSending(ref text);
 			if (logUsage) InputLog.Add(text);
 			
 			if (game.CommandList.IsCommandPrefix(text)) {
@@ -43,7 +43,7 @@ namespace ClassicalSharp {
 		public void Add(string text) { Add(text, MessageType.Normal); }
 		
 		public void Add(string text, MessageType type) {
-			game.Events.RaiseChatReceived(ref text, type);
+			Events.RaiseChatReceived(ref text, type);
 			
 			if (type == MessageType.Normal) {
 				Log.Add(text);

@@ -10,7 +10,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			game.Events.HackPermissionsChanged += CheckHacksAllowed;
+			Events.HackPermissionsChanged += CheckHacksAllowed;
 			ContextRecreated();
 		}
 		
@@ -71,7 +71,7 @@ namespace ClassicalSharp.Gui.Screens {
 		static void SwitchClassicOptions(Game g, Widget w) { g.Gui.SetNewScreen(new ClassicOptionsScreen(g)); }
 		static void QuitGame(Game g, Widget w) { g.Exit(); }
 		
-		void CheckHacksAllowed(object sender, EventArgs e) {
+		void CheckHacksAllowed(object nill, EventArgs e) {
 			if (game.UseClassicOptions) return;
 			widgets[4].Disabled = !game.LocalPlayer.Hacks.CanAnyHacks; // select texture pack
 		}
@@ -88,7 +88,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Dispose() {
 			base.Dispose();
-			game.Events.HackPermissionsChanged -= CheckHacksAllowed;
+			Events.HackPermissionsChanged -= CheckHacksAllowed;
 		}
 	}
 }

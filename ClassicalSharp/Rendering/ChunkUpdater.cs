@@ -1,7 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Entities;
-using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
 using ClassicalSharp.Textures;
@@ -45,14 +44,14 @@ namespace ClassicalSharp.Renderers {
 			this.game = game;
 			this.renderer = game.MapRenderer;
 			
-			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
-			game.WorldEvents.OnNewMap += OnNewMap;
-			game.WorldEvents.OnNewMapLoaded += OnNewMapLoaded;
-			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
+			Events.TerrainAtlasChanged += TerrainAtlasChanged;
+			Events.OnNewMap += OnNewMap;
+			Events.OnNewMapLoaded += OnNewMapLoaded;
+			Events.EnvVariableChanged += EnvVariableChanged;
 			
-			game.Events.BlockDefinitionChanged += BlockDefinitionChanged;
-			game.Events.ViewDistanceChanged += ViewDistanceChanged;
-			game.Events.ProjectionChanged += ProjectionChanged;
+			Events.BlockDefinitionChanged += BlockDefinitionChanged;
+			Events.ViewDistanceChanged += ViewDistanceChanged;
+			Events.ProjectionChanged += ProjectionChanged;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 			
@@ -63,14 +62,14 @@ namespace ClassicalSharp.Renderers {
 			ClearChunkCache();
 			renderer.chunks = null;
 			renderer.unsortedChunks = null;
-			game.Events.TerrainAtlasChanged -= TerrainAtlasChanged;
-			game.WorldEvents.OnNewMap -= OnNewMap;
-			game.WorldEvents.OnNewMapLoaded -= OnNewMapLoaded;
-			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
+			Events.TerrainAtlasChanged -= TerrainAtlasChanged;
+			Events.OnNewMap -= OnNewMap;
+			Events.OnNewMapLoaded -= OnNewMapLoaded;
+			Events.EnvVariableChanged -= EnvVariableChanged;
 			
-			game.Events.BlockDefinitionChanged -= BlockDefinitionChanged;
-			game.Events.ViewDistanceChanged -= ViewDistanceChanged;
-			game.Events.ProjectionChanged -= ProjectionChanged;
+			Events.BlockDefinitionChanged -= BlockDefinitionChanged;
+			Events.ViewDistanceChanged -= ViewDistanceChanged;
+			Events.ProjectionChanged -= ProjectionChanged;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 			builder.Dispose();
@@ -101,7 +100,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
+		void EnvVariableChanged(object nill, EnvVarEventArgs e) {
 			if (e.Var == EnvVar.SunCol || e.Var == EnvVar.ShadowCol) {
 				Refresh();
 			} else if (e.Var == EnvVar.EdgeLevel || e.Var == EnvVar.SidesOffset) {
@@ -112,7 +111,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 
-		void TerrainAtlasChanged(object sender, EventArgs e) {
+		void TerrainAtlasChanged(object nill, EventArgs e) {
 			if (renderer._1DUsed != -1) {
 				bool refreshRequired = elementsPerBitmap != Atlas1D.TilesPerAtlas;
 				if (refreshRequired) Refresh();
@@ -123,17 +122,17 @@ namespace ClassicalSharp.Renderers {
 			ResetUsedFlags();
 		}
 		
-		void BlockDefinitionChanged(object sender, EventArgs e) {
+		void BlockDefinitionChanged(object nill, EventArgs e) {
 			renderer._1DUsed = Atlas1D.UsedAtlasesCount();
 			ResetUsedFlags();
 			Refresh();
 		}
 		
-		void ProjectionChanged(object sender, EventArgs e) {
+		void ProjectionChanged(object nill, EventArgs e) {
 			lastCamPos = Utils.MaxPos();
 		}
 		
-		void ViewDistanceChanged(object sender, EventArgs e) {
+		void ViewDistanceChanged(object nill, EventArgs e) {
 			lastCamPos = Utils.MaxPos();
 		}
 
@@ -153,7 +152,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void OnNewMap(object sender, EventArgs e) {
+		void OnNewMap(object nill, EventArgs e) {
 			game.ChunkUpdates = 0;
 			ClearChunkCache();
 			ResetPartsCounts();
@@ -164,7 +163,7 @@ namespace ClassicalSharp.Renderers {
 		}
 				
 		int chunksX, chunksY, chunksZ;
-		void OnNewMapLoaded(object sender, EventArgs e) {
+		void OnNewMapLoaded(object nill, EventArgs e) {
 			chunksX = Utils.CeilDiv(game.World.Width,  16); renderer.chunksX = chunksX;
 			chunksY = Utils.CeilDiv(game.World.Height, 16); renderer.chunksY = chunksY;
 			chunksZ = Utils.CeilDiv(game.World.Length, 16); renderer.chunksZ = chunksZ;

@@ -1,7 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Entities;
-using ClassicalSharp.Events;
 using ClassicalSharp.Map;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Textures;

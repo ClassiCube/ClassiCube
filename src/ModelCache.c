@@ -4,7 +4,6 @@
 #include "Event.h"
 #include "ExtMath.h"
 #include "Model.h"
-#include "String.h"
 #include "TerrainAtlas.h"
 #include "Drawer.h"
 #include "Block.h"

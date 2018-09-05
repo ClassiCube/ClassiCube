@@ -41,7 +41,7 @@ namespace ClassicalSharp.Network.Protocols {
 				if (oldEntity != null) game.Entities.RemoveEntity(id);
 
 				game.Entities.List[id] = new NetPlayer(displayName, skinName, game);
-				game.EntityEvents.RaiseAdded(id);
+				Events.RaiseEntityAdded(id);
 			} else {
 				game.LocalPlayer.Despawn();
 				// Always reset the texture here, in case other network players are using the same skin as us.
@@ -95,15 +95,15 @@ namespace ClassicalSharp.Network.Protocols {
 				// Only redraw the tab list if something changed.
 				if (info.PlayerName != oldInfo.PlayerName || info.ListName != oldInfo.ListName ||
 				    info.Group != oldInfo.Group || info.GroupRank != oldInfo.GroupRank) {
-					game.EntityEvents.RaiseTabListEntryChanged(id);
+					Events.RaiseTabListEntryChanged(id);
 				}
 			} else {
-				game.EntityEvents.RaiseTabEntryAdded(id);
+				Events.RaiseTabEntryAdded(id);
 			}
 		}
 		
 		protected void RemoveTablistEntry(byte id) {
-			game.EntityEvents.RaiseTabEntryRemoved(id);
+			Events.RaiseTabEntryRemoved(id);
 			TabList.Entries[id] = null;
 		}
 	}

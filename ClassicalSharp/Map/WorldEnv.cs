@@ -1,11 +1,19 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using ClassicalSharp.Events;
 using BlockID = System.UInt16;
 
 namespace ClassicalSharp.Map {
 
 	public enum Weather { Sunny, Rainy, Snowy, }
+	public enum EnvVar {
+		SidesBlock,     EdgeBlock,     EdgeLevel,
+		CloudsLevel,    CloudsSpeed,   Weather,
+		SkyCol,         CloudsCol,     FogCol,
+		SunCol,         ShadowCol,	
+		WeatherSpeed,   WeatherFade,
+		ExpFog,         SidesOffset,
+		SkyboxHorSpeed, SkyboxVerSpeed,
+	}
 	
 	/// <summary> Contains the environment metadata for a world. </summary>
 	public sealed class WorldEnv {
@@ -80,14 +88,14 @@ namespace ClassicalSharp.Map {
 			if (block == 255 && !BlockInfo.IsCustomDefined(255)) block = Block.Bedrock; // some server software wrongly uses this value
 			if (block == SidesBlock) return;
 			SidesBlock = block;
-			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.SidesBlock);
+			Events.RaiseEnvVariableChanged(EnvVar.SidesBlock);
 		}
 		
 		public void SetEdgeBlock(BlockID block) {
 			if (block == 255 && !BlockInfo.IsCustomDefined(255)) block = Block.StillWater; // some server software wrongly uses this value
 			if (block == EdgeBlock) return;
 			EdgeBlock = block;
-			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.EdgeBlock);
+			Events.RaiseEnvVariableChanged(EnvVar.EdgeBlock);
 		}
 
 		public void SetCloudsLevel(int level) { Set(level, ref CloudHeight, EnvVar.CloudsLevel); }
@@ -107,7 +115,7 @@ namespace ClassicalSharp.Map {
 		public void SetWeather(Weather weather) {
 			if (weather == Weather) return;
 			Weather = weather;
-			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.Weather);
+			Events.RaiseEnvVariableChanged(EnvVar.Weather);
 		}
 		
 		public void SetSkyCol(PackedCol col) { Set(col, ref SkyCol, EnvVar.SkyCol); }
@@ -129,7 +137,7 @@ namespace ClassicalSharp.Map {
 		bool Set<T>(T value, ref T target, EnvVar var) where T : IEquatable<T> {
 			if (value.Equals(target)) return false;
 			target = value;
-			game.WorldEvents.RaiseEnvVariableChanged(var);
+			Events.RaiseEnvVariableChanged(var);
 			return true;
 		}
 	}

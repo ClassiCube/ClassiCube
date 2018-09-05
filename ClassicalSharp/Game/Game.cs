@@ -8,7 +8,6 @@ using System.Threading;
 using ClassicalSharp.Audio;
 using ClassicalSharp.Commands;
 using ClassicalSharp.Entities;
-using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui.Screens;
 using ClassicalSharp.Map;
@@ -124,7 +123,7 @@ namespace ClassicalSharp {
 		
 		public void Disconnect(string title, string reason) {
 			World.Reset();
-			WorldEvents.RaiseOnNewMap();
+			Events.RaiseOnNewMap();
 			Gui.SetNewScreen(new DisconnectScreen(this, title, reason));
 			
 			IDrawer2D.InitCols();
@@ -250,17 +249,17 @@ namespace ClassicalSharp {
 		
 		void OnClosed(object sender, EventArgs e) { isExiting = true; }
 		
-		void OnNewMapCore(object sender, EventArgs e) {
+		void OnNewMapCore(object nill, EventArgs e) {
 			for (int i = 0; i < Components.Count; i++)
 				Components[i].OnNewMap(this);
 		}
 		
-		void OnNewMapLoadedCore(object sender, EventArgs e) {
+		void OnNewMapLoadedCore(object nill, EventArgs e) {
 			for (int i = 0; i < Components.Count; i++)
 				Components[i].OnNewMapLoaded(this);
 		}
 		
-		void TextureChangedCore(object sender, TextureEventArgs e) {
+		void TextureChangedCore(object nill, TextureEventArgs e) {
 			if (Utils.CaselessEq(e.Name, "terrain.png")) {
 				Bitmap atlas = Platform.ReadBmp(Drawer2D, e.Data);
 				if (ChangeTerrainAtlas(atlas)) return;
@@ -424,8 +423,8 @@ namespace ClassicalSharp {
 			Atlas1D.Dispose();
 			ModelCache.Dispose();
 			Entities.Dispose();
-			WorldEvents.OnNewMap -= OnNewMapCore;
-			WorldEvents.OnNewMapLoaded -= OnNewMapLoadedCore;
+			Events.OnNewMap       -= OnNewMapCore;
+			Events.OnNewMapLoaded -= OnNewMapLoadedCore;
 			Events.TextureChanged -= TextureChangedCore;
 			
 			for (int i = 0; i < Components.Count; i++)

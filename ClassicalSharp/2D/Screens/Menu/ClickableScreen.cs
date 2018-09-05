@@ -99,7 +99,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected void HandleFontChange() {
-			game.Events.RaiseChatFontChanged();
+			Events.RaiseChatFontChanged();
 			Recreate();
 			game.Gui.RefreshHud();
 			HandlesMouseMove(Mouse.X, Mouse.Y);

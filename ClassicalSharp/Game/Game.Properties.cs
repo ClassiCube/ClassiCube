@@ -7,7 +7,6 @@ using System.Net;
 using ClassicalSharp.Audio;
 using ClassicalSharp.Commands;
 using ClassicalSharp.Entities;
-using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
 using ClassicalSharp.Model;
@@ -87,10 +86,6 @@ namespace ClassicalSharp {
 		public PickedPos SelectedPos = new PickedPos(), CameraClipPos = new PickedPos();
 		public ModelCache ModelCache;
 		internal string skinServer;
-		public OtherEvents Events = new OtherEvents();
-		public EntityEvents EntityEvents = new EntityEvents();
-		public WorldEvents WorldEvents = new WorldEvents();
-		public UserEvents UserEvents = new UserEvents();
 		public InputHandler Input;
 		public Chat Chat;
 		public HeldBlockRenderer HeldBlockRenderer;

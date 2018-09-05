@@ -32,7 +32,7 @@ namespace ClassicalSharp.Singleplayer {
 				BlockInfo.CanPlace[i] = true;
 				BlockInfo.CanDelete[i] = true;
 			}
-			game.Events.RaiseBlockPermissionsChanged();
+			Events.RaiseBlockPermissionsChanged();
 			
 			// For when user drops a map file onto ClassicalSharp.exe
 			string path = game.Username;

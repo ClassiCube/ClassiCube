@@ -46,7 +46,7 @@ namespace ClassicalSharp {
 				if (BlockInfo.Draw[old] == DrawType.Gas || !BlockInfo.CanDelete[old]) return;
 				
 				game.UpdateBlock(pos.X, pos.Y, pos.Z, Block.Air);
-				game.UserEvents.RaiseBlockChanged(pos, old, Block.Air);
+				Events.RaiseBlockChanged(pos, old, Block.Air);
 			} else if (right) {
 				Vector3I pos = game.SelectedPos.TranslatedPos;
 				if (!game.SelectedPos.Valid || !game.World.IsValidPos(pos)) return;
@@ -62,7 +62,7 @@ namespace ClassicalSharp {
 				
 				if (!PickingHandler.CheckIsFree(game, block)) return;
 				game.UpdateBlock(pos.X, pos.Y, pos.Z, block);
-				game.UserEvents.RaiseBlockChanged(pos, old, block);
+				Events.RaiseBlockChanged(pos, old, block);
 			} else if (middle) {
 				Vector3I pos = game.SelectedPos.BlockPos;
 				if (!game.SelectedPos.Valid || !game.World.IsValidPos(pos)) return;				

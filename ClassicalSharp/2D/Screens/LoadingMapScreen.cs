@@ -2,7 +2,6 @@
 using System;
 using System.Drawing;
 using ClassicalSharp.Entities;
-using ClassicalSharp.Events;
 using ClassicalSharp.Generator;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui.Widgets;
@@ -35,7 +34,7 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Graphics.Fog = false;
 			ContextRecreated();
 			
-			game.WorldEvents.Loading += Loading;
+			Events.Loading += Loading;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 		}
@@ -64,7 +63,7 @@ namespace ClassicalSharp.Gui.Screens {
 			font.Dispose();
 			ContextLost();
 			
-			game.WorldEvents.Loading -= Loading;
+			Events.Loading -= Loading;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
@@ -74,7 +73,7 @@ namespace ClassicalSharp.Gui.Screens {
 			titleWidget.Reposition();
 		}
 		
-		void Loading(object sender, LoadingEventArgs e) {
+		void Loading(object nill, LoadingEventArgs e) {
 			progress = e.Progress;
 		}
 		
@@ -176,7 +175,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			game.World.Reset();
-			game.WorldEvents.RaiseOnNewMap();
+			Events.RaiseOnNewMap();
 			GC.Collect();
 			
 			base.Init();
@@ -204,7 +203,7 @@ namespace ClassicalSharp.Gui.Screens {
 				gen.Blocks = null;
 				ResetPlayerPosition();
 				
-				game.WorldEvents.RaiseOnNewMapLoaded();
+				Events.RaiseOnNewMapLoaded();
 				gen.ApplyEnv(game.World);
 			}
 			

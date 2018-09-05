@@ -1,7 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using System.Collections.Generic;
-using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui;
 using ClassicalSharp.Gui.Screens;
@@ -42,7 +41,7 @@ namespace ClassicalSharp {
 		
 		void IGameComponent.Init(Game game) {
 			this.game = game;
-			game.Events.TextureChanged += TextureChanged;
+			Events.TextureChanged += TextureChanged;
 		}
 		
 		public void Reset(Game game) {
@@ -53,7 +52,7 @@ namespace ClassicalSharp {
 		}
 		
 		void IDisposable.Dispose() {
-			game.Events.TextureChanged -= TextureChanged;
+			Events.TextureChanged -= TextureChanged;
 			SetNewScreen(null);
 			statusScreen.Dispose();
 			
@@ -66,7 +65,7 @@ namespace ClassicalSharp {
 			Reset(game);
 		}
 		
-		void TextureChanged(object sender, TextureEventArgs e) {
+		void TextureChanged(object nill, TextureEventArgs e) {
 			if (Utils.CaselessEq(e.Name, "gui.png")) {
 				game.LoadTexture(ref GuiTex, e.Name, e.Data);
 			} else if (Utils.CaselessEq(e.Name, "gui_classic.png")) {

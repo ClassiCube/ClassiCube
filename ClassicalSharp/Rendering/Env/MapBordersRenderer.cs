@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
 using ClassicalSharp.Textures;
@@ -31,9 +30,9 @@ namespace ClassicalSharp.Renderers {
 			this.game = game;
 			map = game.World;
 			
-			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
-			game.Events.ViewDistanceChanged += ResetSidesAndEdges;
-			game.Events.TerrainAtlasChanged += ResetTextures;
+			Events.EnvVariableChanged += EnvVariableChanged;
+			Events.ViewDistanceChanged += ResetSidesAndEdges;
+			Events.TerrainAtlasChanged += ResetTextures;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 		}
@@ -75,9 +74,9 @@ namespace ClassicalSharp.Renderers {
 		void IDisposable.Dispose() {
 			ContextLost();
 			
-			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
-			game.Events.ViewDistanceChanged -= ResetSidesAndEdges;
-			game.Events.TerrainAtlasChanged -= ResetTextures;
+			Events.EnvVariableChanged -= EnvVariableChanged;
+			Events.ViewDistanceChanged -= ResetSidesAndEdges;
+			Events.TerrainAtlasChanged -= ResetTextures;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
@@ -94,7 +93,7 @@ namespace ClassicalSharp.Renderers {
 		
 		void IGameComponent.OnNewMapLoaded(Game game) { ResetSidesAndEdges(null, null); }
 		
-		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
+		void EnvVariableChanged(object nill, EnvVarEventArgs e) {
 			if (e.Var == EnvVar.EdgeBlock) {
 				MakeTexture(ref edgesTex, ref lastEdgeTexLoc, map.Env.EdgeBlock);
 				ResetEdges();
@@ -110,13 +109,13 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void ResetTextures(object sender, EventArgs e) {
+		void ResetTextures(object nill, EventArgs e) {
 			lastEdgeTexLoc = -1; lastSideTexLoc = -1;
 			MakeTexture(ref edgesTex, ref lastEdgeTexLoc, map.Env.EdgeBlock);
 			MakeTexture(ref sidesTex, ref lastSideTexLoc, map.Env.SidesBlock);
 		}
 
-		void ResetSidesAndEdges(object sender, EventArgs e) {
+		void ResetSidesAndEdges(object nill, EventArgs e) {
 			CalculateRects();
 			ContextRecreated();
 		}

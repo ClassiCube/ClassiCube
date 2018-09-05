@@ -1,6 +1,5 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Textures;
 using OpenTK;
@@ -25,8 +24,8 @@ namespace ClassicalSharp.Particles {
 		
 		void IGameComponent.Init(Game game) {
 			this.game = game;
-			game.UserEvents.BlockChanged += BreakBlockEffect;
-			game.Events.TextureChanged += TextureChanged;
+			Events.BlockChanged += BreakBlockEffect;
+			Events.TextureChanged += TextureChanged;
 			
 			ContextRecreated();
 			game.Graphics.ContextLost += ContextLost;
@@ -38,7 +37,7 @@ namespace ClassicalSharp.Particles {
 		void IGameComponent.OnNewMap(Game game) { rainCount = 0; terrainCount = 0; }
 		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
-		void TextureChanged(object sender, TextureEventArgs e) {
+		void TextureChanged(object nill, TextureEventArgs e) {
 			if (Utils.CaselessEq(e.Name, "particles.png")) {
 				game.LoadTexture(ref ParticlesTexId, e.Name, e.Data);
 			}
@@ -159,7 +158,7 @@ namespace ClassicalSharp.Particles {
 		}		
 		
 		
-		void BreakBlockEffect(object sender, BlockChangedEventArgs e) {
+		void BreakBlockEffect(object nill, BlockChangedEventArgs e) {
 			if (e.Block != Block.Air || BlockInfo.Draw[e.OldBlock] == DrawType.Gas) return;
 			Vector3I position = e.Coords;
 			BlockID block = e.OldBlock;
@@ -263,8 +262,8 @@ namespace ClassicalSharp.Particles {
 		
 		void IDisposable.Dispose() {
 			game.Graphics.DeleteTexture(ref ParticlesTexId);
-			game.UserEvents.BlockChanged -= BreakBlockEffect;
-			game.Events.TextureChanged -= TextureChanged;
+			Events.BlockChanged -= BreakBlockEffect;
+			Events.TextureChanged -= TextureChanged;
 			
 			ContextLost();
 			game.Graphics.ContextLost -= ContextLost;

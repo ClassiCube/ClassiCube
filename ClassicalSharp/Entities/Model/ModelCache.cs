@@ -1,7 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using System.Collections.Generic;
-using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp.Model {
@@ -24,7 +23,7 @@ namespace ClassicalSharp.Model {
 			RegisterDefaultModels();
 			ContextRecreated();
 			
-			game.Events.TextureChanged += TextureChanged;
+			Events.TextureChanged += TextureChanged;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 		}
@@ -72,7 +71,7 @@ namespace ClassicalSharp.Model {
 			}
 			ContextLost();
 			
-			game.Events.TextureChanged -= TextureChanged;
+			Events.TextureChanged -= TextureChanged;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
@@ -108,7 +107,7 @@ namespace ClassicalSharp.Model {
 			Register("corpse", "char.png", new CorpseModel(game));
 		}
 
-		void TextureChanged(object sender, TextureEventArgs e) {
+		void TextureChanged(object nill, TextureEventArgs e) {
 			for (int i = 0; i < Textures.Count; i++) {
 				CachedTexture tex = Textures[i];
 				if (!Utils.CaselessEq(tex.Name, e.Name)) continue;

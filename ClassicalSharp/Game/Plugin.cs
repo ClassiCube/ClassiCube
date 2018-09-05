@@ -11,16 +11,14 @@ namespace ClassicalSharp {
 	/// <summary> Allows external functionality to be added to the client. </summary>
 	public interface Plugin : IGameComponent {
 		
-		/// <summary> Client version this plugin is compatible with. </summary>
-		string ClientVersion { get; }
+		/// <summary> API version this plugin is compatible with. </summary>
+		int APIVersion { get; }
 	}
 	
 	internal static class PluginLoader {
-
 		public static EntryList Accepted, Denied;
-		internal static Game game;
 		
-		internal static List<string> LoadAll() {
+		internal static List<string> LoadAll(Game game) {
 			Utils.EnsureDirectory("plugins");
 			
 			Accepted = new EntryList("plugins", "accepted.txt");
@@ -28,10 +26,10 @@ namespace ClassicalSharp {
 			Accepted.Load();
 			Denied.Load();
 			
-			return LoadPlugins();
+			return LoadPlugins(game);
 		}
 		
-		static List<string> LoadPlugins() {
+		static List<string> LoadPlugins(Game game) {
 			string[] dlls = Platform.DirectoryFiles("plugins", "*.dll");
 			List<string> nonLoaded = null;
 			
@@ -40,7 +38,7 @@ namespace ClassicalSharp {
 				if (Denied.Has(plugin)) continue;
 				
 				if (Accepted.Has(plugin)) {
-					Load(plugin, false);
+					Load(plugin, game, false);
 				} else if (nonLoaded == null) {
 					nonLoaded = new List<string>();
 					nonLoaded.Add(plugin);
@@ -51,16 +49,25 @@ namespace ClassicalSharp {
 			return nonLoaded;
 		}
 		
-		public static void Load(string pluginName, bool needsInit) {
+		public static void Load(string pluginName, Game game, bool needsInit) {
 			try {
 				string path = Path.Combine("plugins", pluginName + ".dll");
 				Assembly lib = Assembly.LoadFrom(path);
 				Type[] types = lib.GetTypes();
 				
 				for (int i = 0; i < types.Length; i++) {
-					if (!IsPlugin(types[i])) continue;
+					if (!IsPlugin(types[i])) continue;					
+					Plugin plugin = (Plugin)Activator.CreateInstance(types[i]);
 					
-					IGameComponent plugin = (IGameComponent)Activator.CreateInstance(types[i]);
+					if (plugin.APIVersion < Program.APIVersion) {
+						game.Chat.Add("&c" + pluginName + " plugin is outdated! Try getting a more recent version.");
+						continue;
+					}
+					if (plugin.APIVersion > Program.APIVersion) {
+						game.Chat.Add("&cYour game is too outdated to use " + pluginName + " plugin! Try updating it.");
+						continue;
+					}
+					
 					if (needsInit) {
 						plugin.Init(game);
 						plugin.Ready(game);
@@ -71,6 +78,7 @@ namespace ClassicalSharp {
 					game.Components.Add(plugin);
 				}
 			} catch (Exception ex) {
+				game.Chat.Add("&cError loading " + pluginName + " plugin, see client.log");
 				ErrorHandler.LogError("PluginLoader.Load() - " + pluginName, ex);
 			}
 		}

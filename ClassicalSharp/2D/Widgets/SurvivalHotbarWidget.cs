@@ -22,10 +22,10 @@ namespace ClassicalSharp.Gui.Widgets {
 			font = new Font(game.FontName, 16);
 			posAtlas = new TextAtlas(game, 16);
 			posAtlas.Pack("0123456789", font, "f");
-			game.Events.ChatFontChanged += ChatFontChanged;
+			Events.ChatFontChanged += ChatFontChanged;
 		}
 		
-		void ChatFontChanged(object sender, EventArgs e) { Recreate(); }
+		void ChatFontChanged(object nill, EventArgs e) { Recreate(); }
 		
 		public override void Render(double delta) {
 			base.Render(delta);
@@ -36,7 +36,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public override void Dispose() {
 			font.Dispose();
 			posAtlas.Dispose();
-			game.Events.ChatFontChanged -= ChatFontChanged;
+			Events.ChatFontChanged -= ChatFontChanged;
 		}
 		
 		

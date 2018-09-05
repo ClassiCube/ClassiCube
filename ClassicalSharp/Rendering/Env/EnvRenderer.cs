@@ -1,6 +1,5 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
 using ClassicalSharp.Physics;
@@ -65,7 +64,7 @@ namespace ClassicalSharp.Renderers {
 			RenderClouds(deltaTime);
 		}
 		
-		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
+		void EnvVariableChanged(object nill, EnvVarEventArgs e) {
 			if (minimal) return;
 			
 			if (e.Var == EnvVar.SkyCol) {
@@ -85,9 +84,9 @@ namespace ClassicalSharp.Renderers {
 			map = game.World;
 			ResetAllEnv(null, null);
 			
-			game.Events.TextureChanged += TextureChanged;
-			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
-			game.Events.ViewDistanceChanged += ResetAllEnv;
+			Events.TextureChanged += TextureChanged;
+			Events.EnvVariableChanged += EnvVariableChanged;
+			Events.ViewDistanceChanged += ResetAllEnv;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 			game.SetViewDistance(game.UserViewDistance, false);
@@ -105,21 +104,21 @@ namespace ClassicalSharp.Renderers {
 			ResetAllEnv(null, null);
 		}
 		
-		void TextureChanged(object sender, TextureEventArgs e) {
+		void TextureChanged(object nill, TextureEventArgs e) {
 			if (Utils.CaselessEq(e.Name, "clouds.png")) {
 				game.LoadTexture(ref cloudsTex, e.Name, e.Data);
 			}
 		}
 		
-		void ResetAllEnv(object sender, EventArgs e) { ContextRecreated(); }
+		void ResetAllEnv(object nill, EventArgs e) { ContextRecreated(); }
 		
 		void IDisposable.Dispose() {
 			game.Graphics.DeleteTexture(ref cloudsTex);
 			ContextLost();
 			
-			game.Events.TextureChanged -= TextureChanged;
-			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
-			game.Events.ViewDistanceChanged -= ResetAllEnv;
+			Events.TextureChanged -= TextureChanged;
+			Events.EnvVariableChanged -= EnvVariableChanged;
+			Events.ViewDistanceChanged -= ResetAllEnv;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}

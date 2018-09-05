@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 #if ANDROID
 using Android.Graphics;
@@ -22,8 +21,8 @@ namespace ClassicalSharp.Textures {
 		
 		void IGameComponent.Init(Game game) {
 			this.game = game;
-			game.Events.TexturePackChanged += TexturePackChanged;
-			game.Events.TextureChanged += TextureChanged;
+			Events.TexturePackChanged += TexturePackChanged;
+			Events.TextureChanged += TextureChanged;
 		}
 
 		void IGameComponent.Ready(Game game) { }
@@ -31,13 +30,13 @@ namespace ClassicalSharp.Textures {
 		void IGameComponent.OnNewMap(Game game) { }
 		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
-		void TexturePackChanged(object sender, EventArgs e) {
+		void TexturePackChanged(object nill, EventArgs e) {
 			Clear();
 			useLavaAnim = IsDefaultZip();
 			useWaterAnim = useLavaAnim;
 		}
 		
-		void TextureChanged(object sender, TextureEventArgs e) {
+		void TextureChanged(object nill, TextureEventArgs e) {
 			if (Utils.CaselessEq(e.Name, "animations.png")) {
 				animBmp = Platform.ReadBmp(game.Drawer2D, e.Data);
 				animsBuffer = new FastBitmap(animBmp, true, true);
@@ -186,8 +185,8 @@ namespace ClassicalSharp.Textures {
 		
 		void IDisposable.Dispose() {
 			Clear();
-			game.Events.TextureChanged -= TextureChanged;
-			game.Events.TexturePackChanged -= TexturePackChanged;
+			Events.TextureChanged -= TextureChanged;
+			Events.TexturePackChanged -= TexturePackChanged;
 		}
 		
 		class AnimationData {

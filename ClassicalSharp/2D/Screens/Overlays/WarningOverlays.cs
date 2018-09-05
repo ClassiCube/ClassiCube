@@ -81,7 +81,7 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Gui.DisposeOverlay(this);
 			EntryList accepted = PluginLoader.Accepted;
 			if (IsAlways(w) && !accepted.Has(Plugin)) accepted.Add(Plugin);
-			PluginLoader.Load(Plugin, true);
+			PluginLoader.Load(Plugin, g, true);
 		}
 		
 		protected override void OnNoClick(Game g, Widget w) {

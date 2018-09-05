@@ -1,6 +1,5 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
 using OpenTK;
@@ -16,9 +15,9 @@ namespace ClassicalSharp.Renderers {
 		 
 		void IGameComponent.Init(Game game) {
 			this.game = game;
-			game.Events.TextureChanged += TextureChanged;
-			game.Events.TexturePackChanged += TexturePackChanged;
-			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
+			Events.TextureChanged     += TextureChanged;
+			Events.TexturePackChanged += TexturePackChanged;
+			Events.EnvVariableChanged += EnvVariableChanged;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 			ContextRecreated();
@@ -33,23 +32,23 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.DeleteTexture(ref tex);
 			ContextLost();
 			
-			game.Events.TextureChanged -= TextureChanged;
-			game.Events.TexturePackChanged -= TexturePackChanged;
-			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
+			Events.TextureChanged     -= TextureChanged;
+			Events.TexturePackChanged -= TexturePackChanged;
+			Events.EnvVariableChanged -= EnvVariableChanged;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;			
 		}
 		
-		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
+		void EnvVariableChanged(object nill, EnvVarEventArgs e) {
 			if (e.Var != EnvVar.CloudsCol) return;
 			MakeVb();
 		}
 		
-		void TexturePackChanged(object sender, EventArgs e) {
+		void TexturePackChanged(object nill, EventArgs e) {
 			game.Graphics.DeleteTexture(ref tex);
 		}
 		
-		void TextureChanged(object sender, TextureEventArgs e) {
+		void TextureChanged(object nill, TextureEventArgs e) {
 			if (Utils.CaselessEq(e.Name, "skybox.png")) {
 				game.LoadTexture(ref tex, e.Name, e.Data);
 			}

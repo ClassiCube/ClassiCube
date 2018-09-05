@@ -54,7 +54,7 @@ namespace ClassicalSharp {
 			set {
 				if (!CanChangeSelected()) return;
 				CanPick = true;
-				selectedI = value; game.Events.RaiseHeldBlockChanged();
+				selectedI = value; Events.RaiseHeldBlockChanged();
 			}
 		}
 		
@@ -64,7 +64,7 @@ namespace ClassicalSharp {
 			get { return offset; }
 			set {
 				if (!CanChangeSelected() || game.ClassicMode) return;
-				offset = value; game.Events.RaiseHeldBlockChanged();
+				offset = value; Events.RaiseHeldBlockChanged();
 			}
 		}
 		
@@ -84,12 +84,12 @@ namespace ClassicalSharp {
 					this[selectedI] = this[i];
 					this[i] = prevSelected;
 					
-					game.Events.RaiseHeldBlockChanged();
+					Events.RaiseHeldBlockChanged();
 					return;
 				}
 				
 				this[selectedI] = value;
-				game.Events.RaiseHeldBlockChanged();
+				Events.RaiseHeldBlockChanged();
 			}
 		}
 		

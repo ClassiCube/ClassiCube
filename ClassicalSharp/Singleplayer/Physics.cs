@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using ClassicalSharp.Map;
-using ClassicalSharp.Events;
 using BlockID = System.UInt16;
 using BlockRaw = System.Byte;
 
@@ -36,8 +35,8 @@ namespace ClassicalSharp.Singleplayer {
 		public PhysicsBase(Game game) {
 			this.game = game;
 			map = game.World;
-			game.WorldEvents.OnNewMapLoaded += ResetMap;
-			game.UserEvents.BlockChanged += BlockChanged;
+			Events.OnNewMapLoaded += ResetMap;
+			Events.BlockChanged += BlockChanged;
 			enabled = Options.GetBool(OptionsKey.BlockPhysics, true);
 			
 			falling = new FallingPhysics(game, this);
@@ -59,7 +58,7 @@ namespace ClassicalSharp.Singleplayer {
 			TickRandomBlocks();
 		}
 		
-		void BlockChanged(object sender, BlockChangedEventArgs e) {
+		void BlockChanged(object nill, BlockChangedEventArgs e) {
 			if (!Enabled) return;
 			Vector3I p = e.Coords;
 			int index = (p.Y * length + p.Z) * width + p.X;
@@ -106,7 +105,7 @@ namespace ClassicalSharp.Singleplayer {
 				&& (x == 0 || z == 0 || x == map.MaxX || z == map.MaxZ);
 		}
 		
-		void ResetMap(object sender, EventArgs e) {
+		void ResetMap(object nill, EventArgs e) {
 			falling.ResetMap();
 			liquid.ResetMap();
 			width = map.Width;
@@ -116,8 +115,8 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		public void Dispose() {
-			game.WorldEvents.OnNewMapLoaded -= ResetMap;
-			game.UserEvents.BlockChanged -= BlockChanged;
+			Events.OnNewMapLoaded -= ResetMap;
+			Events.BlockChanged -= BlockChanged;
 		}
 		
 		void TickRandomBlocks() {

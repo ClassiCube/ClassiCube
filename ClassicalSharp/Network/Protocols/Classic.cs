@@ -91,7 +91,7 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void StartLoadingState() {
 			game.World.Reset();
-			game.WorldEvents.RaiseOnNewMap();
+			Events.RaiseOnNewMap();
 			
 			prevScreen = game.Gui.activeScreen;
 			if (prevScreen is LoadingScreen) prevScreen = null;
@@ -168,7 +168,7 @@ namespace ClassicalSharp.Network.Protocols {
 			}
 			
 			float progress = map == null ? 0 : (float)mapIndex / map.Length;
-			game.WorldEvents.RaiseLoading(progress);
+			Events.RaiseLoading(progress);
 		}
 		
 		void HandleLevelFinalise() {
@@ -192,7 +192,7 @@ namespace ClassicalSharp.Network.Protocols {
 				BlockInfo.SetMaxUsed(map2 == null ? 255 : 767);
 			}
 			#endif
-			game.WorldEvents.RaiseOnNewMapLoaded();
+			Events.RaiseOnNewMapLoaded();
 			net.wom.CheckSendWomID();
 			
 			map = null;

@@ -154,7 +154,7 @@ namespace ClassicalSharp.Entities {
 			MaxJumps = ParseFlagInt("jumps=");
 			
 			CheckHacksConsistency();
-			game.Events.RaiseHackPermissionsChanged();
+			Events.RaiseHackPermissionsChanged();
 		}
 	}
 }

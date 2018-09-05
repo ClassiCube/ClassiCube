@@ -2,7 +2,6 @@
 using System;
 using System.Net.Sockets;
 using ClassicalSharp.Entities;
-using ClassicalSharp.Events;
 using ClassicalSharp.Network.Protocols;
 using OpenTK;
 using OpenTK.Input;
@@ -37,7 +36,7 @@ namespace ClassicalSharp.Network {
 		
 		public override void BeginConnect() {
 			socket = new Socket(game.IPAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-			game.UserEvents.BlockChanged += BlockChanged;
+			Events.BlockChanged += BlockChanged;
 			Disconnected = false;
 			
 			socket.Blocking = false;
@@ -69,13 +68,13 @@ namespace ClassicalSharp.Network {
 				FailConnect(null);
 			} else {
 				double leftSecs = (connectTimeout - now).TotalSeconds;
-				game.WorldEvents.RaiseLoading((float)leftSecs / timeoutSecs);
+				Events.RaiseLoading((float)leftSecs / timeoutSecs);
 			}
 		}
 		
 		void FinishConnect() {
 			connecting = false;
-			game.WorldEvents.RaiseLoading(0);
+			Events.RaiseLoading(0);
 			reader = new NetReader(socket);
 			writer = new NetWriter(socket);
 			
@@ -125,7 +124,7 @@ namespace ClassicalSharp.Network {
 		
 		public override void Dispose() {
 			if (Disconnected) return;
-			game.UserEvents.BlockChanged -= BlockChanged;
+			Events.BlockChanged -= BlockChanged;
 			socket.Close();
 			Disconnected = true;
 		}
@@ -243,7 +242,7 @@ namespace ClassicalSharp.Network {
 		internal Action[] handlers = new Action[Opcode.Count];
 		internal ushort[] packetSizes = new ushort[Opcode.Count];
 		
-		void BlockChanged(object sender, BlockChangedEventArgs e) {
+		void BlockChanged(object nill, BlockChangedEventArgs e) {
 			Vector3I p = e.Coords;
 			BlockID block = game.Inventory.Selected;
 			

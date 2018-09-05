@@ -48,7 +48,7 @@ void AxisLinesRenderer_Render(Real64 delta) {
 	Vector3_Add1(&coords[3], &P,  axisLines_size);
 	Vector3_Add1(&coords[4], &P,  axisLines_length);
 	
-	static UInt8 faces[36] = {
+	static UInt8 indices[36] = {
 		2,2,1, 2,2,3, 4,2,3, 4,2,1, /* X arrow */
 		1,2,2, 1,2,4, 3,2,4, 3,2,2, /* Z arrow */
 		1,2,3, 1,4,3, 3,4,1, 3,2,1, /* Y arrow */
@@ -59,10 +59,10 @@ void AxisLinesRenderer_Render(Real64 delta) {
 	VertexP3fC4b* ptr = vertices;
 
 	for (i = 0; i < count; i++, ptr++) {
-		ptr->X = coords[faces[i*3 + 0]].X;
-		ptr->Y = coords[faces[i*3 + 1]].Y;
-		ptr->Z = coords[faces[i*3 + 2]].Z;
-		ptr->Col = cols[i];
+		ptr->X = coords[indices[i*3 + 0]].X;
+		ptr->Y = coords[indices[i*3 + 1]].Y;
+		ptr->Z = coords[indices[i*3 + 2]].Z;
+		ptr->Col = cols[i >> 2];
 	}
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);

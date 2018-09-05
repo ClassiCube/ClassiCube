@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using OpenTK;
@@ -91,6 +92,13 @@ namespace ClassicalSharp {
 			string error = Format(ex);
 			if (ex.InnerException != null) {
 				error += Environment.NewLine + Format(ex.InnerException);
+			}
+			
+			if (ex is ReflectionTypeLoadException) {
+				ReflectionTypeLoadException loaderEx = (ReflectionTypeLoadException)ex;
+				foreach (Exception ex2 in loaderEx.LoaderExceptions) {
+					error += Environment.NewLine + Format(ex2);
+				}
 			}
 			return LogError(location, error);
 		}

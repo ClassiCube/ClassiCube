@@ -163,7 +163,7 @@ namespace ClassicalSharp {
 			
 			game.Inventory.AddDefault(block);
 			SetCustomDefined(block, true);
-			game.Events.RaiseBlockDefinitionChanged();
+			Events.RaiseBlockDefinitionChanged();
 		}
 		
 		static void RecalcIsLiquid(BlockID block) {

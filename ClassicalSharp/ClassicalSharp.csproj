@@ -154,10 +154,7 @@
     <Compile Include="Entities\Mobs\MobEntity.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
     <Compile Include="Entities\TabList.cs" />
-    <Compile Include="Events\EntityEvents.cs" />
-    <Compile Include="Events\Events.cs" />
-    <Compile Include="Events\UserEvents.cs" />
-    <Compile Include="Events\WorldEvents.cs" />
+    <Compile Include="Game\Events.cs" />
     <Compile Include="Game\Game.Init.cs" />
     <Compile Include="Game\Game.Properties.cs" />
     <Compile Include="Game\GuiInterface.cs" />
@@ -417,7 +414,6 @@
     <Folder Include="Blocks" />
     <Folder Include="Entities\Components" />
     <Folder Include="Entities\Mobs" />
-    <Folder Include="Events" />
     <Folder Include="Generator" />
     <Folder Include="Map\Lighting" />
     <Folder Include="Math\Physics" />

@@ -98,7 +98,7 @@ x,3,0,  x,2,0,  x,2,3,  x,3,3,
 0,0,z,  0,1,z,  3,1,z,  3,0,z,\
 0,3,z,  0,2,z,  3,2,z,  3,3,z,
 
-	static UInt8 faces[288] = {
+	static UInt8 indices[288] = {
 		PickedPos_Y(0) PickedPos_Y(3) /* YMin, YMax */
 		PickedPos_X(0) PickedPos_X(3) /* XMin, XMax */
 		PickedPos_Z(0) PickedPos_Z(3) /* ZMin, ZMax */
@@ -107,10 +107,10 @@ x,3,0,  x,2,0,  x,2,3,  x,3,3,
 	VertexP3fC4b* ptr = pickedPos_vertices;
 	Int32 i;
 
-	for (i = 0; i < Array_Elems(faces); i += 3, ptr++) {
-		ptr->X   = coords[faces[i + 0]].X;
-		ptr->Y   = coords[faces[i + 1]].Y;
-		ptr->Z   = coords[faces[i + 2]].Z;
+	for (i = 0; i < Array_Elems(indices); i += 3, ptr++) {
+		ptr->X   = coords[indices[i + 0]].X;
+		ptr->Y   = coords[indices[i + 1]].Y;
+		ptr->Z   = coords[indices[i + 2]].Z;
 		ptr->Col = col;
 	}
 }

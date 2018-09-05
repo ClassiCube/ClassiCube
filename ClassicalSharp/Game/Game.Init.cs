@@ -61,8 +61,8 @@ namespace ClassicalSharp {
 			LoadGuiOptions();
 			Chat = new Chat(); Components.Add(Chat);
 			
-			WorldEvents.OnNewMap += OnNewMapCore;
-			WorldEvents.OnNewMapLoaded += OnNewMapLoadedCore;
+			Events.OnNewMap       += OnNewMapCore;
+			Events.OnNewMapLoaded += OnNewMapLoadedCore;
 			Events.TextureChanged += TextureChangedCore;
 			
 			BlockInfo.Allocate(256);
@@ -132,8 +132,7 @@ namespace ClassicalSharp {
 			AxisLinesRenderer = new AxisLinesRenderer(); Components.Add(AxisLinesRenderer);
 			SkyboxRenderer = new SkyboxRenderer(); Components.Add(SkyboxRenderer);
 			
-			PluginLoader.game = this;
-			List<string> nonLoaded = PluginLoader.LoadAll();
+			List<string> nonLoaded = PluginLoader.LoadAll(this);
 			
 			for (int i = 0; i < Components.Count; i++)
 				Components[i].Init(this);

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 using ClassicalSharp.Entities;
-using ClassicalSharp.Events;
 using ClassicalSharp.Renderers;
 using OpenTK;
 using OpenTK.Input;
@@ -154,7 +153,7 @@ namespace ClassicalSharp.Commands {
 		bool persist = false;
 		
 		public override void Execute(string[] args) {
-			game.UserEvents.BlockChanged -= BlockChanged;
+			Events.BlockChanged -= BlockChanged;
 			block = -1;
 			mark1 = new Vector3I(int.MaxValue);
 			mark2 = new Vector3I(int.MaxValue);
@@ -165,7 +164,7 @@ namespace ClassicalSharp.Commands {
 				persist = true;
 			
 			game.Chat.Add("&eCuboid: &fPlace or delete a block.", MessageType.ClientStatus1);
-			game.UserEvents.BlockChanged += BlockChanged;
+			Events.BlockChanged += BlockChanged;
 		}
 		
 		bool ParseBlock(string[] args) {
@@ -188,7 +187,7 @@ namespace ClassicalSharp.Commands {
 			return true;
 		}
 
-		void BlockChanged(object sender, BlockChangedEventArgs e) {
+		void BlockChanged(object nill, BlockChangedEventArgs e) {
 			if (mark1.X == int.MaxValue) {
 				mark1 = e.Coords;
 				game.UpdateBlock(mark1.X, mark1.Y, mark1.Z, e.OldBlock);
@@ -199,7 +198,7 @@ namespace ClassicalSharp.Commands {
 				DoCuboid();
 				
 				if (!persist) {
-					game.UserEvents.BlockChanged -= BlockChanged;
+					Events.BlockChanged -= BlockChanged;
 					game.Chat.Add(null, MessageType.ClientStatus1);
 				} else {
 					mark1 = new Vector3I(int.MaxValue);

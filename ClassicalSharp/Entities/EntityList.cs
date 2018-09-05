@@ -1,7 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using OpenTK;
-using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Physics;
 
@@ -29,7 +28,7 @@ namespace ClassicalSharp.Entities {
 			this.game = game;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
-			game.Events.ChatFontChanged += ChatFontChanged;
+			Events.ChatFontChanged += ChatFontChanged;
 			
 			NamesMode = Options.GetEnum(OptionsKey.NamesMode, NameMode.Hovered);
 			if (game.ClassicMode) NamesMode = NameMode.Hovered;
@@ -116,7 +115,7 @@ namespace ClassicalSharp.Entities {
 			}
 		}
 		
-		void ChatFontChanged(object sender, EventArgs e) {
+		void ChatFontChanged(object nill, EventArgs e) {
 			for (int i = 0; i < List.Length; i++) {
 				if (List[i] == null) continue;
 				Player p = List[i] as Player;
@@ -125,7 +124,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public void RemoveEntity(byte id) {
-			game.EntityEvents.RaiseRemoved(id);
+			Events.RaiseEntityRemoved(id);
 			List[id].Despawn();
 			List[id] = null;
 		}
@@ -138,7 +137,7 @@ namespace ClassicalSharp.Entities {
 			
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
-			game.Events.ChatFontChanged -= ChatFontChanged;
+			Events.ChatFontChanged -= ChatFontChanged;
 			
 			if (ShadowComponent.shadowTex != 0) {
 				game.Graphics.DeleteTexture(ref ShadowComponent.shadowTex);

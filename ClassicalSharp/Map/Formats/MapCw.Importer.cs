@@ -175,7 +175,7 @@ namespace ClassicalSharp.Map {
 			BlockInfo.DefineCustom(game, id);
 			BlockInfo.CanPlace[id] = true;
 			BlockInfo.CanDelete[id] = true;
-			game.Events.RaiseBlockPermissionsChanged();
+			Events.RaiseBlockPermissionsChanged();
 		}
 	}
 }

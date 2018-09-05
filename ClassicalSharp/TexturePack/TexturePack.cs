@@ -47,7 +47,7 @@ namespace ClassicalSharp.Textures {
 		
 		static void ExtractZip(Stream stream, Game game) {
 			TexturePack.game = game;
-			game.Events.RaiseTexturePackChanged();
+			Events.RaiseTexturePackChanged();
 			if (game.Graphics.LostContext) return;
 			
 			ZipReader reader = new ZipReader();
@@ -57,7 +57,7 @@ namespace ClassicalSharp.Textures {
 		
 		static void ProcessZipEntry(string path, byte[] data, ZipEntry entry) {
 			string name = Utils.GetFilename(path);
-			game.Events.RaiseTextureChanged(name, data);
+			Events.RaiseTextureChanged(name, data);
 		}
 		
 		static void ExtractTerrainPng(Game game, Stream data, string url) {
@@ -68,7 +68,7 @@ namespace ClassicalSharp.Textures {
 			
 			if (bmp != null) {
 				game.World.TextureUrl = url;
-				game.Events.RaiseTexturePackChanged();
+				Events.RaiseTexturePackChanged();
 				if (game.ChangeTerrainAtlas(bmp)) return;
 			}
 			
@@ -99,7 +99,7 @@ namespace ClassicalSharp.Textures {
 				if (!isPng) {
 					ExtractZip(ms, game);
 				} else {
-					game.Events.RaiseTexturePackChanged();
+					Events.RaiseTexturePackChanged();
 					Bitmap bmp = Platform.ReadBmp(game.Drawer2D, ms);					
 					if (!game.ChangeTerrainAtlas(bmp)) bmp.Dispose();
 				}
