@@ -68,7 +68,7 @@ void PackedCol_ToHex(STRING_TRANSIENT String* str, PackedCol value) {
 }
 
 bool PackedCol_TryParseHex(STRING_PURE String* str, PackedCol* value) {
-	PackedCol empty = PACKEDCOL_CONST(0, 0, 0, 0); *value = empty;
+	PackedCol empty = { 0 }; *value = empty;
 	/* accept XXYYZZ or #XXYYZZ forms */
 	if (str->length < 6) return false;
 	if (str->length > 6 && (str->buffer[0] != '#' || str->length > 7)) return false;

@@ -41,28 +41,30 @@ void AxisLinesRenderer_Render(Real64 delta) {
 	Gfx_SetTexturing(false);
 	Vector3 P = LocalPlayer_Instance.Base.Position; P.Y += 0.05f;
 	VertexP3fC4b vertices[axisLines_numVertices];
+	
+	Vector3 coords[5]; coords[2] = P;
+	Vector3_Add1(&coords[0], &P, -axisLines_length);
+	Vector3_Add1(&coords[1], &P, -axisLines_size);
+	Vector3_Add1(&coords[3], &P,  axisLines_size);
+	Vector3_Add1(&coords[4], &P,  axisLines_length);
+	
+	static UInt8 faces[36] = {
+		2,2,1, 2,2,3, 4,2,3, 4,2,1, /* X arrow */
+		1,2,2, 1,2,4, 3,2,4, 3,2,2, /* Z arrow */
+		1,2,3, 1,4,3, 3,4,1, 3,2,1, /* Y arrow */
+	};
+
+	static PackedCol cols[3] = { PACKEDCOL_RED, PACKEDCOL_BLUE, PACKEDCOL_GREEN };
+	Int32 i, count = Camera_Active->IsThirdPerson ? 12 : 8;
 	VertexP3fC4b* ptr = vertices;
 
-	PackedCol red = PACKEDCOL_RED;
-	SelectionBox_HorQuad(&ptr, red,
-		P.X,                    P.Z - axisLines_size, 
-		P.X + axisLines_length, P.Z + axisLines_size,
-		P.Y);
-
-	PackedCol blue = PACKEDCOL_BLUE;
-	SelectionBox_HorQuad(&ptr, blue,
-		P.X - axisLines_size, P.Z, 
-		P.X + axisLines_size, P.Z + axisLines_length, 
-		P.Y);
-
-	if (Camera_Active->IsThirdPerson) {
-		PackedCol green = PACKEDCOL_GREEN;
-		SelectionBox_VerQuad(&ptr, green,
-			P.X - axisLines_size, P.Y,                    P.Z + axisLines_size, 
-			P.X + axisLines_size, P.Y + axisLines_length, P.Z - axisLines_size);
+	for (i = 0; i < count; i++, ptr++) {
+		ptr->X = coords[faces[i*3 + 0]].X;
+		ptr->Y = coords[faces[i*3 + 1]].Y;
+		ptr->Z = coords[faces[i*3 + 2]].Z;
+		ptr->Col = cols[i];
 	}
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
-	Int32 count = (Int32)(ptr - vertices);
 	GfxCommon_UpdateDynamicVb_IndexedTris(axisLines_vb, vertices, count);
 }

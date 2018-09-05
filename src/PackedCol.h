@@ -16,9 +16,9 @@ typedef union PackedCol_ {
 } PackedCol;
 
 #if CC_BUILD_D3D9
-#define PACKEDCOL_CONST(r, g, b, a) { b, g, r, a };
+#define PACKEDCOL_CONST(r, g, b, a) { b, g, r, a }
 #else
-#define PACKEDCOL_CONST(r, g, b, a) { r, g, b, a };
+#define PACKEDCOL_CONST(r, g, b, a) { r, g, b, a }
 #endif
 
 PackedCol PackedCol_Create4(UInt8 r, UInt8 g, UInt8 b, UInt8 a);

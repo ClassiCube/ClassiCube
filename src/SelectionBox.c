@@ -13,11 +13,11 @@ struct SelectionBox {
 	Real32 MinDist, MaxDist;
 };
 
-void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** vertices, VertexP3fC4b** lineVertices) {
+static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** vertices, VertexP3fC4b** lineVertices) {
 	Real32 offset = box->MinDist < 32.0f * 32.0f ? (1.0f / 32.0f) : (1.0f / 16.0f);
 	Vector3 coords[2];
 	Vector3_Add1(&coords[0], &box->Min, -offset);
-	Vector3_Add1(&coords[1], &box->Max, offset);
+	Vector3_Add1(&coords[1], &box->Max,  offset);
 
 	Int32 i;
 	VertexP3fC4b* ptr;
@@ -58,31 +58,6 @@ void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** vertices, Vert
 	}
 	*lineVertices = ptr;
 }
-
-void SelectionBox_VerQuad(VertexP3fC4b** vertices, PackedCol col,
-	Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2) {
-	VertexP3fC4b* ptr = *vertices;
-	VertexP3fC4b v; v.Col = col;
-
-	v.X = x1; v.Y = y1; v.Z = z1; *ptr++ = v;
-			  v.Y = y2;           *ptr++ = v;
-	v.X = x2;           v.Z = z2; *ptr++ = v;
-			  v.Y = y1;           *ptr++ = v;
-	*vertices = ptr;
-}
-
-void SelectionBox_HorQuad(VertexP3fC4b** vertices, PackedCol col,
-	Real32 x1, Real32 z1, Real32 x2, Real32 z2, Real32 y) {
-	VertexP3fC4b* ptr = *vertices;
-	VertexP3fC4b v; v.Y = y; v.Col = col;
-
-	v.X = x1; v.Z = z1; *ptr++ = v;
-			  v.Z = z2; *ptr++ = v;
-	v.X = x2;           *ptr++ = v;
-			  v.Z = z1; *ptr++ = v;
-	*vertices = ptr;
-}
-
 
 static Int32 SelectionBox_Compare(struct SelectionBox* a, struct SelectionBox* b) {
 	Real32 aDist, bDist;
