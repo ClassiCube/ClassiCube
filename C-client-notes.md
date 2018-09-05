@@ -10,7 +10,7 @@ Cross compiling for windows:
 
 Compiling for linux: 
 
-```gcc *.c -o Classicube -lX11 -lpthread -lGL -lm```
+```gcc *.c -o Classicube -lX11 -lpthread -lGL -lm -lcurl```
 
 ### Platform
 Although the majority of the code is designed to be platform-independent, some per-platform functionality is required.
@@ -42,18 +42,20 @@ I may not have defined the appropriate types for your compiler, so you may need 
 
 ### Strings
 Strings are one of the most troublesome aspects of C. In this software, strings consist of:
-- Pointer to 8 bit unsigned characters (code page 437)
+- Pointer to 8 bit characters (unsigned code page 437 indices)
 - Number of characters currently used (length)
 - Maximum number of characters / buffer size (capacity)
 
 Although this makes substrings / concatenating very fast, it also means 
-**STRINGS MIGHT NOT BE NULL TERMINATED** (although they will be in most cases)
+**STRINGS ARE NOT NULL TERMINATED** (and are not in most cases).
 
-*Note: Several functions will take raw ```UInt8*``` for performance, but this is not encouraged*
+Thus, when using or implementing a per-platform API, you must null-terminate and convert characters to native encoding
+
+*Note: Several functions will take raw ```char*``` for performance, but this is not encouraged*
 
 #### String arguments
 A attribute macro is applied to string parameters and/or return types in functions. The three types are:
-- ```STRING_PURE``` - String is not modified, no reference is kept
+- ```STRING_PURE``` - String is not modified, no reference is kept (default)
 - ```STRING_TRANSIENT``` - Characters in string may be modified, no reference is kept
 - ```STRING_REF``` - Characters in string may be modified, **reference is kept to characters**
 
