@@ -41,17 +41,17 @@ String String_FromReadonly(STRING_REF const char* buffer);
 /* Constructs a new string from a compile time array, that may have arbitary actual length of data at runtime */
 #define String_FromRawArray(buffer) String_FromRaw(buffer, (UInt16)sizeof(buffer))
 
-void String_StripCols(STRING_TRANSIENT String* str);
-void String_Copy(STRING_TRANSIENT String* dst, STRING_PURE String* src);
-String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 length);
+NOINLINE_ void String_StripCols(STRING_TRANSIENT String* str);
+NOINLINE_ void String_Copy(STRING_TRANSIENT String* dst, STRING_PURE String* src);
+NOINLINE_ String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 length);
 #define String_UNSAFE_SubstringAt(str, offset) (String_UNSAFE_Substring(str, offset, (str)->length - (offset)))
-void String_UNSAFE_Split(STRING_REF String* str, char c, STRING_TRANSIENT String* subs, Int32* subsCount);
-bool String_UNSAFE_Separate(STRING_REF String* str, char c, STRING_TRANSIENT String* key, STRING_TRANSIENT String* value);
+NOINLINE_ void String_UNSAFE_Split(STRING_REF String* str, char c, STRING_TRANSIENT String* subs, Int32* subsCount);
+NOINLINE_ bool String_UNSAFE_Separate(STRING_REF String* str, char c, STRING_TRANSIENT String* key, STRING_TRANSIENT String* value);
 
-bool String_Equals(STRING_PURE String* a, STRING_PURE String* b);
-bool String_CaselessEquals(STRING_PURE String* a, STRING_PURE String* b);
-bool String_CaselessEqualsConst(STRING_PURE String* a, STRING_PURE const char* b);
-Int32 String_MakeUInt32(UInt32 num, char* numBuffer);
+NOINLINE_ bool String_Equals(STRING_PURE String* a, STRING_PURE String* b);
+NOINLINE_ bool String_CaselessEquals(STRING_PURE String* a, STRING_PURE String* b);
+NOINLINE_ bool String_CaselessEqualsConst(STRING_PURE String* a, STRING_PURE const char* b);
+NOINLINE_ Int32 String_MakeUInt32(UInt32 num, char* numBuffer);
 
 bool String_Append(STRING_TRANSIENT String* str, char c);
 bool String_AppendBool(STRING_TRANSIENT String* str, bool value);
@@ -65,18 +65,18 @@ bool String_AppendConst(STRING_TRANSIENT String* str, const char* src);
 bool String_AppendString(STRING_TRANSIENT String* str, STRING_PURE String* src);
 bool String_AppendColorless(STRING_TRANSIENT String* str, STRING_PURE String* src);
 
-Int32 String_IndexOf(STRING_PURE String* str, char c, Int32 offset);
-Int32 String_LastIndexOf(STRING_PURE String* str, char c);
-void String_InsertAt(STRING_TRANSIENT String* str, Int32 offset, char c);
-void String_DeleteAt(STRING_TRANSIENT String* str, Int32 offset);
-void String_UNSAFE_TrimStart(STRING_TRANSIENT String* str);
-void String_UNSAFE_TrimEnd(STRING_TRANSIENT String* str);
+NOINLINE_ Int32 String_IndexOf(STRING_PURE String* str, char c, Int32 offset);
+NOINLINE_ Int32 String_LastIndexOf(STRING_PURE String* str, char c);
+NOINLINE_ void String_InsertAt(STRING_TRANSIENT String* str, Int32 offset, char c);
+NOINLINE_ void String_DeleteAt(STRING_TRANSIENT String* str, Int32 offset);
+NOINLINE_ void String_UNSAFE_TrimStart(STRING_TRANSIENT String* str);
+NOINLINE_ void String_UNSAFE_TrimEnd(STRING_TRANSIENT String* str);
 
-Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub);
+NOINLINE_ Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub);
 #define String_ContainsString(str, sub) (String_IndexOfString(str, sub) >= 0)
-bool String_CaselessStarts(STRING_PURE String* str, STRING_PURE String* sub);
-bool String_CaselessEnds(STRING_PURE String* str, STRING_PURE String* sub);
-Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b);
+NOINLINE_ bool String_CaselessStarts(STRING_PURE String* str, STRING_PURE String* sub);
+NOINLINE_ bool String_CaselessEnds(STRING_PURE String* str, STRING_PURE String* sub);
+NOINLINE_ Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b);
 
 void String_Format1(STRING_TRANSIENT String* str, const char* format, const void* a1);
 void String_Format2(STRING_TRANSIENT String* str, const char* format, const void* a1, const void* a2);
@@ -88,13 +88,13 @@ char Convert_UnicodeToCP437(UInt16 c);
 bool Convert_TryUnicodeToCP437(UInt16 c, char* value);
 void String_DecodeUtf8(STRING_TRANSIENT String* str, UInt8* data, UInt32 len);
 
-bool Convert_TryParseUInt8(STRING_PURE String*  str, UInt8* value);
-bool Convert_TryParseInt16(STRING_PURE String*  str, Int16* value);
-bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value);
-bool Convert_TryParseInt32(STRING_PURE String*  str, Int32* value);
-bool Convert_TryParseUInt64(STRING_PURE String* str, UInt64* value);
-bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value);
-bool Convert_TryParseBool(STRING_PURE String*   str, bool* value);
+NOINLINE_ bool Convert_TryParseUInt8(STRING_PURE String*  str, UInt8* value);
+NOINLINE_ bool Convert_TryParseInt16(STRING_PURE String*  str, Int16* value);
+NOINLINE_ bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value);
+NOINLINE_ bool Convert_TryParseInt32(STRING_PURE String*  str, Int32* value);
+NOINLINE_ bool Convert_TryParseUInt64(STRING_PURE String* str, UInt64* value);
+NOINLINE_ bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value);
+NOINLINE_ bool Convert_TryParseBool(STRING_PURE String*   str, bool* value);
 
 #define STRINGSBUFFER_BUFFER_DEF_SIZE 4096
 #define STRINGSBUFFER_FLAGS_DEF_ELEMS 256
@@ -108,15 +108,15 @@ typedef struct StringsBuffer_ {
 	UInt32 _DefaultFlags[STRINGSBUFFER_FLAGS_DEF_ELEMS];
 } StringsBuffer;
 
-void StringsBuffer_Init(StringsBuffer* buffer);
-void StringsBuffer_Clear(StringsBuffer* buffer);
-void StringsBuffer_Get(StringsBuffer* buffer, Int32 i, STRING_TRANSIENT String* text);
-STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, Int32 i);
-void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text);
-void StringsBuffer_Remove(StringsBuffer* buffer, Int32 index);
+NOINLINE_ void StringsBuffer_Init(StringsBuffer* buffer);
+NOINLINE_ void StringsBuffer_Clear(StringsBuffer* buffer);
+NOINLINE_ void StringsBuffer_Get(StringsBuffer* buffer, Int32 i, STRING_TRANSIENT String* text);
+NOINLINE_ STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, Int32 i);
+NOINLINE_ void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text);
+NOINLINE_ void StringsBuffer_Remove(StringsBuffer* buffer, Int32 index);
 
-void  WordWrap_Do(STRING_REF String* text, STRING_TRANSIENT String* lines, Int32 numLines, Int32 lineLen);
-void  WordWrap_GetCoords(Int32 index, STRING_PURE String* lines, Int32 numLines, Int32* coordX, Int32* coordY);
-Int32 WordWrap_GetBackLength(STRING_PURE String* text, Int32 index);
-Int32 WordWrap_GetForwardLength(STRING_PURE String* text, Int32 index);
+NOINLINE_ void  WordWrap_Do(STRING_REF String* text, STRING_TRANSIENT String* lines, Int32 numLines, Int32 lineLen);
+NOINLINE_ void  WordWrap_GetCoords(Int32 index, STRING_PURE String* lines, Int32 numLines, Int32* coordX, Int32* coordY);
+NOINLINE_ Int32 WordWrap_GetBackLength(STRING_PURE String* text, Int32 index);
+NOINLINE_ Int32 WordWrap_GetForwardLength(STRING_PURE String* text, Int32 index);
 #endif

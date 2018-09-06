@@ -274,13 +274,15 @@ static void Commands_Execute(STRING_PURE String* input) {
 	String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
 	String prefix      = String_FromConst(COMMANDS_PREFIX);
 
+	Int32 offset;
 	if (String_CaselessStarts(&text, &prefixSpace)) { /* /clientcommand args */
-		text = String_UNSAFE_SubstringAt(&text, prefixSpace.length);
+		offset = prefixSpace.length;
 	} else if (String_CaselessStarts(&text, &prefix)) { /* /client command args */
-		text = String_UNSAFE_SubstringAt(&text, prefix.length);
+		offset = prefix.length;
 	} else { /* /command args */
-		text = String_UNSAFE_SubstringAt(&text, 1);
+		offset = 1;
 	}
+	text = String_UNSAFE_Substring(&text, offset, text.length - offset);
 
 	if (!text.length) { /* only / or /client */
 		Chat_AddRaw("&eList of client commands:");
