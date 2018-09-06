@@ -39,8 +39,8 @@ namespace ClassicalSharp.Gui.Screens {
 			Events.BlockPermissionsChanged += OnBlockChanged;
 			Events.BlockDefinitionChanged  += OnBlockChanged;
 			Keyboard.KeyRepeat = true;
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ContextLost += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 		}
 		
 		public override void Render(double delta) {
@@ -52,15 +52,15 @@ namespace ClassicalSharp.Gui.Screens {
 			font.Dispose();
 			table.Dispose();
 			Events.BlockPermissionsChanged -= OnBlockChanged;
-			Events.BlockDefinitionChanged -= OnBlockChanged;
+			Events.BlockDefinitionChanged  -= OnBlockChanged;
 			Keyboard.KeyRepeat = false;
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.ContextLost -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 		}
 		
 		public override void OnResize() { table.Reposition(); }
 		
-		void OnBlockChanged(object nill, EventArgs e) {
+		void OnBlockChanged() {
 			table.OnInventoryChanged();
 		}
 

@@ -315,7 +315,7 @@ namespace ClassicalSharp.Network.Protocols {
 			if (code == '%' || code == '&') return;
 			
 			IDrawer2D.Cols[code] = col;
-			Events.RaiseColourCodeChanged((char)code);
+			Events.RaiseColCodeChanged((char)code);
 		}
 		
 		void HandleSetMapEnvUrl() {

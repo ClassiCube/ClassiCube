@@ -300,8 +300,8 @@ static void Particles_ContextRecreated(void* obj) {
 	Particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, PARTICLES_MAX * 4);
 }
 
-static void Particles_BreakBlockEffect_Handler(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
-	Particles_BreakBlockEffect(coords, oldBlock, block);
+static void Particles_BreakBlockEffect_Handler(void* obj, Vector3I coords, BlockID old, BlockID now) {
+	Particles_BreakBlockEffect(coords, old, now);
 }
 
 static void Particles_Init(void) {
@@ -353,19 +353,18 @@ void Particles_Tick(struct ScheduledTask* task) {
 	Rain_Tick(task->Interval);
 }
 
-void Particles_BreakBlockEffect(Vector3I coords, BlockID oldBlock, BlockID block) {
-	if (block != BLOCK_AIR || Block_Draw[oldBlock] == DRAW_GAS) return;
-	block = oldBlock;
+void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
+	if (now != BLOCK_AIR || Block_Draw[old] == DRAW_GAS) return;
 
 	Vector3 worldPos;
 	Vector3I_ToVector3(&worldPos, &coords);
-	TextureLoc texLoc = Block_GetTexLoc(block, FACE_XMIN);
+	TextureLoc texLoc = Block_GetTexLoc(old, FACE_XMIN);
 	Int32 texIndex;
 	struct TextureRec baseRec = Atlas1D_TexRec(texLoc, 1, &texIndex);
 	Real32 uScale = (1.0f / 16.0f), vScale = (1.0f / 16.0f) * Atlas1D_InvTileSize;
 
-	Vector3 minBB = Block_MinBB[block];
-	Vector3 maxBB = Block_MaxBB[block];
+	Vector3 minBB = Block_MinBB[old];
+	Vector3 maxBB = Block_MaxBB[old];
 	Int32 minX = (Int32)(minBB.X * 16), minZ = (Int32)(minBB.Z * 16);
 	Int32 maxX = (Int32)(maxBB.X * 16), maxZ = (Int32)(maxBB.Z * 16);
 
@@ -413,7 +412,7 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID oldBlock, BlockID block
 				Particle_Reset(&p->Base, pos, velocity, life);
 				p->Rec = rec;
 				p->TexLoc = (TextureLoc)texLoc;
-				p->Block = block;
+				p->Block = old;
 				Int32 type = Random_Range(&rnd, 0, 30);
 				p->Base.Size = (UInt8)(type >= 28 ? 12 : (type >= 25 ? 10 : 8));
 			}

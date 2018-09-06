@@ -27,8 +27,8 @@ namespace ClassicalSharp.Renderers {
 			Events.TextureChanged += TextureChanged;
 			
 			ContextRecreated();
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ContextLost += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 		}
 		
 		public void Render(double deltaTime) {
@@ -124,11 +124,11 @@ namespace ClassicalSharp.Renderers {
 			oneY = length * width;
 		}
 		
-		void TextureChanged(object nill, TextureEventArgs e) {
-			if (Utils.CaselessEq(e.Name, "snow.png")) {
-				game.LoadTexture(ref snowTexId, e.Name, e.Data);
-			} else if (Utils.CaselessEq(e.Name, "rain.png")) {
-				game.LoadTexture(ref rainTexId, e.Name, e.Data);
+		void TextureChanged(string name, byte[] data) {
+			if (Utils.CaselessEq(name, "snow.png")) {
+				game.LoadTexture(ref snowTexId, name, data);
+			} else if (Utils.CaselessEq(name, "rain.png")) {
+				game.LoadTexture(ref rainTexId, name, data);
 			}
 		}
 		
@@ -138,8 +138,8 @@ namespace ClassicalSharp.Renderers {
 			ContextLost();
 			
 			Events.TextureChanged -= TextureChanged;
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.ContextLost -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 		}
 		
 		void InitHeightmap() {

@@ -70,22 +70,22 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		float colourAcc;
-		protected override void MouseWheelChanged(object sender, MouseWheelEventArgs e) {
-			int steps = Utils.AccumulateWheelDelta(ref colourAcc, e.Delta);
+		protected override void MouseWheelChanged(float delta) {
+			int steps = Utils.AccumulateWheelDelta(ref colourAcc, delta);
 			AdjustSelectedColour(steps);
 		}
 		
-		protected override void KeyDown(object sender, KeyboardKeyEventArgs e) {
-			if (e.Key == Key.Left) {
+		protected override void KeyDown(Key key) {
+			if (key == Key.Left) {
 				AdjustSelectedColour(-1);
-			} else if (e.Key == Key.Right) {
+			} else if (key == Key.Right) {
 				AdjustSelectedColour(+1);
-			} else if (e.Key == Key.Up) {
+			} else if (key == Key.Up) {
 				AdjustSelectedColour(+10);
-			} else if (e.Key == Key.Down) {
+			} else if (key == Key.Down) {
 				AdjustSelectedColour(-10);
 			} else {
-				base.KeyDown(sender, e);
+				base.KeyDown(key);
 			}
 		}
 		

@@ -141,21 +141,21 @@ static bool Physics_IsEdgeWater(Int32 x, Int32 y, Int32 z) {
 }
 
 
-static void Physics_BlockChanged(void* obj, Vector3I p, BlockID oldBlock, BlockID block) {
+static void Physics_BlockChanged(void* obj, Vector3I p, BlockID old, BlockID now) {
 	if (!Physics_Enabled) return;
 	Int32 index = World_Pack(p.X, p.Y, p.Z);
 
-	if (block == BLOCK_AIR && Physics_IsEdgeWater(p.X, p.Y, p.Z)) {
-		block = BLOCK_STILL_WATER;
+	if (now == BLOCK_AIR && Physics_IsEdgeWater(p.X, p.Y, p.Z)) {
+		now = BLOCK_STILL_WATER;
 		Game_UpdateBlock(p.X, p.Y, p.Z, BLOCK_STILL_WATER);
 	}
 
-	if (block == BLOCK_AIR) {
-		PhysicsHandler deleteHandler = Physics_OnDelete[oldBlock];
-		if (deleteHandler) deleteHandler(index, oldBlock);
+	if (now == BLOCK_AIR) {
+		PhysicsHandler deleteHandler = Physics_OnDelete[old];
+		if (deleteHandler) deleteHandler(index, old);
 	} else {
-		PhysicsHandler placeHandler = Physics_OnPlace[block];
-		if (placeHandler) placeHandler(index, block);
+		PhysicsHandler placeHandler = Physics_OnPlace[now];
+		if (placeHandler) placeHandler(index, now);
 	}
 	Physics_ActivateNeighbours(p.X, p.Y, p.Z, index);
 }

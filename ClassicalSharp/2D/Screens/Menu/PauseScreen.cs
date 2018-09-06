@@ -25,7 +25,7 @@ namespace ClassicalSharp.Gui.Screens {
 				widgets[1].Disabled = true;
 				widgets[2].Disabled = true;
 			}
-			CheckHacksAllowed(null, null);
+			CheckHacksAllowed();
 		}
 		
 		void MakeNormal() {
@@ -71,7 +71,7 @@ namespace ClassicalSharp.Gui.Screens {
 		static void SwitchClassicOptions(Game g, Widget w) { g.Gui.SetNewScreen(new ClassicOptionsScreen(g)); }
 		static void QuitGame(Game g, Widget w) { g.Exit(); }
 		
-		void CheckHacksAllowed(object nill, EventArgs e) {
+		void CheckHacksAllowed() {
 			if (game.UseClassicOptions) return;
 			widgets[4].Disabled = !game.LocalPlayer.Hacks.CanAnyHacks; // select texture pack
 		}

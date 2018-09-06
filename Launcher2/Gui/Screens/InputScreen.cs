@@ -50,39 +50,39 @@ namespace Launcher.Gui.Screens {
 			}			
 		}
 		
-		protected override void KeyDown(object sender, KeyboardKeyEventArgs e) {
-			if (e.Key == Key.Enter && enterIndex >= 0) {
+		protected override void KeyDown(Key key) {
+			if (key == Key.Enter && enterIndex >= 0) {
 				Widget widget = (selectedWidget != null && mouseMoved) ?
 					selectedWidget : widgets[enterIndex];
 				if (widget.OnClick != null)
 					widget.OnClick(0, 0);
-			} else if (e.Key == Key.Tab) {
+			} else if (key == Key.Tab) {
 				HandleTab();
 			}
 			if (curInput == null) {
-				if (e.Key == Key.Escape)
+				if (key == Key.Escape)
 					game.SetScreen(new MainScreen(game));
 				return;
 			}
 			
-			if (e.Key == Key.BackSpace && curInput.Chars.Backspace()) {
+			if (key == Key.BackSpace && curInput.Chars.Backspace()) {
 				RedrawLastInput();
 				OnRemovedChar();
-			} else if (e.Key == Key.Delete && curInput.Chars.Delete()) {
+			} else if (key == Key.Delete && curInput.Chars.Delete()) {
 				RedrawLastInput();
 				OnRemovedChar();
-			} else if (e.Key == Key.C && ControlDown) {
+			} else if (key == Key.C && ControlDown) {
 				if (String.IsNullOrEmpty(curInput.Text)) return;				
 				game.Window.SetClipboardText(curInput.Text);
-			} else if (e.Key == Key.V && ControlDown) {
+			} else if (key == Key.V && ControlDown) {
 				string text = game.Window.GetClipboardText();
 				if (curInput.Chars.CopyFromClipboard(text)) RedrawLastInput();
-			} else if (e.Key == Key.Escape) {
+			} else if (key == Key.Escape) {
 				if (curInput.Chars.Clear()) RedrawLastInput();
-			} else if (e.Key == Key.Left) {
+			} else if (key == Key.Left) {
 				curInput.AdvanceCaretPos(false);
 				RedrawLastInput();
-			} else if (e.Key == Key.Right) {
+			} else if (key == Key.Right) {
 				curInput.AdvanceCaretPos(true);
 				RedrawLastInput();
 			}
@@ -95,8 +95,8 @@ namespace Launcher.Gui.Screens {
 			}
 		}
 
-		protected void KeyPress(object sender, KeyPressEventArgs e) {
-			if (curInput != null && curInput.Chars.Append(e.KeyChar)) {
+		protected void KeyPress(char keyChar) {
+			if (curInput != null && curInput.Chars.Append(keyChar)) {
 				RedrawLastInput();
 				OnAddedChar();
 			}
@@ -129,8 +129,7 @@ namespace Launcher.Gui.Screens {
 			((InputWidget)widgets[index]).Redraw(drawer);
 		}
 		
-		protected virtual void MouseWheelChanged(object sender, MouseWheelEventArgs e) {
-		}
+		protected virtual void MouseWheelChanged(float delta) { }
 		
 		protected InputWidget curInput;
 		protected virtual void InputClick(int mouseX, int mouseY) {

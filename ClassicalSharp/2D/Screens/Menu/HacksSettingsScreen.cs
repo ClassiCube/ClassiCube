@@ -30,7 +30,7 @@ namespace ClassicalSharp.Gui.Screens {
 			Events.HackPermissionsChanged -= CheckHacksAllowed;	
 		}
 		
-		void CheckHacksAllowed(object nill, EventArgs e) {
+		void CheckHacksAllowed() {
 			for (int i = 0; i < widgets.Length; i++) {
 				if (widgets[i] == null) continue;
 				widgets[i].Disabled = false;
@@ -64,7 +64,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeBack(false, titleFont, SwitchOptions),
 				null, null, null,
 			};
-			CheckHacksAllowed(null, null);
+			CheckHacksAllowed();
 		}
 		
 		static string GetHacks(Game g) { return GetBool(g.LocalPlayer.Hacks.Enabled); }

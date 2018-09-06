@@ -32,9 +32,9 @@ namespace ClassicalSharp.Gui.Screens {
 			font = new Font(game.FontName, 16);
 			ContextRecreated();
 			
-			Events.ChatFontChanged += ChatFontChanged;
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ChatFontChanged  += ChatFontChanged;
+			Events.ContextLost      += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 		}
 		
 		public override void Render(double delta) {
@@ -55,9 +55,9 @@ namespace ClassicalSharp.Gui.Screens {
 			font.Dispose();
 			ContextLost();
 			
-			Events.ChatFontChanged -= ChatFontChanged;
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.ChatFontChanged  -= ChatFontChanged;
+			Events.ContextLost      -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 		}
 		public override void OnResize() { }
 		
@@ -117,7 +117,7 @@ namespace ClassicalSharp.Gui.Screens {
 			UpdateHackState();
 		}
 		
-		void ChatFontChanged(object nill, EventArgs e) { Recreate(); }
+		void ChatFontChanged() { Recreate(); }
 		
 		void DrawPosition() {
 			int index = 0;

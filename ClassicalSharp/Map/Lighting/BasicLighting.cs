@@ -44,10 +44,10 @@ namespace ClassicalSharp.Map {
 			heightmap = null;
 		}
 
-		void EnvVariableChanged(object nill, EnvVarEventArgs e) {
-			if (e.Var == EnvVar.SunCol) {
+		void EnvVariableChanged(EnvVar envVar) {
+			if (envVar == EnvVar.SunCol) {
 				SetSun(game.World.Env.Sun);
-			} else if (e.Var == EnvVar.ShadowCol) {
+			} else if (envVar == EnvVar.ShadowCol) {
 				SetShadow(game.World.Env.Shadow);
 			}
 		}

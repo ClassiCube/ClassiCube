@@ -2,6 +2,7 @@
 using System;
 using System.Threading;
 using SharpWave;
+using BlockID = System.UInt16;
 
 namespace ClassicalSharp.Audio {
 	
@@ -28,11 +29,11 @@ namespace ClassicalSharp.Audio {
 			stepBoard.Init("step_", files);
 		}
 
-		void PlayBlockSound(object nill, BlockChangedEventArgs e) {
-			if (e.Block == 0) {
-				PlayDigSound(BlockInfo.DigSounds[e.OldBlock]);
+		void PlayBlockSound(Vector3I coords, BlockID old, BlockID now) {
+			if (now == Block.Air) {
+				PlayDigSound(BlockInfo.DigSounds[old]);
 			} else if (!game.ClassicMode) {
-				PlayDigSound(BlockInfo.StepSounds[e.Block]);
+				PlayDigSound(BlockInfo.StepSounds[now]);
 			}
 		}
 		

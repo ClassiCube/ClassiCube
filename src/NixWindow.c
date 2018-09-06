@@ -415,8 +415,9 @@ void Window_RefreshBounds(XEvent* e) {
 	   To get the external (window) size, we need to add the border size. */
 	struct Size2D curSize = Window_GetSize();
 	struct Size2D size = {
-		e->xconfigure.width + borderLeft + borderRight,
-		e->xconfigure.height + borderTop + borderBottom };
+		e->xconfigure.width  + borderLeft + borderRight,
+		e->xconfigure.height + borderTop  + borderBottom 
+	};
 
 	if (curSize.Width != size.Width || curSize.Height != size.Height) {
 		Window_Bounds.Width = size.Width; Window_Bounds.Height = size.Height;

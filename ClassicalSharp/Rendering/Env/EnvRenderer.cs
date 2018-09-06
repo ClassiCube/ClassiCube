@@ -64,16 +64,16 @@ namespace ClassicalSharp.Renderers {
 			RenderClouds(deltaTime);
 		}
 		
-		void EnvVariableChanged(object nill, EnvVarEventArgs e) {
+		void EnvVariableChanged(EnvVar envVar) {
 			if (minimal) return;
 			
-			if (e.Var == EnvVar.SkyCol) {
+			if (envVar == EnvVar.SkyCol) {
 				ResetSky();
-			} else if (e.Var == EnvVar.FogCol) {
+			} else if (envVar == EnvVar.FogCol) {
 				UpdateFog();
-			} else if (e.Var == EnvVar.CloudsCol) {
+			} else if (envVar == EnvVar.CloudsCol) {
 				ResetClouds();
-			} else if (e.Var == EnvVar.CloudsLevel) {
+			} else if (envVar == EnvVar.CloudsLevel) {
 				ResetSky();
 				ResetClouds();
 			}
@@ -82,13 +82,13 @@ namespace ClassicalSharp.Renderers {
 		void IGameComponent.Init(Game game) {
 			this.game = game;
 			map = game.World;
-			ResetAllEnv(null, null);
+			ResetAllEnv();
 			
 			Events.TextureChanged += TextureChanged;
 			Events.EnvVariableChanged += EnvVariableChanged;
 			Events.ViewDistanceChanged += ResetAllEnv;
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ContextLost += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 			game.SetViewDistance(game.UserViewDistance, false);
 		}
 		
@@ -101,16 +101,16 @@ namespace ClassicalSharp.Renderers {
 		
 		void IGameComponent.OnNewMapLoaded(Game game) {
 			game.Graphics.Fog = !minimal;
-			ResetAllEnv(null, null);
+			ResetAllEnv();
 		}
 		
-		void TextureChanged(object nill, TextureEventArgs e) {
-			if (Utils.CaselessEq(e.Name, "clouds.png")) {
-				game.LoadTexture(ref cloudsTex, e.Name, e.Data);
+		void TextureChanged(string name, byte[] data) {
+			if (Utils.CaselessEq(name, "clouds.png")) {
+				game.LoadTexture(ref cloudsTex, name, data);
 			}
 		}
 		
-		void ResetAllEnv(object nill, EventArgs e) { ContextRecreated(); }
+		void ResetAllEnv() { ContextRecreated(); }
 		
 		void IDisposable.Dispose() {
 			game.Graphics.DeleteTexture(ref cloudsTex);
@@ -119,8 +119,8 @@ namespace ClassicalSharp.Renderers {
 			Events.TextureChanged -= TextureChanged;
 			Events.EnvVariableChanged -= EnvVariableChanged;
 			Events.ViewDistanceChanged -= ResetAllEnv;
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.ContextLost -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 		}
 		
 		void ContextLost() {

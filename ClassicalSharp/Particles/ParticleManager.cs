@@ -28,8 +28,8 @@ namespace ClassicalSharp.Particles {
 			Events.TextureChanged += TextureChanged;
 			
 			ContextRecreated();
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ContextLost += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 		}
 		
 		void IGameComponent.Ready(Game game) { }
@@ -37,9 +37,9 @@ namespace ClassicalSharp.Particles {
 		void IGameComponent.OnNewMap(Game game) { rainCount = 0; terrainCount = 0; }
 		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
-		void TextureChanged(object nill, TextureEventArgs e) {
-			if (Utils.CaselessEq(e.Name, "particles.png")) {
-				game.LoadTexture(ref ParticlesTexId, e.Name, e.Data);
+		void TextureChanged(string name, byte[] data) {
+			if (Utils.CaselessEq(name, "particles.png")) {
+				game.LoadTexture(ref ParticlesTexId, name, data);
 			}
 		}
 		
@@ -158,18 +158,16 @@ namespace ClassicalSharp.Particles {
 		}		
 		
 		
-		void BreakBlockEffect(object nill, BlockChangedEventArgs e) {
-			if (e.Block != Block.Air || BlockInfo.Draw[e.OldBlock] == DrawType.Gas) return;
-			Vector3I position = e.Coords;
-			BlockID block = e.OldBlock;
+		void BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
+			if (now != Block.Air || BlockInfo.Draw[old] == DrawType.Gas) return;
 			
-			Vector3 worldPos = new Vector3(position.X, position.Y, position.Z);
-			int texLoc = BlockInfo.GetTextureLoc(block, Side.Left), texIndex = 0;
+			Vector3 worldPos = new Vector3(coords.X, coords.Y, coords.Z);
+			int texLoc = BlockInfo.GetTextureLoc(old, Side.Left), texIndex = 0;
 			TextureRec baseRec = Atlas1D.GetTexRec(texLoc, 1, out texIndex);
 			float uScale = (1/16f), vScale = (1/16f) * Atlas1D.invTileSize;
 			
-			Vector3 minBB = BlockInfo.MinBB[block];
-			Vector3 maxBB = BlockInfo.MaxBB[block];
+			Vector3 minBB = BlockInfo.MinBB[old];
+			Vector3 maxBB = BlockInfo.MaxBB[old];
 			int minU = Math.Min((int)(minBB.X * 16), (int)(minBB.Z * 16));
 			int maxU = Math.Min((int)(maxBB.X * 16), (int)(maxBB.Z * 16));
 			int minV = (int)(16 - maxBB.Y * 16), maxV = (int)(16 - minBB.Y * 16);
@@ -208,7 +206,7 @@ namespace ClassicalSharp.Particles {
 				p.rec = rec;
 				
 				p.texLoc = (TexLoc)texLoc;
-				p.block = block;
+				p.block = old;
 				int type = rnd.Next(0, 30);
 				p.Size = (byte)(type >= 28 ? 12 : (type >= 25 ? 10 : 8));
 			}
@@ -266,8 +264,8 @@ namespace ClassicalSharp.Particles {
 			Events.TextureChanged -= TextureChanged;
 			
 			ContextLost();
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.ContextLost -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 		}
 		
 		void ContextLost() { game.Graphics.DeleteVb(ref vb); }

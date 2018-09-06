@@ -187,26 +187,26 @@ namespace ClassicalSharp.Gui.Widgets {
 			textures[index] = tex;
 		}
 		
-		void TabEntryAdded(object nill, IdEventArgs e) {
-			AddName(e.Id, -1);
+		void TabEntryAdded(byte id) {
+			AddName(id, -1);
 			SortAndReposition();
 		}
 		
-		void TabEntryChanged(object nill, IdEventArgs e) {
+		void TabEntryChanged(byte id) {
 			for (int i = 0; i < namesCount; i++) {
-				if (IDs[i] != e.Id) continue;
+				if (IDs[i] != id) continue;
 				
 				Texture tex = textures[i];
 				game.Graphics.DeleteTexture(ref tex);
-				AddName(e.Id, i);
+				AddName(id, i);
 				SortAndReposition();
 				return;
 			}
 		}
 		
-		void TabEntryRemoved(object nill, IdEventArgs e) {
+		void TabEntryRemoved(byte id) {
 			for (int i = 0; i < namesCount; i++) {
-				if (IDs[i] != e.Id) continue;
+				if (IDs[i] != id) continue;
 				DeleteAt(i);
 				SortAndReposition();
 				return;

@@ -187,14 +187,14 @@ namespace ClassicalSharp.Commands {
 			return true;
 		}
 
-		void BlockChanged(object nill, BlockChangedEventArgs e) {
+		void BlockChanged(Vector3I coords, BlockID old, BlockID now) {
 			if (mark1.X == int.MaxValue) {
-				mark1 = e.Coords;
-				game.UpdateBlock(mark1.X, mark1.Y, mark1.Z, e.OldBlock);
-				game.Chat.Add("&eCuboid: &fMark 1 placed at (" + e.Coords + "), place mark 2.",
+				mark1 = coords;
+				game.UpdateBlock(mark1.X, mark1.Y, mark1.Z, old);
+				game.Chat.Add("&eCuboid: &fMark 1 placed at (" + coords + "), place mark 2.",
 				              MessageType.ClientStatus1);
 			} else {
-				mark2 = e.Coords;				
+				mark2 = coords;				
 				DoCuboid();
 				
 				if (!persist) {

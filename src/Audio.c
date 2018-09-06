@@ -260,11 +260,11 @@ static void Sounds_Play(UInt8 type, struct Soundboard* board) {
 	}
 }
 
-static void Audio_PlayBlockSound(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
-	if (block == BLOCK_AIR) {
-		Audio_PlayDigSound(Block_DigSounds[oldBlock]);
+static void Audio_PlayBlockSound(void* obj, Vector3I coords, BlockID old, BlockID now) {
+	if (now == BLOCK_AIR) {
+		Audio_PlayDigSound(Block_DigSounds[old]);
 	} else if (!Game_ClassicMode) {
-		Audio_PlayDigSound(Block_StepSounds[block]);
+		Audio_PlayDigSound(Block_StepSounds[now]);
 	}
 }
 

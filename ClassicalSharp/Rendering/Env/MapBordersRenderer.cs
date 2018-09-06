@@ -23,18 +23,18 @@ namespace ClassicalSharp.Renderers {
 		
 		public void UseLegacyMode(bool legacy) {
 			this.legacy = legacy;
-			ResetSidesAndEdges(null, null);
+			ResetSidesAndEdges();
 		}
 		
 		void IGameComponent.Init(Game game) {
 			this.game = game;
 			map = game.World;
 			
-			Events.EnvVariableChanged += EnvVariableChanged;
+			Events.EnvVariableChanged  += EnvVariableChanged;
 			Events.ViewDistanceChanged += ResetSidesAndEdges;
 			Events.TerrainAtlasChanged += ResetTextures;
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ContextLost      += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 		}
 		
 		void RenderBorders(BlockID block, int vb, int tex, int count) {
@@ -74,11 +74,11 @@ namespace ClassicalSharp.Renderers {
 		void IDisposable.Dispose() {
 			ContextLost();
 			
-			Events.EnvVariableChanged -= EnvVariableChanged;
+			Events.EnvVariableChanged  -= EnvVariableChanged;
 			Events.ViewDistanceChanged -= ResetSidesAndEdges;
 			Events.TerrainAtlasChanged -= ResetTextures;
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.ContextLost      -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 		}
 
 		void IGameComponent.Ready(Game game) { }
@@ -91,31 +91,31 @@ namespace ClassicalSharp.Renderers {
 			MakeTexture(ref sidesTex, ref lastSideTexLoc, map.Env.SidesBlock);
 		}
 		
-		void IGameComponent.OnNewMapLoaded(Game game) { ResetSidesAndEdges(null, null); }
+		void IGameComponent.OnNewMapLoaded(Game game) { ResetSidesAndEdges(); }
 		
-		void EnvVariableChanged(object nill, EnvVarEventArgs e) {
-			if (e.Var == EnvVar.EdgeBlock) {
+		void EnvVariableChanged(EnvVar envVar) {
+			if (envVar == EnvVar.EdgeBlock) {
 				MakeTexture(ref edgesTex, ref lastEdgeTexLoc, map.Env.EdgeBlock);
 				ResetEdges();
-			} else if (e.Var == EnvVar.SidesBlock) {
+			} else if (envVar == EnvVar.SidesBlock) {
 				MakeTexture(ref sidesTex, ref lastSideTexLoc, map.Env.SidesBlock);
 				ResetSides();
-			} else if (e.Var == EnvVar.EdgeLevel || e.Var == EnvVar.SidesOffset) {
-				ResetSidesAndEdges(null, null);
-			} else if (e.Var == EnvVar.SunCol) {
+			} else if (envVar == EnvVar.EdgeLevel || envVar == EnvVar.SidesOffset) {
+				ResetSidesAndEdges();
+			} else if (envVar == EnvVar.SunCol) {
 				ResetEdges();
-			} else if (e.Var == EnvVar.ShadowCol) {
+			} else if (envVar == EnvVar.ShadowCol) {
 				ResetSides();
 			}
 		}
 		
-		void ResetTextures(object nill, EventArgs e) {
+		void ResetTextures() {
 			lastEdgeTexLoc = -1; lastSideTexLoc = -1;
 			MakeTexture(ref edgesTex, ref lastEdgeTexLoc, map.Env.EdgeBlock);
 			MakeTexture(ref sidesTex, ref lastSideTexLoc, map.Env.SidesBlock);
 		}
 
-		void ResetSidesAndEdges(object nill, EventArgs e) {
+		void ResetSidesAndEdges() {
 			CalculateRects();
 			ContextRecreated();
 		}
@@ -142,7 +142,7 @@ namespace ClassicalSharp.Renderers {
 		void ContextRecreated() {
 			ResetSides();
 			ResetEdges();
-			ResetTextures(null, null);
+			ResetTextures();
 		}
 
 		

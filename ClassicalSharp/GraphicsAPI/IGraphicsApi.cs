@@ -18,8 +18,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public int MaxTexWidth, MaxTexHeight;
 		public bool LostContext;
-		public event Action ContextLost;
-		public event Action ContextRecreated;
 		public ScheduledTaskCallback LostContextFunction;
 		
 		public bool Mipmaps;

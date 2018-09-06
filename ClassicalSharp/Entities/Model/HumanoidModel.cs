@@ -51,9 +51,9 @@ namespace ClassicalSharp.Model {
 			SetSlim.LeftLeg = Set64.LeftLeg;
 			SetSlim.RightLeg = Set64.RightLeg;
 			SetSlim.Hat = Set64.Hat;
-			lArm.BodyW -= 1; lArm.X1 += (offset * 2)/16f;
+			lArm.SizeX -= 1; lArm.X1 += (offset * 2)/16f;
 			SetSlim.LeftArm = BuildBox(lArm.TexOrigin(32, 48));
-			rArm.BodyW -= 1; rArm.X2 -= (offset * 2)/16f;
+			rArm.SizeX -= 1; rArm.X2 -= (offset * 2)/16f;
 			SetSlim.RightArm = BuildBox(rArm.TexOrigin(40, 16));
 			
 			SetSlim.TorsoLayer = Set64.TorsoLayer;

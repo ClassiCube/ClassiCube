@@ -99,51 +99,49 @@ namespace ClassicalSharp {
 		
 		#region Event handlers
 		
-		void MouseButtonUp(object sender, MouseButtonEventArgs e) {
+		void MouseButtonUp(MouseButton btn) {
 			int x = Mouse.X, y = Mouse.Y;
-			if (!game.Gui.ActiveScreen.HandlesMouseUp(x, y, e.Button)) {
-				if (game.Server.UsingPlayerClick && e.Button <= MouseButton.Middle) {
+			if (!game.Gui.ActiveScreen.HandlesMouseUp(x, y, btn)) {
+				if (game.Server.UsingPlayerClick && btn <= MouseButton.Middle) {
 					pickingId = -1;
-					ButtonStateChanged(e.Button, false);
+					ButtonStateChanged(btn, false);
 				}
 			}
 		}
 
-		void MouseButtonDown(object sender, MouseButtonEventArgs e) {
+		void MouseButtonDown(MouseButton btn) {
 			int x = Mouse.X, y = Mouse.Y;
-			if (!game.Gui.ActiveScreen.HandlesMouseDown(x, y, e.Button)) {
-				bool left   = e.Button == MouseButton.Left;
-				bool middle = e.Button == MouseButton.Middle;
-				bool right  = e.Button == MouseButton.Right;
+			if (!game.Gui.ActiveScreen.HandlesMouseDown(x, y, btn)) {
+				bool left   = btn == MouseButton.Left;
+				bool middle = btn == MouseButton.Middle;
+				bool right  = btn == MouseButton.Right;
 				PickBlocks(false, left, middle, right);
 			} else {
 				picking.lastClick = DateTime.UtcNow;
 			}
 		}
 
-		void MouseMove(object sender, MouseMoveEventArgs e) {
+		void MouseMove(int deltaX, int deltaY) {
 			int x = Mouse.X, y = Mouse.Y;
 			game.Gui.ActiveScreen.HandlesMouseMove(x, y);
 		}
 
-		void MouseWheelChanged(object sender, MouseWheelEventArgs e) {
-			if (game.Gui.ActiveScreen.HandlesMouseScroll(e.Delta)) return;
+		void MouseWheelChanged(float delta) {
+			if (game.Gui.ActiveScreen.HandlesMouseScroll(delta)) return;
 			
 			Inventory inv = game.Inventory;
 			bool hotbar = AltDown || ControlDown || ShiftDown;
-			if ((!hotbar && game.Camera.Zoom(e.Delta)) || DoFovZoom(e.Delta) || !inv.CanChangeHeldBlock)
+			if ((!hotbar && game.Camera.Zoom(delta)) || DoFovZoom(delta) || !inv.CanChangeHeldBlock)
 				return;
 			
-			game.Gui.hudScreen.hotbar.HandlesMouseScroll(e.Delta);
+			game.Gui.hudScreen.hotbar.HandlesMouseScroll(delta);
 		}
 
-		void KeyPressHandler(object sender, KeyPressEventArgs e) {
-			char key = e.KeyChar;
-			game.Gui.ActiveScreen.HandlesKeyPress(key);
+		void KeyPressHandler(char keyChar) {
+			game.Gui.ActiveScreen.HandlesKeyPress(keyChar);
 		}
 		
-		void KeyUpHandler(object sender, KeyboardKeyEventArgs e) {
-			Key key = e.Key;
+		void KeyUpHandler(Key key) {
 			if (SimulateMouse(key, false)) return;
 			
 			if (key == Keys[KeyBind.ZoomScrolling]) {
@@ -154,8 +152,7 @@ namespace ClassicalSharp {
 
 		static int[] normViewDists = new int[] { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
 		static int[] classicViewDists = new int[] { 8, 32, 128, 512 };
-		void KeyDownHandler(object sender, KeyboardKeyEventArgs e) {
-			Key key = e.Key;
+		void KeyDownHandler(Key key) {
 			if (SimulateMouse(key, true)) return;
 			
 			if (IsShutdown(key)) {
@@ -187,16 +184,15 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		MouseButtonEventArgs simArgs = new MouseButtonEventArgs();
 		bool SimulateMouse(Key key, bool pressed) {
 			Key left = Keys[KeyBind.MouseLeft], middle = Keys[KeyBind.MouseMiddle],
 			right = Keys[KeyBind.MouseRight];
 			
 			if (!(key == left || key == middle || key == right)) return false;
-			simArgs.Button = key == left ? MouseButton.Left : key == middle ? MouseButton.Middle : MouseButton.Right;
+			MouseButton btn = key == left ? MouseButton.Left : key == middle ? MouseButton.Middle : MouseButton.Right;
 			
-			if (pressed) MouseButtonDown(null, simArgs);
-			else MouseButtonUp(null, simArgs);
+			if (pressed) MouseButtonDown(btn);
+			else MouseButtonUp(btn);
 			return true;
 		}
 		

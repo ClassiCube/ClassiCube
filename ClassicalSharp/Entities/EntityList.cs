@@ -26,9 +26,9 @@ namespace ClassicalSharp.Entities {
 		
 		public EntityList(Game game) {
 			this.game = game;
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
-			Events.ChatFontChanged += ChatFontChanged;
+			Events.ContextLost      += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
+			Events.ChatFontChanged  += ChatFontChanged;
 			
 			NamesMode = Options.GetEnum(OptionsKey.NamesMode, NameMode.Hovered);
 			if (game.ClassicMode) NamesMode = NameMode.Hovered;
@@ -115,7 +115,7 @@ namespace ClassicalSharp.Entities {
 			}
 		}
 		
-		void ChatFontChanged(object nill, EventArgs e) {
+		void ChatFontChanged() {
 			for (int i = 0; i < List.Length; i++) {
 				if (List[i] == null) continue;
 				Player p = List[i] as Player;
@@ -135,9 +135,9 @@ namespace ClassicalSharp.Entities {
 				RemoveEntity((byte)i);
 			}
 			
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
-			Events.ChatFontChanged -= ChatFontChanged;
+			Events.ContextLost      -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
+			Events.ChatFontChanged  -= ChatFontChanged;
 			
 			if (ShadowComponent.shadowTex != 0) {
 				game.Graphics.DeleteTexture(ref ShadowComponent.shadowTex);

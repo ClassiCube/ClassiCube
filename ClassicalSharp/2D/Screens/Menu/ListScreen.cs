@@ -21,8 +21,8 @@ namespace ClassicalSharp.Gui.Screens {
 			font = new Font(game.FontName, 16, FontStyle.Bold);
 			Keyboard.KeyRepeat = true;
 			ContextRecreated();
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ContextLost += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 		}
 		
 		public override void Render(double delta) {
@@ -36,8 +36,8 @@ namespace ClassicalSharp.Gui.Screens {
 			font.Dispose();
 			Keyboard.KeyRepeat = false;
 			ContextLost();
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.ContextLost -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 		}
 		
 		protected override void ContextLost() {

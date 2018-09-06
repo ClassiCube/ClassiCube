@@ -30,7 +30,6 @@ using System.Drawing;
 
 namespace OpenTK {
 	
-	public class KeyPressEventArgs : EventArgs { public char KeyChar; }
 	/// <summary> Enumerates available window states. </summary>
 	public enum WindowState {
 		/// <summary> The window is in its normal state. </summary>
@@ -42,6 +41,7 @@ namespace OpenTK {
 		/// <summary> The window covers the whole screen, including all taskbars and/or panels. </summary>
 		Fullscreen,
 	}
+	public delegate void KeyPressEventFunc(char keyChar);
 	
 	/// <summary> Defines the interface for a native window.  </summary>
 	public abstract class INativeWindow : IDisposable {
@@ -108,41 +108,39 @@ namespace OpenTK {
 		/// <summary> Gets or sets whether the cursor is visible in the window. </summary>
 		public abstract bool CursorVisible { get; set; }
 
-		public event EventHandler Move;
+		public event EmptyEventFunc Move;
 		protected void RaiseMove() { Raise(Move); }
 
-		public event EventHandler Resize;
+		public event EmptyEventFunc Resize;
 		protected void RaiseResize() { Raise(Resize); }
 		
-		public event EventHandler Redraw;
+		public event EmptyEventFunc Redraw;
 		protected void RaiseRedraw() { Raise(Redraw); }
 
-		public event EventHandler Closing;
+		public event EmptyEventFunc Closing;
 		protected void RaiseClosing() { Raise(Closing); }
 
-		public event EventHandler Closed;
+		public event EmptyEventFunc Closed;
 		protected void RaiseClosed() { Raise(Closed); }
 
-		public event EventHandler VisibleChanged;
+		public event EmptyEventFunc VisibleChanged;
 		protected void RaiseVisibleChanged() { Raise(VisibleChanged); }
 
-		public event EventHandler FocusedChanged;
+		public event EmptyEventFunc FocusedChanged;
 		protected void RaiseFocusedChanged() { Raise(FocusedChanged); }
 
-		public event EventHandler WindowStateChanged;
+		public event EmptyEventFunc WindowStateChanged;
 		protected void RaiseWindowStateChanged() { Raise(WindowStateChanged); }
 
 		/// <summary> Occurs whenever a character is typed. </summary>
-		public event EventHandler<KeyPressEventArgs> KeyPress;
-		KeyPressEventArgs pressArgs = new KeyPressEventArgs();
+		public event KeyPressEventFunc KeyPress;
 		
-		protected void RaiseKeyPress(char key) {
-			pressArgs.KeyChar = key;
-			if (KeyPress != null) KeyPress(this, pressArgs);
+		protected void RaiseKeyPress(char keyChar) {
+			if (KeyPress != null) KeyPress(keyChar);
 		}
 		
-		protected void Raise(EventHandler handler) {
-			if (handler != null) handler(this, EventArgs.Empty);
+		protected void Raise(EmptyEventFunc handler) {
+			if (handler != null) handler();
 		}
 		
 		public void Dispose() {

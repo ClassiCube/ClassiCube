@@ -253,13 +253,12 @@ bool net_connecting;
 UInt64 net_connectTimeout;
 #define NET_TIMEOUT_MS (15 * 1000)
 
-static void MPConnection_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
-	Vector3I p = coords;
-	if (block == BLOCK_AIR) {
-		block = Inventory_SelectedBlock;
-		Classic_WriteSetBlock(p.X, p.Y, p.Z, false, block);
+static void MPConnection_BlockChanged(void* obj, Vector3I p, BlockID old, BlockID now) {
+	if (now == BLOCK_AIR) {
+		now = Inventory_SelectedBlock;
+		Classic_WriteSetBlock(p.X, p.Y, p.Z, false, now);
 	} else {
-		Classic_WriteSetBlock(p.X, p.Y, p.Z, true, block);
+		Classic_WriteSetBlock(p.X, p.Y, p.Z, true, now);
 	}
 	Net_SendPacket();
 }

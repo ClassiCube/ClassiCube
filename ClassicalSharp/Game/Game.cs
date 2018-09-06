@@ -64,7 +64,7 @@ namespace ClassicalSharp {
 			window.Resize += OnResize;
 			
 			OnLoad();
-			OnResize(null, null);
+			OnResize();
 			Utils.LogDebug("Entering main loop.");
 			render_watch.Start();
 			
@@ -240,32 +240,32 @@ namespace ClassicalSharp {
 			Height = Math.Max(size.Height, 1);
 		}
 		
-		void OnResize(object sender, EventArgs e) {
+		void OnResize() {
 			UpdateClientSize();
 			Graphics.OnWindowResize(this);
 			UpdateProjection();
 			Gui.OnResize();
 		}
 		
-		void OnClosed(object sender, EventArgs e) { isExiting = true; }
+		void OnClosed() { isExiting = true; }
 		
-		void OnNewMapCore(object nill, EventArgs e) {
+		void OnNewMapCore() {
 			for (int i = 0; i < Components.Count; i++)
 				Components[i].OnNewMap(this);
 		}
 		
-		void OnNewMapLoadedCore(object nill, EventArgs e) {
+		void OnNewMapLoadedCore() {
 			for (int i = 0; i < Components.Count; i++)
 				Components[i].OnNewMapLoaded(this);
 		}
 		
-		void TextureChangedCore(object nill, TextureEventArgs e) {
-			if (Utils.CaselessEq(e.Name, "terrain.png")) {
-				Bitmap atlas = Platform.ReadBmp(Drawer2D, e.Data);
+		void TextureChangedCore(string name, byte[] data) {
+			if (Utils.CaselessEq(name, "terrain.png")) {
+				Bitmap atlas = Platform.ReadBmp(Drawer2D, data);
 				if (ChangeTerrainAtlas(atlas)) return;
 				atlas.Dispose();
-			} else if (Utils.CaselessEq(e.Name, "default.png")) {
-				Bitmap bmp = Platform.ReadBmp(Drawer2D, e.Data);
+			} else if (Utils.CaselessEq(name, "default.png")) {
+				Bitmap bmp = Platform.ReadBmp(Drawer2D, data);
 				Drawer2D.SetFontBitmap(bmp);
 				Events.RaiseChatFontChanged();
 			}

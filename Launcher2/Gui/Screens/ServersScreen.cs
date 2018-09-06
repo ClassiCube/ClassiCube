@@ -63,7 +63,7 @@ namespace Launcher.Gui.Screens {
 			}
 		}
 		
-		void MouseButtonUp(object sender, MouseButtonEventArgs e) {
+		void MouseButtonUp(MouseButton btn) {
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			table.DraggingColumn = -1;
 			table.DraggingScrollbar = false;
@@ -74,9 +74,9 @@ namespace Launcher.Gui.Screens {
 		
 		protected override void OnRemovedChar() { FilterList(); }
 		
-		protected override void KeyDown(object sender, KeyboardKeyEventArgs e) {
+		protected override void KeyDown(Key key) {
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
-			if (e.Key == Key.Enter) {
+			if (key == Key.Enter) {
 				string curServer = Get(view.hashIndex);
 				if (curServer == null) curServer = "";
 				
@@ -86,14 +86,14 @@ namespace Launcher.Gui.Screens {
 				} else if (curServer != "" && (selectedWidget == null || selectedWidget == widgets[view.tableIndex])) {
 					ConnectToServer(0, 0);
 				}
-			} else if (e.Key == Key.Up) {
+			} else if (key == Key.Up) {
 				table.SetSelected(table.SelectedIndex - 1);
 				table.NeedRedraw();
-			} else if (e.Key == Key.Down) {
+			} else if (key == Key.Down) {
 				table.SetSelected(table.SelectedIndex + 1);
 				table.NeedRedraw();
 			} else {
-				base.KeyDown(sender, e);
+				base.KeyDown(key);
 			}
 		}
 		
@@ -170,9 +170,9 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		float tableAcc;
-		protected override void MouseWheelChanged(object sender, MouseWheelEventArgs e) {
+		protected override void MouseWheelChanged(float delta) {
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
-			int steps = Utils.AccumulateWheelDelta(ref tableAcc, e.Delta);
+			int steps = Utils.AccumulateWheelDelta(ref tableAcc, delta);
 			table.CurrentIndex -= steps;
 			MarkPendingRedraw();
 		}

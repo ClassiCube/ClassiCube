@@ -24,8 +24,8 @@ namespace ClassicalSharp.Model {
 			ContextRecreated();
 			
 			Events.TextureChanged += TextureChanged;
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ContextLost += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 		}
 		
 		public void Register(string modelName, string texName, IModel instance) {
@@ -72,8 +72,8 @@ namespace ClassicalSharp.Model {
 			ContextLost();
 			
 			Events.TextureChanged -= TextureChanged;
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.ContextLost -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 		}
 		
 		void InitModel(CachedModel m) {
@@ -107,12 +107,12 @@ namespace ClassicalSharp.Model {
 			Register("corpse", "char.png", new CorpseModel(game));
 		}
 
-		void TextureChanged(object nill, TextureEventArgs e) {
+		void TextureChanged(string name, byte[] data) {
 			for (int i = 0; i < Textures.Count; i++) {
 				CachedTexture tex = Textures[i];
-				if (!Utils.CaselessEq(tex.Name, e.Name)) continue;
+				if (!Utils.CaselessEq(tex.Name, name)) continue;
 				
-				game.UpdateTexture(ref tex.TexID, e.Name, e.Data, ref tex.SkinType);	
+				game.UpdateTexture(ref tex.TexID, name, data, ref tex.SkinType);	
 				Textures[i] = tex; 
 				break;
 			}

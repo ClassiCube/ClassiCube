@@ -242,14 +242,12 @@ namespace ClassicalSharp.Network {
 		internal Action[] handlers = new Action[Opcode.Count];
 		internal ushort[] packetSizes = new ushort[Opcode.Count];
 		
-		void BlockChanged(object nill, BlockChangedEventArgs e) {
-			Vector3I p = e.Coords;
-			BlockID block = game.Inventory.Selected;
-			
-			if (e.Block == 0) {
-				classic.WriteSetBlock(p.X, p.Y, p.Z, false, block);
+		void BlockChanged(Vector3I p, BlockID old, BlockID now) {
+			if (now == Block.Air) {
+				now = game.Inventory.Selected;
+				classic.WriteSetBlock(p.X, p.Y, p.Z, false, now);
 			} else {
-				classic.WriteSetBlock(p.X, p.Y, p.Z, true, e.Block);
+				classic.WriteSetBlock(p.X, p.Y, p.Z, true,  now);
 			}
 			SendPacket();
 		}

@@ -14,13 +14,13 @@ using Android.Graphics;
 using AndroidColor = Android.Graphics.Color;
 #endif
 
+// NOTE: This delegate should be removed when using versions later than NET 2.0.
+public delegate void Action();
+
+public delegate void EmptyEventFunc();
+
 namespace ClassicalSharp {
 
-	// NOTE: This delegate should be removed when using versions later than NET 2.0.
-	// ################################################################
-	public delegate void Action();
-	// ################################################################
-	
 	public enum Anchor {
 		Min,    // left or top
 		Centre, // middle

@@ -14,8 +14,8 @@ namespace ClassicalSharp.Selections {
 		
 		void IGameComponent.Init(Game game) {
 			this.game = game;
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ContextLost      += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 		}
 
 		void IGameComponent.Ready(Game game) { }
@@ -79,8 +79,8 @@ namespace ClassicalSharp.Selections {
 		
 		void IDisposable.Dispose() {
 			ContextLost();
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.ContextLost      -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 		}
 		
 		const int VerticesCount = 6 * 4, LineVerticesCount = 12 * 2;

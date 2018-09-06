@@ -99,19 +99,19 @@ namespace Launcher {
 			}
 		}
 
-		void Resize(object sender, EventArgs e) {
+		void Resize() {
 			UpdateClientSize();
 			platformDrawer.Resize();
-			RedrawAll(sender, e);
+			RedrawAll();
 		}
 		
-		void RedrawPending(object sender, EventArgs e) {
+		void RedrawPending() {
 			// in case we get multiple of these events
 			pendingRedraw = true;
 			Dirty = true;
 		}
 		
-		void RedrawAll(object sender, EventArgs e) {
+		void RedrawAll() {
 			if (Program.ShowingErrorDialog) return;
 			RedrawBackground();			
 			if (Screen != null) Screen.Resize();
@@ -223,7 +223,7 @@ namespace Launcher {
 		
 		void Display() {
 			if (pendingRedraw) {
-				RedrawAll(null, null);
+				RedrawAll();
 				pendingRedraw = false;
 			}
 			
@@ -239,8 +239,8 @@ namespace Launcher {
 			fullRedraw = false;
 		}
 		
-		void KeyDown(object sender, KeyboardKeyEventArgs e) {
-			if (IsShutdown(e.Key)) ShouldExit = true;
+		void KeyDown(Key key) {
+			if (IsShutdown(key)) ShouldExit = true;
 		}
 		
 		public void Dispose() {

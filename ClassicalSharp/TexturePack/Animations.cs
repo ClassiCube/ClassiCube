@@ -22,7 +22,7 @@ namespace ClassicalSharp.Textures {
 		void IGameComponent.Init(Game game) {
 			this.game = game;
 			Events.TexturePackChanged += TexturePackChanged;
-			Events.TextureChanged += TextureChanged;
+			Events.TextureChanged     += TextureChanged;
 		}
 
 		void IGameComponent.Ready(Game game) { }
@@ -30,23 +30,23 @@ namespace ClassicalSharp.Textures {
 		void IGameComponent.OnNewMap(Game game) { }
 		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
-		void TexturePackChanged(object nill, EventArgs e) {
+		void TexturePackChanged() {
 			Clear();
 			useLavaAnim = IsDefaultZip();
 			useWaterAnim = useLavaAnim;
 		}
 		
-		void TextureChanged(object nill, TextureEventArgs e) {
-			if (Utils.CaselessEq(e.Name, "animations.png")) {
-				animBmp = Platform.ReadBmp(game.Drawer2D, e.Data);
+		void TextureChanged(string name, byte[] data) {
+			if (Utils.CaselessEq(name, "animations.png")) {
+				animBmp = Platform.ReadBmp(game.Drawer2D, data);
 				animsBuffer = new FastBitmap(animBmp, true, true);
-			} else if (Utils.CaselessEq(e.Name, "animations.txt")) {
-				MemoryStream stream = new MemoryStream(e.Data);
+			} else if (Utils.CaselessEq(name, "animations.txt")) {
+				MemoryStream stream = new MemoryStream(data);
 				StreamReader reader = new StreamReader(stream, false);
 				ReadAnimationsDescription(reader);
-			} else if (Utils.CaselessEq(e.Name, "uselavaanim")) {
+			} else if (Utils.CaselessEq(name, "uselavaanim")) {
 				useLavaAnim = true;
-			} else if (Utils.CaselessEq(e.Name, "usewateranim")) {
+			} else if (Utils.CaselessEq(name, "usewateranim")) {
 				useWaterAnim = true;
 			}
 		}
@@ -185,7 +185,7 @@ namespace ClassicalSharp.Textures {
 		
 		void IDisposable.Dispose() {
 			Clear();
-			Events.TextureChanged -= TextureChanged;
+			Events.TextureChanged     -= TextureChanged;
 			Events.TexturePackChanged -= TexturePackChanged;
 		}
 		

@@ -30,8 +30,8 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			game.SkipClear = true;
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ContextLost += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 			
 			ContextRecreated();
 			initTime = DateTime.UtcNow;
@@ -48,8 +48,8 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Dispose() {
 			game.SkipClear = false;
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.ContextLost -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 			
 			ContextLost();
 			titleFont.Dispose();

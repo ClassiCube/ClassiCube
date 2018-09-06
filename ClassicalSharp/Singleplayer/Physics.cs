@@ -36,7 +36,7 @@ namespace ClassicalSharp.Singleplayer {
 			this.game = game;
 			map = game.World;
 			Events.OnNewMapLoaded += ResetMap;
-			Events.BlockChanged += BlockChanged;
+			Events.BlockChanged   += BlockChanged;
 			enabled = Options.GetBool(OptionsKey.BlockPhysics, true);
 			
 			falling = new FallingPhysics(game, this);
@@ -58,23 +58,22 @@ namespace ClassicalSharp.Singleplayer {
 			TickRandomBlocks();
 		}
 		
-		void BlockChanged(object nill, BlockChangedEventArgs e) {
+		void BlockChanged(Vector3I p, BlockID old, BlockID now) {
 			if (!Enabled) return;
-			Vector3I p = e.Coords;
 			int index = (p.Y * length + p.Z) * width + p.X;
-			BlockRaw newB = (BlockRaw)e.Block, oldB = (BlockRaw)e.OldBlock;
+			BlockRaw nowB = (BlockRaw)now, oldB = (BlockRaw)old;
 			
-			if (newB == Block.Air && IsEdgeWater(p.X, p.Y, p.Z)) { 
-				newB = Block.StillWater; 
+			if (nowB == Block.Air && IsEdgeWater(p.X, p.Y, p.Z)) { 
+				nowB = Block.StillWater; 
 				game.UpdateBlock(p.X, p.Y, p.Z, Block.StillWater);
 			}
 			
-			if (newB == Block.Air) {
+			if (nowB == Block.Air) {
 				PhysicsAction delete = OnDelete[oldB];
 				if (delete != null) delete(index, oldB);
 			} else {
-				PhysicsAction place = OnPlace[newB];
-				if (place != null) place(index, newB);
+				PhysicsAction place = OnPlace[nowB];
+				if (place != null) place(index, nowB);
 			}
 			ActivateNeighbours(p.X, p.Y, p.Z, index);
 		}
@@ -105,7 +104,7 @@ namespace ClassicalSharp.Singleplayer {
 				&& (x == 0 || z == 0 || x == map.MaxX || z == map.MaxZ);
 		}
 		
-		void ResetMap(object nill, EventArgs e) {
+		void ResetMap() {
 			falling.ResetMap();
 			liquid.ResetMap();
 			width = map.Width;
@@ -116,7 +115,7 @@ namespace ClassicalSharp.Singleplayer {
 		
 		public void Dispose() {
 			Events.OnNewMapLoaded -= ResetMap;
-			Events.BlockChanged -= BlockChanged;
+			Events.BlockChanged   -= BlockChanged;
 		}
 		
 		void TickRandomBlocks() {

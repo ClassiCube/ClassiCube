@@ -45,15 +45,15 @@ namespace ClassicalSharp.Renderers {
 			this.renderer = game.MapRenderer;
 			
 			Events.TerrainAtlasChanged += TerrainAtlasChanged;
-			Events.OnNewMap += OnNewMap;
-			Events.OnNewMapLoaded += OnNewMapLoaded;
-			Events.EnvVariableChanged += EnvVariableChanged;
+			Events.OnNewMap            += OnNewMap;
+			Events.OnNewMapLoaded      += OnNewMapLoaded;
+			Events.EnvVariableChanged  += EnvVariableChanged;
 			
 			Events.BlockDefinitionChanged += BlockDefinitionChanged;
-			Events.ViewDistanceChanged += ViewDistanceChanged;
-			Events.ProjectionChanged += ProjectionChanged;
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ViewDistanceChanged    += ViewDistanceChanged;
+			Events.ProjectionChanged      += ProjectionChanged;
+			Events.ContextLost      += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 			
 			SetMeshBuilder(DefaultMeshBuilder());
 		}
@@ -63,15 +63,15 @@ namespace ClassicalSharp.Renderers {
 			renderer.chunks = null;
 			renderer.unsortedChunks = null;
 			Events.TerrainAtlasChanged -= TerrainAtlasChanged;
-			Events.OnNewMap -= OnNewMap;
-			Events.OnNewMapLoaded -= OnNewMapLoaded;
-			Events.EnvVariableChanged -= EnvVariableChanged;
+			Events.OnNewMap            -= OnNewMap;
+			Events.OnNewMapLoaded      -= OnNewMapLoaded;
+			Events.EnvVariableChanged  -= EnvVariableChanged;
 			
 			Events.BlockDefinitionChanged -= BlockDefinitionChanged;
-			Events.ViewDistanceChanged -= ViewDistanceChanged;
-			Events.ProjectionChanged -= ProjectionChanged;
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.ViewDistanceChanged    -= ViewDistanceChanged;
+			Events.ProjectionChanged      -= ProjectionChanged;
+			Events.ContextLost      -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 			builder.Dispose();
 		}
 		
@@ -100,10 +100,10 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void EnvVariableChanged(object nill, EnvVarEventArgs e) {
-			if (e.Var == EnvVar.SunCol || e.Var == EnvVar.ShadowCol) {
+		void EnvVariableChanged(EnvVar envVar) {
+			if (envVar == EnvVar.SunCol || envVar == EnvVar.ShadowCol) {
 				Refresh();
-			} else if (e.Var == EnvVar.EdgeLevel || e.Var == EnvVar.SidesOffset) {
+			} else if (envVar == EnvVar.EdgeLevel || envVar == EnvVar.SidesOffset) {
 				int oldClip = builder.edgeLevel;
 				builder.sidesLevel = Math.Max(0, game.World.Env.SidesHeight);
 				builder.edgeLevel = Math.Max(0, game.World.Env.EdgeHeight);
@@ -111,7 +111,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 
-		void TerrainAtlasChanged(object nill, EventArgs e) {
+		void TerrainAtlasChanged() {
 			if (renderer._1DUsed != -1) {
 				bool refreshRequired = elementsPerBitmap != Atlas1D.TilesPerAtlas;
 				if (refreshRequired) Refresh();
@@ -122,17 +122,17 @@ namespace ClassicalSharp.Renderers {
 			ResetUsedFlags();
 		}
 		
-		void BlockDefinitionChanged(object nill, EventArgs e) {
+		void BlockDefinitionChanged() {
 			renderer._1DUsed = Atlas1D.UsedAtlasesCount();
 			ResetUsedFlags();
 			Refresh();
 		}
 		
-		void ProjectionChanged(object nill, EventArgs e) {
+		void ProjectionChanged() {
 			lastCamPos = Utils.MaxPos();
 		}
 		
-		void ViewDistanceChanged(object nill, EventArgs e) {
+		void ViewDistanceChanged() {
 			lastCamPos = Utils.MaxPos();
 		}
 
@@ -152,7 +152,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void OnNewMap(object nill, EventArgs e) {
+		void OnNewMap() {
 			game.ChunkUpdates = 0;
 			ClearChunkCache();
 			ResetPartsCounts();
@@ -163,7 +163,7 @@ namespace ClassicalSharp.Renderers {
 		}
 				
 		int chunksX, chunksY, chunksZ;
-		void OnNewMapLoaded(object nill, EventArgs e) {
+		void OnNewMapLoaded() {
 			chunksX = Utils.CeilDiv(game.World.Width,  16); renderer.chunksX = chunksX;
 			chunksY = Utils.CeilDiv(game.World.Height, 16); renderer.chunksY = chunksY;
 			chunksZ = Utils.CeilDiv(game.World.Length, 16); renderer.chunksZ = chunksZ;

@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		
 		public const string AppName = "ClassicalSharp 0.99.9.96";
 		
-		public const int APIVersion = 1;
+		public const int APIVersion = 2;
 		
 		#if !LAUNCHER
 		[STAThread]

@@ -168,8 +168,8 @@ static void HeldBlockRenderer_DoSwitchBlockAnim(void* obj) {
 	}
 }
 
-static void HeldBlockRenderer_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
-	if (block == BLOCK_AIR) return;
+static void HeldBlockRenderer_BlockChanged(void* obj, Vector3I coords, BlockID old, BlockID now) {
+	if (now == BLOCK_AIR) return;
 	HeldBlockRenderer_ClickAnim(false);
 }
 

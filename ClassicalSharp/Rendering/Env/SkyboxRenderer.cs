@@ -18,8 +18,8 @@ namespace ClassicalSharp.Renderers {
 			Events.TextureChanged     += TextureChanged;
 			Events.TexturePackChanged += TexturePackChanged;
 			Events.EnvVariableChanged += EnvVariableChanged;
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ContextLost += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 			ContextRecreated();
 		}
 		
@@ -35,22 +35,22 @@ namespace ClassicalSharp.Renderers {
 			Events.TextureChanged     -= TextureChanged;
 			Events.TexturePackChanged -= TexturePackChanged;
 			Events.EnvVariableChanged -= EnvVariableChanged;
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;			
+			Events.ContextLost -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;			
 		}
 		
-		void EnvVariableChanged(object nill, EnvVarEventArgs e) {
-			if (e.Var != EnvVar.CloudsCol) return;
+		void EnvVariableChanged(EnvVar envVar) {
+			if (envVar != EnvVar.CloudsCol) return;
 			MakeVb();
 		}
 		
-		void TexturePackChanged(object nill, EventArgs e) {
+		void TexturePackChanged() {
 			game.Graphics.DeleteTexture(ref tex);
 		}
 		
-		void TextureChanged(object nill, TextureEventArgs e) {
-			if (Utils.CaselessEq(e.Name, "skybox.png")) {
-				game.LoadTexture(ref tex, e.Name, e.Data);
+		void TextureChanged(string name, byte[] data) {
+			if (Utils.CaselessEq(name, "skybox.png")) {
+				game.LoadTexture(ref tex, name, data);
 			}
 		}
 		

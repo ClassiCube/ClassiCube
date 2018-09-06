@@ -30,7 +30,7 @@ namespace ClassicalSharp.Gui.Screens {
 			};
 			
 			if (selectedI >= 0) MakeDesc();
-			CheckHacksAllowed(null, null);
+			CheckHacksAllowed();
 		}
 		
 		static void SwitchMiscOptions(Game g, Widget w) { g.Gui.SetNewScreen(new MiscOptionsScreen(g)); }
@@ -41,7 +41,7 @@ namespace ClassicalSharp.Gui.Screens {
 		static void SwitchEnvOptions(Game g, Widget w) { g.Gui.SetNewScreen(new EnvSettingsScreen(g)); }
 		static void SwitchNostalgiaOptions(Game g, Widget w) { g.Gui.SetNewScreen(new NostalgiaScreen(g)); }
 		
-		void CheckHacksAllowed(object nill, EventArgs e) {
+		void CheckHacksAllowed() {
 			widgets[5].Disabled = !game.LocalPlayer.Hacks.CanAnyHacks; // env settings
 		}
 		

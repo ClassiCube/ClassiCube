@@ -14,14 +14,14 @@ namespace ClassicalSharp.Renderers {
 			col = new PackedCol(0, 0, 0, 102);
 			
 			ContextRecreated();
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ContextLost += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 		}
 		
 		void IDisposable.Dispose() { 
 			ContextLost();
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.ContextLost -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 		}
 
 		void IGameComponent.Ready(Game game) { }

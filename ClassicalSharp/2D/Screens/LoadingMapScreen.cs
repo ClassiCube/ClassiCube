@@ -34,9 +34,9 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Graphics.Fog = false;
 			ContextRecreated();
 			
-			Events.Loading += Loading;
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.Loading          += Loading;
+			Events.ContextLost      += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 		}
 		
 		public void SetTitle(string title) {
@@ -63,9 +63,9 @@ namespace ClassicalSharp.Gui.Screens {
 			font.Dispose();
 			ContextLost();
 			
-			Events.Loading -= Loading;
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.Loading          -= Loading;
+			Events.ContextLost      -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 		}
 		
 		public override void OnResize() {
@@ -73,9 +73,7 @@ namespace ClassicalSharp.Gui.Screens {
 			titleWidget.Reposition();
 		}
 		
-		void Loading(object nill, LoadingEventArgs e) {
-			progress = e.Progress;
-		}
+		void Loading(float progress) { this.progress = progress; }
 		
 		protected override void ContextLost() {
 			if (messageWidget == null) return;

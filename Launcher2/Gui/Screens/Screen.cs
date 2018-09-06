@@ -87,14 +87,14 @@ namespace Launcher.Gui.Screens {
 		
 		
 		protected Widget lastClicked;
-		void MouseButtonDown(object sender, MouseButtonEventArgs e) {
+		void MouseButtonDown(MouseButton btn) {
 			int x = Mouse.X, y = Mouse.Y;
-			MouseButtonDown(x, y, e.Button);
+			MouseButtonDown(x, y, btn);
 		}
 		
-		void MouseMove(object sender, MouseMoveEventArgs e) { 
+		void MouseMove(int deltaX, int deltaY) { 
 			int x = Mouse.X, y = Mouse.Y;
-			MouseMove(x, y, e.XDelta, e.YDelta); 
+			MouseMove(x, y, deltaX, deltaY); 
 		}
 		
 		protected virtual void MouseButtonDown(int x, int y, MouseButton button) {
@@ -138,18 +138,18 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		
-		protected virtual void KeyDown(object sender, KeyboardKeyEventArgs e) {
-			if (e.Key == Key.Tab) {
+		protected virtual void KeyDown(Key key) {
+			if (key == Key.Tab) {
 				HandleTab();
-			} else if (e.Key == Key.Enter) {
+			} else if (key == Key.Enter) {
 				Widget widget = selectedWidget;
 				if (widget != null && widget.OnClick != null)
 					widget.OnClick(0, 0);
 			}
 		}
 		
-		protected virtual void KeyUp(object sender, KeyboardKeyEventArgs e) {
-			if (e.Key == Key.Tab)
+		protected virtual void KeyUp(Key key) {
+			if (key == Key.Tab)
 				tabDown = false;
 		}
 		

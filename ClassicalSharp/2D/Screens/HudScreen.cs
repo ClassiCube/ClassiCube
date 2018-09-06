@@ -35,8 +35,8 @@ namespace ClassicalSharp.Gui.Screens {
 			chat = new ChatScreen(game, this);
 			chat.Init();
 			
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ContextLost += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 		}
 		
 		public override void Render(double delta) {
@@ -92,8 +92,8 @@ namespace ClassicalSharp.Gui.Screens {
 			chat.Dispose();
 			ContextLost();
 
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.ContextLost -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 		}
 		
 		public override void OnResize() {

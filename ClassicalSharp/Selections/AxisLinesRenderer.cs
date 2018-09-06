@@ -14,14 +14,14 @@ namespace ClassicalSharp.Selections {
 		
 		void IGameComponent.Init(Game game) { 
 			this.game = game;
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ContextLost += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 		}
 		
 		void IDisposable.Dispose() { 
 			ContextLost();
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.ContextLost -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 		}
 		
 		void IGameComponent.Ready(Game game) { }			

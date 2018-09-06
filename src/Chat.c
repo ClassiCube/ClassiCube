@@ -472,10 +472,10 @@ static void CuboidCommand_DoCuboid(void) {
 	}
 }
 
-static void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
+static void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID old, BlockID now) {
 	if (cuboid_mark1.X == Int32_MaxValue) {
 		cuboid_mark1 = coords;
-		Game_UpdateBlock(coords.X, coords.Y, coords.Z, oldBlock);
+		Game_UpdateBlock(coords.X, coords.Y, coords.Z, old);
 		char msgBuffer[STRING_SIZE];
 		String msg = String_FromArray(msgBuffer);
 

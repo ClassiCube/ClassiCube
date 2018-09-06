@@ -23,8 +23,8 @@ namespace ClassicalSharp.Gui.Screens {
 			if (titleFont == null) titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			if (textFont == null) textFont = new Font(game.FontName, 16);
 			
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ContextLost += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 		}
 		
 		public override void Dispose() {
@@ -32,8 +32,8 @@ namespace ClassicalSharp.Gui.Screens {
 			if (titleFont != null) { titleFont.Dispose(); titleFont = null; }
 			if (textFont != null)  { textFont.Dispose(); textFont = null; }
 			
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.ContextLost -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 		}
 		
 		protected override void ContextLost() { DisposeWidgets(widgets); }

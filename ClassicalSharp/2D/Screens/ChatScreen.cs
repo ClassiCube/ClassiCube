@@ -40,11 +40,11 @@ namespace ClassicalSharp.Gui.Screens {
 			announcementFont = new Font(game.FontName, fontSize);
 			ContextRecreated();
 			
-			Events.ChatReceived += ChatReceived;
-			Events.ChatFontChanged += ChatFontChanged;
-			Events.ColCodeChanged += ColCodeChanged;
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
+			Events.ChatReceived     += ChatReceived;
+			Events.ChatFontChanged  += ChatFontChanged;
+			Events.ColCodeChanged   += ColCodeChanged;
+			Events.ContextLost      += ContextLost;
+			Events.ContextRecreated += ContextRecreated;
 		}
 		
 		void ConstructWidgets() {
@@ -208,12 +208,12 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 
-		void ColCodeChanged(object nill, ColourCodeEventArgs e) {
+		void ColCodeChanged(char code) {
 			if (game.Graphics.LostContext) return;
 			
 			altText.UpdateCols();
-			Recreate(normalChat, e.Code); Recreate(status, e.Code);
-			Recreate(bottomRight, e.Code); Recreate(clientStatus, e.Code);
+			Recreate(normalChat,  code); Recreate(status,       code);
+			Recreate(bottomRight, code); Recreate(clientStatus, code);
 			
 			// Some servers have plugins that redefine colours constantly
 			// Preserve caret accumulator so caret blinking stays consistent
@@ -235,8 +235,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 
-		void ChatReceived(object nill, ChatEventArgs e) {
-			MessageType type = e.Type;
+		void ChatReceived(ref string text, MessageType type) {
 			if (game.Graphics.LostContext) return;
 			
 			if (type == MessageType.Normal) {
@@ -246,16 +245,16 @@ namespace ClassicalSharp.Gui.Screens {
 				List<ChatLine> chat = game.Chat.Log;
 				int i = chatIndex + chatLines - 1;
 				
-				string text = i < chat.Count ? chat[i].Text : e.Text;
-				normalChat.PushUpAndReplaceLast(text);
+				string chatMsg = i < chat.Count ? chat[i].Text : text;
+				normalChat.PushUpAndReplaceLast(chatMsg);
 			} else if (type >= MessageType.Status1 && type <= MessageType.Status3) {
-				status.SetText(2 + (int)(type - MessageType.Status1), e.Text);
+				status.SetText(2 + (int)(type - MessageType.Status1), text);
 			} else if (type >= MessageType.BottomRight1 && type <= MessageType.BottomRight3) {
-				bottomRight.SetText(2 - (int)(type - MessageType.BottomRight1), e.Text);
+				bottomRight.SetText(2 - (int)(type - MessageType.BottomRight1), text);
 			} else if (type == MessageType.Announcement) {
-				announcement.Set(e.Text, announcementFont);
+				announcement.Set(text, announcementFont);
 			} else if (type >= MessageType.ClientStatus1 && type <= MessageType.ClientStatus3) {
-				clientStatus.SetText((int)(type - MessageType.ClientStatus1), e.Text);
+				clientStatus.SetText((int)(type - MessageType.ClientStatus1), text);
 				UpdateChatYOffset(true);
 			}
 		}
@@ -266,11 +265,11 @@ namespace ClassicalSharp.Gui.Screens {
 			chatUrlFont.Dispose();
 			announcementFont.Dispose();
 			
-			Events.ChatReceived -= ChatReceived;
-			Events.ChatFontChanged -= ChatFontChanged;
-			Events.ColCodeChanged -= ColCodeChanged;
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			Events.ChatReceived     -= ChatReceived;
+			Events.ChatFontChanged  -= ChatFontChanged;
+			Events.ColCodeChanged   -= ColCodeChanged;
+			Events.ContextLost      -= ContextLost;
+			Events.ContextRecreated -= ContextRecreated;
 		}
 		
 		protected override void ContextLost() {
@@ -294,7 +293,7 @@ namespace ClassicalSharp.Gui.Screens {
 			SetInitialMessages();
 		}
 		
-		void ChatFontChanged(object nill, EventArgs e) {
+		void ChatFontChanged() {
 			if (!game.Drawer2D.UseBitmappedChat) return;
 			Recreate();
 			UpdateChatYOffset(true);

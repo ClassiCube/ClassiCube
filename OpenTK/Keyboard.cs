@@ -51,31 +51,29 @@ namespace OpenTK.Input {
 		
 		// Extended mouse buttons
 		XButton1, XButton2,
-		// Last available keyboard key
-		LastKey
+		Count,
 	}
 	
+	public delegate void KeyboardEventFunc(Key key);
 	public static class Keyboard {
-		static bool[] states = new bool[(int)Key.LastKey];
-		static KeyboardKeyEventArgs args = new KeyboardKeyEventArgs();
+		static bool[] states = new bool[(int)Key.Count];
 		public static bool KeyRepeat;
 
 		public static bool Get(Key key) { return states[(int)key]; }
 		internal static void Set(Key key, bool value) {
 			if (states[(int)key] != value || KeyRepeat) {
 				states[(int)key] = value;
-				args.Key = key;
 				
 				if (value && KeyDown != null) {
-					KeyDown(null, args);
+					KeyDown(key);
 				} else if (!value && KeyUp != null) {
-					KeyUp(null, args);
+					KeyUp(key);
 				}
 			}
 		}
 
-		public static event EventHandler<KeyboardKeyEventArgs> KeyDown;
-		public static event EventHandler<KeyboardKeyEventArgs> KeyUp;
+		public static event KeyboardEventFunc KeyDown;
+		public static event KeyboardEventFunc KeyUp;
 
 		internal static void ClearKeys() {
 			for (int i = 0; i < states.Length; i++) {
@@ -84,6 +82,4 @@ namespace OpenTK.Input {
 			}
 		}
 	}
-
-	public class KeyboardKeyEventArgs : EventArgs { public Key Key; }
 }

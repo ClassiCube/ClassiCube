@@ -33,7 +33,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			LostContext = true;
 			Utils.LogDebug("Lost graphics context" + reason);
 			
-			if (ContextLost != null) ContextLost();
+			Events.RaiseContextLost();
 			DisposeCommon();
 		}
 		
@@ -41,7 +41,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			LostContext = false;
 			Utils.LogDebug("Recreating graphics context");
 			
-			if (ContextRecreated != null) ContextRecreated();		
+			Events.RaiseContextRecreated();
 			InitCommon();
 		}
 		

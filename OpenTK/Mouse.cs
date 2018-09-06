@@ -30,17 +30,15 @@ using System;
 namespace OpenTK.Input {
 	
 	public enum MouseButton {
-        Left, Right, Middle,
-        // Last available mouse button
-        LastButton
-    }
+        Left, Right, Middle, 
+        Count,
+    }	
+	public delegate void MouseEventFunc(MouseButton btn);
+	public delegate void MouseWheelEventFunc(float delta);
+	public delegate void MouseMoveEventFunc(int xDelta, int yDelta);
 	
 	public static class Mouse {
-		static readonly bool[] states = new bool[(int)MouseButton.LastButton];
-		static MouseMoveEventArgs move_args = new MouseMoveEventArgs();
-		static MouseButtonEventArgs button_args = new MouseButtonEventArgs();
-		static MouseWheelEventArgs wheel_args = new MouseWheelEventArgs();
-
+		static readonly bool[] states = new bool[(int)MouseButton.Count];
 		public static float Wheel;
 		public static int X, Y;
 
@@ -48,36 +46,29 @@ namespace OpenTK.Input {
 		internal static void Set(MouseButton btn, bool value) {
 			if (value == states[(int)btn]) return;
 			states[(int)btn] = value;
-			button_args.Button = btn;
 			
 			if (value && ButtonDown != null) {
-				ButtonDown(null, button_args);
+				ButtonDown(btn);
 			} else if (!value && ButtonUp != null) {
-				ButtonUp(null, button_args);
+				ButtonUp(btn);
 			}
 		}
 		
 		internal static void SetWheel(float value) {
-			wheel_args.Delta = value - Wheel;
+			float delta = value - Wheel;
 			Wheel = value;
-			if (WheelChanged != null) WheelChanged(null, wheel_args);
+			if (WheelChanged != null) WheelChanged(delta);
 		}
 
 		internal static void SetPos(int x, int y) {
-			move_args.XDelta = x - X;
-			move_args.YDelta = y - Y;
-			X = x; Y = y;
-			
-			if (Move != null) Move(null, move_args);
+			int xDelta = x - X, yDelta = y - Y;
+			X = x; Y = y;			
+			if (Move != null) Move(xDelta, yDelta);
 		}
 
-		public static event EventHandler<MouseMoveEventArgs> Move;
-		public static event EventHandler<MouseButtonEventArgs> ButtonDown;
-		public static event EventHandler<MouseButtonEventArgs> ButtonUp;
-		public static event EventHandler<MouseWheelEventArgs> WheelChanged;
+		public static event MouseMoveEventFunc Move;
+		public static event MouseEventFunc ButtonDown;
+		public static event MouseEventFunc ButtonUp;
+		public static event MouseWheelEventFunc WheelChanged;
 	}
-
-	public class MouseMoveEventArgs : EventArgs { public int XDelta, YDelta; }
-	public class MouseButtonEventArgs : EventArgs { public MouseButton Button; }
-	public class MouseWheelEventArgs : EventArgs { public float Delta; }
 }
