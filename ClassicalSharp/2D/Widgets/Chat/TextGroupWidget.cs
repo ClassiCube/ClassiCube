@@ -284,7 +284,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			return i;
 		}
 		
-		unsafe void Output(Portion bit, int lineBeg, int lineEnd, ref Portion* portions) {
+		unsafe void Output(Portion bit, int lineBeg, int lineEnd, Portion* portions, ref int count) {
 			if (bit.Beg >= lineEnd || bit.Len == 0) return;
 			bit.LineBeg = bit.Beg;
 			bit.LineLen = bit.Len & 0x7FFF;
@@ -303,13 +303,14 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			bit.LineBeg -= lineBeg;
 			if (bit.LineLen == 0) return;
-			*portions = bit; portions++;
+			
+			portions[count] = bit; count++;
 		}
 		
 		struct Portion { public int Beg, Len, LineBeg, LineLen; }
 		unsafe int Reduce(char* chars, int target, Portion* portions) {
 			Portion* start = portions;
-			int charsLen = 0;
+			int charsLen = 0, count = 0;
 			int* begs = stackalloc int[lines.Length];
 			int* ends = stackalloc int[lines.Length];
 
@@ -330,7 +331,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				// add normal portion between urls
 				bit.Beg = end;
 				bit.Len = nextStart - end;
-				Output(bit, begs[target], ends[target], ref portions);
+				Output(bit, begs[target], ends[target], portions, ref count);
 				
 				if (nextStart == charsLen) break;
 				end = UrlEnd(chars, charsLen, begs, nextStart);
@@ -338,9 +339,9 @@ namespace ClassicalSharp.Gui.Widgets {
 				// add this url portion
 				bit.Beg = nextStart;
 				bit.Len = (end - nextStart) | 0x8000;
-				Output(bit, begs[target], ends[target], ref portions);
+				Output(bit, begs[target], ends[target], portions, ref count);
 			}
-			return (int)(portions - start);
+			return count;
 		}
 	}
 }

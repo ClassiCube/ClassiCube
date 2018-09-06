@@ -749,10 +749,8 @@ void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct Displa
 /* TODO: Implement all these stubs.... */
 #include "Builder.h"
 void AdvLightingBuilder_SetActive(void) { NormalBuilder_SetActive(); }
-/* TODO: Initalise Shell, see https://msdn.microsoft.com/en-us/library/windows/desktop/bb762153(v=vs.85).aspx 
-https://stackoverflow.com/questions/24590059/c-opening-a-url-in-default-browser-on-windows-without-admin-privileges */
-ReturnCode Platform_StartShell(STRING_PURE String* args) { return 0; }
 #if CC_BUILD_NIX
+ReturnCode Platform_StartShell(STRING_PURE String* args) { return 0; }
 void Waitable_WaitFor(void* handle, UInt32 milliseconds) { }
 STRING_PURE String Platform_GetCommandLineArgs(void) { return String_MakeNull(); }
 

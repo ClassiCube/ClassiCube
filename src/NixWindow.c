@@ -145,6 +145,46 @@ void Window_RegisterAtoms(void) {
 	xa_data_sel = XInternAtom(display, "CS_SEL_DATA", false);
 }
 
+static void Window_RefreshBorders(void) {
+	Atom prop_type;
+	int prop_format;
+	unsigned long items, after;
+	long* borders = NULL;
+	
+	XGetWindowProperty(win_display, win_handle, net_frame_extents, 0, 16, false,
+		xa_cardinal, &prop_type, &prop_format, &items, &after, &borders);
+
+	if (!borders) return;
+	if (items == 4) {
+		borderLeft = borders[0]; borderRight = borders[1];
+		borderTop = borders[2]; borderBottom = borders[3];
+	}
+	XFree(borders);
+}
+
+static void Window_RefreshBounds(XEvent* e) {
+	Window_RefreshBorders();
+
+	struct Point2D loc = { e->xconfigure.x - borderLeft, e->xconfigure.y - borderTop };
+	if (loc.X != Window_Bounds.X || loc.Y != Window_Bounds.Y) {
+		Window_Bounds.X = loc.X; Window_Bounds.Y = loc.Y;
+		Event_RaiseVoid(&WindowEvents_Moved);
+	}
+
+	/* Note: width and height denote the internal (client) size.
+	   To get the external (window) size, we need to add the border size. */
+	struct Size2D size = {
+		e->xconfigure.width  + borderLeft + borderRight,
+		e->xconfigure.height + borderTop  + borderBottom 
+	};
+
+	if (size.Width != Window_Bounds.Width || size.Height != Window_Bounds.Height) {
+		Window_Bounds.Width = size.Width; Window_Bounds.Height = size.Height;
+		Window_ClientSize = Size2D_Make(e->xconfigure.width, e->xconfigure.height);
+		Event_RaiseVoid(&WindowEvents_Resized);
+	}
+}
+
 static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode);
 void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, 
 	struct GraphicsMode* mode, struct DisplayDevice* device) {
@@ -382,48 +422,6 @@ void Window_Destroy(void) {
 	XSync(win_display, true);
 	XDestroyWindow(win_display, win_handle);
 	Window_Exists = false;
-}
-
-void Window_RefreshBorders(void) {
-	Atom prop_type;
-	int prop_format;
-	unsigned long items, after;
-	long* borders = NULL;
-	
-	XGetWindowProperty(win_display, win_handle, net_frame_extents, 0, 16, false,
-		xa_cardinal, &prop_type, &prop_format, &items, &after, &borders);
-
-	if (!borders) return;
-	if (items == 4) {
-		borderLeft = borders[0]; borderRight = borders[1];
-		borderTop = borders[2]; borderBottom = borders[3];
-	}
-	XFree(borders);
-}
-
-void Window_RefreshBounds(XEvent* e) {
-	Window_RefreshBorders();
-
-	struct Point2D curLoc = Window_GetLocation();
-	struct Point2D loc = { e->xconfigure.x - borderLeft, e->xconfigure.y - borderTop };
-	if (loc.X != curLoc.X || loc.Y != curLoc.Y) {
-		Window_Bounds.X = loc.X; Window_Bounds.Y = loc.Y;
-		Event_RaiseVoid(&WindowEvents_Moved);
-	}
-
-	/* Note: width and height denote the internal (client) size.
-	   To get the external (window) size, we need to add the border size. */
-	struct Size2D curSize = Window_GetSize();
-	struct Size2D size = {
-		e->xconfigure.width  + borderLeft + borderRight,
-		e->xconfigure.height + borderTop  + borderBottom 
-	};
-
-	if (curSize.Width != size.Width || curSize.Height != size.Height) {
-		Window_Bounds.Width = size.Width; Window_Bounds.Height = size.Height;
-		Window_ClientSize = Size2D_Make(e->xconfigure.width, e->xconfigure.height);
-		Event_RaiseVoid(&WindowEvents_Resized);
-	}
 }
 
 void Window_ToggleKey(XKeyEvent* keyEvent, bool pressed) {

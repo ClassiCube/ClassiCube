@@ -53,8 +53,6 @@ void Window_SetWindowState(UInt8 value);
 
 struct Rectangle2D Window_Bounds;
 struct Size2D Window_ClientSize;
-#define Window_GetLocation() Point2D_Make(Window_Bounds.X, Window_Bounds.Y)
-#define Window_GetSize() Size2D_Make(Window_Bounds.Width, Window_Bounds.Height)
 
 void Window_SetBounds(struct Rectangle2D rect);
 void Window_SetLocation(struct Point2D point);

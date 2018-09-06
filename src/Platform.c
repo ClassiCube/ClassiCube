@@ -19,6 +19,7 @@
 #include <ws2tcpip.h>
 #include <wininet.h>
 #include <mmsystem.h>
+#include <shellapi.h>
 
 #define HTTP_QUERY_ETAG 54 /* Missing from some old MingW32 headers */
 #define Socket__Error() WSAGetLastError()
@@ -1270,6 +1271,12 @@ void Platform_SetWorkingDir(void) {
 }
 
 void Platform_Exit(ReturnCode code) { ExitProcess(code); }
+
+ReturnCode Platform_StartShell(STRING_PURE String* args) {
+	WCHAR str[300]; Platform_ConvertString(str, args);
+	HINSTANCE instance = ShellExecuteW(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
+	return instance > 32 ? 0 : (ReturnCode)instance;
+}
 
 STRING_PURE String Platform_GetCommandLineArgs(void) {
 	String args = String_FromReadonly(GetCommandLineA());

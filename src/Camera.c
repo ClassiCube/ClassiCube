@@ -37,7 +37,7 @@ static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
 struct Point2D cam_prev, cam_delta;
 static void PerspectiveCamera_CentreMousePosition(void) {
 	struct Point2D topLeft = Window_PointToScreen(Point2D_Empty);
-	Int32 cenX = topLeft.X + Game_Width / 2;
+	Int32 cenX = topLeft.X + Game_Width  / 2;
 	Int32 cenY = topLeft.Y + Game_Height / 2;
 
 	Window_SetDesktopCursorPos(Point2D_Make(cenX, cenY));

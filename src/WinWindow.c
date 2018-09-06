@@ -187,25 +187,23 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	case WM_WINDOWPOSCHANGED:
 	{
 		WINDOWPOS* pos = (WINDOWPOS*)lParam;
-		if (pos->hwnd == win_Handle) {
-			struct Point2D loc = Window_GetLocation();
-			if (loc.X != pos->x || loc.Y != pos->y) {
-				Window_Bounds.X = pos->x; Window_Bounds.Y = pos->y;
-				Event_RaiseVoid(&WindowEvents_Moved);
-			}
+		if (pos->hwnd != win_Handle) break;
 
-			struct Size2D size = Window_GetSize();
-			if (size.Width != pos->cx || size.Height != pos->cy) {
-				Window_Bounds.Width = pos->cx; Window_Bounds.Height = pos->cy;
-				Window_UpdateClientSize(handle);
+		if (pos->x != Window_Bounds.X || pos->y != Window_Bounds.Y) {
+			Window_Bounds.X = pos->x; Window_Bounds.Y = pos->y;
+			Event_RaiseVoid(&WindowEvents_Moved);
+		}
 
-				SetWindowPos(win_Handle, NULL,
-					Window_Bounds.X, Window_Bounds.Y, Window_Bounds.Width, Window_Bounds.Height,
-					SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+		if (pos->cx != Window_Bounds.Width || pos->cy != Window_Bounds.Height) {
+			Window_Bounds.Width = pos->cx; Window_Bounds.Height = pos->cy;
+			Window_UpdateClientSize(handle);
 
-				if (suppress_resize <= 0) {
-					Event_RaiseVoid(&WindowEvents_Resized);
-				}
+			SetWindowPos(win_Handle, NULL,
+				Window_Bounds.X, Window_Bounds.Y, Window_Bounds.Width, Window_Bounds.Height,
+				SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+
+			if (suppress_resize <= 0) {
+				Event_RaiseVoid(&WindowEvents_Resized);
 			}
 		}
 	} break;
