@@ -11,7 +11,7 @@ namespace ClassicalSharp.Gui.Screens {
 		readonly Font titleFont, messageFont;
 		TextWidget titleWidget, messageWidget;
 		ButtonWidget reconnect;
-		DateTime initTime, clearTime;
+		DateTime initTime;
 		bool canReconnect;
 		
 		public DisconnectScreen(Game game, string title, string message) : base(game) {
@@ -29,8 +29,10 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Init() {
-			game.SkipClear = true;
-			Events.ContextLost += ContextLost;
+			game.Graphics.SetVSync(game, false);
+			game.limitMillis = 1000 / 5f;
+			
+			Events.ContextLost      += ContextLost;
 			Events.ContextRecreated += ContextRecreated;
 			
 			ContextRecreated();
@@ -38,17 +40,23 @@ namespace ClassicalSharp.Gui.Screens {
 			lastSecsLeft = delay;
 		}
 		
+		readonly PackedCol top = new PackedCol(64, 32, 32), bottom = new PackedCol(80, 16, 16);
 		public override void Render(double delta) {
 			if (canReconnect) UpdateDelayLeft(delta);
+			game.Graphics.Draw2DQuad(0, 0, game.Width, game.Height, top, bottom);
 			
-			// NOTE: We need to make sure that both the front and back buffers have
-			// definitely been drawn over, so we redraw the background multiple times.
-			if (DateTime.UtcNow < clearTime) Redraw(delta);
+			game.Graphics.Texturing = true;
+			titleWidget.Render(delta);
+			messageWidget.Render(delta);
+			
+			if (canReconnect) reconnect.Render(delta);
+			game.Graphics.Texturing = false;
 		}
 		
 		public override void Dispose() {
-			game.SkipClear = false;
-			Events.ContextLost -= ContextLost;
+			game.SetFpsLimit(game.FpsLimit);
+			
+			Events.ContextLost      -= ContextLost;
 			Events.ContextRecreated -= ContextRecreated;
 			
 			ContextLost();
@@ -60,7 +68,6 @@ namespace ClassicalSharp.Gui.Screens {
 			titleWidget.Reposition();
 			messageWidget.Reposition();
 			reconnect.Reposition();
-			clearTime = DateTime.UtcNow.AddSeconds(0.5);
 		}
 		
 		public override bool HandlesKeyDown(Key key) { return key < Key.F1 || key > Key.F35; }
@@ -88,7 +95,6 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override bool HandlesMouseScroll(float delta) { return true; }
-
 		
 		int lastSecsLeft;
 		const int delay = 5;
@@ -101,20 +107,8 @@ namespace ClassicalSharp.Gui.Screens {
 			reconnect.Set(ReconnectMessage(), titleFont);
 			reconnect.Disabled = secsLeft != 0;
 			
-			Redraw(delta);
 			lastSecsLeft = secsLeft;
 			lastActive = reconnect.Active;
-			clearTime = DateTime.UtcNow.AddSeconds(0.5);
-		}
-		
-		readonly PackedCol top = new PackedCol(64, 32, 32), bottom = new PackedCol(80, 16, 16);
-		void Redraw(double delta) {
-			game.Graphics.Draw2DQuad(0, 0, game.Width, game.Height, top, bottom);
-			game.Graphics.Texturing = true;
-			titleWidget.Render(delta);
-			messageWidget.Render(delta);
-			if (canReconnect) reconnect.Render(delta);
-			game.Graphics.Texturing = false;
 		}
 		
 		string ReconnectMessage() {
@@ -133,7 +127,6 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			if (game.Graphics.LostContext) return;
-			clearTime = DateTime.UtcNow.AddSeconds(0.5);
 			
 			titleWidget = TextWidget.Create(game, title, titleFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -30);

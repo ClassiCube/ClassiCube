@@ -337,7 +337,7 @@ static void Game_LoadOptions(void) {
 
 	Game_ViewBobbing = Options_GetBool(OPT_VIEW_BOBBING, true);
 	FpsLimit method  = Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FpsLimit_Count);
-	Game_SetFpsLimitMethod(method);
+	Game_SetFpsLimit(method);
 
 	Game_ViewDistance     = Options_GetInt(OPT_VIEW_DISTANCE, 16, 4096, 512);
 	Game_UserViewDistance = Game_ViewDistance;
@@ -523,8 +523,7 @@ void Game_Load(void) {
 }
 
 UInt64 game_frameTimer;
-Real32 game_limitMs;
-void Game_SetFpsLimitMethod(FpsLimit method) {
+void Game_SetFpsLimit(FpsLimit method) {
 	Game_FpsLimit = method;
 	game_limitMs = 0.0f;
 	Gfx_SetVSync(method == FpsLimit_VSync);
@@ -535,9 +534,8 @@ void Game_SetFpsLimitMethod(FpsLimit method) {
 }
 
 static void Game_LimitFPS(void) {
-	if (Game_FpsLimit == FpsLimit_VSync) return;
-	Int32 elapsedMs = Stopwatch_ElapsedMicroseconds(&game_frameTimer) / 1000;
-	Real32 leftOver = game_limitMs - elapsedMs;
+	Real32 elapsedMs = Stopwatch_ElapsedMicroseconds(&game_frameTimer) / 1000.0f;
+	Real32 leftOver  = game_limitMs - elapsedMs;
 
 	/* going faster than limit */
 	if (leftOver > 0.001f) {
@@ -675,7 +673,7 @@ static void Game_RenderFrame(Real64 delta) {
 	Real32 t = (Real32)(entTask.Accumulator / entTask.Interval);
 	LocalPlayer_SetInterpPosition(t);
 
-	if (!Game_SkipClear) Gfx_Clear();
+	Gfx_Clear();
 	Game_CurrentCameraPos = Camera_Active->GetPosition(t);
 	Game_UpdateViewMatrix();
 
@@ -691,7 +689,7 @@ static void Game_RenderFrame(Real64 delta) {
 	if (Game_ScreenshotRequested) Game_TakeScreenshot();
 
 	Gfx_EndFrame();
-	Game_LimitFPS();
+	if (game_limitMs) Game_LimitFPS();
 }
 
 void Game_Free(void* obj) {

@@ -93,7 +93,7 @@ struct ChatScreen {
 
 struct DisconnectScreen {
 	Screen_Layout
-	UInt64 InitTime, ClearTime;
+	UInt64 InitTime;
 	bool CanReconnect, LastActive;
 	Int32 LastSecsLeft;
 	struct ButtonWidget Reconnect;
@@ -1373,18 +1373,6 @@ static void DisconnectScreen_ReconnectMessage(struct DisconnectScreen* s, STRING
 	String_AppendConst(msg, "Reconnect");
 }
 
-static void DisconnectScreen_Redraw(struct DisconnectScreen* s, Real64 delta) {
-	PackedCol top    = PACKEDCOL_CONST(64, 32, 32, 255);
-	PackedCol bottom = PACKEDCOL_CONST(80, 16, 16, 255);
-	GfxCommon_Draw2DGradient(0, 0, Game_Width, Game_Height, top, bottom);
-
-	Gfx_SetTexturing(true);
-	Elem_Render(&s->Title, delta);
-	Elem_Render(&s->Message, delta);
-	if (s->CanReconnect) { Elem_Render(&s->Reconnect, delta); }
-	Gfx_SetTexturing(false);
-}
-
 static void DisconnectScreen_UpdateDelayLeft(struct DisconnectScreen* s, Real64 delta) {
 	Int32 elapsedMS = (Int32)(DateTime_CurrentUTC_MS() - s->InitTime);
 	Int32 secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLIS_PER_SEC;
@@ -1398,10 +1386,8 @@ static void DisconnectScreen_UpdateDelayLeft(struct DisconnectScreen* s, Real64 
 	ButtonWidget_Set(&s->Reconnect, &msg, &s->TitleFont);
 	s->Reconnect.Disabled = secsLeft != 0;
 
-	DisconnectScreen_Redraw(s, delta);
 	s->LastSecsLeft = secsLeft;
 	s->LastActive   = s->Reconnect.Active;
-	s->ClearTime    = DateTime_CurrentUTC_MS() + 500;
 }
 
 static void DisconnectScreen_ContextLost(void* screen) {
@@ -1413,7 +1399,6 @@ static void DisconnectScreen_ContextLost(void* screen) {
 
 static void DisconnectScreen_ContextRecreated(void* screen) {
 	struct DisconnectScreen* s = screen;
-	s->ClearTime = DateTime_CurrentUTC_MS() + 500;
 
 	TextWidget_Create(&s->Title, &s->TitleStr, &s->TitleFont);
 	Widget_SetLocation(&s->Title, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
@@ -1436,7 +1421,9 @@ static void DisconnectScreen_Init(void* screen) {
 	Font_Make(&s->MessageFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	Screen_CommonInit(s);
 
-	Game_SkipClear = true;
+	Gfx_SetVSync(false);
+	game_limitMs = 1000 / 5.0f;
+
 	s->InitTime     = DateTime_CurrentUTC_MS();
 	s->LastSecsLeft = DISCONNECT_DELAY_MS / DATETIME_MILLIS_PER_SEC;
 }
@@ -1445,11 +1432,16 @@ static void DisconnectScreen_Render(void* screen, Real64 delta) {
 	struct DisconnectScreen* s = screen;
 	if (s->CanReconnect) { DisconnectScreen_UpdateDelayLeft(s, delta); }
 
-	/* NOTE: We need to make sure that both the front and back buffers have
-	definitely been drawn over, so we redraw the background multiple times. */
-	if (DateTime_CurrentUTC_MS() < s->ClearTime) {
-		DisconnectScreen_Redraw(s, delta);
-	}
+	PackedCol top    = PACKEDCOL_CONST(64, 32, 32, 255);
+	PackedCol bottom = PACKEDCOL_CONST(80, 16, 16, 255);
+	GfxCommon_Draw2DGradient(0, 0, Game_Width, Game_Height, top, bottom);
+
+	Gfx_SetTexturing(true);
+	Elem_Render(&s->Title, delta);
+	Elem_Render(&s->Message, delta);
+
+	if (s->CanReconnect) { Elem_Render(&s->Reconnect, delta); }
+	Gfx_SetTexturing(false);
 }
 
 static void DisconnectScreen_Free(void* screen) {
@@ -1457,7 +1449,8 @@ static void DisconnectScreen_Free(void* screen) {
 	Font_Free(&s->TitleFont);
 	Font_Free(&s->MessageFont);
 	Screen_CommonFree(s);
-	Game_SkipClear = false;
+
+	Game_SetFpsLimit(Game_FpsLimit);
 }
 
 static void DisconnectScreen_OnResize(void* screen) {
@@ -1465,7 +1458,6 @@ static void DisconnectScreen_OnResize(void* screen) {
 	Widget_Reposition(&s->Title);
 	Widget_Reposition(&s->Message);
 	Widget_Reposition(&s->Reconnect);
-	s->ClearTime = DateTime_CurrentUTC_MS() + 500;
 }
 
 static bool DisconnectScreen_KeyDown(void* s, Key key) { return key < Key_F1 || key > Key_F35; }

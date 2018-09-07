@@ -215,7 +215,7 @@ static void Hotkeys_QuickSort(Int32 left, Int32 right) {
 	}
 }
 
-void Hotkeys_AddNewHotkey(Key trigger, UInt8 flags, STRING_PURE String* text, bool more) {
+static void Hotkeys_AddNewHotkey(Key trigger, UInt8 flags, STRING_PURE String* text, bool more) {
 	struct HotkeyData hKey;
 	hKey.Trigger = trigger;
 	hKey.Flags = flags;
@@ -233,8 +233,7 @@ void Hotkeys_AddNewHotkey(Key trigger, UInt8 flags, STRING_PURE String* text, bo
 	Hotkeys_QuickSort(0, HotkeysText.Count - 1);
 }
 
-
-void Hotkeys_RemoveText(Int32 index) {
+static void Hotkeys_RemoveText(Int32 index) {
 	Int32 i; struct HotkeyData* hKey = HotkeysList;
 
 	for (i = 0; i < HotkeysText.Count; i++, hKey++) {
@@ -242,6 +241,7 @@ void Hotkeys_RemoveText(Int32 index) {
 	}
 	StringsBuffer_Remove(&HotkeysText, index);
 }
+
 
 void Hotkeys_Add(Key trigger, UInt8 flags, STRING_PURE String* text, bool more) {
 	Int32 i; struct HotkeyData* hKey = HotkeysList;
@@ -273,26 +273,19 @@ bool Hotkeys_Remove(Key trigger, UInt8 flags) {
 	return false;
 }
 
-bool Hotkeys_IsHotkey(Key key, STRING_TRANSIENT String* text, bool* moreInput) {
+Int32 Hotkeys_FindPartial(Key key) {
 	UInt8 flags = 0;
 	if (Key_IsControlPressed()) flags |= HOTKEYS_FLAG_CTRL;
 	if (Key_IsShiftPressed())   flags |= HOTKEYS_FLAG_SHIFT;
 	if (Key_IsAltPressed())     flags |= HOTKEYS_FLAG_ALT;
 
-	text->length = 0;
-	*moreInput = false;
-
 	Int32 i;
 	for (i = 0; i < HotkeysText.Count; i++) {
 		struct HotkeyData hKey = HotkeysList[i];
-		if ((hKey.Flags & flags) == hKey.Flags && hKey.Trigger == key) {
-			String hkeyText = StringsBuffer_UNSAFE_Get(&HotkeysText, hKey.TextIndex);
-			String_AppendString(text, &hkeyText);
-			*moreInput = hKey.StaysOpen;
-			return true;
-		}
+		/* e.g. if holding Ctrl and Shift, a hotkey with only Ctrl flags matches */
+		if ((hKey.Flags & flags) == hKey.Flags && hKey.Trigger == key) return i;
 	}
-	return false;
+	return -1;
 }
 
 void Hotkeys_Init(void) {

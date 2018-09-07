@@ -39,14 +39,10 @@ namespace ClassicalSharp {
 		public bool ShiftDown { get { return IsKeyDown(Key.ShiftLeft) || IsKeyDown(Key.ShiftRight); } }
 		
 		public KeyMap Keys;
-		public bool IsKeyDown(Key key) {
-			return Keyboard.Get(key);
-		}
+		public bool IsKeyDown(Key key) { return Keyboard.Get(key); }
 		
 		/// <summary> Returns whether the key associated with the given key binding is currently held down. </summary>
-		public bool IsKeyDown(KeyBind binding) {
-			return Keyboard.Get(Keys[binding]);
-		}
+		public bool IsKeyDown(KeyBind binding) { return Keyboard.Get(Keys[binding]); }
 		
 		public bool IsMousePressed(MouseButton button) {
 			bool down = Mouse.Get(button);
@@ -173,11 +169,13 @@ namespace ClassicalSharp {
 		}
 		
 		void HandleHotkey(Key key) {
-			string text;
-			bool more;
-			if (!HotkeyList.IsHotkey(key, game.Input, out text, out more)) return;
+			int idx = HotkeyList.FindPartial(key, game.Input);
+			if (idx == -1) return;
 			
-			if (!more) {
+			Hotkey hotkey = HotkeyList.Hotkeys[idx];
+			string text = hotkey.Text;
+			
+			if (!hotkey.StaysOpen) {
 				game.Chat.Send(text, false);
 			} else if (game.Gui.activeScreen == null) {
 				game.Gui.hudScreen.OpenInput(text);

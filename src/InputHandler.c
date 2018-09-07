@@ -437,12 +437,13 @@ static void InputHandler_KeyDown(void* obj, Int32 key) {
 	} else if (InputHandler_HandleCoreKey(key)) {
 	} else if (LocalPlayer_HandlesKey(key)) {
 	} else {
-		char textBuffer[STRING_SIZE];
-		String text = String_FromArray(textBuffer);
-		bool more;
-		if (!Hotkeys_IsHotkey(key, &text, &more)) return;
+		Int32 idx = Hotkeys_FindPartial(key);
+		if (idx == -1) return;
 
-		if (!more) {
+		struct HotkeyData* hkey = &HotkeysList[idx];
+		String text = StringsBuffer_UNSAFE_Get(&HotkeysText, hkey->TextIndex);
+
+		if (!hkey->StaysOpen) {
 			Chat_Send(&text, false);
 		} else if (!Gui_Active) {
 			HUDScreen_OpenInput(Gui_HUD, &text);

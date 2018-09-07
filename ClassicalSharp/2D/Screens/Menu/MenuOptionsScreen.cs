@@ -103,7 +103,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected static string GetFPS(Game g) { return g.FpsLimit.ToString(); }
 		protected void SetFPS(Game g, string v) {
 			object raw = Enum.Parse(typeof(FpsLimitMethod), v);
-			g.SetFpsLimitMethod((FpsLimitMethod)raw);
+			g.SetFpsLimit((FpsLimitMethod)raw);
 			Options.Set(OptionsKey.FpsLimit, v);
 		}
 		

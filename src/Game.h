@@ -15,7 +15,6 @@ Int32 Game_Width, Game_Height;
 Real64 Game_Accumulator;
 Int32 Game_ChunkUpdates;
 bool Game_CameraClipping;
-bool Game_SkipClear;
 struct PickedPos Game_SelectedPos;
 struct PickedPos Game_CameraClipPos;
 GfxResourceID Game_DefaultIb;
@@ -32,6 +31,7 @@ Int32 Game_UserViewDistance;
 Int32 Game_Fov;
 Int32 Game_DefaultFov, Game_ZoomFov;
 
+Real32 game_limitMs;
 FpsLimit Game_FpsLimit;
 bool Game_ShowAxisLines;
 bool Game_SimpleArmsAnim;
@@ -88,7 +88,7 @@ bool Game_CanPick(BlockID block);
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, STRING_PURE String* file, UInt8* skinType);
 bool Game_ValidateBitmap(STRING_PURE String* file, struct Bitmap* bmp);
 Int32 Game_CalcRenderType(STRING_PURE String* type);
-void Game_SetFpsLimitMethod(FpsLimit method);
+void Game_SetFpsLimit(FpsLimit method);
 
 void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct DisplayDevice* device);
 #endif

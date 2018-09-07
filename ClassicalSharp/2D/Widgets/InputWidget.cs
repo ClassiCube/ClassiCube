@@ -285,8 +285,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		protected bool ControlDown() {
 			return OpenTK.Configuration.RunningOnMacOS ?
-				(game.IsKeyDown(Key.WinLeft) || game.IsKeyDown(Key.WinRight))
-				: (game.IsKeyDown(Key.ControlLeft) || game.IsKeyDown(Key.ControlRight));
+				game.Input.WinDown : game.Input.ControlDown;
 		}
 		
 		public override bool HandlesKeyPress(char key) {

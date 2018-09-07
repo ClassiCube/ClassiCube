@@ -1259,7 +1259,7 @@ void Platform_Free(void) {
 void Platform_SetWorkingDir(void) {
 	WCHAR dirName[FILENAME_SIZE + 1] = { 0 };
 	DWORD len = GetModuleFileNameW(NULL, dirName, FILENAME_SIZE);
-	if (len == 0) return;
+	if (!len) return;
 
 	/* get rid of filename at end of directory*/
 	for (; len > 0; len--) {

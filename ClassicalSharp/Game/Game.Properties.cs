@@ -66,8 +66,6 @@ namespace ClassicalSharp {
 		
 		public bool CameraClipping = true;
 		
-		public bool SkipClear = false;
-		
 		public IWorldLighting Lighting;
 		
 		public MapRenderer MapRenderer;

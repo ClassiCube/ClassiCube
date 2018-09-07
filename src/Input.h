@@ -134,7 +134,7 @@ StringsBuffer HotkeysText;
 
 void Hotkeys_Add(Key trigger, UInt8 flags, STRING_PURE String* text, bool more);
 bool Hotkeys_Remove(Key trigger, UInt8 flags);
-bool Hotkeys_IsHotkey(Key key, STRING_TRANSIENT String* text, bool* moreInput);
+Int32 Hotkeys_FindPartial(Key key);
 void Hotkeys_Init(void);
 void Hotkeys_UserRemovedHotkey(Key trigger, UInt8 flags);
 void Hotkeys_UserAddedHotkey(Key trigger, UInt8 flags, bool moreInput, STRING_PURE String* text);

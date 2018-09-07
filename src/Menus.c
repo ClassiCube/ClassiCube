@@ -1898,7 +1898,7 @@ static void MenuOptionsScreen_GetFPS(STRING_TRANSIENT String* raw) {
 }
 static void MenuOptionsScreen_SetFPS(STRING_PURE String* raw) {
 	UInt32 method = Utils_ParseEnum(raw, FpsLimit_VSync, FpsLimit_Names, Array_Elems(FpsLimit_Names));
-	Game_SetFpsLimitMethod(method);
+	Game_SetFpsLimit(method);
 
 	String value = String_FromReadonly(FpsLimit_Names[method]);
 	Options_Set(OPT_FPS_LIMIT, &value);

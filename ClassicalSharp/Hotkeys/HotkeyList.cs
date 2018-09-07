@@ -56,24 +56,18 @@ namespace ClassicalSharp.Hotkeys {
 		
 		/// <summary> Determines whether a hotkey is active based on the given key,
 		/// and the currently active control, alt, and shift modifiers </summary>
-		public static bool IsHotkey(Key key, InputHandler input, out string text, out bool moreInput) {
+		public static int FindPartial(Key key, InputHandler input) {
 			byte flags = 0;
 			if (input.ControlDown) flags |= 1;
-			if (input.ShiftDown) flags |= 2;
-			if (input.AltDown) flags |= 4;
+			if (input.ShiftDown)   flags |= 2;
+			if (input.AltDown)     flags |= 4;
 			
 			for (int i = 0; i < Hotkeys.Count; i++) {
 				Hotkey hKey = Hotkeys[i];
-				if ((hKey.Flags & flags) == hKey.Flags && hKey.Trigger == key) {
-					text = hKey.Text;
-					moreInput = hKey.StaysOpen;
-					return true;
-				}
-			}
-			
-			text = null;
-			moreInput = false;
-			return false;
+				// e.g. If holding Ctrl and Shift, a hotkey with only Ctrl flags matches
+				if ((hKey.Flags & flags) == hKey.Flags && hKey.Trigger == key) return i;
+			}			
+			return -1;
 		}
 		
 		const string prefix = "hotkey-";

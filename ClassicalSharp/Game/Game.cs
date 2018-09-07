@@ -163,9 +163,7 @@ namespace ClassicalSharp {
 			MapRenderer.GetChunk(cx, cy, cz).AllAir &= BlockInfo.Draw[block] == DrawType.Gas;
 			MapRenderer.RefreshChunk(cx, cy, cz);
 		}
-		
-		public bool IsKeyDown(Key key) { return Input.IsKeyDown(key); }
-		
+
 		public bool IsKeyDown(KeyBind binding) { return Input.IsKeyDown(binding); }
 		
 		public bool IsMousePressed(MouseButton button) { return Input.IsMousePressed(button); }
@@ -272,25 +270,23 @@ namespace ClassicalSharp {
 		}
 
 		Stopwatch frameTimer = new Stopwatch();
-		float limitMilliseconds;
-		public void SetFpsLimitMethod(FpsLimitMethod method) {
+		internal float limitMillis;
+		public void SetFpsLimit(FpsLimitMethod method) {
 			FpsLimit = method;
-			limitMilliseconds = 0;
+			limitMillis = 0;
 			Graphics.SetVSync(this, method == FpsLimitMethod.LimitVSync);
 			
 			if (method == FpsLimitMethod.Limit120FPS)
-				limitMilliseconds = 1000f / 120;
+				limitMillis = 1000f / 120;
 			if (method == FpsLimitMethod.Limit60FPS)
-				limitMilliseconds = 1000f / 60;
+				limitMillis = 1000f / 60;
 			if (method == FpsLimitMethod.Limit30FPS)
-				limitMilliseconds = 1000f / 30;
+				limitMillis = 1000f / 30;
 		}
 		
 		void LimitFPS() {
-			if (FpsLimit == FpsLimitMethod.LimitVSync) return;
-			
 			double elapsed = frameTimer.Elapsed.TotalMilliseconds;
-			double leftOver = limitMilliseconds - elapsed;
+			double leftOver = limitMillis - elapsed;
 			if (leftOver > 0.001) // going faster than limit
 				Thread.Sleep((int)Math.Round(leftOver, MidpointRounding.AwayFromZero));
 		}
@@ -318,7 +314,7 @@ namespace ClassicalSharp {
 			float t = (float)(entTask.Accumulator / entTask.Interval);
 			LocalPlayer.SetInterpPosition(t);
 			
-			if (!SkipClear) Graphics.Clear();
+			Graphics.Clear();
 			CurrentCameraPos = Camera.GetPosition(t);
 			UpdateViewMatrix();
 			
@@ -334,7 +330,7 @@ namespace ClassicalSharp {
 			if (screenshotRequested) TakeScreenshot();
 			
 			Graphics.EndFrame(this);
-			LimitFPS();
+			if (limitMillis != 0) LimitFPS();
 		}
 		
 		void UpdateViewMatrix() {

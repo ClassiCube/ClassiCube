@@ -180,7 +180,7 @@ namespace ClassicalSharp {
 			
 			ViewBobbing = Options.GetBool(OptionsKey.ViewBobbing, true);
 			FpsLimitMethod method = Options.GetEnum(OptionsKey.FpsLimit, FpsLimitMethod.LimitVSync);
-			SetFpsLimitMethod(method);
+			SetFpsLimit(method);
 			ViewDistance = Options.GetInt(OptionsKey.ViewDist, 16, 4096, 512);
 			UserViewDistance = ViewDistance;
 			SmoothLighting = Options.GetBool(OptionsKey.SmoothLighting, false);
