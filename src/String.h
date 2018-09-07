@@ -29,11 +29,12 @@ UInt16 String_CalcLen(STRING_PURE const char* raw, UInt16 capacity);
 String String_MakeNull(void);
 String String_Init(STRING_REF char* buffer, UInt16 length, UInt16 capacity);
 String String_InitAndClear(STRING_REF char* buffer, UInt16 capacity);
-#define String_ClearedArray(buffer) String_InitAndClear(buffer, (UInt16)sizeof(buffer))
 /* Constructs a new string from a (maybe null terminated) buffer. */
-String String_FromRaw(STRING_REF char* buffer, UInt16 capacity);
+NOINLINE_ String String_FromRaw(STRING_REF char* buffer, UInt16 capacity);
 /* Constructs a new string from a null-terminated constant readonly buffer. */
-String String_FromReadonly(STRING_REF const char* buffer);
+NOINLINE_ String String_FromReadonly(STRING_REF const char* buffer);
+
+#define String_ClearedArray(buffer) String_InitAndClear(buffer, (UInt16)sizeof(buffer))
 /* Constructs a new string from a compile time string constant. */
 #define String_FromConst(text) { text, (UInt16)(sizeof(text) - 1), (UInt16)(sizeof(text) - 1)}
 /* Constructs a new string from a compile time empty string buffer. */

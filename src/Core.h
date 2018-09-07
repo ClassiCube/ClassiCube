@@ -65,6 +65,7 @@ struct FontDesc { void* Handle; UInt16 Size, Style; };
 #define CC_BUILD_WIN true
 #define CC_BUILD_OSX false
 #define CC_BUILD_NIX false
+#define CC_BUILD_SOLARIS false
 
 #if CC_BUILD_D3D9
 typedef void* GfxResourceID;

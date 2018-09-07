@@ -748,7 +748,6 @@ void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct Displa
 #include "Builder.h"
 void AdvLightingBuilder_SetActive(void) { NormalBuilder_SetActive(); }
 #if CC_BUILD_NIX
-ReturnCode Platform_StartShell(STRING_PURE String* args) { return 0; }
 void Waitable_WaitFor(void* handle, UInt32 milliseconds) { }
 STRING_PURE String Platform_GetCommandLineArgs(void) { return String_MakeNull(); }
 

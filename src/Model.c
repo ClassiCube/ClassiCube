@@ -82,7 +82,7 @@ Real32 Model_RenderDistance(struct Entity* entity) {
 	pos.Y += AABB_Height(bb) * 0.5f; /* Centre Y coordinate. */
 	Vector3 camPos = Game_CurrentCameraPos;
 
-	Real32 dx = Model_MinDist(camPos.X - pos.X, AABB_Width(bb) * 0.5f);
+	Real32 dx = Model_MinDist(camPos.X - pos.X, AABB_Width(bb)  * 0.5f);
 	Real32 dy = Model_MinDist(camPos.Y - pos.Y, AABB_Height(bb) * 0.5f);
 	Real32 dz = Model_MinDist(camPos.Z - pos.Z, AABB_Length(bb) * 0.5f);
 	return dx * dx + dy * dy + dz * dz;

@@ -1,4 +1,5 @@
 #include "GraphicsAPI.h"
+#if !CC_BUILD_D3D9
 #include "ErrorHandler.h"
 #include "Platform.h"
 #include "Window.h"
@@ -6,18 +7,18 @@
 #include "Funcs.h"
 #include "Chat.h"
 #include "Game.h"
+
+#if CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
 #define NOIME
-#if CC_BUILD_WIN
 #include <windows.h>
 #else
 #define APIENETRY
 #endif
 #include <GL/gl.h>
 
-#if !CC_BUILD_D3D9
 /* Extensions from later than OpenGL 1.1 */
 #define GL_TEXTURE_MAX_LEVEL    0x813D
 #define GL_ARRAY_BUFFER         0x8892

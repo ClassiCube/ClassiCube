@@ -4,10 +4,13 @@
 #include "Input.h"
 #include "Event.h"
 #include "ErrorHandler.h"
+
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
 #define NOIME
+#define _WIN32_IE    0x0400
+#define WINVER       0x0500
 #define _WIN32_WINNT 0x0500
 #include <windows.h>
 

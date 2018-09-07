@@ -9,7 +9,6 @@
 const char* FpsLimit_Names[FpsLimit_Count] = {
 	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "LimitNone",
 };
-#define OPT_NOT_FOUND UInt32_MaxValue
 StringsBuffer Options_Changed;
 
 bool Options_HasAnyChanged(void) { return Options_Changed.Count > 0;  }
@@ -29,21 +28,21 @@ bool Options_HasChanged(STRING_PURE String* key) {
 	return false;
 }
 
-static UInt32 Options_Find(STRING_PURE String* key) {
+static Int32 Options_Find(STRING_PURE String* key) {
 	Int32 i;
 	for (i = 0; i < Options_Keys.Count; i++) {
 		String curKey = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
 		if (String_CaselessEquals(&curKey, key)) return i;
 	}
-	return OPT_NOT_FOUND;
+	return -1;
 }
 
 static bool Options_TryGetValue(const char* keyRaw, STRING_TRANSIENT String* value) {
 	String key = String_FromReadonly(keyRaw);
 	*value = String_MakeNull();
 
-	UInt32 i = Options_Find(&key);
-	if (i != OPT_NOT_FOUND) {
+	Int32 i = Options_Find(&key);
+	if (i >= 0) {
 		*value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
 		return true; 
 	}
@@ -53,7 +52,7 @@ static bool Options_TryGetValue(const char* keyRaw, STRING_TRANSIENT String* val
 	key = String_UNSAFE_SubstringAt(&key, sepIndex + 1);
 
 	i = Options_Find(&key);
-	if (i != OPT_NOT_FOUND) {
+	if (i >= 0) {
 		*value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
 		return true;
 	}
@@ -107,14 +106,14 @@ UInt32 Options_GetEnum(const char* key, UInt32 defValue, const char** names, UIn
 	return Utils_ParseEnum(&str, defValue, names, namesCount);
 }
 
-static void Options_Remove(UInt32 i) {
+static void Options_Remove(Int32 i) {
 	StringsBuffer_Remove(&Options_Keys, i);
 	StringsBuffer_Remove(&Options_Values, i);
 }
 
 static Int32 Options_Insert(STRING_PURE String* key, STRING_PURE String* value) {
-	UInt32 i = Options_Find(key);
-	if (i != OPT_NOT_FOUND) Options_Remove(i);
+	Int32 i = Options_Find(key);
+	if (i >= 0) Options_Remove(i);
 
 	StringsBuffer_Add(&Options_Keys, key);
 	StringsBuffer_Add(&Options_Values, value);
@@ -142,15 +141,15 @@ void Options_Set(const char* keyRaw, STRING_PURE String* value) {
 }
 
 void Options_SetString(STRING_PURE String* key, STRING_PURE String* value) {
-	UInt32 i;
+	Int32 i;
 	if (value == NULL || value->buffer == NULL) {
 		i = Options_Find(key);
-		if (i != OPT_NOT_FOUND) Options_Remove(i);
+		if (i >= 0) Options_Remove(i);
 	} else {
 		i = Options_Insert(key, value);
 	}
 
-	if (i == OPT_NOT_FOUND || Options_HasChanged(key)) return;
+	if (i == -1 || Options_HasChanged(key)) return;
 	StringsBuffer_Add(&Options_Changed, key);
 }
 
@@ -163,11 +162,11 @@ void Options_Load(void) {
 	if (res) { Chat_LogError(res, "opening", &path); return; }
 
 	/* Remove all the unchanged options */
-	UInt32 i;
-	for (i = Options_Keys.Count; i > 0; i--) {
-		String key = StringsBuffer_UNSAFE_Get(&Options_Keys, i - 1);
+	Int32 i;
+	for (i = Options_Keys.Count - 1; i >= 0; i--) {
+		String key = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
 		if (Options_HasChanged(&key)) continue;
-		Options_Remove(i - 1);
+		Options_Remove(i);
 	}
 
 	char lineBuffer[768];

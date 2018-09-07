@@ -72,11 +72,12 @@ namespace ClassicalSharp.Entities {
 		static void DrawSquareShadow(VertexP3fT2fC4b[] verts, ref int index,
 		                             float y, float x, float z) {
 			PackedCol col = new PackedCol(c, c, c, (byte)220);
-			TextureRec rec = new TextureRec(63/128f, 63/128f, 1/128f, 1/128f);
-			verts[index++] = new VertexP3fT2fC4b(x, y, z, rec.U1, rec.V1, col);
-			verts[index++] = new VertexP3fT2fC4b(x + 1, y, z, rec.U2, rec.V1, col);
-			verts[index++] = new VertexP3fT2fC4b(x + 1, y, z + 1, rec.U2, rec.V2, col);
-			verts[index++] = new VertexP3fT2fC4b(x, y, z + 1, rec.U1, rec.V2, col);
+			const float uv1 = 63/128f, uv2 = 64/128f;
+			
+			verts[index++] = new VertexP3fT2fC4b(x,     y, z,     uv1, uv1, col);
+			verts[index++] = new VertexP3fT2fC4b(x + 1, y, z,     uv2, uv1, col);
+			verts[index++] = new VertexP3fT2fC4b(x + 1, y, z + 1, uv2, uv2, col);
+			verts[index++] = new VertexP3fT2fC4b(x,     y, z + 1, uv1, uv2, col);
 		}
 		
 		static void DrawCircle(VertexP3fT2fC4b[] verts, ref int index,

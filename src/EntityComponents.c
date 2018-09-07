@@ -496,14 +496,14 @@ static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity
 
 static void ShadowComponent_DrawSquareShadow(VertexP3fT2fC4b** vertices, Real32 y, Real32 x, Real32 z) {
 	PackedCol col = PACKEDCOL_CONST(255, 255, 255, 220);
-	struct TextureRec rec = { 63.0f / 128.0f, 63.0f / 128.0f, 64.0f / 128.0f, 64.0f / 128.0f };
+	Real32    uv1 = 63/128.0f, uv2 = 64/128.0f;
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v; v.Y = y; v.Col = col;
 
-	v.X = x;        v.Z = z;        v.U = rec.U1; v.V = rec.V1; *ptr = v; ptr++;
-	v.X = x + 1.0f;                 v.U = rec.U2;               *ptr = v; ptr++;
-	                v.Z = z + 1.0f;               v.V = rec.V2; *ptr = v; ptr++;
-	v.X = x;                        v.U = rec.U1;               *ptr = v; ptr++;
+	v.X = x;        v.Z = z;        v.U = uv1; v.V = uv1; *ptr = v; ptr++;
+	v.X = x + 1.0f;                 v.U = uv2;            *ptr = v; ptr++;
+	                v.Z = z + 1.0f;            v.V = uv2; *ptr = v; ptr++;
+	v.X = x;                        v.U = uv1;            *ptr = v; ptr++;
 
 	*vertices = ptr;
 }

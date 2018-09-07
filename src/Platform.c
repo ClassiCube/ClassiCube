@@ -13,6 +13,8 @@
 #define NOSERVICE
 #define NOMCX
 #define NOIME
+#define _WIN32_IE    0x0400
+#define WINVER       0x0500
 #define _WIN32_WINNT 0x0500
 #include <windows.h>
 #include <winsock2.h>
@@ -53,6 +55,9 @@ ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <sys/stat.h>
 #include <X11/Xlib.h>
 #include <curl/curl.h>
+#if CC_BUILD_SOLARIS
+#include <sys/filio.h>
+#endif
 
 #define Socket__Error() errno
 #define Nix_Return(success) ((success) ? 0 : errno)
@@ -153,6 +158,11 @@ void Platform_Log4(const char* format, const void* a1, const void* a2, const voi
 	Platform_Log(&msg);
 }
 
+void Platform_LogConst(const char* message) {
+	String msg = String_FromReadonly(message);
+	Platform_Log(&msg);
+}
+
 /* TODO: check this is actually accurate */
 UInt64 sw_freqMul = 1, sw_freqDiv = 1;
 Int32 Stopwatch_ElapsedMicroseconds(UInt64* timer) {
@@ -169,12 +179,6 @@ Int32 Stopwatch_ElapsedMicroseconds(UInt64* timer) {
 void Platform_Log(STRING_PURE String* message) {
 	/* TODO: log to console */
 	OutputDebugStringA(message->buffer);
-	OutputDebugStringA("\n");
-}
-
-void Platform_LogConst(const char* message) {
-	/* TODO: log to console */
-	OutputDebugStringA(message);
 	OutputDebugStringA("\n");
 }
 
@@ -222,8 +226,9 @@ void Stopwatch_Measure(UInt64* timer) {
 	}
 }
 #elif CC_BUILD_NIX
-void Platform_Log(STRING_PURE String* message) { puts(message->buffer); }
-void Platform_LogConst(const char* message) { puts(message); }
+void Platform_Log(STRING_PURE String* message) { 
+	puts(message->buffer); 
+}
 
 #define UNIX_EPOCH 62135596800000ULL
 #define UnixTime_TotalMS(time) ((UInt64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
@@ -1354,4 +1359,15 @@ void Platform_SetWorkingDir(void) {
 }
 
 void Platform_Exit(ReturnCode code) { exit(code); }
+
+ReturnCode Platform_StartShell(STRING_PURE String* args) {
+	char pathBuffer[FILENAME_SIZE + 10];
+	String path = String_FromArray(pathBuffer);
+	String_Format1(&path, "xdg-open %s", args);
+	char str[300]; Platform_ConvertString(str, &path);
+
+	FILE* fp = popen(str, "r");
+	if (!fp) return errno;
+	return Nix_Return(pclose(fp));
+}
 #endif
