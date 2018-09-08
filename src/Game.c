@@ -750,15 +750,6 @@ void AdvLightingBuilder_SetActive(void) { NormalBuilder_SetActive(); }
 #if CC_BUILD_NIX
 void Waitable_WaitFor(void* handle, UInt32 milliseconds) { }
 
-void Audio_Init(AudioHandle* handle, Int32 buffers) { }
-void Audio_Free(AudioHandle handle) { }
-struct AudioFormat* Audio_GetFormat(AudioHandle handle) { return NULL; }
-void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) { }
-void Audio_BufferData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize) { }
-void Audio_Play(AudioHandle handle) { }
-bool Audio_IsCompleted(AudioHandle handle, Int32 idx) { return true; }
-bool Audio_IsFinished(AudioHandle handle) { return true; }
-
 void Font_Make(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) { desc->Size = size; desc->Style = style; }
 void Font_Free(struct FontDesc* desc) { }
 void Font_GetNames(StringsBuffer* buffer) { }

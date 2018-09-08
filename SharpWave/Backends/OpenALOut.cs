@@ -140,16 +140,14 @@ namespace SharpWave {
 		}
 		
 		static ALFormat GetALFormat(int channels, int bitsPerSample) {
-			ALFormat format;
-			switch (channels) {
-					case 1: format = ALFormat.Mono8; break;
-					case 2: format = ALFormat.Stereo8; break;
-					default: throw new NotSupportedException("Unsupported number of channels: " + channels);
+			if (bitsPerSample == 16) {
+				if (channels == 1) return ALFormat.Mono16;
+				if (channels == 2) return ALFormat.Stereo16;
+			} else if (bitsPerSample == 8) {
+				if (channels == 1) return ALFormat.Mono8;
+				if (channels == 2) return ALFormat.Stereo8;
 			}
-			
-			if (bitsPerSample == 8)  return format;
-			if (bitsPerSample == 16) return (ALFormat)(format + 1);
-			throw new NotSupportedException("Unsupported bits per sample: " + bitsPerSample);
+			throw new NotSupportedException("Unsupported audio format: " + bitsPerSample + ", " + channels);
 		}
 
 		
@@ -176,7 +174,7 @@ namespace SharpWave {
 
 		static void CheckContextErrors() {
 			AlcError err = AL.alcGetError(device);
-			if (err == AlcError.NoError) return;		
+			if (err == AlcError.NoError) return;
 			throw new AudioException("Error " + err + " when creating OpenAL context");
 		}
 		

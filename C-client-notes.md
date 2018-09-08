@@ -10,7 +10,7 @@ Cross compiling for windows:
 
 Compiling for linux: 
 
-```gcc *.c -o Classicube -lX11 -lpthread -lGL -lm -lcurl```
+```gcc *.c -o Classicube -lX11 -lpthread -lGL -lm -lcurl -lopenal```
 
 ### Platform
 Although the majority of the code is designed to be platform-independent, some per-platform functionality is required.
