@@ -32,7 +32,7 @@ void Platform_Init(void);
 void Platform_Free(void);
 void Platform_SetWorkingDir(void);
 void Platform_Exit(ReturnCode code);
-STRING_PURE String Platform_GetCommandLineArgs(void);
+Int32 Platform_GetCommandLineArgs(int argc, char** argv, STRING_TRANSIENT String* args);
 ReturnCode Platform_StartShell(STRING_PURE String* args);
 
 NOINLINE_ void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const char* place);

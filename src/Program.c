@@ -39,7 +39,7 @@ int main_imdct() {
 }
 #endif
 
-int main(void) {
+int main(int argc, char** argv) {
 	Platform_SetWorkingDir();
 	ErrorHandler_Init("client.log");
 	Platform_Init();
@@ -61,13 +61,13 @@ int main(void) {
 		Platform_Exit(1); return 1;
 	}
 
-	String title   = String_FromConst(PROGRAM_APP_NAME);
-	String rawArgs = Platform_GetCommandLineArgs();
-	/* NOTE: Make sure to comment this out before pushing a commit */
-	//rawArgs = String_FromReadonly("UnknownShadow200 fff 127.0.0.1 25565");
+	String args[PROGRAM_MAX_CMDARGS];
+	String title    = String_FromConst(PROGRAM_APP_NAME);
+	Int32 argsCount = Platform_GetCommandLineArgs(argc, argv, args);
 
-	String args[5]; Int32 argsCount = Array_Elems(args);
-	String_UNSAFE_Split(&rawArgs, ' ', args, &argsCount);
+	/* NOTE: Make sure to comment this out before pushing a commit */
+	// String rawArgs = String_FromConst("UnknownShadow200 fff 127.0.0.1 25565");
+	// argsCount = 4; String_UNSAFE_Split(&rawArgs, ' ', args, &argsCount);
 
 	if (argsCount == 1) {
 		String name = args[0];

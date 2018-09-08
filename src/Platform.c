@@ -1283,25 +1283,43 @@ ReturnCode Platform_StartShell(STRING_PURE String* args) {
 	return instance > 32 ? 0 : (ReturnCode)instance;
 }
 
-STRING_PURE String Platform_GetCommandLineArgs(void) {
-	String args = String_FromReadonly(GetCommandLineA());
+static String Platform_NextArg(STRING_REF String* args) {
+	/* get rid of leading spaces before arg */
+	while (args->length && args->buffer[0] == ' ') {
+		*args = String_UNSAFE_SubstringAt(args, 1);
+	}
 
-	Int32 argsStart;
-	if (args.buffer[0] == '"') {
-		/* Handle path argument in full "path" form, which can include spaces */
-		argsStart = String_IndexOf(&args, '"', 1) + 1;
+	Int32 end;
+	if (args->length && args->buffer[0] == '"') {
+		/* "xy za" is used for arg with spaces */
+		*args = String_UNSAFE_SubstringAt(args, 1);
+		end = String_IndexOf(args, '"', 0);
 	} else {
-		argsStart = String_IndexOf(&args, ' ', 0) + 1;
+		end = String_IndexOf(args, ' ', 0);
 	}
 
-	if (argsStart == 0) argsStart = args.length;
-	args = String_UNSAFE_SubstringAt(&args, argsStart);
-
-	/* get rid of duplicate leading spaces before first arg */
-	while (args.length && args.buffer[0] == ' ') {
-		args = String_UNSAFE_SubstringAt(&args, 1);
+	String arg;
+	if (end == -1) {
+		arg   = *args;
+		args->length = 0;
+	} else {
+		arg   = String_UNSAFE_Substring(args, 0, end);
+		*args = String_UNSAFE_SubstringAt(args, end + 1);
 	}
-	return args;
+	return arg;
+}
+
+Int32 Platform_GetCommandLineArgs(int argc, char** argv, STRING_TRANSIENT String* args) {
+	String cmdArgs = String_FromReadonly(GetCommandLineA());
+	Platform_NextArg(&cmdArgs); /* skip exe path */
+
+	Int32 count;
+	for (count = 0; count < PROGRAM_MAX_CMDARGS; count++) {
+		args[count] = Platform_NextArg(&cmdArgs);
+
+		if (!args[count].length) break;
+	}
+	return count;
 }
 #elif CC_BUILD_NIX
 void Platform_ConvertString(void* dstPtr, STRING_PURE String* src) {
@@ -1326,9 +1344,9 @@ static void Platform_InitDisplay(void) {
 
 	/* TODO: Use Xinerama and XRandR for querying these */
 	struct DisplayDevice device = { 0 };
-	device.Bounds.Width   = DisplayWidth(display, screen);
+	device.Bounds.Width   = DisplayWidth(display,  screen);
 	device.Bounds.Height  = DisplayHeight(display, screen);
-	device.BitsPerPixel   = DefaultDepth(display, screen);
+	device.BitsPerPixel   = DefaultDepth(display,  screen);
 	DisplayDevice_Default = device;
 
 	DisplayDevice_Meta[0] = display;
@@ -1369,5 +1387,15 @@ ReturnCode Platform_StartShell(STRING_PURE String* args) {
 	FILE* fp = popen(str, "r");
 	if (!fp) return errno;
 	return Nix_Return(pclose(fp));
+}
+
+Int32 Platform_GetCommandLineArgs(int argc, char** argv, STRING_TRANSIENT String* args) {
+	argc--; /* skip path argument*/
+	Int32 i, count = min(argc, PROGRAM_MAX_CMDARGS);
+
+	for (i = 0; i < count; i++) {
+		args[i] = String_FromReadonly(argv[i]);
+	}
+	return count;
 }
 #endif

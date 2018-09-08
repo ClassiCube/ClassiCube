@@ -42,7 +42,7 @@ Int32 Game_ComponentsCount;
 struct ScheduledTask Game_Tasks[6];
 Int32 Game_TasksCount, entTaskI;
 
-char Game_UsernameBuffer[STRING_SIZE];
+char Game_UsernameBuffer[FILENAME_SIZE];
 String Game_Username = String_FromArray(Game_UsernameBuffer);
 char Game_MppassBuffer[STRING_SIZE];
 String Game_Mppass = String_FromArray(Game_MppassBuffer);
