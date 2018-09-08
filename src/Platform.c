@@ -1394,7 +1394,7 @@ Int32 Platform_GetCommandLineArgs(int argc, char** argv, STRING_TRANSIENT String
 	Int32 i, count = min(argc, PROGRAM_MAX_CMDARGS);
 
 	for (i = 0; i < count; i++) {
-		args[i] = String_FromReadonly(argv[i]);
+		args[i] = String_FromReadonly(argv[i + 1]);
 	}
 	return count;
 }

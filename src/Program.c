@@ -69,10 +69,11 @@ int main(int argc, char** argv) {
 	// String rawArgs = String_FromConst("UnknownShadow200 fff 127.0.0.1 25565");
 	// argsCount = 4; String_UNSAFE_Split(&rawArgs, ' ', args, &argsCount);
 
-	if (argsCount == 1) {
-		String name = args[0];
-		if (!name.length) name = String_FromReadonly("Singleplayer");
+	if (argsCount == 0) {
+		String name = String_FromConst("Singleplayer");
 		String_Copy(&Game_Username, &name);
+	} else if (argsCount == 1) {
+		String_Copy(&Game_Username, &args[0]);
 	} else if (argsCount < 4) {
 		ErrorHandler_ShowDialog("Failed to start", "ClassiCube.exe is only the raw client.\n\n" \
 			"Use the launcher instead, or provide command line arguments");

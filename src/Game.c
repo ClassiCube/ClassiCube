@@ -749,7 +749,6 @@ void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct Displa
 void AdvLightingBuilder_SetActive(void) { NormalBuilder_SetActive(); }
 #if CC_BUILD_NIX
 void Waitable_WaitFor(void* handle, UInt32 milliseconds) { }
-STRING_PURE String Platform_GetCommandLineArgs(void) { return String_MakeNull(); }
 
 void Audio_Init(AudioHandle* handle, Int32 buffers) { }
 void Audio_Free(AudioHandle handle) { }
