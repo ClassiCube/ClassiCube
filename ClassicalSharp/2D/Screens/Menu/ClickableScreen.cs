@@ -60,14 +60,10 @@ namespace ClassicalSharp.Gui.Screens {
 			return -1;
 		}
 		
-		protected ButtonWidget MakeBack(bool toGame, Font font, ClickHandler onClick) {
+		protected ButtonWidget MakeBack(string text, Font font, ClickHandler onClick) {
 			int width = game.UseClassicOptions ? 400 : 200;
-			return MakeBack(width, toGame ? "Back to game" : "Cancel", 25, font, onClick);
-		}
-		
-		protected ButtonWidget MakeBack(int width, string text, int y, Font font, ClickHandler onClick) {
 			return ButtonWidget.Create(game, width, text, font, onClick)
-				.SetLocation(Anchor.Centre, Anchor.Max, 0, y);
+				.SetLocation(Anchor.Centre, Anchor.Max, 0, 25);
 		}
 		
 		protected static void SwitchOptions(Game g, Widget w) { g.Gui.SetNewScreen(new OptionsGroupScreen(g)); }

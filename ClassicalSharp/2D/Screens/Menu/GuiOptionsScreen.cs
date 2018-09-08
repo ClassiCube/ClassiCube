@@ -43,7 +43,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(1,    0, "Use system font",     onBool,  GetUseFont,   SetUseFont),
 				Make(   1,   50, "Select system font",  SwitchFont),
 				
-				MakeBack(false, titleFont, SwitchOptions),
+				MakeBack("Done", titleFont, SwitchOptions),
 				null, null, null,
 			};
 		}

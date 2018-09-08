@@ -25,7 +25,7 @@ namespace ClassicalSharp.Gui.Screens {
 				Make( 1,  -50, "Hacks settings...",    SwitchHacksOptions),
 				Make( 1,    0, "Env settings...",      SwitchEnvOptions),
 				Make( 1,   50, "Nostalgia options...", SwitchNostalgiaOptions),
-				MakeBack(false, titleFont, SwitchPause),
+				MakeBack("Done", titleFont, SwitchPause),
 				null, // description text widget placeholder
 			};
 			

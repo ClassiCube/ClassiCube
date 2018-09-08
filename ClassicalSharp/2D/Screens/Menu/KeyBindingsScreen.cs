@@ -29,9 +29,9 @@ namespace ClassicalSharp.Gui.Screens {
 			widgets[i++] = TextWidget.Create(game, title, titleFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -180);
 			if (game.UseClassicOptions) {
-				widgets[i++] = MakeBack(false, titleFont, SwitchClassicOptions);
+				widgets[i++] = MakeBack("Done", titleFont, SwitchClassicOptions);
 			} else {
-				widgets[i++] = MakeBack(false, titleFont, SwitchOptions);
+				widgets[i++] = MakeBack("Done", titleFont, SwitchOptions);
 			}
 			if (leftPage == null && rightPage == null) return i;
 			

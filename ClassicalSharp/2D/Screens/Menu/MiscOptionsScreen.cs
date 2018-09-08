@@ -40,7 +40,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(1, 0, "Invert mouse",                     onBool,  GetInvert,      SetInvert),
 				MakeOpt(1, 50, "Mouse sensitivity",               onClick, GetSensitivity, SetSensitivity),
 
-				MakeBack(false, titleFont, SwitchOptions),
+				MakeBack("Done", titleFont, SwitchOptions),
 				null, null, null,
 			};
 		}

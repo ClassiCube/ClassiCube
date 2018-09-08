@@ -54,7 +54,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(1, 0, "Rain/Snow speed", onClick, GetWeatherSpeed, SetWeatherSpeed),
 				MakeOpt(1, 50, "Water level",    onClick, GetEdgeHeight,   SetEdgeHeight),
 				
-				MakeBack(false, titleFont, SwitchOptions),
+				MakeBack("Done", titleFont, SwitchOptions),
 				null, null, null,
 			};
 		}

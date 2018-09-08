@@ -75,7 +75,7 @@ namespace ClassicalSharp.Gui.Screens {
 					.SetLocation(Anchor.Centre, Anchor.Centre, -150, 120),
 				TextWidget.Create(game, "&eCan be imported into MCEdit", textFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 110, 120),				
-				MakeBack(false, titleFont, SwitchPause),
+				MakeBack("Cancel", titleFont, SwitchPause),
 				input,
 				null, // description widget placeholder				
 			};

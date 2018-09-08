@@ -1128,7 +1128,7 @@ void Audio_Init(AudioHandle* handle, Int32 buffers) {
 
 void Audio_Free(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
-	if (!ctx->Handle) return;
+	if (!ctx->NumBuffers) return;
 
 	ReturnCode result = waveOutClose(ctx->Handle);
 	ErrorHandler_CheckOrFail(result, "Audio - closing device");
@@ -1142,10 +1142,9 @@ struct AudioFormat* Audio_GetFormat(AudioHandle handle) {
 
 void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
-	struct AudioFormat* cur = &ctx->Format;
-
-	/* only recreate handle if we need to */
+	struct AudioFormat*  cur = &ctx->Format;
 	if (AudioFormat_Eq(cur, format)) return;
+
 	if (ctx->Handle) {
 		ReturnCode result = waveOutClose(ctx->Handle);
 		ErrorHandler_CheckOrFail(result, "Audio - closing device");
@@ -1197,6 +1196,7 @@ bool Audio_IsCompleted(AudioHandle handle, Int32 idx) {
 bool Audio_IsFinished(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	Int32 i;
+
 	for (i = 0; i < ctx->NumBuffers; i++) {
 		if (!Audio_IsCompleted(handle, i)) return false;
 	}

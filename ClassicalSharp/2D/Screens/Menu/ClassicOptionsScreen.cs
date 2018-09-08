@@ -38,7 +38,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				ButtonWidget.Create(game, 400, "Controls...", titleFont, SwitchClassic)
 					.SetLocation(Anchor.Centre, Anchor.Max, 0, 95),
-				MakeBack(400, "Done", 25, titleFont, SwitchPause),
+				MakeBack("Done", titleFont, SwitchPause),
 			};
 		}
 		

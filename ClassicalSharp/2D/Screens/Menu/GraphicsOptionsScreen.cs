@@ -39,7 +39,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(1, 0, "Shadows",             onEnum,  GetShadows,  SetShadows),
 				MakeOpt(1, 50, "Mipmaps",            onBool,  GetMipmaps,  SetMipmaps),
 				
-				MakeBack(false, titleFont, SwitchOptions),
+				MakeBack("Done", titleFont, SwitchOptions),
 				null, null, null,
 			};
 		}

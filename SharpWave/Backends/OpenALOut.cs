@@ -91,9 +91,9 @@ namespace SharpWave {
 		
 		void CheckError(string location) {
 			ALError error = AL.alGetError();
-			if (error != ALError.NoError) {
-				throw new InvalidOperationException("OpenAL error: " + error + " at " + location);
-			}
+			if (error == ALError.NoError) return;
+			
+			throw new AudioException("OpenAL error: " + error + " at " + location);
 		}
 
 		public override void Dispose() {
@@ -175,19 +175,9 @@ namespace SharpWave {
 		}
 
 		static void CheckContextErrors() {
-			const string format = "Device {0} reported {1}.";
 			AlcError err = AL.alcGetError(device);
-			
-			switch (err) {
-				case AlcError.OutOfMemory:
-					throw new OutOfMemoryException(String.Format(format, device, err));
-				case AlcError.InvalidValue:
-					throw new AudioException(String.Format(format, device, err));
-				case AlcError.InvalidDevice:
-					throw new AudioException(String.Format(format, device, err));
-				case AlcError.InvalidContext:
-					throw new AudioException(String.Format(format, device, err));
-			}
+			if (err == AlcError.NoError) return;		
+			throw new AudioException("Error " + err + " when creating OpenAL context");
 		}
 		
 		static void DestroyContext() {

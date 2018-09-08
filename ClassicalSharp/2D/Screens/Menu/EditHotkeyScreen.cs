@@ -75,7 +75,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				Make(0, 80, existed ? "Save changes" : "Add hotkey", SaveChangesClick),
 				Make(0, 130, existed ? "Remove hotkey" : "Cancel", RemoveHotkeyClick),
-				MakeBack(false, titleFont, SwitchPause),
+				MakeBack("Cancel", titleFont, SwitchPause),
 			};
 		}
 		

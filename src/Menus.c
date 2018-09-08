@@ -186,13 +186,9 @@ static void Menu_Input(void* s, Int32 i, struct MenuInputWidget* input, Int32 wi
 	input->Base.ShowCaret = true;
 }
 
-static void Menu_Back(void* s, Int32 i, struct ButtonWidget* btn, Int32 width, String* text, Int32 y, struct FontDesc* font, Widget_LeftClick onClick) {
-	Menu_Button(s, i, btn, width, text, font, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, y);
-}
-
-static void Menu_DefaultBack(void* s, Int32 i, struct ButtonWidget* btn, bool toGame, struct FontDesc* font, Widget_LeftClick onClick) {
+static void Menu_Back(void* s, Int32 i, struct ButtonWidget* btn, const char* label, struct FontDesc* font, Widget_LeftClick onClick) {
 	Int32 width = Game_UseClassicOptions ? 400 : 200;
-	String msg = String_FromReadonly(toGame ? "Back to game" : "Cancel");
+	String msg = String_FromReadonly(label);
 	Menu_Button(s, i, btn, width, &msg, font, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
 }
 
@@ -441,7 +437,7 @@ static void ListScreen_ContextRecreated(void* screen) {
 	String rArrow = String_FromConst(">");
 	ListScreen_Make(s, 6,  220, &rArrow, ListScreen_MoveForwards);
 
-	Menu_DefaultBack(s, 7, &s->Buttons[7], false, &s->Font, Menu_SwitchPause);
+	Menu_Back(s, 7, &s->Buttons[7], "Done", &s->Font, Menu_SwitchPause);
 
 	Menu_Label(s, 8, &s->Title, &s->TitleText, &s->Font,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -155);
@@ -625,8 +621,7 @@ static void PauseScreen_ContextRecreated(void* screen) {
 		PauseScreen_MakeClassic(s, 3,   50, "Save level...",         Menu_SwitchSaveLevel);
 		PauseScreen_MakeClassic(s, 4,  150, "Nostalgia options...",  Menu_SwitchNostalgia);
 
-		String back = String_FromConst("Back to game");
-		Menu_Back(s, 5, &s->Buttons[5], 400, &back, 25, font, PauseScreen_Game);	
+		Menu_Back(s, 5, &s->Buttons[5], "Back to game", font, PauseScreen_Game);
 
 		/* Disable nostalgia options in classic mode */
 		if (Game_ClassicMode) Menu_Remove(s, 4);
@@ -644,7 +639,7 @@ static void PauseScreen_ContextRecreated(void* screen) {
 		Menu_Button(s, 6, &s->Buttons[6], 120, &quitMsg, font, PauseScreen_Quit,
 			ANCHOR_MAX, ANCHOR_MAX, 5, 5);
 
-		Menu_DefaultBack(s, 7, &s->Buttons[7], true, font, PauseScreen_Game);
+		Menu_Back(s, 7, &s->Buttons[7], "Back to game", font, PauseScreen_Game);
 	}
 
 	if (!ServerConnection_IsSinglePlayer) {
@@ -726,7 +721,7 @@ static void OptionsGroupScreen_ContextRecreated(void* screen) {
 	OptionsGroupScreen_Make(s, 5,  1,    0, "Env settings...",      Menu_SwitchEnv);
 	OptionsGroupScreen_Make(s, 6,  1,   50, "Nostalgia options...", Menu_SwitchNostalgia);
 
-	Menu_DefaultBack(s, 7, &s->Buttons[7], false, &s->TitleFont, Menu_SwitchPause);	
+	Menu_Back(s, 7, &s->Buttons[7], "Done", &s->TitleFont, Menu_SwitchPause);	
 	s->Widgets[8] = NULL; /* Description text widget placeholder */
 
 	if (s->SelectedI >= 0) { OptionsGroupScreen_MakeDesc(s); }
@@ -957,7 +952,7 @@ static void EditHotkeyScreen_ContextRecreated(void* screen) {
 	String remText = String_FromReadonly(existed ? "Remove hotkey" : "Cancel");
 	EditHotkeyScreen_Make(s, 4, 0, 130, &remText, EditHotkeyScreen_RemoveHotkey);
 
-	Menu_DefaultBack(s, 5, &s->Buttons[5], false, &s->TitleFont, Menu_SwitchHotkeys);
+	Menu_Back(s, 5, &s->Buttons[5], "Cancel", &s->TitleFont, Menu_SwitchHotkeys);
 
 	Menu_Input(s, 6, &s->Input, 500, &text, &s->TextFont, &v,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -35);
@@ -1125,7 +1120,7 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 	Menu_Button(s, 10, &s->Buttons[1], 200, &vanilla, &s->TitleFont, GenLevelScreen_Notchy,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 120, 100);
 
-	Menu_DefaultBack(s, 11, &s->Buttons[2], false, &s->TitleFont, Menu_SwitchPause);
+	Menu_Back(s, 11, &s->Buttons[2], "Cancel", &s->TitleFont, Menu_SwitchPause);
 }
 
 struct ScreenVTABLE GenLevelScreen_VTABLE = {
@@ -1174,7 +1169,7 @@ static void ClassicGenScreen_ContextRecreated(void* screen) {
 	ClassicGenScreen_Make(s, 1,  -50, "Normal", ClassicGenScreen_Medium);
 	ClassicGenScreen_Make(s, 2,    0, "Huge",   ClassicGenScreen_Huge);
 
-	Menu_DefaultBack(s, 3, &s->Buttons[3], false, &s->TitleFont, Menu_SwitchPause);
+	Menu_Back(s, 3, &s->Buttons[3], "Cancel", &s->TitleFont, Menu_SwitchPause);
 }
 
 struct ScreenVTABLE ClassicGenScreen_VTABLE = {
@@ -1346,7 +1341,7 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 	Menu_Label(s, 2, &s->MCEdit, &mcEdit, &s->TextFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 110, 120);
 
-	Menu_DefaultBack(s, 3, &s->Buttons[2], false, &s->TitleFont, Menu_SwitchPause);
+	Menu_Back(s, 3, &s->Buttons[2], "Cancel", &s->TitleFont, Menu_SwitchPause);
 
 	struct MenuInputValidator validator = MenuInputValidator_Path();
 	String empty = String_MakeNull();
@@ -1673,7 +1668,7 @@ static Int32 KeyBindingsScreen_MakeWidgets(struct KeyBindingsScreen* s, Int32 y,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -180); i++;
 
 	Widget_LeftClick backClick = Game_UseClassicOptions ? Menu_SwitchClassicOptions : Menu_SwitchOptions;
-	Menu_DefaultBack(s, i, &s->Back, false, &s->TitleFont, backClick); i++;
+	Menu_Back(s, i, &s->Back, "Done", &s->TitleFont, backClick); i++;
 	if (!s->LeftPage && !s->RightPage) return i;
 
 	String lArrow = String_FromConst("<");
@@ -2260,8 +2255,7 @@ static void ClassicOptionsScreen_ContextRecreated(void* screen) {
 	Menu_Button(s, 9, &s->Buttons[9], 400, &controls, &s->TitleFont, Menu_SwitchKeysClassic,
 		ANCHOR_CENTRE, ANCHOR_MAX, 0, 95);
 
-	String done = String_FromConst("Done");
-	Menu_Back(s, 10, &s->Buttons[10], 400, &done, 25, &s->TitleFont, Menu_SwitchPause);
+	Menu_Back(s, 10, &s->Buttons[10], "Done", &s->TitleFont, Menu_SwitchPause);
 
 	/* Disable certain options */
 	if (!ServerConnection_IsSinglePlayer) Menu_Remove(s, 3);
@@ -2343,7 +2337,7 @@ static void EnvSettingsScreen_ContextRecreated(void* screen) {
 	MenuOptionsScreen_Make(s, 9, 1, 50, "Water level",       MenuOptionsScreen_Input,
 		EnvSettingsScreen_GetEdgeHeight,   EnvSettingsScreen_SetEdgeHeight);
 
-	Menu_DefaultBack(s, 10, &s->Buttons[10], false, &s->TitleFont, Menu_SwitchOptions);
+	Menu_Back(s, 10, &s->Buttons[10], "Done", &s->TitleFont, Menu_SwitchOptions);
 	widgets[11] = NULL; widgets[12] = NULL; widgets[13] = NULL;
 }
 
@@ -2445,7 +2439,7 @@ static void GraphicsOptionsScreen_ContextRecreated(void* screen) {
 	MenuOptionsScreen_Make(s, 5, 1,  50, "Mipmaps", MenuOptionsScreen_Bool,
 		GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps);
 
-	Menu_DefaultBack(s, 6, &s->Buttons[6], false, &s->TitleFont, Menu_SwitchOptions);
+	Menu_Back(s, 6, &s->Buttons[6], "Done", &s->TitleFont, Menu_SwitchOptions);
 	widgets[7] = NULL; widgets[8] = NULL; widgets[9] = NULL;
 }
 
@@ -2556,7 +2550,7 @@ static void GuiOptionsScreen_ContextRecreated(void* screen) {
 		GuiOptionsScreen_GetUseFont,   GuiOptionsScreen_SetUseFont);
 	MenuOptionsScreen_MakeSimple(s, 9, 1,  50, "Select system font", Menu_SwitchFont);
 
-	Menu_DefaultBack(s, 10, &s->Buttons[10], false, &s->TitleFont, Menu_SwitchOptions);
+	Menu_Back(s, 10, &s->Buttons[10], "Done", &s->TitleFont, Menu_SwitchOptions);
 	widgets[11] = NULL; widgets[12] = NULL; widgets[13] = NULL;
 }
 
@@ -2699,7 +2693,7 @@ static void HacksSettingsScreen_ContextRecreated(void* screen) {
 	MenuOptionsScreen_Make(s, 9, 1,   50, "Field of view",       MenuOptionsScreen_Input,
 		HacksSettingsScreen_GetFOV,      HacksSettingsScreen_SetFOV);
 
-	Menu_DefaultBack(s, 10, &s->Buttons[10], false, &s->TitleFont, Menu_SwitchOptions);
+	Menu_Back(s, 10, &s->Buttons[10], "Done", &s->TitleFont, Menu_SwitchOptions);
 	widgets[11] = NULL; widgets[12] = NULL; widgets[13] = NULL;
 }
 
@@ -2799,7 +2793,7 @@ static void MiscOptionsScreen_ContextRecreated(void* screen) {
 	MenuOptionsScreen_Make(s, 7, 1,   50, "Mouse sensitivity",   MenuOptionsScreen_Input,
 		MiscOptionsScreen_GetSensitivity, MiscOptionsScreen_SetSensitivity);
 
-	Menu_DefaultBack(s, 8, &s->Buttons[8], false, &s->TitleFont, Menu_SwitchOptions);
+	Menu_Back(s, 8, &s->Buttons[8], "Done", &s->TitleFont, Menu_SwitchOptions);
 	widgets[9] = NULL; widgets[10] = NULL; widgets[11] = NULL;
 
 	/* Disable certain options */
@@ -2884,7 +2878,7 @@ static void NostalgiaScreen_ContextRecreated(void* screen) {
 		NostalgiaScreen_GetTexs,   NostalgiaScreen_SetTexs);
 
 
-	Menu_DefaultBack(s, 8, &s->Buttons[8], false, &s->TitleFont, NostalgiaScreen_SwitchBack);
+	Menu_Back(s, 8, &s->Buttons[8], "Done", &s->TitleFont, NostalgiaScreen_SwitchBack);
 
 	String descText = String_FromConst("&eButtons on the right require restarting game");
 	Menu_Label(s, 9, &desc, &descText, &s->TextFont,

@@ -44,7 +44,7 @@ namespace ClassicalSharp.Gui.Screens {
 				// Other
 				ButtonWidget.Create(game, 120, "Quit game", titleFont, QuitGame)
 					.SetLocation(Anchor.Max, Anchor.Max, 5, 5),
-				MakeBack(true, titleFont, SwitchGame),
+				MakeBack("Back to game", titleFont, SwitchGame),
 			};
 		}
 		
@@ -56,7 +56,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeClassic(  50, "Save level...",         SwitchSaveLevel),
 				
 				game.ClassicMode ? null : MakeClassic(150, "Nostalgia options...", SwitchNostalgiaOptions),				
-				MakeBack(400, "Back to game", 25, titleFont, SwitchGame),
+				MakeBack("Back to game", titleFont, SwitchGame),
 			};
 		}
 		

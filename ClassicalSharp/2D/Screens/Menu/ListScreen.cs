@@ -50,7 +50,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				Make(-220, "<", MoveBackwards),
 				Make(220,  ">", MoveForwards),
-				MakeBack(false, font, SwitchPause),
+				MakeBack("Done", font, SwitchPause),
 				TextWidget.Create(game, titleText, font)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -155),
 				TextWidget.Create(game, "", font)

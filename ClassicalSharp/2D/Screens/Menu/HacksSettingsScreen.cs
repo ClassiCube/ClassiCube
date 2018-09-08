@@ -61,7 +61,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(1, 0, "Noclip slide",           onBool,  GetSlide,    SetSlide),
 				MakeOpt(1, 50, "Field of view",         onClick, GetFOV,      SetFOV),
 								
-				MakeBack(false, titleFont, SwitchOptions),
+				MakeBack("Done", titleFont, SwitchOptions),
 				null, null, null,
 			};
 			CheckHacksAllowed();

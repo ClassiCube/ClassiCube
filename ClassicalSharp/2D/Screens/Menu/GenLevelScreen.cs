@@ -50,7 +50,7 @@ namespace ClassicalSharp.Gui.Screens {
 					.SetLocation(Anchor.Centre, Anchor.Centre, -120, 100),
 				ButtonWidget.Create(game, 200, "Vanilla", titleFont, GenNotchyClick)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 120, 100),
-				MakeBack(false, titleFont, SwitchPause),
+				MakeBack("Cancel", titleFont, SwitchPause),
 			};
 		}
 		
@@ -140,7 +140,7 @@ namespace ClassicalSharp.Gui.Screens {
 				Make(-100, "Small",  GenSmallClick),
 				Make( -50, "Normal", GenMediumClick),
 				Make(   0, "Huge",   GenHugeClick),
-				MakeBack(false, titleFont, SwitchPause),
+				MakeBack("Cancel", titleFont, SwitchPause),
 			};
 		}
 		
