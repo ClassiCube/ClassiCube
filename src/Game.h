@@ -89,6 +89,7 @@ bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, STRING_PURE St
 bool Game_ValidateBitmap(STRING_PURE String* file, struct Bitmap* bmp);
 Int32 Game_CalcRenderType(STRING_PURE String* type);
 void Game_SetFpsLimit(FpsLimit method);
+Real32 Game_CalcLimitMillis(FpsLimit method);
 
 void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct DisplayDevice* device);
 #endif

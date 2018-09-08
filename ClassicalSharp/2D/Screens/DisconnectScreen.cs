@@ -29,9 +29,8 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Init() {
-			game.Graphics.SetVSync(game, false);
-			game.limitMillis = 1000 / 5f;
-			
+			// NOTE: changing VSync can't be done within frame, causes crash on some GPUs
+			game.limitMillis = 1000 / 5f;			
 			Events.ContextLost      += ContextLost;
 			Events.ContextRecreated += ContextRecreated;
 			
@@ -54,8 +53,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Dispose() {
-			game.SetFpsLimit(game.FpsLimit);
-			
+			game.limitMillis = game.CalcLimitMillis(game.FpsLimit);
 			Events.ContextLost      -= ContextLost;
 			Events.ContextRecreated -= ContextRecreated;
 			

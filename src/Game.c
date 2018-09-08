@@ -525,12 +525,15 @@ void Game_Load(void) {
 UInt64 game_frameTimer;
 void Game_SetFpsLimit(FpsLimit method) {
 	Game_FpsLimit = method;
-	game_limitMs = 0.0f;
+	game_limitMs  = Game_CalcLimitMillis(method);
 	Gfx_SetVSync(method == FpsLimit_VSync);
+}
 
-	if (method == FpsLimit_120FPS) game_limitMs = 1000.0f / 120.0f;
-	if (method == FpsLimit_60FPS)  game_limitMs = 1000.0f / 60.0f;
-	if (method == FpsLimit_30FPS)  game_limitMs = 1000.0f / 30.0f;
+Real32 Game_CalcLimitMillis(FpsLimit method) {
+	if (method == FpsLimit_120FPS) return 1000/120.0f;
+	if (method == FpsLimit_60FPS)  return 1000/60.0f;
+	if (method == FpsLimit_30FPS)  return 1000/30.0f;
+	return 0;
 }
 
 static void Game_LimitFPS(void) {

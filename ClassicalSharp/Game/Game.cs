@@ -272,16 +272,16 @@ namespace ClassicalSharp {
 		Stopwatch frameTimer = new Stopwatch();
 		internal float limitMillis;
 		public void SetFpsLimit(FpsLimitMethod method) {
-			FpsLimit = method;
-			limitMillis = 0;
-			Graphics.SetVSync(this, method == FpsLimitMethod.LimitVSync);
-			
-			if (method == FpsLimitMethod.Limit120FPS)
-				limitMillis = 1000f / 120;
-			if (method == FpsLimitMethod.Limit60FPS)
-				limitMillis = 1000f / 60;
-			if (method == FpsLimitMethod.Limit30FPS)
-				limitMillis = 1000f / 30;
+			FpsLimit    = method;
+			limitMillis = CalcLimitMillis(method);
+			Graphics.SetVSync(this, method == FpsLimitMethod.LimitVSync);			
+		}
+		
+		internal float CalcLimitMillis(FpsLimitMethod method) {
+			if (method == FpsLimitMethod.Limit120FPS) return 1000f / 120;
+			if (method == FpsLimitMethod.Limit60FPS)  return 1000f / 60;
+			if (method == FpsLimitMethod.Limit30FPS)  return 1000f / 30;
+			return 0;
 		}
 		
 		void LimitFPS() {

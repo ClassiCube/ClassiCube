@@ -1421,7 +1421,7 @@ static void DisconnectScreen_Init(void* screen) {
 	Font_Make(&s->MessageFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	Screen_CommonInit(s);
 
-	Gfx_SetVSync(false);
+	/* NOTE: changing VSync can't be done within frame, causes crash on some GPUs */
 	game_limitMs = 1000 / 5.0f;
 
 	s->InitTime     = DateTime_CurrentUTC_MS();
@@ -1450,7 +1450,7 @@ static void DisconnectScreen_Free(void* screen) {
 	Font_Free(&s->MessageFont);
 	Screen_CommonFree(s);
 
-	Game_SetFpsLimit(Game_FpsLimit);
+	game_limitMs = Game_CalcLimitMillis(Game_FpsLimit);
 }
 
 static void DisconnectScreen_OnResize(void* screen) {
