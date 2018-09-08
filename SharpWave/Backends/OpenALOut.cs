@@ -19,11 +19,8 @@ namespace SharpWave {
 			this.volume = volume;
 			if (source == uint.MaxValue) return;
 			
-			lock (contextLock) {
-				MakeContextCurrent();
-				AL.alSourcef(source, ALSourcef.Gain, volume);
-				CheckError("SetVolume");
-			}
+			AL.alSourcef(source, ALSourcef.Gain, volume);
+			CheckError("SetVolume");
 		}
 		
 		public override void Create(int numBuffers) {
@@ -38,27 +35,23 @@ namespace SharpWave {
 			lock (contextLock) {
 				if (context == IntPtr.Zero) CreateContext();
 				contextRefs++;
-
-				MakeContextCurrent();
-				AL.alDistanceModel(ALDistanceModel.None);
-				CheckError("DistanceModel");
 			}
+			
+			AL.alDistanceModel(ALDistanceModel.None);
+			CheckError("DistanceModel");
 			Console.WriteLine("al context:" + context);
 		}
 		
 		public override bool IsCompleted(int index) {
 			int processed = 0;
 			uint buffer = 0;
-			lock (contextLock) {
-				MakeContextCurrent();
-				
-				AL.alGetSourcei(source, ALGetSourcei.BuffersProcessed, &processed);
-				CheckError("GetSources");
-				if (processed == 0) return completed[index];
-				
-				AL.alSourceUnqueueBuffers(source, 1, &buffer);
-				CheckError("SourceUnqueueBuffers");
-			}
+
+			AL.alGetSourcei(source, ALGetSourcei.BuffersProcessed, &processed);
+			CheckError("GetSources");
+			if (processed == 0) return completed[index];
+			
+			AL.alSourceUnqueueBuffers(source, 1, &buffer);
+			CheckError("SourceUnqueueBuffers");
 			
 			for (int i = 0; i < NumBuffers; i++) {
 				if (bufferIDs[i] == buffer) completed[i] = true;
@@ -73,36 +66,27 @@ namespace SharpWave {
 			}
 			
 			int state = 0;
-			lock (contextLock) {
-				MakeContextCurrent();
-				AL.alGetSourcei(source, ALGetSourcei.SourceState, &state);
-				return state != (int)ALSourceState.Playing;
-			}
+			AL.alGetSourcei(source, ALGetSourcei.SourceState, &state);
+			return state != (int)ALSourceState.Playing;
 		}
 		
 		public override void BufferData(int index, AudioChunk chunk) {
 			fixed (byte* data = chunk.Data) {
 				uint buffer = bufferIDs[index];
 				completed[index] = false;
+
+				AL.alBufferData(buffer, dataFormat, (IntPtr)data,
+				                chunk.Length, Format.SampleRate);
+				CheckError("BufferData");
 				
-				lock (contextLock) {
-					MakeContextCurrent();
-					AL.alBufferData(buffer, dataFormat, (IntPtr)data,
-					                chunk.Length, Format.SampleRate);
-					CheckError("BufferData");
-					
-					AL.alSourceQueueBuffers(source, 1, &buffer);
-					CheckError("QueueBuffers");
-				}
+				AL.alSourceQueueBuffers(source, 1, &buffer);
+				CheckError("QueueBuffers");
 			}
 		}
 		
 		public override void Play() {
-			lock (contextLock) {
-				MakeContextCurrent();
-				AL.alSourcePlay(source);
-				CheckError("SourcePlay");
-			}
+			AL.alSourcePlay(source);
+			CheckError("SourcePlay");
 		}
 		
 		void CheckError(string location) {
@@ -124,16 +108,13 @@ namespace SharpWave {
 			if (source == uint.MaxValue) return;
 			uint sourceU = source;
 			
+			AL.alDeleteSources(1, &sourceU);
+			source = uint.MaxValue;
+			CheckError("DeleteSources");
+			
 			fixed (uint* buffers = bufferIDs) {
-				lock (contextLock) {
-					MakeContextCurrent();
-					AL.alDeleteSources(1, &sourceU);
-					source = uint.MaxValue;
-					CheckError("DeleteSources");
-
-					AL.alDeleteBuffers(NumBuffers, buffers);
-					CheckError("DeleteBuffers");
-				}
+				AL.alDeleteBuffers(NumBuffers, buffers);
+				CheckError("DeleteBuffers");
 			}
 		}
 		
@@ -147,15 +128,12 @@ namespace SharpWave {
 			uint sourceU = 0;
 			
 			fixed (uint* buffers = bufferIDs) {
-				lock (contextLock) {
-					MakeContextCurrent();
-					AL.alGenSources(1, &sourceU);
-					source = sourceU;
-					CheckError("GenSources");
-					
-					AL.alGenBuffers(NumBuffers, buffers);
-					CheckError("GenBuffers");
-				}
+				AL.alGenSources(1, &sourceU);
+				source = sourceU;
+				CheckError("GenSources");
+				
+				AL.alGenBuffers(NumBuffers, buffers);
+				CheckError("GenBuffers");
 			}
 			
 			if (volume != 1) SetVolume(volume);
@@ -192,7 +170,7 @@ namespace SharpWave {
 			}
 			CheckContextErrors();
 
-			MakeContextCurrent();
+			AL.alcMakeContextCurrent(context);
 			CheckContextErrors();
 		}
 
@@ -210,10 +188,6 @@ namespace SharpWave {
 				case AlcError.InvalidContext:
 					throw new AudioException(String.Format(format, device, err));
 			}
-		}
-		
-		static void MakeContextCurrent() {
-			AL.alcMakeContextCurrent(context);
 		}
 		
 		static void DestroyContext() {

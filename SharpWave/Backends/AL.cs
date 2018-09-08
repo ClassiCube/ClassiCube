@@ -50,7 +50,7 @@ namespace OpenTK.Audio.OpenAL {
 		[DllImport(lib, CallingConvention = style)]
 		public static extern IntPtr alcCreateContext(IntPtr device, int* attrlist);
 		[DllImport(lib, CallingConvention = style)]
-		public static extern bool alcMakeContextCurrent(IntPtr context);		
+		public static extern bool alcMakeContextCurrent(IntPtr context);
 		[DllImport(lib, CallingConvention = style)]
 		public static extern void alcDestroyContext(IntPtr context);
 
