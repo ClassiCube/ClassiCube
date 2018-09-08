@@ -748,8 +748,6 @@ void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct Displa
 #include "Builder.h"
 void AdvLightingBuilder_SetActive(void) { NormalBuilder_SetActive(); }
 #if CC_BUILD_NIX
-void Waitable_WaitFor(void* handle, UInt32 milliseconds) { }
-
 void Font_Make(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) { desc->Size = size; desc->Style = style; }
 void Font_Free(struct FontDesc* desc) { }
 void Font_GetNames(StringsBuffer* buffer) { }

@@ -228,8 +228,9 @@ void Stopwatch_Measure(UInt64* timer) {
 	}
 }
 #elif CC_BUILD_NIX
-void Platform_Log(STRING_PURE String* message) { 
-	puts(message->buffer); 
+void Platform_Log(STRING_PURE String* message) {
+	write(STDOUT_FILENO, message->buffer, message->length);
+	write(STDOUT_FILENO, "\n",            1);
 }
 
 #define UNIX_EPOCH 62135596800000ULL
@@ -634,6 +635,21 @@ void Waitable_Signal(void* handle) {
 void Waitable_Wait(void* handle) {
 	int result = pthread_cond_wait((pthread_cond_t*)handle, &event_mutex);
 	ErrorHandler_CheckOrFail(result, "Waiting event");
+}
+
+void Waitable_WaitFor(void* handle, UInt32 milliseconds) {
+	struct timeval tv;
+	struct timespec ts;
+	gettimeofday(&tv, NULL);
+
+	ts.tv_sec = tv.tv_sec + milliseconds / 1000;
+	ts.tv_nsec = 1000 * (tv.tv_usec + 1000 * (milliseconds % 1000));
+	ts.tv_sec += ts.tv_nsec / NS_PER_SEC;
+	ts.tv_nsec %= NS_PER_SEC;
+
+	int result = pthread_cond_timedwait((pthread_cond_t*)handle, &event_mutex, &ts);
+	if (result == ETIMEDOUT) return;
+	ErrorHandler_CheckOrFail(result, "Waiting timed event");
 }
 #endif
 
