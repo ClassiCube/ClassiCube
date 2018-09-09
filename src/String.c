@@ -363,8 +363,8 @@ bool String_CaselessContains(STRING_PURE String* str, STRING_PURE String* sub) {
 	for (i = 0; i < str->length; i++) {
 		for (j = 0; j < sub->length && (i + j) < str->length; j++) {
 
-			char strCur = str->buffer[i]; Char_MakeLower(strCur);
-			char subCur = sub->buffer[i]; Char_MakeLower(subCur);
+			char strCur = str->buffer[i + j]; Char_MakeLower(strCur);
+			char subCur = sub->buffer[j];     Char_MakeLower(subCur);
 			if (strCur != subCur) break;
 		}
 		if (j == sub->length) return true;
