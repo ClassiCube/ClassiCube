@@ -61,7 +61,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			if ((major > 1) || (major == 1 && minor >= 5)) {
 				// Supported in core since 1.5
-			} else if (extensions.Contains("GL_ARB_vertex_buffer_object")) {
+			} else if (Utils.CaselessContains(extensions, "GL_ARB_vertex_buffer_object")) {
 				Utils.LogDebug("Using ARB vertex buffer objects");
 				GL.UseArbVboAddresses();
 			} else {
@@ -537,11 +537,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			glContext.VSync = value;
 		}
 		
-		bool isIntelRenderer;
+		bool isIntelRenderer, nvMem;
 		internal override void MakeApiInfo() {
 			string vendor = new String((sbyte*)GL.GetString(StringName.Vendor));
 			string renderer = new String((sbyte*)GL.GetString(StringName.Renderer));
 			string version = new String((sbyte*)GL.GetString(StringName.Version));
+			string extensions = new String((sbyte*)GL.GetString(StringName.Extensions));
+			
 			int depthBits = 0;
 			GL.GetIntegerv(GetPName.DepthBits, &depthBits);
 			
@@ -550,12 +552,26 @@ namespace ClassicalSharp.GraphicsAPI {
 				"Vendor: " + vendor,
 				"Renderer: " + renderer,
 				"GL version: " + version,
+				null,
 				"Max texture size: (" + MaxTexWidth + ", " + MaxTexHeight + ")",
 				"Depth buffer bits: " + depthBits,
 			};
+			
 			isIntelRenderer = renderer.Contains("Intel");
-		}	
-		internal override void UpdateApiInfo() { }
+			nvMem = Utils.CaselessContains(extensions, "GL_NVX_gpu_memory_info");
+			UpdateApiInfo();
+		}
+		
+		internal override void UpdateApiInfo() {
+			if (!nvMem) return;
+			int totalKb = 0, curKb = 0;
+			GL.GetIntegerv((GetPName)0x9048, &totalKb);
+			GL.GetIntegerv((GetPName)0x9049, &curKb);
+			
+			if (totalKb <= 0 || curKb <= 0) return;
+			float total = totalKb / 1024f, cur = curKb / 1024f;
+			ApiInfo[4] = "Video memory: " + total + " MB total, " + cur + " now";
+		}
 		
 		public override bool WarnIfNecessary(Chat chat) {
 			#if GL11

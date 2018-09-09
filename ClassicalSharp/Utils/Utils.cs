@@ -85,10 +85,11 @@ namespace ClassicalSharp {
 		#endif
 		
 		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
-		public static bool CaselessEq(string a, string b)     { return a.Equals(b, comp); }
-		public static bool CaselessEquals(string a, string b) { return a.Equals(b, comp); }
-		public static bool CaselessStarts(string a, string b) { return a.StartsWith(b, comp); }
-		public static bool CaselessEnds(string a, string b)   { return a.EndsWith(b, comp); }
+		public static bool CaselessEq(string a, string b)       { return a.Equals(b, comp); }
+		public static bool CaselessEquals(string a, string b)   { return a.Equals(b, comp); }
+		public static bool CaselessStarts(string a, string b)   { return a.StartsWith(b, comp); }
+		public static bool CaselessEnds(string a, string b)     { return a.EndsWith(b, comp); }
+		public static bool CaselessContains(string a, string b) { return a.IndexOf(b, comp) >= 0; }
 		
 		public static void EnsureDirectory(string path) {
 			if (Platform.DirectoryExists(path)) return;

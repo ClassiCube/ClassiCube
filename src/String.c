@@ -348,19 +348,28 @@ void String_UNSAFE_TrimEnd(STRING_TRANSIENT String* str) {
 
 Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub) {
 	Int32 i, j;
-	/* Special case, sub is an empty string*/
-	if (!sub->length) return 0;
-
-	char subFirst = sub->buffer[0];
 	for (i = 0; i < str->length; i++) {
-		if (str->buffer[i] != subFirst) continue;
-		
-		for (j = 1; j < sub->length; j++) {
+		for (j = 0; j < sub->length && (i + j) < str->length; j++) {
+
 			if (str->buffer[i + j] != sub->buffer[j]) break;
 		}
 		if (j == sub->length) return i;
 	}
 	return -1;
+}
+
+bool String_CaselessContains(STRING_PURE String* str, STRING_PURE String* sub) {
+	Int32 i, j;
+	for (i = 0; i < str->length; i++) {
+		for (j = 0; j < sub->length && (i + j) < str->length; j++) {
+
+			char strCur = str->buffer[i]; Char_MakeLower(strCur);
+			char subCur = sub->buffer[i]; Char_MakeLower(subCur);
+			if (strCur != subCur) break;
+		}
+		if (j == sub->length) return true;
+	}
+	return false;
 }
 
 bool String_CaselessStarts(STRING_PURE String* str, STRING_PURE String* sub) {

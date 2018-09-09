@@ -138,7 +138,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			for (int i = 0; i < EntityList.MaxCount; i++) {
 				if (entries[i] == null) continue;
 				string name = entries[i].PlayerName;
-				if (Utils.CaselessStarts(name, part)) matches.Add(name);
+				if (Utils.CaselessContains(name, part)) matches.Add(name);
 			}
 			
 			if (matches.Count == 1) {

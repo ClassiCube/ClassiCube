@@ -25,7 +25,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Additional text that should be logged to the log file
 		/// when an unhandled exception occurs. </summary>
-		public static string[] AdditionalInfo;
+		public static string[] ExtraInfo;
 		
 		static string Format(Exception ex) {
 			try {
@@ -66,9 +66,10 @@ namespace ClassicalSharp {
 						ex2 = ex2.InnerException;
 					}
 					
-					if (AdditionalInfo != null) {
-						for (int i = 0; i < AdditionalInfo.Length; i++)
-							w.WriteLine(AdditionalInfo[i]);
+					if (ExtraInfo != null) {
+						for (int i = 0; i < ExtraInfo.Length; i++) {
+							if (ExtraInfo[i] != null) w.WriteLine(ExtraInfo[i]);
+						}
 						w.WriteLine();
 					}
 				}

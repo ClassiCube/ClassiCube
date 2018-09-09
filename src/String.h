@@ -75,6 +75,7 @@ NOINLINE_ void String_UNSAFE_TrimEnd(STRING_TRANSIENT String* str);
 
 NOINLINE_ Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub);
 #define String_ContainsString(str, sub) (String_IndexOfString(str, sub) >= 0)
+NOINLINE_ bool String_CaselessContains(STRING_PURE String* str, STRING_PURE String* sub);
 NOINLINE_ bool String_CaselessStarts(STRING_PURE String* str, STRING_PURE String* sub);
 NOINLINE_ bool String_CaselessEnds(STRING_PURE String* str, STRING_PURE String* sub);
 NOINLINE_ Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b);

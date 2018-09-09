@@ -551,7 +551,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				"-- Using Direct3D9 --",
 				"Adapter: " + adapter,
 				"Processing mode: " + createFlags,
-				"",
+				null,
 				"Max texture size: (" + MaxTexWidth + ", " + MaxTexHeight + ")",
 				"Depth buffer format: " + depthFormat,
 				"Back buffer format: " + viewFormat,

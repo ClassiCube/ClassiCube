@@ -34,7 +34,7 @@ namespace ClassicalSharp {
 			Graphics = new Direct3D9Api(window);
 			#endif
 			Graphics.MakeApiInfo();
-			ErrorHandler.AdditionalInfo = Graphics.ApiInfo;
+			ErrorHandler.ExtraInfo = Graphics.ApiInfo;
 			
 			#if ANDROID
 			Drawer2D = new CanvasDrawer2D(Graphics);

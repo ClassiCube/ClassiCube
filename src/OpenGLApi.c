@@ -61,8 +61,8 @@ Int32 gl_batchStride, gl_batchFormat = -1;
 #if !CC_BUILD_GL11
 static void GL_CheckVboSupport(void) {
 	String extensions = String_FromReadonly(glGetString(GL_EXTENSIONS));
-	String version = String_FromReadonly(glGetString(GL_VERSION));
-	String vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
+	String version    = String_FromReadonly(glGetString(GL_VERSION));
+	String vboExt     = String_FromConst("GL_ARB_vertex_buffer_object");
 
 	Int32 major = (Int32)(version.buffer[0] - '0'); /* x.y. (and so forth) */
 	Int32 minor = (Int32)(version.buffer[2] - '0');
@@ -75,7 +75,7 @@ static void GL_CheckVboSupport(void) {
 		glBufferData    = (FUNC_GLBUFFERDATA)GLContext_GetAddress("glBufferData");
 		glBufferSubData = (FUNC_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubData");
 		return;
-	} else if (String_ContainsString(&extensions, &vboExt)) {
+	} else if (String_CaselessContains(&extensions, &vboExt)) {
 		glBindBuffer    = (FUNC_GLBINDBUFFER)GLContext_GetAddress("glBindBufferARB");
 		glDeleteBuffers = (FUNC_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffersARB");
 		glGenBuffers    = (FUNC_GLGENBUFFERS)GLContext_GetAddress("glGenBuffersARB");
@@ -542,18 +542,35 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) 
 	return res;
 }
 
+bool nv_mem;
 void Gfx_MakeApiInfo(void) {
 	Int32 depthBits = 0;
 	glGetIntegerv(GL_DEPTH_BITS, &depthBits);
 
 	String_AppendConst(&Gfx_ApiInfo[0],"-- Using OpenGL --");
-	String_Format1(&Gfx_ApiInfo[1],    "Vendor: %c", glGetString(GL_VENDOR));
-	String_Format1(&Gfx_ApiInfo[2],    "Renderer: %c", glGetString(GL_RENDERER));
-	String_Format1(&Gfx_ApiInfo[3],    "GL version: %c", glGetString(GL_VERSION));
-	String_Format2(&Gfx_ApiInfo[4],    "Max texture size: (%i, %i)", &Gfx_MaxTexWidth, &Gfx_MaxTexHeight);
-	String_Format1(&Gfx_ApiInfo[5],    "Depth buffer bits: %i", &depthBits);
+	String_Format1(&Gfx_ApiInfo[1], "Vendor: %c", glGetString(GL_VENDOR));
+	String_Format1(&Gfx_ApiInfo[2], "Renderer: %c", glGetString(GL_RENDERER));
+	String_Format1(&Gfx_ApiInfo[3], "GL version: %c", glGetString(GL_VERSION));
+	/* Memory usage goes here */
+	String_Format2(&Gfx_ApiInfo[5], "Max texture size: (%i, %i)", &Gfx_MaxTexWidth, &Gfx_MaxTexHeight);
+	String_Format1(&Gfx_ApiInfo[6], "Depth buffer bits: %i", &depthBits);
+
+	String extensions = String_FromReadonly(glGetString(GL_EXTENSIONS));
+	String memExt     = String_FromConst("GL_NVX_gpu_memory_info");
+	nv_mem = String_CaselessContains(&extensions, &memExt);
 }
-void Gfx_UpdateApiInfo(void) { }
+
+void Gfx_UpdateApiInfo(void) {
+	if (!nv_mem) return;
+	Int32 totalKb = 0, curKb = 0;
+	glGetIntegerv(0x9048, &totalKb);
+	glGetIntegerv(0x9049, &curKb);
+
+	if (totalKb <= 0 || curKb <= 0) return;
+	Gfx_ApiInfo[4].length = 0;
+	Real32 total = totalKb / 1024.0f, cur = curKb / 1024.0f;
+	String_Format2(&Gfx_ApiInfo[4], "Video memory: %f2 MB total, %f2 now", &total, &cur);
+}
 
 bool Gfx_WarnIfNecessary(void) {
 #if CC_BUILD_GL11

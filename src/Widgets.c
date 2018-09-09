@@ -1710,7 +1710,7 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 		if (!TabList_Valid(id)) continue;
 
 		String name = TabList_UNSAFE_GetPlayer(i);
-		if (!String_CaselessStarts(&name, &part)) continue;
+		if (!String_CaselessContains(&name, &part)) continue;
 		matches[matchesCount++] = id;
 	}
 
