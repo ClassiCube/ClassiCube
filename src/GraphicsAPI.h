@@ -105,4 +105,5 @@ void Gfx_EndFrame(void);
 void Gfx_SetVSync(bool value);
 void Gfx_OnWindowResize(void);
 void Gfx_MakeApiInfo(void);
+void Gfx_UpdateApiInfo(void);
 #endif

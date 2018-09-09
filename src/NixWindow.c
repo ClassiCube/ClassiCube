@@ -217,8 +217,8 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF Strin
 	char str[600]; Platform_ConvertString(str, title);
 	XStoreName(win_display, win_handle, str);
 
-	XSizeHints hints = { 0 };
-	hints.base_width = width;
+	XSizeHints hints  = { 0 };
+	hints.base_width  = width;
 	hints.base_height = height;
 	hints.flags = PSize | PPosition;
 	XSetWMNormalHints(win_display, win_handle, &hints);

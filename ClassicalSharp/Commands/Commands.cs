@@ -48,6 +48,7 @@ namespace ClassicalSharp.Commands {
 		}
 		
 		public override void Execute(string[] args) {
+			game.Graphics.UpdateApiInfo();
 			string[] lines = game.Graphics.ApiInfo;
 			for (int i = 0; i < lines.Length; i++) {
 				game.Chat.Add("&a" + lines[i]);

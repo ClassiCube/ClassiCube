@@ -553,6 +553,7 @@ void Gfx_MakeApiInfo(void) {
 	String_Format2(&Gfx_ApiInfo[4],    "Max texture size: (%i, %i)", &Gfx_MaxTexWidth, &Gfx_MaxTexHeight);
 	String_Format1(&Gfx_ApiInfo[5],    "Depth buffer bits: %i", &depthBits);
 }
+void Gfx_UpdateApiInfo(void) { }
 
 bool Gfx_WarnIfNecessary(void) {
 #if CC_BUILD_GL11

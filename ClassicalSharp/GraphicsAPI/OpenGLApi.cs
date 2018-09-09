@@ -554,7 +554,8 @@ namespace ClassicalSharp.GraphicsAPI {
 				"Depth buffer bits: " + depthBits,
 			};
 			isIntelRenderer = renderer.Contains("Intel");
-		}
+		}	
+		internal override void UpdateApiInfo() { }
 		
 		public override bool WarnIfNecessary(Chat chat) {
 			#if GL11

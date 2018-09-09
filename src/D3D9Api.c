@@ -650,19 +650,25 @@ const char* D3D9_StrFormat(D3DFORMAT format) {
 	return "(unknown)";
 }
 
+Real32 d3d9_totalMem;
 void Gfx_MakeApiInfo(void) {
 	D3DADAPTER_IDENTIFIER9 adapter = { 0 };
 	IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter);
-	UInt32 texMemBytes = IDirect3DDevice9_GetAvailableTextureMem(device);
-	Real32 texMem = texMemBytes / (1024.0f * 1024.0f);
+	d3d9_totalMem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
 
 	String_AppendConst(&Gfx_ApiInfo[0],"-- Using Direct3D9 --");
-	String_Format1(&Gfx_ApiInfo[1],    "Adapter: %c", adapter.Description);
-	String_Format1(&Gfx_ApiInfo[2],    "Processing mode: %c", D3D9_StrFlags());
-	String_Format1(&Gfx_ApiInfo[3],    "Texture memory: %f2 MB", &texMem);
-	String_Format2(&Gfx_ApiInfo[4],    "Max texture size: (%i, %i)", &Gfx_MaxTexWidth, &Gfx_MaxTexHeight);
-	String_Format1(&Gfx_ApiInfo[5],    "Depth buffer format: %c", D3D9_StrFormat(d3d9_depthFormat));
-	String_Format1(&Gfx_ApiInfo[6],    "Back buffer format: %c", D3D9_StrFormat(d3d9_viewFormat));
+	String_Format1(&Gfx_ApiInfo[1], "Adapter: %c",         adapter.Description);
+	String_Format1(&Gfx_ApiInfo[2], "Processing mode: %c", D3D9_StrFlags());
+	Gfx_UpdateApiInfo();
+	String_Format2(&Gfx_ApiInfo[4], "Max texture size: (%i, %i)", &Gfx_MaxTexWidth, &Gfx_MaxTexHeight);
+	String_Format1(&Gfx_ApiInfo[5], "Depth buffer format: %c",    D3D9_StrFormat(d3d9_depthFormat));
+	String_Format1(&Gfx_ApiInfo[6], "Back buffer format: %c",     D3D9_StrFormat(d3d9_viewFormat));
+}
+
+void Gfx_UpdateApiInfo(void) {
+	Real32 mem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
+	Gfx_ApiInfo[3].length = 0;
+	String_Format2(&Gfx_ApiInfo[3], "Video memory: %f2 MB total, %f2 now", &d3d9_totalMem, &mem);
 }
 
 void Gfx_OnWindowResize(void) {

@@ -118,6 +118,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract void OnWindowResize(Game game);
 		
 		internal abstract void MakeApiInfo();
+		internal abstract void UpdateApiInfo();
 		public string[] ApiInfo;
 		
 		public abstract void CalcOrthoMatrix(float width, float height, out Matrix4 matrix);

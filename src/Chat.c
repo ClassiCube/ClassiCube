@@ -9,6 +9,7 @@
 #include "Inventory.h"
 #include "Entity.h"
 #include "Window.h"
+#include "GraphicsAPI.h"
 #include "GraphicsCommon.h"
 #include "Funcs.h"
 #include "Block.h"
@@ -332,6 +333,7 @@ static void HelpCommand_Make(struct ChatCommand* cmd) {
 *------------------------------------------------------GpuInfo command----------------------------------------------------*
 *#########################################################################################################################*/
 static void GpuInfoCommand_Execute(STRING_PURE String* args, Int32 argsCount) {
+	Gfx_UpdateApiInfo();
 	Int32 i;
 	for (i = 0; i < Array_Elems(Gfx_ApiInfo); i++) {
 		if (!Gfx_ApiInfo[i].length) continue;

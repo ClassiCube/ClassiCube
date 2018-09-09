@@ -49,7 +49,7 @@ namespace ClassicalSharp.GraphicsAPI {
 					device = Direct3D.CreateDevice(d3d, adapter, DeviceType.Hardware, winHandle, createFlags, args);
 				}
 			}
-						
+			
 			Capabilities caps = Device.GetCapabilities(device);
 			MaxTexWidth  = caps.MaxTextureWidth;
 			MaxTexHeight = caps.MaxTextureHeight;
@@ -241,7 +241,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		PackedCol lastClearCol;
 		public override void Clear() {
-			Device.Clear(device, ClearFlags.Target | ClearFlags.ZBuffer, 
+			Device.Clear(device, ClearFlags.Target | ClearFlags.ZBuffer,
 			             (int)lastClearCol.Packed, 1f, 0);
 		}
 
@@ -536,22 +536,32 @@ namespace ClassicalSharp.GraphicsAPI {
 			Delete(ref device);
 			Delete(ref d3d);
 		}
+		
+		float VideoMemoryMB {
+			get { return Device.GetAvailableTextureMemory(device) / 1024f / 1024f; }
+		}
 
+		float totalMem;
 		internal override void MakeApiInfo() {
-			AdapterDetails details = Direct3D.GetAdapterIdentifier(d3d, 0);
+			AdapterDetails details = Direct3D.GetAdapterIdentifier(d3d, 0);		
 			string adapter = details.Description;
-			uint memRaw = Device.GetAvailableTextureMemory(device);
-			float texMem = Device.GetAvailableTextureMemory(device) / 1024f / 1024f;
-			
+			totalMem = VideoMemoryMB;
+
 			ApiInfo = new string[] {
 				"-- Using Direct3D9 --",
 				"Adapter: " + adapter,
 				"Processing mode: " + createFlags,
-				"Texture memory: " + texMem + " MB",
+				"",
 				"Max texture size: (" + MaxTexWidth + ", " + MaxTexHeight + ")",
 				"Depth buffer format: " + depthFormat,
 				"Back buffer format: " + viewFormat,
 			};
+			UpdateApiInfo();
+		}
+		
+		internal override void UpdateApiInfo() {
+			float mem = VideoMemoryMB;
+			ApiInfo[3] = "Video memory: " + totalMem + " MB total, " + mem + " now";
 		}
 
 		public override void TakeScreenshot(Stream output, int width, int height) {
