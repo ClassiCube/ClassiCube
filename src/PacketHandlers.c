@@ -460,7 +460,7 @@ static void Classic_LevelDataChunk(UInt8* data) {
 }
 
 static void Classic_LevelFinalise(UInt8* data) {
-	Gui_ReplaceActive(NULL);
+	Gui_CloseActive();
 	Gui_Active = prevScreen;
 	prevScreen = NULL;
 	Gui_CalcCursorVisible();

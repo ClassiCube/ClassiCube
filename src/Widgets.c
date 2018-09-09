@@ -1767,10 +1767,10 @@ void ChatInputWidget_Create(struct ChatInputWidget* w, struct FontDesc* font) {
 	w->Base.RemakeTexture  = ChatInputWidget_RemakeTexture;
 	w->Base.OnPressedEnter = ChatInputWidget_OnPressedEnter;
 
-	String inputStr   = String_FromArray(w->__TextBuffer);
-	w->Base.Text = inputStr;
-	String origStr    = String_FromArray(w->__OrigBuffer);
-	w->OrigStr   = origStr;
+	String inputStr = String_FromArray(w->__TextBuffer);
+	w->Base.Text    = inputStr;
+	String origStr  = String_FromArray(w->__OrigBuffer);
+	w->OrigStr      = origStr;
 }	
 
 

@@ -183,12 +183,12 @@ static bool InventoryScreen_KeyDown(void* screen, Key key) {
 	struct TableWidget* table = &s->Table;
 
 	if (key == KeyBind_Get(KeyBind_PauseOrExit)) {
-		Gui_ReplaceActive(NULL);
+		Gui_CloseActive();
 	} else if (key == KeyBind_Get(KeyBind_Inventory) && s->ReleasedInv) {
-		Gui_ReplaceActive(NULL);
+		Gui_CloseActive();
 	} else if (key == Key_Enter && table->SelectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->Elements[table->SelectedIndex]);
-		Gui_ReplaceActive(NULL);
+		Gui_CloseActive();
 	} else if (Elem_HandlesKeyDown(table, key)) {
 	} else {
 		struct HUDScreen* hud = (struct HUDScreen*)Gui_HUD;
@@ -216,7 +216,7 @@ static bool InventoryScreen_MouseDown(void* screen, Int32 x, Int32 y, MouseButto
 	bool handled = Elem_HandlesMouseDown(table, x, y, btn);
 	if ((!handled || table->PendingClose) && btn == MouseButton_Left) {
 		bool hotbar = Key_IsControlPressed() || Key_IsShiftPressed();
-		if (!hotbar) Gui_ReplaceActive(NULL);
+		if (!hotbar) Gui_CloseActive();
 	}
 	return true;
 }
@@ -621,7 +621,7 @@ static void GeneratingScreen_Init(void* screen) {
 }
 
 static void GeneratingScreen_EndGeneration(void) {
-	Gui_ReplaceActive(NULL);
+	Gui_CloseActive();
 	Gen_Done = false;
 
 	if (!Gen_Blocks) {
@@ -1475,7 +1475,8 @@ static bool DisconnectScreen_MouseDown(void* screen, Int32 x, Int32 y, MouseButt
 		String message = String_MakeNull();
 		String_Format2(&title, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
 
-		Gui_ReplaceActive(LoadingScreen_MakeInstance(&title, &message));
+		Gui_FreeActive();
+		Gui_SetActive(LoadingScreen_MakeInstance(&title, &message));
 		ServerConnection_BeginConnect();
 	}
 	return true;

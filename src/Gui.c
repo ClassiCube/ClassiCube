@@ -110,7 +110,7 @@ static void Gui_Reset(void) {
 
 static void Gui_Free(void) {
 	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
-	Gui_ReplaceActive(NULL);
+	Gui_CloseActive();
 	Elem_TryFree(Gui_Status);
 
 	if (Gui_Active) { Elem_TryFree(Gui_Active); }
@@ -134,12 +134,12 @@ struct Screen* Gui_GetUnderlyingScreen(void) {
 	return Gui_Active == NULL ? Gui_HUD : Gui_Active;
 }
 
-void Gui_ReplaceActive(struct Screen* screen) { 
-	Gui_FreeActive();
-	Gui_SetActive(screen);
-}
 void Gui_FreeActive(void) {
 	if (Gui_Active) { Elem_TryFree(Gui_Active); }
+}
+void Gui_CloseActive(void) {
+	Gui_FreeActive(); 
+	Gui_SetActive(NULL);
 }
 
 void Gui_SetActive(struct Screen* screen) {

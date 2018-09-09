@@ -323,32 +323,33 @@ static void Menu_HandleFontChange(struct Screen* s) {
 static Int32 Menu_Int32(STRING_PURE String* v)      { Int32 value; Convert_TryParseInt32(v, &value); return value; }
 static Real32 Menu_Real32(STRING_PURE String* v)    { Real32 value; Convert_TryParseReal32(v, &value); return value; }
 static PackedCol Menu_HexCol(STRING_PURE String* v) { PackedCol value; PackedCol_TryParseHex(v, &value); return value; }
+#define Menu_ReplaceActive(screen) Gui_FreeActive(); Gui_SetActive(screen);
 
-static void Menu_SwitchOptions(void* a, void* b)        { Gui_ReplaceActive(OptionsGroupScreen_MakeInstance()); }
-static void Menu_SwitchPause(void* a, void* b)          { Gui_ReplaceActive(PauseScreen_MakeInstance()); }
-static void Menu_SwitchClassicOptions(void* a, void* b) { Gui_ReplaceActive(ClassicOptionsScreen_MakeInstance()); }
+static void Menu_SwitchOptions(void* a, void* b)        { Menu_ReplaceActive(OptionsGroupScreen_MakeInstance()); }
+static void Menu_SwitchPause(void* a, void* b)          { Menu_ReplaceActive(PauseScreen_MakeInstance()); }
+static void Menu_SwitchClassicOptions(void* a, void* b) { Menu_ReplaceActive(ClassicOptionsScreen_MakeInstance()); }
 
-static void Menu_SwitchKeysClassic(void* a, void* b)      { Gui_ReplaceActive(ClassicKeyBindingsScreen_MakeInstance()); }
-static void Menu_SwitchKeysClassicHacks(void* a, void* b) { Gui_ReplaceActive(ClassicHacksKeyBindingsScreen_MakeInstance()); }
-static void Menu_SwitchKeysNormal(void* a, void* b)       { Gui_ReplaceActive(NormalKeyBindingsScreen_MakeInstance()); }
-static void Menu_SwitchKeysHacks(void* a, void* b)        { Gui_ReplaceActive(HacksKeyBindingsScreen_MakeInstance()); }
-static void Menu_SwitchKeysOther(void* a, void* b)        { Gui_ReplaceActive(OtherKeyBindingsScreen_MakeInstance()); }
-static void Menu_SwitchKeysMouse(void* a, void* b)        { Gui_ReplaceActive(MouseKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysClassic(void* a, void* b)      { Menu_ReplaceActive(ClassicKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysClassicHacks(void* a, void* b) { Menu_ReplaceActive(ClassicHacksKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysNormal(void* a, void* b)       { Menu_ReplaceActive(NormalKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysHacks(void* a, void* b)        { Menu_ReplaceActive(HacksKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysOther(void* a, void* b)        { Menu_ReplaceActive(OtherKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysMouse(void* a, void* b)        { Menu_ReplaceActive(MouseKeyBindingsScreen_MakeInstance()); }
 
-static void Menu_SwitchMisc(void* a, void* b)      { Gui_ReplaceActive(MiscOptionsScreen_MakeInstance()); }
-static void Menu_SwitchGui(void* a, void* b)       { Gui_ReplaceActive(GuiOptionsScreen_MakeInstance()); }
-static void Menu_SwitchGfx(void* a, void* b)       { Gui_ReplaceActive(GraphicsOptionsScreen_MakeInstance()); }
-static void Menu_SwitchHacks(void* a, void* b)     { Gui_ReplaceActive(HacksSettingsScreen_MakeInstance()); }
-static void Menu_SwitchEnv(void* a, void* b)       { Gui_ReplaceActive(EnvSettingsScreen_MakeInstance()); }
-static void Menu_SwitchNostalgia(void* a, void* b) { Gui_ReplaceActive(NostalgiaScreen_MakeInstance()); }
+static void Menu_SwitchMisc(void* a, void* b)      { Menu_ReplaceActive(MiscOptionsScreen_MakeInstance()); }
+static void Menu_SwitchGui(void* a, void* b)       { Menu_ReplaceActive(GuiOptionsScreen_MakeInstance()); }
+static void Menu_SwitchGfx(void* a, void* b)       { Menu_ReplaceActive(GraphicsOptionsScreen_MakeInstance()); }
+static void Menu_SwitchHacks(void* a, void* b)     { Menu_ReplaceActive(HacksSettingsScreen_MakeInstance()); }
+static void Menu_SwitchEnv(void* a, void* b)       { Menu_ReplaceActive(EnvSettingsScreen_MakeInstance()); }
+static void Menu_SwitchNostalgia(void* a, void* b) { Menu_ReplaceActive(NostalgiaScreen_MakeInstance()); }
 
-static void Menu_SwitchGenLevel(void* a, void* b)        { Gui_ReplaceActive(GenLevelScreen_MakeInstance()); }
-static void Menu_SwitchClassicGenLevel(void* a, void* b) { Gui_ReplaceActive(ClassicGenScreen_MakeInstance()); }
-static void Menu_SwitchLoadLevel(void* a, void* b)       { Gui_ReplaceActive(LoadLevelScreen_MakeInstance()); }
-static void Menu_SwitchSaveLevel(void* a, void* b)       { Gui_ReplaceActive(SaveLevelScreen_MakeInstance()); }
-static void Menu_SwitchTexPacks(void* a, void* b)        { Gui_ReplaceActive(TexturePackScreen_MakeInstance()); }
-static void Menu_SwitchHotkeys(void* a, void* b)         { Gui_ReplaceActive(HotkeyListScreen_MakeInstance()); }
-static void Menu_SwitchFont(void* a, void* b)            { Gui_ReplaceActive(FontListScreen_MakeInstance()); }
+static void Menu_SwitchGenLevel(void* a, void* b)        { Menu_ReplaceActive(GenLevelScreen_MakeInstance()); }
+static void Menu_SwitchClassicGenLevel(void* a, void* b) { Menu_ReplaceActive(ClassicGenScreen_MakeInstance()); }
+static void Menu_SwitchLoadLevel(void* a, void* b)       { Menu_ReplaceActive(LoadLevelScreen_MakeInstance()); }
+static void Menu_SwitchSaveLevel(void* a, void* b)       { Menu_ReplaceActive(SaveLevelScreen_MakeInstance()); }
+static void Menu_SwitchTexPacks(void* a, void* b)        { Menu_ReplaceActive(TexturePackScreen_MakeInstance()); }
+static void Menu_SwitchHotkeys(void* a, void* b)         { Menu_ReplaceActive(HotkeyListScreen_MakeInstance()); }
+static void Menu_SwitchFont(void* a, void* b)            { Menu_ReplaceActive(FontListScreen_MakeInstance()); }
 
 
 /*########################################################################################################################*
@@ -511,7 +512,7 @@ static void ListScreen_Free(void* screen) {
 static bool ListScreen_KeyDown(void* screen, Key key) {
 	struct ListScreen* s = screen;
 	if (key == Key_Escape) {
-		Gui_ReplaceActive(NULL);
+		Gui_CloseActive();
 	} else if (key == Key_Left) {
 		ListScreen_PageClick(s, false);
 	} else if (key == Key_Right) {
@@ -552,7 +553,7 @@ struct ListScreen* ListScreen_MakeInstance(void) {
 *--------------------------------------------------------MenuScreen-------------------------------------------------------*
 *#########################################################################################################################*/
 static bool MenuScreen_KeyDown(void* screen, Key key) {
-	if (key == Key_Escape) { Gui_ReplaceActive(NULL); }
+	if (key == Key_Escape) { Gui_CloseActive(); }
 	return key < Key_F1 || key > Key_F35;
 }
 static bool MenuScreen_MouseScroll(void* screen, Real32 delta) { return true; }
@@ -602,7 +603,7 @@ static void PauseScreen_MakeClassic(struct PauseScreen* s, Int32 i, Int32 y, con
 }
 
 static void PauseScreen_Quit(void* a, void* b) { Window_Close(); }
-static void PauseScreen_Game(void* a, void* b) { Gui_ReplaceActive(NULL); }
+static void PauseScreen_Game(void* a, void* b) { Gui_CloseActive(); }
 
 static void PauseScreen_CheckHacksAllowed(void* screen) {
 	struct PauseScreen* s = screen;
@@ -863,7 +864,9 @@ static void EditHotkeyScreen_SaveChanges(void* screen, void* b) {
 		Hotkeys_Add(hotkey.Trigger, hotkey.Flags, &text, hotkey.StaysOpen);
 		Hotkeys_UserAddedHotkey(hotkey.Trigger, hotkey.Flags, hotkey.StaysOpen, &text);
 	}
-	Gui_ReplaceActive(HotkeyListScreen_MakeInstance());
+
+	Gui_FreeActive();
+	Gui_SetActive(HotkeyListScreen_MakeInstance());
 }
 
 static void EditHotkeyScreen_RemoveHotkey(void* screen, void* b) {
@@ -874,7 +877,9 @@ static void EditHotkeyScreen_RemoveHotkey(void* screen, void* b) {
 		Hotkeys_Remove(hotkey.Trigger, hotkey.Flags);
 		Hotkeys_UserRemovedHotkey(hotkey.Trigger, hotkey.Flags);
 	}
-	Gui_ReplaceActive(HotkeyListScreen_MakeInstance());
+
+	Gui_FreeActive();
+	Gui_SetActive(HotkeyListScreen_MakeInstance());
 }
 
 static void EditHotkeyScreen_Init(void* screen) {
@@ -1022,7 +1027,9 @@ static void GenLevelScreen_Gen(void* screen, bool vanilla) {
 	} else {
 		Gen_SetDimensions(width, height, length); 
 		Gen_Vanilla = vanilla; Gen_Seed = seed;
-		Gui_ReplaceActive(GeneratingScreen_MakeInstance());
+
+		Gui_FreeActive();
+		Gui_SetActive(GeneratingScreen_MakeInstance());
 	}
 }
 
@@ -1150,7 +1157,9 @@ static void ClassicGenScreen_Gen(Int32 size) {
 	Random rnd; Random_InitFromCurrentTime(&rnd);
 	Gen_SetDimensions(size, 64, size); Gen_Vanilla = true;
 	Gen_Seed = Random_Next(&rnd, Int32_MaxValue);
-	Gui_ReplaceActive(GeneratingScreen_MakeInstance());
+
+	Gui_FreeActive();
+	Gui_SetActive(GeneratingScreen_MakeInstance());
 }
 
 static void ClassicGenScreen_Small(void* a, void* b)  { ClassicGenScreen_Gen(128); }
@@ -1288,8 +1297,9 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s) {
 	if (res) { Chat_LogError(res, "closing", &path); return; }
 
 	Chat_Add1("&eSaved map to: %s", &path);
-	Gui_ReplaceActive(PauseScreen_MakeInstance());
 	s->TextPath.length = 0;
+	Gui_FreeActive();
+	Gui_SetActive(PauseScreen_MakeInstance());
 }
 
 static void SaveLevelScreen_Render(void* screen, Real64 delta) {
@@ -1469,7 +1479,8 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	struct HotkeyData original = { 0 };
 
 	if (String_CaselessEqualsConst(&text, LIST_SCREEN_EMPTY)) {
-		Gui_ReplaceActive(EditHotkeyScreen_MakeInstance(original)); return;
+		Gui_FreeActive();
+		Gui_SetActive(EditHotkeyScreen_MakeInstance(original)); return;
 	}
 
 	String key = text, value;
@@ -1491,7 +1502,9 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 		struct HotkeyData h = HotkeysList[i];
 		if (h.Trigger == baseKey && h.Flags == flags) { original = h; break; }
 	}
-	Gui_ReplaceActive(EditHotkeyScreen_MakeInstance(original));
+
+	Gui_FreeActive();
+	Gui_SetActive(EditHotkeyScreen_MakeInstance(original));
 }
 
 static void HotkeyListScreen_MakeFlags(UInt8 flags, STRING_TRANSIENT String* str) {

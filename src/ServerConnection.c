@@ -160,14 +160,16 @@ static void SPConnection_BeginConnect(void) {
 	String path = Game_Username;
 	if (String_IndexOf(&path, Directory_Separator, 0) >= 0 && File_Exists(&path)) {
 		LoadLevelScreen_LoadMap(&path);
-		Gui_ReplaceActive(NULL);
+		Gui_CloseActive();
 		return;
 	}
 
 	Random rnd; Random_InitFromCurrentTime(&rnd);
 	Gen_SetDimensions(128, 64, 128); Gen_Vanilla = true;
 	Gen_Seed = Random_Next(&rnd, Int32_MaxValue);
-	Gui_ReplaceActive(GeneratingScreen_MakeInstance());
+
+	Gui_FreeActive();
+	Gui_SetActive(GeneratingScreen_MakeInstance());
 }
 
 char SPConnection_LastCol = '\0';
