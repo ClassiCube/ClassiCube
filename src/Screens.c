@@ -1137,7 +1137,7 @@ static void ChatScreen_Render(void* screen, Real64 delta) {
 		}
 	}
 
-	if (s->Announcement.Texture.ID && Chat_Announcement.Received + (5 * 1000) >= now) {
+	if (s->Announcement.Texture.ID && now > Chat_Announcement.Received + (5 * 1000)) {
 		Elem_TryFree(&s->Announcement);
 	}
 }

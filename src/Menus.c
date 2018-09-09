@@ -2168,7 +2168,7 @@ struct Screen* MenuOptionsScreen_MakeInstance(struct Widget** widgets, Int32 cou
 
 	s->ExtHelp.LinesCount = 0;
 	s->VTABLE = &MenuOptionsScreen_VTABLE;
-	s->VTABLE->ContextLost = MenuOptionsScreen_ContextLost;
+	s->VTABLE->ContextLost      = MenuOptionsScreen_ContextLost;
 	s->VTABLE->ContextRecreated = contextRecreated;
 
 	s->Buttons           = buttons;
