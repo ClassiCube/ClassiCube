@@ -105,6 +105,9 @@ struct DisconnectScreen {
 	String TitleStr, MessageStr;
 };
 
+static bool Screen_Mouse(void* elem, Int32 x, Int32 y, MouseButton btn) { return false; }
+static bool Screen_MouseMove(void* elem, Int32 x, Int32 y) { return false; }
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------InventoryScreen-----------------------------------------------------*
@@ -197,6 +200,7 @@ static bool InventoryScreen_KeyDown(void* screen, Key key) {
 	return true;
 }
 
+static bool InventoryScreen_KeyPress(void* elem, char keyChar) { return true; }
 static bool InventoryScreen_KeyUp(void* screen, Key key) {
 	struct InventoryScreen* s = screen;
 	if (key == KeyBind_Get(KeyBind_Inventory)) {
@@ -244,7 +248,7 @@ static bool InventoryScreen_MouseScroll(void* screen, Real32 delta) {
 
 struct ScreenVTABLE InventoryScreen_VTABLE = {
 	InventoryScreen_Init,      InventoryScreen_Render,  InventoryScreen_Free,      Gui_DefaultRecreate,
-	InventoryScreen_KeyDown,   InventoryScreen_KeyUp,   Gui_DefaultKeyPress,
+	InventoryScreen_KeyDown,   InventoryScreen_KeyUp,   InventoryScreen_KeyPress,
 	InventoryScreen_MouseDown, InventoryScreen_MouseUp, InventoryScreen_MouseMove, InventoryScreen_MouseScroll,
 	InventoryScreen_OnResize,  InventoryScreen_ContextLost, InventoryScreen_ContextRecreated,
 };
@@ -384,6 +388,10 @@ static void StatusScreen_ContextRecreated(void* screen) {
 	StatusScreen_UpdateHackState(s);
 }
 
+static bool StatusScreen_Key(void* elem, Key key) { return false; }
+static bool StatusScreen_KeyPress(void* elem, char keyChar) { return false; }
+static bool StatusScreen_MouseScroll(void* elem, Real32 delta) { return false; }
+
 static void StatusScreen_Init(void* screen) {
 	struct StatusScreen* s = screen;
 	Font_Make(&s->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
@@ -415,9 +423,9 @@ static void StatusScreen_Free(void* screen) {
 }
 
 struct ScreenVTABLE StatusScreen_VTABLE = {
-	StatusScreen_Init,     StatusScreen_Render, StatusScreen_Free,    Gui_DefaultRecreate,
-	Gui_DefaultKey,        Gui_DefaultKey,      Gui_DefaultKeyPress,
-	Gui_DefaultMouse,      Gui_DefaultMouse,    Gui_DefaultMouseMove, Gui_DefaultMouseScroll,
+	StatusScreen_Init,  StatusScreen_Render, StatusScreen_Free,     Gui_DefaultRecreate,
+	StatusScreen_Key,   StatusScreen_Key,    StatusScreen_KeyPress,
+	Screen_Mouse,       Screen_Mouse,        Screen_MouseMove,      StatusScreen_MouseScroll,
 	StatusScreen_OnResize, StatusScreen_ContextLost, StatusScreen_ContextRecreated,
 };
 struct Screen* StatusScreen_MakeInstance(void) {
@@ -1147,9 +1155,9 @@ static void ChatScreen_Free(void* screen) {
 }
 
 struct ScreenVTABLE ChatScreen_VTABLE = {
-	ChatScreen_Init,      ChatScreen_Render, ChatScreen_Free,      Gui_DefaultRecreate,
+	ChatScreen_Init,      ChatScreen_Render, ChatScreen_Free,     Gui_DefaultRecreate,
 	ChatScreen_KeyDown,   ChatScreen_KeyUp,  ChatScreen_KeyPress,
-	ChatScreen_MouseDown, Gui_DefaultMouse,  Gui_DefaultMouseMove, ChatScreen_MouseScroll,
+	ChatScreen_MouseDown, Screen_Mouse,      Screen_MouseMove,    ChatScreen_MouseScroll,
 	ChatScreen_OnResize,  ChatScreen_ContextLost, ChatScreen_ContextRecreated,
 };
 struct Screen* ChatScreen_MakeInstance(void) {
@@ -1322,9 +1330,9 @@ static void HUDScreen_Free(void* screen) {
 }
 
 struct ScreenVTABLE HUDScreen_VTABLE = {
-	HUDScreen_Init,      HUDScreen_Render, HUDScreen_Free,       Gui_DefaultRecreate,
+	HUDScreen_Init,      HUDScreen_Render, HUDScreen_Free,     Gui_DefaultRecreate,
 	HUDScreen_KeyDown,   HUDScreen_KeyUp,  HUDScreen_KeyPress,
-	HUDScreen_MouseDown, Gui_DefaultMouse, Gui_DefaultMouseMove, HUDScreen_MouseScroll,
+	HUDScreen_MouseDown, Screen_Mouse,     Screen_MouseMove,   HUDScreen_MouseScroll,
 	HUDScreen_OnResize,  HUDScreen_ContextLost, HUDScreen_ContextRecreated,
 };
 struct Screen* HUDScreen_MakeInstance(void) {

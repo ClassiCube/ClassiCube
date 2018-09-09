@@ -18,12 +18,6 @@ void Gui_DefaultRecreate(void* elem) {
 	Elem_Free(e); Elem_Init(e);
 }
 
-bool Gui_DefaultMouse(void* elem, Int32 x, Int32 y, MouseButton btn) { return false; }
-bool Gui_DefaultKey(void* elem, Key key)                { return false; }
-bool Gui_DefaultKeyPress(void* elem, char keyChar)     { return false; }
-bool Gui_DefaultMouseMove(void* elem, Int32 x, Int32 y) { return false; }
-bool Gui_DefaultMouseScroll(void* elem, Real32 delta)   { return false; }
-
 void Screen_CommonInit(void* screen) { 
 	struct Screen* s = screen;
 	Event_RegisterVoid(&GfxEvents_ContextLost,      s, s->VTABLE->ContextLost);

@@ -29,13 +29,7 @@ struct GuiElem;
 
 struct GuiElemVTABLE { GuiElemVTABLE_Layout() };
 struct GuiElem { struct GuiElemVTABLE* VTABLE; };
-
 void Gui_DefaultRecreate(void* elem);
-bool Gui_DefaultMouse(void* elem, Int32 x, Int32 y, MouseButton btn);
-bool Gui_DefaultKey(void* elem, Key key);
-bool Gui_DefaultKeyPress(void* elem, char keyChar);
-bool Gui_DefaultMouseMove(void* elem, Int32 x, Int32 y);
-bool Gui_DefaultMouseScroll(void* elem, Real32 delta);
 
 
 struct ScreenVTABLE {
