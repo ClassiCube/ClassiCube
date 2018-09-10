@@ -45,6 +45,12 @@ namespace Launcher {
 		
 		static void StartProcess(string args) {
 			string path = Path.Combine(Environment.CurrentDirectory, "ClassicalSharp.exe");
+			if (Options.GetBool("c-client", false)) {
+				path = path.Replace("ClassicalSharp.exe", "ClassiCube");
+				Process.Start(path, args);
+				return;
+			}
+			
 			if (Configuration.RunningOnMono) {
 				// We also need to handle the case of running Mono through wine
 				if (Configuration.RunningOnWindows) {

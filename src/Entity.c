@@ -133,10 +133,10 @@ void Entity_SetModel(struct Entity* entity, STRING_PURE String* model) {
 	}
 
 	/* 'giant' model kept for backwards compatibility */
-	if (String_CaselessEqualsConst(model, "giant")) {
+	if (String_CaselessEqualsConst(&name, "giant")) {
 		name = String_FromReadonly("humanoid");
 		entity->ModelScale = Vector3_Create1(2.0f);
-	} else if (Convert_TryParseUInt8(model, &entity->ModelBlock)) {
+	} else if (Convert_TryParseUInt8(&name, &entity->ModelBlock)) {
 		name = String_FromReadonly("block");
 	}
 

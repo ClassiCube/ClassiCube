@@ -548,8 +548,8 @@ void Gfx_MakeApiInfo(void) {
 	glGetIntegerv(GL_DEPTH_BITS, &depthBits);
 
 	String_AppendConst(&Gfx_ApiInfo[0],"-- Using OpenGL --");
-	String_Format1(&Gfx_ApiInfo[1], "Vendor: %c", glGetString(GL_VENDOR));
-	String_Format1(&Gfx_ApiInfo[2], "Renderer: %c", glGetString(GL_RENDERER));
+	String_Format1(&Gfx_ApiInfo[1], "Vendor: %c",     glGetString(GL_VENDOR));
+	String_Format1(&Gfx_ApiInfo[2], "Renderer: %c",   glGetString(GL_RENDERER));
 	String_Format1(&Gfx_ApiInfo[3], "GL version: %c", glGetString(GL_VERSION));
 	/* Memory usage goes here */
 	String_Format2(&Gfx_ApiInfo[5], "Max texture size: (%i, %i)", &Gfx_MaxTexWidth, &Gfx_MaxTexHeight);
