@@ -235,20 +235,21 @@ static void AsyncDownloader_CompleteResult(struct AsyncRequest* request) {
 }
 
 static void AsyncDownloader_WorkerFunc(void) {
-	while (true) {
+	for (;;) {
 		struct AsyncRequest request;
-		bool hasRequest = false;
+		bool hasRequest = false, stop;
 
 		Mutex_Lock(async_pendingMutex);
 		{
-			if (async_terminate) return;
-			if (async_pending.Count) {
+			stop = async_terminate;
+			if (!stop && async_pending.Count) {
 				request = async_pending.Requests[0];
 				hasRequest = true;
 				AsyncRequestList_RemoveAt(&async_pending, 0);
 			}
 		}
 		Mutex_Unlock(async_pendingMutex);
+		if (stop) return;
 
 		if (hasRequest) {
 			Platform_LogConst("Got something to do!");
@@ -283,8 +284,8 @@ static void AsyncDownloader_Init(void) {
 	Http_Init();
 
 	async_waitable = Waitable_Create();
-	async_pendingMutex = Mutex_Create();
-	async_processedMutex = Mutex_Create();
+	async_pendingMutex    = Mutex_Create();
+	async_processedMutex  = Mutex_Create();
 	async_curRequestMutex = Mutex_Create();
 	async_workerThread = Thread_Start(AsyncDownloader_WorkerFunc, false);
 }
