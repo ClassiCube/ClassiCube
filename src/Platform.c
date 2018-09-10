@@ -897,11 +897,12 @@ void Http_Init(void) {
 
 static ReturnCode Http_Make(struct AsyncRequest* req, HINTERNET* handle) {
 	String url = String_FromRawArray(req->URL);
-	WCHAR urlStr[300]; Platform_ConvertString(urlStr, &url);
+	char urlStr[STRING_SIZE + 1];
+	Mem_Copy(urlStr, url.buffer, url.length);
 
-	char headersBuffer[STRING_SIZE * 2] = { 0 };
+	urlStr[url.length] = '\0';
+	char headersBuffer[STRING_SIZE * 3];
 	String headers = String_FromArray(headersBuffer);
-	WCHAR headersStr[STRING_SIZE * 2 + 1];
 
 	/* https://stackoverflow.com/questions/25308488/c-wininet-custom-http-headers */
 	if (req->Etag[0] || req->LastModified) {
@@ -917,16 +918,12 @@ static ReturnCode Http_Make(struct AsyncRequest* req, HINTERNET* handle) {
 			String_AppendString(&headers, &etag);
 			String_AppendConst(&headers, "\r\n");
 		}
+
 		String_AppendConst(&headers, "\r\n\r\n");
+		headers.buffer[headers.length] = '\0';
 	} else { headers.buffer = NULL; }
 
-	Int32 i;
-	for (i = 0; i < headers.length; i++) {
-		headersStr[i] = headers.buffer[i];
-	}
-	headersStr[headers.length] = '\0';
-
-	*handle = InternetOpenUrlW(hInternet, urlStr, headersStr, headers.length,
+	*handle = InternetOpenUrlA(hInternet, urlStr, headers.buffer, headers.length,
 		INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD, 0);
 	return Win_Return(*handle);
 }

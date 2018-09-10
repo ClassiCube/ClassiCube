@@ -389,7 +389,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 }
 
 
-void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, 
+void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_PURE String* title, 
 	struct GraphicsMode* mode, struct DisplayDevice* device) {
 	win_Instance = GetModuleHandleW(NULL);
 	/* TODO: UngroupFromTaskbar(); */

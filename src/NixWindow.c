@@ -186,7 +186,7 @@ static void Window_RefreshBounds(XEvent* e) {
 }
 
 static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode);
-void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, 
+void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_PURE String* title, 
 	struct GraphicsMode* mode, struct DisplayDevice* device) {
 	win_display = DisplayDevice_Meta[0];
 	win_screen  = DisplayDevice_Meta[1];

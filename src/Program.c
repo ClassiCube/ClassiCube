@@ -62,9 +62,7 @@ int main(int argc, char** argv) {
 	}
 
 	String args[PROGRAM_MAX_CMDARGS];
-	String title    = String_FromConst(PROGRAM_APP_NAME);
 	Int32 argsCount = Platform_GetCommandLineArgs(argc, argv, args);
-
 	/* NOTE: Make sure to comment this out before pushing a commit */
 	// String rawArgs = String_FromConst("UnknownShadow200 fff 127.0.0.1 25565");
 	// argsCount = 4; String_UNSAFE_Split(&rawArgs, ' ', args, &argsCount);
@@ -109,7 +107,11 @@ int main(int argc, char** argv) {
 		if (device.Bounds.Width < 854) width = 640;
 	}
 
+	char titleBuffer[STRING_SIZE];
+	String title = String_FromArray(titleBuffer);
+	String_Format2(&title, "%c (%s)", PROGRAM_APP_NAME, &Game_Username);
 	Game_Run(width, height, &title, &device);
+
 	Platform_Exit(0);
 	return 0;
 }

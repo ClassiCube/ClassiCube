@@ -91,5 +91,5 @@ Int32 Game_CalcRenderType(STRING_PURE String* type);
 void Game_SetFpsLimit(FpsLimit method);
 Real32 Game_CalcLimitMillis(FpsLimit method);
 
-void Game_Run(Int32 width, Int32 height, STRING_REF String* title, struct DisplayDevice* device);
+void Game_Run(Int32 width, Int32 height, STRING_PURE String* title, struct DisplayDevice* device);
 #endif
