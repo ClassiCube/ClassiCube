@@ -561,7 +561,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		internal override void UpdateApiInfo() {
 			float mem = VideoMemoryMB;
-			ApiInfo[3] = "Video memory: " + totalMem + " MB total, " + mem + " now";
+			ApiInfo[3] = "Video memory: " + totalMem + " MB total, " + mem + " free";
 		}
 
 		public override void TakeScreenshot(Stream output, int width, int height) {

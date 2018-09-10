@@ -620,12 +620,10 @@ static void GeneratingScreen_Init(void* screen) {
 
 	void* threadHandle;
 	if (Gen_Vanilla) {
-		threadHandle = Thread_Start(&NotchyGen_Generate);
+		Thread_Start(&NotchyGen_Generate, true);
 	} else {
-		threadHandle = Thread_Start(&FlatgrassGen_Generate);
+		Thread_Start(&FlatgrassGen_Generate, true);
 	}
-	/* don't leak thread handle here */
-	Thread_FreeHandle(threadHandle);
 }
 
 static void GeneratingScreen_EndGeneration(void) {

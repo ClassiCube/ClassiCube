@@ -286,7 +286,7 @@ static void AsyncDownloader_Init(void) {
 	async_pendingMutex = Mutex_Create();
 	async_processedMutex = Mutex_Create();
 	async_curRequestMutex = Mutex_Create();
-	async_workerThread = Thread_Start(AsyncDownloader_WorkerFunc);
+	async_workerThread = Thread_Start(AsyncDownloader_WorkerFunc, false);
 }
 
 static void AsyncDownloader_Reset(void) {
@@ -302,7 +302,6 @@ static void AsyncDownloader_Free(void) {
 	async_terminate = true;
 	AsyncDownloader_Reset();
 	Thread_Join(async_workerThread);
-	Thread_FreeHandle(async_workerThread);
 
 	AsyncRequestList_Free(&async_pending);
 	AsyncRequestList_Free(&async_processed);

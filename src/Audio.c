@@ -438,7 +438,7 @@ static void Music_Init(void) {
 	if (music_thread) return;
 	music_pendingStop = false;
 	Audio_Init(&music_out, AUDIO_MAX_CHUNKS);
-	music_thread = Thread_Start(Music_RunLoop);
+	music_thread = Thread_Start(Music_RunLoop, false);
 }
 
 static void Music_Free(void) {
@@ -447,7 +447,6 @@ static void Music_Free(void) {
 	if (music_out == -1) return;
 
 	Thread_Join(music_thread);
-	Thread_FreeHandle(music_thread);
 	Audio_Free(music_out);
 	music_out = -1;
 	music_thread = NULL;

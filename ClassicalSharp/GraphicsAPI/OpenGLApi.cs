@@ -570,7 +570,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			if (totalKb <= 0 || curKb <= 0) return;
 			float total = totalKb / 1024f, cur = curKb / 1024f;
-			ApiInfo[4] = "Video memory: " + total + " MB total, " + cur + " now";
+			ApiInfo[4] = "Video memory: " + total + " MB total, " + cur + " free";
 		}
 		
 		public override bool WarnIfNecessary(Chat chat) {

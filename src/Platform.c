@@ -506,23 +506,26 @@ DWORD WINAPI Thread_StartCallback(LPVOID lpParam) {
 	return 0;
 }
 
-void* Thread_Start(Thread_StartFunc* func) {
+static void Thread_FreeHandle(void* handle) {
+	if (!CloseHandle((HANDLE)handle)) {
+		ErrorHandler_FailWithCode(GetLastError(), "Freeing thread handle");
+	}
+}
+
+void* Thread_Start(Thread_StartFunc* func, bool detach) {
 	DWORD threadID;
 	void* handle = CreateThread(NULL, 0, Thread_StartCallback, func, 0, &threadID);
 	if (!handle) {
 		ErrorHandler_FailWithCode(GetLastError(), "Creating thread");
 	}
+
+	if (detach) Thread_FreeHandle(handle);
 	return handle;
 }
 
 void Thread_Join(void* handle) {
 	WaitForSingleObject((HANDLE)handle, INFINITE);
-}
-
-void Thread_FreeHandle(void* handle) {
-	if (!CloseHandle((HANDLE)handle)) {
-		ErrorHandler_FailWithCode(GetLastError(), "Freeing thread handle");
-	}
+	Thread_FreeHandle(handle);
 }
 
 CRITICAL_SECTION mutexList[3]; Int32 mutexIndex;
@@ -568,23 +571,22 @@ void* Thread_StartCallback(void* lpParam) {
 }
 
 pthread_t threadList[3]; Int32 threadIndex;
-void* Thread_Start(Thread_StartFunc* func) {
+void* Thread_Start(Thread_StartFunc* func, bool detach) {
 	if (threadIndex == Array_Elems(threadList)) ErrorHandler_Fail("Cannot allocate thread");
 	pthread_t* ptr = &threadList[threadIndex];
 	int result = pthread_create(ptr, NULL, Thread_StartCallback, func);
-
 	ErrorHandler_CheckOrFail(result, "Creating thread");
+
+	if (detach) {
+		result = pthread_detach(*ptr);
+		ErrorHandler_CheckOrFail(result, "Detaching thread");
+	}
 	threadIndex++; return ptr;
 }
 
 void Thread_Join(void* handle) {
 	int result = pthread_join(*((pthread_t*)handle), NULL);
 	ErrorHandler_CheckOrFail(result, "Joining thread");
-}
-
-void Thread_FreeHandle(void* handle) {
-	int result = pthread_detach(*((pthread_t*)handle));
-	ErrorHandler_CheckOrFail(result, "Detaching thread");
 }
 
 pthread_mutex_t mutexList[3]; Int32 mutexIndex;

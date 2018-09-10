@@ -569,7 +569,7 @@ void Gfx_UpdateApiInfo(void) {
 	if (totalKb <= 0 || curKb <= 0) return;
 	Gfx_ApiInfo[4].length = 0;
 	Real32 total = totalKb / 1024.0f, cur = curKb / 1024.0f;
-	String_Format2(&Gfx_ApiInfo[4], "Video memory: %f2 MB total, %f2 now", &total, &cur);
+	String_Format2(&Gfx_ApiInfo[4], "Video memory: %f2 MB total, %f2 free", &total, &cur);
 }
 
 bool Gfx_WarnIfNecessary(void) {

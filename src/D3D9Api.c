@@ -668,7 +668,7 @@ void Gfx_MakeApiInfo(void) {
 void Gfx_UpdateApiInfo(void) {
 	Real32 mem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
 	Gfx_ApiInfo[3].length = 0;
-	String_Format2(&Gfx_ApiInfo[3], "Video memory: %f2 MB total, %f2 now", &d3d9_totalMem, &mem);
+	String_Format2(&Gfx_ApiInfo[3], "Video memory: %f2 MB total, %f2 free", &d3d9_totalMem, &mem);
 }
 
 void Gfx_OnWindowResize(void) {
