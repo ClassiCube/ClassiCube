@@ -53,13 +53,8 @@ namespace ClassicalSharp.Map {
 		public int SidesOffset = -2;
 		
 		public float SkyboxHorSpeed, SkyboxVerSpeed;
-		public bool ExpFog;
-		
-		Game game;
-		public WorldEnv(Game game) {
-			this.game = game;
-			ResetLight();
-		}
+		public bool ExpFog;	
+		public WorldEnv() { ResetLight(); }
 
 		public void Reset() {
 			EdgeHeight = -1; SidesOffset = -2; CloudHeight = -1;

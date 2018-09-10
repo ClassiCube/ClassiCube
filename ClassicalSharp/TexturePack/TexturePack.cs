@@ -15,8 +15,6 @@ namespace ClassicalSharp.Textures {
 	/// <summary> Extracts resources from a .zip texture pack. </summary>
 	public sealed class TexturePack {
 		
-		static Game game;
-		
 		public static void ExtractDefault(Game game) {
 			ExtractZip(game.DefaultTexturePack, game);
 			game.World.TextureUrl = null;
@@ -46,7 +44,6 @@ namespace ClassicalSharp.Textures {
 		}
 		
 		static void ExtractZip(Stream stream, Game game) {
-			TexturePack.game = game;
 			Events.RaiseTexturePackChanged();
 			if (game.Graphics.LostContext) return;
 			

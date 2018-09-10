@@ -27,8 +27,8 @@ struct AsyncRequest {
 	void* ResultData;
 	UInt32 ResultSize;
 
-	UInt64 LastModified;     /* Time item cached at (if at all) */
-	UInt8 Etag[STRING_SIZE]; /* ETag of cached item (if any) */
+	UInt64 LastModified;    /* Time item cached at (if at all) */
+	char Etag[STRING_SIZE]; /* ETag of cached item (if any) */
 	UInt8 RequestType;
 };
 

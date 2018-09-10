@@ -17,11 +17,8 @@ namespace ClassicalSharp.Map {
 		
 		public WorldEnv Env;
 		public Guid Uuid;
-		public string TextureUrl = null;
-		
-		public World(Game game) {
-			Env = new WorldEnv(game);
-		}
+		public string TextureUrl = null;	
+		public World(Game game) { Env = new WorldEnv(); }
 
 		public void Reset() {
 			Env.Reset();

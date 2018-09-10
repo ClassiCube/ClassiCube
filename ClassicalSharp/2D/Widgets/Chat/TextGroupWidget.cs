@@ -309,7 +309,6 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		struct Portion { public int Beg, Len, LineBeg, LineLen; }
 		unsafe int Reduce(char* chars, int target, Portion* portions) {
-			Portion* start = portions;
 			int charsLen = 0, count = 0;
 			int* begs = stackalloc int[lines.Length];
 			int* ends = stackalloc int[lines.Length];

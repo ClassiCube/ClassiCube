@@ -897,8 +897,11 @@ void Http_Init(void) {
 
 static ReturnCode Http_Make(struct AsyncRequest* req, HINTERNET* handle) {
 	String url = String_FromRawArray(req->URL);
+	WCHAR urlStr[300]; Platform_ConvertString(urlStr, &url);
+
 	char headersBuffer[STRING_SIZE * 2] = { 0 };
 	String headers = String_FromArray(headersBuffer);
+	WCHAR headersStr[STRING_SIZE * 2 + 1];
 
 	/* https://stackoverflow.com/questions/25308488/c-wininet-custom-http-headers */
 	if (req->Etag[0] || req->LastModified) {
@@ -917,7 +920,13 @@ static ReturnCode Http_Make(struct AsyncRequest* req, HINTERNET* handle) {
 		String_AppendConst(&headers, "\r\n\r\n");
 	} else { headers.buffer = NULL; }
 
-	*handle = InternetOpenUrlA(hInternet, url.buffer, headers.buffer, headers.length,
+	Int32 i;
+	for (i = 0; i < headers.length; i++) {
+		headersStr[i] = headers.buffer[i];
+	}
+	headersStr[headers.length] = '\0';
+
+	*handle = InternetOpenUrlW(hInternet, urlStr, headersStr, headers.length,
 		INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD, 0);
 	return Win_Return(*handle);
 }
@@ -996,122 +1005,124 @@ ReturnCode Http_Free(void) { return Win_Return(InternetCloseHandle(hInternet)); 
 CURL* curl;
 
 void Http_Init(void) {
-    CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
-    if (res) ErrorHandler_FailWithCode(res, "Failed to init curl");
+	CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
+	if (res) ErrorHandler_FailWithCode(res, "Failed to init curl");
 
-    curl = curl_easy_init();
-    if (!curl) ErrorHandler_Fail("Failed to init easy curl");
+	curl = curl_easy_init();
+	if (!curl) ErrorHandler_Fail("Failed to init easy curl");
 }
 
 static int Http_Progress(Int32* progress, double total, double received, double a, double b) {
-    if (total == 0) return 0;
-    *progress = (Int32)(100 * received / total);
-    return 0;
+	if (total == 0) return 0;
+	*progress = (Int32)(100 * received / total);
+	return 0;
 }
 
 static struct curl_slist* Http_Make(struct AsyncRequest* req) {
-    struct curl_slist* list = NULL;
-    char buffer1[STRING_SIZE + 1] = { 0 };
-    char buffer2[STRING_SIZE + 1] = { 0 };
+	struct curl_slist* list = NULL;
+	char buffer1[STRING_SIZE + 1] = { 0 };
+	char buffer2[STRING_SIZE + 1] = { 0 };
 
-    if (req->Etag[0]) {
-        String tmp = { buffer1, 0, STRING_SIZE };
-        String_AppendConst(&tmp, "If-None-Match: ");
+	if (req->Etag[0]) {
+		String tmp = { buffer1, 0, STRING_SIZE };
+		String_AppendConst(&tmp, "If-None-Match: ");
 
-        String etag = String_FromRawArray(req->Etag);
-        String_AppendString(&tmp, &etag);
-        list = curl_slist_append(list, tmp.buffer);
-    }
+		String etag = String_FromRawArray(req->Etag);
+		String_AppendString(&tmp, &etag);
+		list = curl_slist_append(list, tmp.buffer);
+	}
 
-    if (req->LastModified) {
-        String tmp = { buffer2, 0, STRING_SIZE };
-         String_AppendConst(&tmp, "Last-Modified: ");
+	if (req->LastModified) {
+		String tmp = { buffer2, 0, STRING_SIZE };
+		String_AppendConst(&tmp, "Last-Modified: ");
 
-         DateTime_HttpDate(req->LastModified, &tmp);
-         list = curl_slist_append(list, tmp.buffer);
-    }
-    return list;
+		DateTime_HttpDate(req->LastModified, &tmp);
+		list = curl_slist_append(list, tmp.buffer);
+	}
+	return list;
 }
 
 static size_t Http_GetHeaders(char *buffer, size_t size, size_t nitems, struct AsyncRequest* req) {
-    size_t total = size * nitems;
-    if (size != 1) return total; /* non byte header */
-    String line = String_Init(buffer, nitems, nitems), name, value;
-    if (!String_UNSAFE_Separate(&line, ':', &name, &value)) return total;
+	size_t total = size * nitems;
+	if (size != 1) return total; /* non byte header */
+	String line = String_Init(buffer, nitems, nitems), name, value;
+	if (!String_UNSAFE_Separate(&line, ':', &name, &value)) return total;
 
-    /* value usually has \r\n at end */
-    if (value.length && value.buffer[value.length - 1] == '\n') value.length--;
-    if (value.length && value.buffer[value.length - 1] == '\r') value.length--;
-    if (!value.length) return total;
+	/* value usually has \r\n at end */
+	if (value.length && value.buffer[value.length - 1] == '\n') value.length--;
+	if (value.length && value.buffer[value.length - 1] == '\r') value.length--;
+	if (!value.length) return total;
 
-    if (String_CaselessEqualsConst(&name, "ETag")) {
-        String etag = String_ClearedArray(req->Etag);
-        String_AppendString(&etag, &value);
-    } else if (String_CaselessEqualsConst(&name, "Content-Length")) {
-        Convert_TryParseInt32(&value, &req->ResultSize);
-    } else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
-        char tmpBuffer[STRING_SIZE + 1] = { 0 };
-        String tmp = { tmpBuffer, 0, STRING_SIZE };
-        String_AppendString(&tmp, &value);
+	if (String_CaselessEqualsConst(&name, "ETag")) {
+		String etag = String_ClearedArray(req->Etag);
+		String_AppendString(&etag, &value);
+	} else if (String_CaselessEqualsConst(&name, "Content-Length")) {
+		Convert_TryParseInt32(&value, &req->ResultSize);
+	} else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
+		char tmpBuffer[STRING_SIZE + 1] = { 0 };
+		String tmp = { tmpBuffer, 0, STRING_SIZE };
+		String_AppendString(&tmp, &value);
 
-        time_t time = curl_getdate(tmp.buffer, NULL);
-        if (time == -1) return total;
-        req->LastModified = (UInt64)time * 1000 + UNIX_EPOCH;
-    }
-    return total;
+		time_t time = curl_getdate(tmp.buffer, NULL);
+		if (time == -1) return total;
+		req->LastModified = (UInt64)time * 1000 + UNIX_EPOCH;
+	}
+	return total;
 }
 
 static size_t Http_GetData(char *buffer, size_t size, size_t nitems, struct AsyncRequest* req) {
-    UInt32 total = req->ResultSize;
-    if (!total || req->RequestType == REQUEST_TYPE_CONTENT_LENGTH) return 0;
-    if (!req->ResultData) req->ResultData = Mem_Alloc(total, 1, "http get data");
+	UInt32 total = req->ResultSize;
+	if (!total || req->RequestType == REQUEST_TYPE_CONTENT_LENGTH) return 0;
+	if (!req->ResultData) req->ResultData = Mem_Alloc(total, 1, "http get data");
 
-    /* reuse Result as an offset */
-    UInt32 left = total - req->Result;
-    left        = min(left, nitems);
+	/* reuse Result as an offset */
+	UInt32 left = total - req->Result;
+	left        = min(left, nitems);
 
-    UInt8* dst = (UInt8*)req->ResultData + req->Result;
-    Mem_Copy(dst, buffer, left);
-    req->Result += left;
+	UInt8* dst = (UInt8*)req->ResultData + req->Result;
+	Mem_Copy(dst, buffer, left);
+	req->Result += left;
 
-    return nitems;
+	return nitems;
 }
 
 ReturnCode Http_Do(struct AsyncRequest* req, volatile Int32* progress) {
-    curl_easy_reset(curl);
-    String url = String_FromRawArray(req->URL);
-    struct curl_slist* list = Http_Make(req);
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
+	curl_easy_reset(curl);
+	String url = String_FromRawArray(req->URL);
+	char urlStr[600]; Platform_ConvertString(urlStr, &url);
 
-    curl_easy_setopt(curl, CURLOPT_URL,            url.buffer);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT,      PROGRAM_APP_NAME);
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+	struct curl_slist* list = Http_Make(req);
+	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
 
-    curl_easy_setopt(curl, CURLOPT_NOPROGRESS,       0L);
-    curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, Http_Progress);
-    curl_easy_setopt(curl, CURLOPT_PROGRESSDATA,     progress);
+	curl_easy_setopt(curl, CURLOPT_URL,            urlStr);
+	curl_easy_setopt(curl, CURLOPT_USERAGENT,      PROGRAM_APP_NAME);
+	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
-    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, Http_GetHeaders);
-    curl_easy_setopt(curl, CURLOPT_HEADERDATA,     req);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,  Http_GetData);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
+	curl_easy_setopt(curl, CURLOPT_NOPROGRESS,       0L);
+	curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, Http_Progress);
+	curl_easy_setopt(curl, CURLOPT_PROGRESSDATA,     progress);
 
-    *progress = ASYNC_PROGRESS_FETCHING_DATA;
-    CURLcode res = curl_easy_perform(curl);
-    *progress = 100;
+	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, Http_GetHeaders);
+	curl_easy_setopt(curl, CURLOPT_HEADERDATA,     req);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,  Http_GetData);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
 
-    long status = 0;
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
-    req->StatusCode = status;
+	*progress = ASYNC_PROGRESS_FETCHING_DATA;
+	CURLcode res = curl_easy_perform(curl);
+	*progress = 100;
 
-    curl_slist_free_all(list);
-    return res;
+	long status = 0;
+	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+	req->StatusCode = status;
+
+	curl_slist_free_all(list);
+	return res;
 }
 
 ReturnCode Http_Free(void) {
-    curl_easy_cleanup(curl);
-    curl_global_cleanup();
-    return 0;
+	curl_easy_cleanup(curl);
+	curl_global_cleanup();
+	return 0;
 }
 #endif
 
