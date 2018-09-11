@@ -1,6 +1,7 @@
 #include "Vectors.h"
 #include "ExtMath.h"
 #include "Funcs.h"
+#include "Constants.h"
 
 Vector3 Vector3_Create1(Real32 value) {
 	Vector3 v; v.X = value; v.Y = value; v.Z = value; return v;

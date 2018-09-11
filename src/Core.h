@@ -1,6 +1,6 @@
-#ifndef CC_TYPEDEFS_H
-#define CC_TYPEDEFS_H
-/* Ensures variables are of a fixed size.
+#ifndef CC_CORE_H
+#define CC_CORE_H
+/* Core fixed-size integer and floating point types, and common small structs.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
@@ -49,15 +49,12 @@ typedef UInt16 TextureLoc;
 typedef UInt8 Face;
 typedef UInt32 ReturnCode;
 
-struct FontDesc { void* Handle; UInt16 Size, Style; };
-
-#define UInt8_MaxValue  ((UInt8)255)
-#define Int16_MinValue  ((Int16)-32768)
-#define Int16_MaxValue  ((Int16)32767)
-#define UInt16_MaxValue ((UInt16)65535)
-#define Int32_MinValue  ((Int32)-2147483647L - (Int32)1L)
-#define Int32_MaxValue  ((Int32)2147483647L)
-#define UInt32_MaxValue ((UInt32)4294967295UL)
+typedef struct Rect2D_ { Int32 X, Y, Width, Height; } Rect2D;
+typedef struct Point2D_ { Int32 X, Y; } Point2D;
+typedef struct Size2D_ { Int32 Width, Height; } Size2D;
+typedef struct FontDesc_ { void* Handle; UInt16 Size, Style; } FontDesc;
+typedef struct TextureRec_ { Real32 U1, V1, U2, V2; } TextureRec;
+typedef struct Bitmap_ { UInt8* Scan0; Int32 Width, Height; } Bitmap;
 
 #define CC_BUILD_GL11 false
 #define CC_BUILD_D3D9 true

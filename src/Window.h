@@ -1,8 +1,6 @@
 #ifndef CC_WINDOW_H
 #define CC_WINDOW_H
 #include "String.h"
-#include "Bitmap.h"
-#include "2DStructs.h"
 #include "DisplayDevice.h"
 /* Abstracts creating and managing a native window.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3 | Based on OpenTK code
@@ -51,23 +49,23 @@ void* Window_GetWindowHandle(void);
 UInt8 Window_GetWindowState(void);
 void Window_SetWindowState(UInt8 value);
 
-struct Rectangle2D Window_Bounds;
-struct Size2D Window_ClientSize;
+Rect2D Window_Bounds;
+Size2D Window_ClientSize;
 
-void Window_SetBounds(struct Rectangle2D rect);
-void Window_SetLocation(struct Point2D point);
-void Window_SetSize(struct Size2D size);
-void Window_SetClientSize(struct Size2D size);
+void Window_SetBounds(Rect2D rect);
+void Window_SetLocation(Int32 x, Int32 y);
+void Window_SetSize(Int32 width, Int32 height);
+void Window_SetClientSize(Int32 width, Int32 height);
 
 void Window_Close(void);
 void Window_ProcessEvents(void);
 /* Transforms the specified point from screen to client coordinates. */
-struct Point2D Window_PointToClient(struct Point2D point);
+Point2D Window_PointToClient(Int32 x, Int32 y);
 /* Transforms the specified point from client to screen coordinates. */
-struct Point2D Window_PointToScreen(struct Point2D point);
+Point2D Window_PointToScreen(Int32 x, Int32 y);
 
-struct Point2D Window_GetDesktopCursorPos(void);
-void Window_SetDesktopCursorPos(struct Point2D point);
+Point2D Window_GetDesktopCursorPos(void);
+void Window_SetDesktopCursorPos(Int32 x, Int32 y);
 bool Window_GetCursorVisible(void);
 void Window_SetCursorVisible(bool visible);
 

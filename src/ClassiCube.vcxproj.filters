@@ -19,9 +19,6 @@
     <Filter Include="Header Files\Generator">
       <UniqueIdentifier>{6acee9ab-36de-4f0d-b434-b915b4b52c02}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Defines">
-      <UniqueIdentifier>{405d40c2-3d05-4d42-8ccb-415189b379a4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Platform">
       <UniqueIdentifier>{eab38ecc-57ac-48f4-9ed2-7cbd40effb24}</UniqueIdentifier>
     </Filter>
@@ -216,12 +213,6 @@
     <ClInclude Include="MapRenderer.h">
       <Filter>Header Files\Rendering\Map</Filter>
     </ClInclude>
-    <ClInclude Include="Constants.h">
-      <Filter>Header Files\Defines</Filter>
-    </ClInclude>
-    <ClInclude Include="2DStructs.h">
-      <Filter>Header Files\2D\Utils</Filter>
-    </ClInclude>
     <ClInclude Include="MapGenerator.h">
       <Filter>Header Files\Generator</Filter>
     </ClInclude>
@@ -336,11 +327,14 @@
     <ClInclude Include="Errors.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Core.h">
-      <Filter>Header Files\Defines</Filter>
-    </ClInclude>
     <ClInclude Include="Model.h">
       <Filter>Header Files\Entities\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Core.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -385,9 +379,6 @@
     </ClCompile>
     <ClCompile Include="MapRenderer.c">
       <Filter>Source Files\Rendering\Map</Filter>
-    </ClCompile>
-    <ClCompile Include="2DStructs.c">
-      <Filter>Source Files\2D\Utils</Filter>
     </ClCompile>
     <ClCompile Include="AxisLinesRenderer.c">
       <Filter>Source Files\SelectionBox</Filter>

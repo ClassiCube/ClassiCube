@@ -34,20 +34,20 @@ static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
 	Picking_CalculatePickedBlock(eyePos, dir, reach, pos);
 }
 
-struct Point2D cam_prev, cam_delta;
+Point2D cam_prev, cam_delta;
 static void PerspectiveCamera_CentreMousePosition(void) {
-	struct Point2D topLeft = Window_PointToScreen(Point2D_Empty);
+	Point2D topLeft = Window_PointToScreen(0, 0);
 	Int32 cenX = topLeft.X + Game_Width  / 2;
 	Int32 cenY = topLeft.Y + Game_Height / 2;
 
-	Window_SetDesktopCursorPos(Point2D_Make(cenX, cenY));
+	Window_SetDesktopCursorPos(cenX, cenY);
 	/* Fixes issues with large DPI displays on Windows >= 8.0. */
 	cam_prev = Window_GetDesktopCursorPos();
 }
 
 static void PerspectiveCamera_RegrabMouse(void) {
 	if (!Window_Exists) return;
-	cam_delta = Point2D_Empty;
+	cam_delta.X = 0; cam_delta.Y = 0;
 	PerspectiveCamera_CentreMousePosition();
 }
 
@@ -99,10 +99,10 @@ static void PerspectiveCamera_UpdateMouseRotation(void) {
 static void PerspectiveCamera_UpdateMouse(void) {
 	struct Screen* screen = Gui_GetActiveScreen();
 	if (screen->HandlesAllInput) {
-		cam_delta = Point2D_Empty;
+		cam_delta.X = 0; cam_delta.Y = 0;
 	} else if (Window_Focused) {
-		struct Point2D pos = Window_GetDesktopCursorPos();
-		cam_delta = Point2D_Make(pos.X - cam_prev.X, pos.Y - cam_prev.Y);
+		Point2D pos = Window_GetDesktopCursorPos();
+		cam_delta.X = pos.X - cam_prev.X; cam_delta.Y = pos.Y - cam_prev.Y;
 		PerspectiveCamera_CentreMousePosition();
 	}
 	PerspectiveCamera_UpdateMouseRotation();

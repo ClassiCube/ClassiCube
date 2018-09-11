@@ -47,14 +47,14 @@
 /* Number of faces on a cube. */
 #define FACE_COUNT 6
 
-#define SKIN_TYPE_64x32 0
-#define SKIN_TYPE_64x64 1
-#define SKIN_TYPE_64x64_SLIM 2
-#define SKIN_TYPE_INVALID 3
-
-#define FONT_STYLE_NORMAL    0
-#define FONT_STYLE_BOLD      1
-#define FONT_STYLE_UNDERLINE 2
-
+enum SKIN_TYPE { SKIN_64x32, SKIN_64x64, SKIN_64x64_SLIM, SKIN_INVALID };
+enum FONT_STYLE { FONT_STYLE_NORMAL, FONT_STYLE_BOLD, FONT_STYLE_UNDERLINE };
 #define DRAWER2D_MAX_COLS 256
+
+#define UInt8_MaxValue  ((UInt8)255)
+#define Int16_MinValue  ((Int16)-32768)
+#define Int16_MaxValue  ((Int16)32767)
+#define UInt16_MaxValue ((UInt16)65535)
+#define Int32_MinValue  ((Int32)-2147483647L - (Int32)1L)
+#define Int32_MaxValue  ((Int32)2147483647L)
 #endif

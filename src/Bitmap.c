@@ -7,11 +7,11 @@
 #include "Stream.h"
 #include "Errors.h"
 
-void Bitmap_Create(struct Bitmap* bmp, Int32 width, Int32 height, UInt8* scan0) {
+void Bitmap_Create(Bitmap* bmp, Int32 width, Int32 height, UInt8* scan0) {
 	bmp->Width = width; bmp->Height = height; bmp->Scan0 = scan0;
 }
 
-void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, struct Bitmap* src, struct Bitmap* dst, Int32 size) {
+void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, Bitmap* src, Bitmap* dst, Int32 size) {
 	Int32 x, y;
 	for (y = 0; y < size; y++) {
 		UInt32* srcRow = Bitmap_GetRow(src, srcY + y);
@@ -22,12 +22,12 @@ void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, struct Bit
 	}
 }
 
-void Bitmap_Allocate(struct Bitmap* bmp, Int32 width, Int32 height) {
+void Bitmap_Allocate(Bitmap* bmp, Int32 width, Int32 height) {
 	bmp->Width = width; bmp->Height = height;
 	bmp->Scan0 = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "bitmap data");
 }
 
-void Bitmap_AllocateClearedPow2(struct Bitmap* bmp, Int32 width, Int32 height) {
+void Bitmap_AllocateClearedPow2(Bitmap* bmp, Int32 width, Int32 height) {
 	width  = Math_NextPowOf2(width);
 	height = Math_NextPowOf2(height);
 
@@ -308,7 +308,7 @@ Png_RowExpander Png_GetExpander(UInt8 col, UInt8 bitsPerSample) {
 	return NULL;
 }
 
-static void Png_ComputeTransparency(struct Bitmap* bmp, UInt32 transparentCol) {
+static void Png_ComputeTransparency(Bitmap* bmp, UInt32 transparentCol) {
 	UInt32 trnsRGB = transparentCol & PNG_RGB_MASK;
 	Int32 x, y, width = bmp->Width, height = bmp->Height;
 
@@ -324,7 +324,7 @@ static void Png_ComputeTransparency(struct Bitmap* bmp, UInt32 transparentCol) {
 /* Most bits per sample is 16. Most samples per pixel is 4. Add 1 for filter byte. */
 #define PNG_BUFFER_SIZE ((PNG_MAX_DIMS * 2 * 4 + 1) * 2)
 /* TODO: Test a lot of .png files and ensure output is right */
-ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
+ReturnCode Bitmap_DecodePng(Bitmap* bmp, struct Stream* stream) {
 	Bitmap_Create(bmp, 0, 0, NULL);
 	UInt8 tmp[PNG_PALETTE * 3];
 	ReturnCode res;
@@ -607,7 +607,7 @@ static void Png_EncodeRow(UInt8* src, UInt8* cur, UInt8* prior, UInt8* best, Int
 	best[0] = bestFilter;
 }
 
-ReturnCode Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
+ReturnCode Bitmap_EncodePng(Bitmap* bmp, struct Stream* stream) {
 	ReturnCode res;
 	UInt8 tmp[32];
 	if ((res = Stream_Write(stream, png_sig, PNG_SIG_SIZE))) return res;

@@ -534,13 +534,17 @@ static void EnvRenderer_MakeBorderTex(GfxResourceID* texId, BlockID block) {
 	*texId = Atlas2D_LoadTile(texLoc);
 }
 
-static void EnvRenderer_CalcBorderRects(struct Rectangle2D* rects) {
-	Int32 extent = Utils_AdjViewDist(Game_ViewDistance);
-	rects[0] = Rectangle2D_Make(-extent, -extent, extent + World_Width + extent, extent);
-	rects[1] = Rectangle2D_Make(-extent, World_Length, extent + World_Width + extent, extent);
+static Rect2D EnvRenderer_Rect(Int32 x, Int32 y, Int32 width, Int32 height) {
+	Rect2D r; r.X = x; r.Y = y; r.Width = width; r.Height = height; return r;
+}
 
-	rects[2] = Rectangle2D_Make(-extent, 0, extent, World_Length);
-	rects[3] = Rectangle2D_Make(World_Width, 0, extent, World_Length);
+static void EnvRenderer_CalcBorderRects(Rect2D* rects) {
+	Int32 extent = Utils_AdjViewDist(Game_ViewDistance);
+	rects[0] = EnvRenderer_Rect(-extent, -extent,      extent + World_Width + extent, extent);
+	rects[1] = EnvRenderer_Rect(-extent, World_Length, extent + World_Width + extent, extent);
+
+	rects[2] = EnvRenderer_Rect(-extent,     0, extent, World_Length);
+	rects[3] = EnvRenderer_Rect(World_Width, 0, extent, World_Length);
 }
 
 static void EnvRenderer_UpdateBorderTextures(void) {
@@ -629,12 +633,12 @@ static void EnvRenderer_UpdateMapSides(void) {
 	BlockID block = WorldEnv_SidesBlock;
 
 	if (Block_Draw[block] == DRAW_GAS) return;
-	struct Rectangle2D rects[4]; 
+	Rect2D rects[4]; 
 	EnvRenderer_CalcBorderRects(rects);
 
 	Int32 i; sides_vertices = 0;
 	for (i = 0; i < 4; i++) {
-		struct Rectangle2D r = rects[i];
+		Rect2D r = rects[i];
 		sides_vertices += EnvRenderer_Vertices(r.Width, r.Height); /* YQuads outside */
 	}
 
@@ -656,7 +660,7 @@ static void EnvRenderer_UpdateMapSides(void) {
 	Block_Tint(col, block)
 
 	for (i = 0; i < 4; i++) {
-		struct Rectangle2D r = rects[i];
+		Rect2D r = rects[i];
 		EnvRenderer_DrawBorderY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, (Real32)y, col,
 			0, borders_YOffset(block), &temp);
 	}
@@ -680,12 +684,12 @@ static void EnvRenderer_UpdateMapEdges(void) {
 	BlockID block = WorldEnv_EdgeBlock;
 
 	if (Block_Draw[block] == DRAW_GAS) return;
-	struct Rectangle2D rects[4];
+	Rect2D rects[4];
 	EnvRenderer_CalcBorderRects(rects);
 
 	Int32 i; edges_vertices = 0;
 	for (i = 0; i < 4; i++) {
-		struct Rectangle2D r = rects[i];
+		Rect2D r = rects[i];
 		edges_vertices += EnvRenderer_Vertices(r.Width, r.Height); /* YPlanes outside */
 	}
 
@@ -703,7 +707,7 @@ static void EnvRenderer_UpdateMapEdges(void) {
 
 	Real32 y = (Real32)WorldEnv_EdgeHeight;
 	for (i = 0; i < 4; i++) {
-		struct Rectangle2D r = rects[i];
+		Rect2D r = rects[i];
 		EnvRenderer_DrawBorderY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, col,
 			borders_HorOffset(block), borders_YOffset(block), &temp);
 	}

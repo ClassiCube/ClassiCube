@@ -1,7 +1,6 @@
 #ifndef CC_DISPLAYDEVICE_H
 #define CC_DISPLAYDEVICE_H
 #include "Core.h"
-#include "2DStructs.h"
 /* Contains structs related to monitor displays.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3 | Based originally on OpenTK
 */
@@ -12,7 +11,7 @@
 * See license.txt for licensing detailed licensing details.
 */
 
-struct DisplayDevice { Int32 BitsPerPixel; struct Rectangle2D Bounds; };
+struct DisplayDevice { Int32 BitsPerPixel; Rect2D Bounds; };
 struct DisplayDevice DisplayDevice_Default;
 void* DisplayDevice_Meta[3];
 

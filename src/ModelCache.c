@@ -807,7 +807,7 @@ static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) 
 	Gfx_SetAlphaTest(false);
 
 	UInt8 type = Model_skinType;
-	struct ModelLimbs* set = &model->Limbs[type == SKIN_TYPE_64x64_SLIM ? 2 : (type == SKIN_TYPE_64x64 ? 1 : 0)];
+	struct ModelLimbs* set = &model->Limbs[type == SKIN_64x64_SLIM ? 2 : (type == SKIN_64x64 ? 1 : 0)];
 
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &model->Head, true);
 	Model_DrawPart(&model->Torso);
@@ -821,7 +821,7 @@ static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) 
 	Model_UpdateVB();
 
 	Gfx_SetAlphaTest(true);
-	if (type != SKIN_TYPE_64x32) {
+	if (type != SKIN_64x32) {
 		Model_DrawPart(&model->TorsoLayer);
 		Model_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  &set->LeftLegLayer,  false);
 		Model_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, &set->RightLegLayer, false);
@@ -837,10 +837,10 @@ static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) 
 
 static void HumanModel_DrawArm(struct Entity* entity, struct ModelSet* model) {
 	UInt8 type = Model_skinType;
-	struct ModelLimbs* set = &model->Limbs[type == SKIN_TYPE_64x64_SLIM ? 2 : (type == SKIN_TYPE_64x64 ? 1 : 0)];
+	struct ModelLimbs* set = &model->Limbs[type == SKIN_64x64_SLIM ? 2 : (type == SKIN_64x64 ? 1 : 0)];
 
 	Model_DrawArmPart(&set->RightArm);
-	if (type != SKIN_TYPE_64x32) {
+	if (type != SKIN_64x32) {
 		Model_DrawArmPart(&set->RightArmLayer);
 	}
 	Model_UpdateVB();
@@ -1166,7 +1166,7 @@ if (Block_Tinted[block]) {\
 
 static void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
 	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, FACE_ZMAX);
-	struct TextureRec rec = Atlas1D_TexRec(texLoc, 1, &BlockModel_texIndex);
+	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &BlockModel_texIndex);
 	BlockModel_FlushIfNotSame;
 
 	PackedCol col = Model_Cols[0];
@@ -1193,7 +1193,7 @@ static void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
 
 static void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
 	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, FACE_XMAX);
-	struct TextureRec rec = Atlas1D_TexRec(texLoc, 1, &BlockModel_texIndex);
+	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &BlockModel_texIndex);
 	BlockModel_FlushIfNotSame;
 
 	PackedCol col = Model_Cols[0];

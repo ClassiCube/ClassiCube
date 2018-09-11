@@ -15,6 +15,7 @@
 #include "Physics.h"
 #include "Model.h"
 #include "Audio.h"
+#include "Bitmap.h"
 
 /*########################################################################################################################*
 *----------------------------------------------------AnimatedComponent----------------------------------------------------*
@@ -589,7 +590,7 @@ static bool ShadowComponent_GetBlocks(struct Entity* entity, Int32 x, Int32 y, I
 #define sh_half (sh_size / 2)
 static void ShadowComponent_MakeTex(void) {
 	UInt8 pixels[Bitmap_DataSize(sh_size, sh_size)];
-	struct Bitmap bmp; Bitmap_Create(&bmp, sh_size, sh_size, pixels);
+	Bitmap bmp; Bitmap_Create(&bmp, sh_size, sh_size, pixels);
 
 	UInt32 inPix  = PackedCol_ARGB(0, 0, 0, 200);
 	UInt32 outPix = PackedCol_ARGB(0, 0, 0, 0);

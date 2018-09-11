@@ -25,12 +25,12 @@ HDC win_DC;
 UInt8 win_State = WINDOW_STATE_NORMAL;
 bool invisible_since_creation; /* Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront) */
 Int32 suppress_resize; /* Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events */
-struct Rectangle2D previous_bounds; /* Used to restore previous size when leaving fullscreen mode */
+Rect2D prev_bounds; /* Used to restore previous size when leaving fullscreen mode */
 
-static struct Rectangle2D Window_FromRect(RECT rect) {
-	struct Rectangle2D r;
+static Rect2D Window_FromRect(RECT rect) {
+	Rect2D r;
 	r.X = rect.left; r.Y = rect.top;
-	r.Width = RECT_WIDTH(rect);
+	r.Width  = RECT_WIDTH(rect);
 	r.Height = RECT_HEIGHT(rect);
 	return r;
 }
@@ -395,8 +395,7 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_PURE Stri
 	/* TODO: UngroupFromTaskbar(); */
 
 	/* Find out the final window rectangle, after the WM has added its chrome (titlebar, sidebars etc). */
-	RECT rect; rect.left = x; rect.top = y; 
-	rect.right = x + width; rect.bottom = y + height;
+	RECT rect = { x, y, x + width, y + height };
 	AdjustWindowRect(&rect, win_Style, false);
 
 	WNDCLASSEXW wc = { 0 };
@@ -494,27 +493,25 @@ void Window_SetClipboardText(STRING_PURE String* value) {
 }
 
 
-void Window_SetBounds(struct Rectangle2D rect) {
+void Window_SetBounds(Rect2D rect) {
 	/* Note: the bounds variable is updated when the resize/move message arrives.*/
 	SetWindowPos(win_Handle, NULL, rect.X, rect.Y, rect.Width, rect.Height, 0);
 }
 
-void Window_SetLocation(struct Point2D point) {
-	SetWindowPos(win_Handle, NULL, point.X, point.Y, 0, 0, SWP_NOSIZE);
+void Window_SetLocation(Int32 x, Int32 y) {
+	SetWindowPos(win_Handle, NULL, x, y, 0, 0, SWP_NOSIZE);
 }
 
-void Window_SetSize(struct Size2D size) {
-	SetWindowPos(win_Handle, NULL, 0, 0, size.Width, size.Height, SWP_NOMOVE);
+void Window_SetSize(Int32 width, Int32 height) {
+	SetWindowPos(win_Handle, NULL, 0, 0, width, height, SWP_NOMOVE);
 }
 
-void Window_SetClientSize(struct Size2D size) {
+void Window_SetClientSize(Int32 width, Int32 height) {
 	DWORD style = GetWindowLongW(win_Handle, GWL_STYLE);
-	RECT rect; rect.left = 0; rect.top = 0;
-	rect.right = size.Width; rect.bottom = size.Height;
+	RECT rect = { 0, 0, width, height };
 
 	AdjustWindowRect(&rect, style, false);
-	struct Size2D adjSize = { RECT_WIDTH(rect), RECT_HEIGHT(rect) };
-	Window_SetSize(adjSize);
+	Window_SetSize(RECT_WIDTH(rect), RECT_HEIGHT(rect));
 }
 
 void* Window_GetWindowHandle(void) { return win_Handle; }
@@ -570,7 +567,7 @@ void Window_SetWindowState(UInt8 state) {
 
 		/* Reset state to avoid strange side-effects from maximized/minimized windows. */
 		Window_ResetWindowState();
-		previous_bounds = Window_Bounds;
+		prev_bounds = Window_Bounds;
 		Window_SetHiddenBorder(true);
 
 		command = SW_MAXIMIZE;
@@ -584,20 +581,22 @@ void Window_SetWindowState(UInt8 state) {
 	if (exiting_fullscreen) Window_SetHiddenBorder(false);
 
 	/* Restore previous window size/location if necessary */
-	if (command == SW_RESTORE && !Rectangle2D_Equals(previous_bounds, Rectangle2D_Empty)) {
-		Window_SetBounds(previous_bounds);
-		previous_bounds = Rectangle2D_Empty;
+	if (command == SW_RESTORE && (prev_bounds.Width || prev_bounds.Height)) {
+		Window_SetBounds(prev_bounds);
+		prev_bounds.Width = 0; prev_bounds.Height = 0;
 	}
 }
 
-struct Point2D Window_PointToClient(struct Point2D point) {
+Point2D Window_PointToClient(Int32 x, Int32 y) {
+	Point2D point = { x, y };
 	if (!ScreenToClient(win_Handle, &point)) {
 		ErrorHandler_FailWithCode(GetLastError(), "Converting point from client to screen coordinates");
 	}
 	return point;
 }
 
-struct Point2D Window_PointToScreen(struct Point2D point) {
+Point2D Window_PointToScreen(Int32 x, Int32 y) {
+	Point2D point = { x, y };
 	if (!ClientToScreen(win_Handle, &point)) {
 		ErrorHandler_FailWithCode(GetLastError(), "Converting point from screen to client coordinates");
 	}
@@ -617,12 +616,12 @@ void Window_ProcessEvents(void) {
 	}
 }
 
-struct Point2D Window_GetDesktopCursorPos(void) {
-	POINT p; GetCursorPos(&p);
-	return Point2D_Make(p.x, p.y);
+Point2D Window_GetDesktopCursorPos(void) {
+	POINT point; GetCursorPos(&point);
+	Point2D p = { point.x, point.y }; return p;
 }
-void Window_SetDesktopCursorPos(struct Point2D point) {
-	SetCursorPos(point.X, point.Y);
+void Window_SetDesktopCursorPos(Int32 x, Int32 y) {
+	SetCursorPos(x, y);
 }
 
 bool win_cursorVisible = true;

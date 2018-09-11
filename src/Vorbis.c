@@ -188,6 +188,7 @@ static UInt32 Codebook_Lookup1Values(UInt32 entries, UInt32 dimensions) {
 	return 0;
 }
 
+#define CODEWORD_UNUSED UInt8_MaxValue
 static bool Codebook_CalcCodewords(struct Codebook* c, UInt8* len) {
 	c->Codewords    = Mem_Alloc(c->NumCodewords, sizeof(UInt32), "codewords");
 	c->CodewordLens = Mem_Alloc(c->NumCodewords, sizeof(UInt8),  "raw codeword lens");
@@ -199,7 +200,7 @@ static bool Codebook_CalcCodewords(struct Codebook* c, UInt8* len) {
 
 	/* add codeword 0 to tree */
 	for (i = 0; i < c->Entries; i++) {
-		if (len[i] == UInt8_MaxValue) continue;
+		if (len[i] == CODEWORD_UNUSED) continue;
 
 		c->Codewords[0]    = 0;
 		c->CodewordLens[0] = len[i];
@@ -215,7 +216,7 @@ static bool Codebook_CalcCodewords(struct Codebook* c, UInt8* len) {
 	i++; /* first codeword was already handled */
 	for (j = 1; i < c->Entries; i++) {
 		UInt32 root = len[i];
-		if (root == UInt8_MaxValue) continue;
+		if (root == CODEWORD_UNUSED) continue;
 
 		/* per spec, find lowest possible value (leftmost) */
 		while (root && next_codewords[root] == 0) root--;
@@ -251,7 +252,7 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 			if (sparse) {
 				Int32 flag = Vorbis_ReadBits(ctx, 1);
 				if (!flag) {
-					codewordLens[i] = UInt8_MaxValue; 
+					codewordLens[i] = CODEWORD_UNUSED;
 					continue; /* unused entry */
 				}
 			}

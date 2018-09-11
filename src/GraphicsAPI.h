@@ -1,6 +1,5 @@
 #ifndef CC_GFXAPI_H
 #define CC_GFXAPI_H
-#include "Bitmap.h"
 #include "PackedCol.h"
 #include "Vectors.h"
 #include "GameStructs.h"
@@ -44,8 +43,8 @@ struct Matrix Gfx_View, Gfx_Projection;
 /* Callback invoked when the current context is lost, and is repeatedly invoked until the context can be retrieved. */
 ScheduledTaskCallback Gfx_LostContextFunction;
 
-GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, bool managedPool, bool mipmaps);
-void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 x, Int32 y, struct Bitmap* part, bool mipmaps);
+GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps);
+void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 x, Int32 y, Bitmap* part, bool mipmaps);
 void Gfx_BindTexture(GfxResourceID texId);
 void Gfx_DeleteTexture(GfxResourceID* texId);
 void Gfx_SetTexturing(bool enabled);

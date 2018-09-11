@@ -6,7 +6,7 @@
 #include "GraphicsAPI.h"
 #include "Platform.h"
 
-void Atlas2D_UpdateState(struct Bitmap* bmp) {
+void Atlas2D_UpdateState(Bitmap* bmp) {
 	Atlas2D_Bitmap    = *bmp;
 	Atlas2D_TileSize  = bmp->Width  / ATLAS2D_TILES_PER_ROW;
 	Atlas2D_RowsCount = bmp->Height / Atlas2D_TileSize;
@@ -14,7 +14,7 @@ void Atlas2D_UpdateState(struct Bitmap* bmp) {
 	Block_RecalculateSpriteBB();
 }
 
-static GfxResourceID Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, struct Bitmap* element) {
+static GfxResourceID Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element) {
 	Int32 size = Atlas2D_TileSize;
 	Int32 x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
 	if (y >= Atlas2D_RowsCount) return NULL;
@@ -25,7 +25,7 @@ static GfxResourceID Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, struct Bi
 
 GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {
 	Int32 size = Atlas2D_TileSize;
-	struct Bitmap tile;
+	Bitmap tile;
 
 	/* Try to allocate bitmap on stack if possible */
 	if (size > 64) {
@@ -46,12 +46,12 @@ void Atlas2D_Free(void) {
 }
 
 
-struct TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index) {
+TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index) {
 	*index  = Atlas1D_Index(texLoc);
 	Int32 y = Atlas1D_RowId(texLoc);
 
 	/* Adjust coords to be slightly inside - fixes issues with AMD/ATI cards. */
-	struct TextureRec rec;
+	TextureRec rec;
 	rec.U1 = 0.0f; 
 	rec.V1 = y * Atlas1D_InvTileSize;
 	rec.U2 = (uCount - 1) + UV2_Scale;
@@ -61,7 +61,7 @@ struct TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index) 
 
 static void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 	Int32 tileSize = Atlas2D_TileSize;
-	struct Bitmap atlas1D;
+	Bitmap atlas1D;
 	Bitmap_Allocate(&atlas1D, tileSize, atlas1DHeight);
 
 	Int32 index1D;

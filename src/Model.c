@@ -108,7 +108,7 @@ void Model_SetupState(struct Model* model, struct Entity* entity) {
 	model->index = 0;
 	PackedCol col = entity->VTABLE->GetCol(entity);
 
-	bool _64x64 = entity->SkinType != SKIN_TYPE_64x32;
+	bool _64x64 = entity->SkinType != SKIN_64x32;
 	/* only apply when using humanoid skins */
 	_64x64 &= model->UsesHumanSkin || entity->MobTextureId;
 
@@ -150,7 +150,7 @@ void Model_ApplyTexture(struct Entity* entity) {
 	}
 
 	Gfx_BindTexture(tex);
-	bool _64x64 = Model_skinType != SKIN_TYPE_64x32;
+	bool _64x64 = Model_skinType != SKIN_64x32;
 	Model_uScale = entity->uScale * 0.015625f;
 	Model_vScale = entity->vScale * (_64x64 ? 0.015625f : 0.03125f);
 }

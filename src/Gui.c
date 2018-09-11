@@ -11,6 +11,7 @@
 #include "InputHandler.h"
 #include "ErrorHandler.h"
 #include "Platform.h"
+#include "Bitmap.h"
 
 struct Screen* Gui_Status;
 void Gui_DefaultRecreate(void* elem) {
@@ -226,15 +227,15 @@ void Gui_CalcCursorVisible(void) {
 }
 
 
-void TextAtlas_Make(struct TextAtlas* atlas, STRING_PURE String* chars, struct FontDesc* font, STRING_PURE String* prefix) {
+void TextAtlas_Make(struct TextAtlas* atlas, STRING_PURE String* chars, FontDesc* font, STRING_PURE String* prefix) {
 	struct DrawTextArgs args; DrawTextArgs_Make(&args, prefix, font, true);
-	struct Size2D size = Drawer2D_MeasureText(&args);
+	Size2D size = Drawer2D_MeasureText(&args);
 	atlas->Offset = size.Width;
 	atlas->FontSize = font->Size;
 	size.Width += 16 * chars->length;
 
 	Mem_Set(atlas->Widths, 0, sizeof(atlas->Widths));
-	struct Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
 	{
 		Drawer2D_DrawText(&args, 0, 0);

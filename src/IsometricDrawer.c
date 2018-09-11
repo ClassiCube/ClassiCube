@@ -70,7 +70,7 @@ static TextureLoc IsometricDrawer_GetTexLoc(BlockID block, Face face) {
 #define AddVertex *iso_vertices = v; iso_vertices++;
 static void IsometricDrawer_SpriteZQuad(BlockID block, bool firstPart) {
 	TextureLoc texLoc = Block_GetTexLoc(block, FACE_ZMAX);
-	struct TextureRec rec = Atlas1D_TexRec(texLoc, 1, &iso_texIndex);
+	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &iso_texIndex);
 	if (iso_lastTexIndex != iso_texIndex) IsometricDrawer_Flush();
 
 	VertexP3fT2fC4b v;
@@ -95,7 +95,7 @@ static void IsometricDrawer_SpriteZQuad(BlockID block, bool firstPart) {
 
 static void IsometricDrawer_SpriteXQuad(BlockID block, bool firstPart) {
 	TextureLoc texLoc = Block_GetTexLoc(block, FACE_XMAX);
-	struct TextureRec rec = Atlas1D_TexRec(texLoc, 1, &iso_texIndex);
+	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &iso_texIndex);
 	if (iso_lastTexIndex != iso_texIndex) IsometricDrawer_Flush();
 
 	VertexP3fT2fC4b v;

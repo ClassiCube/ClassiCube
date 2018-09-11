@@ -39,7 +39,7 @@ struct ListScreen;
 struct ListScreen {
 	MenuBase_Layout
 	struct ButtonWidget Buttons[LIST_SCREEN_BUTTONS];
-	struct FontDesc Font;
+	FontDesc Font;
 	Real32 WheelAcc;
 	Int32 CurrentIndex;
 	Widget_LeftClick EntryClick;
@@ -50,7 +50,7 @@ struct ListScreen {
 	StringsBuffer Entries; /* NOTE: this is the last member so we can avoid memsetting it to 0 */
 };
 
-#define MenuScreen_Layout MenuBase_Layout struct FontDesc TitleFont, TextFont;
+#define MenuScreen_Layout MenuBase_Layout FontDesc TitleFont, TextFont;
 struct MenuScreen { MenuScreen_Layout };
 
 struct PauseScreen {
@@ -161,7 +161,7 @@ struct TexPackOverlay {
 /*########################################################################################################################*
 *--------------------------------------------------------Menu base--------------------------------------------------------*
 *#########################################################################################################################*/
-static void Menu_Button(void* s, Int32 i, struct ButtonWidget* btn, Int32 width, String* text, struct FontDesc* font, Widget_LeftClick onClick, UInt8 horAnchor, UInt8 verAnchor, Int32 x, Int32 y) {
+static void Menu_Button(void* s, Int32 i, struct ButtonWidget* btn, Int32 width, String* text, FontDesc* font, Widget_LeftClick onClick, UInt8 horAnchor, UInt8 verAnchor, Int32 x, Int32 y) {
 	struct Menu* menu = (struct Menu*)s;
 	ButtonWidget_Create(btn, width, text, font, onClick);
 
@@ -169,7 +169,7 @@ static void Menu_Button(void* s, Int32 i, struct ButtonWidget* btn, Int32 width,
 	Widget_SetLocation(menu->Widgets[i], horAnchor, verAnchor, x, y);
 }
 
-static void Menu_Label(void* s, Int32 i, struct TextWidget* label, String* text, struct FontDesc* font, UInt8 horAnchor, UInt8 verAnchor, Int32 x, Int32 y) {
+static void Menu_Label(void* s, Int32 i, struct TextWidget* label, String* text, FontDesc* font, UInt8 horAnchor, UInt8 verAnchor, Int32 x, Int32 y) {
 	struct Menu* menu = (struct Menu*)s;
 	TextWidget_Create(label, text, font);
 
@@ -177,7 +177,7 @@ static void Menu_Label(void* s, Int32 i, struct TextWidget* label, String* text,
 	Widget_SetLocation(menu->Widgets[i], horAnchor, verAnchor, x, y);
 }
 
-static void Menu_Input(void* s, Int32 i, struct MenuInputWidget* input, Int32 width, String* text, struct FontDesc* font, struct MenuInputValidator* v, UInt8 horAnchor, UInt8 verAnchor, Int32 x, Int32 y) {
+static void Menu_Input(void* s, Int32 i, struct MenuInputWidget* input, Int32 width, String* text, FontDesc* font, struct MenuInputValidator* v, UInt8 horAnchor, UInt8 verAnchor, Int32 x, Int32 y) {
 	struct Menu* menu = (struct Menu*)s;
 	MenuInputWidget_Create(input, width, 30, text, font, v);
 
@@ -186,7 +186,7 @@ static void Menu_Input(void* s, Int32 i, struct MenuInputWidget* input, Int32 wi
 	input->Base.ShowCaret = true;
 }
 
-static void Menu_Back(void* s, Int32 i, struct ButtonWidget* btn, const char* label, struct FontDesc* font, Widget_LeftClick onClick) {
+static void Menu_Back(void* s, Int32 i, struct ButtonWidget* btn, const char* label, FontDesc* font, Widget_LeftClick onClick) {
 	Int32 width = Game_UseClassicOptions ? 400 : 200;
 	String msg = String_FromReadonly(label);
 	Menu_Button(s, i, btn, width, &msg, font, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
@@ -613,7 +613,7 @@ static void PauseScreen_CheckHacksAllowed(void* screen) {
 
 static void PauseScreen_ContextRecreated(void* screen) {
 	struct PauseScreen* s = screen;
-	struct FontDesc* font = &s->TitleFont;
+	FontDesc* font = &s->TitleFont;
 
 	if (Game_UseClassicOptions) {
 		PauseScreen_MakeClassic(s, 0, -100, "Options...",            Menu_SwitchClassicOptions);
@@ -1436,7 +1436,7 @@ static void FontListScreen_EntryClick(void* screen, void* widget) {
 }
 
 static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* button, STRING_PURE String* text) {
-	struct FontDesc font = { 0 };
+	FontDesc font = { 0 };
 	Font_Make(&font, text, 16, FONT_STYLE_NORMAL);
 	ButtonWidget_Set(button, text, &font);
 	Font_Free(&font);

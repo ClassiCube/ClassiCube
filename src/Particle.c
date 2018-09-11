@@ -21,7 +21,7 @@ GfxResourceID Particles_TexId, Particles_VB;
 Random rnd;
 bool particle_hitTerrain;
 
-void Particle_DoRender(Vector2* size, Vector3* pos, struct TextureRec* rec, PackedCol col, VertexP3fT2fC4b* vertices) {
+void Particle_DoRender(Vector2* size, Vector3* pos, TextureRec* rec, PackedCol col, VertexP3fT2fC4b* vertices) {
 	Real32 sX = size->X * 0.5f, sY = size->Y * 0.5f;
 	Vector3 centre = *pos; centre.Y += sY;
 
@@ -141,7 +141,7 @@ static bool RainParticle_Tick(struct RainParticle* p, Real64 delta) {
 	return Particle_PhysicsTick(&p->Base, 3.5f, false, delta) || particle_hitTerrain;
 }
 
-struct TextureRec Rain_Rec = { 2.0f / 128.0f, 14.0f / 128.0f, 5.0f / 128.0f, 16.0f / 128.0f };
+TextureRec Rain_Rec = { 2.0f / 128.0f, 14.0f / 128.0f, 5.0f / 128.0f, 16.0f / 128.0f };
 static void RainParticle_Render(struct RainParticle* p, Real32 t, VertexP3fT2fC4b* vertices) {
 	Vector3 pos;
 	Vector3_Lerp(&pos, &p->Base.LastPos, &p->Base.NextPos, t);
@@ -191,7 +191,7 @@ static void Rain_Tick(Real64 delta) {
 *#########################################################################################################################*/
 struct TerrainParticle {
 	struct Particle Base;
-	struct TextureRec Rec;
+	TextureRec Rec;
 	TextureLoc TexLoc;
 	BlockID Block;
 };
@@ -360,7 +360,7 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 	Vector3I_ToVector3(&worldPos, &coords);
 	TextureLoc texLoc = Block_GetTexLoc(old, FACE_XMIN);
 	Int32 texIndex;
-	struct TextureRec baseRec = Atlas1D_TexRec(texLoc, 1, &texIndex);
+	TextureRec baseRec = Atlas1D_TexRec(texLoc, 1, &texIndex);
 	Real32 uScale = (1.0f / 16.0f), vScale = (1.0f / 16.0f) * Atlas1D_InvTileSize;
 
 	Vector3 minBB = Block_MinBB[old];
@@ -395,7 +395,7 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 				velocity.Y = CELL_CENTRE + (cellY - 0.0f) + (Random_Float(&rnd) * 0.4f - 0.2f);
 				velocity.Z = CELL_CENTRE + (cellZ - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
 
-				struct TextureRec rec = baseRec;
+				TextureRec rec = baseRec;
 				rec.U1 = baseRec.U1 + Random_Range(&rnd, minU, maxUsedU) * uScale;
 				rec.V1 = baseRec.V1 + Random_Range(&rnd, minV, maxUsedV) * vScale;
 				rec.U2 = rec.U1 + 4 * uScale;

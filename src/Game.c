@@ -36,6 +36,7 @@
 #include "Audio.h"
 #include "DisplayDevice.h"
 #include "Stream.h"
+#include "Bitmap.h"
 
 struct IGameComponent Game_Components[26];
 Int32 Game_ComponentsCount;
@@ -121,7 +122,7 @@ void Game_SetDefaultTexturePack(STRING_PURE String* texPack) {
 	Options_Set(OPT_DEFAULT_TEX_PACK, texPack);
 }
 
-bool Game_ChangeTerrainAtlas(struct Bitmap* atlas) {
+bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
 	String terrain = String_FromConst("terrain.png");
 	if (!Game_ValidateBitmap(&terrain, atlas)) return false;
 
@@ -206,7 +207,7 @@ bool Game_CanPick(BlockID block) {
 }
 
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, STRING_PURE String* file, UInt8* skinType) {
-	struct Bitmap bmp; 
+	Bitmap bmp; 
 	ReturnCode res = Bitmap_DecodePng(&bmp, src);
 	if (res) { Chat_LogError(res, "decoding", file); }
 
@@ -221,7 +222,7 @@ bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, STRING_PURE St
 	return success;
 }
 
-bool Game_ValidateBitmap(STRING_PURE String* file, struct Bitmap* bmp) {
+bool Game_ValidateBitmap(STRING_PURE String* file, Bitmap* bmp) {
 	if (!bmp->Scan0) {
 		Chat_Add1("&cError loading %s from the texture pack.", file);
 		return false;
@@ -260,7 +261,7 @@ Int32 Game_CalcRenderType(STRING_PURE String* type) {
 }
 
 static void Game_UpdateClientSize(void) {
-	struct Size2D size = Window_ClientSize;
+	Size2D size = Window_ClientSize;
 	Game_Width  = max(size.Width,  1);
 	Game_Height = max(size.Height, 1);
 }
@@ -287,7 +288,7 @@ static void Game_OnNewMapLoadedCore(void* obj) {
 }
 
 static void Game_TextureChangedCore(void* obj, struct Stream* src, String* name) {
-	struct Bitmap bmp;
+	Bitmap bmp;
 	if (String_CaselessEqualsConst(name, "terrain.png")) {
 		ReturnCode res = Bitmap_DecodePng(&bmp, src);
 
@@ -751,11 +752,11 @@ void Game_Run(Int32 width, Int32 height, STRING_PURE String* title, struct Displ
 #include "Builder.h"
 void AdvLightingBuilder_SetActive(void) { NormalBuilder_SetActive(); }
 #if CC_BUILD_NIX
-void Font_Make(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) { desc->Size = size; desc->Style = style; }
-void Font_Free(struct FontDesc* desc) { }
+void Font_Make(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) { desc->Size = size; desc->Style = style; }
+void Font_Free(FontDesc* desc) { }
 void Font_GetNames(StringsBuffer* buffer) { }
-struct Size2D Platform_TextMeasure(struct DrawTextArgs* args) { }
-void Platform_SetBitmap(struct Bitmap* bmp) { }
-struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) { }
+Size2D Platform_TextMeasure(struct DrawTextArgs* args) { }
+void Platform_SetBitmap(Bitmap* bmp) { }
+Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) { }
 void Platform_ReleaseBitmap(void) { }
 #endif

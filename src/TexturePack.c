@@ -440,7 +440,7 @@ void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
 }
 
 ReturnCode TexturePack_ExtractTerrainPng(struct Stream* stream) {
-	struct Bitmap bmp; 
+	Bitmap bmp; 
 	ReturnCode res = Bitmap_DecodePng(&bmp, stream);
 
 	if (!res) {

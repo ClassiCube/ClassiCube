@@ -19,6 +19,7 @@
 #include "Input.h"
 #include "Gui.h"
 #include "Stream.h"
+#include "Bitmap.h"
 
 const char* NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const char* ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
@@ -452,7 +453,7 @@ void TabList_MakeComponent(struct IGameComponent* comp) {
 *#########################################################################################################################*/
 #define PLAYER_NAME_EMPTY_TEX -30000
 static void Player_MakeNameTexture(struct Player* player) {
-	struct FontDesc font;
+	FontDesc font;
 	Font_Make(&font, &Game_FontName, 24, FONT_STYLE_NORMAL);
 
 	String displayName = String_FromRawArray(player->DisplayNameRaw);
@@ -462,7 +463,7 @@ static void Player_MakeNameTexture(struct Player* player) {
 	/* we want names to always be drawn not using the system font */
 	bool bitmapped = Drawer2D_UseBitmappedChat;
 	Drawer2D_UseBitmappedChat = true;
-	struct Size2D size = Drawer2D_MeasureText(&args);
+	Size2D size = Drawer2D_MeasureText(&args);
 
 	if (size.Width == 0) {
 		player->NameTex.ID = NULL;
@@ -472,7 +473,7 @@ static void Player_MakeNameTexture(struct Player* player) {
 		String shadowName = String_FromArray(buffer);
 
 		size.Width += 3; size.Height += 3;
-		struct Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+		Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 		Drawer2D_Begin(&bmp);
 		{
 			PackedCol origWhiteCol = Drawer2D_Cols['f'];
@@ -527,7 +528,7 @@ static void Player_DrawName(struct Player* player) {
 	}
 
 	VertexP3fT2fC4b vertices[4];
-	struct TextureRec rec = { 0.0f, 0.0f, player->NameTex.U2, player->NameTex.V2 };
+	TextureRec rec = { 0.0f, 0.0f, player->NameTex.U2, player->NameTex.V2 };
 	PackedCol col = PACKEDCOL_WHITE;
 	Particle_DoRender(&size, &pos, &rec, col, vertices);
 
@@ -587,7 +588,7 @@ void Player_ResetSkin(struct Player* player) {
 	entity->uScale = 1.0f; entity->vScale = 1.0f;
 	entity->MobTextureId = NULL;
 	entity->TextureId    = NULL;
-	entity->SkinType = SKIN_TYPE_64x32;
+	entity->SkinType = SKIN_64x32;
 }
 
 /* Apply or reset skin, for all players with same skin */
@@ -610,9 +611,9 @@ static void Player_SetSkinAll(struct Player* player, bool reset) {
 	}
 }
 
-static void Player_ClearHat(struct Bitmap* bmp, UInt8 skinType) {
+static void Player_ClearHat(Bitmap* bmp, UInt8 skinType) {
 	Int32 sizeX = (bmp->Width / 64) * 32;
-	Int32 yScale = skinType == SKIN_TYPE_64x32 ? 32 : 64;
+	Int32 yScale = skinType == SKIN_64x32 ? 32 : 64;
 	Int32 sizeY = (bmp->Height / yScale) * 16;
 	Int32 x, y;
 
@@ -639,12 +640,12 @@ static void Player_ClearHat(struct Bitmap* bmp, UInt8 skinType) {
 	}
 }
 
-static void Player_EnsurePow2(struct Player* player, struct Bitmap* bmp) {
+static void Player_EnsurePow2(struct Player* player, Bitmap* bmp) {
 	Int32 width  = Math_NextPowOf2(bmp->Width);
 	Int32 height = Math_NextPowOf2(bmp->Height);
 	if (width == bmp->Width && height == bmp->Height) return;
 
-	struct Bitmap scaled; Bitmap_Allocate(&scaled, width, height);
+	Bitmap scaled; Bitmap_Allocate(&scaled, width, height);
 	Int32 y;
 	UInt32 stride = (UInt32)(bmp->Width) * BITMAP_SIZEOF_PIXEL;
 	for (y = 0; y < bmp->Height; y++) {
@@ -680,7 +681,7 @@ static void Player_CheckSkin(struct Player* player) {
 	if (!item.ResultData) { Player_SetSkinAll(player, true); return; }
 
 	String url = String_FromRawArray(item.URL);
-	struct Stream mem; struct Bitmap bmp;
+	struct Stream mem; Bitmap bmp;
 	Stream_ReadonlyMemory(&mem, item.ResultData, item.ResultSize);
 
 	ReturnCode res = Bitmap_DecodePng(&bmp, &mem);
@@ -694,7 +695,7 @@ static void Player_CheckSkin(struct Player* player) {
 	Player_EnsurePow2(player, &bmp);
 	entity->SkinType = Utils_GetSkinType(&bmp);
 
-	if (entity->SkinType == SKIN_TYPE_INVALID) {
+	if (entity->SkinType == SKIN_INVALID) {
 		Player_SetSkinAll(player, true);
 	} else {
 		if (entity->Model->UsesHumanSkin) {

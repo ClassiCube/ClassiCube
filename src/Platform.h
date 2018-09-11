@@ -1,14 +1,11 @@
 #ifndef CC_PLATFORM_H
 #define CC_PLATFORM_H
 #include "Utils.h"
-#include "2DStructs.h"
 #include "PackedCol.h"
 /* Abstracts platform specific memory management, I/O, etc.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 struct DrawTextArgs;
-struct FontDesc;
-struct Bitmap;
 struct AsyncRequest;
 
 enum SOCKET_SELECT { SOCKET_SELECT_READ, SOCKET_SELECT_WRITE };
@@ -89,11 +86,11 @@ void  Waitable_Wait(void* handle);
 void  Waitable_WaitFor(void* handle, UInt32 milliseconds);
 
 void Font_GetNames(StringsBuffer* buffer);
-void Font_Make(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
-void Font_Free(struct FontDesc* desc);
-struct Size2D Platform_TextMeasure(struct DrawTextArgs* args);
-void Platform_SetBitmap(struct Bitmap* bmp);
-struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col);
+void Font_Make(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
+void Font_Free(FontDesc* desc);
+Size2D Platform_TextMeasure(struct DrawTextArgs* args);
+void Platform_SetBitmap(Bitmap* bmp);
+Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col);
 void Platform_ReleaseBitmap(void);
 
 void Socket_Create(SocketPtr* socket);

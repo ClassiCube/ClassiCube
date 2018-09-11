@@ -6,7 +6,6 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-struct Bitmap;
 struct DisplayDevice;
 struct Stream;
 
@@ -79,14 +78,14 @@ Real32 Game_GetChatScale(void);
 void Game_GetDefaultTexturePack(STRING_TRANSIENT String* texPack);
 void Game_SetDefaultTexturePack(STRING_PURE String* texPack);
 
-bool Game_ChangeTerrainAtlas(struct Bitmap* atlas);
+bool Game_ChangeTerrainAtlas(Bitmap* atlas);
 void Game_SetViewDistance(Int32 distance, bool userDist);
 void Game_UpdateProjection(void);
 void Game_Disconnect(STRING_PURE String* title, STRING_PURE String* reason);
 void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block);
 bool Game_CanPick(BlockID block);
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, STRING_PURE String* file, UInt8* skinType);
-bool Game_ValidateBitmap(STRING_PURE String* file, struct Bitmap* bmp);
+bool Game_ValidateBitmap(STRING_PURE String* file, Bitmap* bmp);
 Int32 Game_CalcRenderType(STRING_PURE String* type);
 void Game_SetFpsLimit(FpsLimit method);
 Real32 Game_CalcLimitMillis(FpsLimit method);

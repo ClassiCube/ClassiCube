@@ -7,6 +7,7 @@
 #include "Drawer2D.h"
 #include "Funcs.h"
 #include "AsyncDownloader.h"
+#include "Bitmap.h"
 
 #if CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
@@ -681,7 +682,7 @@ void Font_GetNames(StringsBuffer* buffer) {
 	EnumFontFamiliesW(hdc, NULL, Font_GetNamesCallback, buffer);
 }
 
-void Font_Make(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) {
+void Font_Make(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) {
 	desc->Size    = size; 
 	desc->Style   = style;
 	LOGFONTA font = { 0 };
@@ -697,33 +698,33 @@ void Font_Make(struct FontDesc* desc, STRING_PURE String* fontName, UInt16 size,
 	if (!desc->Handle) ErrorHandler_Fail("Creating font handle failed");
 }
 
-void Font_Free(struct FontDesc* desc) {
+void Font_Free(FontDesc* desc) {
 	if (!DeleteObject(desc->Handle)) ErrorHandler_Fail("Deleting font handle failed");
 	desc->Handle = NULL;
 }
 
 /* TODO: not associate font with device so much */
-struct Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
+Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
 	WCHAR str[300]; Platform_ConvertString(str, &args->Text);
 	HGDIOBJ oldFont = SelectObject(hdc, args->Font.Handle);
 	SIZE area; GetTextExtentPointW(hdc, str, args->Text.length, &area);
 
 	SelectObject(hdc, oldFont);
-	return Size2D_Make(area.cx, area.cy);
+	Size2D s = { area.cx, area.cy }; return s;
 }
 
 HBITMAP platform_dib;
 HBITMAP platform_oldBmp;
-struct Bitmap* platform_bmp;
+Bitmap* platform_bmp;
 void* platform_bits;
 
-void Platform_SetBitmap(struct Bitmap* bmp) {
+void Platform_SetBitmap(Bitmap* bmp) {
 	platform_bmp = bmp;
 	platform_bits = NULL;
 
 	BITMAPINFO bmi = { 0 };
 	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bmi.bmiHeader.biWidth = bmp->Width;
+	bmi.bmiHeader.biWidth  = bmp->Width;
 	bmi.bmiHeader.biHeight = -bmp->Height;
 	bmi.bmiHeader.biPlanes = 1;
 	bmi.bmiHeader.biBitCount = 32;
@@ -737,7 +738,7 @@ void Platform_SetBitmap(struct Bitmap* bmp) {
 /* TODO: check return codes and stuff */
 /* TODO: make text prettier.. somehow? */
 /* TODO: Do we need to / 255 instead of >> 8 ? */
-struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) {
+Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) {
 	WCHAR str[300]; Platform_ConvertString(str, &args->Text);
 
 	HGDIOBJ oldFont = (HFONT)SelectObject(hdc, (HFONT)args->Font.Handle);
@@ -745,7 +746,7 @@ struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, Pac
 	TextOutW(hdc, 0, 0, str, args->Text.length);
 
 	Int32 xx, yy;
-	struct Bitmap* bmp = platform_bmp;
+	Bitmap* bmp = platform_bmp;
 	for (yy = 0; yy < area.cy; yy++) {
 		UInt8* src = (UInt8*)platform_bits + (yy * (bmp->Width << 2));
 		UInt8* dst = (UInt8*)Bitmap_GetRow(bmp, y + yy); dst += x * BITMAP_SIZEOF_PIXEL;
@@ -764,7 +765,7 @@ struct Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, Pac
 	SelectObject(hdc, oldFont);
 	//DrawTextA(hdc, args->Text.buffer, args->Text.length,
 	//	&r, DT_NOPREFIX | DT_SINGLELINE | DT_NOCLIP);
-	return Size2D_Make(area.cx, area.cy);
+	Size2D s = { area.cx, area.cy }; return s;
 }
 
 void Platform_ReleaseBitmap(void) {

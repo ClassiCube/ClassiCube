@@ -165,7 +165,7 @@ static void Window_RefreshBorders(void) {
 static void Window_RefreshBounds(XEvent* e) {
 	Window_RefreshBorders();
 
-	struct Point2D loc = { e->xconfigure.x - borderLeft, e->xconfigure.y - borderTop };
+	Point2D loc = { e->xconfigure.x - borderLeft, e->xconfigure.y - borderTop };
 	if (loc.X != Window_Bounds.X || loc.Y != Window_Bounds.Y) {
 		Window_Bounds.X = loc.X; Window_Bounds.Y = loc.Y;
 		Event_RaiseVoid(&WindowEvents_Moved);
@@ -173,14 +173,14 @@ static void Window_RefreshBounds(XEvent* e) {
 
 	/* Note: width and height denote the internal (client) size.
 	   To get the external (window) size, we need to add the border size. */
-	struct Size2D size = {
+	Size2D size = {
 		e->xconfigure.width  + borderLeft + borderRight,
 		e->xconfigure.height + borderTop  + borderBottom 
 	};
 
-	if (size.Width != Window_Bounds.Width || size.Height != Window_Bounds.Height) {
-		Window_Bounds.Width = size.Width; Window_Bounds.Height = size.Height;
-		Window_ClientSize = Size2D_Make(e->xconfigure.width, e->xconfigure.height);
+	if (size.Width != Window_Bounds.Width || size.Height != Window_Bounds.Height) {		 
+		Window_ClientSize.Width  = e->xconfigure.width;  Window_Bounds.Width  = size.Width;
+		Window_ClientSize.Height = e->xconfigure.height; Window_Bounds.Height = size.Height;
 		Event_RaiseVoid(&WindowEvents_Resized);
 	}
 }
@@ -380,7 +380,7 @@ void Window_SetWindowState(UInt8 state) {
 	Window_ProcessEvents();
 }
 
-void Window_SetBounds(struct Rectangle2D rect) {
+void Window_SetBounds(Rect2D rect) {
 	Int32 width  = rect.Width  - borderLeft - borderRight;
 	Int32 height = rect.Height - borderTop  - borderBottom;
 	XMoveResizeWindow(win_display, win_handle, rect.X, rect.Y,
@@ -388,21 +388,20 @@ void Window_SetBounds(struct Rectangle2D rect) {
 	Window_ProcessEvents();
 }
 
-void Window_SetLocation(struct Point2D point) {
-	XMoveWindow(win_display, win_handle, point.X, point.Y);
+void Window_SetLocation(Int32 x, Int32 y) {
+	XMoveWindow(win_display, win_handle, x, y);
 	Window_ProcessEvents();
 }
 
-void Window_SetSize(struct Size2D size) {
-	Int32 width  = size.Width  - borderLeft - borderRight;
-	Int32 height = size.Height - borderTop  - borderBottom;
-	XResizeWindow(win_display, win_handle, 
-		max(width, 1), max(height, 1));
+void Window_SetSize(Int32 width, Int32 height) {
+	Int32 adjWidth  = width  - borderLeft - borderRight;
+	Int32 adjHeight = height - borderTop  - borderBottom;
+	XResizeWindow(win_display, win_handle, adjWidth, adjHeight);
 	Window_ProcessEvents();
 }
 
-void Window_SetClientSize(struct Size2D size) {
-	XResizeWindow(win_display, win_handle, size.Width, size.Height);
+void Window_SetClientSize(Int32 width, Int32 height) {
+	XResizeWindow(win_display, win_handle, width, height);
 	Window_ProcessEvents();
 }
 
@@ -618,29 +617,29 @@ void Window_ProcessEvents(void) {
 	}
 }
 
-struct Point2D Window_PointToClient(struct Point2D point) {
+Point2D Window_PointToClient(Int32 x, Int32 y) {
 	int ox, oy;
 	Window child;
-	XTranslateCoordinates(win_display, win_rootWin, win_handle, point.X, point.Y, &ox, &oy, &child);
-	return Point2D_Make(ox, oy);
+	XTranslateCoordinates(win_display, win_rootWin, win_handle, x, y, &ox, &oy, &child);
+	Point2D p = { ox, oy }; return p;
 }
 
-struct Point2D Window_PointToScreen(struct Point2D point) {
+Point2D Window_PointToScreen(Int32 x, Int32 y) {
 	int ox, oy;
 	Window child;
-	XTranslateCoordinates(win_display, win_handle, win_rootWin, point.X, point.Y, &ox, &oy, &child);
-	return Point2D_Make(ox, oy);
+	XTranslateCoordinates(win_display, win_handle, win_rootWin, x, y, &ox, &oy, &child);
+	Point2D p = { ox, oy }; return p;
 }
 
-struct Point2D Window_GetDesktopCursorPos(void) {
+Point2D Window_GetDesktopCursorPos(void) {
 	Window root, child;
 	int rootX, rootY, childX, childY, mask;
 	XQueryPointer(win_display, win_rootWin, &root, &child, &rootX, &rootY, &childX, &childY, &mask);
-	return Point2D_Make(rootX, rootY);
+	Point2D p = { rootX, rootY }; return p;
 }
 
-void Window_SetDesktopCursorPos(struct Point2D point) {
-	XWarpPointer(win_display, NULL, win_rootWin, 0, 0, 0, 0, point.X, point.Y);
+void Window_SetDesktopCursorPos(Int32 x, Int32 y) {
+	XWarpPointer(win_display, NULL, win_rootWin, 0, 0, 0, 0, x, y);
 	XFlush(win_display); /* TODO: not sure if XFlush call is necessary */
 }
 

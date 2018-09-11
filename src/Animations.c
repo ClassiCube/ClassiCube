@@ -11,6 +11,7 @@
 #include "ErrorHandler.h"
 #include "Errors.h"
 #include "Stream.h"
+#include "Bitmap.h"
 #define LIQUID_ANIM_MAX 64
 
 /*########################################################################################################################*
@@ -142,7 +143,7 @@ struct AnimationData {
 	Int16 Tick, TickDelay;
 };
 
-struct Bitmap anims_bmp;
+Bitmap anims_bmp;
 struct AnimationData anims_list[ATLAS1D_MAX_ATLASES];
 Int32 anims_count;
 bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
@@ -215,7 +216,7 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, Int32
 
 	Int32 index_1D = Atlas1D_Index(texLoc);
 	Int32 rowId_1D = Atlas1D_RowId(texLoc);
-	struct Bitmap animPart; Bitmap_Create(&animPart, size, size, buffer);
+	Bitmap animPart; Bitmap_Create(&animPart, size, size, buffer);
 
 	if (!data) {
 		if (texLoc == 30) {

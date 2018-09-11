@@ -7,6 +7,7 @@
 #include "Inventory.h"
 #include "Event.h"
 #include "Platform.h"
+#include "Bitmap.h"
 
 const char* Sound_Names[SOUND_COUNT] = {
 	"none", "wood", "gravel", "grass", "stone",
@@ -275,7 +276,7 @@ void Block_RecalculateSpriteBB(void) {
 	}
 }
 
-static Real32 Block_GetSpriteBB_MinX(Int32 size, Int32 tileX, Int32 tileY, struct Bitmap* bmp) {
+static Real32 Block_GetSpriteBB_MinX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (x = 0; x < size; x++) {
 		for (y = 0; y < size; y++) {
@@ -288,7 +289,7 @@ static Real32 Block_GetSpriteBB_MinX(Int32 size, Int32 tileX, Int32 tileY, struc
 	return 1.0f;
 }
 
-static Real32 Block_GetSpriteBB_MinY(Int32 size, Int32 tileX, Int32 tileY, struct Bitmap* bmp) {
+static Real32 Block_GetSpriteBB_MinY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (y = size - 1; y >= 0; y--) {
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
@@ -301,7 +302,7 @@ static Real32 Block_GetSpriteBB_MinY(Int32 size, Int32 tileX, Int32 tileY, struc
 	return 1.0f;
 }
 
-static Real32 Block_GetSpriteBB_MaxX(Int32 size, Int32 tileX, Int32 tileY, struct Bitmap* bmp) {
+static Real32 Block_GetSpriteBB_MaxX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (x = size - 1; x >= 0; x--) {
 		for (y = 0; y < size; y++) {
@@ -314,7 +315,7 @@ static Real32 Block_GetSpriteBB_MaxX(Int32 size, Int32 tileX, Int32 tileY, struc
 	return 0.0f;
 }
 
-static Real32 Block_GetSpriteBB_MaxY(Int32 size, Int32 tileX, Int32 tileY, struct Bitmap* bmp) {
+static Real32 Block_GetSpriteBB_MaxY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (y = 0; y < size; y++) {
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
@@ -328,7 +329,7 @@ static Real32 Block_GetSpriteBB_MaxY(Int32 size, Int32 tileX, Int32 tileY, struc
 }
 
 void Block_RecalculateBB(BlockID block) {
-	struct Bitmap* bmp = &Atlas2D_Bitmap;
+	Bitmap* bmp = &Atlas2D_Bitmap;
 	Int32 tileSize = Atlas2D_TileSize;
 	TextureLoc texLoc = Block_GetTexLoc(block, FACE_XMAX);
 	Int32 x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);

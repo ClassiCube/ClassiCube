@@ -6,7 +6,6 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 struct Stream;
-struct Bitmap;
 struct AsyncRequest;
 
 struct ZipEntry { UInt32 CompressedSize, UncompressedSize, LocalHeaderOffset, Crc32; };

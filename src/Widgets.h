@@ -4,7 +4,6 @@
 #include "BlockID.h"
 #include "Constants.h"
 #include "Entity.h"
-#include "2DStructs.h"
 /* Contains all 2D widget implementations.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -17,8 +16,8 @@ struct TextWidget {
 	PackedCol Col;
 };
 NOINLINE_ void TextWidget_Make(struct TextWidget* w);
-NOINLINE_ void TextWidget_Create(struct TextWidget* w, STRING_PURE String* text, struct FontDesc* font);
-NOINLINE_ void TextWidget_Set(struct TextWidget* w, STRING_PURE String* text, struct FontDesc* font);
+NOINLINE_ void TextWidget_Create(struct TextWidget* w, STRING_PURE String* text, FontDesc* font);
+NOINLINE_ void TextWidget_Set(struct TextWidget* w, STRING_PURE String* text, FontDesc* font);
 
 
 typedef void (*Button_Get)(STRING_TRANSIENT String* raw);
@@ -32,8 +31,8 @@ struct ButtonWidget {
 	Button_Get GetValue;
 	Button_Set SetValue;
 };
-NOINLINE_ void ButtonWidget_Create(struct ButtonWidget* w, Int32 minWidth, STRING_PURE String* text, struct FontDesc* font, Widget_LeftClick onClick);
-NOINLINE_ void ButtonWidget_Set(struct ButtonWidget* w, STRING_PURE String* text, struct FontDesc* font);
+NOINLINE_ void ButtonWidget_Create(struct ButtonWidget* w, Int32 minWidth, STRING_PURE String* text, FontDesc* font, Widget_LeftClick onClick);
+NOINLINE_ void ButtonWidget_Set(struct ButtonWidget* w, STRING_PURE String* text, FontDesc* font);
 
 
 struct ScrollbarWidget {
@@ -61,7 +60,7 @@ struct TableWidget {
 	Widget_Layout
 	Int32 ElementsCount, ElementsPerRow, RowsCount;
 	Int32 LastCreatedIndex;
-	struct FontDesc Font;
+	FontDesc Font;
 	Int32 SelectedIndex, BlockSize;
 	Real32 SelBlockExpand;
 	GfxResourceID VB;
@@ -83,7 +82,7 @@ NOINLINE_ void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block);
 #define INPUTWIDGET_LEN STRING_SIZE
 struct InputWidget {
 	Widget_Layout
-	struct FontDesc Font;		
+	FontDesc Font;		
 	Int32 (*GetMaxLines)(void);
 	void (*RemakeTexture)(void* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
 	void (*OnPressedEnter)(void* elem); /* Invoked when the user presses enter. */
@@ -91,7 +90,7 @@ struct InputWidget {
 
 	String Text;
 	String Lines[INPUTWIDGET_MAX_LINES];            /* raw text of each line */
-	struct Size2D LineSizes[INPUTWIDGET_MAX_LINES]; /* size of each line in pixels */
+	Size2D LineSizes[INPUTWIDGET_MAX_LINES]; /* size of each line in pixels */
 	struct Texture InputTex;
 	String Prefix;
 	UInt16 PrefixWidth, PrefixHeight;
@@ -143,7 +142,7 @@ struct MenuInputWidget {
 	struct MenuInputValidator Validator;
 	char __TextBuffer[INPUTWIDGET_LEN];
 };
-NOINLINE_ void MenuInputWidget_Create(struct MenuInputWidget* w, Int32 width, Int32 height, STRING_PURE String* text, struct FontDesc* font, struct MenuInputValidator* v);
+NOINLINE_ void MenuInputWidget_Create(struct MenuInputWidget* w, Int32 width, Int32 height, STRING_PURE String* text, FontDesc* font, struct MenuInputValidator* v);
 
 
 struct ChatInputWidget {
@@ -154,7 +153,7 @@ struct ChatInputWidget {
 	String OrigStr;
 };
 
-NOINLINE_ void ChatInputWidget_Create(struct ChatInputWidget* w, struct FontDesc* font);
+NOINLINE_ void ChatInputWidget_Create(struct ChatInputWidget* w, FontDesc* font);
 
 
 #define TEXTGROUPWIDGET_MAX_LINES 30
@@ -162,14 +161,14 @@ NOINLINE_ void ChatInputWidget_Create(struct ChatInputWidget* w, struct FontDesc
 struct TextGroupWidget {
 	Widget_Layout
 	Int32 LinesCount, DefaultHeight;
-	struct FontDesc Font, UnderlineFont;
+	FontDesc Font, UnderlineFont;
 	bool PlaceholderHeight[TEXTGROUPWIDGET_MAX_LINES];
 	UInt8 LineLengths[TEXTGROUPWIDGET_MAX_LINES];
 	struct Texture* Textures;
 	char* Buffer;
 };
 
-NOINLINE_ void TextGroupWidget_Create(struct TextGroupWidget* w, Int32 linesCount, struct FontDesc* font, struct FontDesc* underlineFont, STRING_REF struct Texture* textures, STRING_REF char* buffer);
+NOINLINE_ void TextGroupWidget_Create(struct TextGroupWidget* w, Int32 linesCount, FontDesc* font, FontDesc* underlineFont, STRING_REF struct Texture* textures, STRING_REF char* buffer);
 NOINLINE_ void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* w, Int32 index, bool placeHolder);
 NOINLINE_ void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* w, STRING_PURE String* text);
 NOINLINE_ Int32 TextGroupWidget_UsedHeight(struct TextGroupWidget* w);
@@ -180,7 +179,7 @@ NOINLINE_ void TextGroupWidget_SetText(struct TextGroupWidget* w, Int32 index, S
 
 struct PlayerListWidget {
 	Widget_Layout
-	struct FontDesc Font;
+	FontDesc Font;
 	UInt16 NamesCount, ElementOffset;
 	Int32 XMin, XMax, YHeight;
 	bool Classic;
@@ -188,30 +187,30 @@ struct PlayerListWidget {
 	UInt16 IDs[TABLIST_MAX_NAMES * 2];
 	struct Texture Textures[TABLIST_MAX_NAMES * 2];
 };
-NOINLINE_ void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, bool classic);
+NOINLINE_ void PlayerListWidget_Create(struct PlayerListWidget* w, FontDesc* font, bool classic);
 NOINLINE_ void PlayerListWidget_GetNameUnder(struct PlayerListWidget* w, Int32 mouseX, Int32 mouseY, STRING_TRANSIENT String* name);
 
 
 typedef void (*SpecialInputAppendFunc)(void* userData, char c);
 struct SpecialInputTab {
 	Int32 ItemsPerRow, CharsPerItem;
-	struct Size2D TitleSize;
+	Size2D TitleSize;
 	String Title, Contents;	
 };
 
 struct SpecialInputWidget {
 	Widget_Layout
-	struct Size2D ElementSize;
+	Size2D ElementSize;
 	Int32 SelectedIndex;
 	struct InputWidget* AppendObj;
 	struct Texture Tex;
-	struct FontDesc Font;
+	FontDesc Font;
 	struct SpecialInputTab Tabs[5];
 	String ColString;
 	char __ColBuffer[DRAWER2D_MAX_COLS * 4];
 };
 
-NOINLINE_ void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* font, struct InputWidget* appendObj);
+NOINLINE_ void SpecialInputWidget_Create(struct SpecialInputWidget* w, FontDesc* font, struct InputWidget* appendObj);
 NOINLINE_ void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w);
 NOINLINE_ void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active);
 #endif

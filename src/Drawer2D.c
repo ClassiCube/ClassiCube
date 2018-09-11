@@ -5,21 +5,22 @@
 #include "ExtMath.h"
 #include "ErrorHandler.h"
 #include "GraphicsCommon.h"
+#include "Bitmap.h"
 
-void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF String* text, struct FontDesc* font, bool useShadow) {
+void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow) {
 	args->Text = *text;
 	args->Font = *font;
 	args->UseShadow = useShadow;
 }
 
-void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, bool useShadow) {
+void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, FontDesc* font, bool useShadow) {
 	args->Text = String_MakeNull();
 	args->Font = *font;
 	args->UseShadow = useShadow;
 }
 
-struct Bitmap Drawer2D_FontBitmap;
-struct Bitmap* Drawer2D_Cur;
+Bitmap Drawer2D_FontBitmap;
+Bitmap* Drawer2D_Cur;
 Int32 Drawer2D_BoxSize = 8; /* avoid divide by 0 if default.png missing */
 /* So really 16 characters per row */
 #define DRAWER2D_LOG2_CHARS_PER_ROW 4
@@ -60,7 +61,7 @@ static void Drawer2D_FreeFontBitmap(void) {
 	Drawer2D_FontBitmap.Scan0 = NULL;
 }
 
-void Drawer2D_SetFontBitmap(struct Bitmap* bmp) {
+void Drawer2D_SetFontBitmap(Bitmap* bmp) {
 	Drawer2D_FreeFontBitmap();
 	Drawer2D_FontBitmap = *bmp;
 	Drawer2D_BoxSize = bmp->Width >> DRAWER2D_LOG2_CHARS_PER_ROW;
@@ -96,7 +97,7 @@ void Drawer2D_Free(void) {
 	Drawer2D_FreeFontBitmap();
 }
 
-void Drawer2D_Begin(struct Bitmap* bmp) {
+void Drawer2D_Begin(Bitmap* bmp) {
 	if (!Drawer2D_UseBitmappedChat) Platform_SetBitmap(bmp);
 	Drawer2D_Cur = bmp;
 }
@@ -107,9 +108,9 @@ void Drawer2D_End(void) {
 }
 
 /* Draws a 2D flat rectangle. */
-void Drawer2D_Rect(struct Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
+void Drawer2D_Rect(Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
 
-void Drawer2D_Clear(struct Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height) {
+void Drawer2D_Clear(Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height) {
 	if (x < 0 || y < 0 || (x + width) > bmp->Width || (y + height) > bmp->Height) {
 		ErrorHandler_Fail("Drawer2D_Clear - tried to clear at invalid coords");
 	}
@@ -122,7 +123,7 @@ void Drawer2D_Clear(struct Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 w
 	}
 }
 
-Int32 Drawer2D_FontHeight(struct FontDesc* font, bool useShadow) {
+Int32 Drawer2D_FontHeight(FontDesc* font, bool useShadow) {
 	struct DrawTextArgs args;
 	String text = String_FromConst("I");
 	DrawTextArgs_Make(&args, &text, font, useShadow);
@@ -130,13 +131,13 @@ Int32 Drawer2D_FontHeight(struct FontDesc* font, bool useShadow) {
 }
 
 void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, Int32 X, Int32 Y) {
-	struct Size2D size = Drawer2D_MeasureText(args);
+	Size2D size = Drawer2D_MeasureText(args);
 	if (size.Width == 0 && size.Height == 0) {
 		struct Texture empty = { NULL, TEX_RECT(X,Y, 0,0), TEX_UV(0,0, 1,1) };
 		*tex = empty; return;
 	}
 
-	struct Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
 	{
 		Drawer2D_DrawText(args, 0, 0);
@@ -147,7 +148,7 @@ void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, In
 	Mem_Free(bmp.Scan0);
 }
 
-void Drawer2D_Make2DTexture(struct Texture* tex, struct Bitmap* bmp, struct Size2D used, Int32 X, Int32 Y) {
+void Drawer2D_Make2DTexture(struct Texture* tex, Bitmap* bmp, Size2D used, Int32 X, Int32 Y) {
 	GfxResourceID texId = Gfx_CreateTexture(bmp, false, false);
 	Real32 u2 = (Real32)used.Width  / (Real32)bmp->Width;
 	Real32 v2 = (Real32)used.Height / (Real32)bmp->Height;
@@ -315,7 +316,7 @@ static void Drawer2D_DrawUnderline(struct DrawTextArgs* args, Int32 x, Int32 y, 
 	}
 }
 
-void Drawer2D_DrawBitmapText(struct DrawTextArgs* args, Int32 x, Int32 y) {
+static void Drawer2D_DrawBitmapText(struct DrawTextArgs* args, Int32 x, Int32 y) {
 	bool ul = args->Font.Style == FONT_STYLE_UNDERLINE;
 	Int32 offset = Drawer2D_ShadowOffset(args->Font.Size);
 
@@ -328,11 +329,11 @@ void Drawer2D_DrawBitmapText(struct DrawTextArgs* args, Int32 x, Int32 y) {
 	if (ul) Drawer2D_DrawUnderline(args, x, y, false);
 }
 
-struct Size2D Drawer2D_MeasureBitmapText(struct DrawTextArgs* args) {
+static Size2D Drawer2D_MeasureBitmapText(struct DrawTextArgs* args) {
 	Int32 point = args->Font.Size;
 	/* adjust coords to make drawn text match GDI fonts */
 	Int32 xPadding = Drawer2D_XPadding(point), i;
-	struct Size2D total = { 0, Drawer2D_AdjHeight(point) };
+	Size2D total = { 0, Drawer2D_AdjHeight(point) };
 
 	String text = args->Text;
 	for (i = 0; i < text.length; i++) {
@@ -388,26 +389,26 @@ void Drawer2D_DrawText(struct DrawTextArgs* args, Int32 x, Int32 y) {
 			Platform_TextDraw(args, x + DRAWER2D_OFFSET, y + DRAWER2D_OFFSET, backCol);
 		}
 
-		struct Size2D partSize = Platform_TextDraw(args, x, y, col);
+		Size2D partSize = Platform_TextDraw(args, x, y, col);
 		x += partSize.Width;
 	}
 	args->Text = value;
 }
 
-struct Size2D Drawer2D_MeasureText(struct DrawTextArgs* args) {
-	if (Drawer2D_IsEmptyText(&args->Text)) return Size2D_Empty;
+Size2D Drawer2D_MeasureText(struct DrawTextArgs* args) {
+	Size2D size = { 0, 0 };
+	if (Drawer2D_IsEmptyText(&args->Text)) return size;
 	if (Drawer2D_UseBitmappedChat) return Drawer2D_MeasureBitmapText(args);
 
 	String value = args->Text;
 	char nextCol = 'f';
-	Int32 i = 0;
-	struct Size2D size = { 0, 0 };
+	Int32 i = 0;	
 
 	while (i < value.length) {
 		i = Drawer2D_NextPart(i, &value, &args->Text, &nextCol);
 		if (!args->Text.length) continue;
 
-		struct Size2D partSize = Platform_TextMeasure(args);
+		Size2D partSize = Platform_TextMeasure(args);
 		size.Width += partSize.Width;
 		size.Height = max(size.Height, partSize.Height);
 	}

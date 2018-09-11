@@ -23,14 +23,14 @@
 
 struct InventoryScreen {
 	Screen_Layout
-	struct FontDesc Font;
+	FontDesc Font;
 	struct TableWidget Table;
 	bool ReleasedInv, DeferredSelect;
 };
 
 struct StatusScreen {
 	Screen_Layout
-	struct FontDesc Font;
+	FontDesc Font;
 	struct TextWidget Status, HackStates;
 	struct TextAtlas PosAtlas;
 	Real64 Accumulator;
@@ -44,13 +44,13 @@ struct HUDScreen {
 	struct Screen* Chat;
 	struct HotbarWidget Hotbar;
 	struct PlayerListWidget PlayerList;
-	struct FontDesc PlayerFont;
+	FontDesc PlayerFont;
 	bool ShowingList, WasShowingList;
 };
 
 struct LoadingScreen {
 	Screen_Layout
-	struct FontDesc Font;
+	FontDesc Font;
 	Real32 Progress;
 	
 	struct TextWidget Title, Message;
@@ -71,7 +71,7 @@ struct ChatScreen {
 	bool SuppressNextPress;
 	Int32 ChatIndex;
 	Int32 LastDownloadStatus;
-	struct FontDesc ChatFont, ChatUrlFont, AnnouncementFont;
+	FontDesc ChatFont, ChatUrlFont, AnnouncementFont;
 	struct TextWidget Announcement;
 	struct ChatInputWidget Input;
 	struct TextGroupWidget Status, BottomRight, Chat, ClientStatus;
@@ -98,7 +98,7 @@ struct DisconnectScreen {
 	Int32 LastSecsLeft;
 	struct ButtonWidget Reconnect;
 
-	struct FontDesc TitleFont, MessageFont;
+	FontDesc TitleFont, MessageFont;
 	struct TextWidget Title, Message;
 	char __TitleBuffer[STRING_SIZE];
 	char __MessageBuffer[STRING_SIZE];
@@ -523,7 +523,7 @@ static void LoadingScreen_DrawBackground(void) {
 	PackedCol col = PACKEDCOL_CONST(64, 64, 64, 255);
 
 	TextureLoc texLoc = Block_GetTexLoc(BLOCK_DIRT, FACE_YMAX);
-	struct TextureRec rec = Atlas1D_TexRec(texLoc, 1, &atlasIndex);
+	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &atlasIndex);
 
 	Real32 u2 = (Real32)Game_Width / (Real32)LOADING_TILE_SIZE;
 	struct Texture tex = { NULL, TEX_RECT(0,0, Game_Width,LOADING_TILE_SIZE), TEX_UV(0,rec.V1, u2,rec.V2) };
@@ -618,7 +618,6 @@ static void GeneratingScreen_Init(void* screen) {
 	Gen_Done = false;
 	LoadingScreen_Init(screen);
 
-	void* threadHandle;
 	if (Gen_Vanilla) {
 		Thread_Start(&NotchyGen_Generate, true);
 	} else {

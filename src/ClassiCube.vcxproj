@@ -187,7 +187,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="2DStructs.h" />
     <ClInclude Include="AsyncDownloader.h" />
     <ClInclude Include="Audio.h" />
     <ClInclude Include="AxisLinesRenderer.h" />
@@ -255,7 +254,6 @@
     <ClInclude Include="World.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="2DStructs.c" />
     <ClCompile Include="AsyncDownloader.c" />
     <ClCompile Include="Audio.c" />
     <ClCompile Include="Camera.c" />
