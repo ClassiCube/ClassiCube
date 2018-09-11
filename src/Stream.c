@@ -300,13 +300,13 @@ void Stream_SetU32_BE(UInt8* data, UInt32 value) {
 
 ReturnCode Stream_ReadU32_LE(struct Stream* stream, UInt32* value) {
 	UInt8 data[4]; ReturnCode res;
-	if (res = Stream_Read(stream, data, 4)) return res;
+	if ((res = Stream_Read(stream, data, 4))) return res;
 	*value = Stream_GetU32_LE(data); return 0;
 }
 
 ReturnCode Stream_ReadU32_BE(struct Stream* stream, UInt32* value) {
 	UInt8 data[4]; ReturnCode res;
-	if (res = Stream_Read(stream, data, 4)) return res;
+	if ((res = Stream_Read(stream, data, 4))) return res;
 	*value = Stream_GetU32_BE(data); return 0;
 }
 
@@ -336,7 +336,7 @@ ReturnCode Stream_ReadUtf8(struct Stream* stream, UInt16* codepoint) {
 
 	*codepoint = data;
 	for (i = 0; i < byteCount - 1; i++) {
-		if (res = stream->ReadU8(stream, &data)) return res;
+		if ((res = stream->ReadU8(stream, &data))) return res;
 
 		*codepoint <<= 6;
 		/* Top two bits of each are always 10 */
@@ -388,7 +388,7 @@ ReturnCode Stream_WriteLine(struct Stream* stream, STRING_TRANSIENT String* text
 	for (i = 0; i < text->length; i++) {
 		/* For extremely large strings */
 		if (j >= 2048) {
-			if (res = Stream_Write(stream, buffer, j)) return res;
+			if ((res = Stream_Write(stream, buffer, j))) return res;
 			j = 0;
 		}
 

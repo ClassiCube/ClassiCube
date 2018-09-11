@@ -24,7 +24,7 @@ static ReturnCode Map_SkipGZipHeader(struct Stream* stream) {
 	ReturnCode res;
 
 	while (!gzHeader.Done) {
-		if (res = GZipHeader_Read(stream, &gzHeader)) return res;
+		if ((res = GZipHeader_Read(stream, &gzHeader))) return res;
 	}
 	return 0;
 }
@@ -60,9 +60,9 @@ static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
 		for (z = 0; z < World_Length; z += LVL_CHUNKSIZE) {
 			for (x = 0; x < World_Width; x += LVL_CHUNKSIZE) {
 
-				if (res = stream->ReadU8(stream, &hasCustom)) return res;
+				if ((res = stream->ReadU8(stream, &hasCustom))) return res;
 				if (hasCustom != 1) continue;
-				if (res = Stream_Read(stream, chunk, sizeof(chunk))) return res;
+				if ((res = Stream_Read(stream, chunk, sizeof(chunk)))) return res;
 
 				Int32 baseIndex = World_Pack(x, y, z);
 				if ((x + LVL_CHUNKSIZE) <= adjWidth && (y + LVL_CHUNKSIZE) <= adjHeight && (z + LVL_CHUNKSIZE) <= adjLength) {
@@ -117,14 +117,14 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 	Inflate_MakeStream(&compStream, &state, stream);
 
 	UInt8 header[8 + 2];
-	if (res = Stream_Read(&compStream, header, 8)) return res;
+	if ((res = Stream_Read(&compStream, header, 8))) return res;
 	if (Stream_GetU16_LE(&header[0]) != 1874) return LVL_ERR_VERSION;
 
 	World_Width  = Stream_GetU16_LE(&header[2]);
 	World_Length = Stream_GetU16_LE(&header[4]);
 	World_Height = Stream_GetU16_LE(&header[6]);
 
-	if (res = Stream_Read(&compStream, header, sizeof(header))) return res;
+	if ((res = Stream_Read(&compStream, header, sizeof(header)))) return res;
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 
 	p->Spawn.X = Stream_GetU16_LE(&header[0]);
@@ -153,7 +153,7 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 static ReturnCode Fcm_ReadString(struct Stream* stream) {
 	UInt8 data[2];
 	ReturnCode res;
-	if (res = Stream_Read(stream, data, sizeof(data))) return res;
+	if ((res = Stream_Read(stream, data, sizeof(data)))) return res;
 
 	UInt16 len = Stream_GetU16_LE(data);
 	return Stream_Skip(stream, len);
@@ -163,11 +163,11 @@ ReturnCode Fcm_Load(struct Stream* stream) {
 	UInt8 header[(3 * 2) + (3 * 4) + (2 * 1) + (2 * 4) + 16 + 26 + 4];
 	ReturnCode res;
 
-	if (res = Stream_Read(stream, header, 4 + 1)) return res;
+	if ((res = Stream_Read(stream, header, 4 + 1))) return res;
 	if (Stream_GetU32_LE(&header[0]) != 0x0FC2AF40UL) return FCM_ERR_IDENTIFIER;
 	if (header[4] != 13) return FCM_ERR_REVISION;
 	
-	if (res = Stream_Read(stream, header, sizeof(header))) return res;
+	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
 	World_Width  = Stream_GetU16_LE(&header[0]);
 	World_Height = Stream_GetU16_LE(&header[2]);
 	World_Length = Stream_GetU16_LE(&header[4]);
@@ -191,9 +191,9 @@ ReturnCode Fcm_Load(struct Stream* stream) {
 
 	Int32 i;
 	for (i = 0; i < metaSize; i++) {
-		if (res = Fcm_ReadString(&compStream)) return res; /* Group */
-		if (res = Fcm_ReadString(&compStream)) return res; /* Key   */
-		if (res = Fcm_ReadString(&compStream)) return res; /* Value */
+		if ((res = Fcm_ReadString(&compStream))) return res; /* Group */
+		if ((res = Fcm_ReadString(&compStream))) return res; /* Key   */
+		if ((res = Fcm_ReadString(&compStream))) return res; /* Value */
 	}
 	return Map_ReadBlocks(&compStream);
 }
@@ -261,11 +261,11 @@ static String NbtTag_String(struct NbtTag* tag) {
 static ReturnCode Nbt_ReadString(struct Stream* stream, char* strBuffer, UInt32* strLen) {
 	ReturnCode res;
 	char nameBuffer[NBT_SMALL_SIZE * 4];
-	if (res = Stream_Read(stream, nameBuffer, 2)) return res;
+	if ((res = Stream_Read(stream, nameBuffer, 2))) return res;
 
 	UInt16 nameLen = Stream_GetU16_BE(nameBuffer);
 	if (nameLen > NBT_SMALL_SIZE * 4) return CW_ERR_STRING_LEN;
-	if (res = Stream_Read(stream, nameBuffer, nameLen)) return res;
+	if ((res = Stream_Read(stream, nameBuffer, nameLen))) return res;
 
 	String str = String_Init(strBuffer, 0, NBT_SMALL_SIZE);
 	String_DecodeUtf8(&str, nameBuffer, nameLen);
@@ -308,7 +308,7 @@ static ReturnCode Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* str
 		break; /* (8) data */
 
 	case NBT_I8S:
-		if (res = Stream_ReadU32_BE(stream, &tag.DataSize)) break;
+		if ((res = Stream_ReadU32_BE(stream, &tag.DataSize))) break;
 
 		if (tag.DataSize < NBT_SMALL_SIZE) {
 			res = Stream_Read(stream, tag.DataSmall, tag.DataSize);
@@ -323,7 +323,7 @@ static ReturnCode Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* str
 		break;
 
 	case NBT_LIST:
-		if (res = Stream_Read(stream, tmp, 5)) break;
+		if ((res = Stream_Read(stream, tmp, 5))) break;
 		childType = tmp[0];
 		count = Stream_GetU32_BE(&tmp[1]);
 
@@ -335,7 +335,7 @@ static ReturnCode Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* str
 
 	case NBT_DICT:
 		for (;;) {
-			if (res = stream->ReadU8(stream, &childType)) break;
+			if ((res = stream->ReadU8(stream, &childType))) break;
 			if (childType == NBT_END) break;
 
 			res = Nbt_ReadTag(childType, true, stream, &tag, callback);
@@ -572,7 +572,7 @@ ReturnCode Cw_Load(struct Stream* stream) {
 	Inflate_MakeStream(&compStream, &state, stream);
 
 	UInt8 tag;
-	if (res = compStream.ReadU8(&compStream, &tag)) return res;
+	if ((res = compStream.ReadU8(&compStream, &tag))) return res;
 	if (tag != NBT_DICT) return CW_ERR_ROOT_TAG;
 
 	res = Nbt_ReadTag(NBT_DICT, true, &compStream, NULL, Cw_Callback);
@@ -619,7 +619,7 @@ struct JClassDesc {
 
 static ReturnCode Dat_ReadString(struct Stream* stream, char* buffer) {
 	ReturnCode res;
-	if (res = Stream_Read(stream, buffer, 2)) return res;
+	if ((res = Stream_Read(stream, buffer, 2))) return res;
 	UInt16 len = Stream_GetU16_BE(buffer);
 
 	Mem_Set(buffer, 0, JNAME_SIZE);
@@ -629,12 +629,12 @@ static ReturnCode Dat_ReadString(struct Stream* stream, char* buffer) {
 
 static ReturnCode Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* desc) {
 	ReturnCode res;
-	if (res = stream->ReadU8(stream, &desc->Type))     return res;
-	if (res = Dat_ReadString(stream, desc->FieldName)) return res;
+	if ((res = stream->ReadU8(stream, &desc->Type)))     return res;
+	if ((res = Dat_ReadString(stream, desc->FieldName))) return res;
 
 	if (desc->Type == JFIELD_ARRAY || desc->Type == JFIELD_OBJECT) {
 		UInt8 typeCode;
-		if (res = stream->ReadU8(stream, &typeCode)) return res;
+		if ((res = stream->ReadU8(stream, &typeCode))) return res;
 
 		if (typeCode == TC_STRING) {
 			char className1[JNAME_SIZE];
@@ -653,23 +653,23 @@ static ReturnCode Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* de
 	UInt8 typeCode;
 	UInt8 tmp[2];
 
-	if (res = stream->ReadU8(stream, &typeCode)) return res;
+	if ((res = stream->ReadU8(stream, &typeCode))) return res;
 	if (typeCode == TC_NULL) { desc->ClassName[0] = '\0'; desc->FieldsCount = 0; return 0; }
 	if (typeCode != TC_CLASSDESC) return DAT_ERR_JCLASS_TYPE;
 
-	if (res = Dat_ReadString(stream, desc->ClassName)) return res;
-	if (res = Stream_Skip(stream, 9)) return res; /* (8) serial version UID, (1) flags */
+	if ((res = Dat_ReadString(stream, desc->ClassName))) return res;
+	if ((res = Stream_Skip(stream, 9))) return res; /* (8) serial version UID, (1) flags */
 
-	if (res = Stream_Read(stream, tmp, 2)) return res;
+	if ((res = Stream_Read(stream, tmp, 2))) return res;
 	desc->FieldsCount = Stream_GetU16_BE(tmp);
 	if (desc->FieldsCount > Array_Elems(desc->Fields)) return DAT_ERR_JCLASS_FIELDS;
 
 	Int32 i;
 	for (i = 0; i < desc->FieldsCount; i++) {
-		if (res = Dat_ReadFieldDesc(stream, &desc->Fields[i])) return res;
+		if ((res = Dat_ReadFieldDesc(stream, &desc->Fields[i]))) return res;
 	}
 
-	if (res = stream->ReadU8(stream, &typeCode)) return res;
+	if ((res = stream->ReadU8(stream, &typeCode))) return res;
 	if (typeCode != TC_ENDBLOCKDATA) return DAT_ERR_JCLASS_ANNOTATION;
 
 	struct JClassDesc superClassDesc;
@@ -696,16 +696,16 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 		/* Other objects (e.g. player) are stored after the fields we actually care about, so ignore them */
 		String fieldName = String_FromRawArray(field->FieldName);
 		if (!String_CaselessEqualsConst(&fieldName, "blockMap")) return 0;
-		if (res = stream->ReadU8(stream, &typeCode)) return res;
+		if ((res = stream->ReadU8(stream, &typeCode))) return res;
 
 		/* Skip all blockMap data with awful hacks */
 		/* These offsets were based on server_level.dat map from original minecraft classic server */
 		if (typeCode == TC_OBJECT) {
-			if (res = Stream_Skip(stream, 315))          return res;
-			if (res = Stream_ReadU32_BE(stream, &count)) return res;
+			if ((res = Stream_Skip(stream, 315)))          return res;
+			if ((res = Stream_ReadU32_BE(stream, &count))) return res;
 
-			if (res = Stream_Skip(stream, 17 * count)) return res;
-			if (res = Stream_Skip(stream, 152))        return res;
+			if ((res = Stream_Skip(stream, 17 * count))) return res;
+			if ((res = Stream_Skip(stream, 152)))        return res;
 		} else if (typeCode != TC_NULL) {
 			/* WoM maps have this field as null, which makes things easier for us */
 			return DAT_ERR_JOBJECT_TYPE;
@@ -713,15 +713,15 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 	} break;
 
 	case JFIELD_ARRAY: {
-		if (res = stream->ReadU8(stream, &typeCode)) return res;
+		if ((res = stream->ReadU8(stream, &typeCode))) return res;
 		if (typeCode == TC_NULL) break;
 		if (typeCode != TC_ARRAY) return DAT_ERR_JARRAY_TYPE;
 
 		struct JClassDesc arrayClassDesc;
-		if (res = Dat_ReadClassDesc(stream, &arrayClassDesc)) return res;
+		if ((res = Dat_ReadClassDesc(stream, &arrayClassDesc))) return res;
 		if (arrayClassDesc.ClassName[1] != JFIELD_INT8) return DAT_ERR_JARRAY_CONTENT;
 
-		if (res = Stream_ReadU32_BE(stream, &count)) return res;
+		if ((res = Stream_ReadU32_BE(stream, &count))) return res;
 		field->Value_Size = count;
 
 		field->Value_Ptr = Mem_Alloc(count, sizeof(UInt8), ".dat map blocks");
@@ -746,7 +746,7 @@ ReturnCode Dat_Load(struct Stream* stream) {
 	Inflate_MakeStream(&compStream, &state, stream);
 
 	UInt8 header[4 + 1 + 2 * 2];
-	if (res = Stream_Read(&compStream, header, sizeof(header))) return res;
+	if ((res = Stream_Read(&compStream, header, sizeof(header)))) return res;
 
 	/* .dat header */
 	if (Stream_GetU32_BE(&header[0]) != 0x271BB788) return DAT_ERR_IDENTIFIER;
@@ -757,18 +757,18 @@ ReturnCode Dat_Load(struct Stream* stream) {
 	if (Stream_GetU16_BE(&header[7]) != 0x0005) return DAT_ERR_JVERSION;
 
 	UInt8 typeCode;
-	if (res = compStream.ReadU8(&compStream, &typeCode)) return res;
+	if ((res = compStream.ReadU8(&compStream, &typeCode))) return res;
 	if (typeCode != TC_OBJECT) return DAT_ERR_ROOT_TYPE;
 
 	struct JClassDesc obj; 
-	if (res = Dat_ReadClassDesc(&compStream, &obj)) return res;
+	if ((res = Dat_ReadClassDesc(&compStream, &obj))) return res;
 
 	Int32 i;
 	Vector3* spawn = &LocalPlayer_Instance.Spawn;
 	for (i = 0; i < obj.FieldsCount; i++) {
 		struct JFieldDesc* field = &obj.Fields[i];
 
-		if (res = Dat_ReadFieldData(&compStream, field)) return res;
+		if ((res = Dat_ReadFieldData(&compStream, field))) return res;
 		String fieldName = String_FromRawArray(field->FieldName);
 
 		if (String_CaselessEqualsConst(&fieldName, "width")) {
@@ -945,8 +945,8 @@ ReturnCode Cw_Save(struct Stream* stream) {
 		tmp[107] = Math_Deg2Packed(p->SpawnRotY);
 		tmp[112] = Math_Deg2Packed(p->SpawnHeadX);
 	}
-	if (res = Stream_Write(stream, tmp, sizeof(cw_begin))) return res;
-	if (res = Stream_Write(stream, World_Blocks, World_BlocksSize)) return res;
+	if ((res = Stream_Write(stream, tmp, sizeof(cw_begin)))) return res;
+	if ((res = Stream_Write(stream, World_Blocks, World_BlocksSize))) return res;
 
 	Mem_Copy(tmp, cw_meta_cpe, sizeof(cw_meta_cpe));
 	{
@@ -964,12 +964,12 @@ ReturnCode Cw_Save(struct Stream* stream) {
 		Stream_SetU16_BE(&tmp[378], WorldEnv_EdgeHeight);
 	}
 	Int32 b, len = Cw_WriteEndString(&tmp[393], &World_TextureUrl);
-	if (res = Stream_Write(stream, tmp, sizeof(cw_meta_cpe) + len)) return res;
+	if ((res = Stream_Write(stream, tmp, sizeof(cw_meta_cpe) + len))) return res;
 
-	if (res = Stream_Write(stream, cw_meta_defs, sizeof(cw_meta_defs))) return res;
+	if ((res = Stream_Write(stream, cw_meta_defs, sizeof(cw_meta_defs)))) return res;
 	for (b = 1; b < 256; b++) {
 		if (!Block_IsCustomDefined(b)) continue;
-		if (res = Cw_WriteBockDef(stream, b)) return res;
+		if ((res = Cw_WriteBockDef(stream, b))) return res;
 	}
 	return Stream_Write(stream, cw_end, sizeof(cw_end));
 }
@@ -1007,20 +1007,20 @@ ReturnCode Schematic_Save(struct Stream* stream) {
 		Stream_SetU16_BE(&tmp[63], World_Length);
 		Stream_SetU32_BE(&tmp[74], World_BlocksSize);
 	}
-	if (res = Stream_Write(stream, sc_begin, sizeof(sc_begin))) return res;
-	if (res = Stream_Write(stream, World_Blocks, World_BlocksSize)) return res;
+	if ((res = Stream_Write(stream, sc_begin, sizeof(sc_begin)))) return res;
+	if ((res = Stream_Write(stream, World_Blocks, World_BlocksSize))) return res;
 
 	Mem_Copy(tmp, sc_data, sizeof(sc_data));
 	{
 		Stream_SetU32_BE(&tmp[7], World_BlocksSize);
 	}
-	if (res = Stream_Write(stream, sc_data, sizeof(sc_data))) return res;
+	if ((res = Stream_Write(stream, sc_data, sizeof(sc_data)))) return res;
 
 	UInt8 chunk[8192] = { 0 };
 	Int32 i;
 	for (i = 0; i < World_BlocksSize; i += sizeof(chunk)) {
 		Int32 count = World_BlocksSize - i; count = min(count, sizeof(chunk));
-		if (res = Stream_Write(stream, chunk, count)) return res;
+		if ((res = Stream_Write(stream, chunk, count))) return res;
 	}
 	return Stream_Write(stream, sc_end, sizeof(sc_end));
 }

@@ -5,7 +5,7 @@
 #include "Stream.h"
 #include "Errors.h"
 
-#define Header_ReadU8(value) if (res = s->ReadU8(s, &value)) return res;
+#define Header_ReadU8(value) if ((res = s->ReadU8(s, &value))) return res;
 /*########################################################################################################################*
 *-------------------------------------------------------GZip header-------------------------------------------------------*
 *#########################################################################################################################*/
@@ -886,7 +886,7 @@ static ReturnCode GZip_StreamClose(struct Stream* stream) {
 	struct GZipState* state = stream->Meta.Inflate;
 	ReturnCode res;
 
-	if (res = Deflate_StreamClose(stream)) return res;
+	if ((res = Deflate_StreamClose(stream))) return res;
 	Stream_SetU32_LE(&data[0], state->Crc32 ^ 0xFFFFFFFFUL);
 	Stream_SetU32_LE(&data[4], state->Size);
 	return Stream_Write(state->Base.Dest, data, sizeof(data));
@@ -911,7 +911,7 @@ static ReturnCode GZip_StreamWriteFirst(struct Stream* stream, UInt8* data, UInt
 	struct GZipState* state = stream->Meta.Inflate;
 	ReturnCode res;
 
-	if (res = Stream_Write(state->Base.Dest, header, sizeof(header))) return res;
+	if ((res = Stream_Write(state->Base.Dest, header, sizeof(header)))) return res;
 	stream->Write = GZip_StreamWrite;
 	return GZip_StreamWrite(stream, data, count, modified);
 }
@@ -933,7 +933,7 @@ static ReturnCode ZLib_StreamClose(struct Stream* stream) {
 	struct ZLibState* state = stream->Meta.Inflate;
 	ReturnCode res;
 
-	if (res = Deflate_StreamClose(stream)) return res;	
+	if ((res = Deflate_StreamClose(stream))) return res;	
 	Stream_SetU32_BE(&data[0], state->Adler32);
 	return Stream_Write(state->Base.Dest, data, sizeof(data));
 }
@@ -959,7 +959,7 @@ static ReturnCode ZLib_StreamWriteFirst(struct Stream* stream, UInt8* data, UInt
 	struct ZLibState* state = stream->Meta.Inflate;
 	ReturnCode res;
 
-	if (res = Stream_Write(state->Base.Dest, header, sizeof(header))) return res;
+	if ((res = Stream_Write(state->Base.Dest, header, sizeof(header)))) return res;
 	stream->Write = ZLib_StreamWrite;
 	return ZLib_StreamWrite(stream, data, count, modified);
 }

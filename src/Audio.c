@@ -69,7 +69,7 @@ static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	UInt8 tmp[WAV_FMT_SIZE];
 	ReturnCode res;
 
-	if (res = Stream_Read(stream, tmp, 12)) return res;
+	if ((res = Stream_Read(stream, tmp, 12))) return res;
 	fourCC = Stream_GetU32_BE(&tmp[0]);
 	if (fourCC != WAV_FourCC('R','I','F','F')) return WAV_ERR_STREAM_HDR;
 	/* tmp[4] (4) file size */
@@ -77,12 +77,12 @@ static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	if (fourCC != WAV_FourCC('W','A','V','E')) return WAV_ERR_STREAM_TYPE;
 
 	for (;;) {
-		if (res = Stream_Read(stream, tmp, 8)) return res;
+		if ((res = Stream_Read(stream, tmp, 8))) return res;
 		fourCC = Stream_GetU32_BE(&tmp[0]);
 		size   = Stream_GetU32_LE(&tmp[4]);
 
 		if (fourCC == WAV_FourCC('f','m','t',' ')) {
-			if (res = Stream_Read(stream, tmp, sizeof(tmp))) return res;
+			if ((res = Stream_Read(stream, tmp, sizeof(tmp)))) return res;
 			if (Stream_GetU16_LE(&tmp[0]) != 1) return WAV_ERR_DATA_TYPE;
 
 			snd->Format.Channels      = Stream_GetU16_LE(&tmp[2]);

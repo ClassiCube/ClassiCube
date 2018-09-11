@@ -25,7 +25,7 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 	struct Stream* stream = state->Input;
 	UInt8 contents[(3 * 2) + (4 * 4) + (2 * 2)];
 	ReturnCode res;
-	if (res = Stream_Read(stream, contents, sizeof(contents))) return res;
+	if ((res = Stream_Read(stream, contents, sizeof(contents)))) return res;
 
 	/* contents[0] (2) version needed */
 	/* contents[2] (2) flags */
@@ -44,11 +44,11 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 
 	if (pathLen > ZIP_MAXNAMELEN) return ZIP_ERR_FILENAME_LEN;
 	String path = String_Init(pathBuffer, pathLen, pathLen);
-	if (res = Stream_Read(stream, pathBuffer, pathLen)) return res;
+	if ((res = Stream_Read(stream, pathBuffer, pathLen))) return res;
 	pathBuffer[pathLen] = '\0';
 
 	if (!state->SelectEntry(&path)) return 0;
-	if (res = Stream_Skip(stream, extraLen)) return res;
+	if ((res = Stream_Skip(stream, extraLen))) return res;
 	struct Stream portion, compStream;
 
 	if (compressionMethod == 0) {
@@ -70,7 +70,7 @@ static ReturnCode Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEnt
 	struct Stream* stream = state->Input;
 	UInt8 contents[(4 * 2) + (4 * 4) + (3 * 2) + (2 * 2) + (2 * 4)];
 	ReturnCode res;
-	if (res = Stream_Read(stream, contents, sizeof(contents))) return res;
+	if ((res = Stream_Read(stream, contents, sizeof(contents)))) return res;
 
 	/* contents[0] (2) OS */
 	/* contents[2] (2) version needed*/
@@ -97,7 +97,7 @@ static ReturnCode Zip_ReadEndOfCentralDirectory(struct ZipState* state, UInt32* 
 	struct Stream* stream = state->Input;
 	UInt8 contents[(3 * 2) + 2 + (2 * 4) + 2];
 	ReturnCode res;
-	if (res = Stream_Read(stream, contents, sizeof(contents))) return res;
+	if ((res = Stream_Read(stream, contents, sizeof(contents)))) return res;
 
 	/* contents[0] (2) disk number */
 	/* contents[2] (2) disk number start */
@@ -130,7 +130,7 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 	UInt32 sig = 0, stream_len;
 
 	ReturnCode res;
-	if (res = stream->Length(stream, &stream_len)) return res;
+	if ((res = stream->Length(stream, &stream_len))) return res;
 
 	/* At -22 for nearly all zips, but try a bit further back in case of comment */
 	Int32 i, len = min(257, stream_len);
@@ -138,7 +138,7 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 		res = stream->Seek(stream, -i, STREAM_SEEKFROM_END);
 		if (res) return ZIP_ERR_SEEK_END_OF_CENTRAL_DIR;
 
-		if (res = Stream_ReadU32_LE(stream, &sig)) return res;
+		if ((res = Stream_ReadU32_LE(stream, &sig))) return res;
 		if (sig == ZIP_SIG_ENDOFCENTRALDIR) break;
 	}
 	if (sig != ZIP_SIG_ENDOFCENTRALDIR) return ZIP_ERR_NO_END_OF_CENTRAL_DIR;
@@ -154,7 +154,7 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 	/* Read all the central directory entries */
 	Int32 count = 0;
 	while (count < state->EntriesCount) {
-		if (res = Stream_ReadU32_LE(stream, &sig)) return res;
+		if ((res = Stream_ReadU32_LE(stream, &sig))) return res;
 
 		if (sig == ZIP_SIG_CENTRALDIR) {
 			res = Zip_ReadCentralDirectory(state, &state->Entries[count]);
@@ -173,7 +173,7 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 		res = stream->Seek(stream, entry->LocalHeaderOffset, STREAM_SEEKFROM_BEGIN);
 		if (res) return ZIP_ERR_SEEK_LOCAL_DIR;
 
-		if (res = Stream_ReadU32_LE(stream, &sig)) return res;
+		if ((res = Stream_ReadU32_LE(stream, &sig))) return res;
 		if (sig != ZIP_SIG_LOCALFILEHEADER) return ZIP_ERR_INVALID_LOCAL_DIR;
 
 		res = Zip_ReadLocalFileHeader(state, entry);

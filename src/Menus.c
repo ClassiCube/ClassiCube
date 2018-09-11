@@ -1288,7 +1288,7 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s) {
 			stream.Close(&stream);
 			Chat_LogError(res, "encoding", &path); return;
 		}
-		if (res = compStream.Close(&compStream)) {
+		if ((res = compStream.Close(&compStream))) {
 			stream.Close(&stream);
 			Chat_LogError(res, "closing", &path); return;
 		}

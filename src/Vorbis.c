@@ -17,7 +17,7 @@ static ReturnCode Ogg_NextPage(struct Stream* stream) {
 	struct Stream* source = stream->Meta.Ogg.Source;
 	ReturnCode res;
 
-	if (res = Stream_Read(source, header, sizeof(header))) return res;
+	if ((res = Stream_Read(source, header, sizeof(header)))) return res;
 	UInt32 sig = Stream_GetU32_BE(&header[0]);
 	if (sig != OGG_FourCC('O','g','g','S')) return OGG_ERR_INVALID_SIG;
 	if (header[4] != 0) return OGG_ERR_VERSION;
@@ -30,11 +30,11 @@ static ReturnCode Ogg_NextPage(struct Stream* stream) {
 
 	Int32 i, numSegments = header[26];
 	UInt8 segments[255];
-	if (res = Stream_Read(source, segments, numSegments)) return res;
+	if ((res = Stream_Read(source, segments, numSegments))) return res;
 
 	UInt32 dataSize = 0;
 	for (i = 0; i < numSegments; i++) { dataSize += segments[i]; }
-	if (res = Stream_Read(source, stream->Meta.Ogg.Base, dataSize)) return res;
+	if ((res = Stream_Read(source, stream->Meta.Ogg.Base, dataSize))) return res;
 
 	stream->Meta.Ogg.Cur  = stream->Meta.Ogg.Base;
 	stream->Meta.Ogg.Left = dataSize;
@@ -59,7 +59,7 @@ static ReturnCode Ogg_Read(struct Stream* stream, UInt8* data, UInt32 count, UIn
 		if (stream->Meta.Ogg.Last) return 0;
 
 		ReturnCode res;
-		if (res = Ogg_NextPage(stream)) return res;
+		if ((res = Ogg_NextPage(stream))) return res;
 	}
 }
 
@@ -988,7 +988,7 @@ static bool Vorbis_ValidBlockSize(UInt32 size) {
 static ReturnCode Vorbis_CheckHeader(struct VorbisState* ctx, UInt8 type) {
 	UInt8 header[7];
 	ReturnCode res;
-	if (res = Stream_Read(ctx->Source, header, sizeof(header))) return res;
+	if ((res = Stream_Read(ctx->Source, header, sizeof(header)))) return res;
 
 	if (header[0] != type) return VORBIS_ERR_WRONG_HEADER;
 	bool OK = 
@@ -1000,7 +1000,7 @@ static ReturnCode Vorbis_CheckHeader(struct VorbisState* ctx, UInt8 type) {
 static ReturnCode Vorbis_DecodeIdentifier(struct VorbisState* ctx) {
 	UInt8 header[23];
 	ReturnCode res;
-	if (res = Stream_Read(ctx->Source, header, sizeof(header))) return res;
+	if ((res = Stream_Read(ctx->Source, header, sizeof(header)))) return res;
 
 	UInt32 version  = Stream_GetU32_LE(&header[0]);
 	if (version != 0) return VORBIS_ERR_VERSION;
@@ -1026,19 +1026,19 @@ static ReturnCode Vorbis_DecodeComments(struct VorbisState* ctx) {
 	struct Stream* stream = ctx->Source;
 
 	/* vendor name, followed by comments */
-	if (res = Stream_ReadU32_LE(stream, &len))      return res;
-	if (res = Stream_Skip(stream, len))             return res;
-	if (res = Stream_ReadU32_LE(stream, &comments)) return res;
+	if ((res = Stream_ReadU32_LE(stream, &len)))      return res;
+	if ((res = Stream_Skip(stream, len)))             return res;
+	if ((res = Stream_ReadU32_LE(stream, &comments))) return res;
 
 	for (i = 0; i < comments; i++) {
 		/* comments such as artist, year, etc */
-		if (res = Stream_ReadU32_LE(stream, &len)) return res;
-		if (res = Stream_Skip(stream, len))        return res;
+		if ((res = Stream_ReadU32_LE(stream, &len))) return res;
+		if ((res = Stream_Skip(stream, len)))        return res;
 	}
 
 	/* check framing flag */
 	UInt8 flag;
-	if (res = stream->ReadU8(stream, &flag)) return res;
+	if ((res = stream->ReadU8(stream, &flag))) return res;
 	return (flag & 1) ? 0 : VORBIS_ERR_FRAMING;
 }
 
@@ -1105,12 +1105,12 @@ ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 	ReturnCode res;
 	UInt32 count;
 	
-	if (res = Vorbis_CheckHeader(ctx, 1))   return res;
-	if (res = Vorbis_DecodeIdentifier(ctx)) return res;
-	if (res = Vorbis_CheckHeader(ctx, 3))   return res;
-	if (res = Vorbis_DecodeComments(ctx))   return res;
-	if (res = Vorbis_CheckHeader(ctx, 5))   return res;
-	if (res = Vorbis_DecodeSetup(ctx))      return res;
+	if ((res = Vorbis_CheckHeader(ctx, 1)))   return res;
+	if ((res = Vorbis_DecodeIdentifier(ctx))) return res;
+	if ((res = Vorbis_CheckHeader(ctx, 3)))   return res;
+	if ((res = Vorbis_DecodeComments(ctx)))   return res;
+	if ((res = Vorbis_CheckHeader(ctx, 5)))   return res;
+	if ((res = Vorbis_DecodeSetup(ctx)))      return res;
 
 	/* window calculations can be pre-computed here */
 	count = ctx->BlockSizes[0] + ctx->BlockSizes[1];

@@ -440,7 +440,7 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 
 			/* TODO: This assumes zlib header will be in 1 IDAT chunk */
 			while (!zlibHeader.Done) { 
-				if (res = ZLibHeader_Read(&datStream, &zlibHeader)) return res;
+				if ((res = ZLibHeader_Read(&datStream, &zlibHeader))) return res;
 			}
 
 			UInt32 bufferLen = bufferRows * scanlineBytes, bufferMax = bufferLen - scanlineBytes;
@@ -484,11 +484,11 @@ ReturnCode Bitmap_DecodePng(struct Bitmap* bmp, struct Stream* stream) {
 		} break;
 
 		default:
-			if (res = Stream_Skip(stream, dataSize)) return res;
+			if ((res = Stream_Skip(stream, dataSize))) return res;
 			break;
 		}
 
-		if (res = Stream_Read(stream, tmp, 4)) return res; /* Skip CRC32 */
+		if ((res = Stream_Read(stream, tmp, 4))) return res; /* Skip CRC32 */
 	}
 
 	if (transparentCol <= PNG_RGB_MASK) {
@@ -610,7 +610,7 @@ static void Png_EncodeRow(UInt8* src, UInt8* cur, UInt8* prior, UInt8* best, Int
 ReturnCode Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 	ReturnCode res;
 	UInt8 tmp[32];
-	if (res = Stream_Write(stream, png_sig, PNG_SIG_SIZE)) return res;
+	if ((res = Stream_Write(stream, png_sig, PNG_SIG_SIZE))) return res;
 
 	struct Stream* underlying = stream; 
 	struct Stream crc32Stream;
@@ -637,9 +637,9 @@ ReturnCode Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 
 	/* Write PNG body */
 	Stream_SetU32_BE(&tmp[25], 0); /* size of IDAT, filled in later */
-	if (res = Stream_Write(stream, tmp, 29)) return res;
+	if ((res = Stream_Write(stream, tmp, 29))) return res;
 	Stream_SetU32_BE(&tmp[0], PNG_FourCC('I','D','A','T'));
-	if (res = Stream_Write(&crc32Stream, tmp, 4)) return res;
+	if ((res = Stream_Write(&crc32Stream, tmp, 4))) return res;
 
 	stream = &crc32Stream;
 	{
@@ -654,9 +654,9 @@ ReturnCode Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 			UInt8* cur  = (y & 1) == 0 ? curLine : prevLine;
 			Png_EncodeRow(src, cur, prev, bestLine, lineSize);
 			/* +1 for filter byte */
-			if (res = Stream_Write(&zlStream, bestLine, lineSize + 1)) return res;
+			if ((res = Stream_Write(&zlStream, bestLine, lineSize + 1))) return res;
 		}
-		if (res = zlStream.Close(&zlStream)) return res;
+		if ((res = zlStream.Close(&zlStream))) return res;
 	}
 	stream = underlying;
 	Stream_SetU32_BE(&tmp[0], crc32Stream.Meta.CRC32.CRC32 ^ 0xFFFFFFFFUL);
@@ -665,12 +665,12 @@ ReturnCode Bitmap_EncodePng(struct Bitmap* bmp, struct Stream* stream) {
 	Stream_SetU32_BE(&tmp[4],  0);
 	Stream_SetU32_BE(&tmp[8],  PNG_FourCC('I','E','N','D'));
 	Stream_SetU32_BE(&tmp[12], 0xAE426082UL); /* CRC32 of iend */
-	if (res = Stream_Write(stream, tmp, 16)) return res;
+	if ((res = Stream_Write(stream, tmp, 16))) return res;
 
 	/* Come back to write size of data chunk */
 	UInt32 stream_len;
-	if (res = stream->Length(stream, &stream_len))             return res;
-	if (res = stream->Seek(stream, 33, STREAM_SEEKFROM_BEGIN)) return res;
+	if ((res = stream->Length(stream, &stream_len)))             return res;
+	if ((res = stream->Seek(stream, 33, STREAM_SEEKFROM_BEGIN))) return res;
 
 	Stream_SetU32_BE(&tmp[0], stream_len - 57);
 	return Stream_Write(stream, tmp, 4);
