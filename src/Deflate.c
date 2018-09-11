@@ -741,7 +741,7 @@ static void Deflate_LenDist(struct DeflateState* state, Int32 len, Int32 dist) {
 static ReturnCode Deflate_FlushBlock(struct DeflateState* state, Int32 len) {
 	if (!state->WroteHeader) {
 		state->WroteHeader = true;
-		Deflate_PushBits(state, 2, 3); /* final block TRUE, block type FIXED */
+		Deflate_PushBits(state, 3, 3); /* final block TRUE, block type FIXED */
 	}
 
 	/* TODO: Hash chains should persist past one block flush */
