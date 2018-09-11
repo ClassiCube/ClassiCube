@@ -14,7 +14,6 @@
 
 BlockID held_block;
 struct Entity held_entity;
-struct EntityVTABLE held_entityVTABLE;
 struct Matrix held_blockProjection;
 
 bool held_animating, held_breaking, held_swinging;
@@ -222,11 +221,13 @@ void HeldBlockRenderer_Render(Real64 delta) {
 	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
 }
 
+struct EntityVTABLE heldEntity_VTABLE = {
+	NULL, NULL, NULL, HeldBlockRenderer_GetCol,
+	NULL, NULL, NULL, NULL,
+};
 static void HeldBlockRenderer_Init(void) {
 	Entity_Init(&held_entity);
-	held_entityVTABLE = *held_entity.VTABLE;
-	held_entityVTABLE.GetCol = HeldBlockRenderer_GetCol;
-	held_entity.VTABLE = &held_entityVTABLE;
+	held_entity.VTABLE = &heldEntity_VTABLE;
 	held_entity.NoShade = true;
 
 	held_lastBlock = Inventory_SelectedBlock;

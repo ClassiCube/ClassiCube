@@ -61,22 +61,16 @@ void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, Re
 *---------------------------------------------------------Entity----------------------------------------------------------*
 *#########################################################################################################################*/
 struct EntityVTABLE entity_VTABLE;
-static PackedCol Entity_DefaultGetCol(struct Entity* entity) {
-	Vector3 eyePos = Entity_GetEyePosition(entity);
+static PackedCol Entity_GetCol(struct Entity* e) {
+	Vector3 eyePos = Entity_GetEyePosition(e);
 	Vector3I P; Vector3I_Floor(&P, &eyePos);
 	return World_IsValidPos_3I(P) ? Lighting_Col(P.X, P.Y, P.Z) : Lighting_Outside;
 }
-static void Entity_NullFunc(struct Entity* entity) {}
 
 void Entity_Init(struct Entity* entity) {
 	entity->ModelScale = Vector3_Create1(1.0f);
 	entity->uScale = 1.0f;
 	entity->vScale = 1.0f;
-
-	entity->VTABLE = &entity_VTABLE;
-	entity->VTABLE->ContextLost      = Entity_NullFunc;
-	entity->VTABLE->ContextRecreated = Entity_NullFunc;
-	entity->VTABLE->GetCol           = Entity_DefaultGetCol;
 }
 
 Vector3 Entity_GetEyePosition(struct Entity* entity) {
@@ -501,26 +495,26 @@ static void Player_MakeNameTexture(struct Player* player) {
 }
 
 void Player_UpdateNameTex(struct Player* player) {
-	struct Entity* entity = &player->Base;
-	entity->VTABLE->ContextLost(entity);
+	struct Entity* e = &player->Base;
+	e->VTABLE->ContextLost(e);
 
 	if (Gfx_LostContext) return;
 	Player_MakeNameTexture(player);
 }
 
 static void Player_DrawName(struct Player* player) {
-	struct Entity* entity = &player->Base;
-	struct Model* model = entity->Model;
+	struct Entity* e = &player->Base;
+	struct Model* model = e->Model;
 
 	if (player->NameTex.X == PLAYER_NAME_EMPTY_TEX) return;
 	if (!player->NameTex.ID) Player_MakeNameTexture(player);
 	Gfx_BindTexture(player->NameTex.ID);
 
 	Vector3 pos;
-	model->RecalcProperties(entity);
-	Vector3_TransformY(&pos, model->NameYOffset, &entity->Transform);
+	model->RecalcProperties(e);
+	Vector3_TransformY(&pos, model->NameYOffset, &e->Transform);
 
-	Real32 scale = model->NameScale * entity->ModelScale.Y;
+	Real32 scale = model->NameScale * e->ModelScale.Y;
 	scale = scale > 1.0f ? (1.0f / 70.0f) : (scale / 70.0f);
 	Vector2 size = { player->NameTex.Width * scale, player->NameTex.Height * scale };
 
@@ -712,24 +706,24 @@ static void Player_CheckSkin(struct Player* player) {
 	Mem_Free(bmp.Scan0);
 }
 
-static void Player_Despawn(struct Entity* entity) {
-	struct Player* player = (struct Player*)entity;
+static void Player_Despawn(struct Entity* e) {
+	struct Player* player = (struct Player*)e;
 	struct Player* first = Player_FirstOtherWithSameSkin(player);
 	if (!first) {
-		Gfx_DeleteTexture(&entity->TextureId);
+		Gfx_DeleteTexture(&e->TextureId);
 		Player_ResetSkin(player);
 	}
-	entity->VTABLE->ContextLost(entity);
+	e->VTABLE->ContextLost(e);
 }
 
-static void Player_ContextLost(struct Entity* entity) {
-	struct Player* player = (struct Player*)entity;
+static void Player_ContextLost(struct Entity* e) {
+	struct Player* player = (struct Player*)e;
 	Gfx_DeleteTexture(&player->NameTex.ID);
 	player->NameTex.X = 0; /* X is used as an 'empty name' flag */
 }
 
-static void Player_ContextRecreated(struct Entity* entity) {
-	struct Player* player = (struct Player*)entity;
+static void Player_ContextRecreated(struct Entity* e) {
+	struct Player* player = (struct Player*)e;
 	Player_UpdateNameTex(player);
 }
 
@@ -740,20 +734,12 @@ void Player_SetName(struct Player* player, STRING_PURE String* name, STRING_PURE
 	String_AppendString(&p_skin, skin);
 }
 
-struct EntityVTABLE player_VTABLE;
-void Player_Init(struct Player* player) {
-	struct Entity* entity = &player->Base;
-	Entity_Init(entity);
-	entity->StepSize = 0.5f;
-	entity->EntityType = ENTITY_TYPE_PLAYER;
-	String model = String_FromConst("humanoid");
-	Entity_SetModel(entity, &model);
-
-	player_VTABLE  = *entity->VTABLE;
-	entity->VTABLE = &player_VTABLE;
-	entity->VTABLE->ContextLost      = Player_ContextLost;
-	entity->VTABLE->ContextRecreated = Player_ContextRecreated;
-	entity->VTABLE->Despawn          = Player_Despawn;
+static void Player_Init(struct Entity* e) {
+	Entity_Init(e);
+	e->StepSize   = 0.5f;
+	e->EntityType = ENTITY_TYPE_PLAYER;
+	String model  = String_FromConst("humanoid");
+	Entity_SetModel(e, &model);
 }
 
 
@@ -807,58 +793,58 @@ static void LocalPlayer_HandleInput(Real32* xMoving, Real32* zMoving) {
 	}
 }
 
-static void LocalPlayer_SetLocation(struct Entity* entity, struct LocationUpdate* update, bool interpolate) {
-	struct LocalPlayer* p = (struct LocalPlayer*)entity;
+static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update, bool interpolate) {
+	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	LocalInterpComp_SetLocation(&p->Interp, update, interpolate);
 }
 
-void LocalPlayer_Tick(struct Entity* entity, Real64 delta) {
+void LocalPlayer_Tick(struct Entity* e, Real64 delta) {
 	if (!World_Blocks) return;
-	struct LocalPlayer* p = (struct LocalPlayer*)entity;
+	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	struct HacksComp* hacks = &p->Hacks;
 
-	entity->StepSize = hacks->FullBlockStep && hacks->Enabled && hacks->CanAnyHacks && hacks->CanSpeed ? 1.0f : 0.5f;
-	p->OldVelocity   = entity->Velocity;
+	e->StepSize = hacks->FullBlockStep && hacks->Enabled && hacks->CanAnyHacks && hacks->CanSpeed ? 1.0f : 0.5f;
+	p->OldVelocity   = e->Velocity;
 	Real32 xMoving = 0, zMoving = 0;
 	LocalInterpComp_AdvanceState(&p->Interp);
-	bool wasOnGround = entity->OnGround;
+	bool wasOnGround = e->OnGround;
 
 	LocalPlayer_HandleInput(&xMoving, &zMoving);
 	hacks->Floating = hacks->Noclip || hacks->Flying;
-	if (!hacks->Floating && hacks->CanBePushed) PhysicsComp_DoEntityPush(entity);
+	if (!hacks->Floating && hacks->CanBePushed) PhysicsComp_DoEntityPush(e);
 
 	/* Immediate stop in noclip mode */
 	if (!hacks->NoclipSlide && (hacks->Noclip && xMoving == 0 && zMoving == 0)) {
-		Vector3 zero = Vector3_Zero; entity->Velocity = zero;
+		Vector3 zero = Vector3_Zero; e->Velocity = zero;
 	}
 
 	PhysicsComp_UpdateVelocityState(&p->Physics);
-	Vector3 headingVelocity = Vector3_RotateY3(xMoving, 0, zMoving, entity->HeadY * MATH_DEG2RAD);
+	Vector3 headingVelocity = Vector3_RotateY3(xMoving, 0, zMoving, e->HeadY * MATH_DEG2RAD);
 	PhysicsComp_PhysicsTick(&p->Physics, headingVelocity);
 
 	/* Fixes high jump, when holding down a movement key, jump, fly, then let go of fly key */
-	if (p->Hacks.Floating) entity->Velocity.Y = 0.0f;
+	if (p->Hacks.Floating) e->Velocity.Y = 0.0f;
 
-	p->Interp.Next.Pos = entity->Position; entity->Position = p->Interp.Prev.Pos;
-	AnimatedComp_Update(entity, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
+	p->Interp.Next.Pos = e->Position; e->Position = p->Interp.Prev.Pos;
+	AnimatedComp_Update(e, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
 	TiltComp_Update(&p->Tilt, delta);
 
 	Player_CheckSkin((struct Player*)p);
 	SoundComp_Tick(wasOnGround);
 }
 
-static void LocalPlayer_RenderModel(struct Entity* entity, Real64 deltaTime, Real32 t) {
-	struct LocalPlayer* p = (struct LocalPlayer*)entity;
-	AnimatedComp_GetCurrent(entity, t);
+static void LocalPlayer_RenderModel(struct Entity* e, Real64 deltaTime, Real32 t) {
+	struct LocalPlayer* p = (struct LocalPlayer*)e;
+	AnimatedComp_GetCurrent(e, t);
 	TiltComp_GetCurrent(&p->Tilt, t);
 
 	if (!Camera_Active->IsThirdPerson) return;
-	Model_Render(entity->Model, entity);
+	Model_Render(e->Model, e);
 }
 
-static void LocalPlayer_RenderName(struct Entity* entity) {
+static void LocalPlayer_RenderName(struct Entity* e) {
 	if (!Camera_Active->IsThirdPerson) return;
-	Player_DrawName((struct Player*)entity);
+	Player_DrawName((struct Player*)e);
 }
 
 static void LocalPlayer_Init_(void) {
@@ -899,11 +885,14 @@ void LocalPlayer_MakeComponent(struct IGameComponent* comp) {
 	comp->OnNewMap = LocalPlayer_OnNewMap;
 }
 
-struct EntityVTABLE localplayer_VTABLE;
+struct EntityVTABLE localPlayer_VTABLE = {
+	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetCol,
+	LocalPlayer_RenderModel, LocalPlayer_RenderName, Player_ContextLost,      Player_ContextRecreated,
+};
 void LocalPlayer_Init(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	Mem_Set(p, 0, sizeof(struct LocalPlayer));
-	Player_Init((struct Player*)p);
+	Player_Init(&p->Base);
 	Player_SetName((struct Player*)p, &Game_Username, &Game_Username);
 
 	p->Collisions.Entity = &p->Base;
@@ -914,15 +903,7 @@ void LocalPlayer_Init(void) {
 	p->ReachDistance = 5.0f;
 	p->Physics.Hacks = &p->Hacks;
 	p->Physics.Collisions = &p->Collisions;
-
-	struct Entity* entity = &p->Base;
-	localplayer_VTABLE = *entity->VTABLE;
-	entity->VTABLE     = &localplayer_VTABLE;
-
-	entity->VTABLE->SetLocation = LocalPlayer_SetLocation;
-	entity->VTABLE->Tick        = LocalPlayer_Tick;
-	entity->VTABLE->RenderModel = LocalPlayer_RenderModel;
-	entity->VTABLE->RenderName  = LocalPlayer_RenderName;
+	p->Base.VTABLE   = &localPlayer_VTABLE;
 }
 
 static bool LocalPlayer_IsSolidCollide(BlockID b) { return Block_Collide[b] == COLLIDE_SOLID; }
@@ -997,49 +978,44 @@ bool LocalPlayer_HandlesKey(Int32 key) {
 /*########################################################################################################################*
 *-------------------------------------------------------NetPlayer---------------------------------------------------------*
 *#########################################################################################################################*/
-static void NetPlayer_SetLocation(struct Entity* entity, struct LocationUpdate* update, bool interpolate) {
-	struct NetPlayer* p = (struct NetPlayer*)entity;
+static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update, bool interpolate) {
+	struct NetPlayer* p = (struct NetPlayer*)e;
 	NetInterpComp_SetLocation(&p->Interp, update, interpolate);
 }
 
-void NetPlayer_Tick(struct Entity* entity, Real64 delta) {
-	struct NetPlayer* p = (struct NetPlayer*)entity;
+void NetPlayer_Tick(struct Entity* e, Real64 delta) {
+	struct NetPlayer* p = (struct NetPlayer*)e;
 	Player_CheckSkin((struct Player*)p);
 	NetInterpComp_AdvanceState(&p->Interp);
-	AnimatedComp_Update(entity, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
+	AnimatedComp_Update(e, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
 }
 
-static void NetPlayer_RenderModel(struct Entity* entity, Real64 deltaTime, Real32 t) {
-	struct NetPlayer* p = (struct NetPlayer*)entity;
-	Vector3_Lerp(&entity->Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
-	InterpComp_LerpAngles((struct InterpComp*)(&p->Interp), entity, t);
+static void NetPlayer_RenderModel(struct Entity* e, Real64 deltaTime, Real32 t) {
+	struct NetPlayer* p = (struct NetPlayer*)e;
+	Vector3_Lerp(&e->Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
+	InterpComp_LerpAngles((struct InterpComp*)(&p->Interp), e, t);
 
-	AnimatedComp_GetCurrent(entity, t);
-	p->ShouldRender = Model_ShouldRender(entity);
-	if (p->ShouldRender) Model_Render(entity->Model, entity);
+	AnimatedComp_GetCurrent(e, t);
+	p->ShouldRender = Model_ShouldRender(e);
+	if (p->ShouldRender) Model_Render(e->Model, e);
 }
 
-static void NetPlayer_RenderName(struct Entity* entity) {
-	struct NetPlayer* p = (struct NetPlayer*)entity;
+static void NetPlayer_RenderName(struct Entity* e) {
+	struct NetPlayer* p = (struct NetPlayer*)e;
 	if (!p->ShouldRender) return;
 
-	Real32 dist = Model_RenderDistance(entity);
+	Real32 dist = Model_RenderDistance(e);
 	Int32 threshold = Entities_NameMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
 	if (dist <= (Real32)threshold) Player_DrawName((struct Player*)p);
 }
 
-struct EntityVTABLE netplayer_VTABLE;
+struct EntityVTABLE netPlayer_VTABLE = {
+	NetPlayer_Tick,        Player_Despawn,       NetPlayer_SetLocation, Entity_GetCol,
+	NetPlayer_RenderModel, NetPlayer_RenderName, Player_ContextLost,    Player_ContextRecreated,
+};
 void NetPlayer_Init(struct NetPlayer* player, STRING_PURE String* displayName, STRING_PURE String* skinName) {
 	Mem_Set(player, 0, sizeof(struct NetPlayer));
-	Player_Init((struct Player*)player);
+	Player_Init(&player->Base);
 	Player_SetName((struct Player*)player, displayName, skinName);
-
-	struct Entity* entity = &player->Base;
-	netplayer_VTABLE = *entity->VTABLE;
-	entity->VTABLE   = &netplayer_VTABLE;
-
-	entity->VTABLE->SetLocation = NetPlayer_SetLocation;
-	entity->VTABLE->Tick        = NetPlayer_Tick;
-	entity->VTABLE->RenderModel = NetPlayer_RenderModel;
-	entity->VTABLE->RenderName  = NetPlayer_RenderName;
+	player->Base.VTABLE = &netPlayer_VTABLE;
 }

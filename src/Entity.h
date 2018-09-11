@@ -55,14 +55,14 @@ void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, Re
 
 struct Entity;
 struct EntityVTABLE {
-	void (*Tick)(struct Entity* entity, Real64 delta);
-	void (*SetLocation)(struct Entity* entity, struct LocationUpdate* update, bool interpolate);
-	void (*RenderModel)(struct Entity* entity, Real64 deltaTime, Real32 t);
-	void (*RenderName)(struct Entity* entity);
-	void (*ContextLost)(struct Entity* entity);
-	void (*ContextRecreated)(struct Entity* entity);
-	void (*Despawn)(struct Entity* entity);
-	PackedCol (*GetCol)(struct Entity* entity);
+	void (*Tick)(struct Entity* e, Real64 delta);
+	void (*Despawn)(struct Entity* e);
+	void (*SetLocation)(struct Entity* e, struct LocationUpdate* update, bool interpolate);
+	PackedCol (*GetCol)(struct Entity* e);
+	void (*RenderModel)(struct Entity* e, Real64 deltaTime, Real32 t);
+	void (*RenderName)(struct Entity* e);
+	void (*ContextLost)(struct Entity* e);
+	void (*ContextRecreated)(struct Entity* e);
 };
 
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */

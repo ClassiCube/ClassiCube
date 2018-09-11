@@ -7,6 +7,7 @@
 #include "Funcs.h"
 #include "Chat.h"
 #include "Game.h"
+#include "ExtMath.h"
 
 #if CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
@@ -144,6 +145,10 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, bool managedPool, bool mipma
 	glGenTextures(1, &texId);
 	glBindTexture(GL_TEXTURE_2D, texId);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	if (!Math_IsPowOf2(bmp->Width) || !Math_IsPowOf2(bmp->Height)) {
+		ErrorHandler_Fail("Textures must have power of two dimensions");
+	}
 
 	if (mipmaps) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);

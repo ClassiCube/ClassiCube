@@ -6,6 +6,7 @@
 #include "GraphicsCommon.h"
 #include "Funcs.h"
 #include "Game.h"
+#include "ExtMath.h"
 
 //#define D3D_DISABLE_9EX causes compile errors
 #if CC_BUILD_WIN
@@ -231,6 +232,10 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, bool managedPool, bool mipma
 	ReturnCode hresult;
 	Int32 mipmapsLevels = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
 	Int32 levels = 1 + (mipmaps ? mipmapsLevels : 0);
+
+	if (!Math_IsPowOf2(bmp->Width) || !Math_IsPowOf2(bmp->Height)) {
+		ErrorHandler_Fail("Textures must have power of two dimensions");
+	}
 
 	if (managedPool) {
 		hresult = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels, 0,
