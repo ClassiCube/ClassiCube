@@ -41,11 +41,55 @@ void ErrorHandler_ShowDialog(const char* title, const char* msg) {
 	MessageBoxA(Window_GetWindowHandle(), msg, title, 0);
 }
 
+/* Don't want compiler doing anything fancy with registers */
+#if _MSC_VER
+#pragma optimize ("", off)
+#endif
 void ErrorHandler_FailWithCode(ReturnCode result, const char* raw_msg) {
 	CONTEXT ctx;
+#ifndef _M_IX86
+	/* This method is guaranteed to exist on 64 bit windows */
+	/* It is missing in 32 bit Windows 2000 however */
 	RtlCaptureContext(&ctx);
+#elif _MSC_VER
+	/* Stack frame layout on x86: */
+	/* [ebp] is previous frame's EBP */
+	/* [ebp+4] is previous frame's EIP (return address) */
+	/* address of [ebp+8] is previous frame's ESP */
+	__asm {		
+		mov eax, [ebp]
+		mov [ctx.Ebp], eax	
+		mov eax, [ebp+4]
+		mov [ctx.Eip], eax	
+		lea eax, [ebp+8]	
+		mov [ctx.Esp], eax
+		mov [ctx.ContextFlags], CONTEXT_CONTROL
+	}
+#else
+	Int32 _ebp, _eip, _esp;
+	/* TODO: I think this is right, not sure.. */
+	__asm__(
+		"mov 0(%%ebp), %%eax \n\t"
+		"mov %%eax, %0       \n\t"
+		"mov 4(%%ebp), %%eax \n\t"
+		"mov %%eax, %1       \n\t"
+		"lea 8(%%ebp), %%eax \n\t"
+		"mov %%eax, %2"
+		: "=m" (_ebp), "=m" (_eip), "=m" (_esp)
+		:
+		: "eax", "memory");
+
+	ctx.Ebp = _ebp;
+	ctx.Eip = _eip;
+	ctx.Esp = _esp;
+	ctx.ContextFlags = CONTEXT_CONTROL;
+#endif
+
 	ErrorHandler_FailCore(result, raw_msg, &ctx);
 }
+#if _MSC_VER
+#pragma optimize ("", on)
+#endif
 
 static Int32 ErrorHandler_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, Int32 max) {
 	STACKFRAME64 frame = { 0 };
@@ -103,7 +147,7 @@ static void ErrorHandler_Backtrace(STRING_TRANSIENT String* str, void* ctx) {
 	Int32 frames = ErrorHandler_GetFrames((CONTEXT*)ctx, pointers, 40);
 
 	String_AppendConst(str, "\r\nBacktrace: \r\n");
-	UInt32 i;
+	Int32 i;
 
 	for (i = 0; i < frames; i++) {
 		Int32 number = i + 1;
