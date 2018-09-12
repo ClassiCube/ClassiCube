@@ -51,7 +51,7 @@ void ServerConnection_RetrieveTexturePack(STRING_PURE String* url) {
 
 void ServerConnection_DownloadTexturePack(STRING_PURE String* url) {
 	if (TextureCache_HasDenied(url)) return;
-	UInt8 etagBuffer[STRING_SIZE] = { 0 };
+	char etagBuffer[STRING_SIZE];
 	String etag = String_FromArray(etagBuffer);
 	UInt64 lastModified = 0;
 

@@ -184,21 +184,18 @@ UInt32 Utils_Crc32Table[256] = {
 	0xBDBDF21C, 0xCABAC28A, 0x53B39330, 0x24B4A3A6, 0xBAD03605, 0xCDD70693, 0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D,
 };
 
-void Utils_Resize(void** buffer, UInt32* maxElems, UInt32 elemSize, UInt32 defElems, UInt32 expandElems) {
+void* Utils_Resize(void* buffer, UInt32* maxElems, UInt32 elemSize, UInt32 defElems, UInt32 expandElems) {
 	/* We use a statically allocated buffer initally, so can't realloc first time */
-	void* dst;
-	void* cur = *buffer;
-	UInt32 curElems = *maxElems;
+	UInt32 curElems = *maxElems, elems = curElems + expandElems;
+	*maxElems = elems;
 
 	if (curElems <= defElems) {
-		dst = Mem_Alloc(curElems + expandElems, elemSize, "initing array");
-		Mem_Copy(dst, cur, curElems * elemSize);
+		void* resized = Mem_Alloc(elems, elemSize, "initing array");
+		Mem_Copy(resized, buffer, curElems * elemSize);
+		return resized;
 	} else {
-		dst = Mem_Realloc(cur, curElems + expandElems, elemSize, "resizing array");
+		return Mem_Realloc(buffer, elems, elemSize, "resizing array");
 	}
-
-	*buffer   = dst;
-	*maxElems = curElems + expandElems;
 }
 
 bool Utils_ParseIP(STRING_PURE String* ip, UInt8* data) {

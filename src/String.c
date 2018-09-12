@@ -674,7 +674,6 @@ bool Convert_TryParseBool(STRING_PURE String* str, bool* value) {
 #define STRINGSBUFFER_LEN_SHIFT 9
 #define STRINGSBUFFER_LEN_MASK  0x1FFUL
 #define STRINGSBUFFER_BUFFER_EXPAND_SIZE 8192
-#define STRINGSBUFFER_FLAGS_EXPAND_ELEMS 512
 
 void StringsBuffer_Init(StringsBuffer* buffer) {
 	buffer->Count     = 0;
@@ -717,8 +716,8 @@ void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text) {
 	if (!buffer->_FlagsBufferSize) { StringsBuffer_Init(buffer); }
 
 	if (buffer->Count == buffer->_FlagsBufferSize) {
-		Utils_Resize(&buffer->FlagsBuffer, &buffer->_FlagsBufferSize, sizeof(UInt32),
-			STRINGSBUFFER_FLAGS_DEF_ELEMS, STRINGSBUFFER_FLAGS_EXPAND_ELEMS);
+		buffer->FlagsBuffer = Utils_Resize(buffer->FlagsBuffer, &buffer->_FlagsBufferSize, 
+											sizeof(UInt32), STRINGSBUFFER_FLAGS_DEF_ELEMS, 512);
 	}
 
 	if (text->length > STRINGSBUFFER_LEN_MASK) {
@@ -727,8 +726,8 @@ void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text) {
 
 	Int32 textOffset = buffer->TotalLength;
 	if (textOffset + text->length >= buffer->_TextBufferSize) {
-		Utils_Resize(&buffer->TextBuffer, &buffer->_TextBufferSize, sizeof(char),
-			STRINGSBUFFER_BUFFER_DEF_SIZE, STRINGSBUFFER_BUFFER_EXPAND_SIZE);
+		buffer->TextBuffer = Utils_Resize(buffer->TextBuffer, &buffer->_TextBufferSize,
+											sizeof(char), STRINGSBUFFER_BUFFER_DEF_SIZE, 8192);
 	}
 
 	if (text->length) {

@@ -186,6 +186,7 @@ struct Sound* Soundboard_PickRandom(struct Soundboard* board, UInt8 type) {
 *#########################################################################################################################*/
 struct SoundOutput { AudioHandle Handle; void* Buffer; UInt32 BufferSize; };
 #define AUDIO_MAX_HANDLES 6
+#define AUDIO_DEF_ELEMS 0
 #define HANDLE_INV -1
 #define SOUND_INV { HANDLE_INV, NULL, 0 }
 
@@ -201,7 +202,8 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 	if (volume < 100) {		
 		if (output->BufferSize < snd->DataSize) {
 			UInt32 expandBy = snd->DataSize - output->BufferSize;
-			Utils_Resize(&output->Buffer, &output->BufferSize, 1, 0, expandBy);
+			output->Buffer  = Utils_Resize(output->Buffer, &output->BufferSize, 
+											sizeof(UInt8), AUDIO_DEF_ELEMS, expandBy);
 		}
 		buffer = output->Buffer;
 

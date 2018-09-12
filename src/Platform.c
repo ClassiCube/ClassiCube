@@ -1478,16 +1478,16 @@ void Platform_Free(void) {
 }
 
 void Platform_SetWorkingDir(void) {
-	WCHAR dirName[FILENAME_SIZE + 1] = { 0 };
+	WCHAR dirName[FILENAME_SIZE + 1];
 	DWORD len = GetModuleFileNameW(NULL, dirName, FILENAME_SIZE);
 	if (!len) return;
 
-	/* get rid of filename at end of directory*/
+	/* get rid of filename at end of directory */
 	for (; len > 0; len--) {
 		if (dirName[len] == '/' || dirName[len] == '\\') break;
-		dirName[len] = '\0';
 	}
 
+	dirName[len] = '\0';
 	SetCurrentDirectoryW(dirName);
 }
 

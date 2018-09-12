@@ -17,7 +17,6 @@
 #include "GameStructs.h"
 
 #define CHAT_LOGTIMES_DEF_ELEMS 256
-#define CHAT_LOGTIMES_EXPAND_ELEMS 512
 UInt64 Chat_DefaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
 UInt64* Chat_LogTimes = Chat_DefaultLogTimes;
 Int32 Chat_LogTimesMax = CHAT_LOGTIMES_DEF_ELEMS, Chat_LogTimesCount;
@@ -29,8 +28,8 @@ UInt64 Chat_GetLogTime(Int32 i) {
 
 static void Chat_AppendLogTime(void) {	
 	if (Chat_LogTimesCount == Chat_LogTimesMax) {
-		Utils_Resize(&Chat_LogTimes, &Chat_LogTimesMax, sizeof(UInt64),
-			CHAT_LOGTIMES_DEF_ELEMS, CHAT_LOGTIMES_EXPAND_ELEMS);
+		Chat_LogTimes = Utils_Resize(Chat_LogTimes, &Chat_LogTimesMax,
+									sizeof(UInt64), CHAT_LOGTIMES_DEF_ELEMS, 512);
 	}
 
 	UInt64 now = DateTime_CurrentUTC_MS();

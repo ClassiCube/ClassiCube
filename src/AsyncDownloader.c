@@ -11,17 +11,17 @@ void ASyncRequest_Free(struct AsyncRequest* request) {
 	request->ResultSize = 0;
 }
 
-#define ASYNCREQUESTLIST_DEFELEMS 10
+#define ASYNC_DEF_ELEMS 10
 struct AsyncRequestList {
 	Int32 MaxElems, Count;
 	struct AsyncRequest* Requests;
-	struct AsyncRequest DefaultRequests[ASYNCREQUESTLIST_DEFELEMS];
+	struct AsyncRequest DefaultRequests[ASYNC_DEF_ELEMS];
 };
 
 static void AsyncRequestList_EnsureSpace(struct AsyncRequestList* list) {
 	if (list->Count < list->MaxElems) return;
-	Utils_Resize(&list->Requests, &list->MaxElems, sizeof(struct AsyncRequest),
-		ASYNCREQUESTLIST_DEFELEMS, 10);
+	list->Requests = Utils_Resize(list->Requests, &list->MaxElems,
+									sizeof(struct AsyncRequest), ASYNC_DEF_ELEMS, 10);
 }
 
 static void AsyncRequestList_Append(struct AsyncRequestList* list, struct AsyncRequest* item) {
@@ -49,8 +49,8 @@ static void AsyncRequestList_RemoveAt(struct AsyncRequestList* list, Int32 i) {
 }
 
 static void AsyncRequestList_Init(struct AsyncRequestList* list) {
-	list->MaxElems = ASYNCREQUESTLIST_DEFELEMS;
-	list->Count = 0;
+	list->MaxElems = ASYNC_DEF_ELEMS;
+	list->Count    = 0;
 	list->Requests = list->DefaultRequests;
 }
 
