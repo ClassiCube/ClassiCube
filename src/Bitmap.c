@@ -342,7 +342,7 @@ ReturnCode Bitmap_DecodePng(Bitmap* bmp, struct Stream* stream) {
 	for (i = 0; i < PNG_PALETTE; i++) {
 		palette[i] = PackedCol_ARGB(0, 0, 0, 255);
 	}
-	bool gotHeader = false, readingChunks = true;
+	bool readingChunks = true;
 
 	struct InflateState inflate;
 	struct Stream compStream;
@@ -363,7 +363,6 @@ ReturnCode Bitmap_DecodePng(Bitmap* bmp, struct Stream* stream) {
 		switch (fourCC) {
 		case PNG_FourCC('I','H','D','R'): {
 			if (dataSize != PNG_IHDR_SIZE) return PNG_ERR_INVALID_HEADER_SIZE;
-			gotHeader = true;
 			res = Stream_Read(stream, buffer, PNG_IHDR_SIZE);
 			if (res) return res;
 
@@ -442,6 +441,7 @@ ReturnCode Bitmap_DecodePng(Bitmap* bmp, struct Stream* stream) {
 			while (!zlibHeader.Done) { 
 				if ((res = ZLibHeader_Read(&datStream, &zlibHeader))) return res;
 			}
+			if (!bmp->Scan0) return PNG_ERR_NO_DATA;
 
 			UInt32 bufferLen = bufferRows * scanlineBytes, bufferMax = bufferLen - scanlineBytes;
 			while (curY < bmp->Height) {
