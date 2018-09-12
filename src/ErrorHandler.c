@@ -14,17 +14,17 @@ static void ErrorHandler_DumpCommon(STRING_TRANSIENT String* str, void* ctx);
 #define NOMCX
 #define NOIME
 #include <windows.h>
-#include <dbghelp.h>
+#include <imagehlp.h>
 
 struct StackPointers { UInt64 Instruction, Frame, Stack; };
-struct SymbolAndName { IMAGEHLP_SYMBOL64 Symbol; char Name[256]; };
+struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
 
 
 /*########################################################################################################################*
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
 static Int32 ErrorHandler_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, Int32 max) {
-	STACKFRAME64 frame = { 0 };
+	STACKFRAME frame = { 0 };
 	frame.AddrPC.Mode     = AddrModeFlat;
 	frame.AddrFrame.Mode  = AddrModeFlat;
 	frame.AddrStack.Mode  = AddrModeFlat;	
@@ -57,7 +57,7 @@ static Int32 ErrorHandler_GetFrames(CONTEXT* ctx, struct StackPointers* pointers
 	CONTEXT copy = *ctx;
 
 	for (count = 0; count < max; count++) {		
-		if (!StackWalk64(type, process, thread, &frame, &copy, NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL)) break;
+		if (!StackWalk(type, process, thread, &frame, &copy, NULL, SymFunctionTableAccess, SymGetModuleBase, NULL)) break;
 		if (!frame.AddrFrame.Offset) break;
 
 		pointers[count].Instruction = frame.AddrPC.Offset;
@@ -67,12 +67,12 @@ static Int32 ErrorHandler_GetFrames(CONTEXT* ctx, struct StackPointers* pointers
 	return count;
 }
 
-static BOOL CALLBACK ErrorHandler_DumpModule(const char* name, DWORD64 base, ULONG size, void* ctx) {
+static BOOL CALLBACK ErrorHandler_DumpModule(const char* name, ULONG_PTR base, ULONG size, void* ctx) {
 	char buffer[STRING_SIZE * 4];
 	String str = String_FromArray(buffer);
-	DWORD64 end = base + (size - 1);
+	DWORD64 start = base, end = base + (size - 1);
 
-	String_Format3(&str, "%c = %x-%x\r\n", name, &base, &end);
+	String_Format3(&str, "%c = %x-%x\r\n", name, &start, &end);
 	ErrorHandler_Log(&str);
 	return true;
 }
@@ -80,7 +80,7 @@ static BOOL CALLBACK ErrorHandler_DumpModule(const char* name, DWORD64 base, ULO
 static void ErrorHandler_Backtrace(STRING_TRANSIENT String* backtrace, void* ctx) {
 	struct SymbolAndName sym = { 0 };
 	sym.Symbol.MaxNameLength = 255;
-	sym.Symbol.SizeOfStruct = sizeof(IMAGEHLP_SYMBOL64);
+	sym.Symbol.SizeOfStruct = sizeof(IMAGEHLP_SYMBOL);
 
 	HANDLE process = GetCurrentProcess();
 	struct StackPointers pointers[40];
@@ -94,7 +94,7 @@ static void ErrorHandler_Backtrace(STRING_TRANSIENT String* backtrace, void* ctx
 		String str = String_FromArray(strBuffer);
 
 		/* instruction pointer */
-		if (SymGetSymFromAddr64(process, addr, NULL, &sym.Symbol)) {
+		if (SymGetSymFromAddr(process, addr, NULL, &sym.Symbol)) {
 			String_Format3(&str, "%i) 0x%x - %c\r\n", &number, &addr, sym.Symbol.Name);
 		} else {
 			String_Format2(&str, "%i) 0x%x\r\n", &number, &addr);
@@ -105,16 +105,16 @@ static void ErrorHandler_Backtrace(STRING_TRANSIENT String* backtrace, void* ctx
 		String_Format2(&str, "  fp: %x, sp: %x\r\n", &pointers[i].Frame, &pointers[i].Stack);
 
 		/* line number */
-		IMAGEHLP_LINE64 line = { 0 };
-		line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
-		if (SymGetLineFromAddr64(process, addr, &number, &line)) {
+		IMAGEHLP_LINE line = { 0 }; DWORD lineOffset;
+		line.SizeOfStruct = sizeof(IMAGEHLP_LINE);
+		if (SymGetLineFromAddr(process, addr, &lineOffset, &line)) {
 			String_Format2(&str, "  line %i in %c\r\n", &line.LineNumber, line.FileName);
 		}
 
 		/* module address is in */
-		IMAGEHLP_MODULE64 module = { 0 };
-		module.SizeOfStruct = sizeof(IMAGEHLP_MODULE64);
-		if (SymGetModuleInfo64(process, addr, &module)) {
+		IMAGEHLP_MODULE module = { 0 };
+		module.SizeOfStruct = sizeof(IMAGEHLP_MODULE);
+		if (SymGetModuleInfo(process, addr, &module)) {
 			String_Format2(&str, "  in module %c (%c)\r\n", module.ModuleName, module.ImageName);
 		}
 		ErrorHandler_Log(&str);
@@ -132,7 +132,7 @@ static void ErrorHandler_DumpCommon(STRING_TRANSIENT String* str, void* ctx) {
 
 	String modules = String_FromConst("-- modules --\r\n");
 	ErrorHandler_Log(&modules);
-	EnumerateLoadedModules64(process, ErrorHandler_DumpModule, NULL);
+	EnumerateLoadedModules(process, ErrorHandler_DumpModule, NULL);
 }
 
 static void ErrorHandler_DumpRegisters(CONTEXT* ctx) {
@@ -522,19 +522,21 @@ void ErrorHandler_Log(STRING_PURE String* msg) {
 
 static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void* ctx) {
 	char logMsgBuffer[3070 + 1] = { 0 };
-	String logMsg = { logMsgBuffer, 0, 3070 };
+	String msg = { logMsgBuffer, 0, 3070 };
 
-	String_Format1(&logMsg, "ClassiCube crashed.\nMessge: %c\n", raw_msg);
-	if (result) { String_Format1(&logMsg, "%y\n", &result); } else { result = 1; }
-	ErrorHandler_Log(&logMsg);
+	String_Format3(&msg, "ClassiCube crashed.%cMessge: %c%c", Platform_NewLine, raw_msg, Platform_NewLine);
+	if (result) { 
+		String_Format2(&msg, "%y%c", &result, Platform_NewLine); 
+	} else { result = 1; }
 
-	ErrorHandler_DumpCommon(&logMsg, ctx);
+	ErrorHandler_Log(&msg);
+	ErrorHandler_DumpCommon(&msg, ctx);
 	if (logStream.Meta.File) File_Close(logFile);
 
-	String_AppendConst(&logMsg, "Full details of the crash have been logged to 'client.log'.\n");
-	String_AppendConst(&logMsg,
+	String_AppendConst(&msg, "Full details of the crash have been logged to 'client.log'.\n");
+	String_AppendConst(&msg,
 		"Please report the crash to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it.");
-	ErrorHandler_ShowDialog("We're sorry", logMsg.buffer);
+	ErrorHandler_ShowDialog("We're sorry", msg.buffer);
 	Platform_Exit(result);
 }
 

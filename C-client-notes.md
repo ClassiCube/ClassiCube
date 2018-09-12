@@ -4,9 +4,9 @@ Install appropriate libs as required. Build steps are still WIP, but current way
 
 Cross compiling for windows:
 
-```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -lopengl32```
+```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lopengl32```
 
-```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -ld3d9```
+```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -ld3d9```
 
 Compiling for linux: 
 
