@@ -428,6 +428,10 @@ ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCal
 		file.length = 0;
 		String_DecodeUtf8(&file, entry->d_name, len);
 
+		/* exlude . and .. paths */
+		if (file.length == 1 && file.buffer[0] == '.')                          continue;
+		if (file.length == 2 && file.buffer[0] == '.' && file.buffer[1] == '.') continue;
+
 		Utils_UNSAFE_GetFilename(&file);
 		callback(&file, obj);
 	}

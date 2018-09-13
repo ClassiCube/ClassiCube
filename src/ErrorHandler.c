@@ -248,6 +248,11 @@ void ErrorHandler_FailWithCode(ReturnCode result, const char* raw_msg) {
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
+#include <ucontext.h>
+#include <execinfo.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 
 /*########################################################################################################################*
@@ -561,12 +566,11 @@ static void ErrorHandler_DumpCommon(STRING_TRANSIENT String* str, void* ctx) {
 static void ErrorHandler_SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	/* Uninstall handler to avoid chance of infinite loop */
 	signal(SIGSEGV, SIG_DFL);
-	signal(SIGBUS, SIG_DFL);
-	signal(SIGILL, SIG_DFL);
+	signal(SIGBUS,  SIG_DFL);
+	signal(SIGILL,  SIG_DFL);
 	signal(SIGABRT, SIG_DFL);
-	signal(SIGFPE, SIG_DFL);
+	signal(SIGFPE,  SIG_DFL);
 
-	/* TODO: Write processor state to file*/
 	char msgBuffer[128 + 1] = { 0 };
 	String msg = { msgBuffer, 0, 128 };
 
