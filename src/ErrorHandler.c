@@ -119,7 +119,7 @@ static void ErrorHandler_Backtrace(STRING_TRANSIENT String* backtrace, void* ctx
 		}
 		ErrorHandler_Log(&str);
 	}
-	String_AppendConst(backtrace, "\n");
+	String_AppendConst(backtrace, "\r\n");
 }
 
 static void ErrorHandler_DumpCommon(STRING_TRANSIENT String* str, void* ctx) {
@@ -150,7 +150,7 @@ static void ErrorHandler_DumpRegisters(CONTEXT* ctx) {
 	String_Format3(&str, "rip=%x rbp=%x rsp=%x\r\n", &ctx->Rip, &ctx->Rbp, &ctx->Rsp);
 	String_Format3(&str, "r8 =%x r9 =%x r10=%x\r\n", &ctx->R8,  &ctx->R9,  &ctx->R10);
 	String_Format3(&str, "r11=%x r12=%x r13=%x\r\n", &ctx->R11, &ctx->R12, &ctx->R13);
-	String_Format2(&str, "r14=%x r15=%x\r\n"        , &ctx->R14, &ctx->R15);
+	String_Format2(&str, "r14=%x r15=%x\r\n"       , &ctx->R14, &ctx->R15);
 #elif _M_IA64
 	String_Format3(&str, "r1 =%x r2 =%x r3 =%x\r\n", &ctx->IntGp,  &ctx->IntT0,  &ctx->IntT1);
 	String_Format3(&str, "r4 =%x r5 =%x r6 =%x\r\n", &ctx->IntS0,  &ctx->IntS1,  &ctx->IntS2);
@@ -174,7 +174,6 @@ static void ErrorHandler_DumpRegisters(CONTEXT* ctx) {
 *------------------------------------------------------Error handling-----------------------------------------------------*
 *#########################################################################################################################*/
 static LONG WINAPI ErrorHandler_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
-	/* TODO: Write processor state to file*/
 	char msgBuffer[128 + 1] = { 0 };
 	String msg = { msgBuffer, 0, 128 };
 
@@ -475,27 +474,135 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Info dumping------------------------------------------------------*
+*#########################################################################################################################*/
+static void ErrorHandler_Backtrace(STRING_TRANSIENT String* backtrace_, void* ctx) {
+	void* addrs[40];
+	Int32 i, frames = backtrace(addrs, 40);
+	char** strings  = backtrace_symbols(addrs, frames);
+
+	for (i = 0; i < frames; i++) {
+		Int32 number = i + 1;
+		UInt64 addr = (UInt64)addrs[i];
+
+		char strBuffer[STRING_SIZE * 5];
+		String str = String_FromArray(strBuffer);
+
+		/* instruction pointer */
+		if (strings && strings[i]) {
+			String_Format3(&str, "%i) 0x%x - %c\n", &number, &addr, strings[i]);
+		} else {
+			String_Format2(&str, "%i) 0x%x\n", &number, &addr);
+		}
+
+		String_AppendString(backtrace_, &str);
+		ErrorHandler_Log(&str);
+	}
+
+	String_AppendConst(backtrace_, "\n");
+	free(strings);
+}
+
+static void ErrorHandler_DumpRegisters(void* ctx) {
+	if (!ctx) return;
+	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
+
+	char strBuffer[STRING_SIZE * 8];
+	String str = String_FromArray(strBuffer);
+	String_AppendConst(&str, "-- registers --\n");
+
+	/* TODO: There must be a better way of getting these.. */
+#ifdef __i386__
+	String_Format3(&str, "eax=%y ebx=%y ecx=%y\n", &r.gregs[11], &r.gregs[8], &r.gregs[10]);
+	String_Format3(&str, "edx=%y esi=%y edi=%y\n", &r.gregs[9],  &r.gregs[5], &r.gregs[4]);
+	String_Format3(&str, "eip=%y ebp=%y esp=%y\n", &r.gregs[14], &r.gregs[6], &r.gregs[7]);
+#elif __x86_64__
+	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r.gregs[13], &r.gregs[11], &r.gregs[14]);
+	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r.gregs[12], &r.gregs[9],  &r.gregs[8]);
+	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r.gregs[16], &r.gregs[10], &r.gregs[15]);
+	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r.gregs[0],  &r.gregs[1],  &r.gregs[2]);
+	String_Format3(&str, "r11=%x r12=%x r13=%x\n", &r.gregs[3],  &r.gregs[4],  &r.gregs[5]);
+	String_Format2(&str, "r14=%x r15=%x\n",        &r.gregs[6],  &r.gregs[7]);
+#else
+#error "Unknown machine type"
+#endif
+	ErrorHandler_Log(&str);
+}
+
+static void ErrorHandler_DumpMemoryMap(void) {
+	int n, fd = open("/proc/self/maps", O_RDONLY);
+	if (fd < 0) return;
+
+	char buffer[STRING_SIZE * 5];
+	String str = String_FromArray(buffer);
+
+	while ((n = read(fd, str.buffer, str.capacity)) > 0) {
+		str.length = n;
+		ErrorHandler_Log(&str);
+	}
+
+	close(fd);
+}
+
+static void ErrorHandler_DumpCommon(STRING_TRANSIENT String* str, void* ctx) {
+	String backtrace = String_FromConst("-- backtrace --\n");
+	ErrorHandler_Log(&backtrace);
+	ErrorHandler_Backtrace(str, ctx);
+
+	String memMap = String_FromConst("-- memory map --\n");
+	ErrorHandler_Log(&memMap);
+	ErrorHandler_DumpMemoryMap();
+}
+
+
+/*########################################################################################################################*
 *------------------------------------------------------Error handling-----------------------------------------------------*
 *#########################################################################################################################*/
+static void ErrorHandler_SignalHandler(int sig, siginfo_t* info, void* ctx) {
+	/* Uninstall handler to avoid chance of infinite loop */
+	signal(SIGSEGV, SIG_DFL);
+	signal(SIGBUS, SIG_DFL);
+	signal(SIGILL, SIG_DFL);
+	signal(SIGABRT, SIG_DFL);
+	signal(SIGFPE, SIG_DFL);
+
+	/* TODO: Write processor state to file*/
+	char msgBuffer[128 + 1] = { 0 };
+	String msg = { msgBuffer, 0, 128 };
+
+	Int32  type = info->si_signo, code = info->si_code;
+	UInt64 addr = (UInt64)info->si_addr;
+	String_Format3(&msg, "Unhandled signal %i (code %i) at 0x%x", &type, &code, &addr);
+
+	ErrorHandler_DumpRegisters(ctx);
+	ErrorHandler_FailCommon(0, msg.buffer, ctx);
+}
+
 void ErrorHandler_Init(const char* logFile) {
-	/* TODO: Implement this */
+	struct sigaction sa, old;
+	sa.sa_handler = ErrorHandler_SignalHandler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags   = SA_RESTART | SA_SIGINFO;
+
+	sigaction(SIGSEGV, &sa, &old);
+	sigaction(SIGBUS,  &sa, &old);
+	sigaction(SIGILL,  &sa, &old);
+	sigaction(SIGABRT, &sa, &old);
+	sigaction(SIGFPE,  &sa, &old);
 }
 
 void ErrorHandler_ShowDialog(const char* title, const char* msg) {
-    X11Window w     = { 0 };
-    dpy = DisplayDevice_Meta[0];
+	X11Window w = { 0 };
+	dpy = DisplayDevice_Meta[0];
 
-    X11_MessageBox(title, msg, &w);
+	X11_MessageBox(title, msg, &w);
 	X11Window_Free(&w);
 }
 
-void ErrorHandler_DumpCommon(STRING_TRANSIENT String* str, void* ctx) {
-	/* TODO: Implement this */
-}
-
 void ErrorHandler_FailWithCode(ReturnCode result, const char* raw_msg) {
-	/* TODO: Implement this */
-	ErrorHandler_FailCommon(result, raw_msg, NULL);
+	ucontext_t ctx;
+	getcontext(&ctx);
+	ErrorHandler_FailCommon(result, raw_msg, &ctx);
 }
 #endif
 

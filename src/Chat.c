@@ -250,7 +250,7 @@ static struct ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
 }
 
 static void Commands_PrintDefined(void) {
-	UInt8 strBuffer[STRING_SIZE];
+	char strBuffer[STRING_SIZE];
 	String str = String_FromArray(strBuffer);
 	Int32 i;
 

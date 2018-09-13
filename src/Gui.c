@@ -65,6 +65,9 @@ bool Widget_Contains(void* widget, Int32 x, Int32 y) {
 }
 
 
+/*########################################################################################################################*
+*----------------------------------------------------------Gui------------------------------------------------------------*
+*#########################################################################################################################*/
 Int32 Gui_CalcPos(UInt8 anchor, Int32 offset, Int32 size, Int32 axisLen) {
 	if (anchor == ANCHOR_MIN)     return offset;
 	if (anchor == ANCHOR_MAX) return axisLen - size - offset;
@@ -227,6 +230,9 @@ void Gui_CalcCursorVisible(void) {
 }
 
 
+/*########################################################################################################################*
+*-------------------------------------------------------TextAtlas---------------------------------------------------------*
+*#########################################################################################################################*/
 void TextAtlas_Make(struct TextAtlas* atlas, STRING_PURE String* chars, FontDesc* font, STRING_PURE String* prefix) {
 	struct DrawTextArgs args; DrawTextArgs_Make(&args, prefix, font, true);
 	Size2D size = Drawer2D_MeasureText(&args);
