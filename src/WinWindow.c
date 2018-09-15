@@ -409,7 +409,7 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_PURE Stri
 
 	ATOM atom = RegisterClassExW(&wc);
 	if (atom == 0) {
-		ErrorHandler_FailWithCode(GetLastError(), "Failed to register window class");
+		ErrorHandler_Fail2(GetLastError(), "Failed to register window class");
 	}
 	WCHAR str[300]; Platform_ConvertString(str, title);
 
@@ -418,11 +418,11 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_PURE Stri
 		NULL, NULL, win_Instance, NULL);
 
 	if (!win_Handle) {
-		ErrorHandler_FailWithCode(GetLastError(), "Failed to create window");
+		ErrorHandler_Fail2(GetLastError(), "Failed to create window");
 	}
 	win_DC = GetDC(win_Handle);
 	if (!win_DC) {
-		ErrorHandler_FailWithCode(GetLastError(), "Failed to get device context");
+		ErrorHandler_Fail2(GetLastError(), "Failed to get device context");
 	}
 	Window_Exists = true;
 }
@@ -590,7 +590,7 @@ void Window_SetWindowState(UInt8 state) {
 Point2D Window_PointToClient(Int32 x, Int32 y) {
 	Point2D point = { x, y };
 	if (!ScreenToClient(win_Handle, &point)) {
-		ErrorHandler_FailWithCode(GetLastError(), "Converting point from client to screen coordinates");
+		ErrorHandler_Fail2(GetLastError(), "Converting point from client to screen coordinates");
 	}
 	return point;
 }
@@ -598,7 +598,7 @@ Point2D Window_PointToClient(Int32 x, Int32 y) {
 Point2D Window_PointToScreen(Int32 x, Int32 y) {
 	Point2D point = { x, y };
 	if (!ClientToScreen(win_Handle, &point)) {
-		ErrorHandler_FailWithCode(GetLastError(), "Converting point from screen to client coordinates");
+		ErrorHandler_Fail2(GetLastError(), "Converting point from screen to client coordinates");
 	}
 	return point;
 }
@@ -665,7 +665,7 @@ void GLContext_SelectGraphicsMode(struct GraphicsMode mode) {
 
 	DescribePixelFormat(win_DC, modeIndex, pfd.nSize, &pfd);
 	if (!SetPixelFormat(win_DC, modeIndex, &pfd)) {
-		ErrorHandler_FailWithCode(GetLastError(), "SetPixelFormat failed");
+		ErrorHandler_Fail2(GetLastError(), "SetPixelFormat failed");
 	}
 }
 
@@ -682,11 +682,11 @@ void GLContext_Init(struct GraphicsMode mode) {
 		ctx_Handle = wglCreateContext(win_DC);
 	}
 	if (!ctx_Handle) {
-		ErrorHandler_FailWithCode(GetLastError(), "Failed to create OpenGL context");
+		ErrorHandler_Fail2(GetLastError(), "Failed to create OpenGL context");
 	}
 
 	if (!wglMakeCurrent(win_DC, ctx_Handle)) {
-		ErrorHandler_FailWithCode(GetLastError(), "Failed to make OpenGL context current");
+		ErrorHandler_Fail2(GetLastError(), "Failed to make OpenGL context current");
 	}
 
 	ctx_DC = wglGetCurrentDC();
@@ -697,7 +697,7 @@ void GLContext_Init(struct GraphicsMode mode) {
 void GLContext_Update(void) { }
 void GLContext_Free(void) {
 	if (!wglDeleteContext(ctx_Handle)) {
-		ErrorHandler_FailWithCode(GetLastError(), "Failed to destroy OpenGL context");
+		ErrorHandler_Fail2(GetLastError(), "Failed to destroy OpenGL context");
 	}
 	ctx_Handle = NULL;
 }
@@ -709,7 +709,7 @@ void* GLContext_GetAddress(const char* function) {
 
 void GLContext_SwapBuffers(void) {
 	if (!SwapBuffers(ctx_DC)) {
-		ErrorHandler_FailWithCode(GetLastError(), "Failed to swap buffers");
+		ErrorHandler_Fail2(GetLastError(), "Failed to swap buffers");
 	}
 }
 

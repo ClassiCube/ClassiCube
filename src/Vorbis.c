@@ -98,7 +98,7 @@ static UInt32 Vorbis_ReadBits(struct VorbisState* ctx, UInt32 bitsCount) {
 	UInt8 portion;
 	while (ctx->NumBits < bitsCount) {
 		ReturnCode res = ctx->Source->ReadU8(ctx->Source, &portion);
-		if (res) { ErrorHandler_FailWithCode(res, "Failed to read byte for vorbis"); }
+		if (res) { ErrorHandler_Fail2(res, "Failed to read byte for vorbis"); }
 		Vorbis_PushByte(ctx, portion);
 	}
 

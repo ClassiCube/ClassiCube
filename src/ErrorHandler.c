@@ -198,7 +198,7 @@ void ErrorHandler_ShowDialog(const char* title, const char* msg) {
 #if _MSC_VER
 #pragma optimize ("", off)
 #endif
-void ErrorHandler_FailWithCode(ReturnCode result, const char* raw_msg) {
+void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
 	CONTEXT ctx;
 #ifndef _M_IX86
 	/* This method is guaranteed to exist on 64 bit windows */
@@ -603,7 +603,7 @@ void ErrorHandler_ShowDialog(const char* title, const char* msg) {
 	X11Window_Free(&w);
 }
 
-void ErrorHandler_FailWithCode(ReturnCode result, const char* raw_msg) {
+void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
 	ucontext_t ctx;
 	getcontext(&ctx);
 	ErrorHandler_FailCommon(result, raw_msg, &ctx);
@@ -651,4 +651,4 @@ static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void
 	Platform_Exit(result);
 }
 
-void ErrorHandler_Fail(const char* raw_msg) { ErrorHandler_FailWithCode(0, raw_msg); }
+void ErrorHandler_Fail(const char* raw_msg) { ErrorHandler_Fail2(0, raw_msg); }

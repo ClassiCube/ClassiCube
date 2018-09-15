@@ -419,9 +419,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			Device.EndScene(device);
 			int res = Device.Present(device);
 			if (res >= 0) return;
-			
-			if (res != (int)Direct3DError.DeviceLost)
-				throw new SharpDXException(res);
+			if (res != (int)Direct3DError.DeviceLost) throw new SharpDXException(res);
 			
 			// TODO: Make sure this actually works on all graphics cards.
 			

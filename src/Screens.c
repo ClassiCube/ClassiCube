@@ -656,9 +656,8 @@ static void GeneratingScreen_Render(void* screen, Real64 delta) {
 	s->Progress = Gen_CurrentProgress;
 	if (state == s->LastState) return;
 
-	String message = s->MessageStr;
-	message.length = 0;
-	String_AppendConst(&message, state);
+	s->MessageStr.length = 0;
+	String_AppendConst(&s->MessageStr, state);
 	LoadingScreen_SetMessage(s);
 }
 

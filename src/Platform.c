@@ -513,7 +513,7 @@ DWORD WINAPI Thread_StartCallback(LPVOID lpParam) {
 
 static void Thread_FreeHandle(void* handle) {
 	if (!CloseHandle((HANDLE)handle)) {
-		ErrorHandler_FailWithCode(GetLastError(), "Freeing thread handle");
+		ErrorHandler_Fail2(GetLastError(), "Freeing thread handle");
 	}
 }
 
@@ -521,7 +521,7 @@ void* Thread_Start(Thread_StartFunc* func, bool detach) {
 	DWORD threadID;
 	void* handle = CreateThread(NULL, 0, Thread_StartCallback, func, 0, &threadID);
 	if (!handle) {
-		ErrorHandler_FailWithCode(GetLastError(), "Creating thread");
+		ErrorHandler_Fail2(GetLastError(), "Creating thread");
 	}
 
 	if (detach) Thread_FreeHandle(handle);
@@ -548,14 +548,14 @@ void Mutex_Unlock(void* handle) { LeaveCriticalSection((CRITICAL_SECTION*)handle
 void* Waitable_Create(void) {
 	void* handle = CreateEventW(NULL, false, false, NULL);
 	if (!handle) {
-		ErrorHandler_FailWithCode(GetLastError(), "Creating waitable");
+		ErrorHandler_Fail2(GetLastError(), "Creating waitable");
 	}
 	return handle;
 }
 
 void Waitable_Free(void* handle) {
 	if (!CloseHandle((HANDLE)handle)) {
-		ErrorHandler_FailWithCode(GetLastError(), "Freeing waitable");
+		ErrorHandler_Fail2(GetLastError(), "Freeing waitable");
 	}
 }
 
@@ -791,7 +791,7 @@ void Platform_ReleaseBitmap(void) {
 void Socket_Create(SocketPtr* socketResult) {
 	*socketResult = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (*socketResult == -1) {
-		ErrorHandler_FailWithCode(Socket__Error(), "Failed to create socket");
+		ErrorHandler_Fail2(Socket__Error(), "Failed to create socket");
 	}
 }
 
@@ -899,7 +899,7 @@ HINTERNET hInternet;
 void Http_Init(void) {
 	/* TODO: Should we use INTERNET_OPEN_TYPE_PRECONFIG instead? */
 	hInternet = InternetOpenA(PROGRAM_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
-	if (!hInternet) ErrorHandler_FailWithCode(GetLastError(), "Failed to init WinINet");
+	if (!hInternet) ErrorHandler_Fail2(GetLastError(), "Failed to init WinINet");
 }
 
 static ReturnCode Http_Make(struct AsyncRequest* req, HINTERNET* handle) {
@@ -1010,7 +1010,7 @@ CURL* curl;
 
 void Http_Init(void) {
 	CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
-	if (res) ErrorHandler_FailWithCode(res, "Failed to init curl");
+	if (res) ErrorHandler_Fail2(res, "Failed to init curl");
 
 	curl = curl_easy_init();
 	if (!curl) ErrorHandler_Fail("Failed to init easy curl");
@@ -1254,12 +1254,12 @@ volatile int audio_refs;
 
 static void Audio_CheckError(const char* location) {
 	ALenum err = alGetError();
-	if (err) { ErrorHandler_FailWithCode(err, location); }
+	if (err) { ErrorHandler_Fail2(err, location); }
 }
 
 static void Audio_CheckContextErrors(void) {
 	ALenum err = alcGetError(audio_device);
-	if (err) ErrorHandler_FailWithCode(err, "Error creating OpenAL context");
+	if (err) ErrorHandler_Fail2(err, "Error creating OpenAL context");
 }
 
 static void Audio_CreateContext(void) {
