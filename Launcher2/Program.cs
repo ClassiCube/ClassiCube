@@ -6,7 +6,7 @@ namespace Launcher {
 
 	internal static class Program {
 		
-		public const string AppName = "ClassicalSharp Launcher 0.99.9.96";
+		public const string AppName = "ClassicalSharp Launcher 0.99.9.97";
 		public static bool ShowingErrorDialog = false;
 		
 		[STAThread]
