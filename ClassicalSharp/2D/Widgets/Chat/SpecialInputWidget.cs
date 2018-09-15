@@ -19,7 +19,10 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public void UpdateCols() {
 			elements[0].Contents = GetColString();
-			if (!Active || selectedIndex != 0) return;
+			if (selectedIndex != 0) return;
+			
+			// defer updating colours tab until visible
+			if (!Active) { pendingRedraw = true; return; }
 			Redraw();
 		}
 		
@@ -27,10 +30,12 @@ namespace ClassicalSharp.Gui.Widgets {
 		readonly Font font;
 		InputWidget input;
 		Size elementSize;
+		bool pendingRedraw;
 		
 		public void SetActive(bool active) {
 			Active = active;
 			Height = active ? (int)texture.Height : 0;
+			if (active && pendingRedraw) Redraw();
 		}
 		
 		public override void Render(double delta) {
@@ -46,8 +51,9 @@ namespace ClassicalSharp.Gui.Widgets {
 
 		public void Redraw() {
 			Make(elements[selectedIndex], font);
-			Width = texture.Width;
+			Width  = texture.Width;
 			Height = texture.Height;
+			pendingRedraw = false;
 		}
 		
 		unsafe void Make(SpecialInputTab e, Font font) {

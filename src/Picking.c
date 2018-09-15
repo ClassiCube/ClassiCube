@@ -149,7 +149,7 @@ static bool Picking_RayTrace(Vector3 origin, Vector3 dir, Real32 reach, struct P
 
 	Int32 i;
 	Vector3 coords;
-	for (i = 0; i < 10000; i++) {
+	for (i = 0; i < 25000; i++) {
 		Int32 x = tracer.X, y = tracer.Y, z = tracer.Z;
 		coords.X = (Real32)x; coords.Y = (Real32)y; coords.Z = (Real32)z;
 		tracer.Block = insideMap ?
@@ -170,7 +170,7 @@ static bool Picking_RayTrace(Vector3 origin, Vector3 dir, Real32 reach, struct P
 		RayTracer_Step(&tracer);
 	}
 
-	ErrorHandler_Fail("Something went wrong, did over 10,000 iterations in Picking_RayTrace()");
+	ErrorHandler_Fail("Something went wrong, did over 25,000 iterations in Picking_RayTrace()");
 	return false;
 }
 

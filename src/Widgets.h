@@ -202,6 +202,7 @@ struct SpecialInputWidget {
 	Widget_Layout
 	Size2D ElementSize;
 	Int32 SelectedIndex;
+	bool PendingRedraw;
 	struct InputWidget* AppendObj;
 	struct Texture Tex;
 	FontDesc Font;

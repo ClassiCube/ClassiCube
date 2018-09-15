@@ -64,8 +64,8 @@ int main(int argc, char** argv) {
 	String args[PROGRAM_MAX_CMDARGS];
 	Int32 argsCount = Platform_GetCommandLineArgs(argc, argv, args);
 	/* NOTE: Make sure to comment this out before pushing a commit */
-	// String rawArgs = String_FromConst("UnknownShadow200 fff 127.0.0.1 25565");
-	// argsCount = 4; String_UNSAFE_Split(&rawArgs, ' ', args, &argsCount);
+	 String rawArgs = String_FromConst("UnknownShadow200 fff 127.0.0.1 25565");
+	 argsCount = 4; String_UNSAFE_Split(&rawArgs, ' ', args, &argsCount);
 
 	if (argsCount == 0) {
 		String name = String_FromConst("Singleplayer");

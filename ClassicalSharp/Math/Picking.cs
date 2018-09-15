@@ -77,7 +77,7 @@ namespace ClassicalSharp {
 			bool insideMap = game.World.IsValidPos(pOrigin);
 
 			Vector3 coords;
-			for (int i = 0; i < 10000; i++) {
+			for (int i = 0; i < 25000; i++) {
 				int x = t.X, y = t.Y, z = t.Z;
 				coords.X = x; coords.Y = y; coords.Z = z;
 				t.Block = insideMap ?
@@ -97,7 +97,7 @@ namespace ClassicalSharp {
 				t.Step();
 			}
 			
-			throw new InvalidOperationException("did over 10000 iterations in CalculatePickedBlock(). " +
+			throw new InvalidOperationException("did over 25000 iterations in CalculatePickedBlock(). " +
 			                                    "Something has gone wrong. (dir: " + dir + ")");
 		}
 

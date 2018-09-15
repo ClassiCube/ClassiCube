@@ -2751,6 +2751,7 @@ static void SpecialInputWidget_Redraw(struct SpecialInputWidget* w) {
 	SpecialInputWidget_Make(w, &w->Tabs[w->SelectedIndex]);
 	w->Width  = w->Tex.Width;
 	w->Height = w->Tex.Height;
+	w->PendingRedraw = false;
 }
 
 static void SpecialInputWidget_Init(void* widget) {
@@ -2787,13 +2788,17 @@ static bool SpecialInputWidget_MouseDown(void* widget, Int32 x, Int32 y, MouseBu
 void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w) {
 	SpecialInputWidget_UpdateColString(w);
 	w->Tabs[0].Contents = w->ColString;
-	if (!w->Active || w->SelectedIndex != 0) return;
+	if (w->SelectedIndex != 0) return;
+
+	/* defer updating colours tab until visible */
+	if (!w->Active) { w->PendingRedraw = true; return; }
 	SpecialInputWidget_Redraw(w);
 }
 
 void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active) {
 	w->Active = active;
 	w->Height = active ? w->Tex.Height : 0;
+	if (active && w->PendingRedraw) SpecialInputWidget_Redraw(w);
 }
 
 struct WidgetVTABLE SpecialInputWidget_VTABLE = {
