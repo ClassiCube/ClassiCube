@@ -45,7 +45,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 
 		static string GetViewDist(Game g) { return g.ViewDistance.ToString(); }
-		static void SetViewDist(Game g, string v) { g.SetViewDistance(Int32.Parse(v), true); }
+		static void SetViewDist(Game g, string v) { g.UserSetViewDistance(Int32.Parse(v)); }
 		
 		static string GetSmooth(Game g) { return GetBool(g.SmoothLighting); }
 		static void SetSmooth(Game g, string v) {

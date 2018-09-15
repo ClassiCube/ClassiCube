@@ -89,7 +89,7 @@ namespace ClassicalSharp.Renderers {
 			Events.ViewDistanceChanged += ResetAllEnv;
 			Events.ContextLost += ContextLost;
 			Events.ContextRecreated += ContextRecreated;
-			game.SetViewDistance(game.UserViewDistance, false);
+			game.SetViewDistance(game.UserViewDistance);
 		}
 		
 		void IGameComponent.Ready(Game game) { }
@@ -195,9 +195,9 @@ namespace ClassicalSharp.Renderers {
 				
 				const double log005 = -2.99573227355399;
 				double dist = log005 / -fogDensity;
-				game.SetViewDistance((int)dist, false);
+				game.SetViewDistance((int)dist);
 			} else {
-				game.SetViewDistance(game.UserViewDistance, false);
+				game.SetViewDistance(game.UserViewDistance);
 			}
 		}
 		

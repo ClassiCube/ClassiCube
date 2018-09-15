@@ -8,6 +8,7 @@
 #include "Game.h"
 #include "ExtMath.h"
 #include "Bitmap.h"
+#include "Event.h"
 
 //#define D3D_DISABLE_9EX causes compile errors
 #if CC_BUILD_WIN
@@ -148,8 +149,10 @@ void Gfx_Init(void) {
 	}
 	ErrorHandler_CheckOrFail(res, "Creating Direct3D9 device");
 
-	D3DCAPS9 caps = { 0 };
-	IDirect3DDevice9_GetDeviceCaps(device, &caps);
+	D3DCAPS9 caps;
+	res = IDirect3DDevice9_GetDeviceCaps(device, &caps);
+	ErrorHandler_CheckOrFail(res, "Getting Direct3D9 capabilities");
+
 	Gfx_MaxTexWidth  = caps.MaxTextureWidth;
 	Gfx_MaxTexHeight = caps.MaxTextureHeight;
 
@@ -446,9 +449,15 @@ static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 siz
 GfxResourceID Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count) {
 	Int32 size = count * Gfx_strideSizes[vertexFormat];
 	IDirect3DVertexBuffer9* vbuffer;
-	ReturnCode hresult = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_WRITEONLY,
-		d3d9_formatMappings[vertexFormat], D3DPOOL_DEFAULT, &vbuffer, NULL);
-	ErrorHandler_CheckOrFail(hresult, "D3D9_CreateVb");
+
+	for (;;) {
+		ReturnCode hresult = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_WRITEONLY,
+			d3d9_formatMappings[vertexFormat], D3DPOOL_DEFAULT, &vbuffer, NULL);
+		if (!hresult) break;
+
+		if (hresult != D3DERR_OUTOFVIDEOMEMORY) ErrorHandler_FailWithCode(hresult, "D3D9_CreateVb");
+		Event_RaiseVoid(&GfxEvents_LowVRAMDetected);
+	}
 
 	D3D9_SetVbData(vbuffer, vertices, size, "D3D9_CreateVb - Lock", "D3D9_CreateVb - Unlock", 0);
 	return vbuffer;

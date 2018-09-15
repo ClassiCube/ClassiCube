@@ -539,9 +539,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		bool isIntelRenderer, nvMem;
 		internal override void MakeApiInfo() {
-			string vendor = new String((sbyte*)GL.GetString(StringName.Vendor));
+			string vendor   = new String((sbyte*)GL.GetString(StringName.Vendor));
 			string renderer = new String((sbyte*)GL.GetString(StringName.Renderer));
-			string version = new String((sbyte*)GL.GetString(StringName.Version));
+			string version  = new String((sbyte*)GL.GetString(StringName.Version));
 			string extensions = new String((sbyte*)GL.GetString(StringName.Extensions));
 			
 			int depthBits = 0;

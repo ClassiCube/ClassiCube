@@ -35,7 +35,7 @@ static void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
 		for (x = 0; x < size; x++) {
 			/* Calculate the colour at this coordinate in the heatmap */
 
-			/* Lookup table for (Int32)(1.2f * Math_SinF([ANGLE] * 22.5f * MATH_DEG2RAD)); */
+			/* Lookup table for (int)(1.2 * sin([ANGLE] * 22.5 * MATH_DEG2RAD)); */
 			/* [ANGLE] is integer x/y, so repeats every 16 intervals */
 			static Int8 sin_adj_table[16] = { 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0 };
 			Int32 xx = x + sin_adj_table[y & 0xF], yy = y + sin_adj_table[x & 0xF];
@@ -196,7 +196,7 @@ static void Animations_ReadDescription(struct Stream* stream, STRING_PURE String
 		}
 
 		if (anims_count == Array_Elems(anims_list)) {
-			Chat_AddRaw("&cCannot show over 256 animations"); return;
+			Chat_AddRaw("&cCannot show over 512 animations"); return;
 		}
 
 		data.TexLoc = tileX + (tileY * ATLAS2D_TILES_PER_ROW);
@@ -240,7 +240,7 @@ static void Animations_Apply(struct AnimationData* data) {
 	if (data->Tick >= 0) return;
 	data->State++;
 	data->State %= data->StatesCount;
-	data->Tick = data->TickDelay;
+	data->Tick   = data->TickDelay;
 
 	TextureLoc texLoc = data->TexLoc;
 	if (texLoc == 30 && anims_useLavaAnim) return;

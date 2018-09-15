@@ -24,18 +24,18 @@ using OpenTK;
 
 namespace SharpDX.Direct3D9 {
 
-	public enum Direct3DError : uint {
+	public enum Direct3DError {
 		Ok = 0,
-		NotFound = 2150 | 0x88760000u,
-		MoreData = 2151 | 0x88760000u,
-		DeviceLost = 2152 | 0x88760000u,
-		DeviceNotReset = 2153 | 0x88760000u,
-		NotAvailable = 2154 | 0x88760000u,
-		OutOfVideoMemory = 380 | 0x88760000u,
-		InvalidDevice = 2155 | 0x88760000u,
-		InvalidCall = 2156 | 0x88760000u,
-		DriverInvalidCall = 2157 | 0x88760000u,
-		WasStillDrawing = 540 | 0x88760000u,
+		NotFound          = 2150 | unchecked((int)0x88760000),
+		MoreData          = 2151 | unchecked((int)0x88760000),
+		DeviceLost        = 2152 | unchecked((int)0x88760000),
+		DeviceNotReset    = 2153 | unchecked((int)0x88760000),
+		NotAvailable      = 2154 | unchecked((int)0x88760000),
+		OutOfVideoMemory  =  380 | unchecked((int)0x88760000),
+		InvalidDevice     = 2155 | unchecked((int)0x88760000),
+		InvalidCall       = 2156 | unchecked((int)0x88760000),
+		DriverInvalidCall = 2157 | unchecked((int)0x88760000),
+		WasStillDrawing   =  540 | unchecked((int)0x88760000),
 	}
 	
 	public class SharpDXException : Exception {
@@ -66,20 +66,20 @@ namespace SharpDX.Direct3D9 {
 		public static bool CheckDeviceType(IntPtr ptr, int adapter, DeviceType devType, 
 		                                   Format adapterFormat, Format backBufferFormat, bool bWindowed) {
 			return Interop.Calli(ptr, adapter, (int)devType, (int)adapterFormat,
-			                     (int)backBufferFormat, bWindowed ? 1 : 0,(*(IntPtr**)ptr)[9]) == 0;
+			                     (int)backBufferFormat, bWindowed ? 1 : 0, (*(IntPtr**)ptr)[9]) == 0;
 		}
 		
 		public static bool CheckDepthStencilMatch(IntPtr ptr, int adapter, DeviceType deviceType, 
 		                                          Format adapterFormat, Format renderTargetFormat, Format depthStencilFormat) {
 			return Interop.Calli(ptr, adapter, (int)deviceType, (int)adapterFormat,
-			                     (int)renderTargetFormat, (int)depthStencilFormat,(*(IntPtr**)ptr)[12]) == 0;
+			                     (int)renderTargetFormat, (int)depthStencilFormat, (*(IntPtr**)ptr)[12]) == 0;
 		}
 		
 		public static IntPtr CreateDevice(IntPtr ptr, int adapter, DeviceType deviceType, IntPtr hFocusWindow, 
-		                                  CreateFlags behaviorFlags, PresentParameters presentParams) {
+		                                  CreateFlags behaviorFlags, PresentParameters* presentParams) {
 			IntPtr devicePtr = IntPtr.Zero;
-			int res = Interop.Calli(ptr, adapter, (int)deviceType, hFocusWindow, (int)behaviorFlags, (IntPtr)(void*)&presentParams,
-			                        (IntPtr)(void*)&devicePtr,(*(IntPtr**)ptr)[16]);
+			int res = Interop.Calli(ptr, adapter, (int)deviceType, hFocusWindow, (int)behaviorFlags, (IntPtr)presentParams,
+			                        (IntPtr)(void*)&devicePtr, (*(IntPtr**)ptr)[16]);
 			
 			if (res < 0) { throw new SharpDXException(res); }
 			return devicePtr;
@@ -90,80 +90,67 @@ namespace SharpDX.Direct3D9 {
 	public unsafe static class Device {
 
 		public static int TestCooperativeLevel(IntPtr ptr) {
-			return Interop.Calli(ptr,(*(IntPtr**)ptr)[3]);
+			return Interop.Calli(ptr, (*(IntPtr**)ptr)[3]);
 		}
 		
 		public static uint GetAvailableTextureMemory(IntPtr ptr) {
-			return (uint)Interop.Calli(ptr,(*(IntPtr**)ptr)[4]);
+			return (uint)Interop.Calli(ptr, (*(IntPtr**)ptr)[4]);
 		}
 		
-		public static Capabilities GetCapabilities(IntPtr ptr) {
-			Capabilities caps = new Capabilities();
-			int res = Interop.Calli(ptr, (IntPtr)(void*)&caps,(*(IntPtr**)ptr)[7]);
+		public static void GetCapabilities(IntPtr ptr, Capabilities* caps) {
+			int res = Interop.Calli(ptr, (IntPtr)caps, (*(IntPtr**)ptr)[7]);
 			if (res < 0) { throw new SharpDXException(res); }
-			return caps;
 		}
 		
-		public static int Reset(IntPtr ptr, PresentParameters presentParams) {
-			return Interop.Calli(ptr, (IntPtr)(void*)&presentParams,(*(IntPtr**)ptr)[16]);
+		public static int Reset(IntPtr ptr, PresentParameters* presentParams) {
+			return Interop.Calli(ptr, (IntPtr)presentParams, (*(IntPtr**)ptr)[16]);
 		}
 		
 		public static int Present(IntPtr ptr) {
-			return Interop.Calli(ptr, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero,(*(IntPtr**)ptr)[17]);
+			return Interop.Calli(ptr, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, (*(IntPtr**)ptr)[17]);
 		}
 		
-		public static IntPtr GetBackBuffer(IntPtr ptr, int iSwapChain, int iBackBuffer, BackBufferType type) {
-			IntPtr backBuffer = IntPtr.Zero;
-			int res = Interop.Calli(ptr, iSwapChain, iBackBuffer, (int)type, (IntPtr)(void*)&backBuffer,(*(IntPtr**)ptr)[18]);
+		public static void GetBackBuffer(IntPtr ptr, int iSwapChain, int iBackBuffer, BackBufferType type, IntPtr* backBuffer) {
+			int res = Interop.Calli(ptr, iSwapChain, iBackBuffer, (int)type, (IntPtr)backBuffer,(*(IntPtr**)ptr)[18]);
 			if (res < 0) { throw new SharpDXException(res); }
-			return backBuffer;
 		}
 		
-		public static IntPtr CreateTexture(IntPtr ptr, int width, int height, int levels, Usage usage, Format format, Pool pool) {
-			IntPtr tex = IntPtr.Zero;
-			int res = Interop.Calli(ptr, width, height, levels, (int)usage, (int)format, (int)pool, (IntPtr)(void*)&tex, IntPtr.Zero,(*(IntPtr**)ptr)[23]);
+		public static void CreateTexture(IntPtr ptr, int width, int height, int levels, Usage usage, Format format, Pool pool, IntPtr* tex) {
+			int res = Interop.Calli(ptr, width, height, levels, (int)usage, (int)format, (int)pool, (IntPtr)tex, IntPtr.Zero, (*(IntPtr**)ptr)[23]);
 			if (res < 0) { throw new SharpDXException(res); }
-			return tex;
 		}
 		
-		public static IntPtr CreateVertexBuffer(IntPtr ptr, int length, Usage usage, VertexFormat vertexFormat, Pool pool) {
-			IntPtr vb = IntPtr.Zero;
-			int res = Interop.Calli(ptr, length, (int)usage, (int)vertexFormat, (int)pool, (IntPtr)(void*)&vb, IntPtr.Zero,(*(IntPtr**)ptr)[26]);
-			if (res < 0) { throw new SharpDXException(res); }
-			return vb;
+		public static int CreateVertexBuffer(IntPtr ptr, int length, Usage usage, VertexFormat vertexFormat, Pool pool, IntPtr* vb) {
+			return Interop.Calli(ptr, length, (int)usage, (int)vertexFormat, (int)pool, (IntPtr)vb, IntPtr.Zero, (*(IntPtr**)ptr)[26]);
 		}
 		
-		public static IntPtr CreateIndexBuffer(IntPtr ptr, int length, Usage usage, Format format, Pool pool) {
-			IntPtr ib = IntPtr.Zero;
-			int res = Interop.Calli(ptr, length, (int)usage, (int)format, (int)pool, (IntPtr)(void*)&ib, IntPtr.Zero,(*(IntPtr**)ptr)[27]);
+		public static void CreateIndexBuffer(IntPtr ptr, int length, Usage usage, Format format, Pool pool, IntPtr* ib) {
+			int res = Interop.Calli(ptr, length, (int)usage, (int)format, (int)pool, (IntPtr)ib, IntPtr.Zero, (*(IntPtr**)ptr)[27]);
 			if (res < 0) { throw new SharpDXException(res); }
-			return ib;
 		}
 		
 		public static void UpdateTexture(IntPtr ptr, IntPtr srcTex, IntPtr dstTex) {
-			int res = Interop.Calli(ptr, srcTex, dstTex,(*(IntPtr**)ptr)[31]);
+			int res = Interop.Calli(ptr, srcTex, dstTex, (*(IntPtr**)ptr)[31]);
 			if (res < 0) { throw new SharpDXException(res); }
 		}
 		
 		public static void GetRenderTargetData(IntPtr ptr, IntPtr renderTarget, IntPtr dstSurface) {
-			int res = Interop.Calli(ptr, renderTarget, dstSurface,(*(IntPtr**)ptr)[32]);
+			int res = Interop.Calli(ptr, renderTarget, dstSurface, (*(IntPtr**)ptr)[32]);
 			if (res < 0) { throw new SharpDXException(res); }
 		}
 		
-		public static IntPtr CreateOffscreenPlainSurface(IntPtr ptr, int width, int height, Format format, Pool pool) {
-			IntPtr surface = IntPtr.Zero;
-			int res = Interop.Calli(ptr, width, height, (int)format, (int)pool, (IntPtr)(void*)&surface, IntPtr.Zero,(*(IntPtr**)ptr)[36]);
+		public static void CreateOffscreenPlainSurface(IntPtr ptr, int width, int height, Format format, Pool pool, IntPtr* surface) {
+			int res = Interop.Calli(ptr, width, height, (int)format, (int)pool, (IntPtr)surface, IntPtr.Zero, (*(IntPtr**)ptr)[36]);
 			if (res < 0) { throw new SharpDXException(res); }
-			return surface;
 		}
 
 		public static void BeginScene(IntPtr ptr) {
-			int res = Interop.Calli(ptr,(*(IntPtr**)ptr)[41]);
+			int res = Interop.Calli(ptr, (*(IntPtr**)ptr)[41]);
 			if (res < 0) { throw new SharpDXException(res); }
 		}
 
 		public static void EndScene(IntPtr ptr) {
-			int res = Interop.Calli(ptr,(*(IntPtr**)ptr)[42]);
+			int res = Interop.Calli(ptr, (*(IntPtr**)ptr)[42]);
 			if (res < 0) { throw new SharpDXException(res); }
 		}
 		
@@ -175,7 +162,7 @@ namespace SharpDX.Direct3D9 {
 		public static void SetTransform(IntPtr ptr, TransformState state, ref Matrix4 matrixRef) {
 			int res;
 			fixed (void* matrixRef_ = &matrixRef)
-				res = Interop.Calli(ptr, (int)state, (IntPtr)matrixRef_,(*(IntPtr**)ptr)[44]);
+				res = Interop.Calli(ptr, (int)state, (IntPtr)matrixRef_, (*(IntPtr**)ptr)[44]);
 			if (res < 0) { throw new SharpDXException(res); }
 		}
 		
@@ -188,17 +175,17 @@ namespace SharpDX.Direct3D9 {
 		}
 
 		public static void SetRenderState(IntPtr ptr, RenderState state, int value) {
-			int res = Interop.Calli(ptr, (int)state, value,(*(IntPtr**)ptr)[57]);
+			int res = Interop.Calli(ptr, (int)state, value, (*(IntPtr**)ptr)[57]);
 			if (res < 0) { throw new SharpDXException(res); }
 		}
 		
 		public static void SetTexture(IntPtr ptr, int stage, IntPtr texture) {
-			int res = Interop.Calli(ptr, stage, texture,(*(IntPtr**)ptr)[65]);
+			int res = Interop.Calli(ptr, stage, texture, (*(IntPtr**)ptr)[65]);
 			if (res < 0) { throw new SharpDXException(res); }
 		}
 		
 		public static void SetTextureStageState(IntPtr ptr, int stage, TextureStage type, int value) {
-			int res = Interop.Calli(ptr, stage, (int)type, value,(*(IntPtr**)ptr)[67]);
+			int res = Interop.Calli(ptr, stage, (int)type, value, (*(IntPtr**)ptr)[67]);
 			if (res < 0) { throw new SharpDXException(res); }
 		}
 		
@@ -213,7 +200,7 @@ namespace SharpDX.Direct3D9 {
 		}
 		
 		public static void DrawIndexedPrimitives(IntPtr ptr, PrimitiveType type, int baseVertexIndex, int minVertexIndex, int numVertices, int startIndex, int primCount) {
-			int res = Interop.Calli(ptr, (int)type, baseVertexIndex, minVertexIndex, numVertices, startIndex, primCount,(*(IntPtr**)ptr)[82]);
+			int res = Interop.Calli(ptr, (int)type, baseVertexIndex, minVertexIndex, numVertices, startIndex, primCount, (*(IntPtr**)ptr)[82]);
 			if (res < 0) { throw new SharpDXException(res); }
 		}
 
@@ -223,12 +210,12 @@ namespace SharpDX.Direct3D9 {
 		}
 		
 		public static void SetStreamSource(IntPtr ptr, int streamNumber, IntPtr streamData, int offsetInBytes, int stride) {
-			int res = Interop.Calli(ptr, streamNumber, streamData, offsetInBytes, stride,(*(IntPtr**)ptr)[100]);
+			int res = Interop.Calli(ptr, streamNumber, streamData, offsetInBytes, stride, (*(IntPtr**)ptr)[100]);
 			if (res < 0) { throw new SharpDXException(res); }
 		}
 		
 		public static void SetIndices(IntPtr ptr, IntPtr indexData) {
-			int res = Interop.Calli(ptr, indexData,(*(IntPtr**)ptr)[104]);
+			int res = Interop.Calli(ptr, indexData, (*(IntPtr**)ptr)[104]);
 			if (res < 0) { throw new SharpDXException(res); }
 		}
 	}
@@ -537,7 +524,7 @@ namespace SharpDX.Direct3D9 {
 		
 		public static LockedRectangle LockRectangle(IntPtr ptr, LockFlags flags) {
 			LockedRectangle rect = new LockedRectangle();
-			int res = Interop.Calli(ptr, (IntPtr)(void*)&rect, IntPtr.Zero, (int)flags,(*(IntPtr**)ptr)[13]);
+			int res = Interop.Calli(ptr, (IntPtr)(void*)&rect, IntPtr.Zero, (int)flags, (*(IntPtr**)ptr)[13]);
 			if (res < 0) { throw new SharpDXException(res); }
 			return rect;
 		}
@@ -553,14 +540,14 @@ namespace SharpDX.Direct3D9 {
 
 		public static LockedRectangle LockRectangle(IntPtr ptr, int level, LockFlags flags) {
 			LockedRectangle rect = new LockedRectangle();
-			int res = Interop.Calli(ptr, level, (IntPtr)(void*)&rect, IntPtr.Zero, (int)flags,(*(IntPtr**)ptr)[19]);
+			int res = Interop.Calli(ptr, level, (IntPtr)(void*)&rect, IntPtr.Zero, (int)flags, (*(IntPtr**)ptr)[19]);
 			if (res < 0) { throw new SharpDXException(res); }
 			return rect;
 		}
 		
 		public static LockedRectangle LockRectangle(IntPtr ptr, int level, D3DRect region, LockFlags flags) {
 			LockedRectangle rect = new LockedRectangle();
-			int res = Interop.Calli(ptr, level, (IntPtr)(void*)&rect, (IntPtr)(void*)&region, (int)flags,(*(IntPtr**)ptr)[19]);
+			int res = Interop.Calli(ptr, level, (IntPtr)(void*)&rect, (IntPtr)(void*)&region, (int)flags, (*(IntPtr**)ptr)[19]);
 			if (res < 0) { throw new SharpDXException(res); }
 			return rect;
 		}
@@ -588,7 +575,7 @@ namespace SharpDX.Direct3D9 {
 		}
 		
 		public static void UnlockRectangle(IntPtr ptr, int level) {
-			int res = Interop.Calli(ptr, level,(*(IntPtr**)ptr)[20]);
+			int res = Interop.Calli(ptr, level, (*(IntPtr**)ptr)[20]);
 			if (res < 0) { throw new SharpDXException(res); }
 		}
 	}

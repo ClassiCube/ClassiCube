@@ -142,18 +142,19 @@ bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
 	return true;
 }
 
-void Game_SetViewDistance(Int32 distance, bool userDist) {
-	if (userDist) {
-		Game_UserViewDistance = distance;
-		Options_SetInt(OPT_VIEW_DISTANCE, distance);
-	}
-
+void Game_SetViewDistance(Int32 distance) {
 	distance = min(distance, Game_MaxViewDistance);
 	if (distance == Game_ViewDistance) return;
 	Game_ViewDistance = distance;
 
 	Event_RaiseVoid(&GfxEvents_ViewDistanceChanged);
 	Game_UpdateProjection();
+}
+
+void Game_UserSetViewDistance(Int32 distance) {
+	Game_UserViewDistance = distance;
+	Options_SetInt(OPT_VIEW_DISTANCE, distance);
+	Game_SetViewDistance(distance);
 }
 
 void Game_UpdateProjection(void) {
@@ -311,6 +312,16 @@ static void Game_TextureChangedCore(void* obj, struct Stream* src, String* name)
 	}
 }
 
+static void Game_OnLowVRAMDetected(void) {
+	if (Game_UserViewDistance <= 16) ErrorHandler_Fail("Out of video memory!");
+	Game_UserViewDistance /= 2;
+	Game_UserViewDistance = max(16, Game_UserViewDistance);
+
+	ChunkUpdater_Refresh();
+	Game_SetViewDistance(Game_UserViewDistance);
+	Chat_AddRaw("&cOut of VRAM! Halving view distance..");
+}
+
 static void Game_ExtractInitialTexturePack(void) {
 	char texPackBuffer[STRING_SIZE];
 	String texPack = String_FromArray(texPackBuffer);
@@ -429,6 +440,8 @@ void Game_Load(void) {
 	Event_RegisterVoid(&WorldEvents_NewMap,         NULL, Game_OnNewMapCore);
 	Event_RegisterVoid(&WorldEvents_MapLoaded,      NULL, Game_OnNewMapLoadedCore);
 	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Game_TextureChangedCore);
+	Event_RegisterVoid(&GfxEvents_LowVRAMDetected,  NULL, Game_OnLowVRAMDetected);
+
 	Event_RegisterVoid(&WindowEvents_Resized,       NULL, Game_OnResize);
 	Event_RegisterVoid(&WindowEvents_Closed,        NULL, Game_Free);
 
@@ -706,6 +719,8 @@ void Game_Free(void* obj) {
 	Event_UnregisterVoid(&WorldEvents_NewMap,         NULL, Game_OnNewMapCore);
 	Event_UnregisterVoid(&WorldEvents_MapLoaded,      NULL, Game_OnNewMapLoadedCore);
 	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Game_TextureChangedCore);
+	Event_UnregisterVoid(&GfxEvents_LowVRAMDetected,  NULL, Game_OnLowVRAMDetected);
+
 	Event_UnregisterVoid(&WindowEvents_Resized,       NULL, Game_OnResize);
 	Event_UnregisterVoid(&WindowEvents_Closed,        NULL, Game_Free);
 

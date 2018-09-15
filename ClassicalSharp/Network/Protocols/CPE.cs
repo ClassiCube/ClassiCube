@@ -227,7 +227,7 @@ namespace ClassicalSharp.Network.Protocols {
 			game.World.Env.SetCloudsLevel(reader.ReadInt16());
 			short maxViewDist = reader.ReadInt16();
 			game.MaxViewDistance = maxViewDist <= 0 ? 32768 : maxViewDist;
-			game.SetViewDistance(game.UserViewDistance, false);
+			game.SetViewDistance(game.UserViewDistance);
 		}
 		
 		void HandleEnvWeatherType() {
@@ -351,7 +351,7 @@ namespace ClassicalSharp.Network.Protocols {
 				case 4:
 					Utils.Clamp(ref value, -0x7FFF, 0x7FFF);
 					game.MaxViewDistance = value <= 0 ? 32768 : value;
-					game.SetViewDistance(game.UserViewDistance, false); break;
+					game.SetViewDistance(game.UserViewDistance); break;
 				case 5:
 					env.SetCloudsSpeed(value / 256f); break;
 				case 6:

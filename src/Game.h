@@ -79,7 +79,8 @@ void Game_GetDefaultTexturePack(STRING_TRANSIENT String* texPack);
 void Game_SetDefaultTexturePack(STRING_PURE String* texPack);
 
 bool Game_ChangeTerrainAtlas(Bitmap* atlas);
-void Game_SetViewDistance(Int32 distance, bool userDist);
+void Game_SetViewDistance(Int32 distance);
+void Game_UserSetViewDistance(Int32 distance);
 void Game_UpdateProjection(void);
 void Game_Disconnect(STRING_PURE String* title, STRING_PURE String* reason);
 void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block);

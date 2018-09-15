@@ -22,7 +22,7 @@ void MapRenderer_RefreshChunk(Int32 cx, Int32 cy, Int32 cz) {
 	info->PendingDelete = true;
 }
 
-static void MapRenderer_CheckWeather(Real64 deltaTime) {
+static void MapRenderer_CheckWeather(Real64 delta) {
 	Vector3 pos = Game_CurrentCameraPos;
 	Vector3I coords;
 	Vector3I_Floor(&coords, &pos);
@@ -34,7 +34,7 @@ static void MapRenderer_CheckWeather(Real64 deltaTime) {
 	/* If we are under water, render weather before to blend properly */
 	if (!inTranslucent || WorldEnv_Weather == WEATHER_SUNNY) return;
 	Gfx_SetAlphaBlending(true);
-	EnvRenderer_RenderWeather(deltaTime);
+	EnvRenderer_RenderWeather(delta);
 	Gfx_SetAlphaBlending(false);
 }
 
@@ -126,7 +126,7 @@ static void MapRenderer_RenderNormalBatch(UInt32 batch) {
 	}
 }
 
-void MapRenderer_RenderNormal(Real64 deltaTime) {
+void MapRenderer_RenderNormal(Real64 delta) {
 	if (!MapRenderer_Chunks) return;
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Gfx_SetTexturing(true);
@@ -144,7 +144,7 @@ void MapRenderer_RenderNormal(Real64 deltaTime) {
 	}
 	Gfx_DisableMipmaps();
 
-	MapRenderer_CheckWeather(deltaTime);
+	MapRenderer_CheckWeather(delta);
 	Gfx_SetAlphaTest(false);
 	Gfx_SetTexturing(false);
 #if DEBUG_OCCLUSION
@@ -212,7 +212,7 @@ static void MapRenderer_RenderTranslucentBatch(UInt32 batch) {
 	}
 }
 
-void MapRenderer_RenderTranslucent(Real64 deltaTime) {
+void MapRenderer_RenderTranslucent(Real64 delta) {
 	if (!MapRenderer_Chunks) return;
 
 	/* First fill depth buffer */
@@ -251,7 +251,7 @@ void MapRenderer_RenderTranslucent(Real64 deltaTime) {
 	/* If we weren't under water, render weather after to blend properly */
 	if (!inTranslucent && WorldEnv_Weather != WEATHER_SUNNY) {
 		Gfx_SetAlphaTest(true);
-		EnvRenderer_RenderWeather(deltaTime);
+		EnvRenderer_RenderWeather(delta);
 		Gfx_SetAlphaTest(false);
 	}
 	Gfx_SetAlphaBlending(false);

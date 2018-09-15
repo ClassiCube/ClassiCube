@@ -14,7 +14,7 @@ using D3D = SharpDX.Direct3D9;
 namespace ClassicalSharp.GraphicsAPI {
 
 	/// <summary> Implements IGraphicsAPI using Direct3D 9. </summary>
-	public class Direct3D9Api : IGraphicsApi {
+	public unsafe class Direct3D9Api : IGraphicsApi {
 
 		IntPtr device, d3d;
 		const int texBufferSize = 512, iBufferSize = 4, vBufferSize = 2048;
@@ -39,18 +39,19 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			PresentParameters args = GetPresentArgs(640, 480);
 			try {
-				device = Direct3D.CreateDevice(d3d, adapter, DeviceType.Hardware, winHandle, createFlags, args);
+				device = Direct3D.CreateDevice(d3d, adapter, DeviceType.Hardware, winHandle, createFlags, &args);
 			} catch (SharpDXException) {
 				createFlags = CreateFlags.Mixed;
 				try {
-					device = Direct3D.CreateDevice(d3d, adapter, DeviceType.Hardware, winHandle, createFlags, args);
+					device = Direct3D.CreateDevice(d3d, adapter, DeviceType.Hardware, winHandle, createFlags, &args);
 				} catch (SharpDXException) {
 					createFlags = CreateFlags.Software;
-					device = Direct3D.CreateDevice(d3d, adapter, DeviceType.Hardware, winHandle, createFlags, args);
+					device = Direct3D.CreateDevice(d3d, adapter, DeviceType.Hardware, winHandle, createFlags, &args);
 				}
 			}
 			
-			Capabilities caps = Device.GetCapabilities(device);
+			Capabilities caps;
+			Device.GetCapabilities(device, &caps);
 			MaxTexWidth  = caps.MaxTextureWidth;
 			MaxTexHeight = caps.MaxTextureHeight;
 			
@@ -167,27 +168,26 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		protected override int CreateTexture(int width, int height, IntPtr scan0, bool managedPool, bool mipmaps) {
-			IntPtr tex = IntPtr.Zero;
+			IntPtr tex = IntPtr.Zero, sys = IntPtr.Zero;
 			int levels = 1 + (mipmaps ? MipmapsLevels(width, height) : 0);
 			
 			if (managedPool) {
-				tex = Device.CreateTexture(device, width, height, levels, Usage.None, Format.A8R8G8B8, Pool.Managed);
+				Device.CreateTexture(device, width, height, levels, Usage.None, Format.A8R8G8B8, Pool.Managed, &tex);
 				D3D.Texture.SetData(tex, 0, LockFlags.None, scan0, width * height * 4);
 				if (mipmaps) DoMipmaps(tex, 0, 0, width, height, scan0, false);
 			} else {
-				IntPtr sys = Device.CreateTexture(device, width, height, levels, Usage.None, Format.A8R8G8B8, Pool.SystemMemory);
+				Device.CreateTexture(device, width, height, levels, Usage.None, Format.A8R8G8B8, Pool.SystemMemory, &sys);
 				D3D.Texture.SetData(sys, 0, LockFlags.None, scan0, width * height * 4);
 				if (mipmaps) DoMipmaps(sys, 0, 0, width, height, scan0, false);
 				
-				tex = Device.CreateTexture(device, width, height, levels, Usage.None, Format.A8R8G8B8, Pool.Default);
+				Device.CreateTexture(device, width, height, levels, Usage.None, Format.A8R8G8B8, Pool.Default, &tex);
 				Device.UpdateTexture(device, sys, tex);
 				Delete(ref sys);
 			}
 			return GetOrExpand(ref textures, tex, texBufferSize);
 		}
 		
-		unsafe void DoMipmaps(IntPtr tex, int x, int y, int width,
-		                      int height, IntPtr scan0, bool partial) {
+		void DoMipmaps(IntPtr tex, int x, int y, int width, int height, IntPtr scan0, bool partial) {
 			IntPtr prev = scan0;
 			int lvls = MipmapsLevels(width, height);
 			
@@ -280,8 +280,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override int CreateDynamicVb(VertexFormat format, int maxVertices) {
 			int size = maxVertices * strideSizes[(int)format];
-			IntPtr buffer = Device.CreateVertexBuffer(device, size, Usage.Dynamic | Usage.WriteOnly,
-			                                          formatMapping[(int)format], Pool.Default);
+			IntPtr buffer = IntPtr.Zero;
+			int res = Device.CreateVertexBuffer(device, size, Usage.Dynamic | Usage.WriteOnly,
+			                                    formatMapping[(int)format], Pool.Default, &buffer);
+			
+			if (res < 0) throw new SharpDXException(res);
 			return GetOrExpand(ref vBuffers, buffer, iBufferSize);
 		}
 		
@@ -296,16 +299,27 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override int CreateVb(IntPtr vertices, VertexFormat format, int count) {
 			int size = count * strideSizes[(int)format];
-			IntPtr buffer = Device.CreateVertexBuffer(device, size, Usage.WriteOnly,
-			                                          formatMapping[(int)format], Pool.Default);
+			IntPtr buffer = IntPtr.Zero;
+			
+			for (;;) {
+				int res = Device.CreateVertexBuffer(device, size, Usage.WriteOnly,
+				                                    formatMapping[(int)format], Pool.Default, &buffer);
+				if (res >= 0) break;
+				
+				if (res != (int)Direct3DError.OutOfVideoMemory) throw new SharpDXException(res);
+				Events.RaiseLowVRAMDetected();
+			}
+			
 			DataBuffser.SetData(buffer, vertices, size, LockFlags.None);
 			return GetOrExpand(ref vBuffers, buffer, vBufferSize);
 		}
 		
 		public override int CreateIb(IntPtr indices, int indicesCount) {
 			int size = indicesCount * sizeof(ushort);
-			IntPtr buffer = Device.CreateIndexBuffer(device, size, Usage.WriteOnly,
-			                                         Format.Index16, Pool.Default);
+			IntPtr buffer = IntPtr.Zero;
+			Device.CreateIndexBuffer(device, size, Usage.WriteOnly,
+			                         Format.Index16, Pool.Default, &buffer);
+			
 			DataBuffser.SetData(buffer, indices, size, LockFlags.None);
 			return GetOrExpand(ref iBuffers, buffer, iBufferSize);
 		}
@@ -369,7 +383,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 
-		public unsafe override void LoadMatrix(ref Matrix4 matrix) {
+		public override void LoadMatrix(ref Matrix4 matrix) {
 			if (curMatrix == TransformState.Texture0) {
 				matrix.Row2.X = matrix.Row3.X; // NOTE: this hack fixes the texture movements.
 				Device.SetTextureStageState(device, 0, TextureStage.TextureTransformFlags, (int)TextureTransform.Count2);
@@ -403,11 +417,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void EndFrame(Game game) {
 			Device.EndScene(device);
-			int code = Device.Present(device);
-			if (code >= 0) return;
+			int res = Device.Present(device);
+			if (res >= 0) return;
 			
-			if ((uint)code != (uint)Direct3DError.DeviceLost)
-				throw new SharpDXException(code);
+			if (res != (int)Direct3DError.DeviceLost)
+				throw new SharpDXException(res);
 			
 			// TODO: Make sure this actually works on all graphics cards.
 			
@@ -423,8 +437,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			while (true) {
 				Thread.Sleep(16);
-				uint code = (uint)Device.TestCooperativeLevel(device);
-				if ((uint)code == (uint)Direct3DError.DeviceNotReset) return;
+				int res = Device.TestCooperativeLevel(device);
+				if (res == (int)Direct3DError.DeviceNotReset) return;
 				
 				task.Callback(task);
 			}
@@ -448,7 +462,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		void RecreateDevice(Game game) {
 			PresentParameters args = GetPresentArgs(game.Width, game.Height);
 			
-			while ((uint)Device.Reset(device, args) == (uint)Direct3DError.DeviceLost)
+			while (Device.Reset(device, &args) == (int)Direct3DError.DeviceLost)
 				LoopUntilRetrieved();
 			
 			SetDefaultRenderStates();
@@ -543,7 +557,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		float totalMem;
 		internal override void MakeApiInfo() {
-			AdapterDetails details = Direct3D.GetAdapterIdentifier(d3d, 0);		
+			AdapterDetails details = Direct3D.GetAdapterIdentifier(d3d, 0);
 			string adapter = details.Description;
 			totalMem = VideoMemoryMB;
 
@@ -565,8 +579,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public override void TakeScreenshot(Stream output, int width, int height) {
-			IntPtr backbuffer = Device.GetBackBuffer(device, 0, 0, BackBufferType.Mono);
-			IntPtr temp = Device.CreateOffscreenPlainSurface(device, width, height, Format.X8R8G8B8, Pool.SystemMemory);
+			IntPtr backbuffer = IntPtr.Zero, temp = IntPtr.Zero;
+			Device.GetBackBuffer(device, 0, 0, BackBufferType.Mono, &backbuffer);
+			Device.CreateOffscreenPlainSurface(device, width, height, Format.X8R8G8B8, Pool.SystemMemory, &temp);
 			// For DX 8 use IDirect3DDevice8::CreateImageSurface
 			
 			Device.GetRenderTargetData(device, backbuffer, temp);

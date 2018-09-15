@@ -68,58 +68,58 @@ static PackedCol Entity_GetCol(struct Entity* e) {
 	return World_IsValidPos_3I(P) ? Lighting_Col(P.X, P.Y, P.Z) : Lighting_Outside;
 }
 
-void Entity_Init(struct Entity* entity) {
-	entity->ModelScale = Vector3_Create1(1.0f);
-	entity->uScale = 1.0f;
-	entity->vScale = 1.0f;
+void Entity_Init(struct Entity* e) {
+	e->ModelScale = Vector3_Create1(1.0f);
+	e->uScale = 1.0f;
+	e->vScale = 1.0f;
 }
 
-Vector3 Entity_GetEyePosition(struct Entity* entity) {
-	Vector3 pos = entity->Position; pos.Y += Entity_GetEyeHeight(entity); return pos;
+Vector3 Entity_GetEyePosition(struct Entity* e) {
+	Vector3 pos = e->Position; pos.Y += Entity_GetEyeHeight(e); return pos;
 }
 
-Real32 Entity_GetEyeHeight(struct Entity* entity) {
-	return entity->Model->GetEyeY(entity) * entity->ModelScale.Y;
+Real32 Entity_GetEyeHeight(struct Entity* e) {
+	return e->Model->GetEyeY(e) * e->ModelScale.Y;
 }
 
-void Entity_GetTransform(struct Entity* entity, Vector3 pos, Vector3 scale, struct Matrix* m) {
+void Entity_GetTransform(struct Entity* e, Vector3 pos, Vector3 scale, struct Matrix* m) {
 	*m = Matrix_Identity;
 	struct Matrix tmp;
 
 	Matrix_Scale(&tmp, scale.X, scale.Y, scale.Z);
 	Matrix_MulBy(m, &tmp);
-	Matrix_RotateZ(&tmp, -entity->RotZ * MATH_DEG2RAD);
+	Matrix_RotateZ(&tmp, -e->RotZ * MATH_DEG2RAD);
 	Matrix_MulBy(m, &tmp);
-	Matrix_RotateX(&tmp, -entity->RotX * MATH_DEG2RAD);
+	Matrix_RotateX(&tmp, -e->RotX * MATH_DEG2RAD);
 	Matrix_MulBy(m, &tmp);
-	Matrix_RotateY(&tmp, -entity->RotY * MATH_DEG2RAD);
+	Matrix_RotateY(&tmp, -e->RotY * MATH_DEG2RAD);
 	Matrix_MulBy(m, &tmp);
 	Matrix_Translate(&tmp, pos.X, pos.Y, pos.Z);
 	Matrix_MulBy(m, &tmp);
 	/* return rotZ * rotX * rotY * scale * translate; */
 }
 
-void Entity_GetPickingBounds(struct Entity* entity, struct AABB* bb) {
-	AABB_Offset(bb, &entity->ModelAABB, &entity->Position);
+void Entity_GetPickingBounds(struct Entity* e, struct AABB* bb) {
+	AABB_Offset(bb, &e->ModelAABB, &e->Position);
 }
 
-void Entity_GetBounds(struct Entity* entity, struct AABB* bb) {
-	AABB_Make(bb, &entity->Position, &entity->Size);
+void Entity_GetBounds(struct Entity* e, struct AABB* bb) {
+	AABB_Make(bb, &e->Position, &e->Size);
 }
 
-static void Entity_ParseScale(struct Entity* entity, String scale) {
+static void Entity_ParseScale(struct Entity* e, String scale) {
 	if (!scale.length) return;
 	Real32 value;
 	if (!Convert_TryParseReal32(&scale, &value)) return;
 
-	Real32 maxScale = entity->Model->MaxScale;
+	Real32 maxScale = e->Model->MaxScale;
 	Math_Clamp(value, 0.01f, maxScale);
-	entity->ModelScale = Vector3_Create1(value);
+	e->ModelScale = Vector3_Create1(value);
 }
 
-void Entity_SetModel(struct Entity* entity, STRING_PURE String* model) {
-	entity->ModelScale = Vector3_Create1(1.0f);
-	entity->ModelBlock = BLOCK_AIR;
+void Entity_SetModel(struct Entity* e, STRING_PURE String* model) {
+	e->ModelScale = Vector3_Create1(1.0f);
+	e->ModelBlock = BLOCK_AIR;
 
 	String name, scale;
 	if (!String_UNSAFE_Separate(model, '|', &name, &scale)) {
@@ -130,29 +130,29 @@ void Entity_SetModel(struct Entity* entity, STRING_PURE String* model) {
 	/* 'giant' model kept for backwards compatibility */
 	if (String_CaselessEqualsConst(&name, "giant")) {
 		name = String_FromReadonly("humanoid");
-		entity->ModelScale = Vector3_Create1(2.0f);
-	} else if (Convert_TryParseUInt8(&name, &entity->ModelBlock)) {
+		e->ModelScale = Vector3_Create1(2.0f);
+	} else if (Convert_TryParseUInt8(&name, &e->ModelBlock)) {
 		name = String_FromReadonly("block");
 	}
 
-	entity->Model = ModelCache_Get(&name);
-	Entity_ParseScale(entity, scale);
-	entity->MobTextureId = NULL;
+	e->Model = ModelCache_Get(&name);
+	Entity_ParseScale(e, scale);
+	e->MobTextureId = NULL;
 
-	entity->Model->RecalcProperties(entity);
-	Entity_UpdateModelBounds(entity);
-	entity->ModelIsSheepNoFur = String_CaselessEqualsConst(&name, "sheep_nofur");
+	e->Model->RecalcProperties(e);
+	Entity_UpdateModelBounds(e);
+	e->ModelIsSheepNoFur = String_CaselessEqualsConst(&name, "sheep_nofur");
 }
 
-void Entity_UpdateModelBounds(struct Entity* entity) {
-	struct Model* model = entity->Model;
-	model->GetCollisionSize(&entity->Size);
-	Vector3_Mul3By(&entity->Size, &entity->ModelScale);
+void Entity_UpdateModelBounds(struct Entity* e) {
+	struct Model* model = e->Model;
+	model->GetCollisionSize(&e->Size);
+	Vector3_Mul3By(&e->Size, &e->ModelScale);
 
-	struct AABB* bb = &entity->ModelAABB;
+	struct AABB* bb = &e->ModelAABB;
 	model->GetPickingBounds(bb);
-	Vector3_Mul3By(&bb->Min, &entity->ModelScale);
-	Vector3_Mul3By(&bb->Max, &entity->ModelScale);
+	Vector3_Mul3By(&bb->Min, &e->ModelScale);
+	Vector3_Mul3By(&bb->Max, &e->ModelScale);
 }
 
 bool Entity_TouchesAny(struct AABB* bounds, bool (*touches_condition)(BlockID block__)) {

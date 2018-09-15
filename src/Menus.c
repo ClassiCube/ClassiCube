@@ -2215,7 +2215,7 @@ static void ClassicOptionsScreen_GetViewDist(STRING_TRANSIENT String* v) {
 static void ClassicOptionsScreen_SetViewDist(STRING_PURE String* v) {
 	UInt32 raw = Utils_ParseEnum(v, 0, ViewDist_Names, ViewDist_Count);
 	Int32 dist = raw == ViewDist_Far ? 512 : (raw == ViewDist_Normal ? 128 : (raw == ViewDist_Short ? 32 : 8));
-	Game_SetViewDistance(dist, true);
+	Game_UserSetViewDistance(dist);
 }
 
 static void ClassicOptionsScreen_GetPhysics(STRING_TRANSIENT String* v) { Menu_GetBool(v, Physics_Enabled); }
@@ -2398,7 +2398,7 @@ struct Screen* EnvSettingsScreen_MakeInstance(void) {
 *--------------------------------------------------GraphicsOptionsScreen--------------------------------------------------*
 *#########################################################################################################################*/
 static void GraphicsOptionsScreen_GetViewDist(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_ViewDistance); }
-static void GraphicsOptionsScreen_SetViewDist(STRING_PURE String* v) { Game_SetViewDistance(Menu_Int32(v), true); }
+static void GraphicsOptionsScreen_SetViewDist(STRING_PURE String* v) { Game_UserSetViewDistance(Menu_Int32(v)); }
 
 static void GraphicsOptionsScreen_GetSmooth(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_SmoothLighting); }
 static void GraphicsOptionsScreen_SetSmooth(STRING_PURE String* v) {

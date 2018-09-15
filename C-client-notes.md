@@ -29,7 +29,7 @@ Some of the per-platform functionality you'll be required to implement is:
 ### Types
 * Integers and real numbers are always of a fixed size, see ```Typedefs.h```
 * There are a few typedefs of integer types to provide better context in some functions
-* structs are rarely typedef-ed
+* A few common simple structs are typedef-ed, but are rarely otherwise.
 * ```bool``` is an alias for 8 bit unsigned integer
 * ```GfxResourceID``` is not constant type - can be pointer or integer, depending on underlying 3D graphics API
 * ```PackedCol``` field order differs depending on the underlying 3D graphics API

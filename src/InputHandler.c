@@ -95,10 +95,10 @@ static void InputHandler_CycleDistanceForwards(Int32* viewDists, Int32 count) {
 	for (i = 0; i < count; i++) {
 		Int32 dist = viewDists[i];
 		if (dist > Game_UserViewDistance) {
-			Game_SetViewDistance(dist, true); return;
+			Game_UserSetViewDistance(dist); return;
 		}
 	}
-	Game_SetViewDistance(viewDists[0], true);
+	Game_UserSetViewDistance(viewDists[0]);
 }
 
 static void InputHandler_CycleDistanceBackwards(Int32* viewDists, Int32 count) {
@@ -106,10 +106,10 @@ static void InputHandler_CycleDistanceBackwards(Int32* viewDists, Int32 count) {
 	for (i = count - 1; i >= 0; i--) {
 		Int32 dist = viewDists[i];
 		if (dist < Game_UserViewDistance) {
-			Game_SetViewDistance(dist, true); return;
+			Game_UserSetViewDistance(dist); return;
 		}
 	}
-	Game_SetViewDistance(viewDists[count - 1], true);
+	Game_UserSetViewDistance(viewDists[count - 1]);
 }
 
 bool InputHandler_SetFOV(Int32 fov, bool setZoom) {

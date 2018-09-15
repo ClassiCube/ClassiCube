@@ -61,9 +61,10 @@ namespace ClassicalSharp {
 			LoadGuiOptions();
 			Chat = new Chat(); Components.Add(Chat);
 			
-			Events.OnNewMap       += OnNewMapCore;
-			Events.OnNewMapLoaded += OnNewMapLoadedCore;
-			Events.TextureChanged += TextureChangedCore;
+			Events.OnNewMap        += OnNewMapCore;
+			Events.OnNewMapLoaded  += OnNewMapLoadedCore;
+			Events.TextureChanged  += TextureChangedCore;
+			Events.LowVRAMDetected += OnLowVRAMDetected;
 			
 			BlockInfo.Allocate(256);
 			BlockInfo.Init();

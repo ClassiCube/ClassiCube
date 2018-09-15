@@ -90,18 +90,19 @@ namespace ClassicalSharp {
 			window.Close();
 		}
 		
-		public void SetViewDistance(int distance, bool userDist) {
-			if (userDist) {
-				UserViewDistance = distance;
-				Options.Set(OptionsKey.ViewDist, distance);
-			}
-			
+		public void SetViewDistance(int distance) {
 			distance = Math.Min(distance, MaxViewDistance);
 			if (distance == ViewDistance) return;
 			ViewDistance = distance;
 			
 			Events.RaiseViewDistanceChanged();
 			UpdateProjection();
+		}
+		
+		public void UserSetViewDistance(int distance) {
+			UserViewDistance = distance;
+			Options.Set(OptionsKey.ViewDist, distance);
+			SetViewDistance(distance);
 		}
 		
 		public ScheduledTask AddScheduledTask(double interval, ScheduledTaskCallback callback) {
@@ -268,13 +269,23 @@ namespace ClassicalSharp {
 				Events.RaiseChatFontChanged();
 			}
 		}
+		
+		void OnLowVRAMDetected() {
+			if (UserViewDistance <= 16) throw new OutOfMemoryException("Out of video memory!");
+			UserViewDistance /= 2;
+			UserViewDistance = Math.Max(16, UserViewDistance);
+
+			ChunkUpdater.Refresh();
+			SetViewDistance(UserViewDistance);
+			Chat.Add("&cOut of VRAM! Halving view distance..");
+		}
 
 		Stopwatch frameTimer = new Stopwatch();
 		internal float limitMillis;
 		public void SetFpsLimit(FpsLimitMethod method) {
 			FpsLimit    = method;
 			limitMillis = CalcLimitMillis(method);
-			Graphics.SetVSync(this, method == FpsLimitMethod.LimitVSync);			
+			Graphics.SetVSync(this, method == FpsLimitMethod.LimitVSync);
 		}
 		
 		internal float CalcLimitMillis(FpsLimitMethod method) {
@@ -419,9 +430,11 @@ namespace ClassicalSharp {
 			Atlas1D.Dispose();
 			ModelCache.Dispose();
 			Entities.Dispose();
-			Events.OnNewMap       -= OnNewMapCore;
-			Events.OnNewMapLoaded -= OnNewMapLoadedCore;
-			Events.TextureChanged -= TextureChangedCore;
+			
+			Events.OnNewMap        -= OnNewMapCore;
+			Events.OnNewMapLoaded  -= OnNewMapLoadedCore;
+			Events.TextureChanged  -= TextureChangedCore;
+			Events.LowVRAMDetected -= OnLowVRAMDetected;
 			
 			for (int i = 0; i < Components.Count; i++)
 				Components[i].Dispose();

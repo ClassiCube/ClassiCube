@@ -357,7 +357,7 @@ namespace ClassicalSharp {
 			part.vIndex[Side.Top] += 4;
 		}
 		
-		PackedCol[] lerp = new PackedCol[5];
+		PackedCol[] lerp  = new PackedCol[5];
 		PackedCol[] lerpX = new PackedCol[5];
 		PackedCol[] lerpZ = new PackedCol[5];
 		PackedCol[] lerpY = new PackedCol[5];

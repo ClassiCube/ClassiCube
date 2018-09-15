@@ -62,7 +62,7 @@ namespace ClassicalSharp.Gui.Screens {
 		static void SetViewDist(Game g, string v) {
 			ViewDist raw = (ViewDist)Enum.Parse(typeof(ViewDist), v);
 			int dist = raw == ViewDist.FAR ? 512 : (raw == ViewDist.NORMAL ? 128 : (raw == ViewDist.SHORT ? 32 : 8));
-			g.SetViewDistance(dist, true); 
+			g.UserSetViewDistance(dist); 
 		}
 		
 		static string GetPhysics(Game g) { return GetBool(((SinglePlayerServer)g.Server).physics.Enabled); }

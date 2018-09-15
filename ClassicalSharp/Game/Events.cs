@@ -34,6 +34,10 @@ namespace ClassicalSharp {
 		public static event EmptyEventFunc ViewDistanceChanged;
 		public static void RaiseViewDistanceChanged() { Raise(ViewDistanceChanged); }
 		
+		/// <summary> Raised when insufficient VRAM detected, need to free some GPU resources. </summary>
+		public static event EmptyEventFunc LowVRAMDetected;
+		public static void RaiseLowVRAMDetected() { Raise(LowVRAMDetected); }
+		
 		/// <summary> Raised when the projection matrix changes. </summary>
 		public static event EmptyEventFunc ProjectionChanged;
 		public static void RaiseProjectionChanged() { Raise(ProjectionChanged); }

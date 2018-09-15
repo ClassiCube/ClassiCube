@@ -69,9 +69,9 @@ static void EnvRenderer_UpdateFogMinimal(Real32 fogDensity) {
 
 		#define LOG_005 -2.99573227355399
 		Real64 dist = LOG_005 / -fogDensity;
-		Game_SetViewDistance((Int32)dist, false);
+		Game_SetViewDistance((Int32)dist);
 	} else {
-		Game_SetViewDistance(Game_UserViewDistance, false);
+		Game_SetViewDistance(Game_UserViewDistance);
 	}
 }
 
@@ -837,7 +837,7 @@ static void EnvRenderer_Init(void) {
 	Event_RegisterVoid(&GfxEvents_ContextLost,         NULL, EnvRenderer_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated,    NULL, EnvRenderer_ContextRecreated);
 
-	Game_SetViewDistance(Game_UserViewDistance, false);
+	Game_SetViewDistance(Game_UserViewDistance);
 }
 
 static void EnvRenderer_Free(void) {
