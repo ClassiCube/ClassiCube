@@ -703,6 +703,7 @@ void Font_Make(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16
 }
 
 void Font_Free(FontDesc* desc) {
+	if (!desc->Handle) return;
 	if (!DeleteObject(desc->Handle)) ErrorHandler_Fail("Deleting font handle failed");
 	desc->Handle = NULL;
 }

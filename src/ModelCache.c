@@ -934,7 +934,8 @@ static void ChibiModel_CreateParts(void) {
 
 	static struct BoxDesc torso = {
 		BOXDESC_TEX(16,16),
-		BOXDESC_BOX(-2,6,-1, 2,12,1),
+		BOXDESC_DIMS(-4,12,-2, 4,24,2),
+		BOXDESC_BOUNDS(-2,6,-1, 2,12,1),
 		BOXDESC_ROT(0,6,0),
 	}; BoxDesc_BuildBox(&Chibi_Set.Torso, &torso);
 
@@ -947,19 +948,21 @@ static void ChibiModel_CreateParts(void) {
 
 	static struct BoxDesc torsoL = {
 		BOXDESC_TEX(16,32),
-		BOXDESC_DIMS(-2,6,-1, 2,12,1),
+		BOXDESC_DIMS(-4,12,-2, 4,24,2),
 		BOXDESC_BOUNDS(-1.75f,5.75f,-0.75f, 2.25f,12.25f,1.25f),
 		BOXDESC_ROT(0,6,0),
 	}; BoxDesc_BuildBox(&Chibi_Set.TorsoLayer, &torsoL);
 
 	static struct BoxDesc arm = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(2,6,-1, 4,12,1),
+		BOXDESC_TEX(40,16),
+		BOXDESC_DIMS(4,12,-2, 8,24,2),
+		BOXDESC_BOUNDS(2,6,-1, 4,12,1),
 		BOXDESC_ROT(2.5f,11,0),
 	};
 	static struct BoxDesc leg = {
-		BOXDESC_TEX(40,16),
-		BOXDESC_BOX(0,0,-1, 2,6,1),
+		BOXDESC_TEX(0,16),
+		BOXDESC_DIMS(0,0,-2, 4,12,2),
+		BOXDESC_BOUNDS(0,0,-1, 2,6,1),
 		BOXDESC_ROT(0,6,0),
 	};
 	HumanModel_CreateLimbs(&Chibi_Set, 0.25f, &arm, &leg);
