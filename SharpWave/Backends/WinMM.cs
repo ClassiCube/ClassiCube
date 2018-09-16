@@ -7,14 +7,17 @@ namespace SharpWave {
 	[SuppressUnmanagedCodeSecurity]
 	internal static class WinMM {
 		const string lib = "winmm.dll";
+		
+		[DllImport(lib, SetLastError = true)]
+		internal static extern uint waveOutGetNumDevs();
 
 		[DllImport(lib, SetLastError = true)]
 		internal static extern uint waveOutOpen(out IntPtr handle, IntPtr deviceID, ref WaveFormatEx format,
 		                                        IntPtr callback, UIntPtr callbackInstance, uint flags);
 		[DllImport(lib, SetLastError = true)]
-		internal static extern uint waveOutClose(IntPtr handle);
+		internal static extern uint waveOutReset(IntPtr handle);
 		[DllImport(lib, SetLastError = true)]
-		internal static extern uint waveOutGetNumDevs();
+		internal static extern uint waveOutClose(IntPtr handle);
 		
 		[DllImport(lib, SetLastError = true)]
 		internal static extern uint waveOutPrepareHeader(IntPtr handle, IntPtr header, int hdrSize);

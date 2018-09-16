@@ -89,6 +89,11 @@ namespace SharpWave {
 			CheckError("SourcePlay");
 		}
 		
+		public override void Stop() {
+			AL.alSourceStop(source);
+			CheckError("SourceStop");
+		}
+		
 		void CheckError(string location) {
 			ALError error = AL.alGetError();
 			if (error == ALError.NoError) return;

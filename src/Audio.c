@@ -386,7 +386,8 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 		if (res) break;
 	}
 
-	/* Wait until the buffers finished playing */
+	if (music_pendingStop) Audio_Stop(music_out);
+	/* Wait until the buffers finished playing */	
 	while (!Audio_IsFinished(music_out)) { Thread_Sleep(10); }
 
 	Mem_Free(data);

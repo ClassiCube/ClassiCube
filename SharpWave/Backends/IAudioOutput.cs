@@ -29,6 +29,8 @@ namespace SharpWave {
 		public abstract void SetFormat(AudioFormat format);
 		public abstract void BufferData(int index, AudioChunk chunk);
 		public abstract void Play();
+		public abstract void Stop();
+		
 		public abstract bool IsCompleted(int index);
 		public abstract bool IsFinished();
 		
@@ -90,6 +92,7 @@ namespace SharpWave {
 				end = BufferBlock(next, tmp, secondSize, chunks);
 			}
 
+			if (pendingStop) Stop();
 			while (!IsFinished()) { Thread.Sleep(10); }
 		}
 	}

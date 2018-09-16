@@ -1215,6 +1215,12 @@ void Audio_BufferData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize
 
 void Audio_Play(AudioHandle handle) { }
 
+void Audio_Stop(AudioHandle handle) {
+	struct AudioContext* ctx = &Audio_Contexts[handle];
+	ReturnCode result = waveOutReset(ctx->Handle);
+	ErrorHandler_CheckOrFail(result, "Audio - resetting device");
+}
+
 bool Audio_IsCompleted(AudioHandle handle, Int32 idx) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	WAVEHDR* hdr = &ctx->Headers[idx];
@@ -1377,6 +1383,12 @@ void Audio_Play(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	alSourcePlay(ctx->Source);
 	Audio_CheckError("SourcePlay");
+}
+
+void Audio_Stop(AudioHandle handle) {
+	struct AudioContext* ctx = &Audio_Contexts[handle];
+	alSourceStop(ctx->Source);
+	Audio_CheckError("SourceStop");
 }
 
 void Audio_Free(AudioHandle handle) {

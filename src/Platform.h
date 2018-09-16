@@ -119,6 +119,7 @@ struct AudioFormat* Audio_GetFormat(AudioHandle handle);
 void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format);
 void Audio_BufferData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize);
 void Audio_Play(AudioHandle handle);
+void Audio_Stop(AudioHandle handle);
 bool Audio_IsCompleted(AudioHandle handle, Int32 idx);
 bool Audio_IsFinished(AudioHandle handle);
 #endif

@@ -17,6 +17,7 @@
 #include "Game.h"
 #include "ErrorHandler.h"
 #include "Bitmap.h"
+#include "Block.h"
 
 #define WIDGET_UV(u1,v1, u2,v2) u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f
 static void Widget_NullFunc(void* widget) { }

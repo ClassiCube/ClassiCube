@@ -99,6 +99,11 @@ namespace SharpWave {
 		
 		public override void Play() { }
 		
+		public override void Stop() {
+			uint result = WinMM.waveOutReset(devHandle);
+			CheckError(result, "Reset");
+		}
+		
 		void ApplyVolume(IntPtr handle, AudioChunk chunk) {
 			if (volumePercent == 100) return;
 			

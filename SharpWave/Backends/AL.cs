@@ -32,8 +32,11 @@ namespace OpenTK.Audio.OpenAL {
 		public static extern void alSourcef(uint sid, ALSourcef param, float value);
 		[DllImport(lib, CallingConvention = style)]
 		public static extern void alGetSourcei(uint sid, ALGetSourcei param, int* value);
+		
 		[DllImport(lib, CallingConvention = style)]
 		public static extern void alSourcePlay(uint sid);
+		[DllImport(lib, CallingConvention = style)]
+		public static extern void alSourceStop(uint sid);
 
 		[DllImport(lib, CallingConvention = style)]
 		public static extern void alSourceQueueBuffers(uint sid, int numEntries, uint* bids);
