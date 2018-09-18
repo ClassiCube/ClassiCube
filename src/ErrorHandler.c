@@ -174,12 +174,13 @@ static void ErrorHandler_DumpRegisters(CONTEXT* ctx) {
 *------------------------------------------------------Error handling-----------------------------------------------------*
 *#########################################################################################################################*/
 static LONG WINAPI ErrorHandler_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
-	char msgBuffer[128 + 1] = { 0 };
-	String msg = { msgBuffer, 0, 128 };
+	char msgBuffer[STRING_SIZE * 2 + 1];
+	String msg = String_NT_Array(msgBuffer);
 
 	UInt32 code = (UInt32)pInfo->ExceptionRecord->ExceptionCode;
 	UInt64 addr = (UInt64)pInfo->ExceptionRecord->ExceptionAddress;
 	String_Format2(&msg, "Unhandled exception 0x%y at 0x%x", &code, &addr);
+	msg.buffer[msg.length] = '\0';
 
 	ErrorHandler_DumpRegisters(pInfo->ContextRecord);
 	ErrorHandler_FailCommon(0, msg.buffer, pInfo->ContextRecord);
@@ -571,12 +572,13 @@ static void ErrorHandler_SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	signal(SIGABRT, SIG_DFL);
 	signal(SIGFPE,  SIG_DFL);
 
-	char msgBuffer[128 + 1] = { 0 };
-	String msg = { msgBuffer, 0, 128 };
+	char msgBuffer[STRING_SIZE * 2 + 1];
+	String msg = String_NT_Array(msgBuffer);
 
 	Int32  type = info->si_signo, code = info->si_code;
 	UInt64 addr = (UInt64)info->si_addr;
 	String_Format3(&msg, "Unhandled signal %i (code %i) at 0x%x", &type, &code, &addr);
+	msg.buffer[msg.length] = '\0';
 
 	ErrorHandler_DumpRegisters(ctx);
 	ErrorHandler_FailCommon(0, msg.buffer, ctx);
@@ -632,8 +634,8 @@ void ErrorHandler_Log(STRING_PURE String* msg) {
 }
 
 static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void* ctx) {
-	char logMsgBuffer[3070 + 1] = { 0 };
-	String msg = { logMsgBuffer, 0, 3070 };
+	char msgBuffer[3070 + 1];
+	String msg = String_NT_Array(msgBuffer);
 
 	String_Format3(&msg, "ClassiCube crashed.%cMessge: %c%c", Platform_NewLine, raw_msg, Platform_NewLine);
 	if (result) { 
@@ -647,6 +649,8 @@ static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void
 	String_AppendConst(&msg, "Full details of the crash have been logged to 'client.log'.\n");
 	String_AppendConst(&msg,
 		"Please report the crash to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it.");
+
+	msg.buffer[msg.length] = '\0';
 	ErrorHandler_ShowDialog("We're sorry", msg.buffer);
 	Platform_Exit(result);
 }

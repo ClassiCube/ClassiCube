@@ -11,10 +11,11 @@ struct Texture;
 
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow);
 void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, FontDesc* font, bool useShadow);
+NOINLINE_ void Drawer2D_MakeFont(FontDesc* desc, UInt16 size, UInt16 style);
 
 /* Whether chat text should be drawn and measuring using the currently bitmapped font, 
  false uses the font supplied as the DrawTextArgs argument supplied to the function. */
-bool Drawer2D_UseBitmappedChat;
+bool Drawer2D_BitmappedText;
 /* Whether the shadows behind text (that uses shadows) is fully black. */
 bool Drawer2D_BlackTextShadows;
 PackedCol Drawer2D_Cols[DRAWER2D_MAX_COLS];

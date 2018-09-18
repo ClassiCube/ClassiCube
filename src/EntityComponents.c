@@ -555,10 +555,10 @@ static bool ShadowComponent_GetBlocks(struct Entity* entity, Int32 x, Int32 y, I
 		BlockID block;
 		if (!outside) {
 			block = World_GetBlock(x, y, z);
-		} else if (y == WorldEnv_EdgeHeight - 1) {
-			block = Block_Draw[WorldEnv_EdgeBlock] == DRAW_GAS  ? BLOCK_AIR : BLOCK_BEDROCK;
-		} else if (y == WorldEnv_SidesHeight - 1) {
-			block = Block_Draw[WorldEnv_SidesBlock] == DRAW_GAS ? BLOCK_AIR : BLOCK_BEDROCK;
+		} else if (y == Env_EdgeHeight - 1) {
+			block = Block_Draw[Env_EdgeBlock] == DRAW_GAS  ? BLOCK_AIR : BLOCK_BEDROCK;
+		} else if (y == Env_SidesHeight - 1) {
+			block = Block_Draw[Env_SidesBlock] == DRAW_GAS ? BLOCK_AIR : BLOCK_BEDROCK;
 		} else {
 			block = BLOCK_AIR;
 		}
@@ -579,7 +579,7 @@ static bool ShadowComponent_GetBlocks(struct Entity* entity, Int32 x, Int32 y, I
 	}
 
 	if (count < 4) {
-		cur->Block = WorldEnv_EdgeBlock; cur->Y = 0.0f;
+		cur->Block = Env_EdgeBlock; cur->Y = 0.0f;
 		ShadowComponent_CalcAlpha(posY, cur);
 		count++; cur++;
 	}

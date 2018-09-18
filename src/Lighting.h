@@ -7,10 +7,8 @@ BasicLighting: Uses a simple heightmap, where each block is either in sun or sha
 */
 struct IGameComponent;
 
-PackedCol Lighting_Outside;
-PackedCol Lighting_OutsideZSide;
-PackedCol Lighting_OutsideXSide;
-PackedCol Lighting_OutsideYBottom;
+#define Lighting_Pack(x, z) ((x) + World_Width * (z))
+Int16* Lighting_Heightmap;
 
 void Lighting_MakeComponent(struct IGameComponent* comp);
 /* Equivalent to (but far more optimised form of)
@@ -35,8 +33,8 @@ NOTE: Does ***NOT*** check that the coordinates are inside the map. */
 PackedCol Lighting_Col_XSide(Int32 x, Int32 y, Int32 z);
 
 PackedCol Lighting_Col_Sprite_Fast(Int32 x, Int32 y, Int32 z);
-PackedCol Lighting_Col_YTop_Fast(Int32 x, Int32 y, Int32 z);
-PackedCol Lighting_Col_YBottom_Fast(Int32 x, Int32 y, Int32 z);
+PackedCol Lighting_Col_YMax_Fast(Int32 x, Int32 y, Int32 z);
+PackedCol Lighting_Col_YMin_Fast(Int32 x, Int32 y, Int32 z);
 PackedCol Lighting_Col_XSide_Fast(Int32 x, Int32 y, Int32 z);
 PackedCol Lighting_Col_ZSide_Fast(Int32 x, Int32 y, Int32 z);
 #endif

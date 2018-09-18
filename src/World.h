@@ -39,60 +39,60 @@ enum ENV_VAR {
 	ENV_VAR_SHADOW_COL,
 };
 
-BlockID WorldEnv_EdgeBlock;
-BlockID WorldEnv_SidesBlock;
-Int32 WorldEnv_EdgeHeight;
-Int32 WorldEnv_SidesOffset;
-#define WorldEnv_SidesHeight (WorldEnv_EdgeHeight + WorldEnv_SidesOffset)
-Int32 WorldEnv_CloudsHeight;
-Real32 WorldEnv_CloudsSpeed;
+BlockID Env_EdgeBlock;
+BlockID Env_SidesBlock;
+Int32 Env_EdgeHeight;
+Int32 Env_SidesOffset;
+#define Env_SidesHeight (Env_EdgeHeight + Env_SidesOffset)
+Int32 Env_CloudsHeight;
+Real32 Env_CloudsSpeed;
 
 enum WEATHER { WEATHER_SUNNY, WEATHER_RAINY, WEATHER_SNOWY };
 extern const char* Weather_Names[3];
-Real32 WorldEnv_WeatherSpeed;
-Real32 WorldEnv_WeatherFade;
-Int32 WorldEnv_Weather;
-bool WorldEnv_ExpFog;
-Real32 WorldEnv_SkyboxHorSpeed;
-Real32 WorldEnv_SkyboxVerSpeed;
+Real32 Env_WeatherSpeed;
+Real32 Env_WeatherFade;
+Int32 Env_Weather;
+bool Env_ExpFog;
+Real32 Env_SkyboxHorSpeed;
+Real32 Env_SkyboxVerSpeed;
 
-PackedCol WorldEnv_SkyCol;
-extern PackedCol WorldEnv_DefaultSkyCol;
-#define WORLDENV_DEFAULT_SKYCOL_HEX "99CCFF"
-PackedCol WorldEnv_FogCol;
-extern PackedCol WorldEnv_DefaultFogCol;
-#define WORLDENV_DEFAULT_FOGCOL_HEX "FFFFFF"
-PackedCol WorldEnv_CloudsCol;
-extern PackedCol WorldEnv_DefaultCloudsCol;
-#define WORLDENV_DEFAULT_CLOUDSCOL_HEX "FFFFFF"
-PackedCol WorldEnv_SunCol, WorldEnv_SunXSide, WorldEnv_SunZSide, WorldEnv_SunYBottom;
-extern PackedCol WorldEnv_DefaultSunCol;
-#define WORLDENV_DEFAULT_SUNCOL_HEX "FFFFFF"
-PackedCol WorldEnv_ShadowCol, WorldEnv_ShadowXSide, WorldEnv_ShadowZSide, WorldEnv_ShadowYBottom;
-extern PackedCol WorldEnv_DefaultShadowCol;
-#define WORLDENV_DEFAULT_SHADOWCOL_HEX "9B9B9B"
+PackedCol Env_SkyCol;
+extern PackedCol Env_DefaultSkyCol;
+#define ENV_DEFAULT_SKYCOL_HEX "99CCFF"
+PackedCol Env_FogCol;
+extern PackedCol Env_DefaultFogCol;
+#define ENV_DEFAULT_FOGCOL_HEX "FFFFFF"
+PackedCol Env_CloudsCol;
+extern PackedCol Env_DefaultCloudsCol;
+#define ENV_DEFAULT_CLOUDSCOL_HEX "FFFFFF"
+PackedCol Env_SunCol, Env_SunXSide, Env_SunZSide, Env_SunYMin;
+extern PackedCol Env_DefaultSunCol;
+#define ENV_DEFAULT_SUNCOL_HEX "FFFFFF"
+PackedCol Env_ShadowCol, Env_ShadowXSide, Env_ShadowZSide, Env_ShadowYMin;
+extern PackedCol Env_DefaultShadowCol;
+#define ENV_DEFAULT_SHADOWCOL_HEX "9B9B9B"
 
-void WorldEnv_Reset(void);
-void WorldEnv_ResetLight(void);
-void WorldEnv_SetEdgeBlock(BlockID block);
-void WorldEnv_SetSidesBlock(BlockID block);
-void WorldEnv_SetEdgeHeight(Int32 height);
-void WorldEnv_SetSidesOffset(Int32 offset);
-void WorldEnv_SetCloudsHeight(Int32 height);
-void WorldEnv_SetCloudsSpeed(Real32 speed);
+void Env_Reset(void);
+void Env_ResetLight(void);
+void Env_SetEdgeBlock(BlockID block);
+void Env_SetSidesBlock(BlockID block);
+void Env_SetEdgeHeight(Int32 height);
+void Env_SetSidesOffset(Int32 offset);
+void Env_SetCloudsHeight(Int32 height);
+void Env_SetCloudsSpeed(Real32 speed);
 
-void WorldEnv_SetWeatherSpeed(Real32 speed);
-void WorldEnv_SetWeatherFade(Real32 rate);
-void WorldEnv_SetWeather(Int32 weather);
-void WorldEnv_SetExpFog(bool expFog);
-void WorldEnv_SetSkyboxHorSpeed(Real32 speed);
-void WorldEnv_SetSkyboxVerSpeed(Real32 speed);
+void Env_SetWeatherSpeed(Real32 speed);
+void Env_SetWeatherFade(Real32 rate);
+void Env_SetWeather(Int32 weather);
+void Env_SetExpFog(bool expFog);
+void Env_SetSkyboxHorSpeed(Real32 speed);
+void Env_SetSkyboxVerSpeed(Real32 speed);
 
-void WorldEnv_SetSkyCol(PackedCol col);
-void WorldEnv_SetFogCol(PackedCol col);
-void WorldEnv_SetCloudsCol(PackedCol col);
-void WorldEnv_SetSunCol(PackedCol col);
-void WorldEnv_SetShadowCol(PackedCol col);
+void Env_SetSkyCol(PackedCol col);
+void Env_SetFogCol(PackedCol col);
+void Env_SetCloudsCol(PackedCol col);
+void Env_SetSunCol(PackedCol col);
+void Env_SetShadowCol(PackedCol col);
 
 #define RESPAWN_NOT_FOUND -100000.0f
 /* Finds the highest free Y coordinate in the given bounding box */

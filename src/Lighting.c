@@ -8,30 +8,6 @@
 #include "Event.h"
 #include "GameStructs.h"
 
-Int16* Lighting_heightmap;
-PackedCol shadow, shadowZSide, shadowXSide, shadowYBottom;
-#define Lighting_Pack(x, z) ((x) + World_Width * (z))
-
-static void Lighting_SetSun(PackedCol col) {
-	Lighting_Outside = col;
-	PackedCol_GetShaded(col, &Lighting_OutsideXSide,
-		&Lighting_OutsideZSide, &Lighting_OutsideYBottom);
-}
-
-static void Lighting_SetShadow(PackedCol col) {
-	shadow = col;
-	PackedCol_GetShaded(col, &shadowXSide,
-		&shadowZSide, &shadowYBottom);
-}
-
-static void Lighting_EnvVariableChanged(void* obj, Int32 envVar) {
-	if (envVar == ENV_VAR_SUN_COL) {
-		Lighting_SetSun(WorldEnv_SunCol);
-	} else if (envVar == ENV_VAR_SHADOW_COL) {
-		Lighting_SetShadow(WorldEnv_ShadowCol);
-	}
-}
-
 static Int32 Lighting_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
 	Int32 y, i = World_Pack(x, maxY, z);
 
@@ -39,17 +15,17 @@ static Int32 Lighting_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
 		BlockID block = World_Blocks[i];
 		if (Block_BlocksLight[block]) {
 			Int32 offset = (Block_LightOffset[block] >> FACE_YMAX) & 1;
-			Lighting_heightmap[index] = y - offset;
+			Lighting_Heightmap[index] = y - offset;
 			return y - offset;
 		}
 	}
-	Lighting_heightmap[index] = -10;
+	Lighting_Heightmap[index] = -10;
 	return -10;
 }
 
 static Int32 Lighting_GetLightHeight(Int32 x, Int32 z) {
 	Int32 index = (z * World_Width) + x;
-	Int32 lightH = Lighting_heightmap[index];
+	Int32 lightH = Lighting_Heightmap[index];
 	return lightH == Int16_MaxValue ? Lighting_CalcHeightAt(x, World_Height - 1, z, index) : lightH;
 }
 
@@ -59,37 +35,37 @@ bool Lighting_IsLit(Int32 x, Int32 y, Int32 z) {
 }
 
 PackedCol Lighting_Col(Int32 x, Int32 y, Int32 z) {
-	return y > Lighting_GetLightHeight(x, z) ? Lighting_Outside : shadow;
+	return y > Lighting_GetLightHeight(x, z) ? Env_SunCol : Env_ShadowCol;
 }
 
 PackedCol Lighting_Col_XSide(Int32 x, Int32 y, Int32 z) {
-	return y > Lighting_GetLightHeight(x, z) ? Lighting_OutsideXSide : shadowXSide;
+	return y > Lighting_GetLightHeight(x, z) ? Env_SunXSide : Env_ShadowXSide;
 }
 
 PackedCol Lighting_Col_Sprite_Fast(Int32 x, Int32 y, Int32 z) {
-	return y > Lighting_heightmap[(z * World_Width) + x] ? Lighting_Outside : shadow;
+	return y > Lighting_Heightmap[(z * World_Width) + x] ? Env_SunCol : Env_ShadowCol;
 }
 
-PackedCol Lighting_Col_YTop_Fast(Int32 x, Int32 y, Int32 z) {
-	return y > Lighting_heightmap[(z * World_Width) + x] ? Lighting_Outside : shadow;
+PackedCol Lighting_Col_YMax_Fast(Int32 x, Int32 y, Int32 z) {
+	return y > Lighting_Heightmap[(z * World_Width) + x] ? Env_SunCol : Env_ShadowCol;
 }
 
-PackedCol Lighting_Col_YBottom_Fast(Int32 x, Int32 y, Int32 z) {
-	return y > Lighting_heightmap[(z * World_Width) + x] ? Lighting_OutsideYBottom : shadowYBottom;
+PackedCol Lighting_Col_YMin_Fast(Int32 x, Int32 y, Int32 z) {
+	return y > Lighting_Heightmap[(z * World_Width) + x] ? Env_SunYMin : Env_ShadowYMin;
 }
 
 PackedCol Lighting_Col_XSide_Fast(Int32 x, Int32 y, Int32 z) {
-	return y > Lighting_heightmap[(z * World_Width) + x] ? Lighting_OutsideXSide : shadowXSide;
+	return y > Lighting_Heightmap[(z * World_Width) + x] ? Env_SunXSide : Env_ShadowXSide;
 }
 
 PackedCol Lighting_Col_ZSide_Fast(Int32 x, Int32 y, Int32 z) {
-	return y > Lighting_heightmap[(z * World_Width) + x] ? Lighting_OutsideZSide : shadowZSide;
+	return y > Lighting_Heightmap[(z * World_Width) + x] ? Env_SunZSide : Env_ShadowZSide;
 }
 
 void Lighting_Refresh(void) {
 	Int32 i;
 	for (i = 0; i < World_Width * World_Length; i++) {
-		Lighting_heightmap[i] = Int16_MaxValue;
+		Lighting_Heightmap[i] = Int16_MaxValue;
 	}
 }
 
@@ -111,7 +87,7 @@ static void Lighting_UpdateLighting(Int32 x, Int32 y, Int32 z, BlockID oldBlock,
 
 	if ((y - newOffset) >= lightH) {
 		if (nowBlocks) {
-			Lighting_heightmap[index] = y - newOffset;
+			Lighting_Heightmap[index] = y - newOffset;
 		} else {
 			/* Part of the column is now visible to light, we don't know how exactly how high it should be though. */
 			/* However, we know that if the old block was above or equal to light height, then the new light height must be <= old block.y */
@@ -124,7 +100,7 @@ static void Lighting_UpdateLighting(Int32 x, Int32 y, Int32 z, BlockID oldBlock,
 		if (Block_BlocksLight[above]) return;
 
 		if (nowBlocks) {
-			Lighting_heightmap[index] = y - newOffset;
+			Lighting_Heightmap[index] = y - newOffset;
 		} else {
 			Lighting_CalcHeightAt(x, y - 1, z, index);
 		}
@@ -208,13 +184,13 @@ static void Lighting_RefreshAffected(Int32 x, Int32 y, Int32 z, BlockID block, I
 
 void Lighting_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockID newBlock) {
 	Int32 index = (z * World_Width) + x;
-	Int32 lightH = Lighting_heightmap[index];
+	Int32 lightH = Lighting_Heightmap[index];
 	/* Since light wasn't checked to begin with, means column never had meshes for any of its chunks built. */
 	/* So we don't need to do anything. */
 	if (lightH == Int16_MaxValue) return;
 
 	Lighting_UpdateLighting(x, y, z, oldBlock, newBlock, index, lightH);
-	Int32 newHeight = Lighting_heightmap[index] + 1;
+	Int32 newHeight = Lighting_Heightmap[index] + 1;
 	Lighting_RefreshAffected(x, y, z, newBlock, lightH + 1, newHeight);
 }
 
@@ -229,7 +205,7 @@ static Int32 Lighting_InitialHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount,
 	for (z = 0; z < zCount; z++) {
 		Int32 heightmapIndex = Lighting_Pack(x1, z1 + z);
 		for (x = 0; x < xCount; x++) {
-			Int32 lightH = Lighting_heightmap[heightmapIndex++];
+			Int32 lightH = Lighting_Heightmap[heightmapIndex++];
 			skip[index] = 0;
 			if (lightH == Int16_MaxValue) {
 				elemsLeft++;
@@ -263,7 +239,7 @@ static bool Lighting_CalculateHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount
 
 				if (x < xCount && Block_BlocksLight[World_Blocks[mapIndex]]) {
 					Int32 lightOffset = (Block_LightOffset[World_Blocks[mapIndex]] >> FACE_YMAX) & 1;
-					Lighting_heightmap[heightmapIndex + x] = (short)(y - lightOffset);
+					Lighting_Heightmap[heightmapIndex + x] = (short)(y - lightOffset);
 					elemsLeft--;
 					skip[index] = 0;
 					Int32 offset = prevRunCount + curRunCount;
@@ -298,9 +274,9 @@ static void Lighting_FinishHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, I
 	for (z = 0; z < zCount; z++) {
 		Int32 heightmapIndex = Lighting_Pack(x1, z1 + z);
 		for (x = 0; x < xCount; x++) {
-			Int32 lightH = Lighting_heightmap[heightmapIndex];
+			Int32 lightH = Lighting_Heightmap[heightmapIndex];
 			if (lightH == Int16_MaxValue)
-				Lighting_heightmap[heightmapIndex] = -10;
+				Lighting_Heightmap[heightmapIndex] = -10;
 			heightmapIndex++;
 		}
 	}
@@ -322,37 +298,19 @@ void Lighting_LightHint(Int32 startX, Int32 startZ) {
 /*########################################################################################################################*
 *---------------------------------------------------Lighting component----------------------------------------------------*
 *#########################################################################################################################*/
-static void Lighting_Init(void) {
-	Event_RegisterInt(&WorldEvents_EnvVarChanged, NULL, &Lighting_EnvVariableChanged);
-	Lighting_SetSun(WorldEnv_DefaultSunCol);
-	Lighting_SetShadow(WorldEnv_DefaultShadowCol);
-}
-
 static void Lighting_Reset(void) {
-	Mem_Free(Lighting_heightmap);
-	Lighting_heightmap = NULL;
-}
-
-static void Lighting_OnNewMap(void) {
-	Lighting_SetSun(WorldEnv_DefaultSunCol);
-	Lighting_SetShadow(WorldEnv_DefaultShadowCol);
-	Lighting_Reset();
+	Mem_Free(Lighting_Heightmap);
+	Lighting_Heightmap = NULL;
 }
 
 static void Lighting_OnNewMapLoaded(void) {
-	Lighting_heightmap = Mem_Alloc(World_Width * World_Length, sizeof(Int16), "lighting heightmap");
+	Lighting_Heightmap = Mem_Alloc(World_Width * World_Length, sizeof(Int16), "lighting heightmap");
 	Lighting_Refresh();
 }
 
-static void Lighting_Free(void) {
-	Event_UnregisterInt(&WorldEvents_EnvVarChanged, NULL, &Lighting_EnvVariableChanged);
-	Lighting_Reset();
-}
-
 void Lighting_MakeComponent(struct IGameComponent* comp) {
-	comp->Init = Lighting_Init;
-	comp->Free = Lighting_Free;
-	comp->OnNewMap = Lighting_OnNewMap;
+	comp->Free = Lighting_Reset;
+	comp->OnNewMap = Lighting_Reset;
 	comp->OnNewMapLoaded = Lighting_OnNewMapLoaded;
 	comp->Reset = Lighting_Reset; 
 }

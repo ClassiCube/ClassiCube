@@ -248,18 +248,18 @@ static void WoM_ParseConfig(STRING_PURE String* page) {
 		if (!String_UNSAFE_Separate(&line, '=', &key, &value)) continue;
 
 		if (String_CaselessEqualsConst(&key, "environment.cloud")) {
-			PackedCol col = WoM_ParseCol(&value, WorldEnv_DefaultCloudsCol);
-			WorldEnv_SetCloudsCol(col);
+			PackedCol col = WoM_ParseCol(&value, Env_DefaultCloudsCol);
+			Env_SetCloudsCol(col);
 		} else if (String_CaselessEqualsConst(&key, "environment.sky")) {
-			PackedCol col = WoM_ParseCol(&value, WorldEnv_DefaultSkyCol);
-			WorldEnv_SetSkyCol(col);
+			PackedCol col = WoM_ParseCol(&value, Env_DefaultSkyCol);
+			Env_SetSkyCol(col);
 		} else if (String_CaselessEqualsConst(&key, "environment.fog")) {
-			PackedCol col = WoM_ParseCol(&value, WorldEnv_DefaultFogCol);
-			WorldEnv_SetFogCol(col);
+			PackedCol col = WoM_ParseCol(&value, Env_DefaultFogCol);
+			Env_SetFogCol(col);
 		} else if (String_CaselessEqualsConst(&key, "environment.level")) {
 			Int32 waterLevel;
 			if (Convert_TryParseInt32(&value, &waterLevel)) {
-				WorldEnv_SetEdgeHeight(waterLevel);
+				Env_SetEdgeHeight(waterLevel);
 			}
 		} else if (String_CaselessEqualsConst(&key, "user.detail") && !cpe_useMessageTypes) {
 			Chat_AddOf(&value, MSG_TYPE_STATUS_2);
@@ -940,15 +940,15 @@ static void CPE_SetEnvCol(UInt8* data) {
 	PackedCol col = PACKEDCOL_CONST((UInt8)r, (UInt8)g, (UInt8)b, 255);
 
 	if (variable == 0) {
-		WorldEnv_SetSkyCol(invalid ? WorldEnv_DefaultSkyCol : col);
+		Env_SetSkyCol(invalid ? Env_DefaultSkyCol : col);
 	} else if (variable == 1) {
-		WorldEnv_SetCloudsCol(invalid ? WorldEnv_DefaultCloudsCol : col);
+		Env_SetCloudsCol(invalid ? Env_DefaultCloudsCol : col);
 	} else if (variable == 2) {
-		WorldEnv_SetFogCol(invalid ? WorldEnv_DefaultFogCol : col);
+		Env_SetFogCol(invalid ? Env_DefaultFogCol : col);
 	} else if (variable == 3) {
-		WorldEnv_SetShadowCol(invalid ? WorldEnv_DefaultShadowCol : col);
+		Env_SetShadowCol(invalid ? Env_DefaultShadowCol : col);
 	} else if (variable == 4) {
-		WorldEnv_SetSunCol(invalid ? WorldEnv_DefaultSunCol : col);
+		Env_SetSunCol(invalid ? Env_DefaultSunCol : col);
 	}
 }
 
@@ -970,20 +970,20 @@ static void CPE_ChangeModel(UInt8* data) {
 
 static void CPE_EnvSetMapAppearance(UInt8* data) {
 	CPE_SetMapEnvUrl(data);
-	WorldEnv_SetSidesBlock(data[64]);
-	WorldEnv_SetEdgeBlock(data[65]);
-	WorldEnv_SetEdgeHeight((Int16)Stream_GetU16_BE(&data[66]));
+	Env_SetSidesBlock(data[64]);
+	Env_SetEdgeBlock(data[65]);
+	Env_SetEdgeHeight((Int16)Stream_GetU16_BE(&data[66]));
 	if (cpe_envMapVer == 1) return;
 
 	/* Version 2 */
-	WorldEnv_SetCloudsHeight((Int16)Stream_GetU16_BE(&data[68]));
+	Env_SetCloudsHeight((Int16)Stream_GetU16_BE(&data[68]));
 	Int16 maxViewDist = (Int16)Stream_GetU16_BE(&data[70]);
 	Game_MaxViewDistance = maxViewDist <= 0 ? 32768 : maxViewDist;
 	Game_SetViewDistance(Game_UserViewDistance);
 }
 
 static void CPE_EnvWeatherType(UInt8* data) {
-	WorldEnv_SetWeather(*data);
+	Env_SetWeather(*data);
 }
 
 static void CPE_HackControl(UInt8* data) {
@@ -1076,33 +1076,33 @@ static void CPE_SetMapEnvProperty(UInt8* data) {
 	switch (type) {
 	case 0:
 		Math_Clamp(value, 0, maxBlock);
-		WorldEnv_SetSidesBlock((BlockID)value); break;
+		Env_SetSidesBlock((BlockID)value); break;
 	case 1:
 		Math_Clamp(value, 0, maxBlock);
-		WorldEnv_SetEdgeBlock((BlockID)value); break;
+		Env_SetEdgeBlock((BlockID)value); break;
 	case 2:
-		WorldEnv_SetEdgeHeight(value); break;
+		Env_SetEdgeHeight(value); break;
 	case 3:
-		WorldEnv_SetCloudsHeight(value); break;
+		Env_SetCloudsHeight(value); break;
 	case 4:
 		Math_Clamp(value, -0x7FFF, 0x7FFF);
 		Game_MaxViewDistance = value <= 0 ? 32768 : value;
 		Game_SetViewDistance(Game_UserViewDistance); break;
 	case 5:
-		WorldEnv_SetCloudsSpeed(value / 256.0f); break;
+		Env_SetCloudsSpeed(value / 256.0f); break;
 	case 6:
-		WorldEnv_SetWeatherSpeed(value / 256.0f); break;
+		Env_SetWeatherSpeed(value / 256.0f); break;
 	case 7:
 		Math_Clamp(value, 0, UInt8_MaxValue);
-		WorldEnv_SetWeatherFade(value / 128.0f); break;
+		Env_SetWeatherFade(value / 128.0f); break;
 	case 8:
-		WorldEnv_SetExpFog(value != 0); break;
+		Env_SetExpFog(value != 0); break;
 	case 9:
-		WorldEnv_SetSidesOffset(value); break;
+		Env_SetSidesOffset(value); break;
 	case 10:
-		WorldEnv_SetSkyboxHorSpeed(value / 1024.0f); break;
+		Env_SetSkyboxHorSpeed(value / 1024.0f); break;
 	case 11:
-		WorldEnv_SetSkyboxVerSpeed(value / 1024.0f); break;
+		Env_SetSkyboxVerSpeed(value / 1024.0f); break;
 	}
 }
 

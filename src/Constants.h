@@ -32,20 +32,15 @@
 /* Minor adjustment to max UV coords, to avoid pixel bleeding errors due to rounding. */
 #define UV2_Scale (15.99f / 16.0f)
 
-/* Face X = 0. */
-#define FACE_XMIN 0
-/* Face X = 1. */
-#define FACE_XMAX 1
-/* Face Z = 0. */
-#define FACE_ZMIN 2
-/* Face Z = 1. */
-#define FACE_ZMAX 3
-/* Face Y = 0. */
-#define FACE_YMIN 4
-/* Face Y = 1. */
-#define FACE_YMAX 5
-/* Number of faces on a cube. */
-#define FACE_COUNT 6
+enum FACE_CONSTS {
+	FACE_XMIN = 0, /* Face X = 0 */
+	FACE_XMAX = 1, /* Face X = 1 */
+	FACE_ZMIN = 2, /* Face Z = 0 */
+	FACE_ZMAX = 3, /* Face Z = 1 */
+	FACE_YMIN = 4, /* Face Y = 0 */
+	FACE_YMAX = 5, /* Face Y = 1 */
+	FACE_COUNT= 6, /* Number of faces on a cube */
+};
 
 enum SKIN_TYPE { SKIN_64x32, SKIN_64x64, SKIN_64x64_SLIM, SKIN_INVALID };
 enum FONT_STYLE { FONT_STYLE_NORMAL, FONT_STYLE_BOLD, FONT_STYLE_UNDERLINE };

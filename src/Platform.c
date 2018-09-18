@@ -703,7 +703,11 @@ void Font_Make(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16
 }
 
 void Font_Free(FontDesc* desc) {
+	desc->Size  = 0;
+	desc->Style = 0;
+	/* NULL for fonts created by Drawer2D_MakeFont and bitmapped text mode is on */
 	if (!desc->Handle) return;
+
 	if (!DeleteObject(desc->Handle)) ErrorHandler_Fail("Deleting font handle failed");
 	desc->Handle = NULL;
 }

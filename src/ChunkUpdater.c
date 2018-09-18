@@ -44,8 +44,8 @@ static void ChunkUpdater_EnvVariableChanged(void* obj, Int32 envVar) {
 		ChunkUpdater_Refresh();
 	} else if (envVar == ENV_VAR_EDGE_HEIGHT || envVar == ENV_VAR_SIDES_OFFSET) {
 		Int32 oldClip = Builder_EdgeLevel;
-		Builder_SidesLevel = max(0, WorldEnv_SidesHeight);
-		Builder_EdgeLevel = max(0, WorldEnv_EdgeHeight);
+		Builder_SidesLevel = max(0, Env_SidesHeight);
+		Builder_EdgeLevel = max(0, Env_EdgeHeight);
 
 		/* Only need to refresh chunks on map borders up to highest edge level.*/
 		ChunkUpdater_RefreshBorders(max(oldClip, Builder_EdgeLevel));

@@ -142,7 +142,7 @@ static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
 
 static void InventoryScreen_Init(void* screen) {
 	struct InventoryScreen* s = screen;
-	Font_Make(&s->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&s->Font, 16, FONT_STYLE_NORMAL);
 
 	TableWidget_Create(&s->Table);
 	s->Table.Font = s->Font;
@@ -394,7 +394,7 @@ static bool StatusScreen_MouseScroll(void* elem, Real32 delta) { return false; }
 
 static void StatusScreen_Init(void* screen) {
 	struct StatusScreen* s = screen;
-	Font_Make(&s->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&s->Font, 16, FONT_STYLE_NORMAL);
 	Screen_CommonInit(s);
 	Event_RegisterVoid(&ChatEvents_FontChanged, s, StatusScreen_FontChanged);
 }
@@ -547,7 +547,7 @@ static void LoadingScreen_DrawBackground(void) {
 
 static void LoadingScreen_Init(void* screen) {
 	struct LoadingScreen* s = screen;
-	Font_Make(&s->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&s->Font, 16, FONT_STYLE_NORMAL);
 	Screen_CommonInit(s);
 
 	Gfx_SetFog(false);
@@ -1062,7 +1062,7 @@ static void ChatScreen_ContextRecreated(void* screen) {
 
 static void ChatScreen_FontChanged(void* screen) {
 	struct ChatScreen* s = screen;
-	if (!Drawer2D_UseBitmappedChat) return;
+	if (!Drawer2D_BitmappedText) return;
 	Elem_Recreate(s);
 	ChatScreen_UpdateChatYOffset(s, true);
 }
@@ -1084,9 +1084,9 @@ static void ChatScreen_Init(void* screen) {
 	Int32 announceSize = (Int32)(16 * Game_GetChatScale());
 	Math_Clamp(announceSize, 8, 60);
 
-	Font_Make(&s->ChatFont,         &Game_FontName, fontSize,     FONT_STYLE_NORMAL);
-	Font_Make(&s->ChatUrlFont,      &Game_FontName, fontSize,     FONT_STYLE_UNDERLINE);
-	Font_Make(&s->AnnouncementFont, &Game_FontName, announceSize, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&s->ChatFont,         fontSize,     FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&s->ChatUrlFont,      fontSize,     FONT_STYLE_UNDERLINE);
+	Drawer2D_MakeFont(&s->AnnouncementFont, announceSize, FONT_STYLE_NORMAL);
 	Screen_CommonInit(s);
 
 	Event_RegisterChat(&ChatEvents_ChatReceived,    s, ChatScreen_ChatReceived);
@@ -1270,8 +1270,8 @@ static bool HUDScreen_MouseDown(void* screen, Int32 x, Int32 y, MouseButton btn)
 
 static void HUDScreen_Init(void* screen) {
 	struct HUDScreen* s = screen;
-	UInt16 size = Drawer2D_UseBitmappedChat ? 16 : 11;
-	Font_Make(&s->PlayerFont, &Game_FontName, size, FONT_STYLE_NORMAL);
+	UInt16 size = Drawer2D_BitmappedText ? 16 : 11;
+	Drawer2D_MakeFont(&s->PlayerFont, size, FONT_STYLE_NORMAL);
 
 	ChatScreen_MakeInstance();
 	s->Chat = (struct Screen*)&ChatScreen_Instance;
@@ -1421,8 +1421,8 @@ static void DisconnectScreen_ContextRecreated(void* screen) {
 
 static void DisconnectScreen_Init(void* screen) {
 	struct DisconnectScreen* s = screen;
-	Font_Make(&s->TitleFont,   &Game_FontName, 16, FONT_STYLE_BOLD);
-	Font_Make(&s->MessageFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&s->TitleFont,   16, FONT_STYLE_BOLD);
+	Drawer2D_MakeFont(&s->MessageFont, 16, FONT_STYLE_NORMAL);
 	Screen_CommonInit(s);
 
 	/* NOTE: changing VSync can't be done within frame, causes crash on some GPUs */

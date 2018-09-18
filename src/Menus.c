@@ -488,7 +488,7 @@ static void ListScreen_Init(void* screen) {
 	struct ListScreen* s = screen;
 	s->Widgets      = s->ListWidgets;
 	s->WidgetsCount = Array_Elems(s->ListWidgets);
-	Font_Make(&s->Font, &Game_FontName, 16, FONT_STYLE_BOLD);
+	Drawer2D_MakeFont(&s->Font, 16, FONT_STYLE_BOLD);
 
 	Key_KeyRepeat = true;
 	s->WheelAcc   = 0.0f;
@@ -560,11 +560,11 @@ static bool MenuScreen_MouseScroll(void* screen, Real32 delta) { return true; }
 
 static void MenuScreen_Init(void* screen) {
 	struct MenuScreen* s = screen;
-	if (!s->TitleFont.Handle) {
-		Font_Make(&s->TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
+	if (!s->TitleFont.Handle && !s->TitleFont.Size) {
+		Drawer2D_MakeFont(&s->TitleFont, 16, FONT_STYLE_BOLD);
 	}
-	if (!s->TextFont.Handle) {
-		Font_Make(&s->TextFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	if (!s->TextFont.Handle && !s->TextFont.Size) {
+		Drawer2D_MakeFont(&s->TextFont, 16, FONT_STYLE_NORMAL);
 	}
 
 	Screen_CommonInit(s);
@@ -579,8 +579,8 @@ static void MenuScreen_Render(void* screen, Real64 delta) {
 
 static void MenuScreen_Free(void* screen) {
 	struct MenuScreen* s = screen;
-	if (s->TitleFont.Handle) Font_Free(&s->TitleFont);
-	if (s->TextFont.Handle)  Font_Free(&s->TextFont);
+	Font_Free(&s->TitleFont);
+	Font_Free(&s->TextFont);
 
 	Screen_CommonFree(s);
 }
@@ -2291,38 +2291,38 @@ struct Screen* ClassicOptionsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------EnvSettingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
-static void EnvSettingsScreen_GetCloudsCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, WorldEnv_CloudsCol); }
-static void EnvSettingsScreen_SetCloudsCol(STRING_PURE String* v) { WorldEnv_SetCloudsCol(Menu_HexCol(v)); }
+static void EnvSettingsScreen_GetCloudsCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, Env_CloudsCol); }
+static void EnvSettingsScreen_SetCloudsCol(STRING_PURE String* v) { Env_SetCloudsCol(Menu_HexCol(v)); }
 
-static void EnvSettingsScreen_GetSkyCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, WorldEnv_SkyCol); }
-static void EnvSettingsScreen_SetSkyCol(STRING_PURE String* v) { WorldEnv_SetSkyCol(Menu_HexCol(v)); }
+static void EnvSettingsScreen_GetSkyCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, Env_SkyCol); }
+static void EnvSettingsScreen_SetSkyCol(STRING_PURE String* v) { Env_SetSkyCol(Menu_HexCol(v)); }
 
-static void EnvSettingsScreen_GetFogCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, WorldEnv_FogCol); }
-static void EnvSettingsScreen_SetFogCol(STRING_PURE String* v) { WorldEnv_SetFogCol(Menu_HexCol(v)); }
+static void EnvSettingsScreen_GetFogCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, Env_FogCol); }
+static void EnvSettingsScreen_SetFogCol(STRING_PURE String* v) { Env_SetFogCol(Menu_HexCol(v)); }
 
-static void EnvSettingsScreen_GetCloudsSpeed(STRING_TRANSIENT String* v) { String_AppendReal32(v, WorldEnv_CloudsSpeed, 2); }
-static void EnvSettingsScreen_SetCloudsSpeed(STRING_PURE String* v) { WorldEnv_SetCloudsSpeed(Menu_Real32(v)); }
+static void EnvSettingsScreen_GetCloudsSpeed(STRING_TRANSIENT String* v) { String_AppendReal32(v, Env_CloudsSpeed, 2); }
+static void EnvSettingsScreen_SetCloudsSpeed(STRING_PURE String* v) { Env_SetCloudsSpeed(Menu_Real32(v)); }
 
-static void EnvSettingsScreen_GetCloudsHeight(STRING_TRANSIENT String* v) { String_AppendInt32(v, WorldEnv_CloudsHeight); }
-static void EnvSettingsScreen_SetCloudsHeight(STRING_PURE String* v) { WorldEnv_SetCloudsHeight(Menu_Int32(v)); }
+static void EnvSettingsScreen_GetCloudsHeight(STRING_TRANSIENT String* v) { String_AppendInt32(v, Env_CloudsHeight); }
+static void EnvSettingsScreen_SetCloudsHeight(STRING_PURE String* v) { Env_SetCloudsHeight(Menu_Int32(v)); }
 
-static void EnvSettingsScreen_GetSunCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, WorldEnv_SunCol); }
-static void EnvSettingsScreen_SetSunCol(STRING_PURE String* v) { WorldEnv_SetSunCol(Menu_HexCol(v)); }
+static void EnvSettingsScreen_GetSunCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, Env_SunCol); }
+static void EnvSettingsScreen_SetSunCol(STRING_PURE String* v) { Env_SetSunCol(Menu_HexCol(v)); }
 
-static void EnvSettingsScreen_GetShadowCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, WorldEnv_ShadowCol); }
-static void EnvSettingsScreen_SetShadowCol(STRING_PURE String* v) { WorldEnv_SetShadowCol(Menu_HexCol(v)); }
+static void EnvSettingsScreen_GetShadowCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, Env_ShadowCol); }
+static void EnvSettingsScreen_SetShadowCol(STRING_PURE String* v) { Env_SetShadowCol(Menu_HexCol(v)); }
 
-static void EnvSettingsScreen_GetWeather(STRING_TRANSIENT String* v) { String_AppendConst(v, Weather_Names[WorldEnv_Weather]); }
+static void EnvSettingsScreen_GetWeather(STRING_TRANSIENT String* v) { String_AppendConst(v, Weather_Names[Env_Weather]); }
 static void EnvSettingsScreen_SetWeather(STRING_PURE String* v) {
 	UInt32 raw = Utils_ParseEnum(v, 0, Weather_Names, Array_Elems(Weather_Names));
-	WorldEnv_SetWeather(raw); 
+	Env_SetWeather(raw); 
 }
 
-static void EnvSettingsScreen_GetWeatherSpeed(STRING_TRANSIENT String* v) { String_AppendReal32(v, WorldEnv_WeatherSpeed, 2); }
-static void EnvSettingsScreen_SetWeatherSpeed(STRING_PURE String* v) { WorldEnv_SetWeatherSpeed(Menu_Real32(v)); }
+static void EnvSettingsScreen_GetWeatherSpeed(STRING_TRANSIENT String* v) { String_AppendReal32(v, Env_WeatherSpeed, 2); }
+static void EnvSettingsScreen_SetWeatherSpeed(STRING_PURE String* v) { Env_SetWeatherSpeed(Menu_Real32(v)); }
 
-static void EnvSettingsScreen_GetEdgeHeight(STRING_TRANSIENT String* v) { String_AppendInt32(v, WorldEnv_EdgeHeight); }
-static void EnvSettingsScreen_SetEdgeHeight(STRING_PURE String* v) { WorldEnv_SetEdgeHeight(Menu_Int32(v)); }
+static void EnvSettingsScreen_GetEdgeHeight(STRING_TRANSIENT String* v) { String_AppendInt32(v, Env_EdgeHeight); }
+static void EnvSettingsScreen_SetEdgeHeight(STRING_PURE String* v) { Env_SetEdgeHeight(Menu_Int32(v)); }
 
 static void EnvSettingsScreen_ContextRecreated(void* screen) {
 	struct MenuOptionsScreen* s = screen;
@@ -2369,20 +2369,20 @@ struct Screen* EnvSettingsScreen_MakeInstance(void) {
 	String_AppendInt32(&edgeHeight, World_Height / 2);
 
 	validators[0]    = MenuInputValidator_Hex();
-	defaultValues[0] = WORLDENV_DEFAULT_CLOUDSCOL_HEX;
+	defaultValues[0] = ENV_DEFAULT_CLOUDSCOL_HEX;
 	validators[1]    = MenuInputValidator_Hex();
-	defaultValues[1] = WORLDENV_DEFAULT_SKYCOL_HEX;
+	defaultValues[1] = ENV_DEFAULT_SKYCOL_HEX;
 	validators[2]    = MenuInputValidator_Hex();
-	defaultValues[2] = WORLDENV_DEFAULT_FOGCOL_HEX;
+	defaultValues[2] = ENV_DEFAULT_FOGCOL_HEX;
 	validators[3]    = MenuInputValidator_Real(0.00f, 1000.00f);
 	defaultValues[3] = "1";
 	validators[4]    = MenuInputValidator_Integer(-10000, 10000);
 	defaultValues[4] = cloudHeightBuffer;
 
 	validators[5]    = MenuInputValidator_Hex();
-	defaultValues[5] = WORLDENV_DEFAULT_SUNCOL_HEX;
+	defaultValues[5] = ENV_DEFAULT_SUNCOL_HEX;
 	validators[6]    = MenuInputValidator_Hex();
-	defaultValues[6] = WORLDENV_DEFAULT_SHADOWCOL_HEX;
+	defaultValues[6] = ENV_DEFAULT_SHADOWCOL_HEX;
 	validators[7]    = MenuInputValidator_Enum(Weather_Names, Array_Elems(Weather_Names));
 	validators[8]    = MenuInputValidator_Real(-100.00f, 100.00f);
 	defaultValues[8] = "1";
@@ -2532,9 +2532,9 @@ static void GuiOptionsScreen_SetChatlines(STRING_PURE String* v) {
 	Gui_RefreshHud();
 }
 
-static void GuiOptionsScreen_GetUseFont(STRING_TRANSIENT String* v) { Menu_GetBool(v, !Drawer2D_UseBitmappedChat); }
+static void GuiOptionsScreen_GetUseFont(STRING_TRANSIENT String* v) { Menu_GetBool(v, !Drawer2D_BitmappedText); }
 static void GuiOptionsScreen_SetUseFont(STRING_PURE String* v) {
-	Drawer2D_UseBitmappedChat = !Menu_SetBool(v, OPT_USE_CHAT_FONT);
+	Drawer2D_BitmappedText = !Menu_SetBool(v, OPT_USE_CHAT_FONT);
 	Menu_HandleFontChange((struct Screen*)&MenuOptionsScreen_Instance);
 }
 
@@ -3039,7 +3039,7 @@ static void TexIdsOverlay_RenderTextOverlay(struct TexIdsOverlay* s) {
 
 static void TexIdsOverlay_Init(void* screen) {
 	struct TexIdsOverlay* s = screen;
-	Font_Make(&s->TextFont, &Game_FontName, 8, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&s->TextFont, 8, FONT_STYLE_NORMAL);
 	MenuScreen_Init(s);
 }
 

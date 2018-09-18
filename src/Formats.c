@@ -420,13 +420,13 @@ static bool Cw_Callback_4(struct NbtTag* tag) {
 		if (IsTag(tag, "Distance")) { p->ReachDistance = NbtTag_I16(tag) / 32.0f; return true; }
 	}
 	if (IsTag(tag->Parent, "EnvWeatherType")) {
-		if (IsTag(tag, "WeatherType")) { WorldEnv_SetWeather(NbtTag_U8(tag)); return true; }
+		if (IsTag(tag, "WeatherType")) { Env_SetWeather(NbtTag_U8(tag)); return true; }
 	}
 
 	if (IsTag(tag->Parent, "EnvMapAppearance")) {
-		if (IsTag(tag, "SideBlock")) { WorldEnv_SetSidesBlock(NbtTag_U8(tag));  return true; }
-		if (IsTag(tag, "EdgeBlock")) { WorldEnv_SetEdgeBlock(NbtTag_U8(tag));   return true; }
-		if (IsTag(tag, "SideLevel")) { WorldEnv_SetEdgeHeight(NbtTag_I16(tag)); return true; }
+		if (IsTag(tag, "SideBlock")) { Env_SetSidesBlock(NbtTag_U8(tag));  return true; }
+		if (IsTag(tag, "EdgeBlock")) { Env_SetEdgeBlock(NbtTag_U8(tag));   return true; }
+		if (IsTag(tag, "SideLevel")) { Env_SetEdgeHeight(NbtTag_I16(tag)); return true; }
 
 		if (IsTag(tag, "TextureURL")) {
 			String url = NbtTag_String(tag);
@@ -440,15 +440,15 @@ static bool Cw_Callback_4(struct NbtTag* tag) {
 	/* Callback for compound tag is called after all its children have been processed */
 	if (IsTag(tag->Parent, "EnvColors")) {
 		if (IsTag(tag, "Sky")) {
-			WorldEnv_SetSkyCol(Cw_ParseCol(WorldEnv_DefaultSkyCol)); return true;
+			Env_SetSkyCol(Cw_ParseCol(Env_DefaultSkyCol)); return true;
 		} else if (IsTag(tag, "Cloud")) {
-			WorldEnv_SetCloudsCol(Cw_ParseCol(WorldEnv_DefaultCloudsCol)); return true;
+			Env_SetCloudsCol(Cw_ParseCol(Env_DefaultCloudsCol)); return true;
 		} else if (IsTag(tag, "Fog")) {
-			WorldEnv_SetFogCol(Cw_ParseCol(WorldEnv_DefaultFogCol)); return true;
+			Env_SetFogCol(Cw_ParseCol(Env_DefaultFogCol)); return true;
 		} else if (IsTag(tag, "Sunlight")) {
-			WorldEnv_SetSunCol(Cw_ParseCol(WorldEnv_DefaultSunCol)); return true;
+			Env_SetSunCol(Cw_ParseCol(Env_DefaultSunCol)); return true;
 		} else if (IsTag(tag, "Ambient")) {
-			WorldEnv_SetShadowCol(Cw_ParseCol(WorldEnv_DefaultShadowCol)); return true;
+			Env_SetShadowCol(Cw_ParseCol(Env_DefaultShadowCol)); return true;
 		}
 	}
 
@@ -951,17 +951,17 @@ ReturnCode Cw_Save(struct Stream* stream) {
 	Mem_Copy(tmp, cw_meta_cpe, sizeof(cw_meta_cpe));
 	{
 		Stream_SetU16_BE(&tmp[67], (UInt16)(LocalPlayer_Instance.ReachDistance * 32));
-		tmp[124] = WorldEnv_Weather;
+		tmp[124] = Env_Weather;
 
-		col = WorldEnv_SkyCol;    tmp[172] = col.R; tmp[178] = col.G; tmp[184] = col.B;
-		col = WorldEnv_CloudsCol; tmp[199] = col.R; tmp[205] = col.G; tmp[211] = col.B;
-		col = WorldEnv_FogCol;    tmp[224] = col.R; tmp[230] = col.G; tmp[236] = col.B;
-		col = WorldEnv_ShadowCol; tmp[253] = col.R; tmp[259] = col.G; tmp[265] = col.B;
-		col = WorldEnv_SunCol;    tmp[283] = col.R; tmp[289] = col.G; tmp[295] = col.B;
+		col = Env_SkyCol;    tmp[172] = col.R; tmp[178] = col.G; tmp[184] = col.B;
+		col = Env_CloudsCol; tmp[199] = col.R; tmp[205] = col.G; tmp[211] = col.B;
+		col = Env_FogCol;    tmp[224] = col.R; tmp[230] = col.G; tmp[236] = col.B;
+		col = Env_ShadowCol; tmp[253] = col.R; tmp[259] = col.G; tmp[265] = col.B;
+		col = Env_SunCol;    tmp[283] = col.R; tmp[289] = col.G; tmp[295] = col.B;
 
-		tmp[352] = WorldEnv_SidesBlock;
-		tmp[365] = WorldEnv_EdgeBlock;
-		Stream_SetU16_BE(&tmp[378], WorldEnv_EdgeHeight);
+		tmp[352] = Env_SidesBlock;
+		tmp[365] = Env_EdgeBlock;
+		Stream_SetU16_BE(&tmp[378], Env_EdgeHeight);
 	}
 	Int32 b, len = Cw_WriteEndString(&tmp[393], &World_TextureUrl);
 	if ((res = Stream_Write(stream, tmp, sizeof(cw_meta_cpe) + len))) return res;

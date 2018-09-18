@@ -451,14 +451,14 @@ void Game_Load(void) {
 	AsyncDownloader_MakeComponent(&comp); Game_AddComponent(&comp);
 	Lighting_MakeComponent(&comp);        Game_AddComponent(&comp);
 
-	Drawer2D_UseBitmappedChat = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
+	Drawer2D_BitmappedText = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
 	Drawer2D_BlackTextShadows = Options_GetBool(OPT_BLACK_TEXT, false);
 	Gfx_Mipmaps               = Options_GetBool(OPT_MIPMAPS, false);
 
 	Animations_MakeComponent(&comp); Game_AddComponent(&comp);
 	Inventory_MakeComponent(&comp);  Game_AddComponent(&comp);
 	Block_SetDefaultPerms();
-	WorldEnv_Reset();
+	Env_Reset();
 
 	LocalPlayer_Init(); 
 	LocalPlayer_MakeComponent(&comp); Game_AddComponent(&comp);
@@ -592,7 +592,7 @@ static void Game_Render3D(Real64 delta, Real32 t) {
 
 	/* Render water over translucent blocks when underwater for proper alpha blending */
 	Vector3 pos = LocalPlayer_Instance.Base.Position;
-	if (Game_CurrentCameraPos.Y < WorldEnv_EdgeHeight
+	if (Game_CurrentCameraPos.Y < Env_EdgeHeight
 		&& (pos.X < 0 || pos.Z < 0 || pos.X > World_Width || pos.Z > World_Length)) {
 		MapRenderer_RenderTranslucent(delta);
 		EnvRenderer_RenderMapEdges(delta);

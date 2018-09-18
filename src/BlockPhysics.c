@@ -133,10 +133,10 @@ static void Physics_ActivateNeighbours(Int32 x, Int32 y, Int32 z, Int32 index) {
 }
 
 static bool Physics_IsEdgeWater(Int32 x, Int32 y, Int32 z) {
-	if (!(WorldEnv_EdgeBlock == BLOCK_WATER || WorldEnv_EdgeBlock == BLOCK_STILL_WATER))
+	if (!(Env_EdgeBlock == BLOCK_WATER || Env_EdgeBlock == BLOCK_STILL_WATER))
 		return false;
 
-	return y >= WorldEnv_SidesHeight && y < WorldEnv_EdgeHeight
+	return y >= Env_SidesHeight && y < Env_EdgeHeight
 		&& (x == 0 || z == 0 || x == World_MaxX || z == World_MaxZ);
 }
 

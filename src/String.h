@@ -35,12 +35,14 @@ NOINLINE_ String String_FromRaw(STRING_REF char* buffer, UInt16 capacity);
 NOINLINE_ String String_FromReadonly(STRING_REF const char* buffer);
 
 #define String_ClearedArray(buffer) String_InitAndClear(buffer, (UInt16)sizeof(buffer))
-/* Constructs a new string from a compile time string constant. */
+/* Constructs a string from a compile time string constant */
 #define String_FromConst(text) { text, (UInt16)(sizeof(text) - 1), (UInt16)(sizeof(text) - 1)}
-/* Constructs a new string from a compile time empty string buffer. */
+/* Constructs a string from a compile time array */
 #define String_FromArray(buffer) { buffer, 0, (UInt16)sizeof(buffer)}
-/* Constructs a new string from a compile time array, that may have arbitary actual length of data at runtime */
+/* Constructs a string from a compile time array, that may have arbitary actual length of data at runtime */
 #define String_FromRawArray(buffer) String_FromRaw(buffer, (UInt16)sizeof(buffer))
+/* Constructs a string from a compile time array (leaving 1 byte of room for null terminator) */
+#define String_NT_Array(buffer) { buffer, 0, (UInt16)(sizeof(buffer) - 1)}
 
 NOINLINE_ void String_StripCols(STRING_TRANSIENT String* str);
 NOINLINE_ void String_Copy(STRING_TRANSIENT String* dst, STRING_PURE String* src);

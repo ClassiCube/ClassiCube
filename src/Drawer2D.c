@@ -6,6 +6,7 @@
 #include "ErrorHandler.h"
 #include "GraphicsCommon.h"
 #include "Bitmap.h"
+#include "Game.h"
 
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow) {
 	args->Text = *text;
@@ -17,6 +18,16 @@ void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, FontDesc* font, bool useS
 	args->Text = String_MakeNull();
 	args->Font = *font;
 	args->UseShadow = useShadow;
+}
+
+void Drawer2D_MakeFont(FontDesc* desc, UInt16 size, UInt16 style) {
+	if (Drawer2D_BitmappedText) {
+		desc->Handle = NULL;
+		desc->Size   = size;
+		desc->Style  = style;
+	} else {
+		Font_Make(desc, &Game_FontName, size, style);
+	}
 }
 
 Bitmap Drawer2D_FontBitmap;
@@ -98,12 +109,12 @@ void Drawer2D_Free(void) {
 }
 
 void Drawer2D_Begin(Bitmap* bmp) {
-	if (!Drawer2D_UseBitmappedChat) Platform_SetBitmap(bmp);
+	if (!Drawer2D_BitmappedText) Platform_SetBitmap(bmp);
 	Drawer2D_Cur = bmp;
 }
 
 void Drawer2D_End(void) {	
-	if (!Drawer2D_UseBitmappedChat) Platform_ReleaseBitmap();
+	if (!Drawer2D_BitmappedText) Platform_ReleaseBitmap();
 	Drawer2D_Cur = NULL;
 }
 
@@ -196,7 +207,7 @@ static Int32 Drawer2D_Width(Int32 point, char c) {
 static Int32 Drawer2D_AdjHeight(Int32 point) { return Math_CeilDiv(point * 3, 2); }
 
 void Drawer2D_ReducePadding_Tex(struct Texture* tex, Int32 point, Int32 scale) {
-	if (!Drawer2D_UseBitmappedChat) return;
+	if (!Drawer2D_BitmappedText) return;
 
 	Int32 padding = (tex->Height - point) / scale;
 	Real32 vAdj = (Real32)padding / Math_NextPowOf2(tex->Height);
@@ -205,7 +216,7 @@ void Drawer2D_ReducePadding_Tex(struct Texture* tex, Int32 point, Int32 scale) {
 }
 
 void Drawer2D_ReducePadding_Height(Int32* height, Int32 point, Int32 scale) {
-	if (!Drawer2D_UseBitmappedChat) return;
+	if (!Drawer2D_BitmappedText) return;
 
 	Int32 padding = (*height - point) / scale;
 	*height -= padding * 2;
@@ -371,7 +382,7 @@ static Int32 Drawer2D_NextPart(Int32 i, STRING_REF String* value, STRING_TRANSIE
 
 void Drawer2D_DrawText(struct DrawTextArgs* args, Int32 x, Int32 y) {
 	if (Drawer2D_IsEmptyText(&args->Text)) return;
-	if (Drawer2D_UseBitmappedChat) { Drawer2D_DrawBitmapText(args, x, y); return; }
+	if (Drawer2D_BitmappedText) { Drawer2D_DrawBitmapText(args, x, y); return; }
 	
 	String value = args->Text;
 	char nextCol = 'f';
@@ -398,7 +409,7 @@ void Drawer2D_DrawText(struct DrawTextArgs* args, Int32 x, Int32 y) {
 Size2D Drawer2D_MeasureText(struct DrawTextArgs* args) {
 	Size2D size = { 0, 0 };
 	if (Drawer2D_IsEmptyText(&args->Text)) return size;
-	if (Drawer2D_UseBitmappedChat) return Drawer2D_MeasureBitmapText(args);
+	if (Drawer2D_BitmappedText) return Drawer2D_MeasureBitmapText(args);
 
 	String value = args->Text;
 	char nextCol = 'f';

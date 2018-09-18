@@ -65,7 +65,7 @@ struct EntityVTABLE entity_VTABLE;
 static PackedCol Entity_GetCol(struct Entity* e) {
 	Vector3 eyePos = Entity_GetEyePosition(e);
 	Vector3I P; Vector3I_Floor(&P, &eyePos);
-	return World_IsValidPos_3I(P) ? Lighting_Col(P.X, P.Y, P.Z) : Lighting_Outside;
+	return World_IsValidPos_3I(P) ? Lighting_Col(P.X, P.Y, P.Z) : Env_SunCol;
 }
 
 void Entity_Init(struct Entity* e) {
@@ -453,16 +453,16 @@ void TabList_MakeComponent(struct IGameComponent* comp) {
 *#########################################################################################################################*/
 #define PLAYER_NAME_EMPTY_TEX -30000
 static void Player_MakeNameTexture(struct Player* player) {
-	FontDesc font;
-	Font_Make(&font, &Game_FontName, 24, FONT_STYLE_NORMAL);
+	/* we want names to always be drawn not using the system font */
+	bool bitmapped = Drawer2D_BitmappedText;
+	Drawer2D_BitmappedText = true;
 
 	String displayName = String_FromRawArray(player->DisplayNameRaw);
+	FontDesc font;
+	Drawer2D_MakeFont(&font, 24, FONT_STYLE_NORMAL);
+
 	struct DrawTextArgs args;
 	DrawTextArgs_Make(&args, &displayName, &font, false);
-
-	/* we want names to always be drawn not using the system font */
-	bool bitmapped = Drawer2D_UseBitmappedChat;
-	Drawer2D_UseBitmappedChat = true;
 	Size2D size = Drawer2D_MeasureText(&args);
 
 	if (size.Width == 0) {
@@ -492,7 +492,7 @@ static void Player_MakeNameTexture(struct Player* player) {
 		Drawer2D_Make2DTexture(&player->NameTex, &bmp, size, 0, 0);
 		Mem_Free(bmp.Scan0);
 	}
-	Drawer2D_UseBitmappedChat = bitmapped;
+	Drawer2D_BitmappedText = bitmapped;
 }
 
 void Player_UpdateNameTex(struct Player* player) {
@@ -892,7 +892,6 @@ struct EntityVTABLE localPlayer_VTABLE = {
 };
 void LocalPlayer_Init(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	Mem_Set(p, 0, sizeof(struct LocalPlayer));
 	Player_Init(&p->Base);
 	Player_SetName((struct Player*)p, &Game_Username, &Game_Username);
 

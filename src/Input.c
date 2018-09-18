@@ -141,10 +141,12 @@ bool KeyBind_IsPressed(KeyBind binding) { return Key_States[KeyBind_Keys[binding
 void KeyBind_Load(void) {
 	Int32 i;
 	for (i = 0; i < KeyBind_Count; i++) {
-		char nameBuffer[STRING_SIZE] = { 0 };
-		String name = String_FromArray(nameBuffer);
+		char nameBuffer[STRING_SIZE + 1];
+		String name = String_NT_Array(nameBuffer);
 
 		String_Format1(&name, "key-%c", KeyBind_Names[i]);
+		name.buffer[name.length] = '\0';
+
 		Key mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Key_Names, Key_Count);
 		if (mapping != Key_Escape) KeyBind_Keys[i] = mapping;
 	}
@@ -155,10 +157,11 @@ void KeyBind_Save(void) {
 	Int32 i;
 	char nameBuffer[STRING_SIZE];
 	String name = String_FromArray(nameBuffer);
+
 	for (i = 0; i < KeyBind_Count; i++) {
 		name.length = 0; 
-
 		String_Format1(&name, "key-%c", KeyBind_Names[i]);
+
 		String value = String_FromReadonly(Key_Names[KeyBind_Keys[i]]);
 		Options_SetString(&name, &value);
 	}

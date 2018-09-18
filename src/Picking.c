@@ -118,20 +118,20 @@ static BlockID Picking_InsideGetBlock(Int32 x, Int32 y, Int32 z) {
 	}
 
 	/* bedrock on bottom or outside map */
-	bool sides = WorldEnv_SidesBlock != BLOCK_AIR;
-	Int32 height = WorldEnv_SidesHeight; if (height < 1) height = 1;
+	bool sides = Env_SidesBlock != BLOCK_AIR;
+	Int32 height = Env_SidesHeight; if (height < 1) height = 1;
 	return sides && y < height ? PICKING_BORDER : BLOCK_AIR;
 }
 
 static BlockID Picking_OutsideGetBlock(Int32 x, Int32 y, Int32 z, Vector3I origin) {
 	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) return BLOCK_AIR;
-	bool sides = WorldEnv_SidesBlock != BLOCK_AIR;
+	bool sides = Env_SidesBlock != BLOCK_AIR;
 	/* handling of blocks inside the map, above, and on borders */
 
 	if (y >= World_Height) return BLOCK_AIR;
 	if (sides && y == -1 && origin.Y > 0) return PICKING_BORDER;
 	if (sides && y ==  0 && origin.Y < 0) return PICKING_BORDER;
-	Int32 height = WorldEnv_SidesHeight; if (height < 1) height = 1;
+	Int32 height = Env_SidesHeight; if (height < 1) height = 1;
 
 	if (sides && x == 0          && y >= 0 && y < height && origin.X < 0)             return PICKING_BORDER;
 	if (sides && z == 0          && y >= 0 && y < height && origin.Z < 0)             return PICKING_BORDER;
