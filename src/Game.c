@@ -312,7 +312,7 @@ static void Game_TextureChangedCore(void* obj, struct Stream* src, String* name)
 	}
 }
 
-static void Game_OnLowVRAMDetected(void) {
+static void Game_OnLowVRAMDetected(void* obj) {
 	if (Game_UserViewDistance <= 16) ErrorHandler_Fail("Out of video memory!");
 	Game_UserViewDistance /= 2;
 	Game_UserViewDistance = max(16, Game_UserViewDistance);
@@ -764,8 +764,6 @@ void Game_Run(Int32 width, Int32 height, STRING_PURE String* title, struct Displ
 }
 
 /* TODO: Implement all these stubs.... */
-#include "Builder.h"
-void AdvLightingBuilder_SetActive(void) { NormalBuilder_SetActive(); }
 #if CC_BUILD_NIX
 void Font_Make(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) { desc->Size = size; desc->Style = style; }
 void Font_Free(FontDesc* desc) { }

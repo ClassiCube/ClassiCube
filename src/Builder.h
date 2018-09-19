@@ -17,5 +17,5 @@ void Builder_OnNewMapLoaded(void);
 void Builder_MakeChunk(struct ChunkInfo* info);
 
 void NormalBuilder_SetActive(void);
-void AdvLightingBuilder_SetActive(void);
+void AdvBuilder_SetActive(void);
 #endif

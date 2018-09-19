@@ -254,6 +254,7 @@ void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <signal.h>
 
 
 /*########################################################################################################################*

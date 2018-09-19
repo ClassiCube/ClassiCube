@@ -156,7 +156,7 @@ void ChunkUpdater_RefreshBorders(Int32 clipLevel) {
 void ChunkUpdater_ApplyMeshBuilder(void) {
 	if (Game_SmoothLighting) {
 		 /* TODO: Implement advanced lighting builder.*/
-		AdvLightingBuilder_SetActive();
+		AdvBuilder_SetActive();
 	} else {
 		NormalBuilder_SetActive();
 	}

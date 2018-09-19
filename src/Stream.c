@@ -366,7 +366,7 @@ ReturnCode Stream_ReadLine(struct Stream* stream, STRING_TRANSIENT String* text)
 
 Int32 Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint) {
 	if (codepoint <= 0x7F) {
-		buffer[0] = codepoint;
+		buffer[0] = (UInt8)codepoint;
 		return 1;
 	} else if (codepoint <= 0x7FF) {
 		buffer[0] = 0xC0 | ((codepoint >> 6) & 0x1F);

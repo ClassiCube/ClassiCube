@@ -390,8 +390,8 @@ static void Builder_DrawSprite(Int32 count) {
 	Real32 vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
 	Real32 X = (Real32)Builder_X, Y = (Real32)Builder_Y, Z = (Real32)Builder_Z;
 
-#define u1 0.0f
-#define u2 UV2_Scale
+#define s_u1 0.0f
+#define s_u2 UV2_Scale
 	Real32 x1 = (Real32)X + 2.50f / 16.0f, y1 = (Real32)Y,        z1 = (Real32)Z + 2.50f / 16.0f;
 	Real32 x2 = (Real32)X + 13.5f / 16.0f, y2 = (Real32)Y + 1.0f, z2 = (Real32)Z + 13.5f / 16.0f;
 	Real32 v1 = vOrigin, v2 = vOrigin + Atlas1D_InvTileSize * UV2_Scale;
@@ -403,9 +403,9 @@ static void Builder_DrawSprite(Int32 count) {
 		Real32 valY = Random_Range(&spriteRng, 0,  3 + 1) / 16.0f;
 		Real32 valZ = Random_Range(&spriteRng, -3, 3 + 1) / 16.0f;
 
-#define stretch 1.7f / 16.0f
-		x1 += valX - stretch; x2 += valX + stretch;
-		z1 += valZ - stretch; z2 += valZ + stretch;
+#define s_stretch 1.7f / 16.0f
+		x1 += valX - s_stretch; x2 += valX + s_stretch;
+		z1 += valZ - s_stretch; z2 += valZ + s_stretch;
 		if (offsetType == 7) { y1 -= valY; y2 -= valY; }
 	}
 	
@@ -417,31 +417,31 @@ static void Builder_DrawSprite(Int32 count) {
 
 	/* Draw Z axis */
 	Int32 index = part->sOffset;
-	v.X = x1; v.Y = y1; v.Z = z1; v.U = u2; v.V = v2; Builder_Vertices[index + 0] = v;
-	          v.Y = y2;                     v.V = v1; Builder_Vertices[index + 1] = v;
-	v.X = x2;           v.Z = z2; v.U = u1;           Builder_Vertices[index + 2] = v;
-	          v.Y = y1;                     v.V = v2; Builder_Vertices[index + 3] = v;
+	v.X = x1; v.Y = y1; v.Z = z1; v.U = s_u2; v.V = v2; Builder_Vertices[index + 0] = v;
+	          v.Y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
+	v.X = x2;           v.Z = z2; v.U = s_u1;           Builder_Vertices[index + 2] = v;
+	          v.Y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
 
 	/* Draw Z axis mirrored */
 	index += part->sAdvance;
-	v.X = x2; v.Y = y1; v.Z = z2; v.U = u2;           Builder_Vertices[index + 0] = v;
-	          v.Y = y2;                     v.V = v1; Builder_Vertices[index + 1] = v;
-	v.X = x1;           v.Z = z1; v.U = u1;           Builder_Vertices[index + 2] = v;
-	          v.Y = y1;                     v.V = v2; Builder_Vertices[index + 3] = v;
+	v.X = x2; v.Y = y1; v.Z = z2; v.U = s_u2;           Builder_Vertices[index + 0] = v;
+	          v.Y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
+	v.X = x1;           v.Z = z1; v.U = s_u1;           Builder_Vertices[index + 2] = v;
+	          v.Y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
 
 	/* Draw X axis */
 	index += part->sAdvance;
-	v.X = x1; v.Y = y1; v.Z = z2; v.U = u2;           Builder_Vertices[index + 0] = v;
-	          v.Y = y2;                     v.V = v1; Builder_Vertices[index + 1] = v;
-	v.X = x2;           v.Z = z1; v.U = u1;           Builder_Vertices[index + 2] = v;
-	          v.Y = y1;                     v.V = v2; Builder_Vertices[index + 3] = v;
+	v.X = x1; v.Y = y1; v.Z = z2; v.U = s_u2;           Builder_Vertices[index + 0] = v;
+	          v.Y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
+	v.X = x2;           v.Z = z1; v.U = s_u1;           Builder_Vertices[index + 2] = v;
+	          v.Y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
 
 	/* Draw X axis mirrored */
 	index += part->sAdvance;
-	v.X = x2; v.Y = y1; v.Z = z1; v.U = u2;           Builder_Vertices[index + 0] = v;
-	          v.Y = y2;                     v.V = v1; Builder_Vertices[index + 1] = v;
-	v.X = x1;           v.Z = z2; v.U = u1;           Builder_Vertices[index + 2] = v;
-	          v.Y = y1;                     v.V = v2; Builder_Vertices[index + 3] = v;
+	v.X = x2; v.Y = y1; v.Z = z1; v.U = s_u2;           Builder_Vertices[index + 0] = v;
+	          v.Y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
+	v.X = x1;           v.Z = z2; v.U = s_u1;           Builder_Vertices[index + 2] = v;
+	          v.Y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
 
 	part->sOffset += 4;
 }
@@ -564,7 +564,7 @@ static void NormalBuilder_RenderBlock(Int32 index) {
 		count_ZMax == 0 && count_YMin == 0 && count_YMax == 0) return;
 
 	bool fullBright  = Block_FullBright[Builder_Block];
-	Int32 partOffset = (Block_Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
+	Int32 baseOffset = (Block_Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
 	Int32 lightFlags = Block_LightOffset[Builder_Block];
 
 	Drawer_MinBB = Block_MinBB[Builder_Block]; Drawer_MinBB.Y = 1.0f - Drawer_MinBB.Y;
@@ -581,7 +581,7 @@ static void NormalBuilder_RenderBlock(Int32 index) {
 	if (count_XMin) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMIN);
 		Int32 offset = (lightFlags >> FACE_XMIN) & 1;
-		struct Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
+		struct Builder1DPart* part = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white :
 			Builder_X >= offset ? Lighting_Col_XSide_Fast(Builder_X - offset, Builder_Y, Builder_Z) : Env_SunXSide;
@@ -591,7 +591,7 @@ static void NormalBuilder_RenderBlock(Int32 index) {
 	if (count_XMax) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMAX);
 		Int32 offset = (lightFlags >> FACE_XMAX) & 1;
-		struct Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
+		struct Builder1DPart* part = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white :
 			Builder_X <= (World_MaxX - offset) ? Lighting_Col_XSide_Fast(Builder_X + offset, Builder_Y, Builder_Z) : Env_SunXSide;
@@ -601,7 +601,7 @@ static void NormalBuilder_RenderBlock(Int32 index) {
 	if (count_ZMin) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_ZMIN);
 		Int32 offset = (lightFlags >> FACE_ZMIN) & 1;
-		struct Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
+		struct Builder1DPart* part = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white :
 			Builder_Z >= offset ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z - offset) : Env_SunZSide;
@@ -611,7 +611,7 @@ static void NormalBuilder_RenderBlock(Int32 index) {
 	if (count_ZMax) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_ZMAX);
 		Int32 offset = (lightFlags >> FACE_ZMAX) & 1;
-		struct Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
+		struct Builder1DPart* part = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white :
 			Builder_Z <= (World_MaxZ - offset) ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z + offset) : Env_SunZSide;
@@ -621,7 +621,7 @@ static void NormalBuilder_RenderBlock(Int32 index) {
 	if (count_YMin) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_YMIN);
 		Int32 offset = (lightFlags >> FACE_YMIN) & 1;
-		struct Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
+		struct Builder1DPart* part = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white : Lighting_Col_YMin_Fast(Builder_X, Builder_Y - offset, Builder_Z);
 		Drawer_YMin(count_YMin, col, texLoc, &part->fVertices[FACE_YMIN]);
@@ -630,7 +630,7 @@ static void NormalBuilder_RenderBlock(Int32 index) {
 	if (count_YMax) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_YMAX);
 		Int32 offset = (lightFlags >> FACE_YMAX) & 1;
-		struct Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
+		struct Builder1DPart* part = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white : Lighting_Col_YMax_Fast(Builder_X, (Builder_Y + 1) - offset, Builder_Z);
 		Drawer_YMax(count_YMax, col, texLoc, &part->fVertices[FACE_YMAX]);
@@ -660,3 +660,475 @@ void NormalBuilder_SetActive(void) {
 /*########################################################################################################################*
 *-------------------------------------------------Advanced mesh builder---------------------------------------------------*
 *#########################################################################################################################*/
+Vector3 adv_minBB, adv_maxBB;
+bool adv_isTranslucent;
+Int32 adv_initBitFlags, adv_lightFlags, adv_baseOffset;
+Int32* adv_bitFlags;
+Real32 adv_x1, adv_y1, adv_z1, adv_x2, adv_y2, adv_z2;
+PackedCol adv_lerp[5], adv_lerpX[5], adv_lerpZ[5], adv_lerpY[5];
+
+enum ADV_MASK {
+	/* z-1 cube points */
+	xM1_yM1_zM1, xM1_yCC_zM1, xM1_yP1_zM1,
+	xCC_yM1_zM1, xCC_yCC_zM1, xCC_yP1_zM1,
+	xP1_yM1_zM1, xP1_yCC_zM1, xP1_yP1_zM1,
+	/* z cube points */
+	xM1_yM1_zCC, xM1_yCC_zCC, xM1_yP1_zCC,
+	xCC_yM1_zCC, xCC_yCC_zCC, xCC_yP1_zCC,
+	xP1_yM1_zCC, xP1_yCC_zCC, xP1_yP1_zCC,
+	/* z+1 cube points */
+	xM1_yM1_zP1, xM1_yCC_zP1, xM1_yP1_zP1,
+	xCC_yM1_zP1, xCC_yCC_zP1, xCC_yP1_zP1,
+	xP1_yM1_zP1, xP1_yCC_zP1, xP1_yP1_zP1,
+};
+
+static Int32 Adv_Lit(Int32 x, Int32 y, Int32 z, Int32 cIndex) {
+	if (y < 0 || y >= World_Height) return 7; /* all faces lit */
+
+	/* TODO: check sides height (if sides > edges), check if edge block casts a shadow */
+	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) {
+		return y >= Builder_EdgeLevel ? 7 : y == (Builder_EdgeLevel - 1) ? 6 : 0;
+	}
+
+	Int32 flags = 0, offset;
+	BlockID block = Builder_Chunk[cIndex];
+	Int32 lightHeight = Lighting_Heightmap[(z * World_Width) + x];
+	adv_lightFlags = Block_LightOffset[block];
+
+	/* Use fact Light(Y.YMin) == Light((Y-1).YMax) */
+	offset = (adv_lightFlags >> FACE_YMIN) & 1;
+	flags |= ((y - offset) > lightHeight ? 1 : 0);
+
+	/* Light is same for all the horizontal faces */
+	flags |= (y > lightHeight ? 2 : 0);
+
+	/* Use fact Light((Y+1).YMin) == Light(Y.YMax) */
+	offset = (adv_lightFlags >> FACE_YMAX) & 1;
+	flags |= ((y - offset) >= lightHeight ? 4 : 0);
+
+	/* Dynamic lighting */
+	if (Block_FullBright[block])                       flags |= 5;
+	if (Block_FullBright[Builder_Chunk[cIndex + 324]]) flags |= 4;
+	if (Block_FullBright[Builder_Chunk[cIndex - 324]]) flags |= 1;
+	return flags;
+}
+
+static Int32 Adv_ComputeLightFlags(Int32 x, Int32 y, Int32 z, Int32 cIndex) {
+	if (Builder_FullBright) return (1 << xP1_yP1_zP1) - 1; // all faces fully bright
+
+	return
+		Adv_Lit(x - 1, y, z - 1, cIndex - 1 - 18) << xM1_yM1_zM1 |
+		Adv_Lit(x - 1, y, z,     cIndex - 1)      << xM1_yM1_zCC |
+		Adv_Lit(x - 1, y, z + 1, cIndex - 1 + 18) << xM1_yM1_zP1 |
+		Adv_Lit(x,     y, z - 1, cIndex + 0 - 18) << xCC_yM1_zM1 |
+		Adv_Lit(x,     y, z,     cIndex + 0)      << xCC_yM1_zCC |
+		Adv_Lit(x,     y, z + 1, cIndex + 0 + 18) << xCC_yM1_zP1 |
+		Adv_Lit(x + 1, y, z - 1, cIndex + 1 - 18) << xP1_yM1_zM1 |
+		Adv_Lit(x + 1, y, z,     cIndex + 1)      << xP1_yM1_zCC |
+		Adv_Lit(x + 1, y, z + 1, cIndex + 1 + 18) << xP1_yM1_zP1;
+}
+
+Int32 adv_masks[FACE_COUNT] = {
+	/* XMin face */
+	(1 << xM1_yM1_zM1) | (1 << xM1_yM1_zCC) | (1 << xM1_yM1_zP1) |
+	(1 << xM1_yCC_zM1) | (1 << xM1_yCC_zCC) | (1 << xM1_yCC_zP1) |
+	(1 << xM1_yP1_zM1) | (1 << xM1_yP1_zCC) | (1 << xM1_yP1_zP1),
+	/* XMax face */
+	(1 << xP1_yM1_zM1) | (1 << xP1_yM1_zCC) | (1 << xP1_yM1_zP1) |
+	(1 << xP1_yP1_zM1) | (1 << xP1_yP1_zCC) | (1 << xP1_yP1_zP1) |
+	(1 << xP1_yCC_zM1) | (1 << xP1_yCC_zCC) | (1 << xP1_yCC_zP1),
+	/* ZMin face */
+	(1 << xM1_yM1_zM1) | (1 << xCC_yM1_zM1) | (1 << xP1_yM1_zM1) |
+	(1 << xM1_yCC_zM1) | (1 << xCC_yCC_zM1) | (1 << xP1_yCC_zM1) |
+	(1 << xM1_yP1_zM1) | (1 << xCC_yP1_zM1) | (1 << xP1_yP1_zM1),
+	/* ZMax face */
+	(1 << xM1_yM1_zP1) | (1 << xCC_yM1_zP1) | (1 << xP1_yM1_zP1) |
+	(1 << xM1_yCC_zP1) | (1 << xCC_yCC_zP1) | (1 << xP1_yCC_zP1) |
+	(1 << xM1_yP1_zP1) | (1 << xCC_yP1_zP1) | (1 << xP1_yP1_zP1),
+	/* YMin face */
+	(1 << xM1_yM1_zM1) | (1 << xM1_yM1_zCC) | (1 << xM1_yM1_zP1) |
+	(1 << xCC_yM1_zM1) | (1 << xCC_yM1_zCC) | (1 << xCC_yM1_zP1) |
+	(1 << xP1_yM1_zM1) | (1 << xP1_yM1_zCC) | (1 << xP1_yM1_zP1),
+	/* YMax face */
+	(1 << xM1_yP1_zM1) | (1 << xM1_yP1_zCC) | (1 << xM1_yP1_zP1) |
+	(1 << xCC_yP1_zM1) | (1 << xCC_yP1_zCC) | (1 << xCC_yP1_zP1) |
+	(1 << xP1_yP1_zM1) | (1 << xP1_yP1_zCC) | (1 << xP1_yP1_zP1),
+};
+
+
+static bool Adv_CanStretch(BlockID initial, Int32 chunkIndex, Int32 x, Int32 y, Int32 z, Int32 face) {
+	BlockID cur = Builder_Chunk[chunkIndex];
+	adv_bitFlags[chunkIndex] = Adv_ComputeLightFlags(x, y, z, chunkIndex);
+
+	return cur == initial
+		&& !Block_IsFaceHidden(cur, Builder_Chunk[chunkIndex + Builder_Offsets[face]], face)
+		&& (adv_initBitFlags == adv_bitFlags[chunkIndex]
+		/* Check that this face is either fully bright or fully in shadow */
+		&& (adv_initBitFlags == 0 || (adv_initBitFlags & adv_masks[face]) == adv_masks[face]));
+}
+
+static Int32 Adv_StretchXLiquid(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 chunkIndex, BlockID block) {
+	if (Builder_OccludedLiquid(chunkIndex)) return 0;
+	adv_initBitFlags = Adv_ComputeLightFlags(x, y, z, chunkIndex);
+	adv_bitFlags[chunkIndex] = adv_initBitFlags;
+
+	Int32 count = 1;
+	x++;
+	chunkIndex++;
+	countIndex += FACE_COUNT;
+	bool stretchTile = (Block_CanStretch[block] & (1 << FACE_YMAX)) != 0;
+
+	while (x < Builder_ChunkEndX && stretchTile && Adv_CanStretch(block, chunkIndex, x, y, z, FACE_YMAX) && !Builder_OccludedLiquid(chunkIndex)) {
+		Builder_Counts[countIndex] = 0;
+		count++;
+		x++;
+		chunkIndex++;
+		countIndex += FACE_COUNT;
+	}
+	return count;
+}
+
+static Int32 Adv_StretchX(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 chunkIndex, BlockID block, Face face) {
+	adv_initBitFlags = Adv_ComputeLightFlags(x, y, z, chunkIndex);
+	adv_bitFlags[chunkIndex] = adv_initBitFlags;
+
+	Int32 count = 1;
+	x++;
+	chunkIndex++;
+	countIndex += FACE_COUNT;
+	bool stretchTile = (Block_CanStretch[block] & (1 << face)) != 0;
+
+	while (x < Builder_ChunkEndX && stretchTile && Adv_CanStretch(block, chunkIndex, x, y, z, face)) {
+		Builder_Counts[countIndex] = 0;
+		count++;
+		x++;
+		chunkIndex++;
+		countIndex += FACE_COUNT;
+	}
+	return count;
+}
+
+static Int32 Adv_StretchZ(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 chunkIndex, BlockID block, Face face) {
+	adv_initBitFlags = Adv_ComputeLightFlags(x, y, z, chunkIndex);
+	adv_bitFlags[chunkIndex] = adv_initBitFlags;
+
+	Int32 count = 1;
+	z++;
+	chunkIndex += EXTCHUNK_SIZE;
+	countIndex += CHUNK_SIZE * FACE_COUNT;
+	bool stretchTile = (Block_CanStretch[block] & (1 << face)) != 0;
+
+	while (z < Builder_ChunkEndZ && stretchTile && Adv_CanStretch(block, chunkIndex, x, y, z, face)) {
+		Builder_Counts[countIndex] = 0;
+		count++;
+		z++;
+		chunkIndex += EXTCHUNK_SIZE;
+		countIndex += CHUNK_SIZE * FACE_COUNT;
+	}
+	return count;
+}
+
+
+#define Adv_CountBits(F, a, b, c, d) (((F >> a) & 1) + ((F >> b) & 1) + ((F >> c) & 1) + ((F >> d) & 1))
+#define Adv_Tint(c) c.R = (UInt8)(c.R * tint.R / 255); c.G = (UInt8)(c.G * tint.G / 255); c.B = (UInt8)(c.B * tint.B / 255);
+
+static void Adv_DrawXMin(Int32 count) {
+	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMIN);
+	Real32 vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
+	Int32 offset = (adv_lightFlags >> FACE_XMIN) & 1;
+
+	Real32 u1 = adv_minBB.Z, u2 = (count - 1) + adv_maxBB.Z * UV2_Scale;
+	Real32 v1 = vOrigin + adv_maxBB.Y * Atlas1D_InvTileSize;
+	Real32 v2 = vOrigin + adv_minBB.Y * Atlas1D_InvTileSize * UV2_Scale;
+	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
+
+	Int32 F = adv_bitFlags[Builder_ChunkIndex];
+	Int32 aY0_Z0 = Adv_CountBits(F, xM1_yM1_zM1, xM1_yCC_zM1, xM1_yM1_zCC, xM1_yCC_zCC);
+	Int32 aY0_Z1 = Adv_CountBits(F, xM1_yM1_zP1, xM1_yCC_zP1, xM1_yM1_zCC, xM1_yCC_zCC);
+	Int32 aY1_Z0 = Adv_CountBits(F, xM1_yP1_zM1, xM1_yCC_zM1, xM1_yP1_zCC, xM1_yCC_zCC);
+	Int32 aY1_Z1 = Adv_CountBits(F, xM1_yP1_zP1, xM1_yCC_zP1, xM1_yP1_zCC, xM1_yCC_zCC);
+
+	PackedCol white = PACKEDCOL_WHITE;
+	PackedCol col0_0 = Builder_FullBright ? white : adv_lerpX[aY0_Z0], col1_0 = Builder_FullBright ? white : adv_lerpX[aY1_Z0];
+	PackedCol col1_1 = Builder_FullBright ? white : adv_lerpX[aY1_Z1], col0_1 = Builder_FullBright ? white : adv_lerpX[aY0_Z1];
+	if (Builder_Tinted) {
+		PackedCol tint = Block_FogCol[Builder_Block];
+		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
+	}
+
+	VertexP3fT2fC4b* vertices = part->fVertices[FACE_XMIN];
+	VertexP3fT2fC4b v; v.X = adv_x1;
+	if (aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0) {
+		v.Y = adv_y2; v.Z = adv_z1;               v.U = u1; v.V = v1; v.Col = col1_0; *vertices++ = v;
+		v.Y = adv_y1;                                       v.V = v2; v.Col = col0_0; *vertices++ = v;
+		              v.Z = adv_z2 + (count - 1); v.U = u2;           v.Col = col0_1; *vertices++ = v;
+		v.Y = adv_y2;                                       v.V = v1; v.Col = col1_1; *vertices++ = v;
+	} else {
+		v.Y = adv_y2; v.Z = adv_z2 + (count - 1); v.U = u2; v.V = v1; v.Col = col1_1; *vertices++ = v;
+		              v.Z = adv_z1;               v.U = u1;           v.Col = col1_0; *vertices++ = v;
+		v.Y = adv_y1;                                       v.V = v2; v.Col = col0_0; *vertices++ = v;
+		              v.Z = adv_z2 + (count - 1); v.U = u2;           v.Col = col0_1; *vertices++ = v;
+	}
+	part->fVertices[FACE_XMIN] = vertices;
+}
+
+static void Adv_DrawXMax(Int32 count) {
+	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMAX);
+	Real32 vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
+	Int32 offset = (adv_lightFlags >> FACE_XMAX) & 1;
+
+	Real32 u1 = (count - adv_minBB.Z), u2 = (1 - adv_maxBB.Z) * UV2_Scale;
+	Real32 v1 = vOrigin + adv_maxBB.Y * Atlas1D_InvTileSize;
+	Real32 v2 = vOrigin + adv_minBB.Y * Atlas1D_InvTileSize * UV2_Scale;
+	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
+
+	Int32 F = adv_bitFlags[Builder_ChunkIndex];
+	Int32 aY0_Z0 = Adv_CountBits(F, xP1_yM1_zM1, xP1_yCC_zM1, xP1_yM1_zCC, xP1_yCC_zCC);
+	Int32 aY0_Z1 = Adv_CountBits(F, xP1_yM1_zP1, xP1_yCC_zP1, xP1_yM1_zCC, xP1_yCC_zCC);
+	Int32 aY1_Z0 = Adv_CountBits(F, xP1_yP1_zM1, xP1_yCC_zM1, xP1_yP1_zCC, xP1_yCC_zCC);
+	Int32 aY1_Z1 = Adv_CountBits(F, xP1_yP1_zP1, xP1_yCC_zP1, xP1_yP1_zCC, xP1_yCC_zCC);
+
+	PackedCol white = PACKEDCOL_WHITE;
+	PackedCol col0_0 = Builder_FullBright ? white : adv_lerpX[aY0_Z0], col1_0 = Builder_FullBright ? white : adv_lerpX[aY1_Z0];
+	PackedCol col1_1 = Builder_FullBright ? white : adv_lerpX[aY1_Z1], col0_1 = Builder_FullBright ? white : adv_lerpX[aY0_Z1];
+	if (Builder_Tinted) {
+		PackedCol tint = Block_FogCol[Builder_Block];
+		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
+	}
+
+	VertexP3fT2fC4b* vertices = part->fVertices[FACE_XMAX];
+	VertexP3fT2fC4b v; v.X = adv_x2;
+	if (aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0) {
+		v.Y = adv_y2; v.Z = adv_z1;               v.U = u1; v.V = v1; v.Col = col1_0; *vertices++ = v;
+		              v.Z = adv_z2 + (count - 1); v.U = u2;           v.Col = col1_1; *vertices++ = v;
+		v.Y = adv_y1;                                       v.V = v2; v.Col = col0_1; *vertices++ = v;
+		              v.Z = adv_z1;               v.U = u1;           v.Col = col0_0; *vertices++ = v;
+	} else {
+		v.Y = adv_y2; v.Z = adv_z2 + (count - 1); v.U = u2; v.V = v1; v.Col = col1_1; *vertices++ = v;
+		v.Y = adv_y1;                                       v.V = v2; v.Col = col0_1; *vertices++ = v;
+		              v.Z = adv_z1;               v.U = u1;           v.Col = col0_0; *vertices++ = v;
+		v.Y = adv_y2;                                       v.V = v1; v.Col = col1_0; *vertices++ = v;
+	}
+	part->fVertices[FACE_XMAX] = vertices;
+}
+
+static void Adv_DrawZMin(Int32 count) {
+	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_ZMIN);
+	Real32 vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
+	Int32 offset = (adv_lightFlags >> FACE_ZMIN) & 1;
+
+	Real32 u1 = (count - adv_minBB.X), u2 = (1 - adv_maxBB.X) * UV2_Scale;
+	Real32 v1 = vOrigin + adv_maxBB.Y * Atlas1D_InvTileSize;
+	Real32 v2 = vOrigin + adv_minBB.Y * Atlas1D_InvTileSize * UV2_Scale;
+	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
+
+	Int32 F = adv_bitFlags[Builder_ChunkIndex];
+	Int32 aX0_Y0 = Adv_CountBits(F, xM1_yM1_zM1, xM1_yCC_zM1, xCC_yM1_zM1, xCC_yCC_zM1);
+	Int32 aX0_Y1 = Adv_CountBits(F, xM1_yP1_zM1, xM1_yCC_zM1, xCC_yP1_zM1, xCC_yCC_zM1);
+	Int32 aX1_Y0 = Adv_CountBits(F, xP1_yM1_zM1, xP1_yCC_zM1, xCC_yM1_zM1, xCC_yCC_zM1);
+	Int32 aX1_Y1 = Adv_CountBits(F, xP1_yP1_zM1, xP1_yCC_zM1, xCC_yP1_zM1, xCC_yCC_zM1);
+
+	PackedCol white = PACKEDCOL_WHITE;
+	PackedCol col0_0 = Builder_FullBright ? white : adv_lerpZ[aX0_Y0], col1_0 = Builder_FullBright ? white : adv_lerpZ[aX1_Y0];
+	PackedCol col1_1 = Builder_FullBright ? white : adv_lerpZ[aX1_Y1], col0_1 = Builder_FullBright ? white : adv_lerpZ[aX0_Y1];
+	if (Builder_Tinted) {
+		PackedCol tint = Block_FogCol[Builder_Block];
+		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
+	}
+
+	VertexP3fT2fC4b* vertices = part->fVertices[FACE_ZMIN];
+	VertexP3fT2fC4b v; v.Z = adv_z1;
+	if (aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0) {
+		v.X = adv_x2 + (count - 1); v.Y = adv_y1; v.U = u2; v.V = v2; v.Col = col1_0; *vertices++ = v;
+		v.X = adv_x1;                             v.U = u1;           v.Col = col0_0; *vertices++ = v;
+		                            v.Y = adv_y2;           v.V = v1; v.Col = col0_1; *vertices++ = v;
+		v.X = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
+	} else {
+		v.X = adv_x1;               v.Y = adv_y1; v.U = u1; v.V = v2; v.Col = col0_0; *vertices++ = v;
+		                            v.Y = adv_y2;           v.V = v1; v.Col = col0_1; *vertices++ = v;
+		v.X = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
+		                            v.Y = adv_y1;           v.V = v2; v.Col = col1_0; *vertices++ = v;
+	}
+	part->fVertices[FACE_ZMIN] = vertices;
+}
+
+static void Adv_DrawZMax(Int32 count) {
+	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_ZMAX);
+	Real32 vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
+	Int32 offset = (adv_lightFlags >> FACE_ZMAX) & 1;
+
+	Real32 u1 = adv_minBB.X, u2 = (count - 1) + adv_maxBB.X * UV2_Scale;
+	Real32 v1 = vOrigin + adv_maxBB.Y * Atlas1D_InvTileSize;
+	Real32 v2 = vOrigin + adv_minBB.Y * Atlas1D_InvTileSize * UV2_Scale;
+	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
+
+	Int32 F = adv_bitFlags[Builder_ChunkIndex];
+	Int32 aX0_Y0 = Adv_CountBits(F, xM1_yM1_zP1, xM1_yCC_zP1, xCC_yM1_zP1, xCC_yCC_zP1);
+	Int32 aX1_Y0 = Adv_CountBits(F, xP1_yM1_zP1, xP1_yCC_zP1, xCC_yM1_zP1, xCC_yCC_zP1);
+	Int32 aX0_Y1 = Adv_CountBits(F, xM1_yP1_zP1, xM1_yCC_zP1, xCC_yP1_zP1, xCC_yCC_zP1);
+	Int32 aX1_Y1 = Adv_CountBits(F, xP1_yP1_zP1, xP1_yCC_zP1, xCC_yP1_zP1, xCC_yCC_zP1);
+
+	PackedCol white = PACKEDCOL_WHITE;
+	PackedCol col1_1 = Builder_FullBright ? white : adv_lerpZ[aX1_Y1], col1_0 = Builder_FullBright ? white : adv_lerpZ[aX1_Y0];
+	PackedCol col0_0 = Builder_FullBright ? white : adv_lerpZ[aX0_Y0], col0_1 = Builder_FullBright ? white : adv_lerpZ[aX0_Y1];
+	if (Builder_Tinted) {
+		PackedCol tint = Block_FogCol[Builder_Block];
+		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
+	}
+
+	VertexP3fT2fC4b* vertices = part->fVertices[FACE_ZMAX];
+	VertexP3fT2fC4b v; v.Z = adv_z2;
+	if (aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0) {
+		v.X = adv_x1;               v.Y = adv_y2; v.U = u1; v.V = v1; v.Col = col0_1; *vertices++ = v;
+		                            v.Y = adv_y1;           v.V = v2; v.Col = col0_0; *vertices++ = v;
+		v.X = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
+		                            v.Y = adv_y2;           v.V = v1; v.Col = col1_1; *vertices++ = v;
+	} else {
+		v.X = adv_x2 + (count - 1); v.Y = adv_y2; v.U = u2; v.V = v1; v.Col = col1_1; *vertices++ = v;
+		v.X = adv_x1;                             v.U = u1;           v.Col = col0_1; *vertices++ = v;
+		                            v.Y = adv_y1;           v.V = v2; v.Col = col0_0; *vertices++ = v;
+		v.X = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
+	}
+	part->fVertices[FACE_ZMAX] = vertices;
+}
+
+static void Adv_DrawYMin(Int32 count) {
+	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_YMIN);
+	Real32 vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
+	Int32 offset = (adv_lightFlags >> FACE_YMIN) & 1;
+
+	Real32 u1 = adv_minBB.X, u2 = (count - 1) + adv_maxBB.X * UV2_Scale;
+	Real32 v1 = vOrigin + adv_minBB.Z * Atlas1D_InvTileSize;
+	Real32 v2 = vOrigin + adv_maxBB.Z * Atlas1D_InvTileSize * UV2_Scale;
+	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
+
+	Int32 F = adv_bitFlags[Builder_ChunkIndex];
+	Int32 aX0_Z0 = Adv_CountBits(F, xM1_yM1_zM1, xM1_yM1_zCC, xCC_yM1_zM1, xCC_yM1_zCC);
+	Int32 aX1_Z0 = Adv_CountBits(F, xP1_yM1_zM1, xP1_yM1_zCC, xCC_yM1_zM1, xCC_yM1_zCC);
+	Int32 aX0_Z1 = Adv_CountBits(F, xM1_yM1_zP1, xM1_yM1_zCC, xCC_yM1_zP1, xCC_yM1_zCC);
+	Int32 aX1_Z1 = Adv_CountBits(F, xP1_yM1_zP1, xP1_yM1_zCC, xCC_yM1_zP1, xCC_yM1_zCC);
+
+	PackedCol white = PACKEDCOL_WHITE;
+	PackedCol col0_1 = Builder_FullBright ? white : adv_lerpY[aX0_Z1], col1_1 = Builder_FullBright ? white : adv_lerpY[aX1_Z1];
+	PackedCol col1_0 = Builder_FullBright ? white : adv_lerpY[aX1_Z0], col0_0 = Builder_FullBright ? white : adv_lerpY[aX0_Z0];
+	if (Builder_Tinted) {
+		PackedCol tint = Block_FogCol[Builder_Block];
+		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
+	}
+
+	VertexP3fT2fC4b* vertices = part->fVertices[FACE_YMIN];
+	VertexP3fT2fC4b v; v.Y = adv_y1;
+	if (aX0_Z1 + aX1_Z0 > aX0_Z0 + aX1_Z1) {
+		v.X = adv_x2 + (count - 1); v.Z = adv_z2; v.U = u2; v.V = v2; v.Col = col1_1; *vertices++ = v;
+		v.X = adv_x1;                             v.U = u1;           v.Col = col0_1; *vertices++ = v;
+		                            v.Z = adv_z1;           v.V = v1; v.Col = col0_0; *vertices++ = v;
+		v.X = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
+	} else {
+		v.X = adv_x1;               v.Z = adv_z2; v.U = u1; v.V = v2; v.Col = col0_1; *vertices++ = v;
+		                            v.Z = adv_z1;           v.V = v1; v.Col = col0_0; *vertices++ = v;
+		v.X = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_0; *vertices++ = v;
+		                            v.Z = adv_z2;           v.V = v2; v.Col = col1_1; *vertices++ = v;
+	}
+	part->fVertices[FACE_YMIN] = vertices;
+}
+
+static void Adv_DrawYMax(Int32 count) {
+	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_YMAX);
+	Real32 vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
+	Int32 offset = (adv_lightFlags >> FACE_YMAX) & 1;
+
+	Real32 u1 = adv_minBB.X, u2 = (count - 1) + adv_maxBB.X * UV2_Scale;
+	Real32 v1 = vOrigin + adv_minBB.Z * Atlas1D_InvTileSize;
+	Real32 v2 = vOrigin + adv_maxBB.Z * Atlas1D_InvTileSize * UV2_Scale;
+	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
+
+	Int32 F = adv_bitFlags[Builder_ChunkIndex];
+	Int32 aX0_Z0 = Adv_CountBits(F, xM1_yP1_zM1, xM1_yP1_zCC, xCC_yP1_zM1, xCC_yP1_zCC);
+	Int32 aX1_Z0 = Adv_CountBits(F, xP1_yP1_zM1, xP1_yP1_zCC, xCC_yP1_zM1, xCC_yP1_zCC);
+	Int32 aX0_Z1 = Adv_CountBits(F, xM1_yP1_zP1, xM1_yP1_zCC, xCC_yP1_zP1, xCC_yP1_zCC);
+	Int32 aX1_Z1 = Adv_CountBits(F, xP1_yP1_zP1, xP1_yP1_zCC, xCC_yP1_zP1, xCC_yP1_zCC);
+
+	PackedCol white = PACKEDCOL_WHITE;
+	PackedCol col0_0 = Builder_FullBright ? white : adv_lerp[aX0_Z0], col1_0 = Builder_FullBright ? white : adv_lerp[aX1_Z0];
+	PackedCol col1_1 = Builder_FullBright ? white : adv_lerp[aX1_Z1], col0_1 = Builder_FullBright ? white : adv_lerp[aX0_Z1];
+	if (Builder_Tinted) {
+		PackedCol tint = Block_FogCol[Builder_Block];
+		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
+	}
+
+	VertexP3fT2fC4b* vertices = part->fVertices[FACE_YMAX];
+	VertexP3fT2fC4b v; v.Y = adv_y2;
+	if (aX0_Z0 + aX1_Z1 > aX0_Z1 + aX1_Z0) {
+		v.X = adv_x2 + (count - 1); v.Z = adv_z1; v.U = u2; v.V = v1; v.Col = col1_0; *vertices++ = v;
+		v.X = adv_x1;                             v.U = u1;           v.Col = col0_0; *vertices++ = v;
+		                            v.Z = adv_z2;           v.V = v2; v.Col = col0_1; *vertices++ = v;
+		v.X = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
+	} else {
+		v.X = adv_x1;               v.Z = adv_z1; v.U = u1; v.V = v1; v.Col = col0_0; *vertices++ = v;
+		                            v.Z = adv_z2;           v.V = v2; v.Col = col0_1; *vertices++ = v;
+		v.X = adv_x2 + (count - 1);               v.U = u2;           v.Col = col1_1; *vertices++ = v;
+		                            v.Z = adv_z1;           v.V = v1; v.Col = col1_0; *vertices++ = v;
+	}
+	part->fVertices[FACE_YMAX] = vertices;
+}
+
+static void Adv_RenderBlock(Int32 index) {
+	if (Block_Draw[Builder_Block] == DRAW_SPRITE) {
+		Builder_FullBright = Block_FullBright[Builder_Block];
+		Builder_Tinted = Block_Tinted[Builder_Block];
+		Int32 count = Builder_Counts[index + FACE_YMAX];
+		if (count) Builder_DrawSprite(count);
+		return;
+	}
+
+	Int32 count_XMin = Builder_Counts[index + FACE_XMIN];
+	Int32 count_XMax = Builder_Counts[index + FACE_XMAX];
+	Int32 count_ZMin = Builder_Counts[index + FACE_ZMIN];
+	Int32 count_ZMax = Builder_Counts[index + FACE_ZMAX];
+	Int32 count_YMin = Builder_Counts[index + FACE_YMIN];
+	Int32 count_YMax = Builder_Counts[index + FACE_YMAX];
+
+	if (count_XMin == 0 && count_XMax == 0 && count_ZMin == 0 &&
+		count_ZMax == 0 && count_YMin == 0 && count_YMax == 0) return;
+
+	Builder_FullBright = Block_FullBright[Builder_Block];
+	adv_baseOffset = (Block_Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
+	adv_lightFlags = Block_LightOffset[Builder_Block];
+	Builder_Tinted = Block_Tinted[Builder_Block];
+
+	Vector3 min = Block_RenderMinBB[Builder_Block], max = Block_RenderMaxBB[Builder_Block];
+	adv_x1 = Builder_X + min.X; adv_y1 = Builder_Y + min.Y; adv_z1 = Builder_Z + min.Z;
+	adv_x2 = Builder_X + max.X; adv_y2 = Builder_Y + max.Y; adv_z2 = Builder_Z + max.Z;
+
+	adv_minBB = Block_MinBB[Builder_Block]; adv_maxBB = Block_MaxBB[Builder_Block];
+	adv_minBB.Y = 1.0f - adv_minBB.Y; adv_maxBB.Y = 1.0f - adv_maxBB.Y;
+
+	if (count_XMin) Adv_DrawXMin(count_XMin);
+	if (count_XMax) Adv_DrawXMax(count_XMax);
+	if (count_ZMin) Adv_DrawZMin(count_ZMin);
+	if (count_ZMax) Adv_DrawZMax(count_ZMax);
+	if (count_YMin) Adv_DrawYMin(count_YMin);
+	if (count_YMax) Adv_DrawYMax(count_YMax);
+}
+
+static void Adv_PreStretchTiles(Int32 x1, Int32 y1, Int32 z1) {
+	Builder_DefaultPreStretchTiles(x1, y1, z1);
+	adv_bitFlags = Builder_BitFlags;
+	Int32 i;
+
+	for (i = 0; i <= 4; i++) {
+		adv_lerp[i]  = PackedCol_Lerp(Env_ShadowCol,   Env_SunCol,   i / 4.0f);
+		adv_lerpX[i] = PackedCol_Lerp(Env_ShadowXSide, Env_SunXSide, i / 4.0f);
+		adv_lerpZ[i] = PackedCol_Lerp(Env_ShadowZSide, Env_SunZSide, i / 4.0f);
+		adv_lerpY[i] = PackedCol_Lerp(Env_ShadowYMin,  Env_SunYMin,  i / 4.0f);
+	}
+}
+
+void AdvBuilder_SetActive(void) {
+	Builder_SetDefault();
+	Builder_StretchXLiquid  = Adv_StretchXLiquid;
+	Builder_StretchX        = Adv_StretchX;
+	Builder_StretchZ        = Adv_StretchZ;
+	Builder_RenderBlock     = Adv_RenderBlock;
+	Builder_PreStretchTiles = Adv_PreStretchTiles;
+}
