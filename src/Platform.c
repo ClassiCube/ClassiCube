@@ -81,15 +81,17 @@ ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-static void Platform_AllocFailed(const char* place) {
-	char logBuffer[STRING_SIZE + 20] = { 0 };
-	String log = String_FromArray(logBuffer);
+void Mem_Set(void* dst, UInt8 value, UInt32 numBytes) { memset(dst, value, numBytes); }
+void Mem_Copy(void* dst, void* src,  UInt32 numBytes) { memcpy(dst, src,   numBytes); }
+
+NOINLINE_ static void Platform_AllocFailed(const char* place) {
+	char logBuffer[STRING_SIZE+20 + 1];
+	String log = String_NT_Array(logBuffer);
 	String_Format1(&log, "Failed allocating memory for: %c", place);
+
+	log.buffer[log.length] = '\0';
 	ErrorHandler_Fail(log.buffer);
 }
-
-void Mem_Set(void* dst, UInt8 value, UInt32 numBytes) { memset(dst, value, numBytes); }
-void Mem_Copy(void* dst, void* src, UInt32 numBytes)  { memcpy(dst, src,   numBytes); }
 
 #if CC_BUILD_WIN
 void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const char* place) {

@@ -37,13 +37,13 @@ namespace ClassicalSharp {
 		protected VertexP3fT2fC4b[] vertices;
 
 		bool BuildChunk(int x1, int y1, int z1, ref bool allAir) {
-			light = game.Lighting;
-			PreStretchTiles(x1, y1, z1);
+			light = game.Lighting;			
 			BlockID* chunkPtr = stackalloc BlockID[extChunkSize3]; chunk = chunkPtr;
 			byte* countsPtr = stackalloc byte[chunkSize3 * Side.Sides]; counts = countsPtr;
 			int* bitsPtr = stackalloc int[extChunkSize3]; bitFlags = bitsPtr;
-			MemUtils.memset((IntPtr)chunkPtr, 0, 0, extChunkSize3 * sizeof(BlockID));
+			PreStretchTiles(x1, y1, z1);
 			
+			MemUtils.memset((IntPtr)chunkPtr, 0, 0, extChunkSize3 * sizeof(BlockID));
 			bool allSolid = false;
 			fixed (BlockRaw* mapPtr = map.blocks) {
 				#if !ONLY_8BIT

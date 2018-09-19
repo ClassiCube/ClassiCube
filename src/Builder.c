@@ -270,10 +270,10 @@ static void Builder_ReadChunkData(Int32 x1, Int32 y1, Int32 z1, bool* outAllAir,
 }
 
 static bool Builder_BuildChunk(Int32 x1, Int32 y1, Int32 z1, bool* allAir) {
-	Builder_PreStretchTiles(x1, y1, z1);
 	BlockID chunk[EXTCHUNK_SIZE_3]; Builder_Chunk = chunk;
 	UInt8 counts[CHUNK_SIZE_3 * FACE_COUNT]; Builder_Counts = counts;
 	Int32 bitFlags[EXTCHUNK_SIZE_3]; Builder_BitFlags = bitFlags;
+	Builder_PreStretchTiles(x1, y1, z1);
 
 	Mem_Set(chunk, BLOCK_AIR, EXTCHUNK_SIZE_3 * sizeof(BlockID));
 	bool allSolid;
