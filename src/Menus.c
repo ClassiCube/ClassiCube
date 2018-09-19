@@ -2116,8 +2116,8 @@ static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 	MenuOptionsScreen_SelectExtHelp(s, index);
 
 	struct MenuInputValidator* v = &s->Validators[index];
-	const char** names = (const char**)v->Meta_Ptr[0];
-	UInt32 count = (UInt32)v->Meta_Ptr[1];
+	const char** names = v->Meta_Enum.Names;
+	UInt32 count = v->Meta_Enum.Count;
 
 	char valueBuffer[STRING_SIZE];
 	String value = String_FromArray(valueBuffer);

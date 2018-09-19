@@ -122,9 +122,9 @@ struct MenuInputValidatorVTABLE {
 struct MenuInputValidator {
 	struct MenuInputValidatorVTABLE* VTABLE;
 	union {
-		void*  Meta_Ptr[2];
-		Int32  Meta_Int[2];
-		Real32 Meta_Real[2];
+		struct { const char** Names; UInt32 Count; } Meta_Enum;
+		struct { Int32 Min,  Max; } Meta_Int;
+		struct { Real32 Min, Max; } Meta_Real;
 	};
 };
 

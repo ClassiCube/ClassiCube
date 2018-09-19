@@ -204,7 +204,6 @@ static void Animations_ReadDescription(struct Stream* stream, STRING_PURE String
 	}
 }
 
-/* TODO: should we use 128 size here? */
 #define ANIMS_FAST_SIZE 64
 static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, Int32 size) {
 	UInt8 buffer[Bitmap_DataSize(ANIMS_FAST_SIZE, ANIMS_FAST_SIZE)];
@@ -216,7 +215,7 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, Int32
 
 	Int32 index_1D = Atlas1D_Index(texLoc);
 	Int32 rowId_1D = Atlas1D_RowId(texLoc);
-	Bitmap animPart; Bitmap_Create(&animPart, size, size, buffer);
+	Bitmap animPart; Bitmap_Create(&animPart, size, size, ptr);
 
 	if (!data) {
 		if (texLoc == 30) {

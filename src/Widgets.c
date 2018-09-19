@@ -1302,7 +1302,7 @@ struct MenuInputValidator MenuInputValidator_Hex(void) {
 }
 
 static void Integer_Range(struct MenuInputValidator* v, STRING_TRANSIENT String* range) {
-	String_Format2(range, "&7(%i - %i)", &v->Meta_Int[0], &v->Meta_Int[1]);
+	String_Format2(range, "&7(%i - %i)", &v->Meta_Int.Min, &v->Meta_Int.Max);
 }
 
 static bool Integer_ValidChar(struct MenuInputValidator* v, char c) {
@@ -1319,7 +1319,7 @@ static bool Integer_ValidValue(struct MenuInputValidator* v, STRING_PURE String*
 	Int32 value;
 	if (!Convert_TryParseInt32(s, &value)) return false;
 
-	Int32 min = v->Meta_Int[0], max = v->Meta_Int[1];
+	Int32 min = v->Meta_Int.Min, max = v->Meta_Int.Max;
 	return min <= value && value <= max;
 }
 
@@ -1329,8 +1329,8 @@ struct MenuInputValidatorVTABLE IntegerInputValidator_VTABLE = {
 struct MenuInputValidator MenuInputValidator_Integer(Int32 min, Int32 max) {
 	struct MenuInputValidator v;
 	v.VTABLE = &IntegerInputValidator_VTABLE;
-	v.Meta_Int[0] = min;
-	v.Meta_Int[1] = max;
+	v.Meta_Int.Min = min;
+	v.Meta_Int.Max = max;
 	return v;
 }
 
@@ -1348,7 +1348,7 @@ struct MenuInputValidator MenuInputValidator_Seed(void) {
 }
 
 static void Real_Range(struct MenuInputValidator* v, STRING_TRANSIENT String* range) {
-	String_Format2(range, "&7(%f2 - %f2)", &v->Meta_Real[0], &v->Meta_Real[1]);
+	String_Format2(range, "&7(%f2 - %f2)", &v->Meta_Real.Min, &v->Meta_Real.Max);
 }
 
 static bool Real_ValidChar(struct MenuInputValidator* v, char c) {
@@ -1364,7 +1364,7 @@ static bool Real_ValidString(struct MenuInputValidator* v, STRING_PURE String* s
 static bool Real_ValidValue(struct MenuInputValidator* v, STRING_PURE String* s) {
 	Real32 value;
 	if (!Convert_TryParseReal32(s, &value)) return false;
-	Real32 min = v->Meta_Real[0], max = v->Meta_Real[1];
+	Real32 min = v->Meta_Real.Min, max = v->Meta_Real.Max;
 	return min <= value && value <= max;
 }
 
@@ -1374,8 +1374,8 @@ struct MenuInputValidatorVTABLE RealInputValidator_VTABLE = {
 struct MenuInputValidator MenuInputValidator_Real(Real32 min, Real32 max) {
 	struct MenuInputValidator v;
 	v.VTABLE = &RealInputValidator_VTABLE;
-	v.Meta_Real[0] = min;
-	v.Meta_Real[1] = max;
+	v.Meta_Real.Min = min;
+	v.Meta_Real.Max = max;
 	return v;
 }
 
@@ -1399,9 +1399,10 @@ struct MenuInputValidator MenuInputValidator_Path(void) {
 }
 
 struct MenuInputValidator MenuInputValidator_Enum(const char** names, UInt32 namesCount) {
-	struct MenuInputValidator v = { 0 };
-	v.Meta_Ptr[0] = names;
-	v.Meta_Ptr[1] = (void*)namesCount; /* TODO: Need to handle void* size < 32 bits?? */
+	struct MenuInputValidator v;
+	v.VTABLE          = NULL;
+	v.Meta_Enum.Names = names;
+	v.Meta_Enum.Count = namesCount;
 	return v;
 }
 
