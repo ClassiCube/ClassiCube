@@ -161,7 +161,7 @@ static void Soundboard_Init(struct Soundboard* board, STRING_PURE String* boardN
 		ReturnCode res = Sound_ReadWave(&file, snd);
 
 		if (res) {
-			Chat_LogError(res, "decoding", &file);
+			Chat_LogError2(res, "decoding", &file);
 			Mem_Free(snd->Data);
 			snd->Data     = NULL;
 			snd->DataSize = 0;
@@ -194,30 +194,37 @@ struct Soundboard digBoard, stepBoard;
 struct SoundOutput monoOutputs[AUDIO_MAX_HANDLES]   = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
 struct SoundOutput stereoOutputs[AUDIO_MAX_HANDLES] = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
 
-static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct AudioFormat* fmt, Int32 volume) {
-	Audio_SetFormat(output->Handle, fmt);
-	void* buffer = snd->Data;
-	/* copy to temp buffer to apply volume */
+NOINLINE_ static void Sounds_Fail(ReturnCode res) {
+	Chat_LogError(res, "playing sounds", NULL);
+	Chat_AddRaw("&cDisabling sounds");
+	Audio_SetSounds(0);
+}
 
+static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct AudioFormat* fmt, Int32 volume) {
+	ReturnCode res;
+	void* data = snd->Data;
+	Audio_SetFormat(output->Handle, fmt);
+	/* TODO: handle errors here */
+	
+	/* copy to temp buffer to apply volume */
 	if (volume < 100) {		
 		if (output->BufferSize < snd->DataSize) {
 			UInt32 expandBy = snd->DataSize - output->BufferSize;
 			output->Buffer  = Utils_Resize(output->Buffer, &output->BufferSize, 
 											sizeof(UInt8), AUDIO_DEF_ELEMS, expandBy);
 		}
-		buffer = output->Buffer;
+		data = output->Buffer;
 
-		Mem_Copy(buffer, snd->Data, snd->DataSize);
+		Mem_Copy(data, snd->Data, snd->DataSize);
 		if (fmt->BitsPerSample == 8) {
-			Volume_Mix8(buffer,  snd->DataSize,     volume);
+			Volume_Mix8(data,  snd->DataSize,     volume);
 		} else {
-			Volume_Mix16(buffer, snd->DataSize / 2, volume);
+			Volume_Mix16(data, snd->DataSize / 2, volume);
 		}
 	}
 
-	Audio_BufferData(output->Handle, 0, buffer, snd->DataSize);
-	Audio_Play(output->Handle);
-	/* TODO: handle errors here */
+	if ((res = Audio_BufferData(output->Handle, 0, data, snd->DataSize))) { Sounds_Fail(res); return; }
+	if ((res = Audio_Play(output->Handle)))                               { Sounds_Fail(res); return; }
 }
 
 static void Sounds_Play(UInt8 type, struct Soundboard* board) {
@@ -325,6 +332,7 @@ void* music_thread;
 void* music_waitable;
 volatile bool music_pendingStop;
 
+/* TODO: Handle audio errors */
 static ReturnCode Music_BufferBlock(Int32 i, Int16* data, Int32 maxSamples, struct VorbisState* ctx) {
 	Int32 samples = 0;
 	ReturnCode res = 0;
@@ -342,6 +350,7 @@ static ReturnCode Music_BufferBlock(Int32 i, Int16* data, Int32 maxSamples, stru
 	return res;
 }
 
+/* TODO: Handle audio errors */
 static ReturnCode Music_PlayOgg(struct Stream* source) {
 	UInt8 buffer[OGG_BUFFER_SIZE];
 	struct Stream stream;
@@ -422,14 +431,14 @@ static void Music_RunLoop(void) {
 		Platform_Log1("playing music file: %s", &filename);
 
 		void* file; res = File_Open(&file, &path);
-		if (res) { Chat_LogError(res, "opening", &path); return; }
+		if (res) { Chat_LogError2(res, "opening", &path); return; }
 		struct Stream stream; Stream_FromFile(&stream, file);
 		{
 			res = Music_PlayOgg(&stream);
-			if (res) { Chat_LogError(res, "playing", &path); }
+			if (res) { Chat_LogError2(res, "playing", &path); }
 		}
 		res = stream.Close(&stream);
-		if (res) { Chat_LogError(res, "closing", &path); }
+		if (res) { Chat_LogError2(res, "closing", &path); }
 
 		if (music_pendingStop) return;
 		Int32 delay = 1000 * 120 + Random_Range(&rnd, 0, 1000 * 300);

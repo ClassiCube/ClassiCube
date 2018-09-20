@@ -210,7 +210,7 @@ bool Game_CanPick(BlockID block) {
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, STRING_PURE String* file, UInt8* skinType) {
 	Bitmap bmp; 
 	ReturnCode res = Bitmap_DecodePng(&bmp, src);
-	if (res) { Chat_LogError(res, "decoding", file); }
+	if (res) { Chat_LogError2(res, "decoding", file); }
 
 	bool success = !res && Game_ValidateBitmap(file, &bmp);
 	if (success) {
@@ -294,7 +294,7 @@ static void Game_TextureChangedCore(void* obj, struct Stream* src, String* name)
 		ReturnCode res = Bitmap_DecodePng(&bmp, src);
 
 		if (res) { 
-			Chat_LogError(res, "decoding", name);
+			Chat_LogError2(res, "decoding", name);
 			Mem_Free(bmp.Scan0);
 		} else if (!Game_ChangeTerrainAtlas(&bmp)) {
 			Mem_Free(bmp.Scan0);
@@ -303,7 +303,7 @@ static void Game_TextureChangedCore(void* obj, struct Stream* src, String* name)
 		ReturnCode res = Bitmap_DecodePng(&bmp, src);
 
 		if (res) { 
-			Chat_LogError(res, "decoding", name);
+			Chat_LogError2(res, "decoding", name);
 			Mem_Free(bmp.Scan0);
 		} else {
 			Drawer2D_SetFontBitmap(&bmp);
@@ -650,18 +650,18 @@ void Game_TakeScreenshot(void) {
 	String_Format2(&path, "screenshots%r%s", &Directory_Separator, &filename);
 
 	void* file; res = File_Create(&file, &path);
-	if (res) { Chat_LogError(res, "creating", &path); return; }
+	if (res) { Chat_LogError2(res, "creating", &path); return; }
 
 	struct Stream stream; Stream_FromFile(&stream, file);
 	{
 		res = Gfx_TakeScreenshot(&stream, Game_Width, Game_Height);
 		if (res) { 
-			Chat_LogError(res, "saving to", &path);
+			Chat_LogError2(res, "saving to", &path);
 			stream.Close(&stream); return;
 		}
 	}
 	res = stream.Close(&stream);
-	if (res) { Chat_LogError(res, "closing", &path); return; }
+	if (res) { Chat_LogError2(res, "closing", &path); return; }
 
 	Chat_Add1("&eTaken screenshot as: %s", &filename);
 }

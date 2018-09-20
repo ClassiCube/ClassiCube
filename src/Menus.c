@@ -1271,7 +1271,7 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s) {
 	struct Stream compStream;
 
 	void* file; res = File_Create(&file, &path);
-	if (res) { Chat_LogError(res, "creating", &path); return; }
+	if (res) { Chat_LogError2(res, "creating", &path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file);
 	{
 		String cw = String_FromConst(".cw");	
@@ -1286,15 +1286,15 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s) {
 
 		if (res) {
 			stream.Close(&stream);
-			Chat_LogError(res, "encoding", &path); return;
+			Chat_LogError2(res, "encoding", &path); return;
 		}
 		if ((res = compStream.Close(&compStream))) {
 			stream.Close(&stream);
-			Chat_LogError(res, "closing", &path); return;
+			Chat_LogError2(res, "closing", &path); return;
 		}
 	}
 	res = stream.Close(&stream);
-	if (res) { Chat_LogError(res, "closing", &path); return; }
+	if (res) { Chat_LogError2(res, "closing", &path); return; }
 
 	Chat_Add1("&eSaved map to: %s", &path);
 	s->TextPath.length = 0;
@@ -1568,7 +1568,7 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 	ReturnCode res;
 
 	void* file; res = File_Open(&file, path);
-	if (res) { Chat_LogError(res, "opening", path); return; }
+	if (res) { Chat_LogError2(res, "opening", path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file);
 	{
 		String cw = String_FromConst(".cw");   String lvl = String_FromConst(".lvl");
@@ -1585,14 +1585,14 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 		}
 
 		if (res) { 
-			Chat_LogError(res, "decoding", path);
+			Chat_LogError2(res, "decoding", path);
 			Mem_Free(World_Blocks); 
 			World_Blocks = NULL; World_BlocksSize = 0;
 			stream.Close(&stream); return;
 		}
 	}
 	res = stream.Close(&stream);
-	if (res) { Chat_LogError(res, "closing", path); }
+	if (res) { Chat_LogError2(res, "closing", path); }
 
 	World_SetNewMap(World_Blocks, World_BlocksSize, World_Width, World_Height, World_Length);
 	Event_RaiseVoid(&WorldEvents_MapLoaded);

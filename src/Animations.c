@@ -161,7 +161,7 @@ static void Animations_ReadDescription(struct Stream* stream, STRING_PURE String
 	for (;;) {
 		res = Stream_ReadLine(&buffered, &line);
 		if (res == ERR_END_OF_STREAM) break;
-		if (res) { Chat_LogError(res, "reading from", path); break; }
+		if (res) { Chat_LogError2(res, "reading from", path); break; }
 
 		if (!line.length || line.buffer[0] == '#') continue;
 		struct AnimationData data = { 0 };
@@ -327,7 +327,7 @@ static void Animations_FileChanged(void* obj, struct Stream* stream, String* nam
 		ReturnCode res = Bitmap_DecodePng(&anims_bmp, stream);
 		if (!res) return;
 
-		Chat_LogError(res, "decoding", name);
+		Chat_LogError2(res, "decoding", name);
 		Mem_Free(anims_bmp.Scan0);
 		anims_bmp.Scan0 = NULL;
 	} else if (String_CaselessEqualsConst(name, "animations.txt")) {

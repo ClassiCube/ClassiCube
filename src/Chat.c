@@ -53,7 +53,7 @@ DateTime ChatLog_LastLogDate;
 static void Chat_CloseLog(void) {
 	if (!Chat_LogStream.Meta.File) return;
 	ReturnCode res = Chat_LogStream.Close(&Chat_LogStream);
-	if (res) { Chat_LogError(res, "closing", &Chat_LogPath); }
+	if (res) { Chat_LogError2(res, "closing", &Chat_LogPath); }
 }
 
 static bool Chat_AllowedLogChar(char c) {
@@ -103,7 +103,7 @@ static void Chat_OpenLog(DateTime* now) {
 		void* file; res = File_Append(&file, path);
 		if (res && res != ReturnCode_FileShareViolation) {
 			Chat_DisableLogging();
-			Chat_LogError(res, "appending to", path); return;
+			Chat_LogError2(res, "appending to", path); return;
 		}
 
 		if (res == ReturnCode_FileShareViolation) continue;
@@ -138,10 +138,13 @@ static void Chat_AppendLog(STRING_PURE String* text) {
 	ReturnCode res = Stream_WriteLine(&Chat_LogStream, &str);
 	if (!res) return;
 	Chat_DisableLogging();
-	Chat_LogError(res, "writing to", &Chat_LogPath);
+	Chat_LogError2(res, "writing to", &Chat_LogPath);
 }
 
-void Chat_LogError(ReturnCode result, const char* place, STRING_PURE String* path) {
+void Chat_LogError(ReturnCode result, const char* place) {
+	Chat_Add4("&cError %y when %c", &result, place, NULL, NULL);
+}
+void Chat_LogError2(ReturnCode result, const char* place, STRING_PURE String* path) {
 	Chat_Add4("&cError %y when %c '%s'", &result, place, path, NULL);
 }
 void Chat_Add1(const char* format, const void* a1) {

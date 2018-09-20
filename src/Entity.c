@@ -686,7 +686,7 @@ static void Player_CheckSkin(struct Player* player) {
 
 	ReturnCode res = Bitmap_DecodePng(&bmp, &mem);
 	if (res) {
-		Chat_LogError(res, "decoding", &url);
+		Chat_LogError2(res, "decoding", &url);
 		Mem_Free(bmp.Scan0); return;
 	}
 

@@ -122,7 +122,7 @@ bool Utils_EnsureDirectory(STRING_PURE const char* dirName) {
 	if (Directory_Exists(&dir)) return true;
 
 	ReturnCode res = Directory_Create(&dir);
-	if (res) { Chat_LogError(res, "creating directory", &dir); }
+	if (res) { Chat_LogError2(res, "creating directory", &dir); }
 	return res == 0;
 }
 

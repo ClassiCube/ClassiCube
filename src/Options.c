@@ -159,7 +159,7 @@ void Options_Load(void) {
 
 	void* file; res = File_Open(&file, &path);
 	if (res == ReturnCode_FileNotFound) return;
-	if (res) { Chat_LogError(res, "opening", &path); return; }
+	if (res) { Chat_LogError2(res, "opening", &path); return; }
 
 	/* Remove all the unchanged options */
 	Int32 i;
@@ -181,7 +181,7 @@ void Options_Load(void) {
 	for (;;) {
 		res = Stream_ReadLine(&buffered, &line);
 		if (res == ERR_END_OF_STREAM) break;
-		if (res) { Chat_LogError(res, "reading from", &path); break; }
+		if (res) { Chat_LogError2(res, "reading from", &path); break; }
 
 		if (!line.length || line.buffer[0] == '#') continue;
 		if (!String_UNSAFE_Separate(&line, '=', &key, &value)) continue;
@@ -192,7 +192,7 @@ void Options_Load(void) {
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Chat_LogError(res, "closing", &path); return; }
+	if (res) { Chat_LogError2(res, "closing", &path); return; }
 }
 
 void Options_Save(void) {	
@@ -200,7 +200,7 @@ void Options_Save(void) {
 	ReturnCode res;
 
 	void* file; res = File_Create(&file, &path);
-	if (res) { Chat_LogError(res, "creating", &path); return; }
+	if (res) { Chat_LogError2(res, "creating", &path); return; }
 
 	char lineBuffer[1024];
 	String line = String_FromArray(lineBuffer);
@@ -213,11 +213,11 @@ void Options_Save(void) {
 		String_Format2(&line, "%s=%s", &key, &value);
 
 		res = Stream_WriteLine(&stream, &line);
-		if (res) { Chat_LogError(res, "writing to", &path); break; }
+		if (res) { Chat_LogError2(res, "writing to", &path); break; }
 		line.length = 0;
 	}
 
 	StringsBuffer_Clear(&Options_Changed);
 	res = stream.Close(&stream);
-	if (res) { Chat_LogError(res, "closing", &path); return; }
+	if (res) { Chat_LogError2(res, "closing", &path); return; }
 }
