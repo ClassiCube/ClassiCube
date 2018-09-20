@@ -54,17 +54,18 @@ Thus, when using or implementing a per-platform API, you must null-terminate and
 *Note: Several functions will take raw ```char*``` for performance, but this is not encouraged*
 
 #### String arguments
-A attribute macro is applied to string parameters and/or return types in functions. The three types are:
-- ```STRING_PURE``` - String is not modified, no reference is kept (default)
-- ```STRING_TRANSIENT``` - Characters in string may be modified, no reference is kept
-- ```STRING_REF``` - Characters in string may be modified, **reference is kept to characters**
+String arguments are annotated to indicate storage and readonly requirements. These are:
+- ```const String*``` - String is not modified at all
+- ```String*``` - Characters in string may be modified
+- ```STRING_REF``` - Macro annotation indicating a **reference is kept to characters**
 
 To make it extra clear, functions with ```STRING_REF``` arguments usually also have ```_UNSAFE_``` as part of their name.
 
-For example, consider the function ```STRING_REF String StringsBuffer_UNSAFE_Get(buffer, index)```. 
-The returned string has characters pointing to within *buffer*, so modifying them also changes the contents of *buffer*.
+For example, consider the function ```String Substring_UNSAFE(STRING_REF const String* str, length)```
 
-In general, use of ```STRING_PURE``` or ```STRING_TRANSIENT``` is preferred when possible.
+The *input string* is not modified at all. However, the characters of the *returned string* points to the characters of the *input string*, so modifying the characters in the *input string* also modifies the *returned string*.
+
+In general, use of ```const String*``` is preferred when possible, and ```STRING_REF``` as little as possible.
 
 #### String formatting
 An API is provided for formatting strings similiar to printf in C or String.Format in C#.
@@ -83,8 +84,8 @@ void String_Format4(str, format, a1, a2, a3, a4);
 | ```%f[0-9]``` | Real32 |  ```%f2``` of ```321.3519``` = ```321.35``` |
 | ```%p[0-9]``` | Int32, padded | ```%p3``` of ```5``` = ```005``` |
 | ```%t```      | Boolean | ```%t``` of ```1``` = ```true``` |
-| ```%c```      | UInt8* | ```%c``` of ```"ABCD"``` = ```ABCD``` |
+| ```%c```      | char* | ```%c``` of ```"ABCD"``` = ```ABCD``` |
 | ```%s```      | String |  ```%s``` of ```{"ABCD", 2, 4}``` = ```AB``` |
-| ```%r```      | UInt8, raw | ```%r``` of ```47``` = ```\``` |
+| ```%r```      | char, raw | ```%r``` of ```47``` = ```\``` |
 | ```%x```      | UInt64, hex | ```%x``` of ```31``` = ```2F``` |
 | ```%y```      | UInt32, hex | ```%y``` of ```11``` = ```B``` |
