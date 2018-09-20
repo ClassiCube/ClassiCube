@@ -103,7 +103,7 @@ namespace ClassicalSharp {
 				|| c == '<' || c == '/' || c == '\\';
 		}
 		
-		unsafe string Substring(int offset, int len) {
+		public unsafe string Substring(int offset, int len) {
 			if (len == 0) return "";
 			char* tmp = stackalloc char[len];
 			

@@ -15,6 +15,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
 			ShowCaret = true;
 			Padding = 5;
+			convertPercents = !game.ClassicMode;
 		}
 
 		static PackedCol backCol = new PackedCol(0, 0, 0, 127);

@@ -38,7 +38,7 @@ As such, your compiler is required to support:
 - explicit 8/16/32/64 bit signed and unsigned integers
 - 32 and 64 bit floating point numbers
 
-I may not have defined the appropriate types for your compiler, so you may need to modify ```Typedefs.h```
+I may not have defined the appropriate types for your compiler, so you may need to modify ```Core.h```
 
 ### Strings
 Strings are one of the most troublesome aspects of C. In this software, strings consist of:
@@ -49,7 +49,7 @@ Strings are one of the most troublesome aspects of C. In this software, strings 
 Although this makes substrings / concatenating very fast, it also means 
 **STRINGS ARE NOT NULL TERMINATED** (and are not in most cases).
 
-Thus, when using or implementing a per-platform API, you must null-terminate and convert characters to native encoding
+Thus, when using or implementing a per-platform API, you must null-terminate and convert characters to native encoding. You should implement the ```Platform_ConvertString``` function and use that.
 
 *Note: Several functions will take raw ```char*``` for performance, but this is not encouraged*
 

@@ -52,7 +52,7 @@ NOINLINE_ bool String_CaselessEquals(const String* a, const String* b);
 NOINLINE_ bool String_CaselessEqualsConst(const String* a, const char* b);
 NOINLINE_ Int32 String_MakeUInt32(UInt32 num, char* numBuffer);
 
-NOINLINE_ bool String_Append(String* str, char c);
+bool String_Append(String* str, char c);
 NOINLINE_ bool String_AppendBool(String* str, bool value);
 NOINLINE_ bool String_AppendInt32(String* str, Int32 num);
 NOINLINE_ bool String_AppendUInt32(String* str, UInt32 num);

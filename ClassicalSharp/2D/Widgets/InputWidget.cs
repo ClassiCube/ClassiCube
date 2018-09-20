@@ -66,11 +66,14 @@ namespace ClassicalSharp.Gui.Widgets {
 		protected Size[] lineSizes; // size of each line in pixels
 		protected int caretX, caretY; // coordinates of caret in lines
 		protected internal double caretAccumulator;
+		protected bool convertPercents; 
 		
 		public override void Init() {
 			int numLines = UsedLines;
 			if (numLines > 1) {
 				Text.WordWrap(lines, numLines, MaxCharsPerLine);
+			} else if (convertPercents) {
+				lines[0] = Text.Substring(0, Text.Length);
 			} else {
 				lines[0] = Text.ToString();
 			}

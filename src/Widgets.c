@@ -1769,7 +1769,7 @@ void ChatInputWidget_Create(struct ChatInputWidget* w, FontDesc* font) {
 	w->TypingLogPos = Chat_InputLog.Count; /* Index of newest entry + 1. */
 	w->Base.VTABLE  = &ChatInputWidget_VTABLE;
 
-	w->Base.ConvertPercents = true;
+	w->Base.ConvertPercents = !Game_ClassicMode;
 	w->Base.ShowCaret       = true;
 	w->Base.Padding         = 5;
 	w->Base.GetMaxLines    = ChatInputWidget_GetMaxLines;
