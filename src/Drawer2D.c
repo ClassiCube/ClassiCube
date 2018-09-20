@@ -8,7 +8,7 @@
 #include "Bitmap.h"
 #include "Game.h"
 
-void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow) {
+void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, FontDesc* font, bool useShadow) {
 	args->Text = *text;
 	args->Font = *font;
 	args->UseShadow = useShadow;
@@ -168,13 +168,13 @@ void Drawer2D_Make2DTexture(struct Texture* tex, Bitmap* bmp, Size2D used, Int32
 	*tex = tmp;
 }
 
-bool Drawer2D_ValidColCodeAt(STRING_PURE String* text, Int32 i) {
+bool Drawer2D_ValidColCodeAt(const String* text, Int32 i) {
 	if (i >= text->length) return false;
 	return Drawer2D_Cols[(UInt8)text->buffer[i]].A > 0;
 }
 bool Drawer2D_ValidColCode(char c) { return Drawer2D_Cols[(UInt8)c].A > 0; }
 
-bool Drawer2D_IsEmptyText(STRING_PURE String* text) {
+bool Drawer2D_IsEmptyText(const String* text) {
 	if (!text->length) return true;
 
 	Int32 i;
@@ -186,7 +186,7 @@ bool Drawer2D_IsEmptyText(STRING_PURE String* text) {
 	return true;
 }
 
-char Drawer2D_LastCol(STRING_PURE String* text, Int32 start) {
+char Drawer2D_LastCol(const String* text, Int32 start) {
 	if (start >= text->length) start = text->length - 1;
 	Int32 i;
 	for (i = start; i >= 0; i--) {
@@ -366,7 +366,7 @@ static Size2D Drawer2D_MeasureBitmapText(struct DrawTextArgs* args) {
 	return total;
 }
 
-static Int32 Drawer2D_NextPart(Int32 i, STRING_REF String* value, STRING_TRANSIENT String* part, char* nextCol) {
+static Int32 Drawer2D_NextPart(Int32 i, STRING_REF String* value, String* part, char* nextCol) {
 	Int32 length = 0, start = i;
 	for (; i < value->length; i++) {
 		if (value->buffer[i] == '&' && Drawer2D_ValidColCodeAt(value, i + 1)) break;

@@ -24,13 +24,13 @@ extern ReturnCode ReturnCode_SocketInProgess;
 extern ReturnCode ReturnCode_SocketWouldBlock;
 extern ReturnCode ReturnCode_InvalidArg;
 
-void Platform_ConvertString(void* dstPtr, STRING_PURE String* src);
+void Platform_ConvertString(void* dstPtr, const String* src);
 void Platform_Init(void);
 void Platform_Free(void);
 void Platform_SetWorkingDir(void);
 void Platform_Exit(ReturnCode code);
-Int32 Platform_GetCommandLineArgs(int argc, char** argv, STRING_TRANSIENT String* args);
-ReturnCode Platform_StartShell(STRING_PURE String* args);
+Int32 Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args);
+ReturnCode Platform_StartShell(const String* args);
 
 NOINLINE_ void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const char* place);
 NOINLINE_ void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const char* place);
@@ -39,7 +39,7 @@ NOINLINE_ void  Mem_Free(void* mem);
 void Mem_Set(void* dst, UInt8 value, UInt32 numBytes);
 void Mem_Copy(void* dst, void* src, UInt32 numBytes);
 
-void Platform_Log(STRING_PURE String* message);
+void Platform_Log(const String* message);
 void Platform_LogConst(const char* message);
 void Platform_Log1(const char* format, const void* a1);
 void Platform_Log2(const char* format, const void* a1, const void* a2);
@@ -52,16 +52,16 @@ void DateTime_CurrentLocal(DateTime* time);
 void Stopwatch_Measure(UInt64* timer);
 Int32 Stopwatch_ElapsedMicroseconds(UInt64* timer);
 
-bool Directory_Exists(STRING_PURE String* path);
-ReturnCode Directory_Create(STRING_PURE String* path);
-typedef void Directory_EnumCallback(STRING_PURE String* filename, void* obj);
-ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCallback callback);
-bool File_Exists(STRING_PURE String* path);
-ReturnCode File_GetModifiedTime_MS(STRING_PURE String* path, UInt64* ms);
+bool Directory_Exists(const String* path);
+ReturnCode Directory_Create(const String* path);
+typedef void Directory_EnumCallback(const String* filename, void* obj);
+ReturnCode Directory_Enum(const String* path, void* obj, Directory_EnumCallback callback);
+bool File_Exists(const String* path);
+ReturnCode File_GetModifiedTime_MS(const String* path, UInt64* ms);
 
-ReturnCode File_Create(void** file, STRING_PURE String* path);
-ReturnCode File_Open(void** file, STRING_PURE String* path);
-ReturnCode File_Append(void** file, STRING_PURE String* path);
+ReturnCode File_Create(void** file, const String* path);
+ReturnCode File_Open(void** file, const String* path);
+ReturnCode File_Append(void** file, const String* path);
 ReturnCode File_Read(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead);
 ReturnCode File_Write(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWrote);
 ReturnCode File_Close(void* file);
@@ -86,7 +86,7 @@ void  Waitable_Wait(void* handle);
 void  Waitable_WaitFor(void* handle, UInt32 milliseconds);
 
 void Font_GetNames(StringsBuffer* buffer);
-NOINLINE_ void Font_Make(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
+NOINLINE_ void Font_Make(FontDesc* desc, const String* fontName, UInt16 size, UInt16 style);
 NOINLINE_ void Font_Free(FontDesc* desc);
 Size2D Platform_TextMeasure(struct DrawTextArgs* args);
 void Platform_SetBitmap(Bitmap* bmp);
@@ -98,7 +98,7 @@ ReturnCode Socket_Available(SocketPtr socket, UInt32* available);
 ReturnCode Socket_SetBlocking(SocketPtr socket, bool blocking);
 ReturnCode Socket_GetError(SocketPtr socket, ReturnCode* result);
 
-ReturnCode Socket_Connect(SocketPtr socket, STRING_PURE String* ip, Int32 port);
+ReturnCode Socket_Connect(SocketPtr socket, const String* ip, Int32 port);
 ReturnCode Socket_Read(SocketPtr socket, UInt8* buffer, UInt32 count, UInt32* modified);
 ReturnCode Socket_Write(SocketPtr socket, UInt8* buffer, UInt32 count, UInt32* modified);
 ReturnCode Socket_Close(SocketPtr socket);

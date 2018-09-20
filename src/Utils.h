@@ -19,14 +19,14 @@ typedef struct DateTime_ {
 #define DATETIME_MILLIS_PER_SEC 1000
 UInt64 DateTime_TotalMs(DateTime* time);
 void DateTime_FromTotalMs(DateTime* time, UInt64 ms);
-void DateTime_HttpDate(UInt64 ms, STRING_TRANSIENT String* str);
+void DateTime_HttpDate(UInt64 ms, String* str);
 
-UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const char** names, UInt32 namesCount);
+UInt32 Utils_ParseEnum(const String* text, UInt32 defValue, const char** names, UInt32 namesCount);
 bool Utils_IsValidInputChar(char c, bool supportsCP437);
-bool Utils_IsUrlPrefix(STRING_PURE String* value, Int32 index);
+bool Utils_IsUrlPrefix(const String* value, Int32 index);
 
-bool Utils_EnsureDirectory(STRING_PURE const char* dirName);
-void Utils_UNSAFE_GetFilename(STRING_TRANSIENT String* str);
+bool Utils_EnsureDirectory(const char* dirName);
+void Utils_UNSAFE_GetFilename(STRING_REF String* str);
 Int32 Utils_AccumulateWheelDelta(Real32* accmulator, Real32 delta);
 #define Utils_AdjViewDist(value) ((Int32)(1.4142135f * (value)))
 
@@ -34,5 +34,5 @@ UInt8 Utils_GetSkinType(Bitmap* bmp);
 UInt32 Utils_CRC32(UInt8* data, UInt32 length);
 extern UInt32 Utils_Crc32Table[256];
 NOINLINE_ void* Utils_Resize(void* buffer, UInt32* maxElems, UInt32 elemSize, UInt32 defElems, UInt32 expandElems);
-NOINLINE_ bool Utils_ParseIP(STRING_PURE String* ip, UInt8* data);
+NOINLINE_ bool Utils_ParseIP(const String* ip, UInt8* data);
 #endif

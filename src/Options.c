@@ -19,7 +19,7 @@ void Options_Free(void) {
 	StringsBuffer_Clear(&Options_Changed);
 }
 
-bool Options_HasChanged(STRING_PURE String* key) {
+bool Options_HasChanged(const String* key) {
 	Int32 i;
 	for (i = 0; i < Options_Changed.Count; i++) {
 		String curKey = StringsBuffer_UNSAFE_Get(&Options_Changed, i);
@@ -28,7 +28,7 @@ bool Options_HasChanged(STRING_PURE String* key) {
 	return false;
 }
 
-static Int32 Options_Find(STRING_PURE String* key) {
+static Int32 Options_Find(const String* key) {
 	Int32 i;
 	for (i = 0; i < Options_Keys.Count; i++) {
 		String curKey = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
@@ -37,7 +37,7 @@ static Int32 Options_Find(STRING_PURE String* key) {
 	return -1;
 }
 
-static bool Options_TryGetValue(const char* keyRaw, STRING_TRANSIENT String* value) {
+static bool Options_TryGetValue(const char* keyRaw, String* value) {
 	String key = String_FromReadonly(keyRaw);
 	*value = String_MakeNull();
 
@@ -59,7 +59,7 @@ static bool Options_TryGetValue(const char* keyRaw, STRING_TRANSIENT String* val
 	return false;
 }
 
-void Options_Get(const char* key, STRING_TRANSIENT String* value, const char* defValue) {
+void Options_Get(const char* key, String* value, const char* defValue) {
 	String str;
 	Options_TryGetValue(key, &str);
 	value->length = 0;
@@ -111,7 +111,7 @@ static void Options_Remove(Int32 i) {
 	StringsBuffer_Remove(&Options_Values, i);
 }
 
-static Int32 Options_Insert(STRING_PURE String* key, STRING_PURE String* value) {
+static Int32 Options_Insert(const String* key, const String* value) {
 	Int32 i = Options_Find(key);
 	if (i >= 0) Options_Remove(i);
 
@@ -135,12 +135,12 @@ void Options_SetInt(const char* keyRaw, Int32 value) {
 	Options_Set(keyRaw, &numStr);
 }
 
-void Options_Set(const char* keyRaw, STRING_PURE String* value) {
+void Options_Set(const char* keyRaw, const String* value) {
 	String key = String_FromReadonly(keyRaw);
 	Options_SetString(&key, value);
 }
 
-void Options_SetString(STRING_PURE String* key, STRING_PURE String* value) {
+void Options_SetString(const String* key, const String* value) {
 	Int32 i;
 	if (value == NULL || value->buffer == NULL) {
 		i = Options_Find(key);

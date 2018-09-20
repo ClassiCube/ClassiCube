@@ -266,7 +266,7 @@ struct Screen* InventoryScreen_UNSAFE_RawPointer = (struct Screen*)&InventoryScr
 *-------------------------------------------------------StatusScreen------------------------------------------------------*
 *#########################################################################################################################*/
 struct StatusScreen StatusScreen_Instance;
-static void StatusScreen_MakeText(struct StatusScreen* s, STRING_TRANSIENT String* status) {
+static void StatusScreen_MakeText(struct StatusScreen* s, String* status) {
 	s->FPS = (Int32)(s->Frames / s->Accumulator);
 	String_Format1(status, "%i fps, ", &s->FPS);
 
@@ -588,7 +588,7 @@ struct ScreenVTABLE LoadingScreen_VTABLE = {
 	LoadingScreen_MouseDown, LoadingScreen_MouseUp, LoadingScreen_MouseMove, LoadingScreen_MouseScroll,
 	LoadingScreen_OnResize,  LoadingScreen_ContextLost, LoadingScreen_ContextRecreated,
 };
-struct Screen* LoadingScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message) {
+struct Screen* LoadingScreen_MakeInstance(const String* title, const String* message) {
 	struct LoadingScreen* s = &LoadingScreen_Instance;
 	s->LastState = NULL;
 	s->VTABLE    = &LoadingScreen_VTABLE;
@@ -705,7 +705,7 @@ static void ChatScreen_SetHandlesAllInput(struct ChatScreen* s, bool handles) {
 	Gui_CalcCursorVisible();
 }
 
-static void ChatScreen_OpenInput(struct ChatScreen* s, STRING_PURE String* initialText) {
+static void ChatScreen_OpenInput(struct ChatScreen* s, const String* initialText) {
 	s->SuppressNextPress = true;
 	ChatScreen_SetHandlesAllInput(s, true);
 	Key_KeyRepeat = true;
@@ -1013,7 +1013,7 @@ static void ChatScreen_ColCodeChanged(void* screen, Int32 code) {
 	s->Input.Base.CaretAccumulator = caretAcc;
 }
 
-static void ChatScreen_ChatReceived(void* screen, String* msg, Int32 type) {
+static void ChatScreen_ChatReceived(void* screen, const String* msg, Int32 type) {
 	struct ChatScreen* s = screen;
 	if (Gfx_LostContext) return;
 
@@ -1343,12 +1343,12 @@ void HUDScreen_MakeComponent(struct IGameComponent* comp) {
 	comp->Ready = HUDScreen_Ready;
 }
 
-void HUDScreen_OpenInput(struct Screen* hud, STRING_PURE String* text) {
+void HUDScreen_OpenInput(struct Screen* hud, const String* text) {
 	struct Screen* chat = ((struct HUDScreen*)hud)->Chat;
 	ChatScreen_OpenInput((struct ChatScreen*)chat, text);
 }
 
-void HUDScreen_AppendInput(struct Screen* hud, STRING_PURE String* text) {
+void HUDScreen_AppendInput(struct Screen* hud, const String* text) {
 	struct Screen* chat = ((struct HUDScreen*)hud)->Chat;
 	struct ChatInputWidget* widget = &((struct ChatScreen*)chat)->Input;
 	InputWidget_AppendString(&widget->Base, text);
@@ -1365,7 +1365,7 @@ struct Widget* HUDScreen_GetHotbar(struct Screen* hud) {
 *#########################################################################################################################*/
 struct DisconnectScreen DisconnectScreen_Instance;
 #define DISCONNECT_DELAY_MS 5000
-static void DisconnectScreen_ReconnectMessage(struct DisconnectScreen* s, STRING_TRANSIENT String* msg) {
+static void DisconnectScreen_ReconnectMessage(struct DisconnectScreen* s, String* msg) {
 	if (s->CanReconnect) {
 		Int32 elapsedMS = (Int32)(DateTime_CurrentUTC_MS() - s->InitTime);
 		Int32 secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLIS_PER_SEC;
@@ -1502,7 +1502,7 @@ struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_MouseDown, DisconnectScreen_MouseUp, DisconnectScreen_MouseMove, DisconnectScreen_MouseScroll,
 	DisconnectScreen_OnResize,  DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
-struct Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message) {
+struct Screen* DisconnectScreen_MakeInstance(const String* title, const String* message) {
 	struct DisconnectScreen* s = &DisconnectScreen_Instance;
 	s->HandlesAllInput = true;
 	s->BlocksWorld     = true;

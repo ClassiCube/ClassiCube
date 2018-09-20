@@ -204,13 +204,13 @@ STRING_REF String Block_UNSAFE_GetName(BlockID block) {
 	return String_FromRaw(Block_NamePtr(block), STRING_SIZE);
 }
 
-void Block_SetName(BlockID block, STRING_PURE String* name) {
+void Block_SetName(BlockID block, const String* name) {
 	String dst = { Block_NamePtr(block), 0, STRING_SIZE };
 	Mem_Set(dst.buffer, 0, STRING_SIZE);
 	String_AppendString(&dst, name);
 }
 
-Int32 Block_FindID(STRING_PURE String* name) {
+Int32 Block_FindID(const String* name) {
 	Int32 block;
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
 		String blockName = Block_UNSAFE_GetName(block);
@@ -449,7 +449,7 @@ void Block_UpdateCulling(BlockID block) {
 #define AR_EQ1(s, x) (s.length >= 1 && Char_ToLower(s.buffer[0]) == x)
 #define AR_EQ2(s, x, y) (s.length >= 2 && Char_ToLower(s.buffer[0]) == x && Char_ToLower(s.buffer[1]) == y)
 
-static BlockID AutoRotate_Find(BlockID block, String* name, const char* suffix) {
+static BlockID AutoRotate_Find(BlockID block, const String* name, const char* suffix) {
 	char buffer[STRING_SIZE * 2];
 	String temp = String_FromArray(buffer);
 	String_AppendString(&temp, name);
@@ -460,7 +460,7 @@ static BlockID AutoRotate_Find(BlockID block, String* name, const char* suffix) 
 	return block;
 }
 
-static BlockID AutoRotate_RotateCorner(BlockID block, String* name, Vector3 offset) {
+static BlockID AutoRotate_RotateCorner(BlockID block, const String* name, Vector3 offset) {
 	if (offset.X < 0.5f && offset.Z < 0.5f) {
 		return AutoRotate_Find(block, name, "-NW");
 	} else if (offset.X >= 0.5f && offset.Z < 0.5f) {
@@ -473,7 +473,7 @@ static BlockID AutoRotate_RotateCorner(BlockID block, String* name, Vector3 offs
 	return block;
 }
 
-static BlockID AutoRotate_RotateVertical(BlockID block, String* name, Vector3 offset) {
+static BlockID AutoRotate_RotateVertical(BlockID block, const String* name, Vector3 offset) {
 	if (offset.Y >= 0.5f) {
 		return AutoRotate_Find(block, name, "-U");
 	} else {
@@ -481,7 +481,7 @@ static BlockID AutoRotate_RotateVertical(BlockID block, String* name, Vector3 of
 	}
 }
 
-static BlockID AutoRotate_RotateOther(BlockID block, String* name, Vector3 offset) {
+static BlockID AutoRotate_RotateOther(BlockID block, const String* name, Vector3 offset) {
 	/* Fence type blocks */
 	if (AutoRotate_Find(BLOCK_AIR, name, "-UD") == BLOCK_AIR) {
 		Real32 headY = LocalPlayer_Instance.Base.HeadY;
@@ -505,7 +505,7 @@ static BlockID AutoRotate_RotateOther(BlockID block, String* name, Vector3 offse
 	return block;
 }
 
-static BlockID AutoRotate_RotateDirection(BlockID block, String* name, Vector3 offset) {
+static BlockID AutoRotate_RotateDirection(BlockID block, const String* name, Vector3 offset) {
 	Real32 headY = LocalPlayer_Instance.Base.HeadY;
 	headY = LocationUpdate_Clamp(headY);
 

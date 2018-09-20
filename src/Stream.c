@@ -345,7 +345,7 @@ ReturnCode Stream_ReadUtf8(struct Stream* stream, UInt16* codepoint) {
 	return 0;
 }
 
-ReturnCode Stream_ReadLine(struct Stream* stream, STRING_TRANSIENT String* text) {
+ReturnCode Stream_ReadLine(struct Stream* stream, String* text) {
 	text->length = 0;
 	bool readAny = false;
 	UInt16 codepoint;
@@ -380,7 +380,7 @@ Int32 Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint) {
 	}
 }
 
-ReturnCode Stream_WriteLine(struct Stream* stream, STRING_TRANSIENT String* text) {
+ReturnCode Stream_WriteLine(struct Stream* stream, String* text) {
 	UInt8 buffer[2048 + 10];
 	UInt32 i, j = 0;
 	ReturnCode res;

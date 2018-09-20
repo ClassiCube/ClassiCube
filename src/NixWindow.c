@@ -186,8 +186,7 @@ static void Window_RefreshBounds(XEvent* e) {
 }
 
 static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode);
-void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_PURE String* title, 
-	struct GraphicsMode* mode, struct DisplayDevice* device) {
+void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, const String* title, struct GraphicsMode* mode, struct DisplayDevice* device) {
 	win_display = DisplayDevice_Meta[0];
 	win_screen  = DisplayDevice_Meta[1];
 	win_rootWin = DisplayDevice_Meta[2];
@@ -250,7 +249,7 @@ String clipboard_copy_text = String_FromArray(clipboard_copy_buffer);
 char clipboard_paste_buffer[256];
 String clipboard_paste_text = String_FromArray(clipboard_paste_buffer);
 
-void Window_GetClipboardText(STRING_TRANSIENT String* value) {
+void Window_GetClipboardText(String* value) {
 	Window owner = XGetSelectionOwner(win_display, xa_clipboard);
 	if (!owner) return; /* no window owner */
 
@@ -270,7 +269,7 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 	}
 }
 
-void Window_SetClipboardText(STRING_PURE String* value) {
+void Window_SetClipboardText(const String* value) {
 	String_Copy(&clipboard_paste_text, value);
 	XSetSelectionOwner(win_display, xa_clipboard, win_handle, 0);
 }

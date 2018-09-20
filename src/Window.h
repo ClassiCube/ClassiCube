@@ -36,10 +36,9 @@ enum WINDOW_STATE {
 	WINDOW_STATE_MAXIMISED, WINDOW_STATE_FULLSCREEN,
 };
 
-void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_PURE String* title, 
-	struct GraphicsMode* mode, struct DisplayDevice* device);
-void Window_GetClipboardText(STRING_TRANSIENT String* value);
-void Window_SetClipboardText(STRING_PURE String* value);
+void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, const String* title, struct GraphicsMode* mode, struct DisplayDevice* device);
+void Window_GetClipboardText(String* value);
+void Window_SetClipboardText(const String* value);
 /* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */
 
 bool Window_Exists, Window_Focused;

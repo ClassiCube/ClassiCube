@@ -78,7 +78,7 @@ bool ManageCookies;
 bool KeepAlive;
 /* TODO: Connection pooling */
 
-static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 type, UInt64* lastModified, String* etag, String* data) {
+static void AsyncDownloader_Add(const String* url, bool priority, const String* id, UInt8 type, UInt64* lastModified, const String* etag, const String* data) {
 	Mutex_Lock(async_pendingMutex);
 	{
 		struct AsyncRequest req = { 0 };
@@ -107,7 +107,7 @@ static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 ty
 	Waitable_Signal(async_waitable);
 }
 
-void AsyncDownloader_GetSkin(STRING_PURE String* id, STRING_PURE String* skinName) {
+void AsyncDownloader_GetSkin(const String* id, const String* skinName) {
 	char urlBuffer[STRING_SIZE];
 	String url = String_FromArray(urlBuffer);
 
@@ -122,19 +122,19 @@ void AsyncDownloader_GetSkin(STRING_PURE String* id, STRING_PURE String* skinNam
 	AsyncDownloader_Add(&url, false, id, REQUEST_TYPE_DATA, NULL, NULL, NULL);
 }
 
-void AsyncDownloader_GetData(STRING_PURE String* url, bool priority, STRING_PURE String* id) {
+void AsyncDownloader_GetData(const String* url, bool priority, const String* id) {
 	AsyncDownloader_Add(url, priority, id, REQUEST_TYPE_DATA, NULL, NULL, NULL);
 }
 
-void AsyncDownloader_GetContentLength(STRING_PURE String* url, bool priority, STRING_PURE String* id) {
+void AsyncDownloader_GetContentLength(const String* url, bool priority, const String* id) {
 	AsyncDownloader_Add(url, priority, id, REQUEST_TYPE_CONTENT_LENGTH, NULL, NULL, NULL);
 }
 
-void AsyncDownloader_PostString(STRING_PURE String* url, bool priority, STRING_PURE String* id, STRING_PURE String* contents) {
+void AsyncDownloader_PostString(const String* url, bool priority, const String* id, const String* contents) {
 	AsyncDownloader_Add(url, priority, id, REQUEST_TYPE_DATA, NULL, NULL, contents);
 }
 
-void AsyncDownloader_GetDataEx(STRING_PURE String* url, bool priority, STRING_PURE String* id, UInt64* lastModified, STRING_PURE String* etag) {
+void AsyncDownloader_GetDataEx(const String* url, bool priority, const String* id, UInt64* lastModified, const String* etag) {
 	AsyncDownloader_Add(url, priority, id, REQUEST_TYPE_DATA, lastModified, etag, NULL);
 }
 
@@ -155,7 +155,7 @@ void AsyncDownloader_PurgeOldEntriesTask(struct ScheduledTask* task) {
 	Mutex_Unlock(async_processedMutex);
 }
 
-static Int32 AsyncRequestList_Find(STRING_PURE String* id, struct AsyncRequest* item) {
+static Int32 AsyncRequestList_Find(const String* id, struct AsyncRequest* item) {
 	Int32 i;
 	for (i = 0; i < async_processed.Count; i++) {
 		String reqID = String_FromRawArray(async_processed.Requests[i].ID);
@@ -167,7 +167,7 @@ static Int32 AsyncRequestList_Find(STRING_PURE String* id, struct AsyncRequest* 
 	return -1;
 }
 
-bool AsyncDownloader_Get(STRING_PURE String* id, struct AsyncRequest* item) {
+bool AsyncDownloader_Get(const String* id, struct AsyncRequest* item) {
 	bool success = false;
 
 	Mutex_Lock(async_processedMutex);

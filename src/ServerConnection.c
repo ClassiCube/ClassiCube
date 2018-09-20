@@ -40,7 +40,7 @@ static void ServerConnection_ResetState(void) {
 	ServerConnection_SupportsFullCP437 = false;
 }
 
-void ServerConnection_RetrieveTexturePack(STRING_PURE String* url) {
+void ServerConnection_RetrieveTexturePack(const String* url) {
 	if (!TextureCache_HasAccepted(url) && !TextureCache_HasDenied(url)) {
 		struct Screen* warning = TexPackOverlay_MakeInstance(url);
 		Gui_ShowOverlay(warning, false);
@@ -49,7 +49,7 @@ void ServerConnection_RetrieveTexturePack(STRING_PURE String* url) {
 	}
 }
 
-void ServerConnection_DownloadTexturePack(STRING_PURE String* url) {
+void ServerConnection_DownloadTexturePack(const String* url) {
 	if (TextureCache_HasDenied(url)) return;
 	char etagBuffer[STRING_SIZE];
 	String etag = String_FromArray(etagBuffer);
@@ -173,7 +173,7 @@ static void SPConnection_BeginConnect(void) {
 }
 
 char SPConnection_LastCol = '\0';
-static void SPConnection_AddPortion(STRING_PURE String* text) {
+static void SPConnection_AddPortion(const String* text) {
 	char tmpBuffer[STRING_SIZE * 2];
 	String tmp = String_FromArray(tmpBuffer);
 	/* Prepend colour codes for subsequent lines of multi-line chat */
@@ -188,14 +188,14 @@ static void SPConnection_AddPortion(STRING_PURE String* text) {
 	for (i = 0; i < tmp.length; i++) {
 		if (tmp.buffer[i] == '%') tmp.buffer[i] = '&';
 	}
-	String_UNSAFE_TrimEnd(&tmp);
+	String_TrimEnd(&tmp);
 
 	char col = Drawer2D_LastCol(&tmp, tmp.length);
 	if (col) SPConnection_LastCol = col;
 	Chat_Add(&tmp);
 }
 
-static void SPConnection_SendChat(STRING_PURE String* text) {
+static void SPConnection_SendChat(const String* text) {
 	if (!text->length) return;
 	SPConnection_LastCol = '\0';
 
@@ -332,7 +332,7 @@ static void MPConnection_BeginConnect(void) {
 	}
 }
 
-static void MPConnection_SendChat(STRING_PURE String* text) {
+static void MPConnection_SendChat(const String* text) {
 	if (!text->length || net_connecting) return;
 	String remaining = *text;
 

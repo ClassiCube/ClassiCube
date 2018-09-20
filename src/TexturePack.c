@@ -115,8 +115,8 @@ enum ZIP_SIG {
 	ZIP_SIG_LOCALFILEHEADER = 0x04034b50,
 };
 
-static void Zip_DefaultProcessor(STRING_TRANSIENT String* path, struct Stream* data, struct ZipEntry* entry) { }
-static bool Zip_DefaultSelector(STRING_TRANSIENT String* path) { return true; }
+static void Zip_DefaultProcessor(const String* path, struct Stream* data, struct ZipEntry* entry) { }
+static bool Zip_DefaultSelector(const String* path) { return true; }
 void Zip_Init(struct ZipState* state, struct Stream* input) {
 	state->Input = input;
 	state->EntriesCount = 0;
@@ -215,8 +215,8 @@ static void EntryList_Load(struct EntryList* list) {
 			if (res == ERR_END_OF_STREAM) break;
 			if (res) { Chat_LogError2(res, "reading from", &path); break; }
 
-			String_UNSAFE_TrimStart(&line);
-			String_UNSAFE_TrimEnd(&line);
+			String_TrimStart(&line);
+			String_TrimEnd(&line);
 
 			if (!line.length) continue;
 			StringsBuffer_Add(&list->Entries, &line);
@@ -249,12 +249,12 @@ static void EntryList_Save(struct EntryList* list) {
 	if (res) { Chat_LogError2(res, "closing", &path); }
 }
 
-static void EntryList_Add(struct EntryList* list, STRING_PURE String* entry) {
+static void EntryList_Add(struct EntryList* list, const String* entry) {
 	StringsBuffer_Add(&list->Entries, entry);
 	EntryList_Save(list);
 }
 
-static bool EntryList_Has(struct EntryList* list, STRING_PURE String* entry) {
+static bool EntryList_Has(struct EntryList* list, const String* entry) {
 	Int32 i;
 	for (i = 0; i < list->Entries.Count; i++) {
 		String curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
@@ -293,22 +293,22 @@ void TextureCache_Init(void) {
 	EntryList_UNSAFE_Make(&cache_lastModified, TEXCACHE_FOLDER, "lastmodified.txt");
 }
 
-bool TextureCache_HasAccepted(STRING_PURE String* url) { return EntryList_Has(&cache_accepted, url); }
-bool TextureCache_HasDenied(STRING_PURE String* url)   { return EntryList_Has(&cache_denied,   url); }
-void TextureCache_Accept(STRING_PURE String* url) { EntryList_Add(&cache_accepted, url); }
-void TextureCache_Deny(STRING_PURE String* url)   { EntryList_Add(&cache_denied,   url); }
+bool TextureCache_HasAccepted(const String* url) { return EntryList_Has(&cache_accepted, url); }
+bool TextureCache_HasDenied(const String* url)   { return EntryList_Has(&cache_denied,   url); }
+void TextureCache_Accept(const String* url) { EntryList_Add(&cache_accepted, url); }
+void TextureCache_Deny(const String* url)   { EntryList_Add(&cache_denied,   url); }
 
-static void TextureCache_MakePath(STRING_TRANSIENT String* path, STRING_PURE String* url) {
+static void TextureCache_MakePath(String* path, const String* url) {
 	TexCache_Crc32(url);
 	String_Format2(path, TEXCACHE_FOLDER "%r%s", &Directory_Separator, &crc32);
 }
 
-bool TextureCache_HasUrl(STRING_PURE String* url) {
+bool TextureCache_HasUrl(const String* url) {
 	TexCache_InitAndMakePath(url);
 	return File_Exists(&path);
 }
 
-bool TextureCache_GetStream(STRING_PURE String* url, struct Stream* stream) {
+bool TextureCache_GetStream(const String* url, struct Stream* stream) {
 	TexCache_InitAndMakePath(url);
 	ReturnCode res;
 
@@ -320,7 +320,7 @@ bool TextureCache_GetStream(STRING_PURE String* url, struct Stream* stream) {
 	return true;
 }
 
-void TexturePack_GetFromTags(STRING_PURE String* url, STRING_TRANSIENT String* result, struct EntryList* list) {
+void TexturePack_GetFromTags(const String* url, String* result, struct EntryList* list) {
 	TexCache_Crc32(url);
 	Int32 i;
 	String line, key, value;
@@ -334,7 +334,7 @@ void TexturePack_GetFromTags(STRING_PURE String* url, STRING_TRANSIENT String* r
 	}
 }
 
-void TextureCache_GetLastModified(STRING_PURE String* url, UInt64* time) {
+void TextureCache_GetLastModified(const String* url, UInt64* time) {
 	char entryBuffer[STRING_SIZE];
 	String entry = String_FromArray(entryBuffer);
 	TexturePack_GetFromTags(url, &entry, &cache_lastModified);
@@ -351,11 +351,11 @@ void TextureCache_GetLastModified(STRING_PURE String* url, UInt64* time) {
 	}
 }
 
-void TextureCache_GetETag(STRING_PURE String* url, STRING_PURE String* etag) {
+void TextureCache_GetETag(const String* url, String* etag) {
 	TexturePack_GetFromTags(url, etag, &cache_eTags);
 }
 
-void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length) {
+void TextureCache_AddData(const String* url, UInt8* data, UInt32 length) {
 	TexCache_InitAndMakePath(url);
 	ReturnCode res;
 	if (!Utils_EnsureDirectory(TEXCACHE_FOLDER)) return;
@@ -371,7 +371,7 @@ void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length) {
 	if (res) { Chat_LogError2(res, "closing cache for", url); }
 }
 
-void TextureCache_AddToTags(STRING_PURE String* url, STRING_PURE String* data, struct EntryList* list) {
+void TextureCache_AddToTags(const String* url, const String* data, struct EntryList* list) {
 	TexCache_Crc32(url);
 	char entryBuffer[2048];
 	String entry = String_FromArray(entryBuffer);
@@ -388,12 +388,12 @@ void TextureCache_AddToTags(STRING_PURE String* url, STRING_PURE String* data, s
 	EntryList_Add(list, &entry);
 }
 
-void TextureCache_AddETag(STRING_PURE String* url, STRING_PURE String* etag) {
+void TextureCache_AddETag(const String* url, const String* etag) {
 	if (!etag->length) return;
 	TextureCache_AddToTags(url, etag, &cache_eTags);
 }
 
-void TextureCache_AddLastModified(STRING_PURE String* url, UInt64* lastModified) {
+void TextureCache_AddLastModified(const String* url, UInt64* lastModified) {
 	if (!lastModified) return;
 	UInt64 ticks = (*lastModified) * TEXCACHE_TICKS_PER_MS;
 
@@ -407,7 +407,7 @@ void TextureCache_AddLastModified(STRING_PURE String* url, UInt64* lastModified)
 /*########################################################################################################################*
 *-------------------------------------------------------TexturePack-------------------------------------------------------*
 *#########################################################################################################################*/
-static void TexturePack_ProcessZipEntry(STRING_TRANSIENT String* path, struct Stream* stream, struct ZipEntry* entry) {
+static void TexturePack_ProcessZipEntry(const String* path, struct Stream* stream, struct ZipEntry* entry) {
 	String name = *path; Utils_UNSAFE_GetFilename(&name);
 	Event_RaiseEntry(&TextureEvents_FileChanged, stream, &name);
 }
@@ -422,7 +422,7 @@ static ReturnCode TexturePack_ExtractZip(struct Stream* stream) {
 	return Zip_Extract(&state);
 }
 
-void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
+void TexturePack_ExtractZip_File(const String* filename) {
 	char pathBuffer[FILENAME_SIZE];
 	String path = String_FromArray(pathBuffer);
 	String_Format2(&path, "texpacks%r%s", &Directory_Separator, filename);
@@ -461,7 +461,7 @@ void TexturePack_ExtractDefault(void) {
 	World_TextureUrl.length = 0;
 }
 
-void TexturePack_ExtractCurrent(STRING_PURE String* url) {
+void TexturePack_ExtractCurrent(const String* url) {
 	if (!url->length) { TexturePack_ExtractDefault(); return; }
 
 	struct Stream stream;

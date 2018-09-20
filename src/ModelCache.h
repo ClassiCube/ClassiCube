@@ -23,8 +23,8 @@ VertexP3fT2fC4b ModelCache_Vertices[MODELCACHE_MAX_VERTICES];
 
 void ModelCache_Init(void);
 void ModelCache_Free(void);
-NOINLINE_ struct Model* ModelCache_Get(STRING_PURE String* name);
-NOINLINE_ Int32 ModelCache_GetTextureIndex(STRING_PURE String* texName);
-NOINLINE_ void ModelCache_Register(STRING_REF const char* name, STRING_PURE const char* defaultTexName, struct Model* instance);
+NOINLINE_ struct Model* ModelCache_Get(const String* name);
+NOINLINE_ Int32 ModelCache_GetTextureIndex(const String* texName);
+NOINLINE_ void ModelCache_Register(STRING_REF const char* name, const char* defaultTexName, struct Model* instance);
 NOINLINE_ void ModelCache_RegisterTexture(STRING_REF const char* texName);
 #endif

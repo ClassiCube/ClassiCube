@@ -6,7 +6,7 @@
 #include "Stream.h"
 
 static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void* ctx);
-static void ErrorHandler_DumpCommon(STRING_TRANSIENT String* str, void* ctx);
+static void ErrorHandler_DumpCommon(String* str, void* ctx);
 
 #if CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
@@ -77,7 +77,7 @@ static BOOL CALLBACK ErrorHandler_DumpModule(const char* name, ULONG_PTR base, U
 	return true;
 }
 
-static void ErrorHandler_Backtrace(STRING_TRANSIENT String* backtrace, void* ctx) {
+static void ErrorHandler_Backtrace(String* backtrace, void* ctx) {
 	struct SymbolAndName sym = { 0 };
 	sym.Symbol.MaxNameLength = 255;
 	sym.Symbol.SizeOfStruct = sizeof(IMAGEHLP_SYMBOL);
@@ -122,7 +122,7 @@ static void ErrorHandler_Backtrace(STRING_TRANSIENT String* backtrace, void* ctx
 	String_AppendConst(backtrace, "\r\n");
 }
 
-static void ErrorHandler_DumpCommon(STRING_TRANSIENT String* str, void* ctx) {
+static void ErrorHandler_DumpCommon(String* str, void* ctx) {
 	HANDLE process = GetCurrentProcess();
 	SymInitialize(process, NULL, TRUE);
 
@@ -187,7 +187,7 @@ static LONG WINAPI ErrorHandler_UnhandledFilter(struct _EXCEPTION_POINTERS* pInf
 	return EXCEPTION_EXECUTE_HANDLER; /* TODO: different flag */
 }
 
-void ErrorHandler_Init(const char* logFile) {
+void ErrorHandler_Init(void) {
 	SetUnhandledExceptionFilter(ErrorHandler_UnhandledFilter);
 }
 
@@ -483,7 +483,7 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 /*########################################################################################################################*
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
-static void ErrorHandler_Backtrace(STRING_TRANSIENT String* backtrace_, void* ctx) {
+static void ErrorHandler_Backtrace(String* backtrace_, void* ctx) {
 	void* addrs[40];
 	Int32 i, frames = backtrace(addrs, 40);
 	char** strings  = backtrace_symbols(addrs, frames);
@@ -551,7 +551,7 @@ static void ErrorHandler_DumpMemoryMap(void) {
 	close(fd);
 }
 
-static void ErrorHandler_DumpCommon(STRING_TRANSIENT String* str, void* ctx) {
+static void ErrorHandler_DumpCommon(String* str, void* ctx) {
 	String backtrace = String_FromConst("-- backtrace --\n");
 	ErrorHandler_Log(&backtrace);
 	ErrorHandler_Backtrace(str, ctx);
@@ -585,7 +585,7 @@ static void ErrorHandler_SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	ErrorHandler_FailCommon(0, msg.buffer, ctx);
 }
 
-void ErrorHandler_Init(const char* logFile) {
+void ErrorHandler_Init(void) {
 	struct sigaction sa, old;
 	sa.sa_handler = ErrorHandler_SignalHandler;
 	sigemptyset(&sa.sa_mask);
@@ -621,7 +621,7 @@ void* logFile;
 struct Stream logStream;
 bool logOpen;
 
-void ErrorHandler_Log(STRING_PURE String* msg) {
+void ErrorHandler_Log(const String* msg) {
 	if (!logOpen) {
 		logOpen = true;
 		String path = String_FromConst("client.log");

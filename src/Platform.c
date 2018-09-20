@@ -181,7 +181,7 @@ Int32 Stopwatch_ElapsedMicroseconds(UInt64* timer) {
 }
 
 #if CC_BUILD_WIN
-void Platform_Log(STRING_PURE String* message) {
+void Platform_Log(const String* message) {
 	/* TODO: log to console */
 	OutputDebugStringA(message->buffer);
 	OutputDebugStringA("\n");
@@ -231,7 +231,7 @@ void Stopwatch_Measure(UInt64* timer) {
 	}
 }
 #elif CC_BUILD_NIX
-void Platform_Log(STRING_PURE String* message) {
+void Platform_Log(const String* message) {
 	write(STDOUT_FILENO, message->buffer, message->length);
 	write(STDOUT_FILENO, "\n",            1);
 }
@@ -285,25 +285,25 @@ void Stopwatch_Measure(UInt64* timer) {
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 #if CC_BUILD_WIN
-bool Directory_Exists(STRING_PURE String* path) {
+bool Directory_Exists(const String* path) {
 	WCHAR str[300]; Platform_ConvertString(str, path);
 	DWORD attribs = GetFileAttributesW(str);
 	return attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-ReturnCode Directory_Create(STRING_PURE String* path) {
+ReturnCode Directory_Create(const String* path) {
 	WCHAR str[300]; Platform_ConvertString(str, path);
 	BOOL success = CreateDirectoryW(str, NULL);
 	return Win_Return(success);
 }
 
-bool File_Exists(STRING_PURE String* path) {
+bool File_Exists(const String* path) {
 	WCHAR str[300]; Platform_ConvertString(str, path);
 	DWORD attribs = GetFileAttributesW(str);
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCallback callback) {
+ReturnCode Directory_Enum(const String* path, void* obj, Directory_EnumCallback callback) {
 	char fileBuffer[MAX_PATH + 10];
 	String file = String_FromArray(fileBuffer);
 	/* Need to append \* to search for files in directory */
@@ -332,7 +332,7 @@ ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCal
 	return Win_Return(result == ERROR_NO_MORE_FILES);
 }
 
-ReturnCode File_GetModifiedTime_MS(STRING_PURE String* path, UInt64* time) {
+ReturnCode File_GetModifiedTime_MS(const String* path, UInt64* time) {
 	void* file; ReturnCode result = File_Open(&file, path);
 	if (result) return result;
 
@@ -348,19 +348,19 @@ ReturnCode File_GetModifiedTime_MS(STRING_PURE String* path, UInt64* time) {
 	return result;
 }
 
-ReturnCode File_Do(void** file, STRING_PURE String* path, DWORD access, DWORD createMode) {
+ReturnCode File_Do(void** file, const String* path, DWORD access, DWORD createMode) {
 	WCHAR str[300]; Platform_ConvertString(str, path);
 	*file = CreateFileW(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return Win_Return(*file != INVALID_HANDLE_VALUE);
 }
 
-ReturnCode File_Open(void** file, STRING_PURE String* path) {
+ReturnCode File_Open(void** file, const String* path) {
 	return File_Do(file, path, GENERIC_READ, OPEN_EXISTING);
 }
-ReturnCode File_Create(void** file, STRING_PURE String* path) {
+ReturnCode File_Create(void** file, const String* path) {
 	return File_Do(file, path, GENERIC_WRITE, CREATE_ALWAYS);
 }
-ReturnCode File_Append(void** file, STRING_PURE String* path) {
+ReturnCode File_Append(void** file, const String* path) {
 	ReturnCode result = File_Do(file, path, GENERIC_WRITE, OPEN_ALWAYS);
 	if (result) return result;
 	return File_Seek(*file, 0, STREAM_SEEKFROM_END);
@@ -396,26 +396,26 @@ ReturnCode File_Length(void* file, UInt32* length) {
 	return Win_Return(*length != INVALID_FILE_SIZE);
 }
 #elif CC_BUILD_NIX
-bool Directory_Exists(STRING_PURE String* path) {
+bool Directory_Exists(const String* path) {
 	char str[600]; Platform_ConvertString(str, path);
 	struct stat sb;
 	return stat(str, &sb) == 0 && S_ISDIR(sb.st_mode);
 }
 
-ReturnCode Directory_Create(STRING_PURE String* path) {
+ReturnCode Directory_Create(const String* path) {
 	char str[600]; Platform_ConvertString(str, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
 	return Nix_Return(mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != -1);
 }
 
-bool File_Exists(STRING_PURE String* path) {
+bool File_Exists(const String* path) {
 	char str[600]; Platform_ConvertString(str, path);
 	struct stat sb;
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
-ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCallback callback) {
+ReturnCode Directory_Enum(const String* path, void* obj, Directory_EnumCallback callback) {
 	char str[600]; Platform_ConvertString(str, path);
 	DIR* dirPtr = opendir(str);
 	if (!dirPtr) return errno;
@@ -443,7 +443,7 @@ ReturnCode Directory_Enum(STRING_PURE String* path, void* obj, Directory_EnumCal
 	return result;
 }
 
-ReturnCode File_GetModifiedTime_MS(STRING_PURE String* path, UInt64* time) {
+ReturnCode File_GetModifiedTime_MS(const String* path, UInt64* time) {
 	char str[600]; Platform_ConvertString(str, path);
 	struct stat sb;
 	if (stat(str, &sb) == -1) return errno;
@@ -452,19 +452,19 @@ ReturnCode File_GetModifiedTime_MS(STRING_PURE String* path, UInt64* time) {
 	return 0;
 }
 
-ReturnCode File_Do(void** file, STRING_PURE String* path, int mode) {
+ReturnCode File_Do(void** file, const String* path, int mode) {
 	char str[600]; Platform_ConvertString(str, path);
 	*file = open(str, mode, (6 << 6) | (4 << 3) | 4); /* rw|r|r */
 	return Nix_Return(*file != -1);
 }
 
-ReturnCode File_Open(void** file, STRING_PURE String* path) {
+ReturnCode File_Open(void** file, const String* path) {
 	return File_Do(file, path, O_RDONLY);
 }
-ReturnCode File_Create(void** file, STRING_PURE String* path) {
+ReturnCode File_Create(void** file, const String* path) {
 	return File_Do(file, path, O_WRONLY | O_CREAT | O_TRUNC);
 }
-ReturnCode File_Append(void** file, STRING_PURE String* path) {
+ReturnCode File_Append(void** file, const String* path) {
 	ReturnCode result = File_Do(file, path, O_WRONLY | O_CREAT);
 	if (result) return result;
 	return File_Seek(*file, 0, STREAM_SEEKFROM_END);
@@ -688,7 +688,7 @@ void Font_GetNames(StringsBuffer* buffer) {
 	EnumFontFamiliesW(hdc, NULL, Font_GetNamesCallback, buffer);
 }
 
-void Font_Make(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) {
+void Font_Make(FontDesc* desc, const String* fontName, UInt16 size, UInt16 style) {
 	desc->Size    = size; 
 	desc->Style   = style;
 	LOGFONTA font = { 0 };
@@ -823,7 +823,7 @@ ReturnCode Socket_GetError(SocketPtr socket, ReturnCode* result) {
 	return getsockopt(socket, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
-ReturnCode Socket_Connect(SocketPtr socket, STRING_PURE String* ip, Int32 port) {
+ReturnCode Socket_Connect(SocketPtr socket, const String* ip, Int32 port) {
 	struct RAW_IPV4_ADDR { Int16 Family; UInt8 Port[2], IP[4], Pad[8]; } addr;
 	addr.Family = AF_INET;
 
@@ -1443,7 +1443,7 @@ struct AudioFormat* Audio_GetFormat(AudioHandle handle) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 #if CC_BUILD_WIN
-void Platform_ConvertString(void* dstPtr, STRING_PURE String* src) {
+void Platform_ConvertString(void* dstPtr, const String* src) {
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
 	WCHAR* dst = dstPtr;
 
@@ -1510,7 +1510,7 @@ void Platform_SetWorkingDir(void) {
 
 void Platform_Exit(ReturnCode code) { ExitProcess(code); }
 
-ReturnCode Platform_StartShell(STRING_PURE String* args) {
+ReturnCode Platform_StartShell(const String* args) {
 	WCHAR str[300]; Platform_ConvertString(str, args);
 	HINSTANCE instance = ShellExecuteW(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
 	return instance > 32 ? 0 : (ReturnCode)instance;
@@ -1542,7 +1542,7 @@ static String Platform_NextArg(STRING_REF String* args) {
 	return arg;
 }
 
-Int32 Platform_GetCommandLineArgs(int argc, char** argv, STRING_TRANSIENT String* args) {
+Int32 Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args) {
 	String cmdArgs = String_FromReadonly(GetCommandLineA());
 	Platform_NextArg(&cmdArgs); /* skip exe path */
 
@@ -1555,7 +1555,7 @@ Int32 Platform_GetCommandLineArgs(int argc, char** argv, STRING_TRANSIENT String
 	return count;
 }
 #elif CC_BUILD_NIX
-void Platform_ConvertString(void* dstPtr, STRING_PURE String* src) {
+void Platform_ConvertString(void* dstPtr, const String* src) {
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
 	UInt8* dst = dstPtr;
 
@@ -1613,7 +1613,7 @@ void Platform_SetWorkingDir(void) {
 
 void Platform_Exit(ReturnCode code) { exit(code); }
 
-ReturnCode Platform_StartShell(STRING_PURE String* args) {
+ReturnCode Platform_StartShell(const String* args) {
 	char pathBuffer[FILENAME_SIZE + 10];
 	String path = String_FromArray(pathBuffer);
 	String_Format1(&path, "xdg-open %s", args);
@@ -1624,7 +1624,7 @@ ReturnCode Platform_StartShell(STRING_PURE String* args) {
 	return Nix_Return(pclose(fp));
 }
 
-Int32 Platform_GetCommandLineArgs(int argc, char** argv, STRING_TRANSIENT String* args) {
+Int32 Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args) {
 	argc--; /* skip path argument*/
 	Int32 i, count = min(argc, PROGRAM_MAX_CMDARGS);
 

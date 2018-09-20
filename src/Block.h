@@ -90,8 +90,8 @@ void Block_SetDrawType(BlockID block, UInt8 draw);
 void Block_ResetProps(BlockID block);
 
 STRING_REF String Block_UNSAFE_GetName(BlockID block);
-void Block_SetName(BlockID block, STRING_PURE String* name);
-Int32 Block_FindID(STRING_PURE String* name);
+void Block_SetName(BlockID block, const String* name);
+Int32 Block_FindID(const String* name);
 
 void Block_CalcRenderBounds(BlockID block);
 void Block_CalcLightOffset(BlockID block);

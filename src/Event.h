@@ -28,7 +28,7 @@ struct Event_Real {
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
 };
 
-typedef void (*Event_Entry_Callback)(void* obj, struct Stream* stream, String* name);
+typedef void (*Event_Entry_Callback)(void* obj, struct Stream* stream, const String* name);
 struct Event_Entry {
 	Event_Entry_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
@@ -46,7 +46,7 @@ struct Event_MouseMove {
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
 };
 
-typedef void (*Event_Chat_Callback)(void* obj, String* msg, Int32 msgType);
+typedef void (*Event_Chat_Callback)(void* obj, const String* msg, Int32 msgType);
 struct Event_Chat {
 	Event_Chat_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
@@ -64,7 +64,7 @@ void Event_RaiseReal(struct Event_Real* handlers, Real32 arg);
 void Event_RegisterReal(struct Event_Real* handlers, void* obj, Event_Real_Callback handler);
 void Event_UnregisterReal(struct Event_Real* handlers, void* obj, Event_Real_Callback handler);
 
-void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, String* name);
+void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, const String* name);
 void Event_RegisterEntry(struct Event_Entry* handlers, void* obj, Event_Entry_Callback handler);
 void Event_UnregisterEntry(struct Event_Entry* handlers, void* obj, Event_Entry_Callback handler);
 
@@ -76,7 +76,7 @@ void Event_RaiseMouseMove(struct Event_MouseMove* handlers, Int32 xDelta, Int32 
 void Event_RegisterMouseMove(struct Event_MouseMove* handlers, void* obj, Event_MouseMove_Callback handler);
 void Event_UnregisterMouseMove(struct Event_MouseMove* handlers, void* obj, Event_MouseMove_Callback handler);
 
-void Event_RaiseChat(struct Event_Chat* handlers, String* msg, Int32 msgType);
+void Event_RaiseChat(struct Event_Chat* handlers, const String* msg, Int32 msgType);
 void Event_RegisterChat(struct Event_Chat* handlers, void* obj, Event_Chat_Callback handler);
 void Event_UnregisterChat(struct Event_Chat* handlers, void* obj, Event_Chat_Callback handler);
 

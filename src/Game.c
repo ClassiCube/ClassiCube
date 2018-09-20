@@ -105,7 +105,7 @@ Real32 Game_GetChatScale(void) {
 char game_defTexPackBuffer[STRING_SIZE];
 String game_defTexPack = String_FromArray(game_defTexPackBuffer);
 
-void Game_GetDefaultTexturePack(STRING_TRANSIENT String* texPack) {
+void Game_GetDefaultTexturePack(String* texPack) {
 	char texPathBuffer[STRING_SIZE];
 	String texPath = String_FromArray(texPathBuffer);
 	String_Format2(&texPath, "texpacks%r%s", &Directory_Separator, &game_defTexPack);
@@ -117,7 +117,7 @@ void Game_GetDefaultTexturePack(STRING_TRANSIENT String* texPack) {
 	}
 }
 
-void Game_SetDefaultTexturePack(STRING_PURE String* texPack) {
+void Game_SetDefaultTexturePack(const String* texPack) {
 	String_Copy(&game_defTexPack, texPack);
 	Options_Set(OPT_DEFAULT_TEX_PACK, texPack);
 }
@@ -167,7 +167,7 @@ void Game_UpdateProjection(void) {
 	Event_RaiseVoid(&GfxEvents_ProjectionChanged);
 }
 
-void Game_Disconnect(STRING_PURE String* title, STRING_PURE String* reason) {
+void Game_Disconnect(const String* title, const String* reason) {
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
 	Gui_FreeActive();
@@ -207,7 +207,7 @@ bool Game_CanPick(BlockID block) {
 	return Game_BreakableLiquids && Block_CanPlace[block] && Block_CanDelete[block];
 }
 
-bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, STRING_PURE String* file, UInt8* skinType) {
+bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, UInt8* skinType) {
 	Bitmap bmp; 
 	ReturnCode res = Bitmap_DecodePng(&bmp, src);
 	if (res) { Chat_LogError2(res, "decoding", file); }
@@ -223,7 +223,7 @@ bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, STRING_PURE St
 	return success;
 }
 
-bool Game_ValidateBitmap(STRING_PURE String* file, Bitmap* bmp) {
+bool Game_ValidateBitmap(const String* file, Bitmap* bmp) {
 	if (!bmp->Scan0) {
 		Chat_Add1("&cError loading %s from the texture pack.", file);
 		return false;
@@ -248,7 +248,7 @@ bool Game_ValidateBitmap(STRING_PURE String* file, Bitmap* bmp) {
 	return true;
 }
 
-Int32 Game_CalcRenderType(STRING_PURE String* type) {
+Int32 Game_CalcRenderType(const String* type) {
 	if (String_CaselessEqualsConst(type, "legacyfast")) {
 		return 0x03;
 	} else if (String_CaselessEqualsConst(type, "legacy")) {
@@ -288,7 +288,7 @@ static void Game_OnNewMapLoadedCore(void* obj) {
 	}
 }
 
-static void Game_TextureChangedCore(void* obj, struct Stream* src, String* name) {
+static void Game_TextureChangedCore(void* obj, struct Stream* src, const String* name) {
 	Bitmap bmp;
 	if (String_CaselessEqualsConst(name, "terrain.png")) {
 		ReturnCode res = Bitmap_DecodePng(&bmp, src);
@@ -738,7 +738,7 @@ void Game_Free(void* obj) {
 }
 
 UInt64 game_renderTimer;
-void Game_Run(Int32 width, Int32 height, STRING_PURE String* title, struct DisplayDevice* device) {
+void Game_Run(Int32 width, Int32 height, const String* title, struct DisplayDevice* device) {
 	Int32 x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
 	Int32 y = device->Bounds.Y + (device->Bounds.Height - height) / 2;
 	struct GraphicsMode mode = GraphicsMode_MakeDefault();
@@ -765,7 +765,7 @@ void Game_Run(Int32 width, Int32 height, STRING_PURE String* title, struct Displ
 
 /* TODO: Implement all these stubs.... */
 #if CC_BUILD_NIX
-void Font_Make(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) { desc->Size = size; desc->Style = style; }
+void Font_Make(FontDesc* desc, const String* fontName, UInt16 size, UInt16 style) { desc->Size = size; desc->Style = style; }
 void Font_Free(FontDesc* desc) { }
 void Font_GetNames(StringsBuffer* buffer) { }
 Size2D Platform_TextMeasure(struct DrawTextArgs* args) { }

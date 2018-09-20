@@ -31,7 +31,7 @@
 UInt8 classicTabList[256 >> 3];
 #define Handlers_ReadBlock(data) *data++;
 
-static String Handlers_ReadString(UInt8** ptr, STRING_REF char* strBuffer) {
+static void Handlers_ReadString(UInt8** ptr, String* str) {
 	Int32 i, length = 0;
 	UInt8* data = *ptr;
 	for (i = STRING_SIZE - 1; i >= 0; i--) {
@@ -40,14 +40,11 @@ static String Handlers_ReadString(UInt8** ptr, STRING_REF char* strBuffer) {
 		length = i + 1; break;
 	}
 
-	String str = { strBuffer, 0, STRING_SIZE };
-	for (i = 0; i < length; i++) { String_Append(&str, data[i]); }
-
+	for (i = 0; i < length; i++) { String_Append(str, data[i]); }
 	*ptr = data + STRING_SIZE;
-	return str;
 }
 
-static void Handlers_WriteString(UInt8* data, STRING_PURE String* value) {
+static void Handlers_WriteString(UInt8* data, const String* value) {
 	Int32 i, count = min(value->length, STRING_SIZE);
 	for (i = 0; i < count; i++) {
 		char c = value->buffer[i];
@@ -58,15 +55,14 @@ static void Handlers_WriteString(UInt8* data, STRING_PURE String* value) {
 	for (; i < STRING_SIZE; i++) { data[i] = ' '; }
 }
 
-static void Handlers_RemoveEndPlus(STRING_TRANSIENT String* value) {
+static void Handlers_RemoveEndPlus(String* value) {
 	/* Workaround for MCDzienny (and others) use a '+' at the end to distinguish classicube.net accounts */
 	/* from minecraft.net accounts. Unfortunately they also send this ending + to the client. */
-	if (!value->length) return;
-	if (value->buffer[value->length - 1] != '+') return;
-	String_DeleteAt(value, value->length - 1);
+	if (!value->length || value->buffer[value->length - 1] != '+') return;
+	value->length--;
 }
 
-static void Handlers_AddTablistEntry(EntityID id, STRING_PURE String* playerName, STRING_PURE String* listName, STRING_PURE String* groupName, UInt8 groupRank) {
+static void Handlers_AddTablistEntry(EntityID id, const String* playerName, const String* listName, const String* groupName, UInt8 groupRank) {
 	/* Only redraw the tab list if something changed. */
 	if (TabList_Valid(id)) {
 		String oldPlayerName = TabList_UNSAFE_GetPlayer(id);
@@ -91,7 +87,7 @@ static void Handlers_RemoveTablistEntry(EntityID id) {
 	TabList_Remove(id);
 }
 
-static void Handlers_CheckName(EntityID id, STRING_TRANSIENT String* displayName, STRING_TRANSIENT String* skinName) {
+static void Handlers_CheckName(EntityID id, String* displayName, String* skinName) {
 	String_StripCols(skinName);
 	Handlers_RemoveEndPlus(displayName);
 	Handlers_RemoveEndPlus(skinName);
@@ -107,7 +103,7 @@ static void Handlers_CheckName(EntityID id, STRING_TRANSIENT String* displayName
 }
 
 static void Classic_ReadAbsoluteLocation(UInt8* data, EntityID id, bool interpolate);
-static void Handlers_AddEntity(UInt8* data, EntityID id, STRING_TRANSIENT String* displayName, STRING_TRANSIENT String* skinName, bool readPosition) {
+static void Handlers_AddEntity(UInt8* data, EntityID id, const String* displayName, const String* skinName, bool readPosition) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (id != ENTITIES_SELF_ID) {
 		struct Entity* oldEntity = Entities_List[id];
@@ -205,7 +201,7 @@ static void WoM_CheckSendWomID(void) {
 	}
 }
 
-static PackedCol WoM_ParseCol(STRING_PURE String* value, PackedCol defaultCol) {
+static PackedCol WoM_ParseCol(const String* value, PackedCol defaultCol) {
 	Int32 argb;
 	if (!Convert_TryParseInt32(value, &argb)) return defaultCol;
 
@@ -216,7 +212,7 @@ static PackedCol WoM_ParseCol(STRING_PURE String* value, PackedCol defaultCol) {
 	return col;
 }
 
-static bool WoM_ReadLine(STRING_REF String* page, Int32* start, STRING_TRANSIENT String* line) {
+static bool WoM_ReadLine(STRING_REF const String* page, Int32* start, String* line) {
 	Int32 i, offset = *start;
 	if (offset == -1) return false;
 
@@ -239,7 +235,7 @@ static bool WoM_ReadLine(STRING_REF String* page, Int32* start, STRING_TRANSIENT
 	return true;
 }
 
-static void WoM_ParseConfig(STRING_PURE String* page) {
+static void WoM_ParseConfig(const String* page) {
 	String line, key, value;
 	Int32 start = 0;
 
@@ -300,7 +296,7 @@ struct Stream mapPartStream;
 struct Screen* prevScreen;
 bool receivedFirstPosition;
 
-void Classic_WriteChat(STRING_PURE String* text, bool partial) {
+void Classic_WriteChat(const String* text, bool partial) {
 	UInt8* data = ServerConnection_WriteBuffer;
 	data[0] = OPCODE_MESSAGE;
 	{
@@ -351,7 +347,7 @@ void Classic_WriteSetBlock(Int32 x, Int32 y, Int32 z, bool place, BlockID block)
 	ServerConnection_WriteBuffer += 9;
 }
 
-void Classic_WriteLogin(STRING_PURE String* username, STRING_PURE String* verKey) {
+void Classic_WriteLogin(const String* username, const String* verKey) {
 	UInt8* data = ServerConnection_WriteBuffer;
 	data[0] = OPCODE_HANDSHAKE;
 	{
@@ -364,9 +360,12 @@ void Classic_WriteLogin(STRING_PURE String* username, STRING_PURE String* verKey
 }
 
 static void Classic_Handshake(UInt8* data) {
+	ServerConnection_ServerName.length = 0;
+	ServerConnection_ServerMOTD.length = 0;
 	UInt8 protocolVer = *data++;
-	ServerConnection_ServerName = Handlers_ReadString(&data, ServerConnection_ServerName.buffer);
-	ServerConnection_ServerMOTD = Handlers_ReadString(&data, ServerConnection_ServerMOTD.buffer);
+
+	Handlers_ReadString(&data, &ServerConnection_ServerName);
+	Handlers_ReadString(&data, &ServerConnection_ServerMOTD);
 	Chat_SetLogName(&ServerConnection_ServerName);
 
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
@@ -495,11 +494,11 @@ static void Classic_SetBlock(UInt8* data) {
 static void Classic_AddEntity(UInt8* data) {
 	char nameBuffer[STRING_SIZE];
 	char skinBuffer[STRING_SIZE];
-
-	EntityID id = *data++;
-	String name = Handlers_ReadString(&data, nameBuffer);
+	String name = String_FromArray(nameBuffer);
 	String skin = String_FromArray(skinBuffer);
 
+	EntityID id = *data++;
+	Handlers_ReadString(&data, &name);
 	Handlers_CheckName(id, &name, &skin);
 	Handlers_AddEntity(data, id, &name, &skin, true);
 
@@ -552,16 +551,13 @@ static void Classic_RemoveEntity(UInt8* data) {
 
 static void Classic_Message(UInt8* data) {
 	char textBuffer[STRING_SIZE + 2];
+	String text = String_FromArray(textBuffer);
 	UInt8 type  = *data++;
-	String text = Handlers_ReadString(&data, textBuffer);
 
 	/* Original vanilla server uses player ids for type, 255 for server messages (&e prefix) */
 	bool prepend = !cpe_useMessageTypes && type == 0xFF;
-	if (prepend) {
-		text.capacity += 2;
-		String_InsertAt(&text, 0, 'e');
-		String_InsertAt(&text, 0, '&');
-	}
+	if (prepend) { String_AppendConst(&text, "&e"); }
+	Handlers_ReadString(&data, &text);
 	if (!cpe_useMessageTypes) type = MSG_TYPE_NORMAL;
 
 	/* WoM detail messages (used e.g. for fCraft server compass) */
@@ -574,14 +570,16 @@ static void Classic_Message(UInt8* data) {
 	/* Ignore ^detail.user.joined etc */
 	String detailUser = String_FromConst("^detail.user");
 	if (!String_CaselessStarts(&text, &detailUser)) {
-		Chat_AddOf(&text, type);
+		Chat_AddOf(&text, type); 
 	}
 }
 
 static void Classic_Kick(UInt8* data) {
 	char reasonBuffer[STRING_SIZE];
-	String reason = Handlers_ReadString(&data, reasonBuffer);
-	String title = String_FromConst("&eLost connection to the server");
+	String reason = String_FromArray(reasonBuffer);
+	String title  = String_FromConst("&eLost connection to the server");
+
+	Handlers_ReadString(&data, &reason);
 	Game_Disconnect(&title, &reason);
 }
 
@@ -695,7 +693,7 @@ void CPE_WritePlayerClick(MouseButton button, bool buttonDown, UInt8 targetId, s
 	ServerConnection_WriteBuffer += 15;
 }
 
-static void CPE_WriteExtInfo(STRING_PURE String* appName, Int32 extensionsCount) {
+static void CPE_WriteExtInfo(const String* appName, Int32 extensionsCount) {
 	UInt8* data = ServerConnection_WriteBuffer; 
 	data[0] = OPCODE_EXT_INFO;
 	{
@@ -705,7 +703,7 @@ static void CPE_WriteExtInfo(STRING_PURE String* appName, Int32 extensionsCount)
 	ServerConnection_WriteBuffer += 67;
 }
 
-static void CPE_WriteExtEntry(STRING_PURE String* extensionName, Int32 extensionVersion) {
+static void CPE_WriteExtEntry(const String* extensionName, Int32 extensionVersion) {
 	UInt8* data = ServerConnection_WriteBuffer;
 	data[0] = OPCODE_EXT_ENTRY;
 	{
@@ -762,7 +760,8 @@ static void CPE_SendCpeExtInfoReply(void) {
 
 static void CPE_ExtInfo(UInt8* data) {
 	char appNameBuffer[STRING_SIZE];
-	String appName = Handlers_ReadString(&data, appNameBuffer);
+	String appName = String_FromArray(appNameBuffer);
+	Handlers_ReadString(&data, &appName);
 	Chat_Add1("Server software: %s", &appName);
 
 	String d3Server = String_FromConst("D3 server");
@@ -778,7 +777,8 @@ static void CPE_ExtInfo(UInt8* data) {
 
 static void CPE_ExtEntry(UInt8* data) {
 	char extNameBuffer[STRING_SIZE];
-	String ext = Handlers_ReadString(&data, extNameBuffer);
+	String ext = String_FromArray(extNameBuffer);
+	Handlers_ReadString(&data, &ext);
 	Int32 extVersion = Stream_GetU32_BE(data);
 	Platform_Log2("cpe ext: %s, %i", &ext, &extVersion);
 
@@ -848,8 +848,9 @@ static void CPE_HoldThis(UInt8* data) {
 
 static void CPE_SetTextHotkey(UInt8* data) {
 	char actionBuffer[STRING_SIZE];
+	String action = String_FromArray(actionBuffer);
 	data += STRING_SIZE; /* skip label */
-	String action = Handlers_ReadString(&data, actionBuffer);
+	Handlers_ReadString(&data, &action);
 
 	UInt32 keyCode = Stream_GetU32_BE(data); data += 4;
 	UInt8 keyMods  = *data;
@@ -862,7 +863,7 @@ static void CPE_SetTextHotkey(UInt8* data) {
 	if (!action.length) {
 		Hotkeys_Remove(key, keyMods);
 	} else if (action.buffer[action.length - 1] == '\n') {
-		action = String_UNSAFE_Substring(&action, 0, action.length - 1);
+		action.length--;
 		Hotkeys_Add(key, keyMods, &action, false);
 	} else { /* more input needed by user */
 		Hotkeys_Add(key, keyMods, &action, true);
@@ -874,10 +875,14 @@ static void CPE_ExtAddPlayerName(UInt8* data) {
 	char listNameBuffer[STRING_SIZE];
 	char groupNameBuffer[STRING_SIZE];
 
+	String playerName = String_FromArray(playerNameBuffer);
+	String listName   = String_FromArray(listNameBuffer);
+	String groupName  = String_FromArray(groupNameBuffer);
+
 	EntityID id = data[1]; data += 2;
-	String playerName = Handlers_ReadString(&data, playerNameBuffer);
-	String listName   = Handlers_ReadString(&data, listNameBuffer);
-	String groupName  = Handlers_ReadString(&data, groupNameBuffer);
+	Handlers_ReadString(&data, &playerName);
+	Handlers_ReadString(&data, &listName);
+	Handlers_ReadString(&data, &groupName);
 	UInt8 groupRank   = *data;
 
 	String_StripCols(&playerName);
@@ -893,10 +898,12 @@ static void CPE_ExtAddPlayerName(UInt8* data) {
 static void CPE_ExtAddEntity(UInt8* data) {
 	char displayNameBuffer[STRING_SIZE];
 	char skinNameBuffer[STRING_SIZE];
+	String displayName = String_FromArray(displayNameBuffer);
+	String skinName    = String_FromArray(skinNameBuffer);
 
 	UInt8 id = *data++;
-	String displayName = Handlers_ReadString(&data, displayNameBuffer);	
-	String skinName    = Handlers_ReadString(&data, skinNameBuffer);
+	Handlers_ReadString(&data, &displayName);
+	Handlers_ReadString(&data, &skinName);
 
 	Handlers_CheckName(id, &displayName, &skinName);
 	Handlers_AddEntity(data, id, &displayName, &skinName, false);
@@ -960,12 +967,13 @@ static void CPE_SetBlockPermission(UInt8* data) {
 }
 
 static void CPE_ChangeModel(UInt8* data) {
-	char modelNameBuffer[STRING_SIZE];
+	char modelBuffer[STRING_SIZE];
+	String model = String_FromArray(modelBuffer);
 	UInt8 id = *data++;
-	String modelName = Handlers_ReadString(&data, modelNameBuffer);
+	Handlers_ReadString(&data, &model);
 
 	struct Entity* entity = Entities_List[id];
-	if (entity) { Entity_SetModel(entity, &modelName); }
+	if (entity) { Entity_SetModel(entity, &model); }
 }
 
 static void CPE_EnvSetMapAppearance(UInt8* data) {
@@ -1010,9 +1018,12 @@ static void CPE_HackControl(UInt8* data) {
 static void CPE_ExtAddEntity2(UInt8* data) {
 	char displayNameBuffer[STRING_SIZE];
 	char skinNameBuffer[STRING_SIZE];
+	String displayName = String_FromArray(displayNameBuffer);
+	String skinName    = String_FromArray(skinNameBuffer);
+
 	UInt8 id = *data++;
-	String displayName = Handlers_ReadString(&data, displayNameBuffer);
-	String skinName    = Handlers_ReadString(&data, skinNameBuffer);
+	Handlers_ReadString(&data, &displayName);
+	Handlers_ReadString(&data, &skinName);
 
 	Handlers_CheckName(id, &displayName, &skinName);
 	Handlers_AddEntity(data, id, &displayName, &skinName, true);
@@ -1055,7 +1066,8 @@ static void CPE_SetTextColor(UInt8* data) {
 
 static void CPE_SetMapEnvUrl(UInt8* data) {
 	char urlBuffer[STRING_SIZE];
-	String url = Handlers_ReadString(&data, urlBuffer);
+	String url = String_FromArray(urlBuffer);
+	Handlers_ReadString(&data, &url);
 	if (!Game_AllowServerTextures) return;
 
 	if (!url.length) {
@@ -1233,12 +1245,14 @@ static TextureLoc BlockDefs_Tex(UInt8** ptr) {
 
 static BlockID BlockDefs_DefineBlockCommonStart(UInt8** ptr, bool uniqueSideTexs) {
 	UInt8* data = *ptr;
+	char nameBuffer[STRING_SIZE];
+	String name = String_FromArray(nameBuffer);
+
 	BlockID block = Handlers_ReadBlock(data);
 	bool didBlockLight = Block_BlocksLight[block];
 	Block_ResetProps(block);
-
-	char nameBuffer[STRING_SIZE];
-	String name = Handlers_ReadString(&data, nameBuffer);
+	
+	Handlers_ReadString(&data, &name);
 	Block_SetName(block, &name);
 	Block_SetCollide(block, *data++);
 

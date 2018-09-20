@@ -78,7 +78,7 @@ bool Gui_Contains(Int32 recX, Int32 recY, Int32 width, Int32 height, Int32 x, In
 	return x >= recX && y >= recY && x < recX + width && y < recY + height;
 }
 
-static void Gui_FileChanged(void* obj, struct Stream* stream, String* name) {
+static void Gui_FileChanged(void* obj, struct Stream* stream, const String* name) {
 	if (String_CaselessEqualsConst(name, "gui.png")) {
 		Game_UpdateTexture(&Gui_GuiTex, stream, name, NULL);
 	} else if (String_CaselessEqualsConst(name, "gui_classic.png")) {
@@ -233,7 +233,7 @@ void Gui_CalcCursorVisible(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------TextAtlas---------------------------------------------------------*
 *#########################################################################################################################*/
-void TextAtlas_Make(struct TextAtlas* atlas, STRING_PURE String* chars, FontDesc* font, STRING_PURE String* prefix) {
+void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, FontDesc* font, const String* prefix) {
 	struct DrawTextArgs args; DrawTextArgs_Make(&args, prefix, font, true);
 	Size2D size = Drawer2D_MeasureText(&args);
 	atlas->Offset = size.Width;

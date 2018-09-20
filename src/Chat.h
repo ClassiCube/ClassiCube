@@ -28,14 +28,14 @@ StringsBuffer Chat_Log, Chat_InputLog;
 UInt64 Chat_GetLogTime(Int32 i);
 
 void Chat_MakeComponent(struct IGameComponent* comp);
-void Chat_SetLogName(STRING_PURE String* name);
-void Chat_Send(STRING_PURE String* text, bool logUsage);
-void Chat_Add(STRING_PURE String* text);
-void Chat_AddOf(STRING_PURE String* text, Int32 messageType);
+void Chat_SetLogName(const String* name);
+void Chat_Send(const String* text, bool logUsage);
+void Chat_Add(const String* text);
+void Chat_AddOf(const String* text, Int32 messageType);
 void Chat_AddRaw(const char* raw);
 
 void Chat_LogError(ReturnCode result,  const char* place);
-void Chat_LogError2(ReturnCode result, const char* place, STRING_PURE String* path);
+void Chat_LogError2(ReturnCode result, const char* place, const String* path);
 void Chat_Add1(const char* format, const void* a1);
 void Chat_Add2(const char* format, const void* a1, const void* a2);
 void Chat_Add3(const char* format, const void* a1, const void* a2, const void* a3);

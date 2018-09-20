@@ -132,10 +132,10 @@ StringsBuffer HotkeysText;
 #define HOTKEYS_FLAG_SHIFT 2
 #define HOTKEYS_FLAG_ALT   4
 
-void Hotkeys_Add(Key trigger, UInt8 flags, STRING_PURE String* text, bool more);
+void Hotkeys_Add(Key trigger, UInt8 flags, const String* text, bool more);
 bool Hotkeys_Remove(Key trigger, UInt8 flags);
 Int32 Hotkeys_FindPartial(Key key);
 void Hotkeys_Init(void);
 void Hotkeys_UserRemovedHotkey(Key trigger, UInt8 flags);
-void Hotkeys_UserAddedHotkey(Key trigger, UInt8 flags, bool moreInput, STRING_PURE String* text);
+void Hotkeys_UserAddedHotkey(Key trigger, UInt8 flags, bool moreInput, const String* text);
 #endif

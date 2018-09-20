@@ -52,7 +52,7 @@ extern String ServerConnection_ServerMOTD;
 extern String ServerConnection_AppName;
 
 void (*ServerConnection_BeginConnect)(void);
-void (*ServerConnection_SendChat)(STRING_PURE String* text);
+void (*ServerConnection_SendChat)(const String* text);
 void (*ServerConnection_SendPosition)(Vector3 pos, Real32 rotY, Real32 headX);
 void (*ServerConnection_SendPlayerClick)(MouseButton button, bool isDown, EntityID targetId, struct PickedPos* pos);
 void (*ServerConnection_Tick)(struct ScheduledTask* task);
@@ -63,8 +63,8 @@ bool ServerConnection_SupportsPlayerClick;
 bool ServerConnection_SupportsPartialMessages;
 bool ServerConnection_SupportsFullCP437;
 
-void ServerConnection_RetrieveTexturePack(STRING_PURE String* url);
-void ServerConnection_DownloadTexturePack(STRING_PURE String* url);
+void ServerConnection_RetrieveTexturePack(const String* url);
+void ServerConnection_DownloadTexturePack(const String* url);
 void ServerConnection_InitSingleplayer(void);
 void ServerConnection_InitMultiplayer(void);
 void ServerConnection_MakeComponent(struct IGameComponent* comp);

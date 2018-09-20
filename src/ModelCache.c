@@ -44,7 +44,7 @@ static void ModelCache_InitModel(struct Model* model) {
 	Model_ActiveModel = active;
 }
 
-struct Model* ModelCache_Get(STRING_PURE String* name) {
+struct Model* ModelCache_Get(const String* name) {
 	Int32 i;
 	for (i = 0; i < ModelCache_modelCount; i++) {
 		struct CachedModel* m = &ModelCache_Models[i];
@@ -58,7 +58,7 @@ struct Model* ModelCache_Get(STRING_PURE String* name) {
 	return ModelCache_Models[0].Instance;
 }
 
-Int32 ModelCache_GetTextureIndex(STRING_PURE String* texName) {
+Int32 ModelCache_GetTextureIndex(const String* texName) {
 	Int32 i;
 	for (i = 0; i < ModelCache_texCount; i++) {
 		struct CachedTexture* tex = &ModelCache_Textures[i];
@@ -67,7 +67,7 @@ Int32 ModelCache_GetTextureIndex(STRING_PURE String* texName) {
 	return -1;
 }
 
-void ModelCache_Register(STRING_REF const char* name, STRING_PURE const char* defaultTexName, struct Model* instance) {
+void ModelCache_Register(STRING_REF const char* name, const char* defaultTexName, struct Model* instance) {
 	if (ModelCache_modelCount < MODELCACHE_MAX_MODELS) {
 		struct CachedModel model;
 		model.Name     = String_FromReadonly(name);
@@ -94,7 +94,7 @@ void ModelCache_RegisterTexture(STRING_REF const char* texName) {
 	}
 }
 
-static void ModelCache_TextureChanged(void* obj, struct Stream* stream, String* name) {
+static void ModelCache_TextureChanged(void* obj, struct Stream* stream, const String* name) {
 	Int32 i;
 	for (i = 0; i < ModelCache_texCount; i++) {
 		struct CachedTexture* tex = &ModelCache_Textures[i];

@@ -56,7 +56,7 @@ ReturnCode Stream_ReadU32_LE(struct Stream* stream, UInt32* value);
 ReturnCode Stream_ReadU32_BE(struct Stream* stream, UInt32* value);
 
 ReturnCode Stream_ReadUtf8(struct Stream* stream, UInt16* codepoint);
-ReturnCode Stream_ReadLine(struct Stream* stream, STRING_TRANSIENT String* text);
+ReturnCode Stream_ReadLine(struct Stream* stream, String* text);
 Int32 Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint);
-ReturnCode Stream_WriteLine(struct Stream* stream, STRING_TRANSIENT String* text);
+ReturnCode Stream_WriteLine(struct Stream* stream, String* text);
 #endif

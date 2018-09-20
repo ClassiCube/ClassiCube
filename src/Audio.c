@@ -101,7 +101,7 @@ static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	}
 }
 
-static ReturnCode Sound_ReadWave(STRING_PURE String* filename, struct Sound* snd) {
+static ReturnCode Sound_ReadWave(const String* filename, struct Sound* snd) {
 	char pathBuffer[FILENAME_SIZE];
 	String path = String_FromArray(pathBuffer);
 	String_Format2(&path, "audio%r%s", &Directory_Separator, filename);
@@ -118,7 +118,7 @@ static ReturnCode Sound_ReadWave(STRING_PURE String* filename, struct Sound* snd
 	return stream.Close(&stream);
 }
 
-static struct SoundGroup* Soundboard_Find(struct Soundboard* board, STRING_PURE String* name) {
+static struct SoundGroup* Soundboard_Find(struct Soundboard* board, const String* name) {
 	Int32 i;
 	struct SoundGroup* groups = board->Groups;
 
@@ -128,7 +128,7 @@ static struct SoundGroup* Soundboard_Find(struct Soundboard* board, STRING_PURE 
 	return NULL;
 }
 
-static void Soundboard_Init(struct Soundboard* board, STRING_PURE String* boardName, StringsBuffer* files) {
+static void Soundboard_Init(struct Soundboard* board, const String* boardName, StringsBuffer* files) {
 	Int32 i;
 	for (i = 0; i < files->Count; i++) {
 		String file = StringsBuffer_UNSAFE_Get(files, i), name = file;
@@ -482,7 +482,7 @@ static Int32 AudioManager_GetVolume(const char* volKey, const char* boolKey) {
 	return volume;
 }
 
-static void AudioManager_FilesCallback(STRING_PURE String* filename, void* obj) {
+static void AudioManager_FilesCallback(const String* filename, void* obj) {
 	StringsBuffer_Add(&files, filename);
 }
 

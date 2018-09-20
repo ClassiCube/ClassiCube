@@ -81,7 +81,7 @@ void DateTime_FromTotalMs(DateTime* time, UInt64 ms) {
 	}
 }
 
-void DateTime_HttpDate(UInt64 ms, STRING_TRANSIENT String* str) {
+void DateTime_HttpDate(UInt64 ms, String* str) {
 	static char* days_of_weeks[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
 	static char* month_names[13] = { NULL, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
@@ -98,7 +98,7 @@ void DateTime_HttpDate(UInt64 ms, STRING_TRANSIENT String* str) {
 	String_Format3(str, " %p2:%p2:%p2 GMT", &hour, &min, &sec);
 }
 
-UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const char** names, UInt32 namesCount) {
+UInt32 Utils_ParseEnum(const String* text, UInt32 defValue, const char** names, UInt32 namesCount) {
 	UInt32 i;
 	for (i = 0; i < namesCount; i++) {
 		if (String_CaselessEqualsConst(text, names[i])) return i;
@@ -110,14 +110,14 @@ bool Utils_IsValidInputChar(char c, bool supportsCP437) {
 	return supportsCP437 || (Convert_CP437ToUnicode(c) == c);
 }
 
-bool Utils_IsUrlPrefix(STRING_PURE String* value, Int32 index) {
+bool Utils_IsUrlPrefix(const String* value, Int32 index) {
 	String http  = String_FromConst("http://");
 	String https = String_FromConst("https://");
 	return String_IndexOfString(value, &http)  == index
 		|| String_IndexOfString(value, &https) == index;
 }
 
-bool Utils_EnsureDirectory(STRING_PURE const char* dirName) {
+bool Utils_EnsureDirectory(const char* dirName) {
 	String dir = String_FromReadonly(dirName);
 	if (Directory_Exists(&dir)) return true;
 
@@ -126,7 +126,7 @@ bool Utils_EnsureDirectory(STRING_PURE const char* dirName) {
 	return res == 0;
 }
 
-void Utils_UNSAFE_GetFilename(STRING_TRANSIENT String* str) {
+void Utils_UNSAFE_GetFilename(STRING_REF String* str) {
 	Int32 i;
 	for (i = str->length - 1; i >= 0; i--) {
 		char c = str->buffer[i];
@@ -198,7 +198,7 @@ void* Utils_Resize(void* buffer, UInt32* maxElems, UInt32 elemSize, UInt32 defEl
 	}
 }
 
-bool Utils_ParseIP(STRING_PURE String* ip, UInt8* data) {
+bool Utils_ParseIP(const String* ip, UInt8* data) {
 	String parts[4]; Int32 count = 4;
 	String_UNSAFE_Split(ip, '.', parts, &count);
 	if (count != 4) return false;

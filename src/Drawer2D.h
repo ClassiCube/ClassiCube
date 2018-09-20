@@ -9,7 +9,7 @@
 struct DrawTextArgs { String Text; FontDesc Font; bool UseShadow; };
 struct Texture;
 
-void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow);
+void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, FontDesc* font, bool useShadow);
 void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, FontDesc* font, bool useShadow);
 NOINLINE_ void Drawer2D_MakeFont(FontDesc* desc, UInt16 size, UInt16 style);
 
@@ -40,11 +40,11 @@ Int32 Drawer2D_FontHeight(FontDesc* font, bool useShadow);
 void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, Int32 X, Int32 Y);
 void Drawer2D_Make2DTexture(struct Texture* tex, Bitmap* bmp, Size2D used, Int32 X, Int32 Y);
 
-bool Drawer2D_ValidColCodeAt(STRING_PURE String* text, Int32 i);
+bool Drawer2D_ValidColCodeAt(const String* text, Int32 i);
 bool Drawer2D_ValidColCode(char c);
-bool Drawer2D_IsEmptyText(STRING_PURE String* text);
+bool Drawer2D_IsEmptyText(const String* text);
 /* Returns the last valid colour code in the given input, or \0 if no valid colour code was found. */
-char Drawer2D_LastCol(STRING_PURE String* text, Int32 start);
+char Drawer2D_LastCol(const String* text, Int32 start);
 bool Drawer2D_IsWhiteCol(char c);
 
 void Drawer2D_ReducePadding_Tex(struct Texture* tex, Int32 point, Int32 scale);

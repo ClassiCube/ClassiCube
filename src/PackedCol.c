@@ -51,7 +51,7 @@ bool PackedCol_Unhex(UInt8 hex, Int32* value) {
 	return true;
 }
 
-void PackedCol_ToHex(STRING_TRANSIENT String* str, PackedCol value) {
+void PackedCol_ToHex(String* str, PackedCol value) {
 	UInt8 input[3] = { value.R, value.G, value.B };
 	char hex[7];
 	Int32 i;
@@ -67,7 +67,7 @@ void PackedCol_ToHex(STRING_TRANSIENT String* str, PackedCol value) {
 	String_AppendConst(str, hex);
 }
 
-bool PackedCol_TryParseHex(STRING_PURE String* str, PackedCol* value) {
+bool PackedCol_TryParseHex(const String* str, PackedCol* value) {
 	PackedCol empty = { 0 }; *value = empty;
 	/* accept XXYYZZ or #XXYYZZ forms */
 	if (str->length < 6) return false;

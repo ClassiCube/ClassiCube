@@ -34,14 +34,14 @@ struct AsyncRequest {
 void ASyncRequest_Free(struct AsyncRequest* request);
 
 void AsyncDownloader_MakeComponent(struct IGameComponent* comp);
-void AsyncDownloader_GetSkin(STRING_PURE String* id, STRING_PURE String* skinName);
-void AsyncDownloader_GetData(STRING_PURE String* url, bool priority, STRING_PURE String* id);
-void AsyncDownloader_GetContentLength(STRING_PURE String* url, bool priority, STRING_PURE String* id);
+void AsyncDownloader_GetSkin(const String* id, const String* skinName);
+void AsyncDownloader_GetData(const String* url, bool priority, const String* id);
+void AsyncDownloader_GetContentLength(const String* url, bool priority, const String* id);
 /* TODO: Implement post */
-/* void AsyncDownloader_PostString(STRING_PURE String* url, bool priority, STRING_PURE String* id, STRING_PURE String* contents); */
-void AsyncDownloader_GetDataEx(STRING_PURE String* url, bool priority, STRING_PURE String* id, UInt64* lastModified, STRING_PURE String* etag);
+/* void AsyncDownloader_PostString(const String* url, bool priority, const String* id, const String* contents); */
+void AsyncDownloader_GetDataEx(const String* url, bool priority, const String* id, UInt64* lastModified, const String* etag);
 
-bool AsyncDownloader_Get(STRING_PURE String* id, struct AsyncRequest* item);
+bool AsyncDownloader_Get(const String* id, struct AsyncRequest* item);
 bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, Int32* progress);
 void AsyncDownloader_PurgeOldEntriesTask(struct ScheduledTask* task);
 #endif

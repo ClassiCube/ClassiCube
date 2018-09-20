@@ -13,8 +13,8 @@ struct ZipEntry { UInt32 CompressedSize, UncompressedSize, LocalHeaderOffset, Cr
 #define ZIP_MAX_ENTRIES 2048
 struct ZipState {
 	struct Stream* Input;
-	void (*ProcessEntry)(STRING_TRANSIENT String* path, struct Stream* data, struct ZipEntry* entry);
-	bool (*SelectEntry)(STRING_PURE String* path);
+	void (*ProcessEntry)(const String* path, struct Stream* data, struct ZipEntry* entry);
+	bool (*SelectEntry)(const String* path);
 	Int32 EntriesCount;
 	struct ZipEntry Entries[ZIP_MAX_ENTRIES];
 };
@@ -23,21 +23,21 @@ void Zip_Init(struct ZipState* state, struct Stream* input);
 ReturnCode Zip_Extract(struct ZipState* state);
 
 void TextureCache_Init(void);
-bool TextureCache_HasAccepted(STRING_PURE String* url);
-bool TextureCache_HasDenied(STRING_PURE String* url);
-void TextureCache_Accept(STRING_PURE String* url);
-void TextureCache_Deny(STRING_PURE String* url);
+bool TextureCache_HasAccepted(const String* url);
+bool TextureCache_HasDenied(const String* url);
+void TextureCache_Accept(const String* url);
+void TextureCache_Deny(const String* url);
 
-bool TextureCache_HasUrl(STRING_PURE String* url);
-bool TextureCache_GetStream(STRING_PURE String* url, struct Stream* stream);
-void TextureCache_GetLastModified(STRING_PURE String* url, UInt64* time);
-void TextureCache_GetETag(STRING_PURE String* url, STRING_PURE String* etag);
-void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length);
-void TextureCache_AddETag(STRING_PURE String* url, STRING_PURE String* etag);
-void TextureCache_AddLastModified(STRING_PURE String* url, UInt64* lastModified);
+bool TextureCache_HasUrl(const String* url);
+bool TextureCache_GetStream(const String* url, struct Stream* stream);
+void TextureCache_GetLastModified(const String* url, UInt64* time);
+void TextureCache_GetETag(const String* url, String* etag);
+void TextureCache_AddData(const String* url, UInt8* data, UInt32 length);
+void TextureCache_AddETag(const String* url, const String* etag);
+void TextureCache_AddLastModified(const String* url, UInt64* lastModified);
 
-void TexturePack_ExtractZip_File(STRING_PURE String* filename);
+void TexturePack_ExtractZip_File(const String* filename);
 void TexturePack_ExtractDefault(void);
-void TexturePack_ExtractCurrent(STRING_PURE String* url);
+void TexturePack_ExtractCurrent(const String* url);
 void TexturePack_Extract_Req(struct AsyncRequest* item);
 #endif

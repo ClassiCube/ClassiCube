@@ -148,7 +148,7 @@ struct AnimationData anims_list[ATLAS1D_MAX_ATLASES];
 Int32 anims_count;
 bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
 
-static void Animations_ReadDescription(struct Stream* stream, STRING_PURE String* path) {
+static void Animations_ReadDescription(struct Stream* stream, const String* path) {
 	char lineBuffer[STRING_SIZE * 2];
 	String line = String_FromArray(lineBuffer);
 	String parts[7];
@@ -322,7 +322,7 @@ static void Animations_PackChanged(void* obj) {
 	anims_useWaterAnim = anims_useLavaAnim;
 }
 
-static void Animations_FileChanged(void* obj, struct Stream* stream, String* name) {
+static void Animations_FileChanged(void* obj, struct Stream* stream, const String* name) {
 	if (String_CaselessEqualsConst(name, "animations.png")) {
 		ReturnCode res = Bitmap_DecodePng(&anims_bmp, stream);
 		if (!res) return;

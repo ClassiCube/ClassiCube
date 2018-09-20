@@ -107,17 +107,17 @@ void Entity_GetBounds(struct Entity* e, struct AABB* bb) {
 	AABB_Make(bb, &e->Position, &e->Size);
 }
 
-static void Entity_ParseScale(struct Entity* e, String scale) {
-	if (!scale.length) return;
+static void Entity_ParseScale(struct Entity* e, const String* scale) {
+	if (!scale->length) return;
 	Real32 value;
-	if (!Convert_TryParseReal32(&scale, &value)) return;
+	if (!Convert_TryParseReal32(scale, &value)) return;
 
 	Real32 maxScale = e->Model->MaxScale;
 	Math_Clamp(value, 0.01f, maxScale);
 	e->ModelScale = Vector3_Create1(value);
 }
 
-void Entity_SetModel(struct Entity* e, STRING_PURE String* model) {
+void Entity_SetModel(struct Entity* e, const String* model) {
 	e->ModelScale = Vector3_Create1(1.0f);
 	e->ModelBlock = BLOCK_AIR;
 
@@ -136,7 +136,7 @@ void Entity_SetModel(struct Entity* e, STRING_PURE String* model) {
 	}
 
 	e->Model = ModelCache_Get(&name);
-	Entity_ParseScale(e, scale);
+	Entity_ParseScale(e, &scale);
 	e->MobTextureId = NULL;
 
 	e->Model->RecalcProperties(e);
@@ -421,7 +421,7 @@ bool TabList_Remove(EntityID id) {
 	return true;
 }
 
-void TabList_Set(EntityID id, STRING_PURE String* player, STRING_PURE String* list, STRING_PURE String* group, UInt8 rank) {
+void TabList_Set(EntityID id, const String* player, const String* list, const String* group, UInt8 rank) {
 	char playerNameBuffer[STRING_SIZE];
 	String playerName = String_FromArray(playerNameBuffer);
 	String_AppendColorless(&playerName, player);
@@ -728,7 +728,7 @@ static void Player_ContextRecreated(struct Entity* e) {
 	Player_UpdateNameTex(player);
 }
 
-void Player_SetName(struct Player* player, STRING_PURE String* name, STRING_PURE String* skin) {
+void Player_SetName(struct Player* player, const String* name, const String* skin) {
 	String p_name = String_ClearedArray(player->DisplayNameRaw);
 	String_AppendString(&p_name, name);
 	String p_skin = String_ClearedArray(player->SkinNameRaw);
@@ -1013,7 +1013,7 @@ struct EntityVTABLE netPlayer_VTABLE = {
 	NetPlayer_Tick,        Player_Despawn,       NetPlayer_SetLocation, Entity_GetCol,
 	NetPlayer_RenderModel, NetPlayer_RenderName, Player_ContextLost,    Player_ContextRecreated,
 };
-void NetPlayer_Init(struct NetPlayer* player, STRING_PURE String* displayName, STRING_PURE String* skinName) {
+void NetPlayer_Init(struct NetPlayer* player, const String* displayName, const String* skinName) {
 	Mem_Set(player, 0, sizeof(struct NetPlayer));
 	Player_Init(&player->Base);
 	Player_SetName((struct Player*)player, displayName, skinName);

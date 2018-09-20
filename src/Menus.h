@@ -20,7 +20,7 @@ struct Screen* MouseKeyBindingsScreen_MakeInstance(void);
 
 struct Screen* GenLevelScreen_MakeInstance(void);
 struct Screen* ClassicGenScreen_MakeInstance(void);
-void LoadLevelScreen_LoadMap(STRING_PURE String* path);
+void LoadLevelScreen_LoadMap(const String* path);
 struct Screen* LoadLevelScreen_MakeInstance(void);
 struct Screen* SaveLevelScreen_MakeInstance(void);
 struct Screen* TexturePackScreen_MakeInstance(void);
@@ -34,7 +34,7 @@ struct Screen* HacksSettingsScreen_MakeInstance(void);
 struct Screen* EnvSettingsScreen_MakeInstance(void);
 struct Screen* NostalgiaScreen_MakeInstance(void);
 
-struct Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url);
+struct Screen* UrlWarningOverlay_MakeInstance(const String* url);
 struct Screen* TexIdsOverlay_MakeInstance(void);
-struct Screen* TexPackOverlay_MakeInstance(STRING_PURE String* url);
+struct Screen* TexPackOverlay_MakeInstance(const String* url);
 #endif

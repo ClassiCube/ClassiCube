@@ -94,7 +94,7 @@ Real32 Entity_GetEyeHeight(struct Entity* entity);
 void Entity_GetTransform(struct Entity* entity, Vector3 pos, Vector3 scale, struct Matrix* m);
 void Entity_GetPickingBounds(struct Entity* entity, struct AABB* bb);
 void Entity_GetBounds(struct Entity* entity, struct AABB* bb);
-void Entity_SetModel(struct Entity* entity, STRING_PURE String* model);
+void Entity_SetModel(struct Entity* entity, const String* model);
 void Entity_UpdateModelBounds(struct Entity* entity);
 bool Entity_TouchesAny(struct AABB* bb, bool(*touches_condition)(BlockID block__));
 bool Entity_TouchesAnyRope(struct Entity* entity);	
@@ -120,7 +120,7 @@ UInt16 TabList_GroupNames[TABLIST_MAX_NAMES];
 UInt8  TabList_GroupRanks[TABLIST_MAX_NAMES];
 bool TabList_Valid(EntityID id);
 bool TabList_Remove(EntityID id);
-void TabList_Set(EntityID id, STRING_PURE String* player, STRING_PURE String* list, STRING_PURE String* group, UInt8 rank);
+void TabList_Set(EntityID id, const String* player, const String* list, const String* group, UInt8 rank);
 void TabList_MakeComponent(struct IGameComponent* comp);
 
 #define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_PlayerNames[id]);
@@ -130,7 +130,7 @@ void TabList_MakeComponent(struct IGameComponent* comp);
 
 /* Represents a player entity. */
 struct Player { Player_Layout };
-void Player_SetName(struct Player* player, STRING_PURE String* name, STRING_PURE String* skin);
+void Player_SetName(struct Player* player, const String* name, const String* skin);
 void Player_UpdateNameTex(struct Player* player);
 void Player_ResetSkin(struct Player* player);
 
@@ -140,7 +140,7 @@ struct NetPlayer {
 	struct NetInterpComp Interp;
 	bool ShouldRender;
 };
-void NetPlayer_Init(struct NetPlayer* player, STRING_PURE String* displayName, STRING_PURE String* skinName);
+void NetPlayer_Init(struct NetPlayer* player, const String* displayName, const String* skinName);
 struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 
 /* Represents the user/player's own entity. */

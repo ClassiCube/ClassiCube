@@ -77,7 +77,7 @@ void Event_UnregisterReal(struct Event_Real* handlers, void* obj, Event_Real_Cal
 	Event_UnregisterImpl((struct Event_Void*)handlers, obj, (Event_Void_Callback)handler);
 }
 
-void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, String* name) {
+void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, const String* name) {
 	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], stream, name);
@@ -116,7 +116,7 @@ void Event_UnregisterMouseMove(struct Event_MouseMove* handlers, void* obj, Even
 	Event_UnregisterImpl((struct Event_Void*)handlers, obj, (Event_Void_Callback)handler);
 }
 
-void Event_RaiseChat(struct Event_Chat* handlers, String* msg, Int32 msgType) {
+void Event_RaiseChat(struct Event_Chat* handlers, const String* msg, Int32 msgType) {
 	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], msg, msgType);

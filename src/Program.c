@@ -41,7 +41,7 @@ int main_imdct() {
 
 int main(int argc, char** argv) {
 	Platform_SetWorkingDir();
-	ErrorHandler_Init("client.log");
+	ErrorHandler_Init();
 	Platform_Init();
 #ifdef CC_TEST_VORBIS
 	main_imdct();

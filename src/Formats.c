@@ -798,7 +798,7 @@ ReturnCode Dat_Load(struct Stream* stream) {
 *#########################################################################################################################*/
 #define CW_META_VERSION 'E','x','t','e','n','s','i','o','n','V','e','r','s','i','o','n'
 #define CW_META_RGB NBT_I16,0,1,'R',0,0,  NBT_I16,0,1,'G',0,0,  NBT_I16,0,1,'B',0,0,
-static Int32 Cw_WriteEndString(UInt8* data, STRING_PURE String* text) {
+static Int32 Cw_WriteEndString(UInt8* data, const String* text) {
 	Int32 i, len = 0;
 	UInt8* cur = data + 2;
 

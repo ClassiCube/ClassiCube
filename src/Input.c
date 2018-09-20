@@ -218,7 +218,7 @@ static void Hotkeys_QuickSort(Int32 left, Int32 right) {
 	}
 }
 
-static void Hotkeys_AddNewHotkey(Key trigger, UInt8 flags, STRING_PURE String* text, bool more) {
+static void Hotkeys_AddNewHotkey(Key trigger, UInt8 flags, const String* text, bool more) {
 	struct HotkeyData hKey;
 	hKey.Trigger = trigger;
 	hKey.Flags = flags;
@@ -246,7 +246,7 @@ static void Hotkeys_RemoveText(Int32 index) {
 }
 
 
-void Hotkeys_Add(Key trigger, UInt8 flags, STRING_PURE String* text, bool more) {
+void Hotkeys_Add(Key trigger, UInt8 flags, const String* text, bool more) {
 	Int32 i; struct HotkeyData* hKey = HotkeysList;
 
 	for (i = 0; i < HotkeysText.Count; i++, hKey++) {		
@@ -324,7 +324,7 @@ void Hotkeys_UserRemovedHotkey(Key trigger, UInt8 flags) {
 	Options_SetString(&key, NULL);
 }
 
-void Hotkeys_UserAddedHotkey(Key trigger, UInt8 flags, bool moreInput, STRING_PURE String* text) {
+void Hotkeys_UserAddedHotkey(Key trigger, UInt8 flags, bool moreInput, const String* text) {
 	char keyBuffer[STRING_SIZE];
 	String key = String_FromArray(keyBuffer);
 	char valueBuffer[STRING_SIZE * 2];
