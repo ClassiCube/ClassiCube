@@ -4,11 +4,7 @@ using ClassicalSharp.Gui;
 using ClassicalSharp.Gui.Screens;
 using ClassicalSharp.Entities;
 using OpenTK;
-#if __MonoCS__
 using Ionic.Zlib;
-#else
-using System.IO.Compression;
-#endif
 using BlockID = System.UInt16;
 
 namespace ClassicalSharp.Network.Protocols {
@@ -103,22 +99,10 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			// Workaround because built in mono stream assumes that the end of stream
 			// has been reached the first time a read call returns 0. (MS.NET doesn't)
-			#if __MonoCS__
 			gzipStream = new DeflateStream(mapPartStream, true);
-			#else
-			gzipStream = new DeflateStream(mapPartStream, CompressionMode.Decompress);
-			if (OpenTK.Configuration.RunningOnMono) {
-				throw new InvalidOperationException("You must compile ClassicalSharp with __MonoCS__ defined " +
-				                                    "to run on Mono, due to a limitation in Mono.");
-			}
-			#endif
 			
 			#if !ONLY_8BIT
-			#if __MonoCS__
 			gzipStream2 = new DeflateStream(mapPartStream, true);
-			#else
-			gzipStream2 = new DeflateStream(mapPartStream, CompressionMode.Decompress);
-			#endif
 			#endif
 			
 			mapSizeIndex = 0;

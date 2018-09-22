@@ -87,18 +87,16 @@ public interface IGameComponent { }
 			AddRequest(url, priority, identifier, RequestType.ByteArray,
 			           lastModified, etag, null);
 		}
-
-#if !LAUNCHER		
+	
 		public void AsyncGetContentLength(string url, bool priority, string identifier) {
 			AddRequest(url, priority, identifier, RequestType.ContentLength,
 			           DateTime.MinValue, null, null);
 		}
-#else
+
 		public void AsyncPostString(string url, bool priority, string identifier, string contents) {
 			AddRequest(url, priority, identifier, RequestType.String,
 			           DateTime.MinValue, null, contents);
 		}
-#endif
 		
 		void AddRequest(string url, bool priority, string identifier,
 		                RequestType type, DateTime lastModified, string etag, object data) {

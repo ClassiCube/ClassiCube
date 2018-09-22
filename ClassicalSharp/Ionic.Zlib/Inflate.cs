@@ -1,7 +1,6 @@
 // Originally copyright (c) 2009 Dino Chiesa and Microsoft Corporation.
 // All rights reserved.
 // See license.txt, section Ionic.Zlib license
-#if __MonoCS__
 using System;
 using System.IO;
 
@@ -975,4 +974,3 @@ namespace Ionic.Zlib
 		}
 	}
 }
-#endif

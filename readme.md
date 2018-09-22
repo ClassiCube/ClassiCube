@@ -37,8 +37,6 @@ If you are using Mono, you just need to type `mono Launcher.exe` into the termin
 
 *Also when using older mono versions, you may need to run `mozroots --import --sync` to import trusted root certificates, otherwise you will get an 'Error writing headers' exception.*
 
-*You must use either build using the Mono compiler or define `__MonoCS__` when building, otherwise you will get runtime errors when decompressing the map using Mono.*
-
 ###### *Windows specific*
 *If you are stuck using the built-in OpenGL 1.1 software renderer, you can use the MESA software renderer from either [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) or [here](https://wiki.qt.io/Cross_compiling_Mesa_for_Windows) for slightly better performance. Typically though, this occurs because you have not installed GPU drivers.*
 
