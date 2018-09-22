@@ -220,7 +220,6 @@
     <Compile Include="Ionic.Zlib\DeflateStream.cs" />
     <Compile Include="Ionic.Zlib\Inflate.cs" />
     <Compile Include="Ionic.Zlib\InfTree.cs" />
-    <Compile Include="Ionic.Zlib\ZlibCodec.cs" />
     <Compile Include="Map\Formats\IMapFormat.cs" />
     <Compile Include="Map\Formats\MapCw.Exporter.cs" />
     <Compile Include="Map\Formats\MapCw.Importer.cs" />

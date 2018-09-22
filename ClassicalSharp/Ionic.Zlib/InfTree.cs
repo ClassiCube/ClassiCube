@@ -224,7 +224,7 @@ namespace Ionic.Zlib {
 			return y != 0 && maxCodeLen != 1 ? RCode.BufferError : RCode.Okay;
 		}
 		
-		internal void InflateTreeBits(int[] c, ref int bb, ref int tb, int[] hp, ZlibCodec z) {
+		internal void InflateTreeBits(int[] c, ref int bb, ref int tb, int[] hp) {
 			ResetWorkArea(19);
 			hn = 0;
 			int result = BuildTree(c, 0, 19, 19, null, null, ref tb, ref bb, hp);

@@ -8,6 +8,9 @@ namespace Ionic.Zlib
 {
 	sealed class InflateBlocks
 	{
+		public byte[] InputBuffer,    OutputBuffer;
+		public int _NextIn, _AvailIn, _NextOut, _AvailOut;
+		
 		const int MANY = 1440;
 
 		// Table for deflate from PKZIP's appnote.txt.
@@ -37,7 +40,6 @@ namespace Ionic.Zlib
 
 		InflateCodes codes = new InflateCodes(); // if CODES, current state
 		int last;                                // true if this block is the last block
-		internal ZlibCodec codec;                        // pointer back to this zlib stream
 
 		// mode independent information
 		internal int bitk;                                // bits in bit buffer
@@ -50,13 +52,26 @@ namespace Ionic.Zlib
 
 		InfTree inftree = new InfTree();
 
-		internal InflateBlocks(ZlibCodec codec, int w) {
-			this.codec = codec;
+		internal InflateBlocks() {
+			const int w = 32768; // 32K LZ77 window
 			hufts = new int[MANY * 3];
 			window = new byte[w];
 			end = w;
-			mode = InflateBlockMode.TYPE;
 			Reset();
+		}
+		
+		bool done;
+		internal int Inflate() {
+			int r = RCode.BufferError;
+			if (!done) {
+				r = Process(r);
+				if (r == RCode.DataError) throw new InvalidDataException("Bad state");
+				if (r != RCode.StreamEnd) return r;
+
+				Reset();
+				done = true;
+			}
+			return RCode.StreamEnd;
 		}
 
 		internal void Reset() {
@@ -65,12 +80,13 @@ namespace Ionic.Zlib
 			bitb = 0;
 			readAt = writeAt = 0;
 		}
+		
 
 		internal int Process(int r) {
 			int t; // temporary storage
-			int nextIn = codec.NextIn; // input data pointer
-			int availIn = codec.AvailableBytesIn; // bytes available there
-			int bits = bitb; // bit buffer
+			int nextIn  = _NextIn; // input data pointer
+			int availIn = _AvailIn; // bytes available there
+			int bits    = bitb; // bit buffer
 			int bitsNum = bitk; // bits in bit buffer
 			int q = writeAt; // output window write pointer
 			int m = q < readAt ? readAt - q - 1 : end - q; // bytes to end of window or read pointer
@@ -89,7 +105,7 @@ namespace Ionic.Zlib
 							}
 
 							availIn--;
-							bits |= codec.InputBuffer[nextIn++] << bitsNum;
+							bits |= InputBuffer[nextIn++] << bitsNum;
 							bitsNum += 8;
 						}
 						
@@ -128,7 +144,7 @@ namespace Ionic.Zlib
 								return RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 							}
 							availIn--;
-							bits |= codec.InputBuffer[nextIn++] << bitsNum;
+							bits |= InputBuffer[nextIn++] << bitsNum;
 							bitsNum += 8;
 						}
 
@@ -172,7 +188,7 @@ namespace Ionic.Zlib
 							t = availIn;
 						if (t > m)
 							t = m;
-						Array.Copy(codec.InputBuffer, nextIn, window, q, t);
+						Array.Copy(InputBuffer, nextIn, window, q, t);
 						nextIn += t; availIn -= t;
 						q += t; m -= t;
 						if ((left -= t) != 0)
@@ -189,7 +205,7 @@ namespace Ionic.Zlib
 							}
 
 							availIn--;
-							bits |= codec.InputBuffer[nextIn++] << bitsNum;
+							bits |= InputBuffer[nextIn++] << bitsNum;
 							bitsNum += 8;
 						}
 
@@ -222,7 +238,7 @@ namespace Ionic.Zlib
 								}
 
 								availIn--;
-								bits |= codec.InputBuffer[nextIn++] << bitsNum;
+								bits |= InputBuffer[nextIn++] << bitsNum;
 								bitsNum += 8;
 							}
 
@@ -235,7 +251,7 @@ namespace Ionic.Zlib
 						}
 
 						bb = 7;
-						inftree.InflateTreeBits(blens, ref bb, ref tb, hufts, codec);
+						inftree.InflateTreeBits(blens, ref bb, ref tb, hufts);
 						index = 0;
 						mode = InflateBlockMode.DTREE;
 						goto case InflateBlockMode.DTREE;
@@ -256,7 +272,7 @@ namespace Ionic.Zlib
 								}
 
 								availIn--;
-								bits |= codec.InputBuffer[nextIn++] << bitsNum;
+								bits |= InputBuffer[nextIn++] << bitsNum;
 								bitsNum += 8;
 							}
 
@@ -279,7 +295,7 @@ namespace Ionic.Zlib
 									}
 
 									availIn--;
-									bits |= codec.InputBuffer[nextIn++] << bitsNum;
+									bits |= InputBuffer[nextIn++] << bitsNum;
 									bitsNum += 8;
 								}
 
@@ -320,9 +336,9 @@ namespace Ionic.Zlib
 						if (r != RCode.StreamEnd) return Flush(r);
 
 						r = RCode.Okay;
-						nextIn = codec.NextIn;
-						availIn = codec.AvailableBytesIn;
-						bits = bitb;
+						nextIn  = _NextIn;
+						availIn = _AvailIn;
+						bits    = bitb;
 						bitsNum = bitk;
 						q = writeAt;
 						m = q < readAt ? readAt - q - 1 : end - q;
@@ -357,8 +373,8 @@ namespace Ionic.Zlib
 		internal int RanOutOfInput(int bits, int bitsNum, int availIn, int nextIn, int q, int r) {
 			bitb = bits;
 			bitk = bitsNum;
-			codec.AvailableBytesIn = availIn;
-			codec.NextIn = nextIn;
+			_AvailIn = availIn;
+			_NextIn = nextIn;
 			writeAt = q;
 			return Flush(r);
 		}
@@ -366,8 +382,8 @@ namespace Ionic.Zlib
 		internal void UpdateState(int bits, int bitsNum, int availIn, int nextIn, int q) {
 			bitb = bits;
 			bitk = bitsNum;
-			codec.AvailableBytesIn = availIn;
-			codec.NextIn = nextIn;
+			_AvailIn = availIn;
+			_NextIn = nextIn;
 			writeAt = q;
 		}
 
@@ -393,18 +409,18 @@ namespace Ionic.Zlib
 					return r;
 				}
 
-				if (nBytes > codec.AvailableBytesOut)
-					nBytes = codec.AvailableBytesOut;
+				if (nBytes > _AvailOut)
+					nBytes = _AvailOut;
 
 				if (nBytes != 0 && r == RCode.BufferError)
 					r = RCode.Okay;
 
 				// update counters
-				codec.AvailableBytesOut -= nBytes;
+				_AvailOut -= nBytes;
 
 				// copy as far as end of window
-				Array.Copy(window, readAt, codec.OutputBuffer, codec.NextOut, nBytes);
-				codec.NextOut += nBytes;
+				Array.Copy(window, readAt, OutputBuffer, _NextOut, nBytes);
+				_NextOut += nBytes;
 				readAt += nBytes;
 
 				// see if more to copy at beginning of window
@@ -428,6 +444,13 @@ namespace Ionic.Zlib
 			0x0000000f, 0x0000001f, 0x0000003f, 0x0000007f,
 			0x000000ff, 0x000001ff, 0x000003ff, 0x000007ff,
 			0x00000fff, 0x00001fff, 0x00003fff, 0x00007fff, 0x0000ffff };
+	}
+	
+	internal static class RCode {
+		public const int BufferError = -5;
+		public const int DataError   = -3;
+		public const int StreamEnd   =  1;		
+		public const int Okay        =  0;
 	}
 
 
@@ -483,10 +506,9 @@ namespace Ionic.Zlib
 			int tindex; // temporary pointer
 			int e; // extra bits or operation   
 
-			ZlibCodec z = blocks.codec;
-			int nextIn = z.NextIn;// input data pointer
-			int availIn = z.AvailableBytesIn; // bytes available there
-			int bits = blocks.bitb; // bit buffer
+			int nextIn  = blocks._NextIn;// input data pointer
+			int availIn = blocks._AvailIn; // bytes available there
+			int bits    = blocks.bitb; // bit buffer
 			int bitsNum = blocks.bitk; // bits in bit buffer
 			int q = blocks.writeAt;  // output window write pointer
 			int m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q; // bytes to end of window or read pointer
@@ -500,11 +522,11 @@ namespace Ionic.Zlib
 					case START:  // x: set up for LEN
 						if (m >= 258 && availIn >= 10) {
 							blocks.UpdateState(bits, bitsNum, availIn, nextIn, q);
-							r = InflateFast(lbits, dbits, ltree, ltree_index, dtree, dtree_index, blocks, z);
+							r = InflateFast(lbits, dbits, ltree, ltree_index, dtree, dtree_index, blocks);
 
-							nextIn = z.NextIn;
-							availIn = z.AvailableBytesIn;
-							bits = blocks.bitb;
+							nextIn  = blocks._NextIn;
+							availIn = blocks._AvailIn;
+							bits    = blocks.bitb;
 							bitsNum = blocks.bitk;
 							q = blocks.writeAt;
 							m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
@@ -530,7 +552,7 @@ namespace Ionic.Zlib
 								return blocks.RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 							}
 							availIn--;
-							bits |= z.InputBuffer[nextIn++] << bitsNum;
+							bits |= blocks.InputBuffer[nextIn++] << bitsNum;
 							bitsNum += 8;
 						}
 
@@ -576,7 +598,7 @@ namespace Ionic.Zlib
 								return blocks.RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 							}
 							availIn--;
-							bits |= z.InputBuffer[nextIn++] << bitsNum;
+							bits |= blocks.InputBuffer[nextIn++] << bitsNum;
 							bitsNum += 8;
 						}
 
@@ -599,7 +621,7 @@ namespace Ionic.Zlib
 								return blocks.RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 							}
 							availIn--;
-							bits |= z.InputBuffer[nextIn++] << bitsNum;
+							bits |= blocks.InputBuffer[nextIn++] << bitsNum;
 							bitsNum += 8;
 						}
 
@@ -633,7 +655,7 @@ namespace Ionic.Zlib
 								return blocks.RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 							}
 							availIn--;
-							bits |= z.InputBuffer[nextIn++] << bitsNum;
+							bits |= blocks.InputBuffer[nextIn++] << bitsNum;
 							bitsNum += 8;
 						}
 
@@ -749,14 +771,14 @@ namespace Ionic.Zlib
 		// (the maximum string length) and number of input bytes available
 		// at least ten.  The ten bytes are six bytes for the longest length/
 		// distance pair plus four bytes for overloading the bit buffer.
-		internal int InflateFast(int bl, int bd, int[] tl, int tl_index, int[] td, int td_index, InflateBlocks s, ZlibCodec z)
+		internal int InflateFast(int bl, int bd, int[] tl, int tl_index, int[] td, int td_index, InflateBlocks s)
 		{
 			int e;        // extra bits or operation
 			int c;        // bytes to copy
 
-			int nextIn = z.NextIn; // input data pointer
-			int availIn = z.AvailableBytesIn; // bytes available there
-			int bits = s.bitb; // bit buffer
+			int nextIn  = s._NextIn; // input data pointer
+			int availIn = s._AvailIn; // bytes available there
+			int bits    = s.bitb; // bit buffer
 			int bitsNum = s.bitk; // bits in bit buffer
 			int q = s.writeAt; // output window write pointer
 			int m = q < s.readAt ? s.readAt - q - 1 : s.end - q; // bytes to end of window or read pointer
@@ -771,7 +793,7 @@ namespace Ionic.Zlib
 				while (bitsNum < 20) {
 					// max bits for literal/length code
 					availIn--;
-					bits |= z.InputBuffer[nextIn++] << bitsNum;
+					bits |= s.InputBuffer[nextIn++] << bitsNum;
 					bitsNum += 8;
 				}
 
@@ -802,7 +824,7 @@ namespace Ionic.Zlib
 						while (bitsNum < 15) {
 							// max bits for distance code
 							availIn--;
-							bits |= z.InputBuffer[nextIn++] << bitsNum;
+							bits |= s.InputBuffer[nextIn++] << bitsNum;
 							bitsNum += 8;
 						}
 
@@ -822,7 +844,7 @@ namespace Ionic.Zlib
 								while (bitsNum < e) {
 									// get extra bits (up to 13)
 									availIn--;
-									bits |= z.InputBuffer[nextIn++] << bitsNum;
+									bits |= s.InputBuffer[nextIn++] << bitsNum;
 									bitsNum += 8;
 								}
 
@@ -898,7 +920,7 @@ namespace Ionic.Zlib
 							break;
 						}
 					} else if ((e & 32) != 0) {
-						c = z.AvailableBytesIn - availIn;
+						c = s._AvailIn - availIn;
 						c = (bitsNum >> 3) < c ? bitsNum >> 3 : c;
 						availIn += c;
 						nextIn -= c;
@@ -913,7 +935,7 @@ namespace Ionic.Zlib
 			} while (m >= 258 && availIn >= 10);
 
 			// not enough input or output--restore pointers and return
-			c = z.AvailableBytesIn - availIn;
+			c = s._AvailIn - availIn;
 			c = (bitsNum >> 3) < c ? bitsNum >> 3 : c;
 			availIn += c;
 			nextIn -= c;
@@ -921,56 +943,6 @@ namespace Ionic.Zlib
 
 			s.UpdateState(bits, bitsNum, availIn, nextIn, q);
 			return RCode.Okay;
-		}
-	}
-
-
-	internal sealed class InflateManager
-	{
-		bool done = false;
-		ZlibCodec _codec; // pointer back to this zlib stream
-
-		int wbits; // log2(window size)  (8..15, defaults to 15)
-		InflateBlocks blocks; // current inflate_blocks state
-
-		internal void Reset() {
-			done = false;
-			blocks.Reset();
-		}
-
-		internal void End() {
-			if (blocks != null)
-				blocks.Free();
-			blocks = null;
-		}
-
-		internal void Initialize(ZlibCodec codec, int w) {
-			_codec = codec;
-			blocks = null;
-			
-			wbits = w;
-			blocks = new InflateBlocks(codec, 1 << w);
-			Reset();
-		}
-
-		internal int Inflate() {
-			if (_codec.InputBuffer == null)
-				throw new InvalidOperationException("InputBuffer is null. ");
-
-			int r = RCode.BufferError;
-			if (!done) {
-				r = blocks.Process(r);
-				if (r == RCode.DataError) {
-					throw new InvalidDataException("Bad state");
-				}
-
-				if (r != RCode.StreamEnd)
-					return r;
-
-				blocks.Reset();
-				done = true;
-			}
-			return RCode.StreamEnd;
 		}
 	}
 }

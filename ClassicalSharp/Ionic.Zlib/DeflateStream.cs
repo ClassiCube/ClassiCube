@@ -9,7 +9,7 @@ namespace Ionic.Zlib {
 	
 	internal class DeflateStream : ReadOnlyStream {
 		
-		ZlibCodec z;
+		InflateBlocks z;
 		bool _leaveOpen;
 		byte[] workBuffer;
 		Stream _stream;
@@ -18,11 +18,11 @@ namespace Ionic.Zlib {
 			_stream = stream;
 			_leaveOpen = leaveOpen;
 			workBuffer = new byte[16384]; // TODO: 1024 bytes?
-			z = new ZlibCodec();
+			z = new InflateBlocks();
 		}		
 
 		public override void Close() {
-			z.EndInflate();
+			z.Free();
 			z = null;
 			
 			if (!_leaveOpen)
@@ -44,18 +44,18 @@ namespace Ionic.Zlib {
 
 			// set up the output of the deflate/inflate codec:
 			z.OutputBuffer = buffer;
-			z.NextOut = offset;
-			z.AvailableBytesOut = count;
+			z._NextOut = offset;
+			z._AvailOut = count;
 			z.InputBuffer = workBuffer;
 			bool endOfInput = false;
 
 			do {
 				// need data in _workingBuffer in order to deflate/inflate.  Here, we check if we have any.
-				if (z.AvailableBytesIn == 0 && !endOfInput) {
+				if (z._AvailIn == 0 && !endOfInput) {
 					// No data available, so try to Read data from the captive stream.
-					z.NextIn = 0;
-					z.AvailableBytesIn = _stream.Read(workBuffer, 0, workBuffer.Length);
-					if (z.AvailableBytesIn == 0)
+					z._NextIn = 0;
+					z._AvailIn = _stream.Read(workBuffer, 0, workBuffer.Length);
+					if (z._AvailIn == 0)
 						endOfInput = true;
 				}
 				rc = z.Inflate();
@@ -66,11 +66,11 @@ namespace Ionic.Zlib {
 				if (rc != RCode.Okay && rc != RCode.StreamEnd)
 					throw new InvalidDataException("inflating: rc=" + rc);
 
-				if ((endOfInput || rc == RCode.StreamEnd) && z.AvailableBytesOut == count)
+				if ((endOfInput || rc == RCode.StreamEnd) && z._AvailOut == count)
 					break; // nothing more to read
-			} while (z.AvailableBytesOut > 0 && !endOfInput && rc == RCode.Okay);
+			} while (z._AvailOut > 0 && !endOfInput && rc == RCode.Okay);
 
-			return count - z.AvailableBytesOut;
+			return count - z._AvailOut;
 		}
 	}
 }
