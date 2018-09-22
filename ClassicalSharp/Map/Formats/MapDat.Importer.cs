@@ -1,11 +1,11 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using System.IO;
-using System.IO.Compression;
 using System.Net;
 using System.Text;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Network;
+using Ionic.Zlib;
 using OpenTK;
 
 namespace ClassicalSharp.Map {
@@ -29,8 +29,8 @@ namespace ClassicalSharp.Map {
 			GZipHeaderReader gsHeader = new GZipHeaderReader();
 			while (!gsHeader.ReadHeader(stream)) { }
 			
-			using (DeflateStream gs = new DeflateStream(stream, CompressionMode.Decompress)) {
-				reader = new BinaryReader(gs);
+			using (DeflateStream s = new DeflateStream(stream)) {
+				reader = new BinaryReader(s);
 				if (ReadInt32() != 0x271BB788 || reader.ReadByte() != 0x02) {
 					throw new InvalidDataException("Unexpected constant in .dat file");
 				}

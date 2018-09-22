@@ -3,11 +3,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Net;
 using System.Text;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Network;
+using Ionic.Zlib;
 using OpenTK;
 
 namespace ClassicalSharp.Map {
@@ -47,13 +47,14 @@ namespace ClassicalSharp.Map {
 			width = 0;
 			height = 0;
 			length = 0;
-			GZipHeaderReader gsHeader = new GZipHeaderReader();
-			while (!gsHeader.ReadHeader(stream)) { }
+			GZipHeaderReader gzHeader = new GZipHeaderReader();
+			while (!gzHeader.ReadHeader(stream)) { }
+			
 			LocalPlayer p = game.LocalPlayer;
 			p.Spawn = Vector3.Zero;
 			
-			using (DeflateStream gs = new DeflateStream(stream, CompressionMode.Decompress)) {
-				reader = new BinaryReader(gs);
+			using (DeflateStream s = new DeflateStream(stream)) {
+				reader = new BinaryReader(s);
 				if (ReadInt32() != 0x271BB788 || reader.ReadByte() != 0x02) {
 					throw new InvalidDataException("Unexpected constant in .dat file");
 				}

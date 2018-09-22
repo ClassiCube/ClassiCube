@@ -2,10 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Network;
 using ClassicalSharp.Network.Protocols;
+using Ionic.Zlib;
 using OpenTK;
 using NbtCompound = System.Collections.Generic.Dictionary<string, ClassicalSharp.Map.NbtTag>;
 
@@ -19,11 +19,11 @@ namespace ClassicalSharp.Map {
 		World map;
 		
 		public byte[] Load(Stream stream, Game game, out int width, out int height, out int length) {
-			GZipHeaderReader gsHeader = new GZipHeaderReader();
-			while (!gsHeader.ReadHeader(stream)) { }
+			GZipHeaderReader gzHeader = new GZipHeaderReader();
+			while (!gzHeader.ReadHeader(stream)) { }
 			
-			using (DeflateStream gs = new DeflateStream(stream, CompressionMode.Decompress)) {
-				reader = new BinaryReader(gs);
+			using (DeflateStream s = new DeflateStream(stream)) {
+				reader = new BinaryReader(s);
 				if (reader.ReadByte() != (byte)NbtTagType.Compound)
 					throw new InvalidDataException("Nbt file must start with Tag_Compound");
 				this.game = game;
@@ -46,7 +46,7 @@ namespace ClassicalSharp.Map {
 					p.SpawnHeadX = (float)Utils.PackedToDegrees((byte)spawn["P"].Value);
 				
 				map.Uuid = new Guid((byte[])children["UUID"].Value);
-				width = (short)children["X"].Value;
+				width  = (short)children["X"].Value;
 				height = (short)children["Y"].Value;
 				length = (short)children["Z"].Value;
 				

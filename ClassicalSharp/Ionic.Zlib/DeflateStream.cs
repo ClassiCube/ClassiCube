@@ -7,16 +7,13 @@ using ClassicalSharp;
 
 namespace Ionic.Zlib {
 	
-	internal class DeflateStream : ReadOnlyStream {
-		
+	internal class DeflateStream : ReadOnlyStream {	
 		InflateBlocks z;
-		bool _leaveOpen;
 		byte[] workBuffer;
 		Stream _stream;
 
-		public DeflateStream(Stream stream, bool leaveOpen) {
+		public DeflateStream(Stream stream) {
 			_stream = stream;
-			_leaveOpen = leaveOpen;
 			workBuffer = new byte[16384]; // TODO: 1024 bytes?
 			z = new InflateBlocks();
 		}		
@@ -24,9 +21,6 @@ namespace Ionic.Zlib {
 		public override void Close() {
 			z.Free();
 			z = null;
-			
-			if (!_leaveOpen)
-				_stream.Dispose();
 			_stream = null;
 		}
 		

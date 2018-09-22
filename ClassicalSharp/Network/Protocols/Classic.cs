@@ -99,10 +99,10 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			// Workaround because built in mono stream assumes that the end of stream
 			// has been reached the first time a read call returns 0. (MS.NET doesn't)
-			gzipStream = new DeflateStream(mapPartStream, true);
+			gzipStream = new DeflateStream(mapPartStream);
 			
 			#if !ONLY_8BIT
-			gzipStream2 = new DeflateStream(mapPartStream, true);
+			gzipStream2 = new DeflateStream(mapPartStream);
 			#endif
 			
 			mapSizeIndex = 0;

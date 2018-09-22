@@ -2,9 +2,9 @@
 // Part of fCraft | Copyright (c) 2009-2014 Matvei Stefarov <me@matvei.org> | BSD-3 | See LICENSE.txt
 using System;
 using System.IO;
-using System.IO.Compression;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Network;
+using Ionic.Zlib;
 
 namespace ClassicalSharp.Map {
 
@@ -15,11 +15,11 @@ namespace ClassicalSharp.Map {
 		const byte customTile = 163;
 		
 		public byte[] Load(Stream stream, Game game, out int width, out int height, out int length) {
-			GZipHeaderReader gsHeader = new GZipHeaderReader();
-			while (!gsHeader.ReadHeader(stream)) { }
+			GZipHeaderReader gzHeader = new GZipHeaderReader();
+			while (!gzHeader.ReadHeader(stream)) { }
 			
-			using (DeflateStream gs = new DeflateStream(stream, CompressionMode.Decompress)) {
-				BinaryReader r = new BinaryReader(gs);
+			using (DeflateStream s = new DeflateStream(stream)) {
+				BinaryReader r = new BinaryReader(s);
 				ushort header = r.ReadUInt16();
 
 				width = header == Version ? r.ReadUInt16() : header;
@@ -36,11 +36,11 @@ namespace ClassicalSharp.Map {
 				if (header == Version)
 					r.ReadUInt16(); // pervisit and perbuild perms
 				byte[] blocks = new byte[width * height * length];
-				int read = gs.Read(blocks, 0, blocks.Length);
+				int read = s.Read(blocks, 0, blocks.Length);
 				ConvertPhysicsBlocks(blocks);
 				
-				if (gs.ReadByte() != 0xBD) return blocks;
-				ReadCustomBlocks(gs, width, height, length, blocks);
+				if (s.ReadByte() != 0xBD) return blocks;
+				ReadCustomBlocks(s, width, height, length, blocks);
 				return blocks;
 			}
 		}
