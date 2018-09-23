@@ -165,11 +165,12 @@ namespace ClassicalSharp.Entities {
 				
 				AABB adjBB;
 				adjBB.Min.X = Math.Min(finalBB.Min.X, blockBB_MinX + Adjustment);
-				adjBB.Max.X = Math.Max(finalBB.Max.X, blockBB_MaxX - Adjustment);
-				adjBB.Min.Y = blockBB.Max.Y + Adjustment;
-				adjBB.Max.Y = adjBB.Min.Y + size.Y;
 				adjBB.Min.Z = Math.Min(finalBB.Min.Z, blockBB_MinZ + Adjustment);
+				adjBB.Min.Y = blockBB.Max.Y + Adjustment;
+				
+				adjBB.Max.X = Math.Max(finalBB.Max.X, blockBB_MaxX - Adjustment);
 				adjBB.Max.Z = Math.Max(finalBB.Max.Z, blockBB_MaxZ - Adjustment);
+				adjBB.Max.Y = adjBB.Min.Y + size.Y;
 				
 				if (!CanSlideThrough(ref adjBB)) return false;				
 				entity.Position.Y = adjBB.Min.Y;

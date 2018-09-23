@@ -42,9 +42,9 @@ static void ChatLine_Make(struct ChatLine* line, const String* text) {
 	line->Received = DateTime_CurrentUTC_MS();
 }
 
-char  Chat_LogNameBuffer[STRING_SIZE];
+char   Chat_LogNameBuffer[STRING_SIZE];
 String Chat_LogName = String_FromArray(Chat_LogNameBuffer);
-char  Chat_LogPathBuffer[FILENAME_SIZE];
+char   Chat_LogPathBuffer[FILENAME_SIZE];
 String Chat_LogPath = String_FromArray(Chat_LogPathBuffer);
 
 struct Stream Chat_LogStream;
