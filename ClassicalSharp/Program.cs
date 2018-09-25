@@ -19,6 +19,7 @@ namespace ClassicalSharp {
 			ErrorHandler.InstallHandler("client.log");
 			Utils.LogDebug("Starting " + AppName + "..");
 			
+			
 			Utils.EnsureDirectory("maps");
 			Utils.EnsureDirectory("texpacks");
 			Utils.EnsureDirectory("texturecache");

@@ -594,6 +594,15 @@ static void Chat_Init(void) {
 static void Chat_Reset(void) {
 	Chat_CloseLog();
 	Chat_LogName.length = 0;
+	String empty = String_MakeNull();
+	/* reset CPE messages */
+	Chat_AddOf(&empty, MSG_TYPE_ANNOUNCEMENT);
+	Chat_AddOf(&empty, MSG_TYPE_STATUS_1);
+	Chat_AddOf(&empty, MSG_TYPE_STATUS_2);
+	Chat_AddOf(&empty, MSG_TYPE_STATUS_3);
+	Chat_AddOf(&empty, MSG_TYPE_BOTTOMRIGHT_1);
+	Chat_AddOf(&empty, MSG_TYPE_BOTTOMRIGHT_2);
+	Chat_AddOf(&empty, MSG_TYPE_BOTTOMRIGHT_3);
 }
 
 static void Chat_Free(void) {

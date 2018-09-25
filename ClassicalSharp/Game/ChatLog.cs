@@ -17,9 +17,20 @@ namespace ClassicalSharp {
 		void IGameComponent.Init(Game game) {
 			this.game = game;
 		}
+		
+		void IGameComponent.Reset(Game game) { 
+			logName = null;
+			// Reset all the CPE messages
+			Add(null, MessageType.Announcement);
+			Add(null, MessageType.Status1);
+			Add(null, MessageType.Status2);
+			Add(null, MessageType.Status3);
+			Add(null, MessageType.BottomRight1);
+			Add(null, MessageType.BottomRight2);
+			Add(null, MessageType.BottomRight3);
+		}
 
-		void IGameComponent.Ready(Game game) { }
-		void IGameComponent.Reset(Game game) { logName = null; }
+		void IGameComponent.Ready(Game game) { }		
 		void IGameComponent.OnNewMap(Game game) { }
 		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
