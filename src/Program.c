@@ -7,6 +7,7 @@
 #include "Funcs.h"
 #include "ExtMath.h"
 #include "Utils.h"
+#include "Drawer2D.h"
 
 //#define CC_TEST_VORBIS
 #ifdef CC_TEST_VORBIS
@@ -57,14 +58,14 @@ int main(int argc, char** argv) {
 	String_Format1(&defPath, "texpacks%rdefault.zip", &Directory_Separator);
 
 	if (!File_Exists(&defPath)) {
-		ErrorHandler_ShowDialog("Failed to start", "default.zip is missing, try running launcher first");
-		Platform_Exit(1); return 1;
+		ErrorHandler_ShowDialog("Missing file", 
+			"default.zip is missing, try running launcher first.\n\nThe game will still run, but without any textures");
 	}
 
 	String args[PROGRAM_MAX_CMDARGS];
 	Int32 argsCount = Platform_GetCommandLineArgs(argc, argv, args);
 	/* NOTE: Make sure to comment this out before pushing a commit */
-	//String rawArgs = String_FromConst("UnknownShadow200 b012427cdde15b18f47c0ce172853652 34.241.221.25 27020");
+	//String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565");
 	//argsCount = 4; String_UNSAFE_Split(&rawArgs, ' ', args, &argsCount);
 
 	if (argsCount == 0) {
