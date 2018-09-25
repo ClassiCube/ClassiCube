@@ -29,6 +29,7 @@ namespace ClassicalSharp.Entities {
 		internal SoundComponent sound;
 		internal LocalInterpComponent interp;
 		internal TiltComponent tilt;
+		bool warnedRespawn, warnedFly, warnedNoclip;
 		
 		public LocalPlayer(Game game) : base(game) {
 			DisplayName = game.Username;
@@ -39,7 +40,7 @@ namespace ClassicalSharp.Entities {
 			physics = new PhysicsComponent(game, this);
 			sound = new SoundComponent(game, this);
 			interp = new LocalInterpComponent(game, this);
-			tilt = new TiltComponent(game);		
+			tilt = new TiltComponent(game);
 			physics.hacks = Hacks; physics.collisions = collisions;
 		}
 		
@@ -141,10 +142,10 @@ namespace ClassicalSharp.Entities {
 			Hacks.SpeedMultiplier = Options.GetFloat(OptionsKey.Speed, 0.1f, 50, 10);
 			Hacks.PushbackPlacing = Options.GetBool(OptionsKey.PushbackPlacing, false);
 			Hacks.NoclipSlide     = Options.GetBool(OptionsKey.NoclipSlide, false);
-			Hacks.WOMStyleHacks   = Options.GetBool(OptionsKey.WOMStyleHacks, false);			
-			Hacks.FullBlockStep   = Options.GetBool(OptionsKey.FullBlockStep, false);			
+			Hacks.WOMStyleHacks   = Options.GetBool(OptionsKey.WOMStyleHacks, false);
+			Hacks.FullBlockStep   = Options.GetBool(OptionsKey.FullBlockStep, false);
 			physics.userJumpVel   = Options.GetFloat(OptionsKey.JumpVelocity, 0.0f, 52.0f, 0.42f);
-			physics.jumpVel = physics.userJumpVel;			
+			physics.jumpVel = physics.userJumpVel;
 		}
 		
 		void IGameComponent.Ready(Game game) { }
@@ -154,6 +155,9 @@ namespace ClassicalSharp.Entities {
 		void IGameComponent.OnNewMap(Game game) {
 			Velocity    = Vector3.Zero;
 			OldVelocity = Vector3.Zero;
+			warnedRespawn = false;
+			warnedFly     = false;
+			warnedNoclip  = false;
 		}
 		
 		void IGameComponent.Reset(Game game) {
@@ -166,7 +170,7 @@ namespace ClassicalSharp.Entities {
 		
 		
 		static Predicate<BlockID> touchesAnySolid = IsSolidCollide;
-		static bool IsSolidCollide(BlockID b) { return BlockInfo.Collide[b] == CollideType.Solid; }		
+		static bool IsSolidCollide(BlockID b) { return BlockInfo.Collide[b] == CollideType.Solid; }
 		void DoRespawn() {
 			if (!game.World.HasBlocks) return;
 			Vector3 spawn = Spawn;
@@ -199,21 +203,55 @@ namespace ClassicalSharp.Entities {
 			onGround = TouchesAny(bb, touchesAnySolid);
 		}
 		
-		public bool HandlesKey(Key key) {
-			if (key == game.Mapping(KeyBind.Respawn) && Hacks.CanRespawn) {
+		void HandleRespawn() {
+			if (Hacks.CanRespawn) {
 				DoRespawn();
-			} else if (key == game.Mapping(KeyBind.SetSpawn) && Hacks.CanRespawn) {
-				Spawn   = Position;
-				Spawn.X = Utils.Floor(Spawn.X) + 0.5f;
-				Spawn.Z = Utils.Floor(Spawn.Z) + 0.5f;
+			} else if (!warnedRespawn) {
+				warnedRespawn = true;
+				game.Chat.Add("&cRespawning is disabled in this map");
+			}
+		}
+		
+		void HandleSetSpawn() {
+			if (Hacks.CanRespawn) {
+				Spawn.X = Utils.Floor(Position.X) + 0.5f;
+				Spawn.Y = Position.Y;
+				Spawn.Z = Utils.Floor(Position.Z) + 0.5f;
 				SpawnRotY  = RotY;
 				SpawnHeadX = HeadX;
-				DoRespawn();
-			} else if (key == game.Mapping(KeyBind.Fly) && Hacks.CanFly && Hacks.Enabled) {
+			}
+			HandleRespawn();
+		}
+		
+		void HandleFly() {
+			if (Hacks.CanFly && Hacks.Enabled) {
 				Hacks.Flying = !Hacks.Flying;
-			} else if (key == game.Mapping(KeyBind.NoClip) && Hacks.CanNoclip && Hacks.Enabled && !Hacks.WOMStyleHacks) {
+			} else if (!warnedFly) {
+				warnedFly = true;
+				game.Chat.Add("&cFlying is disabled in this map");
+			}
+		}
+		
+		void HandleNoClip() {
+			if (Hacks.CanNoclip && Hacks.Enabled) {
+				if (Hacks.WOMStyleHacks) return; // don't handle this here
 				if (Hacks.Noclip) Velocity.Y = 0;
 				Hacks.Noclip = !Hacks.Noclip;
+			} else if (!warnedNoclip) {
+				warnedNoclip = true;
+				game.Chat.Add("&cNoclip is disabled in this map");
+			}
+		}
+		
+		public bool HandlesKey(Key key) {
+			if (key == game.Mapping(KeyBind.Respawn)) {
+				HandleRespawn();
+			} else if (key == game.Mapping(KeyBind.SetSpawn)) {
+				HandleSetSpawn();
+			} else if (key == game.Mapping(KeyBind.Fly)) {
+				HandleFly();
+			} else if (key == game.Mapping(KeyBind.NoClip)) {
+				HandleNoClip();
 			} else if (key == game.Mapping(KeyBind.Jump) && !onGround && !(Hacks.Flying || Hacks.Noclip)) {
 				int maxJumps = Hacks.CanDoubleJump && Hacks.WOMStyleHacks ? 2 : 0;
 				maxJumps = Math.Max(maxJumps, Hacks.MaxJumps - 1);

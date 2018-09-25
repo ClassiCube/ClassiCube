@@ -507,16 +507,10 @@ ReturnCode File_Length(void* file, UInt32* length) {
 *#########################################################################################################################*/
 #if CC_BUILD_WIN
 void Thread_Sleep(UInt32 milliseconds) { Sleep(milliseconds); }
-DWORD WINAPI Thread_StartCallback(LPVOID lpParam) {
-	Thread_StartFunc* func = (Thread_StartFunc*)lpParam;
+DWORD WINAPI Thread_StartCallback(void* param) {
+	Thread_StartFunc* func = (Thread_StartFunc*)param;
 	(*func)();
 	return 0;
-}
-
-static void Thread_FreeHandle(void* handle) {
-	if (!CloseHandle((HANDLE)handle)) {
-		ErrorHandler_Fail2(GetLastError(), "Freeing thread handle");
-	}
 }
 
 void* Thread_Start(Thread_StartFunc* func, bool detach) {
@@ -526,13 +520,19 @@ void* Thread_Start(Thread_StartFunc* func, bool detach) {
 		ErrorHandler_Fail2(GetLastError(), "Creating thread");
 	}
 
-	if (detach) Thread_FreeHandle(handle);
+	if (detach) Thread_Detach(handle);
 	return handle;
+}
+
+void Thread_Detach(void* handle) {
+	if (!CloseHandle((HANDLE)handle)) {
+		ErrorHandler_Fail2(GetLastError(), "Freeing thread handle");
+	}
 }
 
 void Thread_Join(void* handle) {
 	WaitForSingleObject((HANDLE)handle, INFINITE);
-	Thread_FreeHandle(handle);
+	Thread_Detach(handle);
 }
 
 CRITICAL_SECTION mutexList[3]; Int32 mutexIndex;
@@ -584,15 +584,19 @@ void* Thread_Start(Thread_StartFunc* func, bool detach) {
 	int result = pthread_create(ptr, NULL, Thread_StartCallback, func);
 	ErrorHandler_CheckOrFail(result, "Creating thread");
 
-	if (detach) {
-		result = pthread_detach(*ptr);
-		ErrorHandler_CheckOrFail(result, "Detaching thread");
-	}
+	if (detach) Thread_Detach(ptr);
 	threadIndex++; return ptr;
 }
 
+void Thread_Detach(void* handle) {
+	pthread_t* ptr = handle;
+	int result = pthread_detach(*ptr);
+	ErrorHandler_CheckOrFail(result, "Detaching thread");
+}
+
 void Thread_Join(void* handle) {
-	int result = pthread_join(*((pthread_t*)handle), NULL);
+	pthread_t* ptr = handle;
+	int result = pthread_join(*ptr, NULL);
 	ErrorHandler_CheckOrFail(result, "Joining thread");
 }
 

@@ -153,6 +153,7 @@ struct LocalPlayer {
 	struct InterpComp Interp;
 	struct CollisionsComp Collisions;
 	struct PhysicsComp Physics;
+	bool _WarnedRespawn, _WarnedFly, _WarnedNoclip;
 };
 
 struct LocalPlayer LocalPlayer_Instance;

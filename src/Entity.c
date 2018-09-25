@@ -875,9 +875,14 @@ static void LocalPlayer_Reset(void) {
 }
 
 static void LocalPlayer_OnNewMap(void) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	Vector3 zero = Vector3_Zero; 
-	LocalPlayer_Instance.Base.Velocity = zero;
-	LocalPlayer_Instance.OldVelocity   = zero;
+	p->Base.Velocity = zero;
+	p->OldVelocity   = zero;
+
+	p->_WarnedRespawn = false;
+	p->_WarnedFly     = false;
+	p->_WarnedNoclip  = false;
 }
 
 void LocalPlayer_MakeComponent(struct IGameComponent* comp) {
@@ -941,25 +946,63 @@ static void LocalPlayer_DoRespawn(void) {
 	p->Base.OnGround = Entity_TouchesAny(&bb, LocalPlayer_IsSolidCollide);
 }
 
+static void LocalPlayer_HandleRespawn(void) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	if (p->Hacks.CanRespawn) {
+		LocalPlayer_DoRespawn();
+	} else if (!p->_WarnedRespawn) {
+		p->_WarnedRespawn = true;
+		Chat_AddRaw("&cRespawning is disabled in this map");
+	}
+}
+
+static void LocalPlayer_HandleSetSpawn(void) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	if (p->Hacks.CanRespawn) {
+		p->Spawn.X = Math_Floor(p->Base.Position.X) + 0.5f;
+		p->Spawn.Y = p->Base.Position.Y;
+		p->Spawn.Z = Math_Floor(p->Base.Position.Z) + 0.5f;
+		p->SpawnRotY  = p->Base.RotY;
+		p->SpawnHeadX = p->Base.HeadX;
+	}
+	LocalPlayer_HandleRespawn();
+}
+
+static void LocalPlayer_HandleFly(void) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	if (p->Hacks.CanFly && p->Hacks.Enabled) {
+		p->Hacks.Flying = !p->Hacks.Flying;
+	} else if(!p->_WarnedFly) {
+		p->_WarnedFly = true;
+		Chat_AddRaw("&cFlying is disabled in this map");
+	}
+}
+
+static void LocalPlayer_HandleNoClip(void) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	if (p->Hacks.CanNoclip && p->Hacks.Enabled) {
+		if (p->Hacks.WOMStyleHacks) return; /* don't handle this here */
+		if (p->Hacks.Noclip) p->Base.Velocity.Y = 0;
+		p->Hacks.Noclip = !p->Hacks.Noclip;
+	} else if (!p->_WarnedNoclip) {
+		p->_WarnedNoclip = true;
+		Chat_AddRaw("&cNoclip is disabled in this map");
+	}
+}
+
 bool LocalPlayer_HandlesKey(Int32 key) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct HacksComp* hacks = &p->Hacks;
 	struct PhysicsComp* physics = &p->Physics;
 
-	if (key == KeyBind_Get(KeyBind_Respawn) && hacks->CanRespawn) {
-		LocalPlayer_DoRespawn();
-	} else if (key == KeyBind_Get(KeyBind_SetSpawn) && hacks->CanRespawn) {
-		p->Spawn = p->Base.Position;
-		p->Spawn.X = Math_Floor(p->Spawn.X) + 0.5f;
-		p->Spawn.Z = Math_Floor(p->Spawn.Z) + 0.5f;
-		p->SpawnRotY = p->Base.RotY;
-		p->SpawnHeadX = p->Base.HeadX;
-		LocalPlayer_DoRespawn();
-	} else if (key == KeyBind_Get(KeyBind_Fly) && hacks->CanFly && hacks->Enabled) {
-		hacks->Flying = !hacks->Flying;
-	} else if (key == KeyBind_Get(KeyBind_NoClip) && hacks->CanNoclip && hacks->Enabled && !hacks->WOMStyleHacks) {
-		if (hacks->Noclip) p->Base.Velocity.Y = 0;
-		hacks->Noclip = !hacks->Noclip;
+	if (key == KeyBind_Get(KeyBind_Respawn)) {
+		LocalPlayer_HandleRespawn();
+	} else if (key == KeyBind_Get(KeyBind_SetSpawn)) {
+		LocalPlayer_HandleSetSpawn();
+	} else if (key == KeyBind_Get(KeyBind_Fly)) {
+		LocalPlayer_HandleFly();
+	} else if (key == KeyBind_Get(KeyBind_NoClip)) {
+		LocalPlayer_HandleNoClip();
 	} else if (key == KeyBind_Get(KeyBind_Jump) && !p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
 		Int32 maxJumps = hacks->CanDoubleJump && hacks->WOMStyleHacks ? 2 : 0;
 		maxJumps = max(maxJumps, hacks->MaxJumps - 1);

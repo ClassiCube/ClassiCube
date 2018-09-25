@@ -72,6 +72,7 @@ ReturnCode File_Length(void* file, UInt32* length);
 void Thread_Sleep(UInt32 milliseconds);
 typedef void Thread_StartFunc(void);
 void* Thread_Start(Thread_StartFunc* func, bool detach);
+void Thread_Detach(void* handle);
 void Thread_Join(void* handle);
 
 void* Mutex_Create(void);
