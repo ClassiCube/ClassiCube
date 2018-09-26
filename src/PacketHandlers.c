@@ -306,7 +306,7 @@ void Classic_WriteChat(const String* text, bool partial) {
 	ServerConnection_WriteBuffer += 66;
 }
 
-void Classic_WritePosition(Vector3 pos, Real32 rotY, Real32 headX) {
+void Classic_WritePosition(Vector3 pos, float rotY, float headX) {
 	UInt8* data = ServerConnection_WriteBuffer;
 	data[0] = OPCODE_ENTITY_TELEPORT;
 	Int32 len;
@@ -454,8 +454,8 @@ static void Classic_LevelDataChunk(UInt8* data) {
 		}
 	}
 
-	Real32 progress = !map ? 0.0f : (Real32)mapIndex / mapVolume;
-	Event_RaiseReal(&WorldEvents_Loading, progress);
+	float progress = !map ? 0.0f : (float)mapIndex / mapVolume;
+	Event_RaiseFloat(&WorldEvents_Loading, progress);
 }
 
 static void Classic_LevelFinalise(UInt8* data) {
@@ -519,8 +519,8 @@ static void Classic_RelPosAndOrientationUpdate(UInt8* data) {
 	pos.Y = (Int8)(*data++) / 32.0f;
 	pos.Z = (Int8)(*data++) / 32.0f;
 
-	Real32 rotY  = Math_Packed2Deg(*data++);
-	Real32 headX = Math_Packed2Deg(*data++);
+	float rotY  = Math_Packed2Deg(*data++);
+	float headX = Math_Packed2Deg(*data++);
 	struct LocationUpdate update; LocationUpdate_MakePosAndOri(&update, pos, rotY, headX, true);
 	Handlers_UpdateLocation(id, &update, true);
 }
@@ -537,8 +537,8 @@ static void Classic_RelPositionUpdate(UInt8* data) {
 
 static void Classic_OrientationUpdate(UInt8* data) {
 	EntityID id = *data++;
-	Real32 rotY  = Math_Packed2Deg(*data++);
-	Real32 headX = Math_Packed2Deg(*data++);
+	float rotY  = Math_Packed2Deg(*data++);
+	float headX = Math_Packed2Deg(*data++);
 
 	struct LocationUpdate update; LocationUpdate_MakeOri(&update, rotY, headX);
 	Handlers_UpdateLocation(id, &update, true);
@@ -607,8 +607,8 @@ static void Classic_ReadAbsoluteLocation(UInt8* data, EntityID id, bool interpol
 	if (id == ENTITIES_SELF_ID) y += 22;
 
 	Vector3 pos  = { x/32.0f, y/32.0f, z/32.0f };
-	Real32 rotY  = Math_Packed2Deg(*data++);
-	Real32 headX = Math_Packed2Deg(*data++);
+	float rotY  = Math_Packed2Deg(*data++);
+	float headX = Math_Packed2Deg(*data++);
 
 	if (id == ENTITIES_SELF_ID) receivedFirstPosition = true;
 	struct LocationUpdate update; LocationUpdate_MakePosAndOri(&update, pos, rotY, headX, false);
@@ -1127,17 +1127,17 @@ static void CPE_SetEntityProperty(UInt8* data) {
 	if (!entity) return;
 	struct LocationUpdate update = { 0 };
 
-	Real32 scale;
+	float scale;
 	switch (type) {
 	case 0:
 		update.Flags |= LOCATIONUPDATE_FLAG_ROTX;
-		update.RotX = LocationUpdate_Clamp((Real32)value); break;
+		update.RotX = LocationUpdate_Clamp((float)value); break;
 	case 1:
 		update.Flags |= LOCATIONUPDATE_FLAG_HEADY;
-		update.HeadY = LocationUpdate_Clamp((Real32)value); break;
+		update.HeadY = LocationUpdate_Clamp((float)value); break;
 	case 2:
 		update.Flags |= LOCATIONUPDATE_FLAG_ROTZ;
-		update.RotZ = LocationUpdate_Clamp((Real32)value); break;
+		update.RotZ = LocationUpdate_Clamp((float)value); break;
 
 	case 3:
 	case 4:
@@ -1256,9 +1256,9 @@ static BlockID BlockDefs_DefineBlockCommonStart(UInt8** ptr, bool uniqueSideTexs
 	Block_SetName(block, &name);
 	Block_SetCollide(block, *data++);
 
-	Real32 multiplierExponent = (*data++ - 128) / 64.0f;
+	float multiplierExponent = (*data++ - 128) / 64.0f;
 	#define LOG_2 0.693147180559945
-	Block_SpeedMultiplier[block] = (Real32)Math_Exp(LOG_2 * multiplierExponent); /* pow(2, x) */
+	Block_SpeedMultiplier[block] = (float)Math_Exp(LOG_2 * multiplierExponent); /* pow(2, x) */
 
 	Block_SetTex(BlockDefs_Tex(&data), FACE_YMAX, block);
 	if (uniqueSideTexs) {

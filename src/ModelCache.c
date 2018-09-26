@@ -171,7 +171,7 @@ static void ChickenModel_CreateParts(void) {
 	ChickenModel_MakeLeg(&Chicken_RightLeg, 0, 3, 1, 2);
 }
 
-static Real32 ChickenModel_GetEyeY(struct Entity* entity)  { return 14.0f / 16.0f; }
+static float ChickenModel_GetEyeY(struct Entity* entity)  { return 14.0f / 16.0f; }
 static void ChickenModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(8.0f,12.0f,8.0f); }
 static void ChickenModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-4,0,-8, 4,15,4); }
 
@@ -251,7 +251,7 @@ static void CreeperModel_CreateParts(void) {
 	}; BoxDesc_BuildBox(&Creeper_RightLegBack, &rBack);
 }
 
-static Real32 CreeperModel_GetEyeY(struct Entity* entity)  { return 22.0f / 16.0f; }
+static float CreeperModel_GetEyeY(struct Entity* entity)  { return 22.0f / 16.0f; }
 static void CreeperModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(8.0f,26.0f,8.0f); }
 static void CreeperModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-4,0,-6, 4,26,6); }
 
@@ -322,7 +322,7 @@ static void PigModel_CreateParts(void) {
 	}; BoxDesc_BuildBox(&Pig_RightLegBack, &rBack);
 }
 
-static Real32 PigModel_GetEyeY(struct Entity* entity)  { return 12.0f / 16.0f; }
+static float PigModel_GetEyeY(struct Entity* entity)  { return 12.0f / 16.0f; }
 static void PigModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(14.0f,14.0f,14.0f); }
 static void PigModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-5,0,-14, 5,16,9); }
 
@@ -439,7 +439,7 @@ static void SheepModel_CreateParts(void) {
 	}; BoxDesc_BuildBox(&Fur_RightLegBack, &frBack);
 }
 
-static Real32 SheepModel_GetEyeY(struct Entity* entity)  { return 20.0f / 16.0f; }
+static float SheepModel_GetEyeY(struct Entity* entity)  { return 20.0f / 16.0f; }
 static void SheepModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(10.0f,20.0f,10.0f); }
 static void SheepModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-6,0,-13, 6,23,10); }
 
@@ -524,7 +524,7 @@ static void SkeletonModel_CreateParts(void) {
 	}; BoxDesc_BuildBox(&Skeleton_RightArm, &rArm);
 }
 
-static Real32 SkeletonModel_GetEyeY(struct Entity* entity)  { return 26.0f / 16.0f; }
+static float SkeletonModel_GetEyeY(struct Entity* entity)  { return 26.0f / 16.0f; }
 static void SkeletonModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(8.0f,28.1f,8.0f); }
 static void SkeletonModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-4,0,-4, 4,32,4); }
 
@@ -596,7 +596,7 @@ static void SpiderModel_CreateParts(void) {
 	}; BoxDesc_BuildBox(&Spider_RightLeg, &rLeg);
 }
 
-static Real32 SpiderModel_GetEyeY(struct Entity* entity)  { return 8.0f / 16.0f; }
+static float SpiderModel_GetEyeY(struct Entity* entity)  { return 8.0f / 16.0f; }
 static void SpiderModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(15.0f,12.0f,15.0f); }
 static void SpiderModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-5,0,-11, 5,12,15); }
 
@@ -609,9 +609,9 @@ static void SpiderModel_DrawModel(struct Entity* entity) {
 	Model_DrawPart(&Spider_Link);
 	Model_DrawPart(&Spider_End);
 
-	Real32 rotX = Math_SinF(entity->Anim.WalkTime)     * entity->Anim.Swing * MATH_PI;
-	Real32 rotZ = Math_CosF(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 16.0f;
-	Real32 rotY = Math_SinF(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 32.0f;
+	float rotX = Math_SinF(entity->Anim.WalkTime)     * entity->Anim.Swing * MATH_PI;
+	float rotZ = Math_CosF(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 16.0f;
+	float rotY = Math_SinF(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 32.0f;
 	Model_Rotation = ROTATE_ORDER_XZY;
 
 	Model_DrawRotate(rotX,  quarterPi  + rotY, eighthPi + rotZ, &Spider_LeftLeg, false);
@@ -690,7 +690,7 @@ static void ZombieModel_CreateParts(void) {
 	}; BoxDesc_BuildBox(&Zombie_RightArm, &rArm);
 }
 
-static Real32 ZombieModel_GetEyeY(struct Entity* entity)  { return 26.0f / 16.0f; }
+static float ZombieModel_GetEyeY(struct Entity* entity)  { return 26.0f / 16.0f; }
 static void ZombieModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(8.6f,28.1f,8.6f); }
 static void ZombieModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-4,0,-4, 4,32,4); }
 
@@ -734,7 +734,7 @@ struct ModelSet {
 	struct ModelLimbs Limbs[3];
 };
 
-static void HumanModel_CreateLimbs(struct ModelSet* models, Real32 offset, struct BoxDesc* arm, struct BoxDesc* leg) {
+static void HumanModel_CreateLimbs(struct ModelSet* models, float offset, struct BoxDesc* arm, struct BoxDesc* leg) {
 	struct ModelLimbs* set     = &models->Limbs[0];
 	struct ModelLimbs* set64   = &models->Limbs[1];
 	struct ModelLimbs* setSlim = &models->Limbs[2];
@@ -894,7 +894,7 @@ static void HumanoidModel_CreateParts(void) {
 	HumanModel_CreateLimbs(&Humanoid_Set, 0.5f, &arm, &leg);
 }
 
-static Real32 HumanoidModel_GetEyeY(struct Entity* entity)  { return 26.0f / 16.0f; }
+static float HumanoidModel_GetEyeY(struct Entity* entity)  { return 26.0f / 16.0f; }
 static void HumanoidModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(8.6f,28.1f,8.6f); }
 static void HumanoidModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-8,0,-4, 8,32,4); }
 
@@ -968,7 +968,7 @@ static void ChibiModel_CreateParts(void) {
 	HumanModel_CreateLimbs(&Chibi_Set, 0.25f, &arm, &leg);
 }
 
-static Real32 ChibiModel_GetEyeY(struct Entity* entity)  { return 14.0f / 16.0f; }
+static float ChibiModel_GetEyeY(struct Entity* entity)  { return 14.0f / 16.0f; }
 static void ChibiModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(4.6f,20.1f,4.6f); }
 static void ChibiModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-4,0,-4, 4,16,4); }
 
@@ -1002,7 +1002,7 @@ struct Model SittingModel;
 #define SIT_OFFSET 10.0f
 static void SittingModel_CreateParts(void) { }
 
-static Real32 SittingModel_GetEyeY(struct Entity* entity)  { return (26.0f - SIT_OFFSET) / 16.0f; }
+static float SittingModel_GetEyeY(struct Entity* entity)  { return (26.0f - SIT_OFFSET) / 16.0f; }
 static void SittingModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(8.6f,28.1f - SIT_OFFSET,8.6f); }
 static void SittingModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-8,0,-4, 8,32 - SIT_OFFSET,4); }
 
@@ -1058,7 +1058,7 @@ static struct Model* CorpseModel_GetInstance(void) {
 struct Model HeadModel;
 static void HeadModel_CreateParts(void) { }
 
-static Real32 HeadModel_GetEyeY(struct Entity* entity)  { return 6.0f / 16.0f; }
+static float HeadModel_GetEyeY(struct Entity* entity)  { return 6.0f / 16.0f; }
 static void HeadModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(7.9f,7.9f,7.9f); }
 static void HeadModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-4,0,-4, 4,8,4); }
 
@@ -1101,10 +1101,10 @@ Int32 BlockModel_lastTexIndex = -1, BlockModel_texIndex;
 
 static void BlockModel_CreateParts(void) { }
 
-static Real32 BlockModel_GetEyeY(struct Entity* entity) {
+static float BlockModel_GetEyeY(struct Entity* entity) {
 	BlockID block = entity->ModelBlock;
-	Real32 minY = Block_MinBB[block].Y;
-	Real32 maxY = Block_MaxBB[block].Y;
+	float minY = Block_MinBB[block].Y;
+	float maxY = Block_MaxBB[block].Y;
 	return block == BLOCK_AIR ? 1 : (minY + maxY) / 2.0f;
 }
 
@@ -1123,7 +1123,7 @@ static void BlockModel_GetPickingBounds(struct AABB* bb) {
 
 static void BlockModel_RecalcProperties(struct Entity* p) {
 	BlockID block = p->ModelBlock;
-	Real32 height;
+	float height;
 
 	if (Block_Draw[block] == DRAW_GAS) {
 		Vector3 zero = Vector3_Zero; BlockModel_minBB = zero;
@@ -1175,7 +1175,7 @@ static void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
 	PackedCol col = Model_Cols[0];
 	Block_Tint(col, BlockModel_block);
 
-	Real32 p1 = 0.0f, p2 = 0.0f;
+	float p1 = 0.0f, p2 = 0.0f;
 	if (firstPart) { /* Need to break into two quads for when drawing a sprite model in hand. */
 		if (mirror) { rec.U1 = 0.5f; p1 = -5.5f / 16.0f; }
 		else {        rec.U2 = 0.5f; p2 = -5.5f / 16.0f; }
@@ -1202,7 +1202,7 @@ static void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
 	PackedCol col = Model_Cols[0];
 	Block_Tint(col, BlockModel_block);
 
-	Real32 x1 = 0.0f, x2 = 0.0f, z1 = 0.0f, z2 = 0.0f;
+	float x1 = 0.0f, x2 = 0.0f, z1 = 0.0f, z2 = 0.0f;
 	if (firstPart) {
 		if (mirror) { rec.U2 = 0.5f; x2 = -5.5f / 16.0f; z2 = 5.5f / 16.0f; }
 		else {        rec.U1 = 0.5f; x1 = -5.5f / 16.0f; z1 = 5.5f / 16.0f; }

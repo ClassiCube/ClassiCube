@@ -9,7 +9,7 @@
    Copyright 2014 - 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-volatile Real32 Gen_CurrentProgress;
+volatile float Gen_CurrentProgress;
 volatile const char* Gen_CurrentState;
 volatile bool Gen_Done;
 Int32 Gen_Width, Gen_Height, Gen_Length, Gen_Seed;
@@ -22,15 +22,15 @@ void NotchyGen_Generate(void);
 
 #define NOISE_TABLE_SIZE 512
 void ImprovedNoise_Init(UInt8* p, Random* rnd);
-Real32 ImprovedNoise_Calc(UInt8* p, Real32 x, Real32 y);
+float ImprovedNoise_Calc(UInt8* p, float x, float y);
 
 struct OctaveNoise { UInt8 p[8][NOISE_TABLE_SIZE]; Int32 octaves; };
 void OctaveNoise_Init(struct OctaveNoise* n, Random* rnd, Int32 octaves);
-Real32 OctaveNoise_Calc(struct OctaveNoise* n, Real32 x, Real32 y);
+float OctaveNoise_Calc(struct OctaveNoise* n, float x, float y);
 
 struct CombinedNoise { struct OctaveNoise noise1, noise2; };
 void CombinedNoise_Init(struct CombinedNoise* n, Random* rnd, Int32 octaves1, Int32 octaves2);
-Real32 CombinedNoise_Calc(struct CombinedNoise* n, Real32 x, Real32 y);
+float CombinedNoise_Calc(struct CombinedNoise* n, float x, float y);
 
 
 Int32 Tree_Width, Tree_Height, Tree_Length;

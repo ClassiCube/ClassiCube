@@ -9,7 +9,7 @@
 #define min(x, y) ((x) < (y) ? (x) : (y))
 #define max(x, y) ((x) > (y) ? (x) : (y))
 #define Array_Elems(arr) (sizeof(arr) / sizeof(arr[0]))
-union IntAndFloat { Real32 f; Int32 i; UInt32 u; };
+union IntAndFloat { float f; Int32 i; UInt32 u; };
 
 #define QuickSort_Swap_Maybe()\
 if (i <= j) {\

@@ -38,7 +38,7 @@ NOINLINE_ void ButtonWidget_Set(struct ButtonWidget* w, const String* text, Font
 struct ScrollbarWidget {
 	Widget_Layout
 	Int32 TotalRows, ScrollY;
-	Real32 ScrollingAcc;
+	float ScrollingAcc;
 	Int32 MouseOffset;
 	bool DraggingMouse;
 };
@@ -48,9 +48,9 @@ NOINLINE_ void ScrollbarWidget_Create(struct ScrollbarWidget* w);
 struct HotbarWidget {
 	Widget_Layout
 	struct Texture SelTex, BackTex;
-	Real32 BarHeight, SelBlockSize, ElemSize;
-	Real32 BarXOffset, BorderSize;
-	Real32 ScrollAcc;
+	float BarHeight, SelBlockSize, ElemSize;
+	float BarXOffset, BorderSize;
+	float ScrollAcc;
 	bool AltHandled;
 };
 NOINLINE_ void HotbarWidget_Create(struct HotbarWidget* w);
@@ -62,7 +62,7 @@ struct TableWidget {
 	Int32 LastCreatedIndex;
 	FontDesc Font;
 	Int32 SelectedIndex, BlockSize;
-	Real32 SelBlockExpand;
+	float SelBlockExpand;
 	GfxResourceID VB;
 	bool PendingClose;
 
@@ -103,7 +103,7 @@ struct InputWidget {
 	Int32 CaretPos;       /* Position of caret, -1 for at end of string */
 	PackedCol CaretCol;
 	struct Texture CaretTex;
-	Real64 CaretAccumulator;
+	double CaretAccumulator;
 };
 
 NOINLINE_ void InputWidget_Clear(struct InputWidget* w);
@@ -124,14 +124,14 @@ struct MenuInputValidator {
 	union {
 		struct { const char** Names; UInt32 Count; } Meta_Enum;
 		struct { Int32 Min,  Max; } Meta_Int;
-		struct { Real32 Min, Max; } Meta_Real;
+		struct { float Min, Max; } Meta_Float;
 	};
 };
 
 struct MenuInputValidator MenuInputValidator_Hex(void);
-struct MenuInputValidator MenuInputValidator_Integer(Int32 min, Int32 max);
+struct MenuInputValidator MenuInputValidator_Int(Int32 min, Int32 max);
 struct MenuInputValidator MenuInputValidator_Seed(void);
-struct MenuInputValidator MenuInputValidator_Real(Real32 min, Real32 max);
+struct MenuInputValidator MenuInputValidator_Float(float min, float max);
 struct MenuInputValidator MenuInputValidator_Path(void);
 struct MenuInputValidator MenuInputValidator_Enum(const char** names, UInt32 namesCount);
 struct MenuInputValidator MenuInputValidator_String(void);

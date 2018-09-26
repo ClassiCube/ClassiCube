@@ -63,17 +63,17 @@ void Event_UnregisterInt(struct Event_Int* handlers, void* obj, Event_Int_Callba
 	Event_UnregisterImpl((struct Event_Void*)handlers, obj, (Event_Void_Callback)handler);
 }
 
-void Event_RaiseReal(struct Event_Real* handlers, Real32 arg) {
+void Event_RaiseFloat(struct Event_Float* handlers, float arg) {
 	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], arg);
 	}
 }
-void Event_RegisterReal(struct Event_Real* handlers, void* obj, Event_Real_Callback handler) {
+void Event_RegisterFloat(struct Event_Float* handlers, void* obj, Event_Float_Callback handler) {
 	Event_RegisterImpl((struct Event_Void*)handlers, obj, (Event_Void_Callback)handler);
 }
 
-void Event_UnregisterReal(struct Event_Real* handlers, void* obj, Event_Real_Callback handler) {
+void Event_UnregisterFloat(struct Event_Float* handlers, void* obj, Event_Float_Callback handler) {
 	Event_UnregisterImpl((struct Event_Void*)handlers, obj, (Event_Void_Callback)handler);
 }
 

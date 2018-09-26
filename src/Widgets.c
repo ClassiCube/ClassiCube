@@ -27,12 +27,12 @@ static bool Widget_Mouse(void* elem, Int32 x, Int32 y, MouseButton btn) { return
 static bool Widget_Key(void* elem, Key key) { return false; }
 static bool Widget_KeyPress(void* elem, char keyChar) { return false; }
 static bool Widget_MouseMove(void* elem, Int32 x, Int32 y) { return false; }
-static bool Widget_MouseScroll(void* elem, Real32 delta) { return false; }
+static bool Widget_MouseScroll(void* elem, float delta) { return false; }
 
 /*########################################################################################################################*
 *-------------------------------------------------------TextWidget--------------------------------------------------------*
 *#########################################################################################################################*/
-static void TextWidget_Render(void* widget, Real64 delta) {
+static void TextWidget_Render(void* widget, double delta) {
 	struct TextWidget* w = widget;
 	if (w->Texture.ID) { Texture_RenderShaded(&w->Texture, w->Col); }
 }
@@ -113,7 +113,7 @@ static void ButtonWidget_Reposition(void* widget) {
 	w->Texture.Y += w->Y - oldY;
 }
 
-static void ButtonWidget_Render(void* widget, Real64 delta) {
+static void ButtonWidget_Render(void* widget, double delta) {
 	struct ButtonWidget* w = widget;
 	struct Texture back = w->Active ? Button_SelectedTex : Button_ShadowTex;
 	if (w->Disabled) back = Button_DisabledTex;
@@ -127,7 +127,7 @@ static void ButtonWidget_Render(void* widget, Real64 delta) {
 		Texture_Render(&back);
 	} else {
 		/* Split button down the middle */
-		Real32 scale = (w->Width / 400.0f) * 0.5f;
+		float scale = (w->Width / 400.0f) * 0.5f;
 		Gfx_BindTexture(back.ID); /* avoid bind twice */
 		PackedCol white = PACKEDCOL_WHITE;
 
@@ -201,19 +201,19 @@ static void ScrollbarWidget_ClampScrollY(struct ScrollbarWidget* w) {
 	if (w->ScrollY < 0) w->ScrollY = 0;
 }
 
-static Real32 ScrollbarWidget_GetScale(struct ScrollbarWidget* w) {
-	Real32 rows = (Real32)w->TotalRows;
+static float ScrollbarWidget_GetScale(struct ScrollbarWidget* w) {
+	float rows = (float)w->TotalRows;
 	return (w->Height - SCROLL_BORDER * 2) / rows;
 }
 
 static void ScrollbarWidget_GetScrollbarCoords(struct ScrollbarWidget* w, Int32* y, Int32* height) {
-	Real32 scale = ScrollbarWidget_GetScale(w);
+	float scale = ScrollbarWidget_GetScale(w);
 	*y = Math_Ceil(w->ScrollY * scale) + SCROLL_BORDER;
 	*height = Math_Ceil(TABLE_MAX_ROWS_DISPLAYED * scale);
 	*height = min(*y + *height, w->Height - SCROLL_BORDER) - *y;
 }
 
-static void ScrollbarWidget_Render(void* widget, Real64 delta) {
+static void ScrollbarWidget_Render(void* widget, double delta) {
 	struct ScrollbarWidget* w = widget;
 	Int32 x = w->X, width = w->Width;
 	GfxCommon_Draw2DFlat(x, w->Y, width, w->Height, Scroll_BackCol);
@@ -265,7 +265,7 @@ static bool ScrollbarWidget_MouseUp(void* widget, Int32 x, Int32 y, MouseButton 
 	return true;
 }
 
-static bool ScrollbarWidget_MouseScroll(void* widget, Real32 delta) {
+static bool ScrollbarWidget_MouseScroll(void* widget, float delta) {
 	struct ScrollbarWidget* w = widget;
 	Int32 steps = Utils_AccumulateWheelDelta(&w->ScrollingAcc, delta);
 
@@ -278,7 +278,7 @@ static bool ScrollbarWidget_MouseMove(void* widget, Int32 x, Int32 y) {
 	struct ScrollbarWidget* w = widget;
 	if (w->DraggingMouse) {
 		y -= w->Y;
-		Real32 scale = ScrollbarWidget_GetScale(w);
+		float scale = ScrollbarWidget_GetScale(w);
 		w->ScrollY = (Int32)((y - w->MouseOffset) / scale);
 		ScrollbarWidget_ClampScrollY(w);
 		return true;
@@ -313,7 +313,7 @@ static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
 	Texture_Render(&w->BackTex);
 
 	Int32 i      = Inventory_SelectedIndex;
-	Real32 width = w->ElemSize + w->BorderSize;
+	float width = w->ElemSize + w->BorderSize;
 	Int32 x = (Int32)(w->X + w->BarXOffset + width * i + w->ElemSize / 2);
 
 	w->SelTex.ID = tex;
@@ -327,14 +327,14 @@ static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
 	VertexP3fT2fC4b vertices[INVENTORY_BLOCKS_PER_HOTBAR * ISOMETRICDRAWER_MAXVERTICES];
 	IsometricDrawer_BeginBatch(vertices, ModelCache_Vb);
 
-	Real32 width = w->ElemSize + w->BorderSize;
+	float width = w->ElemSize + w->BorderSize;
 	UInt32 i;
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
 		BlockID block = Inventory_Get(i);
 		Int32 x = (Int32)(w->X + w->BarXOffset + width * i + w->ElemSize / 2);
 		Int32 y = (Int32)(w->Y + (w->Height - w->BarHeight / 2));
 
-		Real32 scale = (w->ElemSize * 13.5f / 16.0f) / 2.0f;
+		float scale = (w->ElemSize * 13.5f / 16.0f) / 2.0f;
 		IsometricDrawer_DrawBatch(block, scale, x, y);
 	}
 	IsometricDrawer_EndBatch();
@@ -346,7 +346,7 @@ static void HotbarWidget_RepositonBackgroundTexture(struct HotbarWidget* w) {
 }
 
 static void HotbarWidget_RepositionSelectionTexture(struct HotbarWidget* w) {
-	Real32 scale = Game_GetHotbarScale();
+	float scale = Game_GetHotbarScale();
 	Int32 hSize = (Int32)w->SelBlockSize;
 	Int32 vSize = (Int32)(22.0f * scale);
 	Int32 y = w->Y + (w->Height - (Int32)(23.0f * scale));
@@ -355,7 +355,7 @@ static void HotbarWidget_RepositionSelectionTexture(struct HotbarWidget* w) {
 	w->SelTex = tex;
 }
 
-static Int32 HotbarWidget_ScrolledIndex(struct HotbarWidget* w, Real32 delta, Int32 index, Int32 dir) {
+static Int32 HotbarWidget_ScrolledIndex(struct HotbarWidget* w, float delta, Int32 index, Int32 dir) {
 	Int32 steps = Utils_AccumulateWheelDelta(&w->ScrollAcc, delta);
 	index += (dir * steps) % INVENTORY_BLOCKS_PER_HOTBAR;
 
@@ -367,14 +367,14 @@ static Int32 HotbarWidget_ScrolledIndex(struct HotbarWidget* w, Real32 delta, In
 }
 
 static void HotbarWidget_Reposition(void* widget) {
-	Real32 scale = Game_GetHotbarScale();
+	float scale = Game_GetHotbarScale();
 	struct HotbarWidget* w = widget;
 
-	w->BarHeight = (Real32)Math_Floor(22.0f * scale);
+	w->BarHeight = (float)Math_Floor(22.0f * scale);
 	w->Width     = (Int32)(182 * scale);
 	w->Height    = (Int32)w->BarHeight;
 
-	w->SelBlockSize = (Real32)Math_Ceil(24.0f * scale);
+	w->SelBlockSize = (float)Math_Ceil(24.0f * scale);
 	w->ElemSize     = 16.0f * scale;
 	w->BarXOffset   = 3.1f * scale;
 	w->BorderSize   = 4.0f * scale;
@@ -389,7 +389,7 @@ static void HotbarWidget_Init(void* widget) {
 	Widget_Reposition(w);
 }
 
-static void HotbarWidget_Render(void* widget, Real64 delta) {
+static void HotbarWidget_Render(void* widget, double delta) {
 	struct HotbarWidget* w = widget;
 	HotbarWidget_RenderHotbarOutline(w);
 	HotbarWidget_RenderHotbarBlocks(w);
@@ -451,7 +451,7 @@ static bool HotbarWidget_MouseDown(void* widget, Int32 x, Int32 y, MouseButton b
 	return false;
 }
 
-static bool HotbarWidget_MouseScroll(void* widget, Real32 delta) {
+static bool HotbarWidget_MouseScroll(void* widget, float delta) {
 	struct HotbarWidget* w = widget;
 	if (KeyBind_IsPressed(KeyBind_HotbarSwitching)) {
 		Int32 index = Inventory_Offset / INVENTORY_BLOCKS_PER_HOTBAR;
@@ -630,7 +630,7 @@ static void TableWidget_Init(void* widget) {
 	Widget_Reposition(w);
 }
 
-static void TableWidget_Render(void* widget, Real64 delta) {
+static void TableWidget_Render(void* widget, double delta) {
 	struct TableWidget* w = widget;
 	/* These were sourced by taking a screenshot of vanilla
 	Then using paint to extract the colour components
@@ -651,7 +651,7 @@ static void TableWidget_Render(void* widget, Real64 delta) {
 	if (w->SelectedIndex != -1 && Game_ClassicMode) {
 		Int32 x, y;
 		TableWidget_GetCoords(w, w->SelectedIndex, &x, &y);
-		Real32 off = blockSize * 0.1f;
+		float off = blockSize * 0.1f;
 		Int32 size = (Int32)(blockSize + off * 2);
 		GfxCommon_Draw2DGradient((Int32)(x - off), (Int32)(y - off), 
 			size, size, topSelCol, bottomSelCol);
@@ -702,7 +702,7 @@ static void TableWidget_Recreate(void* widget) {
 
 static void TableWidget_Reposition(void* widget) {
 	struct TableWidget* w = widget;
-	Real32 scale = Game_GetInventoryScale();
+	float scale = Game_GetInventoryScale();
 	w->BlockSize = (Int32)(50 * Math_SqrtF(scale));
 	w->SelBlockExpand = 25.0f * Math_SqrtF(scale);
 
@@ -746,7 +746,7 @@ static bool TableWidget_MouseUp(void* widget, Int32 x, Int32 y, MouseButton btn)
 	return Elem_HandlesMouseUp(&w->Scroll, x, y, btn);
 }
 
-static bool TableWidget_MouseScroll(void* widget, Real32 delta) {
+static bool TableWidget_MouseScroll(void* widget, float delta) {
 	struct TableWidget* w = widget;
 	Int32 scrollWidth = w->Scroll.Width;
 
@@ -957,11 +957,11 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 	if (code) w->CaretCol = Drawer2D_Cols[(UInt8)code];
 }
 
-static void InputWidget_RenderCaret(struct InputWidget* w, Real64 delta) {
+static void InputWidget_RenderCaret(struct InputWidget* w, double delta) {
 	if (!w->ShowCaret) return;
 
 	w->CaretAccumulator += delta;
-	Real32 second = Math_Mod1((Real32)w->CaretAccumulator);
+	float second = Math_Mod1((float)w->CaretAccumulator);
 	if (second < 0.5f) {
 		Texture_RenderShaded(&w->CaretTex, w->CaretCol);
 	}
@@ -1301,21 +1301,21 @@ struct MenuInputValidator MenuInputValidator_Hex(void) {
 	return v;
 }
 
-static void Integer_Range(struct MenuInputValidator* v, String* range) {
+static void Int_Range(struct MenuInputValidator* v, String* range) {
 	String_Format2(range, "&7(%i - %i)", &v->Meta_Int.Min, &v->Meta_Int.Max);
 }
 
-static bool Integer_ValidChar(struct MenuInputValidator* v, char c) {
+static bool Int_ValidChar(struct MenuInputValidator* v, char c) {
 	return (c >= '0' && c <= '9') || c == '-';
 }
 
-static bool Integer_ValidString(struct MenuInputValidator* v, const String* s) {
+static bool Int_ValidString(struct MenuInputValidator* v, const String* s) {
 	Int32 value;
 	if (s->length == 1 && s->buffer[0] == '-') return true; /* input is just a minus sign */
 	return Convert_TryParseInt32(s, &value);
 }
 
-static bool Integer_ValidValue(struct MenuInputValidator* v, const String* s) {
+static bool Int_ValidValue(struct MenuInputValidator* v, const String* s) {
 	Int32 value;
 	if (!Convert_TryParseInt32(s, &value)) return false;
 
@@ -1323,12 +1323,12 @@ static bool Integer_ValidValue(struct MenuInputValidator* v, const String* s) {
 	return min <= value && value <= max;
 }
 
-struct MenuInputValidatorVTABLE IntegerInputValidator_VTABLE = {
-	Integer_Range, Integer_ValidChar, Integer_ValidString, Integer_ValidValue,
+struct MenuInputValidatorVTABLE IntInputValidator_VTABLE = {
+	Int_Range, Int_ValidChar, Int_ValidString, Int_ValidValue,
 };
-struct MenuInputValidator MenuInputValidator_Integer(Int32 min, Int32 max) {
+struct MenuInputValidator MenuInputValidator_Int(Int32 min, Int32 max) {
 	struct MenuInputValidator v;
-	v.VTABLE = &IntegerInputValidator_VTABLE;
+	v.VTABLE = &IntInputValidator_VTABLE;
 	v.Meta_Int.Min = min;
 	v.Meta_Int.Max = max;
 	return v;
@@ -1339,43 +1339,43 @@ static void Seed_Range(struct MenuInputValidator* v, String* range) {
 }
 
 struct MenuInputValidatorVTABLE SeedInputValidator_VTABLE = {
-	Seed_Range, Integer_ValidChar, Integer_ValidString, Integer_ValidValue,
+	Seed_Range, Int_ValidChar, Int_ValidString, Int_ValidValue,
 };
 struct MenuInputValidator MenuInputValidator_Seed(void) {
-	struct MenuInputValidator v = MenuInputValidator_Integer(Int32_MinValue, Int32_MaxValue);
+	struct MenuInputValidator v = MenuInputValidator_Int(Int32_MinValue, Int32_MaxValue);
 	v.VTABLE = &SeedInputValidator_VTABLE;
 	return v;
 }
 
-static void Real_Range(struct MenuInputValidator* v, String* range) {
-	String_Format2(range, "&7(%f2 - %f2)", &v->Meta_Real.Min, &v->Meta_Real.Max);
+static void Float_Range(struct MenuInputValidator* v, String* range) {
+	String_Format2(range, "&7(%f2 - %f2)", &v->Meta_Float.Min, &v->Meta_Float.Max);
 }
 
-static bool Real_ValidChar(struct MenuInputValidator* v, char c) {
+static bool Float_ValidChar(struct MenuInputValidator* v, char c) {
 	return (c >= '0' && c <= '9') || c == '-' || c == '.' || c == ',';
 }
 
-static bool Real_ValidString(struct MenuInputValidator* v, const String* s) {
-	Real32 value;
-	if (s->length == 1 && Real_ValidChar(v, s->buffer[0])) return true;
+static bool Float_ValidString(struct MenuInputValidator* v, const String* s) {
+	float value;
+	if (s->length == 1 && Float_ValidChar(v, s->buffer[0])) return true;
 	return Convert_TryParseReal32(s, &value);
 }
 
-static bool Real_ValidValue(struct MenuInputValidator* v, const String* s) {
-	Real32 value;
+static bool Float_ValidValue(struct MenuInputValidator* v, const String* s) {
+	float value;
 	if (!Convert_TryParseReal32(s, &value)) return false;
-	Real32 min = v->Meta_Real.Min, max = v->Meta_Real.Max;
+	float min = v->Meta_Float.Min, max = v->Meta_Float.Max;
 	return min <= value && value <= max;
 }
 
-struct MenuInputValidatorVTABLE RealInputValidator_VTABLE = {
-	Real_Range, Real_ValidChar, Real_ValidString, Real_ValidValue,
+struct MenuInputValidatorVTABLE FloatInputValidator_VTABLE = {
+	Float_Range, Float_ValidChar, Float_ValidString, Float_ValidValue,
 };
-struct MenuInputValidator MenuInputValidator_Real(Real32 min, Real32 max) {
+struct MenuInputValidator MenuInputValidator_Float(float min, float max) {
 	struct MenuInputValidator v;
-	v.VTABLE = &RealInputValidator_VTABLE;
-	v.Meta_Real.Min = min;
-	v.Meta_Real.Max = max;
+	v.VTABLE = &FloatInputValidator_VTABLE;
+	v.Meta_Float.Min = min;
+	v.Meta_Float.Max = max;
 	return v;
 }
 
@@ -1431,7 +1431,7 @@ struct MenuInputValidator MenuInputValidator_String(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------MenuInputWidget-----------------------------------------------------*
 *#########################################################################################################################*/
-static void MenuInputWidget_Render(void* widget, Real64 delta) {
+static void MenuInputWidget_Render(void* widget, double delta) {
 	struct InputWidget* w = widget;
 	PackedCol backCol = PACKEDCOL_CONST(30, 30, 30, 200);
 
@@ -1593,7 +1593,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	w->InputTex.Y = w->Y;
 }
 
-static void ChatInputWidget_Render(void* widget, Real64 delta) {
+static void ChatInputWidget_Render(void* widget, double delta) {
 	struct InputWidget* w = widget;
 	Gfx_SetTexturing(false);
 	Int32 x = w->X, y = w->Y;
@@ -2096,7 +2096,7 @@ static void PlayerListWidget_Init(void* widget) {
 	Event_RegisterInt(&TabListEvents_Removed, w, PlayerListWidget_TabEntryRemoved);
 }
 
-static void PlayerListWidget_Render(void* widget, Real64 delta) {
+static void PlayerListWidget_Render(void* widget, double delta) {
 	struct PlayerListWidget* w = widget;
 	struct TextWidget* overview = &w->Overview;
 	PackedCol topCol = PACKEDCOL_CONST(0, 0, 0, 180);
@@ -2525,7 +2525,7 @@ static void TextGroupWidget_Init(void* widget) {
 	TextGroupWidget_UpdateDimensions(w);
 }
 
-static void TextGroupWidget_Render(void* widget, Real64 delta) {
+static void TextGroupWidget_Render(void* widget, double delta) {
 	struct TextGroupWidget* w = widget;
 	Int32 i;
 	struct Texture* textures = w->Textures;
@@ -2764,7 +2764,7 @@ static void SpecialInputWidget_Init(void* widget) {
 	SpecialInputWidget_SetActive(w, w->Active);
 }
 
-static void SpecialInputWidget_Render(void* widget, Real64 delta) {
+static void SpecialInputWidget_Render(void* widget, double delta) {
 	struct SpecialInputWidget* w = widget;
 	Texture_Render(&w->Tex);
 }

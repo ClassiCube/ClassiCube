@@ -60,10 +60,10 @@ void GfxCommon_Draw2DFlat(Int32 x, Int32 y, Int32 width, Int32 height, PackedCol
 	VertexP3fC4b verts[4];
 	VertexP3fC4b v; v.Z = 0.0f; v.Col = col;
 
-	v.X = (Real32)x;           v.Y = (Real32)y;            verts[0] = v;
-	v.X = (Real32)(x + width);                             verts[1] = v;
-	                           v.Y = (Real32)(y + height); verts[2] = v;
-	v.X = (Real32)x;                                       verts[3] = v;
+	v.X = (float)x;           v.Y = (float)y;            verts[0] = v;
+	v.X = (float)(x + width);                             verts[1] = v;
+	                           v.Y = (float)(y + height); verts[2] = v;
+	v.X = (float)x;                                       verts[3] = v;
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, verts, 4);
@@ -73,10 +73,10 @@ void GfxCommon_Draw2DGradient(Int32 x, Int32 y, Int32 width, Int32 height, Packe
 	VertexP3fC4b verts[4];
 	VertexP3fC4b v; v.Z = 0.0f;
 
-	v.X = (Real32)x;           v.Y = (Real32)y;            v.Col = top;    verts[0] = v;
-	v.X = (Real32)(x + width);                                             verts[1] = v;
-	                           v.Y = (Real32)(y + height); v.Col = bottom; verts[2] = v;
-	v.X = (Real32)x;                                                       verts[3] = v;
+	v.X = (float)x;           v.Y = (float)y;            v.Col = top;    verts[0] = v;
+	v.X = (float)(x + width);                                             verts[1] = v;
+	                           v.Y = (float)(y + height); v.Col = bottom; verts[2] = v;
+	v.X = (float)x;                                                       verts[3] = v;
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, verts, 4);
@@ -91,8 +91,8 @@ void GfxCommon_Draw2DTexture(struct Texture* tex, PackedCol col) {
 }
 
 void GfxCommon_Make2DQuad(struct Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices) {
-	Real32 x1 = (Real32)tex->X, x2 = (Real32)(tex->X + tex->Width);
-	Real32 y1 = (Real32)tex->Y, y2 = (Real32)(tex->Y + tex->Height);
+	float x1 = (float)tex->X, x2 = (float)(tex->X + tex->Width);
+	float y1 = (float)tex->Y, y2 = (float)(tex->Y + tex->Height);
 #if CC_BUILD_D3D9
 	/* NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx", */
 	/* i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why we have to do this. */
@@ -113,7 +113,7 @@ bool gfx_hadFog;
 void GfxCommon_Mode2D(Int32 width, Int32 height) {
 	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
 	struct Matrix ortho;
-	Gfx_CalcOrthoMatrix((Real32)width, (Real32)height, &ortho);
+	Gfx_CalcOrthoMatrix((float)width, (float)height, &ortho);
 	Gfx_LoadMatrix(&ortho);
 	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
 	Gfx_LoadIdentityMatrix();

@@ -276,52 +276,52 @@ void Block_RecalculateSpriteBB(void) {
 	}
 }
 
-static Real32 Block_GetSpriteBB_MinX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
+static float Block_GetSpriteBB_MinX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (x = 0; x < size; x++) {
 		for (y = 0; y < size; y++) {
 			UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 			if (PackedCol_ARGB_A(row[x]) != 0) {
-				return (Real32)x / size;
+				return (float)x / size;
 			}
 		}
 	}
 	return 1.0f;
 }
 
-static Real32 Block_GetSpriteBB_MinY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
+static float Block_GetSpriteBB_MinY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (y = size - 1; y >= 0; y--) {
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 		for (x = 0; x < size; x++) {
 			if (PackedCol_ARGB_A(row[x]) != 0) {
-				return 1.0f - (Real32)(y + 1) / size;
+				return 1.0f - (float)(y + 1) / size;
 			}
 		}
 	}
 	return 1.0f;
 }
 
-static Real32 Block_GetSpriteBB_MaxX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
+static float Block_GetSpriteBB_MaxX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (x = size - 1; x >= 0; x--) {
 		for (y = 0; y < size; y++) {
 			UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 			if (PackedCol_ARGB_A(row[x]) != 0) {
-				return (Real32)(x + 1) / size;
+				return (float)(x + 1) / size;
 			}
 		}
 	}
 	return 0.0f;
 }
 
-static Real32 Block_GetSpriteBB_MaxY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
+static float Block_GetSpriteBB_MaxY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (y = 0; y < size; y++) {
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 		for (x = 0; x < size; x++) {
 			if (PackedCol_ARGB_A(row[x]) != 0) {
-				return 1.0f - (Real32)y / size;
+				return 1.0f - (float)y / size;
 			}
 		}
 	}
@@ -334,7 +334,7 @@ void Block_RecalculateBB(BlockID block) {
 	TextureLoc texLoc = Block_GetTexLoc(block, FACE_XMAX);
 	Int32 x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
 
-	Real32 minX = 0.0f, minY = 0.0f, maxX = 1.0f, maxY = 1.0f;
+	float minX = 0.0f, minY = 0.0f, maxX = 1.0f, maxY = 1.0f;
 	if (y < Atlas2D_RowsCount) {
 		minX = Block_GetSpriteBB_MinX(tileSize, x, y, bmp);
 		minY = Block_GetSpriteBB_MinY(tileSize, x, y, bmp);
@@ -484,7 +484,7 @@ static BlockID AutoRotate_RotateVertical(BlockID block, const String* name, Vect
 static BlockID AutoRotate_RotateOther(BlockID block, const String* name, Vector3 offset) {
 	/* Fence type blocks */
 	if (AutoRotate_Find(BLOCK_AIR, name, "-UD") == BLOCK_AIR) {
-		Real32 headY = LocalPlayer_Instance.Base.HeadY;
+		float headY = LocalPlayer_Instance.Base.HeadY;
 		headY = LocationUpdate_Clamp(headY);
 
 		if (headY < 45.0f || (headY >= 135.0f && headY < 225.0f) || headY > 315.0f) {
@@ -506,7 +506,7 @@ static BlockID AutoRotate_RotateOther(BlockID block, const String* name, Vector3
 }
 
 static BlockID AutoRotate_RotateDirection(BlockID block, const String* name, Vector3 offset) {
-	Real32 headY = LocalPlayer_Instance.Base.HeadY;
+	float headY = LocalPlayer_Instance.Base.HeadY;
 	headY = LocationUpdate_Clamp(headY);
 
 	if (headY >= 45.0f && headY < 135.0f) {
@@ -548,7 +548,7 @@ BlockID AutoRotate_RotateBlock(BlockID block) {
 /*########################################################################################################################*
 *-------------------------------------------------------DefaultSet--------------------------------------------------------*
 *#########################################################################################################################*/
-Real32 DefaultSet_Height(BlockID b) {
+float DefaultSet_Height(BlockID b) {
 	if (b == BLOCK_SLAB) return 0.5f;
 	if (b == BLOCK_COBBLE_SLAB) return 0.5f;
 	if (b == BLOCK_SNOW) return 0.25f;
@@ -560,7 +560,7 @@ bool DefaultSet_FullBright(BlockID b) {
 		|| b == BLOCK_MAGMA || b == BLOCK_FIRE;
 }
 
-Real32 DefaultSet_FogDensity(BlockID b) {
+float DefaultSet_FogDensity(BlockID b) {
 	if (b == BLOCK_WATER || b == BLOCK_STILL_WATER)
 		return 0.1f;
 	if (b == BLOCK_LAVA || b == BLOCK_STILL_LAVA)

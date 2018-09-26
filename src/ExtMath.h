@@ -10,34 +10,34 @@
 #define MATH_DEG2RAD (MATH_PI / 180.0f)
 #define MATH_RAD2DEG (180.0f / MATH_PI)
 #define MATH_LARGENUM 1000000000.0f
-#define MATH_POS_INF ((Real32)(1e+300 * 1e+300))
+#define MATH_POS_INF ((float)(1e+300 * 1e+300))
 
 #define Math_Deg2Packed(x) ((UInt8)((x) * 256.0f / 360.0f))
 #define Math_Packed2Deg(x) ((x) * 360.0f / 256.0f)
 
-Real32 Math_AbsF(Real32 x);
-Real32 Math_SqrtF(Real32 x);
-Real32 Math_Mod1(Real32 x);
+float Math_AbsF(float x);
+float Math_SqrtF(float x);
+float Math_Mod1(float x);
 Int32 Math_AbsI(Int32 x);
 
-Real64 Math_Sin(Real64 x);
-Real64 Math_Cos(Real64 x);
-Real32 Math_SinF(Real32 x);
-Real32 Math_CosF(Real32 x);
+double Math_Sin(double x);
+double Math_Cos(double x);
+float Math_SinF(float x);
+float Math_CosF(float x);
 
-Real64 Math_Log(Real64 x);
-Real64 Math_Exp(Real64 x);
-Real64 Math_FastTan(Real64 x);
+double Math_Log(double x);
+double Math_Exp(double x);
+double Math_FastTan(double x);
 
-Int32 Math_Floor(Real32 value);
-Int32 Math_Ceil(Real32 value);
+Int32 Math_Floor(float value);
+Int32 Math_Ceil(float value);
 Int32 Math_Log2(UInt32 value);
 Int32 Math_CeilDiv(Int32 a, Int32 b);
-Int32 Math_Sign(Real32 value);
+Int32 Math_Sign(float value);
 
-Real32 Math_Lerp(Real32 a, Real32 b, Real32 t);
+float Math_Lerp(float a, float b, float t);
 /* Linearly interpolates between a given angle range, adjusting if necessary. */
-Real32 Math_LerpAngle(Real32 leftAngle, Real32 rightAngle, Real32 t);
+float Math_LerpAngle(float leftAngle, float rightAngle, float t);
 
 Int32 Math_NextPowOf2(Int32 value);
 bool Math_IsPowOf2(Int32 value);
@@ -52,5 +52,5 @@ Int32 Random_Range(Random* rnd, Int32 min, Int32 max);
 /* Returns integer from 0 inclusive to n exclusive */
 Int32 Random_Next(Random* rnd, Int32 n);
 /* Returns real from 0 inclusive to 1 exclusive */
-Real32 Random_Float(Random* rnd);
+float Random_Float(Random* rnd);
 #endif

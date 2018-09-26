@@ -18,14 +18,14 @@ bool AABB_Contains(struct AABB* parent, struct AABB* child);
 bool AABB_ContainsPoint(struct AABB* parent, Vector3* P);
 
 /* Calculates the intersection points of a ray and a rotated bounding box. */
-bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, struct Entity* target, Real32* tMin, Real32* tMax);
+bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, struct Entity* target, float* tMin, float* tMax);
 /* Calculates the intersection points of a ray and a bounding box.
 Source: http://www.cs.utah.edu/~awilliam/box/box.pdf */
-bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vector3 max, Real32* t0, Real32* t1);
+bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vector3 max, float* t0, float* t1);
 
-struct SearcherState { Int32 X, Y, Z; Real32 tSquared; };
+struct SearcherState { Int32 X, Y, Z; float tSquared; };
 extern struct SearcherState* Searcher_States;
 Int32 Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, struct AABB* entityExtentBB);
-void Searcher_CalcTime(Vector3* vel, struct AABB *entityBB, struct AABB* blockBB, Real32* tx, Real32* ty, Real32* tz);
+void Searcher_CalcTime(Vector3* vel, struct AABB *entityBB, struct AABB* blockBB, float* tx, float* ty, float* tz);
 void Searcher_Free(void);
 #endif

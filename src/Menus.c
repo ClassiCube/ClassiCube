@@ -40,7 +40,7 @@ struct ListScreen {
 	MenuBase_Layout
 	struct ButtonWidget Buttons[LIST_SCREEN_BUTTONS];
 	FontDesc Font;
-	Real32 WheelAcc;
+	float WheelAcc;
 	Int32 CurrentIndex;
 	Widget_LeftClick EntryClick;
 	void (*UpdateEntry)(struct ListScreen* s, struct ButtonWidget* btn, const String* text);
@@ -216,7 +216,7 @@ static void Menu_OnResize(void* screen) {
 	}
 }
 
-static void Menu_Render(void* screen, Real64 delta) {
+static void Menu_Render(void* screen, double delta) {
 	struct Menu* s = screen;
 	struct Widget** widgets = s->Widgets;
 	if (!widgets) return;
@@ -321,7 +321,7 @@ static void Menu_HandleFontChange(struct Screen* s) {
 }
 
 static Int32 Menu_Int32(const String* v)      { Int32 value; Convert_TryParseInt32(v, &value); return value; }
-static Real32 Menu_Real32(const String* v)    { Real32 value; Convert_TryParseReal32(v, &value); return value; }
+static float Menu_Real32(const String* v)     { float value; Convert_TryParseReal32(v, &value); return value; }
 static PackedCol Menu_HexCol(const String* v) { PackedCol value; PackedCol_TryParseHex(v, &value); return value; }
 #define Menu_ReplaceActive(screen) Gui_FreeActive(); Gui_SetActive(screen);
 
@@ -495,7 +495,7 @@ static void ListScreen_Init(void* screen) {
 	Screen_CommonInit(s);
 }
 
-static void ListScreen_Render(void* screen, Real64 delta) {
+static void ListScreen_Render(void* screen, double delta) {
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
 	Menu_Render(screen, delta);
@@ -523,7 +523,7 @@ static bool ListScreen_KeyDown(void* screen, Key key) {
 	return true;
 }
 
-static bool ListScreen_MouseScroll(void* screen, Real32 delta) {
+static bool ListScreen_MouseScroll(void* screen, float delta) {
 	struct ListScreen* s = screen;
 	Int32 steps = Utils_AccumulateWheelDelta(&s->WheelAcc, delta);
 
@@ -556,7 +556,7 @@ static bool MenuScreen_KeyDown(void* screen, Key key) {
 	if (key == Key_Escape) { Gui_CloseActive(); }
 	return key < Key_F1 || key > Key_F35;
 }
-static bool MenuScreen_MouseScroll(void* screen, Real32 delta) { return true; }
+static bool MenuScreen_MouseScroll(void* screen, float delta) { return true; }
 
 static void MenuScreen_Init(void* screen) {
 	struct MenuScreen* s = screen;
@@ -570,7 +570,7 @@ static void MenuScreen_Init(void* screen) {
 	Screen_CommonInit(s);
 }
 
-static void MenuScreen_Render(void* screen, Real64 delta) {
+static void MenuScreen_Render(void* screen, double delta) {
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
 	Menu_Render(screen, delta);
@@ -887,7 +887,7 @@ static void EditHotkeyScreen_Init(void* screen) {
 	Key_KeyRepeat = true;
 }
 
-static void EditHotkeyScreen_Render(void* screen, Real64 delta) {
+static void EditHotkeyScreen_Render(void* screen, double delta) {
 	MenuScreen_Render(screen, delta);
 	Int32 cX = Game_Width / 2, cY = Game_Height / 2;
 	PackedCol grey = PACKEDCOL_CONST(150, 150, 150, 255);
@@ -1047,7 +1047,7 @@ static void GenLevelScreen_InputClick(void* screen, void* input) {
 
 static void GenLevelScreen_Input(struct GenLevelScreen* s, Int32 i, Int32 y, bool seed, String* value) {
 	struct MenuInputWidget* input = &s->Inputs[i];
-	struct MenuInputValidator v = seed ? MenuInputValidator_Seed() : MenuInputValidator_Integer(1, 8192);
+	struct MenuInputValidator v = seed ? MenuInputValidator_Seed() : MenuInputValidator_Int(1, 8192);
 
 	Menu_Input(s, i, input, 200, value, &s->TextFont, &v,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
@@ -1302,7 +1302,7 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s) {
 	Gui_SetActive(PauseScreen_MakeInstance());
 }
 
-static void SaveLevelScreen_Render(void* screen, Real64 delta) {
+static void SaveLevelScreen_Render(void* screen, double delta) {
 	struct SaveLevelScreen* s = screen;
 	MenuScreen_Render(s, delta);
 	Int32 cX = Game_Width / 2, cY = Game_Height / 2;
@@ -1989,7 +1989,7 @@ static void MenuOptionsScreen_Init(void* screen) {
 	s->SelectedI = -1;
 }
 	
-static void MenuOptionsScreen_Render(void* screen, Real64 delta) {
+static void MenuOptionsScreen_Render(void* screen, double delta) {
 	struct MenuOptionsScreen* s = screen;
 	MenuScreen_Render(s, delta);
 	if (!s->ExtHelp.LinesCount) return;
@@ -2374,9 +2374,9 @@ struct Screen* EnvSettingsScreen_MakeInstance(void) {
 	defaultValues[1] = ENV_DEFAULT_SKYCOL_HEX;
 	validators[2]    = MenuInputValidator_Hex();
 	defaultValues[2] = ENV_DEFAULT_FOGCOL_HEX;
-	validators[3]    = MenuInputValidator_Real(0.00f, 1000.00f);
+	validators[3]    = MenuInputValidator_Float(0.00f, 1000.00f);
 	defaultValues[3] = "1";
-	validators[4]    = MenuInputValidator_Integer(-10000, 10000);
+	validators[4]    = MenuInputValidator_Int(-10000, 10000);
 	defaultValues[4] = cloudHeightBuffer;
 
 	validators[5]    = MenuInputValidator_Hex();
@@ -2384,9 +2384,9 @@ struct Screen* EnvSettingsScreen_MakeInstance(void) {
 	validators[6]    = MenuInputValidator_Hex();
 	defaultValues[6] = ENV_DEFAULT_SHADOWCOL_HEX;
 	validators[7]    = MenuInputValidator_Enum(Weather_Names, Array_Elems(Weather_Names));
-	validators[8]    = MenuInputValidator_Real(-100.00f, 100.00f);
+	validators[8]    = MenuInputValidator_Float(-100.00f, 100.00f);
 	defaultValues[8] = "1";
-	validators[9]    = MenuInputValidator_Integer(-2048, 2048);
+	validators[9]    = MenuInputValidator_Int(-2048, 2048);
 	defaultValues[9] = edgeHeightBuffer;
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
@@ -2463,7 +2463,7 @@ struct Screen* GraphicsOptionsScreen_MakeInstance(void) {
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 
 	validators[0]    = MenuInputValidator_Enum(FpsLimit_Names, FpsLimit_Count);
-	validators[1]    = MenuInputValidator_Integer(8, 4096);
+	validators[1]    = MenuInputValidator_Int(8, 4096);
 	defaultValues[1] = "512";
 	validators[3]    = MenuInputValidator_Enum(NameMode_Names,   NAME_MODE_COUNT);
 	validators[4]    = MenuInputValidator_Enum(ShadowMode_Names, SHADOW_MODE_COUNT);
@@ -2504,7 +2504,7 @@ static void GuiOptionsScreen_SetShadows(const String* v) {
 static void GuiOptionsScreen_GetShowFPS(String* v) { Menu_GetBool(v, Game_ShowFPS); }
 static void GuiOptionsScreen_SetShowFPS(const String* v) { Game_ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
 
-static void GuiOptionsScreen_SetScale(const String* v, Real32* target, const char* optKey) {
+static void GuiOptionsScreen_SetScale(const String* v, float* target, const char* optKey) {
 	*target = Menu_Real32(v);
 	Options_Set(optKey, v);
 	Gui_RefreshHud();
@@ -2573,13 +2573,13 @@ struct Screen* GuiOptionsScreen_MakeInstance(void) {
 	static const char* defaultValues[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 
-	validators[2]    = MenuInputValidator_Real(0.25f, 4.00f);
+	validators[2]    = MenuInputValidator_Float(0.25f, 4.00f);
 	defaultValues[2] = "1";
-	validators[3]    = MenuInputValidator_Real(0.25f, 4.00f);
+	validators[3]    = MenuInputValidator_Float(0.25f, 4.00f);
 	defaultValues[3] = "1";
-	validators[6]    = MenuInputValidator_Real(0.25f, 4.00f);
+	validators[6]    = MenuInputValidator_Float(0.25f, 4.00f);
 	defaultValues[6] = "1";
-	validators[7]    = MenuInputValidator_Integer(0, 30);
+	validators[7]    = MenuInputValidator_Int(0, 30);
 	defaultValues[7] = "10";
 	validators[9]    = MenuInputValidator_String();
 	defaultValues[9] = "Arial";
@@ -2721,11 +2721,11 @@ struct Screen* HacksSettingsScreen_MakeInstance(void) {
 	String jumpHeight = String_FromArray(jumpHeightBuffer);
 	String_AppendReal32(&jumpHeight, 1.233f, 3);
 
-	validators[1]    = MenuInputValidator_Real(0.10f, 50.00f);
+	validators[1]    = MenuInputValidator_Float(0.10f, 50.00f);
 	defaultValues[1] = "10";
-	validators[3]    = MenuInputValidator_Real(0.10f, 2048.00f);
+	validators[3]    = MenuInputValidator_Float(0.10f, 2048.00f);
 	defaultValues[3] = jumpHeightBuffer;
-	validators[9]    = MenuInputValidator_Integer(1, 150);
+	validators[9]    = MenuInputValidator_Int(1, 150);
 	defaultValues[9] = "70";
 
 	static const char* descs[Array_Elems(buttons)];
@@ -2820,13 +2820,13 @@ struct Screen* MiscOptionsScreen_MakeInstance(void) {
 	static const char* defaultValues[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 
-	validators[0]    = MenuInputValidator_Real(1.00f, 1024.00f);
+	validators[0]    = MenuInputValidator_Float(1.00f, 1024.00f);
 	defaultValues[0] = "5";
-	validators[1]    = MenuInputValidator_Integer(0, 100);
+	validators[1]    = MenuInputValidator_Int(0, 100);
 	defaultValues[1] = "0";
-	validators[2]    = MenuInputValidator_Integer(0, 100);
+	validators[2]    = MenuInputValidator_Int(0, 100);
 	defaultValues[2] = "0";
-	validators[7]    = MenuInputValidator_Integer(1, 200);
+	validators[7]    = MenuInputValidator_Int(1, 200);
 	defaultValues[7] = "30";
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
@@ -3043,7 +3043,7 @@ static void TexIdsOverlay_Init(void* screen) {
 	MenuScreen_Init(s);
 }
 
-static void TexIdsOverlay_Render(void* screen, Real64 delta) {
+static void TexIdsOverlay_Render(void* screen, double delta) {
 	struct TexIdsOverlay* s = screen;
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
@@ -3249,7 +3249,7 @@ static void TexPackOverlay_NoClick(void* screen, void* widget) {
 	Gui_ShowOverlay(overlay, true);
 }
 
-static void TexPackOverlay_Render(void* screen, Real64 delta) {
+static void TexPackOverlay_Render(void* screen, double delta) {
 	struct TexPackOverlay* s = screen;
 	MenuScreen_Render(s, delta);
 	struct AsyncRequest item;
@@ -3285,7 +3285,7 @@ static void TexPackOverlay_ContextRecreated(void* screen) {
 	if (s->ContentLength) {
 		char contentsBuffer[STRING_SIZE];
 		String contents = String_FromArray(contentsBuffer);
-		Real32 contentLengthMB = s->ContentLength / (1024.0f * 1024.0f);
+		float contentLengthMB = s->ContentLength / (1024.0f * 1024.0f);
 
 		String_Format1(&contents, "Download size: %f3 MB", &contentLengthMB);
 		lines[3] = contents;

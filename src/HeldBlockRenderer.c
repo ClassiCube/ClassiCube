@@ -17,8 +17,8 @@ struct Entity held_entity;
 struct Matrix held_blockProjection;
 
 bool held_animating, held_breaking, held_swinging;
-Real32 held_swingY;
-Real64 held_time, held_period = 0.25;
+float held_swingY;
+double held_time, held_period = 0.25;
 BlockID held_lastBlock;
 
 static void HeldBlockRenderer_RenderModel(void) {
@@ -86,16 +86,16 @@ static void HeldBlockRenderer_SetBaseOffset(void) {
 
 	Vector3_Add(&held_entity.Position, &held_entity.Position, &offset);
 	if (!sprite && Block_Draw[held_block] != DRAW_GAS) {
-		Real32 height = Block_MaxBB[held_block].Y - Block_MinBB[held_block].Y;
+		float height = Block_MaxBB[held_block].Y - Block_MinBB[held_block].Y;
 		held_entity.Position.Y += 0.2f * (1.0f - height);
 	}
 }
 
 static void HeldBlockRenderer_ProjectionChanged(void* obj) {
-	Real32 fov = 70.0f * MATH_DEG2RAD;
-	Real32 aspectRatio = (Real32)Game_Width / (Real32)Game_Height;
-	Real32 zNear = Gfx_MinZNear;
-	Gfx_CalcPerspectiveMatrix(fov, aspectRatio, zNear, (Real32)Game_ViewDistance, &held_blockProjection);
+	float fov = 70.0f * MATH_DEG2RAD;
+	float aspectRatio = (float)Game_Width / (float)Game_Height;
+	float zNear = Gfx_MinZNear;
+	Gfx_CalcPerspectiveMatrix(fov, aspectRatio, zNear, (float)Game_ViewDistance, &held_blockProjection);
 }
 
 /* Based off incredible gifs from (Thanks goodlyay!)
@@ -107,21 +107,21 @@ static void HeldBlockRenderer_ProjectionChanged(void* obj) {
 	https://github.com/UnknownShadow200/ClassicalSharp/wiki/Dig-animation-details
 */
 static void HeldBlockRenderer_DigAnimation(void) {
-	Real32 t = held_time / held_period;
-	Real32 sinHalfCircle = Math_SinF(t * MATH_PI);
-	Real32 sqrtLerpPI = Math_SqrtF(t) * MATH_PI;
+	float t = held_time / held_period;
+	float sinHalfCircle = Math_SinF(t * MATH_PI);
+	float sqrtLerpPI = Math_SqrtF(t) * MATH_PI;
 
 	held_entity.Position.X -= Math_SinF(sqrtLerpPI)       * 0.4f;
 	held_entity.Position.Y += Math_SinF((sqrtLerpPI * 2)) * 0.2f;
 	held_entity.Position.Z -= sinHalfCircle               * 0.2f;
 
-	Real32 sinHalfCircleWeird = Math_SinF(t * t * MATH_PI);
+	float sinHalfCircleWeird = Math_SinF(t * t * MATH_PI);
 	held_entity.RotY  -= Math_SinF(sqrtLerpPI) * 80.0f;
 	held_entity.HeadY -= Math_SinF(sqrtLerpPI) * 80.0f;
 	held_entity.RotX  += sinHalfCircleWeird    * 20.0f;
 }
 
-static void HeldBlockRenderer_ResetAnim(bool setLastHeld, Real64 period) {
+static void HeldBlockRenderer_ResetAnim(bool setLastHeld, double period) {
 	held_time = 0.0f; held_swingY = 0.0f;
 	held_animating = false; held_swinging = false;
 	held_period = period;
@@ -133,12 +133,12 @@ static PackedCol HeldBlockRenderer_GetCol(struct Entity* entity) {
 	PackedCol col = player->VTABLE->GetCol(player);
 
 	/* Adjust pitch so angle when looking straight down is 0. */
-	Real32 adjHeadX = player->HeadX - 90.0f;
+	float adjHeadX = player->HeadX - 90.0f;
 	if (adjHeadX < 0.0f) adjHeadX += 360.0f;
 
 	/* Adjust colour so held block is brighter when looking straight up */
-	Real32 t = Math_AbsF(adjHeadX - 180.0f) / 180.0f;
-	Real32 colScale = Math_Lerp(0.9f, 0.7f, t);
+	float t = Math_AbsF(adjHeadX - 180.0f) / 180.0f;
+	float colScale = Math_Lerp(0.9f, 0.7f, t);
 	return PackedCol_Scale(col, colScale);
 }
 
@@ -172,11 +172,11 @@ static void HeldBlockRenderer_BlockChanged(void* obj, Vector3I coords, BlockID o
 	HeldBlockRenderer_ClickAnim(false);
 }
 
-static void HeldBlockRenderer_DoAnimation(Real64 delta, Real32 lastSwingY) {
+static void HeldBlockRenderer_DoAnimation(double delta, float lastSwingY) {
 	if (!held_animating) return;
 
 	if (held_swinging || !held_breaking) {
-		Real32 t = held_time / held_period;
+		float t = held_time / held_period;
 		held_swingY = -0.4f * Math_SinF(t * MATH_PI);
 		held_entity.Position.Y += held_swingY;
 
@@ -197,10 +197,10 @@ static void HeldBlockRenderer_DoAnimation(Real64 delta, Real32 lastSwingY) {
 	}
 }
 
-void HeldBlockRenderer_Render(Real64 delta) {
+void HeldBlockRenderer_Render(double delta) {
 	if (!Game_ShowBlockInHand) return;
 
-	Real32 lastSwingY = held_swingY;
+	float lastSwingY = held_swingY;
 	held_swingY = 0.0f;
 	held_block = Inventory_SelectedBlock;
 

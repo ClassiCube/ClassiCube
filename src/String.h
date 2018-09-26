@@ -57,7 +57,7 @@ NOINLINE_ bool String_AppendBool(String* str, bool value);
 NOINLINE_ bool String_AppendInt32(String* str, Int32 num);
 NOINLINE_ bool String_AppendUInt32(String* str, UInt32 num);
 NOINLINE_ bool String_AppendUInt64(String* str, UInt64 num);
-NOINLINE_ bool String_AppendReal32(String* str, Real32 num, Int32 fracDigits); /* TODO: Need to account for , or . for decimal */
+NOINLINE_ bool String_AppendReal32(String* str, float num, Int32 fracDigits); /* TODO: Need to account for , or . for decimal */
 NOINLINE_ bool String_Hex32(String* str, UInt32 value);
 NOINLINE_ bool String_Hex64(String* str, UInt64 value);
 NOINLINE_ bool String_AppendConst(String* str, const char* src);
@@ -93,7 +93,7 @@ NOINLINE_ bool Convert_TryParseInt16(const String*  str, Int16* value);
 NOINLINE_ bool Convert_TryParseUInt16(const String* str, UInt16* value);
 NOINLINE_ bool Convert_TryParseInt32(const String*  str, Int32* value);
 NOINLINE_ bool Convert_TryParseUInt64(const String* str, UInt64* value);
-NOINLINE_ bool Convert_TryParseReal32(const String* str, Real32* value);
+NOINLINE_ bool Convert_TryParseReal32(const String* str, float* value);
 NOINLINE_ bool Convert_TryParseBool(const String*   str, bool* value);
 
 #define STRINGSBUFFER_BUFFER_DEF_SIZE 4096

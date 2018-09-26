@@ -7,6 +7,6 @@
 struct IGameComponent;
 
 void HeldBlockRenderer_ClickAnim(bool digging);
-void HeldBlockRenderer_Render(Real64 delta);
+void HeldBlockRenderer_Render(double delta);
 void HeldBlockRenderer_MakeComponent(struct IGameComponent* comp);
 #endif

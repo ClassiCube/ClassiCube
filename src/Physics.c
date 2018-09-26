@@ -54,7 +54,7 @@ Vector3 Intersection_InverseRotate(Vector3 pos, struct Entity* target) {
 	return pos;
 }
 
-bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, struct Entity* target, Real32* tMin, Real32* tMax) {
+bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, struct Entity* target, float* tMin, float* tMax) {
 	/* This is the rotated AABB of the model we want to test for intersection
 			  *
 			 / \     we then perform a counter       *---*   and we can then do
@@ -73,10 +73,10 @@ bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, struct En
 	return Intersection_RayIntersectsBox(origin, dir, bb.Min, bb.Max, tMin, tMax);
 }
 
-bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vector3 max, Real32* t0, Real32* t1) {
+bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vector3 max, float* t0, float* t1) {
 	*t0 = 0; *t1 = 0;
-	Real32 tmin, tmax, tymin, tymax, tzmin, tzmax;
-	Real32 invDirX = 1.0f / dir.X;
+	float tmin, tmax, tymin, tymax, tzmin, tzmax;
+	float invDirX = 1.0f / dir.X;
 	if (invDirX >= 0) {
 		tmin = (min.X - origin.X) * invDirX;
 		tmax = (max.X - origin.X) * invDirX;
@@ -85,7 +85,7 @@ bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vec
 		tmax = (min.X - origin.X) * invDirX;
 	}
 
-	Real32 invDirY = 1.0f / dir.Y;
+	float invDirY = 1.0f / dir.Y;
 	if (invDirY >= 0) {
 		tymin = (min.Y - origin.Y) * invDirY;
 		tymax = (max.Y - origin.Y) * invDirY;
@@ -98,7 +98,7 @@ bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vec
 	if (tymin > tmin) tmin = tymin;
 	if (tymax < tmax) tmax = tymax;
 
-	Real32 invDirZ = 1.0f / dir.Z;
+	float invDirZ = 1.0f / dir.Z;
 	if (invDirZ >= 0) {
 		tzmin = (min.Z - origin.Z) * invDirZ;
 		tzmax = (max.Z - origin.Z) * invDirZ;
@@ -125,7 +125,7 @@ static void Searcher_QuickSort(Int32 left, Int32 right) {
 	struct SearcherState* keys = Searcher_States; struct SearcherState key;
 	while (left < right) {
 		Int32 i = left, j = right;
-		Real32 pivot = keys[(i + j) >> 1].tSquared;
+		float pivot = keys[(i + j) >> 1].tSquared;
 
 		/* partition the list */
 		while (i <= j) {
@@ -172,7 +172,7 @@ Int32 Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB,
 			for (x = min.X; x <= max.X; x++) {
 				BlockID block = World_GetPhysicsBlock(x, y, z);
 				if (Block_Collide[block] != COLLIDE_SOLID) continue;
-				Real32 xx = (Real32)x, yy = (Real32)y, zz = (Real32)z;
+				float xx = (float)x, yy = (float)y, zz = (float)z;
 
 				blockBB.Min = Block_MinBB[block];
 				blockBB.Min.X += xx; blockBB.Min.Y += yy; blockBB.Min.Z += zz;
@@ -181,7 +181,7 @@ Int32 Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB,
 
 				if (!AABB_Intersects(entityExtentBB, &blockBB)) continue; /* necessary for non whole blocks. (slabs) */
 
-				Real32 tx, ty, tz;
+				float tx, ty, tz;
 				Searcher_CalcTime(&vel, entityBB, &blockBB, &tx, &ty, &tz);
 				if (tx > 1.0f || ty > 1.0f || tz > 1.0f) continue;
 
@@ -199,10 +199,10 @@ Int32 Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB,
 	return count;
 }
 
-void Searcher_CalcTime(Vector3* vel, struct AABB *entityBB, struct AABB* blockBB, Real32* tx, Real32* ty, Real32* tz) {
-	Real32 dx = vel->X > 0.0f ? blockBB->Min.X - entityBB->Max.X : entityBB->Min.X - blockBB->Max.X;
-	Real32 dy = vel->Y > 0.0f ? blockBB->Min.Y - entityBB->Max.Y : entityBB->Min.Y - blockBB->Max.Y;
-	Real32 dz = vel->Z > 0.0f ? blockBB->Min.Z - entityBB->Max.Z : entityBB->Min.Z - blockBB->Max.Z;
+void Searcher_CalcTime(Vector3* vel, struct AABB *entityBB, struct AABB* blockBB, float* tx, float* ty, float* tz) {
+	float dx = vel->X > 0.0f ? blockBB->Min.X - entityBB->Max.X : entityBB->Min.X - blockBB->Max.X;
+	float dy = vel->Y > 0.0f ? blockBB->Min.Y - entityBB->Max.Y : entityBB->Min.Y - blockBB->Max.Y;
+	float dz = vel->Z > 0.0f ? blockBB->Min.Z - entityBB->Max.Z : entityBB->Min.Z - blockBB->Max.Z;
 
 	*tx = vel->X == 0.0f ? MATH_POS_INF : Math_AbsF(dx / vel->X);
 	*ty = vel->Y == 0.0f ? MATH_POS_INF : Math_AbsF(dy / vel->Y);

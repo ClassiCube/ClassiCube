@@ -15,13 +15,13 @@ struct Codebook; struct Floor; struct Residue; struct Mapping; struct Mode;
 
 struct imdct_state {
 	Int32 n, log2_n;
-	Real32 A[VORBIS_MAX_BLOCK_SIZE / 2];
-	Real32 B[VORBIS_MAX_BLOCK_SIZE / 2];
-	Real32 C[VORBIS_MAX_BLOCK_SIZE / 4];
+	float A[VORBIS_MAX_BLOCK_SIZE / 2];
+	float B[VORBIS_MAX_BLOCK_SIZE / 2];
+	float C[VORBIS_MAX_BLOCK_SIZE / 4];
 	UInt32 Reversed[VORBIS_MAX_BLOCK_SIZE / 8];
 };
 
-struct VorbisWindow { Real32* Prev; Real32* Cur; };
+struct VorbisWindow { float* Prev; float* Cur; };
 struct VorbisState {
 	UInt32 Bits;    /* Holds bits across byte boundaries*/
 	UInt32 NumBits; /* Number of bits in Bits buffer*/
@@ -30,10 +30,10 @@ struct VorbisState {
 	UInt8 Channels, ModeNumBits; 
 	UInt16 CurBlockSize, PrevBlockSize, DataSize, NumCodebooks;
 	Int32 SampleRate; Int32 BlockSizes[2];
-	Real32* Temp; /* temp array reused in places */
-	Real32* Values[2]; /* swapped each frame */
-	Real32* PrevOutput[VORBIS_MAX_CHANS];
-	Real32* CurOutput[VORBIS_MAX_CHANS];
+	float* Temp; /* temp array reused in places */
+	float* Values[2]; /* swapped each frame */
+	float* PrevOutput[VORBIS_MAX_CHANS];
+	float* CurOutput[VORBIS_MAX_CHANS];
 
 	struct Codebook* Codebooks;
 	struct Floor* Floors;
@@ -41,7 +41,7 @@ struct VorbisState {
 	struct Mapping* Mappings;
 	struct Mode* Modes;
 
-	Real32* WindowRaw;
+	float* WindowRaw;
 	struct VorbisWindow Windows[2];
 	struct imdct_state imdct[2];
 };

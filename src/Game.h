@@ -11,7 +11,7 @@ struct Stream;
 
 Int32 Game_Width, Game_Height;
 /* Total rendering time(in seconds) elapsed since the client was started. */
-Real64 Game_Accumulator;
+double Game_Accumulator;
 Int32 Game_ChunkUpdates;
 bool Game_CameraClipping;
 struct PickedPos Game_SelectedPos;
@@ -30,7 +30,7 @@ Int32 Game_UserViewDistance;
 Int32 Game_Fov;
 Int32 Game_DefaultFov, Game_ZoomFov;
 
-Real32 game_limitMs;
+float game_limitMs;
 FpsLimit Game_FpsLimit;
 bool Game_ShowAxisLines;
 bool Game_SimpleArmsAnim;
@@ -69,11 +69,11 @@ Int32 Game_MaxChunkUpdates;
 Vector3 Game_CurrentCameraPos;
 bool Game_ScreenshotRequested;
 
-Real32 Game_RawHotbarScale, Game_RawChatScale, Game_RawInventoryScale;
-Real32 Game_Scale(Real32 value);
-Real32 Game_GetHotbarScale(void);
-Real32 Game_GetInventoryScale(void);
-Real32 Game_GetChatScale(void);
+float Game_RawHotbarScale, Game_RawChatScale, Game_RawInventoryScale;
+float Game_Scale(float value);
+float Game_GetHotbarScale(void);
+float Game_GetInventoryScale(void);
+float Game_GetChatScale(void);
 
 void Game_GetDefaultTexturePack(String* texPack);
 void Game_SetDefaultTexturePack(const String* texPack);
@@ -89,7 +89,7 @@ bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* 
 bool Game_ValidateBitmap(const String* file, Bitmap* bmp);
 Int32 Game_CalcRenderType(const String* type);
 void Game_SetFpsLimit(FpsLimit method);
-Real32 Game_CalcLimitMillis(FpsLimit method);
+float Game_CalcLimitMillis(FpsLimit method);
 
 void Game_Run(Int32 width, Int32 height, const String* title, struct DisplayDevice* device);
 #endif

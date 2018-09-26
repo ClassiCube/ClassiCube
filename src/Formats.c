@@ -203,7 +203,7 @@ ReturnCode Fcm_Load(struct Stream* stream) {
 *---------------------------------------------------------NBTFile---------------------------------------------------------*
 *#########################################################################################################################*/
 enum NBT_TAG { 
-	NBT_END, NBT_I8, NBT_I16, NBT_I32, NBT_I64, NBT_R32, 
+	NBT_END, NBT_I8, NBT_I16, NBT_I32, NBT_I64, NBT_F32, 
 	NBT_R64, NBT_I8S, NBT_STR, NBT_LIST, NBT_DICT, NBT_I32S, 
 };
 
@@ -220,7 +220,7 @@ struct NbtTag {
 		UInt8  Value_U8;
 		Int16  Value_I16;
 		Int32  Value_I32;
-		Real32 Value_R32;
+		float  Value_F32;
 		UInt8  DataSmall[NBT_SMALL_SIZE];
 		UInt8* DataBig; /* malloc for big byte arrays */
 	};
@@ -236,14 +236,9 @@ static Int16 NbtTag_I16(struct NbtTag* tag) {
 	return tag->Value_I16;
 }
 
-static Int32 NbtTag_I32(struct NbtTag* tag) {
-	if (tag->TagID != NBT_I32) ErrorHandler_Fail("Expected I32 NBT tag");
-	return tag->Value_I32;
-}
-
-static Real32 NbtTag_R32(struct NbtTag* tag) {
-	if (tag->TagID != NBT_R32) ErrorHandler_Fail("Expected R32 NBT tag");
-	return tag->Value_R32;
+static float NbtTag_F32(struct NbtTag* tag) {
+	if (tag->TagID != NBT_F32) ErrorHandler_Fail("Expected F32 NBT tag");
+	return tag->Value_F32;
 }
 
 static UInt8* NbtTag_U8_Array(struct NbtTag* tag, Int32 minSize) {
@@ -299,7 +294,7 @@ static ReturnCode Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* str
 		tag.Value_I16 = Stream_GetU16_BE(tmp);
 		break;
 	case NBT_I32:
-	case NBT_R32:
+	case NBT_F32:
 		res = Stream_ReadU32_BE(stream, &tag.Value_I32);
 		break;
 	case NBT_I64:
@@ -491,7 +486,7 @@ static bool Cw_Callback_5(struct NbtTag* tag) {
 		BlockID id = cw_curID;
 		if (IsTag(tag, "ID"))             { cw_curID = NbtTag_U8(tag); return true; }
 		if (IsTag(tag, "CollideType"))    { Block_SetCollide(id, NbtTag_U8(tag)); return true; }
-		if (IsTag(tag, "Speed"))          { Block_SpeedMultiplier[id] = NbtTag_R32(tag); return true; }
+		if (IsTag(tag, "Speed"))          { Block_SpeedMultiplier[id] = NbtTag_F32(tag); return true; }
 		if (IsTag(tag, "TransmitsLight")) { Block_BlocksLight[id] = NbtTag_U8(tag) == 0; return true; }
 		if (IsTag(tag, "FullBright"))     { Block_FullBright[id] = NbtTag_U8(tag) != 0; return true; }
 		if (IsTag(tag, "BlockDraw"))      { Block_Draw[id] = NbtTag_U8(tag); return true; }
@@ -595,7 +590,7 @@ enum JTypeCode {
 };
 
 enum JFieldType {
-	JFIELD_INT8 = 'B', JFIELD_REAL32 = 'F', JFIELD_INT32 = 'I', JFIELD_INT64 = 'J',
+	JFIELD_I8 = 'B', JFIELD_F32 = 'F', JFIELD_I32 = 'I', JFIELD_I64 = 'J',
 	JFIELD_BOOL = 'Z', JFIELD_ARRAY = '[', JFIELD_OBJECT = 'L',
 };
 
@@ -604,9 +599,9 @@ struct JFieldDesc {
 	UInt8 Type;
 	char FieldName[JNAME_SIZE];
 	union {
-		UInt8  Value_U8;
-		Int32  Value_I32;
-		Real32 Value_R32;
+		UInt8 Value_U8;
+		Int32 Value_I32;
+		float Value_F32;
 		struct { UInt8* Value_Ptr; UInt32 Value_Size; };
 	};
 };
@@ -682,13 +677,13 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 	UInt32 count;
 
 	switch (field->Type) {
-	case JFIELD_INT8:
+	case JFIELD_I8:
 	case JFIELD_BOOL:
 		return stream->ReadU8(stream, &field->Value_U8);
-	case JFIELD_REAL32:
-	case JFIELD_INT32:
+	case JFIELD_F32:
+	case JFIELD_I32:
 		return Stream_ReadU32_BE(stream, &field->Value_I32);
-	case JFIELD_INT64:
+	case JFIELD_I64:
 		return Stream_Skip(stream, 8); /* (8) data */
 
 	case JFIELD_OBJECT: {
@@ -719,7 +714,7 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 
 		struct JClassDesc arrayClassDesc;
 		if ((res = Dat_ReadClassDesc(stream, &arrayClassDesc))) return res;
-		if (arrayClassDesc.ClassName[1] != JFIELD_INT8) return DAT_ERR_JARRAY_CONTENT;
+		if (arrayClassDesc.ClassName[1] != JFIELD_I8) return DAT_ERR_JARRAY_CONTENT;
 
 		if ((res = Stream_ReadU32_BE(stream, &count))) return res;
 		field->Value_Size = count;
@@ -733,7 +728,7 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 }
 
 static Int32 Dat_I32(struct JFieldDesc* field) {
-	if (field->Type != JFIELD_INT32) ErrorHandler_Fail("Field type must be Int32");
+	if (field->Type != JFIELD_I32) ErrorHandler_Fail("Field type must be Int32");
 	return field->Value_I32;
 }
 
@@ -782,11 +777,11 @@ ReturnCode Dat_Load(struct Stream* stream) {
 			World_Blocks     = field->Value_Ptr;
 			World_BlocksSize = field->Value_Size;
 		} else if (String_CaselessEqualsConst(&fieldName, "xSpawn")) {
-			spawn->X = (Real32)Dat_I32(field);
+			spawn->X = (float)Dat_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "ySpawn")) {
-			spawn->Y = (Real32)Dat_I32(field);
+			spawn->Y = (float)Dat_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "zSpawn")) {
-			spawn->Z = (Real32)Dat_I32(field);
+			spawn->Z = (float)Dat_I32(field);
 		}
 	}
 	return 0;
@@ -867,7 +862,7 @@ UInt8 cw_meta_def[171] = {
 				NBT_DICT, 0,5,  'B','l','o','c','k',
 					NBT_I8,  0,2,  'I','D',                              0,
 					NBT_I8,  0,11, 'C','o','l','l','i','d','e','T','y','p','e', 0,
-					NBT_R32, 0,5,  'S','p','e','e','d',                  0,0,0,0,
+					NBT_F32, 0,5,  'S','p','e','e','d',                  0,0,0,0,
 					NBT_I8S, 0,8,  'T','e','x','t','u','r','e','s',      0,0,0,6, 0,0,0,0,0,0,
 					NBT_I8,  0,14, 'T','r','a','n','s','m','i','t','s','L','i','g','h','t', 0,
 					NBT_I8,  0,9,  'W','a','l','k','S','o','u','n','d',  0,

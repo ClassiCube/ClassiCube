@@ -86,12 +86,12 @@ typedef enum MouseButton_ {
 	MouseButton_Count,
 } MouseButton;
 
-Real32 Mouse_Wheel;
+float Mouse_Wheel;
 Int32 Mouse_X, Mouse_Y;
 
 bool Mouse_IsPressed(MouseButton btn);
 void Mouse_SetPressed(MouseButton btn, bool pressed);
-void Mouse_SetWheel(Real32 wheel);
+void Mouse_SetWheel(float wheel);
 void Mouse_SetPosition(Int32 x, Int32 y);
 
 

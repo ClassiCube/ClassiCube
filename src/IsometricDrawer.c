@@ -8,7 +8,7 @@
 #include "TerrainAtlas.h"
 #include "Block.h"
 
-Real32 iso_scale;
+float iso_scale;
 VertexP3fT2fC4b* iso_vertices;
 VertexP3fT2fC4b* iso_base_vertices;
 GfxResourceID iso_vb;
@@ -24,14 +24,14 @@ struct Matrix iso_transform;
 Vector3 iso_pos;
 Int32 iso_lastTexIndex, iso_texIndex;
 
-static void IsometricDrawer_RotateX(Real32 cosA, Real32 sinA) {
-	Real32 y  = cosA  * iso_pos.Y + sinA * iso_pos.Z;
+static void IsometricDrawer_RotateX(float cosA, float sinA) {
+	float y  = cosA  * iso_pos.Y + sinA * iso_pos.Z;
 	iso_pos.Z = -sinA * iso_pos.Y + cosA * iso_pos.Z;
 	iso_pos.Y = y;
 }
 
-static void IsometricDrawer_RotateY(Real32 cosA, Real32 sinA) {
-	Real32 x  = cosA * iso_pos.X - sinA * iso_pos.Z;
+static void IsometricDrawer_RotateY(float cosA, float sinA) {
+	float x  = cosA * iso_pos.X - sinA * iso_pos.Z;
 	iso_pos.Z = sinA * iso_pos.X + cosA * iso_pos.Z;
 	iso_pos.X = x;
 }
@@ -78,14 +78,14 @@ static void IsometricDrawer_SpriteZQuad(BlockID block, bool firstPart) {
 	v.Col = iso_colNormal;
 	Block_Tint(v.Col, block);
 
-	Real32 x1 = firstPart ? 0.5f : -0.1f, x2 = firstPart ? 1.1f : 0.5f;
+	float x1 = firstPart ? 0.5f : -0.1f, x2 = firstPart ? 1.1f : 0.5f;
 	rec.U1 = firstPart ? 0.0f : 0.5f;
 	rec.U2 = (firstPart ? 0.5f : 1.0f) * UV2_Scale;
 
-	Real32 minX = iso_scale * (1.0f - x1   * 2.0f) + iso_pos.X;
-	Real32 maxX = iso_scale * (1.0f - x2   * 2.0f) + iso_pos.X;
-	Real32 minY = iso_scale * (1.0f - 0.0f * 2.0f) + iso_pos.Y;
-	Real32 maxY = iso_scale * (1.0f - 1.1f * 2.0f) + iso_pos.Y;
+	float minX = iso_scale * (1.0f - x1   * 2.0f) + iso_pos.X;
+	float maxX = iso_scale * (1.0f - x2   * 2.0f) + iso_pos.X;
+	float minY = iso_scale * (1.0f - 0.0f * 2.0f) + iso_pos.Y;
+	float maxY = iso_scale * (1.0f - 1.1f * 2.0f) + iso_pos.Y;
 
 	v.Z = iso_pos.Z;
 	v.X = minX; v.Y = minY; v.U = rec.U2; v.V = rec.V2; AddVertex;
@@ -103,14 +103,14 @@ static void IsometricDrawer_SpriteXQuad(BlockID block, bool firstPart) {
 	v.Col = iso_colNormal;
 	Block_Tint(v.Col, block);
 
-	Real32 z1 = firstPart ? 0.5f : -0.1f, z2 = firstPart ? 1.1f : 0.5f;
+	float z1 = firstPart ? 0.5f : -0.1f, z2 = firstPart ? 1.1f : 0.5f;
 	rec.U1 = firstPart ? 0.0f : 0.5f;
 	rec.U2 = (firstPart ? 0.5f : 1.0f) * UV2_Scale;
 
-	Real32 minY = iso_scale * (1.0f - 0.0f * 2.0f) + iso_pos.Y;
-	Real32 maxY = iso_scale * (1.0f - 1.1f * 2.0f) + iso_pos.Y;
-	Real32 minZ = iso_scale * (1.0f - z1   * 2.0f) + iso_pos.Z;
-	Real32 maxZ = iso_scale * (1.0f - z2   * 2.0f) + iso_pos.Z;
+	float minY = iso_scale * (1.0f - 0.0f * 2.0f) + iso_pos.Y;
+	float maxY = iso_scale * (1.0f - 1.1f * 2.0f) + iso_pos.Y;
+	float minZ = iso_scale * (1.0f - z1   * 2.0f) + iso_pos.Z;
+	float maxZ = iso_scale * (1.0f - z2   * 2.0f) + iso_pos.Z;
 
 	v.X = iso_pos.X;
 	v.Y = minY; v.Z = minZ; v.U = rec.U2; v.V = rec.V2; AddVertex;
@@ -129,7 +129,7 @@ void IsometricDrawer_BeginBatch(VertexP3fT2fC4b* vertices, GfxResourceID vb) {
 	Gfx_LoadMatrix(&iso_transform);
 }
 
-void IsometricDrawer_DrawBatch(BlockID block, Real32 size, Real32 x, Real32 y) {
+void IsometricDrawer_DrawBatch(BlockID block, float size, float x, float y) {
 	bool bright = Block_FullBright[block];
 	if (Block_Draw[block] == DRAW_GAS) return;
 

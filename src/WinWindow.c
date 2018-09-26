@@ -261,7 +261,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_MOUSEWHEEL:
 	{
-		Real32 wheel_delta = ((short)HIWORD(wParam)) / (Real32)WHEEL_DELTA;
+		float wheel_delta = ((short)HIWORD(wParam)) / (float)WHEEL_DELTA;
 		Mouse_SetWheel(Mouse_Wheel + wheel_delta);
 	} return 0;
 

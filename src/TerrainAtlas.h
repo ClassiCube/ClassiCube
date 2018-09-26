@@ -15,7 +15,7 @@ Bitmap Atlas2D_Bitmap;
 Int32 Atlas2D_TileSize, Atlas2D_RowsCount;
 Int32 Atlas1D_Count, Atlas1D_TilesPerAtlas;
 Int32 Atlas1D_Mask, Atlas1D_Shift;
-Real32 Atlas1D_InvTileSize;
+float Atlas1D_InvTileSize;
 GfxResourceID Atlas1D_TexIds[ATLAS1D_MAX_ATLASES];
 
 #define Atlas2D_TileX(texLoc) ((texLoc) &  ATLAS2D_MASK)  /* texLoc % ATLAS2D_TILES_PER_ROW */

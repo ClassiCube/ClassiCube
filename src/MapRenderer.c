@@ -22,7 +22,7 @@ void MapRenderer_RefreshChunk(Int32 cx, Int32 cy, Int32 cz) {
 	info->PendingDelete = true;
 }
 
-static void MapRenderer_CheckWeather(Real64 delta) {
+static void MapRenderer_CheckWeather(double delta) {
 	Vector3 pos = Game_CurrentCameraPos;
 	Vector3I coords;
 	Vector3I_Floor(&coords, &pos);
@@ -126,7 +126,7 @@ static void MapRenderer_RenderNormalBatch(UInt32 batch) {
 	}
 }
 
-void MapRenderer_RenderNormal(Real64 delta) {
+void MapRenderer_RenderNormal(double delta) {
 	if (!MapRenderer_Chunks) return;
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Gfx_SetTexturing(true);
@@ -212,7 +212,7 @@ static void MapRenderer_RenderTranslucentBatch(UInt32 batch) {
 	}
 }
 
-void MapRenderer_RenderTranslucent(Real64 delta) {
+void MapRenderer_RenderTranslucent(double delta) {
 	if (!MapRenderer_Chunks) return;
 
 	/* First fill depth buffer */

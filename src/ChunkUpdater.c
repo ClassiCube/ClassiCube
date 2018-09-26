@@ -36,7 +36,7 @@ void ChunkInfo_Reset(struct ChunkInfo* chunk, Int32 x, Int32 y, Int32 z) {
 Int32 cu_chunksTarget = 12;
 #define cu_targetTime ((1.0 / 30) + 0.01)
 Vector3 cu_lastCamPos;
-Real32 cu_lastHeadY, cu_lastHeadX;
+float cu_lastHeadY, cu_lastHeadX;
 Int32 cu_elementsPerBitmap;
 
 static void ChunkUpdater_EnvVariableChanged(void* obj, Int32 envVar) {
@@ -256,15 +256,15 @@ static Int32 ChunkUpdater_UpdateChunksStill(Int32* chunkUpdates) {
 	return j;
 }
 
-void ChunkUpdater_UpdateChunks(Real64 delta) {
+void ChunkUpdater_UpdateChunks(double delta) {
 	Int32 chunkUpdates = 0;
 	cu_chunksTarget += delta < cu_targetTime ? 1 : -1; /* build more chunks if 30 FPS or over, otherwise slowdown. */
 	Math_Clamp(cu_chunksTarget, 4, Game_MaxChunkUpdates);
 
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	Vector3 camPos = Game_CurrentCameraPos;
-	Real32 headX = p->Base.HeadX;
-	Real32 headY = p->Base.HeadY;
+	float headX = p->Base.HeadX;
+	float headY = p->Base.HeadY;
 
 	bool samePos = Vector3_Equals(&camPos, &cu_lastCamPos) && headX == cu_lastHeadX && headY == cu_lastHeadY;
 	MapRenderer_RenderChunksCount = samePos ?
@@ -461,7 +461,7 @@ static void ChunkUpdater_UpdateSortOrder(void) {
 	/*SimpleOcclusionCulling();*/
 }
 
-void ChunkUpdater_Update(Real64 deltaTime) {
+void ChunkUpdater_Update(double deltaTime) {
 	if (!MapRenderer_Chunks) return;
 	ChunkUpdater_UpdateSortOrder();
 	ChunkUpdater_UpdateChunks(deltaTime);

@@ -14,12 +14,12 @@
 #define AABB_Height(bb) (bb->Max.Y - bb->Min.Y)
 #define AABB_Length(bb) (bb->Max.Z - bb->Min.Z)
 
-void ModelVertex_Init(struct ModelVertex* vertex, Real32 x, Real32 y, Real32 z, Int32 u, Int32 v) {
+void ModelVertex_Init(struct ModelVertex* vertex, float x, float y, float z, Int32 u, Int32 v) {
 	vertex->X = x; vertex->Y = y; vertex->Z = z;
 	vertex->U = (UInt16)u; vertex->V = (UInt16)v;
 }
 
-void ModelPart_Init(struct ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Real32 rotY, Real32 rotZ) {
+void ModelPart_Init(struct ModelPart* part, Int32 offset, Int32 count, float rotX, float rotY, float rotZ) {
 	part->Offset = offset; part->Count = count;
 	part->RotX = rotX; part->RotY = rotY; part->RotZ = rotZ;
 }
@@ -59,32 +59,32 @@ bool Model_ShouldRender(struct Entity* entity) {
 	struct AABB bb; Entity_GetPickingBounds(entity, &bb);
 
 	struct AABB* bbPtr = &bb;
-	Real32 bbWidth  = AABB_Width(bbPtr);
-	Real32 bbHeight = AABB_Height(bbPtr);
-	Real32 bbLength = AABB_Length(bbPtr);
+	float bbWidth  = AABB_Width(bbPtr);
+	float bbHeight = AABB_Height(bbPtr);
+	float bbLength = AABB_Length(bbPtr);
 
-	Real32 maxYZ  = max(bbHeight, bbLength);
-	Real32 maxXYZ = max(bbWidth, maxYZ);
+	float maxYZ  = max(bbHeight, bbLength);
+	float maxXYZ = max(bbWidth, maxYZ);
 	pos.Y += AABB_Height(bbPtr) * 0.5f; /* Centre Y coordinate. */
 	return FrustumCulling_SphereInFrustum(pos.X, pos.Y, pos.Z, maxXYZ);
 }
 
-static Real32 Model_MinDist(Real32 dist, Real32 extent) {
+static float Model_MinDist(float dist, float extent) {
 	/* Compare min coord, centre coord, and max coord */
-	Real32 dMin = Math_AbsF(dist - extent), dMax = Math_AbsF(dist + extent);
-	Real32 dMinMax = min(dMin, dMax);
+	float dMin = Math_AbsF(dist - extent), dMax = Math_AbsF(dist + extent);
+	float dMinMax = min(dMin, dMax);
 	return min(Math_AbsF(dist), dMinMax);
 }
 
-Real32 Model_RenderDistance(struct Entity* entity) {
+float Model_RenderDistance(struct Entity* entity) {
 	Vector3 pos = entity->Position;
 	struct AABB* bb = &entity->ModelAABB;
 	pos.Y += AABB_Height(bb) * 0.5f; /* Centre Y coordinate. */
 	Vector3 camPos = Game_CurrentCameraPos;
 
-	Real32 dx = Model_MinDist(camPos.X - pos.X, AABB_Width(bb)  * 0.5f);
-	Real32 dy = Model_MinDist(camPos.Y - pos.Y, AABB_Height(bb) * 0.5f);
-	Real32 dz = Model_MinDist(camPos.Z - pos.Z, AABB_Length(bb) * 0.5f);
+	float dx = Model_MinDist(camPos.X - pos.X, AABB_Width(bb)  * 0.5f);
+	float dy = Model_MinDist(camPos.Y - pos.Y, AABB_Height(bb) * 0.5f);
+	float dz = Model_MinDist(camPos.Z - pos.Z, AABB_Length(bb) * 0.5f);
 	return dx * dx + dy * dy + dz * dz;
 }
 
@@ -126,9 +126,9 @@ void Model_SetupState(struct Model* model, struct Entity* entity) {
 	Model_Cols[3] = Model_Cols[2]; 
 	Model_Cols[5] = Model_Cols[4];
 
-	Real32 yawDelta = entity->HeadY - entity->RotY;
-	Model_cosHead = (Real32)Math_Cos(yawDelta * MATH_DEG2RAD);
-	Model_sinHead = (Real32)Math_Sin(yawDelta * MATH_DEG2RAD);
+	float yawDelta = entity->HeadY - entity->RotY;
+	Model_cosHead = (float)Math_Cos(yawDelta * MATH_DEG2RAD);
+	Model_sinHead = (float)Math_Sin(yawDelta * MATH_DEG2RAD);
 	Model_ActiveModel = model;
 }
 
@@ -177,12 +177,12 @@ void Model_DrawPart(struct ModelPart* part) {
 #define Model_RotateY t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z;  v.X = t;
 #define Model_RotateZ t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t;
 
-void Model_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct ModelPart* part, bool head) {
+void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart* part, bool head) {
 	struct Model* model = Model_ActiveModel;
-	Real32 cosX = Math_CosF(-angleX), sinX = Math_SinF(-angleX);
-	Real32 cosY = Math_CosF(-angleY), sinY = Math_SinF(-angleY);
-	Real32 cosZ = Math_CosF(-angleZ), sinZ = Math_SinF(-angleZ);
-	Real32 x = part->RotX, y = part->RotY, z = part->RotZ;
+	float cosX = Math_CosF(-angleX), sinX = Math_SinF(-angleX);
+	float cosY = Math_CosF(-angleY), sinY = Math_SinF(-angleY);
+	float cosZ = Math_CosF(-angleZ), sinZ = Math_SinF(-angleZ);
+	float x = part->RotX, y = part->RotY, z = part->RotZ;
 
 	struct ModelVertex* src = &model->vertices[part->Offset];
 	VertexP3fT2fC4b* dst = &ModelCache_Vertices[model->index];
@@ -191,7 +191,7 @@ void Model_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct ModelP
 	for (i = 0; i < count; i++) {
 		struct ModelVertex v = *src;
 		v.X -= x; v.Y -= y; v.Z -= z;
-		Real32 t = 0;
+		float t = 0;
 
 		/* Rotate locally */
 		if (Model_Rotation == ROTATE_ORDER_ZYX) {
@@ -273,7 +273,7 @@ void BoxDesc_TexOrigin(struct BoxDesc* desc, Int32 x, Int32 y) {
 	desc->TexX = x; desc->TexY = y;
 }
 
-void BoxDesc_Expand(struct BoxDesc* desc, Real32 amount) {
+void BoxDesc_Expand(struct BoxDesc* desc, float amount) {
 	amount /= 16.0f;
 	desc->X1 -= amount; desc->X2 += amount;
 	desc->Y1 -= amount; desc->Y2 += amount;
@@ -281,14 +281,14 @@ void BoxDesc_Expand(struct BoxDesc* desc, Real32 amount) {
 }
 
 void BoxDesc_MirrorX(struct BoxDesc* desc) {
-	Real32 temp = desc->X1; desc->X1 = desc->X2; desc->X2 = temp;
+	float temp = desc->X1; desc->X1 = desc->X2; desc->X2 = temp;
 }
 
 
 void BoxDesc_BuildBox(struct ModelPart* part, struct BoxDesc* desc) {
 	Int32 sidesW = desc->SizeZ, bodyW = desc->SizeX, bodyH = desc->SizeY;
-	Real32 x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
-	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
+	float x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
+	float x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
 	Int32 x = desc->TexX, y = desc->TexY;
 	struct Model* m = Model_ActiveModel;
 
@@ -305,8 +305,8 @@ void BoxDesc_BuildBox(struct ModelPart* part, struct BoxDesc* desc) {
 
 void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc) {
 	Int32 sidesW = desc->SizeY, bodyW = desc->SizeX, bodyH = desc->SizeZ;
-	Real32 x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
-	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
+	float x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
+	float x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
 	Int32 x = desc->TexX, y = desc->TexY;
 	struct Model* m = Model_ActiveModel;
 
@@ -321,7 +321,7 @@ void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc) {
 	Int32 i;
 	for (i = m->index - 8; i < m->index; i++) {
 		struct ModelVertex vertex = m->vertices[i];
-		Real32 z = vertex.Z; vertex.Z = vertex.Y; vertex.Y = z;
+		float z = vertex.Z; vertex.Z = vertex.Y; vertex.Y = z;
 		m->vertices[i] = vertex;
 	}
 
@@ -331,7 +331,7 @@ void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc) {
 
 
 void BoxDesc_XQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
-	Real32 z1, Real32 z2, Real32 y1, Real32 y2, Real32 x, bool swapU) {
+	float z1, float z2, float y1, float y2, float x, bool swapU) {
 	Int32 u1 = texX, u2 = (texX + texWidth) | UV_MAX;
 	if (swapU) { Int32 tmp = u1; u1 = u2; u2 = tmp; }
 
@@ -342,7 +342,7 @@ void BoxDesc_XQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int3
 }
 
 void BoxDesc_YQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
-	Real32 x1, Real32 x2, Real32 z1, Real32 z2, Real32 y, bool swapU) {
+	float x1, float x2, float z1, float z2, float y, bool swapU) {
 	Int32 u1 = texX, u2 = (texX + texWidth) | UV_MAX;
 	if (swapU) { Int32 tmp = u1; u1 = u2; u2 = tmp; }
 
@@ -353,7 +353,7 @@ void BoxDesc_YQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int3
 }
 
 void BoxDesc_ZQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
-	Real32 x1, Real32 x2, Real32 y1, Real32 y2, Real32 z, bool swapU) {
+	float x1, float x2, float y1, float y2, float z, bool swapU) {
 	Int32 u1 = texX, u2 = (texX + texWidth) | UV_MAX;
 	if (swapU) { Int32 tmp = u1; u1 = u2; u2 = tmp; }
 

@@ -125,7 +125,7 @@ static Int32 iLog(Int32 x) {
 	return bits;
 }
 
-static Real32 float32_unpack(struct VorbisState* ctx) {
+static float float32_unpack(struct VorbisState* ctx) {
 	/* ReadBits can't reliably read over 24 bits */
 	UInt32 lo = Vorbis_ReadBits(ctx, 16);
 	UInt32 hi = Vorbis_ReadBits(ctx, 16);
@@ -137,7 +137,7 @@ static Real32 float32_unpack(struct VorbisState* ctx) {
 
 	#define LOG_2 0.693147180559945
 	/* TODO: Can we make this more accurate? maybe ldexp ?? */
-	return (Real32)(mantissa * Math_Exp(LOG_2 * ((Int32)exponent - 788))); /* pow(2, x) */
+	return (float)(mantissa * Math_Exp(LOG_2 * ((Int32)exponent - 788))); /* pow(2, x) */
 }
 
 
@@ -151,7 +151,7 @@ struct Codebook {
 	UInt8* CodewordLens;
 	UInt32* Values;
 	/* vector quantisation values */
-	Real32 MinValue, DeltaValue;
+	float MinValue, DeltaValue;
 	UInt32 SequenceP, LookupType, LookupValues;
 	UInt16* Multiplicands;
 };
@@ -328,9 +328,9 @@ static UInt32 Codebook_DecodeScalar(struct VorbisState* ctx, struct Codebook* c)
 	return -1;
 }
 
-static void Codebook_DecodeVectors(struct VorbisState* ctx, struct Codebook* c, Real32* v, Int32 step) {
+static void Codebook_DecodeVectors(struct VorbisState* ctx, struct Codebook* c, float* v, Int32 step) {
 	UInt32 lookupOffset = Codebook_DecodeScalar(ctx, c);
-	Real32 last = 0.0f, value;
+	float last = 0.0f, value;
 	UInt32 i, offset;
 
 	if (c->LookupType == 1) {		
@@ -490,8 +490,8 @@ static Int32 Floor_RenderPoint(Int32 x0, Int32 y0, Int32 x1, Int32 y1, Int32 X) 
 	}
 }
 
-static Real32 floor1_inverse_dB_table[256];
-static void Floor_RenderLine(Int32 x0, Int32 y0, Int32 x1, Int32 y1, Real32* data) {
+static float floor1_inverse_dB_table[256];
+static void Floor_RenderLine(Int32 x0, Int32 y0, Int32 x1, Int32 y1, float* data) {
 	Int32 dy = y1 - y0, adx = x1 - x0;
 	Int32 ady = Math_AbsI(dy);
 	Int32 base = dy / adx, sy;
@@ -539,7 +539,7 @@ static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, Int32 ch) 
 	Int32 YFinal[FLOOR_MAX_VALUES];
 	bool Step2[FLOOR_MAX_VALUES];
 
-	Real32* data = ctx->CurOutput[ch];
+	float* data = ctx->CurOutput[ch];
 	Int32* yList = f->YList[ch];
 
 	Step2[0] = true;
@@ -608,7 +608,7 @@ static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, Int32 ch) 
 	/* TODO: Is this right? should hy be 0, if Step2 is false for all */
 	if (hx >= ctx->DataSize) return;
 	lx = hx; hx = ctx->DataSize;
-	Real32 value = floor1_inverse_dB_table[hy];
+	float value = floor1_inverse_dB_table[hy];
 	for (; lx < hx; lx++) { data[lx] *= value; }
 }
 
@@ -654,7 +654,7 @@ static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r
 	return 0;
 }
 
-static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, UInt32 size, Int32 ch, bool* doNotDecode, Real32** data) {
+static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, UInt32 size, Int32 ch, bool* doNotDecode, float** data) {
 	UInt32 residueBeg = min(r->Begin, size);
 	UInt32 residueEnd = min(r->End,   size);
 	Int32 pass, i, j, k;
@@ -698,7 +698,7 @@ static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, UInt3
 					if (book < 0) continue;
 
 					UInt32 offset = residueBeg + partitionCount * r->PartitionSize;
-					Real32* v = data[j] + offset;
+					float* v = data[j] + offset;
 					struct Codebook* c = &ctx->Codebooks[book];
 
 					if (r->Type == 0) {
@@ -718,7 +718,7 @@ static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, UInt3
 	}
 }
 
-static void Residue_DecodeFrame(struct VorbisState* ctx, struct Residue* r, Int32 ch, bool* doNotDecode, Real32** data) {
+static void Residue_DecodeFrame(struct VorbisState* ctx, struct Residue* r, Int32 ch, bool* doNotDecode, float** data) {
 	UInt32 size = ctx->DataSize;
 	if (r->Type == 2) {
 		bool decodeAny = false;
@@ -731,10 +731,10 @@ static void Residue_DecodeFrame(struct VorbisState* ctx, struct Residue* r, Int3
 		if (!decodeAny) return;
 		decodeAny = false; /* because DecodeCore expects this to be 'false' for 'do not decode' */
 
-		Real32* interleaved = ctx->Temp;
+		float* interleaved = ctx->Temp;
 		/* TODO: avoid using ctx->temp and deinterleaving at all */
 		/* TODO: avoid setting memory to 0 here */
-		Mem_Set(interleaved, 0, ctx->DataSize * ctx->Channels * sizeof(Real32));
+		Mem_Set(interleaved, 0, ctx->DataSize * ctx->Channels * sizeof(float));
 		Residue_DecodeCore(ctx, r, size * ch, 1, &decodeAny, &interleaved);
 
 		/* deinterleave type 2 output */	
@@ -809,11 +809,11 @@ static ReturnCode Mapping_DecodeSetup(struct VorbisState* ctx, struct Mapping* m
 *------------------------------------------------------imdct impl---------------------------------------------------------*
 *#########################################################################################################################*/
 #define PI MATH_PI
-void imdct_slow(Real32* in, Real32* out, Int32 N) {
+void imdct_slow(float* in, float* out, Int32 N) {
 	Int32 i, k;
 
 	for (i = 0; i < 2 * N; i++) {
-		Real64 sum = 0;
+		double sum = 0;
 		for (k = 0; k < N; k++) {
 			sum += in[k] * Math_Cos((PI / N) * (i + 0.5 + N * 0.5) * (k + 0.5));
 		}
@@ -832,19 +832,19 @@ static UInt32 Vorbis_ReverseBits(UInt32 v) {
 
 void imdct_init(struct imdct_state* state, Int32 n) {
 	Int32 k, k2, n4 = n >> 2, n8 = n >> 3, log2_n = Math_Log2(n);
-	Real32 *A = state->A, *B = state->B, *C = state->C;
+	float *A = state->A, *B = state->B, *C = state->C;
 	state->n = n; state->log2_n = log2_n;
 
 	/* setup twiddle factors */
 	for (k = 0, k2 = 0; k < n4; k++, k2 += 2) {
-		A[k2]   =  (Real32)Math_Cos((4*k * PI) / n);
-		A[k2+1] = -(Real32)Math_Sin((4*k * PI) / n);
-		B[k2]   =  (Real32)Math_Cos(((k2+1) * PI) / (2*n));
-		B[k2+1] =  (Real32)Math_Sin(((k2+1) * PI) / (2*n));
+		A[k2]   =  (float)Math_Cos((4*k * PI) / n);
+		A[k2+1] = -(float)Math_Sin((4*k * PI) / n);
+		B[k2]   =  (float)Math_Cos(((k2+1) * PI) / (2*n));
+		B[k2+1] =  (float)Math_Sin(((k2+1) * PI) / (2*n));
 	}
 	for (k = 0, k2 = 0; k < n8; k++, k2 += 2) {
-		C[k2]   =  (Real32)Math_Cos(((k2+1) * (2*PI)) / n);
-		C[k2+1] = -(Real32)Math_Sin(((k2+1) * (2*PI)) / n);
+		C[k2]   =  (float)Math_Cos(((k2+1) * (2*PI)) / n);
+		C[k2+1] = -(float)Math_Sin(((k2+1) * (2*PI)) / n);
 	}
 
 	UInt32* reversed = state->Reversed;
@@ -853,26 +853,26 @@ void imdct_init(struct imdct_state* state, Int32 n) {
 	}
 }
 
-void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
+void imdct_calc(float* in, float* out, struct imdct_state* state) {
 	Int32 k, k2, k4, k8, n = state->n;
 	Int32 n2 = n >> 1, n4 = n >> 2, n8 = n >> 3, n3_4 = n - n4;
 	
 	/* Optimised algorithm from "The use of multirate filter banks for coding of high quality digital audio" */
 	/* Uses a few fixes for the paper noted at http://www.nothings.org/stb_vorbis/mdct_01.txt */
-	Real32 *A = state->A, *B = state->B, *C = state->C;
+	float *A = state->A, *B = state->B, *C = state->C;
 
-	Real32 u[VORBIS_MAX_BLOCK_SIZE];
-	Real32 w[VORBIS_MAX_BLOCK_SIZE];
+	float u[VORBIS_MAX_BLOCK_SIZE];
+	float w[VORBIS_MAX_BLOCK_SIZE];
 
 	/* spectral coefficients, step 1, step 2 */
 	for (k = 0, k2 = 0, k4 = 0; k < n8; k++, k2 += 2, k4 += 4) {
-		Real32 e_1 = -in[k4+3], e_2 = -in[k4+1];
-		Real32 g_1 = e_1 * A[n2-1-k2] + e_2 * A[n2-2-k2];
-		Real32 g_2 = e_1 * A[n2-2-k2] - e_2 * A[n2-1-k2];
+		float e_1 = -in[k4+3], e_2 = -in[k4+1];
+		float g_1 = e_1 * A[n2-1-k2] + e_2 * A[n2-2-k2];
+		float g_2 = e_1 * A[n2-2-k2] - e_2 * A[n2-1-k2];
 
-		Real32 f_1 = in[n2-4-k4], f_2 = in[n2-2-k4];
-		Real32 h_2 = f_1 * A[n4-2-k2] - f_2 * A[n4-1-k2];
-		Real32 h_1 = f_1 * A[n4-1-k2] + f_2 * A[n4-2-k2];
+		float f_1 = in[n2-4-k4], f_2 = in[n2-2-k4];
+		float h_2 = f_1 * A[n4-2-k2] - f_2 * A[n4-1-k2];
+		float h_1 = f_1 * A[n4-1-k2] + f_2 * A[n4-2-k2];
 
 		w[n2+3+k4] = h_2 + g_2;
 		w[n2+1+k4] = h_1 + g_1;
@@ -889,8 +889,8 @@ void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
 
 		for (r = 0, r4 = 0; r < rMax; r++, r4 += 4) {
 			for (s2 = 0; s2 < s2Max; s2 += 2) {
-				Real32 e_1 = w[n-1-k0*s2-r4],     e_2 = w[n-3-k0*s2-r4];
-				Real32 f_1 = w[n-1-k0*(s2+1)-r4], f_2 = w[n-3-k0*(s2+1)-r4];
+				float e_1 = w[n-1-k0*s2-r4],     e_2 = w[n-3-k0*s2-r4];
+				float f_1 = w[n-1-k0*(s2+1)-r4], f_2 = w[n-3-k0*(s2+1)-r4];
 
 				u[n-1-k0*s2-r4] = e_1 + f_1;
 				u[n-3-k0*s2-r4] = e_2 + f_2;
@@ -911,23 +911,23 @@ void imdct_calc(Real32* in, Real32* out, struct imdct_state* state) {
 	UInt32* reversed = state->Reversed;
 	for (k = 0, k2 = 0, k8 = 0; k < n8; k++, k2 += 2, k8 += 8) {
 		UInt32 j = reversed[k], j8 = j << 3;
-		Real32 e_1 = u[n-j8-1], e_2 = u[n-j8-3];
-		Real32 f_1 = u[j8+3],   f_2 = u[j8+1];
+		float e_1 = u[n-j8-1], e_2 = u[n-j8-3];
+		float f_1 = u[j8+3],   f_2 = u[j8+1];
 
-		Real32 g_1 =  e_1 + f_1 + C[k2+1] * (e_1 - f_1) + C[k2] * (e_2 + f_2);
-		Real32 h_1 =  e_1 + f_1 - C[k2+1] * (e_1 - f_1) - C[k2] * (e_2 + f_2);
-		Real32 g_2 =  e_2 - f_2 + C[k2+1] * (e_2 + f_2) - C[k2] * (e_1 - f_1);
-		Real32 h_2 = -e_2 + f_2 + C[k2+1] * (e_2 + f_2) - C[k2] * (e_1 - f_1);
+		float g_1 =  e_1 + f_1 + C[k2+1] * (e_1 - f_1) + C[k2] * (e_2 + f_2);
+		float h_1 =  e_1 + f_1 - C[k2+1] * (e_1 - f_1) - C[k2] * (e_2 + f_2);
+		float g_2 =  e_2 - f_2 + C[k2+1] * (e_2 + f_2) - C[k2] * (e_1 - f_1);
+		float h_2 = -e_2 + f_2 + C[k2+1] * (e_2 + f_2) - C[k2] * (e_1 - f_1);
 
-		Real32 x_1 = -0.5f * (g_1 * B[k2]   + g_2 * B[k2+1]);
-		Real32 x_2 = -0.5f * (g_1 * B[k2+1] - g_2 * B[k2]);
+		float x_1 = -0.5f * (g_1 * B[k2]   + g_2 * B[k2+1]);
+		float x_2 = -0.5f * (g_1 * B[k2+1] - g_2 * B[k2]);
 		out[n4-1-k]   = -x_2;
 		out[n4+k]     =  x_2;
 		out[n3_4-1-k] =  x_1;
 		out[n3_4+k]   =  x_1;
 
-		Real32 y_1 = -0.5f * (h_1 * B[n2-2-k2] + h_2 * B[n2-1-k2]);
-		Real32 y_2 = -0.5f * (h_1 * B[n2-1-k2] - h_2 * B[n2-2-k2]);
+		float y_1 = -0.5f * (h_1 * B[n2-2-k2] + h_2 * B[n2-1-k2]);
+		float y_2 = -0.5f * (h_1 * B[n2-1-k2] - h_2 * B[n2-2-k2]);
 		out[k]      = -y_2;
 		out[n2-1-k] =  y_2;
 		out[n2+k]   =  y_1;
@@ -954,15 +954,15 @@ static ReturnCode Mode_DecodeSetup(struct VorbisState* ctx, struct Mode* m) {
 static void Vorbis_CalcWindow(struct VorbisWindow* window, Int32 blockSize) {
 	Int32 i, n = blockSize / 2;
 	window->Cur = window->Prev + n;
-	Real32* cur_window  = window->Cur;
-	Real32* prev_window = window->Prev;
+	float* cur_window  = window->Cur;
+	float* prev_window = window->Prev;
 
 	for (i = 0; i < n; i++) {
-		Real64 inner   = Math_Sin((i + 0.5) / n * (PI/2));
+		double inner   = Math_Sin((i + 0.5) / n * (PI/2));
 		cur_window[i]  = Math_Sin((PI/2) * inner * inner);
 	}
 	for (i = 0; i < n; i++) {
-		Real64 inner   = Math_Sin((i + 0.5) / n * (PI/2) + (PI/2));
+		double inner   = Math_Sin((i + 0.5) / n * (PI/2) + (PI/2));
 		prev_window[i] = Math_Sin((PI/2) * inner * inner);
 	}
 }
@@ -1115,7 +1115,7 @@ ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 
 	/* window calculations can be pre-computed here */
 	count = ctx->BlockSizes[0] + ctx->BlockSizes[1];
-	ctx->WindowRaw = Mem_Alloc(count, sizeof(Real32), "Vorbis windows");
+	ctx->WindowRaw = Mem_Alloc(count, sizeof(float), "Vorbis windows");
 	ctx->Windows[0].Prev = ctx->WindowRaw;
 	ctx->Windows[1].Prev = ctx->WindowRaw + ctx->BlockSizes[0];
 
@@ -1123,7 +1123,7 @@ ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 	Vorbis_CalcWindow(&ctx->Windows[1], ctx->BlockSizes[1]);
 
 	count = ctx->Channels * ctx->BlockSizes[1];
-	ctx->Temp      = Mem_AllocCleared(count * 3, sizeof(Real32), "Vorbis values");
+	ctx->Temp      = Mem_AllocCleared(count * 3, sizeof(float), "Vorbis values");
 	ctx->Values[0] = ctx->Temp + count;
 	ctx->Values[1] = ctx->Temp + count * 2;
 
@@ -1153,7 +1153,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	if (mode->BlockSizeFlag) { Vorbis_ReadBits(ctx, 2); } /* TODO: do we just SkipBits here */
 
 	/* swap prev and cur outputs around */
-	Real32* tmp = ctx->Values[1]; ctx->Values[1] = ctx->Values[0]; ctx->Values[0] = tmp;
+	float* tmp = ctx->Values[1]; ctx->Values[1] = ctx->Values[0]; ctx->Values[0] = tmp;
 	Mem_Set(ctx->Values[0], 0, ctx->Channels * ctx->CurBlockSize);
 
 	for (i = 0; i < ctx->Channels; i++) {
@@ -1184,7 +1184,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	for (i = 0; i < mapping->Submaps; i++) {
 		Int32 ch = 0;
 		bool doNotDecode[VORBIS_MAX_CHANS];
-		Real32* data[VORBIS_MAX_CHANS]; /* map residue data to actual channel data */
+		float* data[VORBIS_MAX_CHANS]; /* map residue data to actual channel data */
 		for (j = 0; j < ctx->Channels; j++) {
 			if (mapping->Mux[j] != i) continue;
 
@@ -1199,11 +1199,11 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 
 	/* inverse coupling */
 	for (i = mapping->CouplingSteps - 1; i >= 0; i--) {
-		Real32* magValues = ctx->CurOutput[mapping->Magnitude[i]];
-		Real32* angValues = ctx->CurOutput[mapping->Angle[i]];
+		float* magValues = ctx->CurOutput[mapping->Magnitude[i]];
+		float* angValues = ctx->CurOutput[mapping->Angle[i]];
 
 		for (j = 0; j < ctx->DataSize; j++) {
-			Real32 m = magValues[j], a = angValues[j];
+			float m = magValues[j], a = angValues[j];
 
 			if (m > 0.0f) {
 				if (a > 0.0f) { angValues[j] = m - a; }
@@ -1231,10 +1231,10 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 
 	/* inverse monolithic transform of audio spectrum vector */
 	for (i = 0; i < ctx->Channels; i++) {
-		Real32* data = ctx->CurOutput[i];
+		float* data = ctx->CurOutput[i];
 		if (!hasFloor[i]) {
 			/* TODO: Do we actually need to zero data here (residue type 2 maybe) */
-			Mem_Set(data, 0, ctx->CurBlockSize * sizeof(Real32));
+			Mem_Set(data, 0, ctx->CurBlockSize * sizeof(float));
 		} else {
 			imdct_calc(data, data, &ctx->imdct[mode->BlockSizeFlag]);
 			/* defer windowing until output */
@@ -1268,8 +1268,8 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 	          -  | * -        |           ***               | * -        |
 	   ******-***|*   -       |              ***            |*   -       |
 	*/
-	Real32* prev[VORBIS_MAX_CHANS];
-	Real32*  cur[VORBIS_MAX_CHANS];
+	float* prev[VORBIS_MAX_CHANS];
+	float*  cur[VORBIS_MAX_CHANS];
 	Int32 curOffset = curQrtr - overlapQtr, prevOffset = prevQrtr - overlapQtr;
 
 	for (i = 0; i < ctx->Channels; i++) {
@@ -1280,7 +1280,7 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 	/* for long prev and short cur block, there will be non-overlapped data before */
 	for (i = 0; i < prevOffset; i++) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
-			Real32 sample = prev[ch][i];
+			float sample = prev[ch][i];
 			Math_Clamp(sample, -1.0f, 1.0f);
 			*data++ = (Int16)(sample * 32767);
 		}
@@ -1298,7 +1298,7 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 	/* also perform windowing here */
 	for (i = 0; i < overlapSize; i++) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
-			Real32 sample = prev[ch][i] * window.Prev[i] + cur[ch][i] * window.Cur[i];
+			float sample = prev[ch][i] * window.Prev[i] + cur[ch][i] * window.Cur[i];
 			Math_Clamp(sample, -1.0f, 1.0f);
 			*data++ = (Int16)(sample * 32767);
 		}
@@ -1308,7 +1308,7 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 	for (i = 0; i < ctx->Channels; i++) { cur[i] += overlapSize; }
 	for (i = 0; i < curOffset; i++) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
-			Real32 sample = cur[ch][i];
+			float sample = cur[ch][i];
 			Math_Clamp(sample, -1.0f, 1.0f);
 			*data++ = (Int16)(sample * 32767);
 		}
@@ -1318,7 +1318,7 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 	return (prevQrtr + curQrtr) * ctx->Channels;
 }
 
-static Real32 floor1_inverse_dB_table[256] = {
+static float floor1_inverse_dB_table[256] = {
 	1.0649863e-07f, 1.1341951e-07f, 1.2079015e-07f, 1.2863978e-07f,
 	1.3699951e-07f, 1.4590251e-07f, 1.5538408e-07f, 1.6548181e-07f,
 	1.7623575e-07f, 1.8768855e-07f, 1.9988561e-07f, 2.1287530e-07f,

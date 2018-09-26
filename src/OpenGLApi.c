@@ -198,19 +198,19 @@ void Gfx_SetFog(bool enabled) {
 PackedCol gl_lastFogCol;
 void Gfx_SetFogCol(PackedCol col) {
 	if (PackedCol_Equals(col, gl_lastFogCol)) return;
-	Real32 colRGBA[4] = { col.R / 255.0f, col.G / 255.0f, col.B / 255.0f, col.A / 255.0f };
+	float colRGBA[4] = { col.R / 255.0f, col.G / 255.0f, col.B / 255.0f, col.A / 255.0f };
 	glFogfv(GL_FOG_COLOR, colRGBA);
 	gl_lastFogCol = col;
 }
 
-Real32 gl_lastFogEnd = -1, gl_lastFogDensity = -1;
-void Gfx_SetFogDensity(Real32 value) {
+float gl_lastFogEnd = -1, gl_lastFogDensity = -1;
+void Gfx_SetFogDensity(float value) {
 	if (value == gl_lastFogDensity) return;
 	glFogf(GL_FOG_DENSITY, value);
 	gl_lastFogDensity = value;
 }
 
-void Gfx_SetFogEnd(Real32 value) {
+void Gfx_SetFogEnd(float value) {
 	if (value == gl_lastFogEnd) return;
 	glFogf(GL_FOG_END, value);
 	gl_lastFogEnd = value;
@@ -226,7 +226,7 @@ void Gfx_SetFogMode(Int32 mode) {
 
 void Gfx_SetFaceCulling(bool enabled) { gl_Toggle(GL_CULL_FACE); }
 void Gfx_SetAlphaTest(bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
-void Gfx_SetAlphaTestFunc(Int32 func, Real32 value) {
+void Gfx_SetAlphaTestFunc(Int32 func, float value) {
 	glAlphaFunc(gl_compare[func], value);
 }
 
@@ -512,13 +512,13 @@ void Gfx_SetMatrixMode(Int32 matrixType) {
 	gl_lastMatrixType = matrixType;
 }
 
-void Gfx_LoadMatrix(struct Matrix* matrix) { glLoadMatrixf((Real32*)matrix); }
+void Gfx_LoadMatrix(struct Matrix* matrix) { glLoadMatrixf((float*)matrix); }
 void Gfx_LoadIdentityMatrix(void) { glLoadIdentity(); }
 
-void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, struct Matrix* matrix) {
+void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
 	Matrix_OrthographicOffCenter(matrix, 0.0f, width, height, 0.0f, -10000.0f, 10000.0f);
 }
-void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 zFar, struct Matrix* matrix) {
+void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar, struct Matrix* matrix) {
 	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
 }
 
@@ -574,7 +574,7 @@ void Gfx_UpdateApiInfo(void) {
 
 	if (totalKb <= 0 || curKb <= 0) return;
 	Gfx_ApiInfo[4].length = 0;
-	Real32 total = totalKb / 1024.0f, cur = curKb / 1024.0f;
+	float total = totalKb / 1024.0f, cur = curKb / 1024.0f;
 	String_Format2(&Gfx_ApiInfo[4], "Video memory: %f2 MB total, %f2 free", &total, &cur);
 }
 

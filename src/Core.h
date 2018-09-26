@@ -31,9 +31,6 @@ typedef int64_t Int64;
 #error "I don't recognise this compiler. You'll need to add required definitions in Core.h!"
 #endif
 
-typedef float  Real32;
-typedef double Real64;
-
 typedef UInt8 bool;
 #define true 1
 #define false 0
@@ -53,7 +50,7 @@ typedef struct Rect2D_ { Int32 X, Y, Width, Height; } Rect2D;
 typedef struct Point2D_ { Int32 X, Y; } Point2D;
 typedef struct Size2D_ { Int32 Width, Height; } Size2D;
 typedef struct FontDesc_ { void* Handle; UInt16 Size, Style; } FontDesc;
-typedef struct TextureRec_ { Real32 U1, V1, U2, V2; } TextureRec;
+typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 typedef struct Bitmap_ { UInt8* Scan0; Int32 Width, Height; } Bitmap;
 
 #define CC_BUILD_GL11 false

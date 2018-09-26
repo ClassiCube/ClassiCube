@@ -154,16 +154,16 @@ void Env_SetCloudsHeight(Int32 height) {
 	Env_Set(height, Env_CloudsHeight, ENV_VAR_CLOUDS_HEIGHT);
 }
 
-void Env_SetCloudsSpeed(Real32 speed) {
+void Env_SetCloudsSpeed(float speed) {
 	Env_Set(speed, Env_CloudsSpeed, ENV_VAR_CLOUDS_SPEED);
 }
 
 
-void Env_SetWeatherSpeed(Real32 speed) {
+void Env_SetWeatherSpeed(float speed) {
 	Env_Set(speed, Env_WeatherSpeed, ENV_VAR_WEATHER_SPEED);
 }
 
-void Env_SetWeatherFade(Real32 rate) {
+void Env_SetWeatherFade(float rate) {
 	Env_Set(rate, Env_WeatherFade, ENV_VAR_WEATHER_FADE);
 }
 
@@ -175,11 +175,11 @@ void Env_SetExpFog(bool expFog) {
 	Env_Set(expFog, Env_ExpFog, ENV_VAR_EXP_FOG);
 }
 
-void Env_SetSkyboxHorSpeed(Real32 speed) {
+void Env_SetSkyboxHorSpeed(float speed) {
 	Env_Set(speed, Env_SkyboxHorSpeed, ENV_VAR_SKYBOX_HOR_SPEED);
 }
 
-void Env_SetSkyboxVerSpeed(Real32 speed) {
+void Env_SetSkyboxVerSpeed(float speed) {
 	Env_Set(speed, Env_SkyboxVerSpeed, ENV_VAR_SKYBOX_VER_SPEED);
 }
 
@@ -206,22 +206,22 @@ void Env_SetShadowCol(PackedCol col) {
 	Env_SetCol(col, Env_ShadowCol, ENV_VAR_SHADOW_COL);
 }
 
-Real32 Respawn_HighestFreeY(struct AABB* bb) {
+float Respawn_HighestFreeY(struct AABB* bb) {
 	Int32 minX = Math_Floor(bb->Min.X), maxX = Math_Floor(bb->Max.X);
 	Int32 minY = Math_Floor(bb->Min.Y), maxY = Math_Floor(bb->Max.Y);
 	Int32 minZ = Math_Floor(bb->Min.Z), maxZ = Math_Floor(bb->Max.Z);
 
-	Real32 spawnY = RESPAWN_NOT_FOUND;
+	float spawnY = RESPAWN_NOT_FOUND;
 	struct AABB blockBB;
 	Int32 x, y, z;
 	Vector3 pos;
 
 	for (y = minY; y <= maxY; y++) {
-		pos.Y = (Real32)y;
+		pos.Y = (float)y;
 		for (z = minZ; z <= maxZ; z++) {
-			pos.Z = (Real32)z;
+			pos.Z = (float)z;
 			for (x = minX; x <= maxX; x++) {
-				pos.X = (Real32)x;
+				pos.X = (float)x;
 				BlockID block = World_GetPhysicsBlock(x, y, z);
 				Vector3_Add(&blockBB.Min, &pos, &Block_MinBB[block]);
 				Vector3_Add(&blockBB.Max, &pos, &Block_MaxBB[block]);
@@ -235,7 +235,7 @@ Real32 Respawn_HighestFreeY(struct AABB* bb) {
 	return spawnY;
 }
 
-Vector3 Respawn_FindSpawnPosition(Real32 x, Real32 z, Vector3 modelSize) {
+Vector3 Respawn_FindSpawnPosition(float x, float z, Vector3 modelSize) {
 	Vector3 spawn = Vector3_Create3(x, 0.0f, z);
 	spawn.Y = World_Height + ENTITY_ADJUSTMENT;
 	struct AABB bb;
@@ -244,7 +244,7 @@ Vector3 Respawn_FindSpawnPosition(Real32 x, Real32 z, Vector3 modelSize) {
 
 	Int32 y;
 	for (y = World_Height; y >= 0; y--) {
-		Real32 highestY = Respawn_HighestFreeY(&bb);
+		float highestY = Respawn_HighestFreeY(&bb);
 		if (highestY != RESPAWN_NOT_FOUND) {
 			spawn.Y = highestY; break;
 		}

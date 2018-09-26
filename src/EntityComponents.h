@@ -12,33 +12,33 @@ struct LocationUpdate;
 
 /* Entity component that performs model animation depending on movement speed and time */
 struct AnimatedComp {
-	Real32 BobbingHor, BobbingVer, BobbingModel;
-	Real32 WalkTime, Swing, BobStrength;
-	Real32 WalkTimeO, WalkTimeN, SwingO, SwingN, BobStrengthO, BobStrengthN;
+	float BobbingHor, BobbingVer, BobbingModel;
+	float WalkTime, Swing, BobStrength;
+	float WalkTimeO, WalkTimeN, SwingO, SwingN, BobStrengthO, BobStrengthN;
 
-	Real32 LeftLegX, LeftLegZ, RightLegX, RightLegZ;
-	Real32 LeftArmX, LeftArmZ, RightArmX, RightArmZ;
+	float LeftLegX, LeftLegZ, RightLegX, RightLegZ;
+	float LeftArmX, LeftArmZ, RightArmX, RightArmZ;
 };
 
 void AnimatedComp_Init(struct AnimatedComp* anim);
-void AnimatedComp_Update(struct Entity* entity, Vector3 oldPos, Vector3 newPos, Real64 delta);
-void AnimatedComp_GetCurrent(struct Entity* entity, Real32 t);
+void AnimatedComp_Update(struct Entity* entity, Vector3 oldPos, Vector3 newPos, double delta);
+void AnimatedComp_GetCurrent(struct Entity* entity, float t);
 
 /* Entity component that performs tilt animation depending on movement speed and time */
 struct TiltComp {
-	Real32 TiltX, TiltY, VelTiltStrength;
-	Real32 VelTiltStrengthO, VelTiltStrengthN;
+	float TiltX, TiltY, VelTiltStrength;
+	float VelTiltStrengthO, VelTiltStrengthN;
 };
 
 void TiltComp_Init(struct TiltComp* anim);
-void TiltComp_Update(struct TiltComp* anim, Real64 delta);
-void TiltComp_GetCurrent(struct TiltComp* anim, Real32 t);
+void TiltComp_Update(struct TiltComp* anim, double delta);
+void TiltComp_GetCurrent(struct TiltComp* anim, float t);
 
 /* Entity component that performs management of hack states */
 struct HacksComp {
 	UInt8 UserType;
 	/* Speed player move at, relative to normal speed, when the 'speeding' key binding is held down */
-	Real32 SpeedMultiplier;
+	float SpeedMultiplier;
 	/* Whether blocks that the player places that intersect themselves, should cause the player to
 	be pushed back in the opposite direction of the placed block */
 	bool PushbackPlacing;
@@ -50,7 +50,7 @@ struct HacksComp {
 	bool CanAnyHacks, CanUseThirdPersonCamera, CanSpeed, CanFly;
 	bool CanRespawn, CanNoclip, CanPushbackBlocks,CanSeeAllNames;
 	bool CanDoubleJump, CanBePushed;
-	Real32 BaseHorSpeed;
+	float BaseHorSpeed;
 	/* Max amount of jumps the player can perform */
 	Int32 MaxJumps;
 
@@ -73,16 +73,16 @@ void HacksComp_CheckConsistency(struct HacksComp* hacks);
 void HacksComp_UpdateState(struct HacksComp* hacks);
 
 /* Represents a position and orientation state */
-struct InterpState { Vector3 Pos; Real32 HeadX, HeadY, RotX, RotZ; };
+struct InterpState { Vector3 Pos; float HeadX, HeadY, RotX, RotZ; };
 
 #define InterpComp_Layout \
-struct InterpState Prev, Next; Real32 PrevRotY, NextRotY; \
-Int32 RotYCount; Real32 RotYStates[15];
+struct InterpState Prev, Next; float PrevRotY, NextRotY; \
+Int32 RotYCount; float RotYStates[15];
 
 /* Base entity component that performs interpolation of position and orientation */
 struct InterpComp { InterpComp_Layout };
 
-void InterpComp_LerpAngles(struct InterpComp* interp, struct Entity* entity, Real32 t);
+void InterpComp_LerpAngles(struct InterpComp* interp, struct Entity* entity, float t);
 
 void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update, bool interpolate);
 void LocalInterpComp_AdvanceState(struct InterpComp* interp);
@@ -120,7 +120,7 @@ struct PhysicsComp {
 	Int32 MultiJumps;
 	struct Entity* Entity;
 
-	Real32 JumpVel, UserJumpVel, ServerJumpVel;
+	float JumpVel, UserJumpVel, ServerJumpVel;
 	struct HacksComp* Hacks;
 	struct CollisionsComp* Collisions;
 };
@@ -129,8 +129,8 @@ void PhysicsComp_Init(struct PhysicsComp* comp, struct Entity* entity);
 void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp);
 void PhysicsComp_DoNormalJump(struct PhysicsComp* comp);
 void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vector3 vel);
-void PhysicsComp_CalculateJumpVelocity(struct PhysicsComp* comp, Real32 jumpHeight);
-Real64 PhysicsComp_GetMaxHeight(Real32 u);
+void PhysicsComp_CalculateJumpVelocity(struct PhysicsComp* comp, float jumpHeight);
+double PhysicsComp_GetMaxHeight(float u);
 void PhysicsComp_DoEntityPush(struct Entity* entity);
 
 /* Entity component that plays block step sounds */

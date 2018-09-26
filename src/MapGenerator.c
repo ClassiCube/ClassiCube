@@ -32,7 +32,7 @@ static void FlatgrassGen_MapSet(Int32 yStart, Int32 yEnd, BlockID block) {
 	Gen_CurrentProgress = 0.0f;
 	for (y = yStart; y <= yEnd; y++) {
 		Mem_Set(ptr + y * oneY, block, oneY * (UInt32)sizeof(BlockID));
-		Gen_CurrentProgress = (Real32)(y - yStart) / yHeight;
+		Gen_CurrentProgress = (float)(y - yStart) / yHeight;
 	}
 }
 
@@ -59,7 +59,7 @@ Int32 waterLevel, oneY, minHeight;
 Int16* Heightmap;
 Random rnd;
 
-static void NotchyGen_FillOblateSpheroid(Int32 x, Int32 y, Int32 z, Real32 radius, BlockID block) {
+static void NotchyGen_FillOblateSpheroid(Int32 x, Int32 y, Int32 z, float radius, BlockID block) {
 	Int32 xStart = Math_Floor(max(x - radius, 0));
 	Int32 xEnd = Math_Floor(min(x + radius, Gen_MaxX));
 	Int32 yStart = Math_Floor(max(y - radius, 0));
@@ -67,7 +67,7 @@ static void NotchyGen_FillOblateSpheroid(Int32 x, Int32 y, Int32 z, Real32 radiu
 	Int32 zStart = Math_Floor(max(z - radius, 0));
 	Int32 zEnd = Math_Floor(min(z + radius, Gen_MaxZ));
 
-	Real32 radiusSq = radius * radius;
+	float radiusSq = radius * radius;
 	Int32 xx, yy, zz;
 
 	for (yy = yStart; yy <= yEnd; yy++) {
@@ -130,12 +130,12 @@ static void NotchyGen_CreateHeightmap(void) {
 
 	Int32 x, z;
 	for (z = 0; z < Gen_Length; z++) {
-		Gen_CurrentProgress = (Real32)z / Gen_Length;
+		Gen_CurrentProgress = (float)z / Gen_Length;
 		for (x = 0; x < Gen_Width; x++) {
-			Real32 hLow = CombinedNoise_Calc(&n1, x * 1.3f, z * 1.3f) / 6 - 4, height = hLow;
+			float hLow = CombinedNoise_Calc(&n1, x * 1.3f, z * 1.3f) / 6 - 4, height = hLow;
 
-			if (OctaveNoise_Calc(&n3, (Real32)x, (Real32)z) <= 0) {
-				Real32 hHigh = CombinedNoise_Calc(&n2, x * 1.3f, z * 1.3f) / 5 + 6;
+			if (OctaveNoise_Calc(&n3, (float)x, (float)z) <= 0) {
+				float hHigh = CombinedNoise_Calc(&n2, x * 1.3f, z * 1.3f) / 5 + 6;
 				height = max(hLow, hHigh);
 			}
 
@@ -163,14 +163,14 @@ static Int32 NotchyGen_CreateStrataFast(void) {
 	/* We can quickly fill in bottom solid layers */
 	for (y = 1; y <= stoneHeight; y++) {
 		Mem_Set(Gen_Blocks + y * oneY, BLOCK_STONE, oneY * (UInt32)sizeof(BlockID));
-		Gen_CurrentProgress = (Real32)y / Gen_Height;
+		Gen_CurrentProgress = (float)y / Gen_Height;
 	}
 
 	/* Fill in rest of map wih air */
 	Int32 airHeight = max(0, stoneHeight) + 1;
 	for (y = airHeight; y < Gen_Height; y++) {
 		Mem_Set(Gen_Blocks + y * oneY, BLOCK_AIR, oneY * (UInt32)sizeof(BlockID));
-		Gen_CurrentProgress = (Real32)y / Gen_Height;
+		Gen_CurrentProgress = (float)y / Gen_Height;
 	}
 
 	/* if stoneHeight is <= 0, then no layer is fully stone */
@@ -188,9 +188,9 @@ static void NotchyGen_CreateStrata(void) {
 
 	Int32 x, y, z;
 	for (z = 0; z < Gen_Length; z++) {
-		Gen_CurrentProgress = (Real32)z / Gen_Length;
+		Gen_CurrentProgress = (float)z / Gen_Length;
 		for (x = 0; x < Gen_Width; x++) {
-			Int32 dirtThickness = (Int32)(OctaveNoise_Calc(&n, (Real32)x, (Real32)z) / 24 - 4);
+			Int32 dirtThickness = (Int32)(OctaveNoise_Calc(&n, (float)x, (float)z) / 24 - 4);
 			Int32 dirtHeight = Heightmap[hMapIndex++];
 			Int32 stoneHeight = dirtHeight + dirtThickness;
 
@@ -217,15 +217,15 @@ static void NotchyGen_CarveCaves(void) {
 
 	Int32 i, j;
 	for (i = 0; i < cavesCount; i++) {
-		Gen_CurrentProgress = (Real32)i / cavesCount;
-		Real32 caveX = (Real32)Random_Next(&rnd, Gen_Width);
-		Real32 caveY = (Real32)Random_Next(&rnd, Gen_Height);
-		Real32 caveZ = (Real32)Random_Next(&rnd, Gen_Length);
+		Gen_CurrentProgress = (float)i / cavesCount;
+		float caveX = (float)Random_Next(&rnd, Gen_Width);
+		float caveY = (float)Random_Next(&rnd, Gen_Height);
+		float caveZ = (float)Random_Next(&rnd, Gen_Length);
 
 		Int32 caveLen = (Int32)(Random_Float(&rnd) * Random_Float(&rnd) * 200.0f);
-		Real32 theta = Random_Float(&rnd) * 2.0f * MATH_PI, deltaTheta = 0.0f;
-		Real32 phi   = Random_Float(&rnd) * 2.0f * MATH_PI, deltaPhi = 0.0f;
-		Real32 caveRadius = Random_Float(&rnd) * Random_Float(&rnd);
+		float theta = Random_Float(&rnd) * 2.0f * MATH_PI, deltaTheta = 0.0f;
+		float phi   = Random_Float(&rnd) * 2.0f * MATH_PI, deltaPhi = 0.0f;
+		float caveRadius = Random_Float(&rnd) * Random_Float(&rnd);
 
 		for (j = 0; j < caveLen; j++) {
 			caveX += Math_SinF(theta) * Math_CosF(phi);
@@ -242,7 +242,7 @@ static void NotchyGen_CarveCaves(void) {
 			Int32 cenY = (Int32)(caveY + (Random_Next(&rnd, 4) - 2) * 0.2f);
 			Int32 cenZ = (Int32)(caveZ + (Random_Next(&rnd, 4) - 2) * 0.2f);
 
-			Real32 radius = (Gen_Height - cenY) / (Real32)Gen_Height;
+			float radius = (Gen_Height - cenY) / (float)Gen_Height;
 			radius = 1.2f + (radius * 3.5f + 1.0f) * caveRadius;
 			radius = radius * Math_SinF(j * MATH_PI / caveLen);
 			NotchyGen_FillOblateSpheroid(cenX, cenY, cenZ, radius, BLOCK_AIR);
@@ -250,20 +250,20 @@ static void NotchyGen_CarveCaves(void) {
 	}
 }
 
-static void NotchyGen_CarveOreVeins(Real32 abundance, const char* state, BlockID block) {
+static void NotchyGen_CarveOreVeins(float abundance, const char* state, BlockID block) {
 	Int32 numVeins = (Int32)(Gen_Volume * abundance / 16384);
 	Gen_CurrentState = state;
 
 	Int32 i, j;
 	for (i = 0; i < numVeins; i++) {
-		Gen_CurrentProgress = (Real32)i / numVeins;
-		Real32 veinX = (Real32)Random_Next(&rnd, Gen_Width);
-		Real32 veinY = (Real32)Random_Next(&rnd, Gen_Height);
-		Real32 veinZ = (Real32)Random_Next(&rnd, Gen_Length);
+		Gen_CurrentProgress = (float)i / numVeins;
+		float veinX = (float)Random_Next(&rnd, Gen_Width);
+		float veinY = (float)Random_Next(&rnd, Gen_Height);
+		float veinZ = (float)Random_Next(&rnd, Gen_Length);
 
 		Int32 veinLen = (Int32)(Random_Float(&rnd) * Random_Float(&rnd) * 75 * abundance);
-		Real32 theta = Random_Float(&rnd) * 2.0f * MATH_PI, deltaTheta = 0.0f;
-		Real32 phi = Random_Float(&rnd) * 2.0f * MATH_PI, deltaPhi = 0.0f;
+		float theta = Random_Float(&rnd) * 2.0f * MATH_PI, deltaTheta = 0.0f;
+		float phi = Random_Float(&rnd) * 2.0f * MATH_PI, deltaPhi = 0.0f;
 
 		for (j = 0; j < veinLen; j++) {
 			veinX += Math_SinF(theta) * Math_CosF(phi);
@@ -275,7 +275,7 @@ static void NotchyGen_CarveOreVeins(Real32 abundance, const char* state, BlockID
 			phi = phi * 0.5f + deltaPhi * 0.25f;
 			deltaPhi = deltaPhi * 0.9f + Random_Float(&rnd) - Random_Float(&rnd);
 
-			Real32 radius = abundance * Math_SinF(j * MATH_PI / veinLen) + 1.0f;
+			float radius = abundance * Math_SinF(j * MATH_PI / veinLen) + 1.0f;
 			NotchyGen_FillOblateSpheroid((Int32)veinX, (Int32)veinY, (Int32)veinZ, radius, block);
 		}
 	}
@@ -289,7 +289,7 @@ static void NotchyGen_FloodFillWaterBorders(void) {
 	Int32 x, z;
 
 	for (x = 0; x < Gen_Width; x++) {
-		Gen_CurrentProgress = 0.0f + ((Real32)x / Gen_Width) * 0.5f;
+		Gen_CurrentProgress = 0.0f + ((float)x / Gen_Width) * 0.5f;
 		NotchyGen_FloodFill(index1, BLOCK_WATER);
 		NotchyGen_FloodFill(index2, BLOCK_WATER);
 		index1++; index2++;
@@ -298,7 +298,7 @@ static void NotchyGen_FloodFillWaterBorders(void) {
 	index1 = Gen_Pack(0, waterY, 0);
 	index2 = Gen_Pack(Gen_Width - 1, waterY, 0);
 	for (z = 0; z < Gen_Length; z++) {
-		Gen_CurrentProgress = 0.5f + ((Real32)z / Gen_Length) * 0.5f;
+		Gen_CurrentProgress = 0.5f + ((float)z / Gen_Length) * 0.5f;
 		NotchyGen_FloodFill(index1, BLOCK_WATER);
 		NotchyGen_FloodFill(index2, BLOCK_WATER);
 		index1 += Gen_Width; index2 += Gen_Width;
@@ -311,7 +311,7 @@ static void NotchyGen_FloodFillWater(void) {
 
 	Int32 i;
 	for (i = 0; i < numSources; i++) {
-		Gen_CurrentProgress = (Real32)i / numSources;
+		Gen_CurrentProgress = (float)i / numSources;
 		Int32 x = Random_Next(&rnd, Gen_Width);
 		Int32 z = Random_Next(&rnd, Gen_Length);
 		Int32 y = waterLevel - Random_Range(&rnd, 1, 3);
@@ -325,7 +325,7 @@ static void NotchyGen_FloodFillLava(void) {
 
 	Int32 i;
 	for (i = 0; i < numSources; i++) {
-		Gen_CurrentProgress = (Real32)i / numSources;
+		Gen_CurrentProgress = (float)i / numSources;
 		Int32 x = Random_Next(&rnd, Gen_Width);
 		Int32 z = Random_Next(&rnd, Gen_Length);
 		Int32 y = (Int32)((waterLevel - 3) * Random_Float(&rnd) * Random_Float(&rnd));
@@ -343,7 +343,7 @@ static void NotchyGen_CreateSurfaceLayer(void) {
 	Int32 hMapIndex = 0;
 	Int32 x, z;
 	for (z = 0; z < Gen_Length; z++) {
-		Gen_CurrentProgress = (Real32)z / Gen_Length;
+		Gen_CurrentProgress = (float)z / Gen_Length;
 		for (x = 0; x < Gen_Width; x++) {
 			Int32 y = Heightmap[hMapIndex++];
 			if (y < 0 || y >= Gen_Height) continue;
@@ -351,11 +351,11 @@ static void NotchyGen_CreateSurfaceLayer(void) {
 			Int32 index = Gen_Pack(x, y, z);
 			BlockID blockAbove = y >= Gen_MaxY ? BLOCK_AIR : Gen_Blocks[index + oneY];
 
-			if (blockAbove == BLOCK_WATER && (OctaveNoise_Calc(&n2, (Real32)x, (Real32)z) > 12)) {
+			if (blockAbove == BLOCK_WATER && (OctaveNoise_Calc(&n2, (float)x, (float)z) > 12)) {
 				Gen_Blocks[index] = BLOCK_GRAVEL;
 			}
 			else if (blockAbove == BLOCK_AIR) {
-				Gen_Blocks[index] = (y <= waterLevel && (OctaveNoise_Calc(&n1, (Real32)x, (Real32)z) > 8)) ? BLOCK_SAND : BLOCK_GRASS;
+				Gen_Blocks[index] = (y <= waterLevel && (OctaveNoise_Calc(&n1, (float)x, (float)z) > 8)) ? BLOCK_SAND : BLOCK_GRASS;
 			}
 		}
 	}
@@ -367,7 +367,7 @@ static void NotchyGen_PlantFlowers(void) {
 
 	Int32 i, j, k;
 	for (i = 0; i < numPatches; i++) {
-		Gen_CurrentProgress = (Real32)i / numPatches;
+		Gen_CurrentProgress = (float)i / numPatches;
 		BlockID type = (BlockID)(BLOCK_DANDELION + Random_Next(&rnd, 2));
 		Int32 patchX = Random_Next(&rnd, Gen_Width), patchZ = Random_Next(&rnd, Gen_Length);
 		for (j = 0; j < 10; j++) {
@@ -395,7 +395,7 @@ static void NotchyGen_PlantMushrooms(void) {
 
 	Int32 i, j, k;
 	for (i = 0; i < numPatches; i++) {
-		Gen_CurrentProgress = (Real32)i / numPatches;
+		Gen_CurrentProgress = (float)i / numPatches;
 		BlockID type = (BlockID)(BLOCK_BROWN_SHROOM + Random_Next(&rnd, 2));
 		Int32 patchX = Random_Next(&rnd, Gen_Width);
 		Int32 patchY = Random_Next(&rnd, Gen_Height);
@@ -431,7 +431,7 @@ static void NotchyGen_PlantTrees(void) {
 
 	Int32 i, j, k, m;
 	for (i = 0; i < numPatches; i++) {
-		Gen_CurrentProgress = (Real32)i / numPatches;
+		Gen_CurrentProgress = (float)i / numPatches;
 		Int32 patchX = Random_Next(&rnd, Gen_Width), patchZ = Random_Next(&rnd, Gen_Length);
 
 		for (j = 0; j < 20; j++) {
@@ -514,14 +514,14 @@ void ImprovedNoise_Init(UInt8* p, Random* rnd) {
 	}
 }
 
-Real32 ImprovedNoise_Calc(UInt8* p, Real32 x, Real32 y) {
+float ImprovedNoise_Calc(UInt8* p, float x, float y) {
 	Int32 xFloor = x >= 0 ? (Int32)x : (Int32)x - 1;
 	Int32 yFloor = y >= 0 ? (Int32)y : (Int32)y - 1;
 	Int32 X = xFloor & 0xFF, Y = yFloor & 0xFF;
 	x -= xFloor; y -= yFloor;
 
-	Real32 u = x * x * x * (x * (x * 6 - 15) + 10); /* Fade(x) */
-	Real32 v = y * y * y * (y * (y * 6 - 15) + 10); /* Fade(y) */
+	float u = x * x * x * (x * (x * 6 - 15) + 10); /* Fade(x) */
+	float v = y * y * y * (y * (y * 6 - 15) + 10); /* Fade(y) */
 	Int32 A = p[X] + Y, B = p[X + 1] + Y;
 
 	/* Normally, calculating Grad involves a function call. However, we can directly pack this table
@@ -531,16 +531,16 @@ Real32 ImprovedNoise_Calc(UInt8* p, Real32 x, Real32 y) {
 #define yFlags 0x2222550A
 
 	Int32 hash = (p[p[A]] & 0xF) << 1;
-	Real32 g22 = (((xFlags >> hash) & 3) - 1) * x + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[A], x, y) */
+	float g22 = (((xFlags >> hash) & 3) - 1) * x       + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[A], x, y) */
 	hash = (p[p[B]] & 0xF) << 1;
-	Real32 g12 = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[B], x - 1, y) */
-	Real32 c1 = g22 + u * (g12 - g22);
+	float g12 = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[B], x - 1, y) */
+	float c1 = g22 + u * (g12 - g22);
 
 	hash = (p[p[A + 1]] & 0xF) << 1;
-	Real32 g21 = (((xFlags >> hash) & 3) - 1) * x + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[A + 1], x, y - 1) */
+	float g21 = (((xFlags >> hash) & 3) - 1) * x       + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[A + 1], x, y - 1) */
 	hash = (p[p[B + 1]] & 0xF) << 1;
-	Real32 g11 = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[B + 1], x - 1, y - 1) */
-	Real32 c2 = g21 + u * (g11 - g21);
+	float g11 = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[B + 1], x - 1, y - 1) */
+	float c2 = g21 + u * (g11 - g21);
 
 	return c1 + v * (c2 - c1);
 }
@@ -554,9 +554,9 @@ void OctaveNoise_Init(struct OctaveNoise* n, Random* rnd, Int32 octaves) {
 	}
 }
 
-Real32 OctaveNoise_Calc(struct OctaveNoise* n, Real32 x, Real32 y) {
-	Real32 amplitude = 1, freq = 1;
-	Real32 sum = 0;
+float OctaveNoise_Calc(struct OctaveNoise* n, float x, float y) {
+	float amplitude = 1, freq = 1;
+	float sum = 0;
 	Int32 i;
 
 	for (i = 0; i < n->octaves; i++) {
@@ -573,8 +573,8 @@ void CombinedNoise_Init(struct CombinedNoise* n, Random* rnd, Int32 octaves1, In
 	OctaveNoise_Init(&n->noise2, rnd, octaves2);
 }
 
-Real32 CombinedNoise_Calc(struct CombinedNoise* n, Real32 x, Real32 y) {
-	Real32 offset = OctaveNoise_Calc(&n->noise2, x, y);
+float CombinedNoise_Calc(struct CombinedNoise* n, float x, float y) {
+	float offset = OctaveNoise_Calc(&n->noise2, x, y);
 	return OctaveNoise_Calc(&n->noise1, x + offset, y);
 }
 

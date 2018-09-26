@@ -22,9 +22,9 @@ struct Event_Int {
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
 };
 
-typedef void (*Event_Real_Callback)(void* obj, Real32 argument);
-struct Event_Real {
-	Event_Real_Callback Handlers[EVENT_MAX_CALLBACKS];
+typedef void (*Event_Float_Callback)(void* obj, float argument);
+struct Event_Float {
+	Event_Float_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
 };
 
@@ -60,9 +60,9 @@ void Event_RaiseInt(struct Event_Int* handlers, Int32 arg);
 void Event_RegisterInt(struct Event_Int* handlers, void* obj, Event_Int_Callback handler);
 void Event_UnregisterInt(struct Event_Int* handlers, void* obj, Event_Int_Callback handler);
 
-void Event_RaiseReal(struct Event_Real* handlers, Real32 arg);
-void Event_RegisterReal(struct Event_Real* handlers, void* obj, Event_Real_Callback handler);
-void Event_UnregisterReal(struct Event_Real* handlers, void* obj, Event_Real_Callback handler);
+void Event_RaiseFloat(struct Event_Float* handlers, float arg);
+void Event_RegisterFloat(struct Event_Float* handlers, void* obj, Event_Float_Callback handler);
+void Event_UnregisterFloat(struct Event_Float* handlers, void* obj, Event_Float_Callback handler);
 
 void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, const String* name);
 void Event_RegisterEntry(struct Event_Entry* handlers, void* obj, Event_Entry_Callback handler);
@@ -104,7 +104,7 @@ struct Event_Void BlockEvents_PermissionsChanged; /* Block permissions (can plac
 struct Event_Void BlockEvents_BlockDefChanged;    /* Block definition is changed or removed */
 
 struct Event_Void WorldEvents_NewMap;       /* Player begins loading a new world */
-struct Event_Real WorldEvents_Loading;      /* Portion of world is decompressed/generated (Arg is progress from 0-1) */
+struct Event_Float WorldEvents_Loading;      /* Portion of world is decompressed/generated (Arg is progress from 0-1) */
 struct Event_Void WorldEvents_MapLoaded;    /* New world has finished loading, player can now interact with it */
 struct Event_Int WorldEvents_EnvVarChanged; /* World environment variable changed by player/CPE/WoM config */
 
@@ -129,5 +129,5 @@ struct Event_Int KeyEvents_Up;    /* Raised when a key is released. Arg is a mem
 struct Event_MouseMove MouseEvents_Moved; /* Mouse position is changed (Arg is delta from last position) */
 struct Event_Int MouseEvents_Down;        /* Mouse button is pressed (Arg is MouseButton member) */
 struct Event_Int MouseEvents_Up;          /* Mouse button is released (Arg is MouseButton member) */
-struct Event_Real MouseEvents_Wheel;      /* Mouse wheel is moved/scrolled (Arg is wheel delta) */
+struct Event_Float MouseEvents_Wheel;      /* Mouse wheel is moved/scrolled (Arg is wheel delta) */
 #endif

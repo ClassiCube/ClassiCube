@@ -27,8 +27,8 @@ PackedCol PackedCol_Create3(UInt8 r, UInt8 g, UInt8 b);
 #define PackedCol_ARGB(r, g, b, a) (((UInt32)(r) << 16) | ((UInt32)(g) << 8) | ((UInt32)(b)) | ((UInt32)(a) << 24))
 #define PackedCol_ARGB_A(col) ((UInt8)((col) >> 24))
 UInt32 PackedCol_ToARGB(PackedCol col);
-PackedCol PackedCol_Scale(PackedCol value, Real32 t);
-PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, Real32 t);
+PackedCol PackedCol_Scale(PackedCol value, float t);
+PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t);
 void PackedCol_ToHex(String* str, PackedCol value);
 bool PackedCol_TryParseHex(const String* str, PackedCol* value);
 bool PackedCol_Unhex(UInt8 hex, Int32* value);

@@ -53,7 +53,7 @@ extern String ServerConnection_AppName;
 
 void (*ServerConnection_BeginConnect)(void);
 void (*ServerConnection_SendChat)(const String* text);
-void (*ServerConnection_SendPosition)(Vector3 pos, Real32 rotY, Real32 headX);
+void (*ServerConnection_SendPosition)(Vector3 pos, float rotY, float headX);
 void (*ServerConnection_SendPlayerClick)(MouseButton button, bool isDown, EntityID targetId, struct PickedPos* pos);
 void (*ServerConnection_Tick)(struct ScheduledTask* task);
 UInt8* ServerConnection_WriteBuffer;

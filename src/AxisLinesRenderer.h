@@ -7,5 +7,5 @@
 
 struct IGameComponent;
 void AxisLinesRenderer_MakeComponent(struct IGameComponent* comp);
-void AxisLinesRenderer_Render(Real64 delta);
+void AxisLinesRenderer_Render(double delta);
 #endif

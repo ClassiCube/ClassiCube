@@ -49,6 +49,6 @@ struct ChunkPartInfo* MapRenderer_PartsTranslucent;
 
 struct ChunkInfo* MapRenderer_GetChunk(Int32 cx, Int32 cy, Int32 cz);
 void MapRenderer_RefreshChunk(Int32 cx, Int32 cy, Int32 cz);
-void MapRenderer_RenderNormal(Real64 delta);
-void MapRenderer_RenderTranslucent(Real64 delta);
+void MapRenderer_RenderNormal(double delta);
+void MapRenderer_RenderTranslucent(double delta);
 #endif

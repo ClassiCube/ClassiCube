@@ -52,7 +52,7 @@ void ChunkUpdater_Free(void);
 void ChunkUpdater_Refresh(void);
 void ChunkUpdater_RefreshBorders(Int32 clipLevel);
 void ChunkUpdater_ApplyMeshBuilder(void);
-void ChunkUpdater_Update(Real64 deltaTime);
+void ChunkUpdater_Update(double deltaTime);
 
 void ChunkUpdater_ResetPartFlags(void);
 void ChunkUpdater_ResetPartCounts(void);

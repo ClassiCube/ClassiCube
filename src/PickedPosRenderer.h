@@ -8,6 +8,6 @@ struct PickedPos;
 struct IGameComponent;
 
 void PickedPosRenderer_MakeComponent(struct IGameComponent* comp);
-void PickedPosRenderer_Render(Real64 delta);
+void PickedPosRenderer_Render(double delta);
 void PickedPosRenderer_Update(struct PickedPos* selected);
 #endif

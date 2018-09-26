@@ -7,7 +7,7 @@
 */
 
 struct Matrix Camera_TiltM;
-Real32 Camera_BobbingVer, Camera_BobbingHor;
+float Camera_BobbingVer, Camera_BobbingHor;
 
 struct Camera {
 	bool IsThirdPerson;
@@ -15,13 +15,13 @@ struct Camera {
 	void (*GetView)(struct Matrix* view);
 
 	Vector2 (*GetOrientation)(void);
-	Vector3 (*GetPosition)(Real32 t);
+	Vector3 (*GetPosition)(float t);
 
 	void (*UpdateMouse)(void);
 	void (*RegrabMouse)(void);
 
 	void (*GetPickedBlock)(struct PickedPos* pos);
-	bool (*Zoom)(Real32 amount);
+	bool (*Zoom)(float amount);
 };
 
 struct Camera* Camera_Active;

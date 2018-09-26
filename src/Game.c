@@ -71,7 +71,7 @@ void IGameComponent_MakeEmpty(struct IGameComponent* comp) {
 	comp->OnNewMapLoaded = IGameComponent_NullFunc;
 }
 
-Int32 ScheduledTask_Add(Real64 interval, ScheduledTaskCallback callback) {
+Int32 ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
 	struct ScheduledTask task = { 0.0, interval, callback };
 	if (Game_TasksCount == Array_Elems(Game_Tasks)) {
 		ErrorHandler_Fail("ScheduledTask_Add - hit max count");
@@ -82,23 +82,23 @@ Int32 ScheduledTask_Add(Real64 interval, ScheduledTaskCallback callback) {
 
 
 Int32 Game_GetWindowScale(void) {
-	Real32 windowScale = min(Game_Width / 640.0f, Game_Height / 480.0f);
+	float windowScale = min(Game_Width / 640.0f, Game_Height / 480.0f);
 	return 1 + (Int32)windowScale;
  }
 
-Real32 Game_Scale(Real32 value) {
-	return (Real32)((Int32)(value * 10 + 0.5f)) / 10.0f;
+float Game_Scale(float value) {
+	return (float)((Int32)(value * 10 + 0.5f)) / 10.0f;
 }
 
-Real32 Game_GetHotbarScale(void) {
+float Game_GetHotbarScale(void) {
 	return Game_Scale(Game_GetWindowScale() * Game_RawHotbarScale);
 }
 
-Real32 Game_GetInventoryScale(void) {
+float Game_GetInventoryScale(void) {
 	return Game_Scale(Game_GetWindowScale() * (Game_RawInventoryScale * 0.5f));
 }
 
-Real32 Game_GetChatScale(void) {
+float Game_GetChatScale(void) {
 	return Game_Scale(Game_GetWindowScale() * Game_RawChatScale);
 }
 
@@ -543,7 +543,7 @@ void Game_SetFpsLimit(FpsLimit method) {
 	Gfx_SetVSync(method == FpsLimit_VSync);
 }
 
-Real32 Game_CalcLimitMillis(FpsLimit method) {
+float Game_CalcLimitMillis(FpsLimit method) {
 	if (method == FpsLimit_120FPS) return 1000/120.0f;
 	if (method == FpsLimit_60FPS)  return 1000/60.0f;
 	if (method == FpsLimit_30FPS)  return 1000/30.0f;
@@ -551,8 +551,8 @@ Real32 Game_CalcLimitMillis(FpsLimit method) {
 }
 
 static void Game_LimitFPS(void) {
-	Real32 elapsedMs = Stopwatch_ElapsedMicroseconds(&game_frameTimer) / 1000.0f;
-	Real32 leftOver  = game_limitMs - elapsedMs;
+	float elapsedMs = Stopwatch_ElapsedMicroseconds(&game_frameTimer) / 1000.0f;
+	float leftOver  = game_limitMs - elapsedMs;
 
 	/* going faster than limit */
 	if (leftOver > 0.001f) {
@@ -567,7 +567,7 @@ static void Game_UpdateViewMatrix(void) {
 	FrustumCulling_CalcFrustumEquations(&Gfx_Projection, &Gfx_View);
 }
 
-static void Game_Render3D(Real64 delta, Real32 t) {
+static void Game_Render3D(double delta, float t) {
 	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox(delta);
 	AxisLinesRenderer_Render(delta);
 	Entities_RenderModels(delta, t);
@@ -617,7 +617,7 @@ static void Game_Render3D(Real64 delta, Real32 t) {
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
 }
 
-static void Game_DoScheduledTasks(Real64 time) {
+static void Game_DoScheduledTasks(double time) {
 	Int32 i;
 	for (i = 0; i < Game_TasksCount; i++) {
 		struct ScheduledTask task = Game_Tasks[i];
@@ -666,7 +666,7 @@ void Game_TakeScreenshot(void) {
 	Chat_Add1("&eTaken screenshot as: %s", &filename);
 }
 
-static void Game_RenderFrame(Real64 delta) {
+static void Game_RenderFrame(double delta) {
 	Stopwatch_Measure(&game_frameTimer);
 
 	Gfx_BeginFrame();
@@ -687,7 +687,7 @@ static void Game_RenderFrame(Real64 delta) {
 
 	Game_DoScheduledTasks(delta);
 	struct ScheduledTask entTask = Game_Tasks[entTaskI];
-	Real32 t = (Real32)(entTask.Accumulator / entTask.Interval);
+	float t = (float)(entTask.Accumulator / entTask.Interval);
 	LocalPlayer_SetInterpPosition(t);
 
 	Gfx_Clear();
@@ -754,7 +754,7 @@ void Game_Run(Int32 width, Int32 height, const String* title, struct DisplayDevi
 		if (!Window_Exists) break;
 
 		/* Limit maximum render to 1 second (for suspended process) */
-		Real64 time = Stopwatch_ElapsedMicroseconds(&game_renderTimer) / (1000.0 * 1000.0);
+		double time = Stopwatch_ElapsedMicroseconds(&game_renderTimer) / (1000.0 * 1000.0);
 		if (time > 1.0) time = 1.0;
 		if (time <= 0.0) continue;
 

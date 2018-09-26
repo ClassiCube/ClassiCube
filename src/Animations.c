@@ -17,9 +17,9 @@
 /*########################################################################################################################*
 *-----------------------------------------------------Lava animation------------------------------------------------------*
 *#########################################################################################################################*/
-Real32 L_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
-Real32 L_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
-Real32 L_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
+float L_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
+float L_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
+float L_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 Random L_rnd;
 bool L_rndInitalised;
 
@@ -40,7 +40,7 @@ static void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
 			static Int8 sin_adj_table[16] = { 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0 };
 			Int32 xx = x + sin_adj_table[y & 0xF], yy = y + sin_adj_table[x & 0xF];
 
-			Real32 lSoupHeat =
+			float lSoupHeat =
 				L_soupHeat[((yy - 1) & mask) << shift | ((xx - 1) & mask)] +
 				L_soupHeat[((yy - 1) & mask) << shift | (xx       & mask)] +
 				L_soupHeat[((yy - 1) & mask) << shift | ((xx + 1) & mask)] +
@@ -53,7 +53,7 @@ static void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
 				L_soupHeat[((yy + 1) & mask) << shift | (xx       & mask)] +
 				L_soupHeat[((yy + 1) & mask) << shift | ((xx + 1) & mask)];
 
-			Real32 lPotHeat =
+			float lPotHeat =
 				L_potHeat[i] +                                          /* x    , y     */
 				L_potHeat[y << shift | ((x + 1) & mask)] +              /* x + 1, y     */
 				L_potHeat[((y + 1) & mask) << shift | x] +              /* x    , y + 1 */
@@ -68,7 +68,7 @@ static void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
 			if (Random_Float(&L_rnd) <= 0.005f) L_flameHeat[i] = 1.5f * 0.01f;
 
 			/* Output the pixel */
-			Real32 col = 2.0f * L_soupHeat[i];
+			float col = 2.0f * L_soupHeat[i];
 			Math_Clamp(col, 0.0f, 1.0f);
 
 			UInt8 r = (UInt8)(col * 100.0f + 155.0f);
@@ -85,9 +85,9 @@ static void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
 /*########################################################################################################################*
 *----------------------------------------------------Water animation------------------------------------------------------*
 *#########################################################################################################################*/
-Real32 W_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
-Real32 W_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
-Real32 W_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
+float W_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
+float W_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
+float W_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 Random W_rnd;
 bool W_rndInitalised;
 
@@ -102,7 +102,7 @@ static void WaterAnimation_Tick(UInt32* ptr, Int32 size) {
 	for (y = 0; y < size; y++) {
 		for (x = 0; x < size; x++) {
 			/* Calculate the colour at this coordinate in the heatmap */
-			Real32 wSoupHeat =
+			float wSoupHeat =
 				W_soupHeat[y << shift | ((x - 1) & mask)] +
 				W_soupHeat[y << shift | x               ] +
 				W_soupHeat[y << shift | ((x + 1) & mask)];
@@ -116,7 +116,7 @@ static void WaterAnimation_Tick(UInt32* ptr, Int32 size) {
 			if (Random_Float(&W_rnd) <= 0.05f) W_flameHeat[i] = 0.5f * 0.05f;
 
 			/* Output the pixel */
-			Real32 col = W_soupHeat[i];
+			float col = W_soupHeat[i];
 			Math_Clamp(col, 0.0f, 1.0f);
 			col = col * col;
 

@@ -204,7 +204,7 @@ bool String_AppendUInt64(String* str, UInt64 num) {
 	return true;
 }
 
-bool String_AppendReal32(String* str, Real32 num, Int32 fracDigits) {
+bool String_AppendReal32(String* str, float num, Int32 fracDigits) {
 	if (num < 0.0f) {
 		if (!String_Append(str, '-')) return false;
 		num = -num;
@@ -213,7 +213,7 @@ bool String_AppendReal32(String* str, Real32 num, Int32 fracDigits) {
 	Int32 wholePortion = (Int32)num;
 	if (!String_AppendUInt32(str, wholePortion)) return false;
 
-	Real64 frac = (Real64)num - (Real64)wholePortion;
+	double frac = (double)num - (double)wholePortion;
 	if (frac == 0.0) return true;
 	if (!String_Append(str, '.')) return false;
 
@@ -437,7 +437,7 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 			String_AppendInt32(str, *((Int32*)arg)); break;
 		case 'f': 
 			digits = formatStr.buffer[++i] - '0';
-			String_AppendReal32(str, *((Real32*)arg), digits); break;
+			String_AppendReal32(str, *((float*)arg), digits); break;
 		case 'p':
 			digits = formatStr.buffer[++i] - '0';
 			String_AppendPaddedInt32(str, *((Int32*)arg), digits); break;
@@ -620,11 +620,11 @@ bool Convert_TryParseUInt64(const String* str, UInt64* value) {
 	return true;
 }
 
-bool Convert_TryParseReal32(const String* str, Real32* value) {
+bool Convert_TryParseReal32(const String* str, float* value) {
 	Int32 i = 0;
 	*value = 0.0f;
 	bool foundDecimalPoint = false;
-	Real64 whole = 0.0f, fract = 0.0f, divide = 10.0f;
+	double whole = 0.0, fract = 0.0, divide = 10.0;
 
 	/* Handle number signs */
 	bool negate = false;
@@ -651,9 +651,9 @@ bool Convert_TryParseReal32(const String* str, Real32* value) {
 		}
 	}
 
-	Real64 sum = whole + fract;
+	double sum = whole + fract;
 	if (negate) sum = -sum;
-	*value = (Real32)sum;
+	*value = (float)sum;
 	return true;
 }
 

@@ -6,18 +6,18 @@
 */
 struct IGameComponent;
 
-void EnvRenderer_RenderSky(Real64 deltaTime);
-void EnvRenderer_RenderClouds(Real64 deltaTime);
+void EnvRenderer_RenderSky(double deltaTime);
+void EnvRenderer_RenderClouds(double deltaTime);
 void EnvRenderer_UpdateFog(void);
 
-void EnvRenderer_RenderMapSides(Real64 delta);
-void EnvRenderer_RenderMapEdges(Real64 delta);
-void EnvRenderer_RenderSkybox(Real64 deltaTime);
+void EnvRenderer_RenderMapSides(double delta);
+void EnvRenderer_RenderMapEdges(double delta);
+void EnvRenderer_RenderSkybox(double deltaTime);
 bool EnvRenderer_ShouldRenderSkybox(void);
 
 Int16* Weather_Heightmap;
 void EnvRenderer_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockID newBlock);
-void EnvRenderer_RenderWeather(Real64 deltaTime);
+void EnvRenderer_RenderWeather(double deltaTime);
 
 bool EnvRenderer_Legacy, EnvRenderer_Minimal;
 void EnvRenderer_UseMinimalMode(bool minimal);

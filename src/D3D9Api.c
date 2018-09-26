@@ -316,8 +316,8 @@ void Gfx_SetFogCol(PackedCol col) {
 	D3D9_SetRenderState(D3DRS_FOGCOLOR, col.Packed, "D3D9_SetFogColour");
 }
 
-Real32 d3d9_fogDensity = -1.0f;
-void Gfx_SetFogDensity(Real32 value) {
+float d3d9_fogDensity = -1.0f;
+void Gfx_SetFogDensity(float value) {
 	if (value == d3d9_fogDensity) return;
 	d3d9_fogDensity = value;
 	if (Gfx_LostContext) return;
@@ -325,8 +325,8 @@ void Gfx_SetFogDensity(Real32 value) {
 	D3D9_SetRenderState(D3DRS_FOGDENSITY, raw.u, "D3D9_SetFogDensity");
 }
 
-Real32 d3d9_fogEnd = -1.0f;
-void Gfx_SetFogEnd(Real32 value) {
+float d3d9_fogEnd = -1.0f;
+void Gfx_SetFogEnd(float value) {
 	if (value == d3d9_fogEnd) return;
 	d3d9_fogEnd = value;
 	if (Gfx_LostContext) return;
@@ -359,7 +359,7 @@ void Gfx_SetAlphaTest(bool enabled) {
 
 D3DCMPFUNC d3d9_alphaTestFunc = D3DCMP_ALWAYS;
 Int32 d3d9_alphaTestRef = 0;
-void Gfx_SetAlphaTestFunc(Int32 compareFunc, Real32 refValue) {
+void Gfx_SetAlphaTestFunc(Int32 compareFunc, float refValue) {
 	d3d9_alphaTestFunc = d3d9_compareFuncs[compareFunc];
 	D3D9_SetRenderState(D3DRS_ALPHAFUNC, d3d9_alphaTestFunc, "D3D9_SetAlphaTest_Func");
 	d3d9_alphaTestRef = (Int32)(refValue * 255);
@@ -574,12 +574,12 @@ void Gfx_LoadIdentityMatrix(void) {
 
 #define d3d9_zN -10000.0f
 #define d3d9_zF 10000.0f
-void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, struct Matrix* matrix) {
+void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
 	Matrix_OrthographicOffCenter(matrix, 0.0f, width, height, 0.0f, d3d9_zN, d3d9_zF);
 	matrix->Row2.Z = 1.0f    / (d3d9_zN - d3d9_zF);
 	matrix->Row3.Z = d3d9_zN / (d3d9_zN - d3d9_zF);
 }
-void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 zFar, struct Matrix* matrix) {
+void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar, struct Matrix* matrix) {
 	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
 }
 
@@ -663,7 +663,7 @@ const char* D3D9_StrFormat(D3DFORMAT format) {
 	return "(unknown)";
 }
 
-Real32 d3d9_totalMem;
+float d3d9_totalMem;
 void Gfx_MakeApiInfo(void) {
 	D3DADAPTER_IDENTIFIER9 adapter = { 0 };
 	IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter);
@@ -679,7 +679,7 @@ void Gfx_MakeApiInfo(void) {
 }
 
 void Gfx_UpdateApiInfo(void) {
-	Real32 mem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
+	float mem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
 	Gfx_ApiInfo[3].length = 0;
 	String_Format2(&Gfx_ApiInfo[3], "Video memory: %f2 MB total, %f2 free", &d3d9_totalMem, &mem);
 }

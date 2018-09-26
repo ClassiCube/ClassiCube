@@ -44,6 +44,6 @@ void RayTracer_Step(struct RayTracer* t);
 /* Determines the picked block based on the given origin and direction vector.
    Marks pickedPos as invalid if a block could not be found due to going outside map boundaries
    or not being able to find a suitable candiate within the given reach distance.*/
-void Picking_CalculatePickedBlock(Vector3 origin, Vector3 dir, Real32 reach, struct PickedPos* pos);
-void Picking_ClipCameraPos(Vector3 origin, Vector3 dir, Real32 reach, struct PickedPos* pos);
+void Picking_CalculatePickedBlock(Vector3 origin, Vector3 dir, float reach, struct PickedPos* pos);
+void Picking_ClipCameraPos(Vector3 origin, Vector3 dir, float reach, struct PickedPos* pos);
 #endif

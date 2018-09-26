@@ -42,10 +42,10 @@ bool Block_IsLiquid[BLOCK_COUNT];
 bool Block_BlocksLight[BLOCK_COUNT];
 bool Block_FullBright[BLOCK_COUNT];
 PackedCol Block_FogCol[BLOCK_COUNT];
-Real32 Block_FogDensity[BLOCK_COUNT];
+float Block_FogDensity[BLOCK_COUNT];
 UInt8 Block_Collide[BLOCK_COUNT];
 UInt8 Block_ExtendedCollide[BLOCK_COUNT];
-Real32 Block_SpeedMultiplier[BLOCK_COUNT];
+float Block_SpeedMultiplier[BLOCK_COUNT];
 UInt8 Block_LightOffset[BLOCK_COUNT];
 UInt8 Block_Draw[BLOCK_COUNT];
 UInt8 Block_DigSounds[BLOCK_COUNT];
@@ -109,9 +109,9 @@ void Block_UpdateCulling(BlockID block);
 /* Attempts to find the rotated block based on the user's orientation and offset on selected block. */
 BlockID AutoRotate_RotateBlock(BlockID block);
 
-Real32 DefaultSet_Height(BlockID b);
+float DefaultSet_Height(BlockID b);
 bool DefaultSet_FullBright(BlockID b);
-Real32 DefaultSet_FogDensity(BlockID b);
+float DefaultSet_FogDensity(BlockID b);
 PackedCol DefaultSet_FogColour(BlockID b);
 UInt8 DefaultSet_Collide(BlockID b);
 /* Gets a backwards compatible collide type of a block. */

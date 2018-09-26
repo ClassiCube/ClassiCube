@@ -10,11 +10,11 @@
 struct SelectionBox {
 	Vector3 Min, Max;
 	PackedCol Col;
-	Real32 MinDist, MaxDist;
+	float MinDist, MaxDist;
 };
 
 static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** vertices, VertexP3fC4b** lineVertices) {
-	Real32 offset = box->MinDist < 32.0f * 32.0f ? (1.0f / 32.0f) : (1.0f / 16.0f);
+	float offset = box->MinDist < 32.0f * 32.0f ? (1.0f / 32.0f) : (1.0f / 16.0f);
 	Vector3 coords[2];
 	Vector3_Add1(&coords[0], &box->Min, -offset);
 	Vector3_Add1(&coords[1], &box->Max,  offset);
@@ -60,7 +60,7 @@ static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** vertice
 }
 
 static Int32 SelectionBox_Compare(struct SelectionBox* a, struct SelectionBox* b) {
-	Real32 aDist, bDist;
+	float aDist, bDist;
 	if (a->MinDist == b->MinDist) {
 		aDist = a->MaxDist; bDist = b->MaxDist;
 	} else {
@@ -73,9 +73,9 @@ static Int32 SelectionBox_Compare(struct SelectionBox* a, struct SelectionBox* b
 	return 0;
 }
 
-static void SelectionBox_UpdateDist(Vector3 p, Real32 x2, Real32 y2, Real32 z2, Real32* closest, Real32* furthest) {
-	Real32 dx = x2 - p.X, dy = y2 - p.Y, dz = z2 - p.Z;
-	Real32 dist = dx * dx + dy * dy + dz * dz;
+static void SelectionBox_UpdateDist(Vector3 p, float x2, float y2, float z2, float* closest, float* furthest) {
+	float dx = x2 - p.X, dy = y2 - p.Y, dz = z2 - p.Z;
+	float dist = dx * dx + dy * dy + dz * dz;
 
 	if (dist < *closest)  *closest  = dist;
 	if (dist > *furthest) *furthest = dist;
@@ -83,7 +83,7 @@ static void SelectionBox_UpdateDist(Vector3 p, Real32 x2, Real32 y2, Real32 z2, 
 
 static void SelectionBox_Intersect(struct SelectionBox* box, Vector3 origin) {
 	Vector3 min = box->Min, max = box->Max;
-	Real32 closest = MATH_POS_INF, furthest = -MATH_POS_INF;
+	float closest = MATH_POS_INF, furthest = -MATH_POS_INF;
 	/* Bottom corners */
 	SelectionBox_UpdateDist(origin, min.X, min.Y, min.Z, &closest, &furthest);
 	SelectionBox_UpdateDist(origin, max.X, min.Y, min.Z, &closest, &furthest);
@@ -166,7 +166,7 @@ static void Selections_QuickSort(Int32 left, Int32 right) {
 	}
 }
 
-void Selections_Render(Real64 delta) {
+void Selections_Render(double delta) {
 	if (!selections_count || Gfx_LostContext) return;
 	/* TODO: Proper selection box sorting. But this is very difficult because
 	   we can have boxes within boxes, intersecting boxes, etc. Probably not worth it. */

@@ -15,9 +15,9 @@ Vector3 Drawer_MinBB;
 /* Maximum base block bounding box corner. (For texture UV) */
 Vector3 Drawer_MaxBB;
 /* Coordinate of minimum block bounding box corner in the world. */
-Real32 Drawer_X1, Drawer_Y1, Drawer_Z1;
+float Drawer_X1, Drawer_Y1, Drawer_Z1;
 /* Coordinate of maximum block bounding box corner in the world. */
-Real32 Drawer_X2, Drawer_Y2, Drawer_Z2;
+float Drawer_X2, Drawer_Y2, Drawer_Z2;
 
 void Drawer_XMin(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
 void Drawer_XMax(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);

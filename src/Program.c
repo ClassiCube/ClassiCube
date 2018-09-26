@@ -16,8 +16,8 @@
 #define VORBIS_N 1024
 #define VORBIS_N2 (VORBIS_N / 2)
 int main_imdct() {
-	Real32 in[VORBIS_N2], out[VORBIS_N], out2[VORBIS_N];
-	Real64 delta[VORBIS_N];
+	float in[VORBIS_N2], out[VORBIS_N], out2[VORBIS_N];
+	double delta[VORBIS_N];
 
 	Random rng;
 	Random_Init(&rng, 2342334);
@@ -31,7 +31,7 @@ int main_imdct() {
 	imdct_slow(in, out, VORBIS_N2);
 	imdct_calc(in, out2, &imdct);
 
-	Real64 sum = 0;
+	double sum = 0;
 	for (int ii = 0; ii < VORBIS_N; ii++) {
 		delta[ii] = out2[ii] - out[ii];
 		sum += delta[ii];

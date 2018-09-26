@@ -30,7 +30,7 @@ void Gfx_Init(void);
 void Gfx_Free(void);
 
 Int32 Gfx_MaxTexWidth, Gfx_MaxTexHeight;
-Real32 Gfx_MinZNear;
+float Gfx_MinZNear;
 bool Gfx_LostContext;
 bool Gfx_Mipmaps;
 bool Gfx_CustomMipmapsLevels;
@@ -54,13 +54,13 @@ void Gfx_DisableMipmaps(void);
 bool Gfx_GetFog(void);
 void Gfx_SetFog(bool enabled);
 void Gfx_SetFogCol(PackedCol col);
-void Gfx_SetFogDensity(Real32 value);
-void Gfx_SetFogEnd(Real32 value);
+void Gfx_SetFogDensity(float value);
+void Gfx_SetFogEnd(float value);
 void Gfx_SetFogMode(Int32 fogMode);
 
 void Gfx_SetFaceCulling(bool enabled);
 void Gfx_SetAlphaTest(bool enabled);
-void Gfx_SetAlphaTestFunc(Int32 compareFunc, Real32 refValue);
+void Gfx_SetAlphaTestFunc(Int32 compareFunc, float refValue);
 void Gfx_SetAlphaBlending(bool enabled);
 void Gfx_SetAlphaBlendFunc(Int32 srcBlendFunc, Int32 dstBlendFunc);
 /* Whether blending between the alpha components of the texture and colour are performed. */
@@ -91,8 +91,8 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex);
 void Gfx_SetMatrixMode(Int32 matrixType);
 void Gfx_LoadMatrix(struct Matrix* matrix);
 void Gfx_LoadIdentityMatrix(void);
-void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, struct Matrix* matrix);
-void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 zFar, struct Matrix* matrix);
+void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix);
+void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar, struct Matrix* matrix);
 
 /* Outputs a .png screenshot of the backbuffer */
 ReturnCode Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height);

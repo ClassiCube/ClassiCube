@@ -23,7 +23,7 @@ Int32 input_pickingId = -1;
 Int32 input_normViewDists[10] = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
 Int32 input_classicViewDists[4] = { 8, 32, 128, 512 };
 UInt64 input_lastClick;
-Real32 input_fovIndex = -1.0f;
+float input_fovIndex = -1.0f;
 
 bool InputHandler_IsMousePressed(MouseButton button) {
 	if (Mouse_IsPressed(button)) return true;
@@ -123,12 +123,12 @@ bool InputHandler_SetFOV(Int32 fov, bool setZoom) {
 	return true;
 }
 
-static bool InputHandler_DoFovZoom(Real32 deltaPrecise) {
+static bool InputHandler_DoFovZoom(float deltaPrecise) {
 	if (!KeyBind_IsPressed(KeyBind_ZoomScrolling)) return false;
 	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
 	if (!h->Enabled || !h->CanAnyHacks || !h->CanUseThirdPersonCamera) return false;
 
-	if (input_fovIndex == -1.0f) input_fovIndex = (Real32)Game_ZoomFov;
+	if (input_fovIndex == -1.0f) input_fovIndex = (float)Game_ZoomFov;
 	input_fovIndex -= deltaPrecise * 5.0f;
 
 	Math_Clamp(input_fovIndex, 1.0f, Game_DefaultFov);
@@ -374,7 +374,7 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 	}
 }
 
-static void InputHandler_MouseWheel(void* obj, Real32 delta) {
+static void InputHandler_MouseWheel(void* obj, float delta) {
 	struct Screen* active = Gui_GetActiveScreen();
 	if (Elem_HandlesMouseScroll(active, delta)) return;
 
@@ -469,7 +469,7 @@ static void InputHandler_KeyPress(void* obj, Int32 keyChar) {
 }
 
 void InputHandler_Init(void) {
-	Event_RegisterReal(&MouseEvents_Wheel,      NULL, InputHandler_MouseWheel);
+	Event_RegisterFloat(&MouseEvents_Wheel,      NULL, InputHandler_MouseWheel);
 	Event_RegisterMouseMove(&MouseEvents_Moved, NULL, InputHandler_MouseMove);
 	Event_RegisterInt(&MouseEvents_Down,        NULL, InputHandler_MouseDown);
 	Event_RegisterInt(&MouseEvents_Up,          NULL, InputHandler_MouseUp);

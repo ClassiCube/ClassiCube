@@ -161,8 +161,8 @@ void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, In
 
 void Drawer2D_Make2DTexture(struct Texture* tex, Bitmap* bmp, Size2D used, Int32 X, Int32 Y) {
 	GfxResourceID texId = Gfx_CreateTexture(bmp, false, false);
-	Real32 u2 = (Real32)used.Width  / (Real32)bmp->Width;
-	Real32 v2 = (Real32)used.Height / (Real32)bmp->Height;
+	float u2 = (float)used.Width  / (float)bmp->Width;
+	float v2 = (float)used.Height / (float)bmp->Height;
 
 	struct Texture tmp = { texId, TEX_RECT(X,Y, used.Width,used.Height), TEX_UV(0,0, u2,v2) };
 	*tex = tmp;
@@ -210,7 +210,7 @@ void Drawer2D_ReducePadding_Tex(struct Texture* tex, Int32 point, Int32 scale) {
 	if (!Drawer2D_BitmappedText) return;
 
 	Int32 padding = (tex->Height - point) / scale;
-	Real32 vAdj = (Real32)padding / Math_NextPowOf2(tex->Height);
+	float vAdj = (float)padding / Math_NextPowOf2(tex->Height);
 	tex->V1 += vAdj; tex->V2 -= vAdj;
 	tex->Height -= (UInt16)(padding * 2);
 }

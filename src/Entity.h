@@ -42,24 +42,24 @@ extern const char* ShadowMode_Names[SHADOW_MODE_COUNT];
 /* Represents a location update for an entity. Can be a relative position, full position, and/or an orientation update. */
 struct LocationUpdate {
 	Vector3 Pos;
-	Real32 HeadX, HeadY, RotX, RotZ;
+	float HeadX, HeadY, RotX, RotZ;
 	UInt8 Flags;
 	bool RelativePos;
 };
 
 /* Clamps the given angle so it lies between [0, 360). */
-Real32 LocationUpdate_Clamp(Real32 degrees);
-void LocationUpdate_MakeOri(struct LocationUpdate* update, Real32 rotY, Real32 headX);
+float LocationUpdate_Clamp(float degrees);
+void LocationUpdate_MakeOri(struct LocationUpdate* update, float rotY, float headX);
 void LocationUpdate_MakePos(struct LocationUpdate* update, Vector3 pos, bool rel);
-void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, Real32 rotY, Real32 headX, bool rel);
+void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, float rotY, float headX, bool rel);
 
 struct Entity;
 struct EntityVTABLE {
-	void (*Tick)(struct Entity* e, Real64 delta);
+	void (*Tick)(struct Entity* e, double delta);
 	void (*Despawn)(struct Entity* e);
 	void (*SetLocation)(struct Entity* e, struct LocationUpdate* update, bool interpolate);
 	PackedCol (*GetCol)(struct Entity* e);
-	void (*RenderModel)(struct Entity* e, Real64 deltaTime, Real32 t);
+	void (*RenderModel)(struct Entity* e, double deltaTime, float t);
 	void (*RenderName)(struct Entity* e);
 	void (*ContextLost)(struct Entity* e);
 	void (*ContextRecreated)(struct Entity* e);
@@ -69,7 +69,7 @@ struct EntityVTABLE {
 struct Entity {
 	struct EntityVTABLE* VTABLE;
 	Vector3 Position;
-	Real32 HeadX, HeadY, RotX, RotY, RotZ;
+	float HeadX, HeadY, RotX, RotY, RotZ;
 	Vector3 Velocity;
 
 	struct Model* Model;
@@ -77,12 +77,12 @@ struct Entity {
 	bool ModelIsSheepNoFur; /* Hacky, but only sheep model relies on model name. So use just 1 byte. */
 	struct AABB ModelAABB;
 	Vector3 ModelScale, Size;
-	Real32 StepSize;
+	float StepSize;
 	
 	UInt8 SkinType, EntityType;
 	bool NoShade, OnGround;
 	GfxResourceID TextureId, MobTextureId;
-	Real32 uScale, vScale;
+	float uScale, vScale;
 	struct Matrix Transform;
 
 	struct AnimatedComp Anim;
@@ -90,7 +90,7 @@ struct Entity {
 
 void Entity_Init(struct Entity* entity);
 Vector3 Entity_GetEyePosition(struct Entity* entity);
-Real32 Entity_GetEyeHeight(struct Entity* entity);
+float Entity_GetEyeHeight(struct Entity* entity);
 void Entity_GetTransform(struct Entity* entity, Vector3 pos, Vector3 scale, struct Matrix* m);
 void Entity_GetPickingBounds(struct Entity* entity, struct AABB* bb);
 void Entity_GetBounds(struct Entity* entity, struct AABB* bb);
@@ -103,9 +103,9 @@ bool Entity_TouchesAnyWater(struct Entity* entity);
 
 struct Entity* Entities_List[ENTITIES_MAX_COUNT];
 void Entities_Tick(struct ScheduledTask* task);
-void Entities_RenderModels(Real64 delta, Real32 t);
-void Entities_RenderNames(Real64 delta);
-void Entities_RenderHoveredNames(Real64 delta);
+void Entities_RenderModels(double delta, float t);
+void Entities_RenderNames(double delta);
+void Entities_RenderHoveredNames(double delta);
 void Entities_Init(void);
 void Entities_Free(void);
 void Entities_Remove(EntityID id);
@@ -147,7 +147,7 @@ struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 struct LocalPlayer {
 	Player_Layout
 	Vector3 Spawn, OldVelocity;
-	Real32 SpawnRotY, SpawnHeadX, ReachDistance;
+	float SpawnRotY, SpawnHeadX, ReachDistance;
 	struct HacksComp Hacks;
 	struct TiltComp Tilt;
 	struct InterpComp Interp;
@@ -159,8 +159,8 @@ struct LocalPlayer {
 struct LocalPlayer LocalPlayer_Instance;
 void LocalPlayer_MakeComponent(struct IGameComponent* comp);
 void LocalPlayer_Init(void);
-Real32 LocalPlayer_JumpHeight(void);
+float LocalPlayer_JumpHeight(void);
 void LocalPlayer_CheckHacksConsistency(void);
-void LocalPlayer_SetInterpPosition(Real32 t);
+void LocalPlayer_SetInterpPosition(float t);
 bool LocalPlayer_HandlesKey(Int32 key);
 #endif

@@ -32,7 +32,7 @@ static void PickedPosRenderer_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, PickedPosRenderer_ContextRecreated);
 }
 
-void PickedPosRenderer_Render(Real64 delta) {
+void PickedPosRenderer_Render(double delta) {
 	if (Gfx_LostContext) return;
 
 	Gfx_SetAlphaBlending(true);
@@ -47,13 +47,13 @@ void PickedPosRenderer_Render(Real64 delta) {
 void PickedPosRenderer_Update(struct PickedPos* selected) {
 	Vector3 delta;
 	Vector3_Sub(&delta, &Game_CurrentCameraPos, &selected->Min);
-	Real32 dist = Vector3_LengthSquared(&delta);
+	float dist = Vector3_LengthSquared(&delta);
 
-	Real32 offset = 0.01f;
+	float offset = 0.01f;
 	if (dist < 4.0f * 4.0f) offset = 0.00625f;
 	if (dist < 2.0f * 2.0f) offset = 0.00500f;
 
-	Real32 size = 1.0f / 16.0f;
+	float size = 1.0f / 16.0f;
 	if (dist < 32.0f * 32.0f) size = 1.0f / 32.0f;
 	if (dist < 16.0f * 16.0f) size = 1.0f / 64.0f;
 	if (dist <  8.0f *  8.0f) size = 1.0f / 96.0f;

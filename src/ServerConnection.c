@@ -126,7 +126,7 @@ void PingList_Update(UInt16 data) {
 }
 
 Int32 PingList_AveragePingMs(void) {
-	Real64 totalMs = 0.0;
+	double totalMs = 0.0;
 	Int32 measures = 0;
 	Int32 i;
 	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
@@ -208,7 +208,7 @@ static void SPConnection_SendChat(const String* text) {
 	SPConnection_AddPortion(&part);
 }
 
-static void SPConnection_SendPosition(Vector3 pos, Real32 rotY, Real32 headX) { }
+static void SPConnection_SendPosition(Vector3 pos, float rotY, float headX) { }
 static void SPConnection_SendPlayerClick(MouseButton button, bool isDown, EntityID targetId, struct PickedPos* pos) { }
 
 static void SPConnection_Tick(struct ScheduledTask* task) {
@@ -249,7 +249,7 @@ bool net_writeFailed;
 Int32 net_ticks;
 UInt64 net_lastPacket;
 UInt8 net_lastOpcode;
-Real64 net_discAccumulator;
+double net_discAccumulator;
 
 bool net_connecting;
 UInt64 net_connectTimeout;
@@ -268,7 +268,7 @@ static void MPConnection_BlockChanged(void* obj, Vector3I p, BlockID old, BlockI
 static void ServerConnection_Free(void);
 static void MPConnection_FinishConnect(void) {
 	net_connecting = false;
-	Event_RaiseReal(&WorldEvents_Loading, 0.0f);
+	Event_RaiseFloat(&WorldEvents_Loading, 0.0f);
 	net_readCurrent = net_readBuffer;
 	ServerConnection_WriteBuffer = net_writeBuffer;
 
@@ -313,7 +313,7 @@ static void MPConnection_TickConnect(void) {
 		MPConnection_FailConnect(0);
 	} else {
 		Int32 leftMS = (Int32)(net_connectTimeout - now);
-		Event_RaiseReal(&WorldEvents_Loading, (Real32)leftMS / NET_TIMEOUT_MS);
+		Event_RaiseFloat(&WorldEvents_Loading, (float)leftMS / NET_TIMEOUT_MS);
 	}
 }
 
@@ -347,7 +347,7 @@ static void MPConnection_SendChat(const String* text) {
 	Net_SendPacket();
 }
 
-static void MPConnection_SendPosition(Vector3 pos, Real32 rotY, Real32 headX) {
+static void MPConnection_SendPosition(Vector3 pos, float rotY, float headX) {
 	Classic_WritePosition(pos, rotY, headX);
 	Net_SendPacket();
 }
@@ -357,7 +357,7 @@ static void MPConnection_SendPlayerClick(MouseButton button, bool buttonDown, En
 	Net_SendPacket();
 }
 
-static void MPConnection_CheckDisconnection(Real64 delta) {
+static void MPConnection_CheckDisconnection(double delta) {
 	net_discAccumulator += delta;
 	if (net_discAccumulator < 1.0) return;
 	net_discAccumulator = 0.0;

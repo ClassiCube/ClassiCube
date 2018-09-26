@@ -194,7 +194,7 @@ void Gui_FreeOverlay(void* overlay) {
 	Gui_CalcCursorVisible();
 }
 
-void Gui_RenderGui(Real64 delta) {
+void Gui_RenderGui(double delta) {
 	GfxCommon_Mode2D(Game_Width, Game_Height);
 	bool showHUD   = !Gui_Active || !Gui_Active->HidesHUD;
 	bool hudBefore = !Gui_Active || !Gui_Active->RenderHUDOver;
@@ -258,7 +258,7 @@ void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, FontDesc* font
 	Mem_Free(bmp.Scan0);
 
 	Drawer2D_ReducePadding_Tex(&atlas->Tex, Math_Floor(font->Size), 4);
-	atlas->uScale = 1.0f / (Real32)bmp.Width;
+	atlas->uScale = 1.0f / (float)bmp.Width;
 	atlas->Tex.U2 = atlas->Offset * atlas->uScale;
 	atlas->Tex.Width = atlas->Offset;	
 }

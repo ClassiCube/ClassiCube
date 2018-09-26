@@ -27,7 +27,7 @@ bool Utils_IsUrlPrefix(const String* value, Int32 index);
 
 bool Utils_EnsureDirectory(const char* dirName);
 void Utils_UNSAFE_GetFilename(STRING_REF String* str);
-Int32 Utils_AccumulateWheelDelta(Real32* accmulator, Real32 delta);
+Int32 Utils_AccumulateWheelDelta(float* accmulator, float delta);
 #define Utils_AdjViewDist(value) ((Int32)(1.4142135f * (value)))
 
 UInt8 Utils_GetSkinType(Bitmap* bmp);

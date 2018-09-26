@@ -14,13 +14,13 @@ struct AABB;
 enum ROTATE_ORDER { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX };
 
 /* Describes a vertex within a model. */
-struct ModelVertex { Real32 X, Y, Z; UInt16 U, V; };
-void ModelVertex_Init(struct ModelVertex* vertex, Real32 x, Real32 y, Real32 z, Int32 u, Int32 v);
+struct ModelVertex { float X, Y, Z; UInt16 U, V; };
+void ModelVertex_Init(struct ModelVertex* vertex, float x, float y, float z, Int32 u, Int32 v);
 
 /* Describes the starting index of this part within a model's array of vertices,
 and the number of vertices following the starting index that this part uses. */
-struct ModelPart { UInt16 Offset, Count; Real32 RotX, RotY, RotZ; };
-void ModelPart_Init(struct ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Real32 rotY, Real32 rotZ);
+struct ModelPart { UInt16 Offset, Count; float RotX, RotY, RotZ; };
+void ModelPart_Init(struct ModelPart* part, Int32 offset, Int32 count, float rotX, float rotY, float rotZ);
 
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
 the bounding boxes that contain the entire set of quads and/or boxes. */
@@ -39,9 +39,9 @@ struct Model {
 	bool Bobbing;
 	bool UsesSkin, CalcHumanAnims, UsesHumanSkin, Pushes;
 
-	Real32 Gravity; Vector3 Drag, GroundFriction;
+	float Gravity; Vector3 Drag, GroundFriction;
 
-	Real32 (*GetEyeY)(struct Entity* entity);
+	float (*GetEyeY)(struct Entity* entity);
 	void (*GetCollisionSize)(Vector3* size);
 	void (*GetPickingBounds)(struct AABB* bb);
 	void (*CreateParts)(void);
@@ -52,13 +52,13 @@ struct Model {
 	void (*RecalcProperties)(struct Entity* entity);
 	void (*DrawArm)(struct Entity* entity);
 
-	Real32 NameYOffset, MaxScale, ShadowScale, NameScale;
+	float NameYOffset, MaxScale, ShadowScale, NameScale;
 };
 
 PackedCol Model_Cols[FACE_COUNT];
-Real32 Model_uScale, Model_vScale;
+float Model_uScale, Model_vScale;
 /* Angle of offset from head to body rotation. */
-Real32 Model_cosHead, Model_sinHead;
+float Model_cosHead, Model_sinHead;
 UInt8 Model_Rotation, Model_skinType;
 struct Model* Model_ActiveModel;
 void Model_Init(struct Model* model);
@@ -71,13 +71,13 @@ typeName.CreateParts = typeName ## _CreateParts;\
 typeName.DrawModel = typeName ## _DrawModel;
 
 bool Model_ShouldRender(struct Entity* entity);
-Real32 Model_RenderDistance(struct Entity* entity);
+float Model_RenderDistance(struct Entity* entity);
 void Model_Render(struct Model* model, struct Entity* entity);
 void Model_SetupState(struct Model* model, struct Entity* entity);
 void Model_UpdateVB(void);
 void Model_ApplyTexture(struct Entity* entity);
 void Model_DrawPart(struct ModelPart* part);
-void Model_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, struct ModelPart* part, bool head);
+void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart* part, bool head);
 void Model_RenderArm(struct Model* model, struct Entity* entity);
 void Model_DrawArmPart(struct ModelPart* part);
 
@@ -85,14 +85,14 @@ void Model_DrawArmPart(struct ModelPart* part);
 struct BoxDesc {
 	UInt16 TexX, TexY;         /* Texture origin */
 	UInt8 SizeX, SizeY, SizeZ; /* Texture dimensions */
-	Real32 X1,Y1,Z1, X2,Y2,Z2; /* Box corners coordinates */
-	Real32 RotX,RotY,RotZ;     /* Rotation origin point */
+	float X1,Y1,Z1, X2,Y2,Z2;  /* Box corners coordinates */
+	float RotX,RotY,RotZ;      /* Rotation origin point */
 };
 
 /* Sets the texture origin for this part within the texture atlas. */
 void BoxDesc_TexOrigin(struct BoxDesc* desc, Int32 x, Int32 y);
 /* Expands the corners of this box outwards by the given amount in pixel coordinates. */
-void BoxDesc_Expand(struct BoxDesc* desc, Real32 amount);
+void BoxDesc_Expand(struct BoxDesc* desc, float amount);
 /* Swaps the min and max X around, resulting in the part being drawn mirrored. */
 void BoxDesc_MirrorX(struct BoxDesc* desc);
 
@@ -127,9 +127,9 @@ let SW = sides width, BW = body width, BH = body height
 void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc);
 
 void BoxDesc_XQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
-	Real32 z1, Real32 z2, Real32 y1, Real32 y2, Real32 x, bool swapU);
+	float z1, float z2, float y1, float y2, float x, bool swapU);
 void BoxDesc_YQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
-	Real32 x1, Real32 x2, Real32 z1, Real32 z2, Real32 y, bool swapU);
+	float x1, float x2, float z1, float z2, float y, bool swapU);
 void BoxDesc_ZQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
-	Real32 x1, Real32 x2, Real32 y1, Real32 y2, Real32 z, bool swapU);
+	float x1, float x2, float y1, float y2, float z, bool swapU);
 #endif

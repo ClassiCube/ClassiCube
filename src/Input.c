@@ -98,10 +98,10 @@ void Mouse_SetPressed(MouseButton btn, bool pressed) {
 	}
 }
 
-void Mouse_SetWheel(Real32 wheel) {
-	Real32 delta = wheel - Mouse_Wheel;
+void Mouse_SetWheel(float wheel) {
+	float delta = wheel - Mouse_Wheel;
 	Mouse_Wheel = wheel;
-	Event_RaiseReal(&MouseEvents_Wheel, delta);
+	Event_RaiseFloat(&MouseEvents_Wheel, delta);
 }
 
 void Mouse_SetPosition(Int32 x, Int32 y) {

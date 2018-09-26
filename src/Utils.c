@@ -136,7 +136,7 @@ void Utils_UNSAFE_GetFilename(STRING_REF String* str) {
 	}
 }
 
-Int32 Utils_AccumulateWheelDelta(Real32* accmulator, Real32 delta) {
+Int32 Utils_AccumulateWheelDelta(float* accmulator, float delta) {
 	/* Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2) */
 	/* We must use rounding at final step, not at every intermediate step. */
 	*accmulator += delta;

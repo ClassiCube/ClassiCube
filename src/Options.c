@@ -90,9 +90,9 @@ bool Options_GetBool(const char* key, bool defValue) {
 	return value;
 }
 
-Real32 Options_GetFloat(const char* key, Real32 min, Real32 max, Real32 defValue) {
+float Options_GetFloat(const char* key, float min, float max, float defValue) {
 	String str;
-	Real32 value;
+	float value;
 	if (!Options_TryGetValue(key, &str))       return defValue;
 	if (!Convert_TryParseReal32(&str, &value)) return defValue;
 

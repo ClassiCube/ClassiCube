@@ -3,11 +3,11 @@
 #include "Funcs.h"
 #include "Constants.h"
 
-Vector3 Vector3_Create1(Real32 value) {
+Vector3 Vector3_Create1(float value) {
 	Vector3 v; v.X = value; v.Y = value; v.Z = value; return v;
 }
 
-Vector3 Vector3_Create3(Real32 x, Real32 y, Real32 z) {
+Vector3 Vector3_Create3(float x, float y, float z) {
 	Vector3 v; v.X = x; v.Y = y; v.Z = z; return v;
 }
 
@@ -19,7 +19,7 @@ Vector3 Vector3_BigPos(void) {
 	Vector3 v = { 1e25f, 1e25f, 1e25f }; return v;
 }
 
-Real32 Vector3_LengthSquared(Vector3* v) {
+float Vector3_LengthSquared(Vector3* v) {
 	return v->X * v->X + v->Y * v->Y + v->Z * v->Z;
 }
 
@@ -27,7 +27,7 @@ void Vector3_Add(Vector3* result, Vector3* a, Vector3* b) {
 	result->X = a->X + b->X; result->Y = a->Y + b->Y; result->Z = a->Z + b->Z;
 }
 
-void Vector3_Add1(Vector3* result, Vector3* a, Real32 b) {
+void Vector3_Add1(Vector3* result, Vector3* a, float b) {
 	result->X = a->X + b; result->Y = a->Y + b; result->Z = a->Z + b;
 }
 
@@ -35,7 +35,7 @@ void Vector3_Sub(Vector3* result, Vector3* a, Vector3* b) {
 	result->X = a->X - b->X; result->Y = a->Y - b->Y; result->Z = a->Z - b->Z;
 }
 
-void Vector3_Mul1(Vector3* result, Vector3* a, Real32 scale) {
+void Vector3_Mul1(Vector3* result, Vector3* a, float scale) {
 	result->X = a->X * scale; result->Y = a->Y * scale; result->Z = a->Z * scale;
 }
 
@@ -47,15 +47,15 @@ void Vector3_Negate(Vector3* result, Vector3* a) {
 	result->X = -a->X; result->Y = -a->Y; result->Z = -a->Z;
 }
 
-void Vector3_Lerp(Vector3* result, Vector3* a, Vector3* b, Real32 blend) {
+void Vector3_Lerp(Vector3* result, Vector3* a, Vector3* b, float blend) {
 	result->X = blend * (b->X - a->X) + a->X;
 	result->Y = blend * (b->Y - a->Y) + a->Y;
 	result->Z = blend * (b->Z - a->Z) + a->Z;
 }
 
 void Vector3_Normalize(Vector3* result, Vector3* a) {
-	Real32 lenSquared = a->X * a->X + a->Y * a->Y + a->Z * a->Z;
-	Real32 scale = 1.0f / Math_SqrtF(lenSquared);
+	float lenSquared = a->X * a->X + a->Y * a->Y + a->Z * a->Z;
+	float scale = 1.0f / Math_SqrtF(lenSquared);
 	result->X = a->X * scale;
 	result->Y = a->Y * scale;
 	result->Z = a->Z * scale;
@@ -63,39 +63,39 @@ void Vector3_Normalize(Vector3* result, Vector3* a) {
 
 void Vector3_Transform(Vector3* result, Vector3* a, struct Matrix*  mat) {
 	/* a could be pointing to result - can't directly assign X/Y/Z therefore */
-	Real32 x = a->X * mat->Row0.X + a->Y * mat->Row1.X + a->Z * mat->Row2.X + mat->Row3.X;
-	Real32 y = a->X * mat->Row0.Y + a->Y * mat->Row1.Y + a->Z * mat->Row2.Y + mat->Row3.Y;
-	Real32 z = a->X * mat->Row0.Z + a->Y * mat->Row1.Z + a->Z * mat->Row2.Z + mat->Row3.Z;
+	float x = a->X * mat->Row0.X + a->Y * mat->Row1.X + a->Z * mat->Row2.X + mat->Row3.X;
+	float y = a->X * mat->Row0.Y + a->Y * mat->Row1.Y + a->Z * mat->Row2.Y + mat->Row3.Y;
+	float z = a->X * mat->Row0.Z + a->Y * mat->Row1.Z + a->Z * mat->Row2.Z + mat->Row3.Z;
 	result->X = x; result->Y = y; result->Z = z;
 }
 
-void Vector3_TransformY(Vector3* result, Real32 y, struct Matrix*  mat) {
+void Vector3_TransformY(Vector3* result, float y, struct Matrix*  mat) {
 	result->X = y * mat->Row1.X + mat->Row3.X;
 	result->Y = y * mat->Row1.Y + mat->Row3.Y;
 	result->Z = y * mat->Row1.Z + mat->Row3.Z;
 }
 
-Vector3 Vector3_RotateX(Vector3 v, Real32 angle) {
-	Real32 cosA = (Real32)Math_Cos(angle);
-	Real32 sinA = (Real32)Math_Sin(angle);
+Vector3 Vector3_RotateX(Vector3 v, float angle) {
+	float cosA = (float)Math_Cos(angle);
+	float sinA = (float)Math_Sin(angle);
 	return Vector3_Create3(v.X, cosA * v.Y + sinA * v.Z, -sinA * v.Y + cosA * v.Z);
 }
 
-Vector3 Vector3_RotateY(Vector3 v, Real32 angle) {
-	Real32 cosA = (Real32)Math_Cos(angle);
-	Real32 sinA = (Real32)Math_Sin(angle);
+Vector3 Vector3_RotateY(Vector3 v, float angle) {
+	float cosA = (float)Math_Cos(angle);
+	float sinA = (float)Math_Sin(angle);
 	return Vector3_Create3(cosA * v.X - sinA * v.Z, v.Y, sinA * v.X + cosA * v.Z);
 }
 
-Vector3 Vector3_RotateY3(Real32 x, Real32 y, Real32 z, Real32 angle) {
-	Real32 cosA = (Real32)Math_Cos(angle);
-	Real32 sinA = (Real32)Math_Sin(angle);
+Vector3 Vector3_RotateY3(float x, float y, float z, float angle) {
+	float cosA = (float)Math_Cos(angle);
+	float sinA = (float)Math_Sin(angle);
 	return Vector3_Create3(cosA * x - sinA * z, y, sinA * x + cosA * z);
 }
 
-Vector3 Vector3_RotateZ(Vector3 v, Real32 angle) {
-	Real32 cosA = (Real32)Math_Cos(angle);
-	Real32 sinA = (Real32)Math_Sin(angle);
+Vector3 Vector3_RotateZ(Vector3 v, float angle) {
+	float cosA = (float)Math_Cos(angle);
+	float sinA = (float)Math_Sin(angle);
 	return Vector3_Create3(cosA * v.X + sinA * v.Y, -sinA * v.X + cosA * v.Y, v.Z);
 }
 
@@ -114,7 +114,7 @@ void Vector3I_Floor(Vector3I* result, Vector3* a) {
 }
 
 void Vector3I_ToVector3(Vector3* result, Vector3I* a) {
-	result->X = (Real32)a->X; result->Y = (Real32)a->Y; result->Z = (Real32)a->Z;
+	result->X = (float)a->X; result->Y = (float)a->Y; result->Z = (float)a->Z;
 }
 
 void Vector3I_Min(Vector3I* result, Vector3I* a, Vector3I* b) {
@@ -126,16 +126,16 @@ void Vector3I_Max(Vector3I* result, Vector3I* a, Vector3I* b) {
 }
 
 
-Vector3 Vector3_GetDirVector(Real32 yawRad, Real32 pitchRad) {
-	Real32 x = -Math_CosF(pitchRad) * -Math_SinF(yawRad);
-	Real32 y = -Math_SinF(pitchRad);
-	Real32 z = -Math_CosF(pitchRad) * Math_CosF(yawRad);
+Vector3 Vector3_GetDirVector(float yawRad, float pitchRad) {
+	float x = -Math_CosF(pitchRad) * -Math_SinF(yawRad);
+	float y = -Math_SinF(pitchRad);
+	float z = -Math_CosF(pitchRad) * Math_CosF(yawRad);
 	return Vector3_Create3(x, y, z);
 }
 
-/*void Vector3_GetHeading(Vector3 dir, Real32* yaw, Real32* pitch) {
-	*pitch = (Real32)Math_Asin(-dir.Y);
-	*yaw =   (Real32)Math_Atan2(dir.X, -dir.Z);
+/*void Vector3_GetHeading(Vector3 dir, float* yaw, float* pitch) {
+	*pitch = (float)Math_Asin(-dir.Y);
+	*yaw =   (float)Math_Atan2(dir.X, -dir.Z);
 }*/
 
 
@@ -148,46 +148,46 @@ struct Matrix Matrix_Identity = {
 
 /* Transposed, source https://open.gl/transformations */
 
-void Matrix_RotateX(struct Matrix*  result, Real32 angle) {
-	Real32 cosA = (Real32)Math_Cos(angle);
-	Real32 sinA = (Real32)Math_Sin(angle);
+void Matrix_RotateX(struct Matrix* result, float angle) {
+	float cosA = (float)Math_Cos(angle);
+	float sinA = (float)Math_Sin(angle);
 	*result = Matrix_Identity;
 
 	result->Row1.Y = cosA;  result->Row1.Z = sinA;
 	result->Row2.Y = -sinA; result->Row2.Z = cosA;
 }
 
-void Matrix_RotateY(struct Matrix*  result, Real32 angle) {
-	Real32 cosA = (Real32)Math_Cos(angle);
-	Real32 sinA = (Real32)Math_Sin(angle);
+void Matrix_RotateY(struct Matrix* result, float angle) {
+	float cosA = (float)Math_Cos(angle);
+	float sinA = (float)Math_Sin(angle);
 	*result = Matrix_Identity;
 
 	result->Row0.X = cosA; result->Row0.Z = -sinA;
 	result->Row2.X = sinA; result->Row2.Z = cosA;
 }
 
-void Matrix_RotateZ(struct Matrix*  result, Real32 angle) {
-	Real32 cosA = (Real32)Math_Cos(angle);
-	Real32 sinA = (Real32)Math_Sin(angle);
+void Matrix_RotateZ(struct Matrix* result, float angle) {
+	float cosA = (float)Math_Cos(angle);
+	float sinA = (float)Math_Sin(angle);
 	*result = Matrix_Identity;
 
 	result->Row0.X = cosA;  result->Row0.Y = sinA;
 	result->Row1.X = -sinA; result->Row1.Y = cosA;
 }
 
-void Matrix_Translate(struct Matrix*  result, Real32 x, Real32 y, Real32 z) {
+void Matrix_Translate(struct Matrix* result, float x, float y, float z) {
 	*result = Matrix_Identity;
 	result->Row3.X = x; result->Row3.Y = y; result->Row3.Z = z;
 }
 
-void Matrix_Scale(struct Matrix*  result, Real32 x, Real32 y, Real32 z) {
+void Matrix_Scale(struct Matrix* result, float x, float y, float z) {
 	*result = Matrix_Identity;
 	result->Row0.X = x; result->Row1.Y = y; result->Row2.Z = z;
 }
 
-void Matrix_Mul(struct Matrix*  result, struct Matrix*  left, struct Matrix*  right) {
+void Matrix_Mul(struct Matrix* result, struct Matrix* left, struct Matrix* right) {
 	/* Originally from http://www.edais.co.uk/blog/?p=27 */
-	Real32
+	float
 		lM11 = left->Row0.X, lM12 = left->Row0.Y, lM13 = left->Row0.Z, lM14 = left->Row0.W,
 		lM21 = left->Row1.X, lM22 = left->Row1.Y, lM23 = left->Row1.Z, lM24 = left->Row1.W,
 		lM31 = left->Row2.X, lM32 = left->Row2.Y, lM33 = left->Row2.Z, lM34 = left->Row2.W,
@@ -219,16 +219,16 @@ void Matrix_Mul(struct Matrix*  result, struct Matrix*  left, struct Matrix*  ri
 	result->Row3.W = (((lM41 * rM14) + (lM42 * rM24)) + (lM43 * rM34)) + (lM44 * rM44);
 }
 
-void Matrix_Orthographic(struct Matrix*  result, Real32 width, Real32 height, Real32 zNear, Real32 zFar) {
+void Matrix_Orthographic(struct Matrix* result, float width, float height, float zNear, float zFar) {
 	Matrix_OrthographicOffCenter(result, -width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, zNear, zFar);
 }
 
-void Matrix_OrthographicOffCenter(struct Matrix*  result, Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar) {
+void Matrix_OrthographicOffCenter(struct Matrix* result, float left, float right, float bottom, float top, float zNear, float zFar) {
 	/* Transposed, source https://msdn.microsoft.com/en-us/library/dd373965(v=vs.85).aspx */
 	*result = Matrix_Identity;
 
-	result->Row0.X = 2.0f / (right - left);
-	result->Row1.Y = 2.0f / (top - bottom);
+	result->Row0.X =  2.0f / (right - left);
+	result->Row1.Y =  2.0f / (top - bottom);
 	result->Row2.Z = -2.0f / (zFar - zNear);
 
 	result->Row3.X = -(right + left) / (right - left);
@@ -236,12 +236,12 @@ void Matrix_OrthographicOffCenter(struct Matrix*  result, Real32 left, Real32 ri
 	result->Row3.Z = -(zFar + zNear) / (zFar - zNear);
 }
 
-void Matrix_PerspectiveFieldOfView(struct Matrix*  result, Real32 fovy, Real32 aspect, Real32 zNear, Real32 zFar) {
-	Real32 c = zNear * (Real32)Math_FastTan(0.5f * fovy);
+void Matrix_PerspectiveFieldOfView(struct Matrix* result, float fovy, float aspect, float zNear, float zFar) {
+	float c = zNear * (float)Math_FastTan(0.5f * fovy);
 	Matrix_PerspectiveOffCenter(result, -c * aspect, c * aspect, -c, c, zNear, zFar);
 }
 
-void Matrix_PerspectiveOffCenter(struct Matrix*  result, Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar) {
+void Matrix_PerspectiveOffCenter(struct Matrix* result, float left, float right, float bottom, float top, float zNear, float zFar) {
 	/* Transposed, source https://msdn.microsoft.com/en-us/library/dd373537(v=vs.85).aspx */
 	*result = Matrix_Identity;
 	result->Row3.W = 0.0f;
@@ -266,21 +266,21 @@ void Matrix_LookRot(struct Matrix* result, Vector3 pos, Vector2 rot) {
 	Matrix_Mul(result, &trans, result);
 }
 
-Real32
+float
 frustum00, frustum01, frustum02, frustum03,
 frustum10, frustum11, frustum12, frustum13,
 frustum20, frustum21, frustum22, frustum23,
 frustum30, frustum31, frustum32, frustum33,
 frustum40, frustum41, frustum42, frustum43;
 
-void FrustumCulling_Normalise(Real32* plane0, Real32* plane1, Real32* plane2, Real32* plane3) {
-	Real32 val1 = *plane0, val2 = *plane1, val3 = *plane2;
-	Real32 t = Math_SqrtF(val1 * val1 + val2 * val2 + val3 * val3);
+void FrustumCulling_Normalise(float* plane0, float* plane1, float* plane2, float* plane3) {
+	float val1 = *plane0, val2 = *plane1, val3 = *plane2;
+	float t = Math_SqrtF(val1 * val1 + val2 * val2 + val3 * val3);
 	*plane0 /= t; *plane1 /= t; *plane2 /= t; *plane3 /= t;
 }
 
-bool FrustumCulling_SphereInFrustum(Real32 x, Real32 y, Real32 z, Real32 radius) {
-	Real32 d = frustum00 * x + frustum01 * y + frustum02 * z + frustum03;
+bool FrustumCulling_SphereInFrustum(float x, float y, float z, float radius) {
+	float d = frustum00 * x + frustum01 * y + frustum02 * z + frustum03;
 	if (d <= -radius) return false;
 
 	d = frustum10 * x + frustum11 * y + frustum12 * z + frustum13;
@@ -298,11 +298,11 @@ bool FrustumCulling_SphereInFrustum(Real32 x, Real32 y, Real32 z, Real32 radius)
 	return true;
 }
 
-void FrustumCulling_CalcFrustumEquations(struct Matrix*  projection, struct Matrix*  modelView) {
+void FrustumCulling_CalcFrustumEquations(struct Matrix* projection, struct Matrix* modelView) {
 	struct Matrix clipMatrix;
 	Matrix_Mul(&clipMatrix, modelView, projection);
 
-	Real32* clip = (Real32*)&clipMatrix;
+	float* clip = (float*)&clipMatrix;
 	/* Extract the numbers for the RIGHT plane */
 	frustum00 = clip[3]  - clip[0];
 	frustum01 = clip[7]  - clip[4];

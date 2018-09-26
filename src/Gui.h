@@ -16,7 +16,7 @@ struct GuiElem;
 
 #define GuiElemVTABLE_Layout() \
 	void (*Init)(void* elem); \
-	void (*Render)(void* elem, Real64 delta); \
+	void (*Render)(void* elem, double delta); \
 	void (*Free)(void* elem); \
 	void (*Recreate)(void* elem); \
 	bool (*HandlesKeyDown)(void* elem, Key key); \
@@ -25,7 +25,7 @@ struct GuiElem;
 	bool (*HandlesMouseDown)(void* elem, Int32 x, Int32 y, MouseButton btn); \
 	bool (*HandlesMouseUp)(void* elem, Int32 x, Int32 y, MouseButton btn); \
 	bool (*HandlesMouseMove)(void* elem, Int32 x, Int32 y); \
-	bool (*HandlesMouseScroll)(void* elem, Real32 delta);
+	bool (*HandlesMouseScroll)(void* elem, float delta);
 
 struct GuiElemVTABLE { GuiElemVTABLE_Layout() };
 struct GuiElem { struct GuiElemVTABLE* VTABLE; };
@@ -99,7 +99,7 @@ void Gui_RefreshHud(void);
 void Gui_ShowOverlay(struct Screen* overlay, bool atFront);
 Int32 Gui_IndexOverlay(void* overlay);
 void Gui_FreeOverlay(void* overlay);
-void Gui_RenderGui(Real64 delta);
+void Gui_RenderGui(double delta);
 void Gui_OnResize(void);
 void Gui_CalcCursorVisible(void);
 
@@ -107,7 +107,7 @@ void Gui_CalcCursorVisible(void);
 struct TextAtlas {
 	struct Texture Tex;
 	Int32 Offset, CurX, FontSize;
-	Real32 uScale;
+	float uScale;
 	Int32 Widths[TEXTATLAS_MAX_WIDTHS];
 };
 void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, FontDesc* font, const String* prefix);

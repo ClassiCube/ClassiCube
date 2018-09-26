@@ -28,13 +28,13 @@ NOINLINE_ void Game_AddComponent(struct IGameComponent* comp);
 struct ScheduledTask;
 struct ScheduledTask {
 	/* How long (in seconds) has elapsed since callback was last invoked. */
-	Real64 Accumulator;	
+	double Accumulator;
 	/* How long (in seconds) between invocations of the callback. */
-	Real64 Interval;
+	double Interval;
 	/* Callback function that is periodically invoked. */
 	void (*Callback)(struct ScheduledTask* task);
 };
 
 typedef void (*ScheduledTaskCallback)(struct ScheduledTask* task);
-NOINLINE_ Int32 ScheduledTask_Add(Real64 interval, ScheduledTaskCallback callback);
+NOINLINE_ Int32 ScheduledTask_Add(double interval, ScheduledTaskCallback callback);
 #endif

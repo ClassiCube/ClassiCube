@@ -9,8 +9,8 @@
 #include "Block.h"
 #include "ErrorHandler.h"
 
-Real32 PickedPos_dist;
-static void PickedPos_TestAxis(struct PickedPos* pos, Real32 dAxis, Face fAxis) {
+float PickedPos_dist;
+static void PickedPos_TestAxis(struct PickedPos* pos, float dAxis, Face fAxis) {
 	dAxis = Math_AbsF(dAxis);
 	if (dAxis >= PickedPos_dist) return;
 
@@ -54,7 +54,7 @@ void PickedPos_SetAsInvalid(struct PickedPos* pos) {
 	pos->TranslatedPos = blockPos;
 }
 
-static Real32 RayTracer_Div(Real32 a, Real32 b) {
+static float RayTracer_Div(float a, float b) {
 	if (Math_AbsF(b) < 0.000001f) return MATH_LARGENUM;
 	return a / b;
 }
@@ -84,9 +84,9 @@ void RayTracer_SetVectors(struct RayTracer* t, Vector3 origin, Vector3 dir) {
 	t->tMax.Z = RayTracer_Div(cellBoundary.Z - origin.Z, dir.Z); /* Boundary is a plane on the XY axis. */
 
 	/* Determine how far we must travel along the ray before we have crossed a gridcell. */
-	t->tDelta.X = RayTracer_Div((Real32)t->step.X, dir.X);
-	t->tDelta.Y = RayTracer_Div((Real32)t->step.Y, dir.Y);
-	t->tDelta.Z = RayTracer_Div((Real32)t->step.Z, dir.Z);
+	t->tDelta.X = RayTracer_Div((float)t->step.X, dir.X);
+	t->tDelta.Y = RayTracer_Div((float)t->step.Y, dir.Y);
+	t->tDelta.Z = RayTracer_Div((float)t->step.Z, dir.Z);
 }
 
 void RayTracer_Step(struct RayTracer* t) {
@@ -141,9 +141,9 @@ static BlockID Picking_OutsideGetBlock(Int32 x, Int32 y, Int32 z, Vector3I origi
 	return BLOCK_AIR;
 }
 
-static bool Picking_RayTrace(Vector3 origin, Vector3 dir, Real32 reach, struct PickedPos* pos, IntersectTest intersect) {
+static bool Picking_RayTrace(Vector3 origin, Vector3 dir, float reach, struct PickedPos* pos, IntersectTest intersect) {
 	RayTracer_SetVectors(&tracer, origin, dir);
-	Real32 reachSq = reach * reach;
+	float reachSq = reach * reach;
 	Vector3I pOrigin; Vector3I_Floor(&pOrigin, &origin);
 	bool insideMap = World_IsValidPos_3I(pOrigin);
 
@@ -151,7 +151,7 @@ static bool Picking_RayTrace(Vector3 origin, Vector3 dir, Real32 reach, struct P
 	Vector3 coords;
 	for (i = 0; i < 25000; i++) {
 		Int32 x = tracer.X, y = tracer.Y, z = tracer.Z;
-		coords.X = (Real32)x; coords.Y = (Real32)y; coords.Z = (Real32)z;
+		coords.X = (float)x; coords.Y = (float)y; coords.Z = (float)z;
 		tracer.Block = insideMap ?
 			Picking_InsideGetBlock(x, y, z) : Picking_OutsideGetBlock(x, y, z, pOrigin);
 
@@ -159,10 +159,10 @@ static bool Picking_RayTrace(Vector3 origin, Vector3 dir, Real32 reach, struct P
 		Vector3_Add(&minPos, &coords, &Block_RenderMinBB[tracer.Block]);
 		Vector3_Add(&maxPos, &coords, &Block_RenderMaxBB[tracer.Block]);
 
-		Real32 dxMin = Math_AbsF(origin.X - minPos.X), dxMax = Math_AbsF(origin.X - maxPos.X);
-		Real32 dyMin = Math_AbsF(origin.Y - minPos.Y), dyMax = Math_AbsF(origin.Y - maxPos.Y);
-		Real32 dzMin = Math_AbsF(origin.Z - minPos.Z), dzMax = Math_AbsF(origin.Z - maxPos.Z);
-		Real32 dx = min(dxMin, dxMax), dy = min(dyMin, dyMax), dz = min(dzMin, dzMax);
+		float dxMin = Math_AbsF(origin.X - minPos.X), dxMax = Math_AbsF(origin.X - maxPos.X);
+		float dyMin = Math_AbsF(origin.Y - minPos.Y), dyMax = Math_AbsF(origin.Y - maxPos.Y);
+		float dzMin = Math_AbsF(origin.Z - minPos.Z), dzMax = Math_AbsF(origin.Z - maxPos.Z);
+		float dx = min(dxMin, dxMax), dy = min(dyMin, dyMax), dz = min(dzMin, dzMax);
 		if (dx * dx + dy * dy + dz * dz > reachSq) return false;
 
 		tracer.Min = minPos; tracer.Max = maxPos;
@@ -179,7 +179,7 @@ static bool Picking_ClipBlock(struct PickedPos* pos) {
 
 	/* This cell falls on the path of the ray. Now perform an additional AABB test,
 	since some blocks do not occupy a whole cell. */
-	Real32 t0, t1;
+	float t0, t1;
 	if (!Intersection_RayIntersectsBox(tracer.Origin, tracer.Dir, tracer.Min, tracer.Max, &t0, &t1)) {
 		return false;
 	}
@@ -188,8 +188,8 @@ static bool Picking_ClipBlock(struct PickedPos* pos) {
 	Vector3_Mul1(&scaledDir, &tracer.Dir, t0);      /* scaledDir = dir * t0 */
 	Vector3_Add(&intersect, &tracer.Origin, &scaledDir); /* intersect = origin + scaledDir */
 														 /* Only pick the block if the block is precisely within reach distance. */
-	Real32 lenSq = Vector3_LengthSquared(&scaledDir);
-	Real32 reach = LocalPlayer_Instance.ReachDistance;
+	float lenSq = Vector3_LengthSquared(&scaledDir);
+	float reach = LocalPlayer_Instance.ReachDistance;
 
 	if (lenSq <= reach * reach) {
 		PickedPos_SetAsValid(pos, &tracer, intersect);
@@ -202,7 +202,7 @@ static bool Picking_ClipBlock(struct PickedPos* pos) {
 static Vector3 picking_adjust = { 0.1f, 0.1f, 0.1f };
 static bool Picking_ClipCamera(struct PickedPos* pos) {
 	if (Block_Draw[tracer.Block] == DRAW_GAS || Block_Collide[tracer.Block] != COLLIDE_SOLID) return false;
-	Real32 t0, t1;
+	float t0, t1;
 	if (!Intersection_RayIntersectsBox(tracer.Origin, tracer.Dir, tracer.Min, tracer.Max, &t0, &t1)) return false;
 
 	/* Need to collide with slightly outside block, to avoid camera clipping issues */
@@ -217,13 +217,13 @@ static bool Picking_ClipCamera(struct PickedPos* pos) {
 	return true;
 }
 
-void Picking_CalculatePickedBlock(Vector3 origin, Vector3 dir, Real32 reach, struct PickedPos* pos) {
+void Picking_CalculatePickedBlock(Vector3 origin, Vector3 dir, float reach, struct PickedPos* pos) {
 	if (!Picking_RayTrace(origin, dir, reach, pos, Picking_ClipBlock)) {
 		PickedPos_SetAsInvalid(pos);
 	}
 }
 
-void Picking_ClipCameraPos(Vector3 origin, Vector3 dir, Real32 reach, struct PickedPos* pos) {
+void Picking_ClipCameraPos(Vector3 origin, Vector3 dir, float reach, struct PickedPos* pos) {
 	bool noClip = !Game_CameraClipping || LocalPlayer_Instance.Hacks.Noclip;
 	if (noClip || !Picking_RayTrace(origin, dir, reach, pos, Picking_ClipCamera)) {
 		PickedPos_SetAsInvalid(pos);

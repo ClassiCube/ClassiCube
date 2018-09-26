@@ -45,16 +45,16 @@ Int32 Env_EdgeHeight;
 Int32 Env_SidesOffset;
 #define Env_SidesHeight (Env_EdgeHeight + Env_SidesOffset)
 Int32 Env_CloudsHeight;
-Real32 Env_CloudsSpeed;
+float Env_CloudsSpeed;
 
 enum WEATHER { WEATHER_SUNNY, WEATHER_RAINY, WEATHER_SNOWY };
 extern const char* Weather_Names[3];
-Real32 Env_WeatherSpeed;
-Real32 Env_WeatherFade;
+float Env_WeatherSpeed;
+float Env_WeatherFade;
 Int32 Env_Weather;
 bool Env_ExpFog;
-Real32 Env_SkyboxHorSpeed;
-Real32 Env_SkyboxVerSpeed;
+float Env_SkyboxHorSpeed;
+float Env_SkyboxVerSpeed;
 
 PackedCol Env_SkyCol;
 extern PackedCol Env_DefaultSkyCol;
@@ -79,14 +79,14 @@ void Env_SetSidesBlock(BlockID block);
 void Env_SetEdgeHeight(Int32 height);
 void Env_SetSidesOffset(Int32 offset);
 void Env_SetCloudsHeight(Int32 height);
-void Env_SetCloudsSpeed(Real32 speed);
+void Env_SetCloudsSpeed(float speed);
 
-void Env_SetWeatherSpeed(Real32 speed);
-void Env_SetWeatherFade(Real32 rate);
+void Env_SetWeatherSpeed(float speed);
+void Env_SetWeatherFade(float rate);
 void Env_SetWeather(Int32 weather);
 void Env_SetExpFog(bool expFog);
-void Env_SetSkyboxHorSpeed(Real32 speed);
-void Env_SetSkyboxVerSpeed(Real32 speed);
+void Env_SetSkyboxHorSpeed(float speed);
+void Env_SetSkyboxVerSpeed(float speed);
 
 void Env_SetSkyCol(PackedCol col);
 void Env_SetFogCol(PackedCol col);
@@ -96,8 +96,8 @@ void Env_SetShadowCol(PackedCol col);
 
 #define RESPAWN_NOT_FOUND -100000.0f
 /* Finds the highest free Y coordinate in the given bounding box */
-Real32 Respawn_HighestFreeY(struct AABB* bb);
+float Respawn_HighestFreeY(struct AABB* bb);
 /* Finds a suitable spawn position for the entity, by iterating 
 downwards from top of the world until the ground is found */
-Vector3 Respawn_FindSpawnPosition(Real32 x, Real32 z, Vector3 modelSize);
+Vector3 Respawn_FindSpawnPosition(float x, float z, Vector3 modelSize);
 #endif

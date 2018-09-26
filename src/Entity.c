@@ -27,14 +27,14 @@ const char* ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circ
 /*########################################################################################################################*
 *-----------------------------------------------------LocationUpdate------------------------------------------------------*
 *#########################################################################################################################*/
-Real32 LocationUpdate_Clamp(Real32 degrees) {
+float LocationUpdate_Clamp(float degrees) {
 	while (degrees >= 360.0f) degrees -= 360.0f;
 	while (degrees < 0.0f)    degrees += 360.0f;
 	return degrees;
 }
 
 struct LocationUpdate loc_empty;
-void LocationUpdate_MakeOri(struct LocationUpdate* update, Real32 rotY, Real32 headX) {
+void LocationUpdate_MakeOri(struct LocationUpdate* update, float rotY, float headX) {
 	*update = loc_empty;
 	update->Flags = LOCATIONUPDATE_FLAG_HEADX | LOCATIONUPDATE_FLAG_HEADY;
 	update->HeadX = LocationUpdate_Clamp(headX);
@@ -48,7 +48,7 @@ void LocationUpdate_MakePos(struct LocationUpdate* update, Vector3 pos, bool rel
 	update->RelativePos = rel;
 }
 
-void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, Real32 rotY, Real32 headX, bool rel) {
+void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, float rotY, float headX, bool rel) {
 	*update = loc_empty;
 	update->Flags = LOCATIONUPDATE_FLAG_POS | LOCATIONUPDATE_FLAG_HEADX | LOCATIONUPDATE_FLAG_HEADY;
 	update->HeadX = LocationUpdate_Clamp(headX);
@@ -78,7 +78,7 @@ Vector3 Entity_GetEyePosition(struct Entity* e) {
 	Vector3 pos = e->Position; pos.Y += Entity_GetEyeHeight(e); return pos;
 }
 
-Real32 Entity_GetEyeHeight(struct Entity* e) {
+float Entity_GetEyeHeight(struct Entity* e) {
 	return e->Model->GetEyeY(e) * e->ModelScale.Y;
 }
 
@@ -109,10 +109,10 @@ void Entity_GetBounds(struct Entity* e, struct AABB* bb) {
 
 static void Entity_ParseScale(struct Entity* e, const String* scale) {
 	if (!scale->length) return;
-	Real32 value;
+	float value;
 	if (!Convert_TryParseReal32(scale, &value)) return;
 
-	Real32 maxScale = e->Model->MaxScale;
+	float maxScale = e->Model->MaxScale;
 	Math_Clamp(value, 0.01f, maxScale);
 	e->ModelScale = Vector3_Create1(value);
 }
@@ -167,9 +167,9 @@ bool Entity_TouchesAny(struct AABB* bounds, bool (*touches_condition)(BlockID bl
 	struct AABB blockBB;
 	Vector3 v;
 	Int32 x, y, z;
-	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (Real32)y;
-		for (z = bbMin.Z; z <= bbMax.Z; z++) { v.Z = (Real32)z;
-			for (x = bbMin.X; x <= bbMax.X; x++) { v.X = (Real32)x;
+	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (float)y;
+		for (z = bbMin.Z; z <= bbMax.Z; z++) { v.Z = (float)z;
+			for (x = bbMin.X; x <= bbMax.X; x++) { v.X = (float)x;
 				BlockID block = World_GetBlock(x, y, z);
 				Vector3_Add(&blockBB.Min, &v, &Block_MinBB[block]);
 				Vector3_Add(&blockBB.Max, &v, &Block_MaxBB[block]);
@@ -217,7 +217,7 @@ void Entities_Tick(struct ScheduledTask* task) {
 	}
 }
 
-void Entities_RenderModels(Real64 delta, Real32 t) {
+void Entities_RenderModels(double delta, float t) {
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
 	Int32 i;
@@ -230,7 +230,7 @@ void Entities_RenderModels(Real64 delta, Real32 t) {
 }
 	
 
-void Entities_RenderNames(Real64 delta) {
+void Entities_RenderNames(double delta) {
 	if (Entities_NameMode == NAME_MODE_NONE) return;
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	entities_closestId = Entities_GetCloset(&p->Base);
@@ -254,7 +254,7 @@ void Entities_RenderNames(Real64 delta) {
 	if (hadFog) Gfx_SetFog(true);
 }
 
-void Entities_RenderHoveredNames(Real64 delta) {
+void Entities_RenderHoveredNames(double delta) {
 	if (Entities_NameMode == NAME_MODE_NONE) return;
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	bool allNames = !(Entities_NameMode == NAME_MODE_HOVERED || Entities_NameMode == NAME_MODE_ALL)
@@ -345,7 +345,7 @@ void Entities_Remove(EntityID id) {
 EntityID Entities_GetCloset(struct Entity* src) {
 	Vector3 eyePos = Entity_GetEyePosition(src);
 	Vector3 dir = Vector3_GetDirVector(src->HeadY * MATH_DEG2RAD, src->HeadX * MATH_DEG2RAD);
-	Real32 closestDist = MATH_POS_INF;
+	float closestDist = MATH_POS_INF;
 	EntityID targetId = ENTITIES_SELF_ID;
 
 	Int32 i;
@@ -353,7 +353,7 @@ EntityID Entities_GetCloset(struct Entity* src) {
 		struct Entity* entity = Entities_List[i];
 		if (!entity) continue;
 
-		Real32 t0, t1;
+		float t0, t1;
 		if (Intersection_RayIntersectsRotatedBox(eyePos, dir, entity, &t0, &t1) && t0 < closestDist) {
 			closestDist = t0;
 			targetId = (EntityID)i;
@@ -515,7 +515,7 @@ static void Player_DrawName(struct Player* player) {
 	model->RecalcProperties(e);
 	Vector3_TransformY(&pos, model->NameYOffset, &e->Transform);
 
-	Real32 scale = model->NameScale * e->ModelScale.Y;
+	float scale = model->NameScale * e->ModelScale.Y;
 	scale = scale > 1.0f ? (1.0f / 70.0f) : (scale / 70.0f);
 	Vector2 size = { player->NameTex.Width * scale, player->NameTex.Height * scale };
 
@@ -523,7 +523,7 @@ static void Player_DrawName(struct Player* player) {
 		/* Get W component of transformed position */
 		struct Matrix mat;
 		Matrix_Mul(&mat, &Gfx_View, &Gfx_Projection); /* TODO: This mul is slow, avoid it */
-		Real32 tempW = pos.X * mat.Row0.W + pos.Y * mat.Row1.W + pos.Z * mat.Row2.W + mat.Row3.W;
+		float tempW = pos.X * mat.Row0.W + pos.Y * mat.Row1.W + pos.Z * mat.Row2.W + mat.Row3.W;
 		size.X *= tempW * 0.2f; size.Y *= tempW * 0.2f;
 	}
 
@@ -655,8 +655,8 @@ static void Player_EnsurePow2(struct Player* player, Bitmap* bmp) {
 	}
 
 	struct Entity* entity = &player->Base;
-	entity->uScale = (Real32)bmp->Width  / width;
-	entity->vScale = (Real32)bmp->Height / height;
+	entity->uScale = (float)bmp->Width  / width;
+	entity->vScale = (float)bmp->Height / height;
 
 	Mem_Free(bmp->Scan0);
 	*bmp = scaled;
@@ -747,9 +747,9 @@ static void Player_Init(struct Entity* e) {
 /*########################################################################################################################*
 *------------------------------------------------------LocalPlayer--------------------------------------------------------*
 *#########################################################################################################################*/
-Real32 LocalPlayer_JumpHeight(void) {
+float LocalPlayer_JumpHeight(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	return (Real32)PhysicsComp_GetMaxHeight(p->Physics.JumpVel);
+	return (float)PhysicsComp_GetMaxHeight(p->Physics.JumpVel);
 }
 
 void LocalPlayer_CheckHacksConsistency(void) {
@@ -760,7 +760,7 @@ void LocalPlayer_CheckHacksConsistency(void) {
 	}
 }
 
-void LocalPlayer_SetInterpPosition(Real32 t) {
+void LocalPlayer_SetInterpPosition(float t) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (!(p->Hacks.WOMStyleHacks && p->Hacks.Noclip)) {
 		Vector3_Lerp(&p->Base.Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
@@ -768,7 +768,7 @@ void LocalPlayer_SetInterpPosition(Real32 t) {
 	InterpComp_LerpAngles((struct InterpComp*)(&p->Interp), &p->Base, t);
 }
 
-static void LocalPlayer_HandleInput(Real32* xMoving, Real32* zMoving) {
+static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct HacksComp* hacks = &p->Hacks;
 
@@ -799,14 +799,14 @@ static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* upd
 	LocalInterpComp_SetLocation(&p->Interp, update, interpolate);
 }
 
-void LocalPlayer_Tick(struct Entity* e, Real64 delta) {
+void LocalPlayer_Tick(struct Entity* e, double delta) {
 	if (!World_Blocks) return;
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	struct HacksComp* hacks = &p->Hacks;
 
 	e->StepSize = hacks->FullBlockStep && hacks->Enabled && hacks->CanAnyHacks && hacks->CanSpeed ? 1.0f : 0.5f;
 	p->OldVelocity   = e->Velocity;
-	Real32 xMoving = 0, zMoving = 0;
+	float xMoving = 0, zMoving = 0;
 	LocalInterpComp_AdvanceState(&p->Interp);
 	bool wasOnGround = e->OnGround;
 
@@ -834,7 +834,7 @@ void LocalPlayer_Tick(struct Entity* e, Real64 delta) {
 	SoundComp_Tick(wasOnGround);
 }
 
-static void LocalPlayer_RenderModel(struct Entity* e, Real64 deltaTime, Real32 t) {
+static void LocalPlayer_RenderModel(struct Entity* e, double deltaTime, float t) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	AnimatedComp_GetCurrent(e, t);
 	TiltComp_GetCurrent(&p->Tilt, t);
@@ -924,10 +924,10 @@ static void LocalPlayer_DoRespawn(void) {
 		AABB_Make(&bb, &spawn, &p->Base.Size);
 		Int32 y;
 		for (y = P.Y; y <= World_Height; y++) {
-			Real32 spawnY = Respawn_HighestFreeY(&bb);
+			float spawnY = Respawn_HighestFreeY(&bb);
 			if (spawnY == RESPAWN_NOT_FOUND) {
 				BlockID block = World_GetPhysicsBlock(P.X, y, P.Z);
-				Real32 height = Block_Collide[block] == COLLIDE_SOLID ? Block_MaxBB[block].Y : 0.0f;
+				float height = Block_Collide[block] == COLLIDE_SOLID ? Block_MaxBB[block].Y : 0.0f;
 				spawn.Y = y + height + ENTITY_ADJUSTMENT;
 				break;
 			}
@@ -1026,14 +1026,14 @@ static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* updat
 	NetInterpComp_SetLocation(&p->Interp, update, interpolate);
 }
 
-void NetPlayer_Tick(struct Entity* e, Real64 delta) {
+void NetPlayer_Tick(struct Entity* e, double delta) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
 	Player_CheckSkin((struct Player*)p);
 	NetInterpComp_AdvanceState(&p->Interp);
 	AnimatedComp_Update(e, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
 }
 
-static void NetPlayer_RenderModel(struct Entity* e, Real64 deltaTime, Real32 t) {
+static void NetPlayer_RenderModel(struct Entity* e, double deltaTime, float t) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
 	Vector3_Lerp(&e->Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
 	InterpComp_LerpAngles((struct InterpComp*)(&p->Interp), e, t);
@@ -1047,9 +1047,9 @@ static void NetPlayer_RenderName(struct Entity* e) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
 	if (!p->ShouldRender) return;
 
-	Real32 dist = Model_RenderDistance(e);
+	float dist = Model_RenderDistance(e);
 	Int32 threshold = Entities_NameMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
-	if (dist <= (Real32)threshold) Player_DrawName((struct Player*)p);
+	if (dist <= (float)threshold) Player_DrawName((struct Player*)p);
 }
 
 struct EntityVTABLE netPlayer_VTABLE = {
