@@ -195,16 +195,16 @@ struct SoundOutput monoOutputs[AUDIO_MAX_HANDLES]   = { SOUND_INV, SOUND_INV, SO
 struct SoundOutput stereoOutputs[AUDIO_MAX_HANDLES] = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
 
 NOINLINE_ static void Sounds_Fail(ReturnCode res) {
-	Chat_LogError(res, "playing sounds", NULL);
+	Chat_LogError(res, "playing sounds");
 	Chat_AddRaw("&cDisabling sounds");
 	Audio_SetSounds(0);
+	Game_SoundsVolume = 0;
 }
 
 static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct AudioFormat* fmt, Int32 volume) {
 	ReturnCode res;
 	void* data = snd->Data;
-	Audio_SetFormat(output->Handle, fmt);
-	/* TODO: handle errors here */
+	if ((res = Audio_SetFormat(output->Handle, fmt))) { Sounds_Fail(res); return; }
 	
 	/* copy to temp buffer to apply volume */
 	if (volume < 100) {		
@@ -245,14 +245,20 @@ static void Sounds_Play(UInt8 type, struct Soundboard* board) {
 
 	struct SoundOutput* outputs = fmt.Channels == 1 ? monoOutputs : stereoOutputs;
 	Int32 i;
+	bool finished;
+	ReturnCode res;
 
 	/* Try to play on fresh device, or device with same data format */
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
 		struct SoundOutput* output = &outputs[i];
 		if (output->Handle == HANDLE_INV) {
 			Audio_Init(&output->Handle, 1);
+		} else {
+			res = Audio_IsFinished(output->Handle, &finished);
+
+			if (res) { Sounds_Fail(res); return; }
+			if (!finished) continue;
 		}
-		if (!Audio_IsFinished(output->Handle)) continue;
 
 		struct AudioFormat* l = Audio_GetFormat(output->Handle);
 		if (l->Channels == 0 || AudioFormat_Eq(l, &fmt)) {
@@ -263,7 +269,10 @@ static void Sounds_Play(UInt8 type, struct Soundboard* board) {
 	/* Try again with all devices, even if need to recreate one (expensive) */
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
 		struct SoundOutput* output = &outputs[i];
-		if (!Audio_IsFinished(output->Handle)) continue;
+		res = Audio_IsFinished(output->Handle, &finished);
+
+		if (res) { Sounds_Fail(res); return; }
+		if (!finished) continue;
 
 		Sounds_PlayRaw(output, snd, &fmt, volume); return;
 	}
@@ -278,21 +287,11 @@ static void Audio_PlayBlockSound(void* obj, Vector3I coords, BlockID old, BlockI
 }
 
 static void Sounds_FreeOutputs(struct SoundOutput* outputs) {
-	bool anyPlaying = true;
 	Int32 i;
-
-	while (anyPlaying) {
-		anyPlaying = false;
-		for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-			if (outputs[i].Handle == HANDLE_INV) continue;
-			anyPlaying |= !Audio_IsFinished(outputs[i].Handle);
-		}
-		if (anyPlaying) Thread_Sleep(1);
-	}
-
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
 		if (outputs[i].Handle == HANDLE_INV) continue;
-		Audio_Free(outputs[i].Handle);
+
+		Audio_StopAndFree(outputs[i].Handle);
 		outputs[i].Handle = HANDLE_INV;
 
 		Mem_Free(outputs[i].Buffer);
@@ -326,31 +325,28 @@ void Audio_PlayStepSound(UInt8 type) { Sounds_Play(type, &stepBoard); }
 /*########################################################################################################################*
 *--------------------------------------------------------Music------------------------------------------------------------*
 *#########################################################################################################################*/
-AudioHandle music_out = -1;
+AudioHandle music_out;
 StringsBuffer music_files;
 void* music_thread;
 void* music_waitable;
-volatile bool music_pendingStop;
+volatile bool music_pendingStop, music_joining;
 
-/* TODO: Handle audio errors */
 static ReturnCode Music_BufferBlock(Int32 i, Int16* data, Int32 maxSamples, struct VorbisState* ctx) {
 	Int32 samples = 0;
-	ReturnCode res = 0;
+	ReturnCode res = 0, res2;
 
 	while (samples < maxSamples) {
-		res = Vorbis_DecodeFrame(ctx);
-		if (res) break;
-
+		if ((res = Vorbis_DecodeFrame(ctx))) break;
 		Int16* cur = &data[samples];
 		samples += Vorbis_OutputFrame(ctx, cur);
 	}
-
 	if (Game_MusicVolume < 100) { Volume_Mix16(data, samples, Game_MusicVolume); }
-	Audio_BufferData(music_out, i, data, samples * sizeof(Int16));
+
+	res2 = Audio_BufferData(music_out, i, data, samples * sizeof(Int16));
+	if (res2) { music_pendingStop = true; return res2; }
 	return res;
 }
 
-/* TODO: Handle audio errors */
 static ReturnCode Music_PlayOgg(struct Stream* source) {
 	UInt8 buffer[OGG_BUFFER_SIZE];
 	struct Stream stream;
@@ -358,32 +354,41 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 
 	struct VorbisState vorbis = { 0 };
 	vorbis.Source = &stream;
+	Int16* data = NULL;
+
 	ReturnCode res = Vorbis_DecodeHeaders(&vorbis);
-	if (res) return res;
+	if (res) goto cleanup;
 
 	struct AudioFormat fmt;
 	fmt.Channels      = vorbis.Channels;
 	fmt.SampleRate    = vorbis.SampleRate;
 	fmt.BitsPerSample = 16;
-	Audio_SetFormat(music_out, &fmt);
+	if ((res = Audio_SetFormat(music_out, &fmt))) goto cleanup;
 
 	/* largest possible vorbis frame decodes to blocksize1 * channels samples */
 	/* so we may end up decoding slightly over a second of audio */
 	Int32 i, chunkSize     = fmt.Channels * (fmt.SampleRate + vorbis.BlockSizes[1]);
 	Int32 samplesPerSecond = fmt.Channels * fmt.SampleRate;
-	Int16* data = Mem_Alloc(chunkSize * AUDIO_MAX_CHUNKS, sizeof(Int16), "Ogg - final PCM output");
+	data = Mem_Alloc(chunkSize * AUDIO_MAX_CHUNKS, sizeof(Int16), "Ogg - final PCM output");
 
 	/* fill up with some samples before playing */
 	for (i = 0; i < AUDIO_MAX_CHUNKS && !res; i++) {
 		Int16* base = data + (chunkSize * i);
 		res = Music_BufferBlock(i, base, samplesPerSecond, &vorbis);
 	}
-	Audio_Play(music_out);
+	if (music_pendingStop) goto cleanup;
 
+	res = Audio_Play(music_out);
+	if (res) goto cleanup;
+
+	bool completed;
 	for (;;) {
 		Int32 next = -1;
+		
 		for (i = 0; i < AUDIO_MAX_CHUNKS; i++) {
-			if (Audio_IsCompleted(music_out, i)) { next = i; break; }
+			res = Audio_IsCompleted(music_out, i, &completed);
+			if (res)       { music_pendingStop = true; break; }
+			if (completed) { next = i; break; }
 		}
 
 		if (next == -1) { Thread_Sleep(10); continue; }
@@ -396,14 +401,16 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 	}
 
 	if (music_pendingStop) Audio_Stop(music_out);
-	/* Wait until the buffers finished playing */	
-	while (!Audio_IsFinished(music_out)) { Thread_Sleep(10); }
+	/* Wait until the buffers finished playing */
+	for (;;) {
+		if (Audio_IsFinished(music_out, &completed) || completed) break;
+		Thread_Sleep(10);
+	}
 
+cleanup:
 	Mem_Free(data);
 	Vorbis_Free(&vorbis);
-
-	if (res == ERR_END_OF_STREAM) res = 0;
-	return res;
+	return res == ERR_END_OF_STREAM ? 0 : res;
 }
 
 #define MUSIC_MAX_FILES 512
@@ -418,12 +425,13 @@ static void Music_RunLoop(void) {
 		musicFiles[count++] = i;
 	}
 
-	if (!count) return;
 	Random rnd; Random_InitFromCurrentTime(&rnd);
 	char pathBuffer[FILENAME_SIZE];
-	ReturnCode res;
 
-	while (!music_pendingStop) {
+	ReturnCode res = 0;
+	Audio_Init(&music_out, AUDIO_MAX_CHUNKS);
+
+	while (!music_pendingStop && count) {
 		Int32 idx = Random_Range(&rnd, 0, count);
 		String filename = StringsBuffer_UNSAFE_Get(&files, musicFiles[idx]);
 		String path = String_FromArray(pathBuffer);
@@ -431,37 +439,45 @@ static void Music_RunLoop(void) {
 		Platform_Log1("playing music file: %s", &filename);
 
 		void* file; res = File_Open(&file, &path);
-		if (res) { Chat_LogError2(res, "opening", &path); return; }
+		if (res) { Chat_LogError2(res, "opening", &path); break; }
 		struct Stream stream; Stream_FromFile(&stream, file);
 		{
 			res = Music_PlayOgg(&stream);
-			if (res) { Chat_LogError2(res, "playing", &path); }
+			if (res) { Chat_LogError2(res, "playing", &path); break; }
 		}
 		res = stream.Close(&stream);
-		if (res) { Chat_LogError2(res, "closing", &path); }
+		if (res) { Chat_LogError2(res, "closing", &path); break; }
 
-		if (music_pendingStop) return;
+		if (music_pendingStop) break;
 		Int32 delay = 1000 * 120 + Random_Range(&rnd, 0, 1000 * 300);
 		Waitable_WaitFor(music_waitable, delay);
 	}
+
+	if (res) {
+		Chat_AddRaw("&cDisabling music");
+		Game_MusicVolume = 0;
+	}
+	Audio_StopAndFree(music_out);
+
+	if (!music_joining) Thread_Detach(music_thread);
+	music_thread = NULL;
 }
 
 static void Music_Init(void) {
 	if (music_thread) return;
+	music_joining     = false;
 	music_pendingStop = false;
-	Audio_Init(&music_out, AUDIO_MAX_CHUNKS);
+
 	music_thread = Thread_Start(Music_RunLoop, false);
 }
 
 static void Music_Free(void) {
+	music_joining     = true;
 	music_pendingStop = true;
 	Waitable_Signal(music_waitable);
-	if (music_out == -1) return;
-
-	Thread_Join(music_thread);
-	Audio_Free(music_out);
-	music_out = -1;
-	music_thread = NULL;
+	
+	void* thread = music_thread;
+	if (thread) Thread_Join(thread);
 }
 
 void Audio_SetMusic(Int32 volume) {

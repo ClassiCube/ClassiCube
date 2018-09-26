@@ -115,12 +115,13 @@ struct AudioFormat { UInt16 Channels, BitsPerSample; Int32 SampleRate; };
 typedef Int32 AudioHandle;
 
 void Audio_Init(AudioHandle* handle, Int32 buffers);
-void Audio_Free(AudioHandle handle);
+ReturnCode Audio_Free(AudioHandle handle);
+ReturnCode Audio_StopAndFree(AudioHandle handle);
 struct AudioFormat* Audio_GetFormat(AudioHandle handle);
-void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format);
+ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format);
 ReturnCode Audio_BufferData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize);
 ReturnCode Audio_Play(AudioHandle handle);
 ReturnCode Audio_Stop(AudioHandle handle);
-bool Audio_IsCompleted(AudioHandle handle, Int32 idx);
-bool Audio_IsFinished(AudioHandle handle);
+ReturnCode Audio_IsCompleted(AudioHandle handle, Int32 idx, bool* completed);
+ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished);
 #endif

@@ -41,6 +41,13 @@ namespace SharpWave {
 			Play();
 		}
 		
+		protected bool AllCompleted() {
+			for (int i = 0; i < NumBuffers; i++) {
+				if (!IsCompleted(i)) return false;
+			}
+			return true;
+		}
+		
 		bool BufferBlock(int i, AudioChunk tmp, int size, IEnumerator<AudioChunk> chunks) {
 			tmp.Length = 0;
 			bool end = false;

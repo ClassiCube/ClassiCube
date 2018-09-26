@@ -61,9 +61,7 @@ namespace SharpWave {
 		
 		public override bool IsFinished() {
 			if (source == uint.MaxValue) return true;
-			for (int i = 0; i < NumBuffers; i++) {
-				if (!IsCompleted(i)) return false;
-			}
+			if (!AllCompleted()) return false;
 			
 			int state = 0;
 			AL.alGetSourcei(source, ALGetSourcei.SourceState, &state);

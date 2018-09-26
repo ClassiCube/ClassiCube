@@ -21,7 +21,7 @@ namespace ClassicalSharp.Audio {
 			} else {
 				files = new string[0];
 			}
-						
+			
 			game.MusicVolume = GetVolume(OptionsKey.MusicVolume, OptionsKey.UseMusic);
 			SetMusic(game.MusicVolume);
 			game.SoundsVolume = GetVolume(OptionsKey.SoundsVolume, OptionsKey.UseSound);
@@ -63,8 +63,7 @@ namespace ClassicalSharp.Audio {
 			}
 
 			disposingMusic = false;
-			musicOut = GetPlatformOut();
-			musicOut.Create(4);
+			musicOut = MakeOutput(4);
 			musicThread = MakeThread(DoMusicThread, "ClassicalSharp.DoMusic");
 		}
 		
@@ -133,10 +132,14 @@ namespace ClassicalSharp.Audio {
 			return thread;
 		}
 		
-		IAudioOutput GetPlatformOut() {
-			if (OpenTK.Configuration.RunningOnWindows && !Options.GetBool(OptionsKey.ForceOpenAL, false))
-				return new WinMmOut();
-			return new OpenALOut();
+		IAudioOutput MakeOutput(int buffers) {
+			IAudioOutput output;
+			if (OpenTK.Configuration.RunningOnWindows && !Options.GetBool(OptionsKey.ForceOpenAL, false)) {
+				output = new WinMmOut();
+			} else { output = new OpenALOut(); }
+			
+			output.Create(buffers);
+			return output;
 		}
 		
 		void DisposeOf(ref IAudioOutput output, ref Thread thread) {

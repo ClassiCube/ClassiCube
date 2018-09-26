@@ -38,13 +38,7 @@ namespace SharpWave {
 			return true;
 		}
 
-		const ushort pcmFormat = 1;
-		public override bool IsFinished() {
-			for (int i = 0; i < NumBuffers; i++) {
-				if (!IsCompleted(i)) return false;
-			}
-			return true;
-		}
+		public override bool IsFinished() { return AllCompleted(); }
 		
 		public override void SetFormat(AudioFormat format) {
 			// Don't need to recreate device if it's the same
@@ -55,8 +49,8 @@ namespace SharpWave {
 			DisposeDevice();
 			WaveFormatEx fmt = default(WaveFormatEx);
 			
-			fmt.Channels = (ushort)format.Channels;
-			fmt.FormatTag = pcmFormat;
+			fmt.FormatTag = 1; // WAVE_FORMAT_PCM
+			fmt.Channels  = (ushort)format.Channels;			
 			fmt.BitsPerSample = (ushort)format.BitsPerSample;
 			fmt.BlockAlign = (ushort)(fmt.Channels * fmt.BitsPerSample / 8);
 			fmt.SampleRate = (uint)format.SampleRate;

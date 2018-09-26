@@ -72,12 +72,12 @@ namespace ClassicalSharp.Audio {
 			for (int i = 0; i < outputs.Length; i++) {
 				IAudioOutput output = outputs[i];
 				if (output == null) {
-					output = GetPlatformOut();
-					output.Create(1);
+					output = MakeOutput(1);
 					outputs[i] = output;
+				} else {
+					if (!output.IsFinished()) continue;
 				}
 				
-				if (!output.IsFinished()) continue;				
 				AudioFormat fmt = output.Format;
 				if (fmt.Channels == 0 || fmt.Equals(format)) {
 					PlaySound(output, volume); return;
@@ -118,20 +118,12 @@ namespace ClassicalSharp.Audio {
 		
 		void DisposeOutputs(ref IAudioOutput[] outputs) {
 			if (outputs == null) return;
-			bool soundPlaying = true;
-			
-			while (soundPlaying) {
-				soundPlaying = false;
-				for (int i = 0; i < outputs.Length; i++) {
-					if (outputs[i] == null) continue;
-					soundPlaying |= !outputs[i].IsFinished();
-				}
-				if (soundPlaying)
-					Thread.Sleep(1);
-			}
-			
+
 			for (int i = 0; i < outputs.Length; i++) {
 				if (outputs[i] == null) continue;
+				
+				outputs[i].Stop();
+				outputs[i].IsFinished(); // unqueue buffers
 				outputs[i].Dispose();
 			}
 			outputs = null;

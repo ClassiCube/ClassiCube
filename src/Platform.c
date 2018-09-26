@@ -1145,6 +1145,7 @@ ReturnCode Http_Free(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------Audio----------------------------------------------------------*
 *#########################################################################################################################*/
+static ReturnCode Audio_AllCompleted(AudioHandle handle, bool* finished);
 #if CC_BUILD_WIN
 struct AudioContext {
 	HWAVEOUT Handle;
@@ -1171,24 +1172,26 @@ void Audio_Init(AudioHandle* handle, Int32 buffers) {
 	ErrorHandler_Fail("No free audio contexts");
 }
 
-void Audio_Free(AudioHandle handle) {
+ReturnCode Audio_Free(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
-	if (!ctx->Count) return;
+	if (!ctx->Count) return 0;
 
-	ReturnCode result = waveOutClose(ctx->Handle);
-	ErrorHandler_CheckOrFail(result, "Audio - closing device");
-	Mem_Set(ctx, 0, sizeof(struct AudioContext));
+	ReturnCode res = waveOutClose(ctx->Handle);
+	ctx->Handle = NULL;
+	ctx->Count  = 0;
+
+	struct AudioFormat fmt = { 0 };
+	ctx->Format = fmt;
+	return res;
 }
 
-void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
+ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	struct AudioFormat*  cur = &ctx->Format;
-	if (AudioFormat_Eq(cur, format)) return;
+	if (AudioFormat_Eq(cur, format)) return 0;
 
-	if (ctx->Handle) {
-		ReturnCode result = waveOutClose(ctx->Handle);
-		ErrorHandler_CheckOrFail(result, "Audio - closing device");
-	}
+	ReturnCode res;
+	if (ctx->Handle && (res = waveOutClose(ctx->Handle))) return res;
 
 	Int32 sampleSize = format->Channels * format->BitsPerSample / 8;
 	WAVEFORMATEX fmt;
@@ -1200,10 +1203,8 @@ void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	fmt.wBitsPerSample  = format->BitsPerSample;
 	fmt.cbSize          = 0;
 
-	if (waveOutGetNumDevs() == 0u) ErrorHandler_Fail("No audio devices found");
-	ReturnCode result = waveOutOpen(&ctx->Handle, WAVE_MAPPER, &fmt, 0, 0, CALLBACK_NULL);
-	ErrorHandler_CheckOrFail(result, "Audio - opening device");
 	ctx->Format = *format;
+	return waveOutOpen(&ctx->Handle, WAVE_MAPPER, &fmt, 0, 0, CALLBACK_NULL);
 }
 
 ReturnCode Audio_BufferData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize) {
@@ -1228,27 +1229,21 @@ ReturnCode Audio_Stop(AudioHandle handle) {
 	return waveOutReset(ctx->Handle);
 }
 
-bool Audio_IsCompleted(AudioHandle handle, Int32 idx) {
+ReturnCode Audio_IsCompleted(AudioHandle handle, Int32 idx, bool* completed) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	WAVEHDR* hdr = &ctx->Headers[idx];
-	if (!(hdr->dwFlags & WHDR_DONE)) return false;
+
+	*completed = false;
+	if (!(hdr->dwFlags & WHDR_DONE)) return 0;
+	ReturnCode res = 0;
 
 	if (hdr->dwFlags & WHDR_PREPARED) {
-		ReturnCode result = waveOutUnprepareHeader(ctx->Handle, hdr, sizeof(WAVEHDR));
-		ErrorHandler_CheckOrFail(result, "Audio - unprepare header");
+		res = waveOutUnprepareHeader(ctx->Handle, hdr, sizeof(WAVEHDR));
 	}
-	return true;
+	*completed = true; return res;
 }
 
-bool Audio_IsFinished(AudioHandle handle) {
-	struct AudioContext* ctx = &Audio_Contexts[handle];
-	Int32 i;
-
-	for (i = 0; i < ctx->Count; i++) {
-		if (!Audio_IsCompleted(handle, i)) return false;
-	}
-	return true;
-}
+ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) { return Audio_AllCompleted(handle, finished); }
 #elif CC_BUILD_NIX
 struct AudioContext {
 	ALuint Source;
@@ -1264,11 +1259,6 @@ pthread_mutex_t audio_lock;
 ALCdevice* audio_device;
 ALCcontext* audio_context;
 volatile int audio_refs;
-
-static void Audio_CheckError(const char* location) {
-	ALenum err = alGetError();
-	if (err) { ErrorHandler_Fail2(err, location); }
-}
 
 static void Audio_CheckContextErrors(void) {
 	ALenum err = alcGetError(audio_device);
@@ -1302,15 +1292,17 @@ static void Audio_DestroyContext(void) {
 	audio_device  = NULL;
 }
 
-static void Audio_FreeSource(struct AudioContext* ctx) {
-	if (ctx->Source == -1) return;
+static ALenum Audio_FreeSource(struct AudioContext* ctx) {
+	if (ctx->Source == -1) return 0;
+	ALenum err;
 
 	alDeleteSources(1, &ctx->Source);
 	ctx->Source = -1;
-	Audio_CheckError("DeleteSources");
+	if ((err = alGetError())) return err;
 
 	alDeleteBuffers(ctx->Count, ctx->Buffers);
-	Audio_CheckError("DeleteBuffers");
+	if ((err = alGetError())) return err;
+	return 0;
 }
 
 void Audio_Init(AudioHandle* handle, Int32 buffers) {
@@ -1322,7 +1314,8 @@ void Audio_Init(AudioHandle* handle, Int32 buffers) {
 	Mutex_Unlock(&audio_lock);
 
 	alDistanceModel(AL_NONE);
-	Audio_CheckError("DistanceModel");
+	ALenum err = alGetError();
+	if (err) { ErrorHandler_Fail2(err, "DistanceModel"); }
 
 	Int32 i, j;
 	for (i = 0; i < Array_Elems(Audio_Contexts); i++) {
@@ -1341,10 +1334,16 @@ void Audio_Init(AudioHandle* handle, Int32 buffers) {
 	ErrorHandler_Fail("No free audio contexts");
 }
 
-void Audio_Free(AudioHandle handle) {
+ReturnCode Audio_Free(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
-	if (!ctx->Count) return;
-	Audio_FreeSource(ctx);
+	if (!ctx->Count) return 0;
+
+	ctx->Count  = 0;
+	struct AudioFormat fmt = { 0 };
+	ctx->Format = fmt;
+
+	ALenum err = Audio_FreeSource(ctx);
+	if (err) return err;
 
 	Mutex_Lock(&audio_lock);
 	{
@@ -1352,6 +1351,7 @@ void Audio_Free(AudioHandle handle) {
 		if (audio_refs == 0) Audio_DestroyContext();
 	}
 	Mutex_Unlock(&audio_lock);
+	return 0;
 }
 
 static ALenum GetALFormat(Int32 channels, Int32 bitsPerSample) {
@@ -1365,20 +1365,22 @@ static ALenum GetALFormat(Int32 channels, Int32 bitsPerSample) {
 	ErrorHandler_Fail("Unsupported audio format"); return 0;
 }
 
-void Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
+ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	struct AudioFormat*  cur = &ctx->Format;
-	if (AudioFormat_Eq(cur, format)) return;
+	if (AudioFormat_Eq(cur, format)) return 0;
 
 	ctx->DataFormat = GetALFormat(format->Channels, format->BitsPerSample);
 	ctx->Format     = *format;
-	Audio_FreeSource(ctx);
 
+	ALenum err;
+	if ((err = Audio_FreeSource(ctx))) return err;
 	alGenSources(1, &ctx->Source);
-	Audio_CheckError("GenSources");
+	if ((err = alGetError())) return err;
 
 	alGenBuffers(ctx->Count, ctx->Buffers);
-	Audio_CheckError("GenBuffers");
+	if ((err = alGetError())) return err;
+	return 0;
 }
 
 ReturnCode Audio_BufferData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize) {
@@ -1406,40 +1408,63 @@ ReturnCode Audio_Stop(AudioHandle handle) {
 	return alGetError();
 }
 
-bool Audio_IsCompleted(AudioHandle handle, Int32 idx) {
+ReturnCode Audio_IsCompleted(AudioHandle handle, Int32 idx, bool* completed) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	ALint i, processed = 0;
-	ALuint buffer = 0;
+	ALuint buffer;
+	ALenum err;
 
 	alGetSourcei(ctx->Source, AL_BUFFERS_PROCESSED, &processed);
-	Audio_CheckError("GetSources");
-	if (processed == 0) return ctx->Completed[idx];
+	if ((err = alGetError())) return err;
 
-	alSourceUnqueueBuffers(ctx->Source, 1, &buffer);
-	Audio_CheckError("SourceUnqueueBuffers");
+	if (processed > 0) {
+		alSourceUnqueueBuffers(ctx->Source, 1, &buffer);
+		if ((err = alGetError())) return err;
 
-	for (i = 0; i < ctx->Count; i++) {
-		if (ctx->Buffers[i] == buffer) ctx->Completed[i] = true;
+		for (i = 0; i < ctx->Count; i++) {
+			if (ctx->Buffers[i] == buffer) ctx->Completed[i] = true;
+		}
 	}
-	return ctx->Completed[idx];
+	*completed = ctx->Completed[idx]; return 0;
 }
 
-bool Audio_IsFinished(AudioHandle handle) {
+ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
-	if (ctx->Source == -1) return true;
-	Int32 i;
+	if (ctx->Source == -1) { *finished = true; return 0; }
 
-	for (i = 0; i < ctx->Count; i++) {
-		if (!Audio_IsCompleted(handle, i)) return false;
-	}
+	ReturnCode res = Audio_AllCompleted(handle, finished);
+	if (res) return res;
 
 	ALint state = 0;
 	alGetSourcei(ctx->Source, AL_SOURCE_STATE, &state);
-	return state != AL_PLAYING;
+	*finished = state != AL_PLAYING; return 0;
 }
 #endif
+static ReturnCode Audio_AllCompleted(AudioHandle handle, bool* finished) {
+	struct AudioContext* ctx = &Audio_Contexts[handle];	
+	ReturnCode res;
+	*finished = false;
+	Int32 i;
+
+	for (i = 0; i < ctx->Count; i++) {
+		res = Audio_IsCompleted(handle, i, finished);
+		if (res) return res;
+		if (!(*finished)) return 0;
+	}
+
+	*finished = true;
+	return 0;
+}
+
 struct AudioFormat* Audio_GetFormat(AudioHandle handle) {
 	return &Audio_Contexts[handle].Format;
+}
+
+ReturnCode Audio_StopAndFree(AudioHandle handle) {
+	Audio_Stop(handle);
+	bool finished;
+	Audio_IsFinished(handle, &finished); /* unqueue buffers */
+	return Audio_Free(handle);
 }
 
 
