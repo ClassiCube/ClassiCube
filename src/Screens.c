@@ -592,6 +592,7 @@ struct Screen* LoadingScreen_MakeInstance(const String* title, const String* mes
 	struct LoadingScreen* s = &LoadingScreen_Instance;
 	s->LastState = NULL;
 	s->VTABLE    = &LoadingScreen_VTABLE;
+	s->Progress  = 0.0f;
 
 	String title_copy = String_FromArray(s->__TitleBuffer);
 	String_AppendString(&title_copy, title);
