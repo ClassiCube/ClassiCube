@@ -67,7 +67,7 @@ struct InflateState {
 
 void Inflate_Init(struct InflateState* state, struct Stream* source);
 void Inflate_Process(struct InflateState* state);
-void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struct Stream* underlying);
+NOINLINE_ void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struct Stream* underlying);
 
 
 #define DEFLATE_BUFFER_SIZE 16384
@@ -89,10 +89,10 @@ struct DeflateState {
 	UInt16 Prev[DEFLATE_BUFFER_SIZE];
 	bool WroteHeader;
 };
-void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struct Stream* underlying);
+NOINLINE_ void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struct Stream* underlying);
 
 struct GZipState { struct DeflateState Base; UInt32 Crc32, Size; };
-void GZip_MakeStream(struct Stream* stream, struct GZipState* state, struct Stream* underlying);
+NOINLINE_ void GZip_MakeStream(struct Stream* stream, struct GZipState* state, struct Stream* underlying);
 struct ZLibState { struct DeflateState Base; UInt32 Adler32; };
-void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
+NOINLINE_ void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
 #endif

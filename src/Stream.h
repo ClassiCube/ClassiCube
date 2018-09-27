@@ -37,12 +37,12 @@ void Stream_Init(struct Stream* stream);
 ReturnCode Stream_Skip(struct Stream* stream, UInt32 count);
 ReturnCode Stream_DefaultReadU8(struct Stream* stream, UInt8* data);
 
-void Stream_FromFile(struct Stream* stream, void* file);
+NOINLINE_ void Stream_FromFile(struct Stream* stream, void* file);
 /* Readonly Stream wrapping another Stream, only allows reading up to 'len' bytes from the wrapped stream. */
-void Stream_ReadonlyPortion(struct Stream* stream, struct Stream* source, UInt32 len);
-void Stream_ReadonlyMemory(struct Stream* stream, void* data, UInt32 len);
-void Stream_WriteonlyMemory(struct Stream* stream, void* data, UInt32 len);
-void Stream_ReadonlyBuffered(struct Stream* stream, struct Stream* source, void* data, UInt32 size);
+NOINLINE_ void Stream_ReadonlyPortion(struct Stream* stream, struct Stream* source, UInt32 len);
+NOINLINE_ void Stream_ReadonlyMemory(struct Stream* stream, void* data, UInt32 len);
+NOINLINE_ void Stream_WriteonlyMemory(struct Stream* stream, void* data, UInt32 len);
+NOINLINE_ void Stream_ReadonlyBuffered(struct Stream* stream, struct Stream* source, void* data, UInt32 size);
 
 UInt16 Stream_GetU16_LE(UInt8* data);
 UInt16 Stream_GetU16_BE(UInt8* data);

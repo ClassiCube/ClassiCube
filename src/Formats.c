@@ -1002,14 +1002,14 @@ ReturnCode Schematic_Save(struct Stream* stream) {
 		Stream_SetU16_BE(&tmp[63], World_Length);
 		Stream_SetU32_BE(&tmp[74], World_BlocksSize);
 	}
-	if ((res = Stream_Write(stream, sc_begin, sizeof(sc_begin)))) return res;
+	if ((res = Stream_Write(stream, tmp, sizeof(sc_begin)))) return res;
 	if ((res = Stream_Write(stream, World_Blocks, World_BlocksSize))) return res;
 
 	Mem_Copy(tmp, sc_data, sizeof(sc_data));
 	{
 		Stream_SetU32_BE(&tmp[7], World_BlocksSize);
 	}
-	if ((res = Stream_Write(stream, sc_data, sizeof(sc_data)))) return res;
+	if ((res = Stream_Write(stream, tmp, sizeof(sc_data)))) return res;
 
 	UInt8 chunk[8192] = { 0 };
 	Int32 i;
