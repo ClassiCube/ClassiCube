@@ -116,7 +116,7 @@ double Math_FastExp(double x) {
 
 void Random_Init(Random* seed, Int32 seedInit) { Random_SetSeed(seed, seedInit); }
 void Random_InitFromCurrentTime(Random* rnd) {
-	UInt64 now = DateTime_CurrentUTC_MS();
+	TimeMS now = DateTime_CurrentUTC_MS();
 	Random_Init(rnd, (Int32)now);
 }
 

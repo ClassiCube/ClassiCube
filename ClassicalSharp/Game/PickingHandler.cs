@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 				Vector3I pos = game.SelectedPos.BlockPos;
 				if (!game.SelectedPos.Valid || !game.World.IsValidPos(pos)) return;
 				
-				BlockID old = game.World.GetBlock(pos);
+				BlockID old = game.World.GetBlock(pos.X, pos.Y, pos.Z);
 				if (BlockInfo.Draw[old] == DrawType.Gas || !BlockInfo.CanDelete[old]) return;
 				
 				game.UpdateBlock(pos.X, pos.Y, pos.Z, Block.Air);
@@ -51,7 +51,7 @@ namespace ClassicalSharp {
 				Vector3I pos = game.SelectedPos.TranslatedPos;
 				if (!game.SelectedPos.Valid || !game.World.IsValidPos(pos)) return;
 				
-				BlockID old = game.World.GetBlock(pos);
+				BlockID old = game.World.GetBlock(pos.X, pos.Y, pos.Z);
 				BlockID block = inv.Selected;
 				if (game.AutoRotate)
 					block = AutoRotate.RotateBlock(game, block);
@@ -66,7 +66,7 @@ namespace ClassicalSharp {
 			} else if (middle) {
 				Vector3I pos = game.SelectedPos.BlockPos;
 				if (!game.SelectedPos.Valid || !game.World.IsValidPos(pos)) return;				
-				BlockID cur = game.World.GetBlock(pos);
+				BlockID cur = game.World.GetBlock(pos.X, pos.Y, pos.Z);
 				
 				if (BlockInfo.Draw[cur] == DrawType.Gas) return;
 				if (!(BlockInfo.CanPlace[cur] || BlockInfo.CanDelete[cur])) return;

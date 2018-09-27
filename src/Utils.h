@@ -17,9 +17,9 @@ typedef struct DateTime_ {
 } DateTime;
 
 #define DATETIME_MILLIS_PER_SEC 1000
-UInt64 DateTime_TotalMs(DateTime* time);
-void DateTime_FromTotalMs(DateTime* time, UInt64 ms);
-void DateTime_HttpDate(UInt64 ms, String* str);
+TimeMS DateTime_TotalMs(DateTime* time);
+void DateTime_FromTotalMs(DateTime* time, TimeMS ms);
+void DateTime_HttpDate(TimeMS ms, String* str);
 
 UInt32 Utils_ParseEnum(const String* text, UInt32 defValue, const char** names, UInt32 namesCount);
 bool Utils_IsValidInputChar(char c, bool supportsCP437);

@@ -17,11 +17,11 @@
 #include "GameStructs.h"
 
 #define CHAT_LOGTIMES_DEF_ELEMS 256
-UInt64 Chat_DefaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
-UInt64* Chat_LogTimes = Chat_DefaultLogTimes;
+TimeMS Chat_DefaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
+TimeMS* Chat_LogTimes = Chat_DefaultLogTimes;
 Int32 Chat_LogTimesMax = CHAT_LOGTIMES_DEF_ELEMS, Chat_LogTimesCount;
 
-UInt64 Chat_GetLogTime(Int32 i) {
+TimeMS Chat_GetLogTime(Int32 i) {
 	if (i < 0 || i >= Chat_LogTimesCount) ErrorHandler_Fail("Tried to get time past LogTime end");
 	return Chat_LogTimes[i];
 }
@@ -29,10 +29,10 @@ UInt64 Chat_GetLogTime(Int32 i) {
 static void Chat_AppendLogTime(void) {	
 	if (Chat_LogTimesCount == Chat_LogTimesMax) {
 		Chat_LogTimes = Utils_Resize(Chat_LogTimes, &Chat_LogTimesMax,
-									sizeof(UInt64), CHAT_LOGTIMES_DEF_ELEMS, 512);
+									sizeof(TimeMS), CHAT_LOGTIMES_DEF_ELEMS, 512);
 	}
 
-	UInt64 now = DateTime_CurrentUTC_MS();
+	TimeMS now = DateTime_CurrentUTC_MS();
 	Chat_LogTimes[Chat_LogTimesCount++] = now;
 }
 

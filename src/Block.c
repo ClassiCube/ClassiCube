@@ -37,6 +37,13 @@ UInt8 Block_BottomTex[BLOCK_CPE_COUNT]   = { 0,  1,  2,  2, 16,  4, 15, 17, 14, 
 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 56, 55,  6,  6,  7, 10,  4,
 36, 37, 16, 11, 57, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 58, 53, 52 };
 
+#ifdef EXTENDED_BLOCKS
+void Block_SetUsedCount(Int32 count) {
+	Block_UsedCount = count;
+	Block_IDMask    = Math_NextPowOf2(count) - 1;
+}
+#endif
+
 void Block_Reset(void) {
 	Block_Init();
 	Block_RecalculateSpriteBB();

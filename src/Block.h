@@ -78,6 +78,11 @@ UInt8 Block_Hidden[BLOCK_COUNT * BLOCK_COUNT];
 /* Gets a bit flags of which faces of a block can stretch with greedy meshing. */
 UInt8 Block_CanStretch[BLOCK_COUNT];
 
+#ifdef EXTENDED_BLOCKS
+Int32 Block_UsedCount, Block_IDMask;
+void Block_SetUsedCount(Int32 count);
+#endif
+
 void Block_Reset(void);
 void Block_Init(void);
 void Block_SetDefaultPerms(void);

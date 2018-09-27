@@ -348,16 +348,28 @@ static void EnvRenderer_InitWeatherHeightmap(void) {
 	}
 }
 
+#define EnvRenderer_RainCalcBody(get_block)\
+for (y = maxY; y >= 0; y--, i -= World_OneY) {\
+	UInt8 draw = Block_Draw[get_block];\
+	if (!(draw == DRAW_GAS || draw == DRAW_SPRITE)) {\
+		Weather_Heightmap[index] = y;\
+		return y;\
+	}\
+}
+
 static Int32 EnvRenderer_CalcRainHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
 	Int32 i = World_Pack(x, maxY, z), y;
 
-	for (y = maxY; y >= 0; y--, i -= World_OneY) {
-		UInt8 draw = Block_Draw[World_Blocks[i]];
-		if (!(draw == DRAW_GAS || draw == DRAW_SPRITE)) {
-			Weather_Heightmap[index] = y;
-			return y;
-		}
+#ifndef EXTENDED_BLOCKS
+	EnvRenderer_RainCalcBody(World_Blocks[i]);
+#else
+	if (Block_UsedCount <= 256) {
+		EnvRenderer_RainCalcBody(World_Blocks[i]);
+	} else {
+		EnvRenderer_RainCalcBody(World_Blocks[i] | (World_Blocks2[i] << 8));
 	}
+#endif
+
 	Weather_Heightmap[index] = -1;
 	return -1;
 }

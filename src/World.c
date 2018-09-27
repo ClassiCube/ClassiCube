@@ -44,6 +44,9 @@ void World_SetNewMap(BlockRaw* blocks, Int32 blocksSize, Int32 width, Int32 heig
 	if (blocksSize != (width * height * length)) {
 		ErrorHandler_Fail("Blocks array size does not match volume of map");
 	}
+#ifdef EXTENDED_BLOCKS
+	World_Blocks2 = World_Blocks;
+#endif
 
 	World_OneY = width * length;
 	World_MaxX = width - 1;
@@ -58,6 +61,25 @@ void World_SetNewMap(BlockRaw* blocks, Int32 blocksSize, Int32 width, Int32 heig
 	}
 }
 
+
+#ifdef EXTENDED_BLOCKS
+void World_SetBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
+	Int32 i = World_Pack(x, y, z);
+	World_Blocks[i] = (BlockRaw)block;
+
+	/* defer allocation of second map array if possible */
+	if (World_Blocks == World_Blocks2) {
+		if (block < 256) return;
+		World_Blocks2 = Mem_Alloc(World_BlocksSize, 1, "blocks array upper");
+		Block_SetUsedCount(768);
+	}
+	World_Blocks2[i] = (BlockRaw)(block >> 8);
+}
+#else
+void World_SetBlock(Int32 x, Int32 y, Int32 z, BlockID block) { 
+	World_Blocks[World_Pack(x, y, z)] = block; 
+}
+#endif
 
 BlockID World_GetPhysicsBlock(Int32 x, Int32 y, Int32 z) {
 	if (x < 0 || x >= World_Width || z < 0 || z >= World_Length || y < 0) return BLOCK_BEDROCK;

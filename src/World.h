@@ -12,7 +12,11 @@ struct AABB;
 #define World_Pack(x, y, z) (((y) * World_Length + (z)) * World_Width + (x))
 
 BlockRaw* World_Blocks;
+#ifdef EXTENDED_BLOCKS
+BlockRaw* World_Blocks2;
+#endif
 Int32 World_BlocksSize;
+
 Int32 World_Width, World_Height, World_Length;
 Int32 World_MaxX, World_MaxY, World_MaxZ;
 Int32 World_OneY;
@@ -21,12 +25,19 @@ extern String World_TextureUrl;
 
 void World_Reset(void);
 void World_SetNewMap(BlockRaw* blocks, Int32 blocksSize, Int32 width, Int32 height, Int32 length);
-BlockID World_GetPhysicsBlock(Int32 x, Int32 y, Int32 z);
 
-#define World_SetBlock(x, y, z, blockId) World_Blocks[World_Pack(x, y, z)] = blockId
-#define World_SetBlock_3I(p, blockId) World_Blocks[World_Pack(p.X, p.Y, p.Z)] = blockId
+#ifdef EXTENDED_BLOCKS
+extern Int32 Block_IDMask;
+static inline BlockID World_GetBlock(Int32 x, Int32 y, Int32 z) {
+	Int32 i = World_Pack(x, y, z);
+	return (BlockID)((World_Blocks[i] | (World_Blocks2[i] << 8)) & Block_IDMask);
+}
+#else
 #define World_GetBlock(x, y, z) World_Blocks[World_Pack(x, y, z)]
-#define World_GetBlock_3I(p) World_Blocks[World_Pack(p.X, p.Y, p.Z)]
+#endif
+
+BlockID World_GetPhysicsBlock(Int32 x, Int32 y, Int32 z);
+void World_SetBlock(Int32 x, Int32 y, Int32 z, BlockID block);
 BlockID World_SafeGetBlock_3I(Vector3I p);
 bool World_IsValidPos(Int32 x, Int32 y, Int32 z);
 bool World_IsValidPos_3I(Vector3I p);
@@ -39,8 +50,7 @@ enum ENV_VAR {
 	ENV_VAR_SHADOW_COL,
 };
 
-BlockID Env_EdgeBlock;
-BlockID Env_SidesBlock;
+BlockID Env_EdgeBlock, Env_SidesBlock;
 Int32 Env_EdgeHeight;
 Int32 Env_SidesOffset;
 #define Env_SidesHeight (Env_EdgeHeight + Env_SidesOffset)
@@ -53,23 +63,18 @@ float Env_WeatherSpeed;
 float Env_WeatherFade;
 Int32 Env_Weather;
 bool Env_ExpFog;
-float Env_SkyboxHorSpeed;
-float Env_SkyboxVerSpeed;
+float Env_SkyboxHorSpeed, Env_SkyboxVerSpeed;
 
-PackedCol Env_SkyCol;
-extern PackedCol Env_DefaultSkyCol;
-#define ENV_DEFAULT_SKYCOL_HEX "99CCFF"
-PackedCol Env_FogCol;
-extern PackedCol Env_DefaultFogCol;
-#define ENV_DEFAULT_FOGCOL_HEX "FFFFFF"
-PackedCol Env_CloudsCol;
-extern PackedCol Env_DefaultCloudsCol;
-#define ENV_DEFAULT_CLOUDSCOL_HEX "FFFFFF"
-PackedCol Env_SunCol, Env_SunXSide, Env_SunZSide, Env_SunYMin;
-extern PackedCol Env_DefaultSunCol;
-#define ENV_DEFAULT_SUNCOL_HEX "FFFFFF"
+PackedCol Env_SkyCol, Env_FogCol, Env_CloudsCol;
+extern PackedCol Env_DefaultSkyCol, Env_DefaultFogCol, Env_DefaultCloudsCol;
+PackedCol Env_SunCol,    Env_SunXSide,    Env_SunZSide,    Env_SunYMin;
 PackedCol Env_ShadowCol, Env_ShadowXSide, Env_ShadowZSide, Env_ShadowYMin;
-extern PackedCol Env_DefaultShadowCol;
+extern PackedCol Env_DefaultSunCol, Env_DefaultShadowCol;
+
+#define ENV_DEFAULT_SKYCOL_HEX "99CCFF"
+#define ENV_DEFAULT_FOGCOL_HEX "FFFFFF"
+#define ENV_DEFAULT_CLOUDSCOL_HEX "FFFFFF"
+#define ENV_DEFAULT_SUNCOL_HEX "FFFFFF"
 #define ENV_DEFAULT_SHADOWCOL_HEX "9B9B9B"
 
 void Env_Reset(void);

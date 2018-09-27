@@ -25,11 +25,36 @@
 #include "Errors.h"
 #include "TerrainAtlas.h"	
 
+/* Classic state */
+UInt8 classic_tabList[256 >> 3];
+
+/* CPE state */
+Int32 cpe_serverExtensionsCount, cpe_pingTicks;
+Int32 cpe_envMapVer = 2, cpe_blockDefsExtVer = 2;
+bool cpe_twoWayPing, cpe_extTextures, cpe_extBlocks;
+
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
 *#########################################################################################################################*/
-UInt8 classicTabList[256 >> 3];
-#define Handlers_ReadBlock(data) *data++;
+
+
+#ifndef EXTENDED_BLOCKS
+#define Handlers_ReadBlock(data, value) value = *data++;
+#else
+#define Handlers_ReadBlock(data, value)\
+if (cpe_extBlocks) {\
+	value = Stream_GetU16_BE(data, value); data += 2;\
+} else { value = *data++; }
+#endif
+
+#ifndef EXTENDED_BLOCKS
+#define Handlers_WriteBlock(data, value) *data++ = value;
+#else
+#define Handlers_WriteBlock(data, value)\
+if (cpe_extBlocks) {\
+	Stream_SetU16_BE(data, value); data += 2;\
+} else { *data++ = value; }
+#endif
 
 static void Handlers_ReadString(UInt8** ptr, String* str) {
 	Int32 i, length = 0;
@@ -140,10 +165,10 @@ void Handlers_RemoveEntity(EntityID id) {
 
 	/* See comment about some servers in Classic_AddEntity */
 	Int32 mask = id >> 3, bit = 1 << (id & 0x7);
-	if (!(classicTabList[mask] & bit)) return;
+	if (!(classic_tabList[mask] & bit)) return;
 
 	Handlers_RemoveTablistEntry(id);
-	classicTabList[mask] &= (UInt8)~bit;
+	classic_tabList[mask] &= (UInt8)~bit;
 }
 
 static void Handlers_UpdateLocation(EntityID playerId, struct LocationUpdate* update, bool interpolate) {
@@ -284,7 +309,7 @@ static void WoM_Tick(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Classic protocol-----------------------------------------------------*
 *#########################################################################################################################*/
-UInt64 mapReceiveStart;
+TimeMS mapReceiveStart;
 struct InflateState mapInflateState;
 struct Stream mapInflateStream;
 bool mapInflateInited;
@@ -298,65 +323,62 @@ bool receivedFirstPosition;
 
 void Classic_WriteChat(const String* text, bool partial) {
 	UInt8* data = ServerConnection_WriteBuffer;
-	data[0] = OPCODE_MESSAGE;
+	*data++ = OPCODE_MESSAGE;
 	{
-		data[1] = ServerConnection_SupportsPartialMessages ? partial : ENTITIES_SELF_ID;
-		Handlers_WriteString(&data[2], text);
+		*data++ = ServerConnection_SupportsPartialMessages ? partial : ENTITIES_SELF_ID;
+		Handlers_WriteString(data, text); data += STRING_SIZE;
 	}
-	ServerConnection_WriteBuffer += 66;
+	ServerConnection_WriteBuffer = data;
 }
 
 void Classic_WritePosition(Vector3 pos, float rotY, float headX) {
 	UInt8* data = ServerConnection_WriteBuffer;
-	data[0] = OPCODE_ENTITY_TELEPORT;
-	Int32 len;
+	*data++ = OPCODE_ENTITY_TELEPORT;
 	{
-		data[1] = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID; /* TODO: extended blocks */
+		*data++ = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID; /* TODO: extended blocks */
 		Int32 x = (Int32)(pos.X * 32);
 		Int32 y = (Int32)(pos.Y * 32) + 51;
 		Int32 z = (Int32)(pos.Z * 32);
 
 		if (cpe_extEntityPos) {
-			Stream_SetU32_BE(&data[2],  x);
-			Stream_SetU32_BE(&data[6],  y);
-			Stream_SetU32_BE(&data[10], z);
-			len = 14;
+			Stream_SetU32_BE(data, x); data += 4;
+			Stream_SetU32_BE(data, y); data += 4;
+			Stream_SetU32_BE(data, z); data += 4;
 		} else {
-			Stream_SetU16_BE(&data[2], x);
-			Stream_SetU16_BE(&data[4], y);
-			Stream_SetU16_BE(&data[6], z);
-			len = 8;
+			Stream_SetU16_BE(data, x); data += 2;
+			Stream_SetU16_BE(data, y); data += 2;
+			Stream_SetU16_BE(data, z); data += 2;
 		}
 
-		data[len++] = Math_Deg2Packed(rotY);
-		data[len++] = Math_Deg2Packed(headX);
+		*data++ = Math_Deg2Packed(rotY);
+		*data++ = Math_Deg2Packed(headX);
 	}
-	ServerConnection_WriteBuffer += len;
+	ServerConnection_WriteBuffer = data;
 }
 
 void Classic_WriteSetBlock(Int32 x, Int32 y, Int32 z, bool place, BlockID block) {
 	UInt8* data = ServerConnection_WriteBuffer;
-	data[0] = OPCODE_SET_BLOCK_CLIENT;
+	*data++ = OPCODE_SET_BLOCK_CLIENT;
 	{
-		Stream_SetU16_BE(&data[1], x);
-		Stream_SetU16_BE(&data[3], y);
-		Stream_SetU16_BE(&data[5], z);
-		data[7] = place;
-		data[8] = block; /* TODO: extended blocks */
+		Stream_SetU16_BE(data, x); data += 2;
+		Stream_SetU16_BE(data, y); data += 2;
+		Stream_SetU16_BE(data, z); data += 2;
+		*data++ = place;
+		*data++ = block; /* TODO: extended blocks */
 	}
-	ServerConnection_WriteBuffer += 9;
+	ServerConnection_WriteBuffer = data;
 }
 
 void Classic_WriteLogin(const String* username, const String* verKey) {
 	UInt8* data = ServerConnection_WriteBuffer;
-	data[0] = OPCODE_HANDSHAKE;
+	*data++ = OPCODE_HANDSHAKE;
 	{
-		data[1] = 7; /* protocol version */
-		Handlers_WriteString(&data[2], username);
-		Handlers_WriteString(&data[66], verKey);
-		data[130] = Game_UseCPE ? 0x42 : 0x00;
+		*data++ = 7; /* protocol version */
+		Handlers_WriteString(data, username); data += STRING_SIZE;
+		Handlers_WriteString(data, verKey);   data += STRING_SIZE;
+		*data++ = Game_UseCPE ? 0x42 : 0x00;
 	}
-	ServerConnection_WriteBuffer += 131;
+	ServerConnection_WriteBuffer = data;
 }
 
 static void Classic_Handshake(UInt8* data) {
@@ -485,7 +507,7 @@ static void Classic_SetBlock(UInt8* data) {
 	Int32 z = Stream_GetU16_BE(&data[4]);
 
 	data += 6;
-	BlockID block = Handlers_ReadBlock(data);
+	BlockID block; Handlers_ReadBlock(data, block);
 	if (World_IsValidPos(x, y, z)) {
 		Game_UpdateBlock(x, y, z, block);
 	}
@@ -505,7 +527,7 @@ static void Classic_AddEntity(UInt8* data) {
 	/* Workaround for some servers that declare support for ExtPlayerList but don't send ExtAddPlayerName */
 	String group = String_FromConst("Players");
 	Handlers_AddTablistEntry(id, &name, &name, &group, 0);
-	classicTabList[id >> 3] |= (UInt8)(1 << (id & 0x7));
+	classic_tabList[id >> 3] |= (UInt8)(1 << (id & 0x7));
 }
 
 static void Classic_EntityTeleport(UInt8* data) {
@@ -648,11 +670,6 @@ static void Classic_Tick(void) {
 /*########################################################################################################################*
 *------------------------------------------------------CPE protocol-------------------------------------------------------*
 *#########################################################################################################################*/
-
-Int32 cpe_serverExtensionsCount, cpe_pingTicks;
-Int32 cpe_envMapVer = 2, cpe_blockDefsExtVer = 2;
-bool cpe_twoWayPing, cpe_extTextures;
-
 const char* cpe_clientExtensions[29] = {
 	"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 	"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
@@ -667,76 +684,80 @@ static void CPE_SetMapEnvUrl(UInt8* data);
 void CPE_WritePlayerClick(MouseButton button, bool buttonDown, UInt8 targetId, struct PickedPos* pos) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	UInt8* data = ServerConnection_WriteBuffer;
-	data[0] = OPCODE_PLAYER_CLICK;
+	*data++ = OPCODE_PLAYER_CLICK;
 	{
-		data[1] = button;
-		data[2] = buttonDown;
-		Stream_SetU16_BE(&data[3], Ext_Deg2Packed(p->HeadY));
-		Stream_SetU16_BE(&data[5], Ext_Deg2Packed(p->HeadX));
+		*data++ = button;
+		*data++ = buttonDown;
+		Stream_SetU16_BE(data, Ext_Deg2Packed(p->HeadY)); data += 2;
+		Stream_SetU16_BE(data, Ext_Deg2Packed(p->HeadX)); data += 2;
 
-		data[7] = targetId;
-		Stream_SetU16_BE(&data[8],  pos->BlockPos.X);
-		Stream_SetU16_BE(&data[10], pos->BlockPos.Y);
-		Stream_SetU16_BE(&data[12], pos->BlockPos.Z);
+		*data++ = targetId;
+		Stream_SetU16_BE(data, pos->BlockPos.X); data += 2;
+		Stream_SetU16_BE(data, pos->BlockPos.Y); data += 2;
+		Stream_SetU16_BE(data, pos->BlockPos.Z); data += 2;
 
-		data[14] = 255;
+		*data = 255;
 		/* Our own face values differ from CPE block face */
 		switch (pos->ClosestFace) {
-		case FACE_XMAX: data[14] = 0; break;
-		case FACE_XMIN: data[14] = 1; break;
-		case FACE_YMAX: data[14] = 2; break;
-		case FACE_YMIN: data[14] = 3; break;
-		case FACE_ZMAX: data[14] = 4; break;
-		case FACE_ZMIN: data[14] = 5; break;
+		case FACE_XMAX: *data = 0; break;
+		case FACE_XMIN: *data = 1; break;
+		case FACE_YMAX: *data = 2; break;
+		case FACE_YMIN: *data = 3; break;
+		case FACE_ZMAX: *data = 4; break;
+		case FACE_ZMIN: *data = 5; break;
 		}
+		data++;
 	}
 	ServerConnection_WriteBuffer += 15;
 }
 
 static void CPE_WriteExtInfo(const String* appName, Int32 extensionsCount) {
 	UInt8* data = ServerConnection_WriteBuffer; 
-	data[0] = OPCODE_EXT_INFO;
+	*data++ = OPCODE_EXT_INFO;
 	{
-		Handlers_WriteString(&data[1], appName);
-		Stream_SetU16_BE(&data[65], extensionsCount);
+		Handlers_WriteString(data, appName);     data += STRING_SIZE;
+		Stream_SetU16_BE(data, extensionsCount); data += 2;
 	}
-	ServerConnection_WriteBuffer += 67;
+	ServerConnection_WriteBuffer = data;
 }
 
 static void CPE_WriteExtEntry(const String* extensionName, Int32 extensionVersion) {
 	UInt8* data = ServerConnection_WriteBuffer;
-	data[0] = OPCODE_EXT_ENTRY;
+	*data++ = OPCODE_EXT_ENTRY;
 	{
-		Handlers_WriteString(&data[1], extensionName);
-		Stream_SetU32_BE(&data[65], extensionVersion);
+		Handlers_WriteString(data, extensionName); data += STRING_SIZE;
+		Stream_SetU32_BE(data, extensionVersion);  data += 4;
 	}
-	ServerConnection_WriteBuffer += 69;
+	ServerConnection_WriteBuffer = data;
 }
 
 static void CPE_WriteCustomBlockLevel(UInt8 version) {
 	UInt8* data = ServerConnection_WriteBuffer;
-	data[0] = OPCODE_CUSTOM_BLOCK_LEVEL;
+	*data++ = OPCODE_CUSTOM_BLOCK_LEVEL;
 	{
-		data[1] = version;
+		*data++ = version;
 	}
-	ServerConnection_WriteBuffer += 2;
+	ServerConnection_WriteBuffer = data;
 }
 
 static void CPE_WriteTwoWayPing(bool serverToClient, UInt16 payload) {
 	UInt8* data = ServerConnection_WriteBuffer; 
-	data[0] = OPCODE_TWO_WAY_PING;
+	*data++ = OPCODE_TWO_WAY_PING;
 	{
-		data[1] = serverToClient;
-		Stream_SetU16_BE(&data[2], payload);
+		*data++ = serverToClient;
+		Stream_SetU16_BE(data, payload); data += 2;
 	}
-	ServerConnection_WriteBuffer += 4;
+	ServerConnection_WriteBuffer = data;
 }
 
 static void CPE_SendCpeExtInfoReply(void) {
 	if (cpe_serverExtensionsCount) return;
 	Int32 count = Array_Elems(cpe_clientExtensions);
-	if (!Game_AllowCustomBlocks) count -= 2;
+#ifndef EXTENDED_TEXTURES
+	count--;
+#endif
 
+	if (!Game_AllowCustomBlocks) count -= 2;
 	CPE_WriteExtInfo(&ServerConnection_AppName, count);
 	Net_SendPacket();
 	Int32 i, ver;
@@ -752,6 +773,10 @@ static void CPE_SendCpeExtInfoReply(void) {
 			if (String_CaselessEqualsConst(&name, "BlockDefinitionsExt")) continue;
 			if (String_CaselessEqualsConst(&name, "BlockDefinitions"))    continue;
 		}
+
+#ifndef EXTENDED_TEXTURES
+		if (String_CaselessEqualsConst(&name, "ExtendedTextures")) continue;
+#endif
 
 		CPE_WriteExtEntry(&name, ver);
 		Net_SendPacket();
@@ -818,11 +843,14 @@ static void CPE_ExtEntry(UInt8* data) {
 	} else if (String_CaselessEqualsConst(&ext, "FastMap")) {
 		Net_PacketSizes[OPCODE_LEVEL_BEGIN] += 4;
 		cpe_fastMap = true;
-	} else if (String_CaselessEqualsConst(&ext, "ExtendedTextures")) {
+	}
+#ifdef EXTENDED_TEXTURES
+	else if (String_CaselessEqualsConst(&ext, "ExtendedTextures")) {
 		Net_PacketSizes[OPCODE_DEFINE_BLOCK]     += 3;
 		Net_PacketSizes[OPCODE_DEFINE_BLOCK_EXT] += 6;
 		cpe_extTextures = true;
 	}
+#endif
 }
 
 static void CPE_SetClickDistance(UInt8* data) {
@@ -837,7 +865,7 @@ static void CPE_CustomBlockLevel(UInt8* data) {
 }
 
 static void CPE_HoldThis(UInt8* data) {
-	BlockID block  = Handlers_ReadBlock(data);
+	BlockID block; Handlers_ReadBlock(data, block);
 	bool canChange = *data == 0;
 
 	Inventory_CanChangeHeldBlock = true;
@@ -891,7 +919,7 @@ static void CPE_ExtAddPlayerName(UInt8* data) {
 
 	/* Workarond for server software that declares support for ExtPlayerList, but sends AddEntity then AddPlayerName */
 	Int32 mask = id >> 3, bit = 1 << (id & 0x7);
-	classicTabList[mask] &= (UInt8)~bit;
+	classic_tabList[mask] &= (UInt8)~bit;
 	Handlers_AddTablistEntry(id, &playerName, &listName, &groupName, groupRank);
 }
 
@@ -901,7 +929,7 @@ static void CPE_ExtAddEntity(UInt8* data) {
 	String displayName = String_FromArray(displayNameBuffer);
 	String skinName    = String_FromArray(skinNameBuffer);
 
-	UInt8 id = *data++;
+	EntityID id = *data++;
 	Handlers_ReadString(&data, &displayName);
 	Handlers_ReadString(&data, &skinName);
 
@@ -960,7 +988,7 @@ static void CPE_SetEnvCol(UInt8* data) {
 }
 
 static void CPE_SetBlockPermission(UInt8* data) {
-	BlockID block = Handlers_ReadBlock(data);
+	BlockID block; Handlers_ReadBlock(data, block);
 	Block_CanPlace[block]  = *data++ != 0;
 	Block_CanDelete[block] = *data++ != 0;
 	Event_RaiseVoid(&BlockEvents_PermissionsChanged);
@@ -1021,7 +1049,7 @@ static void CPE_ExtAddEntity2(UInt8* data) {
 	String displayName = String_FromArray(displayNameBuffer);
 	String skinName    = String_FromArray(skinNameBuffer);
 
-	UInt8 id = *data++;
+	EntityID id = *data++;
 	Handlers_ReadString(&data, &displayName);
 	Handlers_ReadString(&data, &skinName);
 
@@ -1031,7 +1059,7 @@ static void CPE_ExtAddEntity2(UInt8* data) {
 
 #define BULK_MAX_BLOCKS 256
 static void CPE_BulkBlockUpdate(UInt8* data) {
-	Int32 i, count = *data++ + 1;
+	Int32 i, count = 1 + *data++;
 
 	UInt32 indices[BULK_MAX_BLOCKS];
 	for (i = 0; i < count; i++) {
@@ -1119,7 +1147,7 @@ static void CPE_SetMapEnvProperty(UInt8* data) {
 }
 
 static void CPE_SetEntityProperty(UInt8* data) {
-	UInt8 id    = *data++;
+	EntityID id = *data++;
 	UInt8 type  = *data++;
 	Int32 value = (Int32)Stream_GetU32_BE(data);
 
@@ -1167,8 +1195,8 @@ static void CPE_TwoWayPing(UInt8* data) {
 }
 
 static void CPE_SetInventoryOrder(UInt8* data) {
-	BlockID block = Handlers_ReadBlock(data);
-	BlockID order = Handlers_ReadBlock(data);
+	BlockID block; Handlers_ReadBlock(data, block);
+	BlockID order; Handlers_ReadBlock(data, order);
 
 	Inventory_Remove(block);
 	if (order) { Inventory_Map[order - 1] = block; }
@@ -1248,7 +1276,7 @@ static BlockID BlockDefs_DefineBlockCommonStart(UInt8** ptr, bool uniqueSideTexs
 	char nameBuffer[STRING_SIZE];
 	String name = String_FromArray(nameBuffer);
 
-	BlockID block = Handlers_ReadBlock(data);
+	BlockID block; Handlers_ReadBlock(data, block);
 	bool didBlockLight = Block_BlocksLight[block];
 	Block_ResetProps(block);
 	
@@ -1317,7 +1345,7 @@ static void BlockDefs_DefineBlock(UInt8* data) {
 }
 
 static void BlockDefs_UndefineBlock(UInt8* data) {
-	BlockID block = Handlers_ReadBlock(data);
+	BlockID block; Handlers_ReadBlock(data, block);
 	bool didBlockLight = Block_BlocksLight[block];
 
 	Block_ResetProps(block);

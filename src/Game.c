@@ -445,6 +445,9 @@ void Game_Load(void) {
 	Event_RegisterVoid(&WindowEvents_Resized,       NULL, Game_OnResize);
 	Event_RegisterVoid(&WindowEvents_Closed,        NULL, Game_Free);
 
+#ifdef EXTENDED_BLOCKS
+	Block_SetUsedCount(256);
+#endif
 	Block_Init();
 	ModelCache_Init();
 

@@ -8,17 +8,31 @@
 #include "Event.h"
 #include "GameStructs.h"
 
+#define HEIGHT_UNCALCULATED Int16_MaxValue
+
+#define Lighting_CalcBody(get_block)\
+for (y = maxY; y >= 0; y--, i -= World_OneY) {\
+	BlockID block = get_block;\
+	if (Block_BlocksLight[block]) {\
+		Int32 offset = (Block_LightOffset[block] >> FACE_YMAX) & 1;\
+		Lighting_Heightmap[index] = y - offset;\
+		return y - offset;\
+	}\
+}
+
 static Int32 Lighting_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
 	Int32 y, i = World_Pack(x, maxY, z);
 
-	for (y = maxY; y >= 0; y--, i -= World_OneY) {
-		BlockID block = World_Blocks[i];
-		if (Block_BlocksLight[block]) {
-			Int32 offset = (Block_LightOffset[block] >> FACE_YMAX) & 1;
-			Lighting_Heightmap[index] = y - offset;
-			return y - offset;
-		}
+#ifndef EXTENDED_BLOCKS
+	Lighting_CalcBody(World_Blocks[i]);
+#else
+	if (Block_UsedCount <= 256) {
+		Lighting_CalcBody(World_Blocks[i]);
+	} else {
+		Lighting_CalcBody(World_Blocks[i] | (World_Blocks2[i] << 8));
 	}
+#endif
+
 	Lighting_Heightmap[index] = -10;
 	return -10;
 }
@@ -26,7 +40,7 @@ static Int32 Lighting_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
 static Int32 Lighting_GetLightHeight(Int32 x, Int32 z) {
 	Int32 index = (z * World_Width) + x;
 	Int32 lightH = Lighting_Heightmap[index];
-	return lightH == Int16_MaxValue ? Lighting_CalcHeightAt(x, World_Height - 1, z, index) : lightH;
+	return lightH == HEIGHT_UNCALCULATED ? Lighting_CalcHeightAt(x, World_Height - 1, z, index) : lightH;
 }
 
 /* Outside colour is same as sunlight colour, so we reuse when possible */
@@ -65,7 +79,7 @@ PackedCol Lighting_Col_ZSide_Fast(Int32 x, Int32 y, Int32 z) {
 void Lighting_Refresh(void) {
 	Int32 i;
 	for (i = 0; i < World_Width * World_Length; i++) {
-		Lighting_Heightmap[i] = Int16_MaxValue;
+		Lighting_Heightmap[i] = HEIGHT_UNCALCULATED;
 	}
 }
 
@@ -74,7 +88,7 @@ void Lighting_Refresh(void) {
 *----------------------------------------------------Lighting update------------------------------------------------------*
 *#########################################################################################################################*/
 static void Lighting_UpdateLighting(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockID newBlock, Int32 index, Int32 lightH) {
-	bool didBlock = Block_BlocksLight[oldBlock];
+	bool didBlock  = Block_BlocksLight[oldBlock];
 	bool nowBlocks = Block_BlocksLight[newBlock];
 	Int32 oldOffset = (Block_LightOffset[oldBlock] >> FACE_YMAX) & 1;
 	Int32 newOffset = (Block_LightOffset[newBlock] >> FACE_YMAX) & 1;
@@ -111,13 +125,24 @@ static bool Lighting_Needs(BlockID block, BlockID other) {
 	return Block_Draw[block] != DRAW_OPAQUE || Block_Draw[other] != DRAW_GAS;
 }
 
+#define Lighting_NeedsNeighourBody(get_block)\
+/* Update if any blocks in the chunk are affected by light change. */ \
+for (; y >= minY; y--, index -= World_OneY) {\
+	BlockID other = World_Blocks[index];\
+	bool affected = y == nY ? Lighting_Needs(block, other) : Block_Draw[other] != DRAW_GAS;\
+	if (affected) return true;\
+}
+
 static bool Lighting_NeedsNeighour(BlockID block, Int32 index, Int32 minY, Int32 y, Int32 nY) {
-	/* Update if any blocks in the chunk are affected by light change. */
-	for (; y >= minY; y--, index -= World_OneY) {
-		BlockID other = World_Blocks[index];
-		bool affected = y == nY ? Lighting_Needs(block, other) : Block_Draw[other] != DRAW_GAS;
-		if (affected) return true;
+#ifndef EXTENDED_BLOCKS
+	Lighting_NeedsNeighourBody(World_Blocks[i]);
+#else
+	if (Block_UsedCount <= 256) {
+		Lighting_NeedsNeighourBody(World_Blocks[i]);
+	} else {
+		Lighting_NeedsNeighourBody(World_Blocks[i] | (World_Blocks2[i] << 8));
 	}
+#endif
 	return false;
 }
 
@@ -187,7 +212,7 @@ void Lighting_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockI
 	Int32 lightH = Lighting_Heightmap[index];
 	/* Since light wasn't checked to begin with, means column never had meshes for any of its chunks built. */
 	/* So we don't need to do anything. */
-	if (lightH == Int16_MaxValue) return;
+	if (lightH == HEIGHT_UNCALCULATED) return;
 
 	Lighting_UpdateLighting(x, y, z, oldBlock, newBlock, index, lightH);
 	Int32 newHeight = Lighting_Heightmap[index] + 1;
@@ -207,7 +232,7 @@ static Int32 Lighting_InitialHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount,
 		for (x = 0; x < xCount; x++) {
 			Int32 lightH = Lighting_Heightmap[heightmapIndex++];
 			skip[index] = 0;
-			if (lightH == Int16_MaxValue) {
+			if (lightH == HEIGHT_UNCALCULATED) {
 				elemsLeft++;
 				curRunCount = 0;
 			} else {
@@ -275,7 +300,7 @@ static void Lighting_FinishHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, I
 		Int32 heightmapIndex = Lighting_Pack(x1, z1 + z);
 		for (x = 0; x < xCount; x++) {
 			Int32 lightH = Lighting_Heightmap[heightmapIndex];
-			if (lightH == Int16_MaxValue)
+			if (lightH == HEIGHT_UNCALCULATED)
 				Lighting_Heightmap[heightmapIndex] = -10;
 			heightmapIndex++;
 		}
@@ -283,10 +308,10 @@ static void Lighting_FinishHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, I
 }
 
 void Lighting_LightHint(Int32 startX, Int32 startZ) {
-	Int32 x1 = max(startX, 0), x2 = min(World_Width, startX + 18);
-	Int32 z1 = max(startZ, 0), z2 = min(World_Length, startZ + 18);
+	Int32 x1 = max(startX, 0), x2 = min(World_Width,  startX + EXTCHUNK_SIZE);
+	Int32 z1 = max(startZ, 0), z2 = min(World_Length, startZ + EXTCHUNK_SIZE);
 	Int32 xCount = x2 - x1, zCount = z2 - z1;
-	Int32 skip[18 * 18];
+	Int32 skip[EXTCHUNK_SIZE * EXTCHUNK_SIZE];
 
 	Int32 elemsLeft = Lighting_InitialHeightmapCoverage(x1, z1, xCount, zCount, skip);
 	if (!Lighting_CalculateHeightmapCoverage(x1, z1, xCount, zCount, elemsLeft, skip)) {

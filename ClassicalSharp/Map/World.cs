@@ -56,7 +56,7 @@ namespace ClassicalSharp.Map {
 			blocks[i] = (BlockRaw)blockId;
 
 			// defer allocation of second map array if possible
-			if (blocks == blocks2) {			
+			if (blocks == blocks2) {
 				if (blockId < 256) return;
 				blocks2 = new BlockRaw[blocks.Length];
 				BlockInfo.SetMaxUsed(767);
@@ -83,7 +83,7 @@ namespace ClassicalSharp.Map {
 		}
 		
 		public BlockID SafeGetBlock(Vector3I p) {
-			return IsValidPos(p.X, p.Y, p.Z) ? GetBlock(p) : Block.Air;
+			return IsValidPos(p) ? GetBlock(p.X, p.Y, p.Z) : Block.Air;
 		}
 
 		public bool IsValidPos(int x, int y, int z) {

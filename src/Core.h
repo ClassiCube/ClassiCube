@@ -42,16 +42,25 @@ typedef UInt8 bool;
 #define false 0
 #define NULL ((void*)0)
 
-#ifdef INF_ID
+//#define EXTENDED_BLOCKS
+#ifdef EXTENDED_BLOCKS
 typedef UInt16 BlockID;
 #else
 typedef UInt8 BlockID;
 #endif
+
+#define EXTENDED_TEXTURES
+#ifdef EXTENDED_TEXTURES
+typedef UInt16 TextureLoc;
+#else
+typedef UInt8 TextureLoc;
+#endif
+
 typedef UInt8 BlockRaw;
 typedef UInt8 EntityID;
-typedef UInt16 TextureLoc;
 typedef UInt8 Face;
 typedef UInt32 ReturnCode;
+typedef UInt64 TimeMS;
 
 typedef struct Rect2D_ { Int32 X, Y, Width, Height; } Rect2D;
 typedef struct Point2D_ { Int32 X, Y; } Point2D;

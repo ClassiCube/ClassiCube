@@ -38,7 +38,7 @@ Int32 DateTime_TotalDays(DateTime* time) {
 	return days;
 }
 
-UInt64 DateTime_TotalMs(DateTime* time) {
+TimeMS DateTime_TotalMs(DateTime* time) {
 	Int32 days = DateTime_TotalDays(time);
 	UInt64 seconds =
 		(UInt64)days * DATETIME_SECONDS_PER_DAY +
@@ -48,7 +48,7 @@ UInt64 DateTime_TotalMs(DateTime* time) {
 	return seconds * DATETIME_MILLIS_PER_SEC + time->Milli;
 }
 
-void DateTime_FromTotalMs(DateTime* time, UInt64 ms) {
+void DateTime_FromTotalMs(DateTime* time, TimeMS ms) {
 	/* Work out time component for just this day */
 	Int32 dayMS  = (Int32)(ms % DATETIME_MILLISECS_PER_DAY);
 	time->Milli  = dayMS % DATETIME_MILLIS_PER_SEC;     dayMS /= DATETIME_MILLIS_PER_SEC;
@@ -81,7 +81,7 @@ void DateTime_FromTotalMs(DateTime* time, UInt64 ms) {
 	}
 }
 
-void DateTime_HttpDate(UInt64 ms, String* str) {
+void DateTime_HttpDate(TimeMS ms, String* str) {
 	static char* days_of_weeks[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
 	static char* month_names[13] = { NULL, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 

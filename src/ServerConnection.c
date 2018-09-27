@@ -53,7 +53,7 @@ void ServerConnection_DownloadTexturePack(const String* url) {
 	if (TextureCache_HasDenied(url)) return;
 	char etagBuffer[STRING_SIZE];
 	String etag = String_FromArray(etagBuffer);
-	UInt64 lastModified = 0;
+	TimeMS lastModified = 0;
 
 	if (TextureCache_HasUrl(url)) {
 		TextureCache_GetLastModified(url, &lastModified);
@@ -247,12 +247,12 @@ UInt8* net_readCurrent;
 
 bool net_writeFailed;
 Int32 net_ticks;
-UInt64 net_lastPacket;
+TimeMS net_lastPacket;
 UInt8 net_lastOpcode;
 double net_discAccumulator;
 
 bool net_connecting;
-UInt64 net_connectTimeout;
+TimeMS net_connectTimeout;
 #define NET_TIMEOUT_MS (15 * 1000)
 
 static void MPConnection_BlockChanged(void* obj, Vector3I p, BlockID old, BlockID now) {
@@ -302,7 +302,7 @@ static void MPConnection_TickConnect(void) {
 		MPConnection_FailConnect(err); return;
 	}
 
-	UInt64 now = DateTime_CurrentUTC_MS();
+	TimeMS now = DateTime_CurrentUTC_MS();
 	bool poll_write = false;
 	Socket_Select(net_socket, SOCKET_SELECT_WRITE, &poll_write);
 
@@ -378,7 +378,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	if (net_connecting) { MPConnection_TickConnect(); return; }
 
 	/* over 30 seconds since last packet */
-	UInt64 now = DateTime_CurrentUTC_MS();
+	TimeMS now = DateTime_CurrentUTC_MS();
 	if (net_lastPacket + (30 * 1000) < now) {
 		MPConnection_CheckDisconnection(task->Interval);
 	}

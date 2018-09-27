@@ -22,7 +22,7 @@ bool input_buttonsDown[3];
 Int32 input_pickingId = -1;
 Int32 input_normViewDists[10] = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
 Int32 input_classicViewDists[4] = { 8, 32, 128, 512 };
-UInt64 input_lastClick;
+TimeMS input_lastClick;
 float input_fovIndex = -1.0f;
 
 bool InputHandler_IsMousePressed(MouseButton button) {
@@ -300,7 +300,7 @@ static bool InputHandler_CheckIsFree(BlockID block) {
 }
 
 void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) {
-	UInt64 now = DateTime_CurrentUTC_MS();
+	TimeMS now = DateTime_CurrentUTC_MS();
 	Int32 delta = (Int32)(now - input_lastClick);
 	if (cooldown && delta < 250) return; /* 4 times per second */
 
@@ -318,19 +318,19 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		/* always play delete animations, even if we aren't picking a block */
 		HeldBlockRenderer_ClickAnim(true);
 
-		Vector3I pos = Game_SelectedPos.BlockPos;
-		if (!Game_SelectedPos.Valid || !World_IsValidPos_3I(pos)) return;
+		Vector3I p = Game_SelectedPos.BlockPos;
+		if (!Game_SelectedPos.Valid || !World_IsValidPos_3I(p)) return;
 
-		BlockID old = World_GetBlock_3I(pos);
+		BlockID old = World_GetBlock(p.X, p.Y, p.Z);
 		if (Block_Draw[old] == DRAW_GAS || !Block_CanDelete[old]) return;
 
-		Game_UpdateBlock(pos.X, pos.Y, pos.Z, BLOCK_AIR);
-		Event_RaiseBlock(&UserEvents_BlockChanged, pos, old, BLOCK_AIR);
+		Game_UpdateBlock(p.X, p.Y, p.Z, BLOCK_AIR);
+		Event_RaiseBlock(&UserEvents_BlockChanged, p, old, BLOCK_AIR);
 	} else if (right) {
-		Vector3I pos = Game_SelectedPos.TranslatedPos;
-		if (!Game_SelectedPos.Valid || !World_IsValidPos_3I(pos)) return;
+		Vector3I p = Game_SelectedPos.TranslatedPos;
+		if (!Game_SelectedPos.Valid || !World_IsValidPos_3I(p)) return;
 
-		BlockID old = World_GetBlock_3I(pos);
+		BlockID old = World_GetBlock(p.X, p.Y, p.Z);
 		BlockID block = Inventory_SelectedBlock;
 		if (Game_AutoRotate) { block = AutoRotate_RotateBlock(block); }
 
@@ -339,13 +339,13 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		if (Block_Draw[block] == DRAW_GAS && Block_Draw[old] != DRAW_GAS) return;
 		if (!InputHandler_CheckIsFree(block)) return;
 
-		Game_UpdateBlock(pos.X, pos.Y, pos.Z, block);
-		Event_RaiseBlock(&UserEvents_BlockChanged, pos, old, block);
+		Game_UpdateBlock(p.X, p.Y, p.Z, block);
+		Event_RaiseBlock(&UserEvents_BlockChanged, p, old, block);
 	} else if (middle) {
-		Vector3I pos = Game_SelectedPos.BlockPos;
-		if (!Game_SelectedPos.Valid || !World_IsValidPos_3I(pos)) return;
+		Vector3I p = Game_SelectedPos.BlockPos;
+		if (!Game_SelectedPos.Valid || !World_IsValidPos_3I(p)) return;
 
-		BlockID cur = World_GetBlock_3I(pos);
+		BlockID cur = World_GetBlock(p.X, p.Y, p.Z);
 		if (Block_Draw[cur] == DRAW_GAS) return;
 		if (!(Block_CanPlace[cur] || Block_CanDelete[cur])) return;
 		if (!Inventory_CanChangeSelected() || Inventory_SelectedBlock == cur) return;

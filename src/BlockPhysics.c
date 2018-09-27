@@ -241,8 +241,8 @@ static void Physics_HandleSapling(Int32 index, BlockID block) {
 	Game_UpdateBlock(x, y, z, BLOCK_AIR);
 
 	if (TreeGen_CanGrow(x, y, z, treeHeight)) {
-		Vector3I coords[Tree_BufferCount];
-		BlockID blocks[Tree_BufferCount];
+		Vector3I coords[TREE_MAX_COUNT];
+		BlockRaw blocks[TREE_MAX_COUNT];
 		Int32 count = TreeGen_Grow(x, y, z, treeHeight, coords, blocks);
 
 		Int32 m;

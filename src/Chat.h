@@ -22,10 +22,10 @@ enum MSG_TYPE {
 	MSG_TYPE_CLIENTSTATUS_3 = 258, /* Tab list matching names*/
 };
 
-struct ChatLine { char Buffer[STRING_SIZE]; UInt64 Received; };
+struct ChatLine { char Buffer[STRING_SIZE]; TimeMS Received; };
 struct ChatLine Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
 StringsBuffer Chat_Log, Chat_InputLog;
-UInt64 Chat_GetLogTime(Int32 i);
+TimeMS Chat_GetLogTime(Int32 i);
 
 void Chat_MakeComponent(struct IGameComponent* comp);
 void Chat_SetLogName(const String* name);

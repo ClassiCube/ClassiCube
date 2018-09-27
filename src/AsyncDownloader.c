@@ -78,7 +78,7 @@ bool ManageCookies;
 bool KeepAlive;
 /* TODO: Connection pooling */
 
-static void AsyncDownloader_Add(const String* url, bool priority, const String* id, UInt8 type, UInt64* lastModified, const String* etag, const String* data) {
+static void AsyncDownloader_Add(const String* url, bool priority, const String* id, UInt8 type, TimeMS* lastModified, const String* etag, const String* data) {
 	Mutex_Lock(async_pendingMutex);
 	{
 		struct AsyncRequest req = { 0 };
@@ -134,14 +134,14 @@ void AsyncDownloader_PostString(const String* url, bool priority, const String* 
 	AsyncDownloader_Add(url, priority, id, REQUEST_TYPE_DATA, NULL, NULL, contents);
 }
 
-void AsyncDownloader_GetDataEx(const String* url, bool priority, const String* id, UInt64* lastModified, const String* etag) {
+void AsyncDownloader_GetDataEx(const String* url, bool priority, const String* id, TimeMS* lastModified, const String* etag) {
 	AsyncDownloader_Add(url, priority, id, REQUEST_TYPE_DATA, lastModified, etag, NULL);
 }
 
 void AsyncDownloader_PurgeOldEntriesTask(struct ScheduledTask* task) {
 	Mutex_Lock(async_processedMutex);
 	{
-		UInt64 now = DateTime_CurrentUTC_MS();
+		TimeMS now = DateTime_CurrentUTC_MS();
 		Int32 i;
 
 		for (i = async_processed.Count - 1; i >= 0; i--) {

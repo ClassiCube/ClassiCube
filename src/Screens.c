@@ -93,7 +93,7 @@ struct ChatScreen {
 
 struct DisconnectScreen {
 	Screen_Layout
-	UInt64 InitTime;
+	TimeMS InitTime;
 	bool CanReconnect, LastActive;
 	Int32 LastSecsLeft;
 	struct ButtonWidget Reconnect;
@@ -1111,7 +1111,7 @@ static void ChatScreen_Render(void* screen, double delta) {
 		Texture_Render(&tex);
 	}
 
-	UInt64 now = DateTime_CurrentUTC_MS();
+	TimeMS now = DateTime_CurrentUTC_MS();
 	if (s->HandlesAllInput) {
 		Elem_Render(&s->Chat, delta);
 	} else {

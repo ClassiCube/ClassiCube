@@ -371,7 +371,7 @@ static bool Cw_Callback_1(struct NbtTag* tag) {
 	if (IsTag(tag, "BlockArray")) {
 		World_BlocksSize = tag->DataSize;
 		if (tag->DataSize < NBT_SMALL_SIZE) {
-			World_Blocks = Mem_Alloc(World_BlocksSize, sizeof(UInt8), ".cw map blocks");
+			World_Blocks = Mem_Alloc(World_BlocksSize, 1, ".cw map blocks");
 			Mem_Copy(World_Blocks, tag->DataSmall, tag->DataSize);
 		} else {
 			World_Blocks = tag->DataBig;
@@ -954,8 +954,8 @@ ReturnCode Cw_Save(struct Stream* stream) {
 		col = Env_ShadowCol; tmp[253] = col.R; tmp[259] = col.G; tmp[265] = col.B;
 		col = Env_SunCol;    tmp[283] = col.R; tmp[289] = col.G; tmp[295] = col.B;
 
-		tmp[352] = Env_SidesBlock;
-		tmp[365] = Env_EdgeBlock;
+		tmp[352] = (BlockRaw)Env_SidesBlock;
+		tmp[365] = (BlockRaw)Env_EdgeBlock;
 		Stream_SetU16_BE(&tmp[378], Env_EdgeHeight);
 	}
 	Int32 b, len = Cw_WriteEndString(&tmp[393], &World_TextureUrl);

@@ -189,7 +189,7 @@ void Platform_Log(const String* message) {
 
 #define FILETIME_EPOCH 50491123200000ULL
 #define FileTime_TotalMS(time) ((time / 10000) + FILETIME_EPOCH)
-UInt64 DateTime_CurrentUTC_MS(void) {
+TimeMS DateTime_CurrentUTC_MS(void) {
 	FILETIME ft; GetSystemTimeAsFileTime(&ft);
 	/* in 100 nanosecond units, since Jan 1 1601 */
 	UInt64 raw = ft.dwLowDateTime | ((UInt64)ft.dwHighDateTime << 32);
@@ -238,7 +238,7 @@ void Platform_Log(const String* message) {
 
 #define UNIX_EPOCH 62135596800000ULL
 #define UnixTime_TotalMS(time) ((UInt64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
-UInt64 DateTime_CurrentUTC_MS(void) {
+TimeMS DateTime_CurrentUTC_MS(void) {
 	struct timeval cur;
 	gettimeofday(&cur, NULL);
 	return UnixTime_TotalMS(cur);
@@ -332,7 +332,7 @@ ReturnCode Directory_Enum(const String* path, void* obj, Directory_EnumCallback 
 	return Win_Return(result == ERROR_NO_MORE_FILES);
 }
 
-ReturnCode File_GetModifiedTime_MS(const String* path, UInt64* time) {
+ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* time) {
 	void* file; ReturnCode result = File_Open(&file, path);
 	if (result) return result;
 
@@ -443,7 +443,7 @@ ReturnCode Directory_Enum(const String* path, void* obj, Directory_EnumCallback 
 	return result;
 }
 
-ReturnCode File_GetModifiedTime_MS(const String* path, UInt64* time) {
+ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* time) {
 	char str[600]; Platform_ConvertString(str, path);
 	struct stat sb;
 	if (stat(str, &sb) == -1) return errno;

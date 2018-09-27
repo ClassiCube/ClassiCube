@@ -453,8 +453,8 @@ static void NotchyGen_PlantTrees(void) {
 				BlockRaw blockUnder = treeY > 0 ? Gen_Blocks[index - oneY] : BLOCK_AIR;
 
 				if (blockUnder == BLOCK_GRASS && TreeGen_CanGrow(treeX, treeY, treeZ, treeHeight)) {
-					Vector3I coords[Tree_BufferCount];
-					BlockRaw blocks[Tree_BufferCount];
+					Vector3I coords[TREE_MAX_COUNT];
+					BlockRaw blocks[TREE_MAX_COUNT];
 					Int32 count = TreeGen_Grow(treeX, treeY, treeZ, treeHeight, coords, blocks);
 
 					for (m = 0; m < count; m++) {

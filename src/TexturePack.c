@@ -334,11 +334,11 @@ void TexturePack_GetFromTags(const String* url, String* result, struct EntryList
 	}
 }
 
-void TextureCache_GetLastModified(const String* url, UInt64* time) {
+void TextureCache_GetLastModified(const String* url, TimeMS* time) {
 	char entryBuffer[STRING_SIZE];
 	String entry = String_FromArray(entryBuffer);
 	TexturePack_GetFromTags(url, &entry, &cache_lastModified);
-	UInt64 temp;
+	TimeMS temp;
 
 	if (entry.length && Convert_TryParseUInt64(&entry, &temp)) {
 		*time = temp / TEXCACHE_TICKS_PER_MS;
@@ -393,7 +393,7 @@ void TextureCache_AddETag(const String* url, const String* etag) {
 	TextureCache_AddToTags(url, etag, &cache_eTags);
 }
 
-void TextureCache_AddLastModified(const String* url, UInt64* lastModified) {
+void TextureCache_AddLastModified(const String* url, TimeMS* lastModified) {
 	if (!lastModified) return;
 	UInt64 ticks = (*lastModified) * TEXCACHE_TICKS_PER_MS;
 
