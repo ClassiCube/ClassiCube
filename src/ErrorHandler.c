@@ -16,7 +16,7 @@ static void ErrorHandler_DumpCommon(String* str, void* ctx);
 #include <windows.h>
 #include <imagehlp.h>
 
-struct StackPointers { UInt64 Instruction, Frame, Stack; };
+struct StackPointers { UIntPtr Instruction, Frame, Stack; };
 struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
 
 
@@ -70,7 +70,7 @@ static Int32 ErrorHandler_GetFrames(CONTEXT* ctx, struct StackPointers* pointers
 static BOOL CALLBACK ErrorHandler_DumpModule(const char* name, ULONG_PTR base, ULONG size, void* ctx) {
 	char buffer[STRING_SIZE * 4];
 	String str = String_FromArray(buffer);
-	DWORD64 start = base, end = base + (size - 1);
+	UIntPtr start = base, end = base + (size - 1);
 
 	String_Format3(&str, "%c = %x-%x\r\n", name, &start, &end);
 	ErrorHandler_Log(&str);
@@ -88,7 +88,7 @@ static void ErrorHandler_Backtrace(String* backtrace, void* ctx) {
 
 	for (i = 0; i < frames; i++) {
 		Int32 number = i + 1;
-		UInt64 addr = (UInt64)pointers[i].Instruction;
+		UIntPtr addr = pointers[i].Instruction;
 
 		char strBuffer[STRING_SIZE * 10];
 		String str = String_FromArray(strBuffer);
@@ -141,9 +141,9 @@ static void ErrorHandler_DumpRegisters(CONTEXT* ctx) {
 	String_AppendConst(&str, "-- registers --\r\n");
 
 #ifdef _M_IX86	
-	String_Format3(&str, "eax=%y ebx=%y ecx=%y\r\n", &ctx->Eax, &ctx->Ebx, &ctx->Ecx);
-	String_Format3(&str, "edx=%y esi=%y edi=%y\r\n", &ctx->Edx, &ctx->Esi, &ctx->Edi);
-	String_Format3(&str, "eip=%y ebp=%y esp=%y\r\n", &ctx->Eip, &ctx->Ebp, &ctx->Esp);
+	String_Format3(&str, "eax=%x ebx=%x ecx=%x\r\n", &ctx->Eax, &ctx->Ebx, &ctx->Ecx);
+	String_Format3(&str, "edx=%x esi=%x edi=%x\r\n", &ctx->Edx, &ctx->Esi, &ctx->Edi);
+	String_Format3(&str, "eip=%x ebp=%x esp=%x\r\n", &ctx->Eip, &ctx->Ebp, &ctx->Esp);
 #elif _M_X64
 	String_Format3(&str, "rax=%x rbx=%x rcx=%x\r\n", &ctx->Rax, &ctx->Rbx, &ctx->Rcx);
 	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\r\n", &ctx->Rdx, &ctx->Rsi, &ctx->Rdi);
@@ -177,9 +177,9 @@ static LONG WINAPI ErrorHandler_UnhandledFilter(struct _EXCEPTION_POINTERS* pInf
 	char msgBuffer[STRING_SIZE * 2 + 1];
 	String msg = String_NT_Array(msgBuffer);
 
-	UInt32 code = (UInt32)pInfo->ExceptionRecord->ExceptionCode;
-	UInt64 addr = (UInt64)pInfo->ExceptionRecord->ExceptionAddress;
-	String_Format2(&msg, "Unhandled exception 0x%y at 0x%x", &code, &addr);
+	UInt32 code  = (UInt32)pInfo->ExceptionRecord->ExceptionCode;
+	UIntPtr addr = (UIntPtr)pInfo->ExceptionRecord->ExceptionAddress;
+	String_Format2(&msg, "Unhandled exception 0x%h at 0x%x", &code, &addr);
 	msg.buffer[msg.length] = '\0';
 
 	ErrorHandler_DumpRegisters(pInfo->ContextRecord);
@@ -490,7 +490,7 @@ static void ErrorHandler_Backtrace(String* backtrace_, void* ctx) {
 
 	for (i = 0; i < frames; i++) {
 		Int32 number = i + 1;
-		UInt64 addr = (UInt64)addrs[i];
+		UIntPtr addr = (UIntPtr)addrs[i];
 
 		char strBuffer[STRING_SIZE * 5];
 		String str = String_FromArray(strBuffer);
@@ -520,9 +520,9 @@ static void ErrorHandler_DumpRegisters(void* ctx) {
 
 	/* TODO: There must be a better way of getting these.. */
 #ifdef __i386__
-	String_Format3(&str, "eax=%y ebx=%y ecx=%y\n", &r.gregs[11], &r.gregs[8], &r.gregs[10]);
-	String_Format3(&str, "edx=%y esi=%y edi=%y\n", &r.gregs[9],  &r.gregs[5], &r.gregs[4]);
-	String_Format3(&str, "eip=%y ebp=%y esp=%y\n", &r.gregs[14], &r.gregs[6], &r.gregs[7]);
+	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r.gregs[11], &r.gregs[8], &r.gregs[10]);
+	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r.gregs[9],  &r.gregs[5], &r.gregs[4]);
+	String_Format3(&str, "eip=%x ebp=%x esp=%x\n", &r.gregs[14], &r.gregs[6], &r.gregs[7]);
 #elif __x86_64__
 	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r.gregs[13], &r.gregs[11], &r.gregs[14]);
 	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r.gregs[12], &r.gregs[9],  &r.gregs[8]);
@@ -576,8 +576,8 @@ static void ErrorHandler_SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	char msgBuffer[STRING_SIZE * 2 + 1];
 	String msg = String_NT_Array(msgBuffer);
 
-	Int32  type = info->si_signo, code = info->si_code;
-	UInt64 addr = (UInt64)info->si_addr;
+	Int32 type   = info->si_signo, code = info->si_code;
+	UIntPtr addr = (UIntPtr)info->si_addr;
 	String_Format3(&msg, "Unhandled signal %i (code %i) at 0x%x", &type, &code, &addr);
 	msg.buffer[msg.length] = '\0';
 
@@ -638,9 +638,9 @@ static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void
 	char msgBuffer[3070 + 1];
 	String msg = String_NT_Array(msgBuffer);
 
-	String_Format3(&msg, "ClassiCube crashed.%cMessge: %c%c", Platform_NewLine, raw_msg, Platform_NewLine);
+	String_Format3(&msg, "ClassiCube crashed.%cMessage: %c%c", Platform_NewLine, raw_msg, Platform_NewLine);
 	if (result) { 
-		String_Format2(&msg, "%y%c", &result, Platform_NewLine); 
+		String_Format2(&msg, "%h%c", &result, Platform_NewLine); 
 	} else { result = 1; }
 
 	ErrorHandler_Log(&msg);

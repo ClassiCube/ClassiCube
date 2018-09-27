@@ -454,7 +454,7 @@ static void SheepModel_DrawModel(struct Entity* entity) {
 	Model_DrawRotate(entity->Anim.LeftLegX,  0, 0, &Sheep_RightLegBack,  false);
 	Model_UpdateVB();
 
-	if (entity->ModelIsSheepNoFur) return;
+	if (entity->_ModelIsSheepNoFur) return;
 	Gfx_BindTexture(ModelCache_Textures[fur_Index].TexID);
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Fur_Head, true);
 

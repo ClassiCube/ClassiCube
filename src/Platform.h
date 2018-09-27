@@ -10,7 +10,7 @@ struct AsyncRequest;
 
 enum SOCKET_SELECT { SOCKET_SELECT_READ, SOCKET_SELECT_WRITE };
 #if CC_BUILD_WIN
-typedef void* SocketPtr;
+typedef UIntPtr SocketPtr;
 #else
 typedef Int32 SocketPtr;
 #endif

@@ -205,7 +205,7 @@ static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 
 	if (request->ResultData) {
 		UInt32 size = request->ResultSize;
-		UInt64 addr = (UInt64)request->ResultData;
+		UIntPtr addr = (UIntPtr)request->ResultData;
 		Platform_Log2("HTTP returned data: %i bytes at %x", &size, &addr);
 	}
 }

@@ -58,8 +58,6 @@ NOINLINE_ bool String_AppendInt32(String* str, Int32 num);
 NOINLINE_ bool String_AppendUInt32(String* str, UInt32 num);
 NOINLINE_ bool String_AppendUInt64(String* str, UInt64 num);
 NOINLINE_ bool String_AppendReal32(String* str, float num, Int32 fracDigits); /* TODO: Need to account for , or . for decimal */
-NOINLINE_ bool String_Hex32(String* str, UInt32 value);
-NOINLINE_ bool String_Hex64(String* str, UInt64 value);
 NOINLINE_ bool String_AppendConst(String* str, const char* src);
 NOINLINE_ bool String_AppendString(String* str, const String* src);
 NOINLINE_ bool String_AppendColorless(String* str, const String* src);

@@ -53,7 +53,7 @@ static void D3D9_FreeResource(GfxResourceID* resource) {
 	*resource = NULL;
 	if (refCount <= 0) return;
 
-	UInt64 addr = (UInt64)(unk);
+	UIntPtr addr = (UIntPtr)unk;
 	Platform_Log2("D3D9 resource has %i outstanding references! ID 0x%x", &refCount, &addr);
 }
 

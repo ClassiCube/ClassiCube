@@ -142,10 +142,10 @@ static void Chat_AppendLog(const String* text) {
 }
 
 void Chat_LogError(ReturnCode result, const char* place) {
-	Chat_Add4("&cError %y when %c", &result, place, NULL, NULL);
+	Chat_Add4("&cError %h when %c", &result, place, NULL, NULL);
 }
 void Chat_LogError2(ReturnCode result, const char* place, const String* path) {
-	Chat_Add4("&cError %y when %c '%s'", &result, place, path, NULL);
+	Chat_Add4("&cError %h when %c '%s'", &result, place, path, NULL);
 }
 void Chat_Add1(const char* format, const void* a1) {
 	Chat_Add4(format, a1, NULL, NULL, NULL);

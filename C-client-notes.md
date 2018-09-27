@@ -87,5 +87,5 @@ void String_Format4(str, format, a1, a2, a3, a4);
 | ```%c```      | char* | ```%c``` of ```"ABCD"``` = ```ABCD``` |
 | ```%s```      | String |  ```%s``` of ```{"ABCD", 2, 4}``` = ```AB``` |
 | ```%r```      | char, raw | ```%r``` of ```47``` = ```\``` |
-| ```%x```      | UInt64, hex | ```%x``` of ```31``` = ```2F``` |
-| ```%y```      | UInt32, hex | ```%y``` of ```11``` = ```B``` |
+| ```%x```      | UIntPtr, hex | ```%x``` of ```31``` = ```2F``` |
+| ```%h```      | UInt32, hex | ```%h``` of ```11``` = ```B``` |

@@ -192,8 +192,8 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, const String* ti
 	win_rootWin = DisplayDevice_Meta[2];
 
 	/* Open a display connection to the X server, and obtain the screen and root window */
-	UInt64 addr = (UInt64)win_display;
-	Platform_Log3("Display: %y, Screen %i, Root window: %y", &addr, &win_screen, &win_rootWin);
+	UIntPtr addr = (UIntPtr)win_display;
+	Platform_Log3("Display: %x, Screen %i, Root window: %h", &addr, &win_screen, &win_rootWin);
 
 	Window_RegisterAtoms();
 	win_visual = GLContext_SelectVisual(mode);

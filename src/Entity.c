@@ -142,7 +142,7 @@ void Entity_SetModel(struct Entity* e, const String* model) {
 		name = String_FromReadonly("humanoid");
 		e->ModelScale = Vector3_Create1(2.0f);
 	}
-	e->ModelIsSheepNoFur = String_CaselessEqualsConst(&name, "sheep_nofur");
+	e->_ModelIsSheepNoFur = String_CaselessEqualsConst(&name, "sheep_nofur");
 
 	e->ModelBlock   = BLOCK_AIR;
 	e->Model        = ModelCache_Get(&name);

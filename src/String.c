@@ -226,7 +226,7 @@ bool String_AppendReal32(String* str, float num, Int32 fracDigits) {
 	return true;
 }
 
-bool String_Hex32(String* str, UInt32 value) {
+NOINLINE_ static bool String_Hex32(String* str, UInt32 value) {
 	char hex[9]; hex[8] = '\0';
 	Int32 i;
 
@@ -239,7 +239,7 @@ bool String_Hex32(String* str, UInt32 value) {
 	return String_AppendConst(str, hex);
 }
 
-bool String_Hex64(String* str, UInt64 value) {
+NOINLINE_ static bool String_Hex64(String* str, UInt64 value) {
 	char hex[17]; hex[16] = '\0';
 	Int32 i;
 
@@ -450,8 +450,12 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 		case 'r':
 			String_Append(str, *((char*)arg)); break;
 		case 'x':
-			String_Hex64(str, *((UInt64*)arg)); break;
-		case 'y':
+			if (sizeof(UIntPtr) == 4) {
+				String_Hex32(str, *((UInt32*)arg)); break;
+			} else {
+				String_Hex64(str, *((UInt64*)arg)); break;
+			}
+		case 'h':
 			String_Hex32(str, *((UInt32*)arg)); break;
 		default: 
 			ErrorHandler_Fail("Invalid type for string format");

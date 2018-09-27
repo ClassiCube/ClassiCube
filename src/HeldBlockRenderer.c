@@ -35,7 +35,8 @@ static void HeldBlockRenderer_RenderModel(void) {
 		Model_RenderArm(model, &held_entity);
 		Gfx_SetAlphaTest(false);
 	} else {
-		String name = String_FromConst("block"); model = ModelCache_Get(&name);
+		String block = String_FromConst("block");
+		model = ModelCache_Get(&block);
 		held_entity.ModelScale = Vector3_Create1(0.4f);
 
 		GfxCommon_SetupAlphaState(Block_Draw[held_block]);
