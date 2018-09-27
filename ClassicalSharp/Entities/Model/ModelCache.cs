@@ -60,7 +60,7 @@ namespace ClassicalSharp.Model {
 				if (!m.Instance.initalised) InitModel(m);
 				return m.Instance;
 			}
-			return Models[0].Instance;
+			return null;
 		}
 		
 		public void Dispose() {			

@@ -20,9 +20,9 @@ namespace ClassicalSharp {
 			
 			if (Utils.CaselessEq(dir, "nw") || Utils.CaselessEq(dir, "ne") ||
 			    Utils.CaselessEq(dir, "sw") || Utils.CaselessEq(dir, "se")) {
-				return RotateCorner(game, block, name, offset);
+				return RotateCorner(block, name, offset);
 			} else if (Utils.CaselessEq(dir, "u") || Utils.CaselessEq(dir, "d")) {
-				return RotateVertical(game, block, name, offset);
+				return RotateVertical(block, name, offset);
 			} else if (Utils.CaselessEq(dir, "n") || Utils.CaselessEq(dir, "w") ||
 			           Utils.CaselessEq(dir, "s") || Utils.CaselessEq(dir, "e")) {
 				return RotateDirection(game, block, name, offset);
@@ -33,22 +33,22 @@ namespace ClassicalSharp {
 			return block;
 		}
 		
-		static BlockID RotateCorner(Game game, BlockID block, string name, Vector3 offset) {
+		static BlockID RotateCorner(BlockID block, string name, Vector3 offset) {
 			if (offset.X < 0.5f && offset.Z < 0.5f) {
-				return Find(game, block, name + "-NW");
+				return Find(block, name + "-NW");
 			} else if (offset.X >= 0.5f && offset.Z < 0.5f) {
-				return Find(game, block, name + "-NE");
+				return Find(block, name + "-NE");
 			} else if (offset.X < 0.5f && offset.Z >= 0.5f) {
-				return Find(game, block, name + "-SW");
+				return Find(block, name + "-SW");
 			} else if (offset.X >= 0.5f && offset.Z >= 0.5f) {
-				return Find(game, block, name + "-SE");
+				return Find(block, name + "-SE");
 			}
 			return block;
 		}
 
-		static BlockID RotateVertical(Game game, BlockID block, string name, Vector3 offset) {
+		static BlockID RotateVertical(BlockID block, string name, Vector3 offset) {
 			string height = offset.Y >= 0.5f ? "-U" : "-D";
-			return Find(game, block, name + height);
+			return Find(block, name + height);
 		}
 		
 		static BlockID RotateOther(Game game, BlockID block, string name, Vector3 offset) {
@@ -56,33 +56,33 @@ namespace ClassicalSharp {
 			if (BlockInfo.FindID(name + "-UD") == -1) {
 				float headY = LocationUpdate.Clamp(game.LocalPlayer.HeadY);
 				if (headY < 45 || (headY >= 135 && headY < 225) || headY > 315)
-					return Find(game, block, name + "-WE");
-				return Find(game, block, name + "-NS");
+					return Find(block, name + "-WE");
+				return Find(block, name + "-NS");
 			}
 			
 			// Thin pillar type blocks
 			BlockFace face = game.SelectedPos.Face;
 			if (face == BlockFace.YMax || face == BlockFace.YMin)
-				return Find(game, block, name + "-UD");
+				return Find(block, name + "-UD");
 			if (face == BlockFace.XMax || face == BlockFace.XMin)
-				return Find(game, block, name + "-WE");
+				return Find(block, name + "-WE");
 			if (face == BlockFace.ZMax || face == BlockFace.ZMin)
-				return Find(game, block, name + "-NS");
+				return Find(block, name + "-NS");
 			return block;
 		}
 		
 		static BlockID RotateDirection(Game game, BlockID block, string name, Vector3 offset) {
 			float headY = LocationUpdate.Clamp(game.LocalPlayer.HeadY);
 			if (headY >= 45  && headY < 135)
-				return Find(game, block, name + "-E");
+				return Find(block, name + "-E");
 			if (headY >= 135 && headY < 225)
-				return Find(game, block, name + "-S");
+				return Find(block, name + "-S");
 			if (headY >= 225 && headY < 315)
-				return Find(game, block, name + "-W");
-			return Find(game, block, name + "-N");
+				return Find(block, name + "-W");
+			return Find(block, name + "-N");
 		}
 		
-		static BlockID Find(Game game, BlockID block, string name) {
+		static BlockID Find(BlockID block, string name) {
 			int rotated = BlockInfo.FindID(name);
 			if (rotated != -1) return (BlockID)rotated;
 			return block;

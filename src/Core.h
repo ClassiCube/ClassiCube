@@ -36,11 +36,12 @@ typedef UInt8 bool;
 #define false 0
 #define NULL ((void*)0)
 
-#if USE16_BIT
+#ifdef INF_ID
 typedef UInt16 BlockID;
 #else
 typedef UInt8 BlockID;
 #endif
+typedef UInt8 BlockRaw;
 typedef UInt8 EntityID;
 typedef UInt16 TextureLoc;
 typedef UInt8 Face;

@@ -13,12 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\Generator">
-      <UniqueIdentifier>{5c270b38-8fe1-4d87-81bb-71b889de1474}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Generator">
-      <UniqueIdentifier>{6acee9ab-36de-4f0d-b434-b915b4b52c02}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Platform">
       <UniqueIdentifier>{eab38ecc-57ac-48f4-9ed2-7cbd40effb24}</UniqueIdentifier>
     </Filter>
@@ -97,29 +91,11 @@
     <Filter Include="Header Files\Entities">
       <UniqueIdentifier>{dead5fb3-a62a-4eb7-8d74-ce73e66ab9e6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Rendering\Map">
-      <UniqueIdentifier>{7704f4d9-92d9-424b-904f-80ec51f313f6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Rendering\Map">
-      <UniqueIdentifier>{74643485-c6aa-4b00-999f-9b4890c1f28e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Entities">
       <UniqueIdentifier>{47b3db41-6a79-47ca-a2b0-72d5ccb26bfb}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Blocks">
       <UniqueIdentifier>{3ca12726-ff14-4e95-9f3b-4c4bab3d2122}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Singleplayer">
-      <UniqueIdentifier>{3330713d-f0ac-4d06-9364-be620769878d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Singleplayer">
-      <UniqueIdentifier>{c4fcedcf-b438-4dc5-b633-e345e191fbf8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Entities\Model">
-      <UniqueIdentifier>{1dd38dd7-06fa-492f-9226-9555516dd017}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Entities\Model">
-      <UniqueIdentifier>{d9fb5d8e-29d7-4774-abfb-d30b6ab766e7}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Network">
       <UniqueIdentifier>{9e70549b-2798-4372-b887-876f8403a7ff}</UniqueIdentifier>
@@ -210,12 +186,6 @@
     <ClInclude Include="Entity.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
-    <ClInclude Include="MapRenderer.h">
-      <Filter>Header Files\Rendering\Map</Filter>
-    </ClInclude>
-    <ClInclude Include="MapGenerator.h">
-      <Filter>Header Files\Generator</Filter>
-    </ClInclude>
     <ClInclude Include="AxisLinesRenderer.h">
       <Filter>Header Files\SelectionBox</Filter>
     </ClInclude>
@@ -227,12 +197,6 @@
     </ClInclude>
     <ClInclude Include="Builder.h">
       <Filter>Header Files\MeshBuilder</Filter>
-    </ClInclude>
-    <ClInclude Include="ChunkUpdater.h">
-      <Filter>Header Files\Rendering\Map</Filter>
-    </ClInclude>
-    <ClInclude Include="ModelCache.h">
-      <Filter>Header Files\Entities\Model</Filter>
     </ClInclude>
     <ClInclude Include="TerrainAtlas.h">
       <Filter>Header Files\TexturePack</Filter>
@@ -294,9 +258,6 @@
     <ClInclude Include="InputHandler.h">
       <Filter>Header Files\Game</Filter>
     </ClInclude>
-    <ClInclude Include="BlockPhysics.h">
-      <Filter>Header Files\Singleplayer</Filter>
-    </ClInclude>
     <ClInclude Include="Physics.h">
       <Filter>Header Files\Math</Filter>
     </ClInclude>
@@ -327,14 +288,29 @@
     <ClInclude Include="Errors.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Model.h">
-      <Filter>Header Files\Entities\Model</Filter>
-    </ClInclude>
     <ClInclude Include="Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Core.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MapGenerator.h">
+      <Filter>Header Files\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Header Files\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelCache.h">
+      <Filter>Header Files\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ChunkUpdater.h">
+      <Filter>Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="MapRenderer.h">
+      <Filter>Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="BlockPhysics.h">
+      <Filter>Header Files\Blocks</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -377,9 +353,6 @@
     <ClCompile Include="Lighting.c">
       <Filter>Source Files\Map</Filter>
     </ClCompile>
-    <ClCompile Include="MapRenderer.c">
-      <Filter>Source Files\Rendering\Map</Filter>
-    </ClCompile>
     <ClCompile Include="AxisLinesRenderer.c">
       <Filter>Source Files\SelectionBox</Filter>
     </ClCompile>
@@ -392,12 +365,6 @@
     <ClCompile Include="Builder.c">
       <Filter>Source Files\MeshBuilder</Filter>
     </ClCompile>
-    <ClCompile Include="ChunkUpdater.c">
-      <Filter>Source Files\Rendering\Map</Filter>
-    </ClCompile>
-    <ClCompile Include="ModelCache.c">
-      <Filter>Source Files\Entities\Model</Filter>
-    </ClCompile>
     <ClCompile Include="Program.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -406,9 +373,6 @@
     </ClCompile>
     <ClCompile Include="TerrainAtlas.c">
       <Filter>Source Files\TexturePack</Filter>
-    </ClCompile>
-    <ClCompile Include="MapGenerator.c">
-      <Filter>Source Files\Generator</Filter>
     </ClCompile>
     <ClCompile Include="Entity.c">
       <Filter>Source Files\Entities</Filter>
@@ -479,9 +443,6 @@
     <ClCompile Include="InputHandler.c">
       <Filter>Source Files\Game</Filter>
     </ClCompile>
-    <ClCompile Include="BlockPhysics.c">
-      <Filter>Source Files\Singleplayer</Filter>
-    </ClCompile>
     <ClCompile Include="Physics.c">
       <Filter>Source Files\Math</Filter>
     </ClCompile>
@@ -518,8 +479,23 @@
     <ClCompile Include="ErrorHandler.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
+    <ClCompile Include="MapGenerator.c">
+      <Filter>Source Files\Map</Filter>
+    </ClCompile>
     <ClCompile Include="Model.c">
-      <Filter>Source Files\Entities\Model</Filter>
+      <Filter>Source Files\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelCache.c">
+      <Filter>Source Files\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ChunkUpdater.c">
+      <Filter>Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="MapRenderer.c">
+      <Filter>Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="BlockPhysics.c">
+      <Filter>Source Files\Blocks</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

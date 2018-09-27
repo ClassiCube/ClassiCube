@@ -36,7 +36,7 @@ void World_Reset(void) {
 	World_Uuid[8] |= 0x80; /* variant 2*/
 }
 
-void World_SetNewMap(BlockID* blocks, Int32 blocksSize, Int32 width, Int32 height, Int32 length) {
+void World_SetNewMap(BlockRaw* blocks, Int32 blocksSize, Int32 width, Int32 height, Int32 length) {
 	World_Width = width; World_Height = height; World_Length = length;
 	World_Blocks = blocks; World_BlocksSize = blocksSize;
 	if (!World_BlocksSize) World_Blocks = NULL;

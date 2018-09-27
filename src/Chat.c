@@ -436,21 +436,12 @@ static bool CuboidCommand_ParseBlock(const String* args, Int32 argsCount) {
 	if (argsCount == 1) return true;
 	if (String_CaselessEqualsConst(&args[1], "yes")) { cuboid_persist = true; return true; }
 
-	Int32 temp = Block_FindID(&args[1]);
-	BlockID block = 0;
-
-	if (temp != -1) {
-		block = (BlockID)temp;
-	} else {
-		#if USE16_BIT
-		if (!Convert_TryParseUInt16(&args[1], &block)) {
-		#else
-		if (!Convert_TryParseUInt8(&args[1], &block)) {
-		#endif		
-			Chat_Add1("&eCuboid: &c\"%s\" is not a valid block name or id.", &args[1]); return false;
-		}
+	Int32 raw = Block_Parse(&args[1]);
+	if (raw == -1) {
+		Chat_Add1("&eCuboid: &c\"%s\" is not a valid block name or id.", &args[1]); return false;
 	}
 
+	BlockID block = (BlockID)raw;
 	if (block >= BLOCK_CPE_COUNT && !Block_IsCustomDefined(block)) {
 		Chat_Add1("&eCuboid: &cThere is no block with id \"%s\".", &args[1]); return false;
 	}

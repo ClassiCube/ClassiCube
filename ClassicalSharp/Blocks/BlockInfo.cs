@@ -243,6 +243,12 @@ namespace ClassicalSharp {
 			return -1;
 		}
 		
+		public static int Parse(string str) {
+			int b;
+			if (int.TryParse(str, out b) && b < Count) return b;
+			return FindID(str);
+		}
+		
 		
 		const string RawNames = "Air_Stone_Grass_Dirt_Cobblestone_Wood_Sapling_Bedrock_Water_Still water_Lava" +
 			"_Still lava_Sand_Gravel_Gold ore_Iron ore_Coal ore_Log_Leaves_Sponge_Glass_Red_Orange_Yellow_Lime_Green" +

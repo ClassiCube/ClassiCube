@@ -16,7 +16,7 @@ public CustomModel[] CustomModels = new CustomModel[256];
 #define MODELCACHE_MAX_MODELS 24
 struct CachedModel ModelCache_Models[MODELCACHE_MAX_MODELS];
 struct CachedTexture ModelCache_Textures[MODELCACHE_MAX_MODELS];
-/* Maximum number of vertices a model can have. */
+/* Maximum number of vertices a model can have */
 #define MODELCACHE_MAX_VERTICES (24 * 12)
 GfxResourceID ModelCache_Vb;
 VertexP3fT2fC4b ModelCache_Vertices[MODELCACHE_MAX_VERTICES];

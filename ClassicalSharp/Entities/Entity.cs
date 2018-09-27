@@ -71,7 +71,7 @@ namespace ClassicalSharp.Entities {
 		public abstract void RenderName();
 		
 		public virtual void ContextLost() { }
-		public virtual void ContextRecreated() { }		
+		public virtual void ContextRecreated() { }
 		
 		public Vector3 EyePosition {
 			get { return new Vector3(Position.X, Position.Y + EyeHeight, Position.Z); }
@@ -82,11 +82,11 @@ namespace ClassicalSharp.Entities {
 			Matrix4 m = Matrix4.Identity, tmp;
 
 			Matrix4.Scale(out tmp, scale.X, scale.Y, scale.Z);
-			Matrix4.Mult(out m, ref m, ref tmp);			
-			Matrix4.RotateZ(out tmp, -RotZ * Utils.Deg2Rad); 
+			Matrix4.Mult(out m, ref m, ref tmp);
+			Matrix4.RotateZ(out tmp, -RotZ * Utils.Deg2Rad);
 			Matrix4.Mult(out m, ref m, ref tmp);
 			Matrix4.RotateX(out tmp, -RotX * Utils.Deg2Rad);
-			Matrix4.Mult(out m, ref m, ref tmp);		
+			Matrix4.Mult(out m, ref m, ref tmp);
 			Matrix4.RotateY(out tmp, -RotY * Utils.Deg2Rad);
 			Matrix4.Mult(out m, ref m, ref tmp);
 			Matrix4.Translate(out tmp, pos.X, pos.Y, pos.Z);
@@ -101,6 +101,17 @@ namespace ClassicalSharp.Entities {
 			return game.World.IsValidPos(P) ? game.Lighting.LightCol(P.X, P.Y, P.Z) : game.Lighting.Outside;
 		}
 		
+		void SetBlockModel() {
+			int raw = BlockInfo.Parse(ModelName);
+			if (raw == -1) {
+				// use default humanoid model
+				Model = game.ModelCache.Models[0].Instance;
+			} else {
+				ModelName  = "block";
+				ModelBlock = (BlockID)raw;
+				Model = game.ModelCache.Get("block");
+			}
+		}
 		
 		public void SetModel(string model) {
 			ModelScale = new Vector3(1.0f);
@@ -114,16 +125,11 @@ namespace ClassicalSharp.Entities {
 			}
 			
 			ModelBlock = Block.Air;
-			BlockID block;
-			if (BlockID.TryParse(ModelName, out block) && block < BlockInfo.Count) {
-				ModelName = "block";
-				ModelBlock = block;
-			}
-			
 			Model = game.ModelCache.Get(ModelName);
-			ParseScale(scale);
-			MobTextureId = 0;
+			MobTextureId = 0;		
+			if (Model == null) SetBlockModel();
 			
+			ParseScale(scale);
 			Model.RecalcProperties(this);
 			UpdateModelBounds();
 		}
@@ -142,7 +148,7 @@ namespace ClassicalSharp.Entities {
 			
 			Utils.Clamp(ref value, 0.01f, Model.MaxScale);
 			ModelScale = new Vector3(value);
-		}		
+		}
 		
 		
 		internal AABB modelAABB;
@@ -163,7 +169,7 @@ namespace ClassicalSharp.Entities {
 			Vector3I max = Vector3I.Floor(bounds.Max);
 
 			AABB blockBB;
-			Vector3 v;		
+			Vector3 v;
 			min.X = min.X < 0 ? 0 : min.X; max.X = max.X > game.World.MaxX ? game.World.MaxX : max.X;
 			min.Y = min.Y < 0 ? 0 : min.Y; max.Y = max.Y > game.World.MaxY ? game.World.MaxY : max.Y;
 			min.Z = min.Z < 0 ? 0 : min.Z; max.Z = max.Z > game.World.MaxZ ? game.World.MaxZ : max.Z;
@@ -186,7 +192,7 @@ namespace ClassicalSharp.Entities {
 			}
 			return false;
 		}
-			
+		
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// given bounding box satisfy the given condition. </summary>
 		public bool TouchesAny(AABB bounds, Predicate<byte> condition) {
@@ -202,7 +208,7 @@ namespace ClassicalSharp.Entities {
 		}
 		static Predicate<BlockID> touchesRope = IsRope;
 		static bool IsRope(BlockID b) { return BlockInfo.ExtendedCollide[b] == CollideType.ClimbRope; }
-	
+		
 		
 		static readonly Vector3 liqExpand = new Vector3(0.25f/16f, 0/16f, 0.25f/16f);
 		

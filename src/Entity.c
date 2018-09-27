@@ -117,10 +117,20 @@ static void Entity_ParseScale(struct Entity* e, const String* scale) {
 	e->ModelScale = Vector3_Create1(value);
 }
 
+static void Entity_SetBlockModel(struct Entity* e, const String* model) {
+	Int32 raw = Block_Parse(model);
+	if (raw == -1) {
+		/* use default humanoid model */
+		e->Model = ModelCache_Models[0].Instance;
+	} else {
+		String block  = String_FromConst("block");
+		e->ModelBlock = (BlockID)raw;
+		e->Model      = ModelCache_Get(&block);
+	}
+}
+
 void Entity_SetModel(struct Entity* e, const String* model) {
 	e->ModelScale = Vector3_Create1(1.0f);
-	e->ModelBlock = BLOCK_AIR;
-
 	String name, scale;
 	if (!String_UNSAFE_Separate(model, '|', &name, &scale)) {
 		name  = *model;
@@ -131,17 +141,18 @@ void Entity_SetModel(struct Entity* e, const String* model) {
 	if (String_CaselessEqualsConst(&name, "giant")) {
 		name = String_FromReadonly("humanoid");
 		e->ModelScale = Vector3_Create1(2.0f);
-	} else if (Convert_TryParseUInt8(&name, &e->ModelBlock)) {
-		name = String_FromReadonly("block");
 	}
+	e->ModelIsSheepNoFur = String_CaselessEqualsConst(&name, "sheep_nofur");
 
-	e->Model = ModelCache_Get(&name);
-	Entity_ParseScale(e, &scale);
+	e->ModelBlock   = BLOCK_AIR;
+	e->Model        = ModelCache_Get(&name);
 	e->MobTextureId = NULL;
+	if (!e->Model) Entity_SetBlockModel(e, &name);
 
+	Entity_ParseScale(e, &scale);
 	e->Model->RecalcProperties(e);
 	Entity_UpdateModelBounds(e);
-	e->ModelIsSheepNoFur = String_CaselessEqualsConst(&name, "sheep_nofur");
+	
 }
 
 void Entity_UpdateModelBounds(struct Entity* e) {

@@ -15,7 +15,7 @@ static void Gen_Init(void) {
 	Gen_CurrentProgress = 0.0f;
 	Gen_CurrentState = "";
 
-	Gen_Blocks = Mem_Alloc(Gen_Width * Gen_Height * Gen_Length, sizeof(BlockID), "map blocks for gen");
+	Gen_Blocks = Mem_Alloc(Gen_Volume, 1, "map blocks for gen");
 	Gen_Done = false;
 }
 
@@ -23,15 +23,15 @@ static void Gen_Init(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Flatgrass gen-------------------------------------------------------*
 *#########################################################################################################################*/
-static void FlatgrassGen_MapSet(Int32 yStart, Int32 yEnd, BlockID block) {
+static void FlatgrassGen_MapSet(Int32 yStart, Int32 yEnd, BlockRaw block) {
 	yStart = max(yStart, 0); yEnd = max(yEnd, 0);
 	Int32 y, yHeight = (yEnd - yStart) + 1;
-	BlockID* ptr = Gen_Blocks;
+	BlockRaw* ptr = Gen_Blocks;
 	UInt32 oneY = (UInt32)Gen_Width * (UInt32)Gen_Length;
 
 	Gen_CurrentProgress = 0.0f;
 	for (y = yStart; y <= yEnd; y++) {
-		Mem_Set(ptr + y * oneY, block, oneY * (UInt32)sizeof(BlockID));
+		Mem_Set(ptr + y * oneY, block, oneY);
 		Gen_CurrentProgress = (float)(y - yStart) / yHeight;
 	}
 }
@@ -59,7 +59,7 @@ Int32 waterLevel, oneY, minHeight;
 Int16* Heightmap;
 Random rnd;
 
-static void NotchyGen_FillOblateSpheroid(Int32 x, Int32 y, Int32 z, float radius, BlockID block) {
+static void NotchyGen_FillOblateSpheroid(Int32 x, Int32 y, Int32 z, float radius, BlockRaw block) {
 	Int32 xStart = Math_Floor(max(x - radius, 0));
 	Int32 xEnd = Math_Floor(min(x + radius, Gen_MaxX));
 	Int32 yStart = Math_Floor(max(y - radius, 0));
@@ -92,7 +92,7 @@ if (stack_size == 32768) {\
 	ErrorHandler_Fail("NotchyGen_FloodFail - stack limit hit");\
 }
 
-static void NotchyGen_FloodFill(Int32 startIndex, BlockID block) {
+static void NotchyGen_FloodFill(Int32 startIndex, BlockRaw block) {
 	if (startIndex < 0) return; /* y below map, immediately ignore */
 								/* This is way larger size than I actually have seen used, but we play it safe here.*/
 	Int32 stack[32768];
@@ -156,20 +156,20 @@ static Int32 NotchyGen_CreateStrataFast(void) {
 	Gen_CurrentState = "Filling map";
 
 	/* Make lava layer at bottom */
-	Mem_Set(Gen_Blocks, BLOCK_LAVA, oneY * (UInt32)sizeof(BlockID));
+	Mem_Set(Gen_Blocks, BLOCK_LAVA, oneY);
 
 	/* Invariant: the lowest value dirtThickness can possible be is -14 */
 	Int32 stoneHeight = minHeight - 14;
 	/* We can quickly fill in bottom solid layers */
 	for (y = 1; y <= stoneHeight; y++) {
-		Mem_Set(Gen_Blocks + y * oneY, BLOCK_STONE, oneY * (UInt32)sizeof(BlockID));
+		Mem_Set(Gen_Blocks + y * oneY, BLOCK_STONE, oneY);
 		Gen_CurrentProgress = (float)y / Gen_Height;
 	}
 
 	/* Fill in rest of map wih air */
 	Int32 airHeight = max(0, stoneHeight) + 1;
 	for (y = airHeight; y < Gen_Height; y++) {
-		Mem_Set(Gen_Blocks + y * oneY, BLOCK_AIR, oneY * (UInt32)sizeof(BlockID));
+		Mem_Set(Gen_Blocks + y * oneY, BLOCK_AIR, oneY);
 		Gen_CurrentProgress = (float)y / Gen_Height;
 	}
 
@@ -250,7 +250,7 @@ static void NotchyGen_CarveCaves(void) {
 	}
 }
 
-static void NotchyGen_CarveOreVeins(float abundance, const char* state, BlockID block) {
+static void NotchyGen_CarveOreVeins(float abundance, const char* state, BlockRaw block) {
 	Int32 numVeins = (Int32)(Gen_Volume * abundance / 16384);
 	Gen_CurrentState = state;
 
@@ -349,7 +349,7 @@ static void NotchyGen_CreateSurfaceLayer(void) {
 			if (y < 0 || y >= Gen_Height) continue;
 
 			Int32 index = Gen_Pack(x, y, z);
-			BlockID blockAbove = y >= Gen_MaxY ? BLOCK_AIR : Gen_Blocks[index + oneY];
+			BlockRaw blockAbove = y >= Gen_MaxY ? BLOCK_AIR : Gen_Blocks[index + oneY];
 
 			if (blockAbove == BLOCK_WATER && (OctaveNoise_Calc(&n2, (float)x, (float)z) > 12)) {
 				Gen_Blocks[index] = BLOCK_GRAVEL;
@@ -368,8 +368,10 @@ static void NotchyGen_PlantFlowers(void) {
 	Int32 i, j, k;
 	for (i = 0; i < numPatches; i++) {
 		Gen_CurrentProgress = (float)i / numPatches;
-		BlockID type = (BlockID)(BLOCK_DANDELION + Random_Next(&rnd, 2));
-		Int32 patchX = Random_Next(&rnd, Gen_Width), patchZ = Random_Next(&rnd, Gen_Length);
+		BlockRaw type = (BlockRaw)(BLOCK_DANDELION + Random_Next(&rnd, 2));
+		Int32 patchX  = Random_Next(&rnd, Gen_Width);
+		Int32 patchZ  = Random_Next(&rnd, Gen_Length);
+
 		for (j = 0; j < 10; j++) {
 			Int32 flowerX = patchX, flowerZ = patchZ;
 			for (k = 0; k < 5; k++) {
@@ -396,10 +398,10 @@ static void NotchyGen_PlantMushrooms(void) {
 	Int32 i, j, k;
 	for (i = 0; i < numPatches; i++) {
 		Gen_CurrentProgress = (float)i / numPatches;
-		BlockID type = (BlockID)(BLOCK_BROWN_SHROOM + Random_Next(&rnd, 2));
-		Int32 patchX = Random_Next(&rnd, Gen_Width);
-		Int32 patchY = Random_Next(&rnd, Gen_Height);
-		Int32 patchZ = Random_Next(&rnd, Gen_Length);
+		BlockRaw type = (BlockRaw)(BLOCK_BROWN_SHROOM + Random_Next(&rnd, 2));
+		Int32 patchX  = Random_Next(&rnd, Gen_Width);
+		Int32 patchY  = Random_Next(&rnd, Gen_Height);
+		Int32 patchZ  = Random_Next(&rnd, Gen_Length);
 
 		for (j = 0; j < 20; j++) {
 			Int32 mushX = patchX, mushY = patchY, mushZ = patchZ;
@@ -448,11 +450,11 @@ static void NotchyGen_PlantTrees(void) {
 				Int32 treeHeight = 5 + Random_Next(&rnd, 3);
 
 				Int32 index = Gen_Pack(treeX, treeY, treeZ);
-				BlockID blockUnder = treeY > 0 ? Gen_Blocks[index - oneY] : BLOCK_AIR;
+				BlockRaw blockUnder = treeY > 0 ? Gen_Blocks[index - oneY] : BLOCK_AIR;
 
 				if (blockUnder == BLOCK_GRASS && TreeGen_CanGrow(treeX, treeY, treeZ, treeHeight)) {
 					Vector3I coords[Tree_BufferCount];
-					BlockID blocks[Tree_BufferCount];
+					BlockRaw blocks[Tree_BufferCount];
 					Int32 count = TreeGen_Grow(treeX, treeY, treeZ, treeHeight, coords, blocks);
 
 					for (m = 0; m < count; m++) {
@@ -618,7 +620,7 @@ bool TreeGen_CanGrow(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 treeHeight) {
 coords[count].X = (x); coords[count].Y = (y); coords[count].Z = (z);\
 blocks[count] = block; count++;
 
-Int32 TreeGen_Grow(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height, Vector3I* coords, BlockID* blocks) {
+Int32 TreeGen_Grow(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height, Vector3I* coords, BlockRaw* blocks) {
 	Int32 baseHeight = height - 4;
 	Int32 count = 0;
 	Int32 xx, y, zz;

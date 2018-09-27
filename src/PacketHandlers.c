@@ -291,7 +291,7 @@ bool mapInflateInited;
 struct GZipHeader gzHeader;
 Int32 mapSizeIndex, mapIndex, mapVolume;
 UInt8 mapSize[4];
-UInt8* map;
+BlockRaw* map;
 struct Stream mapPartStream;
 struct Screen* prevScreen;
 bool receivedFirstPosition;

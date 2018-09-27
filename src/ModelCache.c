@@ -16,15 +16,15 @@
 *---------------------------------------------------------ModelCache------------------------------------------------------*
 *#########################################################################################################################*/
 Int32 ModelCache_texCount, ModelCache_modelCount;
-#define MODEL_RET_SIZE(x,y,z) static Vector3 P = { (x)/16.0f,(y)/16.0f,(z)/16.0f }; *size = P;
-#define MODEL_RET_AABB(x1,y1,z1, x2,y2,z2) static struct AABB BB = { (x1)/16.0f,(y1)/16.0f,(z1)/16.0f, (x2)/16.0f,(y2)/16.0f,(z2)/16.0f }; *bb = BB;
-#define BOXDESC_DIM(p1, p2) p1 < p2 ? p2 - p1 : p1 - p2
+#define Model_RetSize(x,y,z) static Vector3 P = { (x)/16.0f,(y)/16.0f,(z)/16.0f }; *size = P;
+#define Model_RetAABB(x1,y1,z1, x2,y2,z2) static struct AABB BB = { (x1)/16.0f,(y1)/16.0f,(z1)/16.0f, (x2)/16.0f,(y2)/16.0f,(z2)/16.0f }; *bb = BB;
+#define BoxDesc_Dim(p1, p2) p1 < p2 ? p2 - p1 : p1 - p2
 
-#define BOXDESC_TEX(x, y)                 x,y
-#define BOXDESC_DIMS(x1,y1,z1,x2,y2,z2)   BOXDESC_DIM(x1,x2), BOXDESC_DIM(y1,y2), BOXDESC_DIM(z1,z2)
-#define BOXDESC_BOUNDS(x1,y1,z1,x2,y2,z2) x1/16.0f,y1/16.0f,z1/16.0f, x2/16.0f,y2/16.0f,z2/16.0f
-#define BOXDESC_ROT(x, y, z)              x/16.0f,y/16.0f,z/16.0f
-#define BOXDESC_BOX(x1,y1,z1,x2,y2,z2)    BOXDESC_DIMS(x1,y1,z1,x2,y2,z2), BOXDESC_BOUNDS(x1,y1,z1,x2,y2,z2)
+#define BoxDesc_Tex(x, y)                 x,y
+#define BoxDesc_Dims(x1,y1,z1,x2,y2,z2)   BoxDesc_Dim(x1,x2), BoxDesc_Dim(y1,y2), BoxDesc_Dim(z1,z2)
+#define BoxDesc_Bounds(x1,y1,z1,x2,y2,z2) x1/16.0f,y1/16.0f,z1/16.0f, x2/16.0f,y2/16.0f,z2/16.0f
+#define BoxDesc_Rot(x, y, z)              x/16.0f,y/16.0f,z/16.0f
+#define BoxDesc_Box(x1,y1,z1,x2,y2,z2)    BoxDesc_Dims(x1,y1,z1,x2,y2,z2), BoxDesc_Bounds(x1,y1,z1,x2,y2,z2)
 
 static void ModelCache_ContextLost(void* obj) {
 	Gfx_DeleteVb(&ModelCache_Vb);
@@ -55,7 +55,7 @@ struct Model* ModelCache_Get(const String* name) {
 		}
 		return m->Instance;
 	}
-	return ModelCache_Models[0].Instance;
+	return NULL;
 }
 
 Int32 ModelCache_GetTextureIndex(const String* texName) {
@@ -132,39 +132,39 @@ static void ChickenModel_MakeLeg(struct ModelPart* part, Int32 x1, Int32 x2, Int
 
 static void ChickenModel_CreateParts(void) {
 	static struct BoxDesc head = {
-		BOXDESC_TEX(0,0),
-		BOXDESC_BOX(-2,9,-6, 2,15,-3),
-		BOXDESC_ROT(0,9,-4),
+		BoxDesc_Tex(0,0),
+		BoxDesc_Box(-2,9,-6, 2,15,-3),
+		BoxDesc_Rot(0,9,-4),
 	}; BoxDesc_BuildBox(&Chicken_Head, &head);
 
 	static struct BoxDesc head2 = { /* TODO: Find a more appropriate name. */
-		BOXDESC_TEX(14,4),
-		BOXDESC_BOX(-1,9,-7, 1,11,-5),
-		BOXDESC_ROT(0,9,-4),
+		BoxDesc_Tex(14,4),
+		BoxDesc_Box(-1,9,-7, 1,11,-5),
+		BoxDesc_Rot(0,9,-4),
 	}; BoxDesc_BuildBox(&Chicken_Head2, &head2);
 
 	static struct BoxDesc head3 = {
-		BOXDESC_TEX(14,0),
-		BOXDESC_BOX(-2,11,-8, 2,13,-6),
-		BOXDESC_ROT(0,9,-4),
+		BoxDesc_Tex(14,0),
+		BoxDesc_Box(-2,11,-8, 2,13,-6),
+		BoxDesc_Rot(0,9,-4),
 	}; BoxDesc_BuildBox(&Chicken_Head3, &head3);
 
 	static struct BoxDesc torso = {
-		BOXDESC_TEX(0,9),
-		BOXDESC_BOX(-3,5,-4, 3,11,3),
-		BOXDESC_ROT(0,5,0),
+		BoxDesc_Tex(0,9),
+		BoxDesc_Box(-3,5,-4, 3,11,3),
+		BoxDesc_Rot(0,5,0),
 	}; BoxDesc_BuildRotatedBox(&Chicken_Torso, &torso);
 
 	static struct BoxDesc lWing = {
-		BOXDESC_TEX(24,13),
-		BOXDESC_BOX(-4,7,-3, -3,11,3),
-		BOXDESC_ROT(-3,11,0),
+		BoxDesc_Tex(24,13),
+		BoxDesc_Box(-4,7,-3, -3,11,3),
+		BoxDesc_Rot(-3,11,0),
 	}; BoxDesc_BuildBox(&Chicken_LeftWing, &lWing);
 
 	static struct BoxDesc rWing = {
-		BOXDESC_TEX(24,13),
-		BOXDESC_BOX(3,7,-3, 4,11,3),
-		BOXDESC_ROT(3,11,0),
+		BoxDesc_Tex(24,13),
+		BoxDesc_Box(3,7,-3, 4,11,3),
+		BoxDesc_Rot(3,11,0),
 	}; BoxDesc_BuildBox(&Chicken_RightWing, &rWing);
 
 	ChickenModel_MakeLeg(&Chicken_LeftLeg, -3, 0, -2, -1);
@@ -172,8 +172,8 @@ static void ChickenModel_CreateParts(void) {
 }
 
 static float ChickenModel_GetEyeY(struct Entity* entity)  { return 14.0f / 16.0f; }
-static void ChickenModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(8.0f,12.0f,8.0f); }
-static void ChickenModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-4,0,-8, 4,15,4); }
+static void ChickenModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.0f,12.0f,8.0f); }
+static void ChickenModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-8, 4,15,4); }
 
 static void ChickenModel_DrawModel(struct Entity* entity) {
 	Model_ApplyTexture(entity);
@@ -215,45 +215,45 @@ struct Model CreeperModel;
 
 static void CreeperModel_CreateParts(void) {
 	static struct BoxDesc head = {
-		BOXDESC_TEX(0,0),
-		BOXDESC_BOX(-4,18,-4, 4,26,4),
-		BOXDESC_ROT(0,18,0),
+		BoxDesc_Tex(0,0),
+		BoxDesc_Box(-4,18,-4, 4,26,4),
+		BoxDesc_Rot(0,18,0),
 	}; BoxDesc_BuildBox(&Creeper_Head, &head);
 
 	static struct BoxDesc torso = {
-		BOXDESC_TEX(16,16),
-		BOXDESC_BOX(-4,6,-2, 4,18,2),
-		BOXDESC_ROT(0,6,0),
+		BoxDesc_Tex(16,16),
+		BoxDesc_Box(-4,6,-2, 4,18,2),
+		BoxDesc_Rot(0,6,0),
 	}; BoxDesc_BuildBox(&Creeper_Torso, &torso);
 
 	static struct BoxDesc lFront = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(-4,0,-6, 0,6,-2),
-		BOXDESC_ROT(0,6,-2),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(-4,0,-6, 0,6,-2),
+		BoxDesc_Rot(0,6,-2),
 	}; BoxDesc_BuildBox(&Creeper_LeftLegFront, &lFront);
 
 	static struct BoxDesc rFront = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(0,0,-6, 4,6,-2),
-		BOXDESC_ROT(0,6,-2),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(0,0,-6, 4,6,-2),
+		BoxDesc_Rot(0,6,-2),
 	}; BoxDesc_BuildBox(&Creeper_RightLegFront, &rFront);
 
 	static struct BoxDesc lBack = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(-4,0,2, 0,6,6),
-		BOXDESC_ROT(0,6,2),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(-4,0,2, 0,6,6),
+		BoxDesc_Rot(0,6,2),
 	}; BoxDesc_BuildBox(&Creeper_LeftLegBack, &lBack);
 
 	static struct BoxDesc rBack = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(0,0,2, 4,6,6),
-		BOXDESC_ROT(0,6,2),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(0,0,2, 4,6,6),
+		BoxDesc_Rot(0,6,2),
 	}; BoxDesc_BuildBox(&Creeper_RightLegBack, &rBack);
 }
 
 static float CreeperModel_GetEyeY(struct Entity* entity)  { return 22.0f / 16.0f; }
-static void CreeperModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(8.0f,26.0f,8.0f); }
-static void CreeperModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-4,0,-6, 4,26,6); }
+static void CreeperModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.0f,26.0f,8.0f); }
+static void CreeperModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-6, 4,26,6); }
 
 static void CreeperModel_DrawModel(struct Entity* entity) {
 	Model_ApplyTexture(entity);
@@ -286,45 +286,45 @@ struct Model PigModel;
 
 static void PigModel_CreateParts(void) {
 	static struct BoxDesc head = {
-		BOXDESC_TEX(0,0),
-		BOXDESC_BOX(-4,8,-14, 4,16,-6),
-		BOXDESC_ROT(0,12,-6),
+		BoxDesc_Tex(0,0),
+		BoxDesc_Box(-4,8,-14, 4,16,-6),
+		BoxDesc_Rot(0,12,-6),
 	}; BoxDesc_BuildBox(&Pig_Head, &head);
 
 	static struct BoxDesc torso = {
-		BOXDESC_TEX(28,8),
-		BOXDESC_BOX(-5,6,-8, 5,14,8),
-		BOXDESC_ROT(0,6,0),
+		BoxDesc_Tex(28,8),
+		BoxDesc_Box(-5,6,-8, 5,14,8),
+		BoxDesc_Rot(0,6,0),
 	}; BoxDesc_BuildRotatedBox(&Pig_Torso, &torso);
 
 	static struct BoxDesc lFront = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(-5,0,-7, -1,6,-3),
-		BOXDESC_ROT(0,6,-5),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(-5,0,-7, -1,6,-3),
+		BoxDesc_Rot(0,6,-5),
 	}; BoxDesc_BuildBox(&Pig_LeftLegFront, &lFront);
 
 	static struct BoxDesc rFront = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(1,0,-7, 5,6,-3),
-		BOXDESC_ROT(0,6,-5),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(1,0,-7, 5,6,-3),
+		BoxDesc_Rot(0,6,-5),
 	}; BoxDesc_BuildBox(&Pig_RightLegFront, &rFront);
 
 	static struct BoxDesc lBack = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(-5,0,5, -1,6,9),
-		BOXDESC_ROT(0,6,7),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(-5,0,5, -1,6,9),
+		BoxDesc_Rot(0,6,7),
 	}; BoxDesc_BuildBox(&Pig_LeftLegBack, &lBack);
 
 	static struct BoxDesc rBack = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(1,0,5, 5,6,9),
-		BOXDESC_ROT(0,6,7),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(1,0,5, 5,6,9),
+		BoxDesc_Rot(0,6,7),
 	}; BoxDesc_BuildBox(&Pig_RightLegBack, &rBack);
 }
 
 static float PigModel_GetEyeY(struct Entity* entity)  { return 12.0f / 16.0f; }
-static void PigModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(14.0f,14.0f,14.0f); }
-static void PigModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-5,0,-14, 5,16,9); }
+static void PigModel_GetCollisionSize(Vector3* size)   { Model_RetSize(14.0f,14.0f,14.0f); }
+static void PigModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-5,0,-14, 5,16,9); }
 
 static void PigModel_DrawModel(struct Entity* entity) {
 	Model_ApplyTexture(entity);
@@ -360,88 +360,88 @@ Int32 fur_Index;
 
 static void SheepModel_CreateParts(void) {
 	static struct BoxDesc head = {
-		BOXDESC_TEX(0,0),
-		BOXDESC_BOX(-3,16,-14, 3,22,-6),
-		BOXDESC_ROT(0,18,-8),
+		BoxDesc_Tex(0,0),
+		BoxDesc_Box(-3,16,-14, 3,22,-6),
+		BoxDesc_Rot(0,18,-8),
 	}; BoxDesc_BuildBox(&Sheep_Head, &head);
 
 	static struct BoxDesc torso = {
-		BOXDESC_TEX(28,8),
-		BOXDESC_BOX(-4,12,-8, 4,18,8),
-		BOXDESC_ROT(0,12,0),
+		BoxDesc_Tex(28,8),
+		BoxDesc_Box(-4,12,-8, 4,18,8),
+		BoxDesc_Rot(0,12,0),
 	}; BoxDesc_BuildRotatedBox(&Sheep_Torso, &torso);
 	
 	static struct BoxDesc lFront = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(-5,0,-7, -1,12,-3),
-		BOXDESC_ROT(0,12,-5),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(-5,0,-7, -1,12,-3),
+		BoxDesc_Rot(0,12,-5),
 	}; BoxDesc_BuildBox(&Sheep_LeftLegFront, &lFront);
 
 	static struct BoxDesc rFront = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(1,0,-7, 5,12,-3),
-		BOXDESC_ROT(0,12,-5),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(1,0,-7, 5,12,-3),
+		BoxDesc_Rot(0,12,-5),
 	}; BoxDesc_BuildBox(&Sheep_RightLegFront, &rFront);
 
 	static struct BoxDesc lBack = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(-5,0,5, -1,12,9),
-		BOXDESC_ROT(0,12,7),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(-5,0,5, -1,12,9),
+		BoxDesc_Rot(0,12,7),
 	}; BoxDesc_BuildBox(&Sheep_LeftLegBack, &lBack);
 
 	static struct BoxDesc rBack = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(1,0,5, 5,12,9),
-		BOXDESC_ROT(0,12,7),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(1,0,5, 5,12,9),
+		BoxDesc_Rot(0,12,7),
 	}; BoxDesc_BuildBox(&Sheep_RightLegBack, &rBack);
 
 
 	static struct BoxDesc fHead = {
-		BOXDESC_TEX(0,0),
-		BOXDESC_DIMS(-3,16,-12, 3,22,-6),
-		BOXDESC_BOUNDS(-3.5f,15.5f,-12.5f, 3.5f,22.5f,-5.5f),
-		BOXDESC_ROT(0,18,-8),
+		BoxDesc_Tex(0,0),
+		BoxDesc_Dims(-3,16,-12, 3,22,-6),
+		BoxDesc_Bounds(-3.5f,15.5f,-12.5f, 3.5f,22.5f,-5.5f),
+		BoxDesc_Rot(0,18,-8),
 	}; BoxDesc_BuildBox(&Fur_Head, &fHead);
 
 	static struct BoxDesc fTorso = {
-		BOXDESC_TEX(28,8),
-		BOXDESC_DIMS(-4,12,-8, 4,18,8),
-		BOXDESC_BOUNDS(-6.0f,10.5f,-10.0f, 6.0f,19.5f,10.0f),
-		BOXDESC_ROT(0,12,0),
+		BoxDesc_Tex(28,8),
+		BoxDesc_Dims(-4,12,-8, 4,18,8),
+		BoxDesc_Bounds(-6.0f,10.5f,-10.0f, 6.0f,19.5f,10.0f),
+		BoxDesc_Rot(0,12,0),
 	}; BoxDesc_BuildRotatedBox(&Fur_Torso, &fTorso);
 
 	static struct BoxDesc flFront = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_DIMS(-5,6,-7, -1,12,-3),
-		BOXDESC_BOUNDS(-5.5f,5.5f,-7.5f, -0.5f,12.5f,-2.5f),
-		BOXDESC_ROT(0,12,-5),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Dims(-5,6,-7, -1,12,-3),
+		BoxDesc_Bounds(-5.5f,5.5f,-7.5f, -0.5f,12.5f,-2.5f),
+		BoxDesc_Rot(0,12,-5),
 	}; BoxDesc_BuildBox(&Fur_LeftLegFront, &flFront);
 
 	static struct BoxDesc frFront = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_DIMS(1,6,-7, 5,12,-3),
-		BOXDESC_BOUNDS(0.5f,5.5f,-7.5f, 5.5f,12.5f,-2.5f),
-		BOXDESC_ROT(0,12,-5),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Dims(1,6,-7, 5,12,-3),
+		BoxDesc_Bounds(0.5f,5.5f,-7.5f, 5.5f,12.5f,-2.5f),
+		BoxDesc_Rot(0,12,-5),
 	}; BoxDesc_BuildBox(&Fur_RightLegFront, &frFront);
 
 	static struct BoxDesc flBack = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_DIMS(-5,6,5, -1,12,9),
-		BOXDESC_BOUNDS(-5.5f,5.5f,4.5f, -0.5f,12.5f,9.5f),
-		BOXDESC_ROT(0,12,7),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Dims(-5,6,5, -1,12,9),
+		BoxDesc_Bounds(-5.5f,5.5f,4.5f, -0.5f,12.5f,9.5f),
+		BoxDesc_Rot(0,12,7),
 	}; BoxDesc_BuildBox(&Fur_LeftLegBack, &flBack);
 
 	static struct BoxDesc frBack = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_DIMS(1,6,5, 5,12,9),
-		BOXDESC_BOUNDS(0.5f,5.5f,4.5f, 5.5f,12.5f,9.5f),
-		BOXDESC_ROT(0,12,7),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Dims(1,6,5, 5,12,9),
+		BoxDesc_Bounds(0.5f,5.5f,4.5f, 5.5f,12.5f,9.5f),
+		BoxDesc_Rot(0,12,7),
 	}; BoxDesc_BuildBox(&Fur_RightLegBack, &frBack);
 }
 
 static float SheepModel_GetEyeY(struct Entity* entity)  { return 20.0f / 16.0f; }
-static void SheepModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(10.0f,20.0f,10.0f); }
-static void SheepModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-6,0,-13, 6,23,10); }
+static void SheepModel_GetCollisionSize(Vector3* size)   { Model_RetSize(10.0f,20.0f,10.0f); }
+static void SheepModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-6,0,-13, 6,23,10); }
 
 static void SheepModel_DrawModel(struct Entity* entity) {
 	Model_ApplyTexture(entity);
@@ -488,45 +488,45 @@ struct Model SkeletonModel;
 
 static void SkeletonModel_CreateParts(void) {
 	static struct BoxDesc head = {
-		BOXDESC_TEX(0,0),
-		BOXDESC_BOX(-4,24,-4, 4,32,4),
-		BOXDESC_ROT(0,24,0),
+		BoxDesc_Tex(0,0),
+		BoxDesc_Box(-4,24,-4, 4,32,4),
+		BoxDesc_Rot(0,24,0),
 	}; BoxDesc_BuildBox(&Skeleton_Head, &head);
 
 	static struct BoxDesc torso = {
-		BOXDESC_TEX(16,16),
-		BOXDESC_BOX(-4,12,-2, 4,24,2),
-		BOXDESC_ROT(0,12,0),
+		BoxDesc_Tex(16,16),
+		BoxDesc_Box(-4,12,-2, 4,24,2),
+		BoxDesc_Rot(0,12,0),
 	}; BoxDesc_BuildBox(&Skeleton_Torso, &torso);
 
 	static struct BoxDesc lLeg = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(-1,0,-1, -3,12,1),
-		BOXDESC_ROT(0,12,0),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(-1,0,-1, -3,12,1),
+		BoxDesc_Rot(0,12,0),
 	}; BoxDesc_BuildBox(&Skeleton_LeftLeg, &lLeg);
 
 	static struct BoxDesc rLeg = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(1,0,-1, 3,12,1),
-		BOXDESC_ROT(0,12,0),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(1,0,-1, 3,12,1),
+		BoxDesc_Rot(0,12,0),
 	}; BoxDesc_BuildBox(&Skeleton_RightLeg, &rLeg);
 
 	static struct BoxDesc lArm = {
-		BOXDESC_TEX(40,16),
-		BOXDESC_BOX(-4,12,-1, -6,24,1),
-		BOXDESC_ROT(-5,23,0),
+		BoxDesc_Tex(40,16),
+		BoxDesc_Box(-4,12,-1, -6,24,1),
+		BoxDesc_Rot(-5,23,0),
 	}; BoxDesc_BuildBox(&Skeleton_LeftArm, &lArm);
 
 	static struct BoxDesc rArm = {
-		BOXDESC_TEX(40,16),
-		BOXDESC_BOX(4,12,-1, 6,24,1),
-		BOXDESC_ROT(5,23,0),
+		BoxDesc_Tex(40,16),
+		BoxDesc_Box(4,12,-1, 6,24,1),
+		BoxDesc_Rot(5,23,0),
 	}; BoxDesc_BuildBox(&Skeleton_RightArm, &rArm);
 }
 
 static float SkeletonModel_GetEyeY(struct Entity* entity)  { return 26.0f / 16.0f; }
-static void SkeletonModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(8.0f,28.1f,8.0f); }
-static void SkeletonModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-4,0,-4, 4,32,4); }
+static void SkeletonModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.0f,28.1f,8.0f); }
+static void SkeletonModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,32,4); }
 
 static void SkeletonModel_DrawModel(struct Entity* entity) {
 	Model_ApplyTexture(entity);
@@ -566,39 +566,39 @@ struct Model SpiderModel;
 
 static void SpiderModel_CreateParts(void) {
 	static struct BoxDesc head = {
-		BOXDESC_TEX(32,4),
-		BOXDESC_BOX(-4,4,-11, 4,12,-3),
-		BOXDESC_ROT(0,8,-3),
+		BoxDesc_Tex(32,4),
+		BoxDesc_Box(-4,4,-11, 4,12,-3),
+		BoxDesc_Rot(0,8,-3),
 	}; BoxDesc_BuildBox(&Spider_Head, &head);
 
 	static struct BoxDesc link = {
-		BOXDESC_TEX(0,0),
-		BOXDESC_BOX(-3,5,3, 3,11,-3),
-		BOXDESC_ROT(0,5,0),
+		BoxDesc_Tex(0,0),
+		BoxDesc_Box(-3,5,3, 3,11,-3),
+		BoxDesc_Rot(0,5,0),
 	}; BoxDesc_BuildBox(&Spider_Link, &link);
 
 	static struct BoxDesc end = {
-		BOXDESC_TEX(0,12),
-		BOXDESC_BOX(-5,4,3, 5,12,15),
-		BOXDESC_ROT(0,4,9),
+		BoxDesc_Tex(0,12),
+		BoxDesc_Box(-5,4,3, 5,12,15),
+		BoxDesc_Rot(0,4,9),
 	}; BoxDesc_BuildBox(&Spider_End, &end);
 
 	static struct BoxDesc lLeg = {
-		BOXDESC_TEX(18,0),
-		BOXDESC_BOX(-19,7,-1, -3,9,1),
-		BOXDESC_ROT(-3,8,0),
+		BoxDesc_Tex(18,0),
+		BoxDesc_Box(-19,7,-1, -3,9,1),
+		BoxDesc_Rot(-3,8,0),
 	}; BoxDesc_BuildBox(&Spider_LeftLeg, &lLeg);
 
 	static struct BoxDesc rLeg = {
-		BOXDESC_TEX(18,0),
-		BOXDESC_BOX(3,7,-1, 19,9,1),
-		BOXDESC_ROT(3,8,0),
+		BoxDesc_Tex(18,0),
+		BoxDesc_Box(3,7,-1, 19,9,1),
+		BoxDesc_Rot(3,8,0),
 	}; BoxDesc_BuildBox(&Spider_RightLeg, &rLeg);
 }
 
 static float SpiderModel_GetEyeY(struct Entity* entity)  { return 8.0f / 16.0f; }
-static void SpiderModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(15.0f,12.0f,15.0f); }
-static void SpiderModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-5,0,-11, 5,12,15); }
+static void SpiderModel_GetCollisionSize(Vector3* size)   { Model_RetSize(15.0f,12.0f,15.0f); }
+static void SpiderModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-5,0,-11, 5,12,15); }
 
 #define quarterPi (MATH_PI / 4.0f)
 #define eighthPi  (MATH_PI / 8.0f)
@@ -647,52 +647,52 @@ struct Model ZombieModel;
 
 static void ZombieModel_CreateParts(void) {
 	static struct BoxDesc head = {
-		BOXDESC_TEX(0,0),
-		BOXDESC_BOX(-4,24,-4, 4,32,4),
-		BOXDESC_ROT(0,24,0),
+		BoxDesc_Tex(0,0),
+		BoxDesc_Box(-4,24,-4, 4,32,4),
+		BoxDesc_Rot(0,24,0),
 	}; BoxDesc_BuildBox(&Zombie_Head, &head);
 
 	static struct BoxDesc hat = {
-		BOXDESC_TEX(32,0),
-		BOXDESC_DIMS(-4,24,-4, 4,32,4),
-		BOXDESC_BOUNDS(-4.5f,23.5f,-4.5f, 4.5f,32.5f,4.5f),
-		BOXDESC_ROT(0,24,0),
+		BoxDesc_Tex(32,0),
+		BoxDesc_Dims(-4,24,-4, 4,32,4),
+		BoxDesc_Bounds(-4.5f,23.5f,-4.5f, 4.5f,32.5f,4.5f),
+		BoxDesc_Rot(0,24,0),
 	}; BoxDesc_BuildBox(&Zombie_Hat, &hat);
 
 	static struct BoxDesc torso = {
-		BOXDESC_TEX(16,16),
-		BOXDESC_BOX(-4,12,-2, 4,24,2),
-		BOXDESC_ROT(0,12,0),
+		BoxDesc_Tex(16,16),
+		BoxDesc_Box(-4,12,-2, 4,24,2),
+		BoxDesc_Rot(0,12,0),
 	}; BoxDesc_BuildBox(&Zombie_Torso, &torso);
 
 	static struct BoxDesc lLeg = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(0,0,-2, -4,12,2),
-		BOXDESC_ROT(0,12,0),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(0,0,-2, -4,12,2),
+		BoxDesc_Rot(0,12,0),
 	}; BoxDesc_BuildBox(&Zombie_LeftLeg, &lLeg);
 
 	static struct BoxDesc rLeg = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(0,0,-2, 4,12,2),
-		BOXDESC_ROT(0,12,0),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(0,0,-2, 4,12,2),
+		BoxDesc_Rot(0,12,0),
 	}; BoxDesc_BuildBox(&Zombie_RightLeg, &rLeg);
 
 	static struct BoxDesc lArm = {
-		BOXDESC_TEX(40,16),
-		BOXDESC_BOX(-4,12,-2, -8,24,2),
-		BOXDESC_ROT(-6,22,0),
+		BoxDesc_Tex(40,16),
+		BoxDesc_Box(-4,12,-2, -8,24,2),
+		BoxDesc_Rot(-6,22,0),
 	}; BoxDesc_BuildBox(&Zombie_LeftArm, &lArm);
 
 	static struct BoxDesc rArm = {
-		BOXDESC_TEX(40,16),
-		BOXDESC_BOX(4,12,-2, 8,24,2),
-		BOXDESC_ROT(6,22,0),
+		BoxDesc_Tex(40,16),
+		BoxDesc_Box(4,12,-2, 8,24,2),
+		BoxDesc_Rot(6,22,0),
 	}; BoxDesc_BuildBox(&Zombie_RightArm, &rArm);
 }
 
 static float ZombieModel_GetEyeY(struct Entity* entity)  { return 26.0f / 16.0f; }
-static void ZombieModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(8.6f,28.1f,8.6f); }
-static void ZombieModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-4,0,-4, 4,32,4); }
+static void ZombieModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.6f,28.1f,8.6f); }
+static void ZombieModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,32,4); }
 
 static void ZombieModel_DrawModel(struct Entity* entity) {
 	Model_ApplyTexture(entity);
@@ -856,47 +856,47 @@ struct Model HumanoidModel;
 
 static void HumanoidModel_CreateParts(void) {
 	static struct BoxDesc head = {
-		BOXDESC_TEX(0,0),
-		BOXDESC_BOX(-4,24,-4, 4,32,4),
-		BOXDESC_ROT(0,24,0),
+		BoxDesc_Tex(0,0),
+		BoxDesc_Box(-4,24,-4, 4,32,4),
+		BoxDesc_Rot(0,24,0),
 	}; BoxDesc_BuildBox(&Humanoid_Set.Head, &head);
 
 	static struct BoxDesc torso = {
-		BOXDESC_TEX(16,16),
-		BOXDESC_BOX(-4,12,-2, 4,24,2),
-		BOXDESC_ROT(0,12,0),
+		BoxDesc_Tex(16,16),
+		BoxDesc_Box(-4,12,-2, 4,24,2),
+		BoxDesc_Rot(0,12,0),
 	}; BoxDesc_BuildBox(&Humanoid_Set.Torso, &torso);
 
 	static struct BoxDesc hat = {
-		BOXDESC_TEX(32,0),
-		BOXDESC_DIMS(-4,24,-4, 4,32,4),
-		BOXDESC_BOUNDS(-4.5f,23.5f,-4.5f, 4.5f,32.5f,4.5f),
-		BOXDESC_ROT(0,24,0),
+		BoxDesc_Tex(32,0),
+		BoxDesc_Dims(-4,24,-4, 4,32,4),
+		BoxDesc_Bounds(-4.5f,23.5f,-4.5f, 4.5f,32.5f,4.5f),
+		BoxDesc_Rot(0,24,0),
 	}; BoxDesc_BuildBox(&Humanoid_Set.Hat, &hat);
 
 	static struct BoxDesc torsoL = {
-		BOXDESC_TEX(16,32),
-		BOXDESC_DIMS(-4,12,-2, 4,24,2),
-		BOXDESC_BOUNDS(-3.5f,11.5f,-3.5f, 4.5f,24.5f,4.5f),
-		BOXDESC_ROT(0,12,0),
+		BoxDesc_Tex(16,32),
+		BoxDesc_Dims(-4,12,-2, 4,24,2),
+		BoxDesc_Bounds(-3.5f,11.5f,-3.5f, 4.5f,24.5f,4.5f),
+		BoxDesc_Rot(0,12,0),
 	}; BoxDesc_BuildBox(&Humanoid_Set.TorsoLayer, &torsoL);
 
 	static struct BoxDesc arm = {
-		BOXDESC_TEX(40,16),
-		BOXDESC_BOX(4,12,-2, 8,24,2),
-		BOXDESC_ROT(5,22,0),
+		BoxDesc_Tex(40,16),
+		BoxDesc_Box(4,12,-2, 8,24,2),
+		BoxDesc_Rot(5,22,0),
 	};
 	static struct BoxDesc leg = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_BOX(0,0,-2, 4,12,2),
-		BOXDESC_ROT(0,12,0),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(0,0,-2, 4,12,2),
+		BoxDesc_Rot(0,12,0),
 	};
 	HumanModel_CreateLimbs(&Humanoid_Set, 0.5f, &arm, &leg);
 }
 
 static float HumanoidModel_GetEyeY(struct Entity* entity)  { return 26.0f / 16.0f; }
-static void HumanoidModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(8.6f,28.1f,8.6f); }
-static void HumanoidModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-8,0,-4, 8,32,4); }
+static void HumanoidModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.6f,28.1f,8.6f); }
+static void HumanoidModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-8,0,-4, 8,32,4); }
 
 static void HumanoidModel_DrawModel(struct Entity* entity) {
 	HumanModel_DrawModel(entity, &Humanoid_Set);
@@ -927,50 +927,50 @@ struct Model ChibiModel;
 
 static void ChibiModel_CreateParts(void) {
 	static struct BoxDesc head = {
-		BOXDESC_TEX(0,0),
-		BOXDESC_BOX(-4,12,-4, 4,20,4),
-		BOXDESC_ROT(0,13,0),
+		BoxDesc_Tex(0,0),
+		BoxDesc_Box(-4,12,-4, 4,20,4),
+		BoxDesc_Rot(0,13,0),
 	}; BoxDesc_BuildBox(&Chibi_Set.Head, &head);
 
 	static struct BoxDesc torso = {
-		BOXDESC_TEX(16,16),
-		BOXDESC_DIMS(-4,12,-2, 4,24,2),
-		BOXDESC_BOUNDS(-2,6,-1, 2,12,1),
-		BOXDESC_ROT(0,6,0),
+		BoxDesc_Tex(16,16),
+		BoxDesc_Dims(-4,12,-2, 4,24,2),
+		BoxDesc_Bounds(-2,6,-1, 2,12,1),
+		BoxDesc_Rot(0,6,0),
 	}; BoxDesc_BuildBox(&Chibi_Set.Torso, &torso);
 
 	static struct BoxDesc hat = {
-		BOXDESC_TEX(32,0),
-		BOXDESC_DIMS(-4,12,-4, 4,20,4),
-		BOXDESC_BOUNDS(-4.25f,11.75f,-4.25f, 4.25f,20.25f,4.25f),
-		BOXDESC_ROT(0,13,0),
+		BoxDesc_Tex(32,0),
+		BoxDesc_Dims(-4,12,-4, 4,20,4),
+		BoxDesc_Bounds(-4.25f,11.75f,-4.25f, 4.25f,20.25f,4.25f),
+		BoxDesc_Rot(0,13,0),
 	}; BoxDesc_BuildBox(&Chibi_Set.Hat, &hat);
 
 	static struct BoxDesc torsoL = {
-		BOXDESC_TEX(16,32),
-		BOXDESC_DIMS(-4,12,-2, 4,24,2),
-		BOXDESC_BOUNDS(-1.75f,5.75f,-0.75f, 2.25f,12.25f,1.25f),
-		BOXDESC_ROT(0,6,0),
+		BoxDesc_Tex(16,32),
+		BoxDesc_Dims(-4,12,-2, 4,24,2),
+		BoxDesc_Bounds(-1.75f,5.75f,-0.75f, 2.25f,12.25f,1.25f),
+		BoxDesc_Rot(0,6,0),
 	}; BoxDesc_BuildBox(&Chibi_Set.TorsoLayer, &torsoL);
 
 	static struct BoxDesc arm = {
-		BOXDESC_TEX(40,16),
-		BOXDESC_DIMS(4,12,-2, 8,24,2),
-		BOXDESC_BOUNDS(2,6,-1, 4,12,1),
-		BOXDESC_ROT(2.5f,11,0),
+		BoxDesc_Tex(40,16),
+		BoxDesc_Dims(4,12,-2, 8,24,2),
+		BoxDesc_Bounds(2,6,-1, 4,12,1),
+		BoxDesc_Rot(2.5f,11,0),
 	};
 	static struct BoxDesc leg = {
-		BOXDESC_TEX(0,16),
-		BOXDESC_DIMS(0,0,-2, 4,12,2),
-		BOXDESC_BOUNDS(0,0,-1, 2,6,1),
-		BOXDESC_ROT(0,6,0),
+		BoxDesc_Tex(0,16),
+		BoxDesc_Dims(0,0,-2, 4,12,2),
+		BoxDesc_Bounds(0,0,-1, 2,6,1),
+		BoxDesc_Rot(0,6,0),
 	};
 	HumanModel_CreateLimbs(&Chibi_Set, 0.25f, &arm, &leg);
 }
 
 static float ChibiModel_GetEyeY(struct Entity* entity)  { return 14.0f / 16.0f; }
-static void ChibiModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(4.6f,20.1f,4.6f); }
-static void ChibiModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-4,0,-4, 4,16,4); }
+static void ChibiModel_GetCollisionSize(Vector3* size)   { Model_RetSize(4.6f,20.1f,4.6f); }
+static void ChibiModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,16,4); }
 
 static void ChibiModel_DrawModel(struct Entity* entity) {
 	HumanModel_DrawModel(entity, &Chibi_Set);
@@ -1003,8 +1003,8 @@ struct Model SittingModel;
 static void SittingModel_CreateParts(void) { }
 
 static float SittingModel_GetEyeY(struct Entity* entity)  { return (26.0f - SIT_OFFSET) / 16.0f; }
-static void SittingModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(8.6f,28.1f - SIT_OFFSET,8.6f); }
-static void SittingModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-8,0,-4, 8,32 - SIT_OFFSET,4); }
+static void SittingModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.6f,28.1f - SIT_OFFSET,8.6f); }
+static void SittingModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-8,0,-4, 8,32 - SIT_OFFSET,4); }
 
 static void SittingModel_GetTransform(struct Entity* entity, Vector3 pos, struct Matrix* m) {
 	pos.Y -= (SIT_OFFSET / 16.0f) * entity->ModelScale.Y;
@@ -1059,8 +1059,8 @@ struct Model HeadModel;
 static void HeadModel_CreateParts(void) { }
 
 static float HeadModel_GetEyeY(struct Entity* entity)  { return 6.0f / 16.0f; }
-static void HeadModel_GetCollisionSize(Vector3* size)   { MODEL_RET_SIZE(7.9f,7.9f,7.9f); }
-static void HeadModel_GetPickingBounds(struct AABB* bb) { MODEL_RET_AABB(-4,0,-4, 4,8,4); }
+static void HeadModel_GetCollisionSize(Vector3* size)   { Model_RetSize(7.9f,7.9f,7.9f); }
+static void HeadModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,8,4); }
 
 static void HeadModel_GetTransform(struct Entity* entity, Vector3 pos, struct Matrix* m) {
 	pos.Y -= (24.0f / 16.0f) * entity->ModelScale.Y;

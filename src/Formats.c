@@ -14,7 +14,7 @@
 
 static ReturnCode Map_ReadBlocks(struct Stream* stream) {
 	World_BlocksSize = World_Width * World_Length * World_Height;
-	World_Blocks = Mem_Alloc(World_BlocksSize, sizeof(BlockID), "map blocks");
+	World_Blocks = Mem_Alloc(World_BlocksSize, 1, "map blocks");
 	return Stream_Read(stream, World_Blocks, World_BlocksSize);
 }
 

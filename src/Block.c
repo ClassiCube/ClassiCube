@@ -219,6 +219,12 @@ Int32 Block_FindID(const String* name) {
 	return -1;
 }
 
+Int32 Block_Parse(const String* name) {
+	Int32 b;
+	if (Convert_TryParseInt32(name, &b) && b < BLOCK_COUNT) return b;
+	return Block_FindID(name);
+}
+
 void Block_SetSide(TextureLoc texLoc, BlockID blockId) {
 	Int32 index = blockId * FACE_COUNT;
 	Block_Textures[index + FACE_XMIN] = texLoc;

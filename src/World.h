@@ -11,7 +11,7 @@ struct AABB;
 #define World_Unpack(idx, x, y, z) x = idx % World_Width; z = (idx / World_Width) % World_Length; y = (idx / World_Width) / World_Length;
 #define World_Pack(x, y, z) (((y) * World_Length + (z)) * World_Width + (x))
 
-BlockID* World_Blocks;
+BlockRaw* World_Blocks;
 Int32 World_BlocksSize;
 Int32 World_Width, World_Height, World_Length;
 Int32 World_MaxX, World_MaxY, World_MaxZ;
@@ -20,7 +20,7 @@ UInt8 World_Uuid[16];
 extern String World_TextureUrl;
 
 void World_Reset(void);
-void World_SetNewMap(BlockID* blocks, Int32 blocksSize, Int32 width, Int32 height, Int32 length);
+void World_SetNewMap(BlockRaw* blocks, Int32 blocksSize, Int32 width, Int32 height, Int32 length);
 BlockID World_GetPhysicsBlock(Int32 x, Int32 y, Int32 z);
 
 #define World_SetBlock(x, y, z, blockId) World_Blocks[World_Pack(x, y, z)] = blockId
