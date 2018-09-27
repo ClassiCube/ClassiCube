@@ -1,9 +1,9 @@
 #ifndef CC_BLOCK_H
 #define CC_BLOCK_H
-#include "BlockID.h"
 #include "PackedCol.h"
 #include "Vectors.h"
 #include "Constants.h"
+#include "BlockID.h"
 /* Stores properties and data for blocks.
    Also performs automatic rotation of directional blocks.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

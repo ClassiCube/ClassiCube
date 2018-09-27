@@ -529,7 +529,8 @@ static void TableWidget_MakeBlockDesc(String* desc, BlockID block) {
 	String_AppendString(desc, &name);
 	if (Game_ClassicMode) return;
 
-	String_Format1(desc, " (ID %b&f", &block);
+	Int32 block_ = block;
+	String_Format1(desc, " (ID %i&f", &block_);
 	if (!Block_CanPlace[block])  { String_AppendConst(desc,  ", place &cNo&f"); }
 	if (!Block_CanDelete[block]) { String_AppendConst(desc, ", delete &cNo&f"); }
 	String_Append(desc, ')');

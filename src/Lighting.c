@@ -246,50 +246,61 @@ static Int32 Lighting_InitialHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount,
 	return elemsLeft;
 }
 
+#define Lighting_CalculateBody(get_block)\
+for (y = World_Height - 1; y >= 0; y--) {\
+	if (elemsLeft <= 0) { return true; } \
+	Int32 mapIndex = World_Pack(x1, y, z1);\
+	Int32 heightmapIndex = Lighting_Pack(x1, z1);\
+\
+	for (z = 0; z < zCount; z++) {\
+		Int32 baseIndex = mapIndex;\
+		Int32 index = z * xCount;\
+		for (x = 0; x < xCount;) {\
+			Int32 curRunCount = skip[index];\
+			x += curRunCount; mapIndex += curRunCount; index += curRunCount;\
+\
+			if (x < xCount && Block_BlocksLight[get_block]) {\
+				Int32 lightOffset = (Block_LightOffset[get_block] >> FACE_YMAX) & 1;\
+				Lighting_Heightmap[heightmapIndex + x] = (Int16)(y - lightOffset);\
+				elemsLeft--;\
+				skip[index] = 0;\
+				Int32 offset = prevRunCount + curRunCount;\
+				Int32 newRunCount = skip[index - offset] + 1;\
+\
+				/* consider case 1 0 1 0, where we are at 0 */ \
+				/* we need to make this 3 0 0 0 and advance by 1 */ \
+				Int32 oldRunCount = (x - offset + newRunCount) < xCount ? skip[index - offset + newRunCount] : 0; \
+				if (oldRunCount != 0) {\
+					skip[index - offset + newRunCount] = 0; \
+					newRunCount += oldRunCount; \
+				} \
+				skip[index - offset] = newRunCount; \
+				x += oldRunCount; index += oldRunCount; mapIndex += oldRunCount; \
+				prevRunCount = newRunCount; \
+			} else { \
+				prevRunCount = 0; \
+			}\
+			x++; mapIndex++; index++; \
+		}\
+		prevRunCount = 0;\
+		heightmapIndex += World_Width;\
+		mapIndex = baseIndex + World_Width; /* advance one Z */ \
+	}\
+}
+
 static bool Lighting_CalculateHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32 zCount, Int32 elemsLeft, Int32* skip) {
 	Int32 prevRunCount = 0;
 	Int32 x, y, z;
 
-	for (y = World_Height - 1; y >= 0; y--) {
-		if (elemsLeft <= 0) return true;
-		Int32 mapIndex = World_Pack(x1, y, z1);
-		Int32 heightmapIndex = Lighting_Pack(x1, z1);
-
-		for (z = 0; z < zCount; z++) {
-			Int32 baseIndex = mapIndex;
-			Int32 index = z * xCount;
-			for (x = 0; x < xCount;) {
-				Int32 curRunCount = skip[index];
-				x += curRunCount; mapIndex += curRunCount; index += curRunCount;
-
-				if (x < xCount && Block_BlocksLight[World_Blocks[mapIndex]]) {
-					Int32 lightOffset = (Block_LightOffset[World_Blocks[mapIndex]] >> FACE_YMAX) & 1;
-					Lighting_Heightmap[heightmapIndex + x] = (short)(y - lightOffset);
-					elemsLeft--;
-					skip[index] = 0;
-					Int32 offset = prevRunCount + curRunCount;
-					Int32 newRunCount = skip[index - offset] + 1;
-
-					/* consider case 1 0 1 0, where we are at 0 */
-					/* we need to make this 3 0 0 0 and advance by 1 */
-					Int32 oldRunCount = (x - offset + newRunCount) < xCount ? skip[index - offset + newRunCount] : 0;
-					if (oldRunCount != 0) {
-						skip[index - offset + newRunCount] = 0;
-						newRunCount += oldRunCount;
-					}
-					skip[index - offset] = newRunCount;
-					x += oldRunCount; index += oldRunCount; mapIndex += oldRunCount;
-					prevRunCount = newRunCount;
-				} else {
-					prevRunCount = 0;
-				}
-				x++; mapIndex++; index++;
-			}
-			prevRunCount = 0;
-			heightmapIndex += World_Width;
-			mapIndex = baseIndex + World_Width; /* advance one Z */
-		}
+#ifndef EXTENDED_BLOCKS
+	Lighting_CalculateBody(World_Blocks[mapIndex]);
+#else
+	if (Block_UsedCount <= 256) {
+		Lighting_CalculateBody(World_Blocks[mapIndex]);
+	} else {
+		Lighting_CalculateBody(World_Blocks[mapIndex] | (World_Blocks2[mapIndex] << 8));
 	}
+#endif
 	return false;
 }
 

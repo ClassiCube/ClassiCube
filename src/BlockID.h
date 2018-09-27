@@ -1,5 +1,6 @@
 #ifndef CC_BLOCKID_H
 #define CC_BLOCKID_H
+#include "Core.h" /* TODO: Remove this include when we move to external defines */
 /* List of all core/standard block IDs
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -84,8 +85,8 @@ enum BLOCKID {
 	/* Number of blocks in original classic plus CPE blocks. */
 	BLOCK_CPE_COUNT = (BLOCK_MAX_CPE + 1),
 
-#if USE16_BIT
-	BLOCK_MAX_DEFINED = 0x3FF,
+#ifdef EXTENDED_BLOCKS
+	BLOCK_MAX_DEFINED = 0x2FF,
 #else
 	BLOCK_MAX_DEFINED = 0xFF,
 #endif

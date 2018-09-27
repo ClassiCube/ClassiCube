@@ -26,11 +26,31 @@
 #include "TerrainAtlas.h"	
 
 /* Classic state */
-UInt8 classic_tabList[256 >> 3];
+UInt8 classic_tabList[ENTITIES_MAX_COUNT >> 3];
+struct Screen* classic_prevScreen;
+bool classic_receivedFirstPos;
+
+/* Map state */
+bool map_begunLoading;
+TimeMS map_receiveStart;
+struct InflateState map_inflateState;
+struct Stream map_stream, map_part;
+struct GZipHeader map_gzHeader;
+Int32 map_sizeIndex, map_index, map_volume;
+UInt8 map_size[4];
+BlockRaw* map_blocks;
+
+#ifdef EXTENDED_BLOCKS
+struct InflateState map2_inflateState;
+struct Stream map2_stream;
+Int32 map2_index;
+BlockRaw* map2_blocks;
+#endif
 
 /* CPE state */
 Int32 cpe_serverExtensionsCount, cpe_pingTicks;
 Int32 cpe_envMapVer = 2, cpe_blockDefsExtVer = 2;
+bool cpe_sendHeldBlock, cpe_useMessageTypes, cpe_extEntityPos, cpe_blockPerms, cpe_fastMap;
 bool cpe_twoWayPing, cpe_extTextures, cpe_extBlocks;
 
 /*########################################################################################################################*
@@ -43,7 +63,7 @@ bool cpe_twoWayPing, cpe_extTextures, cpe_extBlocks;
 #else
 #define Handlers_ReadBlock(data, value)\
 if (cpe_extBlocks) {\
-	value = Stream_GetU16_BE(data, value); data += 2;\
+	value = Stream_GetU16_BE(data); data += 2;\
 } else { value = *data++; }
 #endif
 
@@ -53,7 +73,7 @@ if (cpe_extBlocks) {\
 #define Handlers_WriteBlock(data, value)\
 if (cpe_extBlocks) {\
 	Stream_SetU16_BE(data, value); data += 2;\
-} else { *data++ = value; }
+} else { *data++ = (BlockRaw)value; }
 #endif
 
 static void Handlers_ReadString(UInt8** ptr, String* str) {
@@ -309,17 +329,6 @@ static void WoM_Tick(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Classic protocol-----------------------------------------------------*
 *#########################################################################################################################*/
-TimeMS mapReceiveStart;
-struct InflateState mapInflateState;
-struct Stream mapInflateStream;
-bool mapInflateInited;
-struct GZipHeader gzHeader;
-Int32 mapSizeIndex, mapIndex, mapVolume;
-UInt8 mapSize[4];
-BlockRaw* map;
-struct Stream mapPartStream;
-struct Screen* prevScreen;
-bool receivedFirstPosition;
 
 void Classic_WriteChat(const String* text, bool partial) {
 	UInt8* data = ServerConnection_WriteBuffer;
@@ -335,7 +344,8 @@ void Classic_WritePosition(Vector3 pos, float rotY, float headX) {
 	UInt8* data = ServerConnection_WriteBuffer;
 	*data++ = OPCODE_ENTITY_TELEPORT;
 	{
-		*data++ = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID; /* TODO: extended blocks */
+		BlockID payload = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID;
+		Handlers_WriteBlock(data, payload);
 		Int32 x = (Int32)(pos.X * 32);
 		Int32 y = (Int32)(pos.Y * 32) + 51;
 		Int32 z = (Int32)(pos.Z * 32);
@@ -364,7 +374,7 @@ void Classic_WriteSetBlock(Int32 x, Int32 y, Int32 z, bool place, BlockID block)
 		Stream_SetU16_BE(data, y); data += 2;
 		Stream_SetU16_BE(data, z); data += 2;
 		*data++ = place;
-		*data++ = block; /* TODO: extended blocks */
+		Handlers_WriteBlock(data, block);
 	}
 	ServerConnection_WriteBuffer = data;
 }
@@ -403,102 +413,127 @@ static void Classic_Ping(UInt8* data) { }
 static void Classic_StartLoading(void) {
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
-	Stream_ReadonlyMemory(&mapPartStream, NULL, 0);
+	Stream_ReadonlyMemory(&map_part, NULL, 0);
 
-	prevScreen = Gui_Active;
-	if (prevScreen == LoadingScreen_UNSAFE_RawPointer) {
+	classic_prevScreen = Gui_Active;
+	if (classic_prevScreen == LoadingScreen_UNSAFE_RawPointer) {
 		/* otherwise replacing LoadingScreen with LoadingScreen will cause issues */
 		Gui_FreeActive();
-		prevScreen = NULL;
+		classic_prevScreen = NULL;
 	}
 
 	Gui_SetActive(LoadingScreen_MakeInstance(&ServerConnection_ServerName, &ServerConnection_ServerMOTD));
 	WoM_CheckMotd();
-	receivedFirstPosition = false;
-	GZipHeader_Init(&gzHeader);
+	classic_receivedFirstPos = false;
 
-	Inflate_MakeStream(&mapInflateStream, &mapInflateState, &mapPartStream);
-	mapInflateInited = true;
+	GZipHeader_Init(&map_gzHeader);
+	Inflate_MakeStream(&map_stream, &map_inflateState, &map_part);
+	map_begunLoading = true;
 
-	mapSizeIndex = 0;
-	mapIndex     = 0;
-	mapReceiveStart = DateTime_CurrentUTC_MS();
+	map_sizeIndex    = 0;
+	map_index        = 0;
+	map_receiveStart = DateTime_CurrentUTC_MS();
+
+#ifdef EXTENDED_BLOCKS
+	Inflate_MakeStream(&map2_stream, &map2_inflateState, &map_part);
+	map2_index = 0;
+#endif
 }
 
 static void Classic_LevelInit(UInt8* data) {
-	if (!mapInflateInited) Classic_StartLoading();
+	if (!map_begunLoading) Classic_StartLoading();
 
 	/* Fast map puts volume in header, doesn't bother with gzip */
 	if (cpe_fastMap) {
-		mapVolume = Stream_GetU32_BE(data);
-		gzHeader.Done = true;
-		mapSizeIndex = sizeof(UInt32);
-		map = Mem_Alloc(mapVolume, sizeof(BlockID), "map blocks");
+		map_volume = Stream_GetU32_BE(data);
+		map_gzHeader.Done = true;
+		map_sizeIndex = sizeof(UInt32);
+		map_blocks = Mem_Alloc(map_volume, 1, "map blocks");
 	}
 }
 
 static void Classic_LevelDataChunk(UInt8* data) {
 	/* Workaround for some servers that send LevelDataChunk before LevelInit due to their async sending behaviour */
-	if (!mapInflateInited) Classic_StartLoading();
+	if (!map_begunLoading) Classic_StartLoading();
 
 	Int32 usedLength = Stream_GetU16_BE(data); data += 2;
-	mapPartStream.Meta.Mem.Cur    = data;
-	mapPartStream.Meta.Mem.Base   = data;
-	mapPartStream.Meta.Mem.Left   = usedLength;
-	mapPartStream.Meta.Mem.Length = usedLength;
+	map_part.Meta.Mem.Cur    = data;
+	map_part.Meta.Mem.Base   = data;
+	map_part.Meta.Mem.Left   = usedLength;
+	map_part.Meta.Mem.Length = usedLength;
 
 	data += 1024;
 	UInt8 value = *data; /* progress in original classic, but we ignore it */
 
-	if (!gzHeader.Done) { 
-		ReturnCode res = GZipHeader_Read(&mapPartStream, &gzHeader);
+	if (!map_gzHeader.Done) {
+		ReturnCode res = GZipHeader_Read(&map_part, &map_gzHeader);
 		if (res && res != ERR_END_OF_STREAM) ErrorHandler_Fail2(res, "reading map data");
 	}
 
-	if (gzHeader.Done) {
-		if (mapSizeIndex < sizeof(UInt32)) {
-			UInt8* src = mapSize + mapSizeIndex;
-			UInt32 count = sizeof(UInt32) - mapSizeIndex, modified = 0;
-			mapInflateStream.Read(&mapInflateStream, src, count, &modified);
-			mapSizeIndex += modified;
+	if (map_gzHeader.Done) {
+		if (map_sizeIndex < 4) {
+			UInt32 left = 4 - map_sizeIndex, read = 0;
+			map_stream.Read(&map_stream, &map_size[map_sizeIndex], left, &read); map_sizeIndex += read;
 		}
 
-		if (mapSizeIndex == sizeof(UInt32)) {
-			if (!map) {
-				mapVolume = Stream_GetU32_BE(mapSize);
-				map = Mem_Alloc(mapVolume, sizeof(BlockID), "map blocks");
+		if (map_sizeIndex == 4) {
+			if (!map_blocks) {
+				map_volume = Stream_GetU32_BE(map_size);
+				map_blocks = Mem_Alloc(map_volume, 1, "map blocks");
 			}
 
-			UInt8* src = map + mapIndex;
-			UInt32 count = mapVolume - mapIndex, modified = 0;
-			mapInflateStream.Read(&mapInflateStream, src, count, &modified);
-			mapIndex += modified;
+#ifndef EXTENDED_BLOCKS
+			UInt32 left = map_volume - map_index, read = 0;
+			map_stream.Read(&map_stream, &map_blocks[map_index], left, &read);
+			map_index += read;
+#else
+			if (cpe_extBlocks && value) {
+				/* Only allocate map2 when needed */
+				if (!map2_blocks) map2_blocks = Mem_Alloc(map_volume, 1, "map blocks upper");
+				UInt32 left = map_volume - map2_index, read = 0;
+				map2_stream.Read(&map2_stream, &map2_blocks[map2_index], left, &read); map2_index += read;
+			} else {
+				UInt32 left = map_volume - map_index, read = 0;
+				map_stream.Read(&map_stream, &map_blocks[map_index], left, &read); map_index += read;
+			}
+#endif
 		}
 	}
 
-	float progress = !map ? 0.0f : (float)mapIndex / mapVolume;
+	float progress = !map_blocks ? 0.0f : (float)map_index / map_volume;
 	Event_RaiseFloat(&WorldEvents_Loading, progress);
 }
 
 static void Classic_LevelFinalise(UInt8* data) {
 	Gui_CloseActive();
-	Gui_Active = prevScreen;
-	prevScreen = NULL;
+	Gui_Active = classic_prevScreen;
+	classic_prevScreen = NULL;
 	Gui_CalcCursorVisible();
 
-	Int32 mapWidth  = Stream_GetU16_BE(&data[0]);
-	Int32 mapHeight = Stream_GetU16_BE(&data[2]);
-	Int32 mapLength = Stream_GetU16_BE(&data[4]);
+	Int32 width  = Stream_GetU16_BE(&data[0]);
+	Int32 height = Stream_GetU16_BE(&data[2]);
+	Int32 length = Stream_GetU16_BE(&data[4]);
 
-	Int32 loadingMs = (Int32)(DateTime_CurrentUTC_MS() - mapReceiveStart);
+	Int32 loadingMs = (Int32)(DateTime_CurrentUTC_MS() - map_receiveStart);
 	Platform_Log1("map loading took: %i", &loadingMs);
 
-	World_SetNewMap(map, mapVolume, mapWidth, mapHeight, mapLength);
+	World_SetNewMap(map_blocks, map_volume, width, height, length);
+#ifdef EXTENDED_BLOCKS
+	if (cpe_extBlocks) {
+		/* defer allocation of scond map array if possible */
+		World_Blocks2 = map2_blocks ? map2_blocks : map_blocks;
+		Block_SetUsedCount(map2_blocks ? 768 : 256);
+	}
+#endif
+
 	Event_RaiseVoid(&WorldEvents_MapLoaded);
 	WoM_CheckSendWomID();
 
-	map = NULL;
-	mapInflateInited = false;
+	map_blocks       = NULL;
+	map_begunLoading = false;
+#ifdef EXTENDED_BLOCKS
+	map2_blocks      = NULL;
+#endif
 }
 
 static void Classic_SetBlock(UInt8* data) {
@@ -632,14 +667,14 @@ static void Classic_ReadAbsoluteLocation(UInt8* data, EntityID id, bool interpol
 	float rotY  = Math_Packed2Deg(*data++);
 	float headX = Math_Packed2Deg(*data++);
 
-	if (id == ENTITIES_SELF_ID) receivedFirstPosition = true;
+	if (id == ENTITIES_SELF_ID) classic_receivedFirstPos = true;
 	struct LocationUpdate update; LocationUpdate_MakePosAndOri(&update, pos, rotY, headX, false);
 	Handlers_UpdateLocation(id, &update, interpolate);
 }
 
 static void Classic_Reset(void) {
-	mapInflateInited = false;
-	receivedFirstPosition = false;
+	map_begunLoading = false;
+	classic_receivedFirstPos = false;
 
 	Net_Set(OPCODE_HANDSHAKE, Classic_Handshake, 131);
 	Net_Set(OPCODE_PING, Classic_Ping, 1);
@@ -661,22 +696,22 @@ static void Classic_Reset(void) {
 }
 
 static void Classic_Tick(void) {
-	if (!receivedFirstPosition) return;
-	struct Entity* entity = &LocalPlayer_Instance.Base;
-	Classic_WritePosition(entity->Position, entity->HeadY, entity->HeadX);
+	if (!classic_receivedFirstPos) return;
+	struct Entity* e = &LocalPlayer_Instance.Base;
+	Classic_WritePosition(e->Position, e->HeadY, e->HeadX);
 }
 
 
 /*########################################################################################################################*
 *------------------------------------------------------CPE protocol-------------------------------------------------------*
 *#########################################################################################################################*/
-const char* cpe_clientExtensions[29] = {
+const char* cpe_clientExtensions[30] = {
 	"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 	"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap",
-	"ExtendedTextures",
+	"ExtendedTextures", "ExtendedBlocks",
 };
 static void CPE_SetMapEnvUrl(UInt8* data);
 
@@ -756,8 +791,16 @@ static void CPE_SendCpeExtInfoReply(void) {
 #ifndef EXTENDED_TEXTURES
 	count--;
 #endif
+#ifndef EXTENDED_BLOCKS
+	count--;
+#endif
 
+#ifdef EXTENDED_BLOCKS
+	if (!Game_AllowCustomBlocks) count -= 3;
+#else
 	if (!Game_AllowCustomBlocks) count -= 2;
+#endif
+
 	CPE_WriteExtInfo(&ServerConnection_AppName, count);
 	Net_SendPacket();
 	Int32 i, ver;
@@ -772,10 +815,16 @@ static void CPE_SendCpeExtInfoReply(void) {
 		if (!Game_AllowCustomBlocks) {
 			if (String_CaselessEqualsConst(&name, "BlockDefinitionsExt")) continue;
 			if (String_CaselessEqualsConst(&name, "BlockDefinitions"))    continue;
+#ifdef EXTENDED_BLOCKS
+			if (String_CaselessEqualsConst(&name, "ExtendedBlocks"))      continue;
+#endif
 		}
 
 #ifndef EXTENDED_TEXTURES
 		if (String_CaselessEqualsConst(&name, "ExtendedTextures")) continue;
+#endif
+#ifndef EXTENDED_BLOCKS
+		if (String_CaselessEqualsConst(&name, "ExtendedBlocks")) continue;
 #endif
 
 		CPE_WriteExtEntry(&name, ver);
@@ -849,6 +898,21 @@ static void CPE_ExtEntry(UInt8* data) {
 		Net_PacketSizes[OPCODE_DEFINE_BLOCK]     += 3;
 		Net_PacketSizes[OPCODE_DEFINE_BLOCK_EXT] += 6;
 		cpe_extTextures = true;
+	}
+#endif
+#ifdef EXTENDED_BLOCKS
+	else if (String_CaselessEqualsConst(&ext, "ExtendedBlocks")) {
+		if (!Game_AllowCustomBlocks) return;
+		cpe_extBlocks = true;
+
+		Net_PacketSizes[OPCODE_SET_BLOCK] += 1;
+		Net_PacketSizes[OPCODE_HOLD_THIS] += 1;
+		Net_PacketSizes[OPCODE_SET_BLOCK_PERMISSION] += 1;
+		Net_PacketSizes[OPCODE_DEFINE_BLOCK]     += 1;
+		Net_PacketSizes[OPCODE_UNDEFINE_BLOCK]   += 1;
+		Net_PacketSizes[OPCODE_DEFINE_BLOCK_EXT] += 1;
+		Net_PacketSizes[OPCODE_SET_INVENTORY_ORDER] += 2;
+		Net_PacketSizes[OPCODE_BULK_BLOCK_UPDATE]   += 256 / 4;
 	}
 #endif
 }
@@ -1067,6 +1131,23 @@ static void CPE_BulkBlockUpdate(UInt8* data) {
 	}
 	data += (BULK_MAX_BLOCKS - count) * sizeof(Int32);
 
+	BlockID blocks[BULK_MAX_BLOCKS];
+	for (i = 0; i < count; i++) {
+		blocks[i] = data[i];
+	}
+	data += BULK_MAX_BLOCKS;
+
+	if (cpe_extBlocks) {
+		for (i = 0; i < count; i += 4) {
+			UInt8 flags = data[i >> 2];
+			blocks[i + 0] |= (BlockID)((flags & 0x03) << 8);
+			blocks[i + 1] |= (BlockID)((flags & 0x0C) << 6);
+			blocks[i + 2] |= (BlockID)((flags & 0x30) << 4);
+			blocks[i + 3] |= (BlockID)((flags & 0xC0) << 2);
+		}
+		data += BULK_MAX_BLOCKS / 4;
+	}
+
 	Int32 x, y, z;
 	for (i = 0; i < count; i++) {
 		Int32 index = indices[i];
@@ -1074,7 +1155,7 @@ static void CPE_BulkBlockUpdate(UInt8* data) {
 		World_Unpack(index, x, y, z);
 
 		if (World_IsValidPos(x, y, z)) {
-			Game_UpdateBlock(x, y, z, data[i]);
+			Game_UpdateBlock(x, y, z, blocks[i]);
 		}
 	}
 }
@@ -1207,7 +1288,7 @@ static void CPE_Reset(void) {
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
 	cpe_envMapVer = 2; cpe_blockDefsExtVer = 2;
 	cpe_needD3Fix = false; cpe_extEntityPos = false; cpe_twoWayPing = false; 
-	cpe_extTextures = false; cpe_fastMap = false;
+	cpe_extTextures = false; cpe_fastMap = false; cpe_extBlocks = false;
 	Game_UseCPEBlocks = false;
 	if (!Game_UseCPE) return;
 

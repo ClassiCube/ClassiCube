@@ -231,39 +231,50 @@ static void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 	}
 }
 
+#define Builder_ReadChunkBody(get_block)\
+for (yy = -1; yy < 17; ++yy) {\
+	Int32 y = yy + y1;\
+	if (y < 0) continue;\
+	if (y >= World_Height) break;\
+\
+	for (zz = -1; zz < 17; ++zz) {\
+		Int32 z = zz + z1;\
+		if (z < 0) continue;\
+		if (z >= World_Length) break;\
+\
+		/* need to subtract 1 as index is pre incremented in for loop. */ \
+		Int32 index = World_Pack(x1 - 1, y, z) - 1;\
+		Int32 chunkIndex = (yy + 1) * EXTCHUNK_SIZE_2 + (zz + 1) * EXTCHUNK_SIZE + (-1 + 1) - 1;\
+\
+		for (xx = -1; xx < 17; ++xx) {\
+			Int32 x = xx + x1;\
+			++index;\
+			++chunkIndex;\
+\
+			if (x < 0) continue;\
+			if (x >= World_Width) break;\
+			BlockID block = get_block;\
+\
+			allAir = allAir && Block_Draw[block] == DRAW_GAS;\
+			allSolid = allSolid && Block_FullOpaque[block];\
+			Builder_Chunk[chunkIndex] = block;\
+		}\
+	}\
+}
+
 static void Builder_ReadChunkData(Int32 x1, Int32 y1, Int32 z1, bool* outAllAir, bool* outAllSolid) {
 	bool allAir = true, allSolid = true;
 	Int32 xx, yy, zz;
 
-	for (yy = -1; yy < 17; ++yy) {
-		Int32 y = yy + y1;
-		if (y < 0) continue;
-		if (y >= World_Height) break;
-
-		for (zz = -1; zz < 17; ++zz) {
-			Int32 z = zz + z1;
-			if (z < 0) continue;
-			if (z >= World_Length) break;
-
-			/* need to subtract 1 as index is pre incremented in for loop. */
-			Int32 index = World_Pack(x1 - 1, y, z) - 1;
-			Int32 chunkIndex = (yy + 1) * EXTCHUNK_SIZE_2 + (zz + 1) * EXTCHUNK_SIZE + (-1 + 1) - 1;
-
-			for (xx = -1; xx < 17; ++xx) {
-				Int32 x = xx + x1;
-				++index;
-				++chunkIndex;
-
-				if (x < 0) continue;
-				if (x >= World_Width) break;
-				BlockID rawBlock = World_Blocks[index];
-
-				allAir = allAir && Block_Draw[rawBlock] == DRAW_GAS;
-				allSolid = allSolid && Block_FullOpaque[rawBlock];
-				Builder_Chunk[chunkIndex] = rawBlock;
-			}
-		}
+#ifndef EXTENDED_BLOCKS
+	Builder_ReadChunkBody(World_Blocks[index]);
+#else
+	if (Block_UsedCount <= 256) {
+		Builder_ReadChunkBody(World_Blocks[index]);
+	} else {
+		Builder_ReadChunkBody(World_Blocks[index] | (World_Blocks2[index] << 8));
 	}
+#endif
 
 	*outAllAir = allAir;
 	*outAllSolid = allSolid;

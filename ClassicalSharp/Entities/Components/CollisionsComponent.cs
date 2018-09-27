@@ -49,13 +49,8 @@ namespace ClassicalSharp.Entities {
 			for (int i = 0; i < count; i++) {
 				// Unpack the block and coordinate data
 				State state = Searcher.stateCache[i];
-				#if !ONLY_8BIT
 				bPos.X = state.X >> 3; bPos.Y = state.Y >> 4; bPos.Z = state.Z >> 3;
 				int block = (state.X & 0x7) | (state.Y & 0xF) << 3 | (state.Z & 0x7) << 7;
-				#else
-				bPos.X = state.X >> 3; bPos.Y = state.Y >> 3; bPos.Z = state.Z >> 3;
-				int block = (state.X & 0x7) | (state.Y & 0x7) << 3 | (state.Z & 0x7) << 6;
-				#endif
 				
 				blockBB.Min = BlockInfo.MinBB[block];
 				blockBB.Min.X += bPos.X; blockBB.Min.Y += bPos.Y; blockBB.Min.Z += bPos.Z;

@@ -59,15 +59,9 @@ namespace ClassicalSharp.Physics {
 				CalcTime(ref vel, ref entityBB, ref blockBB, out tx, out ty, out tz);
 				if (tx > 1 || ty > 1 || tz > 1) continue;
 				
-				#if !ONLY_8BIT
 				state.X = (x << 3) | (block  & 0x007);
 				state.Y = (y << 4) | ((block & 0x078) >> 3);
 				state.Z = (z << 3) | ((block & 0x380) >> 7);
-				#else
-				state.X = (x << 3) | (block  & 0x007);
-				state.Y = (y << 3) | ((block & 0x038) >> 3);
-				state.Z = (z << 3) | ((block & 0x1C0) >> 6);
-				#endif
 				state.tSquared = tx * tx + ty * ty + tz * tz;
 				
 				stateCache[count++] = state;

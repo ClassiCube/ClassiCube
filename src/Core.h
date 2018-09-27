@@ -42,7 +42,7 @@ typedef UInt8 bool;
 #define false 0
 #define NULL ((void*)0)
 
-//#define EXTENDED_BLOCKS
+#define EXTENDED_BLOCKS
 #ifdef EXTENDED_BLOCKS
 typedef UInt16 BlockID;
 #else
