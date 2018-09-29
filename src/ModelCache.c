@@ -10,6 +10,7 @@
 #include "Stream.h"
 #include "ErrorHandler.h"
 #include "Entity.h"
+#include "Funcs.h"
 
 
 /*########################################################################################################################*
@@ -1113,6 +1114,10 @@ static void BlockModel_GetCollisionSize(Vector3* size) {
 	/* to fit slightly inside */
 	static Vector3 shrink = { 0.75f/16.0f, 0.75f/16.0f, 0.75f/16.0f };
 	Vector3_SubBy(size, &shrink);
+	/* fix for 0 size blocks */
+	size->X = max(size->X, 0.125f/16.0f);
+	size->Y = max(size->Y, 0.125f/16.0f);
+	size->Z = max(size->Z, 0.125f/16.0f);
 }
 
 static void BlockModel_GetPickingBounds(struct AABB* bb) {

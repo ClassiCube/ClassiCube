@@ -34,10 +34,18 @@ namespace ClassicalSharp.Model {
 			float maxY = BlockInfo.MaxBB[block].Y;
 			return block == Block.Air ? 1 : (minY + maxY) / 2;
 		}
-		
+			
 		static Vector3 colShrink = new Vector3(0.75f/16, 0.75f/16, 0.75f/16);
 		public override Vector3 CollisionSize {
-			get { return (maxBB - minBB) - colShrink; } // to fit slightly inside
+			get {
+				// to fit slightly inside
+				Vector3 size = (maxBB - minBB) - colShrink;
+				// fix for 0 size blocks
+				size.X = Math.Max(size.X, 0.125f/16);
+				size.Y = Math.Max(size.Y, 0.125f/16);
+				size.Z = Math.Max(size.Z, 0.125f/16);
+				return size;
+			}
 		}
 		
 		static Vector3 offset = new Vector3(-0.5f, 0.0f, -0.5f);
