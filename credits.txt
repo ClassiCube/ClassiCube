@@ -11,3 +11,5 @@
 
 And a big thanks to everyone else in the ClassiCube community (who I didn't mention here),
 who in the past have provided many suggestions and assisted in identifying bugs.
+
+* Portions of the FreeType project (https://www.freetype.org/) are used for text rendering
