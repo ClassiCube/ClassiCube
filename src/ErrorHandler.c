@@ -648,8 +648,7 @@ static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void
 	if (logStream.Meta.File) File_Close(logFile);
 
 	String_AppendConst(&msg, "Full details of the crash have been logged to 'client.log'.\n");
-	String_AppendConst(&msg,
-		"Please report the crash to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it.");
+	String_AppendConst(&msg, "Please report the crash on the ClassiCube forums so we can fix it.");
 
 	msg.buffer[msg.length] = '\0';
 	ErrorHandler_ShowDialog("We're sorry", msg.buffer);

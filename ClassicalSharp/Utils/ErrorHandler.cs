@@ -81,7 +81,7 @@ namespace ClassicalSharp {
 			if (wroteToCrashLog) {
 				line1 += " The cause has also been logged to \"" + fileName + "\" in " + Environment.CurrentDirectory;
 			}
-			string line2 = "Please report the crash to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it.";
+			string line2 = "Please report the crash on the ClassiCube forums so we can fix it.";
 			line2 += Environment.NewLine + Environment.NewLine + Format(ex);
 
 			ShowDialog("We're sorry", line1 + Environment.NewLine + Environment.NewLine + line2);
