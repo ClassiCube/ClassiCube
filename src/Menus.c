@@ -1399,7 +1399,7 @@ static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 	ListScreen_SetCurrentIndex(s, idx);
 }
 
-static void TexturePackScreen_SelectEntry(const String* filename, void* obj) {
+static void TexturePackScreen_FilterFiles(const String* filename, void* obj) {
 	String zip = String_FromConst(".zip");
 	if (!String_CaselessEnds(filename, &zip)) return;
 	StringsBuffer_Add((StringsBuffer*)obj, filename);
@@ -1411,7 +1411,7 @@ struct Screen* TexturePackScreen_MakeInstance(void) {
 	s->EntryClick = TexturePackScreen_EntryClick;
 
 	String path = String_FromConst("texpacks");
-	Directory_Enum(&path, &s->Entries, TexturePackScreen_SelectEntry);
+	Directory_Enum(&path, &s->Entries, TexturePackScreen_FilterFiles);
 	if (s->Entries.Count) {
 		ListScreen_QuickSort(0, s->Entries.Count - 1);
 	}
@@ -1545,7 +1545,7 @@ struct Screen* HotkeyListScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------LoadLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
-static void LoadLevelScreen_SelectEntry(const String* filename, void* obj) {
+static void LoadLevelScreen_FilterFiles(const String* filename, void* obj) {
 	String cw = String_FromConst(".cw");  String lvl = String_FromConst(".lvl");
 	String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
 
@@ -1619,7 +1619,7 @@ struct Screen* LoadLevelScreen_MakeInstance(void) {
 	s->EntryClick = LoadLevelScreen_EntryClick;
 
 	String path = String_FromConst("maps");
-	Directory_Enum(&path, &s->Entries, LoadLevelScreen_SelectEntry);
+	Directory_Enum(&path, &s->Entries, LoadLevelScreen_FilterFiles);
 	if (s->Entries.Count) {
 		ListScreen_QuickSort(0, s->Entries.Count - 1);
 	}

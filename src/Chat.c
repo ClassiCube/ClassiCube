@@ -92,7 +92,7 @@ static void Chat_OpenLog(DateTime* now) {
 	for (i = 0; i < 20; i++) {
 		String* path = &Chat_LogPath;
 		path->length = 0;
-		String_Format4(path, "logs%r%p4-%p2-%p2", &Directory_Separator, &year, &month, &day);
+		String_Format4(path, "logs%r%p4-%p2-%p2 ", &Directory_Separator, &year, &month, &day);
 
 		if (i > 0) {
 			String_Format2(path, "%s _%i.log", &Chat_LogName, &i);
