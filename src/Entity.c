@@ -485,21 +485,18 @@ static void Player_MakeNameTexture(struct Player* player) {
 
 		size.Width += 3; size.Height += 3;
 		Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
-		Drawer2D_Begin(&bmp);
 		{
 			PackedCol origWhiteCol = Drawer2D_Cols['f'];
 
 			Drawer2D_Cols['f'] = PackedCol_Create3(80, 80, 80);
 			String_AppendColorless(&shadowName, &displayName);
 			args.Text = shadowName;
-			Drawer2D_DrawText(&args, 3, 3);
+			Drawer2D_DrawText(&bmp, &args, 3, 3);
 
 			Drawer2D_Cols['f'] = origWhiteCol;
 			args.Text = displayName;
-			Drawer2D_DrawText(&args, 0, 0);
+			Drawer2D_DrawText(&bmp, &args, 0, 0);
 		}
-		Drawer2D_End();
-
 		Drawer2D_Make2DTexture(&player->NameTex, &bmp, size, 0, 0);
 		Mem_Free(bmp.Scan0);
 	}

@@ -1468,18 +1468,16 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 	Size2D adjSize = size; adjSize.Width = w->Base.Width;
 
 	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, adjSize.Width, adjSize.Height);
-	Drawer2D_Begin(&bmp);
 	{
-		Drawer2D_DrawText(&args, w->Base.Padding, 0);
+		Drawer2D_DrawText(&bmp, &args, w->Base.Padding, 0);
 
 		args.Text = range;
 		Size2D hintSize = Drawer2D_MeasureText(&args);
 		Int32 hintX = adjSize.Width - hintSize.Width;
 		if (size.Width + 3 < hintX) {
-			Drawer2D_DrawText(&args, hintX, 0);
+			Drawer2D_DrawText(&bmp, &args, hintX, 0);
 		}
 	}
-	Drawer2D_End();
 
 	struct Texture* tex = &w->Base.InputTex;
 	Drawer2D_Make2DTexture(tex, &bmp, adjSize, 0, 0);
@@ -1554,12 +1552,11 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	
 	Int32 realHeight = 0;
 	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
-	Drawer2D_Begin(&bmp);
 
 	struct DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &w->Font, true);
 	if (w->Prefix.length) {
 		args.Text = w->Prefix;
-		Drawer2D_DrawText(&args, 0, 0);
+		Drawer2D_DrawText(&bmp, &args, 0, 0);
 	}
 
 	char lineBuffer[STRING_SIZE + 2];
@@ -1579,10 +1576,9 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 
 		args.Text = line;
 		Int32 offset = i == 0 ? w->PrefixWidth : 0;
-		Drawer2D_DrawText(&args, offset, realHeight);
+		Drawer2D_DrawText(&bmp, &args, offset, realHeight);
 		realHeight += w->LineSizes[i].Height;
 	}
-	Drawer2D_End();
 
 	Drawer2D_Make2DTexture(&w->InputTex, &bmp, size, 0, 0);
 	Mem_Free(bmp.Scan0);
@@ -2466,20 +2462,19 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 	}
 
 	Bitmap bmp;
-	Bitmap_AllocateClearedPow2(&bmp, total.Width, total.Height);	
-	Drawer2D_Begin(&bmp);
+	Bitmap_AllocateClearedPow2(&bmp, total.Width, total.Height);
 	{
 		for (i = 0, x = 0; i < portionsCount; i++) {
 			struct Portion bit = portions[i];
 			args->Text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
 			args->Font = (bit.Len & TEXTGROUPWIDGET_URL) ? w->UnderlineFont : w->Font;
 
-			Drawer2D_DrawText(args, x, 0);
+			Drawer2D_DrawText(&bmp, args, x, 0);
 			x += partSizes[i].Width;
 		}
 		Drawer2D_Make2DTexture(tex, &bmp, total, 0, 0);
 	}
-	Drawer2D_End();
+	Mem_Free(bmp.Scan0);
 }
 
 void TextGroupWidget_SetText(struct TextGroupWidget* w, Int32 index, const String* text_orig) {
@@ -2673,7 +2668,7 @@ static void SpecialInputWidget_DrawTitles(struct SpecialInputWidget* w, Bitmap* 
 		Size2D size = w->Tabs[i].TitleSize;
 
 		Drawer2D_Clear(bmp, col, x, 0, size.Width, size.Height);
-		Drawer2D_DrawText(&args, x + SPECIAL_TITLE_SPACING / 2, 0);
+		Drawer2D_DrawText(bmp, &args, x + SPECIAL_TITLE_SPACING / 2, 0);
 		x += size.Width;
 	}
 }
@@ -2706,7 +2701,7 @@ static void SpecialInputWidget_MeasureContentSizes(struct SpecialInputWidget* w,
 	}
 }
 
-static void SpecialInputWidget_DrawContent(struct SpecialInputWidget* w, struct SpecialInputTab* tab, Int32 yOffset) {
+static void SpecialInputWidget_DrawContent(struct SpecialInputWidget* w, Bitmap* bmp, struct SpecialInputTab* tab, Int32 yOffset) {
 	char buffer[STRING_SIZE];
 	String s = String_FromArray(buffer);
 	s.length = tab->CharsPerItem;
@@ -2721,7 +2716,7 @@ static void SpecialInputWidget_DrawContent(struct SpecialInputWidget* w, struct 
 		Int32 item = i / tab->CharsPerItem;
 		Int32 x = (item % wrap) * w->ElementSize.Width;
 		Int32 y = (item / wrap) * w->ElementSize.Height + yOffset;
-		Drawer2D_DrawText(&args, x, y);
+		Drawer2D_DrawText(bmp, &args, x, y);
 	}
 }
 
@@ -2736,15 +2731,12 @@ static void SpecialInputWidget_Make(struct SpecialInputWidget* w, struct Special
 	Gfx_DeleteTexture(&w->Tex.ID);
 
 	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
-	Drawer2D_Begin(&bmp);
 	{
 		SpecialInputWidget_DrawTitles(w, &bmp);
 		PackedCol col = PACKEDCOL_CONST(30, 30, 30, 200);
 		Drawer2D_Clear(&bmp, col, 0, titleHeight, size.Width, bodySize.Height);
-		SpecialInputWidget_DrawContent(w, tab, titleHeight);
+		SpecialInputWidget_DrawContent(w, &bmp, tab, titleHeight);
 	}
-	Drawer2D_End();
-
 	Drawer2D_Make2DTexture(&w->Tex, &bmp, size, w->X, w->Y);
 	Mem_Free(bmp.Scan0);
 }

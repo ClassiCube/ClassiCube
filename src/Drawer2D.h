@@ -24,16 +24,12 @@ PackedCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 void Drawer2D_Init(void);
 void Drawer2D_Free(void);
 
-/* Sets the underlying bitmap that text operations are performed on. */
-void Drawer2D_Begin(Bitmap* bmp);
-/* Frees any resources associated with the underlying bitmap. */
-void Drawer2D_End(void);
 /* Draws a 2D flat rectangle. */
 void Drawer2D_Rect(Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
 /* Clears the entire given area to the specified colour. */
 void Drawer2D_Clear(Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
 
-void Drawer2D_DrawText(struct DrawTextArgs* args, Int32 x, Int32 y);
+void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, Int32 x, Int32 y);
 Size2D Drawer2D_MeasureText(struct DrawTextArgs* args);
 Int32 Drawer2D_FontHeight(FontDesc* font, bool useShadow);
 

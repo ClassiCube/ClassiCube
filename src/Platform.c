@@ -678,6 +678,9 @@ FT_Library lib;
 StringsBuffer fonts_list;
 static void Font_Init(void);
 
+#define DPI_PIXEL  72
+#define DPI_DEVICE 96 /* TODO: GetDeviceCaps(hdc, LOGPIXELSY) */
+
 static Int32 Font_Find(const String* name) {
 	Int32 i;
 	for (i = 1; i < fonts_list.Count; i += 2) {
@@ -715,8 +718,8 @@ void Font_Make(FontDesc* desc, const String* fontName, UInt16 size, UInt16 style
 	if (err) ErrorHandler_Fail2(err, "Creating font failed");
 	desc->Handle = face;
 
-	err = FT_Set_Char_Size(face, size * 64, 0, 96, 0); /* TODO: Check error */
-	//if (err) ErrorHandler_Fail2(err, "Resizing font failed");
+	err = FT_Set_Char_Size(face, size * 64, 0, DPI_DEVICE, 0); /* TODO: Check error */
+	if (err) ErrorHandler_Fail2(err, "Resizing font failed");
 }
 
 void Font_Free(FontDesc* desc) {
@@ -792,14 +795,16 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, Int32 x, Int32 
 		FT_Load_Char(face, c, FT_LOAD_RENDER); /* TODO: Check error */
 
 		FT_Bitmap* img = &face->glyph->bitmap;
-		Int32 xx, yy;
+		Int32 xx, yy, offset = TEXT_CEIL(s.Height) + TEXT_CEIL(face->descender) - face->glyph->bitmap_top;
+		y += offset;
 
 		for (yy = 0; yy < img->rows; yy++) {
+			if ((y + yy) < 0|| (y + yy) >= bmp->Height) continue;
 			UInt8* src = img->buffer + (yy * img->width);
 			UInt8* dst = (UInt8*)Bitmap_GetRow(bmp, y + yy) + (x * BITMAP_SIZEOF_PIXEL);
 
 			for (xx = 0; xx < img->width; xx++) {
-				if ((x + xx) < 0 || (y + yy) < 0 || (x + xx) >= bmp->Width || (y + yy) >= bmp->Height) continue;
+				if ((x + xx) < 0 || (x + xx) >= bmp->Width) continue;
 
 				UInt8 intensity = *src, invIntensity = UInt8_MaxValue - intensity;
 				dst[0] = ((col.B * intensity) >> 8) + ((dst[0] * invIntensity) >> 8);
@@ -810,7 +815,8 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, Int32 x, Int32 
 				src++; dst += BITMAP_SIZEOF_PIXEL;
 			}
 		}
-		x += face->glyph->advance.x >> 6;
+		x += TEXT_CEIL(face->glyph->advance.x);
+		y -= offset;
 	}
 
 	s.Width  = TEXT_CEIL(s.Width);

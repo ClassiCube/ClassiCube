@@ -139,13 +139,10 @@ void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, In
 	}
 
 	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
-	Drawer2D_Begin(&bmp);
 	{
-		Drawer2D_DrawText(args, 0, 0);
+		Drawer2D_DrawText(&bmp, args, 0, 0);
+		Drawer2D_Make2DTexture(tex, &bmp, size, X, Y);
 	}
-	Drawer2D_End();
-
-	Drawer2D_Make2DTexture(tex, &bmp, size, X, Y);
 	Mem_Free(bmp.Scan0);
 }
 
@@ -370,7 +367,8 @@ static Int32 Drawer2D_NextPart(Int32 i, STRING_REF String* value, String* part, 
 	return i;
 }
 
-void Drawer2D_DrawText(struct DrawTextArgs* args, Int32 x, Int32 y) {
+void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, Int32 x, Int32 y) {
+	Drawer2D_Cur = bmp; /* TODO: Eliminate this */
 	if (Drawer2D_IsEmptyText(&args->Text)) return;
 	if (Drawer2D_BitmappedText) { Drawer2D_DrawBitmapText(args, x, y); return; }
 	
@@ -387,10 +385,10 @@ void Drawer2D_DrawText(struct DrawTextArgs* args, Int32 x, Int32 y) {
 		if (args->UseShadow) {
 			PackedCol black = PACKEDCOL_BLACK;
 			PackedCol backCol = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col, 0.25f);
-			Platform_TextDraw(args, Drawer2D_Cur, x + DRAWER2D_OFFSET, y + DRAWER2D_OFFSET, backCol);
+			Platform_TextDraw(args, bmp, x + DRAWER2D_OFFSET, y + DRAWER2D_OFFSET, backCol);
 		}
 
-		Size2D partSize = Platform_TextDraw(args, Drawer2D_Cur, x, y, col);
+		Size2D partSize = Platform_TextDraw(args, bmp, x, y, col);
 		x += partSize.Width;
 	}
 	args->Text = value;
