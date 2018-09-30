@@ -735,7 +735,7 @@ void Font_Free(FontDesc* desc) {
 }
 
 static void Font_DirCallback(const String* filename, void* obj) {
-	char pathBuffer[MAX_PATH * 5 + 1];
+	char pathBuffer[FILENAME_SIZE + 1];
 	String path = String_NT_Array(pathBuffer);
 	String* dir = obj;
 
@@ -747,7 +747,7 @@ static void Font_DirCallback(const String* filename, void* obj) {
 	if (error) return;
 
 	bool styled = (face->style_flags & FT_STYLE_FLAG_BOLD) || (face->style_flags & FT_STYLE_FLAG_ITALIC);
-	if (!styled) {
+	if (!styled && face->family_name) {
 		StringsBuffer_Add(&fonts_list, &path);
 		path.length = 0;
 
@@ -799,7 +799,7 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, Int32 x, Int32 
 		y += offset;
 
 		for (yy = 0; yy < img->rows; yy++) {
-			if ((y + yy) < 0|| (y + yy) >= bmp->Height) continue;
+			if ((y + yy) < 0 || (y + yy) >= bmp->Height) continue;
 			UInt8* src = img->buffer + (yy * img->width);
 			UInt8* dst = (UInt8*)Bitmap_GetRow(bmp, y + yy) + (x * BITMAP_SIZEOF_PIXEL);
 
@@ -815,6 +815,7 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, Int32 x, Int32 
 				src++; dst += BITMAP_SIZEOF_PIXEL;
 			}
 		}
+
 		x += TEXT_CEIL(face->glyph->advance.x);
 		y -= offset;
 	}

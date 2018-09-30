@@ -765,14 +765,3 @@ void Game_Run(Int32 width, Int32 height, const String* title, struct DisplayDevi
 		Game_RenderFrame(time);
 	}
 }
-
-/* TODO: Implement all these stubs.... */
-#if CC_BUILD_NIX
-void Font_Make(FontDesc* desc, const String* fontName, UInt16 size, UInt16 style) { desc->Size = size; desc->Style = style; }
-void Font_Free(FontDesc* desc) { }
-void Font_GetNames(StringsBuffer* buffer) { }
-Size2D Platform_TextMeasure(struct DrawTextArgs* args) { }
-void Platform_SetBitmap(Bitmap* bmp) { }
-Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) { }
-void Platform_ReleaseBitmap(void) { }
-#endif
