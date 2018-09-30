@@ -441,35 +441,5 @@
          AF_BLUE_STRINGSET_VAII,
          AF_COVERAGE_DEFAULT )
 
-#ifdef AF_CONFIG_OPTION_INDIC
-
-  /* no blue stringset support for the Indic writing system yet */
-#undef  STYLE_DEFAULT_INDIC
-#define STYLE_DEFAULT_INDIC( s, S, d )    \
-          STYLE( s ## _dflt, S ## _DFLT,  \
-                 d " default style",      \
-                 AF_WRITING_SYSTEM_INDIC, \
-                 AF_SCRIPT_ ## S,         \
-                 (AF_Blue_Stringset)0,    \
-                 AF_COVERAGE_DEFAULT )
-
-  STYLE_DEFAULT_INDIC( limb, LIMB, "Limbu" )
-  STYLE_DEFAULT_INDIC( orya, ORYA, "Oriya" )
-  STYLE_DEFAULT_INDIC( sylo, SYLO, "Syloti Nagri" )
-  STYLE_DEFAULT_INDIC( tibt, TIBT, "Tibetan" )
-
-#endif /* AF_CONFIG_OPTION_INDIC */
-
-#ifdef AF_CONFIG_OPTION_CJK
-
-  STYLE( hani_dflt, HANI_DFLT,
-         "CJKV ideographs default style",
-         AF_WRITING_SYSTEM_CJK,
-         AF_SCRIPT_HANI,
-         AF_BLUE_STRINGSET_HANI,
-         AF_COVERAGE_DEFAULT )
-
-#endif /* AF_CONFIG_OPTION_CJK */
-
 
 /* END */

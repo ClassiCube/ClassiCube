@@ -315,8 +315,7 @@
     <ClCompile Include="WinWindow.c" />
     <ClCompile Include="World.c" />
     <ClCompile Include="NixWindow.c" />
-	
-	<ClCompile Include="freetype\autofit.c" />
+    <ClCompile Include="freetype\autofit.c" />
     <ClCompile Include="freetype\ftbase.c" />
     <ClCompile Include="freetype\ftbbox.c" />
     <ClCompile Include="freetype\ftbdf.c" />
@@ -354,7 +353,6 @@
     <ClCompile Include="freetype\type1.c" />
     <ClCompile Include="freetype\type42.c" />
     <ClCompile Include="freetype\winfnt.c" />
-    <ClCompile Include="freetype\ftdebug.c"/>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

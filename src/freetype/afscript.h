@@ -348,43 +348,4 @@
           HINTING_BOTTOM_TO_TOP,
           "\xEA\x98\x93 \xEA\x96\x9C \xEA\x96\xB4" ) /* ꘓ ꖜ ꖴ */
 
-#ifdef AF_CONFIG_OPTION_INDIC
-
-  SCRIPT( limb, LIMB,
-          "Limbu",
-          HB_SCRIPT_LIMBU,
-          HINTING_BOTTOM_TO_TOP,
-          "o" ) /* XXX */
-
-  SCRIPT( orya, ORYA,
-          "Oriya",
-          HB_SCRIPT_ORIYA,
-          HINTING_BOTTOM_TO_TOP,
-          "o" ) /* XXX */
-
-  SCRIPT( sylo, SYLO,
-          "Syloti Nagri",
-          HB_SCRIPT_SYLOTI_NAGRI,
-          HINTING_BOTTOM_TO_TOP,
-          "o" ) /* XXX */
-
-  SCRIPT( tibt, TIBT,
-          "Tibetan",
-          HB_SCRIPT_TIBETAN,
-          HINTING_BOTTOM_TO_TOP,
-          "o" ) /* XXX */
-
-#endif /* AF_CONFIG_OPTION_INDIC */
-
-#ifdef AF_CONFIG_OPTION_CJK
-
-  SCRIPT( hani, HANI,
-          "CJKV ideographs",
-          HB_SCRIPT_HAN,
-          HINTING_BOTTOM_TO_TOP,
-          "\xE7\x94\xB0 \xE5\x9B\x97" ) /* 田 囗 */
-
-#endif /* AF_CONFIG_OPTION_CJK */
-
-
 /* END */

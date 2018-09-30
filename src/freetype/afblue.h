@@ -262,21 +262,7 @@ FT_BEGIN_HEADER
     AF_BLUE_STRING_VAI_TOP = 4757,
     AF_BLUE_STRING_VAI_BOTTOM = 4789,
     af_blue_1_1 = 4820,
-#ifdef AF_CONFIG_OPTION_CJK
-    AF_BLUE_STRING_CJK_TOP = af_blue_1_1 + 1,
-    AF_BLUE_STRING_CJK_BOTTOM = af_blue_1_1 + 203,
-    af_blue_1_1_1 = af_blue_1_1 + 404,
-#ifdef AF_CONFIG_OPTION_CJK_BLUE_HANI_VERT
-    AF_BLUE_STRING_CJK_LEFT = af_blue_1_1_1 + 1,
-    AF_BLUE_STRING_CJK_RIGHT = af_blue_1_1_1 + 204,
-    af_blue_1_1_2 = af_blue_1_1_1 + 405,
-#else
-    af_blue_1_1_2 = af_blue_1_1_1 + 0,
-#endif /* AF_CONFIG_OPTION_CJK_BLUE_HANI_VERT */
-    af_blue_1_2 = af_blue_1_1_2 + 0,
-#else
     af_blue_1_2 = af_blue_1_1 + 0,
-#endif /* AF_CONFIG_OPTION_CJK                */
 
 
     AF_BLUE_STRING_MAX   /* do not remove */
@@ -373,18 +359,7 @@ FT_BEGIN_HEADER
     AF_BLUE_STRINGSET_THAI = 236,
     AF_BLUE_STRINGSET_VAII = 244,
     af_blue_2_1 = 247,
-#ifdef AF_CONFIG_OPTION_CJK
-    AF_BLUE_STRINGSET_HANI = af_blue_2_1 + 0,
-    af_blue_2_1_1 = af_blue_2_1 + 2,
-#ifdef AF_CONFIG_OPTION_CJK_BLUE_HANI_VERT
-    af_blue_2_1_2 = af_blue_2_1_1 + 2,
-#else
-    af_blue_2_1_2 = af_blue_2_1_1 + 0,
-#endif /* AF_CONFIG_OPTION_CJK_BLUE_HANI_VERT */
-    af_blue_2_2 = af_blue_2_1_2 + 1,
-#else
     af_blue_2_2 = af_blue_2_1 + 0,
-#endif /* AF_CONFIG_OPTION_CJK                */
 
 
     AF_BLUE_STRINGSET_MAX   /* do not remove */

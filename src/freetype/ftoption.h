@@ -866,7 +866,7 @@ FT_BEGIN_HEADER
   /* Compile autofit module with CJK (Chinese, Japanese, Korean) script    */
   /* support.                                                              */
   /*                                                                       */
-#define AF_CONFIG_OPTION_CJK
+#undef AF_CONFIG_OPTION_CJK
 
   /*************************************************************************/
   /*                                                                       */
@@ -874,7 +874,7 @@ FT_BEGIN_HEADER
   /* some scripts that the `latin' submodule of the autofit module doesn't */
   /* (yet) handle.                                                         */
   /*                                                                       */
-#define AF_CONFIG_OPTION_INDIC
+#undef AF_CONFIG_OPTION_INDIC
 
   /*************************************************************************/
   /*                                                                       */

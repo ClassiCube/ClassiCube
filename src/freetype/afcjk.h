@@ -101,36 +101,6 @@ FT_BEGIN_HEADER
   } AF_CJKMetricsRec, *AF_CJKMetrics;
 
 
-#ifdef AF_CONFIG_OPTION_CJK
-  FT_LOCAL( FT_Error )
-  af_cjk_metrics_init( AF_CJKMetrics  metrics,
-                       FT_Face        face );
-
-  FT_LOCAL( void )
-  af_cjk_metrics_scale( AF_CJKMetrics  metrics,
-                        AF_Scaler      scaler );
-
-  FT_LOCAL( FT_Error )
-  af_cjk_hints_init( AF_GlyphHints  hints,
-                     AF_CJKMetrics  metrics );
-
-  FT_LOCAL( FT_Error )
-  af_cjk_hints_apply( FT_UInt        glyph_index,
-                      AF_GlyphHints  hints,
-                      FT_Outline*    outline,
-                      AF_CJKMetrics  metrics );
-
-  /* shared; called from afindic.c */
-  FT_LOCAL( void )
-  af_cjk_metrics_check_digits( AF_CJKMetrics  metrics,
-                               FT_Face        face );
-
-  FT_LOCAL( void )
-  af_cjk_metrics_init_widths( AF_CJKMetrics  metrics,
-                              FT_Face        face );
-#endif /* AF_CONFIG_OPTION_CJK */
-
-
 /* */
 
 FT_END_HEADER

@@ -65,11 +65,7 @@ FT_BEGIN_HEADER
    */
 
   /* index of fallback style in `af_style_classes' */
-#ifdef AF_CONFIG_OPTION_CJK
-#define AF_STYLE_FALLBACK    AF_STYLE_HANI_DFLT
-#else
 #define AF_STYLE_FALLBACK    AF_STYLE_NONE_DFLT
-#endif
   /* default script for OpenType; ignored if HarfBuzz isn't used */
 #define AF_SCRIPT_DEFAULT    AF_SCRIPT_LATN
 
