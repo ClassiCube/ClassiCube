@@ -86,13 +86,11 @@ void  Waitable_Signal(void* handle);
 void  Waitable_Wait(void* handle); 
 void  Waitable_WaitFor(void* handle, UInt32 milliseconds);
 
-void Font_GetNames(StringsBuffer* buffer);
+NOINLINE_ void Font_GetNames(StringsBuffer* buffer);
 NOINLINE_ void Font_Make(FontDesc* desc, const String* fontName, UInt16 size, UInt16 style);
 NOINLINE_ void Font_Free(FontDesc* desc);
-Size2D Platform_TextMeasure(struct DrawTextArgs* args);
-void Platform_SetBitmap(Bitmap* bmp);
-Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col);
-void Platform_ReleaseBitmap(void);
+NOINLINE_ Size2D Platform_TextMeasure(struct DrawTextArgs* args);
+NOINLINE_ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, Int32 x, Int32 y, PackedCol col);
 
 void Socket_Create(SocketPtr* socket);
 ReturnCode Socket_Available(SocketPtr socket, UInt32* available);

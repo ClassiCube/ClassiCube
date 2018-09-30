@@ -9,6 +9,9 @@
 #include "AsyncDownloader.h"
 #include "Bitmap.h"
 
+#include "freetype/ft2build.h"
+#include "freetype/freetype.h"
+
 #if CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
@@ -670,42 +673,50 @@ void Waitable_WaitFor(void* handle, UInt32 milliseconds) {
 /*########################################################################################################################*
 *--------------------------------------------------------Font/Text--------------------------------------------------------*
 *#########################################################################################################################*/
-#if CC_BUILD_WIN
-int CALLBACK Font_GetNamesCallback(CONST LOGFONT* desc, CONST TEXTMETRIC* metrics, DWORD fontType, LPVOID obj) {
-	Int32 i;
-	char nameBuffer[LF_FACESIZE];
-	String name = String_FromArray(nameBuffer);
+#include "freetype\ftsnames.h"
+FT_Library lib;
+StringsBuffer fonts_list;
+static void Font_Init(void);
 
-	/* don't want international variations of font names too */
-	if (desc->lfFaceName[0] == '@' || desc->lfCharSet != ANSI_CHARSET) return 1;
-	
-	if ((fontType & RASTER_FONTTYPE) || (fontType & TRUETYPE_FONTTYPE)) {
-		for (i = 0; i < LF_FACESIZE && desc->lfFaceName[i]; i++) {
-			String_Append(&name, Convert_UnicodeToCP437(desc->lfFaceName[i]));
-		}
-		StringsBuffer_Add((StringsBuffer*)obj, &name);
+static Int32 Font_Find(const String* name) {
+	Int32 i;
+	for (i = 1; i < fonts_list.Count; i += 2) {
+		String faceName = StringsBuffer_UNSAFE_Get(&fonts_list, i);
+		if (String_CaselessEquals(&faceName, name)) return i;
 	}
-	return 1;
+	return -1;
 }
 
 void Font_GetNames(StringsBuffer* buffer) {
-	EnumFontFamiliesW(hdc, NULL, Font_GetNamesCallback, buffer);
+	if (!fonts_list.Count) Font_Init();
+
+	Int32 i;
+	for (i = 1; i < fonts_list.Count; i += 2) {
+		String faceName = StringsBuffer_UNSAFE_Get(&fonts_list, i);
+		StringsBuffer_Add(buffer, &faceName);
+	}
 }
 
 void Font_Make(FontDesc* desc, const String* fontName, UInt16 size, UInt16 style) {
-	desc->Size    = size; 
-	desc->Style   = style;
-	LOGFONTA font = { 0 };
+	desc->Size  = size;
+	desc->Style = style;
+	
+	if (!fonts_list.Count) Font_Init();
+	Int32 idx = Font_Find(fontName);
+	if (idx == -1) ErrorHandler_Fail("Unknown font");
+	
+	char pathBuffer[FILENAME_SIZE + 1];
+	String path = String_NT_Array(pathBuffer);
+	StringsBuffer_Get(&fonts_list, idx - 1, &path);
+	path.buffer[path.length] = '\0';
 
-	font.lfHeight    = -Math_CeilDiv(size * GetDeviceCaps(hdc, LOGPIXELSY), 72);
-	font.lfUnderline = style == FONT_STYLE_UNDERLINE;
-	font.lfWeight    = style == FONT_STYLE_BOLD ? FW_BOLD : FW_NORMAL;
-	font.lfQuality   = ANTIALIASED_QUALITY; /* TODO: CLEARTYPE_QUALITY looks slightly better */
+	FT_Face face;
+	FT_Error err = FT_New_Face(lib, path.buffer, 0, &face);
+	if (err) ErrorHandler_Fail2(err, "Creating font failed");
+	desc->Handle = face;
 
-	String dstName = String_Init(font.lfFaceName, 0, LF_FACESIZE);
-	String_AppendString(&dstName, fontName);
-	desc->Handle = CreateFontIndirectA(&font);
-	if (!desc->Handle) ErrorHandler_Fail("Creating font handle failed");
+	err = FT_Set_Char_Size(face, size * 64, 0, 96, 0); /* TODO: Check error */
+	//if (err) ErrorHandler_Fail2(err, "Resizing font failed");
 }
 
 void Font_Free(FontDesc* desc) {
@@ -714,83 +725,104 @@ void Font_Free(FontDesc* desc) {
 	/* NULL for fonts created by Drawer2D_MakeFont and bitmapped text mode is on */
 	if (!desc->Handle) return;
 
-	if (!DeleteObject(desc->Handle)) ErrorHandler_Fail("Deleting font handle failed");
+	FT_Face face = desc->Handle;
+	FT_Error err = FT_Done_Face(face);
+	if (err) ErrorHandler_Fail2(err, "Deleting font failed");
 	desc->Handle = NULL;
 }
 
-/* TODO: not associate font with device so much */
-Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
-	WCHAR str[300]; Platform_ConvertString(str, &args->Text);
-	HGDIOBJ oldFont = SelectObject(hdc, args->Font.Handle);
-	SIZE area; GetTextExtentPointW(hdc, str, args->Text.length, &area);
+static void Font_DirCallback(const String* filename, void* obj) {
+	char pathBuffer[MAX_PATH * 5 + 1];
+	String path = String_NT_Array(pathBuffer);
+	String* dir = obj;
 
-	SelectObject(hdc, oldFont);
-	Size2D s = { area.cx, area.cy }; return s;
-}
+	String_Format2(&path, "%s%s", dir, filename);
+	path.buffer[path.length] = '\0';
 
-HBITMAP platform_dib;
-HBITMAP platform_oldBmp;
-Bitmap* platform_bmp;
-void* platform_bits;
+	FT_Face face;
+	FT_Error error = FT_New_Face(lib, path.buffer, 0, &face);
+	if (error) return;
 
-void Platform_SetBitmap(Bitmap* bmp) {
-	platform_bmp = bmp;
-	platform_bits = NULL;
+	bool styled = (face->style_flags & FT_STYLE_FLAG_BOLD) || (face->style_flags & FT_STYLE_FLAG_ITALIC);
+	if (!styled) {
+		StringsBuffer_Add(&fonts_list, &path);
+		path.length = 0;
 
-	BITMAPINFO bmi = { 0 };
-	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bmi.bmiHeader.biWidth  = bmp->Width;
-	bmi.bmiHeader.biHeight = -bmp->Height;
-	bmi.bmiHeader.biPlanes = 1;
-	bmi.bmiHeader.biBitCount = 32;
-	bmi.bmiHeader.biCompression = BI_RGB;
-
-	platform_dib = CreateDIBSection(hdc, &bmi, 0, &platform_bits, NULL, 0);
-	if (!platform_dib) ErrorHandler_Fail("Failed to allocate DIB for text");
-	platform_oldBmp = SelectObject(hdc, platform_dib);
-}
-
-/* TODO: check return codes and stuff */
-/* TODO: make text prettier.. somehow? */
-/* TODO: Do we need to / 255 instead of >> 8 ? */
-Size2D Platform_TextDraw(struct DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) {
-	WCHAR str[300]; Platform_ConvertString(str, &args->Text);
-
-	HGDIOBJ oldFont = (HFONT)SelectObject(hdc, (HFONT)args->Font.Handle);
-	SIZE area; GetTextExtentPointW(hdc, str, args->Text.length, &area);
-	TextOutW(hdc, 0, 0, str, args->Text.length);
-
-	Int32 xx, yy;
-	Bitmap* bmp = platform_bmp;
-	for (yy = 0; yy < area.cy; yy++) {
-		UInt8* src = (UInt8*)platform_bits + (yy * (bmp->Width << 2));
-		UInt8* dst = (UInt8*)Bitmap_GetRow(bmp, y + yy); dst += x * BITMAP_SIZEOF_PIXEL;
-
-		for (xx = 0; xx < area.cx; xx++) {
-			UInt8 intensity = *src, invIntensity = UInt8_MaxValue - intensity;
-			dst[0] = ((col.B * intensity) >> 8) + ((dst[0] * invIntensity) >> 8);
-			dst[1] = ((col.G * intensity) >> 8) + ((dst[1] * invIntensity) >> 8);
-			dst[2] = ((col.R * intensity) >> 8) + ((dst[2] * invIntensity) >> 8);
-			//dst[3] = ((col.A * intensity) >> 8) + ((dst[3] * invIntensity) >> 8);
-			dst[3] = intensity                  + ((dst[3] * invIntensity) >> 8);
-			src += BITMAP_SIZEOF_PIXEL; dst += BITMAP_SIZEOF_PIXEL;
+		String_AppendConst(&path, face->family_name);
+		/* don't want 'Arial Regular' */
+		if (face->style_name) {
+			String style = String_FromReadonly(face->style_name);
+			if (!String_CaselessEqualsConst(&style, "Regular")) {
+				String_Format1(&path, " %c", face->style_name);
+			}
 		}
+
+		Platform_Log1("Face: %s", &path);
+		StringsBuffer_Add(&fonts_list, &path);
+	}
+	FT_Done_Face(face);
+}
+
+#define TEXT_CEIL(x) (((x) + 63) >> 6)
+Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
+	FT_Face face = args->Font.Handle;
+	String text = args->Text;
+	Size2D s = { 0, face->height };
+	Int32 i;
+
+	for (i = 0; i < text.length; i++) {
+		UInt16 c = Convert_CP437ToUnicode(text.buffer[i]);
+		FT_Load_Char(face, c, 0); /* TODO: Check error */
+		s.Width += face->glyph->advance.x;
 	}
 
-	SelectObject(hdc, oldFont);
-	//DrawTextA(hdc, args->Text.buffer, args->Text.length,
-	//	&r, DT_NOPREFIX | DT_SINGLELINE | DT_NOCLIP);
-	Size2D s = { area.cx, area.cy }; return s;
+	s.Width  = TEXT_CEIL(s.Width);
+	s.Height = TEXT_CEIL(s.Height);
+	return s;
 }
 
-void Platform_ReleaseBitmap(void) {
-	/* TODO: Check return values */
-	SelectObject(hdc, platform_oldBmp);
-	DeleteObject(platform_dib);
+Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, Int32 x, Int32 y, PackedCol col) {
+	FT_Face face = args->Font.Handle;
+	String text = args->Text;
+	Size2D s = { 0, face->height };
+	Int32 i;
 
-	platform_oldBmp = NULL;
-	platform_dib = NULL;
-	platform_bmp = NULL;
+	for (i = 0; i < text.length; i++) {
+		UInt16 c = Convert_CP437ToUnicode(text.buffer[i]);
+		FT_Load_Char(face, c, FT_LOAD_RENDER); /* TODO: Check error */
+
+		FT_Bitmap* img = &face->glyph->bitmap;
+		Int32 xx, yy;
+
+		for (yy = 0; yy < img->rows; yy++) {
+			UInt8* src = img->buffer + (yy * img->width);
+			UInt8* dst = (UInt8*)Bitmap_GetRow(bmp, y + yy) + (x * BITMAP_SIZEOF_PIXEL);
+
+			for (xx = 0; xx < img->width; xx++) {
+				if ((x + xx) < 0 || (y + yy) < 0 || (x + xx) >= bmp->Width || (y + yy) >= bmp->Height) continue;
+
+				UInt8 intensity = *src, invIntensity = UInt8_MaxValue - intensity;
+				dst[0] = ((col.B * intensity) >> 8) + ((dst[0] * invIntensity) >> 8);
+				dst[1] = ((col.G * intensity) >> 8) + ((dst[1] * invIntensity) >> 8);
+				dst[2] = ((col.R * intensity) >> 8) + ((dst[2] * invIntensity) >> 8);
+				//dst[3] = ((col.A * intensity) >> 8) + ((dst[3] * invIntensity) >> 8);
+				dst[3] = intensity + ((dst[3] * invIntensity) >> 8);
+				src++; dst += BITMAP_SIZEOF_PIXEL;
+			}
+		}
+		x += face->glyph->advance.x >> 6;
+	}
+
+	s.Width  = TEXT_CEIL(s.Width);
+	s.Height = TEXT_CEIL(s.Height);
+	return s;
+}
+
+#if CC_BUILD_WIN
+static void Font_Init(void) {
+	FT_Error err = FT_Init_FreeType(&lib);
+	String dir   = String_FromConst("C:\\Windows\\fonts\\");
+	Directory_Enum(&dir, &dir, Font_DirCallback);
 }
 #elif CC_BUILD_NIX
 #endif

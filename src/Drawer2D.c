@@ -104,19 +104,9 @@ void Drawer2D_Init(void) {
 	}
 }
 
-void Drawer2D_Free(void) {
-	Drawer2D_FreeFontBitmap();
-}
-
-void Drawer2D_Begin(Bitmap* bmp) {
-	if (!Drawer2D_BitmappedText) Platform_SetBitmap(bmp);
-	Drawer2D_Cur = bmp;
-}
-
-void Drawer2D_End(void) {	
-	if (!Drawer2D_BitmappedText) Platform_ReleaseBitmap();
-	Drawer2D_Cur = NULL;
-}
+void Drawer2D_Free(void) { Drawer2D_FreeFontBitmap(); }
+void Drawer2D_Begin(Bitmap* bmp) { Drawer2D_Cur = bmp; }
+void Drawer2D_End(void) { Drawer2D_Cur = NULL; }
 
 /* Draws a 2D flat rectangle. */
 void Drawer2D_Rect(Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
@@ -397,10 +387,10 @@ void Drawer2D_DrawText(struct DrawTextArgs* args, Int32 x, Int32 y) {
 		if (args->UseShadow) {
 			PackedCol black = PACKEDCOL_BLACK;
 			PackedCol backCol = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col, 0.25f);
-			Platform_TextDraw(args, x + DRAWER2D_OFFSET, y + DRAWER2D_OFFSET, backCol);
+			Platform_TextDraw(args, Drawer2D_Cur, x + DRAWER2D_OFFSET, y + DRAWER2D_OFFSET, backCol);
 		}
 
-		Size2D partSize = Platform_TextDraw(args, x, y, col);
+		Size2D partSize = Platform_TextDraw(args, Drawer2D_Cur, x, y, col);
 		x += partSize.Width;
 	}
 	args->Text = value;
