@@ -506,9 +506,6 @@
     <ClCompile Include="freetype\ftbbox.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftbdf.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="freetype\ftbitmap.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -554,12 +551,6 @@
     <ClCompile Include="freetype\fttype1.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftwinfnt.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="freetype\bdf.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="freetype\ftcache.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -567,15 +558,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="freetype\type1cid.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="freetype\ftgzip.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="freetype\ftlzw.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="freetype\pcf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="freetype\pfr.c">
@@ -606,9 +588,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="freetype\type42.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="freetype\winfnt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

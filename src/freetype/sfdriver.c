@@ -37,11 +37,6 @@
 #include "ttpost.h"
 #endif
 
-#ifdef TT_CONFIG_OPTION_BDF
-#include "ttbdf.h"
-#include FT_SERVICE_BDF_H
-#endif
-
 #include "ttcmap.h"
 #include "ttkern.h"
 #include "ttmtx.h"

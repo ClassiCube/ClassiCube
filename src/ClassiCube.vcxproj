@@ -318,7 +318,6 @@
     <ClCompile Include="freetype\autofit.c" />
     <ClCompile Include="freetype\ftbase.c" />
     <ClCompile Include="freetype\ftbbox.c" />
-    <ClCompile Include="freetype\ftbdf.c" />
     <ClCompile Include="freetype\ftbitmap.c" />
     <ClCompile Include="freetype\ftcid.c" />
     <ClCompile Include="freetype\ftfstype.c" />
@@ -334,14 +333,9 @@
     <ClCompile Include="freetype\ftsynth.c" />
     <ClCompile Include="freetype\ftsystem.c" />
     <ClCompile Include="freetype\fttype1.c" />
-    <ClCompile Include="freetype\ftwinfnt.c" />
-    <ClCompile Include="freetype\bdf.c" />
     <ClCompile Include="freetype\ftcache.c" />
     <ClCompile Include="freetype\cff.c" />
     <ClCompile Include="freetype\type1cid.c" />
-    <ClCompile Include="freetype\ftgzip.c" />
-    <ClCompile Include="freetype\ftlzw.c" />
-    <ClCompile Include="freetype\pcf.c" />
     <ClCompile Include="freetype\pfr.c" />
     <ClCompile Include="freetype\psaux.c" />
     <ClCompile Include="freetype\pshinter.c" />
@@ -352,7 +346,6 @@
     <ClCompile Include="freetype\truetype.c" />
     <ClCompile Include="freetype\type1.c" />
     <ClCompile Include="freetype\type42.c" />
-    <ClCompile Include="freetype\winfnt.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

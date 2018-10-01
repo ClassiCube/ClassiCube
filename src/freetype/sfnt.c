@@ -23,7 +23,6 @@
 #include "sfdriver.c"
 #include "sfntpic.c"
 #include "sfobjs.c"
-#include "ttbdf.c"
 #include "ttcmap.c"
 #include "ttkern.c"
 #include "ttload.c"
