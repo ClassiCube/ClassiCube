@@ -16,20 +16,10 @@ namespace ClassicalSharp.Entities {
 			anim = new AnimatedComponent(game, this);
 		}
 		
-		/// <summary> The model of this entity. (used for collision detection and rendering) </summary>
 		public IModel Model;
-		
-		/// <summary> The name of the model of this entity. </summary>
-		public string ModelName;
-		
-		/// <summary> BlockID if model name is a vaid block id. </summary>
-		/// <remarks> This avoids needing to repeatedly parse ModelName as a byte. </remarks>
+		public string SkinName, ModelName;
 		public BlockID ModelBlock;
-		
-		/// <summary> Scale applied to the model for collision detection and rendering. </summary>
 		public Vector3 ModelScale = new Vector3(1.0f);
-		
-		/// <summary> Returns the size of the model that is used for collision detection. </summary>
 		public Vector3 Size;
 
 		public int TextureId, MobTextureId;
@@ -132,6 +122,10 @@ namespace ClassicalSharp.Entities {
 			ParseScale(scale);
 			Model.RecalcProperties(this);
 			UpdateModelBounds();
+			
+			if (SkinName != null && Utils.IsUrlPrefix(SkinName, 0)) {
+				MobTextureId = TextureId;
+			}
 		}
 		
 		public void UpdateModelBounds() {

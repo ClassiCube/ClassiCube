@@ -1399,10 +1399,12 @@ static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 	ListScreen_SetCurrentIndex(s, idx);
 }
 
-static void TexturePackScreen_FilterFiles(const String* filename, void* obj) {
+static void TexturePackScreen_FilterFiles(const String* path, void* obj) {
 	String zip = String_FromConst(".zip");
-	if (!String_CaselessEnds(filename, &zip)) return;
-	StringsBuffer_Add((StringsBuffer*)obj, filename);
+	if (!String_CaselessEnds(path, &zip)) return;
+
+	String file = *path; Utils_UNSAFE_GetFilename(&file);
+	StringsBuffer_Add((StringsBuffer*)obj, &file);
 }
 
 struct Screen* TexturePackScreen_MakeInstance(void) {
@@ -1545,13 +1547,15 @@ struct Screen* HotkeyListScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------LoadLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
-static void LoadLevelScreen_FilterFiles(const String* filename, void* obj) {
-	String cw = String_FromConst(".cw");  String lvl = String_FromConst(".lvl");
+static void LoadLevelScreen_FilterFiles(const String* path, void* obj) {
+	String cw  = String_FromConst(".cw");  String lvl = String_FromConst(".lvl");
 	String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
 
-	if (!(String_CaselessEnds(filename, &cw)   || String_CaselessEnds(filename, &lvl)
-		|| String_CaselessEnds(filename, &fcm) || String_CaselessEnds(filename, &dat))) return;
-	StringsBuffer_Add((StringsBuffer*)obj, filename);
+	if (!(String_CaselessEnds(path, &cw)   || String_CaselessEnds(path, &lvl)
+		|| String_CaselessEnds(path, &fcm) || String_CaselessEnds(path, &dat))) return;
+
+	String file = *path; Utils_UNSAFE_GetFilename(&file);
+	StringsBuffer_Add((StringsBuffer*)obj, &file);
 }
 
 void LoadLevelScreen_LoadMap(const String* path) {

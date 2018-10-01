@@ -86,6 +86,7 @@ struct Entity {
 	struct Matrix Transform;
 
 	struct AnimatedComp Anim;
+	char SkinNameRaw[STRING_SIZE];
 };
 
 void Entity_Init(struct Entity* entity);
@@ -126,7 +127,7 @@ void TabList_MakeComponent(struct IGameComponent* comp);
 #define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_PlayerNames[id]);
 #define TabList_UNSAFE_GetList(id)   StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_ListNames[id]);
 #define TabList_UNSAFE_GetGroup(id)  StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_GroupNames[id]);
-#define Player_Layout struct Entity Base; char DisplayNameRaw[STRING_SIZE]; char SkinNameRaw[STRING_SIZE]; bool FetchedSkin; struct Texture NameTex;
+#define Player_Layout struct Entity Base; char DisplayNameRaw[STRING_SIZE]; bool FetchedSkin; struct Texture NameTex;
 
 /* Represents a player entity. */
 struct Player { Player_Layout };

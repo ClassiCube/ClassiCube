@@ -14,7 +14,7 @@ namespace ClassicalSharp.Entities {
 
 	public abstract class Player : Entity {
 		
-		public string DisplayName, SkinName;
+		public string DisplayName;
 		protected Texture nameTex;
 		internal bool fetchedSkin;
 		

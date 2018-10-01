@@ -72,6 +72,7 @@ void Entity_Init(struct Entity* e) {
 	e->ModelScale = Vector3_Create1(1.0f);
 	e->uScale = 1.0f;
 	e->vScale = 1.0f;
+	e->SkinNameRaw[0] = '\0';
 }
 
 Vector3 Entity_GetEyePosition(struct Entity* e) {
@@ -153,6 +154,8 @@ void Entity_SetModel(struct Entity* e, const String* model) {
 	e->Model->RecalcProperties(e);
 	Entity_UpdateModelBounds(e);
 	
+	String skin = String_FromRawArray(e->SkinNameRaw);
+	if (Utils_IsUrlPrefix(&skin, 0)) { e->MobTextureId = e->TextureId; }
 }
 
 void Entity_UpdateModelBounds(struct Entity* e) {
@@ -546,14 +549,15 @@ static void Player_DrawName(struct Player* player) {
 
 static struct Player* Player_FirstOtherWithSameSkin(struct Player* player) {
 	struct Entity* entity = &player->Base;
-	String skin = String_FromRawArray(player->SkinNameRaw);
+	String skin = String_FromRawArray(entity->SkinNameRaw);
 	Int32 i;
+
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i] || Entities_List[i] == entity) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
 		struct Player* p = (struct Player*)Entities_List[i];
-		String pSkin = String_FromRawArray(p->SkinNameRaw);
+		String pSkin = String_FromRawArray(p->Base.SkinNameRaw);
 		if (String_Equals(&skin, &pSkin)) return p;
 	}
 	return NULL;
@@ -561,14 +565,15 @@ static struct Player* Player_FirstOtherWithSameSkin(struct Player* player) {
 
 static struct Player* Player_FirstOtherWithSameSkinAndFetchedSkin(struct Player* player) {
 	struct Entity* entity = &player->Base;
-	String skin = String_FromRawArray(player->SkinNameRaw);
+	String skin = String_FromRawArray(entity->SkinNameRaw);
 	Int32 i;
+
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i] || Entities_List[i] == entity) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
 		struct Player* p = (struct Player*)Entities_List[i];
-		String pSkin = String_FromRawArray(p->SkinNameRaw);
+		String pSkin = String_FromRawArray(p->Base.SkinNameRaw);
 		if (p->FetchedSkin && String_Equals(&skin, &pSkin)) return p;
 	}
 	return NULL;
@@ -585,10 +590,8 @@ static void Player_ApplySkin(struct Player* player, struct Player* from) {
 
 	/* Custom mob textures */
 	dst->MobTextureId = NULL;
-	String skin = String_FromRawArray(player->SkinNameRaw);
-	if (Utils_IsUrlPrefix(&skin, 0)) {
-		dst->MobTextureId = dst->TextureId;
-	}
+	String skin = String_FromRawArray(dst->SkinNameRaw);
+	if (Utils_IsUrlPrefix(&skin, 0)) { dst->MobTextureId = dst->TextureId; }
 }
 
 void Player_ResetSkin(struct Player* player) {
@@ -601,14 +604,16 @@ void Player_ResetSkin(struct Player* player) {
 
 /* Apply or reset skin, for all players with same skin */
 static void Player_SetSkinAll(struct Player* player, bool reset) {
-	String skin = String_FromRawArray(player->SkinNameRaw);
+	struct Entity* entity = &player->Base;
+	String skin = String_FromRawArray(entity->SkinNameRaw);
 	Int32 i;
+
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
 		struct Player* p = (struct Player*)Entities_List[i];
-		String pSkin = String_FromRawArray(p->SkinNameRaw);
+		String pSkin = String_FromRawArray(p->Base.SkinNameRaw);
 		if (!String_Equals(&skin, &pSkin)) continue;
 
 		if (reset) {
@@ -670,23 +675,23 @@ static void Player_EnsurePow2(struct Player* player, Bitmap* bmp) {
 	*bmp = scaled;
 }
 
-static void Player_CheckSkin(struct Player* player) {
-	struct Entity* entity = &player->Base;
-	String skin = String_FromRawArray(player->SkinNameRaw);
+static void Player_CheckSkin(struct Player* p) {
+	struct Entity* e = &p->Base;
+	String skin = String_FromRawArray(e->SkinNameRaw);
 
-	if (!player->FetchedSkin && entity->Model->UsesSkin) {
-		struct Player* first = Player_FirstOtherWithSameSkinAndFetchedSkin(player);
+	if (!p->FetchedSkin && e->Model->UsesSkin) {
+		struct Player* first = Player_FirstOtherWithSameSkinAndFetchedSkin(p);
 		if (!first) {
 			AsyncDownloader_GetSkin(&skin, &skin);
 		} else {
-			Player_ApplySkin(player, first);
+			Player_ApplySkin(p, first);
 		}
-		player->FetchedSkin = true;
+		p->FetchedSkin = true;
 	}
 
 	struct AsyncRequest item;
 	if (!AsyncDownloader_Get(&skin, &item)) return;
-	if (!item.ResultData) { Player_SetSkinAll(player, true); return; }
+	if (!item.ResultData) { Player_SetSkinAll(p, true); return; }
 
 	String url = String_FromRawArray(item.URL);
 	struct Stream mem; Bitmap bmp;
@@ -698,19 +703,19 @@ static void Player_CheckSkin(struct Player* player) {
 		Mem_Free(bmp.Scan0); return;
 	}
 
-	Gfx_DeleteTexture(&entity->TextureId);
-	Player_SetSkinAll(player, true);
-	Player_EnsurePow2(player, &bmp);
-	entity->SkinType = Utils_GetSkinType(&bmp);
+	Gfx_DeleteTexture(&e->TextureId);
+	Player_SetSkinAll(p, true);
+	Player_EnsurePow2(p, &bmp);
+	e->SkinType = Utils_GetSkinType(&bmp);
 
-	if (entity->SkinType == SKIN_INVALID) {
-		Player_SetSkinAll(player, true);
+	if (e->SkinType == SKIN_INVALID) {
+		Player_SetSkinAll(p, true);
 	} else {
-		if (entity->Model->UsesHumanSkin) {
-			Player_ClearHat(&bmp, entity->SkinType);
+		if (e->Model->UsesHumanSkin) {
+			Player_ClearHat(&bmp, e->SkinType);
 		}
-		entity->TextureId = Gfx_CreateTexture(&bmp, true, false);
-		Player_SetSkinAll(player, false);
+		e->TextureId = Gfx_CreateTexture(&bmp, true, false);
+		Player_SetSkinAll(p, false);
 	}
 	Mem_Free(bmp.Scan0);
 }
@@ -736,10 +741,10 @@ static void Player_ContextRecreated(struct Entity* e) {
 	Player_UpdateNameTex(player);
 }
 
-void Player_SetName(struct Player* player, const String* name, const String* skin) {
-	String p_name = String_ClearedArray(player->DisplayNameRaw);
+void Player_SetName(struct Player* p, const String* name, const String* skin) {
+	String p_name = String_ClearedArray(p->DisplayNameRaw);
 	String_AppendString(&p_name, name);
-	String p_skin = String_ClearedArray(player->SkinNameRaw);
+	String p_skin = String_ClearedArray(p->Base.SkinNameRaw);
 	String_AppendString(&p_skin, skin);
 }
 

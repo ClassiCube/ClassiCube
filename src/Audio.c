@@ -91,7 +91,7 @@ static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			snd->Format.BitsPerSample = Stream_GetU16_LE(&tmp[14]);
 			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
-			snd->Data = Mem_Alloc(size, sizeof(UInt8), "WAV sound data");
+			snd->Data = Mem_Alloc(size, 1, "WAV sound data");
 			snd->DataSize = size;
 			return Stream_Read(stream, snd->Data, size);
 		}
@@ -498,8 +498,9 @@ static Int32 AudioManager_GetVolume(const char* volKey, const char* boolKey) {
 	return volume;
 }
 
-static void AudioManager_FilesCallback(const String* filename, void* obj) {
-	StringsBuffer_Add(&files, filename);
+static void AudioManager_FilesCallback(const String* path, void* obj) {
+	String file = *path; Utils_UNSAFE_GetFilename(&file);
+	StringsBuffer_Add(&files, &file);
 }
 
 static void AudioManager_Init(void) {

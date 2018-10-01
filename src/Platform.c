@@ -306,28 +306,27 @@ bool File_Exists(const String* path) {
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-ReturnCode Directory_Enum(const String* path, void* obj, Directory_EnumCallback callback) {
-	char fileBuffer[MAX_PATH + 10];
-	String file = String_FromArray(fileBuffer);
+ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
+	char pathBuffer[MAX_PATH + 10];
+	String path = String_FromArray(pathBuffer);
 	/* Need to append \* to search for files in directory */
-	String_Format1(&file, "%s\\*", path);
-	WCHAR str[300]; Platform_ConvertString(str, &file);
+	String_Format1(&path, "%s\\*", dirPath);
+	WCHAR str[300]; Platform_ConvertString(str, &path);
 
 	WIN32_FIND_DATAW entry;
 	HANDLE find = FindFirstFileW(str, &entry);
 	if (find == INVALID_HANDLE_VALUE) return GetLastError();
 
 	do {
-		if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
-		file.length = 0;
+		if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;		
+		path.length = 0;
+		String_Format2(&path, "%s%r", dirPath, &Directory_Separator);
 		Int32 i;
 
 		for (i = 0; i < MAX_PATH && entry.cFileName[i]; i++) {
-			String_Append(&file, Convert_UnicodeToCP437(entry.cFileName[i]));
+			String_Append(&path, Convert_UnicodeToCP437(entry.cFileName[i]));
 		}
-
-		Utils_UNSAFE_GetFilename(&file);
-		callback(&file, obj);
+		callback(&path, obj);
 	}  while (FindNextFileW(find, &entry));
 
 	ReturnCode result = GetLastError(); /* return code from FindNextFile */
@@ -418,27 +417,25 @@ bool File_Exists(const String* path) {
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
-ReturnCode Directory_Enum(const String* path, void* obj, Directory_EnumCallback callback) {
-	char str[600]; Platform_ConvertString(str, path);
+ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
+	char str[600]; Platform_ConvertString(str, dirPath);
 	DIR* dirPtr = opendir(str);
 	if (!dirPtr) return errno;
 
-	char fileBuffer[FILENAME_SIZE];
-	String file = String_FromArray(fileBuffer);
+	char pathBuffer[FILENAME_SIZE];
+	String path = String_FromArray(pathBuffer);
 	struct dirent* entry;
 
 	/* TODO: does this also include subdirectories */
 	while (entry = readdir(dirPtr)) {
 		UInt16 len = String_CalcLen(entry->d_name, UInt16_MaxValue);
-		file.length = 0;
-		String_DecodeUtf8(&file, entry->d_name, len);
+		path.length = 0;
+		String_DecodeUtf8(&path, entry->d_name, len);
 
 		/* exlude . and .. paths */
-		if (file.length == 1 && file.buffer[0] == '.')                          continue;
-		if (file.length == 2 && file.buffer[0] == '.' && file.buffer[1] == '.') continue;
-
-		Utils_UNSAFE_GetFilename(&file);
-		callback(&file, obj);
+		if (path.length == 1 && path.buffer[0] == '.')                          continue;
+		if (path.length == 2 && path.buffer[0] == '.' && path.buffer[1] == '.') continue;
+		callback(&path, obj);
 	}
 
 	int result = errno; /* return code from readdir */
@@ -734,12 +731,10 @@ void Font_Free(FontDesc* desc) {
 	desc->Handle = NULL;
 }
 
-static void Font_DirCallback(const String* filename, void* obj) {
+static void Font_DirCallback(const String* srcPath, void* obj) {
 	char pathBuffer[FILENAME_SIZE + 1];
 	String path = String_NT_Array(pathBuffer);
-	String* dir = obj;
-
-	String_Format2(&path, "%s%s", dir, filename);
+	String_Copy(&path, srcPath);
 	path.buffer[path.length] = '\0';
 
 	FT_Face face;
@@ -828,8 +823,8 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, Int32 x, Int32 
 #if CC_BUILD_WIN
 static void Font_Init(void) {
 	FT_Error err = FT_Init_FreeType(&lib);
-	String dir   = String_FromConst("C:\\Windows\\fonts\\");
-	Directory_Enum(&dir, &dir, Font_DirCallback);
+	String dir   = String_FromConst("C:\\Windows\\fonts");
+	Directory_Enum(&dir, NULL, Font_DirCallback);
 }
 #elif CC_BUILD_NIX
 #endif
