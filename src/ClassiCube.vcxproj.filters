@@ -533,9 +533,6 @@
     <ClCompile Include="freetype\ftotval.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftpatent.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="freetype\ftpfr.c">
       <Filter>Source Files</Filter>
     </ClCompile>

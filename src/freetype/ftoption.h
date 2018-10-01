@@ -168,21 +168,6 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* LZW-compressed file support.                                          */
-  /*                                                                       */
-  /*   FreeType now handles font files that have been compressed with the  */
-  /*   `compress' program.  This is mostly used to parse many of the PCF   */
-  /*   files that come with various X11 distributions.  The implementation */
-  /*   uses NetBSD's `zopen' to partially uncompress the file on the fly   */
-  /*   (see src/lzw/ftgzip.c).                                             */
-  /*                                                                       */
-  /*   Define this macro if you want to enable this `feature'.             */
-  /*                                                                       */
-#undef FT_CONFIG_OPTION_USE_LZW
-
-
-  /*************************************************************************/
-  /*                                                                       */
   /* Gzip-compressed file support.                                         */
   /*                                                                       */
   /*   FreeType now handles font files that have been compressed with the  */
@@ -198,51 +183,6 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* ZLib library selection                                                */
-  /*                                                                       */
-  /*   This macro is only used when FT_CONFIG_OPTION_USE_ZLIB is defined.  */
-  /*   It allows FreeType's `ftgzip' component to link to the system's     */
-  /*   installation of the ZLib library.  This is useful on systems like   */
-  /*   Unix or VMS where it generally is already available.                */
-  /*                                                                       */
-  /*   If you let it undefined, the component will use its own copy        */
-  /*   of the zlib sources instead.  These have been modified to be        */
-  /*   included directly within the component and *not* export external    */
-  /*   function names.  This allows you to link any program with FreeType  */
-  /*   _and_ ZLib without linking conflicts.                               */
-  /*                                                                       */
-  /*   Do not #undef this macro here since the build system might define   */
-  /*   it for certain configurations only.                                 */
-  /*                                                                       */
-  /*   If you use a build system like cmake or the `configure' script,     */
-  /*   options set by those programs have precendence, overwriting the     */
-  /*   value here with the configured one.                                 */
-  /*                                                                       */
-/* #define FT_CONFIG_OPTION_SYSTEM_ZLIB */
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* Bzip2-compressed file support.                                        */
-  /*                                                                       */
-  /*   FreeType now handles font files that have been compressed with the  */
-  /*   `bzip2' program.  This is mostly used to parse many of the PCF      */
-  /*   files that come with XFree86.  The implementation uses `libbz2' to  */
-  /*   partially uncompress the file on the fly (see src/bzip2/ftbzip2.c). */
-  /*   Contrary to gzip, bzip2 currently is not included and need to use   */
-  /*   the system available bzip2 implementation.                          */
-  /*                                                                       */
-  /*   Define this macro if you want to enable this `feature'.             */
-  /*                                                                       */
-  /*   If you use a build system like cmake or the `configure' script,     */
-  /*   options set by those programs have precendence, overwriting the     */
-  /*   value here with the configured one.                                 */
-  /*                                                                       */
-/* #define FT_CONFIG_OPTION_USE_BZIP2 */
-
-
-  /*************************************************************************/
-  /*                                                                       */
   /* Define to disable the use of file stream functions and types, FILE,   */
   /* fopen() etc.  Enables the use of smaller system libraries on embedded */
   /* systems that have multiple system libraries, some with or without     */
@@ -250,24 +190,6 @@ FT_BEGIN_HEADER
   /* necessary such as memory loading of font files.                       */
   /*                                                                       */
 /* #define FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT */
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* PNG bitmap support.                                                   */
-  /*                                                                       */
-  /*   FreeType now handles loading color bitmap glyphs in the PNG format. */
-  /*   This requires help from the external libpng library.  Uncompressed  */
-  /*   color bitmaps do not need any external libraries and will be        */
-  /*   supported regardless of this configuration.                         */
-  /*                                                                       */
-  /*   Define this macro if you want to enable this `feature'.             */
-  /*                                                                       */
-  /*   If you use a build system like cmake or the `configure' script,     */
-  /*   options set by those programs have precendence, overwriting the     */
-  /*   value here with the configured one.                                 */
-  /*                                                                       */
-/* #define FT_CONFIG_OPTION_USE_PNG */
 
 
   /*************************************************************************/

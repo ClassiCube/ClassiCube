@@ -786,7 +786,7 @@ static void Font_DirCallback(const String* srcPath, void* obj) {
 Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
 	FT_Face face = args->Font.Handle;
 	String text = args->Text;
-	Size2D s = { 0, face->height };
+	Size2D s = { 0, face->size->metrics.height };
 	Int32 i;
 
 	for (i = 0; i < text.length; i++) {
@@ -803,15 +803,15 @@ Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
 Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, Int32 x, Int32 y, PackedCol col) {
 	FT_Face face = args->Font.Handle;
 	String text = args->Text;
-	Size2D s = { 0, face->height };
+	Size2D s = { x, TEXT_CEIL(face->size->metrics.height) };
 	Int32 i;
 
 	for (i = 0; i < text.length; i++) {
 		UInt16 c = Convert_CP437ToUnicode(text.buffer[i]);
 		FT_Load_Char(face, c, FT_LOAD_RENDER); /* TODO: Check error */
 
-		FT_Bitmap* img = &face->glyph->bitmap;
-		Int32 xx, yy, offset = TEXT_CEIL(s.Height) + TEXT_CEIL(face->descender) - face->glyph->bitmap_top;
+		FT_Bitmap* img = &face->glyph->bitmap; /* TODO: face->size->metrics->descender */
+		Int32 xx, yy, offset = s.Height + TEXT_CEIL(face->descender) - face->glyph->bitmap_top;
 		y += offset;
 
 		for (yy = 0; yy < img->rows; yy++) {
@@ -836,9 +836,7 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, Int32 x, Int32 
 		y -= offset;
 	}
 
-	s.Width  = TEXT_CEIL(s.Width);
-	s.Height = TEXT_CEIL(s.Height);
-	return s;
+	s.Width = x - s.Width; return s;
 }
 
 #if CC_BUILD_WIN

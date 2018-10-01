@@ -19,7 +19,6 @@
 #define FT_MAKE_OPTION_SINGLE_OBJECT
 #include "ft2build.h"
 
-#include "pngshim.c"
 #include "sfdriver.c"
 #include "sfntpic.c"
 #include "sfobjs.c"

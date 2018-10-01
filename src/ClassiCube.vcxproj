@@ -327,7 +327,6 @@
     <ClCompile Include="freetype\ftinit.c" />
     <ClCompile Include="freetype\ftmm.c" />
     <ClCompile Include="freetype\ftotval.c" />
-    <ClCompile Include="freetype\ftpatent.c" />
     <ClCompile Include="freetype\ftpfr.c" />
     <ClCompile Include="freetype\ftstroke.c" />
     <ClCompile Include="freetype\ftsynth.c" />
