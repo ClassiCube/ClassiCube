@@ -468,10 +468,10 @@ void ChunkUpdater_Update(double deltaTime) {
 }
 
 void ChunkUpdater_Init(void) {
-	Event_RegisterVoid(&TextureEvents_AtlasChanged,    NULL, ChunkUpdater_TerrainAtlasChanged);
-	Event_RegisterVoid(&WorldEvents_NewMap,            NULL, ChunkUpdater_OnNewMap);
-	Event_RegisterVoid(&WorldEvents_MapLoaded,         NULL, ChunkUpdater_OnNewMapLoaded);
-	Event_RegisterInt(&WorldEvents_EnvVarChanged,    NULL, ChunkUpdater_EnvVariableChanged);
+	Event_RegisterVoid(&TextureEvents_AtlasChanged, NULL, ChunkUpdater_TerrainAtlasChanged);
+	Event_RegisterVoid(&WorldEvents_NewMap,         NULL, ChunkUpdater_OnNewMap);
+	Event_RegisterVoid(&WorldEvents_MapLoaded,      NULL, ChunkUpdater_OnNewMapLoaded);
+	Event_RegisterInt(&WorldEvents_EnvVarChanged,   NULL, ChunkUpdater_EnvVariableChanged);
 
 	Event_RegisterVoid(&BlockEvents_BlockDefChanged,   NULL, ChunkUpdater_BlockDefinitionChanged);
 	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, NULL, ChunkUpdater_ViewDistanceChanged);
@@ -479,15 +479,17 @@ void ChunkUpdater_Init(void) {
 	Event_RegisterVoid(&GfxEvents_ContextLost,         NULL, ChunkUpdater_ClearChunkCache_Handler);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated,    NULL, ChunkUpdater_Refresh_Handler);
 
-	ChunkUpdater_ChunkPos = Vector3I_MaxValue();
+	/* This = 87 fixes map being invisible when no textures */
+	MapRenderer_1DUsedCount = 87; /* Atlas1D_UsedAtlasesCount(); */
+	ChunkUpdater_ChunkPos   = Vector3I_MaxValue();
 	ChunkUpdater_ApplyMeshBuilder();
 }
 
 void ChunkUpdater_Free(void) {
-	Event_UnregisterVoid(&TextureEvents_AtlasChanged,    NULL, ChunkUpdater_TerrainAtlasChanged);
-	Event_UnregisterVoid(&WorldEvents_NewMap,            NULL, ChunkUpdater_OnNewMap);
-	Event_UnregisterVoid(&WorldEvents_MapLoaded,         NULL, ChunkUpdater_OnNewMapLoaded);
-	Event_UnregisterInt(&WorldEvents_EnvVarChanged,    NULL, ChunkUpdater_EnvVariableChanged);
+	Event_UnregisterVoid(&TextureEvents_AtlasChanged, NULL, ChunkUpdater_TerrainAtlasChanged);
+	Event_UnregisterVoid(&WorldEvents_NewMap,         NULL, ChunkUpdater_OnNewMap);
+	Event_UnregisterVoid(&WorldEvents_MapLoaded,      NULL, ChunkUpdater_OnNewMapLoaded);
+	Event_UnregisterInt(&WorldEvents_EnvVarChanged,   NULL, ChunkUpdater_EnvVariableChanged);
 
 	Event_UnregisterVoid(&BlockEvents_BlockDefChanged,   NULL, ChunkUpdater_BlockDefinitionChanged);
 	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, NULL, ChunkUpdater_ViewDistanceChanged);
