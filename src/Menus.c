@@ -1439,9 +1439,13 @@ static void FontListScreen_EntryClick(void* screen, void* widget) {
 
 static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* button, const String* text) {
 	FontDesc font = { 0 };
-	Font_Make(&font, text, 16, FONT_STYLE_NORMAL);
-	ButtonWidget_Set(button, text, &font);
-	Font_Free(&font);
+	if (String_CaselessEqualsConst(text, LIST_SCREEN_EMPTY)) {
+		ButtonWidget_Set(button, text, &s->Font);
+	} else {
+		Font_Make(&font, text, 16, FONT_STYLE_NORMAL);
+		ButtonWidget_Set(button, text, &font);
+		Font_Free(&font);
+	}
 }
 
 static void FontListScreen_Init(void* screen) {

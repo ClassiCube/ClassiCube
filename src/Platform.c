@@ -316,22 +316,33 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	WIN32_FIND_DATAW entry;
 	HANDLE find = FindFirstFileW(str, &entry);
 	if (find == INVALID_HANDLE_VALUE) return GetLastError();
+	ReturnCode res;
 
 	do {
-		if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;		
 		path.length = 0;
-		String_Format2(&path, "%s%r", dirPath, &Directory_Separator);
-		Int32 i;
+		String_Format2(&path, "%s%r", dirPath, &Directory_Separator);	
 
-		for (i = 0; i < MAX_PATH && entry.cFileName[i]; i++) {
-			String_Append(&path, Convert_UnicodeToCP437(entry.cFileName[i]));
+		/* ignore . and .. entry */
+		WCHAR* src = entry.cFileName;
+		if (src[0] == '.' && src[1] == '\0') continue;
+		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
+
+		Int32 i;
+		for (i = 0; i < MAX_PATH && src[i]; i++) {
+			String_Append(&path, Convert_UnicodeToCP437(src[i]));
 		}
-		callback(&path, obj);
+
+		if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			res = Directory_Enum(&path, obj, callback);
+			if (res) { FindClose(find); return res; }
+		} else {
+			callback(&path, obj);
+		}
 	}  while (FindNextFileW(find, &entry));
 
-	ReturnCode result = GetLastError(); /* return code from FindNextFile */
+	res = GetLastError(); /* return code from FindNextFile */
 	FindClose(find);
-	return Win_Return(result == ERROR_NO_MORE_FILES);
+	return Win_Return(res == ERROR_NO_MORE_FILES);
 }
 
 ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* time) {
@@ -421,26 +432,36 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	char str[600]; Platform_ConvertString(str, dirPath);
 	DIR* dirPtr = opendir(str);
 	if (!dirPtr) return errno;
+	int res;
 
 	char pathBuffer[FILENAME_SIZE];
 	String path = String_FromArray(pathBuffer);
 	struct dirent* entry;
 
-	/* TODO: does this also include subdirectories */
 	while (entry = readdir(dirPtr)) {
-		UInt16 len = String_CalcLen(entry->d_name, UInt16_MaxValue);
 		path.length = 0;
-		String_DecodeUtf8(&path, entry->d_name, len);
+		String_Format2(&path, "%s%r", dirPath, &Directory_Separator);
 
-		/* exlude . and .. paths */
-		if (path.length == 1 && path.buffer[0] == '.')                          continue;
-		if (path.length == 2 && path.buffer[0] == '.' && path.buffer[1] == '.') continue;
-		callback(&path, obj);
+		/* ignore . and .. entry */
+		char* src = entry->d_name;
+		if (src[0] == '.' && src[1] == '\0') continue;
+		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
+
+		UInt16 len = String_CalcLen(src, UInt16_MaxValue);
+		String_DecodeUtf8(&path, src, len);
+
+		/* TODO: fallback to stat when this fails */
+		if (entry->d_type == DT_DIR) {
+			res = Directory_Enum(&path, obj, callback);
+			if (res) { closedir(dirPtr); return res; }
+		} else {
+			callback(&path, obj);
+		}
 	}
 
-	int result = errno; /* return code from readdir */
+	res = errno; /* return code from readdir */
 	closedir(dirPtr);
-	return result;
+	return res;
 }
 
 ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* time) {
