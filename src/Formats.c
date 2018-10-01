@@ -858,8 +858,8 @@ UInt8 cw_meta_cpe[395] = {
 UInt8 cw_meta_defs[19] = {
 			NBT_DICT, 0,16, 'B','l','o','c','k','D','e','f','i','n','i','t','i','o','n','s',
 };
-UInt8 cw_meta_def[171] = {
-				NBT_DICT, 0,5,  'B','l','o','c','k',
+UInt8 cw_meta_def[173] = {
+				NBT_DICT, 0,7,  'B','l','o','c','k','\0','\0',
 					NBT_I8,  0,2,  'I','D',                              0,
 					NBT_I8,  0,11, 'C','o','l','l','i','d','e','T','y','p','e', 0,
 					NBT_F32, 0,5,  'S','p','e','e','d',                  0,0,0,0,
@@ -887,36 +887,40 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, Int32 b) {
 
 	Mem_Copy(tmp, cw_meta_def, sizeof(cw_meta_def));
 	{
-		tmp[13] = b;
-		tmp[28] = Block_Collide[b];
+		/* Hacky unique tag name for each */
+		String nameStr = { &tmp[8], 0, 2 };
+		String_AppendHex(&nameStr, b);
+		tmp[15] = b;
+
+		tmp[30] = Block_Collide[b];
 		speed.f = Block_SpeedMultiplier[b];
-		Stream_SetU32_BE(&tmp[37], speed.u);
+		Stream_SetU32_BE(&tmp[39], speed.u);
 
-		tmp[56] = (UInt8)Block_GetTexLoc(b, FACE_YMAX);
-		tmp[57] = (UInt8)Block_GetTexLoc(b, FACE_YMIN);
-		tmp[58] = (UInt8)Block_GetTexLoc(b, FACE_XMIN);
-		tmp[59] = (UInt8)Block_GetTexLoc(b, FACE_XMAX);
-		tmp[60] = (UInt8)Block_GetTexLoc(b, FACE_ZMIN);
-		tmp[61] = (UInt8)Block_GetTexLoc(b, FACE_ZMAX);
+		tmp[58] = (UInt8)Block_GetTexLoc(b, FACE_YMAX);
+		tmp[59] = (UInt8)Block_GetTexLoc(b, FACE_YMIN);
+		tmp[60] = (UInt8)Block_GetTexLoc(b, FACE_XMIN);
+		tmp[61] = (UInt8)Block_GetTexLoc(b, FACE_XMAX);
+		tmp[62] = (UInt8)Block_GetTexLoc(b, FACE_ZMIN);
+		tmp[63] = (UInt8)Block_GetTexLoc(b, FACE_ZMAX);
 
-		tmp[79]  = Block_BlocksLight[b] ? 0 : 1;
-		tmp[92]  = Block_DigSounds[b];
-		tmp[106] = Block_FullBright[b] ? 1 : 0;
-		tmp[115] = sprite ? 0 : (UInt8)(Block_MaxBB[b].Y * 16);
-		tmp[128] = sprite ? Block_SpriteOffset[b] : Block_Draw[b];
+		tmp[81]  = Block_BlocksLight[b] ? 0 : 1;
+		tmp[94]  = Block_DigSounds[b];
+		tmp[108] = Block_FullBright[b] ? 1 : 0;
+		tmp[117] = sprite ? 0 : (UInt8)(Block_MaxBB[b].Y * 16);
+		tmp[130] = sprite ? Block_SpriteOffset[b] : Block_Draw[b];
 
 		UInt8 fog = (UInt8)(128 * Block_FogDensity[b] - 1);
 		PackedCol col = Block_FogCol[b];
-		tmp[139] = Block_FogDensity[b] ? fog : 0;
-		tmp[140] = col.R; tmp[141] = col.G; tmp[142] = col.B;
+		tmp[141] = Block_FogDensity[b] ? fog : 0;
+		tmp[142] = col.R; tmp[143] = col.G; tmp[144] = col.B;
 
 		Vector3 minBB = Block_MinBB[b], maxBB = Block_MaxBB[b];
-		tmp[156] = (UInt8)(minBB.X * 16); tmp[157] = (UInt8)(minBB.Y * 16); tmp[158] = (UInt8)(minBB.Z * 16);
-		tmp[159] = (UInt8)(maxBB.X * 16); tmp[160] = (UInt8)(maxBB.Y * 16); tmp[161] = (UInt8)(maxBB.Z * 16);
+		tmp[158] = (UInt8)(minBB.X * 16); tmp[159] = (UInt8)(minBB.Y * 16); tmp[160] = (UInt8)(minBB.Z * 16);
+		tmp[161] = (UInt8)(maxBB.X * 16); tmp[162] = (UInt8)(maxBB.Y * 16); tmp[163] = (UInt8)(maxBB.Z * 16);
 	}
 
 	String name = Block_UNSAFE_GetName(b);
-	Int32 len   = Cw_WriteEndString(&tmp[169], &name);
+	Int32 len   = Cw_WriteEndString(&tmp[171], &name);
 	return Stream_Write(stream, tmp, sizeof(cw_meta_def) + len);
 }
 
