@@ -61,6 +61,7 @@ NOINLINE_ bool String_AppendReal32(String* str, float num, Int32 fracDigits); /*
 NOINLINE_ bool String_AppendConst(String* str, const char* src);
 NOINLINE_ bool String_AppendString(String* str, const String* src);
 NOINLINE_ bool String_AppendColorless(String* str, const String* src);
+NOINLINE_ bool String_AppendHex(String* str, UInt8 value);
 
 NOINLINE_ Int32 String_IndexOf(const String* str, char c, Int32 offset);
 NOINLINE_ Int32 String_LastIndexOf(const String* str, char c);

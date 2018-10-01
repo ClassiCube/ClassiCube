@@ -52,19 +52,9 @@ bool PackedCol_Unhex(UInt8 hex, Int32* value) {
 }
 
 void PackedCol_ToHex(String* str, PackedCol value) {
-	UInt8 input[3] = { value.R, value.G, value.B };
-	char hex[7];
-	Int32 i;
-
-	for (i = 0; i < 3; i++) {
-		Int32 cur = input[i], hi = cur >> 4, lo = cur & 0x0F;
-		/* 48 = index of 0, 55 = index of (A - 10) */
-		hex[i * 2 + 0] = hi < 10 ? (hi + 48) : (hi + 55);
-		hex[i * 2 + 1] = lo < 10 ? (lo + 48) : (lo + 55);
-	}
-
-	hex[6] = '\0';
-	String_AppendConst(str, hex);
+	String_AppendHex(str, value.R);
+	String_AppendHex(str, value.G);
+	String_AppendHex(str, value.B);
 }
 
 bool PackedCol_TryParseHex(const String* str, PackedCol* value) {

@@ -226,30 +226,36 @@ bool String_AppendReal32(String* str, float num, Int32 fracDigits) {
 	return true;
 }
 
-NOINLINE_ static bool String_Hex32(String* str, UInt32 value) {
-	char hex[9]; hex[8] = '\0';
-	Int32 i;
+bool String_AppendHex(String* str, UInt8 value) {
+	/* 48 = index of 0, 55 = index of (A - 10) */
+	UInt8 hi  = (value >> 4) & 0xF;
+	char c_hi = hi < 10 ? (hi + 48) : (hi + 55);
+	UInt8 lo  = value & 0xF;
+	char c_lo = lo < 10 ? (lo + 48) : (lo + 55);
 
-	for (i = 0; i < 8; i++) {
-		UInt32 nibble = value & 0x0F;
-		/* 48 = index of 0, 55 = index of (A - 10) */
-		hex[7 - i] = nibble < 10 ? (nibble + 48) : (nibble + 55);
-		value >>= 4;
+	return String_Append(str, c_hi) && String_Append(str, c_lo);
+}
+
+NOINLINE_ static bool String_Hex32(String* str, UInt32 value) {
+	bool appended;
+	Int32 shift;
+
+	for (shift = 24; shift >= 0; shift -= 8) {
+		UInt8 part = (UInt8)(value >> shift);
+		appended = String_AppendHex(str, part);
 	}
-	return String_AppendConst(str, hex);
+	return appended;
 }
 
 NOINLINE_ static bool String_Hex64(String* str, UInt64 value) {
-	char hex[17]; hex[16] = '\0';
-	Int32 i;
+	bool appended;
+	Int32 shift;
 
-	for (i = 0; i < 16; i++) {
-		UInt32 nibble = (UInt32)(value & 0x0F);
-		/* 48 = index of 0, 55 = index of (A - 10) */
-		hex[15 - i] = nibble < 10 ? (nibble + 48) : (nibble + 55);
-		value >>= 4;
+	for (shift = 56; shift >= 0; shift -= 8) {
+		UInt8 part = (UInt8)(value >> shift);
+		appended = String_AppendHex(str, part);
 	}
-	return String_AppendConst(str, hex);
+	return appended;
 }
 
 bool String_AppendConst(String* str, const char* src) {

@@ -29,14 +29,14 @@ PackedCol PackedCol_Create3(UInt8 r, UInt8 g, UInt8 b);
 UInt32 PackedCol_ToARGB(PackedCol col);
 PackedCol PackedCol_Scale(PackedCol value, float t);
 PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t);
-void PackedCol_ToHex(String* str, PackedCol value);
-bool PackedCol_TryParseHex(const String* str, PackedCol* value);
-bool PackedCol_Unhex(UInt8 hex, Int32* value);
+NOINLINE_ void PackedCol_ToHex(String* str, PackedCol value);
+NOINLINE_ bool PackedCol_TryParseHex(const String* str, PackedCol* value);
+NOINLINE_ bool PackedCol_Unhex(UInt8 hex, Int32* value);
 
 #define PACKEDCOL_SHADE_X 0.6f
 #define PACKEDCOL_SHADE_Z 0.8f
 #define PACKEDCOL_SHADE_YMIN 0.5f
-/* Retrieves shaded colours for ambient block face lighting. */
+/* Retrieves shaded colours for ambient block face lighting */
 void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, PackedCol* yMin);
 
 #define PACKEDCOL_WHITE   PACKEDCOL_CONST(255, 255, 255, 255)

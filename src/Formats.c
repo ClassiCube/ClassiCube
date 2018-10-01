@@ -883,12 +883,13 @@ NBT_END,
 static ReturnCode Cw_WriteBockDef(struct Stream* stream, Int32 b) {
 	UInt8 tmp[512];
 	bool sprite = Block_Draw[b] == DRAW_SPRITE;
+	union IntAndFloat speed;
 
 	Mem_Copy(tmp, cw_meta_def, sizeof(cw_meta_def));
 	{
 		tmp[13] = b;
 		tmp[28] = Block_Collide[b];
-		union IntAndFloat speed; speed.f = Block_SpeedMultiplier[b];
+		speed.f = Block_SpeedMultiplier[b];
 		Stream_SetU32_BE(&tmp[37], speed.u);
 
 		tmp[56] = (UInt8)Block_GetTexLoc(b, FACE_YMAX);

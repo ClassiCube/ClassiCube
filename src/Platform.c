@@ -763,7 +763,7 @@ static void Font_DirCallback(const String* srcPath, void* obj) {
 	if (error) return;
 
 	bool styled = (face->style_flags & FT_STYLE_FLAG_BOLD) || (face->style_flags & FT_STYLE_FLAG_ITALIC);
-	if (!styled && face->family_name) {
+	if (!styled && face->family_name && (face->face_flags & FT_FACE_FLAG_SCALABLE)) {
 		StringsBuffer_Add(&fonts_list, &path);
 		path.length = 0;
 
