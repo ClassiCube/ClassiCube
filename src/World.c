@@ -70,7 +70,7 @@ void World_SetBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
 	/* defer allocation of second map array if possible */
 	if (World_Blocks == World_Blocks2) {
 		if (block < 256) return;
-		World_Blocks2 = Mem_Alloc(World_BlocksSize, 1, "blocks array upper");
+		World_Blocks2 = Mem_AllocCleared(World_BlocksSize, 1, "blocks array upper");
 		Block_SetUsedCount(768);
 	}
 	World_Blocks2[i] = (BlockRaw)(block >> 8);
