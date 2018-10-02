@@ -27,7 +27,6 @@
 #include FT_TRUETYPE_TAGS_H
 #include FT_SERVICE_POSTSCRIPT_CMAPS_H
 #include FT_SFNT_NAMES_H
-#include FT_GZIP_H
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
 #include FT_SERVICE_MULTIPLE_MASTERS_H
@@ -35,10 +34,6 @@
 #endif
 
 #include "sferrors.h"
-
-#ifdef TT_CONFIG_OPTION_BDF
-#include "ttbdf.h"
-#endif
 
 
   /*************************************************************************/

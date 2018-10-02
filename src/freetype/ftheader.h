@@ -376,21 +376,6 @@
   /*************************************************************************
    *
    * @macro:
-   *   FT_PCF_DRIVER_H
-   *
-   * @description:
-   *   A macro used in #include statements to name the file containing
-   *   structures and macros related to the PCF driver module.
-   *
-   *   Deprecated since version 2.9; use @FT_DRIVER_H instead.
-   *
-   */
-#define FT_PCF_DRIVER_H  FT_DRIVER_H
-
-
-  /*************************************************************************
-   *
-   * @macro:
    *   FT_TYPE1_TABLES_H
    *
    * @description:
@@ -446,20 +431,6 @@
   /*************************************************************************
    *
    * @macro:
-   *   FT_BDF_H
-   *
-   * @description:
-   *   A macro used in #include statements to name the file containing the
-   *   definitions of an API which accesses BDF-specific strings from a
-   *   face.
-   *
-   */
-#define FT_BDF_H  "ftbdf.h"
-
-
-  /*************************************************************************
-   *
-   * @macro:
    *   FT_CID_H
    *
    * @description:
@@ -469,58 +440,6 @@
    *
    */
 #define FT_CID_H  "ftcid.h"
-
-
-  /*************************************************************************
-   *
-   * @macro:
-   *   FT_GZIP_H
-   *
-   * @description:
-   *   A macro used in #include statements to name the file containing the
-   *   definitions of an API which supports gzip-compressed files.
-   *
-   */
-#define FT_GZIP_H  "ftgzip.h"
-
-
-  /*************************************************************************
-   *
-   * @macro:
-   *   FT_LZW_H
-   *
-   * @description:
-   *   A macro used in #include statements to name the file containing the
-   *   definitions of an API which supports LZW-compressed files.
-   *
-   */
-#define FT_LZW_H  "ftlzw.h"
-
-
-  /*************************************************************************
-   *
-   * @macro:
-   *   FT_BZIP2_H
-   *
-   * @description:
-   *   A macro used in #include statements to name the file containing the
-   *   definitions of an API which supports bzip2-compressed files.
-   *
-   */
-#define FT_BZIP2_H  "ftbzip2.h"
-
-
-  /*************************************************************************
-   *
-   * @macro:
-   *   FT_WINFONTS_H
-   *
-   * @description:
-   *   A macro used in #include statements to name the file containing the
-   *   definitions of an API which supports Windows FNT files.
-   *
-   */
-#define FT_WINFONTS_H   "ftwinfnt.h"
 
 
   /*************************************************************************
