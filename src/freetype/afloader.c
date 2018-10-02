@@ -21,7 +21,6 @@
 #include "afhints.h"
 #include "aferrors.h"
 #include "afmodule.h"
-#include "afpic.h"
 
 #include FT_INTERNAL_CALC_H
 
@@ -124,7 +123,7 @@
      *  it can't deliver, stem darkening is disabled.
      */
     writing_system_class =
-      AF_WRITING_SYSTEM_CLASSES_GET[style_metrics->style_class->writing_system];
+      af_writing_system_classes[style_metrics->style_class->writing_system];
 
     if ( writing_system_class->style_metrics_getstdw )
       writing_system_class->style_metrics_getstdw( style_metrics,
@@ -232,10 +231,6 @@
     AF_StyleClass          style_class;
     AF_WritingSystemClass  writing_system_class;
 
-#ifdef FT_CONFIG_OPTION_PIC
-    AF_FaceGlobals  globals = loader->globals;
-#endif
-
 
     if ( !size )
       return FT_THROW( Invalid_Size_Handle );
@@ -324,7 +319,7 @@
 
     style_class          = style_metrics->style_class;
     writing_system_class =
-      AF_WRITING_SYSTEM_CLASSES_GET[style_class->writing_system];
+      af_writing_system_classes[style_class->writing_system];
 
     loader->metrics = style_metrics;
 

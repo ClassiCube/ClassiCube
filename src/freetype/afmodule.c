@@ -20,7 +20,6 @@
 #include "afmodule.h"
 #include "afloader.h"
 #include "aferrors.h"
-#include "afpic.h"
 
 #ifdef FT_DEBUG_AUTOFIT
 
@@ -104,19 +103,6 @@
   }
 
 
-#ifdef FT_CONFIG_OPTION_PIC
-
-#undef  AF_SCRIPT_CLASSES_GET
-#define AF_SCRIPT_CLASSES_GET  \
-          ( GET_PIC( ft_module->library )->af_script_classes )
-
-#undef  AF_STYLE_CLASSES_GET
-#define AF_STYLE_CLASSES_GET  \
-          ( GET_PIC( ft_module->library )->af_style_classes )
-
-#endif
-
-
   static FT_Error
   af_property_set( FT_Module    ft_module,
                    const char*  property_name,
@@ -147,9 +133,9 @@
       /* We translate the fallback script to a fallback style that uses */
       /* `fallback-script' as its script and `AF_COVERAGE_NONE' as its  */
       /* coverage value.                                                */
-      for ( ss = 0; AF_STYLE_CLASSES_GET[ss]; ss++ )
+      for ( ss = 0; af_style_classes[ss]; ss++ )
       {
-        AF_StyleClass  style_class = AF_STYLE_CLASSES_GET[ss];
+        AF_StyleClass  style_class = af_style_classes[ss];
 
 
         if ( (FT_UInt)style_class->script == *fallback_script &&
@@ -160,7 +146,7 @@
         }
       }
 
-      if ( !AF_STYLE_CLASSES_GET[ss] )
+      if ( !af_style_classes[ss] )
       {
         FT_TRACE0(( "af_property_set: Invalid value %d for property `%s'\n",
                     fallback_script, property_name ));
@@ -357,7 +343,7 @@
     {
       FT_UInt*  val = (FT_UInt*)value;
 
-      AF_StyleClass  style_class = AF_STYLE_CLASSES_GET[fallback_style];
+      AF_StyleClass  style_class = af_style_classes[fallback_style];
 
 
       *val = style_class->script;
@@ -440,28 +426,16 @@
   FT_DEFINE_SERVICEDESCREC1(
     af_services,
 
-    FT_SERVICE_ID_PROPERTIES, &AF_SERVICE_PROPERTIES_GET )
+    FT_SERVICE_ID_PROPERTIES, &af_service_properties )
 
 
   FT_CALLBACK_DEF( FT_Module_Interface )
   af_get_interface( FT_Module    module,
                     const char*  module_interface )
   {
-    /* AF_SERVICES_GET dereferences `library' in PIC mode */
-#ifdef FT_CONFIG_OPTION_PIC
-    FT_Library  library;
-
-
-    if ( !module )
-      return NULL;
-    library = module->library;
-    if ( !library )
-      return NULL;
-#else
     FT_UNUSED( module );
-#endif
 
-    return ft_service_list_lookup( AF_SERVICES_GET, module_interface );
+    return ft_service_list_lookup( af_services, module_interface );
   }
 
 
@@ -589,7 +563,7 @@
     0x10000L,   /* version 1.0 of the autofitter  */
     0x20000L,   /* requires FreeType 2.0 or above */
 
-    (const void*)&AF_INTERFACE_GET,
+    (const void*)&af_autofitter_interface,
 
     (FT_Module_Constructor)af_autofitter_init,  /* module_init   */
     (FT_Module_Destructor) af_autofitter_done,  /* module_done   */

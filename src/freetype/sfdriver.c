@@ -25,7 +25,6 @@
 #include "sfdriver.h"
 #include "ttload.h"
 #include "sfobjs.h"
-#include "sfntpic.h"
 
 #include "sferrors.h"
 
@@ -1134,34 +1133,34 @@
   FT_DEFINE_SERVICEDESCREC5(
     sfnt_services,
 
-    FT_SERVICE_ID_SFNT_TABLE,           &SFNT_SERVICE_SFNT_TABLE_GET,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &SFNT_SERVICE_PS_NAME_GET,
-    FT_SERVICE_ID_GLYPH_DICT,           &SFNT_SERVICE_GLYPH_DICT_GET,
-    FT_SERVICE_ID_BDF,                  &SFNT_SERVICE_BDF_GET,
-    FT_SERVICE_ID_TT_CMAP,              &TT_SERVICE_CMAP_INFO_GET )
+    FT_SERVICE_ID_SFNT_TABLE,           &sfnt_service_sfnt_table,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &sfnt_service_ps_name,
+    FT_SERVICE_ID_GLYPH_DICT,           &sfnt_service_glyph_dict,
+    FT_SERVICE_ID_BDF,                  &sfnt_service_bdf,
+    FT_SERVICE_ID_TT_CMAP,              &tt_service_get_cmap_info )
 #elif defined TT_CONFIG_OPTION_POSTSCRIPT_NAMES
   FT_DEFINE_SERVICEDESCREC4(
     sfnt_services,
 
-    FT_SERVICE_ID_SFNT_TABLE,           &SFNT_SERVICE_SFNT_TABLE_GET,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &SFNT_SERVICE_PS_NAME_GET,
-    FT_SERVICE_ID_GLYPH_DICT,           &SFNT_SERVICE_GLYPH_DICT_GET,
-    FT_SERVICE_ID_TT_CMAP,              &TT_SERVICE_CMAP_INFO_GET )
+    FT_SERVICE_ID_SFNT_TABLE,           &sfnt_service_sfnt_table,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &sfnt_service_ps_name,
+    FT_SERVICE_ID_GLYPH_DICT,           &sfnt_service_glyph_dict,
+    FT_SERVICE_ID_TT_CMAP,              &tt_service_get_cmap_info )
 #elif defined TT_CONFIG_OPTION_BDF
   FT_DEFINE_SERVICEDESCREC4(
     sfnt_services,
 
-    FT_SERVICE_ID_SFNT_TABLE,           &SFNT_SERVICE_SFNT_TABLE_GET,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &SFNT_SERVICE_PS_NAME_GET,
-    FT_SERVICE_ID_BDF,                  &SFNT_SERVICE_BDF_GET,
-    FT_SERVICE_ID_TT_CMAP,              &TT_SERVICE_CMAP_INFO_GET )
+    FT_SERVICE_ID_SFNT_TABLE,           &sfnt_service_sfnt_table,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &sfnt_service_ps_name,
+    FT_SERVICE_ID_BDF,                  &sfnt_service_bdf,
+    FT_SERVICE_ID_TT_CMAP,              &tt_service_get_cmap_info )
 #else
   FT_DEFINE_SERVICEDESCREC3(
     sfnt_services,
 
-    FT_SERVICE_ID_SFNT_TABLE,           &SFNT_SERVICE_SFNT_TABLE_GET,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &SFNT_SERVICE_PS_NAME_GET,
-    FT_SERVICE_ID_TT_CMAP,              &TT_SERVICE_CMAP_INFO_GET )
+    FT_SERVICE_ID_SFNT_TABLE,           &sfnt_service_sfnt_table,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &sfnt_service_ps_name,
+    FT_SERVICE_ID_TT_CMAP,              &tt_service_get_cmap_info )
 #endif
 
 
@@ -1169,21 +1168,9 @@
   sfnt_get_interface( FT_Module    module,
                       const char*  module_interface )
   {
-    /* SFNT_SERVICES_GET dereferences `library' in PIC mode */
-#ifdef FT_CONFIG_OPTION_PIC
-    FT_Library  library;
-
-
-    if ( !module )
-      return NULL;
-    library = module->library;
-    if ( !library )
-      return NULL;
-#else
     FT_UNUSED( module );
-#endif
 
-    return ft_service_list_lookup( SFNT_SERVICES_GET, module_interface );
+    return ft_service_list_lookup( sfnt_services, module_interface );
   }
 
 
@@ -1272,7 +1259,7 @@
     0x10000L,   /* driver version 1.0                     */
     0x20000L,   /* driver requires FreeType 2.0 or higher */
 
-    (const void*)&SFNT_INTERFACE_GET,  /* module specific interface */
+    (const void*)&sfnt_interface,  /* module specific interface */
 
     (FT_Module_Constructor)NULL,               /* module_init   */
     (FT_Module_Destructor) NULL,               /* module_done   */

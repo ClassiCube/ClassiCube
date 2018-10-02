@@ -27,7 +27,6 @@
 #include FT_INTERNAL_DEBUG_H
 
 #include "afglobal.h"
-#include "afpic.h"
 #include "aflatin.h"
 #include "afcjk.h"
 

@@ -20,7 +20,6 @@
 #include FT_INTERNAL_OBJECTS_H
 #include "pshrec.h"
 #include "pshalgo.h"
-#include "pshpic.h"
 
 
   /* the Postscript Hinter module structure */
@@ -111,7 +110,7 @@
     0x10000L,
     0x20000L,
 
-    &PSHINTER_INTERFACE_GET,              /* module-specific interface */
+    &pshinter_interface,              /* module-specific interface */
 
     (FT_Module_Constructor)ps_hinter_init,  /* module_init   */
     (FT_Module_Destructor) ps_hinter_done,  /* module_done   */

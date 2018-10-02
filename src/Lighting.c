@@ -38,7 +38,7 @@ static Int32 Lighting_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
 }
 
 static Int32 Lighting_GetLightHeight(Int32 x, Int32 z) {
-	Int32 index = (z * World_Width) + x;
+	Int32 index  = Lighting_Pack(x, z);
 	Int32 lightH = Lighting_Heightmap[index];
 	return lightH == HEIGHT_UNCALCULATED ? Lighting_CalcHeightAt(x, World_Height - 1, z, index) : lightH;
 }
@@ -57,23 +57,23 @@ PackedCol Lighting_Col_XSide(Int32 x, Int32 y, Int32 z) {
 }
 
 PackedCol Lighting_Col_Sprite_Fast(Int32 x, Int32 y, Int32 z) {
-	return y > Lighting_Heightmap[(z * World_Width) + x] ? Env_SunCol : Env_ShadowCol;
+	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env_SunCol : Env_ShadowCol;
 }
 
 PackedCol Lighting_Col_YMax_Fast(Int32 x, Int32 y, Int32 z) {
-	return y > Lighting_Heightmap[(z * World_Width) + x] ? Env_SunCol : Env_ShadowCol;
+	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env_SunCol : Env_ShadowCol;
 }
 
 PackedCol Lighting_Col_YMin_Fast(Int32 x, Int32 y, Int32 z) {
-	return y > Lighting_Heightmap[(z * World_Width) + x] ? Env_SunYMin : Env_ShadowYMin;
+	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env_SunYMin : Env_ShadowYMin;
 }
 
 PackedCol Lighting_Col_XSide_Fast(Int32 x, Int32 y, Int32 z) {
-	return y > Lighting_Heightmap[(z * World_Width) + x] ? Env_SunXSide : Env_ShadowXSide;
+	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env_SunXSide : Env_ShadowXSide;
 }
 
 PackedCol Lighting_Col_ZSide_Fast(Int32 x, Int32 y, Int32 z) {
-	return y > Lighting_Heightmap[(z * World_Width) + x] ? Env_SunZSide : Env_ShadowZSide;
+	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env_SunZSide : Env_ShadowZSide;
 }
 
 void Lighting_Refresh(void) {
@@ -208,7 +208,7 @@ static void Lighting_RefreshAffected(Int32 x, Int32 y, Int32 z, BlockID block, I
 }
 
 void Lighting_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockID newBlock) {
-	Int32 index = (z * World_Width) + x;
+	Int32 index  = Lighting_Pack(x, z);
 	Int32 lightH = Lighting_Heightmap[index];
 	/* Since light wasn't checked to begin with, means column never had meshes for any of its chunks built. */
 	/* So we don't need to do anything. */

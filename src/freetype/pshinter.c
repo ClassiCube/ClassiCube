@@ -22,7 +22,6 @@
 #include "pshalgo.c"
 #include "pshglob.c"
 #include "pshmod.c"
-#include "pshpic.c"
 #include "pshrec.c"
 
 

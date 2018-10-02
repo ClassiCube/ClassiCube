@@ -27,7 +27,6 @@
 #include "ttload.h"
 #include "ttcmap.h"
 #include "ttpost.h"
-#include "sfntpic.h"
 
 
   /*************************************************************************/
@@ -3749,7 +3748,6 @@
 
 #endif /* FT_CONFIG_OPTION_POSTSCRIPT_NAMES */
 
-#ifndef FT_CONFIG_OPTION_PIC
 
   static const TT_CMap_Class  tt_cmap_classes[] =
   {
@@ -3757,61 +3755,6 @@
 #include "ttcmapc.h"
     NULL,
   };
-
-#else /*FT_CONFIG_OPTION_PIC*/
-
-  void
-  FT_Destroy_Class_tt_cmap_classes( FT_Library      library,
-                                    TT_CMap_Class*  clazz )
-  {
-    FT_Memory  memory = library->memory;
-
-
-    if ( clazz )
-      FT_FREE( clazz );
-  }
-
-
-  FT_Error
-  FT_Create_Class_tt_cmap_classes( FT_Library       library,
-                                   TT_CMap_Class**  output_class )
-  {
-    TT_CMap_Class*     clazz  = NULL;
-    TT_CMap_ClassRec*  recs;
-    FT_Error           error;
-    FT_Memory          memory = library->memory;
-
-    int  i = 0;
-
-
-#define TTCMAPCITEM( a ) i++;
-#include "ttcmapc.h"
-
-    /* allocate enough space for both the pointers */
-    /* plus terminator and the class instances     */
-    if ( FT_ALLOC( clazz, sizeof ( *clazz ) * ( i + 1 ) +
-                          sizeof ( TT_CMap_ClassRec ) * i ) )
-      return error;
-
-    /* the location of the class instances follows the array of pointers */
-    recs = (TT_CMap_ClassRec*)( (char*)clazz +
-                                sizeof ( *clazz ) * ( i + 1 ) );
-    i    = 0;
-
-#undef TTCMAPCITEM
-#define  TTCMAPCITEM( a )             \
-    FT_Init_Class_ ## a( &recs[i] );  \
-    clazz[i] = &recs[i];              \
-    i++;
-#include "ttcmapc.h"
-
-    clazz[i] = NULL;
-
-    *output_class = clazz;
-    return FT_Err_Ok;
-  }
-
-#endif /*FT_CONFIG_OPTION_PIC*/
 
 
   /* parse the `cmap' table and build the corresponding TT_CMap objects */
@@ -3859,7 +3802,7 @@
       {
         FT_Byte* volatile              cmap   = table + offset;
         volatile FT_UInt               format = TT_PEEK_USHORT( cmap );
-        const TT_CMap_Class* volatile  pclazz = TT_CMAP_CLASSES_GET;
+        const TT_CMap_Class* volatile  pclazz = tt_cmap_classes;
         TT_CMap_Class volatile         clazz;
 
 

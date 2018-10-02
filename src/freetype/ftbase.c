@@ -19,7 +19,6 @@
 #include "ft2build.h"
 #define  FT_MAKE_OPTION_SINGLE_OBJECT
 
-#include "basepic.c"
 #include "ftadvanc.c"
 #include "ftcalc.c"
 #include "ftdbgmem.c"
@@ -30,7 +29,6 @@
 #include "ftmac.c"
 #include "ftobjs.c"
 #include "ftoutln.c"
-#include "ftpic.c"
 #include "ftpsprop.c"
 #include "ftrfork.c"
 #include "ftsnames.c"

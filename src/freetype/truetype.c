@@ -24,7 +24,6 @@
 #include "ttgxvar.c"    /* gx distortable font */
 #include "ttinterp.c"
 #include "ttobjs.c"     /* object manager      */
-#include "ttpic.c"
 #include "ttpload.c"    /* tables loader       */
 #include "ttsubpix.c"
 

@@ -66,8 +66,6 @@
 #include "ftraster.h"
 #include FT_INTERNAL_CALC_H   /* for FT_MulDiv and FT_MulDiv_No_Round */
 
-#include "rastpic.h"
-
 #endif /* !STANDALONE_ */
 
 

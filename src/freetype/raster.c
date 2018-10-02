@@ -21,7 +21,6 @@
 
 #include "ftraster.c"
 #include "ftrend1.c"
-#include "rastpic.c"
 
 
 /* END */

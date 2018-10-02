@@ -93,8 +93,6 @@ FT_BEGIN_HEADER
   };
 
 
-#ifndef FT_CONFIG_OPTION_PIC
-
 #define FT_DEFINE_SERVICE_METRICSVARIATIONSREC( class_,            \
                                                 hadvance_adjust_,  \
                                                 lsb_adjust_,       \
@@ -115,32 +113,6 @@ FT_BEGIN_HEADER
     vorg_adjust_,                                                  \
     metrics_adjust_                                                \
   };
-
-#else /* FT_CONFIG_OPTION_PIC */
-
-#define FT_DEFINE_SERVICE_METRICSVARIATIONSREC( class_,               \
-                                                hadvance_adjust_,     \
-                                                lsb_adjust_,          \
-                                                rsb_adjust_,          \
-                                                vadvance_adjust_,     \
-                                                tsb_adjust_,          \
-                                                bsb_adjust_,          \
-                                                vorg_adjust_,         \
-                                                metrics_adjust_  )    \
-  void                                                                \
-  FT_Init_Class_ ## class_( FT_Service_MetricsVariationsRec*  clazz ) \
-  {                                                                   \
-    clazz->hadvance_adjust = hadvance_adjust_;                        \
-    clazz->lsb_adjust      = lsb_adjust_;                             \
-    clazz->rsb_adjust      = rsb_adjust_;                             \
-    clazz->vadvance_adjust = vadvance_adjust_;                        \
-    clazz->tsb_adjust      = tsb_adjust_;                             \
-    clazz->bsb_adjust      = bsb_adjust_;                             \
-    clazz->vorg_adjust     = vorg_adjust_;                            \
-    clazz->metrics_adjust  = metrics_adjust_;                         \
-  }
-
-#endif /* FT_CONFIG_OPTION_PIC */
 
   /* */
 

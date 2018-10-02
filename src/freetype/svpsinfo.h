@@ -62,8 +62,6 @@ FT_BEGIN_HEADER
   };
 
 
-#ifndef FT_CONFIG_OPTION_PIC
-
 #define FT_DEFINE_SERVICE_PSINFOREC( class_,                     \
                                      get_font_info_,             \
                                      ps_get_font_extra_,         \
@@ -75,29 +73,6 @@ FT_BEGIN_HEADER
     get_font_info_, ps_get_font_extra_, has_glyph_names_,        \
     get_font_private_, get_font_value_                           \
   };
-
-#else /* FT_CONFIG_OPTION_PIC */
-
-#define FT_DEFINE_SERVICE_PSINFOREC( class_,                     \
-                                     get_font_info_,             \
-                                     ps_get_font_extra_,         \
-                                     has_glyph_names_,           \
-                                     get_font_private_,          \
-                                     get_font_value_ )           \
-  void                                                           \
-  FT_Init_Class_ ## class_( FT_Library             library,      \
-                            FT_Service_PsInfoRec*  clazz )       \
-  {                                                              \
-    FT_UNUSED( library );                                        \
-                                                                 \
-    clazz->ps_get_font_info    = get_font_info_;                 \
-    clazz->ps_get_font_extra   = ps_get_font_extra_;             \
-    clazz->ps_has_glyph_names  = has_glyph_names_;               \
-    clazz->ps_get_font_private = get_font_private_;              \
-    clazz->ps_get_font_value   = get_font_value_;                \
-  }
-
-#endif /* FT_CONFIG_OPTION_PIC */
 
   /* */
 

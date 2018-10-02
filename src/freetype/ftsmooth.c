@@ -22,7 +22,6 @@
 #include FT_OUTLINE_H
 #include "ftsmooth.h"
 #include "ftgrays.h"
-#include "ftspic.h"
 
 #include "ftsmerrs.h"
 
@@ -403,7 +402,7 @@
     (FT_Renderer_GetCBoxFunc)  ft_smooth_get_cbox,   /* get_glyph_cbox  */
     (FT_Renderer_SetModeFunc)  ft_smooth_set_mode,   /* set_mode        */
 
-    (FT_Raster_Funcs*)&FT_GRAYS_RASTER_GET           /* raster_class    */
+    (FT_Raster_Funcs*)&ft_grays_raster           /* raster_class    */
   )
 
 
@@ -430,7 +429,7 @@
     (FT_Renderer_GetCBoxFunc)  ft_smooth_get_cbox,    /* get_glyph_cbox  */
     (FT_Renderer_SetModeFunc)  ft_smooth_set_mode,    /* set_mode        */
 
-    (FT_Raster_Funcs*)&FT_GRAYS_RASTER_GET            /* raster_class    */
+    (FT_Raster_Funcs*)&ft_grays_raster            /* raster_class    */
   )
 
 
@@ -457,7 +456,7 @@
     (FT_Renderer_GetCBoxFunc)  ft_smooth_get_cbox,      /* get_glyph_cbox  */
     (FT_Renderer_SetModeFunc)  ft_smooth_set_mode,      /* set_mode        */
 
-    (FT_Raster_Funcs*)&FT_GRAYS_RASTER_GET              /* raster_class    */
+    (FT_Raster_Funcs*)&ft_grays_raster              /* raster_class    */
   )
 
 

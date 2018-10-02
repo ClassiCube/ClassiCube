@@ -22,7 +22,6 @@
 #include FT_OUTLINE_H
 #include "ftrend1.h"
 #include "ftraster.h"
-#include "rastpic.h"
 
 #include "rasterrs.h"
 
@@ -197,7 +196,7 @@
     (FT_Renderer_GetCBoxFunc)  ft_raster1_get_cbox,   /* get_glyph_cbox  */
     (FT_Renderer_SetModeFunc)  ft_raster1_set_mode,   /* set_mode        */
 
-    (FT_Raster_Funcs*)&FT_STANDARD_RASTER_GET         /* raster_class    */
+    (FT_Raster_Funcs*)&ft_standard_raster         /* raster_class    */
   )
 
 

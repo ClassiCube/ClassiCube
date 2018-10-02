@@ -30,7 +30,6 @@
 #include "aflatin2.c"
 #include "afloader.c"
 #include "afmodule.c"
-#include "afpic.c"
 #include "afranges.c"
 #include "afshaper.c"
 #include "afwarp.c"

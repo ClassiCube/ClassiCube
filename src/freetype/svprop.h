@@ -45,8 +45,6 @@ FT_BEGIN_HEADER
   };
 
 
-#ifndef FT_CONFIG_OPTION_PIC
-
 #define FT_DEFINE_SERVICE_PROPERTIESREC( class_,          \
                                          set_property_,   \
                                          get_property_ )  \
@@ -55,20 +53,6 @@ FT_BEGIN_HEADER
     set_property_,                                        \
     get_property_                                         \
   };
-
-#else /* FT_CONFIG_OPTION_PIC */
-
-#define FT_DEFINE_SERVICE_PROPERTIESREC( class_,                \
-                                         set_property_,         \
-                                         get_property_ )        \
-  void                                                          \
-  FT_Init_Class_ ## class_( FT_Service_PropertiesRec*  clazz )  \
-  {                                                             \
-    clazz->set_property = set_property_;                        \
-    clazz->get_property = get_property_;                        \
-  }
-
-#endif /* FT_CONFIG_OPTION_PIC */
 
   /* */
 

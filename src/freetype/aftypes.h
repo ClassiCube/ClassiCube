@@ -486,8 +486,6 @@ extern void*  _af_debug_hints;
 
 
   /* Declare and define vtables for classes */
-#ifndef FT_CONFIG_OPTION_PIC
-
 #define AF_DECLARE_WRITING_SYSTEM_CLASS( writing_system_class ) \
   FT_CALLBACK_TABLE const AF_WritingSystemClassRec              \
   writing_system_class;
@@ -561,84 +559,6 @@ extern void*  _af_debug_hints;
     blue_stringset,                     \
     coverage                            \
   };
-
-#else /* FT_CONFIG_OPTION_PIC */
-
-#define AF_DECLARE_WRITING_SYSTEM_CLASS( writing_system_class )            \
-  FT_LOCAL( void )                                                         \
-  FT_Init_Class_ ## writing_system_class( AF_WritingSystemClassRec*  ac );
-
-#define AF_DEFINE_WRITING_SYSTEM_CLASS(                                   \
-          writing_system_class,                                           \
-          system,                                                         \
-          m_size,                                                         \
-          m_init,                                                         \
-          m_scale,                                                        \
-          m_done,                                                         \
-          m_stdw,                                                         \
-          h_init,                                                         \
-          h_apply )                                                       \
-  FT_LOCAL_DEF( void )                                                    \
-  FT_Init_Class_ ## writing_system_class( AF_WritingSystemClassRec*  ac ) \
-  {                                                                       \
-    ac->writing_system        = system;                                   \
-                                                                          \
-    ac->style_metrics_size    = m_size;                                   \
-                                                                          \
-    ac->style_metrics_init    = m_init;                                   \
-    ac->style_metrics_scale   = m_scale;                                  \
-    ac->style_metrics_done    = m_done;                                   \
-    ac->style_metrics_getstdw = m_stdw;                                   \
-                                                                          \
-    ac->style_hints_init      = h_init;                                   \
-    ac->style_hints_apply     = h_apply;                                  \
-  }
-
-
-#define AF_DECLARE_SCRIPT_CLASS( script_class )             \
-  FT_LOCAL( void )                                          \
-  FT_Init_Class_ ## script_class( AF_ScriptClassRec*  ac );
-
-#define AF_DEFINE_SCRIPT_CLASS(                            \
-          script_class,                                    \
-          script_,                                         \
-          ranges,                                          \
-          nonbase_ranges,                                  \
-          top_to_bottom,                                   \
-          std_charstring )                                 \
-  FT_LOCAL_DEF( void )                                     \
-  FT_Init_Class_ ## script_class( AF_ScriptClassRec*  ac ) \
-  {                                                        \
-    ac->script                    = script_;               \
-    ac->script_uni_ranges         = ranges;                \
-    ac->script_uni_nonbase_ranges = nonbase_ranges;        \
-    ac->top_to_bottom_hinting     = top_to_bottom;         \
-    ac->standard_charstring       = std_charstring;        \
-  }
-
-
-#define AF_DECLARE_STYLE_CLASS( style_class )             \
-  FT_LOCAL( void )                                        \
-  FT_Init_Class_ ## style_class( AF_StyleClassRec*  ac );
-
-#define AF_DEFINE_STYLE_CLASS(                           \
-          style_class,                                   \
-          style_,                                        \
-          writing_system_,                               \
-          script_,                                       \
-          blue_stringset_,                               \
-          coverage_ )                                    \
-  FT_LOCAL_DEF( void )                                   \
-  FT_Init_Class_ ## style_class( AF_StyleClassRec*  ac ) \
-  {                                                      \
-    ac->style          = style_;                         \
-    ac->writing_system = writing_system_;                \
-    ac->script         = script_;                        \
-    ac->blue_stringset = blue_stringset_;                \
-    ac->coverage       = coverage_;                      \
-  }
-
-#endif /* FT_CONFIG_OPTION_PIC */
 
 
 /* */

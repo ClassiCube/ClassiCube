@@ -627,8 +627,6 @@ FT_BEGIN_HEADER
   /* transitional */
   typedef SFNT_Interface*   SFNT_Service;
 
-#ifndef FT_CONFIG_OPTION_PIC
-
 #define FT_DEFINE_SFNT_INTERFACE(        \
           class_,                        \
           goto_table_,                   \
@@ -696,85 +694,6 @@ FT_BEGIN_HEADER
     get_name_,                           \
     get_name_id_                         \
   };
-
-#else /* FT_CONFIG_OPTION_PIC */
-
-#define FT_INTERNAL( a, a_ )  \
-          clazz->a = a_;
-
-#define FT_DEFINE_SFNT_INTERFACE(                       \
-          class_,                                       \
-          goto_table_,                                  \
-          init_face_,                                   \
-          load_face_,                                   \
-          done_face_,                                   \
-          get_interface_,                               \
-          load_any_,                                    \
-          load_head_,                                   \
-          load_hhea_,                                   \
-          load_cmap_,                                   \
-          load_maxp_,                                   \
-          load_os2_,                                    \
-          load_post_,                                   \
-          load_name_,                                   \
-          free_name_,                                   \
-          load_kern_,                                   \
-          load_gasp_,                                   \
-          load_pclt_,                                   \
-          load_bhed_,                                   \
-          load_sbit_image_,                             \
-          get_psname_,                                  \
-          free_psnames_,                                \
-          get_kerning_,                                 \
-          load_font_dir_,                               \
-          load_hmtx_,                                   \
-          load_eblc_,                                   \
-          free_eblc_,                                   \
-          set_sbit_strike_,                             \
-          load_strike_metrics_,                         \
-          get_metrics_,                                 \
-          get_name_,                                    \
-          get_name_id_ )                                \
-  void                                                  \
-  FT_Init_Class_ ## class_( FT_Library       library,   \
-                            SFNT_Interface*  clazz )    \
-  {                                                     \
-    FT_UNUSED( library );                               \
-                                                        \
-    clazz->goto_table          = goto_table_;           \
-    clazz->init_face           = init_face_;            \
-    clazz->load_face           = load_face_;            \
-    clazz->done_face           = done_face_;            \
-    clazz->get_interface       = get_interface_;        \
-    clazz->load_any            = load_any_;             \
-    clazz->load_head           = load_head_;            \
-    clazz->load_hhea           = load_hhea_;            \
-    clazz->load_cmap           = load_cmap_;            \
-    clazz->load_maxp           = load_maxp_;            \
-    clazz->load_os2            = load_os2_;             \
-    clazz->load_post           = load_post_;            \
-    clazz->load_name           = load_name_;            \
-    clazz->free_name           = free_name_;            \
-    clazz->load_kern           = load_kern_;            \
-    clazz->load_gasp           = load_gasp_;            \
-    clazz->load_pclt           = load_pclt_;            \
-    clazz->load_bhed           = load_bhed_;            \
-    clazz->load_sbit_image     = load_sbit_image_;      \
-    clazz->get_psname          = get_psname_;           \
-    clazz->free_psnames        = free_psnames_;         \
-    clazz->get_kerning         = get_kerning_;          \
-    clazz->load_font_dir       = load_font_dir_;        \
-    clazz->load_hmtx           = load_hmtx_;            \
-    clazz->load_eblc           = load_eblc_;            \
-    clazz->free_eblc           = free_eblc_;            \
-    clazz->set_sbit_strike     = set_sbit_strike_;      \
-    clazz->load_strike_metrics = load_strike_metrics_;  \
-    clazz->get_metrics         = get_metrics_;          \
-    clazz->get_name            = get_name_;             \
-    clazz->get_name_id         = get_name_id_;          \
-  }
-
-#endif /* FT_CONFIG_OPTION_PIC */
 
 FT_END_HEADER
 

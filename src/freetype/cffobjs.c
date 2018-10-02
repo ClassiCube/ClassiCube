@@ -37,7 +37,6 @@
 #include "cffobjs.h"
 #include "cffload.h"
 #include "cffcmap.h"
-#include "cffpic.h"
 
 #include "cfferrs.h"
 
@@ -1070,7 +1069,7 @@
 
         nn = (FT_UInt)cffface->num_charmaps;
 
-        error = FT_CMap_New( &CFF_CMAP_UNICODE_CLASS_REC_GET, NULL,
+        error = FT_CMap_New( &cff_cmap_unicode_class_rec, NULL,
                              &cmaprec, NULL );
         if ( error                                      &&
              FT_ERR_NEQ( error, No_Unicode_Glyph_Name ) )
@@ -1094,19 +1093,19 @@
           {
             cmaprec.encoding_id = TT_ADOBE_ID_STANDARD;
             cmaprec.encoding    = FT_ENCODING_ADOBE_STANDARD;
-            clazz               = &CFF_CMAP_ENCODING_CLASS_REC_GET;
+            clazz               = &cff_cmap_encoding_class_rec;
           }
           else if ( encoding->offset == 1 )
           {
             cmaprec.encoding_id = TT_ADOBE_ID_EXPERT;
             cmaprec.encoding    = FT_ENCODING_ADOBE_EXPERT;
-            clazz               = &CFF_CMAP_ENCODING_CLASS_REC_GET;
+            clazz               = &cff_cmap_encoding_class_rec;
           }
           else
           {
             cmaprec.encoding_id = TT_ADOBE_ID_CUSTOM;
             cmaprec.encoding    = FT_ENCODING_ADOBE_CUSTOM;
-            clazz               = &CFF_CMAP_ENCODING_CLASS_REC_GET;
+            clazz               = &cff_cmap_encoding_class_rec;
           }
 
           error = FT_CMap_New( clazz, NULL, &cmaprec, NULL );

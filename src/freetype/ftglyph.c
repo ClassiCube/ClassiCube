@@ -36,8 +36,6 @@
 #include FT_BITMAP_H
 #include FT_INTERNAL_OBJECTS_H
 
-#include "basepic.h"
-
   /*************************************************************************/
   /*                                                                       */
   /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
@@ -380,11 +378,11 @@
 
     /* if it is a bitmap, that's easy :-) */
     if ( slot->format == FT_GLYPH_FORMAT_BITMAP )
-      clazz = FT_BITMAP_GLYPH_CLASS_GET;
+      clazz = &ft_bitmap_glyph_class;
 
     /* if it is an outline */
     else if ( slot->format == FT_GLYPH_FORMAT_OUTLINE )
-      clazz = FT_OUTLINE_GLYPH_CLASS_GET;
+      clazz = &ft_outline_glyph_class;
 
     else
     {
@@ -553,7 +551,7 @@
       goto Bad;
 
     /* when called with a bitmap glyph, do nothing and return successfully */
-    if ( clazz == FT_BITMAP_GLYPH_CLASS_GET )
+    if ( clazz == &ft_bitmap_glyph_class )
       goto Exit;
 
     if ( !clazz->glyph_prepare )
@@ -569,7 +567,7 @@
     dummy.format   = clazz->glyph_format;
 
     /* create result bitmap glyph */
-    error = ft_new_glyph( library, FT_BITMAP_GLYPH_CLASS_GET, &b );
+    error = ft_new_glyph( library, &ft_bitmap_glyph_class, &b );
     if ( error )
       goto Exit;
     bitmap = (FT_BitmapGlyph)b;

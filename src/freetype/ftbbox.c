@@ -490,13 +490,6 @@
       FT_Error   error;
       TBBox_Rec  user;
 
-#ifdef FT_CONFIG_OPTION_PIC
-      FT_Outline_Funcs  bbox_interface;
-
-
-      Init_Class_bbox_interface( &bbox_interface );
-#endif
-
       user.bbox = bbox;
 
       error = FT_Outline_Decompose( outline, &bbox_interface, &user );

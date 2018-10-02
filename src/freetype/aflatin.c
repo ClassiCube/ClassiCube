@@ -21,7 +21,6 @@
 #include FT_INTERNAL_DEBUG_H
 
 #include "afglobal.h"
-#include "afpic.h"
 #include "aflatin.h"
 #include "aferrors.h"
 
@@ -83,12 +82,8 @@
       AF_LatinMetricsRec  dummy[1];
       AF_Scaler           scaler = &dummy->root.scaler;
 
-#ifdef FT_CONFIG_OPTION_PIC
-      AF_FaceGlobals  globals = metrics->root.globals;
-#endif
-
       AF_StyleClass   style_class  = metrics->root.style_class;
-      AF_ScriptClass  script_class = AF_SCRIPT_CLASSES_GET
+      AF_ScriptClass  script_class = af_script_classes
                                        [style_class->script];
 
       void*        shaper_buf;
@@ -2049,12 +2044,8 @@
     FT_Memory     memory = hints->memory;
     AF_LatinAxis  laxis  = &((AF_LatinMetrics)hints->metrics)->axis[dim];
 
-#ifdef FT_CONFIG_OPTION_PIC
-    AF_FaceGlobals  globals = hints->metrics->globals;
-#endif
-
     AF_StyleClass   style_class  = hints->metrics->style_class;
-    AF_ScriptClass  script_class = AF_SCRIPT_CLASSES_GET
+    AF_ScriptClass  script_class = af_script_classes
                                      [style_class->script];
 
     FT_Bool  top_to_bottom_hinting = 0;
@@ -2936,12 +2927,8 @@
     AF_Edge       anchor     = NULL;
     FT_Int        has_serifs = 0;
 
-#ifdef FT_CONFIG_OPTION_PIC
-    AF_FaceGlobals  globals = hints->metrics->globals;
-#endif
-
     AF_StyleClass   style_class  = hints->metrics->style_class;
-    AF_ScriptClass  script_class = AF_SCRIPT_CLASSES_GET
+    AF_ScriptClass  script_class = af_script_classes
                                      [style_class->script];
 
     FT_Bool  top_to_bottom_hinting = 0;

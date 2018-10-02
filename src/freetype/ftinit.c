@@ -42,7 +42,6 @@
 #include FT_INTERNAL_OBJECTS_H
 #include FT_INTERNAL_DEBUG_H
 #include FT_MODULE_H
-#include "basepic.h"
 
 
   /*************************************************************************/
@@ -53,9 +52,6 @@
   /*                                                                       */
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_init
-
-
-#ifndef FT_CONFIG_OPTION_PIC
 
 
 #undef  FT_USE_MODULE
@@ -78,120 +74,6 @@
   };
 
 
-#else /* FT_CONFIG_OPTION_PIC */
-
-
-#ifdef __cplusplus
-#define FT_EXTERNC  extern "C"
-#else
-#define FT_EXTERNC  extern
-#endif
-
-  /* declare the module's class creation/destruction functions */
-#undef  FT_USE_MODULE
-#define FT_USE_MODULE( type, x )                            \
-  FT_EXTERNC FT_Error                                       \
-  FT_Create_Class_ ## x( FT_Library         library,        \
-                         FT_Module_Class*  *output_class ); \
-  FT_EXTERNC void                                           \
-  FT_Destroy_Class_ ## x( FT_Library        library,        \
-                          FT_Module_Class*  clazz );
-
-#include FT_CONFIG_MODULES_H
-
-  /* count all module classes */
-#undef  FT_USE_MODULE
-#define FT_USE_MODULE( type, x )  MODULE_CLASS_ ## x,
-
-  enum
-  {
-#include FT_CONFIG_MODULES_H
-    FT_NUM_MODULE_CLASSES
-  };
-
-  /* destroy all module classes */
-#undef  FT_USE_MODULE
-#define FT_USE_MODULE( type, x )                   \
-  if ( classes[i] )                                \
-  {                                                \
-    FT_Destroy_Class_ ## x( library, classes[i] ); \
-  }                                                \
-  i++;
-
-
-  FT_BASE_DEF( void )
-  ft_destroy_default_module_classes( FT_Library  library )
-  {
-    FT_Module_Class*  *classes;
-    FT_Memory          memory;
-    FT_UInt            i;
-    BasePIC*           pic_container = (BasePIC*)library->pic_container.base;
-
-
-    if ( !pic_container->default_module_classes )
-      return;
-
-    memory  = library->memory;
-    classes = pic_container->default_module_classes;
-    i       = 0;
-
-#include FT_CONFIG_MODULES_H
-
-    FT_FREE( classes );
-    pic_container->default_module_classes = NULL;
-  }
-
-
-  /* initialize all module classes and the pointer table */
-#undef  FT_USE_MODULE
-#define FT_USE_MODULE( type, x )                     \
-  error = FT_Create_Class_ ## x( library, &clazz );  \
-  if ( error )                                       \
-    goto Exit;                                       \
-  classes[i++] = clazz;
-
-
-  FT_BASE_DEF( FT_Error )
-  ft_create_default_module_classes( FT_Library  library )
-  {
-    FT_Error           error;
-    FT_Memory          memory;
-    FT_Module_Class*  *classes = NULL;
-    FT_Module_Class*   clazz;
-    FT_UInt            i;
-    BasePIC*           pic_container = (BasePIC*)library->pic_container.base;
-
-
-    memory = library->memory;
-
-    pic_container->default_module_classes = NULL;
-
-    if ( FT_ALLOC( classes, sizeof ( FT_Module_Class* ) *
-                              ( FT_NUM_MODULE_CLASSES + 1 ) ) )
-      return error;
-
-    /* initialize all pointers to 0, especially the last one */
-    for ( i = 0; i < FT_NUM_MODULE_CLASSES; i++ )
-      classes[i] = NULL;
-    classes[FT_NUM_MODULE_CLASSES] = NULL;
-
-    i = 0;
-
-#include FT_CONFIG_MODULES_H
-
-  Exit:
-    if ( error )
-      ft_destroy_default_module_classes( library );
-    else
-      pic_container->default_module_classes = classes;
-
-    return error;
-  }
-
-
-#endif /* FT_CONFIG_OPTION_PIC */
-
-
   /* documentation is in ftmodapi.h */
 
   FT_EXPORT_DEF( void )
@@ -200,17 +82,10 @@
     FT_Error                       error;
     const FT_Module_Class* const*  cur;
 
-
-    /* FT_DEFAULT_MODULES_GET dereferences `library' in PIC mode */
-#ifdef FT_CONFIG_OPTION_PIC
-    if ( !library )
-      return;
-#endif
-
     /* GCC 4.6 warns the type difference:
      *   FT_Module_Class** != const FT_Module_Class* const*
      */
-    cur = (const FT_Module_Class* const*)FT_DEFAULT_MODULES_GET;
+    cur = (const FT_Module_Class* const*)ft_default_modules;
 
     /* test for valid `library' delayed to FT_Add_Module() */
     while ( *cur )

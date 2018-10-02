@@ -279,8 +279,6 @@ typedef ptrdiff_t  FT_PtrDist;
 
 #include "ftsmerrs.h"
 
-#include "ftspic.h"
-
 #define Smooth_Err_Invalid_Mode     Smooth_Err_Cannot_Render_Glyph
 #define Smooth_Err_Memory_Overflow  Smooth_Err_Out_Of_Memory
 #define ErrRaster_Memory_Overflow   Smooth_Err_Out_Of_Memory
@@ -1706,11 +1704,6 @@ typedef ptrdiff_t  FT_PtrDist;
   {
 
     volatile int  error = 0;
-
-#ifdef FT_CONFIG_OPTION_PIC
-      FT_Outline_Funcs func_interface;
-      Init_Class_func_interface(&func_interface);
-#endif
 
     if ( ft_setjmp( ras.jump_buffer ) == 0 )
     {

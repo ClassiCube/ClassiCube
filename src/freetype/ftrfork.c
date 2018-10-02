@@ -28,7 +28,6 @@
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_RFORK_H
-#include "basepic.h"
 #include "ftbase.h"
 
 #undef  FT_COMPONENT
@@ -468,7 +467,7 @@
       if ( errors[i] )
         continue;
 
-      errors[i] = (FT_RACCESS_GUESS_TABLE_GET[i].func)( library,
+      errors[i] = (ft_raccess_guess_table[i].func)( library,
                                                  stream, base_name,
                                                  &(new_names[i]),
                                                  &(offsets[i]) );
@@ -488,7 +487,7 @@
     if ( rule_index >= FT_RACCESS_N_RULES )
       return FT_RFork_Rule_invalid;
 
-    return FT_RACCESS_GUESS_TABLE_GET[rule_index].type;
+    return ft_raccess_guess_table[rule_index].type;
   }
 
 

@@ -70,26 +70,11 @@ FT_BEGIN_HEADER
   };
 
 
-#ifndef FT_CONFIG_OPTION_PIC
-
 #define FT_DEFINE_SERVICE_SFNT_TABLEREC( class_, load_, get_, info_ )  \
   static const FT_Service_SFNT_TableRec  class_ =                      \
   {                                                                    \
     load_, get_, info_                                                 \
   };
-
-#else /* FT_CONFIG_OPTION_PIC */
-
-#define FT_DEFINE_SERVICE_SFNT_TABLEREC( class_, load_, get_, info_ ) \
-  void                                                                \
-  FT_Init_Class_ ## class_( FT_Service_SFNT_TableRec*  clazz )        \
-  {                                                                   \
-    clazz->load_table = load_;                                        \
-    clazz->get_table  = get_;                                         \
-    clazz->table_info = info_;                                        \
-  }
-
-#endif /* FT_CONFIG_OPTION_PIC */
 
   /* */
 

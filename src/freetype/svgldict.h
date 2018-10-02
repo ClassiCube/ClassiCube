@@ -52,8 +52,6 @@ FT_BEGIN_HEADER
   };
 
 
-#ifndef FT_CONFIG_OPTION_PIC
-
 #define FT_DEFINE_SERVICE_GLYPHDICTREC( class_,                        \
                                         get_name_,                     \
                                         name_index_ )                  \
@@ -61,23 +59,6 @@ FT_BEGIN_HEADER
   {                                                                    \
     get_name_, name_index_                                             \
   };
-
-#else /* FT_CONFIG_OPTION_PIC */
-
-#define FT_DEFINE_SERVICE_GLYPHDICTREC( class_,                        \
-                                        get_name_,                     \
-                                        name_index_ )                  \
-  void                                                                 \
-  FT_Init_Class_ ## class_( FT_Library                library,         \
-                            FT_Service_GlyphDictRec*  clazz )          \
-  {                                                                    \
-    FT_UNUSED( library );                                              \
-                                                                       \
-    clazz->get_name   = get_name_;                                     \
-    clazz->name_index = name_index_;                                   \
-  }
-
-#endif /* FT_CONFIG_OPTION_PIC */
 
   /* */
 

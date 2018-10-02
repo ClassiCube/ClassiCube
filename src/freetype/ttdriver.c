@@ -43,8 +43,6 @@
 
 #include "tterrors.h"
 
-#include "ttpic.h"
-
   /*************************************************************************/
   /*                                                                       */
   /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
@@ -548,19 +546,19 @@
     tt_services,
 
     FT_SERVICE_ID_FONT_FORMAT,        FT_FONT_FORMAT_TRUETYPE,
-    FT_SERVICE_ID_MULTI_MASTERS,      &TT_SERVICE_GX_MULTI_MASTERS_GET,
-    FT_SERVICE_ID_METRICS_VARIATIONS, &TT_SERVICE_METRICS_VARIATIONS_GET,
+    FT_SERVICE_ID_MULTI_MASTERS,      &tt_service_gx_multi_masters,
+    FT_SERVICE_ID_METRICS_VARIATIONS, &tt_service_metrics_variations,
     FT_SERVICE_ID_TRUETYPE_ENGINE,    &tt_service_truetype_engine,
-    FT_SERVICE_ID_TT_GLYF,            &TT_SERVICE_TRUETYPE_GLYF_GET,
-    FT_SERVICE_ID_PROPERTIES,         &TT_SERVICE_PROPERTIES_GET )
+    FT_SERVICE_ID_TT_GLYF,            &tt_service_truetype_glyf,
+    FT_SERVICE_ID_PROPERTIES,         &tt_service_properties)
 #else
   FT_DEFINE_SERVICEDESCREC4(
     tt_services,
 
     FT_SERVICE_ID_FONT_FORMAT,     FT_FONT_FORMAT_TRUETYPE,
     FT_SERVICE_ID_TRUETYPE_ENGINE, &tt_service_truetype_engine,
-    FT_SERVICE_ID_TT_GLYF,         &TT_SERVICE_TRUETYPE_GLYF_GET,
-    FT_SERVICE_ID_PROPERTIES,      &TT_SERVICE_PROPERTIES_GET )
+    FT_SERVICE_ID_TT_GLYF,         &tt_service_truetype_glyf,
+    FT_SERVICE_ID_PROPERTIES,      &tt_service_properties)
 #endif
 
 
@@ -574,26 +572,15 @@
     SFNT_Service         sfnt;
 
 
-    /* TT_SERVICES_GET dereferences `library' in PIC mode */
-#ifdef FT_CONFIG_OPTION_PIC
-    if ( !driver )
-      return NULL;
-    library = driver->library;
-    if ( !library )
-      return NULL;
-#endif
-
-    result = ft_service_list_lookup( TT_SERVICES_GET, tt_interface );
+    result = ft_service_list_lookup(tt_services, tt_interface );
     if ( result )
       return result;
 
-#ifndef FT_CONFIG_OPTION_PIC
     if ( !driver )
       return NULL;
     library = driver->library;
     if ( !library )
       return NULL;
-#endif
 
     /* only return the default interface from the SFNT module */
     sfntd = FT_Get_Module( library, "sfnt" );

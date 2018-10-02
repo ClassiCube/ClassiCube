@@ -38,7 +38,6 @@
 #include "afwrtsys.h"
 
 #include "aferrors.h"
-#include "afpic.h"
 
 
 #undef  SCRIPT
@@ -67,7 +66,6 @@
 #include "afstyles.h"
 
 
-#ifndef FT_CONFIG_OPTION_PIC
 
 #undef  WRITING_SYSTEM
 #define WRITING_SYSTEM( ws, WS )               \
@@ -109,8 +107,6 @@
 
     NULL  /* do not remove */
   };
-
-#endif /* !FT_CONFIG_OPTION_PIC */
 
 
 #ifdef FT_DEBUG_LEVEL_TRACE
@@ -159,12 +155,12 @@
     }
 
     /* scan each style in a Unicode charmap */
-    for ( ss = 0; AF_STYLE_CLASSES_GET[ss]; ss++ )
+    for ( ss = 0; af_style_classes[ss]; ss++ )
     {
       AF_StyleClass       style_class =
-                            AF_STYLE_CLASSES_GET[ss];
+                            af_style_classes[ss];
       AF_ScriptClass      script_class =
-                            AF_SCRIPT_CLASSES_GET[style_class->script];
+                            af_script_classes[style_class->script];
       AF_Script_UniRange  range;
 
 
@@ -246,9 +242,9 @@
     }
 
     /* handle the remaining default OpenType features ... */
-    for ( ss = 0; AF_STYLE_CLASSES_GET[ss]; ss++ )
+    for ( ss = 0; af_style_classes[ss]; ss++ )
     {
-      AF_StyleClass  style_class = AF_STYLE_CLASSES_GET[ss];
+      AF_StyleClass  style_class = af_style_classes[ss];
 
 
       if ( style_class->coverage == AF_COVERAGE_DEFAULT )
@@ -256,7 +252,7 @@
     }
 
     /* ... and finally the default OpenType features of the default script */
-    af_shaper_get_coverage( globals, AF_STYLE_CLASSES_GET[dflt], gstyles, 1 );
+    af_shaper_get_coverage( globals, af_style_classes[dflt], gstyles, 1 );
 
     /* mark ASCII digits */
     for ( i = 0x30; i <= 0x39; i++ )
@@ -295,9 +291,9 @@
                 "==============\n"
                 "\n" ));
 
-    for ( ss = 0; AF_STYLE_CLASSES_GET[ss]; ss++ )
+    for ( ss = 0; af_style_classes[ss]; ss++ )
     {
-      AF_StyleClass  style_class = AF_STYLE_CLASSES_GET[ss];
+      AF_StyleClass  style_class = af_style_classes[ss];
       FT_UInt        count       = 0;
       FT_Long        idx;
 
@@ -397,9 +393,9 @@
         if ( globals->metrics[nn] )
         {
           AF_StyleClass          style_class =
-            AF_STYLE_CLASSES_GET[nn];
+            af_style_classes[nn];
           AF_WritingSystemClass  writing_system_class =
-            AF_WRITING_SYSTEM_CLASSES_GET[style_class->writing_system];
+            af_writing_system_classes[style_class->writing_system];
 
 
           if ( writing_system_class->style_metrics_done )
@@ -448,8 +444,8 @@
       style = (AF_Style)( globals->glyph_styles[gindex] &
                           AF_STYLE_UNASSIGNED           );
 
-    style_class          = AF_STYLE_CLASSES_GET[style];
-    writing_system_class = AF_WRITING_SYSTEM_CLASSES_GET
+    style_class          = af_style_classes[style];
+    writing_system_class = af_writing_system_classes
                              [style_class->writing_system];
 
     metrics = globals->metrics[style];

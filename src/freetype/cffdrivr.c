@@ -42,7 +42,6 @@
 #endif
 
 #include "cfferrs.h"
-#include "cffpic.h"
 
 #include FT_SERVICE_FONT_FORMAT_H
 #include FT_SERVICE_GLYPH_DICT_H
@@ -654,8 +653,8 @@
     FT_Library  library = FT_FACE_LIBRARY( face );
 
 
-    if ( cmap->clazz != &CFF_CMAP_ENCODING_CLASS_REC_GET &&
-         cmap->clazz != &CFF_CMAP_UNICODE_CLASS_REC_GET  )
+    if ( cmap->clazz != &cff_cmap_encoding_class_rec &&
+         cmap->clazz != &cff_cmap_unicode_class_rec  )
     {
       FT_Module           sfnt    = FT_Get_Module( library, "sfnt" );
       FT_Service_TTCMaps  service =
@@ -1001,54 +1000,54 @@
     cff_services,
 
     FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CFF,
-    FT_SERVICE_ID_MULTI_MASTERS,        &CFF_SERVICE_MULTI_MASTERS_GET,
-    FT_SERVICE_ID_METRICS_VARIATIONS,   &CFF_SERVICE_METRICS_VAR_GET,
-    FT_SERVICE_ID_POSTSCRIPT_INFO,      &CFF_SERVICE_PS_INFO_GET,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &CFF_SERVICE_PS_NAME_GET,
-    FT_SERVICE_ID_GLYPH_DICT,           &CFF_SERVICE_GLYPH_DICT_GET,
-    FT_SERVICE_ID_TT_CMAP,              &CFF_SERVICE_GET_CMAP_INFO_GET,
-    FT_SERVICE_ID_CID,                  &CFF_SERVICE_CID_INFO_GET,
-    FT_SERVICE_ID_PROPERTIES,           &CFF_SERVICE_PROPERTIES_GET,
-    FT_SERVICE_ID_CFF_LOAD,             &CFF_SERVICE_CFF_LOAD_GET
+    FT_SERVICE_ID_MULTI_MASTERS,        &cff_service_multi_masters,
+    FT_SERVICE_ID_METRICS_VARIATIONS,   &cff_service_metrics_variations,
+    FT_SERVICE_ID_POSTSCRIPT_INFO,      &cff_service_ps_info,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &cff_service_ps_name,
+    FT_SERVICE_ID_GLYPH_DICT,           &cff_service_glyph_dict,
+    FT_SERVICE_ID_TT_CMAP,              &cff_service_get_cmap_info,
+    FT_SERVICE_ID_CID,                  &cff_service_cid_info,
+    FT_SERVICE_ID_PROPERTIES,           &cff_service_properties,
+    FT_SERVICE_ID_CFF_LOAD,             &cff_service_cff_load
   )
 #elif !defined FT_CONFIG_OPTION_NO_GLYPH_NAMES
   FT_DEFINE_SERVICEDESCREC8(
     cff_services,
 
     FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CFF,
-    FT_SERVICE_ID_POSTSCRIPT_INFO,      &CFF_SERVICE_PS_INFO_GET,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &CFF_SERVICE_PS_NAME_GET,
-    FT_SERVICE_ID_GLYPH_DICT,           &CFF_SERVICE_GLYPH_DICT_GET,
-    FT_SERVICE_ID_TT_CMAP,              &CFF_SERVICE_GET_CMAP_INFO_GET,
-    FT_SERVICE_ID_CID,                  &CFF_SERVICE_CID_INFO_GET,
-    FT_SERVICE_ID_PROPERTIES,           &CFF_SERVICE_PROPERTIES_GET,
-    FT_SERVICE_ID_CFF_LOAD,             &CFF_SERVICE_CFF_LOAD_GET
+    FT_SERVICE_ID_POSTSCRIPT_INFO,      &cff_service_ps_info,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &cff_service_ps_name,
+    FT_SERVICE_ID_GLYPH_DICT,           &cff_service_glyph_dict,
+    FT_SERVICE_ID_TT_CMAP,              &cff_service_get_cmap_info,
+    FT_SERVICE_ID_CID,                  &cff_service_cid_info,
+    FT_SERVICE_ID_PROPERTIES,           &cff_service_properties,
+    FT_SERVICE_ID_CFF_LOAD,             &cff_service_cff_load
   )
 #elif defined TT_CONFIG_OPTION_GX_VAR_SUPPORT
   FT_DEFINE_SERVICEDESCREC9(
     cff_services,
 
     FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CFF,
-    FT_SERVICE_ID_MULTI_MASTERS,        &CFF_SERVICE_MULTI_MASTERS_GET,
-    FT_SERVICE_ID_METRICS_VARIATIONS,   &CFF_SERVICE_METRICS_VAR_GET,
-    FT_SERVICE_ID_POSTSCRIPT_INFO,      &CFF_SERVICE_PS_INFO_GET,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &CFF_SERVICE_PS_NAME_GET,
-    FT_SERVICE_ID_TT_CMAP,              &CFF_SERVICE_GET_CMAP_INFO_GET,
-    FT_SERVICE_ID_CID,                  &CFF_SERVICE_CID_INFO_GET,
-    FT_SERVICE_ID_PROPERTIES,           &CFF_SERVICE_PROPERTIES_GET,
-    FT_SERVICE_ID_CFF_LOAD,             &CFF_SERVICE_CFF_LOAD_GET
+    FT_SERVICE_ID_MULTI_MASTERS,        &cff_service_multi_masters,
+    FT_SERVICE_ID_METRICS_VARIATIONS,   &cff_service_metrics_variations,
+    FT_SERVICE_ID_POSTSCRIPT_INFO,      &cff_service_ps_info,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &cff_service_ps_name,
+    FT_SERVICE_ID_TT_CMAP,              &cff_service_get_cmap_info,
+    FT_SERVICE_ID_CID,                  &cff_service_cid_info,
+    FT_SERVICE_ID_PROPERTIES,           &cff_service_properties,
+    FT_SERVICE_ID_CFF_LOAD,             &cff_service_cff_load
   )
 #else
   FT_DEFINE_SERVICEDESCREC7(
     cff_services,
 
     FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CFF,
-    FT_SERVICE_ID_POSTSCRIPT_INFO,      &CFF_SERVICE_PS_INFO_GET,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &CFF_SERVICE_PS_NAME_GET,
-    FT_SERVICE_ID_TT_CMAP,              &CFF_SERVICE_GET_CMAP_INFO_GET,
-    FT_SERVICE_ID_CID,                  &CFF_SERVICE_CID_INFO_GET,
-    FT_SERVICE_ID_PROPERTIES,           &CFF_SERVICE_PROPERTIES_GET,
-    FT_SERVICE_ID_CFF_LOAD,             &CFF_SERVICE_CFF_LOAD_GET
+    FT_SERVICE_ID_POSTSCRIPT_INFO,      &cff_service_ps_info,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &cff_service_ps_name,
+    FT_SERVICE_ID_TT_CMAP,              &cff_service_get_cmap_info,
+    FT_SERVICE_ID_CID,                  &cff_service_cid_info,
+    FT_SERVICE_ID_PROPERTIES,           &cff_service_properties,
+    FT_SERVICE_ID_CFF_LOAD,             &cff_service_cff_load
   )
 #endif
 
@@ -1062,27 +1061,15 @@
     FT_Module_Interface  result;
 
 
-    /* CFF_SERVICES_GET dereferences `library' in PIC mode */
-#ifdef FT_CONFIG_OPTION_PIC
-    if ( !driver )
-      return NULL;
-    library = driver->library;
-    if ( !library )
-      return NULL;
-#endif
-
-    result = ft_service_list_lookup( CFF_SERVICES_GET, module_interface );
+    result = ft_service_list_lookup( cff_services, module_interface );
     if ( result )
       return result;
 
-    /* `driver' is not yet evaluated in non-PIC mode */
-#ifndef FT_CONFIG_OPTION_PIC
     if ( !driver )
       return NULL;
     library = driver->library;
     if ( !library )
       return NULL;
-#endif
 
     /* we pass our request to the `sfnt' module */
     sfnt = FT_Get_Module( library, "sfnt" );
