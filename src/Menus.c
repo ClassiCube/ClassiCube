@@ -1020,7 +1020,7 @@ static void GenLevelScreen_Gen(void* screen, bool vanilla) {
 	Int32 seed   = GenLevelScreen_GetSeedInt(s, 3);
 
 	UInt64 volume = (UInt64)width * height * length;
-	if (volume > Int32_MaxValue) {
+	if (volume > (UInt64)-1) {
 		Chat_AddRaw("&cThe generated map's volume is too big.");
 	} else if (!width || !height || !length) {
 		Chat_AddRaw("&cOne of the map dimensions is invalid.");

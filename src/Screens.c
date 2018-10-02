@@ -77,10 +77,6 @@ struct ChatScreen {
 	struct TextGroupWidget Status, BottomRight, Chat, ClientStatus;
 	struct SpecialInputWidget AltText;
 
-	/* needed for lost contexts, to restore chat typed in */
-	char __ChatInInputBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];
-	String ChatInInputStr;
-
 	struct Texture Status_Textures[CHATSCREEN_MAX_STATUS];
 	struct Texture BottomRight_Textures[CHATSCREEN_MAX_GROUP];
 	struct Texture ClientStatus_Textures[CHATSCREEN_MAX_GROUP];
@@ -682,6 +678,10 @@ struct Screen* GeneratingScreen_MakeInstance(void) {
 *--------------------------------------------------------ChatScreen-------------------------------------------------------*
 *#########################################################################################################################*/
 struct ChatScreen ChatScreen_Instance;
+/* needed for lost contexts, to restore chat typed in */
+char ChatScreen_InputBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];
+String ChatScreen_InputStr = String_FromArray(ChatScreen_InputBuffer);
+
 static Int32 ChatScreen_BottomOffset(void) { return ((struct HUDScreen*)Gui_HUD)->Hotbar.Height; }
 static Int32 ChatScreen_InputUsedHeight(struct ChatScreen* s) {
 	if (s->AltText.Height == 0) {
@@ -783,8 +783,7 @@ static void ChatScreen_SetInitialMessages(struct ChatScreen* s) {
 	}
 
 	if (s->HandlesAllInput) {
-		ChatScreen_OpenInput(s, &s->ChatInInputStr);
-		s->ChatInInputStr.length = 0;
+		ChatScreen_OpenInput(s, &ChatScreen_InputStr);
 	}
 }
 
@@ -895,6 +894,7 @@ static bool ChatScreen_KeyDown(void* screen, Key key) {
 			if (key == KeyBind_Get(KeyBind_PauseOrExit)) {
 				InputWidget_Clear(&s->Input.Base);
 			}
+			ChatScreen_InputStr.length = 0;
 
 			struct InputWidget* input = &s->Input.Base;
 			input->OnPressedEnter(input);
@@ -1042,7 +1042,7 @@ static void ChatScreen_ChatReceived(void* screen, const String* msg, Int32 type)
 static void ChatScreen_ContextLost(void* screen) {
 	struct ChatScreen* s = screen;
 	if (s->HandlesAllInput) {
-		String_Copy(&s->ChatInInputStr, &s->Input.Base.Text);
+		String_Copy(&ChatScreen_InputStr, &s->Input.Base.Text);
 		Gui_CalcCursorVisible();
 	}
 
@@ -1077,9 +1077,6 @@ static void ChatScreen_OnResize(void* screen) {
 
 static void ChatScreen_Init(void* screen) {
 	struct ChatScreen* s = screen;
-	String str = String_FromArray(s->__ChatInInputBuffer);
-	s->ChatInInputStr = str;
-
 	Int32 fontSize = (Int32)(8 * Game_GetChatScale());
 	Math_Clamp(fontSize, 8, 60);
 	Int32 announceSize = (Int32)(16 * Game_GetChatScale());
