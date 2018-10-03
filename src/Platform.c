@@ -693,27 +693,27 @@ void Waitable_WaitFor(void* handle, UInt32 milliseconds) {
 *#########################################################################################################################*/
 #include "freetype\ftsnames.h"
 FT_Library lib;
-StringsBuffer fonts_list;
+StringsBuffer norm_fonts, bold_fonts;
 static void Font_Init(void);
 
 #define DPI_PIXEL  72
 #define DPI_DEVICE 96 /* TODO: GetDeviceCaps(hdc, LOGPIXELSY) */
 
-static Int32 Font_Find(const String* name) {
+static Int32 Font_Find(const String* name, StringsBuffer* entries) {
 	Int32 i;
-	for (i = 1; i < fonts_list.Count; i += 2) {
-		String faceName = StringsBuffer_UNSAFE_Get(&fonts_list, i);
+	for (i = 1; i < entries->Count; i += 2) {
+		String faceName = StringsBuffer_UNSAFE_Get(entries, i);
 		if (String_CaselessEquals(&faceName, name)) return i;
 	}
 	return -1;
 }
 
 void Font_GetNames(StringsBuffer* buffer) {
-	if (!fonts_list.Count) Font_Init();
+	if (!norm_fonts.Count) Font_Init();
 
 	Int32 i;
-	for (i = 1; i < fonts_list.Count; i += 2) {
-		String faceName = StringsBuffer_UNSAFE_Get(&fonts_list, i);
+	for (i = 1; i < norm_fonts.Count; i += 2) {
+		String faceName = StringsBuffer_UNSAFE_Get(&norm_fonts, i);
 		StringsBuffer_Add(buffer, &faceName);
 	}
 }
@@ -721,14 +721,21 @@ void Font_GetNames(StringsBuffer* buffer) {
 void Font_Make(FontDesc* desc, const String* fontName, UInt16 size, UInt16 style) {
 	desc->Size  = size;
 	desc->Style = style;
-	
-	if (!fonts_list.Count) Font_Init();
-	Int32 idx = Font_Find(fontName);
+	if (!norm_fonts.Count) Font_Init();
+
+	Int32 idx = -1;
+	StringsBuffer* entries = &bold_fonts;
+	if (style & FONT_STYLE_BOLD) { idx = Font_Find(fontName, entries); }
+
+	if (idx == -1) {
+		entries = &norm_fonts;
+		idx = Font_Find(fontName, entries); 
+	}
 	if (idx == -1) ErrorHandler_Fail("Unknown font");
 	
 	char pathBuffer[FILENAME_SIZE + 1];
 	String path = String_NT_Array(pathBuffer);
-	StringsBuffer_Get(&fonts_list, idx - 1, &path);
+	StringsBuffer_Get(entries, idx - 1, &path);
 	path.buffer[path.length] = '\0';
 
 	FT_Face face;
@@ -752,6 +759,24 @@ void Font_Free(FontDesc* desc) {
 	desc->Handle = NULL;
 }
 
+static void Font_Add(String* path, FT_Face face, StringsBuffer* entries, const char* defStyle) {
+	if (!face->family_name || !(face->face_flags & FT_FACE_FLAG_SCALABLE)) return;
+	StringsBuffer_Add(entries, path);
+	path->length = 0;
+
+	String_AppendConst(path, face->family_name);
+	/* don't want 'Arial Regular' or 'Arial Bold' */
+	if (face->style_name) {
+		String style = String_FromReadonly(face->style_name);
+		if (!String_CaselessEqualsConst(&style, defStyle)) {
+			String_Format1(path, " %c", face->style_name);
+		}
+	}
+
+	Platform_Log1("Face: %s", path);
+	StringsBuffer_Add(entries, path);
+}
+
 static void Font_DirCallback(const String* srcPath, void* obj) {
 	char pathBuffer[FILENAME_SIZE + 1];
 	String path = String_NT_Array(pathBuffer);
@@ -762,22 +787,10 @@ static void Font_DirCallback(const String* srcPath, void* obj) {
 	FT_Error error = FT_New_Face(lib, path.buffer, 0, &face);
 	if (error) return;
 
-	bool styled = (face->style_flags & FT_STYLE_FLAG_BOLD) || (face->style_flags & FT_STYLE_FLAG_ITALIC);
-	if (!styled && face->family_name && (face->face_flags & FT_FACE_FLAG_SCALABLE)) {
-		StringsBuffer_Add(&fonts_list, &path);
-		path.length = 0;
-
-		String_AppendConst(&path, face->family_name);
-		/* don't want 'Arial Regular' */
-		if (face->style_name) {
-			String style = String_FromReadonly(face->style_name);
-			if (!String_CaselessEqualsConst(&style, "Regular")) {
-				String_Format1(&path, " %c", face->style_name);
-			}
-		}
-
-		Platform_Log1("Face: %s", &path);
-		StringsBuffer_Add(&fonts_list, &path);
+	if (face->style_flags == FT_STYLE_FLAG_BOLD) {
+		Font_Add(&path, face, &bold_fonts, "Bold");
+	} else if (face->style_flags == 0) {
+		Font_Add(&path, face, &norm_fonts, "Regular");
 	}
 	FT_Done_Face(face);
 }
