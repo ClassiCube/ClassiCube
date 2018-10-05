@@ -140,7 +140,7 @@ static void ButtonWidget_Render(void* widget, double delta) {
 		GfxCommon_Draw2DTexture(&back, white);
 	}
 	
-	PackedCol normCol     = PACKEDCOL_CONST(224, 224, 244, 255);
+	PackedCol normCol     = PACKEDCOL_CONST(224, 224, 224, 255);
 	PackedCol activeCol   = PACKEDCOL_CONST(255, 255, 160, 255);
 	PackedCol disabledCol = PACKEDCOL_CONST(160, 160, 160, 255);
 
