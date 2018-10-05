@@ -21,11 +21,9 @@
 
 #include "afangles.c"
 #include "afblue.c"
-#include "afcjk.c"
 #include "afdummy.c"
 #include "afglobal.c"
 #include "afhints.c"
-#include "afindic.c"
 #include "aflatin.c"
 #include "aflatin2.c"
 #include "afloader.c"
