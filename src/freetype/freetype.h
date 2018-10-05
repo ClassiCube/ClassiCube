@@ -1954,61 +1954,6 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Init_FreeType                                                   */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Initialize a new FreeType library object.  The set of modules      */
-  /*    that are registered by this function is determined at build time.  */
-  /*                                                                       */
-  /* <Output>                                                              */
-  /*    alibrary :: A handle to a new library object.                      */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0~means success.                             */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    In case you want to provide your own memory allocating routines,   */
-  /*    use @FT_New_Library instead, followed by a call to                 */
-  /*    @FT_Add_Default_Modules (or a series of calls to @FT_Add_Module)   */
-  /*    and @FT_Set_Default_Properties.                                    */
-  /*                                                                       */
-  /*    See the documentation of @FT_Library and @FT_Face for              */
-  /*    multi-threading issues.                                            */
-  /*                                                                       */
-  /*    If you need reference-counting (cf. @FT_Reference_Library), use    */
-  /*    @FT_New_Library and @FT_Done_Library.                              */
-  /*                                                                       */
-  /*    If compilation option FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES is   */
-  /*    set, this function reads the `FREETYPE_PROPERTIES' environment     */
-  /*    variable to control driver properties.  See section @properties    */
-  /*    for more.                                                          */
-  /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FT_Init_FreeType( FT_Library  *alibrary );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Done_FreeType                                                   */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Destroy a given FreeType library object and all of its children,   */
-  /*    including resources, drivers, faces, sizes, etc.                   */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    library :: A handle to the target library object.                  */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0~means success.                             */
-  /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FT_Done_FreeType( FT_Library  library );
-
-
-  /*************************************************************************/
-  /*                                                                       */
   /* <Enum>                                                                */
   /*    FT_OPEN_XXX                                                        */
   /*                                                                       */

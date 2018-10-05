@@ -105,7 +105,7 @@ FT_BEGIN_HEADER
   /*                       cff:no-stem-darkening=1 \                       */
   /*                       autofitter:warping=1                            */
   /*                                                                       */
-#define FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
+#undef FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
 
 
   /*************************************************************************/
@@ -371,24 +371,6 @@ FT_BEGIN_HEADER
   /*   them for certain configurations only.                               */
   /*                                                                       */
 /* #define FT_DEBUG_AUTOFIT */
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* Memory Debugging                                                      */
-  /*                                                                       */
-  /*   FreeType now comes with an integrated memory debugger that is       */
-  /*   capable of detecting simple errors like memory leaks or double      */
-  /*   deletes.  To compile it within your build of the library, you       */
-  /*   should define FT_DEBUG_MEMORY here.                                 */
-  /*                                                                       */
-  /*   Note that the memory debugger is only activated at runtime when     */
-  /*   when the _environment_ variable `FT2_DEBUG_MEMORY' is defined also! */
-  /*                                                                       */
-  /*   Do not #undef this macro here since the build system might define   */
-  /*   it for certain configurations only.                                 */
-  /*                                                                       */
-/* #define FT_DEBUG_MEMORY */
 
 
   /*************************************************************************/

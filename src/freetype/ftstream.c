@@ -218,13 +218,7 @@
     if ( stream && stream->read )
     {
       FT_Memory  memory = stream->memory;
-
-#ifdef FT_DEBUG_MEMORY
-      ft_mem_free( memory, *pbytes );
-      *pbytes = NULL;
-#else
       FT_FREE( *pbytes );
-#endif
     }
     *pbytes = NULL;
   }
@@ -258,17 +252,9 @@
         goto Exit;
       }
 
-#ifdef FT_DEBUG_MEMORY
-      /* assume _ft_debug_file and _ft_debug_lineno are already set */
-      stream->base = (unsigned char*)ft_mem_qalloc( memory,
-                                                    (FT_Long)count,
-                                                    &error );
-      if ( error )
-        goto Exit;
-#else
       if ( FT_QALLOC( stream->base, count ) )
         goto Exit;
-#endif
+
       /* read it */
       read_bytes = stream->read( stream, stream->pos,
                                  stream->base, count );
@@ -327,13 +313,7 @@
     if ( stream->read )
     {
       FT_Memory  memory = stream->memory;
-
-#ifdef FT_DEBUG_MEMORY
-      ft_mem_free( memory, stream->base );
-      stream->base = NULL;
-#else
       FT_FREE( stream->base );
-#endif
     }
     stream->cursor = NULL;
     stream->limit  = NULL;

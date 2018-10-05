@@ -922,39 +922,6 @@ FT_BEGIN_HEADER
                                     FT_String*  glyph_name );
 
 
-#ifndef FT_CONFIG_OPTION_NO_DEFAULT_SYSTEM
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_New_Memory                                                      */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Creates a new memory object.                                       */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    A pointer to the new memory object.  0 in case of error.           */
-  /*                                                                       */
-  FT_BASE( FT_Memory )
-  FT_New_Memory( void );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Done_Memory                                                     */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Discards memory manager.                                           */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    memory :: A handle to the memory manager.                          */
-  /*                                                                       */
-  FT_BASE( void )
-  FT_Done_Memory( FT_Memory  memory );
-
-#endif /* !FT_CONFIG_OPTION_NO_DEFAULT_SYSTEM */
-
 
   /* Define default raster's interface.  The default raster is located in  */
   /* `src/base/ftraster.c'.                                                */

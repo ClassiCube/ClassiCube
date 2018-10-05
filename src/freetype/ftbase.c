@@ -21,7 +21,6 @@
 
 #include "ftadvanc.c"
 #include "ftcalc.c"
-#include "ftdbgmem.c"
 #include "ftfntfmt.c"
 #include "ftgloadr.c"
 #include "fthash.c"

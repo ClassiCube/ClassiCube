@@ -11,6 +11,8 @@
 
 #include "freetype/ft2build.h"
 #include "freetype/freetype.h"
+#include "freetype/ftsnames.h"
+#include "freetype/ftmodapi.h"
 
 #if CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
@@ -691,7 +693,6 @@ void Waitable_WaitFor(void* handle, UInt32 milliseconds) {
 /*########################################################################################################################*
 *--------------------------------------------------------Font/Text--------------------------------------------------------*
 *#########################################################################################################################*/
-#include "freetype\ftsnames.h"
 FT_Library lib;
 StringsBuffer norm_fonts, bold_fonts;
 static void Font_Init(void);
@@ -852,14 +853,38 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, Int32 x, Int32 
 	s.Width = x - s.Width; return s;
 }
 
-#if CC_BUILD_WIN
+struct FT_MemoryRec_ ft_mem;
+static void* FT_AllocWrapper(FT_Memory memory, long size) {
+	return Mem_Alloc(size, 1, "Freetype data");
+}
+
+static void FT_FreeWrapper(FT_Memory memory, void* block) {
+	Mem_Free(block);
+}
+
+static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, void* block) {
+	return Mem_Realloc(block, new_size, 1, "Freetype data");
+}
+
 static void Font_Init(void) {
-	FT_Error err = FT_Init_FreeType(&lib);
+	ft_mem.alloc   = FT_AllocWrapper;
+	ft_mem.free    = FT_FreeWrapper;
+	ft_mem.realloc = FT_ReallocWrapper;
+
+	FT_Error err = FT_New_Library(&ft_mem, &lib);
+	if (err) ErrorHandler_Fail2(err, "Failed to init freetype");
+
+	FT_Add_Default_Modules(lib);
+	FT_Set_Default_Properties(lib);
+
+#if CC_BUILD_WIN
 	String dir   = String_FromConst("C:\\Windows\\fonts");
+#elif CC_BUILD_NIX
+	String dir   = String_FromConst("usr/share/fonts");
+#endif
 	Directory_Enum(&dir, NULL, Font_DirCallback);
 }
-#elif CC_BUILD_NIX
-#endif
+
 
 
 /*########################################################################################################################*
