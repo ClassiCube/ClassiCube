@@ -825,7 +825,7 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, Int32 x, Int32 
 
 		FT_Bitmap* img = &face->glyph->bitmap;
 		Int32 xx, yy, offset = s.Height + descender - face->glyph->bitmap_top;
-		y += offset;
+		x += face->glyph->bitmap_left; y += offset;
 
 		for (yy = 0; yy < img->rows; yy++) {
 			if ((y + yy) < 0 || (y + yy) >= bmp->Height) continue;
@@ -846,7 +846,7 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, Int32 x, Int32 
 		}
 
 		x += TEXT_CEIL(face->glyph->advance.x);
-		y -= offset;
+		x -= face->glyph->bitmap_left; y -= offset;
 	}
 
 	s.Width = x - s.Width; return s;
