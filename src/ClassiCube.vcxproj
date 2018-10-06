@@ -323,10 +323,8 @@
     <ClCompile Include="freetype\ftfstype.c" />
     <ClCompile Include="freetype\ftgasp.c" />
     <ClCompile Include="freetype\ftglyph.c" />
-    <ClCompile Include="freetype\ftgxval.c" />
     <ClCompile Include="freetype\ftinit.c" />
     <ClCompile Include="freetype\ftmm.c" />
-    <ClCompile Include="freetype\ftotval.c" />
     <ClCompile Include="freetype\ftpfr.c" />
     <ClCompile Include="freetype\ftstroke.c" />
     <ClCompile Include="freetype\ftsynth.c" />

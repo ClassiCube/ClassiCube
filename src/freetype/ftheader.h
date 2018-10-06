@@ -541,34 +541,6 @@
   /*************************************************************************
    *
    * @macro:
-   *   FT_OPENTYPE_VALIDATE_H
-   *
-   * @description:
-   *   A macro used in #include statements to name the file containing the
-   *   optional FreeType~2 API which validates OpenType tables (BASE, GDEF,
-   *   GPOS, GSUB, JSTF).
-   *
-   */
-#define FT_OPENTYPE_VALIDATE_H  "ftotval.h"
-
-
-  /*************************************************************************
-   *
-   * @macro:
-   *   FT_GX_VALIDATE_H
-   *
-   * @description:
-   *   A macro used in #include statements to name the file containing the
-   *   optional FreeType~2 API which validates TrueTypeGX/AAT tables (feat,
-   *   mort, morx, bsln, just, kern, opbd, trak, prop).
-   *
-   */
-#define FT_GX_VALIDATE_H  "ftgxval.h"
-
-
-  /*************************************************************************
-   *
-   * @macro:
    *   FT_PFR_H
    *
    * @description:

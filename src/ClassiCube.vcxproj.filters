@@ -521,16 +521,10 @@
     <ClCompile Include="freetype\ftglyph.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftgxval.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="freetype\ftinit.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="freetype\ftmm.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="freetype\ftotval.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="freetype\ftpfr.c">
