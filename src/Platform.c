@@ -33,7 +33,6 @@
 #define Socket__Error() WSAGetLastError()
 #define Win_Return(success) ((success) ? 0 : GetLastError())
 
-HDC hdc;
 HANDLE heap;
 char* Platform_NewLine = "\r\n";
 char Directory_Separator = '\\';
@@ -702,7 +701,7 @@ StringsBuffer norm_fonts, bold_fonts;
 static void Font_Init(void);
 
 #define DPI_PIXEL  72
-#define DPI_DEVICE 96 /* TODO: GetDeviceCaps(hdc, LOGPIXELSY) */
+#define DPI_DEVICE 96 /* TODO: GetDeviceCaps(hdc, LOGPIXELSY) in Platform_InitDisplay ? */
 
 static Int32 Font_Find(const String* name, StringsBuffer* entries) {
 	Int32 i;
@@ -1602,12 +1601,6 @@ static void Platform_InitDisplay(void) {
 void Platform_Init(void) {
 	Platform_InitDisplay();
 	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */
-	hdc = CreateCompatibleDC(NULL);
-	if (!hdc) ErrorHandler_Fail("Failed to get screen DC");
-
-	SetTextColor(hdc, 0x00FFFFFF);
-	SetBkColor(hdc, 0x00000000);
-	SetBkMode(hdc, OPAQUE);
 
 	LARGE_INTEGER freq;
 	sw_highRes = QueryPerformanceFrequency(&freq);
@@ -1622,7 +1615,6 @@ void Platform_Init(void) {
 }
 
 void Platform_Free(void) {
-	DeleteDC(hdc);
 	WSACleanup();
 	HeapDestroy(heap);
 }
