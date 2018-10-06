@@ -23,12 +23,6 @@
 #include "ft2build.h"
 #include FT_FREETYPE_H
 
-#ifdef FREETYPE_H
-#error "freetype.h of FreeType 1 has been loaded!"
-#error "Please fix the directory search order for header files"
-#error "so that freetype.h of FreeType 2 is found first."
-#endif
-
 
 FT_BEGIN_HEADER
 
@@ -121,17 +115,6 @@ FT_BEGIN_HEADER
 #define FT_MODULE_DRIVER_HINTS_LIGHTLY 0x800  /* the driver's hinter      */
                                               /* produces LIGHT hints     */
 
-
-  /* deprecated values */
-#define ft_module_font_driver         FT_MODULE_FONT_DRIVER
-#define ft_module_renderer            FT_MODULE_RENDERER
-#define ft_module_hinter              FT_MODULE_HINTER
-#define ft_module_styler              FT_MODULE_STYLER
-
-#define ft_module_driver_scalable       FT_MODULE_DRIVER_SCALABLE
-#define ft_module_driver_no_outlines    FT_MODULE_DRIVER_NO_OUTLINES
-#define ft_module_driver_has_hinter     FT_MODULE_DRIVER_HAS_HINTER
-#define ft_module_driver_hints_lightly  FT_MODULE_DRIVER_HINTS_LIGHTLY
 
 
   typedef FT_Pointer  FT_Module_Interface;

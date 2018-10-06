@@ -440,6 +440,9 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	String path = String_FromArray(pathBuffer);
 	struct dirent* entry;
 
+	/* POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed." */
+	/* errno is sometimes leftover from previous calls, so always reset it before readdir gets called */
+	errno = 0;
 	while (entry = readdir(dirPtr)) {
 		path.length = 0;
 		String_Format2(&path, "%s%r", dirPath, &Directory_Separator);
@@ -459,6 +462,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 		} else {
 			callback(&path, obj);
 		}
+		errno = 0;
 	}
 
 	res = errno; /* return code from readdir */
@@ -889,7 +893,7 @@ static void Font_Init(void) {
 #if CC_BUILD_WIN
 	String dir   = String_FromConst("C:\\Windows\\fonts");
 #elif CC_BUILD_NIX
-	String dir   = String_FromConst("usr/share/fonts");
+	String dir   = String_FromConst("/usr/share/fonts");
 #endif
 	Directory_Enum(&dir, NULL, Font_DirCallback);
 }
