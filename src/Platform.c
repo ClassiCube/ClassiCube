@@ -850,7 +850,16 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, Int32 x, Int32 
 		x -= face->glyph->bitmap_left; y -= offset;
 	}
 
-	s.Width = x - s.Width; return s;
+	Int32 begX = s.Width;
+	if (args->Font.Style == FONT_STYLE_UNDERLINE) {
+		Int32 ul_pos   = FT_MulFix(face->underline_position,  face->size->metrics.y_scale);
+		Int32 ul_thick = FT_MulFix(face->underline_thickness, face->size->metrics.y_scale);
+
+		Int32 ulHeight = TEXT_CEIL(ul_thick);
+		Int32 ulY      = s.Height + TEXT_CEIL(ul_pos);
+		Drawer2D_Underline(bmp, begX, ulY + y, x - begX, ulHeight, col);
+	}
+	s.Width = x - begX; return s;
 }
 
 struct FT_MemoryRec_ ft_mem;

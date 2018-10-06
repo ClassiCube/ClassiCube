@@ -29,6 +29,7 @@ void Drawer2D_Rect(Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, In
 /* Clears the entire given area to the specified colour. */
 void Drawer2D_Clear(Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
 
+void Drawer2D_Underline(Bitmap* bmp, Int32 x, Int32 y, Int32 width, Int32 height, PackedCol col);
 void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, Int32 x, Int32 y);
 Size2D Drawer2D_MeasureText(struct DrawTextArgs* args);
 Int32 Drawer2D_FontHeight(FontDesc* font, bool useShadow);
