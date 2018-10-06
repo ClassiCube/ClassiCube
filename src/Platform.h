@@ -9,7 +9,7 @@ struct DrawTextArgs;
 struct AsyncRequest;
 
 enum SOCKET_SELECT { SOCKET_SELECT_READ, SOCKET_SELECT_WRITE };
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 typedef UIntPtr SocketPtr;
 #else
 typedef Int32 SocketPtr;

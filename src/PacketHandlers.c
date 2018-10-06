@@ -1459,7 +1459,7 @@ static void BlockDefs_DefineBlockExt(UInt8* data) {
 	BlockDefs_DefineBlockCommonEnd(data, 1, block);
 }
 
-#if FALSE
+#if 0
 void HandleDefineModel(UInt8* data) {
 	int start = reader.index - 1;
 	UInt8 id   = *data++;

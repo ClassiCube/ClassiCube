@@ -93,7 +93,7 @@ void GfxCommon_Draw2DTexture(struct Texture* tex, PackedCol col) {
 void GfxCommon_Make2DQuad(struct Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices) {
 	float x1 = (float)tex->X, x2 = (float)(tex->X + tex->Width);
 	float y1 = (float)tex->Y, y2 = (float)(tex->Y + tex->Height);
-#if CC_BUILD_D3D9
+#ifdef CC_BUILD_D3D9
 	/* NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx", */
 	/* i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why we have to do this. */
 	x1 -= 0.5f; x2 -= 0.5f;

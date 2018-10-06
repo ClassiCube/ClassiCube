@@ -1,5 +1,5 @@
 #include "Window.h"
-#if CC_BUILD_NIX
+#ifdef CC_BUILD_NIX
 #include "DisplayDevice.h"
 #include "ErrorHandler.h"
 #include "Input.h"

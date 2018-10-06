@@ -1,5 +1,5 @@
 #include "Window.h"
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 #include "Platform.h"
 #include "Input.h"
 #include "Event.h"
@@ -630,7 +630,7 @@ void Window_SetCursorVisible(bool visible) {
 	ShowCursor(visible ? 1 : 0);
 }
 
-#if !CC_BUILD_D3D9
+#ifndef CC_BUILD_D3D9
 
 void GLContext_SelectGraphicsMode(struct GraphicsMode mode) {
 	struct ColorFormat color = mode.Format;

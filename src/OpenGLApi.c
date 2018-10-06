@@ -1,5 +1,5 @@
 #include "GraphicsAPI.h"
-#if !CC_BUILD_D3D9
+#ifndef CC_BUILD_D3D9
 #include "ErrorHandler.h"
 #include "Platform.h"
 #include "Window.h"
@@ -10,7 +10,7 @@
 #include "ExtMath.h"
 #include "Bitmap.h"
 
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
@@ -29,7 +29,7 @@
 #define GL_DYNAMIC_DRAW         0x88E8
 #define GL_BGRA_EXT             0x80E1
 
-#if CC_BUILD_GL11
+#ifdef CC_BUILD_GL11
 GfxResourceID gl_activeList;
 #define gl_DYNAMICLISTID 1234567891
 void* gl_dynamicListData;
@@ -60,7 +60,7 @@ GL_SetupVBFunc gl_setupVBFunc;
 GL_SetupVBRangeFunc gl_setupVBRangeFunc;
 Int32 gl_batchStride, gl_batchFormat = -1;
 
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 static void GL_CheckVboSupport(void) {
 	String extensions = String_FromReadonly(glGetString(GL_EXTENSIONS));
 	String version    = String_FromReadonly(glGetString(GL_VERSION));
@@ -97,7 +97,7 @@ void Gfx_Init(void) {
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx_MaxTexWidth);
 	Gfx_MaxTexHeight = Gfx_MaxTexWidth;
 
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 	Gfx_CustomMipmapsLevels = true;
 	GL_CheckVboSupport();
 #else
@@ -262,7 +262,7 @@ void Gfx_SetDepthTestFunc(Int32 compareFunc) {
 }
 
 
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 GfxResourceID GL_GenAndBind(GLenum target) {
 	GfxResourceID id;
 	glGenBuffers(1, &id);
@@ -272,7 +272,7 @@ GfxResourceID GL_GenAndBind(GLenum target) {
 #endif
 
 GfxResourceID Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices) {
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 	GfxResourceID id = GL_GenAndBind(GL_ARRAY_BUFFER);
 	UInt32 sizeInBytes = maxVertices * Gfx_strideSizes[vertexFormat];
 	glBufferData(GL_ARRAY_BUFFER, (void*)sizeInBytes, NULL, GL_DYNAMIC_DRAW);
@@ -284,7 +284,7 @@ GfxResourceID Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices) {
 
 #define gl_MAXINDICES ICOUNT(65536)
 GfxResourceID Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count) {
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 	GfxResourceID id = GL_GenAndBind(GL_ARRAY_BUFFER);
 	UInt32 sizeInBytes = count * Gfx_strideSizes[vertexFormat];
 	glBufferData(GL_ARRAY_BUFFER, (void*)sizeInBytes, vertices, GL_STATIC_DRAW);
@@ -315,7 +315,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count) {
 }
 
 GfxResourceID Gfx_CreateIb(void* indices, Int32 indicesCount) {
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 	GfxResourceID id = GL_GenAndBind(GL_ELEMENT_ARRAY_BUFFER);
 	UInt32 sizeInBytes = indicesCount * sizeof(UInt16);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (void*)sizeInBytes, indices, GL_STATIC_DRAW);
@@ -326,7 +326,7 @@ GfxResourceID Gfx_CreateIb(void* indices, Int32 indicesCount) {
 }
 
 void Gfx_BindVb(GfxResourceID vb) {
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 	glBindBuffer(GL_ARRAY_BUFFER, vb);
 #else
 	gl_activeList = vb;
@@ -334,7 +334,7 @@ void Gfx_BindVb(GfxResourceID vb) {
 }
 
 void Gfx_BindIb(GfxResourceID ib) {
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 #else
 	return;
@@ -343,7 +343,7 @@ void Gfx_BindIb(GfxResourceID ib) {
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	if (vb == NULL || *vb == NULL) return;
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 	glDeleteBuffers(1, vb);
 #else
 	if (*vb != gl_DYNAMICLISTID) glDeleteLists(*vb, 1);
@@ -352,7 +352,7 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 }
 
 void Gfx_DeleteIb(GfxResourceID* ib) {
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 	if (ib == NULL || *ib == NULL) return;
 	glDeleteBuffers(1, ib);
 	*ib = NULL;
@@ -406,7 +406,7 @@ void Gfx_SetBatchFormat(Int32 vertexFormat) {
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount) {
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 	glBindBuffer(GL_ARRAY_BUFFER, vb);
 	UInt32 sizeInBytes = vCount * gl_batchStride;
 	glBufferSubData(GL_ARRAY_BUFFER, NULL, (void*)sizeInBytes, vertices);
@@ -416,7 +416,7 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount) {
 #endif	
 }
 
-#if CC_BUILD_GL11
+#ifdef CC_BUILD_GL11
 static void GL_V16(VertexP3fC4b v) {
 	glColor4ub(v.Col.R, v.Col.G, v.Col.B, v.Col.A);
 	glVertex3f(v.X, v.Y, v.Z);
@@ -449,7 +449,7 @@ static void GL_DrawDynamicTriangles(Int32 verticesCount, Int32 startVertex) {
 #endif
 
 void Gfx_DrawVb_Lines(Int32 verticesCount) {
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 	gl_setupVBFunc();
 	glDrawArrays(GL_LINES, 0, verticesCount);
 #else
@@ -467,7 +467,7 @@ void Gfx_DrawVb_Lines(Int32 verticesCount) {
 }
 
 void Gfx_DrawVb_IndexedTris_Range(Int32 verticesCount, Int32 startVertex) {
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 	gl_setupVBRangeFunc(startVertex);
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
 #else
@@ -477,7 +477,7 @@ void Gfx_DrawVb_IndexedTris_Range(Int32 verticesCount, Int32 startVertex) {
 }
 
 void Gfx_DrawVb_IndexedTris(Int32 verticesCount) {
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 	gl_setupVBFunc();
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
 #else
@@ -489,7 +489,7 @@ void Gfx_DrawVb_IndexedTris(Int32 verticesCount) {
 GfxResourceID gl_lastPartialList;
 void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex) {
 	
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 	UInt32 offset = startVertex * (UInt32)sizeof(VertexP3fT2fC4b);
 	glVertexPointer(3, GL_FLOAT,          sizeof(VertexP3fT2fC4b), (void*)(offset));
 	glColorPointer(4, GL_UNSIGNED_BYTE,   sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
@@ -579,7 +579,7 @@ void Gfx_UpdateApiInfo(void) {
 }
 
 bool Gfx_WarnIfNecessary(void) {
-#if CC_BUILD_GL11
+#ifdef CC_BUILD_GL11
 	Chat_AddRaw("&cYou are using the very outdated OpenGL backend.");
 	Chat_AddRaw("&cAs such you may experience poor performance.");
 	Chat_AddRaw("&cIt is likely you need to install video card drivers.");
@@ -605,7 +605,7 @@ void Gfx_SetVSync(bool value) {
 void Gfx_BeginFrame(void) { }
 void Gfx_EndFrame(void) {
 	GLContext_SwapBuffers();
-#if CC_BUILD_GL11
+#ifdef CC_BUILD_GL11
 	gl_activeList = NULL;
 #endif
 }

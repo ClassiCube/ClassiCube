@@ -74,7 +74,7 @@ static bool InputHandler_IsShutdown(Key key) {
 	if (key == Key_F4 && Key_IsAltPressed()) return true;
 
 	/* On OSX, Cmd+Q should also terminate the process. */
-#if CC_BUILD_OSX
+#ifdef CC_BUILD_OSX
 	return key == Key_Q && Key_IsWinPressed();
 #else
 	return false;

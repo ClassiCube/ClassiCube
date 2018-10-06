@@ -107,7 +107,6 @@
 #define ft_fread    fread
 #define ft_fseek    fseek
 #define ft_ftell    ftell
-#define ft_sprintf  sprintf
 
 
   /**********************************************************************/

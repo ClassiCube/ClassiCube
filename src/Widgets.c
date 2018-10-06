@@ -858,7 +858,7 @@ void TableWidget_OnInventoryChanged(struct TableWidget* w) {
 *-------------------------------------------------------InputWidget-------------------------------------------------------*
 *#########################################################################################################################*/
 static bool InputWidget_ControlDown(void) {
-#if CC_BUILD_OSX
+#ifdef CC_BUILD_OSX
 	return Key_IsWinPressed();
 #else
 	return Key_IsControlPressed();
@@ -954,8 +954,8 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 	w->CaretTex.Y = w->LineSizes[0].Height * w->CaretY + w->InputTex.Y + 2;
 
 	/* Update the colour of the w->CaretPos */
-	char code = InputWidget_GetLastCol(w, w->CaretX, w->CaretY);
-	if (code) w->CaretCol = Drawer2D_Cols[(UInt8)code];
+	char colCode = InputWidget_GetLastCol(w, w->CaretX, w->CaretY);
+	if (colCode) w->CaretCol = Drawer2D_GetCol(colCode);
 }
 
 static void InputWidget_RenderCaret(struct InputWidget* w, double delta) {
@@ -2564,10 +2564,7 @@ void TextGroupWidget_Create(struct TextGroupWidget* w, Int32 linesCount, FontDes
 *---------------------------------------------------SpecialInputWidget----------------------------------------------------*
 *#########################################################################################################################*/
 static void SpecialInputWidget_UpdateColString(struct SpecialInputWidget* w) {
-	UInt32 i;
-	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
-		if (i >= 'A' && i <= 'F') continue;
-	}
+	Int32 i;
 	String buffer = String_FromArray(w->__ColBuffer);
 
 	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {

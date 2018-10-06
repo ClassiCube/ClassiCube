@@ -13,7 +13,7 @@
 #include "freetype/freetype.h"
 #include "freetype/ftmodapi.h"
 
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
@@ -42,7 +42,8 @@ ReturnCode ReturnCode_NotSupported = ERROR_NOT_SUPPORTED;
 ReturnCode ReturnCode_InvalidArg = ERROR_INVALID_PARAMETER;
 ReturnCode ReturnCode_SocketInProgess = WSAEINPROGRESS;
 ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
-#elif CC_BUILD_NIX
+#endif
+#ifdef CC_BUILD_NIX
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -61,7 +62,7 @@ ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <curl/curl.h>
 #include <AL/al.h>
 #include <AL/alc.h>
-#if CC_BUILD_SOLARIS
+#ifdef CC_BUILD_SOLARIS
 #include <sys/filio.h>
 #endif
 
@@ -96,7 +97,7 @@ NOINLINE_ static void Platform_AllocFailed(const char* place) {
 	ErrorHandler_Fail(log.buffer);
 }
 
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const char* place) {
 	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	void* ptr = HeapAlloc(heap, 0, numBytes);
@@ -121,7 +122,8 @@ void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const char* plac
 void Mem_Free(void* mem) {
 	if (mem) HeapFree(heap, 0, mem);
 }
-#elif CC_BUILD_NIX
+#endif
+#ifdef CC_BUILD_NIX
 void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const char* place) {
 	void* ptr = malloc(numElems * elemsSize); /* TODO: avoid overflow here */
 	if (!ptr) Platform_AllocFailed(place);
@@ -183,7 +185,7 @@ Int32 Stopwatch_ElapsedMicroseconds(UInt64* timer) {
 	return (Int32)delta;
 }
 
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 void Platform_Log(const String* message) {
 	/* TODO: log to console */
 	OutputDebugStringA(message->buffer);
@@ -233,7 +235,8 @@ void Stopwatch_Measure(UInt64* timer) {
 		*timer = (UInt64)ft.dwLowDateTime | ((UInt64)ft.dwHighDateTime << 32);
 	}
 }
-#elif CC_BUILD_NIX
+#endif
+#ifdef CC_BUILD_NIX
 void Platform_Log(const String* message) {
 	write(STDOUT_FILENO, message->buffer, message->length);
 	write(STDOUT_FILENO, "\n",            1);
@@ -287,7 +290,7 @@ void Stopwatch_Measure(UInt64* timer) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 bool Directory_Exists(const String* path) {
 	WCHAR str[300]; Platform_ConvertString(str, path);
 	DWORD attribs = GetFileAttributesW(str);
@@ -408,7 +411,8 @@ ReturnCode File_Length(void* file, UInt32* length) {
 	*length = GetFileSize(file, NULL);
 	return Win_Return(*length != INVALID_FILE_SIZE);
 }
-#elif CC_BUILD_NIX
+#endif
+#ifdef CC_BUILD_NIX
 bool Directory_Exists(const String* path) {
 	char str[600]; Platform_ConvertString(str, path);
 	struct stat sb;
@@ -530,7 +534,7 @@ ReturnCode File_Length(void* file, UInt32* length) {
 /*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 void Thread_Sleep(UInt32 milliseconds) { Sleep(milliseconds); }
 DWORD WINAPI Thread_StartCallback(void* param) {
 	Thread_StartFunc* func = (Thread_StartFunc*)param;
@@ -594,7 +598,8 @@ void Waitable_Wait(void* handle) {
 void Waitable_WaitFor(void* handle, UInt32 milliseconds) {
 	WaitForSingleObject((HANDLE)handle, milliseconds);
 }
-#elif CC_BUILD_NIX
+#endif
+#ifdef CC_BUILD_NIX
 void Thread_Sleep(UInt32 milliseconds) { usleep(milliseconds * 1000); }
 void* Thread_StartCallback(void* lpParam) {
 	Thread_StartFunc* func = (Thread_StartFunc*)lpParam;
@@ -888,9 +893,10 @@ static void Font_Init(void) {
 	FT_Add_Default_Modules(lib);
 	FT_Set_Default_Properties(lib);
 
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 	String dir   = String_FromConst("C:\\Windows\\fonts");
-#elif CC_BUILD_NIX
+#endif
+#ifdef CC_BUILD_NIX
 	String dir   = String_FromConst("/usr/share/fonts");
 #endif
 	Directory_Enum(&dir, NULL, Font_DirCallback);
@@ -909,7 +915,7 @@ void Socket_Create(SocketPtr* socketResult) {
 }
 
 static ReturnCode Socket_ioctl(SocketPtr socket, UInt32 cmd, Int32* data) {
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 	return ioctlsocket(socket, cmd, data);
 #else
 	return ioctl(socket, cmd, data);
@@ -954,14 +960,14 @@ ReturnCode Socket_Write(SocketPtr socket, UInt8* buffer, UInt32 count, UInt32* m
 
 ReturnCode Socket_Close(SocketPtr socket) {
 	ReturnCode result = 0;
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 	ReturnCode result1 = shutdown(socket, SD_BOTH);
 #else
 	ReturnCode result1 = shutdown(socket, SHUT_RDWR);
 #endif
 	if (result1 == -1) result = Socket__Error();
 
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 	ReturnCode result2 = closesocket(socket);
 #else
 	ReturnCode result2 = close(socket);
@@ -978,7 +984,7 @@ ReturnCode Socket_Select(SocketPtr socket, Int32 selectMode, bool* success) {
 	struct timeval time = { 0 };
 	Int32 selectCount = -1;
 
-	#if CC_BUILD_WIN
+	#ifdef CC_BUILD_WIN
 	int nfds = 1;
 	#else
 	int nfds = socket + 1;
@@ -991,7 +997,7 @@ ReturnCode Socket_Select(SocketPtr socket, Int32 selectMode, bool* success) {
 	}
 
 	if (selectCount == -1) { *success = false; return Socket__Error(); }
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 	*success = set.fd_count != 0; return 0;
 #else
 	*success = FD_ISSET(socket, &set); return 0;
@@ -1002,7 +1008,7 @@ ReturnCode Socket_Select(SocketPtr socket, Int32 selectMode, bool* success) {
 /*########################################################################################################################*
 *----------------------------------------------------------Http-----------------------------------------------------------*
 *#########################################################################################################################*/
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 HINTERNET hInternet;
 /* TODO: Test last modified and etag even work */
 #define FLAG_STATUS  HTTP_QUERY_STATUS_CODE    | HTTP_QUERY_FLAG_NUMBER
@@ -1118,7 +1124,8 @@ ReturnCode Http_Do(struct AsyncRequest* req, volatile Int32* progress) {
 }
 
 ReturnCode Http_Free(void) { return Win_Return(InternetCloseHandle(hInternet)); }
-#elif CC_BUILD_NIX
+#endif
+#ifdef CC_BUILD_NIX
 CURL* curl;
 
 void Http_Init(void) {
@@ -1248,7 +1255,7 @@ ReturnCode Http_Free(void) {
 *----------------------------------------------------------Audio----------------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode Audio_AllCompleted(AudioHandle handle, bool* finished);
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 struct AudioContext {
 	HWAVEOUT Handle;
 	WAVEHDR Headers[AUDIO_MAX_CHUNKS];
@@ -1346,7 +1353,8 @@ ReturnCode Audio_IsCompleted(AudioHandle handle, Int32 idx, bool* completed) {
 }
 
 ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) { return Audio_AllCompleted(handle, finished); }
-#elif CC_BUILD_NIX
+#endif
+#ifdef CC_BUILD_NIX
 struct AudioContext {
 	ALuint Source;
 	ALuint Buffers[AUDIO_MAX_CHUNKS];
@@ -1573,7 +1581,7 @@ ReturnCode Audio_StopAndFree(AudioHandle handle) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 void Platform_ConvertString(void* dstPtr, const String* src) {
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
 	WCHAR* dst = dstPtr;
@@ -1678,7 +1686,8 @@ Int32 Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String
 	}
 	return count;
 }
-#elif CC_BUILD_NIX
+#endif
+#ifdef CC_BUILD_NIX
 void Platform_ConvertString(void* dstPtr, const String* src) {
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
 	UInt8* dst = dstPtr;

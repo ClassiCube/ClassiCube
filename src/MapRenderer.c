@@ -48,7 +48,7 @@ static void MapRenderer_RenderNormalBatch(UInt32 batch) {
 		if (part.Offset < 0) continue;
 		MapRenderer_HasNormalParts[batch] = true;
 
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 		Gfx_BindVb(info->Vb);
 #else
 		Gfx_BindVb(part.Vb);
@@ -162,7 +162,7 @@ static void MapRenderer_RenderTranslucentBatch(UInt32 batch) {
 		if (part.Offset < 0) continue;
 		MapRenderer_HasTranslucentParts[batch] = true;
 
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 		Gfx_BindVb(info->Vb);
 #else
 		Gfx_BindVb(part.Vb);

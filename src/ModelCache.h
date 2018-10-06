@@ -9,7 +9,7 @@ struct Model;
 
 struct CachedModel { struct Model* Instance; String Name;  };
 struct CachedTexture { UInt8 SkinType; GfxResourceID TexID; String Name; };
-#if FALSE
+#if 0
 public CustomModel[] CustomModels = new CustomModel[256];
 #endif
 

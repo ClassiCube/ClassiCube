@@ -68,7 +68,7 @@ void Window_SetDesktopCursorPos(Int32 x, Int32 y);
 bool Window_GetCursorVisible(void);
 void Window_SetCursorVisible(bool visible);
 
-#if !CC_BUILD_D3D9
+#ifndef CC_BUILD_D3D9
 void GLContext_Init(struct GraphicsMode mode);
 void GLContext_Update(void);
 void GLContext_Free(void);

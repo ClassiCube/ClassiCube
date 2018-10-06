@@ -101,7 +101,7 @@ static void Builder_SetPartInfo(struct Builder1DPart* part, Int32* offset, struc
 	*offset += vCount;
 	*hasParts = true;
 
-#if CC_BUILD_GL11
+#ifdef CC_BUILD_GL11
 	info->Vb = Gfx_CreateVb(&Builder_Vertices[info->Offset], VERTEX_FORMAT_P3FT2FC4B, vCount);
 #endif
 
@@ -119,10 +119,10 @@ static void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 	Int32 xMax = min(World_Width,  x1 + CHUNK_SIZE);
 	Int32 yMax = min(World_Height, y1 + CHUNK_SIZE);
 	Int32 zMax = min(World_Length, z1 + CHUNK_SIZE);
-#if OCCLUSION
+#ifdef OCCLUSION
 	Int32 flags = ComputeOcclusion();
 #endif
-#if DEBUG_OCCLUSION
+#ifdef DEBUG_OCCLUSION
 	FastColour col = new FastColour(60, 60, 60, 255);
 	if (flags & 1) col.R = 255; // x
 	if (flags & 4) col.G = 255; // y
@@ -334,7 +334,7 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 
 	Int32 totalVerts = Builder_TotalVerticesCount();
 	if (!totalVerts) return;
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 	/* add an extra element to fix crashing on some GPUs */
 	info->Vb = Gfx_CreateVb(Builder_Vertices, VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
 #endif
@@ -357,7 +357,7 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 		info->TranslucentParts = &MapRenderer_PartsTranslucent[partsIndex];
 	}
 
-#if OCCLUSION
+#ifdef OCCLUSION
 	if (info.NormalParts != null || info.TranslucentParts != null)
 		info.occlusionFlags = (UInt8)ComputeOcclusion();
 #endif

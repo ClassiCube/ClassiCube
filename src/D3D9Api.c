@@ -1,5 +1,5 @@
 #include "GraphicsAPI.h"
-#if CC_BUILD_D3D9
+#ifdef CC_BUILD_D3D9
 #include "ErrorHandler.h"
 #include "Platform.h"
 #include "Window.h"
@@ -11,7 +11,7 @@
 #include "Event.h"
 
 //#define D3D_DISABLE_9EX causes compile errors
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX

@@ -7,7 +7,7 @@
 
 /* Represents an ARGB colour, in a format suitable for the native graphics api. */
 typedef union PackedCol_ {
-#if CC_BUILD_D3D9
+#ifdef CC_BUILD_D3D9
 	struct { UInt8 B; UInt8 G; UInt8 R; UInt8 A; };
 #else
 	struct { UInt8 R; UInt8 G; UInt8 B; UInt8 A; };
@@ -15,7 +15,7 @@ typedef union PackedCol_ {
 	UInt32 Packed;
 } PackedCol;
 
-#if CC_BUILD_D3D9
+#ifdef CC_BUILD_D3D9
 #define PACKEDCOL_CONST(r, g, b, a) { b, g, r, a }
 #else
 #define PACKEDCOL_CONST(r, g, b, a) { r, g, b, a }

@@ -62,22 +62,21 @@ typedef UInt8 Face;
 typedef UInt32 ReturnCode;
 typedef UInt64 TimeMS;
 
-typedef struct Rect2D_ { Int32 X, Y, Width, Height; } Rect2D;
+typedef struct Rect2D_  { Int32 X, Y, Width, Height; } Rect2D;
 typedef struct Point2D_ { Int32 X, Y; } Point2D;
-typedef struct Size2D_ { Int32 Width, Height; } Size2D;
+typedef struct Size2D_  { Int32 Width, Height; } Size2D;
 typedef struct FontDesc_ { void* Handle; UInt16 Size, Style; } FontDesc;
 typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 typedef struct Bitmap_ { UInt8* Scan0; Int32 Width, Height; } Bitmap;
 
-#define CC_BUILD_GL11 false
-#define CC_BUILD_D3D9 true
+/*#define CC_BUILD_GL11*/
+#define CC_BUILD_D3D9
+#define CC_BUILD_WIN
+/*#define CC_BUILD_OSX*/
+/*#define CC_BUILD_NIX*/
+/*#define CC_BUILD_SOLARIS*/
 
-#define CC_BUILD_WIN true
-#define CC_BUILD_OSX false
-#define CC_BUILD_NIX false
-#define CC_BUILD_SOLARIS false
-
-#if CC_BUILD_D3D9
+#ifdef CC_BUILD_D3D9
 typedef void* GfxResourceID;
 #else
 typedef UInt32 GfxResourceID;

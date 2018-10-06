@@ -9,7 +9,7 @@
 
 /* Describes a portion of the data needed for rendering a chunk. */
 struct ChunkPartInfo {
-#if CC_BUILD_GL11
+#ifdef CC_BUILD_GL11
 	GfxResourceID Vb;
 #endif
 	Int32 Offset;              /* -1 if no vertices at all */
@@ -34,11 +34,11 @@ struct ChunkInfo {
 	UInt8 DrawYMin : 1;
 	UInt8 DrawYMax : 1;
 	UInt8 : 0;          /* pad to next byte */
-#if OCCLUSION
+#ifdef OCCLUSION
 	public bool Visited = false, Occluded = false;
 	public byte OcclusionFlags, OccludedFlags, DistanceFlags;
 #endif
-#if !CC_BUILD_GL11
+#ifndef CC_BUILD_GL11
 	GfxResourceID Vb;
 #endif
 	struct ChunkPartInfo* NormalParts;

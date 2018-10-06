@@ -154,9 +154,9 @@ void Drawer2D_Make2DTexture(struct Texture* tex, Bitmap* bmp, Size2D used, Int32
 
 bool Drawer2D_ValidColCodeAt(const String* text, Int32 i) {
 	if (i >= text->length) return false;
-	return Drawer2D_Cols[(UInt8)text->buffer[i]].A > 0;
+	return Drawer2D_GetCol(text->buffer[i]).A > 0;
 }
-bool Drawer2D_ValidColCode(char c) { return Drawer2D_Cols[(UInt8)c].A > 0; }
+bool Drawer2D_ValidColCode(char c) { return Drawer2D_GetCol(c).A > 0; }
 
 bool Drawer2D_IsEmptyText(const String* text) {
 	if (!text->length) return true;
@@ -252,7 +252,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, Int32 x, I
 	for (i = 0; i < text.length; i++) {
 		char c = text.buffer[i];
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
-			col = Drawer2D_Cols[(UInt8)text.buffer[i + 1]];
+			col = Drawer2D_GetCol(text.buffer[i + 1]);
 			if (shadow) {
 				col = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col, 0.25f);
 			}
@@ -367,7 +367,7 @@ void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, Int32 x, Int32 y)
 	while (i < value.length) {
 		char colCode = nextCol;
 		i = Drawer2D_NextPart(i, &value, &args->Text, &nextCol);
-		PackedCol col = Drawer2D_Cols[(UInt8)colCode];
+		PackedCol col = Drawer2D_GetCol(colCode);
 		if (!args->Text.length) continue;
 
 		if (args->UseShadow) {

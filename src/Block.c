@@ -148,9 +148,6 @@ void Block_SetDrawType(BlockID block, UInt8 draw) {
 "_Forest green_Brown_Deep blue_Turquoise_Ice_Ceramic tile_Magma_Pillar_Crate_Stone brick"
 
 static String Block_DefaultName(BlockID block) {
-#if USE16_BIT
-	if (block >= 256) return "ID " + block;
-#endif
 	if (block >= BLOCK_CPE_COUNT) {
 		String invalid = String_FromConst("Invalid");
 		return invalid;

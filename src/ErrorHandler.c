@@ -8,7 +8,7 @@
 static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void* ctx);
 static void ErrorHandler_DumpCommon(String* str, void* ctx);
 
-#if CC_BUILD_WIN
+#ifdef CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
@@ -244,7 +244,8 @@ void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
 #if _MSC_VER
 #pragma optimize ("", on)
 #endif
-#elif CC_BUILD_NIX
+#endif
+#ifdef CC_BUILD_NIX
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
