@@ -11,7 +11,6 @@
 
 #include "freetype/ft2build.h"
 #include "freetype/freetype.h"
-#include "freetype/ftsnames.h"
 #include "freetype/ftmodapi.h"
 
 #if CC_BUILD_WIN
