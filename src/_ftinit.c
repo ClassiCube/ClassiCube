@@ -37,11 +37,11 @@
   /*************************************************************************/
 
 
-#include "ft2build.h"
-#include FT_CONFIG_CONFIG_H
-#include FT_INTERNAL_OBJECTS_H
-#include FT_INTERNAL_DEBUG_H
-#include FT_MODULE_H
+#include "freetype/ft2build.h"
+#include FT_CONFIG_CONFIG_H_FT
+#include FT_INTERNAL_OBJECTS_H_FT
+#include FT_INTERNAL_DEBUG_H_FT
+#include FT_MODULE_H_FT
 
 
   /*************************************************************************/
@@ -61,7 +61,7 @@
 #define FT_USE_MODULE( type, x )  extern const type  x;
 #endif
 
-#include FT_CONFIG_MODULES_H
+#include FT_CONFIG_MODULES_H_FT
 
 #undef  FT_USE_MODULE
 #define FT_USE_MODULE( type, x )  (const FT_Module_Class*)&(x),
@@ -69,7 +69,7 @@
   static
   const FT_Module_Class*  const ft_default_modules[] =
   {
-#include FT_CONFIG_MODULES_H
+#include FT_CONFIG_MODULES_H_FT
     0
   };
 

@@ -16,11 +16,11 @@
 /***************************************************************************/
 
 
-#include "ft2build.h"
-#include FT_INTERNAL_DEBUG_H
-#include FT_INTERNAL_OBJECTS_H
-#include FT_INTERNAL_SERVICE_H
-#include FT_SERVICE_POSTSCRIPT_INFO_H
+#include "freetype/ft2build.h"
+#include FT_INTERNAL_DEBUG_H_FT
+#include FT_INTERNAL_OBJECTS_H_FT
+#include FT_INTERNAL_SERVICE_H_FT
+#include FT_SERVICE_POSTSCRIPT_INFO_H_FT
 
 
   /* documentation is in t1tables.h */

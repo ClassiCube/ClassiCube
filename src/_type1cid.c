@@ -1,10 +1,10 @@
 /***************************************************************************/
 /*                                                                         */
-/*  autofit.c                                                              */
+/*  type1cid.c                                                             */
 /*                                                                         */
-/*    Auto-fitter module (body).                                           */
+/*    FreeType OpenType driver component (body only).                      */
 /*                                                                         */
-/*  Copyright 2003-2018 by                                                 */
+/*  Copyright 1996-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,19 +17,13 @@
 
 
 #define FT_MAKE_OPTION_SINGLE_OBJECT
-#include "ft2build.h"
+#include "freetype/ft2build.h"
 
-#include "afangles.c"
-#include "afblue.c"
-#include "afdummy.c"
-#include "afglobal.c"
-#include "afhints.c"
-#include "aflatin.c"
-#include "afloader.c"
-#include "afmodule.c"
-#include "afranges.c"
-#include "afshaper.c"
-#include "afwarp.c"
+#include "freetype/cidgload.c"
+#include "freetype/cidload.c"
+#include "freetype/cidobjs.c"
+#include "freetype/cidparse.c"
+#include "freetype/cidriver.c"
 
 
 /* END */

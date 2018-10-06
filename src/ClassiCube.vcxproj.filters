@@ -115,6 +115,9 @@
     <Filter Include="Header Files\Audio">
       <UniqueIdentifier>{b6f24d6b-c6f6-4909-9ae1-f0c478846c6e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Freetype">
+      <UniqueIdentifier>{bff86df8-7005-42a8-80c1-5468c1196336}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Platform.h">
@@ -497,89 +500,89 @@
     <ClCompile Include="BlockPhysics.c">
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\autofit.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_autofit.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftbase.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_cff.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftbbox.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_ftbase.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftbitmap.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_ftbbox.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftcid.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_ftbitmap.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftfstype.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_ftcid.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftgasp.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_ftfstype.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftglyph.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_ftgasp.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftinit.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_ftglyph.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftmm.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_ftinit.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftpfr.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_ftmm.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftstroke.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_ftpfr.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftsynth.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_ftstroke.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftsystem.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_ftsynth.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\fttype1.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_ftsystem.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\ftcache.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_fttype1.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\cff.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_pfr.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\type1cid.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_psaux.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\pfr.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_pshinter.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\psaux.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_psmodule.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\pshinter.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_raster.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\psmodule.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_sfnt.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\raster.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_smooth.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\sfnt.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_type1.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\smooth.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_type1cid.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\truetype.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_type42.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\type1.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_truetype.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="freetype\type42.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="_ftcache.c">
+      <Filter>Source Files\Freetype</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

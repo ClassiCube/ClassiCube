@@ -1,10 +1,10 @@
 /***************************************************************************/
 /*                                                                         */
-/*  psaux.c                                                                */
+/*  ftcache.c                                                              */
 /*                                                                         */
-/*    FreeType auxiliary PostScript driver component (body only).          */
+/*    The FreeType Caching sub-system (body only).                         */
 /*                                                                         */
-/*  Copyright 1996-2018 by                                                 */
+/*  Copyright 2000-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,25 +17,16 @@
 
 
 #define FT_MAKE_OPTION_SINGLE_OBJECT
-#include "ft2build.h"
+#include "freetype/ft2build.h"
 
-#include "afmparse.c"
-#include "psauxmod.c"
-#include "psconv.c"
-#include "psobjs.c"
-#include "t1cmap.c"
-#include "t1decode.c"
-#include "cffdecode.c"
-
-#include "psarrst.c"
-#include "psblues.c"
-#include "pserror.c"
-#include "psfont.c"
-#include "psft.c"
-#include "pshints.c"
-#include "psintrp.c"
-#include "psread.c"
-#include "psstack.c"
+#include "freetype/ftcbasic.c"
+#include "freetype/ftccache.c"
+#include "freetype/ftccmap.c"
+#include "freetype/ftcglyph.c"
+#include "freetype/ftcimage.c"
+#include "freetype/ftcmanag.c"
+#include "freetype/ftcmru.c"
+#include "freetype/ftcsbits.c"
 
 
 /* END */

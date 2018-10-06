@@ -17,15 +17,15 @@
 
 
 #define FT_MAKE_OPTION_SINGLE_OBJECT
-#include "ft2build.h"
+#include "freetype/ft2build.h"
 
-#include "ttdriver.c"   /* driver interface    */
-#include "ttgload.c"    /* glyph loader        */
-#include "ttgxvar.c"    /* gx distortable font */
-#include "ttinterp.c"
-#include "ttobjs.c"     /* object manager      */
-#include "ttpload.c"    /* tables loader       */
-#include "ttsubpix.c"
+#include "freetype/ttdriver.c"   /* driver interface    */
+#include "freetype/ttgload.c"    /* glyph loader        */
+#include "freetype/ttgxvar.c"    /* gx distortable font */
+#include "freetype/ttinterp.c"
+#include "freetype/ttobjs.c"     /* object manager      */
+#include "freetype/ttpload.c"    /* tables loader       */
+#include "freetype/ttsubpix.c"
 
 
 /* END */

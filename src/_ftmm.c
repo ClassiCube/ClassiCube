@@ -16,13 +16,13 @@
 /***************************************************************************/
 
 
-#include "ft2build.h"
-#include FT_INTERNAL_DEBUG_H
+#include "freetype/ft2build.h"
+#include FT_INTERNAL_DEBUG_H_FT
 
-#include FT_MULTIPLE_MASTERS_H
-#include FT_INTERNAL_OBJECTS_H
-#include FT_SERVICE_MULTIPLE_MASTERS_H
-#include FT_SERVICE_METRICS_VARIATIONS_H
+#include FT_MULTIPLE_MASTERS_H_FT
+#include FT_INTERNAL_OBJECTS_H_FT
+#include FT_SERVICE_MULTIPLE_MASTERS_H_FT
+#include FT_SERVICE_METRICS_VARIATIONS_H_FT
 
 
   /*************************************************************************/

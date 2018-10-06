@@ -1,10 +1,10 @@
 /***************************************************************************/
 /*                                                                         */
-/*  type1.c                                                                */
+/*  pshinter.c                                                             */
 /*                                                                         */
-/*    FreeType Type 1 driver component (body only).                        */
+/*    FreeType PostScript Hinting module                                   */
 /*                                                                         */
-/*  Copyright 1996-2018 by                                                 */
+/*  Copyright 2001-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,14 +17,12 @@
 
 
 #define FT_MAKE_OPTION_SINGLE_OBJECT
-#include "ft2build.h"
+#include "freetype/ft2build.h"
 
-#include "t1afm.c"
-#include "t1driver.c"
-#include "t1gload.c"
-#include "t1load.c"
-#include "t1objs.c"
-#include "t1parse.c"
+#include "freetype/pshalgo.c"
+#include "freetype/pshglob.c"
+#include "freetype/pshmod.c"
+#include "freetype/pshrec.c"
 
 
 /* END */

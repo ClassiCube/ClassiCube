@@ -1,8 +1,8 @@
 /***************************************************************************/
 /*                                                                         */
-/*  raster.c                                                               */
+/*  sfnt.c                                                                 */
 /*                                                                         */
-/*    FreeType monochrome rasterer module component (body only).           */
+/*    Single object library component.                                     */
 /*                                                                         */
 /*  Copyright 1996-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
@@ -17,10 +17,16 @@
 
 
 #define FT_MAKE_OPTION_SINGLE_OBJECT
-#include "ft2build.h"
+#include "freetype/ft2build.h"
 
-#include "ftraster.c"
-#include "ftrend1.c"
+#include "freetype/sfdriver.c"
+#include "freetype/sfobjs.c"
+#include "freetype/ttcmap.c"
+#include "freetype/ttkern.c"
+#include "freetype/ttload.c"
+#include "freetype/ttmtx.c"
+#include "freetype/ttpost.c"
+#include "freetype/ttsbit.c"
 
 
 /* END */

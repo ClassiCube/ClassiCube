@@ -16,24 +16,24 @@
 /***************************************************************************/
 
 
-#include "ft2build.h"
+#include "freetype/ft2build.h"
 #define  FT_MAKE_OPTION_SINGLE_OBJECT
 
-#include "ftadvanc.c"
-#include "ftcalc.c"
-#include "ftfntfmt.c"
-#include "ftgloadr.c"
-#include "fthash.c"
-#include "ftlcdfil.c"
-#include "ftmac.c"
-#include "ftobjs.c"
-#include "ftoutln.c"
-#include "ftpsprop.c"
-#include "ftrfork.c"
-#include "ftsnames.c"
-#include "ftstream.c"
-#include "fttrigon.c"
-#include "ftutil.c"
+#include "freetype/ftadvanc.c"
+#include "freetype/ftcalc.c"
+#include "freetype/ftfntfmt.c"
+#include "freetype/ftgloadr.c"
+#include "freetype/fthash.c"
+#include "freetype/ftlcdfil.c"
+#include "freetype/ftmac.c"
+#include "freetype/ftobjs.c"
+#include "freetype/ftoutln.c"
+#include "freetype/ftpsprop.c"
+#include "freetype/ftrfork.c"
+#include "freetype/ftsnames.c"
+#include "freetype/ftstream.c"
+#include "freetype/fttrigon.c"
+#include "freetype/ftutil.c"
 
 
 /* END */

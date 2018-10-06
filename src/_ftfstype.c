@@ -15,11 +15,11 @@
 /*                                                                         */
 /***************************************************************************/
 
-#include "ft2build.h"
-#include FT_TYPE1_TABLES_H
-#include FT_TRUETYPE_TABLES_H
-#include FT_INTERNAL_SERVICE_H
-#include FT_SERVICE_POSTSCRIPT_INFO_H
+#include "freetype/ft2build.h"
+#include FT_TYPE1_TABLES_H_FT
+#include FT_TRUETYPE_TABLES_H_FT
+#include FT_INTERNAL_SERVICE_H_FT
+#include FT_SERVICE_POSTSCRIPT_INFO_H_FT
 
 
   /* documentation is in freetype.h */

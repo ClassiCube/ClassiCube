@@ -400,7 +400,7 @@ Size2D Drawer2D_MeasureText(struct DrawTextArgs* args) {
 		size.Height = max(size.Height, partSize.Height);
 	}
 
-	/* TODO: Is this font shadow offet right? */
+	/* TODO: Is this font shadow offset right? */
 	if (args->UseShadow) { size.Width += DRAWER2D_OFFSET; size.Height += DRAWER2D_OFFSET; }
 	args->Text = value;
 	return size;

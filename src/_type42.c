@@ -1,10 +1,10 @@
 /***************************************************************************/
 /*                                                                         */
-/*  cff.c                                                                  */
+/*  type42.c                                                               */
 /*                                                                         */
-/*    FreeType OpenType driver component (body only).                      */
+/*    FreeType Type 42 driver component.                                   */
 /*                                                                         */
-/*  Copyright 1996-2018 by                                                 */
+/*  Copyright 2002-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,13 +17,11 @@
 
 
 #define FT_MAKE_OPTION_SINGLE_OBJECT
-#include "ft2build.h"
+#include "freetype/ft2build.h"
 
-#include "cffcmap.c"
-#include "cffdrivr.c"
-#include "cffgload.c"
-#include "cffparse.c"
-#include "cffload.c"
-#include "cffobjs.c"
+#include "freetype/t42drivr.c"
+#include "freetype/t42objs.c"
+#include "freetype/t42parse.c"
+
 
 /* END */

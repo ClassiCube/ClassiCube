@@ -16,9 +16,9 @@
 /***************************************************************************/
 
 
-#include "ft2build.h"
-#include FT_GASP_H
-#include FT_INTERNAL_TRUETYPE_TYPES_H
+#include "freetype/ft2build.h"
+#include FT_GASP_H_FT
+#include FT_INTERNAL_TRUETYPE_TYPES_H_FT
 
 
   FT_EXPORT_DEF( FT_Int )

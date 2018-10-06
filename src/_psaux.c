@@ -1,10 +1,10 @@
 /***************************************************************************/
 /*                                                                         */
-/*  type42.c                                                               */
+/*  psaux.c                                                                */
 /*                                                                         */
-/*    FreeType Type 42 driver component.                                   */
+/*    FreeType auxiliary PostScript driver component (body only).          */
 /*                                                                         */
-/*  Copyright 2002-2018 by                                                 */
+/*  Copyright 1996-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,11 +17,25 @@
 
 
 #define FT_MAKE_OPTION_SINGLE_OBJECT
-#include "ft2build.h"
+#include "freetype/ft2build.h"
 
-#include "t42drivr.c"
-#include "t42objs.c"
-#include "t42parse.c"
+#include "freetype/afmparse.c"
+#include "freetype/psauxmod.c"
+#include "freetype/psconv.c"
+#include "freetype/psobjs.c"
+#include "freetype/t1cmap.c"
+#include "freetype/t1decode.c"
+#include "freetype/cffdecode.c"
+
+#include "freetype/psarrst.c"
+#include "freetype/psblues.c"
+#include "freetype/pserror.c"
+#include "freetype/psfont.c"
+#include "freetype/psft.c"
+#include "freetype/pshints.c"
+#include "freetype/psintrp.c"
+#include "freetype/psread.c"
+#include "freetype/psstack.c"
 
 
 /* END */

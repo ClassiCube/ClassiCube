@@ -1,10 +1,10 @@
 /***************************************************************************/
 /*                                                                         */
-/*  pshinter.c                                                             */
+/*  autofit.c                                                              */
 /*                                                                         */
-/*    FreeType PostScript Hinting module                                   */
+/*    Auto-fitter module (body).                                           */
 /*                                                                         */
-/*  Copyright 2001-2018 by                                                 */
+/*  Copyright 2003-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,12 +17,19 @@
 
 
 #define FT_MAKE_OPTION_SINGLE_OBJECT
-#include "ft2build.h"
+#include "freetype/ft2build.h"
 
-#include "pshalgo.c"
-#include "pshglob.c"
-#include "pshmod.c"
-#include "pshrec.c"
+#include "freetype/afangles.c"
+#include "freetype/afblue.c"
+#include "freetype/afdummy.c"
+#include "freetype/afglobal.c"
+#include "freetype/afhints.c"
+#include "freetype/aflatin.c"
+#include "freetype/afloader.c"
+#include "freetype/afmodule.c"
+#include "freetype/afranges.c"
+#include "freetype/afshaper.c"
+#include "freetype/afwarp.c"
 
 
 /* END */

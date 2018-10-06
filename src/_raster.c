@@ -1,10 +1,10 @@
 /***************************************************************************/
 /*                                                                         */
-/*  pfr.c                                                                  */
+/*  raster.c                                                               */
 /*                                                                         */
-/*    FreeType PFR driver component.                                       */
+/*    FreeType monochrome rasterer module component (body only).           */
 /*                                                                         */
-/*  Copyright 2002-2018 by                                                 */
+/*  Copyright 1996-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,14 +17,10 @@
 
 
 #define FT_MAKE_OPTION_SINGLE_OBJECT
-#include "ft2build.h"
+#include "freetype/ft2build.h"
 
-#include "pfrcmap.c"
-#include "pfrdrivr.c"
-#include "pfrgload.c"
-#include "pfrload.c"
-#include "pfrobjs.c"
-#include "pfrsbit.c"
+#include "freetype/ftraster.c"
+#include "freetype/ftrend1.c"
 
 
 /* END */

@@ -1,10 +1,10 @@
 /***************************************************************************/
 /*                                                                         */
-/*  ftcache.c                                                              */
+/*  cff.c                                                                  */
 /*                                                                         */
-/*    The FreeType Caching sub-system (body only).                         */
+/*    FreeType OpenType driver component (body only).                      */
 /*                                                                         */
-/*  Copyright 2000-2018 by                                                 */
+/*  Copyright 1996-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,16 +17,13 @@
 
 
 #define FT_MAKE_OPTION_SINGLE_OBJECT
-#include "ft2build.h"
+#include "freetype/ft2build.h"
 
-#include "ftcbasic.c"
-#include "ftccache.c"
-#include "ftccmap.c"
-#include "ftcglyph.c"
-#include "ftcimage.c"
-#include "ftcmanag.c"
-#include "ftcmru.c"
-#include "ftcsbits.c"
-
+#include "freetype/cffcmap.c"
+#include "freetype/cffdrivr.c"
+#include "freetype/cffgload.c"
+#include "freetype/cffparse.c"
+#include "freetype/cffload.c"
+#include "freetype/cffobjs.c"
 
 /* END */

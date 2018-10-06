@@ -985,24 +985,28 @@ FT_BEGIN_HEADER
    *  The header files containing the services.
    */
 
-#define FT_SERVICE_BDF_H                "svbdf.h"
 #define FT_SERVICE_CFF_TABLE_LOAD_H     "svcfftl.h"
 #define FT_SERVICE_CID_H                "svcid.h"
+#define FT_SERVICE_CID_H_FT             "freetype/svcid.h"
 #define FT_SERVICE_FONT_FORMAT_H        "svfntfmt.h"
 #define FT_SERVICE_GLYPH_DICT_H         "svgldict.h"
 #define FT_SERVICE_KERNING_H            "svkern.h"
 #define FT_SERVICE_METRICS_VARIATIONS_H "svmetric.h"
+#define FT_SERVICE_METRICS_VARIATIONS_H_FT "freetype/svmetric.h"
 #define FT_SERVICE_MULTIPLE_MASTERS_H   "svmm.h"
+#define FT_SERVICE_MULTIPLE_MASTERS_H_FT "freetype/svmm.h"
 #define FT_SERVICE_PFR_H                "svpfr.h"
+#define FT_SERVICE_PFR_H_FT             "freetype/svpfr.h"
 #define FT_SERVICE_POSTSCRIPT_CMAPS_H   "svpscmap.h"
+#define FT_SERVICE_POSTSCRIPT_CMAPS_H_FT "freetype/svpscmap.h"
 #define FT_SERVICE_POSTSCRIPT_INFO_H    "svpsinfo.h"
+#define FT_SERVICE_POSTSCRIPT_INFO_H_FT "freetype/svpsinfo.h"
 #define FT_SERVICE_POSTSCRIPT_NAME_H    "svpostnm.h"
 #define FT_SERVICE_PROPERTIES_H         "svprop.h"
 #define FT_SERVICE_SFNT_H               "svsfnt.h"
 #define FT_SERVICE_TRUETYPE_ENGINE_H    "svtteng.h"
 #define FT_SERVICE_TRUETYPE_GLYF_H      "svttglyf.h"
 #define FT_SERVICE_TT_CMAP_H            "svttcmap.h"
-#define FT_SERVICE_WINFNT_H             "svwinfnt.h"
 
  /* */
 

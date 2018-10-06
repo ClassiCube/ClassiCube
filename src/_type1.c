@@ -1,8 +1,8 @@
 /***************************************************************************/
 /*                                                                         */
-/*  type1cid.c                                                             */
+/*  type1.c                                                                */
 /*                                                                         */
-/*    FreeType OpenType driver component (body only).                      */
+/*    FreeType Type 1 driver component (body only).                        */
 /*                                                                         */
 /*  Copyright 1996-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
@@ -17,13 +17,14 @@
 
 
 #define FT_MAKE_OPTION_SINGLE_OBJECT
-#include "ft2build.h"
+#include "freetype/ft2build.h"
 
-#include "cidgload.c"
-#include "cidload.c"
-#include "cidobjs.c"
-#include "cidparse.c"
-#include "cidriver.c"
+#include "freetype/t1afm.c"
+#include "freetype/t1driver.c"
+#include "freetype/t1gload.c"
+#include "freetype/t1load.c"
+#include "freetype/t1objs.c"
+#include "freetype/t1parse.c"
 
 
 /* END */

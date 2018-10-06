@@ -24,14 +24,14 @@
   /*************************************************************************/
 
 
-#include "ft2build.h"
-#include FT_INTERNAL_DEBUG_H
+#include "freetype/ft2build.h"
+#include FT_INTERNAL_DEBUG_H_FT
 
-#include FT_BBOX_H
-#include FT_IMAGE_H
-#include FT_OUTLINE_H
-#include FT_INTERNAL_CALC_H
-#include FT_INTERNAL_OBJECTS_H
+#include FT_BBOX_H_FT
+#include FT_IMAGE_H_FT
+#include FT_OUTLINE_H_FT
+#include FT_INTERNAL_CALC_H_FT
+#include FT_INTERNAL_OBJECTS_H_FT
 
 
   typedef struct  TBBox_Rec_

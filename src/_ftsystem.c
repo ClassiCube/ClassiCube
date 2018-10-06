@@ -25,13 +25,13 @@
   /*************************************************************************/
 
 
-#include "ft2build.h"
-#include FT_CONFIG_CONFIG_H
-#include FT_INTERNAL_DEBUG_H
-#include FT_INTERNAL_STREAM_H
-#include FT_SYSTEM_H
-#include FT_ERRORS_H
-#include FT_TYPES_H
+#include "freetype/ft2build.h"
+#include FT_CONFIG_CONFIG_H_FT
+#include FT_INTERNAL_DEBUG_H_FT
+#include FT_INTERNAL_STREAM_H_FT
+#include FT_SYSTEM_H_FT
+#include FT_ERRORS_H_FT
+#include FT_TYPES_H_FT
 
 
   /*************************************************************************/

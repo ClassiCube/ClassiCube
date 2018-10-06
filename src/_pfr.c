@@ -1,10 +1,10 @@
 /***************************************************************************/
 /*                                                                         */
-/*  svwinfnt.h                                                             */
+/*  pfr.c                                                                  */
 /*                                                                         */
-/*    The FreeType Windows FNT/FONT service (specification).               */
+/*    FreeType PFR driver component.                                       */
 /*                                                                         */
-/*  Copyright 2003-2018 by                                                 */
+/*  Copyright 2002-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,35 +16,15 @@
 /***************************************************************************/
 
 
-#ifndef SVWINFNT_H_
-#define SVWINFNT_H_
+#define FT_MAKE_OPTION_SINGLE_OBJECT
+#include "freetype/ft2build.h"
 
-#include FT_INTERNAL_SERVICE_H
-#include FT_WINFONTS_H
-
-
-FT_BEGIN_HEADER
-
-
-#define FT_SERVICE_ID_WINFNT  "winfonts"
-
-  typedef FT_Error
-  (*FT_WinFnt_GetHeaderFunc)( FT_Face               face,
-                              FT_WinFNT_HeaderRec  *aheader );
-
-
-  FT_DEFINE_SERVICE( WinFnt )
-  {
-    FT_WinFnt_GetHeaderFunc  get_header;
-  };
-
-  /* */
-
-
-FT_END_HEADER
-
-
-#endif /* SVWINFNT_H_ */
+#include "freetype/pfrcmap.c"
+#include "freetype/pfrdrivr.c"
+#include "freetype/pfrgload.c"
+#include "freetype/pfrload.c"
+#include "freetype/pfrobjs.c"
+#include "freetype/pfrsbit.c"
 
 
 /* END */

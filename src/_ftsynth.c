@@ -16,12 +16,12 @@
 /***************************************************************************/
 
 
-#include "ft2build.h"
-#include FT_SYNTHESIS_H
-#include FT_INTERNAL_DEBUG_H
-#include FT_INTERNAL_OBJECTS_H
-#include FT_OUTLINE_H
-#include FT_BITMAP_H
+#include "freetype/ft2build.h"
+#include FT_SYNTHESIS_H_FT
+#include FT_INTERNAL_DEBUG_H_FT
+#include FT_INTERNAL_OBJECTS_H_FT
+#include FT_OUTLINE_H_FT
+#include FT_BITMAP_H_FT
 
 
   /*************************************************************************/

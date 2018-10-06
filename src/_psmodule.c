@@ -16,12 +16,12 @@
 /***************************************************************************/
 
 
-#include "ft2build.h"
-#include FT_INTERNAL_DEBUG_H
-#include FT_INTERNAL_OBJECTS_H
-#include FT_SERVICE_POSTSCRIPT_CMAPS_H
+#include "freetype/ft2build.h"
+#include FT_INTERNAL_DEBUG_H_FT
+#include FT_INTERNAL_OBJECTS_H_FT
+#include FT_SERVICE_POSTSCRIPT_CMAPS_H_FT
 
-#include "psmodule.h"
+#include "freetype/psmodule.h"
 
   /*
    *  The file `pstables.h' with its arrays and its function
@@ -35,12 +35,12 @@
    *  definitions, and `DEFINE_PS_TABLES_DATA' to provide both proper array
    *  declarations and definitions.
    */
-#include "pstables.h"
+#include "freetype/pstables.h"
 #define  DEFINE_PS_TABLES
 #define  DEFINE_PS_TABLES_DATA
-#include "pstables.h"
+#include "freetype/pstables.h"
 
-#include "psnamerr.h"
+#include "freetype/psnamerr.h"
 
 
 #ifdef FT_CONFIG_OPTION_POSTSCRIPT_NAMES
