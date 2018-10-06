@@ -9,10 +9,10 @@
 struct DisplayDevice;
 struct Stream;
 
-Int32 Game_Width, Game_Height;
+int Game_Width, Game_Height;
 /* Total rendering time(in seconds) elapsed since the client was started. */
 double Game_Accumulator;
-Int32 Game_ChunkUpdates;
+int Game_ChunkUpdates;
 bool Game_CameraClipping;
 struct PickedPos Game_SelectedPos;
 struct PickedPos Game_CameraClipPos;
@@ -22,13 +22,13 @@ bool Game_UseCPEBlocks;
 extern String Game_Username;
 extern String Game_Mppass;
 extern String Game_IPAddress;
-Int32         Game_Port;
+int           Game_Port;
 
-Int32 Game_ViewDistance;
-Int32 Game_MaxViewDistance;
-Int32 Game_UserViewDistance;
-Int32 Game_Fov;
-Int32 Game_DefaultFov, Game_ZoomFov;
+int Game_ViewDistance;
+int Game_MaxViewDistance;
+int Game_UserViewDistance;
+int Game_Fov;
+int Game_DefaultFov, Game_ZoomFov;
 
 float game_limitMs;
 FpsLimit Game_FpsLimit;
@@ -36,9 +36,9 @@ bool Game_ShowAxisLines;
 bool Game_SimpleArmsAnim;
 bool Game_ClassicArmModel;
 bool Game_InvertMouse;
-Int32 Game_Vertices;
+int  Game_Vertices;
 
-Int32 Game_MouseSensitivity;
+int  Game_MouseSensitivity;
 bool Game_TabAutocomplete;
 bool Game_UseClassicGui;
 bool Game_UseClassicTabList;
@@ -54,17 +54,17 @@ bool Game_ChatLogging;
 bool Game_AutoRotate;
 bool Game_SmoothCamera;
 extern String Game_FontName;
-Int32 Game_ChatLines;
+int  Game_ChatLines;
 bool Game_ClickableChat;
 bool Game_HideGui;
 bool Game_ShowFPS;
 
 bool Game_ViewBobbing;
 bool Game_ShowBlockInHand;
-Int32 Game_SoundsVolume;
-Int32 Game_MusicVolume;
+int  Game_SoundsVolume;
+int  Game_MusicVolume;
 bool Game_BreakableLiquids;
-Int32 Game_MaxChunkUpdates;
+int  Game_MaxChunkUpdates;
 
 Vector3 Game_CurrentCameraPos;
 bool Game_ScreenshotRequested;
@@ -79,17 +79,17 @@ void Game_GetDefaultTexturePack(String* texPack);
 void Game_SetDefaultTexturePack(const String* texPack);
 
 bool Game_ChangeTerrainAtlas(Bitmap* atlas);
-void Game_SetViewDistance(Int32 distance);
-void Game_UserSetViewDistance(Int32 distance);
+void Game_SetViewDistance(int distance);
+void Game_UserSetViewDistance(int distance);
 void Game_UpdateProjection(void);
 void Game_Disconnect(const String* title, const String* reason);
-void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block);
+void Game_UpdateBlock(int x, int y, int z, BlockID block);
 bool Game_CanPick(BlockID block);
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, UInt8* skinType);
 bool Game_ValidateBitmap(const String* file, Bitmap* bmp);
-Int32 Game_CalcRenderType(const String* type);
+int  Game_CalcRenderType(const String* type);
 void Game_SetFpsLimit(FpsLimit method);
 float Game_CalcLimitMillis(FpsLimit method);
 
-void Game_Run(Int32 width, Int32 height, const String* title, struct DisplayDevice* device);
+void Game_Run(int width, int height, const String* title, struct DisplayDevice* device);
 #endif

@@ -37,7 +37,7 @@ void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, P
 	*yMin  = PackedCol_Scale(normal, PACKEDCOL_SHADE_YMIN);
 }
 
-bool PackedCol_Unhex(UInt8 hex, Int32* value) {
+bool PackedCol_Unhex(UInt8 hex, int* value) {
 	*value = 0;
 	if (hex >= '0' && hex <= '9') {
 		*value = (hex - '0');
@@ -63,7 +63,7 @@ bool PackedCol_TryParseHex(const String* str, PackedCol* value) {
 	if (str->length < 6) return false;
 	if (str->length > 6 && (str->buffer[0] != '#' || str->length > 7)) return false;
 
-	Int32 rH, rL, gH, gL, bH, bL;
+	int rH, rL, gH, gL, bH, bL;
 	char* buffer = str->buffer;
 	if (buffer[0] == '#') buffer++;
 

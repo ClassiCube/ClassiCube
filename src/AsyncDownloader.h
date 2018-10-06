@@ -20,7 +20,7 @@ struct AsyncRequest {
 	char ID[STRING_SIZE];
 
 	TimeMS TimeAdded, TimeDownloaded;
-	Int32  StatusCode;
+	int StatusCode;
 	ReturnCode Result;
 
 	void* ResultData;
@@ -42,6 +42,6 @@ void AsyncDownloader_GetContentLength(const String* url, bool priority, const St
 void AsyncDownloader_GetDataEx(const String* url, bool priority, const String* id, TimeMS* lastModified, const String* etag);
 
 bool AsyncDownloader_Get(const String* id, struct AsyncRequest* item);
-bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, Int32* progress);
+bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, int* progress);
 void AsyncDownloader_PurgeOldEntriesTask(struct ScheduledTask* task);
 #endif

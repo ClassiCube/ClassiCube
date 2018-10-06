@@ -36,7 +36,7 @@ enum WINDOW_STATE {
 	WINDOW_STATE_MAXIMISED, WINDOW_STATE_FULLSCREEN,
 };
 
-void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, const String* title, struct GraphicsMode* mode, struct DisplayDevice* device);
+void Window_Create(int x, int y, int width, int height, const String* title, struct GraphicsMode* mode, struct DisplayDevice* device);
 void Window_GetClipboardText(String* value);
 void Window_SetClipboardText(const String* value);
 /* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */
@@ -52,19 +52,19 @@ Rect2D Window_Bounds;
 Size2D Window_ClientSize;
 
 void Window_SetBounds(Rect2D rect);
-void Window_SetLocation(Int32 x, Int32 y);
-void Window_SetSize(Int32 width, Int32 height);
-void Window_SetClientSize(Int32 width, Int32 height);
+void Window_SetLocation(int x, int y);
+void Window_SetSize(int width, int height);
+void Window_SetClientSize(int width, int height);
 
 void Window_Close(void);
 void Window_ProcessEvents(void);
 /* Transforms the specified point from screen to client coordinates. */
-Point2D Window_PointToClient(Int32 x, Int32 y);
+Point2D Window_PointToClient(int x, int y);
 /* Transforms the specified point from client to screen coordinates. */
-Point2D Window_PointToScreen(Int32 x, Int32 y);
+Point2D Window_PointToScreen(int x, int y);
 
 Point2D Window_GetDesktopCursorPos(void);
-void Window_SetDesktopCursorPos(Int32 x, Int32 y);
+void Window_SetDesktopCursorPos(int x, int y);
 bool Window_GetCursorVisible(void);
 void Window_SetCursorVisible(bool visible);
 

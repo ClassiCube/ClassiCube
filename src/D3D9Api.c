@@ -72,8 +72,7 @@ static void D3D9_LoopUntilRetrieved(void) {
 }
 
 static void D3D9_FindCompatibleFormat(void) {
-	Int32 count = Array_Elems(d3d9_viewFormats);
-	Int32 i;
+	int i, count = Array_Elems(d3d9_viewFormats);
 	ReturnCode res;
 
 	for (i = 0; i < count; i++) {
@@ -98,16 +97,16 @@ static void D3D9_FindCompatibleFormat(void) {
 	}
 }
 
-static void D3D9_FillPresentArgs(Int32 width, Int32 height, D3DPRESENT_PARAMETERS* args) {
+static void D3D9_FillPresentArgs(int width, int height, D3DPRESENT_PARAMETERS* args) {
 	args->AutoDepthStencilFormat = d3d9_depthFormat;
-	args->BackBufferWidth = width;
+	args->BackBufferWidth  = width;
 	args->BackBufferHeight = height;
 	args->BackBufferFormat = d3d9_viewFormat;
-	args->BackBufferCount = 1;
+	args->BackBufferCount  = 1;
 	args->EnableAutoDepthStencil = true;
-	args->PresentationInterval = d3d9_vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
+	args->PresentationInterval   = d3d9_vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
 	args->SwapEffect = D3DSWAPEFFECT_DISCARD;
-	args->Windowed = true;
+	args->Windowed   = true;
 }
 
 static void D3D9_RecreateDevice(void) {
@@ -164,7 +163,7 @@ void Gfx_Free(void) {
 	D3D9_FreeResource(&d3d);
 }
 
-static void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, Int32 lvl) {
+static void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, int lvl) {
 	D3DLOCKED_RECT rect;
 	ReturnCode res = IDirect3DTexture9_LockRect(texture, lvl, &rect, NULL, 0);
 	if (res) ErrorHandler_Fail2(res, "D3D9_SetTextureData - Lock");
@@ -176,7 +175,7 @@ static void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, Int32 l
 	if (res) ErrorHandler_Fail2(res, "D3D9_SetTextureData - Unlock");
 }
 
-static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitmap* bmp, Int32 lvl) {
+static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp, int lvl) {
 	RECT part;
 	part.left = x; part.right = x + bmp->Width;
 	part.top = y; part.bottom = y + bmp->Height;
@@ -188,7 +187,7 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, Int32 x, Int32 y
 	/* We need to copy scanline by scanline, as generally rect.stride != data.stride */
 	UInt8* src = (UInt8*)bmp->Scan0;
 	UInt8* dst = (UInt8*)rect.pBits;
-	Int32 yy;
+	int yy;
 	UInt32 stride = (UInt32)(bmp->Width) * BITMAP_SIZEOF_PIXEL;
 
 	for (yy = 0; yy < bmp->Height; yy++) {
@@ -201,10 +200,10 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, Int32 x, Int32 y
 	if (res) ErrorHandler_Fail2(res, "D3D9_SetTexturePartData - Unlock");
 }
 
-static void D3D9_DoMipmaps(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitmap* bmp, bool partial) {
+static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp, bool partial) {
 	UInt8* prev = bmp->Scan0;
-	Int32 lvls = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
-	Int32 lvl, width = bmp->Width, height = bmp->Height;
+	int lvls = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
+	int lvl, width = bmp->Width, height = bmp->Height;
 
 	for (lvl = 1; lvl <= lvls; lvl++) {
 		x /= 2; y /= 2; 
@@ -231,8 +230,8 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitmap*
 GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 	IDirect3DTexture9* tex;
 	ReturnCode res;
-	Int32 mipmapsLevels = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
-	Int32 levels = 1 + (mipmaps ? mipmapsLevels : 0);
+	int mipmapsLevels = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
+	int levels = 1 + (mipmaps ? mipmapsLevels : 0);
 
 	if (!Math_IsPowOf2(bmp->Width) || !Math_IsPowOf2(bmp->Height)) {
 		ErrorHandler_Fail("Textures must have power of two dimensions");
@@ -265,7 +264,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 	return tex;
 }
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 x, Int32 y, Bitmap* part, bool mipmaps) {
+void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, bool mipmaps) {
 	IDirect3DTexture9* texture = (IDirect3DTexture9*)texId;
 	D3D9_SetTexturePartData(texture, x, y, part, 0);
 	if (mipmaps) D3D9_DoMipmaps(texture, x, y, part, true);
@@ -335,7 +334,7 @@ void Gfx_SetFogEnd(float value) {
 }
 
 D3DFOGMODE d3d9_fogTableMode = D3DFOG_NONE;
-void Gfx_SetFogMode(Int32 fogMode) {
+void Gfx_SetFogMode(int fogMode) {
 	D3DFOGMODE mode = d3d9_modes[fogMode];
 	if (mode == d3d9_fogTableMode) return;
 	d3d9_fogTableMode = mode;
@@ -358,11 +357,11 @@ void Gfx_SetAlphaTest(bool enabled) {
 }
 
 D3DCMPFUNC d3d9_alphaTestFunc = D3DCMP_ALWAYS;
-Int32 d3d9_alphaTestRef = 0;
-void Gfx_SetAlphaTestFunc(Int32 compareFunc, float refValue) {
+int d3d9_alphaTestRef = 0;
+void Gfx_SetAlphaTestFunc(int compareFunc, float refValue) {
 	d3d9_alphaTestFunc = d3d9_compareFuncs[compareFunc];
 	D3D9_SetRenderState(D3DRS_ALPHAFUNC, d3d9_alphaTestFunc, "D3D9_SetAlphaTest_Func");
-	d3d9_alphaTestRef = (Int32)(refValue * 255);
+	d3d9_alphaTestRef = (int)(refValue * 255);
 	D3D9_SetRenderState2(D3DRS_ALPHAREF, d3d9_alphaTestRef, "D3D9_SetAlphaTest_Ref");
 }
 
@@ -376,7 +375,7 @@ void Gfx_SetAlphaBlending(bool enabled) {
 
 D3DBLEND d3d9_srcBlendFunc = D3DBLEND_ONE;
 D3DBLEND d3d9_dstBlendFunc = D3DBLEND_ZERO;
-void Gfx_SetAlphaBlendFunc(Int32 srcBlendFunc, Int32 dstBlendFunc) {
+void Gfx_SetAlphaBlendFunc(int srcBlendFunc, int dstBlendFunc) {
 	d3d9_srcBlendFunc = d3d9_blendFuncs[srcBlendFunc];
 	D3D9_SetRenderState(D3DRS_SRCBLEND, d3d9_srcBlendFunc, "D3D9_SetAlphaBlendFunc_Src");
 	d3d9_dstBlendFunc = d3d9_blendFuncs[dstBlendFunc];
@@ -408,7 +407,7 @@ void Gfx_SetDepthTest(bool enabled) {
 }
 
 D3DCMPFUNC d3d9_depthTestFunc = D3DCMP_LESSEQUAL;
-void Gfx_SetDepthTestFunc(Int32 compareFunc) {
+void Gfx_SetDepthTestFunc(int compareFunc) {
 	d3d9_depthTestFunc = d3d9_compareFuncs[compareFunc];
 	D3D9_SetRenderState(D3DRS_ZFUNC, d3d9_alphaTestFunc, "D3D9_SetDepthTestFunc");
 }
@@ -425,8 +424,8 @@ void Gfx_SetDepthWrite(bool enabled) {
 }
 
 
-GfxResourceID Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices) {
-	Int32 size = maxVertices * Gfx_strideSizes[vertexFormat];
+GfxResourceID Gfx_CreateDynamicVb(int vertexFormat, int maxVertices) {
+	int size = maxVertices * Gfx_strideSizes[vertexFormat];
 	IDirect3DVertexBuffer9* vbuffer;
 	ReturnCode res = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
 		d3d9_formatMappings[vertexFormat], D3DPOOL_DEFAULT, &vbuffer, NULL);
@@ -435,7 +434,7 @@ GfxResourceID Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices) {
 	return vbuffer;
 }
 
-static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 size, const char* lockMsg, const char* unlockMsg, Int32 lockFlags) {
+static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, int size, const char* lockMsg, const char* unlockMsg, int lockFlags) {
 	void* dst = NULL;
 	ReturnCode res = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, lockFlags);
 	if (res) ErrorHandler_Fail2(res, lockMsg);
@@ -445,8 +444,8 @@ static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 siz
 	if (res) ErrorHandler_Fail2(res, unlockMsg);
 }
 
-GfxResourceID Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count) {
-	Int32 size = count * Gfx_strideSizes[vertexFormat];
+GfxResourceID Gfx_CreateVb(void* vertices, int vertexFormat, int count) {
+	int size = count * Gfx_strideSizes[vertexFormat];
 	IDirect3DVertexBuffer9* vbuffer;
 
 	for (;;) {
@@ -472,8 +471,8 @@ static void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, Int32 size
 	if (res) ErrorHandler_Fail2(res, "D3D9_CreateIb - Unlock");
 }
 
-GfxResourceID Gfx_CreateIb(void* indices, Int32 indicesCount) {
-	Int32 size = indicesCount * sizeof(UInt16);
+GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
+	int size = indicesCount * sizeof(UInt16);
 	IDirect3DIndexBuffer9* ibuffer;
 	ReturnCode res = IDirect3DDevice9_CreateIndexBuffer(device, size, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &ibuffer, NULL);
 	if (res) ErrorHandler_Fail2(res, "D3D9_CreateIb");
@@ -482,7 +481,7 @@ GfxResourceID Gfx_CreateIb(void* indices, Int32 indicesCount) {
 	return ibuffer;
 }
 
-Int32 d3d9_batchStride;
+int d3d9_batchStride;
 void Gfx_BindVb(GfxResourceID vb) {
 	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
 	ReturnCode res = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, d3d9_batchStride);
@@ -498,8 +497,8 @@ void Gfx_BindIb(GfxResourceID ib) {
 void Gfx_DeleteVb(GfxResourceID* vb) { D3D9_FreeResource(vb); }
 void Gfx_DeleteIb(GfxResourceID* ib) { D3D9_FreeResource(ib); }
 
-Int32 d3d9_batchFormat = -1;
-void Gfx_SetBatchFormat(Int32 format) {
+int d3d9_batchFormat = -1;
+void Gfx_SetBatchFormat(int format) {
 	if (format == d3d9_batchFormat) return;
 	d3d9_batchFormat = format;
 
@@ -508,8 +507,8 @@ void Gfx_SetBatchFormat(Int32 format) {
 	d3d9_batchStride = Gfx_strideSizes[format];
 }
 
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount) {
-	Int32 size = vCount * d3d9_batchStride;
+void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+	int size = vCount * d3d9_batchStride;
 	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
 	D3D9_SetVbData(vbuffer, vertices, size, "D3D9_SetDynamicVbData - Lock", "D3D9_SetDynamicVbData - Unlock", D3DLOCK_DISCARD);
 
@@ -517,31 +516,31 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount) {
 	if (res) ErrorHandler_Fail2(res, "D3D9_SetDynamicVbData - Bind");
 }
 
-void Gfx_DrawVb_Lines(Int32 verticesCount) {
+void Gfx_DrawVb_Lines(int verticesCount) {
 	ReturnCode res = IDirect3DDevice9_DrawPrimitive(device, D3DPT_LINELIST, 0, verticesCount >> 1);
 	if (res) ErrorHandler_Fail2(res, "D3D9_DrawVb_Lines");
 }
 
-void Gfx_DrawVb_IndexedTris(Int32 verticesCount) {
+void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	ReturnCode res = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
 		0, 0, verticesCount, 0, verticesCount >> 1);
 	if (res) ErrorHandler_Fail2(res, "D3D9_DrawVb_IndexedTris");
 }
 
-void Gfx_DrawVb_IndexedTris_Range(Int32 verticesCount, Int32 startVertex) {
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 	ReturnCode res = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
 		startVertex, 0, verticesCount, 0, verticesCount >> 1);
 	if (res) ErrorHandler_Fail2(res, "D3D9_DrawVb_IndexedTris");
 }
 
-void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex) {
+void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 	ReturnCode res = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
 		startVertex, 0, verticesCount, 0, verticesCount >> 1);
 	if (res) ErrorHandler_Fail2(res, "D3D9_DrawIndexedVb_TrisT2fC4b");
 }
 
 
-void Gfx_SetMatrixMode(Int32 matrixType) {
+void Gfx_SetMatrixMode(int matrixType) {
 	if (matrixType == MATRIX_TYPE_PROJECTION) {
 		curMatrix = D3DTS_PROJECTION;
 	} else if (matrixType == MATRIX_TYPE_VIEW) {
@@ -584,7 +583,7 @@ void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar,
 }
 
 
-ReturnCode Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height) {
+ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 	IDirect3DSurface9* backbuffer = NULL;
 	IDirect3DSurface9* temp = NULL;
 	ReturnCode res;

@@ -7,9 +7,11 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-#define ANCHOR_MIN 0    /* Left or top */
-#define ANCHOR_CENTRE 1 /* Middle */
-#define ANCHOR_MAX 2    /* Bottom or right */
+enum ANCHOR {
+	ANCHOR_MIN,    /* Left or top */
+	ANCHOR_CENTRE, /* Middle */
+	ANCHOR_MAX,    /* Bottom or right */
+};
 
 struct IGameComponent;
 struct GuiElem;
@@ -22,9 +24,9 @@ struct GuiElem;
 	bool (*HandlesKeyDown)(void* elem, Key key); \
 	bool (*HandlesKeyUp)(void* elem, Key key); \
 	bool (*HandlesKeyPress)(void* elem, char keyChar); \
-	bool (*HandlesMouseDown)(void* elem, Int32 x, Int32 y, MouseButton btn); \
-	bool (*HandlesMouseUp)(void* elem, Int32 x, Int32 y, MouseButton btn); \
-	bool (*HandlesMouseMove)(void* elem, Int32 x, Int32 y); \
+	bool (*HandlesMouseDown)(void* elem, int x, int y, MouseButton btn); \
+	bool (*HandlesMouseUp)(void* elem, int x, int y, MouseButton btn); \
+	bool (*HandlesMouseMove)(void* elem, int x, int y); \
 	bool (*HandlesMouseScroll)(void* elem, float delta);
 
 struct GuiElemVTABLE { GuiElemVTABLE_Layout() };
@@ -57,19 +59,19 @@ struct WidgetVTABLE {
 	void (*Reposition)(void* elem);
 };
 #define Widget_Layout struct WidgetVTABLE* VTABLE; \
-	Int32 X, Y, Width, Height;  /* Top left corner, and dimensions, of this widget */ \
+	int X, Y, Width, Height;    /* Top left corner, and dimensions, of this widget */ \
 	bool Active;                /* Whether this widget is currently being moused over*/ \
 	bool Disabled;              /* Whether widget is prevented from being interacted with */ \
 	UInt8 HorAnchor, VerAnchor; /* Specifies the reference point for when this widget is resized */ \
-	Int32 XOffset, YOffset;     /* Offset from the reference point */ \
+	int XOffset, YOffset;       /* Offset from the reference point */ \
 	Widget_LeftClick MenuClick;
 
 /* Represents an individual 2D gui component. */
 struct Widget { Widget_Layout };
-void Widget_SetLocation(void* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xOffset, Int32 yOffset);
+void Widget_SetLocation(void* widget, UInt8 horAnchor, UInt8 verAnchor, int xOffset, int yOffset);
 void Widget_CalcPosition(void* widget);
 void Widget_Reset(void* widget);
-bool Widget_Contains(void* widget, Int32 x, Int32 y);
+bool Widget_Contains(void* widget, int x, int y);
 
 
 GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
@@ -77,10 +79,10 @@ struct Screen* Gui_HUD;
 struct Screen* Gui_Active;
 #define GUI_MAX_OVERLAYS 6
 struct Screen* Gui_Overlays[GUI_MAX_OVERLAYS];
-Int32 Gui_OverlaysCount;
+int Gui_OverlaysCount;
 
-Int32 Gui_CalcPos(UInt8 anchor, Int32 offset, Int32 size, Int32 axisLen);
-bool Gui_Contains(Int32 recX, Int32 recY, Int32 width, Int32 height, Int32 x, Int32 y);
+int  Gui_CalcPos(UInt8 anchor, int offset, int size, int axisLen);
+bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
 void Gui_MakeComponent(struct IGameComponent* comp);
 /* Gets the screen that the user is currently interacting with.
 This means if an overlay is active, it will be over the top of other screens. */
@@ -97,7 +99,7 @@ NOINLINE_ void Gui_CloseActive(void);
 
 void Gui_RefreshHud(void);
 void Gui_ShowOverlay(struct Screen* overlay, bool atFront);
-Int32 Gui_IndexOverlay(void* overlay);
+int  Gui_IndexOverlay(void* overlay);
 void Gui_FreeOverlay(void* overlay);
 void Gui_RenderGui(double delta);
 void Gui_OnResize(void);
@@ -106,14 +108,14 @@ void Gui_CalcCursorVisible(void);
 #define TEXTATLAS_MAX_WIDTHS 16
 struct TextAtlas {
 	struct Texture Tex;
-	Int32 Offset, CurX, FontSize;
+	int Offset, CurX, FontSize;
 	float uScale;
 	Int32 Widths[TEXTATLAS_MAX_WIDTHS];
 };
 void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, FontDesc* font, const String* prefix);
 void TextAtlas_Free(struct TextAtlas* atlas);
-void TextAtlas_Add(struct TextAtlas* atlas, Int32 charI, VertexP3fT2fC4b** vertices);
-void TextAtlas_AddInt(struct TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** vertices);
+void TextAtlas_Add(struct TextAtlas* atlas, int charI, VertexP3fT2fC4b** vertices);
+void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vertices);
 
 
 #define Elem_Init(elem)           (elem)->VTABLE->Init(elem)

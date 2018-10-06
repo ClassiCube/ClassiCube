@@ -60,7 +60,7 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 		Inflate_MakeStream(&compStream, &inflate, &portion);
 		state->ProcessEntry(&path, &compStream, entry);
 	} else {
-		Int32 method = compressionMethod;
+		int method = compressionMethod;
 		Platform_Log1("Unsupported.zip entry compression method: %i", &method);
 	}
 	return 0;
@@ -133,7 +133,7 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 	if ((res = stream->Length(stream, &stream_len))) return res;
 
 	/* At -22 for nearly all zips, but try a bit further back in case of comment */
-	Int32 i, len = min(257, stream_len);
+	int i, len = min(257, stream_len);
 	for (i = 22; i < len; i++) {
 		res = stream->Seek(stream, -i, STREAM_SEEKFROM_END);
 		if (res) return ZIP_ERR_SEEK_END_OF_CENTRAL_DIR;
@@ -152,7 +152,7 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 	if (state->EntriesCount > ZIP_MAX_ENTRIES) return ZIP_ERR_TOO_MANY_ENTRIES;
 
 	/* Read all the central directory entries */
-	Int32 count = 0;
+	int count = 0;
 	while (count < state->EntriesCount) {
 		if ((res = Stream_ReadU32_LE(stream, &sig))) return res;
 
@@ -238,7 +238,7 @@ static void EntryList_Save(struct EntryList* list) {
 	if (res) { Chat_LogError2(res, "creating", &path); return; }
 	struct Stream stream; Stream_FromFile(&stream, file);
 	{
-		Int32 i;
+		int i;
 		for (i = 0; i < list->Entries.Count; i++) {
 			String entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
 			res = Stream_WriteLine(&stream, &entry);
@@ -255,7 +255,7 @@ static void EntryList_Add(struct EntryList* list, const String* entry) {
 }
 
 static bool EntryList_Has(struct EntryList* list, const String* entry) {
-	Int32 i;
+	int i;
 	for (i = 0; i < list->Entries.Count; i++) {
 		String curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
 		if (String_Equals(&curEntry, entry)) return true;
@@ -322,7 +322,7 @@ bool TextureCache_GetStream(const String* url, struct Stream* stream) {
 
 void TexturePack_GetFromTags(const String* url, String* result, struct EntryList* list) {
 	TexCache_Crc32(url);
-	Int32 i;
+	int i;
 	String line, key, value;
 
 	for (i = 0; i < list->Entries.Count; i++) {
@@ -377,7 +377,7 @@ void TextureCache_AddToTags(const String* url, const String* data, struct EntryL
 	String entry = String_FromArray(entryBuffer);
 	String_Format2(&entry, "%s %s", &crc32, data);
 
-	Int32 i;
+	int i;
 	for (i = 0; i < list->Entries.Count; i++) {
 		String curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
 		if (!String_CaselessStarts(&curEntry, &crc32)) continue;

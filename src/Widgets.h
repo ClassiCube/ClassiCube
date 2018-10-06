@@ -31,15 +31,15 @@ struct ButtonWidget {
 	Button_Get GetValue;
 	Button_Set SetValue;
 };
-NOINLINE_ void ButtonWidget_Create(struct ButtonWidget* w, Int32 minWidth, const String* text, FontDesc* font, Widget_LeftClick onClick);
+NOINLINE_ void ButtonWidget_Create(struct ButtonWidget* w, int minWidth, const String* text, FontDesc* font, Widget_LeftClick onClick);
 NOINLINE_ void ButtonWidget_Set(struct ButtonWidget* w, const String* text, FontDesc* font);
 
 
 struct ScrollbarWidget {
 	Widget_Layout
-	Int32 TotalRows, ScrollY;
+	int TotalRows, ScrollY;
 	float ScrollingAcc;
-	Int32 MouseOffset;
+	int MouseOffset;
 	bool DraggingMouse;
 };
 NOINLINE_ void ScrollbarWidget_Create(struct ScrollbarWidget* w);
@@ -58,10 +58,10 @@ NOINLINE_ void HotbarWidget_Create(struct HotbarWidget* w);
 
 struct TableWidget {
 	Widget_Layout
-	Int32 ElementsCount, ElementsPerRow, RowsCount;
-	Int32 LastCreatedIndex;
+	int ElementsCount, ElementsPerRow, RowsCount;
+	int LastCreatedIndex;
 	FontDesc Font;
-	Int32 SelectedIndex, BlockSize;
+	int SelectedIndex, BlockSize;
 	float SelBlockExpand;
 	GfxResourceID VB;
 	bool PendingClose;
@@ -69,7 +69,7 @@ struct TableWidget {
 	BlockID Elements[BLOCK_COUNT];
 	struct ScrollbarWidget Scroll;
 	struct Texture DescTex;
-	Int32 LastX, LastY;
+	int LastX, LastY;
 };
 
 NOINLINE_ void TableWidget_Create(struct TableWidget* w);
@@ -83,7 +83,7 @@ NOINLINE_ void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block);
 struct InputWidget {
 	Widget_Layout
 	FontDesc Font;		
-	Int32 (*GetMaxLines)(void);
+	int (*GetMaxLines)(void);
 	void (*RemakeTexture)(void* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
 	void (*OnPressedEnter)(void* elem); /* Invoked when the user presses enter. */
 	bool (*AllowedChar)(void* elem, char c);
@@ -99,8 +99,8 @@ struct InputWidget {
 	UInt8 Padding;
 	bool ShowCaret;
 	UInt16 CaretWidth;
-	Int32 CaretX, CaretY; /* Coordinates of caret in lines */
-	Int32 CaretPos;       /* Position of caret, -1 for at end of string */
+	int CaretX, CaretY; /* Coordinates of caret in lines */
+	int CaretPos;       /* Position of caret, -1 for at end of string */
 	PackedCol CaretCol;
 	struct Texture CaretTex;
 	double CaretAccumulator;
@@ -123,13 +123,13 @@ struct MenuInputValidator {
 	struct MenuInputValidatorVTABLE* VTABLE;
 	union {
 		struct { const char** Names; UInt32 Count; } Meta_Enum;
-		struct { Int32 Min,  Max; } Meta_Int;
+		struct { int Min, Max; } Meta_Int;
 		struct { float Min, Max; } Meta_Float;
 	};
 };
 
 struct MenuInputValidator MenuInputValidator_Hex(void);
-struct MenuInputValidator MenuInputValidator_Int(Int32 min, Int32 max);
+struct MenuInputValidator MenuInputValidator_Int(int min, int max);
 struct MenuInputValidator MenuInputValidator_Seed(void);
 struct MenuInputValidator MenuInputValidator_Float(float min, float max);
 struct MenuInputValidator MenuInputValidator_Path(void);
@@ -138,16 +138,16 @@ struct MenuInputValidator MenuInputValidator_String(void);
 
 struct MenuInputWidget {
 	struct InputWidget Base;
-	Int32 MinWidth, MinHeight;
+	int MinWidth, MinHeight;
 	struct MenuInputValidator Validator;
 	char __TextBuffer[INPUTWIDGET_LEN];
 };
-NOINLINE_ void MenuInputWidget_Create(struct MenuInputWidget* w, Int32 width, Int32 height, const String* text, FontDesc* font, struct MenuInputValidator* v);
+NOINLINE_ void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, FontDesc* font, struct MenuInputValidator* v);
 
 
 struct ChatInputWidget {
 	struct InputWidget Base;
-	Int32 TypingLogPos;
+	int TypingLogPos;
 	char __TextBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];
 	char __OrigBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];
 	String OrigStr;
@@ -160,7 +160,7 @@ NOINLINE_ void ChatInputWidget_Create(struct ChatInputWidget* w, FontDesc* font)
 #define TEXTGROUPWIDGET_LEN (STRING_SIZE + (STRING_SIZE / 2))
 struct TextGroupWidget {
 	Widget_Layout
-	Int32 LinesCount, DefaultHeight;
+	int LinesCount, DefaultHeight;
 	FontDesc Font, UnderlineFont;
 	bool PlaceholderHeight[TEXTGROUPWIDGET_MAX_LINES];
 	UInt8 LineLengths[TEXTGROUPWIDGET_MAX_LINES];
@@ -168,32 +168,32 @@ struct TextGroupWidget {
 	char* Buffer;
 };
 
-NOINLINE_ void TextGroupWidget_Create(struct TextGroupWidget* w, Int32 linesCount, FontDesc* font, FontDesc* underlineFont, STRING_REF struct Texture* textures, STRING_REF char* buffer);
-NOINLINE_ void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* w, Int32 index, bool placeHolder);
+NOINLINE_ void TextGroupWidget_Create(struct TextGroupWidget* w, int linesCount, FontDesc* font, FontDesc* underlineFont, STRING_REF struct Texture* textures, STRING_REF char* buffer);
+NOINLINE_ void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* w, int index, bool placeHolder);
 NOINLINE_ void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* w, const String* text);
-NOINLINE_ Int32 TextGroupWidget_UsedHeight(struct TextGroupWidget* w);
-NOINLINE_ void TextGroupWidget_GetSelected(struct TextGroupWidget* w, String* text, Int32 mouseX, Int32 mouseY);
-NOINLINE_ void TextGroupWidget_GetText(struct TextGroupWidget* w, Int32 index, String* text);
-NOINLINE_ void TextGroupWidget_SetText(struct TextGroupWidget* w, Int32 index, const String* text);
+NOINLINE_ int  TextGroupWidget_UsedHeight(struct TextGroupWidget* w);
+NOINLINE_ void TextGroupWidget_GetSelected(struct TextGroupWidget* w, String* text, int mouseX, int mouseY);
+NOINLINE_ void TextGroupWidget_GetText(struct TextGroupWidget* w, int index, String* text);
+NOINLINE_ void TextGroupWidget_SetText(struct TextGroupWidget* w, int index, const String* text);
 
 
 struct PlayerListWidget {
 	Widget_Layout
 	FontDesc Font;
 	UInt16 NamesCount, ElementOffset;
-	Int32 XMin, XMax, YHeight;
+	int XMin, XMax, YHeight;
 	bool Classic;
 	struct TextWidget Overview;
 	UInt16 IDs[TABLIST_MAX_NAMES * 2];
 	struct Texture Textures[TABLIST_MAX_NAMES * 2];
 };
 NOINLINE_ void PlayerListWidget_Create(struct PlayerListWidget* w, FontDesc* font, bool classic);
-NOINLINE_ void PlayerListWidget_GetNameUnder(struct PlayerListWidget* w, Int32 mouseX, Int32 mouseY, String* name);
+NOINLINE_ void PlayerListWidget_GetNameUnder(struct PlayerListWidget* w, int mouseX, int mouseY, String* name);
 
 
 typedef void (*SpecialInputAppendFunc)(void* userData, char c);
 struct SpecialInputTab {
-	Int32 ItemsPerRow, CharsPerItem;
+	int ItemsPerRow, CharsPerItem;
 	Size2D TitleSize;
 	String Title, Contents;	
 };
@@ -201,7 +201,7 @@ struct SpecialInputTab {
 struct SpecialInputWidget {
 	Widget_Layout
 	Size2D ElementSize;
-	Int32 SelectedIndex;
+	int SelectedIndex;
 	bool PendingRedraw;
 	struct InputWidget* AppendObj;
 	struct Texture Tex;

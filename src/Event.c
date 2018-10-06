@@ -50,7 +50,7 @@ void Event_UnregisterVoid(struct Event_Void* handlers, void* obj, Event_Void_Cal
 	Event_UnregisterImpl(handlers, obj, handler);
 }
 
-void Event_RaiseInt(struct Event_Int* handlers, Int32 arg) {
+void Event_RaiseInt(struct Event_Int* handlers, int arg) {
 	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], arg);
@@ -103,7 +103,7 @@ void Event_UnregisterBlock(struct Event_Block* handlers, void* obj, Event_Block_
 	Event_UnregisterImpl((struct Event_Void*)handlers, obj, (Event_Void_Callback)handler);
 }
 
-void Event_RaiseMouseMove(struct Event_MouseMove* handlers, Int32 xDelta, Int32 yDelta) {
+void Event_RaiseMouseMove(struct Event_MouseMove* handlers, int xDelta, int yDelta) {
 	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], xDelta, yDelta);
@@ -116,7 +116,7 @@ void Event_UnregisterMouseMove(struct Event_MouseMove* handlers, void* obj, Even
 	Event_UnregisterImpl((struct Event_Void*)handlers, obj, (Event_Void_Callback)handler);
 }
 
-void Event_RaiseChat(struct Event_Chat* handlers, const String* msg, Int32 msgType) {
+void Event_RaiseChat(struct Event_Chat* handlers, const String* msg, int msgType) {
 	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], msg, msgType);

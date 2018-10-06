@@ -23,7 +23,7 @@ struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
 /*########################################################################################################################*
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
-static Int32 ErrorHandler_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, Int32 max) {
+static int ErrorHandler_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, int max) {
 	STACKFRAME frame = { 0 };
 	frame.AddrPC.Mode     = AddrModeFlat;
 	frame.AddrFrame.Mode  = AddrModeFlat;
@@ -53,7 +53,7 @@ static Int32 ErrorHandler_GetFrames(CONTEXT* ctx, struct StackPointers* pointers
 
 	HANDLE process = GetCurrentProcess();
 	HANDLE thread  = GetCurrentThread();
-	Int32 count;
+	int count;
 	CONTEXT copy = *ctx;
 
 	for (count = 0; count < max; count++) {		
@@ -84,10 +84,10 @@ static void ErrorHandler_Backtrace(String* backtrace, void* ctx) {
 
 	HANDLE process = GetCurrentProcess();
 	struct StackPointers pointers[40];
-	Int32 i, frames = ErrorHandler_GetFrames((CONTEXT*)ctx, pointers, 40);
+	int i, frames = ErrorHandler_GetFrames((CONTEXT*)ctx, pointers, 40);
 
 	for (i = 0; i < frames; i++) {
-		Int32 number = i + 1;
+		int number = i + 1;
 		UIntPtr addr = pointers[i].Instruction;
 
 		char strBuffer[STRING_SIZE * 10];
@@ -319,7 +319,7 @@ static void X11Textbox_Measure(X11Textbox* t, XFontStruct* font) {
 
     for (end = 0; end >= 0; lines++) {
         end = String_IndexOf(&str, '\n', 0);
-        Int32 len = end == -1 ? str.length : end;
+		int len = end == -1 ? str.length : end;
 
         XTextExtents(font, str.buffer, len, &direction, &ascent, &descent, &overall);
         t->Width = max(overall.width, t->Width);
@@ -337,7 +337,7 @@ static void X11Textbox_Draw(X11Textbox* t, X11Window* w) {
 
     for (end = 0; end >= 0; y += t->LineHeight) {
         end = String_IndexOf(&str, '\n', 0);
-        Int32 len = end == -1 ? str.length : end;
+		int len = end == -1 ? str.length : end;
 
         XDrawString(dpy, w->win, w->gc, t->X, y, str.buffer, len);
         if (end >= 0) str = String_UNSAFE_SubstringAt(&str, end + 1);
@@ -486,11 +486,11 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 *#########################################################################################################################*/
 static void ErrorHandler_Backtrace(String* backtrace_, void* ctx) {
 	void* addrs[40];
-	Int32 i, frames = backtrace(addrs, 40);
+	int i, frames = backtrace(addrs, 40);
 	char** strings  = backtrace_symbols(addrs, frames);
 
 	for (i = 0; i < frames; i++) {
-		Int32 number = i + 1;
+		int number = i + 1;
 		UIntPtr addr = (UIntPtr)addrs[i];
 
 		char strBuffer[STRING_SIZE * 5];
@@ -577,7 +577,7 @@ static void ErrorHandler_SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	char msgBuffer[STRING_SIZE * 2 + 1];
 	String msg = String_NT_Array(msgBuffer);
 
-	Int32 type   = info->si_signo, code = info->si_code;
+	int type     = info->si_signo, code = info->si_code;
 	UIntPtr addr = (UIntPtr)info->si_addr;
 	String_Format3(&msg, "Unhandled signal %i (code %i) at 0x%x", &type, &code, &addr);
 	msg.buffer[msg.length] = '\0';

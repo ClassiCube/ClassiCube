@@ -24,7 +24,7 @@ HWND win_Handle;
 HDC win_DC;
 UInt8 win_State = WINDOW_STATE_NORMAL;
 bool invisible_since_creation; /* Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront) */
-Int32 suppress_resize; /* Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events */
+int suppress_resize; /* Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events */
 Rect2D prev_bounds; /* Used to restore previous size when leaving fullscreen mode */
 
 static Rect2D Window_FromRect(RECT rect) {
@@ -389,7 +389,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 }
 
 
-void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, const String* title, struct GraphicsMode* mode, struct DisplayDevice* device) {
+void Window_Create(int x, int y, int width, int height, const String* title, struct GraphicsMode* mode, struct DisplayDevice* device) {
 	win_Instance = GetModuleHandleW(NULL);
 	/* TODO: UngroupFromTaskbar(); */
 
@@ -428,7 +428,7 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, const String* ti
 
 void Window_GetClipboardText(String* value) {
 	/* retry up to 10 times*/
-	Int32 i;
+	int i;
 	value->length = 0;
 
 	for (i = 0; i < 10; i++) {
@@ -467,7 +467,7 @@ void Window_GetClipboardText(String* value) {
 
 void Window_SetClipboardText(const String* value) {
 	/* retry up to 10 times*/
-	Int32 i;
+	int i;
 	for (i = 0; i < 10; i++) {
 		if (!OpenClipboard(win_Handle)) {
 			Thread_Sleep(100);
@@ -497,15 +497,15 @@ void Window_SetBounds(Rect2D rect) {
 	SetWindowPos(win_Handle, NULL, rect.X, rect.Y, rect.Width, rect.Height, 0);
 }
 
-void Window_SetLocation(Int32 x, Int32 y) {
+void Window_SetLocation(int x, int y) {
 	SetWindowPos(win_Handle, NULL, x, y, 0, 0, SWP_NOSIZE);
 }
 
-void Window_SetSize(Int32 width, Int32 height) {
+void Window_SetSize(int width, int height) {
 	SetWindowPos(win_Handle, NULL, 0, 0, width, height, SWP_NOMOVE);
 }
 
-void Window_SetClientSize(Int32 width, Int32 height) {
+void Window_SetClientSize(int width, int height) {
 	DWORD style = GetWindowLongW(win_Handle, GWL_STYLE);
 	RECT rect = { 0, 0, width, height };
 
@@ -586,7 +586,7 @@ void Window_SetWindowState(UInt8 state) {
 	}
 }
 
-Point2D Window_PointToClient(Int32 x, Int32 y) {
+Point2D Window_PointToClient(int x, int y) {
 	Point2D point = { x, y };
 	if (!ScreenToClient(win_Handle, &point)) {
 		ErrorHandler_Fail2(GetLastError(), "Converting point from client to screen coordinates");
@@ -594,7 +594,7 @@ Point2D Window_PointToClient(Int32 x, Int32 y) {
 	return point;
 }
 
-Point2D Window_PointToScreen(Int32 x, Int32 y) {
+Point2D Window_PointToScreen(int x, int y) {
 	Point2D point = { x, y };
 	if (!ClientToScreen(win_Handle, &point)) {
 		ErrorHandler_Fail2(GetLastError(), "Converting point from screen to client coordinates");
@@ -619,7 +619,7 @@ Point2D Window_GetDesktopCursorPos(void) {
 	POINT point; GetCursorPos(&point);
 	Point2D p = { point.x, point.y }; return p;
 }
-void Window_SetDesktopCursorPos(Int32 x, Int32 y) {
+void Window_SetDesktopCursorPos(int x, int y) {
 	SetCursorPos(x, y);
 }
 

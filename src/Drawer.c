@@ -11,7 +11,7 @@ col.B = (UInt8)(col.B * Drawer_TintColour.B / 255);\
 }
 
 
-void Drawer_XMin(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
+void Drawer_XMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
 	float u1 = Drawer_MinBB.Z;
 	float u2 = (count - 1) + Drawer_MaxBB.Z * UV2_Scale;
@@ -28,7 +28,7 @@ void Drawer_XMin(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b*
 	*vertices = ptr;
 }
 
-void Drawer_XMax(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
+void Drawer_XMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
 	float u1 = (count - Drawer_MinBB.Z);
 	float u2 = (1 - Drawer_MaxBB.Z) * UV2_Scale;
@@ -45,7 +45,7 @@ void Drawer_XMax(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b*
 	*vertices = ptr;
 }
 
-void Drawer_ZMin(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
+void Drawer_ZMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
 	float u1 = (count - Drawer_MinBB.X);
 	float u2 = (1 - Drawer_MaxBB.X) * UV2_Scale;
@@ -62,7 +62,7 @@ void Drawer_ZMin(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b*
 	*vertices = ptr;
 }
 
-void Drawer_ZMax(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
+void Drawer_ZMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
 	float u1 = Drawer_MinBB.X;
 	float u2 = (count - 1) + Drawer_MaxBB.X * UV2_Scale;
@@ -79,7 +79,7 @@ void Drawer_ZMax(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b*
 	*vertices = ptr;
 }
 
-void Drawer_YMin(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
+void Drawer_YMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
 	float u1 = Drawer_MinBB.X;
 	float u2 = (count - 1) + Drawer_MaxBB.X * UV2_Scale;
@@ -96,7 +96,7 @@ void Drawer_YMin(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b*
 	*vertices = ptr;
 }
 
-void Drawer_YMax(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
+void Drawer_YMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
 	float u1 = Drawer_MinBB.X;
 	float u2 = (count - 1) + Drawer_MaxBB.X * UV2_Scale;

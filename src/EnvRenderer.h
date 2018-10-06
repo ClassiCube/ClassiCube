@@ -16,7 +16,7 @@ void EnvRenderer_RenderSkybox(double deltaTime);
 bool EnvRenderer_ShouldRenderSkybox(void);
 
 Int16* Weather_Heightmap;
-void EnvRenderer_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockID newBlock);
+void EnvRenderer_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock);
 void EnvRenderer_RenderWeather(double deltaTime);
 
 bool EnvRenderer_Legacy, EnvRenderer_Minimal;

@@ -46,17 +46,17 @@ void GfxCommon_RecreateContext(void) {
 }
 
 
-void GfxCommon_UpdateDynamicVb_Lines(GfxResourceID vb, void* vertices, Int32 vCount) {
+void GfxCommon_UpdateDynamicVb_Lines(GfxResourceID vb, void* vertices, int vCount) {
 	Gfx_SetDynamicVbData(vb, vertices, vCount);
 	Gfx_DrawVb_Lines(vCount);
 }
 
-void GfxCommon_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, Int32 vCount) {
+void GfxCommon_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCount) {
 	Gfx_SetDynamicVbData(vb, vertices, vCount);
 	Gfx_DrawVb_IndexedTris(vCount);
 }
 
-void GfxCommon_Draw2DFlat(Int32 x, Int32 y, Int32 width, Int32 height, PackedCol col) {
+void GfxCommon_Draw2DFlat(int x, int y, int width, int height, PackedCol col) {
 	VertexP3fC4b verts[4];
 	VertexP3fC4b v; v.Z = 0.0f; v.Col = col;
 
@@ -69,7 +69,7 @@ void GfxCommon_Draw2DFlat(Int32 x, Int32 y, Int32 width, Int32 height, PackedCol
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, verts, 4);
 }
 
-void GfxCommon_Draw2DGradient(Int32 x, Int32 y, Int32 width, Int32 height, PackedCol top, PackedCol bottom) {
+void GfxCommon_Draw2DGradient(int x, int y, int width, int height, PackedCol top, PackedCol bottom) {
 	VertexP3fC4b verts[4];
 	VertexP3fC4b v; v.Z = 0.0f;
 
@@ -110,7 +110,7 @@ void GfxCommon_Make2DQuad(struct Texture* tex, PackedCol col, VertexP3fT2fC4b** 
 }
 
 bool gfx_hadFog;
-void GfxCommon_Mode2D(Int32 width, Int32 height) {
+void GfxCommon_Mode2D(int width, int height) {
 	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
 	struct Matrix ortho;
 	Gfx_CalcOrthoMatrix((float)width, (float)height, &ortho);
@@ -135,8 +135,8 @@ void GfxCommon_Mode3D(void) {
 	if (gfx_hadFog) Gfx_SetFog(true);
 }
 
-void GfxCommon_MakeIndices(UInt16* indices, Int32 iCount) {
-	Int32 element = 0, i;
+void GfxCommon_MakeIndices(UInt16* indices, int iCount) {
+	int element = 0, i;
 
 	for (i = 0; i < iCount; i += 6) {
 		indices[0] = (UInt16)(element + 0);
@@ -192,20 +192,20 @@ static UInt32 GfxCommon_Average(UInt32 p1, UInt32 p2) {
 	return (aAve << 24) | (rAve << 16) | (gAve << 8) | bAve;
 }
 
-void GfxCommon_GenMipmaps(Int32 width, Int32 height, UInt8* lvlScan0, UInt8* scan0) {
+void GfxCommon_GenMipmaps(int width, int height, UInt8* lvlScan0, UInt8* scan0) {
 	UInt32* baseSrc = (UInt32*)scan0;
 	UInt32* baseDst = (UInt32*)lvlScan0;
-	Int32 srcWidth = width << 1;
+	int srcWidth = width << 1;
 
-	Int32 x, y;
+	int x, y;
 	for (y = 0; y < height; y++) {
-		Int32 srcY = (y << 1);
+		int srcY = (y << 1);
 		UInt32* src0 = baseSrc + srcY * srcWidth;
 		UInt32* src1 = src0 + srcWidth;
 		UInt32* dst = baseDst + y * width;
 
 		for (x = 0; x < width; x++) {
-			Int32 srcX = (x << 1);
+			int srcX = (x << 1);
 			UInt32 src00 = src0[srcX], src01 = src0[srcX + 1];
 			UInt32 src10 = src1[srcX], src11 = src1[srcX + 1];
 
@@ -217,10 +217,10 @@ void GfxCommon_GenMipmaps(Int32 width, Int32 height, UInt8* lvlScan0, UInt8* sca
 	}
 }
 
-Int32 GfxCommon_MipmapsLevels(Int32 width, Int32 height) {
-	Int32 lvlsWidth = Math_Log2(width), lvlsHeight = Math_Log2(height);
+int GfxCommon_MipmapsLevels(int width, int height) {
+	int lvlsWidth = Math_Log2(width), lvlsHeight = Math_Log2(height);
 	if (Gfx_CustomMipmapsLevels) {
-		Int32 lvls = min(lvlsWidth, lvlsHeight);
+		int lvls = min(lvlsWidth, lvlsHeight);
 		return min(lvls, 4);
 	} else {
 		return max(lvlsWidth, lvlsHeight);

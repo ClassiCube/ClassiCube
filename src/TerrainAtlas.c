@@ -15,8 +15,8 @@ void Atlas2D_UpdateState(Bitmap* bmp) {
 }
 
 static GfxResourceID Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element) {
-	Int32 size = Atlas2D_TileSize;
-	Int32 x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
+	int size = Atlas2D_TileSize;
+	int x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
 	if (y >= Atlas2D_RowsCount) return NULL;
 
 	Bitmap_CopyBlock(x * size, y * size, 0, 0, &Atlas2D_Bitmap, element, size);
@@ -24,7 +24,7 @@ static GfxResourceID Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* e
 }
 
 GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {
-	Int32 size = Atlas2D_TileSize;
+	int size = Atlas2D_TileSize;
 	Bitmap tile;
 
 	/* Try to allocate bitmap on stack if possible */
@@ -46,9 +46,9 @@ void Atlas2D_Free(void) {
 }
 
 
-TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index) {
-	*index  = Atlas1D_Index(texLoc);
-	Int32 y = Atlas1D_RowId(texLoc);
+TextureRec Atlas1D_TexRec(TextureLoc texLoc, int uCount, int* index) {
+	*index = Atlas1D_Index(texLoc);
+	int y  = Atlas1D_RowId(texLoc);
 
 	/* Adjust coords to be slightly inside - fixes issues with AMD/ATI cards */
 	TextureRec rec;
@@ -59,19 +59,19 @@ TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index) {
 	return rec;
 }
 
-static void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
+static void Atlas1D_Convert2DTo1D(int atlasesCount, int atlas1DHeight) {
 	Atlas1D_Count = atlasesCount;
 	Platform_Log2("Loaded new atlas: %i bmps, %i per bmp", &atlasesCount, &Atlas1D_TilesPerAtlas);
 
-	Int32 tileSize = Atlas2D_TileSize;
+	int tileSize = Atlas2D_TileSize;
 	Bitmap atlas1D;
 	Bitmap_Allocate(&atlas1D, tileSize, atlas1DHeight);
 
-	Int32 tile = 0, i, y;
+	int tile = 0, i, y;
 	for (i = 0; i < atlasesCount; i++) {
 		for (y = 0; y < Atlas1D_TilesPerAtlas; y++, tile++) {
-			Int32 atlasX = Atlas2D_TileX(tile) * tileSize;
-			Int32 atlasY = Atlas2D_TileY(tile) * tileSize;
+			int atlasX = Atlas2D_TileX(tile) * tileSize;
+			int atlasY = Atlas2D_TileY(tile) * tileSize;
 
 			Bitmap_CopyBlock(atlasX, atlasY, 0, y * tileSize,
 				&Atlas2D_Bitmap, &atlas1D, tileSize);
@@ -82,13 +82,13 @@ static void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
 }
 
 void Atlas1D_UpdateState(void) {
-	Int32 maxAtlasHeight   = min(4096, Gfx_MaxTexHeight);
-	Int32 maxTilesPerAtlas = maxAtlasHeight / Atlas2D_TileSize;
-	Int32 maxTiles         = Atlas2D_RowsCount * ATLAS2D_TILES_PER_ROW;
+	int maxAtlasHeight   = min(4096, Gfx_MaxTexHeight);
+	int maxTilesPerAtlas = maxAtlasHeight / Atlas2D_TileSize;
+	int maxTiles         = Atlas2D_RowsCount * ATLAS2D_TILES_PER_ROW;
 
 	Atlas1D_TilesPerAtlas = min(maxTilesPerAtlas, maxTiles);
-	Int32 atlasesCount    = Math_CeilDiv(maxTiles, Atlas1D_TilesPerAtlas);
-	Int32 atlasHeight     = Atlas1D_TilesPerAtlas * Atlas2D_TileSize;
+	int atlasesCount    = Math_CeilDiv(maxTiles, Atlas1D_TilesPerAtlas);
+	int atlasHeight     = Atlas1D_TilesPerAtlas * Atlas2D_TileSize;
 
 	Atlas1D_InvTileSize = 1.0f / Atlas1D_TilesPerAtlas;
 	Atlas1D_Mask        = Atlas1D_TilesPerAtlas - 1;
@@ -97,9 +97,9 @@ void Atlas1D_UpdateState(void) {
 	Atlas1D_Convert2DTo1D(atlasesCount, atlasHeight);
 }
 
-Int32 Atlas1D_UsedAtlasesCount(void) {
+int Atlas1D_UsedAtlasesCount(void) {
 	TextureLoc maxTexLoc = 0;
-	Int32 i;
+	int i;
 
 	for (i = 0; i < Array_Elems(Block_Textures); i++) {
 		maxTexLoc = max(maxTexLoc, Block_Textures[i]);
@@ -108,7 +108,7 @@ Int32 Atlas1D_UsedAtlasesCount(void) {
 }
 
 void Atlas1D_Free(void) {
-	Int32 i;
+	int i;
 	for (i = 0; i < Atlas1D_Count; i++) {
 		Gfx_DeleteTexture(&Atlas1D_TexIds[i]);
 	}

@@ -14,13 +14,13 @@ bool Inventory_CanChangeSelected(void) {
 	return true;
 }
 
-void Inventory_SetSelectedIndex(Int32 index) {
+void Inventory_SetSelectedIndex(int index) {
 	if (!Inventory_CanChangeSelected()) return;
 	Inventory_SelectedIndex = index;
 	Event_RaiseVoid(&UserEvents_HeldBlockChanged);
 }
 
-void Inventory_SetOffset(Int32 offset) {
+void Inventory_SetOffset(int offset) {
 	if (!Inventory_CanChangeSelected() || Game_ClassicMode) return;
 	Inventory_Offset = offset;
 	Event_RaiseVoid(&UserEvents_HeldBlockChanged);
@@ -30,7 +30,7 @@ void Inventory_SetSelectedBlock(BlockID block) {
 	if (!Inventory_CanChangeSelected()) return;
 
 	/* Swap with the current, if the new block is already in the hotbar */
-	Int32 i;
+	int i;
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
 		if (Inventory_Get(i) != block) continue;
 		Inventory_Set(i, Inventory_SelectedBlock);
@@ -68,7 +68,7 @@ static BlockID Inventory_DefaultMapping(int slot) {
 }
 
 void Inventory_SetDefaultMapping(void) {
-	Int32 slot;
+	int slot;
 	for (slot = 0; slot < Array_Elems(Inventory_Map); slot++) {
 		Inventory_Map[slot] = Inventory_DefaultMapping(slot);
 	}
@@ -79,7 +79,7 @@ void Inventory_AddDefault(BlockID block) {
 		Inventory_Map[block - 1] = block; return;
 	}
 
-	Int32 slot;
+	int slot;
 	for (slot = 0; slot < BLOCK_MAX_CPE; slot++) {
 		if (Inventory_DefaultMapping(slot) != block) continue;
 		Inventory_Map[slot] = block;
@@ -88,7 +88,7 @@ void Inventory_AddDefault(BlockID block) {
 }
 
 void Inventory_Remove(BlockID block) {
-	Int32 slot;
+	int slot;
 	for (slot = 0; slot < Array_Elems(Inventory_Map); slot++) {
 		if (Inventory_Map[slot] == block) Inventory_Map[slot] = BLOCK_AIR;
 	}

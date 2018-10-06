@@ -8,7 +8,7 @@
 
 typedef struct Vector2_ { float X, Y; } Vector2;
 typedef struct Vector3_ { float X, Y, Z; } Vector3;
-typedef struct Vector3I_ { Int32 X, Y, Z; } Vector3I;
+typedef struct Vector3I_ { int X, Y, Z; } Vector3I;
 struct Vector4 { float X, Y, Z, W; };
 struct Matrix { struct Vector4 Row0, Row1, Row2, Row3; };
 extern struct Matrix Matrix_Identity;

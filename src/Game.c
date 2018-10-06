@@ -39,9 +39,9 @@
 #include "Bitmap.h"
 
 struct IGameComponent Game_Components[26];
-Int32 Game_ComponentsCount;
+int Game_ComponentsCount;
 struct ScheduledTask Game_Tasks[6];
-Int32 Game_TasksCount, entTaskI;
+int Game_TasksCount, entTaskI;
 
 char Game_UsernameBuffer[FILENAME_SIZE];
 String Game_Username = String_FromArray(Game_UsernameBuffer);
@@ -71,7 +71,7 @@ void IGameComponent_MakeEmpty(struct IGameComponent* comp) {
 	comp->OnNewMapLoaded = IGameComponent_NullFunc;
 }
 
-Int32 ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
+int ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
 	struct ScheduledTask task = { 0.0, interval, callback };
 	if (Game_TasksCount == Array_Elems(Game_Tasks)) {
 		ErrorHandler_Fail("ScheduledTask_Add - hit max count");
@@ -81,13 +81,13 @@ Int32 ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
 }
 
 
-Int32 Game_GetWindowScale(void) {
+int Game_GetWindowScale(void) {
 	float windowScale = min(Game_Width / 640.0f, Game_Height / 480.0f);
-	return 1 + (Int32)windowScale;
+	return 1 + (int)windowScale;
  }
 
 float Game_Scale(float value) {
-	return (float)((Int32)(value * 10 + 0.5f)) / 10.0f;
+	return (float)((int)(value * 10 + 0.5f)) / 10.0f;
 }
 
 float Game_GetHotbarScale(void) {
@@ -142,7 +142,7 @@ bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
 	return true;
 }
 
-void Game_SetViewDistance(Int32 distance) {
+void Game_SetViewDistance(int distance) {
 	distance = min(distance, Game_MaxViewDistance);
 	if (distance == Game_ViewDistance) return;
 	Game_ViewDistance = distance;
@@ -151,7 +151,7 @@ void Game_SetViewDistance(Int32 distance) {
 	Game_UpdateProjection();
 }
 
-void Game_UserSetViewDistance(Int32 distance) {
+void Game_UserSetViewDistance(int distance) {
 	Game_UserViewDistance = distance;
 	Options_SetInt(OPT_VIEW_DISTANCE, distance);
 	Game_SetViewDistance(distance);
@@ -177,13 +177,13 @@ void Game_Disconnect(const String* title, const String* reason) {
 	Block_Reset();
 	TexturePack_ExtractDefault();
 
-	Int32 i;
+	int i;
 	for (i = 0; i < Game_ComponentsCount; i++) {
 		Game_Components[i].Reset();
 	}
 }
 
-void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
+void Game_UpdateBlock(int x, int y, int z, BlockID block) {
 	BlockID oldBlock = World_GetBlock(x, y, z);
 	World_SetBlock(x, y, z, block);
 
@@ -193,7 +193,7 @@ void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
 	Lighting_OnBlockChanged(x, y, z, oldBlock, block);
 
 	/* Refresh the chunk the block was located in. */
-	Int32 cx = x >> 4, cy = y >> 4, cz = z >> 4;
+	int cx = x >> 4, cy = y >> 4, cz = z >> 4;
 	struct ChunkInfo* chunk = MapRenderer_GetChunk(cx, cy, cz);
 	chunk->AllAir &= Block_Draw[block] == DRAW_GAS;
 	MapRenderer_RefreshChunk(cx, cy, cz);
@@ -229,7 +229,7 @@ bool Game_ValidateBitmap(const String* file, Bitmap* bmp) {
 		return false;
 	}
 
-	Int32 maxWidth = Gfx_MaxTexWidth, maxHeight = Gfx_MaxTexHeight;
+	int maxWidth = Gfx_MaxTexWidth, maxHeight = Gfx_MaxTexHeight;
 	if (bmp->Width > maxWidth || bmp->Height > maxHeight) {
 		Chat_Add1("&cUnable to use %s from the texture pack.", file);
 
@@ -248,16 +248,12 @@ bool Game_ValidateBitmap(const String* file, Bitmap* bmp) {
 	return true;
 }
 
-Int32 Game_CalcRenderType(const String* type) {
-	if (String_CaselessEqualsConst(type, "legacyfast")) {
-		return 0x03;
-	} else if (String_CaselessEqualsConst(type, "legacy")) {
-		return 0x01;
-	} else if (String_CaselessEqualsConst(type, "normal")) {
-		return 0x00;
-	} else if (String_CaselessEqualsConst(type, "normalfast")) {
-		return 0x02;
-	}
+int Game_CalcRenderType(const String* type) {
+	if (String_CaselessEqualsConst(type, "legacyfast")) return 0x03;
+	if (String_CaselessEqualsConst(type, "legacy"))     return 0x01;
+	if (String_CaselessEqualsConst(type, "normal"))     return 0x00;
+	if (String_CaselessEqualsConst(type, "normalfast")) return 0x02;
+
 	return -1;
 }
 
@@ -275,14 +271,14 @@ static void Game_OnResize(void* obj) {
 }
 
 static void Game_OnNewMapCore(void* obj) {
-	Int32 i;
+	int i;
 	for (i = 0; i < Game_ComponentsCount; i++) {
 		Game_Components[i].OnNewMap();
 	}
 }
 
 static void Game_OnNewMapLoadedCore(void* obj) {
-	Int32 i;
+	int i;
 	for (i = 0; i < Game_ComponentsCount; i++) {
 		Game_Components[i].OnNewMapLoaded();
 	}
@@ -473,7 +469,7 @@ void Game_Load(void) {
 	char renderTypeBuffer[STRING_SIZE];
 	String renderType = String_FromArray(renderTypeBuffer);
 	Options_Get(OPT_RENDER_TYPE, &renderType, "normal");
-	Int32 flags = Game_CalcRenderType(&renderType);
+	int flags = Game_CalcRenderType(&renderType);
 
 	if (flags == -1) flags = 0;
 	EnvRenderer_Legacy  = (flags & 1);
@@ -508,7 +504,7 @@ void Game_Load(void) {
 	/* TODO: plugin dll support */
 	/* List<string> nonLoaded = PluginLoader.LoadAll(); */
 
-	Int32 i;
+	int i;
 	for (i = 0; i < Game_ComponentsCount; i++) {
 		Game_Components[i].Init();
 	}
@@ -559,7 +555,7 @@ static void Game_LimitFPS(void) {
 
 	/* going faster than limit */
 	if (leftOver > 0.001f) {
-		Thread_Sleep((Int32)(leftOver + 0.5f));
+		Thread_Sleep((int)(leftOver + 0.5f));
 	}
 }
 
@@ -621,7 +617,7 @@ static void Game_Render3D(double delta, float t) {
 }
 
 static void Game_DoScheduledTasks(double time) {
-	Int32 i;
+	int i;
 	for (i = 0; i < Game_TasksCount; i++) {
 		struct ScheduledTask task = Game_Tasks[i];
 		task.Accumulator += time;
@@ -640,8 +636,8 @@ void Game_TakeScreenshot(void) {
 	if (!Utils_EnsureDirectory("screenshots")) return;
 
 	DateTime now; DateTime_CurrentLocal(&now);
-	Int32 year = now.Year, month = now.Month, day = now.Day;
-	Int32 hour = now.Hour, min = now.Minute, sec = now.Second;
+	int year = now.Year, month = now.Month, day = now.Day;
+	int hour = now.Hour, min = now.Minute, sec = now.Second;
 
 	char fileBuffer[STRING_SIZE];
 	String filename = String_FromArray(fileBuffer);
@@ -727,7 +723,7 @@ void Game_Free(void* obj) {
 	Event_UnregisterVoid(&WindowEvents_Resized,       NULL, Game_OnResize);
 	Event_UnregisterVoid(&WindowEvents_Closed,        NULL, Game_Free);
 
-	Int32 i;
+	int i;
 	for (i = 0; i < Game_ComponentsCount; i++) {
 		Game_Components[i].Free();
 	}
@@ -741,9 +737,9 @@ void Game_Free(void* obj) {
 }
 
 UInt64 game_renderTimer;
-void Game_Run(Int32 width, Int32 height, const String* title, struct DisplayDevice* device) {
-	Int32 x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
-	Int32 y = device->Bounds.Y + (device->Bounds.Height - height) / 2;
+void Game_Run(int width, int height, const String* title, struct DisplayDevice* device) {
+	int x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
+	int y = device->Bounds.Y + (device->Bounds.Height - height) / 2;
 	struct GraphicsMode mode = GraphicsMode_MakeDefault();
 
 	Window_Create(x, y, width, height, title, &mode, device);

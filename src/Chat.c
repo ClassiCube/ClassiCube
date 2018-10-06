@@ -19,9 +19,9 @@
 #define CHAT_LOGTIMES_DEF_ELEMS 256
 TimeMS Chat_DefaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
 TimeMS* Chat_LogTimes = Chat_DefaultLogTimes;
-Int32 Chat_LogTimesMax = CHAT_LOGTIMES_DEF_ELEMS, Chat_LogTimesCount;
+int Chat_LogTimesMax = CHAT_LOGTIMES_DEF_ELEMS, Chat_LogTimesCount;
 
-TimeMS Chat_GetLogTime(Int32 i) {
+TimeMS Chat_GetLogTime(int i) {
 	if (i < 0 || i >= Chat_LogTimesCount) ErrorHandler_Fail("Tried to get time past LogTime end");
 	return Chat_LogTimes[i];
 }
@@ -70,7 +70,7 @@ void Chat_SetLogName(const String* name) {
 	String noColsName = String_FromArray(noColsBuffer);
 	String_AppendColorless(&noColsName, name);
 
-	Int32 i;
+	int i;
 	for (i = 0; i < noColsName.length; i++) {
 		if (Chat_AllowedLogChar(noColsName.buffer[i])) {
 			String_Append(&Chat_LogName, noColsName.buffer[i]);
@@ -88,7 +88,7 @@ static void Chat_OpenLog(DateTime* now) {
 	if (!Utils_EnsureDirectory("logs")) { Chat_DisableLogging(); return; }
 
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
-	Int32 i, year = now->Year, month = now->Month, day = now->Day;
+	int i, year = now->Year, month = now->Month, day = now->Day;
 	for (i = 0; i < 20; i++) {
 		String* path = &Chat_LogPath;
 		path->length = 0;
@@ -131,7 +131,7 @@ static void Chat_AppendLog(const String* text) {
 	String str = String_FromArray(logBuffer);
 
 	/* [HH:mm:ss] text */
-	Int32 hour = now.Hour, minute = now.Minute, second = now.Second;
+	int hour = now.Hour, minute = now.Minute, second = now.Second;
 	String_Format3(&str, "[%p2:%p2:%p2] ", &hour, &minute, &second);
 	String_AppendColorless(&str, text);
 
@@ -169,7 +169,7 @@ void Chat_AddRaw(const char* raw) {
 }
 void Chat_Add(const String* text) { Chat_AddOf(text, MSG_TYPE_NORMAL); }
 
-void Chat_AddOf(const String* text, Int32 msgType) {
+void Chat_AddOf(const String* text, int msgType) {
 	Event_RaiseChat(&ChatEvents_ChatReceived, text, msgType);
 
 	if (msgType == MSG_TYPE_NORMAL) {
@@ -194,7 +194,7 @@ void Chat_AddOf(const String* text, Int32 msgType) {
 struct ChatCommand {
 	const char* Name;
 	const char* Help[5];
-	void (*Execute)(const String* args, Int32 argsCount);
+	void (*Execute)(const String* args, int argsCount);
 	bool SingleplayerOnly;
 };
 typedef void (*ChatCommandConstructor)(struct ChatCommand* cmd);
@@ -202,7 +202,7 @@ typedef void (*ChatCommandConstructor)(struct ChatCommand* cmd);
 #define COMMANDS_PREFIX "/client"
 #define COMMANDS_PREFIX_SPACE "/client "
 struct ChatCommand commands_list[8];
-Int32 commands_count;
+int commands_count;
 
 static bool Commands_IsCommandPrefix(const String* input) {
 	if (!input->length) return false;
@@ -227,7 +227,7 @@ static void Commands_Register(ChatCommandConstructor constructor) {
 
 static struct ChatCommand* Commands_GetMatch(const String* cmdName) {
 	struct ChatCommand* match = NULL;
-	Int32 i;
+	int i;
 	for (i = 0; i < commands_count; i++) {
 		struct ChatCommand* cmd = &commands_list[i];
 		String name = String_FromReadonly(cmd->Name);
@@ -255,7 +255,7 @@ static struct ChatCommand* Commands_GetMatch(const String* cmdName) {
 static void Commands_PrintDefined(void) {
 	char strBuffer[STRING_SIZE];
 	String str = String_FromArray(strBuffer);
-	Int32 i;
+	int i;
 
 	for (i = 0; i < commands_count; i++) {
 		struct ChatCommand* cmd = &commands_list[i];
@@ -277,7 +277,7 @@ static void Commands_Execute(const String* input) {
 	String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
 	String prefix      = String_FromConst(COMMANDS_PREFIX);
 
-	Int32 offset;
+	int offset;
 	if (String_CaselessStarts(&text, &prefixSpace)) { /* /clientcommand args */
 		offset = prefixSpace.length;
 	} else if (String_CaselessStarts(&text, &prefix)) { /* /client command args */
@@ -295,7 +295,7 @@ static void Commands_Execute(const String* input) {
 	}
 
 	String args[10];
-	Int32 argsCount = Array_Elems(args);
+	int argsCount = Array_Elems(args);
 	String_UNSAFE_Split(&text, ' ', args, &argsCount);
 
 	struct ChatCommand* cmd = Commands_GetMatch(&args[0]);
@@ -307,7 +307,7 @@ static void Commands_Execute(const String* input) {
 /*########################################################################################################################*
 *-------------------------------------------------------Help command------------------------------------------------------*
 *#########################################################################################################################*/
-static void HelpCommand_Execute(const String* args, Int32 argsCount) {
+static void HelpCommand_Execute(const String* args, int argsCount) {
 	if (argsCount == 1) {
 		Chat_AddRaw("&eList of client commands:");
 		Commands_PrintDefined();
@@ -316,7 +316,7 @@ static void HelpCommand_Execute(const String* args, Int32 argsCount) {
 		struct ChatCommand* cmd = Commands_GetMatch(&args[1]);
 		if (!cmd) return;
 
-		Int32 i;
+		int i;
 		for (i = 0; i < Array_Elems(cmd->Help); i++) {
 			if (!cmd->Help[i]) continue;
 			Chat_AddRaw(cmd->Help[i]);
@@ -335,9 +335,9 @@ static void HelpCommand_Make(struct ChatCommand* cmd) {
 /*########################################################################################################################*
 *------------------------------------------------------GpuInfo command----------------------------------------------------*
 *#########################################################################################################################*/
-static void GpuInfoCommand_Execute(const String* args, Int32 argsCount) {
+static void GpuInfoCommand_Execute(const String* args, int argsCount) {
 	Gfx_UpdateApiInfo();
-	Int32 i;
+	int i;
 	for (i = 0; i < Array_Elems(Gfx_ApiInfo); i++) {
 		if (!Gfx_ApiInfo[i].length) continue;
 		Chat_Add1("&a%s", &Gfx_ApiInfo[i]);
@@ -355,12 +355,12 @@ static void GpuInfoCommand_Make(struct ChatCommand* cmd) {
 /*########################################################################################################################*
 *----------------------------------------------------RenderType command---------------------------------------------------*
 *#########################################################################################################################*/
-static void RenderTypeCommand_Execute(const String* args, Int32 argsCount) {
+static void RenderTypeCommand_Execute(const String* args, int argsCount) {
 	if (argsCount == 1) {
 		Chat_AddRaw("&e/client: &cYou didn't specify a new render type."); return;
 	}
 
-	Int32 flags = Game_CalcRenderType(&args[1]);
+	int flags = Game_CalcRenderType(&args[1]);
 	if (flags >= 0) {
 		EnvRenderer_UseLegacyMode( flags & 1);
 		EnvRenderer_UseMinimalMode(flags & 2);
@@ -382,8 +382,8 @@ static void RenderTypeCommand_Make(struct ChatCommand* cmd) {
 	cmd->Execute = RenderTypeCommand_Execute;
 }
 
-static void ResolutionCommand_Execute(const String* args, Int32 argsCount) {
-	Int32 width, height;
+static void ResolutionCommand_Execute(const String* args, int argsCount) {
+	int width, height;
 	if (argsCount < 3) {
 		Chat_AddRaw("&e/client: &cYou didn't specify width and height");
 	} else if (!Convert_TryParseInt32(&args[1], &width) || !Convert_TryParseInt32(&args[2], &height)) {
@@ -404,7 +404,7 @@ static void ResolutionCommand_Make(struct ChatCommand* cmd) {
 	cmd->Execute = ResolutionCommand_Execute;
 }
 
-static void ModelCommand_Execute(const String* args, Int32 argsCount) {
+static void ModelCommand_Execute(const String* args, int argsCount) {
 	if (argsCount == 1) {
 		Chat_AddRaw("&e/client model: &cYou didn't specify a model name.");
 	} else {
@@ -428,15 +428,15 @@ static void ModelCommand_Make(struct ChatCommand* cmd) {
 /*########################################################################################################################*
 *-------------------------------------------------------CuboidCommand-----------------------------------------------------*
 *#########################################################################################################################*/
-Int32 cuboid_block = -1;
+int cuboid_block = -1;
 Vector3I cuboid_mark1, cuboid_mark2;
 bool cuboid_persist, cuboid_hooked;
 
-static bool CuboidCommand_ParseBlock(const String* args, Int32 argsCount) {
+static bool CuboidCommand_ParseBlock(const String* args, int argsCount) {
 	if (argsCount == 1) return true;
 	if (String_CaselessEqualsConst(&args[1], "yes")) { cuboid_persist = true; return true; }
 
-	Int32 raw = Block_Parse(&args[1]);
+	int raw = Block_Parse(&args[1]);
 	if (raw == -1) {
 		Chat_Add1("&eCuboid: &c\"%s\" is not a valid block name or id.", &args[1]); return false;
 	}
@@ -459,7 +459,7 @@ static void CuboidCommand_DoCuboid(void) {
 	BlockID toPlace = (BlockID)cuboid_block;
 	if (cuboid_block == -1) toPlace = Inventory_SelectedBlock;
 
-	Int32 x, y, z;
+	int x, y, z;
 	for (y = min.Y; y <= max.Y; y++) {
 		for (z = min.Z; z <= max.Z; z++) {
 			for (x = min.X; x <= max.X; x++) {
@@ -494,7 +494,7 @@ static void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID old, 
 	}
 }
 
-static void CuboidCommand_Execute(const String* args, Int32 argsCount) {
+static void CuboidCommand_Execute(const String* args, int argsCount) {
 	if (cuboid_hooked) {
 		Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
 		cuboid_hooked = false;
@@ -531,7 +531,7 @@ static void CuboidCommand_Make(struct ChatCommand* cmd) {
 /*########################################################################################################################*
 *------------------------------------------------------TeleportCommand----------------------------------------------------*
 *#########################################################################################################################*/
-static void TeleportCommand_Execute(const String* args, Int32 argsCount) {
+static void TeleportCommand_Execute(const String* args, int argsCount) {
 	if (argsCount != 4) {
 		Chat_AddRaw("&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
 	} else {

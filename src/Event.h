@@ -16,7 +16,7 @@ struct Event_Void {
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
 };
 
-typedef void (*Event_Int_Callback)(void* obj, Int32 argument);
+typedef void (*Event_Int_Callback)(void* obj, int argument);
 struct Event_Int {
 	Event_Int_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
@@ -40,13 +40,13 @@ struct Event_Block {
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
 };
 
-typedef void (*Event_MouseMove_Callback)(void* obj, Int32 xDelta, Int32 yDelta);
+typedef void (*Event_MouseMove_Callback)(void* obj, int xDelta, int yDelta);
 struct Event_MouseMove {
 	Event_MouseMove_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
 };
 
-typedef void (*Event_Chat_Callback)(void* obj, const String* msg, Int32 msgType);
+typedef void (*Event_Chat_Callback)(void* obj, const String* msg, int msgType);
 struct Event_Chat {
 	Event_Chat_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
@@ -56,7 +56,7 @@ void Event_RaiseVoid(struct Event_Void* handlers);
 void Event_RegisterVoid(struct Event_Void* handlers, void* obj, Event_Void_Callback handler);
 void Event_UnregisterVoid(struct Event_Void* handlers, void* obj, Event_Void_Callback handler);
 
-void Event_RaiseInt(struct Event_Int* handlers, Int32 arg);
+void Event_RaiseInt(struct Event_Int* handlers, int arg);
 void Event_RegisterInt(struct Event_Int* handlers, void* obj, Event_Int_Callback handler);
 void Event_UnregisterInt(struct Event_Int* handlers, void* obj, Event_Int_Callback handler);
 
@@ -72,11 +72,11 @@ void Event_RaiseBlock(struct Event_Block* handlers, Vector3I coords, BlockID old
 void Event_RegisterBlock(struct Event_Block* handlers, void* obj, Event_Block_Callback handler);
 void Event_UnregisterBlock(struct Event_Block* handlers, void* obj, Event_Block_Callback handler);
 
-void Event_RaiseMouseMove(struct Event_MouseMove* handlers, Int32 xDelta, Int32 yDelta);
+void Event_RaiseMouseMove(struct Event_MouseMove* handlers, int xDelta, int yDelta);
 void Event_RegisterMouseMove(struct Event_MouseMove* handlers, void* obj, Event_MouseMove_Callback handler);
 void Event_UnregisterMouseMove(struct Event_MouseMove* handlers, void* obj, Event_MouseMove_Callback handler);
 
-void Event_RaiseChat(struct Event_Chat* handlers, const String* msg, Int32 msgType);
+void Event_RaiseChat(struct Event_Chat* handlers, const String* msg, int msgType);
 void Event_RegisterChat(struct Event_Chat* handlers, void* obj, Event_Chat_Callback handler);
 void Event_UnregisterChat(struct Event_Chat* handlers, void* obj, Event_Chat_Callback handler);
 

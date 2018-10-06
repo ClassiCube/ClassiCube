@@ -1,6 +1,6 @@
 #include "DisplayDevice.h"
 
-struct ColorFormat ColorFormat_FromBPP(Int32 bpp) {
+struct ColorFormat ColorFormat_FromBPP(int bpp) {
 	struct ColorFormat format = { 0 };
 	format.BitsPerPixel = bpp;
 	UInt8 rba;
@@ -56,7 +56,7 @@ struct GraphicsMode GraphicsMode_Make(struct ColorFormat color, UInt8 depth, UIn
 }
 
 struct GraphicsMode GraphicsMode_MakeDefault(void) {
-	Int32 bpp = DisplayDevice_Default.BitsPerPixel;
+	int bpp = DisplayDevice_Default.BitsPerPixel;
 	struct ColorFormat format = ColorFormat_FromBPP(bpp);
 	return GraphicsMode_Make(format, 24, 0, 2);
 }

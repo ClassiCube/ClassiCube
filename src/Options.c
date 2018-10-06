@@ -20,7 +20,7 @@ void Options_Free(void) {
 }
 
 bool Options_HasChanged(const String* key) {
-	Int32 i;
+	int i;
 	for (i = 0; i < Options_Changed.Count; i++) {
 		String curKey = StringsBuffer_UNSAFE_Get(&Options_Changed, i);
 		if (String_CaselessEquals(&curKey, key)) return true;
@@ -28,8 +28,8 @@ bool Options_HasChanged(const String* key) {
 	return false;
 }
 
-static Int32 Options_Find(const String* key) {
-	Int32 i;
+static int Options_Find(const String* key) {
+	int i;
 	for (i = 0; i < Options_Keys.Count; i++) {
 		String curKey = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
 		if (String_CaselessEquals(&curKey, key)) return i;
@@ -41,13 +41,13 @@ static bool Options_TryGetValue(const char* keyRaw, String* value) {
 	String key = String_FromReadonly(keyRaw);
 	*value = String_MakeNull();
 
-	Int32 i = Options_Find(&key);
+	int i = Options_Find(&key);
 	if (i >= 0) {
 		*value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
 		return true; 
 	}
 
-	Int32 sepIndex = String_IndexOf(&key, '-', 0);
+	int sepIndex = String_IndexOf(&key, '-', 0);
 	if (sepIndex == -1) return false;
 	key = String_UNSAFE_SubstringAt(&key, sepIndex + 1);
 
@@ -71,9 +71,9 @@ void Options_Get(const char* key, String* value, const char* defValue) {
 	}
 }
 
-Int32 Options_GetInt(const char* key, Int32 min, Int32 max, Int32 defValue) {
+int Options_GetInt(const char* key, int min, int max, int defValue) {
 	String str;
-	Int32 value;
+	int value;
 	if (!Options_TryGetValue(key, &str))      return defValue;
 	if (!Convert_TryParseInt32(&str, &value)) return defValue;
 
@@ -106,13 +106,13 @@ UInt32 Options_GetEnum(const char* key, UInt32 defValue, const char** names, UIn
 	return Utils_ParseEnum(&str, defValue, names, namesCount);
 }
 
-static void Options_Remove(Int32 i) {
+static void Options_Remove(int i) {
 	StringsBuffer_Remove(&Options_Keys, i);
 	StringsBuffer_Remove(&Options_Values, i);
 }
 
-static Int32 Options_Insert(const String* key, const String* value) {
-	Int32 i = Options_Find(key);
+static int Options_Insert(const String* key, const String* value) {
+	int i = Options_Find(key);
 	if (i >= 0) Options_Remove(i);
 
 	StringsBuffer_Add(&Options_Keys, key);
@@ -128,7 +128,7 @@ void Options_SetBool(const char* keyRaw, bool value) {
 	}
 }
 
-void Options_SetInt(const char* keyRaw, Int32 value) {
+void Options_SetInt(const char* keyRaw, int value) {
 	char numBuffer[STRING_INT_CHARS];
 	String numStr = String_FromArray(numBuffer);
 	String_AppendInt32(&numStr, value);
@@ -141,7 +141,7 @@ void Options_Set(const char* keyRaw, const String* value) {
 }
 
 void Options_SetString(const String* key, const String* value) {
-	Int32 i;
+	int i;
 	if (value == NULL || value->buffer == NULL) {
 		i = Options_Find(key);
 		if (i >= 0) Options_Remove(i);
@@ -162,7 +162,7 @@ void Options_Load(void) {
 	if (res) { Chat_LogError2(res, "opening", &path); return; }
 
 	/* Remove all the unchanged options */
-	Int32 i;
+	int i;
 	for (i = Options_Keys.Count - 1; i >= 0; i--) {
 		String key = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
 		if (Options_HasChanged(&key)) continue;
@@ -205,7 +205,7 @@ void Options_Save(void) {
 	char lineBuffer[1024];
 	String line = String_FromArray(lineBuffer);
 	struct Stream stream; Stream_FromFile(&stream, file);
-	Int32 i;
+	int i;
 
 	for (i = 0; i < Options_Keys.Count; i++) {
 		String key   = StringsBuffer_UNSAFE_Get(&Options_Keys,   i);

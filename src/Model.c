@@ -14,12 +14,12 @@
 #define AABB_Height(bb) (bb->Max.Y - bb->Min.Y)
 #define AABB_Length(bb) (bb->Max.Z - bb->Min.Z)
 
-void ModelVertex_Init(struct ModelVertex* vertex, float x, float y, float z, Int32 u, Int32 v) {
+void ModelVertex_Init(struct ModelVertex* vertex, float x, float y, float z, int u, int v) {
 	vertex->X = x; vertex->Y = y; vertex->Z = z;
 	vertex->U = (UInt16)u; vertex->V = (UInt16)v;
 }
 
-void ModelPart_Init(struct ModelPart* part, Int32 offset, Int32 count, float rotX, float rotY, float rotZ) {
+void ModelPart_Init(struct ModelPart* part, int offset, int count, float rotX, float rotY, float rotZ) {
 	part->Offset = offset; part->Count = count;
 	part->RotX = rotX; part->RotY = rotY; part->RotZ = rotZ;
 }
@@ -159,7 +159,7 @@ void Model_DrawPart(struct ModelPart* part) {
 	struct Model* model = Model_ActiveModel;
 	struct ModelVertex* src = &model->vertices[part->Offset];
 	VertexP3fT2fC4b* dst = &ModelCache_Vertices[model->index];
-	Int32 i, count = part->Count;
+	int i, count = part->Count;
 
 	for (i = 0; i < count; i++) {
 		struct ModelVertex v = *src;
@@ -186,7 +186,7 @@ void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart
 
 	struct ModelVertex* src = &model->vertices[part->Offset];
 	VertexP3fT2fC4b* dst = &ModelCache_Vertices[model->index];
-	Int32 i, count = part->Count;
+	int i, count = part->Count;
 
 	for (i = 0; i < count; i++) {
 		struct ModelVertex v = *src;
@@ -269,7 +269,7 @@ void Model_DrawArmPart(struct ModelPart* part) {
 /*########################################################################################################################*
 *----------------------------------------------------------BoxDesc--------------------------------------------------------*
 *#########################################################################################################################*/
-void BoxDesc_TexOrigin(struct BoxDesc* desc, Int32 x, Int32 y) {
+void BoxDesc_TexOrigin(struct BoxDesc* desc, int x, int y) {
 	desc->TexX = x; desc->TexY = y;
 }
 
@@ -286,10 +286,10 @@ void BoxDesc_MirrorX(struct BoxDesc* desc) {
 
 
 void BoxDesc_BuildBox(struct ModelPart* part, struct BoxDesc* desc) {
-	Int32 sidesW = desc->SizeZ, bodyW = desc->SizeX, bodyH = desc->SizeY;
+	int sidesW = desc->SizeZ, bodyW = desc->SizeX, bodyH = desc->SizeY;
 	float x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	float x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
-	Int32 x = desc->TexX, y = desc->TexY;
+	int x = desc->TexX, y = desc->TexY;
 	struct Model* m = Model_ActiveModel;
 
 	BoxDesc_YQuad(m, x + sidesW,                  y,          bodyW, sidesW, x1, x2, z2, z1, y2, true);  /* top */
@@ -304,10 +304,10 @@ void BoxDesc_BuildBox(struct ModelPart* part, struct BoxDesc* desc) {
 }
 
 void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc) {
-	Int32 sidesW = desc->SizeY, bodyW = desc->SizeX, bodyH = desc->SizeZ;
+	int sidesW = desc->SizeY, bodyW = desc->SizeX, bodyH = desc->SizeZ;
 	float x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	float x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
-	Int32 x = desc->TexX, y = desc->TexY;
+	int x = desc->TexX, y = desc->TexY;
 	struct Model* m = Model_ActiveModel;
 
 	BoxDesc_YQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW,  bodyH, x1, x2, z1, z2, y2, false); /* top */
@@ -318,7 +318,7 @@ void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc) {
 	BoxDesc_XQuad(m, x + sidesW + bodyW,          y + sidesW, sidesW, bodyH, y1, y2, z2, z1, x1, false); /* right */
 
 	/* rotate left and right 90 degrees	*/
-	Int32 i;
+	int i;
 	for (i = m->index - 8; i < m->index; i++) {
 		struct ModelVertex vertex = m->vertices[i];
 		float z = vertex.Z; vertex.Z = vertex.Y; vertex.Y = z;
@@ -330,10 +330,9 @@ void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc) {
 }
 
 
-void BoxDesc_XQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
-	float z1, float z2, float y1, float y2, float x, bool swapU) {
-	Int32 u1 = texX, u2 = (texX + texWidth) | UV_MAX;
-	if (swapU) { Int32 tmp = u1; u1 = u2; u2 = tmp; }
+void BoxDesc_XQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float z1, float z2, float y1, float y2, float x, bool swapU) {
+	int u1 = texX, u2 = (texX + texWidth) | UV_MAX;
+	if (swapU) { int tmp = u1; u1 = u2; u2 = tmp; }
 
 	ModelVertex_Init(&m->vertices[m->index], x, y1, z1, u1, (texY + texHeight) | UV_MAX); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x, y2, z1, u1, texY); m->index++;
@@ -341,10 +340,9 @@ void BoxDesc_XQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int3
 	ModelVertex_Init(&m->vertices[m->index], x, y1, z2, u2, (texY + texHeight) | UV_MAX); m->index++;
 }
 
-void BoxDesc_YQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
-	float x1, float x2, float z1, float z2, float y, bool swapU) {
-	Int32 u1 = texX, u2 = (texX + texWidth) | UV_MAX;
-	if (swapU) { Int32 tmp = u1; u1 = u2; u2 = tmp; }
+void BoxDesc_YQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float x1, float x2, float z1, float z2, float y, bool swapU) {
+	int u1 = texX, u2 = (texX + texWidth) | UV_MAX;
+	if (swapU) { int tmp = u1; u1 = u2; u2 = tmp; }
 
 	ModelVertex_Init(&m->vertices[m->index], x1, y, z2, u1, (texY + texHeight) | UV_MAX); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x1, y, z1, u1, texY); m->index++;
@@ -352,10 +350,9 @@ void BoxDesc_YQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int3
 	ModelVertex_Init(&m->vertices[m->index], x2, y, z2, u2, (texY + texHeight) | UV_MAX); m->index++;
 }
 
-void BoxDesc_ZQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
-	float x1, float x2, float y1, float y2, float z, bool swapU) {
-	Int32 u1 = texX, u2 = (texX + texWidth) | UV_MAX;
-	if (swapU) { Int32 tmp = u1; u1 = u2; u2 = tmp; }
+void BoxDesc_ZQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float x1, float x2, float y1, float y2, float z, bool swapU) {
+	int u1 = texX, u2 = (texX + texWidth) | UV_MAX;
+	if (swapU) { int tmp = u1; u1 = u2; u2 = tmp; }
 
 	ModelVertex_Init(&m->vertices[m->index], x1, y1, z, u1, (texY + texHeight) | UV_MAX); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x1, y2, z, u1, texY); m->index++;

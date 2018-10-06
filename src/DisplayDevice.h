@@ -11,7 +11,7 @@
 * See license.txt for licensing detailed licensing details.
 */
 
-struct DisplayDevice { Int32 BitsPerPixel; Rect2D Bounds; };
+struct DisplayDevice { int BitsPerPixel; Rect2D Bounds; };
 struct DisplayDevice DisplayDevice_Default;
 void* DisplayDevice_Meta[3];
 
@@ -21,7 +21,7 @@ struct ColorFormat {
 	Int32 BitsPerPixel;
 };
 
-struct ColorFormat ColorFormat_FromBPP(Int32 bpp);
+struct ColorFormat ColorFormat_FromBPP(int bpp);
 struct ColorFormat ColorFormat_FromRGBA(UInt8 r, UInt8 g, UInt8 b, UInt8 a);
 
 struct GraphicsMode {

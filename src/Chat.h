@@ -25,13 +25,13 @@ enum MSG_TYPE {
 struct ChatLine { char Buffer[STRING_SIZE]; TimeMS Received; };
 struct ChatLine Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
 StringsBuffer Chat_Log, Chat_InputLog;
-TimeMS Chat_GetLogTime(Int32 i);
+TimeMS Chat_GetLogTime(int i);
 
 void Chat_MakeComponent(struct IGameComponent* comp);
 void Chat_SetLogName(const String* name);
 void Chat_Send(const String* text, bool logUsage);
 void Chat_Add(const String* text);
-void Chat_AddOf(const String* text, Int32 messageType);
+void Chat_AddOf(const String* text, int messageType);
 void Chat_AddRaw(const char* raw);
 
 void Chat_LogError(ReturnCode result,  const char* place);

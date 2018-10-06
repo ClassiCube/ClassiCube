@@ -6,12 +6,12 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-Int32 MapRenderer_ChunksX, MapRenderer_ChunksY, MapRenderer_ChunksZ;
+int MapRenderer_ChunksX, MapRenderer_ChunksY, MapRenderer_ChunksZ;
 #define MapRenderer_Pack(cx, cy, cz) (((cz) * MapRenderer_ChunksY + (cy)) * MapRenderer_ChunksX + (cx))
 /* TODO: Swap Y and Z? Make sure to update ChunkUpdater's ResetChunkCache and ClearChunkCache methods! */
 
 /* The count of actual used 1D atlases. (i.e. 1DIndex(maxTextureLoc) + 1*/
-Int32 MapRenderer_1DUsedCount;
+int MapRenderer_1DUsedCount;
 /* The number of non-empty Normal ChunkPartInfos (across entire world) for each 1D atlas batch.
 1D atlas batches that do not have any ChunkPartInfos can be entirely skipped. */
 Int32 MapRenderer_NormalPartsCount[ATLAS1D_MAX_ATLASES];
@@ -32,7 +32,7 @@ bool MapRenderer_CheckingNormalParts[ATLAS1D_MAX_ATLASES];
 /* Render info for all chunks in the world. Unsorted.*/
 struct ChunkInfo* MapRenderer_Chunks;
 /* The number of chunks in the world, or ChunksX * ChunksY * ChunksZ */
-Int32 MapRenderer_ChunksCount;
+int MapRenderer_ChunksCount;
 /* Pointers to render info for all chunks in the world, sorted by distance from the camera. */
 struct ChunkInfo** MapRenderer_SortedChunks;
 /* Pointers to render info for all chunks in the world, sorted by distance from the camera.
@@ -40,15 +40,15 @@ Chunks that can be rendered (not empty and are visible) are included in this arr
 struct ChunkInfo** MapRenderer_RenderChunks;
 /* The number of actually used pointers in the RenderChunks array.
 Entries past this count should be ignored and skipped. */
-Int32 MapRenderer_RenderChunksCount;
+int MapRenderer_RenderChunksCount;
 /* Buffer for all chunk parts. There are (MapRenderer_ChunksCount * Atlas1D_Count) * 2 parts in the buffer,
  with parts for 'normal' buffer being in lower half. */
 struct ChunkPartInfo* MapRenderer_PartsBuffer_Raw;
 struct ChunkPartInfo* MapRenderer_PartsNormal;
 struct ChunkPartInfo* MapRenderer_PartsTranslucent;
 
-struct ChunkInfo* MapRenderer_GetChunk(Int32 cx, Int32 cy, Int32 cz);
-void MapRenderer_RefreshChunk(Int32 cx, Int32 cy, Int32 cz);
+struct ChunkInfo* MapRenderer_GetChunk(int cx, int cy, int cz);
+void MapRenderer_RefreshChunk(int cx, int cy, int cz);
 void MapRenderer_RenderNormal(double delta);
 void MapRenderer_RenderTranslucent(double delta);
 #endif

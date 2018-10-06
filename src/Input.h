@@ -87,12 +87,12 @@ typedef enum MouseButton_ {
 } MouseButton;
 
 float Mouse_Wheel;
-Int32 Mouse_X, Mouse_Y;
+int Mouse_X, Mouse_Y;
 
 bool Mouse_IsPressed(MouseButton btn);
 void Mouse_SetPressed(MouseButton btn, bool pressed);
 void Mouse_SetWheel(float wheel);
-void Mouse_SetPosition(Int32 x, Int32 y);
+void Mouse_SetPosition(int x, int y);
 
 
 /* Enumeration of all custom key bindings. */
@@ -119,7 +119,7 @@ void KeyBind_Init(void);
 
 extern UInt8 Hotkeys_LWJGL[256];
 struct HotkeyData {
-	Int32 TextIndex; /* contents to copy directly into the input bar */
+	int TextIndex; /* contents to copy directly into the input bar */
 	UInt8 Trigger;   /* Member of Key enumeration */
 	UInt8 Flags;     /* ctrl 1, shift 2, alt 4 */
 	bool StaysOpen;  /* whether the user is able to enter further input */
@@ -134,7 +134,7 @@ StringsBuffer HotkeysText;
 
 void Hotkeys_Add(Key trigger, UInt8 flags, const String* text, bool more);
 bool Hotkeys_Remove(Key trigger, UInt8 flags);
-Int32 Hotkeys_FindPartial(Key key);
+int Hotkeys_FindPartial(Key key);
 void Hotkeys_Init(void);
 void Hotkeys_UserRemovedHotkey(Key trigger, UInt8 flags);
 void Hotkeys_UserAddedHotkey(Key trigger, UInt8 flags, bool moreInput, const String* text);

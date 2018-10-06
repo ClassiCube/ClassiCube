@@ -23,12 +23,12 @@ void DateTime_HttpDate(TimeMS ms, String* str);
 
 UInt32 Utils_ParseEnum(const String* text, UInt32 defValue, const char** names, UInt32 namesCount);
 bool Utils_IsValidInputChar(char c, bool supportsCP437);
-bool Utils_IsUrlPrefix(const String* value, Int32 index);
+bool Utils_IsUrlPrefix(const String* value, int index);
 
 bool Utils_EnsureDirectory(const char* dirName);
 void Utils_UNSAFE_GetFilename(STRING_REF String* str);
-Int32 Utils_AccumulateWheelDelta(float* accmulator, float delta);
-#define Utils_AdjViewDist(value) ((Int32)(1.4142135f * (value)))
+int Utils_AccumulateWheelDelta(float* accmulator, float delta);
+#define Utils_AdjViewDist(value) ((int)(1.4142135f * (value)))
 
 UInt8 Utils_GetSkinType(Bitmap* bmp);
 UInt32 Utils_CRC32(UInt8* data, UInt32 length);

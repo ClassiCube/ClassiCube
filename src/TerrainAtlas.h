@@ -16,9 +16,9 @@
 #define ATLAS1D_MAX_ATLASES (ATLAS2D_TILES_PER_ROW * ATLAS2D_MAX_ROWS_COUNT)
 
 Bitmap Atlas2D_Bitmap;
-Int32 Atlas2D_TileSize, Atlas2D_RowsCount;
-Int32 Atlas1D_Count, Atlas1D_TilesPerAtlas;
-Int32 Atlas1D_Mask, Atlas1D_Shift;
+int Atlas2D_TileSize, Atlas2D_RowsCount;
+int Atlas1D_Count, Atlas1D_TilesPerAtlas;
+int Atlas1D_Mask, Atlas1D_Shift;
 float Atlas1D_InvTileSize;
 GfxResourceID Atlas1D_TexIds[ATLAS1D_MAX_ATLASES];
 
@@ -32,8 +32,8 @@ GfxResourceID Atlas1D_TexIds[ATLAS1D_MAX_ATLASES];
 void Atlas2D_UpdateState(Bitmap* bmp);
 GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc);
 void Atlas2D_Free(void);
-TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index);
+TextureRec Atlas1D_TexRec(TextureLoc texLoc, int uCount, int* index);
 void Atlas1D_UpdateState(void);
-Int32 Atlas1D_UsedAtlasesCount(void);
+int Atlas1D_UsedAtlasesCount(void);
 void Atlas1D_Free(void);
 #endif

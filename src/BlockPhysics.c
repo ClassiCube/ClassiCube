@@ -81,22 +81,22 @@ static UInt32 TickQueue_Dequeue(struct TickQueue* queue) {
 }
 
 
-typedef void(*PhysicsHandler)(Int32 index, BlockID block);
+typedef void(*PhysicsHandler)(int index, BlockID block);
 PhysicsHandler Physics_OnActivate[BLOCK_COUNT];
 PhysicsHandler Physics_OnRandomTick[BLOCK_COUNT];
 PhysicsHandler Physics_OnPlace[BLOCK_COUNT];
 PhysicsHandler Physics_OnDelete[BLOCK_COUNT];
 
 Random physics_rnd;
-Int32 physics_tickCount;
-Int32 physics_maxWaterX, physics_maxWaterY, physics_maxWaterZ;
+int physics_tickCount;
+int physics_maxWaterX, physics_maxWaterY, physics_maxWaterZ;
 struct TickQueue physics_lavaQ, physics_waterQ;
 
-#define physics_tickMask 0xF8000000UL
-#define physics_posMask 0x07FFFFFFUL
-#define physics_tickShift 27
-#define physics_defLavaTick (30UL << physics_tickShift)
-#define physics_defWaterTick (5UL << physics_tickShift)
+#define PHYSICS_TICK_MASK 0xF8000000UL
+#define PHYSICS_POS_MASK 0x07FFFFFFUL
+#define PHYSICS_TICK_SHIFT 27
+#define PHYSICS_LAVA_DELAY (30U << PHYSICS_TICK_SHIFT)
+#define PHYSICS_WATER_DELAY (5U << PHYSICS_TICK_SHIFT)
 
 static void Physics_OnNewMapLoaded(void* obj) {
 	TickQueue_Clear(&physics_lavaQ);
@@ -117,13 +117,13 @@ void Physics_SetEnabled(bool enabled) {
 	Physics_OnNewMapLoaded(NULL);
 }
 
-static void Physics_Activate(Int32 index) {
+static void Physics_Activate(int index) {
 	BlockID block = World_Blocks[index];
 	PhysicsHandler activate = Physics_OnActivate[block];
 	if (activate) activate(index, block);
 }
 
-static void Physics_ActivateNeighbours(Int32 x, Int32 y, Int32 z, Int32 index) {
+static void Physics_ActivateNeighbours(int x, int y, int z, int index) {
 	if (x > 0)          Physics_Activate(index - 1);
 	if (x < World_MaxX) Physics_Activate(index + 1);
 	if (z > 0)          Physics_Activate(index - World_Width);
@@ -132,7 +132,7 @@ static void Physics_ActivateNeighbours(Int32 x, Int32 y, Int32 z, Int32 index) {
 	if (y < World_MaxY) Physics_Activate(index + World_OneY);
 }
 
-static bool Physics_IsEdgeWater(Int32 x, Int32 y, Int32 z) {
+static bool Physics_IsEdgeWater(int x, int y, int z) {
 	if (!(Env_EdgeBlock == BLOCK_WATER || Env_EdgeBlock == BLOCK_STILL_WATER))
 		return false;
 
@@ -143,7 +143,7 @@ static bool Physics_IsEdgeWater(Int32 x, Int32 y, Int32 z) {
 
 static void Physics_BlockChanged(void* obj, Vector3I p, BlockID old, BlockID now) {
 	if (!Physics_Enabled) return;
-	Int32 index = World_Pack(p.X, p.Y, p.Z);
+	int index = World_Pack(p.X, p.Y, p.Z);
 
 	if (now == BLOCK_AIR && Physics_IsEdgeWater(p.X, p.Y, p.Z)) {
 		now = BLOCK_STILL_WATER;
@@ -161,18 +161,18 @@ static void Physics_BlockChanged(void* obj, Vector3I p, BlockID old, BlockID now
 }
 
 static void Physics_TickRandomBlocks(void) {
-	Int32 x, y, z;
+	int x, y, z;
 	for (y = 0; y < World_Height; y += CHUNK_SIZE) {
-		Int32 y2 = min(y + CHUNK_MAX, World_MaxY);
+		int y2 = min(y + CHUNK_MAX, World_MaxY);
 		for (z = 0; z < World_Length; z += CHUNK_SIZE) {
-			Int32 z2 = min(z + CHUNK_MAX, World_MaxZ);
+			int z2 = min(z + CHUNK_MAX, World_MaxZ);
 			for (x = 0; x < World_Width; x += CHUNK_SIZE) {
-				Int32 x2 = min(x + CHUNK_MAX, World_MaxX);
-				Int32 lo = World_Pack( x,  y,  z);
-				Int32 hi = World_Pack(x2, y2, z2);
+				int x2 = min(x + CHUNK_MAX, World_MaxX);
+				int lo = World_Pack( x,  y,  z);
+				int hi = World_Pack(x2, y2, z2);
 
 				/* Inlined 3 random ticks for this chunk */
-				Int32 index = Random_Range(&physics_rnd, lo, hi);
+				int index = Random_Range(&physics_rnd, lo, hi);
 				BlockID block = World_Blocks[index];
 				PhysicsHandler tick = Physics_OnRandomTick[block];
 				if (tick) tick(index, block);
@@ -192,8 +192,8 @@ static void Physics_TickRandomBlocks(void) {
 }
 
 
-static void Physics_DoFalling(Int32 index, BlockID block) {
-	Int32 found = -1, start = index;
+static void Physics_DoFalling(int index, BlockID block) {
+	int found = -1, start = index;
 	/* Find lowest block can fall into */
 	while (index >= World_OneY) {
 		index -= World_OneY;
@@ -205,7 +205,7 @@ static void Physics_DoFalling(Int32 index, BlockID block) {
 	}
 	if (found == -1) return;
 
-	Int32 x, y, z;
+	int x, y, z;
 	World_Unpack(found, x, y, z);
 	Game_UpdateBlock(x, y, z, block);
 
@@ -214,14 +214,14 @@ static void Physics_DoFalling(Int32 index, BlockID block) {
 	Physics_ActivateNeighbours(x, y, z, start);
 }
 
-static bool Physics_CheckItem(struct TickQueue* queue, Int32* posIndex) {
+static bool Physics_CheckItem(struct TickQueue* queue, int* posIndex) {
 	UInt32 packed = TickQueue_Dequeue(queue);
-	Int32 tickDelay = (Int32)((packed & physics_tickMask) >> physics_tickShift);
-	*posIndex = (Int32)(packed & physics_posMask);
+	int tickDelay = (int)((packed & PHYSICS_TICK_MASK) >> PHYSICS_TICK_SHIFT);
+	*posIndex = (int)(packed & PHYSICS_POS_MASK);
 
 	if (tickDelay > 0) {
 		tickDelay--;
-		UInt32 item = (UInt32)(*posIndex) | ((UInt32)tickDelay << physics_tickShift);
+		UInt32 item = (UInt32)(*posIndex) | ((UInt32)tickDelay << PHYSICS_TICK_SHIFT);
 		TickQueue_Enqueue(queue, item);
 		return false;
 	}
@@ -229,33 +229,33 @@ static bool Physics_CheckItem(struct TickQueue* queue, Int32* posIndex) {
 }
 
 
-static void Physics_HandleSapling(Int32 index, BlockID block) {
-	Int32 x, y, z;
+static void Physics_HandleSapling(int index, BlockID block) {
+	int x, y, z;
 	World_Unpack(index, x, y, z);
 
 	BlockID below = BLOCK_AIR;
 	if (y > 0) below = World_Blocks[index - World_OneY];
 	if (below != BLOCK_GRASS) return;
 
-	Int32 treeHeight = 5 + Random_Next(&physics_rnd, 3);
+	int treeHeight = 5 + Random_Next(&physics_rnd, 3);
 	Game_UpdateBlock(x, y, z, BLOCK_AIR);
 
 	if (TreeGen_CanGrow(x, y, z, treeHeight)) {
 		Vector3I coords[TREE_MAX_COUNT];
 		BlockRaw blocks[TREE_MAX_COUNT];
-		Int32 count = TreeGen_Grow(x, y, z, treeHeight, coords, blocks);
+		int count = TreeGen_Grow(x, y, z, treeHeight, coords, blocks);
 
-		Int32 m;
-		for (m = 0; m < count; m++) {
-			Game_UpdateBlock(coords[m].X, coords[m].Y, coords[m].Z, blocks[m]);
+		int i;
+		for (i = 0; i < count; i++) {
+			Game_UpdateBlock(coords[i].X, coords[i].Y, coords[i].Z, blocks[i]);
 		}
 	} else {
 		Game_UpdateBlock(x, y, z, BLOCK_SAPLING);
 	}
 }
 
-static void Physics_HandleDirt(Int32 index, BlockID block) {
-	Int32 x, y, z;
+static void Physics_HandleDirt(int index, BlockID block) {
+	int x, y, z;
 	World_Unpack(index, x, y, z);
 
 	if (Lighting_IsLit(x, y, z)) {
@@ -263,8 +263,8 @@ static void Physics_HandleDirt(Int32 index, BlockID block) {
 	}
 }
 
-static void Physics_HandleGrass(Int32 index, BlockID block) {
-	Int32 x, y, z;
+static void Physics_HandleGrass(int index, BlockID block) {
+	int x, y, z;
 	World_Unpack(index, x, y, z);
 
 	if (!Lighting_IsLit(x, y, z)) {
@@ -272,8 +272,8 @@ static void Physics_HandleGrass(Int32 index, BlockID block) {
 	}
 }
 
-static void Physics_HandleFlower(Int32 index, BlockID block) {
-	Int32 x, y, z;
+static void Physics_HandleFlower(int index, BlockID block) {
+	int x, y, z;
 	World_Unpack(index, x, y, z);
 
 	if (!Lighting_IsLit(x, y, z)) {
@@ -290,8 +290,8 @@ static void Physics_HandleFlower(Int32 index, BlockID block) {
 	}
 }
 
-static void Physics_HandleMushroom(Int32 index, BlockID block) {
-	Int32 x, y, z;
+static void Physics_HandleMushroom(int index, BlockID block) {
+	int x, y, z;
 	World_Unpack(index, x, y, z);
 
 	if (Lighting_IsLit(x, y, z)) {
@@ -309,22 +309,22 @@ static void Physics_HandleMushroom(Int32 index, BlockID block) {
 }
 
 
-static void Physics_PlaceLava(Int32 index, BlockID block) {
-	TickQueue_Enqueue(&physics_lavaQ, physics_defLavaTick | (UInt32)index);
+static void Physics_PlaceLava(int index, BlockID block) {
+	TickQueue_Enqueue(&physics_lavaQ, PHYSICS_LAVA_DELAY | index);
 }
 
-static void Physics_PropagateLava(Int32 posIndex, Int32 x, Int32 y, Int32 z) {
+static void Physics_PropagateLava(int posIndex, int x, int y, int z) {
 	BlockID block = World_Blocks[posIndex];
 	if (block == BLOCK_WATER || block == BLOCK_STILL_WATER) {
 		Game_UpdateBlock(x, y, z, BLOCK_STONE);
 	} else if (Block_Collide[block] == COLLIDE_GAS) {
-		TickQueue_Enqueue(&physics_lavaQ, physics_defLavaTick | (UInt32)posIndex);
+		TickQueue_Enqueue(&physics_lavaQ, PHYSICS_LAVA_DELAY | posIndex);
 		Game_UpdateBlock(x, y, z, BLOCK_LAVA);
 	}
 }
 
-static void Physics_ActivateLava(Int32 index, BlockID block) {
-	Int32 x, y, z;
+static void Physics_ActivateLava(int index, BlockID block) {
+	int x, y, z;
 	World_Unpack(index, x, y, z);
 
 	if (x > 0)          Physics_PropagateLava(index - 1, x - 1, y, z);
@@ -335,9 +335,9 @@ static void Physics_ActivateLava(Int32 index, BlockID block) {
 }
 
 static void Physics_TickLava(void) {
-	Int32 i, count = physics_lavaQ.Size;
+	int i, count = physics_lavaQ.Size;
 	for (i = 0; i < count; i++) {
-		Int32 index;
+		int index;
 		if (Physics_CheckItem(&physics_lavaQ, &index)) {
 			BlockID block = World_Blocks[index];
 			if (!(block == BLOCK_LAVA || block == BLOCK_STILL_LAVA)) continue;
@@ -347,17 +347,17 @@ static void Physics_TickLava(void) {
 }
 
 
-static void Physics_PlaceWater(Int32 index, BlockID block) {
-	TickQueue_Enqueue(&physics_waterQ, physics_defWaterTick | (UInt32)index);
+static void Physics_PlaceWater(int index, BlockID block) {
+	TickQueue_Enqueue(&physics_waterQ, PHYSICS_WATER_DELAY | index);
 }
 
-static void Physics_PropagateWater(Int32 posIndex, Int32 x, Int32 y, Int32 z) {
+static void Physics_PropagateWater(int posIndex, int x, int y, int z) {
 	BlockID block = World_Blocks[posIndex];
 	if (block == BLOCK_LAVA || block == BLOCK_STILL_LAVA) {
 		Game_UpdateBlock(x, y, z, BLOCK_STONE);
 	} else if (Block_Collide[block] == COLLIDE_GAS && block != BLOCK_ROPE) {
 		/* Sponge check */
-		Int32 xx, yy, zz;
+		int xx, yy, zz;
 		for (yy = (y < 2 ? 0 : y - 2); yy <= (y > physics_maxWaterY ? World_MaxY : y + 2); yy++) {
 			for (zz = (z < 2 ? 0 : z - 2); zz <= (z > physics_maxWaterZ ? World_MaxZ : z + 2); zz++) {
 				for (xx = (x < 2 ? 0 : x - 2); xx <= (x > physics_maxWaterX ? World_MaxX : x + 2); xx++) {
@@ -367,13 +367,13 @@ static void Physics_PropagateWater(Int32 posIndex, Int32 x, Int32 y, Int32 z) {
 			}
 		}
 
-		TickQueue_Enqueue(&physics_waterQ, physics_defWaterTick | (UInt32)posIndex);
+		TickQueue_Enqueue(&physics_waterQ, PHYSICS_WATER_DELAY | posIndex);
 		Game_UpdateBlock(x, y, z, BLOCK_WATER);
 	}
 }
 
-static void Physics_ActivateWater(Int32 index, BlockID block) {
-	Int32 x, y, z;
+static void Physics_ActivateWater(int index, BlockID block) {
+	int x, y, z;
 	World_Unpack(index, x, y, z);
 
 	if (x > 0)          Physics_PropagateWater(index - 1,           x - 1, y,     z);
@@ -384,9 +384,9 @@ static void Physics_ActivateWater(Int32 index, BlockID block) {
 }
 
 static void Physics_TickWater(void) {
-	Int32 i, count = physics_waterQ.Size;
+	int i, count = physics_waterQ.Size;
 	for (i = 0; i < count; i++) {
-		Int32 index;
+		int index;
 		if (Physics_CheckItem(&physics_waterQ, &index)) {
 			BlockID block = World_Blocks[index];
 			if (!(block == BLOCK_WATER || block == BLOCK_STILL_WATER)) continue;
@@ -396,10 +396,10 @@ static void Physics_TickWater(void) {
 }
 
 
-static void Physics_PlaceSponge(Int32 index, BlockID block) {
-	Int32 x, y, z;
+static void Physics_PlaceSponge(int index, BlockID block) {
+	int x, y, z;
 	World_Unpack(index, x, y, z);
-	Int32 xx, yy, zz;
+	int xx, yy, zz;
 
 	for (yy = y - 2; yy <= y + 2; yy++) {
 		for (zz = z - 2; zz <= z + 2; zz++) {
@@ -414,10 +414,10 @@ static void Physics_PlaceSponge(Int32 index, BlockID block) {
 	}
 }
 
-static void Physics_DeleteSponge(Int32 index, BlockID block) {
-	Int32 x, y, z;
+static void Physics_DeleteSponge(int index, BlockID block) {
+	int x, y, z;
 	World_Unpack(index, x, y, z);
-	Int32 xx, yy, zz;
+	int xx, yy, zz;
 
 	for (yy = y - 3; yy <= y + 3; yy++) {
 		for (zz = z - 3; zz <= z + 3; zz++) {
@@ -428,7 +428,7 @@ static void Physics_DeleteSponge(Int32 index, BlockID block) {
 					index = World_Pack(xx, yy, zz);
 					block = World_Blocks[index];
 					if (block == BLOCK_WATER || block == BLOCK_STILL_WATER) {
-						UInt32 item = (1UL << physics_tickShift) | (UInt32)index;
+						UInt32 item = (1UL << PHYSICS_TICK_SHIFT) | (UInt32)index;
 						TickQueue_Enqueue(&physics_waterQ, item);
 					}
 				}
@@ -438,21 +438,21 @@ static void Physics_DeleteSponge(Int32 index, BlockID block) {
 }
 
 
-static void Physics_HandleSlab(Int32 index, BlockID block) {
+static void Physics_HandleSlab(int index, BlockID block) {
 	if (index < World_OneY) return;
 	if (World_Blocks[index - World_OneY] != BLOCK_SLAB) return;
 
-	Int32 x, y, z;
+	int x, y, z;
 	World_Unpack(index, x, y, z);
 	Game_UpdateBlock(x, y, z, BLOCK_AIR);
 	Game_UpdateBlock(x, y - 1, z, BLOCK_DOUBLE_SLAB);
 }
 
-static void Physics_HandleCobblestoneSlab(Int32 index, BlockID block) {
+static void Physics_HandleCobblestoneSlab(int index, BlockID block) {
 	if (index < World_OneY) return;
 	if (World_Blocks[index - World_OneY] != BLOCK_COBBLE_SLAB) return;
 
-	Int32 x, y, z;
+	int x, y, z;
 	World_Unpack(index, x, y, z);
 	Game_UpdateBlock(x, y, z, BLOCK_AIR);
 	Game_UpdateBlock(x, y - 1, z, BLOCK_COBBLE);
@@ -465,19 +465,19 @@ UInt8 physics_blocksTnt[BLOCK_CPE_COUNT] = {
 	1, 1, 1, 0, 1, 0, 0, 0,  0, 0, 0, 0, 0, 1, 1, 1,  1, 1,
 };
 
-static void Physics_Explode(Int32 x, Int32 y, Int32 z, Int32 power) {
+static void Physics_Explode(int x, int y, int z, int power) {
 	Game_UpdateBlock(x, y, z, BLOCK_AIR);
-	Int32 index = World_Pack(x, y, z);
+	int index = World_Pack(x, y, z);
 	Physics_ActivateNeighbours(x, y, z, index);
 
-	Int32 powerSquared = power * power;
-	Int32 dx, dy, dz;
+	int powerSquared = power * power;
+	int dx, dy, dz;
 	for (dy = -power; dy <= power; dy++) {
 		for (dz = -power; dz <= power; dz++) {
 			for (dx = -power; dx <= power; dx++) {
 				if (dx * dx + dy * dy + dz * dz > powerSquared) continue;
 
-				Int32 xx = x + dx, yy = y + dy, zz = z + dz;
+				int xx = x + dx, yy = y + dy, zz = z + dz;
 				if (!World_IsValidPos(xx, yy, zz)) continue;
 				index = World_Pack(xx, yy, zz);
 
@@ -491,8 +491,8 @@ static void Physics_Explode(Int32 x, Int32 y, Int32 z, Int32 power) {
 	}
 }
 
-static void Physics_HandleTnt(Int32 index, BlockID block) {
-	Int32 x, y, z;
+static void Physics_HandleTnt(int index, BlockID block) {
+	int x, y, z;
 	World_Unpack(index, x, y, z);
 	Physics_Explode(x, y, z, 4);
 }

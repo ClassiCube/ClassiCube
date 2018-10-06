@@ -15,15 +15,15 @@
 UInt16 DateTime_DaysTotal[13]     = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
 UInt16 DateTime_DaysTotalLeap[13] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
 
-static bool DateTime_IsLeapYear(Int32 year) {
+static bool DateTime_IsLeapYear(int year) {
 	if ((year % 4)   != 0) return false;
 	if ((year % 100) != 0) return true;
 	return (year % 400) == 0;
 }
 
-Int32 DateTime_TotalDays(DateTime* time) {
+int DateTime_TotalDays(DateTime* time) {
 	/* Days from before this year */
-	Int32 y = time->Year - 1, days = 365 * y;
+	int y = time->Year - 1, days = 365 * y;
 	/* A year is a leap year when the year is: */
 	/* Divisible by 4, EXCEPT when divisible by 100, UNLESS divisible by 400 */
 	days += (y / 4) - (y / 100) + (y / 400);
@@ -39,7 +39,7 @@ Int32 DateTime_TotalDays(DateTime* time) {
 }
 
 TimeMS DateTime_TotalMs(DateTime* time) {
-	Int32 days = DateTime_TotalDays(time);
+	int days = DateTime_TotalDays(time);
 	UInt64 seconds =
 		(UInt64)days * DATETIME_SECONDS_PER_DAY +
 		time->Hour   * DATETIME_SECONDS_PER_HOUR +
@@ -50,7 +50,7 @@ TimeMS DateTime_TotalMs(DateTime* time) {
 
 void DateTime_FromTotalMs(DateTime* time, TimeMS ms) {
 	/* Work out time component for just this day */
-	Int32 dayMS  = (Int32)(ms % DATETIME_MILLISECS_PER_DAY);
+	int dayMS    = (int)(ms % DATETIME_MILLISECS_PER_DAY);
 	time->Milli  = dayMS % DATETIME_MILLIS_PER_SEC;     dayMS /= DATETIME_MILLIS_PER_SEC;
 	time->Second = dayMS % DATETIME_SECONDS_PER_MINUTE; dayMS /= DATETIME_SECONDS_PER_MINUTE;
 	time->Minute = dayMS % DATETIME_MINUTES_PER_HOUR;   dayMS /= DATETIME_MINUTES_PER_HOUR;
@@ -59,20 +59,20 @@ void DateTime_FromTotalMs(DateTime* time, TimeMS ms) {
 	/* Then work out day/month/year component (inverse TotalDays operation) */
 	/* Probably not the most efficient way of doing this. But it passes my tests at */
 	/* https://gist.github.com/UnknownShadow200/30993c66464bb03ead01577f3ab2a653 */
-	Int32 days = (Int32)(ms / DATETIME_MILLISECS_PER_DAY);
-	Int32 year = 1 + ((days / DAYS_IN_400_YEARS) * 400); days %= DAYS_IN_400_YEARS;
+	int days = (int)(ms / DATETIME_MILLISECS_PER_DAY);
+	int year = 1 + ((days / DAYS_IN_400_YEARS) * 400); days %= DAYS_IN_400_YEARS;
 	bool leap;
 
 	for (; ; year++) {
 		leap = DateTime_IsLeapYear(year);
-		Int32 daysInYear = leap ? 366 : 365;
+		int daysInYear = leap ? 366 : 365;
 		if (days < daysInYear) break;
 		days -= daysInYear;
 	}
 	time->Year = year;
 
 	UInt16* totalDays = leap ? DateTime_DaysTotalLeap : DateTime_DaysTotal;
-	Int32 i;
+	int i;
 	for (i = 1; i <= 12; i++) {
 		if (days >= totalDays[i]) continue;
 		time->Month = i;
@@ -87,12 +87,12 @@ void DateTime_HttpDate(TimeMS ms, String* str) {
 
 	DateTime value;
 	DateTime_FromTotalMs(&value, ms);
-	Int32 days = DateTime_TotalDays(&value);
+	int days = DateTime_TotalDays(&value);
 
 	char* dayOfWeek = days_of_weeks[days % 7];
-	Int32 day   = value.Day, year = value.Year;
+	int day     = value.Day, year = value.Year;
 	char* month = month_names[value.Month];
-	Int32 hour  = value.Hour, min = value.Minute, sec = value.Second;
+	int hour    = value.Hour, min = value.Minute, sec = value.Second;
 
 	String_Format4(str, "%c, %p2 %c %p4", dayOfWeek, &day, month, &year);
 	String_Format3(str, " %p2:%p2:%p2 GMT", &hour, &min, &sec);
@@ -110,7 +110,7 @@ bool Utils_IsValidInputChar(char c, bool supportsCP437) {
 	return supportsCP437 || (Convert_CP437ToUnicode(c) == c);
 }
 
-bool Utils_IsUrlPrefix(const String* value, Int32 index) {
+bool Utils_IsUrlPrefix(const String* value, int index) {
 	String http  = String_FromConst("http://");
 	String https = String_FromConst("https://");
 	return String_IndexOfString(value, &http)  == index
@@ -127,7 +127,7 @@ bool Utils_EnsureDirectory(const char* dirName) {
 }
 
 void Utils_UNSAFE_GetFilename(STRING_REF String* str) {
-	Int32 i;
+	int i;
 	for (i = str->length - 1; i >= 0; i--) {
 		char c = str->buffer[i];
 		if (c == '/' || c == '\\') { 
@@ -136,11 +136,11 @@ void Utils_UNSAFE_GetFilename(STRING_REF String* str) {
 	}
 }
 
-Int32 Utils_AccumulateWheelDelta(float* accmulator, float delta) {
+int Utils_AccumulateWheelDelta(float* accmulator, float delta) {
 	/* Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2) */
 	/* We must use rounding at final step, not at every intermediate step. */
 	*accmulator += delta;
-	Int32 steps = (Int32)(*accmulator);
+	int steps = (int)(*accmulator);
 	*accmulator -= steps;
 	return steps;
 }
@@ -150,15 +150,15 @@ UInt8 Utils_GetSkinType(Bitmap* bmp) {
 	if (bmp->Width != bmp->Height)     return SKIN_INVALID;
 
 	/* Minecraft alex skins have this particular pixel with alpha of 0 */
-	Int32 scale = bmp->Width / 64;
+	int scale    = bmp->Width / 64;
 	UInt32 pixel = Bitmap_GetPixel(bmp, 54 * scale, 20 * scale);
-	UInt8 alpha = PackedCol_ARGB_A(pixel);
+	UInt8 alpha  = PackedCol_ARGB_A(pixel);
 	return alpha >= 127 ? SKIN_64x64 : SKIN_64x64_SLIM;
 }
 
 UInt32 Utils_CRC32(UInt8* data, UInt32 length) {
 	UInt32 crc = 0xffffffffUL;
-	Int32 i;
+	int i;
 	for (i = 0; i < length; i++) {
 		crc = Utils_Crc32Table[(crc ^ data[i]) & 0xFF] ^ (crc >> 8);
 	}
@@ -199,7 +199,7 @@ void* Utils_Resize(void* buffer, UInt32* maxElems, UInt32 elemSize, UInt32 defEl
 }
 
 bool Utils_ParseIP(const String* ip, UInt8* data) {
-	String parts[4]; Int32 count = 4;
+	String parts[4]; int count = 4;
 	String_UNSAFE_Split(ip, '.', parts, &count);
 	if (count != 4) return false;
 

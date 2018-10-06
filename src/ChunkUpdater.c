@@ -18,7 +18,7 @@
 Vector3I ChunkUpdater_ChunkPos;
 UInt32* ChunkUpdater_Distances;
 
-void ChunkInfo_Reset(struct ChunkInfo* chunk, Int32 x, Int32 y, Int32 z) {
+void ChunkInfo_Reset(struct ChunkInfo* chunk, int x, int y, int z) {
 	chunk->CentreX = x + 8; chunk->CentreY = y + 8; chunk->CentreZ = z + 8;
 #ifndef CC_BUILD_GL11
 	chunk->Vb = NULL;
@@ -33,19 +33,19 @@ void ChunkInfo_Reset(struct ChunkInfo* chunk, Int32 x, Int32 y, Int32 z) {
 	chunk->TranslucentParts = NULL;
 }
 
-Int32 cu_chunksTarget = 12;
+int cu_chunksTarget = 12;
 #define cu_targetTime ((1.0 / 30) + 0.01)
 Vector3 cu_lastCamPos;
 float cu_lastHeadY, cu_lastHeadX;
-Int32 cu_elementsPerBitmap;
+int cu_elementsPerBitmap;
 
-static void ChunkUpdater_EnvVariableChanged(void* obj, Int32 envVar) {
+static void ChunkUpdater_EnvVariableChanged(void* obj, int envVar) {
 	if (envVar == ENV_VAR_SUN_COL || envVar == ENV_VAR_SHADOW_COL) {
 		ChunkUpdater_Refresh();
 	} else if (envVar == ENV_VAR_EDGE_HEIGHT || envVar == ENV_VAR_SIDES_OFFSET) {
-		Int32 oldClip = Builder_EdgeLevel;
+		int oldClip        = Builder_EdgeLevel;
 		Builder_SidesLevel = max(0, Env_SidesHeight);
-		Builder_EdgeLevel = max(0, Env_EdgeHeight);
+		Builder_EdgeLevel  = max(0, Env_EdgeHeight);
 
 		/* Only need to refresh chunks on map borders up to highest edge level.*/
 		ChunkUpdater_RefreshBorders(max(oldClip, Builder_EdgeLevel));
@@ -121,7 +121,7 @@ void ChunkUpdater_Refresh(void) {
 		ChunkUpdater_ClearChunkCache();
 		ChunkUpdater_ResetChunkCache();
 
-		Int32 old_atlasesCount = MapRenderer_1DUsedCount;
+		int old_atlasesCount = MapRenderer_1DUsedCount;
 		MapRenderer_1DUsedCount = Atlas1D_UsedAtlasesCount();
 		/* Need to reallocate parts array in this case */
 		if (MapRenderer_1DUsedCount != old_atlasesCount) {
@@ -135,11 +135,11 @@ static void ChunkUpdater_Refresh_Handler(void* obj) {
 	ChunkUpdater_Refresh();
 }
 
-void ChunkUpdater_RefreshBorders(Int32 clipLevel) {
+void ChunkUpdater_RefreshBorders(int clipLevel) {
 	ChunkUpdater_ChunkPos = Vector3I_MaxValue();
 	if (!MapRenderer_Chunks || !World_Blocks) return;
 
-	Int32 cx, cy, cz;
+	int cx, cy, cz;
 	for (cz = 0; cz < MapRenderer_ChunksZ; cz++) {
 		for (cy = 0; cy < MapRenderer_ChunksY; cy++) {
 			for (cx = 0; cx < MapRenderer_ChunksX; cx++) {
@@ -189,21 +189,21 @@ static void ChunkUpdater_OnNewMapLoaded(void* obj) {
 }
 
 
-static Int32 ChunkUpdater_AdjustViewDist(Int32 dist) {
+static int ChunkUpdater_AdjustViewDist(int dist) {
 	if (dist < CHUNK_SIZE) dist = CHUNK_SIZE;
-	Int32 viewDist = Utils_AdjViewDist(dist);
+	int viewDist = Utils_AdjViewDist(dist);
 	return (viewDist + 24) * (viewDist + 24);
 }
 
-static Int32 ChunkUpdater_UpdateChunksAndVisibility(Int32* chunkUpdates) {
-	Int32 i, j = 0;
-	Int32 viewDistSqr = ChunkUpdater_AdjustViewDist(Game_ViewDistance);
-	Int32 userDistSqr = ChunkUpdater_AdjustViewDist(Game_UserViewDistance);
+static int ChunkUpdater_UpdateChunksAndVisibility(int* chunkUpdates) {
+	int i, j = 0;
+	int viewDistSqr = ChunkUpdater_AdjustViewDist(Game_ViewDistance);
+	int userDistSqr = ChunkUpdater_AdjustViewDist(Game_UserViewDistance);
 
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
 		struct ChunkInfo* info = MapRenderer_SortedChunks[i];
 		if (info->Empty) { continue; }
-		Int32 distSqr = ChunkUpdater_Distances[i];
+		int distSqr = ChunkUpdater_Distances[i];
 		bool noData = !info->NormalParts && !info->TranslucentParts;
 		
 		/* Unload chunks beyond visible range */
@@ -224,15 +224,15 @@ static Int32 ChunkUpdater_UpdateChunksAndVisibility(Int32* chunkUpdates) {
 	return j;
 }
 
-static Int32 ChunkUpdater_UpdateChunksStill(Int32* chunkUpdates) {
-	Int32 i, j = 0;
-	Int32 viewDistSqr = ChunkUpdater_AdjustViewDist(Game_ViewDistance);
-	Int32 userDistSqr = ChunkUpdater_AdjustViewDist(Game_UserViewDistance);
+static int ChunkUpdater_UpdateChunksStill(int* chunkUpdates) {
+	int i, j = 0;
+	int viewDistSqr = ChunkUpdater_AdjustViewDist(Game_ViewDistance);
+	int userDistSqr = ChunkUpdater_AdjustViewDist(Game_UserViewDistance);
 
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
 		struct ChunkInfo* info = MapRenderer_SortedChunks[i];
 		if (info->Empty) { continue; }
-		Int32 distSqr = ChunkUpdater_Distances[i];
+		int distSqr = ChunkUpdater_Distances[i];
 		bool noData = !info->NormalParts && !info->TranslucentParts;
 
 		/* Unload chunks beyond visible range */
@@ -257,7 +257,7 @@ static Int32 ChunkUpdater_UpdateChunksStill(Int32* chunkUpdates) {
 }
 
 void ChunkUpdater_UpdateChunks(double delta) {
-	Int32 chunkUpdates = 0;
+	int chunkUpdates = 0;
 	cu_chunksTarget += delta < cu_targetTime ? 1 : -1; /* build more chunks if 30 FPS or over, otherwise slowdown. */
 	Math_Clamp(cu_chunksTarget, 4, Game_MaxChunkUpdates);
 
@@ -281,7 +281,7 @@ void ChunkUpdater_UpdateChunks(double delta) {
 
 
 void ChunkUpdater_ResetPartFlags(void) {
-	Int32 i;
+	int i;
 	for (i = 0; i < ATLAS1D_MAX_ATLASES; i++) {
 		MapRenderer_CheckingNormalParts[i] = true;
 		MapRenderer_HasNormalParts[i] = false;
@@ -291,7 +291,7 @@ void ChunkUpdater_ResetPartFlags(void) {
 }
 
 void ChunkUpdater_ResetPartCounts(void) {
-	Int32 i;
+	int i;
 	for (i = 0; i < ATLAS1D_MAX_ATLASES; i++) {
 		MapRenderer_NormalPartsCount[i] = 0;
 		MapRenderer_TranslucentPartsCount[i] = 0;
@@ -299,7 +299,7 @@ void ChunkUpdater_ResetPartCounts(void) {
 }
 
 void ChunkUpdater_CreateChunkCache(void) {
-	Int32 x, y, z, index = 0;
+	int x, y, z, index = 0;
 	for (z = 0; z < World_Length; z += CHUNK_SIZE) {
 		for (y = 0; y < World_Height; y += CHUNK_SIZE) {
 			for (x = 0; x < World_Width; x += CHUNK_SIZE) {
@@ -314,7 +314,7 @@ void ChunkUpdater_CreateChunkCache(void) {
 }
 
 void ChunkUpdater_ResetChunkCache(void) {
-	Int32 x, y, z, index = 0;
+	int x, y, z, index = 0;
 	for (z = 0; z < World_Length; z += CHUNK_SIZE) {
 		for (y = 0; y < World_Height; y += CHUNK_SIZE) {
 			for (x = 0; x < World_Width; x += CHUNK_SIZE) {
@@ -328,7 +328,7 @@ void ChunkUpdater_ResetChunkCache(void) {
 void ChunkUpdater_ClearChunkCache(void) {
 	if (!MapRenderer_Chunks) return;
 
-	Int32 i;
+	int i;
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
 		ChunkUpdater_DeleteChunk(&MapRenderer_Chunks[i]);
 	}
@@ -348,7 +348,7 @@ void ChunkUpdater_DeleteChunk(struct ChunkInfo* info) {
 #ifndef CC_BUILD_GL11
 	Gfx_DeleteVb(&info->Vb);
 #endif
-	Int32 i;
+	int i;
 
 	if (info->NormalParts) {
 		struct ChunkPartInfo* ptr = info->NormalParts;
@@ -375,7 +375,7 @@ void ChunkUpdater_DeleteChunk(struct ChunkInfo* info) {
 	}
 }
 
-void ChunkUpdater_BuildChunk(struct ChunkInfo* info, Int32* chunkUpdates) {
+void ChunkUpdater_BuildChunk(struct ChunkInfo* info, int* chunkUpdates) {
 	Game_ChunkUpdates++;
 	(*chunkUpdates)++;
 	info->PendingDelete = false;
@@ -384,7 +384,7 @@ void ChunkUpdater_BuildChunk(struct ChunkInfo* info, Int32* chunkUpdates) {
 	if (!info->NormalParts && !info->TranslucentParts) {
 		info->Empty = true; return;
 	}
-	Int32 i;
+	int i;
 
 	if (info->NormalParts) {
 		struct ChunkPartInfo* ptr = info->NormalParts;
@@ -401,11 +401,11 @@ void ChunkUpdater_BuildChunk(struct ChunkInfo* info, Int32* chunkUpdates) {
 	}
 }
 
-static void ChunkUpdater_QuickSort(Int32 left, Int32 right) {
+static void ChunkUpdater_QuickSort(int left, int right) {
 	struct ChunkInfo** values = MapRenderer_SortedChunks; struct ChunkInfo* value;
 	Int32* keys = ChunkUpdater_Distances;          Int32 key;
 	while (left < right) {
-		Int32 i = left, j = right;
+		int i = left, j = right;
 		Int32 pivot = keys[(i + j) / 2];
 
 		/* partition the list */
@@ -434,18 +434,18 @@ static void ChunkUpdater_UpdateSortOrder(void) {
 	ChunkUpdater_ChunkPos = pPos;
 	if (!MapRenderer_ChunksCount) return;
 
-	Int32 i = 0;
+	int i = 0;
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
 		struct ChunkInfo* info = MapRenderer_SortedChunks[i];
 
 		/* Calculate distance to chunk centre*/
-		Int32 dx = info->CentreX - pPos.X, dy = info->CentreY - pPos.Y, dz = info->CentreZ - pPos.Z;
+		int dx = info->CentreX - pPos.X, dy = info->CentreY - pPos.Y, dz = info->CentreZ - pPos.Z;
 		ChunkUpdater_Distances[i] = dx * dx + dy * dy + dz * dz; /* TODO: do we need to cast to unsigned for the mulitplies? */
 
 																 /* Can work out distance to chunk faces as offset from distance to chunk centre on each axis. */
-		Int32 dXMin = dx - HALF_CHUNK_SIZE, dXMax = dx + HALF_CHUNK_SIZE;
-		Int32 dYMin = dy - HALF_CHUNK_SIZE, dYMax = dy + HALF_CHUNK_SIZE;
-		Int32 dZMin = dz - HALF_CHUNK_SIZE, dZMax = dz + HALF_CHUNK_SIZE;
+		int dXMin = dx - HALF_CHUNK_SIZE, dXMax = dx + HALF_CHUNK_SIZE;
+		int dYMin = dy - HALF_CHUNK_SIZE, dYMax = dy + HALF_CHUNK_SIZE;
+		int dZMin = dz - HALF_CHUNK_SIZE, dZMax = dz + HALF_CHUNK_SIZE;
 
 		/* Back face culling: make sure that the chunk is definitely entirely back facing. */
 		info->DrawXMin = !(dXMin <= 0 && dXMax <= 0);

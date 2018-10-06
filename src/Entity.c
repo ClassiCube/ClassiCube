@@ -119,7 +119,7 @@ static void Entity_ParseScale(struct Entity* e, const String* scale) {
 }
 
 static void Entity_SetBlockModel(struct Entity* e, const String* model) {
-	Int32 raw = Block_Parse(model);
+	int raw = Block_Parse(model);
 	if (raw == -1) {
 		/* use default humanoid model */
 		e->Model = ModelCache_Models[0].Instance;
@@ -180,7 +180,7 @@ bool Entity_TouchesAny(struct AABB* bounds, bool (*touches_condition)(BlockID bl
 
 	struct AABB blockBB;
 	Vector3 v;
-	Int32 x, y, z;
+	int x, y, z;
 	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (float)y;
 		for (z = bbMin.Z; z <= bbMax.Z; z++) { v.Z = (float)z;
 			for (x = bbMin.X; x <= bbMax.X; x++) { v.X = (float)x;
@@ -224,7 +224,7 @@ bool Entity_TouchesAnyWater(struct Entity* entity) {
 *#########################################################################################################################*/
 EntityID entities_closestId;
 void Entities_Tick(struct ScheduledTask* task) {
-	Int32 i;
+	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		Entities_List[i]->VTABLE->Tick(Entities_List[i], task->Interval);
@@ -234,7 +234,7 @@ void Entities_Tick(struct ScheduledTask* task) {
 void Entities_RenderModels(double delta, float t) {
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
-	Int32 i;
+	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		Entities_List[i]->VTABLE->RenderModel(Entities_List[i], delta, t);
@@ -255,7 +255,7 @@ void Entities_RenderNames(double delta) {
 	bool hadFog = Gfx_GetFog();
 	if (hadFog) Gfx_SetFog(false);
 
-	Int32 i;
+	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		if (i != entities_closestId || i == ENTITIES_SELF_ID) {
@@ -280,7 +280,7 @@ void Entities_RenderHoveredNames(double delta) {
 	bool hadFog = Gfx_GetFog();
 	if (hadFog) Gfx_SetFog(false);
 
-	Int32 i;
+	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		if ((i == entities_closestId || allNames) && i != ENTITIES_SELF_ID) {
@@ -295,7 +295,7 @@ void Entities_RenderHoveredNames(double delta) {
 }
 
 static void Entities_ContextLost(void* obj) {
-	Int32 i;
+	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		Entities_List[i]->VTABLE->ContextLost(Entities_List[i]);
@@ -304,7 +304,7 @@ static void Entities_ContextLost(void* obj) {
 }
 
 static void Entities_ContextRecreated(void* obj) {
-	Int32 i;
+	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		Entities_List[i]->VTABLE->ContextRecreated(Entities_List[i]);
@@ -312,7 +312,7 @@ static void Entities_ContextRecreated(void* obj) {
 }
 
 static void Entities_ChatFontChanged(void* obj) {
-	Int32 i;
+	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
@@ -335,7 +335,7 @@ void Entities_Init(void) {
 }
 
 void Entities_Free(void) {
-	Int32 i;
+	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		Entities_Remove((EntityID)i);
@@ -362,7 +362,7 @@ EntityID Entities_GetCloset(struct Entity* src) {
 	float closestDist = MATH_POS_INF;
 	EntityID targetId = ENTITIES_SELF_ID;
 
-	Int32 i;
+	int i;
 	for (i = 0; i < ENTITIES_SELF_ID; i++) { /* because we don't want to pick against local player */
 		struct Entity* entity = Entities_List[i];
 		if (!entity) continue;
@@ -388,7 +388,7 @@ void Entities_DrawShadows(void) {
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	ShadowComponent_Draw(Entities_List[ENTITIES_SELF_ID]);
 	if (Entities_ShadowMode == SHADOW_MODE_CIRCLE_ALL) {
-		Int32 i;
+		int i;
 		for (i = 0; i < ENTITIES_SELF_ID; i++) {
 			if (!Entities_List[i]) continue;
 			if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
@@ -550,7 +550,7 @@ static void Player_DrawName(struct Player* player) {
 static struct Player* Player_FirstOtherWithSameSkin(struct Player* player) {
 	struct Entity* entity = &player->Base;
 	String skin = String_FromRawArray(entity->SkinNameRaw);
-	Int32 i;
+	int i;
 
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i] || Entities_List[i] == entity) continue;
@@ -566,7 +566,7 @@ static struct Player* Player_FirstOtherWithSameSkin(struct Player* player) {
 static struct Player* Player_FirstOtherWithSameSkinAndFetchedSkin(struct Player* player) {
 	struct Entity* entity = &player->Base;
 	String skin = String_FromRawArray(entity->SkinNameRaw);
-	Int32 i;
+	int i;
 
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i] || Entities_List[i] == entity) continue;
@@ -606,7 +606,7 @@ void Player_ResetSkin(struct Player* player) {
 static void Player_SetSkinAll(struct Player* player, bool reset) {
 	struct Entity* entity = &player->Base;
 	String skin = String_FromRawArray(entity->SkinNameRaw);
-	Int32 i;
+	int i;
 
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
@@ -625,10 +625,10 @@ static void Player_SetSkinAll(struct Player* player, bool reset) {
 }
 
 static void Player_ClearHat(Bitmap* bmp, UInt8 skinType) {
-	Int32 sizeX = (bmp->Width / 64) * 32;
-	Int32 yScale = skinType == SKIN_64x32 ? 32 : 64;
-	Int32 sizeY = (bmp->Height / yScale) * 16;
-	Int32 x, y;
+	int sizeX  = (bmp->Width / 64) * 32;
+	int yScale = skinType == SKIN_64x32 ? 32 : 64;
+	int sizeY  = (bmp->Height / yScale) * 16;
+	int x, y;
 
 	/* determine if we actually need filtering */
 	for (y = 0; y < sizeY; y++) {
@@ -654,12 +654,12 @@ static void Player_ClearHat(Bitmap* bmp, UInt8 skinType) {
 }
 
 static void Player_EnsurePow2(struct Player* player, Bitmap* bmp) {
-	Int32 width  = Math_NextPowOf2(bmp->Width);
-	Int32 height = Math_NextPowOf2(bmp->Height);
+	int width  = Math_NextPowOf2(bmp->Width);
+	int height = Math_NextPowOf2(bmp->Height);
 	if (width == bmp->Width && height == bmp->Height) return;
 
 	Bitmap scaled; Bitmap_Allocate(&scaled, width, height);
-	Int32 y;
+	int y;
 	UInt32 stride = (UInt32)(bmp->Width) * BITMAP_SIZEOF_PIXEL;
 	for (y = 0; y < bmp->Height; y++) {
 		UInt32* src = Bitmap_GetRow(bmp, y);
@@ -935,7 +935,7 @@ static void LocalPlayer_DoRespawn(void) {
 	/* Spawn player at highest valid position */
 	if (World_IsValidPos_3I(P)) {
 		AABB_Make(&bb, &spawn, &p->Base.Size);
-		Int32 y;
+		int y;
 		for (y = P.Y; y <= World_Height; y++) {
 			float spawnY = Respawn_HighestFreeY(&bb);
 			if (spawnY == RESPAWN_NOT_FOUND) {
@@ -1003,7 +1003,7 @@ static void LocalPlayer_HandleNoClip(void) {
 	}
 }
 
-bool LocalPlayer_HandlesKey(Int32 key) {
+bool LocalPlayer_HandlesKey(int key) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct HacksComp* hacks = &p->Hacks;
 	struct PhysicsComp* physics = &p->Physics;
@@ -1017,7 +1017,7 @@ bool LocalPlayer_HandlesKey(Int32 key) {
 	} else if (key == KeyBind_Get(KeyBind_NoClip)) {
 		LocalPlayer_HandleNoClip();
 	} else if (key == KeyBind_Get(KeyBind_Jump) && !p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
-		Int32 maxJumps = hacks->CanDoubleJump && hacks->WOMStyleHacks ? 2 : 0;
+		int maxJumps = hacks->CanDoubleJump && hacks->WOMStyleHacks ? 2 : 0;
 		maxJumps = max(maxJumps, hacks->MaxJumps - 1);
 
 		if (physics->MultiJumps < maxJumps) {
@@ -1061,7 +1061,7 @@ static void NetPlayer_RenderName(struct Entity* e) {
 	if (!p->ShouldRender) return;
 
 	float dist = Model_RenderDistance(e);
-	Int32 threshold = Entities_NameMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
+	int threshold = Entities_NameMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
 	if (dist <= (float)threshold) Player_DrawName((struct Player*)p);
 }
 

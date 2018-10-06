@@ -29,7 +29,7 @@ enum MATRIX_TYPE { MATRIX_TYPE_PROJECTION, MATRIX_TYPE_VIEW, MATRIX_TYPE_TEXTURE
 void Gfx_Init(void);
 void Gfx_Free(void);
 
-Int32 Gfx_MaxTexWidth, Gfx_MaxTexHeight;
+int Gfx_MaxTexWidth, Gfx_MaxTexHeight;
 float Gfx_MinZNear;
 bool Gfx_LostContext;
 bool Gfx_Mipmaps;
@@ -44,7 +44,7 @@ struct Matrix Gfx_View, Gfx_Projection;
 ScheduledTaskCallback Gfx_LostContextFunction;
 
 GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps);
-void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 x, Int32 y, Bitmap* part, bool mipmaps);
+void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, bool mipmaps);
 void Gfx_BindTexture(GfxResourceID texId);
 void Gfx_DeleteTexture(GfxResourceID* texId);
 void Gfx_SetTexturing(bool enabled);
@@ -56,46 +56,46 @@ void Gfx_SetFog(bool enabled);
 void Gfx_SetFogCol(PackedCol col);
 void Gfx_SetFogDensity(float value);
 void Gfx_SetFogEnd(float value);
-void Gfx_SetFogMode(Int32 fogMode);
+void Gfx_SetFogMode(int fogMode);
 
 void Gfx_SetFaceCulling(bool enabled);
 void Gfx_SetAlphaTest(bool enabled);
-void Gfx_SetAlphaTestFunc(Int32 compareFunc, float refValue);
+void Gfx_SetAlphaTestFunc(int compareFunc, float refValue);
 void Gfx_SetAlphaBlending(bool enabled);
-void Gfx_SetAlphaBlendFunc(Int32 srcBlendFunc, Int32 dstBlendFunc);
+void Gfx_SetAlphaBlendFunc(int srcBlendFunc, int dstBlendFunc);
 /* Whether blending between the alpha components of the texture and colour are performed. */
 void Gfx_SetAlphaArgBlend(bool enabled);
 
 void Gfx_Clear(void);
 void Gfx_ClearCol(PackedCol col);
 void Gfx_SetDepthTest(bool enabled);
-void Gfx_SetDepthTestFunc(Int32 compareFunc);
+void Gfx_SetDepthTestFunc(int compareFunc);
 void Gfx_SetColourWriteMask(bool r, bool g, bool b, bool a);
 void Gfx_SetDepthWrite(bool enabled);
 
-GfxResourceID Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices);
-GfxResourceID Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count);
-GfxResourceID Gfx_CreateIb(void* indices, Int32 indicesCount);
+GfxResourceID Gfx_CreateDynamicVb(int vertexFormat, int maxVertices);
+GfxResourceID Gfx_CreateVb(void* vertices, int vertexFormat, int count);
+GfxResourceID Gfx_CreateIb(void* indices, int indicesCount);
 void Gfx_BindVb(GfxResourceID vb);
 void Gfx_BindIb(GfxResourceID ib);
 void Gfx_DeleteVb(GfxResourceID* vb);
 void Gfx_DeleteIb(GfxResourceID* ib);
 
-void Gfx_SetBatchFormat(Int32 vertexFormat);
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount);
-void Gfx_DrawVb_Lines(Int32 verticesCount);
-void Gfx_DrawVb_IndexedTris_Range(Int32 verticesCount, Int32 startVertex);
-void Gfx_DrawVb_IndexedTris(Int32 verticesCount);
-void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex);
+void Gfx_SetBatchFormat(int vertexFormat);
+void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount);
+void Gfx_DrawVb_Lines(int verticesCount);
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex);
+void Gfx_DrawVb_IndexedTris(int verticesCount);
+void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex);
 
-void Gfx_SetMatrixMode(Int32 matrixType);
+void Gfx_SetMatrixMode(int matrixType);
 void Gfx_LoadMatrix(struct Matrix* matrix);
 void Gfx_LoadIdentityMatrix(void);
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix);
 void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar, struct Matrix* matrix);
 
 /* Outputs a .png screenshot of the backbuffer */
-ReturnCode Gfx_TakeScreenshot(struct Stream* output, Int32 width, Int32 height);
+ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height);
 /* Adds a warning to game's chat if this graphics API has problems with the current user's GPU. 
 Returns boolean of whether legacy rendering mode is needed. */
 bool Gfx_WarnIfNecessary(void);

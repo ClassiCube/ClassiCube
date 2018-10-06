@@ -15,12 +15,12 @@ enum ROTATE_ORDER { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX };
 
 /* Describes a vertex within a model. */
 struct ModelVertex { float X, Y, Z; UInt16 U, V; };
-void ModelVertex_Init(struct ModelVertex* vertex, float x, float y, float z, Int32 u, Int32 v);
+void ModelVertex_Init(struct ModelVertex* vertex, float x, float y, float z, int u, int v);
 
 /* Describes the starting index of this part within a model's array of vertices,
 and the number of vertices following the starting index that this part uses. */
 struct ModelPart { UInt16 Offset, Count; float RotX, RotY, RotZ; };
-void ModelPart_Init(struct ModelPart* part, Int32 offset, Int32 count, float rotX, float rotY, float rotZ);
+void ModelPart_Init(struct ModelPart* part, int offset, int count, float rotX, float rotY, float rotZ);
 
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
 the bounding boxes that contain the entire set of quads and/or boxes. */
@@ -28,7 +28,7 @@ struct Model {
 	/* Pointer to the raw vertices of the model.*/
 	struct ModelVertex* vertices;
 	/* Count of assigned vertices within the raw vertices array. */
-	Int32 index;
+	int index;
 	/* Index within ModelCache's textures of the default texture for this model. */
 	Int8 defaultTexIndex;
 	UInt8 armX, armY; /* these translate arm model part back to (0, 0) */
@@ -90,7 +90,7 @@ struct BoxDesc {
 };
 
 /* Sets the texture origin for this part within the texture atlas. */
-void BoxDesc_TexOrigin(struct BoxDesc* desc, Int32 x, Int32 y);
+void BoxDesc_TexOrigin(struct BoxDesc* desc, int x, int y);
 /* Expands the corners of this box outwards by the given amount in pixel coordinates. */
 void BoxDesc_Expand(struct BoxDesc* desc, float amount);
 /* Swaps the min and max X around, resulting in the part being drawn mirrored. */
@@ -126,10 +126,7 @@ let SW = sides width, BW = body width, BH = body height
 ********************************************************************************************* */
 void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc);
 
-void BoxDesc_XQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
-	float z1, float z2, float y1, float y2, float x, bool swapU);
-void BoxDesc_YQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
-	float x1, float x2, float z1, float z2, float y, bool swapU);
-void BoxDesc_ZQuad(struct Model* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
-	float x1, float x2, float y1, float y2, float z, bool swapU);
+void BoxDesc_XQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float z1, float z2, float y1, float y2, float x, bool swapU);
+void BoxDesc_YQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float x1, float x2, float z1, float z2, float y, bool swapU);
+void BoxDesc_ZQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float x1, float x2, float y1, float y2, float z, bool swapU);
 #endif

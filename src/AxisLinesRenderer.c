@@ -55,7 +55,7 @@ void AxisLinesRenderer_Render(double delta) {
 	};
 
 	static PackedCol cols[3] = { PACKEDCOL_RED, PACKEDCOL_BLUE, PACKEDCOL_GREEN };
-	Int32 i, count = Camera_Active->IsThirdPerson ? 12 : 8;
+	int i, count = Camera_Active->IsThirdPerson ? 12 : 8;
 	VertexP3fC4b* ptr = vertices;
 
 	for (i = 0; i < count; i++, ptr++) {

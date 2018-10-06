@@ -19,7 +19,7 @@
 #include "Gui.h"
 
 bool input_buttonsDown[3];
-Int32 input_pickingId = -1;
+int input_pickingId = -1;
 Int32 input_normViewDists[10] = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
 Int32 input_classicViewDists[4] = { 8, 32, 128, 512 };
 TimeMS input_lastClick;
@@ -90,10 +90,10 @@ static void InputHandler_Toggle(Key key, bool* target, const char* enableMsg, co
 	}
 }
 
-static void InputHandler_CycleDistanceForwards(Int32* viewDists, Int32 count) {
-	Int32 i;
+static void InputHandler_CycleDistanceForwards(Int32* viewDists, int count) {
+	int i;
 	for (i = 0; i < count; i++) {
-		Int32 dist = viewDists[i];
+		int dist = viewDists[i];
 		if (dist > Game_UserViewDistance) {
 			Game_UserSetViewDistance(dist); return;
 		}
@@ -101,10 +101,10 @@ static void InputHandler_CycleDistanceForwards(Int32* viewDists, Int32 count) {
 	Game_UserSetViewDistance(viewDists[0]);
 }
 
-static void InputHandler_CycleDistanceBackwards(Int32* viewDists, Int32 count) {
-	Int32 i;
+static void InputHandler_CycleDistanceBackwards(Int32* viewDists, int count) {
+	int i;
 	for (i = count - 1; i >= 0; i--) {
-		Int32 dist = viewDists[i];
+		int dist = viewDists[i];
 		if (dist < Game_UserViewDistance) {
 			Game_UserSetViewDistance(dist); return;
 		}
@@ -112,7 +112,7 @@ static void InputHandler_CycleDistanceBackwards(Int32* viewDists, Int32 count) {
 	Game_UserSetViewDistance(viewDists[count - 1]);
 }
 
-bool InputHandler_SetFOV(Int32 fov, bool setZoom) {
+bool InputHandler_SetFOV(int fov, bool setZoom) {
 	if (Game_Fov == fov) return true;
 	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
 	if (!h->Enabled || !h->CanAnyHacks || !h->CanUseThirdPersonCamera) return false;
@@ -132,7 +132,7 @@ static bool InputHandler_DoFovZoom(float deltaPrecise) {
 	input_fovIndex -= deltaPrecise * 5.0f;
 
 	Math_Clamp(input_fovIndex, 1.0f, Game_DefaultFov);
-	return InputHandler_SetFOV((Int32)input_fovIndex, true);
+	return InputHandler_SetFOV((int)input_fovIndex, true);
 }
 
 static bool InputHandler_HandleNonClassicKey(Key key) {
@@ -186,7 +186,7 @@ static bool InputHandler_HandleCoreKey(Key key) {
 		}
 	} else if (key == KeyBind_Get(KeyBind_ToggleFog)) {
 		Int32* viewDists = Game_UseClassicOptions ? input_classicViewDists : input_normViewDists;
-		Int32 count = Game_UseClassicOptions ? Array_Elems(input_classicViewDists) : Array_Elems(input_normViewDists);
+		int count = Game_UseClassicOptions ? Array_Elems(input_classicViewDists) : Array_Elems(input_normViewDists);
 
 		if (Key_IsShiftPressed()) {
 			InputHandler_CycleDistanceBackwards(viewDists, count);
@@ -200,7 +200,7 @@ static bool InputHandler_HandleCoreKey(Key key) {
 		Gui_FreeActive();
 		Gui_SetActive(InventoryScreen_MakeInstance());
 	} else if (key == Key_F5 && Game_ClassicMode) {
-		Int32 weather = Env_Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
+		int weather = Env_Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
 		Env_SetWeather(weather);
 	} else if (!Game_ClassicMode) {
 		return InputHandler_HandleNonClassicKey(key);
@@ -254,7 +254,7 @@ static bool InputHandler_IntersectsOthers(Vector3 pos, BlockID block) {
 	Vector3_Add(&blockBB.Min, &pos, &Block_MinBB[block]);
 	Vector3_Add(&blockBB.Max, &pos, &Block_MaxBB[block]);
 
-	Int32 id;
+	int id;
 	for (id = 0; id < ENTITIES_SELF_ID; id++) {
 		struct Entity* entity = Entities_List[id];
 		if (!entity) continue;
@@ -301,7 +301,7 @@ static bool InputHandler_CheckIsFree(BlockID block) {
 
 void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) {
 	TimeMS now = DateTime_CurrentUTC_MS();
-	Int32 delta = (Int32)(now - input_lastClick);
+	int delta = (int)(now - input_lastClick);
 	if (cooldown && delta < 250) return; /* 4 times per second */
 
 	input_lastClick = now;
@@ -349,7 +349,7 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		if (Block_Draw[cur] == DRAW_GAS) return;
 		if (!(Block_CanPlace[cur] || Block_CanDelete[cur])) return;
 		if (!Inventory_CanChangeSelected() || Inventory_SelectedBlock == cur) return;
-		Int32 i;
+		int i;
 
 		/* Is the currently selected block an empty slot */
 		if (Inventory_Get(Inventory_SelectedIndex) == BLOCK_AIR) {
@@ -386,12 +386,12 @@ static void InputHandler_MouseWheel(void* obj, float delta) {
 	Elem_HandlesMouseScroll(hotbarW, delta);
 }
 
-static void InputHandler_MouseMove(void* obj, Int32 xDelta, Int32 yDelta) {
+static void InputHandler_MouseMove(void* obj, int xDelta, int yDelta) {
 	struct Screen* active = Gui_GetActiveScreen();
 	Elem_HandlesMouseMove(active, Mouse_X, Mouse_Y);
 }
 
-static void InputHandler_MouseDown(void* obj, Int32 button) {
+static void InputHandler_MouseDown(void* obj, int button) {
 	struct Screen* active = Gui_GetActiveScreen();
 	if (!Elem_HandlesMouseDown(active, Mouse_X, Mouse_Y, button)) {
 		bool left   = button == MouseButton_Left;
@@ -438,7 +438,7 @@ static void InputHandler_KeyDown(void* obj, Int32 key) {
 	} else if (InputHandler_HandleCoreKey(key)) {
 	} else if (LocalPlayer_HandlesKey(key)) {
 	} else {
-		Int32 idx = Hotkeys_FindPartial(key);
+		int idx = Hotkeys_FindPartial(key);
 		if (idx == -1) return;
 
 		struct HotkeyData* hkey = &HotkeysList[idx];

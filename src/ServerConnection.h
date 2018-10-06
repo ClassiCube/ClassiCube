@@ -43,7 +43,7 @@ struct ScheduledTask;
 
 UInt16 PingList_NextPingData(void);
 void PingList_Update(UInt16 data);
-Int32 PingList_AveragePingMs(void);
+int PingList_AveragePingMs(void);
 
 bool ServerConnection_IsSinglePlayer;
 bool ServerConnection_Disconnected;

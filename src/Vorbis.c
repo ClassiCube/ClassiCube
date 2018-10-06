@@ -28,7 +28,7 @@ static ReturnCode Ogg_NextPage(struct Stream* stream) {
 	/* header[18] (4) page sequence number */
 	/* header[22] (4) page checksum */
 
-	Int32 i, numSegments = header[26];
+	int i, numSegments = header[26];
 	UInt8 segments[255];
 	if ((res = Stream_Read(source, segments, numSegments))) return res;
 
@@ -476,11 +476,11 @@ static bool Floor_DecodeFrame(struct VorbisState* ctx, struct Floor* f, Int32 ch
 	return true;
 }
 
-static Int32 Floor_RenderPoint(Int32 x0, Int32 y0, Int32 x1, Int32 y1, Int32 X) {
-	Int32 dy = y1 - y0, adx = x1 - x0;
-	Int32 ady = Math_AbsI(dy);
-	Int32 err = ady * (X - x0);
-	Int32 off = err / adx;
+static int Floor_RenderPoint(int x0, int y0, int x1, int y1, int X) {
+	int dy  = y1 - y0, adx = x1 - x0;
+	int ady = Math_AbsI(dy);
+	int err = ady * (X - x0);
+	int off = err / adx;
 
 	if (dy < 0) {
 		return y0 - off;
@@ -490,11 +490,11 @@ static Int32 Floor_RenderPoint(Int32 x0, Int32 y0, Int32 x1, Int32 y1, Int32 X) 
 }
 
 static float floor1_inverse_dB_table[256];
-static void Floor_RenderLine(Int32 x0, Int32 y0, Int32 x1, Int32 y1, float* data) {
-	Int32 dy = y1 - y0, adx = x1 - x0;
-	Int32 ady = Math_AbsI(dy);
-	Int32 base = dy / adx, sy;
-	Int32 x = x0, y = y0, err = 0;
+static void Floor_RenderLine(int x0, int y0, int x1, int y1, float* data) {
+	int dy   = y1 - y0, adx = x1 - x0;
+	int ady  = Math_AbsI(dy);
+	int base = dy / adx, sy;
+	int x    = x0, y = y0, err = 0;
 
 	if (dy < 0) {
 		sy = base - 1;
@@ -517,23 +517,23 @@ static void Floor_RenderLine(Int32 x0, Int32 y0, Int32 x1, Int32 y1, float* data
 	}
 }
 
-static Int32 low_neighbor(Int16* v, Int32 x) {
-	Int32 n = 0, i, max = Int32_MinValue;
+static int low_neighbor(Int16* v, int x) {
+	int n = 0, i, max = Int32_MinValue;
 	for (i = 0; i < x; i++) {
 		if (v[i] < v[x] && v[i] > max) { n = i; max = v[i]; }
 	}
 	return n;
 }
 
-static Int32 high_neighbor(Int16* v, Int32 x) {
-	Int32 n = 0, i, min = Int32_MaxValue;
+static int high_neighbor(Int16* v, int x) {
+	int n = 0, i, min = Int32_MaxValue;
 	for (i = 0; i < x; i++) {
 		if (v[i] > v[x] && v[i] < min) { n = i; min = v[i]; }
 	}
 	return n;
 }
 
-static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, Int32 ch) {
+static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, int ch) {
 	/* amplitude value synthesis */
 	Int32 YFinal[FLOOR_MAX_VALUES];
 	bool Step2[FLOOR_MAX_VALUES];
@@ -546,17 +546,17 @@ static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, Int32 ch) 
 	YFinal[0] = yList[0];
 	YFinal[1] = yList[1];
 
-	Int32 i;
+	int i;
 	for (i = 2; i < f->Values; i++) {
-		Int32 lo_offset = low_neighbor(f->XList, i);
-		Int32 hi_offset = high_neighbor(f->XList, i);
+		int lo_offset = low_neighbor(f->XList, i);
+		int hi_offset = high_neighbor(f->XList, i);
 
-		Int32 predicted = Floor_RenderPoint(f->XList[lo_offset], YFinal[lo_offset],
-											f->XList[hi_offset], YFinal[hi_offset], f->XList[i]);
+		int predicted = Floor_RenderPoint(f->XList[lo_offset], YFinal[lo_offset],
+										  f->XList[hi_offset], YFinal[hi_offset], f->XList[i]);
 
-		Int32 val = yList[i];
-		Int32 highroom = f->Range - predicted;
-		Int32 lowroom = predicted, room;
+		int val = yList[i];
+		int highroom = f->Range - predicted;
+		int lowroom = predicted, room;
 
 		if (highroom < lowroom) {
 			room = highroom * 2;
@@ -589,8 +589,8 @@ static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, Int32 ch) 
 	}
 
 	/* curve synthesis */
-	Int32 hx = 0, lx = 0, rawI;
-	Int32 ly = YFinal[f->ListOrder[0]] * f->Multiplier, hy = ly;
+	int hx = 0, lx = 0, rawI;
+	int ly = YFinal[f->ListOrder[0]] * f->Multiplier, hy = ly;
 
 	for (rawI = 1; rawI < f->Values; rawI++) {
 		i = f->ListOrder[rawI];

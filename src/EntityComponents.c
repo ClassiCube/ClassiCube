@@ -79,7 +79,7 @@ void AnimatedComp_Update(struct Entity* entity, Vector3 oldPos, Vector3 newPos, 
 
 	/* TODO: the Tilt code was designed for 60 ticks/second, fix it up for 20 ticks/second */
 	anim->BobStrengthO = anim->BobStrengthN;
-	Int32 i;
+	int i;
 	for (i = 0; i < 3; i++) {
 		AnimatedComp_DoTilt(&anim->BobStrengthN, !Game_ViewBobbing || !entity->OnGround);
 	}
@@ -126,7 +126,7 @@ void TiltComp_Update(struct TiltComp* anim, double delta) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 
 	/* TODO: the Tilt code was designed for 60 ticks/second, fix it up for 20 ticks/second */
-	Int32 i;
+	int i;
 	for (i = 0; i < 3; i++) {
 		AnimatedComp_DoTilt(&anim->VelTiltStrengthN, p->Hacks.Floating);
 	}
@@ -180,11 +180,11 @@ static String HacksComp_UNSAFE_FlagValue(const char* flagRaw, struct HacksComp* 
 	String* joined = &hacks->HacksFlags;
 	String flag = String_FromReadonly(flagRaw);
 
-	Int32 start = String_IndexOfString(joined, &flag);
+	int start = String_IndexOfString(joined, &flag);
 	if (start < 0) return String_MakeNull();
 	start += flag.length;
 
-	Int32 end = String_IndexOf(joined, ' ', start);
+	int end = String_IndexOf(joined, ' ', start);
 	if (end < 0) end = joined->length;
 
 	return String_UNSAFE_Substring(joined, start, end - start);
@@ -199,11 +199,11 @@ static float HacksComp_ParseFlagFloat(const char* flagRaw, struct HacksComp* hac
 	return value;
 }
 
-static Int32 HacksComp_ParseFlagInt(const char* flagRaw, struct HacksComp* hacks) {
+static int HacksComp_ParseFlagInt(const char* flagRaw, struct HacksComp* hacks) {
 	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
 	if (!raw.length || Game_ClassicMode) return 1;
 
-	Int32 value = 0;
+	int value = 0;
 	if (!Convert_TryParseInt32(&raw, &value)) return 1;
 	return value;
 }
@@ -298,7 +298,7 @@ void HacksComp_UpdateState(struct HacksComp* hacks) {
 *--------------------------------------------------InterpolationComponent-------------------------------------------------*
 *#########################################################################################################################*/
 static void InterpComp_RemoveOldestRotY(struct InterpComp* interp) {
-	Int32 i;
+	int i;
 	for (i = 0; i < Array_Elems(interp->RotYStates); i++) {
 		interp->RotYStates[i] = interp->RotYStates[i + 1];
 	}
@@ -344,7 +344,7 @@ static void InterpComp_SetPos(struct InterpState* state, struct LocationUpdate* 
 *----------------------------------------------NetworkInterpolationComponent----------------------------------------------*
 *#########################################################################################################################*/
 static void NetInterpComp_RemoveOldestState(struct NetInterpComp* interp) {
-	Int32 i;
+	int i;
 	for (i = 0; i < Array_Elems(interp->States); i++) {
 		interp->States[i] = interp->States[i + 1];
 	}
@@ -541,8 +541,8 @@ static void ShadowComponent_CalcAlpha(float playerY, struct ShadowData* data) {
 	else data->Y += 1.0f / 4.0f;
 }
 
-static bool ShadowComponent_GetBlocks(struct Entity* entity, Int32 x, Int32 y, Int32 z, struct ShadowData* data) {
-	Int32 count;
+static bool ShadowComponent_GetBlocks(struct Entity* entity, int x, int y, int z, struct ShadowData* data) {
+	int count;
 	struct ShadowData zeroData = { 0 };
 	for (count = 0; count < 4; count++) { data[count] = zeroData; }
 	count = 0;
@@ -613,7 +613,7 @@ void ShadowComponent_Draw(struct Entity* entity) {
 	if (Position.Y < 0.0f) return;
 
 	float posX = Position.X, posZ = Position.Z;
-	Int32 posY = min((Int32)Position.Y, World_MaxY);
+	int posY   = min((int)Position.Y, World_MaxY);
 	GfxResourceID vb;
 
 	float radius = 7.0f * min(entity->ModelScale.Y, 1.0f) * entity->Model->ShadowScale;
@@ -627,14 +627,14 @@ void ShadowComponent_Draw(struct Entity* entity) {
 	VertexP3fT2fC4b* ptr = vertices;
 	if (Entities_ShadowMode == SHADOW_MODE_SNAP_TO_BLOCK) {
 		vb = GfxCommon_texVb;
-		Int32 x1 = Math_Floor(posX), z1 = Math_Floor(posZ);
+		int x1 = Math_Floor(posX), z1 = Math_Floor(posZ);
 		if (!ShadowComponent_GetBlocks(entity, x1, posY, z1, data)) return;
 
 		ShadowComponent_DrawSquareShadow(&ptr, data[0].Y, x1, z1);
 	} else {
 		vb = ModelCache_Vb;
-		Int32 x1 = Math_Floor(posX - ShadowComponent_radius), z1 = Math_Floor(posZ - ShadowComponent_radius);
-		Int32 x2 = Math_Floor(posX + ShadowComponent_radius), z2 = Math_Floor(posZ + ShadowComponent_radius);
+		int x1 = Math_Floor(posX - ShadowComponent_radius), z1 = Math_Floor(posZ - ShadowComponent_radius);
+		int x2 = Math_Floor(posX + ShadowComponent_radius), z2 = Math_Floor(posZ + ShadowComponent_radius);
 
 		if (ShadowComponent_GetBlocks(entity, x1, posY, z1, data) && data[0].A > 0) {
 			ShadowComponent_DrawCircle(&ptr, entity, data, (float)x1, (float)z1);
@@ -696,7 +696,7 @@ static bool Collisions_CanSlideThrough(struct AABB* adjFinalBB) {
 
 	struct AABB blockBB;
 	Vector3 v;
-	Int32 x, y, z;
+	int x, y, z;
 	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (float)y;
 		for (z = bbMin.Z; z <= bbMax.Z; z++) { v.Z = (float)z;
 			for (x = bbMin.X; x <= bbMax.X; x++) { v.X = (float)x;
@@ -789,7 +789,7 @@ static void Collisions_ClipYMax(struct CollisionsComp* comp, struct AABB* blockB
 	comp->HitYMax = true;
 }
 
-static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, Int32 count, struct AABB* entityBB, 
+static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, int count, struct AABB* entityBB,
 	struct AABB* extentBB) {
 	struct Entity* entity = comp->Entity;
 	/* Reset collision detection states */
@@ -800,12 +800,12 @@ static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, I
 
 	struct AABB blockBB;
 	Vector3 bPos, size = entity->Size;
-	Int32 i;
+	int i;
 	for (i = 0; i < count; i++) {
 		/* Unpack the block and coordinate data */
 		struct SearcherState state = Searcher_States[i];
 		bPos.X = state.X >> 3; bPos.Y = state.Y >> 4; bPos.Z = state.Z >> 3;
-		Int32 block = (state.X & 0x7) | (state.Y & 0xF) << 3 | (state.Z & 0x7) << 7;
+		int block = (state.X & 0x7) | (state.Y & 0xF) << 3 | (state.Z & 0x7) << 7;
 
 		Vector3_Add(&blockBB.Min, &Block_MinBB[block], &bPos);
 		Vector3_Add(&blockBB.Max, &Block_MaxBB[block], &bPos);
@@ -867,7 +867,7 @@ void Collisions_MoveAndWallSlide(struct CollisionsComp* comp) {
 	if (Vector3_Equals(&entity->Velocity, &zero)) return;
 
 	struct AABB entityBB, entityExtentBB;
-	Int32 count = Searcher_FindReachableBlocks(entity, &entityBB, &entityExtentBB);
+	int count = Searcher_FindReachableBlocks(entity, &entityBB, &entityExtentBB);
 	Collisions_CollideWithReachableBlocks(comp, count, &entityBB, &entityExtentBB);
 }
 
@@ -891,7 +891,7 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 
 	if (hacks->Floating) {
 		entity->Velocity.Y = 0.0f; /* eliminate the effect of gravity */
-		Int32 dir = (hacks->FlyingUp || comp->Jumping) ? 1 : (hacks->FlyingDown ? -1 : 0);
+		int dir = (hacks->FlyingUp || comp->Jumping) ? 1 : (hacks->FlyingDown ? -1 : 0);
 
 		entity->Velocity.Y += 0.12f * dir;
 		if (hacks->Speeding     && hacks->CanSpeed) entity->Velocity.Y += 0.12f * dir;
@@ -908,8 +908,8 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 	bool touchLava  = Entity_TouchesAnyLava(entity);
 	if (touchWater || touchLava) {
 		struct AABB bounds; Entity_GetBounds(entity, &bounds);
-		Int32 feetY = Math_Floor(bounds.Min.Y), bodyY = feetY + 1;
-		Int32 headY = Math_Floor(bounds.Max.Y);
+		int feetY = Math_Floor(bounds.Min.Y), bodyY = feetY + 1;
+		int headY = Math_Floor(bounds.Max.Y);
 		if (bodyY > headY) bodyY = headY;
 
 		bounds.Max.Y = bounds.Min.Y = feetY;
@@ -1026,7 +1026,7 @@ static float PhysicsComp_LowestModifier(struct PhysicsComp* comp, struct AABB* b
 
 	struct AABB blockBB;
 	Vector3 v;
-	Int32 x, y, z;
+	int x, y, z;
 	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (float)y;
 		for (z = bbMin.Z; z <= bbMax.Z; z++) { v.Z = (float)z;
 			for (x = bbMin.X; x <= bbMax.X; x++) { v.X = (float)x;
@@ -1129,7 +1129,7 @@ void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vector3 vel) {
 	if (entity->OnGround) comp->MultiJumps = 0;
 }
 
-static double PhysicsComp_YPosAt(Int32 t, float u) {
+static double PhysicsComp_YPosAt(int t, float u) {
 	/* v(t, u) = (4 + u) * (0.98^t) - 4, where u = initial velocity */
 	/* x(t, u) = Σv(t, u) from 0 to t (since we work in discrete timesteps) */
 	/* plugging into Wolfram Alpha gives 1 equation as */
@@ -1142,8 +1142,8 @@ double PhysicsComp_GetMaxHeight(float u) {
 	/* equation below comes from solving diff(x(t, u))= 0 */
 	/* We only work in discrete timesteps, so test both rounded up and down */
 	double t = 49.49831645 * Math_Log(0.247483075 * u + 0.9899323);
-	double value_floor = PhysicsComp_YPosAt((Int32)t, u);
-	double value_ceil  = PhysicsComp_YPosAt((Int32)t + 1, u);
+	double value_floor = PhysicsComp_YPosAt((int)t,     u);
+	double value_ceil  = PhysicsComp_YPosAt((int)t + 1, u);
 	return max(value_floor, value_ceil);
 }
 
@@ -1161,7 +1161,7 @@ void PhysicsComp_CalculateJumpVelocity(struct PhysicsComp* comp, float jumpHeigh
 }
 
 void PhysicsComp_DoEntityPush(struct Entity* entity) {
-	Int32 id;
+	int id;
 	Vector3 dir; dir.Y = 0.0f;
 
 	for (id = 0; id < ENTITIES_MAX_COUNT; id++) {

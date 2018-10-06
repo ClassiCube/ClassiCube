@@ -79,8 +79,8 @@ UInt8 Block_Hidden[BLOCK_COUNT * BLOCK_COUNT];
 UInt8 Block_CanStretch[BLOCK_COUNT];
 
 #ifdef EXTENDED_BLOCKS
-Int32 Block_UsedCount, Block_IDMask;
-void Block_SetUsedCount(Int32 count);
+int Block_UsedCount, Block_IDMask;
+void Block_SetUsedCount(int count);
 #endif
 
 void Block_Reset(void);
@@ -96,8 +96,8 @@ void Block_ResetProps(BlockID block);
 
 STRING_REF String Block_UNSAFE_GetName(BlockID block);
 void Block_SetName(BlockID block, const String* name);
-Int32 Block_FindID(const String* name);
-Int32 Block_Parse(const String* name);
+int Block_FindID(const String* name);
+int Block_Parse(const String* name);
 
 void Block_CalcRenderBounds(BlockID block);
 void Block_CalcLightOffset(BlockID block);

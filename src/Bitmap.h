@@ -6,18 +6,18 @@
 */
 struct Stream;
 
-#define PNG_MAX_DIMS 0x8000L
+#define PNG_MAX_DIMS 0x8000
 #define BITMAP_SIZEOF_PIXEL 4 /* 32 bit ARGB */
 #define Bitmap_DataSize(width, height) ((UInt32)(width) * (UInt32)(height) * (UInt32)BITMAP_SIZEOF_PIXEL)
 #define Bitmap_GetRow(bmp, y) ((UInt32*)((bmp)->Scan0 + ((y) * ((bmp)->Width << 2))))
 #define Bitmap_GetPixel(bmp, x, y) (Bitmap_GetRow(bmp, y)[x])
 
-void Bitmap_Create(Bitmap* bmp, Int32 width, Int32 height, UInt8* scan0);
-void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, Bitmap* src, Bitmap* dst, Int32 size);
+void Bitmap_Create(Bitmap* bmp, int width, int height, UInt8* scan0);
+void Bitmap_CopyBlock(int srcX, int srcY, int dstX, int dstY, Bitmap* src, Bitmap* dst, int size);
 /* Allocates a new bitmap of the given dimensions. You are responsible for freeing its memory! */
-void Bitmap_Allocate(Bitmap* bmp, Int32 width, Int32 height);
+void Bitmap_Allocate(Bitmap* bmp, int width, int height);
 /* Allocates a power-of-2 sized bitmap larger or equal to to the given size, and clears it to 0. You are responsible for freeing its memory! */
-void Bitmap_AllocateClearedPow2(Bitmap* bmp, Int32 width, Int32 height);
+void Bitmap_AllocateClearedPow2(Bitmap* bmp, int width, int height);
 
 bool Bitmap_DetectPng(UInt8* data, UInt32 len);
 /*

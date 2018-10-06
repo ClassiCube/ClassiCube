@@ -30,7 +30,7 @@ char ServerConnection_ServerMOTDBuffer[STRING_SIZE];
 String ServerConnection_ServerMOTD = String_FromArray(ServerConnection_ServerMOTDBuffer);
 char ServerConnection_AppNameBuffer[STRING_SIZE];
 String ServerConnection_AppName = String_FromArray(ServerConnection_AppNameBuffer);
-Int32 ServerConnection_Ticks;
+int ServerConnection_Ticks;
 
 static void ServerConnection_ResetState(void) {
 	ServerConnection_Disconnected = false;
@@ -75,7 +75,7 @@ void ServerConnection_CheckAsyncResources(void) {
 	} else if (item.Result) {
 		Chat_Add1("&cError %i when trying to download texture pack", &item.Result);
 	} else {
-		Int32 status = item.StatusCode;
+		int status = item.StatusCode;
 		if (status == 0 || status == 304) return;
 		Chat_Add1("&c%i error when trying to download texture pack", &status);
 	}
@@ -90,7 +90,7 @@ struct PingEntry {
 };
 struct PingEntry PingList_Entries[10];
 
-UInt16 PingList_Set(Int32 i, UInt16 prev) {
+UInt16 PingList_Set(int i, UInt16 prev) {
 	PingList_Entries[i].Data = (UInt16)(prev + 1);
 	PingList_Entries[i].TimeSent = DateTime_CurrentUTC_MS();
 	PingList_Entries[i].TimeReceived = 0;
@@ -99,7 +99,7 @@ UInt16 PingList_Set(Int32 i, UInt16 prev) {
 
 UInt16 PingList_NextPingData(void) {
 	/* Find free ping slot */
-	Int32 i;
+	int i;
 	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
 		if (PingList_Entries[i].TimeSent) continue;
 
@@ -111,12 +111,12 @@ UInt16 PingList_NextPingData(void) {
 	for (i = 0; i < Array_Elems(PingList_Entries) - 1; i++) {
 		PingList_Entries[i] = PingList_Entries[i + 1];
 	}
-	Int32 j = Array_Elems(PingList_Entries) - 1;
+	int j = Array_Elems(PingList_Entries) - 1;
 	return PingList_Set(j, PingList_Entries[j].Data);
 }
 
 void PingList_Update(UInt16 data) {
-	Int32 i;
+	int i;
 	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
 		if (PingList_Entries[i].Data != data) continue;
 
@@ -125,10 +125,10 @@ void PingList_Update(UInt16 data) {
 	}
 }
 
-Int32 PingList_AveragePingMs(void) {
+int PingList_AveragePingMs(void) {
 	double totalMs = 0.0;
-	Int32 measures = 0;
-	Int32 i;
+	int measures = 0;
+	int i;
 	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
 		struct PingEntry entry = PingList_Entries[i];
 		if (!entry.TimeSent || !entry.TimeReceived) continue;
@@ -137,7 +137,7 @@ Int32 PingList_AveragePingMs(void) {
 		totalMs += (entry.TimeReceived - entry.TimeSent) * 0.5;
 		measures++;
 	}
-	return measures == 0 ? 0 : (Int32)(totalMs / measures);
+	return measures == 0 ? 0 : (int)(totalMs / measures);
 }
 
 
@@ -149,7 +149,7 @@ static void SPConnection_BeginConnect(void) {
 	Chat_SetLogName(&logName);
 	Game_UseCPEBlocks = Game_UseCPE;
 
-	Int32 i, count = Game_UseCPEBlocks ? BLOCK_CPE_COUNT : BLOCK_ORIGINAL_COUNT;
+	int i, count = Game_UseCPEBlocks ? BLOCK_CPE_COUNT : BLOCK_ORIGINAL_COUNT;
 	for (i = 1; i < count; i++) {
 		Block_CanPlace[i]  = true;
 		Block_CanDelete[i] = true;
@@ -183,7 +183,7 @@ static void SPConnection_AddPortion(const String* text) {
 	}
 	String_AppendString(&tmp, text);
 
-	Int32 i;
+	int i;
 	/* Replace all % with & */
 	for (i = 0; i < tmp.length; i++) {
 		if (tmp.buffer[i] == '%') tmp.buffer[i] = '&';
@@ -246,7 +246,7 @@ UInt8 net_writeBuffer[131];
 UInt8* net_readCurrent;
 
 bool net_writeFailed;
-Int32 net_ticks;
+int net_ticks;
 TimeMS net_lastPacket;
 UInt8 net_lastOpcode;
 double net_discAccumulator;
@@ -312,7 +312,7 @@ static void MPConnection_TickConnect(void) {
 	} else if (now > net_connectTimeout) {
 		MPConnection_FailConnect(0);
 	} else {
-		Int32 leftMS = (Int32)(net_connectTimeout - now);
+		int leftMS = (int)(net_connectTimeout - now);
 		Event_RaiseFloat(&WorldEvents_Loading, (float)leftMS / NET_TIMEOUT_MS);
 	}
 }
@@ -499,7 +499,7 @@ void ServerConnection_InitMultiplayer(void) {
 static void MPConnection_OnNewMap(void) {
 	if (ServerConnection_IsSinglePlayer) return;
 	/* wipe all existing entity states */
-	Int32 i;
+	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		Handlers_RemoveEntity((EntityID)i);
 	}
@@ -507,7 +507,7 @@ static void MPConnection_OnNewMap(void) {
 
 static void MPConnection_Reset(void) {
 	if (ServerConnection_IsSinglePlayer) return;
-	Int32 i;
+	int i;
 	for (i = 0; i < OPCODE_COUNT; i++) {
 		Net_Handlers[i] = NULL;
 		Net_PacketSizes[i] = 0;

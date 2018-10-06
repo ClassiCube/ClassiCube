@@ -20,7 +20,7 @@ void World_Reset(void) {
 	Random rnd;
 	Random_InitFromCurrentTime(&rnd);
 	/* add a bit of randomness for uuid */
-	Int32 i;
+	int i;
 	for (i = 0; i < Game_Username.length; i++) {
 		Random_Next(&rnd, Game_Username.buffer[i] + 3);
 	}
@@ -36,7 +36,7 @@ void World_Reset(void) {
 	World_Uuid[8] |= 0x80; /* variant 2*/
 }
 
-void World_SetNewMap(BlockRaw* blocks, Int32 blocksSize, Int32 width, Int32 height, Int32 length) {
+void World_SetNewMap(BlockRaw* blocks, int blocksSize, int width, int height, int length) {
 	World_Width = width; World_Height = height; World_Length = length;
 	World_Blocks = blocks; World_BlocksSize = blocksSize;
 	if (!World_BlocksSize) World_Blocks = NULL;
@@ -63,8 +63,8 @@ void World_SetNewMap(BlockRaw* blocks, Int32 blocksSize, Int32 width, Int32 heig
 
 
 #ifdef EXTENDED_BLOCKS
-void World_SetBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
-	Int32 i = World_Pack(x, y, z);
+void World_SetBlock(int x, int y, int z, BlockID block) {
+	int i = World_Pack(x, y, z);
 	World_Blocks[i] = (BlockRaw)block;
 
 	/* defer allocation of second map array if possible */
@@ -76,12 +76,12 @@ void World_SetBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
 	World_Blocks2[i] = (BlockRaw)(block >> 8);
 }
 #else
-void World_SetBlock(Int32 x, Int32 y, Int32 z, BlockID block) { 
+void World_SetBlock(int x, int y, int z, BlockID block) {
 	World_Blocks[World_Pack(x, y, z)] = block; 
 }
 #endif
 
-BlockID World_GetPhysicsBlock(Int32 x, Int32 y, Int32 z) {
+BlockID World_GetPhysicsBlock(int x, int y, int z) {
 	if (x < 0 || x >= World_Width || z < 0 || z >= World_Length || y < 0) return BLOCK_BEDROCK;
 	if (y >= World_Height) return BLOCK_AIR;
 
@@ -92,7 +92,7 @@ BlockID World_SafeGetBlock_3I(Vector3I p) {
 	return World_IsValidPos(p.X, p.Y, p.Z) ? World_GetBlock(p.X, p.Y, p.Z) : BLOCK_AIR;
 }
 
-bool World_IsValidPos(Int32 x, Int32 y, Int32 z) {
+bool World_IsValidPos(int x, int y, int z) {
 	return x >= 0 && y >= 0 && z >= 0 && 
 		x < World_Width && y < World_Height && z < World_Length;
 }
@@ -164,15 +164,15 @@ void Env_SetSidesBlock(BlockID block) {
 	Env_Set(block, Env_SidesBlock, ENV_VAR_SIDES_BLOCK);
 }
 
-void Env_SetEdgeHeight(Int32 height) {
+void Env_SetEdgeHeight(int height) {
 	Env_Set(height, Env_EdgeHeight, ENV_VAR_EDGE_HEIGHT);
 }
 
-void Env_SetSidesOffset(Int32 offset) {
+void Env_SetSidesOffset(int offset) {
 	Env_Set(offset, Env_SidesOffset, ENV_VAR_SIDES_OFFSET);
 }
 
-void Env_SetCloudsHeight(Int32 height) {
+void Env_SetCloudsHeight(int height) {
 	Env_Set(height, Env_CloudsHeight, ENV_VAR_CLOUDS_HEIGHT);
 }
 
@@ -189,7 +189,7 @@ void Env_SetWeatherFade(float rate) {
 	Env_Set(rate, Env_WeatherFade, ENV_VAR_WEATHER_FADE);
 }
 
-void Env_SetWeather(Int32 weather) {
+void Env_SetWeather(int weather) {
 	Env_Set(weather, Env_Weather, ENV_VAR_WEATHER);
 }
 
@@ -229,13 +229,13 @@ void Env_SetShadowCol(PackedCol col) {
 }
 
 float Respawn_HighestFreeY(struct AABB* bb) {
-	Int32 minX = Math_Floor(bb->Min.X), maxX = Math_Floor(bb->Max.X);
-	Int32 minY = Math_Floor(bb->Min.Y), maxY = Math_Floor(bb->Max.Y);
-	Int32 minZ = Math_Floor(bb->Min.Z), maxZ = Math_Floor(bb->Max.Z);
+	int minX = Math_Floor(bb->Min.X), maxX = Math_Floor(bb->Max.X);
+	int minY = Math_Floor(bb->Min.Y), maxY = Math_Floor(bb->Max.Y);
+	int minZ = Math_Floor(bb->Min.Z), maxZ = Math_Floor(bb->Max.Z);
 
 	float spawnY = RESPAWN_NOT_FOUND;
 	struct AABB blockBB;
-	Int32 x, y, z;
+	int x, y, z;
 	Vector3 pos;
 
 	for (y = minY; y <= maxY; y++) {
@@ -264,7 +264,7 @@ Vector3 Respawn_FindSpawnPosition(float x, float z, Vector3 modelSize) {
 	AABB_Make(&bb, &spawn, &modelSize);
 	spawn.Y = 0.0f;
 
-	Int32 y;
+	int y;
 	for (y = World_Height; y >= 0; y--) {
 		float highestY = Respawn_HighestFreeY(&bb);
 		if (highestY != RESPAWN_NOT_FOUND) {

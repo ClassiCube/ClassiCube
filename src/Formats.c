@@ -1017,7 +1017,7 @@ ReturnCode Schematic_Save(struct Stream* stream) {
 	if ((res = Stream_Write(stream, tmp, sizeof(sc_data)))) return res;
 
 	UInt8 chunk[8192] = { 0 };
-	Int32 i;
+	int i;
 	for (i = 0; i < World_BlocksSize; i += sizeof(chunk)) {
 		Int32 count = World_BlocksSize - i; count = min(count, sizeof(chunk));
 		if ((res = Stream_Write(stream, chunk, count))) return res;

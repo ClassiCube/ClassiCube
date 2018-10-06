@@ -15,31 +15,31 @@ BlockRaw* World_Blocks;
 #ifdef EXTENDED_BLOCKS
 BlockRaw* World_Blocks2;
 #endif
-Int32 World_BlocksSize;
+int World_BlocksSize;
 
-Int32 World_Width, World_Height, World_Length;
-Int32 World_MaxX, World_MaxY, World_MaxZ;
-Int32 World_OneY;
+int World_Width, World_Height, World_Length;
+int World_MaxX, World_MaxY, World_MaxZ;
+int World_OneY;
 UInt8 World_Uuid[16];
 extern String World_TextureUrl;
 
 void World_Reset(void);
-void World_SetNewMap(BlockRaw* blocks, Int32 blocksSize, Int32 width, Int32 height, Int32 length);
+void World_SetNewMap(BlockRaw* blocks, int blocksSize, int width, int height, int length);
 
 #ifdef EXTENDED_BLOCKS
-extern Int32 Block_IDMask;
-static inline BlockID World_GetBlock(Int32 x, Int32 y, Int32 z) {
-	Int32 i = World_Pack(x, y, z);
+extern int Block_IDMask;
+static inline BlockID World_GetBlock(int x, int y, int z) {
+	int i = World_Pack(x, y, z);
 	return (BlockID)((World_Blocks[i] | (World_Blocks2[i] << 8)) & Block_IDMask);
 }
 #else
 #define World_GetBlock(x, y, z) World_Blocks[World_Pack(x, y, z)]
 #endif
 
-BlockID World_GetPhysicsBlock(Int32 x, Int32 y, Int32 z);
-void World_SetBlock(Int32 x, Int32 y, Int32 z, BlockID block);
+BlockID World_GetPhysicsBlock(int x, int y, int z);
+void World_SetBlock(int x, int y, int z, BlockID block);
 BlockID World_SafeGetBlock_3I(Vector3I p);
-bool World_IsValidPos(Int32 x, Int32 y, Int32 z);
+bool World_IsValidPos(int x, int y, int z);
 bool World_IsValidPos_3I(Vector3I p);
 
 enum ENV_VAR {
@@ -51,17 +51,17 @@ enum ENV_VAR {
 };
 
 BlockID Env_EdgeBlock, Env_SidesBlock;
-Int32 Env_EdgeHeight;
-Int32 Env_SidesOffset;
+int Env_EdgeHeight;
+int Env_SidesOffset;
 #define Env_SidesHeight (Env_EdgeHeight + Env_SidesOffset)
-Int32 Env_CloudsHeight;
+int Env_CloudsHeight;
 float Env_CloudsSpeed;
 
 enum WEATHER { WEATHER_SUNNY, WEATHER_RAINY, WEATHER_SNOWY };
 extern const char* Weather_Names[3];
 float Env_WeatherSpeed;
 float Env_WeatherFade;
-Int32 Env_Weather;
+int Env_Weather;
 bool Env_ExpFog;
 float Env_SkyboxHorSpeed, Env_SkyboxVerSpeed;
 
@@ -81,14 +81,14 @@ void Env_Reset(void);
 void Env_ResetLight(void);
 void Env_SetEdgeBlock(BlockID block);
 void Env_SetSidesBlock(BlockID block);
-void Env_SetEdgeHeight(Int32 height);
-void Env_SetSidesOffset(Int32 offset);
-void Env_SetCloudsHeight(Int32 height);
+void Env_SetEdgeHeight(int height);
+void Env_SetSidesOffset(int offset);
+void Env_SetCloudsHeight(int height);
 void Env_SetCloudsSpeed(float speed);
 
 void Env_SetWeatherSpeed(float speed);
 void Env_SetWeatherFade(float rate);
-void Env_SetWeather(Int32 weather);
+void Env_SetWeather(int weather);
 void Env_SetExpFog(bool expFog);
 void Env_SetSkyboxHorSpeed(float speed);
 void Env_SetSkyboxVerSpeed(float speed);

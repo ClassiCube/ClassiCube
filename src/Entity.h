@@ -163,5 +163,5 @@ void LocalPlayer_Init(void);
 float LocalPlayer_JumpHeight(void);
 void LocalPlayer_CheckHacksConsistency(void);
 void LocalPlayer_SetInterpPosition(float t);
-bool LocalPlayer_HandlesKey(Int32 key);
+bool LocalPlayer_HandlesKey(int key);
 #endif

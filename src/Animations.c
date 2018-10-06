@@ -23,14 +23,14 @@ float L_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 Random L_rnd;
 bool L_rndInitalised;
 
-static void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
+static void LavaAnimation_Tick(UInt32* ptr, int size) {
 	if (!L_rndInitalised) {
 		Random_InitFromCurrentTime(&L_rnd);
 		L_rndInitalised = true;
 	}
-	Int32 mask = size - 1, shift = Math_Log2(size);
+	int mask = size - 1, shift = Math_Log2(size);
 
-	Int32 x, y, i = 0;
+	int x, y, i = 0;
 	for (y = 0; y < size; y++) {
 		for (x = 0; x < size; x++) {
 			/* Calculate the colour at this coordinate in the heatmap */
@@ -38,7 +38,7 @@ static void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
 			/* Lookup table for (int)(1.2 * sin([ANGLE] * 22.5 * MATH_DEG2RAD)); */
 			/* [ANGLE] is integer x/y, so repeats every 16 intervals */
 			static Int8 sin_adj_table[16] = { 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0 };
-			Int32 xx = x + sin_adj_table[y & 0xF], yy = y + sin_adj_table[x & 0xF];
+			int xx = x + sin_adj_table[y & 0xF], yy = y + sin_adj_table[x & 0xF];
 
 			float lSoupHeat =
 				L_soupHeat[((yy - 1) & mask) << shift | ((xx - 1) & mask)] +
@@ -91,14 +91,14 @@ float W_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 Random W_rnd;
 bool W_rndInitalised;
 
-static void WaterAnimation_Tick(UInt32* ptr, Int32 size) {
+static void WaterAnimation_Tick(UInt32* ptr, int size) {
 	if (!W_rndInitalised) {
 		Random_InitFromCurrentTime(&W_rnd);
 		W_rndInitalised = true;
 	}
-	Int32 mask = size - 1, shift = Math_Log2(size);
+	int mask = size - 1, shift = Math_Log2(size);
 
-	Int32 x, y, i = 0;
+	int x, y, i = 0;
 	for (y = 0; y < size; y++) {
 		for (x = 0; x < size; x++) {
 			/* Calculate the colour at this coordinate in the heatmap */
@@ -145,7 +145,7 @@ struct AnimationData {
 
 Bitmap anims_bmp;
 struct AnimationData anims_list[ATLAS1D_MAX_ATLASES];
-Int32 anims_count;
+int anims_count;
 bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
 
 static void Animations_ReadDescription(struct Stream* stream, const String* path) {
@@ -167,7 +167,7 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 		struct AnimationData data = { 0 };
 		UInt8 tileX, tileY;
 
-		Int32 partsCount = Array_Elems(parts);	
+		int partsCount = Array_Elems(parts);
 		String_UNSAFE_Split(&line, ' ', parts, &partsCount);
 
 		if (partsCount < 7) {
@@ -205,7 +205,7 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 }
 
 #define ANIMS_FAST_SIZE 64
-static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, Int32 size) {
+static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int size) {
 	UInt8 buffer[Bitmap_DataSize(ANIMS_FAST_SIZE, ANIMS_FAST_SIZE)];
 	UInt8* ptr = buffer;
 	if (size > ANIMS_FAST_SIZE) {
@@ -213,8 +213,8 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, Int32
 		ptr = Mem_Alloc(size * size, BITMAP_SIZEOF_PIXEL, "anim frame");
 	}
 
-	Int32 index_1D = Atlas1D_Index(texLoc);
-	Int32 rowId_1D = Atlas1D_RowId(texLoc);
+	int index_1D = Atlas1D_Index(texLoc);
+	int rowId_1D = Atlas1D_RowId(texLoc);
 	Bitmap animPart; Bitmap_Create(&animPart, size, size, ptr);
 
 	if (!data) {
@@ -224,12 +224,12 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, Int32
 			WaterAnimation_Tick((UInt32*)animPart.Scan0, size);
 		}
 	} else {
-		Int32 x = data->FrameX + data->State * size;
+		int x = data->FrameX + data->State * size;
 		Bitmap_CopyBlock(x, data->FrameY, 0, 0, &anims_bmp, &animPart, size);
 	}
 
 	GfxResourceID tex = Atlas1D_TexIds[index_1D];
-	Int32 dstY = rowId_1D * Atlas2D_TileSize;
+	int dstY = rowId_1D * Atlas2D_TileSize;
 	if (tex) { Gfx_UpdateTexturePart(tex, 0, dstY, &animPart, Gfx_Mipmaps); }
 	if (size > ANIMS_FAST_SIZE) Mem_Free(ptr);
 }
@@ -265,13 +265,13 @@ static void Animations_Clear(void) {
 
 static void Animations_Validate(void) {
 	anims_validated = true;
-	Int32 i, j;
+	int i, j;
 
 	for (i = 0; i < anims_count; i++) {
 		struct AnimationData data = anims_list[i];
-		Int32 maxY = data.FrameY + data.FrameSize;
-		Int32 maxX = data.FrameX + data.FrameSize * data.StatesCount;
-		Int32 tileX = Atlas2D_TileX(data.TexLoc), tileY = Atlas2D_TileY(data.TexLoc);
+		int maxY = data.FrameY + data.FrameSize;
+		int maxX = data.FrameX + data.FrameSize * data.StatesCount;
+		int tileX = Atlas2D_TileX(data.TexLoc), tileY = Atlas2D_TileY(data.TexLoc);
 
 		if (data.FrameSize > Atlas2D_TileSize || tileY >= Atlas2D_RowsCount) {
 			Chat_Add2("&cAnimation frames for tile (%i, %i) are bigger than the size of a tile in terrain.png", &tileX, &tileY);
@@ -292,11 +292,11 @@ static void Animations_Validate(void) {
 
 void Animations_Tick(struct ScheduledTask* task) {
 	if (anims_useLavaAnim) {
-		Int32 size = min(Atlas2D_TileSize, 64);
+		int size = min(Atlas2D_TileSize, 64);
 		Animations_Draw(NULL, 30, size);
 	}
 	if (anims_useWaterAnim) {
-		Int32 size = min(Atlas2D_TileSize, 64);
+		int size = min(Atlas2D_TileSize, 64);
 		Animations_Draw(NULL, 14, size);
 	}
 	if (!anims_count) return;
@@ -310,7 +310,7 @@ void Animations_Tick(struct ScheduledTask* task) {
 
 	/* deferred, because when reading animations.txt, might not have read animations.png yet */
 	if (!anims_validated) Animations_Validate();
-	Int32 i;
+	int i;
 	for (i = 0; i < anims_count; i++) {
 		Animations_Apply(&anims_list[i]);
 	}

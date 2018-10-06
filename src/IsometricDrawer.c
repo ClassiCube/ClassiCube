@@ -22,7 +22,7 @@ PackedCol iso_colNormal, iso_colXSide, iso_colZSide, iso_colYBottom;
 
 struct Matrix iso_transform;
 Vector3 iso_pos;
-Int32 iso_lastTexIndex, iso_texIndex;
+int iso_lastTexIndex, iso_texIndex;
 
 static void IsometricDrawer_RotateX(float cosA, float sinA) {
 	float y  = cosA  * iso_pos.Y + sinA * iso_pos.Z;
@@ -52,7 +52,7 @@ static void IsometricDrawer_InitCache(void) {
 static void IsometricDrawer_Flush(void) {
 	if (iso_lastTexIndex != -1) {
 		Gfx_BindTexture(Atlas1D_TexIds[iso_lastTexIndex]);
-		Int32 count = (Int32)(iso_vertices - iso_base_vertices);
+		int count = (int)(iso_vertices - iso_base_vertices);
 		GfxCommon_UpdateDynamicVb_IndexedTris(iso_vb, iso_base_vertices, count);
 	}
 

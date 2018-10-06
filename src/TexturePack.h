@@ -15,7 +15,7 @@ struct ZipState {
 	struct Stream* Input;
 	void (*ProcessEntry)(const String* path, struct Stream* data, struct ZipEntry* entry);
 	bool (*SelectEntry)(const String* path);
-	Int32 EntriesCount;
+	int EntriesCount;
 	struct ZipEntry Entries[ZIP_MAX_ENTRIES];
 };
 

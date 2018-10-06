@@ -38,7 +38,7 @@ UInt8 Block_BottomTex[BLOCK_CPE_COUNT]   = { 0,  1,  2,  2, 16,  4, 15, 17, 14, 
 36, 37, 16, 11, 57, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 58, 53, 52 };
 
 #ifdef EXTENDED_BLOCKS
-void Block_SetUsedCount(Int32 count) {
+void Block_SetUsedCount(int count) {
 	Block_UsedCount = count;
 	Block_IDMask    = Math_NextPowOf2(count) - 1;
 }
@@ -50,13 +50,12 @@ void Block_Reset(void) {
 }
 
 void Block_Init(void) {
-	Int32 count = Array_Elems(Block_DefinedCustomBlocks);
-	Int32 i;
-	for (i = 0; i < count; i++) {
+	int i;
+	for (i = 0; i < Array_Elems(Block_DefinedCustomBlocks); i++) {
 		Block_DefinedCustomBlocks[i] = 0;
 	}
 
-	Int32 block;
+	int block;
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
 		Block_ResetProps((BlockID)block);
 	}
@@ -64,9 +63,9 @@ void Block_Init(void) {
 }
 
 void Block_SetDefaultPerms(void) {
-	Int32 block;
+	int block;
 	for (block = BLOCK_AIR; block <= BLOCK_MAX_DEFINED; block++) {
-		Block_CanPlace[block] = true;
+		Block_CanPlace[block]  = true;
 		Block_CanDelete[block] = true;
 	}
 
@@ -155,11 +154,11 @@ static String Block_DefaultName(BlockID block) {
 
 	String blockNames = String_FromConst(BLOCK_RAW_NAMES);
 	/* Find start and end of this particular block name. */
-	Int32 start = 0, i;
+	int start = 0, i;
 	for (i = 0; i < block; i++) {
 		start = String_IndexOf(&blockNames, '_', start) + 1;
 	}
-	Int32 end = String_IndexOf(&blockNames, '_', start);
+	int end = String_IndexOf(&blockNames, '_', start);
 	if (end == -1) end = blockNames.length;
 
 	return String_UNSAFE_Substring(&blockNames, start, (end - start));
@@ -214,8 +213,8 @@ void Block_SetName(BlockID block, const String* name) {
 	String_AppendString(&dst, name);
 }
 
-Int32 Block_FindID(const String* name) {
-	Int32 block;
+int Block_FindID(const String* name) {
+	int block;
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
 		String blockName = Block_UNSAFE_GetName(block);
 		if (String_CaselessEquals(&blockName, name)) return block;
@@ -223,14 +222,14 @@ Int32 Block_FindID(const String* name) {
 	return -1;
 }
 
-Int32 Block_Parse(const String* name) {
-	Int32 b;
+int Block_Parse(const String* name) {
+	int b;
 	if (Convert_TryParseInt32(name, &b) && b < BLOCK_COUNT) return b;
 	return Block_FindID(name);
 }
 
 void Block_SetSide(TextureLoc texLoc, BlockID blockId) {
-	Int32 index = blockId * FACE_COUNT;
+	int index = blockId * FACE_COUNT;
 	Block_Textures[index + FACE_XMIN] = texLoc;
 	Block_Textures[index + FACE_XMAX] = texLoc;
 	Block_Textures[index + FACE_ZMIN] = texLoc;
@@ -262,7 +261,7 @@ void Block_CalcRenderBounds(BlockID block) {
 }
 
 void Block_CalcLightOffset(BlockID block) {
-	Int32 flags = 0xFF;
+	int flags = 0xFF;
 	Vector3 min = Block_MinBB[block], max = Block_MaxBB[block];
 
 	if (min.X != 0) flags &= ~(1 << FACE_XMIN);
@@ -278,7 +277,7 @@ void Block_CalcLightOffset(BlockID block) {
 }
 
 void Block_RecalculateSpriteBB(void) {
-	Int32 block;
+	int block;
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
 		if (Block_Draw[block] != DRAW_SPRITE) continue;
 
@@ -286,8 +285,8 @@ void Block_RecalculateSpriteBB(void) {
 	}
 }
 
-static float Block_GetSpriteBB_MinX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
-	Int32 x, y;
+static float Block_GetSpriteBB_MinX(int size, int tileX, int tileY, Bitmap* bmp) {
+	int x, y;
 	for (x = 0; x < size; x++) {
 		for (y = 0; y < size; y++) {
 			UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
@@ -299,8 +298,8 @@ static float Block_GetSpriteBB_MinX(Int32 size, Int32 tileX, Int32 tileY, Bitmap
 	return 1.0f;
 }
 
-static float Block_GetSpriteBB_MinY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
-	Int32 x, y;
+static float Block_GetSpriteBB_MinY(int size, int tileX, int tileY, Bitmap* bmp) {
+	int x, y;
 	for (y = size - 1; y >= 0; y--) {
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 		for (x = 0; x < size; x++) {
@@ -312,8 +311,8 @@ static float Block_GetSpriteBB_MinY(Int32 size, Int32 tileX, Int32 tileY, Bitmap
 	return 1.0f;
 }
 
-static float Block_GetSpriteBB_MaxX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
-	Int32 x, y;
+static float Block_GetSpriteBB_MaxX(int size, int tileX, int tileY, Bitmap* bmp) {
+	int x, y;
 	for (x = size - 1; x >= 0; x--) {
 		for (y = 0; y < size; y++) {
 			UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
@@ -325,8 +324,8 @@ static float Block_GetSpriteBB_MaxX(Int32 size, Int32 tileX, Int32 tileY, Bitmap
 	return 0.0f;
 }
 
-static float Block_GetSpriteBB_MaxY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
-	Int32 x, y;
+static float Block_GetSpriteBB_MaxY(int size, int tileX, int tileY, Bitmap* bmp) {
+	int x, y;
 	for (y = 0; y < size; y++) {
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 		for (x = 0; x < size; x++) {
@@ -339,10 +338,10 @@ static float Block_GetSpriteBB_MaxY(Int32 size, Int32 tileX, Int32 tileY, Bitmap
 }
 
 void Block_RecalculateBB(BlockID block) {
-	Bitmap* bmp = &Atlas2D_Bitmap;
-	Int32 tileSize = Atlas2D_TileSize;
+	Bitmap* bmp  = &Atlas2D_Bitmap;
+	int tileSize = Atlas2D_TileSize;
 	TextureLoc texLoc = Block_GetTexLoc(block, FACE_XMAX);
-	Int32 x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
+	int x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
 
 	float minX = 0.0f, minY = 0.0f, maxX = 1.0f, maxY = 1.0f;
 	if (y < Atlas2D_RowsCount) {
@@ -412,7 +411,7 @@ static void Block_CalcCulling(BlockID block, BlockID other) {
 
 		/* Don't need to care about sprites here since they never cull faces */
 		bool bothLiquid = Block_IsLiquid[block] && Block_IsLiquid[other];
-		Int32 f = 0; /* mark all faces initially 'not hidden' */
+		int f = 0; /* mark all faces initially 'not hidden' */
 
 		/* Whether the 'texture region' of a face on block fits inside corresponding region on other block */
 		bool occludedX = (bMin.Z >= oMin.Z && bMax.Z <= oMax.Z) && (bMin.Y >= oMin.Y && bMax.Y <= oMax.Y);
@@ -434,7 +433,7 @@ bool Block_IsFaceHidden(BlockID block, BlockID other, Face face) {
 }
 
 void Block_UpdateCullingAll(void) {
-	Int32 block, neighbour;
+	int block, neighbour;
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
 		Block_CalcStretch((BlockID)block);
 		for (neighbour = BLOCK_AIR; neighbour < BLOCK_COUNT; neighbour++) {
@@ -445,7 +444,7 @@ void Block_UpdateCullingAll(void) {
 
 void Block_UpdateCulling(BlockID block) {
 	Block_CalcStretch(block);
-	Int32 other;
+	int other;
 	for (other = BLOCK_AIR; other < BLOCK_COUNT; other++) {
 		Block_CalcCulling(block, (BlockID)other);
 		Block_CalcCulling((BlockID)other, block);
@@ -465,7 +464,7 @@ static BlockID AutoRotate_Find(BlockID block, const String* name, const char* su
 	String_AppendString(&temp, name);
 	String_AppendConst(&temp, suffix);
 
-	Int32 rotated = Block_FindID(&temp);
+	int rotated = Block_FindID(&temp);
 	if (rotated != -1) return (BlockID)rotated;
 	return block;
 }
@@ -531,8 +530,8 @@ static BlockID AutoRotate_RotateDirection(BlockID block, const String* name, Vec
 }
 
 BlockID AutoRotate_RotateBlock(BlockID block) {
-	String name = Block_UNSAFE_GetName(block);
-	Int32 dirIndex = String_LastIndexOf(&name, '-');
+	String name  = Block_UNSAFE_GetName(block);
+	int dirIndex = String_LastIndexOf(&name, '-');
 	if (dirIndex == -1) return block; /* not a directional block */
 
 	String dir = String_UNSAFE_SubstringAt(&name, dirIndex + 1);

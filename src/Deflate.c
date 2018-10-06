@@ -170,12 +170,12 @@ static UInt32 Huffman_ReverseBits(UInt32 n, UInt8 bits) {
 }
 
 static void Huffman_Build(struct HuffmanTable* table, UInt8* bitLens, Int32 count) {
-	Int32 i;
+	int i;
 	table->FirstCodewords[0] = 0;
 	table->FirstOffsets[0] = 0;
 	table->EndCodewords[0] = -1;
 
-	Int32 bl_count[INFLATE_MAX_BITS] = { 0 };
+	int bl_count[INFLATE_MAX_BITS] = { 0 };
 	for (i = 0; i < count; i++) {
 		bl_count[bitLens[i]]++;
 	}
@@ -186,8 +186,8 @@ static void Huffman_Build(struct HuffmanTable* table, UInt8* bitLens, Int32 coun
 		}
 	}
 
-	Int32 code = 0, offset = 0;
-	UInt16 bl_offsets[INFLATE_MAX_BITS];
+	int code = 0, offset = 0;
+	int bl_offsets[INFLATE_MAX_BITS];
 	for (i = 1; i < INFLATE_MAX_BITS; i++) {
 		code = (code + bl_count[i - 1]) << 1;
 		bl_offsets[i]            = offset;
@@ -204,10 +204,10 @@ static void Huffman_Build(struct HuffmanTable* table, UInt8* bitLens, Int32 coun
 		}
 	}
 
-	Int32 value = 0;
+	int value = 0;
 	Mem_Set(table->Fast, UInt8_MaxValue, sizeof(table->Fast));
 	for (i = 0; i < count; i++, value++) {
-		Int32 len = bitLens[i];
+		int len = bitLens[i];
 		if (!len) continue;
 		table->Values[bl_offsets[len]] = value;
 

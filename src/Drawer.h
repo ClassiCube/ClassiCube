@@ -19,10 +19,10 @@ float Drawer_X1, Drawer_Y1, Drawer_Z1;
 /* Coordinate of maximum block bounding box corner in the world. */
 float Drawer_X2, Drawer_Y2, Drawer_Z2;
 
-void Drawer_XMin(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
-void Drawer_XMax(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
-void Drawer_ZMin(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
-void Drawer_ZMax(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
-void Drawer_YMin(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
-void Drawer_YMax(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
+void Drawer_XMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
+void Drawer_XMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
+void Drawer_ZMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
+void Drawer_ZMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
+void Drawer_YMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
+void Drawer_YMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
 #endif

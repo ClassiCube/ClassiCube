@@ -59,7 +59,7 @@ ReturnCode Stream_DefaultReadU8(struct Stream* stream, UInt8* data) {
 }
 
 static ReturnCode Stream_DefaultClose(struct Stream* stream) { return 0; }
-static ReturnCode Stream_DefaultSeek(struct Stream* stream, Int32 offset, Int32 seekType) { 
+static ReturnCode Stream_DefaultSeek(struct Stream* stream, int offset, int seekType) {
 	return ReturnCode_NotSupported; 
 }
 static ReturnCode Stream_DefaultGet(struct Stream* stream, UInt32* value) { 
@@ -91,7 +91,7 @@ static ReturnCode Stream_FileClose(struct Stream* stream) {
 	stream->Meta.File = NULL;
 	return res;
 }
-static ReturnCode Stream_FileSeek(struct Stream* stream, Int32 offset, Int32 seekType) {
+static ReturnCode Stream_FileSeek(struct Stream* stream, int offset, int seekType) {
 	return File_Seek(stream->Meta.File, offset, seekType);
 }
 static ReturnCode Stream_FilePosition(struct Stream* stream, UInt32* position) {
@@ -182,17 +182,17 @@ static ReturnCode Stream_MemoryWrite(struct Stream* stream, UInt8* data, UInt32 
 	return 0;
 }
 
-static ReturnCode Stream_MemorySeek(struct Stream* stream, Int32 offset, Int32 seekType) {
-	Int32 pos;
+static ReturnCode Stream_MemorySeek(struct Stream* stream, int offset, int seekType) {
+	int pos;
 	UInt32 curOffset = (UInt32)(stream->Meta.Mem.Cur - stream->Meta.Mem.Base);
 
 	switch (seekType) {
 	case STREAM_SEEKFROM_BEGIN:
 		pos = offset; break;
 	case STREAM_SEEKFROM_CURRENT:
-		pos = (Int32)curOffset + offset; break;
+		pos = (int)curOffset + offset; break;
 	case STREAM_SEEKFROM_END:
-		pos = (Int32)stream->Meta.Mem.Length + offset; break;
+		pos = (int)stream->Meta.Mem.Length + offset; break;
 	default: return ReturnCode_InvalidArg;
 	}
 
@@ -324,7 +324,7 @@ ReturnCode Stream_ReadUtf8(struct Stream* stream, UInt16* codepoint) {
 
 	/* Header byte encodes variable number of following bytes */
 	/* The remaining bits of the header form first part of the character */
-	Int32 byteCount = 0, i;
+	int byteCount = 0, i;
 	for (i = 7; i >= 0; i--) {
 		if (data & (1 << i)) {
 			byteCount++;
@@ -364,7 +364,7 @@ ReturnCode Stream_ReadLine(struct Stream* stream, String* text) {
 	return readAny ? 0 : ERR_END_OF_STREAM;
 }
 
-Int32 Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint) {
+int Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint) {
 	if (codepoint <= 0x7F) {
 		buffer[0] = (UInt8)codepoint;
 		return 1;

@@ -17,7 +17,7 @@ String String_Init(STRING_REF char* buffer, UInt16 length, UInt16 capacity) {
 
 String String_InitAndClear(STRING_REF char* buffer, UInt16 capacity) {
 	String str = String_Init(buffer, 0, capacity);	
-	Int32 i;
+	int i;
 	for (i = 0; i < capacity; i++) { buffer[i] = '\0'; }
 	return str;
 }
@@ -41,7 +41,7 @@ String String_FromReadonly(STRING_REF const char* buffer) {
 
 
 void String_StripCols(String* str) {
-	Int32 i;
+	int i;
 	for (i = str->length - 1; i >= 0; i--) {
 		if (str->buffer[i] != '&') continue;
 		/* Remove the & and the colour code following it */
@@ -54,7 +54,7 @@ void String_Copy(String* dst, const String* src) {
 	String_AppendString(dst, src);
 }
 
-String String_UNSAFE_Substring(STRING_REF const String* str, Int32 offset, Int32 length) {
+String String_UNSAFE_Substring(STRING_REF const String* str, int offset, int length) {
 	if (offset < 0 || offset > str->length) {
 		ErrorHandler_Fail("Offset for substring out of range");
 	}
@@ -67,10 +67,10 @@ String String_UNSAFE_Substring(STRING_REF const String* str, Int32 offset, Int32
 	return String_Init(str->buffer + offset, length, length);
 }
 
-void String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, Int32* subsCount) {
-	Int32 maxSubs = *subsCount, i = 0, start = 0;
+void String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int* subsCount) {
+	int maxSubs = *subsCount, i = 0, start = 0;
 	for (; i < maxSubs && start <= str->length; i++) {
-		Int32 end = String_IndexOf(str, c, start);
+		int end = String_IndexOf(str, c, start);
 		if (end == -1) end = str->length;
 
 		subs[i] = String_UNSAFE_Substring(str, start, end - start);
@@ -84,7 +84,7 @@ void String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, Int
 
 bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value) {
 	/* key [c] value or key[c]value */
-	Int32 idx = String_IndexOf(str, c, 0);
+	int idx = String_IndexOf(str, c, 0);
 	if (idx <= 0) return false;                 /* missing [c] or no key */
 	if ((idx + 1) >= str->length) return false; /* missing value */
 
@@ -99,7 +99,7 @@ bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, S
 
 bool String_Equals(const String* a, const String* b) {
 	if (a->length != b->length) return false;
-	Int32 i;
+	int i;
 
 	for (i = 0; i < a->length; i++) {
 		if (a->buffer[i] != b->buffer[i]) return false;
@@ -109,7 +109,7 @@ bool String_Equals(const String* a, const String* b) {
 
 bool String_CaselessEquals(const String* a, const String* b) {
 	if (a->length != b->length) return false;
-	Int32 i;
+	int i;
 
 	for (i = 0; i < a->length; i++) {
 		char aCur = a->buffer[i]; Char_MakeLower(aCur);
@@ -120,7 +120,7 @@ bool String_CaselessEquals(const String* a, const String* b) {
 }
 
 bool String_CaselessEqualsConst(const String* a, const char* b) {
-	Int32 i;
+	int i;
 
 	for (i = 0; i < a->length; i++) {
 		char aCur = a->buffer[i]; Char_MakeLower(aCur);
@@ -238,7 +238,7 @@ bool String_AppendHex(String* str, UInt8 value) {
 
 NOINLINE_ static bool String_Hex32(String* str, UInt32 value) {
 	bool appended;
-	Int32 shift;
+	int shift;
 
 	for (shift = 24; shift >= 0; shift -= 8) {
 		UInt8 part = (UInt8)(value >> shift);
@@ -249,7 +249,7 @@ NOINLINE_ static bool String_Hex32(String* str, UInt32 value) {
 
 NOINLINE_ static bool String_Hex64(String* str, UInt64 value) {
 	bool appended;
-	Int32 shift;
+	int shift;
 
 	for (shift = 56; shift >= 0; shift -= 8) {
 		UInt8 part = (UInt8)(value >> shift);
@@ -267,7 +267,7 @@ bool String_AppendConst(String* str, const char* src) {
 }
 
 bool String_AppendString(String* str, const String* src) {
-	Int32 i;
+	int i;
 
 	for (i = 0; i < src->length; i++) {
 		if (!String_Append(str, src->buffer[i])) return false;
@@ -276,7 +276,7 @@ bool String_AppendString(String* str, const String* src) {
 }
 
 bool String_AppendColorless(String* str, const String* src) {
-	Int32 i;
+	int i;
 
 	for (i = 0; i < src->length; i++) {
 		char c = src->buffer[i];
@@ -287,23 +287,23 @@ bool String_AppendColorless(String* str, const String* src) {
 }
 
 
-Int32 String_IndexOf(const String* str, char c, Int32 offset) {
-	Int32 i;
+int String_IndexOf(const String* str, char c, int offset) {
+	int i;
 	for (i = offset; i < str->length; i++) {
 		if (str->buffer[i] == c) return i;
 	}
 	return -1;
 }
 
-Int32 String_LastIndexOf(const String* str, char c) {
-	Int32 i;
+int String_LastIndexOf(const String* str, char c) {
+	int i;
 	for (i = str->length - 1; i >= 0; i--) {
 		if (str->buffer[i] == c) return i;
 	}
 	return -1;
 }
 
-void String_InsertAt(String* str, Int32 offset, char c) {
+void String_InsertAt(String* str, int offset, char c) {
 	if (offset < 0 || offset > str->length) {
 		ErrorHandler_Fail("Offset for InsertAt out of range");
 	}
@@ -311,7 +311,7 @@ void String_InsertAt(String* str, Int32 offset, char c) {
 		ErrorHandler_Fail("Cannot insert character into full string");
 	}
 
-	Int32 i;
+	int i;
 	for (i = str->length; i > offset; i--) {
 		str->buffer[i] = str->buffer[i - 1];
 	}
@@ -320,12 +320,12 @@ void String_InsertAt(String* str, Int32 offset, char c) {
 	str->length++;
 }
 
-void String_DeleteAt(String* str, Int32 offset) {
+void String_DeleteAt(String* str, int offset) {
 	if (offset < 0 || offset >= str->length) {
 		ErrorHandler_Fail("Offset for DeleteAt out of range");
 	}
 
-	Int32 i;
+	int i;
 	for (i = offset; i < str->length - 1; i++) {
 		str->buffer[i] = str->buffer[i + 1];
 	}
@@ -335,7 +335,7 @@ void String_DeleteAt(String* str, Int32 offset) {
 }
 
 void String_TrimStart(String* str) {
-	Int32 i;
+	int i;
 	for (i = 0; i < str->length; i++) {
 		if (str->buffer[i] != ' ') break;
 			
@@ -345,15 +345,15 @@ void String_TrimStart(String* str) {
 }
 
 void String_TrimEnd(String* str) {
-	Int32 i;
+	int i;
 	for (i = str->length - 1; i >= 0; i--) {
 		if (str->buffer[i] != ' ') break;
 		str->length--;
 	}
 }
 
-Int32 String_IndexOfString(const String* str, const String* sub) {
-	Int32 i, j;
+int String_IndexOfString(const String* str, const String* sub) {
+	int i, j;
 	for (i = 0; i < str->length; i++) {
 		for (j = 0; j < sub->length && (i + j) < str->length; j++) {
 
@@ -365,7 +365,7 @@ Int32 String_IndexOfString(const String* str, const String* sub) {
 }
 
 bool String_CaselessContains(const String* str, const String* sub) {
-	Int32 i, j;
+	int i, j;
 	for (i = 0; i < str->length; i++) {
 		for (j = 0; j < sub->length && (i + j) < str->length; j++) {
 
@@ -380,7 +380,7 @@ bool String_CaselessContains(const String* str, const String* sub) {
 
 bool String_CaselessStarts(const String* str, const String* sub) {
 	if (str->length < sub->length) return false;
-	Int32 i;
+	int i;
 
 	for (i = 0; i < sub->length; i++) {
 		char strCur = str->buffer[i]; Char_MakeLower(strCur);
@@ -392,7 +392,7 @@ bool String_CaselessStarts(const String* str, const String* sub) {
 
 bool String_CaselessEnds(const String* str, const String* sub) {
 	if (str->length < sub->length) return false;
-	Int32 i, j = str->length - sub->length;
+	int i, j = str->length - sub->length;
 
 	for (i = 0; i < sub->length; i++) {
 		char strCur = str->buffer[j + i]; Char_MakeLower(strCur);
@@ -402,9 +402,9 @@ bool String_CaselessEnds(const String* str, const String* sub) {
 	return true;
 }
 
-Int32 String_Compare(const String* a, const String* b) {
-	Int32 minLen = min(a->length, b->length);
-	Int32 i;
+int String_Compare(const String* a, const String* b) {
+	int minLen = min(a->length, b->length);
+	int i;
 
 	for (i = 0; i < minLen; i++) {
 		char aCur = a->buffer[i]; Char_MakeLower(aCur);
@@ -430,7 +430,7 @@ void String_Format3(String* str, const char* format, const void* a1, const void*
 void String_Format4(String* str, const char* format, const void* a1, const void* a2, const void* a3, const void* a4) {
 	String formatStr = String_FromReadonly(format);
 	const void* args[4] = { a1, a2, a3, a4 };
-	Int32 i, j = 0, digits;
+	int i, j = 0, digits;
 
 	for (i = 0; i < formatStr.length; i++) {
 		if (formatStr.buffer[i] != '%') { String_Append(str, formatStr.buffer[i]); continue; }
@@ -707,12 +707,12 @@ void StringsBuffer_Clear(StringsBuffer* buffer) {
 	StringsBuffer_Init(buffer);
 }
 
-void StringsBuffer_Get(StringsBuffer* buffer, Int32 i, String* text) {
+void StringsBuffer_Get(StringsBuffer* buffer, int i, String* text) {
 	String raw = StringsBuffer_UNSAFE_Get(buffer, i);
 	String_Copy(text, &raw);
 }
 
-String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, Int32 i) {
+String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i) {
 	if (i < 0 || i >= buffer->Count) ErrorHandler_Fail("Tried to get String past StringsBuffer end");
 
 	UInt32 flags  = buffer->FlagsBuffer[i];
@@ -734,10 +734,10 @@ void StringsBuffer_Add(StringsBuffer* buffer, const String* text) {
 		ErrorHandler_Fail("String too big to insert into StringsBuffer");
 	}
 
-	Int32 textOffset = buffer->TotalLength;
+	int textOffset = buffer->TotalLength;
 	if (textOffset + text->length >= buffer->_TextBufferSize) {
 		buffer->TextBuffer = Utils_Resize(buffer->TextBuffer, &buffer->_TextBufferSize,
-											sizeof(char), STRINGSBUFFER_BUFFER_DEF_SIZE, 8192);
+											1, STRINGSBUFFER_BUFFER_DEF_SIZE, 8192);
 	}
 
 	if (text->length) {
@@ -749,7 +749,7 @@ void StringsBuffer_Add(StringsBuffer* buffer, const String* text) {
 	buffer->TotalLength += text->length;
 }
 
-void StringsBuffer_Remove(StringsBuffer* buffer, Int32 index) {
+void StringsBuffer_Remove(StringsBuffer* buffer, int index) {
 	if (index < 0 || index >= buffer->Count) ErrorHandler_Fail("Tried to remove String past StringsBuffer end");
 
 	UInt32 flags  = buffer->FlagsBuffer[index];
@@ -786,13 +786,13 @@ bool WordWrap_IsWrapper(char c) {
 	return c == '\0' || c == ' ' || c == '-' || c == '>' || c == '<' || c == '/' || c == '\\';
 }
 
-void WordWrap_Do(STRING_REF String* text, String* lines, Int32 numLines, Int32 lineLen) {
-	Int32 i;
+void WordWrap_Do(STRING_REF String* text, String* lines, int numLines, int lineLen) {
+	int i;
 	for (i = 0; i < numLines; i++) { lines[i] = String_MakeNull(); }
 
-	Int32 lineStart = 0, lineEnd;
+	int lineStart = 0, lineEnd;
 	for (i = 0; i < numLines; i++) {
-		Int32 nextLineStart = lineStart + lineLen;
+		int nextLineStart = lineStart + lineLen;
 		/* No more text to wrap */
 		if (nextLineStart >= text->length) {
 			lines[i] = String_UNSAFE_SubstringAt(text, lineStart); return;
@@ -822,13 +822,13 @@ void WordWrap_Do(STRING_REF String* text, String* lines, Int32 numLines, Int32 l
 }
 
 /* Calculates where the given raw index is located in the wrapped lines. */
-void WordWrap_GetCoords(Int32 index, const String* lines, Int32 numLines, Int32* coordX, Int32* coordY) {
+void WordWrap_GetCoords(int index, const String* lines, int numLines, int* coordX, int* coordY) {
 	if (index == -1) index = Int32_MaxValue;
-	Int32 offset = 0; *coordX = -1; *coordY = 0;
+	int offset = 0; *coordX = -1; *coordY = 0;
 
-	Int32 y;
+	int y;
 	for (y = 0; y < numLines; y++) {
-		Int32 lineLength = lines[y].length;
+		int lineLength = lines[y].length;
 		if (!lineLength) break;
 
 		*coordY = y;
@@ -840,13 +840,13 @@ void WordWrap_GetCoords(Int32 index, const String* lines, Int32 numLines, Int32*
 	if (*coordX == -1) *coordX = lines[*coordY].length;
 }
 
-Int32 WordWrap_GetBackLength(const String* text, Int32 index) {
+int WordWrap_GetBackLength(const String* text, int index) {
 	if (index <= 0) return 0;
 	if (index >= text->length) {
 		ErrorHandler_Fail("WordWrap_GetBackLength - index past end of string");
 	}
 
-	Int32 start = index;
+	int start = index;
 	bool lookingSpace = text->buffer[index] == ' ';
 	/* go back to the end of the previous word */
 	if (lookingSpace) {
@@ -858,13 +858,13 @@ Int32 WordWrap_GetBackLength(const String* text, Int32 index) {
 	return start - index;
 }
 
-Int32 WordWrap_GetForwardLength(const String* text, Int32 index) {
+int WordWrap_GetForwardLength(const String* text, int index) {
 	if (index == -1) return 0;
 	if (index >= text->length) {
 		ErrorHandler_Fail("WordWrap_GetForwardLength - index past end of string");
 	}
 
-	Int32 start = index, length = text->length;
+	int start = index, length = text->length;
 	bool lookingLetter = text->buffer[index] != ' ';
 	/* go forward to the end of the current word */
 	if (lookingLetter) {

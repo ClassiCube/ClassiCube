@@ -28,7 +28,7 @@ http://www.cse.yorku.ca/~amana/research/grid.pdf
 http://www.devmaster.net/articles/raytracing_series/A%20faster%20voxel%20traversal%20algorithm%20for%20ray%20tracing.pdf
 */
 struct RayTracer {
-	Int32 X, Y, Z;
+	int X, Y, Z;
 	Vector3 Origin, Dir;
 	Vector3 Min, Max; /* Block data */
 	BlockID Block;    /* Block data */

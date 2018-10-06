@@ -52,7 +52,7 @@ struct HacksComp {
 	bool CanDoubleJump, CanBePushed;
 	float BaseHorSpeed;
 	/* Max amount of jumps the player can perform */
-	Int32 MaxJumps;
+	int MaxJumps;
 
 	/* Whether the player should slide after letting go of movement buttons in noclip */
 	bool NoclipSlide;
@@ -76,8 +76,7 @@ void HacksComp_UpdateState(struct HacksComp* hacks);
 struct InterpState { Vector3 Pos; float HeadX, HeadY, RotX, RotZ; };
 
 #define InterpComp_Layout \
-struct InterpState Prev, Next; float PrevRotY, NextRotY; \
-Int32 RotYCount; float RotYStates[15];
+struct InterpState Prev, Next; float PrevRotY, NextRotY; int RotYCount; float RotYStates[15];
 
 /* Base entity component that performs interpolation of position and orientation */
 struct InterpComp { InterpComp_Layout };
@@ -92,7 +91,7 @@ struct NetInterpComp {
 	InterpComp_Layout
 	/* Last known position and orientation sent by the server */
 	struct InterpState Cur;
-	Int32 StatesCount;
+	int StatesCount;
 	struct InterpState States[10];
 };
 
@@ -117,7 +116,7 @@ void Collisions_MoveAndWallSlide(struct CollisionsComp* comp);
 struct PhysicsComp {
 	bool UseLiquidGravity; /* used by BlockDefinitions */
 	bool CanLiquidJump, Jumping;
-	Int32 MultiJumps;
+	int MultiJumps;
 	struct Entity* Entity;
 
 	float JumpVel, UserJumpVel, ServerJumpVel;

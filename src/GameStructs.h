@@ -36,5 +36,5 @@ struct ScheduledTask {
 };
 
 typedef void (*ScheduledTaskCallback)(struct ScheduledTask* task);
-NOINLINE_ Int32 ScheduledTask_Add(double interval, ScheduledTaskCallback callback);
+NOINLINE_ int ScheduledTask_Add(double interval, ScheduledTaskCallback callback);
 #endif

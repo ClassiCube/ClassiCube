@@ -62,12 +62,12 @@ typedef UInt8 Face;
 typedef UInt32 ReturnCode;
 typedef UInt64 TimeMS;
 
-typedef struct Rect2D_  { Int32 X, Y, Width, Height; } Rect2D;
-typedef struct Point2D_ { Int32 X, Y; } Point2D;
-typedef struct Size2D_  { Int32 Width, Height; } Size2D;
+typedef struct Rect2D_  { int X, Y, Width, Height; } Rect2D;
+typedef struct Point2D_ { int X, Y; } Point2D;
+typedef struct Size2D_  { int Width, Height; } Size2D;
 typedef struct FontDesc_ { void* Handle; UInt16 Size, Style; } FontDesc;
 typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
-typedef struct Bitmap_ { UInt8* Scan0; Int32 Width, Height; } Bitmap;
+typedef struct Bitmap_ { UInt8* Scan0; int Width, Height; } Bitmap;
 
 /*#define CC_BUILD_GL11*/
 #define CC_BUILD_D3D9

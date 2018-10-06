@@ -10,7 +10,7 @@
 
 Vector2 cam_rotOffset;
 struct Camera Camera_Cameras[3];
-Int32 Camera_ActiveIndex;
+int Camera_ActiveIndex;
 #define Cam_IsForward_Third() (Camera_ActiveIndex == 2)
 
 static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
@@ -37,8 +37,8 @@ static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
 Point2D cam_prev, cam_delta;
 static void PerspectiveCamera_CentreMousePosition(void) {
 	Point2D topLeft = Window_PointToScreen(0, 0);
-	Int32 cenX = topLeft.X + Game_Width  / 2;
-	Int32 cenY = topLeft.Y + Game_Height / 2;
+	int cenX = topLeft.X + Game_Width  / 2;
+	int cenY = topLeft.Y + Game_Height / 2;
 
 	Window_SetDesktopCursorPos(cenX, cenY);
 	/* Fixes issues with large DPI displays on Windows >= 8.0. */
@@ -220,7 +220,7 @@ void Camera_Init(void) {
 void Camera_CycleActive(void) {
 	if (Game_ClassicMode) return;
 
-	Int32 i = Camera_ActiveIndex;
+	int i = Camera_ActiveIndex;
 	i = (i + 1) % Array_Elems(Camera_Cameras);
 
 	struct LocalPlayer* player = &LocalPlayer_Instance;

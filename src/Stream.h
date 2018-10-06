@@ -14,7 +14,7 @@ struct Stream {
 	ReturnCode (*Read)(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified);
 	ReturnCode (*ReadU8)(struct Stream* stream, UInt8* data);
 	ReturnCode (*Write)(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified);	
-	ReturnCode (*Seek)(struct Stream* stream, Int32 offset, Int32 seekType);
+	ReturnCode (*Seek)(struct Stream* stream, int offset, int seekType);
 	ReturnCode (*Position)(struct Stream* stream, UInt32* pos);
 	ReturnCode (*Length)(struct Stream* stream, UInt32* length);
 	ReturnCode (*Close)(struct Stream* stream);
@@ -57,6 +57,6 @@ ReturnCode Stream_ReadU32_BE(struct Stream* stream, UInt32* value);
 
 ReturnCode Stream_ReadUtf8(struct Stream* stream, UInt16* codepoint);
 ReturnCode Stream_ReadLine(struct Stream* stream, String* text);
-Int32 Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint);
+int Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint);
 ReturnCode Stream_WriteLine(struct Stream* stream, String* text);
 #endif

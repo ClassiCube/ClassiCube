@@ -20,7 +20,7 @@ Window win_rootWin;
 
 Window win_handle;
 XVisualInfo win_visual;
-Int32 borderLeft, borderRight, borderTop, borderBottom;
+int borderLeft, borderRight, borderTop, borderBottom;
 bool win_isExiting;
  
 Atom wm_destroy, net_wm_state;
@@ -186,7 +186,7 @@ static void Window_RefreshBounds(XEvent* e) {
 }
 
 static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode);
-void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, const String* title, struct GraphicsMode* mode, struct DisplayDevice* device) {
+void Window_Create(int x, int y, int width, int height, const String* title, struct GraphicsMode* mode, struct DisplayDevice* device) {
 	win_display = DisplayDevice_Meta[0];
 	win_screen  = DisplayDevice_Meta[1];
 	win_rootWin = DisplayDevice_Meta[2];
@@ -255,7 +255,7 @@ void Window_GetClipboardText(String* value) {
 
 	XConvertSelection(win_display, xa_clipboard, xa_utf8_string, xa_data_sel, win_handle, 0);
 	clipboard_paste_text.length = 0;
-	Int32 i;
+	int i;
 
 	/* wait up to 1 second for SelectionNotify event to arrive */
 	for (i = 0; i < 10; i++) {
@@ -299,7 +299,7 @@ UInt8 Window_GetWindowState(void) {
 		&prop_format, &items, &after, &data);
 
 	bool fullscreen = false, minimised = false;
-	Int32 maximised = 0, i;
+	int maximised = 0, i;
 
 	/* TODO: Check this works right */
 	if (data && items) {
@@ -380,26 +380,26 @@ void Window_SetWindowState(UInt8 state) {
 }
 
 void Window_SetBounds(Rect2D rect) {
-	Int32 width  = rect.Width  - borderLeft - borderRight;
-	Int32 height = rect.Height - borderTop  - borderBottom;
+	int width  = rect.Width  - borderLeft - borderRight;
+	int height = rect.Height - borderTop  - borderBottom;
 	XMoveResizeWindow(win_display, win_handle, rect.X, rect.Y,
 		max(width, 1), max(height, 1));
 	Window_ProcessEvents();
 }
 
-void Window_SetLocation(Int32 x, Int32 y) {
+void Window_SetLocation(int x, int y) {
 	XMoveWindow(win_display, win_handle, x, y);
 	Window_ProcessEvents();
 }
 
-void Window_SetSize(Int32 width, Int32 height) {
-	Int32 adjWidth  = width  - borderLeft - borderRight;
-	Int32 adjHeight = height - borderTop  - borderBottom;
+void Window_SetSize(int width, int height) {
+	int adjWidth  = width  - borderLeft - borderRight;
+	int adjHeight = height - borderTop  - borderBottom;
 	XResizeWindow(win_display, win_handle, adjWidth, adjHeight);
 	Window_ProcessEvents();
 }
 
-void Window_SetClientSize(Int32 width, Int32 height) {
+void Window_SetClientSize(int width, int height) {
 	XResizeWindow(win_display, win_handle, width, height);
 	Window_ProcessEvents();
 }
@@ -407,9 +407,9 @@ void Window_SetClientSize(Int32 width, Int32 height) {
 void Window_Close(void) {
 	XEvent ev = { 0 };
 	ev.type = ClientMessage;
-	ev.xclient.format = 32;
+	ev.xclient.format  = 32;
 	ev.xclient.display = win_display;
-	ev.xclient.window = win_handle;
+	ev.xclient.window  = win_handle;
 	ev.xclient.data.l[0] = wm_destroy;
 
 	XSendEvent(win_display, win_handle, false, 0, &ev);
@@ -494,7 +494,7 @@ void Window_ProcessEvents(void) {
 			int status = XLookupString(&e.xkey, data, Array_Elems(data), NULL, NULL);
 
 			/* TODO: Does this work for every non-english layout? works for latin keys (e.g. finnish) */
-			char raw; Int32 i;
+			char raw; int i;
 			for (i = 0; i < status; i++) {
 				if (!Convert_TryUnicodeToCP437((UInt8)data[i], &raw)) continue;
 				Event_RaiseInt(&KeyEvents_Press, raw);
@@ -593,7 +593,7 @@ void Window_ProcessEvents(void) {
 			if (e.xselectionrequest.selection == xa_clipboard && e.xselectionrequest.target == xa_utf8_string && clipboard_copy_text.length) {
 				reply.xselection.property = Window_GetSelectionProperty(&e);
 				UInt8 data[1024];
-				Int32 i, len = 0;
+				int i, len = 0;
 
 				for (i = 0; i < clipboard_copy_text.length; i++) {
 					UInt16 codepoint = Convert_CP437ToUnicode(clipboard_copy_text.buffer[i]);
@@ -616,14 +616,14 @@ void Window_ProcessEvents(void) {
 	}
 }
 
-Point2D Window_PointToClient(Int32 x, Int32 y) {
+Point2D Window_PointToClient(int x, int y) {
 	int ox, oy;
 	Window child;
 	XTranslateCoordinates(win_display, win_rootWin, win_handle, x, y, &ox, &oy, &child);
 	Point2D p = { ox, oy }; return p;
 }
 
-Point2D Window_PointToScreen(Int32 x, Int32 y) {
+Point2D Window_PointToScreen(int x, int y) {
 	int ox, oy;
 	Window child;
 	XTranslateCoordinates(win_display, win_handle, win_rootWin, x, y, &ox, &oy, &child);
@@ -637,7 +637,7 @@ Point2D Window_GetDesktopCursorPos(void) {
 	Point2D p = { rootX, rootY }; return p;
 }
 
-void Window_SetDesktopCursorPos(Int32 x, Int32 y) {
+void Window_SetDesktopCursorPos(int x, int y) {
 	XWarpPointer(win_display, NULL, win_rootWin, 0, 0, 0, 0, x, y);
 	XFlush(win_display); /* TODO: not sure if XFlush call is necessary */
 }
@@ -712,8 +712,8 @@ void GLContext_SetVSync(bool enabled) {
 	if (result != 0) {Platform_Log1("Set VSync failed, error: %i", &result); }
 }
 
-static void GLContext_GetAttribs(struct GraphicsMode mode, Int32* attribs) {
-	Int32 i = 0;
+static void GLContext_GetAttribs(struct GraphicsMode mode, int* attribs) {
+	int i = 0;
 	struct ColorFormat color = mode.Format;
 	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_61/com.ibm.aix.opengl/doc/openglrf/glXChooseFBConfig.htm%23glxchoosefbconfig */
 	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_71/com.ibm.aix.opengl/doc/openglrf/glXChooseVisual.htm%23b5c84be452rree */
@@ -740,9 +740,9 @@ static void GLContext_GetAttribs(struct GraphicsMode mode, Int32* attribs) {
 }
 
 static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
-	Int32 attribs[20];
+	int attribs[20];
 	GLContext_GetAttribs(*mode, attribs);
-	Int32 major = 0, minor = 0, fbcount;
+	int major = 0, minor = 0, fbcount;
 	if (!glXQueryVersion(win_display, &major, &minor)) {
 		ErrorHandler_Fail("glXQueryVersion failed");
 	}

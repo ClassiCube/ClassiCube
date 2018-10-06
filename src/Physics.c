@@ -121,10 +121,10 @@ struct SearcherState Searcher_DefaultStates[SEARCHER_STATES_MIN];
 struct SearcherState* Searcher_States = Searcher_DefaultStates;
 UInt32 Searcher_StatesMax = SEARCHER_STATES_MIN;
 
-static void Searcher_QuickSort(Int32 left, Int32 right) {
+static void Searcher_QuickSort(int left, int right) {
 	struct SearcherState* keys = Searcher_States; struct SearcherState key;
 	while (left < right) {
-		Int32 i = left, j = right;
+		int i = left, j = right;
 		float pivot = keys[(i + j) >> 1].tSquared;
 
 		/* partition the list */
@@ -138,7 +138,7 @@ static void Searcher_QuickSort(Int32 left, Int32 right) {
 	}
 }
 
-Int32 Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, struct AABB* entityExtentBB) {
+int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, struct AABB* entityExtentBB) {
 	Vector3 vel = entity->Velocity;
 	Entity_GetBounds(entity, entityBB);
 
@@ -164,7 +164,7 @@ Int32 Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB,
 
 	/* Order loops so that we minimise cache misses */
 	struct AABB blockBB;
-	Int32 x, y, z;
+	int x, y, z;
 	struct SearcherState* curState = Searcher_States;
 
 	for (y = min.Y; y <= max.Y; y++) {
@@ -194,7 +194,7 @@ Int32 Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB,
 		}
 	}
 
-	Int32 count = (Int32)(curState - Searcher_States);
+	int count = (int)(curState - Searcher_States);
 	if (count) Searcher_QuickSort(0, count - 1);
 	return count;
 }

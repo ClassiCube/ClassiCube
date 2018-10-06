@@ -45,12 +45,12 @@ struct ChunkInfo {
 	struct ChunkPartInfo* TranslucentParts;
 };
 
-void ChunkInfo_Reset(struct ChunkInfo* chunk, Int32 x, Int32 y, Int32 z);
+void ChunkInfo_Reset(struct ChunkInfo* chunk, int x, int y, int z);
 
 void ChunkUpdater_Init(void);
 void ChunkUpdater_Free(void);
 void ChunkUpdater_Refresh(void);
-void ChunkUpdater_RefreshBorders(Int32 clipLevel);
+void ChunkUpdater_RefreshBorders(int clipLevel);
 void ChunkUpdater_ApplyMeshBuilder(void);
 void ChunkUpdater_Update(double deltaTime);
 
@@ -61,5 +61,5 @@ void ChunkUpdater_ResetChunkCache(void);
 void ChunkUpdater_ClearChunkCache(void);
 
 void ChunkUpdater_DeleteChunk(struct ChunkInfo* info);
-void ChunkUpdater_BuildChunk(struct ChunkInfo* info, Int32* chunkUpdates);
+void ChunkUpdater_BuildChunk(struct ChunkInfo* info, int* chunkUpdates);
 #endif

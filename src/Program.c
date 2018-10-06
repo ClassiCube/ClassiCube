@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
 	}
 
 	String args[PROGRAM_MAX_CMDARGS];
-	Int32 argsCount = Platform_GetCommandLineArgs(argc, argv, args);
+	int argsCount = Platform_GetCommandLineArgs(argc, argv, args);
 	/* NOTE: Make sure to comment this out before pushing a commit */
 	//String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565");
 	//argsCount = 4; String_UNSAFE_Split(&rawArgs, ' ', args, &argsCount);
@@ -99,8 +99,8 @@ int main(int argc, char** argv) {
 
 	Options_Load();
 	struct DisplayDevice device = DisplayDevice_Default;
-	Int32 width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, device.Bounds.Width,  0);
-	Int32 height = Options_GetInt(OPT_WINDOW_HEIGHT, 0, device.Bounds.Height, 0);
+	int width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, device.Bounds.Width,  0);
+	int height = Options_GetInt(OPT_WINDOW_HEIGHT, 0, device.Bounds.Height, 0);
 
 	/* No custom resolution has been set */
 	if (width == 0 || height == 0) {

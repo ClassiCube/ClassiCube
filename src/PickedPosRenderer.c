@@ -105,7 +105,7 @@ x,3,0,  x,2,0,  x,2,3,  x,3,3,
 	};
 	PackedCol col = PACKEDCOL_CONST(0, 0, 0, 102);
 	VertexP3fC4b* ptr = pickedPos_vertices;
-	Int32 i;
+	int i;
 
 	for (i = 0; i < Array_Elems(indices); i += 3, ptr++) {
 		ptr->X   = coords[indices[i + 0]].X;

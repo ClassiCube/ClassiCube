@@ -34,7 +34,7 @@ void Screen_CommonFree(void* screen) { struct Screen* s = screen;
 	s->VTABLE->ContextLost(s);
 }
 
-void Widget_SetLocation(void* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xOffset, Int32 yOffset) { 
+void Widget_SetLocation(void* widget, UInt8 horAnchor, UInt8 verAnchor, int xOffset, int yOffset) {
 	struct Widget* w = widget;
 	w->HorAnchor = horAnchor; w->VerAnchor = verAnchor;
 	w->XOffset   = xOffset;   w->YOffset = yOffset;
@@ -59,7 +59,7 @@ void Widget_Reset(void* widget) {
 	w->MenuClick = NULL;
 }
 
-bool Widget_Contains(void* widget, Int32 x, Int32 y) { 
+bool Widget_Contains(void* widget, int x, int y) {
 	struct Widget* w = widget;
 	return Gui_Contains(w->X, w->Y, w->Width, w->Height, x, y);
 }
@@ -68,13 +68,13 @@ bool Widget_Contains(void* widget, Int32 x, Int32 y) {
 /*########################################################################################################################*
 *----------------------------------------------------------Gui------------------------------------------------------------*
 *#########################################################################################################################*/
-Int32 Gui_CalcPos(UInt8 anchor, Int32 offset, Int32 size, Int32 axisLen) {
-	if (anchor == ANCHOR_MIN)     return offset;
+int Gui_CalcPos(UInt8 anchor, int offset, int size, int axisLen) {
+	if (anchor == ANCHOR_MIN) return offset;
 	if (anchor == ANCHOR_MAX) return axisLen - size - offset;
 	return (axisLen - size) / 2 + offset;
 }
 
-bool Gui_Contains(Int32 recX, Int32 recY, Int32 width, Int32 height, Int32 x, Int32 y) {
+bool Gui_Contains(int recX, int recY, int width, int height, int x, int y) {
 	return x >= recX && y >= recY && x < recX + width && y < recY + height;
 }
 
@@ -99,7 +99,7 @@ static void Gui_Init(void) {
 }
 
 static void Gui_Reset(void) {
-	Int32 i;
+	int i;
 	for (i = 0; i < Gui_OverlaysCount; i++) {
 		Elem_TryFree(Gui_Overlays[i]);
 	}
@@ -155,7 +155,7 @@ void Gui_ShowOverlay(struct Screen* overlay, bool atFront) {
 	}
 
 	if (atFront) {
-		Int32 i;
+		int i;
 		/* Insert overlay at start of list */
 		for (i = Gui_OverlaysCount - 1; i > 0; i--) {
 			Gui_Overlays[i] = Gui_Overlays[i - 1];
@@ -170,9 +170,9 @@ void Gui_ShowOverlay(struct Screen* overlay, bool atFront) {
 	Gui_CalcCursorVisible();
 }
 
-Int32 Gui_IndexOverlay(void* overlay) {
+int Gui_IndexOverlay(void* overlay) {
 	struct Screen* s = overlay;
-	Int32 i;
+	int i;
 	for (i = 0; i < Gui_OverlaysCount; i++) {
 		if (Gui_Overlays[i] == s) return i;
 	}
@@ -182,7 +182,7 @@ Int32 Gui_IndexOverlay(void* overlay) {
 void Gui_FreeOverlay(void* overlay) {
 	struct Screen* s = overlay;
 	Elem_Free(s);
-	Int32 i = Gui_IndexOverlay(overlay);
+	int i = Gui_IndexOverlay(overlay);
 	if (i == -1) return;
 
 	for (; i < Gui_OverlaysCount - 1; i++) {
@@ -212,7 +212,7 @@ void Gui_OnResize(void) {
 	if (Gui_Active) { Screen_OnResize(Gui_Active); }
 	Screen_OnResize(Gui_HUD);
 
-	Int32 i;
+	int i;
 	for (i = 0; i < Gui_OverlaysCount; i++) {
 		Screen_OnResize(Gui_Overlays[i]);
 	}
@@ -244,7 +244,7 @@ void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, FontDesc* font
 	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	{
 		Drawer2D_DrawText(&bmp, &args, 0, 0);
-		Int32 i;
+		int i;
 		for (i = 0; i < chars->length; i++) {
 			args.Text = String_UNSAFE_Substring(chars, i, 1);
 			atlas->Widths[i] = Drawer2D_MeasureText(&args).Width;
@@ -262,8 +262,8 @@ void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, FontDesc* font
 
 void TextAtlas_Free(struct TextAtlas* atlas) { Gfx_DeleteTexture(&atlas->Tex.ID); }
 
-void TextAtlas_Add(struct TextAtlas* atlas, Int32 charI, VertexP3fT2fC4b** vertices) {
-	Int32 width = atlas->Widths[charI];
+void TextAtlas_Add(struct TextAtlas* atlas, int charI, VertexP3fT2fC4b** vertices) {
+	int width = atlas->Widths[charI];
 	struct Texture part = atlas->Tex;
 
 	part.X = atlas->CurX; part.Width = width;
@@ -275,13 +275,13 @@ void TextAtlas_Add(struct TextAtlas* atlas, Int32 charI, VertexP3fT2fC4b** verti
 	GfxCommon_Make2DQuad(&part, white, vertices);
 }
 
-void TextAtlas_AddInt(struct TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** vertices) {
+void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vertices) {
 	if (value < 0) {
 		TextAtlas_Add(atlas, 10, vertices); value = -value; /* - sign */
 	}
 
 	char digits[STRING_INT_CHARS];
-	Int32 i, count = String_MakeUInt32((UInt32)value, digits);
+	int i, count = String_MakeUInt32((UInt32)value, digits);
 	for (i = count - 1; i >= 0; i--) {
 		TextAtlas_Add(atlas, digits[i] - '0' , vertices);
 	}

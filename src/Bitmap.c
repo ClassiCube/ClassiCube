@@ -7,12 +7,12 @@
 #include "Stream.h"
 #include "Errors.h"
 
-void Bitmap_Create(Bitmap* bmp, Int32 width, Int32 height, UInt8* scan0) {
+void Bitmap_Create(Bitmap* bmp, int width, int height, UInt8* scan0) {
 	bmp->Width = width; bmp->Height = height; bmp->Scan0 = scan0;
 }
 
-void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, Bitmap* src, Bitmap* dst, Int32 size) {
-	Int32 x, y;
+void Bitmap_CopyBlock(int srcX, int srcY, int dstX, int dstY, Bitmap* src, Bitmap* dst, int size) {
+	int x, y;
 	for (y = 0; y < size; y++) {
 		UInt32* srcRow = Bitmap_GetRow(src, srcY + y);
 		UInt32* dstRow = Bitmap_GetRow(dst, dstY + y);
@@ -22,12 +22,12 @@ void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, Bitmap* sr
 	}
 }
 
-void Bitmap_Allocate(Bitmap* bmp, Int32 width, Int32 height) {
+void Bitmap_Allocate(Bitmap* bmp, int width, int height) {
 	bmp->Width = width; bmp->Height = height;
 	bmp->Scan0 = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "bitmap data");
 }
 
-void Bitmap_AllocateClearedPow2(Bitmap* bmp, Int32 width, Int32 height) {
+void Bitmap_AllocateClearedPow2(Bitmap* bmp, int width, int height) {
 	width  = Math_NextPowOf2(width);
 	height = Math_NextPowOf2(height);
 
@@ -55,12 +55,12 @@ enum PNG_FILTER {
 	PNG_FILTER_AVERAGE, PNG_FILTER_PAETH
 };
 
-typedef void(*Png_RowExpander)(Int32 width, UInt32* palette, UInt8* src, UInt32* dst);
+typedef void(*Png_RowExpander)(int width, UInt32* palette, UInt8* src, UInt32* dst);
 UInt8 png_sig[PNG_SIG_SIZE] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
 bool Bitmap_DetectPng(UInt8* data, UInt32 len) {
 	if (len < PNG_SIG_SIZE) return false;
-	Int32 i;
+	int i;
 
 	for (i = 0; i < PNG_SIG_SIZE; i++) {
 		if (data[i] != png_sig[i]) return false;
@@ -102,10 +102,10 @@ static void Png_Reconstruct(UInt8 type, UInt8 bytesPerPixel, UInt8* line, UInt8*
 		}
 		for (j = 0; i < lineLen; i++, j++) {
 			UInt8 a = line[j], b = prior[i], c = prior[j];
-			Int32 p = a + b - c;
-			Int32 pa = Math_AbsI(p - a);
-			Int32 pb = Math_AbsI(p - b);
-			Int32 pc = Math_AbsI(p - c);
+			int p = a + b - c;
+			int pa = Math_AbsI(p - a);
+			int pb = Math_AbsI(p - b);
+			int pc = Math_AbsI(p - c);
 
 			if (pa <= pb && pa <= pc) { line[i] += a; } 
 			else if (pb <= pc) {        line[i] += b; } 
@@ -119,25 +119,25 @@ static void Png_Reconstruct(UInt8 type, UInt8 bytesPerPixel, UInt8* line, UInt8*
 	}
 }
 
-static void Png_Expand_GRAYSCALE_1(Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
-	Int32 i; /* NOTE: not optimised*/
+static void Png_Expand_GRAYSCALE_1(int width, UInt32* palette, UInt8* src, UInt32* dst) {
+	int i; /* NOTE: not optimised*/
 #define PNG_Do_Grayscale(tmp, dstI, srcI, scale) tmp = src[srcI] * scale; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, 255);
 	for (i = 0; i < width; i++) {
-		Int32 mask = (7 - (i & 7)); UInt8 rgb;
+		int mask = (7 - (i & 7)); UInt8 rgb;
 		PNG_Do_Grayscale(rgb, i, (src[i >> 3] >> mask) & 1, 255);
 	}
 }
 
-static void Png_Expand_GRAYSCALE_2(Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
-	Int32 i; /* NOTE: not optimised */
+static void Png_Expand_GRAYSCALE_2(int width, UInt32* palette, UInt8* src, UInt32* dst) {
+	int i; /* NOTE: not optimised */
 	for (i = 0; i < width; i++) {
-		Int32 mask = (3 - (i & 3)) * 2; UInt8 rgb;
+		int mask = (3 - (i & 3)) * 2; UInt8 rgb;
 		PNG_Do_Grayscale(rgb, i, (src[i >> 3] >> mask) & 3, 85);
 	}
 }
 
-static void Png_Expand_GRAYSCALE_4(Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
-	Int32 i, j, mask; UInt8 cur, rgb1, rgb2;
+static void Png_Expand_GRAYSCALE_4(int width, UInt32* palette, UInt8* src, UInt32* dst) {
+	int i, j, mask; UInt8 cur, rgb1, rgb2;
 
 	for (i = 0, j = 0; i < (width & ~0x1); i += 2, j++) {
 		cur = src[j];
@@ -149,8 +149,8 @@ static void Png_Expand_GRAYSCALE_4(Int32 width, UInt32* palette, UInt8* src, UIn
 	}
 }
 
-static void Png_Expand_GRAYSCALE_8(Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
-	Int32 i; UInt8 rgb1, rgb2, rgb3, rgb4;
+static void Png_Expand_GRAYSCALE_8(int width, UInt32* palette, UInt8* src, UInt32* dst) {
+	int i; UInt8 rgb1, rgb2, rgb3, rgb4;
 #define PNG_Do_Grayscale_8(tmp, dstI, srcI) tmp = src[srcI]; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, 255);
 
 	for (i = 0; i < (width & ~0x3); i += 4) {
@@ -160,16 +160,16 @@ static void Png_Expand_GRAYSCALE_8(Int32 width, UInt32* palette, UInt8* src, UIn
 	for (; i < width; i++) { PNG_Do_Grayscale_8(rgb1, i, i); }
 }
 
-static void Png_Expand_GRAYSCALE_16(Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
-	Int32 i;
+static void Png_Expand_GRAYSCALE_16(int width, UInt32* palette, UInt8* src, UInt32* dst) {
+	int i;
 	for (i = 0; i < width; i++) {
 		UInt8 rgb = src[i * 2];
 		dst[i] = PackedCol_ARGB(rgb, rgb, rgb, 255);
 	}
 }
 
-static void Png_Expand_RGB_8(Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
-	Int32 i, j;
+static void Png_Expand_RGB_8(int width, UInt32* palette, UInt8* src, UInt32* dst) {
+	int i, j;
 #define PNG_Do_RGB__8(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 1], src[srcI + 2], 255);
 
 	for (i = 0, j = 0; i < (width & ~0x03); i += 4, j += 12) {
@@ -179,31 +179,31 @@ static void Png_Expand_RGB_8(Int32 width, UInt32* palette, UInt8* src, UInt32* d
 	for (; i < width; i++, j += 3) { PNG_Do_RGB__8(i, j); }
 }
 
-static void Png_Expand_RGB_16(Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
-	Int32 i, j;
+static void Png_Expand_RGB_16(int width, UInt32* palette, UInt8* src, UInt32* dst) {
+	int i, j;
 	for (i = 0, j = 0; i < width; i++, j += 6) { 
 		dst[i] = PackedCol_ARGB(src[j], src[j + 2], src[j + 4], 255);
 	}
 }
 
-static void Png_Expand_INDEXED_1(Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
-	Int32 i; /* NOTE: not optimised*/
+static void Png_Expand_INDEXED_1(int width, UInt32* palette, UInt8* src, UInt32* dst) {
+	int i; /* NOTE: not optimised*/
 	for (i = 0; i < width; i++) {
-		Int32 mask = (7 - (i & 7));
+		int mask = (7 - (i & 7));
 		dst[i] = palette[(src[i >> 3] >> mask) & 1];
 	}
 }
 
-static void Png_Expand_INDEXED_2(Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
-	Int32 i; /* NOTE: not optimised*/
+static void Png_Expand_INDEXED_2(int width, UInt32* palette, UInt8* src, UInt32* dst) {
+	int i; /* NOTE: not optimised*/
 	for (i = 0; i < width; i++) {
-		Int32 mask = (3 - (i & 3)) * 2;
+		int mask = (3 - (i & 3)) * 2;
 		dst[i] = palette[(src[i >> 3] >> mask) & 3];
 	}
 }
 
-static void Png_Expand_INDEXED_4(Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
-	Int32 i, j, mask; UInt8 cur;
+static void Png_Expand_INDEXED_4(int width, UInt32* palette, UInt8* src, UInt32* dst) {
+	int i, j, mask; UInt8 cur;
 #define PNG_Do_Indexed(dstI, srcI) dst[dstI] = palette[srcI];
 
 	for (i = 0, j = 0; i < (width & ~0x1); i += 2, j++) {
@@ -216,8 +216,8 @@ static void Png_Expand_INDEXED_4(Int32 width, UInt32* palette, UInt8* src, UInt3
 	}
 }
 
-static void Png_Expand_INDEXED_8(Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
-	Int32 i;
+static void Png_Expand_INDEXED_8(int width, UInt32* palette, UInt8* src, UInt32* dst) {
+	int i;
 
 	for (i = 0; i < (width & ~0x3); i += 4) {
 		PNG_Do_Indexed(i    , src[i]    ); PNG_Do_Indexed(i + 1, src[i + 1]);
@@ -226,8 +226,8 @@ static void Png_Expand_INDEXED_8(Int32 width, UInt32* palette, UInt8* src, UInt3
 	for (; i < width; i++) { PNG_Do_Indexed(i, src[i]); }
 }
 
-static void Png_Expand_GRAYSCALE_A_8(Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
-	Int32 i, j; UInt8 rgb1, rgb2, rgb3, rgb4;
+static void Png_Expand_GRAYSCALE_A_8(int width, UInt32* palette, UInt8* src, UInt32* dst) {
+	int i, j; UInt8 rgb1, rgb2, rgb3, rgb4;
 #define PNG_Do_Grayscale_A__8(tmp, dstI, srcI) tmp = src[srcI]; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, src[srcI + 1]);
 
 	for (i = 0, j = 0; i < (width & ~0x3); i += 4, j += 8) {
@@ -237,16 +237,16 @@ static void Png_Expand_GRAYSCALE_A_8(Int32 width, UInt32* palette, UInt8* src, U
 	for (; i < width; i++, j += 2) { PNG_Do_Grayscale_A__8(rgb1, i, j); }
 }
 
-static void Png_Expand_GRAYSCALE_A_16(Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
-	Int32 i, j; /* NOTE: not optimised*/
+static void Png_Expand_GRAYSCALE_A_16(int width, UInt32* palette, UInt8* src, UInt32* dst) {
+	int i, j; /* NOTE: not optimised*/
 	for (i = 0, j = 0; i < width; i++, j += 4) {
 		UInt8 rgb = src[j];
 		dst[i] = PackedCol_ARGB(rgb, rgb, rgb, src[j + 2]);
 	}
 }
 
-static void Png_Expand_RGB_A_8(Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
-	Int32 i, j;
+static void Png_Expand_RGB_A_8(int width, UInt32* palette, UInt8* src, UInt32* dst) {
+	int i, j;
 #define PNG_Do_RGB_A__8(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 1], src[srcI + 2], src[srcI + 3]);
 
 	for (i = 0, j = 0; i < (width & ~0x3); i += 4, j += 16) {
@@ -256,8 +256,8 @@ static void Png_Expand_RGB_A_8(Int32 width, UInt32* palette, UInt8* src, UInt32*
 	for (; i < width; i++, j += 4) { PNG_Do_RGB_A__8(i, j); }
 }
 
-static void Png_Expand_RGB_A_16(Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
-	Int32 i, j; /* NOTE: not optimised*/
+static void Png_Expand_RGB_A_16(int width, UInt32* palette, UInt8* src, UInt32* dst) {
+	int i, j; /* NOTE: not optimised*/
 	for (i = 0, j = 0; i < width; i++, j += 8) { 
 		dst[i] = PackedCol_ARGB(src[j], src[j + 2], src[j + 4], src[j + 6]);
 	}
@@ -310,7 +310,7 @@ Png_RowExpander Png_GetExpander(UInt8 col, UInt8 bitsPerSample) {
 
 static void Png_ComputeTransparency(Bitmap* bmp, UInt32 transparentCol) {
 	UInt32 trnsRGB = transparentCol & PNG_RGB_MASK;
-	Int32 x, y, width = bmp->Width, height = bmp->Height;
+	int x, y, width = bmp->Width, height = bmp->Height;
 
 	for (y = 0; y < height; y++) {
 		UInt32* row = Bitmap_GetRow(bmp, y);
@@ -366,8 +366,8 @@ ReturnCode Bitmap_DecodePng(Bitmap* bmp, struct Stream* stream) {
 			res = Stream_Read(stream, buffer, PNG_IHDR_SIZE);
 			if (res) return res;
 
-			bmp->Width  = (Int32)Stream_GetU32_BE(&buffer[0]);
-			bmp->Height = (Int32)Stream_GetU32_BE(&buffer[4]);
+			bmp->Width  = (int)Stream_GetU32_BE(&buffer[0]);
+			bmp->Height = (int)Stream_GetU32_BE(&buffer[4]);
 			if (bmp->Width  < 0 || bmp->Width  > PNG_MAX_DIMS) return PNG_ERR_TOO_WIDE;
 			if (bmp->Height < 0 || bmp->Height > PNG_MAX_DIMS) return PNG_ERR_TOO_TALL;
 
@@ -520,9 +520,9 @@ static void Bitmap_Crc32Stream(struct Stream* stream, struct Stream* underlying)
 	stream->Write = Bitmap_Crc32StreamWrite;
 }
 
-static void Png_Filter(UInt8 filter, UInt8* cur, UInt8* prior, UInt8* best, Int32 lineLen) {
+static void Png_Filter(UInt8 filter, UInt8* cur, UInt8* prior, UInt8* best, int lineLen) {
 	/* 3 bytes per pixel constant */
-	Int32 i;
+	int i;
 	switch (filter) {
 	case PNG_FILTER_NONE:
 		Mem_Copy(best, cur, lineLen);
@@ -559,10 +559,10 @@ static void Png_Filter(UInt8 filter, UInt8* cur, UInt8* prior, UInt8* best, Int3
 
 		for (i = 3; i < lineLen; i++) {
 			UInt8 a = cur[i - 3], b = prior[i], c = prior[i - 3];
-			Int32 p = a + b - c;
-			Int32 pa = Math_AbsI(p - a);
-			Int32 pb = Math_AbsI(p - b);
-			Int32 pc = Math_AbsI(p - c);
+			int p = a + b - c;
+			int pa = Math_AbsI(p - a);
+			int pb = Math_AbsI(p - b);
+			int pc = Math_AbsI(p - c);
 
 			if (pa <= pb && pa <= pc) { best[i] = cur[i] - a; }
 			else if (pb <= pc)        { best[i] = cur[i] - b; }
@@ -572,16 +572,16 @@ static void Png_Filter(UInt8 filter, UInt8* cur, UInt8* prior, UInt8* best, Int3
 	}
 }
 
-static void Png_EncodeRow(UInt8* src, UInt8* cur, UInt8* prior, UInt8* best, Int32 lineLen) {
+static void Png_EncodeRow(UInt8* src, UInt8* cur, UInt8* prior, UInt8* best, int lineLen) {
 	UInt8* dst = cur;
-	Int32 x;
+	int x;
 	for (x = 0; x < lineLen; x += 3) {
 		dst[0] = src[2]; dst[1] = src[1]; dst[2] = src[0];
 		src += 4; dst += 3;
 	}
 
 	/* Waste of time checking the PNG_NONE filter */
-	Int32 filter, bestFilter = PNG_FILTER_SUB, bestEstimate = Int32_MaxValue;
+	int filter, bestFilter = PNG_FILTER_SUB, bestEstimate = Int32_MaxValue;
 	dst = best + 1;
 
 	for (filter = PNG_FILTER_SUB; filter <= PNG_FILTER_PAETH; filter++) {
@@ -590,7 +590,7 @@ static void Png_EncodeRow(UInt8* src, UInt8* cur, UInt8* prior, UInt8* best, Int
 		/* Estimate how well this filtered line will compress, based on */
 		/* smallest sum of magnitude of each byte (signed) in the line */
 		/* (see note in PNG specification, 12.8 "Filter selection" ) */
-		Int32 estimate = 0;
+		int estimate = 0;
 		for (x = 0; x < lineLen; x++) {
 			estimate += Math_AbsI((Int8)dst[x]);
 		}
@@ -643,7 +643,7 @@ ReturnCode Bitmap_EncodePng(Bitmap* bmp, struct Stream* stream) {
 
 	stream = &crc32Stream;
 	{
-		Int32 y, lineSize = bmp->Width * 3;
+		int y, lineSize = bmp->Width * 3;
 		struct ZLibState zlState;
 		struct Stream zlStream;
 		ZLib_MakeStream(&zlStream, &zlState, stream);

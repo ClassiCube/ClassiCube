@@ -16,16 +16,16 @@ BlockID Inventory_Table[INVENTORY_HOTBARS * INVENTORY_BLOCKS_PER_HOTBAR];
 BlockID Inventory_Map[BLOCK_COUNT];
 void Inventory_MakeComponent(struct IGameComponent* comp);
 
-Int32 Inventory_SelectedIndex;
-Int32 Inventory_Offset;
+int Inventory_SelectedIndex;
+int Inventory_Offset;
 #define Inventory_Get(idx) (Inventory_Table[Inventory_Offset + (idx)])
 #define Inventory_Set(idx, block) Inventory_Table[Inventory_Offset + (idx)] = block
 #define Inventory_SelectedBlock Inventory_Get(Inventory_SelectedIndex)
 bool Inventory_CanChangeHeldBlock, Inventory_CanPick;
 
 bool Inventory_CanChangeSelected(void);
-void Inventory_SetSelectedIndex(Int32 index);
-void Inventory_SetOffset(Int32 offset);
+void Inventory_SetSelectedIndex(int index);
+void Inventory_SetOffset(int offset);
 void Inventory_SetSelectedBlock(BlockID block);
 void Inventory_SetDefaultMapping(void);
 

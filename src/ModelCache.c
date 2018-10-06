@@ -16,7 +16,7 @@
 /*########################################################################################################################*
 *---------------------------------------------------------ModelCache------------------------------------------------------*
 *#########################################################################################################################*/
-Int32 ModelCache_texCount, ModelCache_modelCount;
+int ModelCache_texCount, ModelCache_modelCount;
 #define Model_RetSize(x,y,z) static Vector3 P = { (x)/16.0f,(y)/16.0f,(z)/16.0f }; *size = P;
 #define Model_RetAABB(x1,y1,z1, x2,y2,z2) static struct AABB BB = { (x1)/16.0f,(y1)/16.0f,(z1)/16.0f, (x2)/16.0f,(y2)/16.0f,(z2)/16.0f }; *bb = BB;
 #define BoxDesc_Dim(p1, p2) p1 < p2 ? p2 - p1 : p1 - p2
@@ -46,7 +46,7 @@ static void ModelCache_InitModel(struct Model* model) {
 }
 
 struct Model* ModelCache_Get(const String* name) {
-	Int32 i;
+	int i;
 	for (i = 0; i < ModelCache_modelCount; i++) {
 		struct CachedModel* m = &ModelCache_Models[i];
 		if (!String_CaselessEquals(&m->Name, name)) continue;
@@ -59,8 +59,8 @@ struct Model* ModelCache_Get(const String* name) {
 	return NULL;
 }
 
-Int32 ModelCache_GetTextureIndex(const String* texName) {
-	Int32 i;
+int ModelCache_GetTextureIndex(const String* texName) {
+	int i;
 	for (i = 0; i < ModelCache_texCount; i++) {
 		struct CachedTexture* tex = &ModelCache_Textures[i];
 		if (String_CaselessEquals(&tex->Name, texName)) return i;
@@ -96,7 +96,7 @@ void ModelCache_RegisterTexture(STRING_REF const char* texName) {
 }
 
 static void ModelCache_TextureChanged(void* obj, struct Stream* stream, const String* name) {
-	Int32 i;
+	int i;
 	for (i = 0; i < ModelCache_texCount; i++) {
 		struct CachedTexture* tex = &ModelCache_Textures[i];
 		if (!String_CaselessEquals(&tex->Name, name)) continue;
@@ -115,7 +115,7 @@ struct ModelPart Chicken_LeftLeg, Chicken_RightLeg, Chicken_LeftWing, Chicken_Ri
 struct ModelVertex ChickenModel_Vertices[MODEL_BOX_VERTICES * 6 + (MODEL_QUAD_VERTICES * 2) * 2];
 struct Model ChickenModel;
 
-static void ChickenModel_MakeLeg(struct ModelPart* part, Int32 x1, Int32 x2, Int32 legX1, Int32 legX2) {
+static void ChickenModel_MakeLeg(struct ModelPart* part, int x1, int x2, int legX1, int legX2) {
 #define ch_y1 (1.0f  / 64.0f)
 #define ch_y2 (5.0f  / 16.0f)
 #define ch_z2 (1.0f  / 16.0f)
@@ -187,7 +187,7 @@ static void ChickenModel_DrawModel(struct Entity* entity) {
 	Model_DrawRotate(0, 0,  Math_AbsF(entity->Anim.LeftArmX), &Chicken_RightWing, false);
 
 	PackedCol col = Model_Cols[0];
-	Int32 i;
+	int i;
 	for (i = 0; i < FACE_COUNT; i++) {
 		Model_Cols[i] = PackedCol_Scale(col, 0.7f);
 	}
@@ -357,7 +357,7 @@ struct ModelPart Fur_Head, Fur_Torso, Fur_LeftLegFront, Fur_RightLegFront;
 struct ModelPart Fur_LeftLegBack, Fur_RightLegBack;
 struct ModelVertex SheepModel_Vertices[MODEL_BOX_VERTICES * 6 * 2];
 struct Model SheepModel;
-Int32 fur_Index;
+int fur_Index;
 
 static void SheepModel_CreateParts(void) {
 	static struct BoxDesc head = {
@@ -1098,7 +1098,7 @@ static struct Model* HeadModel_GetInstance(void) {
 struct Model BlockModel;
 BlockID BlockModel_block = BLOCK_AIR;
 Vector3 BlockModel_minBB, BlockModel_maxBB;
-Int32 BlockModel_lastTexIndex = -1, BlockModel_texIndex;
+int BlockModel_lastTexIndex = -1, BlockModel_texIndex;
 
 static void BlockModel_CreateParts(void) { }
 
@@ -1266,7 +1266,7 @@ static void BlockModel_DrawModel(struct Entity* p) {
 	if (Block_Draw[BlockModel_block] == DRAW_GAS) return;
 
 	if (Block_FullBright[BlockModel_block]) {
-		Int32 i;
+		int i;
 		PackedCol white = PACKEDCOL_WHITE;
 		for (i = 0; i < FACE_COUNT; i++) {
 			Model_Cols[i] = white;
@@ -1339,7 +1339,7 @@ void ModelCache_Init(void) {
 }
 
 void ModelCache_Free(void) {
-	Int32 i;
+	int i;
 	for (i = 0; i < ModelCache_texCount; i++) {
 		struct CachedTexture* tex = &ModelCache_Textures[i];
 		Gfx_DeleteTexture(&tex->TexID);

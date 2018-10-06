@@ -19,7 +19,7 @@ static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** vertice
 	Vector3_Add1(&coords[0], &box->Min, -offset);
 	Vector3_Add1(&coords[1], &box->Max,  offset);
 
-	Int32 i;
+	int i;
 	VertexP3fC4b* ptr;
 	PackedCol col = box->Col;
 
@@ -59,7 +59,7 @@ static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** vertice
 	*lineVertices = ptr;
 }
 
-static Int32 SelectionBox_Compare(struct SelectionBox* a, struct SelectionBox* b) {
+static int SelectionBox_Compare(struct SelectionBox* a, struct SelectionBox* b) {
 	float aDist, bDist;
 	if (a->MinDist == b->MinDist) {
 		aDist = a->MaxDist; bDist = b->MaxDist;
@@ -102,7 +102,7 @@ static void SelectionBox_Intersect(struct SelectionBox* box, Vector3 origin) {
 #define SELECTIONS_VERTICES 24
 #define SELECTIONS_MAX_VERTICES SELECTIONS_MAX * SELECTIONS_VERTICES
 
-Int32 selections_count;
+int selections_count;
 struct SelectionBox selections_list[SELECTIONS_MAX];
 UInt8 selections_ids[SELECTIONS_MAX];
 GfxResourceID selections_VB, selections_LineVB;
@@ -122,7 +122,7 @@ void Selections_Add(UInt8 id, Vector3I p1, Vector3I p2, PackedCol col) {
 }
 
 void Selections_Remove(UInt8 id) {
-	Int32 i;
+	int i;
 	for (i = 0; i < selections_count; i++) {
 		if (selections_ids[i] != id) continue;
 
@@ -147,12 +147,12 @@ static void Selections_ContextRecreated(void* obj) {
 	selections_LineVB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, SELECTIONS_MAX_VERTICES);
 }
 
-static void Selections_QuickSort(Int32 left, Int32 right) {
+static void Selections_QuickSort(int left, int right) {
 	UInt8* values = selections_ids; UInt8 value;
 	struct SelectionBox* keys = selections_list; struct SelectionBox key;
 
 	while (left < right) {
-		Int32 i = left, j = right;
+		int i = left, j = right;
 		struct SelectionBox* pivot = &keys[(i + j) / 2];
 
 		/* partition the list */
@@ -171,7 +171,7 @@ void Selections_Render(double delta) {
 	/* TODO: Proper selection box sorting. But this is very difficult because
 	   we can have boxes within boxes, intersecting boxes, etc. Probably not worth it. */
 	Vector3 camPos = Game_CurrentCameraPos;
-	Int32 i;
+	int i;
 	for (i = 0; i < selections_count; i++) {
 		SelectionBox_Intersect(&selections_list[i], camPos);
 	}

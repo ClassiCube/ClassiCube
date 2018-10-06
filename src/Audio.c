@@ -14,8 +14,8 @@
 #include "Stream.h"
 
 StringsBuffer files;
-static void Volume_Mix16(Int16* samples, Int32 count, Int32 volume) {
-	Int32 i;
+static void Volume_Mix16(Int16* samples, int count, int volume) {
+	int i;
 
 	for (i = 0; i < (count & ~0x07); i += 8, samples += 8) {
 		samples[0] = (samples[0] * volume / 100);
@@ -34,8 +34,8 @@ static void Volume_Mix16(Int16* samples, Int32 count, Int32 volume) {
 	}
 }
 
-static void Volume_Mix8(UInt8* samples, Int32 count, Int32 volume) {
-	Int32 i;
+static void Volume_Mix8(UInt8* samples, int count, int volume) {
+	int i;
 	for (i = 0; i < count; i++, samples++) {
 		samples[0] = (127 + (samples[0] - 127) * volume / 100);
 	}
@@ -119,7 +119,7 @@ static ReturnCode Sound_ReadWave(const String* filename, struct Sound* snd) {
 }
 
 static struct SoundGroup* Soundboard_Find(struct Soundboard* board, const String* name) {
-	Int32 i;
+	int i;
 	struct SoundGroup* groups = board->Groups;
 
 	for (i = 0; i < Array_Elems(board->Groups); i++) {
@@ -129,11 +129,11 @@ static struct SoundGroup* Soundboard_Find(struct Soundboard* board, const String
 }
 
 static void Soundboard_Init(struct Soundboard* board, const String* boardName, StringsBuffer* files) {
-	Int32 i;
+	int i;
 	for (i = 0; i < files->Count; i++) {
 		String file = StringsBuffer_UNSAFE_Get(files, i), name = file;
 		/* dig_grass1.wav -> dig_grass1 */
-		Int32 dotIndex = String_LastIndexOf(&name, '.');
+		int dotIndex = String_LastIndexOf(&name, '.');
 		if (dotIndex >= 0) { name = String_UNSAFE_Substring(&name, 0, dotIndex); }
 		if (!String_CaselessStarts(&name, boardName)) continue;
 
@@ -176,7 +176,7 @@ struct Sound* Soundboard_PickRandom(struct Soundboard* board, UInt8 type) {
 
 	struct SoundGroup* group = Soundboard_Find(board, &name);
 	if (group == NULL) return NULL;
-	Int32 idx = Random_Range(&board->Rnd, 0, group->Count);
+	int idx = Random_Range(&board->Rnd, 0, group->Count);
 	return &group->Sounds[idx];
 }
 
@@ -201,7 +201,7 @@ NOINLINE_ static void Sounds_Fail(ReturnCode res) {
 	Game_SoundsVolume = 0;
 }
 
-static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct AudioFormat* fmt, Int32 volume) {
+static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct AudioFormat* fmt, int volume) {
 	ReturnCode res;
 	void* data = snd->Data;
 	if ((res = Audio_SetFormat(output->Handle, fmt))) { Sounds_Fail(res); return; }
@@ -233,7 +233,7 @@ static void Sounds_Play(UInt8 type, struct Soundboard* board) {
 
 	if (snd == NULL) return;
 	struct AudioFormat fmt = snd->Format;
-	Int32 volume = Game_SoundsVolume;
+	int volume = Game_SoundsVolume;
 
 	if (board == &digBoard) {
 		if (type == SOUND_METAL) fmt.SampleRate = (fmt.SampleRate * 6) / 5;
@@ -244,7 +244,7 @@ static void Sounds_Play(UInt8 type, struct Soundboard* board) {
 	}
 
 	struct SoundOutput* outputs = fmt.Channels == 1 ? monoOutputs : stereoOutputs;
-	Int32 i;
+	int i;
 	bool finished;
 	ReturnCode res;
 
@@ -287,7 +287,7 @@ static void Audio_PlayBlockSound(void* obj, Vector3I coords, BlockID old, BlockI
 }
 
 static void Sounds_FreeOutputs(struct SoundOutput* outputs) {
-	Int32 i;
+	int i;
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
 		if (outputs[i].Handle == HANDLE_INV) continue;
 
@@ -313,7 +313,7 @@ static void Sounds_Free(void) {
 	Sounds_FreeOutputs(stereoOutputs);
 }
 
-void Audio_SetSounds(Int32 volume) {
+void Audio_SetSounds(int volume) {
 	if (volume) Sounds_Init();
 	else        Sounds_Free();
 }
@@ -331,8 +331,8 @@ void* music_thread;
 void* music_waitable;
 volatile bool music_pendingStop, music_joining;
 
-static ReturnCode Music_BufferBlock(Int32 i, Int16* data, Int32 maxSamples, struct VorbisState* ctx) {
-	Int32 samples = 0;
+static ReturnCode Music_BufferBlock(int i, Int16* data, int maxSamples, struct VorbisState* ctx) {
+	int samples = 0;
 	ReturnCode res = 0, res2;
 
 	while (samples < maxSamples) {
@@ -367,8 +367,8 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 
 	/* largest possible vorbis frame decodes to blocksize1 * channels samples */
 	/* so we may end up decoding slightly over a second of audio */
-	Int32 i, chunkSize     = fmt.Channels * (fmt.SampleRate + vorbis.BlockSizes[1]);
-	Int32 samplesPerSecond = fmt.Channels * fmt.SampleRate;
+	int i, chunkSize     = fmt.Channels * (fmt.SampleRate + vorbis.BlockSizes[1]);
+	int samplesPerSecond = fmt.Channels * fmt.SampleRate;
 	data = Mem_Alloc(chunkSize * AUDIO_MAX_CHUNKS, sizeof(Int16), "Ogg - final PCM output");
 
 	/* fill up with some samples before playing */
@@ -383,7 +383,7 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 
 	bool completed;
 	for (;;) {
-		Int32 next = -1;
+		int next = -1;
 		
 		for (i = 0; i < AUDIO_MAX_CHUNKS; i++) {
 			res = Audio_IsCompleted(music_out, i, &completed);
@@ -415,7 +415,7 @@ cleanup:
 
 #define MUSIC_MAX_FILES 512
 static void Music_RunLoop(void) {
-	Int32 i, count = 0;
+	int i, count = 0;
 	UInt16 musicFiles[MUSIC_MAX_FILES];
 	String ogg = String_FromConst(".ogg");
 
@@ -432,7 +432,7 @@ static void Music_RunLoop(void) {
 	Audio_Init(&music_out, AUDIO_MAX_CHUNKS);
 
 	while (!music_pendingStop && count) {
-		Int32 idx = Random_Range(&rnd, 0, count);
+		int idx = Random_Range(&rnd, 0, count);
 		String filename = StringsBuffer_UNSAFE_Get(&files, musicFiles[idx]);
 		String path = String_FromArray(pathBuffer);
 		String_Format2(&path, "audio%r%s", &Directory_Separator, &filename);
@@ -449,7 +449,7 @@ static void Music_RunLoop(void) {
 		if (res) { Chat_LogError2(res, "closing", &path); break; }
 
 		if (music_pendingStop) break;
-		Int32 delay = 1000 * 120 + Random_Range(&rnd, 0, 1000 * 300);
+		int delay = 1000 * 120 + Random_Range(&rnd, 0, 1000 * 300);
 		Waitable_WaitFor(music_waitable, delay);
 	}
 
@@ -480,7 +480,7 @@ static void Music_Free(void) {
 	if (thread) Thread_Join(thread);
 }
 
-void Audio_SetMusic(Int32 volume) {
+void Audio_SetMusic(int volume) {
 	if (volume) Music_Init();
 	else        Music_Free();
 }
@@ -489,8 +489,8 @@ void Audio_SetMusic(Int32 volume) {
 /*########################################################################################################################*
 *--------------------------------------------------------General----------------------------------------------------------*
 *#########################################################################################################################*/
-static Int32 AudioManager_GetVolume(const char* volKey, const char* boolKey) {
-	Int32 volume = Options_GetInt(volKey, 0, 100, 0);
+static int AudioManager_GetVolume(const char* volKey, const char* boolKey) {
+	int volume = Options_GetInt(volKey, 0, 100, 0);
 	if (volume) return volume;
 
 	volume = Options_GetBool(boolKey, false) ? 100 : 0;

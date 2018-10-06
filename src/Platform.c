@@ -175,14 +175,14 @@ void Platform_LogConst(const char* message) {
 
 /* TODO: check this is actually accurate */
 UInt64 sw_freqMul = 1, sw_freqDiv = 1;
-Int32 Stopwatch_ElapsedMicroseconds(UInt64* timer) {
+int Stopwatch_ElapsedMicroseconds(UInt64* timer) {
 	UInt64 beg = *timer;
 	Stopwatch_Measure(timer);
 	UInt64 end = *timer;
 
 	if (end < beg) return 0;
 	UInt64 delta = ((end - beg) * sw_freqMul) / sw_freqDiv;
-	return (Int32)delta;
+	return (int)delta;
 }
 
 #ifdef CC_BUILD_WIN
@@ -330,7 +330,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 		if (src[0] == '.' && src[1] == '\0') continue;
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 
-		Int32 i;
+		int i;
 		for (i = 0; i < MAX_PATH && src[i]; i++) {
 			String_Append(&path, Convert_UnicodeToCP437(src[i]));
 		}
@@ -396,7 +396,7 @@ ReturnCode File_Close(void* file) {
 	return Win_Return(CloseHandle((HANDLE)file));
 }
 
-ReturnCode File_Seek(void* file, Int32 offset, Int32 seekType) {
+ReturnCode File_Seek(void* file, int offset, int seekType) {
 	static UInt8 modes[3] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
 	DWORD pos = SetFilePointer(file, offset, NULL, modes[seekType]);
 	return Win_Return(pos != INVALID_SET_FILE_POINTER);
@@ -513,7 +513,7 @@ ReturnCode File_Close(void* file) {
 	return Nix_Return(close((int)file) != -1);
 }
 
-ReturnCode File_Seek(void* file, Int32 offset, Int32 seekType) {
+ReturnCode File_Seek(void* file, int offset, int seekType) {
 	static UInt8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
 	return Nix_Return(lseek((int)file, offset, modes[seekType]) != -1);
 }
@@ -564,7 +564,7 @@ void Thread_Join(void* handle) {
 	Thread_Detach(handle);
 }
 
-CRITICAL_SECTION mutexList[3]; Int32 mutexIndex;
+CRITICAL_SECTION mutexList[3]; int mutexIndex;
 void* Mutex_Create(void) {
 	if (mutexIndex == Array_Elems(mutexList)) ErrorHandler_Fail("Cannot allocate mutex");
 	CRITICAL_SECTION* ptr = &mutexList[mutexIndex];
@@ -607,7 +607,7 @@ void* Thread_StartCallback(void* lpParam) {
 	return NULL;
 }
 
-pthread_t threadList[3]; Int32 threadIndex;
+pthread_t threadList[3]; int threadIndex;
 void* Thread_Start(Thread_StartFunc* func, bool detach) {
 	if (threadIndex == Array_Elems(threadList)) ErrorHandler_Fail("Cannot allocate thread");
 	pthread_t* ptr = &threadList[threadIndex];
@@ -630,7 +630,7 @@ void Thread_Join(void* handle) {
 	ErrorHandler_CheckOrFail(result, "Joining thread");
 }
 
-pthread_mutex_t mutexList[3]; Int32 mutexIndex;
+pthread_mutex_t mutexList[3]; int mutexIndex;
 void* Mutex_Create(void) {
 	if (mutexIndex == Array_Elems(mutexList)) ErrorHandler_Fail("Cannot allocate mutex");
 	pthread_mutex_t* ptr = &mutexList[mutexIndex];
@@ -655,7 +655,7 @@ void Mutex_Unlock(void* handle) {
 	ErrorHandler_CheckOrFail(result, "Unlocking mutex");
 }
 
-pthread_cond_t condList[2]; Int32 condIndex;
+pthread_cond_t condList[2]; int condIndex;
 void* Waitable_Create(void) {
 	if (condIndex == Array_Elems(condList)) ErrorHandler_Fail("Cannot allocate event");
 	pthread_cond_t* ptr = &condList[condIndex];
@@ -707,8 +707,8 @@ static void Font_Init(void);
 #define DPI_PIXEL  72
 #define DPI_DEVICE 96 /* TODO: GetDeviceCaps(hdc, LOGPIXELSY) in Platform_InitDisplay ? */
 
-static Int32 Font_Find(const String* name, StringsBuffer* entries) {
-	Int32 i;
+static int Font_Find(const String* name, StringsBuffer* entries) {
+	int i;
 	for (i = 1; i < entries->Count; i += 2) {
 		String faceName = StringsBuffer_UNSAFE_Get(entries, i);
 		if (String_CaselessEquals(&faceName, name)) return i;
@@ -719,7 +719,7 @@ static Int32 Font_Find(const String* name, StringsBuffer* entries) {
 void Font_GetNames(StringsBuffer* buffer) {
 	if (!norm_fonts.Count) Font_Init();
 
-	Int32 i;
+	int i;
 	for (i = 1; i < norm_fonts.Count; i += 2) {
 		String faceName = StringsBuffer_UNSAFE_Get(&norm_fonts, i);
 		StringsBuffer_Add(buffer, &faceName);
@@ -731,7 +731,7 @@ void Font_Make(FontDesc* desc, const String* fontName, UInt16 size, UInt16 style
 	desc->Style = style;
 	if (!norm_fonts.Count) Font_Init();
 
-	Int32 idx = -1;
+	int idx = -1;
 	StringsBuffer* entries = &bold_fonts;
 	if (style & FONT_STYLE_BOLD) { idx = Font_Find(fontName, entries); }
 
@@ -808,7 +808,7 @@ Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
 	FT_Face face = args->Font.Handle;
 	String text = args->Text;
 	Size2D s = { 0, face->size->metrics.height };
-	Int32 i;
+	int i;
 
 	for (i = 0; i < text.length; i++) {
 		UInt16 c = Convert_CP437ToUnicode(text.buffer[i]);
@@ -821,18 +821,18 @@ Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
 	return s;
 }
 
-Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, Int32 x, Int32 y, PackedCol col) {
+Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, PackedCol col) {
 	FT_Face face = args->Font.Handle;
 	String text = args->Text;
 	Size2D s = { x, TEXT_CEIL(face->size->metrics.height) };
-	Int32 i, descender = TEXT_CEIL(face->size->metrics.descender);
+	int i, descender = TEXT_CEIL(face->size->metrics.descender);
 
 	for (i = 0; i < text.length; i++) {
 		UInt16 c = Convert_CP437ToUnicode(text.buffer[i]);
 		FT_Load_Char(face, c, FT_LOAD_RENDER); /* TODO: Check error */
 
 		FT_Bitmap* img = &face->glyph->bitmap;
-		Int32 xx, yy, offset = s.Height + descender - face->glyph->bitmap_top;
+		int xx, yy, offset = s.Height + descender - face->glyph->bitmap_top;
 		x += face->glyph->bitmap_left; y += offset;
 
 		for (yy = 0; yy < img->rows; yy++) {
@@ -857,13 +857,13 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, Int32 x, Int32 
 		x -= face->glyph->bitmap_left; y -= offset;
 	}
 
-	Int32 begX = s.Width;
+	int begX = s.Width;
 	if (args->Font.Style == FONT_STYLE_UNDERLINE) {
-		Int32 ul_pos   = FT_MulFix(face->underline_position,  face->size->metrics.y_scale);
-		Int32 ul_thick = FT_MulFix(face->underline_thickness, face->size->metrics.y_scale);
+		int ul_pos   = FT_MulFix(face->underline_position,  face->size->metrics.y_scale);
+		int ul_thick = FT_MulFix(face->underline_thickness, face->size->metrics.y_scale);
 
-		Int32 ulHeight = TEXT_CEIL(ul_thick);
-		Int32 ulY      = s.Height + TEXT_CEIL(ul_pos);
+		int ulHeight = TEXT_CEIL(ul_thick);
+		int ulY      = s.Height + TEXT_CEIL(ul_pos);
 		Drawer2D_Underline(bmp, begX, ulY + y, x - begX, ulHeight, col);
 	}
 	s.Width = x - begX; return s;
@@ -914,7 +914,7 @@ void Socket_Create(SocketPtr* socketResult) {
 	}
 }
 
-static ReturnCode Socket_ioctl(SocketPtr socket, UInt32 cmd, Int32* data) {
+static ReturnCode Socket_ioctl(SocketPtr socket, UInt32 cmd, int* data) {
 #ifdef CC_BUILD_WIN
 	return ioctlsocket(socket, cmd, data);
 #else
@@ -926,16 +926,16 @@ ReturnCode Socket_Available(SocketPtr socket, UInt32* available) {
 	return Socket_ioctl(socket, FIONREAD, available);
 }
 ReturnCode Socket_SetBlocking(SocketPtr socket, bool blocking) {
-	Int32 blocking_raw = blocking ? 0 : -1;
+	int blocking_raw = blocking ? 0 : -1;
 	return Socket_ioctl(socket, FIONBIO, &blocking_raw);
 }
 
 ReturnCode Socket_GetError(SocketPtr socket, ReturnCode* result) {
-	Int32 resultSize = sizeof(ReturnCode);
+	int resultSize = sizeof(ReturnCode);
 	return getsockopt(socket, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
-ReturnCode Socket_Connect(SocketPtr socket, const String* ip, Int32 port) {
+ReturnCode Socket_Connect(SocketPtr socket, const String* ip, int port) {
 	struct RAW_IPV4_ADDR { Int16 Family; UInt8 Port[2], IP[4], Pad[8]; } addr;
 	addr.Family = AF_INET;
 
@@ -947,13 +947,13 @@ ReturnCode Socket_Connect(SocketPtr socket, const String* ip, Int32 port) {
 }
 
 ReturnCode Socket_Read(SocketPtr socket, UInt8* buffer, UInt32 count, UInt32* modified) {
-	Int32 recvCount = recv(socket, buffer, count, 0);
+	int recvCount = recv(socket, buffer, count, 0);
 	if (recvCount != -1) { *modified = recvCount; return 0; }
 	*modified = 0; return Socket__Error();
 }
 
 ReturnCode Socket_Write(SocketPtr socket, UInt8* buffer, UInt32 count, UInt32* modified) {
-	Int32 sentCount = send(socket, buffer, count, 0);
+	int sentCount = send(socket, buffer, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return Socket__Error();
 }
@@ -976,13 +976,13 @@ ReturnCode Socket_Close(SocketPtr socket) {
 	return result;
 }
 
-ReturnCode Socket_Select(SocketPtr socket, Int32 selectMode, bool* success) {
+ReturnCode Socket_Select(SocketPtr socket, int selectMode, bool* success) {
 	fd_set set;
 	FD_ZERO(&set);
 	FD_SET(socket, &set);
 
 	struct timeval time = { 0 };
-	Int32 selectCount = -1;
+	int selectCount = -1;
 
 	#ifdef CC_BUILD_WIN
 	int nfds = 1;
@@ -1078,7 +1078,7 @@ static ReturnCode Http_GetHeaders(struct AsyncRequest* req, HINTERNET handle) {
 	return 0;
 }
 
-static ReturnCode Http_GetData(struct AsyncRequest* req, HINTERNET handle, volatile Int32* progress) {
+static ReturnCode Http_GetData(struct AsyncRequest* req, HINTERNET handle, volatile int* progress) {
 	UInt32 size = req->ResultSize;
 	if (!size) return ERROR_NOT_SUPPORTED;
 	*progress = 0;
@@ -1099,14 +1099,14 @@ static ReturnCode Http_GetData(struct AsyncRequest* req, HINTERNET handle, volat
 
 		if (!read) break;
 		buffer += read; totalRead += read; left -= read;
-		*progress = (Int32)(100.0f * totalRead / size);
+		*progress = (int)(100.0f * totalRead / size);
 	}
 
 	*progress = 100;
 	return 0;
 }
 
-ReturnCode Http_Do(struct AsyncRequest* req, volatile Int32* progress) {
+ReturnCode Http_Do(struct AsyncRequest* req, volatile int* progress) {
 	HINTERNET handle;
 	ReturnCode res = Http_Make(req, &handle);
 	if (res) return res;
@@ -1136,9 +1136,9 @@ void Http_Init(void) {
 	if (!curl) ErrorHandler_Fail("Failed to init easy curl");
 }
 
-static int Http_Progress(Int32* progress, double total, double received, double a, double b) {
+static int Http_Progress(int* progress, double total, double received, double a, double b) {
 	if (total == 0) return 0;
-	*progress = (Int32)(100 * received / total);
+	*progress = (int)(100 * received / total);
 	return 0;
 }
 
@@ -1210,7 +1210,7 @@ static size_t Http_GetData(char *buffer, size_t size, size_t nitems, struct Asyn
 	return nitems;
 }
 
-ReturnCode Http_Do(struct AsyncRequest* req, volatile Int32* progress) {
+ReturnCode Http_Do(struct AsyncRequest* req, volatile int* progress) {
 	curl_easy_reset(curl);
 	String url = String_FromRawArray(req->URL);
 	char urlStr[600]; Platform_ConvertString(urlStr, &url);
@@ -1260,12 +1260,12 @@ struct AudioContext {
 	HWAVEOUT Handle;
 	WAVEHDR Headers[AUDIO_MAX_CHUNKS];
 	struct AudioFormat Format;
-	Int32 Count;
+	int Count;
 };
 struct AudioContext Audio_Contexts[20];
 
-void Audio_Init(AudioHandle* handle, Int32 buffers) {
-	Int32 i, j;
+void Audio_Init(AudioHandle* handle, int buffers) {
+	int i, j;
 	for (i = 0; i < Array_Elems(Audio_Contexts); i++) {
 		struct AudioContext* ctx = &Audio_Contexts[i];
 		if (ctx->Count) continue;
@@ -1302,7 +1302,7 @@ ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	ReturnCode res;
 	if (ctx->Handle && (res = waveOutClose(ctx->Handle))) return res;
 
-	Int32 sampleSize = format->Channels * format->BitsPerSample / 8;
+	int sampleSize = format->Channels * format->BitsPerSample / 8;
 	WAVEFORMATEX fmt;
 	fmt.wFormatTag      = WAVE_FORMAT_PCM;
 	fmt.nChannels       = format->Channels;
@@ -1316,7 +1316,7 @@ ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	return waveOutOpen(&ctx->Handle, WAVE_MAPPER, &fmt, 0, 0, CALLBACK_NULL);
 }
 
-ReturnCode Audio_BufferData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize) {
+ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, UInt32 dataSize) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	WAVEHDR* hdr = &ctx->Headers[idx];
 	Mem_Set(hdr, 0, sizeof(WAVEHDR));
@@ -1338,7 +1338,7 @@ ReturnCode Audio_Stop(AudioHandle handle) {
 	return waveOutReset(ctx->Handle);
 }
 
-ReturnCode Audio_IsCompleted(AudioHandle handle, Int32 idx, bool* completed) {
+ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, bool* completed) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	WAVEHDR* hdr = &ctx->Headers[idx];
 
@@ -1360,7 +1360,7 @@ struct AudioContext {
 	ALuint Buffers[AUDIO_MAX_CHUNKS];
 	bool Completed[AUDIO_MAX_CHUNKS];
 	struct AudioFormat Format;
-	Int32 Count;
+	int Count;
 	ALenum DataFormat;
 };
 struct AudioContext Audio_Contexts[20];
@@ -1415,7 +1415,7 @@ static ALenum Audio_FreeSource(struct AudioContext* ctx) {
 	return 0;
 }
 
-void Audio_Init(AudioHandle* handle, Int32 buffers) {
+void Audio_Init(AudioHandle* handle, int buffers) {
 	Mutex_Lock(&audio_lock);
 	{
 		if (!audio_context) Audio_CreateContext();
@@ -1427,7 +1427,7 @@ void Audio_Init(AudioHandle* handle, Int32 buffers) {
 	ALenum err = alGetError();
 	if (err) { ErrorHandler_Fail2(err, "DistanceModel"); }
 
-	Int32 i, j;
+	int i, j;
 	for (i = 0; i < Array_Elems(Audio_Contexts); i++) {
 		struct AudioContext* ctx = &Audio_Contexts[i];
 		if (ctx->Count) continue;
@@ -1464,7 +1464,7 @@ ReturnCode Audio_Free(AudioHandle handle) {
 	return 0;
 }
 
-static ALenum GetALFormat(Int32 channels, Int32 bitsPerSample) {
+static ALenum GetALFormat(int channels, int bitsPerSample) {
     if (bitsPerSample == 16) {
         if (channels == 1) return AL_FORMAT_MONO16;
         if (channels == 2) return AL_FORMAT_STEREO16;
@@ -1493,7 +1493,7 @@ ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	return 0;
 }
 
-ReturnCode Audio_BufferData(AudioHandle handle, Int32 idx, void* data, UInt32 dataSize) {
+ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, UInt32 dataSize) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	ALuint buffer = ctx->Buffers[idx];
 	ctx->Completed[idx] = false;
@@ -1518,7 +1518,7 @@ ReturnCode Audio_Stop(AudioHandle handle) {
 	return alGetError();
 }
 
-ReturnCode Audio_IsCompleted(AudioHandle handle, Int32 idx, bool* completed) {
+ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, bool* completed) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	ALint i, processed = 0;
 	ALuint buffer;
@@ -1554,7 +1554,7 @@ static ReturnCode Audio_AllCompleted(AudioHandle handle, bool* finished) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];	
 	ReturnCode res;
 	*finished = false;
-	Int32 i;
+	int i;
 
 	for (i = 0; i < ctx->Count; i++) {
 		res = Audio_IsCompleted(handle, i, finished);
@@ -1586,7 +1586,7 @@ void Platform_ConvertString(void* dstPtr, const String* src) {
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
 	WCHAR* dst = dstPtr;
 
-	Int32 i;
+	int i;
 	for (i = 0; i < src->length; i++) {
 		*dst = Convert_CP437ToUnicode(src->buffer[i]); dst++;
 	}
@@ -1654,7 +1654,7 @@ static String Platform_NextArg(STRING_REF String* args) {
 		*args = String_UNSAFE_SubstringAt(args, 1);
 	}
 
-	Int32 end;
+	int end;
 	if (args->length && args->buffer[0] == '"') {
 		/* "xy za" is used for arg with spaces */
 		*args = String_UNSAFE_SubstringAt(args, 1);
@@ -1674,11 +1674,11 @@ static String Platform_NextArg(STRING_REF String* args) {
 	return arg;
 }
 
-Int32 Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args) {
+int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args) {
 	String cmdArgs = String_FromReadonly(GetCommandLineA());
 	Platform_NextArg(&cmdArgs); /* skip exe path */
 
-	Int32 count;
+	int count;
 	for (count = 0; count < PROGRAM_MAX_CMDARGS; count++) {
 		args[count] = Platform_NextArg(&cmdArgs);
 
@@ -1692,10 +1692,10 @@ void Platform_ConvertString(void* dstPtr, const String* src) {
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
 	UInt8* dst = dstPtr;
 
-	Int32 i;
+	int i;
 	for (i = 0; i < src->length; i++) {
 		UInt16 codepoint = Convert_CP437ToUnicode(src->buffer[i]);
-		Int32 len = Stream_WriteUtf8(dst, codepoint); dst += len;
+		int len = Stream_WriteUtf8(dst, codepoint); dst += len;
 	}
 	*dst = '\0';
 }
@@ -1757,9 +1757,9 @@ ReturnCode Platform_StartShell(const String* args) {
 	return Nix_Return(pclose(fp));
 }
 
-Int32 Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args) {
+int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args) {
 	argc--; /* skip path argument*/
-	Int32 i, count = min(argc, PROGRAM_MAX_CMDARGS);
+	int i, count = min(argc, PROGRAM_MAX_CMDARGS);
 
 	for (i = 0; i < count; i++) {
 		args[i] = String_FromReadonly(argv[i + 1]);

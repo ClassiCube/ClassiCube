@@ -36,20 +36,20 @@ TimeMS map_receiveStart;
 struct InflateState map_inflateState;
 struct Stream map_stream, map_part;
 struct GZipHeader map_gzHeader;
-Int32 map_sizeIndex, map_index, map_volume;
+int map_sizeIndex, map_index, map_volume;
 UInt8 map_size[4];
 BlockRaw* map_blocks;
 
 #ifdef EXTENDED_BLOCKS
 struct InflateState map2_inflateState;
 struct Stream map2_stream;
-Int32 map2_index;
+int map2_index;
 BlockRaw* map2_blocks;
 #endif
 
 /* CPE state */
-Int32 cpe_serverExtensionsCount, cpe_pingTicks;
-Int32 cpe_envMapVer = 2, cpe_blockDefsExtVer = 2;
+int cpe_serverExtensionsCount, cpe_pingTicks;
+int cpe_envMapVer = 2, cpe_blockDefsExtVer = 2;
 bool cpe_sendHeldBlock, cpe_useMessageTypes, cpe_extEntityPos, cpe_blockPerms, cpe_fastMap;
 bool cpe_twoWayPing, cpe_extTextures, cpe_extBlocks;
 
@@ -77,7 +77,7 @@ if (cpe_extBlocks) {\
 #endif
 
 static void Handlers_ReadString(UInt8** ptr, String* str) {
-	Int32 i, length = 0;
+	int i, length = 0;
 	UInt8* data = *ptr;
 	for (i = STRING_SIZE - 1; i >= 0; i--) {
 		char code = data[i];
@@ -90,7 +90,7 @@ static void Handlers_ReadString(UInt8** ptr, String* str) {
 }
 
 static void Handlers_WriteString(UInt8* data, const String* value) {
-	Int32 i, count = min(value->length, STRING_SIZE);
+	int i, count = min(value->length, STRING_SIZE);
 	for (i = 0; i < count; i++) {
 		char c = value->buffer[i];
 		if (c == '&') c = '%'; /* escape colour codes */
@@ -207,7 +207,7 @@ static void Handlers_UpdateLocation(EntityID playerId, struct LocationUpdate* up
 
 char wom_identifierBuffer[STRING_SIZE];
 String wom_identifier = String_FromArray(wom_identifierBuffer);
-Int32 wom_counter;
+int wom_counter;
 bool wom_sendId, wom_sentId;
 
 static void WoM_UpdateIdentifier(void) {
@@ -220,7 +220,7 @@ static void WoM_CheckMotd(void) {
 	if (!motd.length) return;
 
 	String cfg = String_FromConst("cfg=");
-	Int32 index = String_IndexOfString(&motd, &cfg);
+	int index = String_IndexOfString(&motd, &cfg);
 	if (Game_PureClassic || index == -1) return;
 
 	char urlBuffer[STRING_SIZE];
@@ -257,8 +257,8 @@ static PackedCol WoM_ParseCol(const String* value, PackedCol defaultCol) {
 	return col;
 }
 
-static bool WoM_ReadLine(STRING_REF const String* page, Int32* start, String* line) {
-	Int32 i, offset = *start;
+static bool WoM_ReadLine(STRING_REF const String* page, int* start, String* line) {
+	int i, offset = *start;
 	if (offset == -1) return false;
 
 	for (i = offset; i < page->length; i++) {
@@ -282,7 +282,7 @@ static bool WoM_ReadLine(STRING_REF const String* page, Int32* start, String* li
 
 static void WoM_ParseConfig(const String* page) {
 	String line, key, value;
-	Int32 start = 0;
+	int start = 0;
 
 	while (WoM_ReadLine(page, &start, &line)) {
 		Platform_Log(&line);
@@ -298,7 +298,7 @@ static void WoM_ParseConfig(const String* page) {
 			PackedCol col = WoM_ParseCol(&value, Env_DefaultFogCol);
 			Env_SetFogCol(col);
 		} else if (String_CaselessEqualsConst(&key, "environment.level")) {
-			Int32 waterLevel;
+			int waterLevel;
 			if (Convert_TryParseInt32(&value, &waterLevel)) {
 				Env_SetEdgeHeight(waterLevel);
 			}
@@ -456,7 +456,7 @@ static void Classic_LevelDataChunk(UInt8* data) {
 	/* Workaround for some servers that send LevelDataChunk before LevelInit due to their async sending behaviour */
 	if (!map_begunLoading) Classic_StartLoading();
 
-	Int32 usedLength = Stream_GetU16_BE(data); data += 2;
+	int usedLength = Stream_GetU16_BE(data); data += 2;
 	map_part.Meta.Mem.Cur    = data;
 	map_part.Meta.Mem.Base   = data;
 	map_part.Meta.Mem.Left   = usedLength;
@@ -510,11 +510,11 @@ static void Classic_LevelFinalise(UInt8* data) {
 	classic_prevScreen = NULL;
 	Gui_CalcCursorVisible();
 
-	Int32 width  = Stream_GetU16_BE(&data[0]);
-	Int32 height = Stream_GetU16_BE(&data[2]);
-	Int32 length = Stream_GetU16_BE(&data[4]);
+	int width  = Stream_GetU16_BE(&data[0]);
+	int height = Stream_GetU16_BE(&data[2]);
+	int length = Stream_GetU16_BE(&data[4]);
 
-	Int32 loadingMs = (Int32)(DateTime_CurrentUTC_MS() - map_receiveStart);
+	int loadingMs = (int)(DateTime_CurrentUTC_MS() - map_receiveStart);
 	Platform_Log1("map loading took: %i", &loadingMs);
 
 	World_SetNewMap(map_blocks, map_volume, width, height, length);
@@ -537,9 +537,9 @@ static void Classic_LevelFinalise(UInt8* data) {
 }
 
 static void Classic_SetBlock(UInt8* data) {
-	Int32 x = Stream_GetU16_BE(&data[0]);
-	Int32 y = Stream_GetU16_BE(&data[2]);
-	Int32 z = Stream_GetU16_BE(&data[4]);
+	int x = Stream_GetU16_BE(&data[0]);
+	int y = Stream_GetU16_BE(&data[2]);
+	int z = Stream_GetU16_BE(&data[4]);
 
 	data += 6;
 	BlockID block; Handlers_ReadBlock(data, block);
@@ -1123,13 +1123,13 @@ static void CPE_ExtAddEntity2(UInt8* data) {
 
 #define BULK_MAX_BLOCKS 256
 static void CPE_BulkBlockUpdate(UInt8* data) {
-	Int32 i, count = 1 + *data++;
+	int i, count = 1 + *data++;
 
 	UInt32 indices[BULK_MAX_BLOCKS];
 	for (i = 0; i < count; i++) {
 		indices[i] = Stream_GetU32_BE(data); data += 4;
 	}
-	data += (BULK_MAX_BLOCKS - count) * sizeof(Int32);
+	data += (BULK_MAX_BLOCKS - count) * 4;
 
 	BlockID blocks[BULK_MAX_BLOCKS];
 	for (i = 0; i < count; i++) {

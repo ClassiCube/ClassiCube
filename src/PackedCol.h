@@ -31,7 +31,7 @@ PackedCol PackedCol_Scale(PackedCol value, float t);
 PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t);
 NOINLINE_ void PackedCol_ToHex(String* str, PackedCol value);
 NOINLINE_ bool PackedCol_TryParseHex(const String* str, PackedCol* value);
-NOINLINE_ bool PackedCol_Unhex(UInt8 hex, Int32* value);
+NOINLINE_ bool PackedCol_Unhex(UInt8 hex, int* value);
 
 #define PACKEDCOL_SHADE_X 0.6f
 #define PACKEDCOL_SHADE_Z 0.8f

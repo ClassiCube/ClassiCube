@@ -42,9 +42,9 @@ NOINLINE_ String String_FromReadonly(STRING_REF const char* buffer);
 
 NOINLINE_ void String_StripCols(String* str);
 NOINLINE_ void String_Copy(String* dst, const String* src);
-NOINLINE_ String String_UNSAFE_Substring(STRING_REF const String* str, Int32 offset, Int32 length);
+NOINLINE_ String String_UNSAFE_Substring(STRING_REF const String* str, int offset, int length);
 #define String_UNSAFE_SubstringAt(str, offset) (String_UNSAFE_Substring(str, offset, (str)->length - (offset)))
-NOINLINE_ void String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, Int32* subsCount);
+NOINLINE_ void String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int* subsCount);
 NOINLINE_ bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value);
 
 NOINLINE_ bool String_Equals(const String* a, const String* b);
@@ -63,14 +63,14 @@ NOINLINE_ bool String_AppendString(String* str, const String* src);
 NOINLINE_ bool String_AppendColorless(String* str, const String* src);
 NOINLINE_ bool String_AppendHex(String* str, UInt8 value);
 
-NOINLINE_ Int32 String_IndexOf(const String* str, char c, Int32 offset);
-NOINLINE_ Int32 String_LastIndexOf(const String* str, char c);
-NOINLINE_ void String_InsertAt(String* str, Int32 offset, char c);
-NOINLINE_ void String_DeleteAt(String* str, Int32 offset);
+NOINLINE_ int String_IndexOf(const String* str, char c, int offset);
+NOINLINE_ int String_LastIndexOf(const String* str, char c);
+NOINLINE_ void String_InsertAt(String* str, int offset, char c);
+NOINLINE_ void String_DeleteAt(String* str, int offset);
 NOINLINE_ void String_TrimStart(String* str);
 NOINLINE_ void String_TrimEnd(String* str);
 
-NOINLINE_ Int32 String_IndexOfString(const String* str, const String* sub);
+NOINLINE_ int String_IndexOfString(const String* str, const String* sub);
 #define String_ContainsString(str, sub) (String_IndexOfString(str, sub) >= 0)
 NOINLINE_ bool String_CaselessContains(const String* str, const String* sub);
 NOINLINE_ bool String_CaselessStarts(const String* str, const String* sub);
@@ -100,22 +100,22 @@ NOINLINE_ bool Convert_TryParseBool(const String*   str, bool* value);
 typedef struct StringsBuffer_ {
 	char*  TextBuffer;
 	UInt32* FlagsBuffer;
-	Int32 Count, TotalLength;
+	int Count, TotalLength;
 	/* internal state */
-	Int32  _TextBufferSize, _FlagsBufferSize;
+	int    _TextBufferSize, _FlagsBufferSize;
 	char   _DefaultBuffer[STRINGSBUFFER_BUFFER_DEF_SIZE];
 	UInt32 _DefaultFlags[STRINGSBUFFER_FLAGS_DEF_ELEMS];
 } StringsBuffer;
 
 NOINLINE_ void StringsBuffer_Init(StringsBuffer* buffer);
 NOINLINE_ void StringsBuffer_Clear(StringsBuffer* buffer);
-NOINLINE_ void StringsBuffer_Get(StringsBuffer* buffer, Int32 i, String* text);
-NOINLINE_ STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, Int32 i);
+NOINLINE_ void StringsBuffer_Get(StringsBuffer* buffer, int i, String* text);
+NOINLINE_ STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i);
 NOINLINE_ void StringsBuffer_Add(StringsBuffer* buffer, const String* text);
-NOINLINE_ void StringsBuffer_Remove(StringsBuffer* buffer, Int32 index);
+NOINLINE_ void StringsBuffer_Remove(StringsBuffer* buffer, int index);
 
-NOINLINE_ void  WordWrap_Do(STRING_REF String* text, String* lines, Int32 numLines, Int32 lineLen);
-NOINLINE_ void  WordWrap_GetCoords(Int32 index, const String* lines, Int32 numLines, Int32* coordX, Int32* coordY);
-NOINLINE_ Int32 WordWrap_GetBackLength(const String* text, Int32 index);
-NOINLINE_ Int32 WordWrap_GetForwardLength(const String* text, Int32 index);
+NOINLINE_ void WordWrap_Do(STRING_REF String* text, String* lines, int numLines, int lineLen);
+NOINLINE_ void WordWrap_GetCoords(int index, const String* lines, int numLines, int* coordX, int* coordY);
+NOINLINE_ int  WordWrap_GetBackLength(const String* text, int index);
+NOINLINE_ int  WordWrap_GetForwardLength(const String* text, int index);
 #endif

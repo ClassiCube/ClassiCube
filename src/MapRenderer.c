@@ -8,11 +8,11 @@
 #include "ChunkUpdater.h"
 bool inTranslucent;
 
-struct ChunkInfo* MapRenderer_GetChunk(Int32 cx, Int32 cy, Int32 cz) {
+struct ChunkInfo* MapRenderer_GetChunk(int cx, int cy, int cz) {
 	return &MapRenderer_Chunks[MapRenderer_Pack(cx, cy, cz)];
 }
 
-void MapRenderer_RefreshChunk(Int32 cx, Int32 cy, Int32 cz) {
+void MapRenderer_RefreshChunk(int cx, int cy, int cz) {
 	if (cx < 0 || cy < 0 || cz < 0 || cx >= MapRenderer_ChunksX 
 		|| cy >= MapRenderer_ChunksY || cz >= MapRenderer_ChunksZ) return;
 
@@ -60,7 +60,7 @@ static void MapRenderer_RenderNormalBatch(UInt32 batch) {
 		bool drawZMin = info->DrawZMin && part.Counts[FACE_ZMIN];
 		bool drawZMax = info->DrawZMax && part.Counts[FACE_ZMAX];
 
-		Int32 offset = part.Offset + part.SpriteCount;
+		int offset = part.Offset + part.SpriteCount;
 		if (drawXMin && drawXMax) {
 			Gfx_SetFaceCulling(true);
 			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_XMIN] + part.Counts[FACE_XMAX], offset);
@@ -104,7 +104,7 @@ static void MapRenderer_RenderNormalBatch(UInt32 batch) {
 
 		if (!part.SpriteCount) continue;
 		offset = part.Offset;
-		Int32 count = part.SpriteCount >> 2; /* 4 per sprite */
+		int count = part.SpriteCount >> 2; /* 4 per sprite */
 
 		Gfx_SetFaceCulling(true);
 		if (info->DrawXMax || info->DrawZMin) {
@@ -132,7 +132,7 @@ void MapRenderer_RenderNormal(double delta) {
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
 
-	Int32 batch;
+	int batch;
 	Gfx_EnableMipmaps();
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
 		if (MapRenderer_NormalPartsCount[batch] <= 0) continue;
@@ -174,7 +174,7 @@ static void MapRenderer_RenderTranslucentBatch(UInt32 batch) {
 		bool drawZMin = (inTranslucent || info->DrawZMin) && part.Counts[FACE_ZMIN];
 		bool drawZMax = (inTranslucent || info->DrawZMax) && part.Counts[FACE_ZMAX];
 
-		Int32 offset = part.Offset;
+		int offset = part.Offset;
 		if (drawXMin && drawXMax) {
 			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_XMIN] + part.Counts[FACE_XMAX], offset);
 			Game_Vertices += (part.Counts[FACE_XMIN] + part.Counts[FACE_XMAX]);
@@ -222,7 +222,7 @@ void MapRenderer_RenderTranslucent(double delta) {
 	Gfx_SetAlphaBlending(false);
 	Gfx_SetColourWriteMask(false, false, false, false);
 
-	Int32 batch;
+	int batch;
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
 		if (MapRenderer_TranslucentPartsCount[batch] <= 0) continue;
 		if (MapRenderer_HasTranslucentParts[batch] || MapRenderer_CheckingTranslucentParts[batch]) {
