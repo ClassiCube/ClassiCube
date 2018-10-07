@@ -174,14 +174,14 @@ void Platform_LogConst(const char* message) {
 }
 
 /* TODO: check this is actually accurate */
-UInt64 sw_freqMul = 1, sw_freqDiv = 1;
-int Stopwatch_ElapsedMicroseconds(UInt64* timer) {
-	UInt64 beg = *timer;
+uint64_t sw_freqMul = 1, sw_freqDiv = 1;
+int Stopwatch_ElapsedMicroseconds(uint64_t* timer) {
+	uint64_t beg = *timer;
 	Stopwatch_Measure(timer);
-	UInt64 end = *timer;
+	uint64_t end = *timer;
 
 	if (end < beg) return 0;
-	UInt64 delta = ((end - beg) * sw_freqMul) / sw_freqDiv;
+	uint64_t delta = ((end - beg) * sw_freqMul) / sw_freqDiv;
 	return (int)delta;
 }
 
@@ -197,7 +197,7 @@ void Platform_Log(const String* message) {
 TimeMS DateTime_CurrentUTC_MS(void) {
 	FILETIME ft; GetSystemTimeAsFileTime(&ft);
 	/* in 100 nanosecond units, since Jan 1 1601 */
-	UInt64 raw = ft.dwLowDateTime | ((UInt64)ft.dwHighDateTime << 32);
+	uint64_t raw = ft.dwLowDateTime | ((uint64_t)ft.dwHighDateTime << 32);
 	return FileTime_TotalMS(raw);
 }
 
@@ -224,15 +224,15 @@ void DateTime_CurrentLocal(DateTime* time) {
 }
 
 bool sw_highRes;
-void Stopwatch_Measure(UInt64* timer) {
+void Stopwatch_Measure(uint64_t* timer) {
 	if (sw_highRes) {
 		LARGE_INTEGER t;
 		QueryPerformanceCounter(&t);
-		*timer = (UInt64)t.QuadPart;
+		*timer = (uint64_t)t.QuadPart;
 	} else {
 		FILETIME ft;
 		GetSystemTimeAsFileTime(&ft);
-		*timer = (UInt64)ft.dwLowDateTime | ((UInt64)ft.dwHighDateTime << 32);
+		*timer = (uint64_t)ft.dwLowDateTime | ((uint64_t)ft.dwHighDateTime << 32);
 	}
 }
 #endif
@@ -243,7 +243,7 @@ void Platform_Log(const String* message) {
 }
 
 #define UNIX_EPOCH 62135596800000ULL
-#define UnixTime_TotalMS(time) ((UInt64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
+#define UnixTime_TotalMS(time) ((uint64_t)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
 TimeMS DateTime_CurrentUTC_MS(void) {
 	struct timeval cur;
 	gettimeofday(&cur, NULL);
@@ -278,11 +278,11 @@ void DateTime_CurrentLocal(DateTime* time_) {
 }
 
 #define NS_PER_SEC 1000000000ULL
-void Stopwatch_Measure(UInt64* timer) {
+void Stopwatch_Measure(uint64_t* timer) {
 	struct timespec t;
 	/* TODO: CLOCK_MONOTONIC_RAW ?? */
 	clock_gettime(CLOCK_MONOTONIC, &t);
-	*timer = (UInt64)t.tv_sec * NS_PER_SEC + t.tv_nsec;
+	*timer = (uint64_t)t.tv_sec * NS_PER_SEC + t.tv_nsec;
 }
 #endif
 
@@ -354,7 +354,7 @@ ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* time) {
 
 	FILETIME ft;
 	if (GetFileTime(file, NULL, NULL, &ft)) {
-		UInt64 raw = ft.dwLowDateTime | ((UInt64)ft.dwHighDateTime << 32);
+		uint64_t raw = ft.dwLowDateTime | ((uint64_t)ft.dwHighDateTime << 32);
 		*time = FileTime_TotalMS(raw);
 	} else {
 		result = GetLastError();
@@ -477,7 +477,7 @@ ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* time) {
 	struct stat sb;
 	if (stat(str, &sb) == -1) return errno;
 
-	*time = (UInt64)sb.st_mtime * 1000 + UNIX_EPOCH;
+	*time = (uint64_t)sb.st_mtime * 1000 + UNIX_EPOCH;
 	return 0;
 }
 
@@ -936,7 +936,7 @@ ReturnCode Socket_GetError(SocketPtr socket, ReturnCode* result) {
 }
 
 ReturnCode Socket_Connect(SocketPtr socket, const String* ip, int port) {
-	struct RAW_IPV4_ADDR { Int16 Family; UInt8 Port[2], IP[4], Pad[8]; } addr;
+	struct RAW_IPV4_ADDR { int16_t Family; uint8_t Port[2], IP[4], Pad[8]; } addr;
 	addr.Family = AF_INET;
 
 	Stream_SetU16_BE(addr.Port, port);
@@ -1189,7 +1189,7 @@ static size_t Http_GetHeaders(char *buffer, size_t size, size_t nitems, struct A
 
 		time_t time = curl_getdate(tmp.buffer, NULL);
 		if (time == -1) return total;
-		req->LastModified = (UInt64)time * 1000 + UNIX_EPOCH;
+		req->LastModified = (uint64_t)time * 1000 + UNIX_EPOCH;
 	}
 	return total;
 }

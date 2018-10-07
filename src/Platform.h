@@ -49,8 +49,8 @@ void Platform_Log4(const char* format, const void* a1, const void* a2, const voi
 TimeMS DateTime_CurrentUTC_MS(void);
 void DateTime_CurrentUTC(DateTime* time);
 void DateTime_CurrentLocal(DateTime* time);
-void Stopwatch_Measure(UInt64* timer);
-int Stopwatch_ElapsedMicroseconds(UInt64* timer);
+void Stopwatch_Measure(uint64_t* timer);
+int  Stopwatch_ElapsedMicroseconds(uint64_t* timer);
 
 bool Directory_Exists(const String* path);
 ReturnCode Directory_Create(const String* path);

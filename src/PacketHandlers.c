@@ -184,7 +184,7 @@ void Handlers_RemoveEntity(EntityID id) {
 	if (id != ENTITIES_SELF_ID) Entities_Remove(id);
 
 	/* See comment about some servers in Classic_AddEntity */
-	Int32 mask = id >> 3, bit = 1 << (id & 0x7);
+	int mask = id >> 3, bit = 1 << (id & 0x7);
 	if (!(classic_tabList[mask] & bit)) return;
 
 	Handlers_RemoveTablistEntry(id);
@@ -247,7 +247,7 @@ static void WoM_CheckSendWomID(void) {
 }
 
 static PackedCol WoM_ParseCol(const String* value, PackedCol defaultCol) {
-	Int32 argb;
+	int argb;
 	if (!Convert_TryParseInt32(value, &argb)) return defaultCol;
 
 	PackedCol col; col.A = 255;
@@ -715,7 +715,7 @@ const char* cpe_clientExtensions[30] = {
 };
 static void CPE_SetMapEnvUrl(UInt8* data);
 
-#define Ext_Deg2Packed(x) ((Int16)((x) * 65536.0f / 360.0f))
+#define Ext_Deg2Packed(x) ((int16_t)((x) * 65536.0f / 360.0f))
 void CPE_WritePlayerClick(MouseButton button, bool buttonDown, UInt8 targetId, struct PickedPos* pos) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	UInt8* data = ServerConnection_WriteBuffer;
@@ -982,7 +982,7 @@ static void CPE_ExtAddPlayerName(UInt8* data) {
 	Handlers_RemoveEndPlus(&listName);
 
 	/* Workarond for server software that declares support for ExtPlayerList, but sends AddEntity then AddPlayerName */
-	Int32 mask = id >> 3, bit = 1 << (id & 0x7);
+	int mask = id >> 3, bit = 1 << (id & 0x7);
 	classic_tabList[mask] &= (UInt8)~bit;
 	Handlers_AddTablistEntry(id, &playerName, &listName, &groupName, groupRank);
 }
@@ -1072,12 +1072,12 @@ static void CPE_EnvSetMapAppearance(UInt8* data) {
 	CPE_SetMapEnvUrl(data);
 	Env_SetSidesBlock(data[64]);
 	Env_SetEdgeBlock(data[65]);
-	Env_SetEdgeHeight((Int16)Stream_GetU16_BE(&data[66]));
+	Env_SetEdgeHeight((int16_t)Stream_GetU16_BE(&data[66]));
 	if (cpe_envMapVer == 1) return;
 
 	/* Version 2 */
-	Env_SetCloudsHeight((Int16)Stream_GetU16_BE(&data[68]));
-	Int16 maxViewDist = (Int16)Stream_GetU16_BE(&data[70]);
+	Env_SetCloudsHeight((int16_t)Stream_GetU16_BE(&data[68]));
+	int16_t maxViewDist  = (int16_t)Stream_GetU16_BE(&data[70]);
 	Game_MaxViewDistance = maxViewDist <= 0 ? 32768 : maxViewDist;
 	Game_SetViewDistance(Game_UserViewDistance);
 }

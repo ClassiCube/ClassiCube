@@ -395,9 +395,9 @@ static bool Cw_Callback_2(struct NbtTag* tag) {
 }
 
 BlockID cw_curID;
-Int16 cw_colR, cw_colG, cw_colB;
+int16_t cw_colR, cw_colG, cw_colB;
 static PackedCol Cw_ParseCol(PackedCol defValue) {
-	Int16 r = cw_colR, g = cw_colG, b = cw_colB;	
+	int16_t r = cw_colR, g = cw_colG, b = cw_colB;
 	if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
 		return defValue;
 	} else {

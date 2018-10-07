@@ -2266,7 +2266,7 @@ static void TextGroupWidget_UpdateDimensions(struct TextGroupWidget* w) {
 	Widget_Reposition(w);
 }
 
-struct Portion { Int16 Beg, Len, LineBeg, LineLen; };
+struct Portion { int16_t Beg, Len, LineBeg, LineLen; };
 #define TEXTGROUPWIDGET_HTTP_LEN 7 /* length of http:// */
 #define TEXTGROUPWIDGET_URL 0x8000
 #define TEXTGROUPWIDGET_PACKED_LEN 0x7FFF
@@ -2293,7 +2293,7 @@ static int TextGroupWidget_NextUrl(char* chars, int charsLen, int i) {
 	return charsLen;
 }
 
-static int TextGroupWidget_UrlEnd(char* chars, int charsLen, Int32* begs, int begsLen, int i) {
+static int TextGroupWidget_UrlEnd(char* chars, int charsLen, int32_t* begs, int begsLen, int i) {
 	int start = i, j;
 	for (; i < charsLen && chars[i] != ' '; i++) {
 		/* Is this character the start of a line */
@@ -2342,8 +2342,8 @@ static void TextGroupWidget_Output(struct Portion bit, int lineBeg, int lineEnd,
 static int TextGroupWidget_Reduce(struct TextGroupWidget* w, char* chars, int target, struct Portion* portions) {
 	struct Portion* start = portions;
 	int total = 0, i;
-	Int32 begs[TEXTGROUPWIDGET_MAX_LINES];
-	Int32 ends[TEXTGROUPWIDGET_MAX_LINES];
+	int32_t begs[TEXTGROUPWIDGET_MAX_LINES];
+	int32_t ends[TEXTGROUPWIDGET_MAX_LINES];
 
 	for (i = 0; i < w->LinesCount; i++) {
 		int lineLen = w->LineLengths[i];

@@ -394,7 +394,7 @@ void TextureCache_AddETag(const String* url, const String* etag) {
 
 void TextureCache_AddLastModified(const String* url, TimeMS* lastModified) {
 	if (!lastModified) return;
-	UInt64 ticks = (*lastModified) * TEXCACHE_TICKS_PER_MS;
+	uint64_t ticks = (*lastModified) * TEXCACHE_TICKS_PER_MS;
 
 	char dataBuffer[STRING_SIZE];
 	String data = String_FromArray(dataBuffer);

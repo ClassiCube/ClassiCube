@@ -7,7 +7,6 @@
 #if _MSC_VER
 typedef unsigned __int8  UInt8;
 typedef unsigned __int32 UInt32;
-typedef unsigned __int64 UInt64;
 typedef unsigned __int8  uint8_t;
 typedef unsigned __int16 uint16_t;
 typedef unsigned __int32 uint32_t;
@@ -18,9 +17,7 @@ typedef unsigned __int64 uintptr_t;
 typedef unsigned int     uintptr_t;
 #endif
 
-typedef signed __int16 Int16;
 typedef signed __int32 Int32;
-typedef signed __int64 Int64;
 typedef signed __int8  int8_t;
 typedef signed __int16 int16_t;
 typedef signed __int32 int32_t;
@@ -30,11 +27,8 @@ typedef signed __int64 int64_t;
 #include <stdint.h>
 typedef uint8_t  UInt8;
 typedef uint32_t UInt32;
-typedef uint64_t UInt64;
 
-typedef int16_t Int16;
 typedef int32_t Int32;
-typedef int64_t Int64;
 #define NOINLINE_ __attribute__((noinline))
 #else
 #error "I don't recognise this compiler. You'll need to add required definitions in Core.h!"
@@ -64,7 +58,7 @@ typedef uint8_t BlockRaw;
 typedef uint8_t EntityID;
 typedef uint8_t Face;
 typedef UInt32 ReturnCode;
-typedef UInt64 TimeMS;
+typedef uint64_t TimeMS;
 
 typedef struct Rect2D_  { int X, Y, Width, Height; } Rect2D;
 typedef struct Point2D_ { int X, Y; } Point2D;

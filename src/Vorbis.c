@@ -367,22 +367,22 @@ struct Floor {
 	UInt8 ClassDimensions[FLOOR_MAX_CLASSES];
 	UInt8 ClassSubClasses[FLOOR_MAX_CLASSES];
 	UInt8 ClassMasterbooks[FLOOR_MAX_CLASSES];
-	Int16 SubclassBooks[FLOOR_MAX_CLASSES][8];
-	Int16 XList[FLOOR_MAX_VALUES];
+	int16_t SubclassBooks[FLOOR_MAX_CLASSES][8];
+	int16_t XList[FLOOR_MAX_VALUES];
 	uint16_t ListOrder[FLOOR_MAX_VALUES];
 	Int32 YList[VORBIS_MAX_CHANS][FLOOR_MAX_VALUES];
 };
 
 /* TODO: Make this thread safe */
-Int16* tmp_xlist;
+int16_t* tmp_xlist;
 uint16_t* tmp_order;
 static void Floor_SortXList(int left, int right) {
 	uint16_t* values = tmp_order; uint16_t value;
-	Int16* keys = tmp_xlist;    Int16 key;
+	int16_t* keys = tmp_xlist;    int16_t key;
 
 	while (left < right) {
 		int i = left, j = right;
-		Int16 pivot = keys[(i + j) / 2];
+		int16_t pivot = keys[(i + j) / 2];
 
 		/* partition the list */
 		while (i <= j) {
@@ -416,7 +416,7 @@ static ReturnCode Floor_DecodeSetup(struct VorbisState* ctx, struct Floor* f) {
 	}
 
 	f->Multiplier = Vorbis_ReadBits(ctx, 2) + 1;
-	static Int16 ranges[4] = { 256, 128, 84, 64 };
+	static int16_t ranges[4] = { 256, 128, 84, 64 };
 	f->Range = ranges[f->Multiplier - 1];
 
 	int rangeBits = Vorbis_ReadBits(ctx, 4);
@@ -464,7 +464,7 @@ static bool Floor_DecodeFrame(struct VorbisState* ctx, struct Floor* f, Int32 ch
 		}
 
 		for (j = 0; j < cdim; j++) {
-			Int16 bookNum = f->SubclassBooks[class][cval & csub];
+			int16_t bookNum = f->SubclassBooks[class][cval & csub];
 			cval >>= cbits;
 			if (bookNum >= 0) {
 				yList[idx + j] = Codebook_DecodeScalar(ctx, &ctx->Codebooks[bookNum]);
@@ -645,7 +645,7 @@ static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r
 	int j;
 	for (i = 0; i < r->Classifications; i++) {
 		for (j = 0; j < 8; j++) {
-			Int16 codebook = -1;
+			int16_t codebook = -1;
 			if (r->Cascade[i] & (1 << j)) {
 				codebook = Vorbis_ReadBits(ctx, 8);
 			}
@@ -695,7 +695,7 @@ static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, UInt3
 				for (j = 0; j < ch; j++) {
 					if (doNotDecode[j]) continue;
 					UInt8 class = classifications[j][partitionCount];
-					Int16 book = r->Books[class][pass];
+					int16_t book = r->Books[class][pass];
 					if (book < 0) continue;
 
 					UInt32 offset = residueBeg + partitionCount * r->PartitionSize;

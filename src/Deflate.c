@@ -219,7 +219,7 @@ static void Huffman_Build(struct HuffmanTable* table, UInt8* bitLens, int count)
 		*   - set fast value to specify a 'value' value, and to skip 'len' bits
 		*/
 		if (len <= INFLATE_FAST_BITS) {
-			Int16 packed = (Int16)((len << INFLATE_FAST_BITS) | value), j;
+			int16_t packed = (int16_t)((len << INFLATE_FAST_BITS) | value), j;
 			Int32 codeword = table->FirstCodewords[len] + (bl_offsets[len] - table->FirstOffsets[len]);
 			codeword <<= (INFLATE_FAST_BITS - len);
 

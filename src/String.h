@@ -56,7 +56,7 @@ bool String_Append(String* str, char c);
 NOINLINE_ bool String_AppendBool(String* str, bool value);
 NOINLINE_ bool String_AppendInt32(String* str, Int32 num);
 NOINLINE_ bool String_AppendUInt32(String* str, UInt32 num);
-NOINLINE_ bool String_AppendUInt64(String* str, UInt64 num);
+NOINLINE_ bool String_AppendUInt64(String* str, uint64_t num);
 NOINLINE_ bool String_AppendReal32(String* str, float num, Int32 fracDigits); /* TODO: Need to account for , or . for decimal */
 NOINLINE_ bool String_AppendConst(String* str, const char* src);
 NOINLINE_ bool String_AppendString(String* str, const String* src);
@@ -88,10 +88,10 @@ bool Convert_TryUnicodeToCP437(Codepoint cp, char* value);
 void String_DecodeUtf8(String* str, UInt8* data, UInt32 len);
 
 NOINLINE_ bool Convert_TryParseUInt8(const String*  str, UInt8* value);
-NOINLINE_ bool Convert_TryParseInt16(const String*  str, Int16* value);
+NOINLINE_ bool Convert_TryParseInt16(const String*  str, int16_t* value);
 NOINLINE_ bool Convert_TryParseUInt16(const String* str, uint16_t* value);
 NOINLINE_ bool Convert_TryParseInt32(const String*  str, Int32* value);
-NOINLINE_ bool Convert_TryParseUInt64(const String* str, UInt64* value);
+NOINLINE_ bool Convert_TryParseUInt64(const String* str, uint64_t* value);
 NOINLINE_ bool Convert_TryParseFloat(const String* str, float* value);
 NOINLINE_ bool Convert_TryParseBool(const String*   str, bool* value);
 

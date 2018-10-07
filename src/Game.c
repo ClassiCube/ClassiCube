@@ -535,7 +535,7 @@ void Game_Load(void) {
 	ServerConnection_BeginConnect();
 }
 
-UInt64 game_frameTimer;
+uint64_t game_frameTimer;
 void Game_SetFpsLimit(FpsLimit method) {
 	Game_FpsLimit = method;
 	game_limitMs  = Game_CalcLimitMillis(method);
@@ -736,7 +736,7 @@ void Game_Free(void* obj) {
 	Options_Save();
 }
 
-UInt64 game_renderTimer;
+uint64_t game_renderTimer;
 void Game_Run(int width, int height, const String* title, struct DisplayDevice* device) {
 	int x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
 	int y = device->Bounds.Y + (device->Bounds.Height - height) / 2;

@@ -40,10 +40,10 @@ int DateTime_TotalDays(DateTime* time) {
 
 TimeMS DateTime_TotalMs(DateTime* time) {
 	int days = DateTime_TotalDays(time);
-	UInt64 seconds =
-		(UInt64)days * DATETIME_SECONDS_PER_DAY +
-		time->Hour   * DATETIME_SECONDS_PER_HOUR +
-		time->Minute * DATETIME_SECONDS_PER_MINUTE +
+	uint64_t seconds =
+		(uint64_t)days * DATETIME_SECONDS_PER_DAY +
+		time->Hour     * DATETIME_SECONDS_PER_HOUR +
+		time->Minute   * DATETIME_SECONDS_PER_MINUTE +
 		time->Second;
 	return seconds * DATETIME_MILLIS_PER_SEC + time->Milli;
 }

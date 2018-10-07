@@ -186,7 +186,7 @@ bool String_AppendPaddedInt32(String* str, Int32 num, Int32 minDigits) {
 	return true;
 }
 
-Int32 String_MakeUInt64(UInt64 num, char* numBuffer) {
+Int32 String_MakeUInt64(uint64_t num, char* numBuffer) {
 	Int32 len = 0;
 	do {
 		numBuffer[len] = '0' + (num % 10); num /= 10; len++;
@@ -194,7 +194,7 @@ Int32 String_MakeUInt64(UInt64 num, char* numBuffer) {
 	return len;
 }
 
-bool String_AppendUInt64(String* str, UInt64 num) {
+bool String_AppendUInt64(String* str, uint64_t num) {
 	char numBuffer[STRING_INT_CHARS];
 	Int32 i, numLen = String_MakeUInt64(num, numBuffer);
 
@@ -247,7 +247,7 @@ NOINLINE_ static bool String_Hex32(String* str, UInt32 value) {
 	return appended;
 }
 
-NOINLINE_ static bool String_Hex64(String* str, UInt64 value) {
+NOINLINE_ static bool String_Hex64(String* str, uint64_t value) {
 	bool appended;
 	int shift;
 
@@ -459,7 +459,7 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 			if (sizeof(uintptr_t) == 4) {
 				String_Hex32(str, *((UInt32*)arg)); break;
 			} else {
-				String_Hex64(str, *((UInt64*)arg)); break;
+				String_Hex64(str, *((uint64_t*)arg)); break;
 			}
 		case 'h':
 			String_Hex32(str, *((UInt32*)arg)); break;
@@ -541,10 +541,10 @@ bool Convert_TryParseUInt8(const String* str, UInt8* value) {
 	*value = (UInt8)tmp; return true;
 }
 
-bool Convert_TryParseInt16(const String* str, Int16* value) {
+bool Convert_TryParseInt16(const String* str, int16_t* value) {
 	*value = 0; Int32 tmp;
 	if (!Convert_TryParseInt32(str, &tmp) || tmp < Int16_MinValue || tmp > Int16_MaxValue) return false;
-	*value = (Int16)tmp; return true;
+	*value = (int16_t)tmp; return true;
 }
 
 bool Convert_TryParseUInt16(const String* str, uint16_t* value) {
@@ -611,7 +611,7 @@ bool Convert_TryParseInt32(const String* str, Int32* value) {
 	return true;
 }
 
-bool Convert_TryParseUInt64(const String* str, UInt64* value) {
+bool Convert_TryParseUInt64(const String* str, uint64_t* value) {
 	*value = 0;
 	#define UINT64_DIGITS 20
 	bool negative;
@@ -621,7 +621,7 @@ bool Convert_TryParseUInt64(const String* str, UInt64* value) {
 	int i, compare = Convert_CompareDigits(digits, "18446744073709551615");
 	if (negative || compare > 0) return false;
 
-	UInt64 sum = 0;
+	uint64_t sum = 0;
 	for (i = 0; i < UINT64_DIGITS; i++) {
 		sum *= 10; sum += digits[i] - '0';
 	}

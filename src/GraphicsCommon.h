@@ -11,7 +11,7 @@ GfxResourceID GfxCommon_defaultIb;
 /* Contains the information necessary to describe a 2D textured quad. */
 struct Texture {
 	GfxResourceID ID;
-	Int16 X, Y; uint16_t Width, Height;
+	int16_t X, Y; uint16_t Width, Height;
 	float U1, V1, U2, V2;
 };
 #define TEX_RECT(x,y, width,height) x,y,width,height

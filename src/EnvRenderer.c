@@ -341,7 +341,7 @@ double weather_accumulator;
 Vector3I weather_lastPos;
 
 static void EnvRenderer_InitWeatherHeightmap(void) {
-	Weather_Heightmap = Mem_Alloc(World_Width * World_Length, sizeof(Int16), "weather heightmap");
+	Weather_Heightmap = Mem_Alloc(World_Width * World_Length, 2, "weather heightmap");
 	int i;
 	for (i = 0; i < World_Width * World_Length; i++) {
 		Weather_Heightmap[i] = Int16_MaxValue;

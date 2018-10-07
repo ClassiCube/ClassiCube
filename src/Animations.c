@@ -140,7 +140,7 @@ struct AnimationData {
 	uint16_t FrameSize;      /* Size of each frame in pixel coordinates */
 	uint16_t State;          /* Current animation frame index */
 	uint16_t StatesCount;    /* Total number of animation frames */
-	Int16 Tick, TickDelay;
+	int16_t  Tick, TickDelay;
 };
 
 Bitmap anims_bmp;

@@ -43,7 +43,7 @@ Int32 Math_NextPowOf2(Int32 value);
 bool Math_IsPowOf2(Int32 value);
 #define Math_Clamp(val, min, max) val = val < (min) ? (min) : val;  val = val > (max) ? (max) : val;
 
-typedef UInt64 Random;
+typedef uint64_t Random;
 void Random_Init(Random* rnd, Int32 seed);
 void Random_InitFromCurrentTime(Random* rnd);
 void Random_SetSeed(Random* rnd, Int32 seed);

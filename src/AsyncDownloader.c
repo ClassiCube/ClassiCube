@@ -193,7 +193,7 @@ bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, int* progress) {
 static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	String url = String_FromRawArray(request->URL);
 	Platform_Log2("Downloading from %s (type %b)", &url, &request->RequestType);
-	UInt64 timer;
+	uint64_t timer;
 
 	Stopwatch_Measure(&timer);
 	request->Result = Http_Do(request, &async_curProgress);

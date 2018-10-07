@@ -47,8 +47,8 @@ enum FONT_STYLE { FONT_STYLE_NORMAL, FONT_STYLE_BOLD, FONT_STYLE_UNDERLINE };
 #define DRAWER2D_MAX_COLS 256
 
 #define UInt8_MaxValue  ((UInt8)255)
-#define Int16_MinValue  ((Int16)-32768)
-#define Int16_MaxValue  ((Int16)32767)
+#define Int16_MinValue  ((int16_t)-32768)
+#define Int16_MaxValue  ((int16_t)32767)
 #define UInt16_MaxValue ((uint16_t)65535)
 #define Int32_MinValue  ((Int32)-2147483647L - (Int32)1L)
 #define Int32_MaxValue  ((Int32)2147483647L)
