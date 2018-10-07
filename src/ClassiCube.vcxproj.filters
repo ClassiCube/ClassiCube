@@ -518,9 +518,6 @@
     <ClCompile Include="_ftcid.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="_ftfstype.c">
-      <Filter>Source Files\Freetype</Filter>
-    </ClCompile>
     <ClCompile Include="_ftgasp.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>

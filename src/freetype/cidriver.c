@@ -82,19 +82,10 @@
     return FT_Err_Ok;
   }
 
-  static FT_Error
-  cid_ps_get_font_extra( FT_Face          face,
-                        PS_FontExtraRec*  afont_extra )
-  {
-    *afont_extra = ((CID_Face)face)->font_extra;
-
-    return FT_Err_Ok;
-  }
-
   static const FT_Service_PsInfoRec  cid_service_ps_info =
   {
     (PS_GetFontInfoFunc)   cid_ps_get_font_info,   /* ps_get_font_info    */
-    (PS_GetFontExtraFunc)  cid_ps_get_font_extra,  /* ps_get_font_extra   */
+    (PS_GetFontExtraFunc)  NULL,                   /* ps_get_font_extra   */
     /* unsupported with CID fonts */
     (PS_HasGlyphNamesFunc) NULL,                   /* ps_has_glyph_names  */
     /* unsupported                */

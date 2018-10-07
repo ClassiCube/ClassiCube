@@ -322,7 +322,6 @@
     <ClCompile Include="_ftbitmap.c" />
     <ClCompile Include="_ftcache.c" />
     <ClCompile Include="_ftcid.c" />
-    <ClCompile Include="_ftfstype.c" />
     <ClCompile Include="_ftgasp.c" />
     <ClCompile Include="_ftglyph.c" />
     <ClCompile Include="_ftinit.c" />
