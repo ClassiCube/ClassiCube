@@ -807,7 +807,7 @@ static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) 
 	Model_ApplyTexture(entity);
 	Gfx_SetAlphaTest(false);
 
-	uint8_t type = Model_skinType;
+	int type = Model_skinType;
 	struct ModelLimbs* set = &model->Limbs[type == SKIN_64x64_SLIM ? 2 : (type == SKIN_64x64 ? 1 : 0)];
 
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &model->Head, true);
@@ -837,7 +837,7 @@ static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) 
 }
 
 static void HumanModel_DrawArm(struct Entity* entity, struct ModelSet* model) {
-	uint8_t type = Model_skinType;
+	int type = Model_skinType;
 	struct ModelLimbs* set = &model->Limbs[type == SKIN_64x64_SLIM ? 2 : (type == SKIN_64x64 ? 1 : 0)];
 
 	Model_DrawArmPart(&set->RightArm);

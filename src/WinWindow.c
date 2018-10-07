@@ -22,7 +22,7 @@
 HINSTANCE win_Instance;
 HWND win_Handle;
 HDC win_DC;
-uint8_t win_State = WINDOW_STATE_NORMAL;
+int win_State = WINDOW_STATE_NORMAL;
 bool invisible_since_creation; /* Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront) */
 int suppress_resize; /* Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events */
 Rect2D prev_bounds; /* Used to restore previous size when leaving fullscreen mode */
@@ -60,7 +60,7 @@ static void Window_DoSetHiddenBorder(bool value) {
 
 	/* To ensure maximized/minimized windows work correctly, reset state to normal,
 	change the border, then go back to maximized/minimized. */
-	uint8_t state = win_State;
+	int state = win_State;
 	Window_ResetWindowState();
 	DWORD style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 	style |= (value ? WS_POPUP : WS_OVERLAPPEDWINDOW);
@@ -224,7 +224,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_SIZE:
 	{
-		uint8_t new_state = win_State;
+		int new_state = win_State;
 		switch (wParam) {
 		case SIZE_RESTORED:  new_state = WINDOW_STATE_NORMAL; break;
 		case SIZE_MINIMIZED: new_state = WINDOW_STATE_MINIMISED; break;
@@ -533,8 +533,8 @@ void Window_Close(void) {
 	PostMessageW(win_Handle, WM_CLOSE, 0, 0);
 }
 
-uint8_t Window_GetWindowState(void) { return win_State; }
-void Window_SetWindowState(uint8_t state) {
+int Window_GetWindowState(void) { return win_State; }
+void Window_SetWindowState(int state) {
 	if (win_State == state) return;
 
 	DWORD command = 0;

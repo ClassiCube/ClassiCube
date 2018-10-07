@@ -45,8 +45,8 @@ bool Window_Exists, Window_Focused;
 bool Window_GetVisible(void);
 void Window_SetVisible(bool visible);
 void* Window_GetWindowHandle(void);
-uint8_t Window_GetWindowState(void);
-void Window_SetWindowState(uint8_t value);
+int Window_GetWindowState(void);
+void Window_SetWindowState(int value);
 
 Rect2D Window_Bounds;
 Size2D Window_ClientSize;

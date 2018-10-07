@@ -51,13 +51,12 @@ struct Sound {
 
 #define AUDIO_MAX_SOUNDS 10
 struct SoundGroup {
-	char NameBuffer[16];
-	String Name; uint8_t Count;
+	String Name; int Count;
 	struct Sound Sounds[AUDIO_MAX_SOUNDS];
 };
 
 struct Soundboard {
-	Random Rnd; uint8_t Count;
+	Random Rnd; int Count;
 	struct SoundGroup Groups[AUDIO_MAX_SOUNDS];
 };
 
@@ -122,7 +121,7 @@ static struct SoundGroup* Soundboard_Find(struct Soundboard* board, const String
 	int i;
 	struct SoundGroup* groups = board->Groups;
 
-	for (i = 0; i < Array_Elems(board->Groups); i++) {
+	for (i = 0; i < board->Count; i++) {
 		if (String_CaselessEquals(&groups[i].Name, name)) return &groups[i];
 	}
 	return NULL;
@@ -146,11 +145,10 @@ static void Soundboard_Init(struct Soundboard* board, const String* boardName, S
 			if (board->Count == Array_Elems(board->Groups)) {
 				Chat_AddRaw("&cCannot have more than 10 sound groups"); return;
 			}
-			group = &board->Groups[board->Count++];
 
-			String str = String_FromArray(group->NameBuffer);
-			String_Copy(&str, &name);
-			group->Name = str;
+			group = &board->Groups[board->Count++];
+			/* NOTE: This keeps a reference to inside buffer of files */
+			group->Name = name;
 		}
 
 		if (group->Count == Array_Elems(group->Sounds)) {

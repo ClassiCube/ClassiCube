@@ -161,7 +161,7 @@ struct TexPackOverlay {
 /*########################################################################################################################*
 *--------------------------------------------------------Menu base--------------------------------------------------------*
 *#########################################################################################################################*/
-static void Menu_Button(void* s, int i, struct ButtonWidget* btn, int width, const String* text, FontDesc* font, Widget_LeftClick onClick, uint8_t horAnchor, uint8_t verAnchor, int x, int y) {
+static void Menu_Button(void* s, int i, struct ButtonWidget* btn, int width, const String* text, FontDesc* font, Widget_LeftClick onClick, int horAnchor, int verAnchor, int x, int y) {
 	struct Menu* menu = (struct Menu*)s;
 	ButtonWidget_Create(btn, width, text, font, onClick);
 
@@ -169,7 +169,7 @@ static void Menu_Button(void* s, int i, struct ButtonWidget* btn, int width, con
 	Widget_SetLocation(menu->Widgets[i], horAnchor, verAnchor, x, y);
 }
 
-static void Menu_Label(void* s, int i, struct TextWidget* label, const String* text, FontDesc* font, uint8_t horAnchor, uint8_t verAnchor, int x, int y) {
+static void Menu_Label(void* s, int i, struct TextWidget* label, const String* text, FontDesc* font, int horAnchor, int verAnchor, int x, int y) {
 	struct Menu* menu = (struct Menu*)s;
 	TextWidget_Create(label, text, font);
 
@@ -177,7 +177,7 @@ static void Menu_Label(void* s, int i, struct TextWidget* label, const String* t
 	Widget_SetLocation(menu->Widgets[i], horAnchor, verAnchor, x, y);
 }
 
-static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width, const String* text, FontDesc* font, struct MenuInputValidator* v, uint8_t horAnchor, uint8_t verAnchor, int x, int y) {
+static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width, const String* text, FontDesc* font, struct MenuInputValidator* v, int horAnchor, int verAnchor, int x, int y) {
 	struct Menu* menu = (struct Menu*)s;
 	MenuInputWidget_Create(input, width, 30, text, font, v);
 
@@ -783,8 +783,8 @@ static void EditHotkeyScreen_Make(struct EditHotkeyScreen* s, int i, int x, int 
 		ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
 }
 
-static void HotkeyListScreen_MakeFlags(uint8_t flags, String* str);
-static void EditHotkeyScreen_MakeFlags(uint8_t flags, String* str) {
+static void HotkeyListScreen_MakeFlags(int flags, String* str);
+static void EditHotkeyScreen_MakeFlags(int flags, String* str) {
 	if (flags == 0) String_AppendConst(str, " None");
 	HotkeyListScreen_MakeFlags(flags, str);
 }
@@ -1491,7 +1491,7 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	}
 
 	String key = text, value;
-	uint8_t flags = 0;
+	int flags = 0;
 
 	if (String_UNSAFE_Separate(&text, '+', &key, &value)) {
 		String ctrl  = String_FromConst("Ctrl");
@@ -1514,7 +1514,7 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	Gui_SetActive(EditHotkeyScreen_MakeInstance(original));
 }
 
-static void HotkeyListScreen_MakeFlags(uint8_t flags, String* str) {
+static void HotkeyListScreen_MakeFlags(int flags, String* str) {
 	if (flags & HOTKEYS_FLAG_CTRL)  String_AppendConst(str, " Ctrl");
 	if (flags & HOTKEYS_FLAG_SHIFT) String_AppendConst(str, " Shift");
 	if (flags & HOTKEYS_FLAG_ALT)   String_AppendConst(str, " Alt");

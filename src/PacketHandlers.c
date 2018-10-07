@@ -775,7 +775,7 @@ static void CPE_WriteCustomBlockLevel(uint8_t version) {
 	ServerConnection_WriteBuffer = data;
 }
 
-static void CPE_WriteTwoWayPing(bool serverToClient, uint16_t payload) {
+static void CPE_WriteTwoWayPing(bool serverToClient, int payload) {
 	uint8_t* data = ServerConnection_WriteBuffer; 
 	*data++ = OPCODE_TWO_WAY_PING;
 	{
@@ -1032,9 +1032,9 @@ static void CPE_RemoveSelection(uint8_t* data) {
 
 static void CPE_SetEnvCol(uint8_t* data) {
 	uint8_t variable = *data++;
-	uint16_t r = Stream_GetU16_BE(&data[0]);
-	uint16_t g = Stream_GetU16_BE(&data[2]);
-	uint16_t b = Stream_GetU16_BE(&data[4]);
+	int r = Stream_GetU16_BE(&data[0]);
+	int g = Stream_GetU16_BE(&data[2]);
+	int b = Stream_GetU16_BE(&data[4]);
 	bool invalid = r > 255 || g > 255 || b > 255;
 	PackedCol col = PACKEDCOL_CONST((uint8_t)r, (uint8_t)g, (uint8_t)b, 255);
 
@@ -1267,7 +1267,7 @@ static void CPE_SetEntityProperty(uint8_t* data) {
 
 static void CPE_TwoWayPing(uint8_t* data) {
 	uint8_t serverToClient = *data++;
-	uint16_t payload       = Stream_GetU16_BE(data);
+	int payload = Stream_GetU16_BE(data);
 
 	if (serverToClient) {
 		CPE_WriteTwoWayPing(true, payload); /* server to client reply */

@@ -288,7 +288,7 @@ void Window_SetVisible(bool visible) {
 
 void* Window_GetWindowHandle(void) { return win_handle; }
 
-uint8_t Window_GetWindowState(void) {
+int Window_GetWindowState(void) {
 	Atom prop_type;
 	unsigned long items, after;
 	int prop_format;
@@ -339,8 +339,8 @@ void Window_SendNetWMState(long op, Atom a1, Atom a2) {
 		SubstructureRedirectMask | SubstructureNotifyMask, &ev);
 }
 
-void Window_SetWindowState(uint8_t state) {
-	uint8_t current_state = Window_GetWindowState();
+void Window_SetWindowState(int state) {
+	int current_state = Window_GetWindowState();
 	if (current_state == state) return;
 
 	/* Reset the current window state */

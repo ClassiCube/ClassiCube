@@ -180,7 +180,7 @@ NOINLINE_ void TextGroupWidget_SetText(struct TextGroupWidget* w, int index, con
 struct PlayerListWidget {
 	Widget_Layout
 	FontDesc Font;
-	uint16_t NamesCount, ElementOffset;
+	int NamesCount, ElementOffset;
 	int XMin, XMax, YHeight;
 	bool Classic;
 	struct TextWidget Overview;
