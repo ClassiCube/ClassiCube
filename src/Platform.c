@@ -726,7 +726,7 @@ void Font_GetNames(StringsBuffer* buffer) {
 	}
 }
 
-void Font_Make(FontDesc* desc, const String* fontName, uint16_t size, uint16_t style) {
+void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 	desc->Size  = size;
 	desc->Style = style;
 	if (!norm_fonts.Count) Font_Init();

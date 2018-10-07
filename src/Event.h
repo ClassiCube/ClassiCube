@@ -13,43 +13,43 @@ struct Stream;
 typedef void (*Event_Void_Callback)(void* obj);
 struct Event_Void {
 	Event_Void_Callback Handlers[EVENT_MAX_CALLBACKS]; 
-	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
+	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
 typedef void (*Event_Int_Callback)(void* obj, int argument);
 struct Event_Int {
 	Event_Int_Callback Handlers[EVENT_MAX_CALLBACKS];
-	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
+	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
 typedef void (*Event_Float_Callback)(void* obj, float argument);
 struct Event_Float {
 	Event_Float_Callback Handlers[EVENT_MAX_CALLBACKS];
-	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
+	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
 typedef void (*Event_Entry_Callback)(void* obj, struct Stream* stream, const String* name);
 struct Event_Entry {
 	Event_Entry_Callback Handlers[EVENT_MAX_CALLBACKS];
-	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
+	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
 typedef void (*Event_Block_Callback)(void* obj, Vector3I coords, BlockID oldBlock, BlockID block);
 struct Event_Block {
 	Event_Block_Callback Handlers[EVENT_MAX_CALLBACKS];
-	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
+	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
 typedef void (*Event_MouseMove_Callback)(void* obj, int xDelta, int yDelta);
 struct Event_MouseMove {
 	Event_MouseMove_Callback Handlers[EVENT_MAX_CALLBACKS];
-	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
+	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
 typedef void (*Event_Chat_Callback)(void* obj, const String* msg, int msgType);
 struct Event_Chat {
 	Event_Chat_Callback Handlers[EVENT_MAX_CALLBACKS];
-	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
+	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
 void Event_RaiseVoid(struct Event_Void* handlers);

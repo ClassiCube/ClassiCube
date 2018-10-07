@@ -87,7 +87,7 @@ void  Waitable_Wait(void* handle);
 void  Waitable_WaitFor(void* handle, UInt32 milliseconds);
 
 NOINLINE_ void Font_GetNames(StringsBuffer* buffer);
-NOINLINE_ void Font_Make(FontDesc* desc, const String* fontName, uint16_t size, uint16_t style);
+NOINLINE_ void Font_Make(FontDesc* desc, const String* fontName, int size, int style);
 NOINLINE_ void Font_Free(FontDesc* desc);
 NOINLINE_ Size2D Platform_TextMeasure(struct DrawTextArgs* args);
 NOINLINE_ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, PackedCol col);

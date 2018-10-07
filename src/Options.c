@@ -100,7 +100,7 @@ float Options_GetFloat(const char* key, float min, float max, float defValue) {
 	return value;
 }
 
-UInt32 Options_GetEnum(const char* key, UInt32 defValue, const char** names, UInt32 namesCount) {
+int Options_GetEnum(const char* key, int defValue, const char** names, int namesCount) {
 	String str;
 	if (!Options_TryGetValue(key, &str)) return defValue;
 	return Utils_ParseEnum(&str, defValue, names, namesCount);

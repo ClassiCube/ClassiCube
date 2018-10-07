@@ -459,7 +459,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	net_ticks++;
 }
 
-void Net_Set(uint8_t opcode, Net_Handler handler, uint16_t packetSize) {
+void Net_Set(uint8_t opcode, Net_Handler handler, int packetSize) {
 	Net_Handlers[opcode]    = handler;
 	Net_PacketSizes[opcode] = packetSize;
 }

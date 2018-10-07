@@ -76,11 +76,11 @@ StringsBuffer Options_Values;
 NOINLINE_ bool Options_HasAnyChanged(void);
 NOINLINE_ void Options_Free(void);
 
-NOINLINE_ void Options_Get(const char*        key, String* value, const char* defValue);
-NOINLINE_ int  Options_GetInt(const char*     key, int min, int max, int defValue);
-NOINLINE_ bool Options_GetBool(const char*    key, bool defValue);
-NOINLINE_ float Options_GetFloat(const char*  key, float min, float max, float defValue);
-NOINLINE_ UInt32 Options_GetEnum(const char*  key, UInt32 defValue, const char** names, UInt32 namesCount);
+NOINLINE_ void Options_Get(const char*       key, String* value, const char* defValue);
+NOINLINE_ int  Options_GetInt(const char*    key, int min, int max, int defValue);
+NOINLINE_ bool Options_GetBool(const char*   key, bool defValue);
+NOINLINE_ float Options_GetFloat(const char* key, float min, float max, float defValue);
+NOINLINE_ int   Options_GetEnum(const char*  key, int defValue, const char** names, int namesCount);
 
 NOINLINE_ void Options_SetBool(const char* keyRaw,  bool value);
 NOINLINE_ void Options_SetInt(const char*  keyRaw,  int value);

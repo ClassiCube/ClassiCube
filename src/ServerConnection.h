@@ -72,6 +72,6 @@ void ServerConnection_MakeComponent(struct IGameComponent* comp);
 typedef void (*Net_Handler)(uint8_t* data);
 uint16_t Net_PacketSizes[OPCODE_COUNT];
 Net_Handler Net_Handlers[OPCODE_COUNT];
-void Net_Set(uint8_t opcode, Net_Handler handler, uint16_t size);
+void Net_Set(uint8_t opcode, Net_Handler handler, int size);
 void Net_SendPacket(void);
 #endif

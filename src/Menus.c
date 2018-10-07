@@ -1913,7 +1913,7 @@ static void MenuOptionsScreen_GetFPS(String* raw) {
 	String_AppendConst(raw, FpsLimit_Names[Game_FpsLimit]);
 }
 static void MenuOptionsScreen_SetFPS(const String* raw) {
-	UInt32 method = Utils_ParseEnum(raw, FpsLimit_VSync, FpsLimit_Names, Array_Elems(FpsLimit_Names));
+	int method = Utils_ParseEnum(raw, FpsLimit_VSync, FpsLimit_Names, Array_Elems(FpsLimit_Names));
 	Game_SetFpsLimit(method);
 
 	String value = String_FromReadonly(FpsLimit_Names[method]);
@@ -2125,13 +2125,13 @@ static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 
 	struct MenuInputValidator* v = &s->Validators[index];
 	const char** names = v->Meta_Enum.Names;
-	UInt32 count = v->Meta_Enum.Count;
+	int count = v->Meta_Enum.Count;
 
 	char valueBuffer[STRING_SIZE];
 	String value = String_FromArray(valueBuffer);
 	btn->GetValue(&value);
 
-	UInt32 raw = (Utils_ParseEnum(&value, 0, names, count) + 1) % count;
+	int raw = (Utils_ParseEnum(&value, 0, names, count) + 1) % count;
 	String newValue = String_FromReadonly(names[raw]);
 	MenuOptionsScreen_Set(s, index, &newValue);
 }
@@ -2221,7 +2221,7 @@ static void ClassicOptionsScreen_GetViewDist(String* v) {
 	}
 }
 static void ClassicOptionsScreen_SetViewDist(const String* v) {
-	UInt32 raw = Utils_ParseEnum(v, 0, ViewDist_Names, ViewDist_Count);
+	int raw  = Utils_ParseEnum(v, 0, ViewDist_Names, ViewDist_Count);
 	int dist = raw == ViewDist_Far ? 512 : (raw == ViewDist_Normal ? 128 : (raw == ViewDist_Short ? 32 : 8));
 	Game_UserSetViewDistance(dist);
 }
@@ -2322,7 +2322,7 @@ static void EnvSettingsScreen_SetShadowCol(const String* v) { Env_SetShadowCol(M
 
 static void EnvSettingsScreen_GetWeather(String* v) { String_AppendConst(v, Weather_Names[Env_Weather]); }
 static void EnvSettingsScreen_SetWeather(const String* v) {
-	UInt32 raw = Utils_ParseEnum(v, 0, Weather_Names, Array_Elems(Weather_Names));
+	int raw = Utils_ParseEnum(v, 0, Weather_Names, Array_Elems(Weather_Names));
 	Env_SetWeather(raw); 
 }
 

@@ -110,7 +110,7 @@ struct TextAtlas {
 	struct Texture Tex;
 	int Offset, CurX, FontSize;
 	float uScale;
-	Int32 Widths[TEXTATLAS_MAX_WIDTHS];
+	int16_t Widths[TEXTATLAS_MAX_WIDTHS];
 };
 void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, FontDesc* font, const String* prefix);
 void TextAtlas_Free(struct TextAtlas* atlas);

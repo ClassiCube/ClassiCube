@@ -25,7 +25,7 @@ typedef void (*Button_Set)(const String* raw);
 struct ButtonWidget {
 	Widget_Layout
 	struct Texture Texture;
-	uint16_t MinWidth;
+	int MinWidth;
 
 	const char* OptName;
 	Button_Get GetValue;
@@ -93,12 +93,12 @@ struct InputWidget {
 	Size2D LineSizes[INPUTWIDGET_MAX_LINES]; /* size of each line in pixels */
 	struct Texture InputTex;
 	String Prefix;
-	uint16_t PrefixWidth, PrefixHeight;
+	int PrefixWidth, PrefixHeight;
 	bool ConvertPercents;
 
 	uint8_t Padding;
 	bool ShowCaret;
-	uint16_t CaretWidth;
+	int CaretWidth;
 	int CaretX, CaretY; /* Coordinates of caret in lines */
 	int CaretPos;       /* Position of caret, -1 for at end of string */
 	PackedCol CaretCol;
@@ -122,7 +122,7 @@ struct MenuInputValidatorVTABLE {
 struct MenuInputValidator {
 	struct MenuInputValidatorVTABLE* VTABLE;
 	union {
-		struct { const char** Names; UInt32 Count; } Meta_Enum;
+		struct { const char** Names; int Count; } Meta_Enum;
 		struct { int Min, Max; } Meta_Int;
 		struct { float Min, Max; } Meta_Float;
 	};
@@ -133,7 +133,7 @@ struct MenuInputValidator MenuInputValidator_Int(int min, int max);
 struct MenuInputValidator MenuInputValidator_Seed(void);
 struct MenuInputValidator MenuInputValidator_Float(float min, float max);
 struct MenuInputValidator MenuInputValidator_Path(void);
-struct MenuInputValidator MenuInputValidator_Enum(const char** names, UInt32 namesCount);
+struct MenuInputValidator MenuInputValidator_Enum(const char** names, int namesCount);
 struct MenuInputValidator MenuInputValidator_String(void);
 
 struct MenuInputWidget {

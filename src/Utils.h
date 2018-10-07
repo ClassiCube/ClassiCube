@@ -22,7 +22,7 @@ TimeMS DateTime_TotalMs(DateTime* time);
 void DateTime_FromTotalMs(DateTime* time, TimeMS ms);
 void DateTime_HttpDate(TimeMS ms, String* str);
 
-UInt32 Utils_ParseEnum(const String* text, UInt32 defValue, const char** names, UInt32 namesCount);
+NOINLINE_ int Utils_ParseEnum(const String* text, int defValue, const char** names, int namesCount);
 bool Utils_IsValidInputChar(char c, bool supportsCP437);
 bool Utils_IsUrlPrefix(const String* value, int index);
 

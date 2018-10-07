@@ -20,7 +20,7 @@ void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, FontDesc* font, bool useS
 	args->UseShadow = useShadow;
 }
 
-void Drawer2D_MakeFont(FontDesc* desc, uint16_t size, uint16_t style) {
+void Drawer2D_MakeFont(FontDesc* desc, int size, int style) {
 	if (Drawer2D_BitmappedText) {
 		desc->Handle = NULL;
 		desc->Size   = size;

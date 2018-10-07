@@ -98,8 +98,8 @@ void DateTime_HttpDate(TimeMS ms, String* str) {
 	String_Format3(str, " %p2:%p2:%p2 GMT", &hour, &min, &sec);
 }
 
-UInt32 Utils_ParseEnum(const String* text, UInt32 defValue, const char** names, UInt32 namesCount) {
-	UInt32 i;
+int Utils_ParseEnum(const String* text, int defValue, const char** names, int namesCount) {
+	int i;
 	for (i = 0; i < namesCount; i++) {
 		if (String_CaselessEqualsConst(text, names[i])) return i;
 	}

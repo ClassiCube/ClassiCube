@@ -1399,7 +1399,7 @@ struct MenuInputValidator MenuInputValidator_Path(void) {
 	return v;
 }
 
-struct MenuInputValidator MenuInputValidator_Enum(const char** names, UInt32 namesCount) {
+struct MenuInputValidator MenuInputValidator_Enum(const char** names, int namesCount) {
 	struct MenuInputValidator v;
 	v.VTABLE          = NULL;
 	v.Meta_Enum.Names = names;
@@ -1934,7 +1934,7 @@ static void PlayerListWidget_DeleteGroup(struct PlayerListWidget* w, int* i) {
 	(*i)--;
 }
 
-static void PlayerListWidget_AddGroup(struct PlayerListWidget* w, uint16_t id, int* index) {
+static void PlayerListWidget_AddGroup(struct PlayerListWidget* w, int id, int* index) {
 	int i;
 	for (i = Array_Elems(w->IDs) - 1; i > (*index); i--) {
 		w->IDs[i]      = w->IDs[i - 1];
@@ -1949,7 +1949,7 @@ static void PlayerListWidget_AddGroup(struct PlayerListWidget* w, uint16_t id, i
 	w->NamesCount++;
 }
 
-static int PlayerListWidget_GetGroupCount(struct PlayerListWidget* w, uint16_t id, int idx) {
+static int PlayerListWidget_GetGroupCount(struct PlayerListWidget* w, int id, int idx) {
 	String group = TabList_UNSAFE_GetGroup(id);
 	int count = 0;
 
@@ -2029,7 +2029,7 @@ static void PlayerListWidget_SortEntries(struct PlayerListWidget* w) {
 	i = 0;
 	List_SortCompare = PlayerListWidget_PlayerCompare;
 	while (i < w->NamesCount) {
-		uint16_t id = w->IDs[i];
+		int id = w->IDs[i];
 		PlayerListWidget_AddGroup(w, id, &i);
 		int count = PlayerListWidget_GetGroupCount(w, id, i);
 		PlayerListWidget_QuickSort(i, i + (count - 1));

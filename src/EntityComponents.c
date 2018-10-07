@@ -514,7 +514,7 @@ static void ShadowComponent_DrawCircle(VertexP3fT2fC4b** vertices, struct Entity
 	Vector3 min = Block_MinBB[data[0].Block], max = Block_MaxBB[data[0].Block];
 
 	ShadowComponent_DrawCoords(vertices, entity, &data[0], x + min.X, z + min.Z, x + max.X, z + max.Z);
-	UInt32 i;
+	int i;
 	for (i = 1; i < 4; i++) {
 		if (data[i].Block == BLOCK_AIR) return;
 		Vector3 nMin = Block_MinBB[data[i].Block], nMax = Block_MaxBB[data[i].Block];

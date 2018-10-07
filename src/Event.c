@@ -2,7 +2,7 @@
 #include "ErrorHandler.h"
 
 static void Event_RegisterImpl(struct Event_Void* handlers, void* obj, Event_Void_Callback handler) {
-	UInt32 i;
+	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		if (handlers->Handlers[i] == handler && handlers->Objs[i] == obj) {
 			ErrorHandler_Fail("Attempt to register event handler that was already registered");
@@ -19,7 +19,7 @@ static void Event_RegisterImpl(struct Event_Void* handlers, void* obj, Event_Voi
 }
 
 static void Event_UnregisterImpl(struct Event_Void* handlers, void* obj, Event_Void_Callback handler) {
-	UInt32 i, j;
+	int i, j;
 	for (i = 0; i < handlers->Count; i++) {
 		if (handlers->Handlers[i] != handler || handlers->Objs[i] != obj) continue;
 
@@ -38,7 +38,7 @@ static void Event_UnregisterImpl(struct Event_Void* handlers, void* obj, Event_V
 }
 
 void Event_RaiseVoid(struct Event_Void* handlers) {
-	UInt32 i;
+	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i]);
 	}
@@ -51,7 +51,7 @@ void Event_UnregisterVoid(struct Event_Void* handlers, void* obj, Event_Void_Cal
 }
 
 void Event_RaiseInt(struct Event_Int* handlers, int arg) {
-	UInt32 i;
+	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], arg);
 	}
@@ -64,7 +64,7 @@ void Event_UnregisterInt(struct Event_Int* handlers, void* obj, Event_Int_Callba
 }
 
 void Event_RaiseFloat(struct Event_Float* handlers, float arg) {
-	UInt32 i;
+	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], arg);
 	}
@@ -78,7 +78,7 @@ void Event_UnregisterFloat(struct Event_Float* handlers, void* obj, Event_Float_
 }
 
 void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, const String* name) {
-	UInt32 i;
+	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], stream, name);
 	}
@@ -91,7 +91,7 @@ void Event_UnregisterEntry(struct Event_Entry* handlers, void* obj, Event_Entry_
 }
 
 void Event_RaiseBlock(struct Event_Block* handlers, Vector3I coords, BlockID oldBlock, BlockID block) {
-	UInt32 i;
+	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], coords, oldBlock, block);
 	}
@@ -104,7 +104,7 @@ void Event_UnregisterBlock(struct Event_Block* handlers, void* obj, Event_Block_
 }
 
 void Event_RaiseMouseMove(struct Event_MouseMove* handlers, int xDelta, int yDelta) {
-	UInt32 i;
+	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], xDelta, yDelta);
 	}
@@ -117,7 +117,7 @@ void Event_UnregisterMouseMove(struct Event_MouseMove* handlers, void* obj, Even
 }
 
 void Event_RaiseChat(struct Event_Chat* handlers, const String* msg, int msgType) {
-	UInt32 i;
+	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], msg, msgType);
 	}

@@ -219,6 +219,7 @@ struct NbtTag {
 	union {
 		uint8_t  Value_U8;
 		int16_t  Value_I16;
+		uint16_t Value_U16;
 		int32_t  Value_I32;
 		float    Value_F32;
 		uint8_t  DataSmall[NBT_SMALL_SIZE];
@@ -234,6 +235,11 @@ static uint8_t NbtTag_U8(struct NbtTag* tag) {
 static int16_t NbtTag_I16(struct NbtTag* tag) {
 	if (tag->TagID != NBT_I16) ErrorHandler_Fail("Expected I16 NBT tag");
 	return tag->Value_I16;
+}
+
+static uint16_t NbtTag_U16(struct NbtTag* tag) {
+	if (tag->TagID != NBT_I16) ErrorHandler_Fail("Expected I16 NBT tag");
+	return tag->Value_U16;
 }
 
 static float NbtTag_F32(struct NbtTag* tag) {
@@ -359,9 +365,9 @@ static bool IsTag(struct NbtTag* tag, const char* tagName) {
 *--------------------------------------------------ClassicWorld format----------------------------------------------------*
 *#########################################################################################################################*/
 static bool Cw_Callback_1(struct NbtTag* tag) {
-	if (IsTag(tag, "X")) { World_Width  = (uint16_t)NbtTag_I16(tag); return true; }
-	if (IsTag(tag, "Y")) { World_Height = (uint16_t)NbtTag_I16(tag); return true; }
-	if (IsTag(tag, "Z")) { World_Length = (uint16_t)NbtTag_I16(tag); return true; }
+	if (IsTag(tag, "X")) { World_Width  = NbtTag_U16(tag); return true; }
+	if (IsTag(tag, "Y")) { World_Height = NbtTag_U16(tag); return true; }
+	if (IsTag(tag, "Z")) { World_Length = NbtTag_U16(tag); return true; }
 
 	if (IsTag(tag, "UUID")) {
 		if (tag->DataSize != sizeof(World_Uuid)) ErrorHandler_Fail("Map UUID must be 16 bytes");
@@ -395,15 +401,13 @@ static bool Cw_Callback_2(struct NbtTag* tag) {
 }
 
 BlockID cw_curID;
-int16_t cw_colR, cw_colG, cw_colB;
+uint16_t cw_colR, cw_colG, cw_colB;
 static PackedCol Cw_ParseCol(PackedCol defValue) {
-	int16_t r = cw_colR, g = cw_colG, b = cw_colB;
-	if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
-		return defValue;
-	} else {
-		PackedCol col = PACKEDCOL_CONST((uint8_t)r, (uint8_t)g, (uint8_t)b, 255);
-		return col;		
-	}
+	uint16_t r = cw_colR, g = cw_colG, b = cw_colB;
+	if (r > 255 || g > 255 || b > 255) return defValue;
+
+	PackedCol col = PACKEDCOL_CONST((uint8_t)r, (uint8_t)g, (uint8_t)b, 255);
+	return col;		
 }
 
 static bool Cw_Callback_4(struct NbtTag* tag) {
@@ -412,7 +416,7 @@ static bool Cw_Callback_4(struct NbtTag* tag) {
 	struct LocalPlayer*p = &LocalPlayer_Instance;
 
 	if (IsTag(tag->Parent, "ClickDistance")) {
-		if (IsTag(tag, "Distance")) { p->ReachDistance = NbtTag_I16(tag) / 32.0f; return true; }
+		if (IsTag(tag, "Distance")) { p->ReachDistance = NbtTag_U16(tag) / 32.0f; return true; }
 	}
 	if (IsTag(tag->Parent, "EnvWeatherType")) {
 		if (IsTag(tag, "WeatherType")) { Env_SetWeather(NbtTag_U8(tag)); return true; }
@@ -477,9 +481,9 @@ static bool Cw_Callback_5(struct NbtTag* tag) {
 	if (!IsTag(tag->Parent->Parent->Parent->Parent, "Metadata")) return false;
 
 	if (IsTag(tag->Parent->Parent, "EnvColors")) {
-		if (IsTag(tag, "R")) { cw_colR = NbtTag_I16(tag); return true; }
-		if (IsTag(tag, "G")) { cw_colG = NbtTag_I16(tag); return true; }
-		if (IsTag(tag, "B")) { cw_colB = NbtTag_I16(tag); return true; }
+		if (IsTag(tag, "R")) { cw_colR = NbtTag_U16(tag); return true; }
+		if (IsTag(tag, "G")) { cw_colG = NbtTag_U16(tag); return true; }
+		if (IsTag(tag, "B")) { cw_colB = NbtTag_U16(tag); return true; }
 	}
 
 	if (IsTag(tag->Parent->Parent, "BlockDefinitions") && Game_AllowCustomBlocks) {
@@ -608,7 +612,7 @@ struct JFieldDesc {
 
 struct JClassDesc {
 	char ClassName[JNAME_SIZE];
-	uint16_t FieldsCount;
+	int FieldsCount;
 	struct JFieldDesc Fields[22];
 };
 
@@ -659,7 +663,7 @@ static ReturnCode Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* de
 	desc->FieldsCount = Stream_GetU16_BE(tmp);
 	if (desc->FieldsCount > Array_Elems(desc->Fields)) return DAT_ERR_JCLASS_FIELDS;
 
-	Int32 i;
+	int i;
 	for (i = 0; i < desc->FieldsCount; i++) {
 		if ((res = Dat_ReadFieldDesc(stream, &desc->Fields[i]))) return res;
 	}
@@ -758,7 +762,7 @@ ReturnCode Dat_Load(struct Stream* stream) {
 	struct JClassDesc obj; 
 	if ((res = Dat_ReadClassDesc(&compStream, &obj))) return res;
 
-	Int32 i;
+	int i;
 	Vector3* spawn = &LocalPlayer_Instance.Spawn;
 	for (i = 0; i < obj.FieldsCount; i++) {
 		struct JFieldDesc* field = &obj.Fields[i];
