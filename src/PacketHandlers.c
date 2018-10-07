@@ -248,7 +248,7 @@ static void WoM_CheckSendWomID(void) {
 
 static PackedCol WoM_ParseCol(const String* value, PackedCol defaultCol) {
 	int argb;
-	if (!Convert_TryParseInt32(value, &argb)) return defaultCol;
+	if (!Convert_TryParseInt(value, &argb)) return defaultCol;
 
 	PackedCol col; col.A = 255;
 	col.R = (uint8_t)(argb >> 16);
@@ -299,7 +299,7 @@ static void WoM_ParseConfig(const String* page) {
 			Env_SetFogCol(col);
 		} else if (String_CaselessEqualsConst(&key, "environment.level")) {
 			int waterLevel;
-			if (Convert_TryParseInt32(&value, &waterLevel)) {
+			if (Convert_TryParseInt(&value, &waterLevel)) {
 				Env_SetEdgeHeight(waterLevel);
 			}
 		} else if (String_CaselessEqualsConst(&key, "user.detail") && !cpe_useMessageTypes) {
@@ -447,7 +447,7 @@ static void Classic_LevelInit(uint8_t* data) {
 	if (cpe_fastMap) {
 		map_volume = Stream_GetU32_BE(data);
 		map_gzHeader.Done = true;
-		map_sizeIndex = sizeof(UInt32);
+		map_sizeIndex = sizeof(uint32_t);
 		map_blocks = Mem_Alloc(map_volume, 1, "map blocks");
 	}
 }
@@ -472,7 +472,7 @@ static void Classic_LevelDataChunk(uint8_t* data) {
 
 	if (map_gzHeader.Done) {
 		if (map_sizeIndex < 4) {
-			UInt32 left = 4 - map_sizeIndex, read = 0;
+			uint32_t left = 4 - map_sizeIndex, read = 0;
 			map_stream.Read(&map_stream, &map_size[map_sizeIndex], left, &read); map_sizeIndex += read;
 		}
 
@@ -483,17 +483,17 @@ static void Classic_LevelDataChunk(uint8_t* data) {
 			}
 
 #ifndef EXTENDED_BLOCKS
-			UInt32 left = map_volume - map_index, read = 0;
+			uint32_t left = map_volume - map_index, read = 0;
 			map_stream.Read(&map_stream, &map_blocks[map_index], left, &read);
 			map_index += read;
 #else
 			if (cpe_extBlocks && value) {
 				/* Only allocate map2 when needed */
 				if (!map2_blocks) map2_blocks = Mem_Alloc(map_volume, 1, "map blocks upper");
-				UInt32 left = map_volume - map2_index, read = 0;
+				uint32_t left = map_volume - map2_index, read = 0;
 				map2_stream.Read(&map2_stream, &map2_blocks[map2_index], left, &read); map2_index += read;
 			} else {
-				UInt32 left = map_volume - map_index, read = 0;
+				uint32_t left = map_volume - map_index, read = 0;
 				map_stream.Read(&map_stream, &map_blocks[map_index], left, &read); map_index += read;
 			}
 #endif
@@ -944,7 +944,7 @@ static void CPE_SetTextHotkey(uint8_t* data) {
 	data += STRING_SIZE; /* skip label */
 	Handlers_ReadString(&data, &action);
 
-	UInt32 keyCode  = Stream_GetU32_BE(data); data += 4;
+	uint32_t keyCode  = Stream_GetU32_BE(data); data += 4;
 	uint8_t keyMods = *data;
 	if (keyCode > 255) return;
 
@@ -1125,7 +1125,7 @@ static void CPE_ExtAddEntity2(uint8_t* data) {
 static void CPE_BulkBlockUpdate(uint8_t* data) {
 	int i, count = 1 + *data++;
 
-	UInt32 indices[BULK_MAX_BLOCKS];
+	int32_t indices[BULK_MAX_BLOCKS];
 	for (i = 0; i < count; i++) {
 		indices[i] = Stream_GetU32_BE(data); data += 4;
 	}
@@ -1148,9 +1148,9 @@ static void CPE_BulkBlockUpdate(uint8_t* data) {
 		data += BULK_MAX_BLOCKS / 4;
 	}
 
-	Int32 x, y, z;
+	int x, y, z;
 	for (i = 0; i < count; i++) {
-		Int32 index = indices[i];
+		int index = indices[i];
 		if (index < 0 || index >= World_BlocksSize) continue;
 		World_Unpack(index, x, y, z);
 

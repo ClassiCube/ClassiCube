@@ -7,8 +7,8 @@
 
 float Math_AbsF(float x)  { return fabsf(x); /* MSVC intrinsic */ }
 float Math_SqrtF(float x) { return sqrtf(x); /* MSVC intrinsic */ }
-float Math_Mod1(float x)  { return x - (Int32)x; /* fmodf(x, 1); */ }
-Int32 Math_AbsI(Int32 x)    { return abs(x); /* MSVC intrinsic */ }
+float Math_Mod1(float x)  { return x - (int)x; /* fmodf(x, 1); */ }
+int   Math_AbsI(int x)    { return abs(x); /* MSVC intrinsic */ }
 
 double Math_Sin(double x) { return sin(x); }
 double Math_Cos(double x) { return cos(x); }
@@ -18,27 +18,27 @@ double Math_Exp(double x) { return exp(x); }
 float Math_SinF(float x) { return (float)Math_Sin(x); }
 float Math_CosF(float x) { return (float)Math_Cos(x); }
 
-Int32 Math_Floor(float value) {
-	Int32 valueI = (Int32)value;
+int Math_Floor(float value) {
+	int valueI = (int)value;
 	return valueI > value ? valueI - 1 : valueI;
 }
 
-Int32 Math_Ceil(float value) {
-	Int32 valueI = (Int32)value;
+int Math_Ceil(float value) {
+	int valueI = (int)value;
 	return valueI < value ? valueI + 1 : valueI;
 }
 
-Int32 Math_Log2(UInt32 value) {
-	UInt32 r = 0;
+int Math_Log2(uint32_t value) {
+	uint32_t r = 0;
 	while (value >>= 1) r++;
 	return r;
 }
 
-Int32 Math_CeilDiv(Int32 a, Int32 b) {
+int Math_CeilDiv(int a, int b) {
 	return a / b + (a % b != 0 ? 1 : 0);
 }
 
-Int32 Math_Sign(float value) {
+int Math_Sign(float value) {
 	if (value > 0.0f) return +1;
 	if (value < 0.0f) return -1;
 	return 0;
@@ -60,23 +60,14 @@ float Math_LerpAngle(float leftAngle, float rightAngle, float t) {
 	return Math_Lerp(leftAngle, rightAngle, t);
 }
 
-Int32 Math_NextPowOf2(Int32 value) {
-	Int32 next = 1;
+int Math_NextPowOf2(int value) {
+	int next = 1;
 	while (value > next) { next <<= 1; }
 	return next;
 }
 
-bool Math_IsPowOf2(Int32 value) {
+bool Math_IsPowOf2(int value) {
 	return value != 0 && (value & (value - 1)) == 0;
-}
-
-Int32 Math_AccumulateWheelDelta(float* accmulator, float delta) {
-	/* Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2) */
-	/* We must use rounding at final step, not at every intermediate step. */
-	*accmulator += delta;
-	Int32 steps = (Int32)*accmulator;
-	*accmulator -= steps;
-	return steps;
 }
 
 /* Not the most precise Tan(x), but within 10^-15 of answer, so good enough for here */
@@ -85,7 +76,7 @@ double Math_FastTan(double angle) {
 	if (cosA < -0.00000001 || cosA > 0.00000001) return sinA / cosA;
 
 	/* tan line is parallel to y axis, infinite gradient */
-	Int32 sign = Math_Sign(sinA);
+	int sign = Math_Sign(sinA);
 	if (cosA) sign *= Math_Sign(cosA);
 	return sign * MATH_POS_INF;
 }
@@ -114,31 +105,31 @@ double Math_FastExp(double x) {
 #define RND_VALUE (0x5DEECE66DULL)
 #define RND_MASK ((1ULL << 48) - 1)
 
-void Random_Init(Random* seed, Int32 seedInit) { Random_SetSeed(seed, seedInit); }
+void Random_Init(Random* seed, int seedInit) { Random_SetSeed(seed, seedInit); }
 void Random_InitFromCurrentTime(Random* rnd) {
 	TimeMS now = DateTime_CurrentUTC_MS();
-	Random_Init(rnd, (Int32)now);
+	Random_Init(rnd, (int)now);
 }
 
-void Random_SetSeed(Random* seed, Int32 seedInit) {
+void Random_SetSeed(Random* seed, int seedInit) {
 	*seed = (seedInit ^ RND_VALUE) & RND_MASK;
 }
 
-Int32 Random_Range(Random* seed, Int32 min, Int32 max) {
+int Random_Range(Random* seed, int min, int max) {
 	return min + Random_Next(seed, max - min);
 }
 
-Int32 Random_Next(Random* seed, Int32 n) {
+int Random_Next(Random* seed, int n) {
 	if ((n & -n) == n) { /* i.e., n is a power of 2 */
 		*seed = (*seed * RND_VALUE + 0xBLL) & RND_MASK;
 		int64_t raw = (int64_t)(*seed >> (48 - 31));
-		return (Int32)((n * raw) >> 31);
+		return (int)((n * raw) >> 31);
 	}
 
-	Int32 bits, val;
+	int bits, val;
 	do {
 		*seed = (*seed * RND_VALUE + 0xBLL) & RND_MASK;
-		bits = (Int32)(*seed >> (48 - 31));
+		bits = (int)(*seed >> (48 - 31));
 		val = bits % n;
 	} while (bits - val + (n - 1) < 0);
 	return val;
@@ -146,7 +137,7 @@ Int32 Random_Next(Random* seed, Int32 n) {
 
 float Random_Float(Random* seed) {
 	*seed = (*seed * RND_VALUE + 0xBLL) & RND_MASK;
-	Int32 raw = (Int32)(*seed >> (48 - 24));
+	int raw = (int)(*seed >> (48 - 24));
 	return raw / ((float)(1 << 24));
 }
 

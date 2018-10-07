@@ -177,7 +177,7 @@ static LONG WINAPI ErrorHandler_UnhandledFilter(struct _EXCEPTION_POINTERS* pInf
 	char msgBuffer[STRING_SIZE * 2 + 1];
 	String msg = String_NT_Array(msgBuffer);
 
-	UInt32 code    = (UInt32)pInfo->ExceptionRecord->ExceptionCode;
+	uint32_t code  = (uint32_t)pInfo->ExceptionRecord->ExceptionCode;
 	uintptr_t addr = (uintptr_t)pInfo->ExceptionRecord->ExceptionAddress;
 	String_Format2(&msg, "Unhandled exception 0x%h at 0x%x", &code, &addr);
 	msg.buffer[msg.length] = '\0';
@@ -220,7 +220,7 @@ void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
 		mov [ctx.ContextFlags], CONTEXT_CONTROL
 	}
 #else
-	Int32 _ebp, _eip, _esp;
+	int32_t _ebp, _eip, _esp;
 	/* TODO: I think this is right, not sure.. */
 	__asm__(
 		"mov 0(%%ebp), %%eax \n\t"

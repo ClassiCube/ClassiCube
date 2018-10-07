@@ -138,13 +138,13 @@ enum INFLATE_STATE_ {
 };
 
 /* Insert next byte into the bit buffer */
-#define Inflate_GetByte(state) state->AvailIn--; state->Bits |= (UInt32)(*state->NextIn++) << state->NumBits; state->NumBits += 8;
+#define Inflate_GetByte(state) state->AvailIn--; state->Bits |= (uint32_t)(*state->NextIn++) << state->NumBits; state->NumBits += 8;
 /* Retrieves bits from the bit buffer */
 #define Inflate_PeekBits(state, bits) (state->Bits & ((1UL << (bits)) - 1UL))
 /* Consumes/eats up bits from the bit buffer */
 #define Inflate_ConsumeBits(state, bits) state->Bits >>= (bits); state->NumBits -= (bits);
 /* Aligns bit buffer to be on a byte boundary */
-#define Inflate_AlignBits(state) UInt32 alignSkip = state->NumBits & 7; Inflate_ConsumeBits(state, alignSkip);
+#define Inflate_AlignBits(state) uint32_t alignSkip = state->NumBits & 7; Inflate_ConsumeBits(state, alignSkip);
 /* Ensures there are 'bitsCount' bits, or returns if not */
 #define Inflate_EnsureBits(state, bitsCount) while (state->NumBits < bitsCount) { if (!state->AvailIn) return; Inflate_GetByte(state); }
 /* Ensures there are 'bitsCount' bits */
@@ -161,7 +161,7 @@ enum INFLATE_STATE_ {
 /* The most input bytes required for huffman codes and extra data is 16 + 5 + 16 + 13 bits. Add 3 extra bytes to account for putting data into the bit buffer. */
 #define INFLATE_FASTINF_IN 10
 
-static UInt32 Huffman_ReverseBits(UInt32 n, uint8_t bits) {
+static uint32_t Huffman_ReverseBits(uint32_t n, uint8_t bits) {
 	n = ((n & 0xAAAA) >> 1) | ((n & 0x5555) << 1);
 	n = ((n & 0xCCCC) >> 2) | ((n & 0x3333) << 2);
 	n = ((n & 0xF0F0) >> 4) | ((n & 0x0F0F) << 4);
@@ -220,11 +220,11 @@ static void Huffman_Build(struct HuffmanTable* table, uint8_t* bitLens, int coun
 		*/
 		if (len <= INFLATE_FAST_BITS) {
 			int16_t packed = (int16_t)((len << INFLATE_FAST_BITS) | value), j;
-			Int32 codeword = table->FirstCodewords[len] + (bl_offsets[len] - table->FirstOffsets[len]);
+			int codeword = table->FirstCodewords[len] + (bl_offsets[len] - table->FirstOffsets[len]);
 			codeword <<= (INFLATE_FAST_BITS - len);
 
 			for (j = 0; j < 1 << (INFLATE_FAST_BITS - len); j++, codeword++) {
-				Int32 index = Huffman_ReverseBits(codeword, INFLATE_FAST_BITS);
+				int index = Huffman_ReverseBits(codeword, INFLATE_FAST_BITS);
 				table->Fast[index] = packed;
 			}
 		}
@@ -232,7 +232,7 @@ static void Huffman_Build(struct HuffmanTable* table, uint8_t* bitLens, int coun
 	}
 }
 
-static Int32 Huffman_Decode(struct InflateState* state, struct HuffmanTable* table) {
+static int Huffman_Decode(struct InflateState* state, struct HuffmanTable* table) {
 	/* Buffer as many bits as possible */
 	while (state->NumBits <= INFLATE_MAX_BITS) {
 		if (!state->AvailIn) break;
@@ -241,23 +241,23 @@ static Int32 Huffman_Decode(struct InflateState* state, struct HuffmanTable* tab
 
 	/* Try fast accelerated table lookup */
 	if (state->NumBits >= INFLATE_FAST_BITS) {
-		Int32 packed = table->Fast[Inflate_PeekBits(state, INFLATE_FAST_BITS)];
+		int packed = table->Fast[Inflate_PeekBits(state, INFLATE_FAST_BITS)];
 		if (packed >= 0) {
-			Int32 bits = packed >> INFLATE_FAST_BITS;
+			int bits = packed >> INFLATE_FAST_BITS;
 			Inflate_ConsumeBits(state, bits);
 			return packed & 0x1FF;
 		}
 	}
 
 	/* Slow, bit by bit lookup */
-	UInt32 codeword = 0;
-	UInt32 i, j;
+	uint32_t codeword = 0;
+	uint32_t i, j;
 	for (i = 1, j = 0; i < INFLATE_MAX_BITS; i++, j++) {
 		if (state->NumBits < i) return -1;
 		codeword = (codeword << 1) | ((state->Bits >> j) & 1);
 
 		if (codeword < table->EndCodewords[i]) {
-			Int32 offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
+			int offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
 			Inflate_ConsumeBits(state, i);
 			return table->Values[offset];
 		}
@@ -271,9 +271,9 @@ static Int32 Huffman_Decode(struct InflateState* state, struct HuffmanTable* tab
 #define Huffman_Unsafe_Decode(state, table, result) \
 {\
 	Inflate_UNSAFE_EnsureBits(state, INFLATE_MAX_BITS);\
-	Int32 packed = table.Fast[Inflate_PeekBits(state, INFLATE_FAST_BITS)];\
+	int packed = table.Fast[Inflate_PeekBits(state, INFLATE_FAST_BITS)];\
 	if (packed >= 0) {\
-		Int32 consumedBits = packed >> INFLATE_FAST_BITS;\
+		int consumedBits = packed >> INFLATE_FAST_BITS;\
 		Inflate_ConsumeBits(state, consumedBits);\
 		result = packed & 0x1FF;\
 	} else {\
@@ -281,17 +281,17 @@ static Int32 Huffman_Decode(struct InflateState* state, struct HuffmanTable* tab
 	}\
 }
 
-static Int32 Huffman_Unsafe_Decode_Slow(struct InflateState* state, struct HuffmanTable* table) {
-	UInt32 codeword = Inflate_PeekBits(state, INFLATE_FAST_BITS);
+static int Huffman_Unsafe_Decode_Slow(struct InflateState* state, struct HuffmanTable* table) {
+	uint32_t codeword = Inflate_PeekBits(state, INFLATE_FAST_BITS);
 	/* Slow, bit by bit lookup. Need to reverse order for huffman. */
 	codeword = Huffman_ReverseBits(codeword, INFLATE_FAST_BITS);
 
-	UInt32 i, j;
+	uint32_t i, j;
 	for (i = INFLATE_FAST_BITS + 1, j = INFLATE_FAST_BITS; i < INFLATE_MAX_BITS; i++, j++) {
 		codeword = (codeword << 1) | ((state->Bits >> j) & 1);
 
 		if (codeword < table->EndCodewords[i]) {
-			Int32 offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
+			int offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
 			Inflate_ConsumeBits(state, i);
 			return table->Values[offset];
 		}
@@ -344,13 +344,13 @@ uint8_t dist_bits[32] = { 0,0,0,0,1,1,2,2,3,3,
 uint8_t codelens_order[INFLATE_MAX_CODELENS] = { 16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15 };
 
 static void Inflate_InflateFast(struct InflateState* state) {
-	UInt32 copyStart = state->WindowIndex, copyLen = 0;
+	uint32_t copyStart = state->WindowIndex, copyLen = 0;
 	uint8_t* window = state->Window;
-	UInt32 curIdx = state->WindowIndex;
+	uint32_t curIdx = state->WindowIndex;
 
 #define INFLATE_FAST_COPY_MAX (INFLATE_WINDOW_SIZE - INFLATE_FASTINF_OUT)
 	while (state->AvailOut >= INFLATE_FASTINF_OUT && state->AvailIn >= INFLATE_FASTINF_IN && copyLen < INFLATE_FAST_COPY_MAX) {
-		UInt32 lit; Huffman_Unsafe_Decode(state, state->LitsTable, lit);
+		uint32_t lit; Huffman_Unsafe_Decode(state, state->LitsTable, lit);
 		if (lit <= 256) {
 			if (lit < 256) {
 				window[curIdx] = (uint8_t)lit;
@@ -361,17 +361,17 @@ static void Inflate_InflateFast(struct InflateState* state) {
 				break;
 			}
 		} else {
-			UInt32 lenIdx = lit - 257;
-			UInt32 bits = len_bits[lenIdx];
+			uint32_t lenIdx = lit - 257;
+			uint32_t bits = len_bits[lenIdx];
 			Inflate_UNSAFE_EnsureBits(state, bits);
-			UInt32 len = len_base[lenIdx] + Inflate_ReadBits(state, bits);
+			uint32_t len = len_base[lenIdx] + Inflate_ReadBits(state, bits);
 
-			UInt32 distIdx; Huffman_Unsafe_Decode(state, state->DistsTable, distIdx);
+			uint32_t distIdx; Huffman_Unsafe_Decode(state, state->DistsTable, distIdx);
 			bits = dist_bits[distIdx];
 			Inflate_UNSAFE_EnsureBits(state, bits);
-			UInt32 dist = dist_base[distIdx] + Inflate_ReadBits(state, bits);
+			uint32_t dist = dist_base[distIdx] + Inflate_ReadBits(state, bits);
 
-			UInt32 i, startIdx = (curIdx - dist) & INFLATE_WINDOW_MASK;
+			uint32_t i, startIdx = (curIdx - dist) & INFLATE_WINDOW_MASK;
 			if (curIdx >= startIdx && (curIdx + len) < INFLATE_WINDOW_SIZE) {
 				uint8_t* src = &window[startIdx]; 
 				uint8_t* dst = &window[curIdx];
@@ -396,7 +396,7 @@ static void Inflate_InflateFast(struct InflateState* state) {
 			Mem_Copy(state->Output, &state->Window[copyStart], copyLen);
 			state->Output += copyLen;
 		} else {
-			UInt32 partLen = INFLATE_WINDOW_SIZE - copyStart;
+			uint32_t partLen = INFLATE_WINDOW_SIZE - copyStart;
 			Mem_Copy(state->Output, &state->Window[copyStart], partLen);
 			state->Output += partLen;
 			Mem_Copy(state->Output, state->Window, copyLen - partLen);
@@ -410,7 +410,7 @@ void Inflate_Process(struct InflateState* state) {
 		switch (state->State) {
 		case INFLATE_STATE_HEADER: {
 			Inflate_EnsureBits(state, 3);
-			UInt32 blockHeader = Inflate_ReadBits(state, 3);
+			uint32_t blockHeader = Inflate_ReadBits(state, 3);
 			state->LastBlock = blockHeader & 1;
 
 			switch (blockHeader >> 1) {
@@ -439,8 +439,8 @@ void Inflate_Process(struct InflateState* state) {
 
 		case INFLATE_STATE_UNCOMPRESSED_HEADER: {
 			Inflate_EnsureBits(state, 32);
-			UInt32 len  = Inflate_ReadBits(state, 16);
-			UInt32 nlen = Inflate_ReadBits(state, 16);
+			uint32_t len  = Inflate_ReadBits(state, 16);
+			uint32_t nlen = Inflate_ReadBits(state, 16);
 
 			if (len != (nlen ^ 0xFFFFUL)) {
 				ErrorHandler_Fail("DEFLATE - Uncompressed block LEN check failed");
@@ -460,11 +460,11 @@ void Inflate_Process(struct InflateState* state) {
 			}
 			if (!state->AvailIn || !state->AvailOut) return;
 
-			UInt32 copyLen = min(state->AvailIn, state->AvailOut);
+			uint32_t copyLen = min(state->AvailIn, state->AvailOut);
 			copyLen = min(copyLen, state->Index);
 			if (copyLen > 0) {
 				Mem_Copy(state->Output, state->NextIn, copyLen);
-				UInt32 windowCopyLen = INFLATE_WINDOW_SIZE - state->WindowIndex;
+				uint32_t windowCopyLen = INFLATE_WINDOW_SIZE - state->WindowIndex;
 				windowCopyLen = min(windowCopyLen, copyLen);
 
 				Mem_Copy(&state->Window[state->WindowIndex], state->Output, windowCopyLen);
@@ -492,7 +492,7 @@ void Inflate_Process(struct InflateState* state) {
 		}
 
 		case INFLATE_STATE_DYNAMIC_CODELENS: {
-			Int32 i;
+			int i;
 			while (state->Index < state->NumCodeLens) {
 				Inflate_EnsureBits(state, 3);
 				i = codelens_order[state->Index];
@@ -509,9 +509,9 @@ void Inflate_Process(struct InflateState* state) {
 		}
 
 		case INFLATE_STATE_DYNAMIC_LITSDISTS: {
-			UInt32 count = state->NumLits + state->NumDists;
+			uint32_t count = state->NumLits + state->NumDists;
 			while (state->Index < count) {
-				Int32 bits = Huffman_Decode(state, &state->CodeLensTable);
+				int bits = Huffman_Decode(state, &state->CodeLensTable);
 				if (bits < 16) {
 					if (bits == -1) return;
 					state->Buffer[state->Index] = (uint8_t)bits;
@@ -533,7 +533,7 @@ void Inflate_Process(struct InflateState* state) {
 		}
 
 		case INFLATE_STATE_DYNAMIC_LITSDISTSREPEAT: {
-			UInt32 repeatCount;
+			uint32_t repeatCount;
 			uint8_t repeatValue;
 
 			switch (state->TmpCodeLens) {
@@ -557,7 +557,7 @@ void Inflate_Process(struct InflateState* state) {
 				break;
 			}
 
-			UInt32 count = state->NumLits + state->NumDists;
+			uint32_t count = state->NumLits + state->NumDists;
 			if (state->Index + repeatCount > count) {
 				ErrorHandler_Fail("DEFLATE - Tried to repeat past end");
 			}
@@ -571,7 +571,7 @@ void Inflate_Process(struct InflateState* state) {
 		case INFLATE_STATE_COMPRESSED_LIT: {
 			if (!state->AvailOut) return;
 
-			Int32 lit = Huffman_Decode(state, &state->LitsTable);
+			int lit = Huffman_Decode(state, &state->LitsTable);
 			if (lit < 256) {
 				if (lit == -1) return;
 				*state->Output = (uint8_t)lit;
@@ -589,8 +589,8 @@ void Inflate_Process(struct InflateState* state) {
 		}
 
 		case INFLATE_STATE_COMPRESSED_LITREPEAT: {
-			UInt32 lenIdx = state->TmpLit;
-			UInt32 bits = len_bits[lenIdx];
+			uint32_t lenIdx = state->TmpLit;
+			uint32_t bits = len_bits[lenIdx];
 			Inflate_EnsureBits(state, bits);
 			state->TmpLit = len_base[lenIdx] + Inflate_ReadBits(state, bits);
 			state->State = INFLATE_STATE_COMPRESSED_DIST;
@@ -603,8 +603,8 @@ void Inflate_Process(struct InflateState* state) {
 		}
 
 		case INFLATE_STATE_COMPRESSED_DISTREPEAT: {
-			UInt32 distIdx = state->TmpDist;
-			UInt32 bits = dist_bits[distIdx];
+			uint32_t distIdx = state->TmpDist;
+			uint32_t bits = dist_bits[distIdx];
 			Inflate_EnsureBits(state, bits);
 			state->TmpDist = dist_base[distIdx] + Inflate_ReadBits(state, bits);
 			state->State = INFLATE_STATE_COMPRESSED_DATA;
@@ -612,12 +612,12 @@ void Inflate_Process(struct InflateState* state) {
 
 		case INFLATE_STATE_COMPRESSED_DATA: {
 			if (!state->AvailOut) return;
-			UInt32 len = state->TmpLit, dist = state->TmpDist;
+			uint32_t len = state->TmpLit, dist = state->TmpDist;
 			len = min(len, state->AvailOut);
 
 			/* TODO: Should we test outside of the loop, whether a masking will be required or not? */
-			UInt32 startIdx = (state->WindowIndex - dist) & INFLATE_WINDOW_MASK, curIdx = state->WindowIndex;
-			UInt32 i;
+			uint32_t startIdx = (state->WindowIndex - dist) & INFLATE_WINDOW_MASK, curIdx = state->WindowIndex;
+			uint32_t i;
 			for (i = 0; i < len; i++) {
 				uint8_t value = state->Window[(startIdx + i) & INFLATE_WINDOW_MASK];
 				*state->Output = value;
@@ -646,7 +646,7 @@ void Inflate_Process(struct InflateState* state) {
 	}
 }
 
-static ReturnCode Inflate_StreamRead(struct Stream* stream, uint8_t* data, UInt32 count, UInt32* modified) {
+static ReturnCode Inflate_StreamRead(struct Stream* stream, uint8_t* data, uint32_t count, uint32_t* modified) {
 	struct InflateState* state = stream->Meta.Inflate;
 	*modified = 0;
 	state->Output = data;
@@ -661,7 +661,7 @@ static ReturnCode Inflate_StreamRead(struct Stream* stream, uint8_t* data, UInt3
 			if (state->NextIn == inputEnd) state->NextIn = state->Input;
 
 			uint8_t* cur = state->NextIn;
-			UInt32 read, remaining = (UInt32)(inputEnd - state->NextIn);
+			uint32_t read, remaining = (uint32_t)(inputEnd - state->NextIn);
 			ReturnCode res = state->Source->Read(state->Source, cur, remaining, &read);
 			if (res) return res;
 
@@ -672,7 +672,7 @@ static ReturnCode Inflate_StreamRead(struct Stream* stream, uint8_t* data, UInt3
 		}
 		
 		/* Reading data reduces available out */
-		UInt32 preAvailOut = state->AvailOut;
+		uint32_t preAvailOut = state->AvailOut;
 		Inflate_Process(state);
 		*modified += (preAvailOut - state->AvailOut);
 	}
@@ -706,8 +706,8 @@ static int Deflate_MatchLen(uint8_t* a, uint8_t* b, int maxLen) {
 	return i;
 }
 
-static UInt32 Deflate_Hash(uint8_t* src) {
-	return (UInt32)((src[0] << 8) ^ (src[1] << 4) ^ (src[2])) & DEFLATE_HASH_MASK;
+static uint32_t Deflate_Hash(uint8_t* src) {
+	return (uint32_t)((src[0] << 8) ^ (src[1] << 4) ^ (src[2])) & DEFLATE_HASH_MASK;
 }
 
 static void Deflate_Lit(struct DeflateState* state, int lit) {
@@ -739,7 +739,7 @@ static void Deflate_LenDist(struct DeflateState* state, int len, int dist) {
 	dist_base[30] = 0;
 }
 
-static ReturnCode Deflate_FlushBlock(struct DeflateState* state, Int32 len) {
+static ReturnCode Deflate_FlushBlock(struct DeflateState* state, int len) {
 	if (!state->WroteHeader) {
 		state->WroteHeader = true;
 		Deflate_PushBits(state, 3, 3); /* final block TRUE, block type FIXED */
@@ -755,7 +755,7 @@ static ReturnCode Deflate_FlushBlock(struct DeflateState* state, Int32 len) {
 	uint8_t* cur = src;
 
 	while (len > 3) {
-		UInt32 hash = Deflate_Hash(cur);
+		uint32_t hash = Deflate_Hash(cur);
 		int maxLen = min(len, DEFLATE_MAX_MATCH_LEN);
 
 		int bestLen = 3 - 1; /* Match must be at least 3 bytes */
@@ -777,7 +777,7 @@ static ReturnCode Deflate_FlushBlock(struct DeflateState* state, Int32 len) {
 		/* Lazy evaluation: Find longest match starting at next byte */
 		/* If that's longer than the longest match at current byte, throwaway this match */
 		if (bestPos && len > 2) {
-			UInt32 nextHash = Deflate_Hash(cur + 1);
+			uint32_t nextHash = Deflate_Hash(cur + 1);
 			int nextPos = state->Head[nextHash];
 			maxLen = min(len - 1, DEFLATE_MAX_MATCH_LEN);
 
@@ -817,12 +817,12 @@ static ReturnCode Deflate_FlushBlock(struct DeflateState* state, Int32 len) {
 	return resFinal;
 }
 
-static ReturnCode Deflate_StreamWrite(struct Stream* stream, uint8_t* data, UInt32 count, UInt32* modified) {
+static ReturnCode Deflate_StreamWrite(struct Stream* stream, uint8_t* data, uint32_t count, uint32_t* modified) {
 	struct DeflateState* state = stream->Meta.Inflate;
 	*modified = 0;
 	while (count > 0) {
 		uint8_t* dst = &state->Input[state->InputPosition];
-		UInt32 toWrite = count;
+		uint32_t toWrite = count;
 		if (state->InputPosition + toWrite >= DEFLATE_BUFFER_SIZE) {
 			toWrite = DEFLATE_BUFFER_SIZE - state->InputPosition;
 		}
@@ -893,10 +893,10 @@ static ReturnCode GZip_StreamClose(struct Stream* stream) {
 	return Stream_Write(state->Base.Dest, data, sizeof(data));
 }
 
-static ReturnCode GZip_StreamWrite(struct Stream* stream, uint8_t* data, UInt32 count, UInt32* modified) {
+static ReturnCode GZip_StreamWrite(struct Stream* stream, uint8_t* data, uint32_t count, uint32_t* modified) {
 	struct GZipState* state = stream->Meta.Inflate;
 	state->Size += count;
-	UInt32 i, crc32 = state->Crc32;
+	uint32_t i, crc32 = state->Crc32;
 
 	/* TODO: Optimise this calculation */
 	for (i = 0; i < count; i++) {
@@ -907,7 +907,7 @@ static ReturnCode GZip_StreamWrite(struct Stream* stream, uint8_t* data, UInt32 
 	return Deflate_StreamWrite(stream, data, count, modified);
 }
 
-static ReturnCode GZip_StreamWriteFirst(struct Stream* stream, uint8_t* data, UInt32 count, UInt32* modified) {
+static ReturnCode GZip_StreamWriteFirst(struct Stream* stream, uint8_t* data, uint32_t count, uint32_t* modified) {
 	static uint8_t header[10] = { 0x1F, 0x8B, 0x08 }; /* GZip header */
 	struct GZipState* state = stream->Meta.Inflate;
 	ReturnCode res;
@@ -939,10 +939,10 @@ static ReturnCode ZLib_StreamClose(struct Stream* stream) {
 	return Stream_Write(state->Base.Dest, data, sizeof(data));
 }
 
-static ReturnCode ZLib_StreamWrite(struct Stream* stream, uint8_t* data, UInt32 count, UInt32* modified) {
+static ReturnCode ZLib_StreamWrite(struct Stream* stream, uint8_t* data, uint32_t count, uint32_t* modified) {
 	struct ZLibState* state = stream->Meta.Inflate;
-	UInt32 i, adler32 = state->Adler32;
-	UInt32 s1 = adler32 & 0xFFFF, s2 = (adler32 >> 16) & 0xFFFF;
+	uint32_t i, adler32 = state->Adler32;
+	uint32_t s1 = adler32 & 0xFFFF, s2 = (adler32 >> 16) & 0xFFFF;
 
 	/* TODO: Optimise this calculation */
 	for (i = 0; i < count; i++) {
@@ -955,7 +955,7 @@ static ReturnCode ZLib_StreamWrite(struct Stream* stream, uint8_t* data, UInt32 
 	return Deflate_StreamWrite(stream, data, count, modified);
 }
 
-static ReturnCode ZLib_StreamWriteFirst(struct Stream* stream, uint8_t* data, UInt32 count, UInt32* modified) {
+static ReturnCode ZLib_StreamWriteFirst(struct Stream* stream, uint8_t* data, uint32_t count, uint32_t* modified) {
 	static uint8_t header[2] = { 0x78, 0x9C }; /* ZLib header */
 	struct ZLibState* state = stream->Meta.Inflate;
 	ReturnCode res;

@@ -75,7 +75,7 @@ int Options_GetInt(const char* key, int min, int max, int defValue) {
 	String str;
 	int value;
 	if (!Options_TryGetValue(key, &str))      return defValue;
-	if (!Convert_TryParseInt32(&str, &value)) return defValue;
+	if (!Convert_TryParseInt(&str, &value)) return defValue;
 
 	Math_Clamp(value, min, max);
 	return value;
@@ -131,7 +131,7 @@ void Options_SetBool(const char* keyRaw, bool value) {
 void Options_SetInt(const char* keyRaw, int value) {
 	char numBuffer[STRING_INT_CHARS];
 	String numStr = String_FromArray(numBuffer);
-	String_AppendInt32(&numStr, value);
+	String_AppendInt(&numStr, value);
 	Options_Set(keyRaw, &numStr);
 }
 

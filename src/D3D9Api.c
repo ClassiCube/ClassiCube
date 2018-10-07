@@ -21,13 +21,13 @@
 #include <d3d9caps.h>
 #include <d3d9types.h>
 
-Int32 Gfx_strideSizes[2] = GFX_STRIDE_SIZES;
+int Gfx_strideSizes[2] = GFX_STRIDE_SIZES;
 D3DFORMAT d3d9_depthFormats[6] = { D3DFMT_D32, D3DFMT_D24X8, D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D16, D3DFMT_D15S1 };
 D3DFORMAT d3d9_viewFormats[4] = { D3DFMT_X8R8G8B8, D3DFMT_R8G8B8, D3DFMT_R5G6B5, D3DFMT_X1R5G5B5 };
 D3DBLEND d3d9_blendFuncs[6] = { D3DBLEND_ZERO, D3DBLEND_ONE, D3DBLEND_SRCALPHA, D3DBLEND_INVSRCALPHA, D3DBLEND_DESTALPHA, D3DBLEND_INVDESTALPHA };
 D3DCMPFUNC d3d9_compareFuncs[8] = { D3DCMP_ALWAYS, D3DCMP_NOTEQUAL, D3DCMP_NEVER, D3DCMP_LESS, D3DCMP_LESSEQUAL, D3DCMP_EQUAL, D3DCMP_GREATEREQUAL, D3DCMP_GREATER };
 D3DFOGMODE d3d9_modes[3] = { D3DFOG_LINEAR, D3DFOG_EXP, D3DFOG_EXP2 };
-UInt32 d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX2 };
+DWORD d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX2 };
 
 bool d3d9_vsync;
 IDirect3D9* d3d;
@@ -168,7 +168,7 @@ static void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, int lvl
 	ReturnCode res = IDirect3DTexture9_LockRect(texture, lvl, &rect, NULL, 0);
 	if (res) ErrorHandler_Fail2(res, "D3D9_SetTextureData - Lock");
 
-	UInt32 size = Bitmap_DataSize(bmp->Width, bmp->Height);
+	uint32_t size = Bitmap_DataSize(bmp->Width, bmp->Height);
 	Mem_Copy(rect.pBits, bmp->Scan0, size);
 
 	res = IDirect3DTexture9_UnlockRect(texture, lvl);
@@ -188,7 +188,7 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bi
 	uint8_t* src = (uint8_t*)bmp->Scan0;
 	uint8_t* dst = (uint8_t*)rect.pBits;
 	int yy;
-	UInt32 stride = (UInt32)(bmp->Width) * BITMAP_SIZEOF_PIXEL;
+	uint32_t stride = (uint32_t)(bmp->Width) * BITMAP_SIZEOF_PIXEL;
 
 	for (yy = 0; yy < bmp->Height; yy++) {
 		Mem_Copy(dst, src, stride);
@@ -304,10 +304,10 @@ void Gfx_SetFog(bool enabled) {
 	if (d3d9_fogEnable == enabled) return;
 	d3d9_fogEnable = enabled;
 	if (Gfx_LostContext) return;
-	D3D9_SetRenderState(D3DRS_FOGENABLE, (UInt32)enabled, "D3D9_SetFog");
+	D3D9_SetRenderState(D3DRS_FOGENABLE, (uint32_t)enabled, "D3D9_SetFog");
 }
 
-UInt32 d3d9_fogCol = 0xFF000000; /* black */
+uint32_t d3d9_fogCol = 0xFF000000; /* black */
 void Gfx_SetFogCol(PackedCol col) {
 	if (col.Packed == d3d9_fogCol) return;
 	d3d9_fogCol = col.Packed;
@@ -353,7 +353,7 @@ void Gfx_SetAlphaTest(bool enabled) {
 	if (d3d9_alphaTest == enabled) return;
 
 	d3d9_alphaTest = enabled;
-	D3D9_SetRenderState(D3DRS_ALPHATESTENABLE, (UInt32)enabled, "D3D9_SetAlphaTest");
+	D3D9_SetRenderState(D3DRS_ALPHATESTENABLE, (uint32_t)enabled, "D3D9_SetAlphaTest");
 }
 
 D3DCMPFUNC d3d9_alphaTestFunc = D3DCMP_ALWAYS;
@@ -370,7 +370,7 @@ void Gfx_SetAlphaBlending(bool enabled) {
 	if (d3d9_alphaBlend == enabled) return;
 
 	d3d9_alphaBlend = enabled;
-	D3D9_SetRenderState(D3DRS_ALPHABLENDENABLE, (UInt32)enabled, "D3D9_SetAlphaBlending");
+	D3D9_SetRenderState(D3DRS_ALPHABLENDENABLE, (uint32_t)enabled, "D3D9_SetAlphaBlending");
 }
 
 D3DBLEND d3d9_srcBlendFunc = D3DBLEND_ONE;
@@ -389,7 +389,7 @@ void Gfx_SetAlphaArgBlend(bool enabled) {
 }
 
 
-UInt32 d3d9_clearCol = 0xFF000000;
+uint32_t d3d9_clearCol = 0xFF000000;
 void Gfx_Clear(void) {
 	DWORD flags = D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER;
 	ReturnCode res = IDirect3DDevice9_Clear(device, 0, NULL, flags, d3d9_clearCol, 1.0f, 0);
@@ -403,7 +403,7 @@ void Gfx_ClearCol(PackedCol col) {
 bool d3d9_depthTest = false;
 void Gfx_SetDepthTest(bool enabled) {
 	d3d9_depthTest = enabled;
-	D3D9_SetRenderState(D3DRS_ZENABLE, (UInt32)enabled, "D3D9_SetDepthTest");
+	D3D9_SetRenderState(D3DRS_ZENABLE, (uint32_t)enabled, "D3D9_SetDepthTest");
 }
 
 D3DCMPFUNC d3d9_depthTestFunc = D3DCMP_LESSEQUAL;
@@ -413,14 +413,14 @@ void Gfx_SetDepthTestFunc(int compareFunc) {
 }
 
 void Gfx_SetColourWriteMask(bool r, bool g, bool b, bool a) {
-	UInt32 channels = (r ? 1u : 0u) | (g ? 2u : 0u) | (b ? 4u : 0u) | (a ? 8u : 0u);
+	uint32_t channels = (r ? 1u : 0u) | (g ? 2u : 0u) | (b ? 4u : 0u) | (a ? 8u : 0u);
 	D3D9_SetRenderState(D3DRS_COLORWRITEENABLE, channels, "D3D9_SetColourWrite");
 }
 
 bool d3d9_depthWrite = false;
 void Gfx_SetDepthWrite(bool enabled) {
 	d3d9_depthWrite = enabled;
-	D3D9_SetRenderState(D3DRS_ZWRITEENABLE, (UInt32)enabled, "D3D9_SetDepthWrite");
+	D3D9_SetRenderState(D3DRS_ZWRITEENABLE, (uint32_t)enabled, "D3D9_SetDepthWrite");
 }
 
 
@@ -461,7 +461,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, int vertexFormat, int count) {
 	return vbuffer;
 }
 
-static void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, Int32 size) {
+static void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, int size) {
 	void* dst = NULL;
 	ReturnCode res = IDirect3DIndexBuffer9_Lock(buffer, 0, size, &dst, 0);
 	if (res) ErrorHandler_Fail2(res, "D3D9_CreateIb - Lock");

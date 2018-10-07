@@ -38,13 +38,13 @@ static void MapRenderer_CheckWeather(double delta) {
 	Gfx_SetAlphaBlending(false);
 }
 
-static void MapRenderer_RenderNormalBatch(UInt32 batch) {
-	UInt32 i, offset = MapRenderer_ChunksCount * batch;
+static void MapRenderer_RenderNormalBatch(int batch) {
+	int i, offset = MapRenderer_ChunksCount * batch;
 	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
 		struct ChunkInfo* info = MapRenderer_RenderChunks[i];
 		if (!info->NormalParts) continue;
 
-		struct ChunkPartInfo part = *(info->NormalParts + offset);
+		struct ChunkPartInfo part = info->NormalParts[offset];
 		if (part.Offset < 0) continue;
 		MapRenderer_HasNormalParts[batch] = true;
 
@@ -152,13 +152,13 @@ void MapRenderer_RenderNormal(double delta) {
 #endif
 }
 
-static void MapRenderer_RenderTranslucentBatch(UInt32 batch) {
-	UInt32 i, offset = MapRenderer_ChunksCount * batch;
+static void MapRenderer_RenderTranslucentBatch(int batch) {
+	int i, offset = MapRenderer_ChunksCount * batch;
 	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
 		struct ChunkInfo* info = MapRenderer_RenderChunks[i];
 		if (!info->TranslucentParts) continue;
 
-		struct ChunkPartInfo part = *(info->TranslucentParts + offset);
+		struct ChunkPartInfo part = info->TranslucentParts[offset];
 		if (part.Offset < 0) continue;
 		MapRenderer_HasTranslucentParts[batch] = true;
 
@@ -216,7 +216,7 @@ void MapRenderer_RenderTranslucent(double delta) {
 	if (!MapRenderer_Chunks) return;
 
 	/* First fill depth buffer */
-	UInt32 vertices = Game_Vertices;
+	int vertices = Game_Vertices;
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Gfx_SetTexturing(false);
 	Gfx_SetAlphaBlending(false);

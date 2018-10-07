@@ -18,7 +18,7 @@
 float Math_AbsF(float x);
 float Math_SqrtF(float x);
 float Math_Mod1(float x);
-Int32 Math_AbsI(Int32 x);
+int   Math_AbsI(int x);
 
 double Math_Sin(double x);
 double Math_Cos(double x);
@@ -29,28 +29,28 @@ double Math_Log(double x);
 double Math_Exp(double x);
 double Math_FastTan(double x);
 
-Int32 Math_Floor(float value);
-Int32 Math_Ceil(float value);
-Int32 Math_Log2(UInt32 value);
-Int32 Math_CeilDiv(Int32 a, Int32 b);
-Int32 Math_Sign(float value);
+int Math_Floor(float value);
+int Math_Ceil(float value);
+int Math_Log2(uint32_t value);
+int Math_CeilDiv(int a, int b);
+int Math_Sign(float value);
 
 float Math_Lerp(float a, float b, float t);
 /* Linearly interpolates between a given angle range, adjusting if necessary. */
 float Math_LerpAngle(float leftAngle, float rightAngle, float t);
 
-Int32 Math_NextPowOf2(Int32 value);
-bool Math_IsPowOf2(Int32 value);
+int Math_NextPowOf2(int value);
+bool Math_IsPowOf2(int value);
 #define Math_Clamp(val, min, max) val = val < (min) ? (min) : val;  val = val > (max) ? (max) : val;
 
 typedef uint64_t Random;
-void Random_Init(Random* rnd, Int32 seed);
+void Random_Init(Random* rnd, int seed);
 void Random_InitFromCurrentTime(Random* rnd);
-void Random_SetSeed(Random* rnd, Int32 seed);
+void Random_SetSeed(Random* rnd, int seed);
 /* Returns integer from min inclusive to max exclusive */
-Int32 Random_Range(Random* rnd, Int32 min, Int32 max);
+int Random_Range(Random* rnd, int min, int max);
 /* Returns integer from 0 inclusive to n exclusive */
-Int32 Random_Next(Random* rnd, Int32 n);
+int Random_Next(Random* rnd, int n);
 /* Returns real from 0 inclusive to 1 exclusive */
 float Random_Float(Random* rnd);
 #endif

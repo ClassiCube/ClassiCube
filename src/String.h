@@ -50,14 +50,14 @@ NOINLINE_ bool String_UNSAFE_Separate(STRING_REF const String* str, char c, Stri
 NOINLINE_ bool String_Equals(const String* a, const String* b);
 NOINLINE_ bool String_CaselessEquals(const String* a, const String* b);
 NOINLINE_ bool String_CaselessEqualsConst(const String* a, const char* b);
-NOINLINE_ Int32 String_MakeUInt32(UInt32 num, char* numBuffer);
+NOINLINE_ int  String_MakeUInt32(uint32_t num, char* numBuffer);
 
 bool String_Append(String* str, char c);
 NOINLINE_ bool String_AppendBool(String* str, bool value);
-NOINLINE_ bool String_AppendInt32(String* str, Int32 num);
-NOINLINE_ bool String_AppendUInt32(String* str, UInt32 num);
+NOINLINE_ bool String_AppendInt(String* str, int num);
+NOINLINE_ bool String_AppendUInt32(String* str, uint32_t num);
 NOINLINE_ bool String_AppendUInt64(String* str, uint64_t num);
-NOINLINE_ bool String_AppendReal32(String* str, float num, Int32 fracDigits); /* TODO: Need to account for , or . for decimal */
+NOINLINE_ bool String_AppendFloat(String* str, float num, int fracDigits); /* TODO: Need to account for , or . for decimal */
 NOINLINE_ bool String_AppendConst(String* str, const char* src);
 NOINLINE_ bool String_AppendString(String* str, const String* src);
 NOINLINE_ bool String_AppendColorless(String* str, const String* src);
@@ -85,26 +85,26 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 Codepoint Convert_CP437ToUnicode(char c);
 char Convert_UnicodeToCP437(Codepoint cp);
 bool Convert_TryUnicodeToCP437(Codepoint cp, char* value);
-void String_DecodeUtf8(String* str, uint8_t* data, UInt32 len);
+void String_DecodeUtf8(String* str, uint8_t* data, uint32_t len);
 
 NOINLINE_ bool Convert_TryParseUInt8(const String*  str, uint8_t* value);
 NOINLINE_ bool Convert_TryParseInt16(const String*  str, int16_t* value);
 NOINLINE_ bool Convert_TryParseUInt16(const String* str, uint16_t* value);
-NOINLINE_ bool Convert_TryParseInt32(const String*  str, Int32* value);
+NOINLINE_ bool Convert_TryParseInt(const String*    str, int* value);
 NOINLINE_ bool Convert_TryParseUInt64(const String* str, uint64_t* value);
-NOINLINE_ bool Convert_TryParseFloat(const String* str, float* value);
+NOINLINE_ bool Convert_TryParseFloat(const String*  str, float* value);
 NOINLINE_ bool Convert_TryParseBool(const String*   str, bool* value);
 
 #define STRINGSBUFFER_BUFFER_DEF_SIZE 4096
 #define STRINGSBUFFER_FLAGS_DEF_ELEMS 256
 typedef struct StringsBuffer_ {
-	char*  TextBuffer;
-	UInt32* FlagsBuffer;
+	char*      TextBuffer;
+	uint32_t*  FlagsBuffer;
 	int Count, TotalLength;
 	/* internal state */
-	int    _TextBufferSize, _FlagsBufferSize;
-	char   _DefaultBuffer[STRINGSBUFFER_BUFFER_DEF_SIZE];
-	UInt32 _DefaultFlags[STRINGSBUFFER_FLAGS_DEF_ELEMS];
+	int      _TextBufferSize, _FlagsBufferSize;
+	char     _DefaultBuffer[STRINGSBUFFER_BUFFER_DEF_SIZE];
+	uint32_t _DefaultFlags[STRINGSBUFFER_FLAGS_DEF_ELEMS];
 } StringsBuffer;
 
 NOINLINE_ void StringsBuffer_Init(StringsBuffer* buffer);

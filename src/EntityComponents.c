@@ -204,7 +204,7 @@ static int HacksComp_ParseFlagInt(const char* flagRaw, struct HacksComp* hacks) 
 	if (!raw.length || Game_ClassicMode) return 1;
 
 	int value = 0;
-	if (!Convert_TryParseInt32(&raw, &value)) return 1;
+	if (!Convert_TryParseInt(&raw, &value)) return 1;
 	return value;
 }
 
@@ -592,12 +592,12 @@ static void ShadowComponent_MakeTex(void) {
 	uint8_t pixels[Bitmap_DataSize(sh_size, sh_size)];
 	Bitmap bmp; Bitmap_Create(&bmp, sh_size, sh_size, pixels);
 
-	UInt32 inPix  = PackedCol_ARGB(0, 0, 0, 200);
-	UInt32 outPix = PackedCol_ARGB(0, 0, 0, 0);
+	uint32_t inPix  = PackedCol_ARGB(0, 0, 0, 200);
+	uint32_t outPix = PackedCol_ARGB(0, 0, 0, 0);
 
-	UInt32 x, y;
+	uint32_t x, y;
 	for (y = 0; y < sh_size; y++) {
-		UInt32* row = Bitmap_GetRow(&bmp, y);
+		uint32_t* row = Bitmap_GetRow(&bmp, y);
 		for (x = 0; x < sh_size; x++) {
 			double dist = 
 				(sh_half - (x + 0.5)) * (sh_half - (x + 0.5)) +
@@ -658,7 +658,7 @@ void ShadowComponent_Draw(struct Entity* entity) {
 		ShadowComponent_BoundShadowTex = true;
 	}
 
-	UInt32 vCount = (UInt32)(ptr - vertices);
+	int vCount = (int)(ptr - vertices);
 	GfxCommon_UpdateDynamicVb_IndexedTris(vb, vertices, vCount);
 }
 

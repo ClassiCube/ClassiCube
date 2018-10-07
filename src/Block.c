@@ -18,7 +18,7 @@ const char* Sound_Names[SOUND_COUNT] = {
 /*########################################################################################################################*
 *---------------------------------------------------------Block-----------------------------------------------------------*
 *#########################################################################################################################*/
-UInt32 Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
+uint32_t Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
 char Block_NamesBuffer[STRING_SIZE * BLOCK_COUNT];
 #define Block_NamePtr(i) &Block_NamesBuffer[STRING_SIZE * i]
 
@@ -224,7 +224,7 @@ int Block_FindID(const String* name) {
 
 int Block_Parse(const String* name) {
 	int b;
-	if (Convert_TryParseInt32(name, &b) && b < BLOCK_COUNT) return b;
+	if (Convert_TryParseInt(name, &b) && b < BLOCK_COUNT) return b;
 	return Block_FindID(name);
 }
 
@@ -289,7 +289,7 @@ static float Block_GetSpriteBB_MinX(int size, int tileX, int tileY, Bitmap* bmp)
 	int x, y;
 	for (x = 0; x < size; x++) {
 		for (y = 0; y < size; y++) {
-			UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
+			uint32_t* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 			if (PackedCol_ARGB_A(row[x]) != 0) {
 				return (float)x / size;
 			}
@@ -301,7 +301,7 @@ static float Block_GetSpriteBB_MinX(int size, int tileX, int tileY, Bitmap* bmp)
 static float Block_GetSpriteBB_MinY(int size, int tileX, int tileY, Bitmap* bmp) {
 	int x, y;
 	for (y = size - 1; y >= 0; y--) {
-		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
+		uint32_t* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 		for (x = 0; x < size; x++) {
 			if (PackedCol_ARGB_A(row[x]) != 0) {
 				return 1.0f - (float)(y + 1) / size;
@@ -315,7 +315,7 @@ static float Block_GetSpriteBB_MaxX(int size, int tileX, int tileY, Bitmap* bmp)
 	int x, y;
 	for (x = size - 1; x >= 0; x--) {
 		for (y = 0; y < size; y++) {
-			UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
+			uint32_t* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 			if (PackedCol_ARGB_A(row[x]) != 0) {
 				return (float)(x + 1) / size;
 			}
@@ -327,7 +327,7 @@ static float Block_GetSpriteBB_MaxX(int size, int tileX, int tileY, Bitmap* bmp)
 static float Block_GetSpriteBB_MaxY(int size, int tileX, int tileY, Bitmap* bmp) {
 	int x, y;
 	for (y = 0; y < size; y++) {
-		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
+		uint32_t* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 		for (x = 0; x < size; x++) {
 			if (PackedCol_ARGB_A(row[x]) != 0) {
 				return 1.0f - (float)y / size;

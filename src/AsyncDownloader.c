@@ -196,15 +196,15 @@ static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	uint64_t timer;
 
 	Stopwatch_Measure(&timer);
-	request->Result = Http_Do(request, &async_curProgress);
-	UInt32 elapsed  = Stopwatch_ElapsedMicroseconds(&timer) / 1000;
+	request->Result  = Http_Do(request, &async_curProgress);
+	uint32_t elapsed = Stopwatch_ElapsedMicroseconds(&timer) / 1000;
 
 	int status = request->StatusCode;
 	Platform_Log3("HTTP: return code %i (http %i), in %i ms", 
 		&request->Result, &status, &elapsed);
 
 	if (request->ResultData) {
-		UInt32 size = request->ResultSize;
+		uint32_t size  = request->ResultSize;
 		uintptr_t addr = (uintptr_t)request->ResultData;
 		Platform_Log2("HTTP returned data: %i bytes at %x", &size, &addr);
 	}

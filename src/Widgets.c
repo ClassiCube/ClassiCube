@@ -437,7 +437,7 @@ static bool HotbarWidget_MouseDown(void* widget, int x, int y, MouseButton btn) 
 
 	int width  = (int)(w->ElemSize * w->BorderSize);
 	int height = Math_Ceil(w->BarHeight);
-	UInt32 i;
+	int i;
 
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
 		int winX = (int)(w->X + width * i);
@@ -1313,12 +1313,12 @@ static bool Int_ValidChar(struct MenuInputValidator* v, char c) {
 static bool Int_ValidString(struct MenuInputValidator* v, const String* s) {
 	int value;
 	if (s->length == 1 && s->buffer[0] == '-') return true; /* input is just a minus sign */
-	return Convert_TryParseInt32(s, &value);
+	return Convert_TryParseInt(s, &value);
 }
 
 static bool Int_ValidValue(struct MenuInputValidator* v, const String* s) {
 	int value;
-	if (!Convert_TryParseInt32(s, &value)) return false;
+	if (!Convert_TryParseInt(s, &value)) return false;
 
 	int min = v->Meta_Int.Min, max = v->Meta_Int.Max;
 	return min <= value && value <= max;
@@ -1595,7 +1595,7 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 	Gfx_SetTexturing(false);
 	int x = w->X, y = w->Y;
 
-	UInt32 i;
+	int i;
 	for (i = 0; i < INPUTWIDGET_MAX_LINES; i++) {
 		if (i > 0 && w->LineSizes[i].Height == 0) break;
 		bool caretAtEnd = (w->CaretY == i) && (w->CaretX == INPUTWIDGET_LEN || w->CaretPos == -1);
@@ -1705,7 +1705,7 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 	Chat_AddOf(&empty, MSG_TYPE_CLIENTSTATUS_3);
 
 	EntityID matches[TABLIST_MAX_NAMES];
-	UInt32 i, matchesCount = 0;
+	int i, matchesCount = 0;
 
 	for (i = 0; i < TABLIST_MAX_NAMES; i++) {
 		EntityID id = (EntityID)i;

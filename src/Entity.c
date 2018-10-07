@@ -410,8 +410,8 @@ bool TabList_Valid(EntityID id) {
 	return TabList_PlayerNames[id] || TabList_ListNames[id] || TabList_GroupNames[id];
 }
 
-void TabList_RemoveAt(UInt32 index) {
-	UInt32 i;
+void TabList_RemoveAt(uint32_t index) {
+	uint32_t i;
 	StringsBuffer_Remove(&TabList_Buffer, index);
 	for (i = 0; i < TABLIST_MAX_NAMES; i++) {
 		if (TabList_PlayerNames[i] == index) { TabList_PlayerNames[i] = 0; }
@@ -632,7 +632,7 @@ static void Player_ClearHat(Bitmap* bmp, uint8_t skinType) {
 
 	/* determine if we actually need filtering */
 	for (y = 0; y < sizeY; y++) {
-		UInt32* row = Bitmap_GetRow(bmp, y);
+		uint32_t* row = Bitmap_GetRow(bmp, y);
 		row += sizeX;
 		for (x = 0; x < sizeX; x++) {
 			uint8_t alpha = PackedCol_ARGB_A(row[x]);
@@ -641,13 +641,13 @@ static void Player_ClearHat(Bitmap* bmp, uint8_t skinType) {
 	}
 
 	/* only perform filtering when the entire hat is opaque */
-	UInt32 fullWhite = PackedCol_ARGB(255, 255, 255, 255);
-	UInt32 fullBlack = PackedCol_ARGB(0,   0,   0,   255);
+	uint32_t fullWhite = PackedCol_ARGB(255, 255, 255, 255);
+	uint32_t fullBlack = PackedCol_ARGB(0,   0,   0,   255);
 	for (y = 0; y < sizeY; y++) {
-		UInt32* row = Bitmap_GetRow(bmp, y);
+		uint32_t* row = Bitmap_GetRow(bmp, y);
 		row += sizeX;
 		for (x = 0; x < sizeX; x++) {
-			UInt32 pixel = row[x];
+			uint32_t pixel = row[x];
 			if (pixel == fullWhite || pixel == fullBlack) row[x] = 0;
 		}
 	}
@@ -660,10 +660,10 @@ static void Player_EnsurePow2(struct Player* player, Bitmap* bmp) {
 
 	Bitmap scaled; Bitmap_Allocate(&scaled, width, height);
 	int y;
-	UInt32 stride = (UInt32)(bmp->Width) * BITMAP_SIZEOF_PIXEL;
+	uint32_t stride = (uint32_t)(bmp->Width) * BITMAP_SIZEOF_PIXEL;
 	for (y = 0; y < bmp->Height; y++) {
-		UInt32* src = Bitmap_GetRow(bmp, y);
-		UInt32* dst = Bitmap_GetRow(&scaled, y);
+		uint32_t* src = Bitmap_GetRow(bmp, y);
+		uint32_t* dst = Bitmap_GetRow(&scaled, y);
 		Mem_Copy(dst, src, stride);
 	}
 

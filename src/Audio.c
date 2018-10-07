@@ -46,7 +46,7 @@ static void Volume_Mix8(uint8_t* samples, int count, int volume) {
 *#########################################################################################################################*/
 struct Sound {
 	struct AudioFormat Format;
-	uint8_t* Data; UInt32 DataSize;
+	uint8_t* Data; uint32_t DataSize;
 };
 
 #define AUDIO_MAX_SOUNDS 10
@@ -61,11 +61,11 @@ struct Soundboard {
 	struct SoundGroup Groups[AUDIO_MAX_SOUNDS];
 };
 
-#define WAV_FourCC(a, b, c, d) (((UInt32)a << 24) | ((UInt32)b << 16) | ((UInt32)c << 8) | (UInt32)d)
+#define WAV_FourCC(a, b, c, d) (((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)c << 8) | (uint32_t)d)
 #define WAV_FMT_SIZE 16
 
 static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
-	UInt32 fourCC, size;
+	uint32_t fourCC, size;
 	uint8_t tmp[WAV_FMT_SIZE];
 	ReturnCode res;
 
@@ -184,7 +184,7 @@ struct Sound* Soundboard_PickRandom(struct Soundboard* board, uint8_t type) {
 /*########################################################################################################################*
 *--------------------------------------------------------Sounds-----------------------------------------------------------*
 *#########################################################################################################################*/
-struct SoundOutput { AudioHandle Handle; void* Buffer; UInt32 BufferSize; };
+struct SoundOutput { AudioHandle Handle; void* Buffer; uint32_t BufferSize; };
 #define AUDIO_MAX_HANDLES 6
 #define AUDIO_DEF_ELEMS 0
 #define HANDLE_INV -1
@@ -209,7 +209,7 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 	/* copy to temp buffer to apply volume */
 	if (volume < 100) {		
 		if (output->BufferSize < snd->DataSize) {
-			UInt32 expandBy = snd->DataSize - output->BufferSize;
+			uint32_t expandBy = snd->DataSize - output->BufferSize;
 			output->Buffer  = Utils_Resize(output->Buffer, &output->BufferSize, 
 											1, AUDIO_DEF_ELEMS, expandBy);
 		}

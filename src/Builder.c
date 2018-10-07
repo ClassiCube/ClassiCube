@@ -18,7 +18,7 @@
 
 BlockID* Builder_Chunk;
 uint8_t* Builder_Counts;
-Int32* Builder_BitFlags;
+int* Builder_BitFlags;
 bool Builder_UseBitFlags;
 int Builder_X, Builder_Y, Builder_Z;
 BlockID Builder_Block;
@@ -38,8 +38,8 @@ void (*Builder_PostStretchTiles)(int x1, int y1, int z1);
 /* Contains state for vertices for a portion of a chunk mesh (vertices that are in a 1D atlas) */
 struct Builder1DPart {
 	VertexP3fT2fC4b* fVertices[FACE_COUNT];
-	Int32 fCount[FACE_COUNT];
-	Int32 sCount, sOffset, sAdvance;
+	int fCount[FACE_COUNT];
+	int sCount, sOffset, sAdvance;
 };
 
 /* Part builder data, for both normal and translucent parts.
@@ -157,7 +157,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 
 				Builder_X = x; Builder_Y = y; Builder_Z = z;
 				Builder_FullBright = Block_FullBright[b];
-				UInt32 tileIdx = b * BLOCK_COUNT;
+				int tileIdx = b * BLOCK_COUNT;
 				/* All of these function calls are inlined as they can be called tens of millions to hundreds of millions of times. */
 
 				if (Builder_Counts[index] == 0 ||
@@ -283,7 +283,7 @@ static void Builder_ReadChunkData(int x1, int y1, int z1, bool* outAllAir, bool*
 static bool Builder_BuildChunk(int x1, int y1, int z1, bool* allAir) {
 	BlockID chunk[EXTCHUNK_SIZE_3]; Builder_Chunk = chunk;
 	uint8_t counts[CHUNK_SIZE_3 * FACE_COUNT]; Builder_Counts = counts;
-	Int32 bitFlags[EXTCHUNK_SIZE_3]; Builder_BitFlags = bitFlags;
+	int bitFlags[EXTCHUNK_SIZE_3]; Builder_BitFlags = bitFlags;
 	Builder_PreStretchTiles(x1, y1, z1);
 
 	Mem_Set(chunk, BLOCK_AIR, EXTCHUNK_SIZE_3 * sizeof(BlockID));
@@ -673,8 +673,8 @@ void NormalBuilder_SetActive(void) {
 *#########################################################################################################################*/
 Vector3 adv_minBB, adv_maxBB;
 bool adv_isTranslucent;
-Int32 adv_initBitFlags, adv_lightFlags, adv_baseOffset;
-Int32* adv_bitFlags;
+int adv_initBitFlags, adv_lightFlags, adv_baseOffset;
+int* adv_bitFlags;
 float adv_x1, adv_y1, adv_z1, adv_x2, adv_y2, adv_z2;
 PackedCol adv_lerp[5], adv_lerpX[5], adv_lerpZ[5], adv_lerpY[5];
 
@@ -693,7 +693,7 @@ enum ADV_MASK {
 	xP1_yM1_zP1, xP1_yCC_zP1, xP1_yP1_zP1,
 };
 
-static Int32 Adv_Lit(int x, int y, int z, int cIndex) {
+static int Adv_Lit(int x, int y, int z, int cIndex) {
 	if (y < 0 || y >= World_Height) return 7; /* all faces lit */
 
 	/* TODO: check sides height (if sides > edges), check if edge block casts a shadow */
@@ -739,7 +739,7 @@ static int Adv_ComputeLightFlags(int x, int y, int z, int cIndex) {
 		Adv_Lit(x + 1, y, z + 1, cIndex + 1 + 18) << xP1_yM1_zP1;
 }
 
-Int32 adv_masks[FACE_COUNT] = {
+int adv_masks[FACE_COUNT] = {
 	/* XMin face */
 	(1 << xM1_yM1_zM1) | (1 << xM1_yM1_zCC) | (1 << xM1_yM1_zP1) |
 	(1 << xM1_yCC_zM1) | (1 << xM1_yCC_zCC) | (1 << xM1_yCC_zP1) |

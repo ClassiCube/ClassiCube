@@ -24,7 +24,7 @@ struct AsyncRequest {
 	ReturnCode Result;
 
 	void* ResultData;
-	UInt32 ResultSize;
+	uint32_t ResultSize;
 
 	TimeMS LastModified;    /* Time item cached at (if at all) */
 	char Etag[STRING_SIZE]; /* ETag of cached item (if any) */

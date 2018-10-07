@@ -145,25 +145,25 @@ bool String_AppendBool(String* str, bool value) {
 	return String_AppendConst(str, text);
 }
 
-Int32 String_MakeUInt32(UInt32 num, char* numBuffer) {
-	Int32 len = 0;
+int String_MakeUInt32(uint32_t num, char* numBuffer) {
+	int len = 0;
 	do {
 		numBuffer[len] = '0' + (num % 10); num /= 10; len++;
 	} while (num > 0);
 	return len;
 }
 
-bool String_AppendInt32(String* str, Int32 num) {
+bool String_AppendInt(String* str, int num) {
 	if (num < 0) {
 		num = -num;
 		if (!String_Append(str, '-')) return false;
 	}
-	return String_AppendUInt32(str, (UInt32)num);
+	return String_AppendUInt32(str, (uint32_t)num);
 }
 
-bool String_AppendUInt32(String* str, UInt32 num) {
+bool String_AppendUInt32(String* str, uint32_t num) {
 	char numBuffer[STRING_INT_CHARS];
-	Int32 i, numLen = String_MakeUInt32(num, numBuffer);
+	int i, numLen = String_MakeUInt32(num, numBuffer);
 
 	for (i = numLen - 1; i >= 0; i--) {
 		if (!String_Append(str, numBuffer[i])) return false;
@@ -172,12 +172,12 @@ bool String_AppendUInt32(String* str, UInt32 num) {
 }
 
 /* Attempts to append an integer value to the end of a string, padding left with 0. */
-bool String_AppendPaddedInt32(String* str, Int32 num, Int32 minDigits) {
+bool String_AppendPaddedInt(String* str, int num, int minDigits) {
 	char numBuffer[STRING_INT_CHARS];
-	Int32 i;
+	int i;
 	for (i = 0; i < minDigits; i++) { numBuffer[i] = '0'; }
 
-	Int32 numLen = String_MakeUInt32(num, numBuffer);
+	int numLen = String_MakeUInt32(num, numBuffer);
 	if (numLen < minDigits) numLen = minDigits;
 
 	for (i = numLen - 1; i >= 0; i--) {
@@ -186,8 +186,8 @@ bool String_AppendPaddedInt32(String* str, Int32 num, Int32 minDigits) {
 	return true;
 }
 
-Int32 String_MakeUInt64(uint64_t num, char* numBuffer) {
-	Int32 len = 0;
+int String_MakeUInt64(uint64_t num, char* numBuffer) {
+	int len = 0;
 	do {
 		numBuffer[len] = '0' + (num % 10); num /= 10; len++;
 	} while (num > 0);
@@ -196,7 +196,7 @@ Int32 String_MakeUInt64(uint64_t num, char* numBuffer) {
 
 bool String_AppendUInt64(String* str, uint64_t num) {
 	char numBuffer[STRING_INT_CHARS];
-	Int32 i, numLen = String_MakeUInt64(num, numBuffer);
+	int i, numLen = String_MakeUInt64(num, numBuffer);
 
 	for (i = numLen - 1; i >= 0; i--) {
 		if (!String_Append(str, numBuffer[i])) return false;
@@ -204,23 +204,23 @@ bool String_AppendUInt64(String* str, uint64_t num) {
 	return true;
 }
 
-bool String_AppendReal32(String* str, float num, Int32 fracDigits) {
+bool String_AppendFloat(String* str, float num, int fracDigits) {
 	if (num < 0.0f) {
 		if (!String_Append(str, '-')) return false;
 		num = -num;
 	}
 
-	Int32 wholePortion = (Int32)num;
+	int wholePortion = (int)num;
 	if (!String_AppendUInt32(str, wholePortion)) return false;
 
 	double frac = (double)num - (double)wholePortion;
 	if (frac == 0.0) return true;
 	if (!String_Append(str, '.')) return false;
 
-	Int32 i;
+	int i;
 	for (i = 0; i < fracDigits; i++) {
 		frac *= 10;
-		Int32 digit = Math_AbsI((Int32)frac) % 10;
+		int digit = Math_AbsI((int)frac) % 10;
 		if (!String_Append(str, '0' + digit)) return false;
 	}
 	return true;
@@ -236,7 +236,7 @@ bool String_AppendHex(String* str, uint8_t value) {
 	return String_Append(str, c_hi) && String_Append(str, c_lo);
 }
 
-NOINLINE_ static bool String_Hex32(String* str, UInt32 value) {
+NOINLINE_ static bool String_Hex32(String* str, uint32_t value) {
 	bool appended;
 	int shift;
 
@@ -438,15 +438,15 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 		const void* arg = args[j++];
 		switch (formatStr.buffer[++i]) {
 		case 'b': 
-			String_AppendInt32(str, *((uint8_t*)arg)); break;
+			String_AppendInt(str, *((uint8_t*)arg)); break;
 		case 'i': 
-			String_AppendInt32(str, *((Int32*)arg)); break;
+			String_AppendInt(str, *((int*)arg)); break;
 		case 'f': 
 			digits = formatStr.buffer[++i] - '0';
-			String_AppendReal32(str, *((float*)arg), digits); break;
+			String_AppendFloat(str, *((float*)arg), digits); break;
 		case 'p':
 			digits = formatStr.buffer[++i] - '0';
-			String_AppendPaddedInt32(str, *((Int32*)arg), digits); break;
+			String_AppendPaddedInt(str, *((int*)arg), digits); break;
 		case 't': 
 			String_AppendBool(str, *((bool*)arg)); break;
 		case 'c': 
@@ -457,12 +457,12 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 			String_Append(str, *((char*)arg)); break;
 		case 'x':
 			if (sizeof(uintptr_t) == 4) {
-				String_Hex32(str, *((UInt32*)arg)); break;
+				String_Hex32(str, *((uint32_t*)arg)); break;
 			} else {
 				String_Hex64(str, *((uint64_t*)arg)); break;
 			}
 		case 'h':
-			String_Hex32(str, *((UInt32*)arg)); break;
+			String_Hex32(str, *((uint32_t*)arg)); break;
 		default: 
 			ErrorHandler_Fail("Invalid type for string format");
 		}
@@ -512,7 +512,7 @@ char Convert_UnicodeToCP437(Codepoint cp) {
 
 bool Convert_TryUnicodeToCP437(Codepoint cp, char* value) {
 	if (cp >= 0x20 && cp < 0x7F) { *value = (char)cp; return true; }
-	UInt32 i;
+	int i;
 
 	for (i = 0; i < Array_Elems(Convert_ControlChars); i++) {
 		if (Convert_ControlChars[i] == cp) { *value = i; return true; }
@@ -524,7 +524,7 @@ bool Convert_TryUnicodeToCP437(Codepoint cp, char* value) {
 	*value = '?'; return false;
 }
 
-void String_DecodeUtf8(String* str, uint8_t* data, UInt32 len) {
+void String_DecodeUtf8(String* str, uint8_t* data, uint32_t len) {
 	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len);
 	Codepoint cp;
 
@@ -536,20 +536,20 @@ void String_DecodeUtf8(String* str, uint8_t* data, UInt32 len) {
 }
 
 bool Convert_TryParseUInt8(const String* str, uint8_t* value) {
-	*value = 0; Int32 tmp;
-	if (!Convert_TryParseInt32(str, &tmp) || tmp < 0 || tmp > UInt8_MaxValue) return false;
+	*value = 0; int tmp;
+	if (!Convert_TryParseInt(str, &tmp) || tmp < 0 || tmp > UInt8_MaxValue) return false;
 	*value = (uint8_t)tmp; return true;
 }
 
 bool Convert_TryParseInt16(const String* str, int16_t* value) {
-	*value = 0; Int32 tmp;
-	if (!Convert_TryParseInt32(str, &tmp) || tmp < Int16_MinValue || tmp > Int16_MaxValue) return false;
+	*value = 0; int tmp;
+	if (!Convert_TryParseInt(str, &tmp) || tmp < Int16_MinValue || tmp > Int16_MaxValue) return false;
 	*value = (int16_t)tmp; return true;
 }
 
 bool Convert_TryParseUInt16(const String* str, uint16_t* value) {
-	*value = 0; Int32 tmp;
-	if (!Convert_TryParseInt32(str, &tmp) || tmp < 0 || tmp > UInt16_MaxValue) return false;
+	*value = 0; int tmp;
+	if (!Convert_TryParseInt(str, &tmp) || tmp < 0 || tmp > UInt16_MaxValue) return false;
 	*value = (uint16_t)tmp; return true;
 }
 
@@ -563,13 +563,13 @@ static int Convert_CompareDigits(const char* digits, const char* magnitude) {
 	return 0;
 }
 
-bool Convert_TryParseDigits(const String* str, bool* negative, char* digits, Int32 maxDigits) {
+static bool Convert_TryParseDigits(const String* str, bool* negative, char* digits, int maxDigits) {
 	*negative = false;
 	if (!str->length) return false;
 	char* start = digits; digits += (maxDigits - 1);
 
 	/* Handle number signs */
-	Int32 offset = 0, i = 0;
+	int offset = 0, i = 0;
 	if (str->buffer[0] == '-') { *negative = true; offset = 1; }
 	if (str->buffer[0] == '+') { offset = 1; }
 
@@ -584,14 +584,14 @@ bool Convert_TryParseDigits(const String* str, bool* negative, char* digits, Int
 	return true;
 }
 
-bool Convert_TryParseInt32(const String* str, Int32* value) {
+bool Convert_TryParseInt(const String* str, int* value) {
 	*value = 0;
 	#define INT32_DIGITS 10
 	bool negative;	
 	char digits[INT32_DIGITS];
 	if (!Convert_TryParseDigits(str, &negative, digits, INT32_DIGITS)) return false;
 
-	Int32 i, compare;
+	int i, compare;
 	if (negative) {
 		compare = Convert_CompareDigits(digits, "2147483648");
 		/* Special case, since |largest min value| is > |largest max value| */
@@ -601,7 +601,7 @@ bool Convert_TryParseInt32(const String* str, Int32* value) {
 	}
 
 	if (compare > 0) return false;	
-	Int32 sum = 0;
+	int sum = 0;
 	for (i = 0; i < INT32_DIGITS; i++) {
 		sum *= 10; sum += digits[i] - '0';
 	}
@@ -653,7 +653,7 @@ bool Convert_TryParseFloat(const String* str, float* value) {
 		}
 
 		if (c < '0' || c > '9') return false;
-		Int32 digit = c - '0';
+		int digit = c - '0';
 		if (!foundDecimalPoint) {
 			whole *= 10; whole += digit;
 		} else {
@@ -715,9 +715,9 @@ void StringsBuffer_Get(StringsBuffer* buffer, int i, String* text) {
 String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i) {
 	if (i < 0 || i >= buffer->Count) ErrorHandler_Fail("Tried to get String past StringsBuffer end");
 
-	UInt32 flags  = buffer->FlagsBuffer[i];
-	UInt32 offset = flags >> STRINGSBUFFER_LEN_SHIFT;
-	UInt32 len    = flags  & STRINGSBUFFER_LEN_MASK;
+	uint32_t flags  = buffer->FlagsBuffer[i];
+	uint32_t offset = flags >> STRINGSBUFFER_LEN_SHIFT;
+	uint32_t len    = flags  & STRINGSBUFFER_LEN_MASK;
 	return String_Init(&buffer->TextBuffer[offset], len, len);
 }
 
@@ -727,7 +727,7 @@ void StringsBuffer_Add(StringsBuffer* buffer, const String* text) {
 
 	if (buffer->Count == buffer->_FlagsBufferSize) {
 		buffer->FlagsBuffer = Utils_Resize(buffer->FlagsBuffer, &buffer->_FlagsBufferSize, 
-											sizeof(UInt32), STRINGSBUFFER_FLAGS_DEF_ELEMS, 512);
+											4, STRINGSBUFFER_FLAGS_DEF_ELEMS, 512);
 	}
 
 	if (text->length > STRINGSBUFFER_LEN_MASK) {
@@ -752,21 +752,21 @@ void StringsBuffer_Add(StringsBuffer* buffer, const String* text) {
 void StringsBuffer_Remove(StringsBuffer* buffer, int index) {
 	if (index < 0 || index >= buffer->Count) ErrorHandler_Fail("Tried to remove String past StringsBuffer end");
 
-	UInt32 flags  = buffer->FlagsBuffer[index];
-	UInt32 offset = flags >> STRINGSBUFFER_LEN_SHIFT;
-	UInt32 len    = flags  & STRINGSBUFFER_LEN_MASK;
+	uint32_t flags  = buffer->FlagsBuffer[index];
+	uint32_t offset = flags >> STRINGSBUFFER_LEN_SHIFT;
+	uint32_t len    = flags  & STRINGSBUFFER_LEN_MASK;
 
 	/* Imagine buffer is this: AAXXYYZZ, and want to delete X */
 	/* Start points to first character of Y */
 	/* End points to character past last character of Z */
-	UInt32 i, start = offset + len, end = buffer->TotalLength;
+	uint32_t i, start = offset + len, end = buffer->TotalLength;
 	for (i = start; i < end; i++) { 
 		buffer->TextBuffer[i - len] = buffer->TextBuffer[i]; 
 	}
 
 	/* adjust text offset of elements after this element */
 	/* Elements may not be in order so most account for that */
-	UInt32 flagsLen = len << STRINGSBUFFER_LEN_SHIFT;
+	uint32_t flagsLen = len << STRINGSBUFFER_LEN_SHIFT;
 	for (i = index; i < buffer->Count; i++) {
 		buffer->FlagsBuffer[i] = buffer->FlagsBuffer[i + 1];
 		if (buffer->FlagsBuffer[i] >= flags) {

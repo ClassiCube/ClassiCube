@@ -23,7 +23,7 @@ float L_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 Random L_rnd;
 bool L_rndInitalised;
 
-static void LavaAnimation_Tick(UInt32* ptr, int size) {
+static void LavaAnimation_Tick(uint32_t* ptr, int size) {
 	if (!L_rndInitalised) {
 		Random_InitFromCurrentTime(&L_rnd);
 		L_rndInitalised = true;
@@ -91,7 +91,7 @@ float W_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 Random W_rnd;
 bool W_rndInitalised;
 
-static void WaterAnimation_Tick(UInt32* ptr, int size) {
+static void WaterAnimation_Tick(uint32_t* ptr, int size) {
 	if (!W_rndInitalised) {
 		Random_InitFromCurrentTime(&W_rnd);
 		W_rndInitalised = true;
@@ -219,9 +219,9 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int s
 
 	if (!data) {
 		if (texLoc == 30) {
-			LavaAnimation_Tick((UInt32*)animPart.Scan0, size);
+			LavaAnimation_Tick((uint32_t*)animPart.Scan0, size);
 		} else if (texLoc == 14) {
-			WaterAnimation_Tick((UInt32*)animPart.Scan0, size);
+			WaterAnimation_Tick((uint32_t*)animPart.Scan0, size);
 		}
 	} else {
 		int x = data->FrameX + data->State * size;

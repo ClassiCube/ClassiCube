@@ -16,12 +16,12 @@
 
 /* Data for a resizable queue, used for liquid physic tick entries. */
 struct TickQueue {
-	UInt32* Entries;     /* Buffer holding the items in the tick queue */
-	UInt32  EntriesSize; /* Max number of elements in the buffer */
-	UInt32  EntriesMask; /* EntriesSize - 1, as EntriesSize is always a power of two */
-	UInt32  Size;        /* Number of used elements */
-	UInt32  Head;        /* Head index into the buffer */
-	UInt32  Tail;        /* Tail index into the buffer */
+	uint32_t* Entries;     /* Buffer holding the items in the tick queue */
+	uint32_t  EntriesSize; /* Max number of elements in the buffer */
+	uint32_t  EntriesMask; /* EntriesSize - 1, as EntriesSize is always a power of two */
+	uint32_t  Size;        /* Number of used elements */
+	uint32_t  Head;        /* Head index into the buffer */
+	uint32_t  Tail;        /* Tail index into the buffer */
 };
 
 static void TickQueue_Init(struct TickQueue* queue) {
@@ -46,11 +46,11 @@ static void TickQueue_Resize(struct TickQueue* queue) {
 		return;
 	}
 
-	UInt32 capacity = queue->EntriesSize * 2;
+	uint32_t capacity = queue->EntriesSize * 2;
 	if (capacity < 32) capacity = 32;
-	UInt32* entries = Mem_Alloc(capacity, sizeof(UInt32), "physics tick queue");
+	uint32_t* entries = Mem_Alloc(capacity, sizeof(uint32_t), "physics tick queue");
 
-	UInt32 i, idx;
+	uint32_t i, idx;
 	for (i = 0; i < queue->Size; i++) {
 		idx = (queue->Head + i) & queue->EntriesMask;
 		entries[i] = queue->Entries[idx];
@@ -64,7 +64,7 @@ static void TickQueue_Resize(struct TickQueue* queue) {
 	queue->Tail = queue->Size;
 }
 
-static void TickQueue_Enqueue(struct TickQueue* queue, UInt32 item) {
+static void TickQueue_Enqueue(struct TickQueue* queue, uint32_t item) {
 	if (queue->Size == queue->EntriesSize)
 		TickQueue_Resize(queue);
 
@@ -73,8 +73,8 @@ static void TickQueue_Enqueue(struct TickQueue* queue, UInt32 item) {
 	queue->Size++;
 }
 
-static UInt32 TickQueue_Dequeue(struct TickQueue* queue) {
-	UInt32 result = queue->Entries[queue->Head];
+static uint32_t TickQueue_Dequeue(struct TickQueue* queue) {
+	uint32_t result = queue->Entries[queue->Head];
 	queue->Head = (queue->Head + 1) & queue->EntriesMask;
 	queue->Size--;
 	return result;
@@ -215,13 +215,13 @@ static void Physics_DoFalling(int index, BlockID block) {
 }
 
 static bool Physics_CheckItem(struct TickQueue* queue, int* posIndex) {
-	UInt32 packed = TickQueue_Dequeue(queue);
+	uint32_t packed = TickQueue_Dequeue(queue);
 	int tickDelay = (int)((packed & PHYSICS_TICK_MASK) >> PHYSICS_TICK_SHIFT);
 	*posIndex = (int)(packed & PHYSICS_POS_MASK);
 
 	if (tickDelay > 0) {
 		tickDelay--;
-		UInt32 item = (UInt32)(*posIndex) | ((UInt32)tickDelay << PHYSICS_TICK_SHIFT);
+		uint32_t item = (uint32_t)(*posIndex) | ((uint32_t)tickDelay << PHYSICS_TICK_SHIFT);
 		TickQueue_Enqueue(queue, item);
 		return false;
 	}
@@ -428,7 +428,7 @@ static void Physics_DeleteSponge(int index, BlockID block) {
 					index = World_Pack(xx, yy, zz);
 					block = World_Blocks[index];
 					if (block == BLOCK_WATER || block == BLOCK_STILL_WATER) {
-						UInt32 item = (1UL << PHYSICS_TICK_SHIFT) | (UInt32)index;
+						uint32_t item = (1UL << PHYSICS_TICK_SHIFT) | (uint32_t)index;
 						TickQueue_Enqueue(&physics_waterQ, item);
 					}
 				}

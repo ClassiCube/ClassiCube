@@ -16,7 +16,7 @@
 #include "Vectors.h"
 
 Vector3I ChunkUpdater_ChunkPos;
-UInt32* ChunkUpdater_Distances;
+uint32_t* ChunkUpdater_Distances;
 
 void ChunkInfo_Reset(struct ChunkInfo* chunk, int x, int y, int z) {
 	chunk->CentreX = x + 8; chunk->CentreY = y + 8; chunk->CentreZ = z + 8;
@@ -101,7 +101,7 @@ static void ChunkUpdater_FreeAllocations(void) {
 }
 
 static void ChunkUpdater_PerformPartsAllocations(void) {
-	UInt32 count = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
+	uint32_t count = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
 	MapRenderer_PartsBuffer_Raw  = Mem_AllocCleared(count * 2, sizeof(struct ChunkPartInfo), "chunk parts");
 	MapRenderer_PartsNormal      = MapRenderer_PartsBuffer_Raw;
 	MapRenderer_PartsTranslucent = MapRenderer_PartsBuffer_Raw + count;
@@ -111,7 +111,7 @@ static void ChunkUpdater_PerformAllocations(void) {
 	MapRenderer_Chunks       = Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo), "chunk info");
 	MapRenderer_SortedChunks = Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "sorted chunk info");
 	MapRenderer_RenderChunks = Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "render chunk info");
-	ChunkUpdater_Distances   = Mem_Alloc(MapRenderer_ChunksCount, sizeof(Int32), "chunk distances");
+	ChunkUpdater_Distances   = Mem_Alloc(MapRenderer_ChunksCount, 4, "chunk distances");
 	ChunkUpdater_PerformPartsAllocations();
 }
 
@@ -175,7 +175,7 @@ static void ChunkUpdater_OnNewMapLoaded(void* obj) {
 	MapRenderer_ChunksY = (World_Height + CHUNK_MAX) >> CHUNK_SHIFT;
 	MapRenderer_ChunksZ = (World_Length + CHUNK_MAX) >> CHUNK_SHIFT;
 
-	Int32 count = MapRenderer_ChunksX * MapRenderer_ChunksY * MapRenderer_ChunksZ;
+	int count = MapRenderer_ChunksX * MapRenderer_ChunksY * MapRenderer_ChunksZ;
 	/* TODO: Only perform reallocation when map volume has changed */
 	/*if (MapRenderer_ChunksCount != count) { */
 		MapRenderer_ChunksCount = count;
@@ -403,10 +403,10 @@ void ChunkUpdater_BuildChunk(struct ChunkInfo* info, int* chunkUpdates) {
 
 static void ChunkUpdater_QuickSort(int left, int right) {
 	struct ChunkInfo** values = MapRenderer_SortedChunks; struct ChunkInfo* value;
-	Int32* keys = ChunkUpdater_Distances;          Int32 key;
+	uint32_t* keys = ChunkUpdater_Distances;          uint32_t key;
 	while (left < right) {
 		int i = left, j = right;
-		Int32 pivot = keys[(i + j) / 2];
+		uint32_t pivot = keys[(i + j) / 2];
 
 		/* partition the list */
 		while (i <= j) {

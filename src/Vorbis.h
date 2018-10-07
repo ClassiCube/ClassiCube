@@ -14,22 +14,22 @@ void Ogg_MakeStream(struct Stream* stream, uint8_t* buffer, struct Stream* sourc
 struct Codebook; struct Floor; struct Residue; struct Mapping; struct Mode;
 
 struct imdct_state {
-	Int32 n, log2_n;
+	int n, log2_n;
 	float A[VORBIS_MAX_BLOCK_SIZE / 2];
 	float B[VORBIS_MAX_BLOCK_SIZE / 2];
 	float C[VORBIS_MAX_BLOCK_SIZE / 4];
-	UInt32 Reversed[VORBIS_MAX_BLOCK_SIZE / 8];
+	uint32_t Reversed[VORBIS_MAX_BLOCK_SIZE / 8];
 };
 
 struct VorbisWindow { float* Prev; float* Cur; };
 struct VorbisState {
-	UInt32 Bits;    /* Holds bits across byte boundaries*/
-	UInt32 NumBits; /* Number of bits in Bits buffer*/
+	uint32_t Bits;    /* Holds bits across byte boundaries*/
+	uint32_t NumBits; /* Number of bits in Bits buffer*/
 	struct Stream* Source;  /* Source for filling Input buffer */
 
 	uint8_t Channels, ModeNumBits;
 	uint16_t CurBlockSize, PrevBlockSize, DataSize, NumCodebooks;
-	Int32 SampleRate; Int32 BlockSizes[2];
+	int SampleRate; int BlockSizes[2];
 	float* Temp; /* temp array reused in places */
 	float* Values[2]; /* swapped each frame */
 	float* PrevOutput[VORBIS_MAX_CHANS];

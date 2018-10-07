@@ -20,8 +20,8 @@
 
 bool input_buttonsDown[3];
 int input_pickingId = -1;
-Int32 input_normViewDists[10] = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
-Int32 input_classicViewDists[4] = { 8, 32, 128, 512 };
+int16_t input_normViewDists[10] = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+int16_t input_classicViewDists[4] = { 8, 32, 128, 512 };
 TimeMS input_lastClick;
 float input_fovIndex = -1.0f;
 
@@ -90,7 +90,7 @@ static void InputHandler_Toggle(Key key, bool* target, const char* enableMsg, co
 	}
 }
 
-static void InputHandler_CycleDistanceForwards(Int32* viewDists, int count) {
+static void InputHandler_CycleDistanceForwards(int16_t* viewDists, int count) {
 	int i;
 	for (i = 0; i < count; i++) {
 		int dist = viewDists[i];
@@ -101,7 +101,7 @@ static void InputHandler_CycleDistanceForwards(Int32* viewDists, int count) {
 	Game_UserSetViewDistance(viewDists[0]);
 }
 
-static void InputHandler_CycleDistanceBackwards(Int32* viewDists, int count) {
+static void InputHandler_CycleDistanceBackwards(int16_t* viewDists, int count) {
 	int i;
 	for (i = count - 1; i >= 0; i--) {
 		int dist = viewDists[i];
@@ -185,7 +185,7 @@ static bool InputHandler_HandleCoreKey(Key key) {
 			Window_SetWindowState(fullscreen ? WINDOW_STATE_NORMAL : WINDOW_STATE_FULLSCREEN);
 		}
 	} else if (key == KeyBind_Get(KeyBind_ToggleFog)) {
-		Int32* viewDists = Game_UseClassicOptions ? input_classicViewDists : input_normViewDists;
+		int16_t* viewDists = Game_UseClassicOptions ? input_classicViewDists : input_normViewDists;
 		int count = Game_UseClassicOptions ? Array_Elems(input_classicViewDists) : Array_Elems(input_normViewDists);
 
 		if (Key_IsShiftPressed()) {
@@ -403,7 +403,7 @@ static void InputHandler_MouseDown(void* obj, int button) {
 	}
 }
 
-static void InputHandler_MouseUp(void* obj, Int32 button) {
+static void InputHandler_MouseUp(void* obj, int button) {
 	struct Screen* active = Gui_GetActiveScreen();
 	if (!Elem_HandlesMouseUp(active, Mouse_X, Mouse_Y, button)) {
 		if (ServerConnection_SupportsPlayerClick && button <= MouseButton_Middle) {
@@ -425,7 +425,7 @@ static bool InputHandler_SimulateMouse(Key key, bool pressed) {
 	return true;
 }
 
-static void InputHandler_KeyDown(void* obj, Int32 key) {
+static void InputHandler_KeyDown(void* obj, int key) {
 	if (InputHandler_SimulateMouse(key, true)) return;
 	struct Screen* active = Gui_GetActiveScreen();
 
@@ -452,7 +452,7 @@ static void InputHandler_KeyDown(void* obj, Int32 key) {
 	}
 }
 
-static void InputHandler_KeyUp(void* obj, Int32 key) {
+static void InputHandler_KeyUp(void* obj, int key) {
 	if (InputHandler_SimulateMouse(key, false)) return;
 
 	if (key == KeyBind_Get(KeyBind_ZoomScrolling)) {
@@ -463,7 +463,7 @@ static void InputHandler_KeyUp(void* obj, Int32 key) {
 	Elem_HandlesKeyUp(active, key);
 }
 
-static void InputHandler_KeyPress(void* obj, Int32 keyChar) {
+static void InputHandler_KeyPress(void* obj, int keyChar) {
 	struct Screen* active = Gui_GetActiveScreen();
 	Elem_HandlesKeyPress(active, keyChar);
 }

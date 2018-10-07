@@ -348,7 +348,7 @@ static void MPConnection_CheckDisconnection(double delta) {
 	if (net_discAccumulator < 1.0) return;
 	net_discAccumulator = 0.0;
 
-	UInt32 available = 0; bool poll_success = false;
+	uint32_t available = 0; bool poll_success = false;
 	ReturnCode availResult  = Socket_Available(net_socket, &available);
 	ReturnCode selectResult = Socket_Select(net_socket, SOCKET_SELECT_READ, &poll_success);
 
@@ -370,7 +370,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	}
 	if (ServerConnection_Disconnected) return;
 
-	UInt32 pending = 0;
+	uint32_t pending = 0;
 	ReturnCode res = Socket_Available(net_socket, &pending);
 	uint8_t* readEnd = net_readCurrent;
 
@@ -428,7 +428,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	}
 
 	/* Keep last few unprocessed bytes, don't care about rest since they'll be overwritten on socket read */
-	UInt32 i, remaining = (UInt32)(readEnd - net_readCurrent);
+	uint32_t i, remaining = (uint32_t)(readEnd - net_readCurrent);
 	for (i = 0; i < remaining; i++) {
 		net_readBuffer[i] = net_readCurrent[i];
 	}
@@ -452,12 +452,12 @@ void Net_Set(uint8_t opcode, Net_Handler handler, int packetSize) {
 }
 
 void Net_SendPacket(void) {
-	UInt32 count = (UInt32)(ServerConnection_WriteBuffer - net_writeBuffer);
+	uint32_t count = (uint32_t)(ServerConnection_WriteBuffer - net_writeBuffer);
 	ServerConnection_WriteBuffer = net_writeBuffer;
 	if (ServerConnection_Disconnected) return;
 
 	/* NOTE: Not immediately disconnecting here, as otherwise we sometimes miss out on kick messages */
-	UInt32 wrote = 0;
+	uint32_t wrote = 0;
 	uint8_t* ptr = net_writeBuffer;
 
 	while (count) {

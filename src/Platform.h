@@ -32,12 +32,12 @@ void Platform_Exit(ReturnCode code);
 int  Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args);
 ReturnCode Platform_StartShell(const String* args);
 
-NOINLINE_ void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const char* place);
-NOINLINE_ void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const char* place);
-NOINLINE_ void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const char* place);
+NOINLINE_ void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place);
+NOINLINE_ void* Mem_AllocCleared(uint32_t numElems, uint32_t elemsSize, const char* place);
+NOINLINE_ void* Mem_Realloc(void* mem, uint32_t numElems, uint32_t elemsSize, const char* place);
 NOINLINE_ void  Mem_Free(void* mem);
-void Mem_Set(void* dst, uint8_t value, UInt32 numBytes);
-void Mem_Copy(void* dst, void* src, UInt32 numBytes);
+void Mem_Set(void* dst, uint8_t value, uint32_t numBytes);
+void Mem_Copy(void* dst, void* src, uint32_t numBytes);
 
 void Platform_Log(const String* message);
 void Platform_LogConst(const char* message);
@@ -62,14 +62,14 @@ ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* ms);
 ReturnCode File_Create(void** file, const String* path);
 ReturnCode File_Open(void** file, const String* path);
 ReturnCode File_Append(void** file, const String* path);
-ReturnCode File_Read(void* file, uint8_t* buffer, UInt32 count, UInt32* bytesRead);
-ReturnCode File_Write(void* file, uint8_t* buffer, UInt32 count, UInt32* bytesWrote);
+ReturnCode File_Read(void* file, uint8_t* buffer, uint32_t count, uint32_t* bytesRead);
+ReturnCode File_Write(void* file, uint8_t* buffer, uint32_t count, uint32_t* bytesWrote);
 ReturnCode File_Close(void* file);
 ReturnCode File_Seek(void* file, int offset, int seekType);
-ReturnCode File_Position(void* file, UInt32* position);
-ReturnCode File_Length(void* file, UInt32* length);
+ReturnCode File_Position(void* file, uint32_t* position);
+ReturnCode File_Length(void* file, uint32_t* length);
 
-void Thread_Sleep(UInt32 milliseconds);
+void Thread_Sleep(uint32_t milliseconds);
 typedef void Thread_StartFunc(void);
 void* Thread_Start(Thread_StartFunc* func, bool detach);
 void Thread_Detach(void* handle);
@@ -84,7 +84,7 @@ void* Waitable_Create(void);
 void  Waitable_Free(void* handle);
 void  Waitable_Signal(void* handle);
 void  Waitable_Wait(void* handle); 
-void  Waitable_WaitFor(void* handle, UInt32 milliseconds);
+void  Waitable_WaitFor(void* handle, uint32_t milliseconds);
 
 NOINLINE_ void Font_GetNames(StringsBuffer* buffer);
 NOINLINE_ void Font_Make(FontDesc* desc, const String* fontName, int size, int style);
@@ -93,13 +93,13 @@ NOINLINE_ Size2D Platform_TextMeasure(struct DrawTextArgs* args);
 NOINLINE_ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, PackedCol col);
 
 void Socket_Create(SocketPtr* socket);
-ReturnCode Socket_Available(SocketPtr socket, UInt32* available);
+ReturnCode Socket_Available(SocketPtr socket, uint32_t* available);
 ReturnCode Socket_SetBlocking(SocketPtr socket, bool blocking);
 ReturnCode Socket_GetError(SocketPtr socket, ReturnCode* result);
 
 ReturnCode Socket_Connect(SocketPtr socket, const String* ip, int port);
-ReturnCode Socket_Read(SocketPtr socket, uint8_t* buffer, UInt32 count, UInt32* modified);
-ReturnCode Socket_Write(SocketPtr socket, uint8_t* buffer, UInt32 count, UInt32* modified);
+ReturnCode Socket_Read(SocketPtr socket, uint8_t* buffer, uint32_t count, uint32_t* modified);
+ReturnCode Socket_Write(SocketPtr socket, uint8_t* buffer, uint32_t count, uint32_t* modified);
 ReturnCode Socket_Close(SocketPtr socket);
 ReturnCode Socket_Select(SocketPtr socket, int selectMode, bool* success);
 
@@ -117,7 +117,7 @@ ReturnCode Audio_Free(AudioHandle handle);
 ReturnCode Audio_StopAndFree(AudioHandle handle);
 struct AudioFormat* Audio_GetFormat(AudioHandle handle);
 ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format);
-ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, UInt32 dataSize);
+ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, uint32_t dataSize);
 ReturnCode Audio_Play(AudioHandle handle);
 ReturnCode Audio_Stop(AudioHandle handle);
 ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, bool* completed);

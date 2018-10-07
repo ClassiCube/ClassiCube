@@ -50,6 +50,6 @@ enum FONT_STYLE { FONT_STYLE_NORMAL, FONT_STYLE_BOLD, FONT_STYLE_UNDERLINE };
 #define Int16_MinValue  ((int16_t)-32768)
 #define Int16_MaxValue  ((int16_t)32767)
 #define UInt16_MaxValue ((uint16_t)65535)
-#define Int32_MinValue  ((Int32)-2147483647L - (Int32)1L)
-#define Int32_MaxValue  ((Int32)2147483647L)
+#define Int32_MinValue  ((int32_t)-2147483647L - (int32_t)1L)
+#define Int32_MaxValue  ((int32_t)2147483647L)
 #endif

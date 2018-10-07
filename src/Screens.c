@@ -816,7 +816,7 @@ static void ChatScreen_CheckOtherStatuses(struct ChatScreen* s) {
 		String_AppendConst(&str, "&eDownloading texture pack");
 	} else if (progress >= 0 && progress <= 100) {
 		String_AppendConst(&str, "&eDownloading texture pack (&7");
-		String_AppendInt32(&str, progress);
+		String_AppendInt(&str, progress);
 		String_AppendConst(&str, "&e%)");
 	}
 	TextGroupWidget_SetText(&s->Status, 1, &str);

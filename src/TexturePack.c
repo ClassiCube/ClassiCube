@@ -33,9 +33,9 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 	/* contents[6]  (4) last modified */
 	/* contents[10] (4) CRC32 */
 
-	UInt32 compressedSize = Stream_GetU32_LE(&contents[14]);
+	uint32_t compressedSize = Stream_GetU32_LE(&contents[14]);
 	if (!compressedSize) compressedSize = entry->CompressedSize;
-	UInt32 uncompressedSize = Stream_GetU32_LE(&contents[18]);
+	uint32_t uncompressedSize = Stream_GetU32_LE(&contents[18]);
 	if (!uncompressedSize) uncompressedSize = entry->UncompressedSize;
 
 	int pathLen  = Stream_GetU16_LE(&contents[22]);
@@ -88,11 +88,11 @@ static ReturnCode Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEnt
 	/* contents[34] (4) external attributes */
 	entry->LocalHeaderOffset = Stream_GetU32_LE(&contents[38]);
 
-	UInt32 extraDataLen = pathLen + extraLen + commentLen;
+	uint32_t extraDataLen = pathLen + extraLen + commentLen;
 	return Stream_Skip(stream, extraDataLen);
 }
 
-static ReturnCode Zip_ReadEndOfCentralDirectory(struct ZipState* state, UInt32* centralDirectoryOffset) {
+static ReturnCode Zip_ReadEndOfCentralDirectory(struct ZipState* state, uint32_t* centralDirectoryOffset) {
 	struct Stream* stream = state->Input;
 	uint8_t contents[(3 * 2) + 2 + (2 * 4) + 2];
 	ReturnCode res;
@@ -126,7 +126,7 @@ void Zip_Init(struct ZipState* state, struct Stream* input) {
 ReturnCode Zip_Extract(struct ZipState* state) {
 	state->EntriesCount = 0;
 	struct Stream* stream = state->Input;
-	UInt32 sig = 0, stream_len;
+	uint32_t sig = 0, stream_len;
 
 	ReturnCode res;
 	if ((res = stream->Length(stream, &stream_len))) return res;
@@ -142,7 +142,7 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 	}
 	if (sig != ZIP_SIG_ENDOFCENTRALDIR) return ZIP_ERR_NO_END_OF_CENTRAL_DIR;
 
-	UInt32 centralDirOffset;
+	uint32_t centralDirOffset;
 	res = Zip_ReadEndOfCentralDirectory(state, &centralDirOffset);
 	if (res) return res;
 
@@ -354,7 +354,7 @@ void TextureCache_GetETag(const String* url, String* etag) {
 	TexturePack_GetFromTags(url, etag, &cache_eTags);
 }
 
-void TextureCache_AddData(const String* url, uint8_t* data, UInt32 length) {
+void TextureCache_AddData(const String* url, uint8_t* data, uint32_t length) {
 	TexCache_InitAndMakePath(url);
 	ReturnCode res;
 	if (!Utils_EnsureDirectory(TEXCACHE_FOLDER)) return;
@@ -491,7 +491,7 @@ void TexturePack_Extract_Req(struct AsyncRequest* item) {
 	String url = String_FromRawArray(item->URL);
 	String_Copy(&World_TextureUrl, &url);
 	void* data = item->ResultData;
-	UInt32 len = item->ResultSize;
+	uint32_t len = item->ResultSize;
 
 	String etag = String_FromRawArray(item->Etag);
 	TextureCache_AddData(&url, data, len);

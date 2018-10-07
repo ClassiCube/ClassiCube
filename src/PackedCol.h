@@ -12,7 +12,7 @@ typedef union PackedCol_ {
 #else
 	struct { uint8_t R, G, B, A; };
 #endif
-	UInt32 Packed;
+	uint32_t Packed;
 } PackedCol;
 
 #ifdef CC_BUILD_D3D9
@@ -24,9 +24,9 @@ typedef union PackedCol_ {
 PackedCol PackedCol_Create4(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 PackedCol PackedCol_Create3(uint8_t r, uint8_t g, uint8_t b);
 #define PackedCol_Equals(a, b) ((a).Packed == (b).Packed)
-#define PackedCol_ARGB(r, g, b, a) (((UInt32)(r) << 16) | ((UInt32)(g) << 8) | ((UInt32)(b)) | ((UInt32)(a) << 24))
+#define PackedCol_ARGB(r, g, b, a) (((uint32_t)(r) << 16) | ((uint32_t)(g) << 8) | ((uint32_t)(b)) | ((uint32_t)(a) << 24))
 #define PackedCol_ARGB_A(col) ((uint8_t)((col) >> 24))
-UInt32 PackedCol_ToARGB(PackedCol col);
+uint32_t PackedCol_ToARGB(PackedCol col);
 PackedCol PackedCol_Scale(PackedCol value, float t);
 PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t);
 NOINLINE_ void PackedCol_ToHex(String* str, PackedCol value);

@@ -27,7 +27,7 @@ static void FlatgrassGen_MapSet(int yStart, int yEnd, BlockRaw block) {
 	yStart = max(yStart, 0); yEnd = max(yEnd, 0);
 	int y, yHeight = (yEnd - yStart) + 1;
 	BlockRaw* ptr = Gen_Blocks;
-	UInt32 oneY = (UInt32)Gen_Width * (UInt32)Gen_Length;
+	uint32_t oneY = (uint32_t)Gen_Width * (uint32_t)Gen_Length;
 
 	Gen_CurrentProgress = 0.0f;
 	for (y = yStart; y <= yEnd; y++) {
@@ -150,7 +150,7 @@ static void NotchyGen_CreateHeightmap(void) {
 }
 
 static int NotchyGen_CreateStrataFast(void) {
-	UInt32 oneY = (UInt32)Gen_Width * (UInt32)Gen_Length;
+	uint32_t oneY = (uint32_t)Gen_Width * (uint32_t)Gen_Length;
 	int y;
 	Gen_CurrentProgress = 0.0f;
 	Gen_CurrentState = "Filling map";

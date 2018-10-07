@@ -85,8 +85,8 @@ ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void Mem_Set(void* dst, uint8_t value, UInt32 numBytes) { memset(dst, value, numBytes); }
-void Mem_Copy(void* dst, void* src,  UInt32 numBytes)   { memcpy(dst, src,   numBytes); }
+void Mem_Set(void* dst, uint8_t value, uint32_t numBytes) { memset(dst, value, numBytes); }
+void Mem_Copy(void* dst, void* src,  uint32_t numBytes)   { memcpy(dst, src,   numBytes); }
 
 NOINLINE_ static void Platform_AllocFailed(const char* place) {
 	char logBuffer[STRING_SIZE+20 + 1];
@@ -98,22 +98,22 @@ NOINLINE_ static void Platform_AllocFailed(const char* place) {
 }
 
 #ifdef CC_BUILD_WIN
-void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const char* place) {
-	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
+void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place) {
+	uint32_t numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	void* ptr = HeapAlloc(heap, 0, numBytes);
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const char* place) {
-	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
+void* Mem_AllocCleared(uint32_t numElems, uint32_t elemsSize, const char* place) {
+	uint32_t numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	void* ptr = HeapAlloc(heap, HEAP_ZERO_MEMORY, numBytes);
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const char* place) {
-	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
+void* Mem_Realloc(void* mem, uint32_t numElems, uint32_t elemsSize, const char* place) {
+	uint32_t numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	void* ptr = HeapReAlloc(heap, 0, mem, numBytes);
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
@@ -124,19 +124,19 @@ void Mem_Free(void* mem) {
 }
 #endif
 #ifdef CC_BUILD_NIX
-void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const char* place) {
+void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place) {
 	void* ptr = malloc(numElems * elemsSize); /* TODO: avoid overflow here */
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const char* place) {
+void* Mem_AllocCleared(uint32_t numElems, uint32_t elemsSize, const char* place) {
 	void* ptr = calloc(numElems, elemsSize); /* TODO: avoid overflow here */
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const char* place) {
+void* Mem_Realloc(void* mem, uint32_t numElems, uint32_t elemsSize, const char* place) {
 	void* ptr = realloc(mem, numElems * elemsSize); /* TODO: avoid overflow here */
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
@@ -382,12 +382,12 @@ ReturnCode File_Append(void** file, const String* path) {
 	return File_Seek(*file, 0, STREAM_SEEKFROM_END);
 }
 
-ReturnCode File_Read(void* file, uint8_t* buffer, UInt32 count, UInt32* bytesRead) {
+ReturnCode File_Read(void* file, uint8_t* buffer, uint32_t count, uint32_t* bytesRead) {
 	BOOL success = ReadFile((HANDLE)file, buffer, count, bytesRead, NULL);
 	return Win_Return(success);
 }
 
-ReturnCode File_Write(void* file, uint8_t* buffer, UInt32 count, UInt32* bytesWrote) {
+ReturnCode File_Write(void* file, uint8_t* buffer, uint32_t count, uint32_t* bytesWrote) {
 	BOOL success = WriteFile((HANDLE)file, buffer, count, bytesWrote, NULL);
 	return Win_Return(success);
 }
@@ -402,12 +402,12 @@ ReturnCode File_Seek(void* file, int offset, int seekType) {
 	return Win_Return(pos != INVALID_SET_FILE_POINTER);
 }
 
-ReturnCode File_Position(void* file, UInt32* position) {
+ReturnCode File_Position(void* file, uint32_t* position) {
 	*position = SetFilePointer(file, 0, NULL, 1); /* SEEK_CUR */
 	return Win_Return(*position != INVALID_SET_FILE_POINTER);
 }
 
-ReturnCode File_Length(void* file, UInt32* length) {
+ReturnCode File_Length(void* file, uint32_t* length) {
 	*length = GetFileSize(file, NULL);
 	return Win_Return(*length != INVALID_FILE_SIZE);
 }
@@ -499,12 +499,12 @@ ReturnCode File_Append(void** file, const String* path) {
 	return File_Seek(*file, 0, STREAM_SEEKFROM_END);
 }
 
-ReturnCode File_Read(void* file, uint8_t* buffer, UInt32 count, UInt32* bytesRead) {
+ReturnCode File_Read(void* file, uint8_t* buffer, uint32_t count, uint32_t* bytesRead) {
 	*bytesRead = read((int)file, buffer, count);
 	return Nix_Return(*bytesRead != -1);
 }
 
-ReturnCode File_Write(void* file, uint8_t* buffer, UInt32 count, UInt32* bytesWrote) {
+ReturnCode File_Write(void* file, uint8_t* buffer, uint32_t count, uint32_t* bytesWrote) {
 	*bytesWrote = write((int)file, buffer, count);
 	return Nix_Return(*bytesWrote != -1);
 }
@@ -518,12 +518,12 @@ ReturnCode File_Seek(void* file, int offset, int seekType) {
 	return Nix_Return(lseek((int)file, offset, modes[seekType]) != -1);
 }
 
-ReturnCode File_Position(void* file, UInt32* position) {
+ReturnCode File_Position(void* file, uint32_t* position) {
 	*position = lseek((int)file, 0, SEEK_CUR);
 	return Nix_Return(*position != -1);
 }
 
-ReturnCode File_Length(void* file, UInt32* length) {
+ReturnCode File_Length(void* file, uint32_t* length) {
 	struct stat st;
 	if (fstat((int)file, &st) == -1) { *length = -1; return errno; }
 	*length = st.st_size; return 0;
@@ -535,7 +535,7 @@ ReturnCode File_Length(void* file, UInt32* length) {
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WIN
-void Thread_Sleep(UInt32 milliseconds) { Sleep(milliseconds); }
+void Thread_Sleep(uint32_t milliseconds) { Sleep(milliseconds); }
 DWORD WINAPI Thread_StartCallback(void* param) {
 	Thread_StartFunc* func = (Thread_StartFunc*)param;
 	(*func)();
@@ -595,12 +595,12 @@ void Waitable_Wait(void* handle) {
 	WaitForSingleObject((HANDLE)handle, INFINITE);
 }
 
-void Waitable_WaitFor(void* handle, UInt32 milliseconds) {
+void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
 	WaitForSingleObject((HANDLE)handle, milliseconds);
 }
 #endif
 #ifdef CC_BUILD_NIX
-void Thread_Sleep(UInt32 milliseconds) { usleep(milliseconds * 1000); }
+void Thread_Sleep(uint32_t milliseconds) { usleep(milliseconds * 1000); }
 void* Thread_StartCallback(void* lpParam) {
 	Thread_StartFunc* func = (Thread_StartFunc*)lpParam;
 	(*func)();
@@ -680,7 +680,7 @@ void Waitable_Wait(void* handle) {
 	ErrorHandler_CheckOrFail(result, "Waiting event");
 }
 
-void Waitable_WaitFor(void* handle, UInt32 milliseconds) {
+void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
 	struct timeval tv;
 	struct timespec ts;
 	gettimeofday(&tv, NULL);
@@ -914,7 +914,7 @@ void Socket_Create(SocketPtr* socketResult) {
 	}
 }
 
-static ReturnCode Socket_ioctl(SocketPtr socket, UInt32 cmd, int* data) {
+static ReturnCode Socket_ioctl(SocketPtr socket, uint32_t cmd, int* data) {
 #ifdef CC_BUILD_WIN
 	return ioctlsocket(socket, cmd, data);
 #else
@@ -922,7 +922,7 @@ static ReturnCode Socket_ioctl(SocketPtr socket, UInt32 cmd, int* data) {
 #endif
 }
 
-ReturnCode Socket_Available(SocketPtr socket, UInt32* available) {
+ReturnCode Socket_Available(SocketPtr socket, uint32_t* available) {
 	return Socket_ioctl(socket, FIONREAD, available);
 }
 ReturnCode Socket_SetBlocking(SocketPtr socket, bool blocking) {
@@ -946,13 +946,13 @@ ReturnCode Socket_Connect(SocketPtr socket, const String* ip, int port) {
 	return result == -1 ? Socket__Error() : 0;
 }
 
-ReturnCode Socket_Read(SocketPtr socket, uint8_t* buffer, UInt32 count, UInt32* modified) {
+ReturnCode Socket_Read(SocketPtr socket, uint8_t* buffer, uint32_t count, uint32_t* modified) {
 	int recvCount = recv(socket, buffer, count, 0);
 	if (recvCount != -1) { *modified = recvCount; return 0; }
 	*modified = 0; return Socket__Error();
 }
 
-ReturnCode Socket_Write(SocketPtr socket, uint8_t* buffer, UInt32 count, UInt32* modified) {
+ReturnCode Socket_Write(SocketPtr socket, uint8_t* buffer, uint32_t count, uint32_t* modified) {
 	int sentCount = send(socket, buffer, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return Socket__Error();
@@ -1079,16 +1079,16 @@ static ReturnCode Http_GetHeaders(struct AsyncRequest* req, HINTERNET handle) {
 }
 
 static ReturnCode Http_GetData(struct AsyncRequest* req, HINTERNET handle, volatile int* progress) {
-	UInt32 size = req->ResultSize;
+	uint32_t size = req->ResultSize;
 	if (!size) return ERROR_NOT_SUPPORTED;
 	*progress = 0;
 
 	uint8_t* buffer = Mem_Alloc(size, 1, "http get data");
-	UInt32 left = size, read, totalRead = 0;
+	uint32_t left = size, read, totalRead = 0;
 	req->ResultData = buffer;
 
 	while (left) {
-		UInt32 toRead = left, avail = 0;
+		uint32_t toRead = left, avail = 0;
 		/* only read as much data that is pending */
 		if (InternetQueryDataAvailable(handle, &avail, 0, 0)) {
 			toRead = min(toRead, avail);
@@ -1181,7 +1181,7 @@ static size_t Http_GetHeaders(char *buffer, size_t size, size_t nitems, struct A
 		String etag = String_ClearedArray(req->Etag);
 		String_AppendString(&etag, &value);
 	} else if (String_CaselessEqualsConst(&name, "Content-Length")) {
-		Convert_TryParseInt32(&value, &req->ResultSize);
+		Convert_TryParseInt(&value, &req->ResultSize);
 	} else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
 		char tmpBuffer[STRING_SIZE + 1] = { 0 };
 		String tmp = { tmpBuffer, 0, STRING_SIZE };
@@ -1195,12 +1195,12 @@ static size_t Http_GetHeaders(char *buffer, size_t size, size_t nitems, struct A
 }
 
 static size_t Http_GetData(char *buffer, size_t size, size_t nitems, struct AsyncRequest* req) {
-	UInt32 total = req->ResultSize;
+	uint32_t total = req->ResultSize;
 	if (!total || req->RequestType == REQUEST_TYPE_CONTENT_LENGTH) return 0;
 	if (!req->ResultData) req->ResultData = Mem_Alloc(total, 1, "http get data");
 
 	/* reuse Result as an offset */
-	UInt32 left = total - req->Result;
+	uint32_t left = total - req->Result;
 	left        = min(left, nitems);
 
 	uint8_t* dst = (uint8_t*)req->ResultData + req->Result;
@@ -1316,7 +1316,7 @@ ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	return waveOutOpen(&ctx->Handle, WAVE_MAPPER, &fmt, 0, 0, CALLBACK_NULL);
 }
 
-ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, UInt32 dataSize) {
+ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, uint32_t dataSize) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	WAVEHDR* hdr = &ctx->Headers[idx];
 	Mem_Set(hdr, 0, sizeof(WAVEHDR));
@@ -1493,7 +1493,7 @@ ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	return 0;
 }
 
-ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, UInt32 dataSize) {
+ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, uint32_t dataSize) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	ALuint buffer = ctx->Buffers[idx];
 	ctx->Completed[idx] = false;

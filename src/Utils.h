@@ -32,8 +32,8 @@ int Utils_AccumulateWheelDelta(float* accmulator, float delta);
 #define Utils_AdjViewDist(value) ((int)(1.4142135f * (value)))
 
 uint8_t Utils_GetSkinType(Bitmap* bmp);
-UInt32 Utils_CRC32(uint8_t* data, UInt32 length);
-extern UInt32 Utils_Crc32Table[256];
-NOINLINE_ void* Utils_Resize(void* buffer, UInt32* maxElems, UInt32 elemSize, UInt32 defElems, UInt32 expandElems);
+uint32_t Utils_CRC32(uint8_t* data, uint32_t length);
+extern uint32_t Utils_Crc32Table[256];
+NOINLINE_ void* Utils_Resize(void* buffer, uint32_t* maxElems, uint32_t elemSize, uint32_t defElems, uint32_t expandElems);
 NOINLINE_ bool Utils_ParseIP(const String* ip, uint8_t* data);
 #endif

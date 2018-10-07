@@ -152,7 +152,7 @@ struct TexPackOverlay {
 	MenuScreen_Layout
 	struct ButtonWidget Buttons[4];
 	struct TextWidget Labels[4];
-	UInt32 ContentLength;
+	uint32_t ContentLength;
 	String Identifier;
 	char __IdentifierBuffer[STRING_SIZE + 4];
 };
@@ -320,7 +320,7 @@ static void Menu_HandleFontChange(struct Screen* s) {
 	Elem_HandlesMouseMove(s, Mouse_X, Mouse_Y);
 }
 
-static int Menu_Int(const String* v)         { int value; Convert_TryParseInt32(v, &value); return value; }
+static int Menu_Int(const String* v)         { int value; Convert_TryParseInt(v, &value); return value; }
 static float Menu_Float(const String* v)     { float value; Convert_TryParseFloat(v, &value); return value; }
 static PackedCol Menu_HexCol(const String* v) { PackedCol value; PackedCol_TryParseHex(v, &value); return value; }
 #define Menu_ReplaceActive(screen) Gui_FreeActive(); Gui_SetActive(screen);
@@ -452,7 +452,8 @@ static void ListScreen_ContextRecreated(void* screen) {
 
 static void ListScreen_QuickSort(int left, int right) {
 	StringsBuffer* buffer = &ListScreen_Instance.Entries; 
-	UInt32* keys = buffer->FlagsBuffer; UInt32 key;
+	uint32_t* keys = buffer->FlagsBuffer; uint32_t key;
+
 	while (left < right) {
 		int i = left, j = right;
 		String strI, strJ, pivot = StringsBuffer_UNSAFE_Get(buffer, (i + j) / 2);
@@ -995,7 +996,7 @@ int GenLevelScreen_GetInt(struct GenLevelScreen* s, int index) {
 
 	struct MenuInputValidator* v = &input->Validator;
 	if (!v->VTABLE->IsValidValue(v, &text)) return 0;
-	int value; Convert_TryParseInt32(&text, &value); return value;
+	int value; Convert_TryParseInt(&text, &value); return value;
 }
 
 int GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, int index) {
@@ -1009,7 +1010,7 @@ int GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, int index) {
 
 	struct MenuInputValidator* v = &input->Validator;
 	if (!v->VTABLE->IsValidValue(v, &text)) return 0;
-	int value; Convert_TryParseInt32(&text, &value); return value;
+	int value; Convert_TryParseInt(&text, &value); return value;
 }
 
 static void GenLevelScreen_Gen(void* screen, bool vanilla) {
@@ -1102,11 +1103,11 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 	char tmpBuffer[STRING_SIZE];
 	String tmp = String_FromArray(tmpBuffer);
 
-	String_AppendInt32(&tmp, World_Width);
+	String_AppendInt(&tmp, World_Width);
 	GenLevelScreen_Input(s, 0, -80, false, &tmp);
-	String_AppendInt32(&tmp, World_Height);
+	String_AppendInt(&tmp, World_Height);
 	GenLevelScreen_Input(s, 1, -40, false, &tmp);
-	String_AppendInt32(&tmp, World_Length);
+	String_AppendInt(&tmp, World_Length);
 	GenLevelScreen_Input(s, 2,   0, false, &tmp);
 	GenLevelScreen_Input(s, 3,  40, true,  &tmp);
 
@@ -2308,10 +2309,10 @@ static void EnvSettingsScreen_SetSkyCol(const String* v) { Env_SetSkyCol(Menu_He
 static void EnvSettingsScreen_GetFogCol(String* v) { PackedCol_ToHex(v, Env_FogCol); }
 static void EnvSettingsScreen_SetFogCol(const String* v) { Env_SetFogCol(Menu_HexCol(v)); }
 
-static void EnvSettingsScreen_GetCloudsSpeed(String* v) { String_AppendReal32(v, Env_CloudsSpeed, 2); }
+static void EnvSettingsScreen_GetCloudsSpeed(String* v) { String_AppendFloat(v, Env_CloudsSpeed, 2); }
 static void EnvSettingsScreen_SetCloudsSpeed(const String* v) { Env_SetCloudsSpeed(Menu_Float(v)); }
 
-static void EnvSettingsScreen_GetCloudsHeight(String* v) { String_AppendInt32(v, Env_CloudsHeight); }
+static void EnvSettingsScreen_GetCloudsHeight(String* v) { String_AppendInt(v, Env_CloudsHeight); }
 static void EnvSettingsScreen_SetCloudsHeight(const String* v) { Env_SetCloudsHeight(Menu_Int(v)); }
 
 static void EnvSettingsScreen_GetSunCol(String* v) { PackedCol_ToHex(v, Env_SunCol); }
@@ -2326,10 +2327,10 @@ static void EnvSettingsScreen_SetWeather(const String* v) {
 	Env_SetWeather(raw); 
 }
 
-static void EnvSettingsScreen_GetWeatherSpeed(String* v) { String_AppendReal32(v, Env_WeatherSpeed, 2); }
+static void EnvSettingsScreen_GetWeatherSpeed(String* v) { String_AppendFloat(v, Env_WeatherSpeed, 2); }
 static void EnvSettingsScreen_SetWeatherSpeed(const String* v) { Env_SetWeatherSpeed(Menu_Float(v)); }
 
-static void EnvSettingsScreen_GetEdgeHeight(String* v) { String_AppendInt32(v, Env_EdgeHeight); }
+static void EnvSettingsScreen_GetEdgeHeight(String* v) { String_AppendInt(v, Env_EdgeHeight); }
 static void EnvSettingsScreen_SetEdgeHeight(const String* v) { Env_SetEdgeHeight(Menu_Int(v)); }
 
 static void EnvSettingsScreen_ContextRecreated(void* screen) {
@@ -2370,11 +2371,11 @@ struct Screen* EnvSettingsScreen_MakeInstance(void) {
 
 	static char cloudHeightBuffer[STRING_INT_CHARS];
 	String cloudHeight = String_FromArray(cloudHeightBuffer);
-	String_AppendInt32(&cloudHeight, World_Height + 2);
+	String_AppendInt(&cloudHeight, World_Height + 2);
 
 	static char edgeHeightBuffer[STRING_INT_CHARS];
 	String edgeHeight = String_FromArray(edgeHeightBuffer);
-	String_AppendInt32(&edgeHeight, World_Height / 2);
+	String_AppendInt(&edgeHeight, World_Height / 2);
 
 	validators[0]    = MenuInputValidator_Hex();
 	defaultValues[0] = ENV_DEFAULT_CLOUDSCOL_HEX;
@@ -2405,7 +2406,7 @@ struct Screen* EnvSettingsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------GraphicsOptionsScreen--------------------------------------------------*
 *#########################################################################################################################*/
-static void GraphicsOptionsScreen_GetViewDist(String* v) { String_AppendInt32(v, Game_ViewDistance); }
+static void GraphicsOptionsScreen_GetViewDist(String* v) { String_AppendInt(v, Game_ViewDistance); }
 static void GraphicsOptionsScreen_SetViewDist(const String* v) { Game_UserSetViewDistance(Menu_Int(v)); }
 
 static void GraphicsOptionsScreen_GetSmooth(String* v) { Menu_GetBool(v, Game_SmoothLighting); }
@@ -2518,10 +2519,10 @@ static void GuiOptionsScreen_SetScale(const String* v, float* target, const char
 	Gui_RefreshHud();
 }
 
-static void GuiOptionsScreen_GetHotbar(String* v) { String_AppendReal32(v, Game_RawHotbarScale, 1); }
+static void GuiOptionsScreen_GetHotbar(String* v) { String_AppendFloat(v, Game_RawHotbarScale, 1); }
 static void GuiOptionsScreen_SetHotbar(const String* v) { GuiOptionsScreen_SetScale(v, &Game_RawHotbarScale, OPT_HOTBAR_SCALE); }
 
-static void GuiOptionsScreen_GetInventory(String* v) { String_AppendReal32(v, Game_RawInventoryScale, 1); }
+static void GuiOptionsScreen_GetInventory(String* v) { String_AppendFloat(v, Game_RawInventoryScale, 1); }
 static void GuiOptionsScreen_SetInventory(const String* v) { GuiOptionsScreen_SetScale(v, &Game_RawInventoryScale, OPT_INVENTORY_SCALE); }
 
 static void GuiOptionsScreen_GetTabAuto(String* v) { Menu_GetBool(v, Game_TabAutocomplete); }
@@ -2530,10 +2531,10 @@ static void GuiOptionsScreen_SetTabAuto(const String* v) { Game_TabAutocomplete 
 static void GuiOptionsScreen_GetClickable(String* v) { Menu_GetBool(v, Game_ClickableChat); }
 static void GuiOptionsScreen_SetClickable(const String* v) { Game_ClickableChat = Menu_SetBool(v, OPT_CLICKABLE_CHAT); }
 
-static void GuiOptionsScreen_GetChatScale(String* v) { String_AppendReal32(v, Game_RawChatScale, 1); }
+static void GuiOptionsScreen_GetChatScale(String* v) { String_AppendFloat(v, Game_RawChatScale, 1); }
 static void GuiOptionsScreen_SetChatScale(const String* v) { GuiOptionsScreen_SetScale(v, &Game_RawChatScale, OPT_CHAT_SCALE); }
 
-static void GuiOptionsScreen_GetChatlines(String* v) { String_AppendInt32(v, Game_ChatLines); }
+static void GuiOptionsScreen_GetChatlines(String* v) { String_AppendInt(v, Game_ChatLines); }
 static void GuiOptionsScreen_SetChatlines(const String* v) {
 	Game_ChatLines = Menu_Int(v);
 	Options_Set(OPT_CHATLINES, v);
@@ -2606,7 +2607,7 @@ static void HacksSettingsScreen_SetHacks(const String* v) {
 	LocalPlayer_CheckHacksConsistency();
 }
 
-static void HacksSettingsScreen_GetSpeed(String* v) { String_AppendReal32(v, LocalPlayer_Instance.Hacks.SpeedMultiplier, 2); }
+static void HacksSettingsScreen_GetSpeed(String* v) { String_AppendFloat(v, LocalPlayer_Instance.Hacks.SpeedMultiplier, 2); }
 static void HacksSettingsScreen_SetSpeed(const String* v) {
 	LocalPlayer_Instance.Hacks.SpeedMultiplier = Menu_Float(v);
 	Options_Set(OPT_SPEED_FACTOR, v);
@@ -2617,7 +2618,7 @@ static void HacksSettingsScreen_SetClipping(const String* v) {
 	Game_CameraClipping = Menu_SetBool(v, OPT_CAMERA_CLIPPING);
 }
 
-static void HacksSettingsScreen_GetJump(String* v) { String_AppendReal32(v, LocalPlayer_JumpHeight(), 3); }
+static void HacksSettingsScreen_GetJump(String* v) { String_AppendFloat(v, LocalPlayer_JumpHeight(), 3); }
 static void HacksSettingsScreen_SetJump(const String* v) {
 	struct PhysicsComp* physics = &LocalPlayer_Instance.Physics;
 	PhysicsComp_CalculateJumpVelocity(physics, Menu_Float(v));
@@ -2625,7 +2626,7 @@ static void HacksSettingsScreen_SetJump(const String* v) {
 
 	char strBuffer[STRING_SIZE];
 	String str = String_FromArray(strBuffer);
-	String_AppendReal32(&str, physics->JumpVel, 8);
+	String_AppendFloat(&str, physics->JumpVel, 8);
 	Options_Set(OPT_JUMP_VELOCITY, &str);
 }
 
@@ -2654,7 +2655,7 @@ static void HacksSettingsScreen_SetSlide(const String* v) {
 	LocalPlayer_Instance.Hacks.NoclipSlide = Menu_SetBool(v, OPT_NOCLIP_SLIDE);
 }
 
-static void HacksSettingsScreen_GetFOV(String* v) { String_AppendInt32(v, Game_Fov); }
+static void HacksSettingsScreen_GetFOV(String* v) { String_AppendInt(v, Game_Fov); }
 static void HacksSettingsScreen_SetFOV(const String* v) {
 	Game_Fov = Menu_Int(v);
 	if (Game_ZoomFov > Game_Fov) Game_ZoomFov = Game_Fov;
@@ -2727,7 +2728,7 @@ struct Screen* HacksSettingsScreen_MakeInstance(void) {
 	/* TODO: Is this needed because user may not always use . for decimal point? */
 	static char jumpHeightBuffer[STRING_INT_CHARS];
 	String jumpHeight = String_FromArray(jumpHeightBuffer);
-	String_AppendReal32(&jumpHeight, 1.233f, 3);
+	String_AppendFloat(&jumpHeight, 1.233f, 3);
 
 	validators[1]    = MenuInputValidator_Float(0.10f, 50.00f);
 	defaultValues[1] = "10";
@@ -2755,17 +2756,17 @@ struct Screen* HacksSettingsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------MiscOptionsScreen----------------------------------------------------*
 *#########################################################################################################################*/
-static void MiscOptionsScreen_GetReach(String* v) { String_AppendReal32(v, LocalPlayer_Instance.ReachDistance, 2); }
+static void MiscOptionsScreen_GetReach(String* v) { String_AppendFloat(v, LocalPlayer_Instance.ReachDistance, 2); }
 static void MiscOptionsScreen_SetReach(const String* v) { LocalPlayer_Instance.ReachDistance = Menu_Float(v); }
 
-static void MiscOptionsScreen_GetMusic(String* v) { String_AppendInt32(v, Game_MusicVolume); }
+static void MiscOptionsScreen_GetMusic(String* v) { String_AppendInt(v, Game_MusicVolume); }
 static void MiscOptionsScreen_SetMusic(const String* v) {
 	Game_MusicVolume = Menu_Int(v);
 	Options_Set(OPT_MUSIC_VOLUME, v);
 	Audio_SetMusic(Game_MusicVolume);
 }
 
-static void MiscOptionsScreen_GetSounds(String* v) { String_AppendInt32(v, Game_SoundsVolume); }
+static void MiscOptionsScreen_GetSounds(String* v) { String_AppendInt(v, Game_SoundsVolume); }
 static void MiscOptionsScreen_SetSounds(const String* v) {
 	Game_SoundsVolume = Menu_Int(v);
 	Options_Set(OPT_SOUND_VOLUME, v);
@@ -2786,7 +2787,7 @@ static void MiscOptionsScreen_SetAutoClose(const String* v) { Menu_SetBool(v, OP
 static void MiscOptionsScreen_GetInvert(String* v) { Menu_GetBool(v, Game_InvertMouse); }
 static void MiscOptionsScreen_SetInvert(const String* v) { Game_InvertMouse = Menu_SetBool(v, OPT_INVERT_MOUSE); }
 
-static void MiscOptionsScreen_GetSensitivity(String* v) { String_AppendInt32(v, Game_MouseSensitivity); }
+static void MiscOptionsScreen_GetSensitivity(String* v) { String_AppendInt(v, Game_MouseSensitivity); }
 static void MiscOptionsScreen_SetSensitivity(const String* v) {
 	Game_MouseSensitivity = Menu_Int(v);
 	Options_Set(OPT_SENSITIVITY, v);

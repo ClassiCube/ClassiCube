@@ -13,7 +13,7 @@ PackedCol PackedCol_Create3(uint8_t r, uint8_t g, uint8_t b) {
 	return col;
 }
 
-UInt32 PackedCol_ToARGB(PackedCol col) {
+uint32_t PackedCol_ToARGB(PackedCol col) {
 	return PackedCol_ARGB(col.R, col.G, col.B, col.A);
 }
 

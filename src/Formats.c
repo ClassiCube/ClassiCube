@@ -67,8 +67,8 @@ static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
 				int baseIndex = World_Pack(x, y, z);
 				if ((x + LVL_CHUNKSIZE) <= adjWidth && (y + LVL_CHUNKSIZE) <= adjHeight && (z + LVL_CHUNKSIZE) <= adjLength) {
 					for (i = 0; i < sizeof(chunk); i++) {
-						Int32 xx = i & 0xF, yy = (i >> 8) & 0xF, zz = (i >> 4) & 0xF;
-						Int32 index = baseIndex + World_Pack(xx, yy, zz);
+						int xx = i & 0xF, yy = (i >> 8) & 0xF, zz = (i >> 4) & 0xF;
+						int index = baseIndex + World_Pack(xx, yy, zz);
 						World_Blocks[index] = World_Blocks[index] == LVL_CUSTOMTILE ? chunk[i] : World_Blocks[index];
 					}
 				} else {
@@ -88,13 +88,13 @@ static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
 
 static void Lvl_ConvertPhysicsBlocks(void) {
 	uint8_t conv[256];
-	Int32 i;
+	int i;
 	for (i = 0; i < BLOCK_CPE_COUNT; i++)
 		conv[i] = (uint8_t)i;
 	for (i = BLOCK_CPE_COUNT; i < 256; i++)
 		conv[i] = Lvl_table[i - BLOCK_CPE_COUNT];
 
-	Int32 alignedBlocksSize = World_BlocksSize & ~3;
+	int alignedBlocksSize = World_BlocksSize & ~3;
 	/* Bulk convert 4 blocks at once */
 	uint8_t* blocks = World_Blocks;
 	for (i = 0; i < alignedBlocksSize; i += 4) {
@@ -213,8 +213,8 @@ struct NbtTag {
 	struct NbtTag* Parent;
 	uint8_t TagID;
 	char    NameBuffer[NBT_SMALL_SIZE];
-	UInt32  NameSize;
-	UInt32  DataSize; /* size of data for arrays */
+	uint32_t  NameSize;
+	uint32_t  DataSize; /* size of data for arrays */
 
 	union {
 		uint8_t  Value_U8;
@@ -247,7 +247,7 @@ static float NbtTag_F32(struct NbtTag* tag) {
 	return tag->Value_F32;
 }
 
-static uint8_t* NbtTag_U8_Array(struct NbtTag* tag, Int32 minSize) {
+static uint8_t* NbtTag_U8_Array(struct NbtTag* tag, int minSize) {
 	if (tag->TagID != NBT_I8S) ErrorHandler_Fail("Expected I8_Array NBT tag");
 	if (tag->DataSize < minSize) ErrorHandler_Fail("I8_Array NBT tag too small");
 
@@ -259,7 +259,7 @@ static String NbtTag_String(struct NbtTag* tag) {
 	return String_Init(tag->DataSmall, tag->DataSize, tag->DataSize);
 }
 
-static ReturnCode Nbt_ReadString(struct Stream* stream, char* strBuffer, UInt32* strLen) {
+static ReturnCode Nbt_ReadString(struct Stream* stream, char* strBuffer, uint32_t* strLen) {
 	ReturnCode res;
 	char nameBuffer[NBT_SMALL_SIZE * 4];
 	if ((res = Stream_Read(stream, nameBuffer, 2))) return res;
@@ -282,7 +282,7 @@ static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* s
 	tag.NameSize = 0;   tag.DataSize = 0;
 
 	uint8_t childType;
-	UInt32 i, count;
+	uint32_t i, count;
 	ReturnCode res;
 	uint8_t tmp[5];
 
@@ -546,7 +546,7 @@ static bool Cw_Callback_5(struct NbtTag* tag) {
 }
 
 static bool Cw_Callback(struct NbtTag* tag) {
-	UInt32 depth = 0;
+	int depth = 0;
 	struct NbtTag* tmp = tag->Parent;
 	while (tmp) { depth++; tmp = tmp->Parent; }
 
@@ -606,7 +606,7 @@ struct JFieldDesc {
 		uint8_t Value_U8;
 		int32_t Value_I32;
 		float   Value_F32;
-		struct { uint8_t* Value_Ptr; UInt32 Value_Size; };
+		struct { uint8_t* Value_Ptr; uint32_t Value_Size; };
 	};
 };
 
@@ -678,7 +678,7 @@ static ReturnCode Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* de
 static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
 	ReturnCode res;
 	uint8_t typeCode;
-	UInt32 count;
+	uint32_t count;
 
 	switch (field->Type) {
 	case JFIELD_I8:
@@ -731,7 +731,7 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 	return 0;
 }
 
-static Int32 Dat_I32(struct JFieldDesc* field) {
+static int32_t Dat_I32(struct JFieldDesc* field) {
 	if (field->Type != JFIELD_I32) ErrorHandler_Fail("Field type must be Int32");
 	return field->Value_I32;
 }
@@ -884,7 +884,7 @@ uint8_t cw_end[4] = {
 NBT_END,
 };
 
-static ReturnCode Cw_WriteBockDef(struct Stream* stream, Int32 b) {
+static ReturnCode Cw_WriteBockDef(struct Stream* stream, int b) {
 	uint8_t tmp[512];
 	bool sprite = Block_Draw[b] == DRAW_SPRITE;
 	union IntAndFloat speed;
@@ -924,7 +924,7 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, Int32 b) {
 	}
 
 	String name = Block_UNSAFE_GetName(b);
-	Int32 len   = Cw_WriteEndString(&tmp[171], &name);
+	int len     = Cw_WriteEndString(&tmp[171], &name);
 	return Stream_Write(stream, tmp, sizeof(cw_meta_def) + len);
 }
 
@@ -967,7 +967,7 @@ ReturnCode Cw_Save(struct Stream* stream) {
 		tmp[365] = (BlockRaw)Env_EdgeBlock;
 		Stream_SetU16_BE(&tmp[378], Env_EdgeHeight);
 	}
-	Int32 b, len = Cw_WriteEndString(&tmp[393], &World_TextureUrl);
+	int b, len = Cw_WriteEndString(&tmp[393], &World_TextureUrl);
 	if ((res = Stream_Write(stream, tmp, sizeof(cw_meta_cpe) + len))) return res;
 
 	if ((res = Stream_Write(stream, cw_meta_defs, sizeof(cw_meta_defs)))) return res;
@@ -1023,7 +1023,7 @@ ReturnCode Schematic_Save(struct Stream* stream) {
 	uint8_t chunk[8192] = { 0 };
 	int i;
 	for (i = 0; i < World_BlocksSize; i += sizeof(chunk)) {
-		Int32 count = World_BlocksSize - i; count = min(count, sizeof(chunk));
+		int count = World_BlocksSize - i; count = min(count, sizeof(chunk));
 		if ((res = Stream_Write(stream, chunk, count))) return res;
 	}
 	return Stream_Write(stream, sc_end, sizeof(sc_end));

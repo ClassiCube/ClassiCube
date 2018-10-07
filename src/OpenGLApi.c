@@ -46,7 +46,7 @@ FUNC_GLBUFFERDATA    glBufferData;
 FUNC_GLBUFFERSUBDATA glBufferSubData;
 #endif
 
-Int32 Gfx_strideSizes[2] = GFX_STRIDE_SIZES;
+int Gfx_strideSizes[2] = GFX_STRIDE_SIZES;
 bool gl_vsync;
 
 int gl_blend[6] = { GL_ZERO, GL_ONE, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA };
@@ -142,7 +142,7 @@ static void GL_DoMipmaps(GfxResourceID texId, int x, int y, Bitmap* bmp, bool pa
 }
 
 GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
-	UInt32 texId;
+	uint32_t texId;
 	glGenTextures(1, &texId);
 	glBindTexture(GL_TEXTURE_2D, texId);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -274,7 +274,7 @@ GfxResourceID GL_GenAndBind(GLenum target) {
 GfxResourceID Gfx_CreateDynamicVb(int vertexFormat, int maxVertices) {
 #ifndef CC_BUILD_GL11
 	GfxResourceID id = GL_GenAndBind(GL_ARRAY_BUFFER);
-	UInt32 sizeInBytes = maxVertices * Gfx_strideSizes[vertexFormat];
+	uint32_t sizeInBytes = maxVertices * Gfx_strideSizes[vertexFormat];
 	glBufferData(GL_ARRAY_BUFFER, (void*)sizeInBytes, NULL, GL_DYNAMIC_DRAW);
 	return id;
 #else
@@ -286,7 +286,7 @@ GfxResourceID Gfx_CreateDynamicVb(int vertexFormat, int maxVertices) {
 GfxResourceID Gfx_CreateVb(void* vertices, int vertexFormat, int count) {
 #ifndef CC_BUILD_GL11
 	GfxResourceID id = GL_GenAndBind(GL_ARRAY_BUFFER);
-	UInt32 sizeInBytes = count * Gfx_strideSizes[vertexFormat];
+	uint32_t sizeInBytes = count * Gfx_strideSizes[vertexFormat];
 	glBufferData(GL_ARRAY_BUFFER, (void*)sizeInBytes, vertices, GL_STATIC_DRAW);
 	return id;
 #else
@@ -317,7 +317,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, int vertexFormat, int count) {
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
 #ifndef CC_BUILD_GL11
 	GfxResourceID id = GL_GenAndBind(GL_ELEMENT_ARRAY_BUFFER);
-	UInt32 sizeInBytes = indicesCount * 2;
+	uint32_t sizeInBytes = indicesCount * 2;
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (void*)sizeInBytes, indices, GL_STATIC_DRAW);
 	return id;
 #else
@@ -374,13 +374,13 @@ void GL_SetupVbPos3fTex2fCol4b(void) {
 }
 
 void GL_SetupVbPos3fCol4b_Range(int startVertex) {
-	UInt32 offset = startVertex * (UInt32)sizeof(VertexP3fC4b);
+	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fC4b);
 	glVertexPointer(3, GL_FLOAT,          sizeof(VertexP3fC4b), (void*)(offset));
 	glColorPointer(4, GL_UNSIGNED_BYTE,   sizeof(VertexP3fC4b), (void*)(offset + 12));
 }
 
 void GL_SetupVbPos3fTex2fCol4b_Range(int startVertex) {
-	UInt32 offset = startVertex * (UInt32)sizeof(VertexP3fT2fC4b);
+	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fT2fC4b);
 	glVertexPointer(3,  GL_FLOAT,         sizeof(VertexP3fT2fC4b), (void*)(offset));
 	glColorPointer(4, GL_UNSIGNED_BYTE,   sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
 	glTexCoordPointer(2, GL_FLOAT,        sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
@@ -408,7 +408,7 @@ void Gfx_SetBatchFormat(int vertexFormat) {
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 #ifndef CC_BUILD_GL11
 	glBindBuffer(GL_ARRAY_BUFFER, vb);
-	UInt32 sizeInBytes = vCount * gl_batchStride;
+	uint32_t sizeInBytes = vCount * gl_batchStride;
 	glBufferSubData(GL_ARRAY_BUFFER, NULL, (void*)sizeInBytes, vertices);
 #else
 	gl_activeList = gl_DYNAMICLISTID;
@@ -490,7 +490,7 @@ GfxResourceID gl_lastPartialList;
 void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 	
 #ifndef CC_BUILD_GL11
-	UInt32 offset = startVertex * (UInt32)sizeof(VertexP3fT2fC4b);
+	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fT2fC4b);
 	glVertexPointer(3, GL_FLOAT,          sizeof(VertexP3fT2fC4b), (void*)(offset));
 	glColorPointer(4, GL_UNSIGNED_BYTE,   sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
 	glTexCoordPointer(2, GL_FLOAT,        sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
@@ -530,16 +530,16 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 
 	/* flip vertically around y */
 	int x, y;
-	UInt32 stride = (UInt32)(bmp.Width) * BITMAP_SIZEOF_PIXEL;
+	uint32_t stride = (uint32_t)(bmp.Width) * BITMAP_SIZEOF_PIXEL;
 	for (y = 0; y < height / 2; y++) {
-		UInt32* src = Bitmap_GetRow(&bmp, y);
-		UInt32* dst = Bitmap_GetRow(&bmp, (height - 1) - y);
+		uint32_t* src = Bitmap_GetRow(&bmp, y);
+		uint32_t* dst = Bitmap_GetRow(&bmp, (height - 1) - y);
 
 		Mem_Copy(tmp, src, stride);
 		Mem_Copy(src, dst, stride);
 		Mem_Copy(dst, tmp, stride);
 		/*for (x = 0; x < bmp.Width; x++) {
-			UInt32 temp = dst[x]; dst[x] = src[x]; src[x] = temp;
+			uint32_t temp = dst[x]; dst[x] = src[x]; src[x] = temp;
 		}*/
 	}
 

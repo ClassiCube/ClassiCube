@@ -34,7 +34,7 @@ Bitmap Drawer2D_FontBitmap;
 int Drawer2D_BoxSize = 8; /* avoid divide by 0 if default.png missing */
 /* So really 16 characters per row */
 #define DRAWER2D_LOG2_CHARS_PER_ROW 4
-Int32 Drawer2D_Widths[256];
+int Drawer2D_Widths[256];
 
 static void Drawer2D_CalculateTextWidths(void) {
 	int width = Drawer2D_FontBitmap.Width, height = Drawer2D_FontBitmap.Height;
@@ -46,13 +46,13 @@ static void Drawer2D_CalculateTextWidths(void) {
 	int x, y, xx;
 	for (y = 0; y < height; y++) {
 		int charY = (y / Drawer2D_BoxSize);
-		UInt32* row = Bitmap_GetRow(&Drawer2D_FontBitmap, y);
+		uint32_t* row = Bitmap_GetRow(&Drawer2D_FontBitmap, y);
 
 		for (x = 0; x < width; x += Drawer2D_BoxSize) {
 			int charX = (x / Drawer2D_BoxSize);
 			/* Iterate through each pixel of the given character, on the current scanline */
 			for (xx = Drawer2D_BoxSize - 1; xx >= 0; xx--) {
-				UInt32 pixel = row[x + xx];
+				uint32_t pixel = row[x + xx];
 				uint8_t a = PackedCol_ARGB_A(pixel);
 				if (a < 127) continue;
 
@@ -114,9 +114,9 @@ void Drawer2D_Clear(Bitmap* bmp, PackedCol col, int x, int y, int width, int hei
 	}
 
 	int xx, yy;
-	UInt32 argb = PackedCol_ToARGB(col);
+	uint32_t argb = PackedCol_ToARGB(col);
 	for (yy = 0; yy < height; yy++) {
-		UInt32* row = Bitmap_GetRow(bmp, y + yy) + x;
+		uint32_t* row = Bitmap_GetRow(bmp, y + yy) + x;
 		for (xx = 0; xx < width; xx++) { row[xx] = argb; }
 	}
 }
@@ -222,11 +222,11 @@ static int Drawer2D_NextPart(int i, STRING_REF String* value, String* part, char
 
 void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, PackedCol col) {
 	int xx, yy;
-	UInt32 argb = PackedCol_ToARGB(col);
+	uint32_t argb = PackedCol_ToARGB(col);
 
 	for (yy = y; yy < y + height; yy++) {
 		if (yy >= bmp->Height) return;
-		UInt32* row = Bitmap_GetRow(bmp, yy);
+		uint32_t* row = Bitmap_GetRow(bmp, yy);
 
 		for (xx = x; xx < x + width; xx++) {
 			if (xx >= bmp->Width) break;
@@ -275,25 +275,25 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		if (dstY >= bmp->Height) break;
 
 		int fontY = 0 + yy * Drawer2D_BoxSize / dstHeight;
-		UInt32* dstRow = Bitmap_GetRow(bmp, dstY);
+		uint32_t* dstRow = Bitmap_GetRow(bmp, dstY);
 
 		for (i = 0; i < count; i++) {
 			int srcX = (coords[i] & 0x0F) * Drawer2D_BoxSize;
 			int srcY = (coords[i] >> 4)   * Drawer2D_BoxSize;
-			UInt32* fontRow = Bitmap_GetRow(&Drawer2D_FontBitmap, fontY + srcY);
+			uint32_t* fontRow = Bitmap_GetRow(&Drawer2D_FontBitmap, fontY + srcY);
 
 			int srcWidth = Drawer2D_Widths[coords[i]], dstWidth = dstWidths[i];
 			col = cols[i];
 
 			for (xx = 0; xx < dstWidth; xx++) {
 				int fontX = srcX + xx * srcWidth / dstWidth;
-				UInt32 src = fontRow[fontX];
+				uint32_t src = fontRow[fontX];
 				if (PackedCol_ARGB_A(src) == 0) continue;
 
 				int dstX = x + xx;
 				if (dstX >= bmp->Width) break;
 
-				UInt32 pixel = src & ~0xFFFFFF;
+				uint32_t pixel = src & ~0xFFFFFF;
 				pixel |= ((src & 0xFF)         * col.B / 255);
 				pixel |= (((src >> 8) & 0xFF)  * col.G / 255) << 8;
 				pixel |= (((src >> 16) & 0xFF) * col.R / 255) << 16;

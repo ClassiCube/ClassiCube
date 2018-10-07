@@ -119,7 +119,7 @@ bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vec
 #define SEARCHER_STATES_MIN 64
 struct SearcherState Searcher_DefaultStates[SEARCHER_STATES_MIN];
 struct SearcherState* Searcher_States = Searcher_DefaultStates;
-UInt32 Searcher_StatesMax = SEARCHER_STATES_MIN;
+uint32_t Searcher_StatesMax = SEARCHER_STATES_MIN;
 
 static void Searcher_QuickSort(int left, int right) {
 	struct SearcherState* keys = Searcher_States; struct SearcherState key;
@@ -155,7 +155,7 @@ int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, s
 	Vector3I_Floor(&min, &entityExtentBB->Min);
 	Vector3I_Floor(&max, &entityExtentBB->Max);
 
-	UInt32 elements = (max.X - min.X + 1) * (max.Y - min.Y + 1) * (max.Z - min.Z + 1);
+	uint32_t elements = (max.X - min.X + 1) * (max.Y - min.Y + 1) * (max.Z - min.Z + 1);
 	if (elements > Searcher_StatesMax) {
 		Searcher_Free();
 		Searcher_StatesMax = elements;

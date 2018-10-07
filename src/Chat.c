@@ -386,7 +386,7 @@ static void ResolutionCommand_Execute(const String* args, int argsCount) {
 	int width, height;
 	if (argsCount < 3) {
 		Chat_AddRaw("&e/client: &cYou didn't specify width and height");
-	} else if (!Convert_TryParseInt32(&args[1], &width) || !Convert_TryParseInt32(&args[2], &height)) {
+	} else if (!Convert_TryParseInt(&args[1], &width) || !Convert_TryParseInt(&args[2], &height)) {
 		Chat_AddRaw("&e/client: &cWidth and height must be integers.");
 	} else if (width <= 0 || height <= 0) {
 		Chat_AddRaw("&e/client: &cWidth and height must be above 0.");

@@ -150,14 +150,14 @@ uint8_t Utils_GetSkinType(Bitmap* bmp) {
 	if (bmp->Width != bmp->Height)     return SKIN_INVALID;
 
 	/* Minecraft alex skins have this particular pixel with alpha of 0 */
-	int scale     = bmp->Width / 64;
-	UInt32 pixel  = Bitmap_GetPixel(bmp, 54 * scale, 20 * scale);
-	uint8_t alpha = PackedCol_ARGB_A(pixel);
+	int scale      = bmp->Width / 64;
+	uint32_t pixel = Bitmap_GetPixel(bmp, 54 * scale, 20 * scale);
+	uint8_t alpha  = PackedCol_ARGB_A(pixel);
 	return alpha >= 127 ? SKIN_64x64 : SKIN_64x64_SLIM;
 }
 
-UInt32 Utils_CRC32(uint8_t* data, UInt32 length) {
-	UInt32 crc = 0xffffffffUL;
+uint32_t Utils_CRC32(uint8_t* data, uint32_t length) {
+	uint32_t crc = 0xffffffffUL;
 	int i;
 	for (i = 0; i < length; i++) {
 		crc = Utils_Crc32Table[(crc ^ data[i]) & 0xFF] ^ (crc >> 8);
@@ -165,7 +165,7 @@ UInt32 Utils_CRC32(uint8_t* data, UInt32 length) {
 	return crc ^ 0xffffffffUL;
 }
 
-UInt32 Utils_Crc32Table[256] = {
+uint32_t Utils_Crc32Table[256] = {
 	0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3, 0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988, 0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91,
 	0x1DB71064, 0x6AB020F2, 0xF3B97148, 0x84BE41DE, 0x1ADAD47D, 0x6DDDE4EB, 0xF4D4B551, 0x83D385C7, 0x136C9856, 0x646BA8C0, 0xFD62F97A, 0x8A65C9EC, 0x14015C4F, 0x63066CD9, 0xFA0F3D63, 0x8D080DF5,
 	0x3B6E20C8, 0x4C69105E, 0xD56041E4, 0xA2677172, 0x3C03E4D1, 0x4B04D447, 0xD20D85FD, 0xA50AB56B, 0x35B5A8FA, 0x42B2986C, 0xDBBBC9D6, 0xACBCF940, 0x32D86CE3, 0x45DF5C75, 0xDCD60DCF, 0xABD13D59,
@@ -184,9 +184,9 @@ UInt32 Utils_Crc32Table[256] = {
 	0xBDBDF21C, 0xCABAC28A, 0x53B39330, 0x24B4A3A6, 0xBAD03605, 0xCDD70693, 0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D,
 };
 
-void* Utils_Resize(void* buffer, UInt32* maxElems, UInt32 elemSize, UInt32 defElems, UInt32 expandElems) {
+void* Utils_Resize(void* buffer, uint32_t* maxElems, uint32_t elemSize, uint32_t defElems, uint32_t expandElems) {
 	/* We use a statically allocated buffer initally, so can't realloc first time */
-	UInt32 curElems = *maxElems, elems = curElems + expandElems;
+	uint32_t curElems = *maxElems, elems = curElems + expandElems;
 	*maxElems = elems;
 
 	if (curElems <= defElems) {

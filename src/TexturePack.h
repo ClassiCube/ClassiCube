@@ -8,7 +8,7 @@
 struct Stream;
 struct AsyncRequest;
 
-struct ZipEntry { UInt32 CompressedSize, UncompressedSize, LocalHeaderOffset, Crc32; };
+struct ZipEntry { uint32_t CompressedSize, UncompressedSize, LocalHeaderOffset, Crc32; };
 
 #define ZIP_MAX_ENTRIES 2048
 struct ZipState {
@@ -32,7 +32,7 @@ bool TextureCache_HasUrl(const String* url);
 bool TextureCache_GetStream(const String* url, struct Stream* stream);
 void TextureCache_GetLastModified(const String* url, TimeMS* time);
 void TextureCache_GetETag(const String* url, String* etag);
-void TextureCache_AddData(const String* url, uint8_t* data, UInt32 length);
+void TextureCache_AddData(const String* url, uint8_t* data, uint32_t length);
 void TextureCache_AddETag(const String* url, const String* etag);
 void TextureCache_AddLastModified(const String* url, TimeMS* lastModified);
 
