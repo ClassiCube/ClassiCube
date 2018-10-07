@@ -94,7 +94,7 @@ float Options_GetFloat(const char* key, float min, float max, float defValue) {
 	String str;
 	float value;
 	if (!Options_TryGetValue(key, &str))       return defValue;
-	if (!Convert_TryParseReal32(&str, &value)) return defValue;
+	if (!Convert_TryParseFloat(&str, &value)) return defValue;
 
 	Math_Clamp(value, min, max);
 	return value;

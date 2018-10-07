@@ -536,7 +536,7 @@ static void TeleportCommand_Execute(const String* args, int argsCount) {
 		Chat_AddRaw("&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
 	} else {
 		float x, y, z;
-		if (!Convert_TryParseReal32(&args[1], &x) || !Convert_TryParseReal32(&args[2], &y) || !Convert_TryParseReal32(&args[3], &z)) {
+		if (!Convert_TryParseFloat(&args[1], &x) || !Convert_TryParseFloat(&args[2], &y) || !Convert_TryParseFloat(&args[3], &z)) {
 			Chat_AddRaw("&e/client teleport: &cCoordinates must be decimals");
 			return;
 		}

@@ -16,7 +16,7 @@ static void ErrorHandler_DumpCommon(String* str, void* ctx);
 #include <windows.h>
 #include <imagehlp.h>
 
-struct StackPointers { UIntPtr Instruction, Frame, Stack; };
+struct StackPointers { uintptr_t Instruction, Frame, Stack; };
 struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
 
 
@@ -70,7 +70,7 @@ static int ErrorHandler_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, 
 static BOOL CALLBACK ErrorHandler_DumpModule(const char* name, ULONG_PTR base, ULONG size, void* ctx) {
 	char buffer[STRING_SIZE * 4];
 	String str = String_FromArray(buffer);
-	UIntPtr start = base, end = base + (size - 1);
+	uintptr_t start = base, end = base + (size - 1);
 
 	String_Format3(&str, "%c = %x-%x\r\n", name, &start, &end);
 	ErrorHandler_Log(&str);
@@ -88,7 +88,7 @@ static void ErrorHandler_Backtrace(String* backtrace, void* ctx) {
 
 	for (i = 0; i < frames; i++) {
 		int number = i + 1;
-		UIntPtr addr = pointers[i].Instruction;
+		uintptr_t addr = pointers[i].Instruction;
 
 		char strBuffer[STRING_SIZE * 10];
 		String str = String_FromArray(strBuffer);
@@ -177,8 +177,8 @@ static LONG WINAPI ErrorHandler_UnhandledFilter(struct _EXCEPTION_POINTERS* pInf
 	char msgBuffer[STRING_SIZE * 2 + 1];
 	String msg = String_NT_Array(msgBuffer);
 
-	UInt32 code  = (UInt32)pInfo->ExceptionRecord->ExceptionCode;
-	UIntPtr addr = (UIntPtr)pInfo->ExceptionRecord->ExceptionAddress;
+	UInt32 code    = (UInt32)pInfo->ExceptionRecord->ExceptionCode;
+	uintptr_t addr = (uintptr_t)pInfo->ExceptionRecord->ExceptionAddress;
 	String_Format2(&msg, "Unhandled exception 0x%h at 0x%x", &code, &addr);
 	msg.buffer[msg.length] = '\0';
 
@@ -491,7 +491,7 @@ static void ErrorHandler_Backtrace(String* backtrace_, void* ctx) {
 
 	for (i = 0; i < frames; i++) {
 		int number = i + 1;
-		UIntPtr addr = (UIntPtr)addrs[i];
+		uintptr_t addr = (uintptr_t)addrs[i];
 
 		char strBuffer[STRING_SIZE * 5];
 		String str = String_FromArray(strBuffer);
@@ -578,7 +578,7 @@ static void ErrorHandler_SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	String msg = String_NT_Array(msgBuffer);
 
 	int type     = info->si_signo, code = info->si_code;
-	UIntPtr addr = (UIntPtr)info->si_addr;
+	uintptr_t addr = (uintptr_t)info->si_addr;
 	String_Format3(&msg, "Unhandled signal %i (code %i) at 0x%x", &type, &code, &addr);
 	msg.buffer[msg.length] = '\0';
 

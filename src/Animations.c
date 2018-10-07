@@ -37,7 +37,7 @@ static void LavaAnimation_Tick(UInt32* ptr, int size) {
 
 			/* Lookup table for (int)(1.2 * sin([ANGLE] * 22.5 * MATH_DEG2RAD)); */
 			/* [ANGLE] is integer x/y, so repeats every 16 intervals */
-			static Int8 sin_adj_table[16] = { 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0 };
+			static int8_t sin_adj_table[16] = { 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0 };
 			int xx = x + sin_adj_table[y & 0xF], yy = y + sin_adj_table[x & 0xF];
 
 			float lSoupHeat =

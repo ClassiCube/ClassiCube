@@ -376,11 +376,12 @@ struct Floor {
 /* TODO: Make this thread safe */
 Int16* tmp_xlist;
 UInt16* tmp_order;
-static void Floor_SortXList(Int32 left, Int32 right) {
+static void Floor_SortXList(int left, int right) {
 	UInt16* values = tmp_order; UInt16 value;
 	Int16* keys = tmp_xlist;    Int16 key;
+
 	while (left < right) {
-		Int32 i = left, j = right;
+		int i = left, j = right;
 		Int16 pivot = keys[(i + j) / 2];
 
 		/* partition the list */
@@ -396,7 +397,7 @@ static void Floor_SortXList(Int32 left, Int32 right) {
 
 static ReturnCode Floor_DecodeSetup(struct VorbisState* ctx, struct Floor* f) {
 	f->Partitions = Vorbis_ReadBits(ctx, 5);
-	Int32 i, j, idx, maxClass = -1;
+	int i, j, idx, maxClass = -1;
 
 	for (i = 0; i < f->Partitions; i++) {
 		f->PartitionClasses[i] = Vorbis_ReadBits(ctx, 4);
@@ -418,12 +419,12 @@ static ReturnCode Floor_DecodeSetup(struct VorbisState* ctx, struct Floor* f) {
 	static Int16 ranges[4] = { 256, 128, 84, 64 };
 	f->Range = ranges[f->Multiplier - 1];
 
-	UInt32 rangeBits = Vorbis_ReadBits(ctx, 4);
+	int rangeBits = Vorbis_ReadBits(ctx, 4);
 	f->XList[0] = 0;
 	f->XList[1] = 1 << rangeBits;
 
 	for (i = 0, idx = 2; i < f->Partitions; i++) {
-		Int32 classNum = f->PartitionClasses[i];
+		int classNum = f->PartitionClasses[i];
 		for (j = 0; j < f->ClassDimensions[classNum]; j++) {
 			f->XList[idx++] = Vorbis_ReadBits(ctx, rangeBits);
 		}
@@ -431,8 +432,8 @@ static ReturnCode Floor_DecodeSetup(struct VorbisState* ctx, struct Floor* f) {
 	f->Values = idx;
 
 	/* sort X list for curve computation later */
-	Int16 xlist_sorted[FLOOR_MAX_VALUES];
-	Mem_Copy(xlist_sorted, f->XList, idx * sizeof(Int16));
+	int16_t xlist_sorted[FLOOR_MAX_VALUES];
+	Mem_Copy(xlist_sorted, f->XList, idx * 2);
 	for (i = 0; i < idx; i++) { f->ListOrder[i] = i; }
 
 	tmp_xlist = xlist_sorted; 
@@ -442,11 +443,11 @@ static ReturnCode Floor_DecodeSetup(struct VorbisState* ctx, struct Floor* f) {
 }
 
 static bool Floor_DecodeFrame(struct VorbisState* ctx, struct Floor* f, Int32 ch) {
-	Int32 nonZero = Vorbis_ReadBits(ctx, 1);
+	int nonZero = Vorbis_ReadBits(ctx, 1);
 	if (!nonZero) return false;
 	Int32* yList = f->YList[ch];
 
-	Int32 i, j, idx, rangeBits = iLog(f->Range - 1);
+	int i, j, idx, rangeBits = iLog(f->Range - 1);
 	yList[0] = Vorbis_ReadBits(ctx, rangeBits);
 	yList[1] = Vorbis_ReadBits(ctx, rangeBits);
 
@@ -517,7 +518,7 @@ static void Floor_RenderLine(int x0, int y0, int x1, int y1, float* data) {
 	}
 }
 
-static int low_neighbor(Int16* v, int x) {
+static int low_neighbor(int16_t* v, int x) {
 	int n = 0, i, max = Int32_MinValue;
 	for (i = 0; i < x; i++) {
 		if (v[i] < v[x] && v[i] > max) { n = i; max = v[i]; }
@@ -525,7 +526,7 @@ static int low_neighbor(Int16* v, int x) {
 	return n;
 }
 
-static int high_neighbor(Int16* v, int x) {
+static int high_neighbor(int16_t* v, int x) {
 	int n = 0, i, min = Int32_MaxValue;
 	for (i = 0; i < x; i++) {
 		if (v[i] > v[x] && v[i] < min) { n = i; min = v[i]; }
@@ -619,11 +620,11 @@ static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, int ch) {
 struct Residue {
 	UInt8 Type, Classifications, Classbook;
 	UInt32 Begin, End, PartitionSize;
-	UInt8 Cascade[RESIDUE_MAX_CLASSIFICATIONS];
-	Int16 Books[RESIDUE_MAX_CLASSIFICATIONS][8];
+	uint8_t Cascade[RESIDUE_MAX_CLASSIFICATIONS];
+	int16_t Books[RESIDUE_MAX_CLASSIFICATIONS][8];
 };
 
-static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r, UInt16 type) {
+static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r, int type) {
 	r->Type  = (UInt8)type;
 	r->Begin = Vorbis_ReadBits(ctx, 24);
 	r->End   = Vorbis_ReadBits(ctx, 24);
@@ -631,7 +632,7 @@ static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r
 	r->Classifications = Vorbis_ReadBits(ctx, 6);  r->Classifications++;
 	r->Classbook = Vorbis_ReadBits(ctx, 8);
 
-	Int32 i;
+	int i;
 	for (i = 0; i < r->Classifications; i++) {
 		r->Cascade[i] = Vorbis_ReadBits(ctx, 3);
 		Int32 moreBits = Vorbis_ReadBits(ctx, 1);
@@ -640,7 +641,7 @@ static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r
 		r->Cascade[i] |= bits << 3;
 	}
 
-	Int32 j;
+	int j;
 	for (i = 0; i < r->Classifications; i++) {
 		for (j = 0; j < 8; j++) {
 			Int16 codebook = -1;
@@ -763,16 +764,16 @@ struct Mapping {
 };
 
 static ReturnCode Mapping_DecodeSetup(struct VorbisState* ctx, struct Mapping* m) {
-	Int32 i, submaps = 1, submapFlag = Vorbis_ReadBits(ctx, 1);
+	int i, submaps = 1, submapFlag = Vorbis_ReadBits(ctx, 1);
 	if (submapFlag) {
 		submaps = Vorbis_ReadBits(ctx, 4); submaps++;
 	}
 
-	Int32 couplingSteps = 0, couplingFlag = Vorbis_ReadBits(ctx, 1);
+	int couplingSteps = 0, couplingFlag = Vorbis_ReadBits(ctx, 1);
 	if (couplingFlag) {
 		couplingSteps = Vorbis_ReadBits(ctx, 8); couplingSteps++;
 		/* TODO: How big can couplingSteps ever really get in practice? */
-		Int32 couplingBits = iLog(ctx->Channels - 1);
+		int couplingBits = iLog(ctx->Channels - 1);
 		for (i = 0; i < couplingSteps; i++) {
 			m->Magnitude[i] = Vorbis_ReadBits(ctx, couplingBits);
 			m->Angle[i]     = Vorbis_ReadBits(ctx, couplingBits);
@@ -780,7 +781,7 @@ static ReturnCode Mapping_DecodeSetup(struct VorbisState* ctx, struct Mapping* m
 		}
 	}
 
-	Int32 reserved = Vorbis_ReadBits(ctx, 2);
+	int reserved = Vorbis_ReadBits(ctx, 2);
 	if (reserved != 0) return VORBIS_ERR_MAPPING_RESERVED;
 	m->Submaps = submaps;
 	m->CouplingSteps = couplingSteps;
@@ -940,11 +941,11 @@ void imdct_calc(float* in, float* out, struct imdct_state* state) {
 *#########################################################################################################################*/
 struct Mode { UInt8 BlockSizeFlag, MappingIdx; };
 static ReturnCode Mode_DecodeSetup(struct VorbisState* ctx, struct Mode* m) {
-	m->BlockSizeFlag  = Vorbis_ReadBits(ctx, 1);
-	UInt16 windowType = Vorbis_ReadBits(ctx, 16);
+	m->BlockSizeFlag = Vorbis_ReadBits(ctx, 1);
+	int windowType   = Vorbis_ReadBits(ctx, 16);
 	if (windowType != 0) return VORBIS_ERR_MODE_WINDOW;
 
-	UInt16 transformType = Vorbis_ReadBits(ctx, 16);
+	int transformType = Vorbis_ReadBits(ctx, 16);
 	if (transformType != 0) return VORBIS_ERR_MODE_TRANSFORM;
 	m->MappingIdx = Vorbis_ReadBits(ctx, 8);
 	return 0;
@@ -967,7 +968,7 @@ static void Vorbis_CalcWindow(struct VorbisWindow* window, Int32 blockSize) {
 }
 
 void Vorbis_Free(struct VorbisState* ctx) {
-	Int32 i;
+	int i;
 	for (i = 0; i < ctx->NumCodebooks; i++) {
 		Codebook_Free(&ctx->Codebooks[i]);
 	}
@@ -1043,7 +1044,7 @@ static ReturnCode Vorbis_DecodeComments(struct VorbisState* ctx) {
 }
 
 static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
-	Int32 i, count;
+	int i, count;
 	ReturnCode res;
 
 	count = Vorbis_ReadBits(ctx, 8); count++;
@@ -1056,14 +1057,14 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 
 	count = Vorbis_ReadBits(ctx, 6); count++;
 	for (i = 0; i < count; i++) {
-		UInt16 time = Vorbis_ReadBits(ctx, 16);
+		int time = Vorbis_ReadBits(ctx, 16);
 		if (time != 0) return VORBIS_ERR_TIME_TYPE;
 	}
 
 	count = Vorbis_ReadBits(ctx, 6); count++;
 	ctx->Floors = Mem_Alloc(count, sizeof(struct Floor), "vorbis floors");
 	for (i = 0; i < count; i++) {
-		UInt16 floor = Vorbis_ReadBits(ctx, 16);
+		int floor = Vorbis_ReadBits(ctx, 16);
 		if (floor != 1) return VORBIS_ERR_FLOOR_TYPE;
 		res = Floor_DecodeSetup(ctx, &ctx->Floors[i]);
 		if (res) return res;
@@ -1072,7 +1073,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	count = Vorbis_ReadBits(ctx, 6); count++;
 	ctx->Residues = Mem_Alloc(count, sizeof(struct Residue), "vorbis residues");
 	for (i = 0; i < count; i++) {
-		UInt16 residue = Vorbis_ReadBits(ctx, 16);
+		int residue = Vorbis_ReadBits(ctx, 16);
 		if (residue > 2) return VORBIS_ERR_FLOOR_TYPE;
 		res = Residue_DecodeSetup(ctx, &ctx->Residues[i], residue);
 		if (res) return res;
@@ -1081,7 +1082,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	count = Vorbis_ReadBits(ctx, 6); count++;
 	ctx->Mappings = Mem_Alloc(count, sizeof(struct Mapping), "vorbis mappings");
 	for (i = 0; i < count; i++) {
-		UInt16 mapping = Vorbis_ReadBits(ctx, 16);
+		int mapping = Vorbis_ReadBits(ctx, 16);
 		if (mapping != 0) return VORBIS_ERR_MAPPING_TYPE;
 		res = Mapping_DecodeSetup(ctx, &ctx->Mappings[i]);
 		if (res) return res;
@@ -1136,12 +1137,12 @@ ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 *-----------------------------------------------------Vorbis frame--------------------------------------------------------*
 *#########################################################################################################################*/
 ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
-	Int32 i, j, packetType;
+	int i, j, packetType;
 	ReturnCode res = Vorbis_TryReadBits(ctx, 1, &packetType);
 	if (res) return res;
 	if (packetType) return VORBIS_ERR_FRAME_TYPE;
 
-	Int32 modeIdx = Vorbis_ReadBits(ctx, ctx->ModeNumBits);
+	int modeIdx = Vorbis_ReadBits(ctx, ctx->ModeNumBits);
 	struct Mode* mode = &ctx->Modes[modeIdx];
 	struct Mapping* mapping = &ctx->Mappings[mode->MappingIdx];
 
@@ -1163,16 +1164,16 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	/* decode floor */
 	bool hasFloor[VORBIS_MAX_CHANS], hasResidue[VORBIS_MAX_CHANS];
 	for (i = 0; i < ctx->Channels; i++) {
-		Int32 submap = mapping->Mux[i];
-		Int32 floorIdx = mapping->FloorIdx[submap];
+		int submap   = mapping->Mux[i];
+		int floorIdx = mapping->FloorIdx[submap];
 		hasFloor[i] = Floor_DecodeFrame(ctx, &ctx->Floors[floorIdx], i);
 		hasResidue[i] = hasFloor[i];
 	}
 
 	/* non-zero vector propogate */
 	for (i = 0; i < mapping->CouplingSteps; i++) {
-		Int32 magChannel = mapping->Magnitude[i];
-		Int32 angChannel = mapping->Angle[i];
+		int magChannel = mapping->Magnitude[i];
+		int angChannel = mapping->Angle[i];
 
 		if (hasResidue[magChannel] || hasResidue[angChannel]) {
 			hasResidue[magChannel] = true; hasResidue[angChannel] = true;
@@ -1181,7 +1182,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 
 	/* decode residue */
 	for (i = 0; i < mapping->Submaps; i++) {
-		Int32 ch = 0;
+		int ch = 0;
 		bool doNotDecode[VORBIS_MAX_CHANS];
 		float* data[VORBIS_MAX_CHANS]; /* map residue data to actual channel data */
 		for (j = 0; j < ctx->Channels; j++) {
@@ -1192,7 +1193,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 			ch++;
 		}
 
-		Int32 residueIdx = mapping->FloorIdx[i];
+		int residueIdx = mapping->FloorIdx[i];
 		Residue_DecodeFrame(ctx, &ctx->Residues[residueIdx], ch, doNotDecode, data);
 	}
 
@@ -1223,8 +1224,8 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	/* compute dot product of floor and residue, producing audio spectrum vector */
 	for (i = 0; i < ctx->Channels; i++) {
 		if (!hasFloor[i]) continue;
-		Int32 submap = mapping->Mux[i];
-		Int32 floorIdx = mapping->FloorIdx[submap];
+		int submap   = mapping->Mux[i];
+		int floorIdx = mapping->FloorIdx[submap];
 		Floor_Synthesis(ctx, &ctx->Floors[floorIdx], i);
 	}
 
@@ -1245,8 +1246,8 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	return 0;
 }
 
-Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
-	Int32 i, ch;
+int Vorbis_OutputFrame(struct VorbisState* ctx, int16_t* data) {
+	int i, ch;
 	/* first frame decoded has no data */
 	if (ctx->PrevBlockSize == 0) {
 		ctx->PrevBlockSize = ctx->CurBlockSize;
@@ -1255,8 +1256,8 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 
 	/* data returned is from centre of previous block to centre of current block */
 	/* data is aligned, such that 3/4 of prev block is aligned to 1/4 of cur block */
-	Int32 prevQrtr = ctx->PrevBlockSize / 4, curQrtr = ctx->CurBlockSize / 4;
-	Int32 overlapQtr = min(curQrtr, prevQrtr);
+	int prevQrtr   = ctx->PrevBlockSize / 4, curQrtr = ctx->CurBlockSize / 4;
+	int overlapQtr = min(curQrtr, prevQrtr);
 	
 	/* So for example, consider a short block overlapping with a long block
 	   a) we need to chop off 'prev' before its halfway point
@@ -1269,7 +1270,7 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 	*/
 	float* prev[VORBIS_MAX_CHANS];
 	float*  cur[VORBIS_MAX_CHANS];
-	Int32 curOffset = curQrtr - overlapQtr, prevOffset = prevQrtr - overlapQtr;
+	int curOffset = curQrtr - overlapQtr, prevOffset = prevQrtr - overlapQtr;
 
 	for (i = 0; i < ctx->Channels; i++) {
 		prev[i] = ctx->PrevOutput[i] + (prevQrtr * 2);
@@ -1281,7 +1282,7 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
 			float sample = prev[ch][i];
 			Math_Clamp(sample, -1.0f, 1.0f);
-			*data++ = (Int16)(sample * 32767);
+			*data++ = (int16_t)(sample * 32767);
 		}
 	}
 
@@ -1290,7 +1291,7 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 		prev[i] += prevOffset; cur[i] += curOffset;
 	}
 
-	Int32 overlapSize = overlapQtr * 2;
+	int overlapSize = overlapQtr * 2;
 	struct VorbisWindow window = ctx->Windows[(overlapQtr * 4) == ctx->BlockSizes[1]];
 
 	/* overlap and add data */
@@ -1299,7 +1300,7 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
 			float sample = prev[ch][i] * window.Prev[i] + cur[ch][i] * window.Cur[i];
 			Math_Clamp(sample, -1.0f, 1.0f);
-			*data++ = (Int16)(sample * 32767);
+			*data++ = (int16_t)(sample * 32767);
 		}
 	}
 
@@ -1309,7 +1310,7 @@ Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
 			float sample = cur[ch][i];
 			Math_Clamp(sample, -1.0f, 1.0f);
-			*data++ = (Int16)(sample * 32767);
+			*data++ = (int16_t)(sample * 32767);
 		}
 	}
 

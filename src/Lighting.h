@@ -8,7 +8,7 @@ BasicLighting: Uses a simple heightmap, where each block is either in sun or sha
 struct IGameComponent;
 
 #define Lighting_Pack(x, z) ((x) + World_Width * (z))
-Int16* Lighting_Heightmap;
+int16_t* Lighting_Heightmap;
 
 void Lighting_MakeComponent(struct IGameComponent* comp);
 /* Equivalent to (but far more optimised form of)

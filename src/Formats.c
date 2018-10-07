@@ -47,14 +47,14 @@ UInt8 Lvl_table[256 - BLOCK_CPE_COUNT] = { 0, 0, 0, 0, 39, 36, 36, 10, 46, 21, 2
 41, 19, 35, 21, 29, 49, 34, 16, 41, 0, 22 };
 
 static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
-	Int32 x, y, z, i;
+	int x, y, z, i;
 	UInt8 chunk[LVL_CHUNKSIZE * LVL_CHUNKSIZE * LVL_CHUNKSIZE];
 	ReturnCode res; UInt8 hasCustom;
 
 	/* skip bounds checks when we know chunk is entirely inside map */
-	Int32 adjWidth  = World_Width  & ~0x0F;
-	Int32 adjHeight = World_Height & ~0x0F;
-	Int32 adjLength = World_Length & ~0x0F;
+	int adjWidth  = World_Width  & ~0x0F;
+	int adjHeight = World_Height & ~0x0F;
+	int adjLength = World_Length & ~0x0F;
 
 	for (y = 0; y < World_Height; y += LVL_CHUNKSIZE) {
 		for (z = 0; z < World_Length; z += LVL_CHUNKSIZE) {
@@ -64,7 +64,7 @@ static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
 				if (hasCustom != 1) continue;
 				if ((res = Stream_Read(stream, chunk, sizeof(chunk)))) return res;
 
-				Int32 baseIndex = World_Pack(x, y, z);
+				int baseIndex = World_Pack(x, y, z);
 				if ((x + LVL_CHUNKSIZE) <= adjWidth && (y + LVL_CHUNKSIZE) <= adjHeight && (z + LVL_CHUNKSIZE) <= adjLength) {
 					for (i = 0; i < sizeof(chunk); i++) {
 						Int32 xx = i & 0xF, yy = (i >> 8) & 0xF, zz = (i >> 4) & 0xF;
@@ -73,9 +73,9 @@ static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
 					}
 				} else {
 					for (i = 0; i < sizeof(chunk); i++) {
-						Int32 xx = i & 0xF, yy = (i >> 8) & 0xF, zz = (i >> 4) & 0xF;
+						int xx = i & 0xF, yy = (i >> 8) & 0xF, zz = (i >> 4) & 0xF;
 						if ((x + xx) >= World_Width || (y + yy) >= World_Height || (z + zz) >= World_Length) continue;
-						Int32 index = baseIndex + World_Pack(xx, yy, zz);
+						int index = baseIndex + World_Pack(xx, yy, zz);
 						World_Blocks[index] = World_Blocks[index] == LVL_CUSTOMTILE ? chunk[i] : World_Blocks[index];
 					}
 				}
@@ -173,9 +173,9 @@ ReturnCode Fcm_Load(struct Stream* stream) {
 	World_Length = Stream_GetU16_LE(&header[4]);
 
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	p->Spawn.X = ((Int32)Stream_GetU32_LE(&header[ 6])) / 32.0f;
-	p->Spawn.Y = ((Int32)Stream_GetU32_LE(&header[10])) / 32.0f;
-	p->Spawn.Z = ((Int32)Stream_GetU32_LE(&header[14])) / 32.0f;
+	p->Spawn.X = ((int)Stream_GetU32_LE(&header[ 6])) / 32.0f;
+	p->Spawn.Y = ((int)Stream_GetU32_LE(&header[10])) / 32.0f;
+	p->Spawn.Z = ((int)Stream_GetU32_LE(&header[14])) / 32.0f;
 	p->SpawnRotY  = Math_Packed2Deg(header[18]);
 	p->SpawnHeadX = Math_Packed2Deg(header[19]);
 
@@ -183,13 +183,13 @@ ReturnCode Fcm_Load(struct Stream* stream) {
 	/* header[24] (4) date created */
 	Mem_Copy(&World_Uuid, &header[28], sizeof(World_Uuid));
 	/* header[44] (26) layer index */
-	Int32 metaSize = (Int32)Stream_GetU32_LE(&header[70]);
+	int metaSize = (int)Stream_GetU32_LE(&header[70]);
 
 	struct Stream compStream;
 	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
-	Int32 i;
+	int i;
 	for (i = 0; i < metaSize; i++) {
 		if ((res = Fcm_ReadString(&compStream))) return res; /* Group */
 		if ((res = Fcm_ReadString(&compStream))) return res; /* Key   */
@@ -217,21 +217,21 @@ struct NbtTag {
 	UInt32 DataSize; /* size of data for arrays */
 
 	union {
-		UInt8  Value_U8;
-		Int16  Value_I16;
-		Int32  Value_I32;
-		float  Value_F32;
-		UInt8  DataSmall[NBT_SMALL_SIZE];
-		UInt8* DataBig; /* malloc for big byte arrays */
+		uint8_t  Value_U8;
+		int16_t  Value_I16;
+		int32_t  Value_I32;
+		float    Value_F32;
+		uint8_t  DataSmall[NBT_SMALL_SIZE];
+		uint8_t* DataBig; /* malloc for big byte arrays */
 	};
 };
 
-static UInt8 NbtTag_U8(struct NbtTag* tag) {
+static uint8_t NbtTag_U8(struct NbtTag* tag) {
 	if (tag->TagID != NBT_I8) ErrorHandler_Fail("Expected I8 NBT tag");
 	return tag->Value_U8;
 }
 
-static Int16 NbtTag_I16(struct NbtTag* tag) {
+static int16_t NbtTag_I16(struct NbtTag* tag) {
 	if (tag->TagID != NBT_I16) ErrorHandler_Fail("Expected I16 NBT tag");
 	return tag->Value_I16;
 }
@@ -241,7 +241,7 @@ static float NbtTag_F32(struct NbtTag* tag) {
 	return tag->Value_F32;
 }
 
-static UInt8* NbtTag_U8_Array(struct NbtTag* tag, Int32 minSize) {
+static uint8_t* NbtTag_U8_Array(struct NbtTag* tag, Int32 minSize) {
 	if (tag->TagID != NBT_I8S) ErrorHandler_Fail("Expected I8_Array NBT tag");
 	if (tag->DataSize < minSize) ErrorHandler_Fail("I8_Array NBT tag too small");
 

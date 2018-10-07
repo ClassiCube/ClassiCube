@@ -75,7 +75,7 @@ NOINLINE_ int String_IndexOfString(const String* str, const String* sub);
 NOINLINE_ bool String_CaselessContains(const String* str, const String* sub);
 NOINLINE_ bool String_CaselessStarts(const String* str, const String* sub);
 NOINLINE_ bool String_CaselessEnds(const String* str, const String* sub);
-NOINLINE_ Int32 String_Compare(const String* a, const String* b);
+NOINLINE_ int  String_Compare(const String* a, const String* b);
 
 void String_Format1(String* str, const char* format, const void* a1);
 void String_Format2(String* str, const char* format, const void* a1, const void* a2);
@@ -92,7 +92,7 @@ NOINLINE_ bool Convert_TryParseInt16(const String*  str, Int16* value);
 NOINLINE_ bool Convert_TryParseUInt16(const String* str, UInt16* value);
 NOINLINE_ bool Convert_TryParseInt32(const String*  str, Int32* value);
 NOINLINE_ bool Convert_TryParseUInt64(const String* str, UInt64* value);
-NOINLINE_ bool Convert_TryParseReal32(const String* str, float* value);
+NOINLINE_ bool Convert_TryParseFloat(const String* str, float* value);
 NOINLINE_ bool Convert_TryParseBool(const String*   str, bool* value);
 
 #define STRINGSBUFFER_BUFFER_DEF_SIZE 4096

@@ -56,7 +56,7 @@ void FlatgrassGen_Generate(void) {
 *----------------------------------------------------Notchy map gen-------------------------------------------------------*
 *#########################################################################################################################*/
 int waterLevel, oneY, minHeight;
-Int16* Heightmap;
+int16_t* Heightmap;
 Random rnd;
 
 static void NotchyGen_FillOblateSpheroid(int x, int y, int z, float radius, BlockRaw block) {
@@ -469,7 +469,7 @@ static void NotchyGen_PlantTrees(void) {
 
 void NotchyGen_Generate(void) {
 	Gen_Init();
-	Heightmap = Mem_Alloc(Gen_Width * Gen_Length, sizeof(Int16), "gen heightmap");
+	Heightmap = Mem_Alloc(Gen_Width * Gen_Length, 2, "gen heightmap");
 
 	Random_Init(&rnd, Gen_Seed);
 	oneY = Gen_Width * Gen_Length;	

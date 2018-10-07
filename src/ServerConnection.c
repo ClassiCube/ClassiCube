@@ -86,7 +86,7 @@ void ServerConnection_CheckAsyncResources(void) {
 *--------------------------------------------------------PingList---------------------------------------------------------*
 *#########################################################################################################################*/
 struct PingEntry {
-	Int64 TimeSent, TimeReceived; UInt16 Data;
+	int64_t TimeSent, TimeReceived; UInt16 Data;
 };
 struct PingEntry PingList_Entries[10];
 

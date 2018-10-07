@@ -17,6 +17,7 @@ typedef struct DateTime_ {
 } DateTime;
 
 #define DATETIME_MILLIS_PER_SEC 1000
+int DateTime_TotalDays(DateTime* time);
 TimeMS DateTime_TotalMs(DateTime* time);
 void DateTime_FromTotalMs(DateTime* time, TimeMS ms);
 void DateTime_HttpDate(TimeMS ms, String* str);

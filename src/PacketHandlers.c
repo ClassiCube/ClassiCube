@@ -346,9 +346,9 @@ void Classic_WritePosition(Vector3 pos, float rotY, float headX) {
 	{
 		BlockID payload = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID;
 		Handlers_WriteBlock(data, payload);
-		Int32 x = (Int32)(pos.X * 32);
-		Int32 y = (Int32)(pos.Y * 32) + 51;
-		Int32 z = (Int32)(pos.Z * 32);
+		int x = (int)(pos.X * 32);
+		int y = (int)(pos.Y * 32) + 51;
+		int z = (int)(pos.Z * 32);
 
 		if (cpe_extEntityPos) {
 			Stream_SetU32_BE(data, x); data += 4;
@@ -366,7 +366,7 @@ void Classic_WritePosition(Vector3 pos, float rotY, float headX) {
 	ServerConnection_WriteBuffer = data;
 }
 
-void Classic_WriteSetBlock(Int32 x, Int32 y, Int32 z, bool place, BlockID block) {
+void Classic_WriteSetBlock(int x, int y, int z, bool place, BlockID block) {
 	UInt8* data = ServerConnection_WriteBuffer;
 	*data++ = OPCODE_SET_BLOCK_CLIENT;
 	{
@@ -394,7 +394,7 @@ void Classic_WriteLogin(const String* username, const String* verKey) {
 static void Classic_Handshake(UInt8* data) {
 	ServerConnection_ServerName.length = 0;
 	ServerConnection_ServerMOTD.length = 0;
-	UInt8 protocolVer = *data++;
+	data++; /* protocol version */
 
 	Handlers_ReadString(&data, &ServerConnection_ServerName);
 	Handlers_ReadString(&data, &ServerConnection_ServerMOTD);
@@ -572,9 +572,9 @@ static void Classic_EntityTeleport(UInt8* data) {
 
 static void Classic_RelPosAndOrientationUpdate(UInt8* data) {
 	EntityID id = *data++; Vector3 pos;
-	pos.X = (Int8)(*data++) / 32.0f;
-	pos.Y = (Int8)(*data++) / 32.0f;
-	pos.Z = (Int8)(*data++) / 32.0f;
+	pos.X = (int8_t)(*data++) / 32.0f;
+	pos.Y = (int8_t)(*data++) / 32.0f;
+	pos.Z = (int8_t)(*data++) / 32.0f;
 
 	float rotY  = Math_Packed2Deg(*data++);
 	float headX = Math_Packed2Deg(*data++);
@@ -584,9 +584,9 @@ static void Classic_RelPosAndOrientationUpdate(UInt8* data) {
 
 static void Classic_RelPositionUpdate(UInt8* data) {
 	EntityID id = *data++; Vector3 pos;
-	pos.X = (Int8)(*data++) / 32.0f;
-	pos.Y = (Int8)(*data++) / 32.0f;
-	pos.Z = (Int8)(*data++) / 32.0f;
+	pos.X = (int8_t)(*data++) / 32.0f;
+	pos.Y = (int8_t)(*data++) / 32.0f;
+	pos.Z = (int8_t)(*data++) / 32.0f;
 
 	struct LocationUpdate update; LocationUpdate_MakePos(&update, pos, true);
 	Handlers_UpdateLocation(id, &update, true);
@@ -647,16 +647,16 @@ static void Classic_SetPermission(UInt8* data) {
 }
 
 static void Classic_ReadAbsoluteLocation(UInt8* data, EntityID id, bool interpolate) {
-	Int32 x, y, z;
+	int x, y, z;
 	if (cpe_extEntityPos) {
-		x = (Int32)Stream_GetU32_BE(&data[0]);
-		y = (Int32)Stream_GetU32_BE(&data[4]);
-		z = (Int32)Stream_GetU32_BE(&data[8]);
+		x = (int)Stream_GetU32_BE(&data[0]);
+		y = (int)Stream_GetU32_BE(&data[4]);
+		z = (int)Stream_GetU32_BE(&data[8]);
 		data += 12;
 	} else {
-		x = (Int16)Stream_GetU16_BE(&data[0]);
-		y = (Int16)Stream_GetU16_BE(&data[2]);
-		z = (Int16)Stream_GetU16_BE(&data[4]);
+		x = (int16_t)Stream_GetU16_BE(&data[0]);
+		y = (int16_t)Stream_GetU16_BE(&data[2]);
+		z = (int16_t)Stream_GetU16_BE(&data[4]);
 		data += 6;
 	}
 
@@ -746,7 +746,7 @@ void CPE_WritePlayerClick(MouseButton button, bool buttonDown, UInt8 targetId, s
 	ServerConnection_WriteBuffer += 15;
 }
 
-static void CPE_WriteExtInfo(const String* appName, Int32 extensionsCount) {
+static void CPE_WriteExtInfo(const String* appName, int extensionsCount) {
 	UInt8* data = ServerConnection_WriteBuffer; 
 	*data++ = OPCODE_EXT_INFO;
 	{
@@ -756,7 +756,7 @@ static void CPE_WriteExtInfo(const String* appName, Int32 extensionsCount) {
 	ServerConnection_WriteBuffer = data;
 }
 
-static void CPE_WriteExtEntry(const String* extensionName, Int32 extensionVersion) {
+static void CPE_WriteExtEntry(const String* extensionName, int extensionVersion) {
 	UInt8* data = ServerConnection_WriteBuffer;
 	*data++ = OPCODE_EXT_ENTRY;
 	{
@@ -787,7 +787,7 @@ static void CPE_WriteTwoWayPing(bool serverToClient, UInt16 payload) {
 
 static void CPE_SendCpeExtInfoReply(void) {
 	if (cpe_serverExtensionsCount) return;
-	Int32 count = Array_Elems(cpe_clientExtensions);
+	int count = Array_Elems(cpe_clientExtensions);
 #ifndef EXTENDED_TEXTURES
 	count--;
 #endif
@@ -803,7 +803,7 @@ static void CPE_SendCpeExtInfoReply(void) {
 
 	CPE_WriteExtInfo(&ServerConnection_AppName, count);
 	Net_SendPacket();
-	Int32 i, ver;
+	int i, ver;
 
 	for (i = 0; i < Array_Elems(cpe_clientExtensions); i++) {
 		String name = String_FromReadonly(cpe_clientExtensions[i]);
@@ -853,7 +853,7 @@ static void CPE_ExtEntry(UInt8* data) {
 	char extNameBuffer[STRING_SIZE];
 	String ext = String_FromArray(extNameBuffer);
 	Handlers_ReadString(&data, &ext);
-	Int32 extVersion = Stream_GetU32_BE(data);
+	int extVersion = Stream_GetU32_BE(data);
 	Platform_Log2("cpe ext: %s, %i", &ext, &extVersion);
 
 	cpe_serverExtensionsCount--;
@@ -1011,14 +1011,14 @@ static void CPE_MakeSelection(UInt8* data) {
 	data += STRING_SIZE; /* label */
 
 	Vector3I p1;
-	p1.X = (Int16)Stream_GetU16_BE(&data[0]);
-	p1.Y = (Int16)Stream_GetU16_BE(&data[2]);
-	p1.Z = (Int16)Stream_GetU16_BE(&data[4]);
+	p1.X = (int16_t)Stream_GetU16_BE(&data[0]);
+	p1.Y = (int16_t)Stream_GetU16_BE(&data[2]);
+	p1.Z = (int16_t)Stream_GetU16_BE(&data[4]);
 
 	Vector3I p2; data += 6;
-	p2.X = (Int16)Stream_GetU16_BE(&data[0]);
-	p2.Y = (Int16)Stream_GetU16_BE(&data[2]);
-	p2.Z = (Int16)Stream_GetU16_BE(&data[4]);
+	p2.X = (int16_t)Stream_GetU16_BE(&data[0]);
+	p2.Y = (int16_t)Stream_GetU16_BE(&data[2]);
+	p2.Z = (int16_t)Stream_GetU16_BE(&data[4]);
 
 	PackedCol c; data += 6;
 	/* R,G,B,A are actually 16 bit unsigned integers */
@@ -1192,7 +1192,7 @@ static void CPE_SetMapEnvProperty(UInt8* data) {
 	UInt8 type  = *data++;
 	Int32 value = (Int32)Stream_GetU32_BE(data);
 	Math_Clamp(value, -0xFFFFFF, 0xFFFFFF);
-	Int32 maxBlock = BLOCK_COUNT - 1;
+	int maxBlock = BLOCK_COUNT - 1;
 
 	switch (type) {
 	case 0:

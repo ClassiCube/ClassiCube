@@ -30,7 +30,7 @@ struct Model {
 	/* Count of assigned vertices within the raw vertices array. */
 	int index;
 	/* Index within ModelCache's textures of the default texture for this model. */
-	Int8 defaultTexIndex;
+	int8_t defaultTexIndex;
 	UInt8 armX, armY; /* these translate arm model part back to (0, 0) */
 
 	bool initalised;

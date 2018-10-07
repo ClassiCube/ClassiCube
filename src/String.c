@@ -411,7 +411,7 @@ int String_Compare(const String* a, const String* b) {
 		char bCur = b->buffer[i]; Char_MakeLower(bCur);
 
 		if (aCur == bCur) continue;
-		return (Int32)aCur - (Int32)bCur;
+		return (UInt8)aCur - (UInt8)bCur;
 	}
 
 	/* all chars are equal here - same string, or a substring */
@@ -456,7 +456,7 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 		case 'r':
 			String_Append(str, *((char*)arg)); break;
 		case 'x':
-			if (sizeof(UIntPtr) == 4) {
+			if (sizeof(uintptr_t) == 4) {
 				String_Hex32(str, *((UInt32*)arg)); break;
 			} else {
 				String_Hex64(str, *((UInt64*)arg)); break;
@@ -553,8 +553,8 @@ bool Convert_TryParseUInt16(const String* str, UInt16* value) {
 	*value = (UInt16)tmp; return true;
 }
 
-static Int32 Convert_CompareDigits(const char* digits, const char* magnitude) {
-	Int32 i;
+static int Convert_CompareDigits(const char* digits, const char* magnitude) {
+	int i;
 	for (i = 0; ; i++) {
 		if (magnitude[i] == '\0')     return  0;
 		if (digits[i] > magnitude[i]) return  1;
@@ -618,7 +618,7 @@ bool Convert_TryParseUInt64(const String* str, UInt64* value) {
 	char digits[UINT64_DIGITS];
 	if (!Convert_TryParseDigits(str, &negative, digits, UINT64_DIGITS)) return false;
 
-	Int32 i, compare = Convert_CompareDigits(digits, "18446744073709551615");
+	int i, compare = Convert_CompareDigits(digits, "18446744073709551615");
 	if (negative || compare > 0) return false;
 
 	UInt64 sum = 0;
@@ -630,8 +630,8 @@ bool Convert_TryParseUInt64(const String* str, UInt64* value) {
 	return true;
 }
 
-bool Convert_TryParseReal32(const String* str, float* value) {
-	Int32 i = 0;
+bool Convert_TryParseFloat(const String* str, float* value) {
+	int i = 0;
 	*value = 0.0f;
 	bool foundDecimalPoint = false;
 	double whole = 0.0, fract = 0.0, divide = 10.0;

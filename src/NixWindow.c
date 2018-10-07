@@ -192,7 +192,7 @@ void Window_Create(int x, int y, int width, int height, const String* title, str
 	win_rootWin = DisplayDevice_Meta[2];
 
 	/* Open a display connection to the X server, and obtain the screen and root window */
-	UIntPtr addr = (UIntPtr)win_display;
+	uintptr_t addr = (uintptr_t)win_display;
 	Platform_Log3("Display: %x, Screen %i, Root window: %h", &addr, &win_screen, &win_rootWin);
 
 	Window_RegisterAtoms();

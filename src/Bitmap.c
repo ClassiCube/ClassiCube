@@ -404,10 +404,10 @@ ReturnCode Bitmap_DecodePng(Bitmap* bmp, struct Stream* stream) {
 		case PNG_FourCC('t','R','N','S'): {
 			if (col == PNG_COL_GRAYSCALE) {
 				if (dataSize != 2) return PNG_ERR_TRANS_COUNT;
-				res = Stream_Read(stream, tmp, sizeof(UInt16));
+				res = Stream_Read(stream, tmp, dataSize);
 				if (res) return res;
 
-				UInt8 palRGB = tmp[0]; /* RGB is 16 bits big endian, ignore least significant 8 bits */
+				uint8_t palRGB = tmp[0]; /* RGB is 16 bits big endian, ignore least significant 8 bits */
 				transparentCol = PackedCol_ARGB(palRGB, palRGB, palRGB, 0);
 			} else if (col == PNG_COL_INDEXED) {
 				if (dataSize > PNG_PALETTE) return PNG_ERR_TRANS_COUNT;
@@ -421,11 +421,11 @@ ReturnCode Bitmap_DecodePng(Bitmap* bmp, struct Stream* stream) {
 				}
 			} else if (col == PNG_COL_RGB) {
 				if (dataSize != 6) return PNG_ERR_TRANS_COUNT;
-				res = Stream_Read(stream, tmp, 3 * sizeof(UInt16));
+				res = Stream_Read(stream, tmp, dataSize);
 				if (res) return res;
 
 				/* R,G,B is 16 bits big endian, ignore least significant 8 bits */
-				UInt8 palR = tmp[0], palG = tmp[2], palB = tmp[4];
+				uint8_t palR = tmp[0], palG = tmp[2], palB = tmp[4];
 				transparentCol = PackedCol_ARGB(palR, palG, palB, 0);
 			} else {
 				return PNG_ERR_TRANS_INVALID;
@@ -592,7 +592,7 @@ static void Png_EncodeRow(UInt8* src, UInt8* cur, UInt8* prior, UInt8* best, int
 		/* (see note in PNG specification, 12.8 "Filter selection" ) */
 		int estimate = 0;
 		for (x = 0; x < lineLen; x++) {
-			estimate += Math_AbsI((Int8)dst[x]);
+			estimate += Math_AbsI((int8_t)dst[x]);
 		}
 
 		if (estimate > bestEstimate) continue;

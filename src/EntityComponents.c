@@ -195,7 +195,7 @@ static float HacksComp_ParseFlagFloat(const char* flagRaw, struct HacksComp* hac
 	if (!raw.length || Game_ClassicMode) return 1.0f;
 
 	float value = 0.0f;
-	if (!Convert_TryParseReal32(&raw, &value)) return 1.0f;
+	if (!Convert_TryParseFloat(&raw, &value)) return 1.0f;
 	return value;
 }
 

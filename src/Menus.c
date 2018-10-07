@@ -321,7 +321,7 @@ static void Menu_HandleFontChange(struct Screen* s) {
 }
 
 static int Menu_Int(const String* v)         { int value; Convert_TryParseInt32(v, &value); return value; }
-static float Menu_Float(const String* v)     { float value; Convert_TryParseReal32(v, &value); return value; }
+static float Menu_Float(const String* v)     { float value; Convert_TryParseFloat(v, &value); return value; }
 static PackedCol Menu_HexCol(const String* v) { PackedCol value; PackedCol_TryParseHex(v, &value); return value; }
 #define Menu_ReplaceActive(screen) Gui_FreeActive(); Gui_SetActive(screen);
 

@@ -9,16 +9,23 @@ typedef unsigned __int8  UInt8;
 typedef unsigned __int16 UInt16;
 typedef unsigned __int32 UInt32;
 typedef unsigned __int64 UInt64;
+typedef unsigned __int8  uint8_t;
+typedef unsigned __int16 uint16_t;
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int64 uint64_t;
 #ifdef _WIN64
-typedef unsigned __int64 UIntPtr;
+typedef unsigned __int64 uintptr_t;
 #else
-typedef unsigned int     UIntPtr;
+typedef unsigned int     uintptr_t;
 #endif
 
-typedef signed __int8  Int8;
 typedef signed __int16 Int16;
 typedef signed __int32 Int32;
 typedef signed __int64 Int64;
+typedef signed __int8  int8_t;
+typedef signed __int16 int16_t;
+typedef signed __int32 int32_t;
+typedef signed __int64 int64_t;
 #define NOINLINE_ __declspec(noinline)
 #elif __GNUC__
 #include <stdint.h>
@@ -26,9 +33,7 @@ typedef uint8_t  UInt8;
 typedef uint16_t UInt16;
 typedef uint32_t UInt32;
 typedef uint64_t UInt64;
-typedef uintptr_t UIntPtr;
 
-typedef int8_t Int8;
 typedef int16_t Int16;
 typedef int32_t Int32;
 typedef int64_t Int64;
@@ -44,21 +49,21 @@ typedef UInt8 bool;
 
 #define EXTENDED_BLOCKS
 #ifdef EXTENDED_BLOCKS
-typedef UInt16 BlockID;
+typedef uint16_t BlockID;
 #else
-typedef UInt8 BlockID;
+typedef uint8_t BlockID;
 #endif
 
 #define EXTENDED_TEXTURES
 #ifdef EXTENDED_TEXTURES
-typedef UInt16 TextureLoc;
+typedef uint16_t TextureLoc;
 #else
-typedef UInt8 TextureLoc;
+typedef uint8_t TextureLoc;
 #endif
 
-typedef UInt8 BlockRaw;
-typedef UInt8 EntityID;
-typedef UInt8 Face;
+typedef uint8_t BlockRaw;
+typedef uint8_t EntityID;
+typedef uint8_t Face;
 typedef UInt32 ReturnCode;
 typedef UInt64 TimeMS;
 

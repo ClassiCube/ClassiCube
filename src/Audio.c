@@ -14,7 +14,7 @@
 #include "Stream.h"
 
 StringsBuffer files;
-static void Volume_Mix16(Int16* samples, int count, int volume) {
+static void Volume_Mix16(int16_t* samples, int count, int volume) {
 	int i;
 
 	for (i = 0; i < (count & ~0x07); i += 8, samples += 8) {
@@ -34,7 +34,7 @@ static void Volume_Mix16(Int16* samples, int count, int volume) {
 	}
 }
 
-static void Volume_Mix8(UInt8* samples, int count, int volume) {
+static void Volume_Mix8(uint8_t* samples, int count, int volume) {
 	int i;
 	for (i = 0; i < count; i++, samples++) {
 		samples[0] = (127 + (samples[0] - 127) * volume / 100);
@@ -331,18 +331,18 @@ void* music_thread;
 void* music_waitable;
 volatile bool music_pendingStop, music_joining;
 
-static ReturnCode Music_BufferBlock(int i, Int16* data, int maxSamples, struct VorbisState* ctx) {
+static ReturnCode Music_Buffer(int i, int16_t* data, int maxSamples, struct VorbisState* ctx) {
 	int samples = 0;
 	ReturnCode res = 0, res2;
 
 	while (samples < maxSamples) {
 		if ((res = Vorbis_DecodeFrame(ctx))) break;
-		Int16* cur = &data[samples];
+		int16_t* cur = &data[samples];
 		samples += Vorbis_OutputFrame(ctx, cur);
 	}
 	if (Game_MusicVolume < 100) { Volume_Mix16(data, samples, Game_MusicVolume); }
 
-	res2 = Audio_BufferData(music_out, i, data, samples * sizeof(Int16));
+	res2 = Audio_BufferData(music_out, i, data, samples * 2);
 	if (res2) { music_pendingStop = true; return res2; }
 	return res;
 }
@@ -354,7 +354,7 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 
 	struct VorbisState vorbis = { 0 };
 	vorbis.Source = &stream;
-	Int16* data = NULL;
+	int16_t* data = NULL;
 
 	ReturnCode res = Vorbis_DecodeHeaders(&vorbis);
 	if (res) goto cleanup;
@@ -369,12 +369,11 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 	/* so we may end up decoding slightly over a second of audio */
 	int i, chunkSize     = fmt.Channels * (fmt.SampleRate + vorbis.BlockSizes[1]);
 	int samplesPerSecond = fmt.Channels * fmt.SampleRate;
-	data = Mem_Alloc(chunkSize * AUDIO_MAX_CHUNKS, sizeof(Int16), "Ogg - final PCM output");
+	data = Mem_Alloc(chunkSize * AUDIO_MAX_CHUNKS, 2, "Ogg - final PCM output");
 
 	/* fill up with some samples before playing */
 	for (i = 0; i < AUDIO_MAX_CHUNKS && !res; i++) {
-		Int16* base = data + (chunkSize * i);
-		res = Music_BufferBlock(i, base, samplesPerSecond, &vorbis);
+		res = Music_Buffer(i, &data[chunkSize * i], samplesPerSecond, &vorbis);
 	}
 	if (music_pendingStop) goto cleanup;
 
@@ -394,8 +393,7 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 		if (next == -1) { Thread_Sleep(10); continue; }
 		if (music_pendingStop) break;
 
-		Int16* base = data + (chunkSize * next);
-		res = Music_BufferBlock(next, base, samplesPerSecond, &vorbis);
+		res = Music_Buffer(next, &data[chunkSize * next], samplesPerSecond, &vorbis);
 		/* need to specially handle last bit of audio */
 		if (res) break;
 	}

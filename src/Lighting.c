@@ -261,7 +261,7 @@ for (y = World_Height - 1; y >= 0; y--) {\
 \
 			if (x < xCount && Block_BlocksLight[get_block]) {\
 				int lightOffset = (Block_LightOffset[get_block] >> FACE_YMAX) & 1;\
-				Lighting_Heightmap[heightmapIndex + x] = (Int16)(y - lightOffset);\
+				Lighting_Heightmap[heightmapIndex + x] = (int16_t)(y - lightOffset);\
 				elemsLeft--;\
 				skip[index] = 0;\
 				int offset = prevRunCount + curRunCount;\
@@ -340,7 +340,7 @@ static void Lighting_Reset(void) {
 }
 
 static void Lighting_OnNewMapLoaded(void) {
-	Lighting_Heightmap = Mem_Alloc(World_Width * World_Length, sizeof(Int16), "lighting heightmap");
+	Lighting_Heightmap = Mem_Alloc(World_Width * World_Length, 2, "lighting heightmap");
 	Lighting_Refresh();
 }
 

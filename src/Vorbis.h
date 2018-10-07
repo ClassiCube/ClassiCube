@@ -49,5 +49,5 @@ struct VorbisState {
 void Vorbis_Free(struct VorbisState* ctx);
 ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx);
 ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx);
-Int32 Vorbis_OutputFrame(struct VorbisState* ctx, Int16* data);
+int Vorbis_OutputFrame(struct VorbisState* ctx, int16_t* data);
 #endif

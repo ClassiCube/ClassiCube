@@ -7,7 +7,7 @@
 struct Screen;
 
 bool InputHandler_IsMousePressed(MouseButton button);
-bool InputHandler_SetFOV(Int32 fov, bool setZoom);
+bool InputHandler_SetFOV(int fov, bool setZoom);
 void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right);
 void InputHandler_Init(void);
 void InputHandler_ScreenChanged(struct Screen* oldScreen, struct Screen* newScreen);

@@ -1359,12 +1359,12 @@ static bool Float_ValidChar(struct MenuInputValidator* v, char c) {
 static bool Float_ValidString(struct MenuInputValidator* v, const String* s) {
 	float value;
 	if (s->length == 1 && Float_ValidChar(v, s->buffer[0])) return true;
-	return Convert_TryParseReal32(s, &value);
+	return Convert_TryParseFloat(s, &value);
 }
 
 static bool Float_ValidValue(struct MenuInputValidator* v, const String* s) {
 	float value;
-	if (!Convert_TryParseReal32(s, &value)) return false;
+	if (!Convert_TryParseFloat(s, &value)) return false;
 	float min = v->Meta_Float.Min, max = v->Meta_Float.Max;
 	return min <= value && value <= max;
 }
