@@ -33,8 +33,9 @@
 #define Win_Return(success) ((success) ? 0 : GetLastError())
 
 HANDLE heap;
-char* Platform_NewLine = "\r\n";
-char Directory_Separator = '\\';
+char* Platform_NewLine    = "\r\n";
+char  Directory_Separator = '\\';
+char* Font_DefaultName    = "Arial";
 
 ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
@@ -70,9 +71,10 @@ ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #define Nix_Return(success) ((success) ? 0 : errno)
 
 pthread_mutex_t event_mutex;
-
 char* Platform_NewLine = "\n";
-char Directory_Separator = '/';
+char  Directory_Separator = '/';
+char* Font_DefaultName = "Century Schoolbook L Roman";
+
 ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 ReturnCode ReturnCode_FileNotFound = ENOENT;
 ReturnCode ReturnCode_NotSupported = EPERM;

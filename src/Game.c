@@ -384,10 +384,10 @@ static void Game_LoadGuiOptions(void) {
 	Game_UseClassicOptions = Options_GetBool(OPT_CLASSIC_OPTIONS, false) || Game_ClassicMode;
 
 	Game_TabAutocomplete = Options_GetBool(OPT_TAB_AUTOCOMPLETE, false);
-	Options_Get(OPT_FONT_NAME, &Game_FontName, "Arial");
+	Options_Get(OPT_FONT_NAME, &Game_FontName, Font_DefaultName);
 	if (Game_ClassicMode) {
 		Game_FontName.length = 0;
-		String_AppendConst(&Game_FontName, "Arial");
+		String_AppendConst(&Game_FontName, Font_DefaultName);
 	}
 
 	/* TODO: Handle Arial font not working */

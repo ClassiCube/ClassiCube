@@ -16,7 +16,8 @@ typedef int SocketPtr;
 #endif
 
 extern char* Platform_NewLine; /* Newline for text */
-extern char Directory_Separator;
+extern char  Directory_Separator;
+extern char* Font_DefaultName;
 extern ReturnCode ReturnCode_FileShareViolation;
 extern ReturnCode ReturnCode_FileNotFound;
 extern ReturnCode ReturnCode_NotSupported;
