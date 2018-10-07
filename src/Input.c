@@ -111,7 +111,7 @@ void Mouse_SetPosition(int x, int y) {
 }
 
 Key KeyBind_Keys[KeyBind_Count];
-UInt8 KeyBind_Defaults[KeyBind_Count] = {
+uint8_t KeyBind_Defaults[KeyBind_Count] = {
 	Key_W, Key_S, Key_A, Key_D,
 	Key_Space, Key_R, Key_Enter, Key_T,
 	Key_B, Key_F, Key_Enter, Key_Escape,
@@ -181,7 +181,7 @@ void KeyBind_Init(void) {
 }
 
 
-UInt8 Hotkeys_LWJGL[256] = {
+uint8_t Hotkeys_LWJGL[256] = {
 	0, Key_Escape, Key_1, Key_2, Key_3, Key_4, Key_5, Key_6, Key_7, Key_8, Key_9, Key_0, Key_Minus, Key_Plus, Key_BackSpace, Key_Tab,
 	Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Y, Key_U, Key_I, Key_O, Key_P, Key_BracketLeft, Key_BracketRight, Key_Enter, Key_ControlLeft, Key_A, Key_S,
 	Key_D, Key_F, Key_G, Key_H, Key_J, Key_K, Key_L, Key_Semicolon, Key_Quote, Key_Tilde, Key_ShiftLeft, Key_BackSlash, Key_Z, Key_X, Key_C, Key_V,
@@ -205,7 +205,7 @@ static void Hotkeys_QuickSort(int left, int right) {
 
 	while (left < right) {
 		int i = left, j = right;
-		UInt8 pivot = keys[(i + j) / 2].Flags;
+		uint8_t pivot = keys[(i + j) / 2].Flags;
 
 		/* partition the list */
 		while (i <= j) {
@@ -218,7 +218,7 @@ static void Hotkeys_QuickSort(int left, int right) {
 	}
 }
 
-static void Hotkeys_AddNewHotkey(Key trigger, UInt8 flags, const String* text, bool more) {
+static void Hotkeys_AddNewHotkey(Key trigger, uint8_t flags, const String* text, bool more) {
 	struct HotkeyData hKey;
 	hKey.Trigger = trigger;
 	hKey.Flags = flags;
@@ -246,7 +246,7 @@ static void Hotkeys_RemoveText(int index) {
 }
 
 
-void Hotkeys_Add(Key trigger, UInt8 flags, const String* text, bool more) {
+void Hotkeys_Add(Key trigger, uint8_t flags, const String* text, bool more) {
 	int i; struct HotkeyData* hKey = HotkeysList;
 
 	for (i = 0; i < HotkeysText.Count; i++, hKey++) {		
@@ -261,7 +261,7 @@ void Hotkeys_Add(Key trigger, UInt8 flags, const String* text, bool more) {
 	Hotkeys_AddNewHotkey(trigger, flags, text, more);
 }
 
-bool Hotkeys_Remove(Key trigger, UInt8 flags) {
+bool Hotkeys_Remove(Key trigger, uint8_t flags) {
 	int i, j; struct HotkeyData* hKey = HotkeysList;
 
 	for (i = 0; i < HotkeysText.Count; i++, hKey++) {
@@ -277,7 +277,7 @@ bool Hotkeys_Remove(Key trigger, UInt8 flags) {
 }
 
 int Hotkeys_FindPartial(Key key) {
-	UInt8 flags = 0;
+	uint8_t flags = 0;
 	if (Key_IsControlPressed()) flags |= HOTKEYS_FLAG_CTRL;
 	if (Key_IsShiftPressed())   flags |= HOTKEYS_FLAG_SHIFT;
 	if (Key_IsAltPressed())     flags |= HOTKEYS_FLAG_ALT;
@@ -308,7 +308,7 @@ void Hotkeys_Init(void) {
 		if (!String_UNSAFE_Separate(&value, '&', &strMore, &strText)) continue;
 
 		Key hotkey = Utils_ParseEnum(&strKey, Key_None, Key_Names, Array_Elems(Key_Names));
-		UInt8 flags; bool more;
+		uint8_t flags; bool more;
 		if (hotkey == Key_None || !Convert_TryParseUInt8(&strFlags, &flags) 
 			|| !Convert_TryParseBool(&strMore, &more)) { continue; }
 
@@ -316,7 +316,7 @@ void Hotkeys_Init(void) {
 	}
 }
 
-void Hotkeys_UserRemovedHotkey(Key trigger, UInt8 flags) {
+void Hotkeys_UserRemovedHotkey(Key trigger, uint8_t flags) {
 	char keyBuffer[STRING_SIZE];
 	String key = String_FromArray(keyBuffer);
 
@@ -324,7 +324,7 @@ void Hotkeys_UserRemovedHotkey(Key trigger, UInt8 flags) {
 	Options_SetString(&key, NULL);
 }
 
-void Hotkeys_UserAddedHotkey(Key trigger, UInt8 flags, bool moreInput, const String* text) {
+void Hotkeys_UserAddedHotkey(Key trigger, uint8_t flags, bool moreInput, const String* text) {
 	char keyBuffer[STRING_SIZE];
 	String key = String_FromArray(keyBuffer);
 	char valueBuffer[STRING_SIZE * 2];

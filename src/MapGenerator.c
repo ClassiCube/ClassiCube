@@ -501,14 +501,14 @@ void NotchyGen_Generate(void) {
 /*########################################################################################################################*
 *---------------------------------------------------Noise generation------------------------------------------------------*
 *#########################################################################################################################*/
-void ImprovedNoise_Init(UInt8* p, Random* rnd) {
+void ImprovedNoise_Init(uint8_t* p, Random* rnd) {
 	/* shuffle randomly using fisher-yates */
 	int i;
 	for (i = 0; i < 256; i++) { p[i] = i; }
 
 	for (i = 0; i < 256; i++) {
 		int j = Random_Range(rnd, i, 256);
-		UInt8 temp = p[i]; p[i] = p[j]; p[j] = temp;
+		uint8_t temp = p[i]; p[i] = p[j]; p[j] = temp;
 	}
 
 	for (i = 0; i < 256; i++) {
@@ -516,7 +516,7 @@ void ImprovedNoise_Init(UInt8* p, Random* rnd) {
 	}
 }
 
-float ImprovedNoise_Calc(UInt8* p, float x, float y) {
+float ImprovedNoise_Calc(uint8_t* p, float x, float y) {
 	int xFloor = x >= 0 ? (int)x : (int)x - 1;
 	int yFloor = y >= 0 ? (int)y : (int)y - 1;
 	int X = xFloor & 0xFF, Y = yFloor & 0xFF;

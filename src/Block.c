@@ -22,17 +22,17 @@ UInt32 Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
 char Block_NamesBuffer[STRING_SIZE * BLOCK_COUNT];
 #define Block_NamePtr(i) &Block_NamesBuffer[STRING_SIZE * i]
 
-UInt8 Block_TopTex[BLOCK_CPE_COUNT]      = { 0,  1,  0,  2, 16,  4, 15, 17, 14, 14,
+uint8_t Block_TopTex[BLOCK_CPE_COUNT]      = { 0,  1,  0,  2, 16,  4, 15, 17, 14, 14,
 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 24, 23,  6,  6,  7,  9,  4,
 36, 37, 16, 11, 25, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 26, 53, 52, };
 
-UInt8 Block_SideTex[BLOCK_CPE_COUNT]     = { 0,  1,  3,  2, 16,  4, 15, 17, 14, 14,
+uint8_t Block_SideTex[BLOCK_CPE_COUNT]     = { 0,  1,  3,  2, 16,  4, 15, 17, 14, 14,
 30, 30, 18, 19, 32, 33, 34, 20, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 40, 39,  5,  5,  7,  8, 35,
 36, 37, 16, 11, 41, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 42, 53, 52, };
 
-UInt8 Block_BottomTex[BLOCK_CPE_COUNT]   = { 0,  1,  2,  2, 16,  4, 15, 17, 14, 14,
+uint8_t Block_BottomTex[BLOCK_CPE_COUNT]   = { 0,  1,  2,  2, 16,  4, 15, 17, 14, 14,
 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 56, 55,  6,  6,  7, 10,  4,
 36, 37, 16, 11, 57, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 58, 53, 52 };
@@ -105,13 +105,13 @@ void Block_DefineCustom(BlockID block) {
 }
 
 static void Block_RecalcIsLiquid(BlockID b) {
-	UInt8 collide = Block_ExtendedCollide[b];
+	uint8_t collide = Block_ExtendedCollide[b];
 	Block_IsLiquid[b] =
 		(collide == COLLIDE_LIQUID_WATER && Block_Draw[b] == DRAW_TRANSLUCENT) ||
 		(collide == COLLIDE_LIQUID_LAVA  && Block_Draw[b] == DRAW_TRANSPARENT);
 }
 
-void Block_SetCollide(BlockID block, UInt8 collide) {
+void Block_SetCollide(BlockID block, uint8_t collide) {
 	/* necessary for cases where servers redefined core blocks before extended types were introduced. */
 	collide = DefaultSet_MapOldCollide(block, collide);
 	Block_ExtendedCollide[block] = collide;
@@ -126,7 +126,7 @@ void Block_SetCollide(BlockID block, UInt8 collide) {
 	Block_Collide[block] = collide;
 }
 
-void Block_SetDrawType(BlockID block, UInt8 draw) {
+void Block_SetDrawType(BlockID block, uint8_t draw) {
 	if (draw == DRAW_OPAQUE && Block_Collide[block] != COLLIDE_SOLID) {
 		draw = DRAW_TRANSPARENT;
 	}
@@ -394,7 +394,7 @@ static bool Block_IsHidden(BlockID block, BlockID other) {
 	if (Block_Draw[block] != DRAW_TRANSLUCENT || Block_Draw[other] != DRAW_TRANSLUCENT) return false;
 
 	/* e.g. for water / ice, don't need to draw water. */
-	UInt8 bType = Block_Collide[block], oType = Block_Collide[other];
+	uint8_t bType = Block_Collide[block], oType = Block_Collide[other];
 	bool canSkip = (bType == COLLIDE_SOLID && oType == COLLIDE_SOLID) || bType != COLLIDE_SOLID;
 	return canSkip;
 }
@@ -585,7 +585,7 @@ PackedCol DefaultSet_FogColour(BlockID b) {
 	return PackedCol_Create4(0, 0, 0, 0);
 }
 
-UInt8 DefaultSet_Collide(BlockID b) {
+uint8_t DefaultSet_Collide(BlockID b) {
 	if (b == BLOCK_ICE) return COLLIDE_ICE;
 	if (b == BLOCK_WATER || b == BLOCK_STILL_WATER)
 		return COLLIDE_LIQUID_WATER;
@@ -597,7 +597,7 @@ UInt8 DefaultSet_Collide(BlockID b) {
 	return COLLIDE_SOLID;
 }
 
-UInt8 DefaultSet_MapOldCollide(BlockID b, UInt8 collide) {
+uint8_t DefaultSet_MapOldCollide(BlockID b, uint8_t collide) {
 	if (b == BLOCK_ROPE && collide == COLLIDE_GAS)
 		return COLLIDE_CLIMB_ROPE;
 	if (b == BLOCK_ICE && collide == COLLIDE_SOLID)
@@ -614,14 +614,14 @@ bool DefaultSet_BlocksLight(BlockID b) {
 		|| b == BLOCK_AIR || DefaultSet_Draw(b) == DRAW_SPRITE);
 }
 
-UInt8 DefaultSet_StepSound(BlockID b) {
+uint8_t DefaultSet_StepSound(BlockID b) {
 	if (b == BLOCK_GLASS) return SOUND_STONE;
 	if (b == BLOCK_ROPE) return SOUND_CLOTH;
 	if (DefaultSet_Draw(b) == DRAW_SPRITE) return SOUND_NONE;
 	return DefaultSet_DigSound(b);
 }
 
-UInt8 DefaultSet_Draw(BlockID b) {
+uint8_t DefaultSet_Draw(BlockID b) {
 	if (b == BLOCK_AIR) return DRAW_GAS;
 	if (b == BLOCK_LEAVES) return DRAW_TRANSPARENT_THICK;
 
@@ -637,7 +637,7 @@ UInt8 DefaultSet_Draw(BlockID b) {
 	return DRAW_OPAQUE;
 }
 
-UInt8 DefaultSet_DigSound(BlockID b) {
+uint8_t DefaultSet_DigSound(BlockID b) {
 	if (b >= BLOCK_RED && b <= BLOCK_WHITE)
 		return SOUND_CLOTH;
 	if (b >= BLOCK_LIGHT_PINK && b <= BLOCK_TURQUOISE)

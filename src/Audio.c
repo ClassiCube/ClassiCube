@@ -46,18 +46,18 @@ static void Volume_Mix8(uint8_t* samples, int count, int volume) {
 *#########################################################################################################################*/
 struct Sound {
 	struct AudioFormat Format;
-	UInt8* Data; UInt32 DataSize;
+	uint8_t* Data; UInt32 DataSize;
 };
 
 #define AUDIO_MAX_SOUNDS 10
 struct SoundGroup {
 	char NameBuffer[16];
-	String Name; UInt8 Count;
+	String Name; uint8_t Count;
 	struct Sound Sounds[AUDIO_MAX_SOUNDS];
 };
 
 struct Soundboard {
-	Random Rnd; UInt8 Count;
+	Random Rnd; uint8_t Count;
 	struct SoundGroup Groups[AUDIO_MAX_SOUNDS];
 };
 
@@ -66,7 +66,7 @@ struct Soundboard {
 
 static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	UInt32 fourCC, size;
-	UInt8 tmp[WAV_FMT_SIZE];
+	uint8_t tmp[WAV_FMT_SIZE];
 	ReturnCode res;
 
 	if ((res = Stream_Read(stream, tmp, 12))) return res;
@@ -169,7 +169,7 @@ static void Soundboard_Init(struct Soundboard* board, const String* boardName, S
 	}
 }
 
-struct Sound* Soundboard_PickRandom(struct Soundboard* board, UInt8 type) {
+struct Sound* Soundboard_PickRandom(struct Soundboard* board, uint8_t type) {
 	if (type == SOUND_NONE || type >= SOUND_COUNT) return NULL;
 	if (type == SOUND_METAL) type = SOUND_STONE;
 	String name = String_FromReadonly(Sound_Names[type]);
@@ -211,7 +211,7 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 		if (output->BufferSize < snd->DataSize) {
 			UInt32 expandBy = snd->DataSize - output->BufferSize;
 			output->Buffer  = Utils_Resize(output->Buffer, &output->BufferSize, 
-											sizeof(UInt8), AUDIO_DEF_ELEMS, expandBy);
+											1, AUDIO_DEF_ELEMS, expandBy);
 		}
 		data = output->Buffer;
 
@@ -227,7 +227,7 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 	if ((res = Audio_Play(output->Handle)))                               { Sounds_Fail(res); return; }
 }
 
-static void Sounds_Play(UInt8 type, struct Soundboard* board) {
+static void Sounds_Play(uint8_t type, struct Soundboard* board) {
 	if (type == SOUND_NONE || Game_SoundsVolume == 0) return;
 	struct Sound* snd = Soundboard_PickRandom(board, type);
 
@@ -318,8 +318,8 @@ void Audio_SetSounds(int volume) {
 	else        Sounds_Free();
 }
 
-void Audio_PlayDigSound(UInt8 type)  { Sounds_Play(type, &digBoard); }
-void Audio_PlayStepSound(UInt8 type) { Sounds_Play(type, &stepBoard); }
+void Audio_PlayDigSound(uint8_t type)  { Sounds_Play(type, &digBoard); }
+void Audio_PlayStepSound(uint8_t type) { Sounds_Play(type, &stepBoard); }
 
 
 /*########################################################################################################################*
@@ -348,7 +348,7 @@ static ReturnCode Music_Buffer(int i, int16_t* data, int maxSamples, struct Vorb
 }
 
 static ReturnCode Music_PlayOgg(struct Stream* source) {
-	UInt8 buffer[OGG_BUFFER_SIZE];
+	uint8_t buffer[OGG_BUFFER_SIZE];
 	struct Stream stream;
 	Ogg_MakeStream(&stream, buffer, source);
 

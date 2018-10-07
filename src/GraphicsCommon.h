@@ -39,10 +39,10 @@ void GfxCommon_Mode2D(int width, int height);
 void GfxCommon_Mode3D(void);
 
 void GfxCommon_MakeIndices(uint16_t* indices, int iCount);
-void GfxCommon_SetupAlphaState(UInt8 draw);
-void GfxCommon_RestoreAlphaState(UInt8 draw);
+void GfxCommon_SetupAlphaState(uint8_t draw);
+void GfxCommon_RestoreAlphaState(uint8_t draw);
 
-void GfxCommon_GenMipmaps(int width, int height, UInt8* lvlScan0, UInt8* scan0);
+void GfxCommon_GenMipmaps(int width, int height, uint8_t* lvlScan0, uint8_t* scan0);
 int GfxCommon_MipmapsLevels(int width, int height);
 void Texture_Render(struct Texture* tex);
 void Texture_RenderShaded(struct Texture* tex, PackedCol shadeCol);

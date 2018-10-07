@@ -117,7 +117,7 @@ void Gfx_Free(void) {
 #define gl_Toggle(cap) if (enabled) { glEnable(cap); } else { glDisable(cap); }
 
 static void GL_DoMipmaps(GfxResourceID texId, int x, int y, Bitmap* bmp, bool partial) {
-	UInt8* prev = bmp->Scan0;
+	uint8_t* prev = bmp->Scan0;
 	int lvls = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
 	int lvl, width = bmp->Width, height = bmp->Height;
 
@@ -126,7 +126,7 @@ static void GL_DoMipmaps(GfxResourceID texId, int x, int y, Bitmap* bmp, bool pa
 		if (width > 1) width /= 2;
 		if (height > 1) height /= 2;
 
-		UInt8* cur = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
+		uint8_t* cur = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
 		GfxCommon_GenMipmaps(width, height, cur, prev);
 
 		if (partial) {
@@ -302,9 +302,9 @@ GfxResourceID Gfx_CreateVb(void* vertices, int vertexFormat, int count) {
 
 	int stride = vertexFormat == VERTEX_FORMAT_P3FT2FC4B ? sizeof(VertexP3fT2fC4b) : sizeof(VertexP3fC4b);
 	glVertexPointer(3, GL_FLOAT, stride, vertices);
-	glColorPointer(4, GL_UNSIGNED_BYTE, stride, (void*)((UInt8*)vertices + 12));
+	glColorPointer(4, GL_UNSIGNED_BYTE, stride, (void*)((uint8_t*)vertices + 12));
 	if (vertexFormat == VERTEX_FORMAT_P3FT2FC4B) {
-		glTexCoordPointer(2, GL_FLOAT, stride, (void*)((UInt8*)vertices + 16));
+		glTexCoordPointer(2, GL_FLOAT, stride, (void*)((uint8_t*)vertices + 16));
 	}
 
 	glDrawElements(GL_TRIANGLES, ICOUNT(count), GL_UNSIGNED_SHORT, indices);
@@ -526,7 +526,7 @@ void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar,
 ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 	Bitmap bmp; Bitmap_Allocate(&bmp, width, height);
 	glReadPixels(0, 0, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, bmp.Scan0);
-	UInt8 tmp[PNG_MAX_DIMS * BITMAP_SIZEOF_PIXEL];
+	uint8_t tmp[PNG_MAX_DIMS * BITMAP_SIZEOF_PIXEL];
 
 	/* flip vertically around y */
 	int x, y;

@@ -459,7 +459,7 @@ static void Physics_HandleCobblestoneSlab(int index, BlockID block) {
 }
 
 
-UInt8 physics_blocksTnt[BLOCK_CPE_COUNT] = {
+uint8_t physics_blocksTnt[BLOCK_CPE_COUNT] = {
 	0, 1, 0, 0, 1, 0, 0, 1,  1, 1, 1, 1, 0, 0, 1, 1,  1, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0,  0, 1, 1, 1, 1, 1, 0, 0,
 	1, 1, 1, 0, 1, 0, 0, 0,  0, 0, 0, 0, 0, 1, 1, 1,  1, 1,

@@ -61,7 +61,7 @@ NOINLINE_ bool String_AppendReal32(String* str, float num, Int32 fracDigits); /*
 NOINLINE_ bool String_AppendConst(String* str, const char* src);
 NOINLINE_ bool String_AppendString(String* str, const String* src);
 NOINLINE_ bool String_AppendColorless(String* str, const String* src);
-NOINLINE_ bool String_AppendHex(String* str, UInt8 value);
+NOINLINE_ bool String_AppendHex(String* str, uint8_t value);
 
 NOINLINE_ int String_IndexOf(const String* str, char c, int offset);
 NOINLINE_ int String_LastIndexOf(const String* str, char c);
@@ -85,9 +85,9 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 Codepoint Convert_CP437ToUnicode(char c);
 char Convert_UnicodeToCP437(Codepoint cp);
 bool Convert_TryUnicodeToCP437(Codepoint cp, char* value);
-void String_DecodeUtf8(String* str, UInt8* data, UInt32 len);
+void String_DecodeUtf8(String* str, uint8_t* data, UInt32 len);
 
-NOINLINE_ bool Convert_TryParseUInt8(const String*  str, UInt8* value);
+NOINLINE_ bool Convert_TryParseUInt8(const String*  str, uint8_t* value);
 NOINLINE_ bool Convert_TryParseInt16(const String*  str, int16_t* value);
 NOINLINE_ bool Convert_TryParseUInt16(const String* str, uint16_t* value);
 NOINLINE_ bool Convert_TryParseInt32(const String*  str, Int32* value);

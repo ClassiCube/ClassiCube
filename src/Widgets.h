@@ -96,7 +96,7 @@ struct InputWidget {
 	uint16_t PrefixWidth, PrefixHeight;
 	bool ConvertPercents;
 
-	UInt8 Padding;
+	uint8_t Padding;
 	bool ShowCaret;
 	uint16_t CaretWidth;
 	int CaretX, CaretY; /* Coordinates of caret in lines */

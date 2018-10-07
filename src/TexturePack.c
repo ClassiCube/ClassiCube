@@ -23,7 +23,7 @@
 #define ZIP_MAXNAMELEN 512
 static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* entry) {
 	struct Stream* stream = state->Input;
-	UInt8 contents[(3 * 2) + (4 * 4) + (2 * 2)];
+	uint8_t contents[(3 * 2) + (4 * 4) + (2 * 2)];
 	ReturnCode res;
 	if ((res = Stream_Read(stream, contents, sizeof(contents)))) return res;
 
@@ -67,7 +67,7 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 
 static ReturnCode Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* entry) {
 	struct Stream* stream = state->Input;
-	UInt8 contents[(4 * 2) + (4 * 4) + (3 * 2) + (2 * 2) + (2 * 4)];
+	uint8_t contents[(4 * 2) + (4 * 4) + (3 * 2) + (2 * 2) + (2 * 4)];
 	ReturnCode res;
 	if ((res = Stream_Read(stream, contents, sizeof(contents)))) return res;
 
@@ -94,7 +94,7 @@ static ReturnCode Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEnt
 
 static ReturnCode Zip_ReadEndOfCentralDirectory(struct ZipState* state, UInt32* centralDirectoryOffset) {
 	struct Stream* stream = state->Input;
-	UInt8 contents[(3 * 2) + 2 + (2 * 4) + 2];
+	uint8_t contents[(3 * 2) + 2 + (2 * 4) + 2];
 	ReturnCode res;
 	if ((res = Stream_Read(stream, contents, sizeof(contents)))) return res;
 
@@ -206,7 +206,7 @@ static void EntryList_Load(struct EntryList* list) {
 	struct Stream stream; Stream_FromFile(&stream, file);
 	{
 		/* ReadLine reads single byte at a time */
-		UInt8 buffer[2048]; struct Stream buffered;
+		uint8_t buffer[2048]; struct Stream buffered;
 		Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
 
 		for (;;) {
@@ -354,7 +354,7 @@ void TextureCache_GetETag(const String* url, String* etag) {
 	TexturePack_GetFromTags(url, etag, &cache_eTags);
 }
 
-void TextureCache_AddData(const String* url, UInt8* data, UInt32 length) {
+void TextureCache_AddData(const String* url, uint8_t* data, UInt32 length) {
 	TexCache_InitAndMakePath(url);
 	ReturnCode res;
 	if (!Utils_EnsureDirectory(TEXCACHE_FOLDER)) return;

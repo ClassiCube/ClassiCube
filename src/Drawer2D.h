@@ -20,7 +20,7 @@ bool Drawer2D_BitmappedText;
 bool Drawer2D_BlackTextShadows;
 PackedCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 #define DRAWER2D_OFFSET 1
-#define Drawer2D_GetCol(c) Drawer2D_Cols[(UInt8)c]
+#define Drawer2D_GetCol(c) Drawer2D_Cols[(uint8_t)c]
 
 void Drawer2D_Init(void);
 void Drawer2D_Free(void);

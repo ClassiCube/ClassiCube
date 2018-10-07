@@ -53,7 +53,7 @@ static void Drawer2D_CalculateTextWidths(void) {
 			/* Iterate through each pixel of the given character, on the current scanline */
 			for (xx = Drawer2D_BoxSize - 1; xx >= 0; xx--) {
 				UInt32 pixel = row[x + xx];
-				UInt8 a = PackedCol_ARGB_A(pixel);
+				uint8_t a = PackedCol_ARGB_A(pixel);
 				if (a < 127) continue;
 
 				/* Check if this is the pixel furthest to the right, for the current character */
@@ -79,11 +79,11 @@ void Drawer2D_SetFontBitmap(Bitmap* bmp) {
 }
 
 
-void Drawer2D_HexEncodedCol(int i, int hex, UInt8 lo, UInt8 hi) {
+void Drawer2D_HexEncodedCol(int i, int hex, uint8_t lo, uint8_t hi) {
 	PackedCol* col = &Drawer2D_Cols[i];
-	col->R = (UInt8)(lo * ((hex >> 2) & 1) + hi * (hex >> 3));
-	col->G = (UInt8)(lo * ((hex >> 1) & 1) + hi * (hex >> 3));
-	col->B = (UInt8)(lo * ((hex >> 0) & 1) + hi * (hex >> 3));
+	col->R = (uint8_t)(lo * ((hex >> 2) & 1) + hi * (hex >> 3));
+	col->G = (uint8_t)(lo * ((hex >> 1) & 1) + hi * (hex >> 3));
+	col->B = (uint8_t)(lo * ((hex >> 0) & 1) + hi * (hex >> 3));
 	col->A = UInt8_MaxValue;
 }
 
@@ -186,7 +186,7 @@ bool Drawer2D_IsWhiteCol(char c) { return c == '\0' || c == 'f' || c == 'F'; }
 #define Drawer2D_ShadowOffset(point) (point / 8)
 #define Drawer2D_XPadding(point) (Math_CeilDiv(point, 8))
 static int Drawer2D_Width(int point, char c) {
-	return Math_CeilDiv(Drawer2D_Widths[(UInt8)c] * point, Drawer2D_BoxSize); 
+	return Math_CeilDiv(Drawer2D_Widths[(uint8_t)c] * point, Drawer2D_BoxSize);
 }
 static int Drawer2D_AdjHeight(int point) { return Math_CeilDiv(point * 3, 2); }
 

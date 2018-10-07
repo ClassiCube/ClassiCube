@@ -8,9 +8,9 @@
 /* Represents an ARGB colour, in a format suitable for the native graphics api. */
 typedef union PackedCol_ {
 #ifdef CC_BUILD_D3D9
-	struct { UInt8 B; UInt8 G; UInt8 R; UInt8 A; };
+	struct { uint8_t B, G, R, A; };
 #else
-	struct { UInt8 R; UInt8 G; UInt8 B; UInt8 A; };
+	struct { uint8_t R, G, B, A; };
 #endif
 	UInt32 Packed;
 } PackedCol;
@@ -21,17 +21,16 @@ typedef union PackedCol_ {
 #define PACKEDCOL_CONST(r, g, b, a) { r, g, b, a }
 #endif
 
-PackedCol PackedCol_Create4(UInt8 r, UInt8 g, UInt8 b, UInt8 a);
-PackedCol PackedCol_Create3(UInt8 r, UInt8 g, UInt8 b);
+PackedCol PackedCol_Create4(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+PackedCol PackedCol_Create3(uint8_t r, uint8_t g, uint8_t b);
 #define PackedCol_Equals(a, b) ((a).Packed == (b).Packed)
 #define PackedCol_ARGB(r, g, b, a) (((UInt32)(r) << 16) | ((UInt32)(g) << 8) | ((UInt32)(b)) | ((UInt32)(a) << 24))
-#define PackedCol_ARGB_A(col) ((UInt8)((col) >> 24))
+#define PackedCol_ARGB_A(col) ((uint8_t)((col) >> 24))
 UInt32 PackedCol_ToARGB(PackedCol col);
 PackedCol PackedCol_Scale(PackedCol value, float t);
 PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t);
 NOINLINE_ void PackedCol_ToHex(String* str, PackedCol value);
 NOINLINE_ bool PackedCol_TryParseHex(const String* str, PackedCol* value);
-NOINLINE_ bool PackedCol_Unhex(UInt8 hex, int* value);
 
 #define PACKEDCOL_SHADE_X 0.6f
 #define PACKEDCOL_SHADE_Z 0.8f

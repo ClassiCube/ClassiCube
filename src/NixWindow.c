@@ -288,7 +288,7 @@ void Window_SetVisible(bool visible) {
 
 void* Window_GetWindowHandle(void) { return win_handle; }
 
-UInt8 Window_GetWindowState(void) {
+uint8_t Window_GetWindowState(void) {
 	Atom prop_type;
 	unsigned long items, after;
 	int prop_format;
@@ -339,8 +339,8 @@ void Window_SendNetWMState(long op, Atom a1, Atom a2) {
 		SubstructureRedirectMask | SubstructureNotifyMask, &ev);
 }
 
-void Window_SetWindowState(UInt8 state) {
-	UInt8 current_state = Window_GetWindowState();
+void Window_SetWindowState(uint8_t state) {
+	uint8_t current_state = Window_GetWindowState();
 	if (current_state == state) return;
 
 	/* Reset the current window state */
@@ -496,7 +496,7 @@ void Window_ProcessEvents(void) {
 			/* TODO: Does this work for every non-english layout? works for latin keys (e.g. finnish) */
 			char raw; int i;
 			for (i = 0; i < status; i++) {
-				if (!Convert_TryUnicodeToCP437((UInt8)data[i], &raw)) continue;
+				if (!Convert_TryUnicodeToCP437((uint8_t)data[i], &raw)) continue;
 				Event_RaiseInt(&KeyEvents_Press, raw);
 			}
 		} break;
@@ -564,7 +564,7 @@ void Window_ProcessEvents(void) {
 				Atom prop_type;
 				int prop_format;
 				unsigned long items, after;
-				UInt8* data = NULL;			
+				uint8_t* data = NULL;
 
 				XGetWindowProperty(win_display, win_handle, xa_data_sel, 0, 1024, false, 0,
 					&prop_type, &prop_format, &items, &after, &data);
@@ -592,12 +592,12 @@ void Window_ProcessEvents(void) {
 
 			if (e.xselectionrequest.selection == xa_clipboard && e.xselectionrequest.target == xa_utf8_string && clipboard_copy_text.length) {
 				reply.xselection.property = Window_GetSelectionProperty(&e);
-				UInt8 data[1024];
+				uint8_t data[1024];
 				int i, len = 0;
 
 				for (i = 0; i < clipboard_copy_text.length; i++) {
 					Codepoint cp = Convert_CP437ToUnicode(clipboard_copy_text.buffer[i]);
-					UInt8* cur   = data + len;
+					uint8_t* cur   = data + len;
 					len += Stream_WriteUtf8(cur, cp);
 				}
 

@@ -9,6 +9,6 @@ struct IGameComponent;
 void Audio_MakeComponent(struct IGameComponent* comp);
 void Audio_SetMusic(int volume);
 void Audio_SetSounds(int volume);
-void Audio_PlayDigSound(UInt8 type);
-void Audio_PlayStepSound(UInt8 type);
+void Audio_PlayDigSound(uint8_t type);
+void Audio_PlayStepSound(uint8_t type);
 #endif

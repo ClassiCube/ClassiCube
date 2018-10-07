@@ -240,14 +240,14 @@ void ServerConnection_InitSingleplayer(void) {
 *--------------------------------------------------Multiplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
 SocketPtr net_socket;
-UInt8 net_readBuffer[4096 * 5];
-UInt8 net_writeBuffer[131];
-UInt8* net_readCurrent;
+uint8_t  net_readBuffer[4096 * 5];
+uint8_t  net_writeBuffer[131];
+uint8_t* net_readCurrent;
 
 bool net_writeFailed;
 int net_ticks;
 TimeMS net_lastPacket;
-UInt8 net_lastOpcode;
+uint8_t net_lastOpcode;
 double net_discAccumulator;
 
 bool net_connecting;
@@ -385,7 +385,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 
 	UInt32 pending = 0;
 	ReturnCode res = Socket_Available(net_socket, &pending);
-	UInt8* readEnd = net_readCurrent;
+	uint8_t* readEnd = net_readCurrent;
 
 	if (!res && pending) {
 		/* NOTE: Always using a read call that is a multiple of 4096 (appears to?) improve read performance */	
@@ -407,7 +407,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 
 	net_readCurrent = net_readBuffer;
 	while (net_readCurrent < readEnd) {
-		UInt8 opcode = net_readCurrent[0];
+		uint8_t opcode = net_readCurrent[0];
 		/* Workaround for older D3 servers which wrote one byte too many for HackControl packets */
 		if (cpe_needD3Fix && net_lastOpcode == OPCODE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
 			Platform_LogConst("Skipping invalid HackControl byte from D3 server");
@@ -459,7 +459,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	net_ticks++;
 }
 
-void Net_Set(UInt8 opcode, Net_Handler handler, uint16_t packetSize) {
+void Net_Set(uint8_t opcode, Net_Handler handler, uint16_t packetSize) {
 	Net_Handlers[opcode]    = handler;
 	Net_PacketSizes[opcode] = packetSize;
 }
@@ -471,7 +471,7 @@ void Net_SendPacket(void) {
 
 	/* NOTE: Not immediately disconnecting here, as otherwise we sometimes miss out on kick messages */
 	UInt32 wrote = 0;
-	UInt8* ptr = net_writeBuffer;
+	uint8_t* ptr = net_writeBuffer;
 
 	while (count) {
 		ReturnCode res = Socket_Write(net_socket, ptr, count, &wrote);

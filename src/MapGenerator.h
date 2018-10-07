@@ -21,10 +21,10 @@ void FlatgrassGen_Generate(void);
 void NotchyGen_Generate(void);
 
 #define NOISE_TABLE_SIZE 512
-void ImprovedNoise_Init(UInt8* p, Random* rnd);
-float ImprovedNoise_Calc(UInt8* p, float x, float y);
+void ImprovedNoise_Init(uint8_t* p, Random* rnd);
+float ImprovedNoise_Calc(uint8_t* p, float x, float y);
 
-struct OctaveNoise { UInt8 p[8][NOISE_TABLE_SIZE]; int octaves; };
+struct OctaveNoise { uint8_t p[8][NOISE_TABLE_SIZE]; int octaves; };
 void OctaveNoise_Init(struct OctaveNoise* n, Random* rnd, int octaves);
 float OctaveNoise_Calc(struct OctaveNoise* n, float x, float y);
 

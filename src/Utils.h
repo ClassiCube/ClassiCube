@@ -8,11 +8,11 @@
 /* Represents a particular instance in time in some timezone. Not necessarily UTC time. */
 typedef struct DateTime_ {
 	uint16_t Year;  /* Year,   ranges from 0 to 65535 */
-	UInt8 Month;  /* Month,  ranges from 1 to 12 */
-	UInt8 Day;    /* Day,    ranges from 1 to 31 */
-	UInt8 Hour;   /* Hour,   ranges from 0 to 23 */
-	UInt8 Minute; /* Minute, ranges from 0 to 59 */
-	UInt8 Second; /* Second, ranges from 0 to 59 */
+	uint8_t Month;  /* Month,  ranges from 1 to 12 */
+	uint8_t Day;    /* Day,    ranges from 1 to 31 */
+	uint8_t Hour;   /* Hour,   ranges from 0 to 23 */
+	uint8_t Minute; /* Minute, ranges from 0 to 59 */
+	uint8_t Second; /* Second, ranges from 0 to 59 */
 	uint16_t Milli; /* Milliseconds, ranges from 0 to 999 */
 } DateTime;
 
@@ -31,9 +31,9 @@ void Utils_UNSAFE_GetFilename(STRING_REF String* str);
 int Utils_AccumulateWheelDelta(float* accmulator, float delta);
 #define Utils_AdjViewDist(value) ((int)(1.4142135f * (value)))
 
-UInt8 Utils_GetSkinType(Bitmap* bmp);
-UInt32 Utils_CRC32(UInt8* data, UInt32 length);
+uint8_t Utils_GetSkinType(Bitmap* bmp);
+UInt32 Utils_CRC32(uint8_t* data, UInt32 length);
 extern UInt32 Utils_Crc32Table[256];
 NOINLINE_ void* Utils_Resize(void* buffer, UInt32* maxElems, UInt32 elemSize, UInt32 defElems, UInt32 expandElems);
-NOINLINE_ bool Utils_ParseIP(const String* ip, UInt8* data);
+NOINLINE_ bool Utils_ParseIP(const String* ip, uint8_t* data);
 #endif

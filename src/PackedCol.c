@@ -1,13 +1,13 @@
 #include "PackedCol.h"
 #include "ExtMath.h"
 
-PackedCol PackedCol_Create4(UInt8 r, UInt8 g, UInt8 b, UInt8 a) {
+PackedCol PackedCol_Create4(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 	PackedCol col;
 	col.R = r; col.G = g; col.B = b; col.A = a;
 	return col;
 }
 
-PackedCol PackedCol_Create3(UInt8 r, UInt8 g, UInt8 b) {
+PackedCol PackedCol_Create3(uint8_t r, uint8_t g, uint8_t b) {
 	PackedCol col;
 	col.R = r; col.G = g; col.B = b; col.A = 255;
 	return col;
@@ -18,16 +18,16 @@ UInt32 PackedCol_ToARGB(PackedCol col) {
 }
 
 PackedCol PackedCol_Scale(PackedCol value, float t) {
-	value.R = (UInt8)(value.R * t);
-	value.G = (UInt8)(value.G * t);
-	value.B = (UInt8)(value.B * t);
+	value.R = (uint8_t)(value.R * t);
+	value.G = (uint8_t)(value.G * t);
+	value.B = (uint8_t)(value.B * t);
 	return value;
 }
 
 PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t) {
-	a.R = (UInt8)Math_Lerp(a.R, b.R, t);
-	a.G = (UInt8)Math_Lerp(a.G, b.G, t);
-	a.B = (UInt8)Math_Lerp(a.B, b.B, t);
+	a.R = (uint8_t)Math_Lerp(a.R, b.R, t);
+	a.G = (uint8_t)Math_Lerp(a.G, b.G, t);
+	a.B = (uint8_t)Math_Lerp(a.B, b.B, t);
 	return a;
 }
 
@@ -37,7 +37,7 @@ void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, P
 	*yMin  = PackedCol_Scale(normal, PACKEDCOL_SHADE_YMIN);
 }
 
-bool PackedCol_Unhex(UInt8 hex, int* value) {
+NOINLINE_ static bool PackedCol_Unhex(char hex, int* value) {
 	*value = 0;
 	if (hex >= '0' && hex <= '9') {
 		*value = (hex - '0');

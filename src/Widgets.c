@@ -2175,7 +2175,7 @@ void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* w, const Strin
 	for (i = 0; i < max_index; i++) {
 		char* dst = TextGroupWidget_LineBuffer(w, i);
 		char* src = TextGroupWidget_LineBuffer(w, i + 1);
-		UInt8 lineLen = w->LineLengths[i + 1];
+		uint8_t lineLen = w->LineLengths[i + 1];
 
 		if (lineLen > 0) Mem_Copy(dst, src, lineLen);
 		w->Textures[i]    = w->Textures[i + 1];
@@ -2483,7 +2483,7 @@ void TextGroupWidget_SetText(struct TextGroupWidget* w, int index, const String*
 
 	Gfx_DeleteTexture(&w->Textures[index].ID);
 	Mem_Copy(TextGroupWidget_LineBuffer(w, index), text.buffer, text.length);
-	w->LineLengths[index] = (UInt8)text.length;
+	w->LineLengths[index] = (uint8_t)text.length;
 
 	struct Texture tex = { 0 };
 	if (!Drawer2D_IsEmptyText(&text)) {
@@ -2571,8 +2571,8 @@ static void SpecialInputWidget_UpdateColString(struct SpecialInputWidget* w) {
 		if (i >= 'A' && i <= 'F') continue;
 		if (Drawer2D_Cols[i].A == 0) continue;
 
-		String_Append(&buffer, '&'); String_Append(&buffer, (UInt8)i);
-		String_Append(&buffer, '%'); String_Append(&buffer, (UInt8)i);
+		String_Append(&buffer, '&'); String_Append(&buffer, (char)i);
+		String_Append(&buffer, '%'); String_Append(&buffer, (char)i);
 	}
 	w->ColString = buffer;
 }

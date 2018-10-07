@@ -59,16 +59,16 @@ struct WidgetVTABLE {
 	void (*Reposition)(void* elem);
 };
 #define Widget_Layout struct WidgetVTABLE* VTABLE; \
-	int X, Y, Width, Height;    /* Top left corner, and dimensions, of this widget */ \
-	bool Active;                /* Whether this widget is currently being moused over*/ \
-	bool Disabled;              /* Whether widget is prevented from being interacted with */ \
-	UInt8 HorAnchor, VerAnchor; /* Specifies the reference point for when this widget is resized */ \
-	int XOffset, YOffset;       /* Offset from the reference point */ \
+	int X, Y, Width, Height;      /* Top left corner, and dimensions, of this widget */ \
+	bool Active;                  /* Whether this widget is currently being moused over*/ \
+	bool Disabled;                /* Whether widget is prevented from being interacted with */ \
+	uint8_t HorAnchor, VerAnchor; /* Specifies the reference point for when this widget is resized */ \
+	int XOffset, YOffset;         /* Offset from the reference point */ \
 	Widget_LeftClick MenuClick;
 
 /* Represents an individual 2D gui component. */
 struct Widget { Widget_Layout };
-void Widget_SetLocation(void* widget, UInt8 horAnchor, UInt8 verAnchor, int xOffset, int yOffset);
+void Widget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset);
 void Widget_CalcPosition(void* widget);
 void Widget_Reset(void* widget);
 bool Widget_Contains(void* widget, int x, int y);
@@ -81,7 +81,7 @@ struct Screen* Gui_Active;
 struct Screen* Gui_Overlays[GUI_MAX_OVERLAYS];
 int Gui_OverlaysCount;
 
-int  Gui_CalcPos(UInt8 anchor, int offset, int size, int axisLen);
+int  Gui_CalcPos(uint8_t anchor, int offset, int size, int axisLen);
 bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
 void Gui_MakeComponent(struct IGameComponent* comp);
 /* Gets the screen that the user is currently interacting with.

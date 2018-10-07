@@ -35,7 +35,7 @@ static ReturnCode Map_SkipGZipHeader(struct Stream* stream) {
 *#########################################################################################################################*/
 #define LVL_CUSTOMTILE 163
 #define LVL_CHUNKSIZE 16
-UInt8 Lvl_table[256 - BLOCK_CPE_COUNT] = { 0, 0, 0, 0, 39, 36, 36, 10, 46, 21, 22,
+uint8_t Lvl_table[256 - BLOCK_CPE_COUNT] = { 0, 0, 0, 0, 39, 36, 36, 10, 46, 21, 22,
 22, 22, 22, 4, 0, 22, 21, 0, 22, 23, 24, 22, 26, 27, 28, 30, 31, 32, 33,
 34, 35, 36, 22, 20, 49, 45, 1, 4, 0, 9, 11, 4, 19, 5, 17, 10, 49, 20, 1,
 18, 12, 5, 25, 46, 44, 17, 49, 20, 1, 18, 12, 5, 25, 36, 34, 0, 9, 11, 46,
@@ -48,8 +48,8 @@ UInt8 Lvl_table[256 - BLOCK_CPE_COUNT] = { 0, 0, 0, 0, 39, 36, 36, 10, 46, 21, 2
 
 static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
 	int x, y, z, i;
-	UInt8 chunk[LVL_CHUNKSIZE * LVL_CHUNKSIZE * LVL_CHUNKSIZE];
-	ReturnCode res; UInt8 hasCustom;
+	uint8_t chunk[LVL_CHUNKSIZE * LVL_CHUNKSIZE * LVL_CHUNKSIZE];
+	ReturnCode res; uint8_t hasCustom;
 
 	/* skip bounds checks when we know chunk is entirely inside map */
 	int adjWidth  = World_Width  & ~0x0F;
@@ -87,16 +87,16 @@ static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
 }
 
 static void Lvl_ConvertPhysicsBlocks(void) {
-	UInt8 conv[256];
+	uint8_t conv[256];
 	Int32 i;
 	for (i = 0; i < BLOCK_CPE_COUNT; i++)
-		conv[i] = (UInt8)i;
+		conv[i] = (uint8_t)i;
 	for (i = BLOCK_CPE_COUNT; i < 256; i++)
 		conv[i] = Lvl_table[i - BLOCK_CPE_COUNT];
 
 	Int32 alignedBlocksSize = World_BlocksSize & ~3;
 	/* Bulk convert 4 blocks at once */
-	UInt8* blocks = World_Blocks;
+	uint8_t* blocks = World_Blocks;
 	for (i = 0; i < alignedBlocksSize; i += 4) {
 		*blocks = conv[*blocks]; blocks++;
 		*blocks = conv[*blocks]; blocks++;
@@ -116,7 +116,7 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
-	UInt8 header[8 + 2];
+	uint8_t header[8 + 2];
 	if ((res = Stream_Read(&compStream, header, 8))) return res;
 	if (Stream_GetU16_LE(&header[0]) != 1874) return LVL_ERR_VERSION;
 
@@ -139,7 +139,7 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 	Lvl_ConvertPhysicsBlocks();
 
 	/* 0xBD section type may not be present in older .lvl files */
-	UInt8 type; res = compStream.ReadU8(&compStream, &type);
+	uint8_t type; res = compStream.ReadU8(&compStream, &type);
 	if (res == ERR_END_OF_STREAM) return 0;
 
 	if (res) return res;
@@ -151,7 +151,7 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 *----------------------------------------------------fCraft map format----------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode Fcm_ReadString(struct Stream* stream) {
-	UInt8 data[2];
+	uint8_t data[2];
 	ReturnCode res;
 	if ((res = Stream_Read(stream, data, sizeof(data)))) return res;
 
@@ -160,7 +160,7 @@ static ReturnCode Fcm_ReadString(struct Stream* stream) {
 }
 
 ReturnCode Fcm_Load(struct Stream* stream) {
-	UInt8 header[(3 * 2) + (3 * 4) + (2 * 1) + (2 * 4) + 16 + 26 + 4];
+	uint8_t header[(3 * 2) + (3 * 4) + (2 * 1) + (2 * 4) + 16 + 26 + 4];
 	ReturnCode res;
 
 	if ((res = Stream_Read(stream, header, 4 + 1))) return res;
@@ -211,10 +211,10 @@ enum NBT_TAG {
 struct NbtTag;
 struct NbtTag {
 	struct NbtTag* Parent;
-	UInt8  TagID;
-	char   NameBuffer[NBT_SMALL_SIZE];
-	UInt32 NameSize;
-	UInt32 DataSize; /* size of data for arrays */
+	uint8_t TagID;
+	char    NameBuffer[NBT_SMALL_SIZE];
+	UInt32  NameSize;
+	UInt32  DataSize; /* size of data for arrays */
 
 	union {
 		uint8_t  Value_U8;
@@ -268,17 +268,17 @@ static ReturnCode Nbt_ReadString(struct Stream* stream, char* strBuffer, UInt32*
 }
 
 typedef bool (*Nbt_Callback)(struct NbtTag* tag);
-static ReturnCode Nbt_ReadTag(UInt8 typeId, bool readTagName, struct Stream* stream, struct NbtTag* parent, Nbt_Callback callback) {
+static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* stream, struct NbtTag* parent, Nbt_Callback callback) {
 	if (typeId == NBT_END) return 0;
 
 	struct NbtTag tag;
 	tag.TagID = typeId; tag.Parent = parent;
 	tag.NameSize = 0;   tag.DataSize = 0;
 
-	UInt8 childType;
+	uint8_t childType;
 	UInt32 i, count;
 	ReturnCode res;
-	UInt8 tmp[5];
+	uint8_t tmp[5];
 
 	if (readTagName) {
 		res = Nbt_ReadString(stream, tag.NameBuffer, &tag.NameSize);
@@ -401,7 +401,7 @@ static PackedCol Cw_ParseCol(PackedCol defValue) {
 	if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
 		return defValue;
 	} else {
-		PackedCol col = PACKEDCOL_CONST((UInt8)r, (UInt8)g, (UInt8)b, 255);
+		PackedCol col = PACKEDCOL_CONST((uint8_t)r, (uint8_t)g, (uint8_t)b, 255);
 		return col;		
 	}
 }
@@ -499,7 +499,7 @@ static bool Cw_Callback_5(struct NbtTag* tag) {
 		}
 
 		if (IsTag(tag, "Textures")) {
-			UInt8* tex = NbtTag_U8_Array(tag, 6);
+			uint8_t* tex = NbtTag_U8_Array(tag, 6);
 			Block_SetTex(tex[0], FACE_YMAX, id);
 			Block_SetTex(tex[1], FACE_YMIN, id);
 			Block_SetTex(tex[2], FACE_XMIN, id);
@@ -510,7 +510,7 @@ static bool Cw_Callback_5(struct NbtTag* tag) {
 		}
 		
 		if (IsTag(tag, "WalkSound")) {
-			UInt8 sound = NbtTag_U8(tag);
+			uint8_t sound = NbtTag_U8(tag);
 			Block_DigSounds[id]  = sound;
 			Block_StepSounds[id] = sound;
 			if (sound == SOUND_GLASS) Block_StepSounds[id] = SOUND_STONE;
@@ -518,7 +518,7 @@ static bool Cw_Callback_5(struct NbtTag* tag) {
 		}
 
 		if (IsTag(tag, "Fog")) {
-			UInt8* fog = NbtTag_U8_Array(tag, 4);
+			uint8_t* fog = NbtTag_U8_Array(tag, 4);
 			Block_FogDensity[id] = (fog[0] + 1) / 128.0f;
 			/* Fix for older ClassicalSharp versions which saved wrong fog density value */
 			if (fog[0] == 0xFF) Block_FogDensity[id] = 0.0f;
@@ -531,7 +531,7 @@ static bool Cw_Callback_5(struct NbtTag* tag) {
 		}
 
 		if (IsTag(tag, "Coords")) {
-			UInt8* coords = NbtTag_U8_Array(tag, 6);
+			uint8_t* coords = NbtTag_U8_Array(tag, 6);
 			Block_MinBB[id].X = coords[0] / 16.0f; Block_MaxBB[id].X = coords[3] / 16.0f;
 			Block_MinBB[id].Y = coords[1] / 16.0f; Block_MaxBB[id].Y = coords[4] / 16.0f;
 			Block_MinBB[id].Z = coords[2] / 16.0f; Block_MaxBB[id].Z = coords[5] / 16.0f;
@@ -566,7 +566,7 @@ ReturnCode Cw_Load(struct Stream* stream) {
 	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
-	UInt8 tag;
+	uint8_t tag;
 	if ((res = compStream.ReadU8(&compStream, &tag))) return res;
 	if (tag != NBT_DICT) return CW_ERR_ROOT_TAG;
 
@@ -596,13 +596,13 @@ enum JFieldType {
 
 #define JNAME_SIZE 48
 struct JFieldDesc {
-	UInt8 Type;
+	uint8_t Type;
 	char FieldName[JNAME_SIZE];
 	union {
-		UInt8 Value_U8;
-		Int32 Value_I32;
-		float Value_F32;
-		struct { UInt8* Value_Ptr; UInt32 Value_Size; };
+		uint8_t Value_U8;
+		int32_t Value_I32;
+		float   Value_F32;
+		struct { uint8_t* Value_Ptr; UInt32 Value_Size; };
 	};
 };
 
@@ -628,7 +628,7 @@ static ReturnCode Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* de
 	if ((res = Dat_ReadString(stream, desc->FieldName))) return res;
 
 	if (desc->Type == JFIELD_ARRAY || desc->Type == JFIELD_OBJECT) {
-		UInt8 typeCode;
+		uint8_t typeCode;
 		if ((res = stream->ReadU8(stream, &typeCode))) return res;
 
 		if (typeCode == TC_STRING) {
@@ -645,8 +645,8 @@ static ReturnCode Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* de
 
 static ReturnCode Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* desc) {
 	ReturnCode res;
-	UInt8 typeCode;
-	UInt8 tmp[2];
+	uint8_t typeCode;
+	uint8_t tmp[2];
 
 	if ((res = stream->ReadU8(stream, &typeCode))) return res;
 	if (typeCode == TC_NULL) { desc->ClassName[0] = '\0'; desc->FieldsCount = 0; return 0; }
@@ -673,7 +673,7 @@ static ReturnCode Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* de
 
 static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
 	ReturnCode res;
-	UInt8 typeCode;
+	uint8_t typeCode;
 	UInt32 count;
 
 	switch (field->Type) {
@@ -740,7 +740,7 @@ ReturnCode Dat_Load(struct Stream* stream) {
 	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
-	UInt8 header[4 + 1 + 2 * 2];
+	uint8_t header[4 + 1 + 2 * 2];
 	if ((res = Stream_Read(&compStream, header, sizeof(header)))) return res;
 
 	/* .dat header */
@@ -751,7 +751,7 @@ ReturnCode Dat_Load(struct Stream* stream) {
 	if (Stream_GetU16_BE(&header[5]) != 0xACED) return DAT_ERR_JIDENTIFIER;
 	if (Stream_GetU16_BE(&header[7]) != 0x0005) return DAT_ERR_JVERSION;
 
-	UInt8 typeCode;
+	uint8_t typeCode;
 	if ((res = compStream.ReadU8(&compStream, &typeCode))) return res;
 	if (typeCode != TC_OBJECT) return DAT_ERR_ROOT_TYPE;
 
@@ -793,9 +793,9 @@ ReturnCode Dat_Load(struct Stream* stream) {
 *#########################################################################################################################*/
 #define CW_META_VERSION 'E','x','t','e','n','s','i','o','n','V','e','r','s','i','o','n'
 #define CW_META_RGB NBT_I16,0,1,'R',0,0,  NBT_I16,0,1,'G',0,0,  NBT_I16,0,1,'B',0,0,
-static int Cw_WriteEndString(UInt8* data, const String* text) {
+static int Cw_WriteEndString(uint8_t* data, const String* text) {
 	int i, len = 0;
-	UInt8* cur = data + 2;
+	uint8_t* cur = data + 2;
 
 	for (i = 0; i < text->length; i++) {
 		Codepoint cp = Convert_CP437ToUnicode(text->buffer[i]);
@@ -808,7 +808,7 @@ static int Cw_WriteEndString(UInt8* data, const String* text) {
 	return len + 1;
 }
 
-UInt8 cw_begin[131] = {
+uint8_t cw_begin[131] = {
 NBT_DICT, 0,12, 'C','l','a','s','s','i','c','W','o','r','l','d',
 	NBT_I8,   0,13, 'F','o','r','m','a','t','V','e','r','s','i','o','n', 1,
 	NBT_I8S,  0,4,  'U','U','I','D', 0,0,0,16, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -824,7 +824,7 @@ NBT_DICT, 0,12, 'C','l','a','s','s','i','c','W','o','r','l','d',
 	NBT_END,
 	NBT_I8S,  0,10, 'B','l','o','c','k','A','r','r','a','y', 0,0,0,0,
 };
-UInt8 cw_meta_cpe[395] = {
+uint8_t cw_meta_cpe[395] = {
 	NBT_DICT, 0,8,  'M','e','t','a','d','a','t','a',
 		NBT_DICT, 0,3, 'C','P','E',
 			NBT_DICT, 0,13, 'C','l','i','c','k','D','i','s','t','a','n','c','e',
@@ -855,10 +855,10 @@ UInt8 cw_meta_cpe[395] = {
 				NBT_I16,  0,9,  'S','i','d','e','L','e','v','e','l',     0,0,
 				NBT_STR,  0,10, 'T','e','x','t','u','r','e','U','R','L', 0,0,
 };
-UInt8 cw_meta_defs[19] = {
+uint8_t cw_meta_defs[19] = {
 			NBT_DICT, 0,16, 'B','l','o','c','k','D','e','f','i','n','i','t','i','o','n','s',
 };
-UInt8 cw_meta_def[173] = {
+uint8_t cw_meta_def[173] = {
 				NBT_DICT, 0,7,  'B','l','o','c','k','\0','\0',
 					NBT_I8,  0,2,  'I','D',                              0,
 					NBT_I8,  0,11, 'C','o','l','l','i','d','e','T','y','p','e', 0,
@@ -873,7 +873,7 @@ UInt8 cw_meta_def[173] = {
 					NBT_I8S, 0,6,  'C','o','o','r','d','s',              0,0,0,6, 0,0,0,0,0,0,
 					NBT_STR, 0,4,  'N','a','m','e',                      0,0,
 };
-UInt8 cw_end[4] = {
+uint8_t cw_end[4] = {
 			NBT_END,
 		NBT_END,
 	NBT_END,
@@ -881,7 +881,7 @@ NBT_END,
 };
 
 static ReturnCode Cw_WriteBockDef(struct Stream* stream, Int32 b) {
-	UInt8 tmp[512];
+	uint8_t tmp[512];
 	bool sprite = Block_Draw[b] == DRAW_SPRITE;
 	union IntAndFloat speed;
 
@@ -896,27 +896,27 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, Int32 b) {
 		speed.f = Block_SpeedMultiplier[b];
 		Stream_SetU32_BE(&tmp[39], speed.u);
 
-		tmp[58] = (UInt8)Block_GetTexLoc(b, FACE_YMAX);
-		tmp[59] = (UInt8)Block_GetTexLoc(b, FACE_YMIN);
-		tmp[60] = (UInt8)Block_GetTexLoc(b, FACE_XMIN);
-		tmp[61] = (UInt8)Block_GetTexLoc(b, FACE_XMAX);
-		tmp[62] = (UInt8)Block_GetTexLoc(b, FACE_ZMIN);
-		tmp[63] = (UInt8)Block_GetTexLoc(b, FACE_ZMAX);
+		tmp[58] = (uint8_t)Block_GetTexLoc(b, FACE_YMAX);
+		tmp[59] = (uint8_t)Block_GetTexLoc(b, FACE_YMIN);
+		tmp[60] = (uint8_t)Block_GetTexLoc(b, FACE_XMIN);
+		tmp[61] = (uint8_t)Block_GetTexLoc(b, FACE_XMAX);
+		tmp[62] = (uint8_t)Block_GetTexLoc(b, FACE_ZMIN);
+		tmp[63] = (uint8_t)Block_GetTexLoc(b, FACE_ZMAX);
 
 		tmp[81]  = Block_BlocksLight[b] ? 0 : 1;
 		tmp[94]  = Block_DigSounds[b];
 		tmp[108] = Block_FullBright[b] ? 1 : 0;
-		tmp[117] = sprite ? 0 : (UInt8)(Block_MaxBB[b].Y * 16);
+		tmp[117] = sprite ? 0 : (uint8_t)(Block_MaxBB[b].Y * 16);
 		tmp[130] = sprite ? Block_SpriteOffset[b] : Block_Draw[b];
 
-		UInt8 fog = (UInt8)(128 * Block_FogDensity[b] - 1);
+		uint8_t fog = (uint8_t)(128 * Block_FogDensity[b] - 1);
 		PackedCol col = Block_FogCol[b];
 		tmp[141] = Block_FogDensity[b] ? fog : 0;
 		tmp[142] = col.R; tmp[143] = col.G; tmp[144] = col.B;
 
 		Vector3 minBB = Block_MinBB[b], maxBB = Block_MaxBB[b];
-		tmp[158] = (UInt8)(minBB.X * 16); tmp[159] = (UInt8)(minBB.Y * 16); tmp[160] = (UInt8)(minBB.Z * 16);
-		tmp[161] = (UInt8)(maxBB.X * 16); tmp[162] = (UInt8)(maxBB.Y * 16); tmp[163] = (UInt8)(maxBB.Z * 16);
+		tmp[158] = (uint8_t)(minBB.X * 16); tmp[159] = (uint8_t)(minBB.Y * 16); tmp[160] = (uint8_t)(minBB.Z * 16);
+		tmp[161] = (uint8_t)(maxBB.X * 16); tmp[162] = (uint8_t)(maxBB.Y * 16); tmp[163] = (uint8_t)(maxBB.Z * 16);
 	}
 
 	String name = Block_UNSAFE_GetName(b);
@@ -925,7 +925,7 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, Int32 b) {
 }
 
 ReturnCode Cw_Save(struct Stream* stream) {
-	UInt8 tmp[768];
+	uint8_t tmp[768];
 	PackedCol col;
 	ReturnCode res;
 
@@ -979,7 +979,7 @@ ReturnCode Cw_Save(struct Stream* stream) {
 *---------------------------------------------------Schematic export------------------------------------------------------*
 *#########################################################################################################################*/
 
-UInt8 sc_begin[78] = {
+uint8_t sc_begin[78] = {
 NBT_DICT, 0,9, 'S','c','h','e','m','a','t','i','c',
 	NBT_STR,  0,9,  'M','a','t','e','r','i','a','l','s', 0,7, 'C','l','a','s','s','i','c',
 	NBT_I16,  0,5,  'W','i','d','t','h',                 0,0,
@@ -987,17 +987,17 @@ NBT_DICT, 0,9, 'S','c','h','e','m','a','t','i','c',
 	NBT_I16,  0,6,  'L','e','n','g','t','h',             0,0,
 	NBT_I8S,  0,6,  'B','l','o','c','k','s',             0,0,0,0,
 };
-UInt8 sc_data[11] = {
+uint8_t sc_data[11] = {
 	NBT_I8S,  0,4,  'D','a','t','a',                     0,0,0,0,
 };
-UInt8 sc_end[37] = {
+uint8_t sc_end[37] = {
 	NBT_LIST, 0,8,  'E','n','t','i','t','i','e','s',                 NBT_DICT, 0,0,0,0,
 	NBT_LIST, 0,12, 'T','i','l','e','E','n','t','i','t','i','e','s', NBT_DICT, 0,0,0,0,
 NBT_END,
 };
 
 ReturnCode Schematic_Save(struct Stream* stream) {
-	UInt8 tmp[256];
+	uint8_t tmp[256];
 	ReturnCode res;
 
 	Mem_Copy(tmp, sc_begin, sizeof(sc_begin));
@@ -1016,7 +1016,7 @@ ReturnCode Schematic_Save(struct Stream* stream) {
 	}
 	if ((res = Stream_Write(stream, tmp, sizeof(sc_data)))) return res;
 
-	UInt8 chunk[8192] = { 0 };
+	uint8_t chunk[8192] = { 0 };
 	int i;
 	for (i = 0; i < World_BlocksSize; i += sizeof(chunk)) {
 		Int32 count = World_BlocksSize - i; count = min(count, sizeof(chunk));

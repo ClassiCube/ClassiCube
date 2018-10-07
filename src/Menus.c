@@ -92,7 +92,7 @@ struct KeyBindingsScreen {
 	struct ButtonWidget* Buttons;
 	int CurI, BindsCount;
 	const char** Descs;
-	UInt8* Binds;
+	uint8_t* Binds;
 	Widget_LeftClick LeftPage, RightPage;
 	struct TextWidget Title;
 	struct ButtonWidget Back, Left, Right;
@@ -161,7 +161,7 @@ struct TexPackOverlay {
 /*########################################################################################################################*
 *--------------------------------------------------------Menu base--------------------------------------------------------*
 *#########################################################################################################################*/
-static void Menu_Button(void* s, int i, struct ButtonWidget* btn, int width, const String* text, FontDesc* font, Widget_LeftClick onClick, UInt8 horAnchor, UInt8 verAnchor, int x, int y) {
+static void Menu_Button(void* s, int i, struct ButtonWidget* btn, int width, const String* text, FontDesc* font, Widget_LeftClick onClick, uint8_t horAnchor, uint8_t verAnchor, int x, int y) {
 	struct Menu* menu = (struct Menu*)s;
 	ButtonWidget_Create(btn, width, text, font, onClick);
 
@@ -169,7 +169,7 @@ static void Menu_Button(void* s, int i, struct ButtonWidget* btn, int width, con
 	Widget_SetLocation(menu->Widgets[i], horAnchor, verAnchor, x, y);
 }
 
-static void Menu_Label(void* s, int i, struct TextWidget* label, const String* text, FontDesc* font, UInt8 horAnchor, UInt8 verAnchor, int x, int y) {
+static void Menu_Label(void* s, int i, struct TextWidget* label, const String* text, FontDesc* font, uint8_t horAnchor, uint8_t verAnchor, int x, int y) {
 	struct Menu* menu = (struct Menu*)s;
 	TextWidget_Create(label, text, font);
 
@@ -177,7 +177,7 @@ static void Menu_Label(void* s, int i, struct TextWidget* label, const String* t
 	Widget_SetLocation(menu->Widgets[i], horAnchor, verAnchor, x, y);
 }
 
-static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width, const String* text, FontDesc* font, struct MenuInputValidator* v, UInt8 horAnchor, UInt8 verAnchor, int x, int y) {
+static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width, const String* text, FontDesc* font, struct MenuInputValidator* v, uint8_t horAnchor, uint8_t verAnchor, int x, int y) {
 	struct Menu* menu = (struct Menu*)s;
 	MenuInputWidget_Create(input, width, 30, text, font, v);
 
@@ -782,8 +782,8 @@ static void EditHotkeyScreen_Make(struct EditHotkeyScreen* s, int i, int x, int 
 		ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
 }
 
-static void HotkeyListScreen_MakeFlags(UInt8 flags, String* str);
-static void EditHotkeyScreen_MakeFlags(UInt8 flags, String* str) {
+static void HotkeyListScreen_MakeFlags(uint8_t flags, String* str);
+static void EditHotkeyScreen_MakeFlags(uint8_t flags, String* str) {
 	if (flags == 0) String_AppendConst(str, " None");
 	HotkeyListScreen_MakeFlags(flags, str);
 }
@@ -1490,7 +1490,7 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	}
 
 	String key = text, value;
-	UInt8 flags = 0;
+	uint8_t flags = 0;
 
 	if (String_UNSAFE_Separate(&text, '+', &key, &value)) {
 		String ctrl  = String_FromConst("Ctrl");
@@ -1513,7 +1513,7 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	Gui_SetActive(EditHotkeyScreen_MakeInstance(original));
 }
 
-static void HotkeyListScreen_MakeFlags(UInt8 flags, String* str) {
+static void HotkeyListScreen_MakeFlags(uint8_t flags, String* str) {
 	if (flags & HOTKEYS_FLAG_CTRL)  String_AppendConst(str, " Ctrl");
 	if (flags & HOTKEYS_FLAG_SHIFT) String_AppendConst(str, " Shift");
 	if (flags & HOTKEYS_FLAG_ALT)   String_AppendConst(str, " Alt");
@@ -1743,7 +1743,7 @@ struct ScreenVTABLE KeyBindingsScreen_VTABLE = {
 	KeyBindingsScreen_MouseDown, Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
 	Menu_OnResize,               Menu_ContextLost,   NULL,
 };
-static struct KeyBindingsScreen* KeyBindingsScreen_Make(int bindsCount, UInt8* binds, const char** descs, struct ButtonWidget* buttons, struct Widget** widgets, Event_Void_Callback contextRecreated) {
+static struct KeyBindingsScreen* KeyBindingsScreen_Make(int bindsCount, uint8_t* binds, const char** descs, struct ButtonWidget* buttons, struct Widget** widgets, Event_Void_Callback contextRecreated) {
 	struct KeyBindingsScreen* s = &KeyBindingsScreen_Instance;
 	s->HandlesAllInput = true;
 	s->Widgets         = widgets;
@@ -1777,7 +1777,7 @@ static void ClassicKeyBindingsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* ClassicKeyBindingsScreen_MakeInstance(void) {
-	static UInt8 binds[10] = { KeyBind_Forward, KeyBind_Back, KeyBind_Jump, KeyBind_Chat, KeyBind_SetSpawn, KeyBind_Left, KeyBind_Right, KeyBind_Inventory, KeyBind_ToggleFog, KeyBind_Respawn };
+	static uint8_t binds[10] = { KeyBind_Forward, KeyBind_Back, KeyBind_Jump, KeyBind_Chat, KeyBind_SetSpawn, KeyBind_Left, KeyBind_Right, KeyBind_Inventory, KeyBind_ToggleFog, KeyBind_Respawn };
 	static const char* descs[10] = { "Forward", "Back", "Jump", "Chat", "Save loc", "Left", "Right", "Build", "Toggle fog", "Load loc" };
 	static struct ButtonWidget buttons[10];
 	static struct Widget* widgets[10 + 4];
@@ -1797,7 +1797,7 @@ static void ClassicHacksKeyBindingsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* ClassicHacksKeyBindingsScreen_MakeInstance(void) {
-	static UInt8 binds[6] = { KeyBind_Speed, KeyBind_NoClip, KeyBind_HalfSpeed, KeyBind_Fly, KeyBind_FlyUp, KeyBind_FlyDown };
+	static uint8_t binds[6] = { KeyBind_Speed, KeyBind_NoClip, KeyBind_HalfSpeed, KeyBind_Fly, KeyBind_FlyUp, KeyBind_FlyDown };
 	static const char* descs[6] = { "Speed", "Noclip", "Half speed", "Fly", "Fly up", "Fly down" };
 	static struct ButtonWidget buttons[6];
 	static struct Widget* widgets[6 + 4];
@@ -1817,7 +1817,7 @@ static void NormalKeyBindingsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* NormalKeyBindingsScreen_MakeInstance(void) {
-	static UInt8 binds[12] = { KeyBind_Forward, KeyBind_Back, KeyBind_Jump, KeyBind_Chat, KeyBind_SetSpawn, KeyBind_PlayerList, KeyBind_Left, KeyBind_Right, KeyBind_Inventory, KeyBind_ToggleFog, KeyBind_Respawn, KeyBind_SendChat };
+	static uint8_t binds[12] = { KeyBind_Forward, KeyBind_Back, KeyBind_Jump, KeyBind_Chat, KeyBind_SetSpawn, KeyBind_PlayerList, KeyBind_Left, KeyBind_Right, KeyBind_Inventory, KeyBind_ToggleFog, KeyBind_Respawn, KeyBind_SendChat };
 	static const char* descs[12] = { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list", "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
 	static struct ButtonWidget buttons[12];
 	static struct Widget* widgets[12 + 4];
@@ -1837,7 +1837,7 @@ static void HacksKeyBindingsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* HacksKeyBindingsScreen_MakeInstance(void) {
-	static UInt8 binds[8] = { KeyBind_Speed, KeyBind_NoClip, KeyBind_HalfSpeed, KeyBind_ZoomScrolling, KeyBind_Fly, KeyBind_FlyUp, KeyBind_FlyDown, KeyBind_ThirdPerson };
+	static uint8_t binds[8] = { KeyBind_Speed, KeyBind_NoClip, KeyBind_HalfSpeed, KeyBind_ZoomScrolling, KeyBind_Fly, KeyBind_FlyUp, KeyBind_FlyDown, KeyBind_ThirdPerson };
 	static const char* descs[8] = { "Speed", "Noclip", "Half speed", "Scroll zoom", "Fly", "Fly up", "Fly down", "Third person" };
 	static struct ButtonWidget buttons[8];
 	static struct Widget* widgets[8 + 4];
@@ -1858,7 +1858,7 @@ static void OtherKeyBindingsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* OtherKeyBindingsScreen_MakeInstance(void) {
-	static UInt8 binds[12] = { KeyBind_ExtInput, KeyBind_HideFps, KeyBind_HideGui, KeyBind_HotbarSwitching, KeyBind_DropBlock,KeyBind_Screenshot, KeyBind_Fullscreen, KeyBind_AxisLines, KeyBind_Autorotate, KeyBind_SmoothCamera, KeyBind_IDOverlay, KeyBind_BreakableLiquids };
+	static uint8_t binds[12] = { KeyBind_ExtInput, KeyBind_HideFps, KeyBind_HideGui, KeyBind_HotbarSwitching, KeyBind_DropBlock,KeyBind_Screenshot, KeyBind_Fullscreen, KeyBind_AxisLines, KeyBind_Autorotate, KeyBind_SmoothCamera, KeyBind_IDOverlay, KeyBind_BreakableLiquids };
 	static const char* descs[12] = { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block", "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera", "ID overlay", "Breakable liquids" };
 	static struct ButtonWidget buttons[12];
 	static struct Widget* widgets[12 + 4];
@@ -1884,7 +1884,7 @@ static void MouseKeyBindingsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* MouseKeyBindingsScreen_MakeInstance(void) {
-	static UInt8 binds[3] = { KeyBind_MouseLeft, KeyBind_MouseMiddle, KeyBind_MouseRight };
+	static uint8_t binds[3] = { KeyBind_MouseLeft, KeyBind_MouseMiddle, KeyBind_MouseRight };
 	static const char* descs[3] = { "Left", "Middle", "Right" };
 	static struct ButtonWidget buttons[3];
 	static struct Widget* widgets[3 + 4 + 1];

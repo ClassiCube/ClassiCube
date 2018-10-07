@@ -27,7 +27,7 @@ static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** vertice
 #define SelectionBox_Z(z) 0,0,z, 0,1,z, 1,1,z, 1,0,z,
 #define SelectionBox_X(x) x,0,0, x,1,0, x,1,1, x,0,1,
 
-	static UInt8 faceIndices[72] = {
+	static uint8_t faceIndices[72] = {
 		SelectionBox_Y(0) SelectionBox_Y(1) /* YMin, YMax */
 		SelectionBox_Z(0) SelectionBox_Z(1) /* ZMin, ZMax */
 		SelectionBox_X(0) SelectionBox_X(1) /* XMin, XMax */
@@ -43,7 +43,7 @@ static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** vertice
 	*vertices = ptr;
 
 	col.R = ~col.R; col.G = ~col.G; col.B = ~col.B;
-	static UInt8 edgeIndices[72] = {
+	static uint8_t edgeIndices[72] = {
 		0,0,0, 1,0,0,  1,0,0, 1,0,1,  1,0,1, 0,0,1,  0,0,1, 0,0,0, /* YMin */
 		0,1,0, 1,1,0,  1,1,0, 1,1,1,  1,1,1, 0,1,1,  0,1,1, 0,1,0, /* YMax */
 		0,0,0, 0,1,0,  1,0,0, 1,1,0,  1,0,1, 1,1,1,  0,0,1, 0,1,1, /* X/Z  */
@@ -104,11 +104,11 @@ static void SelectionBox_Intersect(struct SelectionBox* box, Vector3 origin) {
 
 int selections_count;
 struct SelectionBox selections_list[SELECTIONS_MAX];
-UInt8 selections_ids[SELECTIONS_MAX];
+uint8_t selections_ids[SELECTIONS_MAX];
 GfxResourceID selections_VB, selections_LineVB;
 bool selections_used;
 
-void Selections_Add(UInt8 id, Vector3I p1, Vector3I p2, PackedCol col) {	
+void Selections_Add(uint8_t id, Vector3I p1, Vector3I p2, PackedCol col) {
 	struct SelectionBox sel;
 	Vector3I min, max;
 	Vector3I_Min(&min, &p1, &p2); Vector3I_ToVector3(&sel.Min, &min);
@@ -121,7 +121,7 @@ void Selections_Add(UInt8 id, Vector3I p1, Vector3I p2, PackedCol col) {
 	selections_count++;
 }
 
-void Selections_Remove(UInt8 id) {
+void Selections_Remove(uint8_t id) {
 	int i;
 	for (i = 0; i < selections_count; i++) {
 		if (selections_ids[i] != id) continue;
@@ -148,7 +148,7 @@ static void Selections_ContextRecreated(void* obj) {
 }
 
 static void Selections_QuickSort(int left, int right) {
-	UInt8* values = selections_ids; UInt8 value;
+	uint8_t* values = selections_ids; uint8_t value;
 	struct SelectionBox* keys = selections_list; struct SelectionBox key;
 
 	while (left < right) {

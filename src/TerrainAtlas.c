@@ -34,7 +34,7 @@ GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {
 		Mem_Free(tile.Scan0);
 		return texId;
 	} else {
-		UInt8 scan0[Bitmap_DataSize(64, 64)];
+		uint8_t scan0[Bitmap_DataSize(64, 64)];
 		Bitmap_Create(&tile, size, size, scan0);
 		return Atlas2D_LoadTextureElement_Raw(texLoc, &tile);
 	}

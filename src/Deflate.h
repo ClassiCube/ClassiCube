@@ -11,11 +11,11 @@
 */
 struct Stream;
 
-struct GZipHeader { UInt8 State; bool Done; UInt8 PartsRead; Int32 Flags; };
+struct GZipHeader { uint8_t State; bool Done; uint8_t PartsRead; Int32 Flags; };
 void GZipHeader_Init(struct GZipHeader* header);
 ReturnCode GZipHeader_Read(struct Stream* s, struct GZipHeader* header);
 
-struct ZLibHeader { UInt8 State; bool Done; };
+struct ZLibHeader { uint8_t State; bool Done; };
 void ZLibHeader_Init(struct ZLibHeader* header);
 ReturnCode ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header);
 
@@ -39,30 +39,30 @@ struct HuffmanTable {
 };
 
 struct InflateState {
-	UInt8 State;
-	bool LastBlock; /* Whether the last DEFLATE block has been encounted in the stream */
-	UInt32 Bits;    /* Holds bits across byte boundaries*/
-	UInt32 NumBits; /* Number of bits in Bits buffer*/
+	uint8_t State;
+	bool LastBlock;  /* Whether the last DEFLATE block has been encounted in the stream */
+	UInt32 Bits;     /* Holds bits across byte boundaries*/
+	UInt32 NumBits;  /* Number of bits in Bits buffer*/
 
-	UInt8* NextIn;   /* Pointer within Input buffer to next byte that can be read */
+	uint8_t* NextIn; /* Pointer within Input buffer to next byte that can be read */
 	UInt32 AvailIn;  /* Max number of bytes that can be read from Input buffer */
-	UInt8* Output;   /* Pointer for output data */
+	uint8_t* Output; /* Pointer for output data */
 	UInt32 AvailOut; /* Max number of bytes that can be written to Output buffer */
 	struct Stream* Source;  /* Source for filling Input buffer */
 
-	UInt32 Index;                          /* General purpose index / counter */
-	UInt32 WindowIndex;                    /* Current index within window circular buffer */
-	UInt32 NumCodeLens, NumLits, NumDists; /* Temp counters */
-	UInt32 TmpCodeLens, TmpLit, TmpDist;   /* Temp huffman codes */
+	UInt32 Index;                           /* General purpose index / counter */
+	UInt32 WindowIndex;                     /* Current index within window circular buffer */
+	UInt32 NumCodeLens, NumLits, NumDists;  /* Temp counters */
+	UInt32 TmpCodeLens, TmpLit, TmpDist;    /* Temp huffman codes */
 
-	UInt8 Input[INFLATE_MAX_INPUT];       /* Buffer for input to DEFLATE */
-	UInt8 Buffer[INFLATE_MAX_LITS_DISTS]; /* General purpose temp array */
+	uint8_t Input[INFLATE_MAX_INPUT];       /* Buffer for input to DEFLATE */
+	uint8_t Buffer[INFLATE_MAX_LITS_DISTS]; /* General purpose temp array */
 	union {
-		struct HuffmanTable CodeLensTable;/* Values represent codeword lengths of lits/dists codewords */
-		struct HuffmanTable LitsTable;    /* Values represent literal or lengths */
+		struct HuffmanTable CodeLensTable;  /* Values represent codeword lengths of lits/dists codewords */
+		struct HuffmanTable LitsTable;      /* Values represent literal or lengths */
 	};
-	struct HuffmanTable DistsTable;       /* Values represent distances back */
-	UInt8 Window[INFLATE_WINDOW_SIZE];    /* Holds circular buffer of recent output data, used for LZ77 */
+	struct HuffmanTable DistsTable;         /* Values represent distances back */
+	uint8_t Window[INFLATE_WINDOW_SIZE];    /* Holds circular buffer of recent output data, used for LZ77 */
 };
 
 void Inflate_Init(struct InflateState* state, struct Stream* source);
@@ -79,12 +79,12 @@ struct DeflateState {
 	UInt32 NumBits;      /* Number of bits in Bits buffer*/
 	UInt32 InputPosition;
 
-	UInt8* NextOut;  /* Pointer within Output buffer to next byte that can be written */
-	UInt32 AvailOut; /* Max number of bytes that can be written to Output buffer */
+	uint8_t* NextOut;    /* Pointer within Output buffer to next byte that can be written */
+	UInt32 AvailOut;     /* Max number of bytes that can be written to Output buffer */
 	struct Stream* Dest; /* Destination that Output buffer is written to */
 	
-	UInt8 Input[DEFLATE_BUFFER_SIZE];
-	UInt8 Output[DEFLATE_OUT_SIZE];
+	uint8_t Input[DEFLATE_BUFFER_SIZE];
+	uint8_t Output[DEFLATE_OUT_SIZE];
 	uint16_t Head[DEFLATE_HASH_SIZE];
 	uint16_t Prev[DEFLATE_BUFFER_SIZE];
 	bool WroteHeader;

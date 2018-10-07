@@ -179,7 +179,7 @@ static bool InputHandler_HandleCoreKey(Key key) {
 	if (key == KeyBind_Get(KeyBind_HideFps)) {
 		Game_ShowFPS = !Game_ShowFPS;
 	} else if (key == KeyBind_Get(KeyBind_Fullscreen)) {
-		UInt8 state = Window_GetWindowState();
+		uint8_t state = Window_GetWindowState();
 		if (state != WINDOW_STATE_MAXIMISED) {
 			bool fullscreen = state == WINDOW_STATE_FULLSCREEN;
 			Window_SetWindowState(fullscreen ? WINDOW_STATE_NORMAL : WINDOW_STATE_FULLSCREEN);

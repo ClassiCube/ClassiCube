@@ -71,9 +71,9 @@ static void LavaAnimation_Tick(UInt32* ptr, int size) {
 			float col = 2.0f * L_soupHeat[i];
 			Math_Clamp(col, 0.0f, 1.0f);
 
-			UInt8 r = (UInt8)(col * 100.0f + 155.0f);
-			UInt8 g = (UInt8)(col * col * 255.0f);
-			UInt8 b = (UInt8)(col * col * col * col * 128.0f);
+			uint8_t r = (uint8_t)(col * 100.0f + 155.0f);
+			uint8_t g = (uint8_t)(col * col * 255.0f);
+			uint8_t b = (uint8_t)(col * col * col * col * 128.0f);
 			*ptr = PackedCol_ARGB(r, g, b, 255);
 
 			ptr++; i++;
@@ -120,9 +120,9 @@ static void WaterAnimation_Tick(UInt32* ptr, int size) {
 			Math_Clamp(col, 0.0f, 1.0f);
 			col = col * col;
 
-			UInt8 r = (UInt8)(32.0f  + col * 32.0f);
-			UInt8 g = (UInt8)(50.0f  + col * 64.0f);
-			UInt8 a = (UInt8)(146.0f + col * 50.0f);
+			uint8_t r = (uint8_t)(32.0f  + col * 32.0f);
+			uint8_t g = (uint8_t)(50.0f  + col * 64.0f);
+			uint8_t a = (uint8_t)(146.0f + col * 50.0f);
 			*ptr = PackedCol_ARGB(r, g, 255, a);
 
 			ptr++; i++;
@@ -154,7 +154,7 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 	String parts[7];
 
 	/* ReadLine reads single byte at a time */
-	UInt8 buffer[2048]; struct Stream buffered;
+	uint8_t buffer[2048]; struct Stream buffered;
 	Stream_ReadonlyBuffered(&buffered, stream, buffer, sizeof(buffer));
 	ReturnCode res;
 
@@ -165,7 +165,7 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 
 		if (!line.length || line.buffer[0] == '#') continue;
 		struct AnimationData data = { 0 };
-		UInt8 tileX, tileY;
+		uint8_t tileX, tileY;
 
 		int partsCount = Array_Elems(parts);
 		String_UNSAFE_Split(&line, ' ', parts, &partsCount);
@@ -206,8 +206,8 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 
 #define ANIMS_FAST_SIZE 64
 static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int size) {
-	UInt8 buffer[Bitmap_DataSize(ANIMS_FAST_SIZE, ANIMS_FAST_SIZE)];
-	UInt8* ptr = buffer;
+	uint8_t buffer[Bitmap_DataSize(ANIMS_FAST_SIZE, ANIMS_FAST_SIZE)];
+	uint8_t* ptr = buffer;
 	if (size > ANIMS_FAST_SIZE) {
 		/* cannot allocate memory on the stack for very big animation.png frames */
 		ptr = Mem_Alloc(size * size, BITMAP_SIZEOF_PIXEL, "anim frame");

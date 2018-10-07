@@ -17,7 +17,7 @@
 #include "VertexStructs.h"
 
 BlockID* Builder_Chunk;
-UInt8* Builder_Counts;
+uint8_t* Builder_Counts;
 Int32* Builder_BitFlags;
 bool Builder_UseBitFlags;
 int Builder_X, Builder_Y, Builder_Z;
@@ -167,7 +167,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 				} else {
 					int count = Builder_StretchZ(index, x, y, z, cIndex, b, FACE_XMIN);
 					Builder_AddVertices(b, FACE_XMIN);
-					Builder_Counts[index] = (UInt8)count;
+					Builder_Counts[index] = (uint8_t)count;
 				}
 
 				index++;
@@ -178,7 +178,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 				} else {
 					int count = Builder_StretchZ(index, x, y, z, cIndex, b, FACE_XMAX);
 					Builder_AddVertices(b, FACE_XMAX);
-					Builder_Counts[index] = (UInt8)count;
+					Builder_Counts[index] = (uint8_t)count;
 				}
 
 				index++;
@@ -189,7 +189,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 				} else {
 					int count = Builder_StretchX(index, Builder_X, Builder_Y, Builder_Z, cIndex, b, FACE_ZMIN);
 					Builder_AddVertices(b, FACE_ZMIN);
-					Builder_Counts[index] = (UInt8)count;
+					Builder_Counts[index] = (uint8_t)count;
 				}
 
 				index++;
@@ -200,7 +200,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 				} else {
 					int count = Builder_StretchX(index, x, y, z, cIndex, b, FACE_ZMAX);
 					Builder_AddVertices(b, FACE_ZMAX);
-					Builder_Counts[index] = (UInt8)count;
+					Builder_Counts[index] = (uint8_t)count;
 				}
 
 				index++;
@@ -210,7 +210,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 				} else {
 					int count = Builder_StretchX(index, x, y, z, cIndex, b, FACE_YMIN);
 					Builder_AddVertices(b, FACE_YMIN);
-					Builder_Counts[index] = (UInt8)count;
+					Builder_Counts[index] = (uint8_t)count;
 				}
 
 				index++;
@@ -220,11 +220,11 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 				} else if (b < BLOCK_WATER || b > BLOCK_STILL_LAVA) {
 					int count = Builder_StretchX(index, x, y, z, cIndex, b, FACE_YMAX);
 					Builder_AddVertices(b, FACE_YMAX);
-					Builder_Counts[index] = (UInt8)count;
+					Builder_Counts[index] = (uint8_t)count;
 				} else {
 					int count = Builder_StretchXLiquid(index, x, y, z, cIndex, b);
 					if (count > 0) Builder_AddVertices(b, FACE_YMAX);
-					Builder_Counts[index] = (UInt8)count;
+					Builder_Counts[index] = (uint8_t)count;
 				}
 			}
 		}
@@ -282,7 +282,7 @@ static void Builder_ReadChunkData(int x1, int y1, int z1, bool* outAllAir, bool*
 
 static bool Builder_BuildChunk(int x1, int y1, int z1, bool* allAir) {
 	BlockID chunk[EXTCHUNK_SIZE_3]; Builder_Chunk = chunk;
-	UInt8 counts[CHUNK_SIZE_3 * FACE_COUNT]; Builder_Counts = counts;
+	uint8_t counts[CHUNK_SIZE_3 * FACE_COUNT]; Builder_Counts = counts;
 	Int32 bitFlags[EXTCHUNK_SIZE_3]; Builder_BitFlags = bitFlags;
 	Builder_PreStretchTiles(x1, y1, z1);
 
@@ -359,7 +359,7 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 
 #ifdef OCCLUSION
 	if (info.NormalParts != null || info.TranslucentParts != null)
-		info.occlusionFlags = (UInt8)ComputeOcclusion();
+		info.occlusionFlags = (uint8_t)ComputeOcclusion();
 #endif
 }
 
@@ -407,7 +407,7 @@ static void Builder_DrawSprite(int count) {
 	float x2 = (float)X + 13.5f / 16.0f, y2 = (float)Y + 1.0f, z2 = (float)Z + 13.5f / 16.0f;
 	float v1 = vOrigin, v2 = vOrigin + Atlas1D_InvTileSize * UV2_Scale;
 
-	UInt8 offsetType = Block_SpriteOffset[Builder_Block];
+	uint8_t offsetType = Block_SpriteOffset[Builder_Block];
 	if (offsetType >= 6 && offsetType <= 7) {
 		Random_SetSeed(&spriteRng, (Builder_X + 1217 * Builder_Z) & 0x7fffffff);
 		float valX = Random_Range(&spriteRng, -3, 3 + 1) / 16.0f;
@@ -841,7 +841,7 @@ static int Adv_StretchZ(int countIndex, int x, int y, int z, int chunkIndex, Blo
 
 
 #define Adv_CountBits(F, a, b, c, d) (((F >> a) & 1) + ((F >> b) & 1) + ((F >> c) & 1) + ((F >> d) & 1))
-#define Adv_Tint(c) c.R = (UInt8)(c.R * tint.R / 255); c.G = (UInt8)(c.G * tint.G / 255); c.B = (UInt8)(c.B * tint.B / 255);
+#define Adv_Tint(c) c.R = (uint8_t)(c.R * tint.R / 255); c.G = (uint8_t)(c.G * tint.G / 255); c.B = (uint8_t)(c.B * tint.B / 255);
 
 static void Adv_DrawXMin(int count) {
 	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMIN);

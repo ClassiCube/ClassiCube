@@ -12,7 +12,7 @@
 #define MATH_LARGENUM 1000000000.0f
 #define MATH_POS_INF ((float)(1e+300 * 1e+300))
 
-#define Math_Deg2Packed(x) ((UInt8)((x) * 256.0f / 360.0f))
+#define Math_Deg2Packed(x) ((uint8_t)((x) * 256.0f / 360.0f))
 #define Math_Packed2Deg(x) ((x) * 360.0f / 256.0f)
 
 float Math_AbsF(float x);

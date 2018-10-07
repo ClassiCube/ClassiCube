@@ -31,7 +31,7 @@ struct Model {
 	int index;
 	/* Index within ModelCache's textures of the default texture for this model. */
 	int8_t defaultTexIndex;
-	UInt8 armX, armY; /* these translate arm model part back to (0, 0) */
+	uint8_t armX, armY; /* these translate arm model part back to (0, 0) */
 
 	bool initalised;
 	/* Whether the entity should be slightly bobbed up and down when rendering.
@@ -59,7 +59,7 @@ PackedCol Model_Cols[FACE_COUNT];
 float Model_uScale, Model_vScale;
 /* Angle of offset from head to body rotation. */
 float Model_cosHead, Model_sinHead;
-UInt8 Model_Rotation, Model_skinType;
+uint8_t Model_Rotation, Model_skinType;
 struct Model* Model_ActiveModel;
 void Model_Init(struct Model* model);
 
@@ -84,7 +84,7 @@ void Model_DrawArmPart(struct ModelPart* part);
 /* Describes data for a box being built. */
 struct BoxDesc {
 	uint16_t TexX, TexY;         /* Texture origin */
-	UInt8 SizeX, SizeY, SizeZ;   /* Texture dimensions */
+	uint8_t SizeX, SizeY, SizeZ; /* Texture dimensions */
 	float X1,Y1,Z1, X2,Y2,Z2;    /* Box corners coordinates */
 	float RotX,RotY,RotZ;        /* Rotation origin point */
 };

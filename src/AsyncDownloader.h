@@ -28,7 +28,7 @@ struct AsyncRequest {
 
 	TimeMS LastModified;    /* Time item cached at (if at all) */
 	char Etag[STRING_SIZE]; /* ETag of cached item (if any) */
-	UInt8 RequestType;
+	uint8_t RequestType;
 };
 
 void ASyncRequest_Free(struct AsyncRequest* request);

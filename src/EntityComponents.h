@@ -36,7 +36,7 @@ void TiltComp_GetCurrent(struct TiltComp* anim, float t);
 
 /* Entity component that performs management of hack states */
 struct HacksComp {
-	UInt8 UserType;
+	uint8_t UserType;
 	/* Speed player move at, relative to normal speed, when the 'speeding' key binding is held down */
 	float SpeedMultiplier;
 	/* Whether blocks that the player places that intersect themselves, should cause the player to
@@ -68,7 +68,7 @@ struct HacksComp {
 void HacksComp_Init(struct HacksComp* hacks);
 bool HacksComp_CanJumpHigher(struct HacksComp* hacks);
 bool HacksComp_Floating(struct HacksComp* hacks);
-void HacksComp_SetUserType(struct HacksComp* hacks, UInt8 value, bool setBlockPerms);
+void HacksComp_SetUserType(struct HacksComp* hacks, uint8_t value, bool setBlockPerms);
 void HacksComp_CheckConsistency(struct HacksComp* hacks);
 void HacksComp_UpdateState(struct HacksComp* hacks);
 

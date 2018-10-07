@@ -179,7 +179,7 @@ namespace ClassicalSharp {
 			return value;
 		}
 		
-		public static bool UnHex(char hex, out int value) {
+		static bool UnHex(char hex, out int value) {
 			value = 0;
 			if (hex >= '0' && hex <= '9') {
 				value = (hex - '0');

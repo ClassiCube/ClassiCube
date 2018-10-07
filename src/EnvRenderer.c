@@ -350,7 +350,7 @@ static void EnvRenderer_InitWeatherHeightmap(void) {
 
 #define EnvRenderer_RainCalcBody(get_block)\
 for (y = maxY; y >= 0; y--, i -= World_OneY) {\
-	UInt8 draw = Block_Draw[get_block];\
+	uint8_t draw = Block_Draw[get_block];\
 	if (!(draw == DRAW_GAS || draw == DRAW_SPRITE)) {\
 		Weather_Heightmap[index] = y;\
 		return y;\
@@ -457,7 +457,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 			/* Clamp between 0 and 255 */
 			alpha = alpha < 0.0f ? 0.0f : alpha;
 			alpha = alpha > 255.0f ? 255.0f : alpha;
-			col.A = (UInt8)alpha;
+			col.A = (uint8_t)alpha;
 
 			/* NOTE: Making vertex is inlined since this is called millions of times. */
 			v.Col = col;

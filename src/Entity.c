@@ -435,7 +435,7 @@ bool TabList_Remove(EntityID id) {
 	return true;
 }
 
-void TabList_Set(EntityID id, const String* player, const String* list, const String* group, UInt8 rank) {
+void TabList_Set(EntityID id, const String* player, const String* list, const String* group, uint8_t rank) {
 	char playerNameBuffer[STRING_SIZE];
 	String playerName = String_FromArray(playerNameBuffer);
 	String_AppendColorless(&playerName, player);
@@ -624,7 +624,7 @@ static void Player_SetSkinAll(struct Player* player, bool reset) {
 	}
 }
 
-static void Player_ClearHat(Bitmap* bmp, UInt8 skinType) {
+static void Player_ClearHat(Bitmap* bmp, uint8_t skinType) {
 	int sizeX  = (bmp->Width / 64) * 32;
 	int yScale = skinType == SKIN_64x32 ? 32 : 64;
 	int sizeY  = (bmp->Height / yScale) * 16;
@@ -635,7 +635,7 @@ static void Player_ClearHat(Bitmap* bmp, UInt8 skinType) {
 		UInt32* row = Bitmap_GetRow(bmp, y);
 		row += sizeX;
 		for (x = 0; x < sizeX; x++) {
-			UInt8 alpha = PackedCol_ARGB_A(row[x]);
+			uint8_t alpha = PackedCol_ARGB_A(row[x]);
 			if (alpha != 255) return;
 		}
 	}

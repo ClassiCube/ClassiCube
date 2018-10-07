@@ -16,22 +16,22 @@ struct DisplayDevice DisplayDevice_Default;
 void* DisplayDevice_Meta[3];
 
 struct ColorFormat {
-	UInt8 R, G, B, A;
+	uint8_t R, G, B, A;
 	bool IsIndexed;
-	Int32 BitsPerPixel;
+	int  BitsPerPixel;
 };
 
 struct ColorFormat ColorFormat_FromBPP(int bpp);
-struct ColorFormat ColorFormat_FromRGBA(UInt8 r, UInt8 g, UInt8 b, UInt8 a);
+struct ColorFormat ColorFormat_FromRGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
 struct GraphicsMode {
 	struct ColorFormat Format;
-	UInt8 DepthBits, StencilBits;
+	uint8_t DepthBits, StencilBits;
 	/* The number of buffers associated with this DisplayMode. */
-	UInt8 Buffers;	
+	uint8_t Buffers;
 };
 
-struct GraphicsMode GraphicsMode_Make(struct ColorFormat color, UInt8 depth, UInt8 stencil, UInt8 buffers);
+struct GraphicsMode GraphicsMode_Make(struct ColorFormat color, uint8_t depth, uint8_t stencil, uint8_t buffers);
 /* Returns an GraphicsMode compatible with the underlying platform. */
 struct GraphicsMode GraphicsMode_MakeDefault(void);
 #endif

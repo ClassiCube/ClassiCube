@@ -207,7 +207,7 @@ bool Game_CanPick(BlockID block) {
 	return Game_BreakableLiquids && Block_CanPlace[block] && Block_CanDelete[block];
 }
 
-bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, UInt8* skinType) {
+bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, uint8_t* skinType) {
 	Bitmap bmp; 
 	ReturnCode res = Bitmap_DecodePng(&bmp, src);
 	if (res) { Chat_LogError2(res, "decoding", file); }

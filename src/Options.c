@@ -174,7 +174,7 @@ void Options_Load(void) {
 	struct Stream stream; Stream_FromFile(&stream, file);
 
 	/* ReadLine reads single byte at a time */
-	UInt8 buffer[2048]; struct Stream buffered;
+	uint8_t buffer[2048]; struct Stream buffered;
 	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
 	String key, value;
 

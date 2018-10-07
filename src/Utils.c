@@ -145,18 +145,18 @@ int Utils_AccumulateWheelDelta(float* accmulator, float delta) {
 	return steps;
 }
 
-UInt8 Utils_GetSkinType(Bitmap* bmp) {
+uint8_t Utils_GetSkinType(Bitmap* bmp) {
 	if (bmp->Width == bmp->Height * 2) return SKIN_64x32;
 	if (bmp->Width != bmp->Height)     return SKIN_INVALID;
 
 	/* Minecraft alex skins have this particular pixel with alpha of 0 */
-	int scale    = bmp->Width / 64;
-	UInt32 pixel = Bitmap_GetPixel(bmp, 54 * scale, 20 * scale);
-	UInt8 alpha  = PackedCol_ARGB_A(pixel);
+	int scale     = bmp->Width / 64;
+	UInt32 pixel  = Bitmap_GetPixel(bmp, 54 * scale, 20 * scale);
+	uint8_t alpha = PackedCol_ARGB_A(pixel);
 	return alpha >= 127 ? SKIN_64x64 : SKIN_64x64_SLIM;
 }
 
-UInt32 Utils_CRC32(UInt8* data, UInt32 length) {
+UInt32 Utils_CRC32(uint8_t* data, UInt32 length) {
 	UInt32 crc = 0xffffffffUL;
 	int i;
 	for (i = 0; i < length; i++) {
@@ -198,7 +198,7 @@ void* Utils_Resize(void* buffer, UInt32* maxElems, UInt32 elemSize, UInt32 defEl
 	}
 }
 
-bool Utils_ParseIP(const String* ip, UInt8* data) {
+bool Utils_ParseIP(const String* ip, uint8_t* data) {
 	String parts[4]; int count = 4;
 	String_UNSAFE_Split(ip, '.', parts, &count);
 	if (count != 4) return false;

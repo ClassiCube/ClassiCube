@@ -85,8 +85,8 @@ ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void Mem_Set(void* dst, UInt8 value, UInt32 numBytes) { memset(dst, value, numBytes); }
-void Mem_Copy(void* dst, void* src,  UInt32 numBytes) { memcpy(dst, src,   numBytes); }
+void Mem_Set(void* dst, uint8_t value, UInt32 numBytes) { memset(dst, value, numBytes); }
+void Mem_Copy(void* dst, void* src,  UInt32 numBytes)   { memcpy(dst, src,   numBytes); }
 
 NOINLINE_ static void Platform_AllocFailed(const char* place) {
 	char logBuffer[STRING_SIZE+20 + 1];
@@ -203,11 +203,11 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 
 static void Platform_FromSysTime(DateTime* time, SYSTEMTIME* sysTime) {
 	time->Year   = (uint16_t)sysTime->wYear;
-	time->Month  =  (UInt8)sysTime->wMonth;
-	time->Day    =  (UInt8)sysTime->wDay;
-	time->Hour   =  (UInt8)sysTime->wHour;
-	time->Minute =  (UInt8)sysTime->wMinute;
-	time->Second =  (UInt8)sysTime->wSecond;
+	time->Month  =  (uint8_t)sysTime->wMonth;
+	time->Day    =  (uint8_t)sysTime->wDay;
+	time->Hour   =  (uint8_t)sysTime->wHour;
+	time->Minute =  (uint8_t)sysTime->wMinute;
+	time->Second =  (uint8_t)sysTime->wSecond;
 	time->Milli  = (uint16_t)sysTime->wMilliseconds;
 }
 
@@ -382,12 +382,12 @@ ReturnCode File_Append(void** file, const String* path) {
 	return File_Seek(*file, 0, STREAM_SEEKFROM_END);
 }
 
-ReturnCode File_Read(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead) {
+ReturnCode File_Read(void* file, uint8_t* buffer, UInt32 count, UInt32* bytesRead) {
 	BOOL success = ReadFile((HANDLE)file, buffer, count, bytesRead, NULL);
 	return Win_Return(success);
 }
 
-ReturnCode File_Write(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWrote) {
+ReturnCode File_Write(void* file, uint8_t* buffer, UInt32 count, UInt32* bytesWrote) {
 	BOOL success = WriteFile((HANDLE)file, buffer, count, bytesWrote, NULL);
 	return Win_Return(success);
 }
@@ -397,7 +397,7 @@ ReturnCode File_Close(void* file) {
 }
 
 ReturnCode File_Seek(void* file, int offset, int seekType) {
-	static UInt8 modes[3] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
+	static uint8_t modes[3] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
 	DWORD pos = SetFilePointer(file, offset, NULL, modes[seekType]);
 	return Win_Return(pos != INVALID_SET_FILE_POINTER);
 }
@@ -499,12 +499,12 @@ ReturnCode File_Append(void** file, const String* path) {
 	return File_Seek(*file, 0, STREAM_SEEKFROM_END);
 }
 
-ReturnCode File_Read(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead) {
+ReturnCode File_Read(void* file, uint8_t* buffer, UInt32 count, UInt32* bytesRead) {
 	*bytesRead = read((int)file, buffer, count);
 	return Nix_Return(*bytesRead != -1);
 }
 
-ReturnCode File_Write(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWrote) {
+ReturnCode File_Write(void* file, uint8_t* buffer, UInt32 count, UInt32* bytesWrote) {
 	*bytesWrote = write((int)file, buffer, count);
 	return Nix_Return(*bytesWrote != -1);
 }
@@ -514,7 +514,7 @@ ReturnCode File_Close(void* file) {
 }
 
 ReturnCode File_Seek(void* file, int offset, int seekType) {
-	static UInt8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
+	static uint8_t modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
 	return Nix_Return(lseek((int)file, offset, modes[seekType]) != -1);
 }
 
@@ -837,13 +837,13 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, P
 
 		for (yy = 0; yy < img->rows; yy++) {
 			if ((y + yy) < 0 || (y + yy) >= bmp->Height) continue;
-			UInt8* src = img->buffer + (yy * img->width);
-			UInt8* dst = (UInt8*)Bitmap_GetRow(bmp, y + yy) + (x * BITMAP_SIZEOF_PIXEL);
+			uint8_t* src = img->buffer + (yy * img->width);
+			uint8_t* dst = (uint8_t*)Bitmap_GetRow(bmp, y + yy) + (x * BITMAP_SIZEOF_PIXEL);
 
 			for (xx = 0; xx < img->width; xx++) {
 				if ((x + xx) < 0 || (x + xx) >= bmp->Width) continue;
 
-				UInt8 intensity = *src, invIntensity = UInt8_MaxValue - intensity;
+				uint8_t intensity = *src, invIntensity = UInt8_MaxValue - intensity;
 				dst[0] = ((col.B * intensity) >> 8) + ((dst[0] * invIntensity) >> 8);
 				dst[1] = ((col.G * intensity) >> 8) + ((dst[1] * invIntensity) >> 8);
 				dst[2] = ((col.R * intensity) >> 8) + ((dst[2] * invIntensity) >> 8);
@@ -946,13 +946,13 @@ ReturnCode Socket_Connect(SocketPtr socket, const String* ip, int port) {
 	return result == -1 ? Socket__Error() : 0;
 }
 
-ReturnCode Socket_Read(SocketPtr socket, UInt8* buffer, UInt32 count, UInt32* modified) {
+ReturnCode Socket_Read(SocketPtr socket, uint8_t* buffer, UInt32 count, UInt32* modified) {
 	int recvCount = recv(socket, buffer, count, 0);
 	if (recvCount != -1) { *modified = recvCount; return 0; }
 	*modified = 0; return Socket__Error();
 }
 
-ReturnCode Socket_Write(SocketPtr socket, UInt8* buffer, UInt32 count, UInt32* modified) {
+ReturnCode Socket_Write(SocketPtr socket, uint8_t* buffer, UInt32 count, UInt32* modified) {
 	int sentCount = send(socket, buffer, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return Socket__Error();
@@ -1083,7 +1083,7 @@ static ReturnCode Http_GetData(struct AsyncRequest* req, HINTERNET handle, volat
 	if (!size) return ERROR_NOT_SUPPORTED;
 	*progress = 0;
 
-	UInt8* buffer = Mem_Alloc(size, sizeof(UInt8), "http get data");
+	uint8_t* buffer = Mem_Alloc(size, 1, "http get data");
 	UInt32 left = size, read, totalRead = 0;
 	req->ResultData = buffer;
 
@@ -1203,7 +1203,7 @@ static size_t Http_GetData(char *buffer, size_t size, size_t nitems, struct Asyn
 	UInt32 left = total - req->Result;
 	left        = min(left, nitems);
 
-	UInt8* dst = (UInt8*)req->ResultData + req->Result;
+	uint8_t* dst = (uint8_t*)req->ResultData + req->Result;
 	Mem_Copy(dst, buffer, left);
 	req->Result += left;
 
@@ -1690,7 +1690,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 #ifdef CC_BUILD_NIX
 void Platform_ConvertString(void* dstPtr, const String* src) {
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
-	UInt8* dst = dstPtr;
+	uint8_t* dst = dstPtr;
 
 	int i;
 	for (i = 0; i < src->length; i++) {

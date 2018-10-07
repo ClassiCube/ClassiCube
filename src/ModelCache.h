@@ -8,7 +8,7 @@
 struct Model;
 
 struct CachedModel { struct Model* Instance; String Name;  };
-struct CachedTexture { UInt8 SkinType; GfxResourceID TexID; String Name; };
+struct CachedTexture { uint8_t SkinType; GfxResourceID TexID; String Name; };
 #if 0
 public CustomModel[] CustomModels = new CustomModel[256];
 #endif

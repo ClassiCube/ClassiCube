@@ -56,7 +56,7 @@ void (*ServerConnection_SendChat)(const String* text);
 void (*ServerConnection_SendPosition)(Vector3 pos, float rotY, float headX);
 void (*ServerConnection_SendPlayerClick)(MouseButton button, bool isDown, EntityID targetId, struct PickedPos* pos);
 void (*ServerConnection_Tick)(struct ScheduledTask* task);
-UInt8* ServerConnection_WriteBuffer;
+uint8_t* ServerConnection_WriteBuffer;
 
 bool ServerConnection_SupportsExtPlayerList;
 bool ServerConnection_SupportsPlayerClick;
@@ -69,9 +69,9 @@ void ServerConnection_InitSingleplayer(void);
 void ServerConnection_InitMultiplayer(void);
 void ServerConnection_MakeComponent(struct IGameComponent* comp);
 
-typedef void (*Net_Handler)(UInt8* data);
+typedef void (*Net_Handler)(uint8_t* data);
 uint16_t Net_PacketSizes[OPCODE_COUNT];
 Net_Handler Net_Handlers[OPCODE_COUNT];
-void Net_Set(UInt8 opcode, Net_Handler handler, uint16_t size);
+void Net_Set(uint8_t opcode, Net_Handler handler, uint16_t size);
 void Net_SendPacket(void);
 #endif

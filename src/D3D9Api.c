@@ -185,8 +185,8 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bi
 	if (res) ErrorHandler_Fail2(res, "D3D9_SetTexturePartData - Lock");
 
 	/* We need to copy scanline by scanline, as generally rect.stride != data.stride */
-	UInt8* src = (UInt8*)bmp->Scan0;
-	UInt8* dst = (UInt8*)rect.pBits;
+	uint8_t* src = (uint8_t*)bmp->Scan0;
+	uint8_t* dst = (uint8_t*)rect.pBits;
 	int yy;
 	UInt32 stride = (UInt32)(bmp->Width) * BITMAP_SIZEOF_PIXEL;
 
@@ -201,7 +201,7 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bi
 }
 
 static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp, bool partial) {
-	UInt8* prev = bmp->Scan0;
+	uint8_t* prev = bmp->Scan0;
 	int lvls = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
 	int lvl, width = bmp->Width, height = bmp->Height;
 
@@ -210,7 +210,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp
 		if (width > 1)   width /= 2; 
 		if (height > 1) height /= 2;
 
-		UInt8* cur = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
+		uint8_t* cur = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
 		GfxCommon_GenMipmaps(width, height, cur, prev);
 
 		Bitmap mipmap;

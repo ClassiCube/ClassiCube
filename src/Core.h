@@ -5,7 +5,6 @@
 */
 
 #if _MSC_VER
-typedef unsigned __int8  UInt8;
 typedef unsigned __int32 UInt32;
 typedef unsigned __int8  uint8_t;
 typedef unsigned __int16 uint16_t;
@@ -25,7 +24,6 @@ typedef signed __int64 int64_t;
 #define NOINLINE_ __declspec(noinline)
 #elif __GNUC__
 #include <stdint.h>
-typedef uint8_t  UInt8;
 typedef uint32_t UInt32;
 
 typedef int32_t Int32;
@@ -35,7 +33,7 @@ typedef int32_t Int32;
 #endif
 
 typedef uint16_t Codepoint;
-typedef UInt8 bool;
+typedef uint8_t bool;
 #define true 1
 #define false 0
 #define NULL ((void*)0)
@@ -65,7 +63,7 @@ typedef struct Point2D_ { int X, Y; } Point2D;
 typedef struct Size2D_  { int Width, Height; } Size2D;
 typedef struct FontDesc_ { void* Handle; uint16_t Size, Style; } FontDesc;
 typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
-typedef struct Bitmap_ { UInt8* Scan0; int Width, Height; } Bitmap;
+typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
 
 /*#define CC_BUILD_GL11*/
 #define CC_BUILD_D3D9

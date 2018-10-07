@@ -78,7 +78,7 @@ bool ManageCookies;
 bool KeepAlive;
 /* TODO: Connection pooling */
 
-static void AsyncDownloader_Add(const String* url, bool priority, const String* id, UInt8 type, TimeMS* lastModified, const String* etag, const String* data) {
+static void AsyncDownloader_Add(const String* url, bool priority, const String* id, uint8_t type, TimeMS* lastModified, const String* etag, const String* data) {
 	Mutex_Lock(async_pendingMutex);
 	{
 		struct AsyncRequest req = { 0 };

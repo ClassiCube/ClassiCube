@@ -36,7 +36,7 @@ NOINLINE_ void* Mem_Alloc(UInt32 numElems, UInt32 elemsSize, const char* place);
 NOINLINE_ void* Mem_AllocCleared(UInt32 numElems, UInt32 elemsSize, const char* place);
 NOINLINE_ void* Mem_Realloc(void* mem, UInt32 numElems, UInt32 elemsSize, const char* place);
 NOINLINE_ void  Mem_Free(void* mem);
-void Mem_Set(void* dst, UInt8 value, UInt32 numBytes);
+void Mem_Set(void* dst, uint8_t value, UInt32 numBytes);
 void Mem_Copy(void* dst, void* src, UInt32 numBytes);
 
 void Platform_Log(const String* message);
@@ -62,8 +62,8 @@ ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* ms);
 ReturnCode File_Create(void** file, const String* path);
 ReturnCode File_Open(void** file, const String* path);
 ReturnCode File_Append(void** file, const String* path);
-ReturnCode File_Read(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead);
-ReturnCode File_Write(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWrote);
+ReturnCode File_Read(void* file, uint8_t* buffer, UInt32 count, UInt32* bytesRead);
+ReturnCode File_Write(void* file, uint8_t* buffer, UInt32 count, UInt32* bytesWrote);
 ReturnCode File_Close(void* file);
 ReturnCode File_Seek(void* file, int offset, int seekType);
 ReturnCode File_Position(void* file, UInt32* position);
@@ -98,8 +98,8 @@ ReturnCode Socket_SetBlocking(SocketPtr socket, bool blocking);
 ReturnCode Socket_GetError(SocketPtr socket, ReturnCode* result);
 
 ReturnCode Socket_Connect(SocketPtr socket, const String* ip, int port);
-ReturnCode Socket_Read(SocketPtr socket, UInt8* buffer, UInt32 count, UInt32* modified);
-ReturnCode Socket_Write(SocketPtr socket, UInt8* buffer, UInt32 count, UInt32* modified);
+ReturnCode Socket_Read(SocketPtr socket, uint8_t* buffer, UInt32 count, UInt32* modified);
+ReturnCode Socket_Write(SocketPtr socket, uint8_t* buffer, UInt32 count, UInt32* modified);
 ReturnCode Socket_Close(SocketPtr socket);
 ReturnCode Socket_Select(SocketPtr socket, int selectMode, bool* success);
 

@@ -262,7 +262,7 @@ void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
 *-----------------------------------------------------X11 message box-----------------------------------------------------*
 *#########################################################################################################################*/
 Display* dpy;
-unsigned long X11_Col(UInt8 r, UInt8 g, UInt8 b) {
+unsigned long X11_Col(uint8_t r, uint8_t g, uint8_t b) {
     Colormap cmap = XDefaultColormap(dpy, DefaultScreen(dpy));
     XColor col = { 0 };
     col.red   = r << 8;

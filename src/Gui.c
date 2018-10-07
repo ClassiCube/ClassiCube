@@ -34,7 +34,7 @@ void Screen_CommonFree(void* screen) { struct Screen* s = screen;
 	s->VTABLE->ContextLost(s);
 }
 
-void Widget_SetLocation(void* widget, UInt8 horAnchor, UInt8 verAnchor, int xOffset, int yOffset) {
+void Widget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
 	struct Widget* w = widget;
 	w->HorAnchor = horAnchor; w->VerAnchor = verAnchor;
 	w->XOffset   = xOffset;   w->YOffset = yOffset;
@@ -68,7 +68,7 @@ bool Widget_Contains(void* widget, int x, int y) {
 /*########################################################################################################################*
 *----------------------------------------------------------Gui------------------------------------------------------------*
 *#########################################################################################################################*/
-int Gui_CalcPos(UInt8 anchor, int offset, int size, int axisLen) {
+int Gui_CalcPos(uint8_t anchor, int offset, int size, int axisLen) {
 	if (anchor == ANCHOR_MIN) return offset;
 	if (anchor == ANCHOR_MAX) return axisLen - size - offset;
 	return (axisLen - size) / 2 + offset;

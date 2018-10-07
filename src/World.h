@@ -20,7 +20,7 @@ int World_BlocksSize;
 int World_Width, World_Height, World_Length;
 int World_MaxX, World_MaxY, World_MaxZ;
 int World_OneY;
-UInt8 World_Uuid[16];
+uint8_t World_Uuid[16];
 extern String World_TextureUrl;
 
 void World_Reset(void);

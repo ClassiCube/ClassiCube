@@ -51,7 +51,7 @@ static void Particle_Reset(struct Particle* p, Vector3 pos, Vector3 velocity, fl
 }
 
 static bool Particle_CanPass(BlockID block, bool throughLiquids) {
-	UInt8 draw = Block_Draw[block];
+	uint8_t draw = Block_Draw[block];
 	return draw == DRAW_GAS || draw == DRAW_SPRITE || (throughLiquids && Block_IsLiquid[block]);
 }
 
@@ -218,9 +218,9 @@ static void TerrainParticle_Render(struct TerrainParticle* p, float t, VertexP3f
 
 	if (Block_Tinted[p->Block]) {
 		PackedCol tintCol = Block_FogCol[p->Block];
-		col.R = (UInt8)(col.R * tintCol.R / 255);
-		col.G = (UInt8)(col.G * tintCol.G / 255);
-		col.B = (UInt8)(col.B * tintCol.B / 255);
+		col.R = (uint8_t)(col.R * tintCol.R / 255);
+		col.G = (uint8_t)(col.G * tintCol.G / 255);
+		col.B = (uint8_t)(col.B * tintCol.B / 255);
 	}
 	Particle_DoRender(&size, &pos, &p->Rec, col, vertices);
 }
@@ -414,7 +414,7 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 				p->TexLoc = (TextureLoc)texLoc;
 				p->Block = old;
 				int type = Random_Range(&rnd, 0, 30);
-				p->Base.Size = (UInt8)(type >= 28 ? 12 : (type >= 25 ? 10 : 8));
+				p->Base.Size = (uint8_t)(type >= 28 ? 12 : (type >= 25 ? 10 : 8));
 			}
 		}
 	}
@@ -440,6 +440,6 @@ void Particles_RainSnowEffect(Vector3 pos) {
 		Vector3_Add(&pos, &startPos, &offset);
 		Particle_Reset(&p->Base, pos, velocity, 40.0f);
 		int type = Random_Range(&rnd, 0, 30);
-		p->Base.Size = (UInt8)(type >= 28 ? 2 : (type >= 25 ? 4 : 3));
+		p->Base.Size = (uint8_t)(type >= 28 ? 2 : (type >= 25 ? 4 : 3));
 	}
 }

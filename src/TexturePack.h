@@ -32,7 +32,7 @@ bool TextureCache_HasUrl(const String* url);
 bool TextureCache_GetStream(const String* url, struct Stream* stream);
 void TextureCache_GetLastModified(const String* url, TimeMS* time);
 void TextureCache_GetETag(const String* url, String* etag);
-void TextureCache_AddData(const String* url, UInt8* data, UInt32 length);
+void TextureCache_AddData(const String* url, uint8_t* data, UInt32 length);
 void TextureCache_AddETag(const String* url, const String* etag);
 void TextureCache_AddLastModified(const String* url, TimeMS* lastModified);
 

@@ -226,12 +226,12 @@ bool String_AppendReal32(String* str, float num, Int32 fracDigits) {
 	return true;
 }
 
-bool String_AppendHex(String* str, UInt8 value) {
+bool String_AppendHex(String* str, uint8_t value) {
 	/* 48 = index of 0, 55 = index of (A - 10) */
-	UInt8 hi  = (value >> 4) & 0xF;
-	char c_hi = hi < 10 ? (hi + 48) : (hi + 55);
-	UInt8 lo  = value & 0xF;
-	char c_lo = lo < 10 ? (lo + 48) : (lo + 55);
+	uint8_t hi = (value >> 4) & 0xF;
+	char c_hi  = hi < 10 ? (hi + 48) : (hi + 55);
+	uint8_t lo = value & 0xF;
+	char c_lo  = lo < 10 ? (lo + 48) : (lo + 55);
 
 	return String_Append(str, c_hi) && String_Append(str, c_lo);
 }
@@ -241,7 +241,7 @@ NOINLINE_ static bool String_Hex32(String* str, UInt32 value) {
 	int shift;
 
 	for (shift = 24; shift >= 0; shift -= 8) {
-		UInt8 part = (UInt8)(value >> shift);
+		uint8_t part = (uint8_t)(value >> shift);
 		appended = String_AppendHex(str, part);
 	}
 	return appended;
@@ -252,7 +252,7 @@ NOINLINE_ static bool String_Hex64(String* str, uint64_t value) {
 	int shift;
 
 	for (shift = 56; shift >= 0; shift -= 8) {
-		UInt8 part = (UInt8)(value >> shift);
+		uint8_t part = (uint8_t)(value >> shift);
 		appended = String_AppendHex(str, part);
 	}
 	return appended;
@@ -411,7 +411,7 @@ int String_Compare(const String* a, const String* b) {
 		char bCur = b->buffer[i]; Char_MakeLower(bCur);
 
 		if (aCur == bCur) continue;
-		return (UInt8)aCur - (UInt8)bCur;
+		return (uint8_t)aCur - (uint8_t)bCur;
 	}
 
 	/* all chars are equal here - same string, or a substring */
@@ -438,7 +438,7 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 		const void* arg = args[j++];
 		switch (formatStr.buffer[++i]) {
 		case 'b': 
-			String_AppendInt32(str, *((UInt8*)arg)); break;
+			String_AppendInt32(str, *((uint8_t*)arg)); break;
 		case 'i': 
 			String_AppendInt32(str, *((Int32*)arg)); break;
 		case 'f': 
@@ -500,7 +500,7 @@ Codepoint Convert_ExtendedChars[129] = { 0x2302,
 };
 
 Codepoint Convert_CP437ToUnicode(char c) {
-	UInt8 raw = (UInt8)c;
+	uint8_t raw = (uint8_t)c;
 	if (raw < 0x20) return Convert_ControlChars[raw];
 	if (raw < 0x7F) return raw;
 	return Convert_ExtendedChars[raw - 0x7F];
@@ -524,7 +524,7 @@ bool Convert_TryUnicodeToCP437(Codepoint cp, char* value) {
 	*value = '?'; return false;
 }
 
-void String_DecodeUtf8(String* str, UInt8* data, UInt32 len) {
+void String_DecodeUtf8(String* str, uint8_t* data, UInt32 len) {
 	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len);
 	Codepoint cp;
 
@@ -535,10 +535,10 @@ void String_DecodeUtf8(String* str, UInt8* data, UInt32 len) {
 	}
 }
 
-bool Convert_TryParseUInt8(const String* str, UInt8* value) {
+bool Convert_TryParseUInt8(const String* str, uint8_t* value) {
 	*value = 0; Int32 tmp;
 	if (!Convert_TryParseInt32(str, &tmp) || tmp < 0 || tmp > UInt8_MaxValue) return false;
-	*value = (UInt8)tmp; return true;
+	*value = (uint8_t)tmp; return true;
 }
 
 bool Convert_TryParseInt16(const String* str, int16_t* value) {

@@ -232,7 +232,7 @@ static void HacksComp_ParseAllFlag(struct HacksComp* hacks, const char* incFlag,
 	}
 }
 
-void HacksComp_SetUserType(struct HacksComp* hacks, UInt8 value, bool setBlockPerms) {
+void HacksComp_SetUserType(struct HacksComp* hacks, uint8_t value, bool setBlockPerms) {
 	bool isOp = value >= 100 && value <= 127;
 	hacks->UserType = value;
 	hacks->CanSeeAllNames = isOp;
@@ -361,7 +361,7 @@ static void NetInterpComp_AddState(struct NetInterpComp* interp, struct InterpSt
 void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, bool interpolate) {
 	struct InterpState last = interp->Cur;
 	struct InterpState* cur = &interp->Cur;
-	UInt8 flags = update->Flags;
+	uint8_t flags = update->Flags;
 
 	if (flags & LOCATIONUPDATE_FLAG_POS)   InterpComp_SetPos(cur, update);
 	if (flags & LOCATIONUPDATE_FLAG_ROTX)  cur->RotX  = update->RotX;
@@ -413,7 +413,7 @@ void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdat
 	struct Entity* entity = &LocalPlayer_Instance.Base;
 	struct InterpState* prev = &interp->Prev;
 	struct InterpState* next = &interp->Next;
-	UInt8 flags = update->Flags;
+	uint8_t flags = update->Flags;
 
 	if (flags & LOCATIONUPDATE_FLAG_POS) {
 		InterpComp_SetPos(next, update);
@@ -465,7 +465,7 @@ void LocalInterpComp_AdvanceState(struct InterpComp* interp) {
 *-----------------------------------------------------ShadowComponent-----------------------------------------------------*
 *#########################################################################################################################*/
 float ShadowComponent_radius, shadowComponent_uvScale;
-struct ShadowData { float Y; BlockID Block; UInt8 A; };
+struct ShadowData { float Y; BlockID Block; uint8_t A; };
 
 bool lequal(float a, float b) { return a < b || Math_AbsF(a - b) < 0.001f; }
 static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity* entity, struct ShadowData* data, float x1, float z1, float x2, float z2) {
@@ -530,7 +530,7 @@ static void ShadowComponent_DrawCircle(VertexP3fT2fC4b** vertices, struct Entity
 static void ShadowComponent_CalcAlpha(float playerY, struct ShadowData* data) {
 	float height = playerY - data->Y;
 	if (height <= 6.0f) {
-		data->A = (UInt8)(160 - 160 * height / 6.0f);
+		data->A = (uint8_t)(160 - 160 * height / 6.0f);
 		data->Y += 1.0f / 64.0f; return;
 	}
 
@@ -564,7 +564,7 @@ static bool ShadowComponent_GetBlocks(struct Entity* entity, int x, int y, int z
 		}
 		y--;
 
-		UInt8 draw = Block_Draw[block];
+		uint8_t draw = Block_Draw[block];
 		if (draw == DRAW_GAS || draw == DRAW_SPRITE || Block_IsLiquid[block]) continue;
 		float blockY = (y + 1.0f) + Block_MaxBB[block].Y;
 		if (blockY >= posY + 0.01f) continue;
@@ -589,7 +589,7 @@ static bool ShadowComponent_GetBlocks(struct Entity* entity, int x, int y, int z
 #define sh_size 128
 #define sh_half (sh_size / 2)
 static void ShadowComponent_MakeTex(void) {
-	UInt8 pixels[Bitmap_DataSize(sh_size, sh_size)];
+	uint8_t pixels[Bitmap_DataSize(sh_size, sh_size)];
 	Bitmap bmp; Bitmap_Create(&bmp, sh_size, sh_size, pixels);
 
 	UInt32 inPix  = PackedCol_ARGB(0, 0, 0, 200);
@@ -1032,7 +1032,7 @@ static float PhysicsComp_LowestModifier(struct PhysicsComp* comp, struct AABB* b
 			for (x = bbMin.X; x <= bbMax.X; x++) { v.X = (float)x;
 				BlockID block = World_GetBlock(x, y, z);
 				if (block == BLOCK_AIR) continue;
-				UInt8 collide = Block_Collide[block];
+				uint8_t collide = Block_Collide[block];
 				if (collide == COLLIDE_SOLID && !checkSolid) continue;
 
 				Vector3_Add(&blockBB.Min, &v, &Block_MinBB[block]);
@@ -1193,11 +1193,11 @@ void PhysicsComp_DoEntityPush(struct Entity* entity) {
 *#########################################################################################################################*/
 Vector3 sounds_LastPos = { -1e25f, -1e25f, -1e25f };
 bool sounds_AnyNonAir;
-UInt8 sounds_Type;
+uint8_t sounds_Type;
 
 static bool Sounds_CheckNonSolid(BlockID b) {
-	UInt8 type = Block_StepSounds[b];
-	UInt8 collide = Block_Collide[b];
+	uint8_t type = Block_StepSounds[b];
+	uint8_t collide = Block_Collide[b];
 	if (type != SOUND_NONE && collide != COLLIDE_SOLID) sounds_Type = type;
 
 	if (Block_Draw[b] != DRAW_GAS) sounds_AnyNonAir = true;
@@ -1205,7 +1205,7 @@ static bool Sounds_CheckNonSolid(BlockID b) {
 }
 
 static bool Sounds_CheckSolid(BlockID b) {
-	UInt8 type = Block_StepSounds[b];
+	uint8_t type = Block_StepSounds[b];
 	if (type != SOUND_NONE) sounds_Type = type;
 
 	if (Block_Draw[b] != DRAW_GAS) sounds_AnyNonAir = true;
@@ -1228,8 +1228,8 @@ static void SoundComp_GetSound(struct LocalPlayer* p) {
 	BlockID blockUnder = World_SafeGetBlock_3I(feetPos);
 	float maxY = feetPos.Y + Block_MaxBB[blockUnder].Y;
 
-	UInt8 typeUnder = Block_StepSounds[blockUnder];
-	UInt8 collideUnder = Block_Collide[blockUnder];
+	uint8_t typeUnder = Block_StepSounds[blockUnder];
+	uint8_t collideUnder = Block_Collide[blockUnder];
 	if (maxY >= pos.Y && collideUnder == COLLIDE_SOLID && typeUnder != SOUND_NONE) {
 		sounds_AnyNonAir = true; sounds_Type = typeUnder; return;
 	}

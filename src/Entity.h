@@ -43,7 +43,7 @@ extern const char* ShadowMode_Names[SHADOW_MODE_COUNT];
 struct LocationUpdate {
 	Vector3 Pos;
 	float HeadX, HeadY, RotX, RotZ;
-	UInt8 Flags;
+	uint8_t Flags;
 	bool RelativePos;
 };
 
@@ -79,7 +79,7 @@ struct Entity {
 	Vector3 ModelScale, Size;
 	float StepSize;
 	
-	UInt8 SkinType, EntityType;
+	uint8_t SkinType, EntityType;
 	bool NoShade, OnGround;
 	GfxResourceID TextureId, MobTextureId;
 	float uScale, vScale;
@@ -118,10 +118,10 @@ StringsBuffer TabList_Buffer;
 uint16_t TabList_PlayerNames[TABLIST_MAX_NAMES];
 uint16_t TabList_ListNames[TABLIST_MAX_NAMES];
 uint16_t TabList_GroupNames[TABLIST_MAX_NAMES];
-UInt8  TabList_GroupRanks[TABLIST_MAX_NAMES];
+uint8_t  TabList_GroupRanks[TABLIST_MAX_NAMES];
 bool TabList_Valid(EntityID id);
 bool TabList_Remove(EntityID id);
-void TabList_Set(EntityID id, const String* player, const String* list, const String* group, UInt8 rank);
+void TabList_Set(EntityID id, const String* player, const String* list, const String* group, uint8_t rank);
 void TabList_MakeComponent(struct IGameComponent* comp);
 
 #define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_PlayerNames[id]);

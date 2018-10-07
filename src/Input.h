@@ -117,11 +117,11 @@ void KeyBind_Set(KeyBind binding, Key key);
 void KeyBind_Init(void);
 
 
-extern UInt8 Hotkeys_LWJGL[256];
+extern uint8_t Hotkeys_LWJGL[256];
 struct HotkeyData {
 	int TextIndex; /* contents to copy directly into the input bar */
-	UInt8 Trigger;   /* Member of Key enumeration */
-	UInt8 Flags;     /* ctrl 1, shift 2, alt 4 */
+	uint8_t Trigger;   /* Member of Key enumeration */
+	uint8_t Flags;     /* ctrl 1, shift 2, alt 4 */
 	bool StaysOpen;  /* whether the user is able to enter further input */
 };
 
@@ -132,10 +132,10 @@ StringsBuffer HotkeysText;
 #define HOTKEYS_FLAG_SHIFT 2
 #define HOTKEYS_FLAG_ALT   4
 
-void Hotkeys_Add(Key trigger, UInt8 flags, const String* text, bool more);
-bool Hotkeys_Remove(Key trigger, UInt8 flags);
+void Hotkeys_Add(Key trigger, uint8_t flags, const String* text, bool more);
+bool Hotkeys_Remove(Key trigger, uint8_t flags);
 int Hotkeys_FindPartial(Key key);
 void Hotkeys_Init(void);
-void Hotkeys_UserRemovedHotkey(Key trigger, UInt8 flags);
-void Hotkeys_UserAddedHotkey(Key trigger, UInt8 flags, bool moreInput, const String* text);
+void Hotkeys_UserRemovedHotkey(Key trigger, uint8_t flags);
+void Hotkeys_UserAddedHotkey(Key trigger, uint8_t flags, bool moreInput, const String* text);
 #endif

@@ -48,7 +48,7 @@ void AxisLinesRenderer_Render(double delta) {
 	Vector3_Add1(&coords[3], &P,  axisLines_size);
 	Vector3_Add1(&coords[4], &P,  axisLines_length);
 	
-	static UInt8 indices[36] = {
+	static uint8_t indices[36] = {
 		2,2,1, 2,2,3, 4,2,3, 4,2,1, /* X arrow */
 		1,2,2, 1,2,4, 3,2,4, 3,2,2, /* Z arrow */
 		1,2,3, 1,4,3, 3,4,1, 3,2,1, /* Y arrow */

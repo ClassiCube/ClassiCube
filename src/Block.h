@@ -43,25 +43,25 @@ bool Block_BlocksLight[BLOCK_COUNT];
 bool Block_FullBright[BLOCK_COUNT];
 PackedCol Block_FogCol[BLOCK_COUNT];
 float Block_FogDensity[BLOCK_COUNT];
-UInt8 Block_Collide[BLOCK_COUNT];
-UInt8 Block_ExtendedCollide[BLOCK_COUNT];
+uint8_t Block_Collide[BLOCK_COUNT];
+uint8_t Block_ExtendedCollide[BLOCK_COUNT];
 float Block_SpeedMultiplier[BLOCK_COUNT];
-UInt8 Block_LightOffset[BLOCK_COUNT];
-UInt8 Block_Draw[BLOCK_COUNT];
-UInt8 Block_DigSounds[BLOCK_COUNT];
-UInt8 Block_StepSounds[BLOCK_COUNT];
-bool Block_Tinted[BLOCK_COUNT];
+uint8_t Block_LightOffset[BLOCK_COUNT];
+uint8_t Block_Draw[BLOCK_COUNT];
+uint8_t Block_DigSounds[BLOCK_COUNT];
+uint8_t Block_StepSounds[BLOCK_COUNT];
+uint8_t Block_Tinted[BLOCK_COUNT];
 /* Gets whether the given block has an opaque draw type and is also a full tile block.
 Full tile block means Min of (0, 0, 0) and max of (1, 1, 1).*/
 bool Block_FullOpaque[BLOCK_COUNT];
-UInt8 Block_SpriteOffset[BLOCK_COUNT];
+uint8_t Block_SpriteOffset[BLOCK_COUNT];
 
 #define Block_Tint(col, block)\
 if (Block_Tinted[block]) {\
 	PackedCol tintCol = Block_FogCol[block];\
-	col.R = (UInt8)(col.R * tintCol.R / 255);\
-	col.G = (UInt8)(col.G * tintCol.G / 255);\
-	col.B = (UInt8)(col.B * tintCol.B / 255);\
+	col.R = (uint8_t)(col.R * tintCol.R / 255);\
+	col.G = (uint8_t)(col.G * tintCol.G / 255);\
+	col.B = (uint8_t)(col.B * tintCol.B / 255);\
 }
 
 Vector3 Block_MinBB[BLOCK_COUNT];
@@ -74,9 +74,9 @@ bool Block_CanPlace[BLOCK_COUNT];
 bool Block_CanDelete[BLOCK_COUNT];
 
 /* Gets a bit flags of faces hidden of two neighbouring blocks. */
-UInt8 Block_Hidden[BLOCK_COUNT * BLOCK_COUNT];
+uint8_t Block_Hidden[BLOCK_COUNT * BLOCK_COUNT];
 /* Gets a bit flags of which faces of a block can stretch with greedy meshing. */
-UInt8 Block_CanStretch[BLOCK_COUNT];
+uint8_t Block_CanStretch[BLOCK_COUNT];
 
 #ifdef EXTENDED_BLOCKS
 int Block_UsedCount, Block_IDMask;
@@ -90,8 +90,8 @@ bool Block_IsCustomDefined(BlockID block);
 void Block_SetCustomDefined(BlockID block, bool defined);
 void Block_DefineCustom(BlockID block);
 
-void Block_SetCollide(BlockID block, UInt8 collide);
-void Block_SetDrawType(BlockID block, UInt8 draw);
+void Block_SetCollide(BlockID block, uint8_t collide);
+void Block_SetDrawType(BlockID block, uint8_t draw);
 void Block_ResetProps(BlockID block);
 
 STRING_REF String Block_UNSAFE_GetName(BlockID block);
@@ -119,11 +119,11 @@ float DefaultSet_Height(BlockID b);
 bool DefaultSet_FullBright(BlockID b);
 float DefaultSet_FogDensity(BlockID b);
 PackedCol DefaultSet_FogColour(BlockID b);
-UInt8 DefaultSet_Collide(BlockID b);
+uint8_t DefaultSet_Collide(BlockID b);
 /* Gets a backwards compatible collide type of a block. */
-UInt8 DefaultSet_MapOldCollide(BlockID b, UInt8 collide);
+uint8_t DefaultSet_MapOldCollide(BlockID b, uint8_t collide);
 bool DefaultSet_BlocksLight(BlockID b);
-UInt8 DefaultSet_StepSound(BlockID b);
-UInt8 DefaultSet_Draw(BlockID b);
-UInt8 DefaultSet_DigSound(BlockID b);
+uint8_t DefaultSet_StepSound(BlockID b);
+uint8_t DefaultSet_Draw(BlockID b);
+uint8_t DefaultSet_DigSound(BlockID b);
 #endif

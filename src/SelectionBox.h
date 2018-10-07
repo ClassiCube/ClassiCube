@@ -9,6 +9,6 @@ struct IGameComponent;
 
 void Selections_MakeComponent(struct IGameComponent* comp);
 void Selections_Render(double delta);
-void Selections_Add(UInt8 id, Vector3I p1, Vector3I p2, PackedCol col);
-void Selections_Remove(UInt8 id);
+void Selections_Add(uint8_t id, Vector3I p1, Vector3I p2, PackedCol col);
+void Selections_Remove(uint8_t id);
 #endif

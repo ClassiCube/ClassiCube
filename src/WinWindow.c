@@ -22,7 +22,7 @@
 HINSTANCE win_Instance;
 HWND win_Handle;
 HDC win_DC;
-UInt8 win_State = WINDOW_STATE_NORMAL;
+uint8_t win_State = WINDOW_STATE_NORMAL;
 bool invisible_since_creation; /* Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront) */
 int suppress_resize; /* Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events */
 Rect2D prev_bounds; /* Used to restore previous size when leaving fullscreen mode */
@@ -60,7 +60,7 @@ static void Window_DoSetHiddenBorder(bool value) {
 
 	/* To ensure maximized/minimized windows work correctly, reset state to normal,
 	change the border, then go back to maximized/minimized. */
-	UInt8 state = win_State;
+	uint8_t state = win_State;
 	Window_ResetWindowState();
 	DWORD style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 	style |= (value ? WS_POPUP : WS_OVERLAPPEDWINDOW);
@@ -224,7 +224,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_SIZE:
 	{
-		UInt8 new_state = win_State;
+		uint8_t new_state = win_State;
 		switch (wParam) {
 		case SIZE_RESTORED:  new_state = WINDOW_STATE_NORMAL; break;
 		case SIZE_MINIMIZED: new_state = WINDOW_STATE_MINIMISED; break;
@@ -533,8 +533,8 @@ void Window_Close(void) {
 	PostMessageW(win_Handle, WM_CLOSE, 0, 0);
 }
 
-UInt8 Window_GetWindowState(void) { return win_State; }
-void Window_SetWindowState(UInt8 state) {
+uint8_t Window_GetWindowState(void) { return win_State; }
+void Window_SetWindowState(uint8_t state) {
 	if (win_State == state) return;
 
 	DWORD command = 0;
@@ -640,7 +640,7 @@ void GLContext_SelectGraphicsMode(struct GraphicsMode mode) {
 	pfd.nVersion = 1;
 	pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
 	/* TODO: PFD_SUPPORT_COMPOSITION FLAG? CHECK IF IT WORKS ON XP */
-	pfd.cColorBits = (UInt8)(color.R + color.G + color.B);
+	pfd.cColorBits = (uint8_t)(color.R + color.G + color.B);
 
 	pfd.iPixelType = color.IsIndexed ? PFD_TYPE_COLORINDEX : PFD_TYPE_RGBA;
 	pfd.cRedBits   = color.R;

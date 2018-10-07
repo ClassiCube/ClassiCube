@@ -5,9 +5,9 @@
 /* Performance critical, use macro to ensure always inlined. */
 #define ApplyTint \
 if (Drawer_Tinted) {\
-col.R = (UInt8)(col.R * Drawer_TintColour.R / 255);\
-col.G = (UInt8)(col.G * Drawer_TintColour.G / 255);\
-col.B = (UInt8)(col.B * Drawer_TintColour.B / 255);\
+col.R = (uint8_t)(col.R * Drawer_TintColour.R / 255);\
+col.G = (uint8_t)(col.G * Drawer_TintColour.G / 255);\
+col.B = (uint8_t)(col.B * Drawer_TintColour.B / 255);\
 }
 
 

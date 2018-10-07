@@ -807,7 +807,7 @@ static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) 
 	Model_ApplyTexture(entity);
 	Gfx_SetAlphaTest(false);
 
-	UInt8 type = Model_skinType;
+	uint8_t type = Model_skinType;
 	struct ModelLimbs* set = &model->Limbs[type == SKIN_64x64_SLIM ? 2 : (type == SKIN_64x64 ? 1 : 0)];
 
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &model->Head, true);
@@ -837,7 +837,7 @@ static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) 
 }
 
 static void HumanModel_DrawArm(struct Entity* entity, struct ModelSet* model) {
-	UInt8 type = Model_skinType;
+	uint8_t type = Model_skinType;
 	struct ModelLimbs* set = &model->Limbs[type == SKIN_64x64_SLIM ? 2 : (type == SKIN_64x64 ? 1 : 0)];
 
 	Model_DrawArmPart(&set->RightArm);
@@ -1167,9 +1167,9 @@ static TextureLoc BlockModel_GetTex(Face face, VertexP3fT2fC4b** ptr) {
 #define Block_Tint(col, block)\
 if (Block_Tinted[block]) {\
 	PackedCol tintCol = Block_FogCol[block];\
-	col.R = (UInt8)(col.R * tintCol.R / 255);\
-	col.G = (UInt8)(col.G * tintCol.G / 255);\
-	col.B = (UInt8)(col.B * tintCol.B / 255);\
+	col.R = (uint8_t)(col.R * tintCol.R / 255);\
+	col.G = (uint8_t)(col.G * tintCol.G / 255);\
+	col.B = (uint8_t)(col.B * tintCol.B / 255);\
 }
 
 static void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {

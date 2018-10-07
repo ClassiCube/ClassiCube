@@ -10,7 +10,7 @@ struct Stream;
 #define VORBIS_MAX_BLOCK_SIZE 8192
 #define OGG_BUFFER_SIZE (255 * 256)
 
-void Ogg_MakeStream(struct Stream* stream, UInt8* buffer, struct Stream* source);
+void Ogg_MakeStream(struct Stream* stream, uint8_t* buffer, struct Stream* source);
 struct Codebook; struct Floor; struct Residue; struct Mapping; struct Mode;
 
 struct imdct_state {
@@ -27,7 +27,7 @@ struct VorbisState {
 	UInt32 NumBits; /* Number of bits in Bits buffer*/
 	struct Stream* Source;  /* Source for filling Input buffer */
 
-	UInt8 Channels, ModeNumBits; 
+	uint8_t Channels, ModeNumBits;
 	uint16_t CurBlockSize, PrevBlockSize, DataSize, NumCodebooks;
 	Int32 SampleRate; Int32 BlockSizes[2];
 	float* Temp; /* temp array reused in places */
