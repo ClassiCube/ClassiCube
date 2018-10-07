@@ -85,42 +85,29 @@ void ServerConnection_CheckAsyncResources(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------PingList---------------------------------------------------------*
 *#########################################################################################################################*/
-struct PingEntry {
-	int64_t TimeSent, TimeReceived; uint16_t Data;
-};
-struct PingEntry PingList_Entries[10];
+struct PingEntry { int64_t Sent, Recv; uint16_t Data; };
+struct PingEntry pingList_entries[10];
+int pingList_head;
 
-uint16_t PingList_Set(int i, uint16_t prev) {
-	PingList_Entries[i].Data = (uint16_t)(prev + 1);
-	PingList_Entries[i].TimeSent = DateTime_CurrentUTC_MS();
-	PingList_Entries[i].TimeReceived = 0;
-	return (uint16_t)(prev + 1);
+int PingList_NextPingData(void) {
+	int head = pingList_head;
+	int next = pingList_entries[head].Data + 1;
+
+	head = (head + 1) % Array_Elems(pingList_entries);
+	pingList_entries[head].Data = next;
+	pingList_entries[head].Sent = DateTime_CurrentUTC_MS();
+	pingList_entries[head].Recv = 0;
+	
+	pingList_head = head;
+	return next;
 }
 
-uint16_t PingList_NextPingData(void) {
-	/* Find free ping slot */
+void PingList_Update(int data) {
 	int i;
-	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
-		if (PingList_Entries[i].TimeSent) continue;
+	for (i = 0; i < Array_Elems(pingList_entries); i++) {
+		if (pingList_entries[i].Data != data) continue;
 
-		uint16_t prev = i > 0 ? PingList_Entries[i - 1].Data : 0;
-		return PingList_Set(i, prev);
-	}
-
-	/* Remove oldest ping slot */
-	for (i = 0; i < Array_Elems(PingList_Entries) - 1; i++) {
-		PingList_Entries[i] = PingList_Entries[i + 1];
-	}
-	int j = Array_Elems(PingList_Entries) - 1;
-	return PingList_Set(j, PingList_Entries[j].Data);
-}
-
-void PingList_Update(uint16_t data) {
-	int i;
-	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
-		if (PingList_Entries[i].Data != data) continue;
-
-		PingList_Entries[i].TimeReceived = DateTime_CurrentUTC_MS();
+		pingList_entries[i].Recv = DateTime_CurrentUTC_MS();
 		return;
 	}
 }
@@ -128,12 +115,12 @@ void PingList_Update(uint16_t data) {
 int PingList_AveragePingMs(void) {
 	double totalMs = 0.0;
 	int i, measures = 0;
-	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
-		struct PingEntry entry = PingList_Entries[i];
-		if (!entry.TimeSent || !entry.TimeReceived) continue;
+	for (i = 0; i < Array_Elems(pingList_entries); i++) {
+		struct PingEntry entry = pingList_entries[i];
+		if (!entry.Sent || !entry.Recv) continue;
 
 		/* Half, because received->reply time is actually twice time it takes to send data */
-		totalMs += (entry.TimeReceived - entry.TimeSent) * 0.5;
+		totalMs += (entry.Recv - entry.Sent) * 0.5;
 		measures++;
 	}
 	return measures == 0 ? 0 : (int)(totalMs / measures);

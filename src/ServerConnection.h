@@ -41,8 +41,8 @@ struct Stream;
 struct IGameComponent;
 struct ScheduledTask;
 
-uint16_t PingList_NextPingData(void);
-void PingList_Update(uint16_t data);
+int PingList_NextPingData(void);
+void PingList_Update(int data);
 int PingList_AveragePingMs(void);
 
 bool ServerConnection_IsSinglePlayer;

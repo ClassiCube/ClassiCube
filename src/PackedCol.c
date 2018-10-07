@@ -58,7 +58,7 @@ void PackedCol_ToHex(String* str, PackedCol value) {
 }
 
 bool PackedCol_TryParseHex(const String* str, PackedCol* value) {
-	PackedCol empty = { 0 }; *value = empty;
+	value->Packed = 0;
 	/* accept XXYYZZ or #XXYYZZ forms */
 	if (str->length < 6) return false;
 	if (str->length > 6 && (str->buffer[0] != '#' || str->length > 7)) return false;

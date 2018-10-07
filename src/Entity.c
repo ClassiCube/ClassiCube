@@ -169,7 +169,7 @@ void Entity_UpdateModelBounds(struct Entity* e) {
 	Vector3_Mul3By(&bb->Max, &e->ModelScale);
 }
 
-bool Entity_TouchesAny(struct AABB* bounds, bool (*touches_condition)(BlockID block__)) {
+bool Entity_TouchesAny(struct AABB* bounds, Entity_TouchesCondition condition) {
 	Vector3I bbMin, bbMax;
 	Vector3I_Floor(&bbMin, &bounds->Min);
 	Vector3I_Floor(&bbMax, &bounds->Max);
@@ -189,7 +189,7 @@ bool Entity_TouchesAny(struct AABB* bounds, bool (*touches_condition)(BlockID bl
 				Vector3_Add(&blockBB.Max, &v, &Block_MaxBB[block]);
 
 				if (!AABB_Intersects(&blockBB, bounds)) continue;
-				if (touches_condition(block)) return true;
+				if (condition(block)) return true;
 			}
 		}
 	}
@@ -965,7 +965,7 @@ static void LocalPlayer_HandleRespawn(void) {
 		LocalPlayer_DoRespawn();
 	} else if (!p->_WarnedRespawn) {
 		p->_WarnedRespawn = true;
-		Chat_AddRaw("&cRespawning is disabled in this map");
+		Chat_AddRaw("&cRespawning is currently disabled");
 	}
 }
 
@@ -987,7 +987,7 @@ static void LocalPlayer_HandleFly(void) {
 		p->Hacks.Flying = !p->Hacks.Flying;
 	} else if(!p->_WarnedFly) {
 		p->_WarnedFly = true;
-		Chat_AddRaw("&cFlying is disabled in this map");
+		Chat_AddRaw("&cFlying is currently disabled");
 	}
 }
 
@@ -999,7 +999,7 @@ static void LocalPlayer_HandleNoClip(void) {
 		p->Hacks.Noclip = !p->Hacks.Noclip;
 	} else if (!p->_WarnedNoclip) {
 		p->_WarnedNoclip = true;
-		Chat_AddRaw("&cNoclip is disabled in this map");
+		Chat_AddRaw("&cNoclip is currently disabled");
 	}
 }
 

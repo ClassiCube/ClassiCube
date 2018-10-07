@@ -88,6 +88,7 @@ struct Entity {
 	struct AnimatedComp Anim;
 	char SkinNameRaw[STRING_SIZE];
 };
+typedef bool (*Entity_TouchesCondition)(BlockID block);
 
 void Entity_Init(struct Entity* entity);
 Vector3 Entity_GetEyePosition(struct Entity* entity);
@@ -97,7 +98,7 @@ void Entity_GetPickingBounds(struct Entity* entity, struct AABB* bb);
 void Entity_GetBounds(struct Entity* entity, struct AABB* bb);
 void Entity_SetModel(struct Entity* entity, const String* model);
 void Entity_UpdateModelBounds(struct Entity* entity);
-bool Entity_TouchesAny(struct AABB* bb, bool(*touches_condition)(BlockID block__));
+bool Entity_TouchesAny(struct AABB* bb, Entity_TouchesCondition cond);
 bool Entity_TouchesAnyRope(struct Entity* entity);	
 bool Entity_TouchesAnyLava(struct Entity* entity);
 bool Entity_TouchesAnyWater(struct Entity* entity);

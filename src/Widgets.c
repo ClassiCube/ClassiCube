@@ -1263,7 +1263,7 @@ NOINLINE_ static void InputWidget_Create(struct InputWidget* w, FontDesc* font, 
 	struct DrawTextArgs args; DrawTextArgs_Make(&args, &caret, font, true);
 	Drawer2D_MakeTextTexture(&w->CaretTex, &args, 0, 0);
 	w->CaretTex.Width = (uint16_t)((w->CaretTex.Width * 3) / 4);
-	w->CaretWidth     = (uint16_t)w->CaretTex.Width;
+	w->CaretWidth     = w->CaretTex.Width;
 
 	if (!prefix->length) return;
 	DrawTextArgs_Make(&args, prefix, font, true);
@@ -1949,19 +1949,18 @@ static void PlayerListWidget_AddGroup(struct PlayerListWidget* w, int id, int* i
 	w->NamesCount++;
 }
 
-static int PlayerListWidget_GetGroupCount(struct PlayerListWidget* w, int id, int idx) {
+static int PlayerListWidget_GetGroupCount(struct PlayerListWidget* w, int id, int i) {
 	String group = TabList_UNSAFE_GetGroup(id);
 	int count = 0;
 
-	while (idx < w->NamesCount) {
-		String curGroup = TabList_UNSAFE_GetGroup(w->IDs[idx]);
+	for (; i < w->NamesCount; i++, count++) {
+		String curGroup = TabList_UNSAFE_GetGroup(w->IDs[i]);
 		if (!String_CaselessEquals(&group, &curGroup)) return count;
-		idx++; count++;
 	}
 	return count;
 }
 
-static int PlayerListWidget_PlayerCompare(uint16_t x, uint16_t y) {
+static int PlayerListWidget_PlayerCompare(int x, int y) {
 	uint8_t xRank = TabList_GroupRanks[x];
 	uint8_t yRank = TabList_GroupRanks[y];
 	if (xRank != yRank) return (xRank < yRank ? -1 : 1);
@@ -1979,7 +1978,7 @@ static int PlayerListWidget_PlayerCompare(uint16_t x, uint16_t y) {
 	return String_Compare(&xName, &yName);
 }
 
-static int PlayerListWidget_GroupCompare(uint16_t x, uint16_t y) {
+static int PlayerListWidget_GroupCompare(int x, int y) {
 	/* TODO: should we use colourless comparison? ClassicalSharp sorts groups with colours */
 	String xGroup = TabList_UNSAFE_GetGroup(x);
 	String yGroup = TabList_UNSAFE_GetGroup(y);
@@ -1987,14 +1986,14 @@ static int PlayerListWidget_GroupCompare(uint16_t x, uint16_t y) {
 }
 
 struct PlayerListWidget* List_SortObj;
-int (*List_SortCompare)(uint16_t x, uint16_t y);
+int (*List_SortCompare)(int x, int y);
 static void PlayerListWidget_QuickSort(int left, int right) {
 	struct Texture* values = List_SortObj->Textures; struct Texture value;
 	uint16_t* keys = List_SortObj->IDs; uint16_t key;
 
 	while (left < right) {
 		int i = left, j = right;
-		uint16_t pivot = keys[(i + j) / 2];
+		int pivot = keys[(i + j) / 2];
 
 		/* partition the list */
 		while (i <= j) {
@@ -2026,10 +2025,10 @@ static void PlayerListWidget_SortEntries(struct PlayerListWidget* w) {
 	PlayerListWidget_QuickSort(0, w->NamesCount - 1);
 
 	/* Sort the entries in each group */
-	i = 0;
 	List_SortCompare = PlayerListWidget_PlayerCompare;
-	while (i < w->NamesCount) {
+	for (i = 0; i < w->NamesCount;) {
 		int id = w->IDs[i];
+
 		PlayerListWidget_AddGroup(w, id, &i);
 		int count = PlayerListWidget_GetGroupCount(w, id, i);
 		PlayerListWidget_QuickSort(i, i + (count - 1));
@@ -2220,7 +2219,7 @@ void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* w, int index, boo
 	w->PlaceholderHeight[index] = placeHolder;
 	if (w->Textures[index].ID) return;
 
-	uint16_t newHeight = placeHolder ? w->DefaultHeight : 0;
+	int newHeight = placeHolder ? w->DefaultHeight : 0;
 	w->Textures[index].Y = TextGroupWidget_CalcY(w, index, newHeight);
 	w->Textures[index].Height = newHeight;
 }
