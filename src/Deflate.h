@@ -31,11 +31,11 @@ ReturnCode ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header);
 #define INFLATE_WINDOW_MASK 0x7FFFUL
 
 struct HuffmanTable {
-	Int16 Fast[1 << INFLATE_FAST_BITS];      /* Fast lookup table for huffman codes */
-	UInt16 FirstCodewords[INFLATE_MAX_BITS]; /* Starting codeword for each bit length */
-	UInt16 EndCodewords[INFLATE_MAX_BITS];   /* (Last codeword + 1) for each bit length. 0 is ignored. */
-	UInt16 FirstOffsets[INFLATE_MAX_BITS];   /* Base offset into Values for codewords of each bit length. */
-	UInt16 Values[INFLATE_MAX_LITS];         /* Values/Symbols list */
+	int16_t Fast[1 << INFLATE_FAST_BITS];      /* Fast lookup table for huffman codes */
+	uint16_t FirstCodewords[INFLATE_MAX_BITS]; /* Starting codeword for each bit length */
+	uint16_t EndCodewords[INFLATE_MAX_BITS];   /* (Last codeword + 1) for each bit length. 0 is ignored. */
+	uint16_t FirstOffsets[INFLATE_MAX_BITS];   /* Base offset into Values for codewords of each bit length. */
+	uint16_t Values[INFLATE_MAX_LITS];         /* Values/Symbols list */
 };
 
 struct InflateState {
@@ -85,8 +85,8 @@ struct DeflateState {
 	
 	UInt8 Input[DEFLATE_BUFFER_SIZE];
 	UInt8 Output[DEFLATE_OUT_SIZE];
-	UInt16 Head[DEFLATE_HASH_SIZE];
-	UInt16 Prev[DEFLATE_BUFFER_SIZE];
+	uint16_t Head[DEFLATE_HASH_SIZE];
+	uint16_t Prev[DEFLATE_BUFFER_SIZE];
 	bool WroteHeader;
 };
 NOINLINE_ void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struct Stream* underlying);

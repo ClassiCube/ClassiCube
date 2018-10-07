@@ -198,8 +198,8 @@ struct TerrainParticle {
 
 struct TerrainParticle Terrain_Particles[PARTICLES_MAX];
 int Terrain_Count;
-UInt16 Terrain_1DCount[ATLAS1D_MAX_ATLASES];
-UInt16 Terrain_1DIndices[ATLAS1D_MAX_ATLASES];
+uint16_t Terrain_1DCount[ATLAS1D_MAX_ATLASES];
+uint16_t Terrain_1DIndices[ATLAS1D_MAX_ATLASES];
 
 static bool TerrainParticle_Tick(struct TerrainParticle* p, double delta) {
 	return Particle_PhysicsTick(&p->Base, 5.4f, true, delta);

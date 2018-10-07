@@ -241,7 +241,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	case WM_CHAR:
 	{
 		char keyChar;
-		if (Convert_TryUnicodeToCP437((UInt16)wParam, &keyChar)) {
+		if (Convert_TryUnicodeToCP437((Codepoint)wParam, &keyChar)) {
 			Event_RaiseInt(&KeyEvents_Press, keyChar);
 		}
 	} break;
@@ -448,7 +448,7 @@ void Window_GetClipboardText(String* value) {
 
 		char c;
 		if (isUnicode) {
-			UInt16* text = (UInt16*)src;
+			Codepoint* text = (Codepoint*)src;
 			for (; *text; text++) {
 				if (Convert_TryUnicodeToCP437(*text, &c)) String_Append(value, c);
 			}
@@ -474,10 +474,10 @@ void Window_SetClipboardText(const String* value) {
 			continue;
 		}
 
-		HANDLE hGlobal = GlobalAlloc(GMEM_MOVEABLE, (value->length + 1) * sizeof(UInt16));
+		HANDLE hGlobal = GlobalAlloc(GMEM_MOVEABLE, (value->length + 1) * 2);
 		if (!hGlobal) { CloseClipboard(); return; }
 
-		UInt16* text = GlobalLock(hGlobal);
+		Codepoint* text = GlobalLock(hGlobal);
 		for (i = 0; i < value->length; i++, text++) {
 			*text = Convert_CP437ToUnicode(value->buffer[i]);
 		}

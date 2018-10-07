@@ -596,9 +596,9 @@ void Window_ProcessEvents(void) {
 				int i, len = 0;
 
 				for (i = 0; i < clipboard_copy_text.length; i++) {
-					UInt16 codepoint = Convert_CP437ToUnicode(clipboard_copy_text.buffer[i]);
-					UInt8* cur = data + len;
-					len += Stream_WriteUtf8(cur, codepoint);
+					Codepoint cp = Convert_CP437ToUnicode(clipboard_copy_text.buffer[i]);
+					UInt8* cur   = data + len;
+					len += Stream_WriteUtf8(cur, cp);
 				}
 
 				XChangeProperty(win_display, reply.xselection.requestor, reply.xselection.property, xa_utf8_string, 8,

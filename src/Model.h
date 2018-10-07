@@ -14,12 +14,12 @@ struct AABB;
 enum ROTATE_ORDER { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX };
 
 /* Describes a vertex within a model. */
-struct ModelVertex { float X, Y, Z; UInt16 U, V; };
+struct ModelVertex { float X, Y, Z; uint16_t U, V; };
 void ModelVertex_Init(struct ModelVertex* vertex, float x, float y, float z, int u, int v);
 
 /* Describes the starting index of this part within a model's array of vertices,
 and the number of vertices following the starting index that this part uses. */
-struct ModelPart { UInt16 Offset, Count; float RotX, RotY, RotZ; };
+struct ModelPart { uint16_t Offset, Count; float RotX, RotY, RotZ; };
 void ModelPart_Init(struct ModelPart* part, int offset, int count, float rotX, float rotY, float rotZ);
 
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
@@ -83,10 +83,10 @@ void Model_DrawArmPart(struct ModelPart* part);
 
 /* Describes data for a box being built. */
 struct BoxDesc {
-	UInt16 TexX, TexY;         /* Texture origin */
-	UInt8 SizeX, SizeY, SizeZ; /* Texture dimensions */
-	float X1,Y1,Z1, X2,Y2,Z2;  /* Box corners coordinates */
-	float RotX,RotY,RotZ;      /* Rotation origin point */
+	uint16_t TexX, TexY;         /* Texture origin */
+	UInt8 SizeX, SizeY, SizeZ;   /* Texture dimensions */
+	float X1,Y1,Z1, X2,Y2,Z2;    /* Box corners coordinates */
+	float RotX,RotY,RotZ;        /* Rotation origin point */
 };
 
 /* Sets the texture origin for this part within the texture atlas. */

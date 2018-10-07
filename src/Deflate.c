@@ -169,7 +169,7 @@ static UInt32 Huffman_ReverseBits(UInt32 n, UInt8 bits) {
 	return n >> (16 - bits);
 }
 
-static void Huffman_Build(struct HuffmanTable* table, UInt8* bitLens, Int32 count) {
+static void Huffman_Build(struct HuffmanTable* table, UInt8* bitLens, int count) {
 	int i;
 	table->FirstCodewords[0] = 0;
 	table->FirstOffsets[0] = 0;
@@ -329,13 +329,13 @@ UInt8 fixed_dists[INFLATE_MAX_DISTS] = {
 	5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
 };
 
-UInt16 len_base[31] = { 3,4,5,6,7,8,9,10,11,13,
+uint16_t len_base[31] = { 3,4,5,6,7,8,9,10,11,13,
 15,17,19,23,27,31,35,43,51,59,
 67,83,99,115,131,163,195,227,258,0,0 };
 UInt8 len_bits[31] = { 0,0,0,0,0,0,0,0,1,1,
 1,1,2,2,2,2,3,3,3,3,
 4,4,4,4,5,5,5,5,0,0,0 };
-UInt16 dist_base[32] = { 1,2,3,4,5,7,9,13,17,25,
+uint16_t dist_base[32] = { 1,2,3,4,5,7,9,13,17,25,
 33,49,65,97,129,193,257,385,513,769,
 1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,0,0 };
 UInt8 dist_bits[32] = { 0,0,0,0,1,1,2,2,3,3,
@@ -699,8 +699,8 @@ void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struc
 #define Deflate_FlushBits(state) while (state->NumBits >= 8) { Deflate_WriteByte(state); }
 
 #define DEFLATE_MAX_MATCH_LEN 258
-static Int32 Deflate_MatchLen(UInt8* a, UInt8* b, Int32 maxLen) {
-	Int32 i = 0;
+static int Deflate_MatchLen(UInt8* a, UInt8* b, int maxLen) {
+	int i = 0;
 	while (i < maxLen && *a == *b) { i++; a++; b++; }
 	return i;
 }
@@ -709,14 +709,14 @@ static UInt32 Deflate_Hash(UInt8* src) {
 	return (UInt32)((src[0] << 8) ^ (src[1] << 4) ^ (src[2])) & DEFLATE_HASH_MASK;
 }
 
-static void Deflate_Lit(struct DeflateState* state, Int32 lit) {
+static void Deflate_Lit(struct DeflateState* state, int lit) {
 	if (lit <= 143) { Deflate_PushHuff(state, lit + 48, 8); } 
 	else { Deflate_PushHuff(state, lit + 256, 9); }
 	Deflate_FlushBits(state);
 }
 
-static void Deflate_LenDist(struct DeflateState* state, Int32 len, Int32 dist) {
-	Int32 j;
+static void Deflate_LenDist(struct DeflateState* state, int len, int dist) {
+	int j;
 	len_base[29]  = UInt16_MaxValue;
 	dist_base[30] = UInt16_MaxValue;
 	/* TODO: Remove this hack out into Deflate_FlushBlock */
@@ -755,21 +755,21 @@ static ReturnCode Deflate_FlushBlock(struct DeflateState* state, Int32 len) {
 
 	while (len > 3) {
 		UInt32 hash = Deflate_Hash(cur);
-		Int32 maxLen = min(len, DEFLATE_MAX_MATCH_LEN);
+		int maxLen = min(len, DEFLATE_MAX_MATCH_LEN);
 
-		Int32 bestLen = 3 - 1; /* Match must be at least 3 bytes */
-		Int32 bestPos = 0;
+		int bestLen = 3 - 1; /* Match must be at least 3 bytes */
+		int bestPos = 0;
 
-		Int32 pos = state->Head[hash];
+		int pos = state->Head[hash];
 		while (pos != 0) { /* TODO: Need to limit chain length here */
-			Int32 matchLen = Deflate_MatchLen(&src[pos], cur, maxLen);
+			int matchLen = Deflate_MatchLen(&src[pos], cur, maxLen);
 			if (matchLen > bestLen) { bestLen = matchLen; bestPos = pos; }
 			pos = state->Prev[pos];
 		}
 
 		/* Insert this entry into the hash chain */
-		pos = (Int32)(cur - src);
-		UInt16 oldHead = state->Head[hash];
+		pos = (int)(cur - src);
+		uint16_t oldHead = state->Head[hash];
 		state->Head[hash] = pos;
 		state->Prev[pos] = oldHead;
 
@@ -777,11 +777,11 @@ static ReturnCode Deflate_FlushBlock(struct DeflateState* state, Int32 len) {
 		/* If that's longer than the longest match at current byte, throwaway this match */
 		if (bestPos && len > 2) {
 			UInt32 nextHash = Deflate_Hash(cur + 1);
-			Int32 nextPos = state->Head[nextHash];
+			int nextPos = state->Head[nextHash];
 			maxLen = min(len - 1, DEFLATE_MAX_MATCH_LEN);
 
 			while (nextPos != 0) { /* TODO: Need to limit chain length here */
-				Int32 matchLen = Deflate_MatchLen(&src[nextPos], cur + 1, maxLen);
+				int matchLen = Deflate_MatchLen(&src[nextPos], cur + 1, maxLen);
 				if (matchLen > bestLen) { bestPos = 0; break; }
 				nextPos = state->Prev[nextPos];
 			}

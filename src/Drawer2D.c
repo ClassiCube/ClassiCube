@@ -20,7 +20,7 @@ void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, FontDesc* font, bool useS
 	args->UseShadow = useShadow;
 }
 
-void Drawer2D_MakeFont(FontDesc* desc, UInt16 size, UInt16 style) {
+void Drawer2D_MakeFont(FontDesc* desc, uint16_t size, uint16_t style) {
 	if (Drawer2D_BitmappedText) {
 		desc->Handle = NULL;
 		desc->Size   = size;
@@ -196,7 +196,7 @@ void Drawer2D_ReducePadding_Tex(struct Texture* tex, int point, int scale) {
 	int padding = (tex->Height - point) / scale;
 	float vAdj = (float)padding / Math_NextPowOf2(tex->Height);
 	tex->V1 += vAdj; tex->V2 -= vAdj;
-	tex->Height -= (UInt16)(padding * 2);
+	tex->Height -= (uint16_t)(padding * 2);
 }
 
 void Drawer2D_ReducePadding_Height(int* height, int point, int scale) {
@@ -245,9 +245,9 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 	String text = args->Text;
 	int point   = args->Font.Size, count = 0, i;
 
-	UInt8 coords[256];
+	uint8_t coords[256];
 	PackedCol cols[256];
-	UInt16 dstWidths[256];
+	uint16_t dstWidths[256];
 
 	for (i = 0; i < text.length; i++) {
 		char c = text.buffer[i];

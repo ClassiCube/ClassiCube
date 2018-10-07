@@ -12,8 +12,8 @@
 #define DATETIME_MILLISECS_PER_DAY (1000 * 60 * 60 * 24)
 
 #define DAYS_IN_400_YEARS 146097   /* (400*365) + 97 */
-UInt16 DateTime_DaysTotal[13]     = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
-UInt16 DateTime_DaysTotalLeap[13] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
+uint16_t DateTime_DaysTotal[13]     = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
+uint16_t DateTime_DaysTotalLeap[13] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
 
 static bool DateTime_IsLeapYear(int year) {
 	if ((year % 4)   != 0) return false;
@@ -71,7 +71,7 @@ void DateTime_FromTotalMs(DateTime* time, TimeMS ms) {
 	}
 	time->Year = year;
 
-	UInt16* totalDays = leap ? DateTime_DaysTotalLeap : DateTime_DaysTotal;
+	uint16_t* totalDays = leap ? DateTime_DaysTotalLeap : DateTime_DaysTotal;
 	int i;
 	for (i = 1; i <= 12; i++) {
 		if (days >= totalDays[i]) continue;

@@ -86,24 +86,24 @@ void ServerConnection_CheckAsyncResources(void) {
 *--------------------------------------------------------PingList---------------------------------------------------------*
 *#########################################################################################################################*/
 struct PingEntry {
-	int64_t TimeSent, TimeReceived; UInt16 Data;
+	int64_t TimeSent, TimeReceived; uint16_t Data;
 };
 struct PingEntry PingList_Entries[10];
 
-UInt16 PingList_Set(int i, UInt16 prev) {
-	PingList_Entries[i].Data = (UInt16)(prev + 1);
+uint16_t PingList_Set(int i, uint16_t prev) {
+	PingList_Entries[i].Data = (uint16_t)(prev + 1);
 	PingList_Entries[i].TimeSent = DateTime_CurrentUTC_MS();
 	PingList_Entries[i].TimeReceived = 0;
-	return (UInt16)(prev + 1);
+	return (uint16_t)(prev + 1);
 }
 
-UInt16 PingList_NextPingData(void) {
+uint16_t PingList_NextPingData(void) {
 	/* Find free ping slot */
 	int i;
 	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
 		if (PingList_Entries[i].TimeSent) continue;
 
-		UInt16 prev = i > 0 ? PingList_Entries[i - 1].Data : 0;
+		uint16_t prev = i > 0 ? PingList_Entries[i - 1].Data : 0;
 		return PingList_Set(i, prev);
 	}
 
@@ -115,7 +115,7 @@ UInt16 PingList_NextPingData(void) {
 	return PingList_Set(j, PingList_Entries[j].Data);
 }
 
-void PingList_Update(UInt16 data) {
+void PingList_Update(uint16_t data) {
 	int i;
 	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
 		if (PingList_Entries[i].Data != data) continue;
@@ -127,8 +127,7 @@ void PingList_Update(UInt16 data) {
 
 int PingList_AveragePingMs(void) {
 	double totalMs = 0.0;
-	int measures = 0;
-	int i;
+	int i, measures = 0;
 	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
 		struct PingEntry entry = PingList_Entries[i];
 		if (!entry.TimeSent || !entry.TimeReceived) continue;
@@ -460,8 +459,8 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	net_ticks++;
 }
 
-void Net_Set(UInt8 opcode, Net_Handler handler, UInt16 packetSize) {
-	Net_Handlers[opcode] = handler;
+void Net_Set(UInt8 opcode, Net_Handler handler, uint16_t packetSize) {
+	Net_Handlers[opcode]    = handler;
 	Net_PacketSizes[opcode] = packetSize;
 }
 

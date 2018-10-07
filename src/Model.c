@@ -7,8 +7,8 @@
 #include "GraphicsAPI.h"
 #include "Entity.h"
 
-#define UV_POS_MASK ((UInt16)0x7FFF)
-#define UV_MAX ((UInt16)0x8000)
+#define UV_POS_MASK ((uint16_t)0x7FFF)
+#define UV_MAX ((uint16_t)0x8000)
 #define UV_MAX_SHIFT 15
 #define AABB_Width(bb)  (bb->Max.X - bb->Min.X)
 #define AABB_Height(bb) (bb->Max.Y - bb->Min.Y)
@@ -16,7 +16,7 @@
 
 void ModelVertex_Init(struct ModelVertex* vertex, float x, float y, float z, int u, int v) {
 	vertex->X = x; vertex->Y = y; vertex->Z = z;
-	vertex->U = (UInt16)u; vertex->V = (UInt16)v;
+	vertex->U = (uint16_t)u; vertex->V = (uint16_t)v;
 }
 
 void ModelPart_Init(struct ModelPart* part, int offset, int count, float rotX, float rotY, float rotZ) {

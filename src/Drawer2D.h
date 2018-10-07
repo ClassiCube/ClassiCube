@@ -11,7 +11,7 @@ struct Texture;
 
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, FontDesc* font, bool useShadow);
 void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, FontDesc* font, bool useShadow);
-NOINLINE_ void Drawer2D_MakeFont(FontDesc* desc, UInt16 size, UInt16 style);
+NOINLINE_ void Drawer2D_MakeFont(FontDesc* desc, uint16_t size, uint16_t style);
 
 /* Whether chat text should be drawn and measuring using the currently bitmapped font, 
  false uses the font supplied as the DrawTextArgs argument supplied to the function. */

@@ -297,7 +297,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, int vertexFormat, int count) {
 	glNewList(list, GL_COMPILE);
 	count &= ~0x01; /* Need to get rid of the 1 extra element, see comment in chunk mesh builder for why */
 
-	UInt16 indices[GFX_MAX_INDICES];
+	uint16_t indices[GFX_MAX_INDICES];
 	GfxCommon_MakeIndices(indices, ICOUNT(count));
 
 	int stride = vertexFormat == VERTEX_FORMAT_P3FT2FC4B ? sizeof(VertexP3fT2fC4b) : sizeof(VertexP3fC4b);
@@ -317,7 +317,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, int vertexFormat, int count) {
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
 #ifndef CC_BUILD_GL11
 	GfxResourceID id = GL_GenAndBind(GL_ELEMENT_ARRAY_BUFFER);
-	UInt32 sizeInBytes = indicesCount * sizeof(UInt16);
+	UInt32 sizeInBytes = indicesCount * 2;
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (void*)sizeInBytes, indices, GL_STATIC_DRAW);
 	return id;
 #else

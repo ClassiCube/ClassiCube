@@ -28,7 +28,7 @@ struct VorbisState {
 	struct Stream* Source;  /* Source for filling Input buffer */
 
 	UInt8 Channels, ModeNumBits; 
-	UInt16 CurBlockSize, PrevBlockSize, DataSize, NumCodebooks;
+	uint16_t CurBlockSize, PrevBlockSize, DataSize, NumCodebooks;
 	Int32 SampleRate; Int32 BlockSizes[2];
 	float* Temp; /* temp array reused in places */
 	float* Values[2]; /* swapped each frame */

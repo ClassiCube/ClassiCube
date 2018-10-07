@@ -223,7 +223,7 @@ void Lighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newB
 /*########################################################################################################################*
 *---------------------------------------------------Lighting heightmap----------------------------------------------------*
 *#########################################################################################################################*/
-static int Lighting_InitialHeightmapCoverage(int x1, int z1, int xCount, int zCount, Int32* skip) {
+static int Lighting_InitialHeightmapCoverage(int x1, int z1, int xCount, int zCount, int32_t* skip) {
 	int elemsLeft = 0, index = 0, curRunCount = 0;
 	int x, z;
 
@@ -288,7 +288,7 @@ for (y = World_Height - 1; y >= 0; y--) {\
 	}\
 }
 
-static bool Lighting_CalculateHeightmapCoverage(int x1, int z1, int xCount, int zCount, int elemsLeft, Int32* skip) {
+static bool Lighting_CalculateHeightmapCoverage(int x1, int z1, int xCount, int zCount, int elemsLeft, int32_t* skip) {
 	int prevRunCount = 0;
 	int x, y, z;
 
@@ -322,7 +322,7 @@ void Lighting_LightHint(int startX, int startZ) {
 	int x1 = max(startX, 0), x2 = min(World_Width,  startX + EXTCHUNK_SIZE);
 	int z1 = max(startZ, 0), z2 = min(World_Length, startZ + EXTCHUNK_SIZE);
 	int xCount = x2 - x1, zCount = z2 - z1;
-	Int32 skip[EXTCHUNK_SIZE * EXTCHUNK_SIZE];
+	int32_t skip[EXTCHUNK_SIZE * EXTCHUNK_SIZE];
 
 	int elemsLeft = Lighting_InitialHeightmapCoverage(x1, z1, xCount, zCount, skip);
 	if (!Lighting_CalculateHeightmapCoverage(x1, z1, xCount, zCount, elemsLeft, skip)) {

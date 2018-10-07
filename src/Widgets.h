@@ -25,7 +25,7 @@ typedef void (*Button_Set)(const String* raw);
 struct ButtonWidget {
 	Widget_Layout
 	struct Texture Texture;
-	UInt16 MinWidth;
+	uint16_t MinWidth;
 
 	const char* OptName;
 	Button_Get GetValue;
@@ -89,16 +89,16 @@ struct InputWidget {
 	bool (*AllowedChar)(void* elem, char c);
 
 	String Text;
-	String Lines[INPUTWIDGET_MAX_LINES];            /* raw text of each line */
+	String Lines[INPUTWIDGET_MAX_LINES];     /* raw text of each line */
 	Size2D LineSizes[INPUTWIDGET_MAX_LINES]; /* size of each line in pixels */
 	struct Texture InputTex;
 	String Prefix;
-	UInt16 PrefixWidth, PrefixHeight;
+	uint16_t PrefixWidth, PrefixHeight;
 	bool ConvertPercents;
 
 	UInt8 Padding;
 	bool ShowCaret;
-	UInt16 CaretWidth;
+	uint16_t CaretWidth;
 	int CaretX, CaretY; /* Coordinates of caret in lines */
 	int CaretPos;       /* Position of caret, -1 for at end of string */
 	PackedCol CaretCol;
@@ -163,7 +163,7 @@ struct TextGroupWidget {
 	int LinesCount, DefaultHeight;
 	FontDesc Font, UnderlineFont;
 	bool PlaceholderHeight[TEXTGROUPWIDGET_MAX_LINES];
-	UInt8 LineLengths[TEXTGROUPWIDGET_MAX_LINES];
+	uint8_t LineLengths[TEXTGROUPWIDGET_MAX_LINES];
 	struct Texture* Textures;
 	char* Buffer;
 };
@@ -180,11 +180,11 @@ NOINLINE_ void TextGroupWidget_SetText(struct TextGroupWidget* w, int index, con
 struct PlayerListWidget {
 	Widget_Layout
 	FontDesc Font;
-	UInt16 NamesCount, ElementOffset;
+	uint16_t NamesCount, ElementOffset;
 	int XMin, XMax, YHeight;
 	bool Classic;
 	struct TextWidget Overview;
-	UInt16 IDs[TABLIST_MAX_NAMES * 2];
+	uint16_t IDs[TABLIST_MAX_NAMES * 2];
 	struct Texture Textures[TABLIST_MAX_NAMES * 2];
 };
 NOINLINE_ void PlayerListWidget_Create(struct PlayerListWidget* w, FontDesc* font, bool classic);

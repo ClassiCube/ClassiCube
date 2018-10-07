@@ -41,8 +41,8 @@ struct Stream;
 struct IGameComponent;
 struct ScheduledTask;
 
-UInt16 PingList_NextPingData(void);
-void PingList_Update(UInt16 data);
+uint16_t PingList_NextPingData(void);
+void PingList_Update(uint16_t data);
 int PingList_AveragePingMs(void);
 
 bool ServerConnection_IsSinglePlayer;
@@ -70,8 +70,8 @@ void ServerConnection_InitMultiplayer(void);
 void ServerConnection_MakeComponent(struct IGameComponent* comp);
 
 typedef void (*Net_Handler)(UInt8* data);
-UInt16 Net_PacketSizes[OPCODE_COUNT];
+uint16_t Net_PacketSizes[OPCODE_COUNT];
 Net_Handler Net_Handlers[OPCODE_COUNT];
-void Net_Set(UInt8 opcode, Net_Handler handler, UInt16 size);
+void Net_Set(UInt8 opcode, Net_Handler handler, uint16_t size);
 void Net_SendPacket(void);
 #endif

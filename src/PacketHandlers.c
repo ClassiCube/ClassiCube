@@ -775,7 +775,7 @@ static void CPE_WriteCustomBlockLevel(UInt8 version) {
 	ServerConnection_WriteBuffer = data;
 }
 
-static void CPE_WriteTwoWayPing(bool serverToClient, UInt16 payload) {
+static void CPE_WriteTwoWayPing(bool serverToClient, uint16_t payload) {
 	UInt8* data = ServerConnection_WriteBuffer; 
 	*data++ = OPCODE_TWO_WAY_PING;
 	{
@@ -1032,9 +1032,9 @@ static void CPE_RemoveSelection(UInt8* data) {
 
 static void CPE_SetEnvCol(UInt8* data) {
 	UInt8 variable = *data++;
-	UInt16 r = Stream_GetU16_BE(&data[0]);
-	UInt16 g = Stream_GetU16_BE(&data[2]);
-	UInt16 b = Stream_GetU16_BE(&data[4]);
+	uint16_t r = Stream_GetU16_BE(&data[0]);
+	uint16_t g = Stream_GetU16_BE(&data[2]);
+	uint16_t b = Stream_GetU16_BE(&data[4]);
 	bool invalid = r > 255 || g > 255 || b > 255;
 	PackedCol col = PACKEDCOL_CONST((UInt8)r, (UInt8)g, (UInt8)b, 255);
 
@@ -1095,7 +1095,7 @@ static void CPE_HackControl(UInt8* data) {
 	p->Hacks.CanUseThirdPersonCamera = *data++ != 0;
 	LocalPlayer_CheckHacksConsistency();
 
-	UInt16 jumpHeight = Stream_GetU16_BE(data);
+	int jumpHeight = Stream_GetU16_BE(data);
 	struct PhysicsComp* physics = &p->Physics;
 	if (jumpHeight == UInt16_MaxValue) { /* special value of -1 to reset default */
 		physics->JumpVel = HacksComp_CanJumpHigher(&p->Hacks) ? physics->UserJumpVel : 0.42f;
@@ -1267,7 +1267,7 @@ static void CPE_SetEntityProperty(UInt8* data) {
 
 static void CPE_TwoWayPing(UInt8* data) {
 	UInt8 serverToClient = *data++;
-	UInt16 payload       = Stream_GetU16_BE(data);
+	uint16_t payload     = Stream_GetU16_BE(data);
 
 	if (serverToClient) {
 		CPE_WriteTwoWayPing(true, payload); /* server to client reply */

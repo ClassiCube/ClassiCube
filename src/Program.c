@@ -83,13 +83,13 @@ int main(int argc, char** argv) {
 		String_Copy(&Game_Mppass,    &args[1]);
 		String_Copy(&Game_IPAddress, &args[2]);
 
-		UInt8 ip[4];
+		uint8_t ip[4];
 		if (!Utils_ParseIP(&args[2], ip)) { 
 			ErrorHandler_ShowDialog("Failed to start", "Invalid IP");
 			Platform_Exit(1); return 1; 
 		}
 		
-		UInt16 port;
+		uint16_t port;
 		if (!Convert_TryParseUInt16(&args[3], &port)) { 
 			ErrorHandler_ShowDialog("Failed to start", "Invalid port");
 			Platform_Exit(1); return 1;

@@ -1268,7 +1268,7 @@ static bool HUDScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 
 static void HUDScreen_Init(void* screen) {
 	struct HUDScreen* s = screen;
-	UInt16 size = Drawer2D_BitmappedText ? 16 : 11;
+	uint16_t size = Drawer2D_BitmappedText ? 16 : 11;
 	Drawer2D_MakeFont(&s->PlayerFont, size, FONT_STYLE_NORMAL);
 
 	ChatScreen_MakeInstance();

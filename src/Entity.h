@@ -115,9 +115,9 @@ void Entities_DrawShadows(void);
 
 #define TABLIST_MAX_NAMES 256
 StringsBuffer TabList_Buffer;
-UInt16 TabList_PlayerNames[TABLIST_MAX_NAMES];
-UInt16 TabList_ListNames[TABLIST_MAX_NAMES];
-UInt16 TabList_GroupNames[TABLIST_MAX_NAMES];
+uint16_t TabList_PlayerNames[TABLIST_MAX_NAMES];
+uint16_t TabList_ListNames[TABLIST_MAX_NAMES];
+uint16_t TabList_GroupNames[TABLIST_MAX_NAMES];
 UInt8  TabList_GroupRanks[TABLIST_MAX_NAMES];
 bool TabList_Valid(EntityID id);
 bool TabList_Remove(EntityID id);

@@ -87,7 +87,7 @@ void  Waitable_Wait(void* handle);
 void  Waitable_WaitFor(void* handle, UInt32 milliseconds);
 
 NOINLINE_ void Font_GetNames(StringsBuffer* buffer);
-NOINLINE_ void Font_Make(FontDesc* desc, const String* fontName, UInt16 size, UInt16 style);
+NOINLINE_ void Font_Make(FontDesc* desc, const String* fontName, uint16_t size, uint16_t style);
 NOINLINE_ void Font_Free(FontDesc* desc);
 NOINLINE_ Size2D Platform_TextMeasure(struct DrawTextArgs* args);
 NOINLINE_ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, PackedCol col);
@@ -108,7 +108,7 @@ ReturnCode Http_Do(struct AsyncRequest* req, volatile int* progress);
 ReturnCode Http_Free(void);
 
 #define AUDIO_MAX_CHUNKS 4
-struct AudioFormat { UInt16 Channels, BitsPerSample; int SampleRate; };
+struct AudioFormat { uint16_t Channels, BitsPerSample; int SampleRate; };
 #define AudioFormat_Eq(a, b) ((a)->Channels == (b)->Channels && (a)->BitsPerSample == (b)->BitsPerSample && (a)->SampleRate == (b)->SampleRate)
 typedef int AudioHandle;
 

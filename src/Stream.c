@@ -7,7 +7,7 @@
 /*########################################################################################################################*
 *---------------------------------------------------------Stream----------------------------------------------------------*
 *#########################################################################################################################*/
-ReturnCode Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count) {
+ReturnCode Stream_Read(struct Stream* stream, uint8_t* buffer, UInt32 count) {
 	UInt32 read;
 	while (count) {
 		ReturnCode res = stream->Read(stream, buffer, count, &read);
@@ -20,7 +20,7 @@ ReturnCode Stream_Read(struct Stream* stream, UInt8* buffer, UInt32 count) {
 	return 0;
 }
 
-ReturnCode Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count) {
+ReturnCode Stream_Write(struct Stream* stream, uint8_t* buffer, UInt32 count) {
 	UInt32 write;
 	while (count) {
 		ReturnCode res = stream->Write(stream, buffer, count, &write);
@@ -36,7 +36,7 @@ ReturnCode Stream_Write(struct Stream* stream, UInt8* buffer, UInt32 count) {
 ReturnCode Stream_Skip(struct Stream* stream, UInt32 count) {
 	ReturnCode res = stream->Seek(stream, count, STREAM_SEEKFROM_CURRENT);
 	if (!res) return 0;
-	UInt8 tmp[3584]; /* not quite 4 KB to avoid chkstk call */
+	uint8_t tmp[3584]; /* not quite 4 KB to avoid chkstk call */
 
 	while (count) {
 		UInt32 toRead = min(count, sizeof(tmp)), read;
@@ -49,10 +49,10 @@ ReturnCode Stream_Skip(struct Stream* stream, UInt32 count) {
 	return 0;
 }
 
-static ReturnCode Stream_DefaultIO(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode Stream_DefaultIO(struct Stream* stream, uint8_t* data, UInt32 count, UInt32* modified) {
 	*modified = 0; return ReturnCode_NotSupported;
 }
-ReturnCode Stream_DefaultReadU8(struct Stream* stream, UInt8* data) {
+ReturnCode Stream_DefaultReadU8(struct Stream* stream, uint8_t* data) {
 	UInt32 modified = 0;
 	ReturnCode res = stream->Read(stream, data, 1, &modified);
 	return res ? res : (modified ? 0 : ERR_END_OF_STREAM);
@@ -80,10 +80,10 @@ void Stream_Init(struct Stream* stream) {
 /*########################################################################################################################*
 *-------------------------------------------------------FileStream--------------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode Stream_FileRead(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode Stream_FileRead(struct Stream* stream, uint8_t* data, UInt32 count, UInt32* modified) {
 	return File_Read(stream->Meta.File, data, count, modified);
 }
-static ReturnCode Stream_FileWrite(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode Stream_FileWrite(struct Stream* stream, uint8_t* data, UInt32 count, UInt32* modified) {
 	return File_Write(stream->Meta.File, data, count, modified);
 }
 static ReturnCode Stream_FileClose(struct Stream* stream) {
@@ -117,7 +117,7 @@ void Stream_FromFile(struct Stream* stream, void* file) {
 /*########################################################################################################################*
 *-----------------------------------------------------PortionStream-------------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode Stream_PortionRead(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode Stream_PortionRead(struct Stream* stream, uint8_t* data, UInt32 count, UInt32* modified) {
 	count = min(count, stream->Meta.Mem.Left);
 	struct Stream* source = stream->Meta.Portion.Source;
 	ReturnCode code = source->Read(source, data, count, modified);
@@ -125,7 +125,7 @@ static ReturnCode Stream_PortionRead(struct Stream* stream, UInt8* data, UInt32 
 	return code;
 }
 
-static ReturnCode Stream_PortionReadU8(struct Stream* stream, UInt8* data) {
+static ReturnCode Stream_PortionReadU8(struct Stream* stream, uint8_t* data) {
 	if (!stream->Meta.Mem.Left) return ERR_END_OF_STREAM;
 	stream->Meta.Mem.Left--;
 	struct Stream* source = stream->Meta.Portion.Source;
@@ -155,7 +155,7 @@ void Stream_ReadonlyPortion(struct Stream* stream, struct Stream* source, UInt32
 /*########################################################################################################################*
 *-----------------------------------------------------MemoryStream--------------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode Stream_MemoryRead(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode Stream_MemoryRead(struct Stream* stream, uint8_t* data, UInt32 count, UInt32* modified) {
 	count = min(count, stream->Meta.Mem.Left);
 	if (count) { Mem_Copy(data, stream->Meta.Mem.Cur, count); }
 	
@@ -164,7 +164,7 @@ static ReturnCode Stream_MemoryRead(struct Stream* stream, UInt8* data, UInt32 c
 	return 0;
 }
 
-static ReturnCode Stream_MemoryReadU8(struct Stream* stream, UInt8* data) {
+static ReturnCode Stream_MemoryReadU8(struct Stream* stream, uint8_t* data) {
 	if (!stream->Meta.Mem.Left) return ERR_END_OF_STREAM;
 
 	*data = *stream->Meta.Mem.Cur;
@@ -172,7 +172,7 @@ static ReturnCode Stream_MemoryReadU8(struct Stream* stream, UInt8* data) {
 	return 0;
 }
 
-static ReturnCode Stream_MemoryWrite(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode Stream_MemoryWrite(struct Stream* stream, uint8_t* data, UInt32 count, UInt32* modified) {
 	count = min(count, stream->Meta.Mem.Left);
 	if (count) { Mem_Copy(stream->Meta.Mem.Cur, data, count); }
 
@@ -230,7 +230,7 @@ void Stream_WriteonlyMemory(struct Stream* stream, void* data, UInt32 len) {
 /*########################################################################################################################*
 *----------------------------------------------------BufferedStream-------------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode Stream_BufferedRead(struct Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode Stream_BufferedRead(struct Stream* stream, uint8_t* data, UInt32 count, UInt32* modified) {
 	if (stream->Meta.Buffered.Left == 0) {
 		struct Stream* source = stream->Meta.Buffered.Source; 
 		stream->Meta.Buffered.Cur = stream->Meta.Buffered.Base;
@@ -243,7 +243,7 @@ static ReturnCode Stream_BufferedRead(struct Stream* stream, UInt8* data, UInt32
 	return Stream_MemoryRead(stream, data, count, modified);
 }
 
-static ReturnCode Stream_BufferedReadU8(struct Stream* stream, UInt8* data) {
+static ReturnCode Stream_BufferedReadU8(struct Stream* stream, uint8_t* data) {
 	if (stream->Meta.Buffered.Left) return Stream_MemoryReadU8(stream, data);
 	return Stream_DefaultReadU8(stream, data);
 }
@@ -264,48 +264,48 @@ void Stream_ReadonlyBuffered(struct Stream* stream, struct Stream* source, void*
 /*########################################################################################################################*
 *-------------------------------------------------Read/Write primitives---------------------------------------------------*
 *#########################################################################################################################*/
-UInt16 Stream_GetU16_LE(UInt8* data) {
-	return (UInt16)(data[0] | (data[1] << 8));
+uint16_t Stream_GetU16_LE(uint8_t* data) {
+	return (uint16_t)(data[0] | (data[1] << 8));
 }
 
-UInt16 Stream_GetU16_BE(UInt8* data) {
-	return (UInt16)((data[0] << 8) | data[1]);
+uint16_t Stream_GetU16_BE(uint8_t* data) {
+	return (uint16_t)((data[0] << 8) | data[1]);
 }
 
-UInt32 Stream_GetU32_LE(UInt8* data) {
+UInt32 Stream_GetU32_LE(uint8_t* data) {
 	return (UInt32)(
 		 (UInt32)data[0]        | ((UInt32)data[1] << 8) |
 		((UInt32)data[2] << 16) | ((UInt32)data[3] << 24));
 }
 
-UInt32 Stream_GetU32_BE(UInt8* data) {
+UInt32 Stream_GetU32_BE(uint8_t* data) {
 	return (UInt32)(
 		((UInt32)data[0] << 24) | ((UInt32)data[1] << 16) |
 		((UInt32)data[2] << 8)  |  (UInt32)data[3]);
 }
 
-void Stream_SetU16_BE(UInt8* data, UInt16 value) {
-	data[0] = (UInt8)(value >> 8 ); data[1] = (UInt8)(value      );
+void Stream_SetU16_BE(uint8_t* data, uint16_t value) {
+	data[0] = (uint8_t)(value >> 8 ); data[1] = (uint8_t)(value      );
 }
 
-void Stream_SetU32_LE(UInt8* data, UInt32 value) {
-	data[0] = (UInt8)(value      ); data[1] = (UInt8)(value >> 8 );
-	data[2] = (UInt8)(value >> 16); data[3] = (UInt8)(value >> 24);
+void Stream_SetU32_LE(uint8_t* data, UInt32 value) {
+	data[0] = (uint8_t)(value      ); data[1] = (uint8_t)(value >> 8 );
+	data[2] = (uint8_t)(value >> 16); data[3] = (uint8_t)(value >> 24);
 }
 
-void Stream_SetU32_BE(UInt8* data, UInt32 value) {
-	data[0] = (UInt8)(value >> 24); data[1] = (UInt8)(value >> 16);
-	data[2] = (UInt8)(value >> 8 ); data[3] = (UInt8)(value);
+void Stream_SetU32_BE(uint8_t* data, UInt32 value) {
+	data[0] = (uint8_t)(value >> 24); data[1] = (uint8_t)(value >> 16);
+	data[2] = (uint8_t)(value >> 8 ); data[3] = (uint8_t)(value);
 }
 
 ReturnCode Stream_ReadU32_LE(struct Stream* stream, UInt32* value) {
-	UInt8 data[4]; ReturnCode res;
+	uint8_t data[4]; ReturnCode res;
 	if ((res = Stream_Read(stream, data, 4))) return res;
 	*value = Stream_GetU32_LE(data); return 0;
 }
 
 ReturnCode Stream_ReadU32_BE(struct Stream* stream, UInt32* value) {
-	UInt8 data[4]; ReturnCode res;
+	uint8_t data[4]; ReturnCode res;
 	if ((res = Stream_Read(stream, data, 4))) return res;
 	*value = Stream_GetU32_BE(data); return 0;
 }
@@ -314,13 +314,13 @@ ReturnCode Stream_ReadU32_BE(struct Stream* stream, UInt32* value) {
 /*########################################################################################################################*
 *--------------------------------------------------Read/Write strings-----------------------------------------------------*
 *#########################################################################################################################*/
-ReturnCode Stream_ReadUtf8(struct Stream* stream, UInt16* codepoint) {
-	UInt8 data;
+ReturnCode Stream_ReadUtf8(struct Stream* stream, Codepoint* cp) {
+	uint8_t data;
 	ReturnCode res = stream->ReadU8(stream, &data);
 	if (res) return res;
 
 	/* Header byte is just the raw codepoint (common case) */
-	if (data <= 0x7F) { *codepoint = data; return 0; }
+	if (data <= 0x7F) { *cp = data; return 0; }
 
 	/* Header byte encodes variable number of following bytes */
 	/* The remaining bits of the header form first part of the character */
@@ -328,19 +328,19 @@ ReturnCode Stream_ReadUtf8(struct Stream* stream, UInt16* codepoint) {
 	for (i = 7; i >= 0; i--) {
 		if (data & (1 << i)) {
 			byteCount++;
-			data &= (UInt8)~(1 << i);
+			data &= (uint8_t)~(1 << i);
 		} else {
 			break;
 		}
 	}
 
-	*codepoint = data;
+	*cp = data;
 	for (i = 0; i < byteCount - 1; i++) {
 		if ((res = stream->ReadU8(stream, &data))) return res;
 
-		*codepoint <<= 6;
+		*cp <<= 6;
 		/* Top two bits of each are always 10 */
-		*codepoint |= (UInt16)(data & 0x3F);
+		*cp |= (Codepoint)(data & 0x3F);
 	}
 	return 0;
 }
@@ -348,41 +348,41 @@ ReturnCode Stream_ReadUtf8(struct Stream* stream, UInt16* codepoint) {
 ReturnCode Stream_ReadLine(struct Stream* stream, String* text) {
 	text->length = 0;
 	bool readAny = false;
-	UInt16 codepoint;
+	Codepoint cp;
 
 	for (;;) {	
-		ReturnCode res = Stream_ReadUtf8(stream, &codepoint);
+		ReturnCode res = Stream_ReadUtf8(stream, &cp);
 		if (res == ERR_END_OF_STREAM) break;
 		if (res) return res;
 
 		readAny = true;
 		/* Handle \r\n or \n line endings */
-		if (codepoint == '\r') continue;
-		if (codepoint == '\n') return 0;
-		String_Append(text, Convert_UnicodeToCP437(codepoint));
+		if (cp == '\r') continue;
+		if (cp == '\n') return 0;
+		String_Append(text, Convert_UnicodeToCP437(cp));
 	}
 	return readAny ? 0 : ERR_END_OF_STREAM;
 }
 
-int Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint) {
-	if (codepoint <= 0x7F) {
-		buffer[0] = (UInt8)codepoint;
+int Stream_WriteUtf8(uint8_t* buffer, Codepoint cp) {
+	if (cp <= 0x7F) {
+		buffer[0] = (uint8_t)cp;
 		return 1;
-	} else if (codepoint <= 0x7FF) {
-		buffer[0] = 0xC0 | ((codepoint >> 6) & 0x1F);
-		buffer[1] = 0x80 | ((codepoint)      & 0x3F);
+	} else if (cp <= 0x7FF) {
+		buffer[0] = 0xC0 | ((cp >> 6) & 0x1F);
+		buffer[1] = 0x80 | ((cp)      & 0x3F);
 		return 2;
 	} else {
-		buffer[0] = 0xE0 | ((codepoint >> 12) & 0x0F);
-		buffer[1] = 0x80 | ((codepoint >> 6)  & 0x3F);
-		buffer[2] = 0x80 | ((codepoint)       & 0x3F);
+		buffer[0] = 0xE0 | ((cp >> 12) & 0x0F);
+		buffer[1] = 0x80 | ((cp >> 6)  & 0x3F);
+		buffer[2] = 0x80 | ((cp)       & 0x3F);
 		return 3;
 	}
 }
 
 ReturnCode Stream_WriteLine(struct Stream* stream, String* text) {
-	UInt8 buffer[2048 + 10];
-	UInt32 i, j = 0;
+	uint8_t buffer[2048 + 10];
+	int i, j = 0;
 	ReturnCode res;
 
 	for (i = 0; i < text->length; i++) {
@@ -392,12 +392,12 @@ ReturnCode Stream_WriteLine(struct Stream* stream, String* text) {
 			j = 0;
 		}
 
-		UInt8* cur = buffer + j;
-		UInt16 codepoint = Convert_CP437ToUnicode(text->buffer[i]);
-		j += Stream_WriteUtf8(cur, codepoint);
+		uint8_t* cur   = buffer + j;
+		Codepoint cp = Convert_CP437ToUnicode(text->buffer[i]);
+		j += Stream_WriteUtf8(cur, cp);
 	}
 	
-	UInt8* ptr = Platform_NewLine;
+	uint8_t* ptr = Platform_NewLine;
 	while (*ptr) { buffer[j++] = *ptr++; }
 	return Stream_Write(stream, buffer, j);
 }

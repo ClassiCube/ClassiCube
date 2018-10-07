@@ -414,7 +414,7 @@ cleanup:
 #define MUSIC_MAX_FILES 512
 static void Music_RunLoop(void) {
 	int i, count = 0;
-	UInt16 musicFiles[MUSIC_MAX_FILES];
+	uint16_t musicFiles[MUSIC_MAX_FILES];
 	String ogg = String_FromConst(".ogg");
 
 	for (i = 0; i < files.Count && count < MUSIC_MAX_FILES; i++) {

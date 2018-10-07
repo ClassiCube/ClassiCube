@@ -202,13 +202,13 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 }
 
 static void Platform_FromSysTime(DateTime* time, SYSTEMTIME* sysTime) {
-	time->Year   = (UInt16)sysTime->wYear;
+	time->Year   = (uint16_t)sysTime->wYear;
 	time->Month  =  (UInt8)sysTime->wMonth;
 	time->Day    =  (UInt8)sysTime->wDay;
 	time->Hour   =  (UInt8)sysTime->wHour;
 	time->Minute =  (UInt8)sysTime->wMinute;
 	time->Second =  (UInt8)sysTime->wSecond;
-	time->Milli  = (UInt16)sysTime->wMilliseconds;
+	time->Milli  = (uint16_t)sysTime->wMilliseconds;
 }
 
 void DateTime_CurrentUTC(DateTime* time) {
@@ -454,7 +454,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 		if (src[0] == '.' && src[1] == '\0') continue;
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 
-		UInt16 len = String_CalcLen(src, UInt16_MaxValue);
+		int len = String_CalcLen(src, UInt16_MaxValue);
 		String_DecodeUtf8(&path, src, len);
 
 		/* TODO: fallback to stat when this fails */
@@ -726,7 +726,7 @@ void Font_GetNames(StringsBuffer* buffer) {
 	}
 }
 
-void Font_Make(FontDesc* desc, const String* fontName, UInt16 size, UInt16 style) {
+void Font_Make(FontDesc* desc, const String* fontName, uint16_t size, uint16_t style) {
 	desc->Size  = size;
 	desc->Style = style;
 	if (!norm_fonts.Count) Font_Init();
@@ -806,13 +806,13 @@ static void Font_DirCallback(const String* srcPath, void* obj) {
 #define TEXT_CEIL(x) (((x) + 63) >> 6)
 Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
 	FT_Face face = args->Font.Handle;
-	String text = args->Text;
+	String text  = args->Text;
 	Size2D s = { 0, face->size->metrics.height };
 	int i;
 
 	for (i = 0; i < text.length; i++) {
-		UInt16 c = Convert_CP437ToUnicode(text.buffer[i]);
-		FT_Load_Char(face, c, 0); /* TODO: Check error */
+		Codepoint cp = Convert_CP437ToUnicode(text.buffer[i]);
+		FT_Load_Char(face, cp, 0); /* TODO: Check error */
 		s.Width += face->glyph->advance.x;
 	}
 
@@ -828,8 +828,8 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, P
 	int i, descender = TEXT_CEIL(face->size->metrics.descender);
 
 	for (i = 0; i < text.length; i++) {
-		UInt16 c = Convert_CP437ToUnicode(text.buffer[i]);
-		FT_Load_Char(face, c, FT_LOAD_RENDER); /* TODO: Check error */
+		Codepoint cp = Convert_CP437ToUnicode(text.buffer[i]);
+		FT_Load_Char(face, cp, FT_LOAD_RENDER); /* TODO: Check error */
 
 		FT_Bitmap* img = &face->glyph->bitmap;
 		int xx, yy, offset = s.Height + descender - face->glyph->bitmap_top;
@@ -1694,8 +1694,8 @@ void Platform_ConvertString(void* dstPtr, const String* src) {
 
 	int i;
 	for (i = 0; i < src->length; i++) {
-		UInt16 codepoint = Convert_CP437ToUnicode(src->buffer[i]);
-		int len = Stream_WriteUtf8(dst, codepoint); dst += len;
+		Codepoint cp = Convert_CP437ToUnicode(src->buffer[i]);
+		int len = Stream_WriteUtf8(dst, cp); dst += len;
 	}
 	*dst = '\0';
 }

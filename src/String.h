@@ -16,29 +16,29 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 char Char_ToLower(char c);
 
 typedef struct String_ {	
-	char* buffer;    /* Pointer to characters, NOT NULL TERMINATED */
-	UInt16 length;   /* Number of characters used */
-	UInt16 capacity; /* Max number of characters  */
+	char* buffer;      /* Pointer to characters, NOT NULL TERMINATED */
+	uint16_t length;   /* Number of characters used */
+	uint16_t capacity; /* Max number of characters  */
 } String;
 
-UInt16 String_CalcLen(const char* raw, UInt16 capacity);
+uint16_t String_CalcLen(const char* raw, uint16_t capacity);
 String String_MakeNull(void);
-String String_Init(STRING_REF char* buffer, UInt16 length, UInt16 capacity);
-String String_InitAndClear(STRING_REF char* buffer, UInt16 capacity);
+String String_Init(STRING_REF char* buffer, uint16_t length, uint16_t capacity);
+String String_InitAndClear(STRING_REF char* buffer, uint16_t capacity);
 /* Constructs a new string from a (maybe null terminated) buffer. */
-NOINLINE_ String String_FromRaw(STRING_REF char* buffer, UInt16 capacity);
+NOINLINE_ String String_FromRaw(STRING_REF char* buffer, uint16_t capacity);
 /* Constructs a new string from a null-terminated constant readonly buffer. */
 NOINLINE_ String String_FromReadonly(STRING_REF const char* buffer);
 
-#define String_ClearedArray(buffer) String_InitAndClear(buffer, (UInt16)sizeof(buffer))
+#define String_ClearedArray(buffer) String_InitAndClear(buffer, (uint16_t)sizeof(buffer))
 /* Constructs a string from a compile time string constant */
-#define String_FromConst(text) { text, (UInt16)(sizeof(text) - 1), (UInt16)(sizeof(text) - 1)}
+#define String_FromConst(text) { text, (uint16_t)(sizeof(text) - 1), (uint16_t)(sizeof(text) - 1)}
 /* Constructs a string from a compile time array */
-#define String_FromArray(buffer) { buffer, 0, (UInt16)sizeof(buffer)}
+#define String_FromArray(buffer) { buffer, 0, (uint16_t)sizeof(buffer)}
 /* Constructs a string from a compile time array, that may have arbitary actual length of data at runtime */
-#define String_FromRawArray(buffer) String_FromRaw(buffer, (UInt16)sizeof(buffer))
+#define String_FromRawArray(buffer) String_FromRaw(buffer, (uint16_t)sizeof(buffer))
 /* Constructs a string from a compile time array (leaving 1 byte of room for null terminator) */
-#define String_NT_Array(buffer) { buffer, 0, (UInt16)(sizeof(buffer) - 1)}
+#define String_NT_Array(buffer) { buffer, 0, (uint16_t)(sizeof(buffer) - 1)}
 
 NOINLINE_ void String_StripCols(String* str);
 NOINLINE_ void String_Copy(String* dst, const String* src);
@@ -82,14 +82,14 @@ void String_Format2(String* str, const char* format, const void* a1, const void*
 void String_Format3(String* str, const char* format, const void* a1, const void* a2, const void* a3);
 void String_Format4(String* str, const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
 
-UInt16 Convert_CP437ToUnicode(char c);
-char Convert_UnicodeToCP437(UInt16 c);
-bool Convert_TryUnicodeToCP437(UInt16 c, char* value);
+Codepoint Convert_CP437ToUnicode(char c);
+char Convert_UnicodeToCP437(Codepoint cp);
+bool Convert_TryUnicodeToCP437(Codepoint cp, char* value);
 void String_DecodeUtf8(String* str, UInt8* data, UInt32 len);
 
 NOINLINE_ bool Convert_TryParseUInt8(const String*  str, UInt8* value);
 NOINLINE_ bool Convert_TryParseInt16(const String*  str, Int16* value);
-NOINLINE_ bool Convert_TryParseUInt16(const String* str, UInt16* value);
+NOINLINE_ bool Convert_TryParseUInt16(const String* str, uint16_t* value);
 NOINLINE_ bool Convert_TryParseInt32(const String*  str, Int32* value);
 NOINLINE_ bool Convert_TryParseUInt64(const String* str, UInt64* value);
 NOINLINE_ bool Convert_TryParseFloat(const String* str, float* value);

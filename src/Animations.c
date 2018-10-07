@@ -135,11 +135,11 @@ static void WaterAnimation_Tick(UInt32* ptr, int size) {
 *-------------------------------------------------------Animations--------------------------------------------------------*
 *#########################################################################################################################*/
 struct AnimationData {
-	TextureLoc TexLoc;     /* Tile (not pixel) coordinates in terrain.png */
-	UInt16 FrameX, FrameY; /* Top left pixel coordinates of start frame in animatons.png */
-	UInt16 FrameSize;      /* Size of each frame in pixel coordinates */
-	UInt16 State;          /* Current animation frame index */
-	UInt16 StatesCount;    /* Total number of animation frames */
+	TextureLoc TexLoc;       /* Tile (not pixel) coordinates in terrain.png */
+	uint16_t FrameX, FrameY; /* Top left pixel coordinates of start frame in animatons.png */
+	uint16_t FrameSize;      /* Size of each frame in pixel coordinates */
+	uint16_t State;          /* Current animation frame index */
+	uint16_t StatesCount;    /* Total number of animation frames */
 	Int16 Tick, TickDelay;
 };
 

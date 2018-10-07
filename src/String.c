@@ -11,31 +11,31 @@ char Char_ToLower(char c) {
 	return c;
 }
 
-String String_Init(STRING_REF char* buffer, UInt16 length, UInt16 capacity) {
+String String_Init(STRING_REF char* buffer, uint16_t length, uint16_t capacity) {
 	String str = { buffer, length, capacity }; return str;
 }
 
-String String_InitAndClear(STRING_REF char* buffer, UInt16 capacity) {
+String String_InitAndClear(STRING_REF char* buffer, uint16_t capacity) {
 	String str = String_Init(buffer, 0, capacity);	
 	int i;
 	for (i = 0; i < capacity; i++) { buffer[i] = '\0'; }
 	return str;
 }
 
-UInt16 String_CalcLen(const char* raw, UInt16 capacity) {
-	UInt16 length = 0;
+uint16_t String_CalcLen(const char* raw, uint16_t capacity) {
+	uint16_t length = 0;
 	while (length < capacity && *raw) { raw++; length++; }
 	return length;
 }
 
 String String_MakeNull(void) { return String_Init(NULL, 0, 0); }
 
-String String_FromRaw(STRING_REF char* buffer, UInt16 capacity) {
+String String_FromRaw(STRING_REF char* buffer, uint16_t capacity) {
 	return String_Init(buffer, String_CalcLen(buffer, capacity), capacity);
 }
 
 String String_FromReadonly(STRING_REF const char* buffer) {
-	UInt16 len = String_CalcLen(buffer, UInt16_MaxValue);
+	uint16_t len = String_CalcLen(buffer, UInt16_MaxValue);
 	return String_Init(buffer, len, len);
 }
 
@@ -473,14 +473,14 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 /*########################################################################################################################*
 *-------------------------------------------------------Conversions-------------------------------------------------------*
 *#########################################################################################################################*/
-UInt16 Convert_ControlChars[32] = {
+Codepoint Convert_ControlChars[32] = {
 	0x0000, 0x263A, 0x263B, 0x2665, 0x2666, 0x2663, 0x2660, 0x2022,
 	0x25D8, 0x25CB, 0x25D9, 0x2642, 0x2640, 0x266A, 0x266B, 0x263C,
 	0x25BA, 0x25C4, 0x2195, 0x203C, 0x00B6, 0x00A7, 0x25AC, 0x21A8,
 	0x2191, 0x2193, 0x2192, 0x2190, 0x221F, 0x2194, 0x25B2, 0x25BC
 };
 
-UInt16 Convert_ExtendedChars[129] = { 0x2302,
+Codepoint Convert_ExtendedChars[129] = { 0x2302,
 0x00C7, 0x00FC, 0x00E9, 0x00E2, 0x00E4, 0x00E0, 0x00E5, 0x00E7,
 0x00EA, 0x00EB, 0x00E8, 0x00EF, 0x00EE, 0x00EC, 0x00C4, 0x00C5,
 0x00C9, 0x00E6, 0x00C6, 0x00F4, 0x00F6, 0x00F2, 0x00FB, 0x00F9,
@@ -499,26 +499,26 @@ UInt16 Convert_ExtendedChars[129] = { 0x2302,
 0x00B0, 0x2219, 0x00B7, 0x221A, 0x207F, 0x00B2, 0x25A0, 0x00A0
 };
 
-UInt16 Convert_CP437ToUnicode(char c) {
+Codepoint Convert_CP437ToUnicode(char c) {
 	UInt8 raw = (UInt8)c;
 	if (raw < 0x20) return Convert_ControlChars[raw];
 	if (raw < 0x7F) return raw;
 	return Convert_ExtendedChars[raw - 0x7F];
 }
 
-char Convert_UnicodeToCP437(UInt16 c) {
-	char value; Convert_TryUnicodeToCP437(c, &value); return value;
+char Convert_UnicodeToCP437(Codepoint cp) {
+	char value; Convert_TryUnicodeToCP437(cp, &value); return value;
 }
 
-bool Convert_TryUnicodeToCP437(UInt16 c, char* value) {
-	if (c >= 0x20 && c < 0x7F) { *value = (char)c; return true; }
+bool Convert_TryUnicodeToCP437(Codepoint cp, char* value) {
+	if (cp >= 0x20 && cp < 0x7F) { *value = (char)cp; return true; }
 	UInt32 i;
 
 	for (i = 0; i < Array_Elems(Convert_ControlChars); i++) {
-		if (Convert_ControlChars[i] == c) { *value = i; return true; }
+		if (Convert_ControlChars[i] == cp) { *value = i; return true; }
 	}
 	for (i = 0; i < Array_Elems(Convert_ExtendedChars); i++) {
-		if (Convert_ExtendedChars[i] == c) { *value = i + 0x7F; return true; }
+		if (Convert_ExtendedChars[i] == cp) { *value = i + 0x7F; return true; }
 	}
 
 	*value = '?'; return false;
@@ -526,12 +526,12 @@ bool Convert_TryUnicodeToCP437(UInt16 c, char* value) {
 
 void String_DecodeUtf8(String* str, UInt8* data, UInt32 len) {
 	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len);
-	UInt16 codepoint;
+	Codepoint cp;
 
 	while (mem.Meta.Mem.Left) {
-		ReturnCode res = Stream_ReadUtf8(&mem, &codepoint);
+		ReturnCode res = Stream_ReadUtf8(&mem, &cp);
 		if (res) break; /* Memory read only returns ERR_END_OF_STREAM */
-		String_Append(str, Convert_UnicodeToCP437(codepoint));
+		String_Append(str, Convert_UnicodeToCP437(cp));
 	}
 }
 
@@ -547,10 +547,10 @@ bool Convert_TryParseInt16(const String* str, Int16* value) {
 	*value = (Int16)tmp; return true;
 }
 
-bool Convert_TryParseUInt16(const String* str, UInt16* value) {
+bool Convert_TryParseUInt16(const String* str, uint16_t* value) {
 	*value = 0; Int32 tmp;
 	if (!Convert_TryParseInt32(str, &tmp) || tmp < 0 || tmp > UInt16_MaxValue) return false;
-	*value = (UInt16)tmp; return true;
+	*value = (uint16_t)tmp; return true;
 }
 
 static int Convert_CompareDigits(const char* digits, const char* magnitude) {

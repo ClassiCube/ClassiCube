@@ -155,7 +155,7 @@ static ReturnCode Fcm_ReadString(struct Stream* stream) {
 	ReturnCode res;
 	if ((res = Stream_Read(stream, data, sizeof(data)))) return res;
 
-	UInt16 len = Stream_GetU16_LE(data);
+	int len = Stream_GetU16_LE(data);
 	return Stream_Skip(stream, len);
 }
 
@@ -258,7 +258,7 @@ static ReturnCode Nbt_ReadString(struct Stream* stream, char* strBuffer, UInt32*
 	char nameBuffer[NBT_SMALL_SIZE * 4];
 	if ((res = Stream_Read(stream, nameBuffer, 2))) return res;
 
-	UInt16 nameLen = Stream_GetU16_BE(nameBuffer);
+	int nameLen = Stream_GetU16_BE(nameBuffer);
 	if (nameLen > NBT_SMALL_SIZE * 4) return CW_ERR_STRING_LEN;
 	if ((res = Stream_Read(stream, nameBuffer, nameLen))) return res;
 
@@ -359,9 +359,9 @@ static bool IsTag(struct NbtTag* tag, const char* tagName) {
 *--------------------------------------------------ClassicWorld format----------------------------------------------------*
 *#########################################################################################################################*/
 static bool Cw_Callback_1(struct NbtTag* tag) {
-	if (IsTag(tag, "X")) { World_Width  = (UInt16)NbtTag_I16(tag); return true; }
-	if (IsTag(tag, "Y")) { World_Height = (UInt16)NbtTag_I16(tag); return true; }
-	if (IsTag(tag, "Z")) { World_Length = (UInt16)NbtTag_I16(tag); return true; }
+	if (IsTag(tag, "X")) { World_Width  = (uint16_t)NbtTag_I16(tag); return true; }
+	if (IsTag(tag, "Y")) { World_Height = (uint16_t)NbtTag_I16(tag); return true; }
+	if (IsTag(tag, "Z")) { World_Length = (uint16_t)NbtTag_I16(tag); return true; }
 
 	if (IsTag(tag, "UUID")) {
 		if (tag->DataSize != sizeof(World_Uuid)) ErrorHandler_Fail("Map UUID must be 16 bytes");
@@ -608,14 +608,14 @@ struct JFieldDesc {
 
 struct JClassDesc {
 	char ClassName[JNAME_SIZE];
-	UInt16 FieldsCount;
+	uint16_t FieldsCount;
 	struct JFieldDesc Fields[22];
 };
 
 static ReturnCode Dat_ReadString(struct Stream* stream, char* buffer) {
 	ReturnCode res;
 	if ((res = Stream_Read(stream, buffer, 2))) return res;
-	UInt16 len = Stream_GetU16_BE(buffer);
+	int len = Stream_GetU16_BE(buffer);
 
 	Mem_Set(buffer, 0, JNAME_SIZE);
 	if (len > JNAME_SIZE) return DAT_ERR_JSTRING_LEN;
@@ -793,13 +793,13 @@ ReturnCode Dat_Load(struct Stream* stream) {
 *#########################################################################################################################*/
 #define CW_META_VERSION 'E','x','t','e','n','s','i','o','n','V','e','r','s','i','o','n'
 #define CW_META_RGB NBT_I16,0,1,'R',0,0,  NBT_I16,0,1,'G',0,0,  NBT_I16,0,1,'B',0,0,
-static Int32 Cw_WriteEndString(UInt8* data, const String* text) {
-	Int32 i, len = 0;
+static int Cw_WriteEndString(UInt8* data, const String* text) {
+	int i, len = 0;
 	UInt8* cur = data + 2;
 
 	for (i = 0; i < text->length; i++) {
-		UInt16 codepoint = Convert_CP437ToUnicode(text->buffer[i]);
-		Int32 bytes = Stream_WriteUtf8(cur, codepoint);
+		Codepoint cp = Convert_CP437ToUnicode(text->buffer[i]);
+		int bytes    = Stream_WriteUtf8(cur, cp);
 		len += bytes; cur += bytes;
 	}
 
@@ -939,9 +939,9 @@ ReturnCode Cw_Save(struct Stream* stream) {
 
 		struct LocalPlayer* p = &LocalPlayer_Instance;
 		Vector3 spawn = p->Spawn; /* TODO: Maybe keep real spawn too? */
-		Stream_SetU16_BE(&tmp[89],  (UInt16)spawn.X);
-		Stream_SetU16_BE(&tmp[95],  (UInt16)spawn.Y);
-		Stream_SetU16_BE(&tmp[101], (UInt16)spawn.Z);
+		Stream_SetU16_BE(&tmp[89],  (uint16_t)spawn.X);
+		Stream_SetU16_BE(&tmp[95],  (uint16_t)spawn.Y);
+		Stream_SetU16_BE(&tmp[101], (uint16_t)spawn.Z);
 		tmp[107] = Math_Deg2Packed(p->SpawnRotY);
 		tmp[112] = Math_Deg2Packed(p->SpawnHeadX);
 	}
@@ -950,7 +950,7 @@ ReturnCode Cw_Save(struct Stream* stream) {
 
 	Mem_Copy(tmp, cw_meta_cpe, sizeof(cw_meta_cpe));
 	{
-		Stream_SetU16_BE(&tmp[67], (UInt16)(LocalPlayer_Instance.ReachDistance * 32));
+		Stream_SetU16_BE(&tmp[67], (uint16_t)(LocalPlayer_Instance.ReachDistance * 32));
 		tmp[124] = Env_Weather;
 
 		col = Env_SkyCol;    tmp[172] = col.R; tmp[178] = col.G; tmp[184] = col.B;

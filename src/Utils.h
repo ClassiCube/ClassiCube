@@ -7,13 +7,13 @@
 
 /* Represents a particular instance in time in some timezone. Not necessarily UTC time. */
 typedef struct DateTime_ {
-	UInt16 Year;  /* Year,   ranges from 0 to 65535 */
+	uint16_t Year;  /* Year,   ranges from 0 to 65535 */
 	UInt8 Month;  /* Month,  ranges from 1 to 12 */
 	UInt8 Day;    /* Day,    ranges from 1 to 31 */
 	UInt8 Hour;   /* Hour,   ranges from 0 to 23 */
 	UInt8 Minute; /* Minute, ranges from 0 to 59 */
 	UInt8 Second; /* Second, ranges from 0 to 59 */
-	UInt16 Milli; /* Milliseconds, ranges from 0 to 999 */
+	uint16_t Milli; /* Milliseconds, ranges from 0 to 999 */
 } DateTime;
 
 #define DATETIME_MILLIS_PER_SEC 1000

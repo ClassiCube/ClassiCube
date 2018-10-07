@@ -11,7 +11,7 @@ GfxResourceID GfxCommon_defaultIb;
 /* Contains the information necessary to describe a 2D textured quad. */
 struct Texture {
 	GfxResourceID ID;
-	Int16 X, Y; UInt16 Width, Height;
+	Int16 X, Y; uint16_t Width, Height;
 	float U1, V1, U2, V2;
 };
 #define TEX_RECT(x,y, width,height) x,y,width,height
@@ -38,7 +38,7 @@ void GfxCommon_Make2DQuad(struct Texture* tex, PackedCol col, VertexP3fT2fC4b** 
 void GfxCommon_Mode2D(int width, int height);
 void GfxCommon_Mode3D(void);
 
-void GfxCommon_MakeIndices(UInt16* indices, int iCount);
+void GfxCommon_MakeIndices(uint16_t* indices, int iCount);
 void GfxCommon_SetupAlphaState(UInt8 draw);
 void GfxCommon_RestoreAlphaState(UInt8 draw);
 

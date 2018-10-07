@@ -18,7 +18,7 @@ void GfxCommon_Init(void) {
 	GfxCommon_quadVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, 4);
 	GfxCommon_texVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, 4);
 
-	UInt16 indices[GFX_MAX_INDICES];
+	uint16_t indices[GFX_MAX_INDICES];
 	GfxCommon_MakeIndices(indices, GFX_MAX_INDICES);
 	GfxCommon_defaultIb = Gfx_CreateIb(indices, GFX_MAX_INDICES);
 }
@@ -135,17 +135,17 @@ void GfxCommon_Mode3D(void) {
 	if (gfx_hadFog) Gfx_SetFog(true);
 }
 
-void GfxCommon_MakeIndices(UInt16* indices, int iCount) {
+void GfxCommon_MakeIndices(uint16_t* indices, int iCount) {
 	int element = 0, i;
 
 	for (i = 0; i < iCount; i += 6) {
-		indices[0] = (UInt16)(element + 0);
-		indices[1] = (UInt16)(element + 1);
-		indices[2] = (UInt16)(element + 2);
+		indices[0] = (uint16_t)(element + 0);
+		indices[1] = (uint16_t)(element + 1);
+		indices[2] = (uint16_t)(element + 2);
 
-		indices[3] = (UInt16)(element + 2);
-		indices[4] = (UInt16)(element + 3);
-		indices[5] = (UInt16)(element + 0);
+		indices[3] = (uint16_t)(element + 2);
+		indices[4] = (uint16_t)(element + 3);
+		indices[5] = (uint16_t)(element + 0);
 
 		indices += 6; element += 4;
 	}

@@ -29,7 +29,7 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 
 	/* contents[0] (2) version needed */
 	/* contents[2] (2) flags */
-	UInt16 compressionMethod = Stream_GetU16_LE(&contents[4]);
+	int method = Stream_GetU16_LE(&contents[4]);
 	/* contents[6]  (4) last modified */
 	/* contents[10] (4) CRC32 */
 
@@ -38,8 +38,8 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 	UInt32 uncompressedSize = Stream_GetU32_LE(&contents[18]);
 	if (!uncompressedSize) uncompressedSize = entry->UncompressedSize;
 
-	UInt16 pathLen  = Stream_GetU16_LE(&contents[22]);
-	UInt16 extraLen = Stream_GetU16_LE(&contents[24]);
+	int pathLen  = Stream_GetU16_LE(&contents[22]);
+	int extraLen = Stream_GetU16_LE(&contents[24]);
 	char pathBuffer[ZIP_MAXNAMELEN];
 
 	if (pathLen > ZIP_MAXNAMELEN) return ZIP_ERR_FILENAME_LEN;
@@ -51,16 +51,15 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 	if ((res = Stream_Skip(stream, extraLen))) return res;
 	struct Stream portion, compStream;
 
-	if (compressionMethod == 0) {
+	if (method == 0) {
 		Stream_ReadonlyPortion(&portion, stream, uncompressedSize);
 		state->ProcessEntry(&path, &portion, entry);
-	} else if (compressionMethod == 8) {
+	} else if (method == 8) {
 		struct InflateState inflate;
 		Stream_ReadonlyPortion(&portion, stream, compressedSize);
 		Inflate_MakeStream(&compStream, &inflate, &portion);
 		state->ProcessEntry(&path, &compStream, entry);
 	} else {
-		int method = compressionMethod;
 		Platform_Log1("Unsupported.zip entry compression method: %i", &method);
 	}
 	return 0;
@@ -81,9 +80,9 @@ static ReturnCode Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEnt
 	entry->CompressedSize   = Stream_GetU32_LE(&contents[16]);
 	entry->UncompressedSize = Stream_GetU32_LE(&contents[20]);
 
-	UInt16 pathLen    = Stream_GetU16_LE(&contents[24]);
-	UInt16 extraLen   = Stream_GetU16_LE(&contents[26]);
-	UInt16 commentLen = Stream_GetU16_LE(&contents[28]);
+	int pathLen    = Stream_GetU16_LE(&contents[24]);
+	int extraLen   = Stream_GetU16_LE(&contents[26]);
+	int commentLen = Stream_GetU16_LE(&contents[28]);
 	/* contents[30] (2) disk number */
 	/* contents[32] (2) internal attributes */
 	/* contents[34] (4) external attributes */

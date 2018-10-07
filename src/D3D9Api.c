@@ -472,7 +472,7 @@ static void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, Int32 size
 }
 
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
-	int size = indicesCount * sizeof(UInt16);
+	int size = indicesCount * 2;
 	IDirect3DIndexBuffer9* ibuffer;
 	ReturnCode res = IDirect3DDevice9_CreateIndexBuffer(device, size, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &ibuffer, NULL);
 	if (res) ErrorHandler_Fail2(res, "D3D9_CreateIb");
