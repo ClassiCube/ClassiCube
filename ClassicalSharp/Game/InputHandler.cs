@@ -155,9 +155,21 @@ namespace ClassicalSharp {
 				game.Exit();
 			} else if (key == Keys[KeyBind.Screenshot]) {
 				game.screenshotRequested = true;
-			} else if (!game.Gui.ActiveScreen.HandlesKeyDown(key)) {
-				if (!HandleCoreKey(key) && !game.LocalPlayer.HandlesKey(key))
-					HandleHotkey(key);
+			} else if (game.Gui.ActiveScreen.HandlesKeyDown(key)) {
+			} else if (HandleCoreKey(key)) {
+			} else if (game.LocalPlayer.HandlesKey(key)) {
+			} else {
+				int idx = HotkeyList.FindPartial(key, game.Input);
+				if (idx == -1) return;
+				
+				Hotkey hotkey = HotkeyList.Hotkeys[idx];
+				string text = hotkey.Text;
+				
+				if (!hotkey.StaysOpen) {
+					game.Chat.Send(text, false);
+				} else if (game.Gui.activeScreen == null) {
+					game.Gui.hudScreen.OpenInput(text);
+				}
 			}
 		}
 		
@@ -166,20 +178,6 @@ namespace ClassicalSharp {
 			// On OSX, Cmd+Q should also terminate the process.
 			if (!OpenTK.Configuration.RunningOnMacOS) return false;
 			return key == Key.Q && WinDown;
-		}
-		
-		void HandleHotkey(Key key) {
-			int idx = HotkeyList.FindPartial(key, game.Input);
-			if (idx == -1) return;
-			
-			Hotkey hotkey = HotkeyList.Hotkeys[idx];
-			string text = hotkey.Text;
-			
-			if (!hotkey.StaysOpen) {
-				game.Chat.Send(text, false);
-			} else if (game.Gui.activeScreen == null) {
-				game.Gui.hudScreen.OpenInput(text);
-			}
 		}
 		
 		bool SimulateMouse(Key key, bool pressed) {
@@ -255,7 +253,8 @@ namespace ClassicalSharp {
 			} else if (key == Key.F5 && game.ClassicMode) {
 				Weather weather = game.World.Env.Weather == Weather.Sunny ? Weather.Rainy : Weather.Sunny;
 				game.World.Env.SetWeather(weather);
-			} else if (!game.ClassicMode) {
+			} else {
+				if (game.ClassicMode) return false;
 				return HandleNonClassicKey(key);
 			}
 			return true;

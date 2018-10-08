@@ -965,6 +965,7 @@ static void LocalPlayer_HandleRespawn(void) {
 		LocalPlayer_DoRespawn();
 	} else if (!p->_WarnedRespawn) {
 		p->_WarnedRespawn = true;
+		if (Game_PureClassic) return;
 		Chat_AddRaw("&cRespawning is currently disabled");
 	}
 }
@@ -987,6 +988,7 @@ static void LocalPlayer_HandleFly(void) {
 		p->Hacks.Flying = !p->Hacks.Flying;
 	} else if(!p->_WarnedFly) {
 		p->_WarnedFly = true;
+		if (Game_PureClassic) return;
 		Chat_AddRaw("&cFlying is currently disabled");
 	}
 }
@@ -999,6 +1001,7 @@ static void LocalPlayer_HandleNoClip(void) {
 		p->Hacks.Noclip = !p->Hacks.Noclip;
 	} else if (!p->_WarnedNoclip) {
 		p->_WarnedNoclip = true;
+		if (Game_PureClassic) return;
 		Chat_AddRaw("&cNoclip is currently disabled");
 	}
 }

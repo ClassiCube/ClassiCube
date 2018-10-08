@@ -202,7 +202,8 @@ static bool InputHandler_HandleCoreKey(Key key) {
 	} else if (key == Key_F5 && Game_ClassicMode) {
 		int weather = Env_Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
 		Env_SetWeather(weather);
-	} else if (!Game_ClassicMode) {
+	} else {
+		if (Game_ClassicMode) return false;
 		return InputHandler_HandleNonClassicKey(key);
 	}
 	return true;
