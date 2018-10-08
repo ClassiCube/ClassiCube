@@ -88,7 +88,7 @@ void ModelCache_RegisterTexture(STRING_REF const char* texName) {
 	if (ModelCache_texCount < MODELCACHE_MAX_MODELS) {
 		struct CachedTexture tex;
 		tex.Name  = String_FromReadonly(texName);
-		tex.TexID = NULL;
+		tex.TexID = GFX_NULL;
 		ModelCache_Textures[ModelCache_texCount++] = tex;
 	} else {
 		ErrorHandler_Fail("ModelCache_RegisterTexture - hit max textures");

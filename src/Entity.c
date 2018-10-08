@@ -480,7 +480,7 @@ static void Player_MakeNameTexture(struct Player* player) {
 	Size2D size = Drawer2D_MeasureText(&args);
 
 	if (size.Width == 0) {
-		player->NameTex.ID = NULL;
+		player->NameTex.ID = GFX_NULL;
 		player->NameTex.X  = PLAYER_NAME_EMPTY_TEX;
 	} else {
 		char buffer[STRING_SIZE];
@@ -589,7 +589,7 @@ static void Player_ApplySkin(struct Player* player, struct Player* from) {
 	dst->vScale    = src->vScale;
 
 	/* Custom mob textures */
-	dst->MobTextureId = NULL;
+	dst->MobTextureId = GFX_NULL;
 	String skin = String_FromRawArray(dst->SkinNameRaw);
 	if (Utils_IsUrlPrefix(&skin, 0)) { dst->MobTextureId = dst->TextureId; }
 }
@@ -597,8 +597,8 @@ static void Player_ApplySkin(struct Player* player, struct Player* from) {
 void Player_ResetSkin(struct Player* player) {
 	struct Entity* entity = &player->Base;
 	entity->uScale = 1.0f; entity->vScale = 1.0f;
-	entity->MobTextureId = NULL;
-	entity->TextureId    = NULL;
+	entity->MobTextureId = GFX_NULL;
+	entity->TextureId    = GFX_NULL;
 	entity->SkinType = SKIN_64x32;
 }
 

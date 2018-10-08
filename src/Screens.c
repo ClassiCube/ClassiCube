@@ -522,7 +522,7 @@ static void LoadingScreen_DrawBackground(void) {
 	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &atlasIndex);
 
 	float u2 = (float)Game_Width / (float)LOADING_TILE_SIZE;
-	struct Texture tex = { NULL, TEX_RECT(0,0, Game_Width,LOADING_TILE_SIZE), TEX_UV(0,rec.V1, u2,rec.V2) };
+	struct Texture tex = { GFX_NULL, TEX_RECT(0,0, Game_Width,LOADING_TILE_SIZE), TEX_UV(0,rec.V1, u2,rec.V2) };
 
 	bool bound = false;
 	while (y < Game_Height) {

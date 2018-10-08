@@ -95,9 +95,9 @@ void TextWidget_Set(struct TextWidget* w, const String* text, FontDesc* font) {
 #define BUTTON_uWIDTH (200.0f / 256.0f)
 #define BUTTON_MIN_WIDTH 40
 
-struct Texture Button_ShadowTex   = { NULL, TEX_RECT(0,0, 0,0), WIDGET_UV(0,66, 200,86)  };
-struct Texture Button_SelectedTex = { NULL, TEX_RECT(0,0, 0,0), WIDGET_UV(0,86, 200,106) };
-struct Texture Button_DisabledTex = { NULL, TEX_RECT(0,0, 0,0), WIDGET_UV(0,46, 200,66)  };
+struct Texture Button_ShadowTex   = { GFX_NULL, TEX_RECT(0,0, 0,0), WIDGET_UV(0,66, 200,86)  };
+struct Texture Button_SelectedTex = { GFX_NULL, TEX_RECT(0,0, 0,0), WIDGET_UV(0,86, 200,106) };
+struct Texture Button_DisabledTex = { GFX_NULL, TEX_RECT(0,0, 0,0), WIDGET_UV(0,46, 200,66)  };
 
 static void ButtonWidget_Free(void* widget) {
 	struct ButtonWidget* w = widget;

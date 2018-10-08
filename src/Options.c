@@ -142,7 +142,7 @@ void Options_Set(const char* keyRaw, const String* value) {
 
 void Options_SetString(const String* key, const String* value) {
 	int i;
-	if (value == NULL || value->buffer == NULL) {
+	if (!value || !value->length) {
 		i = Options_Find(key);
 		if (i >= 0) Options_Remove(i);
 	} else {

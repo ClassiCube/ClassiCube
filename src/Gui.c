@@ -129,7 +129,7 @@ struct Screen* Gui_GetActiveScreen(void) {
 }
 
 struct Screen* Gui_GetUnderlyingScreen(void) {
-	return Gui_Active == NULL ? Gui_HUD : Gui_Active;
+	return Gui_Active ? Gui_Active : Gui_HUD;
 }
 
 void Gui_FreeActive(void) {

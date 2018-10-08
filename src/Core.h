@@ -69,7 +69,9 @@ typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
 
 #ifdef CC_BUILD_D3D9
 typedef void* GfxResourceID;
+#define GFX_NULL NULL
 #else
 typedef uint32_t GfxResourceID;
+#define GFX_NULL 0
 #endif
 #endif

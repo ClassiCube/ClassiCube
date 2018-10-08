@@ -141,7 +141,7 @@ void Model_UpdateVB(void) {
 void Model_ApplyTexture(struct Entity* entity) {
 	struct Model* model = Model_ActiveModel;
 	GfxResourceID tex = model->UsesHumanSkin ? entity->TextureId : entity->MobTextureId;
-	if (tex != NULL) {
+	if (tex) {
 		Model_skinType = entity->SkinType;
 	} else {
 		struct CachedTexture* data = &ModelCache_Textures[model->defaultTexIndex];
@@ -150,7 +150,7 @@ void Model_ApplyTexture(struct Entity* entity) {
 	}
 
 	Gfx_BindTexture(tex);
-	bool _64x64 = Model_skinType != SKIN_64x32;
+	bool _64x64  = Model_skinType != SKIN_64x32;
 	Model_uScale = entity->uScale * 0.015625f;
 	Model_vScale = entity->vScale * (_64x64 ? 0.015625f : 0.03125f);
 }

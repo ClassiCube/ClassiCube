@@ -215,7 +215,7 @@ bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* 
 	bool success = !res && Game_ValidateBitmap(file, &bmp);
 	if (success) {
 		Gfx_DeleteTexture(texId);
-		if (skinType != NULL) { *skinType = Utils_GetSkinType(&bmp); }
+		if (skinType) { *skinType = Utils_GetSkinType(&bmp); }
 		*texId = Gfx_CreateTexture(&bmp, true, false);
 	}
 
@@ -679,7 +679,7 @@ static void Game_RenderFrame(double delta) {
 		Gui_SetActive(PauseScreen_MakeInstance());
 	}
 
-	bool allowZoom = Gui_Active == NULL && !Gui_HUD->HandlesAllInput;
+	bool allowZoom = !Gui_Active && !Gui_HUD->HandlesAllInput;
 	if (allowZoom && KeyBind_IsPressed(KeyBind_ZoomScrolling)) {
 		InputHandler_SetFOV(Game_ZoomFov, false);
 	}
@@ -693,7 +693,7 @@ static void Game_RenderFrame(double delta) {
 	Game_CurrentCameraPos = Camera_Active->GetPosition(t);
 	Game_UpdateViewMatrix();
 
-	bool visible = Gui_Active == NULL || !Gui_Active->BlocksWorld;
+	bool visible = !Gui_Active || !Gui_Active->BlocksWorld;
 	if (!World_Blocks) visible = false;
 	if (visible) {
 		Game_Render3D(delta, t);

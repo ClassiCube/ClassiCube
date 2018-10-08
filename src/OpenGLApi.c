@@ -178,9 +178,9 @@ void Gfx_BindTexture(GfxResourceID texId) {
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	if (texId == NULL || *texId == NULL) return;
+	if (!texId || *texId == GFX_NULL) return;
 	glDeleteTextures(1, texId);
-	*texId = NULL;
+	*texId = GFX_NULL;
 }
 
 void Gfx_SetTexturing(bool enabled) { gl_Toggle(GL_TEXTURE_2D); }
@@ -342,20 +342,20 @@ void Gfx_BindIb(GfxResourceID ib) {
 }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
-	if (vb == NULL || *vb == NULL) return;
+	if (!vb || *vb == GFX_NULL) return;
 #ifndef CC_BUILD_GL11
 	glDeleteBuffers(1, vb);
 #else
 	if (*vb != gl_DYNAMICLISTID) glDeleteLists(*vb, 1);
 #endif
-	*vb = NULL;
+	*vb = GFX_NULL;
 }
 
 void Gfx_DeleteIb(GfxResourceID* ib) {
 #ifndef CC_BUILD_GL11
-	if (ib == NULL || *ib == NULL) return;
+	if (!ib || *ib == GFX_NULL) return;
 	glDeleteBuffers(1, ib);
-	*ib = NULL;
+	*ib = GFX_NULL;
 #else
 	return;
 #endif

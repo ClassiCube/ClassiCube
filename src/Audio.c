@@ -141,7 +141,7 @@ static void Soundboard_Init(struct Soundboard* board, const String* boardName, S
 		name = String_UNSAFE_Substring(&name, 0, name.length - 1);
 
 		struct SoundGroup* group = Soundboard_Find(board, &name);
-		if (group == NULL) {
+		if (!group) {
 			if (board->Count == Array_Elems(board->Groups)) {
 				Chat_AddRaw("&cCannot have more than 10 sound groups"); return;
 			}
@@ -173,7 +173,7 @@ struct Sound* Soundboard_PickRandom(struct Soundboard* board, uint8_t type) {
 	String name = String_FromReadonly(Sound_Names[type]);
 
 	struct SoundGroup* group = Soundboard_Find(board, &name);
-	if (group == NULL) return NULL;
+	if (!group) return NULL;
 	int idx = Random_Range(&board->Rnd, 0, group->Count);
 	return &group->Sounds[idx];
 }
@@ -229,7 +229,7 @@ static void Sounds_Play(uint8_t type, struct Soundboard* board) {
 	if (type == SOUND_NONE || Game_SoundsVolume == 0) return;
 	struct Sound* snd = Soundboard_PickRandom(board, type);
 
-	if (snd == NULL) return;
+	if (!snd) return;
 	struct AudioFormat fmt = snd->Format;
 	int volume = Game_SoundsVolume;
 

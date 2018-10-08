@@ -47,10 +47,10 @@ static void D3D9_SetDefaultRenderStates(void);
 static void D3D9_RestoreRenderStates(void);
 
 static void D3D9_FreeResource(GfxResourceID* resource) {
-	if (resource == NULL || *resource == NULL) return;
-	IUnknown* unk = (IUnknown*)(*resource);
+	if (!resource || *resource == GFX_NULL) return;
+	IUnknown* unk  = (IUnknown*)(*resource);
 	ULONG refCount = unk->lpVtbl->Release(unk);
-	*resource = NULL;
+	*resource = GFX_NULL;
 	if (refCount <= 0) return;
 
 	uintptr_t addr = (uintptr_t)unk;
