@@ -19,7 +19,7 @@
 #include "Bitmap.h"
 #include "Block.h"
 
-#define WIDGET_UV(u1,v1, u2,v2) u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f
+#define Widget_UV(u1,v1, u2,v2) u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f
 static void Widget_NullFunc(void* widget) { }
 Size2D Size2D_Empty;
 
@@ -95,9 +95,9 @@ void TextWidget_Set(struct TextWidget* w, const String* text, FontDesc* font) {
 #define BUTTON_uWIDTH (200.0f / 256.0f)
 #define BUTTON_MIN_WIDTH 40
 
-struct Texture Button_ShadowTex   = { GFX_NULL, TEX_RECT(0,0, 0,0), WIDGET_UV(0,66, 200,86)  };
-struct Texture Button_SelectedTex = { GFX_NULL, TEX_RECT(0,0, 0,0), WIDGET_UV(0,86, 200,106) };
-struct Texture Button_DisabledTex = { GFX_NULL, TEX_RECT(0,0, 0,0), WIDGET_UV(0,46, 200,66)  };
+struct Texture Button_ShadowTex   = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,66, 200,86)  };
+struct Texture Button_SelectedTex = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,86, 200,106) };
+struct Texture Button_DisabledTex = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,46, 200,66)  };
 
 static void ButtonWidget_Free(void* widget) {
 	struct ButtonWidget* w = widget;
@@ -341,7 +341,7 @@ static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
 }
 
 static void HotbarWidget_RepositonBackgroundTexture(struct HotbarWidget* w) {
-	struct Texture tex = { NULL, TEX_RECT(w->X,w->Y, w->Width,w->Height), WIDGET_UV(0,0, 182,22) };
+	struct Texture tex = { GFX_NULL, Tex_Rect(w->X,w->Y, w->Width,w->Height), Widget_UV(0,0, 182,22) };
 	w->BackTex = tex;
 }
 
@@ -351,7 +351,7 @@ static void HotbarWidget_RepositionSelectionTexture(struct HotbarWidget* w) {
 	int vSize = (int)(22.0f * scale);
 	int y = w->Y + (w->Height - (int)(23.0f * scale));
 
-	struct Texture tex = { NULL, TEX_RECT(0,y, hSize,vSize), WIDGET_UV(0,22, 24,44) };
+	struct Texture tex = { GFX_NULL, Tex_Rect(0,y, hSize,vSize), Widget_UV(0,22, 24,44) };
 	w->SelTex = tex;
 }
 
@@ -2184,7 +2184,7 @@ void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* w, const Strin
 		y += w->Textures[i].Height;
 	}
 
-	w->Textures[max_index].ID = NULL; /* Delete() is called by SetText otherwise */
+	w->Textures[max_index].ID = GFX_NULL; /* Delete() is called by TextGroupWidget_SetText otherwise */
 	TextGroupWidget_SetText(w, max_index, text);
 }
 

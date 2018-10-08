@@ -21,10 +21,10 @@ uint32_t* ChunkUpdater_Distances;
 void ChunkInfo_Reset(struct ChunkInfo* chunk, int x, int y, int z) {
 	chunk->CentreX = x + 8; chunk->CentreY = y + 8; chunk->CentreZ = z + 8;
 #ifndef CC_BUILD_GL11
-	chunk->Vb = NULL;
+	chunk->Vb = GFX_NULL;
 #endif
 
-	chunk->Visible = true; chunk->Empty = false;
+	chunk->Visible = true;        chunk->Empty = false;
 	chunk->PendingDelete = false; chunk->AllAir = false;
 	chunk->DrawXMin = false; chunk->DrawXMax = false; chunk->DrawZMin = false;
 	chunk->DrawZMax = false; chunk->DrawYMin = false; chunk->DrawYMax = false;

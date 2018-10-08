@@ -4,6 +4,7 @@
 #include "Physics.h"
 #include "Constants.h"
 #include "GraphicsCommon.h"
+#include "Input.h"
 /* Represents an in-game entity.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -164,5 +165,5 @@ void LocalPlayer_Init(void);
 float LocalPlayer_JumpHeight(void);
 void LocalPlayer_CheckHacksConsistency(void);
 void LocalPlayer_SetInterpPosition(float t);
-bool LocalPlayer_HandlesKey(int key);
+bool LocalPlayer_HandlesKey(Key key);
 #endif

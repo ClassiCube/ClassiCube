@@ -131,7 +131,7 @@ int Drawer2D_FontHeight(FontDesc* font, bool useShadow) {
 void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, int X, int Y) {
 	Size2D size = Drawer2D_MeasureText(args);
 	if (size.Width == 0 && size.Height == 0) {
-		struct Texture empty = { GFX_NULL, TEX_RECT(X,Y, 0,0), TEX_UV(0,0, 1,1) };
+		struct Texture empty = { GFX_NULL, Tex_Rect(X,Y, 0,0), Tex_UV(0,0, 1,1) };
 		*tex = empty; return;
 	}
 
@@ -148,7 +148,7 @@ void Drawer2D_Make2DTexture(struct Texture* tex, Bitmap* bmp, Size2D used, int X
 	float u2 = (float)used.Width  / (float)bmp->Width;
 	float v2 = (float)used.Height / (float)bmp->Height;
 
-	struct Texture tmp = { texId, TEX_RECT(X,Y, used.Width,used.Height), TEX_UV(0,0, u2,v2) };
+	struct Texture tmp = { texId, Tex_Rect(X,Y, used.Width,used.Height), Tex_UV(0,0, u2,v2) };
 	*tex = tmp;
 }
 

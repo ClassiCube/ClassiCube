@@ -92,11 +92,11 @@ int physics_tickCount;
 int physics_maxWaterX, physics_maxWaterY, physics_maxWaterZ;
 struct TickQueue physics_lavaQ, physics_waterQ;
 
-#define PHYSICS_TICK_MASK 0xF8000000UL
-#define PHYSICS_POS_MASK 0x07FFFFFFUL
-#define PHYSICS_TICK_SHIFT 27
-#define PHYSICS_LAVA_DELAY (30U << PHYSICS_TICK_SHIFT)
-#define PHYSICS_WATER_DELAY (5U << PHYSICS_TICK_SHIFT)
+#define PHYSICS_DELAY_MASK 0xF8000000UL
+#define PHYSICS_POS_MASK   0x07FFFFFFUL
+#define PHYSICS_DELAY_SHIFT 27
+#define PHYSICS_LAVA_DELAY (30U << PHYSICS_DELAY_SHIFT)
+#define PHYSICS_WATER_DELAY (5U << PHYSICS_DELAY_SHIFT)
 
 static void Physics_OnNewMapLoaded(void* obj) {
 	TickQueue_Clear(&physics_lavaQ);
@@ -216,12 +216,12 @@ static void Physics_DoFalling(int index, BlockID block) {
 
 static bool Physics_CheckItem(struct TickQueue* queue, int* posIndex) {
 	uint32_t packed = TickQueue_Dequeue(queue);
-	int tickDelay = (int)((packed & PHYSICS_TICK_MASK) >> PHYSICS_TICK_SHIFT);
+	int tickDelay = (int)((packed & PHYSICS_DELAY_MASK) >> PHYSICS_DELAY_SHIFT);
 	*posIndex = (int)(packed & PHYSICS_POS_MASK);
 
 	if (tickDelay > 0) {
 		tickDelay--;
-		uint32_t item = (uint32_t)(*posIndex) | ((uint32_t)tickDelay << PHYSICS_TICK_SHIFT);
+		uint32_t item = (uint32_t)(*posIndex) | ((uint32_t)tickDelay << PHYSICS_DELAY_SHIFT);
 		TickQueue_Enqueue(queue, item);
 		return false;
 	}
@@ -428,7 +428,7 @@ static void Physics_DeleteSponge(int index, BlockID block) {
 					index = World_Pack(xx, yy, zz);
 					block = World_Blocks[index];
 					if (block == BLOCK_WATER || block == BLOCK_STILL_WATER) {
-						uint32_t item = (1UL << PHYSICS_TICK_SHIFT) | (uint32_t)index;
+						uint32_t item = (1UL << PHYSICS_DELAY_SHIFT) | (uint32_t)index;
 						TickQueue_Enqueue(&physics_waterQ, item);
 					}
 				}

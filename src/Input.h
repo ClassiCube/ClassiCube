@@ -119,9 +119,9 @@ void KeyBind_Init(void);
 
 extern uint8_t Hotkeys_LWJGL[256];
 struct HotkeyData {
-	int TextIndex; /* contents to copy directly into the input bar */
-	uint8_t Trigger;   /* Member of Key enumeration */
-	uint8_t Flags;     /* ctrl 1, shift 2, alt 4 */
+	int TextIndex;   /* contents to copy directly into the input bar */
+	uint8_t Trigger; /* Member of Key enumeration */
+	uint8_t Flags;   /* ctrl 1, shift 2, alt 4 */
 	bool StaysOpen;  /* whether the user is able to enter further input */
 };
 

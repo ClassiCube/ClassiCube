@@ -147,7 +147,7 @@ void Entity_SetModel(struct Entity* e, const String* model) {
 
 	e->ModelBlock   = BLOCK_AIR;
 	e->Model        = ModelCache_Get(&name);
-	e->MobTextureId = NULL;
+	e->MobTextureId = GFX_NULL;
 	if (!e->Model) Entity_SetBlockModel(e, &name);
 
 	Entity_ParseScale(e, &scale);
@@ -1006,7 +1006,7 @@ static void LocalPlayer_HandleNoClip(void) {
 	}
 }
 
-bool LocalPlayer_HandlesKey(int key) {
+bool LocalPlayer_HandlesKey(Key key) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct HacksComp* hacks = &p->Hacks;
 	struct PhysicsComp* physics = &p->Physics;
@@ -1042,7 +1042,7 @@ static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* updat
 	NetInterpComp_SetLocation(&p->Interp, update, interpolate);
 }
 
-void NetPlayer_Tick(struct Entity* e, double delta) {
+static void NetPlayer_Tick(struct Entity* e, double delta) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
 	Player_CheckSkin((struct Player*)p);
 	NetInterpComp_AdvanceState(&p->Interp);

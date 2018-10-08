@@ -522,7 +522,7 @@ static void LoadingScreen_DrawBackground(void) {
 	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &atlasIndex);
 
 	float u2 = (float)Game_Width / (float)LOADING_TILE_SIZE;
-	struct Texture tex = { GFX_NULL, TEX_RECT(0,0, Game_Width,LOADING_TILE_SIZE), TEX_UV(0,rec.V1, u2,rec.V2) };
+	struct Texture tex = { GFX_NULL, Tex_Rect(0,0, Game_Width,LOADING_TILE_SIZE), Tex_UV(0,rec.V1, u2,rec.V2) };
 
 	bool bound = false;
 	while (y < Game_Height) {
@@ -1177,7 +1177,7 @@ static void HUDScreen_DrawCrosshairs(void) {
 	int extent = (int)(CH_EXTENT * Game_Scale(Game_Height / 480.0f)), size = extent * 2;
 	int chX = (Game_Width / 2) - extent, chY = (Game_Height / 2) - extent;
 
-	struct Texture tex = { Gui_IconsTex, TEX_RECT(chX,chY, size, size), TEX_UV(0.0f,0.0f, 15/256.0f,15/256.0f) };
+	struct Texture tex = { Gui_IconsTex, Tex_Rect(chX,chY, size, size), Tex_UV(0.0f,0.0f, 15/256.0f,15/256.0f) };
 	Texture_Render(&tex);
 }
 
