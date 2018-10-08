@@ -37,7 +37,7 @@ void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, P
 	*yMin  = PackedCol_Scale(normal, PACKEDCOL_SHADE_YMIN);
 }
 
-NOINLINE_ static bool PackedCol_Unhex(char hex, int* value) {
+bool PackedCol_Unhex(char hex, int* value) {
 	*value = 0;
 	if (hex >= '0' && hex <= '9') {
 		*value = (hex - '0');

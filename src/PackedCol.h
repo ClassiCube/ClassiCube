@@ -29,6 +29,7 @@ PackedCol PackedCol_Create3(uint8_t r, uint8_t g, uint8_t b);
 uint32_t PackedCol_ToARGB(PackedCol col);
 PackedCol PackedCol_Scale(PackedCol value, float t);
 PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t);
+NOINLINE_ bool PackedCol_Unhex(char hex, int* value);
 NOINLINE_ void PackedCol_ToHex(String* str, PackedCol value);
 NOINLINE_ bool PackedCol_TryParseHex(const String* str, PackedCol* value);
 
