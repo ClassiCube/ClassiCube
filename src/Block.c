@@ -455,9 +455,6 @@ void Block_UpdateCulling(BlockID block) {
 /*########################################################################################################################*
 *-------------------------------------------------------AutoRotate--------------------------------------------------------*
 *#########################################################################################################################*/
-#define AR_EQ1(s, x) (s.length == 1 && Char_ToLower(s.buffer[0]) == x)
-#define AR_EQ2(s, x, y) (s.length == 2 && Char_ToLower(s.buffer[0]) == x && Char_ToLower(s.buffer[1]) == y)
-
 static BlockID AutoRotate_Find(BlockID block, const String* name, const char* suffix) {
 	char buffer[STRING_SIZE * 2];
 	String temp = String_FromArray(buffer);
@@ -469,28 +466,28 @@ static BlockID AutoRotate_Find(BlockID block, const String* name, const char* su
 	return block;
 }
 
-static BlockID AutoRotate_RotateCorner(BlockID block, const String* name, Vector3 offset) {
-	if (offset.X < 0.5f && offset.Z < 0.5f) {
-		return AutoRotate_Find(block, name, "-NW");
-	} else if (offset.X >= 0.5f && offset.Z < 0.5f) {
-		return AutoRotate_Find(block, name, "-NE");
-	} else if (offset.X < 0.5f && offset.Z >= 0.5f) {
-		return AutoRotate_Find(block, name, "-SW");
-	} else if (offset.X >= 0.5f && offset.Z >= 0.5f) {
-		return AutoRotate_Find(block, name, "-SE");
-	}
+static BlockID AutoRotate_RotateCorner(BlockID block, const String* name) {
+	float offsetX = Game_SelectedPos.Intersect.X - (float)Game_SelectedPos.TranslatedPos.X;
+	float offsetZ = Game_SelectedPos.Intersect.Z - (float)Game_SelectedPos.TranslatedPos.Z;
+
+	if (offsetX  < 0.5f && offsetZ  < 0.5f) return AutoRotate_Find(block, name, "-NW");
+	if (offsetX >= 0.5f && offsetZ  < 0.5f) return AutoRotate_Find(block, name, "-NE");
+	if (offsetX  < 0.5f && offsetZ >= 0.5f) return AutoRotate_Find(block, name, "-SW");
+	if (offsetX >= 0.5f && offsetZ >= 0.5f) return AutoRotate_Find(block, name, "-SE");
 	return block;
 }
 
-static BlockID AutoRotate_RotateVertical(BlockID block, const String* name, Vector3 offset) {
-	if (offset.Y >= 0.5f) {
+static BlockID AutoRotate_RotateVertical(BlockID block, const String* name) {
+	float offsetY = Game_SelectedPos.Intersect.Y - (float)Game_SelectedPos.TranslatedPos.Y;
+
+	if (offsetY >= 0.5f) {
 		return AutoRotate_Find(block, name, "-U");
 	} else {
 		return AutoRotate_Find(block, name, "-D");
 	}
 }
 
-static BlockID AutoRotate_RotateOther(BlockID block, const String* name, Vector3 offset) {
+static BlockID AutoRotate_RotateOther(BlockID block, const String* name) {
 	/* Fence type blocks */
 	if (AutoRotate_Find(BLOCK_AIR, name, "-UD") == BLOCK_AIR) {
 		float headY = LocalPlayer_Instance.Base.HeadY;
@@ -505,16 +502,13 @@ static BlockID AutoRotate_RotateOther(BlockID block, const String* name, Vector3
 
 	/* Thin pillar type blocks */
 	Face face = Game_SelectedPos.ClosestFace;
-	if (face == FACE_YMAX || face == FACE_YMIN)
-		return AutoRotate_Find(block, name, "-UD");
-	if (face == FACE_XMAX || face == FACE_XMIN)
-		return AutoRotate_Find(block, name, "-WE");
-	if (face == FACE_ZMAX || face == FACE_ZMIN)
-		return AutoRotate_Find(block, name, "-NS");
+	if (face == FACE_YMAX || face == FACE_YMIN) return AutoRotate_Find(block, name, "-UD");
+	if (face == FACE_XMAX || face == FACE_XMIN) return AutoRotate_Find(block, name, "-WE");
+	if (face == FACE_ZMAX || face == FACE_ZMIN) return AutoRotate_Find(block, name, "-NS");
 	return block;
 }
 
-static BlockID AutoRotate_RotateDirection(BlockID block, const String* name, Vector3 offset) {
+static BlockID AutoRotate_RotateDirection(BlockID block, const String* name) {
 	float headY = LocalPlayer_Instance.Base.HeadY;
 	headY = LocationUpdate_Clamp(headY);
 
@@ -529,26 +523,28 @@ static BlockID AutoRotate_RotateDirection(BlockID block, const String* name, Vec
 	}
 }
 
+#define AR_EQ1(s, x)    (dir0 == x && dir1 == '\0')
+#define AR_EQ2(s, x, y) (dir0 == x && dir1 == y)
 BlockID AutoRotate_RotateBlock(BlockID block) {
 	String name  = Block_UNSAFE_GetName(block);
 	int dirIndex = String_LastIndexOf(&name, '-');
 	if (dirIndex == -1) return block; /* not a directional block */
 
-	String dir = String_UNSAFE_SubstringAt(&name, dirIndex + 1);
-	String baseName = String_UNSAFE_Substring(&name, 0, dirIndex);
+	String dir   = String_UNSAFE_SubstringAt(&name, dirIndex + 1);
+	String group = String_UNSAFE_Substring(&name, 0, dirIndex);
 
-	Vector3 translated, offset;
-	Vector3I_ToVector3(&translated, &Game_SelectedPos.TranslatedPos);
-	Vector3_Sub(&offset, &Game_SelectedPos.Intersect, &translated);
+	if (dir.length > 2) return block;
+	char dir0 = dir.length > 0 ? dir.buffer[0] : '\0'; Char_MakeLower(dir0);
+	char dir1 = dir.length > 1 ? dir.buffer[1] : '\0'; Char_MakeLower(dir1);
 
 	if (AR_EQ2(dir, 'n','w') || AR_EQ2(dir, 'n','e') || AR_EQ2(dir, 's','w') || AR_EQ2(dir, 's','e')) {
-		return AutoRotate_RotateCorner(block, &baseName, offset);
+		return AutoRotate_RotateCorner(block, &group);
 	} else if (AR_EQ1(dir, 'u') || AR_EQ1(dir, 'd')) {
-		return AutoRotate_RotateVertical(block, &baseName, offset);
+		return AutoRotate_RotateVertical(block, &group);
 	} else if (AR_EQ1(dir, 'n') || AR_EQ1(dir, 'w') || AR_EQ1(dir, 's') || AR_EQ1(dir, 'e')) {
-		return AutoRotate_RotateDirection(block, &baseName, offset);
+		return AutoRotate_RotateDirection(block, &group);
 	} else if (AR_EQ2(dir, 'u','d') || AR_EQ2(dir, 'w','e') || AR_EQ2(dir, 'n','s')) {
-		return AutoRotate_RotateOther(block, &baseName, offset);
+		return AutoRotate_RotateOther(block, &group);
 	}
 	return block;
 }

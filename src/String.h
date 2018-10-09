@@ -12,8 +12,7 @@
 /* Indicates that a reference to the buffer in a string argument is persisted after the function has completed.
 Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define STRING_REF
-
-char Char_ToLower(char c);
+#define Char_MakeLower(c) if ((c) >= 'A' && (c) <= 'Z') { (c) += ' '; }
 
 typedef struct String_ {	
 	char* buffer;      /* Pointer to characters, NOT NULL TERMINATED */

@@ -61,11 +61,17 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
 
 /*#define CC_BUILD_GL11*/
+/*#define CC_BUILD_OSX*/
+/*#define CC_BUILD_SOLARIS*/
+#ifndef CC_BUILD_MANUAL
+#ifdef _WIN32
 #define CC_BUILD_D3D9
 #define CC_BUILD_WIN
-/*#define CC_BUILD_OSX*/
-/*#define CC_BUILD_NIX*/
-/*#define CC_BUILD_SOLARIS*/
+#endif
+#ifdef __linux__
+#define CC_BUILD_NIX
+#endif
+#endif
 
 #ifdef CC_BUILD_D3D9
 typedef void* GfxResourceID;

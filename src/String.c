@@ -5,12 +5,6 @@
 #include "ExtMath.h"
 #include "Stream.h"
 
-#define Char_MakeLower(ch) if ((ch) >= 'A' && (ch) <= 'Z') { (ch) += ' '; }
-char Char_ToLower(char c) {
-	Char_MakeLower(c);
-	return c;
-}
-
 String String_Init(STRING_REF char* buffer, uint16_t length, uint16_t capacity) {
 	String str = { buffer, length, capacity }; return str;
 }
