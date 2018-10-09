@@ -140,4 +140,3 @@ float Random_Float(Random* seed) {
 	int raw = (int)(*seed >> (48 - 24));
 	return raw / ((float)(1 << 24));
 }
-

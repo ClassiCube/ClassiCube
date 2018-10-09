@@ -16,7 +16,7 @@ String Gfx_ApiInfo[7] = {
 
 void GfxCommon_Init(void) {
 	GfxCommon_quadVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, 4);
-	GfxCommon_texVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, 4);
+	GfxCommon_texVb  = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, 4);
 
 	uint16_t indices[GFX_MAX_INDICES];
 	GfxCommon_MakeIndices(indices, GFX_MAX_INDICES);
@@ -60,7 +60,7 @@ void GfxCommon_Draw2DFlat(int x, int y, int width, int height, PackedCol col) {
 	VertexP3fC4b verts[4];
 	VertexP3fC4b v; v.Z = 0.0f; v.Col = col;
 
-	v.X = (float)x;           v.Y = (float)y;            verts[0] = v;
+	v.X = (float)x;           v.Y = (float)y;             verts[0] = v;
 	v.X = (float)(x + width);                             verts[1] = v;
 	                           v.Y = (float)(y + height); verts[2] = v;
 	v.X = (float)x;                                       verts[3] = v;

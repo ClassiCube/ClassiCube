@@ -983,7 +983,7 @@ static bool ChatScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 	int chatY  = s->Chat.Y + s->Chat.Height - height;
 	if (!Gui_Contains(s->Chat.X, chatY, s->Chat.Width, height, x, y)) return false;
 
-	char textBuffer[TEXTGROUPWIDGET_LEN];
+	char textBuffer[STRING_SIZE * 4];
 	String text = String_FromArray(textBuffer);
 	TextGroupWidget_GetSelected(&s->Chat, &text, x, y);
 	if (!text.length) return false;
