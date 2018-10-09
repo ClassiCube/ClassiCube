@@ -467,20 +467,20 @@ static BlockID AutoRotate_Find(BlockID block, const String* name, const char* su
 }
 
 static BlockID AutoRotate_RotateCorner(BlockID block, const String* name) {
-	float offsetX = Game_SelectedPos.Intersect.X - (float)Game_SelectedPos.TranslatedPos.X;
-	float offsetZ = Game_SelectedPos.Intersect.Z - (float)Game_SelectedPos.TranslatedPos.Z;
+	float x = Game_SelectedPos.Intersect.X - (float)Game_SelectedPos.TranslatedPos.X;
+	float z = Game_SelectedPos.Intersect.Z - (float)Game_SelectedPos.TranslatedPos.Z;
 
-	if (offsetX  < 0.5f && offsetZ  < 0.5f) return AutoRotate_Find(block, name, "-NW");
-	if (offsetX >= 0.5f && offsetZ  < 0.5f) return AutoRotate_Find(block, name, "-NE");
-	if (offsetX  < 0.5f && offsetZ >= 0.5f) return AutoRotate_Find(block, name, "-SW");
-	if (offsetX >= 0.5f && offsetZ >= 0.5f) return AutoRotate_Find(block, name, "-SE");
+	if (x  < 0.5f && z  < 0.5f) return AutoRotate_Find(block, name, "-NW");
+	if (x >= 0.5f && z  < 0.5f) return AutoRotate_Find(block, name, "-NE");
+	if (x  < 0.5f && z >= 0.5f) return AutoRotate_Find(block, name, "-SW");
+	if (x >= 0.5f && z >= 0.5f) return AutoRotate_Find(block, name, "-SE");
 	return block;
 }
 
 static BlockID AutoRotate_RotateVertical(BlockID block, const String* name) {
-	float offsetY = Game_SelectedPos.Intersect.Y - (float)Game_SelectedPos.TranslatedPos.Y;
+	float y = Game_SelectedPos.Intersect.Y - (float)Game_SelectedPos.TranslatedPos.Y;
 
-	if (offsetY >= 0.5f) {
+	if (y >= 0.5f) {
 		return AutoRotate_Find(block, name, "-U");
 	} else {
 		return AutoRotate_Find(block, name, "-D");
@@ -490,10 +490,10 @@ static BlockID AutoRotate_RotateVertical(BlockID block, const String* name) {
 static BlockID AutoRotate_RotateOther(BlockID block, const String* name) {
 	/* Fence type blocks */
 	if (AutoRotate_Find(BLOCK_AIR, name, "-UD") == BLOCK_AIR) {
-		float headY = LocalPlayer_Instance.Base.HeadY;
-		headY = LocationUpdate_Clamp(headY);
+		float yaw = LocalPlayer_Instance.Base.HeadY;
+		yaw = LocationUpdate_Clamp(yaw);
 
-		if (headY < 45.0f || (headY >= 135.0f && headY < 225.0f) || headY > 315.0f) {
+		if (yaw < 45.0f || (yaw >= 135.0f && yaw < 225.0f) || yaw > 315.0f) {
 			return AutoRotate_Find(block, name, "-WE");
 		} else {
 			return AutoRotate_Find(block, name, "-NS");
@@ -509,14 +509,14 @@ static BlockID AutoRotate_RotateOther(BlockID block, const String* name) {
 }
 
 static BlockID AutoRotate_RotateDirection(BlockID block, const String* name) {
-	float headY = LocalPlayer_Instance.Base.HeadY;
-	headY = LocationUpdate_Clamp(headY);
+	float yaw = LocalPlayer_Instance.Base.HeadY;
+	yaw = LocationUpdate_Clamp(yaw);
 
-	if (headY >= 45.0f && headY < 135.0f) {
+	if (yaw >= 45.0f && yaw < 135.0f) {
 		return AutoRotate_Find(block, name, "-E");
-	} else if (headY >= 135.0f && headY < 225.0f) {
+	} else if (yaw >= 135.0f && yaw < 225.0f) {
 		return AutoRotate_Find(block, name, "-S");
-	} else if (headY >= 225.0f && headY < 315.0f) {
+	} else if (yaw >= 225.0f && yaw < 315.0f) {
 		return AutoRotate_Find(block, name, "-W");
 	} else {
 		return AutoRotate_Find(block, name, "-N");

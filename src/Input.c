@@ -246,7 +246,7 @@ static void Hotkeys_RemoveText(int index) {
 }
 
 
-void Hotkeys_Add(Key trigger, uint8_t flags, const String* text, bool more) {
+void Hotkeys_Add(Key trigger, int flags, const String* text, bool more) {
 	int i; struct HotkeyData* hKey = HotkeysList;
 
 	for (i = 0; i < HotkeysText.Count; i++, hKey++) {		
@@ -261,7 +261,7 @@ void Hotkeys_Add(Key trigger, uint8_t flags, const String* text, bool more) {
 	Hotkeys_AddNewHotkey(trigger, flags, text, more);
 }
 
-bool Hotkeys_Remove(Key trigger, uint8_t flags) {
+bool Hotkeys_Remove(Key trigger, int flags) {
 	int i, j; struct HotkeyData* hKey = HotkeysList;
 
 	for (i = 0; i < HotkeysText.Count; i++, hKey++) {
@@ -277,10 +277,10 @@ bool Hotkeys_Remove(Key trigger, uint8_t flags) {
 }
 
 int Hotkeys_FindPartial(Key key) {
-	uint8_t flags = 0;
-	if (Key_IsControlPressed()) flags |= HOTKEYS_FLAG_CTRL;
-	if (Key_IsShiftPressed())   flags |= HOTKEYS_FLAG_SHIFT;
-	if (Key_IsAltPressed())     flags |= HOTKEYS_FLAG_ALT;
+	int flags = 0;
+	if (Key_IsControlPressed()) flags |= HOTKEY_FLAG_CTRL;
+	if (Key_IsShiftPressed())   flags |= HOTKEY_FLAG_SHIFT;
+	if (Key_IsAltPressed())     flags |= HOTKEY_FLAG_ALT;
 
 	int i;
 	for (i = 0; i < HotkeysText.Count; i++) {
@@ -316,21 +316,21 @@ void Hotkeys_Init(void) {
 	}
 }
 
-void Hotkeys_UserRemovedHotkey(Key trigger, uint8_t flags) {
+void Hotkeys_UserRemovedHotkey(Key trigger, int flags) {
 	char keyBuffer[STRING_SIZE];
 	String key = String_FromArray(keyBuffer);
 
-	String_Format2(&key, "hotkey-%c&%b", Key_Names[trigger], &flags);
+	String_Format2(&key, "hotkey-%c&%i", Key_Names[trigger], &flags);
 	Options_SetString(&key, NULL);
 }
 
-void Hotkeys_UserAddedHotkey(Key trigger, uint8_t flags, bool moreInput, const String* text) {
+void Hotkeys_UserAddedHotkey(Key trigger, int flags, bool moreInput, const String* text) {
 	char keyBuffer[STRING_SIZE];
 	String key = String_FromArray(keyBuffer);
 	char valueBuffer[STRING_SIZE * 2];
 	String value = String_FromArray(valueBuffer);
 
-	String_Format2(&key, "hotkey-%c&%b", Key_Names[trigger], &flags);
+	String_Format2(&key, "hotkey-%c&%i", Key_Names[trigger], &flags);
 	String_Format2(&value, "%t&%s", &moreInput, text);
 	Options_SetString(&key, &value);
 }

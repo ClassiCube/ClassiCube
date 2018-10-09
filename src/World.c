@@ -11,15 +11,22 @@
 #include "Game.h"
 
 void World_Reset(void) {
+#ifdef EXTENDED_BLOCKS
+	if (World_Blocks != World_Blocks2) Mem_Free(World_Blocks2);
+#endif
 	Mem_Free(World_Blocks);
 	World_Width = 0; World_Height = 0; World_Length = 0;
 	World_MaxX = 0;  World_MaxY = 0;   World_MaxZ = 0;
+
+#ifdef EXTENDED_BLOCKS
+	World_Blocks2 = NULL;
+#endif
 	World_Blocks = NULL; World_BlocksSize = 0;
 	Env_Reset();
 
 	Random rnd;
 	Random_InitFromCurrentTime(&rnd);
-	/* add a bit of randomness for uuid */
+	/* seed a bit more randomness for uuid */
 	int i;
 	for (i = 0; i < Game_Username.length; i++) {
 		Random_Next(&rnd, Game_Username.buffer[i] + 3);

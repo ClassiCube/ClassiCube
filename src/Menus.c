@@ -919,9 +919,9 @@ static bool EditHotkeyScreen_KeyDown(void* screen, Key key) {
 			s->CurHotkey.Trigger = key;
 			EditHotkeyScreen_MakeBaseKey(s, EditHotkeyScreen_BaseKey);
 		} else if (s->SelectedI == 1) {
-			if      (key == Key_ControlLeft || key == Key_ControlRight) s->CurHotkey.Flags |= HOTKEYS_FLAG_CTRL;
-			else if (key == Key_ShiftLeft   || key == Key_ShiftRight)   s->CurHotkey.Flags |= HOTKEYS_FLAG_SHIFT;
-			else if (key == Key_AltLeft     || key == Key_AltRight)     s->CurHotkey.Flags |= HOTKEYS_FLAG_ALT;
+			if      (key == Key_ControlLeft || key == Key_ControlRight) s->CurHotkey.Flags |= HOTKEY_FLAG_CTRL;
+			else if (key == Key_ShiftLeft   || key == Key_ShiftRight)   s->CurHotkey.Flags |= HOTKEY_FLAG_SHIFT;
+			else if (key == Key_AltLeft     || key == Key_AltRight)     s->CurHotkey.Flags |= HOTKEY_FLAG_ALT;
 			else s->CurHotkey.Flags = 0;
 
 			EditHotkeyScreen_MakeModifiers(s, EditHotkeyScreen_Modifiers);
@@ -1498,9 +1498,9 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 		String shift = String_FromConst("Shift");
 		String alt   = String_FromConst("Alt");
 
-		if (String_ContainsString(&value, &ctrl))  flags |= HOTKEYS_FLAG_CTRL;
-		if (String_ContainsString(&value, &shift)) flags |= HOTKEYS_FLAG_SHIFT;
-		if (String_ContainsString(&value, &alt))   flags |= HOTKEYS_FLAG_ALT;
+		if (String_ContainsString(&value, &ctrl))  flags |= HOTKEY_FLAG_CTRL;
+		if (String_ContainsString(&value, &shift)) flags |= HOTKEY_FLAG_SHIFT;
+		if (String_ContainsString(&value, &alt))   flags |= HOTKEY_FLAG_ALT;
 	}
 
 	Key baseKey = Utils_ParseEnum(&key, Key_None, Key_Names, Key_Count);
@@ -1515,9 +1515,9 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 }
 
 static void HotkeyListScreen_MakeFlags(int flags, String* str) {
-	if (flags & HOTKEYS_FLAG_CTRL)  String_AppendConst(str, " Ctrl");
-	if (flags & HOTKEYS_FLAG_SHIFT) String_AppendConst(str, " Shift");
-	if (flags & HOTKEYS_FLAG_ALT)   String_AppendConst(str, " Alt");
+	if (flags & HOTKEY_FLAG_CTRL)  String_AppendConst(str, " Ctrl");
+	if (flags & HOTKEY_FLAG_SHIFT) String_AppendConst(str, " Shift");
+	if (flags & HOTKEY_FLAG_ALT)   String_AppendConst(str, " Alt");
 }
 
 struct Screen* HotkeyListScreen_MakeInstance(void) {

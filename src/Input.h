@@ -128,14 +128,14 @@ struct HotkeyData {
 #define HOTKEYS_MAX_COUNT 256
 struct HotkeyData HotkeysList[HOTKEYS_MAX_COUNT];
 StringsBuffer HotkeysText;
-#define HOTKEYS_FLAG_CTRL  1
-#define HOTKEYS_FLAG_SHIFT 2
-#define HOTKEYS_FLAG_ALT   4
+enum HOTKEY_FLAGS {
+	HOTKEY_FLAG_CTRL = 1, HOTKEY_FLAG_SHIFT = 2, HOTKEY_FLAG_ALT = 4,
+};
 
-void Hotkeys_Add(Key trigger, uint8_t flags, const String* text, bool more);
-bool Hotkeys_Remove(Key trigger, uint8_t flags);
+void Hotkeys_Add(Key trigger, int flags, const String* text, bool more);
+bool Hotkeys_Remove(Key trigger, int flags);
 int Hotkeys_FindPartial(Key key);
 void Hotkeys_Init(void);
-void Hotkeys_UserRemovedHotkey(Key trigger, uint8_t flags);
-void Hotkeys_UserAddedHotkey(Key trigger, uint8_t flags, bool moreInput, const String* text);
+void Hotkeys_UserRemovedHotkey(Key trigger, int flags);
+void Hotkeys_UserAddedHotkey(Key trigger, int flags, bool moreInput, const String* text);
 #endif

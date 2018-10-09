@@ -500,6 +500,7 @@ static void MPConnection_Reset(void) {
 	}
 
 	net_writeFailed = false;
+	Block_SetUsedCount(256);
 	Handlers_Reset();
 	ServerConnection_Free();
 }
