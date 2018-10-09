@@ -2,15 +2,19 @@
 
 Install appropriate libs as required. Build steps are still WIP, but current way I'm using is:
 
-Cross compiling for windows:
+Compiling for linux: 
 
-```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lopengl32```
+```gcc *.c -o ClassiCube -lX11 -lpthread -lGL -lm -lcurl -lopenal```
+
+Cross compiling for windows:
 
 ```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -ld3d9```
 
-Compiling for linux: 
+Explicitly:
 
-```gcc *.c -o Classicube -lX11 -lpthread -lGL -lm -lcurl -lopenal```
+```i586-mingw32msvc-gcc *.c -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_D3D9 -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -ld3d9```
+
+```i586-mingw32msvc-gcc *.c -DCC_BUILD_MANUAL -DCC_BUILD_WIN -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lopengl32```
 
 ### Platform
 Although the majority of the code is designed to be platform-independent, some per-platform functionality is required.
@@ -27,7 +31,8 @@ Some of the per-platform functionality you'll be required to implement is:
 - Memory allocation, copying, setting
 
 ### Types
-* Integers and real numbers are always of a fixed size, see ```Typedefs.h```
+* Integers generally use plain ```int```, floating point numbers use ```float``` or ```double```. 
+* Explicit integer types are also provided in ```Core.h```.
 * There are a few typedefs of integer types to provide better context in some functions
 * A few common simple structs are typedef-ed, but are rarely otherwise.
 * ```bool``` is an alias for 8 bit unsigned integer
@@ -77,15 +82,15 @@ void String_Format3(str, format, a1, a2, a3);
 void String_Format4(str, format, a1, a2, a3, a4);
 ```
 #### Formatting specifiers
-| Specifier | Meaning | Example |
+| Specifier | Type | Example |
 | ------------- |-------------| -----|
-| ```%b```      | UInt8 | ```%b``` of ```46``` = ```46``` |
-| ```%i```      | Int32 | ```%i``` of ```-5``` = ```-5``` |
-| ```%f[0-9]``` | Real32 |  ```%f2``` of ```321.3519``` = ```321.35``` |
-| ```%p[0-9]``` | Int32, padded | ```%p3``` of ```5``` = ```005``` |
+| ```%b```      | uint8_t | ```%b``` of ```46``` = ```46``` |
+| ```%i```      | int | ```%i``` of ```-5``` = ```-5``` |
+| ```%f[0-9]``` | float |  ```%f2``` of ```321.3519``` = ```321.35``` |
+| ```%p[0-9]``` | int | ```%p3``` of ```5``` = ```005``` |
 | ```%t```      | Boolean | ```%t``` of ```1``` = ```true``` |
 | ```%c```      | char* | ```%c``` of ```"ABCD"``` = ```ABCD``` |
 | ```%s```      | String |  ```%s``` of ```{"ABCD", 2, 4}``` = ```AB``` |
-| ```%r```      | char, raw | ```%r``` of ```47``` = ```\``` |
-| ```%x```      | UIntPtr, hex | ```%x``` of ```31``` = ```2F``` |
-| ```%h```      | UInt32, hex | ```%h``` of ```11``` = ```B``` |
+| ```%r```      | char | ```%r``` of ```47``` = ```\``` |
+| ```%x```      | uintptr_t | ```%x``` of ```31``` = ```2F``` |
+| ```%h```      | uint32_t | ```%h``` of ```11``` = ```B``` |
