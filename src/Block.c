@@ -455,8 +455,8 @@ void Block_UpdateCulling(BlockID block) {
 /*########################################################################################################################*
 *-------------------------------------------------------AutoRotate--------------------------------------------------------*
 *#########################################################################################################################*/
-#define AR_EQ1(s, x) (s.length >= 1 && Char_ToLower(s.buffer[0]) == x)
-#define AR_EQ2(s, x, y) (s.length >= 2 && Char_ToLower(s.buffer[0]) == x && Char_ToLower(s.buffer[1]) == y)
+#define AR_EQ1(s, x) (s.length == 1 && Char_ToLower(s.buffer[0]) == x)
+#define AR_EQ2(s, x, y) (s.length == 2 && Char_ToLower(s.buffer[0]) == x && Char_ToLower(s.buffer[1]) == y)
 
 static BlockID AutoRotate_Find(BlockID block, const String* name, const char* suffix) {
 	char buffer[STRING_SIZE * 2];
