@@ -193,11 +193,10 @@ void Chat_AddOf(const String* text, int msgType) {
 *#########################################################################################################################*/
 struct ChatCommand {
 	const char* Name;
-	const char* Help[5];
 	void (*Execute)(const String* args, int argsCount);
 	bool SingleplayerOnly;
+	const char* Help[5];
 };
-typedef void (*ChatCommandConstructor)(struct ChatCommand* cmd);
 
 #define COMMANDS_PREFIX "/client"
 #define COMMANDS_PREFIX_SPACE "/client "
@@ -215,14 +214,11 @@ static bool Commands_IsCommandPrefix(const String* input) {
 		|| String_CaselessEquals(input, &prefix);
 }
 
-static void Commands_Register(ChatCommandConstructor constructor) {
+NOINLINE_ static void Commands_Register(struct ChatCommand* cmd) {
 	if (commands_count == Array_Elems(commands_list)) {
 		ErrorHandler_Fail("Commands_Register - hit max client commands");
 	}
-
-	struct ChatCommand command = { 0 };
-	constructor(&command);
-	commands_list[commands_count++] = command;
+	commands_list[commands_count++] = *cmd;
 }
 
 static struct ChatCommand* Commands_GetMatch(const String* cmdName) {
@@ -252,7 +248,8 @@ static struct ChatCommand* Commands_GetMatch(const String* cmdName) {
 	return match;
 }
 
-static void Commands_PrintDefined(void) {
+static void Commands_PrintDefault(void) {
+	Chat_AddRaw("&eList of client commands:");
 	char strBuffer[STRING_SIZE];
 	String str = String_FromArray(strBuffer);
 	int i;
@@ -270,6 +267,7 @@ static void Commands_PrintDefined(void) {
 	}
 
 	if (str.length) { Chat_Add(&str); }
+	Chat_AddRaw("&eTo see help for a command, type /client help [cmd name]");
 }
 
 static void Commands_Execute(const String* input) {
@@ -288,10 +286,7 @@ static void Commands_Execute(const String* input) {
 	text = String_UNSAFE_Substring(&text, offset, text.length - offset);
 
 	if (!text.length) { /* only / or /client */
-		Chat_AddRaw("&eList of client commands:");
-		Commands_PrintDefined();
-		Chat_AddRaw("&eTo see help for a command, type &a/client help [cmd name]");
-		return;
+		Commands_PrintDefault(); return;
 	}
 
 	String args[10];
@@ -305,36 +300,31 @@ static void Commands_Execute(const String* input) {
 
 
 /*########################################################################################################################*
-*-------------------------------------------------------Help command------------------------------------------------------*
+*------------------------------------------------------Simple commands----------------------------------------------------*
 *#########################################################################################################################*/
 static void HelpCommand_Execute(const String* args, int argsCount) {
-	if (argsCount == 1) {
-		Chat_AddRaw("&eList of client commands:");
-		Commands_PrintDefined();
-		Chat_AddRaw("&eTo see help for a command, type /client help [cmd name]");
-	} else {
-		struct ChatCommand* cmd = Commands_GetMatch(&args[1]);
-		if (!cmd) return;
+	if (argsCount == 1) { 
+		Commands_PrintDefault(); return; 
+	}
 
-		int i;
-		for (i = 0; i < Array_Elems(cmd->Help); i++) {
-			if (!cmd->Help[i]) continue;
-			Chat_AddRaw(cmd->Help[i]);
-		}
+	struct ChatCommand* cmd = Commands_GetMatch(&args[1]);
+	if (!cmd) return;
+
+	int i;
+	for (i = 0; i < Array_Elems(cmd->Help); i++) {
+		if (!cmd->Help[i]) continue;
+		Chat_AddRaw(cmd->Help[i]);
 	}
 }
 
-static void HelpCommand_Make(struct ChatCommand* cmd) {
-	cmd->Name    = "Help";
-	cmd->Help[0] = "&a/client help [command name]";
-	cmd->Help[1] = "&eDisplays the help for the given command.";
-	cmd->Execute = HelpCommand_Execute;
-}
+struct ChatCommand HelpCommand_Instance = {
+	"Help", HelpCommand_Execute, false,
+	{
+		"&a/client help [command name]",
+		"&eDisplays the help for the given command.",
+	}
+};
 
-
-/*########################################################################################################################*
-*------------------------------------------------------GpuInfo command----------------------------------------------------*
-*#########################################################################################################################*/
 static void GpuInfoCommand_Execute(const String* args, int argsCount) {
 	Gfx_UpdateApiInfo();
 	int i;
@@ -344,17 +334,14 @@ static void GpuInfoCommand_Execute(const String* args, int argsCount) {
 	}
 }
 
-static void GpuInfoCommand_Make(struct ChatCommand* cmd) {
-	cmd->Name    = "GpuInfo";
-	cmd->Help[0] = "&a/client gpuinfo";
-	cmd->Help[1] = "&eDisplays information about your GPU.";
-	cmd->Execute = GpuInfoCommand_Execute;
-}
+struct ChatCommand GpuInfoCommand_Instance = {
+	"GpuInfo", GpuInfoCommand_Execute, false,
+	{
+		"&a/client gpuinfo",
+		"&eDisplays information about your GPU.",
+	}
+};
 
-
-/*########################################################################################################################*
-*----------------------------------------------------RenderType command---------------------------------------------------*
-*#########################################################################################################################*/
 static void RenderTypeCommand_Execute(const String* args, int argsCount) {
 	if (argsCount == 1) {
 		Chat_AddRaw("&e/client: &cYou didn't specify a new render type."); return;
@@ -372,15 +359,16 @@ static void RenderTypeCommand_Execute(const String* args, int argsCount) {
 	}
 }
 
-static void RenderTypeCommand_Make(struct ChatCommand* cmd) {
-	cmd->Name    = "RenderType";
-	cmd->Help[0] = "&a/client rendertype [normal/legacy/legacyfast]";
-	cmd->Help[1] = "&bnormal: &eDefault renderer, with all environmental effects enabled.";
-	cmd->Help[2] = "&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects.";
-	cmd->Help[3] = "&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.";
-	cmd->Help[4] = "&bnormalfast: &eSacrifices clouds, fog and overhead sky for faster performance.";
-	cmd->Execute = RenderTypeCommand_Execute;
-}
+struct ChatCommand RenderTypeCommand_Instance = {
+	"RenderType", RenderTypeCommand_Execute, false,
+	{
+		"&a/client rendertype [normal/legacy/legacyfast]",
+		"&bnormal: &eDefault renderer, with all environmental effects enabled.",
+		"&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects.",
+		"&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
+		"&bnormalfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
+	}
+};
 
 static void ResolutionCommand_Execute(const String* args, int argsCount) {
 	int width, height;
@@ -397,32 +385,30 @@ static void ResolutionCommand_Execute(const String* args, int argsCount) {
 	}
 }
 
-static void ResolutionCommand_Make(struct ChatCommand* cmd) {
-	cmd->Name    = "Resolution";
-	cmd->Help[0] = "&a/client resolution [width] [height]";
-	cmd->Help[1] = "&ePrecisely sets the size of the rendered window.";
-	cmd->Execute = ResolutionCommand_Execute;
-}
+struct ChatCommand ResolutionCommand_Instance = {
+	"Resolution", ResolutionCommand_Execute, false,
+	{
+		"&a/client resolution [width] [height]",
+		"&ePrecisely sets the size of the rendered window.",
+	}
+};
 
 static void ModelCommand_Execute(const String* args, int argsCount) {
 	if (argsCount == 1) {
 		Chat_AddRaw("&e/client model: &cYou didn't specify a model name.");
 	} else {
-		char modelBuffer[STRING_SIZE];
-		String model = String_FromArray(modelBuffer);
-		String_AppendString(&model, &args[1]);
-		Entity_SetModel(&LocalPlayer_Instance.Base, &model);
+		Entity_SetModel(&LocalPlayer_Instance.Base, &args[1]);
 	}
 }
 
-static void ModelCommand_Make(struct ChatCommand* cmd) {
-	cmd->Name    = "Model";
-	cmd->Help[0] = "&a/client model [name]";
-	cmd->Help[1] = "&bnames: &echibi, chicken, creeper, human, pig, sheep";
-	cmd->Help[2] = "&e       skeleton, spider, zombie, sitting, <numerical block id>";
-	cmd->SingleplayerOnly = true;
-	cmd->Execute = ModelCommand_Execute;
-}
+struct ChatCommand ModelCommand_Instance = {
+	"Model", ModelCommand_Execute, true,
+	{
+		"&a/client model [name]",
+		"&bnames: &echibi, chicken, creeper, human, pig, sheep",
+		"&e       skeleton, spider, zombie, sitting, <numerical block id>",
+	}
+};
 
 
 /*########################################################################################################################*
@@ -516,16 +502,16 @@ static void CuboidCommand_Execute(const String* args, int argsCount) {
 	cuboid_hooked = true;
 }
 
-static void CuboidCommand_Make(struct ChatCommand* cmd) {
-	cmd->Name    = "Cuboid";
-	cmd->Help[0] = "&a/client cuboid [block] [persist]";
-	cmd->Help[1] = "&eFills the 3D rectangle between two points with [block].";
-	cmd->Help[2] = "&eIf no block is given, uses your currently held block.";
-	cmd->Help[3] = "&e  If persist is given and is \"yes\", then the command";
-	cmd->Help[4] = "&e  will repeatedly cuboid, without needing to be typed in again.";
-	cmd->SingleplayerOnly = true;
-	cmd->Execute = CuboidCommand_Execute;
-}
+struct ChatCommand CuboidCommand_Instance = {
+	"Cuboid", CuboidCommand_Execute, true, 
+	{
+		"&a/client cuboid [block] [persist]",
+		"&eFills the 3D rectangle between two points with [block].",
+		"&eIf no block is given, uses your currently held block.",
+		"&e  If persist is given and is \"yes\", then the command",
+		"&e  will repeatedly cuboid, without needing to be typed in again.",
+	}
+};
 
 
 /*########################################################################################################################*
@@ -548,13 +534,13 @@ static void TeleportCommand_Execute(const String* args, int argsCount) {
 	}
 }
 
-static void TeleportCommand_Make(struct ChatCommand* cmd) {
-	cmd->Name    = "TP";
-	cmd->Help[0] = "&a/client tp [x y z]";
-	cmd->Help[1] = "&eMoves you to the given coordinates.";
-	cmd->SingleplayerOnly = true;
-	cmd->Execute = TeleportCommand_Execute;
-}
+struct ChatCommand TeleportCommand_Instance = {
+	"TP", TeleportCommand_Execute, true,
+	{
+		"&a/client tp [x y z]",
+		"&eMoves you to the given coordinates.",
+	}
+};
 
 
 /*########################################################################################################################*
@@ -573,13 +559,13 @@ void Chat_Send(const String* text, bool logUsage) {
 }
 
 static void Chat_Init(void) {
-	Commands_Register(GpuInfoCommand_Make);
-	Commands_Register(HelpCommand_Make);
-	Commands_Register(RenderTypeCommand_Make);
-	Commands_Register(ResolutionCommand_Make);
-	Commands_Register(ModelCommand_Make);
-	Commands_Register(CuboidCommand_Make);
-	Commands_Register(TeleportCommand_Make);
+	Commands_Register(&GpuInfoCommand_Instance);
+	Commands_Register(&HelpCommand_Instance);
+	Commands_Register(&RenderTypeCommand_Instance);
+	Commands_Register(&ResolutionCommand_Instance);
+	Commands_Register(&ModelCommand_Instance);
+	Commands_Register(&CuboidCommand_Instance);
+	Commands_Register(&TeleportCommand_Instance);
 }
 
 static void Chat_Reset(void) {
