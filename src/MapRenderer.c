@@ -220,7 +220,7 @@ void MapRenderer_RenderTranslucent(double delta) {
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Gfx_SetTexturing(false);
 	Gfx_SetAlphaBlending(false);
-	Gfx_SetColourWriteMask(false, false, false, false);
+	Gfx_SetColWriteMask(false, false, false, false);
 
 	int batch;
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
@@ -235,7 +235,7 @@ void MapRenderer_RenderTranslucent(double delta) {
 	/* Then actually draw the transluscent blocks */
 	Gfx_SetAlphaBlending(true);
 	Gfx_SetTexturing(true);
-	Gfx_SetColourWriteMask(true, true, true, true);
+	Gfx_SetColWriteMask(true, true, true, true);
 	Gfx_SetDepthWrite(false); /* we already calculated depth values in depth pass */
 
 	Gfx_EnableMipmaps();

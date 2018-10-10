@@ -324,7 +324,7 @@ static void Animations_PackChanged(void* obj) {
 
 static void Animations_FileChanged(void* obj, struct Stream* stream, const String* name) {
 	if (String_CaselessEqualsConst(name, "animations.png")) {
-		ReturnCode res = Bitmap_DecodePng(&anims_bmp, stream);
+		ReturnCode res = Png_Decode(&anims_bmp, stream);
 		if (!res) return;
 
 		Chat_LogError2(res, "decoding", name);

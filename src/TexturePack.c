@@ -440,7 +440,7 @@ void TexturePack_ExtractZip_File(const String* filename) {
 
 ReturnCode TexturePack_ExtractTerrainPng(struct Stream* stream) {
 	Bitmap bmp; 
-	ReturnCode res = Bitmap_DecodePng(&bmp, stream);
+	ReturnCode res = Png_Decode(&bmp, stream);
 
 	if (!res) {
 		Event_RaiseVoid(&TextureEvents_PackChanged);
@@ -499,7 +499,7 @@ void TexturePack_Extract_Req(struct AsyncRequest* item) {
 	TextureCache_AddLastModified(&url, &item->LastModified);
 
 	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len);
-	bool png = Bitmap_DetectPng(data, len);
+	bool png = Png_Detect(data, len);
 	ReturnCode res = png ? TexturePack_ExtractTerrainPng(&mem) 
 						: TexturePack_ExtractZip(&mem);
 	const char* operation = png ? "decoding" : "extracting";

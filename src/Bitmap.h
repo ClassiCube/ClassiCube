@@ -19,12 +19,13 @@ void Bitmap_Allocate(Bitmap* bmp, int width, int height);
 /* Allocates a power-of-2 sized bitmap larger or equal to to the given size, and clears it to 0. You are responsible for freeing its memory! */
 void Bitmap_AllocateClearedPow2(Bitmap* bmp, int width, int height);
 
-bool Bitmap_DetectPng(uint8_t* data, uint32_t len);
+bool Png_Detect(uint8_t* data, uint32_t len);
+typedef int (*Png_RowSelector)(Bitmap* bmp, int row);
 /*
   Partially based off information from
      https://handmade.network/forums/wip/t/2363-implementing_a_basic_png_reader_the_handmade_way
      https://github.com/nothings/stb/blob/master/stb_image.h
 */
-ReturnCode Bitmap_DecodePng(Bitmap* bmp, struct Stream* stream);
-ReturnCode Bitmap_EncodePng(Bitmap* bmp, struct Stream* stream);
+ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream);
+ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow);
 #endif

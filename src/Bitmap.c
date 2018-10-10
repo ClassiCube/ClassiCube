@@ -58,7 +58,7 @@ enum PNG_FILTER {
 typedef void (*Png_RowExpander)(int width, uint32_t* palette, uint8_t* src, uint32_t* dst);
 uint8_t png_sig[PNG_SIG_SIZE] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
-bool Bitmap_DetectPng(uint8_t* data, uint32_t len) {
+bool Png_Detect(uint8_t* data, uint32_t len) {
 	if (len < PNG_SIG_SIZE) return false;
 	int i;
 
@@ -324,14 +324,14 @@ static void Png_ComputeTransparency(Bitmap* bmp, uint32_t transparentCol) {
 /* Most bits per sample is 16. Most samples per pixel is 4. Add 1 for filter byte. */
 #define PNG_BUFFER_SIZE ((PNG_MAX_DIMS * 2 * 4 + 1) * 2)
 /* TODO: Test a lot of .png files and ensure output is right */
-ReturnCode Bitmap_DecodePng(Bitmap* bmp, struct Stream* stream) {
+ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 	Bitmap_Create(bmp, 0, 0, NULL);
 	uint8_t tmp[PNG_PALETTE * 3];
 	ReturnCode res;
 
 	res = Stream_Read(stream, tmp, PNG_SIG_SIZE);
 	if (res) return res;
-	if (!Bitmap_DetectPng(tmp, PNG_SIG_SIZE)) return PNG_ERR_INVALID_SIG;
+	if (!Png_Detect(tmp, PNG_SIG_SIZE)) return PNG_ERR_INVALID_SIG;
 
 	uint32_t transparentCol = PackedCol_ARGB(0, 0, 0, 255);
 	uint8_t col, bitsPerSample, bytesPerPixel;
@@ -607,7 +607,7 @@ static void Png_EncodeRow(uint8_t* src, uint8_t* cur, uint8_t* prior, uint8_t* b
 	best[0] = bestFilter;
 }
 
-ReturnCode Bitmap_EncodePng(Bitmap* bmp, struct Stream* stream) {
+ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow) {
 	ReturnCode res;
 	uint8_t tmp[32];
 	if ((res = Stream_Write(stream, png_sig, PNG_SIG_SIZE))) return res;
@@ -649,9 +649,11 @@ ReturnCode Bitmap_EncodePng(Bitmap* bmp, struct Stream* stream) {
 		ZLib_MakeStream(&zlStream, &zlState, stream);
 
 		for (y = 0; y < bmp->Height; y++) {
-			uint8_t* src  = (uint8_t*)Bitmap_GetRow(bmp, y);
+			int row = selectRow(bmp, y);
+			uint8_t* src  = (uint8_t*)Bitmap_GetRow(bmp, row);
 			uint8_t* prev = (y & 1) == 0 ? prevLine : curLine;
-			uint8_t* cur  = (y & 1) == 0 ? curLine : prevLine;
+			uint8_t* cur  = (y & 1) == 0 ? curLine  : prevLine;
+
 			Png_EncodeRow(src, cur, prev, bestLine, lineSize);
 			/* +1 for filter byte */
 			if ((res = Stream_Write(&zlStream, bestLine, lineSize + 1))) return res;

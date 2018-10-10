@@ -9,10 +9,6 @@
 */
 struct Stream;
 
-#define ICOUNT(verticesCount) (((verticesCount) >> 2) * 6)
-#define VERTEX_FORMAT_P3FC4B 0
-#define VERTEX_FORMAT_P3FT2FC4B 1
-
 enum COMPARE_FUNC {
 	COMPARE_FUNC_ALWAYS, COMPARE_FUNC_NOTEQUAL,  COMPARE_FUNC_NEVER,
 	COMPARE_FUNC_LESS,   COMPARE_FUNC_LESSEQUAL, COMPARE_FUNC_EQUAL,
@@ -23,8 +19,9 @@ enum BLEND_FUNC {
 	BLEND_FUNC_INV_SRC_ALPHA, BLEND_FUNC_DST_ALPHA, BLEND_FUNC_INV_DST_ALPHA,
 };
 
-enum FOG_FUNC { FOG_LINEAR, FOG_EXP, FOG_EXP2, };
-enum MATRIX_TYPE { MATRIX_TYPE_PROJECTION, MATRIX_TYPE_VIEW, MATRIX_TYPE_TEXTURE };
+enum VERTEX_FORMAT { VERTEX_FORMAT_P3FC4B, VERTEX_FORMAT_P3FT2FC4B };
+enum FOG_FUNC      { FOG_LINEAR, FOG_EXP, FOG_EXP2 };
+enum MATRIX_TYPE   { MATRIX_TYPE_PROJECTION, MATRIX_TYPE_VIEW, MATRIX_TYPE_TEXTURE };
 
 void Gfx_Init(void);
 void Gfx_Free(void);
@@ -36,10 +33,11 @@ bool Gfx_Mipmaps;
 bool Gfx_CustomMipmapsLevels;
 struct Matrix Gfx_View, Gfx_Projection;
 
+#define ICOUNT(verticesCount) (((verticesCount) >> 2) * 6)
 #define GFX_MAX_INDICES (65536 / 4 * 6)
 #define GFX_MAX_VERTICES 65536
 
-/* Callback invoked when the current context is lost, and is repeatedly invoked until the context can be retrieved. */
+/* Callback invoked when the context is lost. Repeatedly invoked until a context can be retrieved. */
 ScheduledTaskCallback Gfx_LostContextFunction;
 
 GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps);
@@ -69,7 +67,7 @@ void Gfx_Clear(void);
 void Gfx_ClearCol(PackedCol col);
 void Gfx_SetDepthTest(bool enabled);
 void Gfx_SetDepthTestFunc(int compareFunc);
-void Gfx_SetColourWriteMask(bool r, bool g, bool b, bool a);
+void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a);
 void Gfx_SetDepthWrite(bool enabled);
 
 GfxResourceID Gfx_CreateDynamicVb(int vertexFormat, int maxVertices);

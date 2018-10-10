@@ -209,7 +209,7 @@ bool Game_CanPick(BlockID block) {
 
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, uint8_t* skinType) {
 	Bitmap bmp; 
-	ReturnCode res = Bitmap_DecodePng(&bmp, src);
+	ReturnCode res = Png_Decode(&bmp, src);
 	if (res) { Chat_LogError2(res, "decoding", file); }
 
 	bool success = !res && Game_ValidateBitmap(file, &bmp);
@@ -287,7 +287,7 @@ static void Game_OnNewMapLoadedCore(void* obj) {
 static void Game_TextureChangedCore(void* obj, struct Stream* src, const String* name) {
 	Bitmap bmp;
 	if (String_CaselessEqualsConst(name, "terrain.png")) {
-		ReturnCode res = Bitmap_DecodePng(&bmp, src);
+		ReturnCode res = Png_Decode(&bmp, src);
 
 		if (res) { 
 			Chat_LogError2(res, "decoding", name);
@@ -296,7 +296,7 @@ static void Game_TextureChangedCore(void* obj, struct Stream* src, const String*
 			Mem_Free(bmp.Scan0);
 		}		
 	} else if (String_CaselessEqualsConst(name, "default.png")) {
-		ReturnCode res = Bitmap_DecodePng(&bmp, src);
+		ReturnCode res = Png_Decode(&bmp, src);
 
 		if (res) { 
 			Chat_LogError2(res, "decoding", name);

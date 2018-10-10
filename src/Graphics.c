@@ -393,7 +393,7 @@ void Gfx_SetAlphaArgBlend(bool enabled) {
 }
 
 void Gfx_ClearCol(PackedCol col) { d3d9_clearCol = col.Packed; }
-void Gfx_SetColourWriteMask(bool r, bool g, bool b, bool a) {
+void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a) {
 	DWORD channels = (r ? 1u : 0u) | (g ? 2u : 0u) | (b ? 4u : 0u) | (a ? 8u : 0u);
 	D3D9_SetRenderState(D3DRS_COLORWRITEENABLE, channels, "D3D9_SetColourWrite");
 }
@@ -608,6 +608,7 @@ void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar,
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
+static int D3D9_SelectRow(Bitmap* bmp, int y) { return y; }
 ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 	IDirect3DSurface9* backbuffer = NULL;
 	IDirect3DSurface9* temp = NULL;
@@ -625,7 +626,7 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 	if (res) goto finished;
 	{
 		Bitmap bmp; Bitmap_Create(&bmp, width, height, rect.pBits);
-		res = Bitmap_EncodePng(&bmp, output);
+		res = Png_Encode(&bmp, output, D3D9_SelectRow);
 		if (res) { IDirect3DSurface9_UnlockRect(temp); goto finished; }
 	}
 	res = IDirect3DSurface9_UnlockRect(temp);
@@ -954,7 +955,7 @@ void Gfx_ClearCol(PackedCol col) {
 	gl_lastClearCol = col;
 }
 
-void Gfx_SetColourWriteMask(bool r, bool g, bool b, bool a) {
+void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a) {
 	glColorMask(r, g, b, a);
 }
 
@@ -1219,27 +1220,12 @@ void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar,
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
+static int GL_SelectRow(Bitmap* bmp, int y) { return (bmp->Height - 1) - y; }
 ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 	Bitmap bmp; Bitmap_Allocate(&bmp, width, height);
 	glReadPixels(0, 0, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, bmp.Scan0);
-	uint8_t tmp[PNG_MAX_DIMS * BITMAP_SIZEOF_PIXEL];
 
-	/* flip vertically around y */
-	int x, y;
-	uint32_t stride = (uint32_t)(bmp.Width) * BITMAP_SIZEOF_PIXEL;
-	for (y = 0; y < height / 2; y++) {
-		uint32_t* src = Bitmap_GetRow(&bmp, y);
-		uint32_t* dst = Bitmap_GetRow(&bmp, (height - 1) - y);
-
-		Mem_Copy(tmp, src, stride);
-		Mem_Copy(src, dst, stride);
-		Mem_Copy(dst, tmp, stride);
-		/*for (x = 0; x < bmp.Width; x++) {
-			uint32_t temp = dst[x]; dst[x] = src[x]; src[x] = temp;
-		}*/
-	}
-
-	ReturnCode res = Bitmap_EncodePng(&bmp, output);
+	ReturnCode res = Png_Encode(&bmp, output, GL_SelectRow);
 	Mem_Free(bmp.Scan0);
 	return res;
 }
