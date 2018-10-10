@@ -4,7 +4,7 @@
 #include "Platform.h"
 #include "Event.h"
 #include "Funcs.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "Chat.h"
 #include "World.h"
 #include "Options.h"

@@ -71,12 +71,12 @@ are generated for the same key when it is held down for a period of time. Should
 bool Key_KeyRepeat;
 extern const char* Key_Names[Key_Count];
 
-#define Key_IsWinPressed()     (Key_IsPressed(Key_WinLeft)     || Key_IsPressed(Key_WinRight))
-#define Key_IsAltPressed()     (Key_IsPressed(Key_AltLeft)     || Key_IsPressed(Key_AltRight))
-#define Key_IsControlPressed() (Key_IsPressed(Key_ControlLeft) || Key_IsPressed(Key_ControlRight))
-#define Key_IsShiftPressed()   (Key_IsPressed(Key_ShiftLeft)   || Key_IsPressed(Key_ShiftRight))
+#define Key_IsWinPressed()     (Key_Pressed[Key_WinLeft]     || Key_Pressed[Key_WinRight])
+#define Key_IsAltPressed()     (Key_Pressed[Key_AltLeft]     || Key_Pressed[Key_AltRight])
+#define Key_IsControlPressed() (Key_Pressed[Key_ControlLeft] || Key_Pressed[Key_ControlRight])
+#define Key_IsShiftPressed()   (Key_Pressed[Key_ShiftLeft]   || Key_Pressed[Key_ShiftRight])
 
-bool Key_IsPressed(Key key);
+bool Key_Pressed[Key_Count];
 void Key_SetPressed(Key key, bool pressed);
 void Key_Clear(void);
 
@@ -89,7 +89,7 @@ typedef enum MouseButton_ {
 float Mouse_Wheel;
 int Mouse_X, Mouse_Y;
 
-bool Mouse_IsPressed(MouseButton btn);
+bool Mouse_Pressed[MouseButton_Count];
 void Mouse_SetPressed(MouseButton btn, bool pressed);
 void Mouse_SetWheel(float wheel);
 void Mouse_SetPosition(int x, int y);

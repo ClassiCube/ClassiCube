@@ -1,7 +1,7 @@
 #include "PickedPosRenderer.h"
 #include "PackedCol.h"
 #include "VertexStructs.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "GraphicsCommon.h"
 #include "Game.h"
 #include "Event.h"

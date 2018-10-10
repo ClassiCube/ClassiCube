@@ -135,7 +135,7 @@ bool String_Append(String* str, char c) {
 }
 
 bool String_AppendBool(String* str, bool value) {
-	char* text = value ? "True" : "False";
+	const char* text = value ? "True" : "False";
 	return String_AppendConst(str, text);
 }
 

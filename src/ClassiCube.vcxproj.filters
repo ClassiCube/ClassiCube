@@ -141,9 +141,6 @@
     <ClInclude Include="ExtMath.h">
       <Filter>Header Files\Math</Filter>
     </ClInclude>
-    <ClInclude Include="GraphicsAPI.h">
-      <Filter>Header Files\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="GraphicsCommon.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
@@ -315,6 +312,9 @@
     <ClInclude Include="BlockPhysics.h">
       <Filter>Header Files\Blocks</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -337,9 +337,6 @@
     </ClCompile>
     <ClCompile Include="World.c">
       <Filter>Source Files\Map</Filter>
-    </ClCompile>
-    <ClCompile Include="D3D9Api.c">
-      <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="PackedCol.c">
       <Filter>Source Files\2D\Utils</Filter>
@@ -394,9 +391,6 @@
     </ClCompile>
     <ClCompile Include="Deflate.c">
       <Filter>Source Files\IO</Filter>
-    </ClCompile>
-    <ClCompile Include="OpenGLApi.c">
-      <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="Formats.c">
       <Filter>Source Files\Map</Filter>
@@ -577,6 +571,9 @@
     </ClCompile>
     <ClCompile Include="_ftcache.c">
       <Filter>Source Files\Freetype</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics.c">
+      <Filter>Source Files\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

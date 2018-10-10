@@ -38,7 +38,6 @@ struct Matrix Gfx_View, Gfx_Projection;
 
 #define GFX_MAX_INDICES (65536 / 4 * 6)
 #define GFX_MAX_VERTICES 65536
-#define GFX_STRIDE_SIZES { 16, 24 }
 
 /* Callback invoked when the current context is lost, and is repeatedly invoked until the context can be retrieved. */
 ScheduledTaskCallback Gfx_LostContextFunction;

@@ -9,13 +9,16 @@
 #include "Inventory.h"
 #include "Entity.h"
 #include "Window.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "GraphicsCommon.h"
 #include "Funcs.h"
 #include "Block.h"
 #include "EnvRenderer.h"
 #include "GameStructs.h"
 
+/*########################################################################################################################*
+*-------------------------------------------------------Chat logging------------------------------------------------------*
+*#########################################################################################################################*/
 #define CHAT_LOGTIMES_DEF_ELEMS 256
 TimeMS Chat_DefaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
 TimeMS* Chat_LogTimes = Chat_DefaultLogTimes;
@@ -34,12 +37,6 @@ static void Chat_AppendLogTime(void) {
 
 	TimeMS now = DateTime_CurrentUTC_MS();
 	Chat_LogTimes[Chat_LogTimesCount++] = now;
-}
-
-static void ChatLine_Make(struct ChatLine* line, const String* text) {
-	String dst = String_ClearedArray(line->Buffer);
-	String_AppendString(&dst, text);
-	line->Received = DateTime_CurrentUTC_MS();
 }
 
 char   Chat_LogNameBuffer[STRING_SIZE];
@@ -139,6 +136,12 @@ static void Chat_AppendLog(const String* text) {
 	if (!res) return;
 	Chat_DisableLogging();
 	Chat_LogError2(res, "writing to", &Chat_LogPath);
+}
+
+static void ChatLine_Make(struct ChatLine* line, const String* text) {
+	String dst = String_ClearedArray(line->Buffer);
+	String_AppendString(&dst, text);
+	line->Received = DateTime_CurrentUTC_MS();
 }
 
 void Chat_LogError(ReturnCode result, const char* place) {

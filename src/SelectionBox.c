@@ -1,6 +1,6 @@
 #include "SelectionBox.h"
 #include "ExtMath.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "GraphicsCommon.h"
 #include "Event.h"
 #include "Funcs.h"

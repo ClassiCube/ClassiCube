@@ -6,7 +6,7 @@
 #include "Platform.h"
 #include "Inventory.h"
 #include "Drawer2D.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "Funcs.h"
 #include "TerrainAtlas.h"
 #include "ModelCache.h"

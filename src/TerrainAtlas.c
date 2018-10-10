@@ -3,7 +3,7 @@
 #include "Block.h"
 #include "ExtMath.h"
 #include "Funcs.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "Platform.h"
 
 void Atlas2D_UpdateState(Bitmap* bmp) {

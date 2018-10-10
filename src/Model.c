@@ -4,7 +4,7 @@
 #include "Game.h"
 #include "ModelCache.h"
 #include "GraphicsCommon.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "Entity.h"
 
 #define UV_POS_MASK ((uint16_t)0x7FFF)

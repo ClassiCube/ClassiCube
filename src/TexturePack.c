@@ -5,7 +5,7 @@
 #include "Stream.h"
 #include "Bitmap.h"
 #include "World.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "Event.h"
 #include "Game.h"
 #include "AsyncDownloader.h"

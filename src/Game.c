@@ -3,7 +3,7 @@
 #include "World.h"
 #include "Lighting.h"
 #include "MapRenderer.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "Camera.h"
 #include "Options.h"
 #include "Funcs.h"

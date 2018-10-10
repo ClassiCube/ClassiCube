@@ -7,6 +7,10 @@
 #include "Platform.h"
 #include "Chat.h"
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Key/Mouse--------------------------------------------------------*
+*#########################################################################################################################*/
 #define Key_Function_Names \
 "F1",  "F2",  "F3",  "F4",  "F5",  "F6",  "F7",  "F8",  "F9",  "F10",\
 "F11", "F12", "F13", "F14", "F15", "F16", "F17", "F18", "F19", "F20",\
@@ -60,41 +64,32 @@ const char* Key_Names[Key_Count] = {
 	"XBUTTON1", "XBUTTON2",
 };*/
 
-bool Key_States[Key_Count];
-bool Key_IsPressed(Key key) { return Key_States[key]; }
-
 void Key_SetPressed(Key key, bool pressed) {
-	if (Key_States[key] != pressed || Key_KeyRepeat) {
-		Key_States[key] = pressed;
+	if (Key_Pressed[key] == pressed && !Key_KeyRepeat) return;
+	Key_Pressed[key] = pressed;
 
-		if (pressed) {
-			Event_RaiseInt(&KeyEvents_Down, key);
-		} else {
-			Event_RaiseInt(&KeyEvents_Up, key);
-		}
+	if (pressed) {
+		Event_RaiseInt(&KeyEvents_Down, key);
+	} else {
+		Event_RaiseInt(&KeyEvents_Up, key);
 	}
 }
 
 void Key_Clear(void) {
 	int i;
 	for (i = 0; i < Key_Count; i++) {
-		if (Key_States[i]) Key_SetPressed((Key)i, false);
+		if (Key_Pressed[i]) Key_SetPressed((Key)i, false);
 	}
 }
 
-
-bool MouseButton_States[MouseButton_Count];
-bool Mouse_IsPressed(MouseButton btn) { return MouseButton_States[btn]; }
-
 void Mouse_SetPressed(MouseButton btn, bool pressed) {
-	if (MouseButton_States[btn] != pressed) {
-		MouseButton_States[btn] = pressed;
+	if (Mouse_Pressed[btn] == pressed) return;
+	Mouse_Pressed[btn] = pressed;
 
-		if (pressed) {
-			Event_RaiseInt(&MouseEvents_Down, btn);
-		} else {
-			Event_RaiseInt(&MouseEvents_Up, btn);
-		}
+	if (pressed) {
+		Event_RaiseInt(&MouseEvents_Down, btn);
+	} else {
+		Event_RaiseInt(&MouseEvents_Up, btn);
 	}
 }
 
@@ -110,6 +105,10 @@ void Mouse_SetPosition(int x, int y) {
 	Event_RaiseMouseMove(&MouseEvents_Moved, deltaX, deltaY);
 }
 
+
+/*########################################################################################################################*
+*---------------------------------------------------------Keybinds--------------------------------------------------------*
+*#########################################################################################################################*/
 Key KeyBind_Keys[KeyBind_Count];
 uint8_t KeyBind_Defaults[KeyBind_Count] = {
 	Key_W, Key_S, Key_A, Key_D,
@@ -136,7 +135,7 @@ const char* KeyBind_Names[KeyBind_Count] = {
 
 Key KeyBind_Get(KeyBind binding) { return KeyBind_Keys[binding]; }
 Key KeyBind_GetDefault(KeyBind binding) { return KeyBind_Defaults[binding]; }
-bool KeyBind_IsPressed(KeyBind binding) { return Key_States[KeyBind_Keys[binding]]; }
+bool KeyBind_IsPressed(KeyBind binding) { return Key_Pressed[KeyBind_Keys[binding]]; }
 
 void KeyBind_Load(void) {
 	int i;
@@ -181,6 +180,9 @@ void KeyBind_Init(void) {
 }
 
 
+/*########################################################################################################################*
+*---------------------------------------------------------Hotkeys---------------------------------------------------------*
+*#########################################################################################################################*/
 uint8_t Hotkeys_LWJGL[256] = {
 	0, Key_Escape, Key_1, Key_2, Key_3, Key_4, Key_5, Key_6, Key_7, Key_8, Key_9, Key_0, Key_Minus, Key_Plus, Key_BackSpace, Key_Tab,
 	Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Y, Key_U, Key_I, Key_O, Key_P, Key_BracketLeft, Key_BracketRight, Key_Enter, Key_ControlLeft, Key_A, Key_S,

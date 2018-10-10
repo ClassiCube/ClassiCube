@@ -47,7 +47,7 @@ namespace OpenTK {
 		public static readonly Vector3 UnitZ = new Vector3(0, 0, 1);
 
 		public static readonly Vector3 Zero = new Vector3(0, 0, 0);
-		public static readonly Vector3 One = new Vector3(1, 1, 1);
+		public static readonly Vector3 One  = new Vector3(1, 1, 1);
 		
 		public static Vector3 Lerp(Vector3 a, Vector3 b, float blend) {
 			a.X = blend * (b.X - a.X) + a.X;

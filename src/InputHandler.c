@@ -26,7 +26,7 @@ TimeMS input_lastClick;
 float input_fovIndex = -1.0f;
 
 bool InputHandler_IsMousePressed(MouseButton button) {
-	if (Mouse_IsPressed(button)) return true;
+	if (Mouse_Pressed[button]) return true;
 
 	/* Key --> mouse mappings */
 	if (button == MouseButton_Left   && KeyBind_IsPressed(KeyBind_MouseLeft))   return true;

@@ -8,7 +8,7 @@
 #include "Platform.h"
 #include "Funcs.h"
 #include "ModelCache.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "Lighting.h"
 #include "Drawer2D.h"
 #include "Particle.h"

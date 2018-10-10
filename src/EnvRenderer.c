@@ -2,7 +2,7 @@
 #include "ExtMath.h"
 #include "World.h"
 #include "Funcs.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "Physics.h"
 #include "Block.h"
 #include "Platform.h"

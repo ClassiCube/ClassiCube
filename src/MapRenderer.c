@@ -1,7 +1,7 @@
 #include "MapRenderer.h"
 #include "Block.h"
 #include "Game.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "EnvRenderer.h"
 #include "World.h"
 #include "Vectors.h"

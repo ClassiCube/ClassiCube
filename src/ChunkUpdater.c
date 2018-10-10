@@ -4,7 +4,7 @@
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Game.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "Entity.h"
 #include "MapRenderer.h"
 #include "Platform.h"

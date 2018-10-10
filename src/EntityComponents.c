@@ -9,7 +9,7 @@
 #include "Camera.h"
 #include "Funcs.h"
 #include "VertexStructs.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "GraphicsCommon.h"
 #include "ModelCache.h"
 #include "Physics.h"

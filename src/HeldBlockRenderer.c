@@ -2,7 +2,7 @@
 #include "Block.h"
 #include "Game.h"
 #include "Inventory.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "GraphicsCommon.h"
 #include "Camera.h"
 #include "ModelCache.h"

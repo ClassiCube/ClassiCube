@@ -5,7 +5,7 @@
 #include "Lighting.h"
 #include "Entity.h"
 #include "TerrainAtlas.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "GraphicsCommon.h"
 #include "Funcs.h"
 #include "Game.h"

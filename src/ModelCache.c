@@ -1,5 +1,5 @@
 #include "ModelCache.h"
-#include "GraphicsAPI.h"
+#include "Graphics.h"
 #include "Game.h"
 #include "Event.h"
 #include "ExtMath.h"

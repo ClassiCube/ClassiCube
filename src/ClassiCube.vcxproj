@@ -241,7 +241,7 @@
     <ClInclude Include="Funcs.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="ExtMath.h" />
-    <ClInclude Include="GraphicsAPI.h" />
+    <ClInclude Include="Graphics.h" />
     <ClInclude Include="GraphicsCommon.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="String.h" />
@@ -262,7 +262,6 @@
     <ClCompile Include="Builder.c" />
     <ClCompile Include="Chat.c" />
     <ClCompile Include="ChunkUpdater.c" />
-    <ClCompile Include="D3D9Api.c" />
     <ClCompile Include="Bitmap.c" />
     <ClCompile Include="DisplayDevice.c" />
     <ClCompile Include="Drawer.c" />
@@ -273,6 +272,7 @@
     <ClCompile Include="ExtMath.c" />
     <ClCompile Include="Formats.c" />
     <ClCompile Include="Game.c" />
+    <ClCompile Include="Graphics.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />
     <ClCompile Include="InputHandler.c" />
@@ -290,7 +290,6 @@
     <ClCompile Include="Entity.c" />
     <ClCompile Include="MapRenderer.c" />
     <ClCompile Include="ModelCache.c" />
-    <ClCompile Include="OpenGLApi.c" />
     <ClCompile Include="Options.c" />
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="GraphicsCommon.c" />
