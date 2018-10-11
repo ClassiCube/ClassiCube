@@ -7,8 +7,6 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-/* Origin points for when seeking in a stream. */
-enum STREAM_SEEKFROM { STREAM_SEEKFROM_BEGIN, STREAM_SEEKFROM_CURRENT, STREAM_SEEKFROM_END };
 struct Stream;
 /* Represents a stream that can be written to and/or read from. */
 struct Stream {
@@ -18,8 +16,11 @@ struct Stream {
 	ReturnCode (*ReadU8)(struct Stream* stream, uint8_t* data);
 	/* Attempts to write some bytes to this stream. */
 	ReturnCode (*Write)(struct Stream* stream, uint8_t* data, uint32_t count, uint32_t* modified);
-	/* Attempts to seek to a position in this stream. */
-	ReturnCode (*Seek)(struct Stream* stream, int offset, int seekType);
+	/* Attempts to quickly advance the position in this stream. (falls back to reading then discarding) */
+	ReturnCode (*Skip)(struct Stream* stream, uint32_t count);
+
+	/* Attempts to seek to the given position in this stream. (may not be supported) */
+	ReturnCode (*Seek)(struct Stream* stream, uint32_t pos);
 	/* Attempts to find current position this stream. (may not be supported) */
 	ReturnCode (*Position)(struct Stream* stream, uint32_t* pos);
 	/* Attempts to find total length of this stream. (may not be supported) */

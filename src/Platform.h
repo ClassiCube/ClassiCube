@@ -15,6 +15,9 @@ typedef uintptr_t SocketPtr;
 typedef int SocketPtr;
 #endif
 
+/* Origin points for when seeking in a file. */
+enum FILE_SEEKFROM { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_END };
+
 /* Newline for console and text files. */
 extern char* Platform_NewLine;
 /* Character in a path that distinguishes directories. (usually / or \) */

@@ -156,7 +156,7 @@ static ReturnCode Fcm_ReadString(struct Stream* stream) {
 	if ((res = Stream_Read(stream, data, sizeof(data)))) return res;
 
 	int len = Stream_GetU16_LE(data);
-	return Stream_Skip(stream, len);
+	return stream->Skip(stream, len);
 }
 
 ReturnCode Fcm_Load(struct Stream* stream) {
@@ -305,7 +305,7 @@ static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* s
 		break;
 	case NBT_I64:
 	case NBT_R64:
-		res = Stream_Skip(stream, 8); 
+		res = stream->Skip(stream, 8);
 		break; /* (8) data */
 
 	case NBT_I8S:
@@ -639,7 +639,7 @@ static ReturnCode Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* de
 			char className1[JNAME_SIZE];
 			return Dat_ReadString(stream, className1);
 		} else if (typeCode == TC_REFERENCE) {
-			return Stream_Skip(stream, 4); /* (4) handle */
+			return stream->Skip(stream, 4); /* (4) handle */
 		} else {
 			return DAT_ERR_JFIELD_CLASS_NAME;
 		}
@@ -657,7 +657,7 @@ static ReturnCode Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* de
 	if (typeCode != TC_CLASSDESC) return DAT_ERR_JCLASS_TYPE;
 
 	if ((res = Dat_ReadString(stream, desc->ClassName))) return res;
-	if ((res = Stream_Skip(stream, 9))) return res; /* (8) serial version UID, (1) flags */
+	if ((res = stream->Skip(stream, 9))) return res; /* (8) serial version UID, (1) flags */
 
 	if ((res = Stream_Read(stream, tmp, 2))) return res;
 	desc->FieldsCount = Stream_GetU16_BE(tmp);
@@ -688,7 +688,7 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 	case JFIELD_I32:
 		return Stream_ReadU32_BE(stream, &field->Value_I32);
 	case JFIELD_I64:
-		return Stream_Skip(stream, 8); /* (8) data */
+		return stream->Skip(stream, 8); /* (8) data */
 
 	case JFIELD_OBJECT: {
 		/* Luckily for us, we only have to account for blockMap object */
@@ -700,11 +700,11 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 		/* Skip all blockMap data with awful hacks */
 		/* These offsets were based on server_level.dat map from original minecraft classic server */
 		if (typeCode == TC_OBJECT) {
-			if ((res = Stream_Skip(stream, 315)))          return res;
+			if ((res = stream->Skip(stream, 315)))         return res;
 			if ((res = Stream_ReadU32_BE(stream, &count))) return res;
 
-			if ((res = Stream_Skip(stream, 17 * count))) return res;
-			if ((res = Stream_Skip(stream, 152)))        return res;
+			if ((res = stream->Skip(stream, 17 * count)))  return res;
+			if ((res = stream->Skip(stream, 152)))         return res;
 		} else if (typeCode != TC_NULL) {
 			/* WoM maps have this field as null, which makes things easier for us */
 			return DAT_ERR_JOBJECT_TYPE;

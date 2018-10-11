@@ -48,7 +48,7 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 	pathBuffer[pathLen] = '\0';
 
 	if (!state->SelectEntry(&path)) return 0;
-	if ((res = Stream_Skip(stream, extraLen))) return res;
+	if ((res = stream->Skip(stream, extraLen))) return res;
 	struct Stream portion, compStream;
 
 	if (method == 0) {
@@ -89,7 +89,7 @@ static ReturnCode Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEnt
 	entry->LocalHeaderOffset = Stream_GetU32_LE(&contents[38]);
 
 	uint32_t extraDataLen = pathLen + extraLen + commentLen;
-	return Stream_Skip(stream, extraDataLen);
+	return stream->Skip(stream, extraDataLen);
 }
 
 static ReturnCode Zip_ReadEndOfCentralDirectory(struct ZipState* state, uint32_t* centralDirectoryOffset) {
@@ -134,7 +134,7 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 	/* At -22 for nearly all zips, but try a bit further back in case of comment */
 	int i, len = min(257, stream_len);
 	for (i = 22; i < len; i++) {
-		res = stream->Seek(stream, -i, STREAM_SEEKFROM_END);
+		res = stream->Seek(stream, stream_len - i);
 		if (res) return ZIP_ERR_SEEK_END_OF_CENTRAL_DIR;
 
 		if ((res = Stream_ReadU32_LE(stream, &sig))) return res;
@@ -146,7 +146,7 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 	res = Zip_ReadEndOfCentralDirectory(state, &centralDirOffset);
 	if (res) return res;
 
-	res = stream->Seek(stream, centralDirOffset, STREAM_SEEKFROM_BEGIN);
+	res = stream->Seek(stream, centralDirOffset);
 	if (res) return ZIP_ERR_SEEK_CENTRAL_DIR;
 	if (state->EntriesCount > ZIP_MAX_ENTRIES) return ZIP_ERR_TOO_MANY_ENTRIES;
 
@@ -169,7 +169,7 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 	/* Now read the local file header entries */
 	for (i = 0; i < count; i++) {
 		struct ZipEntry* entry = &state->Entries[i];
-		res = stream->Seek(stream, entry->LocalHeaderOffset, STREAM_SEEKFROM_BEGIN);
+		res = stream->Seek(stream, entry->LocalHeaderOffset);
 		if (res) return ZIP_ERR_SEEK_LOCAL_DIR;
 
 		if ((res = Stream_ReadU32_LE(stream, &sig))) return res;

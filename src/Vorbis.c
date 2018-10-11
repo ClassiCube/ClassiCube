@@ -1029,13 +1029,13 @@ static ReturnCode Vorbis_DecodeComments(struct VorbisState* ctx) {
 
 	/* vendor name, followed by comments */
 	if ((res = Stream_ReadU32_LE(stream, &len)))      return res;
-	if ((res = Stream_Skip(stream, len)))             return res;
+	if ((res = stream->Skip(stream, len)))            return res;
 	if ((res = Stream_ReadU32_LE(stream, &comments))) return res;
 
 	for (i = 0; i < comments; i++) {
 		/* comments such as artist, year, etc */
 		if ((res = Stream_ReadU32_LE(stream, &len))) return res;
-		if ((res = Stream_Skip(stream, len)))        return res;
+		if ((res = stream->Skip(stream, len)))       return res;
 	}
 
 	/* check framing flag */

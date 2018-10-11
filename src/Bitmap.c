@@ -484,11 +484,11 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 		} break;
 
 		default:
-			if ((res = Stream_Skip(stream, dataSize))) return res;
+			if ((res = stream->Skip(stream, dataSize))) return res;
 			break;
 		}
 
-		if ((res = Stream_Read(stream, tmp, 4))) return res; /* Skip CRC32 */
+		if ((res = stream->Skip(stream, 4))) return res; /* Skip CRC32 */
 	}
 
 	if (transparentCol <= PNG_RGB_MASK) {
@@ -671,8 +671,8 @@ ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector select
 
 	/* Come back to write size of data chunk */
 	uint32_t stream_len;
-	if ((res = stream->Length(stream, &stream_len)))             return res;
-	if ((res = stream->Seek(stream, 33, STREAM_SEEKFROM_BEGIN))) return res;
+	if ((res = stream->Length(stream, &stream_len))) return res;
+	if ((res = stream->Seek(stream, 33)))            return res;
 
 	Stream_SetU32_BE(&tmp[0], stream_len - 57);
 	return Stream_Write(stream, tmp, 4);

@@ -381,7 +381,7 @@ ReturnCode File_Create(void** file, const String* path) {
 ReturnCode File_Append(void** file, const String* path) {
 	ReturnCode result = File_Do(file, path, GENERIC_WRITE, OPEN_ALWAYS);
 	if (result) return result;
-	return File_Seek(*file, 0, STREAM_SEEKFROM_END);
+	return File_Seek(*file, 0, FILE_SEEKFROM_END);
 }
 
 ReturnCode File_Read(void* file, uint8_t* buffer, uint32_t count, uint32_t* bytesRead) {
@@ -498,7 +498,7 @@ ReturnCode File_Create(void** file, const String* path) {
 ReturnCode File_Append(void** file, const String* path) {
 	ReturnCode result = File_Do(file, path, O_WRONLY | O_CREAT);
 	if (result) return result;
-	return File_Seek(*file, 0, STREAM_SEEKFROM_END);
+	return File_Seek(*file, 0, FILE_SEEKFROM_END);
 }
 
 ReturnCode File_Read(void* file, uint8_t* buffer, uint32_t count, uint32_t* bytesRead) {
