@@ -6,6 +6,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 struct PickedPos;
+struct Camera;
 
 /* Tilt effect applied to the camera. */
 struct Matrix Camera_TiltM;
@@ -15,6 +16,9 @@ float Camera_BobbingVer, Camera_BobbingHor;
 struct Camera {
 	/* Whether this camera is third person. (i.e. not allowed when -thirdperson in MOTD) */
 	bool IsThirdPerson;
+	/* Next camera in linked list of cameras. */
+	struct Camera* Next;
+
 	/* Calculates the current projection matrix of this camera. */
 	void (*GetProjection)(struct Matrix* proj);
 	/* Calculates the current modelview matrix of this camera. */
@@ -25,6 +29,8 @@ struct Camera {
 	/* Returns the current interpolated position of the camera. */
 	Vector3 (*GetPosition)(float t);
 
+	/* Called to update the camera's state. */
+	/* Typically, this is used to adjust yaw/pitch based on mouse movement. */
 	void (*UpdateMouse)(void);
 	/* Called when user closes all menus, and is interacting with camera again. */
 	/* Typically, this is used to move mouse cursor to centre of the window. */
@@ -38,7 +44,7 @@ struct Camera {
 
 /* Camera user is currently using. */
 struct Camera* Camera_Active;
-/* Initialises the list of cameras. */
+/* Initialises the default cameras. */
 void Camera_Init(void);
 /* Switches to the next camera in the list. */
 void Camera_CycleActive(void);

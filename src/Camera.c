@@ -9,10 +9,11 @@
 #include "Input.h"
 
 Vector2 cam_rotOffset;
-struct Camera Camera_Cameras[3];
-int Camera_ActiveIndex;
-#define Cam_IsForward_Third() (Camera_ActiveIndex == 2)
+bool cam_isForwardThird;
 
+/*########################################################################################################################*
+*--------------------------------------------------Perspective camera-----------------------------------------------------*
+*#########################################################################################################################*/
 static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
 	float fovy = Game_Fov * MATH_DEG2RAD;
 	float aspectRatio = (float)Game_Width / (float)Game_Height;
@@ -55,9 +56,9 @@ static void PerspectiveCamera_RegrabMouse(void) {
 #define CAMERA_SLIPPERY 0.97f
 #define CAMERA_ADJUST 0.025f
 
-float speedX = 0.0f, speedY = 0.0f;
 static Vector2 PerspectiveCamera_GetMouseDelta(void) {
 	float sensitivity = CAMERA_SENSI_FACTOR * Game_MouseSensitivity;
+	static float speedX, speedY;
 
 	if (Game_SmoothCamera) {
 		speedX += cam_delta.X * CAMERA_ADJUST;
@@ -126,15 +127,10 @@ static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
 	Matrix_MulBy(&Camera_TiltM, &Camera_velX);
 }
 
-static void PerspectiveCamera_Init(struct Camera* cam) {
-	cam->GetProjection = PerspectiveCamera_GetProjection;
-	cam->GetView = PerspectiveCamera_GetView;
-	cam->UpdateMouse = PerspectiveCamera_UpdateMouse;
-	cam->RegrabMouse = PerspectiveCamera_RegrabMouse;
-	cam->GetPickedBlock = PerspectiveCamera_GetPickedBlock;
-}
 
-
+/*########################################################################################################################*
+*---------------------------------------------------First person camera---------------------------------------------------*
+*#########################################################################################################################*/
 static Vector2 FirstPersonCamera_GetOrientation(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	Vector2 ori = { p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD };
@@ -154,21 +150,24 @@ static Vector3 FirstPersonCamera_GetPosition(float t) {
 }
 
 static bool FirstPersonCamera_Zoom(float amount) { return false; }
+struct Camera Camera_FirstPerson = {
+	false, NULL,
+	PerspectiveCamera_GetProjection,  PerspectiveCamera_GetView,
+	FirstPersonCamera_GetOrientation, FirstPersonCamera_GetPosition,
+	PerspectiveCamera_UpdateMouse,    PerspectiveCamera_RegrabMouse,
+	PerspectiveCamera_GetPickedBlock, FirstPersonCamera_Zoom,
+};
 
-static void FirstPersonCamera_Init(struct Camera* cam) {
-	PerspectiveCamera_Init(cam);
-	cam->IsThirdPerson  = false;
-	cam->GetOrientation = FirstPersonCamera_GetOrientation;
-	cam->GetPosition    = FirstPersonCamera_GetPosition;
-	cam->Zoom           = FirstPersonCamera_Zoom;
-}
 
-
+/*########################################################################################################################*
+*---------------------------------------------------Third person camera---------------------------------------------------*
+*#########################################################################################################################*/
 float dist_third = 3.0f, dist_forward = 3.0f;
+
 static Vector2 ThirdPersonCamera_GetOrientation(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	Vector2 v = { p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD };
-	if (Cam_IsForward_Third()) { v.X += MATH_PI; v.Y = -v.Y; }
+	if (cam_isForwardThird) { v.X += MATH_PI; v.Y = -v.Y; }
 
 	v.X += cam_rotOffset.X * MATH_DEG2RAD; 
 	v.Y += cam_rotOffset.Y * MATH_DEG2RAD;
@@ -176,7 +175,7 @@ static Vector2 ThirdPersonCamera_GetOrientation(void) {
 }
 
 static Vector3 ThirdPersonCamera_GetPosition(float t) {
-	float dist = Cam_IsForward_Third() ? dist_forward : dist_third;
+	float dist = cam_isForwardThird ? dist_forward : dist_third;
 	PerspectiveCamera_CalcViewBobbing(t, dist);
 
 	struct Entity* p = &LocalPlayer_Instance.Base;
@@ -192,44 +191,50 @@ static Vector3 ThirdPersonCamera_GetPosition(float t) {
 }
 
 static bool ThirdPersonCamera_Zoom(float amount) {
-	float* dist = Cam_IsForward_Third() ? &dist_forward : &dist_third;
+	float* dist = cam_isForwardThird ? &dist_forward : &dist_third;
 	float newDist = *dist - amount;
 
 	*dist = max(newDist, 2.0f); 
 	return true;
 }
 
-static void ThirdPersonCamera_Init(struct Camera* cam) {
-	PerspectiveCamera_Init(cam);
-	cam->IsThirdPerson = true;
-	cam->GetOrientation = ThirdPersonCamera_GetOrientation;
-	cam->GetPosition = ThirdPersonCamera_GetPosition;
-	cam->Zoom = ThirdPersonCamera_Zoom;
-}
+struct Camera Camera_ThirdPerson = {
+	true, NULL,
+	PerspectiveCamera_GetProjection,  PerspectiveCamera_GetView,
+	ThirdPersonCamera_GetOrientation, ThirdPersonCamera_GetPosition,
+	PerspectiveCamera_UpdateMouse,    PerspectiveCamera_RegrabMouse,
+	PerspectiveCamera_GetPickedBlock, ThirdPersonCamera_Zoom,
+};
+struct Camera Camera_ForwardThird = {
+	true, NULL,
+	PerspectiveCamera_GetProjection,  PerspectiveCamera_GetView,
+	ThirdPersonCamera_GetOrientation, ThirdPersonCamera_GetPosition,
+	PerspectiveCamera_UpdateMouse,    PerspectiveCamera_RegrabMouse,
+	PerspectiveCamera_GetPickedBlock, ThirdPersonCamera_Zoom,
+};
 
 
+/*########################################################################################################################*
+*-----------------------------------------------------General camera------------------------------------------------------*
+*#########################################################################################################################*/
 void Camera_Init(void) {
-	FirstPersonCamera_Init(&Camera_Cameras[0]);
-	ThirdPersonCamera_Init(&Camera_Cameras[1]);
-	ThirdPersonCamera_Init(&Camera_Cameras[2]);
-
-	Camera_Active = &Camera_Cameras[0];
-	Camera_ActiveIndex = 0;
+	Camera_FirstPerson.Next  = &Camera_ThirdPerson;
+	Camera_ThirdPerson.Next  = &Camera_ForwardThird;
+	Camera_ForwardThird.Next = &Camera_FirstPerson;
+	Camera_Active            = &Camera_FirstPerson;
 }
 
 void Camera_CycleActive(void) {
 	if (Game_ClassicMode) return;
+	Camera_Active      = Camera_Active->Next;
+	cam_isForwardThird = Camera_Active == &Camera_ForwardThird;
 
-	int i = Camera_ActiveIndex;
-	i = (i + 1) % Array_Elems(Camera_Cameras);
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	if (!p->Hacks.CanUseThirdPersonCamera || !p->Hacks.Enabled) {
+		Camera_Active = &Camera_FirstPerson;
+	}
 
-	struct LocalPlayer* player = &LocalPlayer_Instance;
-	if (!player->Hacks.CanUseThirdPersonCamera || !player->Hacks.Enabled) { i = 0; }
-
-	Camera_Active = &Camera_Cameras[i];
-	Camera_ActiveIndex = i;
 	/* reset rotation offset when changing cameras */
 	cam_rotOffset.X = 0.0f; cam_rotOffset.Y = 0.0f;
-
 	Game_UpdateProjection();
 }
