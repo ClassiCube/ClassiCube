@@ -367,10 +367,10 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 	/* so we may end up decoding slightly over a second of audio */
 	int i, chunkSize     = fmt.Channels * (fmt.SampleRate + vorbis.BlockSizes[1]);
 	int samplesPerSecond = fmt.Channels * fmt.SampleRate;
-	data = Mem_Alloc(chunkSize * AUDIO_MAX_CHUNKS, 2, "Ogg - final PCM output");
+	data = Mem_Alloc(chunkSize * AUDIO_MAX_BUFFERS, 2, "Ogg - final PCM output");
 
 	/* fill up with some samples before playing */
-	for (i = 0; i < AUDIO_MAX_CHUNKS && !res; i++) {
+	for (i = 0; i < AUDIO_MAX_BUFFERS && !res; i++) {
 		res = Music_Buffer(i, &data[chunkSize * i], samplesPerSecond, &vorbis);
 	}
 	if (music_pendingStop) goto cleanup;
@@ -382,7 +382,7 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 	for (;;) {
 		int next = -1;
 		
-		for (i = 0; i < AUDIO_MAX_CHUNKS; i++) {
+		for (i = 0; i < AUDIO_MAX_BUFFERS; i++) {
 			res = Audio_IsCompleted(music_out, i, &completed);
 			if (res)       { music_pendingStop = true; break; }
 			if (completed) { next = i; break; }
@@ -425,7 +425,7 @@ static void Music_RunLoop(void) {
 	char pathBuffer[FILENAME_SIZE];
 
 	ReturnCode res = 0;
-	Audio_Init(&music_out, AUDIO_MAX_CHUNKS);
+	Audio_Init(&music_out, AUDIO_MAX_BUFFERS);
 
 	while (!music_pendingStop && count) {
 		int idx = Random_Range(&rnd, 0, count);

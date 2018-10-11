@@ -1260,7 +1260,7 @@ static ReturnCode Audio_AllCompleted(AudioHandle handle, bool* finished);
 #ifdef CC_BUILD_WIN
 struct AudioContext {
 	HWAVEOUT Handle;
-	WAVEHDR Headers[AUDIO_MAX_CHUNKS];
+	WAVEHDR Headers[AUDIO_MAX_BUFFERS];
 	struct AudioFormat Format;
 	int Count;
 };
@@ -1359,8 +1359,8 @@ ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) { return Audio_A
 #ifdef CC_BUILD_NIX
 struct AudioContext {
 	ALuint Source;
-	ALuint Buffers[AUDIO_MAX_CHUNKS];
-	bool Completed[AUDIO_MAX_CHUNKS];
+	ALuint Buffers[AUDIO_MAX_BUFFERS];
+	bool Completed[AUDIO_MAX_BUFFERS];
 	struct AudioFormat Format;
 	int Count;
 	ALenum DataFormat;

@@ -9,9 +9,9 @@
 #include "Entity.h"
 
 GfxResourceID axisLines_vb;
-#define axisLines_numVertices 12
-#define axisLines_size (1.0f / 32.0f)
-#define axisLines_length 3.0f
+#define AXISLINES_NUM_VERTICES 12
+#define AXISLINES_THICKNESS (1.0f / 32.0f)
+#define AXISLINES_LENGTH 3.0f
 
 static void AxisLinesRenderer_ContextLost(void* obj) {
 	Gfx_DeleteVb(&axisLines_vb);
@@ -35,18 +35,18 @@ void AxisLinesRenderer_Render(double delta) {
 	if (!Game_ShowAxisLines || Gfx_LostContext) return;
 	/* Don't do it in a ContextRecreated handler, because we only want VB recreated if ShowAxisLines in on. */
 	if (!axisLines_vb) {
-		axisLines_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, axisLines_numVertices);
+		axisLines_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, AXISLINES_NUM_VERTICES);
 	}
 
 	Gfx_SetTexturing(false);
 	Vector3 P = LocalPlayer_Instance.Base.Position; P.Y += 0.05f;
-	VertexP3fC4b vertices[axisLines_numVertices];
+	VertexP3fC4b vertices[AXISLINES_NUM_VERTICES];
 	
 	Vector3 coords[5]; coords[2] = P;
-	Vector3_Add1(&coords[0], &P, -axisLines_length);
-	Vector3_Add1(&coords[1], &P, -axisLines_size);
-	Vector3_Add1(&coords[3], &P,  axisLines_size);
-	Vector3_Add1(&coords[4], &P,  axisLines_length);
+	Vector3_Add1(&coords[0], &P, -AXISLINES_LENGTH);
+	Vector3_Add1(&coords[1], &P, -AXISLINES_THICKNESS);
+	Vector3_Add1(&coords[3], &P,  AXISLINES_THICKNESS);
+	Vector3_Add1(&coords[4], &P,  AXISLINES_LENGTH);
 	
 	static uint8_t indices[36] = {
 		2,2,1, 2,2,3, 4,2,3, 4,2,1, /* X arrow */

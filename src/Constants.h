@@ -7,14 +7,12 @@
 #define PROGRAM_MAX_CMDARGS 5
 #define PROGRAM_APP_NAME "ClassiCube 0.99.9.2"
 
-#define USE16_BIT FALSE
-
 /* Max number of characters strings can have. */
 #define STRING_SIZE 64
 /* Max number of characters filenames can have. */
 #define FILENAME_SIZE 260
 
-/* Chunk axis length, in blocks. */
+/* Chunk axis length in blocks. */
 #define CHUNK_SIZE 16
 #define HALF_CHUNK_SIZE 8
 #define CHUNK_SIZE_2 (CHUNK_SIZE * CHUNK_SIZE)
@@ -24,7 +22,7 @@
 #define CHUNK_MAX 15
 #define CHUNK_SHIFT 4
 
-/* Chunk axis length (and neighbours), in blocks. */
+/* Chunk axis length (plus neighbours) in blocks. */
 #define EXTCHUNK_SIZE 18
 #define EXTCHUNK_SIZE_2 (EXTCHUNK_SIZE * EXTCHUNK_SIZE)
 #define EXTCHUNK_SIZE_3 (EXTCHUNK_SIZE * EXTCHUNK_SIZE * EXTCHUNK_SIZE)

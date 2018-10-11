@@ -60,10 +60,10 @@ void GfxCommon_Draw2DFlat(int x, int y, int width, int height, PackedCol col) {
 	VertexP3fC4b verts[4];
 	VertexP3fC4b v; v.Z = 0.0f; v.Col = col;
 
-	v.X = (float)x;           v.Y = (float)y;             verts[0] = v;
-	v.X = (float)(x + width);                             verts[1] = v;
-	                           v.Y = (float)(y + height); verts[2] = v;
-	v.X = (float)x;                                       verts[3] = v;
+	v.X = (float)x;           v.Y = (float)y;            verts[0] = v;
+	v.X = (float)(x + width);                            verts[1] = v;
+	                          v.Y = (float)(y + height); verts[2] = v;
+	v.X = (float)x;                                      verts[3] = v;
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, verts, 4);
@@ -74,9 +74,9 @@ void GfxCommon_Draw2DGradient(int x, int y, int width, int height, PackedCol top
 	VertexP3fC4b v; v.Z = 0.0f;
 
 	v.X = (float)x;           v.Y = (float)y;            v.Col = top;    verts[0] = v;
-	v.X = (float)(x + width);                                             verts[1] = v;
-	                           v.Y = (float)(y + height); v.Col = bottom; verts[2] = v;
-	v.X = (float)x;                                                       verts[3] = v;
+	v.X = (float)(x + width);                                            verts[1] = v;
+	                          v.Y = (float)(y + height); v.Col = bottom; verts[2] = v;
+	v.X = (float)x;                                                      verts[3] = v;
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, verts, 4);
@@ -104,7 +104,7 @@ void GfxCommon_Make2DQuad(struct Texture* tex, PackedCol col, VertexP3fT2fC4b** 
 	VertexP3fT2fC4b v; v.Z = 0.0f; v.Col = col;
 	v.X = x1; v.Y = y1; v.U = tex->U1; v.V = tex->V1; ptr[0] = v;
 	v.X = x2;           v.U = tex->U2;                ptr[1] = v;
-	v.Y = y2;                         v.V = tex->V2;  ptr[2] = v;
+	v.Y = y2;                          v.V = tex->V2; ptr[2] = v;
 	v.X = x1;           v.U = tex->U1;                ptr[3] = v;
 	*vertices += 4;
 }

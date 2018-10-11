@@ -93,8 +93,7 @@ void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar,
 
 /* Outputs a .png screenshot of the backbuffer */
 ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height);
-/* Adds a warning to game's chat if this graphics API has problems with the current user's GPU. 
-Returns boolean of whether legacy rendering mode is needed. */
+/* Warns if this graphics API has problems with the user's GPU. Returns whether legacy rendering mode is needed. */
 bool Gfx_WarnIfNecessary(void);
 void Gfx_BeginFrame(void);
 void Gfx_EndFrame(void);
