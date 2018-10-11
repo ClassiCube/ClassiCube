@@ -31,7 +31,7 @@
 */
 
 typedef enum Key_ {	
-	Key_None, /* Key outside the known keys */
+	Key_None, /* Unrecognised key */
 
 	Key_ShiftLeft, Key_ShiftRight, Key_ControlLeft, Key_ControlRight,
 	Key_AltLeft, Key_AltRight, Key_WinLeft, Key_WinRight, Key_Menu,
@@ -62,13 +62,14 @@ typedef enum Key_ {
 	Key_Tilde, Key_Minus, Key_Plus, Key_BracketLeft, Key_BracketRight,
 	Key_Semicolon, Key_Quote, Key_Comma, Key_Period, Key_Slash, Key_BackSlash,
 
-	Key_XButton1, Key_XButton2,
+	Key_XButton1, Key_XButton2, /* so these can be used for hotkeys */
 	Key_Count,
 } Key;
 
-/* Gets whether key repeating is on or not. If on (desirable for text input), multiple KeyDowns (varies by OS) 
-are generated for the same key when it is held down for a period of time. Should be off for game input. */
+/* Gets whether key repeating is on or not. When on, multiple KeyDown events are raised when the same key is 
+held down for a period of time (frequency depends on platform). Should be on for menu input, off for game input. */
 bool Key_KeyRepeat;
+/* Simple names for each keyboard button. */
 extern const char* Key_Names[Key_Count];
 
 #define Key_IsWinPressed()     (Key_Pressed[Key_WinLeft]     || Key_Pressed[Key_WinRight])
@@ -76,8 +77,13 @@ extern const char* Key_Names[Key_Count];
 #define Key_IsControlPressed() (Key_Pressed[Key_ControlLeft] || Key_Pressed[Key_ControlRight])
 #define Key_IsShiftPressed()   (Key_Pressed[Key_ShiftLeft]   || Key_Pressed[Key_ShiftRight])
 
+/* Pressed state of each keyboard button. Use Key_SetPressed to change. */
 bool Key_Pressed[Key_Count];
+/* Sets the pressed state of a keyboard button. */
+/* Raises KeyEvents_Up or KeyEvents_Down if state differs, or Key_KeyRepeat is on. */
 void Key_SetPressed(Key key, bool pressed);
+/* Resets all keys to not pressed state. */
+/* Raises KeyEvents_Up for each previously pressed key. */
 void Key_Clear(void);
 
 
@@ -86,16 +92,23 @@ typedef enum MouseButton_ {
 	MouseButton_Count,
 } MouseButton;
 
+/* Wheel position of the mouse. Use Mouse_SetWheel to change. */
 float Mouse_Wheel;
+/* X and Y coordinates of the mouse. Use Mouse_SetPosition to change. */
 int Mouse_X, Mouse_Y;
 
+/* Pressed state of each mouse button. Use Mouse_SetPressed to change. */
 bool Mouse_Pressed[MouseButton_Count];
+/* Sets the pressed state of a mouse button. */
+/* Raises MouseEvents_Up or MouseEvents_Down if state differs. */
 void Mouse_SetPressed(MouseButton btn, bool pressed);
+/* Sets wheel position of the mouse, always raising MouseEvents_Wheel. */
 void Mouse_SetWheel(float wheel);
+/* Sets X and Y position of the mouse, always raising MouseEvents_Moved. */
 void Mouse_SetPosition(int x, int y);
 
 
-/* Enumeration of all custom key bindings. */
+/* Enumeration of all key bindings. */
 typedef enum KeyBind_ {
 	KeyBind_Forward, KeyBind_Back, KeyBind_Left, KeyBind_Right, 
 	KeyBind_Jump, KeyBind_Respawn, KeyBind_SetSpawn, KeyBind_Chat,
@@ -109,11 +122,15 @@ typedef enum KeyBind_ {
 	KeyBind_Count
 } KeyBind;
 
+/* Gets the key that is bound to the the given key binding. */
 Key KeyBind_Get(KeyBind binding);
+/* Gets the default key that the given key binding is bound to */
 Key KeyBind_GetDefault(KeyBind binding);
+/* Gets whether the key bound to the given key binding is pressed. */
 bool KeyBind_IsPressed(KeyBind binding);
+/* Set the key that the given key binding is bound to. (also updates options list) */
 void KeyBind_Set(KeyBind binding, Key key);
-/* Initalises and loads key bindings. */
+/* Initalises and loads key bindings from options. */
 void KeyBind_Init(void);
 
 
@@ -132,10 +149,17 @@ enum HOTKEY_FLAGS {
 	HOTKEY_FLAG_CTRL = 1, HOTKEY_FLAG_SHIFT = 2, HOTKEY_FLAG_ALT = 4,
 };
 
+/* Adds or updates a new hotkey. */
 void Hotkeys_Add(Key trigger, int flags, const String* text, bool more);
+/* Removes the given hotkey. */
 bool Hotkeys_Remove(Key trigger, int flags);
+/* Returns the first hotkey which is bound to the given key and has its modifiers pressed. */
+/* NOTE: The hotkeys list is sorted, so hotkeys with most modifiers are checked first. */
 int Hotkeys_FindPartial(Key key);
+/* Initalises and loads hotkeys from options. */
 void Hotkeys_Init(void);
+/* Called when user has removed a hotkey. (removes it from options) */
 void Hotkeys_UserRemovedHotkey(Key trigger, int flags);
+/* Called when user has added a hotkey. (Adds it to options) */
 void Hotkeys_UserAddedHotkey(Key trigger, int flags, bool moreInput, const String* text);
 #endif

@@ -114,7 +114,7 @@ static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
 	struct Entity* e = &p->Base;
 	struct Matrix Camera_tiltY, Camera_velX;
 
-	Matrix_RotateZ(&Camera_TiltM, -p->Tilt.TiltX * e->Anim.BobStrength);
+	Matrix_RotateZ(&Camera_TiltM, -p->Tilt.TiltX                  * e->Anim.BobStrength);
 	Matrix_RotateX(&Camera_tiltY, Math_AbsF(p->Tilt.TiltY) * 3.0f * e->Anim.BobStrength);
 	Matrix_MulBy(&Camera_TiltM, &Camera_tiltY);
 
@@ -157,10 +157,10 @@ static bool FirstPersonCamera_Zoom(float amount) { return false; }
 
 static void FirstPersonCamera_Init(struct Camera* cam) {
 	PerspectiveCamera_Init(cam);
-	cam->IsThirdPerson = false;
+	cam->IsThirdPerson  = false;
 	cam->GetOrientation = FirstPersonCamera_GetOrientation;
-	cam->GetPosition = FirstPersonCamera_GetPosition;
-	cam->Zoom = FirstPersonCamera_Zoom;
+	cam->GetPosition    = FirstPersonCamera_GetPosition;
+	cam->Zoom           = FirstPersonCamera_Zoom;
 }
 
 

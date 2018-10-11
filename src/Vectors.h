@@ -59,7 +59,7 @@ void Vector3I_ToVector3(Vector3* result, Vector3I* a);
 void Vector3I_Min(Vector3I* result, Vector3I* a, Vector3I* b);
 void Vector3I_Max(Vector3I* result, Vector3I* a, Vector3I* b);
 
-/* Returns a normalised vector that faces in the direction described by the given yaw and pitch. */
+/* Returns a normalised vector facing in the direction described by the given yaw and pitch. */
 Vector3 Vector3_GetDirVector(float yawRad, float pitchRad);
 /* Returns the yaw and pitch of the given direction vector.
 NOTE: This is not an identity function. Returned pitch is always within [-90, 90] degrees.*/

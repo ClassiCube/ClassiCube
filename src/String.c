@@ -679,7 +679,7 @@ bool Convert_TryParseBool(const String* str, bool* value) {
 #define STRINGSBUFFER_LEN_MASK  0x1FFUL
 #define STRINGSBUFFER_BUFFER_EXPAND_SIZE 8192
 
-void StringsBuffer_Init(StringsBuffer* buffer) {
+NOINLINE_ static void StringsBuffer_Init(StringsBuffer* buffer) {
 	buffer->Count     = 0;
 	buffer->TotalLength = 0;
 	buffer->TextBuffer  = buffer->_DefaultBuffer;
@@ -689,7 +689,7 @@ void StringsBuffer_Init(StringsBuffer* buffer) {
 }
 
 void StringsBuffer_Clear(StringsBuffer* buffer) {
-	/* never initialised to begin with */
+	/* Never initialised to begin with */
 	if (!buffer->_FlagsBufferSize) return;
 
 	if (buffer->TextBuffer != buffer->_DefaultBuffer) {
@@ -716,7 +716,7 @@ String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i) {
 }
 
 void StringsBuffer_Add(StringsBuffer* buffer, const String* text) {
-	/* Forgot to initalise flags buffer, so do it here */
+	/* StringsBuffer hasn't been initalised yet, do it here */
 	if (!buffer->_FlagsBufferSize) { StringsBuffer_Init(buffer); }
 
 	if (buffer->Count == buffer->_FlagsBufferSize) {
@@ -815,7 +815,6 @@ void WordWrap_Do(STRING_REF String* text, String* lines, int numLines, int lineL
 	}
 }
 
-/* Calculates where the given raw index is located in the wrapped lines. */
 void WordWrap_GetCoords(int index, const String* lines, int numLines, int* coordX, int* coordY) {
 	if (index == -1) index = Int32_MaxValue;
 	int offset = 0; *coordX = -1; *coordY = 0;
