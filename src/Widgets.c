@@ -435,7 +435,7 @@ static bool HotbarWidget_MouseDown(void* widget, int x, int y, MouseButton btn) 
 	struct Screen* screen = Gui_GetActiveScreen();
 	if (screen != InventoryScreen_UNSAFE_RawPointer) return false;
 
-	int width  = (int)(w->ElemSize * w->BorderSize);
+	int width  = (int)(w->ElemSize + w->BorderSize);
 	int height = Math_Ceil(w->BarHeight);
 	int i;
 
