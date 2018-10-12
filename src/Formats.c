@@ -14,7 +14,10 @@
 
 static ReturnCode Map_ReadBlocks(struct Stream* stream) {
 	World_BlocksSize = World_Width * World_Length * World_Height;
-	World_Blocks = Mem_Alloc(World_BlocksSize, 1, "map blocks");
+	World_Blocks     = Mem_Alloc(World_BlocksSize, 1, "map blocks");
+#ifdef EXTENDED_BLOCKS
+	World_Blocks2    = World_Blocks;
+#endif
 	return Stream_Read(stream, World_Blocks, World_BlocksSize);
 }
 
@@ -374,6 +377,7 @@ static bool Cw_Callback_1(struct NbtTag* tag) {
 		Mem_Copy(World_Uuid, tag->DataSmall, sizeof(World_Uuid));
 		return true;
 	}
+
 	if (IsTag(tag, "BlockArray")) {
 		World_BlocksSize = tag->DataSize;
 		if (tag->DataSize < NBT_SMALL_SIZE) {
@@ -382,6 +386,9 @@ static bool Cw_Callback_1(struct NbtTag* tag) {
 		} else {
 			World_Blocks = tag->DataBig;
 		}
+#ifdef EXTENDED_BLOCKS
+		World_Blocks2 = World_Blocks;
+#endif
 		return true;
 	}
 	return false;
@@ -779,6 +786,9 @@ ReturnCode Dat_Load(struct Stream* stream) {
 		} else if (String_CaselessEqualsConst(&fieldName, "blocks")) {
 			if (field->Type != JFIELD_ARRAY) ErrorHandler_Fail("Blocks field must be Array");
 			World_Blocks     = field->Value_Ptr;
+#ifdef EXTENDED_BLOCKS
+			World_Blocks2    = World_Blocks;
+#endif
 			World_BlocksSize = field->Value_Size;
 		} else if (String_CaselessEqualsConst(&fieldName, "xSpawn")) {
 			spawn->X = (float)Dat_I32(field);
