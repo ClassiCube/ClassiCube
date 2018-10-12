@@ -1395,61 +1395,6 @@
   }
 
 
-  /* there's a Mac-specific extended implementation of FT_New_Face() */
-  /* in src/base/ftmac.c                                             */
-
-#ifndef FT_MACINTOSH
-
-  /* documentation is in freetype.h */
-
-  FT_EXPORT_DEF( FT_Error )
-  FT_New_Face( FT_Library   library,
-               const char*  pathname,
-               FT_Long      face_index,
-               FT_Face     *aface )
-  {
-    FT_Open_Args  args;
-
-
-    /* test for valid `library' and `aface' delayed to `FT_Open_Face' */
-    if ( !pathname )
-      return FT_THROW( Invalid_Argument );
-
-    args.flags    = FT_OPEN_PATHNAME;
-    args.pathname = (char*)pathname;
-    args.stream   = NULL;
-
-    return ft_open_face_internal( library, &args, face_index, aface, 1 );
-  }
-
-#endif
-
-
-  /* documentation is in freetype.h */
-
-  FT_EXPORT_DEF( FT_Error )
-  FT_New_Memory_Face( FT_Library      library,
-                      const FT_Byte*  file_base,
-                      FT_Long         file_size,
-                      FT_Long         face_index,
-                      FT_Face        *aface )
-  {
-    FT_Open_Args  args;
-
-
-    /* test for valid `library' and `face' delayed to `FT_Open_Face' */
-    if ( !file_base )
-      return FT_THROW( Invalid_Argument );
-
-    args.flags       = FT_OPEN_MEMORY;
-    args.memory_base = file_base;
-    args.memory_size = file_size;
-    args.stream      = NULL;
-
-    return ft_open_face_internal( library, &args, face_index, aface, 1 );
-  }
-
-
 #ifdef FT_CONFIG_OPTION_MAC_FONTS
 
   /* The behavior here is very similar to that in base/ftmac.c, but it     */

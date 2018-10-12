@@ -34,7 +34,7 @@ struct Stream {
 		/* NOTE: These structs rely on overlapping Meta_Mem fields being the same! Don't change them */
 		struct { uint8_t* Cur; uint32_t Left, Length; uint8_t* Base; } Mem;
 		struct { struct Stream* Source; uint32_t Left, Length; } Portion;
-		struct { uint8_t* Cur; uint32_t Left, Length; uint8_t* Base; struct Stream* Source; } Buffered;
+		struct { uint8_t* Cur; uint32_t Left, Length; uint8_t* Base; struct Stream* Source; uint32_t End; } Buffered;
 		struct { uint8_t* Cur; uint32_t Left, Last;   uint8_t* Base; struct Stream* Source; } Ogg;
 		struct { struct Stream* Source; uint32_t CRC32; } CRC32;
 	} Meta;

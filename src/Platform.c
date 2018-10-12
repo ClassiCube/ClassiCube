@@ -710,6 +710,53 @@ static void Font_Init(void);
 #define DPI_PIXEL  72
 #define DPI_DEVICE 96 /* TODO: GetDeviceCaps(hdc, LOGPIXELSY) in Platform_InitDisplay ? */
 
+
+static unsigned long Font_ReadWrapper(FT_Stream s, unsigned long offset, unsigned char* buffer, unsigned long count) {
+	if (!count && offset > s->size) return 1;
+	struct Stream* stream = s->descriptor.pointer;
+	if (s->pos != offset) stream->Seek(stream, offset);
+
+	ReturnCode res = Stream_Read(stream, buffer, count);
+	return res ? 0 : count;
+}
+
+static void Font_CloseWrapper(FT_Stream s) {
+	struct Stream* stream = s->descriptor.pointer;
+	struct Stream* source = stream->Meta.Buffered.Source;
+
+	/* Close the actual file stream */
+	source->Close(source);
+	Mem_Free(s->descriptor.pointer);
+}
+
+static bool Font_MakeArgs(const String* path, FT_Stream stream, FT_Open_Args* args) {
+	void* file;
+	if (File_Open(&file, path)) return false;
+
+	uint32_t size;
+	if (File_Length(file, &size)) { File_Close(file); return false; }
+	stream->size = size;
+
+	struct Stream* data    = Mem_Alloc(1, sizeof(struct Stream) * 2 + 8192, "Font_MakeArgs");
+	struct Stream* wrapper = &data[0];
+	struct Stream* fileSrm = &data[1];
+
+	/* TODO: Increase buffer size to 8192, better Seek impl (want 11,000 I/O reads) */
+	uint8_t* buffer = (uint8_t*)&data[2];
+	Stream_FromFile(fileSrm, file);
+	Stream_ReadonlyBuffered(wrapper, fileSrm, buffer, 8192);
+
+	stream->descriptor.pointer = data;
+	stream->memory = &ft_mem;
+	stream->read   = Font_ReadWrapper;
+	stream->close  = Font_CloseWrapper;
+
+	args->flags    = FT_OPEN_STREAM;
+	args->pathname = NULL;
+	args->stream   = stream;
+	return true;
+}
+
 static int Font_Find(const String* name, StringsBuffer* entries) {
 	int i;
 	for (i = 1; i < entries->Count; i += 2) {
@@ -742,15 +789,16 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 		entries = &norm_fonts;
 		idx = Font_Find(fontName, entries); 
 	}
+
 	if (idx == -1) ErrorHandler_Fail("Unknown font");
-	
-	char pathBuffer[FILENAME_SIZE + 1];
-	String path = String_NT_Array(pathBuffer);
-	StringsBuffer_Get(entries, idx - 1, &path);
-	path.buffer[path.length] = '\0';
+	String path = StringsBuffer_UNSAFE_Get(entries, idx - 1, &path);
+
+	FT_Stream stream = Mem_AllocCleared(1, sizeof(FT_StreamRec), "leaky font"); /* TODO: LEAKS MEMORY!!! */
+	FT_Open_Args args;
+	if (!Font_MakeArgs(&path, stream, &args)) return;
 
 	FT_Face face;
-	FT_Error err = FT_New_Face(ft_lib, path.buffer, 0, &face);
+	FT_Error err = FT_Open_Face(ft_lib, &args, 0, &face);
 	if (err) ErrorHandler_Fail2(err, "Creating font failed");
 	desc->Handle = face;
 
@@ -788,53 +836,6 @@ static void Font_Add(const String* path, FT_Face face, StringsBuffer* entries, c
 
 	Platform_Log1("Face: %s", &name);
 	StringsBuffer_Add(entries, &name);
-}
-
-static unsigned long Font_ReadWrapper(FT_Stream s, unsigned long offset, unsigned char* buffer, unsigned long count) {
-	if (!count && offset > s->size) return 1;
-	struct Stream* stream = s->descriptor.pointer;
-	if (s->pos != offset) stream->Seek(stream, offset);
-
-	ReturnCode res = Stream_Read(stream, buffer, count);
-	return res ? 0 : count;
-}
-
-static void Font_CloseWrapper(FT_Stream s) {
-	struct Stream* stream = s->descriptor.pointer;
-	struct Stream* source = stream->Meta.Buffered.Source;
-
-	/* Close the actual file stream */
-	source->Close(source);
-	/* And free up everything */
-	Mem_Free(s->descriptor.pointer);
-}
-
-static bool Font_MakeArgs(const String* path, FT_Stream stream, FT_Open_Args* args) {
-	void* file;
-	if (File_Open(&file, path)) return false;
-
-	uint32_t size;
-	if (File_Length(file, &size)) { stream->close(stream); return false; }
-	stream->size = size;
-
-	struct Stream* data    = Mem_Alloc(1, sizeof(struct Stream) * 2 + 4096, "Font_MakeArgs");
-	struct Stream* wrapper = &data[0];
-	struct Stream* fileSrm = &data[1];
-
-	/* TODO: Increase buffer size to 4096, better Seek impl (want 11,000 I/O reads) */
-	uint8_t* buffer = (uint8_t*)&data[2];
-	Stream_FromFile(fileSrm, file);
-	Stream_ReadonlyBuffered(wrapper, fileSrm, buffer, 4096);
-
-	stream->descriptor.pointer = data;
-	stream->memory = &ft_mem;
-	stream->read   = Font_ReadWrapper;
-	stream->close  = Font_CloseWrapper;
-
-	args->flags    = FT_OPEN_STREAM;
-	args->pathname = NULL;
-	args->stream   = stream;
-	return true;
 }
 
 static void Font_DirCallback(const String* path, void* obj) {

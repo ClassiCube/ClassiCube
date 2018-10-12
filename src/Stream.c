@@ -255,13 +255,14 @@ static ReturnCode Stream_BufferedRead(struct Stream* s, uint8_t* data, uint32_t 
 
 		ReturnCode res = source->Read(source, s->Meta.Buffered.Cur, s->Meta.Buffered.Length, &read);
 		if (res) return res;
-		s->Meta.Mem.Left = read;
+		s->Meta.Buffered.Left  = read;
+		s->Meta.Buffered.End  += read;
 	}
 	
 	count = min(count, s->Meta.Buffered.Left);
 	Mem_Copy(data, s->Meta.Buffered.Cur, count);
 
-	s->Meta.Buffered.Cur += count; s->Meta.Mem.Left -= count;
+	s->Meta.Buffered.Cur += count; s->Meta.Buffered.Left -= count;
 	*modified = count;
 	return 0;
 }
@@ -276,11 +277,23 @@ static ReturnCode Stream_BufferedReadU8(struct Stream* s, uint8_t* data) {
 }
 
 static ReturnCode Stream_BufferedSeek(struct Stream* s, uint32_t position) {
+	/* Check if seek position is within cached buffer */
+	uint32_t length = s->Meta.Buffered.Left + (uint32_t)(s->Meta.Buffered.Cur - s->Meta.Buffered.Base);
+	uint32_t start  = s->Meta.Buffered.End  - length;
+
+	if (position >= start && position < start + length) {
+		uint32_t offset = position - start;
+		s->Meta.Buffered.Cur  = s->Meta.Buffered.Base + offset;
+		s->Meta.Buffered.Left = length - offset;
+		return 0;
+	}
+
 	struct Stream* source = s->Meta.Buffered.Source;
 	ReturnCode res        = source->Seek(source, position);
 
 	if (res) return res;
 	s->Meta.Buffered.Left = 0;
+	s->Meta.Buffered.End  = position;	
 	return res;
 }
 
@@ -288,12 +301,13 @@ void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data
 	Stream_Init(s);
 	s->Read   = Stream_BufferedRead;
 	s->ReadU8 = Stream_BufferedReadU8;
-	s->Seek   = Stream_BufferedSeek; /* TODO: Try to reuse buffered cache */
+	s->Seek   = Stream_BufferedSeek;
 
-	s->Meta.Buffered.Cur    = data;
 	s->Meta.Buffered.Left   = 0;
-	s->Meta.Buffered.Length = size;
+	s->Meta.Buffered.End    = 0;	
+	s->Meta.Buffered.Cur    = data;
 	s->Meta.Buffered.Base   = data;
+	s->Meta.Buffered.Length = size;
 	s->Meta.Buffered.Source = source;
 }
 
