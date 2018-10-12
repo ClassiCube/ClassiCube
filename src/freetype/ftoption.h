@@ -729,32 +729,6 @@ FT_BEGIN_HEADER
 /* #define CFF_CONFIG_OPTION_OLD_ENGINE */
 
 
-  /*************************************************************************/
-  /*************************************************************************/
-  /****                                                                 ****/
-  /****         P C F   D R I V E R    C O N F I G U R A T I O N        ****/
-  /****                                                                 ****/
-  /*************************************************************************/
-  /*************************************************************************/
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* There are many PCF fonts just called `Fixed' which look completely    */
-  /* different, and which have nothing to do with each other.  When        */
-  /* selecting `Fixed' in KDE or Gnome one gets results that appear rather */
-  /* random, the style changes often if one changes the size and one       */
-  /* cannot select some fonts at all.  This option makes the PCF module    */
-  /* prepend the foundry name (plus a space) to the family name.           */
-  /*                                                                       */
-  /* We also check whether we have `wide' characters; all put together, we */
-  /* get family names like `Sony Fixed' or `Misc Fixed Wide'.              */
-  /*                                                                       */
-  /* If this option is activated, it can be controlled with the            */
-  /* `no-long-family-names' property of the pcf driver module.             */
-  /*                                                                       */
-/* #define PCF_CONFIG_OPTION_LONG_FAMILY_NAMES */
-
 
   /*************************************************************************/
   /*************************************************************************/

@@ -10,6 +10,11 @@
 #include "Bitmap.h"
 #include "Event.h"
 
+#define WIN32_LEAN_AND_MEAN
+#define NOSERVICE
+#define NOMCX
+#define NOIME
+
 int Gfx_strideSizes[2] = { 16, 24 };
 int gfx_batchStride, gfx_batchFormat = -1;
 
@@ -21,10 +26,6 @@ bool Gfx_GetFog(void) { return gfx_fogEnabled; }
 *#########################################################################################################################*/
 #ifdef CC_BUILD_D3D9
 //#define D3D_DISABLE_9EX causes compile errors
-#define WIN32_LEAN_AND_MEAN
-#define NOSERVICE
-#define NOMCX
-#define NOIME
 #include <d3d9.h>
 #include <d3d9caps.h>
 #include <d3d9types.h>
@@ -723,10 +724,6 @@ void Gfx_OnWindowResize(void) {
 *#########################################################################################################################*/
 #ifndef CC_BUILD_D3D9
 #ifdef CC_BUILD_WIN
-#define WIN32_LEAN_AND_MEAN
-#define NOSERVICE
-#define NOMCX
-#define NOIME
 #include <windows.h>
 #else
 #define APIENETRY
@@ -804,8 +801,6 @@ void Gfx_Init(void) {
 #ifndef CC_BUILD_GL11
 	Gfx_CustomMipmapsLevels = true;
 	GL_CheckVboSupport();
-#else
-	Gfx_CustomMipmapsLevels = false;
 #endif
 	
 	GfxCommon_Init();

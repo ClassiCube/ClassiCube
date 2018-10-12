@@ -56,7 +56,7 @@ void World_SetNewMap(BlockRaw* blocks, int blocksSize, int width, int height, in
 #endif
 
 	World_OneY = width * length;
-	World_MaxX = width - 1;
+	World_MaxX = width  - 1;
 	World_MaxY = height - 1;
 	World_MaxZ = length - 1;
 

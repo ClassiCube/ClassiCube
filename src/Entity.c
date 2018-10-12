@@ -197,23 +197,23 @@ bool Entity_TouchesAny(struct AABB* bounds, Entity_TouchesCondition condition) {
 }
 
 static bool Entity_IsRope(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_CLIMB_ROPE; }
-bool Entity_TouchesAnyRope(struct Entity* entity) {
-	struct AABB bounds; Entity_GetBounds(entity, &bounds);
+bool Entity_TouchesAnyRope(struct Entity* e) {
+	struct AABB bounds; Entity_GetBounds(e, &bounds);
 	bounds.Max.Y += 0.5f / 16.0f;
 	return Entity_TouchesAny(&bounds, Entity_IsRope);
 }
 
 Vector3 entity_liqExpand = { 0.25f / 16.0f, 0.0f / 16.0f, 0.25f / 16.0f };
 static bool Entity_IsLava(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_LIQUID_LAVA; }
-bool Entity_TouchesAnyLava(struct Entity* entity) {
-	struct AABB bounds; Entity_GetBounds(entity, &bounds);
+bool Entity_TouchesAnyLava(struct Entity* e) {
+	struct AABB bounds; Entity_GetBounds(e, &bounds);
 	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
 	return Entity_TouchesAny(&bounds, Entity_IsLava);
 }
 
 static bool Entity_IsWater(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_LIQUID_WATER; }
-bool Entity_TouchesAnyWater(struct Entity* entity) {
-	struct AABB bounds; Entity_GetBounds(entity, &bounds);
+bool Entity_TouchesAnyWater(struct Entity* e) {
+	struct AABB bounds; Entity_GetBounds(e, &bounds);
 	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
 	return Entity_TouchesAny(&bounds, Entity_IsWater);
 }
@@ -595,11 +595,11 @@ static void Player_ApplySkin(struct Player* player, struct Player* from) {
 }
 
 void Player_ResetSkin(struct Player* player) {
-	struct Entity* entity = &player->Base;
-	entity->uScale = 1.0f; entity->vScale = 1.0f;
-	entity->MobTextureId = GFX_NULL;
-	entity->TextureId    = GFX_NULL;
-	entity->SkinType = SKIN_64x32;
+	struct Entity* e = &player->Base;
+	e->uScale = 1.0f; e->vScale = 1.0f;
+	e->MobTextureId = GFX_NULL;
+	e->TextureId    = GFX_NULL;
+	e->SkinType     = SKIN_64x32;
 }
 
 /* Apply or reset skin, for all players with same skin */

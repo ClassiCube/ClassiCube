@@ -41,10 +41,6 @@
 
 #include "afblue.h"
 
-#ifdef FT_DEBUG_AUTOFIT
-#include FT_CONFIG_STANDARD_LIBRARY_H
-#endif
-
 
 FT_BEGIN_HEADER
 

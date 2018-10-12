@@ -91,18 +91,18 @@ struct Entity {
 };
 typedef bool (*Entity_TouchesCondition)(BlockID block);
 
-void Entity_Init(struct Entity* entity);
-Vector3 Entity_GetEyePosition(struct Entity* entity);
-float Entity_GetEyeHeight(struct Entity* entity);
-void Entity_GetTransform(struct Entity* entity, Vector3 pos, Vector3 scale, struct Matrix* m);
-void Entity_GetPickingBounds(struct Entity* entity, struct AABB* bb);
-void Entity_GetBounds(struct Entity* entity, struct AABB* bb);
-void Entity_SetModel(struct Entity* entity, const String* model);
-void Entity_UpdateModelBounds(struct Entity* entity);
+void Entity_Init(struct Entity* e);
+Vector3 Entity_GetEyePosition(struct Entity* e);
+float Entity_GetEyeHeight(struct Entity* e);
+void Entity_GetTransform(struct Entity* e, Vector3 pos, Vector3 scale, struct Matrix* m);
+void Entity_GetPickingBounds(struct Entity* e, struct AABB* bb);
+void Entity_GetBounds(struct Entity* e, struct AABB* bb);
+void Entity_SetModel(struct Entity* e, const String* model);
+void Entity_UpdateModelBounds(struct Entity* e);
 bool Entity_TouchesAny(struct AABB* bb, Entity_TouchesCondition cond);
-bool Entity_TouchesAnyRope(struct Entity* entity);	
-bool Entity_TouchesAnyLava(struct Entity* entity);
-bool Entity_TouchesAnyWater(struct Entity* entity);
+bool Entity_TouchesAnyRope(struct Entity* e);	
+bool Entity_TouchesAnyLava(struct Entity* e);
+bool Entity_TouchesAnyWater(struct Entity* e);
 
 struct Entity* Entities_List[ENTITIES_MAX_COUNT];
 void Entities_Tick(struct ScheduledTask* task);

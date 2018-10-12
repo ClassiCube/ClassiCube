@@ -702,7 +702,8 @@ void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
 /*########################################################################################################################*
 *--------------------------------------------------------Font/Text--------------------------------------------------------*
 *#########################################################################################################################*/
-FT_Library lib;
+FT_Library ft_lib;
+struct FT_MemoryRec_ ft_mem;
 StringsBuffer norm_fonts, bold_fonts;
 static void Font_Init(void);
 
@@ -749,7 +750,7 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 	path.buffer[path.length] = '\0';
 
 	FT_Face face;
-	FT_Error err = FT_New_Face(lib, path.buffer, 0, &face);
+	FT_Error err = FT_New_Face(ft_lib, path.buffer, 0, &face);
 	if (err) ErrorHandler_Fail2(err, "Creating font failed");
 	desc->Handle = face;
 
@@ -769,38 +770,86 @@ void Font_Free(FontDesc* desc) {
 	desc->Handle = NULL;
 }
 
-static void Font_Add(String* path, FT_Face face, StringsBuffer* entries, const char* defStyle) {
+static void Font_Add(const String* path, FT_Face face, StringsBuffer* entries, const char* defStyle) {
 	if (!face->family_name || !(face->face_flags & FT_FACE_FLAG_SCALABLE)) return;
 	StringsBuffer_Add(entries, path);
-	path->length = 0;
 
-	String_AppendConst(path, face->family_name);
+	char nameBuffer[STRING_SIZE];
+	String name = String_FromArray(nameBuffer);
+
+	String_AppendConst(&name, face->family_name);
 	/* don't want 'Arial Regular' or 'Arial Bold' */
 	if (face->style_name) {
 		String style = String_FromReadonly(face->style_name);
 		if (!String_CaselessEqualsConst(&style, defStyle)) {
-			String_Format1(path, " %c", face->style_name);
+			String_Format1(&name, " %c", face->style_name);
 		}
 	}
 
-	Platform_Log1("Face: %s", path);
-	StringsBuffer_Add(entries, path);
+	Platform_Log1("Face: %s", &name);
+	StringsBuffer_Add(entries, &name);
 }
 
-static void Font_DirCallback(const String* srcPath, void* obj) {
-	char pathBuffer[FILENAME_SIZE + 1];
-	String path = String_NT_Array(pathBuffer);
-	String_Copy(&path, srcPath);
-	path.buffer[path.length] = '\0';
+static unsigned long Font_ReadWrapper(FT_Stream s, unsigned long offset, unsigned char* buffer, unsigned long count) {
+	if (!count && offset > s->size) return 1;
+	struct Stream* stream = s->descriptor.pointer;
+	if (s->pos != offset) stream->Seek(stream, offset);
+
+	ReturnCode res = Stream_Read(stream, buffer, count);
+	return res ? 0 : count;
+}
+
+static void Font_CloseWrapper(FT_Stream s) {
+	struct Stream* stream = s->descriptor.pointer;
+	struct Stream* source = stream->Meta.Buffered.Source;
+
+	/* Close the actual file stream */
+	source->Close(source);
+	/* And free up everything */
+	Mem_Free(s->descriptor.pointer);
+}
+
+static bool Font_MakeArgs(const String* path, FT_Stream stream, FT_Open_Args* args) {
+	void* file;
+	if (File_Open(&file, path)) return false;
+
+	uint32_t size;
+	if (File_Length(file, &size)) { stream->close(stream); return false; }
+	stream->size = size;
+
+	struct Stream* data    = Mem_Alloc(1, sizeof(struct Stream) * 2 + 4096, "Font_MakeArgs");
+	struct Stream* wrapper = &data[0];
+	struct Stream* fileSrm = &data[1];
+
+	/* TODO: Increase buffer size to 4096, better Seek impl (want 11,000 I/O reads) */
+	uint8_t* buffer = (uint8_t*)&data[2];
+	Stream_FromFile(fileSrm, file);
+	Stream_ReadonlyBuffered(wrapper, fileSrm, buffer, 4096);
+
+	stream->descriptor.pointer = data;
+	stream->memory = &ft_mem;
+	stream->read   = Font_ReadWrapper;
+	stream->close  = Font_CloseWrapper;
+
+	args->flags    = FT_OPEN_STREAM;
+	args->pathname = NULL;
+	args->stream   = stream;
+	return true;
+}
+
+static void Font_DirCallback(const String* path, void* obj) {
+	FT_StreamRec stream = { 0 };
+	FT_Open_Args args;
+	if (!Font_MakeArgs(path, &stream, &args)) return;
 
 	FT_Face face;
-	FT_Error error = FT_New_Face(lib, path.buffer, 0, &face);
-	if (error) return;
+	FT_Error error = FT_Open_Face(ft_lib, &args, 0, &face);
+	if (error) { stream.close(&stream); return; }
 
 	if (face->style_flags == FT_STYLE_FLAG_BOLD) {
-		Font_Add(&path, face, &bold_fonts, "Bold");
+		Font_Add(path, face, &bold_fonts, "Bold");
 	} else if (face->style_flags == 0) {
-		Font_Add(&path, face, &norm_fonts, "Regular");
+		Font_Add(path, face, &norm_fonts, "Regular");
 	}
 	FT_Done_Face(face);
 }
@@ -871,7 +920,6 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, P
 	s.Width = x - begX; return s;
 }
 
-struct FT_MemoryRec_ ft_mem;
 static void* FT_AllocWrapper(FT_Memory memory, long size) {
 	return Mem_Alloc(size, 1, "Freetype data");
 }
@@ -889,11 +937,11 @@ static void Font_Init(void) {
 	ft_mem.free    = FT_FreeWrapper;
 	ft_mem.realloc = FT_ReallocWrapper;
 
-	FT_Error err = FT_New_Library(&ft_mem, &lib);
+	FT_Error err = FT_New_Library(&ft_mem, &ft_lib);
 	if (err) ErrorHandler_Fail2(err, "Failed to init freetype");
 
-	FT_Add_Default_Modules(lib);
-	FT_Set_Default_Properties(lib);
+	FT_Add_Default_Modules(ft_lib);
+	FT_Set_Default_Properties(ft_lib);
 
 #ifdef CC_BUILD_WIN
 	String dir   = String_FromConst("C:\\Windows\\fonts");

@@ -34,8 +34,8 @@ void Chat_Add(const String* text);
 void Chat_AddOf(const String* text, int messageType);
 void Chat_AddRaw(const char* raw);
 
-void Chat_LogError(ReturnCode result,  const char* place);
-void Chat_LogError2(ReturnCode result, const char* place, const String* path);
+NOINLINE_ void Chat_LogError(ReturnCode result,  const char* place);
+NOINLINE_ void Chat_LogError2(ReturnCode result, const char* place, const String* path);
 void Chat_Add1(const char* format, const void* a1);
 void Chat_Add2(const char* format, const void* a1, const void* a2);
 void Chat_Add3(const char* format, const void* a1, const void* a2, const void* a3);
