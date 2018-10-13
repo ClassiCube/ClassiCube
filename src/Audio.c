@@ -105,15 +105,13 @@ static ReturnCode Sound_ReadWave(const String* filename, struct Sound* snd) {
 	String path = String_FromArray(pathBuffer);
 	String_Format2(&path, "audio%r%s", &Directory_Separator, filename);
 
-	ReturnCode res;
-	void* file; res = File_Open(&file, &path);
+	ReturnCode res; struct Stream stream;
+	res = Stream_OpenFile(&stream, &path);
 	if (res) return res;
 
-	struct Stream stream; Stream_FromFile(&stream, file);
-	{
-		res = Sound_ReadWaveData(&stream, snd);
-		if (res) { stream.Close(&stream); return res; }
-	}
+	res = Sound_ReadWaveData(&stream, snd);
+	if (res) { stream.Close(&stream); return res; }
+
 	return stream.Close(&stream);
 }
 
@@ -434,13 +432,15 @@ static void Music_RunLoop(void) {
 		String_Format2(&path, "audio%r%s", &Directory_Separator, &filename);
 		Platform_Log1("playing music file: %s", &filename);
 
-		void* file; res = File_Open(&file, &path);
+		struct Stream stream;
+		res = Stream_OpenFile(&stream, &path);
 		if (res) { Chat_LogError2(res, "opening", &path); break; }
-		struct Stream stream; Stream_FromFile(&stream, file);
-		{
-			res = Music_PlayOgg(&stream);
-			if (res) { Chat_LogError2(res, "playing", &path); break; }
+
+		res = Music_PlayOgg(&stream);
+		if (res) { 
+			Chat_LogError2(res, "playing", &path); stream.Close(&stream); break;
 		}
+
 		res = stream.Close(&stream);
 		if (res) { Chat_LogError2(res, "closing", &path); break; }
 

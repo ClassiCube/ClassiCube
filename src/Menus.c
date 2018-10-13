@@ -1238,7 +1238,7 @@ static void SaveLevelScreen_Save(void* screen, void* widget, const char* ext) {
 
 	char pathBuffer[FILENAME_SIZE];
 	String path = String_FromArray(pathBuffer);
-	String_Format2(&path, "maps/%s%c", &file, ext);
+	String_Format3(&path, "maps%r%s%c", &Directory_Separator, &file, ext);
 
 	if (File_Exists(&path) && !btn->OptName) {
 		String warnMsg = String_FromConst("&cOverwrite existing?");
@@ -1267,33 +1267,32 @@ static void SaveLevelScreen_Init(void* screen) {
 }
 
 static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s) {
-	String path = s->TextPath;
-	ReturnCode res;
-	struct Stream compStream;
+	String path = s->TextPath, cw = String_FromConst(".cw");
+	ReturnCode res; struct Stream stream;
 
-	void* file; res = File_Create(&file, &path);
+	res = Stream_CreateFile(&stream, &path);
 	if (res) { Chat_LogError2(res, "creating", &path); return; }
-	struct Stream stream; Stream_FromFile(&stream, file);
-	{
-		String cw = String_FromConst(".cw");	
-		struct GZipState state;
-		GZip_MakeStream(&compStream, &state, &stream);
 
-		if (String_CaselessEnds(&path, &cw)) {
-			res = Cw_Save(&compStream);
-		} else {
-			res = Schematic_Save(&compStream);
-		}
+	struct Stream compStream;
+	struct GZipState state;
+	GZip_MakeStream(&compStream, &state, &stream);
 
-		if (res) {
-			stream.Close(&stream);
-			Chat_LogError2(res, "encoding", &path); return;
-		}
-		if ((res = compStream.Close(&compStream))) {
-			stream.Close(&stream);
-			Chat_LogError2(res, "closing", &path); return;
-		}
+	if (String_CaselessEnds(&path, &cw)) {
+		res = Cw_Save(&compStream);
+	} else {
+		res = Schematic_Save(&compStream);
 	}
+
+	if (res) {
+		stream.Close(&stream);
+		Chat_LogError2(res, "encoding", &path); return;
+	}
+
+	if ((res = compStream.Close(&compStream))) {
+		stream.Close(&stream);
+		Chat_LogError2(res, "closing", &path); return;
+	}
+
 	res = stream.Close(&stream);
 	if (res) { Chat_LogError2(res, "closing", &path); return; }
 
@@ -1574,32 +1573,29 @@ void LoadLevelScreen_LoadMap(const String* path) {
 
 	Block_Reset();
 	Inventory_SetDefaultMapping();
-	ReturnCode res;
 
-	void* file; res = File_Open(&file, path);
+	ReturnCode res; struct Stream stream;
+	res = Stream_OpenFile(&stream, path);
 	if (res) { Chat_LogError2(res, "opening", path); return; }
-	struct Stream stream; Stream_FromFile(&stream, file);
-	{
-		String cw = String_FromConst(".cw");   String lvl = String_FromConst(".lvl");
-		String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
 
-		if (String_CaselessEnds(path, &dat)) {
-			res = Dat_Load(&stream);
-		} else if (String_CaselessEnds(path, &fcm)) {
-			res = Fcm_Load(&stream);
-		} else if (String_CaselessEnds(path, &cw)) {
-			res = Cw_Load(&stream);
-		} else if (String_CaselessEnds(path, &lvl)) {
-			res = Lvl_Load(&stream);
-		}
+	String cw = String_FromConst(".cw");   String lvl = String_FromConst(".lvl");
+	String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
 
-		if (res) { 
-			Chat_LogError2(res, "decoding", path);
-			Mem_Free(World_Blocks); 
-			World_Blocks = NULL; World_BlocksSize = 0;
-			stream.Close(&stream); return;
-		}
+	if (String_CaselessEnds(path, &dat)) {
+		res = Dat_Load(&stream);
+	} else if (String_CaselessEnds(path, &fcm)) {
+		res = Fcm_Load(&stream);
+	} else if (String_CaselessEnds(path, &cw)) {
+		res = Cw_Load(&stream);
+	} else if (String_CaselessEnds(path, &lvl)) {
+		res = Lvl_Load(&stream);
 	}
+
+	if (res) {
+		World_Reset();
+		Chat_LogError2(res, "decoding", path); stream.Close(&stream); return;
+	}
+
 	res = stream.Close(&stream);
 	if (res) { Chat_LogError2(res, "closing", path); }
 

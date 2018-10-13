@@ -104,6 +104,19 @@ static ReturnCode Stream_FileLength(struct Stream* s, uint32_t* length) {
 	return File_Length(s->Meta.File, length);
 }
 
+ReturnCode Stream_OpenFile(struct Stream* s, const String* path) {
+	void* file;
+	ReturnCode res = File_Open(&file, path);
+	Stream_FromFile(s, file);
+	return res;
+}
+ReturnCode Stream_CreateFile(struct Stream* s, const String* path) {
+	void* file;
+	ReturnCode res = File_Create(&file, path);
+	Stream_FromFile(s, file);
+	return res;
+}
+
 void Stream_FromFile(struct Stream* s, void* file) {
 	Stream_Init(s);
 	s->Meta.File = file;

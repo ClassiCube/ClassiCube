@@ -10,9 +10,9 @@
 bool Drawer_Tinted;
 /* The colour to multiply colour of faces by (tinting effect). */
 PackedCol Drawer_TintColour;
-/* Minimum base block bounding box corner. (For texture UV) */
+/* Minimum corner of base block bounding box. (For texture UV) */
 Vector3 Drawer_MinBB;
-/* Maximum base block bounding box corner. (For texture UV) */
+/* Maximum corner of base block bounding box. (For texture UV) */
 Vector3 Drawer_MaxBB;
 /* Coordinate of minimum block bounding box corner in the world. */
 float Drawer_X1, Drawer_Y1, Drawer_Z1;

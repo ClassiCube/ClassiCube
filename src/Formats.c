@@ -910,12 +910,12 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, int b) {
 		speed.f = Block_SpeedMultiplier[b];
 		Stream_SetU32_BE(&tmp[39], speed.u);
 
-		tmp[58] = (uint8_t)Block_GetTexLoc(b, FACE_YMAX);
-		tmp[59] = (uint8_t)Block_GetTexLoc(b, FACE_YMIN);
-		tmp[60] = (uint8_t)Block_GetTexLoc(b, FACE_XMIN);
-		tmp[61] = (uint8_t)Block_GetTexLoc(b, FACE_XMAX);
-		tmp[62] = (uint8_t)Block_GetTexLoc(b, FACE_ZMIN);
-		tmp[63] = (uint8_t)Block_GetTexLoc(b, FACE_ZMAX);
+		tmp[58] = (uint8_t)Block_GetTex(b, FACE_YMAX);
+		tmp[59] = (uint8_t)Block_GetTex(b, FACE_YMIN);
+		tmp[60] = (uint8_t)Block_GetTex(b, FACE_XMIN);
+		tmp[61] = (uint8_t)Block_GetTex(b, FACE_XMAX);
+		tmp[62] = (uint8_t)Block_GetTex(b, FACE_ZMIN);
+		tmp[63] = (uint8_t)Block_GetTex(b, FACE_ZMAX);
 
 		tmp[81]  = Block_BlocksLight[b] ? 0 : 1;
 		tmp[94]  = Block_DigSounds[b];

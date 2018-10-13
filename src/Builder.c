@@ -80,14 +80,14 @@ static int Builder_TotalVerticesCount(void) {
 *----------------------------------------------------Base mesh builder----------------------------------------------------*
 *#########################################################################################################################*/
 static void Builder_AddSpriteVertices(BlockID block) {
-	int i = Atlas1D_Index(Block_GetTexLoc(block, FACE_XMIN));
+	int i = Atlas1D_Index(Block_GetTex(block, FACE_XMIN));
 	struct Builder1DPart* part = &Builder_Parts[i];
 	part->sCount += 4 * 4;
 }
 
 static void Builder_AddVertices(BlockID block, Face face) {
 	int baseOffset = (Block_Draw[block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
-	int i = Atlas1D_Index(Block_GetTexLoc(block, face));
+	int i = Atlas1D_Index(Block_GetTex(block, face));
 	struct Builder1DPart* part = &Builder_Parts[baseOffset + i];
 	part->fCount[face] += 4;
 }
@@ -396,7 +396,7 @@ static void Builder_DefaultPostStretchTiles(int x1, int y1, int z1) {
 
 Random spriteRng;
 static void Builder_DrawSprite(int count) {
-	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMAX);
+	TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_XMAX);
 	int i = Atlas1D_Index(texLoc);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
 	float X = (float)Builder_X, Y = (float)Builder_Y, Z = (float)Builder_Z;
@@ -590,7 +590,7 @@ static void NormalBuilder_RenderBlock(int index) {
 	PackedCol white = PACKEDCOL_WHITE;
 
 	if (count_XMin) {
-		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMIN);
+		TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_XMIN);
 		int offset = (lightFlags >> FACE_XMIN) & 1;
 		struct Builder1DPart* part = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
 
@@ -600,7 +600,7 @@ static void NormalBuilder_RenderBlock(int index) {
 	}
 
 	if (count_XMax) {
-		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMAX);
+		TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_XMAX);
 		int offset = (lightFlags >> FACE_XMAX) & 1;
 		struct Builder1DPart* part = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
 
@@ -610,7 +610,7 @@ static void NormalBuilder_RenderBlock(int index) {
 	}
 
 	if (count_ZMin) {
-		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_ZMIN);
+		TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_ZMIN);
 		int offset = (lightFlags >> FACE_ZMIN) & 1;
 		struct Builder1DPart* part = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
 
@@ -620,7 +620,7 @@ static void NormalBuilder_RenderBlock(int index) {
 	}
 
 	if (count_ZMax) {
-		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_ZMAX);
+		TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_ZMAX);
 		int offset = (lightFlags >> FACE_ZMAX) & 1;
 		struct Builder1DPart* part = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
 
@@ -630,7 +630,7 @@ static void NormalBuilder_RenderBlock(int index) {
 	}
 
 	if (count_YMin) {
-		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_YMIN);
+		TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_YMIN);
 		int offset = (lightFlags >> FACE_YMIN) & 1;
 		struct Builder1DPart* part = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
 
@@ -639,7 +639,7 @@ static void NormalBuilder_RenderBlock(int index) {
 	}
 
 	if (count_YMax) {
-		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_YMAX);
+		TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_YMAX);
 		int offset = (lightFlags >> FACE_YMAX) & 1;
 		struct Builder1DPart* part = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
 
@@ -844,7 +844,7 @@ static int Adv_StretchZ(int countIndex, int x, int y, int z, int chunkIndex, Blo
 #define Adv_Tint(c) c.R = (uint8_t)(c.R * tint.R / 255); c.G = (uint8_t)(c.G * tint.G / 255); c.B = (uint8_t)(c.B * tint.B / 255);
 
 static void Adv_DrawXMin(int count) {
-	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMIN);
+	TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_XMIN);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
 	int offset = (adv_lightFlags >> FACE_XMIN) & 1;
 
@@ -884,7 +884,7 @@ static void Adv_DrawXMin(int count) {
 }
 
 static void Adv_DrawXMax(int count) {
-	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMAX);
+	TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_XMAX);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
 	int offset = (adv_lightFlags >> FACE_XMAX) & 1;
 
@@ -924,7 +924,7 @@ static void Adv_DrawXMax(int count) {
 }
 
 static void Adv_DrawZMin(int count) {
-	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_ZMIN);
+	TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_ZMIN);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
 	int offset = (adv_lightFlags >> FACE_ZMIN) & 1;
 
@@ -964,7 +964,7 @@ static void Adv_DrawZMin(int count) {
 }
 
 static void Adv_DrawZMax(int count) {
-	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_ZMAX);
+	TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_ZMAX);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
 	int offset = (adv_lightFlags >> FACE_ZMAX) & 1;
 
@@ -1004,7 +1004,7 @@ static void Adv_DrawZMax(int count) {
 }
 
 static void Adv_DrawYMin(int count) {
-	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_YMIN);
+	TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_YMIN);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
 	int offset = (adv_lightFlags >> FACE_YMIN) & 1;
 
@@ -1044,7 +1044,7 @@ static void Adv_DrawYMin(int count) {
 }
 
 static void Adv_DrawYMax(int count) {
-	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_YMAX);
+	TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_YMAX);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
 	int offset = (adv_lightFlags >> FACE_YMAX) & 1;
 

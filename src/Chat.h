@@ -17,7 +17,7 @@ enum MSG_TYPE {
 	MSG_TYPE_BOTTOMRIGHT_2 = 12,
 	MSG_TYPE_BOTTOMRIGHT_3 = 13,
 	MSG_TYPE_ANNOUNCEMENT = 100,
-	MSG_TYPE_CLIENTSTATUS_1 = 256, /* Cuboid messages*/
+	MSG_TYPE_CLIENTSTATUS_1 = 256, /* Cuboid messages */
 	MSG_TYPE_CLIENTSTATUS_2 = 257, /* Clipboard invalid character */
 	MSG_TYPE_CLIENTSTATUS_3 = 258, /* Tab list matching names*/
 };

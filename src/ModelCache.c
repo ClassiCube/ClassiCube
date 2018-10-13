@@ -1154,7 +1154,7 @@ static void BlockModel_Flush(void) {
 
 #define BlockModel_FlushIfNotSame if (BlockModel_lastTexIndex != BlockModel_texIndex) { BlockModel_Flush(); }
 static TextureLoc BlockModel_GetTex(Face face, VertexP3fT2fC4b** ptr) {
-	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, face);
+	TextureLoc texLoc = Block_GetTex(BlockModel_block, face);
 	BlockModel_texIndex = Atlas1D_Index(texLoc);
 	BlockModel_FlushIfNotSame;
 
@@ -1173,7 +1173,7 @@ if (Block_Tinted[block]) {\
 }
 
 static void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
-	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, FACE_ZMAX);
+	TextureLoc texLoc = Block_GetTex(BlockModel_block, FACE_ZMAX);
 	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &BlockModel_texIndex);
 	BlockModel_FlushIfNotSame;
 
@@ -1200,7 +1200,7 @@ static void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
 }
 
 static void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
-	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, FACE_XMAX);
+	TextureLoc texLoc = Block_GetTex(BlockModel_block, FACE_XMAX);
 	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &BlockModel_texIndex);
 	BlockModel_FlushIfNotSame;
 

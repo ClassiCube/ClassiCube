@@ -35,14 +35,16 @@ enum COLLIDETYPE {
 	COLLIDE_SLIPPERY_ICE, /* Block is solid and fully slidable on. */
 	COLLIDE_LIQUID_WATER, /* Water style 'swimming'/'bobbing' interaction when player collides. */
 	COLLIDE_LIQUID_LAVA,  /* Lava style 'swimming'/'bobbing' interaction when player collides. */
-	COLLIDE_CLIMB_ROPE,   /* Rope/Ladder style climbing interaction when player collides */
+	COLLIDE_CLIMB_ROPE,   /* Rope/Ladder style climbing interaction when player collides. */
 };
 
 bool Block_IsLiquid[BLOCK_COUNT];
+/* Whether a block prevents lights from passing through it. */
 bool Block_BlocksLight[BLOCK_COUNT];
 bool Block_FullBright[BLOCK_COUNT];
 PackedCol Block_FogCol[BLOCK_COUNT];
 float Block_FogDensity[BLOCK_COUNT];
+/* Basic collide type of a block. (gas, liquid, or solid) */
 uint8_t Block_Collide[BLOCK_COUNT];
 uint8_t Block_ExtendedCollide[BLOCK_COUNT];
 float Block_SpeedMultiplier[BLOCK_COUNT];
@@ -51,8 +53,7 @@ uint8_t Block_Draw[BLOCK_COUNT];
 uint8_t Block_DigSounds[BLOCK_COUNT];
 uint8_t Block_StepSounds[BLOCK_COUNT];
 uint8_t Block_Tinted[BLOCK_COUNT];
-/* Gets whether the given block has an opaque draw type and is also a full tile block.
-Full tile block means Min of (0, 0, 0) and max of (1, 1, 1).*/
+/* Whether a block has an opaque draw type, a min of (0,0,0), and a max of (1,1,1) */
 bool Block_FullOpaque[BLOCK_COUNT];
 uint8_t Block_SpriteOffset[BLOCK_COUNT];
 
@@ -73,9 +74,9 @@ TextureLoc Block_Textures[BLOCK_COUNT * FACE_COUNT];
 bool Block_CanPlace[BLOCK_COUNT];
 bool Block_CanDelete[BLOCK_COUNT];
 
-/* Gets a bit flags of faces hidden of two neighbouring blocks. */
+/* Bit flags of faces hidden of two neighbouring blocks. */
 uint8_t Block_Hidden[BLOCK_COUNT * BLOCK_COUNT];
-/* Gets a bit flags of which faces of a block can stretch with greedy meshing. */
+/* Bit flags of which faces of a block can stretch with greedy meshing. */
 uint8_t Block_CanStretch[BLOCK_COUNT];
 
 #ifdef EXTENDED_BLOCKS
@@ -106,7 +107,7 @@ void Block_RecalculateBB(BlockID block);
 
 void Block_SetSide(TextureLoc texLoc, BlockID blockId);
 void Block_SetTex(TextureLoc texLoc, Face face, BlockID blockId);
-#define Block_GetTexLoc(block, face) Block_Textures[(block) * FACE_COUNT + (face)]
+#define Block_GetTex(block, face) Block_Textures[(block) * FACE_COUNT + (face)]
 
 bool Block_IsFaceHidden(BlockID block, BlockID other, Face face);
 void Block_UpdateCullingAll(void);

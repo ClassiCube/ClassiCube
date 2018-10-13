@@ -49,8 +49,13 @@ void Stream_Init(struct Stream* s);
 /* Slow way of reading a U8 integer through stream->Read(stream, 1, tmp). */
 ReturnCode Stream_DefaultReadU8(struct Stream* s, uint8_t* data);
 
-/* Wraps a file, allowing reading from, writing to, and seeking in the file. */
+/* Wrapper for File_Open() then Stream_FromFile() */
+NOINLINE_ ReturnCode Stream_OpenFile(struct Stream* s, const String* path);
+/* Wrapper for File_Create() then Stream_FromFile() */
+NOINLINE_ ReturnCode Stream_CreateFile(struct Stream* s, const String* path);
+/* Wraps a file, allowing reading from/writing to/seeking in the file. */
 NOINLINE_ void Stream_FromFile(struct Stream* s, void* file);
+
 /* Wraps another Stream, only allows reading up to 'len' bytes from the wrapped stream. */
 NOINLINE_ void Stream_ReadonlyPortion(struct Stream* s, struct Stream* source, uint32_t len);
 /* Wraps a block of memory, allowing reading from and seeking in the block. */
@@ -75,9 +80,9 @@ void Stream_SetU16_BE(uint8_t* data, uint16_t value);
 void Stream_SetU32_LE(uint8_t* data, uint32_t value);
 /* Writes a big-endian 32 bit unsigned integer to memory. */
 void Stream_SetU32_BE(uint8_t* data, uint32_t value);
-/* Reads a little-endian 32 bit unsigned integer a stream. */
+/* Reads a little-endian 32 bit unsigned integer from the stream. */
 ReturnCode Stream_ReadU32_LE(struct Stream* s, uint32_t* value);
-/* Reads a big-endian 32 bit unsigned integer a stream. */
+/* Reads a big-endian 32 bit unsigned integer from the stream. */
 ReturnCode Stream_ReadU32_BE(struct Stream* s, uint32_t* value);
 
 /* Reads a UTF8 encoded character from the stream. */

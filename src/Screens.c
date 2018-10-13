@@ -518,7 +518,7 @@ static void LoadingScreen_DrawBackground(void) {
 	int count = 0, atlasIndex = 0, y = 0;
 	PackedCol col = PACKEDCOL_CONST(64, 64, 64, 255);
 
-	TextureLoc texLoc = Block_GetTexLoc(BLOCK_DIRT, FACE_YMAX);
+	TextureLoc texLoc = Block_GetTex(BLOCK_DIRT, FACE_YMAX);
 	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &atlasIndex);
 
 	float u2 = (float)Game_Width / (float)LOADING_TILE_SIZE;

@@ -631,7 +631,6 @@ static void Game_DoScheduledTasks(double time) {
 }
 
 void Game_TakeScreenshot(void) {
-	ReturnCode res;
 	Game_ScreenshotRequested = false;
 	if (!Utils_EnsureDirectory("screenshots")) return;
 
@@ -648,17 +647,15 @@ void Game_TakeScreenshot(void) {
 	String path = String_FromArray(pathBuffer);
 	String_Format2(&path, "screenshots%r%s", &Directory_Separator, &filename);
 
-	void* file; res = File_Create(&file, &path);
+	ReturnCode res; struct Stream stream;
+	res = Stream_CreateFile(&stream, &path);
 	if (res) { Chat_LogError2(res, "creating", &path); return; }
 
-	struct Stream stream; Stream_FromFile(&stream, file);
-	{
-		res = Gfx_TakeScreenshot(&stream, Game_Width, Game_Height);
-		if (res) { 
-			Chat_LogError2(res, "saving to", &path);
-			stream.Close(&stream); return;
-		}
+	res = Gfx_TakeScreenshot(&stream, Game_Width, Game_Height);
+	if (res) { 
+		Chat_LogError2(res, "saving to", &path); stream.Close(&stream); return;
 	}
+
 	res = stream.Close(&stream);
 	if (res) { Chat_LogError2(res, "closing", &path); return; }
 

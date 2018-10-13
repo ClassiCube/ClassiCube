@@ -791,7 +791,7 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 	}
 
 	if (idx == -1) ErrorHandler_Fail("Unknown font");
-	String path = StringsBuffer_UNSAFE_Get(entries, idx - 1, &path);
+	String path = StringsBuffer_UNSAFE_Get(entries, idx - 1);
 
 	FT_Stream stream = Mem_AllocCleared(1, sizeof(FT_StreamRec), "leaky font"); /* TODO: LEAKS MEMORY!!! */
 	FT_Open_Args args;

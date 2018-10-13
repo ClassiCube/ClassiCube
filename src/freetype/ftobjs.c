@@ -2289,20 +2289,6 @@
     FT_UNUSED( test_mac_fonts );
 #endif
 
-
-#ifdef FT_DEBUG_LEVEL_TRACE
-    FT_TRACE3(( "FT_Open_Face: " ));
-    if ( face_index < 0 )
-      FT_TRACE3(( "Requesting number of faces and named instances\n"));
-    else
-    {
-      FT_TRACE3(( "Requesting face %ld", face_index & 0xFFFFL ));
-      if ( face_index & 0x7FFF0000L )
-        FT_TRACE3(( ", named instance %ld", face_index >> 16 ));
-      FT_TRACE3(( "\n" ));
-    }
-#endif
-
     /* test for valid `library' delayed to `FT_Stream_New' */
 
     if ( ( !aface && face_index >= 0 ) || !args )

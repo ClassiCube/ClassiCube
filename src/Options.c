@@ -155,9 +155,11 @@ void Options_SetString(const String* key, const String* value) {
 
 void Options_Load(void) {	
 	String path = String_FromConst("options.txt");
-	ReturnCode res;
+	char lineBuffer[768];
+	String line = String_FromArray(lineBuffer);
 
-	void* file; res = File_Open(&file, &path);
+	ReturnCode res; struct Stream stream;
+	res = Stream_OpenFile(&stream, &path);
 	if (res == ReturnCode_FileNotFound) return;
 	if (res) { Chat_LogError2(res, "opening", &path); return; }
 
@@ -168,10 +170,6 @@ void Options_Load(void) {
 		if (Options_HasChanged(&key)) continue;
 		Options_Remove(i);
 	}
-
-	char lineBuffer[768];
-	String line = String_FromArray(lineBuffer);
-	struct Stream stream; Stream_FromFile(&stream, file);
 
 	/* ReadLine reads single byte at a time */
 	uint8_t buffer[2048]; struct Stream buffered;
@@ -197,16 +195,14 @@ void Options_Load(void) {
 
 void Options_Save(void) {	
 	String path = String_FromConst("options.txt");
-	ReturnCode res;
-
-	void* file; res = File_Create(&file, &path);
-	if (res) { Chat_LogError2(res, "creating", &path); return; }
-
 	char lineBuffer[1024];
 	String line = String_FromArray(lineBuffer);
-	struct Stream stream; Stream_FromFile(&stream, file);
-	int i;
 
+	ReturnCode res; struct Stream stream;
+	res = Stream_CreateFile(&stream, &path);
+	if (res) { Chat_LogError2(res, "creating", &path); return; }
+
+	int i;
 	for (i = 0; i < Options_Keys.Count; i++) {
 		String key   = StringsBuffer_UNSAFE_Get(&Options_Keys,   i);
 		String value = StringsBuffer_UNSAFE_Get(&Options_Values, i);

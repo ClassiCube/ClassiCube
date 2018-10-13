@@ -352,8 +352,8 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		if (!Inventory_CanChangeSelected() || Inventory_SelectedBlock == cur) return;
 		int i;
 
-		/* Is the currently selected block an empty slot */
-		if (Inventory_Get(Inventory_SelectedIndex) == BLOCK_AIR) {
+		/* Is the currently selected block an empty slot? */
+		if (Inventory_SelectedBlock == BLOCK_AIR) {
 			Inventory_SetSelectedBlock(cur); return;
 		}
 
