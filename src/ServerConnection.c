@@ -55,7 +55,7 @@ void ServerConnection_DownloadTexturePack(const String* url) {
 	String etag = String_FromArray(etagBuffer);
 	TimeMS lastModified = 0;
 
-	if (TextureCache_HasUrl(url)) {
+	if (TextureCache_Has(url)) {
 		TextureCache_GetLastModified(url, &lastModified);
 		TextureCache_GetETag(url, &etag);
 	}

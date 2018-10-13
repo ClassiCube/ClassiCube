@@ -126,22 +126,22 @@ bool Utils_EnsureDirectory(const char* dirName) {
 	return res == 0;
 }
 
-void Utils_UNSAFE_GetFilename(STRING_REF String* str) {
+void Utils_UNSAFE_GetFilename(STRING_REF String* path) {
 	int i;
-	for (i = str->length - 1; i >= 0; i--) {
-		char c = str->buffer[i];
+	for (i = path->length - 1; i >= 0; i--) {
+		char c = path->buffer[i];
 		if (c == '/' || c == '\\') { 
-			*str = String_UNSAFE_SubstringAt(str, i + 1); return; 
+			*path = String_UNSAFE_SubstringAt(path, i + 1); return; 
 		}
 	}
 }
 
-int Utils_AccumulateWheelDelta(float* accmulator, float delta) {
+int Utils_AccumulateWheelDelta(float* accumulator, float delta) {
 	/* Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2) */
 	/* We must use rounding at final step, not at every intermediate step. */
-	*accmulator += delta;
-	int steps = (int)(*accmulator);
-	*accmulator -= steps;
+	*accumulator += delta;
+	int steps = (int)(*accumulator);
+	*accumulator -= steps;
 	return steps;
 }
 

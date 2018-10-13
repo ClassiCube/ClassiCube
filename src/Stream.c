@@ -9,9 +9,10 @@
 *#########################################################################################################################*/
 ReturnCode Stream_Read(struct Stream* s, uint8_t* buffer, uint32_t count) {
 	uint32_t read;
+	ReturnCode res;
+
 	while (count) {
-		ReturnCode res = s->Read(s, buffer, count, &read);
-		if (res) return res;
+		if ((res = s->Read(s, buffer, count, &read))) return res;
 		if (!read) return ERR_END_OF_STREAM;
 
 		buffer += read;
@@ -22,9 +23,10 @@ ReturnCode Stream_Read(struct Stream* s, uint8_t* buffer, uint32_t count) {
 
 ReturnCode Stream_Write(struct Stream* s, uint8_t* buffer, uint32_t count) {
 	uint32_t write;
+	ReturnCode res;
+
 	while (count) {
-		ReturnCode res = s->Write(s, buffer, count, &write);
-		if (res) return res;
+		if ((res = s->Write(s, buffer, count, &write))) return res;
 		if (!write) return ERR_END_OF_STREAM;
 
 		buffer += write;

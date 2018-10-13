@@ -1268,8 +1268,8 @@ static void SaveLevelScreen_Init(void* screen) {
 
 static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s) {
 	String path = s->TextPath, cw = String_FromConst(".cw");
-	ReturnCode res; struct Stream stream;
 
+	ReturnCode res; struct Stream stream;
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Chat_LogError2(res, "creating", &path); return; }
 

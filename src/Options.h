@@ -90,7 +90,7 @@ NOINLINE_ float Options_GetFloat(const char* key, float min, float max, float de
 /* NOTE: Conversion is done by going through all elements of names, returning index of a match. */
 NOINLINE_ int   Options_GetEnum(const char*  key, int defValue, const char** names, int namesCount);
 
-/* Sets value of given option to either "true" or "false" */
+/* Sets value of given option to either "true" or "false". */
 NOINLINE_ void Options_SetBool(const char* keyRaw,  bool value);
 /* Sets value of given option to given integer converted to a string. */
 NOINLINE_ void Options_SetInt(const char*  keyRaw,  int value);

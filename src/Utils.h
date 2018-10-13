@@ -26,9 +26,11 @@ NOINLINE_ int Utils_ParseEnum(const String* text, int defValue, const char** nam
 bool Utils_IsValidInputChar(char c, bool supportsCP437);
 bool Utils_IsUrlPrefix(const String* value, int index);
 
+/* Creates the directory if it doesn't exist. (logs failure in chat) */
 bool Utils_EnsureDirectory(const char* dirName);
-void Utils_UNSAFE_GetFilename(STRING_REF String* str);
-int Utils_AccumulateWheelDelta(float* accmulator, float delta);
+/* Gets the filename portion of a path. (e.g. "dir/file.txt" -> "file.txt") */
+void Utils_UNSAFE_GetFilename(STRING_REF String* path);
+int Utils_AccumulateWheelDelta(float* accumulator, float delta);
 #define Utils_AdjViewDist(value) ((int)(1.4142135f * (value)))
 
 uint8_t Utils_GetSkinType(Bitmap* bmp);

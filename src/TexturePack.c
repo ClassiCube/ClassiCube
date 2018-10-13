@@ -110,7 +110,7 @@ static ReturnCode Zip_ReadEndOfCentralDirectory(struct ZipState* state, uint32_t
 
 enum ZIP_SIG {
 	ZIP_SIG_ENDOFCENTRALDIR = 0x06054b50,
-	ZIP_SIG_CENTRALDIR = 0x02014b50,
+	ZIP_SIG_CENTRALDIR      = 0x02014b50,
 	ZIP_SIG_LOCALFILEHEADER = 0x04034b50,
 };
 
@@ -298,12 +298,12 @@ static void TextureCache_MakePath(String* path, const String* url) {
 	String_Format2(path, TEXCACHE_FOLDER "%r%s", &Directory_Separator, &crc32);
 }
 
-bool TextureCache_HasUrl(const String* url) {
+bool TextureCache_Has(const String* url) {
 	TexCache_InitAndMakePath(url);
 	return File_Exists(&path);
 }
 
-bool TextureCache_GetStream(const String* url, struct Stream* stream) {
+bool TextureCache_Get(const String* url, struct Stream* stream) {
 	TexCache_InitAndMakePath(url);
 	ReturnCode res = Stream_OpenFile(stream, &path);
 
@@ -330,16 +330,13 @@ void TextureCache_GetLastModified(const String* url, TimeMS* time) {
 	char entryBuffer[STRING_SIZE];
 	String entry = String_FromArray(entryBuffer);
 	TexturePack_GetFromTags(url, &entry, &cache_lastModified);
-	TimeMS temp;
 
-	if (entry.length && Convert_TryParseUInt64(&entry, &temp)) {
-		*time = temp / TEXCACHE_TICKS_PER_MS;
+	if (entry.length && Convert_TryParseUInt64(&entry, time)) {
+		*time /= TEXCACHE_TICKS_PER_MS;
 	} else {
 		TexCache_InitAndMakePath(url);
-		ReturnCode res = File_GetModifiedTime_MS(&path, &temp);
-
-		if (res) { Chat_LogError2(res, "getting last modified time of", url); return; }
-		*time = temp;
+		ReturnCode res = File_GetModifiedTime_MS(&path, time);
+		if (res) { Chat_LogError2(res, "getting last modified time of", url); *time = 0; }
 	}
 }
 
@@ -347,7 +344,7 @@ void TextureCache_GetETag(const String* url, String* etag) {
 	TexturePack_GetFromTags(url, etag, &cache_eTags);
 }
 
-void TextureCache_AddData(const String* url, uint8_t* data, uint32_t length) {
+void TextureCache_Set(const String* url, uint8_t* data, uint32_t length) {
 	TexCache_InitAndMakePath(url);
 	if (!Utils_EnsureDirectory(TEXCACHE_FOLDER)) return;
 
@@ -379,12 +376,12 @@ void TextureCache_AddToTags(const String* url, const String* data, struct EntryL
 	EntryList_Add(list, &entry);
 }
 
-void TextureCache_AddETag(const String* url, const String* etag) {
+void TextureCache_SetETag(const String* url, const String* etag) {
 	if (!etag->length) return;
 	TextureCache_AddToTags(url, etag, &cache_eTags);
 }
 
-void TextureCache_AddLastModified(const String* url, TimeMS* lastModified) {
+void TextureCache_SetLastModified(const String* url, TimeMS* lastModified) {
 	if (!lastModified) return;
 	uint64_t ticks = (*lastModified) * TEXCACHE_TICKS_PER_MS;
 
@@ -455,7 +452,7 @@ void TexturePack_ExtractCurrent(const String* url) {
 	if (!url->length) { TexturePack_ExtractDefault(); return; }
 
 	struct Stream stream;
-	if (!TextureCache_GetStream(url, &stream)) {
+	if (!TextureCache_Get(url, &stream)) {
 		/* e.g. 404 errors */
 		if (World_TextureUrl.length) TexturePack_ExtractDefault();
 	} else {
@@ -485,9 +482,9 @@ void TexturePack_Extract_Req(struct AsyncRequest* item) {
 	uint32_t len = item->ResultSize;
 
 	String etag = String_FromRawArray(item->Etag);
-	TextureCache_AddData(&url, data, len);
-	TextureCache_AddETag(&url, &etag);
-	TextureCache_AddLastModified(&url, &item->LastModified);
+	TextureCache_Set(&url, data, len);
+	TextureCache_SetETag(&url, &etag);
+	TextureCache_SetLastModified(&url, &item->LastModified);
 
 	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len);
 	bool png = Png_Detect(data, len);
