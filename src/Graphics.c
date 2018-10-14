@@ -792,9 +792,11 @@ static void GL_CheckVboSupport(void) {
 #endif
 
 void Gfx_Init(void) {
+	struct GraphicsMode mode;
+	GraphicsMode_MakeDefault(&mode);
+	GLContext_Init(&mode);
+
 	Gfx_MinZNear = 0.1f;
-	struct GraphicsMode mode = GraphicsMode_MakeDefault();
-	GLContext_Init(mode);
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx_MaxTexWidth);
 	Gfx_MaxTexHeight = Gfx_MaxTexWidth;
 
@@ -802,8 +804,9 @@ void Gfx_Init(void) {
 	Gfx_CustomMipmapsLevels = true;
 	GL_CheckVboSupport();
 #endif
-	
 	GfxCommon_Init();
+
+	glHint(GL_FOG_HINT, GL_NICEST);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 }

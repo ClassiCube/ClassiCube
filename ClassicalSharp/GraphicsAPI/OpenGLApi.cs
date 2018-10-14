@@ -28,10 +28,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		public OpenGLApi(INativeWindow window) {
 			glContext = Factory.Default.CreateGLContext(GraphicsMode.Default, window);
 			GL.LoadEntryPoints(glContext);
-			
-			MinZNear = 0.1f;
 			InitFields();
 			
+			MinZNear = 0.1f;
 			int size;
 			GL.GetIntegerv(GetPName.MaxTextureSize, &size);
 			MaxTexWidth = size; MaxTexHeight = size;
@@ -39,16 +38,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			#if !GL11
 			CustomMipmapsLevels = true;
 			CheckVboSupport();
-			#else
-			CustomMipmapsLevels = false;
 			#endif
 			base.InitCommon();
 			
-			setupBatchFuncCol4b = SetupVbPos3fCol4b;
+			setupBatchFuncCol4b      = SetupVbPos3fCol4b;
 			setupBatchFuncTex2fCol4b = SetupVbPos3fTex2fCol4b;
-			setupBatchFuncCol4b_Range = SetupVbPos3fCol4b_Range;
+			setupBatchFuncCol4b_Range      = SetupVbPos3fCol4b_Range;
 			setupBatchFuncTex2fCol4b_Range = SetupVbPos3fTex2fCol4b_Range;
 			
+			GL.Hint(HintTarget.FogHint, HintMode.Nicest);
 			GL.EnableClientState(ArrayCap.VertexArray);
 			GL.EnableClientState(ArrayCap.ColorArray);
 		}
