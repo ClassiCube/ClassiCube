@@ -34,6 +34,7 @@ typedef enum WindowState_ {
 	WINDOW_STATE_NORMAL, WINDOW_STATE_MINIMISED, WINDOW_STATE_MAXIMISED, WINDOW_STATE_FULLSCREEN
 } WindowState;
 struct GraphicsMode;
+struct DisplayDevice;
 
 void Window_Create(int x, int y, int width, int height, const String* title, struct GraphicsMode* mode, struct DisplayDevice* device);
 void Window_GetClipboardText(String* value);
