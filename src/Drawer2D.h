@@ -9,8 +9,8 @@
 struct DrawTextArgs { String Text; FontDesc Font; bool UseShadow; };
 struct Texture;
 
-void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, FontDesc* font, bool useShadow);
-void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, FontDesc* font, bool useShadow);
+void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, STRING_REF const FontDesc* font, bool useShadow);
+void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, STRING_REF const FontDesc* font, bool useShadow);
 NOINLINE_ void Drawer2D_MakeFont(FontDesc* desc, int size, int style);
 
 /* Whether chat text should be drawn and measuring using the currently bitmapped font, 
@@ -33,7 +33,7 @@ void Drawer2D_Clear(Bitmap* bmp, PackedCol col, int x, int y, int width, int hei
 void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, PackedCol col);
 void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y);
 Size2D Drawer2D_MeasureText(struct DrawTextArgs* args);
-int Drawer2D_FontHeight(FontDesc* font, bool useShadow);
+int Drawer2D_FontHeight(const FontDesc* font, bool useShadow);
 
 void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, int X, int Y);
 void Drawer2D_Make2DTexture(struct Texture* tex, Bitmap* bmp, Size2D used, int X, int Y);

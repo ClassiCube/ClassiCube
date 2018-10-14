@@ -755,8 +755,7 @@ static void ChatScreen_ConstructWidgets(struct ChatScreen* s) {
 	Widget_SetLocation(&s->ClientStatus, ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
 	Elem_Init(&s->ClientStatus);
 
-	String empty = String_MakeNull();
-	TextWidget_Create(&s->Announcement, &empty, &s->AnnouncementFont);
+	TextWidget_Create(&s->Announcement, &String_Empty, &s->AnnouncementFont);
 	Widget_SetLocation(&s->Announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -Game_Height / 4);
 }
 
@@ -798,8 +797,7 @@ static void ChatScreen_CheckOtherStatuses(struct ChatScreen* s) {
 	/* Is terrain / texture pack currently being downloaded? */
 	if (!hasRequest || !String_Equals(&id, &texPack)) {
 		if (s->Status.Textures[1].ID) {
-			String empty = String_MakeNull();
-			TextGroupWidget_SetText(&s->Status, 1, &empty);
+			TextGroupWidget_SetText(&s->Status, 1, &String_Empty);
 		}
 		s->LastDownloadStatus = Int32_MinValue;
 		return;
@@ -918,8 +916,7 @@ static bool ChatScreen_KeyDown(void* screen, Key key) {
 	}
 
 	if (key == KeyBind_Get(KeyBind_Chat)) {
-		String empty = String_MakeNull();
-		ChatScreen_OpenInput(s, &empty);
+		ChatScreen_OpenInput(s, &String_Empty);
 	} else if (key == Key_Slash) {
 		String slash = String_FromConst("/");
 		ChatScreen_OpenInput(s, &slash);
@@ -1472,13 +1469,12 @@ static bool DisconnectScreen_MouseDown(void* screen, int x, int y, MouseButton b
 	if (btn != MouseButton_Left) return true;
 
 	if (!w->Disabled && Widget_Contains(w, x, y)) {
-		char connectBuffer[STRING_SIZE];
-		String title   = String_FromArray(connectBuffer);
-		String message = String_MakeNull();
+		char titleBuffer[STRING_SIZE];
+		String title = String_FromArray(titleBuffer);
 		String_Format2(&title, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
 
 		Gui_FreeActive();
-		Gui_SetActive(LoadingScreen_MakeInstance(&title, &message));
+		Gui_SetActive(LoadingScreen_MakeInstance(&title, &String_Empty));
 		ServerConnection_BeginConnect();
 	}
 	return true;

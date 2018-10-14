@@ -135,7 +135,7 @@ void Entity_SetModel(struct Entity* e, const String* model) {
 	String name, scale;
 	if (!String_UNSAFE_Separate(model, '|', &name, &scale)) {
 		name  = *model;
-		scale = String_MakeNull();	
+		scale = String_Empty;
 	}
 
 	/* 'giant' model kept for backwards compatibility */

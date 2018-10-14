@@ -53,31 +53,31 @@ struct Event_Chat {
 };
 
 void Event_RaiseVoid(struct Event_Void* handlers);
-void Event_RegisterVoid(struct Event_Void* handlers, void* obj, Event_Void_Callback handler);
+void Event_RegisterVoid(struct Event_Void* handlers,   void* obj, Event_Void_Callback handler);
 void Event_UnregisterVoid(struct Event_Void* handlers, void* obj, Event_Void_Callback handler);
 
 void Event_RaiseInt(struct Event_Int* handlers, int arg);
-void Event_RegisterInt(struct Event_Int* handlers, void* obj, Event_Int_Callback handler);
+void Event_RegisterInt(struct Event_Int* handlers,   void* obj, Event_Int_Callback handler);
 void Event_UnregisterInt(struct Event_Int* handlers, void* obj, Event_Int_Callback handler);
 
 void Event_RaiseFloat(struct Event_Float* handlers, float arg);
-void Event_RegisterFloat(struct Event_Float* handlers, void* obj, Event_Float_Callback handler);
+void Event_RegisterFloat(struct Event_Float* handlers,   void* obj, Event_Float_Callback handler);
 void Event_UnregisterFloat(struct Event_Float* handlers, void* obj, Event_Float_Callback handler);
 
 void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, const String* name);
-void Event_RegisterEntry(struct Event_Entry* handlers, void* obj, Event_Entry_Callback handler);
+void Event_RegisterEntry(struct Event_Entry* handlers,   void* obj, Event_Entry_Callback handler);
 void Event_UnregisterEntry(struct Event_Entry* handlers, void* obj, Event_Entry_Callback handler);
 
 void Event_RaiseBlock(struct Event_Block* handlers, Vector3I coords, BlockID oldBlock, BlockID block);
-void Event_RegisterBlock(struct Event_Block* handlers, void* obj, Event_Block_Callback handler);
+void Event_RegisterBlock(struct Event_Block* handlers,   void* obj, Event_Block_Callback handler);
 void Event_UnregisterBlock(struct Event_Block* handlers, void* obj, Event_Block_Callback handler);
 
 void Event_RaiseMouseMove(struct Event_MouseMove* handlers, int xDelta, int yDelta);
-void Event_RegisterMouseMove(struct Event_MouseMove* handlers, void* obj, Event_MouseMove_Callback handler);
+void Event_RegisterMouseMove(struct Event_MouseMove* handlers,   void* obj, Event_MouseMove_Callback handler);
 void Event_UnregisterMouseMove(struct Event_MouseMove* handlers, void* obj, Event_MouseMove_Callback handler);
 
 void Event_RaiseChat(struct Event_Chat* handlers, const String* msg, int msgType);
-void Event_RegisterChat(struct Event_Chat* handlers, void* obj, Event_Chat_Callback handler);
+void Event_RegisterChat(struct Event_Chat* handlers,   void* obj, Event_Chat_Callback handler);
 void Event_UnregisterChat(struct Event_Chat* handlers, void* obj, Event_Chat_Callback handler);
 
 struct Event_Int EntityEvents_Added;    /* Entity is spawned in the current world */

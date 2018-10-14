@@ -63,12 +63,12 @@ void TextWidget_Make(struct TextWidget* w) {
 	PackedCol col = PACKEDCOL_WHITE; w->Col = col;
 }
 
-void TextWidget_Create(struct TextWidget* w, const String* text, FontDesc* font) {
+void TextWidget_Create(struct TextWidget* w, const String* text, const FontDesc* font) {
 	TextWidget_Make(w);
 	TextWidget_Set(w,  text, font);
 }
 
-void TextWidget_Set(struct TextWidget* w, const String* text, FontDesc* font) {
+void TextWidget_Set(struct TextWidget* w, const String* text, const FontDesc* font) {
 	Gfx_DeleteTexture(&w->Texture.ID);
 	if (Drawer2D_IsEmptyText(text)) {
 		w->Texture.Width  = 0; 
@@ -155,7 +155,7 @@ struct WidgetVTABLE ButtonWidget_VTABLE = {
 	Widget_Mouse,    Widget_Mouse,        Widget_MouseMove,  Widget_MouseScroll,
 	ButtonWidget_Reposition,
 };
-void ButtonWidget_Create(struct ButtonWidget* w, int minWidth, const String* text, FontDesc* font, Widget_LeftClick onClick) {
+void ButtonWidget_Create(struct ButtonWidget* w, int minWidth, const String* text, const FontDesc* font, Widget_LeftClick onClick) {
 	Widget_Reset(w);
 	w->VTABLE    = &ButtonWidget_VTABLE;
 	w->OptName   = NULL;
@@ -164,7 +164,7 @@ void ButtonWidget_Create(struct ButtonWidget* w, int minWidth, const String* tex
 	ButtonWidget_Set(w, text, font);
 }
 
-void ButtonWidget_Set(struct ButtonWidget* w, const String* text, FontDesc* font) {
+void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc* font) {
 	Gfx_DeleteTexture(&w->Texture.ID);
 	if (Drawer2D_IsEmptyText(text)) {
 		w->Texture.Width  = 0;
@@ -520,7 +520,7 @@ static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 
 	Point2D topLeft = Window_PointToScreen(0, 0);
 	x += topLeft.X; y += topLeft.Y;
-	Window_SetDesktopCursorPos(x, y);
+	Window_SetScreenCursorPos(x, y);
 }
 
 static void TableWidget_MakeBlockDesc(String* desc, BlockID block) {
@@ -978,7 +978,7 @@ void InputWidget_Clear(struct InputWidget* w) {
 	w->Text.length = 0;
 	int i;
 	for (i = 0; i < Array_Elems(w->Lines); i++) {
-		w->Lines[i] = String_MakeNull();
+		w->Lines[i] = String_Empty;
 	}
 
 	w->CaretPos = -1;
@@ -1251,7 +1251,7 @@ static bool InputWidget_MouseDown(void* widget, int x, int y, MouseButton button
 	return true;
 }
 
-NOINLINE_ static void InputWidget_Create(struct InputWidget* w, FontDesc* font, STRING_REF String* prefix) {
+NOINLINE_ static void InputWidget_Create(struct InputWidget* w, const FontDesc* font, STRING_REF const String* prefix) {
 	Widget_Reset(w);
 	w->Font            = *font;
 	w->Prefix          = *prefix;
@@ -1513,9 +1513,8 @@ struct WidgetVTABLE MenuInputWidget_VTABLE = {
 	InputWidget_MouseDown, Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
 	InputWidget_Reposition,
 };
-void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, FontDesc* font, struct MenuInputValidator* validator) {
-	String empty = String_MakeNull();
-	InputWidget_Create(&w->Base, font, &empty);
+void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, const FontDesc* font, struct MenuInputValidator* validator) {
+	InputWidget_Create(&w->Base, font, &String_Empty);
 	w->Base.VTABLE = &MenuInputWidget_VTABLE;
 
 	w->MinWidth  = width;
@@ -1625,9 +1624,8 @@ static void ChatInputWidget_OnPressedEnter(void* widget) {
 	w->OrigStr.length = 0;
 	w->TypingLogPos = Chat_InputLog.Count; /* Index of newest entry + 1. */
 
-	String empty = String_MakeNull();
-	Chat_AddOf(&empty, MSG_TYPE_CLIENTSTATUS_2);
-	Chat_AddOf(&empty, MSG_TYPE_CLIENTSTATUS_3);
+	Chat_AddOf(&String_Empty, MSG_TYPE_CLIENTSTATUS_2);
+	Chat_AddOf(&String_Empty, MSG_TYPE_CLIENTSTATUS_3);
 	InputWidget_OnPressedEnter(widget);
 }
 
@@ -1701,8 +1699,7 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 	if (end < 0 || start > end) return;
 
 	String part = String_UNSAFE_Substring(&w->Text, start, (end + 1) - start);
-	String empty = String_MakeNull();
-	Chat_AddOf(&empty, MSG_TYPE_CLIENTSTATUS_3);
+	Chat_AddOf(&String_Empty, MSG_TYPE_CLIENTSTATUS_3);
 
 	EntityID matches[TABLIST_MAX_NAMES];
 	int i, matchesCount = 0;
@@ -1760,7 +1757,7 @@ struct WidgetVTABLE ChatInputWidget_VTABLE = {
 	InputWidget_MouseDown,   Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
 	InputWidget_Reposition,
 };
-void ChatInputWidget_Create(struct ChatInputWidget* w, FontDesc* font) {
+void ChatInputWidget_Create(struct ChatInputWidget* w, const FontDesc* font) {
 	String prefix = String_FromConst("> ");
 	InputWidget_Create(&w->Base, font, &prefix);
 	w->TypingLogPos = Chat_InputLog.Count; /* Index of newest entry + 1. */
@@ -2138,7 +2135,7 @@ struct WidgetVTABLE PlayerListWidget_VTABLE = {
 	Widget_Mouse,          Widget_Mouse,            Widget_MouseMove,      Widget_MouseScroll,
 	PlayerListWidget_Reposition,
 };
-void PlayerListWidget_Create(struct PlayerListWidget* w, FontDesc* font, bool classic) {
+void PlayerListWidget_Create(struct PlayerListWidget* w, const FontDesc* font, bool classic) {
 	Widget_Reset(w);
 	w->VTABLE     = &PlayerListWidget_VTABLE;
 	w->HorAnchor  = ANCHOR_CENTRE;
@@ -2547,13 +2544,13 @@ struct WidgetVTABLE TextGroupWidget_VTABLE = {
 	Widget_Mouse,         Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
 	TextGroupWidget_Reposition,
 };
-void TextGroupWidget_Create(struct TextGroupWidget* w, int linesCount, FontDesc* font, FontDesc* underlineFont, STRING_REF struct Texture* textures, STRING_REF char* buffer) {
+void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, const FontDesc* font, const FontDesc* ulFont, STRING_REF struct Texture* textures, STRING_REF char* buffer) {
 	Widget_Reset(w);
 	w->VTABLE = &TextGroupWidget_VTABLE;
 
-	w->LinesCount = linesCount;
+	w->LinesCount = lines;
 	w->Font       = *font;
-	w->UnderlineFont = *underlineFont;
+	w->UnderlineFont = *ulFont;
 	w->Textures   = textures;
 	w->Buffer     = buffer;
 }
@@ -2795,7 +2792,7 @@ struct WidgetVTABLE SpecialInputWidget_VTABLE = {
 	SpecialInputWidget_MouseDown, Widget_Mouse,              Widget_MouseMove,        Widget_MouseScroll,
 	Widget_CalcPosition,
 };
-void SpecialInputWidget_Create(struct SpecialInputWidget* w, FontDesc* font, struct InputWidget* appendObj) {
+void SpecialInputWidget_Create(struct SpecialInputWidget* w, const FontDesc* font, struct InputWidget* appendObj) {
 	Widget_Reset(w);
 	w->VTABLE    = &SpecialInputWidget_VTABLE;
 	w->VerAnchor = ANCHOR_MAX;

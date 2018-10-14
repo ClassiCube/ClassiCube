@@ -19,7 +19,7 @@ Vector3 Vector3_BigPos(void) {
 	Vector3 v = { 1e25f, 1e25f, 1e25f }; return v;
 }
 
-float Vector3_LengthSquared(Vector3* v) {
+float Vector3_LengthSquared(const Vector3* v) {
 	return v->X * v->X + v->Y * v->Y + v->Z * v->Z;
 }
 

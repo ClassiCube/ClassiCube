@@ -41,9 +41,9 @@ static void PerspectiveCamera_CentreMousePosition(void) {
 	int cenX = topLeft.X + Game_Width  / 2;
 	int cenY = topLeft.Y + Game_Height / 2;
 
-	Window_SetDesktopCursorPos(cenX, cenY);
+	Window_SetScreenCursorPos(cenX, cenY);
 	/* Fixes issues with large DPI displays on Windows >= 8.0. */
-	cam_prev = Window_GetDesktopCursorPos();
+	cam_prev = Window_GetScreenCursorPos();
 }
 
 static void PerspectiveCamera_RegrabMouse(void) {
@@ -102,7 +102,7 @@ static void PerspectiveCamera_UpdateMouse(void) {
 	if (screen->HandlesAllInput) {
 		cam_delta.X = 0; cam_delta.Y = 0;
 	} else if (Window_Focused) {
-		Point2D pos = Window_GetDesktopCursorPos();
+		Point2D pos = Window_GetScreenCursorPos();
 		cam_delta.X = pos.X - cam_prev.X; cam_delta.Y = pos.Y - cam_prev.Y;
 		PerspectiveCamera_CentreMousePosition();
 	}

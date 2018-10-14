@@ -63,8 +63,8 @@ Point2D Window_PointToClient(int x, int y);
 /* Transforms the specified point from client to screen coordinates. */
 Point2D Window_PointToScreen(int x, int y);
 
-Point2D Window_GetDesktopCursorPos(void);
-void Window_SetDesktopCursorPos(int x, int y);
+Point2D Window_GetScreenCursorPos(void);
+void Window_SetScreenCursorPos(int x, int y);
 bool Window_GetCursorVisible(void);
 void Window_SetCursorVisible(bool visible);
 

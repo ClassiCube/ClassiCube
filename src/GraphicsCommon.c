@@ -82,7 +82,7 @@ void GfxCommon_Draw2DGradient(int x, int y, int width, int height, PackedCol top
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, verts, 4);
 }
 
-void GfxCommon_Draw2DTexture(struct Texture* tex, PackedCol col) {
+void GfxCommon_Draw2DTexture(const struct Texture* tex, PackedCol col) {
 	VertexP3fT2fC4b texVerts[4];
 	VertexP3fT2fC4b* ptr = texVerts;
 	GfxCommon_Make2DQuad(tex, col, &ptr);
@@ -90,7 +90,7 @@ void GfxCommon_Draw2DTexture(struct Texture* tex, PackedCol col) {
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_texVb, texVerts, 4);
 }
 
-void GfxCommon_Make2DQuad(struct Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices) {
+void GfxCommon_Make2DQuad(const struct Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices) {
 	float x1 = (float)tex->X, x2 = (float)(tex->X + tex->Width);
 	float y1 = (float)tex->Y, y2 = (float)(tex->Y + tex->Height);
 #ifdef CC_BUILD_D3D9
@@ -227,13 +227,13 @@ int GfxCommon_MipmapsLevels(int width, int height) {
 	}
 }
 
-void Texture_Render(struct Texture* tex) {
+void Texture_Render(const struct Texture* tex) {
 	Gfx_BindTexture(tex->ID);
 	PackedCol white = PACKEDCOL_WHITE;
 	GfxCommon_Draw2DTexture(tex, white);
 }
 
-void Texture_RenderShaded(struct Texture* tex, PackedCol shadeCol) {
+void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeCol) {
 	Gfx_BindTexture(tex->ID);
 	GfxCommon_Draw2DTexture(tex, shadeCol);
 }

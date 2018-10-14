@@ -99,7 +99,7 @@ NOINLINE_ void Gui_CloseActive(void);
 
 void Gui_RefreshHud(void);
 void Gui_ShowOverlay(struct Screen* overlay, bool atFront);
-int  Gui_IndexOverlay(void* overlay);
+int  Gui_IndexOverlay(const void* overlay);
 void Gui_FreeOverlay(void* overlay);
 void Gui_RenderGui(double delta);
 void Gui_OnResize(void);
@@ -112,7 +112,7 @@ struct TextAtlas {
 	float uScale;
 	int16_t Widths[TEXTATLAS_MAX_WIDTHS];
 };
-void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, FontDesc* font, const String* prefix);
+void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const FontDesc* font, const String* prefix);
 void TextAtlas_Free(struct TextAtlas* atlas);
 void TextAtlas_Add(struct TextAtlas* atlas, int charI, VertexP3fT2fC4b** vertices);
 void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vertices);

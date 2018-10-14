@@ -170,8 +170,8 @@ void Gui_ShowOverlay(struct Screen* overlay, bool atFront) {
 	Gui_CalcCursorVisible();
 }
 
-int Gui_IndexOverlay(void* overlay) {
-	struct Screen* s = overlay;
+int Gui_IndexOverlay(const void* overlay) {
+	const struct Screen* s = overlay;
 	int i;
 	for (i = 0; i < Gui_OverlaysCount; i++) {
 		if (Gui_Overlays[i] == s) return i;
@@ -233,7 +233,7 @@ void Gui_CalcCursorVisible(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------TextAtlas---------------------------------------------------------*
 *#########################################################################################################################*/
-void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, FontDesc* font, const String* prefix) {
+void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const FontDesc* font, const String* prefix) {
 	struct DrawTextArgs args; DrawTextArgs_Make(&args, prefix, font, true);
 	Size2D size = Drawer2D_MeasureText(&args);
 	atlas->Offset = size.Width;

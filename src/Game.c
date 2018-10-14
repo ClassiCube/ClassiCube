@@ -525,13 +525,12 @@ void Game_Load(void) {
 
 	if (Gfx_WarnIfNecessary()) EnvRenderer_UseLegacyMode(true);
 
-	char loadTitleBuffer[STRING_SIZE];
-	String loadTitle = String_FromArray(loadTitleBuffer);
-	String_Format2(&loadTitle, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
-	String loadMsg = String_MakeNull();
+	char titleBuffer[STRING_SIZE];
+	String title = String_FromArray(titleBuffer);
+	String_Format2(&title, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
 
 	Gui_FreeActive();
-	Gui_SetActive(LoadingScreen_MakeInstance(&loadTitle, &loadMsg));
+	Gui_SetActive(LoadingScreen_MakeInstance(&title, &String_Empty));
 	ServerConnection_BeginConnect();
 }
 

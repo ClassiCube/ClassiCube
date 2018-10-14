@@ -23,8 +23,9 @@ typedef struct String_ {
 
 /* Counts number of characters until a '\0' is found. */
 uint16_t String_CalcLen(const char* raw, uint16_t capacity);
-/* Constructs a string that points to NULL, and has 0 length. */
-String String_MakeNull(void);
+/* Constant string that points to NULL and has 0 length. */
+/* NOTE: Do NOT modify the contents of this string! */
+const String String_Empty;
 /* Constructs a string from the given arguments. */
 String String_Init(STRING_REF char* buffer, uint16_t length, uint16_t capacity);
 /* Constructs a string from the given arguments, then sets all characters to '\0'. */

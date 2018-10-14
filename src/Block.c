@@ -451,11 +451,12 @@ void Block_UpdateCullingAll(void) {
 }
 
 void Block_UpdateCulling(BlockID block) {
+	int neighbour;
 	Block_CalcStretch(block);
-	int other;
-	for (other = BLOCK_AIR; other < BLOCK_COUNT; other++) {
-		Block_CalcCulling(block, (BlockID)other);
-		Block_CalcCulling((BlockID)other, block);
+	
+	for (neighbour = BLOCK_AIR; neighbour < BLOCK_COUNT; neighbour++) {
+		Block_CalcCulling(block, (BlockID)neighbour);
+		Block_CalcCulling((BlockID)neighbour, block);
 	}
 }
 

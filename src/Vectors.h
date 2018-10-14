@@ -17,7 +17,7 @@ Vector3 Vector3_Create1(float value);
 Vector3 Vector3_Create3(float x, float y, float z);
 Vector3I Vector3I_MaxValue(void);
 Vector3 Vector3_BigPos(void);
-float Vector3_LengthSquared(Vector3* v);
+float Vector3_LengthSquared(const Vector3* v);
 
 #define VECTOR3_CONST(x, y, z) { x, y, z };
 #define Vector3_UnitX VECTOR3_CONST(1.0f, 0.0f, 0.0f)

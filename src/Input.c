@@ -248,7 +248,7 @@ static void Hotkeys_RemoveText(int index) {
 }
 
 
-void Hotkeys_Add(Key trigger, int flags, const String* text, bool more) {
+void Hotkeys_Add(Key trigger, HotkeyFlags flags, const String* text, bool more) {
 	int i; struct HotkeyData* hKey = HotkeysList;
 
 	for (i = 0; i < HotkeysText.Count; i++, hKey++) {		
@@ -263,7 +263,7 @@ void Hotkeys_Add(Key trigger, int flags, const String* text, bool more) {
 	Hotkeys_AddNewHotkey(trigger, flags, text, more);
 }
 
-bool Hotkeys_Remove(Key trigger, int flags) {
+bool Hotkeys_Remove(Key trigger, HotkeyFlags flags) {
 	int i, j; struct HotkeyData* hKey = HotkeysList;
 
 	for (i = 0; i < HotkeysText.Count; i++, hKey++) {
@@ -318,7 +318,7 @@ void Hotkeys_Init(void) {
 	}
 }
 
-void Hotkeys_UserRemovedHotkey(Key trigger, int flags) {
+void Hotkeys_UserRemovedHotkey(Key trigger, HotkeyFlags flags) {
 	char keyBuffer[STRING_SIZE];
 	String key = String_FromArray(keyBuffer);
 
@@ -326,7 +326,7 @@ void Hotkeys_UserRemovedHotkey(Key trigger, int flags) {
 	Options_SetString(&key, NULL);
 }
 
-void Hotkeys_UserAddedHotkey(Key trigger, int flags, bool moreInput, const String* text) {
+void Hotkeys_UserAddedHotkey(Key trigger, HotkeyFlags flags, bool moreInput, const String* text) {
 	char keyBuffer[STRING_SIZE];
 	String key = String_FromArray(keyBuffer);
 	char valueBuffer[STRING_SIZE * 2];

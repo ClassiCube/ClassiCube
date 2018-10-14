@@ -17,8 +17,8 @@ typedef struct DateTime_ {
 } DateTime;
 
 #define DATETIME_MILLIS_PER_SEC 1000
-int DateTime_TotalDays(DateTime* time);
-TimeMS DateTime_TotalMs(DateTime* time);
+int DateTime_TotalDays(const DateTime* time);
+TimeMS DateTime_TotalMs(const DateTime* time);
 void DateTime_FromTotalMs(DateTime* time, TimeMS ms);
 void DateTime_HttpDate(TimeMS ms, String* str);
 
@@ -33,8 +33,8 @@ void Utils_UNSAFE_GetFilename(STRING_REF String* path);
 int Utils_AccumulateWheelDelta(float* accumulator, float delta);
 #define Utils_AdjViewDist(value) ((int)(1.4142135f * (value)))
 
-uint8_t Utils_GetSkinType(Bitmap* bmp);
-uint32_t Utils_CRC32(uint8_t* data, uint32_t length);
+uint8_t Utils_GetSkinType(const Bitmap* bmp);
+uint32_t Utils_CRC32(const uint8_t* data, uint32_t length);
 extern uint32_t Utils_Crc32Table[256];
 NOINLINE_ void* Utils_Resize(void* buffer, uint32_t* maxElems, uint32_t elemSize, uint32_t defElems, uint32_t expandElems);
 NOINLINE_ bool Utils_ParseIP(const String* ip, uint8_t* data);

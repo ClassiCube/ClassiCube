@@ -8,14 +8,14 @@
 #include "Bitmap.h"
 #include "Game.h"
 
-void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, FontDesc* font, bool useShadow) {
+void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, STRING_REF const FontDesc* font, bool useShadow) {
 	args->Text = *text;
 	args->Font = *font;
 	args->UseShadow = useShadow;
 }
 
-void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, FontDesc* font, bool useShadow) {
-	args->Text = String_MakeNull();
+void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, STRING_REF const FontDesc* font, bool useShadow) {
+	args->Text = String_Empty;
 	args->Font = *font;
 	args->UseShadow = useShadow;
 }
@@ -121,7 +121,7 @@ void Drawer2D_Clear(Bitmap* bmp, PackedCol col, int x, int y, int width, int hei
 	}
 }
 
-int Drawer2D_FontHeight(FontDesc* font, bool useShadow) {
+int Drawer2D_FontHeight(const FontDesc* font, bool useShadow) {
 	struct DrawTextArgs args;
 	String text = String_FromConst("I");
 	DrawTextArgs_Make(&args, &text, font, useShadow);

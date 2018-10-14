@@ -630,14 +630,14 @@ Point2D Window_PointToScreen(int x, int y) {
 	Point2D p = { ox, oy }; return p;
 }
 
-Point2D Window_GetDesktopCursorPos(void) {
+Point2D Window_GetScreenCursorPos(void) {
 	Window root, child;
 	int rootX, rootY, childX, childY, mask;
 	XQueryPointer(win_display, win_rootWin, &root, &child, &rootX, &rootY, &childX, &childY, &mask);
 	Point2D p = { rootX, rootY }; return p;
 }
 
-void Window_SetDesktopCursorPos(int x, int y) {
+void Window_SetScreenCursorPos(int x, int y) {
 	XWarpPointer(win_display, NULL, win_rootWin, 0, 0, 0, 0, x, y);
 	XFlush(win_display); /* TODO: not sure if XFlush call is necessary */
 }

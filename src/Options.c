@@ -40,7 +40,7 @@ static int Options_Find(const String* key) {
 static bool Options_TryGetValue(const char* keyRaw, String* value) {
 	int i, idx;
 	String key = String_FromReadonly(keyRaw);
-	*value     = String_MakeNull();
+	*value     = String_Empty;
 
 	i = Options_Find(&key);
 	if (i >= 0) {

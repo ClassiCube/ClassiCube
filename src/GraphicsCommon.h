@@ -32,8 +32,8 @@ void GfxCommon_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int
 GfxResourceID GfxCommon_quadVb, GfxCommon_texVb;
 void GfxCommon_Draw2DFlat(int x, int y, int width, int height, PackedCol col);
 void GfxCommon_Draw2DGradient(int x, int y, int width, int height, PackedCol top, PackedCol bottom);
-void GfxCommon_Draw2DTexture(struct Texture* tex, PackedCol col);
-void GfxCommon_Make2DQuad(struct Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices);
+void GfxCommon_Draw2DTexture(const struct Texture* tex, PackedCol col);
+void GfxCommon_Make2DQuad(const struct Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices);
 
 void GfxCommon_Mode2D(int width, int height);
 void GfxCommon_Mode3D(void);
@@ -44,6 +44,6 @@ void GfxCommon_RestoreAlphaState(uint8_t draw);
 
 void GfxCommon_GenMipmaps(int width, int height, uint8_t* lvlScan0, uint8_t* scan0);
 int GfxCommon_MipmapsLevels(int width, int height);
-void Texture_Render(struct Texture* tex);
-void Texture_RenderShaded(struct Texture* tex, PackedCol shadeCol);
+void Texture_Render(const struct Texture* tex);
+void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeCol);
 #endif

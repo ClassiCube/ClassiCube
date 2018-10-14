@@ -474,7 +474,7 @@ static void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID old, 
 		if (!cuboid_persist) {
 			Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
 			cuboid_hooked = false;
-			String empty = String_MakeNull(); Chat_AddOf(&empty, MSG_TYPE_CLIENTSTATUS_1);
+			Chat_AddOf(&String_Empty, MSG_TYPE_CLIENTSTATUS_1);
 		} else {
 			cuboid_mark1 = Vector3I_MaxValue();
 			String msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
@@ -574,15 +574,15 @@ static void Chat_Init(void) {
 static void Chat_Reset(void) {
 	Chat_CloseLog();
 	Chat_LogName.length = 0;
-	String empty = String_MakeNull();
+
 	/* reset CPE messages */
-	Chat_AddOf(&empty, MSG_TYPE_ANNOUNCEMENT);
-	Chat_AddOf(&empty, MSG_TYPE_STATUS_1);
-	Chat_AddOf(&empty, MSG_TYPE_STATUS_2);
-	Chat_AddOf(&empty, MSG_TYPE_STATUS_3);
-	Chat_AddOf(&empty, MSG_TYPE_BOTTOMRIGHT_1);
-	Chat_AddOf(&empty, MSG_TYPE_BOTTOMRIGHT_2);
-	Chat_AddOf(&empty, MSG_TYPE_BOTTOMRIGHT_3);
+	Chat_AddOf(&String_Empty, MSG_TYPE_ANNOUNCEMENT);
+	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_1);
+	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_2);
+	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_3);
+	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_1);
+	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_2);
+	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_3);
 }
 
 static void Chat_Free(void) {

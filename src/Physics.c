@@ -23,7 +23,7 @@ void AABB_Offset(struct AABB* result, struct AABB* bb, Vector3* amount) {
 	Vector3_Add(&result->Max, &bb->Max, amount);
 }
 
-bool AABB_Intersects(struct AABB* bb, struct AABB* other) {
+bool AABB_Intersects(const struct AABB* bb, const struct AABB* other) {
 	if (bb->Max.X >= other->Min.X && bb->Min.X <= other->Max.X) {
 		if (bb->Max.Y < other->Min.Y || bb->Min.Y > other->Max.Y) {
 			return false;
@@ -33,13 +33,13 @@ bool AABB_Intersects(struct AABB* bb, struct AABB* other) {
 	return false;
 }
 
-bool AABB_Contains(struct AABB* parent, struct AABB* child) {
+bool AABB_Contains(const struct AABB* parent, const struct AABB* child) {
 	return
 		child->Min.X >= parent->Min.X && child->Min.Y >= parent->Min.Y && child->Min.Z >= parent->Min.Z &&
 		child->Max.X <= parent->Max.X && child->Max.Y <= parent->Max.Y && child->Max.Z <= parent->Max.Z;
 }
 
-bool AABB_ContainsPoint(struct AABB* parent, Vector3* P) {
+bool AABB_ContainsPoint(const struct AABB* parent, Vector3* P) {
 	return
 		P->X >= parent->Min.X && P->Y >= parent->Min.Y && P->Z >= parent->Min.Z &&
 		P->X <= parent->Max.X && P->Y <= parent->Max.Y && P->Z <= parent->Max.Z;

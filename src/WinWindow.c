@@ -615,11 +615,11 @@ void Window_ProcessEvents(void) {
 	}
 }
 
-Point2D Window_GetDesktopCursorPos(void) {
+Point2D Window_GetScreenCursorPos(void) {
 	POINT point; GetCursorPos(&point);
 	Point2D p = { point.x, point.y }; return p;
 }
-void Window_SetDesktopCursorPos(int x, int y) {
+void Window_SetScreenCursorPos(int x, int y) {
 	SetCursorPos(x, y);
 }
 

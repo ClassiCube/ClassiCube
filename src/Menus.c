@@ -161,7 +161,7 @@ struct TexPackOverlay {
 /*########################################################################################################################*
 *--------------------------------------------------------Menu base--------------------------------------------------------*
 *#########################################################################################################################*/
-static void Menu_Button(void* s, int i, struct ButtonWidget* btn, int width, const String* text, FontDesc* font, Widget_LeftClick onClick, int horAnchor, int verAnchor, int x, int y) {
+static void Menu_Button(void* s, int i, struct ButtonWidget* btn, int width, const String* text, const FontDesc* font, Widget_LeftClick onClick, int horAnchor, int verAnchor, int x, int y) {
 	struct Menu* menu = (struct Menu*)s;
 	ButtonWidget_Create(btn, width, text, font, onClick);
 
@@ -169,7 +169,7 @@ static void Menu_Button(void* s, int i, struct ButtonWidget* btn, int width, con
 	Widget_SetLocation(menu->Widgets[i], horAnchor, verAnchor, x, y);
 }
 
-static void Menu_Label(void* s, int i, struct TextWidget* label, const String* text, FontDesc* font, int horAnchor, int verAnchor, int x, int y) {
+static void Menu_Label(void* s, int i, struct TextWidget* label, const String* text, const FontDesc* font, int horAnchor, int verAnchor, int x, int y) {
 	struct Menu* menu = (struct Menu*)s;
 	TextWidget_Create(label, text, font);
 
@@ -177,7 +177,7 @@ static void Menu_Label(void* s, int i, struct TextWidget* label, const String* t
 	Widget_SetLocation(menu->Widgets[i], horAnchor, verAnchor, x, y);
 }
 
-static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width, const String* text, FontDesc* font, struct MenuInputValidator* v, int horAnchor, int verAnchor, int x, int y) {
+static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width, const String* text, const FontDesc* font, struct MenuInputValidator* v, int horAnchor, int verAnchor, int x, int y) {
 	struct Menu* menu = (struct Menu*)s;
 	MenuInputWidget_Create(input, width, 30, text, font, v);
 
@@ -186,7 +186,7 @@ static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width,
 	input->Base.ShowCaret = true;
 }
 
-static void Menu_Back(void* s, int i, struct ButtonWidget* btn, const char* label, FontDesc* font, Widget_LeftClick onClick) {
+static void Menu_Back(void* s, int i, struct ButtonWidget* btn, const char* label, const FontDesc* font, Widget_LeftClick onClick) {
 	int width = Game_UseClassicOptions ? 400 : 200;
 	String msg = String_FromReadonly(label);
 	Menu_Button(s, i, btn, width, &msg, font, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
@@ -367,9 +367,9 @@ STRING_REF String ListScreen_UNSAFE_Get(struct ListScreen* s, int index) {
 }
 
 static void ListScreen_MakeText(struct ListScreen* s, int i) {
-	String text = ListScreen_UNSAFE_Get(s, s->CurrentIndex + i), empty = String_MakeNull();
-	Menu_Button(s, i, &s->Buttons[i], 300, &empty, &s->Font, s->EntryClick,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, (i - 2) * 50);
+	String text = ListScreen_UNSAFE_Get(s, s->CurrentIndex + i);
+	Menu_Button(s, i, &s->Buttons[i], 300, &String_Empty, &s->Font, 
+		s->EntryClick, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, (i - 2) * 50);
 	/* needed for font list menu */
 	s->UpdateEntry(s, &s->Buttons[i], &text);
 }
@@ -443,8 +443,7 @@ static void ListScreen_ContextRecreated(void* screen) {
 	Menu_Label(s, 8, &s->Title, &s->TitleText, &s->Font,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -155);
 
-	String empty = String_MakeNull();
-	Menu_Label(s, 9, &s->Page, &empty, &s->Font,
+	Menu_Label(s, 9, &s->Page, &String_Empty, &s->Font,
 		ANCHOR_CENTRE, ANCHOR_MAX, 0, 75);
 
 	ListScreen_UpdatePage(s);
@@ -942,7 +941,7 @@ static bool EditHotkeyScreen_KeyUp(void* screen, Key key) {
 static void EditHotkeyScreen_ContextRecreated(void* screen) {
 	struct EditHotkeyScreen* s = screen;
 	struct MenuInputValidator v = MenuInputValidator_String();
-	String text = String_MakeNull();
+	String text = String_Empty;
 
 	bool existed = s->OrigHotkey.Trigger != Key_None;
 	if (existed) {
@@ -1354,9 +1353,8 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 	Menu_Back(s, 3, &s->Buttons[2], "Cancel", &s->TitleFont, Menu_SwitchPause);
 
 	struct MenuInputValidator validator = MenuInputValidator_Path();
-	String empty = String_MakeNull();
-	Menu_Input(s, 4, &s->Input, 500, &empty, &s->TextFont, &validator,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
+	Menu_Input(s, 4, &s->Input, 500, &String_Empty, &s->TextFont, 
+		&validator, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
 
 	s->Widgets[5] = NULL; /* description widget placeholder */
 }
@@ -3187,7 +3185,7 @@ static void ConfirmDenyOverlay_ContextRecreated(void* screen) {
 	String lines[4] = {
 		String_FromConst("&eYou might be missing out."),
 		String_FromConst("Texture packs can play a vital role in the look and feel of maps."),
-		String_MakeNull(),
+		String_Empty,
 		String_FromConst("Sure you don't want to download the texture pack?")
 	};
 

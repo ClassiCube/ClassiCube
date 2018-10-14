@@ -145,21 +145,21 @@ struct HotkeyData {
 #define HOTKEYS_MAX_COUNT 256
 struct HotkeyData HotkeysList[HOTKEYS_MAX_COUNT];
 StringsBuffer HotkeysText;
-enum HOTKEY_FLAGS {
-	HOTKEY_FLAG_CTRL = 1, HOTKEY_FLAG_SHIFT = 2, HOTKEY_FLAG_ALT = 4,
-};
+typedef enum HotkeyFlags_ {
+	HOTKEY_FLAG_CTRL = 1, HOTKEY_FLAG_SHIFT = 2, HOTKEY_FLAG_ALT = 4
+} HotkeyFlags;
 
 /* Adds or updates a new hotkey. */
-void Hotkeys_Add(Key trigger, int flags, const String* text, bool more);
+void Hotkeys_Add(Key trigger, HotkeyFlags flags, const String* text, bool more);
 /* Removes the given hotkey. */
-bool Hotkeys_Remove(Key trigger, int flags);
+bool Hotkeys_Remove(Key trigger, HotkeyFlags flags);
 /* Returns the first hotkey which is bound to the given key and has its modifiers pressed. */
 /* NOTE: The hotkeys list is sorted, so hotkeys with most modifiers are checked first. */
 int Hotkeys_FindPartial(Key key);
 /* Initalises and loads hotkeys from options. */
 void Hotkeys_Init(void);
 /* Called when user has removed a hotkey. (removes it from options) */
-void Hotkeys_UserRemovedHotkey(Key trigger, int flags);
+void Hotkeys_UserRemovedHotkey(Key trigger, HotkeyFlags flags);
 /* Called when user has added a hotkey. (Adds it to options) */
-void Hotkeys_UserAddedHotkey(Key trigger, int flags, bool moreInput, const String* text);
+void Hotkeys_UserAddedHotkey(Key trigger, HotkeyFlags flags, bool moreInput, const String* text);
 #endif

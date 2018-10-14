@@ -725,7 +725,7 @@ static int Adv_Lit(int x, int y, int z, int cIndex) {
 }
 
 static int Adv_ComputeLightFlags(int x, int y, int z, int cIndex) {
-	if (Builder_FullBright) return (1 << xP1_yP1_zP1) - 1; // all faces fully bright
+	if (Builder_FullBright) return (1 << xP1_yP1_zP1) - 1; /* all faces fully bright */
 
 	return
 		Adv_Lit(x - 1, y, z - 1, cIndex - 1 - 18) << xM1_yM1_zM1 |
@@ -846,7 +846,6 @@ static int Adv_StretchZ(int countIndex, int x, int y, int z, int chunkIndex, Blo
 static void Adv_DrawXMin(int count) {
 	TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_XMIN);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
-	int offset = (adv_lightFlags >> FACE_XMIN) & 1;
 
 	float u1 = adv_minBB.Z, u2 = (count - 1) + adv_maxBB.Z * UV2_Scale;
 	float v1 = vOrigin + adv_maxBB.Y * Atlas1D_InvTileSize;
@@ -886,7 +885,6 @@ static void Adv_DrawXMin(int count) {
 static void Adv_DrawXMax(int count) {
 	TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_XMAX);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
-	int offset = (adv_lightFlags >> FACE_XMAX) & 1;
 
 	float u1 = (count - adv_minBB.Z), u2 = (1 - adv_maxBB.Z) * UV2_Scale;
 	float v1 = vOrigin + adv_maxBB.Y * Atlas1D_InvTileSize;
@@ -926,7 +924,6 @@ static void Adv_DrawXMax(int count) {
 static void Adv_DrawZMin(int count) {
 	TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_ZMIN);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
-	int offset = (adv_lightFlags >> FACE_ZMIN) & 1;
 
 	float u1 = (count - adv_minBB.X), u2 = (1 - adv_maxBB.X) * UV2_Scale;
 	float v1 = vOrigin + adv_maxBB.Y * Atlas1D_InvTileSize;
@@ -966,7 +963,6 @@ static void Adv_DrawZMin(int count) {
 static void Adv_DrawZMax(int count) {
 	TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_ZMAX);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
-	int offset = (adv_lightFlags >> FACE_ZMAX) & 1;
 
 	float u1 = adv_minBB.X, u2 = (count - 1) + adv_maxBB.X * UV2_Scale;
 	float v1 = vOrigin + adv_maxBB.Y * Atlas1D_InvTileSize;
@@ -1006,7 +1002,6 @@ static void Adv_DrawZMax(int count) {
 static void Adv_DrawYMin(int count) {
 	TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_YMIN);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
-	int offset = (adv_lightFlags >> FACE_YMIN) & 1;
 
 	float u1 = adv_minBB.X, u2 = (count - 1) + adv_maxBB.X * UV2_Scale;
 	float v1 = vOrigin + adv_minBB.Z * Atlas1D_InvTileSize;
@@ -1046,7 +1041,6 @@ static void Adv_DrawYMin(int count) {
 static void Adv_DrawYMax(int count) {
 	TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_YMAX);
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
-	int offset = (adv_lightFlags >> FACE_YMAX) & 1;
 
 	float u1 = adv_minBB.X, u2 = (count - 1) + adv_maxBB.X * UV2_Scale;
 	float v1 = vOrigin + adv_minBB.Z * Atlas1D_InvTileSize;

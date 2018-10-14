@@ -13,9 +13,9 @@ struct Entity;
 struct AABB { Vector3 Min, Max; };
 void AABB_Make(struct AABB* result, Vector3* pos, Vector3* size);
 void AABB_Offset(struct AABB* result, struct AABB* bb, Vector3* amount);
-bool AABB_Intersects(struct AABB* bb, struct AABB* other);
-bool AABB_Contains(struct AABB* parent, struct AABB* child);
-bool AABB_ContainsPoint(struct AABB* parent, Vector3* P);
+bool AABB_Intersects(const struct AABB* bb, const struct AABB* other);
+bool AABB_Contains(const struct AABB* parent, const struct AABB* child);
+bool AABB_ContainsPoint(const struct AABB* parent, Vector3* P);
 
 /* Calculates the intersection point of a ray and a rotated bounding box. */
 bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, struct Entity* target, float* tMin, float* tMax);

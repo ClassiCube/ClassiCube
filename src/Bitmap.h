@@ -19,7 +19,7 @@ void Bitmap_Allocate(Bitmap* bmp, int width, int height);
 /* Allocates a power-of-2 sized bitmap larger or equal to to the given size, and clears it to 0. You are responsible for freeing its memory! */
 void Bitmap_AllocateClearedPow2(Bitmap* bmp, int width, int height);
 
-bool Png_Detect(uint8_t* data, uint32_t len);
+bool Png_Detect(const uint8_t* data, uint32_t len);
 typedef int (*Png_RowSelector)(Bitmap* bmp, int row);
 /*
   Partially based off information from

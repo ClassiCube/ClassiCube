@@ -22,8 +22,6 @@ uint16_t String_CalcLen(const char* raw, uint16_t capacity) {
 	return length;
 }
 
-String String_MakeNull(void) { return String_Init(NULL, 0, 0); }
-
 String String_FromRaw(STRING_REF char* buffer, uint16_t capacity) {
 	return String_Init(buffer, String_CalcLen(buffer, capacity), capacity);
 }
@@ -72,8 +70,8 @@ void String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int
 	}
 
 	*subsCount = i;
-	/* If not enough split substrings, make remaining null */
-	for (; i < maxSubs; i++) { subs[i] = String_MakeNull(); }
+	/* If not enough split substrings, make remaining NULL */
+	for (; i < maxSubs; i++) { subs[i] = String_Empty; }
 }
 
 bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value) {
@@ -796,7 +794,7 @@ bool WordWrap_IsWrapper(char c) {
 
 void WordWrap_Do(STRING_REF String* text, String* lines, int numLines, int lineLen) {
 	int i, lineStart, lineEnd;
-	for (i = 0; i < numLines; i++) { lines[i] = String_MakeNull(); }
+	for (i = 0; i < numLines; i++) { lines[i] = String_Empty; }
 
 	for (i = 0, lineStart = 0; i < numLines; i++) {
 		int nextLineStart = lineStart + lineLen;

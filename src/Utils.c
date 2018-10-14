@@ -21,7 +21,7 @@ static bool DateTime_IsLeapYear(int year) {
 	return (year % 400) == 0;
 }
 
-int DateTime_TotalDays(DateTime* time) {
+int DateTime_TotalDays(const DateTime* time) {
 	/* Days from before this year */
 	int y = time->Year - 1, days = 365 * y;
 	/* A year is a leap year when the year is: */
@@ -38,7 +38,7 @@ int DateTime_TotalDays(DateTime* time) {
 	return days;
 }
 
-TimeMS DateTime_TotalMs(DateTime* time) {
+TimeMS DateTime_TotalMs(const DateTime* time) {
 	int days = DateTime_TotalDays(time);
 	uint64_t seconds =
 		(uint64_t)days * DATETIME_SECONDS_PER_DAY +
@@ -145,7 +145,7 @@ int Utils_AccumulateWheelDelta(float* accumulator, float delta) {
 	return steps;
 }
 
-uint8_t Utils_GetSkinType(Bitmap* bmp) {
+uint8_t Utils_GetSkinType(const Bitmap* bmp) {
 	if (bmp->Width == bmp->Height * 2) return SKIN_64x32;
 	if (bmp->Width != bmp->Height)     return SKIN_INVALID;
 
@@ -156,7 +156,7 @@ uint8_t Utils_GetSkinType(Bitmap* bmp) {
 	return alpha >= 127 ? SKIN_64x64 : SKIN_64x64_SLIM;
 }
 
-uint32_t Utils_CRC32(uint8_t* data, uint32_t length) {
+uint32_t Utils_CRC32(const uint8_t* data, uint32_t length) {
 	uint32_t crc = 0xffffffffUL;
 	int i;
 	for (i = 0; i < length; i++) {

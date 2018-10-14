@@ -181,7 +181,7 @@ static String HacksComp_UNSAFE_FlagValue(const char* flagRaw, struct HacksComp* 
 	String flag = String_FromReadonly(flagRaw);
 
 	int start = String_IndexOfString(joined, &flag);
-	if (start < 0) return String_MakeNull();
+	if (start < 0) return String_Empty;
 	start += flag.length;
 
 	int end = String_IndexOf(joined, ' ', start);
