@@ -13,4 +13,4 @@ $(OBJECTS): %.o : %.c
 	$(CC) $(CFLAGS) -c $< $(LIBS) -o $@
 
 clean:
-	rm -rf $(EXECUTABLE) $(OBJECTS)
+	rm -f $(EXECUTABLE) $(OBJECTS)
