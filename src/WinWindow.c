@@ -632,31 +632,27 @@ void Window_SetCursorVisible(bool visible) {
 
 #ifndef CC_BUILD_D3D9
 
-void GLContext_SelectGraphicsMode(struct GraphicsMode mode) {
-	struct ColorFormat color = mode.Format;
-
+void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	PIXELFORMATDESCRIPTOR pfd = { 0 };
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	pfd.nVersion = 1;
 	pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
 	/* TODO: PFD_SUPPORT_COMPOSITION FLAG? CHECK IF IT WORKS ON XP */
-	pfd.cColorBits = (uint8_t)(color.R + color.G + color.B);
+	pfd.cColorBits = mode->R + mode->G + mode->B;
 
-	pfd.iPixelType = color.IsIndexed ? PFD_TYPE_COLORINDEX : PFD_TYPE_RGBA;
-	pfd.cRedBits   = color.R;
-	pfd.cGreenBits = color.G;
-	pfd.cBlueBits  = color.B;
-	pfd.cAlphaBits = color.A;
+	pfd.iPixelType = mode->IsIndexed ? PFD_TYPE_COLORINDEX : PFD_TYPE_RGBA;
+	pfd.cRedBits   = mode->R;
+	pfd.cGreenBits = mode->G;
+	pfd.cBlueBits  = mode->B;
+	pfd.cAlphaBits = mode->A;
 
-	pfd.cDepthBits   = mode.DepthBits;
-	pfd.cStencilBits = mode.StencilBits;
-	if (mode.DepthBits <= 0) pfd.dwFlags |= PFD_DEPTH_DONTCARE;
-	if (mode.Buffers > 1)    pfd.dwFlags |= PFD_DOUBLEBUFFER;
+	pfd.cDepthBits   = mode->DepthBits;
+	pfd.cStencilBits = mode->StencilBits;
+	if (mode->DepthBits <= 0) pfd.dwFlags |= PFD_DEPTH_DONTCARE;
+	if (mode->Buffers > 1)    pfd.dwFlags |= PFD_DOUBLEBUFFER;
 
 	int modeIndex = ChoosePixelFormat(win_DC, &pfd);
-	if (modeIndex == 0) {
-		ErrorHandler_Fail("Requested graphics mode not available");
-	}
+	if (modeIndex == 0) { ErrorHandler_Fail("Requested graphics mode not available"); }
 
 	Mem_Set(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
@@ -674,7 +670,7 @@ typedef BOOL (WINAPI *FN_WGLSWAPINTERVAL)(int interval);
 FN_WGLSWAPINTERVAL wglSwapIntervalEXT;
 bool ctx_supports_vSync;
 
-void GLContext_Init(struct GraphicsMode mode) {
+void GLContext_Init(struct GraphicsMode* mode) {
 	GLContext_SelectGraphicsMode(mode);
 	ctx_Handle = wglCreateContext(win_DC);
 	if (!ctx_Handle) {

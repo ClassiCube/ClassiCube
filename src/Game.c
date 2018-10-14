@@ -34,7 +34,6 @@
 #include "GraphicsCommon.h"
 #include "Menus.h"
 #include "Audio.h"
-#include "DisplayDevice.h"
 #include "Stream.h"
 #include "Bitmap.h"
 
@@ -736,10 +735,12 @@ uint64_t game_renderTimer;
 void Game_Run(int width, int height, const String* title, struct DisplayDevice* device) {
 	int x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
 	int y = device->Bounds.Y + (device->Bounds.Height - height) / 2;
-	struct GraphicsMode mode = GraphicsMode_MakeDefault();
-
+	struct GraphicsMode mode; 
+	
+	GraphicsMode_MakeDefault(&mode);
 	Window_Create(x, y, width, height, title, &mode, device);
 	Window_SetVisible(true);
+
 	Game_Load();
 	Event_RaiseVoid(&WindowEvents_Resized);
 

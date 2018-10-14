@@ -198,7 +198,6 @@
     <ClInclude Include="ChunkUpdater.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="Bitmap.h" />
-    <ClInclude Include="DisplayDevice.h" />
     <ClInclude Include="Drawer.h" />
     <ClInclude Include="Drawer2D.h" />
     <ClInclude Include="Entity.h" />
@@ -263,7 +262,6 @@
     <ClCompile Include="Chat.c" />
     <ClCompile Include="ChunkUpdater.c" />
     <ClCompile Include="Bitmap.c" />
-    <ClCompile Include="DisplayDevice.c" />
     <ClCompile Include="Drawer.c" />
     <ClCompile Include="Drawer2D.c" />
     <ClCompile Include="EntityComponents.c" />

@@ -1,7 +1,6 @@
 #include "Platform.h"
 #include "ErrorHandler.h"
 #include "Stream.h"
-#include "DisplayDevice.h"
 #include "ExtMath.h"
 #include "ErrorHandler.h"
 #include "Drawer2D.h"
@@ -82,6 +81,41 @@ ReturnCode ReturnCode_InvalidArg = EINVAL;
 ReturnCode ReturnCode_SocketInProgess = EINPROGRESS;
 ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #endif
+
+
+/*########################################################################################################################*
+*------------------------------------------------------GraphicsMode-------------------------------------------------------*
+*#########################################################################################################################*/
+void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil, int buffers) {
+	m->DepthBits    = depth;
+	m->StencilBits  = stencil;
+	m->Buffers      = buffers;
+	m->IsIndexed    = bpp < 15;
+	m->BitsPerPixel = bpp;
+
+	m->A = 0;
+	switch (bpp) {
+	case 32:
+		m->R = 8; m->G = 8; m->B = 8; m->A = 8; break;
+	case 24:
+		m->R = 8; m->G = 8; m->B = 8; break;
+	case 16:
+		m->R = 5; m->G = 6; m->B = 5; break;
+	case 15:
+		m->R = 5; m->G = 5; m->B = 5; break;
+	case 8:
+		m->R = 3; m->G = 3; m->B = 2; break;
+	case 4:
+		m->R = 2; m->G = 2; m->B = 1; break;
+	default:
+		/* mode->R = 0; mode->G = 0; mode->B = 0; */
+		ErrorHandler_Fail2(bpp, "Unsupported bits per pixel"); break;
+	}
+}
+void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
+	int bpp = DisplayDevice_Default.BitsPerPixel;
+	GraphicsMode_Make(m, bpp, 24, 0, 2);
+}
 
 
 /*########################################################################################################################*

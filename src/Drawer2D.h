@@ -9,8 +9,8 @@
 struct DrawTextArgs { String Text; FontDesc Font; bool UseShadow; };
 struct Texture;
 
-void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, STRING_REF const FontDesc* font, bool useShadow);
-void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, STRING_REF const FontDesc* font, bool useShadow);
+void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, const FontDesc* font, bool useShadow);
+void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, const FontDesc* font, bool useShadow);
 NOINLINE_ void Drawer2D_MakeFont(FontDesc* desc, int size, int style);
 
 /* Whether chat text should be drawn and measuring using the currently bitmapped font, 

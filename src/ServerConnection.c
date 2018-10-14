@@ -283,10 +283,8 @@ static void MPConnection_FailConnect(ReturnCode result) {
 }
 
 static void MPConnection_TickConnect(void) {
-	ReturnCode err = 0; Socket_GetError(net_socket, &err);
-	if (err) {
-		MPConnection_FailConnect(err); return;
-	}
+	ReturnCode res = 0; Socket_GetError(net_socket, &res);
+	if (res) { MPConnection_FailConnect(res); return; }
 
 	TimeMS now = DateTime_CurrentUTC_MS();
 	bool poll_write = false;
@@ -483,19 +481,21 @@ void ServerConnection_InitMultiplayer(void) {
 
 
 static void MPConnection_OnNewMap(void) {
-	if (ServerConnection_IsSinglePlayer) return;
-	/* wipe all existing entity states */
 	int i;
+	if (ServerConnection_IsSinglePlayer) return;
+
+	/* wipe all existing entities */
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		Handlers_RemoveEntity((EntityID)i);
 	}
 }
 
 static void MPConnection_Reset(void) {
-	if (ServerConnection_IsSinglePlayer) return;
 	int i;
+	if (ServerConnection_IsSinglePlayer) return;
+	
 	for (i = 0; i < OPCODE_COUNT; i++) {
-		Net_Handlers[i] = NULL;
+		Net_Handlers[i]    = NULL;
 		Net_PacketSizes[i] = 0;
 	}
 

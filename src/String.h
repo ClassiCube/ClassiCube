@@ -22,29 +22,29 @@ typedef struct String_ {
 } String;
 
 /* Counts number of characters until a '\0' is found. */
-uint16_t String_CalcLen(const char* raw, uint16_t capacity);
+int String_CalcLen(const char* raw, int capacity);
 /* Constant string that points to NULL and has 0 length. */
 /* NOTE: Do NOT modify the contents of this string! */
 const String String_Empty;
 /* Constructs a string from the given arguments. */
-String String_Init(STRING_REF char* buffer, uint16_t length, uint16_t capacity);
+String String_Init(STRING_REF char* buffer, int length, int capacity);
 /* Constructs a string from the given arguments, then sets all characters to '\0'. */
-String String_InitAndClear(STRING_REF char* buffer, uint16_t capacity);
+String String_InitAndClear(STRING_REF char* buffer, int capacity);
 /* Constructs a string from a (maybe null terminated) buffer. */
-NOINLINE_ String String_FromRaw(STRING_REF char* buffer, uint16_t capacity);
+NOINLINE_ String String_FromRaw(STRING_REF char* buffer, int capacity);
 /* Constructs a string from a null-terminated constant readonly buffer. */
 NOINLINE_ String String_FromReadonly(STRING_REF const char* buffer);
 
 /* Constructs a string from a compile time array, then sets all characters to '\0'. */
-#define String_ClearedArray(buffer) String_InitAndClear(buffer, (uint16_t)sizeof(buffer))
+#define String_ClearedArray(buffer) String_InitAndClear(buffer, sizeof(buffer))
 /* Constructs a string from a compile time string constant */
-#define String_FromConst(text) { text, (uint16_t)(sizeof(text) - 1), (uint16_t)(sizeof(text) - 1)}
+#define String_FromConst(text) { text, (sizeof(text) - 1), (sizeof(text) - 1)}
 /* Constructs a string from a compile time array */
-#define String_FromArray(buffer) { buffer, 0, (uint16_t)sizeof(buffer)}
+#define String_FromArray(buffer) { buffer, 0, sizeof(buffer)}
 /* Constructs a string from a compile time array, that may have arbitary actual length of data at runtime */
-#define String_FromRawArray(buffer) String_FromRaw(buffer, (uint16_t)sizeof(buffer))
+#define String_FromRawArray(buffer) String_FromRaw(buffer, sizeof(buffer))
 /* Constructs a string from a compile time array (leaving 1 byte of room for null terminator) */
-#define String_NT_Array(buffer) { buffer, 0, (uint16_t)(sizeof(buffer) - 1)}
+#define String_NT_Array(buffer) { buffer, 0, (sizeof(buffer) - 1)}
 
 /* Removes all colour codes from the given string. */
 NOINLINE_ void String_StripCols(String* str);
@@ -79,8 +79,11 @@ NOINLINE_ bool String_AppendBool(String* str, bool value);
 NOINLINE_ bool String_AppendInt(String* str, int num);
 /* Appends the digits of an unsigned 32 bit integer to the end of a string. */
 NOINLINE_ bool String_AppendUInt32(String* str, uint32_t num);
+/* Attempts to append an integer value to the end of a string, padding left with 0. */
+NOINLINE_ bool String_AppendPaddedInt(String* str, int num, int minDigits);
 /* Appends the digits of an unsigned 64 bit integer to the end of a string. */
 NOINLINE_ bool String_AppendUInt64(String* str, uint64_t num);
+
 /* Appends the digits of a float as a decimal. */
 /* NOTE: If the number is an integer, no decimal point is added. */
 /* Otherwise, fracDigits digits are added after a decimal point. */
@@ -162,8 +165,8 @@ NOINLINE_ bool Convert_TryParseBool(const String*   str, bool* value);
 #define STRINGSBUFFER_BUFFER_DEF_SIZE 4096
 #define STRINGSBUFFER_FLAGS_DEF_ELEMS 256
 typedef struct StringsBuffer_ {
-	char*      TextBuffer;
-	uint32_t*  FlagsBuffer;
+	char*      TextBuffer;  /* Raw characters of all entries */
+	uint32_t*  FlagsBuffer; /* Private flags for each entry */
 	int Count, TotalLength;
 	/* internal state */
 	int      _TextBufferSize, _FlagsBufferSize;

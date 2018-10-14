@@ -13,7 +13,7 @@ VertexP3fT2fC4b* iso_vertices;
 VertexP3fT2fC4b* iso_base_vertices;
 GfxResourceID iso_vb;
 
-bool iso_cacheInitalisesd;
+bool iso_cacheInitalised;
 PackedCol iso_colNormal, iso_colXSide, iso_colZSide, iso_colYBottom;
 #define iso_cosX  (0.86602540378443864f) /* cos(30  * MATH_DEG2RAD) */
 #define iso_sinX  (0.50000000000000000f) /* sin(30  * MATH_DEG2RAD) */
@@ -25,20 +25,20 @@ Vector3 iso_pos;
 int iso_lastTexIndex, iso_texIndex;
 
 static void IsometricDrawer_RotateX(float cosA, float sinA) {
-	float y  = cosA  * iso_pos.Y + sinA * iso_pos.Z;
+	float y   = cosA  * iso_pos.Y + sinA * iso_pos.Z;
 	iso_pos.Z = -sinA * iso_pos.Y + cosA * iso_pos.Z;
 	iso_pos.Y = y;
 }
 
 static void IsometricDrawer_RotateY(float cosA, float sinA) {
-	float x  = cosA * iso_pos.X - sinA * iso_pos.Z;
+	float x   = cosA * iso_pos.X - sinA * iso_pos.Z;
 	iso_pos.Z = sinA * iso_pos.X + cosA * iso_pos.Z;
 	iso_pos.X = x;
 }
 
 static void IsometricDrawer_InitCache(void) {
-	if (iso_cacheInitalisesd) return;
-	iso_cacheInitalisesd = true;
+	if (iso_cacheInitalised) return;
+	iso_cacheInitalised = true;
 	PackedCol white = PACKEDCOL_WHITE;
 	iso_colNormal = white;
 	PackedCol_GetShaded(iso_colNormal, &iso_colXSide, &iso_colZSide, &iso_colYBottom);

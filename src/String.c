@@ -5,29 +5,31 @@
 #include "Platform.h"
 #include "Stream.h"
 
-String String_Init(STRING_REF char* buffer, uint16_t length, uint16_t capacity) {
-	String str = { buffer, length, capacity }; return str;
+String String_Init(STRING_REF char* buffer, int length, int capacity) {
+	String s; 
+	s.buffer = buffer; s.length = length; s.capacity = capacity; 
+	return s;
 }
 
-String String_InitAndClear(STRING_REF char* buffer, uint16_t capacity) {
+String String_InitAndClear(STRING_REF char* buffer, int capacity) {
 	String str = String_Init(buffer, 0, capacity);	
 	int i;
 	for (i = 0; i < capacity; i++) { buffer[i] = '\0'; }
 	return str;
 }
 
-uint16_t String_CalcLen(const char* raw, uint16_t capacity) {
-	uint16_t length = 0;
+int String_CalcLen(const char* raw, int capacity) {
+	int length = 0;
 	while (length < capacity && *raw) { raw++; length++; }
 	return length;
 }
 
-String String_FromRaw(STRING_REF char* buffer, uint16_t capacity) {
+String String_FromRaw(STRING_REF char* buffer, int capacity) {
 	return String_Init(buffer, String_CalcLen(buffer, capacity), capacity);
 }
 
 String String_FromReadonly(STRING_REF const char* buffer) {
-	uint16_t len = String_CalcLen(buffer, UInt16_MaxValue);
+	int len = String_CalcLen(buffer, UInt16_MaxValue);
 	return String_Init(buffer, len, len);
 }
 
@@ -165,13 +167,12 @@ bool String_AppendUInt32(String* str, uint32_t num) {
 	return true;
 }
 
-/* Attempts to append an integer value to the end of a string, padding left with 0. */
 bool String_AppendPaddedInt(String* str, int num, int minDigits) {
 	char digits[STRING_INT_CHARS];
-	int i;
+	int i, count;
 	for (i = 0; i < minDigits; i++) { digits[i] = '0'; }
 
-	int count = String_MakeUInt32(num, digits);
+	count = String_MakeUInt32(num, digits);
 	if (count < minDigits) count = minDigits;
 
 	for (i = count - 1; i >= 0; i--) {
@@ -199,22 +200,24 @@ bool String_AppendUInt64(String* str, uint64_t num) {
 }
 
 bool String_AppendFloat(String* str, float num, int fracDigits) {
+	int i, whole, digit;
+	double frac;
+
 	if (num < 0.0f) {
-		if (!String_Append(str, '-')) return false;
+		String_Append(str, '-'); /* don't need to check success */
 		num = -num;
 	}
 
-	int wholePortion = (int)num;
-	if (!String_AppendUInt32(str, wholePortion)) return false;
+	whole = (int)num;
+	if (!String_AppendUInt32(str, whole)) return false;
 
-	double frac = (double)num - (double)wholePortion;
+	frac = (double)num - (double)whole;
 	if (frac == 0.0) return true;
-	if (!String_Append(str, '.')) return false;
+	String_Append(str, '.'); /* don't need to check success */
 
-	int i;
 	for (i = 0; i < fracDigits; i++) {
 		frac *= 10;
-		int digit = Math_AbsI((int)frac) % 10;
+		digit = Math_AbsI((int)frac) % 10;
 		if (!String_Append(str, '0' + digit)) return false;
 	}
 	return true;
@@ -427,13 +430,16 @@ void String_Format3(String* str, const char* format, const void* a1, const void*
 }
 void String_Format4(String* str, const char* format, const void* a1, const void* a2, const void* a3, const void* a4) {
 	String formatStr = String_FromReadonly(format);
-	const void* args[4] = { a1, a2, a3, a4 };
+	const void* arg;
 	int i, j = 0, digits;
+
+	const void* args[4];
+	args[0] = a1; args[1] = a2; args[2] = a3; args[3] = a4;
 
 	for (i = 0; i < formatStr.length; i++) {
 		if (formatStr.buffer[i] != '%') { String_Append(str, formatStr.buffer[i]); continue; }
+		arg = args[j++];
 
-		const void* arg = args[j++];
 		switch (formatStr.buffer[++i]) {
 		case 'b': 
 			String_AppendInt(str, *((uint8_t*)arg)); break;
@@ -479,22 +485,22 @@ Codepoint Convert_ControlChars[32] = {
 };
 
 Codepoint Convert_ExtendedChars[129] = { 0x2302,
-0x00C7, 0x00FC, 0x00E9, 0x00E2, 0x00E4, 0x00E0, 0x00E5, 0x00E7,
-0x00EA, 0x00EB, 0x00E8, 0x00EF, 0x00EE, 0x00EC, 0x00C4, 0x00C5,
-0x00C9, 0x00E6, 0x00C6, 0x00F4, 0x00F6, 0x00F2, 0x00FB, 0x00F9,
-0x00FF, 0x00D6, 0x00DC, 0x00A2, 0x00A3, 0x00A5, 0x20A7, 0x0192,
-0x00E1, 0x00ED, 0x00F3, 0x00FA, 0x00F1, 0x00D1, 0x00AA, 0x00BA,
-0x00BF, 0x2310, 0x00AC, 0x00BD, 0x00BC, 0x00A1, 0x00AB, 0x00BB,
-0x2591, 0x2592, 0x2593, 0x2502, 0x2524, 0x2561, 0x2562, 0x2556,
-0x2555, 0x2563, 0x2551, 0x2557, 0x255D, 0x255C, 0x255B, 0x2510,
-0x2514, 0x2534, 0x252C, 0x251C, 0x2500, 0x253C, 0x255E, 0x255F,
-0x255A, 0x2554, 0x2569, 0x2566, 0x2560, 0x2550, 0x256C, 0x2567,
-0x2568, 0x2564, 0x2565, 0x2559, 0x2558, 0x2552, 0x2553, 0x256B,
-0x256A, 0x2518, 0x250C, 0x2588, 0x2584, 0x258C, 0x2590, 0x2580,
-0x03B1, 0x00DF, 0x0393, 0x03C0, 0x03A3, 0x03C3, 0x00B5, 0x03C4,
-0x03A6, 0x0398, 0x03A9, 0x03B4, 0x221E, 0x03C6, 0x03B5, 0x2229,
-0x2261, 0x00B1, 0x2265, 0x2264, 0x2320, 0x2321, 0x00F7, 0x2248,
-0x00B0, 0x2219, 0x00B7, 0x221A, 0x207F, 0x00B2, 0x25A0, 0x00A0
+	0x00C7, 0x00FC, 0x00E9, 0x00E2, 0x00E4, 0x00E0, 0x00E5, 0x00E7,
+	0x00EA, 0x00EB, 0x00E8, 0x00EF, 0x00EE, 0x00EC, 0x00C4, 0x00C5,
+	0x00C9, 0x00E6, 0x00C6, 0x00F4, 0x00F6, 0x00F2, 0x00FB, 0x00F9,
+	0x00FF, 0x00D6, 0x00DC, 0x00A2, 0x00A3, 0x00A5, 0x20A7, 0x0192,
+	0x00E1, 0x00ED, 0x00F3, 0x00FA, 0x00F1, 0x00D1, 0x00AA, 0x00BA,
+	0x00BF, 0x2310, 0x00AC, 0x00BD, 0x00BC, 0x00A1, 0x00AB, 0x00BB,
+	0x2591, 0x2592, 0x2593, 0x2502, 0x2524, 0x2561, 0x2562, 0x2556,
+	0x2555, 0x2563, 0x2551, 0x2557, 0x255D, 0x255C, 0x255B, 0x2510,
+	0x2514, 0x2534, 0x252C, 0x251C, 0x2500, 0x253C, 0x255E, 0x255F,
+	0x255A, 0x2554, 0x2569, 0x2566, 0x2560, 0x2550, 0x256C, 0x2567,
+	0x2568, 0x2564, 0x2565, 0x2559, 0x2558, 0x2552, 0x2553, 0x256B,
+	0x256A, 0x2518, 0x250C, 0x2588, 0x2584, 0x258C, 0x2590, 0x2580,
+	0x03B1, 0x00DF, 0x0393, 0x03C0, 0x03A3, 0x03C3, 0x00B5, 0x03C4,
+	0x03A6, 0x0398, 0x03A9, 0x03B4, 0x221E, 0x03C6, 0x03B5, 0x2229,
+	0x2261, 0x00B1, 0x2265, 0x2264, 0x2320, 0x2321, 0x00F7, 0x2248,
+	0x00B0, 0x2219, 0x00B7, 0x221A, 0x207F, 0x00B2, 0x25A0, 0x00A0
 };
 
 Codepoint Convert_CP437ToUnicode(char c) {
@@ -566,12 +572,14 @@ static int Convert_CompareDigits(const char* digits, const char* magnitude) {
 }
 
 static bool Convert_TryParseDigits(const String* str, bool* negative, char* digits, int maxDigits) {
+	char* start = digits;
+	int offset = 0, i;
+
 	*negative = false;
 	if (!str->length) return false;
-	char* start = digits; digits += (maxDigits - 1);
+	digits += (maxDigits - 1);
 
 	/* Handle number signs */
-	int offset = 0, i = 0;
 	if (str->buffer[0] == '-') { *negative = true; offset = 1; }
 	if (str->buffer[0] == '+') { offset = 1; }
 
@@ -636,36 +644,31 @@ bool Convert_TryParseUInt64(const String* str, uint64_t* value) {
 
 bool Convert_TryParseFloat(const String* str, float* value) {
 	int i = 0;
+	bool negate = false;
+	double sum, whole, fract, divide = 10.0;
 	*value = 0.0f;
-	bool foundDecimalPoint = false;
-	double whole = 0.0, fract = 0.0, divide = 10.0;
 
 	/* Handle number signs */
-	bool negate = false;
 	if (!str->length) return false;
 	if (str->buffer[0] == '-') { negate = true; i++; }
 	if (str->buffer[0] == '+') { i++; }
 
-	/* TODO: CHECK THIS WORKS!!! */
-	for (; i < str->length; i++) {
+	for (whole = 0.0; i < str->length; i++) {
 		char c = str->buffer[i];
-		/* Floating point number can have . in it */
-		if (c == '.' || c == ',') {
-			if (foundDecimalPoint) return false;
-			foundDecimalPoint = true;
-			continue;
-		}
+		if (c == '.' || c == ',') { i++; break; }
 
 		if (c < '0' || c > '9') return false;
-		int digit = c - '0';
-		if (!foundDecimalPoint) {
-			whole *= 10; whole += digit;
-		} else {
-			fract += digit / divide; divide *= 10;
-		}
+		whole *= 10; whole += (c - '0');
 	}
 
-	double sum = whole + fract;
+	for (fract = 0.0; i < str->length; i++) {
+		char c = str->buffer[i];
+		if (c < '0' || c > '9') return false;
+
+		fract += (c - '0') / divide; divide *= 10;
+	}
+
+	sum = whole + fract;
 	if (negate) sum = -sum;
 	*value = (float)sum;
 	return true;
@@ -727,6 +730,7 @@ String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i) {
 }
 
 void StringsBuffer_Add(StringsBuffer* buffer, const String* text) {
+	int textOffset;
 	/* StringsBuffer hasn't been initalised yet, do it here */
 	if (!buffer->_FlagsBufferSize) { StringsBuffer_Init(buffer); }
 
@@ -739,15 +743,13 @@ void StringsBuffer_Add(StringsBuffer* buffer, const String* text) {
 		ErrorHandler_Fail("String too big to insert into StringsBuffer");
 	}
 
-	int textOffset = buffer->TotalLength;
+	textOffset = buffer->TotalLength;
 	if (textOffset + text->length >= buffer->_TextBufferSize) {
 		buffer->TextBuffer = Utils_Resize(buffer->TextBuffer, &buffer->_TextBufferSize,
 											1, STRINGSBUFFER_BUFFER_DEF_SIZE, 8192);
 	}
 
-	if (text->length) {
-		Mem_Copy(&buffer->TextBuffer[textOffset], text->buffer, text->length);
-	}
+	Mem_Copy(&buffer->TextBuffer[textOffset], text->buffer, text->length);
 	buffer->FlagsBuffer[buffer->Count] = text->length | (textOffset << STRINGSBUFFER_LEN_SHIFT);
 
 	buffer->Count++;
@@ -756,27 +758,27 @@ void StringsBuffer_Add(StringsBuffer* buffer, const String* text) {
 
 void StringsBuffer_Remove(StringsBuffer* buffer, int index) {
 	uint32_t flags, offset, len;
+	uint32_t i, offsetAdj;
 	if (index < 0 || index >= buffer->Count) ErrorHandler_Fail("Tried to remove String past StringsBuffer end");
 
 	flags  = buffer->FlagsBuffer[index];
 	offset = flags >> STRINGSBUFFER_LEN_SHIFT;
 	len    = flags  & STRINGSBUFFER_LEN_MASK;
 
-	/* Imagine buffer is this: AAXXYYZZ, and want to delete X */
-	/* Start points to first character of Y */
-	/* End points to character past last character of Z */
-	uint32_t i, start = offset + len, end = buffer->TotalLength;
-	for (i = start; i < end; i++) { 
+	/* Imagine buffer is this: AAXXYYZZ, and want to delete XX */
+	/* We iterate from first char of Y to last char of Z, */
+	/* shifting each character two to the left. */
+	for (i = offset + len; i < buffer->TotalLength; i++) {
 		buffer->TextBuffer[i - len] = buffer->TextBuffer[i]; 
 	}
 
-	/* adjust text offset of elements after this element */
+	/* Adjust text offset of elements after this element */
 	/* Elements may not be in order so most account for that */
-	uint32_t flagsLen = len << STRINGSBUFFER_LEN_SHIFT;
+	offsetAdj = len << STRINGSBUFFER_LEN_SHIFT;
 	for (i = index; i < buffer->Count; i++) {
 		buffer->FlagsBuffer[i] = buffer->FlagsBuffer[i + 1];
 		if (buffer->FlagsBuffer[i] >= flags) {
-			buffer->FlagsBuffer[i] -= flagsLen;
+			buffer->FlagsBuffer[i] -= offsetAdj;
 		}
 	}
 
@@ -845,33 +847,27 @@ void WordWrap_GetCoords(int index, const String* lines, int numLines, int* coord
 }
 
 int WordWrap_GetBackLength(const String* text, int index) {
+	int start = index;
 	if (index <= 0) return 0;
 	if (index >= text->length) ErrorHandler_Fail("WordWrap_GetBackLength - index past end of string");
+	
+	/* Go backward to the end of the previous word */
+	while (index > 0 && text->buffer[index] == ' ') index--;
+	/* Go backward to the start of the current word */
+	while (index > 0 && text->buffer[index] != ' ') index--;
 
-	int start = index;
-	bool lookingSpace = text->buffer[index] == ' ';
-	/* go back to the end of the previous word */
-	if (lookingSpace) {
-		while (index > 0 && text->buffer[index] == ' ') { index--; }
-	}
-
-	/* go back to the start of the current word */
-	while (index > 0 && text->buffer[index] != ' ') { index--; }
 	return start - index;
 }
 
 int WordWrap_GetForwardLength(const String* text, int index) {
+	int start = index, length = text->length;
 	if (index == -1) return 0;
 	if (index >= text->length) ErrorHandler_Fail("WordWrap_GetForwardLength - index past end of string");
 
-	int start = index, length = text->length;
-	bool lookingLetter = text->buffer[index] != ' ';
-	/* go forward to the end of the current word */
-	if (lookingLetter) {
-		while (index < length && text->buffer[index] != ' ') { index++; }
-	}
+	/* Go forward to the end of the word 'index' is currently in */
+	while (index < length && text->buffer[index] != ' ') index++;
+	/* Go forward to the start of the next word after 'index' */
+	while (index < length && text->buffer[index] == ' ') index++;
 
-	/* go forward to the start of the next word */
-	while (index < length && text->buffer[index] == ' ') { index++; }
 	return index - start;
 }

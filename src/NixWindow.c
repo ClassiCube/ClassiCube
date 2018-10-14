@@ -665,7 +665,7 @@ typedef int (*FN_GLXSWAPINTERVAL)(int interval);
 FN_GLXSWAPINTERVAL glXSwapIntervalSGI;
 bool ctx_supports_vSync;
 
-void GLContext_Init(struct GraphicsMode mode) {
+void GLContext_Init(struct GraphicsMode* mode) {
 	ctx_Handle = glXCreateContext(win_display, &win_visual, NULL, true);
 
 	if (!ctx_Handle) {
@@ -712,36 +712,32 @@ void GLContext_SetVSync(bool enabled) {
 	if (result != 0) {Platform_Log1("Set VSync failed, error: %i", &result); }
 }
 
-static void GLContext_GetAttribs(struct GraphicsMode mode, int* attribs) {
+static void GLContext_GetAttribs(struct GraphicsMode* mode, int* attribs) {
 	int i = 0;
-	struct ColorFormat color = mode.Format;
 	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_61/com.ibm.aix.opengl/doc/openglrf/glXChooseFBConfig.htm%23glxchoosefbconfig */
 	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_71/com.ibm.aix.opengl/doc/openglrf/glXChooseVisual.htm%23b5c84be452rree */
 	/* for the attribute declarations. Note that the attributes are different than those used in Glx.ChooseVisual */
 
-	if (!color.IsIndexed) {
-		attribs[i++] = GLX_RGBA;
-	}
-	attribs[i++] = GLX_RED_SIZE;   attribs[i++] = color.R;
-	attribs[i++] = GLX_GREEN_SIZE; attribs[i++] = color.G;
-	attribs[i++] = GLX_BLUE_SIZE;  attribs[i++] = color.B;
-	attribs[i++] = GLX_ALPHA_SIZE; attribs[i++] = color.A;
+	if (!mode->IsIndexed) { attribs[i++] = GLX_RGBA; }
+	attribs[i++] = GLX_RED_SIZE;   attribs[i++] = mode->R;
+	attribs[i++] = GLX_GREEN_SIZE; attribs[i++] = mode->G;
+	attribs[i++] = GLX_BLUE_SIZE;  attribs[i++] = mode->B;
+	attribs[i++] = GLX_ALPHA_SIZE; attribs[i++] = mode->A;
 
-	if (mode.DepthBits) {
-		attribs[i++] = GLX_DEPTH_SIZE; attribs[i++] = mode.DepthBits;
+	if (mode->DepthBits) {
+		attribs[i++] = GLX_DEPTH_SIZE;   attribs[i++] = mode->DepthBits;
 	}
-	if (mode.StencilBits) {
-		attribs[i++] = GLX_STENCIL_SIZE; attribs[i++] = mode.StencilBits;
+	if (mode->StencilBits) {
+		attribs[i++] = GLX_STENCIL_SIZE; attribs[i++] = mode->StencilBits;
 	}
-	if (mode.Buffers > 1) {
-		attribs[i++] = GLX_DOUBLEBUFFER;
-	}
+	if (mode->Buffers > 1) { attribs[i++] = GLX_DOUBLEBUFFER; }
+
 	attribs[i++] = 0;
 }
 
 static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 	int attribs[20];
-	GLContext_GetAttribs(*mode, attribs);
+	GLContext_GetAttribs(mode, attribs);
 	int major = 0, minor = 0, fbcount;
 	if (!glXQueryVersion(win_display, &major, &minor)) {
 		ErrorHandler_Fail("glXQueryVersion failed");

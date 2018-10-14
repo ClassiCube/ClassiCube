@@ -270,9 +270,6 @@
     <ClInclude Include="PacketHandlers.h">
       <Filter>Header Files\Network</Filter>
     </ClInclude>
-    <ClInclude Include="DisplayDevice.h">
-      <Filter>Header Files\Platform</Filter>
-    </ClInclude>
     <ClInclude Include="Window.h">
       <Filter>Header Files\Platform</Filter>
     </ClInclude>
@@ -454,9 +451,6 @@
     </ClCompile>
     <ClCompile Include="AsyncDownloader.c">
       <Filter>Source Files\Network</Filter>
-    </ClCompile>
-    <ClCompile Include="DisplayDevice.c">
-      <Filter>Source Files\Platform</Filter>
     </ClCompile>
     <ClCompile Include="EnvRenderer.c">
       <Filter>Source Files\Rendering</Filter>
