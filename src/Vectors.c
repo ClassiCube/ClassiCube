@@ -300,9 +300,9 @@ bool FrustumCulling_SphereInFrustum(float x, float y, float z, float radius) {
 
 void FrustumCulling_CalcFrustumEquations(struct Matrix* projection, struct Matrix* modelView) {
 	struct Matrix clipMatrix;
+	float* clip = (float*)&clipMatrix;
 	Matrix_Mul(&clipMatrix, modelView, projection);
 
-	float* clip = (float*)&clipMatrix;
 	/* Extract the numbers for the RIGHT plane */
 	frustum00 = clip[3]  - clip[0];
 	frustum01 = clip[7]  - clip[4];

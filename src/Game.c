@@ -344,7 +344,7 @@ static void Game_LoadOptions(void) {
 	Game_ClassicArmModel   = Options_GetBool(OPT_CLASSIC_ARM_MODEL, Game_ClassicMode);
 
 	Game_ViewBobbing = Options_GetBool(OPT_VIEW_BOBBING, true);
-	FpsLimit method  = Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FpsLimit_Count);
+	int method  = Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FPS_LIMIT_COUNT);
 	Game_SetFpsLimit(method);
 
 	Game_ViewDistance     = Options_GetInt(OPT_VIEW_DISTANCE, 16, 4096, 512);
@@ -536,16 +536,16 @@ void Game_Load(void) {
 }
 
 uint64_t game_frameTimer;
-void Game_SetFpsLimit(FpsLimit method) {
+void Game_SetFpsLimit(enum FpsLimit method) {
 	Game_FpsLimit = method;
 	game_limitMs  = Game_CalcLimitMillis(method);
-	Gfx_SetVSync(method == FpsLimit_VSync);
+	Gfx_SetVSync(method == FPS_LIMIT_VSYNC);
 }
 
-float Game_CalcLimitMillis(FpsLimit method) {
-	if (method == FpsLimit_120FPS) return 1000/120.0f;
-	if (method == FpsLimit_60FPS)  return 1000/60.0f;
-	if (method == FpsLimit_30FPS)  return 1000/30.0f;
+float Game_CalcLimitMillis(enum FpsLimit method) {
+	if (method == FPS_LIMIT_120) return 1000/120.0f;
+	if (method == FPS_LIMIT_60)  return 1000/60.0f;
+	if (method == FPS_LIMIT_30)  return 1000/30.0f;
 	return 0;
 }
 

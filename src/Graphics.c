@@ -365,8 +365,8 @@ void Gfx_SetAlphaTest(bool enabled) {
 	D3D9_SetRenderState(D3DRS_ALPHATESTENABLE, enabled, "D3D9_SetAlphaTest");
 }
 
-void Gfx_SetAlphaTestFunc(int compareFunc, float refValue) {
-	d3d9_alphaTestFunc = d3d9_compareFuncs[compareFunc];
+void Gfx_SetAlphaTestFunc(enum CompareFunc func, float refValue) {
+	d3d9_alphaTestFunc = d3d9_compareFuncs[func];
 	D3D9_SetRenderState(D3DRS_ALPHAFUNC, d3d9_alphaTestFunc, "D3D9_SetAlphaTest_Func");
 	d3d9_alphaTestRef = (int)(refValue * 255);
 	D3D9_SetRenderState2(D3DRS_ALPHAREF, d3d9_alphaTestRef, "D3D9_SetAlphaTest_Ref");
@@ -378,12 +378,12 @@ void Gfx_SetAlphaBlending(bool enabled) {
 	D3D9_SetRenderState(D3DRS_ALPHABLENDENABLE, enabled, "D3D9_SetAlphaBlending");
 }
 
-void Gfx_SetAlphaBlendFunc(int srcBlendFunc, int dstBlendFunc) {
+void Gfx_SetAlphaBlendFunc(enum BlendFunc srcFunc, enum BlendFunc dstFunc) {
 	static D3DBLEND funcs[6] = { D3DBLEND_ZERO, D3DBLEND_ONE, D3DBLEND_SRCALPHA, D3DBLEND_INVSRCALPHA, D3DBLEND_DESTALPHA, D3DBLEND_INVDESTALPHA };
 
-	d3d9_srcBlendFunc = funcs[srcBlendFunc];
+	d3d9_srcBlendFunc = funcs[srcFunc];
 	D3D9_SetRenderState(D3DRS_SRCBLEND, d3d9_srcBlendFunc, "D3D9_SetAlphaBlendFunc_Src");
-	d3d9_dstBlendFunc = funcs[dstBlendFunc];
+	d3d9_dstBlendFunc = funcs[dstFunc];
 	D3D9_SetRenderState2(D3DRS_DESTBLEND, d3d9_dstBlendFunc, "D3D9_SetAlphaBlendFunc_Dst");
 }
 
@@ -404,8 +404,8 @@ void Gfx_SetDepthTest(bool enabled) {
 	D3D9_SetRenderState(D3DRS_ZENABLE, enabled, "D3D9_SetDepthTest");
 }
 
-void Gfx_SetDepthTestFunc(int compareFunc) {
-	d3d9_depthTestFunc = d3d9_compareFuncs[compareFunc];
+void Gfx_SetDepthTestFunc(enum CompareFunc func) {
+	d3d9_depthTestFunc = d3d9_compareFuncs[func];
 	D3D9_SetRenderState(D3DRS_ZFUNC, d3d9_alphaTestFunc, "D3D9_SetDepthTestFunc");
 }
 
@@ -933,12 +933,12 @@ void Gfx_SetFogMode(int mode) {
 
 void Gfx_SetFaceCulling(bool enabled) { gl_Toggle(GL_CULL_FACE); }
 void Gfx_SetAlphaTest(bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
-void Gfx_SetAlphaTestFunc(int func, float value) {
+void Gfx_SetAlphaTestFunc(enum CompareFunc func, float value) {
 	glAlphaFunc(gl_compare[func], value);
 }
 
 void Gfx_SetAlphaBlending(bool enabled) { gl_Toggle(GL_BLEND); }
-void Gfx_SetAlphaBlendFunc(int srcFunc, int dstFunc) {
+void Gfx_SetAlphaBlendFunc(enum BlendFunc srcFunc, enum BlendFunc dstFunc) {
 	static GLenum funcs[6] = { GL_ZERO, GL_ONE, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA };
 	glBlendFunc(funcs[srcFunc], funcs[dstFunc]);
 }
@@ -959,8 +959,8 @@ void Gfx_SetDepthWrite(bool enabled) {
 }
 
 void Gfx_SetDepthTest(bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
-void Gfx_SetDepthTestFunc(int compareFunc) {
-	glDepthFunc(gl_compare[compareFunc]);
+void Gfx_SetDepthTestFunc(enum CompareFunc func) {
+	glDepthFunc(gl_compare[func]);
 }
 
 

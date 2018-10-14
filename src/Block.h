@@ -9,25 +9,25 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-enum SOUND {
+typedef enum SoundType_ {
 	SOUND_NONE,  SOUND_WOOD,  SOUND_GRAVEL, SOUND_GRASS, 
 	SOUND_STONE, SOUND_METAL, SOUND_GLASS,  SOUND_CLOTH, 
 	SOUND_SAND,  SOUND_SNOW,  SOUND_COUNT,
-};
+} SoundType;
 extern const char* Sound_Names[SOUND_COUNT];
 
 /* Describes how a block is rendered in the world. */
-enum DRAWTYPE {
+typedef enum DrawType_ {
 	DRAW_OPAQUE,            /* Completely covers blocks behind (e.g. dirt). */
 	DRAW_TRANSPARENT,       /* Blocks behind show (e.g. glass). Pixels either fully visible or invisible. */
 	DRAW_TRANSPARENT_THICK, /* Same as Transparent, but all neighbour faces show. (e.g. leaves) */
 	DRAW_TRANSLUCENT,       /* Blocks behind show (e.g. water). Pixels blend with other blocks behind. */
 	DRAW_GAS,               /* Does not show (e.g. air). Can still be collided with. */
 	DRAW_SPRITE,            /* Block renders as an X (e.g. sapling). Pixels either fully visible or invisible. */
-};
+} DrawType;
 
 /* Describes the interaction a block has with a player when they collide with it. */
-enum COLLIDETYPE {
+typedef enum CollideType_ {
 	COLLIDE_GAS,          /* No interaction when player collides. */
 	COLLIDE_LIQUID,       /* 'swimming'/'bobbing' interaction when player collides. */
 	COLLIDE_SOLID,        /* Block completely stops the player when they are moving. */
@@ -36,7 +36,7 @@ enum COLLIDETYPE {
 	COLLIDE_LIQUID_WATER, /* Water style 'swimming'/'bobbing' interaction when player collides. */
 	COLLIDE_LIQUID_LAVA,  /* Lava style 'swimming'/'bobbing' interaction when player collides. */
 	COLLIDE_CLIMB_ROPE,   /* Rope/Ladder style climbing interaction when player collides. */
-};
+} CollideType;
 
 bool Block_IsLiquid[BLOCK_COUNT];
 /* Whether a block prevents lights from passing through it. */
@@ -91,8 +91,8 @@ bool Block_IsCustomDefined(BlockID block);
 void Block_SetCustomDefined(BlockID block, bool defined);
 void Block_DefineCustom(BlockID block);
 
-void Block_SetCollide(BlockID block, uint8_t collide);
-void Block_SetDrawType(BlockID block, uint8_t draw);
+void Block_SetCollide(BlockID block, CollideType collide);
+void Block_SetDrawType(BlockID block, DrawType draw);
 void Block_ResetProps(BlockID block);
 
 STRING_REF String Block_UNSAFE_GetName(BlockID block);
@@ -117,14 +117,14 @@ void Block_UpdateCulling(BlockID block);
 BlockID AutoRotate_RotateBlock(BlockID block);
 
 float DefaultSet_Height(BlockID b);
-bool DefaultSet_FullBright(BlockID b);
+bool  DefaultSet_FullBright(BlockID b);
 float DefaultSet_FogDensity(BlockID b);
 PackedCol DefaultSet_FogColour(BlockID b);
-uint8_t DefaultSet_Collide(BlockID b);
+CollideType DefaultSet_Collide(BlockID b);
 /* Gets a backwards compatible collide type of a block. */
-uint8_t DefaultSet_MapOldCollide(BlockID b, uint8_t collide);
+CollideType DefaultSet_MapOldCollide(BlockID b, CollideType collide);
 bool DefaultSet_BlocksLight(BlockID b);
-uint8_t DefaultSet_StepSound(BlockID b);
-uint8_t DefaultSet_Draw(BlockID b);
-uint8_t DefaultSet_DigSound(BlockID b);
+SoundType DefaultSet_StepSound(BlockID b);
+DrawType  DefaultSet_Draw(BlockID b);
+SoundType DefaultSet_DigSound(BlockID b);
 #endif

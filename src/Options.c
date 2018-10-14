@@ -6,7 +6,7 @@
 #include "Chat.h"
 #include "Errors.h"
 
-const char* FpsLimit_Names[FpsLimit_Count] = {
+const char* FpsLimit_Names[FPS_LIMIT_COUNT] = {
 	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "LimitNone",
 };
 StringsBuffer Options_Changed;
@@ -38,18 +38,21 @@ static int Options_Find(const String* key) {
 }
 
 static bool Options_TryGetValue(const char* keyRaw, String* value) {
+	int i, idx;
 	String key = String_FromReadonly(keyRaw);
-	*value = String_MakeNull();
+	*value     = String_MakeNull();
 
-	int i = Options_Find(&key);
+	i = Options_Find(&key);
 	if (i >= 0) {
 		*value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
 		return true; 
 	}
 
-	int sepIndex = String_IndexOf(&key, '-', 0);
-	if (sepIndex == -1) return false;
-	key = String_UNSAFE_SubstringAt(&key, sepIndex + 1);
+	/* Fallback to without '-' (e.g. "hacks-fly" to "fly") */
+	/* Needed for some very old options.txt files */
+	idx = String_IndexOf(&key, '-', 0);
+	if (idx == -1) return false;
+	key = String_UNSAFE_SubstringAt(&key, idx + 1);
 
 	i = Options_Find(&key);
 	if (i >= 0) {
@@ -74,7 +77,7 @@ void Options_Get(const char* key, String* value, const char* defValue) {
 int Options_GetInt(const char* key, int min, int max, int defValue) {
 	String str;
 	int value;
-	if (!Options_TryGetValue(key, &str))      return defValue;
+	if (!Options_TryGetValue(key, &str))    return defValue;
 	if (!Convert_TryParseInt(&str, &value)) return defValue;
 
 	Math_Clamp(value, min, max);

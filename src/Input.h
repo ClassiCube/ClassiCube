@@ -63,7 +63,7 @@ typedef enum Key_ {
 	Key_Semicolon, Key_Quote, Key_Comma, Key_Period, Key_Slash, Key_BackSlash,
 
 	Key_XButton1, Key_XButton2, /* so these can be used for hotkeys */
-	Key_Count,
+	Key_Count
 } Key;
 
 /* Gets whether key repeating is on or not. When on, multiple KeyDown events are raised when the same key is 
@@ -89,7 +89,7 @@ void Key_Clear(void);
 
 typedef enum MouseButton_ {
 	MouseButton_Left, MouseButton_Right, MouseButton_Middle,
-	MouseButton_Count,
+	MouseButton_Count
 } MouseButton;
 
 /* Wheel position of the mouse. Use Mouse_SetWheel to change. */

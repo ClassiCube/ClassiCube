@@ -5,10 +5,10 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-typedef enum FpsLimit_ {
-	FpsLimit_VSync, FpsLimit_30FPS, FpsLimit_60FPS, FpsLimit_120FPS, FpsLimit_None, FpsLimit_Count,
-} FpsLimit;
-extern const char* FpsLimit_Names[FpsLimit_Count];
+enum FpsLimit {
+	FPS_LIMIT_VSYNC, FPS_LIMIT_30, FPS_LIMIT_60, FPS_LIMIT_120, FPS_LIMIT_NONE, FPS_LIMIT_COUNT
+};
+extern const char* FpsLimit_Names[FPS_LIMIT_COUNT];
 
 #define OPT_USE_MUSIC "usemusic"
 #define OPT_USE_SOUND "usesound"

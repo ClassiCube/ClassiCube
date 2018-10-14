@@ -37,7 +37,7 @@ enum FACE_CONSTS {
 	FACE_ZMAX = 3, /* Face Z = 1 */
 	FACE_YMIN = 4, /* Face Y = 0 */
 	FACE_YMAX = 5, /* Face Y = 1 */
-	FACE_COUNT= 6, /* Number of faces on a cube */
+	FACE_COUNT= 6  /* Number of faces on a cube */
 };
 
 enum SKIN_TYPE { SKIN_64x32, SKIN_64x64, SKIN_64x64_SLIM, SKIN_INVALID };

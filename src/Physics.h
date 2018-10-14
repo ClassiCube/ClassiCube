@@ -17,9 +17,9 @@ bool AABB_Intersects(struct AABB* bb, struct AABB* other);
 bool AABB_Contains(struct AABB* parent, struct AABB* child);
 bool AABB_ContainsPoint(struct AABB* parent, Vector3* P);
 
-/* Calculates the intersection points of a ray and a rotated bounding box. */
+/* Calculates the intersection point of a ray and a rotated bounding box. */
 bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, struct Entity* target, float* tMin, float* tMax);
-/* Calculates the intersection points of a ray and a bounding box.
+/* Calculates the intersection point of a ray and a bounding box.
 Source: http://www.cs.utah.edu/~awilliam/box/box.pdf */
 bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vector3 max, float* t0, float* t1);
 

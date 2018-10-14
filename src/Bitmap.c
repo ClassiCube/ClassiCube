@@ -45,14 +45,13 @@ void Bitmap_AllocateClearedPow2(Bitmap* bmp, int width, int height) {
 #define PNG_PALETTE 256
 #define PNG_FourCC(a, b, c, d) (((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)c << 8) | (uint32_t)d)
 
-enum PNG_COL {
+enum PngCol {
 	PNG_COL_GRAYSCALE = 0, PNG_COL_RGB = 2, PNG_COL_INDEXED = 3,
-	PNG_COL_GRAYSCALE_A = 4, PNG_COL_RGB_A = 6,
+	PNG_COL_GRAYSCALE_A = 4, PNG_COL_RGB_A = 6
 };
 
-enum PNG_FILTER {
-	PNG_FILTER_NONE, PNG_FILTER_SUB, PNG_FILTER_UP,
-	PNG_FILTER_AVERAGE, PNG_FILTER_PAETH
+enum PngFilter {
+	PNG_FILTER_NONE, PNG_FILTER_SUB, PNG_FILTER_UP, PNG_FILTER_AVERAGE, PNG_FILTER_PAETH
 };
 
 typedef void (*Png_RowExpander)(int width, uint32_t* palette, uint8_t* src, uint32_t* dst);

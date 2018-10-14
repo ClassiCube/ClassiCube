@@ -31,6 +31,7 @@ struct ZipState {
 /* Initialises .zip archive reader state. */
 void Zip_Init(struct ZipState* state, struct Stream* input);
 /* Reads and processes the entries in a .zip archive. */
+/* Must have been initialised with Zip_Init first. */
 ReturnCode Zip_Extract(struct ZipState* state);
 
 /* Initialises cache state. (e.g. loading accepted/denied lists) */

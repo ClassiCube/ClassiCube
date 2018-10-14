@@ -29,9 +29,9 @@ static void PerspectiveCamera_GetView(struct Matrix* mat) {
 
 static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vector3 dir = Vector3_GetDirVector(p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD);
+	Vector3 dir    = Vector3_GetDirVector(p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD);
 	Vector3 eyePos = Entity_GetEyePosition(p);
-	float reach = LocalPlayer_Instance.ReachDistance;
+	float reach    = LocalPlayer_Instance.ReachDistance;
 	Picking_CalculatePickedBlock(eyePos, dir, reach, pos);
 }
 
@@ -191,7 +191,7 @@ static Vector3 ThirdPersonCamera_GetPosition(float t) {
 }
 
 static bool ThirdPersonCamera_Zoom(float amount) {
-	float* dist = cam_isForwardThird ? &dist_forward : &dist_third;
+	float* dist   = cam_isForwardThird ? &dist_forward : &dist_third;
 	float newDist = *dist - amount;
 
 	*dist = max(newDist, 2.0f); 

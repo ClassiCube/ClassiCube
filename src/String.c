@@ -62,8 +62,8 @@ String String_UNSAFE_Substring(STRING_REF const String* str, int offset, int len
 }
 
 void String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int* subsCount) {
-	int maxSubs = *subsCount, i = 0, start = 0;
-	for (; i < maxSubs && start <= str->length; i++) {
+	int maxSubs = *subsCount, i, start = 0;
+	for (i = 0; i < maxSubs && start <= str->length; i++) {
 		int end = String_IndexOf(str, c, start);
 		if (end == -1) end = str->length;
 
@@ -361,8 +361,8 @@ int String_IndexOfString(const String* str, const String* sub) {
 }
 
 bool String_CaselessContains(const String* str, const String* sub) {
-	int i, j;
 	char strCur, subCur;
+	int i, j;
 
 	for (i = 0; i < str->length; i++) {
 		for (j = 0; j < sub->length && (i + j) < str->length; j++) {
@@ -377,8 +377,8 @@ bool String_CaselessContains(const String* str, const String* sub) {
 }
 
 bool String_CaselessStarts(const String* str, const String* sub) {
-	int i;
 	char strCur, subCur;
+	int i;
 	if (str->length < sub->length) return false;
 
 	for (i = 0; i < sub->length; i++) {
@@ -390,11 +390,10 @@ bool String_CaselessStarts(const String* str, const String* sub) {
 }
 
 bool String_CaselessEnds(const String* str, const String* sub) {
-	int i, j;
 	char strCur, subCur;
-	if (str->length < sub->length) return false;
+	int i, j = str->length - sub->length;	
+	if (j < 0) return false; /* sub longer than str */
 
-	j = str->length - sub->length;
 	for (i = 0; i < sub->length; i++) {
 		strCur = str->buffer[j + i]; Char_MakeLower(strCur);
 		subCur = sub->buffer[i];     Char_MakeLower(subCur);
@@ -593,7 +592,7 @@ static bool Convert_TryParseDigits(const String* str, bool* negative, char* digi
 bool Convert_TryParseInt(const String* str, int* value) {
 	bool negative;
 	char digits[INT32_DIGITS];
-	int i, compare, sum;
+	int i, compare, sum = 0;
 
 	*value = 0;	
 	if (!Convert_TryParseDigits(str, &negative, digits, INT32_DIGITS)) return false;
@@ -607,7 +606,7 @@ bool Convert_TryParseInt(const String* str, int* value) {
 	}
 	if (compare > 0) return false;
 
-	for (i = 0, sum = 0; i < INT32_DIGITS; i++) {
+	for (i = 0; i < INT32_DIGITS; i++) {
 		sum *= 10; sum += digits[i] - '0';
 	}
 
@@ -621,7 +620,7 @@ bool Convert_TryParseUInt64(const String* str, uint64_t* value) {
 	bool negative;
 	char digits[UINT64_DIGITS];
 	int i, compare;
-	uint64_t sum;
+	uint64_t sum = 0;
 
 	*value = 0;
 	if (!Convert_TryParseDigits(str, &negative, digits, UINT64_DIGITS)) return false;
@@ -629,7 +628,7 @@ bool Convert_TryParseUInt64(const String* str, uint64_t* value) {
 	compare = Convert_CompareDigits(digits, "18446744073709551615");
 	if (negative || compare > 0) return false;
 
-	for (i = 0, sum = 0; i < UINT64_DIGITS; i++) {
+	for (i = 0; i < UINT64_DIGITS; i++) {
 		sum *= 10; sum += digits[i] - '0';
 	}
 
@@ -830,11 +829,11 @@ void WordWrap_Do(STRING_REF String* text, String* lines, int numLines, int lineL
 }
 
 void WordWrap_GetCoords(int index, const String* lines, int numLines, int* coordX, int* coordY) {
-	int y, offset, lineLen;
+	int y, offset = 0, lineLen;
 	if (index == -1) index = Int32_MaxValue;
 	*coordX = -1; *coordY = 0;
 
-	for (y = 0, offset = 0; y < numLines; y++) {
+	for (y = 0; y < numLines; y++) {
 		lineLen = lines[y].length;
 		if (!lineLen) break;
 

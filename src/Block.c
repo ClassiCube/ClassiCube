@@ -111,13 +111,13 @@ static void Block_RecalcIsLiquid(BlockID b) {
 		(collide == COLLIDE_LIQUID_LAVA  && Block_Draw[b] == DRAW_TRANSPARENT);
 }
 
-void Block_SetCollide(BlockID block, uint8_t collide) {
-	/* necessary for cases where servers redefined core blocks before extended types were introduced. */
+void Block_SetCollide(BlockID block, CollideType collide) {
+	/* necessary if servers redefined core blocks, before extended collide types were added */
 	collide = DefaultSet_MapOldCollide(block, collide);
 	Block_ExtendedCollide[block] = collide;
 	Block_RecalcIsLiquid(block);
 
-	/* Reduce extended collision types to their simpler forms. */
+	/* Reduce extended collision types to their simpler forms */
 	if (collide == COLLIDE_ICE)          collide = COLLIDE_SOLID;
 	if (collide == COLLIDE_SLIPPERY_ICE) collide = COLLIDE_SOLID;
 
@@ -126,7 +126,7 @@ void Block_SetCollide(BlockID block, uint8_t collide) {
 	Block_Collide[block] = collide;
 }
 
-void Block_SetDrawType(BlockID block, uint8_t draw) {
+void Block_SetDrawType(BlockID block, DrawType draw) {
 	if (draw == DRAW_OPAQUE && Block_Collide[block] != COLLIDE_SOLID) {
 		draw = DRAW_TRANSPARENT;
 	}
@@ -286,10 +286,12 @@ void Block_RecalculateSpriteBB(void) {
 }
 
 static float Block_GetSpriteBB_MinX(int size, int tileX, int tileY, Bitmap* bmp) {
+	uint32_t* row;
 	int x, y;
 	for (x = 0; x < size; x++) {
 		for (y = 0; y < size; y++) {
-			uint32_t* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
+			row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
+
 			if (PackedCol_ARGB_A(row[x]) != 0) {
 				return (float)x / size;
 			}
@@ -299,9 +301,11 @@ static float Block_GetSpriteBB_MinX(int size, int tileX, int tileY, Bitmap* bmp)
 }
 
 static float Block_GetSpriteBB_MinY(int size, int tileX, int tileY, Bitmap* bmp) {
+	uint32_t* row;
 	int x, y;
 	for (y = size - 1; y >= 0; y--) {
-		uint32_t* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
+		row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
+
 		for (x = 0; x < size; x++) {
 			if (PackedCol_ARGB_A(row[x]) != 0) {
 				return 1.0f - (float)(y + 1) / size;
@@ -312,10 +316,12 @@ static float Block_GetSpriteBB_MinY(int size, int tileX, int tileY, Bitmap* bmp)
 }
 
 static float Block_GetSpriteBB_MaxX(int size, int tileX, int tileY, Bitmap* bmp) {
+	uint32_t* row;
 	int x, y;
 	for (x = size - 1; x >= 0; x--) {
 		for (y = 0; y < size; y++) {
-			uint32_t* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
+			row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
+
 			if (PackedCol_ARGB_A(row[x]) != 0) {
 				return (float)(x + 1) / size;
 			}
@@ -325,9 +331,11 @@ static float Block_GetSpriteBB_MaxX(int size, int tileX, int tileY, Bitmap* bmp)
 }
 
 static float Block_GetSpriteBB_MaxY(int size, int tileX, int tileY, Bitmap* bmp) {
+	uint32_t* row;
 	int x, y;
 	for (y = 0; y < size; y++) {
-		uint32_t* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
+		row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
+
 		for (x = 0; x < size; x++) {
 			if (PackedCol_ARGB_A(row[x]) != 0) {
 				return 1.0f - (float)y / size;
@@ -581,7 +589,7 @@ PackedCol DefaultSet_FogColour(BlockID b) {
 	return PackedCol_Create4(0, 0, 0, 0);
 }
 
-uint8_t DefaultSet_Collide(BlockID b) {
+CollideType DefaultSet_Collide(BlockID b) {
 	if (b == BLOCK_ICE) return COLLIDE_ICE;
 	if (b == BLOCK_WATER || b == BLOCK_STILL_WATER)
 		return COLLIDE_LIQUID_WATER;
@@ -593,7 +601,7 @@ uint8_t DefaultSet_Collide(BlockID b) {
 	return COLLIDE_SOLID;
 }
 
-uint8_t DefaultSet_MapOldCollide(BlockID b, uint8_t collide) {
+CollideType DefaultSet_MapOldCollide(BlockID b, CollideType collide) {
 	if (b == BLOCK_ROPE && collide == COLLIDE_GAS)
 		return COLLIDE_CLIMB_ROPE;
 	if (b == BLOCK_ICE && collide == COLLIDE_SOLID)
@@ -610,14 +618,14 @@ bool DefaultSet_BlocksLight(BlockID b) {
 		|| b == BLOCK_AIR || DefaultSet_Draw(b) == DRAW_SPRITE);
 }
 
-uint8_t DefaultSet_StepSound(BlockID b) {
+SoundType DefaultSet_StepSound(BlockID b) {
 	if (b == BLOCK_GLASS) return SOUND_STONE;
-	if (b == BLOCK_ROPE) return SOUND_CLOTH;
+	if (b == BLOCK_ROPE)  return SOUND_CLOTH;
 	if (DefaultSet_Draw(b) == DRAW_SPRITE) return SOUND_NONE;
 	return DefaultSet_DigSound(b);
 }
 
-uint8_t DefaultSet_Draw(BlockID b) {
+DrawType DefaultSet_Draw(BlockID b) {
 	if (b == BLOCK_AIR) return DRAW_GAS;
 	if (b == BLOCK_LEAVES) return DRAW_TRANSPARENT_THICK;
 
@@ -633,7 +641,7 @@ uint8_t DefaultSet_Draw(BlockID b) {
 	return DRAW_OPAQUE;
 }
 
-uint8_t DefaultSet_DigSound(BlockID b) {
+SoundType DefaultSet_DigSound(BlockID b) {
 	if (b >= BLOCK_RED && b <= BLOCK_WHITE)
 		return SOUND_CLOTH;
 	if (b >= BLOCK_LIGHT_PINK && b <= BLOCK_TURQUOISE)

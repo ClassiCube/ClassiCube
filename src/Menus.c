@@ -1910,7 +1910,7 @@ static void MenuOptionsScreen_GetFPS(String* raw) {
 	String_AppendConst(raw, FpsLimit_Names[Game_FpsLimit]);
 }
 static void MenuOptionsScreen_SetFPS(const String* raw) {
-	int method = Utils_ParseEnum(raw, FpsLimit_VSync, FpsLimit_Names, Array_Elems(FpsLimit_Names));
+	int method = Utils_ParseEnum(raw, FPS_LIMIT_VSYNC, FpsLimit_Names, Array_Elems(FpsLimit_Names));
 	Game_SetFpsLimit(method);
 
 	String value = String_FromReadonly(FpsLimit_Names[method]);
@@ -2286,7 +2286,7 @@ struct Screen* ClassicOptionsScreen_MakeInstance(void) {
 	static struct Widget* widgets[Array_Elems(buttons)];	
 
 	validators[2] = MenuInputValidator_Enum(ViewDist_Names, ViewDist_Count);
-	validators[7] = MenuInputValidator_Enum(FpsLimit_Names, FpsLimit_Count);
+	validators[7] = MenuInputValidator_Enum(FpsLimit_Names, FPS_LIMIT_COUNT);
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
 		ClassicOptionsScreen_ContextRecreated, validators, NULL, NULL, 0);
@@ -2467,7 +2467,7 @@ struct Screen* GraphicsOptionsScreen_MakeInstance(void) {
 	static const char* defaultValues[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 
-	validators[0]    = MenuInputValidator_Enum(FpsLimit_Names, FpsLimit_Count);
+	validators[0]    = MenuInputValidator_Enum(FpsLimit_Names, FPS_LIMIT_COUNT);
 	validators[1]    = MenuInputValidator_Int(8, 4096);
 	defaultValues[1] = "512";
 	validators[3]    = MenuInputValidator_Enum(NameMode_Names,   NAME_MODE_COUNT);

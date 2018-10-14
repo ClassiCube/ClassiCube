@@ -9,14 +9,14 @@
 */
 struct Stream;
 
-enum COMPARE_FUNC {
+enum CompareFunc {
 	COMPARE_FUNC_ALWAYS, COMPARE_FUNC_NOTEQUAL,  COMPARE_FUNC_NEVER,
 	COMPARE_FUNC_LESS,   COMPARE_FUNC_LESSEQUAL, COMPARE_FUNC_EQUAL,
-	COMPARE_FUNC_GREATEREQUAL, COMPARE_FUNC_GREATER,
+	COMPARE_FUNC_GREATEREQUAL, COMPARE_FUNC_GREATER
 };
-enum BLEND_FUNC {
+enum BlendFunc {
 	BLEND_FUNC_ZERO,          BLEND_FUNC_ONE,       BLEND_FUNC_SRC_ALPHA,
-	BLEND_FUNC_INV_SRC_ALPHA, BLEND_FUNC_DST_ALPHA, BLEND_FUNC_INV_DST_ALPHA,
+	BLEND_FUNC_INV_SRC_ALPHA, BLEND_FUNC_DST_ALPHA, BLEND_FUNC_INV_DST_ALPHA
 };
 
 enum VERTEX_FORMAT { VERTEX_FORMAT_P3FC4B, VERTEX_FORMAT_P3FT2FC4B };
@@ -57,16 +57,16 @@ void Gfx_SetFogMode(int fogMode);
 
 void Gfx_SetFaceCulling(bool enabled);
 void Gfx_SetAlphaTest(bool enabled);
-void Gfx_SetAlphaTestFunc(int compareFunc, float refValue);
+void Gfx_SetAlphaTestFunc(enum CompareFunc func, float refValue);
 void Gfx_SetAlphaBlending(bool enabled);
-void Gfx_SetAlphaBlendFunc(int srcBlendFunc, int dstBlendFunc);
-/* Whether blending between the alpha components of the texture and colour are performed. */
+void Gfx_SetAlphaBlendFunc(enum BlendFunc srcFunc, enum BlendFunc dstFunc);
+/* Sets whether blending between the alpha components of the texture and vertex colour is performed. */
 void Gfx_SetAlphaArgBlend(bool enabled);
 
 void Gfx_Clear(void);
 void Gfx_ClearCol(PackedCol col);
 void Gfx_SetDepthTest(bool enabled);
-void Gfx_SetDepthTestFunc(int compareFunc);
+void Gfx_SetDepthTestFunc(enum CompareFunc func);
 void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a);
 void Gfx_SetDepthWrite(bool enabled);
 

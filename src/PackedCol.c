@@ -2,15 +2,11 @@
 #include "ExtMath.h"
 
 PackedCol PackedCol_Create4(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-	PackedCol col;
-	col.R = r; col.G = g; col.B = b; col.A = a;
-	return col;
+	PackedCol c; c.R = r; c.G = g; c.B = b; c.A = a; return c;
 }
 
 PackedCol PackedCol_Create3(uint8_t r, uint8_t g, uint8_t b) {
-	PackedCol col;
-	col.R = r; col.G = g; col.B = b; col.A = 255;
-	return col;
+	PackedCol c; c.R = r; c.G = g; c.B = b; c.A = 255; return c;
 }
 
 uint32_t PackedCol_ToARGB(PackedCol col) {
@@ -58,13 +54,13 @@ void PackedCol_ToHex(String* str, PackedCol value) {
 }
 
 bool PackedCol_TryParseHex(const String* str, PackedCol* value) {
+	int rH, rL, gH, gL, bH, bL;
+	char* buffer  = str->buffer;
 	value->Packed = 0;
+
 	/* accept XXYYZZ or #XXYYZZ forms */
 	if (str->length < 6) return false;
 	if (str->length > 6 && (str->buffer[0] != '#' || str->length > 7)) return false;
-
-	int rH, rL, gH, gL, bH, bL;
-	char* buffer = str->buffer;
 	if (buffer[0] == '#') buffer++;
 
 	if (!PackedCol_Unhex(buffer[0], &rH) || !PackedCol_Unhex(buffer[1], &rL)) return false;
