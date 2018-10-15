@@ -42,12 +42,11 @@ BlockID World_SafeGetBlock_3I(Vector3I p);
 bool World_IsValidPos(int x, int y, int z);
 bool World_IsValidPos_3I(Vector3I p);
 
-enum ENV_VAR {
+enum EnvVar_ {
 	ENV_VAR_EDGE_BLOCK, ENV_VAR_SIDES_BLOCK, ENV_VAR_EDGE_HEIGHT, ENV_VAR_SIDES_OFFSET,
 	ENV_VAR_CLOUDS_HEIGHT, ENV_VAR_CLOUDS_SPEED, ENV_VAR_WEATHER_SPEED, ENV_VAR_WEATHER_FADE,
 	ENV_VAR_WEATHER, ENV_VAR_EXP_FOG, ENV_VAR_SKYBOX_HOR_SPEED, ENV_VAR_SKYBOX_VER_SPEED,
-	ENV_VAR_SKY_COL, ENV_VAR_CLOUDS_COL, ENV_VAR_FOG_COL, ENV_VAR_SUN_COL,
-	ENV_VAR_SHADOW_COL,
+	ENV_VAR_SKY_COL, ENV_VAR_CLOUDS_COL, ENV_VAR_FOG_COL, ENV_VAR_SUN_COL, ENV_VAR_SHADOW_COL
 };
 
 BlockID Env_EdgeBlock, Env_SidesBlock;
@@ -57,7 +56,7 @@ int Env_SidesOffset;
 int Env_CloudsHeight;
 float Env_CloudsSpeed;
 
-enum WEATHER { WEATHER_SUNNY, WEATHER_RAINY, WEATHER_SNOWY };
+enum Weather_ { WEATHER_SUNNY, WEATHER_RAINY, WEATHER_SNOWY };
 extern const char* Weather_Names[3];
 float Env_WeatherSpeed;
 float Env_WeatherFade;

@@ -172,21 +172,21 @@ void Chat_AddRaw(const char* raw) {
 }
 void Chat_Add(const String* text) { Chat_AddOf(text, MSG_TYPE_NORMAL); }
 
-void Chat_AddOf(const String* text, int msgType) {
-	Event_RaiseChat(&ChatEvents_ChatReceived, text, msgType);
+void Chat_AddOf(const String* text, MsgType type) {
+	Event_RaiseChat(&ChatEvents_ChatReceived, text, type);
 
-	if (msgType == MSG_TYPE_NORMAL) {
+	if (type == MSG_TYPE_NORMAL) {
 		StringsBuffer_Add(&Chat_Log, text);
 		Chat_AppendLog(text);
 		Chat_AppendLogTime();
-	} else if (msgType >= MSG_TYPE_STATUS_1 && msgType <= MSG_TYPE_STATUS_3) {
-		ChatLine_Make(&Chat_Status[msgType - MSG_TYPE_STATUS_1], text);
-	} else if (msgType >= MSG_TYPE_BOTTOMRIGHT_1 && msgType <= MSG_TYPE_BOTTOMRIGHT_3) {
-		ChatLine_Make(&Chat_BottomRight[msgType - MSG_TYPE_BOTTOMRIGHT_1], text);
-	} else if (msgType == MSG_TYPE_ANNOUNCEMENT) {
+	} else if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_3) {
+		ChatLine_Make(&Chat_Status[type - MSG_TYPE_STATUS_1], text);
+	} else if (type >= MSG_TYPE_BOTTOMRIGHT_1 && type <= MSG_TYPE_BOTTOMRIGHT_3) {
+		ChatLine_Make(&Chat_BottomRight[type - MSG_TYPE_BOTTOMRIGHT_1], text);
+	} else if (type == MSG_TYPE_ANNOUNCEMENT) {
 		ChatLine_Make(&Chat_Announcement, text);
-	} else if (msgType >= MSG_TYPE_CLIENTSTATUS_1 && msgType <= MSG_TYPE_CLIENTSTATUS_3) {
-		ChatLine_Make(&Chat_ClientStatus[msgType - MSG_TYPE_CLIENTSTATUS_1], text);
+	} else if (type >= MSG_TYPE_CLIENTSTATUS_1 && type <= MSG_TYPE_CLIENTSTATUS_3) {
+		ChatLine_Make(&Chat_ClientStatus[type - MSG_TYPE_CLIENTSTATUS_1], text);
 	}
 }
 
@@ -306,14 +306,13 @@ static void Commands_Execute(const String* input) {
 *------------------------------------------------------Simple commands----------------------------------------------------*
 *#########################################################################################################################*/
 static void HelpCommand_Execute(const String* args, int argsCount) {
-	if (argsCount == 1) { 
-		Commands_PrintDefault(); return; 
-	}
+	struct ChatCommand* cmd;
+	int i;
 
-	struct ChatCommand* cmd = Commands_GetMatch(&args[1]);
+	if (argsCount == 1) { Commands_PrintDefault(); return; }
+	cmd = Commands_GetMatch(&args[1]);
 	if (!cmd) return;
 
-	int i;
 	for (i = 0; i < Array_Elems(cmd->Help); i++) {
 		if (!cmd->Help[i]) continue;
 		Chat_AddRaw(cmd->Help[i]);
@@ -346,11 +345,12 @@ struct ChatCommand GpuInfoCommand_Instance = {
 };
 
 static void RenderTypeCommand_Execute(const String* args, int argsCount) {
+	int flags;
 	if (argsCount == 1) {
 		Chat_AddRaw("&e/client: &cYou didn't specify a new render type."); return;
 	}
 
-	int flags = Game_CalcRenderType(&args[1]);
+	flags = Game_CalcRenderType(&args[1]);
 	if (flags >= 0) {
 		EnvRenderer_UseLegacyMode( flags & 1);
 		EnvRenderer_UseMinimalMode(flags & 2);
@@ -383,7 +383,7 @@ static void ResolutionCommand_Execute(const String* args, int argsCount) {
 		Chat_AddRaw("&e/client: &cWidth and height must be above 0.");
 	} else {
 		Window_SetClientSize(width, height);
-		Options_SetInt(OPT_WINDOW_WIDTH, width);
+		Options_SetInt(OPT_WINDOW_WIDTH,  width);
 		Options_SetInt(OPT_WINDOW_HEIGHT, height);
 	}
 }
@@ -422,16 +422,16 @@ Vector3I cuboid_mark1, cuboid_mark2;
 bool cuboid_persist, cuboid_hooked;
 
 static bool CuboidCommand_ParseBlock(const String* args, int argsCount) {
+	int block;
 	if (argsCount == 1) return true;
 	if (String_CaselessEqualsConst(&args[1], "yes")) { cuboid_persist = true; return true; }
 
-	int raw = Block_Parse(&args[1]);
-	if (raw == -1) {
+	block = Block_Parse(&args[1]);
+	if (block == -1) {
 		Chat_Add1("&eCuboid: &c\"%s\" is not a valid block name or id.", &args[1]); return false;
 	}
 
-	BlockID block = (BlockID)raw;
-	if (block >= BLOCK_CPE_COUNT && !Block_IsCustomDefined(block)) {
+	if (block >= BLOCK_CPE_COUNT && !Block_IsCustomDefined((BlockID)block)) {
 		Chat_Add1("&eCuboid: &cThere is no block with id \"%s\".", &args[1]); return false;
 	}
 
@@ -521,20 +521,19 @@ struct ChatCommand CuboidCommand_Instance = {
 *------------------------------------------------------TeleportCommand----------------------------------------------------*
 *#########################################################################################################################*/
 static void TeleportCommand_Execute(const String* args, int argsCount) {
+	Vector3 v;
 	if (argsCount != 4) {
 		Chat_AddRaw("&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
-	} else {
-		float x, y, z;
-		if (!Convert_TryParseFloat(&args[1], &x) || !Convert_TryParseFloat(&args[2], &y) || !Convert_TryParseFloat(&args[3], &z)) {
-			Chat_AddRaw("&e/client teleport: &cCoordinates must be decimals");
-			return;
-		}
-
-		Vector3 v = { x, y, z };
-		struct LocationUpdate update; LocationUpdate_MakePos(&update, v, false);
-		struct Entity* entity = &LocalPlayer_Instance.Base;
-		entity->VTABLE->SetLocation(entity, &update, false);
+		return;
 	}
+	if (!Convert_TryParseFloat(&args[1], &v.X) || !Convert_TryParseFloat(&args[2], &v.Y) || !Convert_TryParseFloat(&args[3], &v.Z)) {
+		Chat_AddRaw("&e/client teleport: &cCoordinates must be decimals");
+		return;
+	}
+
+	struct LocationUpdate update; LocationUpdate_MakePos(&update, v, false);
+	struct Entity* entity = &LocalPlayer_Instance.Base;
+	entity->VTABLE->SetLocation(entity, &update, false);
 }
 
 struct ChatCommand TeleportCommand_Instance = {

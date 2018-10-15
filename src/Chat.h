@@ -8,7 +8,7 @@
 */
 struct IGameComponent;
 
-enum MSG_TYPE {
+typedef enum MsgType {
 	MSG_TYPE_NORMAL = 0,
 	MSG_TYPE_STATUS_1 = 1,
 	MSG_TYPE_STATUS_2 = 2,
@@ -19,8 +19,8 @@ enum MSG_TYPE {
 	MSG_TYPE_ANNOUNCEMENT = 100,
 	MSG_TYPE_CLIENTSTATUS_1 = 256, /* Cuboid messages */
 	MSG_TYPE_CLIENTSTATUS_2 = 257, /* Clipboard invalid character */
-	MSG_TYPE_CLIENTSTATUS_3 = 258, /* Tab list matching names*/
-};
+	MSG_TYPE_CLIENTSTATUS_3 = 258  /* Tab list matching names*/
+} MsgType;
 
 struct ChatLine { char Buffer[STRING_SIZE]; TimeMS Received; };
 struct ChatLine Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
@@ -31,7 +31,7 @@ void Chat_MakeComponent(struct IGameComponent* comp);
 void Chat_SetLogName(const String* name);
 void Chat_Send(const String* text, bool logUsage);
 void Chat_Add(const String* text);
-void Chat_AddOf(const String* text, int messageType);
+void Chat_AddOf(const String* text, MsgType type);
 void Chat_AddRaw(const char* raw);
 
 NOINLINE_ void Chat_LogError(ReturnCode result,  const char* place);

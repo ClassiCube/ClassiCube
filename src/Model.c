@@ -10,9 +10,9 @@
 #define UV_POS_MASK ((uint16_t)0x7FFF)
 #define UV_MAX ((uint16_t)0x8000)
 #define UV_MAX_SHIFT 15
-#define AABB_Width(bb)  (bb->Max.X - bb->Min.X)
-#define AABB_Height(bb) (bb->Max.Y - bb->Min.Y)
-#define AABB_Length(bb) (bb->Max.Z - bb->Min.Z)
+#define AABB_Width(bb)  ((bb)->Max.X - (bb)->Min.X)
+#define AABB_Height(bb) ((bb)->Max.Y - (bb)->Min.Y)
+#define AABB_Length(bb) ((bb)->Max.Z - (bb)->Min.Z)
 
 void ModelVertex_Init(struct ModelVertex* vertex, float x, float y, float z, int u, int v) {
 	vertex->X = x; vertex->Y = y; vertex->Z = z;
@@ -49,9 +49,9 @@ void Model_Init(struct Model* model) {
 	model->NameScale   = 1.0f;
 	model->armX = 6; model->armY = 12;
 
-	model->GetTransform = Model_GetTransform;
+	model->GetTransform     = Model_GetTransform;
 	model->RecalcProperties = Model_NullFunc;
-	model->DrawArm = Model_NullFunc;
+	model->DrawArm          = Model_NullFunc;
 }
 
 bool Model_ShouldRender(struct Entity* entity) {
@@ -156,9 +156,9 @@ void Model_ApplyTexture(struct Entity* entity) {
 }
 
 void Model_DrawPart(struct ModelPart* part) {
-	struct Model* model = Model_ActiveModel;
+	struct Model* model     = Model_ActiveModel;
 	struct ModelVertex* src = &model->vertices[part->Offset];
-	VertexP3fT2fC4b* dst = &ModelCache_Vertices[model->index];
+	VertexP3fT2fC4b* dst    = &ModelCache_Vertices[model->index];
 	int i, count = part->Count;
 
 	for (i = 0; i < count; i++) {
@@ -178,14 +178,15 @@ void Model_DrawPart(struct ModelPart* part) {
 #define Model_RotateZ t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t;
 
 void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart* part, bool head) {
-	struct Model* model = Model_ActiveModel;
+	struct Model* model     = Model_ActiveModel;
+	struct ModelVertex* src = &model->vertices[part->Offset];
+	VertexP3fT2fC4b* dst    = &ModelCache_Vertices[model->index];
+
 	float cosX = Math_CosF(-angleX), sinX = Math_SinF(-angleX);
 	float cosY = Math_CosF(-angleY), sinY = Math_SinF(-angleY);
 	float cosZ = Math_CosF(-angleZ), sinZ = Math_SinF(-angleZ);
 	float x = part->RotX, y = part->RotY, z = part->RotZ;
-
-	struct ModelVertex* src = &model->vertices[part->Offset];
-	VertexP3fT2fC4b* dst = &ModelCache_Vertices[model->index];
+	
 	int i, count = part->Count;
 
 	for (i = 0; i < count; i++) {
@@ -232,9 +233,9 @@ void Model_RenderArm(struct Model* model, struct Entity* entity) {
 	struct Matrix translate;
 
 	if (Game_ClassicArmModel) {
-		// TODO: Position's not quite right.
-		// Matrix4.Translate(out m, -armX / 16f + 0.2f, -armY / 16f - 0.20f, 0);
-		// is better, but that breaks the dig animation
+		/* TODO: Position's not quite right. */
+		/* Matrix_Translate(out m, -armX / 16f + 0.2f, -armY / 16f - 0.20f, 0); */
+		/* is better, but that breaks the dig animation */
 		Matrix_Translate(&translate, -model->armX / 16.0f,         -model->armY / 16.0f - 0.10f, 0);
 	} else {
 		Matrix_Translate(&translate, -model->armX / 16.0f + 0.10f, -model->armY / 16.0f - 0.26f, 0);
@@ -253,7 +254,7 @@ void Model_RenderArm(struct Model* model, struct Entity* entity) {
 }
 
 void Model_DrawArmPart(struct ModelPart* part) {
-	struct Model* model = Model_ActiveModel;
+	struct Model* model  = Model_ActiveModel;
 	struct ModelPart arm = *part;
 	arm.RotX = model->armX / 16.0f; 
 	arm.RotY = (model->armY + model->armY / 2) / 16.0f;
@@ -285,7 +286,7 @@ void BoxDesc_MirrorX(struct BoxDesc* desc) {
 }
 
 
-void BoxDesc_BuildBox(struct ModelPart* part, struct BoxDesc* desc) {
+void BoxDesc_BuildBox(struct ModelPart* part, const struct BoxDesc* desc) {
 	int sidesW = desc->SizeZ, bodyW = desc->SizeX, bodyH = desc->SizeY;
 	float x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	float x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
@@ -303,11 +304,11 @@ void BoxDesc_BuildBox(struct ModelPart* part, struct BoxDesc* desc) {
 		desc->RotX, desc->RotY, desc->RotZ);
 }
 
-void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc) {
+void BoxDesc_BuildRotatedBox(struct ModelPart* part, const struct BoxDesc* desc) {
 	int sidesW = desc->SizeY, bodyW = desc->SizeX, bodyH = desc->SizeZ;
 	float x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	float x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
-	int x = desc->TexX, y = desc->TexY;
+	int x = desc->TexX, y = desc->TexY, i;
 	struct Model* m = Model_ActiveModel;
 
 	BoxDesc_YQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW,  bodyH, x1, x2, z1, z2, y2, false); /* top */
@@ -318,7 +319,6 @@ void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc) {
 	BoxDesc_XQuad(m, x + sidesW + bodyW,          y + sidesW, sidesW, bodyH, y1, y2, z2, z1, x1, false); /* right */
 
 	/* rotate left and right 90 degrees	*/
-	int i;
 	for (i = m->index - 8; i < m->index; i++) {
 		struct ModelVertex vertex = m->vertices[i];
 		float z = vertex.Z; vertex.Z = vertex.Y; vertex.Y = z;
@@ -331,8 +331,8 @@ void BoxDesc_BuildRotatedBox(struct ModelPart* part, struct BoxDesc* desc) {
 
 
 void BoxDesc_XQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float z1, float z2, float y1, float y2, float x, bool swapU) {
-	int u1 = texX, u2 = (texX + texWidth) | UV_MAX;
-	if (swapU) { int tmp = u1; u1 = u2; u2 = tmp; }
+	int u1 = texX, u2 = (texX + texWidth) | UV_MAX, tmp;
+	if (swapU) { tmp = u1; u1 = u2; u2 = tmp; }
 
 	ModelVertex_Init(&m->vertices[m->index], x, y1, z1, u1, (texY + texHeight) | UV_MAX); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x, y2, z1, u1, texY); m->index++;
@@ -341,8 +341,8 @@ void BoxDesc_XQuad(struct Model* m, int texX, int texY, int texWidth, int texHei
 }
 
 void BoxDesc_YQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float x1, float x2, float z1, float z2, float y, bool swapU) {
-	int u1 = texX, u2 = (texX + texWidth) | UV_MAX;
-	if (swapU) { int tmp = u1; u1 = u2; u2 = tmp; }
+	int u1 = texX, u2 = (texX + texWidth) | UV_MAX, tmp;
+	if (swapU) { tmp = u1; u1 = u2; u2 = tmp; }
 
 	ModelVertex_Init(&m->vertices[m->index], x1, y, z2, u1, (texY + texHeight) | UV_MAX); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x1, y, z1, u1, texY); m->index++;
@@ -351,8 +351,8 @@ void BoxDesc_YQuad(struct Model* m, int texX, int texY, int texWidth, int texHei
 }
 
 void BoxDesc_ZQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float x1, float x2, float y1, float y2, float z, bool swapU) {
-	int u1 = texX, u2 = (texX + texWidth) | UV_MAX;
-	if (swapU) { int tmp = u1; u1 = u2; u2 = tmp; }
+	int u1 = texX, u2 = (texX + texWidth) | UV_MAX, tmp;
+	if (swapU) { tmp = u1; u1 = u2; u2 = tmp; }
 
 	ModelVertex_Init(&m->vertices[m->index], x1, y1, z, u1, (texY + texHeight) | UV_MAX); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x1, y2, z, u1, texY); m->index++;

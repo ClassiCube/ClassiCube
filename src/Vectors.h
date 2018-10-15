@@ -20,9 +20,6 @@ Vector3 Vector3_BigPos(void);
 float Vector3_LengthSquared(const Vector3* v);
 
 #define VECTOR3_CONST(x, y, z) { x, y, z };
-#define Vector3_UnitX VECTOR3_CONST(1.0f, 0.0f, 0.0f)
-#define Vector3_UnitY VECTOR3_CONST(0.0f, 1.0f, 0.0f)
-#define Vector3_UnitZ VECTOR3_CONST(0.0f, 0.0f, 1.0f)
 #define Vector3_Zero  VECTOR3_CONST(0.0f, 0.0f, 0.0f)
 #define Vector3_One   VECTOR3_CONST(1.0f, 1.0f, 1.0f)
 
