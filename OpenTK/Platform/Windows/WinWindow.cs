@@ -414,7 +414,7 @@ namespace OpenTK.Platform.Windows {
 		}
 		
 		public override unsafe void SetClipboardText(string value) {
-			UIntPtr dstSize = (UIntPtr)((value.Length + 1) * Marshal.SystemDefaultCharSize);
+			UIntPtr dstSize = (UIntPtr)((value.Length + 1) * 2);
 			// retry up to 10 times
 			for (int i = 0; i < 10; i++) {
 				if (!API.OpenClipboard(WinHandle)) {

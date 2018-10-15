@@ -16,6 +16,11 @@
 #include "TerrainAtlas.h"
 #include "VertexStructs.h"
 
+/* Packs an index into the 16x16x16 count array. Coordinates range from 0 to 15. */
+#define Builder_PackCount(xx, yy, zz) ((((yy) << 8) | ((zz) << 4) | (xx)) * FACE_COUNT)
+/* Packs an index into the 18x18x18 chunk array. Coordinates range from -1 to 16. */
+#define Builder_PackChunk(xx, yy, zz) (((yy) + 1) * EXTCHUNK_SIZE_2 + ((zz) + 1) * EXTCHUNK_SIZE + ((xx) + 1))
+
 BlockID* Builder_Chunk;
 uint8_t* Builder_Counts;
 int* Builder_BitFlags;
@@ -136,12 +141,12 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 	int x, y, z, xx, yy, zz;
 	for (y = y1, yy = 0; y < yMax; y++, yy++) {
 		for (z = z1, zz = 0; z < zMax; z++, zz++) {
-			int cIndex = (yy + 1) * EXTCHUNK_SIZE_2 + (zz + 1) * EXTCHUNK_SIZE + (-1 + 1);
-			for (x = x1, xx = 0; x < xMax; x++, xx++) {
-				cIndex++;
+			int cIndex = Builder_PackChunk(0, yy, zz);
+
+			for (x = x1, xx = 0; x < xMax; x++, xx++, cIndex++) {
 				BlockID b = Builder_Chunk[cIndex];
 				if (Block_Draw[b] == DRAW_GAS) continue;
-				int index = ((yy << 8) | (zz << 4) | xx) * FACE_COUNT;
+				int index = Builder_PackCount(xx, yy, zz);
 
 				/* Sprites only use one face to indicate stretching count, so we can take a shortcut here.
 				Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite. */
@@ -233,38 +238,34 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 
 #define Builder_ReadChunkBody(get_block)\
 for (yy = -1; yy < 17; ++yy) {\
-	int y = yy + y1;\
+	y = yy + y1;\
 	if (y < 0) continue;\
 	if (y >= World_Height) break;\
 \
 	for (zz = -1; zz < 17; ++zz) {\
-		int z = zz + z1;\
+		z = zz + z1;\
 		if (z < 0) continue;\
 		if (z >= World_Length) break;\
 \
-		/* need to subtract 1 as index is pre incremented in for loop. */ \
-		int index = World_Pack(x1 - 1, y, z) - 1;\
-		int chunkIndex = (yy + 1) * EXTCHUNK_SIZE_2 + (zz + 1) * EXTCHUNK_SIZE + (-1 + 1) - 1;\
+		int index  = World_Pack(x1 - 1, y, z);\
+		int cIndex = Builder_PackChunk(-1, yy, zz);\
 \
-		for (xx = -1; xx < 17; ++xx) {\
-			int x = xx + x1;\
-			++index;\
-			++chunkIndex;\
-\
+		for (xx = -1; xx < 17; ++xx, ++index, ++cIndex) {\
+			x = xx + x1;\
 			if (x < 0) continue;\
 			if (x >= World_Width) break;\
-			BlockID block = get_block;\
 \
-			allAir = allAir && Block_Draw[block] == DRAW_GAS;\
+			BlockID block = get_block;\
+			allAir   = allAir   && Block_Draw[block] == DRAW_GAS;\
 			allSolid = allSolid && Block_FullOpaque[block];\
-			Builder_Chunk[chunkIndex] = block;\
+			Builder_Chunk[cIndex] = block;\
 		}\
 	}\
 }
 
 static void Builder_ReadChunkData(int x1, int y1, int z1, bool* outAllAir, bool* outAllSolid) {
 	bool allAir = true, allSolid = true;
-	int xx, yy, zz;
+	int xx, yy, zz, x, y, z;
 
 #ifndef EXTENDED_BLOCKS
 	Builder_ReadChunkBody(World_Blocks[index]);
@@ -276,7 +277,7 @@ static void Builder_ReadChunkData(int x1, int y1, int z1, bool* outAllAir, bool*
 	}
 #endif
 
-	*outAllAir = allAir;
+	*outAllAir   = allAir;
 	*outAllSolid = allSolid;
 }
 
@@ -308,17 +309,16 @@ static bool Builder_BuildChunk(int x1, int y1, int z1, bool* allAir) {
 
 	for (y = y1, yy = 0; y < yMax; y++, yy++) {
 		for (z = z1, zz = 0; z < zMax; z++, zz++) {
+			int cIndex = Builder_PackChunk(0, yy, zz);
 
-			int chunkIndex = (yy + 1) * EXTCHUNK_SIZE_2 + (zz + 1) * EXTCHUNK_SIZE + (0 + 1);
-			for (x = x1, xx = 0; x < xMax; x++, xx++) {
-				Builder_Block = chunk[chunkIndex];
-				if (Block_Draw[Builder_Block] != DRAW_GAS) {
-					int index = ((yy << 8) | (zz << 4) | xx) * FACE_COUNT;
-					Builder_X = x; Builder_Y = y; Builder_Z = z;
-					Builder_ChunkIndex = chunkIndex;
-					Builder_RenderBlock(index);
-				}
-				chunkIndex++;
+			for (x = x1, xx = 0; x < xMax; x++, xx++, cIndex++) {
+				Builder_Block = chunk[cIndex];
+				if (Block_Draw[Builder_Block] == DRAW_GAS) continue;
+
+				int index = Builder_PackCount(xx, yy, zz);
+				Builder_X = x; Builder_Y = y; Builder_Z = z;
+				Builder_ChunkIndex = cIndex;
+				Builder_RenderBlock(index);
 			}
 		}
 	}
