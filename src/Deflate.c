@@ -683,7 +683,7 @@ void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struc
 	Stream_Init(stream);
 	Inflate_Init(state, underlying);
 	stream->Meta.Inflate = state;
-	stream->Read  = Inflate_StreamRead;
+	stream->Read = Inflate_StreamRead;
 }
 
 

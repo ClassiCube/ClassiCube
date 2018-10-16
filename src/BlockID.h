@@ -90,6 +90,6 @@ enum BLOCKID {
 #else
 	BLOCK_MAX_DEFINED = 0xFF,
 #endif
-	BLOCK_COUNT = (BLOCK_MAX_DEFINED + 1),
+	BLOCK_COUNT = (BLOCK_MAX_DEFINED + 1)
 };
 #endif

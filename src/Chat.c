@@ -431,7 +431,7 @@ static bool CuboidCommand_ParseBlock(const String* args, int argsCount) {
 		Chat_Add1("&eCuboid: &c\"%s\" is not a valid block name or id.", &args[1]); return false;
 	}
 
-	if (block >= BLOCK_CPE_COUNT && !Block_IsCustomDefined((BlockID)block)) {
+	if (block >= BLOCK_CPE_COUNT && !Block_IsCustomDefined(block)) {
 		Chat_Add1("&eCuboid: &cThere is no block with id \"%s\".", &args[1]); return false;
 	}
 

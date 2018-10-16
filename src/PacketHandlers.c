@@ -697,8 +697,8 @@ static void Classic_Reset(void) {
 
 static void Classic_Tick(void) {
 	if (!classic_receivedFirstPos) return;
-	struct Entity* e = &LocalPlayer_Instance.Base;
-	Classic_WritePosition(e->Position, e->HeadY, e->HeadX);
+	struct Entity* p = &LocalPlayer_Instance.Base;
+	Classic_WritePosition(p->Position, p->HeadY, p->HeadX);
 }
 
 
@@ -786,8 +786,12 @@ static void CPE_WriteTwoWayPing(bool serverToClient, int payload) {
 }
 
 static void CPE_SendCpeExtInfoReply(void) {
-	if (cpe_serverExtensionsCount) return;
 	int count = Array_Elems(cpe_clientExtensions);
+	String name;
+	int i, ver;
+
+	if (cpe_serverExtensionsCount) return;
+	
 #ifndef EXTENDED_TEXTURES
 	count--;
 #endif
@@ -803,11 +807,11 @@ static void CPE_SendCpeExtInfoReply(void) {
 
 	CPE_WriteExtInfo(&ServerConnection_AppName, count);
 	Net_SendPacket();
-	int i, ver;
 
 	for (i = 0; i < Array_Elems(cpe_clientExtensions); i++) {
-		String name = String_FromReadonly(cpe_clientExtensions[i]);
+		name = String_FromReadonly(cpe_clientExtensions[i]);
 		ver = 1;
+
 		if (String_CaselessEqualsConst(&name, "ExtPlayerList"))       ver = 2;
 		if (String_CaselessEqualsConst(&name, "EnvMapAppearance"))    ver = cpe_envMapVer;
 		if (String_CaselessEqualsConst(&name, "BlockDefinitionsExt")) ver = cpe_blockDefsExtVer;
@@ -1442,14 +1446,13 @@ static void BlockDefs_UndefineBlock(uint8_t* data) {
 
 #define BlockDefs_ReadCoord(x) x = *data++ / 16.0f; if (x > 1.0f) x = 1.0f;
 static void BlockDefs_DefineBlockExt(uint8_t* data) {
+	Vector3 minBB, maxBB;
 	BlockID block = BlockDefs_DefineBlockCommonStart(&data, cpe_blockDefsExtVer >= 2);
 
-	Vector3 minBB;
 	BlockDefs_ReadCoord(minBB.X);
 	BlockDefs_ReadCoord(minBB.Y);
 	BlockDefs_ReadCoord(minBB.Z);
 
-	Vector3 maxBB;
 	BlockDefs_ReadCoord(maxBB.X);
 	BlockDefs_ReadCoord(maxBB.Y);
 	BlockDefs_ReadCoord(maxBB.Z);
@@ -1491,8 +1494,8 @@ void HandleDefineModel(uint8_t* data) {
 #endif
 static void BlockDefs_Reset(void) {
 	if (!Game_UseCPE || !Game_AllowCustomBlocks) return;
-	Net_Set(OPCODE_DEFINE_BLOCK, BlockDefs_DefineBlock, 80);
-	Net_Set(OPCODE_UNDEFINE_BLOCK, BlockDefs_UndefineBlock, 2);
+	Net_Set(OPCODE_DEFINE_BLOCK,     BlockDefs_DefineBlock,    80);
+	Net_Set(OPCODE_UNDEFINE_BLOCK,   BlockDefs_UndefineBlock,  2);
 	Net_Set(OPCODE_DEFINE_BLOCK_EXT, BlockDefs_DefineBlockExt, 85);
 }
 

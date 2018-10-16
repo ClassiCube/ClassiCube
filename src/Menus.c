@@ -28,6 +28,7 @@
 #include "Screens.h"
 #include "Gui.h"
 #include "Deflate.h"
+#include "Stream.h"
 
 #define MenuBase_Layout Screen_Layout struct Widget** Widgets; int WidgetsCount;
 struct Menu { MenuBase_Layout };
@@ -1550,11 +1551,8 @@ struct Screen* HotkeyListScreen_MakeInstance(void) {
 *----------------------------------------------------LoadLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
 static void LoadLevelScreen_FilterFiles(const String* path, void* obj) {
-	String cw  = String_FromConst(".cw");  String lvl = String_FromConst(".lvl");
-	String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
-
-	if (!(String_CaselessEnds(path, &cw)   || String_CaselessEnds(path, &lvl)
-		|| String_CaselessEnds(path, &fcm) || String_CaselessEnds(path, &dat))) return;
+	IMapImporter importer = Map_FindImporter(path);
+	if (!importer) return;
 
 	String file = *path; Utils_UNSAFE_GetFilename(&file);
 	StringsBuffer_Add((StringsBuffer*)obj, &file);
@@ -1576,20 +1574,8 @@ void LoadLevelScreen_LoadMap(const String* path) {
 	res = Stream_OpenFile(&stream, path);
 	if (res) { Chat_LogError2(res, "opening", path); return; }
 
-	String cw = String_FromConst(".cw");   String lvl = String_FromConst(".lvl");
-	String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
-
-	if (String_CaselessEnds(path, &dat)) {
-		res = Dat_Load(&stream);
-	} else if (String_CaselessEnds(path, &fcm)) {
-		res = Fcm_Load(&stream);
-	} else if (String_CaselessEnds(path, &cw)) {
-		res = Cw_Load(&stream);
-	} else if (String_CaselessEnds(path, &lvl)) {
-		res = Lvl_Load(&stream);
-	}
-
-	if (res) {
+	IMapImporter importer = Map_FindImporter(path);
+	if ((res = importer(&stream))) {
 		World_Reset();
 		Chat_LogError2(res, "decoding", path); stream.Close(&stream); return;
 	}

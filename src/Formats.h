@@ -1,17 +1,34 @@
 #ifndef CC_MAPFORMATS_H
 #define CC_MAPFORMATS_H
-#include "Stream.h"
+#include "String.h"
 /* Imports/exports a world and associated metadata from/to a particular map file format.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-/* Imports a world from a LVL map file (MCLawl server map) */
+struct Stream;
+/* Imports a world encoded in a particular map file format. */
+typedef ReturnCode (*IMapImporter)(struct Stream* stream);
+/* Attempts to find the suitable importer based on filename. */
+/* Returns NULL if no match found. */
+NOINLINE_ IMapImporter Map_FindImporter(const String* path);
+
+/* Imports a world from a .lvl MCSharp server map file. */
+/* Used by MCSharp/MCLawl/MCForge/MCDzienny/MCGalaxy. */
 ReturnCode Lvl_Load(struct Stream* stream);
-/* Imports a world from a FCMv3 map file (fCraft server map)
-   Part of fCraft | Copyright (c) 2009-2014 Matvei Stefarov <me@matvei.org> | BSD-3 | See LICENSE.txt */
+/* Imports a world from a .fcm fCraft server map file. (v3 only) */
+/* Used by fCraft/800Craft/LegendCraft/ProCraft. */
 ReturnCode Fcm_Load(struct Stream* stream);
-ReturnCode Cw_Save(struct Stream* stream);
+/* Imports a world from a .cw ClassicWorld map file. */
+/* Used by ClassiCube/ClassicalSharp. */
 ReturnCode Cw_Load(struct Stream* stream);
+/* Imports a world from a .dat classic map file. */
+/* Used by Minecraft Classic/WoM client. */
 ReturnCode Dat_Load(struct Stream* stream);
+
+/* Exports a world to a .cw ClassicWorld map file. */
+/* Compatible with ClassiCube/ClassicalSharp. */
+ReturnCode Cw_Save(struct Stream* stream);
+/* Exports a world to a .schematic Schematic map file. */
+/* Used by MCEdit and other tools. */
 ReturnCode Schematic_Save(struct Stream* stream);
 #endif

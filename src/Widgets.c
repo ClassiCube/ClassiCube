@@ -2153,7 +2153,7 @@ void PlayerListWidget_Create(struct PlayerListWidget* w, const FontDesc* font, b
 *#########################################################################################################################*/
 #define TextGroupWidget_LineBuffer(w, i) ((w)->Buffer + (i) * TEXTGROUPWIDGET_LEN)
 String TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* w, int i) {
-	uint16_t length = w->LineLengths[i];
+	int length = w->LineLengths[i];
 	return String_Init(TextGroupWidget_LineBuffer(w, i), length, length);
 }
 

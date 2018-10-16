@@ -11,6 +11,7 @@
 #include "Event.h"
 #include "Funcs.h"
 #include "Errors.h"
+#include "Stream.h"
 
 static ReturnCode Map_ReadBlocks(struct Stream* stream) {
 	World_BlocksSize = World_Width * World_Length * World_Height;
@@ -23,13 +24,25 @@ static ReturnCode Map_ReadBlocks(struct Stream* stream) {
 
 static ReturnCode Map_SkipGZipHeader(struct Stream* stream) {
 	struct GZipHeader gzHeader;
-	GZipHeader_Init(&gzHeader);
 	ReturnCode res;
+	GZipHeader_Init(&gzHeader);
 
 	while (!gzHeader.Done) {
 		if ((res = GZipHeader_Read(stream, &gzHeader))) return res;
 	}
 	return 0;
+}
+
+NOINLINE_ IMapImporter Map_FindImporter(const String* path) {
+	static String cw  = String_FromConst(".cw"),  lvl = String_FromConst(".lvl");
+	static String fcm = String_FromConst(".fcm"), dat = String_FromConst(".dat");
+
+	if (String_CaselessEnds(path, &cw))  return Cw_Load;
+	if (String_CaselessEnds(path, &lvl)) return Lvl_Load;
+	if (String_CaselessEnds(path, &fcm)) return Fcm_Load;
+	if (String_CaselessEnds(path, &dat)) return Dat_Load;
+
+	return NULL;
 }
 
 
@@ -38,21 +51,31 @@ static ReturnCode Map_SkipGZipHeader(struct Stream* stream) {
 *#########################################################################################################################*/
 #define LVL_CUSTOMTILE 163
 #define LVL_CHUNKSIZE 16
-uint8_t Lvl_table[256 - BLOCK_CPE_COUNT] = { 0, 0, 0, 0, 39, 36, 36, 10, 46, 21, 22,
-22, 22, 22, 4, 0, 22, 21, 0, 22, 23, 24, 22, 26, 27, 28, 30, 31, 32, 33,
-34, 35, 36, 22, 20, 49, 45, 1, 4, 0, 9, 11, 4, 19, 5, 17, 10, 49, 20, 1,
-18, 12, 5, 25, 46, 44, 17, 49, 20, 1, 18, 12, 5, 25, 36, 34, 0, 9, 11, 46,
-44, 0, 9, 11, 8, 10, 22, 27, 22, 8, 10, 28, 17, 49, 20, 1, 18, 12, 5, 25, 46,
-44, 11, 9, 0, 9, 11, LVL_CUSTOMTILE, 0, 0, 9, 11, 0, 0, 0, 0, 0, 0, 0, 28, 22, 21,
-11, 0, 0, 0, 46, 46, 10, 10, 46, 20, 41, 42, 11, 9, 0, 8, 10, 10, 8, 0, 22, 22,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 10, 0, 0, 0, 0, 0, 22, 22, 42, 3, 2, 29,
-47, 0, 0, 0, 0, 0, 27, 46, 48, 24, 22, 36, 34, 8, 10, 21, 29, 22, 10, 22, 22,
-41, 19, 35, 21, 29, 49, 34, 16, 41, 0, 22 };
+const uint8_t Lvl_table[256] = {
+	 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
+	16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+	32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+	48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+	64, 65,  0,  0,  0,  0, 39, 36, 36, 10, 46, 21, 22, 22, 22, 22, 
+	 4,  0, 22, 21,  0, 22, 23, 24, 22, 26, 27, 28, 30, 31, 32, 33,
+	34, 35, 36, 22, 20, 49, 45,  1,  4,  0,  9, 11,  4, 19,  5, 17, 
+	10, 49, 20,  1, 18, 12,  5, 25, 46, 44, 17, 49, 20,  1, 18, 12, 
+	 5, 25, 36, 34,  0,  9, 11, 46, 44,  0,  9, 11,  8, 10, 22, 27,
+	22,  8, 10, 28, 17, 49, 20,  1, 18, 12,  5, 25, 46, 44, 11,  9, 
+	 0,  9, 11, 163, 0,  0,  9, 11,  0,  0,  0,  0,  0,  0,  0, 28, 
+	22, 21, 11,  0,  0,  0, 46, 46, 10, 10, 46, 20, 41, 42, 11,  9, 
+	 0,  8, 10, 10,  8,  0, 22, 22,  0,  0,  0,  0,  0,  0,  0,  0, 
+	 0,  0,  0, 21, 10,  0,  0,  0,  0,  0, 22, 22, 42,  3,  2, 29,
+	47,  0,  0,  0,  0,  0, 27, 46, 48, 24, 22, 36, 34,  8, 10, 21, 
+	29, 22, 10, 22, 22, 41, 19, 35, 21, 29, 49, 34, 16, 41,  0, 22 
+};
 
-static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
-	int x, y, z, i;
+static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {	
 	uint8_t chunk[LVL_CHUNKSIZE * LVL_CHUNKSIZE * LVL_CHUNKSIZE];
-	ReturnCode res; uint8_t hasCustom;
+	uint8_t hasCustom;
+	int baseIndex, index, xx, yy, zz;
+	ReturnCode res;
+	int x, y, z, i;
 
 	/* skip bounds checks when we know chunk is entirely inside map */
 	int adjWidth  = World_Width  & ~0x0F;
@@ -66,87 +89,76 @@ static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
 				if ((res = stream->ReadU8(stream, &hasCustom))) return res;
 				if (hasCustom != 1) continue;
 				if ((res = Stream_Read(stream, chunk, sizeof(chunk)))) return res;
+				baseIndex = World_Pack(x, y, z);
 
-				int baseIndex = World_Pack(x, y, z);
 				if ((x + LVL_CHUNKSIZE) <= adjWidth && (y + LVL_CHUNKSIZE) <= adjHeight && (z + LVL_CHUNKSIZE) <= adjLength) {
 					for (i = 0; i < sizeof(chunk); i++) {
-						int xx = i & 0xF, yy = (i >> 8) & 0xF, zz = (i >> 4) & 0xF;
-						int index = baseIndex + World_Pack(xx, yy, zz);
+						xx = i & 0xF; yy = (i >> 8) & 0xF; zz = (i >> 4) & 0xF;
+
+						index = baseIndex + World_Pack(xx, yy, zz);
 						World_Blocks[index] = World_Blocks[index] == LVL_CUSTOMTILE ? chunk[i] : World_Blocks[index];
 					}
 				} else {
 					for (i = 0; i < sizeof(chunk); i++) {
-						int xx = i & 0xF, yy = (i >> 8) & 0xF, zz = (i >> 4) & 0xF;
+						xx = i & 0xF; yy = (i >> 8) & 0xF; zz = (i >> 4) & 0xF;
 						if ((x + xx) >= World_Width || (y + yy) >= World_Height || (z + zz) >= World_Length) continue;
-						int index = baseIndex + World_Pack(xx, yy, zz);
+
+						index = baseIndex + World_Pack(xx, yy, zz);
 						World_Blocks[index] = World_Blocks[index] == LVL_CUSTOMTILE ? chunk[i] : World_Blocks[index];
 					}
-				}
-				
+				}			
 			}
 		}
 	}
 	return 0;
 }
 
-static void Lvl_ConvertPhysicsBlocks(void) {
-	uint8_t conv[256];
-	int i;
-	for (i = 0; i < BLOCK_CPE_COUNT; i++)
-		conv[i] = (uint8_t)i;
-	for (i = BLOCK_CPE_COUNT; i < 256; i++)
-		conv[i] = Lvl_table[i - BLOCK_CPE_COUNT];
-
-	int alignedBlocksSize = World_BlocksSize & ~3;
-	/* Bulk convert 4 blocks at once */
-	uint8_t* blocks = World_Blocks;
-	for (i = 0; i < alignedBlocksSize; i += 4) {
-		*blocks = conv[*blocks]; blocks++;
-		*blocks = conv[*blocks]; blocks++;
-		*blocks = conv[*blocks]; blocks++;
-		*blocks = conv[*blocks]; blocks++;
-	}
-	for (i = alignedBlocksSize; i < World_BlocksSize; i++) {
-		*blocks = conv[*blocks]; blocks++;
-	}
-}
-
 ReturnCode Lvl_Load(struct Stream* stream) {
-	ReturnCode res = Map_SkipGZipHeader(stream);
-	if (res) return res;
-	
+	uint8_t header[18];		
+	uint8_t* blocks;
+	uint8_t section;
+	ReturnCode res;
+	int i;
+
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct Stream compStream;
 	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
-
-	uint8_t header[8 + 2];
-	if ((res = Stream_Read(&compStream, header, 8))) return res;
+	
+	if ((res = Map_SkipGZipHeader(stream)))                       return res;
+	if ((res = Stream_Read(&compStream, header, sizeof(header)))) return res;
 	if (Stream_GetU16_LE(&header[0]) != 1874) return LVL_ERR_VERSION;
 
 	World_Width  = Stream_GetU16_LE(&header[2]);
 	World_Length = Stream_GetU16_LE(&header[4]);
 	World_Height = Stream_GetU16_LE(&header[6]);
 
-	if ((res = Stream_Read(&compStream, header, sizeof(header)))) return res;
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-
-	p->Spawn.X = Stream_GetU16_LE(&header[0]);
-	p->Spawn.Z = Stream_GetU16_LE(&header[2]);
-	p->Spawn.Y = Stream_GetU16_LE(&header[4]);
-	p->SpawnRotY  = Math_Packed2Deg(header[6]);
-	p->SpawnHeadX = Math_Packed2Deg(header[7]);
-
+	p->Spawn.X = Stream_GetU16_LE(&header[8]);
+	p->Spawn.Z = Stream_GetU16_LE(&header[10]);
+	p->Spawn.Y = Stream_GetU16_LE(&header[12]);
+	p->SpawnRotY  = Math_Packed2Deg(header[14]);
+	p->SpawnHeadX = Math_Packed2Deg(header[15]);
 	/* (2) pervisit, perbuild permissions */
-	res = Map_ReadBlocks(&compStream);
-	if (res) return res;
-	Lvl_ConvertPhysicsBlocks();
 
-	/* 0xBD section type may not be present in older .lvl files */
-	uint8_t type; res = compStream.ReadU8(&compStream, &type);
+	if ((res = Map_ReadBlocks(&compStream))) return res;
+	blocks = World_Blocks;
+	/* Bulk convert 4 blocks at once */
+	for (i = 0; i < (World_BlocksSize & ~3); i += 4) {
+		*blocks = Lvl_table[*blocks]; blocks++;
+		*blocks = Lvl_table[*blocks]; blocks++;
+		*blocks = Lvl_table[*blocks]; blocks++;
+		*blocks = Lvl_table[*blocks]; blocks++;
+	}
+	for (; i < World_BlocksSize; i++) {
+		*blocks = Lvl_table[*blocks]; blocks++;
+	}
+
+	/* 0xBD section type is not present in older .lvl files */
+	res = compStream.ReadU8(&compStream, &section);
 	if (res == ERR_END_OF_STREAM) return 0;
 
 	if (res) return res;
-	return type == 0xBD ? Lvl_ReadCustomBlocks(&compStream) : 0;
+	return section == 0xBD ? Lvl_ReadCustomBlocks(&compStream) : 0;
 }
 
 
@@ -155,49 +167,52 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 *#########################################################################################################################*/
 static ReturnCode Fcm_ReadString(struct Stream* stream) {
 	uint8_t data[2];
+	int len;
 	ReturnCode res;
-	if ((res = Stream_Read(stream, data, sizeof(data)))) return res;
 
-	int len = Stream_GetU16_LE(data);
+	if ((res = Stream_Read(stream, data, sizeof(data)))) return res;
+	len = Stream_GetU16_LE(data);
+
 	return stream->Skip(stream, len);
 }
 
 ReturnCode Fcm_Load(struct Stream* stream) {
-	uint8_t header[(3 * 2) + (3 * 4) + (2 * 1) + (2 * 4) + 16 + 26 + 4];
+	uint8_t header[79];	
 	ReturnCode res;
-
-	if ((res = Stream_Read(stream, header, 4 + 1))) return res;
-	if (Stream_GetU32_LE(&header[0]) != 0x0FC2AF40UL) return FCM_ERR_IDENTIFIER;
-	if (header[4] != 13) return FCM_ERR_REVISION;
-	
-	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
-	World_Width  = Stream_GetU16_LE(&header[0]);
-	World_Height = Stream_GetU16_LE(&header[2]);
-	World_Length = Stream_GetU16_LE(&header[4]);
+	int i, count;
 
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	p->Spawn.X = ((int)Stream_GetU32_LE(&header[ 6])) / 32.0f;
-	p->Spawn.Y = ((int)Stream_GetU32_LE(&header[10])) / 32.0f;
-	p->Spawn.Z = ((int)Stream_GetU32_LE(&header[14])) / 32.0f;
-	p->SpawnRotY  = Math_Packed2Deg(header[18]);
-	p->SpawnHeadX = Math_Packed2Deg(header[19]);
-
-	/* header[20] (4) date modified */
-	/* header[24] (4) date created */
-	Mem_Copy(&World_Uuid, &header[28], sizeof(World_Uuid));
-	/* header[44] (26) layer index */
-	int metaSize = (int)Stream_GetU32_LE(&header[70]);
-
 	struct Stream compStream;
 	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
-	int i;
-	for (i = 0; i < metaSize; i++) {
+	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
+	if (Stream_GetU32_LE(&header[0]) != 0x0FC2AF40UL)        return FCM_ERR_IDENTIFIER;
+	if (header[4] != 13) return FCM_ERR_REVISION;
+	
+	World_Width  = Stream_GetU16_LE(&header[5]);
+	World_Height = Stream_GetU16_LE(&header[7]);
+	World_Length = Stream_GetU16_LE(&header[9]);
+	
+	p->Spawn.X = ((int)Stream_GetU32_LE(&header[11])) / 32.0f;
+	p->Spawn.Y = ((int)Stream_GetU32_LE(&header[15])) / 32.0f;
+	p->Spawn.Z = ((int)Stream_GetU32_LE(&header[19])) / 32.0f;
+	p->SpawnRotY  = Math_Packed2Deg(header[23]);
+	p->SpawnHeadX = Math_Packed2Deg(header[24]);
+
+	/* header[25] (4) date modified */
+	/* header[29] (4) date created */
+	Mem_Copy(&World_Uuid, &header[33], sizeof(World_Uuid));
+	/* header[49] (26) layer index */
+	count = (int)Stream_GetU32_LE(&header[75]);
+
+	/* header isn't compressed, rest of data is though */
+	for (i = 0; i < count; i++) {
 		if ((res = Fcm_ReadString(&compStream))) return res; /* Group */
 		if ((res = Fcm_ReadString(&compStream))) return res; /* Key   */
 		if ((res = Fcm_ReadString(&compStream))) return res; /* Value */
 	}
+
 	return Map_ReadBlocks(&compStream);
 }
 
@@ -205,25 +220,25 @@ ReturnCode Fcm_Load(struct Stream* stream) {
 /*########################################################################################################################*
 *---------------------------------------------------------NBTFile---------------------------------------------------------*
 *#########################################################################################################################*/
-enum NBT_TAG { 
-	NBT_END, NBT_I8, NBT_I16, NBT_I32, NBT_I64, NBT_F32, 
-	NBT_R64, NBT_I8S, NBT_STR, NBT_LIST, NBT_DICT, NBT_I32S, 
+enum NbtTagType { 
+	NBT_END, NBT_I8,  NBT_I16, NBT_I32,  NBT_I64,  NBT_F32, 
+	NBT_R64, NBT_I8S, NBT_STR, NBT_LIST, NBT_DICT, NBT_I32S
 };
 
 #define NBT_SMALL_SIZE STRING_SIZE
 struct NbtTag;
 struct NbtTag {
 	struct NbtTag* Parent;
-	uint8_t TagID;
-	char    NameBuffer[NBT_SMALL_SIZE];
-	uint32_t  NameSize;
-	uint32_t  DataSize; /* size of data for arrays */
+	uint8_t  TagID;
+	char     NameBuffer[NBT_SMALL_SIZE];
+	uint32_t NameSize;
+	uint32_t DataSize; /* size of data for arrays */
 
 	union {
 		uint8_t  Value_U8;
 		int16_t  Value_I16;
 		uint16_t Value_U16;
-		int32_t  Value_I32;
+		uint32_t Value_U32;
 		float    Value_F32;
 		uint8_t  DataSmall[NBT_SMALL_SIZE];
 		uint8_t* DataBig; /* malloc for big byte arrays */
@@ -254,7 +269,7 @@ static uint8_t* NbtTag_U8_Array(struct NbtTag* tag, int minSize) {
 	if (tag->TagID != NBT_I8S) ErrorHandler_Fail("Expected I8_Array NBT tag");
 	if (tag->DataSize < minSize) ErrorHandler_Fail("I8_Array NBT tag too small");
 
-	return tag->DataSize < NBT_SMALL_SIZE ? tag->DataSmall : tag->DataBig;
+	return tag->DataSize <= NBT_SMALL_SIZE ? tag->DataSmall : tag->DataBig;
 }
 
 static String NbtTag_String(struct NbtTag* tag) {
@@ -263,31 +278,33 @@ static String NbtTag_String(struct NbtTag* tag) {
 }
 
 static ReturnCode Nbt_ReadString(struct Stream* stream, char* strBuffer, uint32_t* strLen) {
+	uint8_t buffer[NBT_SMALL_SIZE * 4];
+	int len;
+	String str;
 	ReturnCode res;
-	char nameBuffer[NBT_SMALL_SIZE * 4];
-	if ((res = Stream_Read(stream, nameBuffer, 2))) return res;
 
-	int nameLen = Stream_GetU16_BE(nameBuffer);
-	if (nameLen > NBT_SMALL_SIZE * 4) return CW_ERR_STRING_LEN;
-	if ((res = Stream_Read(stream, nameBuffer, nameLen))) return res;
+	if ((res = Stream_Read(stream, buffer, 2)))   return res;
+	len = Stream_GetU16_BE(buffer);
 
-	String str = String_Init(strBuffer, 0, NBT_SMALL_SIZE);
-	String_DecodeUtf8(&str, nameBuffer, nameLen);
+	if (len > Array_Elems(buffer)) return CW_ERR_STRING_LEN;
+	if ((res = Stream_Read(stream, buffer, len))) return res;
+
+	str = String_Init(strBuffer, 0, NBT_SMALL_SIZE);
+	String_DecodeUtf8(&str, buffer, len);
 	*strLen = str.length; return 0;
 }
 
-typedef bool (*Nbt_Callback)(struct NbtTag* tag);
+typedef void (*Nbt_Callback)(struct NbtTag* tag);
 static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* stream, struct NbtTag* parent, Nbt_Callback callback) {
-	if (typeId == NBT_END) return 0;
-
 	struct NbtTag tag;
+	uint8_t childType;
+	uint8_t tmp[5];	
+	ReturnCode res;
+	uint32_t i, count;
+	
+	if (typeId == NBT_END) return 0;
 	tag.TagID = typeId; tag.Parent = parent;
 	tag.NameSize = 0;   tag.DataSize = 0;
-
-	uint8_t childType;
-	uint32_t i, count;
-	ReturnCode res;
-	uint8_t tmp[5];
 
 	if (readTagName) {
 		res = Nbt_ReadString(stream, tag.NameBuffer, &tag.NameSize);
@@ -304,7 +321,7 @@ static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* s
 		break;
 	case NBT_I32:
 	case NBT_F32:
-		res = Stream_ReadU32_BE(stream, &tag.Value_I32);
+		res = Stream_ReadU32_BE(stream, &tag.Value_U32);
 		break;
 	case NBT_I64:
 	case NBT_R64:
@@ -314,7 +331,7 @@ static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* s
 	case NBT_I8S:
 		if ((res = Stream_ReadU32_BE(stream, &tag.DataSize))) break;
 
-		if (tag.DataSize < NBT_SMALL_SIZE) {
+		if (tag.DataSize <= NBT_SMALL_SIZE) {
 			res = Stream_Read(stream, tag.DataSmall, tag.DataSize);
 		} else {
 			tag.DataBig = Mem_Alloc(tag.DataSize, 1, "NBT data");
@@ -352,9 +369,9 @@ static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* s
 	}
 
 	if (res) return res;
-	bool processed = callback(&tag);
-	/* don't leak memory for unprocessed tags */
-	if (!processed && tag.DataSize >= NBT_SMALL_SIZE) Mem_Free(tag.DataBig);
+	callback(&tag);
+	/* callback sets DataBig to NULL, if doesn't want it to be freed */
+	if (tag.DataSize > NBT_SMALL_SIZE) Mem_Free(tag.DataBig);
 	return 0;
 }
 
@@ -367,15 +384,15 @@ static bool IsTag(struct NbtTag* tag, const char* tagName) {
 /*########################################################################################################################*
 *--------------------------------------------------ClassicWorld format----------------------------------------------------*
 *#########################################################################################################################*/
-static bool Cw_Callback_1(struct NbtTag* tag) {
-	if (IsTag(tag, "X")) { World_Width  = NbtTag_U16(tag); return true; }
-	if (IsTag(tag, "Y")) { World_Height = NbtTag_U16(tag); return true; }
-	if (IsTag(tag, "Z")) { World_Length = NbtTag_U16(tag); return true; }
+static void Cw_Callback_1(struct NbtTag* tag) {
+	if (IsTag(tag, "X")) { World_Width  = NbtTag_U16(tag); return; }
+	if (IsTag(tag, "Y")) { World_Height = NbtTag_U16(tag); return; }
+	if (IsTag(tag, "Z")) { World_Length = NbtTag_U16(tag); return; }
 
 	if (IsTag(tag, "UUID")) {
 		if (tag->DataSize != sizeof(World_Uuid)) ErrorHandler_Fail("Map UUID must be 16 bytes");
 		Mem_Copy(World_Uuid, tag->DataSmall, sizeof(World_Uuid));
-		return true;
+		return;
 	}
 
 	if (IsTag(tag, "BlockArray")) {
@@ -385,26 +402,23 @@ static bool Cw_Callback_1(struct NbtTag* tag) {
 			Mem_Copy(World_Blocks, tag->DataSmall, tag->DataSize);
 		} else {
 			World_Blocks = tag->DataBig;
+			tag->DataBig = NULL; /* So Nbt_ReadTag doesn't call Mem_Free on World_Blocks */
 		}
 #ifdef EXTENDED_BLOCKS
 		World_Blocks2 = World_Blocks;
 #endif
-		return true;
 	}
-	return false;
 }
 
-static bool Cw_Callback_2(struct NbtTag* tag) {
-	if (!IsTag(tag->Parent, "Spawn")) return false;
-
-	struct LocalPlayer*p = &LocalPlayer_Instance;
-	if (IsTag(tag, "X")) { p->Spawn.X = NbtTag_I16(tag); return true; }
-	if (IsTag(tag, "Y")) { p->Spawn.Y = NbtTag_I16(tag); return true; }
-	if (IsTag(tag, "Z")) { p->Spawn.Z = NbtTag_I16(tag); return true; }
-	if (IsTag(tag, "H")) { p->SpawnRotY  = Math_Deg2Packed(NbtTag_U8(tag)); return true; }
-	if (IsTag(tag, "P")) { p->SpawnHeadX = Math_Deg2Packed(NbtTag_U8(tag)); return true; }
-
-	return false;
+static void Cw_Callback_2(struct NbtTag* tag) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	if (!IsTag(tag->Parent, "Spawn")) return;
+	
+	if (IsTag(tag, "X")) { p->Spawn.X = NbtTag_I16(tag); return; }
+	if (IsTag(tag, "Y")) { p->Spawn.Y = NbtTag_I16(tag); return; }
+	if (IsTag(tag, "Z")) { p->Spawn.Z = NbtTag_I16(tag); return; }
+	if (IsTag(tag, "H")) { p->SpawnRotY  = Math_Deg2Packed(NbtTag_U8(tag)); return; }
+	if (IsTag(tag, "P")) { p->SpawnHeadX = Math_Deg2Packed(NbtTag_U8(tag)); return; }
 }
 
 BlockID cw_curID;
@@ -417,51 +431,51 @@ static PackedCol Cw_ParseCol(PackedCol defValue) {
 	return col;		
 }
 
-static bool Cw_Callback_4(struct NbtTag* tag) {
-	if (!IsTag(tag->Parent->Parent, "CPE")) return false;
-	if (!IsTag(tag->Parent->Parent->Parent, "Metadata")) return false;
-	struct LocalPlayer*p = &LocalPlayer_Instance;
+static void Cw_Callback_4(struct NbtTag* tag) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	if (!IsTag(tag->Parent->Parent, "CPE")) return;
+	if (!IsTag(tag->Parent->Parent->Parent, "Metadata")) return;
 
 	if (IsTag(tag->Parent, "ClickDistance")) {
-		if (IsTag(tag, "Distance")) { p->ReachDistance = NbtTag_U16(tag) / 32.0f; return true; }
+		if (IsTag(tag, "Distance")) { p->ReachDistance = NbtTag_U16(tag) / 32.0f; return; }
 	}
 	if (IsTag(tag->Parent, "EnvWeatherType")) {
-		if (IsTag(tag, "WeatherType")) { Env_SetWeather(NbtTag_U8(tag)); return true; }
+		if (IsTag(tag, "WeatherType")) { Env_SetWeather(NbtTag_U8(tag)); return; }
 	}
 
 	if (IsTag(tag->Parent, "EnvMapAppearance")) {
-		if (IsTag(tag, "SideBlock")) { Env_SetSidesBlock(NbtTag_U8(tag));  return true; }
-		if (IsTag(tag, "EdgeBlock")) { Env_SetEdgeBlock(NbtTag_U8(tag));   return true; }
-		if (IsTag(tag, "SideLevel")) { Env_SetEdgeHeight(NbtTag_I16(tag)); return true; }
+		if (IsTag(tag, "SideBlock")) { Env_SetSidesBlock(NbtTag_U8(tag));  return; }
+		if (IsTag(tag, "EdgeBlock")) { Env_SetEdgeBlock(NbtTag_U8(tag));   return; }
+		if (IsTag(tag, "SideLevel")) { Env_SetEdgeHeight(NbtTag_I16(tag)); return; }
 
 		if (IsTag(tag, "TextureURL")) {
 			String url = NbtTag_String(tag);
 			if (Game_AllowServerTextures && url.length) {
 				ServerConnection_RetrieveTexturePack(&url);
 			}
-			return true;
+			return;
 		}
 	}
 
 	/* Callback for compound tag is called after all its children have been processed */
 	if (IsTag(tag->Parent, "EnvColors")) {
 		if (IsTag(tag, "Sky")) {
-			Env_SetSkyCol(Cw_ParseCol(Env_DefaultSkyCol)); return true;
+			Env_SetSkyCol(Cw_ParseCol(Env_DefaultSkyCol)); return;
 		} else if (IsTag(tag, "Cloud")) {
-			Env_SetCloudsCol(Cw_ParseCol(Env_DefaultCloudsCol)); return true;
+			Env_SetCloudsCol(Cw_ParseCol(Env_DefaultCloudsCol)); return;
 		} else if (IsTag(tag, "Fog")) {
-			Env_SetFogCol(Cw_ParseCol(Env_DefaultFogCol)); return true;
+			Env_SetFogCol(Cw_ParseCol(Env_DefaultFogCol)); return;
 		} else if (IsTag(tag, "Sunlight")) {
-			Env_SetSunCol(Cw_ParseCol(Env_DefaultSunCol)); return true;
+			Env_SetSunCol(Cw_ParseCol(Env_DefaultSunCol)); return;
 		} else if (IsTag(tag, "Ambient")) {
-			Env_SetShadowCol(Cw_ParseCol(Env_DefaultShadowCol)); return true;
+			Env_SetShadowCol(Cw_ParseCol(Env_DefaultShadowCol)); return;
 		}
 	}
 
 	if (IsTag(tag->Parent, "BlockDefinitions")) {
 		String tagName = { tag->NameBuffer, tag->NameSize, tag->NameSize };
 		String blockStr = String_FromConst("Block");
-		if (!String_CaselessStarts(&tagName, &blockStr)) return false;
+		if (!String_CaselessStarts(&tagName, &blockStr)) return;
 		BlockID id = cw_curID;
 
 		/* hack for sprite draw (can't rely on order of tags when reading) */
@@ -478,106 +492,104 @@ static bool Cw_Callback_4(struct NbtTag* tag) {
 		Event_RaiseVoid(&BlockEvents_PermissionsChanged);
 
 		cw_curID = 0;
-		return true;
 	}
-	return false;
 }
 
-static bool Cw_Callback_5(struct NbtTag* tag) {
-	if (!IsTag(tag->Parent->Parent->Parent, "CPE")) return false;
-	if (!IsTag(tag->Parent->Parent->Parent->Parent, "Metadata")) return false;
+static void Cw_Callback_5(struct NbtTag* tag) {
+	BlockID id = cw_curID;
+	uint8_t* arr;
+	uint8_t sound;
+
+	if (!IsTag(tag->Parent->Parent->Parent, "CPE")) return;
+	if (!IsTag(tag->Parent->Parent->Parent->Parent, "Metadata")) return;
 
 	if (IsTag(tag->Parent->Parent, "EnvColors")) {
-		if (IsTag(tag, "R")) { cw_colR = NbtTag_U16(tag); return true; }
-		if (IsTag(tag, "G")) { cw_colG = NbtTag_U16(tag); return true; }
-		if (IsTag(tag, "B")) { cw_colB = NbtTag_U16(tag); return true; }
+		if (IsTag(tag, "R")) { cw_colR = NbtTag_U16(tag); return; }
+		if (IsTag(tag, "G")) { cw_colG = NbtTag_U16(tag); return; }
+		if (IsTag(tag, "B")) { cw_colB = NbtTag_U16(tag); return; }
 	}
 
 	if (IsTag(tag->Parent->Parent, "BlockDefinitions") && Game_AllowCustomBlocks) {
-		BlockID id = cw_curID;
-		if (IsTag(tag, "ID"))             { cw_curID = NbtTag_U8(tag); return true; }
-		if (IsTag(tag, "CollideType"))    { Block_SetCollide(id, NbtTag_U8(tag)); return true; }
-		if (IsTag(tag, "Speed"))          { Block_SpeedMultiplier[id] = NbtTag_F32(tag); return true; }
-		if (IsTag(tag, "TransmitsLight")) { Block_BlocksLight[id] = NbtTag_U8(tag) == 0; return true; }
-		if (IsTag(tag, "FullBright"))     { Block_FullBright[id] = NbtTag_U8(tag) != 0; return true; }
-		if (IsTag(tag, "BlockDraw"))      { Block_Draw[id] = NbtTag_U8(tag); return true; }
-		if (IsTag(tag, "Shape"))          { Block_SpriteOffset[id] = NbtTag_U8(tag); return true; }
+		if (IsTag(tag, "ID"))             { cw_curID = NbtTag_U8(tag); return; }
+		if (IsTag(tag, "CollideType"))    { Block_SetCollide(id, NbtTag_U8(tag)); return; }
+		if (IsTag(tag, "Speed"))          { Block_SpeedMultiplier[id] = NbtTag_F32(tag); return; }
+		if (IsTag(tag, "TransmitsLight")) { Block_BlocksLight[id] = NbtTag_U8(tag) == 0; return; }
+		if (IsTag(tag, "FullBright"))     { Block_FullBright[id] = NbtTag_U8(tag) != 0; return; }
+		if (IsTag(tag, "BlockDraw"))      { Block_Draw[id] = NbtTag_U8(tag); return; }
+		if (IsTag(tag, "Shape"))          { Block_SpriteOffset[id] = NbtTag_U8(tag); return; }
 
 		if (IsTag(tag, "Name")) {
 			String name = NbtTag_String(tag);
 			Block_SetName(id, &name);
-			return true;
+			return;
 		}
 
 		if (IsTag(tag, "Textures")) {
-			uint8_t* tex = NbtTag_U8_Array(tag, 6);
-			Block_SetTex(tex[0], FACE_YMAX, id);
-			Block_SetTex(tex[1], FACE_YMIN, id);
-			Block_SetTex(tex[2], FACE_XMIN, id);
-			Block_SetTex(tex[3], FACE_XMAX, id);
-			Block_SetTex(tex[4], FACE_ZMIN, id);
-			Block_SetTex(tex[5], FACE_ZMAX, id);
-			return true;
+			arr = NbtTag_U8_Array(tag, 6);
+			Block_SetTex(arr[0], FACE_YMAX, id);
+			Block_SetTex(arr[1], FACE_YMIN, id);
+			Block_SetTex(arr[2], FACE_XMIN, id);
+			Block_SetTex(arr[3], FACE_XMAX, id);
+			Block_SetTex(arr[4], FACE_ZMIN, id);
+			Block_SetTex(arr[5], FACE_ZMAX, id);
+			return;
 		}
 		
 		if (IsTag(tag, "WalkSound")) {
-			uint8_t sound = NbtTag_U8(tag);
+			sound = NbtTag_U8(tag);
 			Block_DigSounds[id]  = sound;
 			Block_StepSounds[id] = sound;
 			if (sound == SOUND_GLASS) Block_StepSounds[id] = SOUND_STONE;
-			return true;
+			return;
 		}
 
 		if (IsTag(tag, "Fog")) {
-			uint8_t* fog = NbtTag_U8_Array(tag, 4);
-			Block_FogDensity[id] = (fog[0] + 1) / 128.0f;
+			arr = NbtTag_U8_Array(tag, 4);
+			Block_FogDensity[id] = (arr[0] + 1) / 128.0f;
 			/* Fix for older ClassicalSharp versions which saved wrong fog density value */
-			if (fog[0] == 0xFF) Block_FogDensity[id] = 0.0f;
+			if (arr[0] == 0xFF) Block_FogDensity[id] = 0.0f;
  
-			Block_FogCol[id].R = fog[1];
-			Block_FogCol[id].G = fog[2];
-			Block_FogCol[id].B = fog[3];
+			Block_FogCol[id].R = arr[1];
+			Block_FogCol[id].G = arr[2];
+			Block_FogCol[id].B = arr[3];
 			Block_FogCol[id].A = 255;
-			return true;
+			return;
 		}
 
 		if (IsTag(tag, "Coords")) {
-			uint8_t* coords = NbtTag_U8_Array(tag, 6);
-			Block_MinBB[id].X = coords[0] / 16.0f; Block_MaxBB[id].X = coords[3] / 16.0f;
-			Block_MinBB[id].Y = coords[1] / 16.0f; Block_MaxBB[id].Y = coords[4] / 16.0f;
-			Block_MinBB[id].Z = coords[2] / 16.0f; Block_MaxBB[id].Z = coords[5] / 16.0f;
-			return true;
+			arr = NbtTag_U8_Array(tag, 6);
+			Block_MinBB[id].X = arr[0] / 16.0f; Block_MaxBB[id].X = arr[3] / 16.0f;
+			Block_MinBB[id].Y = arr[1] / 16.0f; Block_MaxBB[id].Y = arr[4] / 16.0f;
+			Block_MinBB[id].Z = arr[2] / 16.0f; Block_MaxBB[id].Z = arr[5] / 16.0f;
+			return;
 		}
 	}
-	return false;
 }
 
-static bool Cw_Callback(struct NbtTag* tag) {
+static void Cw_Callback(struct NbtTag* tag) {
 	int depth = 0;
 	struct NbtTag* tmp = tag->Parent;
 	while (tmp) { depth++; tmp = tmp->Parent; }
 
 	switch (depth) {
-	case 1: return Cw_Callback_1(tag);
-	case 2: return Cw_Callback_2(tag);
-	case 4: return Cw_Callback_4(tag);
-	case 5: return Cw_Callback_5(tag);
+	case 1: Cw_Callback_1(tag); return;
+	case 2: Cw_Callback_2(tag); return;
+	case 4: Cw_Callback_4(tag); return;
+	case 5: Cw_Callback_5(tag); return;
 	}
-	return false;
-
 	/* ClassicWorld -> Metadata -> CPE -> ExtName -> [values]
 	        0             1         2        3          4   */
 }
 
 ReturnCode Cw_Load(struct Stream* stream) {
-	ReturnCode res = Map_SkipGZipHeader(stream);
-	if (res) return res;
+	uint8_t tag;
+	ReturnCode res;
 
 	struct Stream compStream;
 	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
-	uint8_t tag;
+	if ((res = Map_SkipGZipHeader(stream))) return res;
 	if ((res = compStream.ReadU8(&compStream, &tag))) return res;
 	if (tag != NBT_DICT) return CW_ERR_ROOT_TAG;
 
@@ -597,12 +609,11 @@ ReturnCode Cw_Load(struct Stream* stream) {
 *#########################################################################################################################*/
 enum JTypeCode {
 	TC_NULL = 0x70, TC_REFERENCE = 0x71, TC_CLASSDESC = 0x72, TC_OBJECT = 0x73, 
-	TC_STRING = 0x74, TC_ARRAY = 0x75, TC_ENDBLOCKDATA = 0x78,
+	TC_STRING = 0x74, TC_ARRAY = 0x75, TC_ENDBLOCKDATA = 0x78
 };
-
 enum JFieldType {
 	JFIELD_I8 = 'B', JFIELD_F32 = 'F', JFIELD_I32 = 'I', JFIELD_I64 = 'J',
-	JFIELD_BOOL = 'Z', JFIELD_ARRAY = '[', JFIELD_OBJECT = 'L',
+	JFIELD_BOOL = 'Z', JFIELD_ARRAY = '[', JFIELD_OBJECT = 'L'
 };
 
 #define JNAME_SIZE 48
@@ -610,9 +621,10 @@ struct JFieldDesc {
 	uint8_t Type;
 	char FieldName[JNAME_SIZE];
 	union {
-		uint8_t Value_U8;
-		int32_t Value_I32;
-		float   Value_F32;
+		uint8_t  Value_U8;
+		int32_t  Value_I32;
+		uint32_t Value_U32;
+		float    Value_F32;
 		struct { uint8_t* Value_Ptr; uint32_t Value_Size; };
 	};
 };
@@ -624,9 +636,11 @@ struct JClassDesc {
 };
 
 static ReturnCode Dat_ReadString(struct Stream* stream, char* buffer) {
+	int len;
 	ReturnCode res;
+
 	if ((res = Stream_Read(stream, buffer, 2))) return res;
-	int len = Stream_GetU16_BE(buffer);
+	len = Stream_GetU16_BE(buffer);
 
 	Mem_Set(buffer, 0, JNAME_SIZE);
 	if (len > JNAME_SIZE) return DAT_ERR_JSTRING_LEN;
@@ -634,16 +648,17 @@ static ReturnCode Dat_ReadString(struct Stream* stream, char* buffer) {
 }
 
 static ReturnCode Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* desc) {
+	uint8_t typeCode;
+	char className1[JNAME_SIZE];
 	ReturnCode res;
+
 	if ((res = stream->ReadU8(stream, &desc->Type)))     return res;
 	if ((res = Dat_ReadString(stream, desc->FieldName))) return res;
 
-	if (desc->Type == JFIELD_ARRAY || desc->Type == JFIELD_OBJECT) {
-		uint8_t typeCode;
+	if (desc->Type == JFIELD_ARRAY || desc->Type == JFIELD_OBJECT) {		
 		if ((res = stream->ReadU8(stream, &typeCode))) return res;
 
 		if (typeCode == TC_STRING) {
-			char className1[JNAME_SIZE];
 			return Dat_ReadString(stream, className1);
 		} else if (typeCode == TC_REFERENCE) {
 			return stream->Skip(stream, 4); /* (4) handle */
@@ -655,9 +670,11 @@ static ReturnCode Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* de
 }
 
 static ReturnCode Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* desc) {
-	ReturnCode res;
 	uint8_t typeCode;
-	uint8_t tmp[2];
+	uint8_t count[2];
+	struct JClassDesc superClassDesc;
+	ReturnCode res;
+	int i;
 
 	if ((res = stream->ReadU8(stream, &typeCode))) return res;
 	if (typeCode == TC_NULL) { desc->ClassName[0] = '\0'; desc->FieldsCount = 0; return 0; }
@@ -666,11 +683,10 @@ static ReturnCode Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* de
 	if ((res = Dat_ReadString(stream, desc->ClassName))) return res;
 	if ((res = stream->Skip(stream, 9))) return res; /* (8) serial version UID, (1) flags */
 
-	if ((res = Stream_Read(stream, tmp, 2))) return res;
-	desc->FieldsCount = Stream_GetU16_BE(tmp);
+	if ((res = Stream_Read(stream, count, 2))) return res;
+	desc->FieldsCount = Stream_GetU16_BE(count);
 	if (desc->FieldsCount > Array_Elems(desc->Fields)) return DAT_ERR_JCLASS_FIELDS;
-
-	int i;
+	
 	for (i = 0; i < desc->FieldsCount; i++) {
 		if ((res = Dat_ReadFieldDesc(stream, &desc->Fields[i]))) return res;
 	}
@@ -678,14 +694,15 @@ static ReturnCode Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* de
 	if ((res = stream->ReadU8(stream, &typeCode))) return res;
 	if (typeCode != TC_ENDBLOCKDATA) return DAT_ERR_JCLASS_ANNOTATION;
 
-	struct JClassDesc superClassDesc;
 	return Dat_ReadClassDesc(stream, &superClassDesc);
 }
 
 static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
-	ReturnCode res;
 	uint8_t typeCode;
+	String fieldName;
 	uint32_t count;
+	struct JClassDesc arrayClassDesc;
+	ReturnCode res;
 
 	switch (field->Type) {
 	case JFIELD_I8:
@@ -693,14 +710,14 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 		return stream->ReadU8(stream, &field->Value_U8);
 	case JFIELD_F32:
 	case JFIELD_I32:
-		return Stream_ReadU32_BE(stream, &field->Value_I32);
+		return Stream_ReadU32_BE(stream, &field->Value_U32);
 	case JFIELD_I64:
 		return stream->Skip(stream, 8); /* (8) data */
 
 	case JFIELD_OBJECT: {
 		/* Luckily for us, we only have to account for blockMap object */
 		/* Other objects (e.g. player) are stored after the fields we actually care about, so ignore them */
-		String fieldName = String_FromRawArray(field->FieldName);
+		fieldName = String_FromRawArray(field->FieldName);
 		if (!String_CaselessEqualsConst(&fieldName, "blockMap")) return 0;
 		if ((res = stream->ReadU8(stream, &typeCode))) return res;
 
@@ -723,7 +740,6 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 		if (typeCode == TC_NULL) break;
 		if (typeCode != TC_ARRAY) return DAT_ERR_JARRAY_TYPE;
 
-		struct JClassDesc arrayClassDesc;
 		if ((res = Dat_ReadClassDesc(stream, &arrayClassDesc))) return res;
 		if (arrayClassDesc.ClassName[1] != JFIELD_I8) return DAT_ERR_JARRAY_CONTENT;
 
@@ -744,16 +760,20 @@ static int32_t Dat_I32(struct JFieldDesc* field) {
 }
 
 ReturnCode Dat_Load(struct Stream* stream) {
-	ReturnCode res = Map_SkipGZipHeader(stream);
-	if (res) return res;
+	uint8_t header[10];
+	struct JClassDesc obj;
+	struct JFieldDesc* field;
+	String fieldName;
+	ReturnCode res;
+	int i;
 
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct Stream compStream;
 	struct InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
-	uint8_t header[4 + 1 + 2 * 2];
+	if ((res = Map_SkipGZipHeader(stream)))                       return res;
 	if ((res = Stream_Read(&compStream, header, sizeof(header)))) return res;
-
 	/* .dat header */
 	if (Stream_GetU32_BE(&header[0]) != 0x271BB788) return DAT_ERR_IDENTIFIER;
 	if (header[4] != 0x02) return DAT_ERR_VERSION;
@@ -761,21 +781,13 @@ ReturnCode Dat_Load(struct Stream* stream) {
 	/* Java seralisation headers */
 	if (Stream_GetU16_BE(&header[5]) != 0xACED) return DAT_ERR_JIDENTIFIER;
 	if (Stream_GetU16_BE(&header[7]) != 0x0005) return DAT_ERR_JVERSION;
-
-	uint8_t typeCode;
-	if ((res = compStream.ReadU8(&compStream, &typeCode))) return res;
-	if (typeCode != TC_OBJECT) return DAT_ERR_ROOT_TYPE;
-
-	struct JClassDesc obj; 
+	if (header[9] != TC_OBJECT)                 return DAT_ERR_ROOT_TYPE;
 	if ((res = Dat_ReadClassDesc(&compStream, &obj))) return res;
 
-	int i;
-	Vector3* spawn = &LocalPlayer_Instance.Spawn;
 	for (i = 0; i < obj.FieldsCount; i++) {
-		struct JFieldDesc* field = &obj.Fields[i];
-
+		field = &obj.Fields[i];
 		if ((res = Dat_ReadFieldData(&compStream, field))) return res;
-		String fieldName = String_FromRawArray(field->FieldName);
+		fieldName = String_FromRawArray(field->FieldName);
 
 		if (String_CaselessEqualsConst(&fieldName, "width")) {
 			World_Width  = Dat_I32(field);
@@ -791,11 +803,11 @@ ReturnCode Dat_Load(struct Stream* stream) {
 #endif
 			World_BlocksSize = field->Value_Size;
 		} else if (String_CaselessEqualsConst(&fieldName, "xSpawn")) {
-			spawn->X = (float)Dat_I32(field);
+			p->Spawn.X = (float)Dat_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "ySpawn")) {
-			spawn->Y = (float)Dat_I32(field);
+			p->Spawn.Y = (float)Dat_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "zSpawn")) {
-			spawn->Z = (float)Dat_I32(field);
+			p->Spawn.Z = (float)Dat_I32(field);
 		}
 	}
 	return 0;
@@ -941,7 +953,9 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, int b) {
 ReturnCode Cw_Save(struct Stream* stream) {
 	uint8_t tmp[768];
 	PackedCol col;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	ReturnCode res;
+	int b, len;
 
 	Mem_Copy(tmp, cw_begin, sizeof(cw_begin));
 	{
@@ -950,12 +964,11 @@ ReturnCode Cw_Save(struct Stream* stream) {
 		Stream_SetU16_BE(&tmp[69], World_Height);
 		Stream_SetU16_BE(&tmp[75], World_Length);
 		Stream_SetU32_BE(&tmp[127], World_BlocksSize);
-
-		struct LocalPlayer* p = &LocalPlayer_Instance;
+		
 		Vector3 spawn = p->Spawn; /* TODO: Maybe keep real spawn too? */
-		Stream_SetU16_BE(&tmp[89],  (uint16_t)spawn.X);
-		Stream_SetU16_BE(&tmp[95],  (uint16_t)spawn.Y);
-		Stream_SetU16_BE(&tmp[101], (uint16_t)spawn.Z);
+		Stream_SetU16_BE(&tmp[89],  (uint16_t)p->Spawn.X);
+		Stream_SetU16_BE(&tmp[95],  (uint16_t)p->Spawn.Y);
+		Stream_SetU16_BE(&tmp[101], (uint16_t)p->Spawn.Z);
 		tmp[107] = Math_Deg2Packed(p->SpawnRotY);
 		tmp[112] = Math_Deg2Packed(p->SpawnHeadX);
 	}
@@ -977,7 +990,7 @@ ReturnCode Cw_Save(struct Stream* stream) {
 		tmp[365] = (BlockRaw)Env_EdgeBlock;
 		Stream_SetU16_BE(&tmp[378], Env_EdgeHeight);
 	}
-	int b, len = Cw_WriteEndString(&tmp[393], &World_TextureUrl);
+	len = Cw_WriteEndString(&tmp[393], &World_TextureUrl);
 	if ((res = Stream_Write(stream, tmp, sizeof(cw_meta_cpe) + len))) return res;
 
 	if ((res = Stream_Write(stream, cw_meta_defs, sizeof(cw_meta_defs)))) return res;
@@ -1011,8 +1024,9 @@ NBT_END,
 };
 
 ReturnCode Schematic_Save(struct Stream* stream) {
-	uint8_t tmp[256];
+	uint8_t tmp[256], chunk[8192] = { 0 };
 	ReturnCode res;
+	int i;
 
 	Mem_Copy(tmp, sc_begin, sizeof(sc_begin));
 	{
@@ -1026,12 +1040,10 @@ ReturnCode Schematic_Save(struct Stream* stream) {
 
 	Mem_Copy(tmp, sc_data, sizeof(sc_data));
 	{
-		Stream_SetU32_BE(&tmp[7], World_BlocksSize);
+		Stream_SetU32_BE(&sc_data[7], World_BlocksSize);
 	}
 	if ((res = Stream_Write(stream, tmp, sizeof(sc_data)))) return res;
 
-	uint8_t chunk[8192] = { 0 };
-	int i;
 	for (i = 0; i < World_BlocksSize; i += sizeof(chunk)) {
 		int count = World_BlocksSize - i; count = min(count, sizeof(chunk));
 		if ((res = Stream_Write(stream, chunk, count))) return res;
