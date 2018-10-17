@@ -133,10 +133,9 @@ static void Physics_ActivateNeighbours(int x, int y, int z, int index) {
 }
 
 static bool Physics_IsEdgeWater(int x, int y, int z) {
-	if (!(Env_EdgeBlock == BLOCK_WATER || Env_EdgeBlock == BLOCK_STILL_WATER))
-		return false;
-
-	return y >= Env_SidesHeight && y < Env_EdgeHeight
+	return
+		(Env_EdgeBlock == BLOCK_WATER || Env_EdgeBlock == BLOCK_STILL_WATER)
+		&& (y >= Env_SidesHeight && y < Env_EdgeHeight)
 		&& (x == 0 || z == 0 || x == World_MaxX || z == World_MaxZ);
 }
 
@@ -194,6 +193,8 @@ static void Physics_TickRandomBlocks(void) {
 
 static void Physics_DoFalling(int index, BlockID block) {
 	int found = -1, start = index;
+	int x, y, z;
+
 	/* Find lowest block can fall into */
 	while (index >= World_OneY) {
 		index -= World_OneY;
@@ -203,9 +204,8 @@ static void Physics_DoFalling(int index, BlockID block) {
 		else
 			break;
 	}
-	if (found == -1) return;
 
-	int x, y, z;
+	if (found == -1) return;
 	World_Unpack(found, x, y, z);
 	Game_UpdateBlock(x, y, z, block);
 
@@ -230,22 +230,24 @@ static bool Physics_CheckItem(struct TickQueue* queue, int* posIndex) {
 
 
 static void Physics_HandleSapling(int index, BlockID block) {
+	Vector3I coords[TREE_MAX_COUNT];
+	BlockRaw blocks[TREE_MAX_COUNT];
+	int i, count, height;
+
+	BlockID below;
 	int x, y, z;
 	World_Unpack(index, x, y, z);
 
-	BlockID below = BLOCK_AIR;
+	below = BLOCK_AIR;
 	if (y > 0) below = World_Blocks[index - World_OneY];
 	if (below != BLOCK_GRASS) return;
 
-	int treeHeight = 5 + Random_Next(&physics_rnd, 3);
+	height = 5 + Random_Next(&physics_rnd, 3);
 	Game_UpdateBlock(x, y, z, BLOCK_AIR);
 
-	if (TreeGen_CanGrow(x, y, z, treeHeight)) {
-		Vector3I coords[TREE_MAX_COUNT];
-		BlockRaw blocks[TREE_MAX_COUNT];
-		int count = TreeGen_Grow(x, y, z, treeHeight, coords, blocks);
+	if (TreeGen_CanGrow(x, y, z, height)) {	
+		count = TreeGen_Grow(x, y, z, height, coords, blocks);
 
-		int i;
 		for (i = 0; i < count; i++) {
 			Game_UpdateBlock(coords[i].X, coords[i].Y, coords[i].Z, blocks[i]);
 		}
@@ -273,6 +275,7 @@ static void Physics_HandleGrass(int index, BlockID block) {
 }
 
 static void Physics_HandleFlower(int index, BlockID block) {
+	BlockID below;
 	int x, y, z;
 	World_Unpack(index, x, y, z);
 
@@ -282,7 +285,7 @@ static void Physics_HandleFlower(int index, BlockID block) {
 		return;
 	}
 
-	BlockID below = BLOCK_DIRT;
+	below = BLOCK_DIRT;
 	if (y > 0) below = World_Blocks[index - World_OneY];
 	if (!(below == BLOCK_DIRT || below == BLOCK_GRASS)) {
 		Game_UpdateBlock(x, y, z, BLOCK_AIR);
@@ -291,6 +294,7 @@ static void Physics_HandleFlower(int index, BlockID block) {
 }
 
 static void Physics_HandleMushroom(int index, BlockID block) {
+	BlockID below;
 	int x, y, z;
 	World_Unpack(index, x, y, z);
 
@@ -300,7 +304,7 @@ static void Physics_HandleMushroom(int index, BlockID block) {
 		return;
 	}
 
-	BlockID below = BLOCK_STONE;
+	below = BLOCK_STONE;
 	if (y > 0) below = World_Blocks[index - World_OneY];
 	if (!(below == BLOCK_STONE || below == BLOCK_COBBLE)) {
 		Game_UpdateBlock(x, y, z, BLOCK_AIR);
@@ -405,6 +409,7 @@ static void Physics_PlaceSponge(int index, BlockID block) {
 		for (zz = z - 2; zz <= z + 2; zz++) {
 			for (xx = x - 2; xx <= x + 2; xx++) {
 				if (!World_IsValidPos(xx, yy, zz)) continue;
+
 				block = World_GetBlock(xx, yy, zz);
 				if (block == BLOCK_WATER || block == BLOCK_STILL_WATER) {
 					Game_UpdateBlock(xx, yy, zz, BLOCK_AIR);
@@ -439,22 +444,22 @@ static void Physics_DeleteSponge(int index, BlockID block) {
 
 
 static void Physics_HandleSlab(int index, BlockID block) {
-	if (index < World_OneY) return;
-	if (World_Blocks[index - World_OneY] != BLOCK_SLAB) return;
-
 	int x, y, z;
 	World_Unpack(index, x, y, z);
-	Game_UpdateBlock(x, y, z, BLOCK_AIR);
+	if (index < World_OneY) return;
+
+	if (World_Blocks[index - World_OneY] != BLOCK_SLAB) return;
+	Game_UpdateBlock(x, y,     z, BLOCK_AIR);
 	Game_UpdateBlock(x, y - 1, z, BLOCK_DOUBLE_SLAB);
 }
 
 static void Physics_HandleCobblestoneSlab(int index, BlockID block) {
-	if (index < World_OneY) return;
-	if (World_Blocks[index - World_OneY] != BLOCK_COBBLE_SLAB) return;
-
 	int x, y, z;
 	World_Unpack(index, x, y, z);
-	Game_UpdateBlock(x, y, z, BLOCK_AIR);
+	if (index < World_OneY) return;
+
+	if (World_Blocks[index - World_OneY] != BLOCK_COBBLE_SLAB) return;
+	Game_UpdateBlock(x, y,     z, BLOCK_AIR);
 	Game_UpdateBlock(x, y - 1, z, BLOCK_COBBLE);
 }
 

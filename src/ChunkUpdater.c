@@ -171,7 +171,7 @@ static void ChunkUpdater_OnNewMap(void* obj) {
 }
 
 static void ChunkUpdater_OnNewMapLoaded(void* obj) {
-	MapRenderer_ChunksX = (World_Width + CHUNK_MAX)  >> CHUNK_SHIFT;
+	MapRenderer_ChunksX = (World_Width  + CHUNK_MAX) >> CHUNK_SHIFT;
 	MapRenderer_ChunksY = (World_Height + CHUNK_MAX) >> CHUNK_SHIFT;
 	MapRenderer_ChunksZ = (World_Length + CHUNK_MAX) >> CHUNK_SHIFT;
 
@@ -326,9 +326,9 @@ void ChunkUpdater_ResetChunkCache(void) {
 }
 
 void ChunkUpdater_ClearChunkCache(void) {
+	int i;
 	if (!MapRenderer_Chunks) return;
 
-	int i;
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
 		ChunkUpdater_DeleteChunk(&MapRenderer_Chunks[i]);
 	}
@@ -340,6 +340,9 @@ static void ChunkUpdater_ClearChunkCache_Handler(void* obj) {
 
 
 void ChunkUpdater_DeleteChunk(struct ChunkInfo* info) {
+	struct ChunkPartInfo* ptr;
+	int i;
+
 	info->Empty = false; info->AllAir = false;
 #ifdef OCCLUSION
 	info.OcclusionFlags = 0;
@@ -348,10 +351,9 @@ void ChunkUpdater_DeleteChunk(struct ChunkInfo* info) {
 #ifndef CC_BUILD_GL11
 	Gfx_DeleteVb(&info->Vb);
 #endif
-	int i;
 
 	if (info->NormalParts) {
-		struct ChunkPartInfo* ptr = info->NormalParts;
+		ptr = info->NormalParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
 			if (ptr->Offset < 0) continue; 
 			MapRenderer_NormalPartsCount[i]--;
@@ -363,7 +365,7 @@ void ChunkUpdater_DeleteChunk(struct ChunkInfo* info) {
 	}
 
 	if (info->TranslucentParts) {
-		struct ChunkPartInfo* ptr = info->TranslucentParts;
+		ptr = info->TranslucentParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
 			if (ptr->Offset < 0) continue;
 			MapRenderer_TranslucentPartsCount[i]--;
@@ -376,6 +378,9 @@ void ChunkUpdater_DeleteChunk(struct ChunkInfo* info) {
 }
 
 void ChunkUpdater_BuildChunk(struct ChunkInfo* info, int* chunkUpdates) {
+	struct ChunkPartInfo* ptr;
+	int i;
+
 	Game_ChunkUpdates++;
 	(*chunkUpdates)++;
 	info->PendingDelete = false;
@@ -384,17 +389,16 @@ void ChunkUpdater_BuildChunk(struct ChunkInfo* info, int* chunkUpdates) {
 	if (!info->NormalParts && !info->TranslucentParts) {
 		info->Empty = true; return;
 	}
-	int i;
-
+	
 	if (info->NormalParts) {
-		struct ChunkPartInfo* ptr = info->NormalParts;
+		ptr = info->NormalParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
 			if (ptr->Offset >= 0) { MapRenderer_NormalPartsCount[i]++; }
 		}
 	}
 
 	if (info->TranslucentParts) {
-		struct ChunkPartInfo* ptr = info->TranslucentParts;
+		ptr = info->TranslucentParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
 			if (ptr->Offset >= 0) { MapRenderer_TranslucentPartsCount[i]++; }
 		}

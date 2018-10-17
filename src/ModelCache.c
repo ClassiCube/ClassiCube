@@ -46,9 +46,11 @@ static void ModelCache_InitModel(struct Model* model) {
 }
 
 struct Model* ModelCache_Get(const String* name) {
+	struct CachedModel* m;
 	int i;
+
 	for (i = 0; i < ModelCache_modelCount; i++) {
-		struct CachedModel* m = &ModelCache_Models[i];
+		m = &ModelCache_Models[i];
 		if (!String_CaselessEquals(&m->Name, name)) continue;
 		
 		if (!m->Instance->initalised) {
@@ -60,9 +62,11 @@ struct Model* ModelCache_Get(const String* name) {
 }
 
 int ModelCache_GetTextureIndex(const String* texName) {
+	struct CachedTexture* tex;
 	int i;
+
 	for (i = 0; i < ModelCache_texCount; i++) {
-		struct CachedTexture* tex = &ModelCache_Textures[i];
+		tex = &ModelCache_Textures[i];
 		if (String_CaselessEquals(&tex->Name, texName)) return i;
 	}
 	return -1;
@@ -96,9 +100,11 @@ void ModelCache_RegisterTexture(STRING_REF const char* texName) {
 }
 
 static void ModelCache_TextureChanged(void* obj, struct Stream* stream, const String* name) {
+	struct CachedTexture* tex;
 	int i;
+
 	for (i = 0; i < ModelCache_texCount; i++) {
-		struct CachedTexture* tex = &ModelCache_Textures[i];
+		tex = &ModelCache_Textures[i];
 		if (!String_CaselessEquals(&tex->Name, name)) continue;
 
 		Game_UpdateTexture(&tex->TexID, stream, name, &tex->SkinType);

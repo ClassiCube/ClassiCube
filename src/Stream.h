@@ -88,6 +88,7 @@ ReturnCode Stream_ReadU32_BE(struct Stream* s, uint32_t* value);
 /* Reads a UTF8 encoded character from the stream. */
 ReturnCode Stream_ReadUtf8(struct Stream* s, Codepoint* cp);
 /* Reads a line of UTF8 encoded character from the stream. */
+/* NOTE: Reads one byte at a time. May want to use Stream_ReadonlyBuffered. */
 ReturnCode Stream_ReadLine(struct Stream* s, String* text);
 /* Writes a UTF8 encoded character to the stream. */
 int Stream_WriteUtf8(uint8_t* buffer, Codepoint cp);

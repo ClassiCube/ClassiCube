@@ -278,7 +278,10 @@ static void Commands_Execute(const String* input) {
 	String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
 	String prefix      = String_FromConst(COMMANDS_PREFIX);
 
-	int offset;
+	String args[10];
+	int offset, count;
+	struct ChatCommand* cmd;
+
 	if (String_CaselessStarts(&text, &prefixSpace)) { /* /clientcommand args */
 		offset = prefixSpace.length;
 	} else if (String_CaselessStarts(&text, &prefix)) { /* /client command args */
@@ -286,19 +289,14 @@ static void Commands_Execute(const String* input) {
 	} else { /* /command args */
 		offset = 1;
 	}
+
 	text = String_UNSAFE_Substring(&text, offset, text.length - offset);
+	/* Check for only / or /client */
+	if (!text.length) { Commands_PrintDefault(); return; }
 
-	if (!text.length) { /* only / or /client */
-		Commands_PrintDefault(); return;
-	}
-
-	String args[10];
-	int argsCount = Array_Elems(args);
-	String_UNSAFE_Split(&text, ' ', args, &argsCount);
-
-	struct ChatCommand* cmd = Commands_GetMatch(&args[0]);
-	if (!cmd) return;
-	cmd->Execute(args, argsCount);
+	count = String_UNSAFE_Split(&text, ' ', args, Array_Elems(args));
+	cmd = Commands_GetMatch(&args[0]);
+	if (cmd) cmd->Execute(args,count);
 }
 
 

@@ -307,28 +307,30 @@ static void NotchyGen_FloodFillWaterBorders(void) {
 
 static void NotchyGen_FloodFillWater(void) {
 	int numSources = Gen_Width * Gen_Length / 800;
-	Gen_CurrentState = "Flooding water";
+	int i, x, y, z;
 
-	int i;
+	Gen_CurrentState = "Flooding water";
 	for (i = 0; i < numSources; i++) {
 		Gen_CurrentProgress = (float)i / numSources;
-		int x = Random_Next(&rnd, Gen_Width);
-		int z = Random_Next(&rnd, Gen_Length);
-		int y = waterLevel - Random_Range(&rnd, 1, 3);
+
+		x = Random_Next(&rnd, Gen_Width);
+		z = Random_Next(&rnd, Gen_Length);
+		y = waterLevel - Random_Range(&rnd, 1, 3);
 		NotchyGen_FloodFill(Gen_Pack(x, y, z), BLOCK_WATER);
 	}
 }
 
 static void NotchyGen_FloodFillLava(void) {
 	int numSources = Gen_Width * Gen_Length / 20000;
-	Gen_CurrentState = "Flooding lava";
+	int i, x, y, z;
 
-	int i;
+	Gen_CurrentState = "Flooding lava";
 	for (i = 0; i < numSources; i++) {
 		Gen_CurrentProgress = (float)i / numSources;
-		int x = Random_Next(&rnd, Gen_Width);
-		int z = Random_Next(&rnd, Gen_Length);
-		int y = (int)((waterLevel - 3) * Random_Float(&rnd) * Random_Float(&rnd));
+
+		x = Random_Next(&rnd, Gen_Width);
+		z = Random_Next(&rnd, Gen_Length);
+		y = (int)((waterLevel - 3) * Random_Float(&rnd) * Random_Float(&rnd));
 		NotchyGen_FloodFill(Gen_Pack(x, y, z), BLOCK_LAVA);
 	}
 }
@@ -353,8 +355,7 @@ static void NotchyGen_CreateSurfaceLayer(void) {
 
 			if (blockAbove == BLOCK_WATER && (OctaveNoise_Calc(&n2, (float)x, (float)z) > 12)) {
 				Gen_Blocks[index] = BLOCK_GRAVEL;
-			}
-			else if (blockAbove == BLOCK_AIR) {
+			} else if (blockAbove == BLOCK_AIR) {
 				Gen_Blocks[index] = (y <= waterLevel && (OctaveNoise_Calc(&n1, (float)x, (float)z) > 8)) ? BLOCK_SAND : BLOCK_GRASS;
 			}
 		}

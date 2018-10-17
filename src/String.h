@@ -54,7 +54,9 @@ NOINLINE_ void String_Copy(String* dst, const String* src);
 NOINLINE_ String String_UNSAFE_Substring(STRING_REF const String* str, int offset, int length);
 /* UNSAFE: Returns a substring of the given string. (sub.buffer is within str.buffer + str.length) */
 #define String_UNSAFE_SubstringAt(str, offset) (String_UNSAFE_Substring(str, offset, (str)->length - (offset)))
-NOINLINE_ void String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int* subsCount);
+/* UNSAFE: Splits a string of the form [str1][c][str2][c][str3].. into substrings. */
+/* e.g., "abc:id:xyz" becomes "abc","id","xyz" */
+NOINLINE_ int String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int maxSubs);
 /* UNSAFE: Splits a string of the form [key][c][value] into two substrings. */
 /* e.g., allowed =true becomes 'allowed' and 'true', and excludes the space. */
 NOINLINE_ bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value);

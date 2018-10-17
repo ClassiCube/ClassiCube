@@ -50,12 +50,11 @@ void Block_Reset(void) {
 }
 
 void Block_Init(void) {
-	int i;
+	int i, block;
 	for (i = 0; i < Array_Elems(Block_DefinedCustomBlocks); i++) {
 		Block_DefinedCustomBlocks[i] = 0;
 	}
 
-	int block;
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
 		Block_ResetProps((BlockID)block);
 	}
@@ -214,9 +213,11 @@ void Block_SetName(BlockID block, const String* name) {
 }
 
 int Block_FindID(const String* name) {
+	String blockName;
 	int block;
+
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
-		String blockName = Block_UNSAFE_GetName(block);
+		blockName = Block_UNSAFE_GetName(block);
 		if (String_CaselessEquals(&blockName, name)) return block;
 	}
 	return -1;
@@ -536,15 +537,18 @@ static BlockID AutoRotate_RotateDirection(BlockID block, const String* name) {
 #define AR_EQ2(s, x, y) (dir0 == x && dir1 == y)
 BlockID AutoRotate_RotateBlock(BlockID block) {
 	String name  = Block_UNSAFE_GetName(block);
+	String dir, group;
+	char dir0, dir1;
+
 	int dirIndex = String_LastIndexOf(&name, '-');
 	if (dirIndex == -1) return block; /* not a directional block */
 
-	String dir   = String_UNSAFE_SubstringAt(&name, dirIndex + 1);
-	String group = String_UNSAFE_Substring(&name, 0, dirIndex);
+	dir   = String_UNSAFE_SubstringAt(&name, dirIndex + 1);
+	group = String_UNSAFE_Substring(&name, 0, dirIndex);
 
 	if (dir.length > 2) return block;
-	char dir0 = dir.length > 0 ? dir.buffer[0] : '\0'; Char_MakeLower(dir0);
-	char dir1 = dir.length > 1 ? dir.buffer[1] : '\0'; Char_MakeLower(dir1);
+	dir0 = dir.length > 0 ? dir.buffer[0] : '\0'; Char_MakeLower(dir0);
+	dir1 = dir.length > 1 ? dir.buffer[1] : '\0'; Char_MakeLower(dir1);
 
 	if (AR_EQ2(dir, 'n','w') || AR_EQ2(dir, 'n','e') || AR_EQ2(dir, 's','w') || AR_EQ2(dir, 's','e')) {
 		return AutoRotate_RotateCorner(block, &group);

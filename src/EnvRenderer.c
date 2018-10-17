@@ -352,12 +352,12 @@ static void EnvRenderer_InitWeatherHeightmap(void) {
 for (y = maxY; y >= 0; y--, i -= World_OneY) {\
 	uint8_t draw = Block_Draw[get_block];\
 	if (!(draw == DRAW_GAS || draw == DRAW_SPRITE)) {\
-		Weather_Heightmap[index] = y;\
+		Weather_Heightmap[hIndex] = y;\
 		return y;\
 	}\
 }
 
-static int EnvRenderer_CalcRainHeightAt(int x, int maxY, int z, int index) {
+static int EnvRenderer_CalcRainHeightAt(int x, int maxY, int z, int hIndex) {
 	int i = World_Pack(x, maxY, z), y;
 
 #ifndef EXTENDED_BLOCKS
@@ -370,7 +370,7 @@ static int EnvRenderer_CalcRainHeightAt(int x, int maxY, int z, int index) {
 	}
 #endif
 
-	Weather_Heightmap[index] = -1;
+	Weather_Heightmap[hIndex] = -1;
 	return -1;
 }
 
@@ -378,10 +378,10 @@ static float EnvRenderer_RainHeight(int x, int z) {
 	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) {
 		return (float)Env_EdgeHeight;
 	}
-	int index = (x * World_Length) + z;
-	int height = Weather_Heightmap[index];
+	int hIndex = (x * World_Length) + z;
+	int height = Weather_Heightmap[hIndex];
 
-	int y = height == Int16_MaxValue ? EnvRenderer_CalcRainHeightAt(x, World_MaxY, z, index) : height;
+	int y = height == Int16_MaxValue ? EnvRenderer_CalcRainHeightAt(x, World_MaxY, z, hIndex) : height;
 	return y == -1 ? 0 : y + Block_MaxBB[World_GetBlock(x, y, z)].Y;
 }
 

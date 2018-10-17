@@ -447,23 +447,25 @@ int Stream_WriteUtf8(uint8_t* buffer, Codepoint cp) {
 }
 
 ReturnCode Stream_WriteLine(struct Stream* s, String* text) {
-	uint8_t buffer[2048 + 10];
-	int i, j = 0;
+	uint8_t buffer[2048 + 10]; /* some space for newline */
+	uint8_t* cur;
+	Codepoint cp;
 	ReturnCode res;
+	int i, len = 0;
 
 	for (i = 0; i < text->length; i++) {
 		/* For extremely large strings */
-		if (j >= 2048) {
-			if ((res = Stream_Write(s, buffer, j))) return res;
-			j = 0;
+		if (len >= 2048) {
+			if ((res = Stream_Write(s, buffer, len))) return res;
+			len = 0;
 		}
 
-		uint8_t* cur   = buffer + j;
-		Codepoint cp = Convert_CP437ToUnicode(text->buffer[i]);
-		j += Stream_WriteUtf8(cur, cp);
+		cur = buffer + len;
+		cp  = Convert_CP437ToUnicode(text->buffer[i]);
+		len += Stream_WriteUtf8(cur, cp);
 	}
 	
-	uint8_t* ptr = Platform_NewLine;
-	while (*ptr) { buffer[j++] = *ptr++; }
-	return Stream_Write(s, buffer, j);
+	cur = Platform_NewLine;
+	while (*cur) { buffer[len++] = *cur++; }
+	return Stream_Write(s, buffer, len);
 }

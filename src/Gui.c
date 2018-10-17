@@ -49,7 +49,7 @@ void Widget_CalcPosition(void* widget) {
 
 void Widget_Reset(void* widget) {
 	struct Widget* w = widget;
-	w->Active = false;
+	w->Active   = false;
 	w->Disabled = false;
 	w->X = 0; w->Y = 0;
 	w->Width = 0; w->Height = 0;
@@ -89,13 +89,13 @@ static void Gui_FileChanged(void* obj, struct Stream* stream, const String* name
 }
 
 static void Gui_Init(void) {
-	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
-	Gui_Status = StatusScreen_MakeInstance();
-	Gui_HUD = HUDScreen_MakeInstance();
-
 	struct IGameComponent comp; IGameComponent_MakeEmpty(&comp);
 	StatusScreen_MakeComponent(&comp); Game_AddComponent(&comp);
 	HUDScreen_MakeComponent(&comp);    Game_AddComponent(&comp);
+
+	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
+	Gui_Status = StatusScreen_MakeInstance();
+	Gui_HUD    = HUDScreen_MakeInstance();
 }
 
 static void Gui_Reset(void) {
@@ -150,12 +150,12 @@ void Gui_SetActive(struct Screen* screen) {
 void Gui_RefreshHud(void) { Elem_Recreate(Gui_HUD); }
 
 void Gui_ShowOverlay(struct Screen* overlay, bool atFront) {
+	int i;
 	if (Gui_OverlaysCount == GUI_MAX_OVERLAYS) {
 		ErrorHandler_Fail("Gui_ShowOverlay - hit max count");
 	}
 
-	if (atFront) {
-		int i;
+	if (atFront) {		
 		/* Insert overlay at start of list */
 		for (i = Gui_OverlaysCount - 1; i > 0; i--) {
 			Gui_Overlays[i] = Gui_Overlays[i - 1];
@@ -173,6 +173,7 @@ void Gui_ShowOverlay(struct Screen* overlay, bool atFront) {
 int Gui_IndexOverlay(const void* overlay) {
 	const struct Screen* s = overlay;
 	int i;
+
 	for (i = 0; i < Gui_OverlaysCount; i++) {
 		if (Gui_Overlays[i] == s) return i;
 	}
@@ -181,8 +182,10 @@ int Gui_IndexOverlay(const void* overlay) {
 
 void Gui_FreeOverlay(void* overlay) {
 	struct Screen* s = overlay;
+	int i;
+
 	Elem_Free(s);
-	int i = Gui_IndexOverlay(overlay);
+	i = Gui_IndexOverlay(overlay);
 	if (i == -1) return;
 
 	for (; i < Gui_OverlaysCount - 1; i++) {
@@ -195,9 +198,11 @@ void Gui_FreeOverlay(void* overlay) {
 }
 
 void Gui_RenderGui(double delta) {
+	bool showHUD, hudBefore;
 	GfxCommon_Mode2D(Game_Width, Game_Height);
-	bool showHUD   = !Gui_Active || !Gui_Active->HidesHUD;
-	bool hudBefore = !Gui_Active || !Gui_Active->RenderHUDOver;
+
+	showHUD   = !Gui_Active || !Gui_Active->HidesHUD;
+	hudBefore = !Gui_Active || !Gui_Active->RenderHUDOver;
 	if (showHUD) { Elem_Render(Gui_Status, delta); }
 
 	if (showHUD && hudBefore)  { Elem_Render(Gui_HUD, delta); }
@@ -209,10 +214,10 @@ void Gui_RenderGui(double delta) {
 }
 
 void Gui_OnResize(void) {
+	int i;
 	if (Gui_Active) { Screen_OnResize(Gui_Active); }
 	Screen_OnResize(Gui_HUD);
 
-	int i;
 	for (i = 0; i < Gui_OverlaysCount; i++) {
 		Screen_OnResize(Gui_Overlays[i]);
 	}
@@ -236,7 +241,7 @@ void Gui_CalcCursorVisible(void) {
 void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const FontDesc* font, const String* prefix) {
 	struct DrawTextArgs args; DrawTextArgs_Make(&args, prefix, font, true);
 	Size2D size = Drawer2D_MeasureText(&args);
-	atlas->Offset = size.Width;
+	atlas->Offset   = size.Width;
 	atlas->FontSize = font->Size;
 	size.Width += 16 * chars->length;
 
@@ -263,25 +268,27 @@ void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const FontDesc
 void TextAtlas_Free(struct TextAtlas* atlas) { Gfx_DeleteTexture(&atlas->Tex.ID); }
 
 void TextAtlas_Add(struct TextAtlas* atlas, int charI, VertexP3fT2fC4b** vertices) {
-	int width = atlas->Widths[charI];
 	struct Texture part = atlas->Tex;
+	int width       = atlas->Widths[charI];
+	PackedCol white = PACKEDCOL_WHITE;
 
-	part.X = atlas->CurX; part.Width = width;
+	part.X  = atlas->CurX; part.Width = width;
 	part.U1 = (atlas->Offset + charI * atlas->FontSize) * atlas->uScale;
 	part.U2 = part.U1 + width * atlas->uScale;
 
-	atlas->CurX += width;
-	PackedCol white = PACKEDCOL_WHITE;
+	atlas->CurX += width;	
 	GfxCommon_Make2DQuad(&part, white, vertices);
 }
 
 void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vertices) {
+	char digits[STRING_INT_CHARS];
+	int i, count;
+
 	if (value < 0) {
 		TextAtlas_Add(atlas, 10, vertices); value = -value; /* - sign */
 	}
+	count = String_MakeUInt32((uint32_t)value, digits);
 
-	char digits[STRING_INT_CHARS];
-	int i, count = String_MakeUInt32((uint32_t)value, digits);
 	for (i = count - 1; i >= 0; i--) {
 		TextAtlas_Add(atlas, digits[i] - '0' , vertices);
 	}

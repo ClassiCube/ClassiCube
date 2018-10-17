@@ -24,13 +24,14 @@ Random L_rnd;
 bool L_rndInitalised;
 
 static void LavaAnimation_Tick(uint32_t* ptr, int size) {
+	int mask = size - 1, shift = Math_Log2(size);
+	int x, y, i = 0;
+
 	if (!L_rndInitalised) {
 		Random_InitFromCurrentTime(&L_rnd);
 		L_rndInitalised = true;
 	}
-	int mask = size - 1, shift = Math_Log2(size);
-
-	int x, y, i = 0;
+	
 	for (y = 0; y < size; y++) {
 		for (x = 0; x < size; x++) {
 			/* Calculate the colour at this coordinate in the heatmap */
@@ -92,13 +93,14 @@ Random W_rnd;
 bool W_rndInitalised;
 
 static void WaterAnimation_Tick(uint32_t* ptr, int size) {
+	int mask = size - 1, shift = Math_Log2(size);
+	int x, y, i = 0;
+
 	if (!W_rndInitalised) {
 		Random_InitFromCurrentTime(&W_rnd);
 		W_rndInitalised = true;
 	}
-	int mask = size - 1, shift = Math_Log2(size);
-
-	int x, y, i = 0;
+	
 	for (y = 0; y < size; y++) {
 		for (x = 0; x < size; x++) {
 			/* Calculate the colour at this coordinate in the heatmap */
@@ -147,11 +149,16 @@ Bitmap anims_bmp;
 struct AnimationData anims_list[ATLAS1D_MAX_ATLASES];
 int anims_count;
 bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
+#define ANIM_MIN_ARGS 7
 
 static void Animations_ReadDescription(struct Stream* stream, const String* path) {
 	char lineBuffer[STRING_SIZE * 2];
 	String line = String_FromArray(lineBuffer);
-	String parts[7];
+	String parts[ANIM_MIN_ARGS];
+
+	int count;
+	struct AnimationData data = { 0 };
+	uint8_t tileX, tileY;
 
 	/* ReadLine reads single byte at a time */
 	uint8_t buffer[2048]; struct Stream buffered;
@@ -164,15 +171,12 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 		if (res) { Chat_LogError2(res, "reading from", path); break; }
 
 		if (!line.length || line.buffer[0] == '#') continue;
-		struct AnimationData data = { 0 };
-		uint8_t tileX, tileY;
+		count = String_UNSAFE_Split(&line, ' ', parts, ANIM_MIN_ARGS);
 
-		int partsCount = Array_Elems(parts);
-		String_UNSAFE_Split(&line, ' ', parts, &partsCount);
-
-		if (partsCount < 7) {
+		if (count < ANIM_MIN_ARGS) {
 			Chat_Add1("&cNot enough arguments for anim: %s", &line); continue;
-		}		
+		}
+
 		if (!Convert_TryParseUInt8(&parts[0], &tileX) || tileX >= ATLAS2D_TILES_PER_ROW) {
 			Chat_Add1("&cInvalid anim tile X coord: %s", &line); continue;
 		}
@@ -291,26 +295,26 @@ static void Animations_Validate(void) {
 
 
 void Animations_Tick(struct ScheduledTask* task) {
+	int i, size;
+
 	if (anims_useLavaAnim) {
-		int size = min(Atlas2D_TileSize, 64);
+		size = min(Atlas2D_TileSize, 64);
 		Animations_Draw(NULL, 30, size);
 	}
 	if (anims_useWaterAnim) {
-		int size = min(Atlas2D_TileSize, 64);
+		size = min(Atlas2D_TileSize, 64);
 		Animations_Draw(NULL, 14, size);
 	}
-	if (!anims_count) return;
 
+	if (!anims_count) return;
 	if (!anims_bmp.Scan0) {
 		Chat_AddRaw("&cCurrent texture pack specifies it uses animations,");
 		Chat_AddRaw("&cbut is missing animations.png");
-		anims_count = 0;
-		return;
+		anims_count = 0; return;
 	}
 
 	/* deferred, because when reading animations.txt, might not have read animations.png yet */
 	if (!anims_validated) Animations_Validate();
-	int i;
 	for (i = 0; i < anims_count; i++) {
 		Animations_Apply(&anims_list[i]);
 	}

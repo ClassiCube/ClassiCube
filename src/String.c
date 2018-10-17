@@ -61,19 +61,21 @@ String String_UNSAFE_Substring(STRING_REF const String* str, int offset, int len
 	return String_Init(str->buffer + offset, length, length);
 }
 
-void String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int* subsCount) {
-	int maxSubs = *subsCount, i, start = 0;
+int String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int maxSubs) {
+	int start = 0, end, count, i;
+
 	for (i = 0; i < maxSubs && start <= str->length; i++) {
-		int end = String_IndexOf(str, c, start);
+		end = String_IndexOf(str, c, start);
 		if (end == -1) end = str->length;
 
 		subs[i] = String_UNSAFE_Substring(str, start, end - start);
 		start = end + 1;
 	}
 
-	*subsCount = i;
+	count = i;
 	/* If not enough split substrings, make remaining NULL */
 	for (; i < maxSubs; i++) { subs[i] = String_Empty; }
+	return count;
 }
 
 bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value) {

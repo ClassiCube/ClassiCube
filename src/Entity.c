@@ -178,13 +178,16 @@ bool Entity_TouchesAny(struct AABB* bounds, Entity_TouchesCondition condition) {
 	bbMin.Y = max(bbMin.Y, 0); bbMax.Y = min(bbMax.Y, World_MaxY);
 	bbMin.Z = max(bbMin.Z, 0); bbMax.Z = min(bbMax.Z, World_MaxZ);
 
+	BlockID block;
 	struct AABB blockBB;
 	Vector3 v;
 	int x, y, z;
+
 	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (float)y;
 		for (z = bbMin.Z; z <= bbMax.Z; z++) { v.Z = (float)z;
 			for (x = bbMin.X; x <= bbMax.X; x++) { v.X = (float)x;
-				BlockID block = World_GetBlock(x, y, z);
+
+				block = World_GetBlock(x, y, z);
 				Vector3_Add(&blockBB.Min, &v, &Block_MinBB[block]);
 				Vector3_Add(&blockBB.Max, &v, &Block_MaxBB[block]);
 

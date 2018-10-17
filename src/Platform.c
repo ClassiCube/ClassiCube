@@ -792,20 +792,23 @@ static bool Font_MakeArgs(const String* path, FT_Stream stream, FT_Open_Args* ar
 }
 
 static int Font_Find(const String* name, StringsBuffer* entries) {
+	String faceName;
 	int i;
+
 	for (i = 1; i < entries->Count; i += 2) {
-		String faceName = StringsBuffer_UNSAFE_Get(entries, i);
+		faceName = StringsBuffer_UNSAFE_Get(entries, i);
 		if (String_CaselessEquals(&faceName, name)) return i;
 	}
 	return -1;
 }
 
 void Font_GetNames(StringsBuffer* buffer) {
+	String faceName;
+	int i;
 	if (!norm_fonts.Count) Font_Init();
 
-	int i;
 	for (i = 1; i < norm_fonts.Count; i += 2) {
-		String faceName = StringsBuffer_UNSAFE_Get(&norm_fonts, i);
+		faceName = StringsBuffer_UNSAFE_Get(&norm_fonts, i);
 		StringsBuffer_Add(buffer, &faceName);
 	}
 }
@@ -1638,8 +1641,8 @@ ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) {
 static ReturnCode Audio_AllCompleted(AudioHandle handle, bool* finished) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];	
 	ReturnCode res;
-	*finished = false;
 	int i;
+	*finished = false;
 
 	for (i = 0; i < ctx->Count; i++) {
 		res = Audio_IsCompleted(handle, i, finished);
@@ -1668,10 +1671,10 @@ ReturnCode Audio_StopAndFree(AudioHandle handle) {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WIN
 void Platform_ConvertString(void* dstPtr, const String* src) {
-	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
 	WCHAR* dst = dstPtr;
-
 	int i;
+	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
+	
 	for (i = 0; i < src->length; i++) {
 		*dst = Convert_CP437ToUnicode(src->buffer[i]); dst++;
 	}
@@ -1734,12 +1737,14 @@ ReturnCode Platform_StartShell(const String* args) {
 }
 
 static String Platform_NextArg(STRING_REF String* args) {
+	int end;
+	String arg;
+
 	/* get rid of leading spaces before arg */
 	while (args->length && args->buffer[0] == ' ') {
 		*args = String_UNSAFE_SubstringAt(args, 1);
 	}
-
-	int end;
+	
 	if (args->length && args->buffer[0] == '"') {
 		/* "xy za" is used for arg with spaces */
 		*args = String_UNSAFE_SubstringAt(args, 1);
@@ -1747,8 +1752,7 @@ static String Platform_NextArg(STRING_REF String* args) {
 	} else {
 		end = String_IndexOf(args, ' ', 0);
 	}
-
-	String arg;
+	
 	if (end == -1) {
 		arg   = *args;
 		args->length = 0;
@@ -1761,26 +1765,26 @@ static String Platform_NextArg(STRING_REF String* args) {
 
 int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args) {
 	String cmdArgs = String_FromReadonly(GetCommandLineA());
+	int i;
 	Platform_NextArg(&cmdArgs); /* skip exe path */
 
-	int count;
-	for (count = 0; count < PROGRAM_MAX_CMDARGS; count++) {
-		args[count] = Platform_NextArg(&cmdArgs);
+	for (i = 0; i < PROGRAM_MAX_CMDARGS; i++) {
+		args[i] = Platform_NextArg(&cmdArgs);
 
-		if (!args[count].length) break;
+		if (!args[i].length) break;
 	}
-	return count;
+	return i;
 }
 #endif
 #ifdef CC_BUILD_NIX
 void Platform_ConvertString(void* dstPtr, const String* src) {
-	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
 	uint8_t* dst = dstPtr;
-
-	int i;
+	int i, len;
+	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
+	
 	for (i = 0; i < src->length; i++) {
 		Codepoint cp = Convert_CP437ToUnicode(src->buffer[i]);
-		int len = Stream_WriteUtf8(dst, cp); dst += len;
+		len = Stream_WriteUtf8(dst, cp); dst += len;
 	}
 	*dst = '\0';
 }

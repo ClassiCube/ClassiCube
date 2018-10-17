@@ -9,24 +9,12 @@
 #include "Physics.h"
 #include "Game.h"
 
-void World_Reset(void) {
-#ifdef EXTENDED_BLOCKS
-	if (World_Blocks != World_Blocks2) Mem_Free(World_Blocks2);
-#endif
-	Mem_Free(World_Blocks);
-	World_Width = 0; World_Height = 0; World_Length = 0;
-	World_MaxX = 0;  World_MaxY = 0;   World_MaxZ = 0;
-
-#ifdef EXTENDED_BLOCKS
-	World_Blocks2 = NULL;
-#endif
-	World_Blocks = NULL; World_BlocksSize = 0;
-	Env_Reset();
-
+static void World_NewUuid(void) {
 	Random rnd;
-	Random_InitFromCurrentTime(&rnd);
-	/* seed a bit more randomness for uuid */
 	int i;
+	Random_InitFromCurrentTime(&rnd);
+
+	/* seed a bit more randomness for uuid */
 	for (i = 0; i < Game_Username.length; i++) {
 		Random_Next(&rnd, Game_Username.buffer[i] + 3);
 	}
@@ -40,6 +28,22 @@ void World_Reset(void) {
 	World_Uuid[6] |= 0x40; /* version 4*/
 	World_Uuid[8] &= 0x3F;
 	World_Uuid[8] |= 0x80; /* variant 2*/
+}
+
+void World_Reset(void) {
+#ifdef EXTENDED_BLOCKS
+	if (World_Blocks != World_Blocks2) Mem_Free(World_Blocks2);
+#endif
+	Mem_Free(World_Blocks);
+	World_Width = 0; World_Height = 0; World_Length = 0;
+	World_MaxX = 0;  World_MaxY = 0;   World_MaxZ = 0;
+
+#ifdef EXTENDED_BLOCKS
+	World_Blocks2 = NULL;
+#endif
+	World_Blocks = NULL; World_BlocksSize = 0;
+	Env_Reset();
+	World_NewUuid();
 }
 
 void World_SetNewMap(BlockRaw* blocks, int blocksSize, int width, int height, int length) {
@@ -238,21 +242,20 @@ float Respawn_HighestFreeY(struct AABB* bb) {
 	int minX = Math_Floor(bb->Min.X), maxX = Math_Floor(bb->Max.X);
 	int minY = Math_Floor(bb->Min.Y), maxY = Math_Floor(bb->Max.Y);
 	int minZ = Math_Floor(bb->Min.Z), maxZ = Math_Floor(bb->Max.Z);
-
 	float spawnY = RESPAWN_NOT_FOUND;
-	struct AABB blockBB;
-	int x, y, z;
-	Vector3 pos;
 
-	for (y = minY; y <= maxY; y++) {
-		pos.Y = (float)y;
-		for (z = minZ; z <= maxZ; z++) {
-			pos.Z = (float)z;
-			for (x = minX; x <= maxX; x++) {
-				pos.X = (float)x;
-				BlockID block = World_GetPhysicsBlock(x, y, z);
-				Vector3_Add(&blockBB.Min, &pos, &Block_MinBB[block]);
-				Vector3_Add(&blockBB.Max, &pos, &Block_MaxBB[block]);
+	BlockID block;
+	struct AABB blockBB;
+	Vector3 v;
+	int x, y, z;	
+
+	for (y = minY; y <= maxY; y++) { v.Y = (float)y;
+		for (z = minZ; z <= maxZ; z++) { v.Z = (float)z;
+			for (x = minX; x <= maxX; x++) { v.X = (float)x;
+
+				block = World_GetPhysicsBlock(x, y, z);
+				Vector3_Add(&blockBB.Min, &v, &Block_MinBB[block]);
+				Vector3_Add(&blockBB.Max, &v, &Block_MaxBB[block]);
 
 				if (Block_Collide[block] != COLLIDE_SOLID) continue;
 				if (!AABB_Intersects(bb, &blockBB)) continue;
@@ -265,14 +268,16 @@ float Respawn_HighestFreeY(struct AABB* bb) {
 
 Vector3 Respawn_FindSpawnPosition(float x, float z, Vector3 modelSize) {
 	Vector3 spawn = Vector3_Create3(x, 0.0f, z);
-	spawn.Y = World_Height + ENTITY_ADJUSTMENT;
 	struct AABB bb;
+	float highestY;
+	int y;
+
+	spawn.Y = World_Height + ENTITY_ADJUSTMENT;
 	AABB_Make(&bb, &spawn, &modelSize);
 	spawn.Y = 0.0f;
-
-	int y;
+	
 	for (y = World_Height; y >= 0; y--) {
-		float highestY = Respawn_HighestFreeY(&bb);
+		highestY = Respawn_HighestFreeY(&bb);
 		if (highestY != RESPAWN_NOT_FOUND) {
 			spawn.Y = highestY; break;
 		}

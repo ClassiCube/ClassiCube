@@ -38,9 +38,9 @@ static int Lighting_CalcHeightAt(int x, int maxY, int z, int index) {
 }
 
 static int Lighting_GetLightHeight(int x, int z) {
-	int index  = Lighting_Pack(x, z);
-	int lightH = Lighting_Heightmap[index];
-	return lightH == HEIGHT_UNCALCULATED ? Lighting_CalcHeightAt(x, World_Height - 1, z, index) : lightH;
+	int hIndex = Lighting_Pack(x, z);
+	int lightH = Lighting_Heightmap[hIndex];
+	return lightH == HEIGHT_UNCALCULATED ? Lighting_CalcHeightAt(x, World_Height - 1, z, hIndex) : lightH;
 }
 
 /* Outside colour is same as sunlight colour, so we reuse when possible */
@@ -177,7 +177,8 @@ static void Lighting_ResetColumn(int cx, int cy, int cz, int minCy, int maxCy) {
 }
 
 static void Lighting_RefreshAffected(int x, int y, int z, BlockID block, int oldHeight, int newHeight) {
-	int cx = x >> 4, cy = y >> 4, cz = z >> 4;
+	int cx = x >> 4,   cy = y >> 4,   cz = z >> 4;
+	int bX = x & 0x0F, bY = y & 0x0F, bZ = z & 0x0F;
 
 	/* NOTE: much faster to only update the chunks that are affected by the change in shadows, rather than the entire column. */
 	int newCy = newHeight < 0 ? 0 : newHeight >> 4;
@@ -185,7 +186,6 @@ static void Lighting_RefreshAffected(int x, int y, int z, BlockID block, int old
 	int minCy = min(oldCy, newCy), maxCy = max(oldCy, newCy);
 	Lighting_ResetColumn(cx, cy, cz, minCy, maxCy);
 
-	int bX = x & 0x0F, bY = y & 0x0F, bZ = z & 0x0F;
 	if (bX == 0 && cx > 0) {
 		Lighting_ResetNeighbour(x - 1, y, z, block, cx - 1, cy, cz, minCy, maxCy);
 	}
@@ -208,14 +208,14 @@ static void Lighting_RefreshAffected(int x, int y, int z, BlockID block, int old
 }
 
 void Lighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
-	int index  = Lighting_Pack(x, z);
-	int lightH = Lighting_Heightmap[index];
+	int hIndex = Lighting_Pack(x, z);
+	int lightH = Lighting_Heightmap[hIndex];
 	/* Since light wasn't checked to begin with, means column never had meshes for any of its chunks built. */
 	/* So we don't need to do anything. */
 	if (lightH == HEIGHT_UNCALCULATED) return;
 
-	Lighting_UpdateLighting(x, y, z, oldBlock, newBlock, index, lightH);
-	int newHeight = Lighting_Heightmap[index] + 1;
+	Lighting_UpdateLighting(x, y, z, oldBlock, newBlock, hIndex, lightH);
+	int newHeight = Lighting_Heightmap[hIndex] + 1;
 	Lighting_RefreshAffected(x, y, z, newBlock, lightH + 1, newHeight);
 }
 
@@ -228,9 +228,10 @@ static int Lighting_InitialHeightmapCoverage(int x1, int z1, int xCount, int zCo
 	int x, z;
 
 	for (z = 0; z < zCount; z++) {
-		int heightmapIndex = Lighting_Pack(x1, z1 + z);
+		int hIndex = Lighting_Pack(x1, z1 + z);
 		for (x = 0; x < xCount; x++) {
-			int lightH = Lighting_Heightmap[heightmapIndex++];
+			int lightH = Lighting_Heightmap[hIndex++];
+
 			skip[index] = 0;
 			if (lightH == HEIGHT_UNCALCULATED) {
 				elemsLeft++;
@@ -250,7 +251,7 @@ static int Lighting_InitialHeightmapCoverage(int x1, int z1, int xCount, int zCo
 for (y = World_Height - 1; y >= 0; y--) {\
 	if (elemsLeft <= 0) { return true; } \
 	int mapIndex = World_Pack(x1, y, z1);\
-	int heightmapIndex = Lighting_Pack(x1, z1);\
+	int hIndex   = Lighting_Pack(x1, z1);\
 \
 	for (z = 0; z < zCount; z++) {\
 		int baseIndex = mapIndex;\
@@ -261,7 +262,7 @@ for (y = World_Height - 1; y >= 0; y--) {\
 \
 			if (x < xCount && Block_BlocksLight[get_block]) {\
 				int lightOffset = (Block_LightOffset[get_block] >> FACE_YMAX) & 1;\
-				Lighting_Heightmap[heightmapIndex + x] = (int16_t)(y - lightOffset);\
+				Lighting_Heightmap[hIndex + x] = (int16_t)(y - lightOffset);\
 				elemsLeft--;\
 				skip[index] = 0;\
 				int offset = prevRunCount + curRunCount;\
@@ -283,7 +284,7 @@ for (y = World_Height - 1; y >= 0; y--) {\
 			x++; mapIndex++; index++; \
 		}\
 		prevRunCount = 0;\
-		heightmapIndex += World_Width;\
+		hIndex += World_Width;\
 		mapIndex = baseIndex + World_Width; /* advance one Z */ \
 	}\
 }
@@ -305,15 +306,16 @@ static bool Lighting_CalculateHeightmapCoverage(int x1, int z1, int xCount, int 
 }
 
 static void Lighting_FinishHeightmapCoverage(int x1, int z1, int xCount, int zCount) {
-	int x, z;
+	int x, z, hIndex, lightH;
 
 	for (z = 0; z < zCount; z++) {
-		int heightmapIndex = Lighting_Pack(x1, z1 + z);
-		for (x = 0; x < xCount; x++) {
-			int lightH = Lighting_Heightmap[heightmapIndex];
-			if (lightH == HEIGHT_UNCALCULATED)
-				Lighting_Heightmap[heightmapIndex] = -10;
-			heightmapIndex++;
+		hIndex = Lighting_Pack(x1, z1 + z);
+		for (x = 0; x < xCount; x++, hIndex++) {
+			lightH = Lighting_Heightmap[hIndex];
+
+			if (lightH == HEIGHT_UNCALCULATED) {
+				Lighting_Heightmap[hIndex] = -10;
+			}
 		}
 	}
 }

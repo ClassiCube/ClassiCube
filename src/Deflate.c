@@ -895,8 +895,8 @@ static ReturnCode GZip_StreamClose(struct Stream* stream) {
 
 static ReturnCode GZip_StreamWrite(struct Stream* stream, uint8_t* data, uint32_t count, uint32_t* modified) {
 	struct GZipState* state = stream->Meta.Inflate;
-	state->Size += count;
 	uint32_t i, crc32 = state->Crc32;
+	state->Size += count;
 
 	/* TODO: Optimise this calculation */
 	for (i = 0; i < count; i++) {

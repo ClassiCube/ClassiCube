@@ -50,8 +50,8 @@ static void HeldBlockRenderer_RenderModel(void) {
 }
 
 static void HeldBlockRenderer_SetMatrix(void) {
-	struct Entity* player = &LocalPlayer_Instance.Base;
-	Vector3 eye = { 0, Entity_GetEyeHeight(player), 0 };
+	struct Entity* p = &LocalPlayer_Instance.Base;
+	Vector3 eye = { 0, Entity_GetEyeHeight(p), 0 };
 
 	struct Matrix m, lookAt;
 	Matrix_Translate(&lookAt, -eye.X, -eye.Y, -eye.Z);
@@ -61,8 +61,8 @@ static void HeldBlockRenderer_SetMatrix(void) {
 
 static void HeldBlockRenderer_ResetHeldState(void) {
 	/* Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!) */
-	struct Entity* player = &LocalPlayer_Instance.Base;
-	Vector3 eye = { 0, Entity_GetEyeHeight(player), 0 };
+	struct Entity* p = &LocalPlayer_Instance.Base;
+	Vector3 eye = { 0, Entity_GetEyeHeight(p), 0 };
 	held_entity.Position = eye;
 
 	held_entity.Position.X -= Camera_BobbingHor;
@@ -72,11 +72,12 @@ static void HeldBlockRenderer_ResetHeldState(void) {
 	held_entity.HeadY = -45.0f; held_entity.RotY = -45.0f;
 	held_entity.HeadX = 0.0f;   held_entity.RotX = 0.0f;
 	held_entity.ModelBlock   = held_block;
-	held_entity.SkinType     = player->SkinType;
-	held_entity.TextureId    = player->TextureId;
-	held_entity.MobTextureId = player->MobTextureId;
-	held_entity.uScale       = player->uScale;
-	held_entity.vScale       = player->vScale;
+
+	held_entity.SkinType     = p->SkinType;
+	held_entity.TextureId    = p->TextureId;
+	held_entity.MobTextureId = p->MobTextureId;
+	held_entity.uScale       = p->uScale;
+	held_entity.vScale       = p->vScale;
 }
 
 static void HeldBlockRenderer_SetBaseOffset(void) {

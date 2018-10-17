@@ -228,8 +228,8 @@ int GfxCommon_MipmapsLevels(int width, int height) {
 }
 
 void Texture_Render(const struct Texture* tex) {
-	Gfx_BindTexture(tex->ID);
 	PackedCol white = PACKEDCOL_WHITE;
+	Gfx_BindTexture(tex->ID);
 	GfxCommon_Draw2DTexture(tex, white);
 }
 

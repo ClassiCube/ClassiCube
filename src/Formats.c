@@ -374,7 +374,7 @@ static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* s
 
 	if (res) return res;
 	callback(&tag);
-	/* callback sets DataBig to NULL, if doesn't want it to be freed */
+	/* NOTE: callback must set DataBig to NULL, if doesn't want it to be freed */
 	if (!NbtTag_IsSmall(&tag)) Mem_Free(tag.DataBig);
 	return 0;
 }
@@ -431,7 +431,9 @@ static PackedCol Cw_ParseCol(PackedCol defValue) {
 }
 
 static void Cw_Callback_4(struct NbtTag* tag) {
+	BlockID id = cw_curID;
 	struct LocalPlayer* p = &LocalPlayer_Instance;
+
 	if (!IsTag(tag->Parent->Parent, "CPE")) return;
 	if (!IsTag(tag->Parent->Parent->Parent, "Metadata")) return;
 
@@ -473,8 +475,7 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 
 	if (IsTag(tag->Parent, "BlockDefinitions")) {
 		String blockStr = String_FromConst("Block");
-		if (!String_CaselessStarts(&tag->Name, &blockStr)) return;
-		BlockID id = cw_curID;
+		if (!String_CaselessStarts(&tag->Name, &blockStr)) return;	
 
 		/* hack for sprite draw (can't rely on order of tags when reading) */
 		if (Block_SpriteOffset[id] == 0) {

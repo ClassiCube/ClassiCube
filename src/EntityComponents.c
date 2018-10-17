@@ -694,13 +694,16 @@ static bool Collisions_CanSlideThrough(struct AABB* adjFinalBB) {
 	Vector3I bbMin; Vector3I_Floor(&bbMin, &adjFinalBB->Min);
 	Vector3I bbMax; Vector3I_Floor(&bbMax, &adjFinalBB->Max);
 
+	BlockID block;
 	struct AABB blockBB;
 	Vector3 v;
 	int x, y, z;
+
 	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (float)y;
 		for (z = bbMin.Z; z <= bbMax.Z; z++) { v.Z = (float)z;
 			for (x = bbMin.X; x <= bbMax.X; x++) { v.X = (float)x;
-				BlockID block = World_GetPhysicsBlock(x, y, z);
+
+				block = World_GetPhysicsBlock(x, y, z);
 				Vector3_Add(&blockBB.Min, &v, &Block_MinBB[block]);
 				Vector3_Add(&blockBB.Max, &v, &Block_MaxBB[block]);
 

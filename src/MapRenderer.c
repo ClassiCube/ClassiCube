@@ -127,12 +127,13 @@ static void MapRenderer_RenderNormalBatch(int batch) {
 }
 
 void MapRenderer_RenderNormal(double delta) {
+	int batch;
 	if (!MapRenderer_Chunks) return;
+
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
-
-	int batch;
+	
 	Gfx_EnableMipmaps();
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
 		if (MapRenderer_NormalPartsCount[batch] <= 0) continue;
@@ -213,16 +214,16 @@ static void MapRenderer_RenderTranslucentBatch(int batch) {
 }
 
 void MapRenderer_RenderTranslucent(double delta) {
+	int vertices, batch;
 	if (!MapRenderer_Chunks) return;
 
 	/* First fill depth buffer */
-	int vertices = Game_Vertices;
+	vertices = Game_Vertices;
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Gfx_SetTexturing(false);
 	Gfx_SetAlphaBlending(false);
 	Gfx_SetColWriteMask(false, false, false, false);
 
-	int batch;
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
 		if (MapRenderer_TranslucentPartsCount[batch] <= 0) continue;
 		if (MapRenderer_HasTranslucentParts[batch] || MapRenderer_CheckingTranslucentParts[batch]) {
@@ -236,7 +237,7 @@ void MapRenderer_RenderTranslucent(double delta) {
 	Gfx_SetAlphaBlending(true);
 	Gfx_SetTexturing(true);
 	Gfx_SetColWriteMask(true, true, true, true);
-	Gfx_SetDepthWrite(false); /* we already calculated depth values in depth pass */
+	Gfx_SetDepthWrite(false); /* already calculated depth values in depth pass */
 
 	Gfx_EnableMipmaps();
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {

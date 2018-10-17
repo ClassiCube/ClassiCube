@@ -41,8 +41,9 @@ static void ServerConnection_ResetState(void) {
 }
 
 void ServerConnection_RetrieveTexturePack(const String* url) {
+	struct Screen* warning;
 	if (!TextureCache_HasAccepted(url) && !TextureCache_HasDenied(url)) {
-		struct Screen* warning = TexPackOverlay_MakeInstance(url);
+		warning = TexPackOverlay_MakeInstance(url);
 		Gui_ShowOverlay(warning, false);
 	} else {
 		ServerConnection_DownloadTexturePack(url);
@@ -115,6 +116,7 @@ void PingList_Update(int data) {
 int PingList_AveragePingMs(void) {
 	double totalMs = 0.0;
 	int i, measures = 0;
+
 	for (i = 0; i < Array_Elems(pingList_entries); i++) {
 		struct PingEntry entry = pingList_entries[i];
 		if (!entry.Sent || !entry.Recv) continue;
@@ -162,21 +164,23 @@ char SPConnection_LastCol = '\0';
 static void SPConnection_AddPortion(const String* text) {
 	char tmpBuffer[STRING_SIZE * 2];
 	String tmp = String_FromArray(tmpBuffer);
+	char col;
+	int i;
+
 	/* Prepend colour codes for subsequent lines of multi-line chat */
 	if (!Drawer2D_IsWhiteCol(SPConnection_LastCol)) {
 		String_Append(&tmp, '&');
 		String_Append(&tmp, SPConnection_LastCol);
 	}
 	String_AppendString(&tmp, text);
-
-	int i;
+	
 	/* Replace all % with & */
 	for (i = 0; i < tmp.length; i++) {
 		if (tmp.buffer[i] == '%') tmp.buffer[i] = '&';
 	}
 	String_TrimEnd(&tmp);
 
-	char col = Drawer2D_LastCol(&tmp, tmp.length);
+	col = Drawer2D_LastCol(&tmp, tmp.length);
 	if (col) SPConnection_LastCol = col;
 	Chat_Add(&tmp);
 }

@@ -9,7 +9,7 @@
 #include "Utils.h"
 #include "Drawer2D.h"
 
-//#define CC_TEST_VORBIS
+/*#define CC_TEST_VORBIS*/
 #ifdef CC_TEST_VORBIS
 #include "Vorbis.h"
 
@@ -65,8 +65,8 @@ int main(int argc, char** argv) {
 	String args[PROGRAM_MAX_CMDARGS];
 	int argsCount = Platform_GetCommandLineArgs(argc, argv, args);
 	/* NOTE: Make sure to comment this out before pushing a commit */
-	//String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565");
-	//argsCount = 4; String_UNSAFE_Split(&rawArgs, ' ', args, &argsCount);
+	/* String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565"); */
+	/* argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4); */
 
 	if (argsCount == 0) {
 		String name = String_FromConst("Singleplayer");

@@ -55,6 +55,9 @@ Vector3 Intersection_InverseRotate(Vector3 pos, struct Entity* target) {
 }
 
 bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, struct Entity* target, float* tMin, float* tMax) {
+	Vector3 delta;
+	struct AABB bb;
+
 	/* This is the rotated AABB of the model we want to test for intersection
 			  *
 			 / \     we then perform a counter       *---*   and we can then do
@@ -63,20 +66,21 @@ bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, struct En
 			  *                                     /
 												   /                           
 	*/
-	Vector3 delta; Vector3_Sub(&delta, &origin, &target->Position); /* delta  = origin - target.Position */
-	delta = Intersection_InverseRotate(delta, target);                   /* delta  = UndoRotation(delta) */
-	Vector3_Add(&origin, &delta, &target->Position);                     /* origin = delta + target.Position */
+	Vector3_Sub(&delta, &origin, &target->Position);   /* delta  = origin - target.Position */
+	delta = Intersection_InverseRotate(delta, target); /* delta  = UndoRotation(delta) */
+	Vector3_Add(&origin, &delta, &target->Position);   /* origin = delta + target.Position */
 
 	dir = Intersection_InverseRotate(dir, target);
-	struct AABB bb;
 	Entity_GetPickingBounds(target, &bb);
 	return Intersection_RayIntersectsBox(origin, dir, bb.Min, bb.Max, tMin, tMax);
 }
 
 bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vector3 max, float* t0, float* t1) {
-	*t0 = 0; *t1 = 0;
 	float tmin, tmax, tymin, tymax, tzmin, tzmax;
-	float invDirX = 1.0f / dir.X;
+	float invDirX, invDirY, invDirZ;
+	*t0 = 0; *t1 = 0;
+	
+	invDirX = 1.0f / dir.X;
 	if (invDirX >= 0) {
 		tmin = (min.X - origin.X) * invDirX;
 		tmax = (max.X - origin.X) * invDirX;
@@ -85,7 +89,7 @@ bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vec
 		tmax = (min.X - origin.X) * invDirX;
 	}
 
-	float invDirY = 1.0f / dir.Y;
+	invDirY = 1.0f / dir.Y;
 	if (invDirY >= 0) {
 		tymin = (min.Y - origin.Y) * invDirY;
 		tymax = (max.Y - origin.Y) * invDirY;
@@ -98,7 +102,7 @@ bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vec
 	if (tymin > tmin) tmin = tymin;
 	if (tymax < tmax) tmax = tymax;
 
-	float invDirZ = 1.0f / dir.Z;
+	invDirZ = 1.0f / dir.Z;
 	if (invDirZ >= 0) {
 		tzmin = (min.Z - origin.Z) * invDirZ;
 		tzmax = (max.Z - origin.Z) * invDirZ;
@@ -123,9 +127,12 @@ uint32_t Searcher_StatesMax = SEARCHER_STATES_MIN;
 
 static void Searcher_QuickSort(int left, int right) {
 	struct SearcherState* keys = Searcher_States; struct SearcherState key;
+	float pivot;
+	int i, j;
+
 	while (left < right) {
-		int i = left, j = right;
-		float pivot = keys[(i + j) >> 1].tSquared;
+		i = left; j = right;
+		pivot = keys[(i + j) >> 1].tSquared;
 
 		/* partition the list */
 		while (i <= j) {
@@ -140,6 +147,8 @@ static void Searcher_QuickSort(int left, int right) {
 
 int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, struct AABB* entityExtentBB) {
 	Vector3 vel = entity->Velocity;
+	Vector3I min, max;
+	uint32_t elements;
 	Entity_GetBounds(entity, entityBB);
 
 	/* Exact maximum extent the entity can reach, and the equivalent map coordinates. */
@@ -151,11 +160,10 @@ int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, s
 	entityExtentBB->Max.Y = entityBB->Max.Y + (vel.Y > 0.0f ? vel.Y : 0.0f);
 	entityExtentBB->Max.Z = entityBB->Max.Z + (vel.Z > 0.0f ? vel.Z : 0.0f);
 
-	Vector3I min, max;
 	Vector3I_Floor(&min, &entityExtentBB->Min);
 	Vector3I_Floor(&max, &entityExtentBB->Max);
+	elements = (max.X - min.X + 1) * (max.Y - min.Y + 1) * (max.Z - min.Z + 1);
 
-	uint32_t elements = (max.X - min.X + 1) * (max.Y - min.Y + 1) * (max.Z - min.Z + 1);
 	if (elements > Searcher_StatesMax) {
 		Searcher_Free();
 		Searcher_StatesMax = elements;
@@ -163,17 +171,18 @@ int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, s
 	}
 
 	/* Order loops so that we minimise cache misses */
+	BlockID block;
 	struct AABB blockBB;
-	int x, y, z;
 	struct SearcherState* curState = Searcher_States;
+	int x, y, z;
 
 	for (y = min.Y; y <= max.Y; y++) {
 		for (z = min.Z; z <= max.Z; z++) {
 			for (x = min.X; x <= max.X; x++) {
-				BlockID block = World_GetPhysicsBlock(x, y, z);
+				block = World_GetPhysicsBlock(x, y, z);
 				if (Block_Collide[block] != COLLIDE_SOLID) continue;
-				float xx = (float)x, yy = (float)y, zz = (float)z;
 
+				float xx = (float)x, yy = (float)y, zz = (float)z;
 				blockBB.Min = Block_MinBB[block];
 				blockBB.Min.X += xx; blockBB.Min.Y += yy; blockBB.Min.Z += zz;
 				blockBB.Max = Block_MaxBB[block];
