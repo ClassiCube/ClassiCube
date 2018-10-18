@@ -1347,8 +1347,7 @@ void ModelCache_Init(void) {
 void ModelCache_Free(void) {
 	int i;
 	for (i = 0; i < ModelCache_texCount; i++) {
-		struct CachedTexture* tex = &ModelCache_Textures[i];
-		Gfx_DeleteTexture(&tex->TexID);
+		Gfx_DeleteTexture(&ModelCache_Textures[i].TexID);
 	}
 	ModelCache_ContextLost(NULL);
 

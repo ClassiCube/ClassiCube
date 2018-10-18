@@ -2504,11 +2504,11 @@ void TextGroupWidget_SetText(struct TextGroupWidget* w, int index, const String*
 
 static void TextGroupWidget_Init(void* widget) {
 	struct TextGroupWidget* w = widget;
-	int height = Drawer2D_FontHeight(&w->Font, true);
+	int i, height;
+	
+	height = Drawer2D_FontHeight(&w->Font, true);
 	Drawer2D_ReducePadding_Height(&height, w->Font.Size, 3);
-
 	w->DefaultHeight = height;
-	int i;
 
 	for (i = 0; i < w->LinesCount; i++) {
 		w->Textures[i].Height = height;
@@ -2519,8 +2519,8 @@ static void TextGroupWidget_Init(void* widget) {
 
 static void TextGroupWidget_Render(void* widget, double delta) {
 	struct TextGroupWidget* w = widget;
-	int i;
 	struct Texture* textures = w->Textures;
+	int i;
 
 	for (i = 0; i < w->LinesCount; i++) {
 		if (!textures[i].ID) continue;

@@ -1374,7 +1374,7 @@ static void DisconnectScreen_ReconnectMessage(struct DisconnectScreen* s, String
 
 static void DisconnectScreen_UpdateDelayLeft(struct DisconnectScreen* s, double delta) {
 	int elapsedMS = (int)(DateTime_CurrentUTC_MS() - s->InitTime);
-	int secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLIS_PER_SEC;
+	int secsLeft  = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLIS_PER_SEC;
 	if (secsLeft < 0) secsLeft = 0;
 
 	if (s->LastSecsLeft == secsLeft && s->Reconnect.Active == s->LastActive) return;
