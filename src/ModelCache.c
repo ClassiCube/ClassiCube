@@ -142,37 +142,39 @@ static void ChickenModel_CreateParts(void) {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Box(-2,9,-6, 2,15,-3),
 		BoxDesc_Rot(0,9,-4),
-	}; BoxDesc_BuildBox(&Chicken_Head, &head);
-
+	};
 	static struct BoxDesc head2 = { /* TODO: Find a more appropriate name. */
 		BoxDesc_Tex(14,4),
 		BoxDesc_Box(-1,9,-7, 1,11,-5),
 		BoxDesc_Rot(0,9,-4),
-	}; BoxDesc_BuildBox(&Chicken_Head2, &head2);
-
+	};
 	static struct BoxDesc head3 = {
 		BoxDesc_Tex(14,0),
 		BoxDesc_Box(-2,11,-8, 2,13,-6),
 		BoxDesc_Rot(0,9,-4),
-	}; BoxDesc_BuildBox(&Chicken_Head3, &head3);
-
+	};
 	static struct BoxDesc torso = {
 		BoxDesc_Tex(0,9),
 		BoxDesc_Box(-3,5,-4, 3,11,3),
 		BoxDesc_Rot(0,5,0),
-	}; BoxDesc_BuildRotatedBox(&Chicken_Torso, &torso);
-
+	};
 	static struct BoxDesc lWing = {
 		BoxDesc_Tex(24,13),
 		BoxDesc_Box(-4,7,-3, -3,11,3),
 		BoxDesc_Rot(-3,11,0),
-	}; BoxDesc_BuildBox(&Chicken_LeftWing, &lWing);
-
+	}; 
 	static struct BoxDesc rWing = {
 		BoxDesc_Tex(24,13),
 		BoxDesc_Box(3,7,-3, 4,11,3),
 		BoxDesc_Rot(3,11,0),
-	}; BoxDesc_BuildBox(&Chicken_RightWing, &rWing);
+	}; 
+	
+	BoxDesc_BuildBox(&Chicken_Head,  &head);
+	BoxDesc_BuildBox(&Chicken_Head2, &head2);
+	BoxDesc_BuildBox(&Chicken_Head3, &head3);
+	BoxDesc_BuildRotatedBox(&Chicken_Torso, &torso);
+	BoxDesc_BuildBox(&Chicken_LeftWing,     &lWing);
+	BoxDesc_BuildBox(&Chicken_RightWing,    &rWing);
 
 	ChickenModel_MakeLeg(&Chicken_LeftLeg, -3, 0, -2, -1);
 	ChickenModel_MakeLeg(&Chicken_RightLeg, 0, 3, 1, 2);
@@ -183,7 +185,10 @@ static void ChickenModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.0f,
 static void ChickenModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-8, 4,15,4); }
 
 static void ChickenModel_DrawModel(struct Entity* entity) {
+	PackedCol col = Model_Cols[0];
+	int i;
 	Model_ApplyTexture(entity);
+
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Chicken_Head,  true);
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Chicken_Head2, true);
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Chicken_Head3, true);
@@ -192,8 +197,6 @@ static void ChickenModel_DrawModel(struct Entity* entity) {
 	Model_DrawRotate(0, 0, -Math_AbsF(entity->Anim.LeftArmX), &Chicken_LeftWing,  false);
 	Model_DrawRotate(0, 0,  Math_AbsF(entity->Anim.LeftArmX), &Chicken_RightWing, false);
 
-	PackedCol col = Model_Cols[0];
-	int i;
 	for (i = 0; i < FACE_COUNT; i++) {
 		Model_Cols[i] = PackedCol_Scale(col, 0.7f);
 	}
@@ -225,37 +228,39 @@ static void CreeperModel_CreateParts(void) {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Box(-4,18,-4, 4,26,4),
 		BoxDesc_Rot(0,18,0),
-	}; BoxDesc_BuildBox(&Creeper_Head, &head);
-
+	};
 	static struct BoxDesc torso = {
 		BoxDesc_Tex(16,16),
 		BoxDesc_Box(-4,6,-2, 4,18,2),
 		BoxDesc_Rot(0,6,0),
-	}; BoxDesc_BuildBox(&Creeper_Torso, &torso);
-
+	}; 
 	static struct BoxDesc lFront = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(-4,0,-6, 0,6,-2),
 		BoxDesc_Rot(0,6,-2),
-	}; BoxDesc_BuildBox(&Creeper_LeftLegFront, &lFront);
-
+	}; 
 	static struct BoxDesc rFront = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(0,0,-6, 4,6,-2),
 		BoxDesc_Rot(0,6,-2),
-	}; BoxDesc_BuildBox(&Creeper_RightLegFront, &rFront);
-
+	}; 
 	static struct BoxDesc lBack = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(-4,0,2, 0,6,6),
 		BoxDesc_Rot(0,6,2),
-	}; BoxDesc_BuildBox(&Creeper_LeftLegBack, &lBack);
-
+	}; 
 	static struct BoxDesc rBack = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(0,0,2, 4,6,6),
 		BoxDesc_Rot(0,6,2),
-	}; BoxDesc_BuildBox(&Creeper_RightLegBack, &rBack);
+	};
+	
+	BoxDesc_BuildBox(&Creeper_Head,  &head);
+	BoxDesc_BuildBox(&Creeper_Torso, &torso);
+	BoxDesc_BuildBox(&Creeper_LeftLegFront,  &lFront);
+	BoxDesc_BuildBox(&Creeper_RightLegFront, &rFront);
+	BoxDesc_BuildBox(&Creeper_LeftLegBack,   &lBack);
+	BoxDesc_BuildBox(&Creeper_RightLegBack,  &rBack);
 }
 
 static float CreeperModel_GetEyeY(struct Entity* entity)  { return 22.0f / 16.0f; }
@@ -296,37 +301,39 @@ static void PigModel_CreateParts(void) {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Box(-4,8,-14, 4,16,-6),
 		BoxDesc_Rot(0,12,-6),
-	}; BoxDesc_BuildBox(&Pig_Head, &head);
-
+	}; 
 	static struct BoxDesc torso = {
 		BoxDesc_Tex(28,8),
 		BoxDesc_Box(-5,6,-8, 5,14,8),
 		BoxDesc_Rot(0,6,0),
-	}; BoxDesc_BuildRotatedBox(&Pig_Torso, &torso);
-
+	}; 
 	static struct BoxDesc lFront = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(-5,0,-7, -1,6,-3),
 		BoxDesc_Rot(0,6,-5),
-	}; BoxDesc_BuildBox(&Pig_LeftLegFront, &lFront);
-
+	}; 
 	static struct BoxDesc rFront = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(1,0,-7, 5,6,-3),
 		BoxDesc_Rot(0,6,-5),
-	}; BoxDesc_BuildBox(&Pig_RightLegFront, &rFront);
-
+	}; 
 	static struct BoxDesc lBack = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(-5,0,5, -1,6,9),
 		BoxDesc_Rot(0,6,7),
-	}; BoxDesc_BuildBox(&Pig_LeftLegBack, &lBack);
-
+	}; 
 	static struct BoxDesc rBack = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(1,0,5, 5,6,9),
 		BoxDesc_Rot(0,6,7),
-	}; BoxDesc_BuildBox(&Pig_RightLegBack, &rBack);
+	}; 
+	
+	BoxDesc_BuildBox(&Pig_Head,          &head);
+	BoxDesc_BuildRotatedBox(&Pig_Torso,  &torso);
+	BoxDesc_BuildBox(&Pig_LeftLegFront,  &lFront);
+	BoxDesc_BuildBox(&Pig_RightLegFront, &rFront);
+	BoxDesc_BuildBox(&Pig_LeftLegBack,   &lBack);
+	BoxDesc_BuildBox(&Pig_RightLegBack,  &rBack);
 }
 
 static float PigModel_GetEyeY(struct Entity* entity)  { return 12.0f / 16.0f; }
@@ -370,80 +377,83 @@ static void SheepModel_CreateParts(void) {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Box(-3,16,-14, 3,22,-6),
 		BoxDesc_Rot(0,18,-8),
-	}; BoxDesc_BuildBox(&Sheep_Head, &head);
-
+	};
 	static struct BoxDesc torso = {
 		BoxDesc_Tex(28,8),
 		BoxDesc_Box(-4,12,-8, 4,18,8),
 		BoxDesc_Rot(0,12,0),
-	}; BoxDesc_BuildRotatedBox(&Sheep_Torso, &torso);
-	
+	}; 	
 	static struct BoxDesc lFront = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(-5,0,-7, -1,12,-3),
 		BoxDesc_Rot(0,12,-5),
-	}; BoxDesc_BuildBox(&Sheep_LeftLegFront, &lFront);
-
+	}; 
 	static struct BoxDesc rFront = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(1,0,-7, 5,12,-3),
 		BoxDesc_Rot(0,12,-5),
-	}; BoxDesc_BuildBox(&Sheep_RightLegFront, &rFront);
-
+	}; 
 	static struct BoxDesc lBack = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(-5,0,5, -1,12,9),
 		BoxDesc_Rot(0,12,7),
-	}; BoxDesc_BuildBox(&Sheep_LeftLegBack, &lBack);
-
+	}; 
 	static struct BoxDesc rBack = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(1,0,5, 5,12,9),
 		BoxDesc_Rot(0,12,7),
-	}; BoxDesc_BuildBox(&Sheep_RightLegBack, &rBack);
-
+	};
 
 	static struct BoxDesc fHead = {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Dims(-3,16,-12, 3,22,-6),
 		BoxDesc_Bounds(-3.5f,15.5f,-12.5f, 3.5f,22.5f,-5.5f),
 		BoxDesc_Rot(0,18,-8),
-	}; BoxDesc_BuildBox(&Fur_Head, &fHead);
-
+	}; 
 	static struct BoxDesc fTorso = {
 		BoxDesc_Tex(28,8),
 		BoxDesc_Dims(-4,12,-8, 4,18,8),
 		BoxDesc_Bounds(-6.0f,10.5f,-10.0f, 6.0f,19.5f,10.0f),
 		BoxDesc_Rot(0,12,0),
-	}; BoxDesc_BuildRotatedBox(&Fur_Torso, &fTorso);
-
+	};
 	static struct BoxDesc flFront = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Dims(-5,6,-7, -1,12,-3),
 		BoxDesc_Bounds(-5.5f,5.5f,-7.5f, -0.5f,12.5f,-2.5f),
 		BoxDesc_Rot(0,12,-5),
-	}; BoxDesc_BuildBox(&Fur_LeftLegFront, &flFront);
-
+	};
 	static struct BoxDesc frFront = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Dims(1,6,-7, 5,12,-3),
 		BoxDesc_Bounds(0.5f,5.5f,-7.5f, 5.5f,12.5f,-2.5f),
 		BoxDesc_Rot(0,12,-5),
-	}; BoxDesc_BuildBox(&Fur_RightLegFront, &frFront);
-
+	};
 	static struct BoxDesc flBack = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Dims(-5,6,5, -1,12,9),
 		BoxDesc_Bounds(-5.5f,5.5f,4.5f, -0.5f,12.5f,9.5f),
 		BoxDesc_Rot(0,12,7),
-	}; BoxDesc_BuildBox(&Fur_LeftLegBack, &flBack);
-
+	}; 
 	static struct BoxDesc frBack = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Dims(1,6,5, 5,12,9),
 		BoxDesc_Bounds(0.5f,5.5f,4.5f, 5.5f,12.5f,9.5f),
 		BoxDesc_Rot(0,12,7),
-	}; BoxDesc_BuildBox(&Fur_RightLegBack, &frBack);
+	}; 
+
+	BoxDesc_BuildBox(&Sheep_Head,          &head);
+	BoxDesc_BuildRotatedBox(&Sheep_Torso,  &torso);
+	BoxDesc_BuildBox(&Sheep_LeftLegFront,  &lFront);
+	BoxDesc_BuildBox(&Sheep_RightLegFront, &rFront);
+	BoxDesc_BuildBox(&Sheep_LeftLegBack,   &lBack);
+	BoxDesc_BuildBox(&Sheep_RightLegBack,  &rBack);
+	
+	BoxDesc_BuildBox(&Fur_Head,          &fHead);
+	BoxDesc_BuildRotatedBox(&Fur_Torso,  &fTorso);
+	BoxDesc_BuildBox(&Fur_LeftLegFront,  &flFront);
+	BoxDesc_BuildBox(&Fur_RightLegFront, &frFront);
+	BoxDesc_BuildBox(&Fur_LeftLegBack,   &flBack);
+	BoxDesc_BuildBox(&Fur_RightLegBack,  &frBack);
 }
 
 static float SheepModel_GetEyeY(struct Entity* entity)  { return 20.0f / 16.0f; }
@@ -474,13 +484,13 @@ static void SheepModel_DrawModel(struct Entity* entity) {
 }
 
 static struct Model* SheepModel_GetInstance(void) {
+	static String sheep_fur = String_FromConst("sheep_fur.png");
+	fur_Index = ModelCache_GetTextureIndex(&sheep_fur);
+
 	Model_Init(&SheepModel);
 	Model_SetPointers(SheepModel);
 	SheepModel.vertices = SheepModel_Vertices;
 	SheepModel.NameYOffset = 1.48125f;
-
-	String sheep_fur = String_FromConst("sheep_fur.png");
-	fur_Index = ModelCache_GetTextureIndex(&sheep_fur);
 	return &SheepModel;
 }
 
@@ -498,37 +508,39 @@ static void SkeletonModel_CreateParts(void) {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Box(-4,24,-4, 4,32,4),
 		BoxDesc_Rot(0,24,0),
-	}; BoxDesc_BuildBox(&Skeleton_Head, &head);
-
+	};
 	static struct BoxDesc torso = {
 		BoxDesc_Tex(16,16),
 		BoxDesc_Box(-4,12,-2, 4,24,2),
 		BoxDesc_Rot(0,12,0),
-	}; BoxDesc_BuildBox(&Skeleton_Torso, &torso);
-
+	}; 
 	static struct BoxDesc lLeg = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(-1,0,-1, -3,12,1),
 		BoxDesc_Rot(0,12,0),
-	}; BoxDesc_BuildBox(&Skeleton_LeftLeg, &lLeg);
-
+	}; 
 	static struct BoxDesc rLeg = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(1,0,-1, 3,12,1),
 		BoxDesc_Rot(0,12,0),
-	}; BoxDesc_BuildBox(&Skeleton_RightLeg, &rLeg);
-
+	}; 
 	static struct BoxDesc lArm = {
 		BoxDesc_Tex(40,16),
 		BoxDesc_Box(-4,12,-1, -6,24,1),
 		BoxDesc_Rot(-5,23,0),
-	}; BoxDesc_BuildBox(&Skeleton_LeftArm, &lArm);
-
+	}; 
 	static struct BoxDesc rArm = {
 		BoxDesc_Tex(40,16),
 		BoxDesc_Box(4,12,-1, 6,24,1),
 		BoxDesc_Rot(5,23,0),
-	}; BoxDesc_BuildBox(&Skeleton_RightArm, &rArm);
+	}; 
+
+	BoxDesc_BuildBox(&Skeleton_Head,  &head);
+	BoxDesc_BuildBox(&Skeleton_Torso, &torso);
+	BoxDesc_BuildBox(&Skeleton_LeftLeg,  &lLeg);
+	BoxDesc_BuildBox(&Skeleton_RightLeg, &rLeg);
+	BoxDesc_BuildBox(&Skeleton_LeftArm,  &lArm);
+	BoxDesc_BuildBox(&Skeleton_RightArm, &rArm);
 }
 
 static float SkeletonModel_GetEyeY(struct Entity* entity)  { return 26.0f / 16.0f; }
@@ -576,31 +588,33 @@ static void SpiderModel_CreateParts(void) {
 		BoxDesc_Tex(32,4),
 		BoxDesc_Box(-4,4,-11, 4,12,-3),
 		BoxDesc_Rot(0,8,-3),
-	}; BoxDesc_BuildBox(&Spider_Head, &head);
-
+	};
 	static struct BoxDesc link = {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Box(-3,5,3, 3,11,-3),
 		BoxDesc_Rot(0,5,0),
-	}; BoxDesc_BuildBox(&Spider_Link, &link);
-
+	}; 
 	static struct BoxDesc end = {
 		BoxDesc_Tex(0,12),
 		BoxDesc_Box(-5,4,3, 5,12,15),
 		BoxDesc_Rot(0,4,9),
-	}; BoxDesc_BuildBox(&Spider_End, &end);
-
+	}; 
 	static struct BoxDesc lLeg = {
 		BoxDesc_Tex(18,0),
 		BoxDesc_Box(-19,7,-1, -3,9,1),
 		BoxDesc_Rot(-3,8,0),
-	}; BoxDesc_BuildBox(&Spider_LeftLeg, &lLeg);
-
+	}; 
 	static struct BoxDesc rLeg = {
 		BoxDesc_Tex(18,0),
 		BoxDesc_Box(3,7,-1, 19,9,1),
 		BoxDesc_Rot(3,8,0),
-	}; BoxDesc_BuildBox(&Spider_RightLeg, &rLeg);
+	};
+	
+	BoxDesc_BuildBox(&Spider_Head, &head);
+	BoxDesc_BuildBox(&Spider_Link, &link);
+	BoxDesc_BuildBox(&Spider_End,  &end);
+	BoxDesc_BuildBox(&Spider_LeftLeg,  &lLeg);
+	BoxDesc_BuildBox(&Spider_RightLeg, &rLeg);
 }
 
 static float SpiderModel_GetEyeY(struct Entity* entity)  { return 8.0f / 16.0f; }
@@ -657,44 +671,46 @@ static void ZombieModel_CreateParts(void) {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Box(-4,24,-4, 4,32,4),
 		BoxDesc_Rot(0,24,0),
-	}; BoxDesc_BuildBox(&Zombie_Head, &head);
-
+	}; 
 	static struct BoxDesc hat = {
 		BoxDesc_Tex(32,0),
 		BoxDesc_Dims(-4,24,-4, 4,32,4),
 		BoxDesc_Bounds(-4.5f,23.5f,-4.5f, 4.5f,32.5f,4.5f),
 		BoxDesc_Rot(0,24,0),
-	}; BoxDesc_BuildBox(&Zombie_Hat, &hat);
-
+	}; 
 	static struct BoxDesc torso = {
 		BoxDesc_Tex(16,16),
 		BoxDesc_Box(-4,12,-2, 4,24,2),
 		BoxDesc_Rot(0,12,0),
-	}; BoxDesc_BuildBox(&Zombie_Torso, &torso);
-
+	}; 
 	static struct BoxDesc lLeg = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(0,0,-2, -4,12,2),
 		BoxDesc_Rot(0,12,0),
-	}; BoxDesc_BuildBox(&Zombie_LeftLeg, &lLeg);
-
+	}; 
 	static struct BoxDesc rLeg = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(0,0,-2, 4,12,2),
 		BoxDesc_Rot(0,12,0),
-	}; BoxDesc_BuildBox(&Zombie_RightLeg, &rLeg);
-
+	}; 
 	static struct BoxDesc lArm = {
 		BoxDesc_Tex(40,16),
 		BoxDesc_Box(-4,12,-2, -8,24,2),
 		BoxDesc_Rot(-6,22,0),
-	}; BoxDesc_BuildBox(&Zombie_LeftArm, &lArm);
-
+	}; 
 	static struct BoxDesc rArm = {
 		BoxDesc_Tex(40,16),
 		BoxDesc_Box(4,12,-2, 8,24,2),
 		BoxDesc_Rot(6,22,0),
-	}; BoxDesc_BuildBox(&Zombie_RightArm, &rArm);
+	}; 
+	
+	BoxDesc_BuildBox(&Zombie_Head,  &head);
+	BoxDesc_BuildBox(&Zombie_Hat,   &hat);
+	BoxDesc_BuildBox(&Zombie_Torso, &torso);
+	BoxDesc_BuildBox(&Zombie_LeftLeg,  &lLeg);
+	BoxDesc_BuildBox(&Zombie_RightLeg, &rLeg);
+	BoxDesc_BuildBox(&Zombie_LeftArm,  &lArm);
+	BoxDesc_BuildBox(&Zombie_RightArm, &rArm);
 }
 
 static float ZombieModel_GetEyeY(struct Entity* entity)  { return 26.0f / 16.0f; }
@@ -866,27 +882,24 @@ static void HumanoidModel_CreateParts(void) {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Box(-4,24,-4, 4,32,4),
 		BoxDesc_Rot(0,24,0),
-	}; BoxDesc_BuildBox(&Humanoid_Set.Head, &head);
-
+	}; 
 	static struct BoxDesc torso = {
 		BoxDesc_Tex(16,16),
 		BoxDesc_Box(-4,12,-2, 4,24,2),
 		BoxDesc_Rot(0,12,0),
-	}; BoxDesc_BuildBox(&Humanoid_Set.Torso, &torso);
-
+	}; 
 	static struct BoxDesc hat = {
 		BoxDesc_Tex(32,0),
 		BoxDesc_Dims(-4,24,-4, 4,32,4),
 		BoxDesc_Bounds(-4.5f,23.5f,-4.5f, 4.5f,32.5f,4.5f),
 		BoxDesc_Rot(0,24,0),
-	}; BoxDesc_BuildBox(&Humanoid_Set.Hat, &hat);
-
+	}; 
 	static struct BoxDesc torsoL = {
 		BoxDesc_Tex(16,32),
 		BoxDesc_Dims(-4,12,-2, 4,24,2),
 		BoxDesc_Bounds(-3.5f,11.5f,-3.5f, 4.5f,24.5f,4.5f),
 		BoxDesc_Rot(0,12,0),
-	}; BoxDesc_BuildBox(&Humanoid_Set.TorsoLayer, &torsoL);
+	};
 
 	static struct BoxDesc arm = {
 		BoxDesc_Tex(40,16),
@@ -898,6 +911,11 @@ static void HumanoidModel_CreateParts(void) {
 		BoxDesc_Box(0,0,-2, 4,12,2),
 		BoxDesc_Rot(0,12,0),
 	};
+
+	BoxDesc_BuildBox(&Humanoid_Set.Head,  &head);
+	BoxDesc_BuildBox(&Humanoid_Set.Torso, &torso);
+	BoxDesc_BuildBox(&Humanoid_Set.Hat,   &hat);
+	BoxDesc_BuildBox(&Humanoid_Set.TorsoLayer, &torsoL);
 	HumanModel_CreateLimbs(&Humanoid_Set, 0.5f, &arm, &leg);
 }
 
@@ -937,28 +955,25 @@ static void ChibiModel_CreateParts(void) {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Box(-4,12,-4, 4,20,4),
 		BoxDesc_Rot(0,13,0),
-	}; BoxDesc_BuildBox(&Chibi_Set.Head, &head);
-
+	}; 
 	static struct BoxDesc torso = {
 		BoxDesc_Tex(16,16),
 		BoxDesc_Dims(-4,12,-2, 4,24,2),
 		BoxDesc_Bounds(-2,6,-1, 2,12,1),
 		BoxDesc_Rot(0,6,0),
-	}; BoxDesc_BuildBox(&Chibi_Set.Torso, &torso);
-
+	}; 
 	static struct BoxDesc hat = {
 		BoxDesc_Tex(32,0),
 		BoxDesc_Dims(-4,12,-4, 4,20,4),
 		BoxDesc_Bounds(-4.25f,11.75f,-4.25f, 4.25f,20.25f,4.25f),
 		BoxDesc_Rot(0,13,0),
-	}; BoxDesc_BuildBox(&Chibi_Set.Hat, &hat);
-
+	}; 
 	static struct BoxDesc torsoL = {
 		BoxDesc_Tex(16,32),
 		BoxDesc_Dims(-4,12,-2, 4,24,2),
 		BoxDesc_Bounds(-1.75f,5.75f,-0.75f, 2.25f,12.25f,1.25f),
 		BoxDesc_Rot(0,6,0),
-	}; BoxDesc_BuildBox(&Chibi_Set.TorsoLayer, &torsoL);
+	}; 
 
 	static struct BoxDesc arm = {
 		BoxDesc_Tex(40,16),
@@ -972,6 +987,11 @@ static void ChibiModel_CreateParts(void) {
 		BoxDesc_Bounds(0,0,-1, 2,6,1),
 		BoxDesc_Rot(0,6,0),
 	};
+
+	BoxDesc_BuildBox(&Chibi_Set.Head,  &head);
+	BoxDesc_BuildBox(&Chibi_Set.Torso, &torso);
+	BoxDesc_BuildBox(&Chibi_Set.Hat,   &hat);
+	BoxDesc_BuildBox(&Chibi_Set.TorsoLayer, &torsoL);
 	HumanModel_CreateLimbs(&Chibi_Set, 0.25f, &arm, &leg);
 }
 
@@ -1075,8 +1095,8 @@ static void HeadModel_GetTransform(struct Entity* entity, Vector3 pos, struct Ma
 }
 
 static void HeadModel_DrawModel(struct Entity* entity) {
-	Model_ApplyTexture(entity);
 	struct ModelPart part;
+	Model_ApplyTexture(entity);
 
 	part = Humanoid_Set.Head; part.RotY += 4.0f / 16.0f;
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &part, true);
@@ -1267,13 +1287,14 @@ static void BlockModel_DrawParts(bool sprite) {
 }
 
 static void BlockModel_DrawModel(struct Entity* p) {
+	PackedCol white = PACKEDCOL_WHITE;
+	int i;
+
 	BlockModel_block = p->ModelBlock;
 	BlockModel_RecalcProperties(p);
 	if (Block_Draw[BlockModel_block] == DRAW_GAS) return;
 
 	if (Block_FullBright[BlockModel_block]) {
-		int i;
-		PackedCol white = PACKEDCOL_WHITE;
 		for (i = 0; i < FACE_COUNT; i++) {
 			Model_Cols[i] = white;
 		}

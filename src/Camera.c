@@ -59,6 +59,7 @@ static void PerspectiveCamera_RegrabMouse(void) {
 static Vector2 PerspectiveCamera_GetMouseDelta(void) {
 	float sensitivity = CAMERA_SENSI_FACTOR * Game_MouseSensitivity;
 	static float speedX, speedY;
+	Vector2 v;
 
 	if (Game_SmoothCamera) {
 		speedX += cam_delta.X * CAMERA_ADJUST;
@@ -70,7 +71,7 @@ static Vector2 PerspectiveCamera_GetMouseDelta(void) {
 		speedY = (float)cam_delta.Y;
 	}
 
-	Vector2 v = { speedX * sensitivity, speedY * sensitivity };
+	v.X = speedX * sensitivity; v.Y = speedY * sensitivity;
 	if (Game_InvertMouse) v.Y = -v.Y;
 	return v;
 }
@@ -81,28 +82,30 @@ static void PerspectiveCamera_UpdateMouseRotation(void) {
 		cam_rotOffset.X += rot.X; cam_rotOffset.Y += rot.Y;
 		return;
 	}
-	struct LocalPlayer* player = &LocalPlayer_Instance;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 
-	float headY = player->Interp.Next.HeadY + rot.X;
-	float headX = player->Interp.Next.HeadX + rot.Y;
+	float headY = p->Interp.Next.HeadY + rot.X;
+	float headX = p->Interp.Next.HeadX + rot.Y;
 	struct LocationUpdate update;
 	LocationUpdate_MakeOri(&update, headY, headX);
 
 	/* Need to make sure we don't cross the vertical axes, because that gets weird. */
 	if (update.HeadX >= 90.0f && update.HeadX <= 270.0f) {
-		update.HeadX = player->Interp.Next.HeadX < 180.0f ? 90.0f : 270.0f;
+		update.HeadX = p->Interp.Next.HeadX < 180.0f ? 90.0f : 270.0f;
 	}
 
-	struct Entity* e = &player->Base;
+	struct Entity* e = &p->Base;
 	e->VTABLE->SetLocation(e, &update, false);
 }
 
 static void PerspectiveCamera_UpdateMouse(void) {
 	struct Screen* screen = Gui_GetActiveScreen();
+	Point2D pos;
+
 	if (screen->HandlesAllInput) {
 		cam_delta.X = 0; cam_delta.Y = 0;
 	} else if (Window_Focused) {
-		Point2D pos = Window_GetScreenCursorPos();
+		pos = Window_GetScreenCursorPos();
 		cam_delta.X = pos.X - cam_prev.X; cam_delta.Y = pos.Y - cam_prev.Y;
 		PerspectiveCamera_CentreMousePosition();
 	}
@@ -133,17 +136,18 @@ static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
 *#########################################################################################################################*/
 static Vector2 FirstPersonCamera_GetOrientation(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vector2 ori = { p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD };
-	return ori;
+	Vector2 v;	
+	v.X = p->HeadY * MATH_DEG2RAD; v.Y = p->HeadX * MATH_DEG2RAD; 
+	return v;
 }
 
 static Vector3 FirstPersonCamera_GetPosition(float t) {
-	PerspectiveCamera_CalcViewBobbing(t, 1);
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vector3 camPos = Entity_GetEyePosition(p);
+	Vector3 camPos   = Entity_GetEyePosition(p);
+	float headY      = p->HeadY * MATH_DEG2RAD;
+	PerspectiveCamera_CalcViewBobbing(t, 1);
+	
 	camPos.Y += Camera_BobbingVer;
-
-	float headY = (p->HeadY * MATH_DEG2RAD);
 	camPos.X += Camera_BobbingHor * (float)Math_Cos(headY);
 	camPos.Z += Camera_BobbingHor * (float)Math_Sin(headY);
 	return camPos;
@@ -166,7 +170,8 @@ float dist_third = 3.0f, dist_forward = 3.0f;
 
 static Vector2 ThirdPersonCamera_GetOrientation(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vector2 v = { p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD };
+	Vector2 v;	
+	v.X = p->HeadY * MATH_DEG2RAD; v.Y = p->HeadX * MATH_DEG2RAD;
 	if (cam_isForwardThird) { v.X += MATH_PI; v.Y = -v.Y; }
 
 	v.X += cam_rotOffset.X * MATH_DEG2RAD; 
@@ -179,7 +184,7 @@ static Vector3 ThirdPersonCamera_GetPosition(float t) {
 	PerspectiveCamera_CalcViewBobbing(t, dist);
 
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vector3 target = Entity_GetEyePosition(p);
+	Vector3 target   = Entity_GetEyePosition(p);
 	target.Y += Camera_BobbingVer;
 
 	Vector2 rot = Camera_Active->GetOrientation();
@@ -225,11 +230,11 @@ void Camera_Init(void) {
 }
 
 void Camera_CycleActive(void) {
-	if (Game_ClassicMode) return;
-	Camera_Active      = Camera_Active->Next;
-	cam_isForwardThird = Camera_Active == &Camera_ForwardThird;
-
 	struct LocalPlayer* p = &LocalPlayer_Instance;
+	if (Game_ClassicMode) return;
+	Camera_Active = Camera_Active->Next;
+
+	cam_isForwardThird = Camera_Active == &Camera_ForwardThird;
 	if (!p->Hacks.CanUseThirdPersonCamera || !p->Hacks.Enabled) {
 		Camera_Active = &Camera_FirstPerson;
 	}

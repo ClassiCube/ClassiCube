@@ -84,8 +84,8 @@ float Entity_GetEyeHeight(struct Entity* e) {
 }
 
 void Entity_GetTransform(struct Entity* e, Vector3 pos, Vector3 scale, struct Matrix* m) {
-	*m = Matrix_Identity;
 	struct Matrix tmp;
+	*m = Matrix_Identity;
 
 	Matrix_Scale(&tmp, scale.X, scale.Y, scale.Z);
 	Matrix_MulBy(m, &tmp);
@@ -109,7 +109,6 @@ void Entity_GetBounds(struct Entity* e, struct AABB* bb) {
 }
 
 static void Entity_ParseScale(struct Entity* e, const String* scale) {
-	if (!scale->length) return;
 	float value;
 	if (!Convert_TryParseFloat(scale, &value)) return;
 
@@ -119,20 +118,22 @@ static void Entity_ParseScale(struct Entity* e, const String* scale) {
 }
 
 static void Entity_SetBlockModel(struct Entity* e, const String* model) {
+	static String block = String_FromConst("block");
 	int raw = Block_Parse(model);
+
 	if (raw == -1) {
 		/* use default humanoid model */
 		e->Model = ModelCache_Models[0].Instance;
-	} else {
-		String block  = String_FromConst("block");
+	} else {	
 		e->ModelBlock = (BlockID)raw;
 		e->Model      = ModelCache_Get(&block);
 	}
 }
 
 void Entity_SetModel(struct Entity* e, const String* model) {
+	String name, scale, skin;
 	e->ModelScale = Vector3_Create1(1.0f);
-	String name, scale;
+
 	if (!String_UNSAFE_Separate(model, '|', &name, &scale)) {
 		name  = *model;
 		scale = String_Empty;
@@ -154,7 +155,7 @@ void Entity_SetModel(struct Entity* e, const String* model) {
 	e->Model->RecalcProperties(e);
 	Entity_UpdateModelBounds(e);
 	
-	String skin = String_FromRawArray(e->SkinNameRaw);
+	skin = String_FromRawArray(e->SkinNameRaw);
 	if (Utils_IsUrlPrefix(&skin, 0)) { e->MobTextureId = e->TextureId; }
 }
 
@@ -413,9 +414,10 @@ bool TabList_Valid(EntityID id) {
 	return TabList_PlayerNames[id] || TabList_ListNames[id] || TabList_GroupNames[id];
 }
 
-void TabList_RemoveAt(uint32_t index) {
-	uint32_t i;
+static void TabList_RemoveAt(int index) {
+	int i;
 	StringsBuffer_Remove(&TabList_Buffer, index);
+
 	for (i = 0; i < TABLIST_MAX_NAMES; i++) {
 		if (TabList_PlayerNames[i] == index) { TabList_PlayerNames[i] = 0; }
 		if (TabList_PlayerNames[i] > index)  { TabList_PlayerNames[i]--; }
@@ -585,6 +587,7 @@ static struct Player* Player_FirstOtherWithSameSkinAndFetchedSkin(struct Player*
 static void Player_ApplySkin(struct Player* player, struct Player* from) {
 	struct Entity* dst = &player->Base;
 	struct Entity* src = &from->Base;
+	String skin;
 
 	dst->TextureId = src->TextureId;	
 	dst->SkinType  = src->SkinType;
@@ -593,7 +596,7 @@ static void Player_ApplySkin(struct Player* player, struct Player* from) {
 
 	/* Custom mob textures */
 	dst->MobTextureId = GFX_NULL;
-	String skin = String_FromRawArray(dst->SkinNameRaw);
+	skin = String_FromRawArray(dst->SkinNameRaw);
 	if (Utils_IsUrlPrefix(&skin, 0)) { dst->MobTextureId = dst->TextureId; }
 }
 

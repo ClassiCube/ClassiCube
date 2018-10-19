@@ -17,11 +17,11 @@
 /* Data for a resizable queue, used for liquid physic tick entries. */
 struct TickQueue {
 	uint32_t* Entries;     /* Buffer holding the items in the tick queue */
-	uint32_t  EntriesSize; /* Max number of elements in the buffer */
-	uint32_t  EntriesMask; /* EntriesSize - 1, as EntriesSize is always a power of two */
-	uint32_t  Size;        /* Number of used elements */
-	uint32_t  Head;        /* Head index into the buffer */
-	uint32_t  Tail;        /* Tail index into the buffer */
+	int EntriesSize; /* Max number of elements in the buffer */
+	int EntriesMask; /* EntriesSize - 1, as EntriesSize is always a power of two */
+	int Size;        /* Number of used elements */
+	int Head;        /* Head index into the buffer */
+	int Tail;        /* Tail index into the buffer */
 };
 
 static void TickQueue_Init(struct TickQueue* queue) {
@@ -40,17 +40,19 @@ static void TickQueue_Clear(struct TickQueue* queue) {
 }
 
 static void TickQueue_Resize(struct TickQueue* queue) {
+	uint32_t* entries;
+	int i, idx, capacity;
+
 	if (queue->EntriesSize >= (Int32_MaxValue / 4)) {
-		Chat_AddRaw("&cTickQueue too large, clearing");
+		Chat_AddRaw("&cToo many physics entries, clearing");
 		TickQueue_Clear(queue);
 		return;
 	}
 
-	uint32_t capacity = queue->EntriesSize * 2;
+	capacity = queue->EntriesSize * 2;
 	if (capacity < 32) capacity = 32;
-	uint32_t* entries = Mem_Alloc(capacity, sizeof(uint32_t), "physics tick queue");
+	entries = Mem_Alloc(capacity, 4, "physics tick queue");
 
-	uint32_t i, idx;
 	for (i = 0; i < queue->Size; i++) {
 		idx = (queue->Head + i) & queue->EntriesMask;
 		entries[i] = queue->Entries[idx];
@@ -95,6 +97,7 @@ struct TickQueue physics_lavaQ, physics_waterQ;
 #define PHYSICS_DELAY_MASK 0xF8000000UL
 #define PHYSICS_POS_MASK   0x07FFFFFFUL
 #define PHYSICS_DELAY_SHIFT 27
+#define PHYSICS_ONE_DELAY   (1U << PHYSICS_DELAY_SHIFT)
 #define PHYSICS_LAVA_DELAY (30U << PHYSICS_DELAY_SHIFT)
 #define PHYSICS_WATER_DELAY (5U << PHYSICS_DELAY_SHIFT)
 
@@ -141,39 +144,46 @@ static bool Physics_IsEdgeWater(int x, int y, int z) {
 
 
 static void Physics_BlockChanged(void* obj, Vector3I p, BlockID old, BlockID now) {
+	PhysicsHandler handler;
+	int index;
 	if (!Physics_Enabled) return;
-	int index = World_Pack(p.X, p.Y, p.Z);
 
 	if (now == BLOCK_AIR && Physics_IsEdgeWater(p.X, p.Y, p.Z)) {
 		now = BLOCK_STILL_WATER;
 		Game_UpdateBlock(p.X, p.Y, p.Z, BLOCK_STILL_WATER);
 	}
+	index = World_Pack(p.X, p.Y, p.Z);
 
 	if (now == BLOCK_AIR) {
-		PhysicsHandler deleteHandler = Physics_OnDelete[old];
-		if (deleteHandler) deleteHandler(index, old);
+		handler = Physics_OnDelete[old];
+		if (handler) handler(index, old);
 	} else {
-		PhysicsHandler placeHandler = Physics_OnPlace[now];
-		if (placeHandler) placeHandler(index, now);
+		handler = Physics_OnPlace[now];
+		if (handler) handler(index, now);
 	}
 	Physics_ActivateNeighbours(p.X, p.Y, p.Z, index);
 }
 
 static void Physics_TickRandomBlocks(void) {
-	int x, y, z;
+	int lo, hi, index;
+	BlockID block;
+	PhysicsHandler tick;
+	int x, y, z, x2, y2, z2;
+
 	for (y = 0; y < World_Height; y += CHUNK_SIZE) {
-		int y2 = min(y + CHUNK_MAX, World_MaxY);
+		y2 = min(y + CHUNK_MAX, World_MaxY);
 		for (z = 0; z < World_Length; z += CHUNK_SIZE) {
-			int z2 = min(z + CHUNK_MAX, World_MaxZ);
+			z2 = min(z + CHUNK_MAX, World_MaxZ);
 			for (x = 0; x < World_Width; x += CHUNK_SIZE) {
-				int x2 = min(x + CHUNK_MAX, World_MaxX);
-				int lo = World_Pack( x,  y,  z);
-				int hi = World_Pack(x2, y2, z2);
+				x2 = min(x + CHUNK_MAX, World_MaxX);
 
 				/* Inlined 3 random ticks for this chunk */
-				int index = Random_Range(&physics_rnd, lo, hi);
-				BlockID block = World_Blocks[index];
-				PhysicsHandler tick = Physics_OnRandomTick[block];
+				lo = World_Pack( x,  y,  z);
+				hi = World_Pack(x2, y2, z2);
+				
+				index = Random_Range(&physics_rnd, lo, hi);
+				block = World_Blocks[index];
+				tick = Physics_OnRandomTick[block];
 				if (tick) tick(index, block);
 
 				index = Random_Range(&physics_rnd, lo, hi);
@@ -193,12 +203,14 @@ static void Physics_TickRandomBlocks(void) {
 
 static void Physics_DoFalling(int index, BlockID block) {
 	int found = -1, start = index;
+	BlockID other;
 	int x, y, z;
 
 	/* Find lowest block can fall into */
 	while (index >= World_OneY) {
 		index -= World_OneY;
-		BlockID other = World_Blocks[index];
+		other  = World_Blocks[index];
+
 		if (other == BLOCK_AIR || (other >= BLOCK_WATER && other <= BLOCK_STILL_LAVA))
 			found = index;
 		else
@@ -215,13 +227,11 @@ static void Physics_DoFalling(int index, BlockID block) {
 }
 
 static bool Physics_CheckItem(struct TickQueue* queue, int* posIndex) {
-	uint32_t packed = TickQueue_Dequeue(queue);
-	int tickDelay = (int)((packed & PHYSICS_DELAY_MASK) >> PHYSICS_DELAY_SHIFT);
-	*posIndex = (int)(packed & PHYSICS_POS_MASK);
+	uint32_t item = TickQueue_Dequeue(queue);
+	*posIndex     = (int)(item & PHYSICS_POS_MASK);
 
-	if (tickDelay > 0) {
-		tickDelay--;
-		uint32_t item = (uint32_t)(*posIndex) | ((uint32_t)tickDelay << PHYSICS_DELAY_SHIFT);
+	if (item >= PHYSICS_ONE_DELAY) {
+		item -= PHYSICS_ONE_DELAY;
 		TickQueue_Enqueue(queue, item);
 		return false;
 	}
@@ -357,11 +367,12 @@ static void Physics_PlaceWater(int index, BlockID block) {
 
 static void Physics_PropagateWater(int posIndex, int x, int y, int z) {
 	BlockID block = World_Blocks[posIndex];
+	int xx, yy, zz;
+
 	if (block == BLOCK_LAVA || block == BLOCK_STILL_LAVA) {
 		Game_UpdateBlock(x, y, z, BLOCK_STONE);
 	} else if (Block_Collide[block] == COLLIDE_GAS && block != BLOCK_ROPE) {
-		/* Sponge check */
-		int xx, yy, zz;
+		/* Sponge check */		
 		for (yy = (y < 2 ? 0 : y - 2); yy <= (y > physics_maxWaterY ? World_MaxY : y + 2); yy++) {
 			for (zz = (z < 2 ? 0 : z - 2); zz <= (z > physics_maxWaterZ ? World_MaxZ : z + 2); zz++) {
 				for (xx = (x < 2 ? 0 : x - 2); xx <= (x > physics_maxWaterX ? World_MaxX : x + 2); xx++) {
@@ -401,9 +412,8 @@ static void Physics_TickWater(void) {
 
 
 static void Physics_PlaceSponge(int index, BlockID block) {
-	int x, y, z;
+	int x, y, z, xx, yy, zz;
 	World_Unpack(index, x, y, z);
-	int xx, yy, zz;
 
 	for (yy = y - 2; yy <= y + 2; yy++) {
 		for (zz = z - 2; zz <= z + 2; zz++) {
@@ -420,9 +430,8 @@ static void Physics_PlaceSponge(int index, BlockID block) {
 }
 
 static void Physics_DeleteSponge(int index, BlockID block) {
-	int x, y, z;
+	int x, y, z, xx, yy, zz;
 	World_Unpack(index, x, y, z);
-	int xx, yy, zz;
 
 	for (yy = y - 3; yy <= y + 3; yy++) {
 		for (zz = z - 3; zz <= z + 3; zz++) {
@@ -433,8 +442,7 @@ static void Physics_DeleteSponge(int index, BlockID block) {
 					index = World_Pack(xx, yy, zz);
 					block = World_Blocks[index];
 					if (block == BLOCK_WATER || block == BLOCK_STILL_WATER) {
-						uint32_t item = (1UL << PHYSICS_DELAY_SHIFT) | (uint32_t)index;
-						TickQueue_Enqueue(&physics_waterQ, item);
+						TickQueue_Enqueue(&physics_waterQ, index | PHYSICS_ONE_DELAY);
 					}
 				}
 			}
@@ -470,23 +478,25 @@ uint8_t physics_blocksTnt[BLOCK_CPE_COUNT] = {
 	1, 1, 1, 0, 1, 0, 0, 0,  0, 0, 0, 0, 0, 1, 1, 1,  1, 1,
 };
 
-static void Physics_Explode(int x, int y, int z, int power) {
-	Game_UpdateBlock(x, y, z, BLOCK_AIR);
+static void Physics_Explode(int x, int y, int z, int power) {	
 	int index = World_Pack(x, y, z);
-	Physics_ActivateNeighbours(x, y, z, index);
-
 	int powerSquared = power * power;
-	int dx, dy, dz;
+	BlockID block;
+	int dx, dy, dz, xx, yy, zz;
+
+	Game_UpdateBlock(x, y, z, BLOCK_AIR);
+	Physics_ActivateNeighbours(x, y, z, index);
+	
 	for (dy = -power; dy <= power; dy++) {
 		for (dz = -power; dz <= power; dz++) {
 			for (dx = -power; dx <= power; dx++) {
 				if (dx * dx + dy * dy + dz * dz > powerSquared) continue;
 
-				int xx = x + dx, yy = y + dy, zz = z + dz;
+				xx = x + dx; yy = y + dy; zz = z + dz;
 				if (!World_IsValidPos(xx, yy, zz)) continue;
 				index = World_Pack(xx, yy, zz);
 
-				BlockID block = World_Blocks[index];
+				block = World_Blocks[index];
 				if (block < BLOCK_CPE_COUNT && physics_blocksTnt[block]) continue;
 
 				Game_UpdateBlock(xx, yy, zz, BLOCK_AIR);

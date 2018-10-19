@@ -9,10 +9,10 @@ struct IGameComponent;
 struct ScheduledTask;
 
 enum REQUEST_TYPE { REQUEST_TYPE_DATA, REQUEST_TYPE_CONTENT_LENGTH };
-enum ASYNC_PROGRESS {
-	ASYNC_PROGRESS_NOTHING = -3,
+enum AsyncProgress {
+	ASYNC_PROGRESS_NOTHING        = -3,
 	ASYNC_PROGRESS_MAKING_REQUEST = -2,
-	ASYNC_PROGRESS_FETCHING_DATA = -1,
+	ASYNC_PROGRESS_FETCHING_DATA  = -1
 };
 
 struct AsyncRequest {
@@ -21,10 +21,10 @@ struct AsyncRequest {
 
 	TimeMS TimeAdded, TimeDownloaded;
 	int StatusCode;
-	ReturnCode Result;
 
-	void* ResultData;
-	uint32_t ResultSize;
+	ReturnCode Result;
+	void*      ResultData;
+	uint32_t   ResultSize;
 
 	TimeMS LastModified;    /* Time item cached at (if at all) */
 	char Etag[STRING_SIZE]; /* ETag of cached item (if any) */

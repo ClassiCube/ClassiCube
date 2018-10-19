@@ -665,8 +665,8 @@ struct ScreenVTABLE GeneratingScreen_VTABLE = {
 	LoadingScreen_OnResize,  LoadingScreen_ContextLost, LoadingScreen_ContextRecreated,
 };
 struct Screen* GeneratingScreen_MakeInstance(void) {
-	String title   = String_FromConst("Generating level");
-	String message = String_FromConst("Generating..");
+	static String title   = String_FromConst("Generating level");
+	static String message = String_FromConst("Generating..");
 
 	struct Screen* s = LoadingScreen_MakeInstance(&title, &message);
 	s->VTABLE = &GeneratingScreen_VTABLE;

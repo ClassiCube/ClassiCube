@@ -29,13 +29,13 @@ TimeMS Chat_GetLogTime(int i) {
 	return Chat_LogTimes[i];
 }
 
-static void Chat_AppendLogTime(void) {	
+static void Chat_AppendLogTime(void) {
+	TimeMS now = DateTime_CurrentUTC_MS();
+
 	if (Chat_LogTimesCount == Chat_LogTimesMax) {
 		Chat_LogTimes = Utils_Resize(Chat_LogTimes, &Chat_LogTimesMax,
 									sizeof(TimeMS), CHAT_LOGTIMES_DEF_ELEMS, 512);
 	}
-
-	TimeMS now = DateTime_CurrentUTC_MS();
 	Chat_LogTimes[Chat_LogTimesCount++] = now;
 }
 
@@ -48,8 +48,10 @@ struct Stream Chat_LogStream;
 DateTime ChatLog_LastLogDate;
 
 static void Chat_CloseLog(void) {
+	ReturnCode res;
 	if (!Chat_LogStream.Meta.File) return;
-	ReturnCode res = Chat_LogStream.Close(&Chat_LogStream);
+
+	res = Chat_LogStream.Close(&Chat_LogStream);
 	if (res) { Chat_LogError2(res, "closing", &Chat_LogPath); }
 }
 
@@ -60,17 +62,17 @@ static bool Chat_AllowedLogChar(char c) {
 }
 
 void Chat_SetLogName(const String* name) {
-	if (Chat_LogName.length) return;
-	Chat_LogName.length = 0;
-
-	char noColsBuffer[STRING_SIZE];
-	String noColsName = String_FromArray(noColsBuffer);
-	String_AppendColorless(&noColsName, name);
-
+	char c;
 	int i;
-	for (i = 0; i < noColsName.length; i++) {
-		if (Chat_AllowedLogChar(noColsName.buffer[i])) {
-			String_Append(&Chat_LogName, noColsName.buffer[i]);
+	if (Chat_LogName.length) return;
+
+	for (i = 0; i < name->length; i++) {
+		c = name->buffer[i];
+
+		if (Chat_AllowedLogChar(c)) {
+			String_Append(&Chat_LogName, c);
+		} else if (c == '&') {
+			i++; /* skip over following colour code */
 		}
 	}
 }
@@ -80,14 +82,17 @@ static void Chat_DisableLogging(void) {
 	Chat_AddRaw("&cDisabling chat logging");
 }
 
-static void Chat_OpenLog(DateTime* now) {
+static void Chat_OpenLog(DateTime* now) {	
+	void* file;
+	int i, year, month, day;
 	ReturnCode res;
+
+	String* path = &Chat_LogPath;
 	if (!Utils_EnsureDirectory("logs")) { Chat_DisableLogging(); return; }
+	year = now->Year; month = now->Month; day = now->Day;
 
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
-	int i, year = now->Year, month = now->Month, day = now->Day;
 	for (i = 0; i < 20; i++) {
-		String* path = &Chat_LogPath;
 		path->length = 0;
 		String_Format4(path, "logs%r%p4-%p2-%p2 ", &Directory_Separator, &year, &month, &day);
 
@@ -97,7 +102,7 @@ static void Chat_OpenLog(DateTime* now) {
 			String_Format1(path, "%s.log", &Chat_LogName);
 		}
 
-		void* file; res = File_Append(&file, path);
+		res = File_Append(&file, path);
 		if (res && res != ReturnCode_FileShareViolation) {
 			Chat_DisableLogging();
 			Chat_LogError2(res, "appending to", path); return;
@@ -114,9 +119,15 @@ static void Chat_OpenLog(DateTime* now) {
 }
 
 static void Chat_AppendLog(const String* text) {
-	if (!Chat_LogName.length || !Game_ChatLogging) return;
-	DateTime now; DateTime_CurrentLocal(&now);
+	char strBuffer[STRING_SIZE * 2];
+	String str = String_FromArray(strBuffer);
+	int hour, minute, second;
 
+	DateTime now;
+	ReturnCode res;
+	if (!Chat_LogName.length || !Game_ChatLogging) return;
+
+	DateTime_CurrentLocal(&now);
 	if (now.Day != ChatLog_LastLogDate.Day || now.Month != ChatLog_LastLogDate.Month || now.Year != ChatLog_LastLogDate.Year) {
 		Chat_CloseLog();
 		Chat_OpenLog(&now);
@@ -124,15 +135,13 @@ static void Chat_AppendLog(const String* text) {
 
 	ChatLog_LastLogDate = now;
 	if (!Chat_LogStream.Meta.File) return;
-	char logBuffer[STRING_SIZE * 2];
-	String str = String_FromArray(logBuffer);
 
 	/* [HH:mm:ss] text */
-	int hour = now.Hour, minute = now.Minute, second = now.Second;
+	hour = now.Hour; minute = now.Minute; second = now.Second;
 	String_Format3(&str, "[%p2:%p2:%p2] ", &hour, &minute, &second);
 	String_AppendColorless(&str, text);
 
-	ReturnCode res = Stream_WriteLine(&Chat_LogStream, &str);
+	res = Stream_WriteLine(&Chat_LogStream, &str);
 	if (!res) return;
 	Chat_DisableLogging();
 	Chat_LogError2(res, "writing to", &Chat_LogPath);
@@ -206,15 +215,15 @@ struct ChatCommand {
 struct ChatCommand commands_list[8];
 int commands_count;
 
-static bool Commands_IsCommandPrefix(const String* input) {
-	if (!input->length) return false;
-	if (ServerConnection_IsSinglePlayer && input->buffer[0] == '/')
-		return true;
+static bool Commands_IsCommandPrefix(const String* str) {
+	static String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
+	static String prefix      = String_FromConst(COMMANDS_PREFIX);
 
-	String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
-	String prefix      = String_FromConst(COMMANDS_PREFIX);
-	return String_CaselessStarts(input, &prefixSpace)
-		|| String_CaselessEquals(input, &prefix);
+	if (!str->length) return false;
+	if (ServerConnection_IsSinglePlayer && str->buffer[0] == '/') return true;
+	
+	return String_CaselessStarts(str, &prefixSpace)
+		|| String_CaselessEquals(str, &prefix);
 }
 
 NOINLINE_ static void Commands_Register(struct ChatCommand* cmd) {
@@ -225,11 +234,14 @@ NOINLINE_ static void Commands_Register(struct ChatCommand* cmd) {
 }
 
 static struct ChatCommand* Commands_GetMatch(const String* cmdName) {
+	struct ChatCommand* cmd;
+	String name;
 	struct ChatCommand* match = NULL;
 	int i;
+
 	for (i = 0; i < commands_count; i++) {
-		struct ChatCommand* cmd = &commands_list[i];
-		String name = String_FromReadonly(cmd->Name);
+		cmd  = &commands_list[i];
+		name = String_FromReadonly(cmd->Name);
 		if (!String_CaselessStarts(&name, cmdName)) continue;
 
 		if (match) {
@@ -252,14 +264,17 @@ static struct ChatCommand* Commands_GetMatch(const String* cmdName) {
 }
 
 static void Commands_PrintDefault(void) {
-	Chat_AddRaw("&eList of client commands:");
 	char strBuffer[STRING_SIZE];
 	String str = String_FromArray(strBuffer);
+
+	String name;
+	struct ChatCommand* cmd;
 	int i;
 
+	Chat_AddRaw("&eList of client commands:");
 	for (i = 0; i < commands_count; i++) {
-		struct ChatCommand* cmd = &commands_list[i];
-		String name = String_FromReadonly(cmd->Name);
+		cmd  = &commands_list[i];
+		name = String_FromReadonly(cmd->Name);
 
 		if ((str.length + name.length + 2) > str.capacity) {
 			Chat_Add(&str);
@@ -273,13 +288,13 @@ static void Commands_PrintDefault(void) {
 	Chat_AddRaw("&eTo see help for a command, type /client help [cmd name]");
 }
 
-static void Commands_Execute(const String* input) {
-	String text        = *input;
-	String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
-	String prefix      = String_FromConst(COMMANDS_PREFIX);
+static void Commands_Execute(const String* input) {	
+	static String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
+	static String prefix      = String_FromConst(COMMANDS_PREFIX);
+	String text = *input;
 
-	String args[10];
 	int offset, count;
+	String args[10];
 	struct ChatCommand* cmd;
 
 	if (String_CaselessStarts(&text, &prefixSpace)) { /* /clientcommand args */
@@ -295,8 +310,8 @@ static void Commands_Execute(const String* input) {
 	if (!text.length) { Commands_PrintDefault(); return; }
 
 	count = String_UNSAFE_Split(&text, ' ', args, Array_Elems(args));
-	cmd = Commands_GetMatch(&args[0]);
-	if (cmd) cmd->Execute(args,count);
+	cmd   = Commands_GetMatch(&args[0]);
+	if (cmd) cmd->Execute(args, count);
 }
 
 
@@ -326,8 +341,9 @@ struct ChatCommand HelpCommand_Instance = {
 };
 
 static void GpuInfoCommand_Execute(const String* args, int argsCount) {
-	Gfx_UpdateApiInfo();
 	int i;
+	Gfx_UpdateApiInfo();
+	
 	for (i = 0; i < Array_Elems(Gfx_ApiInfo); i++) {
 		if (!Gfx_ApiInfo[i].length) continue;
 		Chat_Add1("&a%s", &Gfx_ApiInfo[i]);
@@ -418,6 +434,7 @@ struct ChatCommand ModelCommand_Instance = {
 int cuboid_block = -1;
 Vector3I cuboid_mark1, cuboid_mark2;
 bool cuboid_persist, cuboid_hooked;
+String cuboid_msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
 
 static bool CuboidCommand_ParseBlock(const String* args, int argsCount) {
 	int block;
@@ -439,14 +456,16 @@ static bool CuboidCommand_ParseBlock(const String* args, int argsCount) {
 
 static void CuboidCommand_DoCuboid(void) {
 	Vector3I min, max;
+	BlockID toPlace;
+	int x, y, z;
+
 	Vector3I_Min(&min, &cuboid_mark1, &cuboid_mark2);
 	Vector3I_Max(&max, &cuboid_mark1, &cuboid_mark2);
 	if (!World_IsValidPos_3I(min) || !World_IsValidPos_3I(max)) return;
 
-	BlockID toPlace = (BlockID)cuboid_block;
+	toPlace = (BlockID)cuboid_block;
 	if (cuboid_block == -1) toPlace = Inventory_SelectedBlock;
 
-	int x, y, z;
 	for (y = min.Y; y <= max.Y; y++) {
 		for (z = min.Z; z <= max.Z; z++) {
 			for (x = min.X; x <= max.X; x++) {
@@ -457,11 +476,12 @@ static void CuboidCommand_DoCuboid(void) {
 }
 
 static void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID old, BlockID now) {
+	char msgBuffer[STRING_SIZE];
+	String msg = String_FromArray(msgBuffer);
+
 	if (cuboid_mark1.X == Int32_MaxValue) {
 		cuboid_mark1 = coords;
-		Game_UpdateBlock(coords.X, coords.Y, coords.Z, old);
-		char msgBuffer[STRING_SIZE];
-		String msg = String_FromArray(msgBuffer);
+		Game_UpdateBlock(coords.X, coords.Y, coords.Z, old);	
 
 		String_Format3(&msg, "&eCuboid: &fMark 1 placed at (%i, %i, %i), place mark 2.", &coords.X, &coords.Y, &coords.Z);
 		Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_1);
@@ -475,8 +495,7 @@ static void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID old, 
 			Chat_AddOf(&String_Empty, MSG_TYPE_CLIENTSTATUS_1);
 		} else {
 			cuboid_mark1 = Vector3I_MaxValue();
-			String msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
-			Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_1);
+			Chat_AddOf(&cuboid_msg, MSG_TYPE_CLIENTSTATUS_1);
 		}
 	}
 }
@@ -497,8 +516,7 @@ static void CuboidCommand_Execute(const String* args, int argsCount) {
 		cuboid_persist = true;
 	}
 
-	String msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
-	Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_1);
+	Chat_AddOf(&cuboid_msg, MSG_TYPE_CLIENTSTATUS_1);
 	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
 	cuboid_hooked = true;
 }
@@ -519,7 +537,10 @@ struct ChatCommand CuboidCommand_Instance = {
 *------------------------------------------------------TeleportCommand----------------------------------------------------*
 *#########################################################################################################################*/
 static void TeleportCommand_Execute(const String* args, int argsCount) {
+	struct LocationUpdate update;
+	struct Entity* e = &LocalPlayer_Instance.Base;
 	Vector3 v;
+
 	if (argsCount != 4) {
 		Chat_AddRaw("&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
 		return;
@@ -529,9 +550,8 @@ static void TeleportCommand_Execute(const String* args, int argsCount) {
 		return;
 	}
 
-	struct LocationUpdate update; LocationUpdate_MakePos(&update, v, false);
-	struct Entity* entity = &LocalPlayer_Instance.Base;
-	entity->VTABLE->SetLocation(entity, &update, false);
+	LocationUpdate_MakePos(&update, v, false);
+	e->VTABLE->SetLocation(e, &update, false);
 }
 
 struct ChatCommand TeleportCommand_Instance = {

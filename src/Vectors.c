@@ -103,10 +103,10 @@ Vector3 Vector3_RotateZ(Vector3 v, float angle) {
 #define Vec3_EQ(a, b) a->X == b->X && a->Y == b->Y && a->Z == b->Z
 #define Vec3_NE(a, b) a->X != b->X || a->Y != b->Y || a->Z != b->Z
 
-bool Vector3_Equals(Vector3* a, Vector3* b) { return Vec3_EQ(a, b); }
-bool Vector3_NotEquals(Vector3* a, Vector3* b) { return Vec3_NE(a, b); }
-bool Vector3I_Equals(Vector3I* a, Vector3I* b) { return Vec3_EQ(a, b); }
-bool Vector3I_NotEquals(Vector3I* a, Vector3I* b) { return Vec3_NE(a, b); }
+bool Vector3_Equals(const Vector3* a, const Vector3* b) { return Vec3_EQ(a, b); }
+bool Vector3_NotEquals(const Vector3* a, const Vector3* b) { return Vec3_NE(a, b); }
+bool Vector3I_Equals(const Vector3I* a, const Vector3I* b) { return Vec3_EQ(a, b); }
+bool Vector3I_NotEquals(const Vector3I* a, const Vector3I* b) { return Vec3_NE(a, b); }
 
 
 void Vector3I_Floor(Vector3I* result, Vector3* a) {

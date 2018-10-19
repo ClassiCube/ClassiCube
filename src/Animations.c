@@ -25,6 +25,8 @@ bool L_rndInitalised;
 
 static void LavaAnimation_Tick(uint32_t* ptr, int size) {
 	int mask = size - 1, shift = Math_Log2(size);
+	float soupHeat, potHeat, col;
+	uint8_t r, g, b;
 	int x, y, i = 0;
 
 	if (!L_rndInitalised) {
@@ -41,7 +43,7 @@ static void LavaAnimation_Tick(uint32_t* ptr, int size) {
 			static int8_t sin_adj_table[16] = { 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0 };
 			int xx = x + sin_adj_table[y & 0xF], yy = y + sin_adj_table[x & 0xF];
 
-			float lSoupHeat =
+			soupHeat =
 				L_soupHeat[((yy - 1) & mask) << shift | ((xx - 1) & mask)] +
 				L_soupHeat[((yy - 1) & mask) << shift | (xx       & mask)] +
 				L_soupHeat[((yy - 1) & mask) << shift | ((xx + 1) & mask)] +
@@ -54,13 +56,13 @@ static void LavaAnimation_Tick(uint32_t* ptr, int size) {
 				L_soupHeat[((yy + 1) & mask) << shift | (xx       & mask)] +
 				L_soupHeat[((yy + 1) & mask) << shift | ((xx + 1) & mask)];
 
-			float lPotHeat =
+			potHeat =
 				L_potHeat[i] +                                          /* x    , y     */
 				L_potHeat[y << shift | ((x + 1) & mask)] +              /* x + 1, y     */
 				L_potHeat[((y + 1) & mask) << shift | x] +              /* x    , y + 1 */
 				L_potHeat[((y + 1) & mask) << shift | ((x + 1) & mask)];/* x + 1, y + 1 */
 
-			L_soupHeat[i] = lSoupHeat * 0.1f + lPotHeat * 0.2f;
+			L_soupHeat[i] = soupHeat * 0.1f + potHeat * 0.2f;
 
 			L_potHeat[i] += L_flameHeat[i];
 			if (L_potHeat[i] < 0.0f) L_potHeat[i] = 0.0f;
@@ -69,12 +71,12 @@ static void LavaAnimation_Tick(uint32_t* ptr, int size) {
 			if (Random_Float(&L_rnd) <= 0.005f) L_flameHeat[i] = 1.5f * 0.01f;
 
 			/* Output the pixel */
-			float col = 2.0f * L_soupHeat[i];
+			col = 2.0f * L_soupHeat[i];
 			Math_Clamp(col, 0.0f, 1.0f);
 
-			uint8_t r = (uint8_t)(col * 100.0f + 155.0f);
-			uint8_t g = (uint8_t)(col * col * 255.0f);
-			uint8_t b = (uint8_t)(col * col * col * col * 128.0f);
+			r = (uint8_t)(col * 100.0f + 155.0f);
+			g = (uint8_t)(col * col * 255.0f);
+			b = (uint8_t)(col * col * col * col * 128.0f);
 			*ptr = PackedCol_ARGB(r, g, b, 255);
 
 			ptr++; i++;
@@ -94,6 +96,8 @@ bool W_rndInitalised;
 
 static void WaterAnimation_Tick(uint32_t* ptr, int size) {
 	int mask = size - 1, shift = Math_Log2(size);
+	float soupHeat, col;
+	uint8_t r, g, a;
 	int x, y, i = 0;
 
 	if (!W_rndInitalised) {
@@ -104,12 +108,12 @@ static void WaterAnimation_Tick(uint32_t* ptr, int size) {
 	for (y = 0; y < size; y++) {
 		for (x = 0; x < size; x++) {
 			/* Calculate the colour at this coordinate in the heatmap */
-			float wSoupHeat =
+			soupHeat =
 				W_soupHeat[y << shift | ((x - 1) & mask)] +
 				W_soupHeat[y << shift | x               ] +
 				W_soupHeat[y << shift | ((x + 1) & mask)];
 
-			W_soupHeat[i] = wSoupHeat / 3.3f + W_potHeat[i] * 0.8f;
+			W_soupHeat[i] = soupHeat / 3.3f + W_potHeat[i] * 0.8f;
 
 			W_potHeat[i] += W_flameHeat[i];
 			if (W_potHeat[i] < 0.0f) W_potHeat[i] = 0.0f;
@@ -118,13 +122,13 @@ static void WaterAnimation_Tick(uint32_t* ptr, int size) {
 			if (Random_Float(&W_rnd) <= 0.05f) W_flameHeat[i] = 0.5f * 0.05f;
 
 			/* Output the pixel */
-			float col = W_soupHeat[i];
+			col = W_soupHeat[i];
 			Math_Clamp(col, 0.0f, 1.0f);
 			col = col * col;
 
-			uint8_t r = (uint8_t)(32.0f  + col * 32.0f);
-			uint8_t g = (uint8_t)(50.0f  + col * 64.0f);
-			uint8_t a = (uint8_t)(146.0f + col * 50.0f);
+			r = (uint8_t)(32.0f  + col * 32.0f);
+			g = (uint8_t)(50.0f  + col * 64.0f);
+			a = (uint8_t)(146.0f + col * 50.0f);
 			*ptr = PackedCol_ARGB(r, g, 255, a);
 
 			ptr++; i++;
@@ -162,8 +166,8 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 
 	/* ReadLine reads single byte at a time */
 	uint8_t buffer[2048]; struct Stream buffered;
-	Stream_ReadonlyBuffered(&buffered, stream, buffer, sizeof(buffer));
 	ReturnCode res;
+	Stream_ReadonlyBuffered(&buffered, stream, buffer, sizeof(buffer));	
 
 	for (;;) {
 		res = Stream_ReadLine(&buffered, &line);
@@ -172,7 +176,6 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 
 		if (!line.length || line.buffer[0] == '#') continue;
 		count = String_UNSAFE_Split(&line, ' ', parts, ANIM_MIN_ARGS);
-
 		if (count < ANIM_MIN_ARGS) {
 			Chat_Add1("&cNot enough arguments for anim: %s", &line); continue;
 		}
@@ -210,52 +213,56 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 
 #define ANIMS_FAST_SIZE 64
 static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int size) {
+	int dstX = Atlas1D_Index(texLoc), srcX;
+	int dstY = Atlas1D_RowId(texLoc) * Atlas2D_TileSize;
+	GfxResourceID tex;
+
 	uint8_t buffer[Bitmap_DataSize(ANIMS_FAST_SIZE, ANIMS_FAST_SIZE)];
 	uint8_t* ptr = buffer;
-	if (size > ANIMS_FAST_SIZE) {
-		/* cannot allocate memory on the stack for very big animation.png frames */
+	Bitmap frame;
+
+	/* cannot allocate memory on the stack for very big animation.png frames */
+	if (size > ANIMS_FAST_SIZE) {	
 		ptr = Mem_Alloc(size * size, BITMAP_SIZEOF_PIXEL, "anim frame");
 	}
-
-	int index_1D = Atlas1D_Index(texLoc);
-	int rowId_1D = Atlas1D_RowId(texLoc);
-	Bitmap animPart; Bitmap_Create(&animPart, size, size, ptr);
+	Bitmap_Create(&frame, size, size, ptr);
 
 	if (!data) {
 		if (texLoc == 30) {
-			LavaAnimation_Tick((uint32_t*)animPart.Scan0, size);
+			LavaAnimation_Tick((uint32_t*)frame.Scan0, size);
 		} else if (texLoc == 14) {
-			WaterAnimation_Tick((uint32_t*)animPart.Scan0, size);
+			WaterAnimation_Tick((uint32_t*)frame.Scan0, size);
 		}
 	} else {
-		int x = data->FrameX + data->State * size;
-		Bitmap_CopyBlock(x, data->FrameY, 0, 0, &anims_bmp, &animPart, size);
+		srcX = data->FrameX + data->State * size;
+		Bitmap_CopyBlock(srcX, data->FrameY, 0, 0, &anims_bmp, &frame, size);
 	}
 
-	GfxResourceID tex = Atlas1D_TexIds[index_1D];
-	int dstY = rowId_1D * Atlas2D_TileSize;
-	if (tex) { Gfx_UpdateTexturePart(tex, 0, dstY, &animPart, Gfx_Mipmaps); }
+	tex = Atlas1D_TexIds[dstX];
+	if (tex) { Gfx_UpdateTexturePart(tex, 0, dstY, &frame, Gfx_Mipmaps); }
 	if (size > ANIMS_FAST_SIZE) Mem_Free(ptr);
 }
 
 static void Animations_Apply(struct AnimationData* data) {
+	TextureLoc texLoc;
 	data->Tick--;
 	if (data->Tick >= 0) return;
+
 	data->State++;
 	data->State %= data->StatesCount;
 	data->Tick   = data->TickDelay;
 
-	TextureLoc texLoc = data->TexLoc;
+	texLoc = data->TexLoc;
 	if (texLoc == 30 && anims_useLavaAnim) return;
 	if (texLoc == 14 && anims_useWaterAnim) return;
 	Animations_Draw(data, texLoc, data->FrameSize);
 }
 
-static bool Animations_IsDefaultZip(void) {
-	if (World_TextureUrl.length) return false;
+static bool Animations_IsDefaultZip(void) {	
 	char texPackBuffer[STRING_SIZE];
 	String texPack = String_FromArray(texPackBuffer);
 
+	if (World_TextureUrl.length) return false;
 	Options_Get(OPT_DEFAULT_TEX_PACK, &texPack, "default.zip");
 	return String_CaselessEqualsConst(&texPack, "default.zip");
 }
@@ -268,14 +275,18 @@ static void Animations_Clear(void) {
 }
 
 static void Animations_Validate(void) {
-	anims_validated = true;
+	struct AnimationData data;
+	int maxX, maxY, tileX, tileY;
 	int i, j;
 
+	anims_validated = true;
 	for (i = 0; i < anims_count; i++) {
-		struct AnimationData data = anims_list[i];
-		int maxY = data.FrameY + data.FrameSize;
-		int maxX = data.FrameX + data.FrameSize * data.StatesCount;
-		int tileX = Atlas2D_TileX(data.TexLoc), tileY = Atlas2D_TileY(data.TexLoc);
+		data  = anims_list[i];
+
+		maxX  = data.FrameX + data.FrameSize * data.StatesCount;
+		maxY  = data.FrameY + data.FrameSize;
+		tileX = Atlas2D_TileX(data.TexLoc); 
+		tileY = Atlas2D_TileY(data.TexLoc);
 
 		if (data.FrameSize > Atlas2D_TileSize || tileY >= Atlas2D_RowsCount) {
 			Chat_Add2("&cAnimation frames for tile (%i, %i) are bigger than the size of a tile in terrain.png", &tileX, &tileY);
@@ -327,8 +338,9 @@ static void Animations_PackChanged(void* obj) {
 }
 
 static void Animations_FileChanged(void* obj, struct Stream* stream, const String* name) {
+	ReturnCode res;
 	if (String_CaselessEqualsConst(name, "animations.png")) {
-		ReturnCode res = Png_Decode(&anims_bmp, stream);
+		res = Png_Decode(&anims_bmp, stream);
 		if (!res) return;
 
 		Chat_LogError2(res, "decoding", name);

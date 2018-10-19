@@ -140,12 +140,14 @@ void Model_UpdateVB(void) {
 
 void Model_ApplyTexture(struct Entity* entity) {
 	struct Model* model = Model_ActiveModel;
-	GfxResourceID tex = model->UsesHumanSkin ? entity->TextureId : entity->MobTextureId;
+	GfxResourceID tex   = model->UsesHumanSkin ? entity->TextureId : entity->MobTextureId;
+	struct CachedTexture* data;
+
 	if (tex) {
 		Model_skinType = entity->SkinType;
 	} else {
-		struct CachedTexture* data = &ModelCache_Textures[model->defaultTexIndex];
-		tex = data->TexID;
+		data = &ModelCache_Textures[model->defaultTexIndex];
+		tex  = data->TexID;
 		Model_skinType = data->SkinType;
 	}
 
@@ -159,10 +161,12 @@ void Model_DrawPart(struct ModelPart* part) {
 	struct Model* model     = Model_ActiveModel;
 	struct ModelVertex* src = &model->vertices[part->Offset];
 	VertexP3fT2fC4b* dst    = &ModelCache_Vertices[model->index];
+
+	struct ModelVertex v;
 	int i, count = part->Count;
 
 	for (i = 0; i < count; i++) {
-		struct ModelVertex v = *src;
+		v = *src;
 		dst->X = v.X; dst->Y = v.Y; dst->Z = v.Z;
 		dst->Col = Model_Cols[i >> 2];
 
@@ -174,7 +178,7 @@ void Model_DrawPart(struct ModelPart* part) {
 }
 
 #define Model_RotateX t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t;
-#define Model_RotateY t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z;  v.X = t;
+#define Model_RotateY t = cosY * v.X - sinY * v.Z; v.Z =  sinY * v.X + cosY * v.Z; v.X = t;
 #define Model_RotateZ t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t;
 
 void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart* part, bool head) {
@@ -185,14 +189,14 @@ void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart
 	float cosX = Math_CosF(-angleX), sinX = Math_SinF(-angleX);
 	float cosY = Math_CosF(-angleY), sinY = Math_SinF(-angleY);
 	float cosZ = Math_CosF(-angleZ), sinZ = Math_SinF(-angleZ);
-	float x = part->RotX, y = part->RotY, z = part->RotZ;
+	float t, x = part->RotX, y = part->RotY, z = part->RotZ;
 	
+	struct ModelVertex v;
 	int i, count = part->Count;
 
 	for (i = 0; i < count; i++) {
-		struct ModelVertex v = *src;
+		v = *src;
 		v.X -= x; v.Y -= y; v.Z -= z;
-		float t = 0;
 
 		/* Rotate locally */
 		if (Model_Rotation == ROTATE_ORDER_ZYX) {
@@ -224,13 +228,13 @@ void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart
 }
 
 void Model_RenderArm(struct Model* model, struct Entity* entity) {
+	struct Matrix m, translate;
 	Vector3 pos = entity->Position;
 	if (model->Bobbing) pos.Y += entity->Anim.BobbingModel;
-	Model_SetupState(model, entity);
 
+	Model_SetupState(model, entity);
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Model_ApplyTexture(entity);
-	struct Matrix translate;
 
 	if (Game_ClassicArmModel) {
 		/* TODO: Position's not quite right. */
@@ -241,9 +245,8 @@ void Model_RenderArm(struct Model* model, struct Entity* entity) {
 		Matrix_Translate(&translate, -model->armX / 16.0f + 0.10f, -model->armY / 16.0f - 0.26f, 0);
 	}
 
-	struct Matrix m; 
 	Entity_GetTransform(entity, pos, entity->ModelScale, &m);
-	Matrix_Mul(&m, &m,  &Gfx_View);
+	Matrix_Mul(&m, &m,         &Gfx_View);
 	Matrix_Mul(&m, &translate, &m);
 
 	Gfx_LoadMatrix(&m);

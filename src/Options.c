@@ -124,11 +124,9 @@ static int Options_Insert(const String* key, const String* value) {
 }
 
 void Options_SetBool(const char* keyRaw, bool value) {
-	if (value) {
-		String str = String_FromConst("True");  Options_Set(keyRaw, &str);
-	} else {
-		String str = String_FromConst("False"); Options_Set(keyRaw, &str);
-	}
+	static String str_true  = String_FromConst("True");
+	static String str_false = String_FromConst("False");
+	Options_Set(keyRaw, value ? &str_true : &str_false);
 }
 
 void Options_SetInt(const char* keyRaw, int value) {

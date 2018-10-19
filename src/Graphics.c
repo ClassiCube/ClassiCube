@@ -473,9 +473,10 @@ static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, int size,
 GfxResourceID Gfx_CreateVb(void* vertices, int vertexFormat, int count) {
 	int size = count * Gfx_strideSizes[vertexFormat];
 	IDirect3DVertexBuffer9* vbuffer;
+	ReturnCode res;
 
 	for (;;) {
-		ReturnCode res = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_WRITEONLY,
+		res = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_WRITEONLY,
 			d3d9_formatMappings[vertexFormat], D3DPOOL_DEFAULT, &vbuffer, NULL);
 		if (!res) break;
 
@@ -574,28 +575,30 @@ void Gfx_SetMatrixMode(int matrixType) {
 }
 
 void Gfx_LoadMatrix(struct Matrix* matrix) {
+	ReturnCode res;
 	if (curMatrix == D3DTS_TEXTURE0) {
 		matrix->Row2.X = matrix->Row3.X; /* NOTE: this hack fixes the texture movements. */
 		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
 	}
 
 	if (Gfx_LostContext) return;
-	ReturnCode res = IDirect3DDevice9_SetTransform(device, curMatrix, matrix);
+	res = IDirect3DDevice9_SetTransform(device, curMatrix, matrix);
 	if (res) ErrorHandler_Fail2(res, "D3D9_LoadMatrix");
 }
 
 void Gfx_LoadIdentityMatrix(void) {
+	ReturnCode res;
 	if (curMatrix == D3DTS_TEXTURE0) {
 		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
 	}
 
 	if (Gfx_LostContext) return;
-	ReturnCode res = IDirect3DDevice9_SetTransform(device, curMatrix, &Matrix_Identity);
+	res = IDirect3DDevice9_SetTransform(device, curMatrix, &Matrix_Identity);
 	if (res) ErrorHandler_Fail2(res, "D3D9_LoadIdentityMatrix");
 }
 
 #define d3d9_zN -10000.0f
-#define d3d9_zF 10000.0f
+#define d3d9_zF  10000.0f
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
 	Matrix_OrthographicOffCenter(matrix, 0.0f, width, height, 0.0f, d3d9_zN, d3d9_zF);
 	matrix->Row2.Z = 1.0f    / (d3d9_zN - d3d9_zF);

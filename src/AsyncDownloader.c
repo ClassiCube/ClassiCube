@@ -30,8 +30,9 @@ static void AsyncRequestList_Append(struct AsyncRequestList* list, struct AsyncR
 }
 
 static void AsyncRequestList_Prepend(struct AsyncRequestList* list, struct AsyncRequest* item) {
-	AsyncRequestList_EnsureSpace(list);
 	int i;
+	AsyncRequestList_EnsureSpace(list);
+	
 	for (i = list->Count; i > 0; i--) {
 		list->Requests[i] = list->Requests[i - 1];
 	}
@@ -79,21 +80,20 @@ bool KeepAlive;
 /* TODO: Connection pooling */
 
 static void AsyncDownloader_Add(const String* url, bool priority, const String* id, uint8_t type, TimeMS* lastModified, const String* etag, const String* data) {
-	Mutex_Lock(async_pendingMutex);
-	{
-		struct AsyncRequest req = { 0 };
-		String reqUrl = String_FromArray(req.URL); String_Copy(&reqUrl, url);
-		String reqID  = String_FromArray(req.ID);  String_Copy(&reqID, id);
-		req.RequestType = type;
+	struct AsyncRequest req = { 0 };
+	String reqUrl  = String_FromArray(req.URL);
+	String reqID   = String_FromArray(req.ID);
+	String reqEtag = String_FromArray(req.Etag);
 
+	Mutex_Lock(async_pendingMutex);
+	{	
+		String_Copy(&reqUrl, url);
+		String_Copy(&reqID,  id);
+		req.RequestType = type;
 		Platform_Log2("Adding %s (type %b)", &reqUrl, &type);
 
-		if (lastModified) {
-			req.LastModified = *lastModified;
-		}
-		if (etag) {
-			String reqEtag = String_FromArray(req.Etag); String_Copy(&reqEtag, etag);
-		}
+		if (lastModified) { req.LastModified = *lastModified; }
+		if (etag)         { String_Copy(&reqEtag, etag); }
 		/* request.Data = data; TODO: Implement this. do we need to copy or expect caller to malloc it?  */
 
 		req.TimeAdded = DateTime_CurrentUTC_MS();
@@ -139,13 +139,14 @@ void AsyncDownloader_GetDataEx(const String* url, bool priority, const String* i
 }
 
 void AsyncDownloader_PurgeOldEntriesTask(struct ScheduledTask* task) {
+	struct AsyncRequest* item;
+	int i;
+
 	Mutex_Lock(async_processedMutex);
 	{
 		TimeMS now = DateTime_CurrentUTC_MS();
-		int i;
-
 		for (i = async_processed.Count - 1; i >= 0; i--) {
-			struct AsyncRequest* item = &async_processed.Requests[i];
+			item = &async_processed.Requests[i];
 			if (item->TimeDownloaded + (10 * 1000) >= now) continue;
 
 			ASyncRequest_Free(item);
@@ -156,10 +157,12 @@ void AsyncDownloader_PurgeOldEntriesTask(struct ScheduledTask* task) {
 }
 
 static int AsyncRequestList_Find(const String* id, struct AsyncRequest* item) {
+	String reqID;
 	int i;
+
 	for (i = 0; i < async_processed.Count; i++) {
-		String reqID = String_FromRawArray(async_processed.Requests[i].ID);
-		if (!String_Equals(&reqID, id)) continue;
+		reqID = String_FromRawArray(async_processed.Requests[i].ID);
+		if (!String_Equals(id, &reqID)) continue;
 
 		*item = async_processed.Requests[i];
 		return i;
@@ -168,22 +171,20 @@ static int AsyncRequestList_Find(const String* id, struct AsyncRequest* item) {
 }
 
 bool AsyncDownloader_Get(const String* id, struct AsyncRequest* item) {
-	bool success = false;
-
+	int i;
 	Mutex_Lock(async_processedMutex);
 	{
-		int i = AsyncRequestList_Find(id, item);
-		success = i >= 0;
-		if (success) AsyncRequestList_RemoveAt(&async_processed, i);
+		i = AsyncRequestList_Find(id, item);
+		if (i >= 0) AsyncRequestList_RemoveAt(&async_processed, i);
 	}
 	Mutex_Unlock(async_processedMutex);
-	return success;
+	return i >= 0;
 }
 
 bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, int* progress) {
 	Mutex_Lock(async_curRequestMutex);
 	{
-		*request   = async_curRequest;
+		*request  = async_curRequest;
 		*progress = async_curProgress;
 	}
 	Mutex_Unlock(async_curRequestMutex);
@@ -192,52 +193,53 @@ bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, int* progress) {
 
 static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	String url = String_FromRawArray(request->URL);
+	uint64_t  timer;
+	uint32_t  size, elapsed;
+	uintptr_t addr;
+
 	Platform_Log2("Downloading from %s (type %b)", &url, &request->RequestType);
-	uint64_t timer;
-
 	Stopwatch_Measure(&timer);
-	request->Result  = Http_Do(request, &async_curProgress);
-	uint32_t elapsed = Stopwatch_ElapsedMicroseconds(&timer) / 1000;
+	request->Result = Http_Do(request, &async_curProgress);
 
-	int status = request->StatusCode;
+	elapsed = Stopwatch_ElapsedMicroseconds(&timer) / 1000;
 	Platform_Log3("HTTP: return code %i (http %i), in %i ms", 
-		&request->Result, &status, &elapsed);
+				&request->Result, &request->StatusCode, &elapsed);
 
 	if (request->ResultData) {
-		uint32_t size  = request->ResultSize;
-		uintptr_t addr = (uintptr_t)request->ResultData;
+		size = request->ResultSize;
+		addr = (uintptr_t)request->ResultData;
 		Platform_Log2("HTTP returned data: %i bytes at %x", &size, &addr);
 	}
 }
 
 static void AsyncDownloader_CompleteResult(struct AsyncRequest* request) {
+	struct AsyncRequest older;
+	String id = String_FromRawArray(request->ID);
+	int index;
 	request->TimeDownloaded = DateTime_CurrentUTC_MS();
-	Mutex_Lock(async_processedMutex);
-	{
-		struct AsyncRequest older;
-		String id = String_FromRawArray(request->ID);
-		int index = AsyncRequestList_Find(&id, &older);
 
-		if (index >= 0) {
-			/* very rare case - priority item was inserted, then inserted again (so put before first item), */
-			/* and both items got downloaded before an external function removed them from the queue */
-			if (older.TimeAdded > request->TimeAdded) {
-				struct AsyncRequest tmp = older; older = *request; *request = tmp;
-			}
-
-			ASyncRequest_Free(&older);
-			async_processed.Requests[index] = *request;
+	index = AsyncRequestList_Find(&id, &older);
+	if (index >= 0) {
+		/* very rare case - priority item was inserted, then inserted again (so put before first item), */
+		/* and both items got downloaded before an external function removed them from the queue */
+		if (older.TimeAdded > request->TimeAdded) {
+			ASyncRequest_Free(request);
 		} else {
-			AsyncRequestList_Append(&async_processed, request);
+			/* normal case, replace older request */
+			ASyncRequest_Free(&older);
+			async_processed.Requests[index] = *request;				
 		}
+	} else {
+		AsyncRequestList_Append(&async_processed, request);
 	}
-	Mutex_Unlock(async_processedMutex);
 }
 
 static void AsyncDownloader_WorkerFunc(void) {
+	struct AsyncRequest request;
+	bool hasRequest, stop;
+
 	for (;;) {
-		struct AsyncRequest request;
-		bool hasRequest = false, stop;
+		hasRequest = false;
 
 		Mutex_Lock(async_pendingMutex);
 		{
@@ -249,31 +251,39 @@ static void AsyncDownloader_WorkerFunc(void) {
 			}
 		}
 		Mutex_Unlock(async_pendingMutex);
+
 		if (stop) return;
-
-		if (hasRequest) {
-			Platform_LogConst("Got something to do!");
-			Mutex_Lock(async_curRequestMutex);
-			{
-				async_curRequest = request;
-				async_curProgress = ASYNC_PROGRESS_MAKING_REQUEST;
-			}
-			Mutex_Unlock(async_curRequestMutex);
-
-			Platform_LogConst("Doing it");
-			AsyncDownloader_ProcessRequest(&request);
-			AsyncDownloader_CompleteResult(&request);
-
-			Mutex_Lock(async_curRequestMutex);
-			{
-				async_curRequest.ID[0] = '\0';
-				async_curProgress = ASYNC_PROGRESS_NOTHING;
-			}
-			Mutex_Unlock(async_curRequestMutex);
-		} else {
+		/* Block until another thread submits a request to do */
+		if (!hasRequest) {
 			Platform_LogConst("Going back to sleep...");
 			Waitable_Wait(async_waitable);
+			continue;
 		}
+
+		Platform_LogConst("Got something to do!");
+		Mutex_Lock(async_curRequestMutex);
+		{
+			async_curRequest = request;
+			async_curProgress = ASYNC_PROGRESS_MAKING_REQUEST;
+		}
+		Mutex_Unlock(async_curRequestMutex);
+
+		Platform_LogConst("Doing it");
+		/* performing request doesn't need thread safety */
+		AsyncDownloader_ProcessRequest(&request);
+
+		Mutex_Lock(async_processedMutex);
+		{
+			AsyncDownloader_CompleteResult(&request);
+		}
+		Mutex_Unlock(async_processedMutex);
+
+		Mutex_Lock(async_curRequestMutex);
+		{
+			async_curRequest.ID[0] = '\0';
+			async_curProgress = ASYNC_PROGRESS_NOTHING;
+		}
+		Mutex_Unlock(async_curRequestMutex);
 	}
 }
 

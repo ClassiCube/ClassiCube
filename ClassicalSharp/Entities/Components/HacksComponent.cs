@@ -137,8 +137,8 @@ namespace ClassicalSharp.Entities {
 		/// <remarks> Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax, and horspeed=xyz </remarks>
 		public void UpdateHacksState() {
 			SetAllHacks(true);
-			if (HacksFlags == null) return;
 			CanBePushed = true;
+			if (HacksFlags == null) return;			
 			
 			// By default (this is also the case with WoM), we can use hacks.
 			if (HacksFlags.Contains("-hax")) SetAllHacks(false);

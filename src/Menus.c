@@ -196,9 +196,9 @@ static void Menu_Back(void* s, int i, struct ButtonWidget* btn, const char* labe
 static void Menu_ContextLost(void* screen) {
 	struct Menu* s = screen;
 	struct Widget** widgets = s->Widgets;
-	if (!widgets) return;
-
 	int i;
+	if (!widgets) return;
+	
 	for (i = 0; i < s->WidgetsCount; i++) {
 		if (!widgets[i]) continue;
 		Elem_Free(widgets[i]);
@@ -208,9 +208,9 @@ static void Menu_ContextLost(void* screen) {
 static void Menu_OnResize(void* screen) {
 	struct Menu* s = screen;
 	struct Widget** widgets = s->Widgets;
-	if (!widgets) return;
-
 	int i;
+	if (!widgets) return;
+	
 	for (i = 0; i < s->WidgetsCount; i++) {
 		if (!widgets[i]) continue;
 		Widget_Reposition(widgets[i]);
@@ -220,9 +220,9 @@ static void Menu_OnResize(void* screen) {
 static void Menu_Render(void* screen, double delta) {
 	struct Menu* s = screen;
 	struct Widget** widgets = s->Widgets;
-	if (!widgets) return;
-
 	int i;
+	if (!widgets) return;
+	
 	for (i = 0; i < s->WidgetsCount; i++) {
 		if (!widgets[i]) continue;
 		Elem_Render(widgets[i], delta);
@@ -360,11 +360,12 @@ struct ListScreen ListScreen_Instance;
 #define LIST_SCREEN_EMPTY "-----"
 
 STRING_REF String ListScreen_UNSAFE_Get(struct ListScreen* s, int index) {
+	static String str = String_FromConst(LIST_SCREEN_EMPTY);
+
 	if (index >= 0 && index < s->Entries.Count) {
 		return StringsBuffer_UNSAFE_Get(&s->Entries, index);
-	} else {
-		String str = String_FromConst(LIST_SCREEN_EMPTY); return str;
 	}
+	return str;
 }
 
 static void ListScreen_MakeText(struct ListScreen* s, int i) {
@@ -401,12 +402,14 @@ static void ListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* bu
 }
 
 static void ListScreen_SetCurrentIndex(struct ListScreen* s, int index) {
+	String str;
+	int i;
+
 	if (index >= s->Entries.Count) { index = s->Entries.Count - 1; }
 	if (index < 0) index = 0;
-
-	int i;
+	
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) {
-		String str = ListScreen_UNSAFE_Get(s, index + i);
+		str = ListScreen_UNSAFE_Get(s, index + i);
 		s->UpdateEntry(s, &s->Buttons[i], &str);
 	}
 
@@ -443,9 +446,8 @@ static void ListScreen_ContextRecreated(void* screen) {
 
 	Menu_Label(s, 8, &s->Title, &s->TitleText, &s->Font,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -155);
-
-	Menu_Label(s, 9, &s->Page, &String_Empty, &s->Font,
-		ANCHOR_CENTRE, ANCHOR_MAX, 0, 75);
+	Menu_Label(s, 9, &s->Page,  &String_Empty, &s->Font,
+		ANCHOR_CENTRE, ANCHOR_MAX,    0,   75);
 
 	ListScreen_UpdatePage(s);
 }
@@ -456,7 +458,8 @@ static void ListScreen_QuickSort(int left, int right) {
 
 	while (left < right) {
 		int i = left, j = right;
-		String strI, strJ, pivot = StringsBuffer_UNSAFE_Get(buffer, (i + j) / 2);
+		String pivot = StringsBuffer_UNSAFE_Get(buffer, (i + j) >> 1);
+		String strI, strJ;		
 
 		/* partition the list */
 		while (i <= j) {
@@ -613,8 +616,8 @@ static void PauseScreen_CheckHacksAllowed(void* screen) {
 }
 
 static void PauseScreen_ContextRecreated(void* screen) {
+	static String quitMsg = String_FromConst("Quit game");
 	struct PauseScreen* s = screen;
-	FontDesc* font = &s->TitleFont;
 
 	if (Game_UseClassicOptions) {
 		PauseScreen_MakeClassic(s, 0, -100, "Options...",            Menu_SwitchClassicOptions);
@@ -623,7 +626,7 @@ static void PauseScreen_ContextRecreated(void* screen) {
 		PauseScreen_MakeClassic(s, 3,   50, "Save level...",         Menu_SwitchSaveLevel);
 		PauseScreen_MakeClassic(s, 4,  150, "Nostalgia options...",  Menu_SwitchNostalgia);
 
-		Menu_Back(s, 5, &s->Buttons[5], "Back to game", font, PauseScreen_Game);
+		Menu_Back(s, 5, &s->Buttons[5], "Back to game", &s->TitleFont, PauseScreen_Game);
 
 		/* Disable nostalgia options in classic mode */
 		if (Game_ClassicMode) Menu_Remove(s, 4);
@@ -636,12 +639,10 @@ static void PauseScreen_ContextRecreated(void* screen) {
 		PauseScreen_Make(s, 3,  1,  50, "Save level...",          Menu_SwitchSaveLevel);
 		PauseScreen_Make(s, 4, -1,   0, "Change texture pack...", Menu_SwitchTexPacks);
 		PauseScreen_Make(s, 5, -1,  50, "Hotkeys...",             Menu_SwitchHotkeys);
-
-		String quitMsg = String_FromConst("Quit game");
-		Menu_Button(s, 6, &s->Buttons[6], 120, &quitMsg, font, PauseScreen_Quit,
+		
+		Menu_Button(s, 6, &s->Buttons[6], 120, &quitMsg, &s->TitleFont, PauseScreen_Quit,
 			ANCHOR_MAX, ANCHOR_MAX, 5, 5);
-
-		Menu_Back(s, 7, &s->Buttons[7], "Back to game", font, PauseScreen_Game);
+		Menu_Back(s, 7, &s->Buttons[7], "Back to game",  &s->TitleFont, PauseScreen_Game);
 	}
 
 	if (!ServerConnection_IsSinglePlayer) {
@@ -1099,6 +1100,10 @@ static bool GenLevelScreen_KeyPress(void* screen, char keyChar) {
 }
 
 static void GenLevelScreen_ContextRecreated(void* screen) {
+	static String title = String_FromConst("Generate new level");
+	static String flat  = String_FromConst("Flatgrass");
+	static String norm  = String_FromConst("Vanilla");
+
 	struct GenLevelScreen* s = screen;
 	char tmpBuffer[STRING_SIZE];
 	String tmp = String_FromArray(tmpBuffer);
@@ -1115,18 +1120,13 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 	GenLevelScreen_Label(s, 1, -150, -40, "Height:");
 	GenLevelScreen_Label(s, 2, -150,   0, "Length:");
 	GenLevelScreen_Label(s, 3, -140,  40, "Seed:");
-
-	String gen = String_FromConst("Generate new level");
-	Menu_Label(s, 8, &s->Labels[4], &gen, &s->TextFont,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -130);
-
-	String flatgrass = String_FromConst("Flatgrass");
-	Menu_Button(s, 9, &s->Buttons[0], 200, &flatgrass, &s->TitleFont, GenLevelScreen_Flatgrass,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, -120, 100);
-
-	String vanilla = String_FromConst("Vanilla");
-	Menu_Button(s, 10, &s->Buttons[1], 200, &vanilla, &s->TitleFont, GenLevelScreen_Notchy,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 120, 100);
+	
+	Menu_Label(s,   8, &s->Labels[4], &title, &s->TextFont,
+		ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -130);
+	Menu_Button(s,  9, &s->Buttons[0], 200, &flat, &s->TitleFont, GenLevelScreen_Flatgrass,
+		ANCHOR_CENTRE, ANCHOR_CENTRE, -120,  100);
+	Menu_Button(s, 10, &s->Buttons[1], 200, &norm, &s->TitleFont, GenLevelScreen_Notchy,
+		ANCHOR_CENTRE, ANCHOR_CENTRE,  120,  100);
 
 	Menu_Back(s, 11, &s->Buttons[2], "Cancel", &s->TitleFont, Menu_SwitchPause);
 }
@@ -1338,25 +1338,23 @@ static bool SaveLevelScreen_KeyUp(void* screen, Key key) {
 }
 
 static void SaveLevelScreen_ContextRecreated(void* screen) {
+	static String save   = String_FromConst("Save");
+	static String schem  = String_FromConst("Save schematic");
+	static String mcEdit = String_FromConst("&eCan be imported into MCEdit");
+
 	struct SaveLevelScreen* s = screen;
-	String save = String_FromConst("Save");
-	Menu_Button(s, 0, &s->Buttons[0], 300, &save, &s->TitleFont, SaveLevelScreen_Classic,
+	struct MenuInputValidator validator = MenuInputValidator_Path();
+	
+	Menu_Button(s, 0, &s->Buttons[0], 300, &save,  &s->TitleFont, SaveLevelScreen_Classic,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 20);
-
-	String schematic = String_FromConst("Save schematic");
-	Menu_Button(s, 1, &s->Buttons[1], 200, &schematic, &s->TitleFont, SaveLevelScreen_Schematic,
+	Menu_Button(s, 1, &s->Buttons[1], 200, &schem, &s->TitleFont, SaveLevelScreen_Schematic,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, -150, 120);
-
-	String mcEdit = String_FromConst("&eCan be imported into MCEdit");
-	Menu_Label(s, 2, &s->MCEdit, &mcEdit, &s->TextFont,
+	Menu_Label(s,  2, &s->MCEdit, &mcEdit,         &s->TextFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 110, 120);
 
-	Menu_Back(s, 3, &s->Buttons[2], "Cancel", &s->TitleFont, Menu_SwitchPause);
-
-	struct MenuInputValidator validator = MenuInputValidator_Path();
-	Menu_Input(s, 4, &s->Input, 500, &String_Empty, &s->TextFont, 
-		&validator, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
-
+	Menu_Back(s,   3, &s->Buttons[2], "Cancel",      &s->TitleFont, Menu_SwitchPause);
+	Menu_Input(s,  4, &s->Input, 500, &String_Empty, &s->TextFont, &validator, 
+		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
 	s->Widgets[5] = NULL; /* description widget placeholder */
 }
 
@@ -1399,19 +1397,22 @@ static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 }
 
 static void TexturePackScreen_FilterFiles(const String* path, void* obj) {
-	String zip = String_FromConst(".zip");
+	static String zip = String_FromConst(".zip");
+	String file = *path;
 	if (!String_CaselessEnds(path, &zip)) return;
 
-	String file = *path; Utils_UNSAFE_GetFilename(&file);
+	Utils_UNSAFE_GetFilename(&file);
 	StringsBuffer_Add((StringsBuffer*)obj, &file);
 }
 
 struct Screen* TexturePackScreen_MakeInstance(void) {
-	struct ListScreen* s = ListScreen_MakeInstance();
-	String title = String_FromConst("Select a texture pack zip"); s->TitleText = title;
-	s->EntryClick = TexturePackScreen_EntryClick;
+	static String title = String_FromConst("Select a texture pack zip");
+	static String path  = String_FromConst("texpacks");
 
-	String path = String_FromConst("texpacks");
+	struct ListScreen* s = ListScreen_MakeInstance();
+	s->TitleText  = title;
+	s->EntryClick = TexturePackScreen_EntryClick;
+	
 	Directory_Enum(&path, &s->Entries, TexturePackScreen_FilterFiles);
 	if (s->Entries.Count) {
 		ListScreen_QuickSort(0, s->Entries.Count - 1);
@@ -1426,12 +1427,13 @@ struct Screen* TexturePackScreen_MakeInstance(void) {
 static void FontListScreen_EntryClick(void* screen, void* widget) {
 	struct ListScreen* s = screen;
 	String fontName = ListScreen_UNSAFE_GetCur(s, widget);
-	if (String_CaselessEqualsConst(&fontName, LIST_SCREEN_EMPTY)) return;
-
-	String_Copy(&Game_FontName, &fontName);
-	Options_Set(OPT_FONT_NAME, &fontName);
-
 	int cur = s->CurrentIndex;
+
+	if (String_CaselessEqualsConst(&fontName, LIST_SCREEN_EMPTY)) return;
+	String_Copy(&Game_FontName, &fontName);
+	Options_Set(OPT_FONT_NAME,  &fontName);
+
+	/* changing font recreates list menu */
 	Menu_HandleFontChange((struct Screen*)s);
 	ListScreen_SetCurrentIndex(s, cur);
 }
@@ -1460,11 +1462,13 @@ struct ScreenVTABLE FontListScreen_VTABLE = {
 	Menu_OnResize,       Menu_ContextLost,  ListScreen_ContextRecreated,
 };
 struct Screen* FontListScreen_MakeInstance(void) {
+	static String title  = String_FromConst("Select a font");
 	struct ListScreen* s = ListScreen_MakeInstance();
-	String title = String_FromConst("Select a font"); s->TitleText = title;
-	s->EntryClick   = FontListScreen_EntryClick;
-	s->UpdateEntry  = FontListScreen_UpdateEntry;
-	s->VTABLE = &FontListScreen_VTABLE;
+
+	s->TitleText   = title;
+	s->EntryClick  = FontListScreen_EntryClick;
+	s->UpdateEntry = FontListScreen_UpdateEntry;
+	s->VTABLE      = &FontListScreen_VTABLE;
 
 	Font_GetNames(&s->Entries);
 	if (s->Entries.Count) {
@@ -1479,33 +1483,34 @@ struct Screen* FontListScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 /* TODO: Hotkey added event for CPE */
 static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
+	static String ctrl  = String_FromConst("Ctrl");
+	static String shift = String_FromConst("Shift");
+	static String alt   = String_FromConst("Alt");
+
 	struct ListScreen* s = screen;
 	String text = ListScreen_UNSAFE_GetCur(s, widget);
 	struct HotkeyData original = { 0 };
 
 	if (String_CaselessEqualsConst(&text, LIST_SCREEN_EMPTY)) {
 		Gui_FreeActive();
-		Gui_SetActive(EditHotkeyScreen_MakeInstance(original)); return;
+		Gui_SetActive(EditHotkeyScreen_MakeInstance(original)); 
+		return;
 	}
 
 	String key = text, value;
 	int flags = 0;
 
 	if (String_UNSAFE_Separate(&text, '+', &key, &value)) {
-		String ctrl  = String_FromConst("Ctrl");
-		String shift = String_FromConst("Shift");
-		String alt   = String_FromConst("Alt");
-
 		if (String_ContainsString(&value, &ctrl))  flags |= HOTKEY_FLAG_CTRL;
 		if (String_ContainsString(&value, &shift)) flags |= HOTKEY_FLAG_SHIFT;
 		if (String_ContainsString(&value, &alt))   flags |= HOTKEY_FLAG_ALT;
 	}
 
-	Key baseKey = Utils_ParseEnum(&key, Key_None, Key_Names, Key_Count);
+	Key trigger = Utils_ParseEnum(&key, Key_None, Key_Names, Key_Count);
 	int i;
 	for (i = 0; i < HotkeysText.Count; i++) {
 		struct HotkeyData h = HotkeysList[i];
-		if (h.Trigger == baseKey && h.Flags == flags) { original = h; break; }
+		if (h.Trigger == trigger && h.Flags == flags) { original = h; break; }
 	}
 
 	Gui_FreeActive();
@@ -1519,13 +1524,16 @@ static void HotkeyListScreen_MakeFlags(int flags, String* str) {
 }
 
 struct Screen* HotkeyListScreen_MakeInstance(void) {
-	struct ListScreen* s = ListScreen_MakeInstance();
-	String title = String_FromConst("Modify hotkeys"); s->TitleText = title;
-	s->EntryClick = HotkeyListScreen_EntryClick;
+	static String title = String_FromConst("Modify hotkeys");
+	static String empty = String_FromConst(LIST_SCREEN_EMPTY);
 
 	char textBuffer[STRING_SIZE];
 	String text = String_FromArray(textBuffer);
 	int i;
+
+	struct ListScreen* s = ListScreen_MakeInstance();
+	s->TitleText  = title;
+	s->EntryClick = HotkeyListScreen_EntryClick;
 
 	for (i = 0; i < HotkeysText.Count; i++) {
 		struct HotkeyData hKey = HotkeysList[i];
@@ -1538,8 +1546,7 @@ struct Screen* HotkeyListScreen_MakeInstance(void) {
 		}
 		StringsBuffer_Add(&s->Entries, &text);
 	}
-
-	String empty = String_FromConst(LIST_SCREEN_EMPTY);
+	
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) {
 		StringsBuffer_Add(&s->Entries, &empty);
 	}
@@ -1552,9 +1559,10 @@ struct Screen* HotkeyListScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 static void LoadLevelScreen_FilterFiles(const String* path, void* obj) {
 	IMapImporter importer = Map_FindImporter(path);
+	String file = *path;
 	if (!importer) return;
 
-	String file = *path; Utils_UNSAFE_GetFilename(&file);
+	Utils_UNSAFE_GetFilename(&file);
 	StringsBuffer_Add((StringsBuffer*)obj, &file);
 }
 
@@ -1603,11 +1611,13 @@ static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 }
 
 struct Screen* LoadLevelScreen_MakeInstance(void) {
+	static String title  = String_FromConst("Select a level");
+	static String path   = String_FromConst("maps");
 	struct ListScreen* s = ListScreen_MakeInstance();
-	String title = String_FromConst("Select a level"); s->TitleText = title;
-	s->EntryClick = LoadLevelScreen_EntryClick;
 
-	String path = String_FromConst("maps");
+	s->TitleText  = title;
+	s->EntryClick = LoadLevelScreen_EntryClick;
+	
 	Directory_Enum(&path, &s->Entries, LoadLevelScreen_FilterFiles);
 	if (s->Entries.Count) {
 		ListScreen_QuickSort(0, s->Entries.Count - 1);
@@ -1902,11 +1912,11 @@ static void MenuOptionsScreen_SetFPS(const String* raw) {
 }
 
 static void MenuOptionsScreen_Set(struct MenuOptionsScreen* s, int i, const String* text) {
-	s->Buttons[i].SetValue(text);
-	/* need to get btn again here (e.g. changing FPS invalidates all widgets) */
-
 	char titleBuffer[STRING_SIZE];
 	String title = String_FromArray(titleBuffer);
+	s->Buttons[i].SetValue(text);
+
+	/* need to get btn again here (e.g. changing FPS invalidates all widgets) */
 	String_AppendConst(&title, s->Buttons[i].OptName);
 	String_AppendConst(&title, ": ");
 	s->Buttons[i].GetValue(&title);
@@ -1947,9 +1957,9 @@ static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* s, int idx
 }
 
 static void MenuOptionsScreen_FreeInput(struct MenuOptionsScreen* s) {
-	if (s->ActiveI == -1) return;
-
 	int i;
+	if (s->ActiveI == -1) return;
+	
 	for (i = s->WidgetsCount - 3; i < s->WidgetsCount; i++) {
 		if (!s->Widgets[i]) continue;
 		Elem_TryFree(s->Widgets[i]);
@@ -2231,7 +2241,9 @@ static void ClassicOptionsScreen_SetHacks(const String* v) {
 }
 
 static void ClassicOptionsScreen_ContextRecreated(void* screen) {
+	static String title = String_FromConst("Controls...");
 	struct MenuOptionsScreen* s = screen;
+
 	MenuOptionsScreen_Make(s, 0, -1, -150, "Music",           MenuOptionsScreen_Bool, 
 		ClassicOptionsScreen_GetMusic,    ClassicOptionsScreen_SetMusic);
 	MenuOptionsScreen_Make(s, 1, -1, -100, "Invert mouse",    MenuOptionsScreen_Bool, 
@@ -2252,10 +2264,9 @@ static void ClassicOptionsScreen_ContextRecreated(void* screen) {
 	MenuOptionsScreen_Make(s, 8, 0,   60, "Hacks enabled", MenuOptionsScreen_Bool, 
 		ClassicOptionsScreen_GetHacks,   ClassicOptionsScreen_SetHacks);
 
-	String controls = String_FromConst("Controls...");
-	Menu_Button(s, 9, &s->Buttons[9], 400, &controls, &s->TitleFont, Menu_SwitchKeysClassic,
+	
+	Menu_Button(s, 9, &s->Buttons[9], 400, &title, &s->TitleFont, Menu_SwitchKeysClassic,
 		ANCHOR_CENTRE, ANCHOR_MAX, 0, 95);
-
 	Menu_Back(s, 10, &s->Buttons[10], "Done", &s->TitleFont, Menu_SwitchPause);
 
 	/* Disable certain options */
@@ -2916,25 +2927,23 @@ static void Overlay_MakeLabels(void* menu, struct TextWidget* labels, const Stri
 	}
 }
 
-#define WarningOverlay_MakeLeft(btnI, idx, title, yPos) \
-	Menu_Button(s, idx, &btns[btnI], 160, title, &s->TitleFont, yesClick, ANCHOR_CENTRE, ANCHOR_CENTRE, -110, yPos);
-#define WarningOverlay_MakeRight(btnI, idx, title, yPos) \
-	Menu_Button(s, idx, &btns[btnI], 160, title, &s->TitleFont, noClick,  ANCHOR_CENTRE, ANCHOR_CENTRE,  110, yPos);
-
 static void WarningOverlay_MakeButtons(void* menu, struct ButtonWidget* btns, bool always, Widget_LeftClick yesClick, Widget_LeftClick noClick) {
-	struct MenuScreen* s = menu;
+	static String yes = String_FromConst("Yes");
+	static String no  = String_FromConst("No");
+	static String alwaysYes = String_FromConst("Always yes");
+	static String alwaysNo  = String_FromConst("Always no");
 
-	String yes = String_FromConst("Yes"); 
-	WarningOverlay_MakeLeft(0, 4, &yes, 30);
-	String no = String_FromConst("No"); 
-	WarningOverlay_MakeRight(1, 5, &no, 30);
+	struct MenuScreen* s = menu;
+	Menu_Button(s, 4, &btns[0], 160, &yes, &s->TitleFont, yesClick, 
+		ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 30);
+	Menu_Button(s, 5, &btns[1], 160, &no,  &s->TitleFont, noClick, 
+		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 30);
 
 	if (!always) return;
-
-	String alwaysYes = String_FromConst("Always yes"); 
-	WarningOverlay_MakeLeft(2, 6, &alwaysYes, 85);
-	String alwaysNo = String_FromConst("Always no");  
-	WarningOverlay_MakeRight(3, 7, &alwaysNo, 85);
+	Menu_Button(s, 6, &btns[2], 160, &alwaysYes, &s->TitleFont, yesClick, 
+		ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 85);
+	Menu_Button(s, 7, &btns[3], 160, &alwaysNo,  &s->TitleFont, noClick, 
+		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 85);
 }
 bool WarningOverlay_IsAlways(void* screen, void* w) { return Menu_Index(screen, w) >= 6; }
 
@@ -2952,22 +2961,22 @@ static void TexIdsOverlay_ContextLost(void* screen) {
 }
 
 static void TexIdsOverlay_ContextRecreated(void* screen) {
+	static String chars  = String_FromConst("0123456789");
+	static String prefix = String_FromConst("f");
+	static String title  = String_FromConst("Texture ID reference sheet");
+
 	struct TexIdsOverlay* s = screen;
-	s->DynamicVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TEXID_OVERLAY_VERTICES_COUNT);
-
-	String chars = String_FromConst("0123456789");
-	String prefix = String_FromConst("f");
-	TextAtlas_Make(&s->IdAtlas, &chars, &s->TextFont, &prefix);
-
 	int size = Game_Height / ATLAS2D_TILES_PER_ROW;
 	size = (size / 8) * 8;
 	Math_Clamp(size, 8, 40);
 
-	s->XOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas2D_RowsCount,     Game_Width);
-	s->YOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Game_Height);
-	s->TileSize = size;
+	s->DynamicVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TEXID_OVERLAY_VERTICES_COUNT);
+	TextAtlas_Make(&s->IdAtlas, &chars, &s->TextFont, &prefix);
 
-	String title = String_FromConst("Texture ID reference sheet");
+	s->XOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas2D_RowsCount,     Game_Width);
+	s->YOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Game_Height);
+	s->TileSize = size;
+	
 	Menu_Label(s, 0, &s->Title, &title, &s->TitleFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, s->YOffset - 30);
 }
@@ -3166,23 +3175,22 @@ static void ConfirmDenyOverlay_GoBackClick(void* screen, void* b) {
 }
 
 static void ConfirmDenyOverlay_ContextRecreated(void* screen) {
+	static String imSure = String_FromConst("I'm sure");
+	static String goBack = String_FromConst("Go back");
 	struct ConfirmDenyOverlay* s = screen;
+
 	String lines[4] = {
 		String_FromConst("&eYou might be missing out."),
 		String_FromConst("Texture packs can play a vital role in the look and feel of maps."),
 		String_Empty,
 		String_FromConst("Sure you don't want to download the texture pack?")
 	};
-
 	Overlay_MakeLabels(s, s->Labels, lines);
-	struct ButtonWidget* btns = s->Buttons;
-	Widget_LeftClick yesClick = ConfirmDenyOverlay_ConfirmNoClick;
-	Widget_LeftClick noClick  = ConfirmDenyOverlay_GoBackClick;
 
-	String imSure = String_FromConst("I'm sure");
-	WarningOverlay_MakeLeft(0, 4, &imSure, 30);
-	String goBack = String_FromConst("Go back");
-	WarningOverlay_MakeRight(1, 5, &goBack, 30);
+	Menu_Button(s, 4, &s->Buttons[0], 160, &imSure, &s->TitleFont, ConfirmDenyOverlay_ConfirmNoClick,
+		ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 30);
+	Menu_Button(s, 5, &s->Buttons[1], 160, &goBack, &s->TitleFont, ConfirmDenyOverlay_GoBackClick,
+		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 30);
 }
 
 struct ScreenVTABLE ConfirmDenyOverlay_VTABLE = {

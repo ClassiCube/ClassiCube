@@ -127,12 +127,10 @@ uint32_t Searcher_StatesMax = SEARCHER_STATES_MIN;
 
 static void Searcher_QuickSort(int left, int right) {
 	struct SearcherState* keys = Searcher_States; struct SearcherState key;
-	float pivot;
-	int i, j;
 
 	while (left < right) {
-		i = left; j = right;
-		pivot = keys[(i + j) >> 1].tSquared;
+		int i = left, j = right;
+		float pivot = keys[(i + j) >> 1].tSquared;
 
 		/* partition the list */
 		while (i <= j) {

@@ -207,7 +207,7 @@ static void Hotkeys_QuickSort(int left, int right) {
 
 	while (left < right) {
 		int i = left, j = right;
-		uint8_t pivot = keys[(i + j) / 2].Flags;
+		uint8_t pivot = keys[(i + j) >> 1].Flags;
 
 		/* partition the list */
 		while (i <= j) {

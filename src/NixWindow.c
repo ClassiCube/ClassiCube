@@ -1,6 +1,5 @@
 #include "Window.h"
 #ifdef CC_BUILD_NIX
-#include "DisplayDevice.h"
 #include "ErrorHandler.h"
 #include "Input.h"
 #include "Funcs.h"

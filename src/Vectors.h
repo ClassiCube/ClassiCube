@@ -46,10 +46,10 @@ Vector3 Vector3_RotateY(Vector3 v, float angle);
 Vector3 Vector3_RotateY3(float x, float y, float z, float angle);
 Vector3 Vector3_RotateZ(Vector3 v, float angle);
 
-bool Vector3_Equals(Vector3* a, Vector3* b);
-bool Vector3_NotEquals(Vector3* a, Vector3* b);
-bool Vector3I_Equals(Vector3I* a, Vector3I* b);
-bool Vector3I_NotEquals(Vector3I* a, Vector3I* b);
+bool Vector3_Equals(const     Vector3*  a, const Vector3* b);
+bool Vector3_NotEquals(const  Vector3*  a, const Vector3* b);
+bool Vector3I_Equals(const    Vector3I* a, const Vector3I* b);
+bool Vector3I_NotEquals(const Vector3I* a, const Vector3I* b);
 
 void Vector3I_Floor(Vector3I* result, Vector3* a);
 void Vector3I_ToVector3(Vector3* result, Vector3I* a);

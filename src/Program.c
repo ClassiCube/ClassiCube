@@ -41,6 +41,22 @@ int main_imdct() {
 #endif
 
 int main(int argc, char** argv) {
+	String args[PROGRAM_MAX_CMDARGS];
+	int argsCount = Platform_GetCommandLineArgs(argc, argv, args);
+	/* NOTE: Make sure to comment this out before pushing a commit */
+	/* String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565"); */
+	/* argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4); */
+
+	char defPathBuffer[STRING_SIZE];
+	String defPath = String_FromArray(defPathBuffer);
+	char titleBuffer[STRING_SIZE];
+	String title   = String_FromArray(titleBuffer);
+
+	uint8_t ip[4];
+	uint16_t port;
+	struct DisplayDevice device;
+	int width, height;
+
 	Platform_SetWorkingDir();
 	ErrorHandler_Init();
 	Platform_Init();
@@ -52,9 +68,6 @@ int main(int argc, char** argv) {
 	Utils_EnsureDirectory("maps");
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("texturecache");
-
-	char defPathBuffer[STRING_SIZE];
-	String defPath = String_FromArray(defPathBuffer);
 	String_Format1(&defPath, "texpacks%rdefault.zip", &Directory_Separator);
 
 	if (!File_Exists(&defPath)) {
@@ -62,15 +75,8 @@ int main(int argc, char** argv) {
 			"default.zip is missing, try running launcher first.\n\nThe game will still run, but without any textures");
 	}
 
-	String args[PROGRAM_MAX_CMDARGS];
-	int argsCount = Platform_GetCommandLineArgs(argc, argv, args);
-	/* NOTE: Make sure to comment this out before pushing a commit */
-	/* String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565"); */
-	/* argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4); */
-
 	if (argsCount == 0) {
-		String name = String_FromConst("Singleplayer");
-		String_Copy(&Game_Username, &name);
+		String_AppendConst(&Game_Username, "Singleplayer");
 	} else if (argsCount == 1) {
 		String_Copy(&Game_Username, &args[0]);
 	} else if (argsCount < 4) {
@@ -82,14 +88,11 @@ int main(int argc, char** argv) {
 		String_Copy(&Game_Username,  &args[0]);
 		String_Copy(&Game_Mppass,    &args[1]);
 		String_Copy(&Game_IPAddress, &args[2]);
-
-		uint8_t ip[4];
+	
 		if (!Utils_ParseIP(&args[2], ip)) { 
 			ErrorHandler_ShowDialog("Failed to start", "Invalid IP");
 			Platform_Exit(1); return 1; 
 		}
-		
-		uint16_t port;
 		if (!Convert_TryParseUInt16(&args[3], &port)) { 
 			ErrorHandler_ShowDialog("Failed to start", "Invalid port");
 			Platform_Exit(1); return 1;
@@ -98,9 +101,9 @@ int main(int argc, char** argv) {
 	}
 
 	Options_Load();
-	struct DisplayDevice device = DisplayDevice_Default;
-	int width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, device.Bounds.Width,  0);
-	int height = Options_GetInt(OPT_WINDOW_HEIGHT, 0, device.Bounds.Height, 0);
+	device = DisplayDevice_Default;
+	width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, device.Bounds.Width,  0);
+	height = Options_GetInt(OPT_WINDOW_HEIGHT, 0, device.Bounds.Height, 0);
 
 	/* No custom resolution has been set */
 	if (width == 0 || height == 0) {
@@ -108,8 +111,6 @@ int main(int argc, char** argv) {
 		if (device.Bounds.Width < 854) width = 640;
 	}
 
-	char titleBuffer[STRING_SIZE];
-	String title = String_FromArray(titleBuffer);
 	String_Format2(&title, "%c (%s)", PROGRAM_APP_NAME, &Game_Username);
 	Game_Run(width, height, &title, &device);
 

@@ -153,9 +153,10 @@ static void RainParticle_Render(struct RainParticle* p, float t, VertexP3fT2fC4b
 }
 
 static void Rain_Render(float t) {
-	if (!Rain_Count) return;
 	VertexP3fT2fC4b vertices[PARTICLES_MAX * 4];
 	int i;
+	if (!Rain_Count) return;
+	
 	VertexP3fT2fC4b* ptr = vertices;
 	for (i = 0; i < Rain_Count; i++) {
 		RainParticle_Render(&Rain_Particles[i], t, ptr);
@@ -226,13 +227,14 @@ static void TerrainParticle_Render(struct TerrainParticle* p, float t, VertexP3f
 }
 
 static void Terrain_Update1DCounts(void) {
-	int i;
+	int i, index;
+
 	for (i = 0; i < ATLAS1D_MAX_ATLASES; i++) {
 		Terrain_1DCount[i]   = 0;
 		Terrain_1DIndices[i] = 0;
 	}
 	for (i = 0; i < Terrain_Count; i++) {
-		int index = Atlas1D_Index(Terrain_Particles[i].TexLoc);
+		index = Atlas1D_Index(Terrain_Particles[i].TexLoc);
 		Terrain_1DCount[index] += 4;
 	}
 	for (i = 1; i < Atlas1D_Count; i++) {
@@ -241,19 +243,20 @@ static void Terrain_Update1DCounts(void) {
 }
 
 static void Terrain_Render(float t) {
-	if (!Terrain_Count) return;
 	VertexP3fT2fC4b vertices[PARTICLES_MAX * 4];
+	int i, index, offset = 0;
+	if (!Terrain_Count) return;
+
 	Terrain_Update1DCounts();
-	int i;
 	for (i = 0; i < Terrain_Count; i++) {
-		int index = Atlas1D_Index(Terrain_Particles[i].TexLoc);
+		index = Atlas1D_Index(Terrain_Particles[i].TexLoc);
 		VertexP3fT2fC4b* ptr = &vertices[Terrain_1DIndices[index]];
+
 		TerrainParticle_Render(&Terrain_Particles[i], t, ptr);
 		Terrain_1DIndices[index] += 4;
 	}
 
 	Gfx_SetDynamicVbData(Particles_VB, vertices, Terrain_Count * 4);
-	int offset = 0;
 	for (i = 0; i < Atlas1D_Count; i++) {
 		int partCount = Terrain_1DCount[i];
 		if (!partCount) continue;
@@ -422,15 +425,15 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 
 void Particles_RainSnowEffect(Vector3 pos) {
 	Vector3 startPos = pos;
-	int i;
-	for (i = 0; i < 2; i++) {
-		float velX = Random_Float(&rnd) * 0.8f - 0.4f; /* [-0.4, 0.4] */
-		float velZ = Random_Float(&rnd) * 0.8f - 0.4f;
-		float velY = Random_Float(&rnd) + 0.4f;
-		Vector3 velocity = Vector3_Create3(velX, velY, velZ);
+	Vector3 offset, velocity;
+	int i, type;
 
-		Vector3 offset;
-		offset.X = Random_Float(&rnd);  /* [0.0, 1.0] */
+	for (i = 0; i < 2; i++) {
+		velocity.X = Random_Float(&rnd) * 0.8f - 0.4f; /* [-0.4, 0.4] */
+		velocity.Z = Random_Float(&rnd) * 0.8f - 0.4f;
+		velocity.Y = Random_Float(&rnd) + 0.4f;
+
+		offset.X = Random_Float(&rnd); /* [0.0, 1.0] */
 		offset.Y = Random_Float(&rnd) * 0.1f + 0.01f;
 		offset.Z = Random_Float(&rnd);
 
@@ -439,7 +442,8 @@ void Particles_RainSnowEffect(Vector3 pos) {
 
 		Vector3_Add(&pos, &startPos, &offset);
 		Particle_Reset(&p->Base, pos, velocity, 40.0f);
-		int type = Random_Range(&rnd, 0, 30);
+
+		type = Random_Range(&rnd, 0, 30);
 		p->Base.Size = (uint8_t)(type >= 28 ? 2 : (type >= 25 ? 4 : 3));
 	}
 }

@@ -89,13 +89,13 @@ void Block_SetCustomDefined(BlockID block, bool defined) {
 }
 
 void Block_DefineCustom(BlockID block) {
+	PackedCol black = PACKEDCOL_BLACK;
+	String name     = Block_UNSAFE_GetName(block);
+	Block_Tinted[block] = !PackedCol_Equals(Block_FogCol[block], black) && String_IndexOf(&name, '#', 0) >= 0;
+
 	Block_SetDrawType(block, Block_Draw[block]);
 	Block_CalcRenderBounds(block);
 	Block_UpdateCulling(block);
-
-	PackedCol black = PACKEDCOL_BLACK;
-	String name = Block_UNSAFE_GetName(block);
-	Block_Tinted[block] = !PackedCol_Equals(Block_FogCol[block], black) && String_IndexOf(&name, '#', 0) >= 0;
 	Block_CalcLightOffset(block);
 
 	Inventory_AddDefault(block);
@@ -146,24 +146,24 @@ void Block_SetDrawType(BlockID block, DrawType draw) {
 "_Forest green_Brown_Deep blue_Turquoise_Ice_Ceramic tile_Magma_Pillar_Crate_Stone brick"
 
 static String Block_DefaultName(BlockID block) {
-	if (block >= BLOCK_CPE_COUNT) {
-		String invalid = String_FromConst("Invalid");
-		return invalid;
-	}
+	static String names   = String_FromConst(BLOCK_RAW_NAMES);
+	static String invalid = String_FromConst("Invalid");
+	int i, start = 0, end;
 
-	String blockNames = String_FromConst(BLOCK_RAW_NAMES);
+	if (block >= BLOCK_CPE_COUNT) return invalid;
 	/* Find start and end of this particular block name. */
-	int start = 0, i;
 	for (i = 0; i < block; i++) {
-		start = String_IndexOf(&blockNames, '_', start) + 1;
+		start = String_IndexOf(&names, '_', start) + 1;
 	}
-	int end = String_IndexOf(&blockNames, '_', start);
-	if (end == -1) end = blockNames.length;
 
-	return String_UNSAFE_Substring(&blockNames, start, (end - start));
+	end = String_IndexOf(&names, '_', start);
+	if (end == -1) end = names.length;
+	return String_UNSAFE_Substring(&names, start, end - start);
 }
 
 void Block_ResetProps(BlockID block) {
+	String name = Block_DefaultName(block);
+
 	Block_BlocksLight[block] = DefaultSet_BlocksLight(block);
 	Block_FullBright[block] = DefaultSet_FullBright(block);
 	Block_FogCol[block] = DefaultSet_FogColour(block);
@@ -172,7 +172,6 @@ void Block_ResetProps(BlockID block) {
 	Block_DigSounds[block] = DefaultSet_DigSound(block);
 	Block_StepSounds[block] = DefaultSet_StepSound(block);
 	Block_SpeedMultiplier[block] = 1.0f;
-	String name = Block_DefaultName(block);
 	Block_SetName(block, &name);
 	Block_Tinted[block] = false;
 	Block_SpriteOffset[block] = 0;
@@ -352,7 +351,10 @@ void Block_RecalculateBB(BlockID block) {
 	TextureLoc texLoc = Block_GetTex(block, FACE_XMAX);
 	int x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
 
-	float minX = 0.0f, minY = 0.0f, maxX = 1.0f, maxY = 1.0f;
+	static Vector3 centre = { 0.5f, 0.0f, 0.5f };
+	float minX = 0, minY = 0, maxX = 1, maxY = 1;
+	Vector3 minRaw, maxRaw;
+
 	if (y < Atlas2D_RowsCount) {
 		minX = Block_GetSpriteBB_MinX(tileSize, x, y, bmp);
 		minY = Block_GetSpriteBB_MinY(tileSize, x, y, bmp);
@@ -360,10 +362,8 @@ void Block_RecalculateBB(BlockID block) {
 		maxY = Block_GetSpriteBB_MaxY(tileSize, x, y, bmp);
 	}
 
-	static Vector3 centre = { 0.5f, 0.0f, 0.5f };
-	Vector3 minRaw = Vector3_RotateY3(minX - 0.5f, minY, 0.0f, 45.0f * MATH_DEG2RAD);
-	Vector3 maxRaw = Vector3_RotateY3(maxX - 0.5f, maxY, 0.0f, 45.0f * MATH_DEG2RAD);
-
+	minRaw = Vector3_RotateY3(minX - 0.5f, minY, 0.0f, 45.0f * MATH_DEG2RAD);
+	maxRaw = Vector3_RotateY3(maxX - 0.5f, maxY, 0.0f, 45.0f * MATH_DEG2RAD);
 	Vector3_Add(&Block_MinBB[block], &minRaw, &centre);
 	Vector3_Add(&Block_MaxBB[block], &maxRaw, &centre);
 	Block_CalcRenderBounds(block);
@@ -386,55 +386,65 @@ static void Block_CalcStretch(BlockID block) {
 	}
 }
 
-static bool Block_IsHidden(BlockID block, BlockID other) {
-	/* Sprite blocks can never hide faces. */
+static bool Block_MightCull(BlockID block, BlockID other) {
+	uint8_t bType, oType;
+	/* Sprite blocks can never cull blocks. */
 	if (Block_Draw[block] == DRAW_SPRITE) return false;
 
-	/* NOTE: Water is always culled by lava. */
+	/* NOTE: Water is always culled by lava */
 	if ((block == BLOCK_WATER || block == BLOCK_STILL_WATER)
 		&& (other == BLOCK_LAVA || other == BLOCK_STILL_LAVA))
 		return true;
 
-	/* All blocks (except for say leaves) cull with themselves. */
+	/* All blocks (except for say leaves) cull with themselves */
 	if (block == other) return Block_Draw[block] != DRAW_TRANSPARENT_THICK;
 
-	/* An opaque neighbour (asides from lava) culls the face. */
+	/* An opaque neighbour (asides from lava) culls this block. */
 	if (Block_Draw[other] == DRAW_OPAQUE && !Block_IsLiquid[other]) return true;
+	/* Transparent/Gas blocks don't cull other blocks (except themselves) */
 	if (Block_Draw[block] != DRAW_TRANSLUCENT || Block_Draw[other] != DRAW_TRANSLUCENT) return false;
 
-	/* e.g. for water / ice, don't need to draw water. */
-	uint8_t bType = Block_Collide[block], oType = Block_Collide[other];
-	bool canSkip = (bType == COLLIDE_SOLID && oType == COLLIDE_SOLID) || bType != COLLIDE_SOLID;
-	return canSkip;
+	/* Some translucent blocks may still cull other translucent blocks */
+	/* e.g. for water/ice, don't need to draw faces of water */
+	bType = Block_Collide[block]; oType = Block_Collide[other];
+	return (bType == COLLIDE_SOLID && oType == COLLIDE_SOLID) || bType != COLLIDE_SOLID;
 }
 
 static void Block_CalcCulling(BlockID block, BlockID other) {
-	if (!Block_IsHidden(block, other)) {
-		/* Block is not hidden at all, so we can just entirely skip per-face check */
+	Vector3 bMin, bMax, oMin, oMax;
+	bool occludedX, occludedY, occludedZ, bothLiquid;
+	int f;
+
+	/* Some blocks may not cull 'other' block, in which case just skip per-face check */
+	/* e.g. sprite blocks, default leaves, will not cull any other blocks */
+	if (!Block_MightCull(block, other)) {	
 		Block_Hidden[(block * BLOCK_COUNT) + other] = 0;
-	} else {
-		Vector3 bMin = Block_MinBB[block], bMax = Block_MaxBB[block];
-		Vector3 oMin = Block_MinBB[other], oMax = Block_MaxBB[other];
-		if (Block_IsLiquid[block]) bMax.Y -= 1.50f / 16.0f;
-		if (Block_IsLiquid[other]) oMax.Y -= 1.50f / 16.0f;
-
-		/* Don't need to care about sprites here since they never cull faces */
-		bool bothLiquid = Block_IsLiquid[block] && Block_IsLiquid[other];
-		int f = 0; /* mark all faces initially 'not hidden' */
-
-		/* Whether the 'texture region' of a face on block fits inside corresponding region on other block */
-		bool occludedX = (bMin.Z >= oMin.Z && bMax.Z <= oMax.Z) && (bMin.Y >= oMin.Y && bMax.Y <= oMax.Y);
-		bool occludedY = (bMin.X >= oMin.X && bMax.X <= oMax.X) && (bMin.Z >= oMin.Z && bMax.Z <= oMax.Z);
-		bool occludedZ = (bMin.X >= oMin.X && bMax.X <= oMax.X) && (bMin.Y >= oMin.Y && bMax.Y <= oMax.Y);
-
-		f |= occludedX && oMax.X == 1.0f && bMin.X == 0.0f ? (1 << FACE_XMIN) : 0;
-		f |= occludedX && oMin.X == 0.0f && bMax.X == 1.0f ? (1 << FACE_XMAX) : 0;
-		f |= occludedZ && oMax.Z == 1.0f && bMin.Z == 0.0f ? (1 << FACE_ZMIN) : 0;
-		f |= occludedZ && oMin.Z == 0.0f && bMax.Z == 1.0f ? (1 << FACE_ZMAX) : 0;
-		f |= occludedY && (bothLiquid || (oMax.Y == 1.0f && bMin.Y == 0.0f)) ? (1 << FACE_YMIN) : 0;
-		f |= occludedY && (bothLiquid || (oMin.Y == 0.0f && bMax.Y == 1.0f)) ? (1 << FACE_YMAX) : 0;
-		Block_Hidden[(block * BLOCK_COUNT) + other] = f;
+		return;
 	}
+
+	bMin = Block_MinBB[block]; bMax = Block_MaxBB[block];
+	oMin = Block_MinBB[other]; oMax = Block_MaxBB[other];
+
+	/* Extend offsets of liquid down to match rendered position */
+	/* This isn't completely correct, but works well enough */
+	if (Block_IsLiquid[block]) bMax.Y -= 1.50f / 16.0f;
+	if (Block_IsLiquid[other]) oMax.Y -= 1.50f / 16.0f;
+
+	bothLiquid = Block_IsLiquid[block] && Block_IsLiquid[other];
+	f = 0; /* mark all faces initially 'not hidden' */
+
+	/* Whether the 'texture region' of a face on block fits inside corresponding region on other block */
+	occludedX = (bMin.Z >= oMin.Z && bMax.Z <= oMax.Z) && (bMin.Y >= oMin.Y && bMax.Y <= oMax.Y);
+	occludedY = (bMin.X >= oMin.X && bMax.X <= oMax.X) && (bMin.Z >= oMin.Z && bMax.Z <= oMax.Z);
+	occludedZ = (bMin.X >= oMin.X && bMax.X <= oMax.X) && (bMin.Y >= oMin.Y && bMax.Y <= oMax.Y);
+
+	f |= occludedX && oMax.X == 1.0f && bMin.X == 0.0f ? (1 << FACE_XMIN) : 0;
+	f |= occludedX && oMin.X == 0.0f && bMax.X == 1.0f ? (1 << FACE_XMAX) : 0;
+	f |= occludedZ && oMax.Z == 1.0f && bMin.Z == 0.0f ? (1 << FACE_ZMIN) : 0;
+	f |= occludedZ && oMin.Z == 0.0f && bMax.Z == 1.0f ? (1 << FACE_ZMAX) : 0;
+	f |= occludedY && (bothLiquid || (oMax.Y == 1.0f && bMin.Y == 0.0f)) ? (1 << FACE_YMIN) : 0;
+	f |= occludedY && (bothLiquid || (oMin.Y == 0.0f && bMax.Y == 1.0f)) ? (1 << FACE_YMAX) : 0;
+	Block_Hidden[(block * BLOCK_COUNT) + other] = f;
 }
 
 bool Block_IsFaceHidden(BlockID block, BlockID other, Face face) {
@@ -468,12 +478,13 @@ void Block_UpdateCulling(BlockID block) {
 static BlockID AutoRotate_Find(BlockID block, const String* name, const char* suffix) {
 	char buffer[STRING_SIZE * 2];
 	String temp = String_FromArray(buffer);
+	int rotated;
+
 	String_AppendString(&temp, name);
 	String_AppendConst(&temp, suffix);
 
-	int rotated = Block_FindID(&temp);
-	if (rotated != -1) return (BlockID)rotated;
-	return block;
+	rotated = Block_FindID(&temp);
+	return rotated == -1 ? block : (BlockID)rotated;
 }
 
 static BlockID AutoRotate_RotateCorner(BlockID block, const String* name) {
@@ -498,9 +509,10 @@ static BlockID AutoRotate_RotateVertical(BlockID block, const String* name) {
 }
 
 static BlockID AutoRotate_RotateOther(BlockID block, const String* name) {
+	float yaw; Face face;
 	/* Fence type blocks */
 	if (AutoRotate_Find(BLOCK_AIR, name, "-UD") == BLOCK_AIR) {
-		float yaw = LocalPlayer_Instance.Base.HeadY;
+		yaw = LocalPlayer_Instance.Base.HeadY;
 		yaw = LocationUpdate_Clamp(yaw);
 
 		if (yaw < 45.0f || (yaw >= 135.0f && yaw < 225.0f) || yaw > 315.0f) {
@@ -511,7 +523,7 @@ static BlockID AutoRotate_RotateOther(BlockID block, const String* name) {
 	}
 
 	/* Thin pillar type blocks */
-	Face face = Game_SelectedPos.ClosestFace;
+	face = Game_SelectedPos.ClosestFace;
 	if (face == FACE_YMAX || face == FACE_YMIN) return AutoRotate_Find(block, name, "-UD");
 	if (face == FACE_XMAX || face == FACE_XMIN) return AutoRotate_Find(block, name, "-WE");
 	if (face == FACE_ZMAX || face == FACE_ZMIN) return AutoRotate_Find(block, name, "-NS");
@@ -519,7 +531,8 @@ static BlockID AutoRotate_RotateOther(BlockID block, const String* name) {
 }
 
 static BlockID AutoRotate_RotateDirection(BlockID block, const String* name) {
-	float yaw = LocalPlayer_Instance.Base.HeadY;
+	float yaw;
+	yaw = LocalPlayer_Instance.Base.HeadY;
 	yaw = LocationUpdate_Clamp(yaw);
 
 	if (yaw >= 45.0f && yaw < 135.0f) {

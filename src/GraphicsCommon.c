@@ -15,12 +15,12 @@ String Gfx_ApiInfo[7] = {
 };
 
 void GfxCommon_Init(void) {
-	GfxCommon_quadVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, 4);
-	GfxCommon_texVb  = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, 4);
-
 	uint16_t indices[GFX_MAX_INDICES];
 	GfxCommon_MakeIndices(indices, GFX_MAX_INDICES);
 	GfxCommon_defaultIb = Gfx_CreateIb(indices, GFX_MAX_INDICES);
+
+	GfxCommon_quadVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, 4);
+	GfxCommon_texVb  = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, 4);
 }
 
 void GfxCommon_Free(void) {
@@ -111,9 +111,10 @@ void GfxCommon_Make2DQuad(const struct Texture* tex, PackedCol col, VertexP3fT2f
 
 bool gfx_hadFog;
 void GfxCommon_Mode2D(int width, int height) {
-	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
 	struct Matrix ortho;
 	Gfx_CalcOrthoMatrix((float)width, (float)height, &ortho);
+
+	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
 	Gfx_LoadMatrix(&ortho);
 	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
 	Gfx_LoadIdentityMatrix();

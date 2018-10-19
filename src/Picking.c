@@ -108,7 +108,7 @@ void RayTracer_Step(struct RayTracer* t) {
 
 struct RayTracer tracer;
 #define PICKING_BORDER BLOCK_BEDROCK
-typedef bool(*IntersectTest)(struct PickedPos* pos);
+typedef bool (*IntersectTest)(struct PickedPos* pos);
 
 static BlockID Picking_InsideGetBlock(int x, int y, int z) {
 	if (x >= 0 && z >= 0 && x < World_Width && z < World_Length) {

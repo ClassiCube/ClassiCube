@@ -232,9 +232,9 @@ static void EnvRenderer_DrawSkyY(int x1, int z1, int x2, int z2, int y, VertexP3
 			if (z2 > endZ) z2 = endZ;
 
 			v.X = (float)x1; v.Z = (float)z1; *vertices++ = v;
-			                  v.Z = (float)z2; *vertices++ = v;
-			v.X = (float)x2;                   *vertices++ = v;
-			                  v.Z = (float)z1; *vertices++ = v;
+			                 v.Z = (float)z2; *vertices++ = v;
+			v.X = (float)x2;                  *vertices++ = v;
+			                 v.Z = (float)z1; *vertices++ = v;
 		}
 	}
 }
@@ -390,8 +390,8 @@ void EnvRenderer_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID n
 	bool nowBlock = !(Block_Draw[newBlock] == DRAW_GAS || Block_Draw[newBlock] == DRAW_SPRITE);
 	if (didBlock == nowBlock) return;
 
-	int index = (x * World_Length) + z;
-	int height = Weather_Heightmap[index];
+	int hIndex = (x * World_Length) + z;
+	int height = Weather_Heightmap[hIndex];
 	/* Two cases can be skipped here: */
 	/* a) rain height was not calculated to begin with (height is short.MaxValue) */
 	/* b) changed y is below current calculated rain height */
@@ -399,11 +399,11 @@ void EnvRenderer_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID n
 
 	if (nowBlock) {
 		/* Simple case: Rest of column below is now not visible to rain. */
-		Weather_Heightmap[index] = y;
+		Weather_Heightmap[hIndex] = y;
 	} else {
 		/* Part of the column is now visible to rain, we don't know how exactly how high it should be though. */
 		/* However, we know that if the old block was above or equal to rain height, then the new rain height must be <= old block.y */
-		EnvRenderer_CalcRainHeightAt(x, y, z, index);
+		EnvRenderer_CalcRainHeightAt(x, y, z, hIndex);
 	}
 }
 
@@ -569,6 +569,7 @@ static void EnvRenderer_UpdateBorderTextures(void) {
 
 static void EnvRenderer_DrawBorderX(int x, int z1, int z2, int y1, int y2, PackedCol col, VertexP3fT2fC4b** vertices) {
 	int endZ = z2, endY = y2, startY = y1, axisSize = EnvRenderer_AxisSize();
+	float u2, v2;
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v;
 	v.X = (float)x; v.Col = col;
@@ -581,7 +582,7 @@ static void EnvRenderer_DrawBorderX(int x, int z1, int z2, int y1, int y2, Packe
 			y2 = y1 + axisSize;
 			if (y2 > endY) y2 = endY;
 
-			float u2 = (float)z2 - (float)z1, v2 = (float)y2 - (float)y1;
+			u2  = (float)z2 - (float)z1; v2 = (float)y2 - (float)y1;
 			v.Y = (float)y1; v.Z = (float)z1; v.U = 0.0f; v.V = v2;   *ptr++ = v;
 			v.Y = (float)y2;                              v.V = 0.0f; *ptr++ = v;
 			                 v.Z = (float)z2; v.U = u2;               *ptr++ = v;
@@ -593,6 +594,7 @@ static void EnvRenderer_DrawBorderX(int x, int z1, int z2, int y1, int y2, Packe
 
 static void EnvRenderer_DrawBorderZ(int z, int x1, int x2, int y1, int y2, PackedCol col, VertexP3fT2fC4b** vertices) {
 	int endX = x2, endY = y2, startY = y1, axisSize = EnvRenderer_AxisSize();
+	float u2, v2;
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v;
 	v.Z = (float)z; v.Col = col;
@@ -605,7 +607,7 @@ static void EnvRenderer_DrawBorderZ(int z, int x1, int x2, int y1, int y2, Packe
 			y2 = y1 + axisSize;
 			if (y2 > endY) y2 = endY;
 
-			float u2 = (float)x2 - (float)x1, v2 = (float)y2 - (float)y1;
+			u2  = (float)x2 - (float)x1; v2 = (float)y2 - (float)y1;
 			v.X = (float)x1; v.Y = (float)y1; v.U = 0.0f; v.V = v2;   *ptr++ = v;
 			                 v.Y = (float)y2;             v.V = 0.0f; *ptr++ = v;
 			v.X = (float)x2;                  v.U = u2;               *ptr++ = v;
@@ -617,6 +619,7 @@ static void EnvRenderer_DrawBorderZ(int z, int x1, int x2, int y1, int y2, Packe
 
 static void EnvRenderer_DrawBorderY(int x1, int z1, int x2, int z2, float y, PackedCol col, float offset, float yOffset, VertexP3fT2fC4b** vertices) {
 	int endX = x2, endZ = z2, startZ = z1, axisSize = EnvRenderer_AxisSize();
+	float u2, v2;
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v;
 	v.Y = y + yOffset; v.Col = col;
@@ -629,7 +632,7 @@ static void EnvRenderer_DrawBorderY(int x1, int z1, int x2, int z2, float y, Pac
 			z2 = z1 + axisSize;
 			if (z2 > endZ) z2 = endZ;
 
-			float u2 = (float)x2 - (float)x1, v2 = (float)z2 - (float)z1;
+			u2  = (float)x2 - (float)x1; v2 = (float)z2 - (float)z1;
 			v.X = (float)x1 + offset; v.Z = (float)z1 + offset; v.U = 0.0f; v.V = 0.0f; *ptr++ = v;
 			                          v.Z = (float)z2 + offset;             v.V = v2;   *ptr++ = v;
 			v.X = (float)x2 + offset;                           v.U = u2;               *ptr++ = v;

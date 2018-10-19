@@ -412,12 +412,13 @@ ReturnCode Stream_ReadUtf8(struct Stream* s, Codepoint* cp) {
 }
 
 ReturnCode Stream_ReadLine(struct Stream* s, String* text) {
-	text->length = 0;
 	bool readAny = false;
 	Codepoint cp;
+	ReturnCode res;
+	text->length = 0;
 
 	for (;;) {	
-		ReturnCode res = Stream_ReadUtf8(s, &cp);
+		res = Stream_ReadUtf8(s, &cp);
 		if (res == ERR_END_OF_STREAM) break;
 		if (res) return res;
 

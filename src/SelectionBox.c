@@ -13,50 +13,50 @@ struct SelectionBox {
 	float MinDist, MaxDist;
 };
 
-static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** vertices, VertexP3fC4b** lineVertices) {
-	float offset = box->MinDist < 32.0f * 32.0f ? (1.0f / 32.0f) : (1.0f / 16.0f);
-	Vector3 coords[2];
-	Vector3_Add1(&coords[0], &box->Min, -offset);
-	Vector3_Add1(&coords[1], &box->Max,  offset);
-
-	int i;
-	VertexP3fC4b* ptr;
-	PackedCol col = box->Col;
-
 #define SelectionBox_Y(y) 0,y,0, 0,y,1, 1,y,1, 1,y,0,
 #define SelectionBox_Z(z) 0,0,z, 0,1,z, 1,1,z, 1,0,z,
 #define SelectionBox_X(x) x,0,0, x,1,0, x,1,1, x,0,1,
 
+static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** faceVertices, VertexP3fC4b** edgeVertices) {
 	static uint8_t faceIndices[72] = {
 		SelectionBox_Y(0) SelectionBox_Y(1) /* YMin, YMax */
 		SelectionBox_Z(0) SelectionBox_Z(1) /* ZMin, ZMax */
 		SelectionBox_X(0) SelectionBox_X(1) /* XMin, XMax */
 	};
-
-	ptr = *vertices;
-	for (i = 0; i < Array_Elems(faceIndices); i += 3, ptr++) {
-		ptr->X   = coords[faceIndices[i + 0]].X;
-		ptr->Y   = coords[faceIndices[i + 1]].Y;
-		ptr->Z   = coords[faceIndices[i + 2]].Z;
-		ptr->Col = col;
-	}
-	*vertices = ptr;
-
-	col.R = ~col.R; col.G = ~col.G; col.B = ~col.B;
 	static uint8_t edgeIndices[72] = {
 		0,0,0, 1,0,0,  1,0,0, 1,0,1,  1,0,1, 0,0,1,  0,0,1, 0,0,0, /* YMin */
 		0,1,0, 1,1,0,  1,1,0, 1,1,1,  1,1,1, 0,1,1,  0,1,1, 0,1,0, /* YMax */
 		0,0,0, 0,1,0,  1,0,0, 1,1,0,  1,0,1, 1,1,1,  0,0,1, 0,1,1, /* X/Z  */
 	};
 
-	ptr = *lineVertices;
+	VertexP3fC4b* ptr;
+	PackedCol col;
+	int i;
+
+	float offset = box->MinDist < 32.0f * 32.0f ? (1/32.0f) : (1/16.0f);
+	Vector3 coords[2];
+	Vector3_Add1(&coords[0], &box->Min, -offset);
+	Vector3_Add1(&coords[1], &box->Max,  offset);
+
+	col = box->Col;
+	ptr = *faceVertices;
+	for (i = 0; i < Array_Elems(faceIndices); i += 3, ptr++) {
+		ptr->X   = coords[faceIndices[i + 0]].X;
+		ptr->Y   = coords[faceIndices[i + 1]].Y;
+		ptr->Z   = coords[faceIndices[i + 2]].Z;
+		ptr->Col = col;
+	}
+	*faceVertices = ptr;
+
+	col.R = ~col.R; col.G = ~col.G; col.B = ~col.B;
+	ptr = *edgeVertices;
 	for (i = 0; i < Array_Elems(edgeIndices); i += 3, ptr++) {
 		ptr->X   = coords[edgeIndices[i + 0]].X;
 		ptr->Y   = coords[edgeIndices[i + 1]].Y;
 		ptr->Z   = coords[edgeIndices[i + 2]].Z;
 		ptr->Col = col;
 	}
-	*lineVertices = ptr;
+	*edgeVertices = ptr;
 }
 
 static int SelectionBox_Compare(struct SelectionBox* a, struct SelectionBox* b) {
@@ -153,7 +153,7 @@ static void Selections_QuickSort(int left, int right) {
 
 	while (left < right) {
 		int i = left, j = right;
-		struct SelectionBox* pivot = &keys[(i + j) / 2];
+		struct SelectionBox* pivot = &keys[(i + j) >> 1];
 
 		/* partition the list */
 		while (i <= j) {
@@ -167,13 +167,17 @@ static void Selections_QuickSort(int left, int right) {
 }
 
 void Selections_Render(double delta) {
+	VertexP3fC4b faceVertices[SELECTIONS_MAX_VERTICES]; VertexP3fC4b* facesPtr;
+	VertexP3fC4b edgeVertices[SELECTIONS_MAX_VERTICES]; VertexP3fC4b* edgesPtr;
+	Vector3 cameraPos;
+	int i;
 	if (!selections_count || Gfx_LostContext) return;
+
 	/* TODO: Proper selection box sorting. But this is very difficult because
 	   we can have boxes within boxes, intersecting boxes, etc. Probably not worth it. */
-	Vector3 camPos = Game_CurrentCameraPos;
-	int i;
+	cameraPos = Game_CurrentCameraPos;
 	for (i = 0; i < selections_count; i++) {
-		SelectionBox_Intersect(&selections_list[i], camPos);
+		SelectionBox_Intersect(&selections_list[i], cameraPos);
 	}
 	Selections_QuickSort(0, selections_count - 1);
 
@@ -182,19 +186,18 @@ void Selections_Render(double delta) {
 		Selections_ContextRecreated(NULL);
 	}
 
-	VertexP3fC4b vertices[SELECTIONS_MAX_VERTICES]; VertexP3fC4b* ptr = vertices;
-	VertexP3fC4b lineVertices[SELECTIONS_MAX_VERTICES]; VertexP3fC4b* linePtr = lineVertices;
+	facesPtr = faceVertices; edgesPtr = edgeVertices;
 	for (i = 0; i < selections_count; i++) {	
-		SelectionBox_Render(&selections_list[i], &ptr, &linePtr);
+		SelectionBox_Render(&selections_list[i], &facesPtr, &edgesPtr);
 	}
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
-	GfxCommon_UpdateDynamicVb_Lines(selections_LineVB, lineVertices,
+	GfxCommon_UpdateDynamicVb_Lines(selections_LineVB, edgeVertices,
 		selections_count * SELECTIONS_VERTICES);
 
 	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaBlending(true);
-	GfxCommon_UpdateDynamicVb_IndexedTris(selections_VB, vertices,
+	GfxCommon_UpdateDynamicVb_IndexedTris(selections_VB, faceVertices,
 		selections_count * SELECTIONS_VERTICES);
 	Gfx_SetDepthWrite(true);
 	Gfx_SetAlphaBlending(false);

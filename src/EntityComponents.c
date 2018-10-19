@@ -38,12 +38,12 @@ static void AnimatedComp_DoTilt(float* tilt, bool reduce) {
 
 static void AnimatedComp_PerpendicularAnim(struct AnimatedComp* anim, float flapSpeed, float idleXRot, float idleZRot, bool left) {
 	float verAngle = 0.5f + 0.5f * Math_SinF(anim->WalkTime * flapSpeed);
-	float zRot = -idleZRot - verAngle * anim->Swing * ANIM_MAX_ANGLE;
-	float horAngle = Math_CosF(anim->WalkTime) * anim->Swing * ANIM_ARM_MAX * 1.5f;
-	float xRot = idleXRot + horAngle;
+	float horAngle = Math_CosF(anim->WalkTime);
+	float zRot = -idleZRot - verAngle * anim->Swing * ANIM_MAX_ANGLE;	
+	float xRot =  idleXRot + horAngle * anim->Swing * ANIM_ARM_MAX * 1.5f;
 
 	if (left) {
-		anim->LeftArmX = xRot;  anim->LeftArmZ = zRot;
+		anim->LeftArmX  = xRot; anim->LeftArmZ  = zRot;
 	} else {
 		anim->RightArmX = xRot; anim->RightArmZ = zRot;
 	}
@@ -62,14 +62,17 @@ void AnimatedComp_Init(struct AnimatedComp* anim) {
 
 void AnimatedComp_Update(struct Entity* entity, Vector3 oldPos, Vector3 newPos, double delta) {
 	struct AnimatedComp* anim = &entity->Anim;
-	anim->WalkTimeO = anim->WalkTimeN;
-	anim->SwingO    = anim->SwingN;
 	float dx = newPos.X - oldPos.X;
 	float dz = newPos.Z - oldPos.Z;
 	float distance = Math_SqrtF(dx * dx + dz * dz);
+	int i;
+
+	float walkDelta;
+	anim->WalkTimeO = anim->WalkTimeN;
+	anim->SwingO    = anim->SwingN;
 
 	if (distance > 0.05f) {
-		float walkDelta = distance * 2 * (float)(20 * delta);
+		walkDelta = distance * 2 * (float)(20 * delta);
 		anim->WalkTimeN += walkDelta;
 		anim->SwingN += (float)delta * 3;
 	} else {
@@ -79,7 +82,6 @@ void AnimatedComp_Update(struct Entity* entity, Vector3 oldPos, Vector3 newPos, 
 
 	/* TODO: the Tilt code was designed for 60 ticks/second, fix it up for 20 ticks/second */
 	anim->BobStrengthO = anim->BobStrengthN;
-	int i;
 	for (i = 0; i < 3; i++) {
 		AnimatedComp_DoTilt(&anim->BobStrengthN, !Game_ViewBobbing || !entity->OnGround);
 	}
@@ -87,15 +89,15 @@ void AnimatedComp_Update(struct Entity* entity, Vector3 oldPos, Vector3 newPos, 
 
 void AnimatedComp_GetCurrent(struct Entity* entity, float t) {
 	struct AnimatedComp* anim = &entity->Anim;
-	anim->Swing = Math_Lerp(anim->SwingO, anim->SwingN, t);
-	anim->WalkTime = Math_Lerp(anim->WalkTimeO, anim->WalkTimeN, t);
-	anim->BobStrength = Math_Lerp(anim->BobStrengthO, anim->BobStrengthN, t);
-
 	float idleTime = (float)Game_Accumulator;
 	float idleXRot = Math_SinF(idleTime * ANIM_IDLE_XPERIOD) * ANIM_IDLE_MAX;
-	float idleZRot = ANIM_IDLE_MAX + Math_CosF(idleTime * ANIM_IDLE_ZPERIOD) * ANIM_IDLE_MAX;
+	float idleZRot = Math_CosF(idleTime * ANIM_IDLE_ZPERIOD) * ANIM_IDLE_MAX + ANIM_IDLE_MAX;
 
-	anim->LeftArmX = (Math_CosF(anim->WalkTime)  * anim->Swing * ANIM_ARM_MAX) - idleXRot;
+	anim->Swing       = Math_Lerp(anim->SwingO,       anim->SwingN,       t);
+	anim->WalkTime    = Math_Lerp(anim->WalkTimeO,    anim->WalkTimeN,    t);
+	anim->BobStrength = Math_Lerp(anim->BobStrengthO, anim->BobStrengthN, t);
+
+	anim->LeftArmX =  (Math_CosF(anim->WalkTime) * anim->Swing * ANIM_ARM_MAX) - idleXRot;
 	anim->LeftArmZ = -idleZRot;
 	anim->LeftLegX = -(Math_CosF(anim->WalkTime) * anim->Swing * ANIM_LEG_MAX);
 	anim->LeftLegZ = 0;
@@ -103,9 +105,9 @@ void AnimatedComp_GetCurrent(struct Entity* entity, float t) {
 	anim->RightLegX = -anim->LeftLegX; anim->RightLegZ = -anim->LeftLegZ;
 	anim->RightArmX = -anim->LeftArmX; anim->RightArmZ = -anim->LeftArmZ;
 
-	anim->BobbingHor   = Math_CosF(anim->WalkTime)            * anim->Swing * (2.5f / 16.0f);
-	anim->BobbingVer   = Math_AbsF(Math_SinF(anim->WalkTime)) * anim->Swing * (2.5f / 16.0f);
-	anim->BobbingModel = Math_AbsF(Math_CosF(anim->WalkTime)) * anim->Swing * (4.0f / 16.0f);
+	anim->BobbingHor   = Math_CosF(anim->WalkTime)            * anim->Swing * (2.5f/16.0f);
+	anim->BobbingVer   = Math_AbsF(Math_SinF(anim->WalkTime)) * anim->Swing * (2.5f/16.0f);
+	anim->BobbingModel = Math_AbsF(Math_CosF(anim->WalkTime)) * anim->Swing * (4.0f/16.0f);
 
 	if (entity->Model->CalcHumanAnims && !Game_SimpleArmsAnim) {
 		AnimatedComp_CalcHumanAnim(anim, idleXRot, idleZRot);
@@ -122,11 +124,11 @@ void TiltComp_Init(struct TiltComp* anim) {
 }
 
 void TiltComp_Update(struct TiltComp* anim, double delta) {
-	anim->VelTiltStrengthO = anim->VelTiltStrengthN;
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-
-	/* TODO: the Tilt code was designed for 60 ticks/second, fix it up for 20 ticks/second */
 	int i;
+
+	anim->VelTiltStrengthO = anim->VelTiltStrengthN;
+	/* TODO: the Tilt code was designed for 60 ticks/second, fix it up for 20 ticks/second */
 	for (i = 0; i < 3; i++) {
 		AnimatedComp_DoTilt(&anim->VelTiltStrengthN, p->Hacks.Floating);
 	}
@@ -134,9 +136,9 @@ void TiltComp_Update(struct TiltComp* anim, double delta) {
 
 void TiltComp_GetCurrent(struct TiltComp* anim, float t) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	anim->VelTiltStrength = Math_Lerp(anim->VelTiltStrengthO, anim->VelTiltStrengthN, t);
-
 	struct AnimatedComp* pAnim = &p->Base.Anim;
+
+	anim->VelTiltStrength = Math_Lerp(anim->VelTiltStrengthO, anim->VelTiltStrengthN, t);
 	anim->TiltX = Math_CosF(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
 	anim->TiltY = Math_SinF(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
 }
@@ -146,9 +148,9 @@ void TiltComp_GetCurrent(struct TiltComp* anim, float t) {
 *-----------------------------------------------------HacksComponent------------------------------------------------------*
 *#########################################################################################################################*/
 static void HacksComp_SetAll(struct HacksComp* hacks, bool allowed) {
-	hacks->CanAnyHacks = allowed; hacks->CanFly = allowed;
-	hacks->CanNoclip = allowed; hacks->CanRespawn = allowed;
-	hacks->CanSpeed = allowed; hacks->CanPushbackBlocks = allowed;
+	hacks->CanAnyHacks = allowed; hacks->CanFly            = allowed;
+	hacks->CanNoclip   = allowed; hacks->CanRespawn        = allowed;
+	hacks->CanSpeed    = allowed; hacks->CanPushbackBlocks = allowed;
 	hacks->CanUseThirdPersonCamera = allowed;
 }
 
@@ -158,7 +160,7 @@ void HacksComp_Init(struct HacksComp* hacks) {
 	hacks->SpeedMultiplier = 10.0f;
 	hacks->Enabled = true;
 	hacks->CanSeeAllNames = true;
-	hacks->CanDoubleJump = true;
+	hacks->CanDoubleJump  = true;
 	hacks->BaseHorSpeed = 1.0f;
 	hacks->MaxJumps = 1;
 	hacks->NoclipSlide = true;
@@ -178,13 +180,14 @@ bool HacksComp_Floating(struct HacksComp* hacks) {
 
 static String HacksComp_UNSAFE_FlagValue(const char* flagRaw, struct HacksComp* hacks) {
 	String* joined = &hacks->HacksFlags;
-	String flag = String_FromReadonly(flagRaw);
+	String flag    = String_FromReadonly(flagRaw);
+	int start, end;
 
-	int start = String_IndexOfString(joined, &flag);
+	start = String_IndexOfString(joined, &flag);
 	if (start < 0) return String_Empty;
 	start += flag.length;
 
-	int end = String_IndexOf(joined, ' ', start);
+	end = String_IndexOf(joined, ' ', start);
 	if (end < 0) end = joined->length;
 
 	return String_UNSAFE_Substring(joined, start, end - start);
@@ -192,18 +195,18 @@ static String HacksComp_UNSAFE_FlagValue(const char* flagRaw, struct HacksComp* 
 
 static float HacksComp_ParseFlagFloat(const char* flagRaw, struct HacksComp* hacks) {
 	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
-	if (!raw.length || Game_ClassicMode) return 1.0f;
+	float value;
 
-	float value = 0.0f;
+	if (!raw.length || Game_ClassicMode)      return 1.0f;
 	if (!Convert_TryParseFloat(&raw, &value)) return 1.0f;
 	return value;
 }
 
 static int HacksComp_ParseFlagInt(const char* flagRaw, struct HacksComp* hacks) {
 	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
-	if (!raw.length || Game_ClassicMode) return 1;
+	int value;
 
-	int value = 0;
+	if (!raw.length || Game_ClassicMode)    return 1;
 	if (!Convert_TryParseInt(&raw, &value)) return 1;
 	return value;
 }
@@ -266,28 +269,29 @@ void HacksComp_CheckConsistency(struct HacksComp* hacks) {
 }
 
 void HacksComp_UpdateState(struct HacksComp* hacks) {
-	HacksComp_SetAll(hacks, true);
-	if (!hacks->HacksFlags.length) return;
-	hacks->CanBePushed = true;
+	static String excHacks = String_FromConst("-hax");
 
-	/* By default (this is also the case with WoM), we can use hacks. */
-	String excHacks = String_FromConst("-hax");
+	HacksComp_SetAll(hacks, true);
+	hacks->CanBePushed = true;
+	if (!hacks->HacksFlags.length) return;
+
+	/* By default (this is also the case with WoM), we can use hacks */
 	if (String_ContainsString(&hacks->HacksFlags, &excHacks)) {
 		HacksComp_SetAll(hacks, false);
 	}
 
-	HacksComp_ParseFlag(hacks, "+fly", "-fly", &hacks->CanFly);
-	HacksComp_ParseFlag(hacks, "+noclip", "-noclip", &hacks->CanNoclip);
-	HacksComp_ParseFlag(hacks, "+speed", "-speed", &hacks->CanSpeed);
+	HacksComp_ParseFlag(hacks, "+fly",     "-fly",     &hacks->CanFly);
+	HacksComp_ParseFlag(hacks, "+noclip",  "-noclip",  &hacks->CanNoclip);
+	HacksComp_ParseFlag(hacks, "+speed",   "-speed",   &hacks->CanSpeed);
 	HacksComp_ParseFlag(hacks, "+respawn", "-respawn", &hacks->CanRespawn);
-	HacksComp_ParseFlag(hacks, "+push", "-push", &hacks->CanBePushed);
+	HacksComp_ParseFlag(hacks, "+push",    "-push",    &hacks->CanBePushed);
 
 	if (hacks->UserType == 0x64) {
 		HacksComp_ParseAllFlag(hacks, "+ophax", "-ophax");
 	}
 
-	hacks->BaseHorSpeed  = HacksComp_ParseFlagFloat("horspeed=", hacks);
-	hacks->MaxJumps = HacksComp_ParseFlagInt("jumps=", hacks);
+	hacks->BaseHorSpeed = HacksComp_ParseFlagFloat("horspeed=", hacks);
+	hacks->MaxJumps     = HacksComp_ParseFlagInt("jumps=",      hacks);
 
 	HacksComp_CheckConsistency(hacks);
 	Event_RaiseVoid(&UserEvents_HackPermissionsChanged);
@@ -454,9 +458,9 @@ void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdat
 }
 
 void LocalInterpComp_AdvanceState(struct InterpComp* interp) {
-	struct Entity* entity = &LocalPlayer_Instance.Base;
+	struct Entity* p = &LocalPlayer_Instance.Base;
 	interp->Prev = interp->Next;
-	entity->Position = interp->Next.Pos;
+	p->Position  = interp->Next.Pos;
 	InterpComp_AdvanceRotY(interp);
 }
 
@@ -997,7 +1001,7 @@ static void PhysicsComp_Move(struct PhysicsComp* comp, Vector3 drag, float gravi
 }
 
 static void PhysicsComp_MoveFlying(struct PhysicsComp* comp, Vector3 vel, float factor, Vector3 drag, float gravity, float yMul) {
-	struct Entity* entity = comp->Entity;
+	struct Entity* entity   = comp->Entity;
 	struct HacksComp* hacks = comp->Hacks;
 
 	PhysicsComp_MoveHor(comp, vel, factor);
@@ -1073,7 +1077,7 @@ static float PhysicsComp_GetBaseSpeed(struct PhysicsComp* comp) {
 #define LIQUID_GRAVITY 0.02f
 #define ROPE_GRAVITY   0.034f
 void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vector3 vel) {
-	struct Entity* entity = comp->Entity;
+	struct Entity* entity   = comp->Entity;
 	struct HacksComp* hacks = comp->Hacks;
 
 	if (hacks->Noclip) entity->OnGround = false;
@@ -1164,26 +1168,29 @@ void PhysicsComp_CalculateJumpVelocity(struct PhysicsComp* comp, float jumpHeigh
 }
 
 void PhysicsComp_DoEntityPush(struct Entity* entity) {
-	int id;
+	struct Entity* other;
+	bool yIntersects;
 	Vector3 dir; dir.Y = 0.0f;
+	float dist, pushStrength;
+	int id;
 
 	for (id = 0; id < ENTITIES_MAX_COUNT; id++) {
-		struct Entity* other = Entities_List[id];
+		other = Entities_List[id];
 		if (!other || other == entity) continue;
-		if (!other->Model->Pushes) continue;
+		if (!other->Model->Pushes)     continue;
 
-		bool yIntersects =
+		yIntersects =
 			entity->Position.Y <= (other->Position.Y  + other->Size.Y) &&
 			 other->Position.Y <= (entity->Position.Y + entity->Size.Y);
 		if (!yIntersects) continue;
 
 		dir.X = other->Position.X - entity->Position.X;
 		dir.Z = other->Position.Z - entity->Position.Z;
-		float dist = dir.X	* dir.X + dir.Z * dir.Z;
+		dist = dir.X * dir.X + dir.Z * dir.Z;
 		if (dist < 0.002f || dist > 1.0f) continue; /* TODO: range needs to be lower? */
 
 		Vector3_Normalize(&dir, &dir);
-		float pushStrength = (1 - dist) / 32.0f; /* TODO: should be 24/25 */
+		pushStrength = (1 - dist) / 32.0f; /* TODO: should be 24/25 */
 		/* entity.Velocity -= dir * pushStrength */
 		Vector3_Mul1By(&dir, pushStrength);
 		Vector3_SubBy(&entity->Velocity, &dir);
@@ -1263,7 +1270,8 @@ static bool SoundComp_DoPlaySound(struct LocalPlayer* p, Vector3 soundPos) {
 
 void SoundComp_Tick(bool wasOnGround) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	Vector3 soundPos = p->Interp.Next.Pos;
+	Vector3 soundPos      = p->Interp.Next.Pos;
+
 	SoundComp_GetSound(p);
 	if (!sounds_AnyNonAir) soundPos = Vector3_BigPos();
 

@@ -32,6 +32,18 @@ void AxisLinesRenderer_MakeComponent(struct IGameComponent* comp) {
 }
 
 void AxisLinesRenderer_Render(double delta) {
+	static uint8_t indices[36] = {
+		2,2,1, 2,2,3, 4,2,3, 4,2,1, /* X arrow */
+		1,2,2, 1,2,4, 3,2,4, 3,2,2, /* Z arrow */
+		1,2,3, 1,4,3, 3,4,1, 3,2,1, /* Y arrow */
+	};
+	static PackedCol cols[3] = { PACKEDCOL_RED, PACKEDCOL_BLUE, PACKEDCOL_GREEN };
+
+	Vector3 coords[5], pos;
+	VertexP3fC4b vertices[AXISLINES_NUM_VERTICES];
+	VertexP3fC4b* ptr = vertices;
+	int i, count;
+
 	if (!Game_ShowAxisLines || Gfx_LostContext) return;
 	/* Don't do it in a ContextRecreated handler, because we only want VB recreated if ShowAxisLines in on. */
 	if (!axisLines_vb) {
@@ -39,29 +51,19 @@ void AxisLinesRenderer_Render(double delta) {
 	}
 
 	Gfx_SetTexturing(false);
-	Vector3 P = LocalPlayer_Instance.Base.Position; P.Y += 0.05f;
-	VertexP3fC4b vertices[AXISLINES_NUM_VERTICES];
-	
-	Vector3 coords[5]; coords[2] = P;
-	Vector3_Add1(&coords[0], &P, -AXISLINES_LENGTH);
-	Vector3_Add1(&coords[1], &P, -AXISLINES_THICKNESS);
-	Vector3_Add1(&coords[3], &P,  AXISLINES_THICKNESS);
-	Vector3_Add1(&coords[4], &P,  AXISLINES_LENGTH);
-	
-	static uint8_t indices[36] = {
-		2,2,1, 2,2,3, 4,2,3, 4,2,1, /* X arrow */
-		1,2,2, 1,2,4, 3,2,4, 3,2,2, /* Z arrow */
-		1,2,3, 1,4,3, 3,4,1, 3,2,1, /* Y arrow */
-	};
-
-	static PackedCol cols[3] = { PACKEDCOL_RED, PACKEDCOL_BLUE, PACKEDCOL_GREEN };
-	int i, count = Camera_Active->IsThirdPerson ? 12 : 8;
-	VertexP3fC4b* ptr = vertices;
+	pos   = LocalPlayer_Instance.Base.Position; pos.Y += 0.05f;
+	count = Camera_Active->IsThirdPerson ? 12 : 8;
+	 
+	Vector3_Add1(&coords[0], &pos, -AXISLINES_LENGTH);
+	Vector3_Add1(&coords[1], &pos, -AXISLINES_THICKNESS);
+	coords[2] = pos;
+	Vector3_Add1(&coords[3], &pos,  AXISLINES_THICKNESS);
+	Vector3_Add1(&coords[4], &pos,  AXISLINES_LENGTH);
 
 	for (i = 0; i < count; i++, ptr++) {
-		ptr->X = coords[indices[i*3 + 0]].X;
-		ptr->Y = coords[indices[i*3 + 1]].Y;
-		ptr->Z = coords[indices[i*3 + 2]].Z;
+		ptr->X   = coords[indices[i*3 + 0]].X;
+		ptr->Y   = coords[indices[i*3 + 1]].Y;
+		ptr->Z   = coords[indices[i*3 + 2]].Z;
 		ptr->Col = cols[i >> 2];
 	}
 

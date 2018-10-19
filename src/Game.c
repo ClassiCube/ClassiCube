@@ -285,8 +285,10 @@ static void Game_OnNewMapLoadedCore(void* obj) {
 
 static void Game_TextureChangedCore(void* obj, struct Stream* src, const String* name) {
 	Bitmap bmp;
+	ReturnCode res;
+
 	if (String_CaselessEqualsConst(name, "terrain.png")) {
-		ReturnCode res = Png_Decode(&bmp, src);
+		res = Png_Decode(&bmp, src);
 
 		if (res) { 
 			Chat_LogError2(res, "decoding", name);
@@ -295,9 +297,9 @@ static void Game_TextureChangedCore(void* obj, struct Stream* src, const String*
 			Mem_Free(bmp.Scan0);
 		}		
 	} else if (String_CaselessEqualsConst(name, "default.png")) {
-		ReturnCode res = Png_Decode(&bmp, src);
+		res = Png_Decode(&bmp, src);
 
-		if (res) { 
+		if (res) {
 			Chat_LogError2(res, "decoding", name);
 			Mem_Free(bmp.Scan0);
 		} else {
@@ -406,13 +408,15 @@ static void Game_InitScheduledTasks(void) {
 
 void Game_Free(void* obj);
 void Game_Load(void) {
+	struct IGameComponent comp;
+
 	Game_ViewDistance     = 512;
 	Game_MaxViewDistance  = 32768;
 	Game_UserViewDistance = 512;
 	Game_Fov = 70;
 	Game_AutoRotate = true;
 
-	struct IGameComponent comp; IGameComponent_MakeEmpty(&comp);
+	IGameComponent_MakeEmpty(&comp);
 	Gfx_Init();
 	Gfx_SetVSync(true);
 	Gfx_MakeApiInfo();
@@ -615,9 +619,11 @@ static void Game_Render3D(double delta, float t) {
 }
 
 static void Game_DoScheduledTasks(double time) {
+	struct ScheduledTask task;
 	int i;
+
 	for (i = 0; i < Game_TasksCount; i++) {
-		struct ScheduledTask task = Game_Tasks[i];
+		task = Game_Tasks[i];
 		task.Accumulator += time;
 
 		while (task.Accumulator >= task.Interval) {
@@ -704,6 +710,8 @@ static void Game_RenderFrame(double delta) {
 }
 
 void Game_Free(void* obj) {
+	int i;
+
 	ChunkUpdater_Free();
 	Atlas2D_Free();
 	Atlas1D_Free();
@@ -718,7 +726,6 @@ void Game_Free(void* obj) {
 	Event_UnregisterVoid(&WindowEvents_Resized,       NULL, Game_OnResize);
 	Event_UnregisterVoid(&WindowEvents_Closed,        NULL, Game_Free);
 
-	int i;
 	for (i = 0; i < Game_ComponentsCount; i++) {
 		Game_Components[i].Free();
 	}
@@ -735,7 +742,8 @@ uint64_t game_renderTimer;
 void Game_Run(int width, int height, const String* title, struct DisplayDevice* device) {
 	int x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
 	int y = device->Bounds.Y + (device->Bounds.Height - height) / 2;
-	struct GraphicsMode mode; 
+	struct GraphicsMode mode;
+	double time;
 	
 	GraphicsMode_MakeDefault(&mode);
 	Window_Create(x, y, width, height, title, &mode, device);
@@ -750,7 +758,7 @@ void Game_Run(int width, int height, const String* title, struct DisplayDevice* 
 		if (!Window_Exists) break;
 
 		/* Limit maximum render to 1 second (for suspended process) */
-		double time = Stopwatch_ElapsedMicroseconds(&game_renderTimer) / (1000.0 * 1000.0);
+		time = Stopwatch_ElapsedMicroseconds(&game_renderTimer) / (1000.0 * 1000.0);
 		if (time > 1.0) time = 1.0;
 		if (time <= 0.0) continue;
 

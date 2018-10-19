@@ -382,7 +382,7 @@ static void Floor_SortXList(int left, int right) {
 
 	while (left < right) {
 		int i = left, j = right;
-		int16_t pivot = keys[(i + j) / 2];
+		int16_t pivot = keys[(i + j) >> 1];
 
 		/* partition the list */
 		while (i <= j) {

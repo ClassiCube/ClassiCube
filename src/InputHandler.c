@@ -91,9 +91,10 @@ static void InputHandler_Toggle(Key key, bool* target, const char* enableMsg, co
 }
 
 static void InputHandler_CycleDistanceForwards(int16_t* viewDists, int count) {
-	int i;
+	int i, dist;
 	for (i = 0; i < count; i++) {
-		int dist = viewDists[i];
+		dist = viewDists[i];
+
 		if (dist > Game_UserViewDistance) {
 			Game_UserSetViewDistance(dist); return;
 		}
@@ -102,9 +103,10 @@ static void InputHandler_CycleDistanceForwards(int16_t* viewDists, int count) {
 }
 
 static void InputHandler_CycleDistanceBackwards(int16_t* viewDists, int count) {
-	int i;
+	int i, dist;
 	for (i = count - 1; i >= 0; i--) {
-		int dist = viewDists[i];
+		dist = viewDists[i];
+
 		if (dist < Game_UserViewDistance) {
 			Game_UserSetViewDistance(dist); return;
 		}
@@ -179,7 +181,7 @@ static bool InputHandler_HandleCoreKey(Key key) {
 	if (key == KeyBind_Get(KeyBind_HideFps)) {
 		Game_ShowFPS = !Game_ShowFPS;
 	} else if (key == KeyBind_Get(KeyBind_Fullscreen)) {
-		uint8_t state = Window_GetWindowState();
+		int state = Window_GetWindowState();
 		if (state != WINDOW_STATE_MAXIMISED) {
 			bool fullscreen = state == WINDOW_STATE_FULLSCREEN;
 			Window_SetWindowState(fullscreen ? WINDOW_STATE_NORMAL : WINDOW_STATE_FULLSCREEN);
@@ -251,16 +253,18 @@ static bool InputHandler_PushbackPlace(struct AABB* blockBB) {
 }
 
 static bool InputHandler_IntersectsOthers(Vector3 pos, BlockID block) {
-	struct AABB blockBB;
+	struct AABB blockBB, bounds;
+	struct Entity* entity;
+	int id;
+
 	Vector3_Add(&blockBB.Min, &pos, &Block_MinBB[block]);
 	Vector3_Add(&blockBB.Max, &pos, &Block_MaxBB[block]);
-
-	int id;
+	
 	for (id = 0; id < ENTITIES_SELF_ID; id++) {
-		struct Entity* entity = Entities_List[id];
+		entity = Entities_List[id];
 		if (!entity) continue;
 
-		struct AABB bounds; Entity_GetBounds(entity, &bounds);
+		Entity_GetBounds(entity, &bounds);
 		bounds.Min.Y += 1.0f / 32.0f; /* when player is exactly standing on top of ground */
 		if (AABB_Intersects(&bounds, &blockBB)) return true;
 	}
@@ -302,10 +306,15 @@ static bool InputHandler_CheckIsFree(BlockID block) {
 
 void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) {
 	TimeMS now = DateTime_CurrentUTC_MS();
-	int delta = (int)(now - input_lastClick);
-	if (cooldown && delta < 250) return; /* 4 times per second */
+	int delta  = (int)(now - input_lastClick);
 
+	Vector3I p;
+	BlockID old, cur, block;
+	int i;
+
+	if (cooldown && delta < 250) return; /* 4 times per second */
 	input_lastClick = now;
+
 	if (ServerConnection_SupportsPlayerClick && !Gui_GetActiveScreen()->HandlesAllInput) {
 		input_pickingId = -1;
 		InputHandler_ButtonStateChanged(MouseButton_Left,   left);
@@ -319,20 +328,20 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		/* always play delete animations, even if we aren't picking a block */
 		HeldBlockRenderer_ClickAnim(true);
 
-		Vector3I p = Game_SelectedPos.BlockPos;
+		p = Game_SelectedPos.BlockPos;
 		if (!Game_SelectedPos.Valid || !World_IsValidPos_3I(p)) return;
 
-		BlockID old = World_GetBlock(p.X, p.Y, p.Z);
+		old = World_GetBlock(p.X, p.Y, p.Z);
 		if (Block_Draw[old] == DRAW_GAS || !Block_CanDelete[old]) return;
 
 		Game_UpdateBlock(p.X, p.Y, p.Z, BLOCK_AIR);
 		Event_RaiseBlock(&UserEvents_BlockChanged, p, old, BLOCK_AIR);
 	} else if (right) {
-		Vector3I p = Game_SelectedPos.TranslatedPos;
+		p = Game_SelectedPos.TranslatedPos;
 		if (!Game_SelectedPos.Valid || !World_IsValidPos_3I(p)) return;
 
-		BlockID old = World_GetBlock(p.X, p.Y, p.Z);
-		BlockID block = Inventory_SelectedBlock;
+		old   = World_GetBlock(p.X, p.Y, p.Z);
+		block = Inventory_SelectedBlock;
 		if (Game_AutoRotate) { block = AutoRotate_RotateBlock(block); }
 
 		if (Game_CanPick(old) || !Block_CanPlace[block]) return;
@@ -343,14 +352,13 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		Game_UpdateBlock(p.X, p.Y, p.Z, block);
 		Event_RaiseBlock(&UserEvents_BlockChanged, p, old, block);
 	} else if (middle) {
-		Vector3I p = Game_SelectedPos.BlockPos;
-		if (!Game_SelectedPos.Valid || !World_IsValidPos_3I(p)) return;
+		p = Game_SelectedPos.BlockPos;
+		if (!World_IsValidPos_3I(p)) return;
 
-		BlockID cur = World_GetBlock(p.X, p.Y, p.Z);
+		cur = World_GetBlock(p.X, p.Y, p.Z);
 		if (Block_Draw[cur] == DRAW_GAS) return;
 		if (!(Block_CanPlace[cur] || Block_CanDelete[cur])) return;
 		if (!Inventory_CanChangeSelected() || Inventory_SelectedBlock == cur) return;
-		int i;
 
 		/* Is the currently selected block an empty slot? */
 		if (Inventory_SelectedBlock == BLOCK_AIR) {

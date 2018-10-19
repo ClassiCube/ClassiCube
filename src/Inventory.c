@@ -27,10 +27,10 @@ void Inventory_SetOffset(int offset) {
 }
 
 void Inventory_SetSelectedBlock(BlockID block) {
-	if (!Inventory_CanChangeSelected()) return;
-
-	/* Swap with the current, if the new block is already in the hotbar */
 	int i;
+	if (!Inventory_CanChangeSelected()) return;
+	/* Swap with the current, if the new block is already in the hotbar */
+	
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
 		if (Inventory_Get(i) != block) continue;
 		Inventory_Set(i, Inventory_SelectedBlock);
@@ -75,11 +75,11 @@ void Inventory_SetDefaultMapping(void) {
 }
 
 void Inventory_AddDefault(BlockID block) {
+	int slot;
 	if (block >= BLOCK_CPE_COUNT) {
 		Inventory_Map[block - 1] = block; return;
 	}
-
-	int slot;
+	
 	for (slot = 0; slot < BLOCK_MAX_CPE; slot++) {
 		if (Inventory_DefaultMapping(slot) != block) continue;
 		Inventory_Map[slot] = block;
@@ -101,8 +101,9 @@ static void Inventory_Reset(void) {
 }
 
 static void Inventory_Init(void) {
-	Inventory_Reset();
 	BlockID* inv = Inventory_Table;
+	Inventory_Reset();
+	
 	inv[0] = BLOCK_STONE;  inv[1] = BLOCK_COBBLE; inv[2] = BLOCK_BRICK;
 	inv[3] = BLOCK_DIRT;   inv[4] = BLOCK_WOOD;   inv[5] = BLOCK_LOG;
 	inv[6] = BLOCK_LEAVES; inv[7] = BLOCK_GRASS;  inv[8] = BLOCK_SLAB;

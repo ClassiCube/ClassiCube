@@ -703,7 +703,7 @@ static int Adv_Lit(int x, int y, int z, int cIndex) {
 
 	int flags = 0, offset;
 	BlockID block   = Builder_Chunk[cIndex];
-	int lightHeight = Lighting_Heightmap[(z * World_Width) + x];
+	int lightHeight = Lighting_Heightmap[Lighting_Pack(x, z)];
 	adv_lightFlags  = Block_LightOffset[block];
 
 	/* Use fact Light(Y.YMin) == Light((Y-1).YMax) */
