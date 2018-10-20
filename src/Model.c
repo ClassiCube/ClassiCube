@@ -64,7 +64,7 @@ bool Model_ShouldRender(struct Entity* entity) {
 	float bbLength = AABB_Length(bbPtr);
 
 	float maxYZ  = max(bbHeight, bbLength);
-	float maxXYZ = max(bbWidth, maxYZ);
+	float maxXYZ = max(bbWidth,  maxYZ);
 	pos.Y += AABB_Height(bbPtr) * 0.5f; /* Centre Y coordinate. */
 	return FrustumCulling_SphereInFrustum(pos.X, pos.Y, pos.Z, maxXYZ);
 }
@@ -77,14 +77,18 @@ static float Model_MinDist(float dist, float extent) {
 }
 
 float Model_RenderDistance(struct Entity* entity) {
-	Vector3 pos = entity->Position;
+	Vector3 pos     = entity->Position;
 	struct AABB* bb = &entity->ModelAABB;
-	pos.Y += AABB_Height(bb) * 0.5f; /* Centre Y coordinate. */
-	Vector3 camPos = Game_CurrentCameraPos;
+	Vector3 camPos  = Game_CurrentCameraPos;
+	float dx, dy, dz;
 
-	float dx = Model_MinDist(camPos.X - pos.X, AABB_Width(bb)  * 0.5f);
-	float dy = Model_MinDist(camPos.Y - pos.Y, AABB_Height(bb) * 0.5f);
-	float dz = Model_MinDist(camPos.Z - pos.Z, AABB_Length(bb) * 0.5f);
+	/* X and Z are already at centre of model */
+	/* Y is at feet, so needs to be moved up to centre */
+	pos.Y += AABB_Height(bb) * 0.5f;
+
+	dx = Model_MinDist(camPos.X - pos.X, AABB_Width(bb)  * 0.5f);
+	dy = Model_MinDist(camPos.Y - pos.Y, AABB_Height(bb) * 0.5f);
+	dz = Model_MinDist(camPos.Z - pos.Z, AABB_Length(bb) * 0.5f);
 	return dx * dx + dy * dy + dz * dz;
 }
 
@@ -285,7 +289,7 @@ void BoxDesc_Expand(struct BoxDesc* desc, float amount) {
 }
 
 void BoxDesc_MirrorX(struct BoxDesc* desc) {
-	float temp = desc->X1; desc->X1 = desc->X2; desc->X2 = temp;
+	float tmp = desc->X1; desc->X1 = desc->X2; desc->X2 = tmp;
 }
 
 

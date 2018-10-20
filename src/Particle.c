@@ -98,6 +98,7 @@ static bool Particle_TestY(struct Particle* p, int y, bool topFace, bool through
 }
 
 static bool Particle_PhysicsTick(struct Particle* p, float gravity, bool throughLiquids, double delta) {
+	int y;
 	p->LastPos = p->NextPos;
 
 	BlockID cur = Particle_GetBlock((int)p->NextPos.X, (int)p->NextPos.Y, (int)p->NextPos.Z);
@@ -115,7 +116,6 @@ static bool Particle_PhysicsTick(struct Particle* p, float gravity, bool through
 	Vector3_Add(&p->NextPos, &p->NextPos, &velocity);
 	int endY = Math_Floor(p->NextPos.Y);
 
-	int y;
 	if (p->Velocity.Y > 0.0f) {
 		/* don't test block we are already in */
 		for (y = startY + 1; y <= endY && Particle_TestY(p, y, false, throughLiquids); y++) {}

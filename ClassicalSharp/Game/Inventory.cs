@@ -41,7 +41,7 @@ namespace ClassicalSharp {
 		
 		public bool CanChangeSelected() {
 			if (!CanChangeHeldBlock) {
-				game.Chat.Add("&e/client: &cThe server has forbidden you from changing your held block.");
+				game.Chat.Add("&cThe server has forbidden you from changing your held block.");
 				return false;
 			}
 			return true;

@@ -8,7 +8,7 @@
 
 bool Inventory_CanChangeSelected(void) {
 	if (!Inventory_CanChangeHeldBlock) {
-		Chat_AddRaw("&e/client: &cThe server has forbidden you from changing your held block.");
+		Chat_AddRaw("&cThe server has forbidden you from changing your held block.");
 		return false;
 	}
 	return true;

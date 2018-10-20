@@ -716,9 +716,9 @@ void StringsBuffer_Clear(StringsBuffer* buffer) {
 	StringsBuffer_Init(buffer);
 }
 
-void StringsBuffer_Get(StringsBuffer* buffer, int i, String* text) {
-	String raw = StringsBuffer_UNSAFE_Get(buffer, i);
-	String_Copy(text, &raw);
+void StringsBuffer_Get(StringsBuffer* buffer, int i, String* str) {
+	String entry = StringsBuffer_UNSAFE_Get(buffer, i);
+	String_Copy(str, &entry);
 }
 
 String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i) {
@@ -731,7 +731,7 @@ String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i) {
 	return String_Init(&buffer->TextBuffer[offset], len, len);
 }
 
-void StringsBuffer_Add(StringsBuffer* buffer, const String* text) {
+void StringsBuffer_Add(StringsBuffer* buffer, const String* str) {
 	int textOffset;
 	/* StringsBuffer hasn't been initalised yet, do it here */
 	if (!buffer->_FlagsBufferSize) { StringsBuffer_Init(buffer); }
@@ -741,21 +741,21 @@ void StringsBuffer_Add(StringsBuffer* buffer, const String* text) {
 											4, STRINGSBUFFER_FLAGS_DEF_ELEMS, 512);
 	}
 
-	if (text->length > STRINGSBUFFER_LEN_MASK) {
+	if (str->length > STRINGSBUFFER_LEN_MASK) {
 		ErrorHandler_Fail("String too big to insert into StringsBuffer");
 	}
 
 	textOffset = buffer->TotalLength;
-	if (textOffset + text->length >= buffer->_TextBufferSize) {
+	if (textOffset + str->length >= buffer->_TextBufferSize) {
 		buffer->TextBuffer = Utils_Resize(buffer->TextBuffer, &buffer->_TextBufferSize,
 											1, STRINGSBUFFER_BUFFER_DEF_SIZE, 8192);
 	}
 
-	Mem_Copy(&buffer->TextBuffer[textOffset], text->buffer, text->length);
-	buffer->FlagsBuffer[buffer->Count] = text->length | (textOffset << STRINGSBUFFER_LEN_SHIFT);
+	Mem_Copy(&buffer->TextBuffer[textOffset], str->buffer, str->length);
+	buffer->FlagsBuffer[buffer->Count] = str->length | (textOffset << STRINGSBUFFER_LEN_SHIFT);
 
 	buffer->Count++;
-	buffer->TotalLength += text->length;
+	buffer->TotalLength += str->length;
 }
 
 void StringsBuffer_Remove(StringsBuffer* buffer, int index) {

@@ -19,22 +19,22 @@ void Options_Free(void) {
 	StringsBuffer_Clear(&Options_Changed);
 }
 
-bool Options_HasChanged(const String* key) {
+NOINLINE_ static int Options_CaselessIndexOf(StringsBuffer* buffer, const String* str) {
+	String entry;
 	int i;
-	for (i = 0; i < Options_Changed.Count; i++) {
-		String curKey = StringsBuffer_UNSAFE_Get(&Options_Changed, i);
-		if (String_CaselessEquals(&curKey, key)) return true;
-	}
-	return false;
-}
 
-static int Options_Find(const String* key) {
-	int i;
-	for (i = 0; i < Options_Keys.Count; i++) {
-		String curKey = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
-		if (String_CaselessEquals(&curKey, key)) return i;
+	for (i = 0; i < buffer->Count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(buffer, i);
+		if (String_CaselessEquals(&entry, str)) return i;
 	}
 	return -1;
+}
+
+bool Options_HasChanged(const String* key) {
+	return Options_CaselessIndexOf(&Options_Changed, key) >= 0;
+}
+static int Options_Find(const String* key) {
+	return Options_CaselessIndexOf(&Options_Keys, key);
 }
 
 static bool Options_TryGetValue(const char* keyRaw, String* value) {
@@ -155,27 +155,29 @@ void Options_SetString(const String* key, const String* value) {
 }
 
 void Options_Load(void) {	
-	String path = String_FromConst("options.txt");
+	static String path = String_FromConst("options.txt");
 	char lineBuffer[768];
 	String line = String_FromArray(lineBuffer);
 
-	ReturnCode res; struct Stream stream;
+	String key, value;
+	uint8_t buffer[2048];
+	struct Stream stream, buffered;
+	ReturnCode res;
+	int i;
+
 	res = Stream_OpenFile(&stream, &path);
 	if (res == ReturnCode_FileNotFound) return;
 	if (res) { Chat_LogError2(res, "opening", &path); return; }
 
 	/* Remove all the unchanged options */
-	int i;
 	for (i = Options_Keys.Count - 1; i >= 0; i--) {
-		String key = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
+		key = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
 		if (Options_HasChanged(&key)) continue;
 		Options_Remove(i);
 	}
 
 	/* ReadLine reads single byte at a time */
-	uint8_t buffer[2048]; struct Stream buffered;
 	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
-	String key, value;
 
 	for (;;) {
 		res = Stream_ReadLine(&buffered, &line);
@@ -195,18 +197,21 @@ void Options_Load(void) {
 }
 
 void Options_Save(void) {	
-	String path = String_FromConst("options.txt");
+	static String path = String_FromConst("options.txt");
 	char lineBuffer[1024];
 	String line = String_FromArray(lineBuffer);
 
-	ReturnCode res; struct Stream stream;
+	String key, value;
+	struct Stream stream;
+	ReturnCode res;
+	int i;
+
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Chat_LogError2(res, "creating", &path); return; }
 
-	int i;
 	for (i = 0; i < Options_Keys.Count; i++) {
-		String key   = StringsBuffer_UNSAFE_Get(&Options_Keys,   i);
-		String value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
+		key   = StringsBuffer_UNSAFE_Get(&Options_Keys,   i);
+		value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
 		String_Format2(&line, "%s=%s", &key, &value);
 
 		res = Stream_WriteLine(&stream, &line);

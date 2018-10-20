@@ -179,11 +179,11 @@ typedef struct StringsBuffer_ {
 /* Resets counts to 0, and frees any allocated memory. */
 NOINLINE_ void StringsBuffer_Clear(StringsBuffer* buffer);
 /* Copies the characters from the i'th string in the given buffer into the given string. */
-NOINLINE_ void StringsBuffer_Get(StringsBuffer* buffer, int i, String* text);
+NOINLINE_ void StringsBuffer_Get(StringsBuffer* buffer, int i, String* str);
 /* UNSAFE: Returns a direct pointer to the i'th string in the given buffer. */
 NOINLINE_ STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i);
 /* Adds a given string to the end of the given buffer. */
-NOINLINE_ void StringsBuffer_Add(StringsBuffer* buffer, const String* text);
+NOINLINE_ void StringsBuffer_Add(StringsBuffer* buffer, const String* str);
 /* Removes the i'th string from the given buffer, shifting following strings downwards. */
 NOINLINE_ void StringsBuffer_Remove(StringsBuffer* buffer, int index);
 

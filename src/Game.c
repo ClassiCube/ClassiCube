@@ -408,7 +408,13 @@ static void Game_InitScheduledTasks(void) {
 
 void Game_Free(void* obj);
 void Game_Load(void) {
+	char renderTypeBuffer[STRING_SIZE];
+	String renderType = String_FromArray(renderTypeBuffer);
+	char titleBuffer[STRING_SIZE];
+	String title = String_FromArray(titleBuffer);
+
 	struct IGameComponent comp;
+	int i, flags;
 
 	Game_ViewDistance     = 512;
 	Game_MaxViewDistance  = 32768;
@@ -467,13 +473,10 @@ void Game_Load(void) {
 	Entities_List[ENTITIES_SELF_ID] = &LocalPlayer_Instance.Base;
 
 	ChunkUpdater_Init();
-	EnvRenderer_MakeComponent(&comp);     Game_AddComponent(&comp);
-
-	char renderTypeBuffer[STRING_SIZE];
-	String renderType = String_FromArray(renderTypeBuffer);
+	EnvRenderer_MakeComponent(&comp); Game_AddComponent(&comp);
 	Options_Get(OPT_RENDER_TYPE, &renderType, "normal");
-	int flags = Game_CalcRenderType(&renderType);
 
+	flags = Game_CalcRenderType(&renderType);
 	if (flags == -1) flags = 0;
 	EnvRenderer_Legacy  = (flags & 1);
 	EnvRenderer_Minimal = (flags & 2);
@@ -507,7 +510,6 @@ void Game_Load(void) {
 	/* TODO: plugin dll support */
 	/* List<string> nonLoaded = PluginLoader.LoadAll(); */
 
-	int i;
 	for (i = 0; i < Game_ComponentsCount; i++) {
 		Game_Components[i].Init();
 	}
@@ -527,9 +529,6 @@ void Game_Load(void) {
 	}*/
 
 	if (Gfx_WarnIfNecessary()) EnvRenderer_UseLegacyMode(true);
-
-	char titleBuffer[STRING_SIZE];
-	String title = String_FromArray(titleBuffer);
 	String_Format2(&title, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
 
 	Gui_FreeActive();

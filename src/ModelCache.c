@@ -180,7 +180,7 @@ static void ChickenModel_CreateParts(void) {
 	ChickenModel_MakeLeg(&Chicken_RightLeg, 0, 3, 1, 2);
 }
 
-static float ChickenModel_GetEyeY(struct Entity* entity)  { return 14.0f / 16.0f; }
+static float ChickenModel_GetEyeY(struct Entity* entity)   { return 14.0f / 16.0f; }
 static void ChickenModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.0f,12.0f,8.0f); }
 static void ChickenModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-8, 4,15,4); }
 
@@ -263,7 +263,7 @@ static void CreeperModel_CreateParts(void) {
 	BoxDesc_BuildBox(&Creeper_RightLegBack,  &rBack);
 }
 
-static float CreeperModel_GetEyeY(struct Entity* entity)  { return 22.0f / 16.0f; }
+static float CreeperModel_GetEyeY(struct Entity* entity)   { return 22.0f / 16.0f; }
 static void CreeperModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.0f,26.0f,8.0f); }
 static void CreeperModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-6, 4,26,6); }
 
@@ -336,7 +336,7 @@ static void PigModel_CreateParts(void) {
 	BoxDesc_BuildBox(&Pig_RightLegBack,  &rBack);
 }
 
-static float PigModel_GetEyeY(struct Entity* entity)  { return 12.0f / 16.0f; }
+static float PigModel_GetEyeY(struct Entity* entity)   { return 12.0f / 16.0f; }
 static void PigModel_GetCollisionSize(Vector3* size)   { Model_RetSize(14.0f,14.0f,14.0f); }
 static void PigModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-5,0,-14, 5,16,9); }
 
@@ -456,7 +456,7 @@ static void SheepModel_CreateParts(void) {
 	BoxDesc_BuildBox(&Fur_RightLegBack,  &frBack);
 }
 
-static float SheepModel_GetEyeY(struct Entity* entity)  { return 20.0f / 16.0f; }
+static float SheepModel_GetEyeY(struct Entity* entity)   { return 20.0f / 16.0f; }
 static void SheepModel_GetCollisionSize(Vector3* size)   { Model_RetSize(10.0f,20.0f,10.0f); }
 static void SheepModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-6,0,-13, 6,23,10); }
 
@@ -543,7 +543,7 @@ static void SkeletonModel_CreateParts(void) {
 	BoxDesc_BuildBox(&Skeleton_RightArm, &rArm);
 }
 
-static float SkeletonModel_GetEyeY(struct Entity* entity)  { return 26.0f / 16.0f; }
+static float SkeletonModel_GetEyeY(struct Entity* entity)   { return 26.0f / 16.0f; }
 static void SkeletonModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.0f,28.1f,8.0f); }
 static void SkeletonModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,32,4); }
 
@@ -552,7 +552,7 @@ static void SkeletonModel_DrawModel(struct Entity* entity) {
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Skeleton_Head, true);
 
 	Model_DrawPart(&Skeleton_Torso);
-	Model_DrawRotate(entity->Anim.LeftLegX,  0, 0,                      &Skeleton_LeftLeg, false);
+	Model_DrawRotate(entity->Anim.LeftLegX,  0, 0,                      &Skeleton_LeftLeg,  false);
 	Model_DrawRotate(entity->Anim.RightLegX, 0, 0,                      &Skeleton_RightLeg, false);
 	Model_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.LeftArmZ,  &Skeleton_LeftArm,  false);
 	Model_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.RightArmZ, &Skeleton_RightArm, false);
@@ -617,7 +617,7 @@ static void SpiderModel_CreateParts(void) {
 	BoxDesc_BuildBox(&Spider_RightLeg, &rLeg);
 }
 
-static float SpiderModel_GetEyeY(struct Entity* entity)  { return 8.0f / 16.0f; }
+static float SpiderModel_GetEyeY(struct Entity* entity)   { return 8.0f / 16.0f; }
 static void SpiderModel_GetCollisionSize(Vector3* size)   { Model_RetSize(15.0f,12.0f,15.0f); }
 static void SpiderModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-5,0,-11, 5,12,15); }
 
@@ -713,7 +713,7 @@ static void ZombieModel_CreateParts(void) {
 	BoxDesc_BuildBox(&Zombie_RightArm, &rArm);
 }
 
-static float ZombieModel_GetEyeY(struct Entity* entity)  { return 26.0f / 16.0f; }
+static float ZombieModel_GetEyeY(struct Entity* entity)   { return 26.0f / 16.0f; }
 static void ZombieModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.6f,28.1f,8.6f); }
 static void ZombieModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,32,4); }
 
@@ -919,7 +919,7 @@ static void HumanoidModel_CreateParts(void) {
 	HumanModel_CreateLimbs(&Humanoid_Set, 0.5f, &arm, &leg);
 }
 
-static float HumanoidModel_GetEyeY(struct Entity* entity)  { return 26.0f / 16.0f; }
+static float HumanoidModel_GetEyeY(struct Entity* entity)   { return 26.0f / 16.0f; }
 static void HumanoidModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.6f,28.1f,8.6f); }
 static void HumanoidModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-8,0,-4, 8,32,4); }
 
@@ -995,7 +995,7 @@ static void ChibiModel_CreateParts(void) {
 	HumanModel_CreateLimbs(&Chibi_Set, 0.25f, &arm, &leg);
 }
 
-static float ChibiModel_GetEyeY(struct Entity* entity)  { return 14.0f / 16.0f; }
+static float ChibiModel_GetEyeY(struct Entity* entity)   { return 14.0f / 16.0f; }
 static void ChibiModel_GetCollisionSize(Vector3* size)   { Model_RetSize(4.6f,20.1f,4.6f); }
 static void ChibiModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,16,4); }
 
@@ -1029,7 +1029,7 @@ struct Model SittingModel;
 #define SIT_OFFSET 10.0f
 static void SittingModel_CreateParts(void) { }
 
-static float SittingModel_GetEyeY(struct Entity* entity)  { return (26.0f - SIT_OFFSET) / 16.0f; }
+static float SittingModel_GetEyeY(struct Entity* entity)   { return (26.0f - SIT_OFFSET) / 16.0f; }
 static void SittingModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.6f,28.1f - SIT_OFFSET,8.6f); }
 static void SittingModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-8,0,-4, 8,32 - SIT_OFFSET,4); }
 
@@ -1085,7 +1085,7 @@ static struct Model* CorpseModel_GetInstance(void) {
 struct Model HeadModel;
 static void HeadModel_CreateParts(void) { }
 
-static float HeadModel_GetEyeY(struct Entity* entity)  { return 6.0f / 16.0f; }
+static float HeadModel_GetEyeY(struct Entity* entity)   { return 6.0f / 16.0f; }
 static void HeadModel_GetCollisionSize(Vector3* size)   { Model_RetSize(7.9f,7.9f,7.9f); }
 static void HeadModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,8,4); }
 
@@ -1136,9 +1136,10 @@ static float BlockModel_GetEyeY(struct Entity* entity) {
 }
 
 static void BlockModel_GetCollisionSize(Vector3* size) {
-	Vector3_Sub(size, &BlockModel_maxBB, &BlockModel_minBB);
-	/* to fit slightly inside */
 	static Vector3 shrink = { 0.75f/16.0f, 0.75f/16.0f, 0.75f/16.0f };
+	Vector3_Sub(size, &BlockModel_maxBB, &BlockModel_minBB);
+
+	/* to fit slightly inside */
 	Vector3_SubBy(size, &shrink);
 	/* fix for 0 size blocks */
 	size->X = max(size->X, 0.125f/16.0f);
@@ -1180,7 +1181,7 @@ static void BlockModel_Flush(void) {
 
 #define BlockModel_FlushIfNotSame if (BlockModel_lastTexIndex != BlockModel_texIndex) { BlockModel_Flush(); }
 static TextureLoc BlockModel_GetTex(Face face, VertexP3fT2fC4b** ptr) {
-	TextureLoc texLoc = Block_GetTex(BlockModel_block, face);
+	TextureLoc texLoc   = Block_GetTex(BlockModel_block, face);
 	BlockModel_texIndex = Atlas1D_Index(texLoc);
 	BlockModel_FlushIfNotSame;
 
@@ -1199,35 +1200,35 @@ if (Block_Tinted[block]) {\
 }
 
 static void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
-	TextureLoc texLoc = Block_GetTex(BlockModel_block, FACE_ZMAX);
-	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &BlockModel_texIndex);
+	TextureLoc loc = Block_GetTex(BlockModel_block, FACE_ZMAX);
+	TextureRec rec = Atlas1D_TexRec(loc, 1, &BlockModel_texIndex);
 	BlockModel_FlushIfNotSame;
 
 	PackedCol col = Model_Cols[0];
 	Block_Tint(col, BlockModel_block);
 
-	float p1 = 0.0f, p2 = 0.0f;
+	float xz1 = 0.0f, xz2 = 0.0f;
 	if (firstPart) { /* Need to break into two quads for when drawing a sprite model in hand. */
-		if (mirror) { rec.U1 = 0.5f; p1 = -5.5f / 16.0f; }
-		else {        rec.U2 = 0.5f; p2 = -5.5f / 16.0f; }
+		if (mirror) { rec.U1 = 0.5f; xz1 = -5.5f / 16.0f; }
+		else {        rec.U2 = 0.5f; xz2 = -5.5f / 16.0f; }
 	} else {
-		if (mirror) { rec.U2 = 0.5f; p2 = 5.5f / 16.0f; }
-		else {        rec.U1 = 0.5f; p1 = 5.5f / 16.0f; }
+		if (mirror) { rec.U2 = 0.5f; xz2 = 5.5f / 16.0f; }
+		else {        rec.U1 = 0.5f; xz1 = 5.5f / 16.0f; }
 	}
 
 	VertexP3fT2fC4b* ptr = &ModelCache_Vertices[BlockModel.index];
 	VertexP3fT2fC4b v; v.Col = col;
 
-	v.X = p1; v.Y = 0.0f; v.Z = p1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
-	          v.Y = 1.0f;                         v.V = rec.V1; *ptr++ = v;
-	v.X = p2;             v.Z = p2; v.U = rec.U1;               *ptr++ = v;
-	          v.Y = 0.0f;                         v.V = rec.V2; *ptr++ = v;
+	v.X = xz1; v.Y = 0.0f; v.Z = xz1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
+	           v.Y = 1.0f;                          v.V = rec.V1; *ptr++ = v;
+	v.X = xz2;             v.Z = xz2; v.U = rec.U1;               *ptr++ = v;
+	           v.Y = 0.0f;                          v.V = rec.V2; *ptr++ = v;
 	BlockModel.index += 4;
 }
 
 static void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
-	TextureLoc texLoc = Block_GetTex(BlockModel_block, FACE_XMAX);
-	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &BlockModel_texIndex);
+	TextureLoc loc = Block_GetTex(BlockModel_block, FACE_XMAX);
+	TextureRec rec = Atlas1D_TexRec(loc, 1, &BlockModel_texIndex);
 	BlockModel_FlushIfNotSame;
 
 	PackedCol col = Model_Cols[0];
@@ -1253,6 +1254,10 @@ static void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
 }
 
 static void BlockModel_DrawParts(bool sprite) {
+	Vector3 min, max;
+	TextureLoc loc;
+	VertexP3fT2fC4b* ptr = NULL;
+
 	if (sprite) {
 		BlockModel_SpriteXQuad(false, false);
 		BlockModel_SpriteXQuad(false, true);
@@ -1266,16 +1271,13 @@ static void BlockModel_DrawParts(bool sprite) {
 	} else {
 		Drawer_MinBB = Block_MinBB[BlockModel_block]; Drawer_MinBB.Y = 1.0f - Drawer_MinBB.Y;
 		Drawer_MaxBB = Block_MaxBB[BlockModel_block]; Drawer_MaxBB.Y = 1.0f - Drawer_MaxBB.Y;
-
-		Vector3 min = Block_RenderMinBB[BlockModel_block];
-		Vector3 max = Block_RenderMaxBB[BlockModel_block];
-		Drawer_X1 = min.X - 0.5f; Drawer_Y1 = min.Y; Drawer_Z1 = min.Z - 0.5f;
-		Drawer_X2 = max.X - 0.5f; Drawer_Y2 = max.Y; Drawer_Z2 = max.Z - 0.5f;
-
-		Drawer_Tinted = Block_Tinted[BlockModel_block];
+		Drawer_Tinted     = Block_Tinted[BlockModel_block];
 		Drawer_TintColour = Block_FogCol[BlockModel_block];
-		VertexP3fT2fC4b* ptr = NULL;
-		TextureLoc loc;
+
+		min = Block_RenderMinBB[BlockModel_block];
+		max = Block_RenderMaxBB[BlockModel_block];
+		Drawer_X1 = min.X - 0.5f; Drawer_Y1 = min.Y; Drawer_Z1 = min.Z - 0.5f;
+		Drawer_X2 = max.X - 0.5f; Drawer_Y2 = max.Y; Drawer_Z2 = max.Z - 0.5f;		
 
 		loc = BlockModel_GetTex(FACE_YMIN, &ptr); Drawer_YMin(1, Model_Cols[1], loc, &ptr);
 		loc = BlockModel_GetTex(FACE_ZMIN, &ptr); Drawer_ZMin(1, Model_Cols[3], loc, &ptr);
@@ -1288,6 +1290,7 @@ static void BlockModel_DrawParts(bool sprite) {
 
 static void BlockModel_DrawModel(struct Entity* p) {
 	PackedCol white = PACKEDCOL_WHITE;
+	bool sprite;
 	int i;
 
 	BlockModel_block = p->ModelBlock;
@@ -1299,9 +1302,9 @@ static void BlockModel_DrawModel(struct Entity* p) {
 			Model_Cols[i] = white;
 		}
 	}
+	sprite = Block_Draw[BlockModel_block] == DRAW_SPRITE;
 
-	BlockModel_lastTexIndex = -1;
-	bool sprite = Block_Draw[BlockModel_block] == DRAW_SPRITE;
+	BlockModel_lastTexIndex = -1;	
 	BlockModel_DrawParts(sprite);
 	if (!BlockModel.index) return;
 
