@@ -756,10 +756,11 @@ void Player_SetName(struct Player* p, const String* name, const String* skin) {
 }
 
 static void Player_Init(struct Entity* e) {
+	static String model = String_FromConst("humanoid");
 	Entity_Init(e);
+
 	e->StepSize   = 0.5f;
 	e->EntityType = ENTITY_TYPE_PLAYER;
-	String model  = String_FromConst("humanoid");
 	Entity_SetModel(e, &model);
 }
 

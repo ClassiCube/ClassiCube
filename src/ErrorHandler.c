@@ -623,11 +623,12 @@ struct Stream logStream;
 bool logOpen;
 
 void ErrorHandler_Log(const String* msg) {
+	static String path = String_FromConst("client.log");
+	ReturnCode res;
+
 	if (!logOpen) {
 		logOpen = true;
-		String path = String_FromConst("client.log");
-
-		ReturnCode res = File_Append(&logFile, &path);
+		res     = File_Append(&logFile, &path);
 		if (!res) Stream_FromFile(&logStream, logFile);
 	}
 

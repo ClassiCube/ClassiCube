@@ -73,10 +73,11 @@ bool Math_IsPowOf2(int value) {
 /* Not the most precise Tan(x), but within 10^-15 of answer, so good enough for here */
 double Math_FastTan(double angle) {
 	double cosA = Math_Cos(angle), sinA = Math_Sin(angle);
+	int sign;
 	if (cosA < -0.00000001 || cosA > 0.00000001) return sinA / cosA;
 
 	/* tan line is parallel to y axis, infinite gradient */
-	int sign = Math_Sign(sinA);
+	sign = Math_Sign(sinA);
 	if (cosA) sign *= Math_Sign(cosA);
 	return sign * MATH_POS_INF;
 }
@@ -120,23 +121,27 @@ int Random_Range(Random* seed, int min, int max) {
 }
 
 int Random_Next(Random* seed, int n) {
+	int64_t raw;
+	int bits, val;
+
 	if ((n & -n) == n) { /* i.e., n is a power of 2 */
 		*seed = (*seed * RND_VALUE + 0xBLL) & RND_MASK;
-		int64_t raw = (int64_t)(*seed >> (48 - 31));
+		raw   = (int64_t)(*seed >> (48 - 31));
 		return (int)((n * raw) >> 31);
 	}
 
-	int bits, val;
 	do {
 		*seed = (*seed * RND_VALUE + 0xBLL) & RND_MASK;
-		bits = (int)(*seed >> (48 - 31));
-		val = bits % n;
+		bits  = (int)(*seed >> (48 - 31));
+		val   = bits % n;
 	} while (bits - val + (n - 1) < 0);
 	return val;
 }
 
 float Random_Float(Random* seed) {
+	int raw;
+
 	*seed = (*seed * RND_VALUE + 0xBLL) & RND_MASK;
-	int raw = (int)(*seed >> (48 - 24));
+	raw   = (int)(*seed >> (48 - 24));
 	return raw / ((float)(1 << 24));
 }

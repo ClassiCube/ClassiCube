@@ -112,7 +112,7 @@ static void HeldBlockRenderer_ProjectionChanged(void* obj) {
 static void HeldBlockRenderer_DigAnimation(void) {
 	float t = held_time / held_period;
 	float sinHalfCircle = Math_SinF(t * MATH_PI);
-	float sqrtLerpPI = Math_SqrtF(t) * MATH_PI;
+	float sqrtLerpPI    = Math_SqrtF(t) * MATH_PI;
 
 	held_entity.Position.X -= Math_SinF(sqrtLerpPI)       * 0.4f;
 	held_entity.Position.Y += Math_SinF((sqrtLerpPI * 2)) * 0.2f;
@@ -148,8 +148,8 @@ static PackedCol HeldBlockRenderer_GetCol(struct Entity* entity) {
 void HeldBlockRenderer_ClickAnim(bool digging) {
 	/* TODO: timing still not quite right, rotate2 still not quite right */
 	HeldBlockRenderer_ResetAnim(true, digging ? 0.35 : 0.25);
-	held_swinging = false;
-	held_breaking = digging;
+	held_swinging  = false;
+	held_breaking  = digging;
 	held_animating = true;
 	/* Start place animation at bottom of cycle */
 	if (!digging) held_time = held_period / 2;
@@ -176,11 +176,12 @@ static void HeldBlockRenderer_BlockChanged(void* obj, Vector3I coords, BlockID o
 }
 
 static void HeldBlockRenderer_DoAnimation(double delta, float lastSwingY) {
+	double t;
 	if (!held_animating) return;
 
 	if (held_swinging || !held_breaking) {
-		float t = held_time / held_period;
-		held_swingY = -0.4f * Math_SinF(t * MATH_PI);
+		t = held_time / held_period;
+		held_swingY = -0.4f * (float)Math_Sin(t * MATH_PI);
 		held_entity.Position.Y += held_swingY;
 
 		if (held_swinging) {

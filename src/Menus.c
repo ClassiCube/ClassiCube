@@ -321,9 +321,9 @@ static void Menu_HandleFontChange(struct Screen* s) {
 	Elem_HandlesMouseMove(s, Mouse_X, Mouse_Y);
 }
 
-static int Menu_Int(const String* v)         { int value; Convert_TryParseInt(v, &value); return value; }
-static float Menu_Float(const String* v)     { float value; Convert_TryParseFloat(v, &value); return value; }
-static PackedCol Menu_HexCol(const String* v) { PackedCol value; PackedCol_TryParseHex(v, &value); return value; }
+static int Menu_Int(const String* str)          { int v; Convert_TryParseInt(str, &v); return v; }
+static float Menu_Float(const String* str)      { float v; Convert_TryParseFloat(str, &v); return v; }
+static PackedCol Menu_HexCol(const String* str) { PackedCol v; PackedCol_TryParseHex(str, &v); return v; }
 #define Menu_ReplaceActive(screen) Gui_FreeActive(); Gui_SetActive(screen);
 
 static void Menu_SwitchOptions(void* a, void* b)        { Menu_ReplaceActive(OptionsGroupScreen_MakeInstance()); }
@@ -433,13 +433,14 @@ static void ListScreen_MoveForwards(void* screen, void* b) {
 }
 
 static void ListScreen_ContextRecreated(void* screen) {
+	static String lArrow = String_FromConst("<");
+	static String rArrow = String_FromConst(">");
+
 	struct ListScreen* s = screen;
 	int i;
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { ListScreen_MakeText(s, i); }
-
-	String lArrow = String_FromConst("<");
-	ListScreen_Make(s, 5, -220, &lArrow, ListScreen_MoveBackwards);
-	String rArrow = String_FromConst(">");
+	
+	ListScreen_Make(s, 5, -220, &lArrow, ListScreen_MoveBackwards);	
 	ListScreen_Make(s, 6,  220, &rArrow, ListScreen_MoveForwards);
 
 	Menu_Back(s, 7, &s->Buttons[7], "Done", &s->Font, Menu_SwitchPause);
@@ -478,9 +479,11 @@ static String ListScreen_UNSAFE_GetCur(struct ListScreen* s, struct Widget* w) {
 }
 
 static void ListScreen_Select(struct ListScreen* s, const String* str) {
+	String entry;
 	int i;
+
 	for (i = 0; i < s->Entries.Count; i++) {
-		String entry = StringsBuffer_UNSAFE_Get(&s->Entries, i);
+		entry = StringsBuffer_UNSAFE_Get(&s->Entries, i);
 		if (!String_CaselessEquals(&entry, str)) continue;
 
 		ListScreen_SetCurrentIndex(s, i);
@@ -818,20 +821,20 @@ static void EditHotkeyScreen_MakeLeaveOpen(struct EditHotkeyScreen* s, Widget_Le
 }
 
 static void EditHotkeyScreen_BaseKey(void* screen, void* b) {
+	static String msg = String_FromConst("Key: press a key..");
 	struct EditHotkeyScreen* s = screen;
+
 	s->SelectedI = 0;
 	s->SupressNextPress = true;
-
-	String msg = String_FromConst("Key: press a key..");
 	ButtonWidget_Set(&s->Buttons[0], &msg, &s->TitleFont);
 }
 
 static void EditHotkeyScreen_Modifiers(void* screen, void* b) {
+	static String msg = String_FromConst("Modifiers: press a key..");
 	struct EditHotkeyScreen* s = screen;
+
 	s->SelectedI = 1;
 	s->SupressNextPress = true;
-
-	String msg = String_FromConst("Modifiers: press a key..");
 	ButtonWidget_Set(&s->Buttons[1], &msg, &s->TitleFont);
 }
 

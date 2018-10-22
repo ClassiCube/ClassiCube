@@ -194,9 +194,13 @@ struct EntryList {
 static void EntryList_Load(struct EntryList* list) {
 	char pathBuffer[FILENAME_SIZE];
 	String path = String_FromArray(pathBuffer);
-	String_Format3(&path, "%c%r%c", list->Folder, &Directory_Separator, list->Filename);
+	char lineBuffer[FILENAME_SIZE];
+	String line = String_FromArray(lineBuffer);
 
-	ReturnCode res; struct Stream stream;
+	struct Stream stream;
+	ReturnCode res;
+	String_Format3(&path, "%c%r%c", list->Folder, &Directory_Separator, list->Filename);
+	
 	res = Stream_OpenFile(&stream, &path);
 	if (res == ReturnCode_FileNotFound) return;
 	if (res) { Chat_LogError2(res, "opening", &path); return; }
@@ -204,8 +208,6 @@ static void EntryList_Load(struct EntryList* list) {
 	/* ReadLine reads single byte at a time */
 	uint8_t buffer[2048]; struct Stream buffered;
 	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
-	char lineBuffer[FILENAME_SIZE];
-	String line = String_FromArray(lineBuffer);
 
 	for (;;) {
 		res = Stream_ReadLine(&buffered, &line);

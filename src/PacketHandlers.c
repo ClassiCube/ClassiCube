@@ -341,14 +341,17 @@ void Classic_WriteChat(const String* text, bool partial) {
 }
 
 void Classic_WritePosition(Vector3 pos, float rotY, float headX) {
+	BlockID payload;
+	int x, y, z;
+
 	uint8_t* data = ServerConnection_WriteBuffer;
 	*data++ = OPCODE_ENTITY_TELEPORT;
 	{
-		BlockID payload = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID;
+		payload = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID;
 		Handlers_WriteBlock(data, payload);
-		int x = (int)(pos.X * 32);
-		int y = (int)(pos.Y * 32) + 51;
-		int z = (int)(pos.Z * 32);
+		x = (int)(pos.X * 32);
+		y = (int)(pos.Y * 32) + 51;
+		z = (int)(pos.Z * 32);
 
 		if (cpe_extEntityPos) {
 			Stream_SetU32_BE(data, x); data += 4;
@@ -837,15 +840,13 @@ static void CPE_SendCpeExtInfoReply(void) {
 }
 
 static void CPE_ExtInfo(uint8_t* data) {
+	static String d3Server = String_FromConst("D3 server");
 	char appNameBuffer[STRING_SIZE];
 	String appName = String_FromArray(appNameBuffer);
+
 	Handlers_ReadString(&data, &appName);
 	Chat_Add1("Server software: %s", &appName);
-
-	String d3Server = String_FromConst("D3 server");
-	if (String_CaselessStarts(&appName, &d3Server)) {
-		cpe_needD3Fix = true;
-	}
+	cpe_needD3Fix = String_CaselessStarts(&appName, &d3Server);
 
 	/* Workaround for old MCGalaxy that send ExtEntry sync but ExtInfo async. This means
 	   ExtEntry may sometimes arrive before ExtInfo, thus have to use += instead of = */

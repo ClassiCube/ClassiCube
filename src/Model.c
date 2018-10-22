@@ -57,16 +57,18 @@ void Model_Init(struct Model* model) {
 
 bool Model_ShouldRender(struct Entity* entity) {
 	Vector3 pos = entity->Position;
-	struct AABB bb; Entity_GetPickingBounds(entity, &bb);
+	struct AABB bb;
+	float bbWidth, bbHeight, bbLength;
+	float maxYZ, maxXYZ;
 
-	struct AABB* bbPtr = &bb;
-	float bbWidth  = AABB_Width(bbPtr);
-	float bbHeight = AABB_Height(bbPtr);
-	float bbLength = AABB_Length(bbPtr);
+	Entity_GetPickingBounds(entity, &bb);
+	bbWidth  = AABB_Width(&bb);
+	bbHeight = AABB_Height(&bb);
+	bbLength = AABB_Length(&bb);
 
-	float maxYZ  = max(bbHeight, bbLength);
-	float maxXYZ = max(bbWidth,  maxYZ);
-	pos.Y += AABB_Height(bbPtr) * 0.5f; /* Centre Y coordinate. */
+	maxYZ  = max(bbHeight, bbLength);
+	maxXYZ = max(bbWidth,  maxYZ);
+	pos.Y += bbHeight * 0.5f; /* Centre Y coordinate. */
 	return FrustumCulling_SphereInFrustum(pos.X, pos.Y, pos.Z, maxXYZ);
 }
 
@@ -95,13 +97,14 @@ float Model_RenderDistance(struct Entity* entity) {
 
 struct Matrix Model_transform;
 void Model_Render(struct Model* model, struct Entity* entity) {
+	struct Matrix m;
 	Vector3 pos = entity->Position;
 	if (model->Bobbing) pos.Y += entity->Anim.BobbingModel;
+
 	Model_SetupState(model, entity);
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 
 	model->GetTransform(entity, pos, &entity->Transform);
-	struct Matrix m;
 	Matrix_Mul(&m, &entity->Transform, &Gfx_View);
 
 	Gfx_LoadMatrix(&m);

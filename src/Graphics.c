@@ -322,6 +322,7 @@ void Gfx_SetFaceCulling(bool enabled) {
 void Gfx_SetFog(bool enabled) {
 	if (gfx_fogEnabled == enabled) return;
 	gfx_fogEnabled = enabled;
+
 	if (Gfx_LostContext) return;
 	D3D9_SetRenderState(D3DRS_FOGENABLE, enabled, "D3D9_SetFog");
 }
@@ -329,23 +330,28 @@ void Gfx_SetFog(bool enabled) {
 void Gfx_SetFogCol(PackedCol col) {
 	if (col.Packed == d3d9_fogCol) return;
 	d3d9_fogCol = col.Packed;
+
 	if (Gfx_LostContext) return;
 	D3D9_SetRenderState(D3DRS_FOGCOLOR, col.Packed, "D3D9_SetFogColour");
 }
 
 void Gfx_SetFogDensity(float value) {
+	union IntAndFloat raw;
 	if (value == d3d9_fogDensity) return;
 	d3d9_fogDensity = value;
+
 	if (Gfx_LostContext) return;
-	union IntAndFloat raw; raw.f = value;
+	raw.f = value;
 	D3D9_SetRenderState(D3DRS_FOGDENSITY, raw.u, "D3D9_SetFogDensity");
 }
 
 void Gfx_SetFogEnd(float value) {
+	union IntAndFloat raw;
 	if (value == d3d9_fogEnd) return;
 	d3d9_fogEnd = value;
+
 	if (Gfx_LostContext) return;
-	union IntAndFloat raw; raw.f = value;
+	raw.f = value;
 	D3D9_SetRenderState(D3DRS_FOGEND, raw.u, "D3D9_SetFogEnd");
 }
 
@@ -851,7 +857,7 @@ static void GL_DoMipmaps(GfxResourceID texId, int x, int y, Bitmap* bmp, bool pa
 }
 
 GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
-	uint32_t texId;
+	GLuint texId;
 	glGenTextures(1, &texId);
 	glBindTexture(GL_TEXTURE_2D, texId);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

@@ -116,8 +116,10 @@ static void InputHandler_CycleDistanceBackwards(int16_t* viewDists, int count) {
 }
 
 bool InputHandler_SetFOV(int fov, bool setZoom) {
+	struct HacksComp* h;
 	if (Game_Fov == fov) return true;
-	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
+
+	h = &LocalPlayer_Instance.Hacks;
 	if (!h->Enabled || !h->CanAnyHacks || !h->CanUseThirdPersonCamera) return false;
 
 	Game_Fov = fov;
@@ -127,8 +129,10 @@ bool InputHandler_SetFOV(int fov, bool setZoom) {
 }
 
 static bool InputHandler_DoFovZoom(float deltaPrecise) {
+	struct HacksComp* h;
 	if (!KeyBind_IsPressed(KeyBind_ZoomScrolling)) return false;
-	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
+
+	h = &LocalPlayer_Instance.Hacks;
 	if (!h->Enabled || !h->CanAnyHacks || !h->CanUseThirdPersonCamera) return false;
 
 	if (input_fovIndex == -1.0f) input_fovIndex = (float)Game_ZoomFov;
@@ -164,8 +168,7 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 		}
 	} else if (key == KeyBind_Get(KeyBind_IDOverlay)) {
 		if (Gui_OverlaysCount) return true;
-		struct Screen* overlay = TexIdsOverlay_MakeInstance();
-		Gui_ShowOverlay(overlay, false);
+		Gui_ShowOverlay(TexIdsOverlay_MakeInstance(), false);
 	} else if (key == KeyBind_Get(KeyBind_BreakableLiquids)) {
 		InputHandler_Toggle(key, &Game_BreakableLiquids,
 			"  &eBreakable liquids is &aenabled",
@@ -297,7 +300,7 @@ static bool InputHandler_CheckIsFree(BlockID block) {
 
 	/* NOTE: Need to also test against next position here, otherwise player can 
 	fall through the block at feet as collision is performed against nextPos */
-	Entity_GetBounds(&p, &playerBB);
+	Entity_GetBounds(p, &playerBB);
 	playerBB.Min.Y = min(nextPos.Y, playerBB.Min.Y);
 
 	if (hacks->Noclip || !AABB_Intersects(&playerBB, &blockBB)) return true;
@@ -448,8 +451,13 @@ static bool InputHandler_SimulateMouse(Key key, bool pressed) {
 }
 
 static void InputHandler_KeyDown(void* obj, int key) {
+	struct Screen* active;
+	int idx;
+	struct HotkeyData* hkey;
+	String text;
+
 	if (InputHandler_SimulateMouse(key, true)) return;
-	struct Screen* active = Gui_GetActiveScreen();
+	active = Gui_GetActiveScreen();
 
 	if (InputHandler_IsShutdown(key)) {
 		/* TODO: Do we need a separate exit function in Game class? */
@@ -460,11 +468,11 @@ static void InputHandler_KeyDown(void* obj, int key) {
 	} else if (InputHandler_HandleCoreKey(key)) {
 	} else if (LocalPlayer_HandlesKey(key)) {
 	} else {
-		int idx = Hotkeys_FindPartial(key);
+		idx = Hotkeys_FindPartial(key);
 		if (idx == -1) return;
 
-		struct HotkeyData* hkey = &HotkeysList[idx];
-		String text = StringsBuffer_UNSAFE_Get(&HotkeysText, hkey->TextIndex);
+		hkey = &HotkeysList[idx];
+		text = StringsBuffer_UNSAFE_Get(&HotkeysText, hkey->TextIndex);
 
 		if (!hkey->StaysOpen) {
 			Chat_Send(&text, false);
@@ -475,13 +483,14 @@ static void InputHandler_KeyDown(void* obj, int key) {
 }
 
 static void InputHandler_KeyUp(void* obj, int key) {
+	struct Screen* active;
 	if (InputHandler_SimulateMouse(key, false)) return;
 
 	if (key == KeyBind_Get(KeyBind_ZoomScrolling)) {
 		InputHandler_SetFOV(Game_DefaultFov, false);
 	}
 
-	struct Screen* active = Gui_GetActiveScreen();
+	active = Gui_GetActiveScreen();
 	Elem_HandlesKeyUp(active, key);
 }
 
