@@ -6,6 +6,7 @@
 #include "GraphicsCommon.h"
 #include "Graphics.h"
 #include "Entity.h"
+#include "Camera.h"
 
 #define UV_POS_MASK ((uint16_t)0x7FFF)
 #define UV_MAX ((uint16_t)0x8000)
@@ -79,7 +80,7 @@ static float Model_MinDist(float dist, float extent) {
 float Model_RenderDistance(struct Entity* entity) {
 	Vector3 pos     = entity->Position;
 	struct AABB* bb = &entity->ModelAABB;
-	Vector3 camPos  = Game_CurrentCameraPos;
+	Vector3 camPos  = Camera_CurrentPos;
 	float dx, dy, dz;
 
 	/* X and Z are already at centre of model */

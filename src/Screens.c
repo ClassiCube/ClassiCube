@@ -640,7 +640,8 @@ static void GeneratingScreen_EndGeneration(void) {
 
 	struct LocationUpdate update; LocationUpdate_MakePosAndOri(&update, p->Spawn, 0.0f, 0.0f, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
-	Game_CurrentCameraPos = Camera_Active->GetPosition(0.0f);
+
+	Camera_CurrentPos = Camera_Active->GetPosition(0.0f);
 	Event_RaiseVoid(&WorldEvents_MapLoaded);
 }
 

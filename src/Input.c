@@ -138,30 +138,33 @@ Key KeyBind_GetDefault(KeyBind binding) { return KeyBind_Defaults[binding]; }
 bool KeyBind_IsPressed(KeyBind binding) { return Key_Pressed[KeyBind_Keys[binding]]; }
 
 void KeyBind_Load(void) {
+	char nameBuffer[STRING_SIZE + 1];
+	String name = String_NT_Array(nameBuffer);
+	Key mapping;
 	int i;
-	for (i = 0; i < KeyBind_Count; i++) {
-		char nameBuffer[STRING_SIZE + 1];
-		String name = String_NT_Array(nameBuffer);
 
+	for (i = 0; i < KeyBind_Count; i++) {
+		name.length = 0;
 		String_Format1(&name, "key-%c", KeyBind_Names[i]);
 		name.buffer[name.length] = '\0';
 
-		Key mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Key_Names, Key_Count);
+		mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Key_Names, Key_Count);
 		if (mapping != Key_Escape) KeyBind_Keys[i] = mapping;
 	}
 	KeyBind_Keys[KeyBind_PauseOrExit] = Key_Escape;
 }
 
 void KeyBind_Save(void) {
-	int i;
 	char nameBuffer[STRING_SIZE];
 	String name = String_FromArray(nameBuffer);
+	String value;
+	int i;
 
 	for (i = 0; i < KeyBind_Count; i++) {
 		name.length = 0; 
 		String_Format1(&name, "key-%c", KeyBind_Names[i]);
 
-		String value = String_FromReadonly(Key_Names[KeyBind_Keys[i]]);
+		value = String_FromReadonly(Key_Names[KeyBind_Keys[i]]);
 		Options_SetString(&name, &value);
 	}
 }
@@ -239,7 +242,8 @@ static void Hotkeys_AddNewHotkey(Key trigger, uint8_t flags, const String* text,
 }
 
 static void Hotkeys_RemoveText(int index) {
-	int i; struct HotkeyData* hKey = HotkeysList;
+	 struct HotkeyData* hKey = HotkeysList;
+	 int i;
 
 	for (i = 0; i < HotkeysText.Count; i++, hKey++) {
 		if (hKey->TextIndex >= index) hKey->TextIndex--;
@@ -249,7 +253,8 @@ static void Hotkeys_RemoveText(int index) {
 
 
 void Hotkeys_Add(Key trigger, HotkeyFlags flags, const String* text, bool more) {
-	int i; struct HotkeyData* hKey = HotkeysList;
+	struct HotkeyData* hKey = HotkeysList;
+	int i;
 
 	for (i = 0; i < HotkeysText.Count; i++, hKey++) {		
 		if (hKey->Trigger != trigger || hKey->Flags != flags) continue;
@@ -264,7 +269,8 @@ void Hotkeys_Add(Key trigger, HotkeyFlags flags, const String* text, bool more) 
 }
 
 bool Hotkeys_Remove(Key trigger, HotkeyFlags flags) {
-	int i, j; struct HotkeyData* hKey = HotkeysList;
+	struct HotkeyData* hKey = HotkeysList;
+	int i, j;
 
 	for (i = 0; i < HotkeysText.Count; i++, hKey++) {
 		if (hKey->Trigger != trigger || hKey->Flags != flags) continue;
@@ -279,14 +285,15 @@ bool Hotkeys_Remove(Key trigger, HotkeyFlags flags) {
 }
 
 int Hotkeys_FindPartial(Key key) {
-	int flags = 0;
+	struct HotkeyData hKey;
+	int i, flags = 0;
+
 	if (Key_IsControlPressed()) flags |= HOTKEY_FLAG_CTRL;
 	if (Key_IsShiftPressed())   flags |= HOTKEY_FLAG_SHIFT;
 	if (Key_IsAltPressed())     flags |= HOTKEY_FLAG_ALT;
 
-	int i;
 	for (i = 0; i < HotkeysText.Count; i++) {
-		struct HotkeyData hKey = HotkeysList[i];
+		hKey = HotkeysList[i];
 		/* e.g. if holding Ctrl and Shift, a hotkey with only Ctrl flags matches */
 		if ((hKey.Flags & flags) == hKey.Flags && hKey.Trigger == key) return i;
 	}
@@ -294,27 +301,32 @@ int Hotkeys_FindPartial(Key key) {
 }
 
 void Hotkeys_Init(void) {
-	String prefix = String_FromConst("hotkey-");
+	static String prefix = String_FromConst("hotkey-");
+	String strKey, strMods, strMore, strText;
+	String key, value;
 	int i;
 
+	Key trigger;
+	uint8_t modifiers;
+	bool more;
+
 	for (i = 0; i < Options_Keys.Count; i++) {
-		String key = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
+		key = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
 		if (!String_CaselessStarts(&key, &prefix)) continue;
 
-		/* key&modifiers = more-input&text */
+		/* Format is: key&modifiers = more-input&text */
 		key.length -= prefix.length; key.buffer += prefix.length;
-		String value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
-
-		String strKey, strFlags, strMore, strText;
-		if (!String_UNSAFE_Separate(&key,   '&', &strKey, &strFlags)) continue;
+		value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
+	
+		if (!String_UNSAFE_Separate(&key,   '&', &strKey,  &strMods)) continue;
 		if (!String_UNSAFE_Separate(&value, '&', &strMore, &strText)) continue;
 
-		Key hotkey = Utils_ParseEnum(&strKey, Key_None, Key_Names, Array_Elems(Key_Names));
-		uint8_t flags; bool more;
-		if (hotkey == Key_None || !Convert_TryParseUInt8(&strFlags, &flags) 
-			|| !Convert_TryParseBool(&strMore, &more)) { continue; }
+		trigger = Utils_ParseEnum(&strKey, Key_None, Key_Names, Array_Elems(Key_Names));
+		if (trigger == Key_None) continue; 
+		if (!Convert_TryParseUInt8(&strMods, &modifiers)) continue;
+		if (!Convert_TryParseBool(&strMore,  &more))      continue;
 
-		Hotkeys_Add(hotkey, flags, &strText, more);
+		Hotkeys_Add(trigger, modifiers, &strText, more);
 	}
 }
 

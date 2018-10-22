@@ -12,6 +12,8 @@ struct Camera;
 struct Matrix Camera_TiltM;
 /* Bobbing offset of camera from player's eye. */
 float Camera_BobbingVer, Camera_BobbingHor;
+/* Cached position the camera is at */
+Vector3 Camera_CurrentPos;
 
 struct Camera {
 	/* Whether this camera is third person. (i.e. not allowed when -thirdperson in MOTD) */

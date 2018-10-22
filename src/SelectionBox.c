@@ -5,6 +5,7 @@
 #include "Event.h"
 #include "Funcs.h"
 #include "Game.h"
+#include "Camera.h"
 
 /* Data for a selection box. */
 struct SelectionBox {
@@ -175,7 +176,7 @@ void Selections_Render(double delta) {
 
 	/* TODO: Proper selection box sorting. But this is very difficult because
 	   we can have boxes within boxes, intersecting boxes, etc. Probably not worth it. */
-	cameraPos = Game_CurrentCameraPos;
+	cameraPos = Camera_CurrentPos;
 	for (i = 0; i < selections_count; i++) {
 		SelectionBox_Intersect(&selections_list[i], cameraPos);
 	}

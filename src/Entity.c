@@ -172,17 +172,17 @@ void Entity_UpdateModelBounds(struct Entity* e) {
 
 bool Entity_TouchesAny(struct AABB* bounds, Entity_TouchesCondition condition) {
 	Vector3I bbMin, bbMax;
+	BlockID block;
+	struct AABB blockBB;
+	Vector3 v;
+	int x, y, z;
+
 	Vector3I_Floor(&bbMin, &bounds->Min);
 	Vector3I_Floor(&bbMax, &bounds->Max);
 
 	bbMin.X = max(bbMin.X, 0); bbMax.X = min(bbMax.X, World_MaxX);
 	bbMin.Y = max(bbMin.Y, 0); bbMax.Y = min(bbMax.Y, World_MaxY);
 	bbMin.Z = max(bbMin.Z, 0); bbMax.Z = min(bbMax.Z, World_MaxZ);
-
-	BlockID block;
-	struct AABB blockBB;
-	Vector3 v;
-	int x, y, z;
 
 	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (float)y;
 		for (z = bbMin.Z; z <= bbMax.Z; z++) { v.Z = (float)z;
@@ -381,6 +381,7 @@ EntityID Entities_GetCloset(struct Entity* src) {
 }
 
 void Entities_DrawShadows(void) {
+	int i;
 	if (Entities_ShadowMode == SHADOW_MODE_NONE) return;
 	ShadowComponent_BoundShadowTex = false;
 
@@ -391,8 +392,8 @@ void Entities_DrawShadows(void) {
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	ShadowComponent_Draw(Entities_List[ENTITIES_SELF_ID]);
-	if (Entities_ShadowMode == SHADOW_MODE_CIRCLE_ALL) {
-		int i;
+
+	if (Entities_ShadowMode == SHADOW_MODE_CIRCLE_ALL) {	
 		for (i = 0; i < ENTITIES_SELF_ID; i++) {
 			if (!Entities_List[i]) continue;
 			if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
@@ -932,11 +933,13 @@ void LocalPlayer_Init(void) {
 
 static bool LocalPlayer_IsSolidCollide(BlockID b) { return Block_Collide[b] == COLLIDE_SOLID; }
 static void LocalPlayer_DoRespawn(void) {
-	if (!World_Blocks) return;
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	Vector3 spawn = p->Spawn;
-	Vector3I P; Vector3I_Floor(&P, &spawn);
+	Vector3I P;
 	struct AABB bb;
+
+	if (!World_Blocks) return;
+	Vector3I_Floor(&P, &spawn);	
 
 	/* Spawn player at highest valid position */
 	if (World_IsValidPos_3I(P)) {

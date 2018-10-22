@@ -22,11 +22,13 @@ double held_time, held_period = 0.25;
 BlockID held_lastBlock;
 
 static void HeldBlockRenderer_RenderModel(void) {
+	static String block = String_FromConst("block");
+	struct Model* model;
+
 	Gfx_SetFaceCulling(true);
 	Gfx_SetTexturing(true);
 	Gfx_SetDepthTest(false);
-
-	struct Model* model;
+	
 	if (Block_Draw[held_block] == DRAW_GAS) {
 		model = LocalPlayer_Instance.Base.Model;
 		held_entity.ModelScale = Vector3_Create1(1.0f);
@@ -34,8 +36,7 @@ static void HeldBlockRenderer_RenderModel(void) {
 		Gfx_SetAlphaTest(true);
 		Model_RenderArm(model, &held_entity);
 		Gfx_SetAlphaTest(false);
-	} else {
-		String block = String_FromConst("block");
+	} else {	
 		model = ModelCache_Get(&block);
 		held_entity.ModelScale = Vector3_Create1(0.4f);
 

@@ -36,15 +36,16 @@ bool InputHandler_IsMousePressed(MouseButton button) {
 }
 
 static void InputHandler_ButtonStateUpdate(MouseButton button, bool pressed) {
-	/* defer getting the targeted entity as it's a costly operation */
+	struct Entity* p;
+	/* defer getting the targeted entity, as it's a costly operation */
 	if (input_pickingId == -1) {
-		struct Entity* p = &LocalPlayer_Instance.Base;
+		p = &LocalPlayer_Instance.Base;
 		input_pickingId = Entities_GetCloset(p);
 	}
 
-	EntityID id = (EntityID)input_pickingId;
-	ServerConnection_SendPlayerClick(button, pressed, id, &Game_SelectedPos);
 	input_buttonsDown[button] = pressed;
+	ServerConnection_SendPlayerClick(button, pressed, 
+									(EntityID)input_pickingId, &Game_SelectedPos);	
 }
 
 static void InputHandler_ButtonStateChanged(MouseButton button, bool pressed) {
@@ -176,7 +177,7 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 }
 
 static bool InputHandler_HandleCoreKey(Key key) {
-	struct Screen* activeScreen = Gui_GetActiveScreen();
+	struct Screen* active = Gui_GetActiveScreen();
 
 	if (key == KeyBind_Get(KeyBind_HideFps)) {
 		Game_ShowFPS = !Game_ShowFPS;
@@ -195,10 +196,10 @@ static bool InputHandler_HandleCoreKey(Key key) {
 		} else {
 			InputHandler_CycleDistanceForwards(viewDists, count);
 		}
-	} else if ((key == KeyBind_Get(KeyBind_PauseOrExit) || key == Key_Pause) && !activeScreen->HandlesAllInput) {
+	} else if ((key == KeyBind_Get(KeyBind_PauseOrExit) || key == Key_Pause) && !active->HandlesAllInput) {
 		Gui_FreeActive();
 		Gui_SetActive(PauseScreen_MakeInstance());
-	} else if (key == KeyBind_Get(KeyBind_Inventory) && activeScreen == Gui_HUD) {
+	} else if (key == KeyBind_Get(KeyBind_Inventory) && active == Gui_HUD) {
 		Gui_FreeActive();
 		Gui_SetActive(InventoryScreen_MakeInstance());
 	} else if (key == Key_F5 && Game_ClassicMode) {
@@ -213,9 +214,12 @@ static bool InputHandler_HandleCoreKey(Key key) {
 
 static bool InputHandler_TouchesSolid(BlockID b) { return Block_Collide[b] == COLLIDE_SOLID; }
 static bool InputHandler_PushbackPlace(struct AABB* blockBB) {
-	struct Entity* p = &LocalPlayer_Instance.Base;
+	struct Entity* p        = &LocalPlayer_Instance.Base;
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+
 	Vector3 curPos = p->Position, adjPos = p->Position;
+	struct AABB playerBB;
+	struct LocationUpdate update;
 
 	/* Offset position by the closest face */
 	Face closestFace = Game_SelectedPos.ClosestFace;
@@ -233,27 +237,29 @@ static bool InputHandler_PushbackPlace(struct AABB* blockBB) {
 		adjPos.Y = blockBB->Min.Y - p->Size.Y - ENTITY_ADJUSTMENT;
 	}
 
-	/* exclude exact map boundaries, otherwise player can get stuck outside map */
-	bool validPos =
+	/* Exclude exact map boundaries, otherwise player can get stuck outside map */
+	/* Being vertically above the map is acceptable though */
+	bool insideMap =
 		adjPos.X > 0.0f && adjPos.Y >= 0.0f && adjPos.Z > 0.0f &&
 		adjPos.X < World_Width && adjPos.Z < World_Length;
-	if (!validPos) return false;
+	if (!insideMap) return false;
 
 	p->Position = adjPos;
-	struct AABB bounds; Entity_GetBounds(p, &bounds);
-	if (!hacks->Noclip && Entity_TouchesAny(&bounds, InputHandler_TouchesSolid)) {
-		p->Position = curPos;
+	Entity_GetBounds(p, &playerBB);
+	p->Position = curPos;
+
+	if (!hacks->Noclip && Entity_TouchesAny(&playerBB, InputHandler_TouchesSolid)) {
+		/* Don't put player inside another block */
 		return false;
 	}
 
-	p->Position = curPos;
-	struct LocationUpdate update; LocationUpdate_MakePos(&update, adjPos, false);
+	LocationUpdate_MakePos(&update, adjPos, false);
 	p->VTABLE->SetLocation(p, &update, false);
 	return true;
 }
 
 static bool InputHandler_IntersectsOthers(Vector3 pos, BlockID block) {
-	struct AABB blockBB, bounds;
+	struct AABB blockBB, entityBB;
 	struct Entity* entity;
 	int id;
 
@@ -264,42 +270,47 @@ static bool InputHandler_IntersectsOthers(Vector3 pos, BlockID block) {
 		entity = Entities_List[id];
 		if (!entity) continue;
 
-		Entity_GetBounds(entity, &bounds);
-		bounds.Min.Y += 1.0f / 32.0f; /* when player is exactly standing on top of ground */
-		if (AABB_Intersects(&bounds, &blockBB)) return true;
+		Entity_GetBounds(entity, &entityBB);
+		entityBB.Min.Y += 1.0f / 32.0f; /* when player is exactly standing on top of ground */
+		if (AABB_Intersects(&entityBB, &blockBB)) return true;
 	}
 	return false;
 }
 
 static bool InputHandler_CheckIsFree(BlockID block) {
-	Vector3 pos; Vector3I_ToVector3(&pos, &Game_SelectedPos.TranslatedPos);
-	struct Entity* p = &LocalPlayer_Instance.Base;
+	struct Entity* p        = &LocalPlayer_Instance.Base;
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 
-	if (Block_Collide[block] != COLLIDE_SOLID) return true;
-	if (InputHandler_IntersectsOthers(pos, block)) return false;
-	Vector3 nextPos = LocalPlayer_Instance.Interp.Next.Pos;
+	Vector3 pos, nextPos;
+	struct AABB blockBB, playerBB;
+	struct LocationUpdate update;
 
-	struct AABB blockBB;
+	/* Non solid blocks (e.g. water/flowers) can always be placed on players */
+	if (Block_Collide[block] != COLLIDE_SOLID) return true;
+
+	Vector3I_ToVector3(&pos, &Game_SelectedPos.TranslatedPos);
+	if (InputHandler_IntersectsOthers(pos, block)) return false;
+	
+	nextPos = LocalPlayer_Instance.Interp.Next.Pos;
 	Vector3_Add(&blockBB.Min, &pos, &Block_MinBB[block]);
 	Vector3_Add(&blockBB.Max, &pos, &Block_MaxBB[block]);
 
-	/* NOTE: Need to also test against nextPos here, otherwise player can 
+	/* NOTE: Need to also test against next position here, otherwise player can 
 	fall through the block at feet as collision is performed against nextPos */
-	struct AABB localBB; AABB_Make(&localBB, &p->Position, &p->Size);
-	localBB.Min.Y = min(nextPos.Y, localBB.Min.Y);
+	Entity_GetBounds(&p, &playerBB);
+	playerBB.Min.Y = min(nextPos.Y, playerBB.Min.Y);
 
-	if (hacks->Noclip || !AABB_Intersects(&localBB, &blockBB)) return true;
+	if (hacks->Noclip || !AABB_Intersects(&playerBB, &blockBB)) return true;
 	if (hacks->CanPushbackBlocks && hacks->PushbackPlacing && hacks->Enabled) {
 		return InputHandler_PushbackPlace(&blockBB);
 	}
 
-	localBB.Min.Y += 0.25f + ENTITY_ADJUSTMENT;
-	if (AABB_Intersects(&localBB, &blockBB)) return false;
+	playerBB.Min.Y += 0.25f + ENTITY_ADJUSTMENT;
+	if (AABB_Intersects(&playerBB, &blockBB)) return false;
 
 	/* Push player upwards when they are jumping and trying to place a block underneath them */
 	nextPos.Y = pos.Y + Block_MaxBB[block].Y + ENTITY_ADJUSTMENT;
-	struct LocationUpdate update; LocationUpdate_MakePos(&update, nextPos, false);
+	LocationUpdate_MakePos(&update, nextPos, false);
 	p->VTABLE->SetLocation(p, &update, false);
 	return true;
 }
@@ -385,9 +396,10 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 
 static void InputHandler_MouseWheel(void* obj, float delta) {
 	struct Screen* active = Gui_GetActiveScreen();
+	bool hotbar;
 	if (Elem_HandlesMouseScroll(active, delta)) return;
 
-	bool hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
+	hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
 	if (!hotbar && Camera_Active->Zoom(delta)) return;
 	if (InputHandler_DoFovZoom(delta) || !Inventory_CanChangeHeldBlock) return;
 
@@ -426,9 +438,10 @@ static bool InputHandler_SimulateMouse(Key key, bool pressed) {
 	Key left   = KeyBind_Get(KeyBind_MouseLeft);
 	Key middle = KeyBind_Get(KeyBind_MouseMiddle);
 	Key right  = KeyBind_Get(KeyBind_MouseRight);
+	MouseButton btn;
 	if (!(key == left || key == middle || key == right)) return false;
 
-	MouseButton btn = key == left ? MouseButton_Left : key == middle ? MouseButton_Middle : MouseButton_Right;
+	btn = key == left ? MouseButton_Left : key == middle ? MouseButton_Middle : MouseButton_Right;
 	if (pressed) { InputHandler_MouseDown(NULL, btn); }
 	else {         InputHandler_MouseUp(NULL,   btn); }
 	return true;
@@ -478,7 +491,7 @@ static void InputHandler_KeyPress(void* obj, int keyChar) {
 }
 
 void InputHandler_Init(void) {
-	Event_RegisterFloat(&MouseEvents_Wheel,      NULL, InputHandler_MouseWheel);
+	Event_RegisterFloat(&MouseEvents_Wheel,     NULL, InputHandler_MouseWheel);
 	Event_RegisterMouseMove(&MouseEvents_Moved, NULL, InputHandler_MouseMove);
 	Event_RegisterInt(&MouseEvents_Down,        NULL, InputHandler_MouseDown);
 	Event_RegisterInt(&MouseEvents_Up,          NULL, InputHandler_MouseUp);

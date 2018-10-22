@@ -65,8 +65,6 @@ int  Game_SoundsVolume;
 int  Game_MusicVolume;
 bool Game_BreakableLiquids;
 int  Game_MaxChunkUpdates;
-
-Vector3 Game_CurrentCameraPos;
 bool Game_ScreenshotRequested;
 
 float Game_RawHotbarScale, Game_RawChatScale, Game_RawInventoryScale;

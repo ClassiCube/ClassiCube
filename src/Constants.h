@@ -18,8 +18,10 @@
 #define CHUNK_SIZE_2 (CHUNK_SIZE * CHUNK_SIZE)
 #define CHUNK_SIZE_3 (CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE)
 
-/* Maximum index in /mask for a chunk. */
 #define CHUNK_MAX 15
+/* Local index in a chunk for a coordinate */
+#define CHUNK_MASK 15
+/* Chunk index for a coordinate */
 #define CHUNK_SHIFT 4
 
 /* Chunk axis length (plus neighbours) in blocks. */

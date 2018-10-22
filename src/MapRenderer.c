@@ -4,7 +4,7 @@
 #include "Graphics.h"
 #include "EnvRenderer.h"
 #include "World.h"
-#include "Vectors.h"
+#include "Camera.h"
 #include "ChunkUpdater.h"
 bool inTranslucent;
 
@@ -13,22 +13,24 @@ struct ChunkInfo* MapRenderer_GetChunk(int cx, int cy, int cz) {
 }
 
 void MapRenderer_RefreshChunk(int cx, int cy, int cz) {
+	struct ChunkInfo* info;
 	if (cx < 0 || cy < 0 || cz < 0 || cx >= MapRenderer_ChunksX 
 		|| cy >= MapRenderer_ChunksY || cz >= MapRenderer_ChunksZ) return;
 
-	struct ChunkInfo* info = &MapRenderer_Chunks[MapRenderer_Pack(cx, cy, cz)];
+	info = &MapRenderer_Chunks[MapRenderer_Pack(cx, cy, cz)];
 	if (info->AllAir) return; /* do not recreate chunks completely air */
 	info->Empty         = false;
 	info->PendingDelete = true;
 }
 
 static void MapRenderer_CheckWeather(double delta) {
-	Vector3 pos = Game_CurrentCameraPos;
-	Vector3I coords;
-	Vector3I_Floor(&coords, &pos);
+	Vector3I pos;
+	BlockID block;
+	bool outside;
+	Vector3I_Floor(&pos, &Camera_CurrentPos);
 
-	BlockID block = World_SafeGetBlock_3I(coords);
-	bool outside = coords.X < 0 || coords.Y < 0 || coords.Z < 0 || coords.X >= World_Width || coords.Z >= World_Length;
+	block   = World_SafeGetBlock_3I(pos);
+	outside = pos.X < 0 || pos.Y < 0 || pos.Z < 0 || pos.X >= World_Width || pos.Z >= World_Length;
 	inTranslucent = Block_Draw[block] == DRAW_TRANSLUCENT || (pos.Y < Env_EdgeHeight && outside);
 
 	/* If we are under water, render weather before to blend properly */
@@ -39,12 +41,14 @@ static void MapRenderer_CheckWeather(double delta) {
 }
 
 static void MapRenderer_RenderNormalBatch(int batch) {
-	int i, offset = MapRenderer_ChunksCount * batch;
+	int batchOffset = MapRenderer_ChunksCount * batch;
+	int i, offset, count;
+
 	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
 		struct ChunkInfo* info = MapRenderer_RenderChunks[i];
 		if (!info->NormalParts) continue;
 
-		struct ChunkPartInfo part = info->NormalParts[offset];
+		struct ChunkPartInfo part = info->NormalParts[batchOffset];
 		if (part.Offset < 0) continue;
 		MapRenderer_HasNormalParts[batch] = true;
 
@@ -60,7 +64,7 @@ static void MapRenderer_RenderNormalBatch(int batch) {
 		bool drawZMin = info->DrawZMin && part.Counts[FACE_ZMIN];
 		bool drawZMax = info->DrawZMax && part.Counts[FACE_ZMAX];
 
-		int offset = part.Offset + part.SpriteCount;
+		offset = part.Offset + part.SpriteCount;
 		if (drawXMin && drawXMax) {
 			Gfx_SetFaceCulling(true);
 			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_XMIN] + part.Counts[FACE_XMAX], offset);
@@ -104,7 +108,7 @@ static void MapRenderer_RenderNormalBatch(int batch) {
 
 		if (!part.SpriteCount) continue;
 		offset = part.Offset;
-		int count = part.SpriteCount >> 2; /* 4 per sprite */
+		count  = part.SpriteCount >> 2; /* 4 per sprite */
 
 		Gfx_SetFaceCulling(true);
 		if (info->DrawXMax || info->DrawZMin) {
@@ -154,12 +158,14 @@ void MapRenderer_RenderNormal(double delta) {
 }
 
 static void MapRenderer_RenderTranslucentBatch(int batch) {
-	int i, offset = MapRenderer_ChunksCount * batch;
+	int batchOffset = MapRenderer_ChunksCount * batch;
+	int i, offset;
+
 	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
 		struct ChunkInfo* info = MapRenderer_RenderChunks[i];
 		if (!info->TranslucentParts) continue;
 
-		struct ChunkPartInfo part = info->TranslucentParts[offset];
+		struct ChunkPartInfo part = info->TranslucentParts[batchOffset];
 		if (part.Offset < 0) continue;
 		MapRenderer_HasTranslucentParts[batch] = true;
 
@@ -175,7 +181,7 @@ static void MapRenderer_RenderTranslucentBatch(int batch) {
 		bool drawZMin = (inTranslucent || info->DrawZMin) && part.Counts[FACE_ZMIN];
 		bool drawZMax = (inTranslucent || info->DrawZMax) && part.Counts[FACE_ZMAX];
 
-		int offset = part.Offset;
+		offset = part.Offset;
 		if (drawXMin && drawXMax) {
 			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_XMIN] + part.Counts[FACE_XMAX], offset);
 			Game_Vertices += (part.Counts[FACE_XMIN] + part.Counts[FACE_XMAX]);

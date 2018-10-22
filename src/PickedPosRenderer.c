@@ -7,17 +7,18 @@
 #include "Event.h"
 #include "Picking.h"
 #include "Funcs.h"
+#include "Camera.h"
 
 GfxResourceID pickedPos_vb;
-#define pickedPos_numVertices (16 * 6)
-VertexP3fC4b pickedPos_vertices[pickedPos_numVertices];
+#define PICKEDPOS_NUM_VERTICES (16 * 6)
+VertexP3fC4b pickedPos_vertices[PICKEDPOS_NUM_VERTICES];
 
 static void PickedPosRenderer_ContextLost(void* obj) {
 	Gfx_DeleteVb(&pickedPos_vb);
 }
 
 static void PickedPosRenderer_ContextRecreated(void* obj) {
-	pickedPos_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, pickedPos_numVertices);
+	pickedPos_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, PICKEDPOS_NUM_VERTICES);
 }
 
 static void PickedPosRenderer_Init(void) {
@@ -39,26 +40,29 @@ void PickedPosRenderer_Render(double delta) {
 	Gfx_SetDepthWrite(false);
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
 
-	GfxCommon_UpdateDynamicVb_IndexedTris(pickedPos_vb, pickedPos_vertices, pickedPos_numVertices);
+	GfxCommon_UpdateDynamicVb_IndexedTris(pickedPos_vb, pickedPos_vertices, PICKEDPOS_NUM_VERTICES);
 	Gfx_SetDepthWrite(true);
 	Gfx_SetAlphaBlending(false);
 }
 
 void PickedPosRenderer_Update(struct PickedPos* selected) {
 	Vector3 delta;
-	Vector3_Sub(&delta, &Game_CurrentCameraPos, &selected->Min);
-	float dist = Vector3_LengthSquared(&delta);
+	float dist, offset, size;
+	Vector3 coords[4];
 
-	float offset = 0.01f;
+	Vector3_Sub(&delta, &Camera_CurrentPos, &selected->Min);
+	dist = Vector3_LengthSquared(&delta);
+
+	offset = 0.01f;
 	if (dist < 4.0f * 4.0f) offset = 0.00625f;
 	if (dist < 2.0f * 2.0f) offset = 0.00500f;
 
-	float size = 1.0f / 16.0f;
-	if (dist < 32.0f * 32.0f) size = 1.0f / 32.0f;
-	if (dist < 16.0f * 16.0f) size = 1.0f / 64.0f;
-	if (dist <  8.0f *  8.0f) size = 1.0f / 96.0f;
-	if (dist <  4.0f *  4.0f) size = 1.0f / 128.0f;
-	if (dist <  2.0f *  2.0f) size = 1.0f / 192.0f;
+	size = 1.0f/16.0f;
+	if (dist < 32.0f * 32.0f) size = 1.0f/32.0f;
+	if (dist < 16.0f * 16.0f) size = 1.0f/64.0f;
+	if (dist <  8.0f *  8.0f) size = 1.0f/96.0f;
+	if (dist <  4.0f *  4.0f) size = 1.0f/128.0f;
+	if (dist <  2.0f *  2.0f) size = 1.0f/192.0f;
 	
 	/*  How a face is laid out: 
 	                 #--#-------#--#<== OUTER_MAX (3)
@@ -74,7 +78,6 @@ void PickedPosRenderer_Update(struct PickedPos* selected) {
 	- these are used to fake thick lines, by making the lines appear slightly inset
 	- note: actual difference between inner and outer is much smaller then the diagram
 	*/
-	Vector3 coords[4];
 	Vector3_Add1(&coords[0], &selected->Min, -offset);
 	Vector3_Add1(&coords[1], &coords[0],      size);
 	Vector3_Add1(&coords[3], &selected->Max,  offset);

@@ -111,25 +111,29 @@ bool Utils_IsValidInputChar(char c, bool supportsCP437) {
 }
 
 bool Utils_IsUrlPrefix(const String* value, int index) {
-	String http  = String_FromConst("http://");
-	String https = String_FromConst("https://");
+	static String http  = String_FromConst("http://");
+	static String https = String_FromConst("https://");
+
 	return String_IndexOfString(value, &http)  == index
 		|| String_IndexOfString(value, &https) == index;
 }
 
 bool Utils_EnsureDirectory(const char* dirName) {
 	String dir = String_FromReadonly(dirName);
+	ReturnCode res;
 	if (Directory_Exists(&dir)) return true;
 
-	ReturnCode res = Directory_Create(&dir);
+	res = Directory_Create(&dir);
 	if (res) { Chat_LogError2(res, "creating directory", &dir); }
 	return res == 0;
 }
 
 void Utils_UNSAFE_GetFilename(STRING_REF String* path) {
+	char c;
 	int i;
+
 	for (i = path->length - 1; i >= 0; i--) {
-		char c = path->buffer[i];
+		c = path->buffer[i];
 		if (c == '/' || c == '\\') { 
 			*path = String_UNSAFE_SubstringAt(path, i + 1); return; 
 		}

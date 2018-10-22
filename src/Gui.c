@@ -239,24 +239,30 @@ void Gui_CalcCursorVisible(void) {
 *-------------------------------------------------------TextAtlas---------------------------------------------------------*
 *#########################################################################################################################*/
 void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const FontDesc* font, const String* prefix) {
-	struct DrawTextArgs args; DrawTextArgs_Make(&args, prefix, font, true);
-	Size2D size = Drawer2D_MeasureText(&args);
+	struct DrawTextArgs args; 
+	Size2D size;
+	Bitmap bmp;
+	int i;
+
+	DrawTextArgs_Make(&args, prefix, font, true);
+	size = Drawer2D_MeasureText(&args);
+
 	atlas->Offset   = size.Width;
 	atlas->FontSize = font->Size;
 	size.Width += 16 * chars->length;
 
 	Mem_Set(atlas->Widths, 0, sizeof(atlas->Widths));
-	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+	Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	{
-		Drawer2D_DrawText(&bmp, &args, 0, 0);
-		int i;
+		Drawer2D_DrawText(&bmp, &args, 0, 0);		
 		for (i = 0; i < chars->length; i++) {
 			args.Text = String_UNSAFE_Substring(chars, i, 1);
 			atlas->Widths[i] = Drawer2D_MeasureText(&args).Width;
+
 			Drawer2D_DrawText(&bmp, &args, atlas->Offset + font->Size * i, 0);
 		}
-	}
-	Drawer2D_Make2DTexture(&atlas->Tex, &bmp, size, 0, 0);
+		Drawer2D_Make2DTexture(&atlas->Tex, &bmp, size, 0, 0);
+	}	
 	Mem_Free(bmp.Scan0);
 
 	Drawer2D_ReducePadding_Tex(&atlas->Tex, Math_Floor(font->Size), 4);

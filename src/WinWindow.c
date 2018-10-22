@@ -466,7 +466,7 @@ void Window_GetClipboardText(String* value) {
 }
 
 void Window_SetClipboardText(const String* value) {
-	/* retry up to 10 times*/
+	/* retry up to 10 times */
 	int i;
 	for (i = 0; i < 10; i++) {
 		if (!OpenClipboard(win_Handle)) {

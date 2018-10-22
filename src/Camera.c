@@ -21,7 +21,7 @@ static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
 }
 
 static void PerspectiveCamera_GetView(struct Matrix* mat) {
-	Vector3 pos = Game_CurrentCameraPos;
+	Vector3 pos = Camera_CurrentPos;
 	Vector2 rot = Camera_Active->GetOrientation();
 	Matrix_LookRot(mat, pos, rot);
 	Matrix_MulBy(mat, &Camera_TiltM);
@@ -77,24 +77,26 @@ static Vector2 PerspectiveCamera_GetMouseDelta(void) {
 }
 
 static void PerspectiveCamera_UpdateMouseRotation(void) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct Entity* e      = &p->Base;
+
+	struct LocationUpdate update;
+	float headY, headX;
 	Vector2 rot = PerspectiveCamera_GetMouseDelta();
+
 	if (Key_IsAltPressed() && Camera_Active->IsThirdPerson) {
 		cam_rotOffset.X += rot.X; cam_rotOffset.Y += rot.Y;
 		return;
 	}
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-
-	float headY = p->Interp.Next.HeadY + rot.X;
-	float headX = p->Interp.Next.HeadX + rot.Y;
-	struct LocationUpdate update;
+	
+	headY = p->Interp.Next.HeadY + rot.X;
+	headX = p->Interp.Next.HeadX + rot.Y;
 	LocationUpdate_MakeOri(&update, headY, headX);
 
 	/* Need to make sure we don't cross the vertical axes, because that gets weird. */
 	if (update.HeadX >= 90.0f && update.HeadX <= 270.0f) {
 		update.HeadX = p->Interp.Next.HeadX < 180.0f ? 90.0f : 270.0f;
 	}
-
-	struct Entity* e = &p->Base;
 	e->VTABLE->SetLocation(e, &update, false);
 }
 
@@ -113,10 +115,12 @@ static void PerspectiveCamera_UpdateMouse(void) {
 }
 
 static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
-	if (!Game_ViewBobbing) { Camera_TiltM = Matrix_Identity; return; }
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct Entity* e = &p->Base;
+
 	struct Matrix Camera_tiltY, Camera_velX;
+	float vel;
+	if (!Game_ViewBobbing) { Camera_TiltM = Matrix_Identity; return; }
 
 	Matrix_RotateZ(&Camera_TiltM, -p->Tilt.TiltX                  * e->Anim.BobStrength);
 	Matrix_RotateX(&Camera_tiltY, Math_AbsF(p->Tilt.TiltY) * 3.0f * e->Anim.BobStrength);
@@ -125,7 +129,7 @@ static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
 	Camera_BobbingHor = (e->Anim.BobbingHor * 0.3f) * e->Anim.BobStrength;
 	Camera_BobbingVer = (e->Anim.BobbingVer * 0.6f) * e->Anim.BobStrength;
 
-	float vel = Math_Lerp(p->OldVelocity.Y + 0.08f, e->Velocity.Y + 0.08f, t);
+	vel = Math_Lerp(p->OldVelocity.Y + 0.08f, e->Velocity.Y + 0.08f, t);
 	Matrix_RotateX(&Camera_velX, -vel * 0.05f * p->Tilt.VelTiltStrength / velTiltScale);
 	Matrix_MulBy(&Camera_TiltM, &Camera_velX);
 }
@@ -180,15 +184,17 @@ static Vector2 ThirdPersonCamera_GetOrientation(void) {
 }
 
 static Vector3 ThirdPersonCamera_GetPosition(float t) {
-	float dist = cam_isForwardThird ? dist_forward : dist_third;
-	PerspectiveCamera_CalcViewBobbing(t, dist);
-
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vector3 target   = Entity_GetEyePosition(p);
+	float dist = cam_isForwardThird ? dist_forward : dist_third;
+	Vector3 target, dir;
+	Vector2 rot;
+
+	PerspectiveCamera_CalcViewBobbing(t, dist);
+	target = Entity_GetEyePosition(p);
 	target.Y += Camera_BobbingVer;
 
-	Vector2 rot = Camera_Active->GetOrientation();
-	Vector3 dir = Vector3_GetDirVector(rot.X, rot.Y);
+	rot = Camera_Active->GetOrientation();
+	dir = Vector3_GetDirVector(rot.X, rot.Y);
 	Vector3_Negate(&dir, &dir);
 
 	Picking_ClipCameraPos(target, dir, dist, &Game_CameraClipPos);

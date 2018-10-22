@@ -7,10 +7,10 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-enum ANCHOR {
+enum GuiAnchor {
 	ANCHOR_MIN,    /* Left or top */
 	ANCHOR_CENTRE, /* Middle */
-	ANCHOR_MAX,    /* Bottom or right */
+	ANCHOR_MAX     /* Bottom or right */
 };
 
 struct IGameComponent;

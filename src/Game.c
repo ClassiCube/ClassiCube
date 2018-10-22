@@ -167,6 +167,7 @@ void Game_UpdateProjection(void) {
 }
 
 void Game_Disconnect(const String* title, const String* reason) {
+	int i;
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
 	Gui_FreeActive();
@@ -176,7 +177,6 @@ void Game_Disconnect(const String* title, const String* reason) {
 	Block_Reset();
 	TexturePack_ExtractDefault();
 
-	int i;
 	for (i = 0; i < Game_ComponentsCount; i++) {
 		Game_Components[i].Reset();
 	}
@@ -223,12 +223,12 @@ bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* 
 }
 
 bool Game_ValidateBitmap(const String* file, Bitmap* bmp) {
+	int maxWidth = Gfx_MaxTexWidth, maxHeight = Gfx_MaxTexHeight;
 	if (!bmp->Scan0) {
 		Chat_Add1("&cError loading %s from the texture pack.", file);
 		return false;
 	}
-
-	int maxWidth = Gfx_MaxTexWidth, maxHeight = Gfx_MaxTexHeight;
+	
 	if (bmp->Width > maxWidth || bmp->Height > maxHeight) {
 		Chat_Add1("&cUnable to use %s from the texture pack.", file);
 
@@ -568,6 +568,9 @@ static void Game_UpdateViewMatrix(void) {
 }
 
 static void Game_Render3D(double delta, float t) {
+	Vector3 pos;
+	bool left, middle, right;
+
 	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox(delta);
 	AxisLinesRenderer_Render(delta);
 	Entities_RenderModels(delta, t);
@@ -591,9 +594,8 @@ static void Game_Render3D(double delta, float t) {
 	}
 
 	/* Render water over translucent blocks when underwater for proper alpha blending */
-	Vector3 pos = LocalPlayer_Instance.Base.Position;
-	if (Game_CurrentCameraPos.Y < Env_EdgeHeight
-		&& (pos.X < 0 || pos.Z < 0 || pos.X > World_Width || pos.Z > World_Length)) {
+	pos = LocalPlayer_Instance.Base.Position;
+	if (Camera_CurrentPos.Y < Env_EdgeHeight && (pos.X < 0 || pos.Z < 0 || pos.X > World_Width || pos.Z > World_Length)) {
 		MapRenderer_RenderTranslucent(delta);
 		EnvRenderer_RenderMapEdges(delta);
 	} else {
@@ -610,9 +612,10 @@ static void Game_Render3D(double delta, float t) {
 	Selections_Render(delta);
 	Entities_RenderHoveredNames(delta);
 
-	bool left   = InputHandler_IsMousePressed(MouseButton_Left);
-	bool middle = InputHandler_IsMousePressed(MouseButton_Middle);
-	bool right  = InputHandler_IsMousePressed(MouseButton_Right);
+	left   = InputHandler_IsMousePressed(MouseButton_Left);
+	middle = InputHandler_IsMousePressed(MouseButton_Middle);
+	right  = InputHandler_IsMousePressed(MouseButton_Right);
+
 	InputHandler_PickBlocks(true, left, middle, right);
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
 }
@@ -634,23 +637,26 @@ static void Game_DoScheduledTasks(double time) {
 }
 
 void Game_TakeScreenshot(void) {
+	char fileBuffer[STRING_SIZE];
+	String filename = String_FromArray(fileBuffer);
+	char pathBuffer[FILENAME_SIZE];
+	String path = String_FromArray(pathBuffer);
+
+	DateTime now;
+	struct Stream stream;
+	ReturnCode res;
+
 	Game_ScreenshotRequested = false;
 	if (!Utils_EnsureDirectory("screenshots")) return;
 
-	DateTime now; DateTime_CurrentLocal(&now);
+	DateTime_CurrentLocal(&now);
 	int year = now.Year, month = now.Month, day = now.Day;
 	int hour = now.Hour, min = now.Minute, sec = now.Second;
-
-	char fileBuffer[STRING_SIZE];
-	String filename = String_FromArray(fileBuffer);
+	
 	String_Format3(&filename, "screenshot_%p2-%p2-%p4", &day, &month, &year);
 	String_Format3(&filename, "-%p2-%p2-%p2.png", &hour, &min, &sec);
-
-	char pathBuffer[FILENAME_SIZE];
-	String path = String_FromArray(pathBuffer);
 	String_Format2(&path, "screenshots%r%s", &Directory_Separator, &filename);
 
-	ReturnCode res; struct Stream stream;
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Chat_LogError2(res, "creating", &path); return; }
 
@@ -690,7 +696,7 @@ static void Game_RenderFrame(double delta) {
 	LocalPlayer_SetInterpPosition(t);
 
 	Gfx_Clear();
-	Game_CurrentCameraPos = Camera_Active->GetPosition(t);
+	Camera_CurrentPos = Camera_Active->GetPosition(t);
 	Game_UpdateViewMatrix();
 
 	bool visible = !Gui_Active || !Gui_Active->BlocksWorld;

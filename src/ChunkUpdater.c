@@ -13,7 +13,7 @@
 #include "Builder.h"
 #include "Utils.h"
 #include "ErrorHandler.h"
-#include "Vectors.h"
+#include "Camera.h"
 
 Vector3I ChunkUpdater_ChunkPos;
 uint32_t* ChunkUpdater_Distances;
@@ -116,15 +116,17 @@ static void ChunkUpdater_PerformAllocations(void) {
 }
 
 void ChunkUpdater_Refresh(void) {
+	int oldCount;
 	ChunkUpdater_ChunkPos = Vector3I_MaxValue();
+
 	if (MapRenderer_Chunks && World_Blocks) {
 		ChunkUpdater_ClearChunkCache();
 		ChunkUpdater_ResetChunkCache();
 
-		int old_atlasesCount = MapRenderer_1DUsedCount;
+		oldCount = MapRenderer_1DUsedCount;
 		MapRenderer_1DUsedCount = Atlas1D_UsedAtlasesCount();
 		/* Need to reallocate parts array in this case */
-		if (MapRenderer_1DUsedCount != old_atlasesCount) {
+		if (MapRenderer_1DUsedCount != oldCount) {
 			ChunkUpdater_FreePartsAllocations();
 			ChunkUpdater_PerformPartsAllocations();
 		}
@@ -200,15 +202,19 @@ static int ChunkUpdater_AdjustViewDist(int dist) {
 }
 
 static int ChunkUpdater_UpdateChunksAndVisibility(int* chunkUpdates) {
-	int i, j = 0;
 	int viewDistSqr = ChunkUpdater_AdjustViewDist(Game_ViewDistance);
 	int userDistSqr = ChunkUpdater_AdjustViewDist(Game_UserViewDistance);
 
+	struct ChunkInfo* info;
+	int i, j = 0, distSqr;
+	bool noData;
+
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
-		struct ChunkInfo* info = MapRenderer_SortedChunks[i];
-		if (info->Empty) { continue; }
-		int distSqr = ChunkUpdater_Distances[i];
-		bool noData = !info->NormalParts && !info->TranslucentParts;
+		info = MapRenderer_SortedChunks[i];
+		if (info->Empty) continue;
+
+		distSqr = ChunkUpdater_Distances[i];
+		noData  = !info->NormalParts && !info->TranslucentParts;
 		
 		/* Unload chunks beyond visible range */
 		if (!noData && distSqr >= userDistSqr + 32 * 16) {
@@ -229,15 +235,19 @@ static int ChunkUpdater_UpdateChunksAndVisibility(int* chunkUpdates) {
 }
 
 static int ChunkUpdater_UpdateChunksStill(int* chunkUpdates) {
-	int i, j = 0;
 	int viewDistSqr = ChunkUpdater_AdjustViewDist(Game_ViewDistance);
 	int userDistSqr = ChunkUpdater_AdjustViewDist(Game_UserViewDistance);
 
+	struct ChunkInfo* info;
+	int i, j = 0, distSqr;
+	bool noData;
+
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
-		struct ChunkInfo* info = MapRenderer_SortedChunks[i];
-		if (info->Empty) { continue; }
-		int distSqr = ChunkUpdater_Distances[i];
-		bool noData = !info->NormalParts && !info->TranslucentParts;
+		info = MapRenderer_SortedChunks[i];
+		if (info->Empty) continue;
+
+		distSqr = ChunkUpdater_Distances[i];
+		noData  = !info->NormalParts && !info->TranslucentParts;
 
 		/* Unload chunks beyond visible range */
 		if (!noData && distSqr >= userDistSqr + 32 * 16) {
@@ -266,16 +276,16 @@ void ChunkUpdater_UpdateChunks(double delta) {
 	Math_Clamp(cu_chunksTarget, 4, Game_MaxChunkUpdates);
 
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	Vector3 camPos = Game_CurrentCameraPos;
+	Vector3 pos = Camera_CurrentPos;
 	float headX = p->Base.HeadX;
 	float headY = p->Base.HeadY;
 
-	bool samePos = Vector3_Equals(&camPos, &cu_lastCamPos) && headX == cu_lastHeadX && headY == cu_lastHeadY;
+	bool samePos = Vector3_Equals(&pos, &cu_lastCamPos) && headX == cu_lastHeadX && headY == cu_lastHeadY;
 	MapRenderer_RenderChunksCount = samePos ?
 		ChunkUpdater_UpdateChunksStill(&chunkUpdates) :
 		ChunkUpdater_UpdateChunksAndVisibility(&chunkUpdates);
 
-	cu_lastCamPos = camPos;
+	cu_lastCamPos = pos;
 	cu_lastHeadX = headX; cu_lastHeadY = headY;
 
 	if (!samePos || chunkUpdates != 0) {
@@ -435,10 +445,10 @@ static void ChunkUpdater_UpdateSortOrder(void) {
 	int i, dx, dy, dz;
 
 	/* pos is centre coordinate of chunk camera is in */
-	Vector3I_Floor(&pos, &Game_CurrentCameraPos);
-	pos.X = (pos.X & ~CHUNK_MAX) + HALF_CHUNK_SIZE;
-	pos.Y = (pos.Y & ~CHUNK_MAX) + HALF_CHUNK_SIZE;
-	pos.Z = (pos.Z & ~CHUNK_MAX) + HALF_CHUNK_SIZE;
+	Vector3I_Floor(&pos, &Camera_CurrentPos);
+	pos.X = (pos.X & ~CHUNK_MASK) + HALF_CHUNK_SIZE;
+	pos.Y = (pos.Y & ~CHUNK_MASK) + HALF_CHUNK_SIZE;
+	pos.Z = (pos.Z & ~CHUNK_MASK) + HALF_CHUNK_SIZE;
 
 	/* If in same chunk, don't need to recalculate sort order */
 	if (Vector3I_Equals(&pos, &ChunkUpdater_ChunkPos)) return;

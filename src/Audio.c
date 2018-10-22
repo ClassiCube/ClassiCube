@@ -435,8 +435,10 @@ cleanup:
 #define MUSIC_MAX_FILES 512
 static void Music_RunLoop(void) {
 	static String ogg = String_FromConst(".ogg");
-	uint16_t musicFiles[MUSIC_MAX_FILES];
 	char pathBuffer[FILENAME_SIZE];
+	String path = String_FromArray(pathBuffer);
+
+	uint16_t musicFiles[MUSIC_MAX_FILES];
 	String file;
 
 	Random rnd;
@@ -456,10 +458,11 @@ static void Music_RunLoop(void) {
 	while (!music_pendingStop && count) {
 		idx  = Random_Range(&rnd, 0, count);
 		file = StringsBuffer_UNSAFE_Get(&files, musicFiles[idx]);
-		String path = String_FromArray(pathBuffer);
+		
+		path.length = 0;
 		String_Format2(&path, "audio%r%s", &Directory_Separator, &file);
-
 		Platform_Log1("playing music file: %s", &file);
+
 		res = Stream_OpenFile(&stream, &path);
 		if (res) { Chat_LogError2(res, "opening", &path); break; }
 
@@ -482,7 +485,8 @@ static void Music_RunLoop(void) {
 	}
 	Audio_StopAndFree(music_out);
 
-	if (!music_joining) Thread_Detach(music_thread);
+	if (music_joining) return;
+	Thread_Detach(music_thread);
 	music_thread = NULL;
 }
 
@@ -499,8 +503,8 @@ static void Music_Free(void) {
 	music_pendingStop = true;
 	Waitable_Signal(music_waitable);
 	
-	void* thread = music_thread;
-	if (thread) Thread_Join(thread);
+	if (music_thread) Thread_Join(music_thread);
+	music_thread = NULL;
 }
 
 void Audio_SetMusic(int volume) {
