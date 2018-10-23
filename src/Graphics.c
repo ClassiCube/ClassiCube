@@ -25,7 +25,7 @@ bool Gfx_GetFog(void) { return gfx_fogEnabled; }
 *--------------------------------------------------------Direct3D9--------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_D3D9
-//#define D3D_DISABLE_9EX causes compile errors
+/*#define D3D_DISABLE_9EX causes compile errors*/
 #include <d3d9.h>
 #include <d3d9caps.h>
 #include <d3d9types.h>
@@ -202,6 +202,9 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bi
 
 static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp, bool partial) {
 	uint8_t* prev = bmp->Scan0;
+	uint8_t* cur;
+	Bitmap mipmap;
+
 	int lvls = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
 	int lvl, width = bmp->Width, height = bmp->Height;
 
@@ -210,10 +213,9 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp
 		if (width > 1)   width /= 2; 
 		if (height > 1) height /= 2;
 
-		uint8_t* cur = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
+		cur = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
 		GfxCommon_GenMipmaps(width, height, cur, prev);
 
-		Bitmap mipmap;
 		Bitmap_Create(&mipmap, width, height, cur);
 		if (partial) {
 			D3D9_SetTexturePartData(texture, x, y, &mipmap, lvl);
@@ -786,7 +788,6 @@ static void GL_CheckVboSupport(void) {
 		glGenBuffers    = (FUNC_GLGENBUFFERS)GLContext_GetAddress("glGenBuffers");
 		glBufferData    = (FUNC_GLBUFFERDATA)GLContext_GetAddress("glBufferData");
 		glBufferSubData = (FUNC_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubData");
-		return;
 	} else if (String_CaselessContains(&extensions, &vboExt)) {
 		glBindBuffer    = (FUNC_GLBINDBUFFER)GLContext_GetAddress("glBindBufferARB");
 		glDeleteBuffers = (FUNC_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffersARB");
@@ -833,6 +834,8 @@ void Gfx_Free(void) {
 *#########################################################################################################################*/
 static void GL_DoMipmaps(GfxResourceID texId, int x, int y, Bitmap* bmp, bool partial) {
 	uint8_t* prev = bmp->Scan0;
+	uint8_t* cur;
+
 	int lvls = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
 	int lvl, width = bmp->Width, height = bmp->Height;
 
@@ -841,7 +844,7 @@ static void GL_DoMipmaps(GfxResourceID texId, int x, int y, Bitmap* bmp, bool pa
 		if (width > 1)  width /= 2;
 		if (height > 1) height /= 2;
 
-		uint8_t* cur = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
+		cur = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
 		GfxCommon_GenMipmaps(width, height, cur, prev);
 
 		if (partial) {
@@ -918,9 +921,13 @@ void Gfx_SetFog(bool enabled) {
 }
 
 void Gfx_SetFogCol(PackedCol col) {
+	float rgba[4];
 	if (PackedCol_Equals(col, gl_lastFogCol)) return;
-	float colRGBA[4] = { col.R / 255.0f, col.G / 255.0f, col.B / 255.0f, col.A / 255.0f };
-	glFogfv(GL_FOG_COLOR, colRGBA);
+
+	rgba[0] = col.R / 255.0f; rgba[1] = col.G / 255.0f;
+	rgba[2] = col.B / 255.0f; rgba[3] = col.A / 255.0f;
+
+	glFogfv(GL_FOG_COLOR, rgba);
 	gl_lastFogCol = col;
 }
 
@@ -939,6 +946,7 @@ void Gfx_SetFogEnd(float value) {
 void Gfx_SetFogMode(int mode) {
 	static GLint modes[3] = { GL_LINEAR, GL_EXP, GL_EXP2 };
 	if (mode == gl_lastFogMode) return;
+
 	glFogi(GL_FOG_MODE, modes[mode]);
 	gl_lastFogMode = mode;
 }
@@ -989,22 +997,22 @@ static GfxResourceID GL_GenAndBind(GLenum target) {
 
 GfxResourceID Gfx_CreateDynamicVb(int vertexFormat, int maxVertices) {
 	GfxResourceID id = GL_GenAndBind(GL_ARRAY_BUFFER);
-	uint32_t sizeInBytes = maxVertices * Gfx_strideSizes[vertexFormat];
-	glBufferData(GL_ARRAY_BUFFER, (void*)sizeInBytes, NULL, GL_DYNAMIC_DRAW);
+	uint32_t size    = maxVertices * Gfx_strideSizes[vertexFormat];
+	glBufferData(GL_ARRAY_BUFFER, (void*)size, NULL, GL_DYNAMIC_DRAW);
 	return id;
 }
 
 GfxResourceID Gfx_CreateVb(void* vertices, int vertexFormat, int count) {
 	GfxResourceID id = GL_GenAndBind(GL_ARRAY_BUFFER);
-	uint32_t sizeInBytes = count * Gfx_strideSizes[vertexFormat];
-	glBufferData(GL_ARRAY_BUFFER, (void*)sizeInBytes, vertices, GL_STATIC_DRAW);
+	uint32_t size    = count * Gfx_strideSizes[vertexFormat];
+	glBufferData(GL_ARRAY_BUFFER, (void*)size, vertices, GL_STATIC_DRAW);
 	return id;
 }
 
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
 	GfxResourceID id = GL_GenAndBind(GL_ELEMENT_ARRAY_BUFFER);
-	uint32_t sizeInBytes = indicesCount * 2;
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (void*)sizeInBytes, indices, GL_STATIC_DRAW);
+	uint32_t size    = indicesCount * 2;
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (void*)size, indices, GL_STATIC_DRAW);
 	return id;
 }
 
@@ -1026,16 +1034,17 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 GfxResourceID Gfx_CreateDynamicVb(int vertexFormat, int maxVertices) { return gl_DYNAMICLISTID;  }
 GfxResourceID Gfx_CreateVb(void* vertices, int vertexFormat, int count) {
 	/* We need to setup client state properly when building the list */
-	int curFormat = gfx_batchFormat;
+	int curFormat = gfx_batchFormat, stride;
 	Gfx_SetBatchFormat(vertexFormat);
+
 	GfxResourceID list = glGenLists(1);
 	glNewList(list, GL_COMPILE);
 	count &= ~0x01; /* Need to get rid of the 1 extra element, see comment in chunk mesh builder for why */
 
 	uint16_t indices[GFX_MAX_INDICES];
 	GfxCommon_MakeIndices(indices, ICOUNT(count));
+	stride = Gfx_strideSizes[vertexFormat];
 
-	int stride = vertexFormat == VERTEX_FORMAT_P3FT2FC4B ? sizeof(VertexP3fT2fC4b) : sizeof(VertexP3fC4b);
 	glVertexPointer(3, GL_FLOAT, stride, vertices);
 	glColorPointer(4, GL_UNSIGNED_BYTE, stride, (void*)((uint8_t*)vertices + 12));
 	if (vertexFormat == VERTEX_FORMAT_P3FT2FC4B) {
@@ -1105,9 +1114,9 @@ void Gfx_SetBatchFormat(int vertexFormat) {
 
 #ifndef CC_BUILD_GL11
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+	uint32_t size = vCount * gfx_batchStride;
 	glBindBuffer(GL_ARRAY_BUFFER, vb);
-	uint32_t sizeInBytes = vCount * gfx_batchStride;
-	glBufferSubData(GL_ARRAY_BUFFER, NULL, (void*)sizeInBytes, vertices);
+	glBufferSubData(GL_ARRAY_BUFFER, NULL, (void*)size, vertices);
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -1150,8 +1159,9 @@ static void GL_V24(VertexP3fT2fC4b v) {
 }
 
 static void GL_DrawDynamicTriangles(int verticesCount, int startVertex) {
-	glBegin(GL_TRIANGLES);
 	int i;
+	glBegin(GL_TRIANGLES);
+	
 	if (gfx_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
 		VertexP3fT2fC4b* ptr = (VertexP3fT2fC4b*)gl_dynamicListData;
 		for (i = startVertex; i < startVertex + verticesCount; i += 4) {
@@ -1169,8 +1179,9 @@ static void GL_DrawDynamicTriangles(int verticesCount, int startVertex) {
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
-	glBegin(GL_LINES);
 	int i;
+	glBegin(GL_LINES);
+	
 	if (gfx_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
 		VertexP3fT2fC4b* ptr = (VertexP3fT2fC4b*)gl_dynamicListData;
 		for (i = 0; i < verticesCount; i += 2) { GL_V24(ptr[i + 0]); GL_V24(ptr[i + 1]); }
@@ -1207,10 +1218,11 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 int gl_lastMatrixType;
 
 void Gfx_SetMatrixMode(int matrixType) {
+	static GLenum modes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
 	if (matrixType == gl_lastMatrixType) return;
+
 	gl_lastMatrixType = matrixType;
-	static GLenum matrixModes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
-	glMatrixMode(matrixModes[matrixType]);
+	glMatrixMode(modes[matrixType]);
 }
 
 void Gfx_LoadMatrix(struct Matrix* matrix) { glLoadMatrixf((float*)matrix); }
@@ -1229,53 +1241,58 @@ void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar,
 *#########################################################################################################################*/
 static int GL_SelectRow(Bitmap* bmp, int y) { return (bmp->Height - 1) - y; }
 ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
-	Bitmap bmp; Bitmap_Allocate(&bmp, width, height);
+	Bitmap bmp;
+	ReturnCode res;
+
+	Bitmap_Allocate(&bmp, width, height);
 	glReadPixels(0, 0, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, bmp.Scan0);
 
-	ReturnCode res = Png_Encode(&bmp, output, GL_SelectRow);
+	res = Png_Encode(&bmp, output, GL_SelectRow);
 	Mem_Free(bmp.Scan0);
 	return res;
 }
 
 bool nv_mem;
 void Gfx_MakeApiInfo(void) {
-	int depthBits = 0;
+	static String memExt = String_FromConst("GL_NVX_gpu_memory_info");
+	String extensions    = String_FromReadonly(glGetString(GL_EXTENSIONS));	
+	int depthBits;
+
+	nv_mem = String_CaselessContains(&extensions, &memExt);
 	glGetIntegerv(GL_DEPTH_BITS, &depthBits);
 
 	String_AppendConst(&Gfx_ApiInfo[0],"-- Using OpenGL --");
 	String_Format1(&Gfx_ApiInfo[1], "Vendor: %c",     glGetString(GL_VENDOR));
 	String_Format1(&Gfx_ApiInfo[2], "Renderer: %c",   glGetString(GL_RENDERER));
 	String_Format1(&Gfx_ApiInfo[3], "GL version: %c", glGetString(GL_VERSION));
-	/* Memory usage goes here */
+	/* Memory usage line goes here */
 	String_Format2(&Gfx_ApiInfo[5], "Max texture size: (%i, %i)", &Gfx_MaxTexWidth, &Gfx_MaxTexHeight);
 	String_Format1(&Gfx_ApiInfo[6], "Depth buffer bits: %i", &depthBits);
-
-	String extensions = String_FromReadonly(glGetString(GL_EXTENSIONS));
-	String memExt     = String_FromConst("GL_NVX_gpu_memory_info");
-	nv_mem = String_CaselessContains(&extensions, &memExt);
 }
 
 void Gfx_UpdateApiInfo(void) {
-	if (!nv_mem) return;
 	int totalKb = 0, curKb = 0;
+	float total, cur;
+
+	if (!nv_mem) return;
 	glGetIntegerv(0x9048, &totalKb);
 	glGetIntegerv(0x9049, &curKb);
-
 	if (totalKb <= 0 || curKb <= 0) return;
+
+	total = totalKb / 1024.0f; cur = curKb / 1024.0f;
 	Gfx_ApiInfo[4].length = 0;
-	float total = totalKb / 1024.0f, cur = curKb / 1024.0f;
 	String_Format2(&Gfx_ApiInfo[4], "Video memory: %f2 MB total, %f2 free", &total, &cur);
 }
 
 bool Gfx_WarnIfNecessary(void) {
+	static String intel = String_FromConst("Intel");
+	String renderer     = String_FromReadonly(glGetString(GL_RENDERER));
+
 #ifdef CC_BUILD_GL11
 	Chat_AddRaw("&cYou are using the very outdated OpenGL backend.");
 	Chat_AddRaw("&cAs such you may experience poor performance.");
 	Chat_AddRaw("&cIt is likely you need to install video card drivers.");
 #endif
-
-	String renderer = String_FromReadonly(glGetString(GL_RENDERER));
-	String intel = String_FromConst("Intel");
 	if (!String_ContainsString(&renderer, &intel)) return false;
 
 	Chat_AddRaw("&cIntel graphics cards are known to have issues with the OpenGL build.");

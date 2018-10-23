@@ -126,16 +126,13 @@ void Block_SetCollide(BlockID block, CollideType collide) {
 }
 
 void Block_SetDrawType(BlockID block, DrawType draw) {
-	if (draw == DRAW_OPAQUE && Block_Collide[block] != COLLIDE_SOLID) {
-		draw = DRAW_TRANSPARENT;
-	}
+	if (draw == DRAW_OPAQUE && Block_Collide[block] != COLLIDE_SOLID) draw = DRAW_TRANSPARENT;
 	Block_Draw[block] = draw;
 	Block_RecalcIsLiquid(block);
 
-	Vector3 zero = Vector3_Zero; Vector3 one = Vector3_One;
 	Block_FullOpaque[block] = draw == DRAW_OPAQUE
-		&& Vector3_Equals(&Block_MinBB[block], &zero)
-		&& Vector3_Equals(&Block_MaxBB[block], &one);
+		&& Vector3_Equals(&Block_MinBB[block], &Vector3_Zero)
+		&& Vector3_Equals(&Block_MaxBB[block], &Vector3_One);
 }
 
 
@@ -181,8 +178,8 @@ void Block_ResetProps(BlockID block) {
 		Block_MinBB[block] = Vector3_Create3(2.50f / 16.0f, 0.0f, 2.50f / 16.0f);
 		Block_MaxBB[block] = Vector3_Create3(13.5f / 16.0f, 1.0f, 13.5f / 16.0f);
 	} else {		
-		Vector3 zero = Vector3_Zero; Block_MinBB[block] = zero;
-		Vector3 one  = Vector3_One;  Block_MaxBB[block] = one;
+		Block_MinBB[block] = Vector3_Zero;
+		Block_MaxBB[block] = Vector3_One;
 		Block_MaxBB[block].Y = DefaultSet_Height(block);
 	}
 

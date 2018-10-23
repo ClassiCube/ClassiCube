@@ -20,12 +20,12 @@ Vector3 Vector3_BigPos(void);
 float Vector3_LengthSquared(const Vector3* v);
 
 #define VECTOR3_CONST(x, y, z) { x, y, z };
-#define Vector3_Zero  VECTOR3_CONST(0.0f, 0.0f, 0.0f)
-#define Vector3_One   VECTOR3_CONST(1.0f, 1.0f, 1.0f)
+extern const Vector3 Vector3_Zero;
+extern const Vector3 Vector3_One;
 
-void Vector3_Add(Vector3* result, Vector3* a, Vector3* b);
+void Vector3_Add(Vector3* result,  Vector3* a, Vector3* b);
 void Vector3_Add1(Vector3* result, Vector3* a, float b);
-void Vector3_Sub(Vector3* result, Vector3* a, Vector3* b);
+void Vector3_Sub(Vector3* result,  Vector3* a, Vector3* b);
 void Vector3_Mul1(Vector3* result, Vector3* a, float scale);
 void Vector3_Mul3(Vector3* result, Vector3* a, Vector3* scale);
 void Vector3_Negate(Vector3* result, Vector3* a);

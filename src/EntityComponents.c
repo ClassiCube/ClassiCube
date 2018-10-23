@@ -695,13 +695,14 @@ static void Collisions_ClipZ(struct Entity* entity, Vector3* size, struct AABB* 
 }
 
 static bool Collisions_CanSlideThrough(struct AABB* adjFinalBB) {
-	Vector3I bbMin; Vector3I_Floor(&bbMin, &adjFinalBB->Min);
-	Vector3I bbMax; Vector3I_Floor(&bbMax, &adjFinalBB->Max);
-
+	Vector3I bbMin, bbMax; 
 	BlockID block;
 	struct AABB blockBB;
 	Vector3 v;
 	int x, y, z;
+
+	Vector3I_Floor(&bbMin, &adjFinalBB->Min);
+	Vector3I_Floor(&bbMax, &adjFinalBB->Max);
 
 	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (float)y;
 		for (z = bbMin.Z; z <= bbMax.Z; z++) { v.Z = (float)z;
@@ -869,9 +870,8 @@ static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, i
 
 /* TODO: test for corner cases, and refactor this */
 void Collisions_MoveAndWallSlide(struct CollisionsComp* comp) {
-	Vector3 zero = Vector3_Zero;
 	struct Entity* entity = comp->Entity;
-	if (Vector3_Equals(&entity->Velocity, &zero)) return;
+	if (Vector3_Equals(&entity->Velocity, &Vector3_Zero)) return;
 
 	struct AABB entityBB, entityExtentBB;
 	int count = Searcher_FindReachableBlocks(entity, &entityBB, &entityExtentBB);
@@ -893,7 +893,7 @@ void PhysicsComp_Init(struct PhysicsComp* comp, struct Entity* entity) {
 
 static bool PhysicsComp_TouchesLiquid(BlockID block) { return Block_Collide[block] == COLLIDE_LIQUID; }
 void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
-	struct Entity* entity = comp->Entity;
+	struct Entity* entity   = comp->Entity;
 	struct HacksComp* hacks = comp->Hacks;
 
 	if (hacks->Floating) {

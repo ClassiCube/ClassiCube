@@ -216,16 +216,18 @@ static void WoM_UpdateIdentifier(void) {
 }
 
 static void WoM_CheckMotd(void) {
-	String motd = ServerConnection_ServerMOTD;
-	if (!motd.length) return;
-
-	String cfg = String_FromConst("cfg=");
-	int index = String_IndexOfString(&motd, &cfg);
-	if (Game_PureClassic || index == -1) return;
+	static String cfg = String_FromConst("cfg=");
+	String motd = ServerConnection_ServerMOTD, host;
+	int index;
 
 	char urlBuffer[STRING_SIZE];
-	String url  = String_FromArray(urlBuffer);
-	String host = String_UNSAFE_SubstringAt(&motd, index + cfg.length);
+	String url = String_FromArray(urlBuffer);	
+
+	if (!motd.length) return;
+	index = String_IndexOfString(&motd, &cfg);
+	if (Game_PureClassic || index == -1) return;
+	
+	host = String_UNSAFE_SubstringAt(&motd, index + cfg.length);
 	String_Format1(&url, "http://%s", &host);
 	/* TODO: Replace $U with username */
 	/*url = url.Replace("$U", game.Username); */
@@ -259,10 +261,11 @@ static PackedCol WoM_ParseCol(const String* value, PackedCol defaultCol) {
 
 static bool WoM_ReadLine(STRING_REF const String* page, int* start, String* line) {
 	int i, offset = *start;
+	char c;
 	if (offset == -1) return false;
 
 	for (i = offset; i < page->length; i++) {
-		char c = page->buffer[i];
+		c = page->buffer[i];
 		if (c != '\r' && c != '\n') continue;
 
 		*line = String_UNSAFE_Substring(page, offset, i - offset);
@@ -282,23 +285,23 @@ static bool WoM_ReadLine(STRING_REF const String* page, int* start, String* line
 
 static void WoM_ParseConfig(const String* page) {
 	String line, key, value;
-	int start = 0;
+	int start = 0, waterLevel;
+	PackedCol col;
 
 	while (WoM_ReadLine(page, &start, &line)) {
 		Platform_Log(&line);
 		if (!String_UNSAFE_Separate(&line, '=', &key, &value)) continue;
 
 		if (String_CaselessEqualsConst(&key, "environment.cloud")) {
-			PackedCol col = WoM_ParseCol(&value, Env_DefaultCloudsCol);
+			col = WoM_ParseCol(&value, Env_DefaultCloudsCol);
 			Env_SetCloudsCol(col);
 		} else if (String_CaselessEqualsConst(&key, "environment.sky")) {
-			PackedCol col = WoM_ParseCol(&value, Env_DefaultSkyCol);
+			col = WoM_ParseCol(&value, Env_DefaultSkyCol);
 			Env_SetSkyCol(col);
 		} else if (String_CaselessEqualsConst(&key, "environment.fog")) {
-			PackedCol col = WoM_ParseCol(&value, Env_DefaultFogCol);
+			col = WoM_ParseCol(&value, Env_DefaultFogCol);
 			Env_SetFogCol(col);
 		} else if (String_CaselessEqualsConst(&key, "environment.level")) {
-			int waterLevel;
 			if (Convert_TryParseInt(&value, &waterLevel)) {
 				Env_SetEdgeHeight(waterLevel);
 			}
@@ -456,10 +459,13 @@ static void Classic_LevelInit(uint8_t* data) {
 }
 
 static void Classic_LevelDataChunk(uint8_t* data) {
+	int usedLength;
+	float progress;
+
 	/* Workaround for some servers that send LevelDataChunk before LevelInit due to their async sending behaviour */
 	if (!map_begunLoading) Classic_StartLoading();
+	usedLength = Stream_GetU16_BE(data); data += 2;
 
-	int usedLength = Stream_GetU16_BE(data); data += 2;
 	map_part.Meta.Mem.Cur    = data;
 	map_part.Meta.Mem.Base   = data;
 	map_part.Meta.Mem.Left   = usedLength;
@@ -503,21 +509,24 @@ static void Classic_LevelDataChunk(uint8_t* data) {
 		}
 	}
 
-	float progress = !map_blocks ? 0.0f : (float)map_index / map_volume;
+	progress = !map_blocks ? 0.0f : (float)map_index / map_volume;
 	Event_RaiseFloat(&WorldEvents_Loading, progress);
 }
 
 static void Classic_LevelFinalise(uint8_t* data) {
+	int width, height, length;
+	int loadingMs;
+
 	Gui_CloseActive();
 	Gui_Active = classic_prevScreen;
 	classic_prevScreen = NULL;
 	Gui_CalcCursorVisible();
 
-	int width  = Stream_GetU16_BE(&data[0]);
-	int height = Stream_GetU16_BE(&data[2]);
-	int length = Stream_GetU16_BE(&data[4]);
+	width  = Stream_GetU16_BE(&data[0]);
+	height = Stream_GetU16_BE(&data[2]);
+	length = Stream_GetU16_BE(&data[4]);
 
-	int loadingMs = (int)(DateTime_CurrentUTC_MS() - map_receiveStart);
+	loadingMs = (int)(DateTime_CurrentUTC_MS() - map_receiveStart);
 	Platform_Log1("map loading took: %i", &loadingMs);
 
 	World_SetNewMap(map_blocks, map_volume, width, height, length);
@@ -540,12 +549,15 @@ static void Classic_LevelFinalise(uint8_t* data) {
 }
 
 static void Classic_SetBlock(uint8_t* data) {
-	int x = Stream_GetU16_BE(&data[0]);
-	int y = Stream_GetU16_BE(&data[2]);
-	int z = Stream_GetU16_BE(&data[4]);
+	int x, y, z;
+	BlockID block;
 
+	x = Stream_GetU16_BE(&data[0]);
+	y = Stream_GetU16_BE(&data[2]);
+	z = Stream_GetU16_BE(&data[4]);
 	data += 6;
-	BlockID block; Handlers_ReadBlock(data, block);
+
+	Handlers_ReadBlock(data, block);
 	if (World_IsValidPos(x, y, z)) {
 		Game_UpdateBlock(x, y, z, block);
 	}
@@ -574,33 +586,43 @@ static void Classic_EntityTeleport(uint8_t* data) {
 }
 
 static void Classic_RelPosAndOrientationUpdate(uint8_t* data) {
-	EntityID id = *data++; Vector3 pos;
+	EntityID id = *data++; 
+	Vector3 pos;
+	float rotY, headX;
+	struct LocationUpdate update;
+
 	pos.X = (int8_t)(*data++) / 32.0f;
 	pos.Y = (int8_t)(*data++) / 32.0f;
 	pos.Z = (int8_t)(*data++) / 32.0f;
+	rotY  = Math_Packed2Deg(*data++);
+	headX = Math_Packed2Deg(*data++);
 
-	float rotY  = Math_Packed2Deg(*data++);
-	float headX = Math_Packed2Deg(*data++);
-	struct LocationUpdate update; LocationUpdate_MakePosAndOri(&update, pos, rotY, headX, true);
+	LocationUpdate_MakePosAndOri(&update, pos, rotY, headX, true);
 	Handlers_UpdateLocation(id, &update, true);
 }
 
 static void Classic_RelPositionUpdate(uint8_t* data) {
-	EntityID id = *data++; Vector3 pos;
+	EntityID id = *data++; 
+	Vector3 pos;
+	struct LocationUpdate update;
+
 	pos.X = (int8_t)(*data++) / 32.0f;
 	pos.Y = (int8_t)(*data++) / 32.0f;
 	pos.Z = (int8_t)(*data++) / 32.0f;
 
-	struct LocationUpdate update; LocationUpdate_MakePos(&update, pos, true);
+	LocationUpdate_MakePos(&update, pos, true);
 	Handlers_UpdateLocation(id, &update, true);
 }
 
 static void Classic_OrientationUpdate(uint8_t* data) {
 	EntityID id = *data++;
-	float rotY  = Math_Packed2Deg(*data++);
-	float headX = Math_Packed2Deg(*data++);
+	float rotY, headX;
+	struct LocationUpdate update;
 
-	struct LocationUpdate update; LocationUpdate_MakeOri(&update, rotY, headX);
+	rotY  = Math_Packed2Deg(*data++);
+	headX = Math_Packed2Deg(*data++);
+
+	LocationUpdate_MakeOri(&update, rotY, headX);
 	Handlers_UpdateLocation(id, &update, true);
 }
 
@@ -610,6 +632,9 @@ static void Classic_RemoveEntity(uint8_t* data) {
 }
 
 static void Classic_Message(uint8_t* data) {
+	static String detailMsg  = String_FromConst("^detail.user=");
+	static String detailUser = String_FromConst("^detail.user");
+
 	char textBuffer[STRING_SIZE + 2];
 	String text  = String_FromArray(textBuffer);
 	uint8_t type = *data++;
@@ -621,23 +646,22 @@ static void Classic_Message(uint8_t* data) {
 	if (!cpe_useMessageTypes) type = MSG_TYPE_NORMAL;
 
 	/* WoM detail messages (used e.g. for fCraft server compass) */
-	String detailMsg = String_FromConst("^detail.user=");
 	if (String_CaselessStarts(&text, &detailMsg)) {
 		text = String_UNSAFE_SubstringAt(&text, detailMsg.length);
 		type = MSG_TYPE_STATUS_3;
 	}
 
 	/* Ignore ^detail.user.joined etc */
-	String detailUser = String_FromConst("^detail.user");
 	if (!String_CaselessStarts(&text, &detailUser)) {
 		Chat_AddOf(&text, type); 
 	}
 }
 
 static void Classic_Kick(uint8_t* data) {
+	static String title = String_FromConst("&eLost connection to the server");
+
 	char reasonBuffer[STRING_SIZE];
-	String reason = String_FromArray(reasonBuffer);
-	String title  = String_FromConst("&eLost connection to the server");
+	String reason = String_FromArray(reasonBuffer);	
 
 	Handlers_ReadString(&data, &reason);
 	Game_Disconnect(&title, &reason);
@@ -1012,20 +1036,23 @@ static void CPE_ExtRemovePlayerName(uint8_t* data) {
 }
 
 static void CPE_MakeSelection(uint8_t* data) {
-	uint8_t selectionId = *data++;
+	uint8_t selectionId;
+	Vector3I p1, p2;
+	PackedCol c;
+
+	selectionId = *data++;
 	data += STRING_SIZE; /* label */
 
-	Vector3I p1;
 	p1.X = (int16_t)Stream_GetU16_BE(&data[0]);
 	p1.Y = (int16_t)Stream_GetU16_BE(&data[2]);
 	p1.Z = (int16_t)Stream_GetU16_BE(&data[4]);
+	data += 6;
 
-	Vector3I p2; data += 6;
 	p2.X = (int16_t)Stream_GetU16_BE(&data[0]);
 	p2.Y = (int16_t)Stream_GetU16_BE(&data[2]);
 	p2.Z = (int16_t)Stream_GetU16_BE(&data[4]);
+	data += 6;
 
-	PackedCol c; data += 6;
 	/* R,G,B,A are actually 16 bit unsigned integers */
 	c.R = data[1]; c.G = data[3]; c.B = data[5]; c.A = data[7];
 	Selections_Add(selectionId, p1, p2, c);
@@ -1197,14 +1224,13 @@ static void CPE_SetMapEnvProperty(uint8_t* data) {
 	uint8_t type = *data++;
 	int value    = (int)Stream_GetU32_BE(data);
 	Math_Clamp(value, -0xFFFFFF, 0xFFFFFF);
-	int maxBlock = BLOCK_COUNT - 1;
 
 	switch (type) {
 	case 0:
-		Math_Clamp(value, 0, maxBlock);
+		Math_Clamp(value, 0, BLOCK_MAX_DEFINED);
 		Env_SetSidesBlock((BlockID)value); break;
 	case 1:
-		Math_Clamp(value, 0, maxBlock);
+		Math_Clamp(value, 0, BLOCK_MAX_DEFINED);
 		Env_SetEdgeBlock((BlockID)value); break;
 	case 2:
 		Env_SetEdgeHeight(value); break;
@@ -1281,8 +1307,9 @@ static void CPE_TwoWayPing(uint8_t* data) {
 }
 
 static void CPE_SetInventoryOrder(uint8_t* data) {
-	BlockID block; Handlers_ReadBlock(data, block);
-	BlockID order; Handlers_ReadBlock(data, order);
+	BlockID block, order;
+	Handlers_ReadBlock(data, block);
+	Handlers_ReadBlock(data, order);
 
 	Inventory_Remove(block);
 	if (order) { Inventory_Map[order - 1] = block; }
@@ -1358,12 +1385,15 @@ static TextureLoc BlockDefs_Tex(uint8_t** ptr) {
 }
 
 static BlockID BlockDefs_DefineBlockCommonStart(uint8_t** ptr, bool uniqueSideTexs) {
+	BlockID block;
+	bool didBlockLight = Block_BlocksLight[block];
+	uint8_t sound;
 	uint8_t* data = *ptr;
+
 	char nameBuffer[STRING_SIZE];
 	String name = String_FromArray(nameBuffer);
 
-	BlockID block; Handlers_ReadBlock(data, block);
-	bool didBlockLight = Block_BlocksLight[block];
+	Handlers_ReadBlock(data, block);
 	Block_ResetProps(block);
 	
 	Handlers_ReadString(&data, &name);
@@ -1388,9 +1418,9 @@ static BlockID BlockDefs_DefineBlockCommonStart(uint8_t** ptr, bool uniqueSideTe
 	Block_BlocksLight[block] = *data++ == 0;
 	BlockDefs_OnBlockUpdated(block, didBlockLight);
 
-	uint8_t sound = *data++;
+	sound = *data++;
 	Block_StepSounds[block] = sound;
-	Block_DigSounds[block] = sound;
+	Block_DigSounds[block]  = sound;
 	if (sound == SOUND_GLASS) Block_StepSounds[block] = SOUND_STONE;
 
 	Block_FullBright[block] = *data++ != 0;
@@ -1399,17 +1429,20 @@ static BlockID BlockDefs_DefineBlockCommonStart(uint8_t** ptr, bool uniqueSideTe
 }
 
 static void BlockDefs_DefineBlockCommonEnd(uint8_t* data, uint8_t shape, BlockID block) {
-	uint8_t blockDraw = *data++;
+	uint8_t blockDraw;
+	uint8_t density;
+	PackedCol c;
+
+	blockDraw = *data++;
 	if (shape == 0) {
 		Block_SpriteOffset[block] = blockDraw;
 		blockDraw = DRAW_SPRITE;
 	}
 	Block_Draw[block] = blockDraw;
 
-	uint8_t density = *data++;
+	density = *data++;
 	Block_FogDensity[block] = density == 0 ? 0.0f : (density + 1) / 128.0f;
 
-	PackedCol c;
 	c.R = *data++; c.G = *data++; c.B = *data++; c.A = 255;
 	Block_FogCol[block] = c;
 	Block_DefineCustom(block);
@@ -1431,8 +1464,9 @@ static void BlockDefs_DefineBlock(uint8_t* data) {
 }
 
 static void BlockDefs_UndefineBlock(uint8_t* data) {
-	BlockID block; Handlers_ReadBlock(data, block);
+	BlockID block;
 	bool didBlockLight = Block_BlocksLight[block];
+	Handlers_ReadBlock(data, block);
 
 	Block_ResetProps(block);
 	BlockDefs_OnBlockUpdated(block, didBlockLight);

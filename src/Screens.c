@@ -849,9 +849,9 @@ static void ChatScreen_UpdateChatYOffset(struct ChatScreen* s, bool force) {
 }
 
 static void ChatElem_Recreate(struct TextGroupWidget* group, char code) {
-	int i, j;
 	char lineBuffer[TEXTGROUPWIDGET_LEN];
 	String line = String_FromArray(lineBuffer);
+	int i, j;
 
 	for (i = 0; i < group->LinesCount; i++) {
 		TextGroupWidget_GetText(group, i, &line);
@@ -1465,13 +1465,14 @@ static bool DisconnectScreen_KeyPress(void* s, char keyChar) { return true; }
 static bool DisconnectScreen_KeyUp(void* s, Key key) { return true; }
 
 static bool DisconnectScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
-	struct DisconnectScreen* s = screen;
-	struct ButtonWidget* w = &s->Reconnect;
-	if (btn != MouseButton_Left) return true;
+	char titleBuffer[STRING_SIZE];
+	String title = String_FromArray(titleBuffer);
 
-	if (!w->Disabled && Widget_Contains(w, x, y)) {
-		char titleBuffer[STRING_SIZE];
-		String title = String_FromArray(titleBuffer);
+	struct DisconnectScreen* s = screen;
+	struct ButtonWidget* w     = &s->Reconnect;
+
+	if (btn != MouseButton_Left) return true;
+	if (!w->Disabled && Widget_Contains(w, x, y)) {		
 		String_Format2(&title, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
 
 		Gui_FreeActive();
@@ -1483,7 +1484,8 @@ static bool DisconnectScreen_MouseDown(void* screen, int x, int y, MouseButton b
 
 static bool DisconnectScreen_MouseMove(void* screen, int x, int y) {
 	struct DisconnectScreen* s = screen;
-	struct ButtonWidget* w = &s->Reconnect;
+	struct ButtonWidget* w     = &s->Reconnect;
+
 	w->Active = !w->Disabled && Widget_Contains(w, x, y);
 	return true;
 }
@@ -1498,7 +1500,10 @@ struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_OnResize,  DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
 struct Screen* DisconnectScreen_MakeInstance(const String* title, const String* message) {
+	static String kick = String_FromConst("Kicked ");
+	static String ban  = String_FromConst("Banned ");
 	struct DisconnectScreen* s = &DisconnectScreen_Instance;
+
 	s->HandlesAllInput = true;
 	s->BlocksWorld     = true;
 	s->HidesHUD        = true;
@@ -1514,12 +1519,8 @@ struct Screen* DisconnectScreen_MakeInstance(const String* title, const String* 
 	char whyBuffer[STRING_SIZE];
 	String why = String_FromArray(whyBuffer);
 	String_AppendColorless(&why, message);
-
-	String kick = String_FromConst("Kicked ");
-	String ban  = String_FromConst("Banned ");
-	s->CanReconnect = 
-		!(String_CaselessStarts(&why, &kick) || String_CaselessStarts(&why, &ban));
-
+	
+	s->CanReconnect = !(String_CaselessStarts(&why, &kick) || String_CaselessStarts(&why, &ban));
 	s->VTABLE = &DisconnectScreen_VTABLE;
 	return (struct Screen*)s;
 }

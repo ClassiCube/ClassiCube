@@ -3,6 +3,9 @@
 #include "Funcs.h"
 #include "Constants.h"
 
+const Vector3 Vector3_Zero = { 0.0f, 0.0f, 0.0f };
+const Vector3 Vector3_One  = { 1.0f, 1.0f, 1.0f };
+
 Vector3 Vector3_Create1(float value) {
 	Vector3 v; v.X = value; v.Y = value; v.Z = value; return v;
 }

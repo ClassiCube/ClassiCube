@@ -163,8 +163,10 @@ static void Window_RefreshBorders(void) {
 
 static void Window_RefreshBounds(XEvent* e) {
 	Window_RefreshBorders();
+	Point2D loc;
+	loc.X = e->xconfigure.x - borderLeft;
+	loc.Y = e->xconfigure.y - borderTop;
 
-	Point2D loc = { e->xconfigure.x - borderLeft, e->xconfigure.y - borderTop };
 	if (loc.X != Window_Bounds.X || loc.Y != Window_Bounds.Y) {
 		Window_Bounds.X = loc.X; Window_Bounds.Y = loc.Y;
 		Event_RaiseVoid(&WindowEvents_Moved);
@@ -172,10 +174,9 @@ static void Window_RefreshBounds(XEvent* e) {
 
 	/* Note: width and height denote the internal (client) size.
 	   To get the external (window) size, we need to add the border size. */
-	Size2D size = {
-		e->xconfigure.width  + borderLeft + borderRight,
-		e->xconfigure.height + borderTop  + borderBottom 
-	};
+	Size2D size;
+	size.Width  = e->xconfigure.width  + borderLeft + borderRight;
+	size.Height = e->xconfigure.height + borderTop  + borderBottom;
 
 	if (size.Width != Window_Bounds.Width || size.Height != Window_Bounds.Height) {		 
 		Window_ClientSize.Width  = e->xconfigure.width;  Window_Bounds.Width  = size.Width;

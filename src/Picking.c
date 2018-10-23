@@ -59,9 +59,10 @@ static float RayTracer_Div(float a, float b) {
 }
 
 void RayTracer_SetVectors(struct RayTracer* t, Vector3 origin, Vector3 dir) {
+	Vector3I start, cellBoundary;
 	t->Origin = origin; t->Dir = dir;
+
 	/* Rounds the position's X, Y and Z down to the nearest integer values. */
-	Vector3I start;
 	Vector3I_Floor(&start, &origin);
 	/* The cell in which the ray starts. */
 	t->X = start.X; t->Y = start.Y; t->Z = start.Z;
@@ -71,7 +72,6 @@ void RayTracer_SetVectors(struct RayTracer* t, Vector3 origin, Vector3 dir) {
 	/* Calculate cell boundaries. When the step (i.e. direction sign) is positive,
 	the next boundary is AFTER our current position, meaning that we have to add 1.
 	Otherwise, it is BEFORE our current position, in which case we add nothing. */
-	Vector3I cellBoundary;
 	cellBoundary.X = start.X + (t->step.X > 0 ? 1 : 0);
 	cellBoundary.Y = start.Y + (t->step.Y > 0 ? 1 : 0);
 	cellBoundary.Z = start.Z + (t->step.Z > 0 ? 1 : 0);
@@ -186,7 +186,8 @@ static bool Picking_ClipBlock(struct PickedPos* pos) {
 	Vector3 scaledDir, intersect;
 	Vector3_Mul1(&scaledDir, &tracer.Dir, t0);      /* scaledDir = dir * t0 */
 	Vector3_Add(&intersect, &tracer.Origin, &scaledDir); /* intersect = origin + scaledDir */
-														 /* Only pick the block if the block is precisely within reach distance. */
+
+	/* Only pick the block if the block is precisely within reach distance. */
 	float lenSq = Vector3_LengthSquared(&scaledDir);
 	float reach = LocalPlayer_Instance.ReachDistance;
 

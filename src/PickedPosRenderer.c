@@ -45,7 +45,31 @@ void PickedPosRenderer_Render(double delta) {
 	Gfx_SetAlphaBlending(false);
 }
 
+#define PickedPos_Y(y)\
+0,y,1,  0,y,2,  1,y,2,  1,y,1,\
+3,y,1,  3,y,2,  2,y,2,  2,y,1,\
+0,y,0,  0,y,1,  3,y,1,  3,y,0,\
+0,y,3,  0,y,2,  3,y,2,  3,y,3,
+
+#define PickedPos_X(x)\
+x,1,0,  x,2,0,  x,2,1,  x,1,1,\
+x,1,3,  x,2,3,  x,2,2,  x,1,2,\
+x,0,0,  x,1,0,  x,1,3,  x,0,3,\
+x,3,0,  x,2,0,  x,2,3,  x,3,3,
+
+#define PickedPos_Z(z)\
+0,1,z,  0,2,z,  1,2,z,  1,1,z,\
+3,1,z,  3,2,z,  2,2,z,  2,1,z,\
+0,0,z,  0,1,z,  3,1,z,  3,0,z,\
+0,3,z,  0,2,z,  3,2,z,  3,3,z,
+
 void PickedPosRenderer_Update(struct PickedPos* selected) {
+	static uint8_t indices[288] = {
+		PickedPos_Y(0) PickedPos_Y(3) /* YMin, YMax */
+		PickedPos_X(0) PickedPos_X(3) /* XMin, XMax */
+		PickedPos_Z(0) PickedPos_Z(3) /* ZMin, ZMax */
+	};
+
 	Vector3 delta;
 	float dist, offset, size;
 	Vector3 coords[4];
@@ -82,30 +106,7 @@ void PickedPosRenderer_Update(struct PickedPos* selected) {
 	Vector3_Add1(&coords[1], &coords[0],      size);
 	Vector3_Add1(&coords[3], &selected->Max,  offset);
 	Vector3_Add1(&coords[2], &coords[3],     -size);
-
-#define PickedPos_Y(y)\
-0,y,1,  0,y,2,  1,y,2,  1,y,1,\
-3,y,1,  3,y,2,  2,y,2,  2,y,1,\
-0,y,0,  0,y,1,  3,y,1,  3,y,0,\
-0,y,3,  0,y,2,  3,y,2,  3,y,3,
-
-#define PickedPos_X(x)\
-x,1,0,  x,2,0,  x,2,1,  x,1,1,\
-x,1,3,  x,2,3,  x,2,2,  x,1,2,\
-x,0,0,  x,1,0,  x,1,3,  x,0,3,\
-x,3,0,  x,2,0,  x,2,3,  x,3,3,
-
-#define PickedPos_Z(z)\
-0,1,z,  0,2,z,  1,2,z,  1,1,z,\
-3,1,z,  3,2,z,  2,2,z,  2,1,z,\
-0,0,z,  0,1,z,  3,1,z,  3,0,z,\
-0,3,z,  0,2,z,  3,2,z,  3,3,z,
-
-	static uint8_t indices[288] = {
-		PickedPos_Y(0) PickedPos_Y(3) /* YMin, YMax */
-		PickedPos_X(0) PickedPos_X(3) /* XMin, XMax */
-		PickedPos_Z(0) PickedPos_Z(3) /* ZMin, ZMax */
-	};
+	
 	PackedCol col = PACKEDCOL_CONST(0, 0, 0, 102);
 	VertexP3fC4b* ptr = pickedPos_vertices;
 	int i;

@@ -109,10 +109,10 @@ void Entity_GetBounds(struct Entity* e, struct AABB* bb) {
 }
 
 static void Entity_ParseScale(struct Entity* e, const String* scale) {
-	float value;
+	float value, maxScale;
 	if (!Convert_TryParseFloat(scale, &value)) return;
 
-	float maxScale = e->Model->MaxScale;
+	maxScale = e->Model->MaxScale;
 	Math_Clamp(value, 0.01f, maxScale);
 	e->ModelScale = Vector3_Create1(value);
 }
@@ -236,9 +236,10 @@ void Entities_Tick(struct ScheduledTask* task) {
 }
 
 void Entities_RenderModels(double delta, float t) {
+	int i;
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
-	int i;
+	
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		Entities_List[i]->VTABLE->RenderModel(Entities_List[i], delta, t);
@@ -249,17 +250,19 @@ void Entities_RenderModels(double delta, float t) {
 	
 
 void Entities_RenderNames(double delta) {
-	if (Entities_NameMode == NAME_MODE_NONE) return;
 	struct LocalPlayer* p = &LocalPlayer_Instance;
+	bool hadFog;
+	int i;
+
+	if (Entities_NameMode == NAME_MODE_NONE) return;
 	entities_closestId = Entities_GetCloset(&p->Base);
 	if (!p->Hacks.CanSeeAllNames || Entities_NameMode != NAME_MODE_ALL) return;
 
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
-	bool hadFog = Gfx_GetFog();
+	hadFog = Gfx_GetFog();
 	if (hadFog) Gfx_SetFog(false);
 
-	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		if (i != entities_closestId || i == ENTITIES_SELF_ID) {
@@ -273,18 +276,20 @@ void Entities_RenderNames(double delta) {
 }
 
 void Entities_RenderHoveredNames(double delta) {
-	if (Entities_NameMode == NAME_MODE_NONE) return;
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	bool allNames = !(Entities_NameMode == NAME_MODE_HOVERED || Entities_NameMode == NAME_MODE_ALL)
+	bool allNames, hadFog;
+	int i;
+
+	if (Entities_NameMode == NAME_MODE_NONE) return;
+	allNames = !(Entities_NameMode == NAME_MODE_HOVERED || Entities_NameMode == NAME_MODE_ALL) 
 		&& p->Hacks.CanSeeAllNames;
 
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
 	Gfx_SetDepthTest(false);
-	bool hadFog = Gfx_GetFog();
+	hadFog = Gfx_GetFog();
 	if (hadFog) Gfx_SetFog(false);
 
-	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		if ((i == entities_closestId || allNames) && i != ENTITIES_SELF_ID) {
@@ -366,12 +371,13 @@ EntityID Entities_GetCloset(struct Entity* src) {
 	float closestDist = MATH_POS_INF;
 	EntityID targetId = ENTITIES_SELF_ID;
 
+	float t0, t1;
 	int i;
+
 	for (i = 0; i < ENTITIES_SELF_ID; i++) { /* because we don't want to pick against local player */
 		struct Entity* entity = Entities_List[i];
 		if (!entity) continue;
 
-		float t0, t1;
 		if (Intersection_RayIntersectsRotatedBox(eyePos, dir, entity, &t0, &t1) && t0 < closestDist) {
 			closestDist = t0;
 			targetId = (EntityID)i;
@@ -684,10 +690,16 @@ static void Player_EnsurePow2(struct Player* player, Bitmap* bmp) {
 
 static void Player_CheckSkin(struct Player* p) {
 	struct Entity* e = &p->Base;
-	String skin = String_FromRawArray(e->SkinNameRaw);
+	struct Player* first;
+	String url, skin = String_FromRawArray(e->SkinNameRaw);
+
+	struct AsyncRequest item;
+	struct Stream mem;
+	Bitmap bmp;
+	ReturnCode res;
 
 	if (!p->FetchedSkin && e->Model->UsesSkin) {
-		struct Player* first = Player_FirstOtherWithSameSkinAndFetchedSkin(p);
+		first = Player_FirstOtherWithSameSkinAndFetchedSkin(p);
 		if (!first) {
 			AsyncDownloader_GetSkin(&skin, &skin);
 		} else {
@@ -695,17 +707,13 @@ static void Player_CheckSkin(struct Player* p) {
 		}
 		p->FetchedSkin = true;
 	}
-
-	struct AsyncRequest item;
+	
 	if (!AsyncDownloader_Get(&skin, &item)) return;
 	if (!item.ResultData) { Player_SetSkinAll(p, true); return; }
-
-	String url = String_FromRawArray(item.URL);
-	struct Stream mem; Bitmap bmp;
 	Stream_ReadonlyMemory(&mem, item.ResultData, item.ResultSize);
 
-	ReturnCode res = Png_Decode(&bmp, &mem);
-	if (res) {
+	if ((res = Png_Decode(&bmp, &mem))) {
+		url = String_FromRawArray(item.URL);
 		Chat_LogError2(res, "decoding", &url);
 		Mem_Free(bmp.Scan0); return;
 	}
@@ -729,7 +737,8 @@ static void Player_CheckSkin(struct Player* p) {
 
 static void Player_Despawn(struct Entity* e) {
 	struct Player* player = (struct Player*)e;
-	struct Player* first = Player_FirstOtherWithSameSkin(player);
+	struct Player* first  = Player_FirstOtherWithSameSkin(player);
+
 	if (!first) {
 		Gfx_DeleteTexture(&e->TextureId);
 		Player_ResetSkin(player);
@@ -750,8 +759,9 @@ static void Player_ContextRecreated(struct Entity* e) {
 
 void Player_SetName(struct Player* p, const String* name, const String* skin) {
 	String p_name = String_ClearedArray(p->DisplayNameRaw);
-	String_AppendString(&p_name, name);
 	String p_skin = String_ClearedArray(p->Base.SkinNameRaw);
+
+	String_AppendString(&p_name, name);
 	String_AppendString(&p_skin, skin);
 }
 
@@ -809,7 +819,7 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 		hacks->FlyingDown   = KeyBind_IsPressed(KeyBind_FlyDown);
 
 		if (hacks->WOMStyleHacks && hacks->Enabled && hacks->CanNoclip) {
-			if (hacks->Noclip) { Vector3 zero = Vector3_Zero; p->Base.Velocity = zero; }
+			if (hacks->Noclip) p->Base.Velocity = Vector3_Zero;
 			hacks->Noclip = KeyBind_IsPressed(KeyBind_NoClip);
 		}
 	}
@@ -837,7 +847,7 @@ void LocalPlayer_Tick(struct Entity* e, double delta) {
 
 	/* Immediate stop in noclip mode */
 	if (!hacks->NoclipSlide && (hacks->Noclip && xMoving == 0 && zMoving == 0)) {
-		Vector3 zero = Vector3_Zero; e->Velocity = zero;
+		e->Velocity = Vector3_Zero;
 	}
 
 	PhysicsComp_UpdateVelocityState(&p->Physics);
@@ -889,7 +899,7 @@ static void LocalPlayer_Init_(void) {
 static void LocalPlayer_Reset(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	p->ReachDistance = 5.0f;
-	Vector3 zero = Vector3_Zero; p->Base.Velocity = zero;
+	p->Base.Velocity = Vector3_Zero;
 	p->Physics.JumpVel       = 0.42f;
 	p->Physics.ServerJumpVel = 0.42f;
 	/* p->Base.Health = 20; TODO: survival mode stuff */
@@ -897,9 +907,8 @@ static void LocalPlayer_Reset(void) {
 
 static void LocalPlayer_OnNewMap(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	Vector3 zero = Vector3_Zero; 
-	p->Base.Velocity = zero;
-	p->OldVelocity   = zero;
+	p->Base.Velocity = Vector3_Zero;
+	p->OldVelocity   = Vector3_Zero;
 
 	p->_WarnedRespawn = false;
 	p->_WarnedFly     = false;
@@ -961,7 +970,7 @@ static void LocalPlayer_DoRespawn(void) {
 	spawn.Y += 2.0f / 16.0f;
 	struct LocationUpdate update; LocationUpdate_MakePosAndOri(&update, spawn, p->SpawnRotY, p->SpawnHeadX, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
-	Vector3 zero = Vector3_Zero; p->Base.Velocity = zero;
+	p->Base.Velocity = Vector3_Zero;
 
 	/* Update onGround, otherwise if 'respawn' then 'space' is pressed, you still jump into the air if onGround was true before */
 	Entity_GetBounds(&p->Base, &bb);
@@ -1071,11 +1080,13 @@ static void NetPlayer_RenderModel(struct Entity* e, double deltaTime, float t) {
 
 static void NetPlayer_RenderName(struct Entity* e) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
+	float distance;
+	int threshold;
 	if (!p->ShouldRender) return;
 
-	float dist = Model_RenderDistance(e);
-	int threshold = Entities_NameMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
-	if (dist <= (float)threshold) Player_DrawName((struct Player*)p);
+	distance  = Model_RenderDistance(e);
+	threshold = Entities_NameMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
+	if (distance <= (float)threshold) Player_DrawName((struct Player*)p);
 }
 
 struct EntityVTABLE netPlayer_VTABLE = {

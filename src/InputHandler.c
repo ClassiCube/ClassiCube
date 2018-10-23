@@ -399,6 +399,7 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 
 static void InputHandler_MouseWheel(void* obj, float delta) {
 	struct Screen* active = Gui_GetActiveScreen();
+	struct Widget* widget;
 	bool hotbar;
 	if (Elem_HandlesMouseScroll(active, delta)) return;
 
@@ -406,8 +407,8 @@ static void InputHandler_MouseWheel(void* obj, float delta) {
 	if (!hotbar && Camera_Active->Zoom(delta)) return;
 	if (InputHandler_DoFovZoom(delta) || !Inventory_CanChangeHeldBlock) return;
 
-	struct Widget* hotbarW = HUDScreen_GetHotbar(Gui_HUD);
-	Elem_HandlesMouseScroll(hotbarW, delta);
+	widget = HUDScreen_GetHotbar(Gui_HUD);
+	Elem_HandlesMouseScroll(widget, delta);
 }
 
 static void InputHandler_MouseMove(void* obj, int xDelta, int yDelta) {

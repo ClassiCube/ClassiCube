@@ -74,7 +74,7 @@ static BlockID Particle_GetBlock(int x, int y, int z) {
 static bool Particle_TestY(struct Particle* p, int y, bool topFace, bool throughLiquids) {
 	if (y < 0) {
 		p->NextPos.Y = ENTITY_ADJUSTMENT; p->LastPos.Y = ENTITY_ADJUSTMENT;
-		Vector3 zero = Vector3_Zero; p->Velocity = zero;
+		p->Velocity  = Vector3_Zero;
 		particle_hitTerrain = true;
 		return false;
 	}
@@ -90,7 +90,7 @@ static bool Particle_TestY(struct Particle* p, int y, bool topFace, bool through
 		float adjust = topFace ? ENTITY_ADJUSTMENT : -ENTITY_ADJUSTMENT;
 		p->LastPos.Y = collideY + adjust;
 		p->NextPos.Y = p->LastPos.Y;
-		Vector3 zero = Vector3_Zero; p->Velocity = zero;
+		p->Velocity  = Vector3_Zero;
 		particle_hitTerrain = true;
 		return false;
 	}

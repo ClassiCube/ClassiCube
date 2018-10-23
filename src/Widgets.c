@@ -2488,7 +2488,7 @@ void TextGroupWidget_SetText(struct TextGroupWidget* w, int index, const String*
 
 	text.length = min(text.length, TEXTGROUPWIDGET_LEN);
 	Mem_Copy(TextGroupWidget_LineBuffer(w, index), text.buffer, text.length);
-	w->LineLengths[index] = text.length;
+	w->LineLengths[index] = (uint8_t)text.length;
 	
 	if (!Drawer2D_IsEmptyText(&text)) {
 		DrawTextArgs_Make(&args, &text, &w->Font, true);

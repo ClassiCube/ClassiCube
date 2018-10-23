@@ -288,13 +288,21 @@ static void Builder_ReadChunkData(int x1, int y1, int z1, bool* outAllAir, bool*
 }
 
 static bool Builder_BuildChunk(int x1, int y1, int z1, bool* allAir) {
-	BlockID chunk[EXTCHUNK_SIZE_3]; Builder_Chunk = chunk;
-	uint8_t counts[CHUNK_SIZE_3 * FACE_COUNT]; Builder_Counts = counts;
-	int bitFlags[EXTCHUNK_SIZE_3]; Builder_BitFlags = bitFlags;
+	BlockID chunk[EXTCHUNK_SIZE_3]; 
+	uint8_t counts[CHUNK_SIZE_3 * FACE_COUNT]; 
+	int bitFlags[EXTCHUNK_SIZE_3];
+
+	bool allSolid;
+	int xMax, yMax, zMax;
+	int cIndex, index;
+	int x, y, z, xx, yy, zz;
+
+	Builder_Chunk  = chunk;
+	Builder_Counts = counts;
+	Builder_BitFlags = bitFlags;
 	Builder_PreStretchTiles(x1, y1, z1);
 
 	Mem_Set(chunk, BLOCK_AIR, EXTCHUNK_SIZE_3 * sizeof(BlockID));
-	bool allSolid;
 	Builder_ReadChunkData(x1, y1, z1, allAir, &allSolid);
 
 	if (x1 == 0 || y1 == 0 || z1 == 0 || x1 + CHUNK_SIZE >= World_Width ||
@@ -304,24 +312,23 @@ static bool Builder_BuildChunk(int x1, int y1, int z1, bool* allAir) {
 	Lighting_LightHint(x1 - 1, z1 - 1);
 
 	Mem_Set(counts, 1, CHUNK_SIZE_3 * FACE_COUNT);
-	int xMax = min(World_Width,  x1 + CHUNK_SIZE);
-	int yMax = min(World_Height, y1 + CHUNK_SIZE);
-	int zMax = min(World_Length, z1 + CHUNK_SIZE);
+	xMax = min(World_Width,  x1 + CHUNK_SIZE);
+	yMax = min(World_Height, y1 + CHUNK_SIZE);
+	zMax = min(World_Length, z1 + CHUNK_SIZE);
 
 	Builder_ChunkEndX = xMax; Builder_ChunkEndZ = zMax;
 	Builder_Stretch(x1, y1, z1);
 	Builder_PostStretchTiles(x1, y1, z1);
-	int x, y, z, xx, yy, zz;
 
 	for (y = y1, yy = 0; y < yMax; y++, yy++) {
 		for (z = z1, zz = 0; z < zMax; z++, zz++) {
-			int cIndex = Builder_PackChunk(0, yy, zz);
+			cIndex = Builder_PackChunk(0, yy, zz);
 
 			for (x = x1, xx = 0; x < xMax; x++, xx++, cIndex++) {
 				Builder_Block = chunk[cIndex];
 				if (Block_Draw[Builder_Block] == DRAW_GAS) continue;
 
-				int index = Builder_PackCount(xx, yy, zz);
+				index = Builder_PackCount(xx, yy, zz);
 				Builder_X = x; Builder_Y = y; Builder_Z = z;
 				Builder_ChunkIndex = cIndex;
 				Builder_RenderBlock(index);
@@ -334,11 +341,13 @@ static bool Builder_BuildChunk(int x1, int y1, int z1, bool* allAir) {
 void Builder_MakeChunk(struct ChunkInfo* info) {
 	int x = info->CentreX - 8, y = info->CentreY - 8, z = info->CentreZ - 8;
 	bool allAir = false, hasMesh;
+	int totalVerts;
+
 	hasMesh = Builder_BuildChunk(x, y, z, &allAir);
 	info->AllAir = allAir;
 	if (!hasMesh) return;
 
-	int totalVerts = Builder_TotalVerticesCount();
+	totalVerts = Builder_TotalVerticesCount();
 	if (!totalVerts) return;
 #ifndef CC_BUILD_GL11
 	/* add an extra element to fix crashing on some GPUs */
@@ -384,7 +393,7 @@ static void Builder_DefaultPreStretchTiles(int x1, int y1, int z1) {
 }
 
 static void Builder_DefaultPostStretchTiles(int x1, int y1, int z1) {
-	int i, vertsCount = Builder_TotalVerticesCount();
+	int i, j, vertsCount = Builder_TotalVerticesCount();
 	if (vertsCount > Builder_VerticesElems) {
 		Mem_Free(Builder_Vertices);
 		/* ensure buffer can be accessed with 64 bytes alignment by putting 2 extra vertices at end. */
@@ -394,7 +403,8 @@ static void Builder_DefaultPostStretchTiles(int x1, int y1, int z1) {
 
 	vertsCount = 0;
 	for (i = 0; i < ATLAS1D_MAX_ATLASES; i++) {
-		int j = i + ATLAS1D_MAX_ATLASES;
+		j = i + ATLAS1D_MAX_ATLASES;
+
 		Builder1DPart_CalcOffsets(&Builder_Parts[i], &vertsCount);
 		Builder1DPart_CalcOffsets(&Builder_Parts[j], &vertsCount);
 	}
@@ -561,26 +571,29 @@ static int NormalBuilder_StretchZ(int countIndex, int x, int y, int z, int chunk
 }
 
 static void NormalBuilder_RenderBlock(int index) {
-	TextureLoc texLoc;
-	int offset;
+	TextureLoc texLoc;	
 	struct Builder1DPart* part;
 	PackedCol col;
+
+	int count_XMin, count_XMax, count_ZMin;
+	int count_ZMax, count_YMin, count_YMax;
+	int offset, count;
 
 	if (Block_Draw[Builder_Block] == DRAW_SPRITE) {
 		Builder_FullBright = Block_FullBright[Builder_Block];
 		Builder_Tinted = Block_Tinted[Builder_Block];
 
-		int count = Builder_Counts[index + FACE_YMAX];
+		count = Builder_Counts[index + FACE_YMAX];
 		if (count) Builder_DrawSprite(count);
 		return;
 	}
 
-	int count_XMin = Builder_Counts[index + FACE_XMIN];
-	int count_XMax = Builder_Counts[index + FACE_XMAX];
-	int count_ZMin = Builder_Counts[index + FACE_ZMIN];
-	int count_ZMax = Builder_Counts[index + FACE_ZMAX];
-	int count_YMin = Builder_Counts[index + FACE_YMIN];
-	int count_YMax = Builder_Counts[index + FACE_YMAX];
+	count_XMin = Builder_Counts[index + FACE_XMIN];
+	count_XMax = Builder_Counts[index + FACE_XMAX];
+	count_ZMin = Builder_Counts[index + FACE_ZMIN];
+	count_ZMax = Builder_Counts[index + FACE_ZMAX];
+	count_YMin = Builder_Counts[index + FACE_YMIN];
+	count_YMax = Builder_Counts[index + FACE_YMAX];
 
 	if (count_XMin == 0 && count_XMax == 0 && count_ZMin == 0 &&
 		count_ZMax == 0 && count_YMin == 0 && count_YMax == 0) return;
@@ -1091,20 +1104,26 @@ static void Adv_DrawYMax(int count) {
 }
 
 static void Adv_RenderBlock(int index) {
+	Vector3 min, max;
+	int count_XMin, count_XMax, count_ZMin;
+	int count_ZMax, count_YMin, count_YMax;
+	int count;
+
 	if (Block_Draw[Builder_Block] == DRAW_SPRITE) {
 		Builder_FullBright = Block_FullBright[Builder_Block];
 		Builder_Tinted = Block_Tinted[Builder_Block];
-		int count = Builder_Counts[index + FACE_YMAX];
+
+		count = Builder_Counts[index + FACE_YMAX];
 		if (count) Builder_DrawSprite(count);
 		return;
 	}
 
-	int count_XMin = Builder_Counts[index + FACE_XMIN];
-	int count_XMax = Builder_Counts[index + FACE_XMAX];
-	int count_ZMin = Builder_Counts[index + FACE_ZMIN];
-	int count_ZMax = Builder_Counts[index + FACE_ZMAX];
-	int count_YMin = Builder_Counts[index + FACE_YMIN];
-	int count_YMax = Builder_Counts[index + FACE_YMAX];
+	count_XMin = Builder_Counts[index + FACE_XMIN];
+	count_XMax = Builder_Counts[index + FACE_XMAX];
+	count_ZMin = Builder_Counts[index + FACE_ZMIN];
+	count_ZMax = Builder_Counts[index + FACE_ZMAX];
+	count_YMin = Builder_Counts[index + FACE_YMIN];
+	count_YMax = Builder_Counts[index + FACE_YMAX];
 
 	if (count_XMin == 0 && count_XMax == 0 && count_ZMin == 0 &&
 		count_ZMax == 0 && count_YMin == 0 && count_YMax == 0) return;
@@ -1114,7 +1133,7 @@ static void Adv_RenderBlock(int index) {
 	adv_lightFlags = Block_LightOffset[Builder_Block];
 	Builder_Tinted = Block_Tinted[Builder_Block];
 
-	Vector3 min = Block_RenderMinBB[Builder_Block], max = Block_RenderMaxBB[Builder_Block];
+	min = Block_RenderMinBB[Builder_Block]; max = Block_RenderMaxBB[Builder_Block];
 	adv_x1 = Builder_X + min.X; adv_y1 = Builder_Y + min.Y; adv_z1 = Builder_Z + min.Z;
 	adv_x2 = Builder_X + max.X; adv_y2 = Builder_Y + max.Y; adv_z2 = Builder_Z + max.Z;
 
