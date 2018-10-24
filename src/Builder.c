@@ -889,16 +889,18 @@ static void Adv_DrawXMin(int count) {
 	int aY1_Z0 = Adv_CountBits(F, xM1_yP1_zM1, xM1_yCC_zM1, xM1_yP1_zCC, xM1_yCC_zCC);
 	int aY1_Z1 = Adv_CountBits(F, xM1_yP1_zP1, xM1_yCC_zP1, xM1_yP1_zCC, xM1_yCC_zCC);
 
-	PackedCol white = PACKEDCOL_WHITE;
+	PackedCol tint, white = PACKEDCOL_WHITE;
 	PackedCol col0_0 = Builder_FullBright ? white : adv_lerpX[aY0_Z0], col1_0 = Builder_FullBright ? white : adv_lerpX[aY1_Z0];
 	PackedCol col1_1 = Builder_FullBright ? white : adv_lerpX[aY1_Z1], col0_1 = Builder_FullBright ? white : adv_lerpX[aY0_Z1];
+	VertexP3fT2fC4b* vertices, v;
+
 	if (Builder_Tinted) {
-		PackedCol tint = Block_FogCol[Builder_Block];
+		tint = Block_FogCol[Builder_Block];
 		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
 	}
 
-	VertexP3fT2fC4b* vertices = part->fVertices[FACE_XMIN];
-	VertexP3fT2fC4b v; v.X = adv_x1;
+	vertices = part->fVertices[FACE_XMIN];
+	v.X = adv_x1;
 	if (aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0) {
 		v.Y = adv_y2; v.Z = adv_z1;               v.U = u1; v.V = v1; v.Col = col1_0; *vertices++ = v;
 		v.Y = adv_y1;                                       v.V = v2; v.Col = col0_0; *vertices++ = v;
@@ -928,16 +930,18 @@ static void Adv_DrawXMax(int count) {
 	int aY1_Z0 = Adv_CountBits(F, xP1_yP1_zM1, xP1_yCC_zM1, xP1_yP1_zCC, xP1_yCC_zCC);
 	int aY1_Z1 = Adv_CountBits(F, xP1_yP1_zP1, xP1_yCC_zP1, xP1_yP1_zCC, xP1_yCC_zCC);
 
-	PackedCol white = PACKEDCOL_WHITE;
+	PackedCol tint, white = PACKEDCOL_WHITE;
 	PackedCol col0_0 = Builder_FullBright ? white : adv_lerpX[aY0_Z0], col1_0 = Builder_FullBright ? white : adv_lerpX[aY1_Z0];
 	PackedCol col1_1 = Builder_FullBright ? white : adv_lerpX[aY1_Z1], col0_1 = Builder_FullBright ? white : adv_lerpX[aY0_Z1];
+	VertexP3fT2fC4b* vertices, v;
+
 	if (Builder_Tinted) {
-		PackedCol tint = Block_FogCol[Builder_Block];
+		tint = Block_FogCol[Builder_Block];
 		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
 	}
 
-	VertexP3fT2fC4b* vertices = part->fVertices[FACE_XMAX];
-	VertexP3fT2fC4b v; v.X = adv_x2;
+	vertices = part->fVertices[FACE_XMAX];
+	v.X = adv_x2;
 	if (aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0) {
 		v.Y = adv_y2; v.Z = adv_z1;               v.U = u1; v.V = v1; v.Col = col1_0; *vertices++ = v;
 		              v.Z = adv_z2 + (count - 1); v.U = u2;           v.Col = col1_1; *vertices++ = v;
@@ -967,16 +971,18 @@ static void Adv_DrawZMin(int count) {
 	int aX1_Y0 = Adv_CountBits(F, xP1_yM1_zM1, xP1_yCC_zM1, xCC_yM1_zM1, xCC_yCC_zM1);
 	int aX1_Y1 = Adv_CountBits(F, xP1_yP1_zM1, xP1_yCC_zM1, xCC_yP1_zM1, xCC_yCC_zM1);
 
-	PackedCol white = PACKEDCOL_WHITE;
+	PackedCol tint, white = PACKEDCOL_WHITE;
 	PackedCol col0_0 = Builder_FullBright ? white : adv_lerpZ[aX0_Y0], col1_0 = Builder_FullBright ? white : adv_lerpZ[aX1_Y0];
 	PackedCol col1_1 = Builder_FullBright ? white : adv_lerpZ[aX1_Y1], col0_1 = Builder_FullBright ? white : adv_lerpZ[aX0_Y1];
+	VertexP3fT2fC4b* vertices, v;
+
 	if (Builder_Tinted) {
-		PackedCol tint = Block_FogCol[Builder_Block];
+		tint = Block_FogCol[Builder_Block];
 		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
 	}
 
-	VertexP3fT2fC4b* vertices = part->fVertices[FACE_ZMIN];
-	VertexP3fT2fC4b v; v.Z = adv_z1;
+	vertices = part->fVertices[FACE_ZMIN];
+	v.Z = adv_z1;
 	if (aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0) {
 		v.X = adv_x2 + (count - 1); v.Y = adv_y1; v.U = u2; v.V = v2; v.Col = col1_0; *vertices++ = v;
 		v.X = adv_x1;                             v.U = u1;           v.Col = col0_0; *vertices++ = v;
@@ -1006,16 +1012,18 @@ static void Adv_DrawZMax(int count) {
 	int aX0_Y1 = Adv_CountBits(F, xM1_yP1_zP1, xM1_yCC_zP1, xCC_yP1_zP1, xCC_yCC_zP1);
 	int aX1_Y1 = Adv_CountBits(F, xP1_yP1_zP1, xP1_yCC_zP1, xCC_yP1_zP1, xCC_yCC_zP1);
 
-	PackedCol white = PACKEDCOL_WHITE;
+	PackedCol tint, white = PACKEDCOL_WHITE;
 	PackedCol col1_1 = Builder_FullBright ? white : adv_lerpZ[aX1_Y1], col1_0 = Builder_FullBright ? white : adv_lerpZ[aX1_Y0];
 	PackedCol col0_0 = Builder_FullBright ? white : adv_lerpZ[aX0_Y0], col0_1 = Builder_FullBright ? white : adv_lerpZ[aX0_Y1];
+	VertexP3fT2fC4b* vertices, v;
+
 	if (Builder_Tinted) {
-		PackedCol tint = Block_FogCol[Builder_Block];
+		tint = Block_FogCol[Builder_Block];
 		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
 	}
 
-	VertexP3fT2fC4b* vertices = part->fVertices[FACE_ZMAX];
-	VertexP3fT2fC4b v; v.Z = adv_z2;
+	vertices = part->fVertices[FACE_ZMAX];
+	v.Z = adv_z2;
 	if (aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0) {
 		v.X = adv_x1;               v.Y = adv_y2; v.U = u1; v.V = v1; v.Col = col0_1; *vertices++ = v;
 		                            v.Y = adv_y1;           v.V = v2; v.Col = col0_0; *vertices++ = v;
@@ -1045,16 +1053,18 @@ static void Adv_DrawYMin(int count) {
 	int aX0_Z1 = Adv_CountBits(F, xM1_yM1_zP1, xM1_yM1_zCC, xCC_yM1_zP1, xCC_yM1_zCC);
 	int aX1_Z1 = Adv_CountBits(F, xP1_yM1_zP1, xP1_yM1_zCC, xCC_yM1_zP1, xCC_yM1_zCC);
 
-	PackedCol white = PACKEDCOL_WHITE;
+	PackedCol tint, white = PACKEDCOL_WHITE;
 	PackedCol col0_1 = Builder_FullBright ? white : adv_lerpY[aX0_Z1], col1_1 = Builder_FullBright ? white : adv_lerpY[aX1_Z1];
 	PackedCol col1_0 = Builder_FullBright ? white : adv_lerpY[aX1_Z0], col0_0 = Builder_FullBright ? white : adv_lerpY[aX0_Z0];
+	VertexP3fT2fC4b* vertices, v;
+
 	if (Builder_Tinted) {
-		PackedCol tint = Block_FogCol[Builder_Block];
+		tint = Block_FogCol[Builder_Block];
 		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
 	}
 
-	VertexP3fT2fC4b* vertices = part->fVertices[FACE_YMIN];
-	VertexP3fT2fC4b v; v.Y = adv_y1;
+	vertices = part->fVertices[FACE_YMIN];
+	v.Y = adv_y1;
 	if (aX0_Z1 + aX1_Z0 > aX0_Z0 + aX1_Z1) {
 		v.X = adv_x2 + (count - 1); v.Z = adv_z2; v.U = u2; v.V = v2; v.Col = col1_1; *vertices++ = v;
 		v.X = adv_x1;                             v.U = u1;           v.Col = col0_1; *vertices++ = v;
@@ -1084,16 +1094,18 @@ static void Adv_DrawYMax(int count) {
 	int aX0_Z1 = Adv_CountBits(F, xM1_yP1_zP1, xM1_yP1_zCC, xCC_yP1_zP1, xCC_yP1_zCC);
 	int aX1_Z1 = Adv_CountBits(F, xP1_yP1_zP1, xP1_yP1_zCC, xCC_yP1_zP1, xCC_yP1_zCC);
 
-	PackedCol white = PACKEDCOL_WHITE;
+	PackedCol tint, white = PACKEDCOL_WHITE;
 	PackedCol col0_0 = Builder_FullBright ? white : adv_lerp[aX0_Z0], col1_0 = Builder_FullBright ? white : adv_lerp[aX1_Z0];
 	PackedCol col1_1 = Builder_FullBright ? white : adv_lerp[aX1_Z1], col0_1 = Builder_FullBright ? white : adv_lerp[aX0_Z1];
+	VertexP3fT2fC4b* vertices, v;
+
 	if (Builder_Tinted) {
-		PackedCol tint = Block_FogCol[Builder_Block];
+		tint = Block_FogCol[Builder_Block];
 		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
 	}
 
-	VertexP3fT2fC4b* vertices = part->fVertices[FACE_YMAX];
-	VertexP3fT2fC4b v; v.Y = adv_y2;
+	vertices = part->fVertices[FACE_YMAX];
+	v.Y = adv_y2;
 	if (aX0_Z0 + aX1_Z1 > aX0_Z1 + aX1_Z0) {
 		v.X = adv_x2 + (count - 1); v.Z = adv_z1; v.U = u2; v.V = v1; v.Col = col1_0; *vertices++ = v;
 		v.X = adv_x1;                             v.U = u1;           v.Col = col0_0; *vertices++ = v;
@@ -1154,9 +1166,9 @@ static void Adv_RenderBlock(int index) {
 }
 
 static void Adv_PreStretchTiles(int x1, int y1, int z1) {
+	int i;
 	Builder_DefaultPreStretchTiles(x1, y1, z1);
 	adv_bitFlags = Builder_BitFlags;
-	int i;
 
 	for (i = 0; i <= 4; i++) {
 		adv_lerp[i]  = PackedCol_Lerp(Env_ShadowCol,   Env_SunCol,   i / 4.0f);

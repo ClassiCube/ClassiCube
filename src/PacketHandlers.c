@@ -1392,7 +1392,7 @@ static TextureLoc BlockDefs_Tex(uint8_t** ptr) {
 
 static BlockID BlockDefs_DefineBlockCommonStart(uint8_t** ptr, bool uniqueSideTexs) {
 	BlockID block;
-	bool didBlockLight = Block_BlocksLight[block];
+	bool didBlockLight;
 	uint8_t sound;
 	uint8_t* data = *ptr;
 
@@ -1400,6 +1400,7 @@ static BlockID BlockDefs_DefineBlockCommonStart(uint8_t** ptr, bool uniqueSideTe
 	String name = String_FromArray(nameBuffer);
 
 	Handlers_ReadBlock(data, block);
+	didBlockLight = Block_BlocksLight[block];
 	Block_ResetProps(block);
 	
 	Handlers_ReadString(&data, &name);
@@ -1471,8 +1472,10 @@ static void BlockDefs_DefineBlock(uint8_t* data) {
 
 static void BlockDefs_UndefineBlock(uint8_t* data) {
 	BlockID block;
-	bool didBlockLight = Block_BlocksLight[block];
+	bool didBlockLight;
+
 	Handlers_ReadBlock(data, block);
+	didBlockLight = Block_BlocksLight[block];
 
 	Block_ResetProps(block);
 	BlockDefs_OnBlockUpdated(block, didBlockLight);
