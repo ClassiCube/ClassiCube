@@ -61,7 +61,7 @@ ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
-#include <pthread.h> 
+#include <pthread.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -379,7 +379,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 
 	do {
 		path.length = 0;
-		String_Format2(&path, "%s%r", dirPath, &Directory_Separator);	
+		String_Format2(&path, "%s%r", dirPath, &Directory_Separator);
 
 		/* ignore . and .. entry */
 		WCHAR* src = entry.cFileName;
@@ -663,42 +663,40 @@ void* Thread_StartCallback(void* lpParam) {
 	return NULL;
 }
 
-pthread_t threadList[3]; int threadIndex;
 void* Thread_Start(Thread_StartFunc* func, bool detach) {
-	if (threadIndex == Array_Elems(threadList)) ErrorHandler_Fail("Cannot allocate thread");
-	pthread_t* ptr = &threadList[threadIndex];
+	pthread_t* ptr = Mem_Alloc(1, sizeof(pthread_t), "allocating thread");
 	int result = pthread_create(ptr, NULL, Thread_StartCallback, func);
 	ErrorHandler_CheckOrFail(result, "Creating thread");
 
 	if (detach) Thread_Detach(ptr);
-	threadIndex++; return ptr;
+	return ptr;
 }
 
 void Thread_Detach(void* handle) {
 	pthread_t* ptr = handle;
 	int result = pthread_detach(*ptr);
 	ErrorHandler_CheckOrFail(result, "Detaching thread");
+	Mem_Free(ptr);
 }
 
 void Thread_Join(void* handle) {
 	pthread_t* ptr = handle;
 	int result = pthread_join(*ptr, NULL);
 	ErrorHandler_CheckOrFail(result, "Joining thread");
+	Mem_Free(ptr);
 }
 
-pthread_mutex_t mutexList[3]; int mutexIndex;
 void* Mutex_Create(void) {
-	if (mutexIndex == Array_Elems(mutexList)) ErrorHandler_Fail("Cannot allocate mutex");
-	pthread_mutex_t* ptr = &mutexList[mutexIndex];
+	pthread_mutex_t* ptr = Mem_Alloc(1, sizeof(pthread_mutex_t), "allocating mutex");
 	int result = pthread_mutex_init(ptr, NULL);
-
 	ErrorHandler_CheckOrFail(result, "Creating mutex");
-	mutexIndex++; return ptr;
+	return ptr;
 }
 
 void Mutex_Free(void* handle) {
 	int result = pthread_mutex_destroy((pthread_mutex_t*)handle);
 	ErrorHandler_CheckOrFail(result, "Destroying mutex");
+	Mem_Free(handle);
 }
 
 void Mutex_Lock(void* handle) {
@@ -711,19 +709,17 @@ void Mutex_Unlock(void* handle) {
 	ErrorHandler_CheckOrFail(result, "Unlocking mutex");
 }
 
-pthread_cond_t condList[2]; int condIndex;
 void* Waitable_Create(void) {
-	if (condIndex == Array_Elems(condList)) ErrorHandler_Fail("Cannot allocate event");
-	pthread_cond_t* ptr = &condList[condIndex];
+	pthread_cond_t* ptr = Mem_Alloc(1, sizeof(pthread_cond_t), "allocating waitable");
 	int result = pthread_cond_init(ptr, NULL);
-
 	ErrorHandler_CheckOrFail(result, "Creating event");
-	condIndex++; return ptr;
+	return ptr;
 }
 
 void Waitable_Free(void* handle) {
 	int result = pthread_cond_destroy((pthread_cond_t*)handle);
 	ErrorHandler_CheckOrFail(result, "Destroying event");
+	Mem_Free(handle);
 }
 
 void Waitable_Signal(void* handle) {
@@ -844,7 +840,7 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 
 	if (idx == -1) {
 		entries = &norm_fonts;
-		idx = Font_Find(fontName, entries); 
+		idx = Font_Find(fontName, entries);
 	}
 
 	if (idx == -1) ErrorHandler_Fail("Unknown font");
@@ -957,7 +953,7 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, P
 				dst[1] = ((col.G * intensity) >> 8) + ((dst[1] * invIntensity) >> 8);
 				dst[2] = ((col.R * intensity) >> 8) + ((dst[2] * invIntensity) >> 8);
 				//dst[3] = ((col.A * intensity) >> 8) + ((dst[3] * invIntensity) >> 8);
-				dst[3] = intensity + ((dst[3] * invIntensity) >> 8);				
+				dst[3] = intensity + ((dst[3] * invIntensity) >> 8);
 				src++; dst += BITMAP_SIZEOF_PIXEL;
 			}
 		}
@@ -1381,7 +1377,7 @@ void Audio_Init(AudioHandle* handle, int buffers) {
 	for (i = 0; i < Array_Elems(Audio_Contexts); i++) {
 		struct AudioContext* ctx = &Audio_Contexts[i];
 		if (ctx->Count) continue;
-	
+
 		for (j = 0; j < buffers; j++) {
 			ctx->Headers[j].dwFlags = WHDR_DONE;
 		}
@@ -1663,7 +1659,7 @@ ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) {
 }
 #endif
 static ReturnCode Audio_AllCompleted(AudioHandle handle, bool* finished) {
-	struct AudioContext* ctx = &Audio_Contexts[handle];	
+	struct AudioContext* ctx = &Audio_Contexts[handle];
 	ReturnCode res;
 	int i;
 	*finished = false;
@@ -1698,7 +1694,7 @@ void Platform_ConvertString(void* data, const String* src) {
 	WCHAR* dst = data;
 	int i;
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
-	
+
 	for (i = 0; i < src->length; i++) {
 		*dst = Convert_CP437ToUnicode(src->buffer[i]); dst++;
 	}
@@ -1768,7 +1764,7 @@ static String Platform_NextArg(STRING_REF String* args) {
 	while (args->length && args->buffer[0] == ' ') {
 		*args = String_UNSAFE_SubstringAt(args, 1);
 	}
-	
+
 	if (args->length && args->buffer[0] == '"') {
 		/* "xy za" is used for arg with spaces */
 		*args = String_UNSAFE_SubstringAt(args, 1);
@@ -1776,7 +1772,7 @@ static String Platform_NextArg(STRING_REF String* args) {
 	} else {
 		end = String_IndexOf(args, ' ', 0);
 	}
-	
+
 	if (end == -1) {
 		arg   = *args;
 		args->length = 0;
@@ -1806,7 +1802,7 @@ void Platform_ConvertString(void* data, const String* src) {
 	Codepoint cp;
 	int i, len;
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
-	
+
 	for (i = 0; i < src->length; i++) {
 		cp  = Convert_CP437ToUnicode(src->buffer[i]);
 		len = Stream_WriteUtf8(dst, cp); dst += len;
