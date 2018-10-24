@@ -55,7 +55,7 @@ struct SoundGroup {
 };
 
 struct Soundboard {
-	Random Rnd; int Count;
+	RNGState Rnd; int Count;
 	struct SoundGroup Groups[AUDIO_MAX_SOUNDS];
 };
 
@@ -441,7 +441,7 @@ static void Music_RunLoop(void) {
 	uint16_t musicFiles[MUSIC_MAX_FILES];
 	String file;
 
-	Random rnd;
+	RNGState rnd;
 	struct Stream stream;
 	int i, count = 0, idx, delay;
 	ReturnCode res = 0;

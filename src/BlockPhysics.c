@@ -89,7 +89,7 @@ PhysicsHandler Physics_OnRandomTick[BLOCK_COUNT];
 PhysicsHandler Physics_OnPlace[BLOCK_COUNT];
 PhysicsHandler Physics_OnDelete[BLOCK_COUNT];
 
-Random physics_rnd;
+RNGState physics_rnd;
 int physics_tickCount;
 int physics_maxWaterX, physics_maxWaterY, physics_maxWaterZ;
 struct TickQueue physics_lavaQ, physics_waterQ;

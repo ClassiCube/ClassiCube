@@ -410,7 +410,7 @@ static void Builder_DefaultPostStretchTiles(int x1, int y1, int z1) {
 	}
 }
 
-Random spriteRng;
+RNGState spriteRng;
 static void Builder_DrawSprite(int count) {
 	TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_XMAX);
 	int i = Atlas1D_Index(texLoc);
@@ -513,9 +513,14 @@ static PackedCol Normal_LightCol(int x, int y, int z, Face face, BlockID block) 
 
 static bool Normal_CanStretch(BlockID initial, int chunkIndex, int x, int y, int z, Face face) {
 	BlockID cur = Builder_Chunk[chunkIndex];
-	return cur == initial
-		&& !Block_IsFaceHidden(cur, Builder_Chunk[chunkIndex + Builder_Offsets[face]], face)
-		&& (Builder_FullBright || PackedCol_Equals(Normal_LightCol(Builder_X, Builder_Y, Builder_Z, face, initial), Normal_LightCol(x, y, z, face, cur)));
+	PackedColUnion initCol, curCol;
+
+	if (cur != initial || Block_IsFaceHidden(cur, Builder_Chunk[chunkIndex + Builder_Offsets[face]], face)) return false;
+	if (Builder_FullBright) return true;
+
+	initCol.C = Normal_LightCol(Builder_X, Builder_Y, Builder_Z, face, initial);
+	curCol.C  = Normal_LightCol(x, y, z, face, cur);
+	return initCol.Raw == curCol.Raw;
 }
 
 static int NormalBuilder_StretchXLiquid(int countIndex, int x, int y, int z, int chunkIndex, BlockID block) {

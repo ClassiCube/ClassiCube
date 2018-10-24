@@ -122,10 +122,10 @@ struct MenuInputValidatorVTABLE {
 struct MenuInputValidator {
 	struct MenuInputValidatorVTABLE* VTABLE;
 	union {
-		struct { const char** Names; int Count; } Meta_Enum;
-		struct { int Min, Max; } Meta_Int;
-		struct { float Min, Max; } Meta_Float;
-	};
+		struct { const char** Names; int Count; } _Enum;
+		struct { int Min, Max; } _Int;
+		struct { float Min, Max; } _Float;
+	} Meta;
 };
 
 struct MenuInputValidator MenuInputValidator_Hex(void);

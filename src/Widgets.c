@@ -1303,7 +1303,7 @@ struct MenuInputValidator MenuInputValidator_Hex(void) {
 }
 
 static void Int_Range(struct MenuInputValidator* v, String* range) {
-	String_Format2(range, "&7(%i - %i)", &v->Meta_Int.Min, &v->Meta_Int.Max);
+	String_Format2(range, "&7(%i - %i)", &v->Meta._Int.Min, &v->Meta._Int.Max);
 }
 
 static bool Int_ValidChar(struct MenuInputValidator* v, char c) {
@@ -1317,7 +1317,7 @@ static bool Int_ValidString(struct MenuInputValidator* v, const String* s) {
 }
 
 static bool Int_ValidValue(struct MenuInputValidator* v, const String* s) {
-	int value, min = v->Meta_Int.Min, max = v->Meta_Int.Max;
+	int value, min = v->Meta._Int.Min, max = v->Meta._Int.Max;
 	return Convert_TryParseInt(s, &value) && min <= value && value <= max;
 }
 
@@ -1327,8 +1327,8 @@ struct MenuInputValidatorVTABLE IntInputValidator_VTABLE = {
 struct MenuInputValidator MenuInputValidator_Int(int min, int max) {
 	struct MenuInputValidator v;
 	v.VTABLE = &IntInputValidator_VTABLE;
-	v.Meta_Int.Min = min;
-	v.Meta_Int.Max = max;
+	v.Meta._Int.Min = min;
+	v.Meta._Int.Max = max;
 	return v;
 }
 
@@ -1346,7 +1346,7 @@ struct MenuInputValidator MenuInputValidator_Seed(void) {
 }
 
 static void Float_Range(struct MenuInputValidator* v, String* range) {
-	String_Format2(range, "&7(%f2 - %f2)", &v->Meta_Float.Min, &v->Meta_Float.Max);
+	String_Format2(range, "&7(%f2 - %f2)", &v->Meta._Float.Min, &v->Meta._Float.Max);
 }
 
 static bool Float_ValidChar(struct MenuInputValidator* v, char c) {
@@ -1360,7 +1360,7 @@ static bool Float_ValidString(struct MenuInputValidator* v, const String* s) {
 }
 
 static bool Float_ValidValue(struct MenuInputValidator* v, const String* s) {
-	float value, min = v->Meta_Float.Min, max = v->Meta_Float.Max;
+	float value, min = v->Meta._Float.Min, max = v->Meta._Float.Max;
 	return Convert_TryParseFloat(s, &value) && min <= value && value <= max;
 }
 
@@ -1370,8 +1370,8 @@ struct MenuInputValidatorVTABLE FloatInputValidator_VTABLE = {
 struct MenuInputValidator MenuInputValidator_Float(float min, float max) {
 	struct MenuInputValidator v;
 	v.VTABLE = &FloatInputValidator_VTABLE;
-	v.Meta_Float.Min = min;
-	v.Meta_Float.Max = max;
+	v.Meta._Float.Min = min;
+	v.Meta._Float.Max = max;
 	return v;
 }
 
@@ -1397,8 +1397,8 @@ struct MenuInputValidator MenuInputValidator_Path(void) {
 struct MenuInputValidator MenuInputValidator_Enum(const char** names, int namesCount) {
 	struct MenuInputValidator v;
 	v.VTABLE          = NULL;
-	v.Meta_Enum.Names = names;
-	v.Meta_Enum.Count = namesCount;
+	v.Meta._Enum.Names = names;
+	v.Meta._Enum.Count = namesCount;
 	return v;
 }
 

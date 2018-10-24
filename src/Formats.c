@@ -238,47 +238,47 @@ struct NbtTag {
 	uint32_t DataSize; /* size of data for arrays */
 
 	union {
-		uint8_t  Value_U8;
-		int16_t  Value_I16;
-		uint16_t Value_U16;
-		uint32_t Value_U32;
-		float    Value_F32;
-		uint8_t  DataSmall[NBT_SMALL_SIZE];
-		uint8_t* DataBig; /* malloc for big byte arrays */
-		struct { String Value_Str; char StrBuffer[NBT_STRING_SIZE]; };
-	};
+		uint8_t  U8;
+		int16_t  I16;
+		uint16_t U16;
+		uint32_t U32;
+		float    F32;
+		uint8_t  Small[NBT_SMALL_SIZE];
+		uint8_t* Big; /* malloc for big byte arrays */
+		struct { String Text; char Buffer[NBT_STRING_SIZE]; } Str;
+	} Value;
 };
 
 static uint8_t NbtTag_U8(struct NbtTag* tag) {
 	if (tag->TagID != NBT_I8) ErrorHandler_Fail("Expected I8 NBT tag");
-	return tag->Value_U8;
+	return tag->Value.U8;
 }
 
 static int16_t NbtTag_I16(struct NbtTag* tag) {
 	if (tag->TagID != NBT_I16) ErrorHandler_Fail("Expected I16 NBT tag");
-	return tag->Value_I16;
+	return tag->Value.I16;
 }
 
 static uint16_t NbtTag_U16(struct NbtTag* tag) {
 	if (tag->TagID != NBT_I16) ErrorHandler_Fail("Expected I16 NBT tag");
-	return tag->Value_U16;
+	return tag->Value.U16;
 }
 
 static float NbtTag_F32(struct NbtTag* tag) {
 	if (tag->TagID != NBT_F32) ErrorHandler_Fail("Expected F32 NBT tag");
-	return tag->Value_F32;
+	return tag->Value.F32;
 }
 
 static uint8_t* NbtTag_U8_Array(struct NbtTag* tag, int minSize) {
 	if (tag->TagID != NBT_I8S) ErrorHandler_Fail("Expected I8_Array NBT tag");
 	if (tag->DataSize < minSize) ErrorHandler_Fail("I8_Array NBT tag too small");
 
-	return NbtTag_IsSmall(tag) ? tag->DataSmall : tag->DataBig;
+	return NbtTag_IsSmall(tag) ? tag->Value.Small : tag->Value.Big;
 }
 
 static String NbtTag_String(struct NbtTag* tag) {
 	if (tag->TagID != NBT_STR) ErrorHandler_Fail("Expected String NBT tag");
-	return tag->Value_Str;
+	return tag->Value.Str.Text;
 }
 
 static ReturnCode Nbt_ReadString(struct Stream* stream, String* str) {
@@ -316,15 +316,15 @@ static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* s
 
 	switch (typeId) {
 	case NBT_I8:
-		res = stream->ReadU8(stream, &tag.Value_U8);
+		res = stream->ReadU8(stream, &tag.Value.U8);
 		break;
 	case NBT_I16:
 		res = Stream_Read(stream, tmp, 2);
-		tag.Value_I16 = Stream_GetU16_BE(tmp);
+		tag.Value.U16 = Stream_GetU16_BE(tmp);
 		break;
 	case NBT_I32:
 	case NBT_F32:
-		res = Stream_ReadU32_BE(stream, &tag.Value_U32);
+		res = Stream_ReadU32_BE(stream, &tag.Value.U32);
 		break;
 	case NBT_I64:
 	case NBT_R64:
@@ -335,16 +335,16 @@ static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* s
 		if ((res = Stream_ReadU32_BE(stream, &tag.DataSize))) break;
 
 		if (NbtTag_IsSmall(&tag)) {
-			res = Stream_Read(stream, tag.DataSmall, tag.DataSize);
+			res = Stream_Read(stream, tag.Value.Small, tag.DataSize);
 		} else {
-			tag.DataBig = Mem_Alloc(tag.DataSize, 1, "NBT data");
-			res = Stream_Read(stream, tag.DataBig, tag.DataSize);
-			if (res) { Mem_Free(tag.DataBig); }
+			tag.Value.Big = Mem_Alloc(tag.DataSize, 1, "NBT data");
+			res = Stream_Read(stream, tag.Value.Big, tag.DataSize);
+			if (res) { Mem_Free(tag.Value.Big); }
 		}
 		break;
 	case NBT_STR:
-		tag.Value_Str = String_Init(tag.StrBuffer, 0, NBT_STRING_SIZE);
-		res = Nbt_ReadString(stream, &tag.Value_Str);
+		tag.Value.Str.Text = String_Init(tag.Value.Str.Buffer, 0, NBT_STRING_SIZE);
+		res = Nbt_ReadString(stream, &tag.Value.Str.Text);
 		break;
 
 	case NBT_LIST:
@@ -375,7 +375,7 @@ static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* s
 	if (res) return res;
 	callback(&tag);
 	/* NOTE: callback must set DataBig to NULL, if doesn't want it to be freed */
-	if (!NbtTag_IsSmall(&tag)) Mem_Free(tag.DataBig);
+	if (!NbtTag_IsSmall(&tag)) Mem_Free(tag.Value.Big);
 	return 0;
 }
 #define IsTag(tag, tagName) (String_CaselessEqualsConst(&tag->Name, tagName))
@@ -390,7 +390,7 @@ static void Cw_Callback_1(struct NbtTag* tag) {
 
 	if (IsTag(tag, "UUID")) {
 		if (tag->DataSize != sizeof(World_Uuid)) ErrorHandler_Fail("Map UUID must be 16 bytes");
-		Mem_Copy(World_Uuid, tag->DataSmall, sizeof(World_Uuid));
+		Mem_Copy(World_Uuid, tag->Value.Small, sizeof(World_Uuid));
 		return;
 	}
 
@@ -398,10 +398,10 @@ static void Cw_Callback_1(struct NbtTag* tag) {
 		World_BlocksSize = tag->DataSize;
 		if (NbtTag_IsSmall(tag)) {
 			World_Blocks = Mem_Alloc(World_BlocksSize, 1, ".cw map blocks");
-			Mem_Copy(World_Blocks, tag->DataSmall, tag->DataSize);
+			Mem_Copy(World_Blocks, tag->Value.Small, tag->DataSize);
 		} else {
-			World_Blocks = tag->DataBig;
-			tag->DataBig = NULL; /* So Nbt_ReadTag doesn't call Mem_Free on World_Blocks */
+			World_Blocks = tag->Value.Big;
+			tag->Value.Big = NULL; /* So Nbt_ReadTag doesn't call Mem_Free on World_Blocks */
 		}
 #ifdef EXTENDED_BLOCKS
 		World_Blocks2 = World_Blocks;
@@ -620,12 +620,12 @@ struct JFieldDesc {
 	uint8_t Type;
 	char FieldName[JNAME_SIZE];
 	union {
-		uint8_t  Value_U8;
-		int32_t  Value_I32;
-		uint32_t Value_U32;
-		float    Value_F32;
-		struct { uint8_t* Value_Ptr; uint32_t Value_Size; };
-	};
+		uint8_t  U8;
+		int32_t  I32;
+		uint32_t U32;
+		float    F32;
+		struct { uint8_t* Ptr; uint32_t Size; } Array;
+	} Value;
 };
 
 struct JClassDesc {
@@ -706,10 +706,10 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 	switch (field->Type) {
 	case JFIELD_I8:
 	case JFIELD_BOOL:
-		return stream->ReadU8(stream, &field->Value_U8);
+		return stream->ReadU8(stream, &field->Value.U8);
 	case JFIELD_F32:
 	case JFIELD_I32:
-		return Stream_ReadU32_BE(stream, &field->Value_U32);
+		return Stream_ReadU32_BE(stream, &field->Value.U32);
 	case JFIELD_I64:
 		return stream->Skip(stream, 8); /* (8) data */
 
@@ -743,11 +743,11 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 		if (arrayClassDesc.ClassName[1] != JFIELD_I8) return DAT_ERR_JARRAY_CONTENT;
 
 		if ((res = Stream_ReadU32_BE(stream, &count))) return res;
-		field->Value_Size = count;
+		field->Value.Array.Size = count;
 
-		field->Value_Ptr = Mem_Alloc(count, 1, ".dat map blocks");
-		res = Stream_Read(stream, field->Value_Ptr, count);	
-		if (res) { Mem_Free(field->Value_Ptr); return res; }
+		field->Value.Array.Ptr = Mem_Alloc(count, 1, ".dat map blocks");
+		res = Stream_Read(stream, field->Value.Array.Ptr, count);
+		if (res) { Mem_Free(field->Value.Array.Ptr); return res; }
 	} break;
 	}
 	return 0;
@@ -755,7 +755,7 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 
 static int32_t Dat_I32(struct JFieldDesc* field) {
 	if (field->Type != JFIELD_I32) ErrorHandler_Fail("Field type must be Int32");
-	return field->Value_I32;
+	return field->Value.I32;
 }
 
 ReturnCode Dat_Load(struct Stream* stream) {
@@ -796,11 +796,11 @@ ReturnCode Dat_Load(struct Stream* stream) {
 			World_Height = Dat_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "blocks")) {
 			if (field->Type != JFIELD_ARRAY) ErrorHandler_Fail("Blocks field must be Array");
-			World_Blocks     = field->Value_Ptr;
+			World_Blocks     = field->Value.Array.Ptr;
 #ifdef EXTENDED_BLOCKS
 			World_Blocks2    = World_Blocks;
 #endif
-			World_BlocksSize = field->Value_Size;
+			World_BlocksSize = field->Value.Array.Size;
 		} else if (String_CaselessEqualsConst(&fieldName, "xSpawn")) {
 			p->Spawn.X = (float)Dat_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "ySpawn")) {

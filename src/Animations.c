@@ -20,7 +20,7 @@
 float L_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
 float L_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
 float L_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
-Random L_rnd;
+RNGState L_rnd;
 bool L_rndInitalised;
 
 static void LavaAnimation_Tick(uint32_t* ptr, int size) {
@@ -91,7 +91,7 @@ static void LavaAnimation_Tick(uint32_t* ptr, int size) {
 float W_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
 float W_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
 float W_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
-Random W_rnd;
+RNGState W_rnd;
 bool W_rndInitalised;
 
 static void WaterAnimation_Tick(uint32_t* ptr, int size) {

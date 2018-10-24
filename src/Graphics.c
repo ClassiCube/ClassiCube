@@ -303,7 +303,7 @@ void Gfx_DisableMipmaps(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-uint32_t d3d9_fogCol = 0xFF000000; /* black */
+PackedColUnion d3d9_fogCol;
 float d3d9_fogDensity = -1.0f, d3d9_fogEnd = -1.0f;
 D3DFOGMODE d3d9_fogMode = D3DFOG_NONE;
 
@@ -312,7 +312,7 @@ int d3d9_alphaTestRef;
 D3DCMPFUNC d3d9_alphaTestFunc = D3DCMP_ALWAYS;
 D3DBLEND d3d9_srcBlendFunc = D3DBLEND_ONE, d3d9_dstBlendFunc = D3DBLEND_ZERO;
 
-uint32_t d3d9_clearCol = 0xFF000000; /* black */
+PackedColUnion d3d9_clearCol;
 bool d3d9_depthTesting, d3d9_depthWriting;
 D3DCMPFUNC d3d9_depthTestFunc = D3DCMP_LESSEQUAL;
 
@@ -330,11 +330,11 @@ void Gfx_SetFog(bool enabled) {
 }
 
 void Gfx_SetFogCol(PackedCol col) {
-	if (col.Packed == d3d9_fogCol) return;
-	d3d9_fogCol = col.Packed;
+	if (PackedCol_Equals(col, d3d9_fogCol.C)) return;
+	d3d9_fogCol.C = col;
 
 	if (Gfx_LostContext) return;
-	D3D9_SetRenderState(D3DRS_FOGCOLOR, col.Packed, "D3D9_SetFogColour");
+	D3D9_SetRenderState(D3DRS_FOGCOLOR, d3d9_fogCol.Raw, "D3D9_SetFogColour");
 }
 
 void Gfx_SetFogDensity(float value) {
@@ -377,7 +377,7 @@ void Gfx_SetAlphaTestFunc(CompareFunc func, float refValue) {
 	d3d9_alphaTestFunc = d3d9_compareFuncs[func];
 	D3D9_SetRenderState(D3DRS_ALPHAFUNC, d3d9_alphaTestFunc, "D3D9_SetAlphaTest_Func");
 	d3d9_alphaTestRef = (int)(refValue * 255);
-	D3D9_SetRenderState2(D3DRS_ALPHAREF, d3d9_alphaTestRef, "D3D9_SetAlphaTest_Ref");
+	D3D9_SetRenderState2(D3DRS_ALPHAREF, d3d9_alphaTestRef,  "D3D9_SetAlphaTest_Ref");
 }
 
 void Gfx_SetAlphaBlending(bool enabled) {
@@ -390,18 +390,18 @@ void Gfx_SetAlphaBlendFunc(BlendFunc srcFunc, BlendFunc dstFunc) {
 	static D3DBLEND funcs[6] = { D3DBLEND_ZERO, D3DBLEND_ONE, D3DBLEND_SRCALPHA, D3DBLEND_INVSRCALPHA, D3DBLEND_DESTALPHA, D3DBLEND_INVDESTALPHA };
 
 	d3d9_srcBlendFunc = funcs[srcFunc];
-	D3D9_SetRenderState(D3DRS_SRCBLEND, d3d9_srcBlendFunc, "D3D9_SetAlphaBlendFunc_Src");
+	D3D9_SetRenderState(D3DRS_SRCBLEND,   d3d9_srcBlendFunc, "D3D9_SetAlphaBlendFunc_Src");
 	d3d9_dstBlendFunc = funcs[dstFunc];
 	D3D9_SetRenderState2(D3DRS_DESTBLEND, d3d9_dstBlendFunc, "D3D9_SetAlphaBlendFunc_Dst");
 }
 
 void Gfx_SetAlphaArgBlend(bool enabled) {
 	D3DTEXTUREOP op = enabled ? D3DTOP_MODULATE : D3DTOP_SELECTARG1;
-	ReturnCode res = IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_ALPHAOP, op);
+	ReturnCode res  = IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_ALPHAOP, op);
 	if (res) ErrorHandler_Fail2(res, "D3D9_SetAlphaArgBlend");
 }
 
-void Gfx_ClearCol(PackedCol col) { d3d9_clearCol = col.Packed; }
+void Gfx_ClearCol(PackedCol col) { d3d9_clearCol.C = col; }
 void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a) {
 	DWORD channels = (r ? 1u : 0u) | (g ? 2u : 0u) | (b ? 4u : 0u) | (a ? 8u : 0u);
 	D3D9_SetRenderState(D3DRS_COLORWRITEENABLE, channels, "D3D9_SetColourWrite");
@@ -442,7 +442,7 @@ static void D3D9_RestoreRenderStates(void) {
 	D3D9_SetRenderState2(D3DRS_DESTBLEND,        d3d9_dstBlendFunc,  "D3D9_AlphaDstBlend");
 
 	D3D9_SetRenderState2(D3DRS_FOGENABLE, gfx_fogEnabled,  "D3D9_Fog");
-	D3D9_SetRenderState2(D3DRS_FOGCOLOR,  d3d9_fogCol,     "D3D9_FogColor");
+	D3D9_SetRenderState2(D3DRS_FOGCOLOR,  d3d9_fogCol.Raw, "D3D9_FogColor");
 	raw.f = d3d9_fogDensity;
 	D3D9_SetRenderState2(D3DRS_FOGDENSITY, raw.u,          "D3D9_FogDensity");
 	raw.f = d3d9_fogEnd;
@@ -661,7 +661,7 @@ void Gfx_SetVSync(bool value) {
 void Gfx_BeginFrame(void) { IDirect3DDevice9_BeginScene(device); }
 void Gfx_Clear(void) {
 	DWORD flags = D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER;
-	ReturnCode res = IDirect3DDevice9_Clear(device, 0, NULL, flags, d3d9_clearCol, 1.0f, 0);
+	ReturnCode res = IDirect3DDevice9_Clear(device, 0, NULL, flags, d3d9_clearCol.Raw, 1.0f, 0);
 	if (res) ErrorHandler_Fail2(res, "D3D9_Clear");
 }
 
@@ -912,7 +912,6 @@ void Gfx_DisableMipmaps(void) { }
 PackedCol gl_lastFogCol;
 float gl_lastFogEnd = -1, gl_lastFogDensity = -1;
 int gl_lastFogMode = -1;
-
 PackedCol gl_lastClearCol;
 
 void Gfx_SetFog(bool enabled) {

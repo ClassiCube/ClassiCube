@@ -60,7 +60,7 @@ void FlatgrassGen_Generate(void) {
 *#########################################################################################################################*/
 int waterLevel, minHeight;
 int16_t* Heightmap;
-Random rnd;
+RNGState rnd;
 
 static void NotchyGen_FillOblateSpheroid(int x, int y, int z, float radius, BlockRaw block) {
 	int xBeg = Math_Floor(max(x - radius, 0));
@@ -547,7 +547,7 @@ void NotchyGen_Generate(void) {
 /*########################################################################################################################*
 *---------------------------------------------------Noise generation------------------------------------------------------*
 *#########################################################################################################################*/
-void ImprovedNoise_Init(uint8_t* p, Random* rnd) {
+void ImprovedNoise_Init(uint8_t* p, RNGState* rnd) {
 	uint8_t tmp;
 	int i, j;
 	for (i = 0; i < 256; i++) { p[i] = i; }
@@ -601,7 +601,7 @@ float ImprovedNoise_Calc(uint8_t* p, float x, float y) {
 }
 
 
-void OctaveNoise_Init(struct OctaveNoise* n, Random* rnd, int octaves) {
+void OctaveNoise_Init(struct OctaveNoise* n, RNGState* rnd, int octaves) {
 	int i;
 	n->octaves = octaves;
 	
@@ -624,7 +624,7 @@ float OctaveNoise_Calc(struct OctaveNoise* n, float x, float y) {
 }
 
 
-void CombinedNoise_Init(struct CombinedNoise* n, Random* rnd, int octaves1, int octaves2) {
+void CombinedNoise_Init(struct CombinedNoise* n, RNGState* rnd, int octaves1, int octaves2) {
 	OctaveNoise_Init(&n->noise1, rnd, octaves1);
 	OctaveNoise_Init(&n->noise2, rnd, octaves2);
 }

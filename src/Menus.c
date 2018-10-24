@@ -1008,7 +1008,7 @@ int GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, int index) {
 	String text = input->Base.Text;
 
 	if (!text.length) {
-		Random rnd; Random_InitFromCurrentTime(&rnd);
+		RNGState rnd; Random_InitFromCurrentTime(&rnd);
 		return Random_Next(&rnd, Int32_MaxValue);
 	}
 
@@ -1158,7 +1158,7 @@ struct Screen* GenLevelScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 struct ClassicGenScreen ClassicGenScreen_Instance;
 static void ClassicGenScreen_Gen(int size) {
-	Random rnd; Random_InitFromCurrentTime(&rnd);
+	RNGState rnd; Random_InitFromCurrentTime(&rnd);
 	Gen_SetDimensions(size, 64, size); Gen_Vanilla = true;
 	Gen_Seed = Random_Next(&rnd, Int32_MaxValue);
 
@@ -2126,8 +2126,8 @@ static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 	MenuOptionsScreen_SelectExtHelp(s, index);
 
 	struct MenuInputValidator* v = &s->Validators[index];
-	const char** names = v->Meta_Enum.Names;
-	int count = v->Meta_Enum.Count;
+	const char** names = v->Meta._Enum.Names;
+	int count = v->Meta._Enum.Count;
 
 	char valueBuffer[STRING_SIZE];
 	String value = String_FromArray(valueBuffer);

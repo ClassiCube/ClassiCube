@@ -43,14 +43,14 @@ int Math_NextPowOf2(int value);
 bool Math_IsPowOf2(int value);
 #define Math_Clamp(val, min, max) val = val < (min) ? (min) : val;  val = val > (max) ? (max) : val;
 
-typedef uint64_t Random;
-void Random_Init(Random* rnd, int seed);
-void Random_InitFromCurrentTime(Random* rnd);
-void Random_SetSeed(Random* rnd, int seed);
+typedef uint64_t RNGState;
+void Random_Init(RNGState* rnd, int seed);
+void Random_InitFromCurrentTime(RNGState* rnd);
+void Random_SetSeed(RNGState* rnd, int seed);
 /* Returns integer from min inclusive to max exclusive */
-int Random_Range(Random* rnd, int min, int max);
+int Random_Range(RNGState* rnd, int min, int max);
 /* Returns integer from 0 inclusive to n exclusive */
-int Random_Next(Random* rnd, int n);
+int Random_Next(RNGState* rnd, int n);
 /* Returns real from 0 inclusive to 1 exclusive */
-float Random_Float(Random* rnd);
+float Random_Float(RNGState* rnd);
 #endif

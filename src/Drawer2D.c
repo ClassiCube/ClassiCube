@@ -251,7 +251,7 @@ void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, Packed
 
 static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, bool shadow) {
 	PackedCol black = PACKEDCOL_BLACK;
-	PackedCol col   = Drawer2D_Cols['f'];
+	PackedColUnion col;
 	String text  = args->Text;
 	int i, point = args->Font.Size, count = 0;
 
@@ -263,19 +263,20 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 	int cellY, underlineY, underlineHeight;
 
 	uint8_t coords[256];
-	PackedCol cols[256];
+	PackedColUnion cols[256];
 	uint16_t dstWidths[256];
 
+	col.C = Drawer2D_Cols['f'];
 	if (shadow) {
-		col = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col, 0.25f);
+		col.C = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col.C, 0.25f);
 	}
 
 	for (i = 0; i < text.length; i++) {
 		char c = text.buffer[i];
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
-			col = Drawer2D_GetCol(text.buffer[i + 1]);
+			col.C = Drawer2D_GetCol(text.buffer[i + 1]);
 			if (shadow) {
-				col = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col, 0.25f);
+				col.C = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col.C, 0.25f);
 			}
 			i++; continue; /* skip over the colour code */
 		}
@@ -316,9 +317,9 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 				if (dstX >= bmp->Width) break;
 
 				uint32_t pixel = src & ~0xFFFFFF;
-				pixel |= ((src & 0xFF)         * col.B / 255);
-				pixel |= (((src >> 8) & 0xFF)  * col.G / 255) << 8;
-				pixel |= (((src >> 16) & 0xFF) * col.R / 255) << 16;
+				pixel |= ((src & 0xFF)         * col.C.B / 255);
+				pixel |= (((src >> 8) & 0xFF)  * col.C.G / 255) << 8;
+				pixel |= (((src >> 16) & 0xFF) * col.C.R / 255) << 16;
 				dstRow[dstX] = pixel;
 			}
 			x += dstWidth + xPadding;
@@ -336,10 +337,10 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		dstWidth = 0;
 		col = cols[i];
 
-		for (; i < count && PackedCol_Equals(col, cols[i]); i++) {
+		for (; i < count && (col.Raw == cols[i].Raw); i++) {
 			dstWidth += dstWidths[i] + xPadding;
 		}
-		Drawer2D_Underline(bmp, x, underlineY, dstWidth, underlineHeight, col);
+		Drawer2D_Underline(bmp, x, underlineY, dstWidth, underlineHeight, col.C);
 		x += dstWidth;
 	}
 }

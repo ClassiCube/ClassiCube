@@ -6,14 +6,19 @@
 */
 
 /* Represents an ARGB colour, in a format suitable for the native graphics api. */
-typedef union PackedCol_ {
+typedef struct PackedCol_ {
 #ifdef CC_BUILD_D3D9
-	struct { uint8_t B, G, R, A; };
+	uint8_t B, G, R, A;
 #else
-	struct { uint8_t R, G, B, A; };
+	uint8_t R, G, B, A;
 #endif
-	uint32_t Packed;
 } PackedCol;
+
+/* Represents an ARGB colour, in a format suitable for the native graphics api. */
+/* Unioned with Packed member for efficient equality comparison */
+typedef union PackedColUnion_ { PackedCol C; uint32_t Raw; } PackedColUnion;
+/* NOTE: can't just use "struct { uint8_t B, G, R, A; };" here,
+	because unnamed members aren't supported on all compilers) */
 
 #ifdef CC_BUILD_D3D9
 #define PACKEDCOL_CONST(r, g, b, a) { b, g, r, a }
@@ -23,7 +28,8 @@ typedef union PackedCol_ {
 
 PackedCol PackedCol_Create4(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 PackedCol PackedCol_Create3(uint8_t r, uint8_t g, uint8_t b);
-#define PackedCol_Equals(a, b) ((a).Packed == (b).Packed)
+bool PackedCol_Equals(PackedCol a, PackedCol b);
+
 #define PackedCol_ARGB(r, g, b, a) (((uint32_t)(r) << 16) | ((uint32_t)(g) << 8) | ((uint32_t)(b)) | ((uint32_t)(a) << 24))
 #define PackedCol_ARGB_A(col) ((uint8_t)((col) >> 24))
 uint32_t PackedCol_ToARGB(PackedCol col);

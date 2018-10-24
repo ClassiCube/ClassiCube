@@ -10,7 +10,7 @@
 #include "Game.h"
 
 static void World_NewUuid(void) {
-	Random rnd;
+	RNGState rnd;
 	int i;
 	Random_InitFromCurrentTime(&rnd);
 

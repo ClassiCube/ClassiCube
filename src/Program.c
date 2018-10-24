@@ -19,7 +19,7 @@ int main_imdct() {
 	float in[VORBIS_N2], out[VORBIS_N], out2[VORBIS_N];
 	double delta[VORBIS_N];
 
-	Random rng;
+	RngState rng;
 	Random_Init(&rng, 2342334);
 	struct imdct_state imdct;
 	imdct_init(&imdct, VORBIS_N);

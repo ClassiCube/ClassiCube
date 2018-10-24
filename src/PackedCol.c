@@ -9,6 +9,10 @@ PackedCol PackedCol_Create3(uint8_t r, uint8_t g, uint8_t b) {
 	PackedCol c; c.R = r; c.G = g; c.B = b; c.A = 255; return c;
 }
 
+bool PackedCol_Equals(PackedCol a, PackedCol b) {
+	return a.R == b.R && a.G == b.G && a.B == b.B && a.A == b.A;
+}
+
 uint32_t PackedCol_ToARGB(PackedCol col) {
 	return PackedCol_ARGB(col.R, col.G, col.B, col.A);
 }
@@ -56,7 +60,7 @@ void PackedCol_ToHex(String* str, PackedCol value) {
 bool PackedCol_TryParseHex(const String* str, PackedCol* value) {
 	int rH, rL, gH, gL, bH, bL;
 	char* buffer  = str->buffer;
-	value->Packed = 0;
+	*value = PackedCol_Create4(0, 0, 0, 0);
 
 	/* accept XXYYZZ or #XXYYZZ forms */
 	if (str->length < 6) return false;

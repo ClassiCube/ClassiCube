@@ -18,7 +18,7 @@
 *#########################################################################################################################*/
 GfxResourceID Particles_TexId, Particles_VB;
 #define PARTICLES_MAX 600
-Random rnd;
+RNGState rnd;
 bool particle_hitTerrain;
 
 void Particle_DoRender(Vector2* size, Vector3* pos, TextureRec* rec, PackedCol col, VertexP3fT2fC4b* vertices) {
