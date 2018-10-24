@@ -58,7 +58,8 @@ NOINLINE_ String String_UNSAFE_Substring(STRING_REF const String* str, int offse
 /* e.g., "abc:id:xyz" becomes "abc","id","xyz" */
 NOINLINE_ int String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int maxSubs);
 /* UNSAFE: Splits a string of the form [key][c][value] into two substrings. */
-/* e.g., allowed =true becomes 'allowed' and 'true', and excludes the space. */
+/* e.g., "allowed =true" becomes "allowed" and "true", and excludes the space. */
+/* If c is not found, sets key to str and value to String_Empty, returns false. */
 NOINLINE_ bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value);
 
 /* Returns whether all characters of the strings are equal. */

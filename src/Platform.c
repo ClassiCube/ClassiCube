@@ -971,6 +971,13 @@ static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, v
 }
 
 static void Font_Init(void) {
+#ifdef CC_BUILD_WIN
+	static String dir = String_FromConst("C:\\Windows\\fonts");
+#endif
+#ifdef CC_BUILD_NIX
+	static String dir = String_FromConst("/usr/share/fonts");
+#endif
+
 	ft_mem.alloc   = FT_AllocWrapper;
 	ft_mem.free    = FT_FreeWrapper;
 	ft_mem.realloc = FT_ReallocWrapper;
@@ -980,16 +987,8 @@ static void Font_Init(void) {
 
 	FT_Add_Default_Modules(ft_lib);
 	FT_Set_Default_Properties(ft_lib);
-
-#ifdef CC_BUILD_WIN
-	String dir   = String_FromConst("C:\\Windows\\fonts");
-#endif
-#ifdef CC_BUILD_NIX
-	String dir   = String_FromConst("/usr/share/fonts");
-#endif
 	Directory_Enum(&dir, NULL, Font_DirCallback);
 }
-
 
 
 /*########################################################################################################################*
@@ -1048,17 +1047,19 @@ ReturnCode Socket_Write(SocketPtr socket, uint8_t* buffer, uint32_t count, uint3
 
 ReturnCode Socket_Close(SocketPtr socket) {
 	ReturnCode result = 0;
+	ReturnCode result1, result2;
+
 #ifdef CC_BUILD_WIN
-	ReturnCode result1 = shutdown(socket, SD_BOTH);
+	result1 = shutdown(socket, SD_BOTH);
 #else
-	ReturnCode result1 = shutdown(socket, SHUT_RDWR);
+	result1 = shutdown(socket, SHUT_RDWR);
 #endif
 	if (result1 == -1) result = Socket__Error();
 
 #ifdef CC_BUILD_WIN
-	ReturnCode result2 = closesocket(socket);
+	result2 = closesocket(socket);
 #else
-	ReturnCode result2 = close(socket);
+	result2 = close(socket);
 #endif
 	if (result2 == -1) result = Socket__Error();
 	return result;
@@ -1779,11 +1780,12 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 #ifdef CC_BUILD_NIX
 void Platform_ConvertString(void* dstPtr, const String* src) {
 	uint8_t* dst = dstPtr;
+	Codepoint cp;
 	int i, len;
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
 	
 	for (i = 0; i < src->length; i++) {
-		Codepoint cp = Convert_CP437ToUnicode(src->buffer[i]);
+		cp  = Convert_CP437ToUnicode(src->buffer[i]);
 		len = Stream_WriteUtf8(dst, cp); dst += len;
 	}
 	*dst = '\0';
@@ -1835,13 +1837,16 @@ void Platform_SetWorkingDir(void) {
 
 void Platform_Exit(ReturnCode code) { exit(code); }
 
-ReturnCode Platform_StartShell(const String* args) {
+ReturnCode Platform_StartShell(const String* args) {	
+	char str[300];
+	FILE* fp;
 	char pathBuffer[FILENAME_SIZE + 10];
 	String path = String_FromArray(pathBuffer);
+	
 	String_Format1(&path, "xdg-open %s", args);
-	char str[300]; Platform_ConvertString(str, &path);
+	Platform_ConvertString(str, &path);
 
-	FILE* fp = popen(str, "r");
+	fp = popen(str, "r");
 	if (!fp) return errno;
 	return Nix_Return(pclose(fp));
 }

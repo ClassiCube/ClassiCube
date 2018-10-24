@@ -133,11 +133,7 @@ static void Entity_SetBlockModel(struct Entity* e, const String* model) {
 void Entity_SetModel(struct Entity* e, const String* model) {
 	String name, scale, skin;
 	e->ModelScale = Vector3_Create1(1.0f);
-
-	if (!String_UNSAFE_Separate(model, '|', &name, &scale)) {
-		name  = *model;
-		scale = String_Empty;
-	}
+	String_UNSAFE_Separate(model, '|', &name, &scale);
 
 	/* 'giant' model kept for backwards compatibility */
 	if (String_CaselessEqualsConst(&name, "giant")) {
@@ -529,12 +525,12 @@ void Player_UpdateNameTex(struct Player* player) {
 static void Player_DrawName(struct Player* player) {
 	struct Entity* e = &player->Base;
 	struct Model* model = e->Model;
+	Vector3 pos;
 
 	if (player->NameTex.X == PLAYER_NAME_EMPTY_TEX) return;
 	if (!player->NameTex.ID) Player_MakeNameTexture(player);
 	Gfx_BindTexture(player->NameTex.ID);
 
-	Vector3 pos;
 	model->RecalcProperties(e);
 	Vector3_TransformY(&pos, model->NameYOffset, &e->Transform);
 

@@ -23,23 +23,28 @@
 #define ZIP_MAXNAMELEN 512
 static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* entry) {
 	struct Stream* stream = state->Input;
-	uint8_t contents[(3 * 2) + (4 * 4) + (2 * 2)];
+	uint8_t contents[26];
+	uint32_t compressedSize, uncompressedSize;
+	int method, pathLen, extraLen;
+
+	struct Stream portion, compStream;
+	struct InflateState inflate;
 	ReturnCode res;
 	if ((res = Stream_Read(stream, contents, sizeof(contents)))) return res;
 
 	/* contents[0] (2) version needed */
 	/* contents[2] (2) flags */
-	int method = Stream_GetU16_LE(&contents[4]);
+	method = Stream_GetU16_LE(&contents[4]);
 	/* contents[6]  (4) last modified */
 	/* contents[10] (4) CRC32 */
 
-	uint32_t compressedSize = Stream_GetU32_LE(&contents[14]);
+	compressedSize = Stream_GetU32_LE(&contents[14]);
 	if (!compressedSize) compressedSize = entry->CompressedSize;
-	uint32_t uncompressedSize = Stream_GetU32_LE(&contents[18]);
+	uncompressedSize = Stream_GetU32_LE(&contents[18]);
 	if (!uncompressedSize) uncompressedSize = entry->UncompressedSize;
 
-	int pathLen  = Stream_GetU16_LE(&contents[22]);
-	int extraLen = Stream_GetU16_LE(&contents[24]);
+	pathLen  = Stream_GetU16_LE(&contents[22]);
+	extraLen = Stream_GetU16_LE(&contents[24]);
 	char pathBuffer[ZIP_MAXNAMELEN];
 
 	if (pathLen > ZIP_MAXNAMELEN) return ZIP_ERR_FILENAME_LEN;
@@ -49,13 +54,11 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 
 	if (!state->SelectEntry(&path)) return 0;
 	if ((res = stream->Skip(stream, extraLen))) return res;
-	struct Stream portion, compStream;
 
 	if (method == 0) {
 		Stream_ReadonlyPortion(&portion, stream, uncompressedSize);
 		state->ProcessEntry(&path, &portion, entry);
 	} else if (method == 8) {
-		struct InflateState inflate;
 		Stream_ReadonlyPortion(&portion, stream, compressedSize);
 		Inflate_MakeStream(&compStream, &inflate, &portion);
 		state->ProcessEntry(&path, &compStream, entry);
@@ -67,7 +70,10 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 
 static ReturnCode Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* entry) {
 	struct Stream* stream = state->Input;
-	uint8_t contents[(4 * 2) + (4 * 4) + (3 * 2) + (2 * 2) + (2 * 4)];
+	uint8_t contents[42];
+	int pathLen, extraLen, commentLen;
+	uint32_t extraDataLen;
+
 	ReturnCode res;
 	if ((res = Stream_Read(stream, contents, sizeof(contents)))) return res;
 
@@ -80,21 +86,22 @@ static ReturnCode Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEnt
 	entry->CompressedSize   = Stream_GetU32_LE(&contents[16]);
 	entry->UncompressedSize = Stream_GetU32_LE(&contents[20]);
 
-	int pathLen    = Stream_GetU16_LE(&contents[24]);
-	int extraLen   = Stream_GetU16_LE(&contents[26]);
-	int commentLen = Stream_GetU16_LE(&contents[28]);
+	pathLen    = Stream_GetU16_LE(&contents[24]);
+	extraLen   = Stream_GetU16_LE(&contents[26]);
+	commentLen = Stream_GetU16_LE(&contents[28]);
 	/* contents[30] (2) disk number */
 	/* contents[32] (2) internal attributes */
 	/* contents[34] (4) external attributes */
 	entry->LocalHeaderOffset = Stream_GetU32_LE(&contents[38]);
 
-	uint32_t extraDataLen = pathLen + extraLen + commentLen;
+	extraDataLen = pathLen + extraLen + commentLen;
 	return stream->Skip(stream, extraDataLen);
 }
 
 static ReturnCode Zip_ReadEndOfCentralDirectory(struct ZipState* state, uint32_t* centralDirectoryOffset) {
 	struct Stream* stream = state->Input;
-	uint8_t contents[(3 * 2) + 2 + (2 * 4) + 2];
+	uint8_t contents[18];
+
 	ReturnCode res;
 	if ((res = Stream_Read(stream, contents, sizeof(contents)))) return res;
 
@@ -403,21 +410,22 @@ static void TexturePack_ProcessZipEntry(const String* path, struct Stream* strea
 }
 
 static ReturnCode TexturePack_ExtractZip(struct Stream* stream) {
+	struct ZipState state;
 	Event_RaiseVoid(&TextureEvents_PackChanged);
 	if (Gfx_LostContext) return 0;
-
-	struct ZipState state;
+	
 	Zip_Init(&state, stream);
 	state.ProcessEntry = TexturePack_ProcessZipEntry;
 	return Zip_Extract(&state);
 }
 
 void TexturePack_ExtractZip_File(const String* filename) {
+	struct Stream stream;
+	ReturnCode res;
 	char pathBuffer[FILENAME_SIZE];
 	String path = String_FromArray(pathBuffer);
-	String_Format2(&path, "texpacks%r%s", &Directory_Separator, filename);
 
-	ReturnCode res; struct Stream stream;
+	String_Format2(&path, "texpacks%r%s", &Directory_Separator, filename);
 	res = Stream_OpenFile(&stream, &path);
 	if (res) { Chat_LogError2(res, "opening", &path); return; }
 
@@ -451,16 +459,16 @@ void TexturePack_ExtractDefault(void) {
 }
 
 void TexturePack_ExtractCurrent(const String* url) {
-	if (!url->length) { TexturePack_ExtractDefault(); return; }
-
+	static String zipExt = String_FromConst(".zip");
 	struct Stream stream;
+	ReturnCode res = 0;
+
+	if (!url->length) { TexturePack_ExtractDefault(); return; }
+	
 	if (!TextureCache_Get(url, &stream)) {
 		/* e.g. 404 errors */
 		if (World_TextureUrl.length) TexturePack_ExtractDefault();
 	} else {
-		String zipExt = String_FromConst(".zip");
-		ReturnCode res = 0;
-
 		if (String_Equals(url, &World_TextureUrl)) {
 		} else {
 			bool zip = String_ContainsString(url, &zipExt);

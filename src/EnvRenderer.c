@@ -296,6 +296,7 @@ bool EnvRenderer_ShouldRenderSkybox(void) { return skybox_tex && !EnvRenderer_Mi
 void EnvRenderer_RenderSkybox(double deltaTime) {
 	struct Matrix m, rotX, rotY, view;
 	float rotTime;
+	Vector3 pos;
 	if (!skybox_vb) return;
 
 	Gfx_SetDepthWrite(false);
@@ -310,7 +311,7 @@ void EnvRenderer_RenderSkybox(double deltaTime) {
 	Matrix_RotateX(&rotX, Env_SkyboxVerSpeed * rotTime); Matrix_MulBy(&m, &rotX);
 
 	/* Rotate around camera */
-	Vector3 pos = Camera_CurrentPos;
+	pos = Camera_CurrentPos;
 	Camera_CurrentPos = Vector3_Zero;
 	Camera_Active->GetView(&view); Matrix_MulBy(&m, &view);
 	Camera_CurrentPos = pos;
@@ -447,23 +448,27 @@ static float EnvRenderer_RainAlphaAt(float x) {
 
 void EnvRenderer_RenderWeather(double deltaTime) {
 	int weather = Env_Weather;
+	Vector3I pos;
+	bool moved, particles;
+	float speed, vOffset;
+	float dist, alpha;
+
 	if (weather == WEATHER_SUNNY) return;
 	if (!Weather_Heightmap) EnvRenderer_InitWeatherHeightmap();
-
 	Gfx_BindTexture(weather == WEATHER_RAINY ? rain_tex : snow_tex);
-	Vector3I pos;
+
 	Vector3I_Floor(&pos, &Camera_CurrentPos);
-	bool moved = Vector3I_NotEquals(&pos, &weather_lastPos);
+	moved = Vector3I_NotEquals(&pos, &weather_lastPos);
 	weather_lastPos = pos;
 
 	/* Rain should extend up by 64 blocks, or to the top of the world. */
 	pos.Y += 64;
 	pos.Y = max(World_Height, pos.Y);
 
-	float speed = (weather == WEATHER_RAINY ? 1.0f : 0.2f) * Env_WeatherSpeed;
-	float vOffset = (float)Game_Accumulator * speed;
+	speed     = (weather == WEATHER_RAINY ? 1.0f : 0.2f) * Env_WeatherSpeed;
+	vOffset   = (float)Game_Accumulator * speed;
+	particles = weather == WEATHER_RAINY;
 	weather_accumulator += deltaTime;
-	bool particles = weather == WEATHER_RAINY;
 
 	PackedCol col = Env_SunCol;
 	VertexP3fT2fC4b v;
@@ -483,11 +488,9 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 				Particles_RainSnowEffect(particlePos);
 			}
 
-			float dist = (float)dx * (float)dx + (float)dz * (float)dz;
-			float alpha = EnvRenderer_RainAlphaAt(dist);
-			/* Clamp between 0 and 255 */
-			alpha = alpha < 0.0f ? 0.0f : alpha;
-			alpha = alpha > 255.0f ? 255.0f : alpha;
+			dist  = (float)dx * (float)dx + (float)dz * (float)dz;
+			alpha = EnvRenderer_RainAlphaAt(dist);
+			Math_Clamp(alpha, 0.0f, 255.0f);
 			col.A = (uint8_t)alpha;
 
 			/* NOTE: Making vertex is inlined since this is called millions of times. */

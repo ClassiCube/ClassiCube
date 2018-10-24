@@ -336,6 +336,7 @@ static void Game_ExtractInitialTexturePack(void) {
 }
 
 static void Game_LoadOptions(void) {
+	int method;
 	Game_ClassicMode       = Options_GetBool(OPT_CLASSIC_MODE, false);
 	Game_ClassicHacks      = Options_GetBool(OPT_CLASSIC_HACKS, false);
 	Game_AllowCustomBlocks = Options_GetBool(OPT_CUSTOM_BLOCKS, true);
@@ -344,13 +345,13 @@ static void Game_LoadOptions(void) {
 	Game_ChatLogging       = Options_GetBool(OPT_CHAT_LOGGING, true);
 	Game_ClassicArmModel   = Options_GetBool(OPT_CLASSIC_ARM_MODEL, Game_ClassicMode);
 
-	Game_ViewBobbing = Options_GetBool(OPT_VIEW_BOBBING, true);
-	int method  = Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FPS_LIMIT_COUNT);
-	Game_SetFpsLimit(method);
+	Game_ViewBobbing    = Options_GetBool(OPT_VIEW_BOBBING, true);
+	Game_SmoothLighting = Options_GetBool(OPT_SMOOTH_LIGHTING, false);
 
+	method = Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FPS_LIMIT_COUNT);
+	Game_SetFpsLimit(method);
 	Game_ViewDistance     = Options_GetInt(OPT_VIEW_DISTANCE, 16, 4096, 512);
 	Game_UserViewDistance = Game_ViewDistance;
-	Game_SmoothLighting   = Options_GetBool(OPT_SMOOTH_LIGHTING, false);
 
 	Game_DefaultFov = Options_GetInt(OPT_FIELD_OF_VIEW, 1, 150, 70);
 	Game_Fov        = Game_DefaultFov;

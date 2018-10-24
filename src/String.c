@@ -79,14 +79,18 @@ int String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int 
 }
 
 bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value) {
-	/* key [c] value or key[c]value */
 	int idx = String_IndexOf(str, c, 0);
-	if (idx <= 0) return false;                 /* missing [c] or no key */
-	if ((idx + 1) >= str->length) return false; /* missing value */
+	/* a) missing [c] or no key    b) missing value */
+	if (idx <= 0 || (idx + 1) >= str->length) {
+		*key   = *str;
+		*value = String_Empty;
+		return false;
+	}
 
 	*key   = String_UNSAFE_Substring(str, 0, idx); idx++;
 	*value = String_UNSAFE_SubstringAt(str, idx);
 
+	/* Trim key [c] value to just key[c]value */
 	String_TrimEnd(key);
 	String_TrimStart(value);
 	return true;

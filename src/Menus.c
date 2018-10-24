@@ -1209,16 +1209,20 @@ struct Screen* ClassicGenScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 struct SaveLevelScreen SaveLevelScreen_Instance;
 static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* s) {
-	struct ButtonWidget* btn = &s->Buttons[0];
+	static String save  = String_FromConst("Save");
+	static String schem = String_FromConst("Save schematic");
+	struct ButtonWidget* btn;
+		
+	btn = &s->Buttons[0];
 	if (btn->OptName) {
-		btn->OptName = NULL; String save = String_FromConst("Save"); 
-		ButtonWidget_Set(btn, &save, &s->TitleFont);
+		btn->OptName = NULL; 
+		ButtonWidget_Set(btn, &save,  &s->TitleFont);
 	}
 
 	btn = &s->Buttons[1];
 	if (btn->OptName) {
-		btn->OptName = NULL; String save = String_FromConst("Save schematic");
-		ButtonWidget_Set(btn, &save, &s->TitleFont);
+		btn->OptName = NULL;
+		ButtonWidget_Set(btn, &schem, &s->TitleFont);
 	}
 }
 
@@ -1230,28 +1234,29 @@ static void SaveLevelScreen_MakeDesc(struct SaveLevelScreen* s, const String* te
 }
 
 static void SaveLevelScreen_Save(void* screen, void* widget, const char* ext) {
+	static String overMsg = String_FromConst("&cOverwrite existing?");
+	static String saveMsg = String_FromConst("Saving..");
+	static String fileMsg = String_FromConst("&ePlease enter a filename");
+
+	char pathBuffer[FILENAME_SIZE];
+	String path = String_FromArray(pathBuffer);
+
 	struct SaveLevelScreen* s = screen;
 	struct ButtonWidget* btn  = widget;
 	String file = s->Input.Base.Text;
 
 	if (!file.length) {
-		String msg = String_FromConst("&ePlease enter a filename");
-		SaveLevelScreen_MakeDesc(s, &msg); return;
+		SaveLevelScreen_MakeDesc(s, &fileMsg); return;
 	}
-
-	char pathBuffer[FILENAME_SIZE];
-	String path = String_FromArray(pathBuffer);
 	String_Format3(&path, "maps%r%s%c", &Directory_Separator, &file, ext);
 
 	if (File_Exists(&path) && !btn->OptName) {
-		String warnMsg = String_FromConst("&cOverwrite existing?");
-		ButtonWidget_Set(btn, &warnMsg, &s->TitleFont);
+		ButtonWidget_Set(btn, &overMsg, &s->TitleFont);
 		btn->OptName = "O";
 	} else {
 		/* NOTE: We don't immediately save here, because otherwise the 'saving...'
 		will not be rendered in time because saving is done on the main thread. */
-		String warnMsg = String_FromConst("Saving..");
-		SaveLevelScreen_MakeDesc(s, &warnMsg);
+		SaveLevelScreen_MakeDesc(s, &saveMsg);
 
 		String_Copy(&s->TextPath, &path);
 		SaveLevelScreen_RemoveOverwrites(s);
@@ -1272,7 +1277,9 @@ static void SaveLevelScreen_Init(void* screen) {
 static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s) {
 	String path = s->TextPath, cw = String_FromConst(".cw");
 
-	ReturnCode res; struct Stream stream;
+	struct Stream stream;
+	ReturnCode res;
+
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Chat_LogError2(res, "creating", &path); return; }
 
@@ -1500,14 +1507,13 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 		return;
 	}
 
-	String key = text, value;
+	String key, value;
 	int flags = 0;
 
-	if (String_UNSAFE_Separate(&text, '+', &key, &value)) {
-		if (String_ContainsString(&value, &ctrl))  flags |= HOTKEY_FLAG_CTRL;
-		if (String_ContainsString(&value, &shift)) flags |= HOTKEY_FLAG_SHIFT;
-		if (String_ContainsString(&value, &alt))   flags |= HOTKEY_FLAG_ALT;
-	}
+	String_UNSAFE_Separate(&text, '+', &key, &value);
+	if (String_ContainsString(&value, &ctrl))  flags |= HOTKEY_FLAG_CTRL;
+	if (String_ContainsString(&value, &shift)) flags |= HOTKEY_FLAG_SHIFT;
+	if (String_ContainsString(&value, &alt))   flags |= HOTKEY_FLAG_ALT;
 
 	Key trigger = Utils_ParseEnum(&key, Key_None, Key_Names, Key_Count);
 	int i;
@@ -1570,6 +1576,12 @@ static void LoadLevelScreen_FilterFiles(const String* path, void* obj) {
 }
 
 void LoadLevelScreen_LoadMap(const String* path) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocationUpdate update;
+	IMapImporter importer;
+	struct Stream stream;
+	ReturnCode res;
+
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
 
@@ -1580,12 +1592,11 @@ void LoadLevelScreen_LoadMap(const String* path) {
 
 	Block_Reset();
 	Inventory_SetDefaultMapping();
-
-	ReturnCode res; struct Stream stream;
+	
 	res = Stream_OpenFile(&stream, path);
 	if (res) { Chat_LogError2(res, "opening", path); return; }
 
-	IMapImporter importer = Map_FindImporter(path);
+	importer = Map_FindImporter(path);
 	if ((res = importer(&stream))) {
 		World_Reset();
 		Chat_LogError2(res, "decoding", path); stream.Close(&stream); return;
@@ -1597,8 +1608,7 @@ void LoadLevelScreen_LoadMap(const String* path) {
 	World_SetNewMap(World_Blocks, World_BlocksSize, World_Width, World_Height, World_Length);
 	Event_RaiseVoid(&WorldEvents_MapLoaded);
 
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	struct LocationUpdate update; LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnRotY, p->SpawnHeadX, false);
+	LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnRotY, p->SpawnHeadX, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
 }
 
@@ -1900,18 +1910,17 @@ static void Menu_GetBool(String* raw, bool v) {
 
 static bool Menu_SetBool(const String* raw, const char* key) {
 	bool isOn = String_CaselessEqualsConst(raw, "ON");
-	Options_SetBool(key, isOn); return isOn;
+	Options_SetBool(key, isOn); 
+	return isOn;
 }
 
 static void MenuOptionsScreen_GetFPS(String* raw) {
 	String_AppendConst(raw, FpsLimit_Names[Game_FpsLimit]);
 }
-static void MenuOptionsScreen_SetFPS(const String* raw) {
-	int method = Utils_ParseEnum(raw, FPS_LIMIT_VSYNC, FpsLimit_Names, Array_Elems(FpsLimit_Names));
+static void MenuOptionsScreen_SetFPS(const String* v) {
+	int method = Utils_ParseEnum(v, FPS_LIMIT_VSYNC, FpsLimit_Names, Array_Elems(FpsLimit_Names));
+	Options_Set(OPT_FPS_LIMIT, v);
 	Game_SetFpsLimit(method);
-
-	String value = String_FromReadonly(FpsLimit_Names[method]);
-	Options_Set(OPT_FPS_LIMIT, &value);
 }
 
 static void MenuOptionsScreen_Set(struct MenuOptionsScreen* s, int i, const String* text) {
@@ -2130,27 +2139,27 @@ static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 }
 
 static void MenuOptionsScreen_Input(void* screen, void* widget) {
-	struct MenuOptionsScreen* s = screen;
-	struct ButtonWidget* btn    = widget;
-	s->ActiveI = Menu_Index(s, btn);
-	MenuOptionsScreen_FreeExtHelp(s);
-	MenuOptionsScreen_FreeInput(s);
+	static String okay = String_FromConst("OK");
+	static String def  = String_FromConst("Default value");
 
 	char valueBuffer[STRING_SIZE];
 	String value = String_FromArray(valueBuffer);
+
+	struct MenuOptionsScreen* s = screen;
+	struct ButtonWidget* btn    = widget;
+	int i;
+
+	s->ActiveI = Menu_Index(s, btn);
+	MenuOptionsScreen_FreeExtHelp(s);
+	MenuOptionsScreen_FreeInput(s);
 	btn->GetValue(&value);
-	int count = s->WidgetsCount;
 
-	struct MenuInputValidator* validator = &s->Validators[s->ActiveI];
-	Menu_Input(s, count - 1, &s->Input, 400, &value, &s->TextFont, validator,
+	i = s->WidgetsCount;
+	Menu_Input(s,  i - 1, &s->Input,   400, &value, &s->TextFont,  &s->Validators[s->ActiveI],
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 110);
-
-	String okMsg = String_FromConst("OK");
-	Menu_Button(s, count - 2, &s->OK, 40, &okMsg, &s->TitleFont, MenuOptionsScreen_OK,
+	Menu_Button(s, i - 2, &s->OK,       40, &okay,  &s->TitleFont, MenuOptionsScreen_OK,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 240, 110);
-
-	String defMsg = String_FromConst("Default value");
-	Menu_Button(s, count - 3, &s->Default, 200, &defMsg, &s->TitleFont, MenuOptionsScreen_Default,
+	Menu_Button(s, i - 3, &s->Default, 200, &def,   &s->TitleFont, MenuOptionsScreen_Default,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 150);
 }
 
@@ -2187,10 +2196,8 @@ struct Screen* MenuOptionsScreen_MakeInstance(struct Widget** widgets, int count
 /*########################################################################################################################*
 *---------------------------------------------------ClassicOptionsScreen--------------------------------------------------*
 *#########################################################################################################################*/
-typedef enum ViewDist_ {
-	ViewDist_Tiny, ViewDist_Short, ViewDist_Normal, ViewDist_Far, ViewDist_Count,
-} ViewDist;
-const char* ViewDist_Names[ViewDist_Count] = { "TINY", "SHORT", "NORMAL", "FAR" };
+enum ViewDist { VIEW_TINY, VIEW_SHORT, VIEW_NORMAL, VIEW_FAR, VIEW_COUNT };
+const char* ViewDist_Names[VIEW_COUNT] = { "TINY", "SHORT", "NORMAL", "FAR" };
 
 static void ClassicOptionsScreen_GetMusic(String* v) { Menu_GetBool(v, Game_MusicVolume > 0); }
 static void ClassicOptionsScreen_SetMusic(const String* v) {
@@ -2204,18 +2211,18 @@ static void ClassicOptionsScreen_SetInvert(const String* v) { Game_InvertMouse =
 
 static void ClassicOptionsScreen_GetViewDist(String* v) {
 	if (Game_ViewDistance >= 512) {
-		String_AppendConst(v, ViewDist_Names[ViewDist_Far]);
+		String_AppendConst(v, ViewDist_Names[VIEW_FAR]);
 	} else if (Game_ViewDistance >= 128) {
-		String_AppendConst(v, ViewDist_Names[ViewDist_Normal]);
+		String_AppendConst(v, ViewDist_Names[VIEW_NORMAL]);
 	} else if (Game_ViewDistance >= 32) {
-		String_AppendConst(v, ViewDist_Names[ViewDist_Short]);
+		String_AppendConst(v, ViewDist_Names[VIEW_SHORT]);
 	} else {
-		String_AppendConst(v, ViewDist_Names[ViewDist_Tiny]);
+		String_AppendConst(v, ViewDist_Names[VIEW_TINY]);
 	}
 }
 static void ClassicOptionsScreen_SetViewDist(const String* v) {
-	int raw  = Utils_ParseEnum(v, 0, ViewDist_Names, ViewDist_Count);
-	int dist = raw == ViewDist_Far ? 512 : (raw == ViewDist_Normal ? 128 : (raw == ViewDist_Short ? 32 : 8));
+	int raw  = Utils_ParseEnum(v, 0, ViewDist_Names, VIEW_COUNT);
+	int dist = raw == VIEW_FAR ? 512 : (raw == VIEW_NORMAL ? 128 : (raw == VIEW_SHORT ? 32 : 8));
 	Game_UserSetViewDistance(dist);
 }
 
@@ -2282,7 +2289,7 @@ struct Screen* ClassicOptionsScreen_MakeInstance(void) {
 	static struct MenuInputValidator validators[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons)];	
 
-	validators[2] = MenuInputValidator_Enum(ViewDist_Names, ViewDist_Count);
+	validators[2] = MenuInputValidator_Enum(ViewDist_Names, VIEW_COUNT);
 	validators[7] = MenuInputValidator_Enum(FpsLimit_Names, FPS_LIMIT_COUNT);
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
@@ -2614,11 +2621,12 @@ static void HacksSettingsScreen_SetClipping(const String* v) {
 static void HacksSettingsScreen_GetJump(String* v) { String_AppendFloat(v, LocalPlayer_JumpHeight(), 3); }
 static void HacksSettingsScreen_SetJump(const String* v) {
 	struct PhysicsComp* physics = &LocalPlayer_Instance.Physics;
-	PhysicsComp_CalculateJumpVelocity(physics, Menu_Float(v));
-	physics->UserJumpVel = physics->JumpVel;
-
 	char strBuffer[STRING_SIZE];
 	String str = String_FromArray(strBuffer);
+
+	PhysicsComp_CalculateJumpVelocity(physics, Menu_Float(v));
+	physics->UserJumpVel = physics->JumpVel;
+	
 	String_AppendFloat(&str, physics->JumpVel, 8);
 	Options_Set(OPT_JUMP_VELOCITY, &str);
 }
@@ -3249,9 +3257,10 @@ static void TexPackOverlay_NoClick(void* screen, void* widget) {
 }
 
 static void TexPackOverlay_Render(void* screen, double delta) {
-	struct TexPackOverlay* s = screen;
-	MenuScreen_Render(s, delta);
 	struct AsyncRequest item;
+	struct TexPackOverlay* s = screen;
+
+	MenuScreen_Render(s, delta);
 	if (!AsyncDownloader_Get(&s->Identifier, &item)) return;
 
 	s->ContentLength = item.ResultSize;
@@ -3260,16 +3269,16 @@ static void TexPackOverlay_Render(void* screen, double delta) {
 }
 
 static void TexPackOverlay_ContextRecreated(void* screen) {
+	static String https = String_FromConst("https://");
+	static String http = String_FromConst("http://");
+
 	struct TexPackOverlay* s = screen;
 	String url = s->Identifier;
 	url = String_UNSAFE_SubstringAt(&url, 3);
-
-	String https = String_FromConst("https://");
+	
 	if (String_CaselessStarts(&url, &https)) {
 		url = String_UNSAFE_SubstringAt(&url, https.length);
 	}
-
-	String http = String_FromConst("http://");
 	if (String_CaselessStarts(&url, &http)) {
 		url = String_UNSAFE_SubstringAt(&url, http.length);
 	}
@@ -3302,17 +3311,17 @@ struct ScreenVTABLE TexPackOverlay_VTABLE = {
 	Menu_OnResize,   Menu_ContextLost,      TexPackOverlay_ContextRecreated,
 };
 struct Screen* TexPackOverlay_MakeInstance(const String* url) {
-	/* If we are showing a texture pack overlay, completely free that overlay */
-	/* - it doesn't matter anymore, because the new texture pack URL will always */
-	/* replace/override the old texture pack URL associated with that overlay */
+	static struct Widget* widgets[8];
+	struct TexPackOverlay* s = &TexPackOverlay_Instance;
 	void* overlay;
+
+	/* If we are showing a texture pack overlay, completely free that overlay */
+	/* It doesn't matter anymore, because the new texture pack URL will always */
+	/* replace/override the old texture pack URL associated with that overlay */
 	overlay = &TexPackOverlay_Instance;
 	if (Gui_IndexOverlay(overlay) >= 0) { Gui_FreeOverlay(overlay); }
 	overlay = &ConfirmDenyOverlay_Instance;
 	if (Gui_IndexOverlay(overlay) >= 0) { Gui_FreeOverlay(overlay); }
-
-	static struct Widget* widgets[8];
-	struct TexPackOverlay* s = &TexPackOverlay_Instance;
 
 	s->HandlesAllInput = true;
 	s->Widgets         = widgets;

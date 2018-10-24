@@ -675,6 +675,9 @@ static void Classic_SetPermission(uint8_t* data) {
 
 static void Classic_ReadAbsoluteLocation(uint8_t* data, EntityID id, bool interpolate) {
 	int x, y, z;
+	float rotY, headX;
+	struct LocationUpdate update;
+
 	if (cpe_extEntityPos) {
 		x = (int)Stream_GetU32_BE(&data[0]);
 		y = (int)Stream_GetU32_BE(&data[4]);
@@ -690,12 +693,12 @@ static void Classic_ReadAbsoluteLocation(uint8_t* data, EntityID id, bool interp
 	y -= 51; /* Convert to feet position */
 	if (id == ENTITIES_SELF_ID) y += 22;
 
-	Vector3 pos  = { x/32.0f, y/32.0f, z/32.0f };
-	float rotY  = Math_Packed2Deg(*data++);
-	float headX = Math_Packed2Deg(*data++);
+	Vector3 pos = { x/32.0f, y/32.0f, z/32.0f };
+	rotY  = Math_Packed2Deg(*data++);
+	headX = Math_Packed2Deg(*data++);
 
 	if (id == ENTITIES_SELF_ID) classic_receivedFirstPos = true;
-	struct LocationUpdate update; LocationUpdate_MakePosAndOri(&update, pos, rotY, headX, false);
+	LocationUpdate_MakePosAndOri(&update, pos, rotY, headX, false);
 	Handlers_UpdateLocation(id, &update, interpolate);
 }
 
@@ -723,8 +726,8 @@ static void Classic_Reset(void) {
 }
 
 static void Classic_Tick(void) {
-	if (!classic_receivedFirstPos) return;
 	struct Entity* p = &LocalPlayer_Instance.Base;
+	if (!classic_receivedFirstPos) return;
 	Classic_WritePosition(p->Position, p->HeadY, p->HeadX);
 }
 
@@ -881,8 +884,10 @@ static void CPE_ExtInfo(uint8_t* data) {
 static void CPE_ExtEntry(uint8_t* data) {
 	char extNameBuffer[STRING_SIZE];
 	String ext = String_FromArray(extNameBuffer);
+	int extVersion;
+
 	Handlers_ReadString(&data, &ext);
-	int extVersion = Stream_GetU32_BE(data);
+	extVersion = Stream_GetU32_BE(data);
 	Platform_Log2("cpe ext: %s, %i", &ext, &extVersion);
 
 	cpe_serverExtensionsCount--;
@@ -970,6 +975,7 @@ static void CPE_HoldThis(uint8_t* data) {
 static void CPE_SetTextHotkey(uint8_t* data) {
 	char actionBuffer[STRING_SIZE];
 	String action = String_FromArray(actionBuffer);
+	
 	data += STRING_SIZE; /* skip label */
 	Handlers_ReadString(&data, &action);
 
@@ -1155,15 +1161,15 @@ static void CPE_ExtAddEntity2(uint8_t* data) {
 
 #define BULK_MAX_BLOCKS 256
 static void CPE_BulkBlockUpdate(uint8_t* data) {
-	int i, count = 1 + *data++;
-
 	int32_t indices[BULK_MAX_BLOCKS];
+	BlockID blocks[BULK_MAX_BLOCKS];
+	int i, count = 1 + *data++;
+	
 	for (i = 0; i < count; i++) {
 		indices[i] = Stream_GetU32_BE(data); data += 4;
 	}
 	data += (BULK_MAX_BLOCKS - count) * 4;
-
-	BlockID blocks[BULK_MAX_BLOCKS];
+	
 	for (i = 0; i < count; i++) {
 		blocks[i] = data[i];
 	}
