@@ -12,6 +12,15 @@
 #include "freetype/freetype.h"
 #include "freetype/ftmodapi.h"
 
+/* POSIX is mainly shared between Linux and OSX */
+#ifdef CC_BUILD_NIX
+#define CC_BUILD_POSIX
+#endif
+#ifdef CC_BUILD_OSX
+#define CC_BUILD_POSIX
+#endif
+static void Platform_InitDisplay(void);
+
 #ifdef CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
@@ -43,7 +52,8 @@ ReturnCode ReturnCode_InvalidArg = ERROR_INVALID_PARAMETER;
 ReturnCode ReturnCode_SocketInProgess = WSAEINPROGRESS;
 ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #endif
-#ifdef CC_BUILD_NIX
+#ifdef CC_BUILD_POSIX
+#include <curl/curl.h>
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -58,28 +68,34 @@ ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#define Socket__Error() errno
+#define Nix_Return(success) ((success) ? 0 : errno)
+
+char* Platform_NewLine    = "\n";
+char  Directory_Separator = '/'; /* TODO: Is this right for old OSX though?? */
+pthread_mutex_t event_mutex;
+
+ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
+ReturnCode ReturnCode_FileNotFound = ENOENT;
+ReturnCode ReturnCode_NotSupported = EPERM;
+ReturnCode ReturnCode_InvalidArg   = EINVAL;
+ReturnCode ReturnCode_SocketInProgess = EINPROGRESS;
+ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
+#endif
+#ifdef CC_BUILD_NIX
 #include <X11/Xlib.h>
-#include <curl/curl.h>
 #include <AL/al.h>
 #include <AL/alc.h>
 #ifdef CC_BUILD_SOLARIS
 #include <sys/filio.h>
 #endif
-
-#define Socket__Error() errno
-#define Nix_Return(success) ((success) ? 0 : errno)
-
-pthread_mutex_t event_mutex;
-char* Platform_NewLine = "\n";
-char  Directory_Separator = '/';
 char* Font_DefaultName = "Century Schoolbook L Roman";
-
-ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
-ReturnCode ReturnCode_FileNotFound = ENOENT;
-ReturnCode ReturnCode_NotSupported = EPERM;
-ReturnCode ReturnCode_InvalidArg = EINVAL;
-ReturnCode ReturnCode_SocketInProgess = EINPROGRESS;
-ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
+#endif
+#ifdef CC_BUILD_OSX
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
+char* Font_DefaultName = "Arial";
 #endif
 
 
@@ -159,7 +175,7 @@ void Mem_Free(void* mem) {
 	if (mem) HeapFree(heap, 0, mem);
 }
 #endif
-#ifdef CC_BUILD_NIX
+#ifdef CC_BUILD_POSIX
 void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place) {
 	void* ptr = malloc(numElems * elemsSize); /* TODO: avoid overflow here */
 	if (!ptr) Platform_AllocFailed(place);
@@ -272,7 +288,7 @@ void Stopwatch_Measure(uint64_t* timer) {
 	}
 }
 #endif
-#ifdef CC_BUILD_NIX
+#ifdef CC_BUILD_POSIX
 void Platform_Log(const String* message) {
 	write(STDOUT_FILENO, message->buffer, message->length);
 	write(STDOUT_FILENO, "\n",            1);
@@ -314,12 +330,16 @@ void DateTime_CurrentLocal(DateTime* time_) {
 }
 
 #define NS_PER_SEC 1000000000ULL
+#endif
+#ifdef CC_BUILD_NIX
 void Stopwatch_Measure(uint64_t* timer) {
 	struct timespec t;
 	/* TODO: CLOCK_MONOTONIC_RAW ?? */
 	clock_gettime(CLOCK_MONOTONIC, &t);
 	*timer = (uint64_t)t.tv_sec * NS_PER_SEC + t.tv_nsec;
 }
+#endif
+#ifdef CC_BUILD_OSX
 #endif
 
 
@@ -448,7 +468,7 @@ ReturnCode File_Length(void* file, uint32_t* length) {
 	return Win_Return(*length != INVALID_FILE_SIZE);
 }
 #endif
-#ifdef CC_BUILD_NIX
+#ifdef CC_BUILD_POSIX
 bool Directory_Exists(const String* path) {
 	char str[600]; Platform_ConvertString(str, path);
 	struct stat sb;
@@ -635,7 +655,7 @@ void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
 	WaitForSingleObject((HANDLE)handle, milliseconds);
 }
 #endif
-#ifdef CC_BUILD_NIX
+#ifdef CC_BUILD_POSIX
 void Thread_Sleep(uint32_t milliseconds) { usleep(milliseconds * 1000); }
 void* Thread_StartCallback(void* lpParam) {
 	Thread_StartFunc* func = (Thread_StartFunc*)lpParam;
@@ -977,6 +997,9 @@ static void Font_Init(void) {
 #ifdef CC_BUILD_NIX
 	static String dir = String_FromConst("/usr/share/fonts");
 #endif
+#ifdef CC_BUILD_OSX
+	static String dir = String_FromConst("/Library/Fonts");
+#endif
 
 	ft_mem.alloc   = FT_AllocWrapper;
 	ft_mem.free    = FT_FreeWrapper;
@@ -1214,7 +1237,7 @@ ReturnCode Http_Do(struct AsyncRequest* req, volatile int* progress) {
 
 ReturnCode Http_Free(void) { return Win_Return(InternetCloseHandle(hInternet)); }
 #endif
-#ifdef CC_BUILD_NIX
+#ifdef CC_BUILD_POSIX
 CURL* curl;
 
 void Http_Init(void) {
@@ -1443,7 +1466,7 @@ ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, bool* completed) {
 
 ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) { return Audio_AllCompleted(handle, finished); }
 #endif
-#ifdef CC_BUILD_NIX
+#ifdef CC_BUILD_POSIX
 struct AudioContext {
 	ALuint Source;
 	ALuint Buffers[AUDIO_MAX_BUFFERS];
@@ -1682,18 +1705,6 @@ void Platform_ConvertString(void* dstPtr, const String* src) {
 	*dst = '\0';
 }
 
-static void Platform_InitDisplay(void) {
-	HDC hdc = GetDC(NULL);
-	struct DisplayDevice device = { 0 };
-
-	device.Bounds.Width   = GetSystemMetrics(SM_CXSCREEN);
-	device.Bounds.Height  = GetSystemMetrics(SM_CYSCREEN);
-	device.BitsPerPixel   = GetDeviceCaps(hdc, BITSPIXEL);
-	DisplayDevice_Default = device;
-
-	ReleaseDC(NULL, hdc);
-}
-
 void Platform_Init(void) {
 	Platform_InitDisplay();
 	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */
@@ -1713,6 +1724,18 @@ void Platform_Init(void) {
 void Platform_Free(void) {
 	WSACleanup();
 	HeapDestroy(heap);
+}
+
+static void Platform_InitDisplay(void) {
+	HDC hdc = GetDC(NULL);
+
+	DisplayDevice_Default.Bounds.X = 0;
+	DisplayDevice_Default.Bounds.Y = 0;
+	DisplayDevice_Default.Bounds.Width  = GetSystemMetrics(SM_CXSCREEN);
+	DisplayDevice_Default.Bounds.Height = GetSystemMetrics(SM_CYSCREEN);
+	DisplayDevice_Default.BitsPerPixel  = GetDeviceCaps(hdc, BITSPIXEL);
+
+	ReleaseDC(NULL, hdc);
 }
 
 void Platform_SetWorkingDir(void) {
@@ -1777,7 +1800,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 	return i;
 }
 #endif
-#ifdef CC_BUILD_NIX
+#ifdef CC_BUILD_POSIX
 void Platform_ConvertString(void* dstPtr, const String* src) {
 	uint8_t* dst = dstPtr;
 	Codepoint cp;
@@ -1789,26 +1812,6 @@ void Platform_ConvertString(void* dstPtr, const String* src) {
 		len = Stream_WriteUtf8(dst, cp); dst += len;
 	}
 	*dst = '\0';
-}
-
-static void Platform_InitDisplay(void) {
-	Display* display = XOpenDisplay(NULL);
-	if (!display) ErrorHandler_Fail("Failed to open display");
-
-	int screen = XDefaultScreen(display);
-	Window rootWin = XRootWindow(display, screen);
-	sw_freqDiv = 1000;
-
-	/* TODO: Use Xinerama and XRandR for querying these */
-	struct DisplayDevice device = { 0 };
-	device.Bounds.Width   = DisplayWidth(display,  screen);
-	device.Bounds.Height  = DisplayHeight(display, screen);
-	device.BitsPerPixel   = DefaultDepth(display,  screen);
-	DisplayDevice_Default = device;
-
-	DisplayDevice_Meta[0] = display;
-	DisplayDevice_Meta[1] = screen;
-	DisplayDevice_Meta[2] = rootWin;
 }
 
 void Platform_Init(void) {
@@ -1859,5 +1862,38 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 		args[i] = String_FromReadonly(argv[i + 1]);
 	}
 	return count;
+}
+#endif
+#ifdef CC_BUILD_NIX
+static void Platform_InitDisplay(void) {
+	Display* display = XOpenDisplay(NULL);
+	if (!display) ErrorHandler_Fail("Failed to open display");
+
+	int screen = XDefaultScreen(display);
+	Window rootWin = XRootWindow(display, screen);
+	sw_freqDiv = 1000;
+
+	/* TODO: Use Xinerama and XRandR for querying these */
+	DisplayDevice_Default.Bounds.X = 0;
+	DisplayDevice_Default.Bounds.Y = 0;
+	DisplayDevice_Default.Bounds.Width  = DisplayWidth(display,  screen);
+	DisplayDevice_Default.Bounds.Height = DisplayHeight(display, screen);
+	DisplayDevice_Default.BitsPerPixel  = DefaultDepth(display,  screen);
+
+	DisplayDevice_Meta[0] = display;
+	DisplayDevice_Meta[1] = screen;
+	DisplayDevice_Meta[2] = rootWin;
+}
+#endif
+#ifdef CC_BUILD_OSX
+static void Platform_InitDisplay(void) {
+	CGDirectDisplayID display = CGMainDisplayID();
+	CGRect bounds  = CGDisplayBounds(display);
+
+	DisplayDevice_Default.Bounds.X = (int)bounds.origin.X;
+	DisplayDevice_Default.Bounds.Y = (int)bounds.origin.Y;
+	DisplayDevice_Default.Bounds.Width  = (int)bounds.size.X;
+	DisplayDevice_Default.Bounds.Height = (int)bounds.size.Y;
+	DisplayDevice_Default.BitsPerPixel  = CGDisplayBitsPerPixel(display);
 }
 #endif

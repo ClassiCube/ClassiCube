@@ -739,7 +739,12 @@ void Gfx_OnWindowResize(void) {
 #else
 #define APIENETRY
 #endif
+
+#ifdef CC_BUILD_OSX
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 
 /* Extensions from later than OpenGL 1.1 */
 #define GL_TEXTURE_MAX_LEVEL    0x813D
