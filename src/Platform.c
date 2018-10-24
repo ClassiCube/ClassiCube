@@ -1694,8 +1694,8 @@ ReturnCode Audio_StopAndFree(AudioHandle handle) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WIN
-void Platform_ConvertString(void* dstPtr, const String* src) {
-	WCHAR* dst = dstPtr;
+void Platform_ConvertString(void* data, const String* src) {
+	WCHAR* dst = data;
 	int i;
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
 	
@@ -1801,8 +1801,8 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 }
 #endif
 #ifdef CC_BUILD_POSIX
-void Platform_ConvertString(void* dstPtr, const String* src) {
-	uint8_t* dst = dstPtr;
+void Platform_ConvertString(void* data, const String* src) {
+	uint8_t* dst = data;
 	Codepoint cp;
 	int i, len;
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
@@ -1840,20 +1840,6 @@ void Platform_SetWorkingDir(void) {
 
 void Platform_Exit(ReturnCode code) { exit(code); }
 
-ReturnCode Platform_StartShell(const String* args) {	
-	char str[300];
-	FILE* fp;
-	char pathBuffer[FILENAME_SIZE + 10];
-	String path = String_FromArray(pathBuffer);
-	
-	String_Format1(&path, "xdg-open %s", args);
-	Platform_ConvertString(str, &path);
-
-	fp = popen(str, "r");
-	if (!fp) return errno;
-	return Nix_Return(pclose(fp));
-}
-
 int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args) {
 	argc--; /* skip path argument*/
 	int i, count = min(argc, PROGRAM_MAX_CMDARGS);
@@ -1865,6 +1851,20 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 }
 #endif
 #ifdef CC_BUILD_NIX
+ReturnCode Platform_StartShell(const String* args) {
+	char str[300];
+	FILE* fp;
+	char pathBuffer[FILENAME_SIZE + 10];
+	String path = String_FromArray(pathBuffer);
+
+	String_Format1(&path, "xdg-open %s", args);
+	Platform_ConvertString(str, &path);
+
+	fp = popen(str, "r");
+	if (!fp) return errno;
+	return Nix_Return(pclose(fp));
+}
+
 static void Platform_InitDisplay(void) {
 	Display* display = XOpenDisplay(NULL);
 	if (!display) ErrorHandler_Fail("Failed to open display");
@@ -1890,10 +1890,10 @@ static void Platform_InitDisplay(void) {
 	CGDirectDisplayID display = CGMainDisplayID();
 	CGRect bounds  = CGDisplayBounds(display);
 
-	DisplayDevice_Default.Bounds.X = (int)bounds.origin.X;
-	DisplayDevice_Default.Bounds.Y = (int)bounds.origin.Y;
-	DisplayDevice_Default.Bounds.Width  = (int)bounds.size.X;
-	DisplayDevice_Default.Bounds.Height = (int)bounds.size.Y;
+	DisplayDevice_Default.Bounds.X = (int)bounds.origin.x;
+	DisplayDevice_Default.Bounds.Y = (int)bounds.origin.y;
+	DisplayDevice_Default.Bounds.Width  = (int)bounds.size.width;
+	DisplayDevice_Default.Bounds.Height = (int)bounds.size.height;
 	DisplayDevice_Default.BitsPerPixel  = CGDisplayBitsPerPixel(display);
 }
 #endif

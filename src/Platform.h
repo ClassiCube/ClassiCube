@@ -48,7 +48,7 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m);
 
 /* Encodes a string in platform specific format. (e.g. unicode on windows, UTF8 on linux) */
 /* NOTE: Only useful for platform specific function calls - do NOT try to interpret the data. */
-void Platform_ConvertString(void* dstPtr, const String* src);
+void Platform_ConvertString(void* data, const String* src);
 /* Initalises the platform specific state */
 void Platform_Init(void);
 /* Frees the platform specific state */

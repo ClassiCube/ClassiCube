@@ -259,6 +259,7 @@
     <ClCompile Include="AxisLinesRenderer.c" />
     <ClCompile Include="Block.c" />
     <ClCompile Include="Builder.c" />
+    <ClCompile Include="CarbonWindow.c" />
     <ClCompile Include="Chat.c" />
     <ClCompile Include="ChunkUpdater.c" />
     <ClCompile Include="Bitmap.c" />

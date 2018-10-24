@@ -630,8 +630,11 @@ void Window_SetCursorVisible(bool visible) {
 	ShowCursor(visible ? 1 : 0);
 }
 
-#ifndef CC_BUILD_D3D9
 
+/*########################################################################################################################*
+*-----------------------------------------------------OpenGL context------------------------------------------------------*
+*#########################################################################################################################*/
+#ifndef CC_BUILD_D3D9
 void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	PIXELFORMATDESCRIPTOR pfd = { 0 };
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
