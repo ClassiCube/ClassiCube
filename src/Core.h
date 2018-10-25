@@ -76,6 +76,10 @@ typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
 #endif
 #endif
 
+#ifndef CC_COMMIT_SHA
+#define CC_COMMIT_SHA "Unknown"
+#endif
+
 #ifdef CC_BUILD_D3D9
 typedef void* GfxResourceID;
 #define GFX_NULL NULL
