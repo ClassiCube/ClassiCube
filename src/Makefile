@@ -1,6 +1,6 @@
 CC=gcc
 LIBS=-lGL -lcurl -lopenal -lpthread -lX11 -lm
-CFLAGS=-g -w
+CFLAGS=-g -w -no-pie
 SOURCES=$(wildcard *.c)
 OBJECTS=$(patsubst %.c, %.o, $(SOURCES))
 
