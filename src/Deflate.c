@@ -350,7 +350,7 @@ static void Inflate_InflateFast(struct InflateState* state) {
 
 #define INFLATE_FAST_COPY_MAX (INFLATE_WINDOW_SIZE - INFLATE_FASTINF_OUT)
 	while (state->AvailOut >= INFLATE_FASTINF_OUT && state->AvailIn >= INFLATE_FASTINF_IN && copyLen < INFLATE_FAST_COPY_MAX) {
-		uint32_t lit; Huffman_Unsafe_Decode(state, state->LitsTable, lit);
+		uint32_t lit; Huffman_Unsafe_Decode(state, state->Table.Lits, lit);
 		if (lit <= 256) {
 			if (lit < 256) {
 				window[curIdx] = (uint8_t)lit;
@@ -366,7 +366,7 @@ static void Inflate_InflateFast(struct InflateState* state) {
 			Inflate_UNSAFE_EnsureBits(state, bits);
 			uint32_t len = len_base[lenIdx] + Inflate_ReadBits(state, bits);
 
-			uint32_t distIdx; Huffman_Unsafe_Decode(state, state->DistsTable, distIdx);
+			uint32_t distIdx; Huffman_Unsafe_Decode(state, state->TableDists, distIdx);
 			bits = dist_bits[distIdx];
 			Inflate_UNSAFE_EnsureBits(state, bits);
 			uint32_t dist = dist_base[distIdx] + Inflate_ReadBits(state, bits);
@@ -420,8 +420,8 @@ void Inflate_Process(struct InflateState* state) {
 			} break;
 
 			case 1: { /* Fixed/static huffman compressed */
-				Huffman_Build(&state->LitsTable,  fixed_lits,  INFLATE_MAX_LITS);
-				Huffman_Build(&state->DistsTable, fixed_dists, INFLATE_MAX_DISTS);
+				Huffman_Build(&state->Table.Lits,  fixed_lits,  INFLATE_MAX_LITS);
+				Huffman_Build(&state->TableDists, fixed_dists, INFLATE_MAX_DISTS);
 				state->State = Inflate_NextCompressState(state);
 			} break;
 
@@ -505,13 +505,13 @@ void Inflate_Process(struct InflateState* state) {
 
 			state->Index = 0;
 			state->State = INFLATE_STATE_DYNAMIC_LITSDISTS;
-			Huffman_Build(&state->CodeLensTable, state->Buffer, INFLATE_MAX_CODELENS);
+			Huffman_Build(&state->Table.CodeLens, state->Buffer, INFLATE_MAX_CODELENS);
 		}
 
 		case INFLATE_STATE_DYNAMIC_LITSDISTS: {
 			uint32_t count = state->NumLits + state->NumDists;
 			while (state->Index < count) {
-				int bits = Huffman_Decode(state, &state->CodeLensTable);
+				int bits = Huffman_Decode(state, &state->Table.CodeLens);
 				if (bits < 16) {
 					if (bits == -1) return;
 					state->Buffer[state->Index] = (uint8_t)bits;
@@ -526,8 +526,8 @@ void Inflate_Process(struct InflateState* state) {
 			if (state->Index == count) {
 				state->Index = 0;
 				state->State = Inflate_NextCompressState(state);
-				Huffman_Build(&state->LitsTable, state->Buffer, state->NumLits);
-				Huffman_Build(&state->DistsTable, &state->Buffer[state->NumLits], state->NumDists);
+				Huffman_Build(&state->Table.Lits, state->Buffer, state->NumLits);
+				Huffman_Build(&state->TableDists, &state->Buffer[state->NumLits], state->NumDists);
 			}
 			break;
 		}
@@ -571,7 +571,7 @@ void Inflate_Process(struct InflateState* state) {
 		case INFLATE_STATE_COMPRESSED_LIT: {
 			if (!state->AvailOut) return;
 
-			int lit = Huffman_Decode(state, &state->LitsTable);
+			int lit = Huffman_Decode(state, &state->Table.Lits);
 			if (lit < 256) {
 				if (lit == -1) return;
 				*state->Output = (uint8_t)lit;
@@ -597,7 +597,7 @@ void Inflate_Process(struct InflateState* state) {
 		}
 
 		case INFLATE_STATE_COMPRESSED_DIST: {
-			state->TmpDist = Huffman_Decode(state, &state->DistsTable);
+			state->TmpDist = Huffman_Decode(state, &state->TableDists);
 			if (state->TmpDist == -1) return;
 			state->State = INFLATE_STATE_COMPRESSED_DISTREPEAT;
 		}

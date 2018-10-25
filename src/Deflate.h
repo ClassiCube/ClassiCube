@@ -58,10 +58,10 @@ struct InflateState {
 	uint8_t Input[INFLATE_MAX_INPUT];       /* Buffer for input to DEFLATE */
 	uint8_t Buffer[INFLATE_MAX_LITS_DISTS]; /* General purpose temp array */
 	union {
-		struct HuffmanTable CodeLensTable;  /* Values represent codeword lengths of lits/dists codewords */
-		struct HuffmanTable LitsTable;      /* Values represent literal or lengths */
-	};
-	struct HuffmanTable DistsTable;         /* Values represent distances back */
+		struct HuffmanTable CodeLens;       /* Values represent codeword lengths of lits/dists codewords */
+		struct HuffmanTable Lits;           /* Values represent literal or lengths */
+	} Table; /* union to save on memory */
+	struct HuffmanTable TableDists;         /* Values represent distances back */
 	uint8_t Window[INFLATE_WINDOW_SIZE];    /* Holds circular buffer of recent output data, used for LZ77 */
 };
 

@@ -206,7 +206,7 @@ static void Window_UpdateWindowState(void) {
 OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventRef inEvent, void* userData) {
 	UInt32 kind, code;
 	Key key;
-	char charCode;
+	char charCode, raw;
 	bool repeat;
 	OSStatus res;
 	
@@ -232,14 +232,16 @@ OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventRef inEv
 	}
 
 	switch (kind) {
-			/* TODO: Should we be messing with KeyRepeat in kEventRawKeyRepeat here? */
-			/* Looking at documentation, probably not */
+		/* TODO: Should we be messing with KeyRepeat in kEventRawKeyRepeat here? */
+		/* Looking at documentation, probably not */
 		case kEventRawKeyDown:
 		case kEventRawKeyRepeat:
 			Key_SetPressed(key, true);
+
 			/* TODO: Should we be using kEventTextInputUnicodeForKeyEvent for this */
 			/* Look at documentation for kEventRawKeyRepeat */
-			Event_RaiseInt(&KeyEvents_Press, charCode);
+			if (!Convert_TryUnicodeToCP437((uint8_t)charCode, &raw)) return 0;
+			Event_RaiseInt(&KeyEvents_Press, raw);
 			return 0;
 			
 		case kEventRawKeyUp:
@@ -780,7 +782,7 @@ void GLContext_Init(struct GraphicsMode* mode) {
 	GDHandle gdevice;
 	OSStatus res;
 
-	/* Initially try creating context compatible with display */	
+	/* Initially try creating fullscreen compatible context */	
 	res = DMGetGDeviceByDisplayID(CGMainDisplayID(), &gdevice, false);
 	if (res) ErrorHandler_Fail2(res, "Getting display device failed");
 
@@ -789,7 +791,7 @@ void GLContext_Init(struct GraphicsMode* mode) {
 	res = aglGetError();
 
 	/* Try again with non-compatible context if that fails */
-	if (res == AGL_BAD_PIXELFMT) {
+	if (!fmt || res == AGL_BAD_PIXELFMT) {
 		Platform_LogConst("Failed to create full screen pixel format.");
 		Platform_LogConst("Trying again to create a non-fullscreen pixel format.");
 

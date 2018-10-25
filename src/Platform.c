@@ -93,6 +93,7 @@ ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 char* Font_DefaultName = "Century Schoolbook L Roman";
 #endif
 #ifdef CC_BUILD_OSX
+#include <mach/mach_time.h>
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
 char* Font_DefaultName = "Arial";
@@ -340,6 +341,9 @@ void Stopwatch_Measure(uint64_t* timer) {
 }
 #endif
 #ifdef CC_BUILD_OSX
+void Stopwatch_Measure(uint64_t* timer) {
+	*timer = mach_absolute_time();
+}
 #endif
 
 
@@ -1821,19 +1825,6 @@ void Platform_Free(void) {
 	pthread_mutex_destroy(&audio_lock);
 }
 
-void Platform_SetWorkingDir(void) {
-	char path[FILENAME_SIZE + 1] = { 0 };
-	int len = readlink("/proc/self/exe", path, FILENAME_SIZE);
-	if (len <= 0) return;
-
-	/* get rid of filename at end of directory*/
-	for (; len > 0; len--) {
-		if (path[len] == '/' || path[len] == '\\') break;
-		path[len] = '\0';
-	}
-	chdir(path);
-}
-
 void Platform_Exit(ReturnCode code) { exit(code); }
 
 int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args) {
@@ -1845,20 +1836,40 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 	}
 	return count;
 }
-#endif
-#ifdef CC_BUILD_NIX
-ReturnCode Platform_StartShell(const String* args) {
+
+static ReturnCode Platform_RunOpen(const char* format, const String* args) {
 	char str[300];
 	FILE* fp;
 	char pathBuffer[FILENAME_SIZE + 10];
 	String path = String_FromArray(pathBuffer);
 
-	String_Format1(&path, "xdg-open %s", args);
+	String_Format1(&path, format, args);
 	Platform_ConvertString(str, &path);
 
 	fp = popen(str, "r");
 	if (!fp) return errno;
 	return Nix_Return(pclose(fp));
+}
+
+static void Platform_TrimFilename(char* path, int len) {
+	/* get rid of filename at end of directory */
+	for (; len > 0; len--) {
+		if (path[len] == '/' || path[len] == '\\') break;
+		path[len] = '\0';
+	}
+}
+#endif
+#ifdef CC_BUILD_NIX
+ReturnCode Platform_StartShell(const String* args) {
+	return Platform_RunOpen("xdg-open %s", args);
+}
+void Platform_SetWorkingDir(void) {
+	char path[FILENAME_SIZE + 1] = { 0 };
+	int len = readlink("/proc/self/exe", path, FILENAME_SIZE);
+	if (len <= 0) return;
+
+	Platform_TrimFilename(path, len);
+	chdir(path);
 }
 
 static void Platform_InitDisplay(void) {
@@ -1882,9 +1893,41 @@ static void Platform_InitDisplay(void) {
 }
 #endif
 #ifdef CC_BUILD_OSX
+ReturnCode Platform_StartShell(const String* args) {
+	return Platform_RunOpen("/usr/bin/open %s", args);
+}
+void Platform_SetWorkingDir(void) {
+	char path[1024];
+	CFBundleRef bundle;
+	CFURLRef bundleUrl;
+	CFStringRef cfPath;
+	int len;
+
+	bundle = CFBundleGetMainBundle();
+	if (!bundle) return;
+	bundleUrl = CFBundleCopyBundleURL(bundle);
+	if (!bundleUrl) return;
+
+	cfPath = CFURLCopyFileSystemPath(bundleUrl, kCFURLPOSIXPathStyle);
+	if (!cfPath) return;
+	CFStringGetCString(cfPath, path, Array_Elems(path), kCFStringEncodingUTF8);
+
+	CFRelease(bundleUrl);
+	CFRelease(cfPath);
+
+	len = String_CalcLen(path, Array_Elems(path));
+	Platform_TrimFilename(path, len);
+	chdir(path);
+}
+
 static void Platform_InitDisplay(void) {
 	CGDirectDisplayID display = CGMainDisplayID();
 	CGRect bounds  = CGDisplayBounds(display);
+
+	mach_timebase_info_data_t tb = { 0 };
+	mach_timebase_info(&tb);
+	sw_freqMul = tb.numer;
+	sw_freqDiv = tb.denom * 1000;
 
 	DisplayDevice_Default.Bounds.X = (int)bounds.origin.x;
 	DisplayDevice_Default.Bounds.Y = (int)bounds.origin.y;

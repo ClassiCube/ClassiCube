@@ -71,6 +71,9 @@ typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
 #ifdef __linux__
 #define CC_BUILD_NIX
 #endif
+#ifdef __APPLE__
+#define CC_BUILD_OSX
+#endif
 #endif
 
 #ifdef CC_BUILD_D3D9
