@@ -16,8 +16,8 @@
 
 #define win_Style WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
 #define win_ClassName L"ClassiCube_Window"
-#define RECT_WIDTH(rect) (rect.right - rect.left)
-#define RECT_HEIGHT(rect) (rect.bottom - rect.top)
+#define Rect_Width(rect)  (rect.right  - rect.left)
+#define Rect_Height(rect) (rect.bottom - rect.top)
 
 HINSTANCE win_Instance;
 HWND win_Handle;
@@ -27,73 +27,10 @@ bool invisible_since_creation; /* Set by WindowsMessage.CREATE and consumed by V
 int suppress_resize; /* Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events */
 Rect2D prev_bounds; /* Used to restore previous size when leaving fullscreen mode */
 
-static Rect2D Window_FromRect(RECT rect) {
-	Rect2D r;
-	r.X = rect.left; r.Y = rect.top;
-	r.Width  = RECT_WIDTH(rect);
-	r.Height = RECT_HEIGHT(rect);
-	return r;
-}
 
-
-void Window_Destroy(void) {
-	if (!Window_Exists) return;
-	DestroyWindow(win_Handle);
-	Window_Exists = false;
-}
-
-static void Window_ResetWindowState(void) {
-	suppress_resize++;
-	Window_SetWindowState(WINDOW_STATE_NORMAL);
-	Window_ProcessEvents();
-	suppress_resize--;
-}
-
-bool win_hiddenBorder;
-static void Window_DoSetHiddenBorder(bool value) {
-	if (win_hiddenBorder == value) return;
-
-	/* We wish to avoid making an invisible window visible just to change the border.
-	However, it's a good idea to make a visible window invisible temporarily, to
-	avoid garbage caused by the border change. */
-	bool was_visible = Window_GetVisible();
-
-	/* To ensure maximized/minimized windows work correctly, reset state to normal,
-	change the border, then go back to maximized/minimized. */
-	int state = win_State;
-	Window_ResetWindowState();
-	DWORD style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-	style |= (value ? WS_POPUP : WS_OVERLAPPEDWINDOW);
-
-	/* Make sure client size doesn't change when changing the border style.*/
-	RECT rect;
-	rect.left = Window_Bounds.X; rect.top = Window_Bounds.Y;
-	rect.right = rect.left + Window_Bounds.Width;
-	rect.bottom = rect.top + Window_Bounds.Height;
-	AdjustWindowRect(&rect, style, false);
-
-	/* This avoids leaving garbage on the background window. */
-	if (was_visible) Window_SetVisible(false);
-
-	SetWindowLongW(win_Handle, GWL_STYLE, style);
-	SetWindowPos(win_Handle, NULL, 0, 0, RECT_WIDTH(rect), RECT_HEIGHT(rect),
-		SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
-
-	/* Force window to redraw update its borders, but only if it's
-	already visible (invisible windows will change borders when
-	they become visible, so no need to make them visiable prematurely).*/
-	if (was_visible) Window_SetVisible(true);
-
-	Window_SetWindowState(state);
-}
-
-static void Window_SetHiddenBorder(bool hidden) {
-	suppress_resize++;
-	Window_DoSetHiddenBorder(hidden);
-	Window_ProcessEvents();
-	suppress_resize--;
-}
-
+/*########################################################################################################################*
+*-----------------------------------------------------Private details-----------------------------------------------------*
+*#########################################################################################################################*/
 static Key Window_MapKey(WPARAM key) {
 	if (key >= VK_F1 && key <= VK_F24) { return Key_F1 + (key - VK_F1); }
 	if (key >= '0' && key <= '9') { return Key_0 + (key - '0'); }
@@ -159,11 +96,69 @@ static Key Window_MapKey(WPARAM key) {
 	return Key_None;
 }
 
+static void Window_Destroy(void) {
+	if (!Window_Exists) return;
+	DestroyWindow(win_Handle);
+	Window_Exists = false;
+}
+
+static void Window_ResetWindowState(void) {
+	suppress_resize++;
+	Window_SetWindowState(WINDOW_STATE_NORMAL);
+	Window_ProcessEvents();
+	suppress_resize--;
+}
+
+bool win_hiddenBorder;
+static void Window_DoSetHiddenBorder(bool value) {
+	if (win_hiddenBorder == value) return;
+
+	/* We wish to avoid making an invisible window visible just to change the border.
+	However, it's a good idea to make a visible window invisible temporarily, to
+	avoid garbage caused by the border change. */
+	bool was_visible = Window_GetVisible();
+
+	/* To ensure maximized/minimized windows work correctly, reset state to normal,
+	change the border, then go back to maximized/minimized. */
+	int state = win_State;
+	Window_ResetWindowState();
+	DWORD style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+	style |= (value ? WS_POPUP : WS_OVERLAPPEDWINDOW);
+
+	/* Make sure client size doesn't change when changing the border style.*/
+	RECT rect;
+	rect.left = Window_Bounds.X; rect.top = Window_Bounds.Y;
+	rect.right  = rect.left + Window_Bounds.Width;
+	rect.bottom = rect.top  + Window_Bounds.Height;
+	AdjustWindowRect(&rect, style, false);
+
+	/* This avoids leaving garbage on the background window. */
+	if (was_visible) Window_SetVisible(false);
+
+	SetWindowLongW(win_Handle, GWL_STYLE, style);
+	SetWindowPos(win_Handle, NULL, 0, 0, Rect_Width(rect), Rect_Height(rect),
+		SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+
+	/* Force window to redraw update its borders, but only if it's
+	already visible (invisible windows will change borders when
+	they become visible, so no need to make them visiable prematurely).*/
+	if (was_visible) Window_SetVisible(true);
+
+	Window_SetWindowState(state);
+}
+
+static void Window_SetHiddenBorder(bool hidden) {
+	suppress_resize++;
+	Window_DoSetHiddenBorder(hidden);
+	Window_ProcessEvents();
+	suppress_resize--;
+}
+
 static void Window_UpdateClientSize(HWND handle) {
 	RECT rect;
 	GetClientRect(handle, &rect);
-	Window_ClientSize.Width  = RECT_WIDTH(rect);
-	Window_ClientSize.Height = RECT_HEIGHT(rect);
+	Window_ClientSize.Width  = Rect_Width(rect);
+	Window_ClientSize.Height = Rect_Height(rect);
 }
 
 static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -366,8 +361,8 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	{
 		CREATESTRUCT* cs = (CREATESTRUCT*)lParam;
 		if (!cs->hwndParent) {
-			Window_Bounds.X = cs->x;      Window_Bounds.Y = cs->y;
-			Window_Bounds.Width = cs->cx; Window_Bounds.Height = cs->cy;
+			Window_Bounds.X = cs->x; Window_Bounds.Width  = cs->cx;		
+			Window_Bounds.Y = cs->y; Window_Bounds.Height = cs->cy;
 			Window_UpdateClientSize(handle);
 			invisible_since_creation = true;
 		}
@@ -389,6 +384,9 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------Public implementation--------------------------------------------------*
+*#########################################################################################################################*/
 void Window_Create(int x, int y, int width, int height, const String* title, struct GraphicsMode* mode, struct DisplayDevice* device) {
 	win_Instance = GetModuleHandleW(NULL);
 	/* TODO: UngroupFromTaskbar(); */
@@ -413,7 +411,7 @@ void Window_Create(int x, int y, int width, int height, const String* title, str
 	WCHAR str[300]; Platform_ConvertString(str, title);
 
 	win_Handle = CreateWindowExW(0, atom, str, win_Style,
-		rect.left, rect.top, RECT_WIDTH(rect), RECT_HEIGHT(rect),
+		rect.left, rect.top, Rect_Width(rect), Rect_Height(rect),
 		NULL, NULL, win_Instance, NULL);
 
 	if (!win_Handle) {
@@ -510,7 +508,7 @@ void Window_SetClientSize(int width, int height) {
 	RECT rect = { 0, 0, width, height };
 
 	AdjustWindowRect(&rect, style, false);
-	Window_SetSize(RECT_WIDTH(rect), RECT_HEIGHT(rect));
+	Window_SetSize(Rect_Width(rect), Rect_Height(rect));
 }
 
 void* Window_GetWindowHandle(void) { return win_Handle; }

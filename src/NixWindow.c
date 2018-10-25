@@ -33,6 +33,10 @@ Atom xa_clipboard, xa_targets, xa_utf8_string, xa_data_sel;
 Atom xa_atom = 4, xa_cardinal = 6;
 long win_eventMask;
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Private details-----------------------------------------------------*
+*#########################################################################################################################*/
 static Key Window_MapKey(KeySym key) {
 	if (key >= XK_F1 && key <= XK_F35) { return Key_F1 + (key - XK_F1); }
 	if (key >= XK_0 && key <= XK_9) { return Key_0 + (key - XK_0); }
@@ -185,6 +189,10 @@ static void Window_RefreshBounds(XEvent* e) {
 	}
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------Public implementation--------------------------------------------------*
+*#########################################################################################################################*/
 static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode);
 void Window_Create(int x, int y, int width, int height, const String* title, struct GraphicsMode* mode, struct DisplayDevice* device) {
 	win_display = DisplayDevice_Meta[0];

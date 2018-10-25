@@ -1325,5 +1325,6 @@ void Gfx_EndFrame(void) {
 
 void Gfx_OnWindowResize(void) {
 	glViewport(0, 0, Game_Width, Game_Height);
+	GLContext_Update();
 }
 #endif
