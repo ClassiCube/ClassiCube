@@ -7,6 +7,15 @@
 
 static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void* ctx);
 static void ErrorHandler_DumpCommon(String* str, void* ctx);
+static void ErrorHandler_DumpRegisters(void* ctx);
+
+/* POSIX is mainly shared between Linux and OSX */
+#ifdef CC_BUILD_NIX
+#define CC_BUILD_POSIX
+#endif
+#ifdef CC_BUILD_OSX
+#define CC_BUILD_POSIX
+#endif
 
 #ifdef CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
@@ -245,17 +254,92 @@ void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
 #pragma optimize ("", on)
 #endif
 #endif
-#ifdef CC_BUILD_NIX
-#include <X11/X.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/keysym.h>
+#ifdef CC_BUILD_POSIX
 #include <ucontext.h>
 #include <execinfo.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
+
+/*########################################################################################################################*
+*-------------------------------------------------------Info dumping------------------------------------------------------*
+*#########################################################################################################################*/
+static void ErrorHandler_Backtrace(String* backtrace_, void* ctx) {
+	void* addrs[40];
+	int i, frames = backtrace(addrs, 40);
+	char** strings = backtrace_symbols(addrs, frames);
+
+	for (i = 0; i < frames; i++) {
+		int number = i + 1;
+		uintptr_t addr = (uintptr_t)addrs[i];
+
+		char strBuffer[STRING_SIZE * 5];
+		String str = String_FromArray(strBuffer);
+
+		/* instruction pointer */
+		if (strings && strings[i]) {
+			String_Format3(&str, "%i) 0x%x - %c\n", &number, &addr, strings[i]);
+		} else {
+			String_Format2(&str, "%i) 0x%x\n", &number, &addr);
+		}
+
+		String_AppendString(backtrace_, &str);
+		ErrorHandler_Log(&str);
+	}
+
+	String_AppendConst(backtrace_, "\n");
+	free(strings);
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Error handling-----------------------------------------------------*
+*#########################################################################################################################*/
+static void ErrorHandler_SignalHandler(int sig, siginfo_t* info, void* ctx) {
+	/* Uninstall handler to avoid chance of infinite loop */
+	signal(SIGSEGV, SIG_DFL);
+	signal(SIGBUS, SIG_DFL);
+	signal(SIGILL, SIG_DFL);
+	signal(SIGABRT, SIG_DFL);
+	signal(SIGFPE, SIG_DFL);
+
+	char msgBuffer[STRING_SIZE * 2 + 1];
+	String msg = String_NT_Array(msgBuffer);
+
+	int type = info->si_signo, code = info->si_code;
+	uintptr_t addr = (uintptr_t)info->si_addr;
+	String_Format3(&msg, "Unhandled signal %i (code %i) at 0x%x", &type, &code, &addr);
+	msg.buffer[msg.length] = '\0';
+
+	ErrorHandler_DumpRegisters(ctx);
+	ErrorHandler_FailCommon(0, msg.buffer, ctx);
+}
+
+void ErrorHandler_Init(void) {
+	struct sigaction sa, old;
+	sa.sa_handler = ErrorHandler_SignalHandler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART | SA_SIGINFO;
+
+	sigaction(SIGSEGV, &sa, &old);
+	sigaction(SIGBUS, &sa, &old);
+	sigaction(SIGILL, &sa, &old);
+	sigaction(SIGABRT, &sa, &old);
+	sigaction(SIGFPE, &sa, &old);
+}
+
+void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
+	ucontext_t ctx;
+	getcontext(&ctx);
+	ErrorHandler_FailCommon(result, raw_msg, &ctx);
+}
+#endif
+#ifdef CC_BUILD_NIX
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/keysym.h>
 
 
 /*########################################################################################################################*
@@ -484,33 +568,6 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 /*########################################################################################################################*
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
-static void ErrorHandler_Backtrace(String* backtrace_, void* ctx) {
-	void* addrs[40];
-	int i, frames = backtrace(addrs, 40);
-	char** strings  = backtrace_symbols(addrs, frames);
-
-	for (i = 0; i < frames; i++) {
-		int number = i + 1;
-		uintptr_t addr = (uintptr_t)addrs[i];
-
-		char strBuffer[STRING_SIZE * 5];
-		String str = String_FromArray(strBuffer);
-
-		/* instruction pointer */
-		if (strings && strings[i]) {
-			String_Format3(&str, "%i) 0x%x - %c\n", &number, &addr, strings[i]);
-		} else {
-			String_Format2(&str, "%i) 0x%x\n", &number, &addr);
-		}
-
-		String_AppendString(backtrace_, &str);
-		ErrorHandler_Log(&str);
-	}
-
-	String_AppendConst(backtrace_, "\n");
-	free(strings);
-}
-
 static void ErrorHandler_DumpRegisters(void* ctx) {
 	if (!ctx) return;
 	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
@@ -553,50 +610,13 @@ static void ErrorHandler_DumpMemoryMap(void) {
 }
 
 static void ErrorHandler_DumpCommon(String* str, void* ctx) {
-	String backtrace = String_FromConst("-- backtrace --\n");
+	static String backtrace = String_FromConst("-- backtrace --\n");
+	static String memMap    = String_FromConst("-- memory map --\n");
+
 	ErrorHandler_Log(&backtrace);
 	ErrorHandler_Backtrace(str, ctx);
-
-	String memMap = String_FromConst("-- memory map --\n");
 	ErrorHandler_Log(&memMap);
 	ErrorHandler_DumpMemoryMap();
-}
-
-
-/*########################################################################################################################*
-*------------------------------------------------------Error handling-----------------------------------------------------*
-*#########################################################################################################################*/
-static void ErrorHandler_SignalHandler(int sig, siginfo_t* info, void* ctx) {
-	/* Uninstall handler to avoid chance of infinite loop */
-	signal(SIGSEGV, SIG_DFL);
-	signal(SIGBUS,  SIG_DFL);
-	signal(SIGILL,  SIG_DFL);
-	signal(SIGABRT, SIG_DFL);
-	signal(SIGFPE,  SIG_DFL);
-
-	char msgBuffer[STRING_SIZE * 2 + 1];
-	String msg = String_NT_Array(msgBuffer);
-
-	int type     = info->si_signo, code = info->si_code;
-	uintptr_t addr = (uintptr_t)info->si_addr;
-	String_Format3(&msg, "Unhandled signal %i (code %i) at 0x%x", &type, &code, &addr);
-	msg.buffer[msg.length] = '\0';
-
-	ErrorHandler_DumpRegisters(ctx);
-	ErrorHandler_FailCommon(0, msg.buffer, ctx);
-}
-
-void ErrorHandler_Init(void) {
-	struct sigaction sa, old;
-	sa.sa_handler = ErrorHandler_SignalHandler;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags   = SA_RESTART | SA_SIGINFO;
-
-	sigaction(SIGSEGV, &sa, &old);
-	sigaction(SIGBUS,  &sa, &old);
-	sigaction(SIGILL,  &sa, &old);
-	sigaction(SIGABRT, &sa, &old);
-	sigaction(SIGFPE,  &sa, &old);
 }
 
 void ErrorHandler_ShowDialog(const char* title, const char* msg) {
@@ -606,11 +626,50 @@ void ErrorHandler_ShowDialog(const char* title, const char* msg) {
 	X11_MessageBox(title, msg, &w);
 	X11Window_Free(&w);
 }
+#endif
+#ifdef CC_BUILD_OSX
+static void ErrorHandler_DumpRegisters(void* ctx) {
+	if (!ctx) return;
+	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
 
-void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
-	ucontext_t ctx;
-	getcontext(&ctx);
-	ErrorHandler_FailCommon(result, raw_msg, &ctx);
+	char strBuffer[STRING_SIZE * 8];
+	String str = String_FromArray(strBuffer);
+	String_AppendConst(&str, "-- registers --\n");
+
+	/* You can find these definitions at /usr/include/mach/i386/_structs.h */
+#ifdef __i386__
+	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r->__ss.__eax, &r->__ss.__ebx, &r->__ss.__ecx);
+	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r->__ss.__edx, &r->__ss.__esi, &r->__ss.__edi);
+	String_Format3(&str, "eip=%x ebp=%x esp=%x\n", &r->__ss.__eip, &r->__ss.__ebp, &r->__ss.__esp);
+#elif __x86_64__
+	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r->__ss.__rax, &r->__ss.__rbx, &r->__ss.__rcx);
+	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r->__ss.__rdx, &r->__ss.__rsi, &r->__ss.__rdi);
+	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r->__ss.__rip, &r->__ss.__rbp, &r->__ss.__rsp);
+	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r->__ss.__r8,  &r->__ss.__r9,  &r->__ss.__r10);
+	String_Format3(&str, "r11=%x r12=%x r13=%x\n", &r->__ss.__r11, &r->__ss.__r12, &r->__ss.__r13);
+	String_Format2(&str, "r14=%x r15=%x\n",        &r->__ss.__r14, &r->__ss.__r15);
+#else
+#error "Unknown machine type"
+#endif
+	ErrorHandler_Log(&str);
+}
+
+static void ErrorHandler_DumpCommon(String* str, void* ctx) {
+	static String backtrace = String_FromConst("-- backtrace --\n");
+	ErrorHandler_Log(&backtrace);
+	ErrorHandler_Backtrace(str, ctx);
+}
+
+void ErrorHandler_ShowDialog(const char* title, const char* msg) {
+	CFStringRef titleCF = CFStringCreateWithCString(NULL, title, kCFStringEncodingASCII);
+	CFStringRef msgCF   = CFStringCreateWithCString(NULL, msg,   kCFStringEncodingASCII);
+	DialogRef dialog;
+	DialogItemIndex itemHit;
+
+	CreateStandardAlert(kAlertPlainAlert, titleCF, msgCF, NULL, &dialog);
+	CFRelease(titleCF);
+	CFRelease(msgCF);
+	RunStandardAlert(dialog, NULL, &itemHit);
 }
 #endif
 

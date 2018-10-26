@@ -48,8 +48,8 @@ char* Font_DefaultName    = "Arial";
 ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
 ReturnCode ReturnCode_NotSupported = ERROR_NOT_SUPPORTED;
-ReturnCode ReturnCode_InvalidArg = ERROR_INVALID_PARAMETER;
-ReturnCode ReturnCode_SocketInProgess = WSAEINPROGRESS;
+ReturnCode ReturnCode_InvalidArg   = ERROR_INVALID_PARAMETER;
+ReturnCode ReturnCode_SocketInProgess  = WSAEINPROGRESS;
 ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #endif
 #ifdef CC_BUILD_POSIX
