@@ -549,6 +549,7 @@ struct ListScreen* ListScreen_MakeInstance(void) {
 	StringsBuffer_Clear(&s->Entries);
 	s->HandlesAllInput = true;
 	s->WidgetsCount    = 0;
+	s->CurrentIndex    = 0;
 
 	s->UpdateEntry = ListScreen_UpdateEntry;
 	s->VTABLE      = &ListScreen_VTABLE;
