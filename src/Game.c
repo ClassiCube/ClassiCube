@@ -752,7 +752,8 @@ void Game_Run(int width, int height, const String* title, struct DisplayDevice* 
 	double time;
 	
 	GraphicsMode_MakeDefault(&mode);
-	Window_Create(x, y, width, height, title, &mode, device);
+	Window_Create(x, y, width, height, &mode);
+	Window_SetTitle(title);
 	Window_SetVisible(true);
 
 	Game_Load();

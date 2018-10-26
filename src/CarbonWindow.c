@@ -436,10 +436,10 @@ static void Window_ConnectEvents(void) {
 /*########################################################################################################################*
  *--------------------------------------------------Public implementation--------------------------------------------------*
  *#########################################################################################################################*/
-void Window_Create(int x, int y, int width, int height, const String* title, struct GraphicsMode* mode, struct DisplayDevice* device) {
+void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
 	Rect r;
 	OSStatus res;
-	CFStringRef titleCF;
+	
 	ProcessSerialNumber psn;
 	
 	r.left = x; r.right  = x + width; 
@@ -449,12 +449,7 @@ void Window_Create(int x, int y, int width, int height, const String* title, str
 						  kWindowInWindowMenuAttribute | kWindowLiveResizeAttribute,
 						  &r, &win_handle);
 	if (res) ErrorHandler_Fail2(res, "Failed to create window");
-	
-	/* TODO: Use UTF8 encoding instead!!!! */
-	/* Use Platform_ConvertString */
-	titleCF = CFStringCreateWithBytes(kCFAllocatorDefault, title->buffer, title->length, kCFStringEncodingASCII, false);
-	SetWindowTitleWithCFString(win_handle, titleCF);
-	
+
 	Window_SetLocation(r.left, r.right);
 	Window_SetSize(Rect_Width(r), Rect_Height(r));
 	Window_UpdateSize();
@@ -473,6 +468,14 @@ void Window_Create(int x, int y, int width, int height, const String* title, str
 	/* TODO: Use BringWindowToFront instead.. (look in the file which has RepositionWindow in it) !!!! */
 	Window_ConnectEvents();
 	Window_Exists = true;
+}
+
+void Window_SetTitle(const String* title) {
+	CFStringRef titleCF;
+	/* TODO: Use UTF8 encoding instead!!!! */
+	/* Use Platform_ConvertString */
+	titleCF = CFStringCreateWithBytes(kCFAllocatorDefault, title->buffer, title->length, kCFStringEncodingASCII, false);
+	SetWindowTitleWithCFString(win_handle, titleCF);
 }
 
 /* NOTE: All Pasteboard functions are OSX 10.3 or later */
@@ -535,10 +538,7 @@ void Window_SetClipboardText(const String* value) {
 }
 /* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */
 
-bool Window_GetVisible(void) {
-	return IsWindowVisible(win_handle);
-}
-
+bool Window_GetVisible(void) { return IsWindowVisible(win_handle); }
 void Window_SetVisible(bool visible) {
 	if (visible == Window_GetVisible()) return;
 	

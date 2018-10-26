@@ -62,12 +62,12 @@ NOINLINE_ int String_UNSAFE_Split(STRING_REF const String* str, char c, String* 
 /* If c is not found, sets key to str and value to String_Empty, returns false. */
 NOINLINE_ bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value);
 
-/* Returns whether all characters of the strings are equal. */
+/* Whether all characters of the strings are equal. */
 NOINLINE_ bool String_Equals(const String* a, const String* b);
-/* Returns whether all characters of the strings are case-insensitively equal. */
+/* Whether all characters of the strings are case-insensitively equal. */
 NOINLINE_ bool String_CaselessEquals(const String* a, const String* b);
-/* Returns whether all characters of the strings are case-insensitively equal. */
-/* NOTE: This is faster than String_CaselessEquals(a, String_FromReadonly(b)) */
+/* Whether all characters of the strings are case-insensitively equal. */
+/* NOTE: Faster than String_CaselessEquals(a, String_FromReadonly(b)) */
 NOINLINE_ bool String_CaselessEqualsConst(const String* a, const char* b);
 /* Breaks down an integer into an array of digits. */
 /* NOTE: Digits are in reverse order, so e.g. '200' becomes '0','0','2' */
@@ -135,9 +135,14 @@ NOINLINE_ bool String_CaselessEnds(const String* str, const String* sub);
 /* else returns 0. NOTE: The return value is not just in -1,0,1! */
 NOINLINE_ int  String_Compare(const String* a, const String* b);
 
+/* See String_Format4 */
 void String_Format1(String* str, const char* format, const void* a1);
+/* See String_Format4 */
 void String_Format2(String* str, const char* format, const void* a1, const void* a2);
+/* See String_Format4 */
 void String_Format3(String* str, const char* format, const void* a1, const void* a2, const void* a3);
+/* Formats the arguments in a string, similiar to printf or C# String.Format
+NOTE: This is a low level API. Argument count and types are not checked at all. */
 void String_Format4(String* str, const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
 
 /* Converts a code page 437 character to its unicode equivalent. */
@@ -145,7 +150,7 @@ Codepoint Convert_CP437ToUnicode(char c);
 /* Converts a unicode character to its code page 437 equivalent, or '?' if no match. */
 char Convert_UnicodeToCP437(Codepoint cp);
 /* Attempts to convert a unicode character to its code page 437 equivalent. */
-bool Convert_TryUnicodeToCP437(Codepoint cp, char* value);
+bool Convert_TryUnicodeToCP437(Codepoint cp, char* c);
 /* Appends all characters from UTF8 encoded data to the given string. */
 void String_DecodeUtf8(String* str, uint8_t* data, uint32_t len);
 

@@ -194,7 +194,7 @@ static void Window_RefreshBounds(XEvent* e) {
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
 static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode);
-void Window_Create(int x, int y, int width, int height, const String* title, struct GraphicsMode* mode, struct DisplayDevice* device) {
+void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
 	win_display = DisplayDevice_Meta[0];
 	win_screen  = DisplayDevice_Meta[1];
 	win_rootWin = DisplayDevice_Meta[2];
@@ -221,8 +221,6 @@ void Window_Create(int x, int y, int width, int height, const String* title, str
 		0, win_visual.depth /* CopyFromParent*/, InputOutput, win_visual.visual, mask, &attributes);
 
 	if (!win_handle) ErrorHandler_Fail("XCreateWindow call failed");
-	char str[600]; Platform_ConvertString(str, title);
-	XStoreName(win_display, win_handle, str);
 
 	XSizeHints hints  = { 0 };
 	hints.base_width  = width;
@@ -250,6 +248,12 @@ void Window_Create(int x, int y, int width, int height, const String* title, str
 	bool supported;
 	XkbSetDetectableAutoRepeat(win_display, true, &supported);
 	Window_Exists = true;
+}
+
+void Window_SetTitle(const String* title) {
+	char str[600]; 
+	Platform_ConvertString(str, title);
+	XStoreName(win_display, win_handle, str);
 }
 
 char clipboard_copy_buffer[256];

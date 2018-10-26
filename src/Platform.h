@@ -47,8 +47,9 @@ void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil, 
 void GraphicsMode_MakeDefault(struct GraphicsMode* m);
 
 /* Encodes a string in platform specific format. (e.g. unicode on windows, UTF8 on linux) */
-/* NOTE: Only useful for platform specific function calls - do NOT try to interpret the data. */
-void Platform_ConvertString(void* data, const String* src);
+/* NOTE: Only useful for platform specific function calls - do NOT try to interpret the data. 
+Returns the number of bytes written, excluding trailing NULL terminator. */
+NOINLINE_ int Platform_ConvertString(void* data, const String* src);
 /* Initalises the platform specific state */
 void Platform_Init(void);
 /* Frees the platform specific state */

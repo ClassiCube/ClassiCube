@@ -517,21 +517,21 @@ Codepoint Convert_CP437ToUnicode(char c) {
 }
 
 char Convert_UnicodeToCP437(Codepoint cp) {
-	char value; Convert_TryUnicodeToCP437(cp, &value); return value;
+	char c; Convert_TryUnicodeToCP437(cp, &c); return c;
 }
 
-bool Convert_TryUnicodeToCP437(Codepoint cp, char* value) {
+bool Convert_TryUnicodeToCP437(Codepoint cp, char* c) {
 	int i;
-	if (cp >= 0x20 && cp < 0x7F) { *value = (char)cp; return true; }
+	if (cp >= 0x20 && cp < 0x7F) { *c = (char)cp; return true; }
 
 	for (i = 0; i < Array_Elems(Convert_ControlChars); i++) {
-		if (Convert_ControlChars[i] == cp) { *value = i; return true; }
+		if (Convert_ControlChars[i] == cp) { *c = i; return true; }
 	}
 	for (i = 0; i < Array_Elems(Convert_ExtendedChars); i++) {
-		if (Convert_ExtendedChars[i] == cp) { *value = i + 0x7F; return true; }
+		if (Convert_ExtendedChars[i] == cp) { *c = i + 0x7F; return true; }
 	}
 
-	*value = '?'; return false;
+	*c = '?'; return false;
 }
 
 void String_DecodeUtf8(String* str, uint8_t* data, uint32_t len) {

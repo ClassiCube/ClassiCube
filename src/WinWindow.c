@@ -387,7 +387,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
-void Window_Create(int x, int y, int width, int height, const String* title, struct GraphicsMode* mode, struct DisplayDevice* device) {
+void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
 	win_Instance = GetModuleHandleW(NULL);
 	/* TODO: UngroupFromTaskbar(); */
 
@@ -396,32 +396,31 @@ void Window_Create(int x, int y, int width, int height, const String* title, str
 	AdjustWindowRect(&rect, win_Style, false);
 
 	WNDCLASSEXW wc = { 0 };
-	wc.cbSize = sizeof(WNDCLASSEXW);
-	wc.style = CS_OWNDC;
+	wc.cbSize    = sizeof(WNDCLASSEXW);
+	wc.style     = CS_OWNDC;
 	wc.hInstance = win_Instance;
-	wc.lpfnWndProc = Window_Procedure;
+	wc.lpfnWndProc   = Window_Procedure;
 	wc.lpszClassName = win_ClassName;
 	/* TODO: Set window icons here */
 	wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
 
 	ATOM atom = RegisterClassExW(&wc);
-	if (atom == 0) {
-		ErrorHandler_Fail2(GetLastError(), "Failed to register window class");
-	}
-	WCHAR str[300]; Platform_ConvertString(str, title);
+	if (!atom) ErrorHandler_Fail2(GetLastError(), "Failed to register window class");
 
-	win_Handle = CreateWindowExW(0, atom, str, win_Style,
+	win_Handle = CreateWindowExW(0, atom, NULL, win_Style,
 		rect.left, rect.top, Rect_Width(rect), Rect_Height(rect),
 		NULL, NULL, win_Instance, NULL);
+	if (!win_Handle) ErrorHandler_Fail2(GetLastError(), "Failed to create window");
 
-	if (!win_Handle) {
-		ErrorHandler_Fail2(GetLastError(), "Failed to create window");
-	}
 	win_DC = GetDC(win_Handle);
-	if (!win_DC) {
-		ErrorHandler_Fail2(GetLastError(), "Failed to get device context");
-	}
+	if (!win_DC) ErrorHandler_Fail2(GetLastError(), "Failed to get device context");
 	Window_Exists = true;
+}
+
+void Window_SetTitle(const String* title) {
+	WCHAR str[300]; 
+	Platform_ConvertString(str, title);
+	SetWindowTextW(win_Handle, str);
 }
 
 void Window_GetClipboardText(String* value) {

@@ -1694,7 +1694,7 @@ ReturnCode Audio_StopAndFree(AudioHandle handle) {
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WIN
-void Platform_ConvertString(void* data, const String* src) {
+int Platform_ConvertString(void* data, const String* src) {
 	WCHAR* dst = data;
 	int i;
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
@@ -1703,6 +1703,7 @@ void Platform_ConvertString(void* data, const String* src) {
 		*dst = Convert_CP437ToUnicode(src->buffer[i]); dst++;
 	}
 	*dst = '\0';
+	return src->length * 2;
 }
 
 void Platform_Init(void) {
@@ -1801,7 +1802,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 }
 #endif
 #ifdef CC_BUILD_POSIX
-void Platform_ConvertString(void* data, const String* src) {
+int Platform_ConvertString(void* data, const String* src) {
 	uint8_t* dst = data;
 	Codepoint cp;
 	int i, len;
@@ -1812,6 +1813,7 @@ void Platform_ConvertString(void* data, const String* src) {
 		len = Stream_WriteUtf8(dst, cp); dst += len;
 	}
 	*dst = '\0';
+	return len;
 }
 
 void Platform_Init(void) {
