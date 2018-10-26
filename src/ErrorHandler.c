@@ -641,7 +641,10 @@ static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void
 	String msg = String_NT_Array(msgBuffer);
 
 	String_Format3(&msg, "ClassiCube crashed.%cMessage: %c%c", Platform_NewLine, raw_msg, Platform_NewLine);
+
+	#ifdef CC_COMMIT_SHA
 	String_Format2(&msg, "Commit SHA: %c%c", CC_COMMIT_SHA, Platform_NewLine);
+	#endif
 
 	if (result) {
 		String_Format2(&msg, "%h%c", &result, Platform_NewLine);
