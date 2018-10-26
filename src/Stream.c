@@ -380,45 +380,25 @@ ReturnCode Stream_ReadU32_BE(struct Stream* s, uint32_t* value) {
 /*########################################################################################################################*
 *--------------------------------------------------Read/Write strings-----------------------------------------------------*
 *#########################################################################################################################*/
-ReturnCode Stream_ReadUtf8(struct Stream* s, Codepoint* cp) {
-	uint8_t data;
-	ReturnCode res = s->ReadU8(s, &data);
-	if (res) return res;
-
-	/* Header byte is just the raw codepoint (common case) */
-	if (data <= 0x7F) { *cp = data; return 0; }
-
-	/* Header byte encodes variable number of following bytes */
-	/* The remaining bits of the header form first part of the character */
-	int byteCount = 0, i;
-	for (i = 7; i >= 0; i--) {
-		if (data & (1 << i)) {
-			byteCount++;
-			data &= (uint8_t)~(1 << i);
-		} else {
-			break;
-		}
-	}
-
-	*cp = data;
-	for (i = 0; i < byteCount - 1; i++) {
-		if ((res = s->ReadU8(s, &data))) return res;
-
-		*cp <<= 6;
-		/* Top two bits of each are always 10 */
-		*cp |= (Codepoint)(data & 0x3F);
-	}
-	return 0;
-}
-
 ReturnCode Stream_ReadLine(struct Stream* s, String* text) {
 	bool readAny = false;
 	Codepoint cp;
 	ReturnCode res;
-	text->length = 0;
 
-	for (;;) {	
-		res = Stream_ReadUtf8(s, &cp);
+	uint8_t tmp[8];
+	uint32_t len;
+
+	text->length = 0;
+	for (;;) {
+		len = 0;
+
+		/* Read a UTF8 character from the stream */
+		/* (in most cases it's just one byte) */
+		do {
+			if ((res = s->ReadU8(s, &tmp[len]))) break;
+			len++;
+		} while (!Convert_Utf8ToUnicode(&cp, tmp, len));
+
 		if (res == ERR_END_OF_STREAM) break;
 		if (res) return res;
 
@@ -429,22 +409,6 @@ ReturnCode Stream_ReadLine(struct Stream* s, String* text) {
 		String_Append(text, Convert_UnicodeToCP437(cp));
 	}
 	return readAny ? 0 : ERR_END_OF_STREAM;
-}
-
-int Stream_WriteUtf8(uint8_t* buffer, Codepoint cp) {
-	if (cp <= 0x7F) {
-		buffer[0] = (uint8_t)cp;
-		return 1;
-	} else if (cp <= 0x7FF) {
-		buffer[0] = 0xC0 | ((cp >> 6) & 0x1F);
-		buffer[1] = 0x80 | ((cp)      & 0x3F);
-		return 2;
-	} else {
-		buffer[0] = 0xE0 | ((cp >> 12) & 0x0F);
-		buffer[1] = 0x80 | ((cp >> 6)  & 0x3F);
-		buffer[2] = 0x80 | ((cp)       & 0x3F);
-		return 3;
-	}
 }
 
 ReturnCode Stream_WriteLine(struct Stream* s, String* text) {
@@ -463,7 +427,7 @@ ReturnCode Stream_WriteLine(struct Stream* s, String* text) {
 
 		cur = buffer + len;
 		cp  = Convert_CP437ToUnicode(text->buffer[i]);
-		len += Stream_WriteUtf8(cur, cp);
+		len += Convert_UnicodeToUtf8(cp, cur);
 	}
 	
 	cur = Platform_NewLine;

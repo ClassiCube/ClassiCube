@@ -19,10 +19,10 @@
 #define Rect_Width(rect)  (rect.right  - rect.left)
 #define Rect_Height(rect) (rect.bottom - rect.top)
 
-HINSTANCE win_Instance;
-HWND win_Handle;
+HINSTANCE win_instance;
+HWND win_handle;
 HDC win_DC;
-int win_State = WINDOW_STATE_NORMAL;
+int win_state;
 bool invisible_since_creation; /* Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront) */
 int suppress_resize; /* Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events */
 Rect2D prev_bounds; /* Used to restore previous size when leaving fullscreen mode */
@@ -98,7 +98,7 @@ static Key Window_MapKey(WPARAM key) {
 
 static void Window_Destroy(void) {
 	if (!Window_Exists) return;
-	DestroyWindow(win_Handle);
+	DestroyWindow(win_handle);
 	Window_Exists = false;
 }
 
@@ -120,7 +120,7 @@ static void Window_DoSetHiddenBorder(bool value) {
 
 	/* To ensure maximized/minimized windows work correctly, reset state to normal,
 	change the border, then go back to maximized/minimized. */
-	int state = win_State;
+	int state = win_state;
 	Window_ResetWindowState();
 	DWORD style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 	style |= (value ? WS_POPUP : WS_OVERLAPPEDWINDOW);
@@ -135,8 +135,8 @@ static void Window_DoSetHiddenBorder(bool value) {
 	/* This avoids leaving garbage on the background window. */
 	if (was_visible) Window_SetVisible(false);
 
-	SetWindowLongW(win_Handle, GWL_STYLE, style);
-	SetWindowPos(win_Handle, NULL, 0, 0, Rect_Width(rect), Rect_Height(rect),
+	SetWindowLongW(win_handle, GWL_STYLE, style);
+	SetWindowPos(win_handle, NULL, 0, 0, Rect_Width(rect), Rect_Height(rect),
 		SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
 	/* Force window to redraw update its borders, but only if it's
@@ -185,7 +185,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	case WM_WINDOWPOSCHANGED:
 	{
 		WINDOWPOS* pos = (WINDOWPOS*)lParam;
-		if (pos->hwnd != win_Handle) break;
+		if (pos->hwnd != win_handle) break;
 
 		if (pos->x != Window_Bounds.X || pos->y != Window_Bounds.Y) {
 			Window_Bounds.X = pos->x; Window_Bounds.Y = pos->y;
@@ -196,7 +196,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			Window_Bounds.Width = pos->cx; Window_Bounds.Height = pos->cy;
 			Window_UpdateClientSize(handle);
 
-			SetWindowPos(win_Handle, NULL,
+			SetWindowPos(win_handle, NULL,
 				Window_Bounds.X, Window_Bounds.Y, Window_Bounds.Width, Window_Bounds.Height,
 				SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
@@ -219,16 +219,16 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_SIZE:
 	{
-		int new_state = win_State;
+		int new_state = win_state;
 		switch (wParam) {
 		case SIZE_RESTORED:  new_state = WINDOW_STATE_NORMAL; break;
 		case SIZE_MINIMIZED: new_state = WINDOW_STATE_MINIMISED; break;
 		case SIZE_MAXIMIZED: new_state = win_hiddenBorder ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_MAXIMISED; break;
 		}
 
-		if (new_state != win_State) {
-			win_State = new_state;
-			Event_RaiseVoid(&WindowEvents_WindowStateChanged);
+		if (new_state != win_state) {
+			win_state = new_state;
+			Event_RaiseVoid(&WindowEvents_StateChanged);
 		}
 	} break;
 
@@ -375,8 +375,8 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_DESTROY:
 		Window_Exists = false;
-		UnregisterClassW(win_ClassName, win_Instance);
-		if (win_DC) ReleaseDC(win_Handle, win_DC);
+		UnregisterClassW(win_ClassName, win_instance);
+		if (win_DC) ReleaseDC(win_handle, win_DC);
 		Event_RaiseVoid(&WindowEvents_Closed);
 		break;
 	}
@@ -388,7 +388,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
-	win_Instance = GetModuleHandleW(NULL);
+	win_instance = GetModuleHandleW(NULL);
 	/* TODO: UngroupFromTaskbar(); */
 
 	/* Find out the final window rectangle, after the WM has added its chrome (titlebar, sidebars etc). */
@@ -398,7 +398,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	WNDCLASSEXW wc = { 0 };
 	wc.cbSize    = sizeof(WNDCLASSEXW);
 	wc.style     = CS_OWNDC;
-	wc.hInstance = win_Instance;
+	wc.hInstance = win_instance;
 	wc.lpfnWndProc   = Window_Procedure;
 	wc.lpszClassName = win_ClassName;
 	/* TODO: Set window icons here */
@@ -407,12 +407,12 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	ATOM atom = RegisterClassExW(&wc);
 	if (!atom) ErrorHandler_Fail2(GetLastError(), "Failed to register window class");
 
-	win_Handle = CreateWindowExW(0, atom, NULL, win_Style,
+	win_handle = CreateWindowExW(0, atom, NULL, win_Style,
 		rect.left, rect.top, Rect_Width(rect), Rect_Height(rect),
-		NULL, NULL, win_Instance, NULL);
-	if (!win_Handle) ErrorHandler_Fail2(GetLastError(), "Failed to create window");
+		NULL, NULL, win_instance, NULL);
+	if (!win_handle) ErrorHandler_Fail2(GetLastError(), "Failed to create window");
 
-	win_DC = GetDC(win_Handle);
+	win_DC = GetDC(win_handle);
 	if (!win_DC) ErrorHandler_Fail2(GetLastError(), "Failed to get device context");
 	Window_Exists = true;
 }
@@ -420,7 +420,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 void Window_SetTitle(const String* title) {
 	WCHAR str[300]; 
 	Platform_ConvertString(str, title);
-	SetWindowTextW(win_Handle, str);
+	SetWindowTextW(win_handle, str);
 }
 
 void Window_GetClipboardText(String* value) {
@@ -429,7 +429,7 @@ void Window_GetClipboardText(String* value) {
 	value->length = 0;
 
 	for (i = 0; i < 10; i++) {
-		if (!OpenClipboard(win_Handle)) {
+		if (!OpenClipboard(win_handle)) {
 			Thread_Sleep(100);
 			continue;
 		}
@@ -466,7 +466,7 @@ void Window_SetClipboardText(const String* value) {
 	/* retry up to 10 times */
 	int i;
 	for (i = 0; i < 10; i++) {
-		if (!OpenClipboard(win_Handle)) {
+		if (!OpenClipboard(win_handle)) {
 			Thread_Sleep(100);
 			continue;
 		}
@@ -491,48 +491,48 @@ void Window_SetClipboardText(const String* value) {
 
 void Window_SetBounds(Rect2D rect) {
 	/* Note: the bounds variable is updated when the resize/move message arrives.*/
-	SetWindowPos(win_Handle, NULL, rect.X, rect.Y, rect.Width, rect.Height, 0);
+	SetWindowPos(win_handle, NULL, rect.X, rect.Y, rect.Width, rect.Height, 0);
 }
 
 void Window_SetLocation(int x, int y) {
-	SetWindowPos(win_Handle, NULL, x, y, 0, 0, SWP_NOSIZE);
+	SetWindowPos(win_handle, NULL, x, y, 0, 0, SWP_NOSIZE);
 }
 
 void Window_SetSize(int width, int height) {
-	SetWindowPos(win_Handle, NULL, 0, 0, width, height, SWP_NOMOVE);
+	SetWindowPos(win_handle, NULL, 0, 0, width, height, SWP_NOMOVE);
 }
 
 void Window_SetClientSize(int width, int height) {
-	DWORD style = GetWindowLongW(win_Handle, GWL_STYLE);
+	DWORD style = GetWindowLongW(win_handle, GWL_STYLE);
 	RECT rect = { 0, 0, width, height };
 
 	AdjustWindowRect(&rect, style, false);
 	Window_SetSize(Rect_Width(rect), Rect_Height(rect));
 }
 
-void* Window_GetWindowHandle(void) { return win_Handle; }
+void* Window_GetWindowHandle(void) { return win_handle; }
 
-bool Window_GetVisible(void) { return IsWindowVisible(win_Handle); }
+bool Window_GetVisible(void) { return IsWindowVisible(win_handle); }
 void Window_SetVisible(bool visible) {
 	if (visible) {
-		ShowWindow(win_Handle, SW_SHOW);
+		ShowWindow(win_handle, SW_SHOW);
 		if (invisible_since_creation) {
-			BringWindowToTop(win_Handle);
-			SetForegroundWindow(win_Handle);
+			BringWindowToTop(win_handle);
+			SetForegroundWindow(win_handle);
 		}
 	} else {
-		ShowWindow(win_Handle, SW_HIDE);
+		ShowWindow(win_handle, SW_HIDE);
 	}
 }
 
 
 void Window_Close(void) {
-	PostMessageW(win_Handle, WM_CLOSE, 0, 0);
+	PostMessageW(win_handle, WM_CLOSE, 0, 0);
 }
 
-int Window_GetWindowState(void) { return win_State; }
+int Window_GetWindowState(void) { return win_state; }
 void Window_SetWindowState(int state) {
-	if (win_State == state) return;
+	if (win_state == state) return;
 
 	DWORD command = 0;
 	bool exiting_fullscreen = false;
@@ -542,7 +542,7 @@ void Window_SetWindowState(int state) {
 		command = SW_RESTORE;
 
 		/* If we are leaving fullscreen mode we need to restore the border. */
-		if (win_State == WINDOW_STATE_FULLSCREEN)
+		if (win_state == WINDOW_STATE_FULLSCREEN)
 			exiting_fullscreen = true;
 		break;
 
@@ -567,11 +567,11 @@ void Window_SetWindowState(int state) {
 		Window_SetHiddenBorder(true);
 
 		command = SW_MAXIMIZE;
-		SetForegroundWindow(win_Handle);
+		SetForegroundWindow(win_handle);
 		break;
 	}
 
-	if (command != 0) ShowWindow(win_Handle, command);
+	if (command != 0) ShowWindow(win_handle, command);
 
 	/* Restore previous window border or apply pending border change when leaving fullscreen mode. */
 	if (exiting_fullscreen) Window_SetHiddenBorder(false);
@@ -585,7 +585,7 @@ void Window_SetWindowState(int state) {
 
 Point2D Window_PointToClient(int x, int y) {
 	Point2D point = { x, y };
-	if (!ScreenToClient(win_Handle, &point)) {
+	if (!ScreenToClient(win_handle, &point)) {
 		ErrorHandler_Fail2(GetLastError(), "Converting point from client to screen coordinates");
 	}
 	return point;
@@ -593,7 +593,7 @@ Point2D Window_PointToClient(int x, int y) {
 
 Point2D Window_PointToScreen(int x, int y) {
 	Point2D point = { x, y };
-	if (!ClientToScreen(win_Handle, &point)) {
+	if (!ClientToScreen(win_handle, &point)) {
 		ErrorHandler_Fail2(GetLastError(), "Converting point from screen to client coordinates");
 	}
 	return point;
@@ -608,7 +608,7 @@ void Window_ProcessEvents(void) {
 
 	HWND foreground = GetForegroundWindow();
 	if (foreground) {
-		Window_Focused = foreground == win_Handle;
+		Window_Focused = foreground == win_handle;
 	}
 }
 

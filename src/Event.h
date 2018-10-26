@@ -120,7 +120,7 @@ struct Event_Void WindowEvents_Closing;            /* Window is about to close *
 struct Event_Void WindowEvents_Closed;             /* Window has closed */
 struct Event_Void WindowEvents_VisibilityChanged;  /* Visibility of the window changed */
 struct Event_Void WindowEvents_FocusChanged;       /* Focus of the window changed */
-struct Event_Void WindowEvents_WindowStateChanged; /* WindowState of the window changed */
+struct Event_Void WindowEvents_StateChanged;       /* WindowState of the window changed */
 
 struct Event_Int KeyEvents_Press; /* Raised when a character is typed. Arg is a character */
 struct Event_Int KeyEvents_Down;  /* Raised when a key is pressed. Arg is a member of Key enumeration */

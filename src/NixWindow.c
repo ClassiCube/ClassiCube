@@ -561,7 +561,7 @@ void Window_ProcessEvents(void) {
 
 		case PropertyNotify:
 			if (e.xproperty.atom == net_wm_state) {
-				Event_RaiseVoid(&WindowEvents_WindowStateChanged);
+				Event_RaiseVoid(&WindowEvents_StateChanged);
 			}
 
 			/*if (e.xproperty.atom == net_frame_extents) {
@@ -608,9 +608,9 @@ void Window_ProcessEvents(void) {
 				int i, len = 0;
 
 				for (i = 0; i < clipboard_copy_text.length; i++) {
-					Codepoint cp = Convert_CP437ToUnicode(clipboard_copy_text.buffer[i]);
-					uint8_t* cur   = data + len;
-					len += Stream_WriteUtf8(cur, cp);
+					uint8_t* cur = data + len;
+					Codepoint cp = Convert_CP437ToUnicode(clipboard_copy_text.buffer[i]);				
+					len += Convert_UnicodeToUtf8(cp, cur);
 				}
 
 				XChangeProperty(win_display, reply.xselection.requestor, reply.xselection.property, xa_utf8_string, 8,

@@ -822,12 +822,12 @@ ReturnCode Dat_Load(struct Stream* stream) {
 static int Cw_WriteEndString(uint8_t* data, const String* text) {
 	Codepoint cp;
 	uint8_t* cur = data + 2;
-	int i, bytes, len = 0;
+	int i, wrote, len = 0;
 
 	for (i = 0; i < text->length; i++) {
 		cp    = Convert_CP437ToUnicode(text->buffer[i]);
-		bytes = Stream_WriteUtf8(cur, cp);
-		len += bytes; cur += bytes;
+		wrote = Convert_UnicodeToUtf8(cp, cur);
+		len += wrote; cur += wrote;
 	}
 
 	Stream_SetU16_BE(data, len);

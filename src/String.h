@@ -153,6 +153,11 @@ char Convert_UnicodeToCP437(Codepoint cp);
 bool Convert_TryUnicodeToCP437(Codepoint cp, char* c);
 /* Appends all characters from UTF8 encoded data to the given string. */
 void String_DecodeUtf8(String* str, uint8_t* data, uint32_t len);
+/* Decodes a unicode character from UTF8, returning number of bytes read. */
+/* Returns 0 if not enough input data to read the character. */
+int Convert_Utf8ToUnicode(Codepoint* cp, const uint8_t* data, uint32_t len);
+/* Encodes a unicode character in UTF8, returning number of bytes written. */
+int Convert_UnicodeToUtf8(Codepoint cp, uint8_t* data);
 
 /* Attempts to convert the given string into an unsigned 8 bit integer. */
 NOINLINE_ bool Convert_TryParseUInt8(const String*  str, uint8_t* value);

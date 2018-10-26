@@ -1804,15 +1804,18 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 #ifdef CC_BUILD_POSIX
 int Platform_ConvertString(void* data, const String* src) {
 	uint8_t* dst = data;
+	uint8_t* cur;
+
 	Codepoint cp;
-	int i, len;
+	int i, len = 0;
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
 
 	for (i = 0; i < src->length; i++) {
-		cp  = Convert_CP437ToUnicode(src->buffer[i]);
-		len = Stream_WriteUtf8(dst, cp); dst += len;
+		cur = data + len;
+		cp  = Convert_CP437ToUnicode(src->buffer[i]);	
+		len += Convert_UnicodeToUtf8(cp, cur);
 	}
-	*dst = '\0';
+	dst[len] = '\0';
 	return len;
 }
 

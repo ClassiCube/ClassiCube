@@ -50,13 +50,13 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m);
 /* NOTE: Only useful for platform specific function calls - do NOT try to interpret the data. 
 Returns the number of bytes written, excluding trailing NULL terminator. */
 NOINLINE_ int Platform_ConvertString(void* data, const String* src);
-/* Initalises the platform specific state */
+/* Initalises the platform specific state. */
 void Platform_Init(void);
-/* Frees the platform specific state */
+/* Frees the platform specific state. */
 void Platform_Free(void);
-/* Sets current directory to directory executable is in */
+/* Sets current directory to the directory the executable is in. */
 void Platform_SetWorkingDir(void);
-/* Exits the process with the given return code */
+/* Exits the process with the given return code .*/
 void Platform_Exit(ReturnCode code);
 /* Gets the command line arguments passed to the program. */
 int  Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args);

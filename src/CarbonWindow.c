@@ -198,7 +198,7 @@ static void Window_UpdateWindowState(void) {
 		break;
 	}
 
-	Event_RaiseVoid(&WindowEvents_WindowStateChanged);
+	Event_RaiseVoid(&WindowEvents_StateChanged);
 	Window_UpdateSize();
 	Event_RaiseVoid(&WindowEvents_Resized);
 }

@@ -481,7 +481,7 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 
 
 /*########################################################################################################################*
-*-------------------------------------------------------Conversions-------------------------------------------------------*
+*------------------------------------------------Character set conversions------------------------------------------------*
 *#########################################################################################################################*/
 Codepoint Convert_ControlChars[32] = {
 	0x0000, 0x263A, 0x263B, 0x2665, 0x2666, 0x2663, 0x2660, 0x2022,
@@ -536,16 +536,64 @@ bool Convert_TryUnicodeToCP437(Codepoint cp, char* c) {
 
 void String_DecodeUtf8(String* str, uint8_t* data, uint32_t len) {
 	Codepoint cp;
-	struct Stream mem;
-	Stream_ReadonlyMemory(&mem, data, len);
+	int read;
 
-	while (mem.Meta.Mem.Left) {
-		ReturnCode res = Stream_ReadUtf8(&mem, &cp);
-		if (res) break; /* Memory read only returns ERR_END_OF_STREAM */
+	while (len) {
+		read = Convert_Utf8ToUnicode(&cp, data, len);
+		if (!read) break;
+
 		String_Append(str, Convert_UnicodeToCP437(cp));
+		data += read; len -= read;
 	}
 }
 
+int Convert_Utf8ToUnicode(Codepoint* cp, const uint8_t* data, uint32_t len) {
+	*cp = '\0';
+	if (!len) return 0;
+
+	if (data[0] <= 0x7F) {
+		*cp = data[0];
+		return 1;
+	} else if ((data[0] & 0xE0) == 0xC0) {
+		if (len < 2) return 0;
+
+		*cp = ((data[0] & 0x1F) << 6)  | ((data[1] & 0x3F));
+		return 2;
+	} else if ((data[0] & 0xF0) == 0xE0) {
+		if (len < 3) return 0;
+
+		*cp = ((data[0] & 0x0F) << 12) | ((data[1] & 0x3F) << 6) 
+			| ((data[2] & 0x3F));
+		return 3;
+	} else {
+		if (len < 4) return 0;
+
+		*cp = ((data[0] & 0x07) << 18) | ((data[1] & 0x3F) << 12) 
+			| ((data[2] & 0x3F) << 6)  | (data[3] & 0x3F);
+		return 4;
+	}
+}
+
+int Convert_UnicodeToUtf8(Codepoint cp, uint8_t* data) {
+	if (cp <= 0x7F) {
+		data[0] = (uint8_t)cp;
+		return 1;
+	} else if (cp <= 0x7FF) {
+		data[0] = 0xC0 | ((cp >> 6) & 0x1F);
+		data[1] = 0x80 | ((cp)      & 0x3F);
+		return 2;
+	} else {
+		data[0] = 0xE0 | ((cp >> 12) & 0x0F);
+		data[1] = 0x80 | ((cp >>  6) & 0x3F);
+		data[2] = 0x80 | ((cp)       & 0x3F);
+		return 3;
+	}
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------Numerical conversions--------------------------------------------------*
+*#########################################################################################################################*/
 bool Convert_TryParseUInt8(const String* str, uint8_t* value) {
 	int tmp; 
 	*value = 0;
