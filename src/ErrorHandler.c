@@ -36,7 +36,7 @@ static int ErrorHandler_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, 
 	STACKFRAME frame = { 0 };
 	frame.AddrPC.Mode     = AddrModeFlat;
 	frame.AddrFrame.Mode  = AddrModeFlat;
-	frame.AddrStack.Mode  = AddrModeFlat;	
+	frame.AddrStack.Mode  = AddrModeFlat;
 	DWORD type;
 
 #ifdef _M_IX86
@@ -65,7 +65,7 @@ static int ErrorHandler_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, 
 	int count;
 	CONTEXT copy = *ctx;
 
-	for (count = 0; count < max; count++) {		
+	for (count = 0; count < max; count++) {
 		if (!StackWalk(type, process, thread, &frame, &copy, NULL, SymFunctionTableAccess, SymGetModuleBase, NULL)) break;
 		if (!frame.AddrFrame.Offset) break;
 
@@ -149,7 +149,7 @@ static void ErrorHandler_DumpRegisters(CONTEXT* ctx) {
 	String str = String_FromArray(strBuffer);
 	String_AppendConst(&str, "-- registers --\r\n");
 
-#ifdef _M_IX86	
+#ifdef _M_IX86
 	String_Format3(&str, "eax=%x ebx=%x ecx=%x\r\n", &ctx->Eax, &ctx->Ebx, &ctx->Ecx);
 	String_Format3(&str, "edx=%x esi=%x edi=%x\r\n", &ctx->Edx, &ctx->Esi, &ctx->Edi);
 	String_Format3(&str, "eip=%x ebp=%x esp=%x\r\n", &ctx->Eip, &ctx->Ebp, &ctx->Esp);
@@ -219,12 +219,12 @@ void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
 	/* [ebp] is previous frame's EBP */
 	/* [ebp+4] is previous frame's EIP (return address) */
 	/* address of [ebp+8] is previous frame's ESP */
-	__asm {		
+	__asm {
 		mov eax, [ebp]
-		mov [ctx.Ebp], eax	
+		mov [ctx.Ebp], eax
 		mov eax, [ebp+4]
-		mov [ctx.Eip], eax	
-		lea eax, [ebp+8]	
+		mov [ctx.Eip], eax
+		lea eax, [ebp+8]
 		mov [ctx.Esp], eax
 		mov [ctx.ContextFlags], CONTEXT_CONTROL
 	}
@@ -700,8 +700,13 @@ static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void
 	String msg = String_NT_Array(msgBuffer);
 
 	String_Format3(&msg, "ClassiCube crashed.%cMessage: %c%c", Platform_NewLine, raw_msg, Platform_NewLine);
-	if (result) { 
-		String_Format2(&msg, "%h%c", &result, Platform_NewLine); 
+
+	#ifdef CC_COMMIT_SHA
+	String_Format2(&msg, "Commit SHA: %c%c", CC_COMMIT_SHA, Platform_NewLine);
+	#endif
+
+	if (result) {
+		String_Format2(&msg, "%h%c", &result, Platform_NewLine);
 	} else { result = 1; }
 
 	ErrorHandler_Log(&msg);

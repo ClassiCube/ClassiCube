@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
 	String_Format1(&defPath, "texpacks%rdefault.zip", &Directory_Separator);
 
 	if (!File_Exists(&defPath)) {
-		ErrorHandler_ShowDialog("Missing file", 
+		ErrorHandler_ShowDialog("Missing file",
 			"default.zip is missing, try running launcher first.\n\nThe game will still run, but without any textures");
 	}
 
@@ -88,12 +88,12 @@ int main(int argc, char** argv) {
 		String_Copy(&Game_Username,  &args[0]);
 		String_Copy(&Game_Mppass,    &args[1]);
 		String_Copy(&Game_IPAddress, &args[2]);
-	
-		if (!Utils_ParseIP(&args[2], ip)) { 
+
+		if (!Utils_ParseIP(&args[2], ip)) {
 			ErrorHandler_ShowDialog("Failed to start", "Invalid IP");
-			Platform_Exit(1); return 1; 
+			Platform_Exit(1); return 1;
 		}
-		if (!Convert_TryParseUInt16(&args[3], &port)) { 
+		if (!Convert_TryParseUInt16(&args[3], &port)) {
 			ErrorHandler_ShowDialog("Failed to start", "Invalid port");
 			Platform_Exit(1); return 1;
 		}
