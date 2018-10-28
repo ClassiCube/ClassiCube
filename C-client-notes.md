@@ -97,4 +97,3 @@ void String_Format4(str, format, a1, a2, a3, a4);
 | ```%r```      | char | ```%r``` of ```47``` = ```\``` |
 | ```%x```      | uintptr_t | ```%x``` of ```31``` = ```2F``` |
 | ```%h```      | uint32_t | ```%h``` of ```11``` = ```B``` |
- 
