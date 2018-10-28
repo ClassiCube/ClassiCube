@@ -114,6 +114,398 @@ static void ModelCache_TextureChanged(void* obj, struct Stream* stream, const St
 
 
 /*########################################################################################################################*
+*---------------------------------------------------------HumanModel------------------------------------------------------*
+*#########################################################################################################################*/
+struct ModelLimbs {
+	struct ModelPart LeftLeg, RightLeg, LeftArm, RightArm, LeftLegLayer, RightLegLayer, LeftArmLayer, RightArmLayer;
+};
+struct ModelSet {
+	struct ModelPart Head, Torso, Hat, TorsoLayer;
+	struct ModelLimbs Limbs[3];
+};
+
+static void HumanModel_DrawModelSet(struct Entity* entity, struct ModelSet* model) {
+	Model_ApplyTexture(entity);
+	Gfx_SetAlphaTest(false);
+
+	int type = Model_skinType;
+	struct ModelLimbs* set = &model->Limbs[type == SKIN_64x64_SLIM ? 2 : (type == SKIN_64x64 ? 1 : 0)];
+
+	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &model->Head, true);
+	Model_DrawPart(&model->Torso);
+	Model_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  &set->LeftLeg,  false);
+	Model_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, &set->RightLeg, false);
+
+	Model_Rotation = ROTATE_ORDER_XZY;
+	Model_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  &set->LeftArm,  false);
+	Model_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, &set->RightArm, false);
+	Model_Rotation = ROTATE_ORDER_ZYX;
+	Model_UpdateVB();
+
+	Gfx_SetAlphaTest(true);
+	if (type != SKIN_64x32) {
+		Model_DrawPart(&model->TorsoLayer);
+		Model_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  &set->LeftLegLayer,  false);
+		Model_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, &set->RightLegLayer, false);
+
+		Model_Rotation = ROTATE_ORDER_XZY;
+		Model_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  &set->LeftArmLayer,  false);
+		Model_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, &set->RightArmLayer, false);
+		Model_Rotation = ROTATE_ORDER_ZYX;
+	}
+	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &model->Hat, true);
+	Model_UpdateVB();
+}
+
+static void HumanModel_DrawArmSet(struct Entity* entity, struct ModelSet* model) {
+	int type = Model_skinType;
+	struct ModelLimbs* set = &model->Limbs[type == SKIN_64x64_SLIM ? 2 : (type == SKIN_64x64 ? 1 : 0)];
+
+	Model_DrawArmPart(&set->RightArm);
+	if (type != SKIN_64x32) {
+		Model_DrawArmPart(&set->RightArmLayer);
+	}
+	Model_UpdateVB();
+}
+
+
+struct ModelSet Human_Set;
+struct ModelVertex HumanModel_Vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
+struct Model HumanModel;
+
+static void HumanModel_CreateParts(void) {
+	static struct BoxDesc head = {
+		BoxDesc_Tex(0,0),
+		BoxDesc_Box(-4,24,-4, 4,32,4),
+		BoxDesc_Rot(0,24,0),
+	}; 
+	static struct BoxDesc torso = {
+		BoxDesc_Tex(16,16),
+		BoxDesc_Box(-4,12,-2, 4,24,2),
+		BoxDesc_Rot(0,12,0),
+	}; 
+	static struct BoxDesc hat = {
+		BoxDesc_Tex(32,0),
+		BoxDesc_Dims(-4,24,-4, 4,32,4),
+		BoxDesc_Bounds(-4.5f,23.5f,-4.5f, 4.5f,32.5f,4.5f),
+		BoxDesc_Rot(0,24,0),
+	}; 
+	static struct BoxDesc torsoL = {
+		BoxDesc_Tex(16,32),
+		BoxDesc_Dims(-4,12,-2, 4,24,2),
+		BoxDesc_Bounds(-4.5f,11.5f,-2.5f, 4.5f,24.5f,2.5f),
+		BoxDesc_Rot(0,12,0),
+	};
+
+	static struct BoxDesc lArm = {
+		BoxDesc_Tex(40,16),
+		BoxDesc_Box(-4,12,-2, -8,24,2),
+		BoxDesc_Rot(-5,22,0),
+	};
+	static struct BoxDesc rArm = {
+		BoxDesc_Tex(40,16),
+		BoxDesc_Box(4,12,-2, 8,24,2),
+		BoxDesc_Rot(5,22,0),
+	};
+	static struct BoxDesc lLeg = {
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(0,0,-2, -4,12,2),
+		BoxDesc_Rot(0,12,0),
+	};
+	static struct BoxDesc rLeg = {
+		BoxDesc_Tex(0,16),
+		BoxDesc_Box(0,0,-2, 4,12,2),
+		BoxDesc_Rot(0,12,0),
+	};
+
+	static struct BoxDesc lArm64 = {
+		BoxDesc_Tex(48,16),
+		BoxDesc_Box(-8,12,-2, -4,24,2),
+		BoxDesc_Rot(-5,22,0),
+	};
+	static struct BoxDesc lLeg64 = {
+		BoxDesc_Tex(32,48),
+		BoxDesc_Box(-4,0,-2, 0,12,2),
+		BoxDesc_Rot(0,12,0),
+	};
+	static struct BoxDesc lArmL = {
+		BoxDesc_Tex(48,16),
+		BoxDesc_Dims(-8,12,-2, -4,24,2),
+		BoxDesc_Bounds(-8.5f,11.5f,-2.5f, -3.5f,24.5f,2.5f),
+		BoxDesc_Rot(-5,22,0),
+	};
+	static struct BoxDesc rArmL = {
+		BoxDesc_Tex(40,16),
+		BoxDesc_Dims(4,12,-2, 8,24,2),
+		BoxDesc_Bounds(3.5f,11.5f,-2.5f, 8.5f,24.5f,2.5f),
+		BoxDesc_Rot(5,22,0),
+	};
+	static struct BoxDesc lLegL = {
+		BoxDesc_Tex(32,48),
+		BoxDesc_Dims(-4,0,-2, 0,12,2),
+		BoxDesc_Bounds(-4.5f,-0.5f,-2.5f, 0.5f,12.5f,2.5f),
+		BoxDesc_Rot(0,12,0),
+	};
+	static struct BoxDesc rLegL = {
+		BoxDesc_Tex(0,16),
+		BoxDesc_Dims(0,0,-2, 4,12,2),
+		BoxDesc_Bounds(-0.5f,-0.5f,-2.5f, 4.5f,12.5f,2.5f),
+		BoxDesc_Rot(0,12,0),
+	};
+
+	struct ModelLimbs* set     = &Human_Set.Limbs[0];
+	struct ModelLimbs* set64   = &Human_Set.Limbs[1];
+	struct ModelLimbs* setSlim = &Human_Set.Limbs[2];
+
+	BoxDesc_BuildBox(&Human_Set.Head,  &head);
+	BoxDesc_BuildBox(&Human_Set.Torso, &torso);
+	BoxDesc_BuildBox(&Human_Set.Hat,   &hat);
+	BoxDesc_BuildBox(&Human_Set.TorsoLayer, &torsoL);
+
+	BoxDesc_BuildBox(&set->LeftLeg,  &lLeg);
+	BoxDesc_BuildBox(&set->RightLeg, &rLeg);
+	BoxDesc_BuildBox(&set->LeftArm,  &lArm);
+	BoxDesc_BuildBox(&set->RightArm, &rArm);
+
+
+	BoxDesc_BuildBox(&set64->LeftLeg, &lLeg64);
+	set64->RightLeg = set->RightLeg;
+	BoxDesc_BuildBox(&set64->LeftArm, &lArm64);
+	set64->RightArm = set->RightArm;
+
+	lArm64.SizeX -= 1; lArm64.X1 += 1.0f/16.0f;
+	rArm.SizeX   -= 1; rArm.X2   -= 1.0f/16.0f;
+
+	setSlim->LeftLeg  = set64->LeftLeg;
+	setSlim->RightLeg = set64->RightLeg;
+	BoxDesc_BuildBox(&setSlim->LeftArm,  &lArm64);
+	BoxDesc_BuildBox(&setSlim->RightArm, &rArm);
+
+
+	BoxDesc_BuildBox(&set64->LeftLegLayer,  &lLegL);
+	BoxDesc_BuildBox(&set64->RightLegLayer, &rLegL);
+	BoxDesc_BuildBox(&set64->LeftArmLayer,  &lArmL);
+	BoxDesc_BuildBox(&set64->RightArmLayer, &rArmL);
+
+	lArmL.SizeX -= 1; lArmL.X1 += 1.0f/16.0f;
+	rArmL.SizeX -= 1; rArmL.X2 -= 1.0f/16.0f;
+
+	setSlim->LeftLegLayer  = set64->LeftLegLayer;
+	setSlim->RightLegLayer = set64->RightLegLayer;
+	BoxDesc_BuildBox(&setSlim->LeftArmLayer,  &lArmL);
+	BoxDesc_BuildBox(&setSlim->RightArmLayer, &rArmL);
+}
+
+static float HumanModel_GetEyeY(struct Entity* entity)   { return 26.0f / 16.0f; }
+static void HumanModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.6f,28.1f,8.6f); }
+static void HumanModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-8,0,-4, 8,32,4); }
+
+static void HumanModel_DrawModel(struct Entity* entity) {
+	HumanModel_DrawModelSet(entity, &Human_Set);
+}
+
+static void HumanModel_DrawArm(struct Entity* entity) {
+	HumanModel_DrawArmSet(entity, &Human_Set);
+}
+
+static struct Model* HumanoidModel_GetInstance(void) {
+	Model_Init(&HumanModel);
+	Model_SetPointers(HumanModel);
+	HumanModel.DrawArm  = HumanModel_DrawArm;
+	HumanModel.vertices = HumanModel_Vertices;
+	HumanModel.CalcHumanAnims = true;
+	HumanModel.UsesHumanSkin  = true;
+	HumanModel.NameYOffset = 32.5f / 16.0f;
+	return &HumanModel;
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------ChibiModel------------------------------------------------------*
+*#########################################################################################################################*/
+struct ModelSet Chibi_Set;
+struct ModelVertex ChibiModel_Vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
+struct Model ChibiModel;
+
+NOINLINE_ static void ChibiModel_ScalePart(struct ModelPart* dst, struct ModelPart* src) {
+	struct ModelVertex v;
+	int i;
+
+	*dst = *src;
+	dst->RotX *= 0.5f; dst->RotY *= 0.5f; dst->RotZ *= 0.5f;
+	
+	for (i = src->Offset; i < src->Offset + src->Count; i++) {
+		v = HumanModel.vertices[i];
+		v.X *= 0.5f; v.Y *= 0.5f; v.Z *= 0.5f;
+		ChibiModel.vertices[i] = v;
+	}
+}
+
+NOINLINE_ static void ChibiModel_ScaleLimbs(struct ModelLimbs* dst, struct ModelLimbs* src) {
+	ChibiModel_ScalePart(&dst->LeftLeg,  &src->LeftLeg);
+	ChibiModel_ScalePart(&dst->RightLeg, &src->RightLeg);
+	ChibiModel_ScalePart(&dst->LeftArm,  &src->LeftArm);
+	ChibiModel_ScalePart(&dst->RightArm, &src->RightArm);
+
+	ChibiModel_ScalePart(&dst->LeftLegLayer,  &src->LeftLegLayer);
+	ChibiModel_ScalePart(&dst->RightLegLayer, &src->RightLegLayer);
+	ChibiModel_ScalePart(&dst->LeftArmLayer,  &src->LeftArmLayer);
+	ChibiModel_ScalePart(&dst->RightArmLayer, &src->RightArmLayer);
+}
+
+static void ChibiModel_CreateParts(void) {
+	static struct BoxDesc head = {
+		BoxDesc_Tex(0,0),
+		BoxDesc_Box(-4,12,-4, 4,20,4),
+		BoxDesc_Rot(0,13,0),
+	};
+	static struct BoxDesc hat = {
+		BoxDesc_Tex(32,0),
+		BoxDesc_Dims(-4,12,-4, 4,20,4),
+		BoxDesc_Bounds(-4.5f,11.5f,-4.5f, 4.5f,20.5f,4.5f),
+		BoxDesc_Rot(0,13,0),
+	}; 
+	/* TODO: 4.25 instead?? expand by 0.25 instead of 0.5? (what classicalsharp does) */
+	/* TODO: Don't use BuildBox or declare parts, just directly move down the vertices */
+
+	/* Chibi is mostly just half scale humanoid */
+	ChibiModel_ScalePart(&Chibi_Set.Torso,      &Human_Set.Torso);
+	ChibiModel_ScalePart(&Chibi_Set.TorsoLayer, &Human_Set.TorsoLayer);
+	ChibiModel_ScaleLimbs(&Chibi_Set.Limbs[0], &Human_Set.Limbs[0]);
+	ChibiModel_ScaleLimbs(&Chibi_Set.Limbs[1], &Human_Set.Limbs[1]);
+	ChibiModel_ScaleLimbs(&Chibi_Set.Limbs[2], &Human_Set.Limbs[2]);
+
+	/* But head is at normal size */
+	ChibiModel.index = Human_Set.Head.Offset;
+	BoxDesc_BuildBox(&Chibi_Set.Head, &head);
+	ChibiModel.index = Human_Set.Hat.Offset;
+	BoxDesc_BuildBox(&Chibi_Set.Hat,  &hat);
+}
+
+static float ChibiModel_GetEyeY(struct Entity* entity)   { return 14.0f / 16.0f; }
+static void ChibiModel_GetCollisionSize(Vector3* size)   { Model_RetSize(4.6f,20.1f,4.6f); }
+static void ChibiModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,16,4); }
+
+static void ChibiModel_DrawModel(struct Entity* entity) {
+	HumanModel_DrawModelSet(entity, &Chibi_Set);
+}
+
+static void ChibiModel_DrawArm(struct Entity* entity) {
+	HumanModel_DrawArmSet(entity, &Chibi_Set);
+}
+
+static struct Model* ChibiModel_GetInstance(void) {
+	Model_Init(&ChibiModel);
+	Model_SetPointers(ChibiModel);
+	ChibiModel.DrawArm  = ChibiModel_DrawArm;
+	ChibiModel.armX = 3; ChibiModel.armY = 6;
+	ChibiModel.vertices = ChibiModel_Vertices;
+	ChibiModel.CalcHumanAnims = true;
+	ChibiModel.UsesHumanSkin  = true;
+	ChibiModel.MaxScale    = 3.0f;
+	ChibiModel.ShadowScale = 0.5f;
+	ChibiModel.NameYOffset = 20.2f / 16.0f;
+	return &ChibiModel;
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------SittingModel-----------------------------------------------------*
+*#########################################################################################################################*/
+struct Model SittingModel;
+#define SIT_OFFSET 10.0f
+static void SittingModel_CreateParts(void) { }
+
+static float SittingModel_GetEyeY(struct Entity* entity)   { return (26.0f - SIT_OFFSET) / 16.0f; }
+static void SittingModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.6f,28.1f - SIT_OFFSET,8.6f); }
+static void SittingModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-8,0,-4, 8,32 - SIT_OFFSET,4); }
+
+static void SittingModel_GetTransform(struct Entity* entity, Vector3 pos, struct Matrix* m) {
+	pos.Y -= (SIT_OFFSET / 16.0f) * entity->ModelScale.Y;
+	Entity_GetTransform(entity, pos, entity->ModelScale, m);
+}
+
+static void SittingModel_DrawModel(struct Entity* entity) {
+	entity->Anim.LeftLegX = 1.5f;  entity->Anim.RightLegX = 1.5f;
+	entity->Anim.LeftLegZ = -0.1f; entity->Anim.RightLegZ = 0.1f;
+	HumanModel_DrawModel(entity);
+}
+
+static struct Model* SittingModel_GetInstance(void) {
+	Model_Init(&SittingModel);
+	Model_SetPointers(SittingModel);
+	SittingModel.DrawArm  = HumanModel_DrawArm;
+	SittingModel.vertices = HumanModel_Vertices;
+	SittingModel.CalcHumanAnims = true;
+	SittingModel.UsesHumanSkin  = true;
+	SittingModel.ShadowScale  = 0.5f;
+	SittingModel.GetTransform = SittingModel_GetTransform;
+	SittingModel.NameYOffset  = 32.5f / 16.0f;
+	return &SittingModel;
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------CorpseModel------------------------------------------------------*
+*#########################################################################################################################*/
+struct Model CorpseModel;
+static void CorpseModel_CreateParts(void) { }
+static void CorpseModel_DrawModel(struct Entity* entity) {
+	entity->Anim.LeftLegX = 0.025f; entity->Anim.RightLegX = 0.025f;
+	entity->Anim.LeftArmX = 0.025f; entity->Anim.RightArmX = 0.025f;
+	entity->Anim.LeftLegZ = -0.15f; entity->Anim.RightLegZ =  0.15f;
+	entity->Anim.LeftArmZ = -0.20f; entity->Anim.RightArmZ =  0.20f;
+	HumanModel_DrawModel(entity);
+}
+
+static struct Model* CorpseModel_GetInstance(void) {
+	CorpseModel = HumanModel;
+	CorpseModel.CreateParts = CorpseModel_CreateParts;
+	CorpseModel.DrawModel   = CorpseModel_DrawModel;
+	return &CorpseModel;
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------HeadModel-------------------------------------------------------*
+*#########################################################################################################################*/
+struct Model HeadModel;
+static void HeadModel_CreateParts(void) { }
+
+static float HeadModel_GetEyeY(struct Entity* entity)   { return 6.0f / 16.0f; }
+static void HeadModel_GetCollisionSize(Vector3* size)   { Model_RetSize(7.9f,7.9f,7.9f); }
+static void HeadModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,8,4); }
+
+static void HeadModel_GetTransform(struct Entity* entity, Vector3 pos, struct Matrix* m) {
+	pos.Y -= (24.0f / 16.0f) * entity->ModelScale.Y;
+	Entity_GetTransform(entity, pos, entity->ModelScale, m);
+}
+
+static void HeadModel_DrawModel(struct Entity* entity) {
+	struct ModelPart part;
+	Model_ApplyTexture(entity);
+
+	part = Human_Set.Head; part.RotY += 4.0f / 16.0f;
+	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &part, true);
+	part = Human_Set.Hat;  part.RotY += 4.0f / 16.0f;
+	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &part, true);
+
+	Model_UpdateVB();
+}
+
+static struct Model* HeadModel_GetInstance(void) {
+	Model_Init(&HeadModel);
+	Model_SetPointers(HeadModel);
+	HeadModel.vertices = HumanModel_Vertices;
+	HeadModel.UsesHumanSkin  = true;
+	HeadModel.Pushes         = false;
+	HeadModel.GetTransform = HeadModel_GetTransform;
+	HeadModel.NameYOffset  = 32.5f / 16.0f;
+	return &HeadModel;
+}
+
+
+/*########################################################################################################################*
 *--------------------------------------------------------ChickenModel-----------------------------------------------------*
 *#########################################################################################################################*/
 struct ModelPart Chicken_Head, Chicken_Head2, Chicken_Head3, Chicken_Torso;
@@ -567,7 +959,7 @@ static void SkeletonModel_DrawArm(struct Entity* entity) {
 static struct Model* SkeletonModel_GetInstance(void) {
 	Model_Init(&SkeletonModel);
 	Model_SetPointers(SkeletonModel);
-	SkeletonModel.DrawArm = SkeletonModel_DrawArm;
+	SkeletonModel.DrawArm  = SkeletonModel_DrawArm;
 	SkeletonModel.armX = 5;
 	SkeletonModel.vertices = SkeletonModel_Vertices;
 	SkeletonModel.NameYOffset = 2.075f;
@@ -663,71 +1055,24 @@ static struct Model* SpiderModel_GetInstance(void) {
 *#########################################################################################################################*/
 struct ModelPart Zombie_Head, Zombie_Hat, Zombie_Torso, Zombie_LeftLeg;
 struct ModelPart Zombie_RightLeg, Zombie_LeftArm, Zombie_RightArm;
-struct ModelVertex ZombieModel_Vertices[MODEL_BOX_VERTICES * 7];
 struct Model ZombieModel;
 
-static void ZombieModel_CreateParts(void) {
-	static struct BoxDesc head = {
-		BoxDesc_Tex(0,0),
-		BoxDesc_Box(-4,24,-4, 4,32,4),
-		BoxDesc_Rot(0,24,0),
-	}; 
-	static struct BoxDesc hat = {
-		BoxDesc_Tex(32,0),
-		BoxDesc_Dims(-4,24,-4, 4,32,4),
-		BoxDesc_Bounds(-4.5f,23.5f,-4.5f, 4.5f,32.5f,4.5f),
-		BoxDesc_Rot(0,24,0),
-	}; 
-	static struct BoxDesc torso = {
-		BoxDesc_Tex(16,16),
-		BoxDesc_Box(-4,12,-2, 4,24,2),
-		BoxDesc_Rot(0,12,0),
-	}; 
-	static struct BoxDesc lLeg = {
-		BoxDesc_Tex(0,16),
-		BoxDesc_Box(0,0,-2, -4,12,2),
-		BoxDesc_Rot(0,12,0),
-	}; 
-	static struct BoxDesc rLeg = {
-		BoxDesc_Tex(0,16),
-		BoxDesc_Box(0,0,-2, 4,12,2),
-		BoxDesc_Rot(0,12,0),
-	}; 
-	static struct BoxDesc lArm = {
-		BoxDesc_Tex(40,16),
-		BoxDesc_Box(-4,12,-2, -8,24,2),
-		BoxDesc_Rot(-6,22,0),
-	}; 
-	static struct BoxDesc rArm = {
-		BoxDesc_Tex(40,16),
-		BoxDesc_Box(4,12,-2, 8,24,2),
-		BoxDesc_Rot(6,22,0),
-	}; 
-	
-	BoxDesc_BuildBox(&Zombie_Head,  &head);
-	BoxDesc_BuildBox(&Zombie_Hat,   &hat);
-	BoxDesc_BuildBox(&Zombie_Torso, &torso);
-	BoxDesc_BuildBox(&Zombie_LeftLeg,  &lLeg);
-	BoxDesc_BuildBox(&Zombie_RightLeg, &rLeg);
-	BoxDesc_BuildBox(&Zombie_LeftArm,  &lArm);
-	BoxDesc_BuildBox(&Zombie_RightArm, &rArm);
-}
-
+static void ZombieModel_CreateParts(void) { }
 static float ZombieModel_GetEyeY(struct Entity* entity)   { return 26.0f / 16.0f; }
 static void ZombieModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.6f,28.1f,8.6f); }
 static void ZombieModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,32,4); }
 
 static void ZombieModel_DrawModel(struct Entity* entity) {
 	Model_ApplyTexture(entity);
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Zombie_Head, true);
+	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Human_Set.Head, true);
 
-	Model_DrawPart(&Zombie_Torso);
-	Model_DrawRotate(entity->Anim.LeftLegX,  0, 0,                      &Zombie_LeftLeg,  false);
-	Model_DrawRotate(entity->Anim.RightLegX, 0, 0,                      &Zombie_RightLeg, false);
-	Model_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.LeftArmZ,  &Zombie_LeftArm,  false);
-	Model_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.RightArmZ, &Zombie_RightArm, false);
+	Model_DrawPart(&Human_Set.Torso);
+	Model_DrawRotate(entity->Anim.LeftLegX,  0, 0,                      &Human_Set.Limbs[0].LeftLeg,  false);
+	Model_DrawRotate(entity->Anim.RightLegX, 0, 0,                      &Human_Set.Limbs[0].RightLeg, false);
+	Model_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.LeftArmZ,  &Human_Set.Limbs[0].LeftArm,  false);
+	Model_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.RightArmZ, &Human_Set.Limbs[0].RightArm, false);
 
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Zombie_Hat, true);
+	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Human_Set.Hat, true);
 	Model_UpdateVB();
 }
 
@@ -739,382 +1084,10 @@ static void ZombieModel_DrawArm(struct Entity* entity) {
 static struct Model* ZombieModel_GetInstance(void) {
 	Model_Init(&ZombieModel);
 	Model_SetPointers(ZombieModel);
-	ZombieModel.DrawArm = ZombieModel_DrawArm;
-	ZombieModel.vertices = ZombieModel_Vertices;
+	ZombieModel.DrawArm  = ZombieModel_DrawArm;
+	ZombieModel.vertices = HumanModel_Vertices;
 	ZombieModel.NameYOffset = 2.075f;
 	return &ZombieModel;
-}
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------HumanModel------------------------------------------------------*
-*#########################################################################################################################*/
-struct ModelLimbs {
-	struct ModelPart LeftLeg, RightLeg, LeftArm, RightArm, LeftLegLayer, RightLegLayer, LeftArmLayer, RightArmLayer;
-};
-struct ModelSet {
-	struct ModelPart Head, Torso, Hat, TorsoLayer;
-	struct ModelLimbs Limbs[3];
-};
-
-static void HumanModel_CreateLimbs(struct ModelSet* models, float offset, struct BoxDesc* arm, struct BoxDesc* leg) {
-	struct ModelLimbs* set     = &models->Limbs[0];
-	struct ModelLimbs* set64   = &models->Limbs[1];
-	struct ModelLimbs* setSlim = &models->Limbs[2];
-
-	struct BoxDesc lArm = *arm, rArm = *arm, lLeg = *leg, rLeg = *leg;
-	lArm.X1 = -lArm.X1; lArm.X2 = -lArm.X2; lArm.RotX = -lArm.RotX; 
-	lLeg.X2 = -lLeg.X2;
-
-	BoxDesc_BuildBox(&set->LeftLeg, &lLeg);
-	BoxDesc_BuildBox(&set->RightLeg, &rLeg);
-	BoxDesc_BuildBox(&set->LeftArm, &lArm);
-	BoxDesc_BuildBox(&set->RightArm, &rArm);
-
-
-	BoxDesc_MirrorX(&lLeg);
-	BoxDesc_TexOrigin(&lLeg, 16, 48);
-	BoxDesc_BuildBox(&set64->LeftLeg, &lLeg);
-	set64->RightLeg = set->RightLeg;
-
-	BoxDesc_MirrorX(&lArm);
-	BoxDesc_TexOrigin(&lArm, 32, 48);
-	BoxDesc_BuildBox(&set64->LeftArm, &lArm);
-	set64->RightArm = set->RightArm;
-
-	BoxDesc_TexOrigin(&lLeg, 0, 48);
-	BoxDesc_Expand(&lLeg, offset);
-	BoxDesc_BuildBox(&set64->LeftLegLayer, &lLeg);
-
-	BoxDesc_TexOrigin(&rLeg, 0, 32);
-	BoxDesc_Expand(&rLeg, offset);
-	BoxDesc_BuildBox(&set64->RightLegLayer, &rLeg);
-
-	BoxDesc_TexOrigin(&lArm, 48, 48);
-	BoxDesc_Expand(&lArm, offset);
-	BoxDesc_BuildBox(&set64->LeftArmLayer, &lArm);
-
-	BoxDesc_TexOrigin(&rArm, 40, 32);
-	BoxDesc_Expand(&rArm, offset);
-	BoxDesc_BuildBox(&set64->RightArmLayer, &rArm);
-
-
-	lArm = *arm; rArm = *arm;
-	lArm.X1 = -lArm.X1; lArm.X2 = -lArm.X2; lArm.RotX = -lArm.RotX;
-	BoxDesc_MirrorX(&lArm);
-
-	lArm.SizeX -= 1; lArm.X1 += (offset * 2.0f) / 16.0f;
-	rArm.SizeX -= 1; rArm.X2 -= (offset * 2.0f) / 16.0f;
-
-	BoxDesc_TexOrigin(&lArm, 32, 48);
-	BoxDesc_BuildBox(&setSlim->LeftArm, &lArm);
-	BoxDesc_TexOrigin(&rArm, 40, 16);
-	BoxDesc_BuildBox(&setSlim->RightArm, &rArm);
-
-	BoxDesc_TexOrigin(&lArm, 48, 48);
-	BoxDesc_Expand(&lArm, offset);
-	BoxDesc_BuildBox(&setSlim->LeftArmLayer, &lArm);
-
-	BoxDesc_TexOrigin(&rArm, 40, 32);
-	BoxDesc_Expand(&rArm, offset);
-	BoxDesc_BuildBox(&setSlim->RightArmLayer, &rArm);
-
-	setSlim->LeftLeg       = set64->LeftLeg;
-	setSlim->RightLeg      = set64->RightLeg;
-	setSlim->LeftLegLayer  = set64->LeftLegLayer;
-	setSlim->RightLegLayer = set64->RightLegLayer;
-}
-
-static void HumanModel_DrawModel(struct Entity* entity, struct ModelSet* model) {
-	Model_ApplyTexture(entity);
-	Gfx_SetAlphaTest(false);
-
-	int type = Model_skinType;
-	struct ModelLimbs* set = &model->Limbs[type == SKIN_64x64_SLIM ? 2 : (type == SKIN_64x64 ? 1 : 0)];
-
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &model->Head, true);
-	Model_DrawPart(&model->Torso);
-	Model_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  &set->LeftLeg,  false);
-	Model_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, &set->RightLeg, false);
-
-	Model_Rotation = ROTATE_ORDER_XZY;
-	Model_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  &set->LeftArm,  false);
-	Model_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, &set->RightArm, false);
-	Model_Rotation = ROTATE_ORDER_ZYX;
-	Model_UpdateVB();
-
-	Gfx_SetAlphaTest(true);
-	if (type != SKIN_64x32) {
-		Model_DrawPart(&model->TorsoLayer);
-		Model_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  &set->LeftLegLayer,  false);
-		Model_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, &set->RightLegLayer, false);
-
-		Model_Rotation = ROTATE_ORDER_XZY;
-		Model_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  &set->LeftArmLayer,  false);
-		Model_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, &set->RightArmLayer, false);
-		Model_Rotation = ROTATE_ORDER_ZYX;
-	}
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &model->Hat, true);
-	Model_UpdateVB();
-}
-
-static void HumanModel_DrawArm(struct Entity* entity, struct ModelSet* model) {
-	int type = Model_skinType;
-	struct ModelLimbs* set = &model->Limbs[type == SKIN_64x64_SLIM ? 2 : (type == SKIN_64x64 ? 1 : 0)];
-
-	Model_DrawArmPart(&set->RightArm);
-	if (type != SKIN_64x32) {
-		Model_DrawArmPart(&set->RightArmLayer);
-	}
-	Model_UpdateVB();
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------HumanoidModel-----------------------------------------------------*
-*#########################################################################################################################*/
-struct ModelSet Humanoid_Set;
-struct ModelVertex HumanoidModel_Vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
-struct Model HumanoidModel;
-
-static void HumanoidModel_CreateParts(void) {
-	static struct BoxDesc head = {
-		BoxDesc_Tex(0,0),
-		BoxDesc_Box(-4,24,-4, 4,32,4),
-		BoxDesc_Rot(0,24,0),
-	}; 
-	static struct BoxDesc torso = {
-		BoxDesc_Tex(16,16),
-		BoxDesc_Box(-4,12,-2, 4,24,2),
-		BoxDesc_Rot(0,12,0),
-	}; 
-	static struct BoxDesc hat = {
-		BoxDesc_Tex(32,0),
-		BoxDesc_Dims(-4,24,-4, 4,32,4),
-		BoxDesc_Bounds(-4.5f,23.5f,-4.5f, 4.5f,32.5f,4.5f),
-		BoxDesc_Rot(0,24,0),
-	}; 
-	static struct BoxDesc torsoL = {
-		BoxDesc_Tex(16,32),
-		BoxDesc_Dims(-4,12,-2, 4,24,2),
-		BoxDesc_Bounds(-4.5f,11.5f,-2.5f, 4.5f,24.5f,2.5f),
-		BoxDesc_Rot(0,12,0),
-	};
-
-	static struct BoxDesc arm = {
-		BoxDesc_Tex(40,16),
-		BoxDesc_Box(4,12,-2, 8,24,2),
-		BoxDesc_Rot(5,22,0),
-	};
-	static struct BoxDesc leg = {
-		BoxDesc_Tex(0,16),
-		BoxDesc_Box(0,0,-2, 4,12,2),
-		BoxDesc_Rot(0,12,0),
-	};
-
-	BoxDesc_BuildBox(&Humanoid_Set.Head,  &head);
-	BoxDesc_BuildBox(&Humanoid_Set.Torso, &torso);
-	BoxDesc_BuildBox(&Humanoid_Set.Hat,   &hat);
-	BoxDesc_BuildBox(&Humanoid_Set.TorsoLayer, &torsoL);
-	HumanModel_CreateLimbs(&Humanoid_Set, 0.5f, &arm, &leg);
-}
-
-static float HumanoidModel_GetEyeY(struct Entity* entity)   { return 26.0f / 16.0f; }
-static void HumanoidModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.6f,28.1f,8.6f); }
-static void HumanoidModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-8,0,-4, 8,32,4); }
-
-static void HumanoidModel_DrawModel(struct Entity* entity) {
-	HumanModel_DrawModel(entity, &Humanoid_Set);
-}
-
-static void HumanoidModel_DrawArm(struct Entity* entity) {
-	HumanModel_DrawArm(entity, &Humanoid_Set);
-}
-
-static struct Model* HumanoidModel_GetInstance(void) {
-	Model_Init(&HumanoidModel);
-	Model_SetPointers(HumanoidModel);
-	HumanoidModel.DrawArm = HumanoidModel_DrawArm;
-	HumanoidModel.vertices = HumanoidModel_Vertices;
-	HumanoidModel.CalcHumanAnims = true;
-	HumanoidModel.UsesHumanSkin  = true;
-	HumanoidModel.NameYOffset = 32.5f / 16.0f;
-	return &HumanoidModel;
-}
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------ChibiModel------------------------------------------------------*
-*#########################################################################################################################*/
-struct ModelSet Chibi_Set;
-struct ModelVertex ChibiModel_Vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
-struct Model ChibiModel;
-
-static void ChibiModel_CreateParts(void) {
-	static struct BoxDesc head = {
-		BoxDesc_Tex(0,0),
-		BoxDesc_Box(-4,12,-4, 4,20,4),
-		BoxDesc_Rot(0,13,0),
-	}; 
-	static struct BoxDesc torso = {
-		BoxDesc_Tex(16,16),
-		BoxDesc_Dims(-4,12,-2, 4,24,2),
-		BoxDesc_Bounds(-2,6,-1, 2,12,1),
-		BoxDesc_Rot(0,6,0),
-	}; 
-	static struct BoxDesc hat = {
-		BoxDesc_Tex(32,0),
-		BoxDesc_Dims(-4,12,-4, 4,20,4),
-		BoxDesc_Bounds(-4.25f,11.75f,-4.25f, 4.25f,20.25f,4.25f),
-		BoxDesc_Rot(0,13,0),
-	}; 
-	static struct BoxDesc torsoL = {
-		BoxDesc_Tex(16,32),
-		BoxDesc_Dims(-4,12,-2, 4,24,2),
-		BoxDesc_Bounds(-1.75f,5.75f,-0.75f, 2.25f,12.25f,1.25f),
-		BoxDesc_Rot(0,6,0),
-	}; 
-
-	static struct BoxDesc arm = {
-		BoxDesc_Tex(40,16),
-		BoxDesc_Dims(4,12,-2, 8,24,2),
-		BoxDesc_Bounds(2,6,-1, 4,12,1),
-		BoxDesc_Rot(2.5f,11,0),
-	};
-	static struct BoxDesc leg = {
-		BoxDesc_Tex(0,16),
-		BoxDesc_Dims(0,0,-2, 4,12,2),
-		BoxDesc_Bounds(0,0,-1, 2,6,1),
-		BoxDesc_Rot(0,6,0),
-	};
-
-	BoxDesc_BuildBox(&Chibi_Set.Head,  &head);
-	BoxDesc_BuildBox(&Chibi_Set.Torso, &torso);
-	BoxDesc_BuildBox(&Chibi_Set.Hat,   &hat);
-	BoxDesc_BuildBox(&Chibi_Set.TorsoLayer, &torsoL);
-	HumanModel_CreateLimbs(&Chibi_Set, 0.25f, &arm, &leg);
-}
-
-static float ChibiModel_GetEyeY(struct Entity* entity)   { return 14.0f / 16.0f; }
-static void ChibiModel_GetCollisionSize(Vector3* size)   { Model_RetSize(4.6f,20.1f,4.6f); }
-static void ChibiModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,16,4); }
-
-static void ChibiModel_DrawModel(struct Entity* entity) {
-	HumanModel_DrawModel(entity, &Chibi_Set);
-}
-
-static void ChibiModel_DrawArm(struct Entity* entity) {
-	HumanModel_DrawArm(entity, &Chibi_Set);
-}
-
-static struct Model* ChibiModel_GetInstance(void) {
-	Model_Init(&ChibiModel);
-	Model_SetPointers(ChibiModel);
-	ChibiModel.DrawArm = ChibiModel_DrawArm;
-	ChibiModel.armX = 3; ChibiModel.armY = 6;
-	ChibiModel.vertices = ChibiModel_Vertices;
-	ChibiModel.CalcHumanAnims = true;
-	ChibiModel.UsesHumanSkin  = true;
-	ChibiModel.MaxScale    = 3.0f;
-	ChibiModel.ShadowScale = 0.5f;
-	ChibiModel.NameYOffset = 20.2f / 16.0f;
-	return &ChibiModel;
-}
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------SittingModel-----------------------------------------------------*
-*#########################################################################################################################*/
-struct Model SittingModel;
-#define SIT_OFFSET 10.0f
-static void SittingModel_CreateParts(void) { }
-
-static float SittingModel_GetEyeY(struct Entity* entity)   { return (26.0f - SIT_OFFSET) / 16.0f; }
-static void SittingModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.6f,28.1f - SIT_OFFSET,8.6f); }
-static void SittingModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-8,0,-4, 8,32 - SIT_OFFSET,4); }
-
-static void SittingModel_GetTransform(struct Entity* entity, Vector3 pos, struct Matrix* m) {
-	pos.Y -= (SIT_OFFSET / 16.0f) * entity->ModelScale.Y;
-	Entity_GetTransform(entity, pos, entity->ModelScale, m);
-}
-
-static void SittingModel_DrawModel(struct Entity* entity) {
-	entity->Anim.LeftLegX = 1.5f;  entity->Anim.RightLegX = 1.5f;
-	entity->Anim.LeftLegZ = -0.1f; entity->Anim.RightLegZ = 0.1f;
-	HumanoidModel_DrawModel(entity);
-}
-
-static struct Model* SittingModel_GetInstance(void) {
-	Model_Init(&SittingModel);
-	Model_SetPointers(SittingModel);
-	SittingModel.DrawArm = HumanoidModel_DrawArm;
-	SittingModel.vertices = HumanoidModel_Vertices;
-	SittingModel.CalcHumanAnims = true;
-	SittingModel.UsesHumanSkin  = true;
-	SittingModel.ShadowScale  = 0.5f;
-	SittingModel.GetTransform = SittingModel_GetTransform;
-	SittingModel.NameYOffset  = 32.5f / 16.0f;
-	return &SittingModel;
-}
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------CorpseModel------------------------------------------------------*
-*#########################################################################################################################*/
-struct Model CorpseModel;
-static void CorpseModel_CreateParts(void) { }
-static void CorpseModel_DrawModel(struct Entity* entity) {
-	entity->Anim.LeftLegX = 0.025f; entity->Anim.RightLegX = 0.025f;
-	entity->Anim.LeftArmX = 0.025f; entity->Anim.RightArmX = 0.025f;
-	entity->Anim.LeftLegZ = -0.15f; entity->Anim.RightLegZ =  0.15f;
-	entity->Anim.LeftArmZ = -0.20f; entity->Anim.RightArmZ =  0.20f;
-	HumanoidModel_DrawModel(entity);
-}
-
-static struct Model* CorpseModel_GetInstance(void) {
-	CorpseModel = HumanoidModel;
-	CorpseModel.CreateParts = CorpseModel_CreateParts;
-	CorpseModel.DrawModel   = CorpseModel_DrawModel;
-	return &CorpseModel;
-}
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------HeadModel-------------------------------------------------------*
-*#########################################################################################################################*/
-struct Model HeadModel;
-static void HeadModel_CreateParts(void) { }
-
-static float HeadModel_GetEyeY(struct Entity* entity)   { return 6.0f / 16.0f; }
-static void HeadModel_GetCollisionSize(Vector3* size)   { Model_RetSize(7.9f,7.9f,7.9f); }
-static void HeadModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,8,4); }
-
-static void HeadModel_GetTransform(struct Entity* entity, Vector3 pos, struct Matrix* m) {
-	pos.Y -= (24.0f / 16.0f) * entity->ModelScale.Y;
-	Entity_GetTransform(entity, pos, entity->ModelScale, m);
-}
-
-static void HeadModel_DrawModel(struct Entity* entity) {
-	struct ModelPart part;
-	Model_ApplyTexture(entity);
-
-	part = Humanoid_Set.Head; part.RotY += 4.0f / 16.0f;
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &part, true);
-	part = Humanoid_Set.Hat;  part.RotY += 4.0f / 16.0f;
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &part, true);
-
-	Model_UpdateVB();
-}
-
-static struct Model* HeadModel_GetInstance(void) {
-	Model_Init(&HeadModel);
-	Model_SetPointers(HeadModel);
-	HeadModel.vertices = HumanoidModel_Vertices;
-	HeadModel.UsesHumanSkin  = true;
-	HeadModel.Pushes         = false;
-	HeadModel.GetTransform = HeadModel_GetTransform;
-	HeadModel.NameYOffset  = 32.5f / 16.0f;
-	return &HeadModel;
 }
 
 
@@ -1340,7 +1313,7 @@ static void ModelCache_RegisterDefaultModels(void) {
 	ModelCache_RegisterTexture("zombie.png");
 
 	ModelCache_Register("humanoid", "char.png", HumanoidModel_GetInstance());
-	ModelCache_InitModel(&HumanoidModel);
+	ModelCache_InitModel(&HumanModel);
 
 	ModelCache_Register("chicken", "chicken.png", ChickenModel_GetInstance());
 	ModelCache_Register("creeper", "creeper.png", CreeperModel_GetInstance());

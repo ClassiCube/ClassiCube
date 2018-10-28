@@ -263,7 +263,7 @@ static PackedCol WoM_ParseCol(const String* value, PackedCol defaultCol) {
 
 static void WoM_ParseConfig(struct AsyncRequest* item) {
 	String key, value;
-	int start = 0, waterLevel;
+	int waterLevel;
 	PackedCol col;
 
 	char lineBuffer[STRING_SIZE * 2];

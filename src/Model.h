@@ -25,11 +25,11 @@ void ModelPart_Init(struct ModelPart* part, int offset, int count, float rotX, f
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
 the bounding boxes that contain the entire set of quads and/or boxes. */
 struct Model {
-	/* Pointer to the raw vertices of the model.*/
+	/* Pointer to the raw vertices of the model */
 	struct ModelVertex* vertices;
-	/* Count of assigned vertices within the raw vertices array. */
+	/* Count of assigned vertices within the raw vertices array */
 	int index;
-	/* Index within ModelCache's textures of the default texture for this model. */
+	/* Index within ModelCache's textures of the default texture for this model */
 	int8_t defaultTexIndex;
 	uint8_t armX, armY; /* these translate arm model part back to (0, 0) */
 
@@ -57,7 +57,7 @@ struct Model {
 
 PackedCol Model_Cols[FACE_COUNT];
 float Model_uScale, Model_vScale;
-/* Angle of offset from head to body rotation. */
+/* Angle of offset of head to body rotation */
 float Model_cosHead, Model_sinHead;
 uint8_t Model_Rotation, Model_skinType;
 struct Model* Model_ActiveModel;
