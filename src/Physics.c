@@ -8,6 +8,10 @@
 #include "ErrorHandler.h"
 #include "Entity.h"
 
+
+/*########################################################################################################################*
+*----------------------------------------------------------AABB-----------------------------------------------------------*
+*#########################################################################################################################*/
 void AABB_Make(struct AABB* result, Vector3* pos, Vector3* size) {
 	result->Min.X = pos->X - size->X * 0.5f;
 	result->Min.Y = pos->Y;
@@ -24,13 +28,10 @@ void AABB_Offset(struct AABB* result, struct AABB* bb, Vector3* amount) {
 }
 
 bool AABB_Intersects(const struct AABB* bb, const struct AABB* other) {
-	if (bb->Max.X >= other->Min.X && bb->Min.X <= other->Max.X) {
-		if (bb->Max.Y < other->Min.Y || bb->Min.Y > other->Max.Y) {
-			return false;
-		}
-		return bb->Max.Z >= other->Min.Z && bb->Min.Z <= other->Max.Z;
-	}
-	return false;
+	return
+		bb->Max.X >= other->Min.X && bb->Min.X <= other->Max.X &&
+		bb->Max.Y >= other->Min.Y && bb->Min.Y <= other->Max.Y &&
+		bb->Max.Z >= other->Min.Z && bb->Min.Z <= other->Max.Z;
 }
 
 bool AABB_Contains(const struct AABB* parent, const struct AABB* child) {
@@ -46,7 +47,9 @@ bool AABB_ContainsPoint(const struct AABB* parent, Vector3* P) {
 }
 
 
-
+/*########################################################################################################################*
+*------------------------------------------------------Intersection-------------------------------------------------------*
+*#########################################################################################################################*/
 Vector3 Intersection_InverseRotate(Vector3 pos, struct Entity* target) {
 	pos = Vector3_RotateY(pos, -target->RotY * MATH_DEG2RAD);
 	pos = Vector3_RotateZ(pos, -target->RotZ * MATH_DEG2RAD);
@@ -120,6 +123,9 @@ bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vec
 }
 
 
+/*########################################################################################################################*
+*----------------------------------------------------Collisions finder----------------------------------------------------*
+*#########################################################################################################################*/
 #define SEARCHER_STATES_MIN 64
 struct SearcherState Searcher_DefaultStates[SEARCHER_STATES_MIN];
 struct SearcherState* Searcher_States = Searcher_DefaultStates;
@@ -147,8 +153,14 @@ int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, s
 	Vector3 vel = entity->Velocity;
 	Vector3I min, max;
 	uint32_t elements;
-	Entity_GetBounds(entity, entityBB);
+	struct SearcherState* curState;
 
+	BlockID block;
+	struct AABB blockBB;
+	float xx, yy, zz, tx, ty, tz;
+	int x, y, z;
+
+	Entity_GetBounds(entity, entityBB);
 	/* Exact maximum extent the entity can reach, and the equivalent map coordinates. */
 	entityExtentBB->Min.X = entityBB->Min.X + (vel.X < 0.0f ? vel.X : 0.0f);
 	entityExtentBB->Min.Y = entityBB->Min.Y + (vel.Y < 0.0f ? vel.Y : 0.0f);
@@ -167,28 +179,22 @@ int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, s
 		Searcher_StatesMax = elements;
 		Searcher_States    = Mem_Alloc(elements, sizeof(struct SearcherState), "collision search states");
 	}
+	curState = Searcher_States;
 
 	/* Order loops so that we minimise cache misses */
-	BlockID block;
-	struct AABB blockBB;
-	struct SearcherState* curState = Searcher_States;
-	int x, y, z;
-
 	for (y = min.Y; y <= max.Y; y++) {
 		for (z = min.Z; z <= max.Z; z++) {
 			for (x = min.X; x <= max.X; x++) {
 				block = World_GetPhysicsBlock(x, y, z);
 				if (Block_Collide[block] != COLLIDE_SOLID) continue;
 
-				float xx = (float)x, yy = (float)y, zz = (float)z;
+				xx = (float)x; yy = (float)y; zz = (float)z;
 				blockBB.Min = Block_MinBB[block];
 				blockBB.Min.X += xx; blockBB.Min.Y += yy; blockBB.Min.Z += zz;
 				blockBB.Max = Block_MaxBB[block];
 				blockBB.Max.X += xx; blockBB.Max.Y += yy; blockBB.Max.Z += zz;
 
 				if (!AABB_Intersects(entityExtentBB, &blockBB)) continue; /* necessary for non whole blocks. (slabs) */
-
-				float tx, ty, tz;
 				Searcher_CalcTime(&vel, entityBB, &blockBB, &tx, &ty, &tz);
 				if (tx > 1.0f || ty > 1.0f || tz > 1.0f) continue;
 

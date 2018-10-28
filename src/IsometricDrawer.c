@@ -70,7 +70,6 @@ static TextureLoc IsometricDrawer_GetTexLoc(BlockID block, Face face) {
 	return loc;
 }
 
-#define AddVertex *iso_vertices = v; iso_vertices++;
 static void IsometricDrawer_SpriteZQuad(BlockID block, bool firstPart) {
 	TextureLoc loc = Block_GetTex(block, FACE_ZMAX);
 	TextureRec rec = Atlas1D_TexRec(loc, 1, &iso_texIndex);
@@ -94,10 +93,10 @@ static void IsometricDrawer_SpriteZQuad(BlockID block, bool firstPart) {
 	maxY = iso_scale * (1.0f - 1.1f * 2.0f) + iso_pos.Y;
 
 	v.Z = iso_pos.Z;
-	v.X = minX; v.Y = minY; v.U = rec.U2; v.V = rec.V2; AddVertex;
-	            v.Y = maxY;               v.V = rec.V1; AddVertex;
-	v.X = maxX;             v.U = rec.U1;               AddVertex;
-	            v.Y = minY;               v.V = rec.V2; AddVertex;
+	v.X = minX; v.Y = minY; v.U = rec.U2; v.V = rec.V2; *iso_vertices++ = v;
+	            v.Y = maxY;               v.V = rec.V1; *iso_vertices++ = v;
+	v.X = maxX;             v.U = rec.U1;               *iso_vertices++ = v;
+	            v.Y = minY;               v.V = rec.V2; *iso_vertices++ = v;
 }
 
 static void IsometricDrawer_SpriteXQuad(BlockID block, bool firstPart) {
@@ -123,10 +122,10 @@ static void IsometricDrawer_SpriteXQuad(BlockID block, bool firstPart) {
 	maxZ = iso_scale * (1.0f - z2   * 2.0f) + iso_pos.Z;
 
 	v.X = iso_pos.X;
-	v.Y = minY; v.Z = minZ; v.U = rec.U2; v.V = rec.V2; AddVertex;
-	v.Y = maxY;                           v.V = rec.V1; AddVertex;
-	            v.Z = maxZ; v.U = rec.U1;               AddVertex;
-	v.Y = minY;                           v.V = rec.V2; AddVertex;
+	v.Y = minY; v.Z = minZ; v.U = rec.U2; v.V = rec.V2; *iso_vertices++ = v;
+	v.Y = maxY;                           v.V = rec.V1; *iso_vertices++ = v;
+	            v.Z = maxZ; v.U = rec.U1;               *iso_vertices++ = v;
+	v.Y = minY;                           v.V = rec.V2; *iso_vertices++ = v;
 }
 
 void IsometricDrawer_BeginBatch(VertexP3fT2fC4b* vertices, GfxResourceID vb) {

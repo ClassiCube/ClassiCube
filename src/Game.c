@@ -701,8 +701,7 @@ static void Game_RenderFrame(double delta) {
 	Game_UpdateViewMatrix();
 
 	bool visible = !Gui_Active || !Gui_Active->BlocksWorld;
-	if (!World_Blocks) visible = false;
-	if (visible) {
+	if (visible && World_Blocks) {
 		Game_Render3D(delta, t);
 	} else {
 		PickedPos_SetAsInvalid(&Game_SelectedPos);

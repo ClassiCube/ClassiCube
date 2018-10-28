@@ -241,54 +241,37 @@ static void WoM_CheckMotd(void) {
 }
 
 static void WoM_CheckSendWomID(void) {
+	static String msg = String_FromConst("/womid WoMClient-2.0.7");
+
 	if (wom_sendId && !wom_sentId) {
-		String msg = String_FromConst("/womid WoMClient-2.0.7");
 		Chat_Send(&msg, false);
 		wom_sentId = true;
 	}
 }
 
 static PackedCol WoM_ParseCol(const String* value, PackedCol defaultCol) {
+	PackedCol col;
 	int argb;
 	if (!Convert_TryParseInt(value, &argb)) return defaultCol;
 
-	PackedCol col; col.A = 255;
+	col.A = 255;
 	col.R = (uint8_t)(argb >> 16);
 	col.G = (uint8_t)(argb >> 8);
 	col.B = (uint8_t)argb;
 	return col;
 }
 
-static bool WoM_ReadLine(STRING_REF const String* page, int* start, String* line) {
-	int i, offset = *start;
-	char c;
-	if (offset == -1) return false;
-
-	for (i = offset; i < page->length; i++) {
-		c = page->buffer[i];
-		if (c != '\r' && c != '\n') continue;
-
-		*line = String_UNSAFE_Substring(page, offset, i - offset);
-		offset = i + 1;
-		if (c == '\r' && offset < page->length && page->buffer[offset] == '\n') {
-			offset++; /* we stop at the \r, so make sure to skip following \n */
-		}
-
-		*start = offset; return true;
-	}
-
-	*line = String_UNSAFE_SubstringAt(page, offset);
-
-	*start = -1;
-	return true;
-}
-
-static void WoM_ParseConfig(const String* page) {
-	String line, key, value;
+static void WoM_ParseConfig(struct AsyncRequest* item) {
+	String key, value;
 	int start = 0, waterLevel;
 	PackedCol col;
 
-	while (WoM_ReadLine(page, &start, &line)) {
+	char lineBuffer[STRING_SIZE * 2];
+	String line = String_FromArray(lineBuffer);
+	struct Stream mem;
+
+	Stream_ReadonlyMemory(&mem, item->ResultData, item->ResultSize);
+	while (!Stream_ReadLine(&mem, &line)) {
 		Platform_Log(&line);
 		if (!String_UNSAFE_Separate(&line, '=', &key, &value)) continue;
 
@@ -321,10 +304,7 @@ static void WoM_Tick(void) {
 	struct AsyncRequest item;
 	if (!AsyncDownloader_Get(&wom_identifier, &item)) return;
 
-	if (item.ResultData) {
-		String str = String_Init(item.ResultData, item.ResultSize, item.ResultSize);
-		WoM_ParseConfig(&str);
-	}
+	if (item.ResultData) WoM_ParseConfig(&item);
 	ASyncRequest_Free(&item);
 }
 
@@ -461,6 +441,7 @@ static void Classic_LevelInit(uint8_t* data) {
 static void Classic_LevelDataChunk(uint8_t* data) {
 	int usedLength;
 	float progress;
+	uint32_t left, read;
 
 	/* Workaround for some servers that send LevelDataChunk before LevelInit due to their async sending behaviour */
 	if (!map_begunLoading) Classic_StartLoading();
@@ -481,8 +462,9 @@ static void Classic_LevelDataChunk(uint8_t* data) {
 
 	if (map_gzHeader.Done) {
 		if (map_sizeIndex < 4) {
-			uint32_t left = 4 - map_sizeIndex, read = 0;
-			map_stream.Read(&map_stream, &map_size[map_sizeIndex], left, &read); map_sizeIndex += read;
+			left = 4 - map_sizeIndex;
+			map_stream.Read(&map_stream, &map_size[map_sizeIndex], left, &read); 
+			map_sizeIndex += read;
 		}
 
 		if (map_sizeIndex == 4) {
@@ -492,18 +474,21 @@ static void Classic_LevelDataChunk(uint8_t* data) {
 			}
 
 #ifndef EXTENDED_BLOCKS
-			uint32_t left = map_volume - map_index, read = 0;
+			left = map_volume - map_index;
 			map_stream.Read(&map_stream, &map_blocks[map_index], left, &read);
 			map_index += read;
 #else
 			if (cpe_extBlocks && value) {
 				/* Only allocate map2 when needed */
 				if (!map2_blocks) map2_blocks = Mem_Alloc(map_volume, 1, "map blocks upper");
-				uint32_t left = map_volume - map2_index, read = 0;
-				map2_stream.Read(&map2_stream, &map2_blocks[map2_index], left, &read); map2_index += read;
+
+				left = map_volume - map2_index;
+				map2_stream.Read(&map2_stream, &map2_blocks[map2_index], left, &read); 
+				map2_index += read;
 			} else {
-				uint32_t left = map_volume - map_index, read = 0;
-				map_stream.Read(&map_stream, &map_blocks[map_index], left, &read); map_index += read;
+				left = map_volume - map_index;
+				map_stream.Read(&map_stream, &map_blocks[map_index], left, &read); 
+				map_index += read;
 			}
 #endif
 		}
@@ -963,8 +948,11 @@ static void CPE_CustomBlockLevel(uint8_t* data) {
 }
 
 static void CPE_HoldThis(uint8_t* data) {
-	BlockID block; Handlers_ReadBlock(data, block);
-	bool canChange = *data == 0;
+	BlockID block;
+	bool canChange;
+
+	Handlers_ReadBlock(data, block);
+	canChange = *data == 0;
 
 	Inventory_CanChangeHeldBlock = true;
 	Inventory_SetSelectedBlock(block);
@@ -1090,7 +1078,9 @@ static void CPE_SetEnvCol(uint8_t* data) {
 }
 
 static void CPE_SetBlockPermission(uint8_t* data) {
-	BlockID block; Handlers_ReadBlock(data, block);
+	BlockID block; 
+	Handlers_ReadBlock(data, block);
+
 	Block_CanPlace[block]  = *data++ != 0;
 	Block_CanDelete[block] = *data++ != 0;
 	Event_RaiseVoid(&BlockEvents_PermissionsChanged);

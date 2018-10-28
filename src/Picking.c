@@ -174,11 +174,11 @@ static bool Picking_RayTrace(Vector3 origin, Vector3 dir, float reach, struct Pi
 }
 
 static bool Picking_ClipBlock(struct PickedPos* pos) {
+	float t0, t1;
 	if (!Game_CanPick(tracer.Block)) return false;
 
 	/* This cell falls on the path of the ray. Now perform an additional AABB test,
 	since some blocks do not occupy a whole cell. */
-	float t0, t1;
 	if (!Intersection_RayIntersectsBox(tracer.Origin, tracer.Dir, tracer.Min, tracer.Max, &t0, &t1)) {
 		return false;
 	}

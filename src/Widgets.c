@@ -1668,8 +1668,7 @@ static void ChatInputWidget_DownKey(struct InputWidget* w) {
 
 	if (W->TypingLogPos >= Chat_InputLog.Count) {
 		W->TypingLogPos = Chat_InputLog.Count;
-		String* orig = &W->OrigStr;
-		if (orig->length) { String_AppendString(&w->Text, orig); }
+		String_AppendString(&w->Text, &W->OrigStr);
 	} else {
 		String prevInput = StringsBuffer_UNSAFE_Get(&Chat_InputLog, W->TypingLogPos);
 		String_AppendString(&w->Text, &prevInput);

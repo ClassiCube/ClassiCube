@@ -202,16 +202,18 @@ static void HeldBlockRenderer_DoAnimation(double delta, float lastSwingY) {
 }
 
 void HeldBlockRenderer_Render(double delta) {
+	float lastSwingY;
+	struct Matrix view;
 	if (!Game_ShowBlockInHand) return;
 
-	float lastSwingY = held_swingY;
+	lastSwingY  = held_swingY;
 	held_swingY = 0.0f;
-	held_block = Inventory_SelectedBlock;
+	held_block  = Inventory_SelectedBlock;
+	view = Gfx_View;
 
 	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
 	Gfx_LoadMatrix(&held_blockProjection);
-	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
-	struct Matrix view = Gfx_View;
+	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);	
 	HeldBlockRenderer_SetMatrix();
 
 	HeldBlockRenderer_ResetHeldState();

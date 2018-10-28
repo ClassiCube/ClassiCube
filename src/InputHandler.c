@@ -219,44 +219,43 @@ static bool InputHandler_TouchesSolid(BlockID b) { return Block_Collide[b] == CO
 static bool InputHandler_PushbackPlace(struct AABB* blockBB) {
 	struct Entity* p        = &LocalPlayer_Instance.Base;
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	Face closestFace;
+	bool insideMap;
 
-	Vector3 curPos = p->Position, adjPos = p->Position;
+	Vector3 pos = p->Position;
 	struct AABB playerBB;
 	struct LocationUpdate update;
 
 	/* Offset position by the closest face */
-	Face closestFace = Game_SelectedPos.ClosestFace;
+	closestFace = Game_SelectedPos.ClosestFace;
 	if (closestFace == FACE_XMAX) {
-		adjPos.X = blockBB->Max.X + 0.5f;
+		pos.X = blockBB->Max.X + 0.5f;
 	} else if (closestFace == FACE_ZMAX) {
-		adjPos.Z = blockBB->Max.Z + 0.5f;
+		pos.Z = blockBB->Max.Z + 0.5f;
 	} else if (closestFace == FACE_XMIN) {
-		adjPos.X = blockBB->Min.X - 0.5f;
+		pos.X = blockBB->Min.X - 0.5f;
 	} else if (closestFace == FACE_ZMIN) {
-		adjPos.Z = blockBB->Min.Z - 0.5f;
+		pos.Z = blockBB->Min.Z - 0.5f;
 	} else if (closestFace == FACE_YMAX) {
-		adjPos.Y = blockBB->Min.Y + 1 + ENTITY_ADJUSTMENT;
+		pos.Y = blockBB->Min.Y + 1 + ENTITY_ADJUSTMENT;
 	} else if (closestFace == FACE_YMIN) {
-		adjPos.Y = blockBB->Min.Y - p->Size.Y - ENTITY_ADJUSTMENT;
+		pos.Y = blockBB->Min.Y - p->Size.Y - ENTITY_ADJUSTMENT;
 	}
 
 	/* Exclude exact map boundaries, otherwise player can get stuck outside map */
 	/* Being vertically above the map is acceptable though */
-	bool insideMap =
-		adjPos.X > 0.0f && adjPos.Y >= 0.0f && adjPos.Z > 0.0f &&
-		adjPos.X < World_Width && adjPos.Z < World_Length;
+	insideMap =
+		pos.X > 0.0f && pos.Y >= 0.0f && pos.Z > 0.0f &&
+		pos.X < World_Width && pos.Z < World_Length;
 	if (!insideMap) return false;
 
-	p->Position = adjPos;
-	Entity_GetBounds(p, &playerBB);
-	p->Position = curPos;
-
+	AABB_Make(&playerBB, &pos, &p->Size);
 	if (!hacks->Noclip && Entity_TouchesAny(&playerBB, InputHandler_TouchesSolid)) {
 		/* Don't put player inside another block */
 		return false;
 	}
 
-	LocationUpdate_MakePos(&update, adjPos, false);
+	LocationUpdate_MakePos(&update, pos, false);
 	p->VTABLE->SetLocation(p, &update, false);
 	return true;
 }

@@ -244,13 +244,14 @@ static void Terrain_Update1DCounts(void) {
 
 static void Terrain_Render(float t) {
 	VertexP3fT2fC4b vertices[PARTICLES_MAX * 4];
+	VertexP3fT2fC4b* ptr;
 	int i, index, offset = 0;
 	if (!Terrain_Count) return;
 
 	Terrain_Update1DCounts();
 	for (i = 0; i < Terrain_Count; i++) {
 		index = Atlas1D_Index(Terrain_Particles[i].TexLoc);
-		VertexP3fT2fC4b* ptr = &vertices[Terrain_1DIndices[index]];
+		ptr   = &vertices[Terrain_1DIndices[index]];
 
 		TerrainParticle_Render(&Terrain_Particles[i], t, ptr);
 		Terrain_1DIndices[index] += 4;
@@ -270,6 +271,7 @@ static void Terrain_Render(float t) {
 static void Terrain_RemoveAt(int index) {
 	struct TerrainParticle removed = Terrain_Particles[index];
 	int i;
+
 	for (i = index; i < Terrain_Count - 1; i++) {
 		Terrain_Particles[i] = Terrain_Particles[i + 1];
 	}
