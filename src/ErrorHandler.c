@@ -144,34 +144,37 @@ static void ErrorHandler_DumpCommon(String* str, void* ctx) {
 	EnumerateLoadedModules(process, ErrorHandler_DumpModule, NULL);
 }
 
-static void ErrorHandler_DumpRegisters(CONTEXT* ctx) {
+static void ErrorHandler_DumpRegisters(void* ctx) {
+	if (!ctx) return;
+	CONTEXT* r = (CONTEXT*)ctx;
+
 	char strBuffer[STRING_SIZE * 8];
 	String str = String_FromArray(strBuffer);
 	String_AppendConst(&str, "-- registers --\r\n");
 
 #ifdef _M_IX86
-	String_Format3(&str, "eax=%x ebx=%x ecx=%x\r\n", &ctx->Eax, &ctx->Ebx, &ctx->Ecx);
-	String_Format3(&str, "edx=%x esi=%x edi=%x\r\n", &ctx->Edx, &ctx->Esi, &ctx->Edi);
-	String_Format3(&str, "eip=%x ebp=%x esp=%x\r\n", &ctx->Eip, &ctx->Ebp, &ctx->Esp);
+	String_Format3(&str, "eax=%x ebx=%x ecx=%x\r\n", &r->Eax, &r->Ebx, &r->Ecx);
+	String_Format3(&str, "edx=%x esi=%x edi=%x\r\n", &r->Edx, &r->Esi, &r->Edi);
+	String_Format3(&str, "eip=%x ebp=%x esp=%x\r\n", &r->Eip, &r->Ebp, &r->Esp);
 #elif _M_X64
-	String_Format3(&str, "rax=%x rbx=%x rcx=%x\r\n", &ctx->Rax, &ctx->Rbx, &ctx->Rcx);
-	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\r\n", &ctx->Rdx, &ctx->Rsi, &ctx->Rdi);
-	String_Format3(&str, "rip=%x rbp=%x rsp=%x\r\n", &ctx->Rip, &ctx->Rbp, &ctx->Rsp);
-	String_Format3(&str, "r8 =%x r9 =%x r10=%x\r\n", &ctx->R8,  &ctx->R9,  &ctx->R10);
-	String_Format3(&str, "r11=%x r12=%x r13=%x\r\n", &ctx->R11, &ctx->R12, &ctx->R13);
-	String_Format2(&str, "r14=%x r15=%x\r\n"       , &ctx->R14, &ctx->R15);
+	String_Format3(&str, "rax=%x rbx=%x rcx=%x\r\n", &r->Rax, &r->Rbx, &r->Rcx);
+	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\r\n", &r->Rdx, &r->Rsi, &r->Rdi);
+	String_Format3(&str, "rip=%x rbp=%x rsp=%x\r\n", &r->Rip, &r->Rbp, &r->Rsp);
+	String_Format3(&str, "r8 =%x r9 =%x r10=%x\r\n", &r->R8,  &r->R9,  &r->R10);
+	String_Format3(&str, "r11=%x r12=%x r13=%x\r\n", &r->R11, &r->R12, &r->R13);
+	String_Format2(&str, "r14=%x r15=%x\r\n"       , &r->R14, &r->R15);
 #elif _M_IA64
-	String_Format3(&str, "r1 =%x r2 =%x r3 =%x\r\n", &ctx->IntGp,  &ctx->IntT0,  &ctx->IntT1);
-	String_Format3(&str, "r4 =%x r5 =%x r6 =%x\r\n", &ctx->IntS0,  &ctx->IntS1,  &ctx->IntS2);
-	String_Format3(&str, "r7 =%x r8 =%x r9 =%x\r\n", &ctx->IntS3,  &ctx->IntV0,  &ctx->IntT2);
-	String_Format3(&str, "r10=%x r11=%x r12=%x\r\n", &ctx->IntT3,  &ctx->IntT4,  &ctx->IntSp);
-	String_Format3(&str, "r13=%x r14=%x r15=%x\r\n", &ctx->IntTeb, &ctx->IntT5,  &ctx->IntT6);
-	String_Format3(&str, "r16=%x r17=%x r18=%x\r\n", &ctx->IntT7,  &ctx->IntT8,  &ctx->IntT9);
-	String_Format3(&str, "r19=%x r20=%x r21=%x\r\n", &ctx->IntT10, &ctx->IntT11, &ctx->IntT12);
-	String_Format3(&str, "r22=%x r23=%x r24=%x\r\n", &ctx->IntT13, &ctx->IntT14, &ctx->IntT15);
-	String_Format3(&str, "r25=%x r26=%x r27=%x\r\n", &ctx->IntT16, &ctx->IntT17, &ctx->IntT18);
-	String_Format3(&str, "r28=%x r29=%x r30=%x\r\n", &ctx->IntT19, &ctx->IntT20, &ctx->IntT21);
-	String_Format3(&str, "r31=%x nat=%x pre=%x\r\n", &ctx->IntT22, &ctx->IntNats,&ctx->Preds);
+	String_Format3(&str, "r1 =%x r2 =%x r3 =%x\r\n", &r->IntGp,  &r->IntT0,  &r->IntT1);
+	String_Format3(&str, "r4 =%x r5 =%x r6 =%x\r\n", &r->IntS0,  &r->IntS1,  &r->IntS2);
+	String_Format3(&str, "r7 =%x r8 =%x r9 =%x\r\n", &r->IntS3,  &r->IntV0,  &r->IntT2);
+	String_Format3(&str, "r10=%x r11=%x r12=%x\r\n", &r->IntT3,  &r->IntT4,  &r->IntSp);
+	String_Format3(&str, "r13=%x r14=%x r15=%x\r\n", &r->IntTeb, &r->IntT5,  &r->IntT6);
+	String_Format3(&str, "r16=%x r17=%x r18=%x\r\n", &r->IntT7,  &r->IntT8,  &r->IntT9);
+	String_Format3(&str, "r19=%x r20=%x r21=%x\r\n", &r->IntT10, &r->IntT11, &r->IntT12);
+	String_Format3(&str, "r22=%x r23=%x r24=%x\r\n", &r->IntT13, &r->IntT14, &r->IntT15);
+	String_Format3(&str, "r25=%x r26=%x r27=%x\r\n", &r->IntT16, &r->IntT17, &r->IntT18);
+	String_Format3(&str, "r28=%x r29=%x r30=%x\r\n", &r->IntT19, &r->IntT20, &r->IntT21);
+	String_Format3(&str, "r31=%x nat=%x pre=%x\r\n", &r->IntT22, &r->IntNats,&r->Preds);
 #else
 #error "Unknown machine type"
 #endif
