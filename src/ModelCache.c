@@ -897,7 +897,7 @@ static void HumanoidModel_CreateParts(void) {
 	static struct BoxDesc torsoL = {
 		BoxDesc_Tex(16,32),
 		BoxDesc_Dims(-4,12,-2, 4,24,2),
-		BoxDesc_Bounds(-3.5f,11.5f,-3.5f, 4.5f,24.5f,4.5f),
+		BoxDesc_Bounds(-4.5f,11.5f,-2.5f, 4.5f,24.5f,2.5f),
 		BoxDesc_Rot(0,12,0),
 	};
 

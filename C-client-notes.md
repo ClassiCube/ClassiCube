@@ -16,6 +16,9 @@ Explicitly:
 
 ```i586-mingw32msvc-gcc *.c -DCC_BUILD_MANUAL -DCC_BUILD_WIN -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lopengl32```
 
+
+For ubuntu, this means you probably need to install: libx11-dev, libgl1-mesa-dev, libopenal-dev, libcurl4-gnutls-dev or libcurl4-openssl-dev
+
 ### Platform
 Although the majority of the code is designed to be platform-independent, some per-platform functionality is required.
 
