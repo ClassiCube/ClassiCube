@@ -1478,18 +1478,17 @@ static void BlockDefs_UndefineBlock(uint8_t* data) {
 	Event_RaiseVoid(&BlockEvents_BlockDefChanged);
 }
 
-#define BlockDefs_ReadCoord(x) x = *data++ / 16.0f; if (x > 1.0f) x = 1.0f;
 static void BlockDefs_DefineBlockExt(uint8_t* data) {
 	Vector3 minBB, maxBB;
 	BlockID block = BlockDefs_DefineBlockCommonStart(&data, cpe_blockDefsExtVer >= 2);
 
-	BlockDefs_ReadCoord(minBB.X);
-	BlockDefs_ReadCoord(minBB.Y);
-	BlockDefs_ReadCoord(minBB.Z);
+	minBB.X = (int8_t)(*data++) / 16.0f;
+	minBB.Y = (int8_t)(*data++) / 16.0f;
+	minBB.Z = (int8_t)(*data++) / 16.0f;
 
-	BlockDefs_ReadCoord(maxBB.X);
-	BlockDefs_ReadCoord(maxBB.Y);
-	BlockDefs_ReadCoord(maxBB.Z);
+	maxBB.X = (int8_t)(*data++) / 16.0f;
+	maxBB.Y = (int8_t)(*data++) / 16.0f;
+	maxBB.Z = (int8_t)(*data++) / 16.0f;
 
 	Block_MinBB[block] = minBB;
 	Block_MaxBB[block] = maxBB;
