@@ -219,35 +219,35 @@ static void HumanModel_CreateParts(void) {
 	};
 
 	static struct BoxDesc lArm64 = {
-		BoxDesc_Tex(48,16),
+		BoxDesc_Tex(32,48),
 		BoxDesc_Box(-8,12,-2, -4,24,2),
 		BoxDesc_Rot(-5,22,0),
 	};
 	static struct BoxDesc lLeg64 = {
-		BoxDesc_Tex(32,48),
+		BoxDesc_Tex(16,48),
 		BoxDesc_Box(-4,0,-2, 0,12,2),
 		BoxDesc_Rot(0,12,0),
 	};
 	static struct BoxDesc lArmL = {
-		BoxDesc_Tex(48,16),
+		BoxDesc_Tex(48,48),
 		BoxDesc_Dims(-8,12,-2, -4,24,2),
 		BoxDesc_Bounds(-8.5f,11.5f,-2.5f, -3.5f,24.5f,2.5f),
 		BoxDesc_Rot(-5,22,0),
 	};
 	static struct BoxDesc rArmL = {
-		BoxDesc_Tex(40,16),
+		BoxDesc_Tex(40,32),
 		BoxDesc_Dims(4,12,-2, 8,24,2),
 		BoxDesc_Bounds(3.5f,11.5f,-2.5f, 8.5f,24.5f,2.5f),
 		BoxDesc_Rot(5,22,0),
 	};
 	static struct BoxDesc lLegL = {
-		BoxDesc_Tex(32,48),
+		BoxDesc_Tex(0,48),
 		BoxDesc_Dims(-4,0,-2, 0,12,2),
 		BoxDesc_Bounds(-4.5f,-0.5f,-2.5f, 0.5f,12.5f,2.5f),
 		BoxDesc_Rot(0,12,0),
 	};
 	static struct BoxDesc rLegL = {
-		BoxDesc_Tex(0,16),
+		BoxDesc_Tex(0,32),
 		BoxDesc_Dims(0,0,-2, 4,12,2),
 		BoxDesc_Bounds(-0.5f,-0.5f,-2.5f, 4.5f,12.5f,2.5f),
 		BoxDesc_Rot(0,12,0),
@@ -362,7 +362,7 @@ static void ChibiModel_CreateParts(void) {
 	static struct BoxDesc hat = {
 		BoxDesc_Tex(32,0),
 		BoxDesc_Dims(-4,12,-4, 4,20,4),
-		BoxDesc_Bounds(-4.5f,11.5f,-4.5f, 4.5f,20.5f,4.5f),
+		BoxDesc_Bounds(-4.25f,11.75f,-4.25f, 4.25f,20.25f,4.25f),
 		BoxDesc_Rot(0,13,0),
 	}; 
 	/* TODO: 4.25 instead?? expand by 0.25 instead of 0.5? (what classicalsharp does) */
