@@ -775,12 +775,17 @@ static unsigned long Font_ReadWrapper(FT_Stream s, unsigned long offset, unsigne
 }
 
 static void Font_CloseWrapper(FT_Stream s) {
-	struct Stream* stream = s->descriptor.pointer;
-	struct Stream* source = stream->Meta.Buffered.Source;
+	struct Stream* stream;
+	struct Stream* source;
+
+	stream = s->descriptor.pointer;
+	if (!stream) return;
+	source = stream->Meta.Buffered.Source;
 
 	/* Close the actual file stream */
 	source->Close(source);
 	Mem_Free(s->descriptor.pointer);
+	s->descriptor.pointer = NULL;
 }
 
 static bool Font_MakeArgs(const String* path, FT_Stream stream, FT_Open_Args* args) {
