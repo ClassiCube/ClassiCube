@@ -322,6 +322,8 @@ static ReturnCode Stream_BufferedSeek(struct Stream* s, uint32_t position) {
 	res    = source->Seek(source, position);
 
 	if (res) return res;
+
+	s->Meta.Buffered.Cur  = s->Meta.Buffered.Base;
 	s->Meta.Buffered.Left = 0;
 	s->Meta.Buffered.End  = position;	
 	return res;
