@@ -1252,22 +1252,25 @@ static bool InputWidget_MouseDown(void* widget, int x, int y, MouseButton button
 }
 
 NOINLINE_ static void InputWidget_Create(struct InputWidget* w, const FontDesc* font, STRING_REF const String* prefix) {
+	static String caret = String_FromConst("_");
+	struct DrawTextArgs args;
+	Size2D size;
 	Widget_Reset(w);
-	w->Font            = *font;
-	w->Prefix          = *prefix;
-	w->CaretPos        = -1;
-	w->OnPressedEnter  = InputWidget_OnPressedEnter;
-	w->AllowedChar     = InputWidget_AllowedChar;
 
-	String caret = String_FromConst("_");
-	struct DrawTextArgs args; DrawTextArgs_Make(&args, &caret, font, true);
+	w->Font           = *font;
+	w->Prefix         = *prefix;
+	w->CaretPos       = -1;
+	w->OnPressedEnter = InputWidget_OnPressedEnter;
+	w->AllowedChar    = InputWidget_AllowedChar;
+	
+	DrawTextArgs_Make(&args, &caret, font, true);
 	Drawer2D_MakeTextTexture(&w->CaretTex, &args, 0, 0);
 	w->CaretTex.Width = (uint16_t)((w->CaretTex.Width * 3) / 4);
 	w->CaretWidth     = w->CaretTex.Width;
 
 	if (!prefix->length) return;
 	DrawTextArgs_Make(&args, prefix, font, true);
-	Size2D size = Drawer2D_MeasureText(&args);
+	size = Drawer2D_MeasureText(&args);
 	w->PrefixWidth  = size.Width;  w->Width  = size.Width;
 	w->PrefixHeight = size.Height; w->Height = size.Height;
 }
@@ -2174,7 +2177,7 @@ void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* w, const Strin
 		char* src = TextGroupWidget_LineBuffer(w, i + 1);
 		uint8_t lineLen = w->LineLengths[i + 1];
 
-		if (lineLen > 0) Mem_Copy(dst, src, lineLen);
+		Mem_Copy(dst, src, lineLen);
 		w->Textures[i]    = w->Textures[i + 1];
 		w->LineLengths[i] = lineLen;
 

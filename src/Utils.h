@@ -6,14 +6,15 @@
 */
 
 /* Represents a particular instance in time in some timezone. Not necessarily UTC time. */
+/* NOTE: This is not an efficiently sized struct. Store DateTime_TotalMs instead for that. */
 typedef struct DateTime_ {
-	uint16_t Year;  /* Year,   ranges from 0 to 65535 */
-	uint8_t Month;  /* Month,  ranges from 1 to 12 */
-	uint8_t Day;    /* Day,    ranges from 1 to 31 */
-	uint8_t Hour;   /* Hour,   ranges from 0 to 23 */
-	uint8_t Minute; /* Minute, ranges from 0 to 59 */
-	uint8_t Second; /* Second, ranges from 0 to 59 */
-	uint16_t Milli; /* Milliseconds, ranges from 0 to 999 */
+	int Year;  /* Year,   ranges from 0 to 65535 */
+	int Month;  /* Month,  ranges from 1 to 12 */
+	int Day;    /* Day,    ranges from 1 to 31 */
+	int Hour;   /* Hour,   ranges from 0 to 23 */
+	int Minute; /* Minute, ranges from 0 to 59 */
+	int Second; /* Second, ranges from 0 to 59 */
+	int Milli; /* Milliseconds, ranges from 0 to 999 */
 } DateTime;
 
 #define DATETIME_MILLIS_PER_SEC 1000

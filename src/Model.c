@@ -281,22 +281,6 @@ void Model_DrawArmPart(struct ModelPart* part) {
 /*########################################################################################################################*
 *----------------------------------------------------------BoxDesc--------------------------------------------------------*
 *#########################################################################################################################*/
-void BoxDesc_TexOrigin(struct BoxDesc* desc, int x, int y) {
-	desc->TexX = x; desc->TexY = y;
-}
-
-void BoxDesc_Expand(struct BoxDesc* desc, float amount) {
-	amount /= 16.0f;
-	desc->X1 -= amount; desc->X2 += amount;
-	desc->Y1 -= amount; desc->Y2 += amount;
-	desc->Z1 -= amount; desc->Z2 += amount;
-}
-
-void BoxDesc_MirrorX(struct BoxDesc* desc) {
-	float tmp = desc->X1; desc->X1 = desc->X2; desc->X2 = tmp;
-}
-
-
 void BoxDesc_BuildBox(struct ModelPart* part, const struct BoxDesc* desc) {
 	int sidesW = desc->SizeZ, bodyW = desc->SizeX, bodyH = desc->SizeY;
 	float x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;

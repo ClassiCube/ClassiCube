@@ -537,7 +537,6 @@ void Game_Load(void) {
 	ServerConnection_BeginConnect();
 }
 
-uint64_t game_frameTimer;
 void Game_SetFpsLimit(enum FpsLimit method) {
 	Game_FpsLimit = method;
 	game_limitMs  = Game_CalcLimitMillis(method);
@@ -551,8 +550,9 @@ float Game_CalcLimitMillis(enum FpsLimit method) {
 	return 0;
 }
 
-static void Game_LimitFPS(void) {
-	float elapsedMs = Stopwatch_ElapsedMicroseconds(&game_frameTimer) / 1000.0f;
+static void Game_LimitFPS(uint64_t frameStart) {
+	uint64_t frameEnd = Stopwatch_Measure();
+	float elapsedMs = Stopwatch_ElapsedMicroseconds(frameStart, frameEnd) / 1000.0f;
 	float leftOver  = game_limitMs - elapsedMs;
 
 	/* going faster than limit */
@@ -651,11 +651,8 @@ void Game_TakeScreenshot(void) {
 	if (!Utils_EnsureDirectory("screenshots")) return;
 
 	DateTime_CurrentLocal(&now);
-	int year = now.Year, month = now.Month, day = now.Day;
-	int hour = now.Hour, min = now.Minute, sec = now.Second;
-	
-	String_Format3(&filename, "screenshot_%p2-%p2-%p4", &day, &month, &year);
-	String_Format3(&filename, "-%p2-%p2-%p2.png", &hour, &min, &sec);
+	String_Format3(&filename, "screenshot_%p2-%p2-%p4", &now.Day, &now.Month, &now.Year);
+	String_Format3(&filename, "-%p2-%p2-%p2.png", &now.Hour, &now.Minute, &now.Second);
 	String_Format2(&path, "screenshots%r%s", &Directory_Separator, &filename);
 
 	res = Stream_CreateFile(&stream, &path);
@@ -673,8 +670,10 @@ void Game_TakeScreenshot(void) {
 }
 
 static void Game_RenderFrame(double delta) {
-	Stopwatch_Measure(&game_frameTimer);
-
+	uint64_t frameStart;
+	bool allowZoom, visible;
+		
+	frameStart = Stopwatch_Measure();
 	Gfx_BeginFrame();
 	Gfx_BindIb(GfxCommon_defaultIb);
 	Game_Accumulator += delta;
@@ -686,7 +685,7 @@ static void Game_RenderFrame(double delta) {
 		Gui_SetActive(PauseScreen_MakeInstance());
 	}
 
-	bool allowZoom = !Gui_Active && !Gui_HUD->HandlesAllInput;
+	allowZoom = !Gui_Active && !Gui_HUD->HandlesAllInput;
 	if (allowZoom && KeyBind_IsPressed(KeyBind_ZoomScrolling)) {
 		InputHandler_SetFOV(Game_ZoomFov, false);
 	}
@@ -700,7 +699,7 @@ static void Game_RenderFrame(double delta) {
 	Camera_CurrentPos = Camera_Active->GetPosition(t);
 	Game_UpdateViewMatrix();
 
-	bool visible = !Gui_Active || !Gui_Active->BlocksWorld;
+	visible = !Gui_Active || !Gui_Active->BlocksWorld;
 	if (visible && World_Blocks) {
 		Game_Render3D(delta, t);
 	} else {
@@ -711,7 +710,7 @@ static void Game_RenderFrame(double delta) {
 	if (Game_ScreenshotRequested) Game_TakeScreenshot();
 
 	Gfx_EndFrame();
-	if (game_limitMs) Game_LimitFPS();
+	if (game_limitMs) Game_LimitFPS(frameStart);
 }
 
 void Game_Free(void* obj) {
@@ -743,10 +742,10 @@ void Game_Free(void* obj) {
 	Options_Save();
 }
 
-uint64_t game_renderTimer;
 void Game_Run(int width, int height, const String* title, struct DisplayDevice* device) {
 	int x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
 	int y = device->Bounds.Y + (device->Bounds.Height - height) / 2;
+	uint64_t lastRender, render;
 	struct GraphicsMode mode;
 	double time;
 	
@@ -758,17 +757,18 @@ void Game_Run(int width, int height, const String* title, struct DisplayDevice* 
 	Game_Load();
 	Event_RaiseVoid(&WindowEvents_Resized);
 
-	Stopwatch_Measure(&game_renderTimer);
+	lastRender = Stopwatch_Measure();
 	for (;;) {
 		Window_ProcessEvents();
 		if (!Window_Exists) break;
 
 		/* Limit maximum render to 1 second (for suspended process) */
-		time = Stopwatch_ElapsedMicroseconds(&game_renderTimer) / (1000.0 * 1000.0);
+		render = Stopwatch_Measure();
+		time   = Stopwatch_ElapsedMicroseconds(lastRender, render) / (1000.0 * 1000.0);
 		if (time > 1.0) time = 1.0;
 		if (time <= 0.0) continue;
 
-		Stopwatch_Measure(&game_renderTimer);
+		lastRender = Stopwatch_Measure();
 		Game_RenderFrame(time);
 	}
 }

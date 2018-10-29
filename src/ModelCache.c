@@ -125,11 +125,14 @@ struct ModelSet {
 };
 
 static void HumanModel_DrawModelSet(struct Entity* entity, struct ModelSet* model) {
+	struct ModelLimbs* set;
+	int type;
+
 	Model_ApplyTexture(entity);
 	Gfx_SetAlphaTest(false);
 
-	int type = Model_skinType;
-	struct ModelLimbs* set = &model->Limbs[type == SKIN_64x64_SLIM ? 2 : (type == SKIN_64x64 ? 1 : 0)];
+	type = Model_skinType;
+	set  = &model->Limbs[type & 0x3];
 
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &model->Head, true);
 	Model_DrawPart(&model->Torso);
@@ -158,13 +161,14 @@ static void HumanModel_DrawModelSet(struct Entity* entity, struct ModelSet* mode
 }
 
 static void HumanModel_DrawArmSet(struct Entity* entity, struct ModelSet* model) {
-	int type = Model_skinType;
-	struct ModelLimbs* set = &model->Limbs[type == SKIN_64x64_SLIM ? 2 : (type == SKIN_64x64 ? 1 : 0)];
+	struct ModelLimbs* set;
+	int type;
+
+	type = Model_skinType;
+	set  = &model->Limbs[type & 0x3];
 
 	Model_DrawArmPart(&set->RightArm);
-	if (type != SKIN_64x32) {
-		Model_DrawArmPart(&set->RightArmLayer);
-	}
+	if (type != SKIN_64x32) Model_DrawArmPart(&set->RightArmLayer);
 	Model_UpdateVB();
 }
 
@@ -365,8 +369,6 @@ static void ChibiModel_CreateParts(void) {
 		BoxDesc_Bounds(-4.25f,11.75f,-4.25f, 4.25f,20.25f,4.25f),
 		BoxDesc_Rot(0,13,0),
 	}; 
-	/* TODO: 4.25 instead?? expand by 0.25 instead of 0.5? (what classicalsharp does) */
-	/* TODO: Don't use BuildBox or declare parts, just directly move down the vertices */
 
 	/* Chibi is mostly just half scale humanoid */
 	ChibiModel_ScalePart(&Chibi_Set.Torso,      &Human_Set.Torso);

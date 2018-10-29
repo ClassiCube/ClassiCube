@@ -995,27 +995,26 @@ struct Screen* EditHotkeyScreen_MakeInstance(struct HotkeyData original) {
 *-----------------------------------------------------GenLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
 struct GenLevelScreen GenLevelScreen_Instance;
-int GenLevelScreen_GetInt(struct GenLevelScreen* s, int index) {
+NOINLINE_ static int GenLevelScreen_GetInt(struct GenLevelScreen* s, int index) {
 	struct MenuInputWidget* input = &s->Inputs[index];
+	struct MenuInputValidator* v;
 	String text = input->Base.Text;
+	int value;
 
-	struct MenuInputValidator* v = &input->Validator;
+	v = &input->Validator;
 	if (!v->VTABLE->IsValidValue(v, &text)) return 0;
-	int value; Convert_TryParseInt(&text, &value); return value;
+	Convert_TryParseInt(&text, &value); return value;
 }
 
-int GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, int index) {
+NOINLINE_ static int GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, int index) {
 	struct MenuInputWidget* input = &s->Inputs[index];
-	String text = input->Base.Text;
+	RNGState rnd;
 
-	if (!text.length) {
-		RNGState rnd; Random_InitFromCurrentTime(&rnd);
+	if (!input->Base.Text.length) {
+		Random_InitFromCurrentTime(&rnd);
 		return Random_Next(&rnd, Int32_MaxValue);
 	}
-
-	struct MenuInputValidator* v = &input->Validator;
-	if (!v->VTABLE->IsValidValue(v, &text)) return 0;
-	int value; Convert_TryParseInt(&text, &value); return value;
+	return GenLevelScreen_GetInt(s, index);
 }
 
 static void GenLevelScreen_Gen(void* screen, bool vanilla) {
@@ -1879,11 +1878,11 @@ struct Screen* OtherKeyBindingsScreen_MakeInstance(void) {
 *------------------------------------------------MouseKeyBindingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
 static void MouseKeyBindingsScreen_ContextRecreated(void* screen) {
+	static String msg = String_FromConst("&eRight click to remove the key binding");
 	struct KeyBindingsScreen* s = screen;
-	int i = KeyBindingsScreen_MakeWidgets(s, -40, 10, -1, "Mouse key bindings", 260);
-
 	static struct TextWidget text;
-	String msg = String_FromConst("&eRight click to remove the key binding");
+
+	int i = KeyBindingsScreen_MakeWidgets(s, -40, 10, -1, "Mouse key bindings", 260);
 	Menu_Label(s, i, &text, &msg, &s->TextFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
 }
@@ -1956,7 +1955,7 @@ static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* s, int idx
 
 	String descRaw = String_FromReadonly(desc);
 	String descLines[5];
-	int count = String_UNSAFE_Split(&descRaw, '%', descLines, Array_Elems(descLines));
+	int count = String_UNSAFE_Split(&descRaw, '|', descLines, Array_Elems(descLines));
 
 	TextGroupWidget_Create(&s->ExtHelp, count, &s->TextFont, &s->TextFont, s->ExtHelp_Textures, s->ExtHelp_Buffer);
 	Widget_SetLocation((struct Widget*)(&s->ExtHelp), ANCHOR_MIN, ANCHOR_MIN, 0, 0);
@@ -1981,8 +1980,8 @@ static void MenuOptionsScreen_FreeInput(struct MenuOptionsScreen* s) {
 }
 
 static void MenuOptionsScreen_EnterInput(struct MenuOptionsScreen* s) {
-	String text = s->Input.Base.Text;
 	struct MenuInputValidator* v = &s->Input.Validator;
+	String text = s->Input.Base.Text;
 
 	if (v->VTABLE->IsValidValue(v, &text)) {
 		MenuOptionsScreen_Set(s, s->ActiveI, &text);
@@ -2471,31 +2470,31 @@ struct Screen* GraphicsOptionsScreen_MakeInstance(void) {
 	static struct MenuInputValidator validators[Array_Elems(buttons)];
 	static const char* defaultValues[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
-
+	
+	static const char* descs[Array_Elems(buttons)];
+	descs[0] = \
+		"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.|" \
+		"&e30/60/120 FPS: &f30/60/120 frames rendered at most each second.|" \
+		"&eNoLimit: &fRenders as many frames as possible each second.|" \
+		"&cUsing NoLimit mode is discouraged.";
+	descs[2] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
+	descs[3] = \
+		"&eNone: &fNo names of players are drawn.|" \
+		"&eHovered: &fName of the targeted player is drawn see-through.|" \
+		"&eAll: &fNames of all other players are drawn normally.|" \
+		"&eAllHovered: &fAll names of players are drawn see-through.|" \
+		"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.";
+	descs[4] = \
+		"&eNone: &fNo entity shadows are drawn.|" \
+		"&eSnapToBlock: &fA square shadow is shown on block you are directly above.|" \
+		"&eCircle: &fA circular shadow is shown across the blocks you are above.|" \
+		"&eCircleAll: &fA circular shadow is shown underneath all entities.";
+	
 	validators[0]    = MenuInputValidator_Enum(FpsLimit_Names, FPS_LIMIT_COUNT);
 	validators[1]    = MenuInputValidator_Int(8, 4096);
 	defaultValues[1] = "512";
 	validators[3]    = MenuInputValidator_Enum(NameMode_Names,   NAME_MODE_COUNT);
 	validators[4]    = MenuInputValidator_Enum(ShadowMode_Names, SHADOW_MODE_COUNT);
-	
-	static const char* descs[Array_Elems(buttons)];
-	descs[0] = \
-		"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.%" \
-		"&e30/60/120 FPS: &f30/60/120 frames rendered at most each second.%" \
-		"&eNoLimit: &fRenders as many frames as possible each second.%" \
-		"&cUsing NoLimit mode is discouraged.";
-	descs[2] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
-	descs[3] = \
-		"&eNone: &fNo names of players are drawn.%" \
-		"&eHovered: &fName of the targeted player is drawn see-through.%" \
-		"&eAll: &fNames of all other players are drawn normally.%" \
-		"&eAllHovered: &fAll names of players are drawn see-through.%" \
-		"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.";
-	descs[4] = \
-		"&eNone: &fNo entity shadows are drawn.%" \
-		"&eSnapToBlock: &fA square shadow is shown on block you are directly above.%" \
-		"&eCircle: &fA circular shadow is shown across the blocks you are above.%" \
-		"&eCircleAll: &fA circular shadow is shown underneath all entities.";
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
 		GraphicsOptionsScreen_ContextRecreated, validators, defaultValues, descs, Array_Elems(descs));
@@ -2727,6 +2726,15 @@ struct Screen* HacksSettingsScreen_MakeInstance(void) {
 	static const char* defaultValues[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 
+	static const char* descs[Array_Elems(buttons)];
+	descs[2] = "&eIf &fON&e, then the third person cameras will limit|&etheir zoom distance if they hit a solid block.";
+	descs[3] = "&eSets how many blocks high you can jump up.|&eNote: You jump much higher when holding down the Speed key binding.";
+	descs[7] = \
+		"&eIf &fON&e, placing blocks that intersect your own position cause|" \
+		"&ethe block to be placed, and you to be moved out of the way.|" \
+		"&fThis is mainly useful for quick pillaring/towering.";
+	descs[8] = "&eIf &fOFF&e, you will immediately stop when in noclip|&emode and no movement keys are held down.";
+	
 	/* TODO: Is this needed because user may not always use . for decimal point? */
 	static char jumpHeightBuffer[STRING_INT_CHARS];
 	String jumpHeight = String_FromArray(jumpHeightBuffer);
@@ -2738,15 +2746,6 @@ struct Screen* HacksSettingsScreen_MakeInstance(void) {
 	defaultValues[3] = jumpHeightBuffer;
 	validators[9]    = MenuInputValidator_Int(1, 150);
 	defaultValues[9] = "70";
-
-	static const char* descs[Array_Elems(buttons)];
-	descs[2] = "&eIf &fON&e, then the third person cameras will limit%"   "&etheir zoom distance if they hit a solid block.";
-	descs[3] = "&eSets how many blocks high you can jump up.%"   "&eNote: You jump much higher when holding down the Speed key binding.";
-	descs[7] = \
-		"&eIf &fON&e, placing blocks that intersect your own position cause%" \
-		"&ethe block to be placed, and you to be moved out of the way.%" \
-		"&fThis is mainly useful for quick pillaring/towering.";
-	descs[8] = "&eIf &fOFF&e, you will immediately stop when in noclip%"   "&emode and no movement keys are held down.";
 
 	struct Screen* s = MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
 		HacksSettingsScreen_ContextRecreated, validators, defaultValues, descs, Array_Elems(buttons));
@@ -2880,6 +2879,7 @@ static void NostalgiaScreen_SwitchBack(void* a, void* b) {
 }
 
 static void NostalgiaScreen_ContextRecreated(void* screen) {
+	static String descText = String_FromConst("&eButtons on the right require restarting game");
 	struct MenuOptionsScreen* s = screen;
 	static struct TextWidget desc;
 
@@ -2901,11 +2901,8 @@ static void NostalgiaScreen_ContextRecreated(void* screen) {
 	MenuOptionsScreen_Make(s, 7, 1,  -50, "Use server textures", MenuOptionsScreen_Bool, 
 		NostalgiaScreen_GetTexs,   NostalgiaScreen_SetTexs);
 
-
-	Menu_Back(s, 8, &s->Buttons[8], "Done", &s->TitleFont, NostalgiaScreen_SwitchBack);
-
-	String descText = String_FromConst("&eButtons on the right require restarting game");
-	Menu_Label(s, 9, &desc, &descText, &s->TextFont,
+	Menu_Back(s,  8, &s->Buttons[8], "Done", &s->TitleFont, NostalgiaScreen_SwitchBack);
+	Menu_Label(s, 9, &desc, &descText, &s->TextFont, 
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
 }
 

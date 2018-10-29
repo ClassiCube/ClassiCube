@@ -39,17 +39,18 @@ static ReturnCode Stream_DefaultIO(struct Stream* s, uint8_t* data, uint32_t cou
 	*modified = 0; return ReturnCode_NotSupported;
 }
 ReturnCode Stream_DefaultReadU8(struct Stream* s, uint8_t* data) {
-	uint32_t modified = 0;
+	uint32_t modified;
 	ReturnCode res = s->Read(s, data, 1, &modified);
 	return res ? res : (modified ? 0 : ERR_END_OF_STREAM);
 }
 
 static ReturnCode Stream_DefaultSkip(struct Stream* s, uint32_t count) {
 	uint8_t tmp[3584]; /* not quite 4 KB to avoid chkstk call */
+	uint32_t toRead, read;
 	ReturnCode res;
 
 	while (count) {
-		uint32_t toRead = min(count, sizeof(tmp)), read;
+		toRead = min(count, sizeof(tmp));
 		if ((res = s->Read(s, tmp, toRead, &read))) return res;
 
 		if (!read) return ERR_END_OF_STREAM;
@@ -137,27 +138,34 @@ void Stream_FromFile(struct Stream* s, void* file) {
 *-----------------------------------------------------PortionStream-------------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode Stream_PortionRead(struct Stream* s, uint8_t* data, uint32_t count, uint32_t* modified) {
-	count = min(count, s->Meta.Portion.Left);
-	struct Stream* source = s->Meta.Portion.Source;
+	struct Stream* source;
+	ReturnCode res;
 
-	ReturnCode res = source->Read(source, data, count, modified);
+	count  = min(count, s->Meta.Portion.Left);
+	source = s->Meta.Portion.Source;
+
+	res = source->Read(source, data, count, modified);
 	s->Meta.Portion.Left -= *modified;
 	return res;
 }
 
 static ReturnCode Stream_PortionReadU8(struct Stream* s, uint8_t* data) {
+	struct Stream* source;
 	if (!s->Meta.Portion.Left) return ERR_END_OF_STREAM;
-	struct Stream* source = s->Meta.Portion.Source;
+	source = s->Meta.Portion.Source;
 
 	s->Meta.Portion.Left--;
 	return source->ReadU8(source, data);
 }
 
 static ReturnCode Stream_PortionSkip(struct Stream* s, uint32_t count) {
-	if (count > s->Meta.Portion.Left) return ReturnCode_InvalidArg;
-	struct Stream* source = s->Meta.Portion.Source;
+	struct Stream* source;
+	ReturnCode res;
 
-	ReturnCode res = source->Skip(source, count);
+	if (count > s->Meta.Portion.Left) return ReturnCode_InvalidArg;
+	source = s->Meta.Portion.Source;
+
+	res = source->Skip(source, count);
 	if (!res) s->Meta.Portion.Left -= count;
 	return res;
 }
@@ -263,12 +271,15 @@ void Stream_WriteonlyMemory(struct Stream* s, void* data, uint32_t len) {
 *----------------------------------------------------BufferedStream-------------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode Stream_BufferedRead(struct Stream* s, uint8_t* data, uint32_t count, uint32_t* modified) {
-	if (!s->Meta.Buffered.Left) {
-		struct Stream* source = s->Meta.Buffered.Source; 
-		s->Meta.Buffered.Cur  = s->Meta.Buffered.Base;
-		uint32_t read = 0;
+	struct Stream* source;
+	uint32_t read;
+	ReturnCode res;
 
-		ReturnCode res = source->Read(source, s->Meta.Buffered.Cur, s->Meta.Buffered.Length, &read);
+	if (!s->Meta.Buffered.Left) {
+		source               = s->Meta.Buffered.Source; 
+		s->Meta.Buffered.Cur = s->Meta.Buffered.Base;
+
+		res = source->Read(source, s->Meta.Buffered.Cur, s->Meta.Buffered.Length, &read);
 		if (res) return res;
 		s->Meta.Buffered.Left  = read;
 		s->Meta.Buffered.End  += read;
@@ -292,19 +303,23 @@ static ReturnCode Stream_BufferedReadU8(struct Stream* s, uint8_t* data) {
 }
 
 static ReturnCode Stream_BufferedSeek(struct Stream* s, uint32_t position) {
-	/* Check if seek position is within cached buffer */
-	uint32_t length = s->Meta.Buffered.Left + (uint32_t)(s->Meta.Buffered.Cur - s->Meta.Buffered.Base);
-	uint32_t start  = s->Meta.Buffered.End  - length;
+	struct Stream* source;
+	uint32_t beg, len, offset;
+	ReturnCode res;
 
-	if (position >= start && position < start + length) {
-		uint32_t offset = position - start;
+	/* Check if seek position is within cached buffer */
+	len = s->Meta.Buffered.Left + (uint32_t)(s->Meta.Buffered.Cur - s->Meta.Buffered.Base);
+	beg = s->Meta.Buffered.End  - len;
+
+	if (position >= beg && position < beg + len) {
+		offset = position - beg;
 		s->Meta.Buffered.Cur  = s->Meta.Buffered.Base + offset;
-		s->Meta.Buffered.Left = length - offset;
+		s->Meta.Buffered.Left = len - offset;
 		return 0;
 	}
 
-	struct Stream* source = s->Meta.Buffered.Source;
-	ReturnCode res        = source->Seek(source, position);
+	source = s->Meta.Buffered.Source;
+	res    = source->Seek(source, position);
 
 	if (res) return res;
 	s->Meta.Buffered.Left = 0;

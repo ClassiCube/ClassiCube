@@ -49,8 +49,13 @@ TimeMS DateTime_TotalMs(const DateTime* time) {
 }
 
 void DateTime_FromTotalMs(DateTime* time, TimeMS ms) {
+	int dayMS, days, year;
+	int daysInYear, month;
+	uint16_t* totalDays;
+	bool leap;
+
 	/* Work out time component for just this day */
-	int dayMS    = (int)(ms % DATETIME_MILLISECS_PER_DAY);
+	dayMS = (int)(ms % DATETIME_MILLISECS_PER_DAY);
 	time->Milli  = dayMS % DATETIME_MILLIS_PER_SEC;     dayMS /= DATETIME_MILLIS_PER_SEC;
 	time->Second = dayMS % DATETIME_SECONDS_PER_MINUTE; dayMS /= DATETIME_SECONDS_PER_MINUTE;
 	time->Minute = dayMS % DATETIME_MINUTES_PER_HOUR;   dayMS /= DATETIME_MINUTES_PER_HOUR;
@@ -59,43 +64,41 @@ void DateTime_FromTotalMs(DateTime* time, TimeMS ms) {
 	/* Then work out day/month/year component (inverse TotalDays operation) */
 	/* Probably not the most efficient way of doing this. But it passes my tests at */
 	/* https://gist.github.com/UnknownShadow200/30993c66464bb03ead01577f3ab2a653 */
-	int days = (int)(ms / DATETIME_MILLISECS_PER_DAY);
-	int year = 1 + ((days / DAYS_IN_400_YEARS) * 400); days %= DAYS_IN_400_YEARS;
-	bool leap;
+	days = (int)(ms / DATETIME_MILLISECS_PER_DAY);
+	year = 1 + ((days / DAYS_IN_400_YEARS) * 400); days %= DAYS_IN_400_YEARS;
 
 	for (; ; year++) {
 		leap = DateTime_IsLeapYear(year);
-		int daysInYear = leap ? 366 : 365;
+		daysInYear = leap ? 366 : 365;
+
 		if (days < daysInYear) break;
 		days -= daysInYear;
 	}
-	time->Year = year;
 
-	uint16_t* totalDays = leap ? DateTime_DaysTotalLeap : DateTime_DaysTotal;
-	int i;
-	for (i = 1; i <= 12; i++) {
-		if (days >= totalDays[i]) continue;
-		time->Month = i;
-		time->Day = 1 + (days - totalDays[i - 1]);
+	time->Year = year;
+	totalDays  = leap ? DateTime_DaysTotalLeap : DateTime_DaysTotal;
+
+	for (month = 1; month <= 12; month++) {
+		if (days >= totalDays[month]) continue;
+
+		time->Month = month;
+		time->Day   = 1 + (days - totalDays[month - 1]);
 		return;
 	}
 }
 
 void DateTime_HttpDate(TimeMS ms, String* str) {
-	static char* days_of_weeks[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+	static char* days_of_week[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
 	static char* month_names[13] = { NULL, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+	DateTime t;
+	int days;
 
-	DateTime value;
-	DateTime_FromTotalMs(&value, ms);
-	int days = DateTime_TotalDays(&value);
+	DateTime_FromTotalMs(&t, ms);
+	days = DateTime_TotalDays(&t);
 
-	char* dayOfWeek = days_of_weeks[days % 7];
-	int day     = value.Day, year = value.Year;
-	char* month = month_names[value.Month];
-	int hour    = value.Hour, min = value.Minute, sec = value.Second;
-
-	String_Format4(str, "%c, %p2 %c %p4", dayOfWeek, &day, month, &year);
-	String_Format3(str, " %p2:%p2:%p2 GMT", &hour, &min, &sec);
+	String_Format2(str, "%c, %p2 ", days_of_week[days % 7], &t.Day);
+	String_Format2(str, "%c %p4 ",    month_names[t.Month], &t.Year);
+	String_Format3(str, "%p2:%p2:%p2 GMT", &t.Hour, &t.Minute, &t.Second);
 }
 
 int Utils_ParseEnum(const String* text, int defValue, const char** names, int namesCount) {
@@ -141,10 +144,11 @@ void Utils_UNSAFE_GetFilename(STRING_REF String* path) {
 }
 
 int Utils_AccumulateWheelDelta(float* accumulator, float delta) {
+	int steps;
 	/* Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2) */
 	/* We must use rounding at final step, not at every intermediate step. */
 	*accumulator += delta;
-	int steps = (int)(*accumulator);
+	steps = (int)(*accumulator);
 	*accumulator -= steps;
 	return steps;
 }
@@ -163,6 +167,7 @@ uint8_t Utils_GetSkinType(const Bitmap* bmp) {
 uint32_t Utils_CRC32(const uint8_t* data, uint32_t length) {
 	uint32_t crc = 0xffffffffUL;
 	int i;
+
 	for (i = 0; i < length; i++) {
 		crc = Utils_Crc32Table[(crc ^ data[i]) & 0xFF] ^ (crc >> 8);
 	}

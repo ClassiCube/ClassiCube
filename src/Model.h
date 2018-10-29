@@ -89,13 +89,6 @@ struct BoxDesc {
 	float RotX,RotY,RotZ;        /* Rotation origin point */
 };
 
-/* Sets the texture origin for this part within the texture atlas. */
-void BoxDesc_TexOrigin(struct BoxDesc* desc, int x, int y);
-/* Expands the corners of this box outwards by the given amount in pixel coordinates. */
-void BoxDesc_Expand(struct BoxDesc* desc, float amount);
-/* Swaps the min and max X around, resulting in the part being drawn mirrored. */
-void BoxDesc_MirrorX(struct BoxDesc* desc);
-
 /* Builds a box model assuming the follow texture layout:
 let SW = sides width, BW = body width, BH = body height
 *********************************************************************************************

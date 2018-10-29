@@ -442,6 +442,7 @@ static void Classic_LevelDataChunk(uint8_t* data) {
 	int usedLength;
 	float progress;
 	uint32_t left, read;
+	uint8_t value;
 
 	/* Workaround for some servers that send LevelDataChunk before LevelInit due to their async sending behaviour */
 	if (!map_begunLoading) Classic_StartLoading();
@@ -453,7 +454,7 @@ static void Classic_LevelDataChunk(uint8_t* data) {
 	map_part.Meta.Mem.Length = usedLength;
 
 	data += 1024;
-	uint8_t value = *data; /* progress in original classic, but we ignore it */
+	value = *data; /* progress in original classic, but we ignore it */
 
 	if (!map_gzHeader.Done) {
 		ReturnCode res = GZipHeader_Read(&map_part, &map_gzHeader);
@@ -660,6 +661,7 @@ static void Classic_SetPermission(uint8_t* data) {
 
 static void Classic_ReadAbsoluteLocation(uint8_t* data, EntityID id, bool interpolate) {
 	int x, y, z;
+	Vector3 pos;
 	float rotY, headX;
 	struct LocationUpdate update;
 
@@ -678,7 +680,7 @@ static void Classic_ReadAbsoluteLocation(uint8_t* data, EntityID id, bool interp
 	y -= 51; /* Convert to feet position */
 	if (id == ENTITIES_SELF_ID) y += 22;
 
-	Vector3 pos = { x/32.0f, y/32.0f, z/32.0f };
+	pos.X = x/32.0f; pos.Y = y/32.0f; pos.Z = z/32.0f;
 	rotY  = Math_Packed2Deg(*data++);
 	headX = Math_Packed2Deg(*data++);
 
@@ -961,17 +963,20 @@ static void CPE_HoldThis(uint8_t* data) {
 }
 
 static void CPE_SetTextHotkey(uint8_t* data) {
+	uint32_t keyCode;
+	uint8_t keyMods;
+	Key key;
 	char actionBuffer[STRING_SIZE];
 	String action = String_FromArray(actionBuffer);
 	
 	data += STRING_SIZE; /* skip label */
 	Handlers_ReadString(&data, &action);
 
-	uint32_t keyCode  = Stream_GetU32_BE(data); data += 4;
-	uint8_t keyMods = *data;
+	keyCode = Stream_GetU32_BE(data); data += 4;
+	keyMods = *data;
 	if (keyCode > 255) return;
 
-	Key key = Hotkeys_LWJGL[keyCode];
+	key = Hotkeys_LWJGL[keyCode];
 	if (key == Key_None) return;
 	Platform_Log3("CPE hotkey added: %c, %b: %s", Key_Names[key], &keyMods, &action);
 
@@ -1005,8 +1010,7 @@ static void CPE_ExtAddPlayerName(uint8_t* data) {
 	Handlers_RemoveEndPlus(&listName);
 
 	/* Workarond for server software that declares support for ExtPlayerList, but sends AddEntity then AddPlayerName */
-	int mask = id >> 3, bit = 1 << (id & 0x7);
-	classic_tabList[mask] &= (uint8_t)~bit;
+	classic_tabList[id >> 3] &= (uint8_t)~(1 << (id & 0x7));
 	Handlers_AddTablistEntry(id, &playerName, &listName, &groupName, groupRank);
 }
 
@@ -1061,7 +1065,7 @@ static void CPE_SetEnvCol(uint8_t* data) {
 	int r = Stream_GetU16_BE(&data[0]);
 	int g = Stream_GetU16_BE(&data[2]);
 	int b = Stream_GetU16_BE(&data[4]);
-	bool invalid = r > 255 || g > 255 || b > 255;
+	bool invalid  = r > 255 || g > 255 || b > 255;
 	PackedCol col = PACKEDCOL_CONST((uint8_t)r, (uint8_t)g, (uint8_t)b, 255);
 
 	if (variable == 0) {
@@ -1097,6 +1101,8 @@ static void CPE_ChangeModel(uint8_t* data) {
 }
 
 static void CPE_EnvSetMapAppearance(uint8_t* data) {
+	int maxViewDist;
+
 	CPE_SetMapEnvUrl(data);
 	Env_SetSidesBlock(data[64]);
 	Env_SetEdgeBlock(data[65]);
@@ -1105,7 +1111,7 @@ static void CPE_EnvSetMapAppearance(uint8_t* data) {
 
 	/* Version 2 */
 	Env_SetCloudsHeight((int16_t)Stream_GetU16_BE(&data[68]));
-	int maxViewDist   = (int16_t)Stream_GetU16_BE(&data[70]);
+	maxViewDist       = (int16_t)Stream_GetU16_BE(&data[70]);
 	Game_MaxViewDistance = maxViewDist <= 0 ? 32768 : maxViewDist;
 	Game_SetViewDistance(Game_UserViewDistance);
 }
@@ -1116,6 +1122,9 @@ static void CPE_EnvWeatherType(uint8_t* data) {
 
 static void CPE_HackControl(uint8_t* data) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct PhysicsComp* physics;
+	int jumpHeight;
+
 	p->Hacks.CanFly                  = *data++ != 0;
 	p->Hacks.CanNoclip               = *data++ != 0;
 	p->Hacks.CanSpeed                = *data++ != 0;
@@ -1123,8 +1132,8 @@ static void CPE_HackControl(uint8_t* data) {
 	p->Hacks.CanUseThirdPersonCamera = *data++ != 0;
 	LocalPlayer_CheckHacksConsistency();
 
-	int jumpHeight = Stream_GetU16_BE(data);
-	struct PhysicsComp* physics = &p->Physics;
+	jumpHeight = Stream_GetU16_BE(data);
+	physics    = &p->Physics;
 	if (jumpHeight == UInt16_MaxValue) { /* special value of -1 to reset default */
 		physics->JumpVel = HacksComp_CanJumpHigher(&p->Hacks) ? physics->UserJumpVel : 0.42f;
 	} else {
@@ -1153,8 +1162,10 @@ static void CPE_ExtAddEntity2(uint8_t* data) {
 static void CPE_BulkBlockUpdate(uint8_t* data) {
 	int32_t indices[BULK_MAX_BLOCKS];
 	BlockID blocks[BULK_MAX_BLOCKS];
-	int i, count = 1 + *data++;
-	
+	int index, i;
+	int x, y, z;
+	int count = 1 + *data++;
+
 	for (i = 0; i < count; i++) {
 		indices[i] = Stream_GetU32_BE(data); data += 4;
 	}
@@ -1176,9 +1187,8 @@ static void CPE_BulkBlockUpdate(uint8_t* data) {
 		data += BULK_MAX_BLOCKS / 4;
 	}
 
-	int x, y, z;
 	for (i = 0; i < count; i++) {
-		int index = indices[i];
+		index = indices[i];
 		if (index < 0 || index >= World_BlocksSize) continue;
 		World_Unpack(index, x, y, z);
 
@@ -1190,9 +1200,11 @@ static void CPE_BulkBlockUpdate(uint8_t* data) {
 
 static void CPE_SetTextColor(uint8_t* data) {
 	PackedCol c;
-	c.R = *data++; c.G = *data++; c.B = *data++; c.A = *data++;
+	uint8_t code;
 
-	uint8_t code = *data;
+	c.R = *data++; c.G = *data++; c.B = *data++; c.A = *data++;
+	code = *data;
+
 	/* disallow space, null, and colour code specifiers */
 	if (code == '\0' || code == ' ' || code == 0xFF) return;
 	if (code == '%' || code == '&') return;
@@ -1369,7 +1381,8 @@ static void BlockDefs_OnBlockUpdated(BlockID block, bool didBlockLight) {
 }
 
 static TextureLoc BlockDefs_Tex(uint8_t** ptr) {
-	TextureLoc loc; uint8_t* data = *ptr;
+	TextureLoc loc; 
+	uint8_t* data = *ptr;
 
 	if (!cpe_extTextures) {
 		loc = *data++;
@@ -1383,6 +1396,7 @@ static TextureLoc BlockDefs_Tex(uint8_t** ptr) {
 static BlockID BlockDefs_DefineBlockCommonStart(uint8_t** ptr, bool uniqueSideTexs) {
 	BlockID block;
 	bool didBlockLight;
+	float speedLog2;
 	uint8_t sound;
 	uint8_t* data = *ptr;
 
@@ -1397,9 +1411,9 @@ static BlockID BlockDefs_DefineBlockCommonStart(uint8_t** ptr, bool uniqueSideTe
 	Block_SetName(block, &name);
 	Block_SetCollide(block, *data++);
 
-	float multiplierExponent = (*data++ - 128) / 64.0f;
+	speedLog2 = (*data++ - 128) / 64.0f;
 	#define LOG_2 0.693147180559945
-	Block_SpeedMultiplier[block] = (float)Math_Exp(LOG_2 * multiplierExponent); /* pow(2, x) */
+	Block_SpeedMultiplier[block] = (float)Math_Exp(LOG_2 * speedLog2); /* pow(2, x) */
 
 	Block_SetTex(BlockDefs_Tex(&data), FACE_YMAX, block);
 	if (uniqueSideTexs) {

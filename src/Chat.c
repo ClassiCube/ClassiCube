@@ -84,17 +84,16 @@ static void Chat_DisableLogging(void) {
 
 static void Chat_OpenLog(DateTime* now) {	
 	void* file;
-	int i, year, month, day;
+	int i;
 	ReturnCode res;
 
 	String* path = &Chat_LogPath;
 	if (!Utils_EnsureDirectory("logs")) { Chat_DisableLogging(); return; }
-	year = now->Year; month = now->Month; day = now->Day;
 
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
 	for (i = 0; i < 20; i++) {
 		path->length = 0;
-		String_Format4(path, "logs%r%p4-%p2-%p2 ", &Directory_Separator, &year, &month, &day);
+		String_Format4(path, "logs%r%p4-%p2-%p2 ", &Directory_Separator, &now->Year, &now->Month, &now->Day);
 
 		if (i > 0) {
 			String_Format2(path, "%s _%i.log", &Chat_LogName, &i);
@@ -121,7 +120,6 @@ static void Chat_OpenLog(DateTime* now) {
 static void Chat_AppendLog(const String* text) {
 	char strBuffer[STRING_SIZE * 2];
 	String str = String_FromArray(strBuffer);
-	int hour, minute, second;
 
 	DateTime now;
 	ReturnCode res;
@@ -137,8 +135,7 @@ static void Chat_AppendLog(const String* text) {
 	if (!Chat_LogStream.Meta.File) return;
 
 	/* [HH:mm:ss] text */
-	hour = now.Hour; minute = now.Minute; second = now.Second;
-	String_Format3(&str, "[%p2:%p2:%p2] ", &hour, &minute, &second);
+	String_Format3(&str, "[%p2:%p2:%p2] ", &now.Hour, &now.Minute, &now.Second);
 	String_AppendColorless(&str, text);
 
 	res = Stream_WriteLine(&Chat_LogStream, &str);

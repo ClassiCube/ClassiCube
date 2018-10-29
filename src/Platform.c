@@ -228,13 +228,11 @@ void Platform_LogConst(const char* message) {
 
 /* TODO: check this is actually accurate */
 uint64_t sw_freqMul = 1, sw_freqDiv = 1;
-int Stopwatch_ElapsedMicroseconds(uint64_t* timer) {
-	uint64_t beg = *timer;
-	Stopwatch_Measure(timer);
-	uint64_t end = *timer;
-
+int Stopwatch_ElapsedMicroseconds(uint64_t beg, uint64_t end) {
+	uint64_t delta;
 	if (end < beg) return 0;
-	uint64_t delta = ((end - beg) * sw_freqMul) / sw_freqDiv;
+
+	delta = ((end - beg) * sw_freqMul) / sw_freqDiv;
 	return (int)delta;
 }
 
@@ -255,13 +253,13 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 }
 
 static void Platform_FromSysTime(DateTime* time, SYSTEMTIME* sysTime) {
-	time->Year   = (uint16_t)sysTime->wYear;
-	time->Month  =  (uint8_t)sysTime->wMonth;
-	time->Day    =  (uint8_t)sysTime->wDay;
-	time->Hour   =  (uint8_t)sysTime->wHour;
-	time->Minute =  (uint8_t)sysTime->wMinute;
-	time->Second =  (uint8_t)sysTime->wSecond;
-	time->Milli  = (uint16_t)sysTime->wMilliseconds;
+	time->Year   = sysTime->wYear;
+	time->Month  = sysTime->wMonth;
+	time->Day    = sysTime->wDay;
+	time->Hour   = sysTime->wHour;
+	time->Minute = sysTime->wMinute;
+	time->Second = sysTime->wSecond;
+	time->Milli  = sysTime->wMilliseconds;
 }
 
 void DateTime_CurrentUTC(DateTime* time) {
@@ -277,15 +275,16 @@ void DateTime_CurrentLocal(DateTime* time) {
 }
 
 bool sw_highRes;
-void Stopwatch_Measure(uint64_t* timer) {
-	if (sw_highRes) {
-		LARGE_INTEGER t;
+uint64_t Stopwatch_Measure(void) {
+	LARGE_INTEGER t;
+	FILETIME ft;
+
+	if (sw_highRes) {		
 		QueryPerformanceCounter(&t);
-		*timer = (uint64_t)t.QuadPart;
-	} else {
-		FILETIME ft;
+		return (uint64_t)t.QuadPart;
+	} else {		
 		GetSystemTimeAsFileTime(&ft);
-		*timer = (uint64_t)ft.dwLowDateTime | ((uint64_t)ft.dwHighDateTime << 32);
+		return (uint64_t)ft.dwLowDateTime | ((uint64_t)ft.dwHighDateTime << 32);
 	}
 }
 #endif
@@ -313,7 +312,9 @@ static void Platform_FromSysTime(DateTime* time, struct tm* sysTime) {
 }
 
 void DateTime_CurrentUTC(DateTime* time_) {
-	struct timeval cur; struct tm utc_time;
+	struct timeval cur; 
+	struct tm utc_time;
+
 	gettimeofday(&cur, NULL);
 	gmtime_r(&cur.tv_sec, &utc_time);
 
@@ -322,7 +323,9 @@ void DateTime_CurrentUTC(DateTime* time_) {
 }
 
 void DateTime_CurrentLocal(DateTime* time_) {
-	struct timeval cur; struct tm loc_time;
+	struct timeval cur; 
+	struct tm loc_time;
+
 	gettimeofday(&cur, NULL);
 	localtime_r(&cur.tv_sec, &loc_time);
 
@@ -333,16 +336,16 @@ void DateTime_CurrentLocal(DateTime* time_) {
 #define NS_PER_SEC 1000000000ULL
 #endif
 #ifdef CC_BUILD_NIX
-void Stopwatch_Measure(uint64_t* timer) {
+uint64_t Stopwatch_Measure(void) {
 	struct timespec t;
 	/* TODO: CLOCK_MONOTONIC_RAW ?? */
 	clock_gettime(CLOCK_MONOTONIC, &t);
-	*timer = (uint64_t)t.tv_sec * NS_PER_SEC + t.tv_nsec;
+	return (uint64_t)t.tv_sec * NS_PER_SEC + t.tv_nsec;
 }
 #endif
 #ifdef CC_BUILD_OSX
-void Stopwatch_Measure(uint64_t* timer) {
-	*timer = mach_absolute_time();
+uint64_t Stopwatch_Measure(void) {
+	return mach_absolute_time();
 }
 #endif
 
@@ -409,19 +412,20 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 }
 
 ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* time) {
-	void* file; ReturnCode result = File_Open(&file, path);
-	if (result) return result;
+	void* file; 
+	ReturnCode res = File_Open(&file, path);
+	if (res) return res;
 
 	FILETIME ft;
 	if (GetFileTime(file, NULL, NULL, &ft)) {
 		uint64_t raw = ft.dwLowDateTime | ((uint64_t)ft.dwHighDateTime << 32);
 		*time = FileTime_TotalMS(raw);
 	} else {
-		result = GetLastError();
+		res = GetLastError();
 	}
 
 	File_Close(file);
-	return result;
+	return res;
 }
 
 ReturnCode File_Do(void** file, const String* path, DWORD access, DWORD createMode) {
@@ -437,8 +441,8 @@ ReturnCode File_Create(void** file, const String* path) {
 	return File_Do(file, path, GENERIC_WRITE, CREATE_ALWAYS);
 }
 ReturnCode File_Append(void** file, const String* path) {
-	ReturnCode result = File_Do(file, path, GENERIC_WRITE, OPEN_ALWAYS);
-	if (result) return result;
+	ReturnCode res = File_Do(file, path, GENERIC_WRITE, OPEN_ALWAYS);
+	if (res) return res;
 	return File_Seek(*file, 0, FILE_SEEKFROM_END);
 }
 
@@ -554,8 +558,8 @@ ReturnCode File_Create(void** file, const String* path) {
 	return File_Do(file, path, O_WRONLY | O_CREAT | O_TRUNC);
 }
 ReturnCode File_Append(void** file, const String* path) {
-	ReturnCode result = File_Do(file, path, O_WRONLY | O_CREAT);
-	if (result) return result;
+	ReturnCode res = File_Do(file, path, O_WRONLY | O_CREAT);
+	if (res) return res;
 	return File_Seek(*file, 0, FILE_SEEKFROM_END);
 }
 
@@ -1005,12 +1009,13 @@ static void Font_Init(void) {
 #ifdef CC_BUILD_OSX
 	static String dir = String_FromConst("/Library/Fonts");
 #endif
+	FT_Error err;
 
 	ft_mem.alloc   = FT_AllocWrapper;
 	ft_mem.free    = FT_FreeWrapper;
 	ft_mem.realloc = FT_ReallocWrapper;
 
-	FT_Error err = FT_New_Library(&ft_mem, &ft_lib);
+	err = FT_New_Library(&ft_mem, &ft_lib);
 	if (err) ErrorHandler_Fail2(err, "Failed to init freetype");
 
 	FT_Add_Default_Modules(ft_lib);
@@ -1074,23 +1079,23 @@ ReturnCode Socket_Write(SocketPtr socket, uint8_t* buffer, uint32_t count, uint3
 }
 
 ReturnCode Socket_Close(SocketPtr socket) {
-	ReturnCode result = 0;
-	ReturnCode result1, result2;
+	ReturnCode res = 0;
+	ReturnCode res1, res2;
 
 #ifdef CC_BUILD_WIN
-	result1 = shutdown(socket, SD_BOTH);
+	res1 = shutdown(socket, SD_BOTH);
 #else
-	result1 = shutdown(socket, SHUT_RDWR);
+	res1 = shutdown(socket, SHUT_RDWR);
 #endif
-	if (result1 == -1) result = Socket__Error();
+	if (res1 == -1) res = Socket__Error();
 
 #ifdef CC_BUILD_WIN
-	result2 = closesocket(socket);
+	res2 = closesocket(socket);
 #else
-	result2 = close(socket);
+	res2 = close(socket);
 #endif
-	if (result2 == -1) result = Socket__Error();
-	return result;
+	if (res2 == -1) res = Socket__Error();
+	return res;
 }
 
 ReturnCode Socket_Select(SocketPtr socket, int selectMode, bool* success) {
@@ -1533,6 +1538,9 @@ static ALenum Audio_FreeSource(struct AudioContext* ctx) {
 }
 
 void Audio_Init(AudioHandle* handle, int buffers) {
+	ALenum err;
+	int i, j;
+
 	Mutex_Lock(&audio_lock);
 	{
 		if (!audio_context) Audio_CreateContext();
@@ -1541,10 +1549,9 @@ void Audio_Init(AudioHandle* handle, int buffers) {
 	Mutex_Unlock(&audio_lock);
 
 	alDistanceModel(AL_NONE);
-	ALenum err = alGetError();
+	err = alGetError();
 	if (err) { ErrorHandler_Fail2(err, "DistanceModel"); }
 
-	int i, j;
 	for (i = 0; i < Array_Elems(Audio_Contexts); i++) {
 		struct AudioContext* ctx = &Audio_Contexts[i];
 		if (ctx->Count) continue;
@@ -1563,13 +1570,14 @@ void Audio_Init(AudioHandle* handle, int buffers) {
 
 ReturnCode Audio_Free(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
+	ALenum err;
 	if (!ctx->Count) return 0;
 
 	ctx->Count  = 0;
 	struct AudioFormat fmt = { 0 };
 	ctx->Format = fmt;
 
-	ALenum err = Audio_FreeSource(ctx);
+	err = Audio_FreeSource(ctx);
 	if (err) return err;
 
 	Mutex_Lock(&audio_lock);
@@ -1595,12 +1603,12 @@ static ALenum GetALFormat(int channels, int bitsPerSample) {
 ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	struct AudioFormat*  cur = &ctx->Format;
-	if (AudioFormat_Eq(cur, format)) return 0;
+	ALenum err;
 
+	if (AudioFormat_Eq(cur, format)) return 0;
 	ctx->DataFormat = GetALFormat(format->Channels, format->BitsPerSample);
 	ctx->Format     = *format;
-
-	ALenum err;
+	
 	if ((err = Audio_FreeSource(ctx))) return err;
 	alGenSources(1, &ctx->Source);
 	if ((err = alGetError())) return err;
@@ -1613,8 +1621,8 @@ ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, uint32_t dataSize) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	ALuint buffer = ctx->Buffers[idx];
-	ctx->Completed[idx] = false;
 	ALenum err;
+	ctx->Completed[idx] = false;
 
 	alBufferData(buffer, ctx->DataFormat, data, dataSize, ctx->Format.SampleRate);
 	if ((err = alGetError())) return err;
@@ -1712,19 +1720,21 @@ int Platform_ConvertString(void* data, const String* src) {
 }
 
 void Platform_Init(void) {
-	Platform_InitDisplay();
-	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */
-
 	LARGE_INTEGER freq;
+	WSADATA wsaData;
+	ReturnCode res;
+
+	Platform_InitDisplay();
+	heap = GetProcessHeap();
+
 	sw_highRes = QueryPerformanceFrequency(&freq);
 	if (sw_highRes) {
 		sw_freqMul = 1000 * 1000;
 		sw_freqDiv = freq.QuadPart;
 	} else { sw_freqDiv = 10; }
-
-	WSADATA wsaData;
-	ReturnCode wsaResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	ErrorHandler_CheckOrFail(wsaResult, "WSAStartup failed");
+	
+	res = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (res) ErrorHandler_Fail2(res, "WSAStartup failed");
 }
 
 void Platform_Free(void) {
@@ -1767,8 +1777,8 @@ ReturnCode Platform_StartShell(const String* args) {
 }
 
 static String Platform_NextArg(STRING_REF String* args) {
-	int end;
 	String arg;
+	int end;
 
 	/* get rid of leading spaces before arg */
 	while (args->length && args->buffer[0] == ' ') {
@@ -1816,7 +1826,7 @@ int Platform_ConvertString(void* data, const String* src) {
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
 
 	for (i = 0; i < src->length; i++) {
-		cur = data + len;
+		cur = dst + len;
 		cp  = Convert_CP437ToUnicode(src->buffer[i]);	
 		len += Convert_UnicodeToUtf8(cp, cur);
 	}

@@ -263,6 +263,7 @@ struct Screen* InventoryScreen_UNSAFE_RawPointer = (struct Screen*)&InventoryScr
 *#########################################################################################################################*/
 struct StatusScreen StatusScreen_Instance;
 static void StatusScreen_MakeText(struct StatusScreen* s, String* status) {
+	int indices, ping;
 	s->FPS = (int)(s->Frames / s->Accumulator);
 	String_Format1(status, "%i fps, ", &s->FPS);
 
@@ -272,13 +273,12 @@ static void StatusScreen_MakeText(struct StatusScreen* s, String* status) {
 		if (Game_ChunkUpdates) {
 			String_Format1(status, "%i chunks/s, ", &Game_ChunkUpdates);
 		}
-		int indices = ICOUNT(Game_Vertices);
+
+		indices = ICOUNT(Game_Vertices);
 		String_Format1(status, "%i vertices", &indices);
 
-		int ping = PingList_AveragePingMs();
-		if (ping) {
-			String_Format1(status, ", ping %i ms", &ping);
-		}
+		ping = PingList_AveragePingMs();
+		if (ping) String_Format1(status, ", ping %i ms", &ping);
 	}
 }
 
@@ -623,6 +623,10 @@ static void GeneratingScreen_Init(void* screen) {
 }
 
 static void GeneratingScreen_EndGeneration(void) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocationUpdate update;
+	float x, z;
+
 	Gui_CloseActive();
 	Gen_Done = false;
 
@@ -634,11 +638,10 @@ static void GeneratingScreen_EndGeneration(void) {
 	World_SetNewMap(Gen_Blocks, World_BlocksSize, Gen_Width, Gen_Height, Gen_Length);
 	Gen_Blocks = NULL;
 
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	float x = (World_Width / 2) + 0.5f, z = (World_Length / 2) + 0.5f;
+	x = (World_Width / 2) + 0.5f; z = (World_Length / 2) + 0.5f;
 	p->Spawn = Respawn_FindSpawnPosition(x, z, p->Base.Size);
 
-	struct LocationUpdate update; LocationUpdate_MakePosAndOri(&update, p->Spawn, 0.0f, 0.0f, false);
+	LocationUpdate_MakePosAndOri(&update, p->Spawn, 0.0f, 0.0f, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
 
 	Camera_CurrentPos = Camera_Active->GetPosition(0.0f);
@@ -717,11 +720,13 @@ static void ChatScreen_OpenInput(struct ChatScreen* s, const String* initialText
 }
 
 static void ChatScreen_ResetChat(struct ChatScreen* s) {
-	Elem_TryFree(&s->Chat);
+	String msg;
 	int i;
+	Elem_TryFree(&s->Chat);
+
 	for (i = s->ChatIndex; i < s->ChatIndex + Game_ChatLines; i++) {
 		if (i >= 0 && i < Chat_Log.Count) {
-			String msg = StringsBuffer_UNSAFE_Get(&Chat_Log, i);
+			msg = StringsBuffer_UNSAFE_Get(&Chat_Log, i);
 			TextGroupWidget_PushUpAndReplaceLast(&s->Chat, &msg);
 		}
 	}
@@ -761,9 +766,11 @@ static void ChatScreen_ConstructWidgets(struct ChatScreen* s) {
 }
 
 static void ChatScreen_SetInitialMessages(struct ChatScreen* s) {
+	String msg;
+	int i;
+
 	s->ChatIndex = Chat_Log.Count - Game_ChatLines;
 	ChatScreen_ResetChat(s);
-	String msg;
 #define ChatScreen_Set(group, idx, src) msg = String_FromRawArray(src.Buffer); TextGroupWidget_SetText(group, idx, &msg);
 
 	ChatScreen_Set(&s->Status, 2, Chat_Status[0]);
@@ -776,8 +783,7 @@ static void ChatScreen_SetInitialMessages(struct ChatScreen* s) {
 
 	msg = String_FromRawArray(Chat_Announcement.Buffer);
 	TextWidget_Set(&s->Announcement, &msg, &s->AnnouncementFont);
-
-	int i;
+	
 	for (i = 0; i < s->ClientStatus.LinesCount; i++) {
 		ChatScreen_Set(&s->ClientStatus, i, Chat_ClientStatus[i]);
 	}
@@ -788,12 +794,11 @@ static void ChatScreen_SetInitialMessages(struct ChatScreen* s) {
 }
 
 static void ChatScreen_CheckOtherStatuses(struct ChatScreen* s) {
+	static String texPack = String_FromConst("texturePack");
 	struct AsyncRequest request;
 	int progress;
 	bool hasRequest = AsyncDownloader_GetCurrent(&request, &progress);
-
-	String id = String_FromRawArray(request.ID);
-	String texPack = String_FromConst("texturePack");
+	String id = String_FromRawArray(request.ID);	
 
 	/* Is terrain / texture pack currently being downloaded? */
 	if (!hasRequest || !String_Equals(&id, &texPack)) {
