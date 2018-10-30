@@ -13,7 +13,7 @@ extern const char* FpsLimit_Names[FPS_LIMIT_COUNT];
 #define OPT_USE_MUSIC "usemusic"
 #define OPT_USE_SOUND "usesound"
 #define OPT_MUSIC_VOLUME "musicvolume"
-#define OPT_SOUND_VOLUME "soundvolume"
+#define OPT_SOUND_VOLUME "soundsvolume"
 #define OPT_FORCE_OPENAL "forceopenal"
 #define OPT_FORCE_OLD_OPENGL "force-oldgl"
 

@@ -362,24 +362,28 @@ static void StatusScreen_ContextLost(void* screen) {
 	Elem_TryFree(&s->HackStates);
 }
 
-static void StatusScreen_ContextRecreated(void* screen) {
+static void StatusScreen_ContextRecreated(void* screen) {	
+	static String chars  = String_FromConst("0123456789-, ()");
+	static String prefix = String_FromConst("Position: ");
 	struct StatusScreen* s = screen;
-	String chars  = String_FromConst("0123456789-, ()");
-	String prefix = String_FromConst("Position: ");
 
 	struct TextWidget* status = &s->Status;
+	struct TextWidget* hacks  = &s->HackStates;
+	int y;
+
+	y = 2;
 	TextWidget_Make(status);
-	Widget_SetLocation(status, ANCHOR_MIN, ANCHOR_MIN, 2, 2);
+	Widget_SetLocation(status, ANCHOR_MIN, ANCHOR_MIN, 2, y);
 	status->ReducePadding = true;
 	StatusScreen_Update(s, 1.0);
 
-	int elemHeight = status->Height + 2;
+	y += status->Height;
 	TextAtlas_Make(&s->PosAtlas, &chars, &s->Font, &prefix);
-	s->PosAtlas.Tex.Y = elemHeight;
+	s->PosAtlas.Tex.Y = y;
 
-	struct TextWidget* hacks = &s->HackStates; 
+	y += s->PosAtlas.Tex.Height;
 	TextWidget_Make(hacks);
-	Widget_SetLocation(hacks, ANCHOR_MIN, ANCHOR_MIN, 2, elemHeight * 2);
+	Widget_SetLocation(hacks, ANCHOR_MIN, ANCHOR_MIN, 2, y);
 	hacks->ReducePadding = true;
 	StatusScreen_UpdateHackState(s);
 }

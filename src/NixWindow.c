@@ -604,14 +604,8 @@ void Window_ProcessEvents(void) {
 
 			if (e.xselectionrequest.selection == xa_clipboard && e.xselectionrequest.target == xa_utf8_string && clipboard_copy_text.length) {
 				reply.xselection.property = Window_GetSelectionProperty(&e);
-				uint8_t data[1024];
-				int i, len = 0;
-
-				for (i = 0; i < clipboard_copy_text.length; i++) {
-					uint8_t* cur = data + len;
-					Codepoint cp = Convert_CP437ToUnicode(clipboard_copy_text.buffer[i]);				
-					len += Convert_UnicodeToUtf8(cp, cur);
-				}
+				char str[800];
+				int len = Platform_ConvertString(str, &clipboard_copy_text);
 
 				XChangeProperty(win_display, reply.xselection.requestor, reply.xselection.property, xa_utf8_string, 8,
 					PropModeReplace, data, len);

@@ -523,20 +523,20 @@ void Window_GetClipboardText(String* value) {
 void Window_SetClipboardText(const String* value) {
 	PasteboardRef pbRef;
 	CFDataRef cfData;
+	char str[800];
+	int len;
 	OSStatus err;
-	
+
 	pbRef = Window_GetPasteboard();
-	
-	err = PasteboardClear(pbRef);
+	err   = PasteboardClear(pbRef);
 	if (err) ErrorHandler_Fail2(err, "Clearing Pasteboard");
 	PasteboardSynchronize(pbRef);
-	
-	IntPtr ptr = Marshal.StringToHGlobalUni(value);
-	cfData = CFDataCreate(NULL, ptr, (value.Length + 1) * 2);
+
+	len = Platform_ConvertString(str, value);
+	CFDataCreate(NULL, str, len);
 	if (!cfData) ErrorHandler_Fail("CFDataCreate() returned null pointer");
-	
-	PasteboardPutItemFlavor(pbRef, 1, FMT_UTF16, cfData, 0);
-	Marshal.FreeHGlobal(ptr);
+
+	PasteboardPutItemFlavor(pbRef, 1, FMT_UTF8, cfData, 0);
 }
 /* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */
 
