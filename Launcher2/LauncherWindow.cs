@@ -63,7 +63,7 @@ namespace Launcher {
 			Window.Redraw += RedrawPending;
 			Keyboard.KeyDown += KeyDown;
 			
-			LoadFont();
+			LoadSettings();
 			logoFont = new Font(FontName, 32, FontStyle.Regular);
 			
 			string path = Assembly.GetExecutingAssembly().Location;
@@ -88,9 +88,11 @@ namespace Launcher {
 			IDrawer2D.Cols['g'] = new PackedCol(125, 125, 125);
 		}
 		
-		void LoadFont() {
+		void LoadSettings() {
 			Options.Load();
+			Client.CClient = Options.GetBool(OptionsKey.CClient, false);
 			FontName = Options.Get("gui-fontname", "Arial");
+			
 			try {
 				using (Font f = new Font(FontName, 16)) { }
 			} catch (Exception) {

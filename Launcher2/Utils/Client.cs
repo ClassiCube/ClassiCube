@@ -10,8 +10,17 @@ using OpenTK;
 namespace Launcher {
 
 	public static class Client {
-		
 		static DateTime lastJoin;
+		public static bool CClient;
+		
+		public static string GetExeName() {
+			if (!CClient) return "ClassicalSharp.exe";
+			
+			if (OpenTK.Configuration.RunningOnWindows)
+				return "ClassiCube.exe";
+			return "ClassiCube"; // TODO: OSX filename
+		}
+		
 		public static bool Start(ClientStartData data, bool classicubeSkins, ref bool shouldExit) {
 			if ((DateTime.UtcNow - lastJoin).TotalSeconds < 1)
 				return false;
@@ -29,7 +38,7 @@ namespace Launcher {
 		}
 		
 		static bool StartImpl(ClientStartData data, bool ccSkins, string args, ref bool shouldExit) {
-			if (!Platform.FileExists("ClassicalSharp.exe")) return false;
+			if (!Platform.FileExists(GetExeName())) return false;
 			
 			CheckSettings(data, ccSkins, out shouldExit);
 			try {
@@ -44,14 +53,9 @@ namespace Launcher {
 		}
 		
 		static void StartProcess(string args) {
-			string path = Path.Combine(Environment.CurrentDirectory, "ClassicalSharp.exe");
-			if (Options.GetBool("c-client", false)) {
-				path = path.Replace("ClassicalSharp.exe", "ClassiCube");
-				Process.Start(path, args);
-				return;
-			}
+			string path = Path.Combine(Environment.CurrentDirectory, GetExeName());
 			
-			if (Configuration.RunningOnMono) {
+			if (Configuration.RunningOnMono && !CClient) {
 				// We also need to handle the case of running Mono through wine
 				if (Configuration.RunningOnWindows) {
 					try {

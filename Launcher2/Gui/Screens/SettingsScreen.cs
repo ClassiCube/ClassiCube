@@ -22,6 +22,7 @@ namespace Launcher.Gui.Screens {
 			widgets[view.updatesIndex].OnClick = SwitchToUpdates;
 			widgets[view.coloursIndex].OnClick = SwitchToColours;
 			widgets[view.backIndex].OnClick = SwitchToMain;
+			widgets[view.clientIndex].OnClick = UseCClientClick;	
 			Resize();
 		}
 		
@@ -29,6 +30,15 @@ namespace Launcher.Gui.Screens {
 		void SwitchToUpdates(int x, int y) { game.SetScreen(new UpdatesScreen(game)); }
 		void SwitchToColours(int x, int y) { game.SetScreen(new ColoursScreen(game)); }
 		void SwitchToMain(int x, int y) { game.SetScreen(new MainScreen(game)); }
+		
+		void UseCClientClick(int mouseX, int mouseY) {
+			CheckboxWidget widget = (CheckboxWidget)widgets[view.clientIndex];
+			widget.Value = !widget.Value;
+			RedrawWidget(widget);
+			
+			Options.Set(OptionsKey.CClient, widget.Value);
+			Client.CClient = widget.Value;
+		}
 		
 		public override void Tick() { }
 

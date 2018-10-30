@@ -471,10 +471,12 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 }
 
 void Window_SetTitle(const String* title) {
+	char str[600];
 	CFStringRef titleCF;
-	/* TODO: Use UTF8 encoding instead!!!! */
-	/* Use Platform_ConvertString */
-	titleCF = CFStringCreateWithBytes(kCFAllocatorDefault, title->buffer, title->length, kCFStringEncodingASCII, false);
+	int len;
+	
+	len     = Platform_ConvertString(str, title);
+	titleCF = CFStringCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, false);
 	SetWindowTitleWithCFString(win_handle, titleCF);
 }
 

@@ -6,10 +6,11 @@ using Launcher.Gui.Widgets;
 
 namespace Launcher.Gui.Views {
 	public sealed class SettingsView : IView {
-		internal int backIndex, updatesIndex, modeIndex, coloursIndex;
+		internal int backIndex, updatesIndex, modeIndex;
+		internal int coloursIndex, clientIndex;
 		
 		public SettingsView(LauncherWindow game) : base(game) {
-			widgets = new Widget[7];
+			widgets = new Widget[9];
 		}
 
 		public override void Init() {
@@ -43,6 +44,12 @@ namespace Launcher.Gui.Views {
 				widgets[coloursIndex].Visible = false;
 				widgets[coloursIndex + 1].Visible = false;
 			}
+			
+			clientIndex = widgetIndex;
+			Makers.Checkbox(this, Client.CClient, 24)
+				.SetLocation(Anchor.Centre, Anchor.Centre, -175, 130);
+			Makers.Label(this, "Try experimental new client", textFont)
+				.SetLocation(Anchor.Centre, Anchor.Centre, -45, 130);
 			
 			backIndex = widgetIndex;
 			Makers.Button(this, "Back", 80, 35, titleFont)
