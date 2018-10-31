@@ -254,42 +254,6 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* Support for Mac fonts                                                 */
-  /*                                                                       */
-  /*   Define this macro if you want support for outline fonts in Mac      */
-  /*   format (mac dfont, mac resource, macbinary containing a mac         */
-  /*   resource) on non-Mac platforms.                                     */
-  /*                                                                       */
-  /*   Note that the `FOND' resource isn't checked.                        */
-  /*                                                                       */
-#define FT_CONFIG_OPTION_MAC_FONTS
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* Guessing methods to access embedded resource forks                    */
-  /*                                                                       */
-  /*   Enable extra Mac fonts support on non-Mac platforms (e.g.           */
-  /*   GNU/Linux).                                                         */
-  /*                                                                       */
-  /*   Resource forks which include fonts data are stored sometimes in     */
-  /*   locations which users or developers don't expected.  In some cases, */
-  /*   resource forks start with some offset from the head of a file.  In  */
-  /*   other cases, the actual resource fork is stored in file different   */
-  /*   from what the user specifies.  If this option is activated,         */
-  /*   FreeType tries to guess whether such offsets or different file      */
-  /*   names must be used.                                                 */
-  /*                                                                       */
-  /*   Note that normal, direct access of resource forks is controlled via */
-  /*   the FT_CONFIG_OPTION_MAC_FONTS option.                              */
-  /*                                                                       */
-#ifdef FT_CONFIG_OPTION_MAC_FONTS
-#define FT_CONFIG_OPTION_GUESSING_EMBEDDED_RFORK
-#endif
-
-
-  /*************************************************************************/
-  /*                                                                       */
   /* Allow the use of FT_Incremental_Interface to load typefaces that      */
   /* contain no glyph data, but supply it via a callback function.         */
   /* This is required by clients supporting document formats which         */
