@@ -987,7 +987,7 @@
       return error;
 
     /* let it fall through to normal loader (.ttf, .otf, etc.) */
-    return FT_Open_Face( library, &args, face_index, aface );
+    return FT_Open_Face( library, args, face_index, aface );
   }
 
 

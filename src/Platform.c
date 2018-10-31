@@ -891,11 +891,11 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 
 	/* For OSX font suitcase files */
 #ifdef CC_BUILD_OSX
-	char fileBuffer[FILENAME_SIZE + 1];
-	String file = String_NT_Array(fileBuffer);
-	String_Copy(&file, &path);
-	file.buffer[file.length] = '\0';
-	args.pathname = file.buffer;
+	char filenameBuffer[FILENAME_SIZE + 1];
+	String filename = String_NT_Array(filenameBuffer);
+	String_Copy(&filename, &path);
+	filename.buffer[filename.length] = '\0';
+	args.pathname = filename.buffer;
 #endif
 
 	err = FT_New_Face(ft_lib, &args, 0, &face);
@@ -948,7 +948,17 @@ static void Font_DirCallback(const String* path, void* obj) {
 	FT_Error err;
 
 	if (!Font_MakeArgs(path, &stream, &args)) return;
-	err = FT_Open_Face(ft_lib, &args, 0, &face);
+
+	/* For OSX font suitcase files */
+#ifdef CC_BUILD_OSX
+	char filenameBuffer[FILENAME_SIZE + 1];
+	String filename = String_NT_Array(filenameBuffer);
+	String_Copy(&filename, path);
+	filename.buffer[filename.length] = '\0';
+	args.pathname = filename.buffer;
+#endif
+
+	err = FT_New_Face(ft_lib, &args, 0, &face);
 	if (err) { stream.close(&stream); return; }
 
 	if (face->style_flags == FT_STYLE_FLAG_BOLD) {

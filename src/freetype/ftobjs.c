@@ -2221,7 +2221,6 @@
     FT_Error error;
     FT_UNUSED( args );
 
-
     error = IsMacBinary( library, stream, face_index, aface );
     if ( FT_ERR_EQ( error, Unknown_File_Format ) )
     {
@@ -2258,6 +2257,7 @@
 
   /* documentation is in freetype.h */
 
+#ifndef FT_MACINTOSH
   FT_EXPORT_DEF( FT_Error )
   FT_New_Face( FT_Library           library,
                 const FT_Open_Args*  args,
@@ -2266,6 +2266,7 @@
   {
     return FT_Open_Face( library, args, face_index, aface );
   }
+#endif
 
   FT_EXPORT_DEF( FT_Error )
   FT_Open_Face( FT_Library           library,

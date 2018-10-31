@@ -128,10 +128,7 @@ FT_BEGIN_HEADER
 #ifdef ECANCELED /* defined since 10.2 */
 #include "AvailabilityMacros.h"
 #endif
-#if defined( __LP64__ ) && \
-    ( MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_4 )
-#undef FT_MACINTOSH
-#endif
+#define FT_MACINTOSH 1
 
 #elif defined( __SC__ ) || defined( __MRC__ )
   /* Classic MacOS compilers */
