@@ -166,8 +166,10 @@ static void Window_RefreshBorders(void) {
 }
 
 static void Window_RefreshBounds(XEvent* e) {
-	Window_RefreshBorders();
 	Point2D loc;
+	Size2D size;
+	Window_RefreshBorders();
+	
 	loc.X = e->xconfigure.x - borderLeft;
 	loc.Y = e->xconfigure.y - borderTop;
 
@@ -177,8 +179,7 @@ static void Window_RefreshBounds(XEvent* e) {
 	}
 
 	/* Note: width and height denote the internal (client) size.
-	   To get the external (window) size, we need to add the border size. */
-	Size2D size;
+	   To get the external (window) size, we need to add the border size. */	
 	size.Width  = e->xconfigure.width  + borderLeft + borderRight;
 	size.Height = e->xconfigure.height + borderTop  + borderBottom;
 
@@ -195,9 +196,9 @@ static void Window_RefreshBounds(XEvent* e) {
 *#########################################################################################################################*/
 static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode);
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
-	win_display = DisplayDevice_Meta[0];
-	win_screen  = DisplayDevice_Meta[1];
-	win_rootWin = DisplayDevice_Meta[2];
+	win_display = DisplayDevice_Meta;
+	win_screen  = DefaultScreen(win_display);
+	win_rootWin = RootWindow(win_display, win_screen);
 
 	/* Open a display connection to the X server, and obtain the screen and root window */
 	uintptr_t addr = (uintptr_t)win_display;
@@ -263,11 +264,11 @@ String clipboard_paste_text = String_FromArray(clipboard_paste_buffer);
 
 void Window_GetClipboardText(String* value) {
 	Window owner = XGetSelectionOwner(win_display, xa_clipboard);
+	int i;
 	if (!owner) return; /* no window owner */
 
 	XConvertSelection(win_display, xa_clipboard, xa_utf8_string, xa_data_sel, win_handle, 0);
 	clipboard_paste_text.length = 0;
-	int i;
 
 	/* wait up to 1 second for SelectionNotify event to arrive */
 	for (i = 0; i < 10; i++) {
@@ -452,7 +453,7 @@ Atom Window_GetSelectionProperty(XEvent* e) {
 }
 
 bool Window_GetPendingEvent(XEvent* e) {
-	return XCheckWindowEvent(win_display, win_handle, win_eventMask, e) ||
+	return XCheckWindowEvent(win_display,   win_handle, win_eventMask, e) ||
 		XCheckTypedWindowEvent(win_display, win_handle, ClientMessage, e) ||
 		XCheckTypedWindowEvent(win_display, win_handle, SelectionNotify, e) ||
 		XCheckTypedWindowEvent(win_display, win_handle, SelectionRequest, e);
@@ -608,7 +609,7 @@ void Window_ProcessEvents(void) {
 				int len = Platform_ConvertString(str, &clipboard_copy_text);
 
 				XChangeProperty(win_display, reply.xselection.requestor, reply.xselection.property, xa_utf8_string, 8,
-					PropModeReplace, data, len);
+					PropModeReplace, str, len);
 			} else if (e.xselectionrequest.selection == xa_clipboard && e.xselectionrequest.target == xa_targets) {
 				reply.xselection.property = Window_GetSelectionProperty(&e);
 
@@ -623,28 +624,30 @@ void Window_ProcessEvents(void) {
 }
 
 Point2D Window_PointToClient(int x, int y) {
-	int ox, oy;
+	Point2D p;
 	Window child;
-	XTranslateCoordinates(win_display, win_rootWin, win_handle, x, y, &ox, &oy, &child);
-	Point2D p = { ox, oy }; return p;
+	XTranslateCoordinates(win_display, win_rootWin, win_handle, x, y, &p.X, &p.Y, &child);
+	return p;
 }
 
 Point2D Window_PointToScreen(int x, int y) {
-	int ox, oy;
+	Point2D p;
 	Window child;
-	XTranslateCoordinates(win_display, win_handle, win_rootWin, x, y, &ox, &oy, &child);
-	Point2D p = { ox, oy }; return p;
+	XTranslateCoordinates(win_display, win_handle, win_rootWin, x, y, &p.X, &p.Y, &child);
+	return p;
 }
 
 Point2D Window_GetScreenCursorPos(void) {
-	Window root, child;
-	int rootX, rootY, childX, childY, mask;
-	XQueryPointer(win_display, win_rootWin, &root, &child, &rootX, &rootY, &childX, &childY, &mask);
-	Point2D p = { rootX, rootY }; return p;
+	Window rootW, childW;
+	Point2D root, child;
+	unsigned int mask;
+
+	XQueryPointer(win_display, win_rootWin, &rootW, &childW, &root.X, &root.Y, &child.X, &child.Y, &mask);
+	return root;
 }
 
 void Window_SetScreenCursorPos(int x, int y) {
-	XWarpPointer(win_display, NULL, win_rootWin, 0, 0, 0, 0, x, y);
+	XWarpPointer(win_display, None, win_rootWin, 0, 0, 0, 0, x, y);
 	XFlush(win_display); /* TODO: not sure if XFlush call is necessary */
 }
 
@@ -700,7 +703,7 @@ void GLContext_Free(void) {
 	if (!ctx_Handle) return;
 
 	if (glXGetCurrentContext() == ctx_Handle) {
-		glXMakeCurrent(win_display, NULL, NULL);
+		glXMakeCurrent(win_display, None, NULL);
 	}
 	glXDestroyContext(win_display, ctx_Handle);
 	ctx_Handle = NULL;
@@ -716,10 +719,11 @@ void GLContext_SwapBuffers(void) {
 }
 
 void GLContext_SetVSync(bool enabled) {
+	int res;
 	if (!ctx_supports_vSync) return;
 
-	int result = glXSwapIntervalSGI(enabled);
-	if (result != 0) {Platform_Log1("Set VSync failed, error: %i", &result); }
+	res = glXSwapIntervalSGI(enabled);
+	if (res) Platform_Log1("Set VSync failed, error: %i", &res);
 }
 
 static void GLContext_GetAttribs(struct GraphicsMode* mode, int* attribs) {
@@ -747,16 +751,21 @@ static void GLContext_GetAttribs(struct GraphicsMode* mode, int* attribs) {
 
 static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 	int attribs[20];
-	GLContext_GetAttribs(mode, attribs);
-	int major = 0, minor = 0, fbcount;
+	int major, minor;
+	XVisualInfo* visual = NULL;
+
+	int fbcount;
+	GLXFBConfig* fbconfigs;
+	XVisualInfo info;
+
+	GLContext_GetAttribs(mode, attribs);	
 	if (!glXQueryVersion(win_display, &major, &minor)) {
 		ErrorHandler_Fail("glXQueryVersion failed");
 	}
 
-	XVisualInfo* visual = NULL;
 	if (major >= 1 && minor >= 3) {
 		/* ChooseFBConfig returns an array of GLXFBConfig opaque structures */
-		GLXFBConfig* fbconfigs = glXChooseFBConfig(win_display, win_screen, attribs, &fbcount);
+		fbconfigs = glXChooseFBConfig(win_display, win_screen, attribs, &fbcount);
 		if (fbconfigs && fbcount) {
 			/* Use the first GLXFBConfig from the fbconfigs array (best match) */
 			visual = glXGetVisualFromFBConfig(win_display, *fbconfigs);
@@ -772,7 +781,7 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 		ErrorHandler_Fail("Requested GraphicsMode not available.");
 	}
 
-	XVisualInfo info = *visual;
+	info = *visual;
 	XFree(visual);
 	return info;
 }

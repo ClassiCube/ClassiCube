@@ -439,7 +439,6 @@ static void Window_ConnectEvents(void) {
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
 	Rect r;
 	OSStatus res;
-	
 	ProcessSerialNumber psn;
 	
 	r.left = x; r.right  = x + width; 

@@ -1,7 +1,6 @@
 #include "String.h"
 #include "Funcs.h"
 #include "ErrorHandler.h"
-#include "ExtMath.h"
 #include "Platform.h"
 #include "Stream.h"
 
@@ -223,7 +222,7 @@ bool String_AppendFloat(String* str, float num, int fracDigits) {
 
 	for (i = 0; i < fracDigits; i++) {
 		frac *= 10;
-		digit = Math_AbsI((int)frac) % 10;
+		digit = (int)frac % 10;
 		if (!String_Append(str, '0' + digit)) return false;
 	}
 	return true;
@@ -278,10 +277,11 @@ bool String_AppendString(String* str, const String* src) {
 }
 
 bool String_AppendColorless(String* str, const String* src) {
+	char c;
 	int i;
 
 	for (i = 0; i < src->length; i++) {
-		char c = src->buffer[i];
+		c = src->buffer[i];
 		if (c == '&') { i++; continue; } /* Skip over the following colour code */
 		if (!String_Append(str, c)) return false;
 	}

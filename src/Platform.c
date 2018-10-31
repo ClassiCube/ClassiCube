@@ -355,20 +355,29 @@ uint64_t Stopwatch_Measure(void) {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WIN
 bool Directory_Exists(const String* path) {
-	WCHAR str[300]; Platform_ConvertString(str, path);
-	DWORD attribs = GetFileAttributesW(str);
+	WCHAR str[300];
+	DWORD attribs;
+
+	Platform_ConvertString(str, path);
+	attribs = GetFileAttributesW(str);
 	return attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 ReturnCode Directory_Create(const String* path) {
-	WCHAR str[300]; Platform_ConvertString(str, path);
-	BOOL success = CreateDirectoryW(str, NULL);
+	WCHAR str[300];
+	BOOL success;
+
+	Platform_ConvertString(str, path);
+	success = CreateDirectoryW(str, NULL);
 	return Win_Return(success);
 }
 
 bool File_Exists(const String* path) {
-	WCHAR str[300]; Platform_ConvertString(str, path);
-	DWORD attribs = GetFileAttributesW(str);
+	WCHAR str[300];
+	DWORD attribs;
+
+	Platform_ConvertString(str, path);
+	attribs = GetFileAttributesW(str);
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
@@ -429,7 +438,8 @@ ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* time) {
 }
 
 ReturnCode File_Do(void** file, const String* path, DWORD access, DWORD createMode) {
-	WCHAR str[300]; Platform_ConvertString(str, path);
+	WCHAR str[300]; 
+	Platform_ConvertString(str, path);
 	*file = CreateFileW(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return Win_Return(*file != INVALID_HANDLE_VALUE);
 }
@@ -478,33 +488,39 @@ ReturnCode File_Length(void* file, uint32_t* length) {
 #endif
 #ifdef CC_BUILD_POSIX
 bool Directory_Exists(const String* path) {
-	char str[600]; Platform_ConvertString(str, path);
+	char str[600]; 
 	struct stat sb;
+	Platform_ConvertString(str, path);
 	return stat(str, &sb) == 0 && S_ISDIR(sb.st_mode);
 }
 
 ReturnCode Directory_Create(const String* path) {
-	char str[600]; Platform_ConvertString(str, path);
+	char str[600]; 
+	Platform_ConvertString(str, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
 	return Nix_Return(mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != -1);
 }
 
 bool File_Exists(const String* path) {
-	char str[600]; Platform_ConvertString(str, path);
+	char str[600]; 
 	struct stat sb;
+	Platform_ConvertString(str, path);
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
 ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
-	char str[600]; Platform_ConvertString(str, dirPath);
-	DIR* dirPtr = opendir(str);
-	if (!dirPtr) return errno;
+	char str[600];
+	DIR* dirPtr;
+	struct dirent* entry;
 	int res;
+
+	Platform_ConvertString(str, dirPath);
+	dirPtr = opendir(str);
+	if (!dirPtr) return errno;
 
 	char pathBuffer[FILENAME_SIZE];
 	String path = String_FromArray(pathBuffer);
-	struct dirent* entry;
 
 	/* POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed." */
 	/* errno is sometimes leftover from previous calls, so always reset it before readdir gets called */
@@ -537,8 +553,9 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 }
 
 ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* time) {
-	char str[600]; Platform_ConvertString(str, path);
+	char str[600]; 
 	struct stat sb;
+	Platform_ConvertString(str, path);
 	if (stat(str, &sb) == -1) return errno;
 
 	*time = (uint64_t)sb.st_mtime * 1000 + UNIX_EPOCH;
@@ -546,7 +563,8 @@ ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* time) {
 }
 
 ReturnCode File_Do(void** file, const String* path, int mode) {
-	char str[600]; Platform_ConvertString(str, path);
+	char str[600]; 
+	Platform_ConvertString(str, path);
 	*file = open(str, mode, (6 << 6) | (4 << 3) | 4); /* rw|r|r */
 	return Nix_Return(*file != -1);
 }
@@ -770,11 +788,14 @@ static void Font_Init(void);
 
 
 static unsigned long Font_ReadWrapper(FT_Stream s, unsigned long offset, unsigned char* buffer, unsigned long count) {
+	struct Stream* stream;
+	ReturnCode res;
+
 	if (!count && offset > s->size) return 1;
-	struct Stream* stream = s->descriptor.pointer;
+	stream = s->descriptor.pointer;
 	if (s->pos != offset) stream->Seek(stream, offset);
 
-	ReturnCode res = Stream_Read(stream, buffer, count);
+	res = Stream_Read(stream, buffer, count);
 	return res ? 0 : count;
 }
 
@@ -843,6 +864,11 @@ void Font_GetNames(StringsBuffer* buffer) {
 }
 
 void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
+	FT_Stream stream;
+	FT_Open_Args args;
+	FT_Face face;
+	FT_Error err;
+
 	desc->Size  = size;
 	desc->Style = style;
 	if (!norm_fonts.Count) Font_Init();
@@ -859,27 +885,28 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 	if (idx == -1) ErrorHandler_Fail("Unknown font");
 	String path = StringsBuffer_UNSAFE_Get(entries, idx - 1);
 
-	FT_Stream stream = Mem_AllocCleared(1, sizeof(FT_StreamRec), "leaky font"); /* TODO: LEAKS MEMORY!!! */
-	FT_Open_Args args;
+	stream = Mem_AllocCleared(1, sizeof(FT_StreamRec), "leaky font"); /* TODO: LEAKS MEMORY!!! */
 	if (!Font_MakeArgs(&path, stream, &args)) return;
 
-	FT_Face face;
-	FT_Error err = FT_Open_Face(ft_lib, &args, 0, &face);
+	err = FT_Open_Face(ft_lib, &args, 0, &face);
 	if (err) ErrorHandler_Fail2(err, "Creating font failed");
 	desc->Handle = face;
 
-	err = FT_Set_Char_Size(face, size * 64, 0, DPI_DEVICE, 0); /* TODO: Check error */
+	err = FT_Set_Char_Size(face, size * 64, 0, DPI_DEVICE, 0);
 	if (err) ErrorHandler_Fail2(err, "Resizing font failed");
 }
 
 void Font_Free(FontDesc* desc) {
+	FT_Face face;
+	FT_Error err;
+
 	desc->Size  = 0;
 	desc->Style = 0;
 	/* NULL for fonts created by Drawer2D_MakeFont and bitmapped text mode is on */
 	if (!desc->Handle) return;
 
-	FT_Face face = desc->Handle;
-	FT_Error err = FT_Done_Face(face);
+	face = desc->Handle;
+	err  = FT_Done_Face(face);
 	if (err) ErrorHandler_Fail2(err, "Deleting font failed");
 	desc->Handle = NULL;
 }
@@ -907,11 +934,12 @@ static void Font_Add(const String* path, FT_Face face, StringsBuffer* entries, c
 static void Font_DirCallback(const String* path, void* obj) {
 	FT_StreamRec stream = { 0 };
 	FT_Open_Args args;
-	if (!Font_MakeArgs(path, &stream, &args)) return;
-
 	FT_Face face;
-	FT_Error error = FT_Open_Face(ft_lib, &args, 0, &face);
-	if (error) { stream.close(&stream); return; }
+	FT_Error err;
+
+	if (!Font_MakeArgs(path, &stream, &args)) return;
+	err = FT_Open_Face(ft_lib, &args, 0, &face);
+	if (err) { stream.close(&stream); return; }
 
 	if (face->style_flags == FT_STYLE_FLAG_BOLD) {
 		Font_Add(path, face, &bold_fonts, "Bold");
@@ -1056,14 +1084,15 @@ ReturnCode Socket_GetError(SocketPtr socket, ReturnCode* result) {
 }
 
 ReturnCode Socket_Connect(SocketPtr socket, const String* ip, int port) {
-	struct RAW_IPV4_ADDR { int16_t Family; uint8_t Port[2], IP[4], Pad[8]; } addr;
-	addr.Family = AF_INET;
+	struct { int16_t Family; uint8_t Port[2], IP[4], Pad[8]; } addr;
+	ReturnCode res;
 
+	addr.Family = AF_INET;
 	Stream_SetU16_BE(addr.Port, port);
 	Utils_ParseIP(ip, addr.IP);
 
-	ReturnCode result = connect(socket, (struct sockaddr*)(&addr), sizeof(addr));
-	return result == -1 ? Socket__Error() : 0;
+	res = connect(socket, (struct sockaddr*)(&addr), sizeof(addr));
+	return res == -1 ? Socket__Error() : 0;
 }
 
 ReturnCode Socket_Read(SocketPtr socket, uint8_t* buffer, uint32_t count, uint32_t* modified) {
@@ -1333,11 +1362,14 @@ static size_t Http_GetData(char *buffer, size_t size, size_t nitems, struct Asyn
 }
 
 ReturnCode Http_Do(struct AsyncRequest* req, volatile int* progress) {
-	curl_easy_reset(curl);
+	struct curl_slist* list;
 	String url = String_FromRawArray(req->URL);
-	char urlStr[600]; Platform_ConvertString(urlStr, &url);
+	char urlStr[600];
+	long status = 0;
 
-	struct curl_slist* list = Http_Make(req);
+	Platform_ConvertString(urlStr, &url);
+	curl_easy_reset(curl);
+	list = Http_Make(req);
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
 
 	curl_easy_setopt(curl, CURLOPT_URL,            urlStr);
@@ -1357,7 +1389,6 @@ ReturnCode Http_Do(struct AsyncRequest* req, volatile int* progress) {
 	CURLcode res = curl_easy_perform(curl);
 	*progress = 100;
 
-	long status = 0;
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
 	req->StatusCode = status;
 
@@ -1387,9 +1418,11 @@ struct AudioContext {
 struct AudioContext Audio_Contexts[20];
 
 void Audio_Init(AudioHandle* handle, int buffers) {
+	struct AudioContext* ctx;
 	int i, j;
+
 	for (i = 0; i < Array_Elems(Audio_Contexts); i++) {
-		struct AudioContext* ctx = &Audio_Contexts[i];
+		ctx = &Audio_Contexts[i];
 		if (ctx->Count) continue;
 
 		for (j = 0; j < buffers; j++) {
@@ -1405,9 +1438,10 @@ void Audio_Init(AudioHandle* handle, int buffers) {
 
 ReturnCode Audio_Free(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
+	ReturnCode res;
 	if (!ctx->Count) return 0;
 
-	ReturnCode res = waveOutClose(ctx->Handle);
+	res = waveOutClose(ctx->Handle);
 	ctx->Handle = NULL;
 	ctx->Count  = 0;
 
@@ -1419,9 +1453,9 @@ ReturnCode Audio_Free(AudioHandle handle) {
 ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	struct AudioFormat*  cur = &ctx->Format;
-	if (AudioFormat_Eq(cur, format)) return 0;
-
 	ReturnCode res;
+
+	if (AudioFormat_Eq(cur, format)) return 0;
 	if (ctx->Handle && (res = waveOutClose(ctx->Handle))) return res;
 
 	int sampleSize = format->Channels * format->BitsPerSample / 8;
@@ -1441,13 +1475,13 @@ ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, uint32_t dataSize) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	WAVEHDR* hdr = &ctx->Headers[idx];
-	Mem_Set(hdr, 0, sizeof(WAVEHDR));
+	ReturnCode res;
 
+	Mem_Set(hdr, 0, sizeof(WAVEHDR));
 	hdr->lpData         = data;
 	hdr->dwBufferLength = dataSize;
 	hdr->dwLoops        = 1;
-
-	ReturnCode res;
+	
 	if ((res = waveOutPrepareHeader(ctx->Handle, hdr, sizeof(WAVEHDR)))) return res;
 	if ((res = waveOutWrite(ctx->Handle, hdr, sizeof(WAVEHDR))))         return res;
 	return 0;
@@ -1525,8 +1559,8 @@ static void Audio_DestroyContext(void) {
 }
 
 static ALenum Audio_FreeSource(struct AudioContext* ctx) {
-	if (ctx->Source == -1) return 0;
 	ALenum err;
+	if (ctx->Source == -1) return 0;
 
 	alDeleteSources(1, &ctx->Source);
 	ctx->Source = -1;
@@ -1665,12 +1699,13 @@ ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, bool* completed) {
 
 ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
-	if (ctx->Source == -1) { *finished = true; return 0; }
-
-	ReturnCode res = Audio_AllCompleted(handle, finished);
-	if (res) return res;
-
 	ALint state = 0;
+	ReturnCode res;
+
+	if (ctx->Source == -1) { *finished = true; return 0; }
+	res = Audio_AllCompleted(handle, finished);
+	if (res) return res;
+	
 	alGetSourcei(ctx->Source, AL_SOURCE_STATE, &state);
 	*finished = state != AL_PLAYING; return 0;
 }
@@ -1696,8 +1731,8 @@ struct AudioFormat* Audio_GetFormat(AudioHandle handle) {
 }
 
 ReturnCode Audio_StopAndFree(AudioHandle handle) {
-	Audio_Stop(handle);
 	bool finished;
+	Audio_Stop(handle);
 	Audio_IsFinished(handle, &finished); /* unqueue buffers */
 	return Audio_Free(handle);
 }
@@ -1771,8 +1806,10 @@ void Platform_SetWorkingDir(void) {
 void Platform_Exit(ReturnCode code) { ExitProcess(code); }
 
 ReturnCode Platform_StartShell(const String* args) {
-	WCHAR str[300]; Platform_ConvertString(str, args);
-	HINSTANCE instance = ShellExecuteW(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
+	WCHAR str[300];
+	HINSTANCE instance;
+	Platform_ConvertString(str, args);
+	instance = ShellExecuteW(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
 	return instance > 32 ? 0 : (ReturnCode)instance;
 }
 
@@ -1848,8 +1885,9 @@ void Platform_Free(void) {
 void Platform_Exit(ReturnCode code) { exit(code); }
 
 int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args) {
-	argc--; /* skip path argument*/
-	int i, count = min(argc, PROGRAM_MAX_CMDARGS);
+	int i, count;
+	argc--; /* skip executable path argument */
+	count = min(argc, PROGRAM_MAX_CMDARGS);
 
 	for (i = 0; i < count; i++) {
 		args[i] = String_FromReadonly(argv[i + 1]);
@@ -1894,10 +1932,11 @@ void Platform_SetWorkingDir(void) {
 
 static void Platform_InitDisplay(void) {
 	Display* display = XOpenDisplay(NULL);
+	int screen;
 	if (!display) ErrorHandler_Fail("Failed to open display");
 
-	int screen = XDefaultScreen(display);
-	Window rootWin = XRootWindow(display, screen);
+	DisplayDevice_Meta = display;
+	screen = DefaultScreen(display);
 	sw_freqDiv = 1000;
 
 	/* TODO: Use Xinerama and XRandR for querying these */
@@ -1906,10 +1945,6 @@ static void Platform_InitDisplay(void) {
 	DisplayDevice_Default.Bounds.Width  = DisplayWidth(display,  screen);
 	DisplayDevice_Default.Bounds.Height = DisplayHeight(display, screen);
 	DisplayDevice_Default.BitsPerPixel  = DefaultDepth(display,  screen);
-
-	DisplayDevice_Meta[0] = display;
-	DisplayDevice_Meta[1] = screen;
-	DisplayDevice_Meta[2] = rootWin;
 }
 #endif
 #ifdef CC_BUILD_OSX

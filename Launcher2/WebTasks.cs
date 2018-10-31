@@ -231,11 +231,28 @@ namespace Launcher.Web {
 		public byte[] ZipFile;
 		
 		protected override void Begin() {
-			Game.Downloader.AsyncGetData(uri, true, identifier);
+			Game.Downloader.AsyncGetData(uri, false, identifier);
 		}
 		
 		protected override void Handle(Request req) {
 			ZipFile = (byte[])req.Data;
+		}
+	}
+	
+	public sealed class UpdateCClientTask : WebTask {
+		public UpdateCClientTask(string file) {
+			identifier = "CC CClient download";
+			uri = "http://cs.classicube.net/c_client/latest/" + file;
+		}		
+
+		public byte[] File;
+		
+		protected override void Begin() {
+			Game.Downloader.AsyncGetData(uri, false, identifier);
+		}
+		
+		protected override void Handle(Request req) {
+			File = (byte[])req.Data;
 		}
 	}
 	

@@ -463,18 +463,20 @@ void Net_Set(uint8_t opcode, Net_Handler handler, int packetSize) {
 }
 
 void Net_SendPacket(void) {
-	uint32_t count = (uint32_t)(ServerConnection_WriteBuffer - net_writeBuffer);
+	uint32_t left, wrote;
+	uint8_t* cur;
+	ReturnCode res;
+
+	left = (uint32_t)(ServerConnection_WriteBuffer - net_writeBuffer);
 	ServerConnection_WriteBuffer = net_writeBuffer;
 	if (ServerConnection_Disconnected) return;
 
 	/* NOTE: Not immediately disconnecting here, as otherwise we sometimes miss out on kick messages */
-	uint32_t wrote = 0;
-	uint8_t* ptr = net_writeBuffer;
-
-	while (count) {
-		ReturnCode res = Socket_Write(net_socket, ptr, count, &wrote);
+	cur = net_writeBuffer;
+	while (left) {
+		res = Socket_Write(net_socket, cur, left, &wrote);
 		if (res || !wrote) { net_writeFailed = true; break; }
-		ptr += wrote; count -= wrote;
+		cur += wrote; left -= wrote;
 	}
 }
 

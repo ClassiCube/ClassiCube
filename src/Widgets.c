@@ -448,10 +448,10 @@ static bool HotbarWidget_MouseDown(void* widget, int x, int y, MouseButton btn) 
 	int i;
 
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
-		int winX = (int)(w->X + width * i);
-		int winY = (int)(w->Y + (w->Height - height));
+		int cellX = (int)(w->X + width * i);
+		int cellY = (int)(w->Y + (w->Height - height));
 
-		if (Gui_Contains(winX, winY, width, height, x, y)) {
+		if (Gui_Contains(cellX, cellY, width, height, x, y)) {
 			Inventory_SetSelectedIndex(i);
 			return true;
 		}
@@ -776,10 +776,10 @@ static bool TableWidget_MouseMove(void* widget, int x, int y) {
 	if (Gui_Contains(w->X, w->Y + 3, w->Width, maxHeight - 3 * 2, x, y)) {
 		int i;
 		for (i = 0; i < w->ElementsCount; i++) {
-			int winX, winY;
-			TableWidget_GetCoords(w, i, &winX, &winY);
+			int cellX, cellY;
+			TableWidget_GetCoords(w, i, &cellX, &cellY);
 
-			if (Gui_Contains(winX, winY, blockSize, blockSize, x, y)) {
+			if (Gui_Contains(cellX, cellY, blockSize, blockSize, x, y)) {
 				w->SelectedIndex = i;
 				break;
 			}
@@ -1490,8 +1490,11 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 
 static bool MenuInputWidget_AllowedChar(void* widget, char c) {
 	struct InputWidget* w = widget;
-	if (c == '&' || !Utils_IsValidInputChar(c, true)) return false;
-	struct MenuInputValidator* v = &((struct MenuInputWidget*)w)->Validator;
+	struct MenuInputValidator* v;
+	bool valid;
+
+	if (c == '&') return false;
+	v = &((struct MenuInputWidget*)w)->Validator;
 
 	if (!v->VTABLE->IsValidChar(v, c)) return false;
 	int maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
@@ -1499,7 +1502,7 @@ static bool MenuInputWidget_AllowedChar(void* widget, char c) {
 
 	/* See if the new string is in valid format */
 	InputWidget_AppendChar(w, c);
-	bool valid = v->VTABLE->IsValidString(v, &w->Text);
+	valid = v->VTABLE->IsValidString(v, &w->Text);
 	InputWidget_DeleteChar(w);
 	return valid;
 }

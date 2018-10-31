@@ -20,6 +20,8 @@ namespace Launcher.Gui.Screens {
 
 		UpdateCheckTask checkTask;
 		UpdateDownloadTask fetchTask;
+		UpdateCClientTask fetchCClientTask;
+		
 		string buildName;
 		int buildProgress = -1;
 		
@@ -45,6 +47,7 @@ namespace Launcher.Gui.Screens {
 
 		Build dev, stable;
 		public override void Tick() {
+			TickCClientFetchTask();
 			TickFetchTask();
 			TickUpdateCheck();
 		}
@@ -84,20 +87,76 @@ namespace Launcher.Gui.Screens {
 		void UpdateDevOpenGL(int x, int y) { UpdateBuild(false, false); }
 		void SwitchToSettings(int x, int y) { game.SetScreen(new SettingsScreen(game)); }
 		
+		void UpdateStatus() {
+			Widget widget = widgets[view.statusIndex];			
+			int oldX = widget.X, oldWidth  = widget.Width;
+			int oldY = widget.Y, oldHeight = widget.Height;
+			
+			view.UpdateStatus();
+			// if old text is smaller than new
+			// TODO: This needs to be better. widgets should keep track of their 'last area'.
+			// 			and 'RedrawWidget' should also call ResetArea. Widgets should have a bool for if they obscure background or not.
+			game.ResetArea(Math.Min(widget.X, oldX), Math.Min(widget.Y, oldY), 
+			               Math.Max(widget.Width, oldWidth), Math.Max(widget.Height, oldHeight));
+			RedrawWidget(widgets[view.statusIndex]);
+		}
+		
+		
+		static bool IsClient(string name) {
+			return
+				Utils.CaselessEq(name, "ClassicalSharp")     || Utils.CaselessEq(name, "ClassiCube") ||
+				Utils.CaselessEq(name, "ClassicalSharp.exe") || Utils.CaselessEq(name, "ClassiCube.exe");
+		}
+		
+		static bool CheckClientInstances() {
+			Process[] processes = Process.GetProcesses();
+			for (int i = 0; i < processes.Length; i++) {
+				string name = null;
+				try {
+					name = processes[i].ProcessName;
+				} catch {
+					continue;
+				}
+
+				if (IsClient(name)) return true;
+			}
+			return false;
+		}
+		
+		static string GetCExe(bool dx) {
+			// TODO: OSX, 32 bit linux
+			if (!OpenTK.Configuration.RunningOnWindows) return "ClassiCube";
+			
+			if (IntPtr.Size == 8) {
+				return dx ? "ClassiCube.64.exe" : "ClassiCube.64-opengl.exe";
+			} else {
+				return dx ? "ClassiCube.exe" : "ClassiCube.opengl.exe";
+			}
+		}
+		
 		void UpdateBuild(bool release, bool dx) {
 			DateTime last = release ? view.LastStable : view.LastDev;
-			Build build = release ? stable : dev;
+			Build build   = release ? stable : dev;
+			
 			if (last == DateTime.MinValue || fetchTask != null) return;
+			if (Client.CClient && fetchCClientTask != null)     return;
 			if (build.DirectXSize < 50000 || build.OpenGLSize < 50000) return;
 			
 			bool gameOpen = CheckClientInstances();
 			view.statusText = gameOpen ? "&cThe game must be closed before updating" : "";
 			UpdateStatus();
 			if (gameOpen) return;
-			
-			string path = dx ? build.DirectXPath : build.OpenGLPath;
+			string path;
+
+			path = dx ? build.DirectXPath : build.OpenGLPath;
 			fetchTask = new UpdateDownloadTask(path);
 			fetchTask.RunAsync(game);
+			
+			if (Client.CClient) {
+				path = GetCExe(dx);
+				fetchCClientTask = new UpdateCClientTask(path);
+				fetchCClientTask.RunAsync(game);
+			}
 			
 			if (release && dx)   buildName = "&eFetching latest release (Direct3D9)";
 			if (release && !dx)  buildName = "&eFetching latest release (OpenGL)";
@@ -110,50 +169,60 @@ namespace Launcher.Gui.Screens {
 			UpdateStatus();
 		}
 		
-		void UpdateStatus() {
-			view.UpdateStatus();
-			Widget widget = widgets[view.statusIndex];
-			game.ResetArea(widget.X, widget.Y, widget.Width, widget.Height);
-			RedrawWidget(widgets[view.statusIndex]);
+		
+		byte[] csZip, cExe;
+		void ApplyUpdate() {
+			Applier.ExtractUpdate(csZip);
+			game.ShouldExit   = true;
+			game.ShouldUpdate = true;
+			
+			if (cExe == null) return;
+			string path = Client.GetExeName();
+			// TODO: Set last-modified time to actual time of dev build
+			Platform.WriteAllBytes(path, cExe);
 		}
 		
-		bool CheckClientInstances() {
-			Process[] processes = Process.GetProcesses();
-			for (int i = 0; i < processes.Length; i++) {
-				string name = null;
-				try {
-					name = processes[i].ProcessName;
-				} catch {
-					continue;
-				}
-				
-				if (Utils.CaselessEquals(name, "ClassicalSharp")
-				    || Utils.CaselessEquals(name, "ClassicalSharp.exe"))
-					return true;
+		void TickCClientFetchTask() {
+			if (fetchCClientTask == null) return;
+			fetchCClientTask.Tick();
+			UpdateProgress(fetchCClientTask);
+			if (!fetchCClientTask.Completed) return;
+			
+			if (!fetchCClientTask.Success) {
+				view.statusText = "&cFailed to fetch update";
+				UpdateStatus();
+			} else {
+				cExe = fetchCClientTask.File;
+				ApplyUpdate();
 			}
-			return false;
+			fetchCClientTask = null;
 		}
 		
 		void TickFetchTask() {
 			if (fetchTask == null) return;
 			fetchTask.Tick();
-			UpdateFetchProgress();
+			UpdateProgress(fetchTask);
 			if (!fetchTask.Completed) return;
 			
 			if (!fetchTask.Success) {
 				view.statusText = "&cFailed to fetch update";
 				UpdateStatus();
 			} else {
-				Applier.ExtractUpdate(fetchTask.ZipFile);
-				game.ShouldExit = true;
-				game.ShouldUpdate = true;
+				csZip = fetchTask.ZipFile;
+				
+				if (!Client.CClient) {
+					ApplyUpdate();
+				} else {
+					buildName = "&eFetching latest C client";
+					UpdateStatus();
+				}
 			}
 			fetchTask = null;
 		}
 		
-		void UpdateFetchProgress() {
+		void UpdateProgress(WebTask task) {
 			Request item = game.Downloader.CurrentItem;
-			if (item == null || item.Identifier != fetchTask.identifier) return;
+			if (item == null || item.Identifier != task.identifier) return;
 			int progress = game.Downloader.CurrentItemProgress;
 			if (progress == buildProgress) return;
 			

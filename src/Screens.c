@@ -1006,6 +1006,7 @@ static bool ChatScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 
 static void ChatScreen_ColCodeChanged(void* screen, int code) {
 	struct ChatScreen* s = screen;
+	double caretAcc;
 	if (Gfx_LostContext) return;
 
 	SpecialInputWidget_UpdateCols(&s->AltText);
@@ -1016,7 +1017,7 @@ static void ChatScreen_ColCodeChanged(void* screen, int code) {
 
 	/* Some servers have plugins that redefine colours constantly */
 	/* Preserve caret accumulator so caret blinking stays consistent */
-	double caretAcc = s->Input.Base.CaretAccumulator;
+	caretAcc = s->Input.Base.CaretAccumulator;
 	Elem_Recreate(&s->Input.Base);
 	s->Input.Base.CaretAccumulator = caretAcc;
 }
@@ -1101,14 +1102,17 @@ static void ChatScreen_Init(void* screen) {
 
 static void ChatScreen_Render(void* screen, double delta) {
 	struct ChatScreen* s = screen;
+	struct Texture tex;
+	int i, y;
+
 	ChatScreen_CheckOtherStatuses(s);
 	if (!Game_PureClassic) { Elem_Render(&s->Status, delta); }
 	Elem_Render(&s->BottomRight, delta);
 
 	ChatScreen_UpdateChatYOffset(s, false);
-	int i, y = s->ClientStatus.Y + s->ClientStatus.Height;
+	y = s->ClientStatus.Y + s->ClientStatus.Height;
 	for (i = 0; i < s->ClientStatus.LinesCount; i++) {
-		struct Texture tex = s->ClientStatus.Textures[i];
+		tex = s->ClientStatus.Textures[i];
 		if (!tex.ID) continue;
 
 		y -= tex.Height; tex.Y = y;
@@ -1121,11 +1125,11 @@ static void ChatScreen_Render(void* screen, double delta) {
 	} else {
 		/* Only render recent chat */
 		for (i = 0; i < s->Chat.LinesCount; i++) {
-			struct Texture tex = s->Chat.Textures[i];
+			tex = s->Chat.Textures[i];
 			int logIdx = s->ChatIndex + i;
 			if (!tex.ID) continue;
-			if (logIdx < 0 || logIdx >= Chat_Log.Count) continue;
 
+			if (logIdx < 0 || logIdx >= Chat_Log.Count) continue;
 			if (Chat_GetLogTime(logIdx) + (10 * 1000) >= now) Texture_Render(&tex);
 		}
 	}

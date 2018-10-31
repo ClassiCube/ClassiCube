@@ -110,27 +110,33 @@ struct RayTracer tracer;
 #define PICKING_BORDER BLOCK_BEDROCK
 typedef bool (*IntersectTest)(struct PickedPos* pos);
 
-static BlockID Picking_InsideGetBlock(int x, int y, int z) {
+static BlockID Picking_GetInside(int x, int y, int z) {
+	bool sides;
+	int height;
+
 	if (x >= 0 && z >= 0 && x < World_Width && z < World_Length) {
 		if (y >= World_Height) return BLOCK_AIR;
 		if (y >= 0) return World_GetBlock(x, y, z);
 	}
 
 	/* bedrock on bottom or outside map */
-	bool sides = Env_SidesBlock != BLOCK_AIR;
-	int height = Env_SidesHeight; if (height < 1) height = 1;
+	sides  = Env_SidesBlock != BLOCK_AIR;
+	height = Env_SidesHeight; if (height < 1) height = 1;
 	return sides && y < height ? PICKING_BORDER : BLOCK_AIR;
 }
 
-static BlockID Picking_OutsideGetBlock(int x, int y, int z, Vector3I origin) {
+static BlockID Picking_GetOutside(int x, int y, int z, Vector3I origin) {
+	bool sides;
+	int height;
+
 	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) return BLOCK_AIR;
-	bool sides = Env_SidesBlock != BLOCK_AIR;
+	sides = Env_SidesBlock != BLOCK_AIR;
 	/* handling of blocks inside the map, above, and on borders */
 
 	if (y >= World_Height) return BLOCK_AIR;
 	if (sides && y == -1 && origin.Y > 0) return PICKING_BORDER;
 	if (sides && y ==  0 && origin.Y < 0) return PICKING_BORDER;
-	int height = Env_SidesHeight; if (height < 1) height = 1;
+	height = Env_SidesHeight; if (height < 1) height = 1;
 
 	if (sides && x == 0          && y >= 0 && y < height && origin.X < 0)             return PICKING_BORDER;
 	if (sides && z == 0          && y >= 0 && y < height && origin.Z < 0)             return PICKING_BORDER;
@@ -141,30 +147,36 @@ static BlockID Picking_OutsideGetBlock(int x, int y, int z, Vector3I origin) {
 }
 
 static bool Picking_RayTrace(Vector3 origin, Vector3 dir, float reach, struct PickedPos* pos, IntersectTest intersect) {
+	Vector3I pOrigin;
+	bool insideMap;
+	float reachSq;
+	Vector3 v, minBB, maxBB;
+
+	float dxMin, dxMax, dx;
+	float dyMin, dyMax, dy;
+	float dzMin, dzMax, dz;
+	int i, x, y, z;
+
 	RayTracer_SetVectors(&tracer, origin, dir);
-	float reachSq = reach * reach;
-	Vector3I pOrigin; Vector3I_Floor(&pOrigin, &origin);
-	bool insideMap = World_IsValidPos_3I(pOrigin);
-
-	int i;
-	Vector3 coords;
+	Vector3I_Floor(&pOrigin, &origin);
+	insideMap = World_IsValidPos_3I(pOrigin);
+	reachSq   = reach * reach;
+		
 	for (i = 0; i < 25000; i++) {
-		int x = tracer.X, y = tracer.Y, z = tracer.Z;
-		coords.X = (float)x; coords.Y = (float)y; coords.Z = (float)z;
-		tracer.Block = insideMap ?
-			Picking_InsideGetBlock(x, y, z) : Picking_OutsideGetBlock(x, y, z, pOrigin);
+		x = tracer.X; y = tracer.Y; z = tracer.Z;
+		v.X = (float)x; v.Y = (float)y; v.Z = (float)z;
 
-		Vector3 minPos, maxPos;
-		Vector3_Add(&minPos, &coords, &Block_RenderMinBB[tracer.Block]);
-		Vector3_Add(&maxPos, &coords, &Block_RenderMaxBB[tracer.Block]);
+		tracer.Block = insideMap ? Picking_GetInside(x, y, z) : Picking_GetOutside(x, y, z, pOrigin);
+		Vector3_Add(&minBB, &v, &Block_RenderMinBB[tracer.Block]);
+		Vector3_Add(&maxBB, &v, &Block_RenderMaxBB[tracer.Block]);
 
-		float dxMin = Math_AbsF(origin.X - minPos.X), dxMax = Math_AbsF(origin.X - maxPos.X);
-		float dyMin = Math_AbsF(origin.Y - minPos.Y), dyMax = Math_AbsF(origin.Y - maxPos.Y);
-		float dzMin = Math_AbsF(origin.Z - minPos.Z), dzMax = Math_AbsF(origin.Z - maxPos.Z);
-		float dx = min(dxMin, dxMax), dy = min(dyMin, dyMax), dz = min(dzMin, dzMax);
+		dxMin = Math_AbsF(origin.X - minBB.X); dxMax = Math_AbsF(origin.X - maxBB.X);
+		dyMin = Math_AbsF(origin.Y - minBB.Y); dyMax = Math_AbsF(origin.Y - maxBB.Y);
+		dzMin = Math_AbsF(origin.Z - minBB.Z); dzMax = Math_AbsF(origin.Z - maxBB.Z);
+		dx = min(dxMin, dxMax); dy = min(dyMin, dyMax); dz = min(dzMin, dzMax);
 		if (dx * dx + dy * dy + dz * dz > reachSq) return false;
 
-		tracer.Min = minPos; tracer.Max = maxPos;
+		tracer.Min = minBB; tracer.Max = maxBB;
 		if (intersect(pos)) return true;
 		RayTracer_Step(&tracer);
 	}
@@ -174,22 +186,21 @@ static bool Picking_RayTrace(Vector3 origin, Vector3 dir, float reach, struct Pi
 }
 
 static bool Picking_ClipBlock(struct PickedPos* pos) {
+	Vector3 scaledDir, intersect;
+	float lenSq, reach;
 	float t0, t1;
-	if (!Game_CanPick(tracer.Block)) return false;
 
+	if (!Game_CanPick(tracer.Block)) return false;
 	/* This cell falls on the path of the ray. Now perform an additional AABB test,
 	since some blocks do not occupy a whole cell. */
-	if (!Intersection_RayIntersectsBox(tracer.Origin, tracer.Dir, tracer.Min, tracer.Max, &t0, &t1)) {
-		return false;
-	}
-
-	Vector3 scaledDir, intersect;
-	Vector3_Mul1(&scaledDir, &tracer.Dir, t0);      /* scaledDir = dir * t0 */
-	Vector3_Add(&intersect, &tracer.Origin, &scaledDir); /* intersect = origin + scaledDir */
+	if (!Intersection_RayIntersectsBox(tracer.Origin, tracer.Dir, tracer.Min, tracer.Max, &t0, &t1)) return false;
+	
+	Vector3_Mul1(&scaledDir, &tracer.Dir, t0);            /* scaledDir = dir * t0 */
+	Vector3_Add(&intersect,  &tracer.Origin, &scaledDir); /* intersect = origin + scaledDir */
 
 	/* Only pick the block if the block is precisely within reach distance. */
-	float lenSq = Vector3_LengthSquared(&scaledDir);
-	float reach = LocalPlayer_Instance.ReachDistance;
+	lenSq = Vector3_LengthSquared(&scaledDir);
+	reach = LocalPlayer_Instance.ReachDistance;
 
 	if (lenSq <= reach * reach) {
 		PickedPos_SetAsValid(pos, &tracer, intersect);
@@ -201,18 +212,19 @@ static bool Picking_ClipBlock(struct PickedPos* pos) {
 
 static Vector3 picking_adjust = { 0.1f, 0.1f, 0.1f };
 static bool Picking_ClipCamera(struct PickedPos* pos) {
-	if (Block_Draw[tracer.Block] == DRAW_GAS || Block_Collide[tracer.Block] != COLLIDE_SOLID) return false;
+	Vector3 intersect;
 	float t0, t1;
+
+	if (Block_Draw[tracer.Block] == DRAW_GAS || Block_Collide[tracer.Block] != COLLIDE_SOLID) return false;
 	if (!Intersection_RayIntersectsBox(tracer.Origin, tracer.Dir, tracer.Min, tracer.Max, &t0, &t1)) return false;
 
 	/* Need to collide with slightly outside block, to avoid camera clipping issues */
 	Vector3_Sub(&tracer.Min, &tracer.Min, &picking_adjust);
 	Vector3_Add(&tracer.Max, &tracer.Max, &picking_adjust);
 	Intersection_RayIntersectsBox(tracer.Origin, tracer.Dir, tracer.Min, tracer.Max, &t0, &t1);
-
-	Vector3 intersect;
-	Vector3_Mul1(&intersect, &tracer.Dir, t0);           /* intersect = dir * t0 */
-	Vector3_Add(&intersect, &tracer.Origin, &intersect); /* intersect = origin + dir * t0 */
+	
+	Vector3_Mul1(&intersect, &tracer.Dir, t0);            /* intersect = dir * t0 */
+	Vector3_Add(&intersect,  &tracer.Origin, &intersect); /* intersect = origin + dir * t0 */
 	PickedPos_SetAsValid(pos, &tracer, intersect);
 	return true;
 }

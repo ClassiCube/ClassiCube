@@ -321,15 +321,15 @@ static void ErrorHandler_SignalHandler(int sig, siginfo_t* info, void* ctx) {
 
 void ErrorHandler_Init(void) {
 	struct sigaction sa, old;
-	sa.sa_handler = ErrorHandler_SignalHandler;
+	sa.sa_sigaction = ErrorHandler_SignalHandler;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART | SA_SIGINFO;
 
 	sigaction(SIGSEGV, &sa, &old);
-	sigaction(SIGBUS, &sa, &old);
-	sigaction(SIGILL, &sa, &old);
+	sigaction(SIGBUS,  &sa, &old);
+	sigaction(SIGILL,  &sa, &old);
 	sigaction(SIGABRT, &sa, &old);
-	sigaction(SIGFPE, &sa, &old);
+	sigaction(SIGFPE,  &sa, &old);
 }
 
 void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
@@ -401,12 +401,13 @@ typedef struct {
 
 static void X11Textbox_Measure(X11Textbox* t, XFontStruct* font) {
     String str = String_FromReadonly(t->Text);
-    int direction, ascent, descent, end, lines = 0;
     XCharStruct overall;
+	int direction, ascent, descent;
+	int end, len, lines = 0;
 
     for (end = 0; end >= 0; lines++) {
         end = String_IndexOf(&str, '\n', 0);
-		int len = end == -1 ? str.length : end;
+		len = end == -1 ? str.length : end;
 
         XTextExtents(font, str.buffer, len, &direction, &ascent, &descent, &overall);
         t->Width = max(overall.width, t->Width);
@@ -420,11 +421,12 @@ static void X11Textbox_Measure(X11Textbox* t, XFontStruct* font) {
 
 static void X11Textbox_Draw(X11Textbox* t, X11Window* w) {
     String str = String_FromReadonly(t->Text);
-    int end, y = t->Y + t->LineHeight - t->Descent; /* TODO: is -Descent even right? */
+    int y = t->Y + t->LineHeight - t->Descent; /* TODO: is -Descent even right? */
+	int end, len;
 
     for (end = 0; end >= 0; y += t->LineHeight) {
         end = String_IndexOf(&str, '\n', 0);
-		int len = end == -1 ? str.length : end;
+		len = end == -1 ? str.length : end;
 
         XDrawString(dpy, w->win, w->gc, t->X, y, str.buffer, len);
         if (end >= 0) str = String_UNSAFE_SubstringAt(&str, end + 1);
@@ -624,7 +626,7 @@ static void ErrorHandler_DumpCommon(String* str, void* ctx) {
 
 void ErrorHandler_ShowDialog(const char* title, const char* msg) {
 	X11Window w = { 0 };
-	dpy = DisplayDevice_Meta[0];
+	dpy = DisplayDevice_Meta;
 
 	X11_MessageBox(title, msg, &w);
 	X11Window_Free(&w);
