@@ -354,30 +354,30 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 	uint32_t bufferIdx, bufferRows;
 
 	while (readingChunks) {
-		res = Stream_Read(stream, buffer, 8);
+		res = Stream_Read(stream, tmp, 8);
 		if (res) return res;
-		uint32_t dataSize = Stream_GetU32_BE(&buffer[0]);
-		uint32_t fourCC   = Stream_GetU32_BE(&buffer[4]);
+		uint32_t dataSize = Stream_GetU32_BE(&tmp[0]);
+		uint32_t fourCC   = Stream_GetU32_BE(&tmp[4]);
 
 		switch (fourCC) {
 		case PNG_FourCC('I','H','D','R'): {
 			if (dataSize != PNG_IHDR_SIZE) return PNG_ERR_INVALID_HEADER_SIZE;
-			res = Stream_Read(stream, buffer, PNG_IHDR_SIZE);
+			res = Stream_Read(stream, tmp, PNG_IHDR_SIZE);
 			if (res) return res;
 
-			bmp->Width  = (int)Stream_GetU32_BE(&buffer[0]);
-			bmp->Height = (int)Stream_GetU32_BE(&buffer[4]);
+			bmp->Width  = (int)Stream_GetU32_BE(&tmp[0]);
+			bmp->Height = (int)Stream_GetU32_BE(&tmp[4]);
 			if (bmp->Width  < 0 || bmp->Width  > PNG_MAX_DIMS) return PNG_ERR_TOO_WIDE;
 			if (bmp->Height < 0 || bmp->Height > PNG_MAX_DIMS) return PNG_ERR_TOO_TALL;
 
 			bmp->Scan0 = Mem_Alloc(bmp->Width * bmp->Height, BITMAP_SIZEOF_PIXEL, "PNG bitmap data");
-			bitsPerSample = buffer[8]; col = buffer[9];
+			bitsPerSample = tmp[8]; col = tmp[9];
 			rowExpander = Png_GetExpander(col, bitsPerSample);
 			if (rowExpander == NULL) return PNG_ERR_INVALID_COL_BPP;
 
-			if (buffer[10] != 0) return PNG_ERR_COMP_METHOD;
-			if (buffer[11] != 0) return PNG_ERR_FILTER;
-			if (buffer[12] != 0) return PNG_ERR_INTERLACED;
+			if (tmp[10] != 0) return PNG_ERR_COMP_METHOD;
+			if (tmp[11] != 0) return PNG_ERR_FILTER;
+			if (tmp[12] != 0) return PNG_ERR_INTERLACED;
 
 			static uint32_t samplesPerPixel[7] = { 1, 0, 3, 1, 2, 0, 4 };
 			bytesPerPixel = ((samplesPerPixel[col] * bitsPerSample) + 7) >> 3;
