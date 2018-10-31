@@ -318,16 +318,6 @@ FT_BEGIN_HEADER
 #define FT_READ_ULONG_LE( var )   FT_READ_MACRO( FT_Stream_ReadULongLE, FT_ULong, var )
 
 
-#ifndef FT_CONFIG_OPTION_NO_DEFAULT_SYSTEM
-
-  /* initialize a stream for reading a regular system stream */
-  FT_BASE( FT_Error )
-  FT_Stream_Open( FT_Stream    stream,
-                  const char*  filepathname );
-
-#endif /* FT_CONFIG_OPTION_NO_DEFAULT_SYSTEM */
-
-
   /* create a new (input) stream from an FT_Open_Args structure */
   FT_BASE( FT_Error )
   FT_Stream_New( FT_Library           library,

@@ -327,7 +327,6 @@
     <ClCompile Include="_ftpfr.c" />
     <ClCompile Include="_ftstroke.c" />
     <ClCompile Include="_ftsynth.c" />
-    <ClCompile Include="_ftsystem.c" />
     <ClCompile Include="_fttype1.c" />
     <ClCompile Include="_pfr.c" />
     <ClCompile Include="_psaux.c" />

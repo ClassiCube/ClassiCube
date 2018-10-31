@@ -527,9 +527,6 @@
     <ClCompile Include="_ftsynth.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="_ftsystem.c">
-      <Filter>Source Files\Freetype</Filter>
-    </ClCompile>
     <ClCompile Include="_fttype1.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>

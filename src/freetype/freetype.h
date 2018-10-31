@@ -1984,15 +1984,6 @@ FT_BEGIN_HEADER
 #define FT_OPEN_PARAMS    0x10
 
 
-  /* these constants are deprecated; use the corresponding `FT_OPEN_XXX' */
-  /* values instead                                                      */
-#define ft_open_memory    FT_OPEN_MEMORY
-#define ft_open_stream    FT_OPEN_STREAM
-#define ft_open_pathname  FT_OPEN_PATHNAME
-#define ft_open_driver    FT_OPEN_DRIVER
-#define ft_open_params    FT_OPEN_PARAMS
-
-
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
@@ -2270,28 +2261,6 @@ FT_BEGIN_HEADER
                 const FT_Open_Args*  args,
                 FT_Long              face_index,
                 FT_Face             *aface );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Attach_File                                                     */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Call @FT_Attach_Stream to attach a file.                           */
-  /*                                                                       */
-  /* <InOut>                                                               */
-  /*    face         :: The target face object.                            */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    filepathname :: The pathname.                                      */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0~means success.                             */
-  /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FT_Attach_File( FT_Face      face,
-                  const char*  filepathname );
 
 
   /*************************************************************************/

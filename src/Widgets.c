@@ -2343,10 +2343,11 @@ static void TextGroupWidget_Output(struct Portion bit, int lineBeg, int lineEnd,
 }
 
 static int TextGroupWidget_Reduce(struct TextGroupWidget* w, char* chars, int target, struct Portion* portions) {
-	struct Portion* start = portions;
-	int total = 0, i;
+	struct Portion* start = portions;	
 	int32_t begs[TEXTGROUPWIDGET_MAX_LINES];
 	int32_t ends[TEXTGROUPWIDGET_MAX_LINES];
+	struct Portion bit;
+	int i, total = 0, end = 0;
 
 	for (i = 0; i < w->LinesCount; i++) {
 		int lineLen = w->LineLengths[i];
@@ -2358,7 +2359,6 @@ static int TextGroupWidget_Reduce(struct TextGroupWidget* w, char* chars, int ta
 		total += lineLen; ends[i] = total;
 	}
 
-	int end = 0; struct Portion bit;
 	for (;;) {
 		int nextStart = TextGroupWidget_NextUrl(chars, total, end);
 
@@ -2379,26 +2379,31 @@ static int TextGroupWidget_Reduce(struct TextGroupWidget* w, char* chars, int ta
 }
 
 static void TextGroupWidget_FormatUrl(String* text, const String* url) {
-	String_AppendColorless(text, url);
+	char* dst;
 	int i;
-	char* dst = text->buffer;
+	String_AppendColorless(text, url);
 
 	/* Delete "> " multiline chars from URLs */
+	dst = text->buffer;
 	for (i = text->length - 2; i >= 0; i--) {
 		if (dst[i] != '>' || dst[i + 1] != ' ') continue;
+
 		String_DeleteAt(text, i + 1);
 		String_DeleteAt(text, i);
 	}
 }
 
 static bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, String* text, int index, int mouseX) {
-	mouseX -= w->Textures[index].X;
-	struct DrawTextArgs args = { 0 }; args.UseShadow = true;
-	String line = TextGroupWidget_UNSAFE_Get(w, index);
-	if (Game_ClassicMode) return false;
-
 	char chars[TEXTGROUPWIDGET_MAX_LINES * TEXTGROUPWIDGET_LEN];
 	struct Portion portions[2 * (TEXTGROUPWIDGET_LEN / TEXTGROUPWIDGET_HTTP_LEN)];
+	struct DrawTextArgs args = { 0 };
+	String line;
+
+	mouseX -= w->Textures[index].X;
+	args.UseShadow = true;
+	line = TextGroupWidget_UNSAFE_Get(w, index);
+
+	if (Game_ClassicMode) return false;
 	int i, x, portionsCount = TextGroupWidget_Reduce(w, chars, index, portions);
 
 	for (i = 0, x = 0; i < portionsCount; i++) {

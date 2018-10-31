@@ -203,13 +203,6 @@
     }
 
 #ifndef FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT
-
-    else if ( args->flags & FT_OPEN_PATHNAME )
-    {
-      /* create a normal system stream */
-      error = FT_Stream_Open( stream, args->pathname );
-      stream->pathname.pointer = args->pathname;
-    }
     else if ( ( args->flags & FT_OPEN_STREAM ) && args->stream )
     {
       /* use an existing, user-provided stream */
@@ -1661,28 +1654,6 @@
     FT_TRACE4(( "FT_Open_Face: Return 0x%x\n", error ));
 
     return error;
-  }
-
-
-  /* documentation is in freetype.h */
-
-  FT_EXPORT_DEF( FT_Error )
-  FT_Attach_File( FT_Face      face,
-                  const char*  filepathname )
-  {
-    FT_Open_Args  open;
-
-
-    /* test for valid `face' delayed to `FT_Attach_Stream' */
-
-    if ( !filepathname )
-      return FT_THROW( Invalid_Argument );
-
-    open.stream   = NULL;
-    open.flags    = FT_OPEN_PATHNAME;
-    open.pathname = (char*)filepathname;
-
-    return FT_Attach_Stream( face, &open );
   }
 
 

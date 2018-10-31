@@ -87,26 +87,7 @@
 #define ft_strcpy   strcpy
 #define ft_strlen   strlen
 #define ft_strncmp  strncmp
-#define ft_strncpy  strncpy
-#define ft_strrchr  strrchr
 #define ft_strstr   strstr
-
-
-  /**********************************************************************/
-  /*                                                                    */
-  /*                           file handling                            */
-  /*                                                                    */
-  /**********************************************************************/
-
-
-#include <stdio.h>
-
-#define FT_FILE     FILE
-#define ft_fclose   fclose
-#define ft_fopen    fopen
-#define ft_fread    fread
-#define ft_fseek    fseek
-#define ft_ftell    ftell
 
 
   /**********************************************************************/

@@ -558,6 +558,9 @@ static void LoadingScreen_Init(void* screen) {
 #define PROG_BAR_HEIGHT 4
 static void LoadingScreen_Render(void* screen, double delta) {
 	struct LoadingScreen* s = screen;
+	int progWidth;
+	int x, y;
+
 	Gfx_SetTexturing(true);
 	LoadingScreen_DrawBackground();
 
@@ -565,9 +568,9 @@ static void LoadingScreen_Render(void* screen, double delta) {
 	Elem_Render(&s->Message, delta);
 	Gfx_SetTexturing(false);
 
-	int x = Gui_CalcPos(ANCHOR_CENTRE,  0, PROG_BAR_WIDTH,  Game_Width);
-	int y = Gui_CalcPos(ANCHOR_CENTRE, 34, PROG_BAR_HEIGHT, Game_Height);
-	int progWidth = (int)(PROG_BAR_WIDTH * s->Progress);
+	x = Gui_CalcPos(ANCHOR_CENTRE,  0, PROG_BAR_WIDTH,  Game_Width);
+	y = Gui_CalcPos(ANCHOR_CENTRE, 34, PROG_BAR_HEIGHT, Game_Height);
+	progWidth = (int)(PROG_BAR_WIDTH * s->Progress);
 
 	PackedCol backCol = PACKEDCOL_CONST(128, 128, 128, 255);
 	PackedCol progCol = PACKEDCOL_CONST(128, 255, 128, 255);
