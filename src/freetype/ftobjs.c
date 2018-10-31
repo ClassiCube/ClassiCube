@@ -2259,6 +2259,15 @@
   /* documentation is in freetype.h */
 
   FT_EXPORT_DEF( FT_Error )
+  FT_New_Face( FT_Library           library,
+                const FT_Open_Args*  args,
+                FT_Long              face_index,
+                FT_Face             *aface )
+  {
+    return FT_Open_Face( library, args, face_index, aface );
+  }
+
+  FT_EXPORT_DEF( FT_Error )
   FT_Open_Face( FT_Library           library,
                 const FT_Open_Args*  args,
                 FT_Long              face_index,

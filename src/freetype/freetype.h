@@ -2095,6 +2095,38 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
+  /*    FT_New_Face                                                        */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    This function calls @FT_Open_Face to open a font by its pathname.  */
+  /*                                                                       */
+  /* <InOut>                                                               */
+  /*    library    :: A handle to the library resource.                    */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    pathname   :: A path to the font file.                             */
+  /*                                                                       */
+  /*    face_index :: The index of the face within the font.  The first    */
+  /*                  face has index~0.                                    */
+  /*                                                                       */
+  /* <Output>                                                              */
+  /*    aface      :: A handle to a new face object.  If `face_index' is   */
+  /*                  greater than or equal to zero, it must be non-NULL.  */
+  /*                  See @FT_Open_Face for more details.                  */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
+  FT_New_Face( FT_Library   library,
+               const FT_Open_Args*  args,
+               FT_Long      face_index,
+               FT_Face     *aface );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
   /*    FT_Open_Face                                                       */
   /*                                                                       */
   /* <Description>                                                         */

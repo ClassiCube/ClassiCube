@@ -889,7 +889,16 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 	stream = Mem_AllocCleared(1, sizeof(FT_StreamRec), "leaky font"); /* TODO: LEAKS MEMORY!!! */
 	if (!Font_MakeArgs(&path, stream, &args)) return;
 
-	err = FT_Open_Face(ft_lib, &args, 0, &face);
+	/* For OSX font suitcase files */
+#ifdef CC_BUILD_OSX
+	char fileBuffer[FILENAME_SIZE + 1];
+	String file = String_NT_Array(fileBuffer);
+	String_Copy(&file, &path);
+	file.buffer[file.length] = '\0';
+	args.pathname = file.buffer;
+#endif
+
+	err = FT_New_Face(ft_lib, &args, 0, &face);
 	if (err) ErrorHandler_Fail2(err, "Creating font failed");
 	desc->Handle = face;
 
