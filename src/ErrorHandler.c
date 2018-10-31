@@ -132,14 +132,14 @@ static void ErrorHandler_Backtrace(String* backtrace, void* ctx) {
 }
 
 static void ErrorHandler_DumpCommon(String* str, void* ctx) {
+	static String backtrace = String_FromConst("-- backtrace --\r\n");
+	static String modules   = String_FromConst("-- modules --\r\n");
 	HANDLE process = GetCurrentProcess();
-	SymInitialize(process, NULL, TRUE);
 
-	String backtrace = String_FromConst("-- backtrace --\r\n");
+	SymInitialize(process, NULL, TRUE);
 	ErrorHandler_Log(&backtrace);
 	ErrorHandler_Backtrace(str, ctx);
 
-	String modules = String_FromConst("-- modules --\r\n");
 	ErrorHandler_Log(&modules);
 	EnumerateLoadedModules(process, ErrorHandler_DumpModule, NULL);
 }

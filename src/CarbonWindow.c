@@ -474,6 +474,7 @@ void Window_SetTitle(const String* title) {
 	CFStringRef titleCF;
 	int len;
 	
+	/* TODO: This leaks memory, old title isn't released */
 	len     = Platform_ConvertString(str, title);
 	titleCF = CFStringCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, false);
 	SetWindowTitleWithCFString(win_handle, titleCF);

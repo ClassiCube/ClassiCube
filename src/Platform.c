@@ -512,15 +512,15 @@ bool File_Exists(const String* path) {
 ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
 	char str[600];
 	DIR* dirPtr;
-	struct dirent* entry;
-	int res;
+	struct dirent* entry; 
+	char* src;
+	int len, res;
+	char pathBuffer[FILENAME_SIZE];
+	String path = String_FromArray(pathBuffer);
 
 	Platform_ConvertString(str, dirPath);
 	dirPtr = opendir(str);
 	if (!dirPtr) return errno;
-
-	char pathBuffer[FILENAME_SIZE];
-	String path = String_FromArray(pathBuffer);
 
 	/* POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed." */
 	/* errno is sometimes leftover from previous calls, so always reset it before readdir gets called */
@@ -530,11 +530,11 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 		String_Format2(&path, "%s%r", dirPath, &Directory_Separator);
 
 		/* ignore . and .. entry */
-		char* src = entry->d_name;
+		src = entry->d_name;
 		if (src[0] == '.' && src[1] == '\0') continue;
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 
-		int len = String_CalcLen(src, UInt16_MaxValue);
+		len = String_CalcLen(src, UInt16_MaxValue);
 		String_DecodeUtf8(&path, src, len);
 
 		/* TODO: fallback to stat when this fails */
@@ -691,8 +691,8 @@ void* Thread_StartCallback(void* lpParam) {
 
 void* Thread_Start(Thread_StartFunc* func, bool detach) {
 	pthread_t* ptr = Mem_Alloc(1, sizeof(pthread_t), "allocating thread");
-	int result = pthread_create(ptr, NULL, Thread_StartCallback, func);
-	ErrorHandler_CheckOrFail(result, "Creating thread");
+	int res = pthread_create(ptr, NULL, Thread_StartCallback, func);
+	if (res) ErrorHandler_Fail2(res, "Creating thread");
 
 	if (detach) Thread_Detach(ptr);
 	return ptr;
@@ -700,67 +700,68 @@ void* Thread_Start(Thread_StartFunc* func, bool detach) {
 
 void Thread_Detach(void* handle) {
 	pthread_t* ptr = handle;
-	int result = pthread_detach(*ptr);
-	ErrorHandler_CheckOrFail(result, "Detaching thread");
+	int res = pthread_detach(*ptr);
+	if (res) ErrorHandler_Fail2(res, "Detaching thread");
 	Mem_Free(ptr);
 }
 
 void Thread_Join(void* handle) {
 	pthread_t* ptr = handle;
-	int result = pthread_join(*ptr, NULL);
-	ErrorHandler_CheckOrFail(result, "Joining thread");
+	int res = pthread_join(*ptr, NULL);
+	if (res) ErrorHandler_Fail2(res, "Joining thread");
 	Mem_Free(ptr);
 }
 
 void* Mutex_Create(void) {
 	pthread_mutex_t* ptr = Mem_Alloc(1, sizeof(pthread_mutex_t), "allocating mutex");
-	int result = pthread_mutex_init(ptr, NULL);
-	ErrorHandler_CheckOrFail(result, "Creating mutex");
+	int res = pthread_mutex_init(ptr, NULL);
+	if (res) ErrorHandler_Fail2(res, "Creating mutex");
 	return ptr;
 }
 
 void Mutex_Free(void* handle) {
-	int result = pthread_mutex_destroy((pthread_mutex_t*)handle);
-	ErrorHandler_CheckOrFail(result, "Destroying mutex");
+	int res = pthread_mutex_destroy((pthread_mutex_t*)handle);
+	if (res) ErrorHandler_Fail2(res, "Destroying mutex");
 	Mem_Free(handle);
 }
 
 void Mutex_Lock(void* handle) {
-	int result = pthread_mutex_lock((pthread_mutex_t*)handle);
-	ErrorHandler_CheckOrFail(result, "Locking mutex");
+	int res = pthread_mutex_lock((pthread_mutex_t*)handle);
+	if (res) ErrorHandler_Fail2(res, "Locking mutex");
 }
 
 void Mutex_Unlock(void* handle) {
-	int result = pthread_mutex_unlock((pthread_mutex_t*)handle);
-	ErrorHandler_CheckOrFail(result, "Unlocking mutex");
+	int res = pthread_mutex_unlock((pthread_mutex_t*)handle);
+	if (res) ErrorHandler_Fail2(res, "Unlocking mutex");
 }
 
 void* Waitable_Create(void) {
 	pthread_cond_t* ptr = Mem_Alloc(1, sizeof(pthread_cond_t), "allocating waitable");
-	int result = pthread_cond_init(ptr, NULL);
-	ErrorHandler_CheckOrFail(result, "Creating event");
+	int res = pthread_cond_init(ptr, NULL);
+	if (res) ErrorHandler_Fail2(res, "Creating event");
 	return ptr;
 }
 
 void Waitable_Free(void* handle) {
-	int result = pthread_cond_destroy((pthread_cond_t*)handle);
-	ErrorHandler_CheckOrFail(result, "Destroying event");
+	int res = pthread_cond_destroy((pthread_cond_t*)handle);
+	if (res) ErrorHandler_Fail2(res, "Destroying event");
 	Mem_Free(handle);
 }
 
 void Waitable_Signal(void* handle) {
-	int result = pthread_cond_signal((pthread_cond_t*)handle);
-	ErrorHandler_CheckOrFail(result, "Signalling event");
+	int res = pthread_cond_signal((pthread_cond_t*)handle);
+	if (res) ErrorHandler_Fail2(res, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
-	int result = pthread_cond_wait((pthread_cond_t*)handle, &event_mutex);
-	ErrorHandler_CheckOrFail(result, "Waiting event");
+	int res = pthread_cond_wait((pthread_cond_t*)handle, &event_mutex);
+	if (res) ErrorHandler_Fail2(res, "Waiting event");
 }
 
 void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
 	struct timeval tv;
 	struct timespec ts;
+	int res;
 	gettimeofday(&tv, NULL);
 
 	ts.tv_sec = tv.tv_sec + milliseconds / 1000;
@@ -768,9 +769,9 @@ void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
 	ts.tv_sec += ts.tv_nsec / NS_PER_SEC;
 	ts.tv_nsec %= NS_PER_SEC;
 
-	int result = pthread_cond_timedwait((pthread_cond_t*)handle, &event_mutex, &ts);
-	if (result == ETIMEDOUT) return;
-	ErrorHandler_CheckOrFail(result, "Waiting timed event");
+	res = pthread_cond_timedwait((pthread_cond_t*)handle, &event_mutex, &ts);
+	if (res == ETIMEDOUT) return;
+	if (res) ErrorHandler_Fail2(res, "Waiting timed event");
 }
 #endif
 
@@ -815,9 +816,9 @@ static void Font_CloseWrapper(FT_Stream s) {
 
 static bool Font_MakeArgs(const String* path, FT_Stream stream, FT_Open_Args* args) {
 	void* file;
-	if (File_Open(&file, path)) return false;
-
 	uint32_t size;
+
+	if (File_Open(&file, path)) return false;
 	if (File_Length(file, &size)) { File_Close(file); return false; }
 	stream->size = size;
 

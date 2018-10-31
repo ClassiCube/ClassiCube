@@ -42,13 +42,15 @@ static void MapRenderer_CheckWeather(double delta) {
 
 static void MapRenderer_RenderNormalBatch(int batch) {
 	int batchOffset = MapRenderer_ChunksCount * batch;
+	struct ChunkInfo* info;
+	struct ChunkPartInfo part;
 	int i, offset, count;
 
 	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
-		struct ChunkInfo* info = MapRenderer_RenderChunks[i];
+		info = MapRenderer_RenderChunks[i];
 		if (!info->NormalParts) continue;
 
-		struct ChunkPartInfo part = info->NormalParts[batchOffset];
+		part = info->NormalParts[batchOffset];
 		if (part.Offset < 0) continue;
 		MapRenderer_HasNormalParts[batch] = true;
 
@@ -159,13 +161,15 @@ void MapRenderer_RenderNormal(double delta) {
 
 static void MapRenderer_RenderTranslucentBatch(int batch) {
 	int batchOffset = MapRenderer_ChunksCount * batch;
+	struct ChunkInfo* info;
+	struct ChunkPartInfo part;
 	int i, offset;
 
 	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
-		struct ChunkInfo* info = MapRenderer_RenderChunks[i];
+		info = MapRenderer_RenderChunks[i];
 		if (!info->TranslucentParts) continue;
 
-		struct ChunkPartInfo part = info->TranslucentParts[batchOffset];
+		part = info->TranslucentParts[batchOffset];
 		if (part.Offset < 0) continue;
 		MapRenderer_HasTranslucentParts[batch] = true;
 

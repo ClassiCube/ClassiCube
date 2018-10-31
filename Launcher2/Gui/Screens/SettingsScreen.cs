@@ -5,7 +5,7 @@ using Launcher.Gui.Views;
 using Launcher.Gui.Widgets;
 using OpenTK.Input;
 
-namespace Launcher.Gui.Screens {	
+namespace Launcher.Gui.Screens {
 	public sealed class SettingsScreen : Screen {
 		
 		SettingsView view;
@@ -22,7 +22,7 @@ namespace Launcher.Gui.Screens {
 			widgets[view.updatesIndex].OnClick = SwitchToUpdates;
 			widgets[view.coloursIndex].OnClick = SwitchToColours;
 			widgets[view.backIndex].OnClick = SwitchToMain;
-			widgets[view.clientIndex].OnClick = UseCClientClick;	
+			widgets[view.clientIndex].OnClick = UseCClientClick;
 			Resize();
 		}
 		
@@ -31,6 +31,7 @@ namespace Launcher.Gui.Screens {
 		void SwitchToColours(int x, int y) { game.SetScreen(new ColoursScreen(game)); }
 		void SwitchToMain(int x, int y) { game.SetScreen(new MainScreen(game)); }
 		
+		static bool warned;
 		void UseCClientClick(int mouseX, int mouseY) {
 			CheckboxWidget widget = (CheckboxWidget)widgets[view.clientIndex];
 			widget.Value = !widget.Value;
@@ -38,6 +39,12 @@ namespace Launcher.Gui.Screens {
 			
 			Options.Set(OptionsKey.CClient, widget.Value);
 			Client.CClient = widget.Value;
+			
+			if (Client.CClient && !Platform.FileExists(Client.GetExeName())) {
+				if (warned) return;
+				warned = true;
+				ErrorHandler.ShowDialog("Note", "You will need to update again to get it");
+			}
 		}
 		
 		public override void Tick() { }
