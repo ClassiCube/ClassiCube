@@ -48,7 +48,7 @@ struct ListScreen {
 	String TitleText;
 	struct TextWidget Title, Page;
 	struct Widget* ListWidgets[LIST_SCREEN_BUTTONS + 2];
-	StringsBuffer Entries; /* NOTE: this is the last member so we can avoid memsetting it to 0 */
+	StringsBuffer Entries;
 };
 
 #define MenuScreen_Layout MenuBase_Layout FontDesc TitleFont, TextFont;
@@ -1392,14 +1392,16 @@ struct Screen* SaveLevelScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 	struct ListScreen* s = screen;
+	String filename;
+	int idx;
 	char pathBuffer[FILENAME_SIZE];
 	String path = String_FromArray(pathBuffer);
 
-	String filename = ListScreen_UNSAFE_GetCur(s, widget);
+	filename = ListScreen_UNSAFE_GetCur(s, widget);
 	String_Format2(&path, "texpacks%r%s", &Directory_Separator, &filename);
 	if (!File_Exists(&path)) return;
 	
-	int idx = s->CurrentIndex;
+	idx = s->CurrentIndex;
 	Game_SetDefaultTexturePack(&filename);
 	TexturePack_ExtractDefault();
 	Elem_Recreate(s);
@@ -1614,10 +1616,11 @@ void LoadLevelScreen_LoadMap(const String* path) {
 
 static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 	struct ListScreen* s = screen;
+	String filename;
 	char pathBuffer[FILENAME_SIZE];
 	String path = String_FromArray(pathBuffer);
 
-	String filename = ListScreen_UNSAFE_GetCur(s, widget);
+	filename = ListScreen_UNSAFE_GetCur(s, widget);
 	String_Format2(&path, "maps%r%s", &Directory_Separator, &filename);
 	if (!File_Exists(&path)) return;
 	LoadLevelScreen_LoadMap(&path);
@@ -1651,13 +1654,14 @@ static void KeyBindingsScreen_GetText(struct KeyBindingsScreen* s, int i, String
 static void KeyBindingsScreen_OnBindingClick(void* screen, void* widget) {
 	struct KeyBindingsScreen* s = screen;
 	struct ButtonWidget* btn    = widget;
+	struct ButtonWidget* cur;
 	char textBuffer[STRING_SIZE];
 	String text = String_FromArray(textBuffer);
 
 	/* previously selected a different button for binding */
 	if (s->CurI >= 0) {
 		KeyBindingsScreen_GetText(s, s->CurI, &text);
-		struct ButtonWidget* cur = (struct ButtonWidget*)s->Widgets[s->CurI];
+		cur = (struct ButtonWidget*)s->Widgets[s->CurI];
 		ButtonWidget_Set(cur, &text, &s->TitleFont);
 	}
 	s->CurI = Menu_Index(s, btn);
@@ -1669,7 +1673,10 @@ static void KeyBindingsScreen_OnBindingClick(void* screen, void* widget) {
 	ButtonWidget_Set(btn, &text, &s->TitleFont);
 }
 
-static int KeyBindingsScreen_MakeWidgets(struct KeyBindingsScreen* s, int y, int arrowsY, int leftLength,  const char* title, int btnWidth) {
+static int KeyBindingsScreen_MakeWidgets(struct KeyBindingsScreen* s, int y, int arrowsY, int leftLength, const char* title, int btnWidth) {
+	static String lArrow = String_FromConst("<");
+	static String rArrow = String_FromConst(">");
+
 	int i, origin = y, xOffset = btnWidth / 2 + 5;
 	s->CurI = -1;
 
@@ -1695,25 +1702,24 @@ static int KeyBindingsScreen_MakeWidgets(struct KeyBindingsScreen* s, int y, int
 	Widget_LeftClick backClick = Game_UseClassicOptions ? Menu_SwitchClassicOptions : Menu_SwitchOptions;
 	Menu_Back(s, i, &s->Back, "Done", &s->TitleFont, backClick); i++;
 	if (!s->LeftPage && !s->RightPage) return i;
-
-	String lArrow = String_FromConst("<");
-	Menu_Button(s, i, &s->Left, 40, &lArrow, &s->TitleFont, s->LeftPage,
+	
+	Menu_Button(s, i, &s->Left,  40, &lArrow, &s->TitleFont, s->LeftPage,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, -btnWidth - 35, arrowsY); i++;
-	s->Left.Disabled = !s->LeftPage;
-
-	String rArrow = String_FromConst(">");
 	Menu_Button(s, i, &s->Right, 40, &rArrow, &s->TitleFont, s->RightPage,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, btnWidth + 35, arrowsY); i++;
-	s->Right.Disabled = !s->RightPage;
+		ANCHOR_CENTRE, ANCHOR_CENTRE,  btnWidth + 35, arrowsY); i++;
 
+	s->Left.Disabled  = !s->LeftPage;
+	s->Right.Disabled = !s->RightPage;
 	return i;
 }
 
 static bool KeyBindingsScreen_KeyDown(void* screen, Key key) {
 	struct KeyBindingsScreen* s = screen;
+	struct ButtonWidget* cur;
+	KeyBind bind;
 	if (s->CurI == -1) return MenuScreen_KeyDown(s, key);
 
-	KeyBind bind = s->Binds[s->CurI];
+	bind = s->Binds[s->CurI];
 	if (key == Key_Escape) key = KeyBind_GetDefault(bind);
 	KeyBind_Set(bind, key);
 
@@ -1721,7 +1727,7 @@ static bool KeyBindingsScreen_KeyDown(void* screen, Key key) {
 	String text = String_FromArray(textBuffer);
 	KeyBindingsScreen_GetText(s, s->CurI, &text);
 
-	struct ButtonWidget* cur = (struct ButtonWidget*)s->Widgets[s->CurI];
+	cur = (struct ButtonWidget*)s->Widgets[s->CurI];
 	ButtonWidget_Set(cur, &text, &s->TitleFont);
 	s->CurI = -1;
 	return true;
@@ -2142,12 +2148,11 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 	static String okay = String_FromConst("OK");
 	static String def  = String_FromConst("Default value");
 
+	struct MenuOptionsScreen* s = screen;
+	struct ButtonWidget* btn = widget;
+	int i;
 	char valueBuffer[STRING_SIZE];
 	String value = String_FromArray(valueBuffer);
-
-	struct MenuOptionsScreen* s = screen;
-	struct ButtonWidget* btn    = widget;
-	int i;
 
 	s->ActiveI = Menu_Index(s, btn);
 	MenuOptionsScreen_FreeExtHelp(s);
@@ -3168,8 +3173,10 @@ struct Screen* UrlWarningOverlay_MakeInstance(const String* url) {
 struct ConfirmDenyOverlay ConfirmDenyOverlay_Instance;
 static void ConfirmDenyOverlay_ConfirmNoClick(void* screen, void* b) {
 	struct ConfirmDenyOverlay* s = screen;
+	String url;
+
 	Gui_FreeOverlay(s);
-	String url = s->Url;
+	url = s->Url;
 
 	if (s->AlwaysDeny && !TextureCache_HasDenied(&url)) {
 		TextureCache_Deny(&url);
@@ -3178,8 +3185,10 @@ static void ConfirmDenyOverlay_ConfirmNoClick(void* screen, void* b) {
 
 static void ConfirmDenyOverlay_GoBackClick(void* screen, void* b) {
 	struct ConfirmDenyOverlay* s = screen;
+	struct Screen* overlay;
+
 	Gui_FreeOverlay(s);
-	struct Screen* overlay = TexPackOverlay_MakeInstance(&s->Url);
+	overlay = TexPackOverlay_MakeInstance(&s->Url);
 	Gui_ShowOverlay(overlay, true);
 }
 
@@ -3232,12 +3241,14 @@ struct Screen* ConfirmDenyOverlay_MakeInstance(const String* url, bool alwaysDen
 struct TexPackOverlay TexPackOverlay_Instance;
 static void TexPackOverlay_YesClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = screen;
+	String url;
+	bool isAlways;
+
 	Gui_FreeOverlay(s);
-	String url = s->Identifier;
-	url = String_UNSAFE_SubstringAt(&url, 3);
+	url = String_UNSAFE_SubstringAt(&s->Identifier, 3);
 
 	ServerConnection_DownloadTexturePack(&url);
-	bool isAlways = WarningOverlay_IsAlways(s, widget);
+	isAlways = WarningOverlay_IsAlways(s, widget);
 	if (isAlways && !TextureCache_HasAccepted(&url)) {
 		TextureCache_Accept(&url);
 	}
@@ -3245,11 +3256,13 @@ static void TexPackOverlay_YesClick(void* screen, void* widget) {
 
 static void TexPackOverlay_NoClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = screen;
-	Gui_FreeOverlay(s);
-	String url = s->Identifier;
-	url = String_UNSAFE_SubstringAt(&url, 3);
+	String url;
+	bool isAlways;
 
-	bool isAlways = WarningOverlay_IsAlways(s, widget);
+	Gui_FreeOverlay(s);
+	url = String_UNSAFE_SubstringAt(&s->Identifier, 3);
+
+	isAlways = WarningOverlay_IsAlways(s, widget);
 	struct Screen* overlay = ConfirmDenyOverlay_MakeInstance(&url, isAlways);
 	Gui_ShowOverlay(overlay, true);
 }
@@ -3269,11 +3282,10 @@ static void TexPackOverlay_Render(void* screen, double delta) {
 static void TexPackOverlay_ContextRecreated(void* screen) {
 	static String https = String_FromConst("https://");
 	static String http = String_FromConst("http://");
-
 	struct TexPackOverlay* s = screen;
-	String url = s->Identifier;
-	url = String_UNSAFE_SubstringAt(&url, 3);
-	
+	String url;
+
+	url = String_UNSAFE_SubstringAt(&s->Identifier, 3);
 	if (String_CaselessStarts(&url, &https)) {
 		url = String_UNSAFE_SubstringAt(&url, https.length);
 	}

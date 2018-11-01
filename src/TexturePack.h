@@ -61,7 +61,7 @@ void TextureCache_Set(const String* url, uint8_t* data, uint32_t length);
 /* Sets the cached ETag header for the given url. */
 void TextureCache_SetETag(const String* url, const String* etag);
 /* Sets the cached Last-Modified header for the given url. */
-void TextureCache_SetLastModified(const String* url, TimeMS* lastModified);
+void TextureCache_SetLastModified(const String* url, const TimeMS* lastModified);
 
 void TexturePack_ExtractZip_File(const String* filename);
 void TexturePack_ExtractDefault(void);

@@ -115,10 +115,10 @@ static ReturnCode Zip_ReadEndOfCentralDirectory(struct ZipState* state, uint32_t
 	return 0;
 }
 
-enum ZIP_SIG {
+enum ZipSig {
 	ZIP_SIG_ENDOFCENTRALDIR = 0x06054b50,
 	ZIP_SIG_CENTRALDIR      = 0x02014b50,
-	ZIP_SIG_LOCALFILEHEADER = 0x04034b50,
+	ZIP_SIG_LOCALFILEHEADER = 0x04034b50
 };
 
 static void Zip_DefaultProcessor(const String* path, struct Stream* data, struct ZipEntry* entry) { }
@@ -233,16 +233,18 @@ static void EntryList_Load(struct EntryList* list) {
 }
 
 static void EntryList_Save(struct EntryList* list) {
+	struct Stream stream;
+	ReturnCode res;
+	int i;
 	char pathBuffer[FILENAME_SIZE];
 	String path = String_FromArray(pathBuffer);
+
 	String_Format3(&path, "%c%r%c", list->Folder, &Directory_Separator, list->Filename);
 	if (!Utils_EnsureDirectory(list->Folder)) return;
-
-	ReturnCode res; struct Stream stream;
+	
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Chat_LogError2(res, "creating", &path); return; }
 
-	int i;
 	for (i = 0; i < list->Entries.Count; i++) {
 		String entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
 		res = Stream_WriteLine(&stream, &entry);
@@ -354,10 +356,12 @@ void TextureCache_GetETag(const String* url, String* etag) {
 }
 
 void TextureCache_Set(const String* url, uint8_t* data, uint32_t length) {
+	struct Stream stream;
+	ReturnCode res;
+
 	TexCache_InitAndMakePath(url);
 	if (!Utils_EnsureDirectory(TEXCACHE_FOLDER)) return;
-
-	ReturnCode res; struct Stream stream;	
+	
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Chat_LogError2(res, "creating cache for", &path); return; }
 
@@ -390,7 +394,7 @@ void TextureCache_SetETag(const String* url, const String* etag) {
 	TextureCache_AddToTags(url, etag, &cache_eTags);
 }
 
-void TextureCache_SetLastModified(const String* url, TimeMS* lastModified) {
+void TextureCache_SetLastModified(const String* url, const TimeMS* lastModified) {
 	if (!lastModified) return;
 	uint64_t ticks = (*lastModified) * TEXCACHE_TICKS_PER_MS;
 

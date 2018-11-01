@@ -944,16 +944,15 @@ static bool ChatScreen_KeyUp(void* screen, Key key) {
 	if (!s->HandlesAllInput) return false;
 
 	if (ServerConnection_SupportsFullCP437 && key == KeyBind_Get(KeyBind_ExtInput)) {
-		if (Window_Focused) {
-			bool active = !s->AltText.Active;
-			SpecialInputWidget_SetActive(&s->AltText, active);
-		}
+		if (!Window_Focused) return true;
+		SpecialInputWidget_SetActive(&s->AltText, !s->AltText.Active);
 	}
 	return true;
 }
 
 static bool ChatScreen_KeyPress(void* screen, char keyChar) {
 	struct ChatScreen* s = screen;
+	bool handled;
 	if (!s->HandlesAllInput) return false;
 
 	if (s->SuppressNextPress) {
@@ -961,16 +960,17 @@ static bool ChatScreen_KeyPress(void* screen, char keyChar) {
 		return false;
 	}
 
-	bool handled = Elem_HandlesKeyPress(&s->Input.Base, keyChar);
+	handled = Elem_HandlesKeyPress(&s->Input.Base, keyChar);
 	ChatScreen_UpdateAltTextY(s);
 	return handled;
 }
 
 static bool ChatScreen_MouseScroll(void* screen, float delta) {
 	struct ChatScreen* s = screen;
+	int steps;
 	if (!s->HandlesAllInput) return false;
 
-	int steps = Utils_AccumulateWheelDelta(&s->ChatAcc, delta);
+	steps = Utils_AccumulateWheelDelta(&s->ChatAcc, delta);
 	ChatScreen_ScrollHistoryBy(s, -steps);
 	return true;
 }

@@ -260,7 +260,7 @@ FT_BEGIN_HEADER
   /* supply font data incrementally as the document is parsed, such        */
   /* as the Ghostscript interpreter for the PostScript language.           */
   /*                                                                       */
-#define FT_CONFIG_OPTION_INCREMENTAL
+#undef FT_CONFIG_OPTION_INCREMENTAL
 
 
   /*************************************************************************/
@@ -556,7 +556,7 @@ FT_BEGIN_HEADER
   /* and avar tables).  This has many similarities to Type 1 Multiple      */
   /* Masters support.                                                      */
   /*                                                                       */
-#define TT_CONFIG_OPTION_GX_VAR_SUPPORT
+#undef TT_CONFIG_OPTION_GX_VAR_SUPPORT
 
 
   /*************************************************************************/
@@ -628,7 +628,7 @@ FT_BEGIN_HEADER
   /* files into an existing face.  Note that if set, the T1 driver will be */
   /* unable to produce kerning distances.                                  */
   /*                                                                       */
-#undef T1_CONFIG_OPTION_NO_AFM
+#define T1_CONFIG_OPTION_NO_AFM
 
 
   /*************************************************************************/
@@ -637,7 +637,7 @@ FT_BEGIN_HEADER
   /* compilation of the Multiple Masters font support in the Type 1        */
   /* driver.                                                               */
   /*                                                                       */
-#undef T1_CONFIG_OPTION_NO_MM_SUPPORT
+#define T1_CONFIG_OPTION_NO_MM_SUPPORT
 
 
   /*************************************************************************/

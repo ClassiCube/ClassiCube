@@ -43,6 +43,7 @@ static ReturnCode Ogg_NextPage(struct Stream* stream) {
 }
 
 static ReturnCode Ogg_Read(struct Stream* stream, uint8_t* data, uint32_t count, uint32_t* modified) {
+	ReturnCode res;
 	for (;;) {
 		if (stream->Meta.Ogg.Left) {
 			count = min(count, stream->Meta.Ogg.Left);
@@ -57,8 +58,6 @@ static ReturnCode Ogg_Read(struct Stream* stream, uint8_t* data, uint32_t count,
 		/* try again with data from next page */
 		*modified = 0;
 		if (stream->Meta.Ogg.Last) return 0;
-
-		ReturnCode res;
 		if ((res = Ogg_NextPage(stream))) return res;
 	}
 }
@@ -67,7 +66,8 @@ static ReturnCode Ogg_ReadU8(struct Stream* stream, uint8_t* data) {
 	if (!stream->Meta.Ogg.Left) return Stream_DefaultReadU8(stream, data);
 
 	*data = *stream->Meta.Ogg.Cur;
-	stream->Meta.Ogg.Cur++; stream->Meta.Ogg.Left--;
+	stream->Meta.Ogg.Cur++; 
+	stream->Meta.Ogg.Left--;
 	return 0;
 }
 
@@ -96,20 +96,25 @@ void Ogg_MakeStream(struct Stream* stream, uint8_t* buffer, struct Stream* sourc
 /* TODO: Make sure this is inlined */
 static uint32_t Vorbis_ReadBits(struct VorbisState* ctx, uint32_t bitsCount) {
 	uint8_t portion;
+	uint32_t data;
+	ReturnCode res;
+
 	while (ctx->NumBits < bitsCount) {
-		ReturnCode res = ctx->Source->ReadU8(ctx->Source, &portion);
+		res = ctx->Source->ReadU8(ctx->Source, &portion);
 		if (res) { ErrorHandler_Fail2(res, "Failed to read byte for vorbis"); }
 		Vorbis_PushByte(ctx, portion);
 	}
 
-	uint32_t data = Vorbis_PeekBits(ctx, bitsCount); Vorbis_ConsumeBits(ctx, bitsCount);
+	data = Vorbis_PeekBits(ctx, bitsCount); Vorbis_ConsumeBits(ctx, bitsCount);
 	return data;
 }
 
 static ReturnCode Vorbis_TryReadBits(struct VorbisState* ctx, uint32_t bitsCount, uint32_t* data) {
 	uint8_t portion;
+	ReturnCode res;
+
 	while (ctx->NumBits < bitsCount) {
-		ReturnCode res = ctx->Source->ReadU8(ctx->Source, &portion);
+		res = ctx->Source->ReadU8(ctx->Source, &portion);
 		if (res) return res;
 		Vorbis_PushByte(ctx, portion);
 	}
@@ -989,11 +994,13 @@ static bool Vorbis_ValidBlockSize(uint32_t size) {
 
 static ReturnCode Vorbis_CheckHeader(struct VorbisState* ctx, uint8_t type) {
 	uint8_t header[7];
+	bool OK;
 	ReturnCode res;
-	if ((res = Stream_Read(ctx->Source, header, sizeof(header)))) return res;
 
+	if ((res = Stream_Read(ctx->Source, header, sizeof(header)))) return res;
 	if (header[0] != type) return VORBIS_ERR_WRONG_HEADER;
-	bool OK = 
+
+	OK = 
 		header[1] == 'v' && header[2] == 'o' && header[3] == 'r' &&
 		header[4] == 'b' && header[5] == 'i' && header[6] == 's';
 	return OK ? 0 : ReturnCode_InvalidArg;
@@ -1001,10 +1008,11 @@ static ReturnCode Vorbis_CheckHeader(struct VorbisState* ctx, uint8_t type) {
 
 static ReturnCode Vorbis_DecodeIdentifier(struct VorbisState* ctx) {
 	uint8_t header[23];
+	uint32_t version;
 	ReturnCode res;
-	if ((res = Stream_Read(ctx->Source, header, sizeof(header)))) return res;
 
-	uint32_t version  = Stream_GetU32_LE(&header[0]);
+	if ((res = Stream_Read(ctx->Source, header, sizeof(header)))) return res;
+	version  = Stream_GetU32_LE(&header[0]);
 	if (version != 0) return VORBIS_ERR_VERSION;
 
 	ctx->Channels   = header[4];
@@ -1104,8 +1112,8 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 }
 
 ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
-	ReturnCode res;
 	uint32_t count;
+	ReturnCode res;
 	
 	if ((res = Vorbis_CheckHeader(ctx, 1)))   return res;
 	if ((res = Vorbis_DecodeIdentifier(ctx))) return res;

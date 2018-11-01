@@ -2220,12 +2220,13 @@ static int TextGroupWidget_CalcY(struct TextGroupWidget* w, int index, int newHe
 }
 
 void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* w, int index, bool placeHolder) {
+	int height;
 	w->PlaceholderHeight[index] = placeHolder;
 	if (w->Textures[index].ID) return;
 
-	int newHeight = placeHolder ? w->DefaultHeight : 0;
-	w->Textures[index].Y = TextGroupWidget_CalcY(w, index, newHeight);
-	w->Textures[index].Height = newHeight;
+	height = placeHolder ? w->DefaultHeight : 0;
+	w->Textures[index].Y      = TextGroupWidget_CalcY(w, index, height);
+	w->Textures[index].Height = height;
 }
 
 int TextGroupWidget_UsedHeight(struct TextGroupWidget* w) {

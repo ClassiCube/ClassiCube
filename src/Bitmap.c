@@ -385,7 +385,7 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 			scanlineBytes = scanlineSize + 1; /* Add 1 byte for filter byte of each scanline */
 
 			Mem_Set(buffer, 0, scanlineBytes); /* Prior row should be 0 per PNG spec */
-			bufferIdx = scanlineBytes;
+			bufferIdx  = scanlineBytes;
 			bufferRows = PNG_BUFFER_SIZE / scanlineBytes;
 		} break;
 

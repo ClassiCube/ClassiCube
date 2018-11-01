@@ -475,17 +475,18 @@ void TabList_MakeComponent(struct IGameComponent* comp) {
 *#########################################################################################################################*/
 #define PLAYER_NAME_EMPTY_TEX -30000
 static void Player_MakeNameTexture(struct Player* player) {
+	struct DrawTextArgs args;
+	Size2D size;
+	Bitmap bmp;
+
 	/* we want names to always be drawn not using the system font */
 	bool bitmapped = Drawer2D_BitmappedText;
 	Drawer2D_BitmappedText = true;
-
 	String displayName = String_FromRawArray(player->DisplayNameRaw);
-	FontDesc font;
-	Drawer2D_MakeFont(&font, 24, FONT_STYLE_NORMAL);
 
-	struct DrawTextArgs args;
-	DrawTextArgs_Make(&args, &displayName, &font, false);
-	Size2D size = Drawer2D_MeasureText(&args);
+	Drawer2D_MakeFont(&args.Font, 24, FONT_STYLE_NORMAL);
+	DrawTextArgs_Make(&args, &displayName, &args.Font, false);
+	size = Drawer2D_MeasureText(&args);
 
 	if (size.Width == 0) {
 		player->NameTex.ID = GFX_NULL;
@@ -495,7 +496,7 @@ static void Player_MakeNameTexture(struct Player* player) {
 		String shadowName = String_FromArray(buffer);
 
 		size.Width += 3; size.Height += 3;
-		Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+		Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 		{
 			PackedCol origWhiteCol = Drawer2D_Cols['f'];
 
@@ -526,6 +527,7 @@ static void Player_DrawName(struct Player* player) {
 	struct Entity* e = &player->Base;
 	struct Model* model = e->Model;
 	Vector3 pos;
+	float scale;
 
 	if (player->NameTex.X == PLAYER_NAME_EMPTY_TEX) return;
 	if (!player->NameTex.ID) Player_MakeNameTexture(player);
@@ -534,7 +536,7 @@ static void Player_DrawName(struct Player* player) {
 	model->RecalcProperties(e);
 	Vector3_TransformY(&pos, model->NameYOffset, &e->Transform);
 
-	float scale = model->NameScale * e->ModelScale.Y;
+	scale = model->NameScale * e->ModelScale.Y;
 	scale = scale > 1.0f ? (1.0f / 70.0f) : (scale / 70.0f);
 	Vector2 size = { player->NameTex.Width * scale, player->NameTex.Height * scale };
 
@@ -665,9 +667,11 @@ static void Player_ClearHat(Bitmap* bmp, uint8_t skinType) {
 static void Player_EnsurePow2(struct Player* player, Bitmap* bmp) {
 	int width  = Math_NextPowOf2(bmp->Width);
 	int height = Math_NextPowOf2(bmp->Height);
+	Bitmap scaled;
+
 	if (width == bmp->Width && height == bmp->Height) return;
 
-	Bitmap scaled; Bitmap_Allocate(&scaled, width, height);
+	Bitmap_Allocate(&scaled, width, height);
 	int y;
 	uint32_t stride = (uint32_t)(bmp->Width) * BITMAP_SIZEOF_PIXEL;
 	for (y = 0; y < bmp->Height; y++) {
