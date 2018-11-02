@@ -1190,12 +1190,17 @@ struct HUDScreen HUDScreen_Instance;
 #define CH_EXTENT 16
 
 static void HUDScreen_DrawCrosshairs(void) {
+	static struct Texture tex = { GFX_NULL, Tex_Rect(0,0,0,0), Tex_UV(0.0f,0.0f, 15/256.0f,15/256.0f) };
+	int extent;
 	if (!Gui_IconsTex) return;
 
-	int extent = (int)(CH_EXTENT * Game_Scale(Game_Height / 480.0f)), size = extent * 2;
-	int chX = (Game_Width / 2) - extent, chY = (Game_Height / 2) - extent;
+	extent = (int)(CH_EXTENT * Game_Scale(Game_Height / 480.0f));
+	tex.ID = Gui_IconsTex;
+	tex.X  = (Game_Width  / 2) - extent;
+	tex.Y  = (Game_Height / 2) - extent;
 
-	struct Texture tex = { Gui_IconsTex, Tex_Rect(chX,chY, size, size), Tex_UV(0.0f,0.0f, 15/256.0f,15/256.0f) };
+	tex.Width  = extent * 2;
+	tex.Height = extent * 2;
 	Texture_Render(&tex);
 }
 

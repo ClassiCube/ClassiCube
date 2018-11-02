@@ -2992,7 +2992,7 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 	s->TileSize = size;
 	
 	Menu_Label(s, 0, &s->Title, &title, &s->TitleFont,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, s->YOffset - 30);
+		ANCHOR_CENTRE, ANCHOR_MIN, 0, s->YOffset - 30);
 }
 
 static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s) {

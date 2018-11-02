@@ -321,43 +321,53 @@ static void Png_ComputeTransparency(Bitmap* bmp, uint32_t transparentCol) {
 }
 
 /* Most bits per sample is 16. Most samples per pixel is 4. Add 1 for filter byte. */
+/* Need to store both current and prior row, per PNG specification. */
 #define PNG_BUFFER_SIZE ((PNG_MAX_DIMS * 2 * 4 + 1) * 2)
 /* TODO: Test a lot of .png files and ensure output is right */
 ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
-	Bitmap_Create(bmp, 0, 0, NULL);
 	uint8_t tmp[PNG_PALETTE * 3];
+	uint32_t dataSize, fourCC;
 	ReturnCode res;
 
+	/* header variables */
+	uint8_t col, bitsPerSample, bytesPerPixel;
+	Png_RowExpander rowExpander;
+	uint32_t scanlineSize, scanlineBytes;
+
+	/* palette data */
+	uint32_t transparentCol = PackedCol_ARGB(0, 0, 0, 255);
+	uint32_t palette[PNG_PALETTE];
+	uint32_t i;
+
+	/* idat state */
+	uint32_t curY = 0, begY, rowY, endY;
+	uint8_t buffer[PNG_BUFFER_SIZE];
+	uint32_t bufferRows, bufferLen;
+	uint32_t bufferIdx, read, left;
+
+	/* idat decompressor */
+	struct InflateState inflate;
+	struct Stream compStream, datStream;
+	struct ZLibHeader zlibHeader;
+
+	Bitmap_Create(bmp, 0, 0, NULL);
 	res = Stream_Read(stream, tmp, PNG_SIG_SIZE);
 	if (res) return res;
 	if (!Png_Detect(tmp, PNG_SIG_SIZE)) return PNG_ERR_INVALID_SIG;
 
-	uint32_t transparentCol = PackedCol_ARGB(0, 0, 0, 255);
-	uint8_t col, bitsPerSample, bytesPerPixel;
-	Png_RowExpander rowExpander;
-
-	uint32_t palette[PNG_PALETTE];
-	uint32_t i;
 	for (i = 0; i < PNG_PALETTE; i++) {
 		palette[i] = PackedCol_ARGB(0, 0, 0, 255);
 	}
 	bool readingChunks = true;
 
-	struct InflateState inflate;
-	struct Stream compStream;
 	Inflate_MakeStream(&compStream, &inflate, stream);
-	struct ZLibHeader zlibHeader;
 	ZLibHeader_Init(&zlibHeader);
-
-	uint32_t scanlineSize, scanlineBytes, curY = 0;
-	uint8_t buffer[PNG_BUFFER_SIZE];
-	uint32_t bufferIdx, bufferRows;
 
 	while (readingChunks) {
 		res = Stream_Read(stream, tmp, 8);
 		if (res) return res;
-		uint32_t dataSize = Stream_GetU32_BE(&tmp[0]);
-		uint32_t fourCC   = Stream_GetU32_BE(&tmp[4]);
+		dataSize = Stream_GetU32_BE(&tmp[0]);
+		fourCC   = Stream_GetU32_BE(&tmp[4]);
 
 		switch (fourCC) {
 		case PNG_FourCC('I','H','D','R'): {
@@ -387,6 +397,7 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 			Mem_Set(buffer, 0, scanlineBytes); /* Prior row should be 0 per PNG spec */
 			bufferIdx  = scanlineBytes;
 			bufferRows = PNG_BUFFER_SIZE / scanlineBytes;
+			bufferLen  = bufferRows * scanlineBytes;
 		} break;
 
 		case PNG_FourCC('P','L','T','E'): {
@@ -406,7 +417,8 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 				res = Stream_Read(stream, tmp, dataSize);
 				if (res) return res;
 
-				uint8_t palRGB = tmp[0]; /* RGB is 16 bits big endian, ignore least significant 8 bits */
+				/* RGB is 16 bits big endian, ignore least significant 8 bits */
+				uint8_t palRGB = tmp[0];
 				transparentCol = PackedCol_ARGB(palRGB, palRGB, palRGB, 0);
 			} else if (col == PNG_COL_INDEXED) {
 				if (dataSize > PNG_PALETTE) return PNG_ERR_TRANS_COUNT;
@@ -432,17 +444,15 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 		} break;
 
 		case PNG_FourCC('I','D','A','T'): {
-			struct Stream datStream;
 			Stream_ReadonlyPortion(&datStream, stream, dataSize);
 			inflate.Source = &datStream;
 
 			/* TODO: This assumes zlib header will be in 1 IDAT chunk */
-			while (!zlibHeader.Done) { 
+			while (!zlibHeader.Done) {
 				if ((res = ZLibHeader_Read(&datStream, &zlibHeader))) return res;
 			}
 			if (!bmp->Scan0) return PNG_ERR_NO_DATA;
 
-			uint32_t bufferLen = bufferRows * scanlineBytes, bufferMax = bufferLen - scanlineBytes;
 			while (curY < bmp->Height) {
 				/* Need to leave one row in buffer untouched for storing prior scanline. Illustrated example of process:
 				*          |=====|        #-----|        |-----|        #-----|        |-----|
@@ -453,20 +463,23 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 				* (==== is prior scanline, # is current index in buffer)
 				* Having initial state this way allows doing two 'read 3' first time (assuming large idat chunks)
 				*/
-				uint32_t bufferLeft = bufferLen - bufferIdx, read;
-				if (bufferLeft > bufferMax) bufferLeft = bufferMax;
 
-				res = compStream.Read(&compStream, &buffer[bufferIdx], bufferLeft, &read);
+				begY = bufferIdx / scanlineBytes;
+				left = bufferLen - bufferIdx;
+				/* if row is at 0, last row in buffer is prior row */
+				/* hence subtract a row, as don't want to overwrite it */
+				if (begY == 0) left -= scanlineBytes;
+
+				res = compStream.Read(&compStream, &buffer[bufferIdx], left, &read);
 				if (res) return res;
 				if (!read) break;
 
-				uint32_t startY = bufferIdx / scanlineBytes, rowY;
 				bufferIdx += read;
-				uint32_t endY = bufferIdx / scanlineBytes;
+				endY = bufferIdx / scanlineBytes;
 				/* reached end of buffer, cycle back to start */
 				if (bufferIdx == bufferLen) bufferIdx = 0;
 
-				for (rowY = startY; rowY < endY; rowY++, curY++) {
+				for (rowY = begY; rowY < endY; rowY++, curY++) {
 					uint32_t priorY = rowY == 0 ? bufferRows : rowY;
 					uint8_t* prior    = &buffer[(priorY - 1) * scanlineBytes];
 					uint8_t* scanline = &buffer[rowY         * scanlineBytes];
