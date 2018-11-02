@@ -207,11 +207,14 @@ bool Game_CanPick(BlockID block) {
 }
 
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, uint8_t* skinType) {
-	Bitmap bmp; 
-	ReturnCode res = Png_Decode(&bmp, src);
+	Bitmap bmp;
+	bool success;
+	ReturnCode res;
+	
+	res = Png_Decode(&bmp, src);
 	if (res) { Chat_LogError2(res, "decoding", file); }
 
-	bool success = !res && Game_ValidateBitmap(file, &bmp);
+	success = !res && Game_ValidateBitmap(file, &bmp);
 	if (success) {
 		Gfx_DeleteTexture(texId);
 		if (skinType) { *skinType = Utils_GetSkinType(&bmp); }
