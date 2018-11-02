@@ -424,10 +424,11 @@ BlockID cw_curID;
 int cw_colR, cw_colG, cw_colB;
 static PackedCol Cw_ParseCol(PackedCol defValue) {
 	int r = cw_colR, g = cw_colG, b = cw_colB;
+	PackedCol c;
 	if (r > 255 || g > 255 || b > 255) return defValue;
 
-	PackedCol col = PACKEDCOL_CONST((uint8_t)r, (uint8_t)g, (uint8_t)b, 255);
-	return col;		
+	c.R = r; c.G = g; c.B = b; c.A = 255;
+	return c;		
 }
 
 static void Cw_Callback_4(struct NbtTag* tag) {

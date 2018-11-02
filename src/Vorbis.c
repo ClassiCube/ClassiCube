@@ -151,10 +151,10 @@ static float float32_unpack(struct VorbisState* ctx) {
 *#########################################################################################################################*/
 #define CODEBOOK_SYNC 0x564342
 struct Codebook {
-	uint32_t Dimensions, Entries, NumCodewords;
+	uint32_t Dimensions, Entries, TotalCodewords;
 	uint32_t* Codewords;
-	uint8_t* CodewordLens;
 	uint32_t* Values;
+	uint32_t NumCodewords[33]; /* number of codewords of bit length i*/
 	/* vector quantisation values */
 	float MinValue, DeltaValue;
 	uint32_t SequenceP, LookupType, LookupValues;
@@ -163,7 +163,6 @@ struct Codebook {
 
 static void Codebook_Free(struct Codebook* c) {
 	Mem_Free(c->Codewords);
-	Mem_Free(c->CodewordLens);
 	Mem_Free(c->Values);
 	Mem_Free(c->Multiplicands);
 }
@@ -194,21 +193,32 @@ static uint32_t Codebook_Lookup1Values(uint32_t entries, uint32_t dimensions) {
 }
 
 static bool Codebook_CalcCodewords(struct Codebook* c, uint8_t* len) {
-	c->Codewords    = Mem_Alloc(c->NumCodewords, 4, "codewords");
-	c->CodewordLens = Mem_Alloc(c->NumCodewords, 1, "raw codeword lens");
-	c->Values       = Mem_Alloc(c->NumCodewords, 4, "values");
-
 	/* This is taken from stb_vorbis.c because I gave up trying */
-	uint32_t i, j, depth;
+	uint32_t i, depth;
+	uint32_t root, codeword;
 	uint32_t next_codewords[33] = { 0 };
+	int offset;
+	int len_offsets[33];
+
+	c->Codewords    = Mem_Alloc(c->TotalCodewords, 4, "codewords");
+	c->Values       = Mem_Alloc(c->TotalCodewords, 4, "values");
+
+	/* Codeword entries are ordered by length */
+	offset = 0;
+	for (i = 0; i < Array_Elems(len_offsets); i++) {
+		len_offsets[i] = offset;
+		offset += c->NumCodewords[i];
+	}
 
 	/* add codeword 0 to tree */
 	for (i = 0; i < c->Entries; i++) {
 		if (!len[i]) continue;
+		offset = len_offsets[len[i]];
 
-		c->Codewords[0]    = 0;
-		c->CodewordLens[0] = len[i];
-		c->Values[0]       = i;
+		c->Codewords[offset] = 0;
+		c->Values[offset]    = i;
+
+		len_offsets[len[i]]++;
 		break;
 	}
 
@@ -218,25 +228,26 @@ static bool Codebook_CalcCodewords(struct Codebook* c, uint8_t* len) {
 	}
 
 	i++; /* first codeword was already handled */
-	for (j = 1; i < c->Entries; i++) {
-		uint32_t root = len[i];
+	for (; i < c->Entries; i++) {
+		root = len[i];
 		if (!root) continue;
+		offset = len_offsets[len[i]];
 
 		/* per spec, find lowest possible value (leftmost) */
 		while (root && next_codewords[root] == 0) root--;
 		if (root == 0) return false;
 
-		uint32_t codeword = next_codewords[root];
+		codeword = next_codewords[root];
 		next_codewords[root] = 0;
 
-		c->Codewords[j]    = codeword;
-		c->CodewordLens[j] = len[i];
-		c->Values[j]       = i;
+		c->Codewords[offset] = codeword;
+		c->Values[offset]    = i;
 
 		for (depth = len[i]; depth > root; depth--) {
 			next_codewords[depth] = codeword + (1U << (32 - depth));
 		}
-		j++;
+
+		len_offsets[len[i]]++;
 	}
 	return true;
 }
@@ -249,6 +260,10 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 
 	uint8_t* codewordLens = Mem_Alloc(c->Entries, 1, "raw codeword lens");
 	int i, ordered = Vorbis_ReadBits(ctx, 1), usedEntries = 0;
+
+	for (i = 0; i < Array_Elems(c->NumCodewords); i++) {
+		c->NumCodewords[i] = 0;
+	}
 
 	if (!ordered) {
 		int sparse = Vorbis_ReadBits(ctx, 1);
@@ -263,6 +278,7 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 
 			int len = Vorbis_ReadBits(ctx, 5) + 1;
 			codewordLens[i] = len;
+			c->NumCodewords[len]++;
 			usedEntries++;
 		}
 	} else {
@@ -275,6 +291,7 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 			for (i = entry; i < entry + runLen; i++) {
 				codewordLens[i] = curLength;
 			}
+			c->NumCodewords[curLength] = runLen;
 
 			entry += runLen;
 			curLength++;
@@ -283,7 +300,7 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 		usedEntries = c->Entries;
 	}
 
-	c->NumCodewords = usedEntries;
+	c->TotalCodewords = usedEntries;
 	Codebook_CalcCodewords(c, codewordLens);
 	Mem_Free(codewordLens);
 
@@ -314,19 +331,21 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 
 static uint32_t Codebook_DecodeScalar(struct VorbisState* ctx, struct Codebook* c) {
 	uint32_t codeword = 0, shift = 31, depth, i;
+	uint32_t* codewords = c->Codewords;
+	uint32_t* values    = c->Values;
+
 	/* TODO: This is so massively slow */
 	for (depth = 1; depth <= 32; depth++, shift--) {
 		uint32_t bit = Vorbis_ReadBits(ctx, 1);
 		codeword |= bit << shift;
 
-		for (i = 0; i < c->NumCodewords; i++) {
-			if (depth != c->CodewordLens[i]) continue;
-			if (codeword != c->Codewords[i]) continue;
-
-			uint32_t value = c->Values[i];
-			//Platform_Log2("read value %i of len %i", &value, &depth);
-			return value;
+		for (i = 0; i < c->NumCodewords[depth]; i++) {
+			if (codeword != codewords[i]) continue;
+			return values[i];
 		}
+
+		codewords += c->NumCodewords[depth];
+		values    += c->NumCodewords[depth];
 	}
 	ErrorHandler_Fail("Invalid huffman code");
 	return -1;
@@ -630,6 +649,8 @@ struct Residue {
 };
 
 static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r, int type) {
+	int i, j;
+
 	r->Type  = (uint8_t)type;
 	r->Begin = Vorbis_ReadBits(ctx, 24);
 	r->End   = Vorbis_ReadBits(ctx, 24);
@@ -637,7 +658,6 @@ static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r
 	r->Classifications = Vorbis_ReadBits(ctx, 6)  + 1;
 	r->Classbook       = Vorbis_ReadBits(ctx, 8);
 
-	int i;
 	for (i = 0; i < r->Classifications; i++) {
 		r->Cascade[i] = Vorbis_ReadBits(ctx, 3);
 		int moreBits  = Vorbis_ReadBits(ctx, 1);
@@ -647,7 +667,6 @@ static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r
 		r->Cascade[i] |= bits << 3;
 	}
 
-	int j;
 	for (i = 0; i < r->Classifications; i++) {
 		for (j = 0; j < 8; j++) {
 			int16_t codebook = -1;

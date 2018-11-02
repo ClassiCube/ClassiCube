@@ -313,6 +313,7 @@ static void MPConnection_TickConnect(void) {
 }
 
 static void MPConnection_BeginConnect(void) {
+	ReturnCode res;
 	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, MPConnection_BlockChanged);
 	Socket_Create(&net_socket);
 	ServerConnection_Disconnected = false;
@@ -321,7 +322,7 @@ static void MPConnection_BeginConnect(void) {
 	net_connecting = true;
 	net_connectTimeout = DateTime_CurrentUTC_MS() + NET_TIMEOUT_MS;
 
-	ReturnCode res = Socket_Connect(net_socket, &Game_IPAddress, Game_Port);
+	res = Socket_Connect(net_socket, &Game_IPAddress, Game_Port);
 	if (res && res != ReturnCode_SocketInProgess && res != ReturnCode_SocketWouldBlock) {
 		MPConnection_FailConnect(res);
 	}

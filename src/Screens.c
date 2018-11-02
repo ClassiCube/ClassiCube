@@ -657,10 +657,12 @@ static void GeneratingScreen_EndGeneration(void) {
 
 static void GeneratingScreen_Render(void* screen, double delta) {
 	struct LoadingScreen* s = screen;
+	const volatile char* state;
+
 	LoadingScreen_Render(s, delta);
 	if (Gen_Done) { GeneratingScreen_EndGeneration(); return; }
 
-	const volatile char* state = Gen_CurrentState;
+	state       = Gen_CurrentState;
 	s->Progress = Gen_CurrentProgress;
 	if (state == s->LastState) return;
 
@@ -1027,14 +1029,16 @@ static void ChatScreen_ColCodeChanged(void* screen, int code) {
 
 static void ChatScreen_ChatReceived(void* screen, const String* msg, int type) {
 	struct ChatScreen* s = screen;
+	String chatMsg;
+	int i;
 	if (Gfx_LostContext) return;
 
 	if (type == MSG_TYPE_NORMAL) {
 		s->ChatIndex++;
 		if (!Game_ChatLines) return;
 
-		int i = s->ChatIndex + (Game_ChatLines - 1);
-		String chatMsg = *msg;
+		chatMsg = *msg;
+		i = s->ChatIndex + (Game_ChatLines - 1);
 
 		if (i < Chat_Log.Count) { chatMsg = StringsBuffer_UNSAFE_Get(&Chat_Log, i); }
 		TextGroupWidget_PushUpAndReplaceLast(&s->Chat, &chatMsg);
@@ -1206,11 +1210,13 @@ static void HUDScreen_ContextLost(void* screen) {
 
 static void HUDScreen_ContextRecreated(void* screen) {
 	struct HUDScreen* s = screen;
+	bool extended;
+
 	Elem_TryFree(&s->Hotbar);
 	Elem_Init(&s->Hotbar);
 
 	if (!s->WasShowingList) return;
-	bool extended = ServerConnection_SupportsExtPlayerList && !Game_UseClassicTabList;
+	extended = ServerConnection_SupportsExtPlayerList && !Game_UseClassicTabList;
 	PlayerListWidget_Create(&s->PlayerList, &s->PlayerFont, !extended);
 	s->ShowingList = true;
 
@@ -1266,12 +1272,15 @@ static bool HUDScreen_MouseScroll(void* screen, float delta) {
 
 static bool HUDScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 	struct HUDScreen* s = screen;
+	struct ChatScreen* chat;
+
 	if (btn != MouseButton_Left || !s->HandlesAllInput) return false;
-	struct ChatScreen* chat = (struct ChatScreen*)s->Chat;
+	chat = (struct ChatScreen*)s->Chat;
 	if (!s->ShowingList) { return Elem_HandlesMouseDown(chat, x, y, btn); }
 
 	char nameBuffer[STRING_SIZE + 1];
 	String name = String_FromArray(nameBuffer);
+	
 	PlayerListWidget_GetNameUnder(&s->PlayerList, x, y, &name);
 	if (!name.length) { return Elem_HandlesMouseDown(chat, x, y, btn); }
 
@@ -1297,13 +1306,15 @@ static void HUDScreen_Init(void* screen) {
 static void HUDScreen_Render(void* screen, double delta) {
 	struct HUDScreen* s = screen;
 	struct ChatScreen* chat = (struct ChatScreen*)s->Chat;
+	bool showMinimal;
+
 	if (Game_HideGui && chat->HandlesAllInput) {
 		Gfx_SetTexturing(true);
 		Elem_Render(&chat->Input.Base, delta);
 		Gfx_SetTexturing(false);
 	}
 	if (Game_HideGui) return;
-	bool showMinimal = Gui_GetActiveScreen()->BlocksWorld;
+	showMinimal = Gui_GetActiveScreen()->BlocksWorld;
 
 	if (!s->ShowingList && !showMinimal) {
 		Gfx_SetTexturing(true);
