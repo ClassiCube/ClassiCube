@@ -312,6 +312,7 @@ public interface IGameComponent { }
 				using (Stream stream = req.GetRequestStream()) {
 					stream.Write(encodedData, 0, encodedData.Length);
 				}
+				request.Data = null;
 			}
 			return req;
 		}
