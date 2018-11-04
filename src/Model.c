@@ -113,10 +113,14 @@ void Model_Render(struct Model* model, struct Entity* entity) {
 }
 
 void Model_SetupState(struct Model* model, struct Entity* entity) {
-	model->index = 0;
-	PackedCol col = entity->VTABLE->GetCol(entity);
+	PackedCol col;
+	bool _64x64;
+	float yawDelta;
 
-	bool _64x64 = entity->SkinType != SKIN_64x32;
+	model->index = 0;
+	col = entity->VTABLE->GetCol(entity);
+
+	_64x64  = entity->SkinType != SKIN_64x32;
 	/* only apply when using humanoid skins */
 	_64x64 &= model->UsesHumanSkin || entity->MobTextureId;
 
@@ -131,10 +135,11 @@ void Model_SetupState(struct Model* model, struct Entity* entity) {
 	} else {
 		Model_Cols[1] = col; Model_Cols[2] = col; Model_Cols[4] = col;
 	}
+
 	Model_Cols[3] = Model_Cols[2]; 
 	Model_Cols[5] = Model_Cols[4];
+	yawDelta = entity->HeadY - entity->RotY;
 
-	float yawDelta = entity->HeadY - entity->RotY;
 	Model_cosHead = (float)Math_Cos(yawDelta * MATH_DEG2RAD);
 	Model_sinHead = (float)Math_Sin(yawDelta * MATH_DEG2RAD);
 	Model_ActiveModel = model;
@@ -148,9 +153,11 @@ void Model_UpdateVB(void) {
 
 void Model_ApplyTexture(struct Entity* entity) {
 	struct Model* model = Model_ActiveModel;
-	GfxResourceID tex   = model->UsesHumanSkin ? entity->TextureId : entity->MobTextureId;
 	struct CachedTexture* data;
+	GfxResourceID tex;
+	bool _64x64;
 
+	tex = model->UsesHumanSkin ? entity->TextureId : entity->MobTextureId;
 	if (tex) {
 		Model_skinType = entity->SkinType;
 	} else {
@@ -160,7 +167,8 @@ void Model_ApplyTexture(struct Entity* entity) {
 	}
 
 	Gfx_BindTexture(tex);
-	bool _64x64  = Model_skinType != SKIN_64x32;
+	_64x64 = Model_skinType != SKIN_64x32;
+
 	Model_uScale = entity->uScale * 0.015625f;
 	Model_vScale = entity->vScale * (_64x64 ? 0.015625f : 0.03125f);
 }

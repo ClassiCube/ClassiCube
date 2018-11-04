@@ -1267,9 +1267,7 @@ static void SaveLevelScreen_Schematic(void* a, void* b) { SaveLevelScreen_Save(a
 
 static void SaveLevelScreen_Init(void* screen) {
 	struct SaveLevelScreen* s = screen;
-	String str = String_FromArray(s->__TextPathBuffer);
-	s->TextPath = str;
-
+	String_InitArray(s->TextPath, s->__TextPathBuffer);
 	Key_KeyRepeat = true;
 	MenuScreen_Init(s);
 }
@@ -3158,9 +3156,8 @@ struct Screen* UrlWarningOverlay_MakeInstance(const String* url) {
 	s->Widgets         = widgets;
 	s->WidgetsCount    = Array_Elems(widgets);
 
-	String dstUrl = String_FromArray(s->__UrlBuffer);
-	String_Copy(&dstUrl, url);
-	s->Url = dstUrl;
+	String_InitArray(s->Url, s->__UrlBuffer);
+	String_Copy(&s->Url, url);
 
 	s->VTABLE = &UrlWarningOverlay_VTABLE;
 	return (struct Screen*)s;
@@ -3225,9 +3222,8 @@ struct Screen* ConfirmDenyOverlay_MakeInstance(const String* url, bool alwaysDen
 	s->Widgets         = widgets;
 	s->WidgetsCount    = Array_Elems(widgets);
 
-	String dstUrl = String_FromArray(s->__UrlBuffer);
-	String_Copy(&dstUrl, url);
-	s->Url = dstUrl;
+	String_InitArray(s->Url, s->__UrlBuffer);
+	String_Copy(&s->Url, url);
 	s->AlwaysDeny = alwaysDeny;
 
 	s->VTABLE = &ConfirmDenyOverlay_VTABLE;
@@ -3337,12 +3333,11 @@ struct Screen* TexPackOverlay_MakeInstance(const String* url) {
 	s->Widgets         = widgets;
 	s->WidgetsCount    = Array_Elems(widgets);
 
-	String identifier = String_FromArray(s->__IdentifierBuffer);
-	String_Format1(&identifier, "CL_%s", url);
-	s->Identifier    = identifier;
+	String_InitArray(s->Identifier, s->__IdentifierBuffer);
+	String_Format1(&s->Identifier, "CL_%s", url);
 	s->ContentLength = 0;
 
-	AsyncDownloader_GetContentLength(url, true, &identifier);
+	AsyncDownloader_GetContentLength(url, true, &s->Identifier);
 	s->VTABLE = &TexPackOverlay_VTABLE;
 	return (struct Screen*)s;
 }

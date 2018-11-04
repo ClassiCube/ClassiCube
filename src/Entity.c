@@ -528,6 +528,7 @@ static void Player_DrawName(struct Player* player) {
 	struct Model* model = e->Model;
 	Vector3 pos;
 	float scale;
+	VertexP3fT2fC4b vertices[4];
 
 	if (player->NameTex.X == PLAYER_NAME_EMPTY_TEX) return;
 	if (!player->NameTex.ID) Player_MakeNameTexture(player);
@@ -548,7 +549,6 @@ static void Player_DrawName(struct Player* player) {
 		size.X *= tempW * 0.2f; size.Y *= tempW * 0.2f;
 	}
 
-	VertexP3fT2fC4b vertices[4];
 	TextureRec rec = { 0.0f, 0.0f, player->NameTex.U2, player->NameTex.V2 };
 	PackedCol col = PACKEDCOL_WHITE;
 	Particle_DoRender(&size, &pos, &rec, col, vertices);
@@ -664,25 +664,26 @@ static void Player_ClearHat(Bitmap* bmp, uint8_t skinType) {
 	}
 }
 
-static void Player_EnsurePow2(struct Player* player, Bitmap* bmp) {
-	int width  = Math_NextPowOf2(bmp->Width);
-	int height = Math_NextPowOf2(bmp->Height);
+static void Player_EnsurePow2(struct Player* p, Bitmap* bmp) {
+	uint32_t stride;
+	int width, height;
 	Bitmap scaled;
+	int y;
 
+	width  = Math_NextPowOf2(bmp->Width);
+	height = Math_NextPowOf2(bmp->Height);
 	if (width == bmp->Width && height == bmp->Height) return;
 
 	Bitmap_Allocate(&scaled, width, height);
-	int y;
-	uint32_t stride = (uint32_t)(bmp->Width) * BITMAP_SIZEOF_PIXEL;
+	p->Base.uScale = (float)bmp->Width  / width;
+	p->Base.vScale = (float)bmp->Height / height;
+	stride = bmp->Width * BITMAP_SIZEOF_PIXEL;
+
 	for (y = 0; y < bmp->Height; y++) {
 		uint32_t* src = Bitmap_GetRow(bmp, y);
 		uint32_t* dst = Bitmap_GetRow(&scaled, y);
 		Mem_Copy(dst, src, stride);
 	}
-
-	struct Entity* entity = &player->Base;
-	entity->uScale = (float)bmp->Width  / width;
-	entity->vScale = (float)bmp->Height / height;
 
 	Mem_Free(bmp->Scan0);
 	*bmp = scaled;
@@ -831,16 +832,18 @@ static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* upd
 }
 
 void LocalPlayer_Tick(struct Entity* e, double delta) {
-	if (!World_Blocks) return;
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	struct HacksComp* hacks = &p->Hacks;
-
-	e->StepSize = hacks->FullBlockStep && hacks->Enabled && hacks->CanAnyHacks && hacks->CanSpeed ? 1.0f : 0.5f;
-	p->OldVelocity   = e->Velocity;
 	float xMoving = 0, zMoving = 0;
-	LocalInterpComp_AdvanceState(&p->Interp);
-	bool wasOnGround = e->OnGround;
+	bool wasOnGround;
+	Vector3 headingVelocity;
 
+	if (!World_Blocks) return;
+	e->StepSize = hacks->FullBlockStep && hacks->Enabled && hacks->CanAnyHacks && hacks->CanSpeed ? 1.0f : 0.5f;
+	p->OldVelocity = e->Velocity;
+	wasOnGround    = e->OnGround;
+
+	LocalInterpComp_AdvanceState(&p->Interp);
 	LocalPlayer_HandleInput(&xMoving, &zMoving);
 	hacks->Floating = hacks->Noclip || hacks->Flying;
 	if (!hacks->Floating && hacks->CanBePushed) PhysicsComp_DoEntityPush(e);
@@ -851,7 +854,7 @@ void LocalPlayer_Tick(struct Entity* e, double delta) {
 	}
 
 	PhysicsComp_UpdateVelocityState(&p->Physics);
-	Vector3 headingVelocity = Vector3_RotateY3(xMoving, 0, zMoving, e->HeadY * MATH_DEG2RAD);
+	headingVelocity = Vector3_RotateY3(xMoving, 0, zMoving, e->HeadY * MATH_DEG2RAD);
 	PhysicsComp_PhysicsTick(&p->Physics, headingVelocity);
 
 	/* Fixes high jump, when holding down a movement key, jump, fly, then let go of fly key */
@@ -861,7 +864,7 @@ void LocalPlayer_Tick(struct Entity* e, double delta) {
 	AnimatedComp_Update(e, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
 	TiltComp_Update(&p->Tilt, delta);
 
-	Player_CheckSkin((struct Player*)p);
+	Player_CheckSkin(&p->Base);
 	SoundComp_Tick(wasOnGround);
 }
 
@@ -928,7 +931,7 @@ struct EntityVTABLE localPlayer_VTABLE = {
 void LocalPlayer_Init(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	Player_Init(&p->Base);
-	Player_SetName((struct Player*)p, &Game_Username, &Game_Username);
+	Player_SetName(&p->Base, &Game_Username, &Game_Username);
 
 	p->Collisions.Entity = &p->Base;
 	HacksComp_Init(&p->Hacks);
@@ -944,22 +947,26 @@ void LocalPlayer_Init(void) {
 static bool LocalPlayer_IsSolidCollide(BlockID b) { return Block_Collide[b] == COLLIDE_SOLID; }
 static void LocalPlayer_DoRespawn(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	Vector3 spawn = p->Spawn;
-	Vector3I P;
+	struct LocationUpdate update;
 	struct AABB bb;
+	Vector3 spawn = p->Spawn;
+	Vector3I pos;
+	BlockID block;
+	float height, spawnY;
+	int y;
 
 	if (!World_Blocks) return;
-	Vector3I_Floor(&P, &spawn);	
+	Vector3I_Floor(&pos, &spawn);	
 
 	/* Spawn player at highest valid position */
-	if (World_IsValidPos_3I(P)) {
+	if (World_IsValidPos_3I(pos)) {
 		AABB_Make(&bb, &spawn, &p->Base.Size);
-		int y;
-		for (y = P.Y; y <= World_Height; y++) {
-			float spawnY = Respawn_HighestFreeY(&bb);
+		for (y = pos.Y; y <= World_Height; y++) {
+			spawnY = Respawn_HighestFreeY(&bb);
+
 			if (spawnY == RESPAWN_NOT_FOUND) {
-				BlockID block = World_GetPhysicsBlock(P.X, y, P.Z);
-				float height = Block_Collide[block] == COLLIDE_SOLID ? Block_MaxBB[block].Y : 0.0f;
+				block   = World_GetPhysicsBlock(pos.X, y, pos.Z);
+				height  = Block_Collide[block] == COLLIDE_SOLID ? Block_MaxBB[block].Y : 0.0f;
 				spawn.Y = y + height + ENTITY_ADJUSTMENT;
 				break;
 			}
@@ -967,8 +974,8 @@ static void LocalPlayer_DoRespawn(void) {
 		}
 	}
 
-	spawn.Y += 2.0f / 16.0f;
-	struct LocationUpdate update; LocationUpdate_MakePosAndOri(&update, spawn, p->SpawnRotY, p->SpawnHeadX, false);
+	spawn.Y += 2.0f/16.0f;
+	LocationUpdate_MakePosAndOri(&update, spawn, p->SpawnRotY, p->SpawnHeadX, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
 	p->Base.Velocity = Vector3_Zero;
 
@@ -1063,7 +1070,7 @@ static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* updat
 
 static void NetPlayer_Tick(struct Entity* e, double delta) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
-	Player_CheckSkin((struct Player*)p);
+	Player_CheckSkin(&p->Base);
 	NetInterpComp_AdvanceState(&p->Interp);
 	AnimatedComp_Update(e, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
 }
@@ -1086,16 +1093,16 @@ static void NetPlayer_RenderName(struct Entity* e) {
 
 	distance  = Model_RenderDistance(e);
 	threshold = Entities_NameMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
-	if (distance <= (float)threshold) Player_DrawName((struct Player*)p);
+	if (distance <= (float)threshold) Player_DrawName(&p->Base);
 }
 
 struct EntityVTABLE netPlayer_VTABLE = {
 	NetPlayer_Tick,        Player_Despawn,       NetPlayer_SetLocation, Entity_GetCol,
 	NetPlayer_RenderModel, NetPlayer_RenderName, Player_ContextLost,    Player_ContextRecreated,
 };
-void NetPlayer_Init(struct NetPlayer* player, const String* displayName, const String* skinName) {
-	Mem_Set(player, 0, sizeof(struct NetPlayer));
-	Player_Init(&player->Base);
-	Player_SetName((struct Player*)player, displayName, skinName);
-	player->Base.VTABLE = &netPlayer_VTABLE;
+void NetPlayer_Init(struct NetPlayer* p, const String* displayName, const String* skinName) {
+	Mem_Set(p, 0, sizeof(struct NetPlayer));
+	Player_Init(&p->Base);
+	Player_SetName(&p->Base, displayName, skinName);
+	p->Base.VTABLE = &netPlayer_VTABLE;
 }

@@ -40,8 +40,9 @@ void Drawer2D_Make2DTexture(struct Texture* tex, Bitmap* bmp, Size2D used, int X
 
 bool Drawer2D_ValidColCodeAt(const String* text, int i);
 bool Drawer2D_ValidColCode(char c);
+/* Whether text is empty or consists purely of valid colour codes. */
 bool Drawer2D_IsEmptyText(const String* text);
-/* Returns the last valid colour code in the given input, or \0 if no valid colour code was found. */
+/* Returns the last valid colour code in the given input, or \0 if not found. */
 char Drawer2D_LastCol(const String* text, int start);
 bool Drawer2D_IsWhiteCol(char c);
 

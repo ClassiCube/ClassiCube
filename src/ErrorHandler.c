@@ -485,14 +485,21 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
     X11Button ok    = { 0 };
     X11Textbox body = { 0 };
 
+	XFontStruct* font;
+	Atom wmDelete;
+	int x, y, width, height;
+	XSizeHints hints = { 0 };
+	int mouseX = -1, mouseY = -1, over;
+	XEvent e;
+
     X11Window_Init(w);
     XMapWindow(dpy, w->win);
     XStoreName(dpy, w->win, title);
 
-    Atom wmDelete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
+    wmDelete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(dpy, w->win, &wmDelete, 1);
 
-    XFontStruct* font = XQueryFont(dpy, XGContextFromGC(w->gc));
+    font = XQueryFont(dpy, XGContextFromGC(w->gc));
     if (!font) return;
 
     /* Compute size of widgets */
@@ -504,10 +511,10 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
     ok.Height = ok.Text.Height + 10;
 
     /* Compute size and position of window */
-    int width  = body.Width                   + 20;
-    int height = body.Height + 20 + ok.Height + 20;
-    int x = DisplayWidth (dpy, DefaultScreen(dpy))/2 -  width/2;
-    int y = DisplayHeight(dpy, DefaultScreen(dpy))/2 - height/2;
+    width  = body.Width                   + 20;
+    height = body.Height + 20 + ok.Height + 20;
+    x = DisplayWidth (dpy, DefaultScreen(dpy))/2 -  width/2;
+    y = DisplayHeight(dpy, DefaultScreen(dpy))/2 - height/2;
     XMoveResizeWindow(dpy, w->win, x, y, width, height);
 
     /* Adjust bounds of widgets */
@@ -518,7 +525,6 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
     XFreeFontInfo(NULL, font, 1);
     XUnmapWindow(dpy, w->win); /* Make window non resizeable */
 
-    XSizeHints hints = { 0 };
     hints.flags      = PSize | PMinSize | PMaxSize;
     hints.min_width  = hints.max_width  = hints.base_width  = width;
     hints.min_height = hints.max_height = hints.base_height = height;
@@ -526,9 +532,6 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
     XSetWMNormalHints(dpy, w->win, &hints);
     XMapRaised(dpy, w->win);
     XFlush(dpy);
-
-    XEvent e;
-    int mouseX = -1, mouseY = -1;
 
     for (;;) {
         XNextEvent(dpy, &e);
@@ -538,7 +541,7 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
         case ButtonPress:
         case ButtonRelease:
             if (e.xbutton.button != Button1) break;
-            int over = X11Button_Contains(&ok, mouseX, mouseY);
+            over = X11Button_Contains(&ok, mouseX, mouseY);
 
             if (ok.Clicked && e.type == ButtonRelease) {
                 if (over) return;

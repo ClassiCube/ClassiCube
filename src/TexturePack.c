@@ -204,7 +204,8 @@ static void EntryList_Load(struct EntryList* list) {
 	char lineBuffer[FILENAME_SIZE];
 	String line = String_FromArray(lineBuffer);
 
-	struct Stream stream;
+	uint8_t buffer[2048];
+	struct Stream stream, buffered;
 	ReturnCode res;
 	String_Format3(&path, "%c%r%c", list->Folder, &Directory_Separator, list->Filename);
 	
@@ -213,7 +214,6 @@ static void EntryList_Load(struct EntryList* list) {
 	if (res) { Chat_LogError2(res, "opening", &path); return; }
 
 	/* ReadLine reads single byte at a time */
-	uint8_t buffer[2048]; struct Stream buffered;
 	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
 
 	for (;;) {

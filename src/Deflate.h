@@ -75,8 +75,8 @@ NOINLINE_ void Inflate_MakeStream(struct Stream* stream, struct InflateState* st
 #define DEFLATE_HASH_SIZE 0x1000UL
 #define DEFLATE_HASH_MASK 0x0FFFUL
 struct DeflateState {
-	uint32_t Bits;         /* Holds bits across byte boundaries*/
-	uint32_t NumBits;      /* Number of bits in Bits buffer*/
+	uint32_t Bits;         /* Holds bits across byte boundaries */
+	uint32_t NumBits;      /* Number of bits in Bits buffer */
 	uint32_t InputPosition;
 
 	uint8_t* NextOut;    /* Pointer within Output buffer to next byte that can be written */

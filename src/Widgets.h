@@ -183,7 +183,7 @@ struct PlayerListWidget {
 	int NamesCount, ElementOffset;
 	int XMin, XMax, YHeight;
 	bool Classic;
-	struct TextWidget Overview;
+	struct TextWidget Title;
 	uint16_t IDs[TABLIST_MAX_NAMES * 2];
 	struct Texture Textures[TABLIST_MAX_NAMES * 2];
 };

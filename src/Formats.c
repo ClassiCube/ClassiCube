@@ -305,9 +305,10 @@ static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* s
 	uint32_t i, count;
 	
 	if (typeId == NBT_END) return 0;
-	tag.TagID = typeId; tag.Parent = parent;
-	tag.Name  = String_Init(tag.NameBuffer, 0, NBT_STRING_SIZE);
+	tag.TagID  = typeId; 
+	tag.Parent = parent;
 	tag.DataSize = 0;
+	String_InitArray(tag.Name, tag.NameBuffer);
 
 	if (readTagName) {
 		res = Nbt_ReadString(stream, &tag.Name);
@@ -343,7 +344,7 @@ static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* s
 		}
 		break;
 	case NBT_STR:
-		tag.Value.Str.Text = String_Init(tag.Value.Str.Buffer, 0, NBT_STRING_SIZE);
+		String_InitArray(tag.Value.Str.Text, tag.Value.Str.Buffer);
 		res = Nbt_ReadString(stream, &tag.Value.Str.Text);
 		break;
 

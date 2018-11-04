@@ -23,7 +23,8 @@ void GZipHeader_Init(struct GZipHeader* header) {
 }
 
 ReturnCode GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
-	ReturnCode res; uint8_t tmp;
+	uint8_t tmp;
+	ReturnCode res;
 	switch (header->State) {
 
 	case GZIP_STATE_HEADER1:
@@ -104,7 +105,8 @@ void ZLibHeader_Init(struct ZLibHeader* header) {
 }
 
 ReturnCode ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header) {
-	ReturnCode res; uint8_t tmp;
+	uint8_t tmp;
+	ReturnCode res;
 	switch (header->State) {
 
 	case ZLIB_STATE_COMPRESSIONMETHOD:
@@ -196,7 +198,8 @@ static void Huffman_Build(struct HuffmanTable* table, uint8_t* bitLens, int coun
 		offset += bl_count[i];
 
 		/* Last codeword is actually: code + (bl_count[i] - 1) */
-		/* When decoding we peform < against this value though, so we need to add 1 here */
+		/* When decoding we peform < against this value though, so need to add 1 here */
+		/* This way, don't need to special case bit lengths with 0 codewords when decoding */
 		if (bl_count[i]) {
 			table->EndCodewords[i] = code + bl_count[i];
 		} else {
@@ -306,7 +309,7 @@ void Inflate_Init(struct InflateState* state, struct Stream* source) {
 	state->LastBlock = false;
 	state->Bits = 0;
 	state->NumBits = 0;
-	state->NextIn = state->Input;
+	state->NextIn  = state->Input;
 	state->AvailIn = 0;
 	state->Output = NULL;
 	state->AvailOut = 0;
@@ -420,7 +423,7 @@ void Inflate_Process(struct InflateState* state) {
 			} break;
 
 			case 1: { /* Fixed/static huffman compressed */
-				Huffman_Build(&state->Table.Lits,  fixed_lits,  INFLATE_MAX_LITS);
+				Huffman_Build(&state->Table.Lits, fixed_lits,  INFLATE_MAX_LITS);
 				Huffman_Build(&state->TableDists, fixed_dists, INFLATE_MAX_DISTS);
 				state->State = Inflate_NextCompressState(state);
 			} break;

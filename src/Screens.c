@@ -597,13 +597,10 @@ struct Screen* LoadingScreen_MakeInstance(const String* title, const String* mes
 	s->VTABLE    = &LoadingScreen_VTABLE;
 	s->Progress  = 0.0f;
 
-	String title_copy = String_FromArray(s->__TitleBuffer);
-	String_AppendString(&title_copy, title);
-	s->TitleStr  = title_copy;
-
-	String message_copy = String_FromArray(s->__MessageBuffer);
-	String_AppendString(&message_copy, message);
-	s->MessageStr  = message_copy;
+	String_InitArray(s->TitleStr, s->__TitleBuffer);
+	String_AppendString(&s->TitleStr, title);
+	String_InitArray(s->MessageStr, s->__MessageBuffer);
+	String_AppendString(&s->MessageStr, message);
 	
 	s->HandlesAllInput = true;
 	s->BlocksWorld     = true;
@@ -1540,13 +1537,10 @@ struct Screen* DisconnectScreen_MakeInstance(const String* title, const String* 
 	s->BlocksWorld     = true;
 	s->HidesHUD        = true;
 
-	String title_copy = String_FromArray(s->__TitleBuffer);
-	String_AppendString(&title_copy, title);
-	s->TitleStr = title_copy;
-
-	String message_copy = String_FromArray(s->__MessageBuffer);
-	String_AppendString(&message_copy, message);
-	s->MessageStr = message_copy;
+	String_InitArray(s->TitleStr, s->__TitleBuffer);
+	String_AppendString(&s->TitleStr, title);
+	String_InitArray(s->MessageStr, s->__MessageBuffer);
+	String_AppendString(&s->MessageStr, message);
 
 	char whyBuffer[STRING_SIZE];
 	String why = String_FromArray(whyBuffer);

@@ -45,6 +45,8 @@ NOINLINE_ String String_FromReadonly(STRING_REF const char* buffer);
 #define String_FromRawArray(buffer) String_FromRaw(buffer, sizeof(buffer))
 /* Constructs a string from a compile time array (leaving 1 byte of room for null terminator) */
 #define String_NT_Array(buffer) { buffer, 0, (sizeof(buffer) - 1)}
+/* Initialises a string from a compile time array. */
+#define String_InitArray(str, buffr) str.buffer = buffr; str.length = 0; str.capacity = sizeof(buffr);
 
 /* Removes all colour codes from the given string. */
 NOINLINE_ void String_StripCols(String* str);

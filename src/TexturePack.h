@@ -52,7 +52,7 @@ bool TextureCache_Has(const String* url);
 /* Attempts to get the cached data stream for the given url. */
 bool TextureCache_Get(const String* url, struct Stream* stream);
 /* Attempts to get the Last-Modified header cached for the given URL. */
-/* If header is not found, returns last time the cached datastream was modified. */
+/* If header is not found, returns last time the cached data was modified. */
 void TextureCache_GetLastModified(const String* url, TimeMS* time);
 /* Attempts to get the ETag header cached for the given URL. */
 void TextureCache_GetETag(const String* url, String* etag);
