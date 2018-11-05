@@ -864,7 +864,7 @@ void LocalPlayer_Tick(struct Entity* e, double delta) {
 	AnimatedComp_Update(e, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
 	TiltComp_Update(&p->Tilt, delta);
 
-	Player_CheckSkin(&p->Base);
+	Player_CheckSkin((struct Player*)p);
 	SoundComp_Tick(wasOnGround);
 }
 
@@ -931,7 +931,7 @@ struct EntityVTABLE localPlayer_VTABLE = {
 void LocalPlayer_Init(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	Player_Init(&p->Base);
-	Player_SetName(&p->Base, &Game_Username, &Game_Username);
+	Player_SetName((struct Player*)p, &Game_Username, &Game_Username);
 
 	p->Collisions.Entity = &p->Base;
 	HacksComp_Init(&p->Hacks);
@@ -1070,7 +1070,7 @@ static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* updat
 
 static void NetPlayer_Tick(struct Entity* e, double delta) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
-	Player_CheckSkin(&p->Base);
+	Player_CheckSkin((struct Player*)p);
 	NetInterpComp_AdvanceState(&p->Interp);
 	AnimatedComp_Update(e, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
 }
@@ -1093,7 +1093,7 @@ static void NetPlayer_RenderName(struct Entity* e) {
 
 	distance  = Model_RenderDistance(e);
 	threshold = Entities_NameMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
-	if (distance <= (float)threshold) Player_DrawName(&p->Base);
+	if (distance <= (float)threshold) Player_DrawName((struct Player*)p);
 }
 
 struct EntityVTABLE netPlayer_VTABLE = {
@@ -1103,6 +1103,6 @@ struct EntityVTABLE netPlayer_VTABLE = {
 void NetPlayer_Init(struct NetPlayer* p, const String* displayName, const String* skinName) {
 	Mem_Set(p, 0, sizeof(struct NetPlayer));
 	Player_Init(&p->Base);
-	Player_SetName(&p->Base, displayName, skinName);
+	Player_SetName((struct Player*)p, displayName, skinName);
 	p->Base.VTABLE = &netPlayer_VTABLE;
 }

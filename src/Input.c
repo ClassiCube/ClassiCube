@@ -331,18 +331,18 @@ void Hotkeys_Init(void) {
 }
 
 void Hotkeys_UserRemovedHotkey(Key trigger, HotkeyFlags flags) {
-	char keyBuffer[STRING_SIZE];
-	String key = String_FromArray(keyBuffer);
+	String key; char keyBuffer[STRING_SIZE];
+	String_InitArray(key, keyBuffer);
 
 	String_Format2(&key, "hotkey-%c&%i", Key_Names[trigger], &flags);
 	Options_SetString(&key, NULL);
 }
 
 void Hotkeys_UserAddedHotkey(Key trigger, HotkeyFlags flags, bool moreInput, const String* text) {
-	char keyBuffer[STRING_SIZE];
-	String key = String_FromArray(keyBuffer);
-	char valueBuffer[STRING_SIZE * 2];
-	String value = String_FromArray(valueBuffer);
+	String key;   char keyBuffer[STRING_SIZE];
+	String value; char valueBuffer[STRING_SIZE * 2];
+	String_InitArray(key, keyBuffer);
+	String_InitArray(value, valueBuffer);
 
 	String_Format2(&key, "hotkey-%c&%i", Key_Names[trigger], &flags);
 	String_Format2(&value, "%t&%s", &moreInput, text);

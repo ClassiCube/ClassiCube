@@ -118,14 +118,13 @@ static void Chat_OpenLog(DateTime* now) {
 }
 
 static void Chat_AppendLog(const String* text) {
-	char strBuffer[STRING_SIZE * 2];
-	String str = String_FromArray(strBuffer);
-
 	DateTime now;
 	ReturnCode res;
-	if (!Chat_LogName.length || !Game_ChatLogging) return;
+	String str; char strBuffer[STRING_SIZE * 2];
 
+	if (!Chat_LogName.length || !Game_ChatLogging) return;
 	DateTime_CurrentLocal(&now);
+
 	if (now.Day != ChatLog_LastLogDate.Day || now.Month != ChatLog_LastLogDate.Month || now.Year != ChatLog_LastLogDate.Year) {
 		Chat_CloseLog();
 		Chat_OpenLog(&now);
@@ -135,6 +134,7 @@ static void Chat_AppendLog(const String* text) {
 	if (!Chat_LogStream.Meta.File) return;
 
 	/* [HH:mm:ss] text */
+	String_InitArray(str, strBuffer);
 	String_Format3(&str, "[%p2:%p2:%p2] ", &now.Hour, &now.Minute, &now.Second);
 	String_AppendColorless(&str, text);
 
@@ -166,8 +166,9 @@ void Chat_Add3(const char* format, const void* a1, const void* a2, const void* a
 	Chat_Add4(format, a1, a2, a3, NULL);
 }
 void Chat_Add4(const char* format, const void* a1, const void* a2, const void* a3, const void* a4) {
-	char msgBuffer[STRING_SIZE * 2];
-	String msg = String_FromArray(msgBuffer);
+	String msg; char msgBuffer[STRING_SIZE * 2];
+	String_InitArray(msg, msgBuffer);
+
 	String_Format4(&msg, format, a1, a2, a3, a4);
 	Chat_AddOf(&msg, MSG_TYPE_NORMAL);
 }
@@ -473,8 +474,8 @@ static void CuboidCommand_DoCuboid(void) {
 }
 
 static void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID old, BlockID now) {
-	char msgBuffer[STRING_SIZE];
-	String msg = String_FromArray(msgBuffer);
+	String msg; char msgBuffer[STRING_SIZE];
+	String_InitArray(msg, msgBuffer);
 
 	if (cuboid_mark1.X == Int32_MaxValue) {
 		cuboid_mark1 = coords;

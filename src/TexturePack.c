@@ -234,11 +234,12 @@ static void EntryList_Load(struct EntryList* list) {
 
 static void EntryList_Save(struct EntryList* list) {
 	struct Stream stream;
-	ReturnCode res;
+	String entry;
 	int i;
-	char pathBuffer[FILENAME_SIZE];
-	String path = String_FromArray(pathBuffer);
+	ReturnCode res;
+	String path; char pathBuffer[FILENAME_SIZE];
 
+	String_InitArray(path, pathBuffer);
 	String_Format3(&path, "%c%r%c", list->Folder, &Directory_Separator, list->Filename);
 	if (!Utils_EnsureDirectory(list->Folder)) return;
 	
@@ -246,8 +247,8 @@ static void EntryList_Save(struct EntryList* list) {
 	if (res) { Chat_LogError2(res, "creating", &path); return; }
 
 	for (i = 0; i < list->Entries.Count; i++) {
-		String entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
-		res = Stream_WriteLine(&stream, &entry);
+		entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
+		res   = Stream_WriteLine(&stream, &entry);
 		if (res) { Chat_LogError2(res, "writing to", &path); break; }
 	}
 
@@ -261,16 +262,18 @@ static void EntryList_Add(struct EntryList* list, const String* entry) {
 }
 
 static bool EntryList_Has(struct EntryList* list, const String* entry) {
+	String curEntry;
 	int i;
+
 	for (i = 0; i < list->Entries.Count; i++) {
-		String curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
+		curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
 		if (String_Equals(&curEntry, entry)) return true;
 	}
 	return false;
 }
 
 static void EntryList_UNSAFE_Make(struct EntryList* list, STRING_REF const char* folder, STRING_REF const char* file) {
-	list->Folder = folder;
+	list->Folder   = folder;
 	list->Filename = file;
 	EntryList_Load(list);
 }
@@ -325,8 +328,8 @@ bool TextureCache_Get(const String* url, struct Stream* stream) {
 
 void TexturePack_GetFromTags(const String* url, String* result, struct EntryList* list) {
 	TexCache_Crc32(url);
-	int i;
 	String line, key, value;
+	int i;
 
 	for (i = 0; i < list->Entries.Count; i++) {
 		line = StringsBuffer_UNSAFE_Get(&list->Entries, i);
@@ -372,7 +375,7 @@ void TextureCache_Set(const String* url, uint8_t* data, uint32_t length) {
 	if (res) { Chat_LogError2(res, "closing cache for", url); }
 }
 
-void TextureCache_AddToTags(const String* url, const String* data, struct EntryList* list) {
+static void TextureCache_SetEntry(const String* url, const String* data, struct EntryList* list) {
 	TexCache_Crc32(url);
 	char entryBuffer[2048];
 	String entry = String_FromArray(entryBuffer);
@@ -391,17 +394,17 @@ void TextureCache_AddToTags(const String* url, const String* data, struct EntryL
 
 void TextureCache_SetETag(const String* url, const String* etag) {
 	if (!etag->length) return;
-	TextureCache_AddToTags(url, etag, &cache_eTags);
+	TextureCache_SetEntry(url, etag, &cache_eTags);
 }
 
 void TextureCache_SetLastModified(const String* url, const TimeMS* lastModified) {
-	if (!lastModified) return;
 	uint64_t ticks = (*lastModified) * TEXCACHE_TICKS_PER_MS;
+	if (!ticks) return;
 
 	char dataBuffer[STRING_SIZE];
 	String data = String_FromArray(dataBuffer);
 	String_AppendUInt64(&data, ticks);
-	TextureCache_AddToTags(url, &data, &cache_lastModified);
+	TextureCache_SetEntry(url, &data, &cache_lastModified);
 }
 
 
@@ -426,10 +429,11 @@ static ReturnCode TexturePack_ExtractZip(struct Stream* stream) {
 void TexturePack_ExtractZip_File(const String* filename) {
 	struct Stream stream;
 	ReturnCode res;
-	char pathBuffer[FILENAME_SIZE];
-	String path = String_FromArray(pathBuffer);
+	String path; char pathBuffer[FILENAME_SIZE];
 
+	String_InitArray(path, pathBuffer);
 	String_Format2(&path, "texpacks%r%s", &Directory_Separator, filename);
+
 	res = Stream_OpenFile(&stream, &path);
 	if (res) { Chat_LogError2(res, "opening", &path); return; }
 

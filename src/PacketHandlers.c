@@ -219,15 +219,14 @@ static void WoM_CheckMotd(void) {
 	static String cfg = String_FromConst("cfg=");
 	String motd = ServerConnection_ServerMOTD, host;
 	int index;
-
-	char urlBuffer[STRING_SIZE];
-	String url = String_FromArray(urlBuffer);	
+	String url; char urlBuffer[STRING_SIZE];
 
 	if (!motd.length) return;
 	index = String_IndexOfString(&motd, &cfg);
 	if (Game_PureClassic || index == -1) return;
 	
 	host = String_UNSAFE_SubstringAt(&motd, index + cfg.length);
+	String_InitArray(url, urlBuffer);
 	String_Format1(&url, "http://%s", &host);
 	/* TODO: Replace $U with username */
 	/*url = url.Replace("$U", game.Username); */
@@ -646,10 +645,9 @@ static void Classic_Message(uint8_t* data) {
 
 static void Classic_Kick(uint8_t* data) {
 	static String title = String_FromConst("&eLost connection to the server");
+	String reason; char reasonBuffer[STRING_SIZE];
 
-	char reasonBuffer[STRING_SIZE];
-	String reason = String_FromArray(reasonBuffer);	
-
+	String_InitArray(reason, reasonBuffer);
 	Handlers_ReadString(&data, &reason);
 	Game_Disconnect(&title, &reason);
 }
@@ -856,9 +854,9 @@ static void CPE_SendCpeExtInfoReply(void) {
 
 static void CPE_ExtInfo(uint8_t* data) {
 	static String d3Server = String_FromConst("D3 server");
-	char appNameBuffer[STRING_SIZE];
-	String appName = String_FromArray(appNameBuffer);
+	String appName; char appNameBuffer[STRING_SIZE];
 
+	String_InitArray(appName, appNameBuffer);
 	Handlers_ReadString(&data, &appName);
 	Chat_Add1("Server software: %s", &appName);
 	cpe_needD3Fix = String_CaselessStarts(&appName, &d3Server);
@@ -870,10 +868,10 @@ static void CPE_ExtInfo(uint8_t* data) {
 }
 
 static void CPE_ExtEntry(uint8_t* data) {
-	char extNameBuffer[STRING_SIZE];
-	String ext = String_FromArray(extNameBuffer);
+	String ext; char extNameBuffer[STRING_SIZE];
 	int extVersion;
 
+	String_InitArray(ext, extNameBuffer);
 	Handlers_ReadString(&data, &ext);
 	extVersion = Stream_GetU32_BE(data);
 	Platform_Log2("cpe ext: %s, %i", &ext, &extVersion);
@@ -1215,8 +1213,9 @@ static void CPE_SetTextColor(uint8_t* data) {
 }
 
 static void CPE_SetMapEnvUrl(uint8_t* data) {
-	char urlBuffer[STRING_SIZE];
-	String url = String_FromArray(urlBuffer);
+	String url; char urlBuffer[STRING_SIZE];
+
+	String_InitArray(url, urlBuffer);
 	Handlers_ReadString(&data, &url);
 	if (!Game_AllowServerTextures) return;
 

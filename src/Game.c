@@ -105,8 +105,9 @@ char game_defTexPackBuffer[STRING_SIZE];
 String game_defTexPack = String_FromArray(game_defTexPackBuffer);
 
 void Game_GetDefaultTexturePack(String* texPack) {
-	char texPathBuffer[STRING_SIZE];
-	String texPath = String_FromArray(texPathBuffer);
+	String texPath; char texPathBuffer[STRING_SIZE];
+
+	String_InitArray(texPath, texPathBuffer);
 	String_Format2(&texPath, "texpacks%r%s", &Directory_Separator, &game_defTexPack);
 
 	if (File_Exists(&texPath) && !Game_ClassicMode) {
@@ -412,13 +413,10 @@ static void Game_InitScheduledTasks(void) {
 
 void Game_Free(void* obj);
 void Game_Load(void) {
-	char renderTypeBuffer[STRING_SIZE];
-	String renderType = String_FromArray(renderTypeBuffer);
-	char titleBuffer[STRING_SIZE];
-	String title = String_FromArray(titleBuffer);
-
 	struct IGameComponent comp;
 	int i, flags;
+	String renderType; char renderTypeBuffer[STRING_SIZE];
+	String title;      char titleBuffer[STRING_SIZE];
 
 	Game_ViewDistance     = 512;
 	Game_MaxViewDistance  = 32768;
@@ -478,6 +476,7 @@ void Game_Load(void) {
 
 	ChunkUpdater_Init();
 	EnvRenderer_MakeComponent(&comp); Game_AddComponent(&comp);
+	String_InitArray(renderType, renderTypeBuffer);
 	Options_Get(OPT_RENDER_TYPE, &renderType, "normal");
 
 	flags = Game_CalcRenderType(&renderType);
@@ -533,6 +532,7 @@ void Game_Load(void) {
 	}*/
 
 	if (Gfx_WarnIfNecessary()) EnvRenderer_UseLegacyMode(true);
+	String_InitArray(title, titleBuffer);
 	String_Format2(&title, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
 
 	Gui_FreeActive();

@@ -145,11 +145,12 @@ static void ErrorHandler_DumpCommon(String* str, void* ctx) {
 }
 
 static void ErrorHandler_DumpRegisters(void* ctx) {
+	CONTEXT* r;
+	String str; char strBuffer[STRING_SIZE * 8];
 	if (!ctx) return;
-	CONTEXT* r = (CONTEXT*)ctx;
 
-	char strBuffer[STRING_SIZE * 8];
-	String str = String_FromArray(strBuffer);
+	r = (CONTEXT*)ctx;
+	String_InitArray(str, strBuffer);
 	String_AppendConst(&str, "-- registers --\r\n");
 
 #ifdef _M_IX86
@@ -577,11 +578,12 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
 static void ErrorHandler_DumpRegisters(void* ctx) {
+	mcontext_t r;
+	String str; char strBuffer[STRING_SIZE * 8];
 	if (!ctx) return;
-	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
 
-	char strBuffer[STRING_SIZE * 8];
-	String str = String_FromArray(strBuffer);
+	r = ((ucontext_t*)ctx)->uc_mcontext;
+	String_InitArray(str, strBuffer);
 	String_AppendConst(&str, "-- registers --\n");
 
 	/* TODO: There must be a better way of getting these.. */
@@ -637,11 +639,12 @@ void ErrorHandler_ShowDialog(const char* title, const char* msg) {
 #endif
 #ifdef CC_BUILD_OSX
 static void ErrorHandler_DumpRegisters(void* ctx) {
+	mcontext_t r;
+	String str; char strBuffer[STRING_SIZE * 8];
 	if (!ctx) return;
-	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
 
-	char strBuffer[STRING_SIZE * 8];
-	String str = String_FromArray(strBuffer);
+	r = ((ucontext_t*)ctx)->uc_mcontext;
+	String_InitArray(str, strBuffer);
 	String_AppendConst(&str, "-- registers --\n");
 
 	/* You can find these definitions at /usr/include/mach/i386/_structs.h */

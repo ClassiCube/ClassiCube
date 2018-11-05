@@ -130,10 +130,10 @@ void Options_SetBool(const char* keyRaw, bool value) {
 }
 
 void Options_SetInt(const char* keyRaw, int value) {
-	char numBuffer[STRING_INT_CHARS];
-	String numStr = String_FromArray(numBuffer);
-	String_AppendInt(&numStr, value);
-	Options_Set(keyRaw, &numStr);
+	String str; char strBuffer[STRING_INT_CHARS];
+	String_InitArray(str, strBuffer);
+	String_AppendInt(&str, value);
+	Options_Set(keyRaw, &str);
 }
 
 void Options_Set(const char* keyRaw, const String* value) {
@@ -156,14 +156,13 @@ void Options_SetString(const String* key, const String* value) {
 
 void Options_Load(void) {	
 	static String path = String_FromConst("options.txt");
-	char lineBuffer[768];
-	String line = String_FromArray(lineBuffer);
 
 	String key, value;
 	uint8_t buffer[2048];
 	struct Stream stream, buffered;
-	ReturnCode res;
 	int i;
+	ReturnCode res;
+	String line; char lineBuffer[768];
 
 	res = Stream_OpenFile(&stream, &path);
 	if (res == ReturnCode_FileNotFound) return;
@@ -178,6 +177,7 @@ void Options_Load(void) {
 
 	/* ReadLine reads single byte at a time */
 	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
+	String_InitArray(line, lineBuffer);
 
 	for (;;) {
 		res = Stream_ReadLine(&buffered, &line);
@@ -198,13 +198,13 @@ void Options_Load(void) {
 
 void Options_Save(void) {	
 	static String path = String_FromConst("options.txt");
-	char lineBuffer[1024];
+	char lineBuffer[768];
 	String line = String_FromArray(lineBuffer);
 
 	String key, value;
 	struct Stream stream;
-	ReturnCode res;
 	int i;
+	ReturnCode res;
 
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Chat_LogError2(res, "creating", &path); return; }

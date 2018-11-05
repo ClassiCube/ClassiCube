@@ -473,14 +473,14 @@ void Block_UpdateCulling(BlockID block) {
 *-------------------------------------------------------AutoRotate--------------------------------------------------------*
 *#########################################################################################################################*/
 static BlockID AutoRotate_Find(BlockID block, const String* name, const char* suffix) {
-	char buffer[STRING_SIZE * 2];
-	String temp = String_FromArray(buffer);
 	int rotated;
+	String str; char strBuffer[STRING_SIZE * 2];
 
-	String_AppendString(&temp, name);
-	String_AppendConst(&temp, suffix);
+	String_InitArray(str, strBuffer);
+	String_AppendString(&str, name);
+	String_AppendConst(&str, suffix);
 
-	rotated = Block_FindID(&temp);
+	rotated = Block_FindID(&str);
 	return rotated == -1 ? block : (BlockID)rotated;
 }
 

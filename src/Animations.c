@@ -156,18 +156,19 @@ bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
 #define ANIM_MIN_ARGS 7
 
 static void Animations_ReadDescription(struct Stream* stream, const String* path) {
-	char lineBuffer[STRING_SIZE * 2];
-	String line = String_FromArray(lineBuffer);
+	String line; char lineBuffer[STRING_SIZE * 2];
 	String parts[ANIM_MIN_ARGS];
-
 	int count;
 	struct AnimationData data = { 0 };
 	uint8_t tileX, tileY;
 
-	/* ReadLine reads single byte at a time */
-	uint8_t buffer[2048]; struct Stream buffered;
+	uint8_t buffer[2048]; 
+	struct Stream buffered;
 	ReturnCode res;
-	Stream_ReadonlyBuffered(&buffered, stream, buffer, sizeof(buffer));	
+
+	String_InitArray(line, lineBuffer);
+	/* ReadLine reads single byte at a time */
+	Stream_ReadonlyBuffered(&buffered, stream, buffer, sizeof(buffer));
 
 	for (;;) {
 		res = Stream_ReadLine(&buffered, &line);
@@ -244,7 +245,7 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int s
 }
 
 static void Animations_Apply(struct AnimationData* data) {
-	TextureLoc texLoc;
+	TextureLoc loc;
 	data->Tick--;
 	if (data->Tick >= 0) return;
 
@@ -252,17 +253,17 @@ static void Animations_Apply(struct AnimationData* data) {
 	data->State %= data->StatesCount;
 	data->Tick   = data->TickDelay;
 
-	texLoc = data->TexLoc;
-	if (texLoc == 30 && anims_useLavaAnim) return;
-	if (texLoc == 14 && anims_useWaterAnim) return;
-	Animations_Draw(data, texLoc, data->FrameSize);
+	loc = data->TexLoc;
+	if (loc == 30 && anims_useLavaAnim) return;
+	if (loc == 14 && anims_useWaterAnim) return;
+	Animations_Draw(data, loc, data->FrameSize);
 }
 
 static bool Animations_IsDefaultZip(void) {	
-	char texPackBuffer[STRING_SIZE];
-	String texPack = String_FromArray(texPackBuffer);
-
+	String texPack; char texPackBuffer[STRING_SIZE];
 	if (World_TextureUrl.length) return false;
+
+	String_InitArray(texPack, texPackBuffer);
 	Options_Get(OPT_DEFAULT_TEX_PACK, &texPack, "default.zip");
 	return String_CaselessEqualsConst(&texPack, "default.zip");
 }

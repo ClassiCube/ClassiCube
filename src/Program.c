@@ -47,10 +47,8 @@ int main(int argc, char** argv) {
 	/* String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565"); */
 	/* argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4); */
 
-	char defPathBuffer[STRING_SIZE];
-	String defPath = String_FromArray(defPathBuffer);
-	char titleBuffer[STRING_SIZE];
-	String title   = String_FromArray(titleBuffer);
+	String defPath; char defPathBuffer[STRING_SIZE];
+	String title; char titleBuffer[STRING_SIZE];
 
 	uint8_t ip[4];
 	uint16_t port;
@@ -68,6 +66,8 @@ int main(int argc, char** argv) {
 	Utils_EnsureDirectory("maps");
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("texturecache");
+
+	String_InitArray(defPath, defPathBuffer);
 	String_Format1(&defPath, "texpacks%rdefault.zip", &Directory_Separator);
 
 	if (!File_Exists(&defPath)) {
@@ -111,6 +111,7 @@ int main(int argc, char** argv) {
 		if (device.Bounds.Width < 854) width = 640;
 	}
 
+	String_InitArray(title, titleBuffer);
 	String_Format2(&title, "%c (%s)", PROGRAM_APP_NAME, &Game_Username);
 	Game_Run(width, height, &title, &device);
 

@@ -215,8 +215,9 @@ void Platform_Log3(const char* format, const void* a1, const void* a2, const voi
 }
 
 void Platform_Log4(const char* format, const void* a1, const void* a2, const void* a3, const void* a4) {
-	char msgBuffer[512];
-	String msg = String_FromArray(msgBuffer);
+	String msg; char msgBuffer[512];
+	String_InitArray(msg, msgBuffer);
+
 	String_Format4(&msg, format, a1, a2, a3, a4);
 	Platform_Log(&msg);
 }
@@ -922,16 +923,17 @@ void Font_Free(FontDesc* desc) {
 }
 
 static void Font_Add(const String* path, FT_Face face, StringsBuffer* entries, const char* defStyle) {
+	String name; char nameBuffer[STRING_SIZE];
+	String style;
+
 	if (!face->family_name || !(face->face_flags & FT_FACE_FLAG_SCALABLE)) return;
 	StringsBuffer_Add(entries, path);
-
-	char nameBuffer[STRING_SIZE];
-	String name = String_FromArray(nameBuffer);
+	String_InitArray(name, nameBuffer);
 
 	String_AppendConst(&name, face->family_name);
 	/* don't want 'Arial Regular' or 'Arial Bold' */
 	if (face->style_name) {
-		String style = String_FromReadonly(face->style_name);
+		style = String_FromReadonly(face->style_name);
 		if (!String_CaselessEqualsConst(&style, defStyle)) {
 			String_Format1(&name, " %c", face->style_name);
 		}
@@ -1918,9 +1920,9 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 static ReturnCode Platform_RunOpen(const char* format, const String* args) {
 	char str[300];
 	FILE* fp;
-	char pathBuffer[FILENAME_SIZE + 10];
-	String path = String_FromArray(pathBuffer);
+	String path; char pathBuffer[FILENAME_SIZE + 10];
 
+	String_InitArray(path, pathBuffer);
 	String_Format1(&path, format, args);
 	Platform_ConvertString(str, &path);
 

@@ -81,21 +81,23 @@ bool KeepAlive;
 
 static void AsyncDownloader_Add(const String* url, bool priority, const String* id, uint8_t type, TimeMS* lastModified, const String* etag, const String* data) {
 	struct AsyncRequest req = { 0 };
-	String reqUrl  = String_FromArray(req.URL);
-	String reqID   = String_FromArray(req.ID);
-	String reqEtag = String_FromArray(req.Etag);
+	String reqUrl, reqID, reqEtag;
+
+	String_InitArray(reqUrl, req.URL);
+	String_Copy(&reqUrl, url);
+	String_InitArray(reqID, req.ID);
+	String_Copy(&reqID, id);
+
+	req.RequestType = type;
+	Platform_Log2("Adding %s (type %b)", &reqUrl, &type);
+
+	String_InitArray(reqEtag, req.Etag);
+	if (lastModified) { req.LastModified = *lastModified; }
+	if (etag)         { String_Copy(&reqEtag, etag); }
+	/* request.Data = data; TODO: Implement this. do we need to copy or expect caller to malloc it?  */
 
 	Mutex_Lock(async_pendingMutex);
 	{	
-		String_Copy(&reqUrl, url);
-		String_Copy(&reqID,  id);
-		req.RequestType = type;
-		Platform_Log2("Adding %s (type %b)", &reqUrl, &type);
-
-		if (lastModified) { req.LastModified = *lastModified; }
-		if (etag)         { String_Copy(&reqEtag, etag); }
-		/* request.Data = data; TODO: Implement this. do we need to copy or expect caller to malloc it?  */
-
 		req.TimeAdded = DateTime_CurrentUTC_MS();
 		if (priority) {
 			AsyncRequestList_Prepend(&async_pending, &req);

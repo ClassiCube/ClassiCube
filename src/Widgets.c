@@ -580,11 +580,11 @@ static void TableWidget_RecreateDescTex(struct TableWidget* w) {
 
 void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block) {
 	struct DrawTextArgs args;
-	char descBuffer[STRING_SIZE * 2];
-	String desc = String_FromArray(descBuffer);
+	String desc; char descBuffer[STRING_SIZE * 2];
 
 	Gfx_DeleteTexture(&w->DescTex.ID);
-	if (block == BLOCK_AIR) return;	
+	if (block == BLOCK_AIR) return;
+	String_InitArray(desc, descBuffer);
 	TableWidget_MakeBlockDesc(&desc, block);
 	
 	DrawTextArgs_Make(&args, &desc, &w->Font, true);
@@ -1133,12 +1133,14 @@ static void InputWidget_EndKey(struct InputWidget* w) {
 }
 
 static bool InputWidget_OtherKey(struct InputWidget* w, Key key) {
-	int maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
+	int maxChars;
+	String text; char textBuffer[INPUTWIDGET_MAX_LINES * STRING_SIZE];
+	
+	maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
 	if (!InputWidget_ControlDown()) return false;
 
 	if (key == Key_V && w->Text.length < maxChars) {
-		char textBuffer[INPUTWIDGET_MAX_LINES * STRING_SIZE];
-		String text = String_FromArray(textBuffer);
+		String_InitArray(text, textBuffer);
 		Window_GetClipboardText(&text);
 
 		String_TrimStart(&text);
@@ -1457,13 +1459,13 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 	struct DrawTextArgs args;
 	Size2D size;
 	Bitmap bmp;
+	String range; char rangeBuffer[STRING_SIZE];
 
 	DrawTextArgs_Make(&args, &w->Base.Lines[0], &w->Base.Font, false);
 	size = Drawer2D_MeasureText(&args);
 	w->Base.CaretAccumulator = 0.0;
 
-	char rangeBuffer[STRING_SIZE];
-	String range = String_FromArray(rangeBuffer);
+	String_InitArray(range, rangeBuffer);
 	v = &w->Validator;
 	v->VTABLE->GetRange(v, &range);
 
@@ -1806,11 +1808,11 @@ void ChatInputWidget_Create(struct ChatInputWidget* w, const FontDesc* font) {
 #define LIST_NAMES_PER_COLUMN 16
 
 static void PlayerListWidget_DrawName(struct Texture* tex, struct PlayerListWidget* w, const String* name) {
-	char tmpBuffer[STRING_SIZE];
-	String tmp = String_FromArray(tmpBuffer);
+	String tmp; char tmpBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 
 	if (Game_PureClassic) {
+		String_InitArray(tmp, tmpBuffer);
 		String_AppendColorless(&tmp, name);
 	} else {
 		tmp = *name;
@@ -1982,18 +1984,21 @@ static int PlayerListWidget_GetGroupCount(struct PlayerListWidget* w, int id, in
 }
 
 static int PlayerListWidget_PlayerCompare(int x, int y) {
-	uint8_t xRank = TabList_GroupRanks[x];
-	uint8_t yRank = TabList_GroupRanks[y];
-	if (xRank != yRank) return (xRank < yRank ? -1 : 1);
+	uint8_t xRank, yRank;
+	String xNameRaw, yNameRaw;
+	String xName; char xNameBuffer[STRING_SIZE];
+	String yName; char yNameBuffer[STRING_SIZE];
 
-	char xNameBuffer[STRING_SIZE];
-	String xName    = String_FromArray(xNameBuffer);
-	String xNameRaw = TabList_UNSAFE_GetList(x);
+	xRank = TabList_GroupRanks[x];
+	yRank = TabList_GroupRanks[y];
+	if (xRank != yRank) return (xRank < yRank ? -1 : 1);
+	
+	String_InitArray(xName, xNameBuffer);
+	xNameRaw = TabList_UNSAFE_GetList(x);
 	String_AppendColorless(&xName, &xNameRaw);
 
-	char yNameBuffer[STRING_SIZE];
-	String yName    = String_FromArray(yNameBuffer);
-	String yNameRaw = TabList_UNSAFE_GetList(y);
+	String_InitArray(yName, yNameBuffer);
+	yNameRaw = TabList_UNSAFE_GetList(y);
 	String_AppendColorless(&yName, &yNameRaw);
 
 	return String_Compare(&xName, &yName);

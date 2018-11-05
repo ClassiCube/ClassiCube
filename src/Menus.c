@@ -795,8 +795,8 @@ static void EditHotkeyScreen_MakeFlags(int flags, String* str) {
 }
 
 static void EditHotkeyScreen_MakeBaseKey(struct EditHotkeyScreen* s, Widget_LeftClick onClick) {
-	char textBuffer[STRING_SIZE];
-	String text = String_FromArray(textBuffer);
+	String text; char textBuffer[STRING_SIZE];
+	String_InitArray(text, textBuffer);
 
 	String_AppendConst(&text, "Key: ");
 	String_AppendConst(&text, Key_Names[s->CurHotkey.Trigger]);
@@ -804,8 +804,8 @@ static void EditHotkeyScreen_MakeBaseKey(struct EditHotkeyScreen* s, Widget_Left
 }
 
 static void EditHotkeyScreen_MakeModifiers(struct EditHotkeyScreen* s, Widget_LeftClick onClick) {
-	char textBuffer[STRING_SIZE];
-	String text = String_FromArray(textBuffer);
+	String text; char textBuffer[STRING_SIZE];
+	String_InitArray(text, textBuffer);
 
 	String_AppendConst(&text, "Modifiers:");
 	EditHotkeyScreen_MakeFlags(s->CurHotkey.Flags, &text);
@@ -813,8 +813,8 @@ static void EditHotkeyScreen_MakeModifiers(struct EditHotkeyScreen* s, Widget_Le
 }
 
 static void EditHotkeyScreen_MakeLeaveOpen(struct EditHotkeyScreen* s, Widget_LeftClick onClick) {
-	char textBuffer[STRING_SIZE];
-	String text = String_FromArray(textBuffer);
+	String text; char textBuffer[STRING_SIZE];
+	String_InitArray(text, textBuffer);
 
 	String_AppendConst(&text, "Input stays open: ");
 	String_AppendConst(&text, s->CurHotkey.StaysOpen ? "ON" : "OFF");
@@ -2075,13 +2075,15 @@ static bool MenuOptionsScreen_MouseMove(void* screen, int x, int y) {
 }
 
 static void MenuOptionsScreen_Make(struct MenuOptionsScreen* s, int i, int dir, int y, const char* optName, Widget_LeftClick onClick, Button_Get getter, Button_Set setter) {
-	char titleBuffer[STRING_SIZE];
-	String title = String_FromArray(titleBuffer);
+	struct ButtonWidget* btn;
+	String title; char titleBuffer[STRING_SIZE];
+
+	String_InitArray(title, titleBuffer);
 	String_AppendConst(&title, optName);
 	String_AppendConst(&title, ": ");
 	getter(&title);
 
-	struct ButtonWidget* btn = &s->Buttons[i];
+	btn = &s->Buttons[i];
 	Menu_Button(s, i, btn, 300, &title, &s->TitleFont, onClick,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 160 * dir, y);
 
