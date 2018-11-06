@@ -573,10 +573,10 @@ static void Classic_EntityTeleport(uint8_t* data) {
 }
 
 static void Classic_RelPosAndOrientationUpdate(uint8_t* data) {
+	struct LocationUpdate update;
 	EntityID id = *data++; 
 	Vector3 pos;
 	float rotY, headX;
-	struct LocationUpdate update;
 
 	pos.X = (int8_t)(*data++) / 32.0f;
 	pos.Y = (int8_t)(*data++) / 32.0f;
@@ -589,9 +589,9 @@ static void Classic_RelPosAndOrientationUpdate(uint8_t* data) {
 }
 
 static void Classic_RelPositionUpdate(uint8_t* data) {
+	struct LocationUpdate update;
 	EntityID id = *data++; 
 	Vector3 pos;
-	struct LocationUpdate update;
 
 	pos.X = (int8_t)(*data++) / 32.0f;
 	pos.Y = (int8_t)(*data++) / 32.0f;
@@ -602,9 +602,9 @@ static void Classic_RelPositionUpdate(uint8_t* data) {
 }
 
 static void Classic_OrientationUpdate(uint8_t* data) {
+	struct LocationUpdate update;
 	EntityID id = *data++;
 	float rotY, headX;
-	struct LocationUpdate update;
 
 	rotY  = Math_Packed2Deg(*data++);
 	headX = Math_Packed2Deg(*data++);

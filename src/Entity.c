@@ -1013,7 +1013,7 @@ static void LocalPlayer_HandleFly(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (p->Hacks.CanFly && p->Hacks.Enabled) {
 		p->Hacks.Flying = !p->Hacks.Flying;
-	} else if(!p->_WarnedFly) {
+	} else if (!p->_WarnedFly) {
 		p->_WarnedFly = true;
 		if (Game_PureClassic) return;
 		Chat_AddRaw("&cFlying is currently disabled");

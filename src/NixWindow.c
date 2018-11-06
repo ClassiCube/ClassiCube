@@ -283,7 +283,7 @@ void Window_GetClipboardText(String* value) {
 }
 
 void Window_SetClipboardText(const String* value) {
-	String_Copy(&clipboard_paste_text, value);
+	String_Copy(&clipboard_copy_text, value);
 	XSetSelectionOwner(win_display, xa_clipboard, win_handle, 0);
 }
 
