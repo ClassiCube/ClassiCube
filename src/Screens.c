@@ -806,11 +806,15 @@ static void ChatScreen_CheckOtherStatuses(struct ChatScreen* s) {
 	static String texPack = String_FromConst("texturePack");
 	struct AsyncRequest request;
 	int progress;
-	bool hasRequest = AsyncDownloader_GetCurrent(&request, &progress);
-	String id = String_FromRawArray(request.ID);	
+	bool hasRequest;
+	String identifier;
+	String str; char strBuffer[STRING_SIZE];
+	
+	hasRequest = AsyncDownloader_GetCurrent(&request, &progress);
+	identifier = String_FromRawArray(request.ID);	
 
 	/* Is terrain / texture pack currently being downloaded? */
-	if (!hasRequest || !String_Equals(&id, &texPack)) {
+	if (!hasRequest || !String_Equals(&identifier, &texPack)) {
 		if (s->Status.Textures[1].ID) {
 			TextGroupWidget_SetText(&s->Status, 1, &String_Empty);
 		}
@@ -820,8 +824,7 @@ static void ChatScreen_CheckOtherStatuses(struct ChatScreen* s) {
 
 	if (progress == s->LastDownloadStatus) return;
 	s->LastDownloadStatus = progress;
-	char strBuffer[STRING_SIZE];
-	String str = String_FromArray(strBuffer);
+	String_InitArray(str, strBuffer);
 
 	if (progress == ASYNC_PROGRESS_MAKING_REQUEST) {
 		String_AppendConst(&str, "&eRetrieving texture pack..");

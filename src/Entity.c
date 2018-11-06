@@ -444,12 +444,13 @@ bool TabList_Remove(EntityID id) {
 }
 
 void TabList_Set(EntityID id, const String* player, const String* list, const String* group, uint8_t rank) {
-	char playerNameBuffer[STRING_SIZE];
-	String playerName = String_FromArray(playerNameBuffer);
-	String_AppendColorless(&playerName, player);
+	String colorlessName; char colorlessBuffer[STRING_SIZE];
+
+	String_InitArray(colorlessName, colorlessBuffer);
+	String_AppendColorless(&colorlessName, player);
 	TabList_Remove(id);
 
-	TabList_PlayerNames[id] = TabList_Buffer.Count; StringsBuffer_Add(&TabList_Buffer, &playerName);
+	TabList_PlayerNames[id] = TabList_Buffer.Count; StringsBuffer_Add(&TabList_Buffer, &colorlessName);
 	TabList_ListNames[id]   = TabList_Buffer.Count; StringsBuffer_Add(&TabList_Buffer, list);
 	TabList_GroupNames[id]  = TabList_Buffer.Count; StringsBuffer_Add(&TabList_Buffer, group);
 	TabList_GroupRanks[id]  = rank;

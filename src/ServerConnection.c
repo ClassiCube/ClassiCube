@@ -277,10 +277,11 @@ static void MPConnection_FinishConnect(void) {
 
 static void MPConnection_FailConnect(ReturnCode result) {
 	static String reason = String_FromConst("You failed to connect to the server. It's probably down!");
-	char msgBuffer[STRING_SIZE * 2];
-	String msg = String_FromArray(msgBuffer);
+	String msg; char msgBuffer[STRING_SIZE * 2];
 
 	net_connecting = false;
+	String_InitArray(msg, msgBuffer);
+
 	if (result) {
 		String_Format3(&msg, "Error connecting to %s:%i: %i", &Game_IPAddress, &Game_Port, &result);
 		ErrorHandler_Log(&msg);

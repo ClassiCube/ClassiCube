@@ -198,16 +198,16 @@ void Options_Load(void) {
 
 void Options_Save(void) {	
 	static String path = String_FromConst("options.txt");
-	char lineBuffer[768];
-	String line = String_FromArray(lineBuffer);
 
 	String key, value;
 	struct Stream stream;
 	int i;
 	ReturnCode res;
+	String line; char lineBuffer[768];
 
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Chat_LogError2(res, "creating", &path); return; }
+	String_InitArray(line, lineBuffer);
 
 	for (i = 0; i < Options_Keys.Count; i++) {
 		key   = StringsBuffer_UNSAFE_Get(&Options_Keys,   i);

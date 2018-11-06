@@ -324,9 +324,10 @@ static void Game_OnLowVRAMDetected(void* obj) {
 }
 
 static void Game_ExtractInitialTexturePack(void) {
-	char texPackBuffer[STRING_SIZE];
-	String texPack = String_FromArray(texPackBuffer);
+	String texPack; char texPackBuffer[STRING_SIZE];
+
 	Options_Get(OPT_DEFAULT_TEX_PACK, &game_defTexPack, "default.zip");
+	String_InitArray(texPack, texPackBuffer);
 
 	String_AppendConst(&texPack, "default.zip");
 	TexturePack_ExtractZip_File(&texPack);
@@ -641,21 +642,20 @@ static void Game_DoScheduledTasks(double time) {
 }
 
 void Game_TakeScreenshot(void) {
-	char fileBuffer[STRING_SIZE];
-	String filename = String_FromArray(fileBuffer);
-	char pathBuffer[FILENAME_SIZE];
-	String path = String_FromArray(pathBuffer);
-
 	DateTime now;
 	struct Stream stream;
 	ReturnCode res;
+	String filename; char fileBuffer[STRING_SIZE];
+	String path;     char pathBuffer[FILENAME_SIZE];
 
 	Game_ScreenshotRequested = false;
 	if (!Utils_EnsureDirectory("screenshots")) return;
-
 	DateTime_CurrentLocal(&now);
+
+	String_InitArray(filename, fileBuffer);
 	String_Format3(&filename, "screenshot_%p2-%p2-%p4", &now.Day, &now.Month, &now.Year);
 	String_Format3(&filename, "-%p2-%p2-%p2.png", &now.Hour, &now.Minute, &now.Second);
+	String_InitArray(path, pathBuffer);
 	String_Format2(&path, "screenshots%r%s", &Directory_Separator, &filename);
 
 	res = Stream_CreateFile(&stream, &path);

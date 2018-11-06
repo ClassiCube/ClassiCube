@@ -382,17 +382,21 @@ static void ListScreen_Make(struct ListScreen* s, int i, int x, const String* te
 }
 
 static void ListScreen_UpdatePage(struct ListScreen* s) {
-	int start = LIST_SCREEN_ITEMS, end = s->Entries.Count - LIST_SCREEN_ITEMS;
-	s->Buttons[5].Disabled = s->CurrentIndex < start;
-	s->Buttons[6].Disabled = s->CurrentIndex >= end;
-	if (Game_ClassicMode) return;
+	int beg, end;
+	int num, pages;
+	String page; char pageBuffer[STRING_SIZE];
 
-	char pageBuffer[STRING_SIZE];
-	String page = String_FromArray(pageBuffer);
-	int num     = (s->CurrentIndex  / LIST_SCREEN_ITEMS) + 1;
-	int pages   = Math_CeilDiv(s->Entries.Count, LIST_SCREEN_ITEMS);
+	beg = LIST_SCREEN_ITEMS;
+	end = s->Entries.Count - LIST_SCREEN_ITEMS;
+	s->Buttons[5].Disabled = s->CurrentIndex <  beg;
+	s->Buttons[6].Disabled = s->CurrentIndex >= end;
+
+	if (Game_ClassicMode) return;
+	num   = (s->CurrentIndex  / LIST_SCREEN_ITEMS) + 1;
+	pages = Math_CeilDiv(s->Entries.Count, LIST_SCREEN_ITEMS);
 	if (pages == 0) pages = 1;
 
+	String_InitArray(page, pageBuffer);
 	String_Format2(&page, "&7Page %i of %i", &num, &pages);
 	TextWidget_Set(&s->Page, &page, &s->Font);
 }
@@ -443,8 +447,7 @@ static void ListScreen_ContextRecreated(void* screen) {
 	ListScreen_Make(s, 5, -220, &lArrow, ListScreen_MoveBackwards);	
 	ListScreen_Make(s, 6,  220, &rArrow, ListScreen_MoveForwards);
 
-	Menu_Back(s, 7, &s->Buttons[7], "Done", &s->Font, Menu_SwitchPause);
-
+	Menu_Back(s,  7, &s->Buttons[7], "Done",   &s->Font, Menu_SwitchPause);
 	Menu_Label(s, 8, &s->Title, &s->TitleText, &s->Font,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -155);
 	Menu_Label(s, 9, &s->Page,  &String_Empty, &s->Font,
@@ -646,7 +649,7 @@ static void PauseScreen_ContextRecreated(void* screen) {
 		
 		Menu_Button(s, 6, &s->Buttons[6], 120, &quitMsg, &s->TitleFont, PauseScreen_Quit,
 			ANCHOR_MAX, ANCHOR_MAX, 5, 5);
-		Menu_Back(s, 7, &s->Buttons[7], "Back to game",  &s->TitleFont, PauseScreen_Game);
+		Menu_Back(s,   7, &s->Buttons[7], "Back to game",&s->TitleFont, PauseScreen_Game);
 	}
 
 	if (!ServerConnection_IsSinglePlayer) {
@@ -1106,10 +1109,10 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 	static String title = String_FromConst("Generate new level");
 	static String flat  = String_FromConst("Flatgrass");
 	static String norm  = String_FromConst("Vanilla");
-
 	struct GenLevelScreen* s = screen;
-	char tmpBuffer[STRING_SIZE];
-	String tmp = String_FromArray(tmpBuffer);
+	
+	String tmp; char tmpBuffer[STRING_SIZE];
+	String_InitArray(tmp, tmpBuffer);
 
 	String_AppendInt(&tmp, World_Width);
 	GenLevelScreen_Input(s, 0, -80, false, &tmp);
@@ -1124,14 +1127,13 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 	GenLevelScreen_Label(s, 2, -150,   0, "Length:");
 	GenLevelScreen_Label(s, 3, -140,  40, "Seed:");
 	
-	Menu_Label(s,   8, &s->Labels[4], &title, &s->TextFont,
+	Menu_Label(s,   8, &s->Labels[4], &title,      &s->TextFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -130);
 	Menu_Button(s,  9, &s->Buttons[0], 200, &flat, &s->TitleFont, GenLevelScreen_Flatgrass,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, -120,  100);
 	Menu_Button(s, 10, &s->Buttons[1], 200, &norm, &s->TitleFont, GenLevelScreen_Notchy,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,  120,  100);
-
-	Menu_Back(s, 11, &s->Buttons[2], "Cancel", &s->TitleFont, Menu_SwitchPause);
+	Menu_Back(s,   11, &s->Buttons[2], "Cancel",   &s->TitleFont, Menu_SwitchPause);
 }
 
 struct ScreenVTABLE GenLevelScreen_VTABLE = {
@@ -1361,7 +1363,7 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 110, 120);
 
 	Menu_Back(s,   3, &s->Buttons[2], "Cancel",      &s->TitleFont, Menu_SwitchPause);
-	Menu_Input(s,  4, &s->Input, 500, &String_Empty, &s->TextFont, &validator, 
+	Menu_Input(s,  4, &s->Input, 500, &String_Empty, &s->TextFont,  &validator, 
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
 	s->Widgets[5] = NULL; /* description widget placeholder */
 }
@@ -1416,10 +1418,10 @@ static void TexturePackScreen_FilterFiles(const String* path, void* obj) {
 }
 
 struct Screen* TexturePackScreen_MakeInstance(void) {
-	static String title = String_FromConst("Select a texture pack zip");
-	static String path  = String_FromConst("texpacks");
-
+	static String title  = String_FromConst("Select a texture pack zip");
+	static String path   = String_FromConst("texpacks");
 	struct ListScreen* s = ListScreen_MakeInstance();
+
 	s->TitleText  = title;
 	s->EntryClick = TexturePackScreen_EntryClick;
 	
@@ -1533,19 +1535,20 @@ static void HotkeyListScreen_MakeFlags(int flags, String* str) {
 }
 
 struct Screen* HotkeyListScreen_MakeInstance(void) {
-	static String title = String_FromConst("Modify hotkeys");
-	static String empty = String_FromConst(LIST_SCREEN_EMPTY);
-
-	char textBuffer[STRING_SIZE];
-	String text = String_FromArray(textBuffer);
-	int i;
-
+	static String title  = String_FromConst("Modify hotkeys");
+	static String empty  = String_FromConst(LIST_SCREEN_EMPTY);
 	struct ListScreen* s = ListScreen_MakeInstance();
+
+	struct HotkeyData hKey;
+	int i;
+	String text; char textBuffer[STRING_SIZE];
+
+	String_InitArray(text, textBuffer);
 	s->TitleText  = title;
 	s->EntryClick = HotkeyListScreen_EntryClick;
 
 	for (i = 0; i < HotkeysText.Count; i++) {
-		struct HotkeyData hKey = HotkeysList[i];
+		hKey = HotkeysList[i];
 		text.length = 0;
 		String_AppendConst(&text, Key_Names[hKey.Trigger]);
 
@@ -1928,9 +1931,10 @@ static void MenuOptionsScreen_SetFPS(const String* v) {
 }
 
 static void MenuOptionsScreen_Set(struct MenuOptionsScreen* s, int i, const String* text) {
-	char titleBuffer[STRING_SIZE];
-	String title = String_FromArray(titleBuffer);
+	String title; char titleBuffer[STRING_SIZE];
+
 	s->Buttons[i].SetValue(text);
+	String_InitArray(title, titleBuffer);
 
 	/* need to get btn again here (e.g. changing FPS invalidates all widgets) */
 	String_AppendConst(&title, s->Buttons[i].OptName);
@@ -2147,19 +2151,20 @@ static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 static void MenuOptionsScreen_Input(void* screen, void* widget) {
 	static String okay = String_FromConst("OK");
 	static String def  = String_FromConst("Default value");
-
 	struct MenuOptionsScreen* s = screen;
+
 	struct ButtonWidget* btn = widget;
 	int i;
-	char valueBuffer[STRING_SIZE];
-	String value = String_FromArray(valueBuffer);
+	String value; char valueBuffer[STRING_SIZE];
 
 	s->ActiveI = Menu_Index(s, btn);
 	MenuOptionsScreen_FreeExtHelp(s);
 	MenuOptionsScreen_FreeInput(s);
-	btn->GetValue(&value);
 
+	String_InitArray(value, valueBuffer);
+	btn->GetValue(&value);
 	i = s->WidgetsCount;
+
 	Menu_Input(s,  i - 1, &s->Input,   400, &value, &s->TextFont,  &s->Validators[s->ActiveI],
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 110);
 	Menu_Button(s, i - 2, &s->OK,       40, &okay,  &s->TitleFont, MenuOptionsScreen_OK,
@@ -2282,7 +2287,7 @@ static void ClassicOptionsScreen_ContextRecreated(void* screen) {
 	
 	Menu_Button(s, 9, &s->Buttons[9], 400, &title, &s->TitleFont, Menu_SwitchKeysClassic,
 		ANCHOR_CENTRE, ANCHOR_MAX, 0, 95);
-	Menu_Back(s, 10, &s->Buttons[10], "Done", &s->TitleFont, Menu_SwitchPause);
+	Menu_Back(s,  10, &s->Buttons[10], "Done",     &s->TitleFont, Menu_SwitchPause);
 
 	/* Disable certain options */
 	if (!ServerConnection_IsSinglePlayer) Menu_Remove(s, 3);
@@ -2435,9 +2440,10 @@ static void GraphicsOptionsScreen_SetShadows(const String* v) {
 
 static void GraphicsOptionsScreen_GetMipmaps(String* v) { Menu_GetBool(v, Gfx_Mipmaps); }
 static void GraphicsOptionsScreen_SetMipmaps(const String* v) {
+	String url; char urlBuffer[STRING_SIZE];
+
 	Gfx_Mipmaps = Menu_SetBool(v, OPT_MIPMAPS);
-	char urlBuffer[STRING_SIZE];
-	String url = String_FromArray(urlBuffer);
+	String_InitArray(url, urlBuffer);
 	String_Copy(&url, &World_TextureUrl);
 
 	/* always force a reload from cache */
@@ -2626,12 +2632,12 @@ static void HacksSettingsScreen_SetClipping(const String* v) {
 static void HacksSettingsScreen_GetJump(String* v) { String_AppendFloat(v, LocalPlayer_JumpHeight(), 3); }
 static void HacksSettingsScreen_SetJump(const String* v) {
 	struct PhysicsComp* physics = &LocalPlayer_Instance.Physics;
-	char strBuffer[STRING_SIZE];
-	String str = String_FromArray(strBuffer);
+	String str; char strBuffer[STRING_SIZE];
 
 	PhysicsComp_CalculateJumpVelocity(physics, Menu_Float(v));
 	physics->UserJumpVel = physics->JumpVel;
 	
+	String_InitArray(str, strBuffer);
 	String_AppendFloat(&str, physics->JumpVel, 8);
 	Options_Set(OPT_JUMP_VELOCITY, &str);
 }

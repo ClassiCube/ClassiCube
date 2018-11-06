@@ -132,19 +132,20 @@ static void Handlers_RemoveTablistEntry(EntityID id) {
 	TabList_Remove(id);
 }
 
-static void Handlers_CheckName(EntityID id, String* displayName, String* skinName) {
-	String_StripCols(skinName);
-	Handlers_RemoveEndPlus(displayName);
-	Handlers_RemoveEndPlus(skinName);
+static void Handlers_CheckName(EntityID id, String* name, String* skin) {
+	String colorlessName; char colorlessBuffer[STRING_SIZE];
+
+	String_StripCols(skin);
+	Handlers_RemoveEndPlus(name);
+	Handlers_RemoveEndPlus(skin);
 	/* Server is only allowed to change our own name colours. */
 	if (id != ENTITIES_SELF_ID) return;
 
-	char nameNoColsBuffer[STRING_SIZE];
-	String nameNoCols = String_FromArray(nameNoColsBuffer);
-	String_AppendColorless(&nameNoCols, displayName);
+	String_InitArray(colorlessName, colorlessBuffer);
+	String_AppendColorless(&colorlessName, name);
 
-	if (!String_Equals(&nameNoCols, &Game_Username)) { String_Copy(displayName, &Game_Username); }
-	if (!skinName->length) { String_Copy(skinName, &Game_Username); }
+	if (!String_Equals(&colorlessName, &Game_Username)) String_Copy(name, &Game_Username);
+	if (!skin->length) String_Copy(skin, &Game_Username);
 }
 
 static void Classic_ReadAbsoluteLocation(uint8_t* data, EntityID id, bool interpolate);

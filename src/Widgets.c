@@ -880,9 +880,7 @@ static void InputWidget_CalculateLineSizes(struct InputWidget* w) {
 	struct DrawTextArgs args;
 	Size2D size;
 	int y;
-
-	char lineBuffer[STRING_SIZE];
-	String line = String_FromArray(lineBuffer);
+	String line; char lineBuffer[STRING_SIZE];
 
 	for (y = 0; y < INPUTWIDGET_MAX_LINES; y++) {
 		w->LineSizes[y] = Size2D_Empty;
@@ -890,11 +888,12 @@ static void InputWidget_CalculateLineSizes(struct InputWidget* w) {
 	w->LineSizes[0].Width = w->PrefixWidth;
 	DrawTextArgs_MakeEmpty(&args, &w->Font, true);
 
+	String_InitArray(line, lineBuffer);
 	for (y = 0; y < w->GetMaxLines(); y++) {
 		line.length = 0;
 		InputWidget_FormatLine(w, y, &line);
-		args.Text = line;
 
+		args.Text = line;
 		size = Drawer2D_MeasureText(&args);
 		w->LineSizes[y].Width += size.Width;
 		w->LineSizes[y].Height = size.Height;

@@ -199,14 +199,13 @@ struct EntryList {
 };
 
 static void EntryList_Load(struct EntryList* list) {
-	char pathBuffer[FILENAME_SIZE];
-	String path = String_FromArray(pathBuffer);
-	char lineBuffer[FILENAME_SIZE];
-	String line = String_FromArray(lineBuffer);
-
 	uint8_t buffer[2048];
 	struct Stream stream, buffered;
 	ReturnCode res;
+	String line; char lineBuffer[FILENAME_SIZE];
+	String path; char pathBuffer[FILENAME_SIZE];
+
+	String_InitArray(path, pathBuffer);
 	String_Format3(&path, "%c%r%c", list->Folder, &Directory_Separator, list->Filename);
 	
 	res = Stream_OpenFile(&stream, &path);
@@ -215,6 +214,7 @@ static void EntryList_Load(struct EntryList* list) {
 
 	/* ReadLine reads single byte at a time */
 	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
+	String_InitArray(line, lineBuffer);
 
 	for (;;) {
 		res = Stream_ReadLine(&buffered, &line);
@@ -377,7 +377,7 @@ void TextureCache_Set(const String* url, uint8_t* data, uint32_t length) {
 
 static void TextureCache_SetEntry(const String* url, const String* data, struct EntryList* list) {
 	TexCache_Crc32(url);
-	char entryBuffer[2048];
+	char entryBuffer[1024];
 	String entry = String_FromArray(entryBuffer);
 	String_Format2(&entry, "%s %s", &crc32, data);
 
@@ -458,8 +458,9 @@ ReturnCode TexturePack_ExtractTerrainPng(struct Stream* stream) {
 }
 
 void TexturePack_ExtractDefault(void) {
-	char texPackBuffer[STRING_SIZE];
-	String texPack = String_FromArray(texPackBuffer);
+	String texPack; char texPackBuffer[STRING_SIZE];
+
+	String_InitArray(texPack, texPackBuffer);
 	Game_GetDefaultTexturePack(&texPack);
 
 	TexturePack_ExtractZip_File(&texPack);

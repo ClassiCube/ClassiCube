@@ -262,14 +262,14 @@ static struct ChatCommand* Commands_GetMatch(const String* cmdName) {
 }
 
 static void Commands_PrintDefault(void) {
-	char strBuffer[STRING_SIZE];
-	String str = String_FromArray(strBuffer);
-
 	String name;
 	struct ChatCommand* cmd;
 	int i;
+	String str; char strBuffer[STRING_SIZE];
 
 	Chat_AddRaw("&eList of client commands:");
+	String_InitArray(str, strBuffer);
+
 	for (i = 0; i < commands_count; i++) {
 		cmd  = &commands_list[i];
 		name = String_FromReadonly(cmd->Name);

@@ -383,16 +383,19 @@ bool File_Exists(const String* path) {
 }
 
 ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
-	char pathBuffer[MAX_PATH + 10];
-	String path = String_FromArray(pathBuffer);
-	/* Need to append \* to search for files in directory */
-	String_Format1(&path, "%s\\*", dirPath);
-	WCHAR str[300]; Platform_ConvertString(str, &path);
-
+	WCHAR str[300];
 	WIN32_FIND_DATAW entry;
-	HANDLE find = FindFirstFileW(str, &entry);
-	if (find == INVALID_HANDLE_VALUE) return GetLastError();
+	HANDLE find;
 	ReturnCode res;
+	String path; char pathBuffer[MAX_PATH + 10];
+
+	/* Need to append \* to search for files in directory */
+	String_InitArray(path, pathBuffer);
+	String_Format1(&path, "%s\\*", dirPath);
+	Platform_ConvertString(str, &path);
+	
+	find = FindFirstFileW(str, &entry);
+	if (find == INVALID_HANDLE_VALUE) return GetLastError();
 
 	do {
 		path.length = 0;
@@ -513,7 +516,7 @@ bool File_Exists(const String* path) {
 ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
 	char str[600];
 	DIR* dirPtr;
-	struct dirent* entry; 
+	struct dirent* entry;
 	char* src;
 	int len, res;
 	char pathBuffer[FILENAME_SIZE];

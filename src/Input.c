@@ -155,11 +155,11 @@ void KeyBind_Load(void) {
 }
 
 void KeyBind_Save(void) {
-	char nameBuffer[STRING_SIZE];
-	String name = String_FromArray(nameBuffer);
 	String value;
 	int i;
+	String name; char nameBuffer[STRING_SIZE];
 
+	String_InitArray(name, nameBuffer);
 	for (i = 0; i < KeyBind_Count; i++) {
 		name.length = 0; 
 		String_Format1(&name, "key-%c", KeyBind_Names[i]);

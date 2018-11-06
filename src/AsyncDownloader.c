@@ -110,8 +110,8 @@ static void AsyncDownloader_Add(const String* url, bool priority, const String* 
 }
 
 void AsyncDownloader_GetSkin(const String* id, const String* skinName) {
-	char urlBuffer[STRING_SIZE];
-	String url = String_FromArray(urlBuffer);
+	String url; char urlBuffer[STRING_SIZE];
+	String_InitArray(url, urlBuffer);
 
 	if (Utils_IsUrlPrefix(skinName, 0)) {
 		String_Copy(&url, skinName);
