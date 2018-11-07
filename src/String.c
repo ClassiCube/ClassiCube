@@ -79,8 +79,7 @@ int String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int 
 
 bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value) {
 	int idx = String_IndexOf(str, c, 0);
-	/* a) missing [c] or no key    b) missing value */
-	if (idx <= 0 || (idx + 1) >= str->length) {
+	if (idx == -1) {
 		*key   = *str;
 		*value = String_Empty;
 		return false;
@@ -92,7 +91,7 @@ bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, S
 	/* Trim key [c] value to just key[c]value */
 	String_TrimEnd(key);
 	String_TrimStart(value);
-	return true;
+	return key->length > 0 && value->length > 0;
 }
 
 
