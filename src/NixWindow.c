@@ -545,6 +545,9 @@ void Window_ProcessEvents(void) {
 		case FocusIn:
 		case FocusOut:
 		{
+			/* Don't lose focus when another app grabs key or mouse */
+			if (e.xfocus.mode == NotifyGrab || e.xfocus.mode == NotifyUngrab) break;
+
 			bool wasFocused = Window_Focused;
 			Window_Focused = e.type == FocusIn;
 			if (Window_Focused != wasFocused) {
@@ -553,8 +556,7 @@ void Window_ProcessEvents(void) {
 		} break;
 
 		case MappingNotify:
-			/* 0 == MappingModifier, 1 == MappingKeyboard */
-			if (e.xmapping.request == 0 || e.xmapping.request == 1) {
+			if (e.xmapping.request == MappingModifier || e.xmapping.request == MappingKeyboard) {
 				Platform_LogConst("keybard mapping refreshed");
 				XRefreshKeyboardMapping(&e.xmapping);
 			}
