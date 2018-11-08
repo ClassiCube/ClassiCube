@@ -677,10 +677,15 @@ void Window_SetCursorVisible(bool visible) {
 *#########################################################################################################################*/
 GLXContext ctx_Handle;
 typedef int (*FN_GLXSWAPINTERVAL)(int interval);
-FN_GLXSWAPINTERVAL glXSwapIntervalSGI;
+FN_GLXSWAPINTERVAL swapIntervalMESA, swapIntervalSGI;
 bool ctx_supports_vSync;
 
 void GLContext_Init(struct GraphicsMode* mode) {
+	static String ext_mesa = String_FromConst("GLX_MESA_swap_control");
+	static String ext_sgi  = String_FromConst("GLX_SGI_swap_control");
+
+	const char* raw_exts;
+	String exts;
 	ctx_Handle = glXCreateContext(win_display, &win_visual, NULL, true);
 
 	if (!ctx_Handle) {
@@ -696,8 +701,18 @@ void GLContext_Init(struct GraphicsMode* mode) {
 		ErrorHandler_Fail("Failed to make context current.");
 	}
 
-	glXSwapIntervalSGI = (FN_GLXSWAPINTERVAL)GLContext_GetAddress("glXSwapIntervalSGI");
-	ctx_supports_vSync = glXSwapIntervalSGI != NULL;
+	/* GLX may return non-null function pointers that don't actually work */
+	/* So we need to manually check the extensions string for support */
+	raw_exts = glXQueryExtensionsString(win_display, win_screen);
+	exts = String_FromReadonly(raw_exts);
+
+	if (String_CaselessContains(&exts, &ext_mesa)) {
+		swapIntervalMESA = (FN_GLXSWAPINTERVAL)GLContext_GetAddress("glXSwapIntervalMESA");
+	}
+	if (String_CaselessContains(&exts, &ext_sgi)) {
+		swapIntervalSGI  = (FN_GLXSWAPINTERVAL)GLContext_GetAddress("glXSwapIntervalSGI");
+	}
+	ctx_supports_vSync = swapIntervalMESA || swapIntervalSGI;
 }
 
 void GLContext_Update(void) { }
@@ -724,7 +739,11 @@ void GLContext_SetVSync(bool enabled) {
 	int res;
 	if (!ctx_supports_vSync) return;
 
-	res = glXSwapIntervalSGI(enabled);
+	if (swapIntervalMESA) {
+		res = swapIntervalMESA(enabled);
+	} else {
+		res = swapIntervalSGI(enabled);
+	}
 	if (res) Platform_Log1("Set VSync failed, error: %i", &res);
 }
 
@@ -732,7 +751,7 @@ static void GLContext_GetAttribs(struct GraphicsMode* mode, int* attribs) {
 	int i = 0;
 	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_61/com.ibm.aix.opengl/doc/openglrf/glXChooseFBConfig.htm%23glxchoosefbconfig */
 	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_71/com.ibm.aix.opengl/doc/openglrf/glXChooseVisual.htm%23b5c84be452rree */
-	/* for the attribute declarations. Note that the attributes are different than those used in Glx.ChooseVisual */
+	/* for the attribute declarations. Note that the attributes are different than those used in glxChooseVisual */
 
 	if (!mode->IsIndexed) { attribs[i++] = GLX_RGBA; }
 	attribs[i++] = GLX_RED_SIZE;   attribs[i++] = mode->R;
