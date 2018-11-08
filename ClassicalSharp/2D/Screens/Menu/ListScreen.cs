@@ -118,9 +118,9 @@ namespace ClassicalSharp.Gui.Screens {
 		public override bool HandlesKeyDown(Key key) {
 			if (key == Key.Escape) {
 				game.Gui.SetNewScreen(null);
-			} else if (key == Key.Left) {
+			} else if (key == Key.Left  || key == Key.PageUp) {
 				PageClick(false);
-			} else if (key == Key.Right) {
+			} else if (key == Key.Right || key == Key.PageDown) {
 				PageClick(true);
 			} else {
 				return false;

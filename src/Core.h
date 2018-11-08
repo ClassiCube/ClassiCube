@@ -20,9 +20,13 @@ typedef signed __int16 int16_t;
 typedef signed __int32 int32_t;
 typedef signed __int64 int64_t;
 #define NOINLINE_ __declspec(noinline)
+#define ALIGN_HINT_(x) /* TODO: Why does this cause LNK2005 errors */
+#define EXPORT_ __declspec(dllexport, noinline)
 #elif __GNUC__
 #include <stdint.h>
 #define NOINLINE_ __attribute__((noinline))
+#define ALIGN_HINT_(x) __attribute__((aligned(x)))
+#define EXPORT_ __attribute__((noinline))
 #else
 #error "I don't recognise this compiler. You'll need to add required definitions in Core.h!"
 #endif
@@ -61,7 +65,6 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
 
 /*#define CC_BUILD_GL11*/
-/*#define CC_BUILD_OSX*/
 /*#define CC_BUILD_SOLARIS*/
 #ifndef CC_BUILD_MANUAL
 #ifdef _WIN32

@@ -79,27 +79,27 @@ NOINLINE_ bool Options_HasAnyChanged(void);
 NOINLINE_ void Options_Free(void);
 
 /* Returns value of given option, or defalt value if not found. */
-NOINLINE_ void Options_Get(const char*       key, String* value, const char* defValue);
+EXPORT_ void Options_Get(const char*       key, String* value, const char* defValue);
 /* Returns value of given option as an integer, or defalt value if could not be converted. */
-NOINLINE_ int  Options_GetInt(const char*    key, int min, int max, int defValue);
+EXPORT_ int  Options_GetInt(const char*    key, int min, int max, int defValue);
 /* Returns value of given option as a bool, or defalt value if could not be converted. */
-NOINLINE_ bool Options_GetBool(const char*   key, bool defValue);
+EXPORT_ bool Options_GetBool(const char*   key, bool defValue);
 /* Returns value of given option as a float, or defalt value if could not be converted. */
-NOINLINE_ float Options_GetFloat(const char* key, float min, float max, float defValue);
+EXPORT_ float Options_GetFloat(const char* key, float min, float max, float defValue);
 /* Returns value of given option as an integer, or defalt value if could not be converted. */
 /* NOTE: Conversion is done by going through all elements of names, returning index of a match. */
-NOINLINE_ int   Options_GetEnum(const char*  key, int defValue, const char** names, int namesCount);
+EXPORT_ int   Options_GetEnum(const char*  key, int defValue, const char** names, int namesCount);
 
 /* Sets value of given option to either "true" or "false". */
-NOINLINE_ void Options_SetBool(const char* keyRaw,  bool value);
+EXPORT_ void Options_SetBool(const char* keyRaw,  bool value);
 /* Sets value of given option to given integer converted to a string. */
-NOINLINE_ void Options_SetInt(const char*  keyRaw,  int value);
+EXPORT_ void Options_SetInt(const char*  keyRaw,  int value);
 /* Sets value of given option to given string. */
-NOINLINE_ void Options_Set(const char*     keyRaw,  const String* value);
+EXPORT_ void Options_Set(const char*     keyRaw,  const String* value);
 /* Sets value of given option to given string. */
-NOINLINE_ void Options_SetString(const String* key, const String* value);
+EXPORT_ void Options_SetString(const String* key, const String* value);
 /* Loads options from disc. Leaves options changed in this session alone. */
-NOINLINE_ void Options_Load(void);
+EXPORT_ void Options_Load(void);
 /* Saves all options to disc. */
-NOINLINE_ void Options_Save(void);
+EXPORT_ void Options_Save(void);
 #endif

@@ -85,14 +85,14 @@ void Window_SetClientSize(int width, int height);
 void Window_Close(void);
 /* Processes all pending window messages/events. */
 void Window_ProcessEvents(void);
-/* Transforms the specified point from screen to client coordinates. */
+/* Converts the specified point from screen to client coordinates. */
 Point2D Window_PointToClient(int x, int y);
-/* Transforms the specified point from client to screen coordinates. */
+/* Converts the specified point from client to screen coordinates. */
 Point2D Window_PointToScreen(int x, int y);
 
 /* Gets the position of the cursor in screen coordinates. */
 Point2D Window_GetScreenCursorPos(void);
-/* Sets the position of the cursor in screen coordinates.*/
+/* Sets the position of the cursor in screen coordinates. */
 void Window_SetScreenCursorPos(int x, int y);
 /* Whether the cursor is visible when over this window. */
 bool Window_GetCursorVisible(void);
@@ -102,7 +102,7 @@ so setting invisible multiple times means you must then set visible multiple tim
 void Window_SetCursorVisible(bool visible);
 
 #ifndef CC_BUILD_D3D9
-/* Initalises an OpenGL context that most closely matches the input arguments. */
+/* Initialises an OpenGL context that most closely matches the input arguments. */
 /* NOTE: You must have created a window beforehand, as the GL context is attached to the window. */
 void GLContext_Init(struct GraphicsMode* mode);
 /* Updates the OpenGL context after the window is resized. */

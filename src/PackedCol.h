@@ -6,7 +6,7 @@
 */
 
 /* Represents an ARGB colour, in a format suitable for the native graphics api. */
-typedef struct PackedCol_ {
+ typedef ALIGN_HINT_(4) struct PackedCol_ {
 #ifdef CC_BUILD_D3D9
 	uint8_t B, G, R, A;
 #else

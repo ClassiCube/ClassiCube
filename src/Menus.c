@@ -523,9 +523,9 @@ static bool ListScreen_KeyDown(void* screen, Key key) {
 	struct ListScreen* s = screen;
 	if (key == Key_Escape) {
 		Gui_CloseActive();
-	} else if (key == Key_Left) {
+	} else if (key == Key_Left  || key == Key_PageUp) {
 		ListScreen_PageClick(s, false);
-	} else if (key == Key_Right) {
+	} else if (key == Key_Right || key == Key_PageDown) {
 		ListScreen_PageClick(s, true);
 	} else {
 		return false;

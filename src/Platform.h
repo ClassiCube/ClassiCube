@@ -49,7 +49,7 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m);
 /* Encodes a string in platform specific format. (e.g. unicode on windows, UTF8 on linux) */
 /* NOTE: Only useful for platform specific function calls - do NOT try to interpret the data. 
 Returns the number of bytes written, excluding trailing NULL terminator. */
-NOINLINE_ int Platform_ConvertString(void* data, const String* src);
+EXPORT_ int Platform_ConvertString(void* data, const String* src);
 /* Initalises the platform specific state. */
 void Platform_Init(void);
 /* Frees the platform specific state. */
@@ -61,16 +61,16 @@ void Platform_Exit(ReturnCode code);
 /* Gets the command line arguments passed to the program. */
 int  Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args);
 /* Starts the platform's shell with the given arguments. (e.g. open http:// url in web browser) */
-ReturnCode Platform_StartShell(const String* args);
+EXPORT_ ReturnCode Platform_StartShell(const String* args);
 
 /* Allocates a block of memory, with undetermined contents. Exits process on allocation failure. */
-NOINLINE_ void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place);
+EXPORT_ void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place);
 /* Allocates a block of memory, with contents of all 0. Exits process on allocation failure. */
-NOINLINE_ void* Mem_AllocCleared(uint32_t numElems, uint32_t elemsSize, const char* place);
+EXPORT_ void* Mem_AllocCleared(uint32_t numElems, uint32_t elemsSize, const char* place);
 /* Reallocates a block of memory, with undetermined contents. Exits process on reallocation failure. */
-NOINLINE_ void* Mem_Realloc(void* mem, uint32_t numElems, uint32_t elemsSize, const char* place);
+EXPORT_ void* Mem_Realloc(void* mem, uint32_t numElems, uint32_t elemsSize, const char* place);
 /* Frees an allocated a block of memory. Does nothing when passed NULL. */
-NOINLINE_ void  Mem_Free(void* mem);
+EXPORT_ void  Mem_Free(void* mem);
 /* Sets the contents of a block of memory to the given value. */
 void Mem_Set(void* dst, uint8_t value, uint32_t numBytes);
 /* Copies a block of memory to another block. NOTE: These blocks MUST NOT overlap. */
@@ -130,47 +130,47 @@ ReturnCode File_Position(void* file, uint32_t* position);
 ReturnCode File_Length(void* file, uint32_t* length);
 
 /* Blocks the current thread for the given number of milliseconds. */
-void Thread_Sleep(uint32_t milliseconds);
+EXPORT_ void Thread_Sleep(uint32_t milliseconds);
 typedef void Thread_StartFunc(void);
 /* Starts a new thread, optionally immediately detaching it. (See Thread_Detach) */
-void* Thread_Start(Thread_StartFunc* func, bool detach);
+EXPORT_ void* Thread_Start(Thread_StartFunc* func, bool detach);
 /* Frees the platform specific persistent data associated with the thread. */
 /* NOTE: You must either detach or join threads, as this data otherwise leaks. */
-void Thread_Detach(void* handle);
+EXPORT_ void Thread_Detach(void* handle);
 /* Blocks the current thread, until the given thread has finished. */
 /* NOTE: Once a thread has been detached, you can no longer use this method. */
-void Thread_Join(void* handle);
+EXPORT_ void Thread_Join(void* handle);
 
 /* Allocates a new mutex. (used to synchronise access to a shared resource) */
-void* Mutex_Create(void);
+EXPORT_ void* Mutex_Create(void);
 /* Frees an allocated mutex. */
-void  Mutex_Free(void* handle);
+EXPORT_ void  Mutex_Free(void* handle);
 /* Locks the given mutex, blocking other threads from entering. */
-void  Mutex_Lock(void* handle);
+EXPORT_ void  Mutex_Lock(void* handle);
 /* Unlocks the given mutex, allowing other threads to enter. */
-void  Mutex_Unlock(void* handle);
+EXPORT_ void  Mutex_Unlock(void* handle);
 
 /* Allocates a new waitable. (used to conditionally wake-up a blocked thread) */
-void* Waitable_Create(void);
+EXPORT_ void* Waitable_Create(void);
 /* Frees an allocated waitable. */
-void  Waitable_Free(void* handle);
+EXPORT_ void  Waitable_Free(void* handle);
 /* Signals a waitable, waking up blocked threads. */
-void  Waitable_Signal(void* handle);
+EXPORT_ void  Waitable_Signal(void* handle);
 /* Blocks the calling thread until the waitable gets signalled. */
-void  Waitable_Wait(void* handle);
+EXPORT_ void  Waitable_Wait(void* handle);
 /* Blocks the calling thread until the waitable gets signalled, or milliseconds delay passes. */
-void  Waitable_WaitFor(void* handle, uint32_t milliseconds);
+EXPORT_ void  Waitable_WaitFor(void* handle, uint32_t milliseconds);
 
 /* Gets the list of all supported font names on this platform. */
-NOINLINE_ void Font_GetNames(StringsBuffer* buffer);
+EXPORT_ void Font_GetNames(StringsBuffer* buffer);
 /* Allocates a new font from the given arguments. */
-NOINLINE_ void Font_Make(FontDesc* desc, const String* fontName, int size, int style);
+EXPORT_ void Font_Make(FontDesc* desc, const String* fontName, int size, int style);
 /* Frees an allocated font. */
-NOINLINE_ void Font_Free(FontDesc* desc);
+EXPORT_ void Font_Free(FontDesc* desc);
 /* Measures dimensions of the given text, if it was drawn with the given font. */
-NOINLINE_ Size2D Platform_TextMeasure(struct DrawTextArgs* args);
+EXPORT_ Size2D Platform_TextMeasure(struct DrawTextArgs* args);
 /* Draws the given text with the given font onto the given bitmap. */
-NOINLINE_ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, PackedCol col);
+EXPORT_ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, PackedCol col);
 
 /* Allocates a new socket. */
 void Socket_Create(SocketPtr* socket);

@@ -73,14 +73,16 @@ int ModelCache_GetTextureIndex(const String* texName) {
 }
 
 void ModelCache_Register(STRING_REF const char* name, const char* defaultTexName, struct Model* instance) {
-	if (ModelCache_modelCount < MODELCACHE_MAX_MODELS) {
-		struct CachedModel model;
+	struct CachedModel model;
+	String defaultTex;
+
+	if (ModelCache_modelCount < MODELCACHE_MAX_MODELS) {		
 		model.Name     = String_FromReadonly(name);
 		model.Instance = instance;
 		ModelCache_Models[ModelCache_modelCount++] = model;
 
 		if (defaultTexName) {
-			String defaultTex         = String_FromReadonly(defaultTexName);
+			defaultTex = String_FromReadonly(defaultTexName);
 			instance->defaultTexIndex = ModelCache_GetTextureIndex(&defaultTex);
 		}		
 	} else {
