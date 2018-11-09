@@ -1,6 +1,6 @@
 #ifndef CC_CORE_H
 #define CC_CORE_H
-/* Core fixed-size integer and floating point types, and common small structs.
+/* Core fixed-size integer types, automatic platform detection, and common small structs.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
@@ -26,7 +26,11 @@ typedef signed __int64 int64_t;
 #include <stdint.h>
 #define NOINLINE_ __attribute__((noinline))
 #define ALIGN_HINT_(x) __attribute__((aligned(x)))
+#ifdef _W32
+#define EXPORT_ __attribute__((dllexport, noinline))
+#else
 #define EXPORT_ __attribute__((visibility("default"), noinline))
+#endif
 #else
 #error "I don't recognise this compiler. You'll need to add required definitions in Core.h!"
 #endif
@@ -35,7 +39,9 @@ typedef uint16_t Codepoint;
 typedef uint8_t bool;
 #define true 1
 #define false 0
+#ifndef NULL
 #define NULL ((void*)0)
+#endif
 
 #define EXTENDED_BLOCKS
 #ifdef EXTENDED_BLOCKS
