@@ -12,14 +12,8 @@
 #include "freetype/freetype.h"
 #include "freetype/ftmodapi.h"
 
-/* POSIX is mainly shared between Linux and OSX */
-#ifdef CC_BUILD_NIX
-#define CC_BUILD_POSIX
-#endif
-#ifdef CC_BUILD_OSX
-#define CC_BUILD_POSIX
-#endif
 static void Platform_InitDisplay(void);
+static void Platform_InitStopwatch(void);
 
 #ifdef CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
@@ -52,6 +46,7 @@ ReturnCode ReturnCode_InvalidArg   = ERROR_INVALID_PARAMETER;
 ReturnCode ReturnCode_SocketInProgess  = WSAEINPROGRESS;
 ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #endif
+/* POSIX is mainly shared between Linux and OSX */
 #ifdef CC_BUILD_POSIX
 #include <curl/curl.h>
 #include <errno.h>
@@ -87,9 +82,13 @@ ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #include <X11/Xlib.h>
 #include <AL/al.h>
 #include <AL/alc.h>
-#ifdef CC_BUILD_SOLARIS
-#include <sys/filio.h>
+char* Font_DefaultName = "Century Schoolbook L Roman";
 #endif
+#ifdef CC_BUILD_SOLARIS
+#include <X11/Xlib.h>
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <sys/filio.h>
 char* Font_DefaultName = "Century Schoolbook L Roman";
 #endif
 #ifdef CC_BUILD_OSX
@@ -342,6 +341,11 @@ uint64_t Stopwatch_Measure(void) {
 	/* TODO: CLOCK_MONOTONIC_RAW ?? */
 	clock_gettime(CLOCK_MONOTONIC, &t);
 	return (uint64_t)t.tv_sec * NS_PER_SEC + t.tv_nsec;
+}
+#endif
+#ifdef CC_BUILD_SOLARIS
+uint64_t Stopwatch_Measure(void) {
+	return gethrtime();
 }
 #endif
 #ifdef CC_BUILD_OSX
@@ -1057,6 +1061,9 @@ static void Font_Init(void) {
 	static String dir = String_FromConst("C:\\Windows\\fonts");
 #endif
 #ifdef CC_BUILD_NIX
+	static String dir = String_FromConst("/usr/share/fonts");
+#endif
+#ifdef CC_BUILD_SOLARIS
 	static String dir = String_FromConst("/usr/share/fonts");
 #endif
 #ifdef CC_BUILD_OSX
@@ -1779,19 +1786,13 @@ int Platform_ConvertString(void* data, const String* src) {
 	return src->length * 2;
 }
 
-void Platform_Init(void) {
-	LARGE_INTEGER freq;
+void Platform_Init(void) {	
 	WSADATA wsaData;
 	ReturnCode res;
 
 	Platform_InitDisplay();
+	Platform_InitStopwatch();
 	heap = GetProcessHeap();
-
-	sw_highRes = QueryPerformanceFrequency(&freq);
-	if (sw_highRes) {
-		sw_freqMul = 1000 * 1000;
-		sw_freqDiv = freq.QuadPart;
-	} else { sw_freqDiv = 10; }
 	
 	res = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (res) ErrorHandler_Fail2(res, "WSAStartup failed");
@@ -1812,6 +1813,16 @@ static void Platform_InitDisplay(void) {
 	DisplayDevice_Default.BitsPerPixel  = GetDeviceCaps(hdc, BITSPIXEL);
 
 	ReleaseDC(NULL, hdc);
+}
+
+static void Platform_InitStopwatch(void) {
+	LARGE_INTEGER freq;
+	sw_highRes = QueryPerformanceFrequency(&freq);
+
+	if (sw_highRes) {
+		sw_freqMul = 1000 * 1000;
+		sw_freqDiv = freq.QuadPart;
+	} else { sw_freqDiv = 10; }
 }
 
 void Platform_SetWorkingDir(void) {
@@ -1898,6 +1909,7 @@ int Platform_ConvertString(void* data, const String* src) {
 
 void Platform_Init(void) {
 	Platform_InitDisplay();
+	Platform_InitStopwatch();
 	pthread_mutex_init(&event_mutex, NULL);
 	pthread_mutex_init(&audio_lock,  NULL);
 }
@@ -1942,10 +1954,29 @@ static void Platform_TrimFilename(char* path, int len) {
 	}
 }
 #endif
+#ifdef CC_BUILD_X11
+static void Platform_InitDisplay(void) {
+	Display* display = XOpenDisplay(NULL);
+	int screen;
+	if (!display) ErrorHandler_Fail("Failed to open display");
+
+	DisplayDevice_Meta = display;
+	screen = DefaultScreen(display);
+
+	/* TODO: Use Xinerama and XRandR for querying these */
+	DisplayDevice_Default.Bounds.X = 0;
+	DisplayDevice_Default.Bounds.Y = 0;
+	DisplayDevice_Default.Bounds.Width  = DisplayWidth(display,  screen);
+	DisplayDevice_Default.Bounds.Height = DisplayHeight(display, screen);
+	DisplayDevice_Default.BitsPerPixel  = DefaultDepth(display,  screen);
+}
+#endif
 #ifdef CC_BUILD_NIX
 ReturnCode Platform_StartShell(const String* args) {
 	return Platform_RunOpen("xdg-open %s", args);
 }
+static void Platform_InitStopwatch(void) { sw_freqDiv = 1000; }
+
 void Platform_SetWorkingDir(void) {
 	char path[FILENAME_SIZE + 1] = { 0 };
 	int len = readlink("/proc/self/exe", path, FILENAME_SIZE);
@@ -1954,22 +1985,21 @@ void Platform_SetWorkingDir(void) {
 	Platform_TrimFilename(path, len);
 	chdir(path);
 }
+#endif
+#ifdef CC_BUILD_SOLARIS
+ReturnCode Platform_StartShell(const String* args) {
+	/* TODO: Is this on solaris, or just an OpenIndiana thing */
+	return Platform_RunOpen("xdg-open %s", args);
+}
+static void Platform_InitStopwatch(void) { sw_freqDiv = 1000; }
 
-static void Platform_InitDisplay(void) {
-	Display* display = XOpenDisplay(NULL);
-	int screen;
-	if (!display) ErrorHandler_Fail("Failed to open display");
+void Platform_SetWorkingDir(void) {
+	char path[FILENAME_SIZE + 1] = { 0 };
+	int len = readlink("/proc/self/path/a.out", path, FILENAME_SIZE);
+	if (len <= 0) return;
 
-	DisplayDevice_Meta = display;
-	screen = DefaultScreen(display);
-	sw_freqDiv = 1000;
-
-	/* TODO: Use Xinerama and XRandR for querying these */
-	DisplayDevice_Default.Bounds.X = 0;
-	DisplayDevice_Default.Bounds.Y = 0;
-	DisplayDevice_Default.Bounds.Width  = DisplayWidth(display,  screen);
-	DisplayDevice_Default.Bounds.Height = DisplayHeight(display, screen);
-	DisplayDevice_Default.BitsPerPixel  = DefaultDepth(display,  screen);
+	Platform_TrimFilename(path, len);
+	chdir(path);
 }
 #endif
 #ifdef CC_BUILD_OSX
@@ -2002,17 +2032,20 @@ void Platform_SetWorkingDir(void) {
 
 static void Platform_InitDisplay(void) {
 	CGDirectDisplayID display = CGMainDisplayID();
-	CGRect bounds  = CGDisplayBounds(display);
-
-	mach_timebase_info_data_t tb = { 0 };
-	mach_timebase_info(&tb);
-	sw_freqMul = tb.numer;
-	sw_freqDiv = tb.denom * 1000;
+	CGRect bounds = CGDisplayBounds(display);
 
 	DisplayDevice_Default.Bounds.X = (int)bounds.origin.x;
 	DisplayDevice_Default.Bounds.Y = (int)bounds.origin.y;
 	DisplayDevice_Default.Bounds.Width  = (int)bounds.size.width;
 	DisplayDevice_Default.Bounds.Height = (int)bounds.size.height;
 	DisplayDevice_Default.BitsPerPixel  = CGDisplayBitsPerPixel(display);
+}
+
+static void Platform_InitStopwatch(void) {
+	mach_timebase_info_data_t tb = { 0 };
+	mach_timebase_info(&tb);
+
+	sw_freqMul = tb.numer;
+	sw_freqDiv = tb.denom * 1000;
 }
 #endif

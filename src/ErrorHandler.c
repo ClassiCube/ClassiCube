@@ -9,14 +9,6 @@ static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void
 static void ErrorHandler_DumpCommon(String* str, void* ctx);
 static void ErrorHandler_DumpRegisters(void* ctx);
 
-/* POSIX is mainly shared between Linux and OSX */
-#ifdef CC_BUILD_NIX
-#define CC_BUILD_POSIX
-#endif
-#ifdef CC_BUILD_OSX
-#define CC_BUILD_POSIX
-#endif
-
 #ifdef CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
@@ -39,17 +31,17 @@ static int ErrorHandler_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, 
 	frame.AddrStack.Mode  = AddrModeFlat;
 	DWORD type;
 
-#ifdef _M_IX86
+#if defined _M_IX86
 	type = IMAGE_FILE_MACHINE_I386;
 	frame.AddrPC.Offset    = ctx->Eip;
 	frame.AddrFrame.Offset = ctx->Ebp;
 	frame.AddrStack.Offset = ctx->Esp;
-#elif _M_X64
+#elif defined _M_X64
 	type = IMAGE_FILE_MACHINE_AMD64;
 	frame.AddrPC.Offset    = ctx->Rip;
 	frame.AddrFrame.Offset = ctx->Rsp;
 	frame.AddrStack.Offset = ctx->Rsp;
-#elif _M_IA64
+#elif defined _M_IA64
 	type = IMAGE_FILE_MACHINE_IA64;
 	frame.AddrPC.Offset     = ctx->StIIP;
 	frame.AddrFrame.Offset  = ctx->IntSp;
@@ -153,18 +145,18 @@ static void ErrorHandler_DumpRegisters(void* ctx) {
 	String_InitArray(str, strBuffer);
 	String_AppendConst(&str, "-- registers --\r\n");
 
-#ifdef _M_IX86
+#if defined _M_IX86
 	String_Format3(&str, "eax=%x ebx=%x ecx=%x\r\n", &r->Eax, &r->Ebx, &r->Ecx);
 	String_Format3(&str, "edx=%x esi=%x edi=%x\r\n", &r->Edx, &r->Esi, &r->Edi);
 	String_Format3(&str, "eip=%x ebp=%x esp=%x\r\n", &r->Eip, &r->Ebp, &r->Esp);
-#elif _M_X64
+#elif defined _M_X64
 	String_Format3(&str, "rax=%x rbx=%x rcx=%x\r\n", &r->Rax, &r->Rbx, &r->Rcx);
 	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\r\n", &r->Rdx, &r->Rsi, &r->Rdi);
 	String_Format3(&str, "rip=%x rbp=%x rsp=%x\r\n", &r->Rip, &r->Rbp, &r->Rsp);
 	String_Format3(&str, "r8 =%x r9 =%x r10=%x\r\n", &r->R8,  &r->R9,  &r->R10);
 	String_Format3(&str, "r11=%x r12=%x r13=%x\r\n", &r->R11, &r->R12, &r->R13);
 	String_Format2(&str, "r14=%x r15=%x\r\n"       , &r->R14, &r->R15);
-#elif _M_IA64
+#elif defined _M_IA64
 	String_Format3(&str, "r1 =%x r2 =%x r3 =%x\r\n", &r->IntGp,  &r->IntT0,  &r->IntT1);
 	String_Format3(&str, "r4 =%x r5 =%x r6 =%x\r\n", &r->IntS0,  &r->IntS1,  &r->IntS2);
 	String_Format3(&str, "r7 =%x r8 =%x r9 =%x\r\n", &r->IntS3,  &r->IntV0,  &r->IntT2);
@@ -258,6 +250,7 @@ void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
 #pragma optimize ("", on)
 #endif
 #endif
+/* POSIX is mainly shared between Linux and OSX */
 #ifdef CC_BUILD_POSIX
 #include <ucontext.h>
 #include <execinfo.h>
@@ -339,12 +332,11 @@ void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
 	ErrorHandler_FailCommon(result, raw_msg, &ctx);
 }
 #endif
-#ifdef CC_BUILD_NIX
+#ifdef CC_BUILD_X11
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
-
 
 /*########################################################################################################################*
 *-----------------------------------------------------X11 message box-----------------------------------------------------*
@@ -573,10 +565,20 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
     }
 }
 
+void ErrorHandler_ShowDialog(const char* title, const char* msg) {
+	X11Window w = { 0 };
+	dpy = DisplayDevice_Meta;
+
+	X11_MessageBox(title, msg, &w);
+	X11Window_Free(&w);
+}
+#endif
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
+#if defined CC_BUILD_NIX || defined CC_BUILD_SOLARIS
 static void ErrorHandler_DumpRegisters(void* ctx) {
 	mcontext_t r;
 	String str; char strBuffer[STRING_SIZE * 8];
@@ -628,16 +630,7 @@ static void ErrorHandler_DumpCommon(String* str, void* ctx) {
 	ErrorHandler_Log(&memMap);
 	ErrorHandler_DumpMemoryMap();
 }
-
-void ErrorHandler_ShowDialog(const char* title, const char* msg) {
-	X11Window w = { 0 };
-	dpy = DisplayDevice_Meta;
-
-	X11_MessageBox(title, msg, &w);
-	X11Window_Free(&w);
-}
-#endif
-#ifdef CC_BUILD_OSX
+#elif defined CC_BUILD_OSX
 static void ErrorHandler_DumpRegisters(void* ctx) {
 	mcontext_t r;
 	String str; char strBuffer[STRING_SIZE * 8];
@@ -648,11 +641,11 @@ static void ErrorHandler_DumpRegisters(void* ctx) {
 	String_AppendConst(&str, "-- registers --\n");
 
 	/* You can find these definitions at /usr/include/mach/i386/_structs.h */
-#ifdef __i386__
+#if defined __i386__
 	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r->__ss.__eax, &r->__ss.__ebx, &r->__ss.__ecx);
 	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r->__ss.__edx, &r->__ss.__esi, &r->__ss.__edi);
 	String_Format3(&str, "eip=%x ebp=%x esp=%x\n", &r->__ss.__eip, &r->__ss.__ebp, &r->__ss.__esp);
-#elif __x86_64__
+#elif defined __x86_64__
 	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r->__ss.__rax, &r->__ss.__rbx, &r->__ss.__rcx);
 	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r->__ss.__rdx, &r->__ss.__rsi, &r->__ss.__rdi);
 	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r->__ss.__rip, &r->__ss.__rbp, &r->__ss.__rsp);

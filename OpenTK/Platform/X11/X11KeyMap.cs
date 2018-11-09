@@ -182,8 +182,8 @@ namespace OpenTK.Platform.X11
 
 			Add(XKey.Pause, Key.Pause);
 			Add(XKey.Break, Key.Pause);
-			Add(XKey.Scroll_Lock, Key.Pause);
-			Add(XKey.Insert, Key.PrintScreen);
+			Add(XKey.Scroll_Lock, Key.ScrollLock);
+			Add(XKey.Insert, Key.Insert);
 			Add(XKey.Print, Key.PrintScreen);
 			Add(XKey.Sys_Req, Key.PrintScreen);
 

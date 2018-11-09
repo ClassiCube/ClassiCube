@@ -26,7 +26,7 @@ typedef signed __int64 int64_t;
 #include <stdint.h>
 #define NOINLINE_ __attribute__((noinline))
 #define ALIGN_HINT_(x) __attribute__((aligned(x)))
-#define EXPORT_ __attribute__((noinline))
+#define EXPORT_ __attribute__((visibility("default"), noinline))
 #else
 #error "I don't recognise this compiler. You'll need to add required definitions in Core.h!"
 #endif
@@ -73,9 +73,17 @@ typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
 #endif
 #ifdef __linux__
 #define CC_BUILD_NIX
+#define CC_BUILD_POSIX
+#define CC_BUILD_X11
 #endif
 #ifdef __APPLE__
 #define CC_BUILD_OSX
+#define CC_BUILD_POSIX
+#endif
+#ifdef __sun__
+#define CC_BUILD_SOLARIS
+#define CC_BUILD_POSIX
+#define CC_BUILD_X11
 #endif
 #endif
 

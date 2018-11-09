@@ -1,5 +1,5 @@
 #include "Window.h"
-#ifdef CC_BUILD_NIX
+#ifdef CC_BUILD_X11
 #include "ErrorHandler.h"
 #include "Input.h"
 #include "Funcs.h"
@@ -75,8 +75,8 @@ static Key Window_MapKey(KeySym key) {
 
 		case XK_Pause: return Key_Pause;
 		case XK_Break: return Key_Pause;
-		case XK_Scroll_Lock: return Key_Pause;
-		case XK_Insert: return Key_PrintScreen;
+		case XK_Scroll_Lock: return Key_ScrollLock;
+		case XK_Insert: return Key_Insert;
 		case XK_Print: return Key_PrintScreen;
 		case XK_Sys_Req: return Key_PrintScreen;
 
