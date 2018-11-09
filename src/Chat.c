@@ -20,9 +20,9 @@
 *-------------------------------------------------------Chat logging------------------------------------------------------*
 *#########################################################################################################################*/
 #define CHAT_LOGTIMES_DEF_ELEMS 256
-TimeMS Chat_DefaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
-TimeMS* Chat_LogTimes = Chat_DefaultLogTimes;
-int Chat_LogTimesMax = CHAT_LOGTIMES_DEF_ELEMS, Chat_LogTimesCount;
+static TimeMS Chat_DefaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
+static TimeMS* Chat_LogTimes = Chat_DefaultLogTimes;
+static int Chat_LogTimesMax = CHAT_LOGTIMES_DEF_ELEMS, Chat_LogTimesCount;
 
 TimeMS Chat_GetLogTime(int i) {
 	if (i < 0 || i >= Chat_LogTimesCount) ErrorHandler_Fail("Tried to get time past LogTime end");
@@ -39,13 +39,13 @@ static void Chat_AppendLogTime(void) {
 	Chat_LogTimes[Chat_LogTimesCount++] = now;
 }
 
-char   Chat_LogNameBuffer[STRING_SIZE];
-String Chat_LogName = String_FromArray(Chat_LogNameBuffer);
-char   Chat_LogPathBuffer[FILENAME_SIZE];
-String Chat_LogPath = String_FromArray(Chat_LogPathBuffer);
+static char   Chat_LogNameBuffer[STRING_SIZE];
+static String Chat_LogName = String_FromArray(Chat_LogNameBuffer);
+static char   Chat_LogPathBuffer[FILENAME_SIZE];
+static String Chat_LogPath = String_FromArray(Chat_LogPathBuffer);
 
-struct Stream Chat_LogStream;
-DateTime ChatLog_LastLogDate;
+static struct Stream Chat_LogStream;
+static DateTime ChatLog_LastLogDate;
 
 static void Chat_CloseLog(void) {
 	ReturnCode res;
@@ -210,8 +210,8 @@ struct ChatCommand {
 
 #define COMMANDS_PREFIX "/client"
 #define COMMANDS_PREFIX_SPACE "/client "
-struct ChatCommand commands_list[8];
-int commands_count;
+static struct ChatCommand commands_list[8];
+static int commands_count;
 
 static bool Commands_IsCommandPrefix(const String* str) {
 	static String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
@@ -330,7 +330,7 @@ static void HelpCommand_Execute(const String* args, int argsCount) {
 	}
 }
 
-struct ChatCommand HelpCommand_Instance = {
+static struct ChatCommand HelpCommand_Instance = {
 	"Help", HelpCommand_Execute, false,
 	{
 		"&a/client help [command name]",
@@ -348,7 +348,7 @@ static void GpuInfoCommand_Execute(const String* args, int argsCount) {
 	}
 }
 
-struct ChatCommand GpuInfoCommand_Instance = {
+static struct ChatCommand GpuInfoCommand_Instance = {
 	"GpuInfo", GpuInfoCommand_Execute, false,
 	{
 		"&a/client gpuinfo",
@@ -374,7 +374,7 @@ static void RenderTypeCommand_Execute(const String* args, int argsCount) {
 	}
 }
 
-struct ChatCommand RenderTypeCommand_Instance = {
+static struct ChatCommand RenderTypeCommand_Instance = {
 	"RenderType", RenderTypeCommand_Execute, false,
 	{
 		"&a/client rendertype [normal/legacy/legacyfast]",
@@ -400,7 +400,7 @@ static void ResolutionCommand_Execute(const String* args, int argsCount) {
 	}
 }
 
-struct ChatCommand ResolutionCommand_Instance = {
+static struct ChatCommand ResolutionCommand_Instance = {
 	"Resolution", ResolutionCommand_Execute, false,
 	{
 		"&a/client resolution [width] [height]",
@@ -416,7 +416,7 @@ static void ModelCommand_Execute(const String* args, int argsCount) {
 	}
 }
 
-struct ChatCommand ModelCommand_Instance = {
+static struct ChatCommand ModelCommand_Instance = {
 	"Model", ModelCommand_Execute, true,
 	{
 		"&a/client model [name]",
@@ -429,10 +429,10 @@ struct ChatCommand ModelCommand_Instance = {
 /*########################################################################################################################*
 *-------------------------------------------------------CuboidCommand-----------------------------------------------------*
 *#########################################################################################################################*/
-int cuboid_block = -1;
-Vector3I cuboid_mark1, cuboid_mark2;
-bool cuboid_persist, cuboid_hooked;
-String cuboid_msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
+static int cuboid_block = -1;
+static Vector3I cuboid_mark1, cuboid_mark2;
+static bool cuboid_persist, cuboid_hooked;
+static String cuboid_msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
 
 static bool CuboidCommand_ParseBlock(const String* args, int argsCount) {
 	int block;
@@ -519,7 +519,7 @@ static void CuboidCommand_Execute(const String* args, int argsCount) {
 	cuboid_hooked = true;
 }
 
-struct ChatCommand CuboidCommand_Instance = {
+static struct ChatCommand CuboidCommand_Instance = {
 	"Cuboid", CuboidCommand_Execute, true, 
 	{
 		"&a/client cuboid [block] [persist]",
@@ -552,7 +552,7 @@ static void TeleportCommand_Execute(const String* args, int argsCount) {
 	e->VTABLE->SetLocation(e, &update, false);
 }
 
-struct ChatCommand TeleportCommand_Instance = {
+static struct ChatCommand TeleportCommand_Instance = {
 	"TP", TeleportCommand_Execute, true,
 	{
 		"&a/client tp [x y z]",

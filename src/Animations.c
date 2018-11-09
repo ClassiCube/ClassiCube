@@ -17,11 +17,11 @@
 /*########################################################################################################################*
 *-----------------------------------------------------Lava animation------------------------------------------------------*
 *#########################################################################################################################*/
-float L_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
-float L_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
-float L_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
-RNGState L_rnd;
-bool L_rndInitalised;
+static float L_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
+static float L_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
+static float L_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
+static RNGState L_rnd;
+static bool L_rndInitalised;
 
 static void LavaAnimation_Tick(uint32_t* ptr, int size) {
 	int mask = size - 1, shift = Math_Log2(size);
@@ -88,11 +88,11 @@ static void LavaAnimation_Tick(uint32_t* ptr, int size) {
 /*########################################################################################################################*
 *----------------------------------------------------Water animation------------------------------------------------------*
 *#########################################################################################################################*/
-float W_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
-float W_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
-float W_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
-RNGState W_rnd;
-bool W_rndInitalised;
+static float W_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
+static float W_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
+static float W_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
+static RNGState W_rnd;
+static bool W_rndInitalised;
 
 static void WaterAnimation_Tick(uint32_t* ptr, int size) {
 	int mask = size - 1, shift = Math_Log2(size);
@@ -149,10 +149,10 @@ struct AnimationData {
 	int16_t  Tick, TickDelay;
 };
 
-Bitmap anims_bmp;
-struct AnimationData anims_list[ATLAS1D_MAX_ATLASES];
-int anims_count;
-bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
+static Bitmap anims_bmp;
+static struct AnimationData anims_list[ATLAS1D_MAX_ATLASES];
+static int anims_count;
+static bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
 #define ANIM_MIN_ARGS 7
 
 static void Animations_ReadDescription(struct Stream* stream, const String* path) {

@@ -12,14 +12,14 @@
 #include "Model.h"
 #include "GameStructs.h"
 
-BlockID held_block;
-struct Entity held_entity;
-struct Matrix held_blockProjection;
+static BlockID held_block;
+static struct Entity held_entity;
+static struct Matrix held_blockProjection;
 
-bool held_animating, held_breaking, held_swinging;
-float held_swingY;
-double held_time, held_period = 0.25;
-BlockID held_lastBlock;
+static bool held_animating, held_breaking, held_swinging;
+static float held_swingY;
+static double held_time, held_period = 0.25;
+static BlockID held_lastBlock;
 
 static void HeldBlockRenderer_RenderModel(void) {
 	static String block = String_FromConst("block");

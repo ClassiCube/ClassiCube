@@ -6,7 +6,7 @@
 #include "World.h"
 #include "Camera.h"
 #include "ChunkUpdater.h"
-bool inTranslucent;
+static bool inTranslucent;
 
 struct ChunkInfo* MapRenderer_GetChunk(int cx, int cy, int cz) {
 	return &MapRenderer_Chunks[MapRenderer_Pack(cx, cy, cz)];

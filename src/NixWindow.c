@@ -13,25 +13,25 @@
 #define _NET_WM_STATE_ADD    1
 #define _NET_WM_STATE_TOGGLE 2
 
-Display* win_display;
-int win_screen;
-Window win_rootWin;
+static Display* win_display;
+static int win_screen;
+static Window win_rootWin;
 
-Window win_handle;
-XVisualInfo win_visual;
-int borderLeft, borderRight, borderTop, borderBottom;
-bool win_isExiting;
+static Window win_handle;
+static XVisualInfo win_visual;
+static int borderLeft, borderRight, borderTop, borderBottom;
+static bool win_isExiting;
  
-Atom wm_destroy, net_wm_state;
-Atom net_wm_state_minimized;
-Atom net_wm_state_fullscreen;
-Atom net_wm_state_maximized_horizontal;
-Atom net_wm_state_maximized_vertical;
-Atom net_wm_icon, net_frame_extents;
+static Atom wm_destroy, net_wm_state;
+static Atom net_wm_state_minimized;
+static Atom net_wm_state_fullscreen;
+static Atom net_wm_state_maximized_horizontal;
+static Atom net_wm_state_maximized_vertical;
+static Atom net_wm_icon, net_frame_extents;
 
-Atom xa_clipboard, xa_targets, xa_utf8_string, xa_data_sel;
-Atom xa_atom = 4, xa_cardinal = 6;
-long win_eventMask;
+static Atom xa_clipboard, xa_targets, xa_utf8_string, xa_data_sel;
+static Atom xa_atom = 4, xa_cardinal = 6;
+static long win_eventMask;
 
 
 /*########################################################################################################################*
@@ -257,10 +257,10 @@ void Window_SetTitle(const String* title) {
 	XStoreName(win_display, win_handle, str);
 }
 
-char clipboard_copy_buffer[256];
-String clipboard_copy_text = String_FromArray(clipboard_copy_buffer);
-char clipboard_paste_buffer[256];
-String clipboard_paste_text = String_FromArray(clipboard_paste_buffer);
+static char clipboard_copy_buffer[256];
+static String clipboard_copy_text = String_FromArray(clipboard_copy_buffer);
+static char clipboard_paste_buffer[256];
+static String clipboard_paste_text = String_FromArray(clipboard_paste_buffer);
 
 void Window_GetClipboardText(String* value) {
 	Window owner = XGetSelectionOwner(win_display, xa_clipboard);
@@ -287,7 +287,7 @@ void Window_SetClipboardText(const String* value) {
 	XSetSelectionOwner(win_display, xa_clipboard, win_handle, 0);
 }
 
-bool win_visible;
+static bool win_visible;
 bool Window_GetVisible(void) { return win_visible; }
 
 void Window_SetVisible(bool visible) {
@@ -653,8 +653,8 @@ void Window_SetScreenCursorPos(int x, int y) {
 	XFlush(win_display); /* TODO: not sure if XFlush call is necessary */
 }
 
-Cursor win_blankCursor;
-bool win_cursorVisible = true;
+static Cursor win_blankCursor;
+static bool win_cursorVisible = true;
 bool Window_GetCursorVisible(void) { return win_cursorVisible; }
 void Window_SetCursorVisible(bool visible) {
 	win_cursorVisible = visible;
@@ -675,10 +675,10 @@ void Window_SetCursorVisible(bool visible) {
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
 *#########################################################################################################################*/
-GLXContext ctx_Handle;
+static GLXContext ctx_Handle;
 typedef int (*FN_GLXSWAPINTERVAL)(int interval);
-FN_GLXSWAPINTERVAL swapIntervalMESA, swapIntervalSGI;
-bool ctx_supports_vSync;
+static FN_GLXSWAPINTERVAL swapIntervalMESA, swapIntervalSGI;
+static bool ctx_supports_vSync;
 
 void GLContext_Init(struct GraphicsMode* mode) {
 	static String ext_mesa = String_FromConst("GLX_MESA_swap_control");

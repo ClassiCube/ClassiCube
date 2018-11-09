@@ -26,32 +26,32 @@
 #include "TerrainAtlas.h"	
 
 /* Classic state */
-uint8_t classic_tabList[ENTITIES_MAX_COUNT >> 3];
-struct Screen* classic_prevScreen;
-bool classic_receivedFirstPos;
+static uint8_t classic_tabList[ENTITIES_MAX_COUNT >> 3];
+static struct Screen* classic_prevScreen;
+static bool classic_receivedFirstPos;
 
 /* Map state */
-bool map_begunLoading;
-TimeMS map_receiveStart;
-struct InflateState map_inflateState;
-struct Stream map_stream, map_part;
-struct GZipHeader map_gzHeader;
-int map_sizeIndex, map_index, map_volume;
-uint8_t map_size[4];
-BlockRaw* map_blocks;
+static bool map_begunLoading;
+static TimeMS map_receiveStart;
+static struct InflateState map_inflateState;
+static struct Stream map_stream, map_part;
+static struct GZipHeader map_gzHeader;
+static int map_sizeIndex, map_index, map_volume;
+static uint8_t map_size[4];
+static BlockRaw* map_blocks;
 
 #ifdef EXTENDED_BLOCKS
-struct InflateState map2_inflateState;
-struct Stream map2_stream;
-int map2_index;
-BlockRaw* map2_blocks;
+static struct InflateState map2_inflateState;
+static struct Stream map2_stream;
+static int map2_index;
+static BlockRaw* map2_blocks;
 #endif
 
 /* CPE state */
-int cpe_serverExtensionsCount, cpe_pingTicks;
-int cpe_envMapVer = 2, cpe_blockDefsExtVer = 2;
-bool cpe_sendHeldBlock, cpe_useMessageTypes, cpe_extEntityPos, cpe_blockPerms, cpe_fastMap;
-bool cpe_twoWayPing, cpe_extTextures, cpe_extBlocks;
+static int cpe_serverExtensionsCount, cpe_pingTicks;
+static int cpe_envMapVer = 2, cpe_blockDefsExtVer = 2;
+static bool cpe_sendHeldBlock, cpe_useMessageTypes, cpe_extEntityPos, cpe_blockPerms, cpe_fastMap;
+static bool cpe_twoWayPing, cpe_extTextures, cpe_extBlocks;
 
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
@@ -206,10 +206,10 @@ static void Handlers_UpdateLocation(EntityID playerId, struct LocationUpdate* up
 /* Partially based on information from http://files.worldofminecraft.com/texturing/ */
 /* NOTE: http://files.worldofminecraft.com/ has been down for quite a while, so support was removed on Oct 10, 2015 */
 
-char wom_identifierBuffer[STRING_SIZE];
-String wom_identifier = String_FromArray(wom_identifierBuffer);
-int wom_counter;
-bool wom_sendId, wom_sentId;
+static char wom_identifierBuffer[STRING_SIZE];
+static String wom_identifier = String_FromArray(wom_identifierBuffer);
+static int wom_counter;
+static bool wom_sendId, wom_sentId;
 
 static void WoM_UpdateIdentifier(void) {
 	wom_identifier.length = 0;

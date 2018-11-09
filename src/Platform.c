@@ -34,7 +34,7 @@ static void Platform_InitStopwatch(void);
 #define Socket__Error() WSAGetLastError()
 #define Win_Return(success) ((success) ? 0 : GetLastError())
 
-HANDLE heap;
+static HANDLE heap;
 char* Platform_NewLine    = "\r\n";
 char  Directory_Separator = '\\';
 char* Font_DefaultName    = "Arial";
@@ -227,7 +227,7 @@ void Platform_LogConst(const char* message) {
 }
 
 /* TODO: check this is actually accurate */
-uint64_t sw_freqMul = 1, sw_freqDiv = 1;
+static uint64_t sw_freqMul = 1, sw_freqDiv = 1;
 int Stopwatch_ElapsedMicroseconds(uint64_t beg, uint64_t end) {
 	uint64_t delta;
 	if (end < beg) return 0;
@@ -274,7 +274,7 @@ void DateTime_CurrentLocal(DateTime* time) {
 	Platform_FromSysTime(time, &localTime);
 }
 
-bool sw_highRes;
+static bool sw_highRes;
 uint64_t Stopwatch_Measure(void) {
 	LARGE_INTEGER t;
 	FILETIME ft;
@@ -654,7 +654,7 @@ void Thread_Join(void* handle) {
 	Thread_Detach(handle);
 }
 
-CRITICAL_SECTION mutexList[3]; int mutexIndex;
+static CRITICAL_SECTION mutexList[3]; int mutexIndex;
 void* Mutex_Create(void) {
 	if (mutexIndex == Array_Elems(mutexList)) ErrorHandler_Fail("Cannot allocate mutex");
 	CRITICAL_SECTION* ptr = &mutexList[mutexIndex];
@@ -787,9 +787,9 @@ void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
 /*########################################################################################################################*
 *--------------------------------------------------------Font/Text--------------------------------------------------------*
 *#########################################################################################################################*/
-FT_Library ft_lib;
-struct FT_MemoryRec_ ft_mem;
-StringsBuffer norm_fonts, bold_fonts;
+static FT_Library ft_lib;
+static struct FT_MemoryRec_ ft_mem;
+static StringsBuffer norm_fonts, bold_fonts;
 static void Font_Init(void);
 
 #define DPI_PIXEL  72
@@ -1192,7 +1192,7 @@ ReturnCode Socket_Select(SocketPtr socket, int selectMode, bool* success) {
 *----------------------------------------------------------Http-----------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WIN
-HINTERNET hInternet;
+static HINTERNET hInternet;
 /* TODO: Test last modified and etag even work */
 #define FLAG_STATUS  HTTP_QUERY_STATUS_CODE    | HTTP_QUERY_FLAG_NUMBER
 #define FLAG_LENGTH  HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER
@@ -1447,7 +1447,7 @@ struct AudioContext {
 	struct AudioFormat Format;
 	int Count;
 };
-struct AudioContext Audio_Contexts[20];
+static struct AudioContext Audio_Contexts[20];
 
 void Audio_Init(AudioHandle* handle, int buffers) {
 	struct AudioContext* ctx;
@@ -1551,12 +1551,12 @@ struct AudioContext {
 	int Count;
 	ALenum DataFormat;
 };
-struct AudioContext Audio_Contexts[20];
+static struct AudioContext Audio_Contexts[20];
 
-pthread_mutex_t audio_lock;
-ALCdevice* audio_device;
-ALCcontext* audio_context;
-volatile int audio_refs;
+static pthread_mutex_t audio_lock;
+static ALCdevice* audio_device;
+static ALCcontext* audio_context;
+static volatile int audio_refs;
 
 static void Audio_CheckContextErrors(void) {
 	ALenum err = alcGetError(audio_device);

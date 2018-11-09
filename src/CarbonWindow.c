@@ -8,11 +8,11 @@
 #include "Platform.h"
 #include "ErrorHandler.h"
 
-WindowRef win_handle;
-int title_height;
-int win_state;
+static WindowRef win_handle;
+static int title_height;
+static int win_state;
 /* Hacks for fullscreen */
-bool ctx_pendingWindowed, ctx_pendingFullscreen;
+static bool ctx_pendingWindowed, ctx_pendingFullscreen;
 
 #define Rect_Width(rect)  (rect.right  - rect.left)
 #define Rect_Height(rect) (rect.bottom - rect.top)
@@ -668,7 +668,7 @@ void Window_SetScreenCursorPos(int x, int y) {
 	CGAssociateMouseAndMouseCursorPosition(1);
 }
 
-bool win_cursorVisible;
+static bool win_cursorVisible;
 bool Window_GetCursorVisible(void) { return win_cursorVisible; }
 
 void Window_SetCursorVisible(bool visible) {
@@ -684,9 +684,9 @@ void Window_SetCursorVisible(bool visible) {
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
 *#########################################################################################################################*/
-AGLContext ctx_handle;
-bool ctx_fullscreen, ctx_firstFullscreen;
-Rect2D ctx_windowedBounds;
+static AGLContext ctx_handle;
+static bool ctx_fullscreen, ctx_firstFullscreen;
+static Rect2D ctx_windowedBounds;
 
 static void GLContext_Check(int code, const char* place) {
 	ReturnCode res;

@@ -19,13 +19,13 @@
 #define Rect_Width(rect)  (rect.right  - rect.left)
 #define Rect_Height(rect) (rect.bottom - rect.top)
 
-HINSTANCE win_instance;
-HWND win_handle;
-HDC win_DC;
-int win_state;
-bool invisible_since_creation; /* Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront) */
-int suppress_resize; /* Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events */
-Rect2D prev_bounds; /* Used to restore previous size when leaving fullscreen mode */
+static HINSTANCE win_instance;
+static HWND win_handle;
+static HDC win_DC;
+static int win_state;
+static bool invisible_since_creation; /* Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront) */
+static int suppress_resize; /* Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events */
+static Rect2D prev_bounds; /* Used to restore previous size when leaving fullscreen mode */
 
 
 /*########################################################################################################################*
@@ -109,7 +109,7 @@ static void Window_ResetWindowState(void) {
 	suppress_resize--;
 }
 
-bool win_hiddenBorder;
+static bool win_hiddenBorder;
 static void Window_DoSetHiddenBorder(bool value) {
 	if (win_hiddenBorder == value) return;
 
@@ -620,7 +620,7 @@ void Window_SetScreenCursorPos(int x, int y) {
 	SetCursorPos(x, y);
 }
 
-bool win_cursorVisible = true;
+static bool win_cursorVisible = true;
 bool Window_GetCursorVisible(void) { return win_cursorVisible; }
 void Window_SetCursorVisible(bool visible) {
 	win_cursorVisible = visible;
@@ -664,11 +664,11 @@ void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	}
 }
 
-HGLRC ctx_Handle;
-HDC ctx_DC;
+static HGLRC ctx_Handle;
+static HDC ctx_DC;
 typedef BOOL (WINAPI *FN_WGLSWAPINTERVAL)(int interval);
-FN_WGLSWAPINTERVAL wglSwapIntervalEXT;
-bool ctx_supports_vSync;
+static FN_WGLSWAPINTERVAL wglSwapIntervalEXT;
+static bool ctx_supports_vSync;
 
 void GLContext_Init(struct GraphicsMode* mode) {
 	GLContext_SelectGraphicsMode(mode);

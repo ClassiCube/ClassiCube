@@ -12,7 +12,7 @@
 #include "Chat.h"
 #include "Stream.h"
 
-StringsBuffer files;
+static StringsBuffer files;
 static void Volume_Mix16(int16_t* samples, int count, int volume) {
 	int i;
 
@@ -199,9 +199,9 @@ struct SoundOutput { AudioHandle Handle; void* Buffer; uint32_t BufferSize; };
 #define HANDLE_INV -1
 #define SOUND_INV { HANDLE_INV, NULL, 0 }
 
-struct Soundboard digBoard, stepBoard;
-struct SoundOutput monoOutputs[AUDIO_MAX_HANDLES]   = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
-struct SoundOutput stereoOutputs[AUDIO_MAX_HANDLES] = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
+static struct Soundboard digBoard, stepBoard;
+static struct SoundOutput monoOutputs[AUDIO_MAX_HANDLES]   = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
+static struct SoundOutput stereoOutputs[AUDIO_MAX_HANDLES] = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
 
 NOINLINE_ static void Sounds_Fail(ReturnCode res) {
 	Chat_LogError(res, "playing sounds");
@@ -343,11 +343,11 @@ void Audio_PlayStepSound(uint8_t type) { Sounds_Play(type, &stepBoard); }
 /*########################################################################################################################*
 *--------------------------------------------------------Music------------------------------------------------------------*
 *#########################################################################################################################*/
-AudioHandle music_out;
-StringsBuffer music_files;
-void* music_thread;
-void* music_waitable;
-volatile bool music_pendingStop, music_joining;
+static AudioHandle music_out;
+static StringsBuffer music_files;
+static void* music_thread;
+static void* music_waitable;
+static volatile bool music_pendingStop, music_joining;
 
 static ReturnCode Music_Buffer(int i, int16_t* data, int maxSamples, struct VorbisState* ctx) {
 	int samples = 0;

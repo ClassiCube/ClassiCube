@@ -398,8 +398,8 @@ struct Floor {
 };
 
 /* TODO: Make this thread safe */
-int16_t* tmp_xlist;
-uint16_t* tmp_order;
+static int16_t* tmp_xlist;
+static uint16_t* tmp_order;
 static void Floor_SortXList(int left, int right) {
 	uint16_t* values = tmp_order; uint16_t value;
 	int16_t* keys = tmp_xlist;    int16_t key;

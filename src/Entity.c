@@ -33,7 +33,7 @@ float LocationUpdate_Clamp(float degrees) {
 	return degrees;
 }
 
-struct LocationUpdate loc_empty;
+static struct LocationUpdate loc_empty;
 void LocationUpdate_MakeOri(struct LocationUpdate* update, float rotY, float headX) {
 	*update = loc_empty;
 	update->Flags = LOCATIONUPDATE_FLAG_HEADX | LOCATIONUPDATE_FLAG_HEADY;
@@ -61,7 +61,7 @@ void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, fl
 /*########################################################################################################################*
 *---------------------------------------------------------Entity----------------------------------------------------------*
 *#########################################################################################################################*/
-struct EntityVTABLE entity_VTABLE;
+static struct EntityVTABLE entity_VTABLE;
 static PackedCol Entity_GetCol(struct Entity* e) {
 	Vector3 eyePos = Entity_GetEyePosition(e);
 	Vector3I P; Vector3I_Floor(&P, &eyePos);
@@ -203,7 +203,7 @@ bool Entity_TouchesAnyRope(struct Entity* e) {
 	return Entity_TouchesAny(&bounds, Entity_IsRope);
 }
 
-Vector3 entity_liqExpand = { 0.25f / 16.0f, 0.0f / 16.0f, 0.25f / 16.0f };
+static Vector3 entity_liqExpand = { 0.25f/16.0f, 0.0f/16.0f, 0.25f/16.0f };
 static bool Entity_IsLava(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_LIQUID_LAVA; }
 bool Entity_TouchesAnyLava(struct Entity* e) {
 	struct AABB bounds; Entity_GetBounds(e, &bounds);
@@ -222,7 +222,7 @@ bool Entity_TouchesAnyWater(struct Entity* e) {
 /*########################################################################################################################*
 *--------------------------------------------------------Entities---------------------------------------------------------*
 *#########################################################################################################################*/
-EntityID entities_closestId;
+static EntityID entities_closestId;
 void Entities_Tick(struct ScheduledTask* task) {
 	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {

@@ -123,8 +123,8 @@ void EnvRenderer_UpdateFog(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------Clouds---------------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID clouds_vb, clouds_tex;
-int clouds_vertices;
+static GfxResourceID clouds_vb, clouds_tex;
+static int clouds_vertices;
 
 void EnvRenderer_RenderClouds(double deltaTime) {
 	double time;
@@ -212,8 +212,8 @@ static void EnvRenderer_UpdateClouds(void) {
 /*########################################################################################################################*
 *------------------------------------------------------------Sky----------------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID sky_vb;
-int sky_vertices;
+static GfxResourceID sky_vb;
+static int sky_vertices;
 
 void EnvRenderer_RenderSky(double deltaTime) {
 	if (!sky_vb || EnvRenderer_ShouldRenderSkybox()) return;
@@ -289,7 +289,7 @@ static void EnvRenderer_UpdateSky(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------Skybox---------------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID skybox_tex, skybox_vb;
+static GfxResourceID skybox_tex, skybox_vb;
 #define SKYBOX_COUNT (6 * 4)
 bool EnvRenderer_ShouldRenderSkybox(void) { return skybox_tex && !EnvRenderer_Minimal; }
 
@@ -360,13 +360,13 @@ static void EnvRenderer_UpdateSkybox(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------Weather--------------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID rain_tex, snow_tex, weather_vb;
+static GfxResourceID rain_tex, snow_tex, weather_vb;
 #define WEATHER_EXTENT 4
 #define WEATHER_VERTS_COUNT 8 * (WEATHER_EXTENT * 2 + 1) * (WEATHER_EXTENT * 2 + 1)
 
 #define Weather_Pack(x, z) ((x) * World_Length + (z))
-double weather_accumulator;
-Vector3I weather_lastPos;
+static double weather_accumulator;
+static Vector3I weather_lastPos;
 
 static void EnvRenderer_InitWeatherHeightmap(void) {
 	int i;
@@ -534,10 +534,10 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 /*########################################################################################################################*
 *--------------------------------------------------------Sides/Edge-------------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID sides_vb, edges_vb, sides_tex, edges_tex;
-int sides_vertices, edges_vertices;
-bool sides_fullBright, edges_fullBright;
-TextureLoc edges_lastTexLoc, sides_lastTexLoc;
+static GfxResourceID sides_vb, edges_vb, sides_tex, edges_tex;
+static int sides_vertices, edges_vertices;
+static bool sides_fullBright, edges_fullBright;
+static TextureLoc edges_lastTexLoc, sides_lastTexLoc;
 
 void EnvRenderer_RenderBorders(BlockID block, GfxResourceID vb, GfxResourceID tex, int count) {
 	if (!vb) return;

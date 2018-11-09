@@ -21,24 +21,24 @@
 /* Packs an index into the 18x18x18 chunk array. Coordinates range from -1 to 16. */
 #define Builder_PackChunk(xx, yy, zz) (((yy) + 1) * EXTCHUNK_SIZE_2 + ((zz) + 1) * EXTCHUNK_SIZE + ((xx) + 1))
 
-BlockID* Builder_Chunk;
-uint8_t* Builder_Counts;
-int* Builder_BitFlags;
-bool Builder_UseBitFlags;
-int Builder_X, Builder_Y, Builder_Z;
-BlockID Builder_Block;
-int Builder_ChunkIndex;
-bool Builder_FullBright;
-bool Builder_Tinted;
-int Builder_ChunkEndX, Builder_ChunkEndZ;
-int Builder_Offsets[FACE_COUNT] = { -1,1, -EXTCHUNK_SIZE,EXTCHUNK_SIZE, -EXTCHUNK_SIZE_2,EXTCHUNK_SIZE_2 };
+static BlockID* Builder_Chunk;
+static uint8_t* Builder_Counts;
+static int* Builder_BitFlags;
+static bool Builder_UseBitFlags;
+static int Builder_X, Builder_Y, Builder_Z;
+static BlockID Builder_Block;
+static int Builder_ChunkIndex;
+static bool Builder_FullBright;
+static bool Builder_Tinted;
+static int Builder_ChunkEndX, Builder_ChunkEndZ;
+static int Builder_Offsets[FACE_COUNT] = { -1,1, -EXTCHUNK_SIZE,EXTCHUNK_SIZE, -EXTCHUNK_SIZE_2,EXTCHUNK_SIZE_2 };
 
-int (*Builder_StretchXLiquid)(int countIndex, int x, int y, int z, int chunkIndex, BlockID block);
-int (*Builder_StretchX)(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face);
-int (*Builder_StretchZ)(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face);
-void (*Builder_RenderBlock)(int countsIndex);
-void (*Builder_PreStretchTiles)(int x1, int y1, int z1);
-void (*Builder_PostStretchTiles)(int x1, int y1, int z1);
+static int (*Builder_StretchXLiquid)(int countIndex, int x, int y, int z, int chunkIndex, BlockID block);
+static int (*Builder_StretchX)(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face);
+static int (*Builder_StretchZ)(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face);
+static void (*Builder_RenderBlock)(int countsIndex);
+static void (*Builder_PreStretchTiles)(int x1, int y1, int z1);
+static void (*Builder_PostStretchTiles)(int x1, int y1, int z1);
 
 /* Contains state for vertices for a portion of a chunk mesh (vertices that are in a 1D atlas) */
 struct Builder1DPart {
@@ -49,9 +49,9 @@ struct Builder1DPart {
 
 /* Part builder data, for both normal and translucent parts.
 The first ATLAS1D_MAX_ATLASES parts are for normal parts, remainder are for translucent parts. */
-struct Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES * 2];
-VertexP3fT2fC4b* Builder_Vertices;
-int Builder_VerticesElems;
+static struct Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES * 2];
+static VertexP3fT2fC4b* Builder_Vertices;
+static int Builder_VerticesElems;
 
 static int Builder1DPart_VerticesCount(struct Builder1DPart* part) {
 	int i, count = part->sCount;
@@ -410,7 +410,7 @@ static void Builder_DefaultPostStretchTiles(int x1, int y1, int z1) {
 	}
 }
 
-RNGState spriteRng;
+static RNGState spriteRng;
 static void Builder_DrawSprite(int count) {
 	TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_XMAX);
 	int i = Atlas1D_Index(texLoc);
@@ -700,12 +700,12 @@ void NormalBuilder_SetActive(void) {
 /*########################################################################################################################*
 *-------------------------------------------------Advanced mesh builder---------------------------------------------------*
 *#########################################################################################################################*/
-Vector3 adv_minBB, adv_maxBB;
-bool adv_isTranslucent;
-int adv_initBitFlags, adv_lightFlags, adv_baseOffset;
-int* adv_bitFlags;
-float adv_x1, adv_y1, adv_z1, adv_x2, adv_y2, adv_z2;
-PackedCol adv_lerp[5], adv_lerpX[5], adv_lerpZ[5], adv_lerpY[5];
+static Vector3 adv_minBB, adv_maxBB;
+static bool adv_isTranslucent;
+static int adv_initBitFlags, adv_lightFlags, adv_baseOffset;
+static int* adv_bitFlags;
+static float adv_x1, adv_y1, adv_z1, adv_x2, adv_y2, adv_z2;
+static PackedCol adv_lerp[5], adv_lerpX[5], adv_lerpZ[5], adv_lerpY[5];
 
 enum ADV_MASK {
 	/* z-1 cube points */
@@ -770,7 +770,7 @@ static int Adv_ComputeLightFlags(int x, int y, int z, int cIndex) {
 		Adv_Lit(x + 1, y, z + 1, cIndex + 1 + 18) << xP1_yM1_zP1;
 }
 
-int adv_masks[FACE_COUNT] = {
+static int adv_masks[FACE_COUNT] = {
 	/* XMin face */
 	(1 << xM1_yM1_zM1) | (1 << xM1_yM1_zCC) | (1 << xM1_yM1_zP1) |
 	(1 << xM1_yCC_zM1) | (1 << xM1_yCC_zCC) | (1 << xM1_yCC_zP1) |

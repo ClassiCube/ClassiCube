@@ -467,10 +467,10 @@ void LocalInterpComp_AdvanceState(struct InterpComp* interp) {
 /*########################################################################################################################*
 *-----------------------------------------------------ShadowComponent-----------------------------------------------------*
 *#########################################################################################################################*/
-float ShadowComponent_radius, shadowComponent_uvScale;
+static float ShadowComponent_radius, shadowComponent_uvScale;
 struct ShadowData { float Y; BlockID Block; uint8_t A; };
 
-bool lequal(float a, float b) { return a < b || Math_AbsF(a - b) < 0.001f; }
+static bool lequal(float a, float b) { return a < b || Math_AbsF(a - b) < 0.001f; }
 static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity* entity, struct ShadowData* data, float x1, float z1, float x2, float z2) {
 	Vector3 cen = entity->Position;
 	if (lequal(x2, x1) || lequal(z2, z1)) return;
@@ -1200,9 +1200,9 @@ void PhysicsComp_DoEntityPush(struct Entity* entity) {
 /*########################################################################################################################*
 *----------------------------------------------------SoundsComponent------------------------------------------------------*
 *#########################################################################################################################*/
-Vector3 sounds_LastPos = { -1e25f, -1e25f, -1e25f };
-bool sounds_AnyNonAir;
-uint8_t sounds_Type;
+static Vector3 sounds_LastPos = { -1e25f, -1e25f, -1e25f };
+static bool sounds_AnyNonAir;
+static uint8_t sounds_Type;
 
 static bool Sounds_CheckNonSolid(BlockID b) {
 	uint8_t type = Block_StepSounds[b];

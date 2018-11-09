@@ -8,7 +8,7 @@
 #include "Block.h"
 #include "ErrorHandler.h"
 
-float PickedPos_dist;
+static float PickedPos_dist;
 static void PickedPos_TestAxis(struct PickedPos* pos, float dAxis, Face fAxis) {
 	dAxis = Math_AbsF(dAxis);
 	if (dAxis >= PickedPos_dist) return;
@@ -106,7 +106,7 @@ void RayTracer_Step(struct RayTracer* t) {
 	}
 }
 
-struct RayTracer tracer;
+static struct RayTracer tracer;
 #define PICKING_BORDER BLOCK_BEDROCK
 typedef bool (*IntersectTest)(struct PickedPos* pos);
 

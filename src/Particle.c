@@ -16,10 +16,10 @@
 /*########################################################################################################################*
 *------------------------------------------------------Particle base------------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID Particles_TexId, Particles_VB;
+static GfxResourceID Particles_TexId, Particles_VB;
 #define PARTICLES_MAX 600
-RNGState rnd;
-bool particle_hitTerrain;
+static RNGState rnd;
+static bool particle_hitTerrain;
 
 void Particle_DoRender(Vector2* size, Vector3* pos, TextureRec* rec, PackedCol col, VertexP3fT2fC4b* vertices) {
 	float sX = size->X * 0.5f, sY = size->Y * 0.5f;
@@ -142,8 +142,8 @@ static bool Particle_PhysicsTick(struct Particle* p, float gravity, bool through
 *#########################################################################################################################*/
 struct RainParticle { struct Particle Base; };
 
-struct RainParticle Rain_Particles[PARTICLES_MAX];
-int Rain_Count;
+static struct RainParticle Rain_Particles[PARTICLES_MAX];
+static int Rain_Count;
 
 static bool RainParticle_Tick(struct RainParticle* p, double delta) {
 	particle_hitTerrain = false;
@@ -212,10 +212,10 @@ struct TerrainParticle {
 	BlockID Block;
 };
 
-struct TerrainParticle Terrain_Particles[PARTICLES_MAX];
-int Terrain_Count;
-uint16_t Terrain_1DCount[ATLAS1D_MAX_ATLASES];
-uint16_t Terrain_1DIndices[ATLAS1D_MAX_ATLASES];
+static struct TerrainParticle Terrain_Particles[PARTICLES_MAX];
+static int Terrain_Count;
+static uint16_t Terrain_1DCount[ATLAS1D_MAX_ATLASES];
+static uint16_t Terrain_1DIndices[ATLAS1D_MAX_ATLASES];
 
 static bool TerrainParticle_Tick(struct TerrainParticle* p, double delta) {
 	return Particle_PhysicsTick(&p->Base, 5.4f, true, delta);

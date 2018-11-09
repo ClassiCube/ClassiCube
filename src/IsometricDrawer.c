@@ -8,23 +8,23 @@
 #include "TerrainAtlas.h"
 #include "Block.h"
 
-float iso_scale;
-VertexP3fT2fC4b* iso_vertices;
-VertexP3fT2fC4b* iso_vertices_base;
-GfxResourceID iso_vb;
+static float iso_scale;
+static VertexP3fT2fC4b* iso_vertices;
+static VertexP3fT2fC4b* iso_vertices_base;
+static GfxResourceID iso_vb;
 
-bool iso_cacheInitalised;
-PackedCol iso_col = PACKEDCOL_WHITE;
-PackedCol iso_colXSide, iso_colZSide, iso_colYBottom;
+static bool iso_cacheInitalised;
+static PackedCol iso_col = PACKEDCOL_WHITE;
+static PackedCol iso_colXSide, iso_colZSide, iso_colYBottom;
 
 #define iso_cosX  (0.86602540378443864f) /* cos(30  * MATH_DEG2RAD) */
 #define iso_sinX  (0.50000000000000000f) /* sin(30  * MATH_DEG2RAD) */
 #define iso_cosY  (0.70710678118654752f) /* cos(-45 * MATH_DEG2RAD) */
 #define iso_sinY (-0.70710678118654752f) /* sin(-45 * MATH_DEG2RAD) */
 
-struct Matrix iso_transform;
-Vector3 iso_pos;
-int iso_lastTexIndex, iso_texIndex;
+static struct Matrix iso_transform;
+static Vector3 iso_pos;
+static int iso_lastTexIndex, iso_texIndex;
 
 static void IsometricDrawer_RotateX(float cosA, float sinA) {
 	float y   = cosA  * iso_pos.Y + sinA * iso_pos.Z;

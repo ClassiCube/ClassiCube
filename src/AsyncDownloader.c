@@ -62,21 +62,21 @@ static void AsyncRequestList_Free(struct AsyncRequestList* list) {
 	AsyncRequestList_Init(list);
 }
 
-void* async_waitable;
-void* async_workerThread;
-void* async_pendingMutex;
-void* async_processedMutex;
-void* async_curRequestMutex;
-volatile bool async_terminate;
+static void* async_waitable;
+static void* async_workerThread;
+static void* async_pendingMutex;
+static void* async_processedMutex;
+static void* async_curRequestMutex;
+static volatile bool async_terminate;
 
-struct AsyncRequestList async_pending;
-struct AsyncRequestList async_processed;
-String async_skinServer = String_FromConst("http://static.classicube.net/skins/");
-struct AsyncRequest async_curRequest;
-volatile int async_curProgress = ASYNC_PROGRESS_NOTHING;
+static struct AsyncRequestList async_pending;
+static struct AsyncRequestList async_processed;
+static String async_skinServer = String_FromConst("http://static.classicube.net/skins/");
+static struct AsyncRequest async_curRequest;
+static volatile int async_curProgress = ASYNC_PROGRESS_NOTHING;
 /* TODO: Implement these */
-bool ManageCookies;
-bool KeepAlive;
+static bool ManageCookies;
+static bool KeepAlive;
 /* TODO: Connection pooling */
 
 static void AsyncDownloader_Add(const String* url, bool priority, const String* id, uint8_t type, TimeMS* lastModified, const String* etag, const String* data) {

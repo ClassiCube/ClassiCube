@@ -95,7 +95,7 @@ float Model_RenderDistance(struct Entity* entity) {
 	return dx * dx + dy * dy + dz * dz;
 }
 
-struct Matrix Model_transform;
+static struct Matrix Model_transform;
 void Model_Render(struct Model* model, struct Entity* entity) {
 	struct Matrix m;
 	Vector3 pos = entity->Position;

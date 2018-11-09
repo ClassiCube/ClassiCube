@@ -16,7 +16,7 @@
 /*########################################################################################################################*
 *---------------------------------------------------------ModelCache------------------------------------------------------*
 *#########################################################################################################################*/
-int ModelCache_texCount, ModelCache_modelCount;
+static int ModelCache_texCount, ModelCache_modelCount;
 #define Model_RetSize(x,y,z) static Vector3 P = { (x)/16.0f,(y)/16.0f,(z)/16.0f }; *size = P;
 #define Model_RetAABB(x1,y1,z1, x2,y2,z2) static struct AABB BB = { (x1)/16.0f,(y1)/16.0f,(z1)/16.0f, (x2)/16.0f,(y2)/16.0f,(z2)/16.0f }; *bb = BB;
 #define BoxDesc_Dim(p1, p2) p1 < p2 ? p2 - p1 : p1 - p2
@@ -175,9 +175,9 @@ static void HumanModel_DrawArmSet(struct Entity* entity, struct ModelSet* model)
 }
 
 
-struct ModelSet Human_Set;
-struct ModelVertex HumanModel_Vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
-struct Model HumanModel;
+static struct ModelSet Human_Set;
+static struct ModelVertex HumanModel_Vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
+static struct Model HumanModel;
 
 static void HumanModel_CreateParts(void) {
 	static struct BoxDesc head = {
@@ -329,9 +329,9 @@ static struct Model* HumanoidModel_GetInstance(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------ChibiModel------------------------------------------------------*
 *#########################################################################################################################*/
-struct ModelSet Chibi_Set;
-struct ModelVertex ChibiModel_Vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
-struct Model ChibiModel;
+static struct ModelSet Chibi_Set;
+static struct ModelVertex ChibiModel_Vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
+static struct Model ChibiModel;
 
 NOINLINE_ static void ChibiModel_ScalePart(struct ModelPart* dst, struct ModelPart* src) {
 	struct ModelVertex v;
@@ -416,7 +416,7 @@ static struct Model* ChibiModel_GetInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------SittingModel-----------------------------------------------------*
 *#########################################################################################################################*/
-struct Model SittingModel;
+static struct Model SittingModel;
 #define SIT_OFFSET 10.0f
 static void SittingModel_CreateParts(void) { }
 
@@ -452,7 +452,7 @@ static struct Model* SittingModel_GetInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------CorpseModel------------------------------------------------------*
 *#########################################################################################################################*/
-struct Model CorpseModel;
+static struct Model CorpseModel;
 static void CorpseModel_CreateParts(void) { }
 static void CorpseModel_DrawModel(struct Entity* entity) {
 	entity->Anim.LeftLegX = 0.025f; entity->Anim.RightLegX = 0.025f;
@@ -473,7 +473,7 @@ static struct Model* CorpseModel_GetInstance(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------HeadModel-------------------------------------------------------*
 *#########################################################################################################################*/
-struct Model HeadModel;
+static struct Model HeadModel;
 static void HeadModel_CreateParts(void) { }
 
 static float HeadModel_GetEyeY(struct Entity* entity)   { return 6.0f / 16.0f; }
@@ -512,10 +512,10 @@ static struct Model* HeadModel_GetInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------ChickenModel-----------------------------------------------------*
 *#########################################################################################################################*/
-struct ModelPart Chicken_Head, Chicken_Head2, Chicken_Head3, Chicken_Torso;
-struct ModelPart Chicken_LeftLeg, Chicken_RightLeg, Chicken_LeftWing, Chicken_RightWing;
-struct ModelVertex ChickenModel_Vertices[MODEL_BOX_VERTICES * 6 + (MODEL_QUAD_VERTICES * 2) * 2];
-struct Model ChickenModel;
+static struct ModelPart Chicken_Head, Chicken_Head2, Chicken_Head3, Chicken_Torso;
+static struct ModelPart Chicken_LeftLeg, Chicken_RightLeg, Chicken_LeftWing, Chicken_RightWing;
+static struct ModelVertex ChickenModel_Vertices[MODEL_BOX_VERTICES * 6 + (MODEL_QUAD_VERTICES * 2) * 2];
+static struct Model ChickenModel;
 
 static void ChickenModel_MakeLeg(struct ModelPart* part, int x1, int x2, int legX1, int legX2) {
 #define ch_y1 (1.0f  / 64.0f)
@@ -614,10 +614,10 @@ static struct Model* ChickenModel_GetInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------CreeperModel-----------------------------------------------------*
 *#########################################################################################################################*/
-struct ModelPart Creeper_Head, Creeper_Torso, Creeper_LeftLegFront;
-struct ModelPart Creeper_RightLegFront, Creeper_LeftLegBack, Creeper_RightLegBack;
-struct ModelVertex CreeperModel_Vertices[MODEL_BOX_VERTICES * 6];
-struct Model CreeperModel;
+static struct ModelPart Creeper_Head, Creeper_Torso, Creeper_LeftLegFront;
+static struct ModelPart Creeper_RightLegFront, Creeper_LeftLegBack, Creeper_RightLegBack;
+static struct ModelVertex CreeperModel_Vertices[MODEL_BOX_VERTICES * 6];
+static struct Model CreeperModel;
 
 static void CreeperModel_CreateParts(void) {
 	static struct BoxDesc head = {
@@ -687,10 +687,10 @@ static struct Model* CreeperModel_GetInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------PigModel-------------------------------------------------------*
 *#########################################################################################################################*/
-struct ModelPart Pig_Head, Pig_Torso, Pig_LeftLegFront, Pig_RightLegFront;
-struct ModelPart Pig_LeftLegBack, Pig_RightLegBack;
-struct ModelVertex PigModel_Vertices[MODEL_BOX_VERTICES * 6];
-struct Model PigModel;
+static struct ModelPart Pig_Head, Pig_Torso, Pig_LeftLegFront, Pig_RightLegFront;
+static struct ModelPart Pig_LeftLegBack, Pig_RightLegBack;
+static struct ModelVertex PigModel_Vertices[MODEL_BOX_VERTICES * 6];
+static struct Model PigModel;
 
 static void PigModel_CreateParts(void) {
 	static struct BoxDesc head = {
@@ -760,13 +760,13 @@ static struct Model* PigModel_GetInstance(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------SheepModel------------------------------------------------------*
 *#########################################################################################################################*/
-struct ModelPart Sheep_Head, Sheep_Torso, Sheep_LeftLegFront;
-struct ModelPart Sheep_RightLegFront, Sheep_LeftLegBack, Sheep_RightLegBack;
-struct ModelPart Fur_Head, Fur_Torso, Fur_LeftLegFront, Fur_RightLegFront;
-struct ModelPart Fur_LeftLegBack, Fur_RightLegBack;
-struct ModelVertex SheepModel_Vertices[MODEL_BOX_VERTICES * 6 * 2];
-struct Model SheepModel;
-int fur_Index;
+static struct ModelPart Sheep_Head, Sheep_Torso, Sheep_LeftLegFront;
+static struct ModelPart Sheep_RightLegFront, Sheep_LeftLegBack, Sheep_RightLegBack;
+static struct ModelPart Fur_Head, Fur_Torso, Fur_LeftLegFront, Fur_RightLegFront;
+static struct ModelPart Fur_LeftLegBack, Fur_RightLegBack;
+static struct ModelVertex SheepModel_Vertices[MODEL_BOX_VERTICES * 6 * 2];
+static struct Model SheepModel;
+static int fur_Index;
 
 static void SheepModel_CreateParts(void) {
 	static struct BoxDesc head = {
@@ -894,10 +894,10 @@ static struct Model* SheepModel_GetInstance(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------SkeletonModel-----------------------------------------------------*
 *#########################################################################################################################*/
-struct ModelPart Skeleton_Head, Skeleton_Torso, Skeleton_LeftLeg;
-struct ModelPart Skeleton_RightLeg, Skeleton_LeftArm, Skeleton_RightArm;
-struct ModelVertex SkeletonModel_Vertices[MODEL_BOX_VERTICES * 6];
-struct Model SkeletonModel;
+static struct ModelPart Skeleton_Head, Skeleton_Torso, Skeleton_LeftLeg;
+static struct ModelPart Skeleton_RightLeg, Skeleton_LeftArm, Skeleton_RightArm;
+static struct ModelVertex SkeletonModel_Vertices[MODEL_BOX_VERTICES * 6];
+static struct Model SkeletonModel;
 
 static void SkeletonModel_CreateParts(void) {
 	static struct BoxDesc head = {
@@ -974,10 +974,10 @@ static struct Model* SkeletonModel_GetInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------SpiderModel------------------------------------------------------*
 *#########################################################################################################################*/
-struct ModelPart Spider_Head, Spider_Link, Spider_End;
-struct ModelPart Spider_LeftLeg, Spider_RightLeg;
-struct ModelVertex SpiderModel_Vertices[MODEL_BOX_VERTICES * 5];
-struct Model SpiderModel;
+static struct ModelPart Spider_Head, Spider_Link, Spider_End;
+static struct ModelPart Spider_LeftLeg, Spider_RightLeg;
+static struct ModelVertex SpiderModel_Vertices[MODEL_BOX_VERTICES * 5];
+static struct Model SpiderModel;
 
 static void SpiderModel_CreateParts(void) {
 	static struct BoxDesc head = {
@@ -1057,9 +1057,9 @@ static struct Model* SpiderModel_GetInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------ZombieModel------------------------------------------------------*
 *#########################################################################################################################*/
-struct ModelPart Zombie_Head, Zombie_Hat, Zombie_Torso, Zombie_LeftLeg;
-struct ModelPart Zombie_RightLeg, Zombie_LeftArm, Zombie_RightArm;
-struct Model ZombieModel;
+static struct ModelPart Zombie_Head, Zombie_Hat, Zombie_Torso, Zombie_LeftLeg;
+static struct ModelPart Zombie_RightLeg, Zombie_LeftArm, Zombie_RightArm;
+static struct Model ZombieModel;
 
 static void ZombieModel_CreateParts(void) { }
 static float ZombieModel_GetEyeY(struct Entity* entity)   { return 26.0f / 16.0f; }
@@ -1098,10 +1098,10 @@ static struct Model* ZombieModel_GetInstance(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------BlockModel------------------------------------------------------*
 *#########################################################################################################################*/
-struct Model BlockModel;
-BlockID BlockModel_block = BLOCK_AIR;
-Vector3 BlockModel_minBB, BlockModel_maxBB;
-int BlockModel_lastTexIndex = -1, BlockModel_texIndex;
+static struct Model BlockModel;
+static BlockID BlockModel_block = BLOCK_AIR;
+static Vector3 BlockModel_minBB, BlockModel_maxBB;
+static int BlockModel_lastTexIndex = -1, BlockModel_texIndex;
 
 static void BlockModel_CreateParts(void) { }
 

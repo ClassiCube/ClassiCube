@@ -127,9 +127,9 @@ bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vec
 *----------------------------------------------------Collisions finder----------------------------------------------------*
 *#########################################################################################################################*/
 #define SEARCHER_STATES_MIN 64
-struct SearcherState Searcher_DefaultStates[SEARCHER_STATES_MIN];
+static struct SearcherState Searcher_DefaultStates[SEARCHER_STATES_MIN];
+static uint32_t Searcher_StatesMax = SEARCHER_STATES_MIN;
 struct SearcherState* Searcher_States = Searcher_DefaultStates;
-uint32_t Searcher_StatesMax = SEARCHER_STATES_MIN;
 
 static void Searcher_QuickSort(int left, int right) {
 	struct SearcherState* keys = Searcher_States; struct SearcherState key;

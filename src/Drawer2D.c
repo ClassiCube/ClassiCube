@@ -30,11 +30,11 @@ void Drawer2D_MakeFont(FontDesc* desc, int size, int style) {
 	}
 }
 
-Bitmap Drawer2D_FontBitmap;
-int Drawer2D_TileSize = 8; /* avoid divide by 0 if default.png missing */
+static Bitmap Drawer2D_FontBitmap;
+static int Drawer2D_TileSize = 8; /* avoid divide by 0 if default.png missing */
 /* So really 16 characters per row */
 #define DRAWER2D_LOG2_CHARS_PER_ROW 4
-int Drawer2D_Widths[256];
+static int Drawer2D_Widths[256];
 
 static void Drawer2D_CalculateTextWidths(void) {
 	int width = Drawer2D_FontBitmap.Width, height = Drawer2D_FontBitmap.Height;

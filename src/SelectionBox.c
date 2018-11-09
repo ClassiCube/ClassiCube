@@ -103,11 +103,11 @@ static void SelectionBox_Intersect(struct SelectionBox* box, Vector3 origin) {
 #define SELECTIONS_VERTICES 24
 #define SELECTIONS_MAX_VERTICES SELECTIONS_MAX * SELECTIONS_VERTICES
 
-int selections_count;
-struct SelectionBox selections_list[SELECTIONS_MAX];
-uint8_t selections_ids[SELECTIONS_MAX];
-GfxResourceID selections_VB, selections_LineVB;
-bool selections_used;
+static int selections_count;
+static struct SelectionBox selections_list[SELECTIONS_MAX];
+static uint8_t selections_ids[SELECTIONS_MAX];
+static GfxResourceID selections_VB, selections_LineVB;
+static bool selections_used;
 
 void Selections_Add(uint8_t id, Vector3I p1, Vector3I p2, PackedCol col) {
 	struct SelectionBox sel;

@@ -26,7 +26,7 @@ typedef signed __int64 int64_t;
 #include <stdint.h>
 #define NOINLINE_ __attribute__((noinline))
 #define ALIGN_HINT_(x) __attribute__((aligned(x)))
-#ifdef _W32
+#ifdef _WIN32
 #define EXPORT_ __attribute__((dllexport, noinline))
 #else
 #define EXPORT_ __attribute__((visibility("default"), noinline))

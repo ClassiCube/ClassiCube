@@ -6,7 +6,7 @@
 #include "Funcs.h"
 #include "ExtMath.h"
 
-char Gfx_ApiBuffer[7][STRING_SIZE];
+static char Gfx_ApiBuffer[7][STRING_SIZE];
 String Gfx_ApiInfo[7] = {
 	String_FromArray(Gfx_ApiBuffer[0]), String_FromArray(Gfx_ApiBuffer[1]),
 	String_FromArray(Gfx_ApiBuffer[2]), String_FromArray(Gfx_ApiBuffer[3]),
@@ -109,7 +109,7 @@ void GfxCommon_Make2DQuad(const struct Texture* tex, PackedCol col, VertexP3fT2f
 	*vertices += 4;
 }
 
-bool gfx_hadFog;
+static bool gfx_hadFog;
 void GfxCommon_Mode2D(int width, int height) {
 	struct Matrix ortho;
 	Gfx_CalcOrthoMatrix((float)width, (float)height, &ortho);

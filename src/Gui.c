@@ -223,7 +223,7 @@ void Gui_OnResize(void) {
 	}
 }
 
-bool gui_cursorVisible = true;
+static bool gui_cursorVisible = true;
 void Gui_CalcCursorVisible(void) {
 	bool vis = Gui_GetActiveScreen()->HandlesAllInput;
 	if (vis == gui_cursorVisible) return;

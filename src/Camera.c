@@ -8,8 +8,8 @@
 #include "Entity.h"
 #include "Input.h"
 
-Vector2 cam_rotOffset;
-bool cam_isForwardThird;
+static Vector2 cam_rotOffset;
+static bool cam_isForwardThird;
 
 /*########################################################################################################################*
 *--------------------------------------------------Perspective camera-----------------------------------------------------*
@@ -35,7 +35,7 @@ static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
 	Picking_CalculatePickedBlock(eyePos, dir, reach, pos);
 }
 
-Point2D cam_prev, cam_delta;
+static Point2D cam_prev, cam_delta;
 static void PerspectiveCamera_CentreMousePosition(void) {
 	Point2D topLeft = Window_PointToScreen(0, 0);
 	int cenX = topLeft.X + Game_Width  / 2;

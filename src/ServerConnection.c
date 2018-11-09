@@ -24,13 +24,13 @@
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
 *#########################################################################################################################*/
-char ServerConnection_ServerNameBuffer[STRING_SIZE];
+static char ServerConnection_ServerNameBuffer[STRING_SIZE];
 String ServerConnection_ServerName = String_FromArray(ServerConnection_ServerNameBuffer);
-char ServerConnection_ServerMOTDBuffer[STRING_SIZE];
+static char ServerConnection_ServerMOTDBuffer[STRING_SIZE];
 String ServerConnection_ServerMOTD = String_FromArray(ServerConnection_ServerMOTDBuffer);
-char ServerConnection_AppNameBuffer[STRING_SIZE];
+static char ServerConnection_AppNameBuffer[STRING_SIZE];
 String ServerConnection_AppName = String_FromArray(ServerConnection_AppNameBuffer);
-int ServerConnection_Ticks;
+static int server_ticks;
 
 static void ServerConnection_ResetState(void) {
 	ServerConnection_Disconnected = false;
@@ -88,8 +88,8 @@ void ServerConnection_CheckAsyncResources(void) {
 *--------------------------------------------------------PingList---------------------------------------------------------*
 *#########################################################################################################################*/
 struct PingEntry { int64_t Sent, Recv; uint16_t Data; };
-struct PingEntry pingList_entries[10];
-int pingList_head;
+static struct PingEntry pingList_entries[10];
+static int pingList_head;
 
 int PingList_NextPingData(void) {
 	int head = pingList_head;
@@ -165,7 +165,7 @@ static void SPConnection_BeginConnect(void) {
 	Gui_SetActive(GeneratingScreen_MakeInstance());
 }
 
-char SPConnection_LastCol = '\0';
+static char SPConnection_LastCol = '\0';
 static void SPConnection_AddPart(const String* text) {
 	char tmpBuffer[STRING_SIZE * 2];
 	String tmp = String_FromArray(tmpBuffer);
@@ -210,11 +210,11 @@ static void SPConnection_SendPlayerClick(MouseButton button, bool isDown, Entity
 
 static void SPConnection_Tick(struct ScheduledTask* task) {
 	if (ServerConnection_Disconnected) return;
-	if ((ServerConnection_Ticks % 3) == 0) {
+	if ((server_ticks % 3) == 0) {
 		Physics_Tick();
 		ServerConnection_CheckAsyncResources();
 	}
-	ServerConnection_Ticks++;
+	server_ticks++;
 }
 
 void ServerConnection_InitSingleplayer(void) {
@@ -237,19 +237,18 @@ void ServerConnection_InitSingleplayer(void) {
 /*########################################################################################################################*
 *--------------------------------------------------Multiplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
-SocketPtr net_socket;
-uint8_t  net_readBuffer[4096 * 5];
-uint8_t  net_writeBuffer[131];
-uint8_t* net_readCurrent;
+static SocketPtr net_socket;
+static uint8_t  net_readBuffer[4096 * 5];
+static uint8_t  net_writeBuffer[131];
+static uint8_t* net_readCurrent;
 
-bool net_writeFailed;
-int net_ticks;
-TimeMS net_lastPacket;
-uint8_t net_lastOpcode;
-double net_discAccumulator;
+static bool net_writeFailed;
+static TimeMS net_lastPacket;
+static uint8_t net_lastOpcode;
+static double net_discAccumulator;
 
-bool net_connecting;
-TimeMS net_connectTimeout;
+static bool net_connecting;
+static TimeMS net_connectTimeout;
 #define NET_TIMEOUT_MS (15 * 1000)
 
 static void MPConnection_BlockChanged(void* obj, Vector3I p, BlockID old, BlockID now) {
@@ -448,7 +447,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	net_readCurrent = net_readBuffer + remaining;
 
 	/* Network is ticked 60 times a second. We only send position updates 20 times a second */
-	if ((net_ticks % 3) == 0) {
+	if ((server_ticks % 3) == 0) {
 		ServerConnection_CheckAsyncResources();
 		Handlers_Tick();
 		/* Have any packets been written? */
@@ -456,7 +455,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 			Net_SendPacket();
 		}
 	}
-	net_ticks++;
+	server_ticks++;
 }
 
 void Net_Set(uint8_t opcode, Net_Handler handler, int packetSize) {

@@ -356,7 +356,7 @@ static void Menu_SwitchFont(void* a, void* b)            { Menu_ReplaceActive(Fo
 /*########################################################################################################################*
 *--------------------------------------------------------ListScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-struct ListScreen ListScreen_Instance;
+static struct ListScreen ListScreen_Instance;
 #define LIST_SCREEN_EMPTY "-----"
 
 STRING_REF String ListScreen_UNSAFE_Get(struct ListScreen* s, int index) {
@@ -600,7 +600,7 @@ static void MenuScreen_Free(void* screen) {
 /*########################################################################################################################*
 *-------------------------------------------------------PauseScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-struct PauseScreen PauseScreen_Instance;
+static struct PauseScreen PauseScreen_Instance;
 static void PauseScreen_Make(struct PauseScreen* s, int i, int dir, int y, const char* title, Widget_LeftClick onClick) {
 	String text = String_FromReadonly(title);
 	Menu_Button(s, i, &s->Buttons[i], 300, &text, &s->TitleFont, onClick,
@@ -693,7 +693,7 @@ struct Screen* PauseScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------OptionsGroupScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-struct OptionsGroupScreen OptionsGroupScreen_Instance;
+static struct OptionsGroupScreen OptionsGroupScreen_Instance;
 const char* optsGroup_descs[7] = {
 	"&eMusic/Sound, view bobbing, and more",
 	"&eChat options, gui scale, font settings, and more",
@@ -785,7 +785,7 @@ struct Screen* OptionsGroupScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------EditHotkeyScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-struct EditHotkeyScreen EditHotkeyScreen_Instance;
+static struct EditHotkeyScreen EditHotkeyScreen_Instance;
 static void EditHotkeyScreen_Make(struct EditHotkeyScreen* s, int i, int x, int y, const String* text, Widget_LeftClick onClick) {
 	Menu_Button(s, i, &s->Buttons[i], 300, text, &s->TitleFont, onClick,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
@@ -997,7 +997,7 @@ struct Screen* EditHotkeyScreen_MakeInstance(struct HotkeyData original) {
 /*########################################################################################################################*
 *-----------------------------------------------------GenLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
-struct GenLevelScreen GenLevelScreen_Instance;
+static struct GenLevelScreen GenLevelScreen_Instance;
 NOINLINE_ static int GenLevelScreen_GetInt(struct GenLevelScreen* s, int index) {
 	struct MenuInputWidget* input = &s->Inputs[index];
 	struct MenuInputValidator* v;
@@ -1158,7 +1158,7 @@ struct Screen* GenLevelScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------ClassicGenScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-struct ClassicGenScreen ClassicGenScreen_Instance;
+static struct ClassicGenScreen ClassicGenScreen_Instance;
 static void ClassicGenScreen_Gen(int size) {
 	RNGState rnd; Random_InitFromCurrentTime(&rnd);
 	Gen_SetDimensions(size, 64, size); Gen_Vanilla = true;
@@ -1209,7 +1209,7 @@ struct Screen* ClassicGenScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------SaveLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
-struct SaveLevelScreen SaveLevelScreen_Instance;
+static struct SaveLevelScreen SaveLevelScreen_Instance;
 static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* s) {
 	static String save  = String_FromConst("Save");
 	static String schem = String_FromConst("Save schematic");
@@ -1646,7 +1646,7 @@ struct Screen* LoadLevelScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *---------------------------------------------------KeyBindingsScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-struct KeyBindingsScreen KeyBindingsScreen_Instance;
+static struct KeyBindingsScreen KeyBindingsScreen_Instance;
 static void KeyBindingsScreen_GetText(struct KeyBindingsScreen* s, int i, String* text) {
 	Key key = KeyBind_Get(s->Binds[i]);
 	String_Format2(text, "%c: %c", s->Descs[i], Key_Names[key]);
@@ -1910,7 +1910,7 @@ struct Screen* MouseKeyBindingsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------MenuOptionsScreen------------------------------------------------------*
 *#########################################################################################################################*/
-struct MenuOptionsScreen MenuOptionsScreen_Instance;
+static struct MenuOptionsScreen MenuOptionsScreen_Instance;
 static void Menu_GetBool(String* raw, bool v) {
 	String_AppendConst(raw, v ? "ON" : "OFF");
 }
@@ -2965,14 +2965,14 @@ static void WarningOverlay_MakeButtons(void* menu, struct ButtonWidget* btns, bo
 	Menu_Button(s, 7, &btns[3], 160, &alwaysNo,  &s->TitleFont, noClick, 
 		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 85);
 }
-bool WarningOverlay_IsAlways(void* screen, void* w) { return Menu_Index(screen, w) >= 6; }
+static bool WarningOverlay_IsAlways(void* screen, void* w) { return Menu_Index(screen, w) >= 6; }
 
 
 /*########################################################################################################################*
 *------------------------------------------------------TexIdsOverlay------------------------------------------------------*
 *#########################################################################################################################*/
 #define TEXID_OVERLAY_VERTICES_COUNT (ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW * 4)
-struct TexIdsOverlay TexIdsOverlay_Instance;
+static struct TexIdsOverlay TexIdsOverlay_Instance;
 static void TexIdsOverlay_ContextLost(void* screen) {
 	struct TexIdsOverlay* s = screen;
 	Menu_ContextLost(s);
@@ -3124,7 +3124,7 @@ struct Screen* TexIdsOverlay_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------UrlWarningOverlay----------------------------------------------------*
 *#########################################################################################################################*/
-struct UrlWarningOverlay UrlWarningOverlay_Instance;
+static struct UrlWarningOverlay UrlWarningOverlay_Instance;
 static void UrlWarningOverlay_OpenUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = screen;
 	Gui_FreeOverlay(s);
@@ -3175,7 +3175,7 @@ struct Screen* UrlWarningOverlay_MakeInstance(const String* url) {
 /*########################################################################################################################*
 *----------------------------------------------------ConfirmDenyOverlay---------------------------------------------------*
 *#########################################################################################################################*/
-struct ConfirmDenyOverlay ConfirmDenyOverlay_Instance;
+static struct ConfirmDenyOverlay ConfirmDenyOverlay_Instance;
 static void ConfirmDenyOverlay_ConfirmNoClick(void* screen, void* b) {
 	struct ConfirmDenyOverlay* s = screen;
 	String url;
@@ -3242,7 +3242,7 @@ struct Screen* ConfirmDenyOverlay_MakeInstance(const String* url, bool alwaysDen
 /*########################################################################################################################*
 *-----------------------------------------------------TexPackOverlay------------------------------------------------------*
 *#########################################################################################################################*/
-struct TexPackOverlay TexPackOverlay_Instance;
+static struct TexPackOverlay TexPackOverlay_Instance;
 static void TexPackOverlay_YesClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = screen;
 	String url;

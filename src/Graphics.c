@@ -15,10 +15,10 @@
 #define NOMCX
 #define NOIME
 
-int Gfx_strideSizes[2] = { 16, 24 };
-int gfx_batchStride, gfx_batchFormat = -1;
+static int Gfx_strideSizes[2] = { 16, 24 };
+static int gfx_batchStride, gfx_batchFormat = -1;
 
-bool gfx_vsync, gfx_fogEnabled;
+static bool gfx_vsync, gfx_fogEnabled;
 bool Gfx_GetFog(void) { return gfx_fogEnabled; }
 
 /*########################################################################################################################*
@@ -30,14 +30,14 @@ bool Gfx_GetFog(void) { return gfx_fogEnabled; }
 #include <d3d9caps.h>
 #include <d3d9types.h>
 
-D3DCMPFUNC d3d9_compareFuncs[8] = { D3DCMP_ALWAYS, D3DCMP_NOTEQUAL, D3DCMP_NEVER, D3DCMP_LESS, D3DCMP_LESSEQUAL, D3DCMP_EQUAL, D3DCMP_GREATEREQUAL, D3DCMP_GREATER };
-DWORD d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX2 };
+static D3DCMPFUNC d3d9_compareFuncs[8] = { D3DCMP_ALWAYS, D3DCMP_NOTEQUAL, D3DCMP_NEVER, D3DCMP_LESS, D3DCMP_LESSEQUAL, D3DCMP_EQUAL, D3DCMP_GREATEREQUAL, D3DCMP_GREATER };
+static DWORD d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX2 };
 
-IDirect3D9* d3d;
-IDirect3DDevice9* device;
-D3DTRANSFORMSTATETYPE curMatrix;
-DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
-D3DFORMAT d3d9_viewFormat, d3d9_depthFormat;
+static IDirect3D9* d3d;
+static IDirect3DDevice9* device;
+static D3DTRANSFORMSTATETYPE curMatrix;
+static DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+static D3DFORMAT d3d9_viewFormat, d3d9_depthFormat;
 
 #define D3D9_SetRenderState(state, value, name) \
 ReturnCode res = IDirect3DDevice9_SetRenderState(device, state, value); if (res) ErrorHandler_Fail2(res, name);
@@ -303,18 +303,18 @@ void Gfx_DisableMipmaps(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-PackedColUnion d3d9_fogCol;
-float d3d9_fogDensity = -1.0f, d3d9_fogEnd = -1.0f;
-D3DFOGMODE d3d9_fogMode = D3DFOG_NONE;
+static PackedColUnion d3d9_fogCol;
+static float d3d9_fogDensity = -1.0f, d3d9_fogEnd = -1.0f;
+static D3DFOGMODE d3d9_fogMode = D3DFOG_NONE;
 
-bool d3d9_alphaTesting, d3d9_alphaBlending;
-int d3d9_alphaTestRef;
-D3DCMPFUNC d3d9_alphaTestFunc = D3DCMP_ALWAYS;
-D3DBLEND d3d9_srcBlendFunc = D3DBLEND_ONE, d3d9_dstBlendFunc = D3DBLEND_ZERO;
+static bool d3d9_alphaTesting, d3d9_alphaBlending;
+static int d3d9_alphaTestRef;
+static D3DCMPFUNC d3d9_alphaTestFunc = D3DCMP_ALWAYS;
+static D3DBLEND d3d9_srcBlendFunc = D3DBLEND_ONE, d3d9_dstBlendFunc = D3DBLEND_ZERO;
 
-PackedColUnion d3d9_clearCol;
-bool d3d9_depthTesting, d3d9_depthWriting;
-D3DCMPFUNC d3d9_depthTestFunc = D3DCMP_LESSEQUAL;
+static PackedColUnion d3d9_clearCol;
+static bool d3d9_depthTesting, d3d9_depthWriting;
+static D3DCMPFUNC d3d9_depthTestFunc = D3DCMP_LESSEQUAL;
 
 void Gfx_SetFaceCulling(bool enabled) {
 	D3DCULL mode = enabled ? D3DCULL_CW : D3DCULL_NONE;
@@ -702,7 +702,7 @@ const char* D3D9_StrFormat(D3DFORMAT format) {
 	return "(unknown)";
 }
 
-float d3d9_totalMem;
+static float d3d9_totalMem;
 void Gfx_MakeApiInfo(void) {
 	D3DADAPTER_IDENTIFIER9 adapter = { 0 };
 	IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter);
@@ -753,9 +753,9 @@ void Gfx_OnWindowResize(void) {
 #define GL_BGRA_EXT             0x80E1
 
 #ifdef CC_BUILD_GL11
-GfxResourceID gl_activeList;
+static GfxResourceID gl_activeList;
 #define gl_DYNAMICLISTID 1234567891
-void* gl_dynamicListData;
+static void* gl_dynamicListData;
 #else
 /* Weak linked on OSX, so we don't need to use GetProcAddress */
 #ifndef CC_BUILD_OSX
@@ -764,19 +764,19 @@ typedef void (APIENTRY *FUNC_GLDELETEBUFFERS) (GLsizei n, const GLuint *buffers)
 typedef void (APIENTRY *FUNC_GLGENBUFFERS) (GLsizei n, GLuint *buffers);
 typedef void (APIENTRY *FUNC_GLBUFFERDATA) (GLenum target, uintptr_t size, const GLvoid* data, GLenum usage);
 typedef void (APIENTRY *FUNC_GLBUFFERSUBDATA) (GLenum target, uintptr_t offset, uintptr_t size, const GLvoid* data);
-FUNC_GLBINDBUFFER    glBindBuffer;
-FUNC_GLDELETEBUFFERS glDeleteBuffers;
-FUNC_GLGENBUFFERS    glGenBuffers;
-FUNC_GLBUFFERDATA    glBufferData;
-FUNC_GLBUFFERSUBDATA glBufferSubData;
+static FUNC_GLBINDBUFFER    glBindBuffer;
+static FUNC_GLDELETEBUFFERS glDeleteBuffers;
+static FUNC_GLGENBUFFERS    glGenBuffers;
+static FUNC_GLBUFFERDATA    glBufferData;
+static FUNC_GLBUFFERSUBDATA glBufferSubData;
 #endif
 #endif
 
-int gl_compare[8] = { GL_ALWAYS, GL_NOTEQUAL, GL_NEVER, GL_LESS, GL_LEQUAL, GL_EQUAL, GL_GEQUAL, GL_GREATER };
+static int gl_compare[8] = { GL_ALWAYS, GL_NOTEQUAL, GL_NEVER, GL_LESS, GL_LEQUAL, GL_EQUAL, GL_GEQUAL, GL_GREATER };
 typedef void (*GL_SetupVBFunc)(void);
 typedef void (*GL_SetupVBRangeFunc)(int startVertex);
-GL_SetupVBFunc gl_setupVBFunc;
-GL_SetupVBRangeFunc gl_setupVBRangeFunc;
+static GL_SetupVBFunc gl_setupVBFunc;
+static GL_SetupVBRangeFunc gl_setupVBRangeFunc;
 
 #ifndef CC_BUILD_GL11
 static void GL_CheckVboSupport(void) {
@@ -918,10 +918,10 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-PackedCol gl_lastFogCol;
-float gl_lastFogEnd = -1, gl_lastFogDensity = -1;
-int gl_lastFogMode = -1;
-PackedCol gl_lastClearCol;
+static PackedCol gl_lastFogCol;
+static float gl_lastFogEnd = -1, gl_lastFogDensity = -1;
+static int gl_lastFogMode = -1;
+static PackedCol gl_lastClearCol;
 
 void Gfx_SetFog(bool enabled) {
 	gfx_fogEnabled = enabled;
@@ -1210,7 +1210,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	else { GL_DrawDynamicTriangles(verticesCount, 0); }
 }
 
-GfxResourceID gl_lastPartialList;
+static GfxResourceID gl_lastPartialList;
 void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 	/* TODO: This renders the whole map, bad performance!! FIX FIX */
 	if (gl_activeList == gl_lastPartialList) return;
@@ -1223,7 +1223,7 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-int gl_lastMatrixType;
+static int gl_lastMatrixType;
 
 void Gfx_SetMatrixMode(int matrixType) {
 	static GLenum modes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
@@ -1260,7 +1260,7 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 	return res;
 }
 
-bool nv_mem;
+static bool nv_mem;
 void Gfx_MakeApiInfo(void) {
 	static String memExt = String_FromConst("GL_NVX_gpu_memory_info");
 	String extensions    = String_FromReadonly(glGetString(GL_EXTENSIONS));	

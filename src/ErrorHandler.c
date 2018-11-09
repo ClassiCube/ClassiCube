@@ -681,9 +681,9 @@ void ErrorHandler_ShowDialog(const char* title, const char* msg) {
 /*########################################################################################################################*
 *----------------------------------------------------------Common---------------------------------------------------------*
 *#########################################################################################################################*/
-void* logFile;
-struct Stream logStream;
-bool logOpen;
+static void* logFile;
+static struct Stream logStream;
+static bool logOpen;
 
 void ErrorHandler_Log(const String* msg) {
 	static String path = String_FromConst("client.log");

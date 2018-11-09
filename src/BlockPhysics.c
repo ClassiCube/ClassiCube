@@ -83,16 +83,16 @@ static uint32_t TickQueue_Dequeue(struct TickQueue* queue) {
 }
 
 
-typedef void(*PhysicsHandler)(int index, BlockID block);
-PhysicsHandler Physics_OnActivate[BLOCK_COUNT];
-PhysicsHandler Physics_OnRandomTick[BLOCK_COUNT];
-PhysicsHandler Physics_OnPlace[BLOCK_COUNT];
-PhysicsHandler Physics_OnDelete[BLOCK_COUNT];
+typedef void (*PhysicsHandler)(int index, BlockID block);
+static PhysicsHandler Physics_OnActivate[BLOCK_COUNT];
+static PhysicsHandler Physics_OnRandomTick[BLOCK_COUNT];
+static PhysicsHandler Physics_OnPlace[BLOCK_COUNT];
+static PhysicsHandler Physics_OnDelete[BLOCK_COUNT];
 
-RNGState physics_rnd;
-int physics_tickCount;
-int physics_maxWaterX, physics_maxWaterY, physics_maxWaterZ;
-struct TickQueue physics_lavaQ, physics_waterQ;
+static RNGState physics_rnd;
+static int physics_tickCount;
+static int physics_maxWaterX, physics_maxWaterY, physics_maxWaterZ;
+static struct TickQueue physics_lavaQ, physics_waterQ;
 
 #define PHYSICS_DELAY_MASK 0xF8000000UL
 #define PHYSICS_POS_MASK   0x07FFFFFFUL
@@ -472,7 +472,7 @@ static void Physics_HandleCobblestoneSlab(int index, BlockID block) {
 }
 
 
-uint8_t physics_blocksTnt[BLOCK_CPE_COUNT] = {
+static uint8_t physics_blocksTnt[BLOCK_CPE_COUNT] = {
 	0, 1, 0, 0, 1, 0, 0, 1,  1, 1, 1, 1, 0, 0, 1, 1,  1, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0,  0, 1, 1, 1, 1, 1, 0, 0,
 	1, 1, 1, 0, 1, 0, 0, 0,  0, 0, 0, 0, 0, 1, 1, 1,  1, 1,

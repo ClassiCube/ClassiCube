@@ -18,12 +18,12 @@
 #include "Menus.h"
 #include "Gui.h"
 
-bool input_buttonsDown[3];
-int input_pickingId = -1;
-int16_t input_normViewDists[10] = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
-int16_t input_classicViewDists[4] = { 8, 32, 128, 512 };
-TimeMS input_lastClick;
-float input_fovIndex = -1.0f;
+static bool input_buttonsDown[3];
+static int input_pickingId = -1;
+static int16_t input_normViewDists[10] = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+static int16_t input_classicViewDists[4] = { 8, 32, 128, 512 };
+static TimeMS input_lastClick;
+static float input_fovIndex = -1.0f;
 
 bool InputHandler_IsMousePressed(MouseButton button) {
 	if (Mouse_Pressed[button]) return true;

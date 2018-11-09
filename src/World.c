@@ -132,7 +132,7 @@ PackedCol Env_DefaultFogCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
 PackedCol Env_DefaultCloudsCol = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
 PackedCol Env_DefaultSunCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
 PackedCol Env_DefaultShadowCol = PACKEDCOL_CONST(0x9B, 0x9B, 0x9B, 0xFF);
-char World_TextureUrlBuffer[STRING_SIZE];
+static char World_TextureUrlBuffer[STRING_SIZE];
 String World_TextureUrl = String_FromArray(World_TextureUrlBuffer);
 
 void Env_Reset(void) {

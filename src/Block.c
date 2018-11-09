@@ -18,8 +18,8 @@ const char* Sound_Names[SOUND_COUNT] = {
 /*########################################################################################################################*
 *---------------------------------------------------------Block-----------------------------------------------------------*
 *#########################################################################################################################*/
-uint32_t Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
-char Block_NamesBuffer[STRING_SIZE * BLOCK_COUNT];
+static uint32_t Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
+static char Block_NamesBuffer[STRING_SIZE * BLOCK_COUNT];
 #define Block_NamePtr(i) &Block_NamesBuffer[STRING_SIZE * i]
 
 uint8_t Block_TopTex[BLOCK_CPE_COUNT]      = { 0,  1,  0,  2, 16,  4, 15, 17, 14, 14,

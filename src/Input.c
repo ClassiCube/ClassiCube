@@ -109,8 +109,8 @@ void Mouse_SetPosition(int x, int y) {
 /*########################################################################################################################*
 *---------------------------------------------------------Keybinds--------------------------------------------------------*
 *#########################################################################################################################*/
-Key KeyBind_Keys[KeyBind_Count];
-uint8_t KeyBind_Defaults[KeyBind_Count] = {
+static Key KeyBind_Keys[KeyBind_Count];
+static uint8_t KeyBind_Defaults[KeyBind_Count] = {
 	Key_W, Key_S, Key_A, Key_D,
 	Key_Space, Key_R, Key_Enter, Key_T,
 	Key_B, Key_F, Key_Enter, Key_Escape,

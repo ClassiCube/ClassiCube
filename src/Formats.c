@@ -51,7 +51,7 @@ NOINLINE_ IMapImporter Map_FindImporter(const String* path) {
 *#########################################################################################################################*/
 #define LVL_CUSTOMTILE 163
 #define LVL_CHUNKSIZE 16
-const uint8_t Lvl_table[256] = {
+const static uint8_t Lvl_table[256] = {
 	 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
 	16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
 	32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
@@ -421,8 +421,8 @@ static void Cw_Callback_2(struct NbtTag* tag) {
 	if (IsTag(tag, "P")) { p->SpawnHeadX = Math_Deg2Packed(NbtTag_U8(tag)); return; }
 }
 
-BlockID cw_curID;
-int cw_colR, cw_colG, cw_colB;
+static BlockID cw_curID;
+static int cw_colR, cw_colG, cw_colB;
 static PackedCol Cw_ParseCol(PackedCol defValue) {
 	int r = cw_colR, g = cw_colG, b = cw_colB;
 	PackedCol c;
@@ -837,7 +837,7 @@ static int Cw_WriteEndString(uint8_t* data, const String* text) {
 	return len + 1;
 }
 
-uint8_t cw_begin[131] = {
+static uint8_t cw_begin[131] = {
 NBT_DICT, 0,12, 'C','l','a','s','s','i','c','W','o','r','l','d',
 	NBT_I8,   0,13, 'F','o','r','m','a','t','V','e','r','s','i','o','n', 1,
 	NBT_I8S,  0,4,  'U','U','I','D', 0,0,0,16, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -853,7 +853,7 @@ NBT_DICT, 0,12, 'C','l','a','s','s','i','c','W','o','r','l','d',
 	NBT_END,
 	NBT_I8S,  0,10, 'B','l','o','c','k','A','r','r','a','y', 0,0,0,0,
 };
-uint8_t cw_meta_cpe[395] = {
+static uint8_t cw_meta_cpe[395] = {
 	NBT_DICT, 0,8,  'M','e','t','a','d','a','t','a',
 		NBT_DICT, 0,3, 'C','P','E',
 			NBT_DICT, 0,13, 'C','l','i','c','k','D','i','s','t','a','n','c','e',
@@ -884,10 +884,10 @@ uint8_t cw_meta_cpe[395] = {
 				NBT_I16,  0,9,  'S','i','d','e','L','e','v','e','l',     0,0,
 				NBT_STR,  0,10, 'T','e','x','t','u','r','e','U','R','L', 0,0,
 };
-uint8_t cw_meta_defs[19] = {
+static uint8_t cw_meta_defs[19] = {
 			NBT_DICT, 0,16, 'B','l','o','c','k','D','e','f','i','n','i','t','i','o','n','s',
 };
-uint8_t cw_meta_def[173] = {
+static uint8_t cw_meta_def[173] = {
 				NBT_DICT, 0,7,  'B','l','o','c','k','\0','\0',
 					NBT_I8,  0,2,  'I','D',                              0,
 					NBT_I8,  0,11, 'C','o','l','l','i','d','e','T','y','p','e', 0,
@@ -902,7 +902,7 @@ uint8_t cw_meta_def[173] = {
 					NBT_I8S, 0,6,  'C','o','o','r','d','s',              0,0,0,6, 0,0,0,0,0,0,
 					NBT_STR, 0,4,  'N','a','m','e',                      0,0,
 };
-uint8_t cw_end[4] = {
+static uint8_t cw_end[4] = {
 			NBT_END,
 		NBT_END,
 	NBT_END,
@@ -1015,7 +1015,7 @@ ReturnCode Cw_Save(struct Stream* stream) {
 *---------------------------------------------------Schematic export------------------------------------------------------*
 *#########################################################################################################################*/
 
-uint8_t sc_begin[78] = {
+static uint8_t sc_begin[78] = {
 NBT_DICT, 0,9, 'S','c','h','e','m','a','t','i','c',
 	NBT_STR,  0,9,  'M','a','t','e','r','i','a','l','s', 0,7, 'C','l','a','s','s','i','c',
 	NBT_I16,  0,5,  'W','i','d','t','h',                 0,0,
@@ -1023,10 +1023,10 @@ NBT_DICT, 0,9, 'S','c','h','e','m','a','t','i','c',
 	NBT_I16,  0,6,  'L','e','n','g','t','h',             0,0,
 	NBT_I8S,  0,6,  'B','l','o','c','k','s',             0,0,0,0,
 };
-uint8_t sc_data[11] = {
+static uint8_t sc_data[11] = {
 	NBT_I8S,  0,4,  'D','a','t','a',                     0,0,0,0,
 };
-uint8_t sc_end[37] = {
+static uint8_t sc_end[37] = {
 	NBT_LIST, 0,8,  'E','n','t','i','t','i','e','s',                 NBT_DICT, 0,0,0,0,
 	NBT_LIST, 0,12, 'T','i','l','e','E','n','t','i','t','i','e','s', NBT_DICT, 0,0,0,0,
 NBT_END,

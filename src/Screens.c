@@ -261,7 +261,7 @@ struct Screen* InventoryScreen_UNSAFE_RawPointer = (struct Screen*)&InventoryScr
 /*########################################################################################################################*
 *-------------------------------------------------------StatusScreen------------------------------------------------------*
 *#########################################################################################################################*/
-struct StatusScreen StatusScreen_Instance;
+static struct StatusScreen StatusScreen_Instance;
 static void StatusScreen_MakeText(struct StatusScreen* s, String* status) {
 	int indices, ping;
 	s->FPS = (int)(s->Frames / s->Accumulator);
@@ -448,7 +448,7 @@ void StatusScreen_MakeComponent(struct IGameComponent* comp) {
 /*########################################################################################################################*
 *------------------------------------------------------LoadingScreen------------------------------------------------------*
 *#########################################################################################################################*/
-struct LoadingScreen LoadingScreen_Instance;
+static struct LoadingScreen LoadingScreen_Instance;
 static void LoadingScreen_SetTitle(struct LoadingScreen* s) {
 	Elem_TryFree(&s->Title);
 	TextWidget_Create(&s->Title, &s->TitleStr, &s->Font);
@@ -690,10 +690,10 @@ struct Screen* GeneratingScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------ChatScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-struct ChatScreen ChatScreen_Instance;
+static struct ChatScreen ChatScreen_Instance;
 /* needed for lost contexts, to restore chat typed in */
-char ChatScreen_InputBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];
-String ChatScreen_InputStr = String_FromArray(ChatScreen_InputBuffer);
+static char ChatScreen_InputBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];
+static String ChatScreen_InputStr = String_FromArray(ChatScreen_InputBuffer);
 
 static int ChatScreen_BottomOffset(void) { return ((struct HUDScreen*)Gui_HUD)->Hotbar.Height; }
 static int ChatScreen_InputUsedHeight(struct ChatScreen* s) {
@@ -1189,7 +1189,7 @@ struct Screen* ChatScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------HUDScreen--------------------------------------------------------*
 *#########################################################################################################################*/
-struct HUDScreen HUDScreen_Instance;
+static struct HUDScreen HUDScreen_Instance;
 #define CH_EXTENT 16
 
 static void HUDScreen_DrawCrosshairs(void) {
@@ -1393,7 +1393,7 @@ struct Widget* HUDScreen_GetHotbar(struct Screen* hud) {
 /*########################################################################################################################*
 *----------------------------------------------------DisconnectScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-struct DisconnectScreen DisconnectScreen_Instance;
+static struct DisconnectScreen DisconnectScreen_Instance;
 #define DISCONNECT_DELAY_MS 5000
 static void DisconnectScreen_ReconnectMessage(struct DisconnectScreen* s, String* msg) {
 	if (s->CanReconnect) {

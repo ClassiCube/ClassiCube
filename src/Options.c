@@ -9,7 +9,7 @@
 const char* FpsLimit_Names[FPS_LIMIT_COUNT] = {
 	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "LimitNone",
 };
-StringsBuffer Options_Changed;
+static StringsBuffer Options_Changed;
 
 bool Options_HasAnyChanged(void) { return Options_Changed.Count > 0;  }
 

@@ -21,7 +21,7 @@
 
 #define Widget_UV(u1,v1, u2,v2) u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f
 static void Widget_NullFunc(void* widget) { }
-Size2D Size2D_Empty;
+static Size2D Size2D_Empty;
 
 static bool Widget_Mouse(void* elem, int x, int y, MouseButton btn) { return false; }
 static bool Widget_Key(void* elem, Key key) { return false; }
@@ -97,9 +97,9 @@ void TextWidget_Set(struct TextWidget* w, const String* text, const FontDesc* fo
 #define BUTTON_uWIDTH (200.0f / 256.0f)
 #define BUTTON_MIN_WIDTH 40
 
-struct Texture Button_ShadowTex   = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,66, 200,86)  };
-struct Texture Button_SelectedTex = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,86, 200,106) };
-struct Texture Button_DisabledTex = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,46, 200,66)  };
+static struct Texture Button_ShadowTex   = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,66, 200,86)  };
+static struct Texture Button_SelectedTex = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,86, 200,106) };
+static struct Texture Button_DisabledTex = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,46, 200,66)  };
 
 static void ButtonWidget_Free(void* widget) {
 	struct ButtonWidget* w = widget;
@@ -197,9 +197,9 @@ void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc
 #define SCROLL_WIDTH 22
 #define SCROLL_BORDER 2
 #define SCROLL_NUBS_WIDTH 3
-PackedCol Scroll_BackCol  = PACKEDCOL_CONST( 10,  10,  10, 220);
-PackedCol Scroll_BarCol   = PACKEDCOL_CONST(100, 100, 100, 220);
-PackedCol Scroll_HoverCol = PACKEDCOL_CONST(122, 122, 122, 220);
+static PackedCol Scroll_BackCol  = PACKEDCOL_CONST( 10,  10,  10, 220);
+static PackedCol Scroll_BarCol   = PACKEDCOL_CONST(100, 100, 100, 220);
+static PackedCol Scroll_HoverCol = PACKEDCOL_CONST(122, 122, 122, 220);
 
 static void ScrollbarWidget_ClampScrollY(struct ScrollbarWidget* w) {
 	int maxRows = w->TotalRows - TABLE_MAX_ROWS_DISPLAYED;

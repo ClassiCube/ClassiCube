@@ -37,20 +37,20 @@
 #include "Stream.h"
 #include "Bitmap.h"
 
-struct IGameComponent Game_Components[26];
-int Game_ComponentsCount;
-struct ScheduledTask Game_Tasks[6];
-int Game_TasksCount, entTaskI;
+static struct IGameComponent Game_Components[26];
+static int Game_ComponentsCount;
+static struct ScheduledTask Game_Tasks[6];
+static int Game_TasksCount, entTaskI;
 
-char Game_UsernameBuffer[FILENAME_SIZE];
-String Game_Username = String_FromArray(Game_UsernameBuffer);
-char Game_MppassBuffer[STRING_SIZE];
-String Game_Mppass = String_FromArray(Game_MppassBuffer);
+static char Game_UsernameBuffer[FILENAME_SIZE];
+static char Game_MppassBuffer[STRING_SIZE];
+static char Game_IPAddressBuffer[STRING_SIZE];
+static char Game_FontNameBuffer[STRING_SIZE];
 
-char Game_IPAddressBuffer[STRING_SIZE];
+String Game_Username  = String_FromArray(Game_UsernameBuffer);
+String Game_Mppass    = String_FromArray(Game_MppassBuffer);
 String Game_IPAddress = String_FromArray(Game_IPAddressBuffer);
-char Game_FontNameBuffer[STRING_SIZE];
-String Game_FontName = String_FromArray(Game_FontNameBuffer);
+String Game_FontName  = String_FromArray(Game_FontNameBuffer);
 
 void Game_AddComponent(struct IGameComponent* comp) {
 	if (Game_ComponentsCount == Array_Elems(Game_Components)) {
@@ -101,8 +101,8 @@ float Game_GetChatScale(void) {
 	return Game_Scale(Game_GetWindowScale() * Game_RawChatScale);
 }
 
-char game_defTexPackBuffer[STRING_SIZE];
-String game_defTexPack = String_FromArray(game_defTexPackBuffer);
+static char game_defTexPackBuffer[STRING_SIZE];
+static String game_defTexPack = String_FromArray(game_defTexPackBuffer);
 
 void Game_GetDefaultTexturePack(String* texPack) {
 	String texPath; char texPathBuffer[STRING_SIZE];

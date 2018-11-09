@@ -269,7 +269,7 @@ void Matrix_LookRot(struct Matrix* result, Vector3 pos, Vector2 rot) {
 	Matrix_Mul(result, &trans, result);
 }
 
-float
+static float
 frustum00, frustum01, frustum02, frustum03,
 frustum10, frustum11, frustum12, frustum13,
 frustum20, frustum21, frustum22, frustum23,

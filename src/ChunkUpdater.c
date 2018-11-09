@@ -15,8 +15,8 @@
 #include "ErrorHandler.h"
 #include "Camera.h"
 
-Vector3I ChunkUpdater_ChunkPos;
-uint32_t* ChunkUpdater_Distances;
+static Vector3I ChunkUpdater_ChunkPos;
+static uint32_t* ChunkUpdater_Distances;
 
 void ChunkInfo_Reset(struct ChunkInfo* chunk, int x, int y, int z) {
 	chunk->CentreX = x + 8; chunk->CentreY = y + 8; chunk->CentreZ = z + 8;
@@ -33,11 +33,11 @@ void ChunkInfo_Reset(struct ChunkInfo* chunk, int x, int y, int z) {
 	chunk->TranslucentParts = NULL;
 }
 
-int cu_chunksTarget = 12;
+static int cu_chunksTarget = 12;
 #define cu_targetTime ((1.0 / 30) + 0.01)
-Vector3 cu_lastCamPos;
-float cu_lastHeadY, cu_lastHeadX;
-int cu_elementsPerBitmap;
+static Vector3 cu_lastCamPos;
+static float cu_lastHeadY, cu_lastHeadX;
+static int cu_elementsPerBitmap;
 
 static void ChunkUpdater_EnvVariableChanged(void* obj, int envVar) {
 	if (envVar == ENV_VAR_SUN_COL || envVar == ENV_VAR_SHADOW_COL) {

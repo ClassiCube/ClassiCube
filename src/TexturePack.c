@@ -285,7 +285,7 @@ static void EntryList_UNSAFE_Make(struct EntryList* list, STRING_REF const char*
 #define TEXCACHE_FOLDER "texturecache"
 /* Because I didn't store milliseconds in original C# client */
 #define TEXCACHE_TICKS_PER_MS 10000
-struct EntryList cache_accepted, cache_denied, cache_eTags, cache_lastModified;
+static struct EntryList cache_accepted, cache_denied, cache_eTags, cache_lastModified;
 
 #define TexCache_InitAndMakePath(url) char pathBuffer[FILENAME_SIZE]; \
 String path = String_FromArray(pathBuffer); \

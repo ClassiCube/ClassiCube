@@ -8,7 +8,7 @@
 #include "Event.h"
 #include "Entity.h"
 
-GfxResourceID axisLines_vb;
+static GfxResourceID axisLines_vb;
 #define AXISLINES_NUM_VERTICES 12
 #define AXISLINES_THICKNESS (1.0f / 32.0f)
 #define AXISLINES_LENGTH 3.0f

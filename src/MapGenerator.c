@@ -5,7 +5,7 @@
 #include "Funcs.h"
 #include "Platform.h"
 
-int Gen_MaxX, Gen_MaxY, Gen_MaxZ, Gen_Volume, Gen_OneY;
+static int Gen_MaxX, Gen_MaxY, Gen_MaxZ, Gen_Volume, Gen_OneY;
 #define Gen_Pack(x, y, z) (((y) * Gen_Length + (z)) * Gen_Width + (x))
 
 static void Gen_Init(void) {
@@ -58,9 +58,9 @@ void FlatgrassGen_Generate(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Notchy map gen-------------------------------------------------------*
 *#########################################################################################################################*/
-int waterLevel, minHeight;
-int16_t* Heightmap;
-RNGState rnd;
+static int waterLevel, minHeight;
+static int16_t* Heightmap;
+static RNGState rnd;
 
 static void NotchyGen_FillOblateSpheroid(int x, int y, int z, float radius, BlockRaw block) {
 	int xBeg = Math_Floor(max(x - radius, 0));

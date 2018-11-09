@@ -9,9 +9,9 @@
 #include "Funcs.h"
 #include "Camera.h"
 
-GfxResourceID pickedPos_vb;
+static GfxResourceID pickedPos_vb;
 #define PICKEDPOS_NUM_VERTICES (16 * 6)
-VertexP3fC4b pickedPos_vertices[PICKEDPOS_NUM_VERTICES];
+static VertexP3fC4b pickedPos_vertices[PICKEDPOS_NUM_VERTICES];
 
 static void PickedPosRenderer_ContextLost(void* obj) {
 	Gfx_DeleteVb(&pickedPos_vb);
