@@ -1,5 +1,5 @@
 CC=gcc
-LIBS=-lGL -lcurl -lopenal -lpthread -lX11 -lm
+LIBS=-lGL -lcurl -lopenal -lpthread -lX11 -lm -ldl
 CFLAGS=-g -w -no-pie -rdynamic
 SOURCES=$(wildcard *.c)
 OBJECTS=$(patsubst %.c, %.o, $(SOURCES))

@@ -62,6 +62,7 @@ ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <dirent.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <dlfcn.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -1902,7 +1903,7 @@ ReturnCode Platform_LoadLibrary(const String* path, void** lib) {
 }
 
 ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol) {
-	*symbol = GetProcAddress(lib, symbol);
+	*symbol = GetProcAddress(lib, name);
 	return Win_Return(*symbol);
 }
 #endif
