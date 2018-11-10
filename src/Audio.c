@@ -344,7 +344,6 @@ void Audio_PlayStepSound(uint8_t type) { Sounds_Play(type, &stepBoard); }
 *--------------------------------------------------------Music------------------------------------------------------------*
 *#########################################################################################################################*/
 static AudioHandle music_out;
-static StringsBuffer music_files;
 static void* music_thread;
 static void* music_waitable;
 static volatile bool music_pendingStop, music_joining;

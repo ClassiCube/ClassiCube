@@ -60,8 +60,14 @@ void Platform_SetWorkingDir(void);
 void Platform_Exit(ReturnCode code);
 /* Gets the command line arguments passed to the program. */
 int  Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args);
+
 /* Starts the platform's shell with the given arguments. (e.g. open http:// url in web browser) */
 CC_EXPORT ReturnCode Platform_StartShell(const String* args);
+/* Attempts to load the native dynamic library from the given path. */
+CC_EXPORT ReturnCode Platform_LoadLibrary(const String* path, void** lib);
+/* Attempts to get the address of the symbol in the given dynamic library. */
+/* NOTE: Do NOT use this to load OpenGL functions, use GLContext_GetAddress. */
+CC_EXPORT ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol);
 
 /* Allocates a block of memory, with undetermined contents. Exits process on allocation failure. */
 CC_EXPORT void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place);

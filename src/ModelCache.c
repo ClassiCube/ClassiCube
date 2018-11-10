@@ -1057,8 +1057,6 @@ static struct Model* SpiderModel_GetInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------ZombieModel------------------------------------------------------*
 *#########################################################################################################################*/
-static struct ModelPart Zombie_Head, Zombie_Hat, Zombie_Torso, Zombie_LeftLeg;
-static struct ModelPart Zombie_RightLeg, Zombie_LeftArm, Zombie_RightArm;
 static struct Model ZombieModel;
 
 static void ZombieModel_CreateParts(void) { }
@@ -1081,7 +1079,7 @@ static void ZombieModel_DrawModel(struct Entity* entity) {
 }
 
 static void ZombieModel_DrawArm(struct Entity* entity) {
-	Model_DrawArmPart(&Zombie_RightArm);
+	Model_DrawArmPart(&Human_Set.Limbs[0].RightArm);
 	Model_UpdateVB();
 }
 

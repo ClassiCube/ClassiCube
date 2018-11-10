@@ -4,7 +4,7 @@ Install appropriate libs as required. Build steps are still WIP, but current way
 
 Compiling for linux: 
 
-```gcc *.c -o ClassiCube -lX11 -lpthread -lGL -lm -lcurl -lopenal```
+```gcc *.c -o ClassiCube -lX11 -lpthread -lGL -lm -lcurl -lopenal -ldl```
 
 Cross compiling for windows:
 

@@ -23,6 +23,11 @@ static void Platform_InitStopwatch(void);
 #define _WIN32_IE    0x0400
 #define WINVER       0x0500
 #define _WIN32_WINNT 0x0500
+#ifndef UNICODE
+#define UNICODE
+#define _UNICODE
+#endif
+
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -360,35 +365,35 @@ uint64_t Stopwatch_Measure(void) {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WIN
 bool Directory_Exists(const String* path) {
-	WCHAR str[300];
+	TCHAR str[300];
 	DWORD attribs;
 
 	Platform_ConvertString(str, path);
-	attribs = GetFileAttributesW(str);
+	attribs = GetFileAttributes(str);
 	return attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 ReturnCode Directory_Create(const String* path) {
-	WCHAR str[300];
+	TCHAR str[300];
 	BOOL success;
 
 	Platform_ConvertString(str, path);
-	success = CreateDirectoryW(str, NULL);
+	success = CreateDirectory(str, NULL);
 	return Win_Return(success);
 }
 
 bool File_Exists(const String* path) {
-	WCHAR str[300];
+	TCHAR str[300];
 	DWORD attribs;
 
 	Platform_ConvertString(str, path);
-	attribs = GetFileAttributesW(str);
+	attribs = GetFileAttributes(str);
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
-	WCHAR str[300];
-	WIN32_FIND_DATAW entry;
+	TCHAR str[300];
+	WIN32_FIND_DATA entry;
 	HANDLE find;
 	ReturnCode res;
 	String path; char pathBuffer[MAX_PATH + 10];
@@ -398,7 +403,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	String_Format1(&path, "%s\\*", dirPath);
 	Platform_ConvertString(str, &path);
 	
-	find = FindFirstFileW(str, &entry);
+	find = FindFirstFile(str, &entry);
 	if (find == INVALID_HANDLE_VALUE) return GetLastError();
 
 	do {
@@ -406,7 +411,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 		String_Format2(&path, "%s%r", dirPath, &Directory_Separator);
 
 		/* ignore . and .. entry */
-		WCHAR* src = entry.cFileName;
+		TCHAR* src = entry.cFileName;
 		if (src[0] == '.' && src[1] == '\0') continue;
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 
@@ -421,7 +426,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 		} else {
 			callback(&path, obj);
 		}
-	}  while (FindNextFileW(find, &entry));
+	}  while (FindNextFile(find, &entry));
 
 	res = GetLastError(); /* return code from FindNextFile */
 	FindClose(find);
@@ -446,9 +451,9 @@ ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* time) {
 }
 
 ReturnCode File_Do(void** file, const String* path, DWORD access, DWORD createMode) {
-	WCHAR str[300]; 
+	TCHAR str[300]; 
 	Platform_ConvertString(str, path);
-	*file = CreateFileW(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
+	*file = CreateFile(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return Win_Return(*file != INVALID_HANDLE_VALUE);
 }
 
@@ -667,7 +672,7 @@ void Mutex_Lock(void* handle)   { EnterCriticalSection((CRITICAL_SECTION*)handle
 void Mutex_Unlock(void* handle) { LeaveCriticalSection((CRITICAL_SECTION*)handle); }
 
 void* Waitable_Create(void) {
-	void* handle = CreateEventW(NULL, false, false, NULL);
+	void* handle = CreateEvent(NULL, false, false, NULL);
 	if (!handle) {
 		ErrorHandler_Fail2(GetLastError(), "Creating waitable");
 	}
@@ -1775,7 +1780,7 @@ ReturnCode Audio_StopAndFree(AudioHandle handle) {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WIN
 int Platform_ConvertString(void* data, const String* src) {
-	WCHAR* dst = data;
+	TCHAR* dst = data;
 	int i;
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
 
@@ -1826,8 +1831,8 @@ static void Platform_InitStopwatch(void) {
 }
 
 void Platform_SetWorkingDir(void) {
-	WCHAR dirName[FILENAME_SIZE + 1];
-	DWORD len = GetModuleFileNameW(NULL, dirName, FILENAME_SIZE);
+	TCHAR dirName[FILENAME_SIZE + 1];
+	DWORD len = GetModuleFileName(NULL, dirName, FILENAME_SIZE);
 	if (!len) return;
 
 	/* get rid of filename at end of directory */
@@ -1836,18 +1841,10 @@ void Platform_SetWorkingDir(void) {
 	}
 
 	dirName[len] = '\0';
-	SetCurrentDirectoryW(dirName);
+	SetCurrentDirectory(dirName);
 }
 
 void Platform_Exit(ReturnCode code) { ExitProcess(code); }
-
-ReturnCode Platform_StartShell(const String* args) {
-	WCHAR str[300];
-	HINSTANCE instance;
-	Platform_ConvertString(str, args);
-	instance = ShellExecuteW(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
-	return instance > 32 ? 0 : (ReturnCode)instance;
-}
 
 static String Platform_NextArg(STRING_REF String* args) {
 	String arg;
@@ -1887,6 +1884,26 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 		if (!args[i].length) break;
 	}
 	return i;
+}
+
+ReturnCode Platform_StartShell(const String* args) {
+	TCHAR str[300];
+	HINSTANCE instance;
+	Platform_ConvertString(str, args);
+	instance = ShellExecute(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
+	return instance > 32 ? 0 : (ReturnCode)instance;
+}
+
+ReturnCode Platform_LoadLibrary(const String* path, void** lib) {
+	TCHAR str[300];
+	Platform_ConvertString(str, path);
+	*lib = LoadLibrary(str);
+	return Win_Return(*lib);
+}
+
+ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol) {
+	*symbol = GetProcAddress(lib, symbol);
+	return Win_Return(*symbol);
 }
 #endif
 #ifdef CC_BUILD_POSIX
@@ -1933,7 +1950,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 }
 
 static ReturnCode Platform_RunOpen(const char* format, const String* args) {
-	char str[300];
+	char str[600];
 	FILE* fp;
 	String path; char pathBuffer[FILENAME_SIZE + 10];
 
@@ -1952,6 +1969,18 @@ static void Platform_TrimFilename(char* path, int len) {
 		if (path[len] == '/' || path[len] == '\\') break;
 		path[len] = '\0';
 	}
+}
+
+ReturnCode Platform_LoadLibrary(const String* path, void** lib) {
+	char str[600];
+	Platform_ConvertString(str, path);
+	*lib = dlopen(str, RTLD_NOW);
+	return *lib == NULL;
+}
+
+ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol) {
+	*symbol = dlsym(lib, name);
+	return *symbol == NULL; /* dlerror would be proper, but eh */
 }
 #endif
 #ifdef CC_BUILD_X11

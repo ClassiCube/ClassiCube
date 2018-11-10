@@ -12,10 +12,14 @@
 #define _WIN32_IE    0x0400
 #define WINVER       0x0500
 #define _WIN32_WINNT 0x0500
+#ifndef UNICODE
+#define UNICODE
+#define _UNICODE
+#endif
 #include <windows.h>
 
 #define win_Style WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
-#define win_ClassName L"ClassiCube_Window"
+#define win_ClassName TEXT("ClassiCube_Window")
 #define Rect_Width(rect)  (rect.right  - rect.left)
 #define Rect_Height(rect) (rect.bottom - rect.top)
 
@@ -135,7 +139,7 @@ static void Window_DoSetHiddenBorder(bool value) {
 	/* This avoids leaving garbage on the background window. */
 	if (was_visible) Window_SetVisible(false);
 
-	SetWindowLongW(win_handle, GWL_STYLE, style);
+	SetWindowLong(win_handle, GWL_STYLE, style);
 	SetWindowPos(win_handle, NULL, 0, 0, Rect_Width(rect), Rect_Height(rect),
 		SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
@@ -375,12 +379,12 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_DESTROY:
 		Window_Exists = false;
-		UnregisterClassW(win_ClassName, win_instance);
+		UnregisterClass(win_ClassName, win_instance);
 		if (win_DC) ReleaseDC(win_handle, win_DC);
 		Event_RaiseVoid(&WindowEvents_Closed);
 		break;
 	}
-	return DefWindowProcW(handle, message, wParam, lParam);
+	return DefWindowProc(handle, message, wParam, lParam);
 }
 
 
@@ -388,26 +392,26 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
-	win_instance = GetModuleHandleW(NULL);
+	win_instance = GetModuleHandle(NULL);
 	/* TODO: UngroupFromTaskbar(); */
 
 	/* Find out the final window rectangle, after the WM has added its chrome (titlebar, sidebars etc). */
 	RECT rect = { x, y, x + width, y + height };
 	AdjustWindowRect(&rect, win_Style, false);
 
-	WNDCLASSEXW wc = { 0 };
-	wc.cbSize    = sizeof(WNDCLASSEXW);
+	WNDCLASSEX wc = { 0 };
+	wc.cbSize    = sizeof(WNDCLASSEX);
 	wc.style     = CS_OWNDC;
 	wc.hInstance = win_instance;
 	wc.lpfnWndProc   = Window_Procedure;
 	wc.lpszClassName = win_ClassName;
 	/* TODO: Set window icons here */
-	wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
+	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 
-	ATOM atom = RegisterClassExW(&wc);
+	ATOM atom = RegisterClassEx(&wc);
 	if (!atom) ErrorHandler_Fail2(GetLastError(), "Failed to register window class");
 
-	win_handle = CreateWindowExW(0, atom, NULL, win_Style,
+	win_handle = CreateWindowEx(0, atom, NULL, win_Style,
 		rect.left, rect.top, Rect_Width(rect), Rect_Height(rect),
 		NULL, NULL, win_instance, NULL);
 	if (!win_handle) ErrorHandler_Fail2(GetLastError(), "Failed to create window");
@@ -418,9 +422,9 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 }
 
 void Window_SetTitle(const String* title) {
-	WCHAR str[300]; 
+	TCHAR str[300]; 
 	Platform_ConvertString(str, title);
-	SetWindowTextW(win_handle, str);
+	SetWindowText(win_handle, str);
 }
 
 void Window_GetClipboardText(String* value) {
@@ -503,7 +507,7 @@ void Window_SetSize(int width, int height) {
 }
 
 void Window_SetClientSize(int width, int height) {
-	DWORD style = GetWindowLongW(win_handle, GWL_STYLE);
+	DWORD style = GetWindowLong(win_handle, GWL_STYLE);
 	RECT rect = { 0, 0, width, height };
 
 	AdjustWindowRect(&rect, style, false);
@@ -527,7 +531,7 @@ void Window_SetVisible(bool visible) {
 
 
 void Window_Close(void) {
-	PostMessageW(win_handle, WM_CLOSE, 0, 0);
+	PostMessage(win_handle, WM_CLOSE, 0, 0);
 }
 
 int Window_GetWindowState(void) { return win_state; }
@@ -601,9 +605,9 @@ Point2D Window_PointToScreen(int x, int y) {
 
 void Window_ProcessEvents(void) {
 	MSG msg;
-	while (PeekMessageW(&msg, NULL, 0, 0, 1)) {
+	while (PeekMessage(&msg, NULL, 0, 0, 1)) {
 		TranslateMessage(&msg);
-		DispatchMessageW(&msg);
+		DispatchMessage(&msg);
 	}
 
 	HWND foreground = GetForegroundWindow();

@@ -170,7 +170,6 @@ void Env_SetEdgeBlock(BlockID block) {
 	if (block == 255 && !Block_IsCustomDefined(255)) block = BLOCK_STILL_WATER; 
 	Env_Set(block, Env_EdgeBlock, ENV_VAR_EDGE_BLOCK);
 }
-
 void Env_SetSidesBlock(BlockID block) {
 	/* some server software wrongly uses this value */
 	if (block == 255 && !Block_IsCustomDefined(255)) block = BLOCK_BEDROCK;
@@ -180,53 +179,41 @@ void Env_SetSidesBlock(BlockID block) {
 void Env_SetEdgeHeight(int height) {
 	Env_Set(height, Env_EdgeHeight, ENV_VAR_EDGE_HEIGHT);
 }
-
 void Env_SetSidesOffset(int offset) {
 	Env_Set(offset, Env_SidesOffset, ENV_VAR_SIDES_OFFSET);
 }
-
 void Env_SetCloudsHeight(int height) {
 	Env_Set(height, Env_CloudsHeight, ENV_VAR_CLOUDS_HEIGHT);
 }
-
 void Env_SetCloudsSpeed(float speed) {
 	Env_Set(speed, Env_CloudsSpeed, ENV_VAR_CLOUDS_SPEED);
 }
 
-
 void Env_SetWeatherSpeed(float speed) {
 	Env_Set(speed, Env_WeatherSpeed, ENV_VAR_WEATHER_SPEED);
 }
-
 void Env_SetWeatherFade(float rate) {
 	Env_Set(rate, Env_WeatherFade, ENV_VAR_WEATHER_FADE);
 }
-
 void Env_SetWeather(int weather) {
 	Env_Set(weather, Env_Weather, ENV_VAR_WEATHER);
 }
-
 void Env_SetExpFog(bool expFog) {
 	Env_Set(expFog, Env_ExpFog, ENV_VAR_EXP_FOG);
 }
-
 void Env_SetSkyboxHorSpeed(float speed) {
 	Env_Set(speed, Env_SkyboxHorSpeed, ENV_VAR_SKYBOX_HOR_SPEED);
 }
-
 void Env_SetSkyboxVerSpeed(float speed) {
 	Env_Set(speed, Env_SkyboxVerSpeed, ENV_VAR_SKYBOX_VER_SPEED);
 }
 
-
 void Env_SetSkyCol(PackedCol col) {
 	Env_SetCol(col, Env_SkyCol, ENV_VAR_SKY_COL);
 }
-
 void Env_SetFogCol(PackedCol col) {
 	Env_SetCol(col, Env_FogCol, ENV_VAR_FOG_COL);
 }
-
 void Env_SetCloudsCol(PackedCol col) {
 	Env_SetCol(col, Env_CloudsCol, ENV_VAR_CLOUDS_COL);
 }
@@ -235,7 +222,6 @@ void Env_SetSunCol(PackedCol col) {
 	PackedCol_GetShaded(col, &Env_SunXSide, &Env_SunZSide, &Env_SunYMin);
 	Env_SetCol(col, Env_SunCol, ENV_VAR_SUN_COL);
 }
-
 void Env_SetShadowCol(PackedCol col) {
 	PackedCol_GetShaded(col, &Env_ShadowXSide, &Env_ShadowZSide, &Env_ShadowYMin);
 	Env_SetCol(col, Env_ShadowCol, ENV_VAR_SHADOW_COL);

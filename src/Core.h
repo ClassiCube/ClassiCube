@@ -14,22 +14,26 @@ typedef unsigned __int64 uintptr_t;
 #else
 typedef unsigned int     uintptr_t;
 #endif
-
 typedef signed __int8  int8_t;
 typedef signed __int16 int16_t;
 typedef signed __int32 int32_t;
 typedef signed __int64 int64_t;
+
 #define CC_NOINLINE __declspec(noinline)
 #define CC_ALIGN_HINT(x) /* TODO: Why does this cause LNK2005 errors */
+#ifndef CC_EXPORT
 #define CC_EXPORT __declspec(dllexport, noinline)
+#endif
 #elif __GNUC__
 #include <stdint.h>
 #define CC_NOINLINE __attribute__((noinline))
 #define CC_ALIGN_HINT(x) __attribute__((aligned(x)))
+#ifndef CC_EXPORT
 #ifdef _WIN32
 #define CC_EXPORT __attribute__((dllexport, noinline))
 #else
 #define CC_EXPORT __attribute__((visibility("default"), noinline))
+#endif
 #endif
 #else
 #error "I don't recognise this compiler. You'll need to add required definitions in Core.h!"
