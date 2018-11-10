@@ -92,7 +92,7 @@ namespace Launcher.Gui.Screens {
 			MouseButtonDown(x, y, btn);
 		}
 		
-		void MouseMove(int deltaX, int deltaY) { 
+		internal void MouseMove(int deltaX, int deltaY) { 
 			int x = Mouse.X, y = Mouse.Y;
 			MouseMove(x, y, deltaX, deltaY); 
 		}

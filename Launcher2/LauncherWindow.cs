@@ -125,6 +125,8 @@ namespace Launcher {
 			RedrawBackground();
 			Screen = screen;
 			screen.Init();
+			// for selecting active button etc
+			Screen.MouseMove(0, 0);
 		}
 		
 		public bool ConnectToServer(List<ServerListEntry> publicServers, string hash) {

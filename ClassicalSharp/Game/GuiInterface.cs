@@ -5,6 +5,7 @@ using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui;
 using ClassicalSharp.Gui.Screens;
 using ClassicalSharp.Renderers;
+using OpenTK.Input;
 
 namespace ClassicalSharp {
 
@@ -83,7 +84,11 @@ namespace ClassicalSharp {
 			if (activeScreen != null && disposeOld)
 				activeScreen.Dispose();
 			
-			if (screen != null) screen.Init();
+			if (screen != null) {
+				screen.Init();
+				// for selecting active button etc
+				screen.HandlesMouseMove(Mouse.X, Mouse.Y);
+			}
 			activeScreen = screen;
 			CalcCursorVisible();
 		}
