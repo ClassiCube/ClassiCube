@@ -149,15 +149,6 @@ void Env_Reset(void) {
 	Env_SkyboxHorSpeed = 0.0f;
 	Env_SkyboxVerSpeed = 0.0f;
 
-	Env_ResetLight();
-	Env_SkyCol    = Env_DefaultSkyCol;
-	Env_FogCol    = Env_DefaultFogCol;
-	Env_CloudsCol = Env_DefaultCloudsCol;
-	Env_Weather = WEATHER_SUNNY;
-	Env_ExpFog = false;
-}
-
-void Env_ResetLight(void) {
 	Env_ShadowCol = Env_DefaultShadowCol;
 	PackedCol_GetShaded(Env_ShadowCol, &Env_ShadowXSide,
 		&Env_ShadowZSide, &Env_ShadowYMin);
@@ -165,6 +156,12 @@ void Env_ResetLight(void) {
 	Env_SunCol = Env_DefaultSunCol;
 	PackedCol_GetShaded(Env_SunCol, &Env_SunXSide,
 		&Env_SunZSide, &Env_SunYMin);
+
+	Env_SkyCol    = Env_DefaultSkyCol;
+	Env_FogCol    = Env_DefaultFogCol;
+	Env_CloudsCol = Env_DefaultCloudsCol;
+	Env_Weather = WEATHER_SUNNY;
+	Env_ExpFog = false;
 }
 
 

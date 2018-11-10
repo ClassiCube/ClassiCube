@@ -541,7 +541,7 @@ static bool ListScreen_MouseScroll(void* screen, float delta) {
 	return true;
 }
 
-struct ScreenVTABLE ListScreen_VTABLE = {
+static struct ScreenVTABLE ListScreen_VTABLE = {
 	ListScreen_Init,    ListScreen_Render, ListScreen_Free, Gui_DefaultRecreate,
 	ListScreen_KeyDown, Menu_KeyUp,        Menu_KeyPress,
 	Menu_MouseDown,     Menu_MouseUp,      Menu_MouseMove,  ListScreen_MouseScroll,
@@ -671,7 +671,7 @@ static void PauseScreen_Free(void* screen) {
 	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
 }
 
-struct ScreenVTABLE PauseScreen_VTABLE = {
+static struct ScreenVTABLE PauseScreen_VTABLE = {
 	PauseScreen_Init,   MenuScreen_Render,  PauseScreen_Free, Gui_DefaultRecreate,
 	MenuScreen_KeyDown, Menu_KeyUp,         Menu_KeyPress,
 	Menu_MouseDown,     Menu_MouseUp,       Menu_MouseMove,   MenuScreen_MouseScroll,
@@ -762,7 +762,7 @@ static bool OptionsGroupScreen_MouseMove(void* screen, int x, int y) {
 	return true;
 }
 
-struct ScreenVTABLE OptionsGroupScreen_VTABLE = {
+static struct ScreenVTABLE OptionsGroupScreen_VTABLE = {
 	OptionsGroupScreen_Init, MenuScreen_Render,  OptionsGroupScreen_Free,      Gui_DefaultRecreate,
 	MenuScreen_KeyDown,      Menu_KeyUp,         Menu_KeyPress,
 	Menu_MouseDown,          Menu_MouseUp,       OptionsGroupScreen_MouseMove, MenuScreen_MouseScroll,
@@ -972,7 +972,7 @@ static void EditHotkeyScreen_ContextRecreated(void* screen) {
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -35);
 }
 
-struct ScreenVTABLE EditHotkeyScreen_VTABLE = {
+static struct ScreenVTABLE EditHotkeyScreen_VTABLE = {
 	EditHotkeyScreen_Init,    EditHotkeyScreen_Render, EditHotkeyScreen_Free,     Gui_DefaultRecreate,
 	EditHotkeyScreen_KeyDown, EditHotkeyScreen_KeyUp,  EditHotkeyScreen_KeyPress,
 	Menu_MouseDown,           Menu_MouseUp,            Menu_MouseMove,            MenuScreen_MouseScroll,
@@ -998,7 +998,7 @@ struct Screen* EditHotkeyScreen_MakeInstance(struct HotkeyData original) {
 *-----------------------------------------------------GenLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
 static struct GenLevelScreen GenLevelScreen_Instance;
-NOINLINE_ static int GenLevelScreen_GetInt(struct GenLevelScreen* s, int index) {
+CC_NOINLINE static int GenLevelScreen_GetInt(struct GenLevelScreen* s, int index) {
 	struct MenuInputWidget* input = &s->Inputs[index];
 	struct MenuInputValidator* v;
 	String text = input->Base.Text;
@@ -1009,7 +1009,7 @@ NOINLINE_ static int GenLevelScreen_GetInt(struct GenLevelScreen* s, int index) 
 	Convert_TryParseInt(&text, &value); return value;
 }
 
-NOINLINE_ static int GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, int index) {
+CC_NOINLINE static int GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, int index) {
 	struct MenuInputWidget* input = &s->Inputs[index];
 	RNGState rnd;
 
@@ -1136,7 +1136,7 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 	Menu_Back(s,   11, &s->Buttons[2], "Cancel",   &s->TitleFont, Menu_SwitchPause);
 }
 
-struct ScreenVTABLE GenLevelScreen_VTABLE = {
+static struct ScreenVTABLE GenLevelScreen_VTABLE = {
 	GenLevelScreen_Init,    MenuScreen_Render,    GenLevelScreen_Free,     Gui_DefaultRecreate,
 	GenLevelScreen_KeyDown, GenLevelScreen_KeyUp, GenLevelScreen_KeyPress,
 	Menu_MouseDown,         Menu_MouseUp,         Menu_MouseMove,          MenuScreen_MouseScroll,
@@ -1187,7 +1187,7 @@ static void ClassicGenScreen_ContextRecreated(void* screen) {
 	Menu_Back(s, 3, &s->Buttons[3], "Cancel", &s->TitleFont, Menu_SwitchPause);
 }
 
-struct ScreenVTABLE ClassicGenScreen_VTABLE = {
+static struct ScreenVTABLE ClassicGenScreen_VTABLE = {
 	MenuScreen_Init,    MenuScreen_Render,  MenuScreen_Free, Gui_DefaultRecreate,
 	MenuScreen_KeyDown, Menu_KeyUp,         Menu_KeyPress,
 	Menu_MouseDown,     Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
@@ -1368,7 +1368,7 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 	s->Widgets[5] = NULL; /* description widget placeholder */
 }
 
-struct ScreenVTABLE SaveLevelScreen_VTABLE = {
+static struct ScreenVTABLE SaveLevelScreen_VTABLE = {
 	SaveLevelScreen_Init,    SaveLevelScreen_Render, SaveLevelScreen_Free,     Gui_DefaultRecreate,
 	SaveLevelScreen_KeyDown, SaveLevelScreen_KeyUp,  SaveLevelScreen_KeyPress,
 	Menu_MouseDown,          Menu_MouseUp,           Menu_MouseMove,           MenuScreen_MouseScroll,
@@ -1467,7 +1467,7 @@ static void FontListScreen_Init(void* screen) {
 	ListScreen_Select(s, &Game_FontName);
 }
 
-struct ScreenVTABLE FontListScreen_VTABLE = {
+static struct ScreenVTABLE FontListScreen_VTABLE = {
 	FontListScreen_Init, ListScreen_Render, ListScreen_Free,     Gui_DefaultRecreate,
 	ListScreen_KeyDown,  Menu_KeyUp,        Menu_KeyPress,
 	Menu_MouseDown,      Menu_MouseUp,      Menu_MouseMove,      ListScreen_MouseScroll,
@@ -1578,43 +1578,6 @@ static void LoadLevelScreen_FilterFiles(const String* path, void* obj) {
 	StringsBuffer_Add((StringsBuffer*)obj, &file);
 }
 
-void LoadLevelScreen_LoadMap(const String* path) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	struct LocationUpdate update;
-	IMapImporter importer;
-	struct Stream stream;
-	ReturnCode res;
-
-	World_Reset();
-	Event_RaiseVoid(&WorldEvents_NewMap);
-
-	if (World_TextureUrl.length) {
-		TexturePack_ExtractDefault();
-		World_TextureUrl.length = 0;
-	}
-
-	Block_Reset();
-	Inventory_SetDefaultMapping();
-	
-	res = Stream_OpenFile(&stream, path);
-	if (res) { Chat_LogError2(res, "opening", path); return; }
-
-	importer = Map_FindImporter(path);
-	if ((res = importer(&stream))) {
-		World_Reset();
-		Chat_LogError2(res, "decoding", path); stream.Close(&stream); return;
-	}
-
-	res = stream.Close(&stream);
-	if (res) { Chat_LogError2(res, "closing", path); }
-
-	World_SetNewMap(World_Blocks, World_BlocksSize, World_Width, World_Height, World_Length);
-	Event_RaiseVoid(&WorldEvents_MapLoaded);
-
-	LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnRotY, p->SpawnHeadX, false);
-	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
-}
-
 static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 	struct ListScreen* s = screen;
 	String filename;
@@ -1624,7 +1587,7 @@ static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 	filename = ListScreen_UNSAFE_GetCur(s, widget);
 	String_Format2(&path, "maps%r%s", &Directory_Separator, &filename);
 	if (!File_Exists(&path)) return;
-	LoadLevelScreen_LoadMap(&path);
+	Map_LoadFrom(&path);
 }
 
 struct Screen* LoadLevelScreen_MakeInstance(void) {
@@ -1748,7 +1711,7 @@ static bool KeyBindingsScreen_MouseDown(void* screen, int x, int y, MouseButton 
 	return true;
 }
 
-struct ScreenVTABLE KeyBindingsScreen_VTABLE = {
+static struct ScreenVTABLE KeyBindingsScreen_VTABLE = {
 	MenuScreen_Init,             MenuScreen_Render,  MenuScreen_Free, Gui_DefaultRecreate,
 	KeyBindingsScreen_KeyDown,   Menu_KeyUp,         Menu_KeyPress,
 	KeyBindingsScreen_MouseDown, Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
@@ -2173,7 +2136,7 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 150);
 }
 
-struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
+static struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
 	MenuOptionsScreen_Init,     MenuOptionsScreen_Render, MenuOptionsScreen_Free,      Gui_DefaultRecreate,
 	MenuOptionsScreen_KeyDown,  MenuOptionsScreen_KeyUp,  MenuOptionsScreen_KeyPress,
 	Menu_MouseDown,             Menu_MouseUp,             MenuOptionsScreen_MouseMove, MenuScreen_MouseScroll,
@@ -3102,7 +3065,7 @@ static bool TexIdsOverlay_KeyUp(void* screen, Key key) {
 	return Elem_HandlesKeyUp(active, key);
 }
 
-struct ScreenVTABLE TexIdsOverlay_VTABLE = {
+static struct ScreenVTABLE TexIdsOverlay_VTABLE = {
 	TexIdsOverlay_Init,    TexIdsOverlay_Render, MenuScreen_Free,        Gui_DefaultRecreate,
 	TexIdsOverlay_KeyDown, TexIdsOverlay_KeyUp,  TexIdsOverlay_KeyPress,
 	Menu_MouseDown,        Menu_MouseUp,         Menu_MouseMove,         MenuScreen_MouseScroll,
@@ -3150,7 +3113,7 @@ static void UrlWarningOverlay_ContextRecreated(void* screen) {
 		UrlWarningOverlay_OpenUrl, UrlWarningOverlay_AppendUrl);
 }
 
-struct ScreenVTABLE UrlWarningOverlay_VTABLE = {
+static struct ScreenVTABLE UrlWarningOverlay_VTABLE = {
 	MenuScreen_Init, MenuScreen_Render,  MenuScreen_Free, Gui_DefaultRecreate,
 	Overlay_KeyDown, Menu_KeyUp,         Menu_KeyPress,
 	Menu_MouseDown,  Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
@@ -3216,7 +3179,7 @@ static void ConfirmDenyOverlay_ContextRecreated(void* screen) {
 		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 30);
 }
 
-struct ScreenVTABLE ConfirmDenyOverlay_VTABLE = {
+static struct ScreenVTABLE ConfirmDenyOverlay_VTABLE = {
 	MenuScreen_Init, MenuScreen_Render,  MenuScreen_Free, Gui_DefaultRecreate,
 	Overlay_KeyDown, Menu_KeyUp,         Menu_KeyPress,
 	Menu_MouseDown,  Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
@@ -3318,7 +3281,7 @@ static void TexPackOverlay_ContextRecreated(void* screen) {
 		TexPackOverlay_YesClick, TexPackOverlay_NoClick);
 }
 
-struct ScreenVTABLE TexPackOverlay_VTABLE = {
+static struct ScreenVTABLE TexPackOverlay_VTABLE = {
 	MenuScreen_Init, TexPackOverlay_Render, MenuScreen_Free, Gui_DefaultRecreate,
 	Overlay_KeyDown, Menu_KeyUp,            Menu_KeyPress,
 	Menu_MouseDown,  Menu_MouseUp,          Menu_MouseMove,  MenuScreen_MouseScroll,

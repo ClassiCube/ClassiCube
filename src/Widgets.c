@@ -51,7 +51,7 @@ static void TextWidget_Reposition(void* widget) {
 	w->Texture.Y += w->Y - oldY;
 }
 
-struct WidgetVTABLE TextWidget_VTABLE = {
+static struct WidgetVTABLE TextWidget_VTABLE = {
 	Widget_NullFunc, TextWidget_Render, TextWidget_Free,  Gui_DefaultRecreate,
 	Widget_Key,	     Widget_Key,        Widget_KeyPress,
 	Widget_Mouse,    Widget_Mouse,      Widget_MouseMove, Widget_MouseScroll,
@@ -154,7 +154,7 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	Texture_RenderShaded(&w->Texture, col);
 }
 
-struct WidgetVTABLE ButtonWidget_VTABLE = {
+static struct WidgetVTABLE ButtonWidget_VTABLE = {
 	Widget_NullFunc, ButtonWidget_Render, ButtonWidget_Free, Gui_DefaultRecreate,
 	Widget_Key,	     Widget_Key,          Widget_KeyPress,
 	Widget_Mouse,    Widget_Mouse,        Widget_MouseMove,  Widget_MouseScroll,
@@ -295,7 +295,7 @@ static bool ScrollbarWidget_MouseMove(void* widget, int x, int y) {
 	return false;
 }
 
-struct WidgetVTABLE ScrollbarWidget_VTABLE = {
+static struct WidgetVTABLE ScrollbarWidget_VTABLE = {
 	Widget_NullFunc,           ScrollbarWidget_Render,  Widget_NullFunc,           Gui_DefaultRecreate,
 	Widget_Key,	               Widget_Key,              Widget_KeyPress,
 	ScrollbarWidget_MouseDown, ScrollbarWidget_MouseUp, ScrollbarWidget_MouseMove, ScrollbarWidget_MouseScroll,
@@ -478,7 +478,7 @@ static bool HotbarWidget_MouseScroll(void* widget, float delta) {
 	return true;
 }
 
-struct WidgetVTABLE HotbarWidget_VTABLE = {
+static struct WidgetVTABLE HotbarWidget_VTABLE = {
 	HotbarWidget_Init,      HotbarWidget_Render, Widget_NullFunc,  Gui_DefaultRecreate,
 	HotbarWidget_KeyDown,	HotbarWidget_KeyUp,  Widget_KeyPress,
 	HotbarWidget_MouseDown, Widget_Mouse,        Widget_MouseMove, HotbarWidget_MouseScroll,
@@ -812,7 +812,7 @@ static bool TableWidget_KeyDown(void* widget, Key key) {
 	return true;
 }
 
-struct WidgetVTABLE TableWidget_VTABLE = {
+static struct WidgetVTABLE TableWidget_VTABLE = {
 	TableWidget_Init,      TableWidget_Render,  TableWidget_Free,      TableWidget_Recreate,
 	TableWidget_KeyDown,   Widget_Key,          Widget_KeyPress,
 	TableWidget_MouseDown, TableWidget_MouseUp, TableWidget_MouseMove, TableWidget_MouseScroll,
@@ -1261,7 +1261,7 @@ static bool InputWidget_MouseDown(void* widget, int x, int y, MouseButton button
 	return true;
 }
 
-NOINLINE_ static void InputWidget_Create(struct InputWidget* w, const FontDesc* font, STRING_REF const String* prefix) {
+CC_NOINLINE static void InputWidget_Create(struct InputWidget* w, const FontDesc* font, STRING_REF const String* prefix) {
 	static String caret = String_FromConst("_");
 	struct DrawTextArgs args;
 	Size2D size;
@@ -1306,7 +1306,7 @@ static bool Hex_ValidValue(struct MenuInputValidator* v, const String* s) {
 	return PackedCol_TryParseHex(s, &col);
 }
 
-struct MenuInputValidatorVTABLE HexInputValidator_VTABLE = {
+static struct MenuInputValidatorVTABLE HexInputValidator_VTABLE = {
 	Hex_Range, Hex_ValidChar, Hex_ValidString, Hex_ValidValue,
 };
 struct MenuInputValidator MenuInputValidator_Hex(void) {
@@ -1334,7 +1334,7 @@ static bool Int_ValidValue(struct MenuInputValidator* v, const String* s) {
 	return Convert_TryParseInt(s, &value) && min <= value && value <= max;
 }
 
-struct MenuInputValidatorVTABLE IntInputValidator_VTABLE = {
+static struct MenuInputValidatorVTABLE IntInputValidator_VTABLE = {
 	Int_Range, Int_ValidChar, Int_ValidString, Int_ValidValue,
 };
 struct MenuInputValidator MenuInputValidator_Int(int min, int max) {
@@ -1349,7 +1349,7 @@ static void Seed_Range(struct MenuInputValidator* v, String* range) {
 	String_AppendConst(range, "&7(an integer)");
 }
 
-struct MenuInputValidatorVTABLE SeedInputValidator_VTABLE = {
+static struct MenuInputValidatorVTABLE SeedInputValidator_VTABLE = {
 	Seed_Range, Int_ValidChar, Int_ValidString, Int_ValidValue,
 };
 struct MenuInputValidator MenuInputValidator_Seed(void) {
@@ -1377,7 +1377,7 @@ static bool Float_ValidValue(struct MenuInputValidator* v, const String* s) {
 	return Convert_TryParseFloat(s, &value) && min <= value && value <= max;
 }
 
-struct MenuInputValidatorVTABLE FloatInputValidator_VTABLE = {
+static struct MenuInputValidatorVTABLE FloatInputValidator_VTABLE = {
 	Float_Range, Float_ValidChar, Float_ValidString, Float_ValidValue,
 };
 struct MenuInputValidator MenuInputValidator_Float(float min, float max) {
@@ -1398,7 +1398,7 @@ static bool Path_ValidChar(struct MenuInputValidator* v, char c) {
 }
 static bool Path_ValidString(struct MenuInputValidator* v, const String* s) { return true; }
 
-struct MenuInputValidatorVTABLE PathInputValidator_VTABLE = {
+static struct MenuInputValidatorVTABLE PathInputValidator_VTABLE = {
 	Path_Range, Path_ValidChar, Path_ValidString, Path_ValidString,
 };
 struct MenuInputValidator MenuInputValidator_Path(void) {
@@ -1427,7 +1427,7 @@ static bool String_ValidString(struct MenuInputValidator* v, const String* s) {
 	return s->length <= STRING_SIZE;
 }
 
-struct MenuInputValidatorVTABLE StringInputValidator_VTABLE = {
+static struct MenuInputValidatorVTABLE StringInputValidator_VTABLE = {
 	String_Range, String_ValidChar, String_ValidString, String_ValidString,
 };
 struct MenuInputValidator MenuInputValidator_String(void) {
@@ -1523,7 +1523,7 @@ static bool MenuInputWidget_AllowedChar(void* widget, char c) {
 }
 
 static int MenuInputWidget_GetMaxLines(void) { return 1; }
-struct WidgetVTABLE MenuInputWidget_VTABLE = {
+static struct WidgetVTABLE MenuInputWidget_VTABLE = {
 	InputWidget_Init,      MenuInputWidget_Render, InputWidget_Free,     InputWidget_Recreate,
 	InputWidget_KeyDown,   InputWidget_KeyUp,      InputWidget_KeyPress,
 	InputWidget_MouseDown, Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
@@ -1773,7 +1773,7 @@ static int ChatInputWidget_GetMaxLines(void) {
 	return !Game_ClassicMode && ServerConnection_SupportsPartialMessages ? 3 : 1;
 }
 
-struct WidgetVTABLE ChatInputWidget_VTABLE = {
+static struct WidgetVTABLE ChatInputWidget_VTABLE = {
 	InputWidget_Init,        ChatInputWidget_Render, InputWidget_Free,     InputWidget_Recreate,
 	ChatInputWidget_KeyDown, InputWidget_KeyUp,      InputWidget_KeyPress,
 	InputWidget_MouseDown,   Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
@@ -2165,7 +2165,7 @@ static void PlayerListWidget_Free(void* widget) {
 	Event_UnregisterInt(&TabListEvents_Removed, w, PlayerListWidget_TabEntryRemoved);
 }
 
-struct WidgetVTABLE PlayerListWidget_VTABLE = {
+static struct WidgetVTABLE PlayerListWidget_VTABLE = {
 	PlayerListWidget_Init, PlayerListWidget_Render, PlayerListWidget_Free, Gui_DefaultRecreate,
 	Widget_Key,	           Widget_Key,              Widget_KeyPress,
 	Widget_Mouse,          Widget_Mouse,            Widget_MouseMove,      Widget_MouseScroll,
@@ -2606,7 +2606,7 @@ static void TextGroupWidget_Free(void* widget) {
 	}
 }
 
-struct WidgetVTABLE TextGroupWidget_VTABLE = {
+static struct WidgetVTABLE TextGroupWidget_VTABLE = {
 	TextGroupWidget_Init, TextGroupWidget_Render, TextGroupWidget_Free, Gui_DefaultRecreate,
 	Widget_Key,	          Widget_Key,             Widget_KeyPress,
 	Widget_Mouse,         Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
@@ -2858,7 +2858,7 @@ void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active) {
 	if (active && w->PendingRedraw) SpecialInputWidget_Redraw(w);
 }
 
-struct WidgetVTABLE SpecialInputWidget_VTABLE = {
+static struct WidgetVTABLE SpecialInputWidget_VTABLE = {
 	SpecialInputWidget_Init,      SpecialInputWidget_Render, SpecialInputWidget_Free, Gui_DefaultRecreate,
 	Widget_Key,                   Widget_Key,                Widget_KeyPress,
 	SpecialInputWidget_MouseDown, Widget_Mouse,              Widget_MouseMove,        Widget_MouseScroll,

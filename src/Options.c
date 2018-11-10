@@ -19,7 +19,7 @@ void Options_Free(void) {
 	StringsBuffer_Clear(&Options_Changed);
 }
 
-NOINLINE_ static int Options_CaselessIndexOf(StringsBuffer* buffer, const String* str) {
+CC_NOINLINE static int Options_CaselessIndexOf(StringsBuffer* buffer, const String* str) {
 	String entry;
 	int i;
 

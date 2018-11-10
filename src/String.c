@@ -237,7 +237,7 @@ bool String_AppendHex(String* str, uint8_t value) {
 	return String_Append(str, c_hi) && String_Append(str, c_lo);
 }
 
-NOINLINE_ static bool String_Hex32(String* str, uint32_t value) {
+CC_NOINLINE static bool String_Hex32(String* str, uint32_t value) {
 	bool appended;
 	int shift;
 
@@ -248,7 +248,7 @@ NOINLINE_ static bool String_Hex32(String* str, uint32_t value) {
 	return appended;
 }
 
-NOINLINE_ static bool String_Hex64(String* str, uint64_t value) {
+CC_NOINLINE static bool String_Hex64(String* str, uint64_t value) {
 	bool appended;
 	int shift;
 
@@ -745,7 +745,7 @@ bool Convert_TryParseBool(const String* str, bool* value) {
 #define STRINGSBUFFER_LEN_MASK  0x1FFUL
 #define STRINGSBUFFER_BUFFER_EXPAND_SIZE 8192
 
-NOINLINE_ static void StringsBuffer_Init(StringsBuffer* buffer) {
+CC_NOINLINE static void StringsBuffer_Init(StringsBuffer* buffer) {
 	buffer->Count       = 0;
 	buffer->TotalLength = 0;
 	buffer->TextBuffer  = buffer->_DefaultBuffer;

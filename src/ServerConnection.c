@@ -10,6 +10,7 @@
 #include "Entity.h"
 #include "Gui.h"
 #include "Screens.h"
+#include "Formats.h"
 #include "MapGenerator.h"
 #include "World.h"
 #include "Camera.h"
@@ -24,13 +25,14 @@
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
 *#########################################################################################################################*/
-static char ServerConnection_ServerNameBuffer[STRING_SIZE];
-String ServerConnection_ServerName = String_FromArray(ServerConnection_ServerNameBuffer);
-static char ServerConnection_ServerMOTDBuffer[STRING_SIZE];
-String ServerConnection_ServerMOTD = String_FromArray(ServerConnection_ServerMOTDBuffer);
-static char ServerConnection_AppNameBuffer[STRING_SIZE];
-String ServerConnection_AppName = String_FromArray(ServerConnection_AppNameBuffer);
+static char server_nameBuffer[STRING_SIZE];
+static char server_motdBuffer[STRING_SIZE];
+static char server_appBuffer[STRING_SIZE];
 static int server_ticks;
+
+String ServerConnection_ServerName = String_FromArray(server_nameBuffer);
+String ServerConnection_ServerMOTD = String_FromArray(server_motdBuffer);
+String ServerConnection_AppName    = String_FromArray(server_appBuffer);
 
 static void ServerConnection_ResetState(void) {
 	ServerConnection_Disconnected = false;
@@ -152,7 +154,7 @@ static void SPConnection_BeginConnect(void) {
 	/* For when user drops a map file onto ClassiCube.exe */
 	path = Game_Username;
 	if (String_IndexOf(&path, Directory_Separator, 0) >= 0 && File_Exists(&path)) {
-		LoadLevelScreen_LoadMap(&path);
+		Map_LoadFrom(&path);
 		Gui_CloseActive();
 		return;
 	}

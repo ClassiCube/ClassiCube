@@ -1250,12 +1250,11 @@ static void CPE_SetMapEnvProperty(uint8_t* data) {
 		Game_MaxViewDistance = value <= 0 ? 32768 : value;
 		Game_SetViewDistance(Game_UserViewDistance); break;
 	case 5:
-		Env_SetCloudsSpeed(value / 256.0f); break;
+		Env_SetCloudsSpeed(value  / 256.0f); break;
 	case 6:
 		Env_SetWeatherSpeed(value / 256.0f); break;
 	case 7:
-		Math_Clamp(value, 0, UInt8_MaxValue);
-		Env_SetWeatherFade(value / 128.0f); break;
+		Env_SetWeatherFade(value  / 128.0f); break;
 	case 8:
 		Env_SetExpFog(value != 0); break;
 	case 9:

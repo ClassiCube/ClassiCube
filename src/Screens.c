@@ -108,7 +108,7 @@ static bool Screen_MouseMove(void* elem, int x, int y) { return false; }
 /*########################################################################################################################*
 *-----------------------------------------------------InventoryScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-struct InventoryScreen InventoryScreen_Instance;
+static struct InventoryScreen InventoryScreen_Instance;
 static void InventoryScreen_OnBlockChanged(void* screen) {
 	struct InventoryScreen* s = screen;
 	TableWidget_OnInventoryChanged(&s->Table);
@@ -242,7 +242,7 @@ static bool InventoryScreen_MouseScroll(void* screen, float delta) {
 	return Elem_HandlesMouseScroll(table, delta);
 }
 
-struct ScreenVTABLE InventoryScreen_VTABLE = {
+static struct ScreenVTABLE InventoryScreen_VTABLE = {
 	InventoryScreen_Init,      InventoryScreen_Render,  InventoryScreen_Free,      Gui_DefaultRecreate,
 	InventoryScreen_KeyDown,   InventoryScreen_KeyUp,   InventoryScreen_KeyPress,
 	InventoryScreen_MouseDown, InventoryScreen_MouseUp, InventoryScreen_MouseMove, InventoryScreen_MouseScroll,
@@ -425,7 +425,7 @@ static void StatusScreen_Free(void* screen) {
 	Event_UnregisterVoid(&ChatEvents_FontChanged, s, StatusScreen_FontChanged);
 }
 
-struct ScreenVTABLE StatusScreen_VTABLE = {
+static struct ScreenVTABLE StatusScreen_VTABLE = {
 	StatusScreen_Init,  StatusScreen_Render, StatusScreen_Free,     Gui_DefaultRecreate,
 	StatusScreen_Key,   StatusScreen_Key,    StatusScreen_KeyPress,
 	Screen_Mouse,       Screen_Mouse,        Screen_MouseMove,      StatusScreen_MouseScroll,
@@ -588,7 +588,7 @@ static void LoadingScreen_Free(void* screen) {
 	Event_UnregisterFloat(&WorldEvents_Loading, s, LoadingScreen_MapLoading);
 }
 
-struct ScreenVTABLE LoadingScreen_VTABLE = {
+static struct ScreenVTABLE LoadingScreen_VTABLE = {
 	LoadingScreen_Init,      LoadingScreen_Render,  LoadingScreen_Free,      Gui_DefaultRecreate,
 	LoadingScreen_KeyDown,   LoadingScreen_KeyUp,   LoadingScreen_KeyPress,
 	LoadingScreen_MouseDown, LoadingScreen_MouseUp, LoadingScreen_MouseMove, LoadingScreen_MouseScroll,
@@ -671,7 +671,7 @@ static void GeneratingScreen_Render(void* screen, double delta) {
 	LoadingScreen_SetMessage(s);
 }
 
-struct ScreenVTABLE GeneratingScreen_VTABLE = {
+static struct ScreenVTABLE GeneratingScreen_VTABLE = {
 	GeneratingScreen_Init,   GeneratingScreen_Render, LoadingScreen_Free,      Gui_DefaultRecreate,
 	LoadingScreen_KeyDown,   LoadingScreen_KeyUp,     LoadingScreen_KeyPress,
 	LoadingScreen_MouseDown, LoadingScreen_MouseUp,   LoadingScreen_MouseMove, LoadingScreen_MouseScroll,
@@ -1169,7 +1169,7 @@ static void ChatScreen_Free(void* screen) {
 	Event_UnregisterInt(&ChatEvents_ColCodeChanged,   s, ChatScreen_ColCodeChanged);
 }
 
-struct ScreenVTABLE ChatScreen_VTABLE = {
+static struct ScreenVTABLE ChatScreen_VTABLE = {
 	ChatScreen_Init,      ChatScreen_Render, ChatScreen_Free,     Gui_DefaultRecreate,
 	ChatScreen_KeyDown,   ChatScreen_KeyUp,  ChatScreen_KeyPress,
 	ChatScreen_MouseDown, Screen_Mouse,      Screen_MouseMove,    ChatScreen_MouseScroll,
@@ -1355,7 +1355,7 @@ static void HUDScreen_Free(void* screen) {
 	Screen_CommonFree(s);
 }
 
-struct ScreenVTABLE HUDScreen_VTABLE = {
+static struct ScreenVTABLE HUDScreen_VTABLE = {
 	HUDScreen_Init,      HUDScreen_Render, HUDScreen_Free,     Gui_DefaultRecreate,
 	HUDScreen_KeyDown,   HUDScreen_KeyUp,  HUDScreen_KeyPress,
 	HUDScreen_MouseDown, Screen_Mouse,     Screen_MouseMove,   HUDScreen_MouseScroll,
@@ -1526,7 +1526,7 @@ static bool DisconnectScreen_MouseMove(void* screen, int x, int y) {
 static bool DisconnectScreen_MouseScroll(void* screen, float delta) { return true; }
 static bool DisconnectScreen_MouseUp(void* screen, int x, int y, MouseButton btn) { return true; }
 
-struct ScreenVTABLE DisconnectScreen_VTABLE = {
+static struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_Init,      DisconnectScreen_Render,  DisconnectScreen_Free,      Gui_DefaultRecreate,
 	DisconnectScreen_KeyDown,   DisconnectScreen_KeyUp,   DisconnectScreen_KeyPress,
 	DisconnectScreen_MouseDown, DisconnectScreen_MouseUp, DisconnectScreen_MouseMove, DisconnectScreen_MouseScroll,

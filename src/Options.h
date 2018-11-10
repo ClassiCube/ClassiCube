@@ -74,32 +74,32 @@ StringsBuffer Options_Keys;
 StringsBuffer Options_Values;
 
 /* Returns whether user has changed any options this session. */
-NOINLINE_ bool Options_HasAnyChanged(void);
+CC_NOINLINE bool Options_HasAnyChanged(void);
 /* Frees any memory allocated in storing options. */
-NOINLINE_ void Options_Free(void);
+CC_NOINLINE void Options_Free(void);
 
 /* Returns value of given option, or defalt value if not found. */
-EXPORT_ void Options_Get(const char*       key, String* value, const char* defValue);
+CC_EXPORT void Options_Get(const char*       key, String* value, const char* defValue);
 /* Returns value of given option as an integer, or defalt value if could not be converted. */
-EXPORT_ int  Options_GetInt(const char*    key, int min, int max, int defValue);
+CC_EXPORT int  Options_GetInt(const char*    key, int min, int max, int defValue);
 /* Returns value of given option as a bool, or defalt value if could not be converted. */
-EXPORT_ bool Options_GetBool(const char*   key, bool defValue);
+CC_EXPORT bool Options_GetBool(const char*   key, bool defValue);
 /* Returns value of given option as a float, or defalt value if could not be converted. */
-EXPORT_ float Options_GetFloat(const char* key, float min, float max, float defValue);
+CC_EXPORT float Options_GetFloat(const char* key, float min, float max, float defValue);
 /* Returns value of given option as an integer, or defalt value if could not be converted. */
 /* NOTE: Conversion is done by going through all elements of names, returning index of a match. */
-EXPORT_ int   Options_GetEnum(const char*  key, int defValue, const char** names, int namesCount);
+CC_EXPORT int   Options_GetEnum(const char*  key, int defValue, const char** names, int namesCount);
 
 /* Sets value of given option to either "true" or "false". */
-EXPORT_ void Options_SetBool(const char* keyRaw,  bool value);
+CC_EXPORT void Options_SetBool(const char* keyRaw,  bool value);
 /* Sets value of given option to given integer converted to a string. */
-EXPORT_ void Options_SetInt(const char*  keyRaw,  int value);
+CC_EXPORT void Options_SetInt(const char*  keyRaw,  int value);
 /* Sets value of given option to given string. */
-EXPORT_ void Options_Set(const char*     keyRaw,  const String* value);
+CC_EXPORT void Options_Set(const char*     keyRaw,  const String* value);
 /* Sets value of given option to given string. */
-EXPORT_ void Options_SetString(const String* key, const String* value);
+CC_EXPORT void Options_SetString(const String* key, const String* value);
 /* Loads options from disc. Leaves options changed in this session alone. */
-EXPORT_ void Options_Load(void);
+CC_EXPORT void Options_Load(void);
 /* Saves all options to disc. */
-EXPORT_ void Options_Save(void);
+CC_EXPORT void Options_Save(void);
 #endif

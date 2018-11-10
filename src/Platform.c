@@ -140,7 +140,7 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
 void Mem_Set(void* dst, uint8_t value, uint32_t numBytes) { memset(dst, value, numBytes); }
 void Mem_Copy(void* dst, void* src,  uint32_t numBytes)   { memcpy(dst, src,   numBytes); }
 
-NOINLINE_ static void Platform_AllocFailed(const char* place) {
+CC_NOINLINE static void Platform_AllocFailed(const char* place) {
 	char logBuffer[STRING_SIZE+20 + 1];
 	String log = String_NT_Array(logBuffer);
 	String_Format1(&log, "Failed allocating memory for: %c", place);

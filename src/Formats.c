@@ -12,7 +12,14 @@
 #include "Funcs.h"
 #include "Errors.h"
 #include "Stream.h"
+#include "Chat.h"
+#include "Inventory.h"
+#include "TexturePack.h"
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------General----------------------------------------------------------*
+*#########################################################################################################################*/
 static ReturnCode Map_ReadBlocks(struct Stream* stream) {
 	World_BlocksSize = World_Width * World_Length * World_Height;
 	World_Blocks     = Mem_Alloc(World_BlocksSize, 1, "map blocks");
@@ -33,7 +40,7 @@ static ReturnCode Map_SkipGZipHeader(struct Stream* stream) {
 	return 0;
 }
 
-NOINLINE_ IMapImporter Map_FindImporter(const String* path) {
+IMapImporter Map_FindImporter(const String* path) {
 	static String cw  = String_FromConst(".cw"),  lvl = String_FromConst(".lvl");
 	static String fcm = String_FromConst(".fcm"), dat = String_FromConst(".dat");
 
@@ -43,6 +50,43 @@ NOINLINE_ IMapImporter Map_FindImporter(const String* path) {
 	if (String_CaselessEnds(path, &dat)) return Dat_Load;
 
 	return NULL;
+}
+
+void Map_LoadFrom(const String* path) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocationUpdate update;
+	IMapImporter importer;
+	struct Stream stream;
+	ReturnCode res;
+
+	World_Reset();
+	Event_RaiseVoid(&WorldEvents_NewMap);
+
+	if (World_TextureUrl.length) {
+		TexturePack_ExtractDefault();
+		World_TextureUrl.length = 0;
+	}
+
+	Block_Reset();
+	Inventory_SetDefaultMapping();
+	
+	res = Stream_OpenFile(&stream, path);
+	if (res) { Chat_LogError2(res, "opening", path); return; }
+
+	importer = Map_FindImporter(path);
+	if ((res = importer(&stream))) {
+		World_Reset();
+		Chat_LogError2(res, "decoding", path); stream.Close(&stream); return;
+	}
+
+	res = stream.Close(&stream);
+	if (res) { Chat_LogError2(res, "closing", path); }
+
+	World_SetNewMap(World_Blocks, World_BlocksSize, World_Width, World_Height, World_Length);
+	Event_RaiseVoid(&WorldEvents_MapLoaded);
+
+	LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnRotY, p->SpawnHeadX, false);
+	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
 }
 
 

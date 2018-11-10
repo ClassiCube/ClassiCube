@@ -91,11 +91,11 @@ struct Screen* Gui_GetActiveScreen(void);
 This means if an overlay is active, it will return the screen under it. */
 struct Screen* Gui_GetUnderlyingScreen(void);
 
-NOINLINE_ void Gui_FreeActive(void);
+CC_NOINLINE void Gui_FreeActive(void);
 /* NOTE: This doesn't free old active screen - must call Gui_FreeActive() first */
-NOINLINE_ void Gui_SetActive(struct Screen* screen);
+CC_NOINLINE void Gui_SetActive(struct Screen* screen);
 /* NOTE: Same as Gui_FreeActive(); Gui_SetActive(NULL); */
-NOINLINE_ void Gui_CloseActive(void);
+CC_NOINLINE void Gui_CloseActive(void);
 
 void Gui_RefreshHud(void);
 void Gui_ShowOverlay(struct Screen* overlay, bool atFront);

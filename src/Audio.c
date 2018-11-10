@@ -203,7 +203,7 @@ static struct Soundboard digBoard, stepBoard;
 static struct SoundOutput monoOutputs[AUDIO_MAX_HANDLES]   = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
 static struct SoundOutput stereoOutputs[AUDIO_MAX_HANDLES] = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
 
-NOINLINE_ static void Sounds_Fail(ReturnCode res) {
+CC_NOINLINE static void Sounds_Fail(ReturnCode res) {
 	Chat_LogError(res, "playing sounds");
 	Chat_AddRaw("&cDisabling sounds");
 	Audio_SetSounds(0);

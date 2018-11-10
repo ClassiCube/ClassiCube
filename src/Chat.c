@@ -224,7 +224,7 @@ static bool Commands_IsCommandPrefix(const String* str) {
 		|| String_CaselessEquals(str, &prefix);
 }
 
-NOINLINE_ static void Commands_Register(struct ChatCommand* cmd) {
+CC_NOINLINE static void Commands_Register(struct ChatCommand* cmd) {
 	if (commands_count == Array_Elems(commands_list)) {
 		ErrorHandler_Fail("Commands_Register - hit max client commands");
 	}

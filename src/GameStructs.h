@@ -22,7 +22,7 @@ struct IGameComponent {
 };
 
 void IGameComponent_MakeEmpty(struct IGameComponent* comp);
-NOINLINE_ void Game_AddComponent(struct IGameComponent* comp);
+CC_NOINLINE void Game_AddComponent(struct IGameComponent* comp);
 
 /* Represents a task that periodically runs on the main thread every specified interval. */
 struct ScheduledTask;
@@ -36,5 +36,5 @@ struct ScheduledTask {
 };
 
 typedef void (*ScheduledTaskCallback)(struct ScheduledTask* task);
-NOINLINE_ int ScheduledTask_Add(double interval, ScheduledTaskCallback callback);
+CC_NOINLINE int ScheduledTask_Add(double interval, ScheduledTaskCallback callback);
 #endif

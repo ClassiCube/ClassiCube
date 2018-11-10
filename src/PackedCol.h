@@ -6,7 +6,7 @@
 */
 
 /* Represents an ARGB colour, in a format suitable for the native graphics api. */
- typedef ALIGN_HINT_(4) struct PackedCol_ {
+ typedef CC_ALIGN_HINT(4) struct PackedCol_ {
 #ifdef CC_BUILD_D3D9
 	uint8_t B, G, R, A;
 #else
@@ -35,9 +35,9 @@ bool PackedCol_Equals(PackedCol a, PackedCol b);
 uint32_t PackedCol_ToARGB(PackedCol col);
 PackedCol PackedCol_Scale(PackedCol value, float t);
 PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t);
-NOINLINE_ bool PackedCol_Unhex(char hex, int* value);
-NOINLINE_ void PackedCol_ToHex(String* str, PackedCol value);
-NOINLINE_ bool PackedCol_TryParseHex(const String* str, PackedCol* value);
+CC_NOINLINE bool PackedCol_Unhex(char hex, int* value);
+CC_NOINLINE void PackedCol_ToHex(String* str, PackedCol value);
+CC_NOINLINE bool PackedCol_TryParseHex(const String* str, PackedCol* value);
 
 #define PACKEDCOL_SHADE_X 0.6f
 #define PACKEDCOL_SHADE_Z 0.8f

@@ -24,15 +24,15 @@ VertexP3fT2fC4b ModelCache_Vertices[MODELCACHE_MAX_VERTICES];
 void ModelCache_Init(void);
 void ModelCache_Free(void);
 /* Returns pointer to model whose name caselessly matches given name. */
-EXPORT_ struct Model* ModelCache_Get(const String* name);
+CC_EXPORT struct Model* ModelCache_Get(const String* name);
 /* Returns index of cached texture whose name caselessly matches given name. */
-EXPORT_ int ModelCache_GetTextureIndex(const String* texName);
+CC_EXPORT int ModelCache_GetTextureIndex(const String* texName);
 /* Adds a model to the list of cached models. (e.g. "skeleton") */
 /* Cached models can be applied to entities to change their appearance. Use Entity_SetModel for that. */
 /* NOTE: defaultTexName can be NULL, and is for some models. (such as the "block" model) */
-EXPORT_ void ModelCache_Register(STRING_REF const char* name, const char* defaultTexName, struct Model* instance);
+CC_EXPORT void ModelCache_Register(STRING_REF const char* name, const char* defaultTexName, struct Model* instance);
 /* Adds a texture to the list of cached textures. (e.g. "skeleton.png") */
 /* Cached textures are automatically loaded from texture packs. Used as a 'default skin' for models. */
 /* NOTE: Textures should be registered BEFORE models are registered. */
-EXPORT_ void ModelCache_RegisterTexture(STRING_REF const char* texName);
+CC_EXPORT void ModelCache_RegisterTexture(STRING_REF const char* texName);
 #endif

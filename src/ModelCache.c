@@ -333,7 +333,7 @@ static struct ModelSet Chibi_Set;
 static struct ModelVertex ChibiModel_Vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
 static struct Model ChibiModel;
 
-NOINLINE_ static void ChibiModel_ScalePart(struct ModelPart* dst, struct ModelPart* src) {
+CC_NOINLINE static void ChibiModel_ScalePart(struct ModelPart* dst, struct ModelPart* src) {
 	struct ModelVertex v;
 	int i;
 
@@ -347,7 +347,7 @@ NOINLINE_ static void ChibiModel_ScalePart(struct ModelPart* dst, struct ModelPa
 	}
 }
 
-NOINLINE_ static void ChibiModel_ScaleLimbs(struct ModelLimbs* dst, struct ModelLimbs* src) {
+CC_NOINLINE static void ChibiModel_ScaleLimbs(struct ModelLimbs* dst, struct ModelLimbs* src) {
 	ChibiModel_ScalePart(&dst->LeftLeg,  &src->LeftLeg);
 	ChibiModel_ScalePart(&dst->RightLeg, &src->RightLeg);
 	ChibiModel_ScalePart(&dst->LeftArm,  &src->LeftArm);

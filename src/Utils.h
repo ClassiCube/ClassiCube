@@ -23,7 +23,7 @@ TimeMS DateTime_TotalMs(const DateTime* time);
 void DateTime_FromTotalMs(DateTime* time, TimeMS ms);
 void DateTime_HttpDate(TimeMS ms, String* str);
 
-NOINLINE_ int Utils_ParseEnum(const String* text, int defValue, const char** names, int namesCount);
+CC_NOINLINE int Utils_ParseEnum(const String* text, int defValue, const char** names, int namesCount);
 bool Utils_IsValidInputChar(char c, bool supportsCP437);
 bool Utils_IsUrlPrefix(const String* value, int index);
 
@@ -37,6 +37,6 @@ int Utils_AccumulateWheelDelta(float* accumulator, float delta);
 uint8_t Utils_GetSkinType(const Bitmap* bmp);
 uint32_t Utils_CRC32(const uint8_t* data, uint32_t length);
 extern uint32_t Utils_Crc32Table[256];
-NOINLINE_ void* Utils_Resize(void* buffer, uint32_t* maxElems, uint32_t elemSize, uint32_t defElems, uint32_t expandElems);
-NOINLINE_ bool Utils_ParseIP(const String* ip, uint8_t* data);
+CC_NOINLINE void* Utils_Resize(void* buffer, uint32_t* maxElems, uint32_t elemSize, uint32_t defElems, uint32_t expandElems);
+CC_NOINLINE bool Utils_ParseIP(const String* ip, uint8_t* data);
 #endif

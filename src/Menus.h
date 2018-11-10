@@ -20,7 +20,6 @@ struct Screen* MouseKeyBindingsScreen_MakeInstance(void);
 
 struct Screen* GenLevelScreen_MakeInstance(void);
 struct Screen* ClassicGenScreen_MakeInstance(void);
-void LoadLevelScreen_LoadMap(const String* path);
 struct Screen* LoadLevelScreen_MakeInstance(void);
 struct Screen* SaveLevelScreen_MakeInstance(void);
 struct Screen* TexturePackScreen_MakeInstance(void);

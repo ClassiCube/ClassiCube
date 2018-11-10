@@ -70,7 +70,7 @@ void Inflate_Process(struct InflateState* state);
 /* Deompresses input data read from another stream using DEFLATE. Read only stream. */
 /* NOTE: This only uncompresses pure DEFLATE compressed data. */
 /* If the data starts with a GZIP or ZLIB header, use GZipHeader_Read or ZLibHeader_Read to skip it. */
-EXPORT_ void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struct Stream* underlying);
+CC_EXPORT void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struct Stream* underlying);
 
 
 #define DEFLATE_BUFFER_SIZE 16384
@@ -94,14 +94,14 @@ struct DeflateState {
 };
 /* Compresses input data using DEFLATE, then writes compressed output to another stream. Write only stream. */
 /* DEFLATE compression is pure compressed data, there is no header or footer. */
-EXPORT_ void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struct Stream* underlying);
+CC_EXPORT void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struct Stream* underlying);
 
 struct GZipState { struct DeflateState Base; uint32_t Crc32, Size; };
 /* Compresses input data using GZIP, then writes compressed output to another stream. Write only stream. */
 /* GZIP compression is GZIP header, followed by DEFLATE compressed data, followed by GZIP footer. */
-EXPORT_ void GZip_MakeStream(struct Stream* stream, struct GZipState* state, struct Stream* underlying);
+CC_EXPORT void GZip_MakeStream(struct Stream* stream, struct GZipState* state, struct Stream* underlying);
 struct ZLibState { struct DeflateState Base; uint32_t Adler32; };
 /* Compresses input data using ZLIB, then writes compressed output to another stream. Write only stream. */
 /* ZLIB compression is ZLIB header, followed by DEFLATE compressed data, followed by ZLIB footer. */
-EXPORT_ void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
+CC_EXPORT void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
 #endif
