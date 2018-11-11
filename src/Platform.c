@@ -146,11 +146,11 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
 void Mem_Set(void* dst, uint8_t value, uint32_t numBytes) { memset(dst, value, numBytes); }
 void Mem_Copy(void* dst, void* src,  uint32_t numBytes)   { memcpy(dst, src,   numBytes); }
 
-CC_NOINLINE static void Platform_AllocFailed(const char* place) {
-	char logBuffer[STRING_SIZE+20 + 1];
-	String log = String_NT_Array(logBuffer);
-	String_Format1(&log, "Failed allocating memory for: %c", place);
+CC_NOINLINE static void Platform_AllocFailed(const char* place) {	
+	String log; char logBuffer[STRING_SIZE+20 + 1];
+	String_InitArray_NT(log, logBuffer);
 
+	String_Format1(&log, "Failed allocating memory for: %c", place);
 	log.buffer[log.length] = '\0';
 	ErrorHandler_Fail(log.buffer);
 }
@@ -393,11 +393,11 @@ bool File_Exists(const String* path) {
 }
 
 ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
+	String path; char pathBuffer[MAX_PATH + 10];
 	TCHAR str[300];
 	WIN32_FIND_DATA entry;
 	HANDLE find;
-	ReturnCode res;
-	String path; char pathBuffer[MAX_PATH + 10];
+	ReturnCode res;	
 
 	/* Need to append \* to search for files in directory */
 	String_InitArray(path, pathBuffer);
@@ -524,13 +524,12 @@ bool File_Exists(const String* path) {
 }
 
 ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
+	String path; char pathBuffer[FILENAME_SIZE];
 	char str[600];
 	DIR* dirPtr;
 	struct dirent* entry;
 	char* src;
 	int len, res;
-	char pathBuffer[FILENAME_SIZE];
-	String path = String_FromArray(pathBuffer);
 
 	Platform_ConvertString(str, dirPath);
 	dirPtr = opendir(str);
@@ -539,6 +538,8 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	/* POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed." */
 	/* errno is sometimes leftover from previous calls, so always reset it before readdir gets called */
 	errno = 0;
+	String_InitArray(path, pathBuffer);
+
 	while (entry = readdir(dirPtr)) {
 		path.length = 0;
 		String_Format2(&path, "%s%r", dirPath, &Directory_Separator);

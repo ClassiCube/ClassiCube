@@ -15,17 +15,11 @@ namespace ClassicalSharp.Gui.Screens {
 		InputWidget input;
 		const int overwriteIndex = 2;
 		static PackedCol grey = new PackedCol(150, 150, 150);
-		string textPath;
 		
-		public override void Render(double delta) {
-			base.Render(delta);			
-			int cX = game.Width / 2, cY = game.Height / 2;
-			game.Graphics.Draw2DQuad(cX - 250, cY + 90, 500, 2, grey);			
-			if (textPath == null) return;
-			
-			bool cw = textPath.EndsWith(".cw");
+		void SaveMap(string path) {
+			bool cw = path.EndsWith(".cw");
 			try {
-				using (Stream fs = Platform.FileCreate(textPath)) {
+				using (Stream fs = Platform.FileCreate(path)) {
 					IMapFormatExporter exporter = null;
 					if (cw) exporter = new MapCwExporter();
 					else exporter = new MapSchematicExporter();
@@ -37,9 +31,14 @@ namespace ClassicalSharp.Gui.Screens {
 				return;
 			}
 			
-			game.Chat.Add("&eSaved map to: " + textPath);
+			game.Chat.Add("&eSaved map to: " + path);
 			game.Gui.SetNewScreen(new PauseScreen(game));
-			textPath = null;
+		}
+		
+		public override void Render(double delta) {
+			base.Render(delta);			
+			int cX = game.Width / 2, cY = game.Height / 2;
+			game.Graphics.Draw2DQuad(cX - 250, cY + 90, 500, 2, grey);
 		}
 		
 		public override bool HandlesKeyPress(char key) {
@@ -102,11 +101,8 @@ namespace ClassicalSharp.Gui.Screens {
 				btn.Set("&cOverwrite existing?", titleFont);
 				btn.OptName = "O";
 			} else {
-				// NOTE: We don't immediately save here, because otherwise the 'saving...'
-				// will not be rendered in time because saving is done on the main thread.
-				MakeDescWidget("Saving..");
-				textPath = path;
 				RemoveOverwrites();
+				SaveMap(path);
 			}
 		}
 		

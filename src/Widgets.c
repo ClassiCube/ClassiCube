@@ -579,8 +579,8 @@ static void TableWidget_RecreateDescTex(struct TableWidget* w) {
 }
 
 void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block) {
-	struct DrawTextArgs args;
 	String desc; char descBuffer[STRING_SIZE * 2];
+	struct DrawTextArgs args;
 
 	Gfx_DeleteTexture(&w->DescTex.ID);
 	if (block == BLOCK_AIR) return;
@@ -877,10 +877,10 @@ static void InputWidget_FormatLine(struct InputWidget* w, int i, String* line) {
 }
 
 static void InputWidget_CalculateLineSizes(struct InputWidget* w) {
+	String line; char lineBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 	Size2D size;
 	int y;
-	String line; char lineBuffer[STRING_SIZE];
 
 	for (y = 0; y < INPUTWIDGET_MAX_LINES; y++) {
 		w->LineSizes[y] = Size2D_Empty;
@@ -904,13 +904,12 @@ static void InputWidget_CalculateLineSizes(struct InputWidget* w) {
 	}
 }
 
-static char InputWidget_GetLastCol(struct InputWidget* w, int indexX, int indexY) {
-	char lineBuffer[STRING_SIZE];
-	String line = String_FromArray(lineBuffer);
+static char InputWidget_GetLastCol(struct InputWidget* w, int x, int y) {
+	String line; char lineBuffer[STRING_SIZE];
 	char col;
-	int x = indexX, y;
+	String_InitArray(line, lineBuffer);
 
-	for (y = indexY; y >= 0; y--) {
+	for (; y >= 0; y--) {
 		line.length = 0;
 		InputWidget_FormatLine(w, y, &line);
 
@@ -922,10 +921,14 @@ static char InputWidget_GetLastCol(struct InputWidget* w, int indexX, int indexY
 }
 
 static void InputWidget_UpdateCaret(struct InputWidget* w) {
-	int maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
+	struct DrawTextArgs args;
+	int maxChars;
+	
+	maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
 	if (w->CaretPos >= maxChars) w->CaretPos = -1;
 	WordWrap_GetCoords(w->CaretPos, w->Lines, w->GetMaxLines(), &w->CaretX, &w->CaretY);
-	struct DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &w->Font, false);
+
+	DrawTextArgs_MakeEmpty(&args, &w->Font, false);
 	w->CaretAccumulator = 0;
 
 	/* Caret is at last character on line */
@@ -1132,8 +1135,8 @@ static void InputWidget_EndKey(struct InputWidget* w) {
 }
 
 static bool InputWidget_OtherKey(struct InputWidget* w, Key key) {
-	int maxChars;
 	String text; char textBuffer[INPUTWIDGET_MAX_LINES * STRING_SIZE];
+	int maxChars;
 	
 	maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
 	if (!InputWidget_ControlDown()) return false;
@@ -1453,12 +1456,12 @@ static void MenuInputWidget_Render(void* widget, double delta) {
 }
 
 static void MenuInputWidget_RemakeTexture(void* widget) {
+	String range; char rangeBuffer[STRING_SIZE];
 	struct MenuInputWidget* w = widget;
 	struct MenuInputValidator* v;
 	struct DrawTextArgs args;
 	Size2D size;
 	Bitmap bmp;
-	String range; char rangeBuffer[STRING_SIZE];
 
 	DrawTextArgs_Make(&args, &w->Base.Lines[0], &w->Base.Font, false);
 	size = Drawer2D_MeasureText(&args);
@@ -1713,7 +1716,7 @@ static bool ChatInputWidget_IsNameChar(char c) {
 
 static void ChatInputWidget_TabKey(struct InputWidget* w) {
 	EntityID matches[TABLIST_MAX_NAMES];
-	String part, match;
+	String part, name;
 	int end = w->CaretPos == -1 ? w->Text.length - 1 : w->CaretPos;
 	int beg = end;
 	char* buffer = w->Text.buffer;
@@ -1724,18 +1727,18 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 
 	part = String_UNSAFE_Substring(&w->Text, beg, (end + 1) - beg);
 	Chat_AddOf(&String_Empty, MSG_TYPE_CLIENTSTATUS_3);
-	int i, matchesCount = 0;
+	int i, numMatches = 0;
 
 	for (i = 0; i < TABLIST_MAX_NAMES; i++) {
 		EntityID id = (EntityID)i;
 		if (!TabList_Valid(id)) continue;
 
-		String name = TabList_UNSAFE_GetPlayer(i);
+		name = TabList_UNSAFE_GetPlayer(i);
 		if (!String_CaselessContains(&name, &part)) continue;
-		matches[matchesCount++] = id;
+		matches[numMatches++] = id;
 	}
 
-	if (matchesCount == 1) {
+	if (numMatches == 1) {
 		if (w->CaretPos == -1) end++;
 		int len = end - beg, j;
 		for (j = 0; j < len; j++) {
@@ -1743,18 +1746,18 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 		}
 
 		if (w->CaretPos != -1) w->CaretPos -= len;
-		match = TabList_UNSAFE_GetPlayer(matches[0]);
-		InputWidget_AppendString(w, &match);
-	} else if (matchesCount > 1) {
+		name = TabList_UNSAFE_GetPlayer(matches[0]);
+		InputWidget_AppendString(w, &name);
+	} else if (numMatches > 1) {
 		char strBuffer[STRING_SIZE];
 		String str = String_FromArray(strBuffer);
-		String_Format1(&str, "&e%i matching names: ", &matchesCount);
+		String_Format1(&str, "&e%i matching names: ", &numMatches);
 
-		for (i = 0; i < matchesCount; i++) {
-			match = TabList_UNSAFE_GetPlayer(matches[i]);
-			if ((str.length + match.length + 1) > STRING_SIZE) break;
+		for (i = 0; i < numMatches; i++) {
+			name = TabList_UNSAFE_GetPlayer(matches[i]);
+			if ((str.length + name.length + 1) > STRING_SIZE) break;
 
-			String_AppendString(&str, &match);
+			String_AppendString(&str, &name);
 			String_Append(&str, ' ');
 		}
 		Chat_AddOf(&str, MSG_TYPE_CLIENTSTATUS_3);
@@ -1983,10 +1986,10 @@ static int PlayerListWidget_GetGroupCount(struct PlayerListWidget* w, int id, in
 }
 
 static int PlayerListWidget_PlayerCompare(int x, int y) {
-	uint8_t xRank, yRank;
-	String xNameRaw, yNameRaw;
 	String xName; char xNameBuffer[STRING_SIZE];
 	String yName; char yNameBuffer[STRING_SIZE];
+	uint8_t xRank, yRank;
+	String xNameRaw, yNameRaw;
 
 	xRank = TabList_GroupRanks[x];
 	yRank = TabList_GroupRanks[y];

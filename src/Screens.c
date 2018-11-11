@@ -315,21 +315,21 @@ static bool StatusScreen_HacksChanged(struct StatusScreen* s) {
 }
 
 static void StatusScreen_UpdateHackState(struct StatusScreen* s) {
-	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	String status; char statusBuffer[STRING_SIZE * 2];
+	struct HacksComp* hacks;
 	bool speeding;
 
+	hacks = &LocalPlayer_Instance.Hacks;
 	s->Speed = hacks->Speeding; s->HalfSpeed = hacks->HalfSpeeding; s->Fly = hacks->Flying;
 	s->Noclip = hacks->Noclip;  s->LastFov = Game_Fov; s->CanSpeed = hacks->CanSpeed;
 
-	char statusBuffer[STRING_SIZE * 2];
-	String status = String_FromArray(statusBuffer);
-
+	String_InitArray(status, statusBuffer);
 	if (Game_Fov != Game_DefaultFov) {
 		String_Format1(&status, "Zoom fov %i  ", &Game_Fov);
 	}
-	if (hacks->Flying) String_AppendConst(&status, "Fly ON   ");
-
 	speeding = (hacks->Speeding || hacks->HalfSpeeding) && hacks->CanSpeed;
+
+	if (hacks->Flying) String_AppendConst(&status, "Fly ON   ");
 	if (speeding)      String_AppendConst(&status, "Speed ON   ");
 	if (hacks->Noclip) String_AppendConst(&status, "Noclip ON   ");
 
@@ -804,11 +804,11 @@ static void ChatScreen_SetInitialMessages(struct ChatScreen* s) {
 
 static void ChatScreen_CheckOtherStatuses(struct ChatScreen* s) {
 	static String texPack = String_FromConst("texturePack");
+	String str; char strBuffer[STRING_SIZE];
 	struct AsyncRequest request;
 	int progress;
 	bool hasRequest;
 	String identifier;
-	String str; char strBuffer[STRING_SIZE];
 	
 	hasRequest = AsyncDownloader_GetCurrent(&request, &progress);
 	identifier = String_FromRawArray(request.ID);	
@@ -866,10 +866,10 @@ static void ChatScreen_UpdateChatYOffset(struct ChatScreen* s, bool force) {
 }
 
 static void ChatElem_Recreate(struct TextGroupWidget* group, char code) {
-	char lineBuffer[TEXTGROUPWIDGET_LEN];
-	String line = String_FromArray(lineBuffer);
+	String line; char lineBuffer[TEXTGROUPWIDGET_LEN];
 	int i, j;
 
+	String_InitArray(line, lineBuffer);
 	for (i = 0; i < group->LinesCount; i++) {
 		TextGroupWidget_GetText(group, i, &line);
 		if (!line.length) continue;
@@ -1279,9 +1279,9 @@ static bool HUDScreen_MouseScroll(void* screen, float delta) {
 }
 
 static bool HUDScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
-	struct HUDScreen* s = screen;
-	struct ChatScreen* chat;
 	String name; char nameBuffer[STRING_SIZE + 1];
+	struct HUDScreen* s = screen;
+	struct ChatScreen* chat;	
 
 	if (btn != MouseButton_Left || !s->HandlesAllInput) return false;
 	chat = (struct ChatScreen*)s->Chat;
@@ -1408,18 +1408,19 @@ static void DisconnectScreen_ReconnectMessage(struct DisconnectScreen* s, String
 }
 
 static void DisconnectScreen_UpdateDelayLeft(struct DisconnectScreen* s, double delta) {
-	int elapsedMS = (int)(DateTime_CurrentUTC_MS() - s->InitTime);
-	int secsLeft  = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLIS_PER_SEC;
-	if (secsLeft < 0) secsLeft = 0;
+	String msg; char msgBuffer[STRING_SIZE];
+	int elapsedMS, secsLeft;
 
+	elapsedMS = (int)(DateTime_CurrentUTC_MS() - s->InitTime);
+	secsLeft  = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLIS_PER_SEC;
+	if (secsLeft < 0) secsLeft = 0;
 	if (s->LastSecsLeft == secsLeft && s->Reconnect.Active == s->LastActive) return;
 
-	char msgBuffer[STRING_SIZE];
-	String msg = String_FromArray(msgBuffer);
+	String_InitArray(msg, msgBuffer);
 	DisconnectScreen_ReconnectMessage(s, &msg);
 	ButtonWidget_Set(&s->Reconnect, &msg, &s->TitleFont);
-	s->Reconnect.Disabled = secsLeft != 0;
 
+	s->Reconnect.Disabled = secsLeft != 0;
 	s->LastSecsLeft = secsLeft;
 	s->LastActive   = s->Reconnect.Active;
 }
@@ -1432,8 +1433,8 @@ static void DisconnectScreen_ContextLost(void* screen) {
 }
 
 static void DisconnectScreen_ContextRecreated(void* screen) {
-	struct DisconnectScreen* s = screen;
 	String msg; char msgBuffer[STRING_SIZE];
+	struct DisconnectScreen* s = screen;
 
 	TextWidget_Create(&s->Title, &s->TitleStr, &s->TitleFont);
 	Widget_SetLocation(&s->Title, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
@@ -1499,9 +1500,9 @@ static bool DisconnectScreen_KeyPress(void* s, char keyChar) { return true; }
 static bool DisconnectScreen_KeyUp(void* s, Key key) { return true; }
 
 static bool DisconnectScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
+	String title; char titleBuffer[STRING_SIZE];
 	struct DisconnectScreen* s = screen;
 	struct ButtonWidget* w = &s->Reconnect;
-	String title; char titleBuffer[STRING_SIZE];
 
 	if (btn != MouseButton_Left) return true;
 	if (!w->Disabled && Widget_Contains(w, x, y)) {
@@ -1535,9 +1536,8 @@ static struct ScreenVTABLE DisconnectScreen_VTABLE = {
 struct Screen* DisconnectScreen_MakeInstance(const String* title, const String* message) {
 	static String kick = String_FromConst("Kicked ");
 	static String ban  = String_FromConst("Banned ");
-
-	struct DisconnectScreen* s = &DisconnectScreen_Instance;
 	String why; char whyBuffer[STRING_SIZE];
+	struct DisconnectScreen* s = &DisconnectScreen_Instance;
 
 	s->HandlesAllInput = true;
 	s->BlocksWorld     = true;

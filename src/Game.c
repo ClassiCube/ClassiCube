@@ -414,10 +414,10 @@ static void Game_InitScheduledTasks(void) {
 
 void Game_Free(void* obj);
 void Game_Load(void) {
-	struct IGameComponent comp;
-	int i, flags;
 	String renderType; char renderTypeBuffer[STRING_SIZE];
 	String title;      char titleBuffer[STRING_SIZE];
+	struct IGameComponent comp;
+	int i, flags;
 
 	Game_ViewDistance     = 512;
 	Game_MaxViewDistance  = 32768;
@@ -642,11 +642,11 @@ static void Game_DoScheduledTasks(double time) {
 }
 
 void Game_TakeScreenshot(void) {
+	String filename; char fileBuffer[STRING_SIZE];
+	String path;     char pathBuffer[FILENAME_SIZE];
 	DateTime now;
 	struct Stream stream;
 	ReturnCode res;
-	String filename; char fileBuffer[STRING_SIZE];
-	String path;     char pathBuffer[FILENAME_SIZE];
 
 	Game_ScreenshotRequested = false;
 	if (!Utils_EnsureDirectory("screenshots")) return;

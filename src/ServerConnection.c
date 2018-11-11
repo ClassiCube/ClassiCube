@@ -54,11 +54,12 @@ void ServerConnection_RetrieveTexturePack(const String* url) {
 
 void ServerConnection_DownloadTexturePack(const String* url) {
 	static String texPack = String_FromConst("texturePack");
-	if (TextureCache_HasDenied(url)) return;
+	String etag; char etagBuffer[STRING_SIZE];
+	TimeMS lastModified;
 
-	char etagBuffer[STRING_SIZE];
-	String etag = String_FromArray(etagBuffer);
-	TimeMS lastModified = 0;
+	if (TextureCache_HasDenied(url)) return;
+	String_InitArray(etag, etagBuffer);
+	lastModified = 0;
 
 	if (TextureCache_Has(url)) {
 		TextureCache_GetLastModified(url, &lastModified);
@@ -169,10 +170,10 @@ static void SPConnection_BeginConnect(void) {
 
 static char SPConnection_LastCol = '\0';
 static void SPConnection_AddPart(const String* text) {
-	char tmpBuffer[STRING_SIZE * 2];
-	String tmp = String_FromArray(tmpBuffer);
+	String tmp; char tmpBuffer[STRING_SIZE * 2];
 	char col;
 	int i;
+	String_InitArray(tmp, tmpBuffer);
 
 	/* Prepend colour codes for subsequent lines of multi-line chat */
 	if (!Drawer2D_IsWhiteCol(SPConnection_LastCol)) {
@@ -296,10 +297,12 @@ static void MPConnection_FailConnect(ReturnCode result) {
 
 static void MPConnection_TickConnect(void) {
 	ReturnCode res = 0;
+	TimeMS now;
+
 	Socket_GetError(net_socket, &res);
 	if (res) { MPConnection_FailConnect(res); return; }
 
-	TimeMS now = DateTime_CurrentUTC_MS();
+	now = DateTime_CurrentUTC_MS();
 	bool poll_write = false;
 	Socket_Select(net_socket, SOCKET_SELECT_WRITE, &poll_write);
 
@@ -378,19 +381,26 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	static String reason_err  = String_FromConst("I/O error when reading packets");
 	static String title_disc  = String_FromConst("Disconnected");
 	static String msg_invalid = String_FromConst("Server sent invalid packet!");
+	String msg; char msgBuffer[STRING_SIZE * 2];
+
+	struct LocalPlayer* p;
+	TimeMS now;
+	uint32_t pending;
+	ReturnCode res;
+	Net_Handler handler;
 
 	if (ServerConnection_Disconnected) return;
 	if (net_connecting) { MPConnection_TickConnect(); return; }
 
 	/* over 30 seconds since last packet */
-	TimeMS now = DateTime_CurrentUTC_MS();
+	now = DateTime_CurrentUTC_MS();
 	if (net_lastPacket + (30 * 1000) < now) {
 		MPConnection_CheckDisconnection(task->Interval);
 	}
 	if (ServerConnection_Disconnected) return;
 
-	uint32_t pending = 0;
-	ReturnCode res = Socket_Available(net_socket, &pending);
+	pending = 0;
+	res = Socket_Available(net_socket, &pending);
 	uint8_t* readEnd = net_readCurrent;
 
 	if (!res && pending) {
@@ -400,8 +410,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	}
 
 	if (res) {
-		char msgBuffer[STRING_SIZE * 2];
-		String msg = String_FromArray(msgBuffer);
+		String_InitArray(msg, msgBuffer);
 		String_Format3(&msg, "Error reading from %s:%i: %i", &Game_IPAddress, &Game_Port, &res);
 
 		ErrorHandler_Log(&msg);
@@ -418,7 +427,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 			Platform_LogConst("Skipping invalid HackControl byte from D3 server");
 			net_readCurrent++;
 
-			struct LocalPlayer* p = &LocalPlayer_Instance;
+			p = &LocalPlayer_Instance;
 			p->Physics.JumpVel = 0.42f; /* assume default jump height */
 			p->Physics.ServerJumpVel = p->Physics.JumpVel;
 			continue;
@@ -432,7 +441,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 		net_lastOpcode = opcode;
 		net_lastPacket = DateTime_CurrentUTC_MS();
 
-		Net_Handler handler = Net_Handlers[opcode];
+		handler = Net_Handlers[opcode];
 		if (!handler) {
 			Game_Disconnect(&title_disc, &msg_invalid); return;
 		}

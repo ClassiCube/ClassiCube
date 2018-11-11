@@ -138,11 +138,11 @@ Key KeyBind_GetDefault(KeyBind binding) { return KeyBind_Defaults[binding]; }
 bool KeyBind_IsPressed(KeyBind binding) { return Key_Pressed[KeyBind_Keys[binding]]; }
 
 void KeyBind_Load(void) {
-	char nameBuffer[STRING_SIZE + 1];
-	String name = String_NT_Array(nameBuffer);
+	String name; char nameBuffer[STRING_SIZE + 1];
 	Key mapping;
 	int i;
 
+	String_InitArray_NT(name, nameBuffer);
 	for (i = 0; i < KeyBind_Count; i++) {
 		name.length = 0;
 		String_Format1(&name, "key-%c", KeyBind_Names[i]);
@@ -155,9 +155,9 @@ void KeyBind_Load(void) {
 }
 
 void KeyBind_Save(void) {
-	String value;
-	int i;
 	String name; char nameBuffer[STRING_SIZE];
+	String value;
+	int i;	
 
 	String_InitArray(name, nameBuffer);
 	for (i = 0; i < KeyBind_Count; i++) {

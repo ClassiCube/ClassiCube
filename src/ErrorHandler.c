@@ -69,11 +69,13 @@ static int ErrorHandler_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, 
 }
 
 static BOOL CALLBACK ErrorHandler_DumpModule(const char* name, ULONG_PTR base, ULONG size, void* ctx) {
-	char buffer[STRING_SIZE * 4];
-	String str = String_FromArray(buffer);
-	uintptr_t start = base, end = base + (size - 1);
+	String str; char strBuffer[STRING_SIZE * 4];
+	uintptr_t beg, end;
 
-	String_Format3(&str, "%c = %x-%x\r\n", name, &start, &end);
+	beg = base; end = base + (size - 1);
+	String_InitArray(str, strBuffer);
+
+	String_Format3(&str, "%c = %x-%x\r\n", name, &beg, &end);
 	ErrorHandler_Log(&str);
 	return true;
 }
@@ -137,8 +139,8 @@ static void ErrorHandler_DumpCommon(String* str, void* ctx) {
 }
 
 static void ErrorHandler_DumpRegisters(void* ctx) {
-	CONTEXT* r;
 	String str; char strBuffer[STRING_SIZE * 8];
+	CONTEXT* r;
 	if (!ctx) return;
 
 	r = (CONTEXT*)ctx;
@@ -179,11 +181,14 @@ static void ErrorHandler_DumpRegisters(void* ctx) {
 *------------------------------------------------------Error handling-----------------------------------------------------*
 *#########################################################################################################################*/
 static LONG WINAPI ErrorHandler_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
-	char msgBuffer[STRING_SIZE * 2 + 1];
-	String msg = String_NT_Array(msgBuffer);
+	String msg; char msgBuffer[STRING_SIZE * 2 + 1];
+	uint32_t code;
+	uintptr_t addr;
 
-	uint32_t code  = (uint32_t)pInfo->ExceptionRecord->ExceptionCode;
-	uintptr_t addr = (uintptr_t)pInfo->ExceptionRecord->ExceptionAddress;
+	code = (uint32_t)pInfo->ExceptionRecord->ExceptionCode;
+	addr = (uintptr_t)pInfo->ExceptionRecord->ExceptionAddress;
+
+	String_InitArray_NT(msg, msgBuffer);
 	String_Format2(&msg, "Unhandled exception 0x%h at 0x%x", &code, &addr);
 	msg.buffer[msg.length] = '\0';
 
@@ -294,18 +299,22 @@ static void ErrorHandler_Backtrace(String* backtrace_, void* ctx) {
 *------------------------------------------------------Error handling-----------------------------------------------------*
 *#########################################################################################################################*/
 static void ErrorHandler_SignalHandler(int sig, siginfo_t* info, void* ctx) {
+	String msg; char msgBuffer[STRING_SIZE * 2 + 1];
+	int type, code;
+	uintptr_t addr;
+
 	/* Uninstall handler to avoid chance of infinite loop */
 	signal(SIGSEGV, SIG_DFL);
-	signal(SIGBUS, SIG_DFL);
-	signal(SIGILL, SIG_DFL);
+	signal(SIGBUS,  SIG_DFL);
+	signal(SIGILL,  SIG_DFL);
 	signal(SIGABRT, SIG_DFL);
-	signal(SIGFPE, SIG_DFL);
+	signal(SIGFPE,  SIG_DFL);
 
-	char msgBuffer[STRING_SIZE * 2 + 1];
-	String msg = String_NT_Array(msgBuffer);
+	type = info->si_signo;
+	code = info->si_code;
+	addr = (uintptr_t)info->si_addr;
 
-	int type = info->si_signo, code = info->si_code;
-	uintptr_t addr = (uintptr_t)info->si_addr;
+	String_InitArray_NT(msg, msgBuffer);
 	String_Format3(&msg, "Unhandled signal %i (code %i) at 0x%x", &type, &code, &addr);
 	msg.buffer[msg.length] = '\0';
 
@@ -580,8 +589,8 @@ void ErrorHandler_ShowDialog(const char* title, const char* msg) {
 *#########################################################################################################################*/
 #if defined CC_BUILD_NIX || defined CC_BUILD_SOLARIS
 static void ErrorHandler_DumpRegisters(void* ctx) {
-	mcontext_t r;
 	String str; char strBuffer[STRING_SIZE * 8];
+	mcontext_t r;
 	if (!ctx) return;
 
 	r = ((ucontext_t*)ctx)->uc_mcontext;
@@ -632,8 +641,8 @@ static void ErrorHandler_DumpCommon(String* str, void* ctx) {
 }
 #elif defined CC_BUILD_OSX
 static void ErrorHandler_DumpRegisters(void* ctx) {
-	mcontext_t r;
 	String str; char strBuffer[STRING_SIZE * 8];
+	mcontext_t r;
 	if (!ctx) return;
 
 	r = ((ucontext_t*)ctx)->uc_mcontext;
@@ -699,12 +708,11 @@ void ErrorHandler_Log(const String* msg) {
 	Stream_Write(&logStream, msg->buffer, msg->length);
 }
 
-static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void* ctx) {
-	char msgBuffer[3070 + 1];
-	String msg = String_NT_Array(msgBuffer);
+static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void* ctx) {	
+	String msg; char msgBuffer[3070 + 1];
+	String_InitArray_NT(msg, msgBuffer);
 
 	String_Format3(&msg, "ClassiCube crashed.%cMessage: %c%c", Platform_NewLine, raw_msg, Platform_NewLine);
-
 	#ifdef CC_COMMIT_SHA
 	String_Format2(&msg, "Commit SHA: %c%c", CC_COMMIT_SHA, Platform_NewLine);
 	#endif

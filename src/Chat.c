@@ -118,9 +118,9 @@ static void Chat_OpenLog(DateTime* now) {
 }
 
 static void Chat_AppendLog(const String* text) {
-	DateTime now;
-	ReturnCode res;
 	String str; char strBuffer[STRING_SIZE * 2];
+	DateTime now;
+	ReturnCode res;	
 
 	if (!Chat_LogName.length || !Game_ChatLogging) return;
 	DateTime_CurrentLocal(&now);
@@ -262,10 +262,10 @@ static struct ChatCommand* Commands_GetMatch(const String* cmdName) {
 }
 
 static void Commands_PrintDefault(void) {
+	String str; char strBuffer[STRING_SIZE];
 	String name;
 	struct ChatCommand* cmd;
 	int i;
-	String str; char strBuffer[STRING_SIZE];
 
 	Chat_AddRaw("&eList of client commands:");
 	String_InitArray(str, strBuffer);

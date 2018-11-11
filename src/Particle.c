@@ -379,7 +379,7 @@ void Particles_Tick(struct ScheduledTask* task) {
 
 void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 	struct TerrainParticle* p;
-	Vector3 origin, pos;
+	Vector3 origin;
 	Vector3 minBB, maxBB;
 
 	if (now != BLOCK_AIR || Block_Draw[old] == DRAW_GAS) return;

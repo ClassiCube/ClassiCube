@@ -40,19 +40,20 @@ int main_imdct() {
 #endif
 
 int main(int argc, char** argv) {
-	String args[PROGRAM_MAX_CMDARGS];
-	int argsCount = Platform_GetCommandLineArgs(argc, argv, args);
-	/* NOTE: Make sure to comment this out before pushing a commit */
-	/* String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565"); */
-	/* argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4); */
-
 	String defPath; char defPathBuffer[STRING_SIZE];
-	String title; char titleBuffer[STRING_SIZE];
+	String title;   char titleBuffer[STRING_SIZE];
+	String args[PROGRAM_MAX_CMDARGS];
+	int argsCount;
 
 	uint8_t ip[4];
 	uint16_t port;
 	struct DisplayDevice device;
 	int width, height;
+
+	argsCount = Platform_GetCommandLineArgs(argc, argv, args);
+	/* NOTE: Make sure to comment this out before pushing a commit */
+	/* String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565"); */
+	/* argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4); */
 
 	Platform_SetWorkingDir();
 	ErrorHandler_Init();

@@ -17,7 +17,7 @@ struct ZipState {
 	/* Source of the .zip archive data. Must be seekable. */
 	struct Stream* Input;
 	/* Callback function to process the data in a .zip archive entry. */
-	/* Note that data stream may not be seekable. (entry data can be compressed) */
+	/* Note that data stream may not be seekable. (entry data might be compressed) */
 	void (*ProcessEntry)(const String* path, struct Stream* data, struct ZipEntry* entry);
 	/* Predicate used to select which entries in a .zip archive get proessed.*/
 	/* Return false to skip the entry. (this avoids seeking to the entry's data) */

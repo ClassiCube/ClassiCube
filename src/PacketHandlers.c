@@ -218,10 +218,11 @@ static void WoM_UpdateIdentifier(void) {
 
 static void WoM_CheckMotd(void) {
 	static String cfg = String_FromConst("cfg=");
-	String motd = ServerConnection_ServerMOTD, host;
-	int index;
 	String url; char urlBuffer[STRING_SIZE];
+	String motd, host;
+	int index;	
 
+	motd = ServerConnection_ServerMOTD;
 	if (!motd.length) return;
 	index = String_IndexOfString(&motd, &cfg);
 	if (Game_PureClassic || index == -1) return;
@@ -262,15 +263,15 @@ static PackedCol WoM_ParseCol(const String* value, PackedCol defaultCol) {
 }
 
 static void WoM_ParseConfig(struct AsyncRequest* item) {
+	String line; char lineBuffer[STRING_SIZE * 2];
+	struct Stream mem;
 	String key, value;
 	int waterLevel;
 	PackedCol col;
 
-	char lineBuffer[STRING_SIZE * 2];
-	String line = String_FromArray(lineBuffer);
-	struct Stream mem;
-
+	String_InitArray(line, lineBuffer);
 	Stream_ReadonlyMemory(&mem, item->ResultData, item->ResultSize);
+
 	while (!Stream_ReadLine(&mem, &line)) {
 		Platform_Log(&line);
 		if (!String_UNSAFE_Separate(&line, '=', &key, &value)) continue;
@@ -378,6 +379,8 @@ void Classic_WriteLogin(const String* username, const String* verKey) {
 }
 
 static void Classic_Handshake(uint8_t* data) {
+	struct HacksComp* hacks;
+
 	ServerConnection_ServerName.length = 0;
 	ServerConnection_ServerMOTD.length = 0;
 	data++; /* protocol version */
@@ -386,10 +389,10 @@ static void Classic_Handshake(uint8_t* data) {
 	Handlers_ReadString(&data, &ServerConnection_ServerMOTD);
 	Chat_SetLogName(&ServerConnection_ServerName);
 
-	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	hacks = &LocalPlayer_Instance.Hacks;
 	HacksComp_SetUserType(hacks, *data, !cpe_blockPerms);
 	
-	String_Copy(&hacks->HacksFlags, &ServerConnection_ServerName);
+	String_Copy(&hacks->HacksFlags,         &ServerConnection_ServerName);
 	String_AppendString(&hacks->HacksFlags, &ServerConnection_ServerMOTD);
 	HacksComp_UpdateState(hacks);
 }
@@ -551,18 +554,19 @@ static void Classic_SetBlock(uint8_t* data) {
 }
 
 static void Classic_AddEntity(uint8_t* data) {
-	char nameBuffer[STRING_SIZE];
-	char skinBuffer[STRING_SIZE];
-	String name = String_FromArray(nameBuffer);
-	String skin = String_FromArray(skinBuffer);
+	static String group = String_FromConst("Players");
+	String name; char nameBuffer[STRING_SIZE];
+	String skin; char skinBuffer[STRING_SIZE];
+	EntityID id;
+	String_InitArray(name, nameBuffer);
+	String_InitArray(skin, skinBuffer);
 
-	EntityID id = *data++;
+	id = *data++;
 	Handlers_ReadString(&data, &name);
 	Handlers_CheckName(id, &name, &skin);
 	Handlers_AddEntity(data, id, &name, &skin, true);
 
 	/* Workaround for some servers that declare support for ExtPlayerList but don't send ExtAddPlayerName */
-	String group = String_FromConst("Players");
 	Handlers_AddTablistEntry(id, &name, &name, &group, 0);
 	classic_tabList[id >> 3] |= (uint8_t)(1 << (id & 0x7));
 }
@@ -660,10 +664,10 @@ static void Classic_SetPermission(uint8_t* data) {
 }
 
 static void Classic_ReadAbsoluteLocation(uint8_t* data, EntityID id, bool interpolate) {
+	struct LocationUpdate update;
 	int x, y, z;
 	Vector3 pos;
 	float rotY, headX;
-	struct LocationUpdate update;
 
 	if (cpe_extEntityPos) {
 		x = (int)Stream_GetU32_BE(&data[0]);
@@ -963,13 +967,13 @@ static void CPE_HoldThis(uint8_t* data) {
 }
 
 static void CPE_SetTextHotkey(uint8_t* data) {
+	String action; char actionBuffer[STRING_SIZE];
 	uint32_t keyCode;
 	uint8_t keyMods;
 	Key key;
-	char actionBuffer[STRING_SIZE];
-	String action = String_FromArray(actionBuffer);
 	
 	data += STRING_SIZE; /* skip label */
+	String_InitArray(action, actionBuffer);
 	Handlers_ReadString(&data, &action);
 
 	keyCode = Stream_GetU32_BE(data); data += 4;
@@ -991,19 +995,20 @@ static void CPE_SetTextHotkey(uint8_t* data) {
 }
 
 static void CPE_ExtAddPlayerName(uint8_t* data) {
-	char playerNameBuffer[STRING_SIZE];
-	char listNameBuffer[STRING_SIZE];
-	char groupNameBuffer[STRING_SIZE];
+	String playerName; char playerNameBuffer[STRING_SIZE];
+	String listName;   char listNameBuffer[STRING_SIZE];
+	String groupName;  char groupNameBuffer[STRING_SIZE];
+	uint8_t groupRank;
+	EntityID id;
+	String_InitArray(playerName, playerNameBuffer);
+	String_InitArray(listName,   listNameBuffer);
+	String_InitArray(groupName,  groupNameBuffer);
 
-	String playerName = String_FromArray(playerNameBuffer);
-	String listName   = String_FromArray(listNameBuffer);
-	String groupName  = String_FromArray(groupNameBuffer);
-
-	EntityID id = data[1]; data += 2;
+	id = data[1]; data += 2;
 	Handlers_ReadString(&data, &playerName);
 	Handlers_ReadString(&data, &listName);
 	Handlers_ReadString(&data, &groupName);
-	uint8_t groupRank = *data;
+	groupRank = *data;
 
 	String_StripCols(&playerName);
 	Handlers_RemoveEndPlus(&playerName);
@@ -1015,17 +1020,18 @@ static void CPE_ExtAddPlayerName(uint8_t* data) {
 }
 
 static void CPE_ExtAddEntity(uint8_t* data) {
-	char displayNameBuffer[STRING_SIZE];
-	char skinNameBuffer[STRING_SIZE];
-	String displayName = String_FromArray(displayNameBuffer);
-	String skinName    = String_FromArray(skinNameBuffer);
+	String name; char nameBuffer[STRING_SIZE];
+	String skin; char skinBuffer[STRING_SIZE];
+	EntityID id;
+	String_InitArray(name, nameBuffer);
+	String_InitArray(skin, skinBuffer);
 
-	EntityID id = *data++;
-	Handlers_ReadString(&data, &displayName);
-	Handlers_ReadString(&data, &skinName);
+	id = *data++;
+	Handlers_ReadString(&data, &name);
+	Handlers_ReadString(&data, &skin);
 
-	Handlers_CheckName(id, &displayName, &skinName);
-	Handlers_AddEntity(data, id, &displayName, &skinName, false);
+	Handlers_CheckName(id, &name, &skin);
+	Handlers_AddEntity(data, id, &name, &skin, false);
 }
 
 static void CPE_ExtRemovePlayerName(uint8_t* data) {
@@ -1061,23 +1067,26 @@ static void CPE_RemoveSelection(uint8_t* data) {
 }
 
 static void CPE_SetEnvCol(uint8_t* data) {
-	uint8_t variable = *data++;
-	int r = Stream_GetU16_BE(&data[0]);
-	int g = Stream_GetU16_BE(&data[2]);
-	int b = Stream_GetU16_BE(&data[4]);
-	bool invalid  = r > 255 || g > 255 || b > 255;
-	PackedCol col = PACKEDCOL_CONST((uint8_t)r, (uint8_t)g, (uint8_t)b, 255);
+	PackedCol c;
+	uint8_t variable;
+	bool invalid;
+	
+	variable = *data++;
+	invalid  = data[0] || data[2] || data[4];
+	/* R,G,B are actually 16 bit unsigned integers */
+	/* Above > 255 is 'invalid' (this is used by servers) */
+	c.R = data[1]; c.G = data[3]; c.B = data[5]; c.A = 255;
 
 	if (variable == 0) {
-		Env_SetSkyCol(invalid ? Env_DefaultSkyCol : col);
+		Env_SetSkyCol(invalid ? Env_DefaultSkyCol : c);
 	} else if (variable == 1) {
-		Env_SetCloudsCol(invalid ? Env_DefaultCloudsCol : col);
+		Env_SetCloudsCol(invalid ? Env_DefaultCloudsCol : c);
 	} else if (variable == 2) {
-		Env_SetFogCol(invalid ? Env_DefaultFogCol : col);
+		Env_SetFogCol(invalid ? Env_DefaultFogCol : c);
 	} else if (variable == 3) {
-		Env_SetShadowCol(invalid ? Env_DefaultShadowCol : col);
+		Env_SetShadowCol(invalid ? Env_DefaultShadowCol : c);
 	} else if (variable == 4) {
-		Env_SetSunCol(invalid ? Env_DefaultSunCol : col);
+		Env_SetSunCol(invalid ? Env_DefaultSunCol : c);
 	}
 }
 
@@ -1091,12 +1100,15 @@ static void CPE_SetBlockPermission(uint8_t* data) {
 }
 
 static void CPE_ChangeModel(uint8_t* data) {
-	char modelBuffer[STRING_SIZE];
-	String model = String_FromArray(modelBuffer);
-	EntityID id  = *data++;
+	String model; char modelBuffer[STRING_SIZE];
+	struct Entity* entity;
+	EntityID id;
+	String_InitArray(model, modelBuffer);
+
+	id = *data++;
 	Handlers_ReadString(&data, &model);
 
-	struct Entity* entity = Entities_List[id];
+	entity = Entities_List[id];
 	if (entity) { Entity_SetModel(entity, &model); }
 }
 
@@ -1145,17 +1157,18 @@ static void CPE_HackControl(uint8_t* data) {
 }
 
 static void CPE_ExtAddEntity2(uint8_t* data) {
-	char displayNameBuffer[STRING_SIZE];
-	char skinNameBuffer[STRING_SIZE];
-	String displayName = String_FromArray(displayNameBuffer);
-	String skinName    = String_FromArray(skinNameBuffer);
+	String name; char nameBuffer[STRING_SIZE];
+	String skin; char skinBuffer[STRING_SIZE];
+	EntityID id;
+	String_InitArray(name, nameBuffer);
+	String_InitArray(skin, skinBuffer);
 
-	EntityID id = *data++;
-	Handlers_ReadString(&data, &displayName);
-	Handlers_ReadString(&data, &skinName);
+	id = *data++;
+	Handlers_ReadString(&data, &name);
+	Handlers_ReadString(&data, &skin);
 
-	Handlers_CheckName(id, &displayName, &skinName);
-	Handlers_AddEntity(data, id, &displayName, &skinName, true);
+	Handlers_CheckName(id, &name, &skin);
+	Handlers_AddEntity(data, id, &name, &skin, true);
 }
 
 #define BULK_MAX_BLOCKS 256

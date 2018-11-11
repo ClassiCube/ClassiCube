@@ -19,9 +19,15 @@ typedef enum BlendFunc_ {
 	BLEND_FUNC_INV_SRC_ALPHA, BLEND_FUNC_DST_ALPHA, BLEND_FUNC_INV_DST_ALPHA
 } BlendFunc;
 
-enum VERTEX_FORMAT { VERTEX_FORMAT_P3FC4B, VERTEX_FORMAT_P3FT2FC4B };
-enum FOG_FUNC      { FOG_LINEAR, FOG_EXP, FOG_EXP2 };
-enum MATRIX_TYPE   { MATRIX_TYPE_PROJECTION, MATRIX_TYPE_VIEW, MATRIX_TYPE_TEXTURE };
+typedef enum VertexFormat_ {
+	VERTEX_FORMAT_P3FC4B, VERTEX_FORMAT_P3FT2FC4B
+} VertexFormat;
+typedef enum FogFunc_ {
+	FOG_LINEAR, FOG_EXP, FOG_EXP2
+} FogFunc;
+typedef enum MatrixType_ {
+	MATRIX_TYPE_PROJECTION, MATRIX_TYPE_VIEW, MATRIX_TYPE_TEXTURE
+} MatrixType;
 
 void Gfx_Init(void);
 void Gfx_Free(void);
@@ -53,7 +59,7 @@ void Gfx_SetFog(bool enabled);
 void Gfx_SetFogCol(PackedCol col);
 void Gfx_SetFogDensity(float value);
 void Gfx_SetFogEnd(float value);
-void Gfx_SetFogMode(int fogMode);
+void Gfx_SetFogMode(FogFunc func);
 
 void Gfx_SetFaceCulling(bool enabled);
 void Gfx_SetAlphaTest(bool enabled);
@@ -70,22 +76,22 @@ void Gfx_SetDepthTestFunc(CompareFunc func);
 void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a);
 void Gfx_SetDepthWrite(bool enabled);
 
-GfxResourceID Gfx_CreateDynamicVb(int vertexFormat, int maxVertices);
-GfxResourceID Gfx_CreateVb(void* vertices, int vertexFormat, int count);
+GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices);
+GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count);
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount);
 void Gfx_BindVb(GfxResourceID vb);
 void Gfx_BindIb(GfxResourceID ib);
 void Gfx_DeleteVb(GfxResourceID* vb);
 void Gfx_DeleteIb(GfxResourceID* ib);
 
-void Gfx_SetBatchFormat(int vertexFormat);
+void Gfx_SetBatchFormat(VertexFormat fmt);
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount);
 void Gfx_DrawVb_Lines(int verticesCount);
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex);
 void Gfx_DrawVb_IndexedTris(int verticesCount);
 void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex);
 
-void Gfx_SetMatrixMode(int matrixType);
+void Gfx_SetMatrixMode(MatrixType type);
 void Gfx_LoadMatrix(struct Matrix* matrix);
 void Gfx_LoadIdentityMatrix(void);
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix);

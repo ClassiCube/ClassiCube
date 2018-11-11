@@ -156,13 +156,13 @@ void Options_SetString(const String* key, const String* value) {
 
 void Options_Load(void) {	
 	static String path = String_FromConst("options.txt");
+	String line; char lineBuffer[768];
 
 	String key, value;
 	uint8_t buffer[2048];
 	struct Stream stream, buffered;
 	int i;
-	ReturnCode res;
-	String line; char lineBuffer[768];
+	ReturnCode res;	
 
 	res = Stream_OpenFile(&stream, &path);
 	if (res == ReturnCode_FileNotFound) return;
@@ -198,12 +198,12 @@ void Options_Load(void) {
 
 void Options_Save(void) {	
 	static String path = String_FromConst("options.txt");
+	String line; char lineBuffer[768];
 
 	String key, value;
 	struct Stream stream;
 	int i;
 	ReturnCode res;
-	String line; char lineBuffer[768];
 
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Chat_LogError2(res, "creating", &path); return; }

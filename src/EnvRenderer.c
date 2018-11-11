@@ -470,8 +470,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	particles = weather == WEATHER_RAINY;
 	weather_accumulator += deltaTime;
 
-	PackedCol col = Env_SunCol;
-	VertexP3fT2fC4b v;
+	VertexP3fT2fC4b v; v.Col = Env_SunCol;
 	VertexP3fT2fC4b vertices[WEATHER_VERTS_COUNT];
 	VertexP3fT2fC4b* ptr = vertices;
 
@@ -491,10 +490,9 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 			dist  = (float)dx * (float)dx + (float)dz * (float)dz;
 			alpha = EnvRenderer_RainAlphaAt(dist);
 			Math_Clamp(alpha, 0.0f, 255.0f);
-			col.A = (uint8_t)alpha;
+			v.Col.A = (uint8_t)alpha;
 
 			/* NOTE: Making vertex is inlined since this is called millions of times. */
-			v.Col = col;
 			float worldV = vOffset + (z & 1) / 2.0f - (x & 0x0F) / 16.0f;
 			float v1 = y / 6.0f + worldV, v2 = (y + height) / 6.0f + worldV;
 			float x1 = (float)x,       y1 = (float)y,            z1 = (float)z;

@@ -545,16 +545,15 @@ static void ShadowComponent_CalcAlpha(float playerY, struct ShadowData* data) {
 }
 
 static bool ShadowComponent_GetBlocks(struct Entity* entity, int x, int y, int z, struct ShadowData* data) {
-	int count;
+	int i;
 	struct ShadowData zeroData = { 0 };
-	for (count = 0; count < 4; count++) { data[count] = zeroData; }
-	count = 0;
 
+	for (i = 0; i < 4; i++) { data[i] = zeroData; }
 	struct ShadowData* cur = data;
 	float posY = entity->Position.Y;
 	bool outside = x < 0 || z < 0 || x >= World_Width || z >= World_Length;
 
-	while (y >= 0 && count < 4) {
+	for (i = 0; y >= 0 && i < 4; y--) {
 		BlockID block;
 		if (!outside) {
 			block = World_GetBlock(x, y, z);
@@ -565,26 +564,25 @@ static bool ShadowComponent_GetBlocks(struct Entity* entity, int x, int y, int z
 		} else {
 			block = BLOCK_AIR;
 		}
-		y--;
 
 		uint8_t draw = Block_Draw[block];
 		if (draw == DRAW_GAS || draw == DRAW_SPRITE || Block_IsLiquid[block]) continue;
-		float blockY = (y + 1.0f) + Block_MaxBB[block].Y;
-		if (blockY >= posY + 0.01f) continue;
+		float topY = y + Block_MaxBB[block].Y;
+		if (topY >= posY + 0.01f) continue;
 
-		cur->Block = block; cur->Y = blockY;
+		cur->Block = block; cur->Y = topY;
 		ShadowComponent_CalcAlpha(posY, cur);
-		count++; cur++;
+		i++; cur++;
 
 		/* Check if the casted shadow will continue on further down. */
 		if (Block_MinBB[block].X == 0.0f && Block_MaxBB[block].X == 1.0f &&
 			Block_MinBB[block].Z == 0.0f && Block_MaxBB[block].Z == 1.0f) return true;
 	}
 
-	if (count < 4) {
+	if (i < 4) {
 		cur->Block = Env_EdgeBlock; cur->Y = 0.0f;
 		ShadowComponent_CalcAlpha(posY, cur);
-		count++; cur++;
+		i++; cur++;
 	}
 	return true;
 }

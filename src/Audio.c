@@ -100,9 +100,9 @@ static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 }
 
 static ReturnCode Sound_ReadWave(const String* filename, struct Sound* snd) {
+	String path; char pathBuffer[FILENAME_SIZE];
 	struct Stream stream;
 	ReturnCode res;
-	String path; char pathBuffer[FILENAME_SIZE];
 
 	String_InitArray(path, pathBuffer);
 	String_Format2(&path, "audio%r%s", &Directory_Separator, filename);

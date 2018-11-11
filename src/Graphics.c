@@ -357,9 +357,9 @@ void Gfx_SetFogEnd(float value) {
 	D3D9_SetRenderState(D3DRS_FOGEND, raw.u, "D3D9_SetFogEnd");
 }
 
-void Gfx_SetFogMode(int fogMode) {
+void Gfx_SetFogMode(FogFunc func) {
 	static D3DFOGMODE modes[3] = { D3DFOG_LINEAR, D3DFOG_EXP, D3DFOG_EXP2 };
-	D3DFOGMODE mode = modes[fogMode];
+	D3DFOGMODE mode = modes[func];
 	if (mode == d3d9_fogMode) return;
 
 	d3d9_fogMode = mode;
@@ -458,11 +458,11 @@ static void D3D9_RestoreRenderStates(void) {
 /*########################################################################################################################*
 *---------------------------------------------------Vertex/Index buffers--------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID Gfx_CreateDynamicVb(int vertexFormat, int maxVertices) {
-	int size = maxVertices * Gfx_strideSizes[vertexFormat];
+GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
+	int size = maxVertices * Gfx_strideSizes[fmt];
 	IDirect3DVertexBuffer9* vbuffer;
 	ReturnCode res = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
-		d3d9_formatMappings[vertexFormat], D3DPOOL_DEFAULT, &vbuffer, NULL);
+		d3d9_formatMappings[fmt], D3DPOOL_DEFAULT, &vbuffer, NULL);
 	if (res) ErrorHandler_Fail2(res, "D3D9_CreateDynamicVb");
 
 	return vbuffer;
@@ -478,14 +478,14 @@ static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, int size,
 	if (res) ErrorHandler_Fail2(res, unlockMsg);
 }
 
-GfxResourceID Gfx_CreateVb(void* vertices, int vertexFormat, int count) {
-	int size = count * Gfx_strideSizes[vertexFormat];
+GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
+	int size = count * Gfx_strideSizes[fmt];
 	IDirect3DVertexBuffer9* vbuffer;
 	ReturnCode res;
 
 	for (;;) {
 		res = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_WRITEONLY,
-			d3d9_formatMappings[vertexFormat], D3DPOOL_DEFAULT, &vbuffer, NULL);
+			d3d9_formatMappings[fmt], D3DPOOL_DEFAULT, &vbuffer, NULL);
 		if (!res) break;
 
 		if (res != D3DERR_OUTOFVIDEOMEMORY) ErrorHandler_Fail2(res, "D3D9_CreateVb");
@@ -531,13 +531,13 @@ void Gfx_BindIb(GfxResourceID ib) {
 void Gfx_DeleteVb(GfxResourceID* vb) { D3D9_FreeResource(vb); }
 void Gfx_DeleteIb(GfxResourceID* ib) { D3D9_FreeResource(ib); }
 
-void Gfx_SetBatchFormat(int format) {
-	if (format == gfx_batchFormat) return;
-	gfx_batchFormat = format;
+void Gfx_SetBatchFormat(VertexFormat fmt) {
+	if (fmt == gfx_batchFormat) return;
+	gfx_batchFormat = fmt;
 
-	ReturnCode res = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[format]);
+	ReturnCode res = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[fmt]);
 	if (res) ErrorHandler_Fail2(res, "D3D9_SetBatchFormat");
-	gfx_batchStride = Gfx_strideSizes[format];
+	gfx_batchStride = Gfx_strideSizes[fmt];
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
@@ -576,10 +576,10 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetMatrixMode(int matrixType) {
-	if (matrixType == MATRIX_TYPE_PROJECTION)   { curMatrix = D3DTS_PROJECTION; } 
-	else if (matrixType == MATRIX_TYPE_VIEW)    { curMatrix = D3DTS_VIEW; } 
-	else if (matrixType == MATRIX_TYPE_TEXTURE) { curMatrix = D3DTS_TEXTURE0; }
+void Gfx_SetMatrixMode(MatrixType type) {
+	if (type == MATRIX_TYPE_PROJECTION)   { curMatrix = D3DTS_PROJECTION; } 
+	else if (type == MATRIX_TYPE_VIEW)    { curMatrix = D3DTS_VIEW; } 
+	else if (type == MATRIX_TYPE_TEXTURE) { curMatrix = D3DTS_TEXTURE0; }
 }
 
 void Gfx_LoadMatrix(struct Matrix* matrix) {
@@ -951,12 +951,12 @@ void Gfx_SetFogEnd(float value) {
 	gl_lastFogEnd = value;
 }
 
-void Gfx_SetFogMode(int mode) {
+void Gfx_SetFogMode(FogFunc func) {
 	static GLint modes[3] = { GL_LINEAR, GL_EXP, GL_EXP2 };
-	if (mode == gl_lastFogMode) return;
+	if (func == gl_lastFogMode) return;
 
-	glFogi(GL_FOG_MODE, modes[mode]);
-	gl_lastFogMode = mode;
+	glFogi(GL_FOG_MODE, modes[func]);
+	gl_lastFogMode = func;
 }
 
 void Gfx_SetFaceCulling(bool enabled) { gl_Toggle(GL_CULL_FACE); }
@@ -1003,16 +1003,16 @@ static GfxResourceID GL_GenAndBind(GLenum target) {
 	return id;
 }
 
-GfxResourceID Gfx_CreateDynamicVb(int vertexFormat, int maxVertices) {
+GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	GfxResourceID id = GL_GenAndBind(GL_ARRAY_BUFFER);
-	uint32_t size    = maxVertices * Gfx_strideSizes[vertexFormat];
+	uint32_t size    = maxVertices * Gfx_strideSizes[fmt];
 	glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
 	return id;
 }
 
-GfxResourceID Gfx_CreateVb(void* vertices, int vertexFormat, int count) {
+GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 	GfxResourceID id = GL_GenAndBind(GL_ARRAY_BUFFER);
-	uint32_t size    = count * Gfx_strideSizes[vertexFormat];
+	uint32_t size    = count * Gfx_strideSizes[fmt];
 	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 	return id;
 }
@@ -1039,11 +1039,11 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 	*ib = GFX_NULL;
 }
 #else
-GfxResourceID Gfx_CreateDynamicVb(int vertexFormat, int maxVertices) { return gl_DYNAMICLISTID;  }
-GfxResourceID Gfx_CreateVb(void* vertices, int vertexFormat, int count) {
+GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) { return gl_DYNAMICLISTID;  }
+GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 	/* We need to setup client state properly when building the list */
 	int curFormat = gfx_batchFormat, stride;
-	Gfx_SetBatchFormat(vertexFormat);
+	Gfx_SetBatchFormat(fmt);
 
 	GfxResourceID list = glGenLists(1);
 	glNewList(list, GL_COMPILE);
@@ -1051,11 +1051,11 @@ GfxResourceID Gfx_CreateVb(void* vertices, int vertexFormat, int count) {
 
 	uint16_t indices[GFX_MAX_INDICES];
 	GfxCommon_MakeIndices(indices, ICOUNT(count));
-	stride = Gfx_strideSizes[vertexFormat];
+	stride = Gfx_strideSizes[fmt];
 
 	glVertexPointer(3, GL_FLOAT, stride, vertices);
 	glColorPointer(4, GL_UNSIGNED_BYTE, stride, (void*)((uint8_t*)vertices + 12));
-	if (vertexFormat == VERTEX_FORMAT_P3FT2FC4B) {
+	if (fmt == VERTEX_FORMAT_P3FT2FC4B) {
 		glTexCoordPointer(2, GL_FLOAT, stride, (void*)((uint8_t*)vertices + 16));
 	}
 
@@ -1101,16 +1101,16 @@ void GL_SetupVbPos3fTex2fCol4b_Range(int startVertex) {
 	glTexCoordPointer(2, GL_FLOAT,        sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
 }
 
-void Gfx_SetBatchFormat(int vertexFormat) {
-	if (vertexFormat == gfx_batchFormat) return;
+void Gfx_SetBatchFormat(VertexFormat fmt) {
+	if (fmt == gfx_batchFormat) return;
 
 	if (gfx_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	}
-	gfx_batchFormat = vertexFormat;
-	gfx_batchStride = Gfx_strideSizes[vertexFormat];
+	gfx_batchFormat = fmt;
+	gfx_batchStride = Gfx_strideSizes[fmt];
 
-	if (vertexFormat == VERTEX_FORMAT_P3FT2FC4B) {
+	if (fmt == VERTEX_FORMAT_P3FT2FC4B) {
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		gl_setupVBFunc      = GL_SetupVbPos3fTex2fCol4b;
 		gl_setupVBRangeFunc = GL_SetupVbPos3fTex2fCol4b_Range;
@@ -1225,12 +1225,12 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 *#########################################################################################################################*/
 static int gl_lastMatrixType;
 
-void Gfx_SetMatrixMode(int matrixType) {
+void Gfx_SetMatrixMode(MatrixType type) {
 	static GLenum modes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
-	if (matrixType == gl_lastMatrixType) return;
+	if (type == gl_lastMatrixType) return;
 
-	gl_lastMatrixType = matrixType;
-	glMatrixMode(modes[matrixType]);
+	gl_lastMatrixType = type;
+	glMatrixMode(modes[type]);
 }
 
 void Gfx_LoadMatrix(struct Matrix* matrix) { glLoadMatrixf((float*)matrix); }
