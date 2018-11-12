@@ -1067,14 +1067,15 @@ static void GenLevelScreen_Input(struct GenLevelScreen* s, int i, int y, bool se
 
 static void GenLevelScreen_Label(struct GenLevelScreen* s, int i, int x, int y, const char* title) {
 	struct TextWidget* label = &s->Labels[i];
+	PackedCol col = PACKEDCOL_CONST(224, 224, 224, 255);
 
 	String text = String_FromReadonly(title);
 	Menu_Label(s, i + 4, label, &text, &s->TextFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
 
+	label->Col     = col;
 	label->XOffset = -110 - label->Width / 2;
-	Widget_Reposition(label);
-	PackedCol col = PACKEDCOL_CONST(224, 224, 224, 255); label->Col = col;
+	Widget_Reposition(label);	 
 }
 
 static void GenLevelScreen_Init(void* screen) {
@@ -3023,13 +3024,17 @@ static void TexIdsOverlay_Init(void* screen) {
 
 static void TexIdsOverlay_Render(void* screen, double delta) {
 	struct TexIdsOverlay* s = screen;
+	int rows, origXOffset;
+
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Menu_Render(s, delta);
 
-	int rows = Atlas2D_RowsCount, origXOffset = s->XOffset;
+	rows = Atlas2D_RowsCount;
+	origXOffset = s->XOffset;
 	s->BaseTexLoc = 0;
+
 	while (rows > 0) {
 		TexIdsOverlay_RenderTerrain(s);
 		TexIdsOverlay_RenderTextOverlay(s);
@@ -3044,12 +3049,11 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 }
 
 static bool TexIdsOverlay_KeyDown(void* screen, Key key) {
-	struct TexIdsOverlay* s = screen;
-	if (key == KeyBind_Get(KeyBind_IDOverlay) || key == KeyBind_Get(KeyBind_PauseOrExit)) {
-		Gui_FreeOverlay(s); return true;
-	}
-
 	struct Screen* active = Gui_GetUnderlyingScreen();
+
+	if (key == KeyBind_Get(KeyBind_IDOverlay) || key == KeyBind_Get(KeyBind_PauseOrExit)) {
+		Gui_FreeOverlay(screen); return true;
+	}
 	return Elem_HandlesKeyDown(active, key);
 }
 
@@ -3221,6 +3225,7 @@ static void TexPackOverlay_YesClick(void* screen, void* widget) {
 
 static void TexPackOverlay_NoClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = screen;
+	struct Screen* overlay;
 	String url;
 	bool isAlways;
 
@@ -3228,7 +3233,7 @@ static void TexPackOverlay_NoClick(void* screen, void* widget) {
 	url = String_UNSAFE_SubstringAt(&s->Identifier, 3);
 
 	isAlways = WarningOverlay_IsAlways(s, widget);
-	struct Screen* overlay = ConfirmDenyOverlay_MakeInstance(&url, isAlways);
+	overlay  = ConfirmDenyOverlay_MakeInstance(&url, isAlways);
 	Gui_ShowOverlay(overlay, true);
 }
 

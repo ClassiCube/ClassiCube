@@ -44,7 +44,7 @@ static Key Window_MapKey(KeySym key) {
 	if (key >= XK_a && key <= XK_z) { return Key_A + (key - XK_a); }
 
 	if (key >= XK_KP_0 && key <= XK_KP_9) {
-		return Key_Keypad0 + (key - XK_KP_9);
+		return Key_Keypad0 + (key - XK_KP_0);
 	}
 
 	switch (key) {
@@ -121,6 +121,7 @@ static Key Window_MapKey(KeySym key) {
 		case XK_KP_Down: return Key_Keypad2;
 		case XK_KP_Page_Down: return Key_Keypad3;
 		case XK_KP_Left: return Key_Keypad4;
+		case XK_KP_Begin: return Key_Keypad5;
 		case XK_KP_Right: return Key_Keypad6;
 		case XK_KP_Home: return Key_Keypad7;
 		case XK_KP_Up: return Key_Keypad8;

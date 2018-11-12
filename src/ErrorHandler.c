@@ -616,11 +616,12 @@ static void ErrorHandler_DumpRegisters(void* ctx) {
 }
 
 static void ErrorHandler_DumpMemoryMap(void) {
-	int n, fd = open("/proc/self/maps", O_RDONLY);
+	String str; char strBuffer[STRING_SIZE * 5];
+	int n, fd;
+	
+	fd = open("/proc/self/maps", O_RDONLY);
 	if (fd < 0) return;
-
-	char buffer[STRING_SIZE * 5];
-	String str = String_FromArray(buffer);
+	String_InitArray(str, strBuffer);
 
 	while ((n = read(fd, str.buffer, str.capacity)) > 0) {
 		str.length = n;

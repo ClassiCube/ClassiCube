@@ -199,11 +199,13 @@ static bool InventoryScreen_KeyDown(void* screen, Key key) {
 static bool InventoryScreen_KeyPress(void* elem, char keyChar) { return true; }
 static bool InventoryScreen_KeyUp(void* screen, Key key) {
 	struct InventoryScreen* s = screen;
+	struct HUDScreen* hud;
+
 	if (key == KeyBind_Get(KeyBind_Inventory)) {
 		s->ReleasedInv = true; return true;
 	}
 
-	struct HUDScreen* hud = (struct HUDScreen*)Gui_HUD;
+	hud = (struct HUDScreen*)Gui_HUD;
 	return Elem_HandlesKeyUp(&hud->Hotbar, key);
 }
 
@@ -211,11 +213,13 @@ static bool InventoryScreen_MouseDown(void* screen, int x, int y, MouseButton bt
 	struct InventoryScreen* s = screen;
 	struct TableWidget* table = &s->Table;
 	struct HUDScreen* hud     = (struct HUDScreen*)Gui_HUD;
-	if (table->Scroll.DraggingMouse || Elem_HandlesMouseDown(&hud->Hotbar, x, y, btn)) return true;
+	bool handled, hotbar;
 
-	bool handled = Elem_HandlesMouseDown(table, x, y, btn);
+	if (table->Scroll.DraggingMouse || Elem_HandlesMouseDown(&hud->Hotbar, x, y, btn)) return true;
+	handled = Elem_HandlesMouseDown(table, x, y, btn);
+
 	if ((!handled || table->PendingClose) && btn == MouseButton_Left) {
-		bool hotbar = Key_IsControlPressed() || Key_IsShiftPressed();
+		hotbar = Key_IsControlPressed() || Key_IsShiftPressed();
 		if (!hotbar) Gui_CloseActive();
 	}
 	return true;
@@ -284,16 +288,21 @@ static void StatusScreen_MakeText(struct StatusScreen* s, String* status) {
 
 static void StatusScreen_DrawPosition(struct StatusScreen* s) {
 	struct TextAtlas* atlas = &s->PosAtlas;
+	struct Texture tex;
+	PackedCol col = PACKEDCOL_WHITE;
+	Vector3I pos;
 	VertexP3fT2fC4b vertices[4 * 64];
 	VertexP3fT2fC4b* ptr = vertices;
 
-	struct Texture tex = atlas->Tex; tex.X = 2; tex.Width = atlas->Offset;
-	PackedCol col = PACKEDCOL_WHITE;
+	/* Make "Position: " prefix */
+	tex = atlas->Tex; 
+	tex.X = 2; tex.Width = atlas->Offset;
 	GfxCommon_Make2DQuad(&tex, col, &ptr);
 
-	Vector3I pos; Vector3I_Floor(&pos, &LocalPlayer_Instance.Base.Position);
+	Vector3I_Floor(&pos, &LocalPlayer_Instance.Base.Position);
 	atlas->CurX = atlas->Offset + 2;
 
+	/* Make (X, Y, Z) suffix */
 	TextAtlas_Add(atlas, 13, &ptr);
 	TextAtlas_AddInt(atlas, pos.X, &ptr);
 	TextAtlas_Add(atlas, 11, &ptr);
@@ -561,6 +570,8 @@ static void LoadingScreen_Init(void* screen) {
 #define PROG_BAR_HEIGHT 4
 static void LoadingScreen_Render(void* screen, double delta) {
 	struct LoadingScreen* s = screen;
+	PackedCol backCol = PACKEDCOL_CONST(128, 128, 128, 255);
+	PackedCol progCol = PACKEDCOL_CONST(128, 255, 128, 255);
 	int progWidth;
 	int x, y;
 
@@ -575,8 +586,6 @@ static void LoadingScreen_Render(void* screen, double delta) {
 	y = Gui_CalcPos(ANCHOR_CENTRE, 34, PROG_BAR_HEIGHT, Game_Height);
 	progWidth = (int)(PROG_BAR_WIDTH * s->Progress);
 
-	PackedCol backCol = PACKEDCOL_CONST(128, 128, 128, 255);
-	PackedCol progCol = PACKEDCOL_CONST(128, 255, 128, 255);
 	GfxCommon_Draw2DFlat(x, y, PROG_BAR_WIDTH, PROG_BAR_HEIGHT, backCol);
 	GfxCommon_Draw2DFlat(x, y, progWidth,      PROG_BAR_HEIGHT, progCol);
 }
@@ -899,10 +908,14 @@ static void ChatScreen_ScrollHistoryBy(struct ChatScreen* s, int delta) {
 }
 
 static bool ChatScreen_KeyDown(void* screen, Key key) {
+	static String slash  = String_FromConst("/");
 	struct ChatScreen* s = screen;
-	s->SuppressNextPress = false;
+	struct InputWidget* input;
+	int defaultIndex;
 
-	if (s->HandlesAllInput) { /* text input bar */
+	s->SuppressNextPress = false;
+	/* Handle text input bar */
+	if (s->HandlesAllInput) {
 		if (key == KeyBind_Get(KeyBind_SendChat) || key == Key_KeypadEnter || key == KeyBind_Get(KeyBind_PauseOrExit)) {
 			ChatScreen_SetHandlesAllInput(s, false);
 			Key_KeyRepeat = false;
@@ -912,12 +925,12 @@ static bool ChatScreen_KeyDown(void* screen, Key key) {
 			}
 			ChatScreen_InputStr.length = 0;
 
-			struct InputWidget* input = &s->Input.Base;
+			input = &s->Input.Base;
 			input->OnPressedEnter(input);
 			SpecialInputWidget_SetActive(&s->AltText, false);
 
 			/* Reset chat when user has scrolled up in chat history */
-			int defaultIndex = Chat_Log.Count - Game_ChatLines;
+			defaultIndex = Chat_Log.Count - Game_ChatLines;
 			if (s->ChatIndex != defaultIndex) {
 				s->ChatIndex = ChatScreen_ClampIndex(defaultIndex);
 				ChatScreen_ResetChat(s);
@@ -936,7 +949,6 @@ static bool ChatScreen_KeyDown(void* screen, Key key) {
 	if (key == KeyBind_Get(KeyBind_Chat)) {
 		ChatScreen_OpenInput(s, &String_Empty);
 	} else if (key == Key_Slash) {
-		String slash = String_FromConst("/");
 		ChatScreen_OpenInput(s, &slash);
 	} else {
 		return false;
@@ -1095,14 +1107,16 @@ static void ChatScreen_OnResize(void* screen) {
 
 static void ChatScreen_Init(void* screen) {
 	struct ChatScreen* s = screen;
-	int fontSize = (int)(8 * Game_GetChatScale());
-	Math_Clamp(fontSize, 8, 60);
-	int announceSize = (int)(16 * Game_GetChatScale());
-	Math_Clamp(announceSize, 8, 60);
+	int fontSize, largeSize;
 
-	Drawer2D_MakeFont(&s->ChatFont,         fontSize,     FONT_STYLE_NORMAL);
-	Drawer2D_MakeFont(&s->ChatUrlFont,      fontSize,     FONT_STYLE_UNDERLINE);
-	Drawer2D_MakeFont(&s->AnnouncementFont, announceSize, FONT_STYLE_NORMAL);
+	fontSize  = (int)(8  * Game_GetChatScale());
+	Math_Clamp(fontSize, 8, 60);
+	largeSize = (int)(16 * Game_GetChatScale());
+	Math_Clamp(largeSize, 8, 60);
+
+	Drawer2D_MakeFont(&s->ChatFont,         fontSize,  FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&s->ChatUrlFont,      fontSize,  FONT_STYLE_UNDERLINE);
+	Drawer2D_MakeFont(&s->AnnouncementFont, largeSize, FONT_STYLE_NORMAL);
 	Screen_CommonInit(s);
 
 	Event_RegisterChat(&ChatEvents_ChatReceived,    s, ChatScreen_ChatReceived);
@@ -1113,7 +1127,8 @@ static void ChatScreen_Init(void* screen) {
 static void ChatScreen_Render(void* screen, double delta) {
 	struct ChatScreen* s = screen;
 	struct Texture tex;
-	int i, y;
+	TimeMS now;
+	int i, y, logIdx;
 
 	ChatScreen_CheckOtherStatuses(s);
 	if (!Game_PureClassic) { Elem_Render(&s->Status, delta); }
@@ -1129,14 +1144,14 @@ static void ChatScreen_Render(void* screen, double delta) {
 		Texture_Render(&tex);
 	}
 
-	TimeMS now = DateTime_CurrentUTC_MS();
+	now = DateTime_CurrentUTC_MS();
 	if (s->HandlesAllInput) {
 		Elem_Render(&s->Chat, delta);
 	} else {
 		/* Only render recent chat */
 		for (i = 0; i < s->Chat.LinesCount; i++) {
-			tex = s->Chat.Textures[i];
-			int logIdx = s->ChatIndex + i;
+			tex    = s->Chat.Textures[i];
+			logIdx = s->ChatIndex + i;
 			if (!tex.ID) continue;
 
 			if (logIdx < 0 || logIdx >= Chat_Log.Count) continue;
@@ -1465,10 +1480,10 @@ static void DisconnectScreen_Init(void* screen) {
 
 static void DisconnectScreen_Render(void* screen, double delta) {
 	struct DisconnectScreen* s = screen;
-	if (s->CanReconnect) { DisconnectScreen_UpdateDelayLeft(s, delta); }
-
 	PackedCol top    = PACKEDCOL_CONST(64, 32, 32, 255);
 	PackedCol bottom = PACKEDCOL_CONST(80, 16, 16, 255);
+
+	if (s->CanReconnect) { DisconnectScreen_UpdateDelayLeft(s, delta); }
 	GfxCommon_Draw2DGradient(0, 0, Game_Width, Game_Height, top, bottom);
 
 	Gfx_SetTexturing(true);
