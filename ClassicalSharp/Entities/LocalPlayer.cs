@@ -203,17 +203,18 @@ namespace ClassicalSharp.Entities {
 			onGround = TouchesAny(bb, touchesAnySolid);
 		}
 		
-		void HandleRespawn() {
+		bool HandleRespawn() {
 			if (Hacks.CanRespawn) {
 				DoRespawn();
+				return true;
 			} else if (!warnedRespawn) {
 				warnedRespawn = true;
-				if (game.PureClassic) return;
-				game.Chat.Add("&cRespawning is currently disabled");
+				if (!game.ClassicMode) game.Chat.Add("&cRespawning is currently disabled");				
 			}
+			return false;
 		}
 		
-		void HandleSetSpawn() {
+		bool HandleSetSpawn() {
 			if (Hacks.CanRespawn) {
 				Spawn.X = Utils.Floor(Position.X) + 0.5f;
 				Spawn.Y = Position.Y;
@@ -221,40 +222,43 @@ namespace ClassicalSharp.Entities {
 				SpawnRotY  = RotY;
 				SpawnHeadX = HeadX;
 			}
-			HandleRespawn();
+			return HandleRespawn();
 		}
 		
-		void HandleFly() {
+		bool HandleFly() {
 			if (Hacks.CanFly && Hacks.Enabled) {
 				Hacks.Flying = !Hacks.Flying;
+				return true;
 			} else if (!warnedFly) {
 				warnedFly = true;
-				if (game.PureClassic) return;
-				game.Chat.Add("&cFlying is currently disabled");
+				if (!game.ClassicMode) game.Chat.Add("&cFlying is currently disabled");				
 			}
+			return false;
 		}
 		
-		void HandleNoClip() {
+		bool HandleNoClip() {
 			if (Hacks.CanNoclip && Hacks.Enabled) {
-				if (Hacks.WOMStyleHacks) return; // don't handle this here
+				if (Hacks.WOMStyleHacks) return true; // don't handle this here
 				if (Hacks.Noclip) Velocity.Y = 0;
+				
 				Hacks.Noclip = !Hacks.Noclip;
+				return true;
 			} else if (!warnedNoclip) {
 				warnedNoclip = true;
-				if (game.PureClassic) return;
-				game.Chat.Add("&cNoclip is currently disabled");
+				if (!game.ClassicMode) game.Chat.Add("&cNoclip is currently disabled");				
 			}
+			return false;
 		}
 		
 		public bool HandlesKey(Key key) {
 			if (key == game.Mapping(KeyBind.Respawn)) {
-				HandleRespawn();
+				return HandleRespawn();
 			} else if (key == game.Mapping(KeyBind.SetSpawn)) {
-				HandleSetSpawn();
+				return HandleSetSpawn();
 			} else if (key == game.Mapping(KeyBind.Fly)) {
-				HandleFly();
+				return HandleFly();
 			} else if (key == game.Mapping(KeyBind.NoClip)) {
-				HandleNoClip();
+				return HandleNoClip();
 			} else if (key == game.Mapping(KeyBind.Jump) && !onGround && !(Hacks.Flying || Hacks.Noclip)) {
 				int maxJumps = Hacks.CanDoubleJump && Hacks.WOMStyleHacks ? 2 : 0;
 				maxJumps = Math.Max(maxJumps, Hacks.MaxJumps - 1);
@@ -263,10 +267,9 @@ namespace ClassicalSharp.Entities {
 					physics.DoNormalJump();
 					physics.multiJumps++;
 				}
-			} else {
-				return false;
+				return true;
 			}
-			return true;
+			return false;
 		}
 	}
 }

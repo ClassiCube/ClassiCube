@@ -985,18 +985,19 @@ static void LocalPlayer_DoRespawn(void) {
 	p->Base.OnGround = Entity_TouchesAny(&bb, LocalPlayer_IsSolidCollide);
 }
 
-static void LocalPlayer_HandleRespawn(void) {
+static bool LocalPlayer_HandleRespawn(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (p->Hacks.CanRespawn) {
 		LocalPlayer_DoRespawn();
+		return true;
 	} else if (!p->_WarnedRespawn) {
 		p->_WarnedRespawn = true;
-		if (Game_PureClassic) return;
-		Chat_AddRaw("&cRespawning is currently disabled");
+		if (!Game_ClassicMode) Chat_AddRaw("&cRespawning is currently disabled");
 	}
+	return false;
 }
 
-static void LocalPlayer_HandleSetSpawn(void) {
+static bool LocalPlayer_HandleSetSpawn(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (p->Hacks.CanRespawn) {
 		p->Spawn.X = Math_Floor(p->Base.Position.X) + 0.5f;
@@ -1005,58 +1006,61 @@ static void LocalPlayer_HandleSetSpawn(void) {
 		p->SpawnRotY  = p->Base.RotY;
 		p->SpawnHeadX = p->Base.HeadX;
 	}
-	LocalPlayer_HandleRespawn();
+	return LocalPlayer_HandleRespawn();
 }
 
-static void LocalPlayer_HandleFly(void) {
+static bool LocalPlayer_HandleFly(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (p->Hacks.CanFly && p->Hacks.Enabled) {
 		p->Hacks.Flying = !p->Hacks.Flying;
+		return true;
 	} else if (!p->_WarnedFly) {
 		p->_WarnedFly = true;
-		if (Game_PureClassic) return;
-		Chat_AddRaw("&cFlying is currently disabled");
+		if (!Game_ClassicMode) Chat_AddRaw("&cFlying is currently disabled");		
 	}
+	return false;
 }
 
-static void LocalPlayer_HandleNoClip(void) {
+static bool LocalPlayer_HandleNoClip(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (p->Hacks.CanNoclip && p->Hacks.Enabled) {
-		if (p->Hacks.WOMStyleHacks) return; /* don't handle this here */
+		if (p->Hacks.WOMStyleHacks) return true; /* don't handle this here */
 		if (p->Hacks.Noclip) p->Base.Velocity.Y = 0;
+
 		p->Hacks.Noclip = !p->Hacks.Noclip;
+		return true;
 	} else if (!p->_WarnedNoclip) {
 		p->_WarnedNoclip = true;
-		if (Game_PureClassic) return;
-		Chat_AddRaw("&cNoclip is currently disabled");
+		if (!Game_ClassicMode) Chat_AddRaw("&cNoclip is currently disabled");		
 	}
+	return false;
 }
 
 bool LocalPlayer_HandlesKey(Key key) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct HacksComp* hacks = &p->Hacks;
 	struct PhysicsComp* physics = &p->Physics;
+	int maxJumps;
 
 	if (key == KeyBind_Get(KeyBind_Respawn)) {
-		LocalPlayer_HandleRespawn();
+		return LocalPlayer_HandleRespawn();
 	} else if (key == KeyBind_Get(KeyBind_SetSpawn)) {
-		LocalPlayer_HandleSetSpawn();
+		return LocalPlayer_HandleSetSpawn();
 	} else if (key == KeyBind_Get(KeyBind_Fly)) {
-		LocalPlayer_HandleFly();
+		return LocalPlayer_HandleFly();
 	} else if (key == KeyBind_Get(KeyBind_NoClip)) {
-		LocalPlayer_HandleNoClip();
+		return LocalPlayer_HandleNoClip();
 	} else if (key == KeyBind_Get(KeyBind_Jump) && !p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
-		int maxJumps = hacks->CanDoubleJump && hacks->WOMStyleHacks ? 2 : 0;
+		maxJumps = hacks->CanDoubleJump && hacks->WOMStyleHacks ? 2 : 0;
 		maxJumps = max(maxJumps, hacks->MaxJumps - 1);
 
 		if (physics->MultiJumps < maxJumps) {
 			PhysicsComp_DoNormalJump(physics);
 			physics->MultiJumps++;
 		}
-	} else {
-		return false;
+		return true;
 	}
-	return true;
+	return false;
 }
 
 
