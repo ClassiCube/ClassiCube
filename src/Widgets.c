@@ -406,9 +406,10 @@ static void HotbarWidget_Render(void* widget, double delta) {
 
 static bool HotbarWidget_KeyDown(void* widget, Key key) {
 	struct HotbarWidget* w = widget;
+	int index;
 	if (key < Key_1 || key > Key_9) return false;
 
-	int index = key - Key_1;
+	index = key - Key_1;
 	if (KeyBind_IsPressed(KeyBind_HotbarSwitching)) {
 		/* Pick from first to ninth row */
 		Inventory_SetOffset(index * INVENTORY_BLOCKS_PER_HOTBAR);
@@ -921,8 +922,10 @@ static char InputWidget_GetLastCol(struct InputWidget* w, int x, int y) {
 }
 
 static void InputWidget_UpdateCaret(struct InputWidget* w) {
+	String line; char lineBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
-	int maxChars;
+	int maxChars, lineWidth;
+	char colCode;
 	
 	maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
 	if (w->CaretPos >= maxChars) w->CaretPos = -1;
@@ -930,48 +933,45 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 
 	DrawTextArgs_MakeEmpty(&args, &w->Font, false);
 	w->CaretAccumulator = 0;
+	w->CaretTex.Width   = w->CaretWidth;
 
 	/* Caret is at last character on line */
 	if (w->CaretX == INPUTWIDGET_LEN) {
-		w->CaretTex.X = w->X + w->Padding + w->LineSizes[w->CaretY].Width;
-		PackedCol yellow = PACKEDCOL_YELLOW; w->CaretCol = yellow;
-		w->CaretTex.Width = w->CaretWidth;
+		lineWidth = w->LineSizes[w->CaretY].Width;	
 	} else {
-		char lineBuffer[STRING_SIZE];
-		String line = String_FromArray(lineBuffer);
+		String_InitArray(line, lineBuffer);
 		InputWidget_FormatLine(w, w->CaretY, &line);
 
 		args.Text = String_UNSAFE_Substring(&line, 0, w->CaretX);
-		Size2D trimmedSize = Drawer2D_MeasureText(&args);
-		if (w->CaretY == 0) { trimmedSize.Width += w->PrefixWidth; }
-
-		w->CaretTex.X = w->X + w->Padding + trimmedSize.Width;
-		PackedCol white = PACKEDCOL_WHITE;
-		w->CaretCol = PackedCol_Scale(white, 0.8f);
+		lineWidth = Drawer2D_MeasureText(&args).Width;
+		if (w->CaretY == 0) lineWidth += w->PrefixWidth;
 
 		if (w->CaretX < line.length) {
 			args.Text = String_UNSAFE_Substring(&line, w->CaretX, 1);
 			args.UseShadow = true;
 			w->CaretTex.Width = Drawer2D_MeasureText(&args).Width;
-		} else {
-			w->CaretTex.Width = w->CaretWidth;
 		}
 	}
-	w->CaretTex.Y = w->LineSizes[0].Height * w->CaretY + w->InputTex.Y + 2;
 
-	/* Update the colour of the w->CaretPos */
-	char colCode = InputWidget_GetLastCol(w, w->CaretX, w->CaretY);
-	if (colCode) w->CaretCol = Drawer2D_GetCol(colCode);
+	w->CaretTex.X = w->X + w->Padding + lineWidth;
+	w->CaretTex.Y = w->InputTex.Y + w->CaretY * w->LineSizes[0].Height + 2;
+	colCode = InputWidget_GetLastCol(w, w->CaretX, w->CaretY);
+
+	if (colCode) {
+		w->CaretCol = Drawer2D_GetCol(colCode);
+	} else {
+		PackedCol white = PACKEDCOL_WHITE;
+		w->CaretCol = PackedCol_Scale(white, 0.8f);
+	}
 }
 
 static void InputWidget_RenderCaret(struct InputWidget* w, double delta) {
+	float second;
 	if (!w->ShowCaret) return;
-
 	w->CaretAccumulator += delta;
-	float second = Math_Mod1((float)w->CaretAccumulator);
-	if (second < 0.5f) {
-		Texture_RenderShaded(&w->CaretTex, w->CaretCol);
-	}
+
+	second = Math_Mod1((float)w->CaretAccumulator);
+	if (second < 0.5f) Texture_RenderShaded(&w->CaretTex, w->CaretCol);
 }
 
 static void InputWidget_OnPressedEnter(void* widget) {
@@ -1224,34 +1224,34 @@ static bool InputWidget_KeyPress(void* widget, char keyChar) {
 }
 
 static bool InputWidget_MouseDown(void* widget, int x, int y, MouseButton button) {
+	String line; char lineBuffer[STRING_SIZE];
 	struct InputWidget* w = widget;
 	struct DrawTextArgs args;
+	int cx, cy, offset = 0;
+	int charX, charWidth, charHeight;
 
 	if (button != MouseButton_Left) return true;
-
 	x -= w->InputTex.X; y -= w->InputTex.Y;
+
 	DrawTextArgs_MakeEmpty(&args, &w->Font, true);
-	int offset = 0, charHeight = w->CaretTex.Height;
+	charHeight = w->CaretTex.Height;
+	String_InitArray(line, lineBuffer);
 
-	char lineBuffer[STRING_SIZE];
-	String line = String_FromArray(lineBuffer);
-	int charX, charY;
-
-	for (charY = 0; charY < w->GetMaxLines(); charY++) {
+	for (cy = 0; cy < w->GetMaxLines(); cy++) {
 		line.length = 0;
-		InputWidget_FormatLine(w, charY, &line);
+		InputWidget_FormatLine(w, cy, &line);
 		if (!line.length) continue;
 
-		for (charX = 0; charX < line.length; charX++) {
-			args.Text = String_UNSAFE_Substring(&line, 0, charX);
-			int charOffset = Drawer2D_MeasureText(&args).Width;
-			if (charY == 0) charOffset += w->PrefixWidth;
+		for (cx = 0; cx < line.length; cx++) {
+			args.Text = String_UNSAFE_Substring(&line, 0, cx);
+			charX     = Drawer2D_MeasureText(&args).Width;
+			if (cy == 0) charX += w->PrefixWidth;
 
-			args.Text = String_UNSAFE_Substring(&line, charX, 1);
-			int charWidth = Drawer2D_MeasureText(&args).Width;
+			args.Text = String_UNSAFE_Substring(&line, cx, 1);
+			charWidth = Drawer2D_MeasureText(&args).Width;
 
-			if (Gui_Contains(charOffset, charY * charHeight, charWidth, charHeight, x, y)) {
-				w->CaretPos = offset + charX;
+			if (Gui_Contains(charX, cy * charHeight, charWidth, charHeight, x, y)) {
+				w->CaretPos = offset + cx;
 				InputWidget_UpdateCaret(w);
 				return true;
 			}
@@ -1561,15 +1561,13 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	struct DrawTextArgs args;
 	Size2D size = { 0, 0 };
 	Bitmap bmp;
-	int i;
+	int i, x, y = 0;
 	w->CaretAccumulator = 0;
 
 	for (i = 0; i < w->GetMaxLines(); i++) {
 		size.Height += w->LineSizes[i].Height;
 		size.Width   = max(size.Width, w->LineSizes[i].Width);
 	}
-	
-	int realHeight = 0;
 	Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 
 	DrawTextArgs_MakeEmpty(&args, &w->Font, true);
@@ -1592,18 +1590,18 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 		}
 		/* Convert % to & for colour codes */
 		InputWidget_FormatLine(w, i, &line);
-
 		args.Text = line;
-		int offset = i == 0 ? w->PrefixWidth : 0;
-		Drawer2D_DrawText(&bmp, &args, offset, realHeight);
-		realHeight += w->LineSizes[i].Height;
+
+		x = i == 0 ? w->PrefixWidth : 0;
+		Drawer2D_DrawText(&bmp, &args, x, y);
+		y += w->LineSizes[i].Height;
 	}
 
 	Drawer2D_Make2DTexture(&w->InputTex, &bmp, size, 0, 0);
 	Mem_Free(bmp.Scan0);
 
-	w->Width = size.Width;
-	w->Height = realHeight == 0 ? w->PrefixHeight : realHeight;
+	w->Width  = size.Width;
+	w->Height = y == 0 ? w->PrefixHeight : y;
 	Widget_Reposition(w);
 	w->InputTex.X = w->X + w->Padding;
 	w->InputTex.Y = w->Y;

@@ -663,8 +663,9 @@ void Window_SetCursorVisible(bool visible) {
 		XUndefineCursor(win_display, win_handle);
 	} else {
 		if (!win_blankCursor) {
+			char data  = 0;
 			XColor col = { 0 };
-			Pixmap pixmap = XCreatePixmap(win_display, win_rootWin, 1, 1, 1);
+			Pixmap pixmap   = XCreateBitmapFromData(win_display, win_handle, &data, 1, 1);
 			win_blankCursor = XCreatePixmapCursor(win_display, pixmap, pixmap, &col, &col, 0, 0);
 			XFreePixmap(win_display, pixmap);
 		}

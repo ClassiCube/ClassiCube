@@ -125,18 +125,17 @@ namespace ClassicalSharp.Gui.Widgets {
 			DrawTextArgs args = new DrawTextArgs(null, font, false);
 			IDrawer2D drawer = game.Drawer2D;
 			caretAccumulator = 0;
+			caretCol = PackedCol.Scale(PackedCol.White, 0.8f);
 
 			if (caretX == MaxCharsPerLine) {
 				caretTex.X1 = X + Padding + lineSizes[caretY].Width;
-				caretCol = PackedCol.Yellow;
 				caretTex.Width = (ushort)caretWidth;
 			} else {
 				args.Text = lines[caretY].Substring(0, caretX);
 				Size trimmedSize = drawer.MeasureText(ref args);
 				if (caretY == 0) trimmedSize.Width += prefixWidth;
 
-				caretTex.X1 = X + Padding + trimmedSize.Width;
-				caretCol = PackedCol.Scale(PackedCol.White, 0.8f);
+				caretTex.X1 = X + Padding + trimmedSize.Width;				
 				
 				string line = lines[caretY];
 				if (caretX < line.Length) {

@@ -3103,14 +3103,17 @@ static void UrlWarningOverlay_AppendUrl(void* screen, void* b) {
 }
 
 static void UrlWarningOverlay_ContextRecreated(void* screen) {
-	struct UrlWarningOverlay* s = screen;
-	String lines[4] = {
-		String_FromConst("&eAre you sure you want to open this link?"), s->Url,
+	static String lines[4] = {
+		String_FromConst("&eAre you sure you want to open this link?"),
+		String_FromConst(""),
 		String_FromConst("Be careful - links from strangers may be websites that"),
 		String_FromConst(" have viruses, or things you may not want to open/see."),
 	};
 
+	struct UrlWarningOverlay* s = screen;
+	lines[1] = s->Url;
 	Overlay_MakeLabels(s, s->Labels, lines);
+
 	WarningOverlay_MakeButtons((struct MenuScreen*)s, s->Buttons, false,
 		UrlWarningOverlay_OpenUrl, UrlWarningOverlay_AppendUrl);
 }
@@ -3163,16 +3166,16 @@ static void ConfirmDenyOverlay_GoBackClick(void* screen, void* b) {
 }
 
 static void ConfirmDenyOverlay_ContextRecreated(void* screen) {
-	static String imSure = String_FromConst("I'm sure");
-	static String goBack = String_FromConst("Go back");
-	struct ConfirmDenyOverlay* s = screen;
-
-	String lines[4] = {
+	static String lines[4] = {
 		String_FromConst("&eYou might be missing out."),
 		String_FromConst("Texture packs can play a vital role in the look and feel of maps."),
-		String_Empty,
+		String_FromConst(""),
 		String_FromConst("Sure you don't want to download the texture pack?")
 	};
+	static String imSure = String_FromConst("I'm sure");
+	static String goBack = String_FromConst("Go back");
+
+	struct ConfirmDenyOverlay* s = screen;
 	Overlay_MakeLabels(s, s->Labels, lines);
 
 	Menu_Button(s, 4, &s->Buttons[0], 160, &imSure, &s->TitleFont, ConfirmDenyOverlay_ConfirmNoClick,
@@ -3250,6 +3253,12 @@ static void TexPackOverlay_Render(void* screen, double delta) {
 }
 
 static void TexPackOverlay_ContextRecreated(void* screen) {
+	static String lines[4] = {
+		String_FromConst("Do you want to download the server's texture pack?"),
+		String_FromConst("Texture pack url:"),
+		String_FromConst(""),
+		String_FromConst("Download size: Determining..."),
+	};
 	static String https = String_FromConst("https://");
 	static String http = String_FromConst("http://");
 	String contents; char contentsBuffer[STRING_SIZE];
@@ -3266,13 +3275,7 @@ static void TexPackOverlay_ContextRecreated(void* screen) {
 		url = String_UNSAFE_SubstringAt(&url, http.length);
 	}
 
-	String lines[4] = {
-		String_FromConst("Do you want to download the server's texture pack?"),
-		String_FromConst("Texture pack url:"),
-		url, 
-		String_FromConst("Download size: Determining..."),
-	};
-
+	lines[2] = url;
 	if (s->ContentLength) {
 		String_InitArray(contents, contentsBuffer);
 		String_Format1(&contents, "Download size: %f3 MB", &contentLengthMB);

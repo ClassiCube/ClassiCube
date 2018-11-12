@@ -61,7 +61,6 @@ void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, fl
 /*########################################################################################################################*
 *---------------------------------------------------------Entity----------------------------------------------------------*
 *#########################################################################################################################*/
-static struct EntityVTABLE entity_VTABLE;
 static PackedCol Entity_GetCol(struct Entity* e) {
 	Vector3 eyePos = Entity_GetEyePosition(e);
 	Vector3I P; Vector3I_Floor(&P, &eyePos);

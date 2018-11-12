@@ -892,6 +892,7 @@ static bool PhysicsComp_TouchesLiquid(BlockID block) { return Block_Collide[bloc
 void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 	struct Entity* entity   = comp->Entity;
 	struct HacksComp* hacks = comp->Hacks;
+	bool touchWater, touchLava;
 
 	if (hacks->Floating) {
 		entity->Velocity.Y = 0.0f; /* eliminate the effect of gravity */
@@ -908,8 +909,8 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 		comp->CanLiquidJump = false; return;
 	}
 
-	bool touchWater = Entity_TouchesAnyWater(entity);
-	bool touchLava  = Entity_TouchesAnyLava(entity);
+	touchWater = Entity_TouchesAnyWater(entity);
+	touchLava  = Entity_TouchesAnyLava(entity);
 	if (touchWater || touchLava) {
 		struct AABB bounds; Entity_GetBounds(entity, &bounds);
 		int feetY = Math_Floor(bounds.Min.Y), bodyY = feetY + 1;
@@ -1246,15 +1247,17 @@ static void SoundComp_GetSound(struct LocalPlayer* p) {
 	Entity_TouchesAny(&bounds, Sounds_CheckSolid);
 }
 
-static bool SoundComp_DoPlaySound(struct LocalPlayer* p, Vector3 soundPos) {
-	Vector3 delta; Vector3_Sub(&delta, &sounds_LastPos, &soundPos);
-	float distSq = Vector3_LengthSquared(&delta);
-	bool enoughDist = distSq > 1.75f * 1.75f;
+static bool SoundComp_ShouldPlay(struct LocalPlayer* p, Vector3 soundPos) {
+	Vector3 delta;
+	float distSq;
+	float oldLegRot, newLegRot;
+
+	Vector3_Sub(&delta, &sounds_LastPos, &soundPos);
+	distSq = Vector3_LengthSquared(&delta);
 	/* just play every certain block interval when not animating */
-	if (p->Base.Anim.Swing < 0.999f) return enoughDist;
+	if (p->Base.Anim.Swing < 0.999f) return distSq > 1.75f * 1.75f;
 
 	/* have our legs just crossed over the '0' point? */
-	float oldLegRot, newLegRot;
 	if (Camera_Active->IsThirdPerson) {
 		oldLegRot = (float)Math_Cos(p->Base.Anim.WalkTimeO);
 		newLegRot = (float)Math_Cos(p->Base.Anim.WalkTimeN);
@@ -1272,7 +1275,7 @@ void SoundComp_Tick(bool wasOnGround) {
 	SoundComp_GetSound(p);
 	if (!sounds_AnyNonAir) soundPos = Vector3_BigPos();
 
-	if (p->Base.OnGround && (SoundComp_DoPlaySound(p, soundPos) || !wasOnGround)) {
+	if (p->Base.OnGround && (SoundComp_ShouldPlay(p, soundPos) || !wasOnGround)) {
 		Audio_PlayStepSound(sounds_Type);
 		sounds_LastPos = soundPos;
 	}

@@ -357,13 +357,17 @@ static uint8_t codelens_order[INFLATE_MAX_CODELENS] = {
 };
 
 static void Inflate_InflateFast(struct InflateState* state) {
+	uint32_t lit, len, dist;
+	uint32_t bits, lenIdx, distIdx;
+
 	uint32_t copyStart = state->WindowIndex, copyLen = 0;
 	uint8_t* window = state->Window;
 	uint32_t curIdx = state->WindowIndex;
 
 #define INFLATE_FAST_COPY_MAX (INFLATE_WINDOW_SIZE - INFLATE_FASTINF_OUT)
 	while (state->AvailOut >= INFLATE_FASTINF_OUT && state->AvailIn >= INFLATE_FASTINF_IN && copyLen < INFLATE_FAST_COPY_MAX) {
-		uint32_t lit; Huffman_Unsafe_Decode(state, state->Table.Lits, lit);
+		Huffman_Unsafe_Decode(state, state->Table.Lits, lit);
+
 		if (lit <= 256) {
 			if (lit < 256) {
 				window[curIdx] = (uint8_t)lit;
@@ -374,15 +378,15 @@ static void Inflate_InflateFast(struct InflateState* state) {
 				break;
 			}
 		} else {
-			uint32_t lenIdx = lit - 257;
-			uint32_t bits = len_bits[lenIdx];
+			lenIdx = lit - 257;
+			bits = len_bits[lenIdx];
 			Inflate_UNSAFE_EnsureBits(state, bits);
-			uint32_t len = len_base[lenIdx] + Inflate_ReadBits(state, bits);
+			len  = len_base[lenIdx] + Inflate_ReadBits(state, bits);
 
-			uint32_t distIdx; Huffman_Unsafe_Decode(state, state->TableDists, distIdx);
+			Huffman_Unsafe_Decode(state, state->TableDists, distIdx);
 			bits = dist_bits[distIdx];
 			Inflate_UNSAFE_EnsureBits(state, bits);
-			uint32_t dist = dist_base[distIdx] + Inflate_ReadBits(state, bits);
+			dist = dist_base[distIdx] + Inflate_ReadBits(state, bits);
 
 			uint32_t i, startIdx = (curIdx - dist) & INFLATE_WINDOW_MASK;
 			if (curIdx >= startIdx && (curIdx + len) < INFLATE_WINDOW_SIZE) {
