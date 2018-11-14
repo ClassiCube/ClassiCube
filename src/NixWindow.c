@@ -272,13 +272,13 @@ void Window_GetClipboardText(String* value) {
 	clipboard_paste_text.length = 0;
 
 	/* wait up to 1 second for SelectionNotify event to arrive */
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < 100; i++) {
 		Window_ProcessEvents();
 		if (clipboard_paste_text.length) {
 			String_Copy(value, &clipboard_paste_text);
 			return;
 		} else {
-			Thread_Sleep(100);
+			Thread_Sleep(10);
 		}
 	}
 }

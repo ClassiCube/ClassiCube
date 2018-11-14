@@ -540,7 +540,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	errno = 0;
 	String_InitArray(path, pathBuffer);
 
-	while (entry = readdir(dirPtr)) {
+	while ((entry = readdir(dirPtr))) {
 		path.length = 0;
 		String_Format2(&path, "%s%r", dirPath, &Directory_Separator);
 
@@ -1357,46 +1357,51 @@ static struct curl_slist* Http_Make(struct AsyncRequest* req) {
 }
 
 static size_t Http_GetHeaders(char *buffer, size_t size, size_t nitems, struct AsyncRequest* req) {
-	size_t total = size * nitems;
-	if (size != 1) return total; /* non byte header */
-	String line = String_Init(buffer, nitems, nitems), name, value;
-	if (!String_UNSAFE_Separate(&line, ':', &name, &value)) return total;
+	String tmp; char tmpBuffer[STRING_SIZE + 1];
+	String line, name, value;
+	time_t time;
+
+	if (size != 1) return size * nitems; /* non byte header */
+	line = String_Init(buffer, nitems, nitems);
+	if (!String_UNSAFE_Separate(&line, ':', &name, &value)) return nitems;
 
 	/* value usually has \r\n at end */
 	if (value.length && value.buffer[value.length - 1] == '\n') value.length--;
 	if (value.length && value.buffer[value.length - 1] == '\r') value.length--;
-	if (!value.length) return total;
+	if (!value.length) return nitems;
 
 	if (String_CaselessEqualsConst(&name, "ETag")) {
-		String etag = String_ClearedArray(req->Etag);
+		tmp = String_ClearedArray(req->Etag);
 		String_AppendString(&etag, &value);
 	} else if (String_CaselessEqualsConst(&name, "Content-Length")) {
 		Convert_TryParseInt(&value, &req->ResultSize);
 	} else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
-		char tmpBuffer[STRING_SIZE + 1] = { 0 };
-		String tmp = { tmpBuffer, 0, STRING_SIZE };
+		String_InitArray_NT(tmp, tmpBuffer);
 		String_AppendString(&tmp, &value);
+		tmp.buffer[tmp.length] = '\0';
 
-		time_t time = curl_getdate(tmp.buffer, NULL);
-		if (time == -1) return total;
+		time = curl_getdate(tmp.buffer, NULL);
+		if (time == -1) return nitems;
 		req->LastModified = (uint64_t)time * 1000 + UNIX_EPOCH;
 	}
-	return total;
+	return nitems;
 }
 
 static size_t Http_GetData(char *buffer, size_t size, size_t nitems, struct AsyncRequest* req) {
-	uint32_t total = req->ResultSize;
+	uint32_t total, left;
+	uint8_t* dst;
+		
+	total = req->ResultSize;
 	if (!total || req->RequestType == REQUEST_TYPE_CONTENT_LENGTH) return 0;
 	if (!req->ResultData) req->ResultData = Mem_Alloc(total, 1, "http get data");
 
 	/* reuse Result as an offset */
-	uint32_t left = total - req->Result;
-	left        = min(left, nitems);
+	left = total - req->Result;
+	left = min(left, nitems);
+	dst  = (uint8_t*)req->ResultData + req->Result;
 
-	uint8_t* dst = (uint8_t*)req->ResultData + req->Result;
 	Mem_Copy(dst, buffer, left);
 	req->Result += left;
-
 	return nitems;
 }
 
@@ -1405,6 +1410,7 @@ ReturnCode Http_Do(struct AsyncRequest* req, volatile int* progress) {
 	String url = String_FromRawArray(req->URL);
 	char urlStr[600];
 	long status = 0;
+	CURLcode res;
 
 	Platform_ConvertString(urlStr, &url);
 	curl_easy_reset(curl);
@@ -1425,7 +1431,7 @@ ReturnCode Http_Do(struct AsyncRequest* req, volatile int* progress) {
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
 
 	*progress = ASYNC_PROGRESS_FETCHING_DATA;
-	CURLcode res = curl_easy_perform(curl);
+	res = curl_easy_perform(curl);
 	*progress = 100;
 
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);

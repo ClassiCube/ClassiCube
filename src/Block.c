@@ -520,7 +520,7 @@ static BlockID AutoRotate_RotateOther(BlockID block, const String* name) {
 	}
 
 	/* Thin pillar type blocks */
-	face = Game_SelectedPos.ClosestFace;
+	face = Game_SelectedPos.Closest;
 	if (face == FACE_YMAX || face == FACE_YMIN) return AutoRotate_Find(block, name, "-UD");
 	if (face == FACE_XMAX || face == FACE_XMIN) return AutoRotate_Find(block, name, "-WE");
 	if (face == FACE_ZMAX || face == FACE_ZMIN) return AutoRotate_Find(block, name, "-NS");

@@ -227,7 +227,7 @@ static bool InputHandler_PushbackPlace(struct AABB* blockBB) {
 	struct LocationUpdate update;
 
 	/* Offset position by the closest face */
-	closestFace = Game_SelectedPos.ClosestFace;
+	closestFace = Game_SelectedPos.Closest;
 	if (closestFace == FACE_XMAX) {
 		pos.X = blockBB->Max.X + 0.5f;
 	} else if (closestFace == FACE_ZMAX) {

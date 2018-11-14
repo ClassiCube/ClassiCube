@@ -754,7 +754,7 @@ void CPE_WritePlayerClick(MouseButton button, bool buttonDown, uint8_t targetId,
 
 		*data = 255;
 		/* Our own face values differ from CPE block face */
-		switch (pos->ClosestFace) {
+		switch (pos->Closest) {
 		case FACE_XMAX: *data = 0; break;
 		case FACE_XMIN: *data = 1; break;
 		case FACE_YMAX: *data = 2; break;

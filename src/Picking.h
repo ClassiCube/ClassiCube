@@ -14,7 +14,7 @@ struct PickedPos {
 	Vector3I BlockPos;      /* Coords of the block */
 	Vector3I TranslatedPos; /* Coords of the neighbouring block that is closest to the player */	
 	bool Valid;             /* Whether this instance actually has a selected block currently */
-	Face ClosestFace;       /* Face of the picked block that is closet to the player */
+	Face Closest;           /* Face of the picked block that is closet to the player */
 	BlockID Block;          /* Block ID of the picked block */
 };
 

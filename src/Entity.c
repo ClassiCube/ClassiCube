@@ -157,12 +157,11 @@ void Entity_SetModel(struct Entity* e, const String* model) {
 void Entity_UpdateModelBounds(struct Entity* e) {
 	struct Model* model = e->Model;
 	model->GetCollisionSize(&e->Size);
-	Vector3_Mul3By(&e->Size, &e->ModelScale);
+	model->GetPickingBounds(&e->ModelAABB);
 
-	struct AABB* bb = &e->ModelAABB;
-	model->GetPickingBounds(bb);
-	Vector3_Mul3By(&bb->Min, &e->ModelScale);
-	Vector3_Mul3By(&bb->Max, &e->ModelScale);
+	Vector3_Mul3By(&e->Size,          &e->ModelScale);
+	Vector3_Mul3By(&e->ModelAABB.Min, &e->ModelScale);
+	Vector3_Mul3By(&e->ModelAABB.Max, &e->ModelScale);
 }
 
 bool Entity_TouchesAny(struct AABB* bounds, Entity_TouchesCondition condition) {
@@ -559,15 +558,17 @@ static void Player_DrawName(struct Player* player) {
 
 static struct Player* Player_FirstOtherWithSameSkin(struct Player* player) {
 	struct Entity* entity = &player->Base;
-	String skin = String_FromRawArray(entity->SkinNameRaw);
+	struct Player* p;
+	String skin, pSkin;
 	int i;
 
+	skin = String_FromRawArray(entity->SkinNameRaw);
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i] || Entities_List[i] == entity) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
-		struct Player* p = (struct Player*)Entities_List[i];
-		String pSkin = String_FromRawArray(p->Base.SkinNameRaw);
+		p     = (struct Player*)Entities_List[i];
+		pSkin = String_FromRawArray(p->Base.SkinNameRaw);
 		if (String_Equals(&skin, &pSkin)) return p;
 	}
 	return NULL;
@@ -575,15 +576,17 @@ static struct Player* Player_FirstOtherWithSameSkin(struct Player* player) {
 
 static struct Player* Player_FirstOtherWithSameSkinAndFetchedSkin(struct Player* player) {
 	struct Entity* entity = &player->Base;
-	String skin = String_FromRawArray(entity->SkinNameRaw);
+	struct Player* p;
+	String skin, pSkin;
 	int i;
 
+	skin = String_FromRawArray(entity->SkinNameRaw);
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i] || Entities_List[i] == entity) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
-		struct Player* p = (struct Player*)Entities_List[i];
-		String pSkin = String_FromRawArray(p->Base.SkinNameRaw);
+		p     = (struct Player*)Entities_List[i];
+		pSkin = String_FromRawArray(p->Base.SkinNameRaw);
 		if (p->FetchedSkin && String_Equals(&skin, &pSkin)) return p;
 	}
 	return NULL;
@@ -616,15 +619,17 @@ void Player_ResetSkin(struct Player* player) {
 /* Apply or reset skin, for all players with same skin */
 static void Player_SetSkinAll(struct Player* player, bool reset) {
 	struct Entity* entity = &player->Base;
-	String skin = String_FromRawArray(entity->SkinNameRaw);
+	struct Player* p;
+	String skin, pSkin;
 	int i;
 
+	skin = String_FromRawArray(entity->SkinNameRaw);
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities_List[i]) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
-		struct Player* p = (struct Player*)Entities_List[i];
-		String pSkin = String_FromRawArray(p->Base.SkinNameRaw);
+		p     = (struct Player*)Entities_List[i];
+		pSkin = String_FromRawArray(p->Base.SkinNameRaw);
 		if (!String_Equals(&skin, &pSkin)) continue;
 
 		if (reset) {

@@ -428,13 +428,13 @@ void Window_SetTitle(const String* title) {
 }
 
 void Window_GetClipboardText(String* value) {
-	/* retry up to 10 times*/
+	/* retry up to 50 times*/
 	int i;
 	value->length = 0;
 
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < 50; i++) {
 		if (!OpenClipboard(win_handle)) {
-			Thread_Sleep(100);
+			Thread_Sleep(10);
 			continue;
 		}
 

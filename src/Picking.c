@@ -8,24 +8,27 @@
 #include "Block.h"
 #include "ErrorHandler.h"
 
-static float PickedPos_dist;
+static float pickedPos_dist;
 static void PickedPos_TestAxis(struct PickedPos* pos, float dAxis, Face fAxis) {
 	dAxis = Math_AbsF(dAxis);
-	if (dAxis >= PickedPos_dist) return;
+	if (dAxis >= pickedPos_dist) return;
 
-	PickedPos_dist = dAxis;
-	pos->ClosestFace = fAxis;
+	pickedPos_dist = dAxis;
+	pos->Closest   = fAxis;
 }
 
 void PickedPos_SetAsValid(struct PickedPos* pos, struct RayTracer* t, Vector3 intersect) {
-	Vector3I blockPos  = { t->X, t->Y, t->Z };
-	pos->Valid         = true;
-	pos->BlockPos      = blockPos;
-	pos->Block         = t->Block;	
-	pos->Intersect     = intersect;
+	pos->BlockPos.X    = t->X;
+	pos->BlockPos.Y    = t->Y;
+	pos->BlockPos.Z    = t->Z;
+	pos->TranslatedPos = pos->BlockPos;
+
+	pos->Valid     = true;
+	pos->Block     = t->Block;	
+	pos->Intersect = intersect;
 	pos->Min = t->Min; pos->Max = t->Max;
 
-	PickedPos_dist = MATH_LARGENUM;
+	pickedPos_dist = MATH_LARGENUM;
 	PickedPos_TestAxis(pos, intersect.X - t->Min.X, FACE_XMIN);
 	PickedPos_TestAxis(pos, intersect.X - t->Max.X, FACE_XMAX);
 	PickedPos_TestAxis(pos, intersect.Y - t->Min.Y, FACE_YMIN);
@@ -33,24 +36,25 @@ void PickedPos_SetAsValid(struct PickedPos* pos, struct RayTracer* t, Vector3 in
 	PickedPos_TestAxis(pos, intersect.Z - t->Min.Z, FACE_ZMIN);
 	PickedPos_TestAxis(pos, intersect.Z - t->Max.Z, FACE_ZMAX);
 
-	switch (pos->ClosestFace) {
-	case FACE_XMIN: blockPos.X--; break;
-	case FACE_XMAX: blockPos.X++; break;
-	case FACE_ZMIN: blockPos.Z--; break;
-	case FACE_ZMAX: blockPos.Z++; break;
-	case FACE_YMIN: blockPos.Y--; break;
-	case FACE_YMAX: blockPos.Y++; break;
+	switch (pos->Closest) {
+	case FACE_XMIN: pos->TranslatedPos.X--; break;
+	case FACE_XMAX: pos->TranslatedPos.X++; break;
+	case FACE_ZMIN: pos->TranslatedPos.Z--; break;
+	case FACE_ZMAX: pos->TranslatedPos.Z++; break;
+	case FACE_YMIN: pos->TranslatedPos.Y--; break;
+	case FACE_YMAX: pos->TranslatedPos.Y++; break;
 	}
-	pos->TranslatedPos = blockPos;
 }
 
 void PickedPos_SetAsInvalid(struct PickedPos* pos) {
-	Vector3I blockPos  = { -1, -1, -1 };
-	pos->Valid         = false;
+	static Vector3I blockPos = { -1, -1, -1 };
 	pos->BlockPos      = blockPos;
-	pos->Block         = BLOCK_AIR;
-	pos->ClosestFace   = (Face)FACE_COUNT;
 	pos->TranslatedPos = blockPos;
+
+	pos->Valid   = false;
+	pos->Block   = BLOCK_AIR;
+	pos->Closest = FACE_COUNT;
+	
 }
 
 static float RayTracer_Div(float a, float b) {
