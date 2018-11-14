@@ -259,8 +259,8 @@ void Window_SetTitle(const String* title) {
 }
 
 static char clipboard_copy_buffer[256];
-static String clipboard_copy_text = String_FromArray(clipboard_copy_buffer);
 static char clipboard_paste_buffer[256];
+static String clipboard_copy_text  = String_FromArray(clipboard_copy_buffer);
 static String clipboard_paste_text = String_FromArray(clipboard_paste_buffer);
 
 void Window_GetClipboardText(String* value) {

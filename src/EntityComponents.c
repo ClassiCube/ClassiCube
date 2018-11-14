@@ -60,8 +60,8 @@ void AnimatedComp_Init(struct AnimatedComp* anim) {
 	anim->BobStrength = 1.0f; anim->BobStrengthO = 1.0f; anim->BobStrengthN = 1.0f;
 }
 
-void AnimatedComp_Update(struct Entity* entity, Vector3 oldPos, Vector3 newPos, double delta) {
-	struct AnimatedComp* anim = &entity->Anim;
+void AnimatedComp_Update(struct Entity* e, Vector3 oldPos, Vector3 newPos, double delta) {
+	struct AnimatedComp* anim = &e->Anim;
 	float dx = newPos.X - oldPos.X;
 	float dz = newPos.Z - oldPos.Z;
 	float distance = Math_SqrtF(dx * dx + dz * dz);
@@ -83,12 +83,12 @@ void AnimatedComp_Update(struct Entity* entity, Vector3 oldPos, Vector3 newPos, 
 	/* TODO: the Tilt code was designed for 60 ticks/second, fix it up for 20 ticks/second */
 	anim->BobStrengthO = anim->BobStrengthN;
 	for (i = 0; i < 3; i++) {
-		AnimatedComp_DoTilt(&anim->BobStrengthN, !Game_ViewBobbing || !entity->OnGround);
+		AnimatedComp_DoTilt(&anim->BobStrengthN, !Game_ViewBobbing || !e->OnGround);
 	}
 }
 
-void AnimatedComp_GetCurrent(struct Entity* entity, float t) {
-	struct AnimatedComp* anim = &entity->Anim;
+void AnimatedComp_GetCurrent(struct Entity* e, float t) {
+	struct AnimatedComp* anim = &e->Anim;
 	float idleTime = (float)Game_Accumulator;
 	float idleXRot = Math_SinF(idleTime * ANIM_IDLE_XPERIOD) * ANIM_IDLE_MAX;
 	float idleZRot = Math_CosF(idleTime * ANIM_IDLE_ZPERIOD) * ANIM_IDLE_MAX + ANIM_IDLE_MAX;
@@ -109,7 +109,7 @@ void AnimatedComp_GetCurrent(struct Entity* entity, float t) {
 	anim->BobbingVer   = Math_AbsF(Math_SinF(anim->WalkTime)) * anim->Swing * (2.5f/16.0f);
 	anim->BobbingModel = Math_AbsF(Math_CosF(anim->WalkTime)) * anim->Swing * (4.0f/16.0f);
 
-	if (entity->Model->CalcHumanAnims && !Game_SimpleArmsAnim) {
+	if (e->Model->CalcHumanAnims && !Game_SimpleArmsAnim) {
 		AnimatedComp_CalcHumanAnim(anim, idleXRot, idleZRot);
 	}
 }
@@ -323,15 +323,15 @@ static void InterpComp_AdvanceRotY(struct InterpComp* interp) {
 	InterpComp_RemoveOldestRotY(interp);
 }
 
-void InterpComp_LerpAngles(struct InterpComp* interp, struct Entity* entity, float t) {
+void InterpComp_LerpAngles(struct InterpComp* interp, struct Entity* e, float t) {
 	struct InterpState* prev = &interp->Prev;
 	struct InterpState* next = &interp->Next;
 
-	entity->HeadX = Math_LerpAngle(prev->HeadX, next->HeadX, t);
-	entity->HeadY = Math_LerpAngle(prev->HeadY, next->HeadY, t);
-	entity->RotX  = Math_LerpAngle(prev->RotX,  next->RotX, t);
-	entity->RotY  = Math_LerpAngle(interp->PrevRotY, interp->NextRotY, t);
-	entity->RotZ  = Math_LerpAngle(prev->RotZ,  next->RotZ, t);
+	e->HeadX = Math_LerpAngle(prev->HeadX, next->HeadX, t);
+	e->HeadY = Math_LerpAngle(prev->HeadY, next->HeadY, t);
+	e->RotX  = Math_LerpAngle(prev->RotX,  next->RotX, t);
+	e->RotY  = Math_LerpAngle(interp->PrevRotY, interp->NextRotY, t);
+	e->RotZ  = Math_LerpAngle(prev->RotZ,  next->RotZ, t);
 }
 
 static void InterpComp_SetPos(struct InterpState* state, struct LocationUpdate* update) {
@@ -417,12 +417,14 @@ void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdat
 	struct InterpState* prev = &interp->Prev;
 	struct InterpState* next = &interp->Next;
 	uint8_t flags = update->Flags;
+	float yOffset;
 
 	if (flags & LOCATIONUPDATE_FLAG_POS) {
 		InterpComp_SetPos(next, update);
 		/* If server sets Y position exactly on ground, push up a tiny bit */
-		float yOffset = next->Pos.Y - Math_Floor(next->Pos.Y);
-		if (yOffset < ENTITY_ADJUSTMENT) { next->Pos.Y += ENTITY_ADJUSTMENT; }
+		yOffset = next->Pos.Y - Math_Floor(next->Pos.Y);
+
+		if (yOffset < ENTITY_ADJUSTMENT) next->Pos.Y += ENTITY_ADJUSTMENT;
 		if (!interpolate) { prev->Pos = next->Pos; entity->Position = next->Pos; }
 	}
 
@@ -433,10 +435,10 @@ void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdat
 		LocalInterpComp_Angle(&prev->HeadY, &next->HeadY, update->HeadY, interpolate);
 	}
 	if (flags & LOCATIONUPDATE_FLAG_ROTX) {
-		LocalInterpComp_Angle(&prev->RotX, &next->RotX, update->RotX, interpolate);
+		LocalInterpComp_Angle(&prev->RotX,  &next->RotX,  update->RotX,  interpolate);
 	}
 	if (flags & LOCATIONUPDATE_FLAG_ROTZ) {
-		LocalInterpComp_Angle(&prev->RotZ, &next->RotZ, update->RotZ, interpolate);
+		LocalInterpComp_Angle(&prev->RotZ,  &next->RotZ,  update->RotZ,  interpolate);
 	}
 
 	if (flags & LOCATIONUPDATE_FLAG_HEADY) {
@@ -467,24 +469,27 @@ void LocalInterpComp_AdvanceState(struct InterpComp* interp) {
 /*########################################################################################################################*
 *-----------------------------------------------------ShadowComponent-----------------------------------------------------*
 *#########################################################################################################################*/
-static float ShadowComponent_radius, shadowComponent_uvScale;
+static float shadow_radius, shadow_uvScale;
 struct ShadowData { float Y; BlockID Block; uint8_t A; };
 
 static bool lequal(float a, float b) { return a < b || Math_AbsF(a - b) < 0.001f; }
-static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity* entity, struct ShadowData* data, float x1, float z1, float x2, float z2) {
-	Vector3 cen = entity->Position;
-	if (lequal(x2, x1) || lequal(z2, z1)) return;
+static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity* e, struct ShadowData* data, float x1, float z1, float x2, float z2) {
+	Vector3 cen;
+	float u1, v1, u2, v2;
 
-	float u1 = (x1 - cen.X) * shadowComponent_uvScale + 0.5f;
-	float v1 = (z1 - cen.Z) * shadowComponent_uvScale + 0.5f;
-	float u2 = (x2 - cen.X) * shadowComponent_uvScale + 0.5f;
-	float v2 = (z2 - cen.Z) * shadowComponent_uvScale + 0.5f;
+	if (lequal(x2, x1) || lequal(z2, z1)) return;
+	cen = e->Position;
+
+	u1 = (x1 - cen.X) * shadow_uvScale + 0.5f;
+	v1 = (z1 - cen.Z) * shadow_uvScale + 0.5f;
+	u2 = (x2 - cen.X) * shadow_uvScale + 0.5f;
+	v2 = (z2 - cen.Z) * shadow_uvScale + 0.5f;
 	if (u2 <= 0.0f || v2 <= 0.0f || u1 >= 1.0f || v1 >= 1.0f) return;
 
-	x1 = max(x1, cen.X - ShadowComponent_radius); u1 = u1 >= 0.0f ? u1 : 0.0f;
-	z1 = max(z1, cen.Z - ShadowComponent_radius); v1 = v1 >= 0.0f ? v1 : 0.0f;
-	x2 = min(x2, cen.X + ShadowComponent_radius); u2 = u2 <= 1.0f ? u2 : 1.0f;
-	z2 = min(z2, cen.Z + ShadowComponent_radius); v2 = v2 <= 1.0f ? v2 : 1.0f;
+	x1 = max(x1, cen.X - shadow_radius); u1 = u1 >= 0.0f ? u1 : 0.0f;
+	z1 = max(z1, cen.Z - shadow_radius); v1 = v1 >= 0.0f ? v1 : 0.0f;
+	x2 = min(x2, cen.X + shadow_radius); u2 = u2 <= 1.0f ? u2 : 1.0f;
+	z2 = min(z2, cen.Z + shadow_radius); v2 = v2 <= 1.0f ? v2 : 1.0f;
 
 	PackedCol col = PACKEDCOL_CONST(255, 255, 255, data->A);
 	VertexP3fT2fC4b* ptr = *vertices;
@@ -512,20 +517,20 @@ static void ShadowComponent_DrawSquareShadow(VertexP3fT2fC4b** vertices, float y
 	*vertices = ptr;
 }
 
-static void ShadowComponent_DrawCircle(VertexP3fT2fC4b** vertices, struct Entity* entity, struct ShadowData* data, float x, float z) {
+static void ShadowComponent_DrawCircle(VertexP3fT2fC4b** vertices, struct Entity* e, struct ShadowData* data, float x, float z) {
 	x = (float)Math_Floor(x); z = (float)Math_Floor(z);
 	Vector3 min = Block_MinBB[data[0].Block], max = Block_MaxBB[data[0].Block];
 
-	ShadowComponent_DrawCoords(vertices, entity, &data[0], x + min.X, z + min.Z, x + max.X, z + max.Z);
+	ShadowComponent_DrawCoords(vertices, e, &data[0], x + min.X, z + min.Z, x + max.X, z + max.Z);
 	int i;
 	for (i = 1; i < 4; i++) {
 		if (data[i].Block == BLOCK_AIR) return;
 		Vector3 nMin = Block_MinBB[data[i].Block], nMax = Block_MaxBB[data[i].Block];
-		ShadowComponent_DrawCoords(vertices, entity, &data[i], x + min.X, z + nMin.Z, x + max.X, z + min.Z);
-		ShadowComponent_DrawCoords(vertices, entity, &data[i], x + min.X, z + max.Z, x + max.X, z + nMax.Z);
+		ShadowComponent_DrawCoords(vertices, e, &data[i], x + min.X, z + nMin.Z, x + max.X, z + min.Z);
+		ShadowComponent_DrawCoords(vertices, e, &data[i], x + min.X, z + max.Z, x + max.X, z + nMax.Z);
 
-		ShadowComponent_DrawCoords(vertices, entity, &data[i], x + nMin.X, z + nMin.Z, x + min.X, z + nMax.Z);
-		ShadowComponent_DrawCoords(vertices, entity, &data[i], x + max.X, z + nMin.Z, x + nMax.X, z + nMax.Z);
+		ShadowComponent_DrawCoords(vertices, e, &data[i], x + nMin.X, z + nMin.Z, x + min.X, z + nMax.Z);
+		ShadowComponent_DrawCoords(vertices, e, &data[i], x + max.X, z + nMin.Z, x + nMax.X, z + nMax.Z);
 		min = nMin; max = nMax;
 	}
 }
@@ -544,13 +549,13 @@ static void ShadowComponent_CalcAlpha(float playerY, struct ShadowData* data) {
 	else data->Y += 1.0f / 4.0f;
 }
 
-static bool ShadowComponent_GetBlocks(struct Entity* entity, int x, int y, int z, struct ShadowData* data) {
+static bool ShadowComponent_GetBlocks(struct Entity* e, int x, int y, int z, struct ShadowData* data) {
 	int i;
 	struct ShadowData zeroData = { 0 };
 
 	for (i = 0; i < 4; i++) { data[i] = zeroData; }
 	struct ShadowData* cur = data;
-	float posY = entity->Position.Y;
+	float posY = e->Position.Y;
 	bool outside = x < 0 || z < 0 || x >= World_Width || z >= World_Length;
 
 	for (i = 0; y >= 0 && i < 4; y--) {
@@ -609,17 +614,19 @@ static void ShadowComponent_MakeTex(void) {
 	ShadowComponent_ShadowTex = Gfx_CreateTexture(&bmp, false, false);
 }
 
-void ShadowComponent_Draw(struct Entity* entity) {
-	Vector3 Position = entity->Position;
-	if (Position.Y < 0.0f) return;
-
-	float posX = Position.X, posZ = Position.Z;
-	int posY   = min((int)Position.Y, World_MaxY);
+void ShadowComponent_Draw(struct Entity* e) {
 	GfxResourceID vb;
+	Vector3 pos;
+	int y, count;
+	int x1, z1, x2, z2;
 
-	float radius = 7.0f * min(entity->ModelScale.Y, 1.0f) * entity->Model->ShadowScale;
-	ShadowComponent_radius = radius / 16.0f;
-	shadowComponent_uvScale = 16.0f / (radius * 2.0f);
+	pos = e->Position;
+	if (pos.Y < 0.0f) return;
+	y = min((int)pos.Y, World_MaxY);
+
+	float radius = 7.0f * min(e->ModelScale.Y, 1.0f) * e->Model->ShadowScale;
+	shadow_radius  = radius / 16.0f;
+	shadow_uvScale = 16.0f / (radius * 2.0f);
 
 	VertexP3fT2fC4b vertices[128];
 	struct ShadowData data[4];
@@ -628,26 +635,26 @@ void ShadowComponent_Draw(struct Entity* entity) {
 	VertexP3fT2fC4b* ptr = vertices;
 	if (Entities_ShadowMode == SHADOW_MODE_SNAP_TO_BLOCK) {
 		vb = GfxCommon_texVb;
-		int x1 = Math_Floor(posX), z1 = Math_Floor(posZ);
-		if (!ShadowComponent_GetBlocks(entity, x1, posY, z1, data)) return;
+		x1 = Math_Floor(pos.X); z1 = Math_Floor(pos.Z);
+		if (!ShadowComponent_GetBlocks(e, x1, y, z1, data)) return;
 
 		ShadowComponent_DrawSquareShadow(&ptr, data[0].Y, x1, z1);
 	} else {
 		vb = ModelCache_Vb;
-		int x1 = Math_Floor(posX - ShadowComponent_radius), z1 = Math_Floor(posZ - ShadowComponent_radius);
-		int x2 = Math_Floor(posX + ShadowComponent_radius), z2 = Math_Floor(posZ + ShadowComponent_radius);
+		x1 = Math_Floor(pos.X - shadow_radius); z1 = Math_Floor(pos.Z - shadow_radius);
+		x2 = Math_Floor(pos.X + shadow_radius); z2 = Math_Floor(pos.Z + shadow_radius);
 
-		if (ShadowComponent_GetBlocks(entity, x1, posY, z1, data) && data[0].A > 0) {
-			ShadowComponent_DrawCircle(&ptr, entity, data, (float)x1, (float)z1);
+		if (ShadowComponent_GetBlocks(e, x1, y, z1, data) && data[0].A > 0) {
+			ShadowComponent_DrawCircle(&ptr, e, data, (float)x1, (float)z1);
 		}
-		if (x1 != x2 && ShadowComponent_GetBlocks(entity, x2, posY, z1, data) && data[0].A > 0) {
-			ShadowComponent_DrawCircle(&ptr, entity, data, (float)x2, (float)z1);
+		if (x1 != x2 && ShadowComponent_GetBlocks(e, x2, y, z1, data) && data[0].A > 0) {
+			ShadowComponent_DrawCircle(&ptr, e, data, (float)x2, (float)z1);
 		}
-		if (z1 != z2 && ShadowComponent_GetBlocks(entity, x1, posY, z2, data) && data[0].A > 0) {
-			ShadowComponent_DrawCircle(&ptr, entity, data, (float)x1, (float)z2);
+		if (z1 != z2 && ShadowComponent_GetBlocks(e, x1, y, z2, data) && data[0].A > 0) {
+			ShadowComponent_DrawCircle(&ptr, e, data, (float)x1, (float)z2);
 		}
-		if (x1 != x2 && z1 != z2 && ShadowComponent_GetBlocks(entity, x2, posY, z2, data) && data[0].A > 0) {
-			ShadowComponent_DrawCircle(&ptr, entity, data, (float)x2, (float)z2);
+		if (x1 != x2 && z1 != z2 && ShadowComponent_GetBlocks(e, x2, y, z2, data) && data[0].A > 0) {
+			ShadowComponent_DrawCircle(&ptr, e, data, (float)x2, (float)z2);
 		}
 	}
 
@@ -659,8 +666,8 @@ void ShadowComponent_Draw(struct Entity* entity) {
 		ShadowComponent_BoundShadowTex = true;
 	}
 
-	int vCount = (int)(ptr - vertices);
-	GfxCommon_UpdateDynamicVb_IndexedTris(vb, vertices, vCount);
+	count = (int)(ptr - vertices);
+	GfxCommon_UpdateDynamicVb_IndexedTris(vb, vertices, count);
 }
 
 
@@ -673,22 +680,22 @@ bool Collisions_HitHorizontal(struct CollisionsComp* comp) {
 }
 #define COLLISIONS_ADJ 0.001f
 
-static void Collisions_ClipX(struct Entity* entity, Vector3* size, struct AABB* entityBB, struct AABB* extentBB) {
-	entity->Velocity.X = 0.0f;
-	entityBB->Min.X = entity->Position.X - size->X / 2; extentBB->Min.X = entityBB->Min.X;
-	entityBB->Max.X = entity->Position.X + size->X / 2; extentBB->Max.X = entityBB->Max.X;
+static void Collisions_ClipX(struct Entity* e, Vector3* size, struct AABB* entityBB, struct AABB* extentBB) {
+	e->Velocity.X = 0.0f;
+	entityBB->Min.X = e->Position.X - size->X / 2; extentBB->Min.X = entityBB->Min.X;
+	entityBB->Max.X = e->Position.X + size->X / 2; extentBB->Max.X = entityBB->Max.X;
 }
 
-static void Collisions_ClipY(struct Entity* entity, Vector3* size, struct AABB* entityBB, struct AABB* extentBB) {
-	entity->Velocity.Y = 0.0f;
-	entityBB->Min.Y = entity->Position.Y;               extentBB->Min.Y = entityBB->Min.Y;
-	entityBB->Max.Y = entity->Position.Y + size->Y;     extentBB->Max.Y = entityBB->Max.Y;
+static void Collisions_ClipY(struct Entity* e, Vector3* size, struct AABB* entityBB, struct AABB* extentBB) {
+	e->Velocity.Y = 0.0f;
+	entityBB->Min.Y = e->Position.Y;               extentBB->Min.Y = entityBB->Min.Y;
+	entityBB->Max.Y = e->Position.Y + size->Y;     extentBB->Max.Y = entityBB->Max.Y;
 }
 
-static void Collisions_ClipZ(struct Entity* entity, Vector3* size, struct AABB* entityBB, struct AABB* extentBB) {
-	entity->Velocity.Z = 0.0f;
-	entityBB->Min.Z = entity->Position.Z - size->Z / 2; extentBB->Min.Z = entityBB->Min.Z;
-	entityBB->Max.Z = entity->Position.Z + size->Z / 2; extentBB->Max.Z = entityBB->Max.Z;
+static void Collisions_ClipZ(struct Entity* e, Vector3* size, struct AABB* entityBB, struct AABB* extentBB) {
+	e->Velocity.Z = 0.0f;
+	entityBB->Min.Z = e->Position.Z - size->Z / 2; extentBB->Min.Z = entityBB->Min.Z;
+	entityBB->Max.Z = e->Position.Z + size->Z / 2; extentBB->Max.Z = entityBB->Max.Z;
 }
 
 static bool Collisions_CanSlideThrough(struct AABB* adjFinalBB) {
@@ -720,13 +727,14 @@ static bool Collisions_CanSlideThrough(struct AABB* adjFinalBB) {
 static bool Collisions_DidSlide(struct CollisionsComp* comp, struct AABB* blockBB, Vector3* size,
 	struct AABB* finalBB, struct AABB* entityBB, struct AABB* extentBB) {
 	float yDist = blockBB->Max.Y - entityBB->Min.Y;
+	struct AABB adjBB;
+
 	if (yDist > 0.0f && yDist <= comp->Entity->StepSize + 0.01f) {
 		float blockBB_MinX = max(blockBB->Min.X, blockBB->Max.X - size->X / 2);
 		float blockBB_MaxX = min(blockBB->Max.X, blockBB->Min.X + size->X / 2);
 		float blockBB_MinZ = max(blockBB->Min.Z, blockBB->Max.Z - size->Z / 2);
 		float blockBB_MaxZ = min(blockBB->Max.Z, blockBB->Min.Z + size->Z / 2);
-
-		struct AABB adjBB;
+		
 		adjBB.Min.X = min(finalBB->Min.X, blockBB_MinX + COLLISIONS_ADJ);
 		adjBB.Max.X = max(finalBB->Max.X, blockBB_MaxX - COLLISIONS_ADJ);
 		adjBB.Min.Y = blockBB->Max.Y + COLLISIONS_ADJ;
@@ -867,11 +875,12 @@ static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, i
 
 /* TODO: test for corner cases, and refactor this */
 void Collisions_MoveAndWallSlide(struct CollisionsComp* comp) {
-	struct Entity* entity = comp->Entity;
-	if (Vector3_Equals(&entity->Velocity, &Vector3_Zero)) return;
-
+	struct Entity* e = comp->Entity;
 	struct AABB entityBB, entityExtentBB;
-	int count = Searcher_FindReachableBlocks(entity, &entityBB, &entityExtentBB);
+	int count;
+
+	if (Vector3_Equals(&e->Velocity, &Vector3_Zero)) return;
+	count = Searcher_FindReachableBlocks(e,            &entityBB, &entityExtentBB);
 	Collisions_CollideWithReachableBlocks(comp, count, &entityBB, &entityExtentBB);
 }
 
@@ -963,13 +972,13 @@ void PhysicsComp_DoNormalJump(struct PhysicsComp* comp) {
 }
 
 static bool PhysicsComp_TouchesSlipperyIce(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_SLIPPERY_ICE; }
-static bool PhysicsComp_OnIce(struct Entity* entity) {
-	Vector3 under = entity->Position; under.Y -= 0.01f;
+static bool PhysicsComp_OnIce(struct Entity* e) {
+	Vector3 under = e->Position; under.Y -= 0.01f;
 	Vector3I underCoords; Vector3I_Floor(&underCoords, &under);
 	BlockID blockUnder = World_SafeGetBlock_3I(underCoords);
 	if (Block_ExtendedCollide[blockUnder] == COLLIDE_ICE) return true;
 
-	struct AABB bounds; Entity_GetBounds(entity, &bounds);
+	struct AABB bounds; Entity_GetBounds(e, &bounds);
 	bounds.Min.Y -= 0.01f; bounds.Max.Y = bounds.Min.Y;
 	return Entity_TouchesAny(&bounds, PhysicsComp_TouchesSlipperyIce);
 }
@@ -1062,11 +1071,15 @@ static float PhysicsComp_GetSpeed(struct HacksComp* hacks, float speedMul) {
 }
 
 static float PhysicsComp_GetBaseSpeed(struct PhysicsComp* comp) {
-	struct AABB bounds; Entity_GetBounds(comp->Entity, &bounds);
+	struct AABB bounds;
+	float baseModifier, solidModifier;
+	
+	Entity_GetBounds(comp->Entity, &bounds);
 	comp->UseLiquidGravity = false;
-	float baseModifier = PhysicsComp_LowestModifier(comp, &bounds, false);
-	bounds.Min.Y -= 0.5f / 16.0f; /* also check block standing on */
-	float solidModifier = PhysicsComp_LowestModifier(comp, &bounds, true);
+
+	baseModifier  = PhysicsComp_LowestModifier(comp, &bounds, false);
+	bounds.Min.Y -= 0.5f/16.0f; /* also check block standing on */
+	solidModifier = PhysicsComp_LowestModifier(comp, &bounds, true);
 
 	if (baseModifier == MATH_POS_INF && solidModifier == MATH_POS_INF) return 1.0f;
 	return baseModifier == MATH_POS_INF ? solidModifier : baseModifier;

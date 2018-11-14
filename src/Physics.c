@@ -154,6 +154,7 @@ int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, s
 	Vector3I min, max;
 	uint32_t elements;
 	struct SearcherState* curState;
+	int count;
 
 	BlockID block;
 	struct AABB blockBB;
@@ -207,7 +208,7 @@ int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, s
 		}
 	}
 
-	int count = (int)(curState - Searcher_States);
+	count = (int)(curState - Searcher_States);
 	if (count) Searcher_QuickSort(0, count - 1);
 	return count;
 }

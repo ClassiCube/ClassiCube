@@ -222,14 +222,14 @@ static bool TerrainParticle_Tick(struct TerrainParticle* p, double delta) {
 }
 
 static void TerrainParticle_Render(struct TerrainParticle* p, float t, VertexP3fT2fC4b* vertices) {
+	PackedCol col = PACKEDCOL_WHITE;
 	Vector3 pos;
 	Vector2 size;
 	int x, y, z;
 
 	Vector3_Lerp(&pos, &p->Base.LastPos, &p->Base.NextPos, t);
 	size.X = (float)p->Base.Size * 0.015625f; size.Y = size.X;
-
-	PackedCol col = PACKEDCOL_WHITE;
+	
 	if (!Block_FullBright[p->Block]) {
 		x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
 		col = World_IsValidPos(x, y, z) ? Lighting_Col_XSide(x, y, z) : Env_SunXSide;

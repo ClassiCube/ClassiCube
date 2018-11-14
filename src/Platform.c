@@ -1372,7 +1372,7 @@ static size_t Http_GetHeaders(char *buffer, size_t size, size_t nitems, struct A
 
 	if (String_CaselessEqualsConst(&name, "ETag")) {
 		tmp = String_ClearedArray(req->Etag);
-		String_AppendString(&etag, &value);
+		String_AppendString(&tmp, &value);
 	} else if (String_CaselessEqualsConst(&name, "Content-Length")) {
 		Convert_TryParseInt(&value, &req->ResultSize);
 	} else if (String_CaselessEqualsConst(&name, "Last-Modified")) {

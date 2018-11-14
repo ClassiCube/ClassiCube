@@ -236,6 +236,9 @@ static void Huffman_Build(struct HuffmanTable* table, uint8_t* bitLens, int coun
 }
 
 static int Huffman_Decode(struct InflateState* state, struct HuffmanTable* table) {
+	uint32_t i, j, codeword;
+	int packed, bits, offset;
+
 	/* Buffer as many bits as possible */
 	while (state->NumBits <= INFLATE_MAX_BITS) {
 		if (!state->AvailIn) break;
@@ -244,23 +247,22 @@ static int Huffman_Decode(struct InflateState* state, struct HuffmanTable* table
 
 	/* Try fast accelerated table lookup */
 	if (state->NumBits >= INFLATE_FAST_BITS) {
-		int packed = table->Fast[Inflate_PeekBits(state, INFLATE_FAST_BITS)];
+		packed = table->Fast[Inflate_PeekBits(state, INFLATE_FAST_BITS)];
 		if (packed >= 0) {
-			int bits = packed >> INFLATE_FAST_BITS;
+			bits = packed >> INFLATE_FAST_BITS;
 			Inflate_ConsumeBits(state, bits);
 			return packed & 0x1FF;
 		}
 	}
 
 	/* Slow, bit by bit lookup */
-	uint32_t codeword = 0;
-	uint32_t i, j;
+	codeword = 0;
 	for (i = 1, j = 0; i < INFLATE_MAX_BITS; i++, j++) {
 		if (state->NumBits < i) return -1;
 		codeword = (codeword << 1) | ((state->Bits >> j) & 1);
 
 		if (codeword < table->EndCodewords[i]) {
-			int offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
+			offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
 			Inflate_ConsumeBits(state, i);
 			return table->Values[offset];
 		}
@@ -285,16 +287,18 @@ static int Huffman_Decode(struct InflateState* state, struct HuffmanTable* table
 }
 
 static int Huffman_Unsafe_Decode_Slow(struct InflateState* state, struct HuffmanTable* table) {
-	uint32_t codeword = Inflate_PeekBits(state, INFLATE_FAST_BITS);
+	uint32_t i, j, codeword;
+	int offset;
+
 	/* Slow, bit by bit lookup. Need to reverse order for huffman. */
+	codeword = Inflate_PeekBits(state,       INFLATE_FAST_BITS);
 	codeword = Huffman_ReverseBits(codeword, INFLATE_FAST_BITS);
 
-	uint32_t i, j;
 	for (i = INFLATE_FAST_BITS + 1, j = INFLATE_FAST_BITS; i < INFLATE_MAX_BITS; i++, j++) {
 		codeword = (codeword << 1) | ((state->Bits >> j) & 1);
 
 		if (codeword < table->EndCodewords[i]) {
-			int offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
+			offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
 			Inflate_ConsumeBits(state, i);
 			return table->Values[offset];
 		}
@@ -664,22 +668,28 @@ void Inflate_Process(struct InflateState* state) {
 }
 
 static ReturnCode Inflate_StreamRead(struct Stream* stream, uint8_t* data, uint32_t count, uint32_t* modified) {
-	struct InflateState* state = stream->Meta.Inflate;
+	struct InflateState* state;
+	uint8_t* inputEnd;
+	uint32_t read, left;
+	uint32_t startAvailOut;
+	ReturnCode res;
+
 	*modified = 0;
-	state->Output = data;
+	state = stream->Meta.Inflate;
+	state->Output   = data;
 	state->AvailOut = count;
 
 	bool hasInput = true;
 	while (state->AvailOut > 0 && hasInput) {
 		if (state->State == INFLATE_STATE_DONE) break;
+
 		if (!state->AvailIn) {
 			/* Fully used up input buffer. Cycle back to start. */
-			uint8_t* inputEnd = state->Input + INFLATE_MAX_INPUT;
+			inputEnd = state->Input + INFLATE_MAX_INPUT;
 			if (state->NextIn == inputEnd) state->NextIn = state->Input;
 
-			uint8_t* cur = state->NextIn;
-			uint32_t read, remaining = (uint32_t)(inputEnd - state->NextIn);
-			ReturnCode res = state->Source->Read(state->Source, cur, remaining, &read);
+			left = (uint32_t)(inputEnd - state->NextIn);
+			res  = state->Source->Read(state->Source, state->NextIn, left, &read);
 			if (res) return res;
 
 			/* Did we fail to read in more input data? Can't immediately return here, */
@@ -689,9 +699,9 @@ static ReturnCode Inflate_StreamRead(struct Stream* stream, uint8_t* data, uint3
 		}
 		
 		/* Reading data reduces available out */
-		uint32_t preAvailOut = state->AvailOut;
+		startAvailOut = state->AvailOut;
 		Inflate_Process(state);
-		*modified += (preAvailOut - state->AvailOut);
+		*modified += (startAvailOut - state->AvailOut);
 	}
 	return 0;
 }
@@ -757,6 +767,8 @@ static void Deflate_LenDist(struct DeflateState* state, int len, int dist) {
 }
 
 static ReturnCode Deflate_FlushBlock(struct DeflateState* state, int len) {
+	ReturnCode res;
+
 	if (!state->WroteHeader) {
 		state->WroteHeader = true;
 		Deflate_PushBits(state, 3, 3); /* final block TRUE, block type FIXED */
@@ -789,7 +801,7 @@ static ReturnCode Deflate_FlushBlock(struct DeflateState* state, int len) {
 		pos = (int)(cur - src);
 		uint16_t oldHead = state->Head[hash];
 		state->Head[hash] = pos;
-		state->Prev[pos] = oldHead;
+		state->Prev[pos]  = oldHead;
 
 		/* Lazy evaluation: Find longest match starting at next byte */
 		/* If that's longer than the longest match at current byte, throwaway this match */
@@ -815,8 +827,8 @@ static ReturnCode Deflate_FlushBlock(struct DeflateState* state, int len) {
 
 		/* leave room for a few bytes and literals at end */
 		if (state->AvailOut >= 20) continue;
-		ReturnCode res = Stream_Write(state->Dest, state->Output, DEFLATE_OUT_SIZE - state->AvailOut);
-		state->NextOut = state->Output;
+		res = Stream_Write(state->Dest, state->Output, DEFLATE_OUT_SIZE - state->AvailOut);
+		state->NextOut  = state->Output;
 		state->AvailOut = DEFLATE_OUT_SIZE;
 		if (res) return res;
 	}
@@ -826,12 +838,12 @@ static ReturnCode Deflate_FlushBlock(struct DeflateState* state, int len) {
 		Deflate_Lit(state, *cur);
 		len--; cur++;
 	}
-
 	state->InputPosition = 0;
-	ReturnCode resFinal = Stream_Write(state->Dest, state->Output, DEFLATE_OUT_SIZE - state->AvailOut);
-	state->NextOut = state->Output;
+
+	res = Stream_Write(state->Dest, state->Output, DEFLATE_OUT_SIZE - state->AvailOut);
+	state->NextOut  = state->Output;
 	state->AvailOut = DEFLATE_OUT_SIZE;
-	return resFinal;
+	return res;
 }
 
 static ReturnCode Deflate_StreamWrite(struct Stream* stream, uint8_t* data, uint32_t count, uint32_t* modified) {
