@@ -271,7 +271,7 @@ void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const FontDesc
 
 	Drawer2D_ReducePadding_Tex(&atlas->Tex, Math_Floor(font->Size), 4);
 	atlas->uScale = 1.0f / (float)bmp.Width;
-	atlas->Tex.U2 = atlas->Offset * atlas->uScale;
+	atlas->Tex.uv.U2 = atlas->Offset * atlas->uScale;
 	atlas->Tex.Width = atlas->Offset;	
 }
 
@@ -283,8 +283,8 @@ void TextAtlas_Add(struct TextAtlas* atlas, int charI, VertexP3fT2fC4b** vertice
 	PackedCol white = PACKEDCOL_WHITE;
 
 	part.X  = atlas->CurX; part.Width = width;
-	part.U1 = (atlas->Offset + charI * atlas->FontSize) * atlas->uScale;
-	part.U2 = part.U1 + width * atlas->uScale;
+	part.uv.U1 = (atlas->Offset + charI * atlas->FontSize) * atlas->uScale;
+	part.uv.U2 = part.uv.U1 + width                        * atlas->uScale;
 
 	atlas->CurX += width;	
 	GfxCommon_Make2DQuad(&part, white, vertices);

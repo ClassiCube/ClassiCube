@@ -27,6 +27,7 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 	uint32_t compressedSize, uncompressedSize;
 	int method, pathLen, extraLen;
 
+	String path; char pathBuffer[ZIP_MAXNAMELEN];
 	struct Stream portion, compStream;
 	struct InflateState inflate;
 	ReturnCode res;
@@ -45,12 +46,10 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 
 	pathLen  = Stream_GetU16_LE(&contents[22]);
 	extraLen = Stream_GetU16_LE(&contents[24]);
-	char pathBuffer[ZIP_MAXNAMELEN];
-
 	if (pathLen > ZIP_MAXNAMELEN) return ZIP_ERR_FILENAME_LEN;
-	String path = String_Init(pathBuffer, pathLen, pathLen);
+
+	path = String_Init(pathBuffer, pathLen, pathLen);
 	if ((res = Stream_Read(stream, pathBuffer, pathLen))) return res;
-	pathBuffer[pathLen] = '\0';
 
 	if (!state->SelectEntry(&path)) return 0;
 	if ((res = stream->Skip(stream, extraLen))) return res;

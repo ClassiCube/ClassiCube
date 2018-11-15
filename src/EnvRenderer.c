@@ -182,12 +182,11 @@ static void EnvRenderer_DrawCloudsY(int x1, int z1, int x2, int z2, int y, Verte
 }
 
 static void EnvRenderer_UpdateClouds(void) {
-	int extent;
-	int x1, z1, x2, z2;
-
 	VertexP3fT2fC4b v[ENV_SMALL_VERTICES];
 	VertexP3fT2fC4b* ptr;
-
+	int extent;
+	int x1, z1, x2, z2;
+	
 	if (!World_Blocks || Gfx_LostContext) return;
 	Gfx_DeleteVb(&clouds_vb);
 	if (EnvRenderer_Minimal) return;
@@ -259,11 +258,10 @@ static void EnvRenderer_DrawSkyY(int x1, int z1, int x2, int z2, int y, VertexP3
 }
 
 static void EnvRenderer_UpdateSky(void) {
-	int extent, height;
-	int x1, z1, x2, z2;
-
 	VertexP3fC4b v[ENV_SMALL_VERTICES];
 	VertexP3fC4b* ptr;
+	int extent, height;
+	int x1, z1, x2, z2;
 
 	if (!World_Blocks || Gfx_LostContext) return;
 	Gfx_DeleteVb(&sky_vb);

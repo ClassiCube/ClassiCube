@@ -137,11 +137,11 @@ static void ButtonWidget_Render(void* widget, double delta) {
 		PackedCol white = PACKEDCOL_WHITE;
 
 		back.Width = (w->Width / 2);
-		back.U1 = 0.0f; back.U2 = BUTTON_uWIDTH * scale;
+		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
 		GfxCommon_Draw2DTexture(&back, white);
 
 		back.X += (w->Width / 2);
-		back.U1 = BUTTON_uWIDTH * (1.0f - scale); back.U2 = BUTTON_uWIDTH;
+		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
 		GfxCommon_Draw2DTexture(&back, white);
 	}
 	
@@ -442,18 +442,20 @@ static bool HotbarWidget_KeyUp(void* widget, Key key) {
 
 static bool HotbarWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
 	struct HotbarWidget* w = widget;
-	if (btn != MouseButton_Left || !Widget_Contains(w, x, y)) return false;
+	struct Screen* screen;
+	int width, height;
+	int i, cellX, cellY;
 
-	struct Screen* screen = Gui_GetActiveScreen();
+	if (btn != MouseButton_Left || !Widget_Contains(w, x, y)) return false;
+	screen = Gui_GetActiveScreen();
 	if (screen != InventoryScreen_UNSAFE_RawPointer) return false;
 
-	int width  = (int)(w->ElemSize + w->BorderSize);
-	int height = Math_Ceil(w->BarHeight);
-	int i;
+	width  = (int)(w->ElemSize + w->BorderSize);
+	height = Math_Ceil(w->BarHeight);
 
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
-		int cellX = (int)(w->X + width * i);
-		int cellY = (int)(w->Y + (w->Height - height));
+		cellX = (int)(w->X + width * i);
+		cellY = (int)(w->Y + (w->Height - height));
 
 		if (Gui_Contains(cellX, cellY, width, height, x, y)) {
 			Inventory_SetSelectedIndex(i);
@@ -1042,9 +1044,11 @@ static void InputWidget_DeleteChar(struct InputWidget* w) {
 }
 
 static bool InputWidget_CheckCol(struct InputWidget* w, int index) {
+	char code, col;
 	if (index < 0) return false;
-	char code = w->Text.buffer[index];
-	char col  = w->Text.buffer[index + 1];
+
+	code = w->Text.buffer[index];
+	col  = w->Text.buffer[index + 1];
 	return (code == '%' || code == '&') && Drawer2D_ValidColCode(col);
 }
 
@@ -2629,17 +2633,16 @@ void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, const FontDesc
 *---------------------------------------------------SpecialInputWidget----------------------------------------------------*
 *#########################################################################################################################*/
 static void SpecialInputWidget_UpdateColString(struct SpecialInputWidget* w) {
-	String buffer = String_FromArray(w->__ColBuffer);
 	int i;
+	String_InitArray(w->ColString, w->__ColBuffer);
 
 	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
 		if (i >= 'A' && i <= 'F') continue;
 		if (Drawer2D_Cols[i].A == 0) continue;
 
-		String_Append(&buffer, '&'); String_Append(&buffer, (char)i);
-		String_Append(&buffer, '%'); String_Append(&buffer, (char)i);
+		String_Append(&w->ColString, '&'); String_Append(&w->ColString, (char)i);
+		String_Append(&w->ColString, '%'); String_Append(&w->ColString, (char)i);
 	}
-	w->ColString = buffer;
 }
 
 static bool SpecialInputWidget_IntersectsTitle(struct SpecialInputWidget* w, int x, int y) {

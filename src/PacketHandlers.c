@@ -1280,15 +1280,17 @@ static void CPE_SetMapEnvProperty(uint8_t* data) {
 }
 
 static void CPE_SetEntityProperty(uint8_t* data) {
+	struct LocationUpdate update = { 0 };
+	struct Entity* entity;
+	float scale;
+
 	EntityID id  = *data++;
 	uint8_t type = *data++;
 	int value    = (int)Stream_GetU32_BE(data);
 
-	struct Entity* entity = Entities_List[id];
+	entity = Entities_List[id];
 	if (!entity) return;
-	struct LocationUpdate update = { 0 };
 
-	float scale;
 	switch (type) {
 	case 0:
 		update.Flags |= LOCATIONUPDATE_FLAG_ROTX;
@@ -1407,19 +1409,18 @@ static TextureLoc BlockDefs_Tex(uint8_t** ptr) {
 }
 
 static BlockID BlockDefs_DefineBlockCommonStart(uint8_t** ptr, bool uniqueSideTexs) {
+	String name; char nameBuffer[STRING_SIZE];
 	BlockID block;
 	bool didBlockLight;
 	float speedLog2;
 	uint8_t sound;
 	uint8_t* data = *ptr;
 
-	char nameBuffer[STRING_SIZE];
-	String name = String_FromArray(nameBuffer);
-
 	Handlers_ReadBlock(data, block);
 	didBlockLight = Block_BlocksLight[block];
 	Block_ResetProps(block);
 	
+	String_InitArray(name, nameBuffer);
 	Handlers_ReadString(&data, &name);
 	Block_SetName(block, &name);
 	Block_SetCollide(block, *data++);

@@ -151,8 +151,11 @@ namespace ClassicalSharp.Entities {
 		
 		
 		bool OnIce(Entity entity) {
-			Vector3 under = entity.Position; under.Y -= 0.01f;
-			BlockID blockUnder = game.World.SafeGetBlock(Vector3I.Floor(under));
+			int feetX = Utils.Floor(entity.Position.X);
+			int feetY = Utils.Floor(entity.Position.Y - 0.01f);
+			int feetZ = Utils.Floor(entity.Position.Z);
+			
+			BlockID blockUnder = game.World.GetPhysicsBlock(feetX, feetY, feetZ);
 			if (BlockInfo.ExtendedCollide[blockUnder] == CollideType.Ice) return true;
 			
 			AABB bounds = entity.Bounds;

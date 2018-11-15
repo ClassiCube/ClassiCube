@@ -1687,8 +1687,10 @@ static bool KeyBindingsScreen_KeyDown(void* screen, Key key) {
 
 static bool KeyBindingsScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 	struct KeyBindingsScreen* s = screen;
+	int i;
+
 	if (btn != MouseButton_Right) { return Menu_MouseDown(s, x, y, btn); }
-	int i = Menu_DoMouseDown(s, x, y, btn);
+	i = Menu_DoMouseDown(s, x, y, btn);
 	if (i == -1) return false;
 
 	/* Reset a key binding */
@@ -1960,16 +1962,18 @@ static void MenuOptionsScreen_Init(void* screen) {
 	s->SelectedI = -1;
 }
 	
+#define EXTHELP_PAD 5 /* padding around extended help box */
 static void MenuOptionsScreen_Render(void* screen, double delta) {
 	struct MenuOptionsScreen* s = screen;
+	struct TextGroupWidget* w;
+	PackedCol tableCol = PACKEDCOL_CONST(20, 20, 20, 200);
+
 	MenuScreen_Render(s, delta);
 	if (!s->ExtHelp.LinesCount) return;
 
-	struct TextGroupWidget* w = &s->ExtHelp;
-	int x = w->X - 5, y = w->Y - 5;
-	int width = w->Width, height = w->Height;
-	PackedCol tableCol = PACKEDCOL_CONST(20, 20, 20, 200);
-	GfxCommon_Draw2DFlat(x, y, width + 10, height + 10, tableCol);
+	w = &s->ExtHelp;
+	GfxCommon_Draw2DFlat(w->X - EXTHELP_PAD, w->Y - EXTHELP_PAD, 
+		w->Width + EXTHELP_PAD * 2, w->Height + EXTHELP_PAD * 2, tableCol);
 
 	Gfx_SetTexturing(true);
 	Elem_Render(&s->ExtHelp, delta);
@@ -2968,7 +2972,7 @@ static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s) {
 	int i, size = s->TileSize;
 
 	struct Texture tex;
-	tex.U1 = 0.0f; tex.U2 = UV2_Scale;
+	tex.uv.U1 = 0.0f; tex.uv.U2 = UV2_Scale;
 	tex.Width = size; tex.Height = size;
 
 	for (i = 0; i < ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW;) {
@@ -2979,8 +2983,8 @@ static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s) {
 			tex.X = s->XOffset + Atlas2D_TileX(i) * size;
 			tex.Y = s->YOffset + Atlas2D_TileY(i) * size;
 
-			tex.V1 = Atlas1D_RowId(i + s->BaseTexLoc) * Atlas1D_InvTileSize;
-			tex.V2 = tex.V1                    + UV2_Scale * Atlas1D_InvTileSize;
+			tex.uv.V1 = Atlas1D_RowId(i + s->BaseTexLoc) * Atlas1D_InvTileSize;
+			tex.uv.V2 = tex.uv.V1            + UV2_Scale * Atlas1D_InvTileSize;
 
 			PackedCol col = PACKEDCOL_WHITE;
 			GfxCommon_Make2DQuad(&tex, col, &ptr);
@@ -2998,7 +3002,7 @@ static void TexIdsOverlay_RenderTextOverlay(struct TexIdsOverlay* s) {
 	VertexP3fT2fC4b* ptr = vertices;
 
 	struct TextAtlas* idAtlas = &s->IdAtlas;
-	idAtlas->Tex.Y = (s->YOffset + (size - idAtlas->Tex.Height));
+	idAtlas->Tex.Y = s->YOffset + (size - idAtlas->Tex.Height);
 
 	for (y = 0; y < ATLAS2D_TILES_PER_ROW; y++) {
 		for (x = 0; x < ATLAS2D_TILES_PER_ROW; x++) {

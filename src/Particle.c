@@ -142,15 +142,15 @@ static bool Particle_PhysicsTick(struct Particle* p, float gravity, bool through
 *#########################################################################################################################*/
 struct RainParticle { struct Particle Base; };
 
-static struct RainParticle Rain_Particles[PARTICLES_MAX];
-static int Rain_Count;
+static struct RainParticle rain_Particles[PARTICLES_MAX];
+static int rain_count;
+static TextureRec rain_rec = { 2.0f/128.0f, 14.0f/128.0f, 5.0f/128.0f, 16.0f/128.0f };
 
 static bool RainParticle_Tick(struct RainParticle* p, double delta) {
 	particle_hitTerrain = false;
 	return Particle_PhysicsTick(&p->Base, 3.5f, false, delta) || particle_hitTerrain;
 }
 
-TextureRec Rain_Rec = { 2.0f/128.0f, 14.0f/128.0f, 5.0f/128.0f, 16.0f/128.0f };
 static void RainParticle_Render(struct RainParticle* p, float t, VertexP3fT2fC4b* vertices) {
 	Vector3 pos;
 	Vector2 size;
@@ -162,40 +162,40 @@ static void RainParticle_Render(struct RainParticle* p, float t, VertexP3fT2fC4b
 
 	x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
 	col = World_IsValidPos(x, y, z) ? Lighting_Col(x, y, z) : Env_SunCol;
-	Particle_DoRender(&size, &pos, &Rain_Rec, col, vertices);
+	Particle_DoRender(&size, &pos, &rain_rec, col, vertices);
 }
 
 static void Rain_Render(float t) {
 	VertexP3fT2fC4b vertices[PARTICLES_MAX * 4];
 	VertexP3fT2fC4b* ptr;
 	int i;
-	if (!Rain_Count) return;
+	if (!rain_count) return;
 	
 	ptr = vertices;
-	for (i = 0; i < Rain_Count; i++) {
-		RainParticle_Render(&Rain_Particles[i], t, ptr);
+	for (i = 0; i < rain_count; i++) {
+		RainParticle_Render(&rain_Particles[i], t, ptr);
 		ptr += 4;
 	}
 
 	Gfx_BindTexture(Particles_TexId);
-	GfxCommon_UpdateDynamicVb_IndexedTris(Particles_VB, vertices, Rain_Count * 4);
+	GfxCommon_UpdateDynamicVb_IndexedTris(Particles_VB, vertices, rain_count * 4);
 }
 
 static void Rain_RemoveAt(int index) {
-	struct RainParticle removed = Rain_Particles[index];
+	struct RainParticle removed = rain_Particles[index];
 	int i;
 
-	for (i = index; i < Rain_Count - 1; i++) {
-		Rain_Particles[i] = Rain_Particles[i + 1];
+	for (i = index; i < rain_count - 1; i++) {
+		rain_Particles[i] = rain_Particles[i + 1];
 	}
-	Rain_Particles[Rain_Count - 1] = removed;
-	Rain_Count--;
+	rain_Particles[rain_count - 1] = removed;
+	rain_count--;
 }
 
 static void Rain_Tick(double delta) {
 	int i;
-	for (i = 0; i < Rain_Count; i++) {
-		if (RainParticle_Tick(&Rain_Particles[i], delta)) {
+	for (i = 0; i < rain_count; i++) {
+		if (RainParticle_Tick(&rain_Particles[i], delta)) {
 			Rain_RemoveAt(i); i--;
 		}
 	}
@@ -212,10 +212,10 @@ struct TerrainParticle {
 	BlockID Block;
 };
 
-static struct TerrainParticle Terrain_Particles[PARTICLES_MAX];
-static int Terrain_Count;
-static uint16_t Terrain_1DCount[ATLAS1D_MAX_ATLASES];
-static uint16_t Terrain_1DIndices[ATLAS1D_MAX_ATLASES];
+static struct TerrainParticle terrain_particles[PARTICLES_MAX];
+static int terrain_count;
+static uint16_t terrain_1DCount[ATLAS1D_MAX_ATLASES];
+static uint16_t terrain_1DIndices[ATLAS1D_MAX_ATLASES];
 
 static bool TerrainParticle_Tick(struct TerrainParticle* p, double delta) {
 	return Particle_PhysicsTick(&p->Base, 5.4f, true, delta);
@@ -248,15 +248,15 @@ static void Terrain_Update1DCounts(void) {
 	int i, index;
 
 	for (i = 0; i < ATLAS1D_MAX_ATLASES; i++) {
-		Terrain_1DCount[i]   = 0;
-		Terrain_1DIndices[i] = 0;
+		terrain_1DCount[i]   = 0;
+		terrain_1DIndices[i] = 0;
 	}
-	for (i = 0; i < Terrain_Count; i++) {
-		index = Atlas1D_Index(Terrain_Particles[i].TexLoc);
-		Terrain_1DCount[index] += 4;
+	for (i = 0; i < terrain_count; i++) {
+		index = Atlas1D_Index(terrain_particles[i].TexLoc);
+		terrain_1DCount[index] += 4;
 	}
 	for (i = 1; i < Atlas1D_Count; i++) {
-		Terrain_1DIndices[i] = Terrain_1DIndices[i - 1] + Terrain_1DCount[i - 1];
+		terrain_1DIndices[i] = terrain_1DIndices[i - 1] + terrain_1DCount[i - 1];
 	}
 }
 
@@ -265,20 +265,20 @@ static void Terrain_Render(float t) {
 	VertexP3fT2fC4b* ptr;
 	int offset = 0;
 	int i, index;
-	if (!Terrain_Count) return;
+	if (!terrain_count) return;
 
 	Terrain_Update1DCounts();
-	for (i = 0; i < Terrain_Count; i++) {
-		index = Atlas1D_Index(Terrain_Particles[i].TexLoc);
-		ptr   = &vertices[Terrain_1DIndices[index]];
+	for (i = 0; i < terrain_count; i++) {
+		index = Atlas1D_Index(terrain_particles[i].TexLoc);
+		ptr   = &vertices[terrain_1DIndices[index]];
 
-		TerrainParticle_Render(&Terrain_Particles[i], t, ptr);
-		Terrain_1DIndices[index] += 4;
+		TerrainParticle_Render(&terrain_particles[i], t, ptr);
+		terrain_1DIndices[index] += 4;
 	}
 
-	Gfx_SetDynamicVbData(Particles_VB, vertices, Terrain_Count * 4);
+	Gfx_SetDynamicVbData(Particles_VB, vertices, terrain_count * 4);
 	for (i = 0; i < Atlas1D_Count; i++) {
-		int partCount = Terrain_1DCount[i];
+		int partCount = terrain_1DCount[i];
 		if (!partCount) continue;
 
 		Gfx_BindTexture(Atlas1D_TexIds[i]);
@@ -288,20 +288,20 @@ static void Terrain_Render(float t) {
 }
 
 static void Terrain_RemoveAt(int index) {
-	struct TerrainParticle removed = Terrain_Particles[index];
+	struct TerrainParticle removed = terrain_particles[index];
 	int i;
 
-	for (i = index; i < Terrain_Count - 1; i++) {
-		Terrain_Particles[i] = Terrain_Particles[i + 1];
+	for (i = index; i < terrain_count - 1; i++) {
+		terrain_particles[i] = terrain_particles[i + 1];
 	}
-	Terrain_Particles[Terrain_Count - 1] = removed;
-	Terrain_Count--;
+	terrain_particles[terrain_count - 1] = removed;
+	terrain_count--;
 }
 
 static void Terrain_Tick(double delta) {
 	int i;
-	for (i = 0; i < Terrain_Count; i++) {
-		if (TerrainParticle_Tick(&Terrain_Particles[i], delta)) {
+	for (i = 0; i < terrain_count; i++) {
+		if (TerrainParticle_Tick(&terrain_particles[i], delta)) {
 			Terrain_RemoveAt(i); i--;
 		}
 	}
@@ -338,7 +338,7 @@ static void Particles_Init(void) {
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, Particles_ContextRecreated);
 }
 
-static void Particles_Reset(void) { Rain_Count = 0; Terrain_Count = 0; }
+static void Particles_Reset(void) { rain_count = 0; terrain_count = 0; }
 
 static void Particles_Free(void) {
 	Gfx_DeleteTexture(&Particles_TexId);
@@ -358,7 +358,7 @@ void Particles_MakeComponent(struct IGameComponent* comp) {
 }
 
 void Particles_Render(double delta, float t) {
-	if (!Terrain_Count && !Rain_Count) return;
+	if (!terrain_count && !rain_count) return;
 	if (Gfx_LostContext) return;
 
 	Gfx_SetTexturing(true);
@@ -379,15 +379,18 @@ void Particles_Tick(struct ScheduledTask* task) {
 
 void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 	struct TerrainParticle* p;
-	Vector3 origin;
+	TextureLoc loc;
+	int texIndex;
+	TextureRec baseRec, rec;
+	Vector3 origin, pos;
 	Vector3 minBB, maxBB;
+	int x, y, z, type;
 
 	if (now != BLOCK_AIR || Block_Draw[old] == DRAW_GAS) return;
-
 	Vector3I_ToVector3(&origin, &coords);
-	TextureLoc texLoc = Block_GetTex(old, FACE_XMIN);
-	int texIndex;
-	TextureRec baseRec = Atlas1D_TexRec(texLoc, 1, &texIndex);
+	loc = Block_GetTex(old, FACE_XMIN);
+	
+	baseRec = Atlas1D_TexRec(loc, 1, &texIndex);
 	float uScale = (1.0f/16.0f), vScale = (1.0f/16.0f) * Atlas1D_InvTileSize;
 
 	minBB = Block_MinBB[old]; maxBB = Block_MaxBB[old];
@@ -405,7 +408,6 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 	/* gridOffset gives the centre of the cell on a grid */
 	#define CELL_CENTRE ((1.0f / GRID_SIZE) * 0.5f)
 
-	int x, y, z;
 	float maxU2 = baseRec.U1 + maxU * uScale;
 	float maxV2 = baseRec.V1 + maxV * vScale;
 	for (x = 0; x < GRID_SIZE; x++) {
@@ -421,7 +423,7 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 				velocity.Y = CELL_CENTRE + (cellY - 0.0f) + (Random_Float(&rnd) * 0.4f - 0.2f);
 				velocity.Z = CELL_CENTRE + (cellZ - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
 
-				TextureRec rec = baseRec;
+				rec = baseRec;
 				rec.U1 = baseRec.U1 + Random_Range(&rnd, minU, maxUsedU) * uScale;
 				rec.V1 = baseRec.V1 + Random_Range(&rnd, minV, maxUsedV) * vScale;
 				rec.U2 = rec.U1 + 4 * uScale;
@@ -429,17 +431,17 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 				rec.U2 = min(rec.U2, maxU2) - 0.01f * uScale;
 				rec.V2 = min(rec.V2, maxV2) - 0.01f * vScale;
 
-				if (Terrain_Count == PARTICLES_MAX) Terrain_RemoveAt(0);
-				p = &Terrain_Particles[Terrain_Count++];
-				float life = 0.3f + Random_Float(&rnd) * 1.2f;
+				if (terrain_count == PARTICLES_MAX) Terrain_RemoveAt(0);
+				p = &terrain_particles[terrain_count++];
 
-				Vector3 pos;
+				float life = 0.3f + Random_Float(&rnd) * 1.2f;
 				Vector3_Add(&pos, &origin, &cell);
 				Particle_Reset(&p->Base, pos, velocity, life);
-				p->Rec = rec;
-				p->TexLoc = texLoc;
-				p->Block = old;
-				int type = Random_Range(&rnd, 0, 30);
+
+				p->Rec    = rec;
+				p->TexLoc = loc;
+				p->Block  = old;
+				type = Random_Range(&rnd, 0, 30);
 				p->Base.Size = (uint8_t)(type >= 28 ? 12 : (type >= 25 ? 10 : 8));
 			}
 		}
@@ -461,8 +463,8 @@ void Particles_RainSnowEffect(Vector3 pos) {
 		offset.Y = Random_Float(&rnd) * 0.1f + 0.01f;
 		offset.Z = Random_Float(&rnd);
 
-		if (Rain_Count == PARTICLES_MAX) Rain_RemoveAt(0);
-		p = &Rain_Particles[Rain_Count++];
+		if (rain_count == PARTICLES_MAX) Rain_RemoveAt(0);
+		p = &rain_Particles[rain_count++];
 
 		Vector3_Add(&pos, &origin, &offset);
 		Particle_Reset(&p->Base, pos, velocity, 40.0f);

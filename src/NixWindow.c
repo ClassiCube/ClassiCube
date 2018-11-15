@@ -132,21 +132,21 @@ static Key Window_MapKey(KeySym key) {
 	return Key_None;
 }
 
-void Window_RegisterAtoms(void) {
+static void Window_RegisterAtoms(void) {
 	Display* display = win_display;
 	wm_destroy = XInternAtom(display, "WM_DELETE_WINDOW", true);
 	net_wm_state = XInternAtom(display, "_NET_WM_STATE", false);
-	net_wm_state_minimized = XInternAtom(display, "_NET_WM_STATE_MINIMIZED", false);
+	net_wm_state_minimized  = XInternAtom(display, "_NET_WM_STATE_MINIMIZED",  false);
 	net_wm_state_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", false);
 	net_wm_state_maximized_horizontal = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", false);
-	net_wm_state_maximized_vertical = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", false);
+	net_wm_state_maximized_vertical   = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", false);
 	net_wm_icon = XInternAtom(display, "_NEW_WM_ICON", false);
 	net_frame_extents = XInternAtom(display, "_NET_FRAME_EXTENTS", false);
 
-	xa_clipboard = XInternAtom(display, "CLIPBOARD", false);
-	xa_targets = XInternAtom(display, "TARGETS", false);
+	xa_clipboard   = XInternAtom(display, "CLIPBOARD",   false);
+	xa_targets     = XInternAtom(display, "TARGETS",     false);
 	xa_utf8_string = XInternAtom(display, "UTF8_STRING", false);
-	xa_data_sel = XInternAtom(display, "CS_SEL_DATA", false);
+	xa_data_sel    = XInternAtom(display, "CC_SEL_DATA", false);
 }
 
 static void Window_RefreshBorders(void) {
@@ -197,34 +197,35 @@ static void Window_RefreshBounds(XEvent* e) {
 *#########################################################################################################################*/
 static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode);
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
+	XSetWindowAttributes attributes = { 0 };
+	XSizeHints hints = { 0 };
+	uintptr_t addr;
+	bool supported;
+
 	win_display = DisplayDevice_Meta;
 	win_screen  = DefaultScreen(win_display);
 	win_rootWin = RootWindow(win_display, win_screen);
 
 	/* Open a display connection to the X server, and obtain the screen and root window */
-	uintptr_t addr = (uintptr_t)win_display;
+	addr = (uintptr_t)win_display;
 	Platform_Log3("Display: %x, Screen %i, Root window: %h", &addr, &win_screen, &win_rootWin);
-
 	Window_RegisterAtoms();
-	win_visual = GLContext_SelectVisual(mode);
-	Platform_LogConst("Opening render window... ");
-
-	XSetWindowAttributes attributes = { 0 };
-	attributes.colormap = XCreateColormap(win_display, win_rootWin, win_visual.visual, AllocNone);
 
 	win_eventMask = StructureNotifyMask /*| SubstructureNotifyMask*/ | ExposureMask |
-		KeyReleaseMask | KeyPressMask | KeymapStateMask | PointerMotionMask |
+		KeyReleaseMask  | KeyPressMask    | KeymapStateMask   | PointerMotionMask |
 		FocusChangeMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask |
 		LeaveWindowMask | PropertyChangeMask;
+	win_visual = GLContext_SelectVisual(mode);
+
+	Platform_LogConst("Opening render window... ");
+	attributes.colormap   = XCreateColormap(win_display, win_rootWin, win_visual.visual, AllocNone);
 	attributes.event_mask = win_eventMask;
 
-	long mask = CWColormap | CWEventMask | CWBackPixel | CWBorderPixel;
 	win_handle = XCreateWindow(win_display, win_rootWin, x, y, width, height,
-		0, win_visual.depth /* CopyFromParent*/, InputOutput, win_visual.visual, mask, &attributes);
-
+		0, win_visual.depth /* CopyFromParent*/, InputOutput, win_visual.visual, 
+		CWColormap | CWEventMask | CWBackPixel | CWBorderPixel, &attributes);
 	if (!win_handle) ErrorHandler_Fail("XCreateWindow call failed");
 
-	XSizeHints hints  = { 0 };
 	hints.base_width  = width;
 	hints.base_height = height;
 	hints.flags = PSize | PPosition;
@@ -247,7 +248,6 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	   This typically means that it's turned off for keyboards (which is what we want).
 	   We prefer this method over XAutoRepeatOff/On, because the latter needs to
 	   be reset before the program exits. */
-	bool supported;
 	XkbSetDetectableAutoRepeat(win_display, true, &supported);
 	Window_Exists = true;
 }

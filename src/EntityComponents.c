@@ -474,6 +474,8 @@ struct ShadowData { float Y; BlockID Block; uint8_t A; };
 
 static bool lequal(float a, float b) { return a < b || Math_AbsF(a - b) < 0.001f; }
 static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity* e, struct ShadowData* data, float x1, float z1, float x2, float z2) {
+	PackedCol col = PACKEDCOL_CONST(255, 255, 255, 0);
+	VertexP3fT2fC4b* ptr, v;
 	Vector3 cen;
 	float u1, v1, u2, v2;
 
@@ -491,9 +493,8 @@ static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity
 	x2 = min(x2, cen.X + shadow_radius); u2 = u2 <= 1.0f ? u2 : 1.0f;
 	z2 = min(z2, cen.Z + shadow_radius); v2 = v2 <= 1.0f ? v2 : 1.0f;
 
-	PackedCol col = PACKEDCOL_CONST(255, 255, 255, data->A);
-	VertexP3fT2fC4b* ptr = *vertices;
-	VertexP3fT2fC4b v; v.Y = data->Y; v.Col = col;
+	ptr = *vertices;
+	v.Y = data->Y; v.Col = col; v.Col.A = data->A;
 
 	v.X = x1; v.Z = z1; v.U = u1; v.V = v1; *ptr++ = v;
 	v.X = x2;           v.U = u2;           *ptr++ = v;
@@ -505,7 +506,7 @@ static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity
 
 static void ShadowComponent_DrawSquareShadow(VertexP3fT2fC4b** vertices, float y, float x, float z) {
 	PackedCol col = PACKEDCOL_CONST(255, 255, 255, 220);
-	float    uv1 = 63/128.0f, uv2 = 64/128.0f;
+	float     uv1 = 63/128.0f, uv2 = 64/128.0f;
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v; v.Y = y; v.Col = col;
 
@@ -517,20 +518,24 @@ static void ShadowComponent_DrawSquareShadow(VertexP3fT2fC4b** vertices, float y
 	*vertices = ptr;
 }
 
+/* Shadow may extend down multiple blocks vertically */
+/* If so, shadow on a block must be 'chopped up' to avoid a shadow underneath block above this one */
 static void ShadowComponent_DrawCircle(VertexP3fT2fC4b** vertices, struct Entity* e, struct ShadowData* data, float x, float z) {
+	Vector3 min, max, nMin, nMax;
+	int i;
 	x = (float)Math_Floor(x); z = (float)Math_Floor(z);
-	Vector3 min = Block_MinBB[data[0].Block], max = Block_MaxBB[data[0].Block];
+	min = Block_MinBB[data[0].Block]; max = Block_MaxBB[data[0].Block];
 
 	ShadowComponent_DrawCoords(vertices, e, &data[0], x + min.X, z + min.Z, x + max.X, z + max.Z);
-	int i;
 	for (i = 1; i < 4; i++) {
 		if (data[i].Block == BLOCK_AIR) return;
-		Vector3 nMin = Block_MinBB[data[i].Block], nMax = Block_MaxBB[data[i].Block];
-		ShadowComponent_DrawCoords(vertices, e, &data[i], x + min.X, z + nMin.Z, x + max.X, z + min.Z);
-		ShadowComponent_DrawCoords(vertices, e, &data[i], x + min.X, z + max.Z, x + max.X, z + nMax.Z);
+		nMin = Block_MinBB[data[i].Block]; nMax = Block_MaxBB[data[i].Block];
 
-		ShadowComponent_DrawCoords(vertices, e, &data[i], x + nMin.X, z + nMin.Z, x + min.X, z + nMax.Z);
-		ShadowComponent_DrawCoords(vertices, e, &data[i], x + max.X, z + nMin.Z, x + nMax.X, z + nMax.Z);
+		ShadowComponent_DrawCoords(vertices, e, &data[i], x +  min.X, z + nMin.Z, x +  max.X, z +  min.Z);
+		ShadowComponent_DrawCoords(vertices, e, &data[i], x +  min.X, z +  max.Z, x +  max.X, z + nMax.Z);
+
+		ShadowComponent_DrawCoords(vertices, e, &data[i], x + nMin.X, z + nMin.Z, x +  min.X, z + nMax.Z);
+		ShadowComponent_DrawCoords(vertices, e, &data[i], x +  max.X, z + nMin.Z, x + nMax.X, z + nMax.Z);
 		min = nMin; max = nMax;
 	}
 }
@@ -550,11 +555,12 @@ static void ShadowComponent_CalcAlpha(float playerY, struct ShadowData* data) {
 }
 
 static bool ShadowComponent_GetBlocks(struct Entity* e, int x, int y, int z, struct ShadowData* data) {
-	int i;
 	struct ShadowData zeroData = { 0 };
+	struct ShadowData* cur;
+	int i;
 
 	for (i = 0; i < 4; i++) { data[i] = zeroData; }
-	struct ShadowData* cur = data;
+	cur = data;
 	float posY = e->Position.Y;
 	bool outside = x < 0 || z < 0 || x >= World_Width || z >= World_Length;
 
@@ -615,8 +621,12 @@ static void ShadowComponent_MakeTex(void) {
 }
 
 void ShadowComponent_Draw(struct Entity* e) {
+	VertexP3fT2fC4b vertices[128];
+	VertexP3fT2fC4b* ptr;
+	struct ShadowData data[4];
 	GfxResourceID vb;
 	Vector3 pos;
+	float radius;
 	int y, count;
 	int x1, z1, x2, z2;
 
@@ -624,15 +634,12 @@ void ShadowComponent_Draw(struct Entity* e) {
 	if (pos.Y < 0.0f) return;
 	y = min((int)pos.Y, World_MaxY);
 
-	float radius = 7.0f * min(e->ModelScale.Y, 1.0f) * e->Model->ShadowScale;
+	radius = 7.0f * min(e->ModelScale.Y, 1.0f) * e->Model->ShadowScale;
 	shadow_radius  = radius / 16.0f;
 	shadow_uvScale = 16.0f / (radius * 2.0f);
 
-	VertexP3fT2fC4b vertices[128];
-	struct ShadowData data[4];
-
 	/* TODO: Should shadow component use its own VB? */
-	VertexP3fT2fC4b* ptr = vertices;
+	ptr = vertices;
 	if (Entities_ShadowMode == SHADOW_MODE_SNAP_TO_BLOCK) {
 		vb = GfxCommon_texVb;
 		x1 = Math_Floor(pos.X); z1 = Math_Floor(pos.Z);
@@ -901,7 +908,10 @@ static bool PhysicsComp_TouchesLiquid(BlockID block) { return Block_Collide[bloc
 void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 	struct Entity* entity   = comp->Entity;
 	struct HacksComp* hacks = comp->Hacks;
+	struct AABB bounds;
 	bool touchWater, touchLava;
+	bool liquidFeet, liquidRest;
+	bool pastJumpPoint;
 
 	if (hacks->Floating) {
 		entity->Velocity.Y = 0.0f; /* eliminate the effect of gravity */
@@ -921,18 +931,18 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 	touchWater = Entity_TouchesAnyWater(entity);
 	touchLava  = Entity_TouchesAnyLava(entity);
 	if (touchWater || touchLava) {
-		struct AABB bounds; Entity_GetBounds(entity, &bounds);
+		Entity_GetBounds(entity, &bounds);
 		int feetY = Math_Floor(bounds.Min.Y), bodyY = feetY + 1;
 		int headY = Math_Floor(bounds.Max.Y);
 		if (bodyY > headY) bodyY = headY;
 
 		bounds.Max.Y = bounds.Min.Y = feetY;
-		bool liquidFeet = Entity_TouchesAny(&bounds, PhysicsComp_TouchesLiquid);
+		liquidFeet   = Entity_TouchesAny(&bounds, PhysicsComp_TouchesLiquid);
 		bounds.Min.Y = min(bodyY, headY);
 		bounds.Max.Y = max(bodyY, headY);
-		bool liquidRest = Entity_TouchesAny(&bounds, PhysicsComp_TouchesLiquid);
+		liquidRest   = Entity_TouchesAny(&bounds, PhysicsComp_TouchesLiquid);
 
-		bool pastJumpPoint = liquidFeet && !liquidRest && (Math_Mod1(entity->Position.Y) >= 0.4f);
+		pastJumpPoint = liquidFeet && !liquidRest && (Math_Mod1(entity->Position.Y) >= 0.4f);
 		if (!pastJumpPoint) {
 			comp->CanLiquidJump = true;
 			entity->Velocity.Y += 0.04f;
@@ -961,7 +971,7 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 }
 
 void PhysicsComp_DoNormalJump(struct PhysicsComp* comp) {
-	struct Entity* entity = comp->Entity;
+	struct Entity* entity   = comp->Entity;
 	struct HacksComp* hacks = comp->Hacks;
 	if (comp->JumpVel == 0.0f || hacks->MaxJumps <= 0) return;
 
@@ -973,23 +983,32 @@ void PhysicsComp_DoNormalJump(struct PhysicsComp* comp) {
 
 static bool PhysicsComp_TouchesSlipperyIce(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_SLIPPERY_ICE; }
 static bool PhysicsComp_OnIce(struct Entity* e) {
-	Vector3 under = e->Position; under.Y -= 0.01f;
-	Vector3I underCoords; Vector3I_Floor(&underCoords, &under);
-	BlockID blockUnder = World_SafeGetBlock_3I(underCoords);
-	if (Block_ExtendedCollide[blockUnder] == COLLIDE_ICE) return true;
+	struct AABB bounds;
+	int feetX, feetY, feetZ;
+	BlockID feetBlock;
 
-	struct AABB bounds; Entity_GetBounds(e, &bounds);
+	feetX = Math_Floor(e->Position.X);
+	feetY = Math_Floor(e->Position.Y - 0.01f);
+	feetZ = Math_Floor(e->Position.Z);
+
+	feetBlock = World_GetPhysicsBlock(feetX, feetY, feetZ);
+	if (Block_ExtendedCollide[feetBlock] == COLLIDE_ICE) return true;
+
+	Entity_GetBounds(e, &bounds);
 	bounds.Min.Y -= 0.01f; bounds.Max.Y = bounds.Min.Y;
 	return Entity_TouchesAny(&bounds, PhysicsComp_TouchesSlipperyIce);
 }
 
 static void PhysicsComp_MoveHor(struct PhysicsComp* comp, Vector3 vel, float factor) {
-	float dist = Math_SqrtF(vel.X * vel.X + vel.Z * vel.Z);
+	struct Entity* entity;
+	float dist;
+
+	dist = Math_SqrtF(vel.X * vel.X + vel.Z * vel.Z);
 	if (dist < 0.00001f) return;
 	if (dist < 1.0f) dist = 1.0f;
 
 	/* entity.Velocity += vel * (factor / dist) */
-	struct Entity* entity = comp->Entity;
+	entity = comp->Entity;
 	Vector3_Mul1By(&vel, factor / dist);
 	Vector3_AddBy(&entity->Velocity, &vel);
 }
@@ -997,6 +1016,7 @@ static void PhysicsComp_MoveHor(struct PhysicsComp* comp, Vector3 vel, float fac
 static void PhysicsComp_Move(struct PhysicsComp* comp, Vector3 drag, float gravity, float yMul) {
 	struct Entity* entity = comp->Entity;
 	entity->Velocity.Y *= yMul;
+
 	if (!comp->Hacks->Noclip) {
 		Collisions_MoveAndWallSlide(comp->Collisions);
 	}
@@ -1010,9 +1030,10 @@ static void PhysicsComp_Move(struct PhysicsComp* comp, Vector3 drag, float gravi
 static void PhysicsComp_MoveFlying(struct PhysicsComp* comp, Vector3 vel, float factor, Vector3 drag, float gravity, float yMul) {
 	struct Entity* entity   = comp->Entity;
 	struct HacksComp* hacks = comp->Hacks;
+	float yVel;
 
 	PhysicsComp_MoveHor(comp, vel, factor);
-	float yVel = Math_SqrtF(entity->Velocity.X * entity->Velocity.X + entity->Velocity.Z * entity->Velocity.Z);
+	yVel = Math_SqrtF(entity->Velocity.X * entity->Velocity.X + entity->Velocity.Z * entity->Velocity.Z);
 	/* make horizontal speed the same as vertical speed */
 	if ((vel.X != 0.0f || vel.Z != 0.0f) && yVel > 0.001f) {
 		entity->Velocity.Y = 0.0f;
@@ -1030,17 +1051,18 @@ static void PhysicsComp_MoveNormal(struct PhysicsComp* comp, Vector3 vel, float 
 
 static float PhysicsComp_LowestModifier(struct PhysicsComp* comp, struct AABB* bounds, bool checkSolid) {
 	Vector3I bbMin, bbMax;
-	Vector3I_Floor(&bbMin, &bounds->Min);
-	Vector3I_Floor(&bbMax, &bounds->Max);
 	float modifier = MATH_POS_INF;
+	struct AABB blockBB;
+	Vector3 v;
+	int x, y, z;
+
+	Vector3I_Floor(&bbMin, &bounds->Min);
+	Vector3I_Floor(&bbMax, &bounds->Max);	
 
 	bbMin.X = max(bbMin.X, 0); bbMax.X = min(bbMax.X, World_MaxX);
 	bbMin.Y = max(bbMin.Y, 0); bbMax.Y = min(bbMax.Y, World_MaxY);
 	bbMin.Z = max(bbMin.Z, 0); bbMax.Z = min(bbMax.Z, World_MaxZ);
-
-	struct AABB blockBB;
-	Vector3 v;
-	int x, y, z;
+	
 	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (float)y;
 		for (z = bbMin.Z; z <= bbMax.Z; z++) { v.Z = (float)z;
 			for (x = bbMin.X; x <= bbMax.X; x++) { v.X = (float)x;
@@ -1090,21 +1112,23 @@ static float PhysicsComp_GetBaseSpeed(struct PhysicsComp* comp) {
 void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vector3 vel) {
 	struct Entity* entity   = comp->Entity;
 	struct HacksComp* hacks = comp->Hacks;
+	float baseSpeed, verSpeed, horSpeed;
+	float factor, gravity;
+	bool womSpeedBoost;
 
 	if (hacks->Noclip) entity->OnGround = false;
-	float baseSpeed = PhysicsComp_GetBaseSpeed(comp);
-	float verSpeed  = baseSpeed * (PhysicsComp_GetSpeed(hacks, 8.0f) / 5.0f);
-	float horSpeed  = baseSpeed * PhysicsComp_GetSpeed(hacks, 8.0f / 5.0f) * hacks->BaseHorSpeed;
+	baseSpeed = PhysicsComp_GetBaseSpeed(comp);
+	verSpeed  = baseSpeed * (PhysicsComp_GetSpeed(hacks, 8.0f) / 5.0f);
+	horSpeed  = baseSpeed * PhysicsComp_GetSpeed(hacks, 8.0f / 5.0f) * hacks->BaseHorSpeed;
 	/* previously horSpeed used to be multiplied by factor of 0.02 in last case */
 	/* it's now multiplied by 0.1, so need to divide by 5 so user speed modifier comes out same */
 
 	/* TODO: this is a temp fix to avoid crashing for high horizontal speed */
 	Math_Clamp(horSpeed, -75.0f, 75.0f);
-
 	/* vertical speed never goes below: base speed * 1.0 */
 	if (verSpeed < baseSpeed) verSpeed = baseSpeed;
 
-	bool womSpeedBoost = hacks->CanDoubleJump && hacks->WOMStyleHacks;
+	womSpeedBoost = hacks->CanDoubleJump && hacks->WOMStyleHacks;
 	if (!hacks->Floating && womSpeedBoost) {
 		if (comp->MultiJumps == 1)     { horSpeed *= 46.5f; verSpeed *= 7.5f; } 
 		else if (comp->MultiJumps > 1) { horSpeed *= 93.0f; verSpeed *= 10.0f; }
@@ -1120,8 +1144,8 @@ void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vector3 vel) {
 		Vector3 ropeDrag = VECTOR3_CONST(0.5f, 0.85f, 0.5f);
 		PhysicsComp_MoveNormal(comp, vel, 0.02f * 1.7f, ropeDrag, ROPE_GRAVITY, verSpeed);
 	} else {
-		float factor  = hacks->Floating || entity->OnGround ? 0.1f : 0.02f;
-		float gravity = comp->UseLiquidGravity ? LIQUID_GRAVITY : entity->Model->Gravity;
+		factor  = hacks->Floating || entity->OnGround ? 0.1f : 0.02f;
+		gravity = comp->UseLiquidGravity ? LIQUID_GRAVITY : entity->Model->Gravity;
 
 		if (hacks->Floating) {
 			PhysicsComp_MoveFlying(comp, vel, factor * horSpeed, entity->Model->Drag, gravity, verSpeed);
@@ -1181,9 +1205,10 @@ void PhysicsComp_CalculateJumpVelocity(struct PhysicsComp* comp, float jumpHeigh
 void PhysicsComp_DoEntityPush(struct Entity* entity) {
 	struct Entity* other;
 	bool yIntersects;
-	Vector3 dir; dir.Y = 0.0f;
+	Vector3 dir;
 	float dist, pushStrength;
 	int id;
+	dir.Y = 0.0f;
 
 	for (id = 0; id < ENTITIES_MAX_COUNT; id++) {
 		other = Entities_List[id];
@@ -1212,47 +1237,51 @@ void PhysicsComp_DoEntityPush(struct Entity* entity) {
 /*########################################################################################################################*
 *----------------------------------------------------SoundsComponent------------------------------------------------------*
 *#########################################################################################################################*/
-static Vector3 sounds_LastPos = { -1e25f, -1e25f, -1e25f };
-static bool sounds_AnyNonAir;
-static uint8_t sounds_Type;
+static Vector3 sounds_lastPos = { -1e25f, -1e25f, -1e25f };
+static bool sounds_anyNonAir;
+static uint8_t sounds_type;
 
 static bool Sounds_CheckNonSolid(BlockID b) {
 	uint8_t type = Block_StepSounds[b];
 	uint8_t collide = Block_Collide[b];
-	if (type != SOUND_NONE && collide != COLLIDE_SOLID) sounds_Type = type;
+	if (type != SOUND_NONE && collide != COLLIDE_SOLID) sounds_type = type;
 
-	if (Block_Draw[b] != DRAW_GAS) sounds_AnyNonAir = true;
+	if (Block_Draw[b] != DRAW_GAS) sounds_anyNonAir = true;
 	return false;
 }
 
 static bool Sounds_CheckSolid(BlockID b) {
 	uint8_t type = Block_StepSounds[b];
-	if (type != SOUND_NONE) sounds_Type = type;
+	if (type != SOUND_NONE) sounds_type = type;
 
-	if (Block_Draw[b] != DRAW_GAS) sounds_AnyNonAir = true;
+	if (Block_Draw[b] != DRAW_GAS) sounds_anyNonAir = true;
 	return false;
 }
 
 static void SoundComp_GetSound(struct LocalPlayer* p) {
-	Vector3 pos = p->Interp.Next.Pos;
-	struct AABB bounds; Entity_GetBounds(&p->Base, &bounds);
-	sounds_Type = SOUND_NONE;
-	sounds_AnyNonAir = false;
+	struct AABB bounds;
+	Vector3 pos;
+	Vector3I feetPos;
+	BlockID blockUnder;
+
+	Entity_GetBounds(&p->Base, &bounds);
+	sounds_type = SOUND_NONE;
+	sounds_anyNonAir = false;
 
 	/* first check surrounding liquids/gas for sounds */
 	Entity_TouchesAny(&bounds, Sounds_CheckNonSolid);
-	if (sounds_Type != SOUND_NONE) return;
+	if (sounds_type != SOUND_NONE) return;
 
 	/* then check block standing on */
-	pos.Y -= 0.01f;
-	Vector3I feetPos; Vector3I_Floor(&feetPos, &pos);
-	BlockID blockUnder = World_SafeGetBlock_3I(feetPos);
+	pos = p->Interp.Next.Pos; pos.Y -= 0.01f;
+	Vector3I_Floor(&feetPos, &pos);
+	blockUnder = World_SafeGetBlock_3I(feetPos);
 	float maxY = feetPos.Y + Block_MaxBB[blockUnder].Y;
 
 	uint8_t typeUnder = Block_StepSounds[blockUnder];
 	uint8_t collideUnder = Block_Collide[blockUnder];
 	if (maxY >= pos.Y && collideUnder == COLLIDE_SOLID && typeUnder != SOUND_NONE) {
-		sounds_AnyNonAir = true; sounds_Type = typeUnder; return;
+		sounds_anyNonAir = true; sounds_type = typeUnder; return;
 	}
 
 	/* then check all solid blocks at feet */
@@ -1265,7 +1294,7 @@ static bool SoundComp_ShouldPlay(struct LocalPlayer* p, Vector3 soundPos) {
 	float distSq;
 	float oldLegRot, newLegRot;
 
-	Vector3_Sub(&delta, &sounds_LastPos, &soundPos);
+	Vector3_Sub(&delta, &sounds_lastPos, &soundPos);
 	distSq = Vector3_LengthSquared(&delta);
 	/* just play every certain block interval when not animating */
 	if (p->Base.Anim.Swing < 0.999f) return distSq > 1.75f * 1.75f;
@@ -1286,10 +1315,10 @@ void SoundComp_Tick(bool wasOnGround) {
 	Vector3 soundPos      = p->Interp.Next.Pos;
 
 	SoundComp_GetSound(p);
-	if (!sounds_AnyNonAir) soundPos = Vector3_BigPos();
+	if (!sounds_anyNonAir) soundPos = Vector3_BigPos();
 
 	if (p->Base.OnGround && (SoundComp_ShouldPlay(p, soundPos) || !wasOnGround)) {
-		Audio_PlayStepSound(sounds_Type);
-		sounds_LastPos = soundPos;
+		Audio_PlayStepSound(sounds_type);
+		sounds_lastPos = soundPos;
 	}
 }

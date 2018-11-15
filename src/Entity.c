@@ -522,36 +522,37 @@ void Player_UpdateNameTex(struct Player* player) {
 	Player_MakeNameTexture(player);
 }
 
-static void Player_DrawName(struct Player* player) {
-	struct Entity* e = &player->Base;
-	struct Model* model = e->Model;
+static void Player_DrawName(struct Player* p) {
+	VertexP3fT2fC4b vertices[4];
+	PackedCol col = PACKEDCOL_WHITE;
+
+	struct Entity* e = &p->Base;
+	struct Model* model;
+	struct Matrix mat;
 	Vector3 pos;
 	float scale;
-	VertexP3fT2fC4b vertices[4];
+	Vector2 size;	
 
-	if (player->NameTex.X == PLAYER_NAME_EMPTY_TEX) return;
-	if (!player->NameTex.ID) Player_MakeNameTexture(player);
-	Gfx_BindTexture(player->NameTex.ID);
+	if (p->NameTex.X == PLAYER_NAME_EMPTY_TEX) return;
+	if (!p->NameTex.ID) Player_MakeNameTexture(p);
+	Gfx_BindTexture(p->NameTex.ID);
 
+	model = e->Model;
 	model->RecalcProperties(e);
 	Vector3_TransformY(&pos, model->NameYOffset, &e->Transform);
 
-	scale = model->NameScale * e->ModelScale.Y;
-	scale = scale > 1.0f ? (1.0f / 70.0f) : (scale / 70.0f);
-	Vector2 size = { player->NameTex.Width * scale, player->NameTex.Height * scale };
+	scale  = model->NameScale * e->ModelScale.Y;
+	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);
+	size.X = p->NameTex.Width * scale; size.Y = p->NameTex.Height * scale;
 
-	if (Entities_NameMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {
-		/* Get W component of transformed position */
-		struct Matrix mat;
+	if (Entities_NameMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {			
 		Matrix_Mul(&mat, &Gfx_View, &Gfx_Projection); /* TODO: This mul is slow, avoid it */
-		float tempW = pos.X * mat.Row0.W + pos.Y * mat.Row1.W + pos.Z * mat.Row2.W + mat.Row3.W;
-		size.X *= tempW * 0.2f; size.Y *= tempW * 0.2f;
+		/* Get W component of transformed position */
+		scale = pos.X * mat.Row0.W + pos.Y * mat.Row1.W + pos.Z * mat.Row2.W + mat.Row3.W;
+		size.X *= scale * 0.2f; size.Y *= scale * 0.2f;
 	}
 
-	TextureRec rec = { 0.0f, 0.0f, player->NameTex.U2, player->NameTex.V2 };
-	PackedCol col = PACKEDCOL_WHITE;
-	Particle_DoRender(&size, &pos, &rec, col, vertices);
-
+	Particle_DoRender(&size, &pos, &p->NameTex.uv, col, vertices);
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_texVb, vertices, 4);
 }

@@ -12,7 +12,7 @@ GfxResourceID GfxCommon_defaultIb;
 struct Texture {
 	GfxResourceID ID;
 	int16_t X, Y; uint16_t Width, Height;
-	float U1, V1, U2, V2;
+	TextureRec uv;
 };
 #define Tex_Rect(x,y, width,height) x,y,width,height
 #define Tex_UV(u1,v1, u2,v2)        u1,v1,u2,v2

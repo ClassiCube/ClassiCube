@@ -123,6 +123,21 @@ static ReturnCode Vorbis_TryReadBits(struct VorbisState* ctx, uint32_t bitsCount
 	return 0;
 }
 
+static uint32_t Vorbis_ReadBit(struct VorbisState* ctx) {
+	uint8_t portion;
+	uint32_t data;
+	ReturnCode res;
+
+	if (!ctx->NumBits) {
+		res = ctx->Source->ReadU8(ctx->Source, &portion);
+		if (res) { ErrorHandler_Fail2(res, "Failed to read byte for vorbis"); }
+		Vorbis_PushByte(ctx, portion);
+	}
+
+	data = Vorbis_PeekBits(ctx, 1); Vorbis_ConsumeBits(ctx, 1);
+	return data;
+}
+
 
 static int iLog(int x) {
 	int bits = 0;
@@ -259,21 +274,19 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 	c->Entries    = Vorbis_ReadBits(ctx, 24);
 
 	uint8_t* codewordLens = Mem_Alloc(c->Entries, 1, "raw codeword lens");
-	int i, ordered = Vorbis_ReadBits(ctx, 1), usedEntries = 0;
+	int i, ordered = Vorbis_ReadBit(ctx), usedEntries = 0;
 
 	for (i = 0; i < Array_Elems(c->NumCodewords); i++) {
 		c->NumCodewords[i] = 0;
 	}
 
 	if (!ordered) {
-		int sparse = Vorbis_ReadBits(ctx, 1);
+		int sparse = Vorbis_ReadBit(ctx);
 		for (i = 0; i < c->Entries; i++) {
-			if (sparse) {
-				int flag = Vorbis_ReadBits(ctx, 1);
-				if (!flag) {
-					codewordLens[i] = 0;
-					continue; /* unused entry */
-				}
+			/* sparse trees may not have all entries */
+			if (sparse && !Vorbis_ReadBit(ctx)){
+				codewordLens[i] = 0;
+				continue; /* unused entry */
 			}
 
 			int len = Vorbis_ReadBits(ctx, 5) + 1;
@@ -312,7 +325,7 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 	c->MinValue   = float32_unpack(ctx);
 	c->DeltaValue = float32_unpack(ctx);
 	int valueBits = Vorbis_ReadBits(ctx, 4) + 1;
-	c->SequenceP  = Vorbis_ReadBits(ctx, 1);
+	c->SequenceP  = Vorbis_ReadBit(ctx);
 
 	uint32_t lookupValues;
 	if (c->LookupType == 1) {
@@ -336,8 +349,7 @@ static uint32_t Codebook_DecodeScalar(struct VorbisState* ctx, struct Codebook* 
 
 	/* TODO: This is so massively slow */
 	for (depth = 1; depth <= 32; depth++, shift--) {
-		uint32_t bit = Vorbis_ReadBits(ctx, 1);
-		codeword |= bit << shift;
+		codeword |= Vorbis_ReadBit(ctx) << shift;
 
 		for (i = 0; i < c->NumCodewords[depth]; i++) {
 			if (codeword != codewords[i]) continue;
@@ -649,6 +661,7 @@ struct Residue {
 };
 
 static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r, int type) {
+	int16_t codebook;
 	int i, j;
 
 	r->Type  = (uint8_t)type;
@@ -660,16 +673,14 @@ static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r
 
 	for (i = 0; i < r->Classifications; i++) {
 		r->Cascade[i] = Vorbis_ReadBits(ctx, 3);
-		int moreBits  = Vorbis_ReadBits(ctx, 1);
-		if (!moreBits) continue;
-
-		int bits = Vorbis_ReadBits(ctx, 5);
-		r->Cascade[i] |= bits << 3;
+		if (!Vorbis_ReadBit(ctx)) continue;
+		r->Cascade[i] |= Vorbis_ReadBits(ctx, 5) << 3;
 	}
 
 	for (i = 0; i < r->Classifications; i++) {
 		for (j = 0; j < 8; j++) {
-			int16_t codebook = -1;
+			codebook = -1;
+
 			if (r->Cascade[i] & (1 << j)) {
 				codebook = Vorbis_ReadBits(ctx, 8);
 			}
@@ -789,13 +800,13 @@ struct Mapping {
 };
 
 static ReturnCode Mapping_DecodeSetup(struct VorbisState* ctx, struct Mapping* m) {
-	int i, submaps = 1, submapFlag = Vorbis_ReadBits(ctx, 1);
-	if (submapFlag) {
-		submaps = Vorbis_ReadBits(ctx, 4); submaps++;
+	int i, submaps = 1;
+	if (Vorbis_ReadBit(ctx)) {
+		submaps = Vorbis_ReadBits(ctx, 4) + 1;
 	}
 
-	int couplingSteps = 0, couplingFlag = Vorbis_ReadBits(ctx, 1);
-	if (couplingFlag) {
+	int couplingSteps = 0;
+	if (Vorbis_ReadBit(ctx)) {
 		couplingSteps = Vorbis_ReadBits(ctx, 8) + 1;
 		/* TODO: How big can couplingSteps ever really get in practice? */
 		int couplingBits = iLog(ctx->Channels - 1);

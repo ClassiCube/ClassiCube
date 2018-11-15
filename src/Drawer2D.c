@@ -156,9 +156,9 @@ void Drawer2D_Make2DTexture(struct Texture* tex, Bitmap* bmp, Size2D used, int X
 	tex->X  = X; tex->Width  = used.Width;
 	tex->Y  = Y; tex->Height = used.Height;
 
-	tex->U1 = 0.0f; tex->V1 = 0.0f;
-	tex->U2 = (float)used.Width  / (float)bmp->Width;
-	tex->V2 = (float)used.Height / (float)bmp->Height;
+	tex->uv.U1 = 0.0f; tex->uv.V1 = 0.0f;
+	tex->uv.U2 = (float)used.Width  / (float)bmp->Width;
+	tex->uv.V2 = (float)used.Height / (float)bmp->Height;
 }
 
 bool Drawer2D_ValidColCodeAt(const String* text, int i) {
@@ -207,7 +207,7 @@ void Drawer2D_ReducePadding_Tex(struct Texture* tex, int point, int scale) {
 
 	padding = (tex->Height - point) / scale;
 	vAdj    = (float)padding / Math_NextPowOf2(tex->Height);
-	tex->V1 += vAdj; tex->V2 -= vAdj;
+	tex->uv.V1 += vAdj; tex->uv.V2 -= vAdj;
 	tex->Height -= (uint16_t)(padding * 2);
 }
 

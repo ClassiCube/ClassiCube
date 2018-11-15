@@ -102,10 +102,10 @@ void GfxCommon_Make2DQuad(const struct Texture* tex, PackedCol col, VertexP3fT2f
 
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v; v.Z = 0.0f; v.Col = col;
-	v.X = x1; v.Y = y1; v.U = tex->U1; v.V = tex->V1; ptr[0] = v;
-	v.X = x2;           v.U = tex->U2;                ptr[1] = v;
-	v.Y = y2;                          v.V = tex->V2; ptr[2] = v;
-	v.X = x1;           v.U = tex->U1;                ptr[3] = v;
+	v.X = x1; v.Y = y1; v.U = tex->uv.U1; v.V = tex->uv.V1; ptr[0] = v;
+	v.X = x2;           v.U = tex->uv.U2;                   ptr[1] = v;
+	v.Y = y2;                             v.V = tex->uv.V2; ptr[2] = v;
+	v.X = x1;           v.U = tex->uv.U1;                   ptr[3] = v;
 	*vertices += 4;
 }
 
