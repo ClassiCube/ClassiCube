@@ -701,7 +701,6 @@ void NormalBuilder_SetActive(void) {
 *-------------------------------------------------Advanced mesh builder---------------------------------------------------*
 *#########################################################################################################################*/
 static Vector3 adv_minBB, adv_maxBB;
-static bool adv_isTranslucent;
 static int adv_initBitFlags, adv_lightFlags, adv_baseOffset;
 static int* adv_bitFlags;
 static float adv_x1, adv_y1, adv_z1, adv_x2, adv_y2, adv_z2;

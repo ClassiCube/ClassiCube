@@ -1604,12 +1604,12 @@ static void KeyBindingsScreen_GetText(struct KeyBindingsScreen* s, int i, String
 }
 
 static void KeyBindingsScreen_OnBindingClick(void* screen, void* widget) {
+	String text; char textBuffer[STRING_SIZE];
 	struct KeyBindingsScreen* s = screen;
 	struct ButtonWidget* btn    = widget;
 	struct ButtonWidget* cur;
-	char textBuffer[STRING_SIZE];
-	String text = String_FromArray(textBuffer);
 
+	String_InitArray(text, textBuffer);
 	/* previously selected a different button for binding */
 	if (s->CurI >= 0) {
 		KeyBindingsScreen_GetText(s, s->CurI, &text);

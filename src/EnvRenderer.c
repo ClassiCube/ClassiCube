@@ -30,7 +30,7 @@ static float EnvRenderer_BlendFactor(float x) {
 
 #define EnvRenderer_AxisSize() (EnvRenderer_Legacy ? 128 : 65536)
 /* Returns the number of vertices needed to subdivide a quad */
-int EnvRenderer_Vertices(int axis1Len, int axis2Len) {
+static int EnvRenderer_Vertices(int axis1Len, int axis2Len) {
 	int axisSize = EnvRenderer_AxisSize();
 	return Math_CeilDiv(axis1Len, axisSize) * Math_CeilDiv(axis2Len, axisSize) * 4;
 }
@@ -871,8 +871,10 @@ static void EnvRenderer_ViewDistanceChanged(void* obj) {
 static void EnvRenderer_EnvVariableChanged(void* obj, int envVar) {
 	if (envVar == ENV_VAR_EDGE_BLOCK) {
 		EnvRenderer_MakeBorderTex(&edges_tex, Env_EdgeBlock);
+		EnvRenderer_UpdateMapEdges();
 	} else if (envVar == ENV_VAR_SIDES_BLOCK) {
 		EnvRenderer_MakeBorderTex(&sides_tex, Env_SidesBlock);
+		EnvRenderer_UpdateMapSides();
 	} else if (envVar == ENV_VAR_EDGE_HEIGHT || envVar == ENV_VAR_SIDES_OFFSET) {
 		EnvRenderer_UpdateMapEdges();
 		EnvRenderer_UpdateMapSides();

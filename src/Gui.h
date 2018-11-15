@@ -71,6 +71,7 @@ struct Widget { Widget_Layout };
 void Widget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset);
 void Widget_CalcPosition(void* widget);
 void Widget_Reset(void* widget);
+/* Whether the given point is located within the bounds of the widget. */
 bool Widget_Contains(void* widget, int x, int y);
 
 

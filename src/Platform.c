@@ -880,6 +880,10 @@ void Font_GetNames(StringsBuffer* buffer) {
 }
 
 void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
+	StringsBuffer* entries;
+	int idx;
+	String path;
+
 	FT_Stream stream;
 	FT_Open_Args args;
 	FT_Face face;
@@ -889,8 +893,8 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 	desc->Style = style;
 	if (!norm_fonts.Count) Font_Init();
 
-	int idx = -1;
-	StringsBuffer* entries = &bold_fonts;
+	idx     = -1;
+	entries = &bold_fonts;
 	if (style & FONT_STYLE_BOLD) { idx = Font_Find(fontName, entries); }
 
 	if (idx == -1) {
@@ -899,7 +903,7 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 	}
 
 	if (idx == -1) ErrorHandler_Fail("Unknown font");
-	String path = StringsBuffer_UNSAFE_Get(entries, idx - 1);
+	path = StringsBuffer_UNSAFE_Get(entries, idx - 1);
 
 	stream = Mem_AllocCleared(1, sizeof(FT_StreamRec), "leaky font"); /* TODO: LEAKS MEMORY!!! */
 	if (!Font_MakeArgs(&path, stream, &args)) return;
