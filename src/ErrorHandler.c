@@ -268,22 +268,25 @@ void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
 static void ErrorHandler_Backtrace(String* backtrace_, void* ctx) {
+	String str; char strBuffer[STRING_SIZE * 5];
 	void* addrs[40];
-	int i, frames = backtrace(addrs, 40);
-	char** strings = backtrace_symbols(addrs, frames);
+	int i, frames, num;
+	char** strings;
+	uintptr_t addr;
+
+	frames  = backtrace(addrs, 40);
+	strings = backtrace_symbols(addrs, frames);
 
 	for (i = 0; i < frames; i++) {
-		int number = i + 1;
-		uintptr_t addr = (uintptr_t)addrs[i];
-
-		char strBuffer[STRING_SIZE * 5];
-		String str = String_FromArray(strBuffer);
+		num  = i + 1;
+		addr = (uintptr_t)addrs[i];
+		String_InitArray(str, strBuffer);
 
 		/* instruction pointer */
 		if (strings && strings[i]) {
-			String_Format3(&str, "%i) 0x%x - %c\n", &number, &addr, strings[i]);
+			String_Format3(&str, "%i) 0x%x - %c\n", &num, &addr, strings[i]);
 		} else {
-			String_Format2(&str, "%i) 0x%x\n", &number, &addr);
+			String_Format2(&str, "%i) 0x%x\n", &num, &addr);
 		}
 
 		String_AppendString(backtrace_, &str);
