@@ -19,7 +19,7 @@
 #include "Bitmap.h"
 #include "Block.h"
 
-#define Widget_UV(u1,v1, u2,v2) u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f
+#define Widget_UV(u1,v1, u2,v2) Tex_UV(u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f)
 static void Widget_NullFunc(void* widget) { }
 static Size2D Size2D_Empty;
 
@@ -116,6 +116,9 @@ static void ButtonWidget_Reposition(void* widget) {
 }
 
 static void ButtonWidget_Render(void* widget, double delta) {
+	PackedCol normCol     = PACKEDCOL_CONST(224, 224, 224, 255);
+	PackedCol activeCol   = PACKEDCOL_CONST(255, 255, 160, 255);
+	PackedCol disabledCol = PACKEDCOL_CONST(160, 160, 160, 255);
 	struct ButtonWidget* w = widget;
 	struct Texture back;
 	PackedCol col;
@@ -144,10 +147,6 @@ static void ButtonWidget_Render(void* widget, double delta) {
 		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
 		GfxCommon_Draw2DTexture(&back, white);
 	}
-	
-	PackedCol normCol     = PACKEDCOL_CONST(224, 224, 224, 255);
-	PackedCol activeCol   = PACKEDCOL_CONST(255, 255, 160, 255);
-	PackedCol disabledCol = PACKEDCOL_CONST(160, 160, 160, 255);
 
 	if (!w->Texture.ID) return;
 	col = w->Disabled ? disabledCol : (w->Active ? activeCol : normCol);
@@ -350,8 +349,9 @@ static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
 }
 
 static void HotbarWidget_RepositonBackgroundTexture(struct HotbarWidget* w) {
-	struct Texture tex = { GFX_NULL, Tex_Rect(w->X,w->Y, w->Width,w->Height), Widget_UV(0,0, 182,22) };
-	w->BackTex = tex;
+	w->BackTex.ID = GFX_NULL;
+	Tex_SetRect(w->BackTex, w->X,w->Y, w->Width,w->Height);
+	Tex_SetUV(w->BackTex,   0,0, 182/256.0f,22/256.0f);
 }
 
 static void HotbarWidget_RepositionSelectionTexture(struct HotbarWidget* w) {
@@ -360,8 +360,9 @@ static void HotbarWidget_RepositionSelectionTexture(struct HotbarWidget* w) {
 	int vSize = (int)(22.0f * scale);
 	int y = w->Y + (w->Height - (int)(23.0f * scale));
 
-	struct Texture tex = { GFX_NULL, Tex_Rect(0,y, hSize,vSize), Widget_UV(0,22, 24,44) };
-	w->SelTex = tex;
+	w->SelTex.ID = GFX_NULL;
+	Tex_SetRect(w->SelTex, 0,y, hSize,vSize);
+	Tex_SetUV(w->SelTex,   0,22/256.0f, 24/256.0f,44/256.0f);
 }
 
 static int HotbarWidget_ScrolledIndex(struct HotbarWidget* w, float delta, int index, int dir) {

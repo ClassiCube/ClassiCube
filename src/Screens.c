@@ -287,12 +287,14 @@ static void StatusScreen_MakeText(struct StatusScreen* s, String* status) {
 }
 
 static void StatusScreen_DrawPosition(struct StatusScreen* s) {
-	struct TextAtlas* atlas = &s->PosAtlas;
-	struct Texture tex;
-	PackedCol col = PACKEDCOL_WHITE;
-	Vector3I pos;
 	VertexP3fT2fC4b vertices[4 * 64];
 	VertexP3fT2fC4b* ptr = vertices;
+	PackedCol col = PACKEDCOL_WHITE;
+
+	struct TextAtlas* atlas = &s->PosAtlas;
+	struct Texture tex;
+	Vector3I pos;
+	int count;	
 
 	/* Make "Position: " prefix */
 	tex = atlas->Tex; 
@@ -313,7 +315,7 @@ static void StatusScreen_DrawPosition(struct StatusScreen* s) {
 
 	Gfx_BindTexture(atlas->Tex.ID);
 	/* TODO: Do we need to use a separate VB here? */
-	int count = (int)(ptr - vertices);
+	count = (int)(ptr - vertices);
 	GfxCommon_UpdateDynamicVb_IndexedTris(ModelCache_Vb, vertices, count);
 }
 
@@ -531,19 +533,21 @@ static void LoadingScreen_UpdateBackgroundVB(VertexP3fT2fC4b* vertices, int coun
 static void LoadingScreen_DrawBackground(void) {
 	VertexP3fT2fC4b vertices[144];
 	VertexP3fT2fC4b* ptr = vertices;
-	int count = 0, atlasIndex = 0, y = 0;
 	PackedCol col = PACKEDCOL_CONST(64, 64, 64, 255);
 
-	TextureLoc texLoc = Block_GetTex(BLOCK_DIRT, FACE_YMAX);
-	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &atlasIndex);
-
-	float u2 = (float)Game_Width / (float)LOADING_TILE_SIZE;
-	struct Texture tex = { GFX_NULL, Tex_Rect(0,0, Game_Width,LOADING_TILE_SIZE), Tex_UV(0,rec.V1, u2,rec.V2) };
-
+	struct Texture tex;
+	TextureLoc loc;
+	int count  = 0, atlasIndex, y;
 	bool bound = false;
-	while (y < Game_Height) {
+
+	loc = Block_GetTex(BLOCK_DIRT, FACE_YMAX);
+	tex.ID    = GFX_NULL;
+	Tex_SetRect(tex, 0,0, Game_Width,LOADING_TILE_SIZE);
+	tex.uv    = Atlas1D_TexRec(loc, 1, &atlasIndex);
+	tex.uv.U2 = (float)Game_Width / LOADING_TILE_SIZE;
+	
+	for (y = 0; y < Game_Height; y += LOADING_TILE_SIZE) {
 		tex.Y = y;
-		y += LOADING_TILE_SIZE;
 		GfxCommon_Make2DQuad(&tex, col, &ptr);
 		count += 4;
 

@@ -673,9 +673,11 @@ void Game_TakeScreenshot(void) {
 }
 
 static void Game_RenderFrame(double delta) {
+	struct ScheduledTask entTask;
 	uint64_t frameStart;
 	bool allowZoom, visible;
-		
+	float t;
+
 	frameStart = Stopwatch_Measure();
 	Gfx_BeginFrame();
 	Gfx_BindIb(GfxCommon_defaultIb);
@@ -694,8 +696,8 @@ static void Game_RenderFrame(double delta) {
 	}
 
 	Game_DoScheduledTasks(delta);
-	struct ScheduledTask entTask = Game_Tasks[entTaskI];
-	float t = (float)(entTask.Accumulator / entTask.Interval);
+	entTask = Game_Tasks[entTaskI];
+	t = (float)(entTask.Accumulator / entTask.Interval);
 	LocalPlayer_SetInterpPosition(t);
 
 	Gfx_Clear();
@@ -746,13 +748,15 @@ void Game_Free(void* obj) {
 }
 
 void Game_Run(int width, int height, const String* title, struct DisplayDevice* device) {
-	int x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
-	int y = device->Bounds.Y + (device->Bounds.Height - height) / 2;
-	uint64_t lastRender, render;
 	struct GraphicsMode mode;
+	uint64_t lastRender, render;
 	double time;
-	
+	int x, y;
+
+	x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
+	y = device->Bounds.Y + (device->Bounds.Height - height) / 2;
 	GraphicsMode_MakeDefault(&mode);
+
 	Window_Create(x, y, width, height, &mode);
 	Window_SetTitle(title);
 	Window_SetVisible(true);

@@ -297,13 +297,13 @@ static void MPConnection_FailConnect(ReturnCode result) {
 
 static void MPConnection_TickConnect(void) {
 	ReturnCode res = 0;
+	bool poll_write;
 	TimeMS now;
 
 	Socket_GetError(net_socket, &res);
 	if (res) { MPConnection_FailConnect(res); return; }
 
 	now = DateTime_CurrentUTC_MS();
-	bool poll_write = false;
 	Socket_Select(net_socket, SOCKET_SELECT_WRITE, &poll_write);
 
 	if (poll_write) {
@@ -363,15 +363,18 @@ static void MPConnection_CheckDisconnection(double delta) {
 	static String title  = String_FromConst("Disconnected!");
 	static String reason = String_FromConst("You've lost connection to the server");
 
+	ReturnCode availRes, selectRes;
+	uint32_t pending = 0;
+	bool poll_success;
+
 	net_discAccumulator += delta;
 	if (net_discAccumulator < 1.0) return;
 	net_discAccumulator = 0.0;
 
-	uint32_t available = 0; bool poll_success = false;
-	ReturnCode availResult  = Socket_Available(net_socket, &available);
-	ReturnCode selectResult = Socket_Select(net_socket, SOCKET_SELECT_READ, &poll_success);
+	availRes  = Socket_Available(net_socket, &pending);
+	selectRes = Socket_Select(net_socket, SOCKET_SELECT_READ, &poll_success);
 
-	if (net_writeFailed || availResult || selectResult || (available == 0 && poll_success)) {	
+	if (net_writeFailed || availRes || selectRes || (pending == 0 && poll_success)) {	
 		Game_Disconnect(&title, &reason);
 	}
 }

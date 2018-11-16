@@ -14,8 +14,15 @@ struct Texture {
 	int16_t X, Y; uint16_t Width, Height;
 	TextureRec uv;
 };
+/* Statically initialises the position and dimensions of this texture */
 #define Tex_Rect(x,y, width,height) x,y,width,height
+/* Statically initialises the texture coordinate corners of this texture */
 #define Tex_UV(u1,v1, u2,v2)        u1,v1,u2,v2
+/* Sets the position and dimensions of this texture */
+#define Tex_SetRect(tex, x,y, width, height) tex.X = x; tex.Y = y; tex.Width = width; tex.Height = height;
+/* Sets texture coordinate corners of this texture */
+/* Useful to only draw a sub-region of the texture's pixels */
+#define Tex_SetUV(tex, u1,v1, u2,v2) tex.uv.U1 = u1; tex.uv.V1 = v1; tex.uv.U2 = u2; tex.uv.V2 = v2;
 
 void GfxCommon_Init(void);
 void GfxCommon_Free(void);

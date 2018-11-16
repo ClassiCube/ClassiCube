@@ -473,39 +473,43 @@ void TabList_MakeComponent(struct IGameComponent* comp) {
 *---------------------------------------------------------Player----------------------------------------------------------*
 *#########################################################################################################################*/
 #define PLAYER_NAME_EMPTY_TEX -30000
+#define NAME_OFFSET 3 /* offset of back layer of name above an entity */
+
 static void Player_MakeNameTexture(struct Player* player) {
+	String colorlessName; char colorlessBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
+	bool bitmapped;
+	String name;
 	Size2D size;
 	Bitmap bmp;
 
 	/* we want names to always be drawn not using the system font */
-	bool bitmapped = Drawer2D_BitmappedText;
+	bitmapped = Drawer2D_BitmappedText;
 	Drawer2D_BitmappedText = true;
-	String displayName = String_FromRawArray(player->DisplayNameRaw);
+	name = String_FromRawArray(player->DisplayNameRaw);
 
 	Drawer2D_MakeFont(&args.Font, 24, FONT_STYLE_NORMAL);
-	DrawTextArgs_Make(&args, &displayName, &args.Font, false);
+	DrawTextArgs_Make(&args, &name, &args.Font, false);
 	size = Drawer2D_MeasureText(&args);
 
 	if (size.Width == 0) {
 		player->NameTex.ID = GFX_NULL;
 		player->NameTex.X  = PLAYER_NAME_EMPTY_TEX;
 	} else {
-		char buffer[STRING_SIZE];
-		String shadowName = String_FromArray(buffer);
+		String_InitArray(colorlessName, colorlessBuffer);
+		size.Width += NAME_OFFSET; size.Height += NAME_OFFSET;
 
-		size.Width += 3; size.Height += 3;
 		Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 		{
 			PackedCol origWhiteCol = Drawer2D_Cols['f'];
 
 			Drawer2D_Cols['f'] = PackedCol_Create3(80, 80, 80);
-			String_AppendColorless(&shadowName, &displayName);
-			args.Text = shadowName;
-			Drawer2D_DrawText(&bmp, &args, 3, 3);
+			String_AppendColorless(&colorlessName, &name);
+			args.Text = colorlessName;
+			Drawer2D_DrawText(&bmp, &args, NAME_OFFSET, NAME_OFFSET);
 
 			Drawer2D_Cols['f'] = origWhiteCol;
-			args.Text = displayName;
+			args.Text = name;
 			Drawer2D_DrawText(&bmp, &args, 0, 0);
 		}
 		Drawer2D_Make2DTexture(&player->NameTex, &bmp, size, 0, 0);

@@ -1172,21 +1172,21 @@ ReturnCode Socket_Close(SocketPtr socket) {
 
 ReturnCode Socket_Select(SocketPtr socket, int selectMode, bool* success) {
 	fd_set set;
+	struct timeval time = { 0 };
+	int selectCount, nfds;
+
 	FD_ZERO(&set);
 	FD_SET(socket, &set);
 
-	struct timeval time = { 0 };
-	int selectCount = -1;
-
 	#ifdef CC_BUILD_WIN
-	int nfds = 1;
+	nfds = 1;
 	#else
-	int nfds = socket + 1;
+	nfds = socket + 1;
 	#endif
 
 	if (selectMode == SOCKET_SELECT_READ) {
 		selectCount = select(nfds, &set, NULL, NULL, &time);
-	} else if (selectMode == SOCKET_SELECT_WRITE) {
+	} else {
 		selectCount = select(nfds, NULL, &set, NULL, &time);
 	}
 
