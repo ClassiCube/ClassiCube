@@ -24,12 +24,9 @@ typedef union PackedColUnion_ { PackedCol C; uint32_t Raw; } PackedColUnion;
 #define PACKEDCOL_CONST(r, g, b, a) { r, g, b, a }
 #endif
 #define PACKEDCOL_WHITE PACKEDCOL_CONST(255, 255, 255, 255)
-
-PackedCol PackedCol_Create4(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-PackedCol PackedCol_Create3(uint8_t r, uint8_t g, uint8_t b);
-bool PackedCol_Equals(PackedCol a, PackedCol b);
-
 #define PackedCol_ARGB(r, g, b, a) (((uint32_t)(r) << 16) | ((uint32_t)(g) << 8) | ((uint32_t)(b)) | ((uint32_t)(a) << 24))
+
+bool PackedCol_Equals(PackedCol a, PackedCol b);
 PackedCol PackedCol_Scale(PackedCol value, float t);
 PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t);
 CC_NOINLINE bool PackedCol_Unhex(char hex, int* value);

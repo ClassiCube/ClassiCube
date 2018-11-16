@@ -1,14 +1,6 @@
 #include "PackedCol.h"
 #include "ExtMath.h"
 
-PackedCol PackedCol_Create4(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-	PackedCol c; c.R = r; c.G = g; c.B = b; c.A = a; return c;
-}
-
-PackedCol PackedCol_Create3(uint8_t r, uint8_t g, uint8_t b) {
-	PackedCol c; c.R = r; c.G = g; c.B = b; c.A = 255; return c;
-}
-
 bool PackedCol_Equals(PackedCol a, PackedCol b) {
 	return a.R == b.R && a.G == b.G && a.B == b.B && a.A == b.A;
 }
@@ -54,9 +46,12 @@ void PackedCol_ToHex(String* str, PackedCol value) {
 }
 
 bool PackedCol_TryParseHex(const String* str, PackedCol* value) {
+	PackedCol colZero = PACKEDCOL_CONST(0, 0, 0, 0);
 	int rH, rL, gH, gL, bH, bL;
-	char* buffer  = str->buffer;
-	*value = PackedCol_Create4(0, 0, 0, 0);
+	char* buffer;
+		
+	buffer = str->buffer;
+	*value = colZero;
 
 	/* accept XXYYZZ or #XXYYZZ forms */
 	if (str->length < 6) return false;
@@ -67,6 +62,9 @@ bool PackedCol_TryParseHex(const String* str, PackedCol* value) {
 	if (!PackedCol_Unhex(buffer[2], &gH) || !PackedCol_Unhex(buffer[3], &gL)) return false;
 	if (!PackedCol_Unhex(buffer[4], &bH) || !PackedCol_Unhex(buffer[5], &bL)) return false;
 
-	*value = PackedCol_Create3((rH << 4) | rL, (gH << 4) | gL, (bH << 4) | bL);
+	value->R = (uint8_t)((rH << 4) | rL);
+	value->G = (uint8_t)((gH << 4) | gL);
+	value->B = (uint8_t)((bH << 4) | bL);
+	value->A = 255;
 	return true;
 }

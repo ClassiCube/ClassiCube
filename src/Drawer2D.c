@@ -353,13 +353,17 @@ static void Drawer2D_DrawBitmapText(Bitmap* bmp, struct DrawTextArgs* args, int 
 }
 
 static Size2D Drawer2D_MeasureBitmapText(struct DrawTextArgs* args) {
-	int point = args->Font.Size;
-	/* adjust coords to make drawn text match GDI fonts */
-	int i, offset;
-	int xPadding = Drawer2D_XPadding(point);
-	Size2D total = { 0, Drawer2D_AdjHeight(point) };
+	int i, point = args->Font.Size;
+	int offset, xPadding;
+	Size2D total;
+	String text;
 
-	String text = args->Text;
+	/* adjust coords to make drawn text match GDI fonts */
+	xPadding     = Drawer2D_XPadding(point);
+	total.Width  = 0;
+	total.Height = Drawer2D_AdjHeight(point);
+
+	text = args->Text;
 	for (i = 0; i < text.length; i++) {
 		char c = text.buffer[i];
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {

@@ -1628,16 +1628,20 @@ static void KeyBindingsScreen_OnBindingClick(void* screen, void* widget) {
 static int KeyBindingsScreen_MakeWidgets(struct KeyBindingsScreen* s, int y, int arrowsY, int leftLength, const char* title, int btnWidth) {
 	static String lArrow = String_FromConst("<");
 	static String rArrow = String_FromConst(">");
+	String text; char textBuffer[STRING_SIZE];
+	String titleText;
+	Widget_LeftClick backClick;
+	int origin, xOffset;
+	int i, xDir;
 
-	int i, origin = y, xOffset = btnWidth / 2 + 5;
+	origin  = y;
+	xOffset = btnWidth / 2 + 5;
 	s->CurI = -1;
-
-	char textBuffer[STRING_SIZE];
-	String text = String_FromArray(textBuffer);
+	String_InitArray(text, textBuffer);
 
 	for (i = 0; i < s->BindsCount; i++) {
 		if (i == leftLength) y = origin; /* reset y for next column */
-		int xDir = leftLength == -1 ? 0 : (i < leftLength ? -1 : 1);
+		xDir = leftLength == -1 ? 0 : (i < leftLength ? -1 : 1);
 
 		text.length = 0;
 		KeyBindingsScreen_GetText(s, i, &text);
@@ -1647,11 +1651,11 @@ static int KeyBindingsScreen_MakeWidgets(struct KeyBindingsScreen* s, int y, int
 		y += 50; /* distance between buttons */
 	}
 
-	String titleText = String_FromReadonly(title);
+	titleText = String_FromReadonly(title);
 	Menu_Label(s, i, &s->Title, &titleText, &s->TitleFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -180); i++;
 
-	Widget_LeftClick backClick = Game_UseClassicOptions ? Menu_SwitchClassicOptions : Menu_SwitchOptions;
+	backClick = Game_UseClassicOptions ? Menu_SwitchClassicOptions : Menu_SwitchOptions;
 	Menu_Back(s, i, &s->Back, "Done", &s->TitleFont, backClick); i++;
 	if (!s->LeftPage && !s->RightPage) return i;
 	
@@ -2997,11 +3001,14 @@ static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s) {
 }
 
 static void TexIdsOverlay_RenderTextOverlay(struct TexIdsOverlay* s) {
-	int x, y, size = s->TileSize;
 	VertexP3fT2fC4b vertices[TEXID_OVERLAY_VERTICES_COUNT];
 	VertexP3fT2fC4b* ptr = vertices;
+	struct TextAtlas* idAtlas;
+	int size, count;
+	int x, y, id;
 
-	struct TextAtlas* idAtlas = &s->IdAtlas;
+	size    = s->TileSize;
+	idAtlas = &s->IdAtlas;
 	idAtlas->Tex.Y = s->YOffset + (size - idAtlas->Tex.Height);
 
 	for (y = 0; y < ATLAS2D_TILES_PER_ROW; y++) {
@@ -3010,11 +3017,12 @@ static void TexIdsOverlay_RenderTextOverlay(struct TexIdsOverlay* s) {
 			int id = x + y * ATLAS2D_TILES_PER_ROW;
 			TextAtlas_AddInt(idAtlas, id + s->BaseTexLoc, &ptr);
 		}
-		idAtlas->Tex.Y += size;
 
+		idAtlas->Tex.Y += size;
 		if ((y % 4) != 3) continue;
 		Gfx_BindTexture(idAtlas->Tex.ID);
-		int count = (int)(ptr - vertices);
+
+		count = (int)(ptr - vertices);
 		GfxCommon_UpdateDynamicVb_IndexedTris(s->DynamicVb, vertices, count);
 		ptr = vertices;
 	}
@@ -3035,16 +3043,14 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Menu_Render(s, delta);
 
-	rows = Atlas2D_RowsCount;
 	origXOffset = s->XOffset;
 	s->BaseTexLoc = 0;
 
-	while (rows > 0) {
+	for (rows = Atlas2D_RowsCount; rows > 0; rows -= ATLAS2D_TILES_PER_ROW) {
 		TexIdsOverlay_RenderTerrain(s);
 		TexIdsOverlay_RenderTextOverlay(s);
-		rows -= ATLAS2D_TILES_PER_ROW;
 
-		s->XOffset    += s->TileSize      * ATLAS2D_TILES_PER_ROW;
+		s->XOffset    += s->TileSize           * ATLAS2D_TILES_PER_ROW;
 		s->BaseTexLoc += ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW;
 	}
 

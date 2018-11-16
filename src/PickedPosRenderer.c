@@ -69,7 +69,9 @@ void PickedPosRenderer_Update(struct PickedPos* selected) {
 		PickedPos_X(0) PickedPos_X(3) /* XMin, XMax */
 		PickedPos_Z(0) PickedPos_Z(3) /* ZMin, ZMax */
 	};
-
+	PackedCol col = PACKEDCOL_CONST(0, 0, 0, 102);
+	VertexP3fC4b* ptr;
+	int i;
 	Vector3 delta;
 	float dist, offset, size;
 	Vector3 coords[4];
@@ -107,10 +109,7 @@ void PickedPosRenderer_Update(struct PickedPos* selected) {
 	Vector3_Add1(&coords[3], &selected->Max,  offset);
 	Vector3_Add1(&coords[2], &coords[3],     -size);
 	
-	PackedCol col = PACKEDCOL_CONST(0, 0, 0, 102);
-	VertexP3fC4b* ptr = pickedPos_vertices;
-	int i;
-
+	ptr = pickedPos_vertices;
 	for (i = 0; i < Array_Elems(indices); i += 3, ptr++) {
 		ptr->X   = coords[indices[i + 0]].X;
 		ptr->Y   = coords[indices[i + 1]].Y;

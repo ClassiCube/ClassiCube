@@ -125,9 +125,9 @@ static void Png_Reconstruct(uint8_t type, uint8_t bytesPerPixel, uint8_t* line, 
 
 #define Bitmap_Set(dst, r,g,b,a) dst.B = b; dst.G = g; dst.R = r; dst.A = a;
 
-#define PNG_Do_Grayscale(dstI, srcI, scale) rgb = src[srcI] * scale; Bitmap_Set(dst[dstI], rgb, rgb, rgb, 255);
-#define PNG_Do_Grayscale_8(dstI, srcI)      rgb = src[srcI];         Bitmap_Set(dst[dstI], rgb, rgb, rgb, 255);
-#define PNG_Do_Grayscale_A__8(dstI, srcI)   rgb = src[srcI];         Bitmap_Set(dst[dstI], rgb, rgb, rgb, src[srcI + 1]);
+#define PNG_Do_Grayscale(dstI, src, scale)  rgb = (src) * scale; Bitmap_Set(dst[dstI], rgb, rgb, rgb, 255);
+#define PNG_Do_Grayscale_8(dstI, srcI)      rgb = src[srcI];     Bitmap_Set(dst[dstI], rgb, rgb, rgb, 255);
+#define PNG_Do_Grayscale_A__8(dstI, srcI)   rgb = src[srcI];     Bitmap_Set(dst[dstI], rgb, rgb, rgb, src[srcI + 1]);
 #define PNG_Do_RGB__8(dstI, srcI)           Bitmap_Set(dst[dstI], src[srcI], src[srcI + 1], src[srcI + 2], 255);
 #define PNG_Do_RGB_A__8(dstI, srcI)         Bitmap_Set(dst[dstI], src[srcI], src[srcI + 1], src[srcI + 2], src[srcI + 3]);
 
@@ -326,6 +326,7 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 	ReturnCode res;
 
 	/* header variables */
+	static uint32_t samplesPerPixel[7] = { 1, 0, 3, 1, 2, 0, 4 };
 	uint8_t col, bitsPerSample, bytesPerPixel;
 	Png_RowExpander rowExpander;
 	uint32_t scanlineSize, scanlineBytes;
@@ -384,7 +385,6 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 			if (tmp[11] != 0) return PNG_ERR_FILTER;
 			if (tmp[12] != 0) return PNG_ERR_INTERLACED;
 
-			static uint32_t samplesPerPixel[7] = { 1, 0, 3, 1, 2, 0, 4 };
 			bytesPerPixel = ((samplesPerPixel[col] * bitsPerSample) + 7) >> 3;
 			scanlineSize  = ((samplesPerPixel[col] * bitsPerSample * bmp->Width) + 7) >> 3;
 			scanlineBytes = scanlineSize + 1; /* Add 1 byte for filter byte of each scanline */
@@ -415,8 +415,8 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 				if (res) return res;
 
 				/* RGB is 16 bits big endian, ignore least significant 8 bits */
-				transparentCol.B = tmp[0]; transparentCol.G = tmp[0];
-				transparentCol.R = tmp[0]; transparentCol.A = 0;
+				transparentCol.R = tmp[0]; transparentCol.G = tmp[0];
+				transparentCol.B = tmp[0]; transparentCol.A = 0;
 			} else if (col == PNG_COL_INDEXED) {
 				if (dataSize > PNG_PALETTE) return PNG_ERR_TRANS_COUNT;
 				res = Stream_Read(stream, tmp, dataSize);
@@ -432,8 +432,8 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 				if (res) return res;
 
 				/* R,G,B is 16 bits big endian, ignore least significant 8 bits */
-				transparentCol.B = tmp[4]; transparentCol.G = tmp[2];
-				transparentCol.R = tmp[0]; transparentCol.A = 0;
+				transparentCol.R = tmp[0]; transparentCol.G = tmp[2];
+				transparentCol.B = tmp[4]; transparentCol.A = 0;
 			} else {
 				return PNG_ERR_TRANS_INVALID;
 			}
