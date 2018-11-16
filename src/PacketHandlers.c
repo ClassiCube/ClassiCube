@@ -150,16 +150,18 @@ static void Handlers_CheckName(EntityID id, String* name, String* skin) {
 
 static void Classic_ReadAbsoluteLocation(uint8_t* data, EntityID id, bool interpolate);
 static void Handlers_AddEntity(uint8_t* data, EntityID id, const String* displayName, const String* skinName, bool readPosition) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	if (id != ENTITIES_SELF_ID) {
-		struct Entity* oldEntity = Entities_List[id];
-		if (oldEntity) Entities_Remove(id);
+	struct LocalPlayer* p;
+	struct NetPlayer* pl;
 
-		struct NetPlayer* player = &NetPlayers_List[id];
-		NetPlayer_Init(player, displayName, skinName);
-		Entities_List[id] = &player->Base;
+	if (id != ENTITIES_SELF_ID) {
+		if (Entities_List[id]) Entities_Remove(id);
+		pl = &NetPlayers_List[id];
+
+		NetPlayer_Init(pl, displayName, skinName);
+		Entities_List[id] = &pl->Base;
 		Event_RaiseInt(&EntityEvents_Added, id);
 	} else {
+		p = &LocalPlayer_Instance;
 		p->Base.VTABLE->Despawn(&p->Base);
 		/* Always reset the texture here, in case other network players are using the same skin as us */
 		/* In that case, we don't want the fetching of new skin for us to delete the texture used by them */

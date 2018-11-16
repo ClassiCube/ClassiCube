@@ -557,15 +557,17 @@ static void ShadowComponent_CalcAlpha(float playerY, struct ShadowData* data) {
 static bool ShadowComponent_GetBlocks(struct Entity* e, int x, int y, int z, struct ShadowData* data) {
 	struct ShadowData zeroData = { 0 };
 	struct ShadowData* cur;
+	float posY, topY;
+	bool outside;
+	BlockID block; uint8_t draw;
 	int i;
 
 	for (i = 0; i < 4; i++) { data[i] = zeroData; }
-	cur = data;
-	float posY = e->Position.Y;
-	bool outside = x < 0 || z < 0 || x >= World_Width || z >= World_Length;
+	cur  = data;
+	posY = e->Position.Y;
+	outside = x < 0 || z < 0 || x >= World_Width || z >= World_Length;
 
 	for (i = 0; y >= 0 && i < 4; y--) {
-		BlockID block;
 		if (!outside) {
 			block = World_GetBlock(x, y, z);
 		} else if (y == Env_EdgeHeight - 1) {
@@ -576,9 +578,9 @@ static bool ShadowComponent_GetBlocks(struct Entity* e, int x, int y, int z, str
 			block = BLOCK_AIR;
 		}
 
-		uint8_t draw = Block_Draw[block];
+		draw = Block_Draw[block];
 		if (draw == DRAW_GAS || draw == DRAW_SPRITE || Block_IsLiquid[block]) continue;
-		float topY = y + Block_MaxBB[block].Y;
+		topY = y + Block_MaxBB[block].Y;
 		if (topY >= posY + 0.01f) continue;
 
 		cur->Block = block; cur->Y = topY;
@@ -707,8 +709,8 @@ static void Collisions_ClipZ(struct Entity* e, Vector3* size, struct AABB* entit
 
 static bool Collisions_CanSlideThrough(struct AABB* adjFinalBB) {
 	Vector3I bbMin, bbMax; 
-	BlockID block;
 	struct AABB blockBB;
+	BlockID block;
 	Vector3 v;
 	int x, y, z;
 
@@ -812,18 +814,25 @@ static void Collisions_ClipYMax(struct CollisionsComp* comp, struct AABB* blockB
 static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, int count, struct AABB* entityBB,
 	struct AABB* extentBB) {
 	struct Entity* entity = comp->Entity;
+	struct SearcherState state;
+	struct AABB blockBB, finalBB;
+	Vector3 size;
+	bool wasOn;
+
+	Vector3 bPos, v;
+	float tx, ty, tz;
+	int i, block;
+
 	/* Reset collision detection states */
-	bool wasOn = entity->OnGround;
+	wasOn = entity->OnGround;
 	entity->OnGround = false;
 	comp->HitXMin = false; comp->HitYMin = false; comp->HitZMin = false;
 	comp->HitXMax = false; comp->HitYMax = false; comp->HitZMax = false;
 
-	struct AABB blockBB;
-	Vector3 bPos, size = entity->Size;
-	int i;
+	size = entity->Size;
 	for (i = 0; i < count; i++) {
 		/* Unpack the block and coordinate data */
-		struct SearcherState state = Searcher_States[i];
+		state  = Searcher_States[i];
 		bPos.X = state.X >> 3; bPos.Y = state.Y >> 4; bPos.Z = state.Z >> 3;
 		int block = (state.X & 0x7) | (state.Y & 0xF) << 3 | (state.Z & 0x7) << 7;
 
@@ -832,16 +841,15 @@ static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, i
 		if (!AABB_Intersects(extentBB, &blockBB)) continue;
 
 		/* Recheck time to collide with block (as colliding with blocks modifies this) */
-		float tx, ty, tz;
 		Searcher_CalcTime(&entity->Velocity, entityBB, &blockBB, &tx, &ty, &tz);
 		if (tx > 1.0f || ty > 1.0f || tz > 1.0f) {
 			Platform_LogConst("t > 1 in physics calculation.. this shouldn't have happened.");
 		}
 
 		/* Calculate the location of the entity when it collides with this block */
-		Vector3 v = entity->Velocity; 
+		v = entity->Velocity; 
 		v.X *= tx; v.Y *= ty; v.Z *= tz;
-		struct AABB finalBB; /* Inlined ABBB_Offset */
+		/* Inlined ABBB_Offset */
 		Vector3_Add(&finalBB.Min, &entityBB->Min, &v);
 		Vector3_Add(&finalBB.Max, &entityBB->Max, &v);
 
@@ -909,13 +917,16 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 	struct Entity* entity   = comp->Entity;
 	struct HacksComp* hacks = comp->Hacks;
 	struct AABB bounds;
+	int dir;
+
 	bool touchWater, touchLava;
 	bool liquidFeet, liquidRest;
+	int feetY, bodyY, headY;
 	bool pastJumpPoint;
 
 	if (hacks->Floating) {
 		entity->Velocity.Y = 0.0f; /* eliminate the effect of gravity */
-		int dir = (hacks->FlyingUp || comp->Jumping) ? 1 : (hacks->FlyingDown ? -1 : 0);
+		dir = (hacks->FlyingUp || comp->Jumping) ? 1 : (hacks->FlyingDown ? -1 : 0);
 
 		entity->Velocity.Y += 0.12f * dir;
 		if (hacks->Speeding     && hacks->CanSpeed) entity->Velocity.Y += 0.12f * dir;
@@ -924,16 +935,14 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 		entity->Velocity.Y = 0.02f;
 	}
 
-	if (!comp->Jumping) {
-		comp->CanLiquidJump = false; return;
-	}
-
+	if (!comp->Jumping) { comp->CanLiquidJump = false; return; }
 	touchWater = Entity_TouchesAnyWater(entity);
 	touchLava  = Entity_TouchesAnyLava(entity);
+
 	if (touchWater || touchLava) {
 		Entity_GetBounds(entity, &bounds);
-		int feetY = Math_Floor(bounds.Min.Y), bodyY = feetY + 1;
-		int headY = Math_Floor(bounds.Max.Y);
+		feetY = Math_Floor(bounds.Min.Y); bodyY = feetY + 1;
+		headY = Math_Floor(bounds.Max.Y);
 		if (bodyY > headY) bodyY = headY;
 
 		bounds.Max.Y = bounds.Min.Y = feetY;
@@ -1053,6 +1062,8 @@ static float PhysicsComp_LowestModifier(struct PhysicsComp* comp, struct AABB* b
 	Vector3I bbMin, bbMax;
 	float modifier = MATH_POS_INF;
 	struct AABB blockBB;
+	BlockID block;
+	uint8_t collide;
 	Vector3 v;
 	int x, y, z;
 
@@ -1066,9 +1077,10 @@ static float PhysicsComp_LowestModifier(struct PhysicsComp* comp, struct AABB* b
 	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (float)y;
 		for (z = bbMin.Z; z <= bbMax.Z; z++) { v.Z = (float)z;
 			for (x = bbMin.X; x <= bbMax.X; x++) { v.X = (float)x;
-				BlockID block = World_GetBlock(x, y, z);
+				block = World_GetBlock(x, y, z);
+
 				if (block == BLOCK_AIR) continue;
-				uint8_t collide = Block_Collide[block];
+				collide = Block_Collide[block];
 				if (collide == COLLIDE_SOLID && !checkSolid) continue;
 
 				Vector3_Add(&blockBB.Min, &v, &Block_MinBB[block]);
@@ -1263,6 +1275,8 @@ static void SoundComp_GetSound(struct LocalPlayer* p) {
 	Vector3 pos;
 	Vector3I feetPos;
 	BlockID blockUnder;
+	float maxY;
+	uint8_t typeUnder, collideUnder;
 
 	Entity_GetBounds(&p->Base, &bounds);
 	sounds_type = SOUND_NONE;
@@ -1276,10 +1290,10 @@ static void SoundComp_GetSound(struct LocalPlayer* p) {
 	pos = p->Interp.Next.Pos; pos.Y -= 0.01f;
 	Vector3I_Floor(&feetPos, &pos);
 	blockUnder = World_SafeGetBlock_3I(feetPos);
-	float maxY = feetPos.Y + Block_MaxBB[blockUnder].Y;
+	maxY = feetPos.Y + Block_MaxBB[blockUnder].Y;
 
-	uint8_t typeUnder = Block_StepSounds[blockUnder];
-	uint8_t collideUnder = Block_Collide[blockUnder];
+	typeUnder    = Block_StepSounds[blockUnder];
+	collideUnder = Block_Collide[blockUnder];
 	if (maxY >= pos.Y && collideUnder == COLLIDE_SOLID && typeUnder != SOUND_NONE) {
 		sounds_anyNonAir = true; sounds_type = typeUnder; return;
 	}

@@ -2347,12 +2347,13 @@ struct Screen* EnvSettingsScreen_MakeInstance(void) {
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 
 	static char cloudHeightBuffer[STRING_INT_CHARS];
-	String cloudHeight = String_ClearedArray(cloudHeightBuffer);
-	String_AppendInt(&cloudHeight, World_Height + 2);
-
 	static char edgeHeightBuffer[STRING_INT_CHARS];
-	String edgeHeight = String_ClearedArray(edgeHeightBuffer);
-	String_AppendInt(&edgeHeight, World_Height / 2);
+	String cloudHeight, edgeHeight;
+
+	cloudHeight = String_ClearedArray(cloudHeightBuffer);
+	String_AppendInt(&cloudHeight, World_Height + 2);
+	edgeHeight  = String_ClearedArray(edgeHeightBuffer);
+	String_AppendInt(&edgeHeight,  World_Height / 2);
 
 	validators[0]    = MenuInputValidator_Hex();
 	defaultValues[0] = ENV_DEFAULT_CLOUDSCOL_HEX;
@@ -2954,9 +2955,10 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 	static String chars  = String_FromConst("0123456789");
 	static String prefix = String_FromConst("f");
 	static String title  = String_FromConst("Texture ID reference sheet");
-
 	struct TexIdsOverlay* s = screen;
-	int size = Game_Height / ATLAS2D_TILES_PER_ROW;
+	int size;
+
+	size = Game_Height / ATLAS2D_TILES_PER_ROW;
 	size = (size / 8) * 8;
 	Math_Clamp(size, 8, 40);
 
@@ -2972,16 +2974,21 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 }
 
 static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s) {
+	PackedCol col = PACKEDCOL_WHITE;
 	VertexP3fT2fC4b vertices[TEXID_OVERLAY_VERTICES_COUNT];
-	int i, size = s->TileSize;
-
+	VertexP3fT2fC4b* ptr;
 	struct Texture tex;
+	int size, count;
+	int i, idx, end;
+
+	size = s->TileSize;
 	tex.uv.U1 = 0.0f; tex.uv.U2 = UV2_Scale;
 	tex.Width = size; tex.Height = size;
 
 	for (i = 0; i < ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW;) {
-		VertexP3fT2fC4b* ptr = vertices;
-		int texIdx = Atlas1D_Index(i + s->BaseTexLoc), end = i + Atlas1D_TilesPerAtlas;
+		ptr = vertices;
+		idx = Atlas1D_Index(i + s->BaseTexLoc);
+		end = i + Atlas1D_TilesPerAtlas;
 
 		for (; i < end; i++) {
 			tex.X = s->XOffset + Atlas2D_TileX(i) * size;
@@ -2989,13 +2996,12 @@ static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s) {
 
 			tex.uv.V1 = Atlas1D_RowId(i + s->BaseTexLoc) * Atlas1D_InvTileSize;
 			tex.uv.V2 = tex.uv.V1            + UV2_Scale * Atlas1D_InvTileSize;
-
-			PackedCol col = PACKEDCOL_WHITE;
+		
 			GfxCommon_Make2DQuad(&tex, col, &ptr);
 		}
 
-		Gfx_BindTexture(Atlas1D_TexIds[texIdx]);
-		int count = (int)(ptr - vertices);
+		Gfx_BindTexture(Atlas1D_TexIds[idx]);
+		count = (int)(ptr - vertices);
 		GfxCommon_UpdateDynamicVb_IndexedTris(s->DynamicVb, vertices, count);
 	}
 }
@@ -3014,7 +3020,7 @@ static void TexIdsOverlay_RenderTextOverlay(struct TexIdsOverlay* s) {
 	for (y = 0; y < ATLAS2D_TILES_PER_ROW; y++) {
 		for (x = 0; x < ATLAS2D_TILES_PER_ROW; x++) {
 			idAtlas->CurX = s->XOffset + size * x + 3; /* offset text by 3 pixels */
-			int id = x + y * ATLAS2D_TILES_PER_ROW;
+			id = x + y * ATLAS2D_TILES_PER_ROW;
 			TextAtlas_AddInt(idAtlas, id + s->BaseTexLoc, &ptr);
 		}
 

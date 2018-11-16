@@ -171,16 +171,24 @@ static uint32_t Huffman_ReverseBits(uint32_t n, uint8_t bits) {
 	return n >> (16 - bits);
 }
 
+/* Builds a huffman tree, based on input lengths of each codeword */
 static void Huffman_Build(struct HuffmanTable* table, uint8_t* bitLens, int count) {
-	int i;
-	table->FirstCodewords[0] = 0;
-	table->FirstOffsets[0] = 0;
-	table->EndCodewords[0] = -1;
+	int bl_count[INFLATE_MAX_BITS], bl_offsets[INFLATE_MAX_BITS];
+	int code, offset, value;
+	int i, j;
 
-	int bl_count[INFLATE_MAX_BITS] = { 0 };
+	/* Initialise 'zero bit length' codewords */
+	table->FirstCodewords[0] = 0;
+	table->FirstOffsets[0]   = 0;
+	table->EndCodewords[0]   = 0;
+
+	/* Count number of codewords assigned to each bit length */
+	for (i = 0; i < INFLATE_MAX_BITS; i++) bl_count[i] = 0;
 	for (i = 0; i < count; i++) {
 		bl_count[bitLens[i]]++;
 	}
+
+	/* Ensure huffman tree actually makes sense */
 	bl_count[0] = 0;
 	for (i = 1; i < INFLATE_MAX_BITS; i++) {
 		if (bl_count[i] > (1 << i)) {
@@ -188,18 +196,24 @@ static void Huffman_Build(struct HuffmanTable* table, uint8_t* bitLens, int coun
 		}
 	}
 
-	int code = 0, offset = 0;
-	int bl_offsets[INFLATE_MAX_BITS];
+	/* Compute the codewords for the huffman tree
+	* Codewords are ordered, so consider this example tree:
+	*    2 of length 2, 3 of length 3, 1 of length 4
+	* Codewords produced would be: 00,01 100,101,110, 1110 
+	*/
+	code = 0; offset = 0;
 	for (i = 1; i < INFLATE_MAX_BITS; i++) {
 		code = (code + bl_count[i - 1]) << 1;
-		bl_offsets[i]            = offset;
+		bl_offsets[i] = offset;
+
 		table->FirstCodewords[i] = code;
 		table->FirstOffsets[i]   = offset;
 		offset += bl_count[i];
 
-		/* Last codeword is actually: code + (bl_count[i] - 1) */
-		/* When decoding we peform < against this value though, so need to add 1 here */
-		/* This way, don't need to special case bit lengths with 0 codewords when decoding */
+		/* Last codeword is actually: code + (bl_count[i] - 1)
+		* Hoever, when decoding we peform < against this value though, so need to add 1 here 
+		* This way, don't need to special case bit lengths with 0 codewords when decoding 
+		*/
 		if (bl_count[i]) {
 			table->EndCodewords[i] = code + bl_count[i];
 		} else {
@@ -207,14 +221,18 @@ static void Huffman_Build(struct HuffmanTable* table, uint8_t* bitLens, int coun
 		}
 	}
 
-	int value = 0;
+	/* Assigns values to each codeword
+	* Note that although codewords are ordered, values may not be
+	* Some values may also not be assigned to any codeword
+	*/
+	value = 0;
 	Mem_Set(table->Fast, UInt8_MaxValue, sizeof(table->Fast));
 	for (i = 0; i < count; i++, value++) {
 		int len = bitLens[i];
 		if (!len) continue;
 		table->Values[bl_offsets[len]] = value;
 
-		/* Computes the accelerated lookup table values for this codeword
+		/* Compute the accelerated lookup table values for this codeword
 		* For example, assume len = 4 and codeword = 0100
 		* - Shift it left to be 0100_00000
 		* - Then, for all the indices from 0100_00000 to 0100_11111,
@@ -222,7 +240,7 @@ static void Huffman_Build(struct HuffmanTable* table, uint8_t* bitLens, int coun
 		*   - set fast value to specify a 'value' value, and to skip 'len' bits
 		*/
 		if (len <= INFLATE_FAST_BITS) {
-			int16_t packed = (int16_t)((len << INFLATE_FAST_BITS) | value), j;
+			int16_t packed = (int16_t)((len << INFLATE_FAST_BITS) | value);
 			int codeword = table->FirstCodewords[len] + (bl_offsets[len] - table->FirstOffsets[len]);
 			codeword <<= (INFLATE_FAST_BITS - len);
 
@@ -235,6 +253,8 @@ static void Huffman_Build(struct HuffmanTable* table, uint8_t* bitLens, int coun
 	}
 }
 
+/* Attempts to read the next huffman encoded value from the bitstream, using given table */
+/* Returns -1 if there are insufficient bits to read the value */
 static int Huffman_Decode(struct InflateState* state, struct HuffmanTable* table) {
 	uint32_t i, j, codeword;
 	int packed, bits, offset;
@@ -678,6 +698,7 @@ static ReturnCode Inflate_StreamRead(struct Stream* stream, uint8_t* data, uint3
 	uint8_t* inputEnd;
 	uint32_t read, left;
 	uint32_t startAvailOut;
+	bool hasInput;
 	ReturnCode res;
 
 	*modified = 0;
@@ -685,7 +706,7 @@ static ReturnCode Inflate_StreamRead(struct Stream* stream, uint8_t* data, uint3
 	state->Output   = data;
 	state->AvailOut = count;
 
-	bool hasInput = true;
+	hasInput = true;
 	while (state->AvailOut > 0 && hasInput) {
 		if (state->State == INFLATE_STATE_DONE) break;
 
@@ -773,6 +794,12 @@ static void Deflate_LenDist(struct DeflateState* state, int len, int dist) {
 }
 
 static ReturnCode Deflate_FlushBlock(struct DeflateState* state, int len) {
+	uint32_t hash, nextHash;
+	int bestLen, maxLen, matchLen;
+	int bestPos, pos, nextPos;
+	uint16_t oldHead;
+	uint8_t* src;
+	uint8_t* cur;
 	ReturnCode res;
 
 	if (!state->WroteHeader) {
@@ -786,38 +813,39 @@ static ReturnCode Deflate_FlushBlock(struct DeflateState* state, int len) {
 
 	/* Based off descriptions from http://www.gzip.org/algorithm.txt and
 	https://github.com/nothings/stb/blob/master/stb_image_write.h */
-	uint8_t* src = state->Input;
-	uint8_t* cur = src;
+	src = state->Input;
+	cur = src;
 
 	while (len > 3) {
-		uint32_t hash = Deflate_Hash(cur);
-		int maxLen = min(len, DEFLATE_MAX_MATCH_LEN);
+		hash   = Deflate_Hash(cur);
+		maxLen = min(len, DEFLATE_MAX_MATCH_LEN);
 
-		int bestLen = 3 - 1; /* Match must be at least 3 bytes */
-		int bestPos = 0;
+		bestLen = 3 - 1; /* Match must be at least 3 bytes */
+		bestPos = 0;
 
-		int pos = state->Head[hash];
+		/* Find longest match starting at this byte */
+		pos = state->Head[hash];
 		while (pos != 0) { /* TODO: Need to limit chain length here */
-			int matchLen = Deflate_MatchLen(&src[pos], cur, maxLen);
+			matchLen = Deflate_MatchLen(&src[pos], cur, maxLen);
 			if (matchLen > bestLen) { bestLen = matchLen; bestPos = pos; }
 			pos = state->Prev[pos];
 		}
 
 		/* Insert this entry into the hash chain */
 		pos = (int)(cur - src);
-		uint16_t oldHead = state->Head[hash];
+		oldHead = state->Head[hash];
 		state->Head[hash] = pos;
 		state->Prev[pos]  = oldHead;
 
 		/* Lazy evaluation: Find longest match starting at next byte */
 		/* If that's longer than the longest match at current byte, throwaway this match */
 		if (bestPos && len > 2) {
-			uint32_t nextHash = Deflate_Hash(cur + 1);
-			int nextPos = state->Head[nextHash];
-			maxLen = min(len - 1, DEFLATE_MAX_MATCH_LEN);
+			nextHash = Deflate_Hash(cur + 1);
+			nextPos  = state->Head[nextHash];
+			maxLen   = min(len - 1, DEFLATE_MAX_MATCH_LEN);
 
 			while (nextPos != 0) { /* TODO: Need to limit chain length here */
-				int matchLen = Deflate_MatchLen(&src[nextPos], cur + 1, maxLen);
+				matchLen = Deflate_MatchLen(&src[nextPos], cur + 1, maxLen);
 				if (matchLen > bestLen) { bestPos = 0; break; }
 				nextPos = state->Prev[nextPos];
 			}
