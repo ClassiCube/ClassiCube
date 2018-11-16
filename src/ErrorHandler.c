@@ -445,13 +445,16 @@ typedef struct {
 } X11Button;
 
 static void X11Button_Draw(X11Button* b, X11Window* w) {
+	X11Textbox* t;
+	int begX, endX, begY, endY;
+
     XSetForeground(dpy, w->gc, w->btnBorder);
     XDrawRectangle(dpy, w->win, w->gc, b->X, b->Y,
                     b->Width, b->Height);
 
-    X11Textbox* t = &b->Text;
-    int begX = b->X + 1, endX = b->X + b->Width  - 1;
-    int begY = b->Y + 1, endY = b->Y + b->Height - 1;
+	t = &b->Text;
+	begX = b->X + 1; endX = b->X + b->Width - 1;
+	begY = b->Y + 1; endY = b->Y + b->Height - 1;
 
     if (b->Clicked) {
         XSetForeground(dpy, w->gc, w->highlight);

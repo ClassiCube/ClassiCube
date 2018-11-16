@@ -477,6 +477,9 @@ void TabList_MakeComponent(struct IGameComponent* comp) {
 
 static void Player_MakeNameTexture(struct Player* player) {
 	String colorlessName; char colorlessBuffer[STRING_SIZE];
+	BitmapCol shadowCol = BITMAPCOL_CONST(80, 80, 80, 255);
+	BitmapCol origWhiteCol;
+
 	struct DrawTextArgs args;
 	bool bitmapped;
 	String name;
@@ -501,9 +504,9 @@ static void Player_MakeNameTexture(struct Player* player) {
 
 		Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 		{
-			PackedCol origWhiteCol = Drawer2D_Cols['f'];
+			origWhiteCol = Drawer2D_Cols['f'];
 
-			Drawer2D_Cols['f'] = PackedCol_Create3(80, 80, 80);
+			Drawer2D_Cols['f'] = shadowCol;
 			String_AppendColorless(&colorlessName, &name);
 			args.Text = colorlessName;
 			Drawer2D_DrawText(&bmp, &args, NAME_OFFSET, NAME_OFFSET);
@@ -653,11 +656,9 @@ static void Player_ClearHat(Bitmap* bmp, uint8_t skinType) {
 
 	/* determine if we actually need filtering */
 	for (y = 0; y < sizeY; y++) {
-		uint32_t* row = Bitmap_GetRow(bmp, y);
-		row += sizeX;
+		BitmapCol* row = Bitmap_GetRow(bmp, y) + sizeX;
 		for (x = 0; x < sizeX; x++) {
-			uint8_t alpha = PackedCol_ARGB_A(row[x]);
-			if (alpha != 255) return;
+			if (row[x].A != 255) return;
 		}
 	}
 
@@ -665,8 +666,7 @@ static void Player_ClearHat(Bitmap* bmp, uint8_t skinType) {
 	uint32_t fullWhite = PackedCol_ARGB(255, 255, 255, 255);
 	uint32_t fullBlack = PackedCol_ARGB(0,   0,   0,   255);
 	for (y = 0; y < sizeY; y++) {
-		uint32_t* row = Bitmap_GetRow(bmp, y);
-		row += sizeX;
+		uint32_t* row = Bitmap_RawRow(bmp, y) + sizeX;
 		for (x = 0; x < sizeX; x++) {
 			uint32_t pixel = row[x];
 			if (pixel == fullWhite || pixel == fullBlack) row[x] = 0;
@@ -690,8 +690,8 @@ static void Player_EnsurePow2(struct Player* p, Bitmap* bmp) {
 	stride = bmp->Width * BITMAP_SIZEOF_PIXEL;
 
 	for (y = 0; y < bmp->Height; y++) {
-		uint32_t* src = Bitmap_GetRow(bmp, y);
-		uint32_t* dst = Bitmap_GetRow(&scaled, y);
+		BitmapCol* src = Bitmap_GetRow(bmp, y);
+		BitmapCol* dst = Bitmap_GetRow(&scaled, y);
 		Mem_Copy(dst, src, stride);
 	}
 

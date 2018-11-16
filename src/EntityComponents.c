@@ -602,14 +602,14 @@ static bool ShadowComponent_GetBlocks(struct Entity* e, int x, int y, int z, str
 #define sh_half (sh_size / 2)
 static void ShadowComponent_MakeTex(void) {
 	uint8_t pixels[Bitmap_DataSize(sh_size, sh_size)];
-	Bitmap bmp; Bitmap_Create(&bmp, sh_size, sh_size, pixels);
-
-	uint32_t inPix  = PackedCol_ARGB(0, 0, 0, 200);
-	uint32_t outPix = PackedCol_ARGB(0, 0, 0, 0);
-
+	BitmapCol inPix  = BITMAPCOL_CONST(0, 0, 0, 200);
+	BitmapCol outPix = BITMAPCOL_CONST(0, 0, 0, 0);
+	Bitmap bmp; 
 	uint32_t x, y;
+	Bitmap_Create(&bmp, sh_size, sh_size, pixels);
+
 	for (y = 0; y < sh_size; y++) {
-		uint32_t* row = Bitmap_GetRow(&bmp, y);
+		BitmapCol* row = Bitmap_GetRow(&bmp, y);
 		for (x = 0; x < sh_size; x++) {
 			double dist = 
 				(sh_half - (x + 0.5)) * (sh_half - (x + 0.5)) +

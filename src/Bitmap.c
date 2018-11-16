@@ -7,6 +7,13 @@
 #include "Stream.h"
 #include "Errors.h"
 
+BitmapCol BitmapCol_Scale(BitmapCol value, float t) {
+	value.R = (uint8_t)(value.R * t);
+	value.G = (uint8_t)(value.G * t);
+	value.B = (uint8_t)(value.B * t);
+	return value;
+}
+
 void Bitmap_Create(Bitmap* bmp, int width, int height, uint8_t* scan0) {
 	bmp->Width = width; bmp->Height = height; bmp->Scan0 = scan0;
 }
@@ -14,11 +21,9 @@ void Bitmap_Create(Bitmap* bmp, int width, int height, uint8_t* scan0) {
 void Bitmap_CopyBlock(int srcX, int srcY, int dstX, int dstY, Bitmap* src, Bitmap* dst, int size) {
 	int x, y;
 	for (y = 0; y < size; y++) {
-		uint32_t* srcRow = Bitmap_GetRow(src, srcY + y);
-		uint32_t* dstRow = Bitmap_GetRow(dst, dstY + y);
-		for (x = 0; x < size; x++) {
-			dstRow[dstX + x] = srcRow[srcX + x];
-		}
+		BitmapCol* srcRow = Bitmap_GetRow(src, srcY + y) + srcX;
+		BitmapCol* dstRow = Bitmap_GetRow(dst, dstY + y) + dstX;
+		for (x = 0; x < size; x++) { dstRow[x] = srcRow[x]; }
 	}
 }
 
@@ -54,7 +59,7 @@ enum PngFilter {
 	PNG_FILTER_NONE, PNG_FILTER_SUB, PNG_FILTER_UP, PNG_FILTER_AVERAGE, PNG_FILTER_PAETH
 };
 
-typedef void (*Png_RowExpander)(int width, uint32_t* palette, uint8_t* src, uint32_t* dst);
+typedef void (*Png_RowExpander)(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst);
 static uint8_t png_sig[PNG_SIG_SIZE] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
 bool Png_Detect(const uint8_t* data, uint32_t len) {
@@ -118,58 +123,60 @@ static void Png_Reconstruct(uint8_t type, uint8_t bytesPerPixel, uint8_t* line, 
 	}
 }
 
-static void Png_Expand_GRAYSCALE_1(int width, uint32_t* palette, uint8_t* src, uint32_t* dst) {
-	int i; /* NOTE: not optimised*/
-#define PNG_Do_Grayscale(tmp, dstI, srcI, scale) tmp = src[srcI] * scale; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, 255);
-	for (i = 0; i < width; i++) {
-		int mask = (7 - (i & 7)); uint8_t rgb;
-		PNG_Do_Grayscale(rgb, i, (src[i >> 3] >> mask) & 1, 255);
-	}
+#define Bitmap_Set(dst, r,g,b,a) dst.B = b; dst.G = g; dst.R = r; dst.A = a;
+
+#define PNG_Do_Grayscale(dstI, srcI, scale) rgb = src[srcI] * scale; Bitmap_Set(dst[dstI], rgb, rgb, rgb, 255);
+#define PNG_Do_Grayscale_8(dstI, srcI)      rgb = src[srcI];         Bitmap_Set(dst[dstI], rgb, rgb, rgb, 255);
+#define PNG_Do_Grayscale_A__8(dstI, srcI)   rgb = src[srcI];         Bitmap_Set(dst[dstI], rgb, rgb, rgb, src[srcI + 1]);
+#define PNG_Do_RGB__8(dstI, srcI)           Bitmap_Set(dst[dstI], src[srcI], src[srcI + 1], src[srcI + 2], 255);
+#define PNG_Do_RGB_A__8(dstI, srcI)         Bitmap_Set(dst[dstI], src[srcI], src[srcI + 1], src[srcI + 2], src[srcI + 3]);
+
+#define PNG_Mask_1(i) (7 - (i & 7))
+#define PNG_Mask_2(i) ((3 - (i & 3)) * 2)
+#define PNG_Mask_4(i) ((1 - (i & 1)) * 4)
+#define PNG_Get__1(i) ((src[i >> 3] >> PNG_Mask_1(i)) & 1)
+#define PNG_Get__2(i) ((src[i >> 2] >> PNG_Mask_2(i)) & 3)
+
+static void Png_Expand_GRAYSCALE_1(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst) {
+	int i; uint8_t rgb; /* NOTE: not optimised*/
+	for (i = 0; i < width; i++) { PNG_Do_Grayscale(i, PNG_Get__1(i), 255); }
 }
 
-static void Png_Expand_GRAYSCALE_2(int width, uint32_t* palette, uint8_t* src, uint32_t* dst) {
-	int i; /* NOTE: not optimised */
-	for (i = 0; i < width; i++) {
-		int mask = (3 - (i & 3)) * 2; uint8_t rgb;
-		PNG_Do_Grayscale(rgb, i, (src[i >> 3] >> mask) & 3, 85);
-	}
+static void Png_Expand_GRAYSCALE_2(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst) {
+	int i; uint8_t rgb; /* NOTE: not optimised */
+	for (i = 0; i < width; i++) { PNG_Do_Grayscale(i, PNG_Get__2(i), 85); }
 }
 
-static void Png_Expand_GRAYSCALE_4(int width, uint32_t* palette, uint8_t* src, uint32_t* dst) {
-	int i, j, mask; uint8_t cur, rgb1, rgb2;
+static void Png_Expand_GRAYSCALE_4(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst) {
+	int i, j; uint8_t rgb;
 
 	for (i = 0, j = 0; i < (width & ~0x1); i += 2, j++) {
-		cur = src[j];
-		PNG_Do_Grayscale(rgb1, i, cur >> 4, 17); PNG_Do_Grayscale(rgb2, i + 1, cur & 0x0F, 17);
+		PNG_Do_Grayscale(i, src[j] >> 4, 17); PNG_Do_Grayscale(i + 1, src[j] & 0x0F, 17);
 	}
 	for (; i < width; i++) {
-		mask = (1 - (i & 1)) * 4;
-		PNG_Do_Grayscale(rgb1, i, (src[j] >> mask) & 15, 17);
+		PNG_Do_Grayscale(i, (src[j] >> PNG_Mask_4(i)) & 15, 17);
 	}
 }
 
-static void Png_Expand_GRAYSCALE_8(int width, uint32_t* palette, uint8_t* src, uint32_t* dst) {
-	int i; uint8_t rgb1, rgb2, rgb3, rgb4;
-#define PNG_Do_Grayscale_8(tmp, dstI, srcI) tmp = src[srcI]; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, 255);
+static void Png_Expand_GRAYSCALE_8(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst) {
+	int i; uint8_t rgb;
 
 	for (i = 0; i < (width & ~0x3); i += 4) {
-		PNG_Do_Grayscale_8(rgb1, i    , i    ); PNG_Do_Grayscale_8(rgb2, i + 1, i + 1);
-		PNG_Do_Grayscale_8(rgb3, i + 2, i + 2); PNG_Do_Grayscale_8(rgb4, i + 3, i + 3);
+		PNG_Do_Grayscale_8(i    , i    ); PNG_Do_Grayscale_8(i + 1, i + 1);
+		PNG_Do_Grayscale_8(i + 2, i + 2); PNG_Do_Grayscale_8(i + 3, i + 3);
 	}
-	for (; i < width; i++) { PNG_Do_Grayscale_8(rgb1, i, i); }
+	for (; i < width; i++) { PNG_Do_Grayscale_8(i, i); }
 }
 
-static void Png_Expand_GRAYSCALE_16(int width, uint32_t* palette, uint8_t* src, uint32_t* dst) {
-	int i;
+static void Png_Expand_GRAYSCALE_16(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst) {
+	int i; uint8_t rgb; /* NOTE: not optimised */
 	for (i = 0; i < width; i++) {
-		uint8_t rgb = src[i * 2];
-		dst[i] = PackedCol_ARGB(rgb, rgb, rgb, 255);
+		rgb = src[i * 2]; Bitmap_Set(dst[i], rgb, rgb, rgb, 255);
 	}
 }
 
-static void Png_Expand_RGB_8(int width, uint32_t* palette, uint8_t* src, uint32_t* dst) {
+static void Png_Expand_RGB_8(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst) {
 	int i, j;
-#define PNG_Do_RGB__8(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 1], src[srcI + 2], 255);
 
 	for (i = 0, j = 0; i < (width & ~0x03); i += 4, j += 12) {
 		PNG_Do_RGB__8(i    , j    ); PNG_Do_RGB__8(i + 1, j + 3);
@@ -178,75 +185,64 @@ static void Png_Expand_RGB_8(int width, uint32_t* palette, uint8_t* src, uint32_
 	for (; i < width; i++, j += 3) { PNG_Do_RGB__8(i, j); }
 }
 
-static void Png_Expand_RGB_16(int width, uint32_t* palette, uint8_t* src, uint32_t* dst) {
-	int i, j;
+static void Png_Expand_RGB_16(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst) {
+	int i, j; /* NOTE: not optimised */
 	for (i = 0, j = 0; i < width; i++, j += 6) { 
-		dst[i] = PackedCol_ARGB(src[j], src[j + 2], src[j + 4], 255);
+		Bitmap_Set(dst[i], src[j], src[j + 2], src[j + 4], 255);
 	}
 }
 
-static void Png_Expand_INDEXED_1(int width, uint32_t* palette, uint8_t* src, uint32_t* dst) {
-	int i; /* NOTE: not optimised*/
-	for (i = 0; i < width; i++) {
-		int mask = (7 - (i & 7));
-		dst[i] = palette[(src[i >> 3] >> mask) & 1];
-	}
+static void Png_Expand_INDEXED_1(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst) {
+	int i; /* NOTE: not optimised */
+	for (i = 0; i < width; i++) { dst[i] = palette[PNG_Get__1(i)]; }
 }
 
-static void Png_Expand_INDEXED_2(int width, uint32_t* palette, uint8_t* src, uint32_t* dst) {
-	int i; /* NOTE: not optimised*/
-	for (i = 0; i < width; i++) {
-		int mask = (3 - (i & 3)) * 2;
-		dst[i] = palette[(src[i >> 3] >> mask) & 3];
-	}
+static void Png_Expand_INDEXED_2(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst) {
+	int i; /* NOTE: not optimised */
+	for (i = 0; i < width; i++) { dst[i] = palette[PNG_Get__2(i)]; }
 }
 
-static void Png_Expand_INDEXED_4(int width, uint32_t* palette, uint8_t* src, uint32_t* dst) {
-	int i, j, mask; uint8_t cur;
-#define PNG_Do_Indexed(dstI, srcI) dst[dstI] = palette[srcI];
+static void Png_Expand_INDEXED_4(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst) {
+	int i, j; uint8_t cur;
 
 	for (i = 0, j = 0; i < (width & ~0x1); i += 2, j++) {
 		cur = src[j];
-		PNG_Do_Indexed(i, cur >> 4); PNG_Do_Indexed(i + 1, cur & 0x0F);
+		dst[i] = palette[cur >> 4]; dst[i + 1] = palette[cur & 0x0F];
 	}
 	for (; i < width; i++) {
-		mask = (1 - (i & 1)) * 4;
-		PNG_Do_Indexed(i, (src[j] >> mask) & 15);
+		dst[i] = palette[(src[j] >> PNG_Mask_4(i)) & 15];
 	}
 }
 
-static void Png_Expand_INDEXED_8(int width, uint32_t* palette, uint8_t* src, uint32_t* dst) {
+static void Png_Expand_INDEXED_8(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst) {
 	int i;
 
 	for (i = 0; i < (width & ~0x3); i += 4) {
-		PNG_Do_Indexed(i    , src[i]    ); PNG_Do_Indexed(i + 1, src[i + 1]);
-		PNG_Do_Indexed(i + 2, src[i + 2]); PNG_Do_Indexed(i + 3, src[i + 3]);
+		dst[i]     = palette[src[i]];     dst[i + 1] = palette[src[i + 1]];
+		dst[i + 2] = palette[src[i + 2]]; dst[i + 3] = palette[src[i + 3]];
 	}
-	for (; i < width; i++) { PNG_Do_Indexed(i, src[i]); }
+	for (; i < width; i++) { dst[i] = palette[src[i]]; }
 }
 
-static void Png_Expand_GRAYSCALE_A_8(int width, uint32_t* palette, uint8_t* src, uint32_t* dst) {
-	int i, j; uint8_t rgb1, rgb2, rgb3, rgb4;
-#define PNG_Do_Grayscale_A__8(tmp, dstI, srcI) tmp = src[srcI]; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, src[srcI + 1]);
+static void Png_Expand_GRAYSCALE_A_8(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst) {
+	int i, j; uint8_t rgb;
 
 	for (i = 0, j = 0; i < (width & ~0x3); i += 4, j += 8) {
-		PNG_Do_Grayscale_A__8(rgb1, i    , j    ); PNG_Do_Grayscale_A__8(rgb2, i + 1, j + 2);
-		PNG_Do_Grayscale_A__8(rgb3, i + 2, j + 4); PNG_Do_Grayscale_A__8(rgb4, i + 3, j + 6);
+		PNG_Do_Grayscale_A__8(i    , j    ); PNG_Do_Grayscale_A__8(i + 1, j + 2);
+		PNG_Do_Grayscale_A__8(i + 2, j + 4); PNG_Do_Grayscale_A__8(i + 3, j + 6);
 	}
-	for (; i < width; i++, j += 2) { PNG_Do_Grayscale_A__8(rgb1, i, j); }
+	for (; i < width; i++, j += 2) { PNG_Do_Grayscale_A__8(i, j); }
 }
 
-static void Png_Expand_GRAYSCALE_A_16(int width, uint32_t* palette, uint8_t* src, uint32_t* dst) {
-	int i, j; /* NOTE: not optimised*/
-	for (i = 0, j = 0; i < width; i++, j += 4) {
-		uint8_t rgb = src[j];
-		dst[i] = PackedCol_ARGB(rgb, rgb, rgb, src[j + 2]);
+static void Png_Expand_GRAYSCALE_A_16(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst) {
+	int i; uint8_t rgb; /* NOTE: not optimised*/
+	for (i = 0; i < width; i++) {
+		rgb = src[i * 4]; Bitmap_Set(dst[i], rgb, rgb, rgb, src[i * 4 + 2]);
 	}
 }
 
-static void Png_Expand_RGB_A_8(int width, uint32_t* palette, uint8_t* src, uint32_t* dst) {
+static void Png_Expand_RGB_A_8(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst) {
 	int i, j;
-#define PNG_Do_RGB_A__8(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 1], src[srcI + 2], src[srcI + 3]);
 
 	for (i = 0, j = 0; i < (width & ~0x3); i += 4, j += 16) {
 		PNG_Do_RGB_A__8(i    , j    ); PNG_Do_RGB_A__8(i + 1, j + 4 );
@@ -255,10 +251,10 @@ static void Png_Expand_RGB_A_8(int width, uint32_t* palette, uint8_t* src, uint3
 	for (; i < width; i++, j += 4) { PNG_Do_RGB_A__8(i, j); }
 }
 
-static void Png_Expand_RGB_A_16(int width, uint32_t* palette, uint8_t* src, uint32_t* dst) {
+static void Png_Expand_RGB_A_16(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst) {
 	int i, j; /* NOTE: not optimised*/
 	for (i = 0, j = 0; i < width; i++, j += 8) { 
-		dst[i] = PackedCol_ARGB(src[j], src[j + 2], src[j + 4], src[j + 6]);
+		Bitmap_Set(dst[i], src[j], src[j + 2], src[j + 4], src[j + 6]);
 	}
 }
 
@@ -307,12 +303,12 @@ Png_RowExpander Png_GetExpander(uint8_t col, uint8_t bitsPerSample) {
 	return NULL;
 }
 
-static void Png_ComputeTransparency(Bitmap* bmp, uint32_t transparentCol) {
-	uint32_t trnsRGB = transparentCol & PNG_RGB_MASK;
+static void Png_ComputeTransparency(Bitmap* bmp, BitmapCol col) {
+	uint32_t trnsRGB = col.B | (col.G << 8) | (col.R << 16); /* TODO: Remove this!! */
 	int x, y, width = bmp->Width, height = bmp->Height;
 
 	for (y = 0; y < height; y++) {
-		uint32_t* row = Bitmap_GetRow(bmp, y);
+		uint32_t* row = Bitmap_RawRow(bmp, y);
 		for (x = 0; x < width; x++) {
 			uint32_t rgb = row[x] & PNG_RGB_MASK;
 			row[x] = (rgb == trnsRGB) ? trnsRGB : row[x];
@@ -335,8 +331,9 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 	uint32_t scanlineSize, scanlineBytes;
 
 	/* palette data */
-	uint32_t transparentCol = PackedCol_ARGB(0, 0, 0, 255);
-	uint32_t palette[PNG_PALETTE];
+	BitmapCol black = BITMAPCOL_CONST(0, 0, 0, 255);
+	BitmapCol transparentCol;
+	BitmapCol palette[PNG_PALETTE];
 	uint32_t i;
 
 	/* idat state */
@@ -355,15 +352,13 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 	if (res) return res;
 	if (!Png_Detect(tmp, PNG_SIG_SIZE)) return PNG_ERR_INVALID_SIG;
 
-	for (i = 0; i < PNG_PALETTE; i++) {
-		palette[i] = PackedCol_ARGB(0, 0, 0, 255);
-	}
-	bool readingChunks = true;
+	transparentCol = black;
+	for (i = 0; i < PNG_PALETTE; i++) { palette[i] = black; }
 
 	Inflate_MakeStream(&compStream, &inflate, stream);
 	ZLibHeader_Init(&zlibHeader);
 
-	while (readingChunks) {
+	for (;;) {
 		res = Stream_Read(stream, tmp, 8);
 		if (res) return res;
 		dataSize = Stream_GetU32_BE(&tmp[0]);
@@ -407,7 +402,9 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 			if (res) return res;
 
 			for (i = 0; i < dataSize; i += 3) {
-				palette[i / 3] = PackedCol_ARGB(tmp[i], tmp[i + 1], tmp[i + 2], 255);
+				palette[i / 3].R = tmp[i];
+				palette[i / 3].G = tmp[i + 1];
+				palette[i / 3].B = tmp[i + 2];
 			}
 		} break;
 
@@ -418,8 +415,8 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 				if (res) return res;
 
 				/* RGB is 16 bits big endian, ignore least significant 8 bits */
-				uint8_t palRGB = tmp[0];
-				transparentCol = PackedCol_ARGB(palRGB, palRGB, palRGB, 0);
+				transparentCol.B = tmp[0]; transparentCol.G = tmp[0];
+				transparentCol.R = tmp[0]; transparentCol.A = 0;
 			} else if (col == PNG_COL_INDEXED) {
 				if (dataSize > PNG_PALETTE) return PNG_ERR_TRANS_COUNT;
 				res = Stream_Read(stream, tmp, dataSize);
@@ -427,8 +424,7 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 
 				/* set alpha component of palette*/
 				for (i = 0; i < dataSize; i++) {
-					palette[i] &= PNG_RGB_MASK;
-					palette[i] |= (uint32_t)tmp[i] << 24;
+					palette[i].A = tmp[i];
 				}
 			} else if (col == PNG_COL_RGB) {
 				if (dataSize != 6) return PNG_ERR_TRANS_COUNT;
@@ -436,8 +432,8 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 				if (res) return res;
 
 				/* R,G,B is 16 bits big endian, ignore least significant 8 bits */
-				uint8_t palR = tmp[0], palG = tmp[2], palB = tmp[4];
-				transparentCol = PackedCol_ARGB(palR, palG, palB, 0);
+				transparentCol.B = tmp[4]; transparentCol.G = tmp[2];
+				transparentCol.R = tmp[0]; transparentCol.A = 0;
 			} else {
 				return PNG_ERR_TRANS_INVALID;
 			}
@@ -491,8 +487,9 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 		} break;
 
 		case PNG_FourCC('I','E','N','D'): {
-			readingChunks = false;
 			if (dataSize) return PNG_ERR_INVALID_END_SIZE;
+			if (!transparentCol.A) Png_ComputeTransparency(bmp, transparentCol);
+			return bmp->Scan0 ? 0 : PNG_ERR_NO_DATA;
 		} break;
 
 		default:
@@ -502,11 +499,6 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 
 		if ((res = stream->Skip(stream, 4))) return res; /* Skip CRC32 */
 	}
-
-	if (transparentCol <= PNG_RGB_MASK) {
-		Png_ComputeTransparency(bmp, transparentCol);
-	}
-	return bmp->Scan0 ? 0 : PNG_ERR_NO_DATA;
 }
 
 
@@ -589,14 +581,14 @@ static void Png_Filter(uint8_t filter, uint8_t* cur, uint8_t* prior, uint8_t* be
 	}
 }
 
-static void Png_EncodeRow(const uint8_t* src, uint8_t* cur, uint8_t* prior, uint8_t* best, int lineLen) {
+static void Png_EncodeRow(const BitmapCol* src, uint8_t* cur, uint8_t* prior, uint8_t* best, int lineLen) {
 	uint8_t* dst = cur;
 	int bestFilter, bestEstimate = Int32_MaxValue;
 	int x, filter, estimate;
 
 	for (x = 0; x < lineLen; x += 3) {
-		dst[0] = src[2]; dst[1] = src[1]; dst[2] = src[0];
-		src += 4; dst += 3;
+		dst[0] = src->R; dst[1] = src->G; dst[2] = src->B;
+		src++; dst += 3;
 	}
 
 	dst = best + 1;
@@ -665,9 +657,9 @@ ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector select
 
 	for (y = 0; y < bmp->Height; y++) {
 		int row = selectRow(bmp, y);
-		uint8_t* src  = (uint8_t*)Bitmap_GetRow(bmp, row);
-		uint8_t* prev = (y & 1) == 0 ? prevLine : curLine;
-		uint8_t* cur  = (y & 1) == 0 ? curLine  : prevLine;
+		BitmapCol* src = Bitmap_GetRow(bmp, row);
+		uint8_t* prev  = (y & 1) == 0 ? prevLine : curLine;
+		uint8_t* cur   = (y & 1) == 0 ? curLine  : prevLine;
 
 		Png_EncodeRow(src, cur, prev, bestLine, lineSize);
 		/* +1 for filter byte */

@@ -2,6 +2,7 @@
 #define CC_PLATFORM_H
 #include "Utils.h"
 #include "PackedCol.h"
+#include "Bitmap.h"
 /* Abstracts platform specific memory management, I/O, etc.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -176,7 +177,7 @@ CC_EXPORT void Font_Free(FontDesc* desc);
 /* Measures dimensions of the given text, if it was drawn with the given font. */
 CC_EXPORT Size2D Platform_TextMeasure(struct DrawTextArgs* args);
 /* Draws the given text with the given font onto the given bitmap. */
-CC_EXPORT Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, PackedCol col);
+CC_EXPORT Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col);
 
 /* Allocates a new socket. */
 void Socket_Create(SocketPtr* socket);

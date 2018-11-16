@@ -13,10 +13,6 @@ bool PackedCol_Equals(PackedCol a, PackedCol b) {
 	return a.R == b.R && a.G == b.G && a.B == b.B && a.A == b.A;
 }
 
-uint32_t PackedCol_ToARGB(PackedCol col) {
-	return PackedCol_ARGB(col.R, col.G, col.B, col.A);
-}
-
 PackedCol PackedCol_Scale(PackedCol value, float t) {
 	value.R = (uint8_t)(value.R * t);
 	value.G = (uint8_t)(value.G * t);

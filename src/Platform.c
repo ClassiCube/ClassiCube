@@ -1007,7 +1007,7 @@ Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
 	return s;
 }
 
-Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, PackedCol col) {
+Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col) {
 	FT_Face face = args->Font.Handle;
 	String text = args->Text;
 	Size2D s = { x, TEXT_CEIL(face->size->metrics.height) };
@@ -1023,19 +1023,19 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, P
 
 		for (yy = 0; yy < img->rows; yy++) {
 			if ((y + yy) < 0 || (y + yy) >= bmp->Height) continue;
-			uint8_t* src = img->buffer + (yy * img->width);
-			uint8_t* dst = (uint8_t*)Bitmap_GetRow(bmp, y + yy) + (x * BITMAP_SIZEOF_PIXEL);
+			uint8_t* src   = img->buffer + (yy * img->width);
+			BitmapCol* dst = Bitmap_GetRow(bmp, y + yy) + x;
 
 			for (xx = 0; xx < img->width; xx++) {
 				if ((x + xx) < 0 || (x + xx) >= bmp->Width) continue;
 
 				uint8_t intensity = *src, invIntensity = UInt8_MaxValue - intensity;
-				dst[0] = ((col.B * intensity) >> 8) + ((dst[0] * invIntensity) >> 8);
-				dst[1] = ((col.G * intensity) >> 8) + ((dst[1] * invIntensity) >> 8);
-				dst[2] = ((col.R * intensity) >> 8) + ((dst[2] * invIntensity) >> 8);
-				//dst[3] = ((col.A * intensity) >> 8) + ((dst[3] * invIntensity) >> 8);
-				dst[3] = intensity + ((dst[3] * invIntensity) >> 8);
-				src++; dst += BITMAP_SIZEOF_PIXEL;
+				dst->B = ((col.B * intensity) >> 8) + ((dst->B * invIntensity) >> 8);
+				dst->G = ((col.G * intensity) >> 8) + ((dst->G * invIntensity) >> 8);
+				dst->R = ((col.R * intensity) >> 8) + ((dst->R * invIntensity) >> 8);
+				//dst[3] = ((col.A * intensity) >> 8) + ((dst->A * invIntensity) >> 8);
+				dst->A = intensity + ((dst->A * invIntensity) >> 8);
+				src++; dst++;
 			}
 		}
 

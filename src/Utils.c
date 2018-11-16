@@ -154,14 +154,13 @@ int Utils_AccumulateWheelDelta(float* accumulator, float delta) {
 }
 
 uint8_t Utils_GetSkinType(const Bitmap* bmp) {
+	int scale;
 	if (bmp->Width == bmp->Height * 2) return SKIN_64x32;
 	if (bmp->Width != bmp->Height)     return SKIN_INVALID;
 
 	/* Minecraft alex skins have this particular pixel with alpha of 0 */
-	int scale      = bmp->Width / 64;
-	uint32_t pixel = Bitmap_GetPixel(bmp, 54 * scale, 20 * scale);
-	uint8_t alpha  = PackedCol_ARGB_A(pixel);
-	return alpha >= 127 ? SKIN_64x64 : SKIN_64x64_SLIM;
+	scale = bmp->Width / 64;
+	return Bitmap_GetPixel(bmp, 54 * scale, 20 * scale).A >= 127 ? SKIN_64x64 : SKIN_64x64_SLIM;
 }
 
 uint32_t Utils_CRC32(const uint8_t* data, uint32_t length) {

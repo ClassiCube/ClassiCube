@@ -2,6 +2,7 @@
 #define CC_DRAWER2D_H
 #include "PackedCol.h"
 #include "Constants.h"
+#include "Bitmap.h"
 /*  Responsible for performing drawing operations on bitmaps, and for converting bitmaps into textures.
 	Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -18,7 +19,7 @@ CC_NOINLINE void Drawer2D_MakeFont(FontDesc* desc, int size, int style);
 bool Drawer2D_BitmappedText;
 /* Whether the shadows behind text (that uses shadows) is fully black. */
 bool Drawer2D_BlackTextShadows;
-PackedCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
+BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 #define DRAWER2D_OFFSET 1
 #define Drawer2D_GetCol(c) Drawer2D_Cols[(uint8_t)c]
 
@@ -26,11 +27,11 @@ void Drawer2D_Init(void);
 void Drawer2D_Free(void);
 
 /* Draws a 2D flat rectangle. */
-void Drawer2D_Rect(Bitmap* bmp, PackedCol col, int x, int y, int width, int height);
+void Drawer2D_Rect(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height);
 /* Clears the entire given area to the specified colour. */
-void Drawer2D_Clear(Bitmap* bmp, PackedCol col, int x, int y, int width, int height);
+void Drawer2D_Clear(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height);
 
-void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, PackedCol col);
+void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, BitmapCol col);
 void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y);
 Size2D Drawer2D_MeasureText(struct DrawTextArgs* args);
 int Drawer2D_FontHeight(const FontDesc* font, bool useShadow);

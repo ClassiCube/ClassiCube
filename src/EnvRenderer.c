@@ -215,18 +215,21 @@ static GfxResourceID sky_vb;
 static int sky_vertices;
 
 void EnvRenderer_RenderSky(double deltaTime) {
+	struct Matrix m;
+	float skyY, normY, dy;
 	if (!sky_vb || EnvRenderer_ShouldRenderSkybox()) return;
-	Vector3 pos = Camera_CurrentPos;
-	float normalY = (float)World_Height + 8.0f;
-	float skyY = max(pos.Y + 8.0f, normalY);
+
+	normY = (float)World_Height + 8.0f;
+	skyY  = max(Camera_CurrentPos.Y + 8.0f, normY);
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
 	Gfx_BindVb(sky_vb);
 
-	if (skyY == normalY) {
+	if (skyY == normY) {
 		Gfx_DrawVb_IndexedTris(sky_vertices);
 	} else {
-		struct Matrix m = Gfx_View;
-		float dy = skyY - normalY; /* inlined Y translation matrix multiply */
+		m  = Gfx_View;
+		dy = skyY - normY; 
+		/* inlined Y translation matrix multiply */
 		m.Row3.X += dy * m.Row1.X; m.Row3.Y += dy * m.Row1.Y;
 		m.Row3.Z += dy * m.Row1.Z; m.Row3.W += dy * m.Row1.W;
 
@@ -445,12 +448,19 @@ static float EnvRenderer_RainAlphaAt(float x) {
 }
 
 void EnvRenderer_RenderWeather(double deltaTime) {
-	int weather = Env_Weather;
+	VertexP3fT2fC4b vertices[WEATHER_VERTS_COUNT];
+	VertexP3fT2fC4b* ptr, v;
+	int weather, vCount;
 	Vector3I pos;
 	bool moved, particles;
 	float speed, vOffset;
-	float dist, alpha;
 
+	int dist, dx, dz, x, z;
+	float alpha, y, height;
+	float worldV, v1, v2;
+	float x1,y1,z1, x2,y2,z2;
+
+	weather = Env_Weather;
 	if (weather == WEATHER_SUNNY) return;
 	if (!Weather_Heightmap) EnvRenderer_InitWeatherHeightmap();
 	Gfx_BindTexture(weather == WEATHER_RAINY ? rain_tex : snow_tex);
@@ -468,16 +478,15 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	particles = weather == WEATHER_RAINY;
 	weather_accumulator += deltaTime;
 
-	VertexP3fT2fC4b v; v.Col = Env_SunCol;
-	VertexP3fT2fC4b vertices[WEATHER_VERTS_COUNT];
-	VertexP3fT2fC4b* ptr = vertices;
+	ptr   = vertices;
+	v.Col = Env_SunCol;
 
-	int dx, dz;
 	for (dx = -WEATHER_EXTENT; dx <= WEATHER_EXTENT; dx++) {
 		for (dz = -WEATHER_EXTENT; dz <= WEATHER_EXTENT; dz++) {
-			int x = pos.X + dx, z = pos.Z + dz;
-			float y = EnvRenderer_RainHeight(x, z);
-			float height = pos.Y - y;
+			x = pos.X + dx; z = pos.Z + dz;
+
+			y = EnvRenderer_RainHeight(x, z);
+			height = pos.Y - y;
 			if (height <= 0) continue;
 
 			if (particles && (weather_accumulator >= 0.25 || moved)) {
@@ -485,16 +494,17 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 				Particles_RainSnowEffect(particlePos);
 			}
 
-			dist  = (float)dx * (float)dx + (float)dz * (float)dz;
-			alpha = EnvRenderer_RainAlphaAt(dist);
+			dist  = dx * dx + dz * dz;
+			alpha = EnvRenderer_RainAlphaAt((float)dist);
 			Math_Clamp(alpha, 0.0f, 255.0f);
 			v.Col.A = (uint8_t)alpha;
 
 			/* NOTE: Making vertex is inlined since this is called millions of times. */
-			float worldV = vOffset + (z & 1) / 2.0f - (x & 0x0F) / 16.0f;
-			float v1 = y / 6.0f + worldV, v2 = (y + height) / 6.0f + worldV;
-			float x1 = (float)x,       y1 = (float)y,            z1 = (float)z;
-			float x2 = (float)(x + 1), y2 = (float)(y + height), z2 = (float)(z + 1);
+			worldV = vOffset + (z & 1) / 2.0f - (x & 0x0F) / 16.0f;
+			v1 = y            / 6.0f + worldV; 
+			v2 = (y + height) / 6.0f + worldV;
+			x1 = (float)x;       y1 = (float)y;            z1 = (float)z;
+			x2 = (float)(x + 1); y2 = (float)(y + height); z2 = (float)(z + 1);
 
 			v.X = x1; v.Y = y1; v.Z = z1; v.U = 0.0f; v.V = v1; *ptr++ = v;
 			          v.Y = y2;                       v.V = v2; *ptr++ = v;
@@ -518,7 +528,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	Gfx_SetAlphaArgBlend(true);
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
-	int vCount = (int)(ptr - vertices);
+	vCount = (int)(ptr - vertices);
 	GfxCommon_UpdateDynamicVb_IndexedTris(weather_vb, vertices, vCount);
 
 	Gfx_SetAlphaArgBlend(false);

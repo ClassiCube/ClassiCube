@@ -72,7 +72,6 @@ typedef struct Point2D_ { int X, Y; } Point2D;
 typedef struct Size2D_  { int Width, Height; } Size2D;
 typedef struct FontDesc_ { void* Handle; uint16_t Size, Style; } FontDesc;
 typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
-typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
 
 /*#define CC_BUILD_GL11*/
 /*#define CC_BUILD_SOLARIS*/

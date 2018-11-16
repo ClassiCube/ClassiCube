@@ -1212,7 +1212,7 @@ static void CPE_BulkBlockUpdate(uint8_t* data) {
 }
 
 static void CPE_SetTextColor(uint8_t* data) {
-	PackedCol c;
+	BitmapCol c;
 	uint8_t code;
 
 	c.R = *data++; c.G = *data++; c.B = *data++; c.A = *data++;

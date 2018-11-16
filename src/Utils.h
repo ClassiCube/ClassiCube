@@ -1,6 +1,7 @@
 #ifndef CC_UTILS_H
 #define CC_UTILS_H
 #include "String.h"
+#include "Bitmap.h"
 /* Implements various utility functions.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

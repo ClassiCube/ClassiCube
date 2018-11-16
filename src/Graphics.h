@@ -3,6 +3,7 @@
 #include "PackedCol.h"
 #include "Vectors.h"
 #include "GameStructs.h"
+#include "Bitmap.h"
 
 /* Abstracts a 3D graphics rendering API.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

@@ -270,25 +270,28 @@ static int ChunkUpdater_UpdateChunksStill(int* chunkUpdates) {
 	return j;
 }
 
-void ChunkUpdater_UpdateChunks(double delta) {
+static void ChunkUpdater_UpdateChunks(double delta) {
+	struct LocalPlayer* p;
+	bool samePos;
 	int chunkUpdates = 0;
-	cu_chunksTarget += delta < cu_targetTime ? 1 : -1; /* build more chunks if 30 FPS or over, otherwise slowdown. */
+
+	/* Build more chunks if 30 FPS or over, otherwise slowdown */
+	cu_chunksTarget += delta < cu_targetTime ? 1 : -1; 
 	Math_Clamp(cu_chunksTarget, 4, Game_MaxChunkUpdates);
 
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	Vector3 pos = Camera_CurrentPos;
-	float headX = p->Base.HeadX;
-	float headY = p->Base.HeadY;
+	p = &LocalPlayer_Instance;
+	samePos = Vector3_Equals(&Camera_CurrentPos, &cu_lastCamPos)
+		&& p->Base.HeadX == cu_lastHeadX && p->Base.HeadY == cu_lastHeadY;
 
-	bool samePos = Vector3_Equals(&pos, &cu_lastCamPos) && headX == cu_lastHeadX && headY == cu_lastHeadY;
 	MapRenderer_RenderChunksCount = samePos ?
 		ChunkUpdater_UpdateChunksStill(&chunkUpdates) :
 		ChunkUpdater_UpdateChunksAndVisibility(&chunkUpdates);
 
-	cu_lastCamPos = pos;
-	cu_lastHeadX = headX; cu_lastHeadY = headY;
+	cu_lastCamPos = Camera_CurrentPos;
+	cu_lastHeadX  = p->Base.HeadX; 
+	cu_lastHeadY  = p->Base.HeadY;
 
-	if (!samePos || chunkUpdates != 0) {
+	if (!samePos || chunkUpdates) {
 		ChunkUpdater_ResetPartFlags();
 	}
 }

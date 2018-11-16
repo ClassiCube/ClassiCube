@@ -1,5 +1,4 @@
 #include "TerrainAtlas.h"
-#include "Bitmap.h"
 #include "Block.h"
 #include "ExtMath.h"
 #include "Funcs.h"

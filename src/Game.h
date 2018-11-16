@@ -2,6 +2,7 @@
 #define CC_GAME_H
 #include "Picking.h"
 #include "Options.h"
+#include "Bitmap.h"
 /* Represents the game.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

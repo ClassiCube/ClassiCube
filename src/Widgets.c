@@ -925,6 +925,7 @@ static char InputWidget_GetLastCol(struct InputWidget* w, int x, int y) {
 }
 
 static void InputWidget_UpdateCaret(struct InputWidget* w) {
+	BitmapCol col;
 	String line; char lineBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 	int maxChars, lineWidth;
@@ -961,7 +962,9 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 	colCode = InputWidget_GetLastCol(w, w->CaretX, w->CaretY);
 
 	if (colCode) {
-		w->CaretCol = Drawer2D_GetCol(colCode);
+		col = Drawer2D_GetCol(colCode);
+		w->CaretCol.B = col.B; w->CaretCol.G = col.G; 
+		w->CaretCol.R = col.R; w->CaretCol.A = col.A;
 	} else {
 		PackedCol white = PACKEDCOL_WHITE;
 		w->CaretCol = PackedCol_Scale(white, 0.8f);
@@ -2725,9 +2728,9 @@ static Size2D SpecialInputWidget_MeasureTitles(struct SpecialInputWidget* w) {
 }
 
 static void SpecialInputWidget_DrawTitles(struct SpecialInputWidget* w, Bitmap* bmp) {
-	PackedCol col_selected = PACKEDCOL_CONST(30, 30, 30, 200);
-	PackedCol col_inactive = PACKEDCOL_CONST( 0,  0,  0, 127);
-	PackedCol col;
+	BitmapCol col_selected = BITMAPCOL_CONST(30, 30, 30, 200);
+	BitmapCol col_inactive = BITMAPCOL_CONST( 0,  0,  0, 127);
+	BitmapCol col;
 
 	struct DrawTextArgs args;
 	Size2D size;
@@ -2788,7 +2791,7 @@ static void SpecialInputWidget_DrawContent(struct SpecialInputWidget* w, struct 
 }
 
 static void SpecialInputWidget_Make(struct SpecialInputWidget* w, struct SpecialInputTab* tab) {
-	PackedCol col = PACKEDCOL_CONST(30, 30, 30, 200);
+	BitmapCol col = PACKEDCOL_CONST(30, 30, 30, 200);
 	Size2D size, titles, content;
 	Bitmap bmp;
 

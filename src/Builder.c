@@ -508,7 +508,7 @@ static PackedCol Normal_LightCol(int x, int y, int z, Face face, BlockID block) 
 		return y >= World_MaxY           ? Env_SunCol   : Lighting_Col_YMax_Fast(x, (y + 1) - offset, z);
 	}
 
-	PackedCol black = PACKEDCOL_BLACK; return black;
+	PackedCol invalid = PACKEDCOL_CONST(0, 0, 0, 0); return invalid;
 }
 
 static bool Normal_CanStretch(BlockID initial, int chunkIndex, int x, int y, int z, Face face) {

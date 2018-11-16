@@ -38,7 +38,7 @@ static int Drawer2D_Widths[256];
 
 static void Drawer2D_CalculateTextWidths(void) {
 	int width = Drawer2D_FontBitmap.Width, height = Drawer2D_FontBitmap.Height;
-	uint32_t* row;
+	BitmapCol* row;
 	int i, x, y, xx, tileX, tileY;
 
 	for (i = 0; i < Array_Elems(Drawer2D_Widths); i++) {
@@ -55,9 +55,7 @@ static void Drawer2D_CalculateTextWidths(void) {
 
 			/* Iterate through each pixel of the given character, on the current scanline */
 			for (xx = Drawer2D_TileSize - 1; xx >= 0; xx--) {
-				uint32_t pixel = row[x + xx];
-				uint8_t a = PackedCol_ARGB_A(pixel);
-				if (a < 127) continue;
+				if (row[x + xx].A < 127) continue;
 
 				/* Check if this is the pixel furthest to the right, for the current character */			
 				Drawer2D_Widths[i] = max(Drawer2D_Widths[i], xx + 1);
@@ -82,15 +80,14 @@ void Drawer2D_SetFontBitmap(Bitmap* bmp) {
 
 
 void Drawer2D_HexEncodedCol(int i, int hex, uint8_t lo, uint8_t hi) {
-	PackedCol* col = &Drawer2D_Cols[i];
-	col->R = (uint8_t)(lo * ((hex >> 2) & 1) + hi * (hex >> 3));
-	col->G = (uint8_t)(lo * ((hex >> 1) & 1) + hi * (hex >> 3));
-	col->B = (uint8_t)(lo * ((hex >> 0) & 1) + hi * (hex >> 3));
-	col->A = UInt8_MaxValue;
+	Drawer2D_Cols[i].R = (uint8_t)(lo * ((hex >> 2) & 1) + hi * (hex >> 3));
+	Drawer2D_Cols[i].G = (uint8_t)(lo * ((hex >> 1) & 1) + hi * (hex >> 3));
+	Drawer2D_Cols[i].B = (uint8_t)(lo * ((hex >> 0) & 1) + hi * (hex >> 3));
+	Drawer2D_Cols[i].A = 255;
 }
 
 void Drawer2D_Init(void) {
-	PackedCol col = PACKEDCOL_CONST(0, 0, 0, 0);
+	BitmapCol col = BITMAPCOL_CONST(0, 0, 0, 0);
 	int i;
 	
 	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
@@ -109,11 +106,10 @@ void Drawer2D_Init(void) {
 void Drawer2D_Free(void) { Drawer2D_FreeFontBitmap(); }
 
 /* Draws a 2D flat rectangle. */
-void Drawer2D_Rect(Bitmap* bmp, PackedCol col, int x, int y, int width, int height);
+void Drawer2D_Rect(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height);
 
-void Drawer2D_Clear(Bitmap* bmp, PackedCol col, int x, int y, int width, int height) {
-	uint32_t argb = PackedCol_ToARGB(col);
-	uint32_t* row;
+void Drawer2D_Clear(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height) {
+	BitmapCol* row;
 	int xx, yy;
 
 	if (x < 0 || y < 0 || (x + width) > bmp->Width || (y + height) > bmp->Height) {
@@ -122,7 +118,7 @@ void Drawer2D_Clear(Bitmap* bmp, PackedCol col, int x, int y, int width, int hei
 	
 	for (yy = 0; yy < height; yy++) {
 		row = Bitmap_GetRow(bmp, y + yy) + x;
-		for (xx = 0; xx < width; xx++) { row[xx] = argb; }
+		for (xx = 0; xx < width; xx++) { row[xx] = col; }
 	}
 }
 
@@ -233,9 +229,8 @@ static int Drawer2D_NextPart(int i, STRING_REF String* value, String* part, char
 	return i;
 }
 
-void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, PackedCol col) {	
-	uint32_t argb = PackedCol_ToARGB(col);
-	uint32_t* row;
+void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, BitmapCol col) {
+	BitmapCol* row;
 	int xx, yy;
 
 	for (yy = y; yy < y + height; yy++) {
@@ -244,14 +239,14 @@ void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, Packed
 
 		for (xx = x; xx < x + width; xx++) {
 			if (xx >= bmp->Width) break;
-			row[xx] = argb;
+			row[xx] = col;
 		}
 	}
 }
 
 static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, bool shadow) {
-	PackedCol black = PACKEDCOL_BLACK;
-	PackedColUnion col;
+	BitmapCol black = BITMAPCOL_CONST(0, 0, 0, 255);
+	BitmapColUnion col;
 	String text  = args->Text;
 	int i, point = args->Font.Size, count = 0;
 
@@ -262,13 +257,16 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 	int dstHeight, begX, xx, yy;
 	int cellY, underlineY, underlineHeight;
 
+	BitmapCol* srcRow, src;
+	BitmapCol* dstRow, dst;
+
 	uint8_t coords[256];
-	PackedColUnion cols[256];
+	BitmapColUnion cols[256];
 	uint16_t dstWidths[256];
 
 	col.C = Drawer2D_Cols['f'];
 	if (shadow) {
-		col.C = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col.C, 0.25f);
+		col.C = Drawer2D_BlackTextShadows ? black : BitmapCol_Scale(col.C, 0.25f);
 	}
 
 	for (i = 0; i < text.length; i++) {
@@ -276,7 +274,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
 			col.C = Drawer2D_GetCol(text.buffer[i + 1]);
 			if (shadow) {
-				col.C = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col.C, 0.25f);
+				col.C = Drawer2D_BlackTextShadows ? black : BitmapCol_Scale(col.C, 0.25f);
 			}
 			i++; continue; /* skip over the colour code */
 		}
@@ -296,13 +294,13 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		dstY = y + (yy + yPadding);
 		if (dstY >= bmp->Height) break;
 
-		fontY = 0 + yy * Drawer2D_TileSize / dstHeight;
-		uint32_t* dstRow = Bitmap_GetRow(bmp, dstY);
+		fontY  = 0 + yy * Drawer2D_TileSize / dstHeight;
+		dstRow = Bitmap_GetRow(bmp, dstY);
 
 		for (i = 0; i < count; i++) {
-			srcX = (coords[i] & 0x0F) * Drawer2D_TileSize;
-			srcY = (coords[i] >> 4)   * Drawer2D_TileSize;
-			uint32_t* fontRow = Bitmap_GetRow(&Drawer2D_FontBitmap, fontY + srcY);
+			srcX   = (coords[i] & 0x0F) * Drawer2D_TileSize;
+			srcY   = (coords[i] >> 4)   * Drawer2D_TileSize;
+			srcRow = Bitmap_GetRow(&Drawer2D_FontBitmap, fontY + srcY);
 
 			srcWidth = Drawer2D_Widths[coords[i]];
 			dstWidth = dstWidths[i];
@@ -310,17 +308,17 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 
 			for (xx = 0; xx < dstWidth; xx++) {
 				fontX = srcX + xx * srcWidth / dstWidth;
-				uint32_t src = fontRow[fontX];
-				if (PackedCol_ARGB_A(src) == 0) continue;
+				src   = srcRow[fontX];
+				if (!src.A) continue;
 
 				dstX = x + xx;
 				if (dstX >= bmp->Width) break;
 
-				uint32_t pixel = src & ~0xFFFFFF;
-				pixel |= ((src & 0xFF)         * col.C.B / 255);
-				pixel |= (((src >> 8) & 0xFF)  * col.C.G / 255) << 8;
-				pixel |= (((src >> 16) & 0xFF) * col.C.R / 255) << 16;
-				dstRow[dstX] = pixel;
+				dst.B = src.B * col.C.B / 255;
+				dst.G = src.G * col.C.G / 255;
+				dst.R = src.R * col.C.R / 255;
+				dst.A = src.A;
+				dstRow[dstX] = dst;
 			}
 			x += dstWidth + xPadding;
 		}
@@ -382,7 +380,7 @@ static Size2D Drawer2D_MeasureBitmapText(struct DrawTextArgs* args) {
 }
 
 void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
-	PackedCol col, backCol, black = PACKEDCOL_BLACK;
+	BitmapCol col, backCol, black = BITMAPCOL_CONST(0, 0, 0, 255);
 	Size2D partSize;
 	String value = args->Text;
 	char colCode, nextCol = 'f';
@@ -398,7 +396,7 @@ void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 
 		col = Drawer2D_GetCol(colCode);
 		if (args->UseShadow) {
-			backCol = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col, 0.25f);
+			backCol = Drawer2D_BlackTextShadows ? black : BitmapCol_Scale(col, 0.25f);
 			Platform_TextDraw(args, bmp, x + DRAWER2D_OFFSET, y + DRAWER2D_OFFSET, backCol);
 		}
 

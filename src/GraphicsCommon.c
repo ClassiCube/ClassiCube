@@ -167,52 +167,54 @@ void GfxCommon_RestoreAlphaState(uint8_t draw) {
 }
 
 
-#define alphaMask ((uint32_t)0xFF000000UL)
 /* Quoted from http://www.realtimerendering.com/blog/gpus-prefer-premultiplication/
    The short version: if you want your renderer to properly handle textures with alphas when using
    bilinear interpolation or mipmapping, you need to premultiply your PNG color data by their (unassociated) alphas. */
-static uint32_t GfxCommon_Average(uint32_t p1, uint32_t p2) {
-	uint32_t a1 = ((p1 & alphaMask) >> 24) & 0xFF;
-	uint32_t a2 = ((p2 & alphaMask) >> 24) & 0xFF;
-	uint32_t aSum = (a1 + a2);
+static BitmapCol GfxCommon_Average(BitmapCol p1, BitmapCol p2) {
+	uint32_t a1, a2, aSum;
+	uint32_t b1, g1, r1;
+	uint32_t b2, g2, r2;
+	BitmapCol ave;
+
+	a1 = p1.A; a2 = p2.A; 
+	aSum = (a1 + a2);
 	aSum = aSum > 0 ? aSum : 1; /* avoid divide by 0 below */
 
 	/* Convert RGB to pre-multiplied form */
-	uint32_t r1 = ((p1 >> 16) & 0xFF) * a1, g1 = ((p1 >> 8) & 0xFF) * a1, b1 = (p1 & 0xFF) * a1;
-	uint32_t r2 = ((p2 >> 16) & 0xFF) * a2, g2 = ((p2 >> 8) & 0xFF) * a2, b2 = (p2 & 0xFF) * a2;
+	b1 = p1.B * a1; g1 = p1.G * a1; r1 = p1.R * a1;
+	b2 = p1.B * a2; g2 = p2.G * a2; r2 = p2.R * a2;
 
 	/* https://stackoverflow.com/a/347376
 	   We need to convert RGB back from the pre-multiplied average into normal form
 	   ((r1 + r2) / 2) / ((a1 + a2) / 2)
 	   but we just cancel out the / 2*/
-	uint32_t aAve = aSum >> 1;
-	uint32_t rAve = (r1 + r2) / aSum;
-	uint32_t gAve = (g1 + g2) / aSum;
-	uint32_t bAve = (b1 + b2) / aSum;
-
-	return (aAve << 24) | (rAve << 16) | (gAve << 8) | bAve;
+	ave.B = (b1 + b2) / aSum;
+	ave.G = (g1 + g2) / aSum;
+	ave.R = (r1 + r2) / aSum;
+	ave.A = aSum >> 1;
+	return ave;
 }
 
 void GfxCommon_GenMipmaps(int width, int height, uint8_t* lvlScan0, uint8_t* scan0) {
-	uint32_t* baseSrc = (uint32_t*)scan0;
-	uint32_t* baseDst = (uint32_t*)lvlScan0;
+	BitmapCol* baseSrc = (BitmapCol*)scan0;
+	BitmapCol* baseDst = (BitmapCol*)lvlScan0;
 	int srcWidth = width << 1;
 
 	int x, y;
 	for (y = 0; y < height; y++) {
 		int srcY = (y << 1);
-		uint32_t* src0 = baseSrc + srcY * srcWidth;
-		uint32_t* src1 = src0 + srcWidth;
-		uint32_t* dst = baseDst + y * width;
+		BitmapCol* src0 = baseSrc + srcY * srcWidth;
+		BitmapCol* src1 = src0 + srcWidth;
+		BitmapCol* dst = baseDst + y * width;
 
 		for (x = 0; x < width; x++) {
 			int srcX = (x << 1);
-			uint32_t src00 = src0[srcX], src01 = src0[srcX + 1];
-			uint32_t src10 = src1[srcX], src11 = src1[srcX + 1];
+			BitmapCol src00 = src0[srcX], src01 = src0[srcX + 1];
+			BitmapCol src10 = src1[srcX], src11 = src1[srcX + 1];
 
 			/* bilinear filter this mipmap */
-			uint32_t ave0 = GfxCommon_Average(src00, src01);
-			uint32_t ave1 = GfxCommon_Average(src10, src11);
+			BitmapCol ave0 = GfxCommon_Average(src00, src01);
+			BitmapCol ave1 = GfxCommon_Average(src10, src11);
 			dst[x] = GfxCommon_Average(ave0, ave1);
 		}
 	}

@@ -37,7 +37,11 @@ void AxisLinesRenderer_Render(double delta) {
 		1,2,2, 1,2,4, 3,2,4, 3,2,2, /* Z arrow */
 		1,2,3, 1,4,3, 3,4,1, 3,2,1, /* Y arrow */
 	};
-	static PackedCol cols[3] = { PACKEDCOL_RED, PACKEDCOL_BLUE, PACKEDCOL_GREEN };
+	static PackedCol cols[3] = {
+		PACKEDCOL_CONST(255,   0,   0, 255), /* Red   */
+		PACKEDCOL_CONST(  0, 255,   0, 255), /* Green */
+		PACKEDCOL_CONST(  0,   0, 255, 255), /* Blue  */
+	};
 
 	Vector3 coords[5], pos;
 	VertexP3fC4b vertices[AXISLINES_NUM_VERTICES];

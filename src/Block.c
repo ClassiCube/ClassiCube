@@ -89,7 +89,7 @@ void Block_SetCustomDefined(BlockID block, bool defined) {
 }
 
 void Block_DefineCustom(BlockID block) {
-	PackedCol black = PACKEDCOL_BLACK;
+	PackedCol black = PACKEDCOL_CONST(0, 0, 0, 255);
 	String name     = Block_UNSAFE_GetName(block);
 	Block_Tinted[block] = !PackedCol_Equals(Block_FogCol[block], black) && String_IndexOf(&name, '#', 0) >= 0;
 
@@ -283,60 +283,52 @@ void Block_RecalculateSpriteBB(void) {
 }
 
 static float Block_GetSpriteBB_MinX(int size, int tileX, int tileY, Bitmap* bmp) {
-	uint32_t* row;
+	BitmapCol* row;
 	int x, y;
+
 	for (x = 0; x < size; x++) {
 		for (y = 0; y < size; y++) {
 			row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
-
-			if (PackedCol_ARGB_A(row[x]) != 0) {
-				return (float)x / size;
-			}
+			if (row[x].A) { return (float)x / size; }
 		}
 	}
 	return 1.0f;
 }
 
 static float Block_GetSpriteBB_MinY(int size, int tileX, int tileY, Bitmap* bmp) {
-	uint32_t* row;
+	BitmapCol* row;
 	int x, y;
+
 	for (y = size - 1; y >= 0; y--) {
 		row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
-
 		for (x = 0; x < size; x++) {
-			if (PackedCol_ARGB_A(row[x]) != 0) {
-				return 1.0f - (float)(y + 1) / size;
-			}
+			if (row[x].A) { return 1.0f - (float)(y + 1) / size; }
 		}
 	}
 	return 1.0f;
 }
 
 static float Block_GetSpriteBB_MaxX(int size, int tileX, int tileY, Bitmap* bmp) {
-	uint32_t* row;
+	BitmapCol* row;
 	int x, y;
+
 	for (x = size - 1; x >= 0; x--) {
 		for (y = 0; y < size; y++) {
 			row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
-
-			if (PackedCol_ARGB_A(row[x]) != 0) {
-				return (float)(x + 1) / size;
-			}
+			if (row[x].A) { return (float)(x + 1) / size; }
 		}
 	}
 	return 0.0f;
 }
 
 static float Block_GetSpriteBB_MaxY(int size, int tileX, int tileY, Bitmap* bmp) {
-	uint32_t* row;
+	BitmapCol* row;
 	int x, y;
+
 	for (y = 0; y < size; y++) {
 		row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
-
 		for (x = 0; x < size; x++) {
-			if (PackedCol_ARGB_A(row[x]) != 0) {
-				return 1.0f - (float)y / size;
-			}
+			if (row[x].A) { return 1.0f - (float)y / size; }
 		}
 	}
 	return 0.0f;

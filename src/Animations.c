@@ -23,10 +23,9 @@ static float L_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 static RNGState L_rnd;
 static bool L_rndInitalised;
 
-static void LavaAnimation_Tick(uint32_t* ptr, int size) {
+static void LavaAnimation_Tick(BitmapCol* ptr, int size) {
 	int mask = size - 1, shift = Math_Log2(size);
 	float soupHeat, potHeat, col;
-	uint8_t r, g, b;
 	int x, y, i = 0;
 
 	if (!L_rndInitalised) {
@@ -74,10 +73,10 @@ static void LavaAnimation_Tick(uint32_t* ptr, int size) {
 			col = 2.0f * L_soupHeat[i];
 			Math_Clamp(col, 0.0f, 1.0f);
 
-			r = (uint8_t)(col * 100.0f + 155.0f);
-			g = (uint8_t)(col * col * 255.0f);
-			b = (uint8_t)(col * col * col * col * 128.0f);
-			*ptr = PackedCol_ARGB(r, g, b, 255);
+			ptr->R = (uint8_t)(col * 100.0f + 155.0f);
+			ptr->G = (uint8_t)(col * col * 255.0f);
+			ptr->B = (uint8_t)(col * col * col * col * 128.0f);
+			ptr->A = 255;
 
 			ptr++; i++;
 		}
@@ -94,10 +93,9 @@ static float W_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 static RNGState W_rnd;
 static bool W_rndInitalised;
 
-static void WaterAnimation_Tick(uint32_t* ptr, int size) {
+static void WaterAnimation_Tick(BitmapCol* ptr, int size) {
 	int mask = size - 1, shift = Math_Log2(size);
 	float soupHeat, col;
-	uint8_t r, g, a;
 	int x, y, i = 0;
 
 	if (!W_rndInitalised) {
@@ -126,10 +124,10 @@ static void WaterAnimation_Tick(uint32_t* ptr, int size) {
 			Math_Clamp(col, 0.0f, 1.0f);
 			col = col * col;
 
-			r = (uint8_t)(32.0f  + col * 32.0f);
-			g = (uint8_t)(50.0f  + col * 64.0f);
-			a = (uint8_t)(146.0f + col * 50.0f);
-			*ptr = PackedCol_ARGB(r, g, 255, a);
+			ptr->R = (uint8_t)(32.0f  + col * 32.0f);
+			ptr->G = (uint8_t)(50.0f  + col * 64.0f);
+			ptr->A = (uint8_t)(146.0f + col * 50.0f);
+			ptr->B = 255;
 
 			ptr++; i++;
 		}
@@ -230,9 +228,9 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int s
 
 	if (!data) {
 		if (texLoc == 30) {
-			LavaAnimation_Tick((uint32_t*)frame.Scan0, size);
+			LavaAnimation_Tick((BitmapCol*)frame.Scan0, size);
 		} else if (texLoc == 14) {
-			WaterAnimation_Tick((uint32_t*)frame.Scan0, size);
+			WaterAnimation_Tick((BitmapCol*)frame.Scan0, size);
 		}
 	} else {
 		srcX = data->FrameX + data->State * size;
