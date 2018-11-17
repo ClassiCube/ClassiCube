@@ -29,7 +29,7 @@ bld/
 [sS]rc/texturecache
 [sS]rc/logs
 [sS]rc/options.txt
-[sS]rc/ClassiCube
+[sS]rc/ClassiCube*
 [sS]rc/screenshots
 
 #GCC object files

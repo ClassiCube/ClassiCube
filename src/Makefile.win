@@ -1,9 +1,9 @@
 CC=gcc
-LIBS=-lGL -lcurl -lopenal -lpthread -lX11 -lm -ldl
-CFLAGS=-g -w -no-pie -rdynamic -pipe
+LIBS=-mwindows -lws2_32 -lwininet -lwinmm -limagehlp -ld3d9
+CFLAGS=-g -w -pipe
 SOURCES=$(wildcard *.c)
 OBJECTS=$(patsubst %.c, %.o, $(SOURCES))
-COMMITSHA=$(shell git rev-parse HEAD | cut -c '1-7')
+COMMITSHA=$(shell getsha)
 
 EXECUTABLE=ClassiCube
 
