@@ -3295,6 +3295,7 @@ static void TexPackOverlay_ContextRecreated(void* screen) {
 	lines[2] = url;
 	if (s->ContentLength) {
 		String_InitArray(contents, contentsBuffer);
+		contentLengthMB = s->ContentLength / (1024.0f * 1024.0f);
 		String_Format1(&contents, "Download size: %f3 MB", &contentLengthMB);
 		lines[3] = contents;
 	} else { lines[3] = defCL; }

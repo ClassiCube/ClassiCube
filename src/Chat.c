@@ -201,17 +201,10 @@ void Chat_AddOf(const String* text, MsgType type) {
 /*########################################################################################################################*
 *---------------------------------------------------------Commands--------------------------------------------------------*
 *#########################################################################################################################*/
-struct ChatCommand {
-	const char* Name;
-	void (*Execute)(const String* args, int argsCount);
-	bool SingleplayerOnly;
-	const char* Help[5];
-};
-
 #define COMMANDS_PREFIX "/client"
 #define COMMANDS_PREFIX_SPACE "/client "
-static struct ChatCommand commands_list[8];
-static int commands_count;
+static struct ChatCommand* cmds_head;
+static struct ChatCommand* cmds_tail;
 
 static bool Commands_IsCommandPrefix(const String* str) {
 	static String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
@@ -224,21 +217,22 @@ static bool Commands_IsCommandPrefix(const String* str) {
 		|| String_CaselessEquals(str, &prefix);
 }
 
-CC_NOINLINE static void Commands_Register(struct ChatCommand* cmd) {
-	if (commands_count == Array_Elems(commands_list)) {
-		ErrorHandler_Fail("Commands_Register - hit max client commands");
+void Commands_Register(struct ChatCommand* cmd) {
+	if (!cmds_head) {
+		cmds_head = cmd;
+	} else {
+		cmds_tail->Next = cmd;
 	}
-	commands_list[commands_count++] = *cmd;
+	cmds_tail = cmd;
+	cmd->Next = NULL;
 }
 
 static struct ChatCommand* Commands_GetMatch(const String* cmdName) {
 	struct ChatCommand* cmd;
 	String name;
 	struct ChatCommand* match = NULL;
-	int i;
 
-	for (i = 0; i < commands_count; i++) {
-		cmd  = &commands_list[i];
+	for (cmd = cmds_head; cmd; cmd = cmd->Next) {
 		name = String_FromReadonly(cmd->Name);
 		if (!String_CaselessStarts(&name, cmdName)) continue;
 
@@ -265,13 +259,11 @@ static void Commands_PrintDefault(void) {
 	String str; char strBuffer[STRING_SIZE];
 	String name;
 	struct ChatCommand* cmd;
-	int i;
 
 	Chat_AddRaw("&eList of client commands:");
 	String_InitArray(str, strBuffer);
 
-	for (i = 0; i < commands_count; i++) {
-		cmd  = &commands_list[i];
+	for (cmd = cmds_head; cmd; cmd = cmd->Next) {
 		name = String_FromReadonly(cmd->Name);
 
 		if ((str.length + name.length + 2) > str.capacity) {
@@ -309,7 +301,7 @@ static void Commands_Execute(const String* input) {
 
 	count = String_UNSAFE_Split(&text, ' ', args, Array_Elems(args));
 	cmd   = Commands_GetMatch(&args[0]);
-	if (cmd) cmd->Execute(args, count);
+	if (cmd) cmd->Execute(&args[1], count - 1);
 }
 
 
@@ -320,8 +312,8 @@ static void HelpCommand_Execute(const String* args, int argsCount) {
 	struct ChatCommand* cmd;
 	int i;
 
-	if (argsCount == 1) { Commands_PrintDefault(); return; }
-	cmd = Commands_GetMatch(&args[1]);
+	if (!argsCount) { Commands_PrintDefault(); return; }
+	cmd = Commands_GetMatch(&args[0]);
 	if (!cmd) return;
 
 	for (i = 0; i < Array_Elems(cmd->Help); i++) {
@@ -358,19 +350,19 @@ static struct ChatCommand GpuInfoCommand_Instance = {
 
 static void RenderTypeCommand_Execute(const String* args, int argsCount) {
 	int flags;
-	if (argsCount == 1) {
+	if (!argsCount) {
 		Chat_AddRaw("&e/client: &cYou didn't specify a new render type."); return;
 	}
 
-	flags = Game_CalcRenderType(&args[1]);
+	flags = Game_CalcRenderType(&args[0]);
 	if (flags >= 0) {
 		EnvRenderer_UseLegacyMode( flags & 1);
 		EnvRenderer_UseMinimalMode(flags & 2);
 
-		Options_Set(OPT_RENDER_TYPE, &args[1]);
-		Chat_Add1("&e/client: &fRender type is now %s.", &args[1]);
+		Options_Set(OPT_RENDER_TYPE, &args[0]);
+		Chat_Add1("&e/client: &fRender type is now %s.", &args[0]);
 	} else {
-		Chat_Add1("&e/client: &cUnrecognised render type &f\"%s\"&c.", &args[1]);
+		Chat_Add1("&e/client: &cUnrecognised render type &f\"%s\"&c.", &args[0]);
 	}
 }
 
@@ -387,9 +379,9 @@ static struct ChatCommand RenderTypeCommand_Instance = {
 
 static void ResolutionCommand_Execute(const String* args, int argsCount) {
 	int width, height;
-	if (argsCount < 3) {
+	if (argsCount < 2) {
 		Chat_AddRaw("&e/client: &cYou didn't specify width and height");
-	} else if (!Convert_TryParseInt(&args[1], &width) || !Convert_TryParseInt(&args[2], &height)) {
+	} else if (!Convert_TryParseInt(&args[0], &width) || !Convert_TryParseInt(&args[1], &height)) {
 		Chat_AddRaw("&e/client: &cWidth and height must be integers.");
 	} else if (width <= 0 || height <= 0) {
 		Chat_AddRaw("&e/client: &cWidth and height must be above 0.");
@@ -409,10 +401,10 @@ static struct ChatCommand ResolutionCommand_Instance = {
 };
 
 static void ModelCommand_Execute(const String* args, int argsCount) {
-	if (argsCount == 1) {
-		Chat_AddRaw("&e/client model: &cYou didn't specify a model name.");
+	if (argsCount) {
+		Entity_SetModel(&LocalPlayer_Instance.Base, &args[0]);
 	} else {
-		Entity_SetModel(&LocalPlayer_Instance.Base, &args[1]);
+		Chat_AddRaw("&e/client model: &cYou didn't specify a model name.");
 	}
 }
 
@@ -436,16 +428,16 @@ static String cuboid_msg = String_FromConst("&eCuboid: &fPlace or delete a block
 
 static bool CuboidCommand_ParseBlock(const String* args, int argsCount) {
 	int block;
-	if (argsCount == 1) return true;
-	if (String_CaselessEqualsConst(&args[1], "yes")) { cuboid_persist = true; return true; }
+	if (!argsCount) return true;
+	if (String_CaselessEqualsConst(&args[0], "yes")) { cuboid_persist = true; return true; }
 
-	block = Block_Parse(&args[1]);
+	block = Block_Parse(&args[0]);
 	if (block == -1) {
-		Chat_Add1("&eCuboid: &c\"%s\" is not a valid block name or id.", &args[1]); return false;
+		Chat_Add1("&eCuboid: &c\"%s\" is not a valid block name or id.", &args[0]); return false;
 	}
 
 	if (block >= BLOCK_CPE_COUNT && !Block_IsCustomDefined(block)) {
-		Chat_Add1("&eCuboid: &cThere is no block with id \"%s\".", &args[1]); return false;
+		Chat_Add1("&eCuboid: &cThere is no block with id \"%s\".", &args[0]); return false;
 	}
 
 	cuboid_block = block;
@@ -510,7 +502,7 @@ static void CuboidCommand_Execute(const String* args, int argsCount) {
 	cuboid_persist = false;
 
 	if (!CuboidCommand_ParseBlock(args, argsCount)) return;
-	if (argsCount > 2 && String_CaselessEqualsConst(&args[2], "yes")) {
+	if (argsCount > 1 && String_CaselessEqualsConst(&args[0], "yes")) {
 		cuboid_persist = true;
 	}
 
@@ -539,11 +531,11 @@ static void TeleportCommand_Execute(const String* args, int argsCount) {
 	struct Entity* e = &LocalPlayer_Instance.Base;
 	Vector3 v;
 
-	if (argsCount != 4) {
+	if (argsCount != 3) {
 		Chat_AddRaw("&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
 		return;
 	}
-	if (!Convert_TryParseFloat(&args[1], &v.X) || !Convert_TryParseFloat(&args[2], &v.Y) || !Convert_TryParseFloat(&args[3], &v.Z)) {
+	if (!Convert_TryParseFloat(&args[0], &v.X) || !Convert_TryParseFloat(&args[1], &v.Y) || !Convert_TryParseFloat(&args[2], &v.Z)) {
 		Chat_AddRaw("&e/client teleport: &cCoordinates must be decimals");
 		return;
 	}
@@ -602,7 +594,7 @@ static void Chat_Reset(void) {
 
 static void Chat_Free(void) {
 	Chat_CloseLog();
-	commands_count = 0;
+	cmds_head = NULL;
 
 	if (Chat_LogTimes != Chat_DefaultLogTimes) Mem_Free(Chat_LogTimes);
 	Chat_LogTimes      = Chat_DefaultLogTimes;

@@ -10,7 +10,7 @@ void Atlas2D_UpdateState(Bitmap* bmp) {
 	Atlas2D_TileSize  = bmp->Width  / ATLAS2D_TILES_PER_ROW;
 	Atlas2D_RowsCount = bmp->Height / Atlas2D_TileSize;
 	Atlas2D_RowsCount = min(Atlas2D_RowsCount, ATLAS2D_MAX_ROWS_COUNT);
-	Block_RecalculateSpriteBB();
+	Block_RecalculateAllSpriteBB();
 }
 
 static GfxResourceID Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element) {

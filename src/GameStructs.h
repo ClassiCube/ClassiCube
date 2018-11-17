@@ -27,11 +27,11 @@ CC_NOINLINE void Game_AddComponent(struct IGameComponent* comp);
 /* Represents a task that periodically runs on the main thread every specified interval. */
 struct ScheduledTask;
 struct ScheduledTask {
-	/* How long (in seconds) has elapsed since callback was last invoked. */
+	/* How long (in seconds) has elapsed since callback was last invoked */
 	double Accumulator;
-	/* How long (in seconds) between invocations of the callback. */
+	/* How long (in seconds) between invocations of the callback */
 	double Interval;
-	/* Callback function that is periodically invoked. */
+	/* Callback function that is periodically invoked */
 	void (*Callback)(struct ScheduledTask* task);
 };
 
