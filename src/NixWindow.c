@@ -462,19 +462,21 @@ bool Window_GetPendingEvent(XEvent* e) {
 
 void Window_ProcessEvents(void) {
 	XEvent e;
+	bool wasVisible, wasFocused;
+
 	while (Window_Exists) {
 		if (!Window_GetPendingEvent(&e)) break;
 
 		switch (e.type) {
 		case MapNotify:
 		case UnmapNotify:
-		{
-			bool wasVisible = win_visible;
+			wasVisible  = win_visible;
 			win_visible = e.type == MapNotify;
+
 			if (win_visible != wasVisible) {
 				Event_RaiseVoid(&WindowEvents_VisibilityChanged);
 			}
-		} break;
+			break;
 
 		case ClientMessage:
 			if (!win_isExiting && e.xclient.data.l[0] == wm_destroy) {
@@ -545,16 +547,15 @@ void Window_ProcessEvents(void) {
 
 		case FocusIn:
 		case FocusOut:
-		{
 			/* Don't lose focus when another app grabs key or mouse */
 			if (e.xfocus.mode == NotifyGrab || e.xfocus.mode == NotifyUngrab) break;
-
-			bool wasFocused = Window_Focused;
+			wasFocused     = Window_Focused;
 			Window_Focused = e.type == FocusIn;
+
 			if (Window_Focused != wasFocused) {
 				Event_RaiseVoid(&WindowEvents_FocusChanged);
 			}
-		} break;
+			break;
 
 		case MappingNotify:
 			if (e.xmapping.request == MappingModifier || e.xmapping.request == MappingKeyboard) {

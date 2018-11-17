@@ -834,7 +834,7 @@ static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, i
 		/* Unpack the block and coordinate data */
 		state  = Searcher_States[i];
 		bPos.X = state.X >> 3; bPos.Y = state.Y >> 4; bPos.Z = state.Z >> 3;
-		int block = (state.X & 0x7) | (state.Y & 0xF) << 3 | (state.Z & 0x7) << 7;
+		block  = (state.X & 0x7) | (state.Y & 0xF) << 3 | (state.Z & 0x7) << 7;
 
 		Vector3_Add(&blockBB.Min, &Block_MinBB[block], &bPos);
 		Vector3_Add(&blockBB.Max, &Block_MaxBB[block], &bPos);

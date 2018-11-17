@@ -483,6 +483,7 @@ void TexturePack_ExtractDefault(void) {
 void TexturePack_ExtractCurrent(const String* url) {
 	static String zipExt = String_FromConst(".zip");
 	struct Stream stream;
+	bool zip;
 	ReturnCode res = 0;
 
 	if (!url->length) { TexturePack_ExtractDefault(); return; }
@@ -491,15 +492,13 @@ void TexturePack_ExtractCurrent(const String* url) {
 		/* e.g. 404 errors */
 		if (World_TextureUrl.length) TexturePack_ExtractDefault();
 	} else {
-		if (String_Equals(url, &World_TextureUrl)) {
-		} else {
-			bool zip = String_ContainsString(url, &zipExt);
+		if (!String_Equals(url, &World_TextureUrl)) {
+			zip = String_ContainsString(url, &zipExt);
 			String_Copy(&World_TextureUrl, url);
-			const char* operation = zip ? "extracting" : "decoding";
-			
+
 			res = zip ? TexturePack_ExtractZip(&stream) :
 						TexturePack_ExtractTerrainPng(&stream);		
-			if (res) { Chat_LogError2(res, operation, url); }
+			if (res) Chat_LogError2(res, zip ? "extracting" : "decoding", url);
 		}
 
 		res = stream.Close(&stream);
@@ -508,22 +507,27 @@ void TexturePack_ExtractCurrent(const String* url) {
 }
 
 void TexturePack_Extract_Req(struct AsyncRequest* item) {
-	String url = String_FromRawArray(item->URL);
-	String_Copy(&World_TextureUrl, &url);
-	void* data = item->ResultData;
-	uint32_t len = item->ResultSize;
+	String url, etag;
+	void* data; uint32_t len;
+	struct Stream mem;
+	bool png;
+	ReturnCode res;
 
-	String etag = String_FromRawArray(item->Etag);
+	url  = String_FromRawArray(item->URL);
+	String_Copy(&World_TextureUrl, &url);
+	data = item->ResultData;
+	len  = item->ResultSize;
+
+	etag = String_FromRawArray(item->Etag);
 	TextureCache_Set(&url, data, len);
 	TextureCache_SetETag(&url, &etag);
 	TextureCache_SetLastModified(&url, &item->LastModified);
 
-	struct Stream mem; Stream_ReadonlyMemory(&mem, data, len);
-	bool png = Png_Detect(data, len);
-	ReturnCode res = png ? TexturePack_ExtractTerrainPng(&mem) 
-						: TexturePack_ExtractZip(&mem);
-	const char* operation = png ? "decoding" : "extracting";
+	Stream_ReadonlyMemory(&mem, data, len);
+	png = Png_Detect(data, len);
+	res = png ? TexturePack_ExtractTerrainPng(&mem) 
+			 : TexturePack_ExtractZip(&mem);
 
-	if (res) { Chat_LogError2(res, operation, &url); }
+	if (res) Chat_LogError2(res, png ? "decoding" : "extracting", &url);
 	ASyncRequest_Free(item);
 }

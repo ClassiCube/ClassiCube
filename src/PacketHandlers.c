@@ -108,15 +108,19 @@ static void Handlers_RemoveEndPlus(String* value) {
 }
 
 static void Handlers_AddTablistEntry(EntityID id, const String* playerName, const String* listName, const String* groupName, uint8_t groupRank) {
+	String oldPlayerName, oldListName, oldGroupName;
+	uint8_t oldGroupRank;
+	bool changed;
+
 	/* Only redraw the tab list if something changed. */
 	if (TabList_Valid(id)) {
-		String oldPlayerName = TabList_UNSAFE_GetPlayer(id);
-		String oldListName   = TabList_UNSAFE_GetList(id);
-		String oldGroupName  = TabList_UNSAFE_GetList(id);
-		uint8_t oldGroupRank = TabList_GroupRanks[id];
+		oldPlayerName = TabList_UNSAFE_GetPlayer(id);
+		oldListName   = TabList_UNSAFE_GetList(id);
+		oldGroupName  = TabList_UNSAFE_GetGroup(id);
+		oldGroupRank  = TabList_GroupRanks[id];
 
-		bool changed = !String_Equals(playerName, &oldPlayerName) || !String_Equals(listName, &oldListName) 
-			|| !String_Equals(groupName, &oldGroupName) || groupRank != oldGroupRank;	
+		changed = !String_Equals(playerName, &oldPlayerName) || !String_Equals(listName, &oldListName) 
+			   || !String_Equals(groupName,  &oldGroupName)  || groupRank != oldGroupRank;	
 		if (changed) {
 			TabList_Set(id, playerName, listName, groupName, groupRank);
 			Event_RaiseInt(&TabListEvents_Changed, id);
