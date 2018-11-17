@@ -75,7 +75,7 @@ int Gui_CalcPos(uint8_t anchor, int offset, int size, int axisLen) {
 }
 
 bool Gui_Contains(int recX, int recY, int width, int height, int x, int y) {
-	return x >= recX && y >= recY && x < recX + width && y < recY + height;
+	return x >= recX && y >= recY && x < (recX + width) && y < (recY + height);
 }
 
 static void Gui_FileChanged(void* obj, struct Stream* stream, const String* name) {

@@ -3273,10 +3273,11 @@ static void TexPackOverlay_ContextRecreated(void* screen) {
 		String_FromConst("Do you want to download the server's texture pack?"),
 		String_FromConst("Texture pack url:"),
 		String_FromConst(""),
-		String_FromConst("Download size: Determining..."),
+		String_FromConst(""),
 	};
+	static String defCL = String_FromConst("Download size: Determining...");
 	static String https = String_FromConst("https://");
-	static String http = String_FromConst("http://");
+	static String http  = String_FromConst("http://");
 	String contents; char contentsBuffer[STRING_SIZE];
 
 	float contentLengthMB;
@@ -3296,7 +3297,7 @@ static void TexPackOverlay_ContextRecreated(void* screen) {
 		String_InitArray(contents, contentsBuffer);
 		String_Format1(&contents, "Download size: %f3 MB", &contentLengthMB);
 		lines[3] = contents;
-	}
+	} else { lines[3] = defCL; }
 
 	Overlay_MakeLabels(s, s->Labels, lines);
 	WarningOverlay_MakeButtons((struct MenuScreen*)s, s->Buttons, true,

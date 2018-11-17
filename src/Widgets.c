@@ -119,9 +119,10 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	PackedCol normCol     = PACKEDCOL_CONST(224, 224, 224, 255);
 	PackedCol activeCol   = PACKEDCOL_CONST(255, 255, 160, 255);
 	PackedCol disabledCol = PACKEDCOL_CONST(160, 160, 160, 255);
+	PackedCol col, white  = PACKEDCOL_WHITE;
 	struct ButtonWidget* w = widget;
-	struct Texture back;
-	PackedCol col;
+	struct Texture back;	
+	float scale;
 		
 	back = w->Active ? Button_SelectedTex : Button_ShadowTex;
 	if (w->Disabled) back = Button_DisabledTex;
@@ -135,9 +136,8 @@ static void ButtonWidget_Render(void* widget, double delta) {
 		Texture_Render(&back);
 	} else {
 		/* Split button down the middle */
-		float scale = (w->Width / 400.0f) * 0.5f;
+		scale = (w->Width / 400.0f) * 0.5f;
 		Gfx_BindTexture(back.ID); /* avoid bind twice */
-		PackedCol white = PACKEDCOL_WHITE;
 
 		back.Width = (w->Width / 2);
 		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
@@ -220,16 +220,19 @@ static void ScrollbarWidget_GetScrollbarCoords(struct ScrollbarWidget* w, int* y
 
 static void ScrollbarWidget_Render(void* widget, double delta) {
 	struct ScrollbarWidget* w = widget;
-	int x = w->X, width = w->Width;
+	int x, y, width, height;
+	PackedCol barCol;
+	bool hovered;
+
+	x = w->X; width = w->Width;
 	GfxCommon_Draw2DFlat(x, w->Y, width, w->Height, Scroll_BackCol);
 
-	int y, height;
 	ScrollbarWidget_GetScrollbarCoords(w, &y, &height);
 	x += SCROLL_BORDER; y += w->Y;
 	width -= SCROLL_BORDER * 2; 
 
-	bool hovered = Mouse_Y >= y && Mouse_Y < (y + height) && Mouse_X >= x && Mouse_X < (x + width);
-	PackedCol barCol = hovered ? Scroll_HoverCol : Scroll_BarCol;
+	hovered = Mouse_Y >= y && Mouse_Y < (y + height) && Mouse_X >= x && Mouse_X < (x + width);
+	barCol  = hovered ? Scroll_HoverCol : Scroll_BarCol;
 	GfxCommon_Draw2DFlat(x, y, width, height, barCol);
 
 	if (height < 20) return;
@@ -333,17 +336,17 @@ static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
 static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
 	/* TODO: Should hotbar use its own VB? */
 	VertexP3fT2fC4b vertices[INVENTORY_BLOCKS_PER_HOTBAR * ISOMETRICDRAWER_MAXVERTICES];
+	float width, scale;
+	int i, x, y;
+
 	IsometricDrawer_BeginBatch(vertices, ModelCache_Vb);
+	width =  w->ElemSize + w->BorderSize;
+	scale = (w->ElemSize * 13.5f/16.0f) / 2.0f;
 
-	float width = w->ElemSize + w->BorderSize;
-	int i;
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
-		BlockID block = Inventory_Get(i);
-		int x = (int)(w->X + w->BarXOffset + width * i + w->ElemSize / 2);
-		int y = (int)(w->Y + (w->Height - w->BarHeight / 2));
-
-		float scale = (w->ElemSize * 13.5f / 16.0f) / 2.0f;
-		IsometricDrawer_DrawBatch(block, scale, x, y);
+		x = (int)(w->X + w->BarXOffset + width * i + w->ElemSize / 2);
+		y = (int)(w->Y + (w->Height - w->BarHeight / 2));
+		IsometricDrawer_DrawBatch(Inventory_Get(i), scale, x, y);
 	}
 	IsometricDrawer_EndBatch();
 }
@@ -578,8 +581,7 @@ static void TableWidget_RecreateDescTex(struct TableWidget* w) {
 
 	Gfx_DeleteTexture(&w->DescTex.ID);
 	if (w->SelectedIndex == -1) return;
-	BlockID block = w->Elements[w->SelectedIndex];
-	TableWidget_MakeDescTex(w, block);
+	TableWidget_MakeDescTex(w, w->Elements[w->SelectedIndex]);
 }
 
 void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block) {
@@ -1565,6 +1567,7 @@ void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, co
 *-----------------------------------------------------ChatInputWidget-----------------------------------------------------*
 *#########################################################################################################################*/
 static void ChatInputWidget_RemakeTexture(void* widget) {
+	String line; char lineBuffer[STRING_SIZE + 2];
 	struct InputWidget* w = widget;
 	struct DrawTextArgs args;
 	Size2D size = { 0, 0 };
@@ -1584,9 +1587,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 		Drawer2D_DrawText(&bmp, &args, 0, 0);
 	}
 
-	char lineBuffer[STRING_SIZE + 2];
-	String line = String_FromArray(lineBuffer);
-
+	String_InitArray(line, lineBuffer);
 	for (i = 0; i < Array_Elems(w->Lines); i++) {
 		if (!w->Lines[i].length) break;
 		line.length = 0;
@@ -1964,8 +1965,9 @@ static void PlayerListWidget_DeleteAt(struct PlayerListWidget* w, int i) {
 }
 
 static void PlayerListWidget_AddGroup(struct PlayerListWidget* w, int id, int* index) {
-	String group = TabList_UNSAFE_GetGroup(id);
+	String group;
 	int i;
+	group = TabList_UNSAFE_GetGroup(id);
 
 	for (i = Array_Elems(w->IDs) - 1; i > (*index); i--) {
 		w->IDs[i]      = w->IDs[i - 1];
@@ -1980,11 +1982,11 @@ static void PlayerListWidget_AddGroup(struct PlayerListWidget* w, int id, int* i
 }
 
 static int PlayerListWidget_GetGroupCount(struct PlayerListWidget* w, int id, int i) {
-	String group = TabList_UNSAFE_GetGroup(id);
-	String curGroup;
-	int count = 0;
+	String group, curGroup;
+	int count;
+	group = TabList_UNSAFE_GetGroup(id);
 
-	for (; i < w->NamesCount; i++, count++) {
+	for (count = 0; i < w->NamesCount; i++, count++) {
 		curGroup = TabList_UNSAFE_GetGroup(w->IDs[i]);
 		if (!String_CaselessEquals(&group, &curGroup)) break;
 	}
@@ -2013,9 +2015,10 @@ static int PlayerListWidget_PlayerCompare(int x, int y) {
 }
 
 static int PlayerListWidget_GroupCompare(int x, int y) {
+	String xGroup, yGroup;
 	/* TODO: should we use colourless comparison? ClassicalSharp sorts groups with colours */
-	String xGroup = TabList_UNSAFE_GetGroup(x);
-	String yGroup = TabList_UNSAFE_GetGroup(y);
+	xGroup = TabList_UNSAFE_GetGroup(x);
+	yGroup = TabList_UNSAFE_GetGroup(y);
 	return String_Compare(&xGroup, &yGroup);
 }
 
@@ -2711,7 +2714,7 @@ static void SpecialInputWidget_InitTabs(struct SpecialInputWidget* w) {
 #define SPECIAL_CONTENT_SPACING 5
 static Size2D SpecialInputWidget_MeasureTitles(struct SpecialInputWidget* w) {
 	struct DrawTextArgs args; 
-	Size2D size = Size2D_Empty;
+	Size2D size = { 0, 0 };
 	int i;
 
 	DrawTextArgs_MakeEmpty(&args, &w->Font, false);

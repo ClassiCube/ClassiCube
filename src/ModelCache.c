@@ -1021,14 +1021,15 @@ static void SpiderModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-5,0,-
 #define eighthPi  (MATH_PI / 8.0f)
 
 static void SpiderModel_DrawModel(struct Entity* entity) {
+	float rotX, rotY, rotZ;
 	Model_ApplyTexture(entity);
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &Spider_Head, true);
 	Model_DrawPart(&Spider_Link);
 	Model_DrawPart(&Spider_End);
 
-	float rotX = Math_SinF(entity->Anim.WalkTime)     * entity->Anim.Swing * MATH_PI;
-	float rotZ = Math_CosF(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 16.0f;
-	float rotY = Math_SinF(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 32.0f;
+	rotX = Math_SinF(entity->Anim.WalkTime)     * entity->Anim.Swing * MATH_PI;
+	rotZ = Math_CosF(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 16.0f;
+	rotY = Math_SinF(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 32.0f;
 	Model_Rotation = ROTATE_ORDER_XZY;
 
 	Model_DrawRotate(rotX,  quarterPi  + rotY, eighthPi + rotZ, &Spider_LeftLeg, false);

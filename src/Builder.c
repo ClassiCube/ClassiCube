@@ -492,7 +492,9 @@ void Builder_OnNewMapLoaded(void) {
 *--------------------------------------------------Normal mesh builder----------------------------------------------------*
 *#########################################################################################################################*/
 static PackedCol Normal_LightCol(int x, int y, int z, Face face, BlockID block) {
+	PackedCol invalid = PACKEDCOL_CONST(0, 0, 0, 0);
 	int offset = (Block_LightOffset[block] >> face) & 1;
+
 	switch (face) {
 	case FACE_XMIN:
 		return x < offset                ? Env_SunXSide : Lighting_Col_XSide_Fast(x - offset, y, z);
@@ -507,8 +509,7 @@ static PackedCol Normal_LightCol(int x, int y, int z, Face face, BlockID block) 
 	case FACE_YMAX:
 		return y >= World_MaxY           ? Env_SunCol   : Lighting_Col_YMax_Fast(x, (y + 1) - offset, z);
 	}
-
-	PackedCol invalid = PACKEDCOL_CONST(0, 0, 0, 0); return invalid;
+	return invalid; /* should never happen */
 }
 
 static bool Normal_CanStretch(BlockID initial, int chunkIndex, int x, int y, int z, Face face) {
