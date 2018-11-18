@@ -9,7 +9,7 @@
 /* Whether a colour tinting effect should be applied to all faces. */
 bool Drawer_Tinted;
 /* The colour to multiply colour of faces by (tinting effect). */
-PackedCol Drawer_TintColour;
+PackedCol Drawer_TintCol;
 /* Minimum corner of base block bounding box. (For texture UV) */
 Vector3 Drawer_MinBB;
 /* Maximum corner of base block bounding box. (For texture UV) */

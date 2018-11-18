@@ -287,9 +287,9 @@ static void Commands_Execute(const String* input) {
 	String args[10];
 	struct ChatCommand* cmd;
 
-	if (String_CaselessStarts(&text, &prefixSpace)) { /* /clientcommand args */
+	if (String_CaselessStarts(&text, &prefixSpace)) { /* /client command args */
 		offset = prefixSpace.length;
-	} else if (String_CaselessStarts(&text, &prefix)) { /* /client command args */
+	} else if (String_CaselessStarts(&text, &prefix)) { /* /clientcommand args */
 		offset = prefix.length;
 	} else { /* /command args */
 		offset = 1;

@@ -231,7 +231,7 @@ static void ScrollbarWidget_Render(void* widget, double delta) {
 	x += SCROLL_BORDER; y += w->Y;
 	width -= SCROLL_BORDER * 2; 
 
-	hovered = Mouse_Y >= y && Mouse_Y < (y + height) && Mouse_X >= x && Mouse_X < (x + width);
+	hovered = Gui_Contains(x, y, width, height, Mouse_X, Mouse_Y);
 	barCol  = hovered ? Scroll_HoverCol : Scroll_BarCol;
 	GfxCommon_Draw2DFlat(x, y, width, height, barCol);
 
@@ -319,17 +319,21 @@ void ScrollbarWidget_Create(struct ScrollbarWidget* w) {
 *------------------------------------------------------HotbarWidget-------------------------------------------------------*
 *#########################################################################################################################*/
 static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
-	GfxResourceID tex = Game_UseClassicGui ? Gui_GuiClassicTex : Gui_GuiTex;
+	PackedCol white = PACKEDCOL_WHITE;
+	GfxResourceID tex;
+	float width;
+	int i, x;
+	
+	tex = Game_UseClassicGui ? Gui_GuiClassicTex : Gui_GuiTex;
 	w->BackTex.ID = tex;
 	Texture_Render(&w->BackTex);
 
-	int i       = Inventory_SelectedIndex;
-	float width = w->ElemSize + w->BorderSize;
-	int x = (int)(w->X + w->BarXOffset + width * i + w->ElemSize / 2);
+	i     = Inventory_SelectedIndex;
+	width = w->ElemSize + w->BorderSize;
+	x     = (int)(w->X + w->BarXOffset + width * i + w->ElemSize / 2);
 
 	w->SelTex.ID = tex;
-	w->SelTex.X = (int)(x - w->SelBlockSize / 2);
-	PackedCol white = PACKEDCOL_WHITE;
+	w->SelTex.X  = (int)(x - w->SelBlockSize / 2);
 	GfxCommon_Draw2DTexture(&w->SelTex, white);
 }
 
@@ -775,22 +779,22 @@ static bool TableWidget_MouseScroll(void* widget, float delta) {
 
 static bool TableWidget_MouseMove(void* widget, int x, int y) {
 	struct TableWidget* w = widget;
-	if (Elem_HandlesMouseMove(&w->Scroll, x, y)) return true;
+	int cellSize, maxHeight;
+	int i, cellX, cellY;
 
+	if (Elem_HandlesMouseMove(&w->Scroll, x, y)) return true;
 	if (w->LastX == x && w->LastY == y) return true;
 	w->LastX = x; w->LastY = y;
 
 	w->SelectedIndex = -1;
-	int blockSize = w->BlockSize;
-	int maxHeight = blockSize * TABLE_MAX_ROWS_DISPLAYED;
+	cellSize  = w->BlockSize;
+	maxHeight = cellSize * TABLE_MAX_ROWS_DISPLAYED;
 
 	if (Gui_Contains(w->X, w->Y + 3, w->Width, maxHeight - 3 * 2, x, y)) {
-		int i;
 		for (i = 0; i < w->ElementsCount; i++) {
-			int cellX, cellY;
 			TableWidget_GetCoords(w, i, &cellX, &cellY);
 
-			if (Gui_Contains(cellX, cellY, blockSize, blockSize, x, y)) {
+			if (Gui_Contains(cellX, cellY, cellSize, cellSize, x, y)) {
 				w->SelectedIndex = i;
 				break;
 			}

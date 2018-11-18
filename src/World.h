@@ -32,7 +32,7 @@ CC_EXPORT void World_SetNewMap(BlockRaw* blocks, int blocksSize, int width, int 
 
 #ifdef EXTENDED_BLOCKS
 extern int Block_IDMask;
-static inline BlockID World_GetBlock(int x, int y, int z) {
+static CC_INLINE BlockID World_GetBlock(int x, int y, int z) {
 	int i = World_Pack(x, y, z);
 	return (BlockID)((World_Blocks[i] | (World_Blocks2[i] << 8)) & Block_IDMask);
 }

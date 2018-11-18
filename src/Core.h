@@ -19,6 +19,7 @@ typedef signed __int16 int16_t;
 typedef signed __int32 int32_t;
 typedef signed __int64 int64_t;
 
+#define CC_INLINE inline
 #define CC_NOINLINE __declspec(noinline)
 #define CC_ALIGN_HINT(x) /* TODO: Why does this cause LNK2005 errors */
 #ifndef CC_EXPORT
@@ -26,6 +27,7 @@ typedef signed __int64 int64_t;
 #endif
 #elif __GNUC__
 #include <stdint.h>
+#define CC_INLINE inline
 #define CC_NOINLINE __attribute__((noinline))
 #define CC_ALIGN_HINT(x) __attribute__((aligned(x)))
 #ifndef CC_EXPORT

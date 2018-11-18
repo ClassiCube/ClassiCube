@@ -34,8 +34,8 @@ struct Model {
 	uint8_t armX, armY; /* these translate arm model part back to (0, 0) */
 
 	bool initalised;
-	/* Whether the entity should be slightly bobbed up and down when rendering.
-	e.g. for players when their legs are at the peak of their swing, the whole model will be moved slightly down. */
+	/* Whether the model should be slightly bobbed up and down when rendering */
+	/* e.g. for HumanoidModel, when legs are at the peak of their swing, whole model is moved slightly down */
 	bool Bobbing;
 	bool UsesSkin, CalcHumanAnims, UsesHumanSkin, Pushes;
 
@@ -46,9 +46,11 @@ struct Model {
 	void (*GetPickingBounds)(struct AABB* bb);
 	void (*CreateParts)(void);
 	void (*DrawModel)(struct Entity* entity);
+	/* Returns the transformation matrix applied to the model when rendering */
+	/* NOTE: Most models just use Entity_GetTransform (except SittingModel) */
 	void (*GetTransform)(struct Entity* entity, Vector3 pos, struct Matrix* m);
-	/* Recalculates properties such as name Y offset, collision size. 
-	Not used by majority of models. (BlockModel is the exception).*/
+	/* Recalculates properties such as name Y offset, collision size */
+	/* NOTE: Not needed for most models (except BlockModel) */
 	void (*RecalcProperties)(struct Entity* entity);
 	void (*DrawArm)(struct Entity* entity);
 
@@ -56,6 +58,8 @@ struct Model {
 };
 
 PackedCol Model_Cols[FACE_COUNT];
+/* U/V scale applied to the skin when rendering the model. */
+/* Default uScale is 1/32, vScale is 1/32 or 1/64 depending on skin. */
 float Model_uScale, Model_vScale;
 /* Angle of offset of head to body rotation */
 float Model_cosHead, Model_sinHead;

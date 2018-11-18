@@ -61,7 +61,7 @@ static int Builder1DPart_VerticesCount(struct Builder1DPart* part) {
 
 static void Builder1DPart_CalcOffsets(struct Builder1DPart* part, int* offset) {
 	int pos = *offset, i;
-	part->sOffset = pos;
+	part->sOffset  = pos;
 	part->sAdvance = part->sCount >> 2;
 
 	pos += part->sCount;
@@ -576,14 +576,23 @@ static int NormalBuilder_StretchZ(int countIndex, int x, int y, int z, int chunk
 	return count;
 }
 
-static void NormalBuilder_RenderBlock(int index) {
-	TextureLoc texLoc;	
-	struct Builder1DPart* part;
-	PackedCol col;
-
+static void NormalBuilder_RenderBlock(int index) {	
+	/* counters */
 	int count_XMin, count_XMax, count_ZMin;
 	int count_ZMax, count_YMin, count_YMax;
-	int offset, count;
+	int count;
+
+	/* block state */
+	PackedCol white = PACKEDCOL_WHITE;
+	Vector3 min, max;
+	int baseOffset, lightFlags;
+	bool fullBright;
+
+	/* per-face state */
+	struct Builder1DPart* part;
+	TextureLoc loc;
+	PackedCol col;
+	int offset;
 
 	if (Block_Draw[Builder_Block] == DRAW_SPRITE) {
 		Builder_FullBright = Block_FullBright[Builder_Block];
@@ -601,80 +610,79 @@ static void NormalBuilder_RenderBlock(int index) {
 	count_YMin = Builder_Counts[index + FACE_YMIN];
 	count_YMax = Builder_Counts[index + FACE_YMAX];
 
-	if (count_XMin == 0 && count_XMax == 0 && count_ZMin == 0 &&
-		count_ZMax == 0 && count_YMin == 0 && count_YMax == 0) return;
+	if (!count_XMin && !count_XMax && !count_ZMin &&
+		!count_ZMax && !count_YMin && !count_YMax) return;
 
-	bool fullBright = Block_FullBright[Builder_Block];
-	int baseOffset  = (Block_Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
-	int lightFlags  = Block_LightOffset[Builder_Block];
+	fullBright = Block_FullBright[Builder_Block];
+	baseOffset = (Block_Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
+	lightFlags = Block_LightOffset[Builder_Block];
 
 	Drawer_MinBB = Block_MinBB[Builder_Block]; Drawer_MinBB.Y = 1.0f - Drawer_MinBB.Y;
 	Drawer_MaxBB = Block_MaxBB[Builder_Block]; Drawer_MaxBB.Y = 1.0f - Drawer_MaxBB.Y;
 
-	Vector3 min = Block_RenderMinBB[Builder_Block], max = Block_RenderMaxBB[Builder_Block];
+	min = Block_RenderMinBB[Builder_Block]; max = Block_RenderMaxBB[Builder_Block];
 	Drawer_X1 = Builder_X + min.X; Drawer_Y1 = Builder_Y + min.Y; Drawer_Z1 = Builder_Z + min.Z;
 	Drawer_X2 = Builder_X + max.X; Drawer_Y2 = Builder_Y + max.Y; Drawer_Z2 = Builder_Z + max.Z;
 
-	Drawer_Tinted     = Block_Tinted[Builder_Block];
-	Drawer_TintColour = Block_FogCol[Builder_Block];
-	PackedCol white = PACKEDCOL_WHITE;
+	Drawer_Tinted  = Block_Tinted[Builder_Block];
+	Drawer_TintCol = Block_FogCol[Builder_Block];
 
 	if (count_XMin) {
-		texLoc = Block_GetTex(Builder_Block, FACE_XMIN);
+		loc    = Block_GetTex(Builder_Block, FACE_XMIN);
 		offset = (lightFlags >> FACE_XMIN) & 1;
-		part   = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
+		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? white :
 			Builder_X >= offset ? Lighting_Col_XSide_Fast(Builder_X - offset, Builder_Y, Builder_Z) : Env_SunXSide;
-		Drawer_XMin(count_XMin, col, texLoc, &part->fVertices[FACE_XMIN]);
+		Drawer_XMin(count_XMin, col, loc, &part->fVertices[FACE_XMIN]);
 	}
 
 	if (count_XMax) {
-		texLoc = Block_GetTex(Builder_Block, FACE_XMAX);
+		loc    = Block_GetTex(Builder_Block, FACE_XMAX);
 		offset = (lightFlags >> FACE_XMAX) & 1;
-		part   = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
+		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? white :
 			Builder_X <= (World_MaxX - offset) ? Lighting_Col_XSide_Fast(Builder_X + offset, Builder_Y, Builder_Z) : Env_SunXSide;
-		Drawer_XMax(count_XMax, col, texLoc, &part->fVertices[FACE_XMAX]);
+		Drawer_XMax(count_XMax, col, loc, &part->fVertices[FACE_XMAX]);
 	}
 
 	if (count_ZMin) {
-		texLoc = Block_GetTex(Builder_Block, FACE_ZMIN);
+		loc    = Block_GetTex(Builder_Block, FACE_ZMIN);
 		offset = (lightFlags >> FACE_ZMIN) & 1;
-		part   = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
+		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? white :
 			Builder_Z >= offset ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z - offset) : Env_SunZSide;
-		Drawer_ZMin(count_ZMin, col, texLoc, &part->fVertices[FACE_ZMIN]);
+		Drawer_ZMin(count_ZMin, col, loc, &part->fVertices[FACE_ZMIN]);
 	}
 
 	if (count_ZMax) {
-		texLoc = Block_GetTex(Builder_Block, FACE_ZMAX);
+		loc    = Block_GetTex(Builder_Block, FACE_ZMAX);
 		offset = (lightFlags >> FACE_ZMAX) & 1;
-		part   = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
+		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? white :
 			Builder_Z <= (World_MaxZ - offset) ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z + offset) : Env_SunZSide;
-		Drawer_ZMax(count_ZMax, col, texLoc, &part->fVertices[FACE_ZMAX]);
+		Drawer_ZMax(count_ZMax, col, loc, &part->fVertices[FACE_ZMAX]);
 	}
 
 	if (count_YMin) {
-		texLoc = Block_GetTex(Builder_Block, FACE_YMIN);
+		loc    = Block_GetTex(Builder_Block, FACE_YMIN);
 		offset = (lightFlags >> FACE_YMIN) & 1;
-		part   = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
+		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? white : Lighting_Col_YMin_Fast(Builder_X, Builder_Y - offset, Builder_Z);
-		Drawer_YMin(count_YMin, col, texLoc, &part->fVertices[FACE_YMIN]);
+		Drawer_YMin(count_YMin, col, loc, &part->fVertices[FACE_YMIN]);
 	}
 
 	if (count_YMax) {
-		texLoc = Block_GetTex(Builder_Block, FACE_YMAX);
+		loc    = Block_GetTex(Builder_Block, FACE_YMAX);
 		offset = (lightFlags >> FACE_YMAX) & 1;
-		part   = &Builder_Parts[baseOffset + Atlas1D_Index(texLoc)];
+		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? white : Lighting_Col_YMax_Fast(Builder_X, (Builder_Y + 1) - offset, Builder_Z);
-		Drawer_YMax(count_YMax, col, texLoc, &part->fVertices[FACE_YMAX]);
+		Drawer_YMax(count_YMax, col, loc, &part->fVertices[FACE_YMAX]);
 	}
 }
 
@@ -1142,8 +1150,8 @@ static void Adv_RenderBlock(int index) {
 	count_YMin = Builder_Counts[index + FACE_YMIN];
 	count_YMax = Builder_Counts[index + FACE_YMAX];
 
-	if (count_XMin == 0 && count_XMax == 0 && count_ZMin == 0 &&
-		count_ZMax == 0 && count_YMin == 0 && count_YMax == 0) return;
+	if (!count_XMin && !count_XMax && !count_ZMin &&
+		!count_ZMax && !count_YMin && !count_YMax) return;
 
 	Builder_FullBright = Block_FullBright[Builder_Block];
 	adv_baseOffset = (Block_Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;

@@ -27,19 +27,26 @@ typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
 
 BitmapCol BitmapCol_Scale(BitmapCol value, float t);
 void Bitmap_Create(Bitmap* bmp, int width, int height, uint8_t* scan0);
+/* Copies a rectangle of pixels from one bitmap to another. */
+/* NOTE: If src and dst are the same, src and dst rectangles MUST NOT overlap. */
 void Bitmap_CopyBlock(int srcX, int srcY, int dstX, int dstY, Bitmap* src, Bitmap* dst, int size);
-/* Allocates a new bitmap of the given dimensions. You are responsible for freeing its memory! */
+/* Allocates a new bitmap of the given dimensions. */
+/* NOTE: You are responsible for freeing its memory! */
 void Bitmap_Allocate(Bitmap* bmp, int width, int height);
-/* Allocates a power-of-2 sized bitmap larger or equal to to the given size, and clears it to 0. You are responsible for freeing its memory! */
+/* Allocates a power-of-2 sized bitmap equal to or greater than the given size, and clears it to 0. */
+/* NOTE: You are responsible for freeing its memory! */
 void Bitmap_AllocateClearedPow2(Bitmap* bmp, int width, int height);
 
+/* Whether data starts with PNG format signature/identifier. */
 bool Png_Detect(const uint8_t* data, uint32_t len);
 typedef int (*Png_RowSelector)(Bitmap* bmp, int row);
 /*
-  Partially based off information from
+  Decodes a bitmap in PNG format. Partially based off information from
      https://handmade.network/forums/wip/t/2363-implementing_a_basic_png_reader_the_handmade_way
      https://github.com/nothings/stb/blob/master/stb_image.h
 */
 ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream);
+/* Encodes a bitmap in PNG format. */
+/* NOTE: Always saves as RGB, alpha channel is discarded. */
 ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow);
 #endif
