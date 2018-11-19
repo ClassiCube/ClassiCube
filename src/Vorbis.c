@@ -894,8 +894,12 @@ static uint32_t Vorbis_ReverseBits(uint32_t v) {
 }
 
 void imdct_init(struct imdct_state* state, int n) {
-	int k, k2, n4 = n >> 2, n8 = n >> 3, log2_n = Math_Log2(n);
+	int k, k2, n4 = n >> 2, n8 = n >> 3, log2_n;
 	float *A = state->A, *B = state->B, *C = state->C;
+	uint32_t* reversed;
+
+	log2_n   = Math_Log2(n);
+	reversed = state->Reversed;
 	state->n = n; state->log2_n = log2_n;
 
 	/* setup twiddle factors */
@@ -910,7 +914,6 @@ void imdct_init(struct imdct_state* state, int n) {
 		C[k2+1] = -(float)Math_Sin(((k2+1) * (2*PI)) / n);
 	}
 
-	uint32_t* reversed = state->Reversed;
 	for (k = 0; k < n8; k++) {
 		reversed[k] = Vorbis_ReverseBits(k) >> (32-log2_n+3);
 	}

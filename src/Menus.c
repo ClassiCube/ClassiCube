@@ -2716,10 +2716,11 @@ struct Screen* HacksSettingsScreen_MakeInstance(void) {
 		"&ethe block to be placed, and you to be moved out of the way.|" \
 		"&fThis is mainly useful for quick pillaring/towering.";
 	descs[8] = "&eIf &fOFF&e, you will immediately stop when in noclip|&emode and no movement keys are held down.";
-	
-	/* TODO: Is this needed because user may not always use . for decimal point? */
+
 	static char jumpHeightBuffer[STRING_INT_CHARS];
-	String jumpHeight = String_ClearedArray(jumpHeightBuffer);
+	String jumpHeight;
+	/* TODO: Is this needed because user may not always use . for decimal point? */	
+	jumpHeight = String_ClearedArray(jumpHeightBuffer);
 	String_AppendFloat(&jumpHeight, 1.233f, 3);
 
 	validators[1]    = MenuInputValidator_Float(0.10f, 50.00f);

@@ -182,7 +182,7 @@ static BitmapCol GfxCommon_Average(BitmapCol p1, BitmapCol p2) {
 
 	/* Convert RGB to pre-multiplied form */
 	b1 = p1.B * a1; g1 = p1.G * a1; r1 = p1.R * a1;
-	b2 = p1.B * a2; g2 = p2.G * a2; r2 = p2.R * a2;
+	b2 = p2.B * a2; g2 = p2.G * a2; r2 = p2.R * a2;
 
 	/* https://stackoverflow.com/a/347376
 	   We need to convert RGB back from the pre-multiplied average into normal form

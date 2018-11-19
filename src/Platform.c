@@ -993,15 +993,17 @@ static void Font_DirCallback(const String* path, void* obj) {
 Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
 	FT_Face face = args->Font.Handle;
 	String text  = args->Text;
-	Size2D s = { 0, face->size->metrics.height };
+	Size2D s = { 0, 0 };
+	Codepoint cp;
 	int i;
 
 	for (i = 0; i < text.length; i++) {
-		Codepoint cp = Convert_CP437ToUnicode(text.buffer[i]);
+		cp = Convert_CP437ToUnicode(text.buffer[i]);
 		FT_Load_Char(face, cp, 0); /* TODO: Check error */
 		s.Width += face->glyph->advance.x;
 	}
 
+	s.Height = face->size->metrics.height;
 	s.Width  = TEXT_CEIL(s.Width);
 	s.Height = TEXT_CEIL(s.Height);
 	return s;
@@ -1010,30 +1012,43 @@ Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
 Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col) {
 	FT_Face face = args->Font.Handle;
 	String text = args->Text;
-	Size2D s = { x, TEXT_CEIL(face->size->metrics.height) };
-	int i, descender = TEXT_CEIL(face->size->metrics.descender);
+	Size2D s = { 0, 0 };
+	int descender, begX = x;
+
+	/* glyph state */
+	int i, xx, yy, offset;
+	Codepoint cp;
+	FT_Bitmap* img;
+
+	/* glyph drawing state */
+	uint8_t* src;
+	BitmapCol* dst;
+	uint8_t intensity, invIntensity;
+
+	s.Height  = TEXT_CEIL(face->size->metrics.height);
+	descender = TEXT_CEIL(face->size->metrics.descender);
 
 	for (i = 0; i < text.length; i++) {
-		Codepoint cp = Convert_CP437ToUnicode(text.buffer[i]);
+		cp = Convert_CP437ToUnicode(text.buffer[i]);
 		FT_Load_Char(face, cp, FT_LOAD_RENDER); /* TODO: Check error */
 
-		FT_Bitmap* img = &face->glyph->bitmap;
-		int xx, yy, offset = s.Height + descender - face->glyph->bitmap_top;
+		img    = &face->glyph->bitmap;
+		offset = (s.Height + descender) - face->glyph->bitmap_top;
 		x += face->glyph->bitmap_left; y += offset;
 
 		for (yy = 0; yy < img->rows; yy++) {
 			if ((y + yy) < 0 || (y + yy) >= bmp->Height) continue;
-			uint8_t* src   = img->buffer + (yy * img->width);
-			BitmapCol* dst = Bitmap_GetRow(bmp, y + yy) + x;
+			src = img->buffer + (yy * img->width);
+			dst = Bitmap_GetRow(bmp, y + yy) + x;
 
 			for (xx = 0; xx < img->width; xx++) {
 				if ((x + xx) < 0 || (x + xx) >= bmp->Width) continue;
+				intensity = *src; invIntensity = UInt8_MaxValue - intensity;
 
-				uint8_t intensity = *src, invIntensity = UInt8_MaxValue - intensity;
 				dst->B = ((col.B * intensity) >> 8) + ((dst->B * invIntensity) >> 8);
 				dst->G = ((col.G * intensity) >> 8) + ((dst->G * invIntensity) >> 8);
 				dst->R = ((col.R * intensity) >> 8) + ((dst->R * invIntensity) >> 8);
-				//dst[3] = ((col.A * intensity) >> 8) + ((dst->A * invIntensity) >> 8);
+				/*dst->A = ((col.A * intensity) >> 8) + ((dst->A * invIntensity) >> 8);*/
 				dst->A = intensity + ((dst->A * invIntensity) >> 8);
 				src++; dst++;
 			}
@@ -1043,7 +1058,6 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, B
 		x -= face->glyph->bitmap_left; y -= offset;
 	}
 
-	int begX = s.Width;
 	if (args->Font.Style == FONT_STYLE_UNDERLINE) {
 		int ul_pos   = FT_MulFix(face->underline_position,  face->size->metrics.y_scale);
 		int ul_thick = FT_MulFix(face->underline_thickness, face->size->metrics.y_scale);
@@ -1052,6 +1066,7 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, B
 		int ulY      = s.Height + TEXT_CEIL(ul_pos);
 		Drawer2D_Underline(bmp, begX, ulY + y, x - begX, ulHeight, col);
 	}
+
 	s.Width = x - begX; return s;
 }
 
@@ -1486,16 +1501,17 @@ void Audio_Init(AudioHandle* handle, int buffers) {
 }
 
 ReturnCode Audio_Free(AudioHandle handle) {
-	struct AudioContext* ctx = &Audio_Contexts[handle];
+	struct AudioFormat fmt = { 0 };
+	struct AudioContext* ctx;
 	ReturnCode res;
+	ctx = &Audio_Contexts[handle];
+
 	if (!ctx->Count) return 0;
+	ctx->Count  = 0;
+	ctx->Format = fmt;
 
 	res = waveOutClose(ctx->Handle);
 	ctx->Handle = NULL;
-	ctx->Count  = 0;
-
-	struct AudioFormat fmt = { 0 };
-	ctx->Format = fmt;
 	return res;
 }
 
@@ -1652,12 +1668,13 @@ void Audio_Init(AudioHandle* handle, int buffers) {
 }
 
 ReturnCode Audio_Free(AudioHandle handle) {
-	struct AudioContext* ctx = &Audio_Contexts[handle];
-	ALenum err;
-	if (!ctx->Count) return 0;
-
-	ctx->Count  = 0;
 	struct AudioFormat fmt = { 0 };
+	struct AudioContext* ctx;
+	ALenum err;
+	ctx = &Audio_Contexts[handle];
+
+	if (!ctx->Count) return 0;
+	ctx->Count  = 0;
 	ctx->Format = fmt;
 
 	err = Audio_FreeSource(ctx);

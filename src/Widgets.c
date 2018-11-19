@@ -551,13 +551,13 @@ static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 
 static void TableWidget_MakeBlockDesc(String* desc, BlockID block) {
 	String name;
+	int block_ = block;
 	if (Game_PureClassic) { String_AppendConst(desc, "Select block"); return; }
 
 	name = Block_UNSAFE_GetName(block);
 	String_AppendString(desc, &name);
 	if (Game_ClassicMode) return;
 
-	int block_ = block;
 	String_Format1(desc, " (ID %i&f", &block_);
 	if (!Block_CanPlace[block])  { String_AppendConst(desc,  ", place &cNo&f"); }
 	if (!Block_CanDelete[block]) { String_AppendConst(desc, ", delete &cNo&f"); }
@@ -1621,22 +1621,22 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 }
 
 static void ChatInputWidget_Render(void* widget, double delta) {
+	PackedCol backCol = PACKEDCOL_CONST(0, 0, 0, 127);
 	struct InputWidget* w = widget;
-	Gfx_SetTexturing(false);
 	int x = w->X, y = w->Y;
+	bool caretAtEnd;
+	int i, width;
 
-	int i;
+	Gfx_SetTexturing(false);
 	for (i = 0; i < INPUTWIDGET_MAX_LINES; i++) {
-		if (i > 0 && w->LineSizes[i].Height == 0) break;
-		bool caretAtEnd = (w->CaretY == i) && (w->CaretX == INPUTWIDGET_LEN || w->CaretPos == -1);
-		int drawWidth = w->LineSizes[i].Width + (caretAtEnd ? w->CaretTex.Width : 0);
-		/* Cover whole window width to match original classic behaviour */
-		if (Game_PureClassic) {
-			drawWidth = max(drawWidth, Game_Width - x * 4);
-		}
+		if (i > 0 && !w->LineSizes[i].Height) break;
 
-		PackedCol backCol = PACKEDCOL_CONST(0, 0, 0, 127);
-		GfxCommon_Draw2DFlat(x, y, drawWidth + w->Padding * 2, w->PrefixHeight, backCol);
+		caretAtEnd = (w->CaretY == i) && (w->CaretX == INPUTWIDGET_LEN || w->CaretPos == -1);
+		width      = w->LineSizes[i].Width + (caretAtEnd ? w->CaretTex.Width : 0);
+		/* Cover whole window width to match original classic behaviour */
+		if (Game_PureClassic) { width = max(width, Game_Width - x * 4); }
+	
+		GfxCommon_Draw2DFlat(x, y, width + w->Padding * 2, w->PrefixHeight, backCol);
 		y += w->LineSizes[i].Height;
 	}
 

@@ -22,14 +22,19 @@ static RNGState rnd;
 static bool particle_hitTerrain;
 
 void Particle_DoRender(Vector2* size, Vector3* pos, TextureRec* rec, PackedCol col, VertexP3fT2fC4b* vertices) {
-	float sX = size->X * 0.5f, sY = size->Y * 0.5f;
-	Vector3 centre = *pos; centre.Y += sY;
-
-	struct Matrix* view = &Gfx_View;
+	struct Matrix* view;
+	VertexP3fT2fC4b v;
+	float sX, sY;
+	Vector3 centre;
 	float aX, aY, aZ, bX, bY, bZ;
+
+	sX = size->X * 0.5f; sY = size->Y * 0.5f;
+	centre = *pos; centre.Y += sY;
+	view   = &Gfx_View;
+	
 	aX = view->Row0.X * sX; aY = view->Row1.X * sX; aZ = view->Row2.X * sX; /* right * size.X * 0.5f */
 	bX = view->Row0.Y * sY; bY = view->Row1.Y * sY; bZ = view->Row2.Y * sY; /* up    * size.Y * 0.5f */
-	VertexP3fT2fC4b v; v.Col = col;
+	v.Col = col;
 
 	v.X = centre.X - aX - bX; v.Y = centre.Y - aY - bY; v.Z = centre.Z - aZ - bZ;
 	v.U = rec->U1; v.V = rec->V2; vertices[0] = v;
