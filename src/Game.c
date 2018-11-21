@@ -184,6 +184,8 @@ void Game_Disconnect(const String* title, const String* reason) {
 }
 
 void Game_UpdateBlock(int x, int y, int z, BlockID block) {
+	struct ChunkInfo* chunk;
+	int cx = x >> 4, cy = y >> 4, cz = z >> 4;
 	BlockID oldBlock = World_GetBlock(x, y, z);
 	World_SetBlock(x, y, z, block);
 
@@ -193,8 +195,7 @@ void Game_UpdateBlock(int x, int y, int z, BlockID block) {
 	Lighting_OnBlockChanged(x, y, z, oldBlock, block);
 
 	/* Refresh the chunk the block was located in. */
-	int cx = x >> 4, cy = y >> 4, cz = z >> 4;
-	struct ChunkInfo* chunk = MapRenderer_GetChunk(cx, cy, cz);
+	chunk = MapRenderer_GetChunk(cx, cy, cz);
 	chunk->AllAir &= Block_Draw[block] == DRAW_GAS;
 	MapRenderer_RefreshChunk(cx, cy, cz);
 }

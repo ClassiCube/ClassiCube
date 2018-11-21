@@ -52,9 +52,9 @@ static void HeldBlockRenderer_RenderModel(void) {
 
 static void HeldBlockRenderer_SetMatrix(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vector3 eye = { 0, Entity_GetEyeHeight(p), 0 };
-
 	struct Matrix m, lookAt;
+	Vector3 eye = { 0,0,0 }; eye.Y = Entity_GetEyeHeight(p);
+
 	Matrix_Translate(&lookAt, -eye.X, -eye.Y, -eye.Z);
 	Matrix_Mul(&m, &lookAt, &Camera_TiltM);
 	Gfx_View = m;
@@ -63,7 +63,7 @@ static void HeldBlockRenderer_SetMatrix(void) {
 static void HeldBlockRenderer_ResetHeldState(void) {
 	/* Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!) */
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vector3 eye = { 0, Entity_GetEyeHeight(p), 0 };
+	Vector3 eye = { 0,0,0 }; eye.Y = Entity_GetEyeHeight(p);
 	held_entity.Position = eye;
 
 	held_entity.Position.X -= Camera_BobbingHor;

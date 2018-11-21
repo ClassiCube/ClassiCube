@@ -330,7 +330,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override bool HandlesMouseScroll(float delta) {
 			int startScrollY = scroll.ScrollY;
-			bool bounds = Contains(TableX - scroll.Width, TableY, TableWidth + scroll.Width,
+			bool bounds = Contains(TableX, TableY, TableWidth + scroll.Width,
 			                       TableHeight, Mouse.X, Mouse.Y);
 			if (!bounds) return false;
 			

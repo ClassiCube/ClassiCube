@@ -17,7 +17,6 @@ namespace OpenTK.Platform.X11 {
 	internal sealed class X11GLContext : IGraphicsContext {
 		#if !USE_DX
 		X11Window cur;
-		bool vsync_supported;
 
 		public X11GLContext(GraphicsMode mode, X11Window window) {
 			Debug.Print("Creating X11GLContext context: ");
@@ -44,8 +43,7 @@ namespace OpenTK.Platform.X11 {
 			if (!Glx.glXMakeCurrent(API.DefaultDisplay, window.WinHandle, ContextHandle))
 				throw new GraphicsContextException("Failed to make context current.");
 			
-			Glx.LoadEntryPoints();
-			vsync_supported = Glx.glXSwapIntervalSGI != null;
+			Glx.LoadEntryPoints(display, API.DefaultScreen);
 		}
 
 		public override void SwapBuffers() {
@@ -54,8 +52,13 @@ namespace OpenTK.Platform.X11 {
 
 		public override bool VSync {
 			set {
-				if (!vsync_supported) return;
-				int result = Glx.glXSwapIntervalSGI(value ? 1 : 0);
+				int result = 0;
+				if (Glx.glXSwapIntervalMESA != null) {
+					result = Glx.glXSwapIntervalMESA(value ? 1 : 0);
+				} else if (Glx.glXSwapIntervalSGI != null) {
+					result = Glx.glXSwapIntervalSGI(value ? 1 : 0);
+				}
+				
 				if (result != 0) Debug.Print("VSync = {0} failed, error {1}.", value, result);
 			}
 		}

@@ -22,17 +22,25 @@ namespace OpenTK.Platform.X11 {
 	}
 
 	[SuppressUnmanagedCodeSecurity]
-	internal static class Glx {
+	internal unsafe static class Glx {
 		
 		internal static IntPtr GetAddress(string funcname) {
 			return glXGetProcAddress(funcname);
 		}
 		
-		internal static void LoadEntryPoints() {
-			IntPtr address = GetAddress("glXSwapIntervalSGI");
-			if (address != IntPtr.Zero) {
-				glXSwapIntervalSGI = (SwapIntervalSGI)Marshal.GetDelegateForFunctionPointer(
-					address, typeof(SwapIntervalSGI));
+		internal static void LoadEntryPoints(IntPtr dpy, int screen) {
+			string exts = new string(glXQueryExtensionsString(dpy, screen));
+			
+			IntPtr sgiAddr = GetAddress("glXSwapIntervalSGI");
+			if (sgiAddr != IntPtr.Zero && exts.Contains("GLX_SGI_swap_control")) {
+				glXSwapIntervalSGI = (SwapIntervalFunc)Marshal.GetDelegateForFunctionPointer(
+					sgiAddr, typeof(SwapIntervalFunc));
+			}
+			
+			IntPtr mesaAddr = GetAddress("glXSwapIntervalMESA");
+			if (mesaAddr != IntPtr.Zero && exts.Contains("GLX_MESA_swap_control")) {
+				glXSwapIntervalMESA = (SwapIntervalFunc)Marshal.GetDelegateForFunctionPointer(
+					mesaAddr, typeof(SwapIntervalFunc));
 			}
 		}
 
@@ -41,6 +49,8 @@ namespace OpenTK.Platform.X11 {
 		public static extern bool glXIsDirect(IntPtr dpy, IntPtr context);
 		[DllImport(lib)]
 		public extern static bool glXQueryVersion(IntPtr dpy, ref int major, ref int minor);
+		[DllImport(lib)]
+		public extern static sbyte* glXQueryExtensionsString(IntPtr dpy, int screen);
 
 		[DllImport(lib)]
 		public static extern IntPtr glXCreateContext(IntPtr dpy, ref XVisualInfo vis, IntPtr shareList, bool direct);	
@@ -67,7 +77,8 @@ namespace OpenTK.Platform.X11 {
 		public unsafe extern static IntPtr glXGetVisualFromFBConfig(IntPtr dpy, IntPtr fbconfig);
 
 		[SuppressUnmanagedCodeSecurity]
-		public delegate int SwapIntervalSGI(int interval);
-		public static SwapIntervalSGI glXSwapIntervalSGI;
+		public delegate int SwapIntervalFunc(int interval);
+		public static SwapIntervalFunc glXSwapIntervalSGI;
+		public static SwapIntervalFunc glXSwapIntervalMESA;
 	}
 }

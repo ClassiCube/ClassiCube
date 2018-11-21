@@ -3,7 +3,7 @@
 #include "Utils.h"
 #include <math.h>
 
-/* TODO: Replace with own functions that don't rely on stdlib */
+/* TODO: Replace with own functions that don't rely on <math> */
 
 float Math_AbsF(float x)  { return fabsf(x); /* MSVC intrinsic */ }
 float Math_SqrtF(float x) { return sqrtf(x); /* MSVC intrinsic */ }

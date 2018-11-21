@@ -2717,16 +2717,11 @@ struct Screen* HacksSettingsScreen_MakeInstance(void) {
 		"&fThis is mainly useful for quick pillaring/towering.";
 	descs[8] = "&eIf &fOFF&e, you will immediately stop when in noclip|&emode and no movement keys are held down.";
 
-	static char jumpHeightBuffer[STRING_INT_CHARS];
-	String jumpHeight;
-	/* TODO: Is this needed because user may not always use . for decimal point? */	
-	jumpHeight = String_ClearedArray(jumpHeightBuffer);
-	String_AppendFloat(&jumpHeight, 1.233f, 3);
-
 	validators[1]    = MenuInputValidator_Float(0.10f, 50.00f);
 	defaultValues[1] = "10";
 	validators[3]    = MenuInputValidator_Float(0.10f, 2048.00f);
-	defaultValues[3] = jumpHeightBuffer;
+	/* TODO: User may not always use . for decimal point, need to account for that */
+	defaultValues[3] = "1.233";
 	validators[9]    = MenuInputValidator_Int(1, 150);
 	defaultValues[9] = "70";
 

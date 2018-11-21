@@ -525,12 +525,13 @@ static bool Normal_CanStretch(BlockID initial, int chunkIndex, int x, int y, int
 }
 
 static int NormalBuilder_StretchXLiquid(int countIndex, int x, int y, int z, int chunkIndex, BlockID block) {
+	int count = 1; bool stretchTile;
 	if (Builder_OccludedLiquid(chunkIndex)) return 0;
-	int count = 1;
+	
 	x++;
 	chunkIndex++;
 	countIndex += FACE_COUNT;
-	bool stretchTile = (Block_CanStretch[block] & (1 << FACE_YMAX)) != 0;
+	stretchTile = (Block_CanStretch[block] & (1 << FACE_YMAX)) != 0;
 
 	while (x < Builder_ChunkEndX && stretchTile && Normal_CanStretch(block, chunkIndex, x, y, z, FACE_YMAX) && !Builder_OccludedLiquid(chunkIndex)) {
 		Builder_Counts[countIndex] = 0;
@@ -543,11 +544,11 @@ static int NormalBuilder_StretchXLiquid(int countIndex, int x, int y, int z, int
 }
 
 static int NormalBuilder_StretchX(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face) {
-	int count = 1;
+	int count = 1; bool stretchTile;
 	x++;
 	chunkIndex++;
 	countIndex += FACE_COUNT;
-	bool stretchTile = (Block_CanStretch[block] & (1 << face)) != 0;
+	stretchTile = (Block_CanStretch[block] & (1 << face)) != 0;
 
 	while (x < Builder_ChunkEndX && stretchTile && Normal_CanStretch(block, chunkIndex, x, y, z, face)) {
 		Builder_Counts[countIndex] = 0;
@@ -560,11 +561,11 @@ static int NormalBuilder_StretchX(int countIndex, int x, int y, int z, int chunk
 }
 
 static int NormalBuilder_StretchZ(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face) {
-	int count = 1;
+	int count = 1; bool stretchTile;
 	z++;
 	chunkIndex += EXTCHUNK_SIZE;
 	countIndex += CHUNK_SIZE * FACE_COUNT;
-	bool stretchTile = (Block_CanStretch[block] & (1 << face)) != 0;
+	stretchTile = (Block_CanStretch[block] & (1 << face)) != 0;
 
 	while (z < Builder_ChunkEndZ && stretchTile && Normal_CanStretch(block, chunkIndex, x, y, z, face)) {
 		Builder_Counts[countIndex] = 0;
@@ -818,15 +819,15 @@ static bool Adv_CanStretch(BlockID initial, int chunkIndex, int x, int y, int z,
 }
 
 static int Adv_StretchXLiquid(int countIndex, int x, int y, int z, int chunkIndex, BlockID block) {
+	int count = 1; bool stretchTile;
 	if (Builder_OccludedLiquid(chunkIndex)) return 0;
 	adv_initBitFlags = Adv_ComputeLightFlags(x, y, z, chunkIndex);
 	adv_bitFlags[chunkIndex] = adv_initBitFlags;
 
-	int count = 1;
 	x++;
 	chunkIndex++;
 	countIndex += FACE_COUNT;
-	bool stretchTile = (Block_CanStretch[block] & (1 << FACE_YMAX)) != 0;
+	stretchTile = (Block_CanStretch[block] & (1 << FACE_YMAX)) != 0;
 
 	while (x < Builder_ChunkEndX && stretchTile && Adv_CanStretch(block, chunkIndex, x, y, z, FACE_YMAX) && !Builder_OccludedLiquid(chunkIndex)) {
 		Builder_Counts[countIndex] = 0;
@@ -839,14 +840,14 @@ static int Adv_StretchXLiquid(int countIndex, int x, int y, int z, int chunkInde
 }
 
 static int Adv_StretchX(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face) {
+	int count = 1; bool stretchTile;
 	adv_initBitFlags = Adv_ComputeLightFlags(x, y, z, chunkIndex);
 	adv_bitFlags[chunkIndex] = adv_initBitFlags;
-
-	int count = 1;
+	
 	x++;
 	chunkIndex++;
 	countIndex += FACE_COUNT;
-	bool stretchTile = (Block_CanStretch[block] & (1 << face)) != 0;
+	stretchTile = (Block_CanStretch[block] & (1 << face)) != 0;
 
 	while (x < Builder_ChunkEndX && stretchTile && Adv_CanStretch(block, chunkIndex, x, y, z, face)) {
 		Builder_Counts[countIndex] = 0;
@@ -859,14 +860,14 @@ static int Adv_StretchX(int countIndex, int x, int y, int z, int chunkIndex, Blo
 }
 
 static int Adv_StretchZ(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face) {
+	int count = 1; bool stretchTile;
 	adv_initBitFlags = Adv_ComputeLightFlags(x, y, z, chunkIndex);
 	adv_bitFlags[chunkIndex] = adv_initBitFlags;
 
-	int count = 1;
 	z++;
 	chunkIndex += EXTCHUNK_SIZE;
 	countIndex += CHUNK_SIZE * FACE_COUNT;
-	bool stretchTile = (Block_CanStretch[block] & (1 << face)) != 0;
+	stretchTile = (Block_CanStretch[block] & (1 << face)) != 0;
 
 	while (z < Builder_ChunkEndZ && stretchTile && Adv_CanStretch(block, chunkIndex, x, y, z, face)) {
 		Builder_Counts[countIndex] = 0;
