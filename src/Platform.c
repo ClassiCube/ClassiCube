@@ -435,7 +435,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 }
 
 ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* time) {
-	void* file; 
+	FileHandle file; 
 	ReturnCode res = File_Open(&file, path);
 	if (res) return res;
 
@@ -830,7 +830,7 @@ static void Font_CloseWrapper(FT_Stream s) {
 }
 
 static bool Font_MakeArgs(const String* path, FT_Stream stream, FT_Open_Args* args) {
-	void* file;
+	FileHandle file;
 	uint32_t size;
 
 	if (File_Open(&file, path)) return false;
@@ -1362,24 +1362,26 @@ static int Http_Progress(int* progress, double total, double received, double a,
 }
 
 static struct curl_slist* Http_Make(struct AsyncRequest* req) {
+	String tmp; char buffer[STRING_SIZE + 1];
 	struct curl_slist* list = NULL;
-	char buffer1[STRING_SIZE + 1] = { 0 };
-	char buffer2[STRING_SIZE + 1] = { 0 };
+	String etag;
 
 	if (req->Etag[0]) {
-		String tmp = { buffer1, 0, STRING_SIZE };
+		String_InitArray_NT(tmp, buffer);
 		String_AppendConst(&tmp, "If-None-Match: ");
 
-		String etag = String_FromRawArray(req->Etag);
+		etag = String_FromRawArray(req->Etag);
 		String_AppendString(&tmp, &etag);
+		tmp.buffer[tmp.length] = '\0';
 		list = curl_slist_append(list, tmp.buffer);
 	}
 
 	if (req->LastModified) {
-		String tmp = { buffer2, 0, STRING_SIZE };
+		String_InitArray_NT(tmp, buffer);
 		String_AppendConst(&tmp, "Last-Modified: ");
 
 		DateTime_HttpDate(req->LastModified, &tmp);
+		tmp.buffer[tmp.length] = '\0';
 		list = curl_slist_append(list, tmp.buffer);
 	}
 	return list;
@@ -1405,7 +1407,7 @@ static size_t Http_GetHeaders(char *buffer, size_t size, size_t nitems, struct A
 	} else if (String_CaselessEqualsConst(&name, "Content-Length")) {
 		Convert_TryParseInt(&value, &req->ContentLength);
 		/* TODO: Fix when ContentLength isn't RequestSize */
-		req->RequestSize = req->ContentLength;
+		req->ResultSize = req->ContentLength;
 	} else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
 		String_InitArray_NT(tmp, tmpBuffer);
 		String_AppendString(&tmp, &value);

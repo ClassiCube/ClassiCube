@@ -83,7 +83,7 @@ static void Chat_DisableLogging(void) {
 }
 
 static void Chat_OpenLog(struct DateTime* now) {	
-	void* file;
+	FileHandle file;
 	int i;
 	ReturnCode res;
 

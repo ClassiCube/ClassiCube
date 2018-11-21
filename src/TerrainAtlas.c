@@ -48,8 +48,8 @@ void Atlas2D_Free(void) {
 
 TextureRec Atlas1D_TexRec(TextureLoc texLoc, int uCount, int* index) {
 	TextureRec rec;
-	*index = Atlas1D_Index(texLoc);
 	int y  = Atlas1D_RowId(texLoc);
+	*index = Atlas1D_Index(texLoc);
 
 	/* Adjust coords to be slightly inside - fixes issues with AMD/ATI cards */	
 	rec.U1 = 0.0f; 

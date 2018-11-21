@@ -15,7 +15,6 @@
 #include "ErrorHandler.h"
 #include "Entity.h"
 #include "Chat.h"
-#include "Platform.h"
 #include "Drawer2D.h"
 #include "ModelCache.h"
 #include "Particle.h"
@@ -35,7 +34,6 @@
 #include "Menus.h"
 #include "Audio.h"
 #include "Stream.h"
-#include "Bitmap.h"
 
 static struct IGameComponent Game_Components[26];
 static int Game_ComponentsCount;
@@ -71,7 +69,11 @@ void IGameComponent_MakeEmpty(struct IGameComponent* comp) {
 }
 
 int ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
-	struct ScheduledTask task = { 0.0, interval, callback };
+	struct ScheduledTask task;
+	task.Accumulator = 0.0;
+	task.Interval    = interval;
+	task.Callback    = callback;
+
 	if (Game_TasksCount == Array_Elems(Game_Tasks)) {
 		ErrorHandler_Fail("ScheduledTask_Add - hit max count");
 	}
