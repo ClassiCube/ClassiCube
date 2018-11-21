@@ -115,12 +115,14 @@ static void Window_ResetWindowState(void) {
 
 static bool win_hiddenBorder;
 static void Window_DoSetHiddenBorder(bool value) {
+	bool wasVisible;
+	RECT rect;
 	if (win_hiddenBorder == value) return;
 
 	/* We wish to avoid making an invisible window visible just to change the border.
 	However, it's a good idea to make a visible window invisible temporarily, to
 	avoid garbage caused by the border change. */
-	bool was_visible = Window_GetVisible();
+	wasVisible = Window_GetVisible();
 
 	/* To ensure maximized/minimized windows work correctly, reset state to normal,
 	change the border, then go back to maximized/minimized. */
@@ -130,14 +132,13 @@ static void Window_DoSetHiddenBorder(bool value) {
 	style |= (value ? WS_POPUP : WS_OVERLAPPEDWINDOW);
 
 	/* Make sure client size doesn't change when changing the border style.*/
-	RECT rect;
 	rect.left = Window_Bounds.X; rect.top = Window_Bounds.Y;
 	rect.right  = rect.left + Window_Bounds.Width;
 	rect.bottom = rect.top  + Window_Bounds.Height;
 	AdjustWindowRect(&rect, style, false);
 
 	/* This avoids leaving garbage on the background window. */
-	if (was_visible) Window_SetVisible(false);
+	if (wasVisible) Window_SetVisible(false);
 
 	SetWindowLong(win_handle, GWL_STYLE, style);
 	SetWindowPos(win_handle, NULL, 0, 0, Rect_Width(rect), Rect_Height(rect),
@@ -146,7 +147,7 @@ static void Window_DoSetHiddenBorder(bool value) {
 	/* Force window to redraw update its borders, but only if it's
 	already visible (invisible windows will change borders when
 	they become visible, so no need to make them visiable prematurely).*/
-	if (was_visible) Window_SetVisible(true);
+	if (wasVisible) Window_SetVisible(true);
 
 	Window_SetWindowState(state);
 }
@@ -166,15 +167,19 @@ static void Window_UpdateClientSize(HWND handle) {
 }
 
 static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
+	char keyChar;
+	bool wasFocused;
+	float wheelDelta;
+
 	switch (message) {
 	case WM_ACTIVATE:
-	{
-		bool wasFocused = Window_Focused;
+		wasFocused     = Window_Focused;
 		Window_Focused = LOWORD(wParam) != 0;
+
 		if (Window_Focused != wasFocused) {
 			Event_RaiseVoid(&WindowEvents_FocusChanged);
 		}
-	} break;
+		break;
 
 	case WM_ENTERMENULOOP:
 	case WM_ENTERSIZEMOVE:
@@ -238,31 +243,24 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 
 	case WM_CHAR:
-	{
-		char keyChar;
 		if (Convert_TryUnicodeToCP437((Codepoint)wParam, &keyChar)) {
 			Event_RaiseInt(&KeyEvents_Press, keyChar);
 		}
-	} break;
+		break;
 
 	case WM_MOUSEMOVE:
-	{
 		/* set before position change, in case mouse buttons changed when outside window */
 		Mouse_SetPressed(MouseButton_Left,   (wParam & 0x01) != 0);
 		Mouse_SetPressed(MouseButton_Right,  (wParam & 0x02) != 0);
 		Mouse_SetPressed(MouseButton_Middle, (wParam & 0x10) != 0);
-		/* TODO: do we need to set XBUTTON1 / XBUTTON 2 here */
-
-		WORD mouse_x = LOWORD(lParam);
-		WORD mouse_y = HIWORD(lParam);
-		Mouse_SetPosition(mouse_x, mouse_y);
-	} break;
+		/* TODO: do we need to set XBUTTON1/XBUTTON2 here */
+		Mouse_SetPosition(LOWORD(lParam), HIWORD(lParam));
+		break;
 
 	case WM_MOUSEWHEEL:
-	{
-		float wheel_delta = ((short)HIWORD(wParam)) / (float)WHEEL_DELTA;
-		Mouse_SetWheel(Mouse_Wheel + wheel_delta);
-	} return 0;
+		wheelDelta = ((short)HIWORD(wParam)) / (float)WHEEL_DELTA;
+		Mouse_SetWheel(Mouse_Wheel + wheelDelta);
+		return 0;
 
 	case WM_LBUTTONDOWN:
 		Mouse_SetPressed(MouseButton_Left, true);

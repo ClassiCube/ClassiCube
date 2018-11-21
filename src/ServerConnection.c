@@ -240,7 +240,7 @@ void ServerConnection_InitSingleplayer(void) {
 /*########################################################################################################################*
 *--------------------------------------------------Multiplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
-static SocketPtr net_socket;
+static SocketHandle net_socket;
 static uint8_t  net_readBuffer[4096 * 5];
 static uint8_t  net_writeBuffer[131];
 static uint8_t* net_readCurrent;

@@ -645,7 +645,7 @@ static void Game_DoScheduledTasks(double time) {
 void Game_TakeScreenshot(void) {
 	String filename; char fileBuffer[STRING_SIZE];
 	String path;     char pathBuffer[FILENAME_SIZE];
-	DateTime now;
+	struct DateTime now;
 	struct Stream stream;
 	ReturnCode res;
 

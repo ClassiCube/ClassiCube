@@ -21,6 +21,7 @@ struct AsyncRequest {
 
 	TimeMS TimeAdded, TimeDownloaded;
 	int StatusCode;
+	uint32_t ContentLength;
 
 	ReturnCode Result;
 	void*      ResultData;

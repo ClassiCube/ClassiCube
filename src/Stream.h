@@ -1,7 +1,7 @@
 #ifndef CC_STREAM_H
 #define CC_STREAM_H
-#include "String.h"
 #include "Constants.h"
+#include "Platform.h"
 /* Defines an abstract way of reading and writing data in a streaming manner.
    Also provides common helper methods for reading/writing data to/from streams.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
@@ -29,7 +29,7 @@ struct Stream {
 	ReturnCode (*Close)(struct Stream* s);
 	
 	union {
-		void* File;
+		FileHandle File;
 		void* Inflate;
 		/* NOTE: These structs rely on overlapping Meta_Mem fields being the same! Don't change them */
 		struct { uint8_t* Cur; uint32_t Left, Length; uint8_t* Base; } Mem;
@@ -54,7 +54,7 @@ CC_EXPORT ReturnCode Stream_OpenFile(struct Stream* s, const String* path);
 /* Wrapper for File_Create() then Stream_FromFile() */
 CC_EXPORT ReturnCode Stream_CreateFile(struct Stream* s, const String* path);
 /* Wraps a file, allowing reading from/writing to/seeking in the file. */
-CC_EXPORT void Stream_FromFile(struct Stream* s, void* file);
+CC_EXPORT void Stream_FromFile(struct Stream* s, FileHandle file);
 
 /* Wraps another Stream, only allows reading up to 'len' bytes from the wrapped stream. */
 CC_EXPORT void Stream_ReadonlyPortion(struct Stream* s, struct Stream* source, uint32_t len);

@@ -1916,21 +1916,25 @@ static void PlayerListWidget_SetColumnPos(struct PlayerListWidget* w, int column
 }
 
 static void PlayerListWidget_RepositionColumns(struct PlayerListWidget* w) {
-	int width = 0, centreX = Game_Width / 2;
-	w->YHeight = 0;
+	int x, y, width = 0, height;
+	int col, columns;
 
-	int col, columns = Math_CeilDiv(w->NamesCount, LIST_NAMES_PER_COLUMN);
+	w->YHeight = 0;
+	columns    = Math_CeilDiv(w->NamesCount, LIST_NAMES_PER_COLUMN);
+
 	for (col = 0; col < columns; col++) {
 		width += PlayerListWidget_GetColumnWidth(w, col);
-		int colHeight = PlayerListWidget_GetColumnHeight(w, col);
-		w->YHeight = max(colHeight, w->YHeight);
+		height = PlayerListWidget_GetColumnHeight(w, col);
+		w->YHeight = max(height, w->YHeight);
 	}
 
 	if (width < 480) width = 480;
-	w->XMin = centreX - width / 2;
-	w->XMax = centreX + width / 2;
+	w->XMin = Game_Width / 2 - width / 2;
+	w->XMax = Game_Width / 2 + width / 2;
 
-	int x = w->XMin, y = Game_Height / 2 - w->YHeight / 2;
+	x = w->XMin;
+	y = Game_Height / 2 - w->YHeight / 2;
+
 	for (col = 0; col < columns; col++) {
 		PlayerListWidget_SetColumnPos(w, col, x, y);
 		x += PlayerListWidget_GetColumnWidth(w, col);

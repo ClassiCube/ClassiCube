@@ -3259,7 +3259,7 @@ static void TexPackOverlay_Render(void* screen, double delta) {
 	MenuScreen_Render(s, delta);
 	if (!AsyncDownloader_Get(&s->Identifier, &item)) return;
 
-	s->ContentLength = item.ResultSize;
+	s->ContentLength = item.ContentLength;
 	if (!s->ContentLength) return;
 	Elem_Recreate(s);
 }

@@ -45,7 +45,7 @@ static char   Chat_LogPathBuffer[FILENAME_SIZE];
 static String Chat_LogPath = String_FromArray(Chat_LogPathBuffer);
 
 static struct Stream Chat_LogStream;
-static DateTime ChatLog_LastLogDate;
+static struct DateTime ChatLog_LastLogDate;
 
 static void Chat_CloseLog(void) {
 	ReturnCode res;
@@ -82,7 +82,7 @@ static void Chat_DisableLogging(void) {
 	Chat_AddRaw("&cDisabling chat logging");
 }
 
-static void Chat_OpenLog(DateTime* now) {	
+static void Chat_OpenLog(struct DateTime* now) {	
 	void* file;
 	int i;
 	ReturnCode res;
@@ -119,7 +119,7 @@ static void Chat_OpenLog(DateTime* now) {
 
 static void Chat_AppendLog(const String* text) {
 	String str; char strBuffer[STRING_SIZE * 2];
-	DateTime now;
+	struct DateTime now;
 	ReturnCode res;	
 
 	if (!Chat_LogName.length || !Game_ChatLogging) return;

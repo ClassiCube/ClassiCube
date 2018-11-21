@@ -6,6 +6,7 @@
 #include "ErrorHandler.h"
 #include "Stream.h"
 #include "Errors.h"
+#include "Utils.h"
 
 BitmapCol BitmapCol_Scale(BitmapCol value, float t) {
 	value.R = (uint8_t)(value.R * t);

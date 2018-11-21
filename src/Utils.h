@@ -8,7 +8,7 @@
 
 /* Represents a particular instance in time in some timezone. Not necessarily UTC time. */
 /* NOTE: This is not an efficiently sized struct. Store DateTime_TotalMs instead for that. */
-typedef struct DateTime_ {
+struct DateTime {
 	int Year;  /* Year,   ranges from 0 to 65535 */
 	int Month;  /* Month,  ranges from 1 to 12 */
 	int Day;    /* Day,    ranges from 1 to 31 */
@@ -16,12 +16,12 @@ typedef struct DateTime_ {
 	int Minute; /* Minute, ranges from 0 to 59 */
 	int Second; /* Second, ranges from 0 to 59 */
 	int Milli; /* Milliseconds, ranges from 0 to 999 */
-} DateTime;
+};
 
 #define DATETIME_MILLIS_PER_SEC 1000
-int DateTime_TotalDays(const DateTime* time);
-TimeMS DateTime_TotalMs(const DateTime* time);
-void DateTime_FromTotalMs(DateTime* time, TimeMS ms);
+int DateTime_TotalDays(const struct DateTime* time);
+TimeMS DateTime_TotalMs(const struct DateTime* time);
+void DateTime_FromTotalMs(struct DateTime* time, TimeMS ms);
 void DateTime_HttpDate(TimeMS ms, String* str);
 
 CC_NOINLINE int Utils_ParseEnum(const String* text, int defValue, const char** names, int namesCount);

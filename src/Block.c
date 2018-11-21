@@ -307,8 +307,7 @@ STRING_REF String Block_UNSAFE_GetName(BlockID block) {
 }
 
 void Block_SetName(BlockID block, const String* name) {
-	String dst = { Block_NamePtr(block), 0, STRING_SIZE };
-	Mem_Set(dst.buffer, 0, STRING_SIZE);
+	String dst = String_InitAndClear(Block_NamePtr(block), STRING_SIZE);
 	String_AppendString(&dst, name);
 }
 

@@ -258,7 +258,7 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 	return FileTime_TotalMS(raw);
 }
 
-static void Platform_FromSysTime(DateTime* time, SYSTEMTIME* sysTime) {
+static void Platform_FromSysTime(struct DateTime* time, SYSTEMTIME* sysTime) {
 	time->Year   = sysTime->wYear;
 	time->Month  = sysTime->wMonth;
 	time->Day    = sysTime->wDay;
@@ -268,13 +268,13 @@ static void Platform_FromSysTime(DateTime* time, SYSTEMTIME* sysTime) {
 	time->Milli  = sysTime->wMilliseconds;
 }
 
-void DateTime_CurrentUTC(DateTime* time) {
+void DateTime_CurrentUTC(struct DateTime* time) {
 	SYSTEMTIME utcTime;
 	GetSystemTime(&utcTime);
 	Platform_FromSysTime(time, &utcTime);
 }
 
-void DateTime_CurrentLocal(DateTime* time) {
+void DateTime_CurrentLocal(struct DateTime* time) {
 	SYSTEMTIME localTime;
 	GetLocalTime(&localTime);
 	Platform_FromSysTime(time, &localTime);
@@ -308,7 +308,7 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 	return UnixTime_TotalMS(cur);
 }
 
-static void Platform_FromSysTime(DateTime* time, struct tm* sysTime) {
+static void Platform_FromSysTime(struct DateTime* time, struct tm* sysTime) {
 	time->Year   = sysTime->tm_year + 1900;
 	time->Month  = sysTime->tm_mon + 1;
 	time->Day    = sysTime->tm_mday;
@@ -317,7 +317,7 @@ static void Platform_FromSysTime(DateTime* time, struct tm* sysTime) {
 	time->Second = sysTime->tm_sec;
 }
 
-void DateTime_CurrentUTC(DateTime* time_) {
+void DateTime_CurrentUTC(struct DateTime* time_) {
 	struct timeval cur; 
 	struct tm utc_time;
 
@@ -328,7 +328,7 @@ void DateTime_CurrentUTC(DateTime* time_) {
 	time_->Milli = cur.tv_usec / 1000;
 }
 
-void DateTime_CurrentLocal(DateTime* time_) {
+void DateTime_CurrentLocal(struct DateTime* time_) {
 	struct timeval cur; 
 	struct tm loc_time;
 
@@ -451,51 +451,51 @@ ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* time) {
 	return res;
 }
 
-ReturnCode File_Do(void** file, const String* path, DWORD access, DWORD createMode) {
+static ReturnCode File_Do(FileHandle* file, const String* path, DWORD access, DWORD createMode) {
 	TCHAR str[300]; 
 	Platform_ConvertString(str, path);
 	*file = CreateFile(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return Win_Return(*file != INVALID_HANDLE_VALUE);
 }
 
-ReturnCode File_Open(void** file, const String* path) {
+ReturnCode File_Open(FileHandle* file, const String* path) {
 	return File_Do(file, path, GENERIC_READ, OPEN_EXISTING);
 }
-ReturnCode File_Create(void** file, const String* path) {
+ReturnCode File_Create(FileHandle* file, const String* path) {
 	return File_Do(file, path, GENERIC_WRITE, CREATE_ALWAYS);
 }
-ReturnCode File_Append(void** file, const String* path) {
+ReturnCode File_Append(FileHandle* file, const String* path) {
 	ReturnCode res = File_Do(file, path, GENERIC_WRITE, OPEN_ALWAYS);
 	if (res) return res;
 	return File_Seek(*file, 0, FILE_SEEKFROM_END);
 }
 
-ReturnCode File_Read(void* file, uint8_t* buffer, uint32_t count, uint32_t* bytesRead) {
-	BOOL success = ReadFile((HANDLE)file, buffer, count, bytesRead, NULL);
+ReturnCode File_Read(FileHandle file, uint8_t* buffer, uint32_t count, uint32_t* bytesRead) {
+	BOOL success = ReadFile(file, buffer, count, bytesRead, NULL);
 	return Win_Return(success);
 }
 
-ReturnCode File_Write(void* file, uint8_t* buffer, uint32_t count, uint32_t* bytesWrote) {
-	BOOL success = WriteFile((HANDLE)file, buffer, count, bytesWrote, NULL);
+ReturnCode File_Write(FileHandle file, uint8_t* buffer, uint32_t count, uint32_t* bytesWrote) {
+	BOOL success = WriteFile(file, buffer, count, bytesWrote, NULL);
 	return Win_Return(success);
 }
 
-ReturnCode File_Close(void* file) {
-	return Win_Return(CloseHandle((HANDLE)file));
+ReturnCode File_Close(FileHandle file) {
+	return Win_Return(CloseHandle(file));
 }
 
-ReturnCode File_Seek(void* file, int offset, int seekType) {
+ReturnCode File_Seek(FileHandle file, int offset, int seekType) {
 	static uint8_t modes[3] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
 	DWORD pos = SetFilePointer(file, offset, NULL, modes[seekType]);
 	return Win_Return(pos != INVALID_SET_FILE_POINTER);
 }
 
-ReturnCode File_Position(void* file, uint32_t* position) {
-	*position = SetFilePointer(file, 0, NULL, 1); /* SEEK_CUR */
+ReturnCode File_Position(FileHandle file, uint32_t* position) {
+	*position = SetFilePointer(file, 0, NULL, FILE_CURRENT);
 	return Win_Return(*position != INVALID_SET_FILE_POINTER);
 }
 
-ReturnCode File_Length(void* file, uint32_t* length) {
+ReturnCode File_Length(FileHandle file, uint32_t* length) {
 	*length = GetFileSize(file, NULL);
 	return Win_Return(*length != INVALID_FILE_SIZE);
 }
@@ -577,52 +577,52 @@ ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* time) {
 	return 0;
 }
 
-ReturnCode File_Do(void** file, const String* path, int mode) {
+static ReturnCode File_Do(FileHandle* file, const String* path, int mode) {
 	char str[600]; 
 	Platform_ConvertString(str, path);
 	*file = open(str, mode, (6 << 6) | (4 << 3) | 4); /* rw|r|r */
 	return Nix_Return(*file != -1);
 }
 
-ReturnCode File_Open(void** file, const String* path) {
+ReturnCode File_Open(FileHandle* file, const String* path) {
 	return File_Do(file, path, O_RDONLY);
 }
-ReturnCode File_Create(void** file, const String* path) {
+ReturnCode File_Create(FileHandle* file, const String* path) {
 	return File_Do(file, path, O_WRONLY | O_CREAT | O_TRUNC);
 }
-ReturnCode File_Append(void** file, const String* path) {
+ReturnCode File_Append(FileHandle* file, const String* path) {
 	ReturnCode res = File_Do(file, path, O_WRONLY | O_CREAT);
 	if (res) return res;
 	return File_Seek(*file, 0, FILE_SEEKFROM_END);
 }
 
-ReturnCode File_Read(void* file, uint8_t* buffer, uint32_t count, uint32_t* bytesRead) {
-	*bytesRead = read((int)file, buffer, count);
+ReturnCode File_Read(FileHandle file, uint8_t* buffer, uint32_t count, uint32_t* bytesRead) {
+	*bytesRead = read(file, buffer, count);
 	return Nix_Return(*bytesRead != -1);
 }
 
-ReturnCode File_Write(void* file, uint8_t* buffer, uint32_t count, uint32_t* bytesWrote) {
-	*bytesWrote = write((int)file, buffer, count);
+ReturnCode File_Write(FileHandle file, uint8_t* buffer, uint32_t count, uint32_t* bytesWrote) {
+	*bytesWrote = write(file, buffer, count);
 	return Nix_Return(*bytesWrote != -1);
 }
 
-ReturnCode File_Close(void* file) {
-	return Nix_Return(close((int)file) != -1);
+ReturnCode File_Close(FileHandle file) {
+	return Nix_Return(close(file) != -1);
 }
 
-ReturnCode File_Seek(void* file, int offset, int seekType) {
+ReturnCode File_Seek(FileHandle file, int offset, int seekType) {
 	static uint8_t modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
-	return Nix_Return(lseek((int)file, offset, modes[seekType]) != -1);
+	return Nix_Return(lseek(file, offset, modes[seekType]) != -1);
 }
 
-ReturnCode File_Position(void* file, uint32_t* position) {
-	*position = lseek((int)file, 0, SEEK_CUR);
+ReturnCode File_Position(FileHandle file, uint32_t* position) {
+	*position = lseek(file, 0, SEEK_CUR);
 	return Nix_Return(*position != -1);
 }
 
-ReturnCode File_Length(void* file, uint32_t* length) {
+ReturnCode File_Length(FileHandle file, uint32_t* length) {
 	struct stat st;
-	if (fstat((int)file, &st) == -1) { *length = -1; return errno; }
+	if (fstat(file, &st) == -1) { *length = -1; return errno; }
 	*length = st.st_size; return 0;
 }
 #endif
@@ -1113,14 +1113,14 @@ static void Font_Init(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-void Socket_Create(SocketPtr* socketResult) {
+void Socket_Create(SocketHandle* socketResult) {
 	*socketResult = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (*socketResult == -1) {
 		ErrorHandler_Fail2(Socket__Error(), "Failed to create socket");
 	}
 }
 
-static ReturnCode Socket_ioctl(SocketPtr socket, uint32_t cmd, int* data) {
+static ReturnCode Socket_ioctl(SocketHandle socket, uint32_t cmd, int* data) {
 #ifdef CC_BUILD_WIN
 	return ioctlsocket(socket, cmd, data);
 #else
@@ -1128,20 +1128,20 @@ static ReturnCode Socket_ioctl(SocketPtr socket, uint32_t cmd, int* data) {
 #endif
 }
 
-ReturnCode Socket_Available(SocketPtr socket, uint32_t* available) {
+ReturnCode Socket_Available(SocketHandle socket, uint32_t* available) {
 	return Socket_ioctl(socket, FIONREAD, available);
 }
-ReturnCode Socket_SetBlocking(SocketPtr socket, bool blocking) {
+ReturnCode Socket_SetBlocking(SocketHandle socket, bool blocking) {
 	int blocking_raw = blocking ? 0 : -1;
 	return Socket_ioctl(socket, FIONBIO, &blocking_raw);
 }
 
-ReturnCode Socket_GetError(SocketPtr socket, ReturnCode* result) {
+ReturnCode Socket_GetError(SocketHandle socket, ReturnCode* result) {
 	int resultSize = sizeof(ReturnCode);
 	return getsockopt(socket, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
-ReturnCode Socket_Connect(SocketPtr socket, const String* ip, int port) {
+ReturnCode Socket_Connect(SocketHandle socket, const String* ip, int port) {
 	struct { int16_t Family; uint8_t Port[2], IP[4], Pad[8]; } addr;
 	ReturnCode res;
 
@@ -1153,19 +1153,19 @@ ReturnCode Socket_Connect(SocketPtr socket, const String* ip, int port) {
 	return res == -1 ? Socket__Error() : 0;
 }
 
-ReturnCode Socket_Read(SocketPtr socket, uint8_t* buffer, uint32_t count, uint32_t* modified) {
+ReturnCode Socket_Read(SocketHandle socket, uint8_t* buffer, uint32_t count, uint32_t* modified) {
 	int recvCount = recv(socket, buffer, count, 0);
 	if (recvCount != -1) { *modified = recvCount; return 0; }
 	*modified = 0; return Socket__Error();
 }
 
-ReturnCode Socket_Write(SocketPtr socket, uint8_t* buffer, uint32_t count, uint32_t* modified) {
+ReturnCode Socket_Write(SocketHandle socket, uint8_t* buffer, uint32_t count, uint32_t* modified) {
 	int sentCount = send(socket, buffer, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return Socket__Error();
 }
 
-ReturnCode Socket_Close(SocketPtr socket) {
+ReturnCode Socket_Close(SocketHandle socket) {
 	ReturnCode res = 0;
 	ReturnCode res1, res2;
 
@@ -1185,7 +1185,7 @@ ReturnCode Socket_Close(SocketPtr socket) {
 	return res;
 }
 
-ReturnCode Socket_Select(SocketPtr socket, int selectMode, bool* success) {
+ReturnCode Socket_Select(SocketHandle socket, int selectMode, bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
 	int selectCount, nfds;
@@ -1270,12 +1270,12 @@ static ReturnCode Http_GetHeaders(struct AsyncRequest* req, HINTERNET handle) {
 	if (!HttpQueryInfoA(handle, FLAG_STATUS, &req->StatusCode, &len, NULL)) return GetLastError();
 
 	len = sizeof(DWORD);
-	HttpQueryInfoA(handle, FLAG_LENGTH, &req->ResultSize, &len, NULL);
+	HttpQueryInfoA(handle, FLAG_LENGTH, &req->ContentLength, &len, NULL);
 
 	SYSTEMTIME sysTime;
 	len = sizeof(SYSTEMTIME);
 	if (HttpQueryInfoA(handle, FLAG_LASTMOD, &sysTime, &len, NULL)) {
-		DateTime time;
+		struct DateTime time;
 		Platform_FromSysTime(&time, &sysTime);
 		req->LastModified = DateTime_TotalMs(&time);
 	}
@@ -1288,30 +1288,40 @@ static ReturnCode Http_GetHeaders(struct AsyncRequest* req, HINTERNET handle) {
 }
 
 static ReturnCode Http_GetData(struct AsyncRequest* req, HINTERNET handle, volatile int* progress) {
-	uint32_t size = req->ResultSize;
-	if (!size) return ERROR_NOT_SUPPORTED;
+	uint8_t* buffer;
+	uint32_t size, totalRead;
+	uint32_t read, avail;
+	bool success;
+	
 	*progress = 0;
+	size      = req->ContentLength ? req->ContentLength : 1;
+	buffer    = Mem_Alloc(size, 1, "http get data");
+	totalRead = 0;
 
-	uint8_t* buffer = Mem_Alloc(size, 1, "http get data");
-	uint32_t left = size, read, totalRead = 0;
 	req->ResultData = buffer;
+	req->ResultSize = 0;
 
-	while (left) {
-		uint32_t toRead = left, avail = 0;
-		/* only read as much data that is pending */
-		if (InternetQueryDataAvailable(handle, &avail, 0, 0)) {
-			toRead = min(toRead, avail);
+	for (;;) {
+		if (!InternetQueryDataAvailable(handle, &avail, 0, 0)) break;
+		if (!avail) break;
+
+		/* expand if buffer is too small (some servers don't give content length) */
+		if (totalRead + avail > size) {
+			size   = totalRead + avail;
+			buffer = Mem_Realloc(buffer, size, 1, "http inc data");
+			req->ResultData = buffer;
 		}
 
-		bool success = InternetReadFile(handle, buffer, toRead, &read);
+		success = InternetReadFile(handle, &buffer[totalRead], avail, &read);
 		if (!success) { Mem_Free(buffer); return GetLastError(); }
-
 		if (!read) break;
-		buffer += read; totalRead += read; left -= read;
-		*progress = (int)(100.0f * totalRead / size);
+
+		totalRead += read;
+		if (req->ContentLength) *progress = (int)(100.0f * totalRead / size);
+		req->ResultSize += read;
 	}
 
-	*progress = 100;
+ 	*progress = 100;
 	return 0;
 }
 
@@ -1393,7 +1403,9 @@ static size_t Http_GetHeaders(char *buffer, size_t size, size_t nitems, struct A
 		tmp = String_ClearedArray(req->Etag);
 		String_AppendString(&tmp, &value);
 	} else if (String_CaselessEqualsConst(&name, "Content-Length")) {
-		Convert_TryParseInt(&value, &req->ResultSize);
+		Convert_TryParseInt(&value, &req->ContentLength);
+		/* TODO: Fix when ContentLength isn't RequestSize */
+		req->RequestSize = req->ContentLength;
 	} else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
 		String_InitArray_NT(tmp, tmpBuffer);
 		String_AppendString(&tmp, &value);

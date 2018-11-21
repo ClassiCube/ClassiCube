@@ -4,6 +4,7 @@
 #include "Platform.h"
 #include "Stream.h"
 #include "Errors.h"
+#include "Utils.h"
 
 #define Header_ReadU8(value) if ((res = s->ReadU8(s, &value))) return res;
 /*########################################################################################################################*

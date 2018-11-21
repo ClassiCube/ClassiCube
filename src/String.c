@@ -3,6 +3,7 @@
 #include "ErrorHandler.h"
 #include "Platform.h"
 #include "Stream.h"
+#include "Utils.h"
 
 String String_Init(STRING_REF char* buffer, int length, int capacity) {
 	String s; 

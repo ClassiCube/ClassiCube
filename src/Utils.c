@@ -21,7 +21,7 @@ static bool DateTime_IsLeapYear(int year) {
 	return (year % 400) == 0;
 }
 
-int DateTime_TotalDays(const DateTime* time) {
+int DateTime_TotalDays(const struct DateTime* time) {
 	/* Days from before this year */
 	int y = time->Year - 1, days = 365 * y;
 	/* A year is a leap year when the year is: */
@@ -38,7 +38,7 @@ int DateTime_TotalDays(const DateTime* time) {
 	return days;
 }
 
-TimeMS DateTime_TotalMs(const DateTime* time) {
+TimeMS DateTime_TotalMs(const struct DateTime* time) {
 	int days = DateTime_TotalDays(time);
 	uint64_t seconds =
 		(uint64_t)days * DATETIME_SECONDS_PER_DAY +
@@ -48,7 +48,7 @@ TimeMS DateTime_TotalMs(const DateTime* time) {
 	return seconds * DATETIME_MILLIS_PER_SEC + time->Milli;
 }
 
-void DateTime_FromTotalMs(DateTime* time, TimeMS ms) {
+void DateTime_FromTotalMs(struct DateTime* time, TimeMS ms) {
 	int dayMS, days, year;
 	int daysInYear, month;
 	uint16_t* totalDays;
@@ -90,7 +90,7 @@ void DateTime_FromTotalMs(DateTime* time, TimeMS ms) {
 void DateTime_HttpDate(TimeMS ms, String* str) {
 	static char* days_of_week[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
 	static char* month_names[13] = { NULL, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-	DateTime t;
+	struct DateTime t;
 	int days;
 
 	DateTime_FromTotalMs(&t, ms);
