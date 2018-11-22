@@ -412,38 +412,47 @@ static void Builder_DefaultPostStretchTiles(int x1, int y1, int z1) {
 
 static RNGState spriteRng;
 static void Builder_DrawSprite(int count) {
-	TextureLoc texLoc = Block_GetTex(Builder_Block, FACE_XMAX);
-	int i = Atlas1D_Index(texLoc);
-	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
-	float X = (float)Builder_X, Y = (float)Builder_Y, Z = (float)Builder_Z;
+	struct Builder1DPart* part;
+	VertexP3fT2fC4b v;
+	PackedCol white = PACKEDCOL_WHITE;
+
+	uint8_t offsetType;
+	TextureLoc loc;
+	float v1, v2;
+	int index;
+
+	float X, Y, Z;
+	float valX, valY, valZ;
+	float x1,y1,z1, x2,y2,z2;
+	
+	X  = (float)Builder_X; Y = (float)Builder_Y; Z = (float)Builder_Z;
+	x1 = X + 2.50f/16.0f; y1 = Y;        z1 = Z + 2.50f/16.0f;
+	x2 = X + 13.5f/16.0f; y2 = Y + 1.0f; z2 = Z + 13.5f/16.0f;
 
 #define s_u1 0.0f
 #define s_u2 UV2_Scale
-	float x1 = (float)X + 2.50f / 16.0f, y1 = (float)Y,        z1 = (float)Z + 2.50f / 16.0f;
-	float x2 = (float)X + 13.5f / 16.0f, y2 = (float)Y + 1.0f, z2 = (float)Z + 13.5f / 16.0f;
-	float v1 = vOrigin, v2 = vOrigin + Atlas1D_InvTileSize * UV2_Scale;
+	loc = Block_GetTex(Builder_Block, FACE_XMAX);
+	v1  = Atlas1D_RowId(loc) * Atlas1D_InvTileSize;
+	v2  = v1 + Atlas1D_InvTileSize * UV2_Scale;
 
-	uint8_t offsetType = Block_SpriteOffset[Builder_Block];
+	offsetType = Block_SpriteOffset[Builder_Block];
 	if (offsetType >= 6 && offsetType <= 7) {
 		Random_SetSeed(&spriteRng, (Builder_X + 1217 * Builder_Z) & 0x7fffffff);
-		float valX = Random_Range(&spriteRng, -3, 3 + 1) / 16.0f;
-		float valY = Random_Range(&spriteRng, 0,  3 + 1) / 16.0f;
-		float valZ = Random_Range(&spriteRng, -3, 3 + 1) / 16.0f;
+		valX = Random_Range(&spriteRng, -3, 3 + 1) / 16.0f;
+		valY = Random_Range(&spriteRng, 0,  3 + 1) / 16.0f;
+		valZ = Random_Range(&spriteRng, -3, 3 + 1) / 16.0f;
 
-#define s_stretch 1.7f / 16.0f
-		x1 += valX - s_stretch; x2 += valX + s_stretch;
-		z1 += valZ - s_stretch; z2 += valZ + s_stretch;
+		x1 += valX - 1.7f/16.0f; x2 += valX + 1.7f/16.0f;
+		z1 += valZ - 1.7f/16.0f; z2 += valZ + 1.7f/16.0f;
 		if (offsetType == 7) { y1 -= valY; y2 -= valY; }
 	}
 	
-	struct Builder1DPart* part = &Builder_Parts[i];
-	PackedCol white = PACKEDCOL_WHITE;
-	PackedCol col = Builder_FullBright ? white : Lighting_Col_Sprite_Fast(Builder_X, Builder_Y, Builder_Z);
-	Block_Tint(col, Builder_Block);
-	VertexP3fT2fC4b v; v.Col = col;
+	part  = &Builder_Parts[Atlas1D_Index(loc)];
+	v.Col = Builder_FullBright ? white : Lighting_Col_Sprite_Fast(Builder_X, Builder_Y, Builder_Z);
+	Block_Tint(v.Col, Builder_Block);
 
 	/* Draw Z axis */
-	int index = part->sOffset;
+	index = part->sOffset;
 	v.X = x1; v.Y = y1; v.Z = z1; v.U = s_u2; v.V = v2; Builder_Vertices[index + 0] = v;
 	          v.Y = y2;                       v.V = v1; Builder_Vertices[index + 1] = v;
 	v.X = x2;           v.Z = z2; v.U = s_u1;           Builder_Vertices[index + 2] = v;

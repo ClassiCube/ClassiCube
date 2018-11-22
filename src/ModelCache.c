@@ -1169,14 +1169,16 @@ static TextureLoc BlockModel_GetTex(Face face, VertexP3fT2fC4b** ptr) {
 
 static void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
 	VertexP3fT2fC4b* ptr, v;
+	PackedCol col;
+	float xz1, xz2;
 	TextureLoc loc = Block_GetTex(bModel_block, FACE_ZMAX);
 	TextureRec rec = Atlas1D_TexRec(loc, 1, &bModel_texIndex);
-	BlockModel_FlushIfNotSame;
 
-	PackedCol col = Model_Cols[0];
+	BlockModel_FlushIfNotSame;
+	col = Model_Cols[0];
 	Block_Tint(col, bModel_block);
 
-	float xz1 = 0.0f, xz2 = 0.0f;
+	xz1 = 0.0f; xz2 = 0.0f;
 	if (firstPart) { /* Need to break into two quads for when drawing a sprite model in hand. */
 		if (mirror) { rec.U1 = 0.5f; xz1 = -5.5f/16.0f; }
 		else {        rec.U2 = 0.5f; xz2 = -5.5f/16.0f; }
@@ -1197,14 +1199,16 @@ static void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
 
 static void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
 	VertexP3fT2fC4b* ptr, v;
+	PackedCol col;
+	float x1, x2, z1, z2;
 	TextureLoc loc = Block_GetTex(bModel_block, FACE_XMAX);
 	TextureRec rec = Atlas1D_TexRec(loc, 1, &bModel_texIndex);
-	BlockModel_FlushIfNotSame;
 
-	PackedCol col = Model_Cols[0];
+	BlockModel_FlushIfNotSame;
+	col = Model_Cols[0];
 	Block_Tint(col, bModel_block);
 
-	float x1 = 0.0f, x2 = 0.0f, z1 = 0.0f, z2 = 0.0f;
+	x1 = 0.0f; x2 = 0.0f; z1 = 0.0f; z2 = 0.0f;
 	if (firstPart) {
 		if (mirror) { rec.U2 = 0.5f; x2 = -5.5f/16.0f; z2 =  5.5f/16.0f; }
 		else {        rec.U1 = 0.5f; x1 = -5.5f/16.0f; z1 =  5.5f/16.0f; }

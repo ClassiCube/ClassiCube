@@ -1479,6 +1479,7 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 	struct DrawTextArgs args;
 	struct Texture* tex;
 	Size2D size, adjSize;
+	int hintX, hintWidth;
 	Bitmap bmp;
 
 	DrawTextArgs_Make(&args, &w->Base.Lines[0], &w->Base.Font, false);
@@ -1505,8 +1506,8 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 		Drawer2D_DrawText(&bmp, &args, w->Base.Padding, 0);
 
 		args.Text = range;
-		Size2D hintSize = Drawer2D_MeasureText(&args);
-		int hintX = adjSize.Width - hintSize.Width;
+		hintWidth = Drawer2D_MeasureText(&args).Width;
+		hintX     = adjSize.Width - hintWidth;
 		if (size.Width + 3 < hintX) {
 			Drawer2D_DrawText(&bmp, &args, hintX, 0);
 		}
@@ -1973,18 +1974,16 @@ static void PlayerListWidget_AddName(struct PlayerListWidget* w, EntityID id, in
 }
 
 static void PlayerListWidget_DeleteAt(struct PlayerListWidget* w, int i) {
-	struct Texture tex = w->Textures[i];
-	Gfx_DeleteTexture(&tex.ID);
-	struct Texture empty = { 0 };
+	Gfx_DeleteTexture(&w->Textures[i].ID);
 
 	for (; i < w->NamesCount - 1; i++) {
 		w->IDs[i]      = w->IDs[i + 1];
 		w->Textures[i] = w->Textures[i + 1];
 	}
 
-	w->IDs[w->NamesCount]      = 0;
-	w->Textures[w->NamesCount] = empty;
 	w->NamesCount--;
+	w->IDs[w->NamesCount]         = 0;
+	w->Textures[w->NamesCount].ID = GFX_NULL;
 }
 
 static void PlayerListWidget_AddGroup(struct PlayerListWidget* w, int id, int* index) {

@@ -948,27 +948,30 @@ static bool EditHotkeyScreen_KeyUp(void* screen, Key key) {
 }
 
 static void EditHotkeyScreen_ContextRecreated(void* screen) {
-	struct EditHotkeyScreen* s = screen;
+	static String saveHK = String_FromConst("Save changes");
+	static String addHK  = String_FromConst("Add hotkey");
+	static String remHK  = String_FromConst("Remove hotkey");
+	static String cancel = String_FromConst("Cancel");
+	struct EditHotkeyScreen* s  = screen;
 	struct MenuInputValidator v = MenuInputValidator_String();
-	String text = String_Empty;
+	String text; bool existed;
 
-	bool existed = s->OrigHotkey.Trigger != Key_None;
+	existed = s->OrigHotkey.Trigger != Key_None;
 	if (existed) {
 		text = StringsBuffer_UNSAFE_Get(&HotkeysText, s->OrigHotkey.TextIndex);
-	}
+	} else { text = String_Empty; }
 
 	EditHotkeyScreen_MakeBaseKey(s,   EditHotkeyScreen_BaseKey);
 	EditHotkeyScreen_MakeModifiers(s, EditHotkeyScreen_Modifiers);
 	EditHotkeyScreen_MakeLeaveOpen(s, EditHotkeyScreen_LeaveOpen);
 
-	String addText = String_FromReadonly(existed ? "Save changes" : "Add hotkey");
-	EditHotkeyScreen_Make(s, 3, 0, 80, &addText, EditHotkeyScreen_SaveChanges);
-	String remText = String_FromReadonly(existed ? "Remove hotkey" : "Cancel");
-	EditHotkeyScreen_Make(s, 4, 0, 130, &remText, EditHotkeyScreen_RemoveHotkey);
+	EditHotkeyScreen_Make(s, 3, 0,  80, existed ? &saveHK : &addHK, 
+		EditHotkeyScreen_SaveChanges);
+	EditHotkeyScreen_Make(s, 4, 0, 130, existed ? &remHK : &cancel, 
+		EditHotkeyScreen_RemoveHotkey);
 
-	Menu_Back(s, 5, &s->Buttons[5], "Cancel", &s->TitleFont, Menu_SwitchHotkeys);
-
-	Menu_Input(s, 6, &s->Input, 500, &text, &s->TextFont, &v,
+	Menu_Back(s,  5, &s->Buttons[5], "Cancel", &s->TitleFont, Menu_SwitchHotkeys);
+	Menu_Input(s, 6, &s->Input, 500, &text,    &s->TextFont, &v,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -35);
 }
 
