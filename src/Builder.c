@@ -340,9 +340,11 @@ static bool Builder_BuildChunk(int x1, int y1, int z1, bool* allAir) {
 
 void Builder_MakeChunk(struct ChunkInfo* info) {
 	int x = info->CentreX - 8, y = info->CentreY - 8, z = info->CentreZ - 8;
-	bool allAir = false, hasMesh;
-	int totalVerts;
+	bool allAir, hasMesh, hasNorm, hasTrans;
+	int totalVerts, partsIndex;
+	int i, j, curIdx, offset;
 
+	allAir  = false;
 	hasMesh = Builder_BuildChunk(x, y, z, &allAir);
 	info->AllAir = allAir;
 	if (!hasMesh) return;
@@ -354,21 +356,23 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 	info->Vb = Gfx_CreateVb(Builder_Vertices, VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
 #endif
 
-	int i, offset = 0, partsIndex = MapRenderer_Pack(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, z >> CHUNK_SHIFT);
-	bool hasNormal = false, hasTranslucent = false;
+	partsIndex = MapRenderer_Pack(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, z >> CHUNK_SHIFT);
+	offset   = 0;
+	hasNorm  = false;
+	hasTrans = false;
 
 	for (i = 0; i < MapRenderer_1DUsedCount; i++) {
-		int j = i + ATLAS1D_MAX_ATLASES;
-		int curIdx = partsIndex + i * MapRenderer_ChunksCount;
+		j = i + ATLAS1D_MAX_ATLASES;
+		curIdx = partsIndex + i * MapRenderer_ChunksCount;
 
-		Builder_SetPartInfo(&Builder_Parts[i], &offset, &MapRenderer_PartsNormal[curIdx],      &hasNormal);
-		Builder_SetPartInfo(&Builder_Parts[j], &offset, &MapRenderer_PartsTranslucent[curIdx], &hasTranslucent);
+		Builder_SetPartInfo(&Builder_Parts[i], &offset, &MapRenderer_PartsNormal[curIdx],      &hasNorm);
+		Builder_SetPartInfo(&Builder_Parts[j], &offset, &MapRenderer_PartsTranslucent[curIdx], &hasTrans);
 	}
 
-	if (hasNormal) {
-		info->NormalParts = &MapRenderer_PartsNormal[partsIndex];
+	if (hasNorm) {
+		info->NormalParts      = &MapRenderer_PartsNormal[partsIndex];
 	}
-	if (hasTranslucent) {
+	if (hasTrans) {
 		info->TranslucentParts = &MapRenderer_PartsTranslucent[partsIndex];
 	}
 

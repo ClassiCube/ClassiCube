@@ -110,15 +110,18 @@ static void HeldBlockRenderer_ProjectionChanged(void* obj) {
 	https://github.com/UnknownShadow200/ClassicalSharp/wiki/Dig-animation-details
 */
 static void HeldBlockRenderer_DigAnimation(void) {
-	float t = held_time / held_period;
-	float sinHalfCircle = Math_SinF(t * MATH_PI);
-	float sqrtLerpPI    = Math_SqrtF(t) * MATH_PI;
+	float sinHalfCircle, sinHalfCircleWeird;
+	float t, sqrtLerpPI;
+
+	t = held_time / held_period;
+	sinHalfCircle = Math_SinF(t * MATH_PI);
+	sqrtLerpPI    = Math_SqrtF(t) * MATH_PI;
 
 	held_entity.Position.X -= Math_SinF(sqrtLerpPI)       * 0.4f;
 	held_entity.Position.Y += Math_SinF((sqrtLerpPI * 2)) * 0.2f;
 	held_entity.Position.Z -= sinHalfCircle               * 0.2f;
 
-	float sinHalfCircleWeird = Math_SinF(t * t * MATH_PI);
+	sinHalfCircleWeird = Math_SinF(t * t * MATH_PI);
 	held_entity.RotY  -= Math_SinF(sqrtLerpPI) * 80.0f;
 	held_entity.HeadY -= Math_SinF(sqrtLerpPI) * 80.0f;
 	held_entity.RotX  += sinHalfCircleWeird    * 20.0f;
@@ -132,17 +135,21 @@ static void HeldBlockRenderer_ResetAnim(bool setLastHeld, double period) {
 }
 
 static PackedCol HeldBlockRenderer_GetCol(struct Entity* entity) {
-	struct Entity* player = &LocalPlayer_Instance.Base;
-	PackedCol col = player->VTABLE->GetCol(player);
+	struct Entity* player;
+	PackedCol col;
+	float adjHeadX, t, scale;
+
+	player = &LocalPlayer_Instance.Base;
+	col    = player->VTABLE->GetCol(player);
 
 	/* Adjust pitch so angle when looking straight down is 0. */
-	float adjHeadX = player->HeadX - 90.0f;
+	adjHeadX = player->HeadX - 90.0f;
 	if (adjHeadX < 0.0f) adjHeadX += 360.0f;
 
 	/* Adjust colour so held block is brighter when looking straight up */
-	float t = Math_AbsF(adjHeadX - 180.0f) / 180.0f;
-	float colScale = Math_Lerp(0.9f, 0.7f, t);
-	return PackedCol_Scale(col, colScale);
+	t     = Math_AbsF(adjHeadX - 180.0f) / 180.0f;
+	scale = Math_Lerp(0.9f, 0.7f, t);
+	return PackedCol_Scale(col, scale);
 }
 
 void HeldBlockRenderer_ClickAnim(bool digging) {

@@ -459,10 +459,18 @@ static void Inflate_InflateFast(struct InflateState* state) {
 
 void Inflate_Process(struct InflateState* state) {
 	uint32_t len, dist, nlen;
-	uint32_t count, bits;
+	uint32_t i, bits;
 	uint32_t blockHeader;
+
+	/* len/dist table variables */
+	uint32_t distIdx, lenIdx;
+	int lit;
+	/* code lens table variables */
+	uint32_t count, repeatCount;
+	uint8_t  repeatValue;
+	/* window variables */
+	uint32_t startIdx, curIdx;
 	uint32_t copyLen, windowCopyLen;
-	uint32_t distIdx, lenIdx;	
 
 	for (;;) {
 		switch (state->State) {
@@ -550,7 +558,6 @@ void Inflate_Process(struct InflateState* state) {
 		}
 
 		case INFLATE_STATE_DYNAMIC_CODELENS: {
-			int i;
 			while (state->Index < state->NumCodeLens) {
 				Inflate_EnsureBits(state, 3);
 				i = codelens_order[state->Index];
@@ -591,9 +598,6 @@ void Inflate_Process(struct InflateState* state) {
 		}
 
 		case INFLATE_STATE_DYNAMIC_LITSDISTSREPEAT: {
-			uint32_t repeatCount;
-			uint8_t repeatValue;
-
 			switch (state->TmpCodeLens) {
 			case 16:
 				Inflate_EnsureBits(state, 2);
@@ -628,8 +632,8 @@ void Inflate_Process(struct InflateState* state) {
 
 		case INFLATE_STATE_COMPRESSED_LIT: {
 			if (!state->AvailOut) return;
+			lit = Huffman_Decode(state, &state->Table.Lits);
 
-			int lit = Huffman_Decode(state, &state->Table.Lits);
 			if (lit < 256) {
 				if (lit == -1) return;
 				*state->Output = (uint8_t)lit;
@@ -673,9 +677,9 @@ void Inflate_Process(struct InflateState* state) {
 			len = state->TmpLit; dist = state->TmpDist;
 			len = min(len, state->AvailOut);
 
-			/* TODO: Should we test outside of the loop, whether a masking will be required or not? */
-			uint32_t startIdx = (state->WindowIndex - dist) & INFLATE_WINDOW_MASK, curIdx = state->WindowIndex;
-			uint32_t i;
+			/* TODO: Should we test outside of the loop, whether a masking will be required or not? */		
+			startIdx = (state->WindowIndex - dist) & INFLATE_WINDOW_MASK;
+			curIdx   = state->WindowIndex;
 			for (i = 0; i < len; i++) {
 				uint8_t value = state->Window[(startIdx + i) & INFLATE_WINDOW_MASK];
 				*state->Output = value;

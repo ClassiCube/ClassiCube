@@ -387,8 +387,21 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 	TextureLoc loc;
 	int texIndex;
 	TextureRec baseRec, rec;
-	Vector3 origin, pos;
-	Vector3 minBB, maxBB;
+	Vector3 origin, minBB, maxBB;
+
+	/* texture UV variables */
+	float uScale, vScale, maxU2, maxV2;
+	int minX, minZ, maxX, maxZ;
+	int minU, minV, maxU, maxV;
+	int maxUsedU, maxUsedV;
+	
+	/* per-particle coords */
+	float cellX, cellY, cellZ;
+	Vector3 cell, pos;
+	
+	/* per-particle variables */
+	Vector3 velocity;
+	float life;
 	int x, y, z, type;
 
 	if (now != BLOCK_AIR || Block_Draw[old] == DRAW_GAS) return;
@@ -396,16 +409,16 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 	loc = Block_GetTex(old, FACE_XMIN);
 	
 	baseRec = Atlas1D_TexRec(loc, 1, &texIndex);
-	float uScale = (1.0f/16.0f), vScale = (1.0f/16.0f) * Atlas1D_InvTileSize;
+	uScale  = (1.0f/16.0f); vScale = (1.0f/16.0f) * Atlas1D_InvTileSize;
 
-	minBB = Block_MinBB[old]; maxBB = Block_MaxBB[old];
-	int minX = (int)(minBB.X * 16), minZ = (int)(minBB.Z * 16);
-	int maxX = (int)(maxBB.X * 16), maxZ = (int)(maxBB.Z * 16);
+	minBB = Block_MinBB[old];    maxBB = Block_MaxBB[old];
+	minX  = (int)(minBB.X * 16); maxX  = (int)(maxBB.X * 16);
+	minZ  = (int)(minBB.Z * 16); maxZ  = (int)(maxBB.Z * 16);
 
-	int minU = min(minX, minZ), minV = (int)(16 - maxBB.Y * 16);
-	int maxU = min(maxX, maxZ), maxV = (int)(16 - minBB.Y * 16);
-	int maxUsedU = maxU, maxUsedV = maxV;
+	minU = min(minX, minZ); minV = (int)(16 - maxBB.Y * 16);
+	maxU = min(maxX, maxZ); maxV = (int)(16 - minBB.Y * 16);
 	/* This way we can avoid creating particles which outside the bounds and need to be clamped */
+	maxUsedU = maxU; maxUsedV = maxV;
 	if (minU < 12 && maxU > 12) maxUsedU = 12;
 	if (minV < 12 && maxV > 12) maxUsedV = 12;
 
@@ -413,17 +426,18 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 	/* gridOffset gives the centre of the cell on a grid */
 	#define CELL_CENTRE ((1.0f / GRID_SIZE) * 0.5f)
 
-	float maxU2 = baseRec.U1 + maxU * uScale;
-	float maxV2 = baseRec.V1 + maxV * vScale;
+	maxU2 = baseRec.U1 + maxU * uScale;
+	maxV2 = baseRec.V1 + maxV * vScale;
 	for (x = 0; x < GRID_SIZE; x++) {
 		for (y = 0; y < GRID_SIZE; y++) {
 			for (z = 0; z < GRID_SIZE; z++) {
-				float cellX = (float)x / GRID_SIZE, cellY = (float)y / GRID_SIZE, cellZ = (float)z / GRID_SIZE;
-				Vector3 cell = Vector3_Create3(CELL_CENTRE + cellX, CELL_CENTRE / 2 + cellY, CELL_CENTRE + cellZ);
+
+				cellX = (float)x / GRID_SIZE; cellY = (float)y / GRID_SIZE; cellZ = (float)z / GRID_SIZE;
+				cell  = Vector3_Create3(CELL_CENTRE + cellX, CELL_CENTRE / 2 + cellY, CELL_CENTRE + cellZ);
 				if (cell.X < minBB.X || cell.X > maxBB.X || cell.Y < minBB.Y
 					|| cell.Y > maxBB.Y || cell.Z < minBB.Z || cell.Z > maxBB.Z) continue;
 
-				Vector3 velocity; /* centre random offset around [-0.2, 0.2] */
+				/* centre random offset around [-0.2, 0.2] */
 				velocity.X = CELL_CENTRE + (cellX - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
 				velocity.Y = CELL_CENTRE + (cellY - 0.0f) + (Random_Float(&rnd) * 0.4f - 0.2f);
 				velocity.Z = CELL_CENTRE + (cellZ - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
@@ -439,7 +453,7 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 				if (terrain_count == PARTICLES_MAX) Terrain_RemoveAt(0);
 				p = &terrain_particles[terrain_count++];
 
-				float life = 0.3f + Random_Float(&rnd) * 1.2f;
+				life = 0.3f + Random_Float(&rnd) * 1.2f;
 				Vector3_Add(&pos, &origin, &cell);
 				Particle_Reset(&p->Base, pos, velocity, life);
 

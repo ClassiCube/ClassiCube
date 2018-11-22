@@ -593,29 +593,38 @@ static int high_neighbor(int16_t* v, int x) {
 }
 
 static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, int ch) {
-	/* amplitude value synthesis */
+	/* amplitude arrays */
 	int32_t YFinal[FLOOR_MAX_VALUES];
 	bool Step2[FLOOR_MAX_VALUES];
+	int32_t* yList;
+	float* data;
+	/* amplitude variables */
+	int lo_offset, hi_offset, predicted;
+	int val, highroom, lowroom, room;
+	int i;
+	/* curve variables */
+	int lx, hx, ly, hy;
+	int rawI;
+	float value;
 
-	float* data    = ctx->CurOutput[ch];
-	int32_t* yList = f->YList[ch];
+	/* amplitude value synthesis */
+	yList = f->YList[ch];
+	data  = ctx->CurOutput[ch];
 
-	Step2[0] = true;
-	Step2[1] = true;
+	Step2[0]  = true;
+	Step2[1]  = true;
 	YFinal[0] = yList[0];
 	YFinal[1] = yList[1];
 
-	int i;
 	for (i = 2; i < f->Values; i++) {
-		int lo_offset = low_neighbor(f->XList, i);
-		int hi_offset = high_neighbor(f->XList, i);
+		lo_offset = low_neighbor(f->XList, i);
+		hi_offset = high_neighbor(f->XList, i);
+		predicted = Floor_RenderPoint(f->XList[lo_offset], YFinal[lo_offset],
+									  f->XList[hi_offset], YFinal[hi_offset], f->XList[i]);
 
-		int predicted = Floor_RenderPoint(f->XList[lo_offset], YFinal[lo_offset],
-										  f->XList[hi_offset], YFinal[hi_offset], f->XList[i]);
-
-		int val = yList[i];
-		int highroom = f->Range - predicted;
-		int lowroom = predicted, room;
+		val      = yList[i];
+		highroom = f->Range - predicted;
+		lowroom  = predicted;
 
 		if (highroom < lowroom) {
 			room = highroom * 2;
@@ -647,9 +656,9 @@ static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, int ch) {
 		}
 	}
 
-	/* curve synthesis */
-	int hx = 0, lx = 0, rawI;
-	int ly = YFinal[f->ListOrder[0]] * f->Multiplier, hy = ly;
+	/* curve synthesis */ 
+	lx = 0; ly = YFinal[f->ListOrder[0]] * f->Multiplier; 
+	hx = 0; hy = ly;
 
 	for (rawI = 1; rawI < f->Values; rawI++) {
 		i = f->ListOrder[rawI];
@@ -666,7 +675,8 @@ static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, int ch) {
 	/* TODO: Is this right? should hy be 0, if Step2 is false for all */
 	if (hx >= ctx->DataSize) return;
 	lx = hx; hx = ctx->DataSize;
-	float value = floor1_inverse_dB_table[hy];
+
+	value = floor1_inverse_dB_table[hy];
 	for (; lx < hx; lx++) { data[lx] *= value; }
 }
 
@@ -713,18 +723,35 @@ static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r
 }
 
 static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, uint32_t size, int ch, bool* doNotDecode, float** data) {
-	uint32_t residueBeg = min(r->Begin, size);
-	uint32_t residueEnd = min(r->End,   size);
+	struct Codebook* classbook;
+	uint32_t residueBeg, residueEnd;
+	uint32_t classwordsPerCodeword;
+	uint32_t nToRead, partitionsToRead;
 	int pass, i, j, k;
 
-	struct Codebook* classbook = &ctx->Codebooks[r->Classbook];
-	uint32_t classwordsPerCodeword = classbook->Dimensions;
-	uint32_t nToRead = residueEnd - residueBeg;
-	uint32_t partitionsToRead = nToRead / r->PartitionSize;
+	/* classification variables */
+	uint8_t* classifications[VORBIS_MAX_CHANS];
+	uint8_t* classifications_raw;
+	uint32_t temp;
+
+	/* partition variables */
+	struct Codebook* c;
+	float* v;
+	uint32_t offset;
+	uint8_t class;
+	int16_t book;
+
+	/* per spec, ensure decoded bounds are actually in size */
+	residueBeg = min(r->Begin, size);
+	residueEnd = min(r->End,   size);
+	classbook = &ctx->Codebooks[r->Classbook];
+
+	classwordsPerCodeword = classbook->Dimensions;
+	nToRead = residueEnd - residueBeg;
+	partitionsToRead = nToRead / r->PartitionSize;
 
 	/* first half of temp array is used by residue type 2 for storing temp interleaved data */
-	uint8_t* classifications_raw = ((uint8_t*)ctx->Temp) + (ctx->DataSize * ctx->Channels * 5);
-	uint8_t* classifications[VORBIS_MAX_CHANS];
+	classifications_raw = ((uint8_t*)ctx->Temp) + (ctx->DataSize * ctx->Channels * 5);
 	for (i = 0; i < ch; i++) {
 		/* add a bit of space in case classwordsPerCodeword is > partitionsToRead*/
 		classifications[i] = classifications_raw + i * (partitionsToRead + 64);
@@ -740,7 +767,7 @@ static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, uint3
 				for (j = 0; j < ch; j++) {
 					if (doNotDecode[j]) continue;
 
-					uint32_t temp = Codebook_DecodeScalar(ctx, classbook);
+					temp = Codebook_DecodeScalar(ctx, classbook);
 					for (i = classwordsPerCodeword - 1; i >= 0; i--) {
 						classifications[j][i + partitionCount] = temp % r->Classifications;
 						temp /= r->Classifications;
@@ -751,13 +778,14 @@ static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, uint3
 			for (i = 0; i < classwordsPerCodeword && partitionCount < partitionsToRead; i++) {
 				for (j = 0; j < ch; j++) {
 					if (doNotDecode[j]) continue;
-					uint8_t class = classifications[j][partitionCount];
-					int16_t book = r->Books[class][pass];
+
+					class = classifications[j][partitionCount];
+					book  = r->Books[class][pass];
 					if (book < 0) continue;
 
-					uint32_t offset = residueBeg + partitionCount * r->PartitionSize;
-					float* v = data[j] + offset;
-					struct Codebook* c = &ctx->Codebooks[book];
+					offset = residueBeg + partitionCount * r->PartitionSize;
+					v = data[j] + offset;
+					c = &ctx->Codebooks[book];
 
 					if (r->Type == 0) {
 						int step = r->PartitionSize / c->Dimensions;
@@ -778,9 +806,11 @@ static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, uint3
 
 static void Residue_DecodeFrame(struct VorbisState* ctx, struct Residue* r, int ch, bool* doNotDecode, float** data) {
 	uint32_t size = ctx->DataSize;
+	float* interleaved;
+	int i, j;
+
 	if (r->Type == 2) {
 		bool decodeAny = false;
-		int i, j;
 
 		/* type 2 decodes all channel vectors, if at least 1 channel to decode */
 		for (i = 0; i < ch; i++) {
@@ -789,7 +819,7 @@ static void Residue_DecodeFrame(struct VorbisState* ctx, struct Residue* r, int 
 		if (!decodeAny) return;
 		decodeAny = false; /* because DecodeCore expects this to be 'false' for 'do not decode' */
 
-		float* interleaved = ctx->Temp;
+		interleaved = ctx->Temp;
 		/* TODO: avoid using ctx->temp and deinterleaving at all */
 		/* TODO: avoid setting memory to 0 here */
 		Mem_Set(interleaved, 0, ctx->DataSize * ctx->Channels * sizeof(float));
@@ -922,6 +952,8 @@ void imdct_init(struct imdct_state* state, int n) {
 void imdct_calc(float* in, float* out, struct imdct_state* state) {
 	int k, k2, k4, k8, n = state->n;
 	int n2 = n >> 1, n4 = n >> 2, n8 = n >> 3, n3_4 = n - n4;
+	int l, log2_n;
+	uint32_t* reversed;
 	
 	/* Optimised algorithm from "The use of multirate filter banks for coding of high quality digital audio" */
 	/* Uses a few fixes for the paper noted at http://www.nothings.org/stb_vorbis/mdct_01.txt */
@@ -951,7 +983,7 @@ void imdct_calc(float* in, float* out, struct imdct_state* state) {
 	}
 
 	/* step 3 */
-	int l, log2_n = state->log2_n;
+	log2_n = state->log2_n;
 	for (l = 0; l <= log2_n - 4; l++) {
 		int k0 = n >> (l+2), k1 = 1 << (l+3);
 		int r, r4, rMax = n >> (l+4), s2, s2Max = 1 << (l+2);
@@ -977,7 +1009,7 @@ void imdct_calc(float* in, float* out, struct imdct_state* state) {
 	}
 
 	/* step 4, step 5, step 6, step 7, step 8, output */
-	uint32_t* reversed = state->Reversed;
+	reversed = state->Reversed;
 	for (k = 0, k2 = 0, k8 = 0; k < n8; k++, k2 += 2, k8 += 8) {
 		uint32_t j = reversed[k], j8 = j << 3;
 		e_1 = u[n-j8-1]; e_2 = u[n-j8-3];
@@ -1024,16 +1056,19 @@ static ReturnCode Mode_DecodeSetup(struct VorbisState* ctx, struct Mode* m) {
 
 static void Vorbis_CalcWindow(struct VorbisWindow* window, int blockSize) {
 	int i, n = blockSize / 2;
+	float *cur_window, *prev_window;
+	double inner;
+
 	window->Cur = window->Prev + n;
-	float* cur_window  = window->Cur;
-	float* prev_window = window->Prev;
+	cur_window  = window->Cur;
+	prev_window = window->Prev;
 
 	for (i = 0; i < n; i++) {
-		double inner   = Math_Sin((i + 0.5) / n * (PI/2));
+		inner          = Math_Sin((i + 0.5) / n * (PI/2));
 		cur_window[i]  = Math_Sin((PI/2) * inner * inner);
 	}
 	for (i = 0; i < n; i++) {
-		double inner   = Math_Sin((i + 0.5) / n * (PI/2) + (PI/2));
+		inner          = Math_Sin((i + 0.5) / n * (PI/2) + (PI/2));
 		prev_window[i] = Math_Sin((PI/2) * inner * inner);
 	}
 }
@@ -1219,7 +1254,8 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	int modeIdx;
 
 	/* floor/residue */
-	bool hasFloor[VORBIS_MAX_CHANS], hasResidue[VORBIS_MAX_CHANS];
+	bool hasFloor[VORBIS_MAX_CHANS];
+	bool hasResidue[VORBIS_MAX_CHANS];
 	bool doNotDecode[VORBIS_MAX_CHANS];
 	float* data[VORBIS_MAX_CHANS];
 	int submap, floorIdx;
@@ -1345,7 +1381,15 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 }
 
 int Vorbis_OutputFrame(struct VorbisState* ctx, int16_t* data) {
+	struct VorbisWindow window;
+	float* prev[VORBIS_MAX_CHANS];
+	float*  cur[VORBIS_MAX_CHANS];
+
+	int curQrtr, prevQrtr, overlapQtr;
+	int curOffset, prevOffset, overlapSize;
+	float sample;
 	int i, ch;
+
 	/* first frame decoded has no data */
 	if (ctx->PrevBlockSize == 0) {
 		ctx->PrevBlockSize = ctx->CurBlockSize;
@@ -1354,8 +1398,9 @@ int Vorbis_OutputFrame(struct VorbisState* ctx, int16_t* data) {
 
 	/* data returned is from centre of previous block to centre of current block */
 	/* data is aligned, such that 3/4 of prev block is aligned to 1/4 of cur block */
-	int prevQrtr   = ctx->PrevBlockSize / 4, curQrtr = ctx->CurBlockSize / 4;
-	int overlapQtr = min(curQrtr, prevQrtr);
+	curQrtr   = ctx->CurBlockSize  / 4;
+	prevQrtr  = ctx->PrevBlockSize / 4;
+	overlapQtr = min(curQrtr, prevQrtr);
 	
 	/* So for example, consider a short block overlapping with a long block
 	   a) we need to chop off 'prev' before its halfway point
@@ -1365,10 +1410,9 @@ int Vorbis_OutputFrame(struct VorbisState* ctx, int16_t* data) {
 	           - |  #         |        ***          ===>    |  #         |
 	          -  | * -        |           ***               | * -        |
 	   ******-***|*   -       |              ***            |*   -       |
-	*/
-	float* prev[VORBIS_MAX_CHANS];
-	float*  cur[VORBIS_MAX_CHANS];
-	int curOffset = curQrtr - overlapQtr, prevOffset = prevQrtr - overlapQtr;
+	*/	
+	curOffset  = curQrtr  - overlapQtr;
+	prevOffset = prevQrtr - overlapQtr;
 
 	for (i = 0; i < ctx->Channels; i++) {
 		prev[i] = ctx->PrevOutput[i] + (prevQrtr * 2);
@@ -1378,7 +1422,7 @@ int Vorbis_OutputFrame(struct VorbisState* ctx, int16_t* data) {
 	/* for long prev and short cur block, there will be non-overlapped data before */
 	for (i = 0; i < prevOffset; i++) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
-			float sample = prev[ch][i];
+			sample = prev[ch][i];
 			Math_Clamp(sample, -1.0f, 1.0f);
 			*data++ = (int16_t)(sample * 32767);
 		}
@@ -1389,14 +1433,14 @@ int Vorbis_OutputFrame(struct VorbisState* ctx, int16_t* data) {
 		prev[i] += prevOffset; cur[i] += curOffset;
 	}
 
-	int overlapSize = overlapQtr * 2;
-	struct VorbisWindow window = ctx->Windows[(overlapQtr * 4) == ctx->BlockSizes[1]];
+	overlapSize = overlapQtr * 2;
+	window = ctx->Windows[(overlapQtr * 4) == ctx->BlockSizes[1]];
 
 	/* overlap and add data */
 	/* also perform windowing here */
 	for (i = 0; i < overlapSize; i++) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
-			float sample = prev[ch][i] * window.Prev[i] + cur[ch][i] * window.Cur[i];
+			sample = prev[ch][i] * window.Prev[i] + cur[ch][i] * window.Cur[i];
 			Math_Clamp(sample, -1.0f, 1.0f);
 			*data++ = (int16_t)(sample * 32767);
 		}
@@ -1406,7 +1450,7 @@ int Vorbis_OutputFrame(struct VorbisState* ctx, int16_t* data) {
 	for (i = 0; i < ctx->Channels; i++) { cur[i] += overlapSize; }
 	for (i = 0; i < curOffset; i++) {
 		for (ch = 0; ch < ctx->Channels; ch++) {
-			float sample = cur[ch][i];
+			sample = cur[ch][i];
 			Math_Clamp(sample, -1.0f, 1.0f);
 			*data++ = (int16_t)(sample * 32767);
 		}
