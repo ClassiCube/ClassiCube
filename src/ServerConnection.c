@@ -389,8 +389,9 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	struct LocalPlayer* p;
 	TimeMS now;
 	uint32_t pending;
-	ReturnCode res;
+	uint8_t* readEnd;
 	Net_Handler handler;
+	ReturnCode res;
 
 	if (ServerConnection_Disconnected) return;
 	if (net_connecting) { MPConnection_TickConnect(); return; }
@@ -403,8 +404,8 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	if (ServerConnection_Disconnected) return;
 
 	pending = 0;
-	res = Socket_Available(net_socket, &pending);
-	uint8_t* readEnd = net_readCurrent;
+	res     = Socket_Available(net_socket, &pending);
+	readEnd = net_readCurrent;
 
 	if (!res && pending) {
 		/* NOTE: Always using a read call that is a multiple of 4096 (appears to?) improve read performance */	

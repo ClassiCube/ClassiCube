@@ -612,8 +612,8 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 }
 
 static void Cw_Callback(struct NbtTag* tag) {
-	int depth = 0;
 	struct NbtTag* tmp = tag->Parent;
+	int depth = 0;
 	while (tmp) { depth++; tmp = tmp->Parent; }
 
 	switch (depth) {
@@ -628,22 +628,22 @@ static void Cw_Callback(struct NbtTag* tag) {
 
 ReturnCode Cw_Load(struct Stream* stream) {
 	uint8_t tag;
-	ReturnCode res;
-
 	struct Stream compStream;
 	struct InflateState state;
-	Inflate_MakeStream(&compStream, &state, stream);
+	Vector3* spawn; Vector3I P;
+	ReturnCode res;
 
+	Inflate_MakeStream(&compStream, &state, stream);
 	if ((res = Map_SkipGZipHeader(stream))) return res;
 	if ((res = compStream.ReadU8(&compStream, &tag))) return res;
-	if (tag != NBT_DICT) return CW_ERR_ROOT_TAG;
 
+	if (tag != NBT_DICT) return CW_ERR_ROOT_TAG;
 	res = Nbt_ReadTag(NBT_DICT, true, &compStream, NULL, Cw_Callback);
 	if (res) return res;
 
 	/* Older versions incorrectly multiplied spawn coords by * 32, so we check for that */
-	Vector3* spawn = &LocalPlayer_Instance.Spawn;
-	Vector3I P; Vector3I_Floor(&P, spawn);
+	spawn = &LocalPlayer_Instance.Spawn; 
+	Vector3I_Floor(&P, spawn);
 	if (!World_IsValidPos_3I(P)) { spawn->X /= 32.0f; spawn->Y /= 32.0f; spawn->Z /= 32.0f; }
 	return 0;
 }

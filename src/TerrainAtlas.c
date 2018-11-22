@@ -83,17 +83,20 @@ static void Atlas1D_Convert2DTo1D(int atlasesCount, int atlas1DHeight) {
 }
 
 void Atlas1D_UpdateState(void) {
-	int maxAtlasHeight   = min(4096, Gfx_MaxTexHeight);
-	int maxTilesPerAtlas = maxAtlasHeight / Atlas2D_TileSize;
-	int maxTiles         = Atlas2D_RowsCount * ATLAS2D_TILES_PER_ROW;
+	int maxAtlasHeight, maxTilesPerAtlas, maxTiles;
+	int atlasesCount, atlasHeight;
+
+	maxAtlasHeight   = min(4096, Gfx_MaxTexHeight);
+	maxTilesPerAtlas = maxAtlasHeight / Atlas2D_TileSize;
+	maxTiles         = Atlas2D_RowsCount * ATLAS2D_TILES_PER_ROW;
 
 	Atlas1D_TilesPerAtlas = min(maxTilesPerAtlas, maxTiles);
-	int atlasesCount    = Math_CeilDiv(maxTiles, Atlas1D_TilesPerAtlas);
-	int atlasHeight     = Atlas1D_TilesPerAtlas * Atlas2D_TileSize;
+	atlasesCount  = Math_CeilDiv(maxTiles, Atlas1D_TilesPerAtlas);
+	atlasHeight   = Atlas1D_TilesPerAtlas * Atlas2D_TileSize;
 
 	Atlas1D_InvTileSize = 1.0f / Atlas1D_TilesPerAtlas;
-	Atlas1D_Mask        = Atlas1D_TilesPerAtlas - 1;
-	Atlas1D_Shift       = Math_Log2(Atlas1D_TilesPerAtlas);
+	Atlas1D_Mask  = Atlas1D_TilesPerAtlas - 1;
+	Atlas1D_Shift = Math_Log2(Atlas1D_TilesPerAtlas);
 
 	Atlas1D_Convert2DTo1D(atlasesCount, atlasHeight);
 }

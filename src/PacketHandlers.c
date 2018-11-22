@@ -629,29 +629,27 @@ static void Classic_RemoveEntity(uint8_t* data) {
 }
 
 static void Classic_Message(uint8_t* data) {
+	String text; char textBuffer[STRING_SIZE + 2];
 	static String detailMsg  = String_FromConst("^detail.user=");
 	static String detailUser = String_FromConst("^detail.user");
 
-	char textBuffer[STRING_SIZE + 2];
-	String text  = String_FromArray(textBuffer);
 	uint8_t type = *data++;
+	String_InitArray(text, textBuffer);
 
 	/* Original vanilla server uses player ids for type, 255 for server messages (&e prefix) */
-	bool prepend = !cpe_useMessageTypes && type == 0xFF;
-	if (prepend) { String_AppendConst(&text, "&e"); }
+	if (!cpe_useMessageTypes) {
+		if (type == 0xFF) String_AppendConst(&text, "&e");
+		type = MSG_TYPE_NORMAL;
+	}
 	Handlers_ReadString(&data, &text);
-	if (!cpe_useMessageTypes) type = MSG_TYPE_NORMAL;
 
 	/* WoM detail messages (used e.g. for fCraft server compass) */
 	if (String_CaselessStarts(&text, &detailMsg)) {
 		text = String_UNSAFE_SubstringAt(&text, detailMsg.length);
 		type = MSG_TYPE_STATUS_3;
 	}
-
 	/* Ignore ^detail.user.joined etc */
-	if (!String_CaselessStarts(&text, &detailUser)) {
-		Chat_AddOf(&text, type); 
-	}
+	if (!String_CaselessStarts(&text, &detailUser)) Chat_AddOf(&text, type);
 }
 
 static void Classic_Kick(uint8_t* data) {

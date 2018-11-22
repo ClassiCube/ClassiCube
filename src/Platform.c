@@ -830,6 +830,8 @@ static void Font_CloseWrapper(FT_Stream s) {
 }
 
 static bool Font_MakeArgs(const String* path, FT_Stream stream, FT_Open_Args* args) {
+	struct Stream* data;
+	uint8_t* buffer;
 	FileHandle file;
 	uint32_t size;
 
@@ -837,14 +839,10 @@ static bool Font_MakeArgs(const String* path, FT_Stream stream, FT_Open_Args* ar
 	if (File_Length(file, &size)) { File_Close(file); return false; }
 	stream->size = size;
 
-	struct Stream* data    = Mem_Alloc(1, sizeof(struct Stream) * 2 + 8192, "Font_MakeArgs");
-	struct Stream* wrapper = &data[0];
-	struct Stream* fileSrm = &data[1];
-
-	/* TODO: Increase buffer size to 8192, better Seek impl (want 11,000 I/O reads) */
-	uint8_t* buffer = (uint8_t*)&data[2];
-	Stream_FromFile(fileSrm, file);
-	Stream_ReadonlyBuffered(wrapper, fileSrm, buffer, 8192);
+	data   = Mem_Alloc(1, sizeof(struct Stream) * 2 + 8192, "Font_MakeArgs");
+	buffer = (uint8_t*)&data[2];
+	Stream_FromFile(&data[1], file);
+	Stream_ReadonlyBuffered(&data[0], &data[1], buffer, 8192);
 
 	stream->descriptor.pointer = data;
 	stream->memory = &ft_mem;
@@ -1993,9 +1991,9 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 }
 
 static ReturnCode Platform_RunOpen(const char* format, const String* args) {
+	String path; char pathBuffer[FILENAME_SIZE + 10];
 	char str[600];
 	FILE* fp;
-	String path; char pathBuffer[FILENAME_SIZE + 10];
 
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, format, args);

@@ -61,7 +61,7 @@ struct TableWidget {
 	int ElementsCount, ElementsPerRow, RowsCount;
 	int LastCreatedIndex;
 	FontDesc Font;
-	int SelectedIndex, BlockSize;
+	int SelectedIndex, CellSize;
 	float SelBlockExpand;
 	GfxResourceID VB;
 	bool PendingClose;

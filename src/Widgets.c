@@ -509,10 +509,10 @@ void HotbarWidget_Create(struct HotbarWidget* w) {
 static int Table_X(struct TableWidget* w) { return w->X - 5 - 10; }
 static int Table_Y(struct TableWidget* w) { return w->Y - 5 - 30; }
 static int Table_Width(struct TableWidget* w) {
-	return w->ElementsPerRow * w->BlockSize + 10 + 20; 
+	return w->ElementsPerRow * w->CellSize + 10 + 20; 
 }
 static int Table_Height(struct TableWidget* w) {
-	return min(w->RowsCount, TABLE_MAX_ROWS_DISPLAYED) * w->BlockSize + 10 + 40;
+	return min(w->RowsCount, TABLE_MAX_ROWS_DISPLAYED) * w->CellSize + 10 + 40;
 }
 
 #define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
@@ -522,8 +522,8 @@ static bool TableWidget_GetCoords(struct TableWidget* w, int i, int* cellX, int*
 	x = i % w->ElementsPerRow;
 	y = i / w->ElementsPerRow - w->Scroll.ScrollY;
 
-	*cellX = w->X + w->BlockSize * x;
-	*cellY = w->Y + w->BlockSize * y + 3;
+	*cellX = w->X + w->CellSize * x;
+	*cellY = w->Y + w->CellSize * y + 3;
 	return y >= 0 && y < TABLE_MAX_ROWS_DISPLAYED;
 }
 
@@ -542,7 +542,7 @@ static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 
 	idx = w->SelectedIndex;
 	TableWidget_GetCoords(w, idx, &x, &y);
-	x += w->BlockSize / 2; y += w->BlockSize / 2;
+	x += w->CellSize / 2; y += w->CellSize / 2;
 
 	topLeft = Window_PointToScreen(0, 0);
 	x += topLeft.X; y += topLeft.Y;
@@ -571,8 +571,8 @@ static void TableWidget_UpdateDescTexPos(struct TableWidget* w) {
 
 static void TableWidget_UpdatePos(struct TableWidget* w) {
 	int rowsDisplayed = min(TABLE_MAX_ROWS_DISPLAYED, w->RowsCount);
-	w->Width  = w->BlockSize * w->ElementsPerRow;
-	w->Height = w->BlockSize * rowsDisplayed;
+	w->Width  = w->CellSize * w->ElementsPerRow;
+	w->Height = w->CellSize * rowsDisplayed;
 	w->X = Game_Width  / 2 - w->Width  / 2;
 	w->Y = Game_Height / 2 - w->Height / 2;
 	TableWidget_UpdateDescTexPos(w);
@@ -643,6 +643,8 @@ static void TableWidget_Init(void* widget) {
 static void TableWidget_Render(void* widget, double delta) {
 	struct TableWidget* w = widget;
 	VertexP3fT2fC4b vertices[TABLE_MAX_VERTICES];
+	int cellSize, size;
+	float off;
 	int i, x, y;
 
 	/* These were sourced by taking a screenshot of vanilla
@@ -660,12 +662,12 @@ static void TableWidget_Render(void* widget, double delta) {
 		Elem_Render(&w->Scroll, delta);
 	}
 
-	int blockSize = w->BlockSize;
+	cellSize = w->CellSize;
 	if (w->SelectedIndex != -1 && Game_ClassicMode) {
 		TableWidget_GetCoords(w, w->SelectedIndex, &x, &y);
 
-		float off = blockSize * 0.1f;
-		int size = (int)(blockSize + off * 2);
+		off  = cellSize * 0.1f;
+		size = (int)(cellSize + off * 2);
 		GfxCommon_Draw2DGradient((int)(x - off), (int)(y - off),
 			size, size, topSelCol, bottomSelCol);
 	}
@@ -678,8 +680,8 @@ static void TableWidget_Render(void* widget, double delta) {
 
 		/* We want to always draw the selected block on top of others */
 		if (i == w->SelectedIndex) continue;
-		IsometricDrawer_DrawBatch(w->Elements[i], blockSize * 0.7f / 2.0f,
-			x + blockSize / 2, y + blockSize / 2);
+		IsometricDrawer_DrawBatch(w->Elements[i], cellSize * 0.7f / 2.0f,
+			x + cellSize / 2, y + cellSize / 2);
 	}
 
 	i = w->SelectedIndex;
@@ -687,8 +689,8 @@ static void TableWidget_Render(void* widget, double delta) {
 		TableWidget_GetCoords(w, i, &x, &y);
 
 		IsometricDrawer_DrawBatch(w->Elements[i],
-			(blockSize + w->SelBlockExpand) * 0.7f / 2.0f,
-			x + blockSize / 2, y + blockSize / 2);
+			(cellSize + w->SelBlockExpand) * 0.7f / 2.0f,
+			x + cellSize / 2, y + cellSize / 2);
 	}
 	IsometricDrawer_EndBatch();
 
@@ -713,7 +715,7 @@ static void TableWidget_Recreate(void* widget) {
 static void TableWidget_Reposition(void* widget) {
 	struct TableWidget* w = widget;
 	float scale = Game_GetInventoryScale();
-	w->BlockSize = (int)(50 * Math_SqrtF(scale));
+	w->CellSize = (int)(50 * Math_SqrtF(scale));
 	w->SelBlockExpand = 25.0f * Math_SqrtF(scale);
 
 	TableWidget_UpdatePos(w);
@@ -788,7 +790,7 @@ static bool TableWidget_MouseMove(void* widget, int x, int y) {
 	w->LastX = x; w->LastY = y;
 
 	w->SelectedIndex = -1;
-	cellSize  = w->BlockSize;
+	cellSize  = w->CellSize;
 	maxHeight = cellSize * TABLE_MAX_ROWS_DISPLAYED;
 
 	if (Gui_Contains(w->X, w->Y + 3, w->Width, maxHeight - 3 * 2, x, y)) {
