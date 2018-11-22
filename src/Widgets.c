@@ -1734,7 +1734,7 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 	String str; char strBuffer[STRING_SIZE];
 	EntityID matches[TABLIST_MAX_NAMES];
 	String part, name;
-	int beg, end;
+	int beg, end, len;
 	int i, j, numMatches;
 	char* buffer;
 
@@ -1762,7 +1762,10 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 
 	if (numMatches == 1) {
 		if (w->CaretPos == -1) end++;
-		int len = end - beg;
+		len = end - beg;
+
+		/* Following on from above example, delete 'N','a','m' */
+		/* Then insert the e.g. matching 'nAME1' player name */
 		for (j = 0; j < len; j++) {
 			String_DeleteAt(&w->Text, beg);
 		}

@@ -39,8 +39,8 @@ void AxisLinesRenderer_Render(double delta) {
 	};
 	static PackedCol cols[3] = {
 		PACKEDCOL_CONST(255,   0,   0, 255), /* Red   */
-		PACKEDCOL_CONST(  0, 255,   0, 255), /* Green */
 		PACKEDCOL_CONST(  0,   0, 255, 255), /* Blue  */
+		PACKEDCOL_CONST(  0, 255,   0, 255), /* Green */
 	};
 
 	Vector3 coords[5], pos;

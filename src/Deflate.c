@@ -297,9 +297,9 @@ static int Huffman_Decode(struct InflateState* state, struct HuffmanTable* table
 #define Huffman_Unsafe_Decode(state, table, result) \
 {\
 	Inflate_UNSAFE_EnsureBits(state, INFLATE_MAX_BITS);\
-	int packed = table.Fast[Inflate_PeekBits(state, INFLATE_FAST_BITS)];\
+	packed = table.Fast[Inflate_PeekBits(state, INFLATE_FAST_BITS)];\
 	if (packed >= 0) {\
-		int consumedBits = packed >> INFLATE_FAST_BITS;\
+		consumedBits = packed >> INFLATE_FAST_BITS;\
 		Inflate_ConsumeBits(state, consumedBits);\
 		result = packed & 0x1FF;\
 	} else {\
@@ -382,12 +382,20 @@ static uint8_t codelens_order[INFLATE_MAX_CODELENS] = {
 };
 
 static void Inflate_InflateFast(struct InflateState* state) {
+	/* huffman variables */
 	uint32_t lit, len, dist;
 	uint32_t bits, lenIdx, distIdx;
+	int packed, consumedBits;
 
-	uint32_t copyStart = state->WindowIndex, copyLen = 0;
-	uint8_t* window = state->Window;
-	uint32_t curIdx = state->WindowIndex;
+	/* window variables */
+	uint8_t* window;
+	uint32_t i, curIdx, startIdx;
+	uint32_t copyStart, copyLen, partLen;
+
+	window = state->Window;
+	curIdx = state->WindowIndex;
+	copyStart = state->WindowIndex;
+	copyLen   = 0;
 
 #define INFLATE_FAST_COPY_MAX (INFLATE_WINDOW_SIZE - INFLATE_FASTINF_OUT)
 	while (state->AvailOut >= INFLATE_FASTINF_OUT && state->AvailIn >= INFLATE_FASTINF_IN && copyLen < INFLATE_FAST_COPY_MAX) {
@@ -412,8 +420,10 @@ static void Inflate_InflateFast(struct InflateState* state) {
 			bits = dist_bits[distIdx];
 			Inflate_UNSAFE_EnsureBits(state, bits);
 			dist = dist_base[distIdx] + Inflate_ReadBits(state, bits);
-
-			uint32_t i, startIdx = (curIdx - dist) & INFLATE_WINDOW_MASK;
+	
+			/* Window is infinitely repeating like ... [xyz][xyz][xyz] ... */
+			/* If start and end don't cross a boundary, can avoid masking index */
+			startIdx = (curIdx - dist) & INFLATE_WINDOW_MASK;
 			if (curIdx >= startIdx && (curIdx + len) < INFLATE_WINDOW_SIZE) {
 				uint8_t* src = &window[startIdx]; 
 				uint8_t* dst = &window[curIdx];
@@ -433,17 +443,17 @@ static void Inflate_InflateFast(struct InflateState* state) {
 	}
 
 	state->WindowIndex = curIdx;
-	if (copyLen > 0) {
-		if (copyStart + copyLen < INFLATE_WINDOW_SIZE) {
-			Mem_Copy(state->Output, &state->Window[copyStart], copyLen);
-			state->Output += copyLen;
-		} else {
-			uint32_t partLen = INFLATE_WINDOW_SIZE - copyStart;
-			Mem_Copy(state->Output, &state->Window[copyStart], partLen);
-			state->Output += partLen;
-			Mem_Copy(state->Output, state->Window, copyLen - partLen);
-			state->Output += (copyLen - partLen);
-		}
+	if (!copyLen) return;
+
+	if (copyStart + copyLen < INFLATE_WINDOW_SIZE) {
+		Mem_Copy(state->Output, &state->Window[copyStart], copyLen);
+		state->Output += copyLen;
+	} else {
+		partLen = INFLATE_WINDOW_SIZE - copyStart;
+		Mem_Copy(state->Output, &state->Window[copyStart], partLen);
+		state->Output += partLen;
+		Mem_Copy(state->Output, state->Window, copyLen - partLen);
+		state->Output += (copyLen - partLen);
 	}
 }
 

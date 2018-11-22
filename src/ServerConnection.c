@@ -391,6 +391,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	uint32_t pending;
 	uint8_t* readEnd;
 	Net_Handler handler;
+	int i, remaining;
 	ReturnCode res;
 
 	if (ServerConnection_Disconnected) return;
@@ -454,8 +455,10 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 		net_readCurrent += Net_PacketSizes[opcode];
 	}
 
-	/* Keep last few unprocessed bytes, don't care about rest since they'll be overwritten on socket read */
-	uint32_t i, remaining = (uint32_t)(readEnd - net_readCurrent);
+	/* Protocol packets might be split up across TCP packets */
+	/* If so, copy last few unprocessed bytes back to beginning of buffer */
+	/* These bytes are then later combined with subsequently read TCP packet data */
+	remaining = (int)(readEnd - net_readCurrent);
 	for (i = 0; i < remaining; i++) {
 		net_readBuffer[i] = net_readCurrent[i];
 	}

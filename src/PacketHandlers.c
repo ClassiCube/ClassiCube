@@ -56,7 +56,9 @@ static bool cpe_twoWayPing, cpe_extTextures, cpe_extBlocks;
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
 *#########################################################################################################################*/
-
+#define Classic_TabList_Get(id)   (classic_tabList[id >> 3] & (1 << (id & 0x7)))
+#define Classic_TabList_Set(id)   (classic_tabList[id >> 3] |=  (uint8_t)(1 << (id & 0x7)))
+#define Classic_TabList_Reset(id) (classic_tabList[id >> 3] &= (uint8_t)~(1 << (id & 0x7)))
 
 #ifndef EXTENDED_BLOCKS
 #define Handlers_ReadBlock(data, value) value = *data++;
@@ -191,11 +193,9 @@ void Handlers_RemoveEntity(EntityID id) {
 	if (id != ENTITIES_SELF_ID) Entities_Remove(id);
 
 	/* See comment about some servers in Classic_AddEntity */
-	int mask = id >> 3, bit = 1 << (id & 0x7);
-	if (!(classic_tabList[mask] & bit)) return;
-
+	if (!Classic_TabList_Get(id)) return;
 	Handlers_RemoveTablistEntry(id);
-	classic_tabList[mask] &= (uint8_t)~bit;
+	Classic_TabList_Reset(id);
 }
 
 static void Handlers_UpdateLocation(EntityID playerId, struct LocationUpdate* update, bool interpolate) {
@@ -574,7 +574,7 @@ static void Classic_AddEntity(uint8_t* data) {
 
 	/* Workaround for some servers that declare support for ExtPlayerList but don't send ExtAddPlayerName */
 	Handlers_AddTablistEntry(id, &name, &name, &group, 0);
-	classic_tabList[id >> 3] |= (uint8_t)(1 << (id & 0x7));
+	Classic_TabList_Set(id);
 }
 
 static void Classic_EntityTeleport(uint8_t* data) {
@@ -1019,7 +1019,7 @@ static void CPE_ExtAddPlayerName(uint8_t* data) {
 	Handlers_RemoveEndPlus(&listName);
 
 	/* Workarond for server software that declares support for ExtPlayerList, but sends AddEntity then AddPlayerName */
-	classic_tabList[id >> 3] &= (uint8_t)~(1 << (id & 0x7));
+	Classic_TabList_Reset(id);
 	Handlers_AddTablistEntry(id, &playerName, &listName, &groupName, groupRank);
 }
 
