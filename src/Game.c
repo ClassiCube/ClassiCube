@@ -16,7 +16,7 @@
 #include "Entity.h"
 #include "Chat.h"
 #include "Drawer2D.h"
-#include "ModelCache.h"
+#include "Model.h"
 #include "Particle.h"
 #include "AsyncDownloader.h"
 #include "Animations.h"

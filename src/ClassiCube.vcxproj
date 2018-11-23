@@ -222,7 +222,6 @@
     <ClInclude Include="Animations.h" />
     <ClInclude Include="MapGenerator.h" />
     <ClInclude Include="MapRenderer.h" />
-    <ClInclude Include="ModelCache.h" />
     <ClInclude Include="Options.h" />
     <ClInclude Include="Particle.h" />
     <ClInclude Include="BlockPhysics.h" />
@@ -288,7 +287,6 @@
     <ClCompile Include="Animations.c" />
     <ClCompile Include="Entity.c" />
     <ClCompile Include="MapRenderer.c" />
-    <ClCompile Include="ModelCache.c" />
     <ClCompile Include="Options.c" />
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="GraphicsCommon.c" />
@@ -310,9 +308,8 @@
     <ClCompile Include="Vorbis.c" />
     <ClCompile Include="Widgets.c" />
     <ClCompile Include="ErrorHandler.c" />
-    <ClCompile Include="WinWindow.c" />
+    <ClCompile Include="Window.c" />
     <ClCompile Include="World.c" />
-    <ClCompile Include="NixWindow.c" />
     <ClCompile Include="_autofit.c" />
     <ClCompile Include="_cff.c" />
     <ClCompile Include="_ftbase.c" />

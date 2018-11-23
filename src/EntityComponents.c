@@ -11,7 +11,6 @@
 #include "VertexStructs.h"
 #include "Graphics.h"
 #include "GraphicsCommon.h"
-#include "ModelCache.h"
 #include "Physics.h"
 #include "Model.h"
 #include "Audio.h"
@@ -649,7 +648,7 @@ void ShadowComponent_Draw(struct Entity* e) {
 
 		ShadowComponent_DrawSquareShadow(&ptr, data[0].Y, x1, z1);
 	} else {
-		vb = ModelCache_Vb;
+		vb = Model_Vb;
 		x1 = Math_Floor(pos.X - shadow_radius); z1 = Math_Floor(pos.Z - shadow_radius);
 		x2 = Math_Floor(pos.X + shadow_radius); z2 = Math_Floor(pos.Z + shadow_radius);
 

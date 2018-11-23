@@ -297,9 +297,6 @@
     <ClInclude Include="Model.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
-    <ClInclude Include="ModelCache.h">
-      <Filter>Header Files\Entities</Filter>
-    </ClInclude>
     <ClInclude Include="ChunkUpdater.h">
       <Filter>Header Files\Rendering</Filter>
     </ClInclude>
@@ -364,9 +361,6 @@
     </ClCompile>
     <ClCompile Include="Program.c">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WinWindow.c">
-      <Filter>Source Files\Platform</Filter>
     </ClCompile>
     <ClCompile Include="TerrainAtlas.c">
       <Filter>Source Files\TexturePack</Filter>
@@ -455,9 +449,6 @@
     <ClCompile Include="EnvRenderer.c">
       <Filter>Source Files\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="NixWindow.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="Audio.c">
       <Filter>Source Files\Audio</Filter>
     </ClCompile>
@@ -474,9 +465,6 @@
       <Filter>Source Files\Map</Filter>
     </ClCompile>
     <ClCompile Include="Model.c">
-      <Filter>Source Files\Entities</Filter>
-    </ClCompile>
-    <ClCompile Include="ModelCache.c">
       <Filter>Source Files\Entities</Filter>
     </ClCompile>
     <ClCompile Include="ChunkUpdater.c">
@@ -567,6 +555,9 @@
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="CarbonWindow.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
   </ItemGroup>

@@ -5,7 +5,6 @@
 #include "Graphics.h"
 #include "GraphicsCommon.h"
 #include "Camera.h"
-#include "ModelCache.h"
 #include "ExtMath.h"
 #include "Event.h"
 #include "Entity.h"
@@ -37,7 +36,7 @@ static void HeldBlockRenderer_RenderModel(void) {
 		Model_RenderArm(model, &held_entity);
 		Gfx_SetAlphaTest(false);
 	} else {	
-		model = ModelCache_Get(&block);
+		model = Model_Get(&block);
 		held_entity.ModelScale = Vector3_Create1(0.4f);
 
 		GfxCommon_SetupAlphaState(Block_Draw[held_block]);

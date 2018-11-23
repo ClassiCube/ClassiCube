@@ -9,7 +9,7 @@
 #include "Graphics.h"
 #include "Funcs.h"
 #include "TerrainAtlas.h"
-#include "ModelCache.h"
+#include "Model.h"
 #include "MapGenerator.h"
 #include "ServerConnection.h"
 #include "Chat.h"

@@ -3,7 +3,9 @@
 #include "Vectors.h"
 #include "PackedCol.h"
 #include "Constants.h"
+#include "VertexStructs.h"
 /* Contains various structs and methods for an entity model.
+   Also contains a list of models and default textures for those models.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 struct Entity;
@@ -23,6 +25,10 @@ void ModelVertex_Init(struct ModelVertex* vertex, float x, float y, float z, int
 and the number of vertices following the starting index that this part uses. */
 struct ModelPart { uint16_t Offset, Count; float RotX, RotY, RotZ; };
 void ModelPart_Init(struct ModelPart* part, int offset, int count, float rotX, float rotY, float rotZ);
+
+struct ModelTex;
+/* Contains information about a texture used for models. */
+struct ModelTex { const char* Name; uint8_t SkinType; GfxResourceID TexID; struct ModelTex* Next; };
 
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
 the bounding boxes that contain the entire set of quads and/or boxes. */
@@ -61,6 +67,9 @@ struct Model {
 	float NameYOffset, MaxScale, ShadowScale, NameScale;
 	struct Model* Next;
 };
+#if 0
+public CustomModel[] CustomModels = new CustomModel[256];
+#endif
 
 PackedCol Model_Cols[FACE_COUNT];
 /* U/V scale applied to the skin when rendering the model. */
@@ -89,6 +98,25 @@ void Model_DrawPart(struct ModelPart* part);
 void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart* part, bool head);
 void Model_RenderArm(struct Model* model, struct Entity* entity);
 void Model_DrawArmPart(struct ModelPart* part);
+
+/* Maximum number of vertices a model can have */
+#define MODEL_MAX_VERTICES (24 * 12)
+GfxResourceID Model_Vb;
+VertexP3fT2fC4b Model_Vertices[MODEL_MAX_VERTICES];
+struct Model* Human_ModelPtr;
+
+void ModelCache_Init(void);
+void ModelCache_Free(void);
+/* Returns pointer to model whose name caselessly matches given name. */
+CC_EXPORT struct Model* Model_Get(const String* name);
+/* Returns index of cached texture whose name caselessly matches given name. */
+CC_EXPORT struct ModelTex* Model_GetTexture(const String* name);
+/* Adds a model to the list of models. (e.g. "skeleton") */
+/* Models can be applied to entities to change their appearance. Use Entity_SetModel for that. */
+CC_EXPORT void Model_Register(struct Model* model);
+/* Adds a texture to the list of model textures. (e.g. "skeleton.png") */
+/* Model textures are automatically loaded from texture packs. Used as a 'default skin' for models. */
+CC_EXPORT void Model_RegisterTexture(struct ModelTex* tex);
 
 /* Describes data for a box being built. */
 struct BoxDesc {

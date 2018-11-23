@@ -7,7 +7,6 @@
 #include "Camera.h"
 #include "Platform.h"
 #include "Funcs.h"
-#include "ModelCache.h"
 #include "Graphics.h"
 #include "Lighting.h"
 #include "Drawer2D.h"
@@ -125,7 +124,7 @@ static void Entity_SetBlockModel(struct Entity* e, const String* model) {
 		e->Model      = Human_ModelPtr;
 	} else {	
 		e->ModelBlock = (BlockID)raw;
-		e->Model      = ModelCache_Get(&block);
+		e->Model      = Model_Get(&block);
 	}
 }
 
@@ -141,7 +140,7 @@ void Entity_SetModel(struct Entity* e, const String* model) {
 	}
 
 	e->ModelBlock   = BLOCK_AIR;
-	e->Model        = ModelCache_Get(&name);
+	e->Model        = Model_Get(&name);
 	e->MobTextureId = GFX_NULL;
 	if (!e->Model) Entity_SetBlockModel(e, &name);
 

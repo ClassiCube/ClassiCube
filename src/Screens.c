@@ -9,7 +9,7 @@
 #include "Graphics.h"
 #include "Funcs.h"
 #include "TerrainAtlas.h"
-#include "ModelCache.h"
+#include "Model.h"
 #include "MapGenerator.h"
 #include "ServerConnection.h"
 #include "Chat.h"
@@ -316,7 +316,7 @@ static void StatusScreen_DrawPosition(struct StatusScreen* s) {
 	Gfx_BindTexture(atlas->Tex.ID);
 	/* TODO: Do we need to use a separate VB here? */
 	count = (int)(ptr - vertices);
-	GfxCommon_UpdateDynamicVb_IndexedTris(ModelCache_Vb, vertices, count);
+	GfxCommon_UpdateDynamicVb_IndexedTris(Model_Vb, vertices, count);
 }
 
 static bool StatusScreen_HacksChanged(struct StatusScreen* s) {
@@ -526,7 +526,7 @@ static void LoadingScreen_UpdateBackgroundVB(VertexP3fT2fC4b* vertices, int coun
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	/* TODO: Do we need to use a separate VB here? */
-	GfxCommon_UpdateDynamicVb_IndexedTris(ModelCache_Vb, vertices, count);
+	GfxCommon_UpdateDynamicVb_IndexedTris(Model_Vb, vertices, count);
 }
 
 #define LOADING_TILE_SIZE 64

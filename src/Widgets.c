@@ -8,7 +8,7 @@
 #include "Inventory.h"
 #include "IsometricDrawer.h"
 #include "Utils.h"
-#include "ModelCache.h"
+#include "Model.h"
 #include "Screens.h"
 #include "Platform.h"
 #include "ServerConnection.h"
@@ -343,7 +343,7 @@ static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
 	float width, scale;
 	int i, x, y;
 
-	IsometricDrawer_BeginBatch(vertices, ModelCache_Vb);
+	IsometricDrawer_BeginBatch(vertices, Model_Vb);
 	width =  w->ElemSize + w->BorderSize;
 	scale = (w->ElemSize * 13.5f/16.0f) / 2.0f;
 
