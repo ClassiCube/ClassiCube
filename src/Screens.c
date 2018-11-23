@@ -181,11 +181,11 @@ static bool InventoryScreen_KeyDown(void* screen, Key key) {
 	struct InventoryScreen* s = screen;
 	struct TableWidget* table = &s->Table;
 
-	if (key == KeyBind_Get(KeyBind_PauseOrExit)) {
+	if (key == KeyBind_Get(KEYBIND_PAUSE_EXIT)) {
 		Gui_CloseActive();
-	} else if (key == KeyBind_Get(KeyBind_Inventory) && s->ReleasedInv) {
+	} else if (key == KeyBind_Get(KEYBIND_INVENTORY) && s->ReleasedInv) {
 		Gui_CloseActive();
-	} else if (key == Key_Enter && table->SelectedIndex != -1) {
+	} else if (key == KEY_ENTER && table->SelectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->Elements[table->SelectedIndex]);
 		Gui_CloseActive();
 	} else if (Elem_HandlesKeyDown(table, key)) {
@@ -201,7 +201,7 @@ static bool InventoryScreen_KeyUp(void* screen, Key key) {
 	struct InventoryScreen* s = screen;
 	struct HUDScreen* hud;
 
-	if (key == KeyBind_Get(KeyBind_Inventory)) {
+	if (key == KeyBind_Get(KEYBIND_INVENTORY)) {
 		s->ReleasedInv = true; return true;
 	}
 
@@ -218,7 +218,7 @@ static bool InventoryScreen_MouseDown(void* screen, int x, int y, MouseButton bt
 	if (table->Scroll.DraggingMouse || Elem_HandlesMouseDown(&hud->Hotbar, x, y, btn)) return true;
 	handled = Elem_HandlesMouseDown(table, x, y, btn);
 
-	if ((!handled || table->PendingClose) && btn == MouseButton_Left) {
+	if ((!handled || table->PendingClose) && btn == MOUSE_LEFT) {
 		hotbar = Key_IsControlPressed() || Key_IsShiftPressed();
 		if (!hotbar) Gui_CloseActive();
 	}
@@ -496,7 +496,7 @@ static void LoadingScreen_ContextRecreated(void* screen) {
 }
 
 static bool LoadingScreen_KeyDown(void* sceen, Key key) {
-	if (key == Key_Tab) return true;
+	if (key == KEY_TAB) return true;
 	return Elem_HandlesKeyDown(Gui_HUD, key);
 }
 
@@ -505,7 +505,7 @@ static bool LoadingScreen_KeyPress(void* scren, char keyChar) {
 }
 
 static bool LoadingScreen_KeyUp(void* screen, Key key) {
-	if (key == Key_Tab) return true;
+	if (key == KEY_TAB) return true;
 	return Elem_HandlesKeyUp(Gui_HUD, key);
 }
 
@@ -920,11 +920,11 @@ static bool ChatScreen_KeyDown(void* screen, Key key) {
 	s->SuppressNextPress = false;
 	/* Handle text input bar */
 	if (s->HandlesAllInput) {
-		if (key == KeyBind_Get(KeyBind_SendChat) || key == Key_KeypadEnter || key == KeyBind_Get(KeyBind_PauseOrExit)) {
+		if (key == KeyBind_Get(KEYBIND_SEND_CHAT) || key == KEY_KP_ENTER || key == KeyBind_Get(KEYBIND_PAUSE_EXIT)) {
 			ChatScreen_SetHandlesAllInput(s, false);
 			Key_KeyRepeat = false;
 
-			if (key == KeyBind_Get(KeyBind_PauseOrExit)) {
+			if (key == KeyBind_Get(KEYBIND_PAUSE_EXIT)) {
 				InputWidget_Clear(&s->Input.Base);
 			}
 			ChatScreen_InputStr.length = 0;
@@ -939,20 +939,20 @@ static bool ChatScreen_KeyDown(void* screen, Key key) {
 				s->ChatIndex = ChatScreen_ClampIndex(defaultIndex);
 				ChatScreen_ResetChat(s);
 			}
-		} else if (key == Key_PageUp) {
+		} else if (key == KEY_PAGEUP) {
 			ChatScreen_ScrollHistoryBy(s, -Game_ChatLines);
-		} else if (key == Key_PageDown) {
+		} else if (key == KEY_PAGEDOWN) {
 			ChatScreen_ScrollHistoryBy(s, +Game_ChatLines);
 		} else {
 			Elem_HandlesKeyDown(&s->Input.Base, key);
 			ChatScreen_UpdateAltTextY(s);
 		}
-		return key < Key_F1 || key > Key_F35;
+		return key < KEY_F1 || key > KEY_F35;
 	}
 
-	if (key == KeyBind_Get(KeyBind_Chat)) {
+	if (key == KeyBind_Get(KEYBIND_CHAT)) {
 		ChatScreen_OpenInput(s, &String_Empty);
-	} else if (key == Key_Slash) {
+	} else if (key == KEY_SLASH) {
 		ChatScreen_OpenInput(s, &slash);
 	} else {
 		return false;
@@ -964,7 +964,7 @@ static bool ChatScreen_KeyUp(void* screen, Key key) {
 	struct ChatScreen* s = screen;
 	if (!s->HandlesAllInput) return false;
 
-	if (ServerConnection_SupportsFullCP437 && key == KeyBind_Get(KeyBind_ExtInput)) {
+	if (ServerConnection_SupportsFullCP437 && key == KeyBind_Get(KEYBIND_EXT_INPUT)) {
 		if (!Window_Focused) return true;
 		SpecialInputWidget_SetActive(&s->AltText, !s->AltText.Active);
 	}
@@ -1268,8 +1268,8 @@ static bool HUDScreen_KeyPress(void* screen, char keyChar) {
 
 static bool HUDScreen_KeyDown(void* screen, Key key) {
 	struct HUDScreen* s = screen;
-	Key playerListKey = KeyBind_Get(KeyBind_PlayerList);
-	bool handles = playerListKey != Key_Tab || !Game_TabAutocomplete || !s->Chat->HandlesAllInput;
+	Key playerListKey = KeyBind_Get(KEYBIND_PLAYER_LIST);
+	bool handles = playerListKey != KEY_TAB || !Game_TabAutocomplete || !s->Chat->HandlesAllInput;
 
 	if (key == playerListKey && handles) {
 		if (!s->ShowingList && !ServerConnection_IsSinglePlayer) {
@@ -1284,7 +1284,7 @@ static bool HUDScreen_KeyDown(void* screen, Key key) {
 
 static bool HUDScreen_KeyUp(void* screen, Key key) {
 	struct HUDScreen* s = screen;
-	if (key == KeyBind_Get(KeyBind_PlayerList) && s->ShowingList) {
+	if (key == KeyBind_Get(KEYBIND_PLAYER_LIST) && s->ShowingList) {
 		s->ShowingList    = false;
 		s->WasShowingList = false;
 		Elem_TryFree(&s->PlayerList);
@@ -1304,7 +1304,7 @@ static bool HUDScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 	struct HUDScreen* s = screen;
 	struct ChatScreen* chat;	
 
-	if (btn != MouseButton_Left || !s->HandlesAllInput) return false;
+	if (btn != MOUSE_LEFT || !s->HandlesAllInput) return false;
 	chat = (struct ChatScreen*)s->Chat;
 	if (!s->ShowingList) { return Elem_HandlesMouseDown(chat, x, y, btn); }
 
@@ -1361,7 +1361,7 @@ static void HUDScreen_Render(void* screen, double delta) {
 		s->PlayerList.Active = s->Chat->HandlesAllInput;
 		Elem_Render(&s->PlayerList, delta);
 		/* NOTE: Should usually be caught by KeyUp, but just in case. */
-		if (!KeyBind_IsPressed(KeyBind_PlayerList)) {
+		if (!KeyBind_IsPressed(KEYBIND_PLAYER_LIST)) {
 			Elem_TryFree(&s->PlayerList);
 			s->ShowingList = false;
 		}
@@ -1516,7 +1516,7 @@ static void DisconnectScreen_OnResize(void* screen) {
 	Widget_Reposition(&s->Reconnect);
 }
 
-static bool DisconnectScreen_KeyDown(void* s, Key key) { return key < Key_F1 || key > Key_F35; }
+static bool DisconnectScreen_KeyDown(void* s, Key key) { return key < KEY_F1 || key > KEY_F35; }
 static bool DisconnectScreen_KeyPress(void* s, char keyChar) { return true; }
 static bool DisconnectScreen_KeyUp(void* s, Key key) { return true; }
 
@@ -1525,7 +1525,7 @@ static bool DisconnectScreen_MouseDown(void* screen, int x, int y, MouseButton b
 	struct DisconnectScreen* s = screen;
 	struct ButtonWidget* w = &s->Reconnect;
 
-	if (btn != MouseButton_Left) return true;
+	if (btn != MOUSE_LEFT) return true;
 	if (!w->Disabled && Widget_Contains(w, x, y)) {
 		String_InitArray(title, titleBuffer);
 		String_Format2(&title, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);

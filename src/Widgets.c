@@ -249,7 +249,7 @@ static bool ScrollbarWidget_MouseDown(void* widget, int x, int y, MouseButton bt
 	int posY, height;
 
 	if (w->DraggingMouse) return true;
-	if (btn != MouseButton_Left) return false;
+	if (btn != MOUSE_LEFT) return false;
 	if (x < w->X || x >= w->X + w->Width) return false;
 
 	y -= w->Y;
@@ -415,10 +415,10 @@ static void HotbarWidget_Render(void* widget, double delta) {
 static bool HotbarWidget_KeyDown(void* widget, Key key) {
 	struct HotbarWidget* w = widget;
 	int index;
-	if (key < Key_1 || key > Key_9) return false;
+	if (key < KEY_1 || key > KEY_9) return false;
 
-	index = key - Key_1;
-	if (KeyBind_IsPressed(KeyBind_HotbarSwitching)) {
+	index = key - KEY_1;
+	if (KeyBind_IsPressed(KEYBIND_HOTBAR_SWITCH)) {
 		/* Pick from first to ninth row */
 		Inventory_SetOffset(index * INVENTORY_BLOCKS_PER_HOTBAR);
 		w->AltHandled = true;
@@ -436,7 +436,7 @@ static bool HotbarWidget_KeyUp(void* widget, Key key) {
 	     a) user presses alt then number
 	     b) user presses alt
 	   We only do case b) if case a) did not happen */
-	if (key != KeyBind_Get(KeyBind_HotbarSwitching)) return false;
+	if (key != KeyBind_Get(KEYBIND_HOTBAR_SWITCH)) return false;
 	if (w->AltHandled) { w->AltHandled = false; return true; } /* handled already */
 
 	/* Don't switch hotbar when alt+tab */
@@ -454,7 +454,7 @@ static bool HotbarWidget_MouseDown(void* widget, int x, int y, MouseButton btn) 
 	int width, height;
 	int i, cellX, cellY;
 
-	if (btn != MouseButton_Left || !Widget_Contains(w, x, y)) return false;
+	if (btn != MOUSE_LEFT || !Widget_Contains(w, x, y)) return false;
 	screen = Gui_GetActiveScreen();
 	if (screen != InventoryScreen_UNSAFE_RawPointer) return false;
 
@@ -477,7 +477,7 @@ static bool HotbarWidget_MouseScroll(void* widget, float delta) {
 	struct HotbarWidget* w = widget;
 	int index;
 
-	if (KeyBind_IsPressed(KeyBind_HotbarSwitching)) {
+	if (KeyBind_IsPressed(KEYBIND_HOTBAR_SWITCH)) {
 		index = Inventory_Offset / INVENTORY_BLOCKS_PER_HOTBAR;
 		index = HotbarWidget_ScrolledIndex(w, delta, index, 1);
 		Inventory_SetOffset(index * INVENTORY_BLOCKS_PER_HOTBAR);
@@ -740,7 +740,7 @@ static void TableWidget_ScrollRelative(struct TableWidget* w, int delta) {
 static bool TableWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
 	struct TableWidget* w = widget;
 	w->PendingClose = false;
-	if (btn != MouseButton_Left) return false;
+	if (btn != MOUSE_LEFT) return false;
 
 	if (Elem_HandlesMouseDown(&w->Scroll, x, y, btn)) {
 		return true;
@@ -811,13 +811,13 @@ static bool TableWidget_KeyDown(void* widget, Key key) {
 	struct TableWidget* w = widget;
 	if (w->SelectedIndex == -1) return false;
 
-	if (key == Key_Left || key == Key_Keypad4) {
+	if (key == KEY_LEFT || key == KEY_KP4) {
 		TableWidget_ScrollRelative(w, -1);
-	} else if (key == Key_Right || key == Key_Keypad6) {
+	} else if (key == KEY_RIGHT || key == KEY_KP6) {
 		TableWidget_ScrollRelative(w, 1);
-	} else if (key == Key_Up || key == Key_Keypad8) {
+	} else if (key == KEY_UP || key == KEY_KP8) {
 		TableWidget_ScrollRelative(w, -w->ElementsPerRow);
-	} else if (key == Key_Down || key == Key_Keypad2) {
+	} else if (key == KEY_DOWN || key == KEY_KP2) {
 		TableWidget_ScrollRelative(w, w->ElementsPerRow);
 	} else {
 		return false;
@@ -1158,7 +1158,7 @@ static bool InputWidget_OtherKey(struct InputWidget* w, Key key) {
 	maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
 	if (!InputWidget_ControlDown()) return false;
 
-	if (key == Key_V && w->Text.length < maxChars) {
+	if (key == KEY_V && w->Text.length < maxChars) {
 		String_InitArray(text, textBuffer);
 		Window_GetClipboardText(&text);
 
@@ -1168,7 +1168,7 @@ static bool InputWidget_OtherKey(struct InputWidget* w, Key key) {
 		if (!text.length) return true;
 		InputWidget_AppendString(w, &text);
 		return true;
-	} else if (key == Key_C) {
+	} else if (key == KEY_C) {
 		if (!w->Text.length) return true;
 		Window_SetClipboardText(&w->Text);
 		return true;
@@ -1214,17 +1214,17 @@ static void InputWidget_Reposition(void* widget) {
 
 static bool InputWidget_KeyDown(void* widget, Key key) {
 	struct InputWidget* w = widget;
-	if (key == Key_Left) {
+	if (key == KEY_LEFT) {
 		InputWidget_LeftKey(w);
-	} else if (key == Key_Right) {
+	} else if (key == KEY_RIGHT) {
 		InputWidget_RightKey(w);
-	} else if (key == Key_BackSpace) {
+	} else if (key == KEY_BACKSPACE) {
 		InputWidget_BackspaceKey(w);
-	} else if (key == Key_Delete) {
+	} else if (key == KEY_DELETE) {
 		InputWidget_DeleteKey(w);
-	} else if (key == Key_Home) {
+	} else if (key == KEY_HOME) {
 		InputWidget_HomeKey(w);
-	} else if (key == Key_End) {
+	} else if (key == KEY_END) {
 		InputWidget_EndKey(w);
 	} else if (!InputWidget_OtherKey(w, key)) {
 		return false;
@@ -1247,7 +1247,7 @@ static bool InputWidget_MouseDown(void* widget, int x, int y, MouseButton button
 	int cx, cy, offset = 0;
 	int charX, charWidth, charHeight;
 
-	if (button != MouseButton_Left) return true;
+	if (button != MOUSE_LEFT) return true;
 	x -= w->InputTex.X; y -= w->InputTex.Y;
 
 	DrawTextArgs_MakeEmpty(&args, &w->Font, true);
@@ -1791,9 +1791,9 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 
 static bool ChatInputWidget_KeyDown(void* widget, Key key) {
 	struct InputWidget* w = widget;
-	if (key == Key_Tab)  { ChatInputWidget_TabKey(w);  return true; }
-	if (key == Key_Up)   { ChatInputWidget_UpKey(w);   return true; }
-	if (key == Key_Down) { ChatInputWidget_DownKey(w); return true; }
+	if (key == KEY_TAB)  { ChatInputWidget_TabKey(w);  return true; }
+	if (key == KEY_UP)   { ChatInputWidget_UpKey(w);   return true; }
+	if (key == KEY_DOWN) { ChatInputWidget_DownKey(w); return true; }
 	return InputWidget_KeyDown(w, key);
 }
 

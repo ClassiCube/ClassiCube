@@ -5,6 +5,9 @@
 #include "ErrorHandler.h"
 #include "Funcs.h"
 
+static bool win_cursorVisible = true;
+bool Window_GetCursorVisible(void) { return win_cursorVisible; }
+
 /*########################################################################################################################*
 *------------------------------------------------------Win32 window-------------------------------------------------------*
 *#########################################################################################################################*/
@@ -22,8 +25,8 @@
 #endif
 #include <windows.h>
 
-#define win_Style WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
-#define win_ClassName TEXT("ClassiCube_Window")
+#define CC_WIN_STYLE WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
+#define CC_WIN_CLASSNAME TEXT("ClassiCube_Window")
 #define Rect_Width(rect)  (rect.right  - rect.left)
 #define Rect_Height(rect) (rect.bottom - rect.top)
 
@@ -39,70 +42,23 @@ static Rect2D prev_bounds; /* Used to restore previous size when leaving fullscr
 /*########################################################################################################################*
 *-----------------------------------------------------Private details-----------------------------------------------------*
 *#########################################################################################################################*/
-static Key Window_MapKey(WPARAM key) {
-	if (key >= VK_F1 && key <= VK_F24) { return Key_F1 + (key - VK_F1); }
-	if (key >= '0' && key <= '9') { return Key_0 + (key - '0'); }
-	if (key >= 'A' && key <= 'Z') { return Key_A + (key - 'A'); }
-
-	if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) { 
-		return Key_Keypad0 + (key - VK_NUMPAD0); 
-	}
-
-	switch (key) {
-	case VK_ESCAPE: return Key_Escape;
-	case VK_TAB: return Key_Tab;
-	case VK_CAPITAL: return Key_CapsLock;
-	case VK_LCONTROL: return Key_ControlLeft;
-	case VK_LSHIFT: return Key_ShiftLeft;
-	case VK_LWIN: return Key_WinLeft;
-	case VK_LMENU: return Key_AltLeft;
-	case VK_SPACE: return Key_Space;
-	case VK_RMENU: return Key_AltRight;
-	case VK_RWIN: return Key_WinRight;
-	case VK_APPS: return Key_Menu;
-	case VK_RCONTROL: return Key_ControlRight;
-	case VK_RSHIFT: return Key_ShiftRight;
-	case VK_RETURN: return Key_Enter;
-	case VK_BACK: return Key_BackSpace;
-
-	case VK_OEM_1: return Key_Semicolon;      /* Varies by keyboard: return ;: on Win2K/US */
-	case VK_OEM_2: return Key_Slash;          /* Varies by keyboard: return /? on Win2K/US */
-	case VK_OEM_3: return Key_Tilde;          /* Varies by keyboard: return `~ on Win2K/US */
-	case VK_OEM_4: return Key_BracketLeft;    /* Varies by keyboard: return [{ on Win2K/US */
-	case VK_OEM_5: return Key_BackSlash;      /* Varies by keyboard: return \| on Win2K/US */
-	case VK_OEM_6: return Key_BracketRight;   /* Varies by keyboard: return ]} on Win2K/US */
-	case VK_OEM_7: return Key_Quote;          /* Varies by keyboard: return '" on Win2K/US */
-	case VK_OEM_PLUS: return Key_Plus;        /* Invariant: +							   */
-	case VK_OEM_COMMA: return Key_Comma;      /* Invariant: : return					   */
-	case VK_OEM_MINUS: return Key_Minus;      /* Invariant: -							   */
-	case VK_OEM_PERIOD: return Key_Period;    /* Invariant: .							   */
-
-	case VK_HOME: return Key_Home;
-	case VK_END: return Key_End;
-	case VK_DELETE: return Key_Delete;
-	case VK_PRIOR: return Key_PageUp;
-	case VK_NEXT: return Key_PageDown;
-	case VK_PRINT: return Key_PrintScreen;
-	case VK_PAUSE: return Key_Pause;
-	case VK_NUMLOCK: return Key_NumLock;
-
-	case VK_SCROLL: return Key_ScrollLock;
-	case VK_SNAPSHOT: return Key_PrintScreen;
-	case VK_INSERT: return Key_Insert;
-
-	case VK_DECIMAL: return Key_KeypadDecimal;
-	case VK_ADD: return Key_KeypadAdd;
-	case VK_SUBTRACT: return Key_KeypadSubtract;
-	case VK_DIVIDE: return Key_KeypadDivide;
-	case VK_MULTIPLY: return Key_KeypadMultiply;
-
-	case VK_UP: return Key_Up;
-	case VK_DOWN: return Key_Down;
-	case VK_LEFT: return Key_Left;
-	case VK_RIGHT: return Key_Right;
-	}
-	return Key_None;
-}
+static uint8_t key_map[14 * 16] = {
+	0, 0, 0, 0, 0, 0, 0, 0, KEY_BACKSPACE, KEY_TAB, 0, 0, 0, KEY_ENTER, 0, 0,
+	0, 0, 0, KEY_PAUSE, KEY_CAPSLOCK, 0, 0, 0, 0, 0, 0, KEY_ESCAPE, 0, 0, 0, 0,
+	KEY_SPACE, KEY_PAGEUP, KEY_PAGEDOWN, KEY_END, KEY_HOME, KEY_LEFT, KEY_UP, KEY_RIGHT, KEY_DOWN, 0, KEY_PRINTSCREEN, 0, KEY_PRINTSCREEN, KEY_INSERT, KEY_DELETE, 0,
+	KEY_0, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, 0, 0, 0, 0, 0, 0,
+	0, KEY_A, KEY_B, KEY_C, KEY_D, KEY_E, KEY_F, KEY_G, KEY_H, KEY_I, KEY_J, KEY_K, KEY_L, KEY_M, KEY_N, KEY_O,
+	KEY_P, KEY_Q, KEY_R, KEY_S, KEY_T, KEY_U, KEY_V, KEY_W, KEY_X, KEY_Y, KEY_Z, KEY_LWIN, KEY_RWIN, KEY_MENU, 0, 0,
+	KEY_KP0, KEY_KP1, KEY_KP2, KEY_KP3, KEY_KP4, KEY_KP5, KEY_KP6, KEY_KP7, KEY_KP8, KEY_KP9, KEY_KP_MULTIPLY, KEY_KP_PLUS, 0, KEY_KP_MINUS, KEY_KP_DECIMAL, KEY_KP_DIVIDE,
+	KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_F11, KEY_F12, KEY_F13, KEY_F14, KEY_F15, KEY_F16,
+	KEY_F17, KEY_F18, KEY_F19, KEY_F20, KEY_F21, KEY_F22, KEY_F23, KEY_F24, 0, 0, 0, 0, 0, 0, 0, 0,
+	KEY_NUMLOCK, KEY_SCROLLLOCK, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	KEY_LSHIFT, KEY_RSHIFT, KEY_LCTRL, KEY_RCTRL, KEY_LALT, KEY_RALT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_SEMICOLON, KEY_PLUS, KEY_COMMA, KEY_MINUS, KEY_PERIOD, KEY_SLASH,
+	KEY_TILDE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_LBRACKET, KEY_BACKSLASH, KEY_RBRACKET, KEY_QUOTE, 0,
+};
+static Key Window_MapKey(WPARAM key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
 
 static void Window_Destroy(void) {
 	if (!Window_Exists) return;
@@ -185,12 +141,6 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		}
 		break;
 
-	case WM_ENTERMENULOOP:
-	case WM_ENTERSIZEMOVE:
-	case WM_EXITMENULOOP:
-	case WM_EXITSIZEMOVE:
-		break;
-
 	case WM_ERASEBKGND:
 		Event_RaiseVoid(&WindowEvents_Redraw);
 		return 1;
@@ -254,9 +204,9 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_MOUSEMOVE:
 		/* set before position change, in case mouse buttons changed when outside window */
-		Mouse_SetPressed(MouseButton_Left,   (wParam & 0x01) != 0);
-		Mouse_SetPressed(MouseButton_Right,  (wParam & 0x02) != 0);
-		Mouse_SetPressed(MouseButton_Middle, (wParam & 0x10) != 0);
+		Mouse_SetPressed(MOUSE_LEFT,   (wParam & 0x01) != 0);
+		Mouse_SetPressed(MOUSE_RIGHT,  (wParam & 0x02) != 0);
+		Mouse_SetPressed(MOUSE_MIDDLE, (wParam & 0x10) != 0);
 		/* TODO: do we need to set XBUTTON1/XBUTTON2 here */
 		Mouse_SetPosition(LOWORD(lParam), HIWORD(lParam));
 		break;
@@ -267,28 +217,28 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		return 0;
 
 	case WM_LBUTTONDOWN:
-		Mouse_SetPressed(MouseButton_Left, true);
+		Mouse_SetPressed(MOUSE_LEFT,   true);
 		break;
 	case WM_MBUTTONDOWN:
-		Mouse_SetPressed(MouseButton_Middle, true);
+		Mouse_SetPressed(MOUSE_MIDDLE, true);
 		break;
 	case WM_RBUTTONDOWN:
-		Mouse_SetPressed(MouseButton_Right, true);
+		Mouse_SetPressed(MOUSE_RIGHT,  true);
 		break;
 	case WM_XBUTTONDOWN:
-		Key_SetPressed(HIWORD(wParam) == 1 ? Key_XButton1 : Key_XButton2, true);
+		Key_SetPressed(HIWORD(wParam) == 1 ? KEY_XBUTTON1 : KEY_XBUTTON2, true);
 		break;
 	case WM_LBUTTONUP:
-		Mouse_SetPressed(MouseButton_Left, false);
+		Mouse_SetPressed(MOUSE_LEFT,   false);
 		break;
 	case WM_MBUTTONUP:
-		Mouse_SetPressed(MouseButton_Middle, false);
+		Mouse_SetPressed(MOUSE_MIDDLE, false);
 		break;
 	case WM_RBUTTONUP:
-		Mouse_SetPressed(MouseButton_Right, false);
+		Mouse_SetPressed(MOUSE_RIGHT,  false);
 		break;
 	case WM_XBUTTONUP:
-		Key_SetPressed(HIWORD(wParam) == 1 ? Key_XButton1 : Key_XButton2, false);
+		Key_SetPressed(HIWORD(wParam) == 1 ? KEY_XBUTTON1 : KEY_XBUTTON2, false);
 		break;
 
 	case WM_KEYDOWN:
@@ -303,7 +253,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		To combat this, we are going to release both keys when either is released. Hacky, but should work.
 		Win95 does not distinguish left/right key constants (GetAsyncKeyState returns 0).
 		In this case, both keys will be reported as pressed.	*/
-		bool extended = (lParam & (1UL << 24)) != 0;
+		bool ext = (lParam & (1UL << 24)) != 0;
 
 		bool lShiftDown, rShiftDown;
 		Key mappedKey;
@@ -317,38 +267,24 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			rShiftDown = ((USHORT)GetKeyState(VK_RSHIFT)) >> 15;
 
 			if (!pressed || lShiftDown != rShiftDown) {
-				Key_SetPressed(Key_ShiftLeft, lShiftDown);
-				Key_SetPressed(Key_ShiftRight, rShiftDown);
+				Key_SetPressed(KEY_LSHIFT,  lShiftDown);
+				Key_SetPressed(KEY_RSHIFT, rShiftDown);
 			}
 			return 0;
 
 		case VK_CONTROL:
-			if (extended) {
-				Key_SetPressed(Key_ControlRight, pressed);
-			} else {
-				Key_SetPressed(Key_ControlLeft, pressed);
-			}
+			Key_SetPressed(ext ? KEY_RCTRL : KEY_LCTRL, pressed);
 			return 0;
-
 		case VK_MENU:
-			if (extended) {
-				Key_SetPressed(Key_AltRight, pressed);
-			} else {
-				Key_SetPressed(Key_AltLeft, pressed);
-			}
+			Key_SetPressed(ext ? KEY_RALT  : KEY_LALT,  pressed);
 			return 0;
-
 		case VK_RETURN:
-			if (extended) {
-				Key_SetPressed(Key_KeypadEnter, pressed);
-			} else {
-				Key_SetPressed(Key_Enter, pressed);
-			}
+			Key_SetPressed(ext ? KEY_KP_ENTER : KEY_ENTER,  pressed);
 			return 0;
 
 		default:
 			mappedKey = Window_MapKey(wParam);
-			if (mappedKey != Key_None) {
+			if (mappedKey != KEY_NONE) {
 				Key_SetPressed(mappedKey, pressed);
 			}
 			return 0;
@@ -361,7 +297,6 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	case WM_KILLFOCUS:
 		Key_Clear();
 		break;
-
 
 	case WM_CREATE:
 	{
@@ -381,7 +316,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_DESTROY:
 		Window_Exists = false;
-		UnregisterClass(win_ClassName, win_instance);
+		UnregisterClass(CC_WIN_CLASSNAME, win_instance);
 		if (win_DC) ReleaseDC(win_handle, win_DC);
 		Event_RaiseVoid(&WindowEvents_Closed);
 		break;
@@ -399,21 +334,21 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 
 	/* Find out the final window rectangle, after the WM has added its chrome (titlebar, sidebars etc). */
 	RECT rect = { x, y, x + width, y + height };
-	AdjustWindowRect(&rect, win_Style, false);
+	AdjustWindowRect(&rect, CC_WIN_STYLE, false);
 
 	WNDCLASSEX wc = { 0 };
 	wc.cbSize    = sizeof(WNDCLASSEX);
 	wc.style     = CS_OWNDC;
 	wc.hInstance = win_instance;
 	wc.lpfnWndProc   = Window_Procedure;
-	wc.lpszClassName = win_ClassName;
+	wc.lpszClassName = CC_WIN_CLASSNAME;
 	/* TODO: Set window icons here */
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 
 	ATOM atom = RegisterClassEx(&wc);
 	if (!atom) ErrorHandler_Fail2(GetLastError(), "Failed to register window class");
 
-	win_handle = CreateWindowEx(0, atom, NULL, win_Style,
+	win_handle = CreateWindowEx(0, atom, NULL, CC_WIN_STYLE,
 		rect.left, rect.top, Rect_Width(rect), Rect_Height(rect),
 		NULL, NULL, win_instance, NULL);
 	if (!win_handle) ErrorHandler_Fail2(GetLastError(), "Failed to create window");
@@ -625,9 +560,6 @@ Point2D Window_GetScreenCursorPos(void) {
 void Window_SetScreenCursorPos(int x, int y) {
 	SetCursorPos(x, y);
 }
-
-static bool win_cursorVisible = true;
-bool Window_GetCursorVisible(void) { return win_cursorVisible; }
 void Window_SetCursorVisible(bool visible) {
 	win_cursorVisible = visible;
 	ShowCursor(visible ? 1 : 0);
@@ -757,98 +689,98 @@ static long win_eventMask;
 *-----------------------------------------------------Private details-----------------------------------------------------*
 *#########################################################################################################################*/
 static Key Window_MapKey(KeySym key) {
-	if (key >= XK_F1 && key <= XK_F35) { return Key_F1 + (key - XK_F1); }
-	if (key >= XK_0 && key <= XK_9) { return Key_0 + (key - XK_0); }
-	if (key >= XK_A && key <= XK_Z) { return Key_A + (key - XK_A); }
-	if (key >= XK_a && key <= XK_z) { return Key_A + (key - XK_a); }
+	if (key >= XK_F1 && key <= XK_F35) { return KEY_F1 + (key - XK_F1); }
+	if (key >= XK_0 && key <= XK_9) { return KEY_0 + (key - XK_0); }
+	if (key >= XK_A && key <= XK_Z) { return KEY_A + (key - XK_A); }
+	if (key >= XK_a && key <= XK_z) { return KEY_A + (key - XK_a); }
 
 	if (key >= XK_KP_0 && key <= XK_KP_9) {
-		return Key_Keypad0 + (key - XK_KP_0);
+		return KEY_KP0 + (key - XK_KP_0);
 	}
 
 	switch (key) {
-		case XK_Escape: return Key_Escape;
-		case XK_Return: return Key_Enter;
-		case XK_space: return Key_Space;
-		case XK_BackSpace: return Key_BackSpace;
+		case XK_Escape: return KEY_ESCAPE;
+		case XK_Return: return KEY_ENTER;
+		case XK_space: return KEY_SPACE;
+		case XK_BackSpace: return KEY_BACKSPACE;
 
-		case XK_Shift_L: return Key_ShiftLeft;
-		case XK_Shift_R: return Key_ShiftRight;
-		case XK_Alt_L: return Key_AltLeft;
-		case XK_Alt_R: return Key_AltRight;
-		case XK_Control_L: return Key_ControlLeft;
-		case XK_Control_R: return Key_ControlRight;
-		case XK_Super_L: return Key_WinLeft;
-		case XK_Super_R: return Key_WinRight;
-		case XK_Meta_L: return Key_WinLeft;
-		case XK_Meta_R: return Key_WinRight;
+		case XK_Shift_L: return KEY_LSHIFT;
+		case XK_Shift_R: return KEY_RSHIFT;
+		case XK_Alt_L: return KEY_LALT;
+		case XK_Alt_R: return KEY_RALT;
+		case XK_Control_L: return KEY_LCTRL;
+		case XK_Control_R: return KEY_RCTRL;
+		case XK_Super_L: return KEY_LWIN;
+		case XK_Super_R: return KEY_RWIN;
+		case XK_Meta_L: return KEY_LWIN;
+		case XK_Meta_R: return KEY_RWIN;
 
-		case XK_Menu: return Key_Menu;
-		case XK_Tab: return Key_Tab;
-		case XK_minus: return Key_Minus;
-		case XK_plus: return Key_Plus;
-		case XK_equal: return Key_Plus;
+		case XK_Menu: return KEY_MENU;
+		case XK_Tab: return KEY_TAB;
+		case XK_minus: return KEY_MINUS;
+		case XK_plus: return KEY_PLUS;
+		case XK_equal: return KEY_PLUS;
 
-		case XK_Caps_Lock: return Key_CapsLock;
-		case XK_Num_Lock: return Key_NumLock;
+		case XK_Caps_Lock: return KEY_CAPSLOCK;
+		case XK_Num_Lock: return KEY_NUMLOCK;
 
-		case XK_Pause: return Key_Pause;
-		case XK_Break: return Key_Pause;
-		case XK_Scroll_Lock: return Key_ScrollLock;
-		case XK_Insert: return Key_Insert;
-		case XK_Print: return Key_PrintScreen;
-		case XK_Sys_Req: return Key_PrintScreen;
+		case XK_Pause: return KEY_PAUSE;
+		case XK_Break: return KEY_PAUSE;
+		case XK_Scroll_Lock: return KEY_SCROLLLOCK;
+		case XK_Insert: return KEY_INSERT;
+		case XK_Print: return KEY_PRINTSCREEN;
+		case XK_Sys_Req: return KEY_PRINTSCREEN;
 
-		case XK_backslash: return Key_BackSlash;
-		case XK_bar: return Key_BackSlash;
-		case XK_braceleft: return Key_BracketLeft;
-		case XK_bracketleft: return Key_BracketLeft;
-		case XK_braceright: return Key_BracketRight;
-		case XK_bracketright: return Key_BracketRight;
-		case XK_colon: return Key_Semicolon;
-		case XK_semicolon: return Key_Semicolon;
-		case XK_quoteright: return Key_Quote;
-		case XK_quotedbl: return Key_Quote;
-		case XK_quoteleft: return Key_Tilde;
-		case XK_asciitilde: return Key_Tilde;
+		case XK_backslash: return KEY_BACKSLASH;
+		case XK_bar: return KEY_BACKSLASH;
+		case XK_braceleft: return KEY_LBRACKET;
+		case XK_bracketleft: return KEY_LBRACKET;
+		case XK_braceright: return KEY_RBRACKET;
+		case XK_bracketright: return KEY_RBRACKET;
+		case XK_colon: return KEY_SEMICOLON;
+		case XK_semicolon: return KEY_SEMICOLON;
+		case XK_quoteright: return KEY_QUOTE;
+		case XK_quotedbl: return KEY_QUOTE;
+		case XK_quoteleft: return KEY_TILDE;
+		case XK_asciitilde: return KEY_TILDE;
 
-		case XK_comma: return Key_Comma;
-		case XK_less: return Key_Comma;
-		case XK_period: return Key_Period;
-		case XK_greater: return Key_Period;
-		case XK_slash: return Key_Slash;
-		case XK_question: return Key_Slash;
+		case XK_comma: return KEY_COMMA;
+		case XK_less: return KEY_COMMA;
+		case XK_period: return KEY_PERIOD;
+		case XK_greater: return KEY_PERIOD;
+		case XK_slash: return KEY_SLASH;
+		case XK_question: return KEY_SLASH;
 
-		case XK_Left: return Key_Left;
-		case XK_Down: return Key_Down;
-		case XK_Right: return Key_Right;
-		case XK_Up: return Key_Up;
+		case XK_Left: return KEY_LEFT;
+		case XK_Down: return KEY_DOWN;
+		case XK_Right: return KEY_RIGHT;
+		case XK_Up: return KEY_UP;
 
-		case XK_Delete: return Key_Delete;
-		case XK_Home: return Key_Home;
-		case XK_End: return Key_End;
-		case XK_Page_Up: return Key_PageUp;
-		case XK_Page_Down: return Key_PageDown;
+		case XK_Delete: return KEY_DELETE;
+		case XK_Home: return KEY_HOME;
+		case XK_End: return KEY_END;
+		case XK_Page_Up: return KEY_PAGEUP;
+		case XK_Page_Down: return KEY_PAGEDOWN;
 
-		case XK_KP_Add: return Key_KeypadAdd;
-		case XK_KP_Subtract: return Key_KeypadSubtract;
-		case XK_KP_Multiply: return Key_KeypadMultiply;
-		case XK_KP_Divide: return Key_KeypadDivide;
-		case XK_KP_Decimal: return Key_KeypadDecimal;
-		case XK_KP_Insert: return Key_Keypad0;
-		case XK_KP_End: return Key_Keypad1;
-		case XK_KP_Down: return Key_Keypad2;
-		case XK_KP_Page_Down: return Key_Keypad3;
-		case XK_KP_Left: return Key_Keypad4;
-		case XK_KP_Begin: return Key_Keypad5;
-		case XK_KP_Right: return Key_Keypad6;
-		case XK_KP_Home: return Key_Keypad7;
-		case XK_KP_Up: return Key_Keypad8;
-		case XK_KP_Page_Up: return Key_Keypad9;
-		case XK_KP_Delete: return Key_KeypadDecimal;
-		case XK_KP_Enter: return Key_KeypadEnter;
+		case XK_KP_Add: return KEY_KP_PLUS;
+		case XK_KP_Subtract: return KEY_KP_MINUS;
+		case XK_KP_Multiply: return KEY_KP_MULTIPLY;
+		case XK_KP_Divide: return KEY_KP_DIVIDE;
+		case XK_KP_Decimal: return KEY_KP_DECIMAL;
+		case XK_KP_Insert: return KEY_KP0;
+		case XK_KP_End: return KEY_KP1;
+		case XK_KP_Down: return KEY_KP2;
+		case XK_KP_Page_Down: return KEY_KP3;
+		case XK_KP_Left: return KEY_KP4;
+		case XK_KP_Begin: return KEY_KP5;
+		case XK_KP_Right: return KEY_KP6;
+		case XK_KP_Home: return KEY_KP7;
+		case XK_KP_Up: return KEY_KP8;
+		case XK_KP_Page_Up: return KEY_KP9;
+		case XK_KP_Delete: return KEY_KP_DECIMAL;
+		case XK_KP_Enter: return KEY_KP_ENTER;
 	}
-	return Key_None;
+	return KEY_NONE;
 }
 
 static void Window_RegisterAtoms(void) {
@@ -1160,8 +1092,8 @@ void Window_ToggleKey(XKeyEvent* keyEvent, bool pressed) {
 	KeySym keysym2 = XLookupKeysym(keyEvent, 1);
 
 	Key key = Window_MapKey(keysym1);
-	if (key == Key_None) key = Window_MapKey(keysym2);
-	if (key != Key_None) Key_SetPressed(key, pressed);
+	if (key == KEY_NONE) key = Window_MapKey(keysym2);
+	if (key != KEY_NONE) Key_SetPressed(key, pressed);
 }
 
 Atom Window_GetSelectionProperty(XEvent* e) {
@@ -1243,21 +1175,21 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case ButtonPress:
-			if (e.xbutton.button == 1)      Mouse_SetPressed(MouseButton_Left,   true);
-			else if (e.xbutton.button == 2) Mouse_SetPressed(MouseButton_Middle, true);
-			else if (e.xbutton.button == 3) Mouse_SetPressed(MouseButton_Right,  true);
+			if (e.xbutton.button == 1)      Mouse_SetPressed(MOUSE_LEFT,   true);
+			else if (e.xbutton.button == 2) Mouse_SetPressed(MOUSE_MIDDLE, true);
+			else if (e.xbutton.button == 3) Mouse_SetPressed(MOUSE_RIGHT,  true);
 			else if (e.xbutton.button == 4) Mouse_SetWheel(Mouse_Wheel + 1);
 			else if (e.xbutton.button == 5) Mouse_SetWheel(Mouse_Wheel - 1);
-			else if (e.xbutton.button == 6) Key_SetPressed(Key_XButton1, true);
-			else if (e.xbutton.button == 7) Key_SetPressed(Key_XButton2, true);
+			else if (e.xbutton.button == 6) Key_SetPressed(KEY_XBUTTON1, true);
+			else if (e.xbutton.button == 7) Key_SetPressed(KEY_XBUTTON2, true);
 			break;
 
 		case ButtonRelease:
-			if (e.xbutton.button == 1)      Mouse_SetPressed(MouseButton_Left, false);
-			else if (e.xbutton.button == 2) Mouse_SetPressed(MouseButton_Middle, false);
-			else if (e.xbutton.button == 3) Mouse_SetPressed(MouseButton_Right,  false);
-			else if (e.xbutton.button == 6) Key_SetPressed(Key_XButton1, false);
-			else if (e.xbutton.button == 7) Key_SetPressed(Key_XButton2, false);
+			if (e.xbutton.button == 1)      Mouse_SetPressed(MOUSE_LEFT, false);
+			else if (e.xbutton.button == 2) Mouse_SetPressed(MOUSE_MIDDLE, false);
+			else if (e.xbutton.button == 3) Mouse_SetPressed(MOUSE_RIGHT,  false);
+			else if (e.xbutton.button == 6) Key_SetPressed(KEY_XBUTTON1, false);
+			else if (e.xbutton.button == 7) Key_SetPressed(KEY_XBUTTON2, false);
 			break;
 
 		case MotionNotify:
@@ -1375,8 +1307,6 @@ void Window_SetScreenCursorPos(int x, int y) {
 }
 
 static Cursor win_blankCursor;
-static bool win_cursorVisible = true;
-bool Window_GetCursorVisible(void) { return win_cursorVisible; }
 void Window_SetCursorVisible(bool visible) {
 	win_cursorVisible = visible;
 	if (visible) {
@@ -1549,128 +1479,28 @@ static bool ctx_pendingWindowed, ctx_pendingFullscreen;
 /*########################################################################################################################*
 *-----------------------------------------------------Private details-----------------------------------------------------*
 *#########################################################################################################################*/
-static Key Window_MapKey(UInt32 key) {
-	/* Sourced from https://www.meandmark.com/keycodes.html */
-	switch (key) {
-		case 0x00: return Key_A;
-		case 0x01: return Key_S;
-		case 0x02: return Key_D;
-		case 0x03: return Key_F;
-		case 0x04: return Key_H;
-		case 0x05: return Key_G;
-		case 0x06: return Key_Z;
-		case 0x07: return Key_X;
-		case 0x08: return Key_C;
-		case 0x09: return Key_V;
-		case 0x0B: return Key_B;
-		case 0x0C: return Key_Q;
-		case 0x0D: return Key_W;
-		case 0x0E: return Key_E;
-		case 0x0F: return Key_R;
-			
-		case 0x10: return Key_Y;
-		case 0x11: return Key_T;
-		case 0x12: return Key_1;
-		case 0x13: return Key_2;
-		case 0x14: return Key_3;
-		case 0x15: return Key_4;
-		case 0x16: return Key_6;
-		case 0x17: return Key_5;
-		case 0x18: return Key_Plus;
-		case 0x19: return Key_9;
-		case 0x1A: return Key_7;
-		case 0x1B: return Key_Minus;
-		case 0x1C: return Key_8;
-		case 0x1D: return Key_0;
-		case 0x1E: return Key_BracketRight;
-		case 0x1F: return Key_O;
-			
-		case 0x20: return Key_U;
-		case 0x21: return Key_BracketLeft;
-		case 0x22: return Key_I;
-		case 0x23: return Key_P;
-		case 0x24: return Key_Enter;
-		case 0x25: return Key_L;
-		case 0x26: return Key_J;
-		case 0x27: return Key_Quote;
-		case 0x28: return Key_K;
-		case 0x29: return Key_Semicolon;
-		case 0x2A: return Key_BackSlash;
-		case 0x2B: return Key_Comma;
-		case 0x2C: return Key_Slash;
-		case 0x2D: return Key_N;
-		case 0x2E: return Key_M;
-		case 0x2F: return Key_Period;
-			
-		case 0x30: return Key_Tab;
-		case 0x31: return Key_Space;
-		case 0x32: return Key_Tilde;
-		case 0x33: return Key_BackSpace;
-		case 0x35: return Key_Escape;
-		/*case 0x37: return Key_WinLeft; */
-		/*case 0x38: return Key_ShiftLeft; */
-		case 0x39: return Key_CapsLock;
-		/*case 0x3A: return Key_AltLeft; */
-		/*case 0x3B: return Key_ControlLeft; */
-			
-		case 0x41: return Key_KeypadDecimal;
-		case 0x43: return Key_KeypadMultiply;
-		case 0x45: return Key_KeypadAdd;
-		case 0x4B: return Key_KeypadDivide;
-		case 0x4C: return Key_KeypadEnter;
-		case 0x4E: return Key_KeypadSubtract;
-			
-		case 0x51: return Key_KeypadEnter;
-		case 0x52: return Key_Keypad0;
-		case 0x53: return Key_Keypad1;
-		case 0x54: return Key_Keypad2;
-		case 0x55: return Key_Keypad3;
-		case 0x56: return Key_Keypad4;
-		case 0x57: return Key_Keypad5;
-		case 0x58: return Key_Keypad6;
-		case 0x59: return Key_Keypad7;
-		case 0x5B: return Key_Keypad8;
-		case 0x5C: return Key_Keypad9;
-		case 0x5D: return Key_N;
-		case 0x5E: return Key_M;
-		case 0x5F: return Key_Period;
-			
-		case 0x60: return Key_F5;
-		case 0x61: return Key_F6;
-		case 0x62: return Key_F7;
-		case 0x63: return Key_F3;
-		case 0x64: return Key_F8;
-		case 0x65: return Key_F9;
-		case 0x67: return Key_F11;
-		case 0x69: return Key_F13;
-		case 0x6B: return Key_F14;
-		case 0x6D: return Key_F10;
-		case 0x6F: return Key_F12;
-			
-		case 0x70: return Key_U;
-		case 0x71: return Key_F15;
-		case 0x72: return Key_Insert;
-		case 0x73: return Key_Home;
-		case 0x74: return Key_PageUp;
-		case 0x75: return Key_Delete;
-		case 0x76: return Key_F4;
-		case 0x77: return Key_End;
-		case 0x78: return Key_F2;
-		case 0x79: return Key_PageDown;
-		case 0x7A: return Key_F1;
-		case 0x7B: return Key_Left;
-		case 0x7C: return Key_Right;
-		case 0x7D: return Key_Down;
-		case 0x7E: return Key_Up;
-	}
-	return Key_None;
-	/* TODO: Verify these differences */
-	/*
-	 Backspace = 51,  (0x33, Key_Delete according to that link)
-	 Return = 52,     (0x34, ??? according to that link)
-	 Menu = 110,      (0x6E, ??? according to that ink)
-	 */
-}
+/* Sourced from https://www.meandmark.com/keycodes.html */
+static uint8_t key_map[8 * 16] = {
+	KEY_A, KEY_S, KEY_D, KEY_F, KEY_H, KEY_G, KEY_Z, KEY_X, KEY_C, KEY_V, 0, KEY_B, KEY_Q, KEY_W, KEY_E, KEY_R,
+	KEY_Y, KEY_T, KEY_1, KEY_2, KEY_3, KEY_4, KEY_6, KEY_5, KEY_PLUS, KEY_9, KEY_7, KEY_MINUS, KEY_8, KEY_0, KEY_RBRACKET, KEY_O,
+	KEY_U, KEY_LBRACKET, KEY_I, KEY_P, KEY_ENTER, KEY_L, KEY_J, KEY_QUOTE, KEY_K, KEY_SEMICOLON, KEY_BACKSLASH, KEY_COMMA, KEY_SLASH, KEY_N, KEY_M, KEY_PERIOD,
+	KEY_TAB, KEY_SPACE, KEY_TILDE, KEY_BACKSPACE, 0, KEY_ESCAPE, 0, 0, 0, KEY_CAPSLOCK, 0, 0, 0, 0, 0, 0,
+	0, KEY_KP_DECIMAL, 0, KEY_KP_MULTIPLY, 0, KEY_KP_PLUS, 0, 0, 0, 0, 0, KEY_KP_DIVIDE, KEY_KP_ENTER, 0, KEY_KP_MINUS, 0,
+	0, KEY_KP_ENTER, KEY_KP0, KEY_KP1, KEY_KP2, KEY_KP3, KEY_KP4, KEY_KP5, KEY_KP6, KEY_KP7, 0, KEY_KP8, KEY_KP9, KEY_N, KEY_M, KEY_PERIOD,
+	KEY_F5, KEY_F6, KEY_F7, KEY_F3, KEY_F8, KEY_F9, 0, KEY_F11, 0, KEY_F13, 0, KEY_F14, 0, KEY_F10, 0, KEY_F12,
+	KEY_U, KEY_F15, KEY_INSERT, KEY_HOME, KEY_PAGEUP, KEY_DELETE, KEY_F4, KEY_END, KEY_F2, KEY_PAGEDOWN, KEY_F1, KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, 0,
+};
+static Key Window_MapKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
+/* TODO: Check these.. */
+/*   case 0x37: return KEY_LWIN; */
+/*   case 0x38: return KEY_LSHIFT; */
+/*   case 0x3A: return KEY_LALT; */
+/*   case 0x3B: return Key_ControlLeft; */
+
+/* TODO: Verify these differences from OpenTK */
+/*Backspace = 51,  (0x33, KEY_DELETE according to that link)*/
+/*Return = 52,     (0x34, ??? according to that link)*/
+/*Menu = 110,      (0x6E, ??? according to that link)*/
 
 static void Window_Destroy(void) {
 	if (!Window_Exists) return;
@@ -1753,7 +1583,7 @@ OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventRef inEv
 			if (res) ErrorHandler_Fail2(res, "Getting key char");
 			
 			key = Window_MapKey(code);
-			if (key == Key_None) {
+			if (key == KEY_NONE) {
 				Platform_Log1("Key %i not mapped, ignoring press.", &code);
 				return 0;
 			}
@@ -1786,11 +1616,11 @@ OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventRef inEv
 			repeat = Key_KeyRepeat; 
 			Key_KeyRepeat = false;
 			
-			Key_SetPressed(Key_ControlLeft, (code & 0x1000) != 0);
-			Key_SetPressed(Key_AltLeft,     (code & 0x0800) != 0);
-			Key_SetPressed(Key_ShiftLeft,   (code & 0x0200) != 0);
-			Key_SetPressed(Key_WinLeft,     (code & 0x0100) != 0);			
-			Key_SetPressed(Key_CapsLock,    (code & 0x0400) != 0);
+			Key_SetPressed(KEY_LCTRL,  (code & 0x1000) != 0);
+			Key_SetPressed(KEY_LALT,   (code & 0x0800) != 0);
+			Key_SetPressed(KEY_LSHIFT, (code & 0x0200) != 0);
+			Key_SetPressed(KEY_LWIN,   (code & 0x0100) != 0);			
+			Key_SetPressed(KEY_CAPSLOCK,  (code & 0x0400) != 0);
 			
 			Key_KeyRepeat = repeat;
 			return 0;
@@ -1873,11 +1703,11 @@ OSStatus Window_ProcessMouseEvent(EventHandlerCallRef inCaller, EventRef inEvent
 			
 			switch (button) {
 				case kEventMouseButtonPrimary:
-					Mouse_SetPressed(MouseButton_Left, down); break;
+					Mouse_SetPressed(MOUSE_LEFT, down); break;
 				case kEventMouseButtonSecondary:
-					Mouse_SetPressed(MouseButton_Right, down); break;
+					Mouse_SetPressed(MOUSE_RIGHT, down); break;
 				case kEventMouseButtonTertiary:
-					Mouse_SetPressed(MouseButton_Middle, down); break;
+					Mouse_SetPressed(MOUSE_MIDDLE, down); break;
 			}
 			return 0;
 			
@@ -2196,9 +2026,6 @@ void Window_SetScreenCursorPos(int x, int y) {
 	CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
 	CGAssociateMouseAndMouseCursorPosition(1);
 }
-
-static bool win_cursorVisible;
-bool Window_GetCursorVisible(void) { return win_cursorVisible; }
 
 void Window_SetCursorVisible(bool visible) {
 	win_cursorVisible = visible;

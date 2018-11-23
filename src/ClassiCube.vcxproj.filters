@@ -554,9 +554,6 @@
     <ClCompile Include="Graphics.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="CarbonWindow.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="Window.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>

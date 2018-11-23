@@ -620,9 +620,9 @@ static void Game_Render3D(double delta, float t) {
 	Selections_Render(delta);
 	Entities_RenderHoveredNames(delta);
 
-	left   = InputHandler_IsMousePressed(MouseButton_Left);
-	middle = InputHandler_IsMousePressed(MouseButton_Middle);
-	right  = InputHandler_IsMousePressed(MouseButton_Right);
+	left   = InputHandler_IsMousePressed(MOUSE_LEFT);
+	middle = InputHandler_IsMousePressed(MOUSE_MIDDLE);
+	right  = InputHandler_IsMousePressed(MOUSE_RIGHT);
 
 	InputHandler_PickBlocks(true, left, middle, right);
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
@@ -694,7 +694,7 @@ static void Game_RenderFrame(double delta) {
 	}
 
 	allowZoom = !Gui_Active && !Gui_HUD->HandlesAllInput;
-	if (allowZoom && KeyBind_IsPressed(KeyBind_ZoomScrolling)) {
+	if (allowZoom && KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL)) {
 		InputHandler_SetFOV(Game_ZoomFov, false);
 	}
 

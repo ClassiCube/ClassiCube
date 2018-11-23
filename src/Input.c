@@ -21,7 +21,7 @@
 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",\
 "U", "V", "W", "X", "Y", "Z"
 
-const char* Key_Names[Key_Count] = {
+const char* Key_Names[KEY_COUNT] = {
 	"None",
 	"ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight",
 	"AltLeft", "AltRight", "WinLeft", "WinRight", "Menu",
@@ -43,7 +43,7 @@ const char* Key_Names[Key_Count] = {
 };
 
 /* TODO: Should this only be shown in GUI? not saved to disc? */
-/*const char* Key_Names[Key_Count] = {
+/*const char* Key_Names[KEY_COUNT] = {
 	"NONE",
 	"LSHIFT", "RSHIFT", "LCONTROL", "RCONTROL",
 	"LMENU", "RMENU", "LWIN", "RWIN", "MENU",
@@ -77,7 +77,7 @@ void Key_SetPressed(Key key, bool pressed) {
 
 void Key_Clear(void) {
 	int i;
-	for (i = 0; i < Key_Count; i++) {
+	for (i = 0; i < KEY_COUNT; i++) {
 		if (Key_Pressed[i]) Key_SetPressed((Key)i, false);
 	}
 }
@@ -109,19 +109,19 @@ void Mouse_SetPosition(int x, int y) {
 /*########################################################################################################################*
 *---------------------------------------------------------Keybinds--------------------------------------------------------*
 *#########################################################################################################################*/
-static Key KeyBind_Keys[KeyBind_Count];
-static uint8_t KeyBind_Defaults[KeyBind_Count] = {
-	Key_W, Key_S, Key_A, Key_D,
-	Key_Space, Key_R, Key_Enter, Key_T,
-	Key_B, Key_F, Key_Enter, Key_Escape,
-	Key_Tab, Key_ShiftLeft, Key_X, Key_Z,
-	Key_Q, Key_E, Key_AltLeft, Key_F3,
-	Key_F12, Key_F11, Key_F5, Key_F1,
-	Key_F7, Key_C, Key_ControlLeft, Key_None,
-	Key_None, Key_None, Key_F6, Key_AltLeft, 
-	Key_F8, Key_G, Key_F10, Key_None,
+static Key KeyBind_Keys[KEYBIND_COUNT];
+static uint8_t KeyBind_Defaults[KEYBIND_COUNT] = {
+	KEY_W, KEY_S, KEY_A, KEY_D,
+	KEY_SPACE, KEY_R, KEY_ENTER, KEY_T,
+	KEY_B, KEY_F, KEY_ENTER, KEY_ESCAPE,
+	KEY_TAB, KEY_LSHIFT, KEY_X, KEY_Z,
+	KEY_Q, KEY_E, KEY_LALT, KEY_F3,
+	KEY_F12, KEY_F11, KEY_F5, KEY_F1,
+	KEY_F7, KEY_C, KEY_LCTRL, KEY_NONE,
+	KEY_NONE, KEY_NONE, KEY_F6, KEY_LALT, 
+	KEY_F8, KEY_G, KEY_F10, KEY_NONE,
 };
-const char* KeyBind_Names[KeyBind_Count] = {
+const char* KeyBind_Names[KEYBIND_COUNT] = {
 	"Forward", "Back", "Left", "Right",
 	"Jump", "Respawn", "SetSpawn", "Chat",
 	"Inventory", "ToggleFog", "SendChat", "PauseOrExit",
@@ -143,15 +143,15 @@ void KeyBind_Load(void) {
 	int i;
 
 	String_InitArray_NT(name, nameBuffer);
-	for (i = 0; i < KeyBind_Count; i++) {
+	for (i = 0; i < KEYBIND_COUNT; i++) {
 		name.length = 0;
 		String_Format1(&name, "key-%c", KeyBind_Names[i]);
 		name.buffer[name.length] = '\0';
 
-		mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Key_Names, Key_Count);
-		if (mapping != Key_Escape) KeyBind_Keys[i] = mapping;
+		mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Key_Names, KEY_COUNT);
+		if (mapping != KEY_ESCAPE) KeyBind_Keys[i] = mapping;
 	}
-	KeyBind_Keys[KeyBind_PauseOrExit] = Key_Escape;
+	KeyBind_Keys[KEYBIND_PAUSE_EXIT] = KEY_ESCAPE;
 }
 
 void KeyBind_Save(void) {
@@ -160,7 +160,7 @@ void KeyBind_Save(void) {
 	int i;	
 
 	String_InitArray(name, nameBuffer);
-	for (i = 0; i < KeyBind_Count; i++) {
+	for (i = 0; i < KEYBIND_COUNT; i++) {
 		name.length = 0; 
 		String_Format1(&name, "key-%c", KeyBind_Names[i]);
 
@@ -176,7 +176,7 @@ void KeyBind_Set(KeyBind binding, Key key) {
 
 void KeyBind_Init(void) {
 	int i;
-	for (i = 0; i < KeyBind_Count; i++) {
+	for (i = 0; i < KEYBIND_COUNT; i++) {
 		KeyBind_Keys[i] = KeyBind_Defaults[i];
 	}
 	KeyBind_Load();
@@ -187,20 +187,20 @@ void KeyBind_Init(void) {
 *---------------------------------------------------------Hotkeys---------------------------------------------------------*
 *#########################################################################################################################*/
 uint8_t Hotkeys_LWJGL[256] = {
-	0, Key_Escape, Key_1, Key_2, Key_3, Key_4, Key_5, Key_6, Key_7, Key_8, Key_9, Key_0, Key_Minus, Key_Plus, Key_BackSpace, Key_Tab,
-	Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Y, Key_U, Key_I, Key_O, Key_P, Key_BracketLeft, Key_BracketRight, Key_Enter, Key_ControlLeft, Key_A, Key_S,
-	Key_D, Key_F, Key_G, Key_H, Key_J, Key_K, Key_L, Key_Semicolon, Key_Quote, Key_Tilde, Key_ShiftLeft, Key_BackSlash, Key_Z, Key_X, Key_C, Key_V,
-	Key_B, Key_N, Key_M, Key_Comma, Key_Period, Key_Slash, Key_ShiftRight, 0, Key_AltLeft, Key_Space, Key_CapsLock, Key_F1, Key_F2, Key_F3, Key_F4, Key_F5,
-	Key_F6, Key_F7, Key_F8, Key_F9, Key_F10, Key_NumLock, Key_ScrollLock, Key_Keypad7, Key_Keypad8, Key_Keypad9, Key_KeypadSubtract, Key_Keypad4, Key_Keypad5, Key_Keypad6, Key_KeypadAdd, Key_Keypad1,
-	Key_Keypad2, Key_Keypad3, Key_Keypad0, Key_KeypadDecimal, 0, 0, 0, Key_F11, Key_F12, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, Key_F13, Key_F14, Key_F15, Key_F16, Key_F17, Key_F18, 0, 0, 0, 0, 0, 0,
+	0, KEY_ESCAPE, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, KEY_MINUS, KEY_PLUS, KEY_BACKSPACE, KEY_TAB,
+	KEY_Q, KEY_W, KEY_E, KEY_R, KEY_T, KEY_Y, KEY_U, KEY_I, KEY_O, KEY_P, KEY_LBRACKET, KEY_RBRACKET, KEY_ENTER, KEY_LCTRL, KEY_A, KEY_S,
+	KEY_D, KEY_F, KEY_G, KEY_H, KEY_J, KEY_K, KEY_L, KEY_SEMICOLON, KEY_QUOTE, KEY_TILDE, KEY_LSHIFT, KEY_BACKSLASH, KEY_Z, KEY_X, KEY_C, KEY_V,
+	KEY_B, KEY_N, KEY_M, KEY_COMMA, KEY_PERIOD, KEY_SLASH, KEY_RSHIFT, 0, KEY_LALT, KEY_SPACE, KEY_CAPSLOCK, KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5,
+	KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_NUMLOCK, KEY_SCROLLLOCK, KEY_KP7, KEY_KP8, KEY_KP9, KEY_KP_MINUS, KEY_KP4, KEY_KP5, KEY_KP6, KEY_KP_PLUS, KEY_KP1,
+	KEY_KP2, KEY_KP3, KEY_KP0, KEY_KP_DECIMAL, 0, 0, 0, KEY_F11, KEY_F12, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, KEY_F13, KEY_F14, KEY_F15, KEY_F16, KEY_F17, KEY_F18, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, Key_KeypadAdd, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, Key_KeypadEnter, Key_ControlRight, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_KP_PLUS, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_KP_ENTER, KEY_RCTRL, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, Key_KeypadDivide, 0, 0, Key_AltRight, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, Key_Pause, 0, Key_Home, Key_Up, Key_PageUp, 0, Key_Left, 0, Key_Right, 0, Key_End,
-	Key_Down, Key_PageDown, Key_Insert, Key_Delete, 0, 0, 0, 0, 0, 0, 0, Key_WinLeft, Key_WinRight, 0, 0, 0,
+	0, 0, 0, 0, 0, KEY_KP_DIVIDE, 0, 0, KEY_RALT, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, KEY_PAUSE, 0, KEY_HOME, KEY_UP, KEY_PAGEUP, 0, KEY_LEFT, 0, KEY_RIGHT, 0, KEY_END,
+	KEY_DOWN, KEY_PAGEDOWN, KEY_INSERT, KEY_DELETE, 0, 0, 0, 0, 0, 0, 0, KEY_LWIN, KEY_RWIN, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
@@ -321,8 +321,8 @@ void Hotkeys_Init(void) {
 		if (!String_UNSAFE_Separate(&key,   '&', &strKey,  &strMods)) continue;
 		if (!String_UNSAFE_Separate(&value, '&', &strMore, &strText)) continue;
 
-		trigger = Utils_ParseEnum(&strKey, Key_None, Key_Names, Array_Elems(Key_Names));
-		if (trigger == Key_None) continue; 
+		trigger = Utils_ParseEnum(&strKey, KEY_NONE, Key_Names, Array_Elems(Key_Names));
+		if (trigger == KEY_NONE) continue; 
 		if (!Convert_TryParseUInt8(&strMods, &modifiers)) continue;
 		if (!Convert_TryParseBool(&strMore,  &more))      continue;
 

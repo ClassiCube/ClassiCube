@@ -10,7 +10,7 @@ int MapRenderer_ChunksX, MapRenderer_ChunksY, MapRenderer_ChunksZ;
 #define MapRenderer_Pack(cx, cy, cz) (((cz) * MapRenderer_ChunksY + (cy)) * MapRenderer_ChunksX + (cx))
 /* TODO: Swap Y and Z? Make sure to update ChunkUpdater's ResetChunkCache and ClearChunkCache methods! */
 
-/* The count of actual used 1D atlases. (i.e. 1DIndex(maxTextureLoc) + 1*/
+/* The count of actual used 1D atlases. (i.e. 1DIndex(maxTextureLoc) + 1 */
 int MapRenderer_1DUsedCount;
 /* The number of non-empty Normal ChunkPartInfos (across entire world) for each 1D atlas batch.
 1D atlas batches that do not have any ChunkPartInfos can be entirely skipped. */

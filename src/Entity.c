@@ -816,20 +816,20 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 		p->Physics.Jumping = false; hacks->Speeding = false;
 		hacks->FlyingUp    = false; hacks->FlyingDown = false;
 	} else {
-		if (KeyBind_IsPressed(KeyBind_Forward)) *zMoving -= 0.98f;
-		if (KeyBind_IsPressed(KeyBind_Back))    *zMoving += 0.98f;
-		if (KeyBind_IsPressed(KeyBind_Left))    *xMoving -= 0.98f;
-		if (KeyBind_IsPressed(KeyBind_Right))   *xMoving += 0.98f;
+		if (KeyBind_IsPressed(KEYBIND_FORWARD)) *zMoving -= 0.98f;
+		if (KeyBind_IsPressed(KEYBIND_BACK))    *zMoving += 0.98f;
+		if (KeyBind_IsPressed(KEYBIND_LEFT))    *xMoving -= 0.98f;
+		if (KeyBind_IsPressed(KEYBIND_RIGHT))   *xMoving += 0.98f;
 
-		p->Physics.Jumping  = KeyBind_IsPressed(KeyBind_Jump);
-		hacks->Speeding     = hacks->Enabled && KeyBind_IsPressed(KeyBind_Speed);
-		hacks->HalfSpeeding = hacks->Enabled && KeyBind_IsPressed(KeyBind_HalfSpeed);
-		hacks->FlyingUp     = KeyBind_IsPressed(KeyBind_FlyUp);
-		hacks->FlyingDown   = KeyBind_IsPressed(KeyBind_FlyDown);
+		p->Physics.Jumping  = KeyBind_IsPressed(KEYBIND_JUMP);
+		hacks->Speeding     = hacks->Enabled && KeyBind_IsPressed(KEYBIND_SPEED);
+		hacks->HalfSpeeding = hacks->Enabled && KeyBind_IsPressed(KEYBIND_HALF_SPEED);
+		hacks->FlyingUp     = KeyBind_IsPressed(KEYBIND_FLY_UP);
+		hacks->FlyingDown   = KeyBind_IsPressed(KEYBIND_FLY_DOWN);
 
 		if (hacks->WOMStyleHacks && hacks->Enabled && hacks->CanNoclip) {
 			if (hacks->Noclip) p->Base.Velocity = Vector3_Zero;
-			hacks->Noclip = KeyBind_IsPressed(KeyBind_NoClip);
+			hacks->Noclip = KeyBind_IsPressed(KEYBIND_NOCLIP);
 		}
 	}
 }
@@ -1050,15 +1050,15 @@ bool LocalPlayer_HandlesKey(Key key) {
 	struct PhysicsComp* physics = &p->Physics;
 	int maxJumps;
 
-	if (key == KeyBind_Get(KeyBind_Respawn)) {
+	if (key == KeyBind_Get(KEYBIND_RESPAWN)) {
 		return LocalPlayer_HandleRespawn();
-	} else if (key == KeyBind_Get(KeyBind_SetSpawn)) {
+	} else if (key == KeyBind_Get(KEYBIND_SET_SPAWN)) {
 		return LocalPlayer_HandleSetSpawn();
-	} else if (key == KeyBind_Get(KeyBind_Fly)) {
+	} else if (key == KeyBind_Get(KEYBIND_FLY)) {
 		return LocalPlayer_HandleFly();
-	} else if (key == KeyBind_Get(KeyBind_NoClip)) {
+	} else if (key == KeyBind_Get(KEYBIND_NOCLIP)) {
 		return LocalPlayer_HandleNoClip();
-	} else if (key == KeyBind_Get(KeyBind_Jump) && !p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
+	} else if (key == KeyBind_Get(KEYBIND_JUMP) && !p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
 		maxJumps = hacks->CanDoubleJump && hacks->WOMStyleHacks ? 2 : 0;
 		maxJumps = max(maxJumps, hacks->MaxJumps - 1);
 

@@ -31,54 +31,54 @@
 */
 
 typedef enum Key_ {	
-	Key_None, /* Unrecognised key */
+	KEY_NONE, /* Unrecognised key */
 
-	Key_ShiftLeft, Key_ShiftRight, Key_ControlLeft, Key_ControlRight,
-	Key_AltLeft, Key_AltRight, Key_WinLeft, Key_WinRight, Key_Menu,
+	KEY_LSHIFT, KEY_RSHIFT, KEY_LCTRL, KEY_RCTRL,
+	KEY_LALT, KEY_RALT, KEY_LWIN, KEY_RWIN, KEY_MENU,
 
-	Key_F1,  Key_F2,  Key_F3,  Key_F4,  Key_F5,  Key_F6,  Key_F7,  Key_F8,  Key_F9,  Key_F10,
-	Key_F11, Key_F12, Key_F13, Key_F14, Key_F15, Key_F16, Key_F17, Key_F18, Key_F19, Key_F20,
-	Key_F21, Key_F22, Key_F23, Key_F24, Key_F25, Key_F26, Key_F27, Key_F28, Key_F29, Key_F30,
-	Key_F31, Key_F32, Key_F33, Key_F34, Key_F35,
+	KEY_F1,  KEY_F2,  KEY_F3,  KEY_F4,  KEY_F5,  KEY_F6,  KEY_F7,  KEY_F8,  KEY_F9,  KEY_F10,
+	KEY_F11, KEY_F12, KEY_F13, KEY_F14, KEY_F15, KEY_F16, KEY_F17, KEY_F18, KEY_F19, KEY_F20,
+	KEY_F21, KEY_F22, KEY_F23, KEY_F24, KEY_F25, KEY_F26, KEY_F27, KEY_F28, KEY_F29, KEY_F30,
+	KEY_F31, KEY_F32, KEY_F33, KEY_F34, KEY_F35,
 
-	Key_Up, Key_Down, Key_Left, Key_Right,
+	KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT,
 
-	Key_Enter, Key_Escape, Key_Space, Key_Tab, Key_BackSpace, Key_Insert,
-	Key_Delete, Key_PageUp, Key_PageDown, Key_Home, Key_End, Key_CapsLock,
-	Key_ScrollLock, Key_PrintScreen, Key_Pause, Key_NumLock,
+	KEY_ENTER, KEY_ESCAPE, KEY_SPACE, KEY_TAB, KEY_BACKSPACE, KEY_INSERT,
+	KEY_DELETE, KEY_PAGEUP, KEY_PAGEDOWN, KEY_HOME, KEY_END, KEY_CAPSLOCK,
+	KEY_SCROLLLOCK, KEY_PRINTSCREEN, KEY_PAUSE, KEY_NUMLOCK,
 
-	Key_Keypad0, Key_Keypad1, Key_Keypad2, Key_Keypad3, Key_Keypad4,
-	Key_Keypad5, Key_Keypad6, Key_Keypad7, Key_Keypad8, Key_Keypad9,
-	Key_KeypadDivide, Key_KeypadMultiply, Key_KeypadSubtract,
-	Key_KeypadAdd, Key_KeypadDecimal, Key_KeypadEnter,
+	KEY_KP0, KEY_KP1, KEY_KP2, KEY_KP3, KEY_KP4,
+	KEY_KP5, KEY_KP6, KEY_KP7, KEY_KP8, KEY_KP9,
+	KEY_KP_DIVIDE, KEY_KP_MULTIPLY, KEY_KP_MINUS,
+	KEY_KP_PLUS, KEY_KP_DECIMAL, KEY_KP_ENTER,
 
-	Key_A, Key_B, Key_C, Key_D, Key_E, Key_F, Key_G, Key_H, Key_I, Key_J,
-	Key_K, Key_L, Key_M, Key_N, Key_O, Key_P, Key_Q, Key_R, Key_S, Key_T,
-	Key_U, Key_V, Key_W, Key_X, Key_Y, Key_Z,
+	KEY_A, KEY_B, KEY_C, KEY_D, KEY_E, KEY_F, KEY_G, KEY_H, KEY_I, KEY_J,
+	KEY_K, KEY_L, KEY_M, KEY_N, KEY_O, KEY_P, KEY_Q, KEY_R, KEY_S, KEY_T,
+	KEY_U, KEY_V, KEY_W, KEY_X, KEY_Y, KEY_Z,
 
-	Key_0, Key_1, Key_2, Key_3, Key_4,
-	Key_5, Key_6, Key_7, Key_8, Key_9,
+	KEY_0, KEY_1, KEY_2, KEY_3, KEY_4,
+	KEY_5, KEY_6, KEY_7, KEY_8, KEY_9,
 
-	Key_Tilde, Key_Minus, Key_Plus, Key_BracketLeft, Key_BracketRight,
-	Key_Semicolon, Key_Quote, Key_Comma, Key_Period, Key_Slash, Key_BackSlash,
+	KEY_TILDE, KEY_MINUS, KEY_PLUS, KEY_LBRACKET, KEY_RBRACKET,
+	KEY_SEMICOLON, KEY_QUOTE, KEY_COMMA, KEY_PERIOD, KEY_SLASH, KEY_BACKSLASH,
 
-	Key_XButton1, Key_XButton2, /* so these can be used for hotkeys */
-	Key_Count
+	KEY_XBUTTON1, KEY_XBUTTON2, /* so these can be used for hotkeys */
+	KEY_COUNT
 } Key;
 
 /* Gets whether key repeating is on or not. When on, multiple KeyDown events are raised when the same key is 
 held down for a period of time (frequency depends on platform). Should be on for menu input, off for game input. */
 bool Key_KeyRepeat;
 /* Simple names for each keyboard button. */
-extern const char* Key_Names[Key_Count];
+extern const char* Key_Names[KEY_COUNT];
 
-#define Key_IsWinPressed()     (Key_Pressed[Key_WinLeft]     || Key_Pressed[Key_WinRight])
-#define Key_IsAltPressed()     (Key_Pressed[Key_AltLeft]     || Key_Pressed[Key_AltRight])
-#define Key_IsControlPressed() (Key_Pressed[Key_ControlLeft] || Key_Pressed[Key_ControlRight])
-#define Key_IsShiftPressed()   (Key_Pressed[Key_ShiftLeft]   || Key_Pressed[Key_ShiftRight])
+#define Key_IsWinPressed()     (Key_Pressed[KEY_LWIN]   || Key_Pressed[KEY_RWIN])
+#define Key_IsAltPressed()     (Key_Pressed[KEY_LALT]   || Key_Pressed[KEY_RALT])
+#define Key_IsControlPressed() (Key_Pressed[KEY_LCTRL]  || Key_Pressed[KEY_RCTRL])
+#define Key_IsShiftPressed()   (Key_Pressed[KEY_LSHIFT] || Key_Pressed[KEY_RSHIFT])
 
 /* Pressed state of each keyboard button. Use Key_SetPressed to change. */
-bool Key_Pressed[Key_Count];
+bool Key_Pressed[KEY_COUNT];
 /* Sets the pressed state of a keyboard button. */
 /* Raises KeyEvents_Up or KeyEvents_Down if state differs, or Key_KeyRepeat is on. */
 void Key_SetPressed(Key key, bool pressed);
@@ -88,8 +88,8 @@ void Key_Clear(void);
 
 
 typedef enum MouseButton_ {
-	MouseButton_Left, MouseButton_Right, MouseButton_Middle,
-	MouseButton_Count
+	MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE,
+	MOUSE_COUNT
 } MouseButton;
 
 /* Wheel position of the mouse. Use Mouse_SetWheel to change. */
@@ -98,7 +98,7 @@ float Mouse_Wheel;
 int Mouse_X, Mouse_Y;
 
 /* Pressed state of each mouse button. Use Mouse_SetPressed to change. */
-bool Mouse_Pressed[MouseButton_Count];
+bool Mouse_Pressed[MOUSE_COUNT];
 /* Sets the pressed state of a mouse button. */
 /* Raises MouseEvents_Up or MouseEvents_Down if state differs. */
 void Mouse_SetPressed(MouseButton btn, bool pressed);
@@ -110,16 +110,16 @@ void Mouse_SetPosition(int x, int y);
 
 /* Enumeration of all key bindings. */
 typedef enum KeyBind_ {
-	KeyBind_Forward, KeyBind_Back, KeyBind_Left, KeyBind_Right, 
-	KeyBind_Jump, KeyBind_Respawn, KeyBind_SetSpawn, KeyBind_Chat,
-	KeyBind_Inventory, KeyBind_ToggleFog, KeyBind_SendChat, KeyBind_PauseOrExit, 
-	KeyBind_PlayerList, KeyBind_Speed, KeyBind_NoClip, KeyBind_Fly, 
-	KeyBind_FlyUp, KeyBind_FlyDown, KeyBind_ExtInput, KeyBind_HideFps,
-	KeyBind_Screenshot, KeyBind_Fullscreen, KeyBind_ThirdPerson, KeyBind_HideGui, 
-	KeyBind_AxisLines, KeyBind_ZoomScrolling, KeyBind_HalfSpeed, KeyBind_MouseLeft, 
-	KeyBind_MouseMiddle, KeyBind_MouseRight, KeyBind_Autorotate, KeyBind_HotbarSwitching, 
-	KeyBind_SmoothCamera, KeyBind_DropBlock, KeyBind_IDOverlay, KeyBind_BreakableLiquids,
-	KeyBind_Count
+	KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_LEFT, KEYBIND_RIGHT, 
+	KEYBIND_JUMP, KEYBIND_RESPAWN, KEYBIND_SET_SPAWN, KEYBIND_CHAT,
+	KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_SEND_CHAT, KEYBIND_PAUSE_EXIT, 
+	KEYBIND_PLAYER_LIST, KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_FLY, 
+	KEYBIND_FLY_UP, KEYBIND_FLY_DOWN, KEYBIND_EXT_INPUT, KEYBIND_HIDE_FPS,
+	KEYBIND_SCREENSHOT, KEYBIND_FULLSCREEN, KEYBIND_THIRD_PERSO, KEYBIND_HIDE_GUI, 
+	KEYBIND_AXIS_LINES, KEYBIND_ZOOM_SCROLL, KEYBIND_HALF_SPEED, KEYBIND_MOUSE_LEFT, 
+	KEYBIND_MOUSE_MIDDLE, KEYBIND_MOUSE_RIGHT, KEYBIND_AUTOROTATE, KEYBIND_HOTBAR_SWITCH, 
+	KEYBIND_SMOOTH_CAMERA, KEYBIND_DROP_BLOCK, KEYBIND_IDOVERLAY, KEYBIND_BREAK_LIQUIDS,
+	KEYBIND_COUNT
 } KeyBind;
 
 /* Gets the key that is bound to the the given key binding. */

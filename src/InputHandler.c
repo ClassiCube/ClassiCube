@@ -29,9 +29,9 @@ bool InputHandler_IsMousePressed(MouseButton button) {
 	if (Mouse_Pressed[button]) return true;
 
 	/* Key --> mouse mappings */
-	if (button == MouseButton_Left   && KeyBind_IsPressed(KeyBind_MouseLeft))   return true;
-	if (button == MouseButton_Middle && KeyBind_IsPressed(KeyBind_MouseMiddle)) return true;
-	if (button == MouseButton_Right  && KeyBind_IsPressed(KeyBind_MouseRight))  return true;
+	if (button == MOUSE_LEFT   && KeyBind_IsPressed(KEYBIND_MOUSE_LEFT))   return true;
+	if (button == MOUSE_MIDDLE && KeyBind_IsPressed(KEYBIND_MOUSE_MIDDLE)) return true;
+	if (button == MOUSE_RIGHT  && KeyBind_IsPressed(KEYBIND_MOUSE_RIGHT))  return true;
 	return false;
 }
 
@@ -65,18 +65,18 @@ void InputHandler_ScreenChanged(struct Screen* oldScreen, struct Screen* newScre
 
 	if (ServerConnection_SupportsPlayerClick) {
 		input_pickingId = -1;
-		InputHandler_ButtonStateChanged(MouseButton_Left,   false);
-		InputHandler_ButtonStateChanged(MouseButton_Right,  false);
-		InputHandler_ButtonStateChanged(MouseButton_Middle, false);
+		InputHandler_ButtonStateChanged(MOUSE_LEFT,   false);
+		InputHandler_ButtonStateChanged(MOUSE_RIGHT,  false);
+		InputHandler_ButtonStateChanged(MOUSE_MIDDLE, false);
 	}
 }
 
 static bool InputHandler_IsShutdown(Key key) {
-	if (key == Key_F4 && Key_IsAltPressed()) return true;
+	if (key == KEY_F4 && Key_IsAltPressed()) return true;
 
 	/* On OSX, Cmd+Q should also terminate the process. */
 #ifdef CC_BUILD_OSX
-	return key == Key_Q && Key_IsWinPressed();
+	return key == KEY_Q && Key_IsWinPressed();
 #else
 	return false;
 #endif
@@ -130,7 +130,7 @@ bool InputHandler_SetFOV(int fov, bool setZoom) {
 
 static bool InputHandler_DoFovZoom(float deltaPrecise) {
 	struct HacksComp* h;
-	if (!KeyBind_IsPressed(KeyBind_ZoomScrolling)) return false;
+	if (!KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL)) return false;
 
 	h = &LocalPlayer_Instance.Hacks;
 	if (!h->Enabled || !h->CanAnyHacks || !h->CanUseThirdPersonCamera) return false;
@@ -143,33 +143,33 @@ static bool InputHandler_DoFovZoom(float deltaPrecise) {
 }
 
 static bool InputHandler_HandleNonClassicKey(Key key) {
-	if (key == KeyBind_Get(KeyBind_HideGui)) {
+	if (key == KeyBind_Get(KEYBIND_HIDE_GUI)) {
 		Game_HideGui = !Game_HideGui;
-	} else if (key == KeyBind_Get(KeyBind_SmoothCamera)) {
+	} else if (key == KeyBind_Get(KEYBIND_SMOOTH_CAMERA)) {
 		InputHandler_Toggle(key, &Game_SmoothCamera,
 			"  &eSmooth camera is &aenabled",
 			"  &eSmooth camera is &cdisabled");
-	} else if (key == KeyBind_Get(KeyBind_AxisLines)) {
+	} else if (key == KeyBind_Get(KEYBIND_AXIS_LINES)) {
 		InputHandler_Toggle(key, &Game_ShowAxisLines,
 			"  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show",
 			"  &eAxis lines no longer show");
-	} else if (key == KeyBind_Get(KeyBind_Autorotate)) {
+	} else if (key == KeyBind_Get(KEYBIND_AUTOROTATE)) {
 		InputHandler_Toggle(key, &Game_AutoRotate,
 			"  &eAuto rotate is &aenabled",
 			"  &eAuto rotate is &cdisabled");
-	} else if (key == KeyBind_Get(KeyBind_ThirdPerson)) {
+	} else if (key == KeyBind_Get(KEYBIND_THIRD_PERSO)) {
 		Camera_CycleActive();
-	} else if (key == KeyBind_Get(KeyBind_DropBlock)) {
+	} else if (key == KeyBind_Get(KEYBIND_DROP_BLOCK)) {
 		if (Inventory_CanChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {
 			/* Don't assign SelectedIndex directly, because we don't want held block
 			switching positions if they already have air in their inventory hotbar. */
 			Inventory_Set(Inventory_SelectedIndex, BLOCK_AIR);
 			Event_RaiseVoid(&UserEvents_HeldBlockChanged);
 		}
-	} else if (key == KeyBind_Get(KeyBind_IDOverlay)) {
+	} else if (key == KeyBind_Get(KEYBIND_IDOVERLAY)) {
 		if (Gui_OverlaysCount) return true;
 		Gui_ShowOverlay(TexIdsOverlay_MakeInstance(), false);
-	} else if (key == KeyBind_Get(KeyBind_BreakableLiquids)) {
+	} else if (key == KeyBind_Get(KEYBIND_BREAK_LIQUIDS)) {
 		InputHandler_Toggle(key, &Game_BreakableLiquids,
 			"  &eBreakable liquids is &aenabled",
 			"  &eBreakable liquids is &cdisabled");
@@ -182,15 +182,15 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 static bool InputHandler_HandleCoreKey(Key key) {
 	struct Screen* active = Gui_GetActiveScreen();
 
-	if (key == KeyBind_Get(KeyBind_HideFps)) {
+	if (key == KeyBind_Get(KEYBIND_HIDE_FPS)) {
 		Game_ShowFPS = !Game_ShowFPS;
-	} else if (key == KeyBind_Get(KeyBind_Fullscreen)) {
+	} else if (key == KeyBind_Get(KEYBIND_FULLSCREEN)) {
 		int state = Window_GetWindowState();
 		if (state != WINDOW_STATE_MAXIMISED) {
 			bool fullscreen = state == WINDOW_STATE_FULLSCREEN;
 			Window_SetWindowState(fullscreen ? WINDOW_STATE_NORMAL : WINDOW_STATE_FULLSCREEN);
 		}
-	} else if (key == KeyBind_Get(KeyBind_ToggleFog)) {
+	} else if (key == KeyBind_Get(KEYBIND_FOG)) {
 		int16_t* viewDists = Game_UseClassicOptions ? input_classicViewDists : input_normViewDists;
 		int count = Game_UseClassicOptions ? Array_Elems(input_classicViewDists) : Array_Elems(input_normViewDists);
 
@@ -199,13 +199,13 @@ static bool InputHandler_HandleCoreKey(Key key) {
 		} else {
 			InputHandler_CycleDistanceForwards(viewDists, count);
 		}
-	} else if ((key == KeyBind_Get(KeyBind_PauseOrExit) || key == Key_Pause) && !active->HandlesAllInput) {
+	} else if ((key == KeyBind_Get(KEYBIND_PAUSE_EXIT) || key == KEY_PAUSE) && !active->HandlesAllInput) {
 		Gui_FreeActive();
 		Gui_SetActive(PauseScreen_MakeInstance());
-	} else if (key == KeyBind_Get(KeyBind_Inventory) && active == Gui_HUD) {
+	} else if (key == KeyBind_Get(KEYBIND_INVENTORY) && active == Gui_HUD) {
 		Gui_FreeActive();
 		Gui_SetActive(InventoryScreen_MakeInstance());
-	} else if (key == Key_F5 && Game_ClassicMode) {
+	} else if (key == KEY_F5 && Game_ClassicMode) {
 		int weather = Env_Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
 		Env_SetWeather(weather);
 	} else {
@@ -330,9 +330,9 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 
 	if (ServerConnection_SupportsPlayerClick && !Gui_GetActiveScreen()->HandlesAllInput) {
 		input_pickingId = -1;
-		InputHandler_ButtonStateChanged(MouseButton_Left,   left);
-		InputHandler_ButtonStateChanged(MouseButton_Right,  right);
-		InputHandler_ButtonStateChanged(MouseButton_Middle, middle);
+		InputHandler_ButtonStateChanged(MOUSE_LEFT,   left);
+		InputHandler_ButtonStateChanged(MOUSE_RIGHT,  right);
+		InputHandler_ButtonStateChanged(MOUSE_MIDDLE, middle);
 	}
 
 	if (Gui_GetActiveScreen()->HandlesAllInput || !Inventory_CanPick) return;
@@ -418,9 +418,9 @@ static void InputHandler_MouseMove(void* obj, int xDelta, int yDelta) {
 static void InputHandler_MouseDown(void* obj, int button) {
 	struct Screen* active = Gui_GetActiveScreen();
 	if (!Elem_HandlesMouseDown(active, Mouse_X, Mouse_Y, button)) {
-		bool left   = button == MouseButton_Left;
-		bool middle = button == MouseButton_Middle;
-		bool right  = button == MouseButton_Right;
+		bool left   = button == MOUSE_LEFT;
+		bool middle = button == MOUSE_MIDDLE;
+		bool right  = button == MOUSE_RIGHT;
 		InputHandler_PickBlocks(false, left, middle, right);
 	} else {
 		input_lastClick = DateTime_CurrentUTC_MS();
@@ -430,7 +430,7 @@ static void InputHandler_MouseDown(void* obj, int button) {
 static void InputHandler_MouseUp(void* obj, int button) {
 	struct Screen* active = Gui_GetActiveScreen();
 	if (!Elem_HandlesMouseUp(active, Mouse_X, Mouse_Y, button)) {
-		if (ServerConnection_SupportsPlayerClick && button <= MouseButton_Middle) {
+		if (ServerConnection_SupportsPlayerClick && button <= MOUSE_MIDDLE) {
 			input_pickingId = -1;
 			InputHandler_ButtonStateChanged(button, false);
 		}
@@ -438,13 +438,13 @@ static void InputHandler_MouseUp(void* obj, int button) {
 }
 
 static bool InputHandler_SimulateMouse(Key key, bool pressed) {
-	Key left   = KeyBind_Get(KeyBind_MouseLeft);
-	Key middle = KeyBind_Get(KeyBind_MouseMiddle);
-	Key right  = KeyBind_Get(KeyBind_MouseRight);
+	Key left   = KeyBind_Get(KEYBIND_MOUSE_LEFT);
+	Key middle = KeyBind_Get(KEYBIND_MOUSE_MIDDLE);
+	Key right  = KeyBind_Get(KEYBIND_MOUSE_RIGHT);
 	MouseButton btn;
 	if (!(key == left || key == middle || key == right)) return false;
 
-	btn = key == left ? MouseButton_Left : key == middle ? MouseButton_Middle : MouseButton_Right;
+	btn = key == left ? MOUSE_LEFT : key == middle ? MOUSE_MIDDLE : MOUSE_RIGHT;
 	if (pressed) { InputHandler_MouseDown(NULL, btn); }
 	else {         InputHandler_MouseUp(NULL,   btn); }
 	return true;
@@ -462,7 +462,7 @@ static void InputHandler_KeyDown(void* obj, int key) {
 	if (InputHandler_IsShutdown(key)) {
 		/* TODO: Do we need a separate exit function in Game class? */
 		Window_Close();
-	} else if (key == KeyBind_Get(KeyBind_Screenshot)) {
+	} else if (key == KeyBind_Get(KEYBIND_SCREENSHOT)) {
 		Game_ScreenshotRequested = true;
 	} else if (Elem_HandlesKeyDown(active, key)) {
 	} else if (InputHandler_HandleCoreKey(key)) {
@@ -486,7 +486,7 @@ static void InputHandler_KeyUp(void* obj, int key) {
 	struct Screen* active;
 	if (InputHandler_SimulateMouse(key, false)) return;
 
-	if (key == KeyBind_Get(KeyBind_ZoomScrolling)) {
+	if (key == KeyBind_Get(KEYBIND_ZOOM_SCROLL)) {
 		InputHandler_SetFOV(Game_DefaultFov, false);
 	}
 

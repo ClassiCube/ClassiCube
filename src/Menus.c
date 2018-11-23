@@ -247,7 +247,7 @@ static int Menu_DoMouseDown(void* screen, int x, int y, MouseButton btn) {
 		if (!w || !Widget_Contains(w, x, y)) continue;
 		if (w->Disabled) return i;
 
-		if (w->MenuClick && btn == MouseButton_Left) {
+		if (w->MenuClick && btn == MOUSE_LEFT) {
 			w->MenuClick(s, w);
 		} else {
 			Elem_HandlesMouseDown(w, x, y, btn);
@@ -519,11 +519,11 @@ static void ListScreen_Free(void* screen) {
 
 static bool ListScreen_KeyDown(void* screen, Key key) {
 	struct ListScreen* s = screen;
-	if (key == Key_Escape) {
+	if (key == KEY_ESCAPE) {
 		Gui_CloseActive();
-	} else if (key == Key_Left  || key == Key_PageUp) {
+	} else if (key == KEY_LEFT  || key == KEY_PAGEUP) {
 		ListScreen_PageClick(s, false);
-	} else if (key == Key_Right || key == Key_PageDown) {
+	} else if (key == KEY_RIGHT || key == KEY_PAGEDOWN) {
 		ListScreen_PageClick(s, true);
 	} else {
 		return false;
@@ -562,8 +562,8 @@ struct ListScreen* ListScreen_MakeInstance(void) {
 *--------------------------------------------------------MenuScreen-------------------------------------------------------*
 *#########################################################################################################################*/
 static bool MenuScreen_KeyDown(void* screen, Key key) {
-	if (key == Key_Escape) { Gui_CloseActive(); }
-	return key < Key_F1 || key > Key_F35;
+	if (key == KEY_ESCAPE) { Gui_CloseActive(); }
+	return key < KEY_F1 || key > KEY_F35;
 }
 static bool MenuScreen_MouseScroll(void* screen, float delta) { return true; }
 
@@ -860,13 +860,13 @@ static void EditHotkeyScreen_SaveChanges(void* screen, void* b) {
 	struct EditHotkeyScreen* s = screen;
 	struct HotkeyData hotkey = s->OrigHotkey;
 
-	if (hotkey.Trigger != Key_None) {
+	if (hotkey.Trigger != KEY_NONE) {
 		Hotkeys_Remove(hotkey.Trigger, hotkey.Flags);
 		Hotkeys_UserRemovedHotkey(hotkey.Trigger, hotkey.Flags);
 	}
 
 	hotkey = s->CurHotkey;
-	if (hotkey.Trigger != Key_None) {
+	if (hotkey.Trigger != KEY_NONE) {
 		String text = s->Input.Base.Text;
 		Hotkeys_Add(hotkey.Trigger, hotkey.Flags, &text, hotkey.StaysOpen);
 		Hotkeys_UserAddedHotkey(hotkey.Trigger, hotkey.Flags, hotkey.StaysOpen, &text);
@@ -880,7 +880,7 @@ static void EditHotkeyScreen_RemoveHotkey(void* screen, void* b) {
 	struct EditHotkeyScreen* s = screen;
 	struct HotkeyData hotkey = s->OrigHotkey;
 
-	if (hotkey.Trigger != Key_None) {
+	if (hotkey.Trigger != KEY_NONE) {
 		Hotkeys_Remove(hotkey.Trigger, hotkey.Flags);
 		Hotkeys_UserRemovedHotkey(hotkey.Trigger, hotkey.Flags);
 	}
@@ -927,9 +927,9 @@ static bool EditHotkeyScreen_KeyDown(void* screen, Key key) {
 			s->CurHotkey.Trigger = key;
 			EditHotkeyScreen_MakeBaseKey(s, EditHotkeyScreen_BaseKey);
 		} else if (s->SelectedI == 1) {
-			if      (key == Key_ControlLeft || key == Key_ControlRight) s->CurHotkey.Flags |= HOTKEY_FLAG_CTRL;
-			else if (key == Key_ShiftLeft   || key == Key_ShiftRight)   s->CurHotkey.Flags |= HOTKEY_FLAG_SHIFT;
-			else if (key == Key_AltLeft     || key == Key_AltRight)     s->CurHotkey.Flags |= HOTKEY_FLAG_ALT;
+			if      (key == KEY_LCTRL || key == KEY_RCTRL) s->CurHotkey.Flags |= HOTKEY_FLAG_CTRL;
+			else if (key == KEY_LSHIFT   || key == KEY_RSHIFT)   s->CurHotkey.Flags |= HOTKEY_FLAG_SHIFT;
+			else if (key == KEY_LALT     || key == KEY_RALT)     s->CurHotkey.Flags |= HOTKEY_FLAG_ALT;
 			else s->CurHotkey.Flags = 0;
 
 			EditHotkeyScreen_MakeModifiers(s, EditHotkeyScreen_Modifiers);
@@ -956,7 +956,7 @@ static void EditHotkeyScreen_ContextRecreated(void* screen) {
 	struct MenuInputValidator v = MenuInputValidator_String();
 	String text; bool existed;
 
-	existed = s->OrigHotkey.Trigger != Key_None;
+	existed = s->OrigHotkey.Trigger != KEY_NONE;
 	if (existed) {
 		text = StringsBuffer_UNSAFE_Get(&HotkeysText, s->OrigHotkey.TextIndex);
 	} else { text = String_Empty; }
@@ -1052,7 +1052,7 @@ static void GenLevelScreen_InputClick(void* screen, void* input) {
 	if (s->Selected) s->Selected->Base.ShowCaret = false;
 
 	s->Selected = input;
-	Elem_HandlesMouseDown(&s->Selected->Base, Mouse_X, Mouse_Y, MouseButton_Left);
+	Elem_HandlesMouseDown(&s->Selected->Base, Mouse_X, Mouse_Y, MOUSE_LEFT);
 	s->Selected->Base.ShowCaret = true;
 }
 
@@ -1508,7 +1508,7 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	if (String_ContainsString(&value, &shift)) flags |= HOTKEY_FLAG_SHIFT;
 	if (String_ContainsString(&value, &alt))   flags |= HOTKEY_FLAG_ALT;
 
-	trigger = Utils_ParseEnum(&key, Key_None, Key_Names, Key_Count);
+	trigger = Utils_ParseEnum(&key, KEY_NONE, Key_Names, KEY_COUNT);
 	for (i = 0; i < HotkeysText.Count; i++) {
 		h = HotkeysList[i];
 		if (h.Trigger == trigger && h.Flags == flags) { original = h; break; }
@@ -1680,7 +1680,7 @@ static bool KeyBindingsScreen_KeyDown(void* screen, Key key) {
 
 	if (s->CurI == -1) return MenuScreen_KeyDown(s, key);
 	bind = s->Binds[s->CurI];
-	if (key == Key_Escape) key = KeyBind_GetDefault(bind);
+	if (key == KEY_ESCAPE) key = KeyBind_GetDefault(bind);
 
 	KeyBind_Set(bind, key);
 	String_InitArray(text, textBuffer);
@@ -1696,7 +1696,7 @@ static bool KeyBindingsScreen_MouseDown(void* screen, int x, int y, MouseButton 
 	struct KeyBindingsScreen* s = screen;
 	int i;
 
-	if (btn != MouseButton_Right) { return Menu_MouseDown(s, x, y, btn); }
+	if (btn != MOUSE_RIGHT) { return Menu_MouseDown(s, x, y, btn); }
 	i = Menu_DoMouseDown(s, x, y, btn);
 	if (i == -1) return false;
 
@@ -1748,7 +1748,7 @@ static void ClassicKeyBindingsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* ClassicKeyBindingsScreen_MakeInstance(void) {
-	static uint8_t binds[10] = { KeyBind_Forward, KeyBind_Back, KeyBind_Jump, KeyBind_Chat, KeyBind_SetSpawn, KeyBind_Left, KeyBind_Right, KeyBind_Inventory, KeyBind_ToggleFog, KeyBind_Respawn };
+	static uint8_t binds[10] = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN };
 	static const char* descs[10] = { "Forward", "Back", "Jump", "Chat", "Save loc", "Left", "Right", "Build", "Toggle fog", "Load loc" };
 	static struct ButtonWidget buttons[10];
 	static struct Widget* widgets[10 + 4];
@@ -1768,7 +1768,7 @@ static void ClassicHacksKeyBindingsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* ClassicHacksKeyBindingsScreen_MakeInstance(void) {
-	static uint8_t binds[6] = { KeyBind_Speed, KeyBind_NoClip, KeyBind_HalfSpeed, KeyBind_Fly, KeyBind_FlyUp, KeyBind_FlyDown };
+	static uint8_t binds[6] = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN };
 	static const char* descs[6] = { "Speed", "Noclip", "Half speed", "Fly", "Fly up", "Fly down" };
 	static struct ButtonWidget buttons[6];
 	static struct Widget* widgets[6 + 4];
@@ -1788,7 +1788,7 @@ static void NormalKeyBindingsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* NormalKeyBindingsScreen_MakeInstance(void) {
-	static uint8_t binds[12] = { KeyBind_Forward, KeyBind_Back, KeyBind_Jump, KeyBind_Chat, KeyBind_SetSpawn, KeyBind_PlayerList, KeyBind_Left, KeyBind_Right, KeyBind_Inventory, KeyBind_ToggleFog, KeyBind_Respawn, KeyBind_SendChat };
+	static uint8_t binds[12] = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_PLAYER_LIST, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN, KEYBIND_SEND_CHAT };
 	static const char* descs[12] = { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list", "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
 	static struct ButtonWidget buttons[12];
 	static struct Widget* widgets[12 + 4];
@@ -1808,7 +1808,7 @@ static void HacksKeyBindingsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* HacksKeyBindingsScreen_MakeInstance(void) {
-	static uint8_t binds[8] = { KeyBind_Speed, KeyBind_NoClip, KeyBind_HalfSpeed, KeyBind_ZoomScrolling, KeyBind_Fly, KeyBind_FlyUp, KeyBind_FlyDown, KeyBind_ThirdPerson };
+	static uint8_t binds[8] = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_ZOOM_SCROLL, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN, KEYBIND_THIRD_PERSO };
 	static const char* descs[8] = { "Speed", "Noclip", "Half speed", "Scroll zoom", "Fly", "Fly up", "Fly down", "Third person" };
 	static struct ButtonWidget buttons[8];
 	static struct Widget* widgets[8 + 4];
@@ -1829,7 +1829,7 @@ static void OtherKeyBindingsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* OtherKeyBindingsScreen_MakeInstance(void) {
-	static uint8_t binds[12] = { KeyBind_ExtInput, KeyBind_HideFps, KeyBind_HideGui, KeyBind_HotbarSwitching, KeyBind_DropBlock,KeyBind_Screenshot, KeyBind_Fullscreen, KeyBind_AxisLines, KeyBind_Autorotate, KeyBind_SmoothCamera, KeyBind_IDOverlay, KeyBind_BreakableLiquids };
+	static uint8_t binds[12] = { KEYBIND_EXT_INPUT, KEYBIND_HIDE_FPS, KEYBIND_HIDE_GUI, KEYBIND_HOTBAR_SWITCH, KEYBIND_DROP_BLOCK,KEYBIND_SCREENSHOT, KEYBIND_FULLSCREEN, KEYBIND_AXIS_LINES, KEYBIND_AUTOROTATE, KEYBIND_SMOOTH_CAMERA, KEYBIND_IDOVERLAY, KEYBIND_BREAK_LIQUIDS };
 	static const char* descs[12] = { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block", "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera", "ID overlay", "Breakable liquids" };
 	static struct ButtonWidget buttons[12];
 	static struct Widget* widgets[12 + 4];
@@ -1855,7 +1855,7 @@ static void MouseKeyBindingsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* MouseKeyBindingsScreen_MakeInstance(void) {
-	static uint8_t binds[3] = { KeyBind_MouseLeft, KeyBind_MouseMiddle, KeyBind_MouseRight };
+	static uint8_t binds[3] = { KEYBIND_MOUSE_LEFT, KEYBIND_MOUSE_MIDDLE, KEYBIND_MOUSE_RIGHT };
 	static const char* descs[3] = { "Left", "Middle", "Right" };
 	static struct ButtonWidget buttons[3];
 	static struct Widget* widgets[3 + 4 + 1];
@@ -2018,7 +2018,7 @@ static bool MenuOptionsScreen_KeyDown(void* screen, Key key) {
 	if (s->ActiveI >= 0) {
 		if (Elem_HandlesKeyDown(&s->Input.Base, key)) return true;
 
-		if (key == Key_Enter || key == Key_KeypadEnter) {
+		if (key == KEY_ENTER || key == KEY_KP_ENTER) {
 			MenuOptionsScreen_EnterInput(s); return true;
 		}
 	}
@@ -3066,7 +3066,7 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 static bool TexIdsOverlay_KeyDown(void* screen, Key key) {
 	struct Screen* active = Gui_GetUnderlyingScreen();
 
-	if (key == KeyBind_Get(KeyBind_IDOverlay) || key == KeyBind_Get(KeyBind_PauseOrExit)) {
+	if (key == KeyBind_Get(KEYBIND_IDOVERLAY) || key == KeyBind_Get(KEYBIND_PAUSE_EXIT)) {
 		Gui_FreeOverlay(screen); return true;
 	}
 	return Elem_HandlesKeyDown(active, key);
