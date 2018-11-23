@@ -122,7 +122,7 @@ static void Entity_SetBlockModel(struct Entity* e, const String* model) {
 
 	if (raw == -1) {
 		/* use default humanoid model */
-		e->Model = ModelCache_Models[0].Instance;
+		e->Model      = Human_ModelPtr;
 	} else {	
 		e->ModelBlock = (BlockID)raw;
 		e->Model      = ModelCache_Get(&block);
@@ -139,7 +139,6 @@ void Entity_SetModel(struct Entity* e, const String* model) {
 		name = String_FromReadonly("humanoid");
 		e->ModelScale = Vector3_Create1(2.0f);
 	}
-	e->_ModelIsSheepNoFur = String_CaselessEqualsConst(&name, "sheep_nofur");
 
 	e->ModelBlock   = BLOCK_AIR;
 	e->Model        = ModelCache_Get(&name);
@@ -841,7 +840,7 @@ static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* upd
 	LocalInterpComp_SetLocation(&p->Interp, update, interpolate);
 }
 
-void LocalPlayer_Tick(struct Entity* e, double delta) {
+static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	struct HacksComp* hacks = &p->Hacks;
 	float xMoving = 0, zMoving = 0;

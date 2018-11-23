@@ -8,6 +8,8 @@
 */
 struct Entity;
 struct AABB;
+struct Model;
+struct ModelTex;
 
 #define MODEL_QUAD_VERTICES 4
 #define MODEL_BOX_VERTICES (FACE_COUNT * MODEL_QUAD_VERTICES)
@@ -25,12 +27,14 @@ void ModelPart_Init(struct ModelPart* part, int offset, int count, float rotX, f
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
 the bounding boxes that contain the entire set of quads and/or boxes. */
 struct Model {
+	/* Name of this model */
+	const char* Name;
 	/* Pointer to the raw vertices of the model */
-	struct ModelVertex* vertices;
+	struct ModelVertex* vertices;	
+	/* Pointer to default texture for this model */
+	struct ModelTex* defaultTex;
 	/* Count of assigned vertices within the raw vertices array */
 	int index;
-	/* Index within ModelCache's textures of the default texture for this model */
-	int8_t defaultTexIndex;
 	uint8_t armX, armY; /* these translate arm model part back to (0, 0) */
 
 	bool initalised;
@@ -55,6 +59,7 @@ struct Model {
 	void (*DrawArm)(struct Entity* entity);
 
 	float NameYOffset, MaxScale, ShadowScale, NameScale;
+	struct Model* Next;
 };
 
 PackedCol Model_Cols[FACE_COUNT];
@@ -67,12 +72,12 @@ uint8_t Model_Rotation, Model_skinType;
 struct Model* Model_ActiveModel;
 void Model_Init(struct Model* model);
 
-#define Model_SetPointers(typeName)\
-typeName.GetEyeY = typeName ## _GetEyeY;\
-typeName.GetCollisionSize = typeName ## _GetCollisionSize; \
-typeName.GetPickingBounds = typeName ## _GetPickingBounds;\
-typeName.CreateParts = typeName ## _CreateParts;\
-typeName.DrawModel = typeName ## _DrawModel;
+#define Model_SetPointers(instance, typeName)\
+instance.GetEyeY = typeName ## _GetEyeY;\
+instance.GetCollisionSize = typeName ## _GetCollisionSize; \
+instance.GetPickingBounds = typeName ## _GetPickingBounds;\
+instance.CreateParts = typeName ## _CreateParts;\
+instance.DrawModel = typeName ## _DrawModel;
 
 bool Model_ShouldRender(struct Entity* entity);
 float Model_RenderDistance(struct Entity* entity);

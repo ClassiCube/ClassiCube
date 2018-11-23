@@ -152,7 +152,7 @@ void Model_UpdateVB(void) {
 
 void Model_ApplyTexture(struct Entity* entity) {
 	struct Model* model = Model_ActiveModel;
-	struct CachedTexture* data;
+	struct ModelTex* data;
 	GfxResourceID tex;
 	bool _64x64;
 
@@ -160,7 +160,7 @@ void Model_ApplyTexture(struct Entity* entity) {
 	if (tex) {
 		Model_skinType = entity->SkinType;
 	} else {
-		data = &ModelCache_Textures[model->defaultTexIndex];
+		data = model->defaultTex;
 		tex  = data->TexID;
 		Model_skinType = data->SkinType;
 	}

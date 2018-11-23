@@ -413,7 +413,7 @@ static struct ChatCommand ModelCommand_Instance = {
 	{
 		"&a/client model [name]",
 		"&bnames: &echibi, chicken, creeper, human, pig, sheep",
-		"&e       skeleton, spider, zombie, sitting, <numerical block id>",
+		"&e       skeleton, spider, zombie, sit, <numerical block id>",
 	}
 };
 

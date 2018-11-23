@@ -79,7 +79,7 @@ void Drawer2D_SetFontBitmap(Bitmap* bmp) {
 }
 
 
-void Drawer2D_HexEncodedCol(int i, int hex, uint8_t lo, uint8_t hi) {
+static void Drawer2D_HexEncodedCol(int i, int hex, uint8_t lo, uint8_t hi) {
 	Drawer2D_Cols[i].R = (uint8_t)(lo * ((hex >> 2) & 1) + hi * (hex >> 3));
 	Drawer2D_Cols[i].G = (uint8_t)(lo * ((hex >> 1) & 1) + hi * (hex >> 3));
 	Drawer2D_Cols[i].B = (uint8_t)(lo * ((hex >> 0) & 1) + hi * (hex >> 3));

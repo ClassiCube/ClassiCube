@@ -75,7 +75,6 @@ struct Entity {
 
 	struct Model* Model;
 	BlockID ModelBlock; /* BlockID, if model name was originally a vaid block id. */
-	bool _ModelIsSheepNoFur; /* Hacky, but only sheep model relies on model name. So use just 1 byte. */
 	struct AABB ModelAABB;
 	Vector3 ModelScale, Size;
 	float StepSize;
