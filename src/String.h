@@ -75,7 +75,7 @@ CC_NOINLINE bool String_CaselessEquals(const String* a, const String* b);
 CC_NOINLINE bool String_CaselessEqualsConst(const String* a, const char* b);
 /* Breaks down an integer into an array of digits. */
 /* NOTE: Digits are in reverse order, so e.g. '200' becomes '0','0','2' */
-CC_NOINLINE int  String_MakeUInt32(uint32_t num, char* numBuffer);
+CC_NOINLINE int  String_MakeUInt32(uint32_t num, char* digits);
 
 /* Appends a character to the end of a string. */
 /* Returns false when str->length == str->capcity, true otherwise. */

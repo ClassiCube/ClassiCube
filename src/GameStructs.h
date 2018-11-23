@@ -9,12 +9,12 @@
 struct IGameComponent {
 	/* Called when the game is being loaded. */
 	void (*Init)(void);
-	/* Called when the component is being freed, due to game being closed. */
+	/* Called when the component is being freed. (e.g. due to game being closed) */
 	void (*Free)(void);
-	/* Called when the texture pack has been loaded and all components have been initalised. */
-	void (*Ready)(void);
-	/* Called to reset the component's state when the user is reconnecting to a server */
+	/* Called to reset the component's state. (e.g. reconnecting to server) */
 	void (*Reset)(void);
+	/* Called when the texture pack has been loaded and all components have been initialised. */
+	void (*Ready)(void);
 	/* Called to update the component's state when the user begins loading a new map. */
 	void (*OnNewMap)(void);
 	/* Called to update the component's state when the user has finished loading a new map. */

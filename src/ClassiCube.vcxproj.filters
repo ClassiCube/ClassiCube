@@ -297,9 +297,6 @@
     <ClInclude Include="Model.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
-    <ClInclude Include="ChunkUpdater.h">
-      <Filter>Header Files\Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="MapRenderer.h">
       <Filter>Header Files\Rendering</Filter>
     </ClInclude>
@@ -466,9 +463,6 @@
     </ClCompile>
     <ClCompile Include="Model.c">
       <Filter>Source Files\Entities</Filter>
-    </ClCompile>
-    <ClCompile Include="ChunkUpdater.c">
-      <Filter>Source Files\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="MapRenderer.c">
       <Filter>Source Files\Rendering</Filter>

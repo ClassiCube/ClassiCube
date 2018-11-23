@@ -34,6 +34,7 @@
 #include "Menus.h"
 #include "Audio.h"
 #include "Stream.h"
+#include "TerrainAtlas.h"
 
 static struct IGameComponent Game_Components[26];
 static int Game_ComponentsCount;
@@ -321,7 +322,7 @@ static void Game_OnLowVRAMDetected(void* obj) {
 	Game_UserViewDistance /= 2;
 	Game_UserViewDistance = max(16, Game_UserViewDistance);
 
-	ChunkUpdater_Refresh();
+	MapRenderer_Refresh();
 	Game_SetViewDistance(Game_UserViewDistance);
 	Chat_AddRaw("&cOut of VRAM! Halving view distance..");
 }
@@ -478,7 +479,7 @@ void Game_Load(void) {
 	LocalPlayer_MakeComponent(&comp); Game_AddComponent(&comp);
 	Entities_List[ENTITIES_SELF_ID] = &LocalPlayer_Instance.Base;
 
-	ChunkUpdater_Init();
+	MapRenderer_Init();
 	EnvRenderer_MakeComponent(&comp); Game_AddComponent(&comp);
 	String_InitArray(renderType, renderTypeBuffer);
 	Options_Get(OPT_RENDER_TYPE, &renderType, "normal");
@@ -591,7 +592,7 @@ static void Game_Render3D(double delta, float t) {
 	EnvRenderer_RenderSky(delta);
 	EnvRenderer_RenderClouds(delta);
 
-	ChunkUpdater_Update(delta);
+	MapRenderer_Update(delta);
 	MapRenderer_RenderNormal(delta);
 	EnvRenderer_RenderMapSides(delta);
 
@@ -724,7 +725,7 @@ static void Game_RenderFrame(double delta) {
 void Game_Free(void* obj) {
 	int i;
 
-	ChunkUpdater_Free();
+	MapRenderer_Free();
 	Atlas2D_Free();
 	Atlas1D_Free();
 	ModelCache_Free();

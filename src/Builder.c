@@ -9,7 +9,6 @@
 #include "ErrorHandler.h"
 #include "Drawer.h"
 #include "ExtMath.h"
-#include "ChunkUpdater.h"
 #include "BlockID.h"
 #include "Block.h"
 #include "PackedCol.h"
@@ -340,7 +339,7 @@ static bool Builder_BuildChunk(int x1, int y1, int z1, bool* allAir) {
 
 void Builder_MakeChunk(struct ChunkInfo* info) {
 	int x = info->CentreX - 8, y = info->CentreY - 8, z = info->CentreZ - 8;
-	bool allAir, hasMesh, hasNorm, hasTrans;
+	bool allAir, hasMesh, hasNorm, hasTran;
 	int totalVerts, partsIndex;
 	int i, j, curIdx, offset;
 
@@ -357,22 +356,22 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 #endif
 
 	partsIndex = MapRenderer_Pack(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, z >> CHUNK_SHIFT);
-	offset   = 0;
-	hasNorm  = false;
-	hasTrans = false;
+	offset  = 0;
+	hasNorm = false;
+	hasTran = false;
 
 	for (i = 0; i < MapRenderer_1DUsedCount; i++) {
 		j = i + ATLAS1D_MAX_ATLASES;
 		curIdx = partsIndex + i * MapRenderer_ChunksCount;
 
 		Builder_SetPartInfo(&Builder_Parts[i], &offset, &MapRenderer_PartsNormal[curIdx],      &hasNorm);
-		Builder_SetPartInfo(&Builder_Parts[j], &offset, &MapRenderer_PartsTranslucent[curIdx], &hasTrans);
+		Builder_SetPartInfo(&Builder_Parts[j], &offset, &MapRenderer_PartsTranslucent[curIdx], &hasTran);
 	}
 
 	if (hasNorm) {
 		info->NormalParts      = &MapRenderer_PartsNormal[partsIndex];
 	}
-	if (hasTrans) {
+	if (hasTran) {
 		info->TranslucentParts = &MapRenderer_PartsTranslucent[partsIndex];
 	}
 

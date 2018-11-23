@@ -2393,8 +2393,8 @@ static void GraphicsOptionsScreen_SetViewDist(const String* v) { Game_UserSetVie
 static void GraphicsOptionsScreen_GetSmooth(String* v) { Menu_GetBool(v, Game_SmoothLighting); }
 static void GraphicsOptionsScreen_SetSmooth(const String* v) {
 	Game_SmoothLighting = Menu_SetBool(v, OPT_SMOOTH_LIGHTING);
-	ChunkUpdater_ApplyMeshBuilder();
-	ChunkUpdater_Refresh();
+	MapRenderer_ApplyMeshBuilder();
+	MapRenderer_Refresh();
 }
 
 static void GraphicsOptionsScreen_GetNames(String* v) { String_AppendConst(v, NameMode_Names[Entities_NameMode]); }

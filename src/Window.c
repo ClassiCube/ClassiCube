@@ -989,7 +989,7 @@ int Window_GetWindowState(void) {
 	return WINDOW_STATE_NORMAL;
 }
 
-void Window_SendNetWMState(long op, Atom a1, Atom a2) {
+static void Window_SendNetWMState(long op, Atom a1, Atom a2) {
 	XEvent ev = { 0 };
 	ev.xclient.type = ClientMessage;
 	ev.xclient.send_event = true;
@@ -1087,7 +1087,7 @@ void Window_Destroy(void) {
 	Window_Exists = false;
 }
 
-void Window_ToggleKey(XKeyEvent* keyEvent, bool pressed) {
+static void Window_ToggleKey(XKeyEvent* keyEvent, bool pressed) {
 	KeySym keysym1 = XLookupKeysym(keyEvent, 0);
 	KeySym keysym2 = XLookupKeysym(keyEvent, 1);
 
@@ -1096,7 +1096,7 @@ void Window_ToggleKey(XKeyEvent* keyEvent, bool pressed) {
 	if (key != KEY_NONE) Key_SetPressed(key, pressed);
 }
 
-Atom Window_GetSelectionProperty(XEvent* e) {
+static Atom Window_GetSelectionProperty(XEvent* e) {
 	Atom prop = e->xselectionrequest.property;
 	if (prop) return prop;
 
@@ -1104,7 +1104,7 @@ Atom Window_GetSelectionProperty(XEvent* e) {
 	return e->xselectionrequest.target;
 }
 
-bool Window_GetPendingEvent(XEvent* e) {
+static bool Window_GetPendingEvent(XEvent* e) {
 	return XCheckWindowEvent(win_display,   win_handle, win_eventMask, e) ||
 		XCheckTypedWindowEvent(win_display, win_handle, ClientMessage, e) ||
 		XCheckTypedWindowEvent(win_display, win_handle, SelectionNotify, e) ||
