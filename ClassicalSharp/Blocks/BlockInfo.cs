@@ -386,7 +386,7 @@ namespace ClassicalSharp {
 		/// <summary> Returns whether the face at the given face of the block
 		/// should be drawn with the neighbour 'other' present on the other side of the face. </summary>
 		public static bool IsFaceHidden(BlockID block, BlockID other, int tileSide) {
-			return (hidden[(block * Count) + other] & (1 << tileSide)) != 0;
+			return (hidden[(block * Count) + other] & (1 << tileSide)) != 0; 
 		}
 	}
 }
