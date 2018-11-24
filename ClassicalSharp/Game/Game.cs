@@ -311,7 +311,7 @@ namespace ClassicalSharp {
 			accumulator += delta;
 			Vertices = 0;
 			
-			Camera.UpdateMouse();
+			Camera.UpdateMouse(delta);
 			if (!window.Focused && !Gui.ActiveScreen.HandlesAllInput) {
 				Gui.SetNewScreen(new PauseScreen(this));
 			}

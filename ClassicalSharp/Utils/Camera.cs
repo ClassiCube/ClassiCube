@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 		public abstract bool IsThirdPerson { get; }
 		public virtual bool Zoom(float amount) { return false; }
 		
-		public abstract void UpdateMouse();
+		public abstract void UpdateMouse(double deltaTime);
 		public abstract void RegrabMouse();
 		
 		public abstract void ResetRotOffset();
@@ -88,17 +88,16 @@ namespace ClassicalSharp {
 		const float adjust = 0.025f;
 		
 		static float speedX = 0, speedY = 0;
-		protected Vector2 CalcMouseDelta() {
+		protected Vector2 CalcMouseDelta(double scale) {
 			float sensitivity = sensiFactor * game.MouseSensitivity;
-
 			if (game.SmoothCamera) {
 				speedX += delta.X * adjust;
 				speedX *= slippery;
 				speedY += delta.Y * adjust;
 				speedY *= slippery;
 			} else {
-				speedX = delta.X;
-				speedY = delta.Y;
+				speedX = delta.X * (float)(scale * 0.5f);
+				speedY = delta.Y * (float)(scale * 0.5f);
 			}
 			
 			float dx = speedX * sensitivity, dy = speedY * sensitivity;
@@ -106,8 +105,8 @@ namespace ClassicalSharp {
 			return new Vector2(dx, dy);
 		}
 		
-		void UpdateMouseRotation() {
-			Vector2 rot = CalcMouseDelta();
+		void UpdateMouseRotation(double scale) {
+			Vector2 rot = CalcMouseDelta(scale);
 			if (game.Input.AltDown && IsThirdPerson) {
 				rotOffset.X += rot.X; rotOffset.Y += rot.Y;
 				return;
@@ -124,7 +123,11 @@ namespace ClassicalSharp {
 			game.LocalPlayer.SetLocation(update, false);
 		}
 		
-		public override void UpdateMouse() {
+		double camAccumulator;
+		public override void UpdateMouse(double deltaTime) {
+			camAccumulator += deltaTime;
+			if (camAccumulator < 1.0/120.0) return;
+			
 			if (game.Gui.ActiveScreen.HandlesAllInput) {
 				delta = Point.Empty;
 			} else if (game.window.Focused) {
@@ -132,7 +135,9 @@ namespace ClassicalSharp {
 				delta = new Point(pos.X - previous.X, pos.Y - previous.Y);
 				CentreMousePosition();
 			}
-			UpdateMouseRotation();
+			
+			UpdateMouseRotation(120.0 * camAccumulator);
+			camAccumulator = 0;
 		}
 		
 		protected void CalcViewBobbing(float t, float velTiltScale) {
