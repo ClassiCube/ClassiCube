@@ -10,7 +10,6 @@
 #include "Funcs.h"
 #include "VertexStructs.h"
 #include "Graphics.h"
-#include "GraphicsCommon.h"
 #include "Physics.h"
 #include "Model.h"
 #include "Audio.h"
@@ -642,7 +641,7 @@ void ShadowComponent_Draw(struct Entity* e) {
 	/* TODO: Should shadow component use its own VB? */
 	ptr = vertices;
 	if (Entities_ShadowMode == SHADOW_MODE_SNAP_TO_BLOCK) {
-		vb = GfxCommon_texVb;
+		vb = Gfx_texVb;
 		x1 = Math_Floor(pos.X); z1 = Math_Floor(pos.Z);
 		if (!ShadowComponent_GetBlocks(e, x1, y, z1, data)) return;
 
@@ -675,7 +674,7 @@ void ShadowComponent_Draw(struct Entity* e) {
 	}
 
 	count = (int)(ptr - vertices);
-	GfxCommon_UpdateDynamicVb_IndexedTris(vb, vertices, count);
+	Gfx_UpdateDynamicVb_IndexedTris(vb, vertices, count);
 }
 
 

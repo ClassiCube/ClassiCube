@@ -2,7 +2,6 @@
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Game.h"
-#include "GraphicsCommon.h"
 #include "Graphics.h"
 #include "Entity.h"
 #include "Camera.h"
@@ -108,7 +107,7 @@ void Model_Render(struct Model* model, struct Entity* entity) {
 	if (model->Bobbing) pos.Y += entity->Anim.BobbingModel;
 
 	Model_SetupState(model, entity);
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 
 	model->GetTransform(entity, pos, &entity->Transform);
 	Matrix_Mul(&m, &entity->Transform, &Gfx_View);
@@ -153,7 +152,7 @@ void Model_SetupState(struct Model* model, struct Entity* entity) {
 
 void Model_UpdateVB(void) {
 	struct Model* model = Model_ActiveModel;
-	GfxCommon_UpdateDynamicVb_IndexedTris(Model_Vb, Model_Vertices, model->index);
+	Gfx_UpdateDynamicVb_IndexedTris(Model_Vb, Model_Vertices, model->index);
 	model->index = 0;
 }
 
@@ -255,7 +254,7 @@ void Model_RenderArm(struct Model* model, struct Entity* entity) {
 	if (model->Bobbing) pos.Y += entity->Anim.BobbingModel;
 
 	Model_SetupState(model, entity);
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Model_ApplyTexture(entity);
 
 	if (Game_ClassicArmModel) {

@@ -239,7 +239,6 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="ExtMath.h" />
     <ClInclude Include="Graphics.h" />
-    <ClInclude Include="GraphicsCommon.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="String.h" />
     <ClInclude Include="Core.h" />
@@ -286,7 +285,6 @@
     <ClCompile Include="MapRenderer.c" />
     <ClCompile Include="Options.c" />
     <ClCompile Include="PackedCol.c" />
-    <ClCompile Include="GraphicsCommon.c" />
     <ClCompile Include="Particle.c" />
     <ClCompile Include="BlockPhysics.c" />
     <ClCompile Include="PickedPosRenderer.c" />

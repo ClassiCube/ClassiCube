@@ -3,8 +3,8 @@
 #include "EntityComponents.h"
 #include "Physics.h"
 #include "Constants.h"
-#include "GraphicsCommon.h"
 #include "Input.h"
+#include "PackedCol.h"
 /* Represents an in-game entity.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

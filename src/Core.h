@@ -105,4 +105,11 @@ typedef void* GfxResourceID;
 typedef uint32_t GfxResourceID;
 #define GFX_NULL 0
 #endif
+
+/* Contains the information to describe a 2D textured quad. */
+struct Texture {
+	GfxResourceID ID;
+	int16_t X, Y; uint16_t Width, Height;
+	TextureRec uv;
+};
 #endif

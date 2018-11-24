@@ -3,7 +3,6 @@
 #include "Game.h"
 #include "Inventory.h"
 #include "Graphics.h"
-#include "GraphicsCommon.h"
 #include "Camera.h"
 #include "ExtMath.h"
 #include "Event.h"
@@ -39,9 +38,9 @@ static void HeldBlockRenderer_RenderModel(void) {
 		model = Model_Get(&block);
 		held_entity.ModelScale = Vector3_Create1(0.4f);
 
-		GfxCommon_SetupAlphaState(Block_Draw[held_block]);
+		Gfx_SetupAlphaState(Block_Draw[held_block]);
 		Model_Render(model, &held_entity);
-		GfxCommon_RestoreAlphaState(Block_Draw[held_block]);
+		Gfx_RestoreAlphaState(Block_Draw[held_block]);
 	}
 	
 	Gfx_SetTexturing(false);

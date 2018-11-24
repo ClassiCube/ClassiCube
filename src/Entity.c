@@ -11,7 +11,6 @@
 #include "Lighting.h"
 #include "Drawer2D.h"
 #include "Particle.h"
-#include "GraphicsCommon.h"
 #include "AsyncDownloader.h"
 #include "Chat.h"
 #include "Model.h"
@@ -388,7 +387,7 @@ void Entities_DrawShadows(void) {
 	Gfx_SetAlphaBlending(true);
 	Gfx_SetTexturing(true);
 
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 	ShadowComponent_Draw(Entities_List[ENTITIES_SELF_ID]);
 
 	if (Entities_ShadowMode == SHADOW_MODE_CIRCLE_ALL) {	
@@ -558,8 +557,8 @@ static void Player_DrawName(struct Player* p) {
 	}
 
 	Particle_DoRender(&size, &pos, &p->NameTex.uv, col, vertices);
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
-	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_texVb, vertices, 4);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_UpdateDynamicVb_IndexedTris(Gfx_texVb, vertices, 4);
 }
 
 static struct Player* Player_FirstOtherWithSameSkin(struct Player* player) {

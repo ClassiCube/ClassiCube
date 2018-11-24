@@ -1,6 +1,5 @@
 #include "IsometricDrawer.h"
 #include "Drawer.h"
-#include "GraphicsCommon.h"
 #include "Graphics.h"
 #include "PackedCol.h"
 #include "ExtMath.h"
@@ -55,7 +54,7 @@ static void IsometricDrawer_Flush(void) {
 	if (iso_lastTexIndex != -1) {
 		Gfx_BindTexture(Atlas1D_TexIds[iso_lastTexIndex]);
 		count = (int)(iso_vertices - iso_vertices_base);
-		GfxCommon_UpdateDynamicVb_IndexedTris(iso_vb, iso_vertices_base, count);
+		Gfx_UpdateDynamicVb_IndexedTris(iso_vb, iso_vertices_base, count);
 	}
 
 	iso_lastTexIndex = iso_texIndex;

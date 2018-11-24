@@ -1,7 +1,6 @@
 #include "Gui.h"
 #include "Window.h"
 #include "Game.h"
-#include "GraphicsCommon.h"
 #include "Graphics.h"
 #include "Event.h"
 #include "Drawer2D.h"
@@ -203,7 +202,7 @@ void Gui_FreeOverlay(void* overlay) {
 
 void Gui_RenderGui(double delta) {
 	bool showHUD, hudBefore;
-	GfxCommon_Mode2D(Game_Width, Game_Height);
+	Gfx_Mode2D(Game_Width, Game_Height);
 
 	showHUD   = !Gui_Active || !Gui_Active->HidesHUD;
 	hudBefore = !Gui_Active || !Gui_Active->RenderHUDOver;
@@ -214,7 +213,7 @@ void Gui_RenderGui(double delta) {
 	if (showHUD && !hudBefore) { Elem_Render(Gui_HUD, delta); }
 
 	if (Gui_OverlaysCount) { Elem_Render(Gui_Overlays[0], delta); }
-	GfxCommon_Mode3D();
+	Gfx_Mode3D();
 }
 
 void Gui_OnResize(void) {
@@ -287,7 +286,7 @@ void TextAtlas_Add(struct TextAtlas* atlas, int charI, VertexP3fT2fC4b** vertice
 	part.uv.U2 = part.uv.U1 + width                        * atlas->uScale;
 
 	atlas->CurX += width;	
-	GfxCommon_Make2DQuad(&part, white, vertices);
+	Gfx_Make2DQuad(&part, white, vertices);
 }
 
 void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vertices) {

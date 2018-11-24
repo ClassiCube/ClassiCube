@@ -141,9 +141,6 @@
     <ClInclude Include="ExtMath.h">
       <Filter>Header Files\Math</Filter>
     </ClInclude>
-    <ClInclude Include="GraphicsCommon.h">
-      <Filter>Header Files\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="VertexStructs.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
@@ -319,9 +316,6 @@
     </ClCompile>
     <ClCompile Include="Vectors.c">
       <Filter>Source Files\Math</Filter>
-    </ClCompile>
-    <ClCompile Include="GraphicsCommon.c">
-      <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="ExtMath.c">
       <Filter>Source Files\Math</Filter>

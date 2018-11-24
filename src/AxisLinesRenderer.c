@@ -1,7 +1,6 @@
 #include "AxisLinesRenderer.h"
 #include "Graphics.h"
 #include "Game.h"
-#include "GraphicsCommon.h"
 #include "SelectionBox.h"
 #include "PackedCol.h"
 #include "Camera.h"
@@ -71,6 +70,6 @@ void AxisLinesRenderer_Render(double delta) {
 		ptr->Col = cols[i >> 2];
 	}
 
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
-	GfxCommon_UpdateDynamicVb_IndexedTris(axisLines_vb, vertices, count);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
+	Gfx_UpdateDynamicVb_IndexedTris(axisLines_vb, vertices, count);
 }

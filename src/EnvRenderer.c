@@ -12,7 +12,6 @@
 #include "ErrorHandler.h"
 #include "Stream.h"
 #include "Block.h"
-#include "GraphicsCommon.h"
 #include "Event.h"
 #include "TerrainAtlas.h"
 #include "Platform.h"
@@ -143,7 +142,7 @@ void EnvRenderer_RenderClouds(double deltaTime) {
 	Gfx_SetAlphaTest(true);
 	Gfx_SetTexturing(true);
 	Gfx_BindTexture(clouds_tex);
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Gfx_BindVb(clouds_vb);
 	Gfx_DrawVb_IndexedTris(clouds_vertices);
 	Gfx_SetAlphaTest(false);
@@ -221,7 +220,7 @@ void EnvRenderer_RenderSky(double deltaTime) {
 
 	normY = (float)World_Height + 8.0f;
 	skyY  = max(Camera_CurrentPos.Y + 8.0f, normY);
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
 	Gfx_BindVb(sky_vb);
 
 	if (skyY == normY) {
@@ -303,7 +302,7 @@ void EnvRenderer_RenderSkybox(double deltaTime) {
 	Gfx_SetDepthWrite(false);
 	Gfx_SetTexturing(true);
 	Gfx_BindTexture(skybox_tex);
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 
 	/* Base skybox rotation */
 	m       = Matrix_Identity;
@@ -527,9 +526,9 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaArgBlend(true);
 
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 	vCount = (int)(ptr - vertices);
-	GfxCommon_UpdateDynamicVb_IndexedTris(weather_vb, vertices, vCount);
+	Gfx_UpdateDynamicVb_IndexedTris(weather_vb, vertices, vCount);
 
 	Gfx_SetAlphaArgBlend(false);
 	Gfx_SetDepthWrite(true);
@@ -549,16 +548,16 @@ void EnvRenderer_RenderBorders(BlockID block, GfxResourceID vb, GfxResourceID te
 	if (!vb) return;
 
 	Gfx_SetTexturing(true);
-	GfxCommon_SetupAlphaState(Block_Draw[block]);
+	Gfx_SetupAlphaState(Block_Draw[block]);
 	Gfx_EnableMipmaps();
 
 	Gfx_BindTexture(tex);
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Gfx_BindVb(vb);
 	Gfx_DrawVb_IndexedTris(count);
 
 	Gfx_DisableMipmaps();
-	GfxCommon_RestoreAlphaState(Block_Draw[block]);
+	Gfx_RestoreAlphaState(Block_Draw[block]);
 	Gfx_SetTexturing(false);
 }
 

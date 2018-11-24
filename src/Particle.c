@@ -6,7 +6,6 @@
 #include "Entity.h"
 #include "TerrainAtlas.h"
 #include "Graphics.h"
-#include "GraphicsCommon.h"
 #include "Funcs.h"
 #include "Game.h"
 #include "Event.h"
@@ -183,7 +182,7 @@ static void Rain_Render(float t) {
 	}
 
 	Gfx_BindTexture(Particles_TexId);
-	GfxCommon_UpdateDynamicVb_IndexedTris(Particles_VB, vertices, rain_count * 4);
+	Gfx_UpdateDynamicVb_IndexedTris(Particles_VB, vertices, rain_count * 4);
 }
 
 static void Rain_RemoveAt(int index) {
@@ -369,7 +368,7 @@ void Particles_Render(double delta, float t) {
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
 
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Terrain_Render(t);
 	Rain_Render(t);
 

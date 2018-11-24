@@ -2,7 +2,6 @@
 #include "PackedCol.h"
 #include "VertexStructs.h"
 #include "Graphics.h"
-#include "GraphicsCommon.h"
 #include "Game.h"
 #include "Event.h"
 #include "Picking.h"
@@ -38,9 +37,9 @@ void PickedPosRenderer_Render(double delta) {
 
 	Gfx_SetAlphaBlending(true);
 	Gfx_SetDepthWrite(false);
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
 
-	GfxCommon_UpdateDynamicVb_IndexedTris(pickedPos_vb, pickedPos_vertices, PICKEDPOS_NUM_VERTICES);
+	Gfx_UpdateDynamicVb_IndexedTris(pickedPos_vb, pickedPos_vertices, PICKEDPOS_NUM_VERTICES);
 	Gfx_SetDepthWrite(true);
 	Gfx_SetAlphaBlending(false);
 }

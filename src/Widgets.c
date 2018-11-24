@@ -1,7 +1,6 @@
 #include "Widgets.h"
 #include "Graphics.h"
 #include "Drawer2D.h"
-#include "GraphicsCommon.h"
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Window.h"
@@ -141,11 +140,11 @@ static void ButtonWidget_Render(void* widget, double delta) {
 
 		back.Width = (w->Width / 2);
 		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
-		GfxCommon_Draw2DTexture(&back, white);
+		Gfx_Draw2DTexture(&back, white);
 
 		back.X += (w->Width / 2);
 		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
-		GfxCommon_Draw2DTexture(&back, white);
+		Gfx_Draw2DTexture(&back, white);
 	}
 
 	if (!w->Texture.ID) return;
@@ -225,7 +224,7 @@ static void ScrollbarWidget_Render(void* widget, double delta) {
 	bool hovered;
 
 	x = w->X; width = w->Width;
-	GfxCommon_Draw2DFlat(x, w->Y, width, w->Height, Scroll_BackCol);
+	Gfx_Draw2DFlat(x, w->Y, width, w->Height, Scroll_BackCol);
 
 	ScrollbarWidget_GetScrollbarCoords(w, &y, &height);
 	x += SCROLL_BORDER; y += w->Y;
@@ -233,15 +232,15 @@ static void ScrollbarWidget_Render(void* widget, double delta) {
 
 	hovered = Gui_Contains(x, y, width, height, Mouse_X, Mouse_Y);
 	barCol  = hovered ? Scroll_HoverCol : Scroll_BarCol;
-	GfxCommon_Draw2DFlat(x, y, width, height, barCol);
+	Gfx_Draw2DFlat(x, y, width, height, barCol);
 
 	if (height < 20) return;
 	x += SCROLL_NUBS_WIDTH; y += (height / 2);
 	width -= SCROLL_NUBS_WIDTH * 2;
 
-	GfxCommon_Draw2DFlat(x, y - 1 - 4, width, SCROLL_BORDER, Scroll_BackCol);
-	GfxCommon_Draw2DFlat(x, y - 1,     width, SCROLL_BORDER, Scroll_BackCol);
-	GfxCommon_Draw2DFlat(x, y - 1 + 4, width, SCROLL_BORDER, Scroll_BackCol);
+	Gfx_Draw2DFlat(x, y - 1 - 4, width, SCROLL_BORDER, Scroll_BackCol);
+	Gfx_Draw2DFlat(x, y - 1,     width, SCROLL_BORDER, Scroll_BackCol);
+	Gfx_Draw2DFlat(x, y - 1 + 4, width, SCROLL_BORDER, Scroll_BackCol);
 }
 
 static bool ScrollbarWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
@@ -334,7 +333,7 @@ static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
 
 	w->SelTex.ID = tex;
 	w->SelTex.X  = (int)(x - w->SelBlockSize / 2);
-	GfxCommon_Draw2DTexture(&w->SelTex, white);
+	Gfx_Draw2DTexture(&w->SelTex, white);
 }
 
 static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
@@ -655,7 +654,7 @@ static void TableWidget_Render(void* widget, double delta) {
 	PackedCol topSelCol     = PACKEDCOL_CONST(255, 255, 255, 142);
 	PackedCol bottomSelCol  = PACKEDCOL_CONST(255, 255, 255, 192);
 
-	GfxCommon_Draw2DGradient(Table_X(w), Table_Y(w),
+	Gfx_Draw2DGradient(Table_X(w), Table_Y(w),
 		Table_Width(w), Table_Height(w), topBackCol, bottomBackCol);
 
 	if (w->RowsCount > TABLE_MAX_ROWS_DISPLAYED) {
@@ -668,11 +667,11 @@ static void TableWidget_Render(void* widget, double delta) {
 
 		off  = cellSize * 0.1f;
 		size = (int)(cellSize + off * 2);
-		GfxCommon_Draw2DGradient((int)(x - off), (int)(y - off),
+		Gfx_Draw2DGradient((int)(x - off), (int)(y - off),
 			size, size, topSelCol, bottomSelCol);
 	}
 	Gfx_SetTexturing(true);
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 
 	IsometricDrawer_BeginBatch(vertices, w->VB);
 	for (i = 0; i < w->ElementsCount; i++) {
@@ -1465,7 +1464,7 @@ static void MenuInputWidget_Render(void* widget, double delta) {
 	PackedCol backCol = PACKEDCOL_CONST(30, 30, 30, 200);
 
 	Gfx_SetTexturing(false);
-	GfxCommon_Draw2DFlat(w->X, w->Y, w->Width, w->Height, backCol);
+	Gfx_Draw2DFlat(w->X, w->Y, w->Width, w->Height, backCol);
 	Gfx_SetTexturing(true);
 
 	Texture_Render(&w->InputTex);
@@ -1642,7 +1641,7 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 		/* Cover whole window width to match original classic behaviour */
 		if (Game_PureClassic) { width = max(width, Game_Width - x * 4); }
 	
-		GfxCommon_Draw2DFlat(x, y, width + w->Padding * 2, w->PrefixHeight, backCol);
+		Gfx_Draw2DFlat(x, y, width + w->Padding * 2, w->PrefixHeight, backCol);
 		y += w->LineSizes[i].Height;
 	}
 
@@ -2169,7 +2168,7 @@ static void PlayerListWidget_Render(void* widget, double delta) {
 	Gfx_SetTexturing(false);
 	offset = title->Height + 10;
 	height = max(300, w->Height + title->Height);
-	GfxCommon_Draw2DGradient(w->X, w->Y - offset, w->Width, height, topCol, bottomCol);
+	Gfx_Draw2DGradient(w->X, w->Y - offset, w->Width, height, topCol, bottomCol);
 
 	Gfx_SetTexturing(true);
 	title->YOffset = w->Y - offset + 5;

@@ -1,7 +1,6 @@
 #include "SelectionBox.h"
 #include "ExtMath.h"
 #include "Graphics.h"
-#include "GraphicsCommon.h"
 #include "Event.h"
 #include "Funcs.h"
 #include "Game.h"
@@ -192,13 +191,13 @@ void Selections_Render(double delta) {
 		SelectionBox_Render(&selections_list[i], &facesPtr, &edgesPtr);
 	}
 
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
-	GfxCommon_UpdateDynamicVb_Lines(selections_LineVB, edgeVertices,
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
+	Gfx_UpdateDynamicVb_Lines(selections_LineVB, edgeVertices,
 		selections_count * SELECTIONS_VERTICES);
 
 	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaBlending(true);
-	GfxCommon_UpdateDynamicVb_IndexedTris(selections_VB, faceVertices,
+	Gfx_UpdateDynamicVb_IndexedTris(selections_VB, faceVertices,
 		selections_count * SELECTIONS_VERTICES);
 	Gfx_SetDepthWrite(true);
 	Gfx_SetAlphaBlending(false);

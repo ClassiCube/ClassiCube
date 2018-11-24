@@ -320,6 +320,7 @@ static void Png_ComputeTransparency(Bitmap* bmp, BitmapCol col) {
 /* Most bits per sample is 16. Most samples per pixel is 4. Add 1 for filter byte. */
 /* Need to store both current and prior row, per PNG specification. */
 #define PNG_BUFFER_SIZE ((PNG_MAX_DIMS * 2 * 4 + 1) * 2)
+
 /* TODO: Test a lot of .png files and ensure output is right */
 ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 	uint8_t tmp[PNG_PALETTE * 3];

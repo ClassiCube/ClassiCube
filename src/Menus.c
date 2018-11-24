@@ -2,7 +2,6 @@
 #include "Widgets.h"
 #include "Game.h"
 #include "Event.h"
-#include "GraphicsCommon.h"
 #include "Platform.h"
 #include "Inventory.h"
 #include "Drawer2D.h"
@@ -233,7 +232,7 @@ static void Menu_RenderBounds(void) {
 	Then using wolfram alpha to solve the glblendfunc equation */
 	PackedCol topCol    = PACKEDCOL_CONST(24, 24, 24, 105);
 	PackedCol bottomCol = PACKEDCOL_CONST(51, 51, 98, 162);
-	GfxCommon_Draw2DGradient(0, 0, Game_Width, Game_Height, topCol, bottomCol);
+	Gfx_Draw2DGradient(0, 0, Game_Width, Game_Height, topCol, bottomCol);
 }
 
 static int Menu_DoMouseDown(void* screen, int x, int y, MouseButton btn) {
@@ -900,8 +899,8 @@ static void EditHotkeyScreen_Render(void* screen, double delta) {
 	MenuScreen_Render(screen, delta);
 
 	x = Game_Width / 2; y = Game_Height / 2;	
-	GfxCommon_Draw2DFlat(x - 250, y - 65, 500, 2, grey);
-	GfxCommon_Draw2DFlat(x - 250, y + 45, 500, 2, grey);
+	Gfx_Draw2DFlat(x - 250, y - 65, 500, 2, grey);
+	Gfx_Draw2DFlat(x - 250, y + 45, 500, 2, grey);
 }
 
 static void EditHotkeyScreen_Free(void* screen) {
@@ -1311,7 +1310,7 @@ static void SaveLevelScreen_Render(void* screen, double delta) {
 	MenuScreen_Render(screen, delta);
 
 	x = Game_Width / 2; y = Game_Height / 2;
-	GfxCommon_Draw2DFlat(x - 250, y + 90, 500, 2, grey);
+	Gfx_Draw2DFlat(x - 250, y + 90, 500, 2, grey);
 }
 
 static void SaveLevelScreen_Free(void* screen) {
@@ -1979,7 +1978,7 @@ static void MenuOptionsScreen_Render(void* screen, double delta) {
 	if (!s->ExtHelp.LinesCount) return;
 
 	w = &s->ExtHelp;
-	GfxCommon_Draw2DFlat(w->X - EXTHELP_PAD, w->Y - EXTHELP_PAD, 
+	Gfx_Draw2DFlat(w->X - EXTHELP_PAD, w->Y - EXTHELP_PAD, 
 		w->Width + EXTHELP_PAD * 2, w->Height + EXTHELP_PAD * 2, tableCol);
 
 	Gfx_SetTexturing(true);
@@ -2996,12 +2995,12 @@ static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s) {
 			tex.uv.V1 = Atlas1D_RowId(i + s->BaseTexLoc) * Atlas1D_InvTileSize;
 			tex.uv.V2 = tex.uv.V1            + UV2_Scale * Atlas1D_InvTileSize;
 		
-			GfxCommon_Make2DQuad(&tex, col, &ptr);
+			Gfx_Make2DQuad(&tex, col, &ptr);
 		}
 
 		Gfx_BindTexture(Atlas1D_TexIds[idx]);
 		count = (int)(ptr - vertices);
-		GfxCommon_UpdateDynamicVb_IndexedTris(s->DynamicVb, vertices, count);
+		Gfx_UpdateDynamicVb_IndexedTris(s->DynamicVb, vertices, count);
 	}
 }
 
@@ -3028,7 +3027,7 @@ static void TexIdsOverlay_RenderTextOverlay(struct TexIdsOverlay* s) {
 		Gfx_BindTexture(idAtlas->Tex.ID);
 
 		count = (int)(ptr - vertices);
-		GfxCommon_UpdateDynamicVb_IndexedTris(s->DynamicVb, vertices, count);
+		Gfx_UpdateDynamicVb_IndexedTris(s->DynamicVb, vertices, count);
 		ptr = vertices;
 	}
 }
@@ -3045,7 +3044,7 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Menu_Render(s, delta);
 
 	origXOffset = s->XOffset;

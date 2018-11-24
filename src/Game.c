@@ -30,7 +30,6 @@
 #include "EnvRenderer.h"
 #include "HeldBlockRenderer.h"
 #include "PickedPosRenderer.h"
-#include "GraphicsCommon.h"
 #include "Menus.h"
 #include "Audio.h"
 #include "Stream.h"
@@ -684,7 +683,7 @@ static void Game_RenderFrame(double delta) {
 
 	frameStart = Stopwatch_Measure();
 	Gfx_BeginFrame();
-	Gfx_BindIb(GfxCommon_defaultIb);
+	Gfx_BindIb(Gfx_defaultIb);
 	Game_Accumulator += delta;
 	Game_Vertices = 0;
 

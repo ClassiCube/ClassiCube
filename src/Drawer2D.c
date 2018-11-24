@@ -4,7 +4,6 @@
 #include "Platform.h"
 #include "ExtMath.h"
 #include "ErrorHandler.h"
-#include "GraphicsCommon.h"
 #include "Bitmap.h"
 #include "Game.h"
 

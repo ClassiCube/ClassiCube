@@ -2,7 +2,6 @@
 #include "Widgets.h"
 #include "Game.h"
 #include "Event.h"
-#include "GraphicsCommon.h"
 #include "Platform.h"
 #include "Inventory.h"
 #include "Drawer2D.h"
@@ -299,7 +298,7 @@ static void StatusScreen_DrawPosition(struct StatusScreen* s) {
 	/* Make "Position: " prefix */
 	tex = atlas->Tex; 
 	tex.X = 2; tex.Width = atlas->Offset;
-	GfxCommon_Make2DQuad(&tex, col, &ptr);
+	Gfx_Make2DQuad(&tex, col, &ptr);
 
 	Vector3I_Floor(&pos, &LocalPlayer_Instance.Base.Position);
 	atlas->CurX = atlas->Offset + 2;
@@ -316,7 +315,7 @@ static void StatusScreen_DrawPosition(struct StatusScreen* s) {
 	Gfx_BindTexture(atlas->Tex.ID);
 	/* TODO: Do we need to use a separate VB here? */
 	count = (int)(ptr - vertices);
-	GfxCommon_UpdateDynamicVb_IndexedTris(Model_Vb, vertices, count);
+	Gfx_UpdateDynamicVb_IndexedTris(Model_Vb, vertices, count);
 }
 
 static bool StatusScreen_HacksChanged(struct StatusScreen* s) {
@@ -524,9 +523,9 @@ static void LoadingScreen_UpdateBackgroundVB(VertexP3fT2fC4b* vertices, int coun
 		Gfx_BindTexture(Atlas1D_TexIds[atlasIndex]);
 	}
 
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 	/* TODO: Do we need to use a separate VB here? */
-	GfxCommon_UpdateDynamicVb_IndexedTris(Model_Vb, vertices, count);
+	Gfx_UpdateDynamicVb_IndexedTris(Model_Vb, vertices, count);
 }
 
 #define LOADING_TILE_SIZE 64
@@ -548,7 +547,7 @@ static void LoadingScreen_DrawBackground(void) {
 	
 	for (y = 0; y < Game_Height; y += LOADING_TILE_SIZE) {
 		tex.Y = y;
-		GfxCommon_Make2DQuad(&tex, col, &ptr);
+		Gfx_Make2DQuad(&tex, col, &ptr);
 		count += 4;
 
 		if (count < Array_Elems(vertices)) continue;
@@ -590,8 +589,8 @@ static void LoadingScreen_Render(void* screen, double delta) {
 	y = Gui_CalcPos(ANCHOR_CENTRE, 34, PROG_BAR_HEIGHT, Game_Height);
 	progWidth = (int)(PROG_BAR_WIDTH * s->Progress);
 
-	GfxCommon_Draw2DFlat(x, y, PROG_BAR_WIDTH, PROG_BAR_HEIGHT, backCol);
-	GfxCommon_Draw2DFlat(x, y, progWidth,      PROG_BAR_HEIGHT, progCol);
+	Gfx_Draw2DFlat(x, y, PROG_BAR_WIDTH, PROG_BAR_HEIGHT, backCol);
+	Gfx_Draw2DFlat(x, y, progWidth,      PROG_BAR_HEIGHT, progCol);
 }
 
 static void LoadingScreen_Free(void* screen) {
@@ -861,7 +860,7 @@ static void ChatScreen_RenderBackground(struct ChatScreen* s) {
 
 	if (height > 0) {
 		PackedCol backCol = PACKEDCOL_CONST(0, 0, 0, 127);
-		GfxCommon_Draw2DFlat(x - 5, y - 5, width + 10, height + 10, backCol);
+		Gfx_Draw2DFlat(x - 5, y - 5, width + 10, height + 10, backCol);
 	}
 }
 
@@ -1490,7 +1489,7 @@ static void DisconnectScreen_Render(void* screen, double delta) {
 	PackedCol bottom = PACKEDCOL_CONST(80, 16, 16, 255);
 
 	if (s->CanReconnect) { DisconnectScreen_UpdateDelayLeft(s, delta); }
-	GfxCommon_Draw2DGradient(0, 0, Game_Width, Game_Height, top, bottom);
+	Gfx_Draw2DGradient(0, 0, Game_Width, Game_Height, top, bottom);
 
 	Gfx_SetTexturing(true);
 	Elem_Render(&s->Title, delta);

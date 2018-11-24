@@ -2,13 +2,13 @@
 #include "ErrorHandler.h"
 #include "Platform.h"
 #include "Window.h"
-#include "GraphicsCommon.h"
 #include "Funcs.h"
 #include "Chat.h"
 #include "Game.h"
 #include "ExtMath.h"
-#include "Bitmap.h"
 #include "Event.h"
+#include "Block.h"
+#include "ExtMath.h"
 
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
@@ -20,6 +20,245 @@ static int gfx_batchStride, gfx_batchFormat = -1;
 
 static bool gfx_vsync, gfx_fogEnabled;
 bool Gfx_GetFog(void) { return gfx_fogEnabled; }
+
+/*########################################################################################################################*
+*------------------------------------------------------Generic/Common-----------------------------------------------------*
+*#########################################################################################################################*/
+static char Gfx_ApiBuffer[7][STRING_SIZE];
+String Gfx_ApiInfo[7] = {
+	String_FromArray(Gfx_ApiBuffer[0]), String_FromArray(Gfx_ApiBuffer[1]),
+	String_FromArray(Gfx_ApiBuffer[2]), String_FromArray(Gfx_ApiBuffer[3]),
+	String_FromArray(Gfx_ApiBuffer[4]), String_FromArray(Gfx_ApiBuffer[5]),
+	String_FromArray(Gfx_ApiBuffer[6]),
+};
+
+CC_NOINLINE static void Gfx_InitDefaultResources(void) {
+	uint16_t indices[GFX_MAX_INDICES];
+	Gfx_MakeIndices(indices, GFX_MAX_INDICES);
+	Gfx_defaultIb = Gfx_CreateIb(indices, GFX_MAX_INDICES);
+
+	Gfx_quadVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, 4);
+	Gfx_texVb  = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, 4);
+}
+
+CC_NOINLINE static void Gfx_FreeDefaultResources(void) {
+	Gfx_DeleteVb(&Gfx_quadVb);
+	Gfx_DeleteVb(&Gfx_texVb);
+	Gfx_DeleteIb(&Gfx_defaultIb);
+}
+
+void Gfx_LoseContext(const char* reason) {
+	Gfx_LostContext = true;
+	Platform_Log1("Lost graphics context: %c", reason);
+
+	Event_RaiseVoid(&GfxEvents_ContextLost);
+	Gfx_FreeDefaultResources();
+}
+
+void Gfx_RecreateContext(void) {
+	Gfx_LostContext = false;
+	Platform_LogConst("Recreating graphics context");
+
+	Event_RaiseVoid(&GfxEvents_ContextRecreated);
+	Gfx_InitDefaultResources();
+}
+
+
+void Gfx_UpdateDynamicVb_Lines(GfxResourceID vb, void* vertices, int vCount) {
+	Gfx_SetDynamicVbData(vb, vertices, vCount);
+	Gfx_DrawVb_Lines(vCount);
+}
+
+void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCount) {
+	Gfx_SetDynamicVbData(vb, vertices, vCount);
+	Gfx_DrawVb_IndexedTris(vCount);
+}
+
+void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol col) {
+	VertexP3fC4b verts[4];
+	VertexP3fC4b v; v.Z = 0.0f; v.Col = col;
+
+	v.X = (float)x;           v.Y = (float)y;            verts[0] = v;
+	v.X = (float)(x + width);                            verts[1] = v;
+	                          v.Y = (float)(y + height); verts[2] = v;
+	v.X = (float)x;                                      verts[3] = v;
+
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
+	Gfx_UpdateDynamicVb_IndexedTris(Gfx_quadVb, verts, 4);
+}
+
+void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, PackedCol bottom) {
+	VertexP3fC4b verts[4];
+	VertexP3fC4b v; v.Z = 0.0f;
+
+	v.X = (float)x;           v.Y = (float)y;            v.Col = top;    verts[0] = v;
+	v.X = (float)(x + width);                                            verts[1] = v;
+	                          v.Y = (float)(y + height); v.Col = bottom; verts[2] = v;
+	v.X = (float)x;                                                      verts[3] = v;
+
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
+	Gfx_UpdateDynamicVb_IndexedTris(Gfx_quadVb, verts, 4);
+}
+
+void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol col) {
+	VertexP3fT2fC4b texVerts[4];
+	VertexP3fT2fC4b* ptr = texVerts;
+	Gfx_Make2DQuad(tex, col, &ptr);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_UpdateDynamicVb_IndexedTris(Gfx_texVb, texVerts, 4);
+}
+
+void Gfx_Make2DQuad(const struct Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices) {
+	float x1 = (float)tex->X, x2 = (float)(tex->X + tex->Width);
+	float y1 = (float)tex->Y, y2 = (float)(tex->Y + tex->Height);
+#ifdef CC_BUILD_D3D9
+	/* NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx", */
+	/* i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why we have to do this. */
+	x1 -= 0.5f; x2 -= 0.5f;
+	y1 -= 0.5f; y2 -= 0.5f;
+#endif
+
+	VertexP3fT2fC4b* ptr = *vertices;
+	VertexP3fT2fC4b v; v.Z = 0.0f; v.Col = col;
+	v.X = x1; v.Y = y1; v.U = tex->uv.U1; v.V = tex->uv.V1; ptr[0] = v;
+	v.X = x2;           v.U = tex->uv.U2;                   ptr[1] = v;
+	v.Y = y2;                             v.V = tex->uv.V2; ptr[2] = v;
+	v.X = x1;           v.U = tex->uv.U1;                   ptr[3] = v;
+	*vertices += 4;
+}
+
+static bool gfx_hadFog;
+void Gfx_Mode2D(int width, int height) {
+	struct Matrix ortho;
+	Gfx_CalcOrthoMatrix((float)width, (float)height, &ortho);
+
+	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
+	Gfx_LoadMatrix(&ortho);
+	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
+	Gfx_LoadIdentityMatrix();
+
+	Gfx_SetDepthTest(false);
+	Gfx_SetAlphaBlending(true);
+	gfx_hadFog = Gfx_GetFog();
+	if (gfx_hadFog) Gfx_SetFog(false);
+}
+
+void Gfx_Mode3D(void) {
+	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
+	Gfx_LoadMatrix(&Gfx_Projection);
+	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
+	Gfx_LoadMatrix(&Gfx_View);
+
+	Gfx_SetDepthTest(true);
+	Gfx_SetAlphaBlending(false);
+	if (gfx_hadFog) Gfx_SetFog(true);
+}
+
+void Gfx_MakeIndices(uint16_t* indices, int iCount) {
+	int element = 0, i;
+
+	for (i = 0; i < iCount; i += 6) {
+		indices[0] = (uint16_t)(element + 0);
+		indices[1] = (uint16_t)(element + 1);
+		indices[2] = (uint16_t)(element + 2);
+
+		indices[3] = (uint16_t)(element + 2);
+		indices[4] = (uint16_t)(element + 3);
+		indices[5] = (uint16_t)(element + 0);
+
+		indices += 6; element += 4;
+	}
+}
+
+void Gfx_SetupAlphaState(uint8_t draw) {
+	if (draw == DRAW_TRANSLUCENT)       Gfx_SetAlphaBlending(true);
+	if (draw == DRAW_TRANSPARENT)       Gfx_SetAlphaTest(true);
+	if (draw == DRAW_TRANSPARENT_THICK) Gfx_SetAlphaTest(true);
+	if (draw == DRAW_SPRITE)            Gfx_SetAlphaTest(true);
+}
+
+void Gfx_RestoreAlphaState(uint8_t draw) {
+	if (draw == DRAW_TRANSLUCENT)       Gfx_SetAlphaBlending(false);
+	if (draw == DRAW_TRANSPARENT)       Gfx_SetAlphaTest(false);
+	if (draw == DRAW_TRANSPARENT_THICK) Gfx_SetAlphaTest(false);
+	if (draw == DRAW_SPRITE)            Gfx_SetAlphaTest(false);
+}
+
+
+/* Quoted from http://www.realtimerendering.com/blog/gpus-prefer-premultiplication/
+   The short version: if you want your renderer to properly handle textures with alphas when using
+   bilinear interpolation or mipmapping, you need to premultiply your PNG color data by their (unassociated) alphas. */
+static BitmapCol GfxCommon_Average(BitmapCol p1, BitmapCol p2) {
+	uint32_t a1, a2, aSum;
+	uint32_t b1, g1, r1;
+	uint32_t b2, g2, r2;
+	BitmapCol ave;
+
+	a1 = p1.A; a2 = p2.A; 
+	aSum = (a1 + a2);
+	aSum = aSum > 0 ? aSum : 1; /* avoid divide by 0 below */
+
+	/* Convert RGB to pre-multiplied form */
+	b1 = p1.B * a1; g1 = p1.G * a1; r1 = p1.R * a1;
+	b2 = p2.B * a2; g2 = p2.G * a2; r2 = p2.R * a2;
+
+	/* https://stackoverflow.com/a/347376
+	   We need to convert RGB back from the pre-multiplied average into normal form
+	   ((r1 + r2) / 2) / ((a1 + a2) / 2)
+	   but we just cancel out the / 2*/
+	ave.B = (b1 + b2) / aSum;
+	ave.G = (g1 + g2) / aSum;
+	ave.R = (r1 + r2) / aSum;
+	ave.A = aSum >> 1;
+	return ave;
+}
+
+void Gfx_GenMipmaps(int width, int height, uint8_t* lvlScan0, uint8_t* scan0) {
+	BitmapCol* baseSrc = (BitmapCol*)scan0;
+	BitmapCol* baseDst = (BitmapCol*)lvlScan0;
+	int srcWidth = width << 1;
+
+	int x, y;
+	for (y = 0; y < height; y++) {
+		int srcY = (y << 1);
+		BitmapCol* src0 = baseSrc + srcY * srcWidth;
+		BitmapCol* src1 = src0    + srcWidth;
+		BitmapCol* dst  = baseDst + y * width;
+
+		for (x = 0; x < width; x++) {
+			int srcX = (x << 1);
+			BitmapCol src00 = src0[srcX], src01 = src0[srcX + 1];
+			BitmapCol src10 = src1[srcX], src11 = src1[srcX + 1];
+
+			/* bilinear filter this mipmap */
+			BitmapCol ave0 = GfxCommon_Average(src00, src01);
+			BitmapCol ave1 = GfxCommon_Average(src10, src11);
+			dst[x] = GfxCommon_Average(ave0, ave1);
+		}
+	}
+}
+
+int Gfx_MipmapsLevels(int width, int height) {
+	int lvlsWidth = Math_Log2(width), lvlsHeight = Math_Log2(height);
+	if (Gfx_CustomMipmapsLevels) {
+		int lvls = min(lvlsWidth, lvlsHeight);
+		return min(lvls, 4);
+	} else {
+		return max(lvlsWidth, lvlsHeight);
+	}
+}
+
+void Texture_Render(const struct Texture* tex) {
+	PackedCol white = PACKEDCOL_WHITE;
+	Gfx_BindTexture(tex->ID);
+	Gfx_Draw2DTexture(tex, white);
+}
+
+void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeCol) {
+	Gfx_BindTexture(tex->ID);
+	Gfx_Draw2DTexture(tex, shadeCol);
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------Direct3D9--------------------------------------------------------*
@@ -116,7 +355,7 @@ static void D3D9_RecreateDevice(void) {
 
 	D3D9_SetDefaultRenderStates();
 	D3D9_RestoreRenderStates();
-	GfxCommon_RecreateContext();
+	Gfx_RecreateContext();
 }
 
 void Gfx_Init(void) {
@@ -150,11 +389,11 @@ void Gfx_Init(void) {
 
 	Gfx_CustomMipmapsLevels = true;
 	D3D9_SetDefaultRenderStates();
-	GfxCommon_Init();
+	Gfx_InitDefaultResources();
 }
 
 void Gfx_Free(void) { 
-	GfxCommon_Free();
+	Gfx_FreeDefaultResources();
 	D3D9_FreeResource(&device);
 	D3D9_FreeResource(&d3d);
 }
@@ -205,7 +444,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp
 	uint8_t* cur;
 	Bitmap mipmap;
 
-	int lvls = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
+	int lvls = Gfx_MipmapsLevels(bmp->Width, bmp->Height);
 	int lvl, width = bmp->Width, height = bmp->Height;
 
 	for (lvl = 1; lvl <= lvls; lvl++) {
@@ -214,7 +453,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp
 		if (height > 1) height /= 2;
 
 		cur = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
-		GfxCommon_GenMipmaps(width, height, cur, prev);
+		Gfx_GenMipmaps(width, height, cur, prev);
 
 		Bitmap_Create(&mipmap, width, height, cur);
 		if (partial) {
@@ -232,7 +471,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp
 GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 	IDirect3DTexture9* tex;
 	ReturnCode res;
-	int mipmapsLevels = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
+	int mipmapsLevels = Gfx_MipmapsLevels(bmp->Width, bmp->Height);
 	int levels = 1 + (mipmaps ? mipmapsLevels : 0);
 
 	if (!Math_IsPowOf2(bmp->Width) || !Math_IsPowOf2(bmp->Height)) {
@@ -531,7 +770,7 @@ void Gfx_BindIb(GfxResourceID ib) {
 void Gfx_DeleteVb(GfxResourceID* vb) { D3D9_FreeResource(vb); }
 void Gfx_DeleteIb(GfxResourceID* ib) { D3D9_FreeResource(ib); }
 
-void Gfx_SetBatchFormat(VertexFormat fmt) {
+void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_batchFormat) return;
 	gfx_batchFormat = fmt;
 
@@ -654,7 +893,7 @@ void Gfx_SetVSync(bool value) {
 	if (gfx_vsync == value) return;
 	gfx_vsync = value;
 
-	GfxCommon_LoseContext(" (toggling VSync)");
+	Gfx_LoseContext(" (toggling VSync)");
 	D3D9_RecreateDevice();
 }
 
@@ -672,7 +911,7 @@ void Gfx_EndFrame(void) {
 	if (res != D3DERR_DEVICELOST) ErrorHandler_Fail2(res, "D3D9_EndFrame");
 
 	/* TODO: Make sure this actually works on all graphics cards.*/
-	GfxCommon_LoseContext(" (Direct3D9 device lost)");
+	Gfx_LoseContext(" (Direct3D9 device lost)");
 	D3D9_LoopUntilRetrieved();
 	D3D9_RecreateDevice();
 }
@@ -724,7 +963,7 @@ void Gfx_UpdateApiInfo(void) {
 }
 
 void Gfx_OnWindowResize(void) {
-	GfxCommon_LoseContext(" (resizing window)");
+	Gfx_LoseContext(" (resizing window)");
 	D3D9_RecreateDevice();
 }
 #endif
@@ -823,7 +1062,7 @@ void Gfx_Init(void) {
 	Gfx_CustomMipmapsLevels = true;
 	GL_CheckVboSupport();
 #endif
-	GfxCommon_Init();
+	Gfx_InitDefaultResources();
 
 	glHint(GL_FOG_HINT, GL_NICEST);
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -831,7 +1070,7 @@ void Gfx_Init(void) {
 }
 
 void Gfx_Free(void) {
-	GfxCommon_Free();
+	Gfx_FreeDefaultResources();
 	GLContext_Free();
 }
 
@@ -845,7 +1084,7 @@ static void GL_DoMipmaps(GfxResourceID texId, int x, int y, Bitmap* bmp, bool pa
 	uint8_t* prev = bmp->Scan0;
 	uint8_t* cur;
 
-	int lvls = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
+	int lvls = Gfx_MipmapsLevels(bmp->Width, bmp->Height);
 	int lvl, width = bmp->Width, height = bmp->Height;
 
 	for (lvl = 1; lvl <= lvls; lvl++) {
@@ -854,7 +1093,7 @@ static void GL_DoMipmaps(GfxResourceID texId, int x, int y, Bitmap* bmp, bool pa
 		if (height > 1) height /= 2;
 
 		cur = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
-		GfxCommon_GenMipmaps(width, height, cur, prev);
+		Gfx_GenMipmaps(width, height, cur, prev);
 
 		if (partial) {
 			glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, cur);
@@ -881,7 +1120,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 	if (mipmaps) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
 		if (Gfx_CustomMipmapsLevels) {
-			int lvls = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
+			int lvls = Gfx_MipmapsLevels(bmp->Width, bmp->Height);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, lvls);
 		}
 	} else {
@@ -1043,14 +1282,14 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) { return gl
 GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 	/* We need to setup client state properly when building the list */
 	int curFormat = gfx_batchFormat, stride;
-	Gfx_SetBatchFormat(fmt);
+	Gfx_SetVertexFormat(fmt);
 
 	GfxResourceID list = glGenLists(1);
 	glNewList(list, GL_COMPILE);
 	count &= ~0x01; /* Need to get rid of the 1 extra element, see comment in chunk mesh builder for why */
 
 	uint16_t indices[GFX_MAX_INDICES];
-	GfxCommon_MakeIndices(indices, ICOUNT(count));
+	Gfx_MakeIndices(indices, ICOUNT(count));
 	stride = Gfx_strideSizes[fmt];
 
 	glVertexPointer(3, GL_FLOAT, stride, vertices);
@@ -1061,7 +1300,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 
 	glDrawElements(GL_TRIANGLES, ICOUNT(count), GL_UNSIGNED_SHORT, indices);
 	glEndList();
-	Gfx_SetBatchFormat(curFormat);
+	Gfx_SetVertexFormat(curFormat);
 	return list;
 }
 
@@ -1101,7 +1340,7 @@ void GL_SetupVbPos3fTex2fCol4b_Range(int startVertex) {
 	glTexCoordPointer(2, GL_FLOAT,        sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
 }
 
-void Gfx_SetBatchFormat(VertexFormat fmt) {
+void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_batchFormat) return;
 
 	if (gfx_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
