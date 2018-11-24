@@ -1927,7 +1927,29 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 	return i;
 }
 
-ReturnCode Platform_StartShell(const String* args) {
+ReturnCode Platform_StartProcess(const String* path, const String* args) {
+	String argv; char argvBuffer[300];
+	TCHAR str[300], raw[300];
+	STARTUPINFO si = { 0 };
+	PROCESS_INFORMATION pi = { 0 };
+	BOOL ok;
+
+	String_InitArray(argv, argvBuffer);
+	String_Format2(&argv, "%s %s", path, args);
+	Platform_ConvertString(str, path);
+	Platform_ConvertString(raw, &argv);
+
+	si.cb = sizeof(STARTUPINFO);
+	ok    = CreateProcess(str, raw, NULL, NULL, false, 0, NULL, NULL, &si, &pi);
+	if (!ok) return GetLastError();
+
+	/* Don't leak memory for proess return code */
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+	return 0;
+}
+
+ReturnCode Platform_StartOpen(const String* args) {
 	TCHAR str[300];
 	HINSTANCE instance;
 	Platform_ConvertString(str, args);
@@ -1990,18 +2012,27 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 	return count;
 }
 
-static ReturnCode Platform_RunOpen(const char* format, const String* args) {
-	String path; char pathBuffer[FILENAME_SIZE + 10];
-	char str[600];
-	FILE* fp;
+ReturnCode Platform_StartProcess(const String* path, const String* args) {
+	char str[600], raw[600];
+	pid_t pid;
+	Platform_ConvertString(str, path);
+	Platform_ConvertString(raw, args);
 
-	String_InitArray(path, pathBuffer);
-	String_Format1(&path, format, args);
-	Platform_ConvertString(str, &path);
+	pid = fork();
+	if (pid == -1) return errno;
 
-	fp = popen(str, "r");
-	if (!fp) return errno;
-	return Nix_Return(pclose(fp));
+	if (pid == 0) {
+		/* Executed in child process */
+		char* argv[3];
+		argv[0] = str; argv[1] = raw; argv[2] = NULL;
+
+		execvp(str, argv);
+		_exit(127); /* "command not found" */
+	} else {
+		/* Executed in parent process */
+		/* We do nothing here.. */
+		return 0;
+	}
 }
 
 static void Platform_TrimFilename(char* path, int len) {
@@ -2042,8 +2073,9 @@ static void Platform_InitDisplay(void) {
 }
 #endif
 #ifdef CC_BUILD_NIX
-ReturnCode Platform_StartShell(const String* args) {
-	return Platform_RunOpen("xdg-open %s", args);
+ReturnCode Platform_StartOpen(const String* args) {
+	static String path = String_FromConst("xdg-open");
+	return Platform_StartProcess(&path, args);
 }
 static void Platform_InitStopwatch(void) { sw_freqDiv = 1000; }
 
@@ -2057,9 +2089,10 @@ void Platform_SetWorkingDir(void) {
 }
 #endif
 #ifdef CC_BUILD_SOLARIS
-ReturnCode Platform_StartShell(const String* args) {
+ReturnCode Platform_StartOpen(const String* args) {
 	/* TODO: Is this on solaris, or just an OpenIndiana thing */
-	return Platform_RunOpen("xdg-open %s", args);
+	static String path = String_FromConst("xdg-open");
+	return Platform_StartProcess(&path, args);
 }
 static void Platform_InitStopwatch(void) { sw_freqDiv = 1000; }
 
@@ -2073,8 +2106,9 @@ void Platform_SetWorkingDir(void) {
 }
 #endif
 #ifdef CC_BUILD_OSX
-ReturnCode Platform_StartShell(const String* args) {
-	return Platform_RunOpen("/usr/bin/open %s", args);
+ReturnCode Platform_StartOpen(const String* args) {
+	static String path = String_FromConst("/usr/bin/open");
+	return Platform_StartOpen(&path, args);
 }
 void Platform_SetWorkingDir(void) {
 	char path[1024];

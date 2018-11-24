@@ -279,7 +279,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			Key_SetPressed(ext ? KEY_RALT  : KEY_LALT,  pressed);
 			return 0;
 		case VK_RETURN:
-			Key_SetPressed(ext ? KEY_KP_ENTER : KEY_ENTER,  pressed);
+			Key_SetPressed(ext ? KEY_KP_ENTER : KEY_ENTER, pressed);
 			return 0;
 
 		default:
