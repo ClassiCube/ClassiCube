@@ -8,6 +8,35 @@
 static bool win_cursorVisible = true;
 bool Window_GetCursorVisible(void) { return win_cursorVisible; }
 
+static void Window_DecodeUtf16(String* value, Codepoint* chars, int numBytes) {
+	int i; char c;
+	
+	for (i = 0; i < (numBytes >> 1); i++) {
+		if (Convert_TryUnicodeToCP437(chars[i], &c)) String_Append(value, c);
+	}
+}
+
+static void Window_DecodeUtf8(String* value, uint8_t* chars, int numBytes) {
+	int len; Codepoint cp; char c;
+
+	for (; numBytes > 0; numBytes -= len) {
+		len = Convert_Utf8ToUnicode(&cp, chars, numBytes);
+		if (!len) return;
+
+		if (Convert_TryUnicodeToCP437(cp, &c)) String_Append(value, c);
+		chars += len;
+	}
+}
+
+static void Window_DecodeAscii(String* value, uint8_t* chars, int numBytes) {
+	int i; char c;
+
+	for (i = 0; i < numBytes; i++) {
+		if (Convert_TryUnicodeToCP437(chars[i], &c)) String_Append(value, c);
+	}
+}
+
+
 /*########################################################################################################################*
 *------------------------------------------------------Win32 window-------------------------------------------------------*
 *#########################################################################################################################*/
@@ -383,18 +412,14 @@ void Window_GetClipboardText(String* value) {
 		}
 		if (!hGlobal) { CloseClipboard(); return; }
 		LPVOID src = GlobalLock(hGlobal);
+		DWORD size = GlobalSize(hGlobal);
 
-		char c;
+		/* ignore trailing NULL at end */
+		/* TODO: Verify it's always there */
 		if (isUnicode) {
-			Codepoint* text = (Codepoint*)src;
-			for (; *text; text++) {
-				if (Convert_TryUnicodeToCP437(*text, &c)) String_Append(value, c);
-			}
+			Window_DecodeUtf16(value, (Codepoint*)src, size - 2);
 		} else {
-			char* text = (char*)src;
-			for (; *text; text++) {
-				if (Convert_TryUnicodeToCP437(*text, &c)) String_Append(value, c);
-			}
+			Window_DecodeAscii(value, (uint8_t*)src,   size - 1);
 		}
 
 		GlobalUnlock(hGlobal);
@@ -1240,7 +1265,7 @@ void Window_ProcessEvents(void) {
 
 				if (data && items && prop_type == xa_utf8_string) {
 					clipboard_paste_text.length = 0;
-					String_DecodeUtf8(&clipboard_paste_text, data, items);
+					Window_DecodeUtf8(&clipboard_paste_text, data, items);
 				}
 				if (data) XFree(data);
 			}
