@@ -132,10 +132,8 @@ void Gfx_Mode2D(int width, int height) {
 	struct Matrix ortho;
 	Gfx_CalcOrthoMatrix((float)width, (float)height, &ortho);
 
-	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
-	Gfx_LoadMatrix(&ortho);
-	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
-	Gfx_LoadIdentityMatrix();
+	Gfx_LoadMatrix(MATRIX_PROJECTION, &ortho);
+	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
 
 	Gfx_SetDepthTest(false);
 	Gfx_SetAlphaBlending(true);
@@ -144,10 +142,8 @@ void Gfx_Mode2D(int width, int height) {
 }
 
 void Gfx_Mode3D(void) {
-	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
-	Gfx_LoadMatrix(&Gfx_Projection);
-	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
-	Gfx_LoadMatrix(&Gfx_View);
+	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx_Projection);
+	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx_View);
 
 	Gfx_SetDepthTest(true);
 	Gfx_SetAlphaBlending(false);
@@ -274,7 +270,6 @@ static DWORD d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ 
 
 static IDirect3D9* d3d;
 static IDirect3DDevice9* device;
-static D3DTRANSFORMSTATETYPE curMatrix;
 static DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 static D3DFORMAT d3d9_viewFormat, d3d9_depthFormat;
 
@@ -815,32 +810,28 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-void Gfx_SetMatrixMode(MatrixType type) {
-	if (type == MATRIX_TYPE_PROJECTION)   { curMatrix = D3DTS_PROJECTION; } 
-	else if (type == MATRIX_TYPE_VIEW)    { curMatrix = D3DTS_VIEW; } 
-	else if (type == MATRIX_TYPE_TEXTURE) { curMatrix = D3DTS_TEXTURE0; }
-}
+static D3DTRANSFORMSTATETYPE matrix_modes[3] = { D3DTS_PROJECTION, D3DTS_VIEW, D3DTS_TEXTURE0 };
 
-void Gfx_LoadMatrix(struct Matrix* matrix) {
+void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
 	ReturnCode res;
-	if (curMatrix == D3DTS_TEXTURE0) {
+	if (type == MATRIX_TEXTURE) {
 		matrix->Row2.X = matrix->Row3.X; /* NOTE: this hack fixes the texture movements. */
 		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
 	}
 
 	if (Gfx_LostContext) return;
-	res = IDirect3DDevice9_SetTransform(device, curMatrix, matrix);
+	res = IDirect3DDevice9_SetTransform(device, matrix_modes[type], matrix);
 	if (res) ErrorHandler_Fail2(res, "D3D9_LoadMatrix");
 }
 
-void Gfx_LoadIdentityMatrix(void) {
+void Gfx_LoadIdentityMatrix(MatrixType type) {
 	ReturnCode res;
-	if (curMatrix == D3DTS_TEXTURE0) {
+	if (type == MATRIX_TEXTURE) {
 		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
 	}
 
 	if (Gfx_LostContext) return;
-	res = IDirect3DDevice9_SetTransform(device, curMatrix, &Matrix_Identity);
+	res = IDirect3DDevice9_SetTransform(device, matrix_modes[type], &Matrix_Identity);
 	if (res) ErrorHandler_Fail2(res, "D3D9_LoadIdentityMatrix");
 }
 
@@ -1462,18 +1453,18 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static int gl_lastMatrixType;
+static GLenum matrix_modes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
+static int lastMatrix;
 
-void Gfx_SetMatrixMode(MatrixType type) {
-	static GLenum modes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
-	if (type == gl_lastMatrixType) return;
-
-	gl_lastMatrixType = type;
-	glMatrixMode(modes[type]);
+void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
+	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
+	glLoadMatrixf((float*)matrix); 
 }
 
-void Gfx_LoadMatrix(struct Matrix* matrix) { glLoadMatrixf((float*)matrix); }
-void Gfx_LoadIdentityMatrix(void) { glLoadIdentity(); }
+void Gfx_LoadIdentityMatrix(MatrixType type) {
+	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
+	glLoadIdentity(); 
+}
 
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
 	Matrix_OrthographicOffCenter(matrix, 0.0f, width, height, 0.0f, -10000.0f, 10000.0f);

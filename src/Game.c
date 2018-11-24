@@ -163,9 +163,7 @@ void Game_UpdateProjection(void) {
 	Game_DefaultFov = Options_GetInt(OPT_FIELD_OF_VIEW, 1, 150, 70);
 	Camera_Active->GetProjection(&Gfx_Projection);
 
-	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
-	Gfx_LoadMatrix(&Gfx_Projection);
-	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
+	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx_Projection);
 	Event_RaiseVoid(&GfxEvents_ProjectionChanged);
 }
 
@@ -569,9 +567,8 @@ static void Game_LimitFPS(uint64_t frameStart) {
 }
 
 static void Game_UpdateViewMatrix(void) {
-	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
 	Camera_Active->GetView(&Gfx_View);
-	Gfx_LoadMatrix(&Gfx_View);
+	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx_View);
 	FrustumCulling_CalcFrustumEquations(&Gfx_Projection, &Gfx_View);
 }
 

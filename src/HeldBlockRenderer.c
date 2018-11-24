@@ -216,9 +216,7 @@ void HeldBlockRenderer_Render(double delta) {
 	held_block  = Inventory_SelectedBlock;
 	view = Gfx_View;
 
-	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
-	Gfx_LoadMatrix(&held_blockProjection);
-	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);	
+	Gfx_LoadMatrix(MATRIX_PROJECTION, &held_blockProjection);
 	HeldBlockRenderer_SetMatrix();
 
 	HeldBlockRenderer_ResetHeldState();
@@ -227,9 +225,7 @@ void HeldBlockRenderer_Render(double delta) {
 	if (!Camera_Active->IsThirdPerson) HeldBlockRenderer_RenderModel();
 
 	Gfx_View = view;
-	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
-	Gfx_LoadMatrix(&Gfx_Projection);
-	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
+	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx_Projection);
 }
 
 struct EntityVTABLE heldEntity_VTABLE = {

@@ -134,7 +134,7 @@ void IsometricDrawer_BeginBatch(VertexP3fT2fC4b* vertices, GfxResourceID vb) {
 	iso_vertices_base = vertices;
 	iso_vb = vb;
 
-	Gfx_LoadMatrix(&iso_transform);
+	Gfx_LoadMatrix(MATRIX_VIEW, &iso_transform);
 }
 
 void IsometricDrawer_DrawBatch(BlockID block, float size, float x, float y) {
@@ -191,5 +191,5 @@ void IsometricDrawer_EndBatch(void) {
 	}
 
 	iso_lastTexIndex = -1;
-	Gfx_LoadIdentityMatrix();
+	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
 }

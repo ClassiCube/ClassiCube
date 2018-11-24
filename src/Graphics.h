@@ -28,7 +28,7 @@ typedef enum FogFunc_ {
 	FOG_LINEAR, FOG_EXP, FOG_EXP2
 } FogFunc;
 typedef enum MatrixType_ {
-	MATRIX_TYPE_PROJECTION, MATRIX_TYPE_VIEW, MATRIX_TYPE_TEXTURE
+	MATRIX_PROJECTION, MATRIX_VIEW, MATRIX_TEXTURE
 } MatrixType;
 
 void Gfx_Init(void);
@@ -139,12 +139,10 @@ void Gfx_DrawVb_IndexedTris(int verticesCount);
 /* Special case Gfx_DrawVb_IndexedTris_Range for map renderer */
 void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex);
 
-/* Sets the currently active matrix. */
-void Gfx_SetMatrixMode(MatrixType type);
 /* Loads the given matrix over the currently active matrix. */
-void Gfx_LoadMatrix(struct Matrix* matrix);
+void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix);
 /* Loads the identity matrix over the currently active matrix. */
-void Gfx_LoadIdentityMatrix(void);
+void Gfx_LoadIdentityMatrix(MatrixType type);
 /* Calculates an orthographic matrix suitable with this backend. (usually for 2D) */
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix);
 /* Calculates a projection matrix suitable with this backend. (usually for 3D) */

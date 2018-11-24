@@ -134,10 +134,8 @@ void EnvRenderer_RenderClouds(double deltaTime) {
 	time   = Game_Accumulator;
 	offset = (float)(time / 2048.0f * 0.6f * Env_CloudsSpeed);
 
-	Gfx_SetMatrixMode(MATRIX_TYPE_TEXTURE);
 	m = Matrix_Identity; m.Row3.X = offset; /* translate X axis */
-	Gfx_LoadMatrix(&m);
-	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
+	Gfx_LoadMatrix(MATRIX_TEXTURE, &m);
 
 	Gfx_SetAlphaTest(true);
 	Gfx_SetTexturing(true);
@@ -148,9 +146,7 @@ void EnvRenderer_RenderClouds(double deltaTime) {
 	Gfx_SetAlphaTest(false);
 	Gfx_SetTexturing(false);
 
-	Gfx_SetMatrixMode(MATRIX_TYPE_TEXTURE);
-	Gfx_LoadIdentityMatrix();
-	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
+	Gfx_LoadIdentityMatrix(MATRIX_TEXTURE);
 }
 
 static void EnvRenderer_DrawCloudsY(int x1, int z1, int x2, int z2, int y, VertexP3fT2fC4b* vertices) {
@@ -232,9 +228,9 @@ void EnvRenderer_RenderSky(double deltaTime) {
 		m.Row3.X += dy * m.Row1.X; m.Row3.Y += dy * m.Row1.Y;
 		m.Row3.Z += dy * m.Row1.Z; m.Row3.W += dy * m.Row1.W;
 
-		Gfx_LoadMatrix(&m);
+		Gfx_LoadMatrix(MATRIX_VIEW, &m);
 		Gfx_DrawVb_IndexedTris(sky_vertices);
-		Gfx_LoadMatrix(&Gfx_View);
+		Gfx_LoadMatrix(MATRIX_VIEW, &Gfx_View);
 	}
 }
 
@@ -316,12 +312,12 @@ void EnvRenderer_RenderSkybox(double deltaTime) {
 	Camera_Active->GetView(&view); Matrix_MulBy(&m, &view);
 	Camera_CurrentPos = pos;
 
-	Gfx_LoadMatrix(&m);
+	Gfx_LoadMatrix(MATRIX_VIEW, &m);
 	Gfx_BindVb(skybox_vb);
 	Gfx_DrawVb_IndexedTris(SKYBOX_COUNT);
 
 	Gfx_SetTexturing(false);
-	Gfx_LoadMatrix(&Gfx_View);
+	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx_View);
 	Gfx_SetDepthWrite(true);
 }
 
