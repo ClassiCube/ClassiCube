@@ -449,11 +449,6 @@ struct Screen* StatusScreen_MakeInstance(void) {
 	return (struct Screen*)s;
 }
 
-static void StatusScreen_Ready(void) { Elem_Init(&StatusScreen_Instance); }
-void StatusScreen_MakeComponent(struct IGameComponent* comp) {
-	comp->Ready = StatusScreen_Ready;
-}
-
 
 /*########################################################################################################################*
 *------------------------------------------------------LoadingScreen------------------------------------------------------*
@@ -1386,11 +1381,6 @@ struct Screen* HUDScreen_MakeInstance(void) {
 	s->WasShowingList = false;
 	s->VTABLE = &HUDScreen_VTABLE;
 	return (struct Screen*)s;
-}
-
-static void HUDScreen_Ready(void) { Elem_Init(&HUDScreen_Instance); }
-void HUDScreen_MakeComponent(struct IGameComponent* comp) {
-	comp->Ready = HUDScreen_Ready;
 }
 
 void HUDScreen_OpenInput(struct Screen* hud, const String* text) {

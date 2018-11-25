@@ -35,8 +35,6 @@
 #include "Stream.h"
 #include "TerrainAtlas.h"
 
-static struct IGameComponent Game_Components[26];
-static int Game_ComponentsCount;
 static struct ScheduledTask Game_Tasks[6];
 static int Game_TasksCount, entTaskI;
 
@@ -50,22 +48,16 @@ String Game_Mppass    = String_FromArray(Game_MppassBuffer);
 String Game_IPAddress = String_FromArray(Game_IPAddressBuffer);
 String Game_FontName  = String_FromArray(Game_FontNameBuffer);
 
+static struct IGameComponent* comps_head;
+static struct IGameComponent* comps_tail;
 void Game_AddComponent(struct IGameComponent* comp) {
-	if (Game_ComponentsCount == Array_Elems(Game_Components)) {
-		ErrorHandler_Fail("Game_AddComponent - hit max count");
+	if (!comps_head) {
+		comps_head = comp;
+	} else {
+		comps_tail->Next = comp;
 	}
-	Game_Components[Game_ComponentsCount++] = *comp;
-	IGameComponent_MakeEmpty(comp);
-}
-
-void IGameComponent_NullFunc(void) { }
-void IGameComponent_MakeEmpty(struct IGameComponent* comp) {
-	comp->Init  = IGameComponent_NullFunc;
-	comp->Free  = IGameComponent_NullFunc;
-	comp->Ready = IGameComponent_NullFunc;
-	comp->Reset = IGameComponent_NullFunc;
-	comp->OnNewMap       = IGameComponent_NullFunc;
-	comp->OnNewMapLoaded = IGameComponent_NullFunc;
+	comps_tail = comp;
+	comp->Next = NULL;
 }
 
 int ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
@@ -168,7 +160,7 @@ void Game_UpdateProjection(void) {
 }
 
 void Game_Disconnect(const String* title, const String* reason) {
-	int i;
+	struct IGameComponent* comp;
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
 	Gui_FreeActive();
@@ -178,8 +170,8 @@ void Game_Disconnect(const String* title, const String* reason) {
 	Block_Reset();
 	TexturePack_ExtractDefault();
 
-	for (i = 0; i < Game_ComponentsCount; i++) {
-		Game_Components[i].Reset();
+	for (comp = comps_head; comp; comp = comp->Next) {
+		if (comp->Reset) comp->Reset();
 	}
 }
 
@@ -275,16 +267,16 @@ static void Game_OnResize(void* obj) {
 }
 
 static void Game_OnNewMapCore(void* obj) {
-	int i;
-	for (i = 0; i < Game_ComponentsCount; i++) {
-		Game_Components[i].OnNewMap();
+	struct IGameComponent* comp;
+	for (comp = comps_head; comp; comp = comp->Next) {
+		if (comp->OnNewMap) comp->OnNewMap();
 	}
 }
 
 static void Game_OnNewMapLoadedCore(void* obj) {
-	int i;
-	for (i = 0; i < Game_ComponentsCount; i++) {
-		Game_Components[i].OnNewMapLoaded();
+	struct IGameComponent* comp;
+	for (comp = comps_head; comp; comp = comp->Next) {
+		if (comp->OnNewMapLoaded) comp->OnNewMapLoaded();
 	}
 }
 
@@ -417,8 +409,8 @@ void Game_Free(void* obj);
 void Game_Load(void) {
 	String renderType; char renderTypeBuffer[STRING_SIZE];
 	String title;      char titleBuffer[STRING_SIZE];
-	struct IGameComponent comp;
-	int i, flags;
+	struct IGameComponent* comp;
+	int flags;
 
 	Game_ViewDistance     = 512;
 	Game_MaxViewDistance  = 32768;
@@ -426,7 +418,6 @@ void Game_Load(void) {
 	Game_Fov = 70;
 	Game_AutoRotate = true;
 
-	IGameComponent_MakeEmpty(&comp);
 	Gfx_Init();
 	Gfx_SetVSync(true);
 	Gfx_MakeApiInfo();
@@ -439,12 +430,12 @@ void Game_Load(void) {
 	/* TODO: Survival vs Creative game mode */
 
 	InputHandler_Init();
-	Particles_MakeComponent(&comp); Game_AddComponent(&comp);
-	TabList_MakeComponent(&comp);   Game_AddComponent(&comp);
+	Game_AddComponent(&Particles_Component);
+	Game_AddComponent(&TabList_Component);
 
 	Game_LoadOptions();
 	Game_LoadGuiOptions();
-	Chat_MakeComponent(&comp); Game_AddComponent(&comp);
+	Game_AddComponent(&Chat_Component);
 
 	Event_RegisterVoid(&WorldEvents_NewMap,         NULL, Game_OnNewMapCore);
 	Event_RegisterVoid(&WorldEvents_MapLoaded,      NULL, Game_OnNewMapLoadedCore);
@@ -460,24 +451,24 @@ void Game_Load(void) {
 	Block_Init();
 	ModelCache_Init();
 
-	AsyncDownloader_MakeComponent(&comp); Game_AddComponent(&comp);
-	Lighting_MakeComponent(&comp);        Game_AddComponent(&comp);
+	Game_AddComponent(&AsyncDownloader_Component);
+	Game_AddComponent(&Lighting_Component);
 
 	Drawer2D_BitmappedText = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
 	Drawer2D_BlackTextShadows = Options_GetBool(OPT_BLACK_TEXT, false);
 	Gfx_Mipmaps               = Options_GetBool(OPT_MIPMAPS, false);
 
-	Animations_MakeComponent(&comp); Game_AddComponent(&comp);
-	Inventory_MakeComponent(&comp);  Game_AddComponent(&comp);
+	Game_AddComponent(&Animations_Component);
+	Game_AddComponent(&Inventory_Component);
 	Block_SetDefaultPerms();
 	Env_Reset();
 
 	LocalPlayer_Init(); 
-	LocalPlayer_MakeComponent(&comp); Game_AddComponent(&comp);
+	Game_AddComponent(&LocalPlayer_Component);
 	Entities_List[ENTITIES_SELF_ID] = &LocalPlayer_Instance.Base;
 
 	MapRenderer_Init();
-	EnvRenderer_MakeComponent(&comp); Game_AddComponent(&comp);
+	Game_AddComponent(&EnvRenderer_Component);
 	String_InitArray(renderType, renderTypeBuffer);
 	Options_Get(OPT_RENDER_TYPE, &renderType, "normal");
 
@@ -491,16 +482,16 @@ void Game_Load(void) {
 	} else {
 		ServerConnection_InitMultiplayer();
 	}
-	ServerConnection_MakeComponent(&comp); Game_AddComponent(&comp);
+	Game_AddComponent(&ServerConnection_Component);
 	String_AppendConst(&ServerConnection_AppName, PROGRAM_APP_NAME);
 
 	Gfx_LostContextFunction = ServerConnection_Tick;
 	Camera_Init();
 	Game_UpdateProjection();
 
-	Gui_MakeComponent(&comp);               Game_AddComponent(&comp);
-	Selections_MakeComponent(&comp);        Game_AddComponent(&comp);
-	HeldBlockRenderer_MakeComponent(&comp); Game_AddComponent(&comp);
+	Game_AddComponent(&Gui_Component);
+	Game_AddComponent(&Selections_Component);
+	Game_AddComponent(&HeldBlockRenderer_Component);
 
 	Gfx_SetDepthTest(true);
 	Gfx_SetDepthTestFunc(COMPARE_FUNC_LESSEQUAL);
@@ -508,20 +499,20 @@ void Game_Load(void) {
 	Gfx_SetAlphaBlendFunc(BLEND_FUNC_SRC_ALPHA, BLEND_FUNC_INV_SRC_ALPHA);
 	Gfx_SetAlphaTestFunc(COMPARE_FUNC_GREATER, 0.5f);
 
-	PickedPosRenderer_MakeComponent(&comp); Game_AddComponent(&comp);
-	Audio_MakeComponent(&comp);             Game_AddComponent(&comp);
-	AxisLinesRenderer_MakeComponent(&comp); Game_AddComponent(&comp);
+	Game_AddComponent(&PickedPosRenderer_Component);
+	Game_AddComponent(&Audio_Component);
+	Game_AddComponent(&AxisLinesRenderer_Component);
 
 	/* TODO: plugin dll support */
 	/* List<string> nonLoaded = PluginLoader.LoadAll(); */
 
-	for (i = 0; i < Game_ComponentsCount; i++) {
-		Game_Components[i].Init();
+	for (comp = comps_head; comp; comp = comp->Next) {
+		if (comp->Init) comp->Init();
 	}
 	Game_ExtractInitialTexturePack();
 
-	for (i = 0; i < Game_ComponentsCount; i++) {
-		Game_Components[i].Ready();
+	for (comp = comps_head; comp; comp = comp->Next) {
+		if (comp->Ready) comp->Ready();
 	}
 	Game_InitScheduledTasks();
 
@@ -719,7 +710,7 @@ static void Game_RenderFrame(double delta) {
 }
 
 void Game_Free(void* obj) {
-	int i;
+	struct IGameComponent* comp;
 
 	MapRenderer_Free();
 	Atlas2D_Free();
@@ -735,8 +726,8 @@ void Game_Free(void* obj) {
 	Event_UnregisterVoid(&WindowEvents_Resized,       NULL, Game_OnResize);
 	Event_UnregisterVoid(&WindowEvents_Closed,        NULL, Game_Free);
 
-	for (i = 0; i < Game_ComponentsCount; i++) {
-		Game_Components[i].Free();
+	for (comp = comps_head; comp; comp = comp->Next) {
+		if (comp->Free) comp->Free();
 	}
 
 	Drawer2D_Free();

@@ -6,8 +6,8 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 struct IGameComponent;
+extern struct IGameComponent Selections_Component;
 
-void Selections_MakeComponent(struct IGameComponent* comp);
 void Selections_Render(double delta);
 void Selections_Add(uint8_t id, Vector3I p1, Vector3I p2, PackedCol col);
 void Selections_Remove(uint8_t id);

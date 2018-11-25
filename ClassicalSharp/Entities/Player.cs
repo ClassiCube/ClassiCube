@@ -130,8 +130,8 @@ namespace ClassicalSharp.Entities {
 			Bitmap bmp = (Bitmap)item.Data;
 			game.Graphics.DeleteTexture(ref TextureId);
 			
-			SetSkinAll(true);		
-			EnsurePow2(ref bmp);			
+			EnsurePow2(ref bmp);
+			SetSkinAll(true);					
 			SkinType = Utils.GetSkinType(bmp);
 			
 			if (bmp.Width > game.Graphics.MaxTexWidth || bmp.Height > game.Graphics.MaxTexHeight) {

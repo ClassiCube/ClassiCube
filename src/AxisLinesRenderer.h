@@ -6,6 +6,7 @@
 */
 
 struct IGameComponent;
-void AxisLinesRenderer_MakeComponent(struct IGameComponent* comp);
+extern struct IGameComponent AxisLinesRenderer_Component;
+
 void AxisLinesRenderer_Render(double delta);
 #endif

@@ -40,6 +40,7 @@ struct PickedPos;
 struct Stream;
 struct IGameComponent;
 struct ScheduledTask;
+extern struct IGameComponent ServerConnection_Component;
 
 int PingList_NextPingData(void);
 void PingList_Update(int data);

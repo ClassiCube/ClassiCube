@@ -10,6 +10,7 @@
 
 struct IGameComponent;
 struct ScheduledTask;
-void Animations_MakeComponent(struct IGameComponent* comp);
+extern struct IGameComponent Animations_Component;
+
 void Animations_Tick(struct ScheduledTask* task);
 #endif

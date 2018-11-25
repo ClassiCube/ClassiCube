@@ -4,6 +4,7 @@
 /* Represents Game related structures.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+struct IGameComponent;
 
 /* Represents a game component. */
 struct IGameComponent {
@@ -13,15 +14,15 @@ struct IGameComponent {
 	void (*Free)(void);
 	/* Called to reset the component's state. (e.g. reconnecting to server) */
 	void (*Reset)(void);
-	/* Called when the texture pack has been loaded and all components have been initialised. */
-	void (*Ready)(void);
 	/* Called to update the component's state when the user begins loading a new map. */
 	void (*OnNewMap)(void);
 	/* Called to update the component's state when the user has finished loading a new map. */
 	void (*OnNewMapLoaded)(void);
+	/* Called when the texture pack has been loaded and all components have been initialised. */
+	void (*Ready)(void);
+	/* Next component in linked list of components. */
+	struct IGameComponent* Next;
 };
-
-void IGameComponent_MakeEmpty(struct IGameComponent* comp);
 CC_NOINLINE void Game_AddComponent(struct IGameComponent* comp);
 
 /* Represents a task that periodically runs on the main thread every specified interval. */

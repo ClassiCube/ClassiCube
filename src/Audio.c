@@ -551,7 +551,7 @@ static void AudioManager_Free(void) {
 	Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, Audio_PlayBlockSound);
 }
 
-void Audio_MakeComponent(struct IGameComponent* comp) {
-	comp->Init = AudioManager_Init;
-	comp->Free = AudioManager_Free;
-}
+struct IGameComponent Audio_Component = {
+	AudioManager_Init, /* Init  */
+	AudioManager_Free  /* Free  */
+};

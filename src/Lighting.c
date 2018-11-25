@@ -361,9 +361,10 @@ static void Lighting_OnNewMapLoaded(void) {
 	Lighting_Refresh();
 }
 
-void Lighting_MakeComponent(struct IGameComponent* comp) {
-	comp->Free = Lighting_Reset;
-	comp->OnNewMap = Lighting_Reset;
-	comp->OnNewMapLoaded = Lighting_OnNewMapLoaded;
-	comp->Reset = Lighting_Reset; 
-}
+struct IGameComponent Lighting_Component = {
+	NULL,           /* Init  */
+	Lighting_Reset, /* Free  */
+	Lighting_Reset, /* Reset */
+	Lighting_Reset, /* OnNewMap */
+	Lighting_OnNewMapLoaded /* OnNewMapLoaded */
+};

@@ -203,6 +203,10 @@ void Selections_Render(double delta) {
 	Gfx_SetAlphaBlending(false);
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------Selections component---------------------------------------------------*
+*#########################################################################################################################*/
 static void Selections_Init(void) {
 	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, Selections_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, Selections_ContextRecreated);
@@ -218,9 +222,9 @@ static void Selections_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, Selections_ContextRecreated);
 }
 
-void Selections_MakeComponent(struct IGameComponent* comp) {
-	comp->Init = Selections_Init;
-	comp->Free = Selections_Free;
-	comp->Reset = Selections_Reset;
-	comp->OnNewMap = Selections_Reset;
-}
+struct IGameComponent Selections_Component = {
+	Selections_Init,  /* Init  */
+	Selections_Free,  /* Free  */
+	Selections_Reset, /* Reset */
+	Selections_Reset  /* OnNewMap */
+};

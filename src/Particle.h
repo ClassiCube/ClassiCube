@@ -8,6 +8,8 @@
 
 struct IGameComponent;
 struct ScheduledTask;
+extern struct IGameComponent Particles_Component;
+
 struct Particle {
 	Vector3 Velocity;
 	float Lifetime;

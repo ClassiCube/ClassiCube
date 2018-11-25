@@ -6,15 +6,12 @@
 */
 struct Screen;
 struct Widget;
-struct IGameComponent;
 
 struct Screen* InventoryScreen_MakeInstance(void);
 struct Screen* StatusScreen_MakeInstance(void);
-void StatusScreen_MakeComponent(struct IGameComponent* comp);
 struct Screen* LoadingScreen_MakeInstance(const String* title, const String* message);
 struct Screen* GeneratingScreen_MakeInstance(void);
 struct Screen* HUDScreen_MakeInstance(void);
-void HUDScreen_MakeComponent(struct IGameComponent* comp);
 struct Screen* DisconnectScreen_MakeInstance(const String* title, const String* message);
 
 /* Raw pointer to inventory screen. DO NOT USE THIS. Use InventoryScreen_MakeInstance() */

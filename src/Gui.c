@@ -88,13 +88,14 @@ static void Gui_FileChanged(void* obj, struct Stream* stream, const String* name
 }
 
 static void Gui_Init(void) {
-	struct IGameComponent comp; IGameComponent_MakeEmpty(&comp);
-	StatusScreen_MakeComponent(&comp); Game_AddComponent(&comp);
-	HUDScreen_MakeComponent(&comp);    Game_AddComponent(&comp);
-
 	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
 	Gui_Status = StatusScreen_MakeInstance();
 	Gui_HUD    = HUDScreen_MakeInstance();
+}
+
+static void Gui_Ready(void) {
+	Elem_Init(Gui_Status);
+	Elem_Init(Gui_HUD);
 }
 
 static void Gui_Reset(void) {
@@ -117,11 +118,14 @@ static void Gui_Free(void) {
 	Gui_Reset();
 }
 
-void Gui_MakeComponent(struct IGameComponent* comp) {
-	comp->Init  = Gui_Init;
-	comp->Reset = Gui_Reset;
-	comp->Free  = Gui_Free;
-}
+struct IGameComponent Gui_Component = {
+	Gui_Init,  /* Init  */
+	Gui_Free,  /* Free  */
+	Gui_Reset, /* Reset */
+	NULL, /* OnNewMap */
+	NULL, /* OnNewMapLoaded */
+	Gui_Ready
+};
 
 struct Screen* Gui_GetActiveScreen(void) {
 	return Gui_OverlaysCount ? Gui_Overlays[0] : Gui_GetUnderlyingScreen();

@@ -460,10 +460,11 @@ static void TabList_Reset(void) {
 	StringsBuffer_Clear(&TabList_Buffer);
 }
 
-void TabList_MakeComponent(struct IGameComponent* comp) {
-	comp->Free  = TabList_Free;
-	comp->Reset = TabList_Reset;
-}
+struct IGameComponent TabList_Component = {
+	NULL,         /* Init  */
+	TabList_Free, /* Free  */
+	TabList_Reset /* Reset */
+};
 
 
 /*########################################################################################################################*
@@ -727,8 +728,8 @@ static void Player_CheckSkin(struct Player* p) {
 	}
 
 	Gfx_DeleteTexture(&e->TextureId);
-	Player_SetSkinAll(p, true);
 	Player_EnsurePow2(p, &bmp);
+	Player_SetSkinAll(p, true);
 	e->SkinType = Utils_GetSkinType(&bmp);
 
 	if (bmp.Width > Gfx_MaxTexWidth || bmp.Height > Gfx_MaxTexHeight) {
@@ -923,11 +924,12 @@ static void LocalPlayer_OnNewMap(void) {
 	p->_WarnedNoclip  = false;
 }
 
-void LocalPlayer_MakeComponent(struct IGameComponent* comp) {
-	comp->Init     = LocalPlayer_Init_;
-	comp->Ready    = LocalPlayer_Reset;
-	comp->OnNewMap = LocalPlayer_OnNewMap;
-}
+struct IGameComponent LocalPlayer_Component = {
+	LocalPlayer_Init_, /* Init  */
+	NULL,              /* Free  */
+	LocalPlayer_Reset, /* Reset */
+	LocalPlayer_OnNewMap, /* OnNewMap */
+};
 
 struct EntityVTABLE localPlayer_VTABLE = {
 	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetCol,

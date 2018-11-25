@@ -94,6 +94,10 @@ void Inventory_Remove(BlockID block) {
 	}
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------Inventory component----------------------------------------------------*
+*#########################################################################################################################*/
 static void Inventory_Reset(void) {
 	Inventory_SetDefaultMapping();
 	Inventory_CanChangeHeldBlock = true;
@@ -109,7 +113,8 @@ static void Inventory_Init(void) {
 	inv[6] = BLOCK_LEAVES; inv[7] = BLOCK_GRASS;  inv[8] = BLOCK_SLAB;
 }
 
-void Inventory_MakeComponent(struct IGameComponent* comp) {
-	comp->Init  = Inventory_Init;
-	comp->Reset = Inventory_Reset;
-}
+struct IGameComponent Inventory_Component = {
+	Inventory_Init,  /* Init  */
+	NULL,            /* Free  */
+	Inventory_Reset, /* Reset */
+};

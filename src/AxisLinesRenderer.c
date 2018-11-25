@@ -12,24 +12,6 @@ static GfxResourceID axisLines_vb;
 #define AXISLINES_THICKNESS (1.0f / 32.0f)
 #define AXISLINES_LENGTH 3.0f
 
-static void AxisLinesRenderer_ContextLost(void* obj) {
-	Gfx_DeleteVb(&axisLines_vb);
-}
-
-static void AxisLinesRenderer_Init(void) {
-	Event_RegisterVoid(&GfxEvents_ContextLost, NULL, AxisLinesRenderer_ContextLost);
-}
-
-static void AxisLinesRenderer_Free(void) {
-	AxisLinesRenderer_ContextLost(NULL);
-	Event_UnregisterVoid(&GfxEvents_ContextLost, NULL, AxisLinesRenderer_ContextLost);
-}
-
-void AxisLinesRenderer_MakeComponent(struct IGameComponent* comp) {
-	comp->Init = AxisLinesRenderer_Init;
-	comp->Free = AxisLinesRenderer_Free;
-}
-
 void AxisLinesRenderer_Render(double delta) {
 	static uint8_t indices[36] = {
 		2,2,1, 2,2,3, 4,2,3, 4,2,1, /* X arrow */
@@ -73,3 +55,25 @@ void AxisLinesRenderer_Render(double delta) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
 	Gfx_UpdateDynamicVb_IndexedTris(axisLines_vb, vertices, count);
 }
+
+
+/*########################################################################################################################*
+*-----------------------------------------------AxisLinesRenderer component-----------------------------------------------*
+*#########################################################################################################################*/
+static void AxisLinesRenderer_ContextLost(void* obj) {
+	Gfx_DeleteVb(&axisLines_vb);
+}
+
+static void AxisLinesRenderer_Init(void) {
+	Event_RegisterVoid(&GfxEvents_ContextLost, NULL, AxisLinesRenderer_ContextLost);
+}
+
+static void AxisLinesRenderer_Free(void) {
+	AxisLinesRenderer_ContextLost(NULL);
+	Event_UnregisterVoid(&GfxEvents_ContextLost, NULL, AxisLinesRenderer_ContextLost);
+}
+
+struct IGameComponent AxisLinesRenderer_Component = {
+	AxisLinesRenderer_Init, /* Init */
+	AxisLinesRenderer_Free, /* Free */
+};

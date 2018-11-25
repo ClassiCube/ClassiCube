@@ -5,8 +5,8 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 struct IGameComponent;
+extern struct IGameComponent HeldBlockRenderer_Component;
 
 void HeldBlockRenderer_ClickAnim(bool digging);
 void HeldBlockRenderer_Render(double delta);
-void HeldBlockRenderer_MakeComponent(struct IGameComponent* comp);
 #endif

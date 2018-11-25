@@ -7,6 +7,7 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 struct IGameComponent;
+extern struct IGameComponent Inventory_Component;
 
 #define INVENTORY_BLOCKS_PER_HOTBAR 9
 #define INVENTORY_HOTBARS 9
@@ -14,7 +15,6 @@ struct IGameComponent;
 BlockID Inventory_Table[INVENTORY_HOTBARS * INVENTORY_BLOCKS_PER_HOTBAR];
 /* Mapping of indices in inventory menu to block IDs. */
 BlockID Inventory_Map[BLOCK_COUNT];
-void Inventory_MakeComponent(struct IGameComponent* comp);
 
 int Inventory_SelectedIndex;
 int Inventory_Offset;

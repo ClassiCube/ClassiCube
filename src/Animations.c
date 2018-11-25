@@ -354,6 +354,10 @@ static void Animations_FileChanged(void* obj, struct Stream* stream, const Strin
 	}
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------Animations component---------------------------------------------------*
+*#########################################################################################################################*/
 static void Animations_Init(void) {
 	Event_RegisterVoid(&TextureEvents_PackChanged,  NULL, Animations_PackChanged);
 	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Animations_FileChanged);
@@ -365,7 +369,7 @@ static void Animations_Free(void) {
 	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Animations_FileChanged);
 }
 
-void Animations_MakeComponent(struct IGameComponent* comp) {
-	comp->Init = Animations_Init;
-	comp->Free = Animations_Free;
-}
+struct IGameComponent Animations_Component = {
+	Animations_Init, /* Init  */
+	Animations_Free  /* Free  */
+};

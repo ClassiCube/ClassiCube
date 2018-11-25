@@ -824,18 +824,6 @@ static void EnvRenderer_ContextRecreated(void* obj) {
 	EnvRenderer_UpdateAll();
 }
 
-static void EnvRenderer_Reset(void) {
-	Gfx_SetFog(false);
-	EnvRenderer_DeleteVbs();
-	Mem_Free(Weather_Heightmap);
-	Weather_Heightmap = NULL;
-	weather_lastPos   = Vector3I_MaxValue();
-}
-
-static void EnvRenderer_OnNewMapLoaded(void) {
-	EnvRenderer_ContextRecreated(NULL);
-}
-
 void EnvRenderer_UseLegacyMode(bool legacy) {
 	EnvRenderer_Legacy = legacy;
 	EnvRenderer_ContextRecreated(NULL);
@@ -898,6 +886,10 @@ static void EnvRenderer_EnvVariableChanged(void* obj, int envVar) {
 	}
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------EnvRenderer component--------------------------------------------------*
+*#########################################################################################################################*/
 static void EnvRenderer_Init(void) {
 	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, EnvRenderer_FileChanged);
 	Event_RegisterVoid(&TextureEvents_PackChanged,  NULL, EnvRenderer_TexturePackChanged);
@@ -931,6 +923,18 @@ static void EnvRenderer_Free(void) {
 	Gfx_DeleteTexture(&snow_tex);
 }
 
+static void EnvRenderer_Reset(void) {
+	Gfx_SetFog(false);
+	EnvRenderer_DeleteVbs();
+	Mem_Free(Weather_Heightmap);
+	Weather_Heightmap = NULL;
+	weather_lastPos = Vector3I_MaxValue();
+}
+
+static void EnvRenderer_OnNewMapLoaded(void) {
+	EnvRenderer_ContextRecreated(NULL);
+}
+
 void EnvRenderer_MakeComponent(struct IGameComponent* comp) {
 	comp->Init     = EnvRenderer_Init;
 	comp->Reset    = EnvRenderer_Reset;
@@ -938,3 +942,11 @@ void EnvRenderer_MakeComponent(struct IGameComponent* comp) {
 	comp->OnNewMapLoaded = EnvRenderer_OnNewMapLoaded;
 	comp->Free     = EnvRenderer_Free;
 }
+
+struct IGameComponent EnvRenderer_Component = {
+	EnvRenderer_Init,  /* Init  */
+	EnvRenderer_Free,  /* Free  */
+	EnvRenderer_Reset, /* Reset */
+	EnvRenderer_Reset, /* OnNewMap */
+	EnvRenderer_OnNewMapLoaded /* OnNewMapLoaded */
+};

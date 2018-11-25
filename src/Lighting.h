@@ -6,11 +6,11 @@ BasicLighting: Uses a simple heightmap, where each block is either in sun or sha
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 struct IGameComponent;
+extern struct IGameComponent Lighting_Component;
 
 #define Lighting_Pack(x, z) ((x) + World_Width * (z))
 int16_t* Lighting_Heightmap;
 
-void Lighting_MakeComponent(struct IGameComponent* comp);
 /* Equivalent to (but far more optimised form of)
 * for x = startX; x < startX + 18; x++
 *   for z = startZ; z < startZ + 18; z++

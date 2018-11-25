@@ -603,8 +603,8 @@ static void Chat_Free(void) {
 	StringsBuffer_Clear(&Chat_InputLog);
 }
 
-void Chat_MakeComponent(struct IGameComponent* comp) {
-	comp->Init  = Chat_Init;
-	comp->Reset = Chat_Reset;
-	comp->Free  = Chat_Free;
-}
+struct IGameComponent Chat_Component = {
+	Chat_Init, /* Init  */
+	Chat_Free, /* Free  */
+	Chat_Reset /* Reset */
+};

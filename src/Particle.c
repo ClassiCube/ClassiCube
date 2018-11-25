@@ -321,46 +321,6 @@ static void Particles_FileChanged(void* obj, struct Stream* stream, const String
 	}
 }
 
-static void Particles_ContextLost(void* obj) {
-	Gfx_DeleteVb(&Particles_VB); 
-}
-static void Particles_ContextRecreated(void* obj) {
-	Particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, PARTICLES_MAX * 4);
-}
-
-static void Particles_BreakBlockEffect_Handler(void* obj, Vector3I coords, BlockID old, BlockID now) {
-	Particles_BreakBlockEffect(coords, old, now);
-}
-
-static void Particles_Init(void) {
-	Random_InitFromCurrentTime(&rnd);
-	Particles_ContextRecreated(NULL);
-
-	Event_RegisterBlock(&UserEvents_BlockChanged,   NULL, Particles_BreakBlockEffect_Handler);
-	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Particles_FileChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, Particles_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, Particles_ContextRecreated);
-}
-
-static void Particles_Reset(void) { rain_count = 0; terrain_count = 0; }
-
-static void Particles_Free(void) {
-	Gfx_DeleteTexture(&Particles_TexId);
-	Particles_ContextLost(NULL);
-
-	Event_UnregisterBlock(&UserEvents_BlockChanged,   NULL, Particles_BreakBlockEffect_Handler);
-	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Particles_FileChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, Particles_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, Particles_ContextRecreated);
-}
-
-void Particles_MakeComponent(struct IGameComponent* comp) {
-	comp->Init     = Particles_Init;
-	comp->Reset    = Particles_Reset;
-	comp->OnNewMap = Particles_Reset;
-	comp->Free     = Particles_Free;
-}
-
 void Particles_Render(double delta, float t) {
 	if (!terrain_count && !rain_count) return;
 	if (Gfx_LostContext) return;
@@ -491,3 +451,46 @@ void Particles_RainSnowEffect(Vector3 pos) {
 		p->Base.Size = (uint8_t)(type >= 28 ? 2 : (type >= 25 ? 4 : 3));
 	}
 }
+
+
+/*########################################################################################################################*
+*---------------------------------------------------Particles component---------------------------------------------------*
+*#########################################################################################################################*/
+static void Particles_ContextLost(void* obj) {
+	Gfx_DeleteVb(&Particles_VB); 
+}
+static void Particles_ContextRecreated(void* obj) {
+	Particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, PARTICLES_MAX * 4);
+}
+static void Particles_BreakBlockEffect_Handler(void* obj, Vector3I coords, BlockID old, BlockID now) {
+	Particles_BreakBlockEffect(coords, old, now);
+}
+
+static void Particles_Init(void) {
+	Random_InitFromCurrentTime(&rnd);
+	Particles_ContextRecreated(NULL);
+
+	Event_RegisterBlock(&UserEvents_BlockChanged,   NULL, Particles_BreakBlockEffect_Handler);
+	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Particles_FileChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, Particles_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, Particles_ContextRecreated);
+}
+
+static void Particles_Free(void) {
+	Gfx_DeleteTexture(&Particles_TexId);
+	Particles_ContextLost(NULL);
+
+	Event_UnregisterBlock(&UserEvents_BlockChanged,   NULL, Particles_BreakBlockEffect_Handler);
+	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Particles_FileChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, Particles_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, Particles_ContextRecreated);
+}
+
+static void Particles_Reset(void) { rain_count = 0; terrain_count = 0; }
+
+struct IGameComponent Particles_Component = {
+	Particles_Init,  /* Init  */
+	Particles_Free,  /* Free  */
+	Particles_Reset, /* Reset */
+	Particles_Reset  /* OnNewMap */
+};

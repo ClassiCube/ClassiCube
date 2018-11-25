@@ -7,6 +7,7 @@
 */
 struct IGameComponent;
 struct ScheduledTask;
+extern struct IGameComponent AsyncDownloader_Component;
 
 enum REQUEST_TYPE { REQUEST_TYPE_DATA, REQUEST_TYPE_CONTENT_LENGTH };
 enum AsyncProgress {

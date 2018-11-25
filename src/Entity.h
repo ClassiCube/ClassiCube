@@ -11,6 +11,8 @@
 struct Model;
 struct IGameComponent;
 struct ScheduledTask;
+extern struct IGameComponent TabList_Component;
+extern struct IGameComponent LocalPlayer_Component;
 
 /* Offset used to avoid floating point roundoff errors. */
 #define ENTITY_ADJUSTMENT 0.001f
@@ -123,7 +125,6 @@ uint8_t  TabList_GroupRanks[TABLIST_MAX_NAMES];
 bool TabList_Valid(EntityID id);
 bool TabList_Remove(EntityID id);
 void TabList_Set(EntityID id, const String* player, const String* list, const String* group, uint8_t rank);
-void TabList_MakeComponent(struct IGameComponent* comp);
 
 #define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_PlayerNames[id]);
 #define TabList_UNSAFE_GetList(id)   StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_ListNames[id]);
@@ -159,7 +160,6 @@ struct LocalPlayer {
 };
 
 struct LocalPlayer LocalPlayer_Instance;
-void LocalPlayer_MakeComponent(struct IGameComponent* comp);
 void LocalPlayer_Init(void);
 float LocalPlayer_JumpHeight(void);
 void LocalPlayer_CheckHacksConsistency(void);

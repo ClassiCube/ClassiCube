@@ -12,26 +12,6 @@ static GfxResourceID pickedPos_vb;
 #define PICKEDPOS_NUM_VERTICES (16 * 6)
 static VertexP3fC4b pickedPos_vertices[PICKEDPOS_NUM_VERTICES];
 
-static void PickedPosRenderer_ContextLost(void* obj) {
-	Gfx_DeleteVb(&pickedPos_vb);
-}
-
-static void PickedPosRenderer_ContextRecreated(void* obj) {
-	pickedPos_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, PICKEDPOS_NUM_VERTICES);
-}
-
-static void PickedPosRenderer_Init(void) {
-	PickedPosRenderer_ContextRecreated(NULL);
-	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, PickedPosRenderer_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, PickedPosRenderer_ContextRecreated);
-}
-
-static void PickedPosRenderer_Free(void) {
-	PickedPosRenderer_ContextLost(NULL);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, PickedPosRenderer_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, PickedPosRenderer_ContextRecreated);
-}
-
 void PickedPosRenderer_Render(double delta) {
 	if (Gfx_LostContext) return;
 
@@ -117,7 +97,31 @@ void PickedPosRenderer_Update(struct PickedPos* selected) {
 	}
 }
 
-void PickedPosRenderer_MakeComponent(struct IGameComponent* comp) {
-	comp->Init = PickedPosRenderer_Init;
-	comp->Free = PickedPosRenderer_Free;
+
+/*########################################################################################################################*
+*-----------------------------------------------PickedPosRenderer component-----------------------------------------------*
+*#########################################################################################################################*/
+static void PickedPosRenderer_ContextLost(void* obj) {
+	Gfx_DeleteVb(&pickedPos_vb);
 }
+
+static void PickedPosRenderer_ContextRecreated(void* obj) {
+	pickedPos_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, PICKEDPOS_NUM_VERTICES);
+}
+
+static void PickedPosRenderer_Init(void) {
+	PickedPosRenderer_ContextRecreated(NULL);
+	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, PickedPosRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, PickedPosRenderer_ContextRecreated);
+}
+
+static void PickedPosRenderer_Free(void) {
+	PickedPosRenderer_ContextLost(NULL);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, PickedPosRenderer_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, PickedPosRenderer_ContextRecreated);
+}
+
+struct IGameComponent PickedPosRenderer_Component = {
+	PickedPosRenderer_Init, /* Init */
+	PickedPosRenderer_Free, /* Free */
+};

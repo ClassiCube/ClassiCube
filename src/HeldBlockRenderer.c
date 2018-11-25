@@ -249,7 +249,7 @@ static void HeldBlockRenderer_Free(void) {
 	Event_UnregisterBlock(&UserEvents_BlockChanged,    NULL, HeldBlockRenderer_BlockChanged);
 }
 
-void HeldBlockRenderer_MakeComponent(struct IGameComponent* comp) {
-	comp->Init = HeldBlockRenderer_Init;
-	comp->Free = HeldBlockRenderer_Free;
-}
+struct IGameComponent HeldBlockRenderer_Component = {
+	HeldBlockRenderer_Init, /* Init  */
+	HeldBlockRenderer_Free  /* Free  */
+};

@@ -550,8 +550,9 @@ static void ServerConnection_Free(void) {
 	}
 }
 
-void ServerConnection_MakeComponent(struct IGameComponent* comp) {
-	comp->OnNewMap = MPConnection_OnNewMap;
-	comp->Reset    = MPConnection_Reset;
-	comp->Free     = ServerConnection_Free;
-}
+struct IGameComponent ServerConnection_Component = {
+	NULL,                  /* Init  */
+	ServerConnection_Free, /* Free  */
+	MPConnection_Reset,    /* Reset */
+	MPConnection_OnNewMap  /* OnNewMap */
+};

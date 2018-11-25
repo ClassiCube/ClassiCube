@@ -15,6 +15,7 @@ enum GuiAnchor {
 
 struct IGameComponent;
 struct GuiElem;
+extern struct IGameComponent Gui_Component;
 
 #define GuiElemVTABLE_Layout() \
 	void (*Init)(void* elem); \

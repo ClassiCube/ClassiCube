@@ -7,6 +7,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 struct IGameComponent;
+extern struct IGameComponent Chat_Component;
 
 typedef enum MsgType_ {
 	MSG_TYPE_NORMAL = 0,
@@ -41,7 +42,6 @@ struct ChatCommand {
 /* Registers a client-side command, allowing it to be used with /client [cmd name] */
 CC_EXPORT void Commands_Register(struct ChatCommand* cmd);
 
-void Chat_MakeComponent(struct IGameComponent* comp);
 void Chat_SetLogName(const String* name);
 /* Sends a chat message, raising ChatEvents_ChatSending event. */
 /* NOTE: /client is always interpreted as client-side commands. */

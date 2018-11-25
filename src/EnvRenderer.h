@@ -5,6 +5,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 struct IGameComponent;
+extern struct IGameComponent EnvRenderer_Component;
 
 void EnvRenderer_RenderSky(double deltaTime);
 void EnvRenderer_RenderClouds(double deltaTime);
@@ -22,5 +23,4 @@ void EnvRenderer_RenderWeather(double deltaTime);
 bool EnvRenderer_Legacy, EnvRenderer_Minimal;
 void EnvRenderer_UseMinimalMode(bool minimal);
 void EnvRenderer_UseLegacyMode(bool legacy);
-void EnvRenderer_MakeComponent(struct IGameComponent* comp);
 #endif

@@ -291,6 +291,9 @@ static void AsyncDownloader_WorkerFunc(void) {
 }
 
 
+/*########################################################################################################################*
+*------------------------------------------------AsyncDownloader component------------------------------------------------*
+*#########################################################################################################################*/
 static void AsyncDownloader_Init(void) {
 	AsyncRequestList_Init(&async_pending);
 	AsyncRequestList_Init(&async_processed);
@@ -327,8 +330,8 @@ static void AsyncDownloader_Free(void) {
 	Mutex_Free(async_curRequestMutex);
 }
 
-void AsyncDownloader_MakeComponent(struct IGameComponent* comp) {
-	comp->Init  = AsyncDownloader_Init;
-	comp->Reset = AsyncDownloader_Reset;
-	comp->Free  = AsyncDownloader_Free;
-}
+struct IGameComponent AsyncDownloader_Component = {
+	AsyncDownloader_Init, /* Init  */
+	AsyncDownloader_Free, /* Free  */
+	AsyncDownloader_Reset /* Reset */
+};
