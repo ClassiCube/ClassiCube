@@ -26,6 +26,9 @@
 
 FT_BEGIN_HEADER
 
+/* MacOS resource fork cannot exceed 16MB at least for Carbon code; */
+/* see https://support.microsoft.com/en-us/kb/130437                */
+#define FT_MAC_RFORK_MAX_LEN  0x00FFFFFFUL
 
 FT_END_HEADER
 

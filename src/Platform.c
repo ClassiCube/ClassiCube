@@ -2108,7 +2108,7 @@ void Platform_SetWorkingDir(void) {
 #ifdef CC_BUILD_OSX
 ReturnCode Platform_StartOpen(const String* args) {
 	static String path = String_FromConst("/usr/bin/open");
-	return Platform_StartOpen(&path, args);
+	return Platform_StartProcess(&path, args);
 }
 void Platform_SetWorkingDir(void) {
 	char path[1024];

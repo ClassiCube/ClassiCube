@@ -1882,10 +1882,11 @@ void Window_GetClipboardText(String* value) {
 	PasteboardItemID itemID;
 	CFDataRef outData;
 	const UInt8* ptr;
+	CFIndex len;
 	OSStatus err;
 	
 	pbRef = Window_GetPasteboard();
-	
+
 	err = PasteboardGetItemCount(pbRef, &itemCount);
 	if (err) ErrorHandler_Fail2(err, "Getting item count from Pasteboard");
 	if (itemCount < 1) return;
@@ -1893,14 +1894,14 @@ void Window_GetClipboardText(String* value) {
 	err = PasteboardGetItemIdentifier(pbRef, 1, &itemID);
 	if (err) ErrorHandler_Fail2(err, "Getting item identifier from Pasteboard");
 	
-	if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF16, &outData))) {
+	if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF16, &outData))) {	
 		ptr = CFDataGetBytePtr(outData);
-		if (!ptr) ErrorHandler_Fail("CFDataGetBytePtr() returned null pointer");
-		return Marshal.PtrToStringUni(ptr);
+		len = CFDataGetLength(outData);
+		if (ptr) Window_DecodeUtf16(value, (Codepoint*)ptr, len);
 	} else if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF8, &outData))) {
 		ptr = CFDataGetBytePtr(outData);
-		if (!ptr) ErrorHandler_Fail("CFDataGetBytePtr() returned null pointer");
-		return GetUTF8(ptr);
+		len = CFDataGetLength(outData);
+		if (ptr) Window_DecodeUtf8(value, (uint8_t*)ptr, len);
 	}
 }
 
