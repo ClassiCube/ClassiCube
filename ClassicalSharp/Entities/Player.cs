@@ -134,9 +134,9 @@ namespace ClassicalSharp.Entities {
 			EnsurePow2(ref bmp);			
 			SkinType = Utils.GetSkinType(bmp);
 			
-			if (SkinType == SkinType.Invalid) {
-				SetSkinAll(true);
-			} else {
+			if (bmp.Width > game.Graphics.MaxTexWidth || bmp.Height > game.Graphics.MaxTexHeight) {
+				game.Chat.Add("&cSkin " + SkinName + " is too large");
+			} else if (SkinType != SkinType.Invalid) {
 				if (Model.UsesHumanSkin) ClearHat(bmp, SkinType);
 				TextureId = game.Graphics.CreateTexture(bmp, true, false);
 				SetSkinAll(false);

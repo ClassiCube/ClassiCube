@@ -715,7 +715,7 @@ static void Player_CheckSkin(struct Player* p) {
 		}
 		p->FetchedSkin = true;
 	}
-	
+
 	if (!AsyncDownloader_Get(&skin, &item)) return;
 	if (!item.ResultData) { Player_SetSkinAll(p, true); return; }
 	Stream_ReadonlyMemory(&mem, item.ResultData, item.ResultSize);
@@ -731,12 +731,10 @@ static void Player_CheckSkin(struct Player* p) {
 	Player_EnsurePow2(p, &bmp);
 	e->SkinType = Utils_GetSkinType(&bmp);
 
-	if (e->SkinType == SKIN_INVALID) {
-		Player_SetSkinAll(p, true);
-	} else {
-		if (e->Model->UsesHumanSkin) {
-			Player_ClearHat(&bmp, e->SkinType);
-		}
+	if (bmp.Width > Gfx_MaxTexWidth || bmp.Height > Gfx_MaxTexHeight) {
+		Chat_Add1("&cSkin %s is too large", &skin);
+	} else if (e->SkinType != SKIN_INVALID) {
+		if (e->Model->UsesHumanSkin) Player_ClearHat(&bmp, e->SkinType);
 		e->TextureId = Gfx_CreateTexture(&bmp, true, false);
 		Player_SetSkinAll(p, false);
 	}
