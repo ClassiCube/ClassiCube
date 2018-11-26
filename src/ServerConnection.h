@@ -66,9 +66,6 @@ bool ServerConnection_SupportsFullCP437;
 
 void ServerConnection_RetrieveTexturePack(const String* url);
 void ServerConnection_DownloadTexturePack(const String* url);
-void ServerConnection_InitSingleplayer(void);
-void ServerConnection_InitMultiplayer(void);
-void ServerConnection_MakeComponent(struct IGameComponent* comp);
 
 typedef void (*Net_Handler)(uint8_t* data);
 uint16_t Net_PacketSizes[OPCODE_COUNT];

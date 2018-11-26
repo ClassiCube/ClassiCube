@@ -10,8 +10,8 @@
 */
 struct Entity;
 struct AABB;
-struct Model;
-struct ModelTex;
+struct IGameComponent;
+extern struct IGameComponent Models_Component;
 
 #define MODEL_QUAD_VERTICES 4
 #define MODEL_BOX_VERTICES (FACE_COUNT * MODEL_QUAD_VERTICES)
@@ -30,6 +30,7 @@ struct ModelTex;
 /* Contains information about a texture used for models. */
 struct ModelTex { const char* Name; uint8_t SkinType; GfxResourceID TexID; struct ModelTex* Next; };
 
+struct Model;
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
 the bounding boxes that contain the entire set of quads and/or boxes. */
 struct Model {
@@ -105,8 +106,8 @@ GfxResourceID Model_Vb;
 VertexP3fT2fC4b Model_Vertices[MODEL_MAX_VERTICES];
 struct Model* Human_ModelPtr;
 
-void ModelCache_Init(void);
-void ModelCache_Free(void);
+void Models_Init(void);
+void Models_Free(void);
 /* Returns pointer to model whose name caselessly matches given name. */
 CC_EXPORT struct Model* Model_Get(const String* name);
 /* Returns index of cached texture whose name caselessly matches given name. */

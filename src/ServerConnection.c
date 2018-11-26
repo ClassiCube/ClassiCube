@@ -8,6 +8,7 @@
 #include "AsyncDownloader.h"
 #include "Funcs.h"
 #include "Entity.h"
+#include "Graphics.h"
 #include "Gui.h"
 #include "Screens.h"
 #include "Formats.h"
@@ -220,7 +221,7 @@ static void SPConnection_Tick(struct ScheduledTask* task) {
 	server_ticks++;
 }
 
-void ServerConnection_InitSingleplayer(void) {
+static void SPConnection_Init(void) {
 	ServerConnection_ResetState();
 	Physics_Init();
 	ServerConnection_SupportsFullCP437 = !Game_ClassicMode;
@@ -499,7 +500,7 @@ void Net_SendPacket(void) {
 	}
 }
 
-void ServerConnection_InitMultiplayer(void) {
+static void MPConnection_Init(void) {
 	ServerConnection_ResetState();
 	ServerConnection_IsSinglePlayer = false;
 
@@ -539,6 +540,17 @@ static void MPConnection_Reset(void) {
 	ServerConnection_Free();
 }
 
+static void ServerConnection_Init(void) {
+	if (!Game_IPAddress.length) {
+		SPConnection_Init();
+	} else {
+		MPConnection_Init();
+	}
+
+	ScheduledTask_Add(GAME_NET_TICKS, ServerConnection_Tick);
+	String_AppendConst(&ServerConnection_AppName, PROGRAM_APP_NAME);
+}
+
 static void ServerConnection_Free(void) {
 	if (ServerConnection_IsSinglePlayer) {
 		Physics_Free();
@@ -548,10 +560,11 @@ static void ServerConnection_Free(void) {
 		Socket_Close(net_socket);
 		ServerConnection_Disconnected = true;
 	}
+	Gfx_LostContextFunction = ServerConnection_Tick;
 }
 
 struct IGameComponent ServerConnection_Component = {
-	NULL,                  /* Init  */
+	ServerConnection_Init, /* Init  */
 	ServerConnection_Free, /* Free  */
 	MPConnection_Reset,    /* Reset */
 	MPConnection_OnNewMap  /* OnNewMap */

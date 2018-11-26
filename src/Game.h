@@ -82,6 +82,7 @@ void Game_SetViewDistance(int distance);
 void Game_UserSetViewDistance(int distance);
 void Game_UpdateProjection(void);
 void Game_Disconnect(const String* title, const String* reason);
+void Game_Reset(void);
 void Game_UpdateBlock(int x, int y, int z, BlockID block);
 bool Game_CanPick(BlockID block);
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, uint8_t* skinType);

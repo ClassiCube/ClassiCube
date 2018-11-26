@@ -12,7 +12,7 @@ struct Model;
 struct IGameComponent;
 struct ScheduledTask;
 extern struct IGameComponent TabList_Component;
-extern struct IGameComponent LocalPlayer_Component;
+extern struct IGameComponent Entities_Component;
 
 /* Offset used to avoid floating point roundoff errors. */
 #define ENTITY_ADJUSTMENT 0.001f
@@ -110,8 +110,6 @@ void Entities_Tick(struct ScheduledTask* task);
 void Entities_RenderModels(double delta, float t);
 void Entities_RenderNames(double delta);
 void Entities_RenderHoveredNames(double delta);
-void Entities_Init(void);
-void Entities_Free(void);
 void Entities_Remove(EntityID id);
 EntityID Entities_GetCloset(struct Entity* src);
 void Entities_DrawShadows(void);

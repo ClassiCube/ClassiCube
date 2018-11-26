@@ -61,14 +61,7 @@ void Map_LoadFrom(const String* path) {
 
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
-
-	if (World_TextureUrl.length) {
-		TexturePack_ExtractDefault();
-		World_TextureUrl.length = 0;
-	}
-
-	Block_Reset();
-	Inventory_SetDefaultMapping();
+	Game_Reset();
 	
 	res = Stream_OpenFile(&stream, path);
 	if (res) { Chat_LogError2(res, "opening", path); return; }

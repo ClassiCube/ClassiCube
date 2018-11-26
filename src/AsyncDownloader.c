@@ -295,6 +295,7 @@ static void AsyncDownloader_WorkerFunc(void) {
 *------------------------------------------------AsyncDownloader component------------------------------------------------*
 *#########################################################################################################################*/
 static void AsyncDownloader_Init(void) {
+	ScheduledTask_Add(30, AsyncDownloader_PurgeOldEntriesTask);
 	AsyncRequestList_Init(&async_pending);
 	AsyncRequestList_Init(&async_processed);
 	Http_Init();

@@ -8,6 +8,8 @@
    Also performs automatic rotation of directional blocks.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+struct IGameComponent;
+extern struct IGameComponent Blocks_Component;
 
 typedef enum SoundType_ {
 	SOUND_NONE,  SOUND_WOOD,  SOUND_GRAVEL, SOUND_GRASS, 

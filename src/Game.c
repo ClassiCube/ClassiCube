@@ -160,15 +160,18 @@ void Game_UpdateProjection(void) {
 }
 
 void Game_Disconnect(const String* title, const String* reason) {
-	struct IGameComponent* comp;
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
 	Gui_FreeActive();
 	Gui_SetActive(DisconnectScreen_MakeInstance(title, reason));
+}
 
-	Drawer2D_Init();
-	Block_Reset();
-	TexturePack_ExtractDefault();
+void Game_Reset(void) {
+	struct IGameComponent* comp;
+	if (World_TextureUrl.length) {
+		TexturePack_ExtractDefault();
+		World_TextureUrl.length = 0;
+	}
 
 	for (comp = comps_head; comp; comp = comp->Next) {
 		if (comp->Reset) comp->Reset();
@@ -394,23 +397,14 @@ static void Game_LoadGuiOptions(void) {
 }
 
 static void Game_InitScheduledTasks(void) {
-	#define GAME_DEF_TICKS (1.0 / 20)
-	#define GAME_NET_TICKS (1.0 / 60)
-
-	ScheduledTask_Add(30, AsyncDownloader_PurgeOldEntriesTask);
-	ScheduledTask_Add(GAME_NET_TICKS, ServerConnection_Tick);
 	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
-
-	ScheduledTask_Add(GAME_DEF_TICKS, Particles_Tick);
 	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
 }
 
 void Game_Free(void* obj);
 void Game_Load(void) {
-	String renderType; char renderTypeBuffer[STRING_SIZE];
 	String title;      char titleBuffer[STRING_SIZE];
 	struct IGameComponent* comp;
-	int flags;
 
 	Game_ViewDistance     = 512;
 	Game_MaxViewDistance  = 32768;
@@ -421,21 +415,11 @@ void Game_Load(void) {
 	Gfx_Init();
 	Gfx_SetVSync(true);
 	Gfx_MakeApiInfo();
+	Gfx_Mipmaps = Options_GetBool(OPT_MIPMAPS, false);
 
-	Drawer2D_Init();
 	Game_UpdateClientSize();
-
-	Entities_Init();
-	TextureCache_Init();
-	/* TODO: Survival vs Creative game mode */
-
-	InputHandler_Init();
-	Game_AddComponent(&Particles_Component);
-	Game_AddComponent(&TabList_Component);
-
 	Game_LoadOptions();
 	Game_LoadGuiOptions();
-	Game_AddComponent(&Chat_Component);
 
 	Event_RegisterVoid(&WorldEvents_NewMap,         NULL, Game_OnNewMapCore);
 	Event_RegisterVoid(&WorldEvents_MapLoaded,      NULL, Game_OnNewMapLoadedCore);
@@ -445,47 +429,29 @@ void Game_Load(void) {
 	Event_RegisterVoid(&WindowEvents_Resized,       NULL, Game_OnResize);
 	Event_RegisterVoid(&WindowEvents_Closed,        NULL, Game_Free);
 
-#ifdef EXTENDED_BLOCKS
-	Block_SetUsedCount(256);
-#endif
-	Block_Init();
-	ModelCache_Init();
+	TextureCache_Init();
+	/* TODO: Survival vs Creative game mode */
 
+	InputHandler_Init();
+	Game_AddComponent(&Blocks_Component);
+	Game_AddComponent(&Drawer2D_Component);
+
+	Game_AddComponent(&Particles_Component);
+	Game_AddComponent(&TabList_Component);
+	Game_AddComponent(&Chat_Component);
+
+	Game_AddComponent(&Models_Component);
+	Game_AddComponent(&Entities_Component);
 	Game_AddComponent(&AsyncDownloader_Component);
 	Game_AddComponent(&Lighting_Component);
 
-	Drawer2D_BitmappedText = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
-	Drawer2D_BlackTextShadows = Options_GetBool(OPT_BLACK_TEXT, false);
-	Gfx_Mipmaps               = Options_GetBool(OPT_MIPMAPS, false);
-
 	Game_AddComponent(&Animations_Component);
 	Game_AddComponent(&Inventory_Component);
-	Block_SetDefaultPerms();
 	Env_Reset();
 
-	LocalPlayer_Init(); 
-	Game_AddComponent(&LocalPlayer_Component);
-	Entities_List[ENTITIES_SELF_ID] = &LocalPlayer_Instance.Base;
-
-	MapRenderer_Init();
+	Game_AddComponent(&MapRenderer_Component);
 	Game_AddComponent(&EnvRenderer_Component);
-	String_InitArray(renderType, renderTypeBuffer);
-	Options_Get(OPT_RENDER_TYPE, &renderType, "normal");
-
-	flags = Game_CalcRenderType(&renderType);
-	if (flags == -1) flags = 0;
-	EnvRenderer_Legacy  = (flags & 1);
-	EnvRenderer_Minimal = (flags & 2);
-
-	if (!Game_IPAddress.length) {
-		ServerConnection_InitSingleplayer();
-	} else {
-		ServerConnection_InitMultiplayer();
-	}
 	Game_AddComponent(&ServerConnection_Component);
-	String_AppendConst(&ServerConnection_AppName, PROGRAM_APP_NAME);
-
-	Gfx_LostContextFunction = ServerConnection_Tick;
 	Camera_Init();
 	Game_UpdateProjection();
 
@@ -711,12 +677,8 @@ static void Game_RenderFrame(double delta) {
 
 void Game_Free(void* obj) {
 	struct IGameComponent* comp;
-
-	MapRenderer_Free();
 	Atlas2D_Free();
 	Atlas1D_Free();
-	ModelCache_Free();
-	Entities_Free();
 
 	Event_UnregisterVoid(&WorldEvents_NewMap,         NULL, Game_OnNewMapCore);
 	Event_UnregisterVoid(&WorldEvents_MapLoaded,      NULL, Game_OnNewMapLoadedCore);
@@ -729,8 +691,6 @@ void Game_Free(void* obj) {
 	for (comp = comps_head; comp; comp = comp->Next) {
 		if (comp->Free) comp->Free();
 	}
-
-	Drawer2D_Free();
 	Gfx_Free();
 
 	if (!Options_HasAnyChanged()) return;

@@ -7,6 +7,8 @@
    Also sorts chunks so nearest chunks are rendered first, and calculates chunk visibility.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+struct IGameComponent;
+extern struct IGameComponent MapRenderer_Component;
 
 int MapRenderer_ChunksX, MapRenderer_ChunksY, MapRenderer_ChunksZ;
 #define MapRenderer_Pack(cx, cy, cz) (((cz) * MapRenderer_ChunksY + (cy)) * MapRenderer_ChunksX + (cx))
@@ -88,8 +90,5 @@ void MapRenderer_BuildChunk(struct ChunkInfo* info, int* chunkUpdates);
 void MapRenderer_RefreshBorders(int maxHeight);
 /* Deletes all chunks and resets internal state. */
 void MapRenderer_Refresh(void);
-
-void MapRenderer_Init(void);
-void MapRenderer_Free(void);
 void MapRenderer_ApplyMeshBuilder(void);
 #endif

@@ -370,7 +370,7 @@ void BoxDesc_ZQuad(struct Model* m, int texX, int texY, int texWidth, int texHei
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------ModelCache------------------------------------------------------*
+*--------------------------------------------------------Models common----------------------------------------------------*
 *#########################################################################################################################*/
 static struct Model* models_head;
 static struct ModelTex* textures_head;
@@ -385,21 +385,21 @@ static struct ModelTex* textures_head;
 #define BoxDesc_Rot(x, y, z)              x/16.0f,y/16.0f,z/16.0f
 #define BoxDesc_Box(x1,y1,z1,x2,y2,z2)    BoxDesc_Dims(x1,y1,z1,x2,y2,z2), BoxDesc_Bounds(x1,y1,z1,x2,y2,z2)
 
-static void ModelCache_ContextLost(void* obj) {
+static void Models_ContextLost(void* obj) {
 	Gfx_DeleteVb(&Model_Vb);
 }
 
-static void ModelCache_ContextRecreated(void* obj) {
+static void Models_ContextRecreated(void* obj) {
 	Model_Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, MODEL_MAX_VERTICES);
 }
 
-static void ModelCache_InitModel(struct Model* model) {
+static void Model_Make(struct Model* model) {
 	struct Model* active = Model_ActiveModel;
 	Model_ActiveModel = model;
 	model->CreateParts();
 
 	model->initalised = true;
-	model->index = 0;
+	model->index      = 0;
 	Model_ActiveModel = active;
 }
 
@@ -409,7 +409,7 @@ struct Model* Model_Get(const String* name) {
 	for (model = models_head; model; model = model->Next) {
 		if (!String_CaselessEqualsConst(name, model->Name)) continue;
 
-		if (!model->initalised) ModelCache_InitModel(model);
+		if (!model->initalised) Model_Make(model);
 		return model;
 	}
 	return NULL;
@@ -434,7 +434,7 @@ void Model_RegisterTexture(struct ModelTex* tex) {
 	textures_head = tex;
 }
 
-static void ModelCache_TextureChanged(void* obj, struct Stream* stream, const String* name) {
+static void Models_TextureChanged(void* obj, struct Stream* stream, const String* name) {
 	struct ModelTex* tex;
 
 	for (tex = textures_head; tex; tex = tex->Next) {
@@ -1638,9 +1638,9 @@ static struct Model* BlockModel_GetInstance(void) {
 
 
 /*########################################################################################################################*
-*---------------------------------------------------------ModelCache------------------------------------------------------*
+*-------------------------------------------------------Model component---------------------------------------------------*
 *#########################################################################################################################*/
-static void ModelCache_RegisterDefaultModels(void) {
+static void Model_RegisterDefaultModels(void) {
 	Model_RegisterTexture(&human_tex);
 	Model_RegisterTexture(&chicken_tex);
 	Model_RegisterTexture(&creeper_tex);
@@ -1652,7 +1652,7 @@ static void ModelCache_RegisterDefaultModels(void) {
 	Model_RegisterTexture(&zombie_tex);
 
 	Model_Register(HumanoidModel_GetInstance());
-	ModelCache_InitModel(&human_model);
+	Model_Make(&human_model);
 	Human_ModelPtr = &human_model;
 
 	Model_Register(ChickenModel_GetInstance());
@@ -1671,24 +1671,29 @@ static void ModelCache_RegisterDefaultModels(void) {
 	Model_Register(CorpseModel_GetInstance());
 }
 
-void ModelCache_Init(void) {
-	ModelCache_RegisterDefaultModels();
-	ModelCache_ContextRecreated(NULL);
+void Models_Init(void) {
+	Model_RegisterDefaultModels();
+	Models_ContextRecreated(NULL);
 
-	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, ModelCache_TextureChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, ModelCache_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, ModelCache_ContextRecreated);
+	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Models_TextureChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, Models_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, Models_ContextRecreated);
 }
 
-void ModelCache_Free(void) {
+void Models_Free(void) {
 	struct ModelTex* tex;
 
 	for (tex = textures_head; tex; tex = tex->Next) {
 		Gfx_DeleteTexture(&tex->TexID);
 	}
-	ModelCache_ContextLost(NULL);
+	Models_ContextLost(NULL);
 
-	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, ModelCache_TextureChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, ModelCache_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, ModelCache_ContextRecreated);
+	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Models_TextureChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, Models_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, Models_ContextRecreated);
 }
+
+struct IGameComponent Models_Component = {
+	Models_Init, /* Init  */
+	Models_Free, /* Free  */
+};

@@ -9,6 +9,8 @@
 
 struct DrawTextArgs { String Text; FontDesc Font; bool UseShadow; };
 struct Texture;
+struct IGameComponent;
+extern struct IGameComponent Drawer2D_Component;
 
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, const FontDesc* font, bool useShadow);
 void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, const FontDesc* font, bool useShadow);
@@ -22,9 +24,6 @@ bool Drawer2D_BlackTextShadows;
 BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 #define DRAWER2D_OFFSET 1
 #define Drawer2D_GetCol(c) Drawer2D_Cols[(uint8_t)c]
-
-void Drawer2D_Init(void);
-void Drawer2D_Free(void);
 
 /* Draws a 2D flat rectangle. */
 void Drawer2D_Rect(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height);

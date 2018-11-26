@@ -891,6 +891,16 @@ static void EnvRenderer_EnvVariableChanged(void* obj, int envVar) {
 *--------------------------------------------------EnvRenderer component--------------------------------------------------*
 *#########################################################################################################################*/
 static void EnvRenderer_Init(void) {
+	String renderType; char renderTypeBuffer[STRING_SIZE];
+	int flags;
+	String_InitArray(renderType, renderTypeBuffer);
+	Options_Get(OPT_RENDER_TYPE, &renderType, "normal");
+
+	flags = Game_CalcRenderType(&renderType);
+	if (flags == -1) flags = 0;
+	EnvRenderer_Legacy  = (flags & 1);
+	EnvRenderer_Minimal = (flags & 2);
+
 	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, EnvRenderer_FileChanged);
 	Event_RegisterVoid(&TextureEvents_PackChanged,  NULL, EnvRenderer_TexturePackChanged);
 	Event_RegisterVoid(&TextureEvents_AtlasChanged, NULL, EnvRenderer_TerrainAtlasChanged);
@@ -926,21 +936,14 @@ static void EnvRenderer_Free(void) {
 static void EnvRenderer_Reset(void) {
 	Gfx_SetFog(false);
 	EnvRenderer_DeleteVbs();
+
 	Mem_Free(Weather_Heightmap);
 	Weather_Heightmap = NULL;
-	weather_lastPos = Vector3I_MaxValue();
+	weather_lastPos   = Vector3I_MaxValue();
 }
 
 static void EnvRenderer_OnNewMapLoaded(void) {
 	EnvRenderer_ContextRecreated(NULL);
-}
-
-void EnvRenderer_MakeComponent(struct IGameComponent* comp) {
-	comp->Init     = EnvRenderer_Init;
-	comp->Reset    = EnvRenderer_Reset;
-	comp->OnNewMap = EnvRenderer_Reset;
-	comp->OnNewMapLoaded = EnvRenderer_OnNewMapLoaded;
-	comp->Free     = EnvRenderer_Free;
 }
 
 struct IGameComponent EnvRenderer_Component = {

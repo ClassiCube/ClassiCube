@@ -320,36 +320,6 @@ static void Entities_ChatFontChanged(void* obj) {
 	}
 }
 
-void Entities_Init(void) {
-	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, Entities_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, Entities_ContextRecreated);
-	Event_RegisterVoid(&ChatEvents_FontChanged,     NULL, Entities_ChatFontChanged);
-
-	Entities_NameMode = Options_GetEnum(OPT_NAMES_MODE, NAME_MODE_HOVERED,
-		NameMode_Names, Array_Elems(NameMode_Names));
-	if (Game_ClassicMode) Entities_NameMode = NAME_MODE_HOVERED;
-
-	Entities_ShadowMode = Options_GetEnum(OPT_ENTITY_SHADOW, SHADOW_MODE_NONE,
-		ShadowMode_Names, Array_Elems(ShadowMode_Names));
-	if (Game_ClassicMode) Entities_ShadowMode = SHADOW_MODE_NONE;
-}
-
-void Entities_Free(void) {
-	int i;
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities_List[i]) continue;
-		Entities_Remove((EntityID)i);
-	}
-
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, Entities_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, Entities_ContextRecreated);
-	Event_UnregisterVoid(&ChatEvents_FontChanged,     NULL, Entities_ChatFontChanged);
-
-	if (ShadowComponent_ShadowTex) {
-		Gfx_DeleteTexture(&ShadowComponent_ShadowTex);
-	}
-}
-
 void Entities_Remove(EntityID id) {
 	Event_RaiseInt(&EntityEvents_Removed, id);
 	Entities_List[id]->VTABLE->Despawn(Entities_List[id]);
@@ -888,9 +858,26 @@ static void LocalPlayer_RenderName(struct Entity* e) {
 	Player_DrawName((struct Player*)e);
 }
 
-static void LocalPlayer_Init_(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
+struct EntityVTABLE localPlayer_VTABLE = {
+	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetCol,
+	LocalPlayer_RenderModel, LocalPlayer_RenderName, Player_ContextLost,      Player_ContextRecreated,
+};
+static void LocalPlayer_Init(void) {
+	struct LocalPlayer* p   = &LocalPlayer_Instance;
 	struct HacksComp* hacks = &p->Hacks;
+
+	Player_Init(&p->Base);
+	Player_SetName((struct Player*)p, &Game_Username, &Game_Username);
+
+	p->Collisions.Entity = &p->Base;
+	HacksComp_Init(hacks);
+	PhysicsComp_Init(&p->Physics, &p->Base);
+	TiltComp_Init(&p->Tilt);
+
+	p->ReachDistance = 5.0f;
+	p->Physics.Hacks = &p->Hacks;
+	p->Physics.Collisions = &p->Collisions;
+	p->Base.VTABLE   = &localPlayer_VTABLE;
 
 	hacks->Enabled = !Game_PureClassic && Options_GetBool(OPT_HACKS_ENABLED, true);
 	/* p->Base.Health = 20; TODO: survival mode stuff */
@@ -922,33 +909,6 @@ static void LocalPlayer_OnNewMap(void) {
 	p->_WarnedRespawn = false;
 	p->_WarnedFly     = false;
 	p->_WarnedNoclip  = false;
-}
-
-struct IGameComponent LocalPlayer_Component = {
-	LocalPlayer_Init_, /* Init  */
-	NULL,              /* Free  */
-	LocalPlayer_Reset, /* Reset */
-	LocalPlayer_OnNewMap, /* OnNewMap */
-};
-
-struct EntityVTABLE localPlayer_VTABLE = {
-	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetCol,
-	LocalPlayer_RenderModel, LocalPlayer_RenderName, Player_ContextLost,      Player_ContextRecreated,
-};
-void LocalPlayer_Init(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	Player_Init(&p->Base);
-	Player_SetName((struct Player*)p, &Game_Username, &Game_Username);
-
-	p->Collisions.Entity = &p->Base;
-	HacksComp_Init(&p->Hacks);
-	PhysicsComp_Init(&p->Physics, &p->Base);
-	TiltComp_Init(&p->Tilt);
-
-	p->ReachDistance = 5.0f;
-	p->Physics.Hacks = &p->Hacks;
-	p->Physics.Collisions = &p->Collisions;
-	p->Base.VTABLE   = &localPlayer_VTABLE;
 }
 
 static bool LocalPlayer_IsSolidCollide(BlockID b) { return Block_Collide[b] == COLLIDE_SOLID; }
@@ -1117,3 +1077,48 @@ void NetPlayer_Init(struct NetPlayer* p, const String* displayName, const String
 	Player_SetName((struct Player*)p, displayName, skinName);
 	p->Base.VTABLE = &netPlayer_VTABLE;
 }
+
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Entities---------------------------------------------------------*
+*#########################################################################################################################*/
+static void Entities_Init(void) {
+	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, Entities_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, Entities_ContextRecreated);
+	Event_RegisterVoid(&ChatEvents_FontChanged,     NULL, Entities_ChatFontChanged);
+
+	Entities_NameMode = Options_GetEnum(OPT_NAMES_MODE, NAME_MODE_HOVERED,
+		NameMode_Names, Array_Elems(NameMode_Names));
+	if (Game_ClassicMode) Entities_NameMode = NAME_MODE_HOVERED;
+
+	Entities_ShadowMode = Options_GetEnum(OPT_ENTITY_SHADOW, SHADOW_MODE_NONE,
+		ShadowMode_Names, Array_Elems(ShadowMode_Names));
+	if (Game_ClassicMode) Entities_ShadowMode = SHADOW_MODE_NONE;
+
+	Entities_List[ENTITIES_SELF_ID] = &LocalPlayer_Instance.Base;
+	LocalPlayer_Init();
+}
+
+static void Entities_Free(void) {
+	int i;
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
+		if (!Entities_List[i]) continue;
+		Entities_Remove((EntityID)i);
+	}
+
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, Entities_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, Entities_ContextRecreated);
+	Event_UnregisterVoid(&ChatEvents_FontChanged,     NULL, Entities_ChatFontChanged);
+
+	if (ShadowComponent_ShadowTex) {
+		Gfx_DeleteTexture(&ShadowComponent_ShadowTex);
+	}
+}
+
+struct IGameComponent Entities_Component = {
+	Entities_Init,  /* Init  */
+	Entities_Free,  /* Free  */
+	LocalPlayer_Reset,    /* Reset */
+	LocalPlayer_OnNewMap, /* OnNewMap */
+};

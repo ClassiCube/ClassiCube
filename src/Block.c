@@ -8,6 +8,7 @@
 #include "Event.h"
 #include "Platform.h"
 #include "Bitmap.h"
+#include "GameStructs.h"
 
 const char* Sound_Names[SOUND_COUNT] = {
 	"none", "wood", "gravel", "grass", "stone",
@@ -147,38 +148,6 @@ void Block_SetUsedCount(int count) {
 	Block_IDMask    = Math_NextPowOf2(count) - 1;
 }
 #endif
-
-void Block_Reset(void) {
-	Block_Init();
-	Block_RecalculateAllSpriteBB();
-}
-
-void Block_Init(void) {
-	int i, block;
-	for (i = 0; i < Array_Elems(Block_DefinedCustomBlocks); i++) {
-		Block_DefinedCustomBlocks[i] = 0;
-	}
-
-	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
-		Block_ResetProps((BlockID)block);
-	}
-	Block_UpdateAllCulling();
-}
-
-void Block_SetDefaultPerms(void) {
-	int block;
-	for (block = BLOCK_AIR; block <= BLOCK_MAX_DEFINED; block++) {
-		Block_CanPlace[block]  = true;
-		Block_CanDelete[block] = true;
-	}
-
-	Block_CanPlace[BLOCK_AIR] = false;         Block_CanDelete[BLOCK_AIR] = false;
-	Block_CanPlace[BLOCK_LAVA] = false;        Block_CanDelete[BLOCK_LAVA] = false;
-	Block_CanPlace[BLOCK_WATER] = false;       Block_CanDelete[BLOCK_WATER] = false;
-	Block_CanPlace[BLOCK_STILL_LAVA] = false;  Block_CanDelete[BLOCK_STILL_LAVA] = false;
-	Block_CanPlace[BLOCK_STILL_WATER] = false; Block_CanDelete[BLOCK_STILL_WATER] = false;
-	Block_CanPlace[BLOCK_BEDROCK] = false;     Block_CanDelete[BLOCK_BEDROCK] = false;
-}
 
 bool Block_IsCustomDefined(BlockID block) {
 	return (Block_DefinedCustomBlocks[block >> 5] & (1u << (block & 0x1F))) != 0;
@@ -666,3 +635,46 @@ BlockID AutoRotate_RotateBlock(BlockID block) {
 	}
 	return block;
 }
+
+
+/*########################################################################################################################*
+*----------------------------------------------------Blocks component-----------------------------------------------------*
+*#########################################################################################################################*/
+static void Blocks_Reset(void) {
+	int i, block;
+	for (i = 0; i < Array_Elems(Block_DefinedCustomBlocks); i++) {
+		Block_DefinedCustomBlocks[i] = 0;
+	}
+
+	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
+		Block_ResetProps((BlockID)block);
+	}
+	Block_UpdateAllCulling();
+
+#ifdef EXTENDED_BLOCKS
+	Block_SetUsedCount(256);
+#endif
+	Block_RecalculateAllSpriteBB();
+}
+
+static void Blocks_Init(void) {
+	int block;
+	for (block = BLOCK_AIR; block <= BLOCK_MAX_DEFINED; block++) {
+		Block_CanPlace[block]  = true;
+		Block_CanDelete[block] = true;
+	}
+	Blocks_Reset();
+
+	Block_CanPlace[BLOCK_AIR] = false;         Block_CanDelete[BLOCK_AIR] = false;
+	Block_CanPlace[BLOCK_LAVA] = false;        Block_CanDelete[BLOCK_LAVA] = false;
+	Block_CanPlace[BLOCK_WATER] = false;       Block_CanDelete[BLOCK_WATER] = false;
+	Block_CanPlace[BLOCK_STILL_LAVA] = false;  Block_CanDelete[BLOCK_STILL_LAVA] = false;
+	Block_CanPlace[BLOCK_STILL_WATER] = false; Block_CanDelete[BLOCK_STILL_WATER] = false;
+	Block_CanPlace[BLOCK_BEDROCK] = false;     Block_CanDelete[BLOCK_BEDROCK] = false;
+}
+
+struct IGameComponent Blocks_Component = {
+	Blocks_Init,  /* Init  */
+	NULL,         /* Free  */
+	Blocks_Reset, /* Reset */
+};

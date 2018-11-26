@@ -78,32 +78,6 @@ void Drawer2D_SetFontBitmap(Bitmap* bmp) {
 }
 
 
-static void Drawer2D_HexEncodedCol(int i, int hex, uint8_t lo, uint8_t hi) {
-	Drawer2D_Cols[i].R = (uint8_t)(lo * ((hex >> 2) & 1) + hi * (hex >> 3));
-	Drawer2D_Cols[i].G = (uint8_t)(lo * ((hex >> 1) & 1) + hi * (hex >> 3));
-	Drawer2D_Cols[i].B = (uint8_t)(lo * ((hex >> 0) & 1) + hi * (hex >> 3));
-	Drawer2D_Cols[i].A = 255;
-}
-
-void Drawer2D_Init(void) {
-	BitmapCol col = BITMAPCOL_CONST(0, 0, 0, 0);
-	int i;
-	
-	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
-		Drawer2D_Cols[i] = col;
-	}
-
-	for (i = 0; i <= 9; i++) {
-		Drawer2D_HexEncodedCol('0' + i, i, 191, 64);
-	}
-	for (i = 10; i <= 15; i++) {
-		Drawer2D_HexEncodedCol('a' + (i - 10), i, 191, 64);
-		Drawer2D_HexEncodedCol('a' + (i - 10), i, 191, 64);
-	}
-}
-
-void Drawer2D_Free(void) { Drawer2D_FreeFontBitmap(); }
-
 /* Draws a 2D flat rectangle. */
 void Drawer2D_Rect(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height);
 
@@ -433,3 +407,45 @@ Size2D Drawer2D_MeasureText(struct DrawTextArgs* args) {
 	args->Text = value;
 	return size;
 }
+
+
+/*########################################################################################################################*
+*---------------------------------------------------Drawer2D component----------------------------------------------------*
+*#########################################################################################################################*/
+static void Drawer2D_HexEncodedCol(int i, int hex, uint8_t lo, uint8_t hi) {
+	Drawer2D_Cols[i].R = (uint8_t)(lo * ((hex >> 2) & 1) + hi * (hex >> 3));
+	Drawer2D_Cols[i].G = (uint8_t)(lo * ((hex >> 1) & 1) + hi * (hex >> 3));
+	Drawer2D_Cols[i].B = (uint8_t)(lo * ((hex >> 0) & 1) + hi * (hex >> 3));
+	Drawer2D_Cols[i].A = 255;
+}
+
+static void Drawer2D_Reset(void) {
+	BitmapCol col = BITMAPCOL_CONST(0, 0, 0, 0);
+	int i;
+	
+	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
+		Drawer2D_Cols[i] = col;
+	}
+
+	for (i = 0; i <= 9; i++) {
+		Drawer2D_HexEncodedCol('0' + i, i, 191, 64);
+	}
+	for (i = 10; i <= 15; i++) {
+		Drawer2D_HexEncodedCol('a' + (i - 10), i, 191, 64);
+		Drawer2D_HexEncodedCol('a' + (i - 10), i, 191, 64);
+	}
+}
+
+static void Drawer2D_Init(void) {
+	Drawer2D_Reset();
+	Drawer2D_BitmappedText    = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
+	Drawer2D_BlackTextShadows = Options_GetBool(OPT_BLACK_TEXT, false);
+}
+
+static void Drawer2D_Free(void) { Drawer2D_FreeFontBitmap(); }
+
+struct IGameComponent Drawer2D_Component = {
+	Drawer2D_Init,  /* Init  */
+	Drawer2D_Free,  /* Free  */
+	Drawer2D_Reset, /* Reset */
+};
