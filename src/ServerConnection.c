@@ -547,6 +547,7 @@ static void ServerConnection_Init(void) {
 		MPConnection_Init();
 	}
 
+	Gfx_LostContextFunction = ServerConnection_Tick;
 	ScheduledTask_Add(GAME_NET_TICKS, ServerConnection_Tick);
 	String_AppendConst(&ServerConnection_AppName, PROGRAM_APP_NAME);
 }
@@ -560,7 +561,6 @@ static void ServerConnection_Free(void) {
 		Socket_Close(net_socket);
 		ServerConnection_Disconnected = true;
 	}
-	Gfx_LostContextFunction = ServerConnection_Tick;
 }
 
 struct IGameComponent ServerConnection_Component = {
