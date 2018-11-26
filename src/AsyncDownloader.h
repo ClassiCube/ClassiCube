@@ -35,7 +35,6 @@ struct AsyncRequest {
 
 void ASyncRequest_Free(struct AsyncRequest* request);
 
-void AsyncDownloader_MakeComponent(struct IGameComponent* comp);
 void AsyncDownloader_GetSkin(const String* id, const String* skinName);
 void AsyncDownloader_GetData(const String* url, bool priority, const String* id);
 void AsyncDownloader_GetContentLength(const String* url, bool priority, const String* id);

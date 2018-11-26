@@ -9,8 +9,11 @@
 
 
 /*########################################################################################################################*
-*--------------------------------------------------------Key/Mouse--------------------------------------------------------*
+*-----------------------------------------------------------Key-----------------------------------------------------------*
 *#########################################################################################################################*/
+bool Key_KeyRepeat;
+bool Key_Pressed[KEY_COUNT];
+
 #define Key_Function_Names \
 "F1",  "F2",  "F3",  "F4",  "F5",  "F6",  "F7",  "F8",  "F9",  "F10",\
 "F11", "F12", "F13", "F14", "F15", "F16", "F17", "F18", "F19", "F20",\
@@ -81,6 +84,14 @@ void Key_Clear(void) {
 		if (Key_Pressed[i]) Key_SetPressed((Key)i, false);
 	}
 }
+
+
+/*########################################################################################################################*
+*----------------------------------------------------------Mouse----------------------------------------------------------*
+*#########################################################################################################################*/
+float Mouse_Wheel;
+int Mouse_X, Mouse_Y;
+bool Mouse_Pressed[MOUSE_COUNT];
 
 void Mouse_SetPressed(MouseButton btn, bool pressed) {
 	if (Mouse_Pressed[btn] == pressed) return;
@@ -186,7 +197,7 @@ void KeyBind_Init(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Hotkeys---------------------------------------------------------*
 *#########################################################################################################################*/
-uint8_t Hotkeys_LWJGL[256] = {
+const uint8_t Hotkeys_LWJGL[256] = {
 	0, KEY_ESCAPE, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, KEY_MINUS, KEY_PLUS, KEY_BACKSPACE, KEY_TAB,
 	KEY_Q, KEY_W, KEY_E, KEY_R, KEY_T, KEY_Y, KEY_U, KEY_I, KEY_O, KEY_P, KEY_LBRACKET, KEY_RBRACKET, KEY_ENTER, KEY_LCTRL, KEY_A, KEY_S,
 	KEY_D, KEY_F, KEY_G, KEY_H, KEY_J, KEY_K, KEY_L, KEY_SEMICOLON, KEY_QUOTE, KEY_TILDE, KEY_LSHIFT, KEY_BACKSLASH, KEY_Z, KEY_X, KEY_C, KEY_V,
@@ -204,6 +215,8 @@ uint8_t Hotkeys_LWJGL[256] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
+struct HotkeyData HotkeysList[HOTKEYS_MAX_COUNT];
+StringsBuffer HotkeysText;
 
 static void Hotkeys_QuickSort(int left, int right) {
 	struct HotkeyData* keys = HotkeysList; struct HotkeyData key;

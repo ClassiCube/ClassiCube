@@ -35,6 +35,36 @@
 #include "Stream.h"
 #include "TerrainAtlas.h"
 
+int Game_Width, Game_Height;
+double Game_Accumulator;
+int Game_ChunkUpdates, Game_Port;
+bool Game_CameraClipping, Game_UseCPEBlocks;
+
+struct PickedPos Game_SelectedPos, Game_CameraClipPos;
+int Game_ViewDistance, Game_MaxViewDistance, Game_UserViewDistance;
+int Game_Fov, Game_DefaultFov, Game_ZoomFov;
+
+float game_limitMs;
+int  Game_FpsLimit, Game_Vertices;
+bool Game_ShowAxisLines, Game_SimpleArmsAnim;
+bool Game_ClassicArmModel, Game_InvertMouse;
+
+int  Game_MouseSensitivity, Game_ChatLines;
+bool Game_TabAutocomplete, Game_UseClassicGui;
+bool Game_UseClassicTabList, Game_UseClassicOptions;
+bool Game_ClassicMode, Game_ClassicHacks;
+bool Game_AllowCustomBlocks, Game_UseCPE;
+bool Game_AllowServerTextures, Game_SmoothLighting;
+bool Game_ChatLogging, Game_AutoRotate;
+bool Game_SmoothCamera, Game_ClickableChat;
+bool Game_HideGui, Game_ShowFPS;
+
+bool Game_ViewBobbing, Game_ShowBlockInHand;
+int  Game_SoundsVolume, Game_MusicVolume;
+bool Game_BreakableLiquids, Game_ScreenshotRequested;
+int  Game_MaxChunkUpdates;
+float Game_RawHotbarScale, Game_RawChatScale, Game_RawInventoryScale;
+
 static struct ScheduledTask Game_Tasks[6];
 static int Game_TasksCount, entTaskI;
 

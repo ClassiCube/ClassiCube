@@ -100,8 +100,8 @@ void NetInterpComp_AdvanceState(struct NetInterpComp* interp);
 
 /* Entity component that draws square and circle shadows beneath entities */
 
-bool ShadowComponent_BoundShadowTex;
-GfxResourceID ShadowComponent_ShadowTex;
+extern bool ShadowComponent_BoundShadowTex;
+extern GfxResourceID ShadowComponent_ShadowTex;
 void ShadowComponent_Draw(struct Entity* entity);
 
 /* Entity component that performs collision detection */

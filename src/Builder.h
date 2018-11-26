@@ -10,7 +10,7 @@ Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 struct ChunkInfo;
 
-int Builder_SidesLevel, Builder_EdgeLevel;
+extern int Builder_SidesLevel, Builder_EdgeLevel;
 
 void Builder_Init(void);
 void Builder_OnNewMapLoaded(void);

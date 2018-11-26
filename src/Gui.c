@@ -12,7 +12,13 @@
 #include "Platform.h"
 #include "Bitmap.h"
 
+GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
 struct Screen* Gui_Status;
+struct Screen* Gui_HUD;
+struct Screen* Gui_Active;
+struct Screen* Gui_Overlays[GUI_MAX_OVERLAYS];
+int Gui_OverlaysCount;
+
 void Gui_DefaultRecreate(void* elem) {
 	struct GuiElem* e = elem;
 	Elem_Free(e); Elem_Init(e);

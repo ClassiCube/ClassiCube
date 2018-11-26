@@ -72,14 +72,14 @@ struct Model {
 public CustomModel[] CustomModels = new CustomModel[256];
 #endif
 
-PackedCol Model_Cols[FACE_COUNT];
+extern PackedCol Model_Cols[FACE_COUNT];
 /* U/V scale applied to the skin when rendering the model. */
 /* Default uScale is 1/32, vScale is 1/32 or 1/64 depending on skin. */
-float Model_uScale, Model_vScale;
-/* Angle of offset of head to body rotation */
-float Model_cosHead, Model_sinHead;
-uint8_t Model_Rotation, Model_skinType;
-struct Model* Model_ActiveModel;
+extern float Model_uScale, Model_vScale;
+/* Angle of offset of head from body rotation */
+extern float Model_cosHead, Model_sinHead;
+extern uint8_t Model_Rotation, Model_skinType;
+extern struct Model* Model_ActiveModel;
 void Model_Init(struct Model* model);
 
 #define Model_SetPointers(instance, typeName)\
@@ -102,9 +102,9 @@ void Model_DrawArmPart(struct ModelPart* part);
 
 /* Maximum number of vertices a model can have */
 #define MODEL_MAX_VERTICES (24 * 12)
-GfxResourceID Model_Vb;
-VertexP3fT2fC4b Model_Vertices[MODEL_MAX_VERTICES];
-struct Model* Human_ModelPtr;
+extern GfxResourceID Model_Vb;
+extern VertexP3fT2fC4b Model_Vertices[MODEL_MAX_VERTICES];
+extern struct Model* Human_ModelPtr;
 
 void Models_Init(void);
 void Models_Free(void);

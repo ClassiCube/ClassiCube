@@ -70,8 +70,8 @@ extern const char* FpsLimit_Names[FPS_LIMIT_COUNT];
 #define OPT_CLASSIC_ARM_MODEL "nostalgia-classicarm"
 #define OPT_MAX_CHUNK_UPDATES "gfx-maxchunkupdates"
 
-StringsBuffer Options_Keys;
-StringsBuffer Options_Values;
+extern StringsBuffer Options_Keys;
+extern StringsBuffer Options_Values;
 
 /* Returns whether user has changed any options this session. */
 CC_NOINLINE bool Options_HasAnyChanged(void);

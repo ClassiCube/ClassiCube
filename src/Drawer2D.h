@@ -18,10 +18,11 @@ CC_NOINLINE void Drawer2D_MakeFont(FontDesc* desc, int size, int style);
 
 /* Whether chat text should be drawn and measuring using the currently bitmapped font, 
  false uses the font supplied as the DrawTextArgs argument supplied to the function. */
-bool Drawer2D_BitmappedText;
+extern bool Drawer2D_BitmappedText;
 /* Whether the shadows behind text (that uses shadows) is fully black. */
-bool Drawer2D_BlackTextShadows;
-BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
+extern bool Drawer2D_BlackTextShadows;
+/* List of all colours. (An A of 0 means the colour is not used) */
+extern BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 #define DRAWER2D_OFFSET 1
 #define Drawer2D_GetCol(c) Drawer2D_Cols[(uint8_t)c]
 

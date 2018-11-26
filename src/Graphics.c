@@ -15,6 +15,24 @@
 #define NOMCX
 #define NOIME
 
+int Gfx_MaxTexWidth, Gfx_MaxTexHeight;
+float Gfx_MinZNear;
+bool Gfx_LostContext;
+bool Gfx_Mipmaps, Gfx_CustomMipmapsLevels;
+struct Matrix Gfx_View, Gfx_Projection;
+
+static char Gfx_ApiBuffer[7][STRING_SIZE];
+String Gfx_ApiInfo[7] = {
+	String_FromArray(Gfx_ApiBuffer[0]), String_FromArray(Gfx_ApiBuffer[1]),
+	String_FromArray(Gfx_ApiBuffer[2]), String_FromArray(Gfx_ApiBuffer[3]),
+	String_FromArray(Gfx_ApiBuffer[4]), String_FromArray(Gfx_ApiBuffer[5]),
+	String_FromArray(Gfx_ApiBuffer[6]),
+};
+
+GfxResourceID Gfx_defaultIb;
+GfxResourceID Gfx_quadVb, Gfx_texVb;
+ScheduledTaskCallback Gfx_LostContextFunction;
+
 static int Gfx_strideSizes[2] = { 16, 24 };
 static int gfx_batchStride, gfx_batchFormat = -1;
 
@@ -24,14 +42,6 @@ bool Gfx_GetFog(void) { return gfx_fogEnabled; }
 /*########################################################################################################################*
 *------------------------------------------------------Generic/Common-----------------------------------------------------*
 *#########################################################################################################################*/
-static char Gfx_ApiBuffer[7][STRING_SIZE];
-String Gfx_ApiInfo[7] = {
-	String_FromArray(Gfx_ApiBuffer[0]), String_FromArray(Gfx_ApiBuffer[1]),
-	String_FromArray(Gfx_ApiBuffer[2]), String_FromArray(Gfx_ApiBuffer[3]),
-	String_FromArray(Gfx_ApiBuffer[4]), String_FromArray(Gfx_ApiBuffer[5]),
-	String_FromArray(Gfx_ApiBuffer[6]),
-};
-
 CC_NOINLINE static void Gfx_InitDefaultResources(void) {
 	uint16_t indices[GFX_MAX_INDICES];
 	Gfx_MakeIndices(indices, GFX_MAX_INDICES);
@@ -184,7 +194,7 @@ void Gfx_RestoreAlphaState(uint8_t draw) {
 /* Quoted from http://www.realtimerendering.com/blog/gpus-prefer-premultiplication/
    The short version: if you want your renderer to properly handle textures with alphas when using
    bilinear interpolation or mipmapping, you need to premultiply your PNG color data by their (unassociated) alphas. */
-static BitmapCol GfxCommon_Average(BitmapCol p1, BitmapCol p2) {
+static BitmapCol Gfx_Average(BitmapCol p1, BitmapCol p2) {
 	uint32_t a1, a2, aSum;
 	uint32_t b1, g1, r1;
 	uint32_t b2, g2, r2;
@@ -227,9 +237,9 @@ void Gfx_GenMipmaps(int width, int height, uint8_t* lvlScan0, uint8_t* scan0) {
 			BitmapCol src10 = src1[srcX], src11 = src1[srcX + 1];
 
 			/* bilinear filter this mipmap */
-			BitmapCol ave0 = GfxCommon_Average(src00, src01);
-			BitmapCol ave1 = GfxCommon_Average(src10, src11);
-			dst[x] = GfxCommon_Average(ave0, ave1);
+			BitmapCol ave0 = Gfx_Average(src00, src01);
+			BitmapCol ave1 = Gfx_Average(src10, src11);
+			dst[x] = Gfx_Average(ave0, ave1);
 		}
 	}
 }

@@ -18,6 +18,8 @@
 #include "Camera.h"
 #include "Particle.h"
 
+bool EnvRenderer_Legacy, EnvRenderer_Minimal;
+
 #define ENV_SMALL_VERTICES 4096
 static float EnvRenderer_BlendFactor(float x) {
 	/* return -0.05 + 0.22 * (Math_Log(x) * 0.25f); */
@@ -356,13 +358,14 @@ static void EnvRenderer_UpdateSkybox(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------Weather--------------------------------------------------------*
 *#########################################################################################################################*/
+int16_t* Weather_Heightmap;
 static GfxResourceID rain_tex, snow_tex, weather_vb;
-#define WEATHER_EXTENT 4
-#define WEATHER_VERTS_COUNT 8 * (WEATHER_EXTENT * 2 + 1) * (WEATHER_EXTENT * 2 + 1)
-
-#define Weather_Pack(x, z) ((x) * World_Length + (z))
 static double weather_accumulator;
 static Vector3I weather_lastPos;
+
+#define WEATHER_EXTENT 4
+#define WEATHER_VERTS_COUNT 8 * (WEATHER_EXTENT * 2 + 1) * (WEATHER_EXTENT * 2 + 1)
+#define Weather_Pack(x, z) ((x) * World_Length + (z))
 
 static void EnvRenderer_InitWeatherHeightmap(void) {
 	int i;

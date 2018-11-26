@@ -48,6 +48,7 @@ static BlockRaw* map2_blocks;
 #endif
 
 /* CPE state */
+bool cpe_needD3Fix;
 static int cpe_serverExtensionsCount, cpe_pingTicks;
 static int cpe_envMapVer = 2, cpe_blockDefsExtVer = 2;
 static bool cpe_sendHeldBlock, cpe_useMessageTypes, cpe_extEntityPos, cpe_blockPerms, cpe_fastMap;

@@ -15,12 +15,12 @@
 #endif
 #define ATLAS1D_MAX_ATLASES (ATLAS2D_TILES_PER_ROW * ATLAS2D_MAX_ROWS_COUNT)
 
-Bitmap Atlas2D_Bitmap;
-int Atlas2D_TileSize, Atlas2D_RowsCount;
-int Atlas1D_Count, Atlas1D_TilesPerAtlas;
-int Atlas1D_Mask, Atlas1D_Shift;
-float Atlas1D_InvTileSize;
-GfxResourceID Atlas1D_TexIds[ATLAS1D_MAX_ATLASES];
+extern Bitmap Atlas2D_Bitmap;
+extern int Atlas2D_TileSize, Atlas2D_RowsCount;
+extern int Atlas1D_Count, Atlas1D_TilesPerAtlas;
+extern int Atlas1D_Mask, Atlas1D_Shift;
+extern float Atlas1D_InvTileSize;
+extern GfxResourceID Atlas1D_TexIds[ATLAS1D_MAX_ATLASES];
 
 #define Atlas2D_TileX(texLoc) ((texLoc) &  ATLAS2D_MASK)  /* texLoc % ATLAS2D_TILES_PER_ROW */
 #define Atlas2D_TileY(texLoc) ((texLoc) >> ATLAS2D_SHIFT) /* texLoc / ATLAS2D_TILES_PER_ROW */

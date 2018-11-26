@@ -14,6 +14,11 @@
 #include "Utils.h"
 #include "World.h"
 
+int MapRenderer_ChunksX, MapRenderer_ChunksY, MapRenderer_ChunksZ;
+int MapRenderer_1DUsedCount, MapRenderer_ChunksCount;
+struct ChunkPartInfo* MapRenderer_PartsNormal;
+struct ChunkPartInfo* MapRenderer_PartsTranslucent;
+
 static bool inTranslucent;
 static int elementsPerBitmap;
 static Vector3I chunkPos;

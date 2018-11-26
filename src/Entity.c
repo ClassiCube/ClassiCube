@@ -19,6 +19,8 @@
 #include "Stream.h"
 #include "Bitmap.h"
 
+NameMode Entities_NameMode;
+ShadowMode Entities_ShadowMode;
 const char* NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const char* ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
 
@@ -217,7 +219,9 @@ bool Entity_TouchesAnyWater(struct Entity* e) {
 /*########################################################################################################################*
 *--------------------------------------------------------Entities---------------------------------------------------------*
 *#########################################################################################################################*/
+struct Entity* Entities_List[ENTITIES_MAX_COUNT];
 static EntityID entities_closestId;
+
 void Entities_Tick(struct ScheduledTask* task) {
 	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
@@ -378,6 +382,12 @@ void Entities_DrawShadows(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------TabList----------------------------------------------------------*
 *#########################################################################################################################*/
+StringsBuffer TabList_Buffer;
+uint16_t TabList_PlayerNames[TABLIST_MAX_NAMES];
+uint16_t TabList_ListNames[TABLIST_MAX_NAMES];
+uint16_t TabList_GroupNames[TABLIST_MAX_NAMES];
+uint8_t  TabList_GroupRanks[TABLIST_MAX_NAMES];
+
 bool TabList_Valid(EntityID id) {
 	return TabList_PlayerNames[id] || TabList_ListNames[id] || TabList_GroupNames[id];
 }
@@ -755,6 +765,7 @@ static void Player_Init(struct Entity* e) {
 /*########################################################################################################################*
 *------------------------------------------------------LocalPlayer--------------------------------------------------------*
 *#########################################################################################################################*/
+struct LocalPlayer LocalPlayer_Instance;
 float LocalPlayer_JumpHeight(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	return (float)PhysicsComp_GetMaxHeight(p->Physics.JumpVel);

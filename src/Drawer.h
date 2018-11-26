@@ -7,17 +7,17 @@
 */
 
 /* Whether a colour tinting effect should be applied to all faces. */
-bool Drawer_Tinted;
+extern bool Drawer_Tinted;
 /* The colour to multiply colour of faces by (tinting effect). */
-PackedCol Drawer_TintCol;
+extern PackedCol Drawer_TintCol;
 /* Minimum corner of base block bounding box. (For texture UV) */
-Vector3 Drawer_MinBB;
+extern Vector3 Drawer_MinBB;
 /* Maximum corner of base block bounding box. (For texture UV) */
-Vector3 Drawer_MaxBB;
+extern Vector3 Drawer_MaxBB;
 /* Coordinate of minimum block bounding box corner in the world. */
-float Drawer_X1, Drawer_Y1, Drawer_Z1;
+extern float Drawer_X1, Drawer_Y1, Drawer_Z1;
 /* Coordinate of maximum block bounding box corner in the world. */
-float Drawer_X2, Drawer_Y2, Drawer_Z2;
+extern float Drawer_X2, Drawer_Y2, Drawer_Z2;
 
 void Drawer_XMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
 void Drawer_XMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);

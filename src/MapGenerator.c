@@ -5,6 +5,13 @@
 #include "Funcs.h"
 #include "Platform.h"
 
+volatile float Gen_CurrentProgress;
+volatile const char* Gen_CurrentState;
+volatile bool Gen_Done;
+int Gen_Width, Gen_Height, Gen_Length, Gen_Seed;
+bool Gen_Vanilla;
+BlockRaw* Gen_Blocks;
+
 static int Gen_MaxX, Gen_MaxY, Gen_MaxZ, Gen_Volume, Gen_OneY;
 #define Gen_Pack(x, y, z) (((y) * Gen_Length + (z)) * Gen_Width + (x))
 
@@ -636,8 +643,11 @@ float CombinedNoise_Calc(struct CombinedNoise* n, float x, float y) {
 
 
 /*########################################################################################################################*
-*--------------------------------------------------Tree generation----------------------------------------------------*
+*----------------------------------------------------Tree generation------------------------------------------------------*
 *#########################################################################################################################*/
+int Tree_Width, Tree_Height, Tree_Length;
+BlockRaw* Tree_Blocks;
+RNGState* Tree_Rnd;
 #define Tree_Pack(x, y, z) (((y) * Tree_Length + (z)) * Tree_Width + (x))
 
 bool TreeGen_CanGrow(int treeX, int treeY, int treeZ, int treeHeight) {

@@ -16,11 +16,11 @@ void EnvRenderer_RenderMapEdges(double delta);
 void EnvRenderer_RenderSkybox(double deltaTime);
 bool EnvRenderer_ShouldRenderSkybox(void);
 
-int16_t* Weather_Heightmap;
+extern int16_t* Weather_Heightmap;
 void EnvRenderer_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock);
 void EnvRenderer_RenderWeather(double deltaTime);
 
-bool EnvRenderer_Legacy, EnvRenderer_Minimal;
+extern bool EnvRenderer_Legacy, EnvRenderer_Minimal;
 void EnvRenderer_UseMinimalMode(bool minimal);
 void EnvRenderer_UseLegacyMode(bool legacy);
 #endif

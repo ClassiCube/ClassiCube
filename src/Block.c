@@ -10,6 +10,32 @@
 #include "Bitmap.h"
 #include "GameStructs.h"
 
+bool Block_IsLiquid[BLOCK_COUNT];
+bool Block_BlocksLight[BLOCK_COUNT];
+bool Block_FullBright[BLOCK_COUNT];
+PackedCol Block_FogCol[BLOCK_COUNT];
+
+float   Block_FogDensity[BLOCK_COUNT];
+uint8_t Block_Collide[BLOCK_COUNT];
+uint8_t Block_ExtendedCollide[BLOCK_COUNT];
+float   Block_SpeedMultiplier[BLOCK_COUNT];
+uint8_t Block_LightOffset[BLOCK_COUNT];
+uint8_t Block_Draw[BLOCK_COUNT];
+uint8_t Block_DigSounds[BLOCK_COUNT], Block_StepSounds[BLOCK_COUNT];
+uint8_t Block_Tinted[BLOCK_COUNT];
+bool    Block_FullOpaque[BLOCK_COUNT];
+uint8_t Block_SpriteOffset[BLOCK_COUNT];
+
+Vector3 Block_MinBB[BLOCK_COUNT], Block_RenderMinBB[BLOCK_COUNT];
+Vector3 Block_MaxBB[BLOCK_COUNT], Block_RenderMaxBB[BLOCK_COUNT];
+
+TextureLoc Block_Textures[BLOCK_COUNT * FACE_COUNT];
+bool Block_CanPlace[BLOCK_COUNT], Block_CanDelete[BLOCK_COUNT];
+
+uint8_t Block_Hidden[BLOCK_COUNT * BLOCK_COUNT];
+uint8_t Block_CanStretch[BLOCK_COUNT];
+int Block_UsedCount, Block_IDMask;
+
 const char* Sound_Names[SOUND_COUNT] = {
 	"none", "wood", "gravel", "grass", "stone",
 	"metal", "glass", "cloth", "sand", "snow",

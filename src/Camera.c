@@ -8,6 +8,11 @@
 #include "Entity.h"
 #include "Input.h"
 
+struct Matrix Camera_TiltM;
+float Camera_BobbingVer, Camera_BobbingHor;
+Vector3 Camera_CurrentPos;
+struct Camera* Camera_Active;
+
 static Vector2 cam_rotOffset;
 static bool cam_isForwardThird;
 

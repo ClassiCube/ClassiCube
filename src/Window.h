@@ -49,9 +49,9 @@ void Window_SetClipboardText(const String* value);
 /* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */
 
 /* Whether the window is actually valid (i.e. not destroyed). */
-bool Window_Exists;
+extern bool Window_Exists;
 /* Whether the user is interacting with the window. */
-bool Window_Focused;
+extern bool Window_Focused;
 /* Whether the window is visible on screen at all. */
 /* NOTE: This does not count when just hidden behind other windows. */
 bool Window_GetVisible(void);
@@ -66,10 +66,10 @@ void Window_SetWindowState(int state);
 
 /* The external bounds of the window in screen coordinates. */
 /* Size of external bounds is client size + borders + title */
-Rect2D Window_Bounds;
+extern Rect2D Window_Bounds;
 /* Size of the internal bounds of the window. */
 /* This is the size of area that can be drawn on. (i.e. content size) */
-Size2D Window_ClientSize;
+extern Size2D Window_ClientSize;
 /* Sets the position and external size of the window. */
 void Window_SetBounds(Rect2D rect);
 /* Sets the position of the window on the screen. */

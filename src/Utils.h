@@ -37,7 +37,7 @@ int Utils_AccumulateWheelDelta(float* accumulator, float delta);
 
 uint8_t Utils_GetSkinType(const Bitmap* bmp);
 uint32_t Utils_CRC32(const uint8_t* data, uint32_t length);
-extern uint32_t Utils_Crc32Table[256];
+extern const uint32_t Utils_Crc32Table[256];
 CC_NOINLINE void* Utils_Resize(void* buffer, uint32_t* maxElems, uint32_t elemSize, uint32_t defElems, uint32_t expandElems);
 CC_NOINLINE bool Utils_ParseIP(const String* ip, uint8_t* data);
 #endif

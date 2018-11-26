@@ -24,8 +24,8 @@ typedef enum MsgType_ {
 } MsgType;
 
 struct ChatLine { char Buffer[STRING_SIZE]; TimeMS Received; };
-struct ChatLine Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
-StringsBuffer Chat_Log, Chat_InputLog;
+extern struct ChatLine Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
+extern StringsBuffer Chat_Log, Chat_InputLog;
 /* Gets the time the ith chat message was received at. */
 TimeMS Chat_GetLogTime(int i);
 

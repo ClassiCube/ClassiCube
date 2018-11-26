@@ -11,16 +11,16 @@ struct AABB;
 #define World_Unpack(idx, x, y, z) x = idx % World_Width; z = (idx / World_Width) % World_Length; y = (idx / World_Width) / World_Length;
 #define World_Pack(x, y, z) (((y) * World_Length + (z)) * World_Width + (x))
 
-BlockRaw* World_Blocks;
+extern BlockRaw* World_Blocks;
 #ifdef EXTENDED_BLOCKS
-BlockRaw* World_Blocks2;
+extern BlockRaw* World_Blocks2;
 #endif
-int World_BlocksSize;
+extern int World_BlocksSize;
 
-int World_Width, World_Height, World_Length;
-int World_MaxX, World_MaxY, World_MaxZ;
-int World_OneY;
-uint8_t World_Uuid[16];
+extern int World_Width, World_Height, World_Length;
+extern int World_MaxX, World_MaxY, World_MaxZ;
+extern int World_OneY;
+extern uint8_t World_Uuid[16];
 extern String World_TextureUrl;
 
 /* Frees the blocks array, sets dimensions to 0, resets environment to default. */
@@ -53,25 +53,25 @@ enum EnvVar_ {
 	ENV_VAR_SKY_COL, ENV_VAR_CLOUDS_COL, ENV_VAR_FOG_COL, ENV_VAR_SUN_COL, ENV_VAR_SHADOW_COL
 };
 
-BlockID Env_EdgeBlock, Env_SidesBlock;
-int Env_EdgeHeight;
-int Env_SidesOffset;
+extern BlockID Env_EdgeBlock, Env_SidesBlock;
+extern int Env_EdgeHeight;
+extern int Env_SidesOffset;
 #define Env_SidesHeight (Env_EdgeHeight + Env_SidesOffset)
-int Env_CloudsHeight;
-float Env_CloudsSpeed;
+extern int Env_CloudsHeight;
+extern float Env_CloudsSpeed;
 
 enum Weather_ { WEATHER_SUNNY, WEATHER_RAINY, WEATHER_SNOWY };
 extern const char* Weather_Names[3];
-float Env_WeatherSpeed;
-float Env_WeatherFade;
-int Env_Weather;
-bool Env_ExpFog;
-float Env_SkyboxHorSpeed, Env_SkyboxVerSpeed;
+extern float Env_WeatherSpeed;
+extern float Env_WeatherFade;
+extern int Env_Weather;
+extern bool Env_ExpFog;
+extern float Env_SkyboxHorSpeed, Env_SkyboxVerSpeed;
 
-PackedCol Env_SkyCol, Env_FogCol, Env_CloudsCol;
+extern PackedCol Env_SkyCol, Env_FogCol, Env_CloudsCol;
 extern PackedCol Env_DefaultSkyCol, Env_DefaultFogCol, Env_DefaultCloudsCol;
-PackedCol Env_SunCol,    Env_SunXSide,    Env_SunZSide,    Env_SunYMin;
-PackedCol Env_ShadowCol, Env_ShadowXSide, Env_ShadowZSide, Env_ShadowYMin;
+extern PackedCol Env_SunCol,    Env_SunXSide,    Env_SunZSide,    Env_SunYMin;
+extern PackedCol Env_ShadowCol, Env_ShadowXSide, Env_ShadowZSide, Env_ShadowYMin;
 extern PackedCol Env_DefaultSunCol, Env_DefaultShadowCol;
 
 #define ENV_DEFAULT_SKYCOL_HEX "99CCFF"

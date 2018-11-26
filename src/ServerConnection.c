@@ -23,18 +23,29 @@
 #include "Platform.h"
 #include "GameStructs.h"
 
-/*########################################################################################################################*
-*-----------------------------------------------------Common handlers-----------------------------------------------------*
-*#########################################################################################################################*/
 static char server_nameBuffer[STRING_SIZE];
 static char server_motdBuffer[STRING_SIZE];
 static char server_appBuffer[STRING_SIZE];
 static int server_ticks;
 
+bool ServerConnection_IsSinglePlayer, ServerConnection_Disconnected;
 String ServerConnection_ServerName = String_FromArray(server_nameBuffer);
 String ServerConnection_ServerMOTD = String_FromArray(server_motdBuffer);
 String ServerConnection_AppName    = String_FromArray(server_appBuffer);
 
+void (*ServerConnection_BeginConnect)(void);
+void (*ServerConnection_SendChat)(const String* text);
+void (*ServerConnection_SendPosition)(Vector3 pos, float rotY, float headX);
+void (*ServerConnection_SendPlayerClick)(MouseButton button, bool isDown, EntityID targetId, struct PickedPos* pos);
+void (*ServerConnection_Tick)(struct ScheduledTask* task);
+
+uint8_t* ServerConnection_WriteBuffer; 
+bool ServerConnection_SupportsExtPlayerList, ServerConnection_SupportsPlayerClick;
+bool ServerConnection_SupportsPartialMessages, ServerConnection_SupportsFullCP437;
+
+/*########################################################################################################################*
+*-----------------------------------------------------Common handlers-----------------------------------------------------*
+*#########################################################################################################################*/
 static void ServerConnection_ResetState(void) {
 	ServerConnection_Disconnected = false;
 	ServerConnection_SupportsExtPlayerList = false;
@@ -241,6 +252,9 @@ static void SPConnection_Init(void) {
 /*########################################################################################################################*
 *--------------------------------------------------Multiplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
+uint16_t Net_PacketSizes[OPCODE_COUNT];
+Net_Handler Net_Handlers[OPCODE_COUNT];
+
 static SocketHandle net_socket;
 static uint8_t  net_readBuffer[4096 * 5];
 static uint8_t  net_writeBuffer[131];

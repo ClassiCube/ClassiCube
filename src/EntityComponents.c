@@ -467,6 +467,8 @@ void LocalInterpComp_AdvanceState(struct InterpComp* interp) {
 /*########################################################################################################################*
 *-----------------------------------------------------ShadowComponent-----------------------------------------------------*
 *#########################################################################################################################*/
+bool ShadowComponent_BoundShadowTex;
+GfxResourceID ShadowComponent_ShadowTex;
 static float shadow_radius, shadow_uvScale;
 struct ShadowData { float Y; BlockID Block; uint8_t A; };
 

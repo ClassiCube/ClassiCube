@@ -8,6 +8,7 @@
 #include "Event.h"
 #include "GameStructs.h"
 
+int16_t* Lighting_Heightmap;
 #define HEIGHT_UNCALCULATED Int16_MaxValue
 
 #define Lighting_CalcBody(get_block)\

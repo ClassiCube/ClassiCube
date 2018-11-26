@@ -5,6 +5,13 @@
 #include "Graphics.h"
 #include "Platform.h"
 
+Bitmap Atlas2D_Bitmap;
+int Atlas2D_TileSize, Atlas2D_RowsCount;
+int Atlas1D_Count, Atlas1D_TilesPerAtlas;
+int Atlas1D_Mask, Atlas1D_Shift;
+float Atlas1D_InvTileSize;
+GfxResourceID Atlas1D_TexIds[ATLAS1D_MAX_ATLASES];
+
 void Atlas2D_UpdateState(Bitmap* bmp) {
 	Atlas2D_Bitmap    = *bmp;
 	Atlas2D_TileSize  = bmp->Width  / ATLAS2D_TILES_PER_ROW;

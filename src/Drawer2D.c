@@ -7,6 +7,10 @@
 #include "Bitmap.h"
 #include "Game.h"
 
+bool Drawer2D_BitmappedText;
+bool Drawer2D_BlackTextShadows;
+BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
+
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, const FontDesc* font, bool useShadow) {
 	args->Text = *text;
 	args->Font = *font;

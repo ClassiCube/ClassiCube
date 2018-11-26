@@ -15,6 +15,7 @@
 #include "TerrainAtlas.h"
 #include "VertexStructs.h"
 
+int Builder_SidesLevel, Builder_EdgeLevel;
 /* Packs an index into the 16x16x16 count array. Coordinates range from 0 to 15. */
 #define Builder_PackCount(xx, yy, zz) ((((yy) << 8) | ((zz) << 4) | (xx)) * FACE_COUNT)
 /* Packs an index into the 18x18x18 chunk array. Coordinates range from -1 to 16. */

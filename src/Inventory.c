@@ -6,6 +6,13 @@
 #include "Chat.h"
 #include "GameStructs.h"
 
+BlockID Inventory_Table[INVENTORY_HOTBARS * INVENTORY_BLOCKS_PER_HOTBAR];
+BlockID Inventory_Map[BLOCK_COUNT];
+
+int Inventory_SelectedIndex;
+int Inventory_Offset;
+bool Inventory_CanChangeHeldBlock, Inventory_CanPick;
+
 bool Inventory_CanChangeSelected(void) {
 	if (!Inventory_CanChangeHeldBlock) {
 		Chat_AddRaw("&cThe server has forbidden you from changing your held block.");

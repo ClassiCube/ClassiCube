@@ -13,6 +13,15 @@
 #include "Stream.h"
 #include "Funcs.h"
 
+PackedCol Model_Cols[FACE_COUNT];
+float Model_uScale, Model_vScale;
+float Model_cosHead, Model_sinHead;
+uint8_t Model_Rotation, Model_skinType;
+struct Model* Model_ActiveModel;
+
+GfxResourceID Model_Vb;
+VertexP3fT2fC4b Model_Vertices[MODEL_MAX_VERTICES];
+struct Model* Human_ModelPtr;
 
 #define UV_POS_MASK ((uint16_t)0x7FFF)
 #define UV_MAX ((uint16_t)0x8000)

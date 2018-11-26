@@ -1,6 +1,57 @@
 #include "Event.h"
 #include "ErrorHandler.h"
 
+struct Event_Int EntityEvents_Added;
+struct Event_Int EntityEvents_Removed;
+struct Event_Int TabListEvents_Added;
+struct Event_Int TabListEvents_Changed;
+struct Event_Int TabListEvents_Removed;
+
+struct Event_Void TextureEvents_AtlasChanged;
+struct Event_Void TextureEvents_PackChanged;
+struct Event_Entry TextureEvents_FileChanged;
+
+struct Event_Void GfxEvents_ViewDistanceChanged;
+struct Event_Void GfxEvents_LowVRAMDetected;
+struct Event_Void GfxEvents_ProjectionChanged;
+struct Event_Void GfxEvents_ContextLost;
+struct Event_Void GfxEvents_ContextRecreated;
+
+struct Event_Block UserEvents_BlockChanged;
+struct Event_Void UserEvents_HackPermissionsChanged;
+struct Event_Void UserEvents_HeldBlockChanged;
+
+struct Event_Void BlockEvents_PermissionsChanged;
+struct Event_Void BlockEvents_BlockDefChanged;
+
+struct Event_Void WorldEvents_NewMap;
+struct Event_Float WorldEvents_Loading;
+struct Event_Void WorldEvents_MapLoaded;
+struct Event_Int WorldEvents_EnvVarChanged;
+
+struct Event_Void ChatEvents_FontChanged;
+struct Event_Chat ChatEvents_ChatReceived;
+struct Event_Chat ChatEvents_ChatSending;
+struct Event_Int ChatEvents_ColCodeChanged;
+
+struct Event_Void WindowEvents_Redraw;
+struct Event_Void WindowEvents_Moved;
+struct Event_Void WindowEvents_Resized;
+struct Event_Void WindowEvents_Closing;
+struct Event_Void WindowEvents_Closed;
+struct Event_Void WindowEvents_VisibilityChanged;
+struct Event_Void WindowEvents_FocusChanged;
+struct Event_Void WindowEvents_StateChanged;
+
+struct Event_Int KeyEvents_Press;
+struct Event_Int KeyEvents_Down;
+struct Event_Int KeyEvents_Up;
+
+struct Event_MouseMove MouseEvents_Moved;
+struct Event_Int MouseEvents_Down;
+struct Event_Int MouseEvents_Up;
+struct Event_Float MouseEvents_Wheel;
+
 static void Event_RegisterImpl(struct Event_Void* handlers, void* obj, Event_Void_Callback handler) {
 	int i;
 	for (i = 0; i < handlers->Count; i++) {

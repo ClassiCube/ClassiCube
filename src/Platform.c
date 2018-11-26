@@ -44,12 +44,12 @@ char* Platform_NewLine    = "\r\n";
 char  Directory_Separator = '\\';
 char* Font_DefaultName    = "Arial";
 
-ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
-ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
-ReturnCode ReturnCode_NotSupported = ERROR_NOT_SUPPORTED;
-ReturnCode ReturnCode_InvalidArg   = ERROR_INVALID_PARAMETER;
-ReturnCode ReturnCode_SocketInProgess  = WSAEINPROGRESS;
-ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
+const ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
+const ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
+const ReturnCode ReturnCode_NotSupported = ERROR_NOT_SUPPORTED;
+const ReturnCode ReturnCode_InvalidArg   = ERROR_INVALID_PARAMETER;
+const ReturnCode ReturnCode_SocketInProgess  = WSAEINPROGRESS;
+const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #endif
 /* POSIX is mainly shared between Linux and OSX */
 #ifdef CC_BUILD_POSIX
@@ -77,12 +77,12 @@ char* Platform_NewLine    = "\n";
 char  Directory_Separator = '/'; /* TODO: Is this right for old OSX though?? */
 pthread_mutex_t event_mutex;
 
-ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
-ReturnCode ReturnCode_FileNotFound = ENOENT;
-ReturnCode ReturnCode_NotSupported = EPERM;
-ReturnCode ReturnCode_InvalidArg   = EINVAL;
-ReturnCode ReturnCode_SocketInProgess = EINPROGRESS;
-ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
+const ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
+const ReturnCode ReturnCode_FileNotFound = ENOENT;
+const ReturnCode ReturnCode_NotSupported = EPERM;
+const ReturnCode ReturnCode_InvalidArg   = EINVAL;
+const ReturnCode ReturnCode_SocketInProgess = EINPROGRESS;
+const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #endif
 #ifdef CC_BUILD_NIX
 #include <X11/Xlib.h>

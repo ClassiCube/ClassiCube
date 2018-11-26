@@ -13,7 +13,7 @@ void Handlers_RemoveEntity(EntityID id);
 void Handlers_Reset(void);
 void Handlers_Tick(void);
 
-bool cpe_needD3Fix;
+extern bool cpe_needD3Fix;
 void Classic_WriteChat(const String* text, bool partial);
 void Classic_WritePosition(Vector3 pos, float rotY, float headX);
 void Classic_WriteSetBlock(int x, int y, int z, bool place, BlockID block);

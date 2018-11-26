@@ -9,11 +9,11 @@ struct PickedPos;
 struct Camera;
 
 /* Tilt effect applied to the camera. */
-struct Matrix Camera_TiltM;
+extern struct Matrix Camera_TiltM;
 /* Bobbing offset of camera from player's eye. */
-float Camera_BobbingVer, Camera_BobbingHor;
+extern float Camera_BobbingVer, Camera_BobbingHor;
 /* Cached position the camera is at */
-Vector3 Camera_CurrentPos;
+extern Vector3 Camera_CurrentPos;
 
 struct Camera {
 	/* Whether this camera is third person. (i.e. not allowed when -thirdperson in MOTD) */
@@ -45,7 +45,7 @@ struct Camera {
 };
 
 /* Camera user is currently using. */
-struct Camera* Camera_Active;
+extern struct Camera* Camera_Active;
 /* Initialises the default cameras. */
 void Camera_Init(void);
 /* Switches to the next camera in the list. */

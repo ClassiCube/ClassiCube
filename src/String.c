@@ -5,6 +5,8 @@
 #include "Stream.h"
 #include "Utils.h"
 
+const String String_Empty;
+
 String String_Init(STRING_REF char* buffer, int length, int capacity) {
 	String s; 
 	s.buffer = buffer; s.length = length; s.capacity = capacity; 

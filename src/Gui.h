@@ -76,16 +76,15 @@ void Widget_Reset(void* widget);
 bool Widget_Contains(void* widget, int x, int y);
 
 
-GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
-struct Screen* Gui_HUD;
-struct Screen* Gui_Active;
+extern GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
+extern struct Screen* Gui_HUD;
+extern struct Screen* Gui_Active;
 #define GUI_MAX_OVERLAYS 6
-struct Screen* Gui_Overlays[GUI_MAX_OVERLAYS];
-int Gui_OverlaysCount;
+extern struct Screen* Gui_Overlays[GUI_MAX_OVERLAYS];
+extern int Gui_OverlaysCount;
 
 int  Gui_CalcPos(uint8_t anchor, int offset, int size, int axisLen);
 bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
-void Gui_MakeComponent(struct IGameComponent* comp);
 /* Gets the screen that the user is currently interacting with.
 This means if an overlay is active, it will be over the top of other screens. */
 struct Screen* Gui_GetActiveScreen(void);

@@ -5,6 +5,10 @@
 #include "ErrorHandler.h"
 #include "Funcs.h"
 
+bool Window_Exists, Window_Focused;
+Rect2D Window_Bounds;
+Size2D Window_ClientSize;
+
 static bool win_cursorVisible = true;
 bool Window_GetCursorVisible(void) { return win_cursorVisible; }
 

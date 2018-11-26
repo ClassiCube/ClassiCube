@@ -25,7 +25,7 @@ typedef struct String_ {
 int String_CalcLen(const char* raw, int capacity);
 /* Constant string that points to NULL and has 0 length. */
 /* NOTE: Do NOT modify the contents of this string! */
-const String String_Empty;
+extern const String String_Empty;
 /* Constructs a string from the given arguments. */
 String String_Init(STRING_REF char* buffer, int length, int capacity);
 /* Constructs a string from the given arguments, then sets all characters to '\0'. */

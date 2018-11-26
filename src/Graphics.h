@@ -34,23 +34,23 @@ typedef enum MatrixType_ {
 void Gfx_Init(void);
 void Gfx_Free(void);
 
-int Gfx_MaxTexWidth, Gfx_MaxTexHeight;
-float Gfx_MinZNear;
-bool Gfx_LostContext;
-bool Gfx_Mipmaps;
-bool Gfx_CustomMipmapsLevels;
-struct Matrix Gfx_View, Gfx_Projection;
+extern int Gfx_MaxTexWidth, Gfx_MaxTexHeight;
+extern float Gfx_MinZNear;
+extern bool Gfx_LostContext;
+extern bool Gfx_Mipmaps;
+extern bool Gfx_CustomMipmapsLevels;
+extern struct Matrix Gfx_View, Gfx_Projection;
 
 extern String Gfx_ApiInfo[7];
-GfxResourceID Gfx_defaultIb;
-GfxResourceID Gfx_quadVb, Gfx_texVb;
+extern GfxResourceID Gfx_defaultIb;
+extern GfxResourceID Gfx_quadVb, Gfx_texVb;
 
 #define ICOUNT(verticesCount) (((verticesCount) >> 2) * 6)
 #define GFX_MAX_INDICES (65536 / 4 * 6)
 #define GFX_MAX_VERTICES 65536
 
 /* Callback invoked when the context is lost. Repeatedly invoked until a context can be retrieved. */
-ScheduledTaskCallback Gfx_LostContextFunction;
+extern ScheduledTaskCallback Gfx_LostContextFunction;
 
 /* Creates a new texture. (and also generates mipmaps if mipmaps) */
 /* NOTE: Only set mipmaps to true if Gfx_Mipmaps is also true, because whether textures

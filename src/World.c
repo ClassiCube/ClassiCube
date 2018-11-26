@@ -9,6 +9,17 @@
 #include "Physics.h"
 #include "Game.h"
 
+BlockRaw* World_Blocks;
+#ifdef EXTENDED_BLOCKS
+BlockRaw* World_Blocks2;
+#endif
+int World_BlocksSize;
+
+int World_Width, World_Height, World_Length;
+int World_MaxX, World_MaxY, World_MaxZ;
+int World_OneY;
+uint8_t World_Uuid[16];
+
 /*########################################################################################################################*
 *----------------------------------------------------------World----------------------------------------------------------*
 *#########################################################################################################################*/
@@ -132,6 +143,17 @@ PackedCol Env_DefaultFogCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
 PackedCol Env_DefaultCloudsCol = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
 PackedCol Env_DefaultSunCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
 PackedCol Env_DefaultShadowCol = PACKEDCOL_CONST(0x9B, 0x9B, 0x9B, 0xFF);
+
+BlockID Env_EdgeBlock, Env_SidesBlock;
+int Env_EdgeHeight, Env_SidesOffset, Env_CloudsHeight; 
+float Env_CloudsSpeed, Env_WeatherSpeed, Env_WeatherFade;
+int Env_Weather; bool Env_ExpFog;
+float Env_SkyboxHorSpeed, Env_SkyboxVerSpeed;
+
+PackedCol Env_SkyCol, Env_FogCol, Env_CloudsCol;
+PackedCol Env_SunCol,    Env_SunXSide,    Env_SunZSide,    Env_SunYMin;
+PackedCol Env_ShadowCol, Env_ShadowXSide, Env_ShadowZSide, Env_ShadowYMin;
+
 static char World_TextureUrlBuffer[STRING_SIZE];
 String World_TextureUrl = String_FromArray(World_TextureUrlBuffer);
 

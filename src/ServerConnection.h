@@ -46,30 +46,30 @@ int PingList_NextPingData(void);
 void PingList_Update(int data);
 int PingList_AveragePingMs(void);
 
-bool ServerConnection_IsSinglePlayer;
-bool ServerConnection_Disconnected;
+extern bool ServerConnection_IsSinglePlayer;
+extern bool ServerConnection_Disconnected;
 extern String ServerConnection_ServerName;
 extern String ServerConnection_ServerMOTD;
 extern String ServerConnection_AppName;
 
-void (*ServerConnection_BeginConnect)(void);
-void (*ServerConnection_SendChat)(const String* text);
-void (*ServerConnection_SendPosition)(Vector3 pos, float rotY, float headX);
-void (*ServerConnection_SendPlayerClick)(MouseButton button, bool isDown, EntityID targetId, struct PickedPos* pos);
-void (*ServerConnection_Tick)(struct ScheduledTask* task);
-uint8_t* ServerConnection_WriteBuffer;
+extern void (*ServerConnection_BeginConnect)(void);
+extern void (*ServerConnection_SendChat)(const String* text);
+extern void (*ServerConnection_SendPosition)(Vector3 pos, float rotY, float headX);
+extern void (*ServerConnection_SendPlayerClick)(MouseButton button, bool isDown, EntityID targetId, struct PickedPos* pos);
+extern void (*ServerConnection_Tick)(struct ScheduledTask* task);
+extern uint8_t* ServerConnection_WriteBuffer;
 
-bool ServerConnection_SupportsExtPlayerList;
-bool ServerConnection_SupportsPlayerClick;
-bool ServerConnection_SupportsPartialMessages;
-bool ServerConnection_SupportsFullCP437;
+extern bool ServerConnection_SupportsExtPlayerList;
+extern bool ServerConnection_SupportsPlayerClick;
+extern bool ServerConnection_SupportsPartialMessages;
+extern bool ServerConnection_SupportsFullCP437;
 
 void ServerConnection_RetrieveTexturePack(const String* url);
 void ServerConnection_DownloadTexturePack(const String* url);
 
 typedef void (*Net_Handler)(uint8_t* data);
-uint16_t Net_PacketSizes[OPCODE_COUNT];
-Net_Handler Net_Handlers[OPCODE_COUNT];
+extern uint16_t Net_PacketSizes[OPCODE_COUNT];
+extern Net_Handler Net_Handlers[OPCODE_COUNT];
 void Net_Set(uint8_t opcode, Net_Handler handler, int size);
 void Net_SendPacket(void);
 #endif

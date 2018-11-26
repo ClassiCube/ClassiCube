@@ -68,7 +68,7 @@ typedef enum Key_ {
 
 /* Gets whether key repeating is on or not. When on, multiple KeyDown events are raised when the same key is 
 held down for a period of time (frequency depends on platform). Should be on for menu input, off for game input. */
-bool Key_KeyRepeat;
+extern bool Key_KeyRepeat;
 /* Simple names for each keyboard button. */
 extern const char* Key_Names[KEY_COUNT];
 
@@ -78,7 +78,7 @@ extern const char* Key_Names[KEY_COUNT];
 #define Key_IsShiftPressed()   (Key_Pressed[KEY_LSHIFT] || Key_Pressed[KEY_RSHIFT])
 
 /* Pressed state of each keyboard button. Use Key_SetPressed to change. */
-bool Key_Pressed[KEY_COUNT];
+extern bool Key_Pressed[KEY_COUNT];
 /* Sets the pressed state of a keyboard button. */
 /* Raises KeyEvents_Up or KeyEvents_Down if state differs, or Key_KeyRepeat is on. */
 void Key_SetPressed(Key key, bool pressed);
@@ -93,12 +93,12 @@ typedef enum MouseButton_ {
 } MouseButton;
 
 /* Wheel position of the mouse. Use Mouse_SetWheel to change. */
-float Mouse_Wheel;
+extern float Mouse_Wheel;
 /* X and Y coordinates of the mouse. Use Mouse_SetPosition to change. */
-int Mouse_X, Mouse_Y;
+extern int Mouse_X, Mouse_Y;
 
 /* Pressed state of each mouse button. Use Mouse_SetPressed to change. */
-bool Mouse_Pressed[MOUSE_COUNT];
+extern bool Mouse_Pressed[MOUSE_COUNT];
 /* Sets the pressed state of a mouse button. */
 /* Raises MouseEvents_Up or MouseEvents_Down if state differs. */
 void Mouse_SetPressed(MouseButton btn, bool pressed);
@@ -134,7 +134,7 @@ void KeyBind_Set(KeyBind binding, Key key);
 void KeyBind_Init(void);
 
 
-extern uint8_t Hotkeys_LWJGL[256];
+extern const uint8_t Hotkeys_LWJGL[256];
 struct HotkeyData {
 	int TextIndex;   /* contents to copy directly into the input bar */
 	uint8_t Trigger; /* Member of Key enumeration */
@@ -143,8 +143,8 @@ struct HotkeyData {
 };
 
 #define HOTKEYS_MAX_COUNT 256
-struct HotkeyData HotkeysList[HOTKEYS_MAX_COUNT];
-StringsBuffer HotkeysText;
+extern struct HotkeyData HotkeysList[HOTKEYS_MAX_COUNT];
+extern StringsBuffer HotkeysText;
 typedef enum HotkeyFlags_ {
 	HOTKEY_FLAG_CTRL = 1, HOTKEY_FLAG_SHIFT = 2, HOTKEY_FLAG_ALT = 4
 } HotkeyFlags;

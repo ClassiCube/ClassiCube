@@ -10,19 +10,19 @@
 struct IGameComponent;
 extern struct IGameComponent MapRenderer_Component;
 
-int MapRenderer_ChunksX, MapRenderer_ChunksY, MapRenderer_ChunksZ;
+extern int MapRenderer_ChunksX, MapRenderer_ChunksY, MapRenderer_ChunksZ;
 #define MapRenderer_Pack(cx, cy, cz) (((cz) * MapRenderer_ChunksY + (cy)) * MapRenderer_ChunksX + (cx))
 /* TODO: Swap Y and Z? Make sure to update ChunkUpdater's ResetChunkCache and ClearChunkCache methods! */
 
 /* Count of actual used 1D atlases. (i.e. 1DIndex(maxTextureLoc) + 1 */
-int MapRenderer_1DUsedCount;
+extern int MapRenderer_1DUsedCount;
 /* Number of chunks in the world, or ChunksX * ChunksY * ChunksZ */
-int MapRenderer_ChunksCount;
+extern int MapRenderer_ChunksCount;
 
 /* Buffer for all chunk parts. There are (MapRenderer_ChunksCount * Atlas1D_Count) parts in the buffer,
 with parts for 'normal' buffer being in lower half. */
-struct ChunkPartInfo* MapRenderer_PartsNormal; /* TODO: THAT DESC SUCKS */
-struct ChunkPartInfo* MapRenderer_PartsTranslucent;
+extern struct ChunkPartInfo* MapRenderer_PartsNormal; /* TODO: THAT DESC SUCKS */
+extern struct ChunkPartInfo* MapRenderer_PartsTranslucent;
 
 /* Describes a portion of the data needed for rendering a chunk. */
 struct ChunkPartInfo {

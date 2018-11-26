@@ -89,6 +89,7 @@ static PhysicsHandler Physics_OnRandomTick[BLOCK_COUNT];
 static PhysicsHandler Physics_OnPlace[BLOCK_COUNT];
 static PhysicsHandler Physics_OnDelete[BLOCK_COUNT];
 
+bool Physics_Enabled;
 static RNGState physics_rnd;
 static int physics_tickCount;
 static int physics_maxWaterX, physics_maxWaterY, physics_maxWaterZ;

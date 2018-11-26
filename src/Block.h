@@ -40,24 +40,26 @@ typedef enum CollideType_ {
 	COLLIDE_CLIMB_ROPE    /* Rope/Ladder style climbing interaction when player collides. */
 } CollideType;
 
-bool Block_IsLiquid[BLOCK_COUNT];
+/* Whether a block is a liquid. (Like water/lava) */
+extern bool Block_IsLiquid[BLOCK_COUNT];
 /* Whether a block prevents lights from passing through it. */
-bool Block_BlocksLight[BLOCK_COUNT];
-bool Block_FullBright[BLOCK_COUNT];
-PackedCol Block_FogCol[BLOCK_COUNT];
-float Block_FogDensity[BLOCK_COUNT];
+extern bool Block_BlocksLight[BLOCK_COUNT];
+/* Whether a block is fully bright/light emitting. (Like lava) */
+extern bool Block_FullBright[BLOCK_COUNT];
+extern PackedCol Block_FogCol[BLOCK_COUNT];
+extern float Block_FogDensity[BLOCK_COUNT];
 /* Basic collide type of a block. (gas, liquid, or solid) */
-uint8_t Block_Collide[BLOCK_COUNT];
-uint8_t Block_ExtendedCollide[BLOCK_COUNT];
-float Block_SpeedMultiplier[BLOCK_COUNT];
-uint8_t Block_LightOffset[BLOCK_COUNT];
-uint8_t Block_Draw[BLOCK_COUNT];
-uint8_t Block_DigSounds[BLOCK_COUNT];
-uint8_t Block_StepSounds[BLOCK_COUNT];
-uint8_t Block_Tinted[BLOCK_COUNT];
+extern uint8_t Block_Collide[BLOCK_COUNT];
+extern uint8_t Block_ExtendedCollide[BLOCK_COUNT];
+extern float   Block_SpeedMultiplier[BLOCK_COUNT];
+extern uint8_t Block_LightOffset[BLOCK_COUNT];
+extern uint8_t Block_Draw[BLOCK_COUNT];
+extern uint8_t Block_DigSounds[BLOCK_COUNT];
+extern uint8_t Block_StepSounds[BLOCK_COUNT];
+extern uint8_t Block_Tinted[BLOCK_COUNT];
 /* Whether a block has an opaque draw type, a min of (0,0,0), and a max of (1,1,1) */
-bool Block_FullOpaque[BLOCK_COUNT];
-uint8_t Block_SpriteOffset[BLOCK_COUNT];
+extern bool    Block_FullOpaque[BLOCK_COUNT];
+extern uint8_t Block_SpriteOffset[BLOCK_COUNT];
 
 #define Block_Tint(col, block)\
 if (Block_Tinted[block]) {\
@@ -67,28 +69,27 @@ if (Block_Tinted[block]) {\
 	col.B = (uint8_t)(col.B * tintCol.B / 255);\
 }
 
-Vector3 Block_MinBB[BLOCK_COUNT];
-Vector3 Block_MaxBB[BLOCK_COUNT];
-Vector3 Block_RenderMinBB[BLOCK_COUNT];
-Vector3 Block_RenderMaxBB[BLOCK_COUNT];
+extern Vector3 Block_MinBB[BLOCK_COUNT];
+extern Vector3 Block_MaxBB[BLOCK_COUNT];
+extern Vector3 Block_RenderMinBB[BLOCK_COUNT];
+extern Vector3 Block_RenderMaxBB[BLOCK_COUNT];
 
-TextureLoc Block_Textures[BLOCK_COUNT * FACE_COUNT];
-bool Block_CanPlace[BLOCK_COUNT];
-bool Block_CanDelete[BLOCK_COUNT];
+extern TextureLoc Block_Textures[BLOCK_COUNT * FACE_COUNT];
+/* Whether the player has permission to place a block. */
+extern bool Block_CanPlace[BLOCK_COUNT];
+/* Whether the player has permission to delete a block. */
+extern bool Block_CanDelete[BLOCK_COUNT];
 
 /* Bit flags of faces hidden of two neighbouring blocks. */
-uint8_t Block_Hidden[BLOCK_COUNT * BLOCK_COUNT];
+extern uint8_t Block_Hidden[BLOCK_COUNT * BLOCK_COUNT];
 /* Bit flags of which faces of a block can stretch with greedy meshing. */
-uint8_t Block_CanStretch[BLOCK_COUNT];
+extern uint8_t Block_CanStretch[BLOCK_COUNT];
 
 #ifdef EXTENDED_BLOCKS
-int Block_UsedCount, Block_IDMask;
-void Block_SetUsedCount(int count);
+extern int Block_UsedCount, Block_IDMask;
+extern void Block_SetUsedCount(int count);
 #endif
 
-void Block_Reset(void);
-void Block_Init(void);
-void Block_SetDefaultPerms(void);
 bool Block_IsCustomDefined(BlockID block);
 void Block_SetCustomDefined(BlockID block, bool defined);
 void Block_DefineCustom(BlockID block);
