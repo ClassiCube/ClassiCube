@@ -55,7 +55,9 @@ namespace ClassicalSharp {
 		void IDisposable.Dispose() {
 			Events.TextureChanged -= TextureChanged;
 			SetNewScreen(null);
+			
 			statusScreen.Dispose();
+			hudScreen.Dispose();
 			
 			if (activeScreen != null)
 				activeScreen.Dispose();

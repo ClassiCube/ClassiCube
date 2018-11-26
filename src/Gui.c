@@ -110,6 +110,7 @@ static void Gui_Free(void) {
 	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
 	Gui_CloseActive();
 	Elem_TryFree(Gui_Status);
+	Elem_TryFree(Gui_HUD);
 
 	if (Gui_Active) { Elem_TryFree(Gui_Active); }
 	Gfx_DeleteTexture(&Gui_GuiTex);
