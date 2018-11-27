@@ -188,96 +188,6 @@ ReturnCode Zip_Extract(struct ZipState* state) {
 
 
 /*########################################################################################################################*
-*--------------------------------------------------------EntryList--------------------------------------------------------*
-*#########################################################################################################################*/
-struct EntryList {
-	const char* Folder;
-	const char* Filename;
-	StringsBuffer Entries;
-};
-
-static void EntryList_Load(struct EntryList* list) {
-	String line; char lineBuffer[FILENAME_SIZE];
-	String path; char pathBuffer[FILENAME_SIZE];
-	uint8_t buffer[2048];
-	struct Stream stream, buffered;
-	ReturnCode res;
-
-	String_InitArray(path, pathBuffer);
-	String_Format3(&path, "%c%r%c", list->Folder, &Directory_Separator, list->Filename);
-	
-	res = Stream_OpenFile(&stream, &path);
-	if (res == ReturnCode_FileNotFound) return;
-	if (res) { Chat_LogError2(res, "opening", &path); return; }
-
-	/* ReadLine reads single byte at a time */
-	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
-	String_InitArray(line, lineBuffer);
-
-	for (;;) {
-		res = Stream_ReadLine(&buffered, &line);
-		if (res == ERR_END_OF_STREAM) break;
-		if (res) { Chat_LogError2(res, "reading from", &path); break; }
-		
-		String_TrimStart(&line);
-		String_TrimEnd(&line);
-
-		if (!line.length) continue;
-		StringsBuffer_Add(&list->Entries, &line);
-	}
-
-	res = stream.Close(&stream);
-	if (res) { Chat_LogError2(res, "closing", &path); }
-}
-
-static void EntryList_Save(struct EntryList* list) {
-	String path; char pathBuffer[FILENAME_SIZE];
-	struct Stream stream;
-	String entry;
-	int i;
-	ReturnCode res;
-
-	String_InitArray(path, pathBuffer);
-	String_Format3(&path, "%c%r%c", list->Folder, &Directory_Separator, list->Filename);
-	if (!Utils_EnsureDirectory(list->Folder)) return;
-	
-	res = Stream_CreateFile(&stream, &path);
-	if (res) { Chat_LogError2(res, "creating", &path); return; }
-
-	for (i = 0; i < list->Entries.Count; i++) {
-		entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
-		res   = Stream_WriteLine(&stream, &entry);
-		if (res) { Chat_LogError2(res, "writing to", &path); break; }
-	}
-
-	res = stream.Close(&stream);
-	if (res) { Chat_LogError2(res, "closing", &path); }
-}
-
-static void EntryList_Add(struct EntryList* list, const String* entry) {
-	StringsBuffer_Add(&list->Entries, entry);
-	EntryList_Save(list);
-}
-
-static bool EntryList_Has(struct EntryList* list, const String* entry) {
-	String curEntry;
-	int i;
-
-	for (i = 0; i < list->Entries.Count; i++) {
-		curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
-		if (String_Equals(&curEntry, entry)) return true;
-	}
-	return false;
-}
-
-static void EntryList_UNSAFE_Make(struct EntryList* list, STRING_REF const char* folder, STRING_REF const char* file) {
-	list->Folder   = folder;
-	list->Filename = file;
-	EntryList_Load(list);
-}
-
-
-/*########################################################################################################################*
 *------------------------------------------------------TextureCache-------------------------------------------------------*
 *#########################################################################################################################*/
 #define TEXCACHE_FOLDER "texturecache"
@@ -286,23 +196,30 @@ static void EntryList_UNSAFE_Make(struct EntryList* list, STRING_REF const char*
 static struct EntryList cache_accepted, cache_denied, cache_eTags, cache_lastModified;
 
 void TextureCache_Init(void) {
-	EntryList_UNSAFE_Make(&cache_accepted,     TEXCACHE_FOLDER, "acceptedurls.txt");
-	EntryList_UNSAFE_Make(&cache_denied,       TEXCACHE_FOLDER, "deniedurls.txt");
-	EntryList_UNSAFE_Make(&cache_eTags,        TEXCACHE_FOLDER, "etags.txt");
-	EntryList_UNSAFE_Make(&cache_lastModified, TEXCACHE_FOLDER, "lastmodified.txt");
+	EntryList_Init(&cache_accepted,     TEXCACHE_FOLDER, "acceptedurls.txt", ' ');
+	EntryList_Init(&cache_denied,       TEXCACHE_FOLDER, "deniedurls.txt",   ' ');
+	EntryList_Init(&cache_eTags,        TEXCACHE_FOLDER, "etags.txt",        ' ');
+	EntryList_Init(&cache_lastModified, TEXCACHE_FOLDER, "lastmodified.txt", ' ');
 }
 
-bool TextureCache_HasAccepted(const String* url) { return EntryList_Has(&cache_accepted, url); }
-bool TextureCache_HasDenied(const String* url)   { return EntryList_Has(&cache_denied,   url); }
-void TextureCache_Accept(const String* url) { EntryList_Add(&cache_accepted, url); }
-void TextureCache_Deny(const String* url)   { EntryList_Add(&cache_denied,   url); }
+bool TextureCache_HasAccepted(const String* url) { return EntryList_Find(&cache_accepted, url) >= 0; }
+bool TextureCache_HasDenied(const String* url)   { return EntryList_Find(&cache_denied,   url) >= 0; }
 
-static void TextureCache_MakePath(String* path, const String* url) {
-	String crc32; char crc32Buffer[STRING_INT_CHARS];
-	String_InitArray(crc32, crc32Buffer);
+void TextureCache_Accept(const String* url)      { 
+	EntryList_Set(&cache_accepted, url, &String_Empty); 
+	EntryList_Save(&cache_accepted);
+}
+void TextureCache_Deny(const String* url)        { 
+	EntryList_Set(&cache_denied,   url, &String_Empty); 
+	EntryList_Save(&cache_denied);
+}
 
-	String_AppendUInt32(&crc32, Utils_CRC32(url->buffer, url->length));
-	String_Format2(path, TEXCACHE_FOLDER "%r%s", &Directory_Separator, &crc32);
+CC_NOINLINE static void TextureCache_MakePath(String* path, const String* url) {
+	String key; char keyBuffer[STRING_INT_CHARS];
+	String_InitArray(key, keyBuffer);
+
+	String_AppendUInt32(&key, Utils_CRC32(url->buffer, url->length));
+	String_Format2(path, TEXCACHE_FOLDER "%r%s", &Directory_Separator, &key);
 }
 
 bool TextureCache_Has(const String* url) {
@@ -327,20 +244,12 @@ bool TextureCache_Get(const String* url, struct Stream* stream) {
 }
 
 void TexturePack_GetFromTags(const String* url, String* result, struct EntryList* list) {
-	String crc32; char crc32Buffer[STRING_INT_CHARS];
-	String line, key, value;
-	int i;
+	String key, value; char keyBuffer[STRING_INT_CHARS];
+	String_InitArray(key, keyBuffer);
 
-	String_InitArray(crc32, crc32Buffer);
-	String_AppendUInt32(&crc32, Utils_CRC32(url->buffer, url->length));	
-
-	for (i = 0; i < list->Entries.Count; i++) {
-		line = StringsBuffer_UNSAFE_Get(&list->Entries, i);
-		if (!String_UNSAFE_Separate(&line, ' ', &key, &value)) continue;
-
-		if (!String_CaselessEquals(&key, &crc32)) continue;
-		String_AppendString(result, &value);
-	}
+	String_AppendUInt32(&key, Utils_CRC32(url->buffer, url->length));	
+	value = EntryList_UNSAFE_Get(list, &key);
+	if (value.length) String_AppendString(result, &value);
 }
 
 void TextureCache_GetLastModified(const String* url, TimeMS* time) {
@@ -385,24 +294,13 @@ void TextureCache_Set(const String* url, uint8_t* data, uint32_t length) {
 	if (res) { Chat_LogError2(res, "closing cache for", url); }
 }
 
-static void TextureCache_SetEntry(const String* url, const String* data, struct EntryList* list) {
-	String crc32; char crc32Buffer[STRING_INT_CHARS];
-	String entry; char entryBuffer[1024];
-	int i;
+CC_NOINLINE static void TextureCache_SetEntry(const String* url, const String* data, struct EntryList* list) {
+	String key; char keyBuffer[STRING_INT_CHARS];
+	String_InitArray(key, keyBuffer);
 
-	String_InitArray(crc32, crc32Buffer);
-	String_InitArray(entry, entryBuffer);
-	String_AppendUInt32(&crc32, Utils_CRC32(url->buffer, url->length));
-	String_Format2(&entry, "%s %s", &crc32, data);
-
-	for (i = 0; i < list->Entries.Count; i++) {
-		String curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
-		if (!String_CaselessStarts(&curEntry, &crc32)) continue;
-
-		StringsBuffer_Remove(&list->Entries, i);
-		break;
-	}
-	EntryList_Add(list, &entry);
+	String_AppendUInt32(&key, Utils_CRC32(url->buffer, url->length));
+	EntryList_Set(list, &key, data);
+	EntryList_Save(list);
 }
 
 void TextureCache_SetETag(const String* url, const String* etag) {

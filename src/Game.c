@@ -433,11 +433,6 @@ static void Game_LoadGuiOptions(void) {
 	/* TODO: Handle Arial font not working */
 }
 
-static void Game_InitScheduledTasks(void) {
-	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
-	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
-}
-
 void Game_Free(void* obj);
 void Game_Load(void) {
 	String title;      char titleBuffer[STRING_SIZE];
@@ -517,8 +512,8 @@ void Game_Load(void) {
 	for (comp = comps_head; comp; comp = comp->Next) {
 		if (comp->Ready) comp->Ready();
 	}
-	Game_InitScheduledTasks();
 
+	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
 	/* TODO: plugin dll support */
 	/* if (nonLoaded != null) {
 		for (int i = 0; i < nonLoaded.Count; i++) {

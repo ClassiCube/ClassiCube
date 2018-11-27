@@ -100,6 +100,8 @@ bool Window_GetCursorVisible(void);
 /* NOTE: You must be careful with this! OS typically uses a counter for visibility,
 so setting invisible multiple times means you must then set visible multiple times. */
 void Window_SetCursorVisible(bool visible);
+/* Shows a dialog box window. */
+CC_EXPORT void Window_ShowDialog(const char* title, const char* msg);
 
 #ifndef CC_BUILD_D3D9
 /* Initialises an OpenGL context that most closely matches the input arguments. */

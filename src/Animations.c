@@ -304,7 +304,7 @@ static void Animations_Validate(void) {
 }
 
 
-void Animations_Tick(struct ScheduledTask* task) {
+static void Animations_Tick(struct ScheduledTask* task) {
 	int i, size;
 
 	if (anims_useLavaAnim) {
@@ -359,6 +359,7 @@ static void Animations_FileChanged(void* obj, struct Stream* stream, const Strin
 *--------------------------------------------------Animations component---------------------------------------------------*
 *#########################################################################################################################*/
 static void Animations_Init(void) {
+	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
 	Event_RegisterVoid(&TextureEvents_PackChanged,  NULL, Animations_PackChanged);
 	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Animations_FileChanged);
 }

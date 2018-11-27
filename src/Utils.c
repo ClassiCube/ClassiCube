@@ -3,7 +3,13 @@
 #include "PackedCol.h"
 #include "Chat.h"
 #include "Platform.h"
+#include "Stream.h"
+#include "Errors.h"
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------DateTime---------------------------------------------------------*
+*#########################################################################################################################*/
 #define DATETIME_SECONDS_PER_MINUTE 60
 #define DATETIME_SECONDS_PER_HOUR (60 * 60)
 #define DATETIME_SECONDS_PER_DAY (60 * 60 * 24)
@@ -101,6 +107,10 @@ void DateTime_HttpDate(TimeMS ms, String* str) {
 	String_Format3(str, "%p2:%p2:%p2 GMT", &t.Hour, &t.Minute, &t.Second);
 }
 
+
+/*########################################################################################################################*
+*----------------------------------------------------------Misc-----------------------------------------------------------*
+*#########################################################################################################################*/
 int Utils_ParseEnum(const String* text, int defValue, const char** names, int namesCount) {
 	int i;
 	for (i = 0; i < namesCount; i++) {
@@ -214,4 +224,131 @@ bool Utils_ParseIP(const String* ip, uint8_t* data) {
 	return
 		Convert_TryParseUInt8(&parts[0], &data[0]) && Convert_TryParseUInt8(&parts[1], &data[1]) &&
 		Convert_TryParseUInt8(&parts[2], &data[2]) && Convert_TryParseUInt8(&parts[3], &data[3]);
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------EntryList--------------------------------------------------------*
+*#########################################################################################################################*/
+void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
+	String entry; char entryBuffer[768];
+	String path;  char pathBuffer[FILENAME_SIZE];
+	String key, value;
+
+	uint8_t buffer[2048];
+	struct Stream stream, buffered;
+	ReturnCode res;
+
+	String_InitArray(path, pathBuffer);
+	if (list->Folder) {
+		String_Format3(&path, "%c%r%c", list->Folder, &Directory_Separator, list->Filename);
+	} else {
+		String_AppendConst(&path, list->Filename);
+	}
+	
+	res = Stream_OpenFile(&stream, &path);
+	if (res == ReturnCode_FileNotFound) return;
+	if (res) { Chat_LogError2(res, "opening", &path); return; }
+
+	/* ReadLine reads single byte at a time */
+	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
+	String_InitArray(entry, entryBuffer);
+
+	for (;;) {
+		res = Stream_ReadLine(&buffered, &entry);
+		if (res == ERR_END_OF_STREAM) break;
+		if (res) { Chat_LogError2(res, "reading from", &path); break; }
+		
+		String_TrimStart(&entry);
+		String_TrimEnd(&entry);
+
+		if (!entry.length) continue;
+		if (filter && !filter(&entry)) continue;
+
+		String_UNSAFE_Separate(&entry, list->Separator, &key, &value);
+		EntryList_Set(list, &key, &value);
+	}
+
+	res = stream.Close(&stream);
+	if (res) { Chat_LogError2(res, "closing", &path); }
+}
+
+void EntryList_Save(struct EntryList* list) {
+	String path, entry; char pathBuffer[FILENAME_SIZE];
+	struct Stream stream;
+	int i;
+	ReturnCode res;
+
+	String_InitArray(path, pathBuffer);
+	if (list->Folder) {
+		String_Format3(&path, "%c%r%c", list->Folder, &Directory_Separator, list->Filename);
+		if (!Utils_EnsureDirectory(list->Folder)) return;
+	} else {
+		String_AppendConst(&path, list->Filename);
+	}
+	
+	res = Stream_CreateFile(&stream, &path);
+	if (res) { Chat_LogError2(res, "creating", &path); return; }
+
+	for (i = 0; i < list->Entries.Count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
+		res   = Stream_WriteLine(&stream, &entry);
+		if (res) { Chat_LogError2(res, "writing to", &path); break; }
+	}
+
+	res = stream.Close(&stream);
+	if (res) { Chat_LogError2(res, "closing", &path); }
+}
+
+int EntryList_Remove(struct EntryList* list, const String* key) {
+	int i = EntryList_Find(list, key);
+	if (i >= 0) StringsBuffer_Remove(&list->Entries, i);
+	return i;
+}
+
+void EntryList_Set(struct EntryList* list, const String* key, const String* value) {
+	String entry; char entryBuffer[1024];
+	String_InitArray(entry, entryBuffer);
+
+	if (value->length) {
+		String_Format3(&entry, "%s%r%s", key, &list->Separator, value);
+	} else {
+		String_Copy(&entry, key);
+	}
+
+	EntryList_Remove(list, key);
+	StringsBuffer_Add(&list->Entries, &entry);
+}
+
+String EntryList_UNSAFE_Get(struct EntryList* list, const String* key) {
+	String curEntry, curKey, curValue;
+	int i;
+
+	for (i = 0; i < list->Entries.Count; i++) {
+		curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
+		String_UNSAFE_Separate(&curEntry, list->Separator, &curKey, &curValue);
+
+		if (String_CaselessEquals(key, &curKey)) return curValue;
+	}
+	return String_Empty;
+}
+
+int EntryList_Find(struct EntryList* list, const String* key) {
+	String curEntry, curKey, curValue;
+	int i;
+
+	for (i = 0; i < list->Entries.Count; i++) {
+		curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
+		String_UNSAFE_Separate(&curEntry, list->Separator, &curKey, &curValue);
+
+		if (String_CaselessEquals(key, &curKey)) return i;
+	}
+	return -1;
+}
+
+void EntryList_Init(struct EntryList* list, const char* folder, const char* file, char separator) {
+	list->Folder    = folder;
+	list->Filename  = file;
+	list->Separator = separator;
+	EntryList_Load(list, NULL);
 }

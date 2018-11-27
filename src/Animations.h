@@ -11,6 +11,4 @@
 struct IGameComponent;
 struct ScheduledTask;
 extern struct IGameComponent Animations_Component;
-
-void Animations_Tick(struct ScheduledTask* task);
 #endif

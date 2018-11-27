@@ -93,6 +93,7 @@ void ServerConnection_DownloadTexturePack(const String* url);
 typedef void (*Net_Handler)(uint8_t* data);
 extern uint16_t Net_PacketSizes[OPCODE_COUNT];
 extern Net_Handler Net_Handlers[OPCODE_COUNT];
-void Net_Set(uint8_t opcode, Net_Handler handler, int size);
+#define Net_Set(opcode, handler, size) Net_Handlers[opcode] = handler; Net_PacketSizes[opcode] = size;
+
 void Net_SendPacket(void);
 #endif

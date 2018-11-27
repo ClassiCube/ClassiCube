@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
 	String_Format1(&defPath, "texpacks%rdefault.zip", &Directory_Separator);
 
 	if (!File_Exists(&defPath)) {
-		ErrorHandler_ShowDialog("Missing file",
+		Window_ShowDialog("Missing file",
 			"default.zip is missing, try running launcher first.\n\nThe game will still run, but without any textures");
 	}
 
@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
 	} else if (argsCount == 1) {
 		String_Copy(&Game_Username, &args[0]);
 	} else if (argsCount < 4) {
-		ErrorHandler_ShowDialog("Failed to start", "ClassiCube.exe is only the raw client.\n\n" \
+		Window_ShowDialog("Failed to start", "ClassiCube.exe is only the raw client.\n\n" \
 			"Use the launcher instead, or provide command line arguments");
 		Platform_Exit(1);
 		return 1;
@@ -90,11 +90,11 @@ int main(int argc, char** argv) {
 		String_Copy(&Game_IPAddress, &args[2]);
 
 		if (!Utils_ParseIP(&args[2], ip)) {
-			ErrorHandler_ShowDialog("Failed to start", "Invalid IP");
+			Window_ShowDialog("Failed to start", "Invalid IP");
 			Platform_Exit(1); return 1;
 		}
 		if (!Convert_TryParseUInt16(&args[3], &port)) {
-			ErrorHandler_ShowDialog("Failed to start", "Invalid port");
+			Window_ShowDialog("Failed to start", "Invalid port");
 			Platform_Exit(1); return 1;
 		}
 		Game_Port = port;

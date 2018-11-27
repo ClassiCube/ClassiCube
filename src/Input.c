@@ -316,20 +316,20 @@ int Hotkeys_FindPartial(Key key) {
 void Hotkeys_Init(void) {
 	static String prefix = String_FromConst("hotkey-");
 	String strKey, strMods, strMore, strText;
-	String key, value;
+	String entry, key, value;
 	int i;
 
 	Key trigger;
 	uint8_t modifiers;
 	bool more;
 
-	for (i = 0; i < Options_Keys.Count; i++) {
-		key = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
-		if (!String_CaselessStarts(&key, &prefix)) continue;
+	for (i = 0; i < Options.Entries.Count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(&Options.Entries, i);
+		String_UNSAFE_Separate(&entry, Options.Separator, &key, &value);
 
+		if (!String_CaselessStarts(&key, &prefix)) continue;
 		/* Format is: key&modifiers = more-input&text */
 		key.length -= prefix.length; key.buffer += prefix.length;
-		value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
 	
 		if (!String_UNSAFE_Separate(&key,   '&', &strKey,  &strMods)) continue;
 		if (!String_UNSAFE_Separate(&value, '&', &strMore, &strText)) continue;
