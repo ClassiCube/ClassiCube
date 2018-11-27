@@ -880,8 +880,8 @@ void Font_GetNames(StringsBuffer* buffer) {
 		entry = StringsBuffer_UNSAFE_Get(&font_list.Entries, i);
 		String_UNSAFE_Separate(&entry, font_list.Separator, &name, &path);
 
-		/* remove " B"/" R" at end of font name */
-		if (name.length < 2) continue;
+		/* Only want Regular fonts here */
+		if (name.length < 2 || name.buffer[name.length - 1] != 'R') continue;
 		name.length -= 2;
 		StringsBuffer_Add(buffer, &name);
 	}
@@ -1035,6 +1035,56 @@ Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
 	return s;
 }
 
+static void Platform_GrayscaleGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, BitmapCol col) {
+	uint8_t* src;
+	BitmapCol* dst;
+	uint8_t intensity, invIntensity;
+	int xx, yy;
+
+	for (yy = 0; yy < img->rows; yy++) {
+		if ((y + yy) < 0 || (y + yy) >= bmp->Height) continue;
+		src = img->buffer + (yy * img->pitch);
+		dst = Bitmap_GetRow(bmp, y + yy) + x;
+
+		for (xx = 0; xx < img->width; xx++, src++) {
+			if ((x + xx) < 0 || (x + xx) >= bmp->Width) continue;
+			intensity = *src; invIntensity = UInt8_MaxValue - intensity;
+
+			dst->B = ((col.B * intensity) >> 8) + ((dst->B * invIntensity) >> 8);
+			dst->G = ((col.G * intensity) >> 8) + ((dst->G * invIntensity) >> 8);
+			dst->R = ((col.R * intensity) >> 8) + ((dst->R * invIntensity) >> 8);
+			/*dst->A = ((col.A * intensity) >> 8) + ((dst->A * invIntensity) >> 8);*/
+			dst->A = intensity + ((dst->A * invIntensity) >> 8);
+			dst++;
+		}
+	}
+}
+
+static void Platform_BlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, BitmapCol col) {
+	uint8_t* src;
+	BitmapCol* dst;
+	uint8_t intensity;
+	int xx, yy;
+
+	for (yy = 0; yy < img->rows; yy++) {
+		if ((y + yy) < 0 || (y + yy) >= bmp->Height) continue;
+		src = img->buffer + (yy * img->pitch);
+		dst = Bitmap_GetRow(bmp, y + yy) + x;
+
+		for (xx = 0; xx < img->width; xx++) {
+			if ((x + xx) < 0 || (x + xx) >= bmp->Width) continue;
+			intensity = src[xx >> 3];
+
+			if (intensity & (1 << (7 - (xx & 7)))) {
+				dst->B = col.B; dst->G = col.G; dst->R = col.R;
+				/*dst->A = col.A*/
+				dst->A = 255;
+			}
+			dst++;
+		}
+	}
+}
+
 Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col) {
 	FT_Face face = args->Font.Handle;
 	String text = args->Text;
@@ -1042,14 +1092,9 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, B
 	int descender, begX = x;
 
 	/* glyph state */
-	int i, xx, yy, offset;
-	Codepoint cp;
 	FT_Bitmap* img;
-
-	/* glyph drawing state */
-	uint8_t* src;
-	BitmapCol* dst;
-	uint8_t intensity, invIntensity;
+	int i, offset;
+	Codepoint cp;
 
 	s.Height  = TEXT_CEIL(face->size->metrics.height);
 	descender = TEXT_CEIL(face->size->metrics.descender);
@@ -1058,26 +1103,14 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, B
 		cp = Convert_CP437ToUnicode(text.buffer[i]);
 		FT_Load_Char(face, cp, FT_LOAD_RENDER); /* TODO: Check error */
 
-		img    = &face->glyph->bitmap;
 		offset = (s.Height + descender) - face->glyph->bitmap_top;
 		x += face->glyph->bitmap_left; y += offset;
 
-		for (yy = 0; yy < img->rows; yy++) {
-			if ((y + yy) < 0 || (y + yy) >= bmp->Height) continue;
-			src = img->buffer + (yy * img->width);
-			dst = Bitmap_GetRow(bmp, y + yy) + x;
-
-			for (xx = 0; xx < img->width; xx++) {
-				if ((x + xx) < 0 || (x + xx) >= bmp->Width) continue;
-				intensity = *src; invIntensity = UInt8_MaxValue - intensity;
-
-				dst->B = ((col.B * intensity) >> 8) + ((dst->B * invIntensity) >> 8);
-				dst->G = ((col.G * intensity) >> 8) + ((dst->G * invIntensity) >> 8);
-				dst->R = ((col.R * intensity) >> 8) + ((dst->R * invIntensity) >> 8);
-				/*dst->A = ((col.A * intensity) >> 8) + ((dst->A * invIntensity) >> 8);*/
-				dst->A = intensity + ((dst->A * invIntensity) >> 8);
-				src++; dst++;
-			}
+		img = &face->glyph->bitmap;
+		if (img->num_grays == 2) {
+			Platform_BlackWhiteGlyph(img, bmp, x, y, col);
+		} else {
+			Platform_GrayscaleGlyph(img, bmp, x, y, col);
 		}
 
 		x += TEXT_CEIL(face->glyph->advance.x);
