@@ -8,12 +8,15 @@
 #include "AsyncDownloader.h"
 #include "Bitmap.h"
 
+#define FT_EXPORT(x) extern x
 #include "freetype/ft2build.h"
 #include "freetype/freetype.h"
 #include "freetype/ftmodapi.h"
 
 static void Platform_InitDisplay(void);
 static void Platform_InitStopwatch(void);
+struct DisplayDevice DisplayDevice_Default;
+void* DisplayDevice_Meta;
 
 #ifdef CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN

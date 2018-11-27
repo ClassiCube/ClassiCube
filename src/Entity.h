@@ -142,7 +142,7 @@ struct NetPlayer {
 	bool ShouldRender;
 };
 void NetPlayer_Init(struct NetPlayer* player, const String* displayName, const String* skinName);
-struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
+extern struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 
 /* Represents the user/player's own entity. */
 struct LocalPlayer {

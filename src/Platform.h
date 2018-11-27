@@ -36,8 +36,8 @@ extern const ReturnCode ReturnCode_InvalidArg;
 
 /* Data for a display device. (usually a monitor) */
 struct DisplayDevice { int BitsPerPixel; Rect2D Bounds; };
-struct DisplayDevice DisplayDevice_Default;
-void* DisplayDevice_Meta;
+extern struct DisplayDevice DisplayDevice_Default;
+extern void* DisplayDevice_Meta;
 
 struct GraphicsMode {
 	int R,G,B,A, BitsPerPixel, IsIndexed; /* Colour buffer data */

@@ -1045,6 +1045,8 @@ bool LocalPlayer_HandlesKey(Key key) {
 /*########################################################################################################################*
 *-------------------------------------------------------NetPlayer---------------------------------------------------------*
 *#########################################################################################################################*/
+struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
+
 static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update, bool interpolate) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
 	NetInterpComp_SetLocation(&p->Interp, update, interpolate);
