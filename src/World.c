@@ -253,11 +253,11 @@ void Env_SetShadowCol(PackedCol col) {
 /*########################################################################################################################*
 *-------------------------------------------------------Respawning--------------------------------------------------------*
 *#########################################################################################################################*/
-float Respawn_HighestFreeY(struct AABB* bb) {
+float Respawn_HighestSolidY(struct AABB* bb) {
 	int minX = Math_Floor(bb->Min.X), maxX = Math_Floor(bb->Max.X);
 	int minY = Math_Floor(bb->Min.Y), maxY = Math_Floor(bb->Max.Y);
 	int minZ = Math_Floor(bb->Min.Z), maxZ = Math_Floor(bb->Max.Z);
-	float spawnY = RESPAWN_NOT_FOUND;
+	float highestY = RESPAWN_NOT_FOUND;
 
 	BlockID block;
 	struct AABB blockBB;
@@ -274,11 +274,11 @@ float Respawn_HighestFreeY(struct AABB* bb) {
 
 				if (Block_Collide[block] != COLLIDE_SOLID) continue;
 				if (!AABB_Intersects(bb, &blockBB)) continue;
-				if (blockBB.Max.Y > spawnY) spawnY = blockBB.Max.Y;
+				if (blockBB.Max.Y > highestY) highestY = blockBB.Max.Y;
 			}
 		}
 	}
-	return spawnY;
+	return highestY;
 }
 
 Vector3 Respawn_FindSpawnPosition(float x, float z, Vector3 modelSize) {
@@ -292,7 +292,7 @@ Vector3 Respawn_FindSpawnPosition(float x, float z, Vector3 modelSize) {
 	spawn.Y = 0.0f;
 	
 	for (y = World_Height; y >= 0; y--) {
-		highestY = Respawn_HighestFreeY(&bb);
+		highestY = Respawn_HighestSolidY(&bb);
 		if (highestY != RESPAWN_NOT_FOUND) {
 			spawn.Y = highestY; break;
 		}

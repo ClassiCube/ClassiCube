@@ -1521,7 +1521,7 @@ static bool DisconnectScreen_MouseDown(void* screen, int x, int y, MouseButton b
 
 		Gui_FreeActive();
 		Gui_SetActive(LoadingScreen_MakeInstance(&title, &String_Empty));
-		ServerConnection_BeginConnect();
+		ServerConnection.BeginConnect();
 	}
 	return true;
 }

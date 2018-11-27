@@ -940,7 +940,7 @@ static void LocalPlayer_DoRespawn(void) {
 	if (World_IsValidPos_3I(pos)) {
 		AABB_Make(&bb, &spawn, &p->Base.Size);
 		for (y = pos.Y; y <= World_Height; y++) {
-			spawnY = Respawn_HighestFreeY(&bb);
+			spawnY = Respawn_HighestSolidY(&bb);
 
 			if (spawnY == RESPAWN_NOT_FOUND) {
 				block   = World_GetPhysicsBlock(pos.X, y, pos.Z);

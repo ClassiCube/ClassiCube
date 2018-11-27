@@ -144,16 +144,16 @@ static bool Physics_IsEdgeWater(int x, int y, int z) {
 }
 
 
-static void Physics_BlockChanged(void* obj, Vector3I p, BlockID old, BlockID now) {
+void Physics_OnBlockChanged(int x, int y, int z, BlockID old, BlockID now) {
 	PhysicsHandler handler;
 	int index;
 	if (!Physics_Enabled) return;
 
-	if (now == BLOCK_AIR && Physics_IsEdgeWater(p.X, p.Y, p.Z)) {
+	if (now == BLOCK_AIR && Physics_IsEdgeWater(x, y, z)) {
 		now = BLOCK_STILL_WATER;
-		Game_UpdateBlock(p.X, p.Y, p.Z, BLOCK_STILL_WATER);
+		Game_UpdateBlock(x, y, z, BLOCK_STILL_WATER);
 	}
-	index = World_Pack(p.X, p.Y, p.Z);
+	index = World_Pack(x, y, z);
 
 	if (now == BLOCK_AIR) {
 		handler = Physics_OnDelete[old];
@@ -162,7 +162,7 @@ static void Physics_BlockChanged(void* obj, Vector3I p, BlockID old, BlockID now
 		handler = Physics_OnPlace[now];
 		if (handler) handler(index, now);
 	}
-	Physics_ActivateNeighbours(p.X, p.Y, p.Z, index);
+	Physics_ActivateNeighbours(x, y, z, index);
 }
 
 static void Physics_TickRandomBlocks(void) {
@@ -515,7 +515,6 @@ static void Physics_HandleTnt(int index, BlockID block) {
 
 void Physics_Init(void) {
 	Event_RegisterVoid(&WorldEvents_MapLoaded,    NULL, Physics_OnNewMapLoaded);
-	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, Physics_BlockChanged);
 	Physics_Enabled = Options_GetBool(OPT_BLOCK_PHYSICS, true);
 	TickQueue_Init(&physics_lavaQ);
 	TickQueue_Init(&physics_waterQ);
@@ -559,7 +558,6 @@ void Physics_Init(void) {
 
 void Physics_Free(void) {
 	Event_UnregisterVoid(&WorldEvents_MapLoaded,    NULL, Physics_OnNewMapLoaded);
-	Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, Physics_BlockChanged);
 }
 
 void Physics_Tick(void) {

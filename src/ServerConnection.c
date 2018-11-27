@@ -28,16 +28,11 @@ static char server_motdBuffer[STRING_SIZE];
 static char server_appBuffer[STRING_SIZE];
 static int server_ticks;
 
+struct ServerConnectionFuncs ServerConnection;
 bool ServerConnection_IsSinglePlayer, ServerConnection_Disconnected;
 String ServerConnection_ServerName = String_FromArray(server_nameBuffer);
 String ServerConnection_ServerMOTD = String_FromArray(server_motdBuffer);
 String ServerConnection_AppName    = String_FromArray(server_appBuffer);
-
-void (*ServerConnection_BeginConnect)(void);
-void (*ServerConnection_SendChat)(const String* text);
-void (*ServerConnection_SendPosition)(Vector3 pos, float rotY, float headX);
-void (*ServerConnection_SendPlayerClick)(MouseButton button, bool isDown, EntityID targetId, struct PickedPos* pos);
-void (*ServerConnection_Tick)(struct ScheduledTask* task);
 
 uint8_t* ServerConnection_WriteBuffer; 
 bool ServerConnection_SupportsExtPlayerList, ServerConnection_SupportsPlayerClick;
@@ -205,6 +200,10 @@ static void SPConnection_AddPart(const String* text) {
 	Chat_Add(&tmp);
 }
 
+static void SPConnection_SendBlock(int x, int y, int z, BlockID old, BlockID now) {
+	Physics_OnBlockChanged(x, y, z, old, now);
+}
+
 static void SPConnection_SendChat(const String* text) {
 	String left, part;
 	if (!text->length) return;
@@ -232,19 +231,21 @@ static void SPConnection_Tick(struct ScheduledTask* task) {
 	server_ticks++;
 }
 
+static struct ServerConnectionFuncs SPConnection = {
+	SPConnection_BeginConnect, SPConnection_Tick,
+	SPConnection_SendBlock,    SPConnection_SendChat,
+	SPConnection_SendPosition, SPConnection_SendPlayerClick
+};
+
 static void SPConnection_Init(void) {
 	ServerConnection_ResetState();
 	Physics_Init();
+	
 	ServerConnection_SupportsFullCP437 = !Game_ClassicMode;
 	ServerConnection_SupportsPartialMessages = true;
 	ServerConnection_IsSinglePlayer = true;
 
-	ServerConnection_BeginConnect = SPConnection_BeginConnect;
-	ServerConnection_SendChat = SPConnection_SendChat;
-	ServerConnection_SendPosition = SPConnection_SendPosition;
-	ServerConnection_SendPlayerClick = SPConnection_SendPlayerClick;
-	ServerConnection_Tick = SPConnection_Tick;
-
+	ServerConnection = SPConnection;
 	ServerConnection_WriteBuffer = NULL;
 }
 
@@ -268,16 +269,6 @@ static double net_discAccumulator;
 static bool net_connecting;
 static TimeMS net_connectTimeout;
 #define NET_TIMEOUT_MS (15 * 1000)
-
-static void MPConnection_BlockChanged(void* obj, Vector3I p, BlockID old, BlockID now) {
-	if (now == BLOCK_AIR) {
-		now = Inventory_SelectedBlock;
-		Classic_WriteSetBlock(p.X, p.Y, p.Z, false, now);
-	} else {
-		Classic_WriteSetBlock(p.X, p.Y, p.Z, true, now);
-	}
-	Net_SendPacket();
-}
 
 static void ServerConnection_Free(void);
 static void MPConnection_FinishConnect(void) {
@@ -334,7 +325,6 @@ static void MPConnection_TickConnect(void) {
 
 static void MPConnection_BeginConnect(void) {
 	ReturnCode res;
-	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, MPConnection_BlockChanged);
 	Socket_Create(&net_socket);
 	ServerConnection_Disconnected = false;
 
@@ -346,6 +336,16 @@ static void MPConnection_BeginConnect(void) {
 	if (res && res != ReturnCode_SocketInProgess && res != ReturnCode_SocketWouldBlock) {
 		MPConnection_FailConnect(res);
 	}
+}
+
+static void MPConnection_SendBlock(int x, int y, int z, BlockID old, BlockID now) {
+	if (now == BLOCK_AIR) {
+		now = Inventory_SelectedBlock;
+		Classic_WriteSetBlock(x, y, z, false, now);
+	} else {
+		Classic_WriteSetBlock(x, y, z, true, now);
+	}
+	Net_SendPacket();
 }
 
 static void MPConnection_SendChat(const String* text) {
@@ -514,17 +514,18 @@ void Net_SendPacket(void) {
 	}
 }
 
+static struct ServerConnectionFuncs MPConnection = {
+	MPConnection_BeginConnect, MPConnection_Tick,
+	MPConnection_SendBlock,    MPConnection_SendChat,
+	MPConnection_SendPosition, MPConnection_SendPlayerClick
+};
+
 static void MPConnection_Init(void) {
 	ServerConnection_ResetState();
 	ServerConnection_IsSinglePlayer = false;
 
-	ServerConnection_BeginConnect = MPConnection_BeginConnect;
-	ServerConnection_SendChat = MPConnection_SendChat;
-	ServerConnection_SendPosition = MPConnection_SendPosition;
-	ServerConnection_SendPlayerClick = MPConnection_SendPlayerClick;
-	ServerConnection_Tick = MPConnection_Tick;
-
-	net_readCurrent = net_readBuffer;
+	ServerConnection = MPConnection;
+	net_readCurrent  = net_readBuffer;
 	ServerConnection_WriteBuffer = net_writeBuffer;
 }
 
@@ -561,8 +562,8 @@ static void ServerConnection_Init(void) {
 		MPConnection_Init();
 	}
 
-	Gfx_LostContextFunction = ServerConnection_Tick;
-	ScheduledTask_Add(GAME_NET_TICKS, ServerConnection_Tick);
+	Gfx_LostContextFunction = ServerConnection.Tick;
+	ScheduledTask_Add(GAME_NET_TICKS, ServerConnection.Tick);
 	String_AppendConst(&ServerConnection_AppName, PROGRAM_APP_NAME);
 }
 
@@ -571,7 +572,6 @@ static void ServerConnection_Free(void) {
 		Physics_Free();
 	} else {
 		if (ServerConnection_Disconnected) return;
-		Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, MPConnection_BlockChanged);
 		Socket_Close(net_socket);
 		ServerConnection_Disconnected = true;
 	}

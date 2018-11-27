@@ -7,6 +7,7 @@
 
 extern bool Physics_Enabled;
 void Physics_SetEnabled(bool enabled);
+void Physics_OnBlockChanged(int x, int y, int z, BlockID old, BlockID now);
 void Physics_Init(void);
 void Physics_Free(void);
 void Physics_Tick(void);

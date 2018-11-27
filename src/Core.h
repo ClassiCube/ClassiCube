@@ -21,7 +21,7 @@ typedef signed __int64 int64_t;
 
 #define CC_INLINE inline
 #define CC_NOINLINE __declspec(noinline)
-#define CC_ALIGN_HINT(x) /* TODO: Why does this cause LNK2005 errors */
+#define CC_ALIGN_HINT(x) __declspec(align(x))
 #ifndef CC_EXPORT
 #define CC_EXPORT __declspec(dllexport, noinline)
 #endif

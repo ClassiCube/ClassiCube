@@ -46,22 +46,45 @@ int PingList_NextPingData(void);
 void PingList_Update(int data);
 int PingList_AveragePingMs(void);
 
+/* Whether the player is connected to singleplayer/loopback server. */
 extern bool ServerConnection_IsSinglePlayer;
+/* Whether the player has been disconnected from the server. */
 extern bool ServerConnection_Disconnected;
+/* The current name of the server. (Shows as first line when loading) */
 extern String ServerConnection_ServerName;
+/* The current MOTD of the server. (Shows as second line when loading) */
 extern String ServerConnection_ServerMOTD;
+/* The software name the client identifies itself as being to the server. */
+/* By default this is the same as PROGRAM_APP_NAME */
 extern String ServerConnection_AppName;
 
-extern void (*ServerConnection_BeginConnect)(void);
-extern void (*ServerConnection_SendChat)(const String* text);
-extern void (*ServerConnection_SendPosition)(Vector3 pos, float rotY, float headX);
-extern void (*ServerConnection_SendPlayerClick)(MouseButton button, bool isDown, EntityID targetId, struct PickedPos* pos);
-extern void (*ServerConnection_Tick)(struct ScheduledTask* task);
+struct ServerConnectionFuncs {
+	/* Begins connecting to the server. */
+	/* NOTE: Usually asynchronous, but not always. */
+	void (*BeginConnect)(void);
+	/* Ticks state of the server. */
+	void (*Tick)(struct ScheduledTask* task);
+	/* Sends a block update to the server. */
+	void (*SendBlock)(int x, int y, int z, BlockID old, BlockID now);
+	/* Sends a chat message to the server. */
+	void (*SendChat)(const String* text);
+	/* Sends a position update to the server. */
+	void (*SendPosition)(Vector3 pos, float rotY, float headX);
+	/* Sends a PlayerClick packet to the server. */
+	void (*SendPlayerClick)(MouseButton button, bool isDown, EntityID targetId, struct PickedPos* pos);
+};
+
+/* Currently active connection to a server. */
+extern struct ServerConnectionFuncs ServerConnection;
 extern uint8_t* ServerConnection_WriteBuffer;
 
+/* Whether the server supports separate tab list from entities in world. */
 extern bool ServerConnection_SupportsExtPlayerList;
+/* Whether the server supports packet with detailed info on mouse clicks. */
 extern bool ServerConnection_SupportsPlayerClick;
+/* Whether the server supports combining multiple chat packets into one. */
 extern bool ServerConnection_SupportsPartialMessages;
+/* Whether the server supports all of code page 437, not just ASCII. */
 extern bool ServerConnection_SupportsFullCP437;
 
 void ServerConnection_RetrieveTexturePack(const String* url);

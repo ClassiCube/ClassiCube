@@ -461,7 +461,7 @@ static void CuboidCommand_DoCuboid(void) {
 	for (y = min.Y; y <= max.Y; y++) {
 		for (z = min.Z; z <= max.Z; z++) {
 			for (x = min.X; x <= max.X; x++) {
-				Game_UpdateBlock(x, y, z, toPlace);
+				Game_ChangeBlock(x, y, z, toPlace);
 			}
 		}
 	}
@@ -566,7 +566,7 @@ void Chat_Send(const String* text, bool logUsage) {
 	if (Commands_IsCommandPrefix(text)) {
 		Commands_Execute(text);
 	} else {
-		ServerConnection_SendChat(text);
+		ServerConnection.SendChat(text);
 	}
 }
 

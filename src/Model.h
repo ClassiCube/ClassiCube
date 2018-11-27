@@ -106,8 +106,6 @@ extern GfxResourceID Model_Vb;
 extern VertexP3fT2fC4b Model_Vertices[MODEL_MAX_VERTICES];
 extern struct Model* Human_ModelPtr;
 
-void Models_Init(void);
-void Models_Free(void);
 /* Returns pointer to model whose name caselessly matches given name. */
 CC_EXPORT struct Model* Model_Get(const String* name);
 /* Returns index of cached texture whose name caselessly matches given name. */

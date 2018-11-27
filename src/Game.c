@@ -194,6 +194,7 @@ void Game_Disconnect(const String* title, const String* reason) {
 	Event_RaiseVoid(&WorldEvents_NewMap);
 	Gui_FreeActive();
 	Gui_SetActive(DisconnectScreen_MakeInstance(title, reason));
+	Game_Reset();
 }
 
 void Game_Reset(void) {
@@ -211,18 +212,24 @@ void Game_Reset(void) {
 void Game_UpdateBlock(int x, int y, int z, BlockID block) {
 	struct ChunkInfo* chunk;
 	int cx = x >> 4, cy = y >> 4, cz = z >> 4;
-	BlockID oldBlock = World_GetBlock(x, y, z);
+	BlockID old = World_GetBlock(x, y, z);
 	World_SetBlock(x, y, z, block);
 
 	if (Weather_Heightmap) {
-		EnvRenderer_OnBlockChanged(x, y, z, oldBlock, block);
+		EnvRenderer_OnBlockChanged(x, y, z, old, block);
 	}
-	Lighting_OnBlockChanged(x, y, z, oldBlock, block);
+	Lighting_OnBlockChanged(x, y, z, old, block);
 
 	/* Refresh the chunk the block was located in. */
 	chunk = MapRenderer_GetChunk(cx, cy, cz);
 	chunk->AllAir &= Block_Draw[block] == DRAW_GAS;
 	MapRenderer_RefreshChunk(cx, cy, cz);
+}
+
+void Game_ChangeBlock(int x, int y, int z, BlockID block) {
+	BlockID old = World_GetBlock(x, y, z);
+	Game_UpdateBlock(x, y, z, block);
+	ServerConnection.SendBlock(x, y, z, old, block);
 }
 
 bool Game_CanPick(BlockID block) {
@@ -526,7 +533,7 @@ void Game_Load(void) {
 
 	Gui_FreeActive();
 	Gui_SetActive(LoadingScreen_MakeInstance(&title, &String_Empty));
-	ServerConnection_BeginConnect();
+	ServerConnection.BeginConnect();
 }
 
 void Game_SetFpsLimit(enum FpsLimit method) {

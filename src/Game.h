@@ -82,7 +82,12 @@ void Game_UserSetViewDistance(int distance);
 void Game_UpdateProjection(void);
 void Game_Disconnect(const String* title, const String* reason);
 void Game_Reset(void);
-void Game_UpdateBlock(int x, int y, int z, BlockID block);
+/* Sets the block in the map at the given coordinates, then updates state associated with the block. */
+/* (updating state means recalculating light, redrawing chunk block is in, etc) */
+/* NOTE: This does NOT notify the server, use Game_ChangeBlock for that. */
+CC_EXPORT void Game_UpdateBlock(int x, int y, int z, BlockID block);
+/* Calls Game_UpdateBlock, then sends the block change to the server. */
+CC_EXPORT void Game_ChangeBlock(int x, int y, int z, BlockID block);
 bool Game_CanPick(BlockID block);
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, uint8_t* skinType);
 bool Game_ValidateBitmap(const String* file, Bitmap* bmp);

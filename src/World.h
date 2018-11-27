@@ -129,9 +129,11 @@ CC_EXPORT void Env_SetSunCol(PackedCol col);
 CC_EXPORT void Env_SetShadowCol(PackedCol col);
 
 #define RESPAWN_NOT_FOUND -100000.0f
-/* Finds the highest free Y coordinate in the given bounding box */
-float Respawn_HighestFreeY(struct AABB* bb);
-/* Finds a suitable spawn position for the entity. */
-/* Works by iterating downwards from top of world until ground is found. */
+/* Finds the highest Y coordinate of any solid block that intersects the given bounding box */
+/* So essentially, means max(Y + Block_MaxBB[block].Y) over all solid blocks the AABB touches */
+/* Returns RESPAWN_NOT_FOUND when no intersecting solid blocks are found. */
+float Respawn_HighestSolidY(struct AABB* bb);
+/* Finds a suitable initial spawn position for the entity. */
+/* Works by iterating downwards from top of world until solid ground is found. */
 Vector3 Respawn_FindSpawnPosition(float x, float z, Vector3 modelSize);
 #endif
