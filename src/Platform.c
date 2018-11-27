@@ -7,6 +7,7 @@
 #include "Funcs.h"
 #include "AsyncDownloader.h"
 #include "Bitmap.h"
+#include "Window.h"
 
 #define FT_EXPORT(x) extern x
 #include "freetype/ft2build.h"
@@ -799,7 +800,8 @@ void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
 *#########################################################################################################################*/
 static FT_Library ft_lib;
 static struct FT_MemoryRec_ ft_mem;
-static StringsBuffer norm_fonts, bold_fonts;
+static struct EntryList font_list;
+static bool font_list_changed;
 static void Font_Init(void);
 
 #define DPI_PIXEL  72
@@ -870,21 +872,31 @@ static int Font_Find(const String* name, StringsBuffer* entries) {
 }
 
 void Font_GetNames(StringsBuffer* buffer) {
-	String faceName;
+	String entry, name, path;
 	int i;
-	if (!norm_fonts.Count) Font_Init();
+	if (!font_list.Entries.Count) Font_Init();
 
-	for (i = 1; i < norm_fonts.Count; i += 2) {
-		faceName = StringsBuffer_UNSAFE_Get(&norm_fonts, i);
-		StringsBuffer_Add(buffer, &faceName);
+	for (i = 0; i < font_list.Entries.Count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(&font_list.Entries, i);
+		String_UNSAFE_Separate(&entry, font_list.Separator, &name, &path);
+
+		/* remove " B"/" R" at end of font name */
+		if (name.length < 2) continue;
+		name.length -= 2;
+		StringsBuffer_Add(buffer, &name);
 	}
 }
 
-void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
-	StringsBuffer* entries;
-	int idx;
-	String path;
+static String Font_Lookup(const String* fontName, const char type) {
+	String name; char nameBuffer[STRING_SIZE + 2];
+	String_InitArray(name, nameBuffer);
 
+	String_Format2(&name, "%s %r", fontName, &type);
+	return EntryList_UNSAFE_Get(&font_list, &name);
+}
+
+void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
+	String path;
 	FT_Stream stream;
 	FT_Open_Args args;
 	FT_Face face;
@@ -892,19 +904,13 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 
 	desc->Size  = size;
 	desc->Style = style;
-	if (!norm_fonts.Count) Font_Init();
 
-	idx     = -1;
-	entries = &bold_fonts;
-	if (style & FONT_STYLE_BOLD) { idx = Font_Find(fontName, entries); }
+	if (!font_list.Entries.Count) Font_Init();
+	path = String_Empty;
 
-	if (idx == -1) {
-		entries = &norm_fonts;
-		idx = Font_Find(fontName, entries);
-	}
-
-	if (idx == -1) ErrorHandler_Fail("Unknown font");
-	path = StringsBuffer_UNSAFE_Get(entries, idx - 1);
+	if (style & FONT_STYLE_BOLD) path = Font_Lookup(fontName, 'B');
+	if (!path.length) path = Font_Lookup(fontName, 'R');
+	if (!path.length) ErrorHandler_Fail("Unknown font");
 
 	stream = Mem_AllocCleared(1, sizeof(FT_StreamRec), "leaky font"); /* TODO: LEAKS MEMORY!!! */
 	if (!Font_MakeArgs(&path, stream, &args)) return;
@@ -941,15 +947,14 @@ void Font_Free(FontDesc* desc) {
 	desc->Handle = NULL;
 }
 
-static void Font_Add(const String* path, FT_Face face, StringsBuffer* entries, const char* defStyle) {
+static void Font_Add(const String* path, FT_Face face, char type, const char* defStyle) {
 	String name; char nameBuffer[STRING_SIZE];
 	String style;
 
 	if (!face->family_name || !(face->face_flags & FT_FACE_FLAG_SCALABLE)) return;
-	StringsBuffer_Add(entries, path);
 	String_InitArray(name, nameBuffer);
-
 	String_AppendConst(&name, face->family_name);
+
 	/* don't want 'Arial Regular' or 'Arial Bold' */
 	if (face->style_name) {
 		style = String_FromReadonly(face->style_name);
@@ -959,14 +964,19 @@ static void Font_Add(const String* path, FT_Face face, StringsBuffer* entries, c
 	}
 
 	Platform_Log1("Face: %s", &name);
-	StringsBuffer_Add(entries, &name);
+	String_Append(&name, ' '); String_Append(&name, type);
+	EntryList_Set(&font_list, &name, path);
+	font_list_changed = true;
 }
 
 static void Font_DirCallback(const String* path, void* obj) {
+	static String fonExt = String_FromConst(".fon");
+	String entry, name, fontPath;
 	FT_StreamRec stream = { 0 };
 	FT_Open_Args args;
 	FT_Face face;
 	FT_Error err;
+	int i, flags;
 
 	if (!Font_MakeArgs(path, &stream, &args)) return;
 
@@ -979,13 +989,28 @@ static void Font_DirCallback(const String* path, void* obj) {
 	args.pathname = filename.buffer;
 #endif
 
+	/* If font is already known good, skip it */
+	for (i = 0; i < font_list.Entries.Count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(&font_list.Entries, i);
+		String_UNSAFE_Separate(&entry, font_list.Separator, &name, &fontPath);
+		if (String_CaselessEquals(path, &fontPath)) return;
+	}
+
+	/* Completely skip windows .FON files */
+	if (String_CaselessEnds(path, &fonExt)) return;
+
 	err = FT_New_Face(ft_lib, &args, 0, &face);
 	if (err) { stream.close(&stream); return; }
+	flags = face->style_flags;
 
-	if (face->style_flags == FT_STYLE_FLAG_BOLD) {
-		Font_Add(path, face, &bold_fonts, "Bold");
-	} else if (face->style_flags == 0) {
-		Font_Add(path, face, &norm_fonts, "Regular");
+	if (flags == (FT_STYLE_FLAG_BOLD | FT_STYLE_FLAG_ITALIC)) {
+		Font_Add(path, face, 'Z', "Bold Italic");
+	} else if (flags == FT_STYLE_FLAG_BOLD) {
+		Font_Add(path, face, 'B', "Bold");
+	} else if (flags == FT_STYLE_FLAG_ITALIC) {
+		Font_Add(path, face, 'I', "Italic");
+	} else if (flags == 0) {
+		Font_Add(path, face, 'R', "Regular");
 	}
 	FT_Done_Face(face);
 }
@@ -1083,6 +1108,7 @@ static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, v
 	return Mem_Realloc(block, new_size, 1, "Freetype data");
 }
 
+#define FONT_CACHE_FILE "fontcache.txt"
 static void Font_Init(void) {
 #ifdef CC_BUILD_WIN
 	static String dir = String_FromConst("C:\\Windows\\fonts");
@@ -1096,6 +1122,7 @@ static void Font_Init(void) {
 #ifdef CC_BUILD_OSX
 	static String dir = String_FromConst("/Library/Fonts");
 #endif
+	static String cachePath = String_FromConst(FONT_CACHE_FILE);
 	FT_Error err;
 
 	ft_mem.alloc   = FT_AllocWrapper;
@@ -1107,7 +1134,14 @@ static void Font_Init(void) {
 
 	FT_Add_Default_Modules(ft_lib);
 	FT_Set_Default_Properties(ft_lib);
+
+	if (!File_Exists(&cachePath)) {
+		Window_ShowDialog("One time load", "Initialising font cache, this can take several seconds.");
+	}
+
+	EntryList_Init(&font_list, NULL, FONT_CACHE_FILE, '=');
 	Directory_Enum(&dir, NULL, Font_DirCallback);
+	if (font_list_changed) EntryList_Save(&font_list);
 }
 
 

@@ -10,5 +10,4 @@ void ErrorHandler_Init(void);
 void ErrorHandler_Log(const String* msg);
 void ErrorHandler_Fail(const char* raw_msg);
 CC_NOINLINE void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg);
-#define ErrorHandler_CheckOrFail(result, raw_msg) if (result) { ErrorHandler_Fail2(result, raw_msg); }
 #endif

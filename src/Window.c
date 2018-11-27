@@ -908,7 +908,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	win_handle = XCreateWindow(win_display, win_rootWin, x, y, width, height,
 		0, win_visual.depth /* CopyFromParent*/, InputOutput, win_visual.visual, 
 		CWColormap | CWEventMask | CWBackPixel | CWBorderPixel, &attributes);
-	if (!win_handle) ErrorHandler_Fail("XCreateWindow call failed");
+	if (!win_handle) ErrorHandler_Fail("XCreateWindow failed");
 
 	hints.base_width  = width;
 	hints.base_height = height;
@@ -1616,13 +1616,13 @@ void GLContext_Init(struct GraphicsMode* mode) {
 		Platform_LogConst("Context create failed. Trying indirect...");
 		ctx_Handle = glXCreateContext(win_display, &win_visual, NULL, false);
 	}
-	if (!ctx_Handle) ErrorHandler_Fail("Failed to create context");
+	if (!ctx_Handle) ErrorHandler_Fail("Failed to create OpenGL context");
 
 	if (!glXIsDirect(win_display, ctx_Handle)) {
 		Platform_LogConst("== WARNING: Context is not direct ==");
 	}
 	if (!glXMakeCurrent(win_display, win_handle, ctx_Handle)) {
-		ErrorHandler_Fail("Failed to make context current.");
+		ErrorHandler_Fail("Failed to make OpenGL context current.");
 	}
 
 	/* GLX may return non-null function pointers that don't actually work */

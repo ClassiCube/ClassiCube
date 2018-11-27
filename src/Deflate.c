@@ -1004,8 +1004,8 @@ static ReturnCode GZip_StreamWriteFirst(struct Stream* stream, uint8_t* data, ui
 
 void GZip_MakeStream(struct Stream* stream, struct GZipState* state, struct Stream* underlying) {
 	Deflate_MakeStream(stream, &state->Base, underlying);
-	state->Crc32 = 0xFFFFFFFFUL;
-	state->Size  = 0;
+	state->Crc32  = 0xFFFFFFFFUL;
+	state->Size   = 0;
 	stream->Write = GZip_StreamWriteFirst;
 	stream->Close = GZip_StreamClose;
 }
