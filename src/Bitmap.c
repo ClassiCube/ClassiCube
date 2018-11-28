@@ -619,6 +619,7 @@ static void Png_EncodeRow(const BitmapCol* src, uint8_t* cur, uint8_t* prior, ui
 	best[0] = bestFilter;
 }
 
+static int Png_SelectRow(Bitmap* bmp, int y) { return y; }
 ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow) {	
 	uint8_t tmp[32];
 	uint8_t prevLine[PNG_MAX_DIMS * 3], curLine[PNG_MAX_DIMS * 3];
@@ -630,6 +631,7 @@ ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector select
 	int y, lineSize;
 	ReturnCode res;
 
+	if (!selectRow) selectRow = Png_SelectRow;
 	if ((res = Stream_Write(stream, png_sig, PNG_SIG_SIZE))) return res;
 	Bitmap_Crc32Stream(&chunk, stream);
 

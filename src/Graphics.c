@@ -860,7 +860,6 @@ void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar,
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
-static int D3D9_SelectRow(Bitmap* bmp, int y) { return y; }
 ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 	IDirect3DSurface9* backbuffer = NULL;
 	IDirect3DSurface9* temp = NULL;
@@ -878,7 +877,7 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 	if (res) goto finished;
 	{
 		Bitmap bmp; Bitmap_Create(&bmp, width, height, rect.pBits);
-		res = Png_Encode(&bmp, output, D3D9_SelectRow);
+		res = Png_Encode(&bmp, output, NULL);
 		if (res) { IDirect3DSurface9_UnlockRect(temp); goto finished; }
 	}
 	res = IDirect3DSurface9_UnlockRect(temp);
