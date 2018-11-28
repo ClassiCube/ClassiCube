@@ -9,7 +9,6 @@
 #include "Bitmap.h"
 #include "Window.h"
 
-#define FT_EXPORT(x) extern x
 #include "freetype/ft2build.h"
 #include "freetype/freetype.h"
 #include "freetype/ftmodapi.h"

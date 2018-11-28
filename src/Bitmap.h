@@ -21,8 +21,8 @@ typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
 #define BITMAP_SIZEOF_PIXEL 4 /* 32 bit ARGB */
 
 #define Bitmap_DataSize(width, height) ((uint32_t)(width) * (uint32_t)(height) * (uint32_t)BITMAP_SIZEOF_PIXEL)
-#define Bitmap_RawRow(bmp, y) ((uint32_t*)((bmp)->Scan0 + ((y) * ((bmp)->Width << 2))))
-#define Bitmap_GetRow(bmp, y) ((BitmapCol*)((bmp)->Scan0 + ((y) * ((bmp)->Width << 2))))
+#define Bitmap_RawRow(bmp, y) ((uint32_t*)(bmp)->Scan0  + (y) * (bmp)->Width)
+#define Bitmap_GetRow(bmp, y) ((BitmapCol*)(bmp)->Scan0 + (y) * (bmp)->Width)
 #define Bitmap_GetPixel(bmp, x, y) (Bitmap_GetRow(bmp, y)[x])
 
 BitmapCol BitmapCol_Scale(BitmapCol value, float t);

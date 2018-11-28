@@ -452,7 +452,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
 #ifndef FT_EXPORT
 
-#ifdef FT2_BUILD_LIBRARY
+/*#ifdef FT2_BUILD_LIBRARY
 
 #if defined( _WIN32 ) && ( defined( _DLL ) || defined( DLL_EXPORT ) )
 #define FT_EXPORT( x )  __declspec( dllexport )  x
@@ -474,6 +474,12 @@ FT_BEGIN_HEADER
 #define FT_EXPORT( x )  extern  x
 #endif
 
+#endif*/
+
+#if defined(__cplusplus)
+#define FT_EXPORT( x )  extern "C"  x
+#else
+#define FT_EXPORT( x )  extern  x
 #endif
 
 #endif /* !FT_EXPORT */

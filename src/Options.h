@@ -72,9 +72,9 @@ extern const char* FpsLimit_Names[FPS_LIMIT_COUNT];
 
 extern struct EntryList Options;
 /* Returns whether user has changed any options this session. */
-CC_NOINLINE bool Options_HasAnyChanged(void);
+bool Options_HasAnyChanged(void);
 /* Frees any memory allocated in storing options. */
-CC_NOINLINE void Options_Free(void);
+void Options_Free(void);
 
 /* Returns value of given option, or defalt value if not found. */
 CC_EXPORT void Options_Get(const char*       key, String* value, const char* defValue);

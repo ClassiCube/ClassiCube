@@ -26,9 +26,30 @@ extern BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 #define DRAWER2D_OFFSET 1
 #define Drawer2D_GetCol(c) Drawer2D_Cols[(uint8_t)c]
 
+/* Clamps the given rectangle to line inside the bitmap. */
+/* Returns false if rectangle is completely outside bitmap's rectangle. */
+bool Drawer2D_Clamp(Bitmap* bmp, int* x, int* y, int* width, int* height);
+
+void Gradient_Noise(Bitmap* bmp, int x, int y, int width, int height,
+					BitmapCol col, int variation);
+void Gradient_Vertical(Bitmap* bmp, int x, int y, int width, int height,
+					   PackedCol a, PackedCol b);
+void Gradient_Blend(Bitmap* bmp, int x, int y, int width, int height,
+					PackedCol col, int blend);
+
+void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size,
+						 uint8_t* indices, BitmapCol* palette);
+void Drawer2D_BmpScaled(Bitmap* dst, int x, int y, int width, int height,
+						Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight,
+						int scaleWidth, int scaleHeight, uint8_t scaleA, uint8_t scaleB);
+void Drawer2D_BmpTiled(Bitmap* dst, int x, int y, int width, int height,
+					   Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight);
+void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, int width, int height, Bitmap* src);
+
+
 /* Draws a 2D flat rectangle. */
 void Drawer2D_Rect(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height);
-/* Clears the entire given area to the specified colour. */
+/* Fills the given rectangular area with the given colour. */
 void Drawer2D_Clear(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height);
 
 void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, BitmapCol col);

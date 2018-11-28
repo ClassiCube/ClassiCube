@@ -603,9 +603,6 @@
    */
 #define FT_FONT_FORMATS_H  "ftfntfmt.h"
 
-  /* deprecated */
-#define FT_XFREE86_H  FT_FONT_FORMATS_H
-
 
   /*************************************************************************
    *
