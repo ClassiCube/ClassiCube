@@ -1,6 +1,7 @@
 #ifndef CC_WINDOW_H
 #define CC_WINDOW_H
 #include "String.h"
+#include "Bitmap.h"
 /* Abstracts creating and managing a native window.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3 | Based on OpenTK code
 */
@@ -100,8 +101,14 @@ bool Window_GetCursorVisible(void);
 /* NOTE: You must be careful with this! OS typically uses a counter for visibility,
 so setting invisible multiple times means you must then set visible multiple times. */
 void Window_SetCursorVisible(bool visible);
+
 /* Shows a dialog box window. */
 CC_EXPORT void Window_ShowDialog(const char* title, const char* msg);
+
+void Window_DrawerInit(void);
+void Window_DrawerFree(void);
+void Window_DrawerGet(Bitmap* bmp, int width, int height);
+void Window_Redraw(Bitmap* bmp, Rect2D r);
 
 #ifndef CC_BUILD_D3D9
 /* Initialises an OpenGL context that most closely matches the input arguments. */

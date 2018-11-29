@@ -1444,7 +1444,7 @@ static struct Model* ZombieModel_GetInstance(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------BlockModel------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Model block_model = { "block" };
+static struct Model block_model = { "block", NULL, &human_tex };
 static BlockID bModel_block = BLOCK_AIR;
 static Vector3 bModel_minBB, bModel_maxBB;
 static int bModel_lastTexIndex = -1, bModel_texIndex;
