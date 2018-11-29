@@ -432,7 +432,7 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bi
 	uint8_t* src = (uint8_t*)bmp->Scan0;
 	uint8_t* dst = (uint8_t*)rect.pBits;
 	int yy;
-	uint32_t stride = (uint32_t)(bmp->Width) * BITMAP_SIZEOF_PIXEL;
+	uint32_t stride = (uint32_t)bmp->Width * 4;
 
 	for (yy = 0; yy < bmp->Height; yy++) {
 		Mem_Copy(dst, src, stride);
@@ -457,7 +457,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp
 		if (width > 1)   width /= 2; 
 		if (height > 1) height /= 2;
 
-		cur = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
+		cur = Mem_Alloc(width * height, 4, "mipmaps");
 		Gfx_GenMipmaps(width, height, cur, prev);
 
 		Bitmap_Create(&mipmap, width, height, cur);
@@ -1092,7 +1092,7 @@ static void GL_DoMipmaps(GfxResourceID texId, int x, int y, Bitmap* bmp, bool pa
 		if (width > 1)  width /= 2;
 		if (height > 1) height /= 2;
 
-		cur = Mem_Alloc(width * height, BITMAP_SIZEOF_PIXEL, "mipmaps");
+		cur = Mem_Alloc(width * height, 4, "mipmaps");
 		Gfx_GenMipmaps(width, height, cur, prev);
 
 		if (partial) {

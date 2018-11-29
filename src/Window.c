@@ -598,6 +598,29 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	MessageBoxA(win_handle, msg, title, 0);
 }
 
+static HGDIOBJ draw_DC;
+static HBITMAP draw_DIB;
+void Window_InitRaw(Bitmap* bmp) {
+	BITMAPINFO hdr = { 0 };
+
+	if (!draw_DC) draw_DC = CreateCompatibleDC(win_DC);
+	if (draw_DIB) DeleteObject(draw_DIB);
+	
+	hdr.bmiHeader.biSize = sizeof(BITMAPINFO);
+	hdr.bmiHeader.biWidth    =  bmp->Width;
+	hdr.bmiHeader.biHeight   = -bmp->Height;
+	hdr.bmiHeader.biBitCount = 32;
+	hdr.bmiHeader.biPlanes   = 1;
+
+	draw_DIB = CreateDIBSection(draw_DC, &hdr, 0, &bmp->Scan0, NULL, 0);
+}
+
+void Window_DrawRaw(Rect2D r) {
+	HGDIOBJ oldSrc = SelectObject(draw_DC, draw_DIB);
+	BOOL success = BitBlt(win_DC, r.X, r.Y, r.Width, r.Height, draw_DC, r.X, r.Y, SRCCOPY);
+	SelectObject(draw_DC, oldSrc);
+}
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
@@ -1595,6 +1618,25 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	X11Window_Free(&w);
 }
 
+static GC win_gc;
+static XImage* win_image;
+void Window_InitRaw(Bitmap* bmp) {
+	if (!win_gc) win_gc = XCreateGC(win_display, win_handle, NULL, NULL);
+	if (win_image) XFree(win_image);
+
+	Mem_Free(bmp->Scan0);
+	bmp->Scan0 = Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
+
+	win_image = XCreateImage(win_display, win_visual.visual,
+		win_visual.depth, ZPixmap, 0, bmp->Scan0,
+		bmp->Width, bmp->Height, 32, 0);
+}
+
+void Window_DrawRaw(Rect2D r) {
+	XPutImage(win_display, win_handle, win_gc, win_image,
+		r.X, r.Y, r.X, r.Y, r.Width, r.Height);
+}
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------OpenGL context------------------------------------------------------*
@@ -2319,6 +2361,47 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	CFRelease(titleCF);
 	CFRelease(msgCF);
 	RunStandardAlert(dialog, NULL, &itemHit);
+}
+
+static CGrafPtr win_winPort;
+static CGImageRef win_image;
+
+void Window_InitRaw(Bitmap* bmp) {
+	CGColorSpaceRef colorSpace;
+	CGDataProviderRef provider;
+	
+	if (!win_winPort) win_winPort = GetWindowPort(win_handle);
+	Mem_Free(bmp->Scan0);
+	bmp->Scan0 = Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
+	
+	colorSpace = CGColorSpaceCreateDeviceRGB();
+	provider   = CGDataProviderCreateWithData(NULL, bmp->Scan0, 
+					Bimap_DataSize(bmp->Width, bmp->Height), NULL);
+	
+	win_image = CGImageCreate(bmp->Width, bmp->Height, 8, 32, bmp->Width * 4, colorSpace, 
+					kCGBitmapByteOrder32Little | kCGImageAlphaFirst, provider, NULL, 0, 0);
+	
+	CGColorSpaceRelease(colorSpace);
+	CGDataProviderRelease(provider);
+}
+
+void Window_DrawRaw(Rect2D r) {
+	CGContextRef context = NULL;
+	CGRect rect;
+	OSStatus err;
+	
+	err = QDBeginCGContext(win_winPort, &context);
+	if (err) ErrorHandler_Fail2(err, "Begin draw");
+	
+	/* TODO: Only update changed bit.. */
+	rect.origin.x = 0; rect.origin.y = 0;
+	rect.size.x   = Window_ClientSize.Width;
+	rect.size.y   = Window_ClientSize.Height;
+	
+	CGContextDrawImage(context, rect, win_image);
+	CGContextSynchronize(context);
+	err = QDEndCGContext(win_winPort, &context);
+	if (err) ErrorHandler_Fail2(err, "End draw");
 }
 
 

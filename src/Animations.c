@@ -222,7 +222,7 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int s
 
 	/* cannot allocate memory on the stack for very big animation.png frames */
 	if (size > ANIMS_FAST_SIZE) {	
-		ptr = Mem_Alloc(size * size, BITMAP_SIZEOF_PIXEL, "anim frame");
+		ptr = Mem_Alloc(size * size, 4, "anim frame");
 	}
 	Bitmap_Create(&frame, size, size, ptr);
 

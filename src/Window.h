@@ -104,11 +104,13 @@ void Window_SetCursorVisible(bool visible);
 
 /* Shows a dialog box window. */
 CC_EXPORT void Window_ShowDialog(const char* title, const char* msg);
-
-void Window_DrawerInit(void);
-void Window_DrawerFree(void);
-void Window_DrawerGet(Bitmap* bmp, int width, int height);
-void Window_Redraw(Bitmap* bmp, Rect2D r);
+/* Initialises the internal state for being able to set window's pixels. */
+/* NOTE: Do not manually free bmp->Scan0 - it may be allocated by system. */
+/* NOTE: This function must also be called whenever the window is resized. */
+void Window_InitRaw(Bitmap* bmp);
+/* Updates the window's pixels using the bitmap from Window_InitRaw. */
+/* r can be used to only update a small region of pixels (may be ignored) */
+void Window_DrawRaw(Rect2D r);
 
 #ifndef CC_BUILD_D3D9
 /* Initialises an OpenGL context that most closely matches the input arguments. */

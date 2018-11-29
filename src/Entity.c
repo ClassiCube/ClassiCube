@@ -665,7 +665,7 @@ static void Player_EnsurePow2(struct Player* p, Bitmap* bmp) {
 	Bitmap_Allocate(&scaled, width, height);
 	p->Base.uScale = (float)bmp->Width  / width;
 	p->Base.vScale = (float)bmp->Height / height;
-	stride = bmp->Width * BITMAP_SIZEOF_PIXEL;
+	stride = bmp->Width * 4;
 
 	for (y = 0; y < bmp->Height; y++) {
 		BitmapCol* src = Bitmap_GetRow(bmp, y);
