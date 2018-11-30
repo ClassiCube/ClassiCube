@@ -129,11 +129,7 @@ namespace ClassicalSharp.Commands {
 		}
 		
 		public override void Execute(string[] args) {
-			if (args.Length == 1) {
-				game.Chat.Add("&e/client model: &cYou didn't specify a model name.");
-			} else {
-				game.LocalPlayer.SetModel(args[1]);
-			}
+			foreach (IGameComponent comp in game.Components) { comp.Dispose(); }
 		}
 	}
 	

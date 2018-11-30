@@ -56,7 +56,7 @@ namespace Launcher {
 		
 		Font logoFont;
 		PlatformDrawer platformDrawer;
-		public void Init() {
+		void Init() {
 			Window.Resize += Resize;
 			Window.FocusedChanged += RedrawAll;
 			Window.WindowStateChanged += Resize;
@@ -247,7 +247,7 @@ namespace Launcher {
 			if (IsShutdown(key)) ShouldExit = true;
 		}
 		
-		public void Dispose() {
+		void Dispose() {
 			Window.Resize -= Resize;
 			Window.FocusedChanged -= RedrawAll;
 			Window.WindowStateChanged -= Resize;

@@ -33,7 +33,7 @@ GfxResourceID Gfx_defaultIb;
 GfxResourceID Gfx_quadVb, Gfx_texVb;
 ScheduledTaskCallback Gfx_LostContextFunction;
 
-static int Gfx_strideSizes[2] = { 16, 24 };
+static int gfx_strideSizes[2] = { 16, 24 };
 static int gfx_batchStride, gfx_batchFormat = -1;
 
 static bool gfx_vsync, gfx_fogEnabled;
@@ -703,7 +703,7 @@ static void D3D9_RestoreRenderStates(void) {
 *---------------------------------------------------Vertex/Index buffers--------------------------------------------------*
 *#########################################################################################################################*/
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	int size = maxVertices * Gfx_strideSizes[fmt];
+	int size = maxVertices * gfx_strideSizes[fmt];
 	IDirect3DVertexBuffer9* vbuffer;
 	ReturnCode res = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
 		d3d9_formatMappings[fmt], D3DPOOL_DEFAULT, &vbuffer, NULL);
@@ -723,7 +723,7 @@ static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, int size,
 }
 
 GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
-	int size = count * Gfx_strideSizes[fmt];
+	int size = count * gfx_strideSizes[fmt];
 	IDirect3DVertexBuffer9* vbuffer;
 	ReturnCode res;
 
@@ -781,7 +781,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 
 	ReturnCode res = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[fmt]);
 	if (res) ErrorHandler_Fail2(res, "D3D9_SetBatchFormat");
-	gfx_batchStride = Gfx_strideSizes[fmt];
+	gfx_batchStride = gfx_strideSizes[fmt];
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
@@ -1244,14 +1244,14 @@ static GfxResourceID GL_GenAndBind(GLenum target) {
 
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	GfxResourceID id = GL_GenAndBind(GL_ARRAY_BUFFER);
-	uint32_t size    = maxVertices * Gfx_strideSizes[fmt];
+	uint32_t size    = maxVertices * gfx_strideSizes[fmt];
 	glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
 	return id;
 }
 
 GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 	GfxResourceID id = GL_GenAndBind(GL_ARRAY_BUFFER);
-	uint32_t size    = count * Gfx_strideSizes[fmt];
+	uint32_t size    = count * gfx_strideSizes[fmt];
 	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 	return id;
 }
@@ -1290,7 +1290,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 
 	uint16_t indices[GFX_MAX_INDICES];
 	Gfx_MakeIndices(indices, ICOUNT(count));
-	stride = Gfx_strideSizes[fmt];
+	stride = gfx_strideSizes[fmt];
 
 	glVertexPointer(3, GL_FLOAT, stride, vertices);
 	glColorPointer(4, GL_UNSIGNED_BYTE, stride, (void*)((uint8_t*)vertices + 12));
@@ -1347,7 +1347,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	}
 	gfx_batchFormat = fmt;
-	gfx_batchStride = Gfx_strideSizes[fmt];
+	gfx_batchStride = gfx_strideSizes[fmt];
 
 	if (fmt == VERTEX_FORMAT_P3FT2FC4B) {
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);

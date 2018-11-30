@@ -40,7 +40,7 @@ namespace Launcher {
 		static bool StartImpl(ClientStartData data, bool ccSkins, string args, ref bool shouldExit) {
 			if (!Platform.FileExists(GetExeName())) return false;
 			
-			CheckSettings(data, ccSkins, out shouldExit);
+			UpdateSettings(data, ccSkins, out shouldExit);
 			try {
 				StartProcess(args);
 			} catch (Win32Exception ex) {
@@ -97,7 +97,7 @@ namespace Launcher {
 			}
 		}
 		
-		internal static void CheckSettings(ClientStartData data, bool ccSkins, out bool shouldExit) {
+		static void UpdateSettings(ClientStartData data, bool ccSkins, out bool shouldExit) {
 			shouldExit = false;
 			// Make sure if the client has changed some settings in the meantime, we keep the changes
 			if (!Options.Load())

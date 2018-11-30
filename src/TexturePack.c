@@ -14,7 +14,6 @@
 #include "Errors.h"
 #include "Chat.h"
 #include "ExtMath.h"
-#include "Block.h" /* NOTE: Just for block_recalculateallspritebb */
 #include "Chat.h"
 #include "Options.h"
 
@@ -313,7 +312,6 @@ static void Animations_Validate(void) {
 	}
 }
 
-
 static void Animations_Tick(struct ScheduledTask* task) {
 	int i, size;
 
@@ -340,6 +338,10 @@ static void Animations_Tick(struct ScheduledTask* task) {
 	}
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------Animations component---------------------------------------------------*
+*#########################################################################################################################*/
 static void Animations_PackChanged(void* obj) {
 	Animations_Clear();
 	anims_useLavaAnim = Animations_IsDefaultZip();
@@ -364,10 +366,6 @@ static void Animations_FileChanged(void* obj, struct Stream* stream, const Strin
 	}
 }
 
-
-/*########################################################################################################################*
-*--------------------------------------------------Animations component---------------------------------------------------*
-*#########################################################################################################################*/
 static void Animations_Init(void) {
 	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
 	Event_RegisterVoid(&TextureEvents_PackChanged,  NULL, Animations_PackChanged);
@@ -454,7 +452,6 @@ void Atlas_Update(Bitmap* bmp) {
 	Atlas_RowsCount = bmp->Height / Atlas_TileSize;
 	Atlas_RowsCount = min(Atlas_RowsCount, ATLAS2D_MAX_ROWS_COUNT);
 
-	Block_RecalculateAllSpriteBB();
 	Atlas_Update1D();
 	Atlas_Convert2DTo1D();
 }

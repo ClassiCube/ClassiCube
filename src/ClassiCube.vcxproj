@@ -209,6 +209,7 @@
     <ClInclude Include="Deflate.h" />
     <ClInclude Include="Gui.h" />
     <ClInclude Include="HeldBlockRenderer.h" />
+    <ClInclude Include="Launcher.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="InputHandler.h" />

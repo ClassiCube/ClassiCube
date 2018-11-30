@@ -38,9 +38,9 @@ struct ChunkPartInfo {
 struct ChunkInfo {	
 	uint16_t CentreX, CentreY, CentreZ; /* Centre coordinates of the chunk */
 
-	uint8_t Visible : 1;       /* Whether chunk is visibile to the player */
+	uint8_t Visible : 1;       /* Whether chunk is visible to the player */
 	uint8_t Empty : 1;         /* Whether the chunk is empty of data */
-	uint8_t PendingDelete : 1; /* Whether chunk is pending deletion*/
+	uint8_t PendingDelete : 1; /* Whether chunk is pending deletion */
 	uint8_t AllAir : 1;        /* Whether chunk is completely air */
 	uint8_t : 0;               /* pad to next byte*/
 

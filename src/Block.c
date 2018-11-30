@@ -682,6 +682,7 @@ static void Blocks_Reset(void) {
 	Block_RecalculateAllSpriteBB();
 }
 
+static void Blocks_AtlasChanged(void* obj) { Block_RecalculateAllSpriteBB(); }
 static void Blocks_Init(void) {
 	int block;
 	for (block = BLOCK_AIR; block <= BLOCK_MAX_DEFINED; block++) {
@@ -689,6 +690,7 @@ static void Blocks_Init(void) {
 		Block_CanDelete[block] = true;
 	}
 	Blocks_Reset();
+	Event_RegisterVoid(&TextureEvents_AtlasChanged, NULL, Blocks_AtlasChanged);
 
 	Block_CanPlace[BLOCK_AIR] = false;         Block_CanDelete[BLOCK_AIR] = false;
 	Block_CanPlace[BLOCK_LAVA] = false;        Block_CanDelete[BLOCK_LAVA] = false;
@@ -698,8 +700,12 @@ static void Blocks_Init(void) {
 	Block_CanPlace[BLOCK_BEDROCK] = false;     Block_CanDelete[BLOCK_BEDROCK] = false;
 }
 
+static void Blocks_Free(void) {
+	Event_UnregisterVoid(&TextureEvents_AtlasChanged, NULL, Blocks_AtlasChanged);
+}
+
 struct IGameComponent Blocks_Component = {
 	Blocks_Init,  /* Init  */
-	NULL,         /* Free  */
+	Blocks_Free,  /* Free  */
 	Blocks_Reset, /* Reset */
 };
