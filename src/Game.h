@@ -86,7 +86,8 @@ void Game_Reset(void);
 /* (updating state means recalculating light, redrawing chunk block is in, etc) */
 /* NOTE: This does NOT notify the server, use Game_ChangeBlock for that. */
 CC_EXPORT void Game_UpdateBlock(int x, int y, int z, BlockID block);
-/* Calls Game_UpdateBlock, then sends the block change to the server. */
+/* Calls Game_UpdateBlock, then informs server connection of the block change. */
+/* In multiplayer this is sent to the server, in singleplayer just activates physics. */
 CC_EXPORT void Game_ChangeBlock(int x, int y, int z, BlockID block);
 bool Game_CanPick(BlockID block);
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, uint8_t* skinType);

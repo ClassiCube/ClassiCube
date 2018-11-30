@@ -14,7 +14,7 @@ extern int MapRenderer_ChunksX, MapRenderer_ChunksY, MapRenderer_ChunksZ;
 #define MapRenderer_Pack(cx, cy, cz) (((cz) * MapRenderer_ChunksY + (cy)) * MapRenderer_ChunksX + (cx))
 /* TODO: Swap Y and Z? Make sure to update ChunkUpdater's ResetChunkCache and ClearChunkCache methods! */
 
-/* Count of actual used 1D atlases. (i.e. 1DIndex(maxTextureLoc) + 1 */
+/* Max used 1D atlases. (i.e. Atlas1D_Index(maxTextureLoc) + 1) */
 extern int MapRenderer_1DUsedCount;
 /* Number of chunks in the world, or ChunksX * ChunksY * ChunksZ */
 extern int MapRenderer_ChunksCount;

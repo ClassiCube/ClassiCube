@@ -17,19 +17,19 @@ extern int16_t* Lighting_Heightmap;
 *      CalcLight(x, maxY, z)                         */
 void Lighting_LightHint(int startX, int startZ);
 
-/* Called when a block is changed, to update the lighting information.
-NOTE: Implementations ***MUST*** mark all chunks affected by this lighting changeas needing to be refreshed. */
+/* Called when a block is changed, to update the lighting information. */
+/* NOTE: Implementations ***MUST*** mark all chunks affected by this lighting changeas needing to be refreshed. */
 void Lighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock);
 void Lighting_Refresh(void);
 
-/* Returns whether the block at the given coordinates is fully in sunlight.
-NOTE: Does ***NOT*** check that the coordinates are inside the map. */
+/* Returns whether the block at the given coordinates is fully in sunlight. */
+/* NOTE: Does ***NOT*** check that the coordinates are inside the map. */
 bool Lighting_IsLit(int x, int y, int z);
-/* Returns the light colour of the block at the given coordinates.
-NOTE: Does ***NOT*** check that the coordinates are inside the map. */
+/* Returns the light colour of the block at the given coordinates. */
+/* NOTE: Does ***NOT*** check that the coordinates are inside the map. */
 PackedCol Lighting_Col(int x, int y, int z);
-/* Returns the light colour of the block at the given coordinates.
-NOTE: Does ***NOT*** check that the coordinates are inside the map. */
+/* Returns the light colour of the block at the given coordinates. */
+/* NOTE: Does ***NOT*** check that the coordinates are inside the map. */
 PackedCol Lighting_Col_XSide(int x, int y, int z);
 
 PackedCol Lighting_Col_Sprite_Fast(int x, int y, int z);

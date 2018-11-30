@@ -15,7 +15,13 @@
 #include "EnvRenderer.h"
 #include "GameStructs.h"
 
-struct ChatLine Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
+static char msgs[10][STRING_SIZE];
+String Chat_Status[3]       = { String_FromArray(msgs[0]), String_FromArray(msgs[1]), String_FromArray(msgs[2]) };
+String Chat_BottomRight[3]  = { String_FromArray(msgs[3]), String_FromArray(msgs[4]), String_FromArray(msgs[5]) };
+String Chat_ClientStatus[3] = { String_FromArray(msgs[6]), String_FromArray(msgs[7]), String_FromArray(msgs[8]) };
+
+String Chat_Announcement = String_FromArray(msgs[9]);
+TimeMS Chat_AnnouncementReceived;
 StringsBuffer Chat_Log, Chat_InputLog;
 
 /*########################################################################################################################*
@@ -146,12 +152,6 @@ static void Chat_AppendLog(const String* text) {
 	Chat_LogError2(res, "writing to", &Chat_LogPath);
 }
 
-static void ChatLine_Make(struct ChatLine* line, const String* text) {
-	String dst = String_ClearedArray(line->Buffer);
-	String_AppendString(&dst, text);
-	line->Received = DateTime_CurrentUTC_MS();
-}
-
 void Chat_LogError(ReturnCode result, const char* place) {
 	Chat_Add4("&cError %h when %c", &result, place, NULL, NULL);
 }
@@ -189,13 +189,14 @@ void Chat_AddOf(const String* text, MsgType type) {
 		Chat_AppendLog(text);
 		Chat_AppendLogTime();
 	} else if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_3) {
-		ChatLine_Make(&Chat_Status[type - MSG_TYPE_STATUS_1], text);
+		String_Copy(&Chat_Status[type - MSG_TYPE_STATUS_1], text);
 	} else if (type >= MSG_TYPE_BOTTOMRIGHT_1 && type <= MSG_TYPE_BOTTOMRIGHT_3) {
-		ChatLine_Make(&Chat_BottomRight[type - MSG_TYPE_BOTTOMRIGHT_1], text);
+		String_Copy(&Chat_BottomRight[type - MSG_TYPE_BOTTOMRIGHT_1], text);
 	} else if (type == MSG_TYPE_ANNOUNCEMENT) {
-		ChatLine_Make(&Chat_Announcement, text);
+		String_Copy(&Chat_Announcement, text);
+		Chat_AnnouncementReceived = DateTime_CurrentUTC_MS();
 	} else if (type >= MSG_TYPE_CLIENTSTATUS_1 && type <= MSG_TYPE_CLIENTSTATUS_3) {
-		ChatLine_Make(&Chat_ClientStatus[type - MSG_TYPE_CLIENTSTATUS_1], text);
+		String_Copy(&Chat_ClientStatus[type - MSG_TYPE_CLIENTSTATUS_1], text);
 	}
 }
 

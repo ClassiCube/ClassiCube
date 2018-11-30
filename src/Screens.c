@@ -782,26 +782,23 @@ static void ChatScreen_ConstructWidgets(struct ChatScreen* s) {
 }
 
 static void ChatScreen_SetInitialMessages(struct ChatScreen* s) {
-	String msg;
 	int i;
 
 	s->ChatIndex = Chat_Log.Count - Game_ChatLines;
 	ChatScreen_ResetChat(s);
-#define ChatScreen_Set(group, idx, src) msg = String_FromRawArray(src.Buffer); TextGroupWidget_SetText(group, idx, &msg);
 
-	ChatScreen_Set(&s->Status, 2, Chat_Status[0]);
-	ChatScreen_Set(&s->Status, 3, Chat_Status[1]);
-	ChatScreen_Set(&s->Status, 4, Chat_Status[2]);
+	TextGroupWidget_SetText(&s->Status, 2, &Chat_Status[0]);
+	TextGroupWidget_SetText(&s->Status, 3, &Chat_Status[1]);
+	TextGroupWidget_SetText(&s->Status, 4, &Chat_Status[2]);
 
-	ChatScreen_Set(&s->BottomRight, 2, Chat_BottomRight[0]);
-	ChatScreen_Set(&s->BottomRight, 1, Chat_BottomRight[1]);
-	ChatScreen_Set(&s->BottomRight, 0, Chat_BottomRight[2]);
+	TextGroupWidget_SetText(&s->BottomRight, 2, &Chat_BottomRight[0]);
+	TextGroupWidget_SetText(&s->BottomRight, 1, &Chat_BottomRight[1]);
+	TextGroupWidget_SetText(&s->BottomRight, 0, &Chat_BottomRight[2]);
 
-	msg = String_FromRawArray(Chat_Announcement.Buffer);
-	TextWidget_Set(&s->Announcement, &msg, &s->AnnouncementFont);
+	TextWidget_Set(&s->Announcement, &Chat_Announcement, &s->AnnouncementFont);
 	
 	for (i = 0; i < s->ClientStatus.LinesCount; i++) {
-		ChatScreen_Set(&s->ClientStatus, i, Chat_ClientStatus[i]);
+		TextGroupWidget_SetText(&s->ClientStatus, i, &Chat_ClientStatus[i]);
 	}
 
 	if (s->HandlesAllInput) {
@@ -1167,7 +1164,7 @@ static void ChatScreen_Render(void* screen, double delta) {
 		}
 	}
 
-	if (s->Announcement.Texture.ID && now > Chat_Announcement.Received + (5 * 1000)) {
+	if (s->Announcement.Texture.ID && now > Chat_AnnouncementReceived + (5 * 1000)) {
 		Elem_TryFree(&s->Announcement);
 	}
 }

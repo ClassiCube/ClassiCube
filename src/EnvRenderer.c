@@ -580,7 +580,7 @@ static void EnvRenderer_MakeBorderTex(GfxResourceID* texId, BlockID block) {
 	if (Gfx_LostContext) return;
 
 	Gfx_DeleteTexture(texId);
-	*texId = Atlas2D_LoadTile(loc);
+	*texId = Atlas_LoadTile(loc);
 }
 
 static Rect2D EnvRenderer_Rect(int x, int y, int width, int height) {

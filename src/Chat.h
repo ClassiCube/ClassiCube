@@ -23,9 +23,10 @@ typedef enum MsgType_ {
 	MSG_TYPE_CLIENTSTATUS_3 = 258  /* Tab list matching names*/
 } MsgType;
 
-struct ChatLine { char Buffer[STRING_SIZE]; TimeMS Received; };
-extern struct ChatLine Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
+extern String Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
 extern StringsBuffer Chat_Log, Chat_InputLog;
+
+extern TimeMS Chat_AnnouncementReceived;
 /* Gets the time the ith chat message was received at. */
 TimeMS Chat_GetLogTime(int i);
 

@@ -213,7 +213,7 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 #define ANIMS_FAST_SIZE 64
 static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int size) {
 	int dstX = Atlas1D_Index(texLoc), srcX;
-	int dstY = Atlas1D_RowId(texLoc) * Atlas2D_TileSize;
+	int dstY = Atlas1D_RowId(texLoc) * Atlas_TileSize;
 	GfxResourceID tex;
 
 	uint8_t buffer[Bitmap_DataSize(ANIMS_FAST_SIZE, ANIMS_FAST_SIZE)];
@@ -287,7 +287,7 @@ static void Animations_Validate(void) {
 		tileX = Atlas2D_TileX(data.TexLoc); 
 		tileY = Atlas2D_TileY(data.TexLoc);
 
-		if (data.FrameSize > Atlas2D_TileSize || tileY >= Atlas2D_RowsCount) {
+		if (data.FrameSize > Atlas_TileSize || tileY >= Atlas_RowsCount) {
 			Chat_Add2("&cAnimation frames for tile (%i, %i) are bigger than the size of a tile in terrain.png", &tileX, &tileY);
 		} else if (maxX > anims_bmp.Width || maxY > anims_bmp.Height) {
 			Chat_Add2("&cSome of the animation frames for tile (%i, %i) are at coordinates outside animations.png", &tileX, &tileY);
@@ -308,11 +308,11 @@ static void Animations_Tick(struct ScheduledTask* task) {
 	int i, size;
 
 	if (anims_useLavaAnim) {
-		size = min(Atlas2D_TileSize, 64);
+		size = min(Atlas_TileSize, 64);
 		Animations_Draw(NULL, 30, size);
 	}
 	if (anims_useWaterAnim) {
-		size = min(Atlas2D_TileSize, 64);
+		size = min(Atlas_TileSize, 64);
 		Animations_Draw(NULL, 14, size);
 	}
 

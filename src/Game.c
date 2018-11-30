@@ -157,10 +157,8 @@ bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
 	}
 	if (Gfx_LostContext) return false;
 
-	Atlas1D_Free();
-	Atlas2D_Free();
-	Atlas2D_UpdateState(atlas);
-	Atlas1D_UpdateState();
+	Atlas_Free();
+	Atlas_Update(atlas);
 
 	Event_RaiseVoid(&TextureEvents_AtlasChanged);
 	return true;
@@ -709,8 +707,7 @@ static void Game_RenderFrame(double delta) {
 
 void Game_Free(void* obj) {
 	struct IGameComponent* comp;
-	Atlas2D_Free();
-	Atlas1D_Free();
+	Atlas_Free();
 
 	Event_UnregisterVoid(&WorldEvents_NewMap,         NULL, Game_OnNewMapCore);
 	Event_UnregisterVoid(&WorldEvents_MapLoaded,      NULL, Game_OnNewMapLoadedCore);

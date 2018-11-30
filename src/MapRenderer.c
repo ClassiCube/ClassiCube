@@ -67,6 +67,16 @@ void ChunkInfo_Reset(struct ChunkInfo* chunk, int x, int y, int z) {
 	chunk->TranslucentParts = NULL;
 }
 
+CC_NOINLINE static int MapRenderer_UsedAtlases(void) {
+	TextureLoc maxLoc = 0;
+	int i;
+
+	for (i = 0; i < Array_Elems(Block_Textures); i++) {
+		maxLoc = max(maxLoc, Block_Textures[i]);
+	}
+	return Atlas1D_Index(maxLoc) + 1;
+}
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------Map rendering-----------------------------------------------------*
@@ -386,7 +396,7 @@ void MapRenderer_Refresh(void) {
 		MapRenderer_ResetChunks();
 
 		oldCount = MapRenderer_1DUsedCount;
-		MapRenderer_1DUsedCount = Atlas1D_UsedAtlasesCount();
+		MapRenderer_1DUsedCount = MapRenderer_UsedAtlases();
 		/* Need to reallocate parts array in this case */
 		if (MapRenderer_1DUsedCount != oldCount) {
 			MapRenderer_FreeParts();
@@ -693,14 +703,14 @@ static void MapRenderer_TerrainAtlasChanged(void* obj) {
 		if (refreshRequired) MapRenderer_Refresh();
 	}
 
-	MapRenderer_1DUsedCount = Atlas1D_UsedAtlasesCount();
+	MapRenderer_1DUsedCount = MapRenderer_UsedAtlases();
 	elementsPerBitmap = Atlas1D_TilesPerAtlas;
 	MapRenderer_ResetPartFlags();
 }
 
 static void MapRenderer_BlockDefinitionChanged(void* obj) {
 	MapRenderer_Refresh();
-	MapRenderer_1DUsedCount = Atlas1D_UsedAtlasesCount();
+	MapRenderer_1DUsedCount = MapRenderer_UsedAtlases();
 	MapRenderer_ResetPartFlags();
 }
 

@@ -433,8 +433,8 @@ static float Block_GetSpriteBB_MaxY(int size, int tileX, int tileY, Bitmap* bmp)
 }
 
 void Block_RecalculateBB(BlockID block) {
-	Bitmap* bmp  = &Atlas2D_Bitmap;
-	int tileSize = Atlas2D_TileSize;
+	Bitmap* bmp  = &Atlas_Bitmap;
+	int tileSize = Atlas_TileSize;
 	TextureLoc texLoc = Block_GetTex(block, FACE_XMAX);
 	int x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
 
@@ -442,7 +442,7 @@ void Block_RecalculateBB(BlockID block) {
 	float minX = 0, minY = 0, maxX = 1, maxY = 1;
 	Vector3 minRaw, maxRaw;
 
-	if (y < Atlas2D_RowsCount) {
+	if (y < Atlas_RowsCount) {
 		minX = Block_GetSpriteBB_MinX(tileSize, x, y, bmp);
 		minY = Block_GetSpriteBB_MinY(tileSize, x, y, bmp);
 		maxX = Block_GetSpriteBB_MaxX(tileSize, x, y, bmp);

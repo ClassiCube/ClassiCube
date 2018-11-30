@@ -27,7 +27,7 @@ namespace Launcher {
 		
 		/// <summary> Whether the client drawing area needs to be redrawn/presented to the screen. </summary>
 		public bool Dirty, pendingRedraw;
-				/// <summary> The specific area/region of the window that needs to be redrawn. </summary>
+		/// <summary> The specific area/region of the window that needs to be redrawn. </summary>
 		public Rectangle DirtyArea;
 		
 		public string Username;

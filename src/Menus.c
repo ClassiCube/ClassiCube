@@ -2963,7 +2963,7 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 	s->DynamicVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TEXID_OVERLAY_VERTICES_COUNT);
 	TextAtlas_Make(&s->IdAtlas, &chars, &s->TextFont, &prefix);
 
-	s->XOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas2D_RowsCount,     Game_Width);
+	s->XOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas_RowsCount,     Game_Width);
 	s->YOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Game_Height);
 	s->TileSize = size;
 	
@@ -3050,7 +3050,7 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 	origXOffset = s->XOffset;
 	s->BaseTexLoc = 0;
 
-	for (rows = Atlas2D_RowsCount; rows > 0; rows -= ATLAS2D_TILES_PER_ROW) {
+	for (rows = Atlas_RowsCount; rows > 0; rows -= ATLAS2D_TILES_PER_ROW) {
 		TexIdsOverlay_RenderTerrain(s);
 		TexIdsOverlay_RenderTextOverlay(s);
 
