@@ -1,6 +1,6 @@
 #ifndef CC_DEFLATE_H
 #define CC_DEFLATE_H
-#include "Core.h"
+#include "String.h"
 /* Decodes data compressed using DEFLATE in a streaming manner.
    Partially based off information from
 	https://handmade.network/forums/wip/t/2363-implementing_a_basic_png_reader_the_handmade_way
@@ -65,11 +65,14 @@ struct InflateState {
 	uint8_t Window[INFLATE_WINDOW_SIZE];    /* Holds circular buffer of recent output data, used for LZ77 */
 };
 
-void Inflate_Init(struct InflateState* state, struct Stream* source);
+/* Initialises DEFLATE decompressor state to defaults. */
+CC_EXPORT void Inflate_Init(struct InflateState* state, struct Stream* source);
+/* Attempts to decompress all currently pending data. */
+/* NOTE: This is a low level call - usually you should use Inflate_MakeStream. */
 void Inflate_Process(struct InflateState* state);
 /* Deompresses input data read from another stream using DEFLATE. Read only stream. */
 /* NOTE: This only uncompresses pure DEFLATE compressed data. */
-/* If the data starts with a GZIP or ZLIB header, use GZipHeader_Read or ZLibHeader_Read to skip it. */
+/* If data starts with a GZIP or ZLIB header, use GZipHeader_Read or ZLibHeader_Read to first skip it. */
 CC_EXPORT void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struct Stream* underlying);
 
 
@@ -100,8 +103,35 @@ struct GZipState { struct DeflateState Base; uint32_t Crc32, Size; };
 /* Compresses input data using GZIP, then writes compressed output to another stream. Write only stream. */
 /* GZIP compression is GZIP header, followed by DEFLATE compressed data, followed by GZIP footer. */
 CC_EXPORT void GZip_MakeStream(struct Stream* stream, struct GZipState* state, struct Stream* underlying);
+
 struct ZLibState { struct DeflateState Base; uint32_t Adler32; };
 /* Compresses input data using ZLIB, then writes compressed output to another stream. Write only stream. */
 /* ZLIB compression is ZLIB header, followed by DEFLATE compressed data, followed by ZLIB footer. */
 CC_EXPORT void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
+
+/* Minimal data needed to describe an entry in a .zip archive. */
+struct ZipEntry { uint32_t CompressedSize, UncompressedSize, LocalHeaderOffset, Crc32; };
+#define ZIP_MAX_ENTRIES 2048
+
+/* Stores state for reading and processing entries in a .zip archive. */
+struct ZipState {
+	/* Source of the .zip archive data. Must be seekable. */
+	struct Stream* Input;
+	/* Callback function to process the data in a .zip archive entry. */
+	/* NOTE: data stream may not be seekable. (entry data might be compressed) */
+	void (*ProcessEntry)(const String* path, struct Stream* data, struct ZipEntry* entry);
+	/* Predicate used to select which entries in a .zip archive get proessed. */
+	/* NOTE: returning false entirely skips the entry. (avoids pointless seek to entry) */
+	bool (*SelectEntry)(const String* path);
+	/* Number of entries in the .zip archive. */
+	int EntriesCount;
+	/* Data for each entry in the .zip archive. */
+	struct ZipEntry Entries[ZIP_MAX_ENTRIES];
+};
+
+/* Initialises .zip archive reader state to defaults. */
+CC_EXPORT void Zip_Init(struct ZipState* state, struct Stream* input);
+/* Reads and processes the entries in a .zip archive. */
+/* NOTE: Must have been initialised with Zip_Init first. */
+CC_EXPORT ReturnCode Zip_Extract(struct ZipState* state);
 #endif

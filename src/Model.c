@@ -7,7 +7,7 @@
 #include "Camera.h"
 #include "Event.h"
 #include "ExtMath.h"
-#include "TerrainAtlas.h"
+#include "TexturePack.h"
 #include "Drawer.h"
 #include "Block.h"
 #include "Stream.h"

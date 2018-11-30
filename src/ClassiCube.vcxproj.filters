@@ -195,9 +195,6 @@
     <ClInclude Include="Builder.h">
       <Filter>Header Files\MeshBuilder</Filter>
     </ClInclude>
-    <ClInclude Include="TerrainAtlas.h">
-      <Filter>Header Files\TexturePack</Filter>
-    </ClInclude>
     <ClInclude Include="Picking.h">
       <Filter>Header Files\Math</Filter>
     </ClInclude>
@@ -215,9 +212,6 @@
     </ClInclude>
     <ClInclude Include="Particle.h">
       <Filter>Header Files\Entities</Filter>
-    </ClInclude>
-    <ClInclude Include="Animations.h">
-      <Filter>Header Files\TexturePack</Filter>
     </ClInclude>
     <ClInclude Include="Widgets.h">
       <Filter>Header Files\2D</Filter>
@@ -353,9 +347,6 @@
     <ClCompile Include="Program.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TerrainAtlas.c">
-      <Filter>Source Files\TexturePack</Filter>
-    </ClCompile>
     <ClCompile Include="Entity.c">
       <Filter>Source Files\Entities</Filter>
     </ClCompile>
@@ -385,9 +376,6 @@
     </ClCompile>
     <ClCompile Include="Particle.c">
       <Filter>Source Files\Entities</Filter>
-    </ClCompile>
-    <ClCompile Include="Animations.c">
-      <Filter>Source Files\TexturePack</Filter>
     </ClCompile>
     <ClCompile Include="Widgets.c">
       <Filter>Source Files\2D</Filter>

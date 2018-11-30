@@ -4,7 +4,7 @@
 #include "ExtMath.h"
 #include "Lighting.h"
 #include "Entity.h"
-#include "TerrainAtlas.h"
+#include "TexturePack.h"
 #include "Graphics.h"
 #include "Funcs.h"
 #include "Game.h"

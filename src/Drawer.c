@@ -1,5 +1,5 @@
 #include "Drawer.h"
-#include "TerrainAtlas.h"
+#include "TexturePack.h"
 #include "Constants.h"
 
 bool Drawer_Tinted;

@@ -12,7 +12,7 @@
 #include "BlockID.h"
 #include "Block.h"
 #include "PackedCol.h"
-#include "TerrainAtlas.h"
+#include "TexturePack.h"
 #include "VertexStructs.h"
 
 int Builder_SidesLevel, Builder_EdgeLevel;

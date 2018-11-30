@@ -1056,3 +1056,156 @@ void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stre
 	stream->Write = ZLib_StreamWriteFirst;
 	stream->Close = ZLib_StreamClose;
 }
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------ZipEntry---------------------------------------------------------*
+*#########################################################################################################################*/
+#define ZIP_MAXNAMELEN 512
+static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry* entry) {
+	struct Stream* stream = state->Input;
+	uint8_t header[26];
+	uint32_t compressedSize, uncompressedSize;
+	int method, pathLen, extraLen;
+
+	String path; char pathBuffer[ZIP_MAXNAMELEN];
+	struct Stream portion, compStream;
+	struct InflateState inflate;
+	ReturnCode res;
+	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
+
+	method = Stream_GetU16_LE(&header[4]);
+	compressedSize   = Stream_GetU32_LE(&header[14]);
+	uncompressedSize = Stream_GetU32_LE(&header[18]);
+
+	/* Some .zip files don't set these in local file header */
+	if (!compressedSize)   compressedSize   = entry->CompressedSize;
+	if (!uncompressedSize) uncompressedSize = entry->UncompressedSize;
+
+	pathLen  = Stream_GetU16_LE(&header[22]);
+	extraLen = Stream_GetU16_LE(&header[24]);
+	if (pathLen > ZIP_MAXNAMELEN) return ZIP_ERR_FILENAME_LEN;
+
+	path = String_Init(pathBuffer, pathLen, pathLen);
+	if ((res = Stream_Read(stream, pathBuffer, pathLen))) return res;
+
+	if (!state->SelectEntry(&path)) return 0;
+	/* local file may have extra data before actual data (e.g. ZIP64) */
+	if ((res = stream->Skip(stream, extraLen))) return res;
+
+	if (method == 0) {
+		Stream_ReadonlyPortion(&portion, stream, uncompressedSize);
+		state->ProcessEntry(&path, &portion, entry);
+	} else if (method == 8) {
+		Stream_ReadonlyPortion(&portion, stream, compressedSize);
+		Inflate_MakeStream(&compStream, &inflate, &portion);
+		state->ProcessEntry(&path, &compStream, entry);
+	} else {
+		Platform_Log1("Unsupported.zip entry compression method: %i", &method);
+	}
+	return 0;
+}
+
+static ReturnCode Zip_ReadCentralDirectory(struct ZipState* state, struct ZipEntry* entry) {
+	struct Stream* stream = state->Input;
+	uint8_t header[42];
+	int pathLen, extraLen, commentLen;
+	ReturnCode res;
+	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
+
+	entry->Crc32            = Stream_GetU32_LE(&header[12]);
+	entry->CompressedSize   = Stream_GetU32_LE(&header[16]);
+	entry->UncompressedSize = Stream_GetU32_LE(&header[20]);
+
+	pathLen    = Stream_GetU16_LE(&header[24]);
+	extraLen   = Stream_GetU16_LE(&header[26]);
+	commentLen = Stream_GetU16_LE(&header[28]);
+
+	entry->LocalHeaderOffset = Stream_GetU32_LE(&header[38]);
+	/* skip data following central directory entry header */
+	return stream->Skip(stream, pathLen + extraLen + commentLen);
+}
+
+static ReturnCode Zip_ReadEndOfCentralDirectory(struct ZipState* state, uint32_t* centralDirectoryOffset) {
+	struct Stream* stream = state->Input;
+	uint8_t header[18];
+
+	ReturnCode res;
+	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
+
+	state->EntriesCount     = Stream_GetU16_LE(&header[6]);
+	*centralDirectoryOffset = Stream_GetU32_LE(&header[12]);
+	return 0;
+}
+
+enum ZipSig {
+	ZIP_SIG_ENDOFCENTRALDIR = 0x06054b50,
+	ZIP_SIG_CENTRALDIR      = 0x02014b50,
+	ZIP_SIG_LOCALFILEHEADER = 0x04034b50
+};
+
+static void Zip_DefaultProcessor(const String* path, struct Stream* data, struct ZipEntry* entry) { }
+static bool Zip_DefaultSelector(const String* path) { return true; }
+void Zip_Init(struct ZipState* state, struct Stream* input) {
+	state->Input = input;
+	state->EntriesCount = 0;
+	state->ProcessEntry = Zip_DefaultProcessor;
+	state->SelectEntry  = Zip_DefaultSelector;
+}
+
+ReturnCode Zip_Extract(struct ZipState* state) {
+	struct Stream* stream = state->Input;
+	uint32_t stream_len, centralDirOffset;
+	uint32_t sig = 0;
+	int i, count;
+
+	ReturnCode res;
+	state->EntriesCount = 0;
+	if ((res = stream->Length(stream, &stream_len))) return res;
+
+	/* At -22 for nearly all zips, but try a bit further back in case of comment */
+	count = min(257, stream_len);
+	for (i = 22; i < count; i++) {
+		res = stream->Seek(stream, stream_len - i);
+		if (res) return ZIP_ERR_SEEK_END_OF_CENTRAL_DIR;
+
+		if ((res = Stream_ReadU32_LE(stream, &sig))) return res;
+		if (sig == ZIP_SIG_ENDOFCENTRALDIR) break;
+	}
+
+	if (sig != ZIP_SIG_ENDOFCENTRALDIR) return ZIP_ERR_NO_END_OF_CENTRAL_DIR;
+	res = Zip_ReadEndOfCentralDirectory(state, &centralDirOffset);
+	if (res) return res;
+
+	res = stream->Seek(stream, centralDirOffset);
+	if (res) return ZIP_ERR_SEEK_CENTRAL_DIR;
+	if (state->EntriesCount > ZIP_MAX_ENTRIES) return ZIP_ERR_TOO_MANY_ENTRIES;
+
+	/* Read all the central directory entries */
+	for (count = 0; count < state->EntriesCount; count++) {
+		if ((res = Stream_ReadU32_LE(stream, &sig))) return res;
+
+		if (sig == ZIP_SIG_CENTRALDIR) {
+			res = Zip_ReadCentralDirectory(state, &state->Entries[count]);
+			if (res) return res;
+		} else if (sig == ZIP_SIG_ENDOFCENTRALDIR) {
+			break;
+		} else {
+			return ZIP_ERR_INVALID_CENTRAL_DIR;
+		}
+	}
+
+	/* Now read the local file header entries */
+	for (i = 0; i < count; i++) {
+		struct ZipEntry* entry = &state->Entries[i];
+		res = stream->Seek(stream, entry->LocalHeaderOffset);
+		if (res) return ZIP_ERR_SEEK_LOCAL_DIR;
+
+		if ((res = Stream_ReadU32_LE(stream, &sig))) return res;
+		if (sig != ZIP_SIG_LOCALFILEHEADER) return ZIP_ERR_INVALID_LOCAL_DIR;
+
+		res = Zip_ReadLocalFileHeader(state, entry);
+		if (res) return res;
+	}
+	return 0;
+}

@@ -10,7 +10,7 @@
 #include "Game.h"
 #include "Graphics.h"
 #include "Platform.h"
-#include "TerrainAtlas.h"
+#include "TexturePack.h"
 #include "Utils.h"
 #include "World.h"
 

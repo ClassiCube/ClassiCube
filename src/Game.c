@@ -19,7 +19,6 @@
 #include "Model.h"
 #include "Particle.h"
 #include "AsyncDownloader.h"
-#include "Animations.h"
 #include "Inventory.h"
 #include "InputHandler.h"
 #include "ServerConnection.h"
@@ -33,7 +32,6 @@
 #include "Menus.h"
 #include "Audio.h"
 #include "Stream.h"
-#include "TerrainAtlas.h"
 
 int Game_Width, Game_Height;
 double Game_Accumulator;

@@ -4,7 +4,7 @@
 #include "PackedCol.h"
 #include "ExtMath.h"
 #include "Block.h"
-#include "TerrainAtlas.h"
+#include "TexturePack.h"
 #include "Block.h"
 
 static float iso_scale;

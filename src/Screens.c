@@ -7,7 +7,7 @@
 #include "Drawer2D.h"
 #include "Graphics.h"
 #include "Funcs.h"
-#include "TerrainAtlas.h"
+#include "TexturePack.h"
 #include "Model.h"
 #include "MapGenerator.h"
 #include "ServerConnection.h"

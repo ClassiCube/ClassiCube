@@ -13,7 +13,7 @@
 #include "Stream.h"
 #include "Block.h"
 #include "Event.h"
-#include "TerrainAtlas.h"
+#include "TexturePack.h"
 #include "Platform.h"
 #include "Camera.h"
 #include "Particle.h"

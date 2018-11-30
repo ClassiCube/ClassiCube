@@ -1,13 +1,12 @@
 #include "Block.h"
 #include "Funcs.h"
 #include "ExtMath.h"
-#include "TerrainAtlas.h"
+#include "TexturePack.h"
 #include "Game.h"
 #include "Entity.h"
 #include "Inventory.h"
 #include "Event.h"
 #include "Platform.h"
-#include "Bitmap.h"
 #include "GameStructs.h"
 
 bool Block_IsLiquid[BLOCK_COUNT];

@@ -218,7 +218,6 @@
     <ClInclude Include="Inventory.h" />
     <ClInclude Include="IsometricDrawer.h" />
     <ClInclude Include="Lighting.h" />
-    <ClInclude Include="Animations.h" />
     <ClInclude Include="MapGenerator.h" />
     <ClInclude Include="MapRenderer.h" />
     <ClInclude Include="Options.h" />
@@ -231,7 +230,6 @@
     <ClInclude Include="ServerConnection.h" />
     <ClInclude Include="Stream.h" />
     <ClInclude Include="GameStructs.h" />
-    <ClInclude Include="TerrainAtlas.h" />
     <ClInclude Include="TexturePack.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="PackedCol.h" />
@@ -280,7 +278,6 @@
     <ClCompile Include="IsometricDrawer.c" />
     <ClCompile Include="Input.c" />
     <ClCompile Include="Lighting.c" />
-    <ClCompile Include="Animations.c" />
     <ClCompile Include="Entity.c" />
     <ClCompile Include="MapRenderer.c" />
     <ClCompile Include="Options.c" />
@@ -296,7 +293,6 @@
     <ClCompile Include="ServerConnection.c" />
     <ClCompile Include="Stream.c" />
     <ClCompile Include="String.c" />
-    <ClCompile Include="TerrainAtlas.c" />
     <ClCompile Include="TexturePack.c" />
     <ClCompile Include="Utils.c" />
     <ClCompile Include="Vectors.c" />

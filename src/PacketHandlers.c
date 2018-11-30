@@ -23,7 +23,6 @@
 #include "TexturePack.h"
 #include "Gui.h"
 #include "Errors.h"
-#include "TerrainAtlas.h"	
 
 /* Classic state */
 static uint8_t classic_tabList[ENTITIES_MAX_COUNT >> 3];
