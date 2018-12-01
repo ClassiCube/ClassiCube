@@ -13,8 +13,8 @@ namespace ClassicalSharp.Gui.Screens {
 	public class StatusScreen : Screen, IGameComponent {
 		
 		Font font;
-		StringBuffer statusBuffer;		
-		TextWidget status, hackStates;
+		StringBuffer statusBuffer;
+		TextWidget line1, line2;
 		TextAtlas posAtlas;
 		
 		public StatusScreen(Game game) : base(game) {
@@ -27,7 +27,7 @@ namespace ClassicalSharp.Gui.Screens {
 		void IGameComponent.Reset(Game game) { }
 		void IGameComponent.OnNewMap(Game game) { }
 		void IGameComponent.OnNewMapLoaded(Game game) { }
-				
+		
 		public override void Init() {
 			font = new Font(game.FontName, 16);
 			ContextRecreated();
@@ -39,14 +39,17 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Render(double delta) {
 			UpdateStatus(delta);
-			if (game.HideGui || !game.ShowFPS) return;
-			game.Graphics.Texturing = true;
-			status.Render(delta);
+			if (game.HideGui) return;
 			
-			if (!game.ClassicMode && game.Gui.activeScreen == null) {
+			game.Graphics.Texturing = true;
+			if (game.ShowFPS) line1.Render(delta);
+			
+			if (game.ClassicMode) {
+				line2.Render(delta);
+			} else if (game.Gui.activeScreen == null && game.ShowFPS) {
 				if (HacksChanged()) { UpdateHackState(); }
 				DrawPosition();
-				hackStates.Render(delta);
+				line2.Render(delta);
 			}
 			game.Graphics.Texturing = false;
 		}
@@ -87,34 +90,45 @@ namespace ClassicalSharp.Gui.Screens {
 				}
 			}
 			
-			status.Set(statusBuffer.ToString(), font);
+			line1.Set(statusBuffer.ToString(), font);
 			accumulator = 0;
 			frames = 0;
 			game.ChunkUpdates = 0;
 		}
 		
 		protected override void ContextLost() {
-			status.Dispose();
+			line1.Dispose();
 			posAtlas.Dispose();
-			hackStates.Dispose();
+			line2.Dispose();
 		}
 		
 		protected override void ContextRecreated() {
-			status = new TextWidget(game)
+			line1 = new TextWidget(game)
 				.SetLocation(Anchor.Min, Anchor.Min, 2, 2);
-			status.ReducePadding = true;
+			line1.ReducePadding = true;
 			string msg = statusBuffer.Length > 0 ? statusBuffer.ToString() : "FPS: no data yet";
-			status.Set(msg, font);
+			line1.Set(msg, font);
 			
 			posAtlas = new TextAtlas(game, 16);
 			posAtlas.Pack("0123456789-, ()", font, "Position: ");
-			posAtlas.tex.Y = (short)(status.Height + 2);
+			posAtlas.tex.Y = (short)(line1.Height + 2);
 			
-			int yOffset = status.Height + posAtlas.tex.Height + 2;
-			hackStates = new TextWidget(game)
+			int yOffset = line1.Height + posAtlas.tex.Height + 2;
+			line2 = new TextWidget(game)
 				.SetLocation(Anchor.Min, Anchor.Min, 2, yOffset);
-			hackStates.ReducePadding = true;
-			UpdateHackState();
+			line2.ReducePadding = true;
+			
+			if (game.ClassicMode) {
+				// Swap around so 0.30 version is at top
+				line2.YOffset = 2;
+				line1.YOffset = posAtlas.tex.Y;
+				line2.Set("0.30", font);
+				
+				line1.Reposition();
+				line2.Reposition();
+			} else {
+				UpdateHackState();
+			}
 		}
 		
 		void ChatFontChanged() { Recreate(); }
@@ -147,12 +161,12 @@ namespace ClassicalSharp.Gui.Screens {
 		bool HacksChanged()  {
 			HacksComponent hacks = game.LocalPlayer.Hacks;
 			return hacks.Speeding != speed || hacks.HalfSpeeding != halfSpeed || hacks.Flying != fly
-				 || hacks.Noclip != noclip || game.Fov != lastFov || hacks.CanSpeed != canSpeed;
+				|| hacks.Noclip != noclip || game.Fov != lastFov || hacks.CanSpeed != canSpeed;
 		}
 		
 		void UpdateHackState() {
 			HacksComponent hacks = game.LocalPlayer.Hacks;
-			speed = hacks.Speeding; halfSpeed = hacks.HalfSpeeding; fly = hacks.Flying; 
+			speed = hacks.Speeding; halfSpeed = hacks.HalfSpeeding; fly = hacks.Flying;
 			noclip = hacks.Noclip; lastFov = game.Fov; canSpeed = hacks.CanSpeed;
 			
 			statusBuffer.Clear();
@@ -162,7 +176,7 @@ namespace ClassicalSharp.Gui.Screens {
 			bool speeding = (speed || halfSpeed) && hacks.CanSpeed;
 			if (speeding) statusBuffer.Append("Speed ON   ");
 			if (noclip)   statusBuffer.Append("Noclip ON   ");
-			hackStates.Set(statusBuffer.ToString(), font);
+			line2.Set(statusBuffer.ToString(), font);
 		}
 	}
 }

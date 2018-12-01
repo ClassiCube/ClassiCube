@@ -38,7 +38,7 @@ void LWidget_Reset(void* widget) {
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
 *#########################################################################################################################*/
 #define BTN_BORDER 1
-static BitmapCol Expand(BitmapCol a, int amount) {
+static BitmapCol LButton_Expand(BitmapCol a, int amount) {
 	int r, g, b;
 	r = a.R + amount; Math_Clamp(r, 0, 255); a.R = r;
 	g = a.G + amount; Math_Clamp(g, 0, 255); a.G = g;
@@ -58,8 +58,7 @@ static void LButton_DrawBackground(struct LButton* w) {
 						w->Width - 2 * BTN_BORDER, w->Height - 2 * BTN_BORDER);
 	} else {
 		col = w->Active ? Launcher_ButtonForeActiveCol : Launcher_ButtonForeCol;
-		BitmapCol top = Expand(col, 8), bottom = Expand(col, -8);
-		Gradient_Vertical(&Launcher_Framebuffer, top, bottom,
+		Gradient_Vertical(&Launcher_Framebuffer, LButton_Expand(col, 8), LButton_Expand(col, -8),
 						  w->X + BTN_BORDER,         w->Y + BTN_BORDER,
 						  w->Width - 2 * BTN_BORDER, w->Height - 2 * BTN_BORDER);
 	}
