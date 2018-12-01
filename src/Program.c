@@ -40,8 +40,8 @@ int main_imdct() {
 #endif
 
 int main(int argc, char** argv) {
-	String defPath; char defPathBuffer[STRING_SIZE];
-	String title;   char titleBuffer[STRING_SIZE];
+	static String defPath = String_FromConst("texpacks/default.zip");
+	String title; char titleBuffer[STRING_SIZE];
 	String args[PROGRAM_MAX_CMDARGS];
 	int argsCount;
 
@@ -66,9 +66,6 @@ int main(int argc, char** argv) {
 	Utils_EnsureDirectory("maps");
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("texturecache");
-
-	String_InitArray(defPath, defPathBuffer);
-	String_Format1(&defPath, "texpacks%rdefault.zip", &Directory_Separator);
 
 	if (!File_Exists(&defPath)) {
 		Window_ShowDialog("Missing file",

@@ -130,7 +130,7 @@ void Game_GetDefaultTexturePack(String* texPack) {
 	String texPath; char texPathBuffer[STRING_SIZE];
 
 	String_InitArray(texPath, texPathBuffer);
-	String_Format2(&texPath, "texpacks%r%s", &Directory_Separator, &game_defTexPack);
+	String_Format1(&texPath, "texpacks/%s", &game_defTexPack);
 
 	if (File_Exists(&texPath) && !Game_ClassicMode) {
 		String_AppendString(texPack, &game_defTexPack);
@@ -421,7 +421,7 @@ static void Game_LoadGuiOptions(void) {
 
 	Game_TabAutocomplete = Options_GetBool(OPT_TAB_AUTOCOMPLETE, false);
 	Options_Get(OPT_FONT_NAME, &Game_FontName, Font_DefaultName);
-	if (Game_ClassicMode) {
+	if (!Game_ClassicMode) {
 		Game_FontName.length = 0;
 		String_AppendConst(&Game_FontName, Font_DefaultName);
 	}
@@ -641,7 +641,7 @@ void Game_TakeScreenshot(void) {
 	String_Format3(&filename, "screenshot_%p2-%p2-%p4", &now.Day, &now.Month, &now.Year);
 	String_Format3(&filename, "-%p2-%p2-%p2.png", &now.Hour, &now.Minute, &now.Second);
 	String_InitArray(path, pathBuffer);
-	String_Format2(&path, "screenshots%r%s", &Directory_Separator, &filename);
+	String_Format1(&path, "screenshots/%s", &filename);
 
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Chat_LogError2(res, "creating", &path); return; }

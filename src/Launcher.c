@@ -3,21 +3,189 @@
 #include "Game.h"
 #include "Deflate.h"
 #include "Stream.h"
+#include "Utils.h"
+#include "Input.h"
+#include "Window.h"
+#include "GameStructs.h"
 
 struct LSCreen* Launcher_Screen;
 bool Launcher_Dirty, Launcher_PendingRedraw;
 Rect2D Launcher_DirtyArea;
 Bitmap Launcher_Framebuffer;
- bool Launcher_ClassicBackground;
+bool Launcher_ClassicBackground;
 
 bool Launcher_ShouldExit, Launcher_ShouldUpdate;
 TimeMS Launcher_PatchTime;
 struct ServerListEntry* Launcher_PublicServers;
 int Launcher_NumServers;
 
+/* TODO: FIX THESE STUBS!!! */
+void Launcher_ShowError(ReturnCode res, const char* place) { }
+void Launcher_SecureSetOpt(const char* opt, const String* data, const String* key) { }
+
+/*internal UpdateCheckTask checkTask;
+bool fullRedraw;
+
+Font logoFont;
+static void Launcher_Init(void) {
+	BitmapCol col = BITMAPCOL_CONST(125, 125, 125, 255);
+	Window.Resize += Resize;
+	Window.FocusedChanged += RedrawAll;
+	Window.WindowStateChanged += Resize;
+	Window.Redraw += RedrawPending;
+	Keyboard.KeyDown += KeyDown;
+
+	Options_Load();
+	Options_Get(OPT_FONT_NAME, &Game_FontName, Font_DefaultName);
+	/* TODO: Handle Arial font not working */
+	/*logoFont = new Font(FontName, 32, FontStyle.Regular);
+
+	Drawer2D_Cols['g'] = col;
+	Utils_EnsureDirectory("texpacks");
+	Utils_EnsureDirectory("audio");
+}
+
+void Resize() {
+	UpdateClientSize();
+	platformDrawer.Resize();
+	RedrawAll();
+}
+
+void RedrawPending() {
+	// in case we get multiple of these events
+	pendingRedraw = true;
+	Dirty = true;
+}
+
+void RedrawAll() {
+	RedrawBackground();
+	if (Screen != null) Screen.Resize();
+	fullRedraw = true;
+}
+
+void SetScreen(Screen screen) {
+	if (Launcher_Screen) Screen.Dispose();
+	Launcher_ResetPixels();
+	Screen = screen;
+	screen.Init();
+	// for selecting active button etc
+	Screen.MouseMove(0, 0);
+}
+
+void UpdateClientSize() {
+	Size size = Window.ClientSize;
+	Width = Math.Max(size.Width, 1);
+	Height = Math.Max(size.Height, 1);
+}
+
+void Run() {
+	Window = Factory.CreateWindow(640, 400, Program.AppName,
+		GraphicsMode.Default, DisplayDevice.Default);
+	Window_SetVisible(true);
+	Drawer2D_Component.Init();
+	UpdateClientSize();
+
+	Launcher_Init();
+	Launcher_TryLoadTexturePack();
+
+	Launcher_Framebuffer.Width  = Game_Width;
+	Launcher_Framebuffer.Height = Game_Height;
+	Window_InitRaw(&Launcher_Framebuffer);
+
+	Downloader = new AsyncDownloader(Drawer);
+	Downloader.Init("");
+	Downloader.Cookies = new CookieContainer();
+	Downloader.KeepAlive = true;
+
+	fetcher = new ResourceFetcher();
+	fetcher.CheckResourceExistence();
+	checkTask = new UpdateCheckTask();
+	checkTask.RunAsync(this);
+
+	if (!fetcher.AllResourcesExist) {
+		SetScreen(new ResourcesScreen(this));
+	} else {
+		SetScreen(new MainScreen(this));
+	}
+
+	while (true) {
+		Window_ProcessEvents();
+		if (!Window_Exists) break;
+		if (Launcher_ShouldExit) break;
+
+		checkTask.Tick();
+		Screen.Tick();
+		if (Launcher_Dirty) Launcher_Display();
+		Thread_Sleep(10);
+	}
+
+	if (Options.Load()) {
+		LauncherSkin.SaveToOptions();
+		Options.Save();
+	}
+
+	if (Launcher_Screen) {
+		Screen.Dispose();
+		Launcher_Screen = NULL;
+	}
+
+	if (Launcher_ShouldUpdate)
+		Updater.Applier.ApplyUpdate();
+	if (Window_Exists)
+		Window_Close();
+}
+
+void Display() {
+	if (pendingRedraw) {
+		RedrawAll();
+		pendingRedraw = false;
+	}
+
+	Screen.OnDisplay();
+	Dirty = false;
+
+	Rectangle rec = new Rectangle(0, 0, Framebuffer.Width, Framebuffer.Height);
+	if (!fullRedraw && DirtyArea.Width > 0) {
+		rec = DirtyArea;
+	}
+
+	Window_DrawRaw(rec);
+	DirtyArea = Rectangle.Empty;
+	fullRedraw = false;
+}
+
+void KeyDown(Key key) {
+	if (IsShutdown(key)) Launcher_ShouldExit = true;
+}
+
+void Dispose() {
+	Window.Resize -= Resize;
+	Window.FocusedChanged -= RedrawAll;
+	Window.WindowStateChanged -= Resize;
+	Window.Redraw -= RedrawPending;
+	Keyboard.KeyDown -= KeyDown;
+
+	List<FastBitmap> bitmaps = FetchFlagsTask.Bitmaps;
+	for (int i = 0; i < bitmaps.Count; i++) {
+		bitmaps[i].Dispose();
+		bitmaps[i].Bitmap.Dispose();
+	}
+	logoFont.Dispose();
+}*/
+
+static bool Launcher_IsShutdown(Key key) {
+	if (key == KEY_F4 && Key_IsAltPressed()) return true;
+
+	/* On OSX, Cmd+Q should also terminate the process */
+#ifdef CC_BUILD_OSX
+	return key == Key.Q && Key_IsWinPressed();
+#else
+	return false;
+#endif
+}
 
 /*########################################################################################################################*
-*---------------------------------------------------------Colours/Skin-----------------------------------------------------*
+*---------------------------------------------------------Colours/Skin----------------------------------------------------*
 *#########################################################################################################################*/
 BitmapCol Launcher_BackgroundCol       = BITMAPCOL_CONST(153, 127, 172, 255);
 BitmapCol Launcher_ButtonBorderCol     = BITMAPCOL_CONST( 97,  81, 110, 255);
@@ -40,13 +208,13 @@ void Launcher_ResetSkin(void) {
 	Launcher_ButtonHighlightCol  = defaultButtonHighlightCol;
 }
 
-/*CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {
+CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {
 	PackedCol tmp;
-	string value = Options.Get(key, null);
-	if (String.IsNullOrEmpty(value)) return;
+	String value;
+	if (!Options_UNSAFE_Get(key, &value))     return;
+	if (!PackedCol_TryParseHex(&value, &tmp)) return;
 
-	if (!PackedCol.TryParse(value, out col))
-		col = defaultCol;
+	col->R = tmp.R; col->G = tmp.G; col->B = tmp.B;
 }
 
 void Launcher_LoadSkin(void) {
@@ -58,12 +226,13 @@ void Launcher_LoadSkin(void) {
 }
 
 CC_NOINLINE static void Launcher_SetCol(const char* key, BitmapCol col) {
+	String value; char valueBuffer[8];
 	PackedCol tmp;
-	string value = Options.Get(key, null);
-	if (String.IsNullOrEmpty(value)) return;
-
-	if (!PackedCol.TryParse(value, out col))
-		col = defaultCol;
+	tmp.R = col.R; tmp.G = col.G; tmp.B = col.B; tmp.A = 0;
+	
+	String_InitArray(value, valueBuffer);
+	PackedCol_ToHex(&value, tmp);
+	Options_Set(key, &value);
 }
 
 void Launcher_SaveSkin(void) {
@@ -72,7 +241,7 @@ void Launcher_SaveSkin(void) {
 	Launcher_SetCol("launcher-btn-fore-active-col",        Launcher_ButtonForeActiveCol);
 	Launcher_SetCol("launcher-btn-fore-inactive-col",      Launcher_ButtonForeCol);
 	Launcher_SetCol("launcher-btn-highlight-inactive-col", Launcher_ButtonHighlightCol);
-}*/
+}
 
 
 /*########################################################################################################################*
@@ -150,28 +319,30 @@ static void Launcher_ExtractTexturePack(const String* path) {
 	stream.Close(&stream);
 }
 
-/*void Launcher_TryLoadTexturePack(void) {
-	if (Options.Get("nostalgia-classicbg", null) != null) {
+void Launcher_TryLoadTexturePack(void) {
+	static String defZipPath = String_FromConst("texpacks/default.zip");
+	String path; char pathBuffer[FILENAME_SIZE];
+	String texPack;
+
+	if (Options_UNSAFE_Get("nostalgia-classicbg", &texPack)) {
 		Launcher_ClassicBackground = Options_GetBool("nostalgia-classicbg", false);
 	} else {
 		Launcher_ClassicBackground = Options_GetBool(OPT_CLASSIC_MODE,      false);
 	}
 
-	string texPack = Options.Get(OptionsKey.DefaultTexturePack, "default.zip");
-	string texPath = Path.Combine("texpacks", texPack);
+	Options_UNSAFE_Get(OPT_DEFAULT_TEX_PACK, &texPack);
+	String_InitArray(path, pathBuffer);
+	String_Format1(&path, "texpacks/", &texPack);
 
-	if (!Platform_FileExists(texPath)) {
-		texPath = Path.Combine("texpacks", "default.zip");
-	}
-	if (!Platform_FileExists(texPath)) return;
+	if (!texPack.length || !File_Exists(&path)) path = defZipPath;
+	if (!File_Exists(&path)) return;
 
-	Launcher_ExtractTexturePack(texPath);
-	// user selected texture pack is missing some required .png files
+	Launcher_ExtractTexturePack(&path);
+	/* user selected texture pack is missing some required .png files */
 	if (!fontBmp.Scan0 || !terrainBmp.Scan0) {
-		texPath = Path.Combine("texpacks", "default.zip");
-		ExtractTexturePack(texPath);
+		Launcher_ExtractTexturePack(&defZipPath);
 	}
-}*/
+}
 
 static void Launcher_ClearTile(int x, int y, int width, int height, int srcX) {
 	Drawer2D_BmpTiled(&Launcher_Framebuffer, x, y, width, height,
@@ -182,7 +353,7 @@ void Launcher_ResetArea(int x, int y, int width, int height) {
 	if (Launcher_ClassicBackground && terrainBmp.Scan0) {
 		Launcher_ClearTile(x, y, width, height, 0);
 	} else {
-		Gradient_Noise(&Launcher_Framebuffer, x, y, width, height, Launcher_BackgroundCol, 6);
+		Gradient_Noise(&Launcher_Framebuffer, Launcher_BackgroundCol, 6, x, y, width, height);
 	}
 }
 
@@ -210,4 +381,52 @@ void Launcher_ResetPixels(void) {
 
 	Drawer2D_BitmappedText = false;
 	Launcher_Dirty = true;
+}
+
+static TimeMS lastJoin;
+bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server) {
+#ifdef CC_BUILD_WINDOWS
+	static String exe = String_FromConst("ClassiCube.exe");
+#else
+	static String exe = String_FromConst("ClassiCube");
+#endif
+	String args; char argsBuffer[512];
+	TimeMS now;
+	ReturnCode res;
+	
+	now = DateTime_CurrentUTC_MS();
+	if (lastJoin + 1000 < now) return false;
+	lastJoin = now;
+
+	/* Make sure if the client has changed some settings in the meantime, we keep the changes */
+	Options_Load();
+	Launcher_ShouldExit = Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false);
+
+	/* Save resume info */
+	if (server) {
+		Options_Set("launcher-server",   server);
+		Options_Set("launcher-username", user);
+		Options_Set("launcher-ip",       ip);
+		Options_Set("launcher-port",     port);
+		Launcher_SecureSetOpt("launcher-mppass", mppass, user);
+		Options_Save();
+	}
+
+	String_InitArray(args, argsBuffer);
+	String_AppendString(&args, user);
+	if (mppass->length) String_Format3(&args, "%s %s %s", mppass, ip, port);
+
+	res = Platform_StartProcess(&exe, &args);
+#ifdef CC_BUILD_WINDOWS
+	/* TODO: Check this*/
+	/* HRESULT when user clicks 'cancel' to 'are you sure you want to run ClassiCube.exe' */
+	if (res == 0x80004005) return;
+#endif
+
+	if (res) {
+		Launcher_ShowError(res, "starting game");
+		Launcher_ShouldExit = false;
+		return false;
+	}
+	return true;
 }

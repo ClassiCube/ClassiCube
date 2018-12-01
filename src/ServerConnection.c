@@ -143,6 +143,7 @@ int PingList_AveragePingMs(void) {
 /*########################################################################################################################*
 *-------------------------------------------------Singleplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
+#define SP_HasDir(path) (String_IndexOf(&path, '/', 0) >= 0 || String_IndexOf(&path, '\\', 0) >= 0)
 static void SPConnection_BeginConnect(void) {
 	static String logName = String_FromConst("Singleplayer");
 	String path;
@@ -161,7 +162,7 @@ static void SPConnection_BeginConnect(void) {
 
 	/* For when user drops a map file onto ClassiCube.exe */
 	path = Game_Username;
-	if (String_IndexOf(&path, Directory_Separator, 0) >= 0 && File_Exists(&path)) {
+	if (SP_HasDir(path) && File_Exists(&path)) {
 		Map_LoadFrom(&path);
 		Gui_CloseActive();
 		return;

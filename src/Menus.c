@@ -1284,7 +1284,7 @@ static void SaveLevelScreen_Save(void* screen, void* widget, const char* ext) {
 		SaveLevelScreen_MakeDesc(s, &fileMsg); return;
 	}
 	String_InitArray(path, pathBuffer);
-	String_Format3(&path, "maps%r%s%c", &Directory_Separator, &file, ext);
+	String_Format2(&path, "maps/%s%c", &file, ext);
 
 	if (File_Exists(&path) && !btn->OptName) {
 		ButtonWidget_Set(btn, &overMsg, &s->TitleFont);
@@ -1387,7 +1387,7 @@ static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 	
 	filename = ListScreen_UNSAFE_GetCur(s, widget);
 	String_InitArray(path, pathBuffer);
-	String_Format2(&path, "texpacks%r%s", &Directory_Separator, &filename);
+	String_Format1(&path, "texpacks/%s", &filename);
 	if (!File_Exists(&path)) return;
 	
 	idx = s->CurrentIndex;
@@ -1573,7 +1573,7 @@ static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 
 	filename = ListScreen_UNSAFE_GetCur(s, widget);
 	String_InitArray(path, pathBuffer);
-	String_Format2(&path, "maps%r%s", &Directory_Separator, &filename);
+	String_Format1(&path, "maps/%s", &filename);
 
 	if (!File_Exists(&path)) return;
 	Map_LoadFrom(&path);

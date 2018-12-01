@@ -105,7 +105,7 @@ static ReturnCode Sound_ReadWave(const String* filename, struct Sound* snd) {
 	ReturnCode res;
 
 	String_InitArray(path, pathBuffer);
-	String_Format2(&path, "audio%r%s", &Directory_Separator, filename);
+	String_Format1(&path, "audio/%s", filename);
 
 	res = Stream_OpenFile(&stream, &path);
 	if (res) return res;
@@ -460,7 +460,7 @@ static void Music_RunLoop(void) {
 		file = StringsBuffer_UNSAFE_Get(&files, musicFiles[idx]);
 		
 		path.length = 0;
-		String_Format2(&path, "audio%r%s", &Directory_Separator, &file);
+		String_Format1(&path, "audio/%s", &file);
 		Platform_Log1("playing music file: %s", &file);
 
 		res = Stream_OpenFile(&stream, &path);

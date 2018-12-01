@@ -44,7 +44,6 @@ void* DisplayDevice_Meta;
 
 static HANDLE heap;
 char* Platform_NewLine    = "\r\n";
-char  Directory_Separator = '\\';
 char* Font_DefaultName    = "Arial";
 
 const ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
@@ -77,7 +76,6 @@ const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #define Nix_Return(success) ((success) ? 0 : errno)
 
 char* Platform_NewLine    = "\n";
-char  Directory_Separator = '/'; /* TODO: Is this right for old OSX though?? */
 pthread_mutex_t event_mutex;
 
 const ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
@@ -412,7 +410,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 
 	do {
 		path.length = 0;
-		String_Format2(&path, "%s%r", dirPath, &Directory_Separator);
+		String_Format1(&path, "%s/", dirPath);
 
 		/* ignore . and .. entry */
 		TCHAR* src = entry.cFileName;
@@ -545,7 +543,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 
 	while ((entry = readdir(dirPtr))) {
 		path.length = 0;
-		String_Format2(&path, "%s%r", dirPath, &Directory_Separator);
+		String_Format1(&path, "%s/", dirPath);
 
 		/* ignore . and .. entry */
 		src = entry->d_name;
@@ -1587,9 +1585,9 @@ ReturnCode Audio_Free(AudioHandle handle) {
 	ReturnCode res;
 	ctx = &Audio_Contexts[handle];
 
-	if (!ctx->Count) return 0;
 	ctx->Count  = 0;
 	ctx->Format = fmt;
+	if (!ctx->Handle) return 0;
 
 	res = waveOutClose(ctx->Handle);
 	ctx->Handle = NULL;
@@ -1637,6 +1635,7 @@ ReturnCode Audio_Play(AudioHandle handle) { return 0; }
 
 ReturnCode Audio_Stop(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
+	if (!ctx->Handle) return 0;
 	return waveOutReset(ctx->Handle);
 }
 

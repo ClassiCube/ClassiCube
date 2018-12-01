@@ -210,6 +210,7 @@
     <ClInclude Include="Gui.h" />
     <ClInclude Include="HeldBlockRenderer.h" />
     <ClInclude Include="Launcher.h" />
+    <ClInclude Include="LWidgets.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="InputHandler.h" />
@@ -226,6 +227,7 @@
     <ClInclude Include="BlockPhysics.h" />
     <ClInclude Include="Picking.h" />
     <ClInclude Include="PickedPosRenderer.h" />
+    <ClInclude Include="Resources.h" />
     <ClInclude Include="Screens.h" />
     <ClInclude Include="SelectionBox.h" />
     <ClInclude Include="ServerConnection.h" />
@@ -271,6 +273,7 @@
     <ClCompile Include="InputHandler.c" />
     <ClCompile Include="Inventory.c" />
     <ClCompile Include="Launcher.c" />
+    <ClCompile Include="LWidgets.c" />
     <ClCompile Include="MapGenerator.c" />
     <ClCompile Include="Deflate.c" />
     <ClCompile Include="Model.c" />
@@ -290,6 +293,7 @@
     <ClCompile Include="Picking.c" />
     <ClCompile Include="Platform.c" />
     <ClCompile Include="Program.c" />
+    <ClCompile Include="Resources.c" />
     <ClCompile Include="Screens.c" />
     <ClCompile Include="SelectionBox.c" />
     <ClCompile Include="ServerConnection.c" />

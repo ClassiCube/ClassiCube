@@ -97,7 +97,7 @@ namespace ClassicalSharp.Audio {
 		void PlaySound(IAudioOutput output, float volume) {
 			try {
 				output.SetVolume(volume);
-				output.SetFormat(format);
+				output.SetFormat(format);				
 				output.PlayData(0, chunk);
 			} catch (InvalidOperationException ex) {
 				ErrorHandler.LogError("AudioPlayer.PlayCurrentSound()", ex);

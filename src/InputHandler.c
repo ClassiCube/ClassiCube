@@ -74,7 +74,7 @@ void InputHandler_ScreenChanged(struct Screen* oldScreen, struct Screen* newScre
 static bool InputHandler_IsShutdown(Key key) {
 	if (key == KEY_F4 && Key_IsAltPressed()) return true;
 
-	/* On OSX, Cmd+Q should also terminate the process. */
+	/* On OSX, Cmd+Q should also terminate the process */
 #ifdef CC_BUILD_OSX
 	return key == KEY_Q && Key_IsWinPressed();
 #else

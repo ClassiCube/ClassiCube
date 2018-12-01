@@ -76,6 +76,9 @@ bool Options_HasAnyChanged(void);
 /* Frees any memory allocated in storing options. */
 void Options_Free(void);
 
+/* Sets value to value of option directly in Options.Buffer if found, String_Empty if not. */
+/* Returns whether the option was actually found. */
+STRING_REF bool Options_UNSAFE_Get(const char* keyRaw, String* value);
 /* Returns value of given option, or defalt value if not found. */
 CC_EXPORT void Options_Get(const char*       key, String* value, const char* defValue);
 /* Returns value of given option as an integer, or defalt value if could not be converted. */

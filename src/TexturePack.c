@@ -267,12 +267,12 @@ static void Animations_Apply(struct AnimationData* data) {
 }
 
 static bool Animations_IsDefaultZip(void) {	
-	String texPack; char texPackBuffer[STRING_SIZE];
+	String texPack;
+	bool optExists;
 	if (World_TextureUrl.length) return false;
 
-	String_InitArray(texPack, texPackBuffer);
-	Options_Get(OPT_DEFAULT_TEX_PACK, &texPack, "default.zip");
-	return String_CaselessEqualsConst(&texPack, "default.zip");
+	optExists = Options_UNSAFE_Get(OPT_DEFAULT_TEX_PACK, &texPack);
+	return !optExists || String_CaselessEqualsConst(&texPack, "default.zip");
 }
 
 static void Animations_Clear(void) {
@@ -497,16 +497,15 @@ void Atlas_Free(void) {
 /*########################################################################################################################*
 *------------------------------------------------------TextureCache-------------------------------------------------------*
 *#########################################################################################################################*/
-#define TEXCACHE_FOLDER "texturecache"
 /* Because I didn't store milliseconds in original C# client */
 #define TEXCACHE_TICKS_PER_MS 10000
 static struct EntryList cache_accepted, cache_denied, cache_eTags, cache_lastModified;
 
 void TextureCache_Init(void) {
-	EntryList_Init(&cache_accepted,     TEXCACHE_FOLDER, "acceptedurls.txt", ' ');
-	EntryList_Init(&cache_denied,       TEXCACHE_FOLDER, "deniedurls.txt",   ' ');
-	EntryList_Init(&cache_eTags,        TEXCACHE_FOLDER, "etags.txt",        ' ');
-	EntryList_Init(&cache_lastModified, TEXCACHE_FOLDER, "lastmodified.txt", ' ');
+	EntryList_Init(&cache_accepted,     "texturecache", "acceptedurls.txt", ' ');
+	EntryList_Init(&cache_denied,       "texturecache", "deniedurls.txt",   ' ');
+	EntryList_Init(&cache_eTags,        "texturecache", "etags.txt",        ' ');
+	EntryList_Init(&cache_lastModified, "texturecache", "lastmodified.txt", ' ');
 }
 
 bool TextureCache_HasAccepted(const String* url) { return EntryList_Find(&cache_accepted, url) >= 0; }
@@ -526,7 +525,7 @@ CC_NOINLINE static void TextureCache_MakePath(String* path, const String* url) {
 	String_InitArray(key, keyBuffer);
 
 	String_AppendUInt32(&key, Utils_CRC32(url->buffer, url->length));
-	String_Format2(path, TEXCACHE_FOLDER "%r%s", &Directory_Separator, &key);
+	String_Format1(path, "texturecache/%s", &key);
 }
 
 bool TextureCache_Has(const String* url) {
@@ -589,7 +588,7 @@ void TextureCache_Set(const String* url, uint8_t* data, uint32_t length) {
 
 	String_InitArray(path, pathBuffer);
 	TextureCache_MakePath(&path, url);
-	if (!Utils_EnsureDirectory(TEXCACHE_FOLDER)) return;
+	if (!Utils_EnsureDirectory("texturecache")) return;
 	
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Chat_LogError2(res, "creating cache for", &path); return; }
@@ -650,7 +649,7 @@ void TexturePack_ExtractZip_File(const String* filename) {
 	ReturnCode res;
 
 	String_InitArray(path, pathBuffer);
-	String_Format2(&path, "texpacks%r%s", &Directory_Separator, filename);
+	String_Format1(&path, "texpacks/%s", filename);
 
 	res = Stream_OpenFile(&stream, &path);
 	if (res) { Chat_LogError2(res, "opening", &path); return; }

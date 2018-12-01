@@ -31,7 +31,7 @@ bool Options_HasChanged(const String* key) {
 	return false;
 }
 
-static bool Options_TryGetValue(const char* keyRaw, String* value) {
+bool Options_UNSAFE_Get(const char* keyRaw, String* value) {
 	int idx;
 	String key = String_FromReadonly(keyRaw);
 
@@ -50,7 +50,7 @@ static bool Options_TryGetValue(const char* keyRaw, String* value) {
 
 void Options_Get(const char* key, String* value, const char* defValue) {
 	String str;
-	Options_TryGetValue(key, &str);
+	Options_UNSAFE_Get(key, &str);
 	value->length = 0;
 
 	if (str.length) {
@@ -63,7 +63,7 @@ void Options_Get(const char* key, String* value, const char* defValue) {
 int Options_GetInt(const char* key, int min, int max, int defValue) {
 	String str;
 	int value;
-	if (!Options_TryGetValue(key, &str))    return defValue;
+	if (!Options_UNSAFE_Get(key, &str))    return defValue;
 	if (!Convert_TryParseInt(&str, &value)) return defValue;
 
 	Math_Clamp(value, min, max);
@@ -73,7 +73,7 @@ int Options_GetInt(const char* key, int min, int max, int defValue) {
 bool Options_GetBool(const char* key, bool defValue) {
 	String str;
 	bool value;
-	if (!Options_TryGetValue(key, &str))     return defValue;
+	if (!Options_UNSAFE_Get(key, &str))     return defValue;
 	if (!Convert_TryParseBool(&str, &value)) return defValue;
 
 	return value;
@@ -82,7 +82,7 @@ bool Options_GetBool(const char* key, bool defValue) {
 float Options_GetFloat(const char* key, float min, float max, float defValue) {
 	String str;
 	float value;
-	if (!Options_TryGetValue(key, &str))       return defValue;
+	if (!Options_UNSAFE_Get(key, &str))       return defValue;
 	if (!Convert_TryParseFloat(&str, &value)) return defValue;
 
 	Math_Clamp(value, min, max);
@@ -91,7 +91,7 @@ float Options_GetFloat(const char* key, float min, float max, float defValue) {
 
 int Options_GetEnum(const char* key, int defValue, const char** names, int namesCount) {
 	String str;
-	if (!Options_TryGetValue(key, &str)) return defValue;
+	if (!Options_UNSAFE_Get(key, &str)) return defValue;
 	return Utils_ParseEnum(&str, defValue, names, namesCount);
 }
 

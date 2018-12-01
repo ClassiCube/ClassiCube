@@ -241,7 +241,7 @@ void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
 
 	String_InitArray(path, pathBuffer);
 	if (list->Folder) {
-		String_Format3(&path, "%c%r%c", list->Folder, &Directory_Separator, list->Filename);
+		String_Format2(&path, "%c/c", list->Folder, list->Filename);
 	} else {
 		String_AppendConst(&path, list->Filename);
 	}
@@ -281,7 +281,7 @@ void EntryList_Save(struct EntryList* list) {
 
 	String_InitArray(path, pathBuffer);
 	if (list->Folder) {
-		String_Format3(&path, "%c%r%c", list->Folder, &Directory_Separator, list->Filename);
+		String_Format2(&path, "%c/%c", list->Folder, list->Filename);
 		if (!Utils_EnsureDirectory(list->Folder)) return;
 	} else {
 		String_AppendConst(&path, list->Filename);

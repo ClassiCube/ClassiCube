@@ -94,6 +94,7 @@ namespace SharpWave {
 		public override void Play() { }
 		
 		public override void Stop() {
+			if (devHandle == IntPtr.Zero) return;
 			uint result = WinMM.waveOutReset(devHandle);
 			CheckError(result, "Reset");
 		}

@@ -2,7 +2,9 @@
 #define CC_LAUNCHER_H
 #include "Bitmap.h"
 #include "String.h"
-
+/* Implements the launcher part of the game.
+	Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+*/
 struct LScreen;
 
 /* Currently active screen/menu. */
@@ -11,7 +13,7 @@ extern struct LSCreen* Launcher_Screen;
 extern bool Launcher_Dirty, Launcher_PendingRedraw;
 /* The specific area/region of the window that needs to be redrawn. */
 extern Rect2D Launcher_DirtyArea;
-/* Pixels containing contents of the window.*/
+/* Contains the pixels that are drawn to the window. */
 extern Bitmap Launcher_Framebuffer;
 /* Whether to use stone tile background like minecraft.net. */
 extern bool Launcher_ClassicBackground;
@@ -67,8 +69,12 @@ void Launcher_SetScreen(struct LScreen* screen);
 bool Launcher_ConnectToServer(const String* hash);
 /* Launcher main loop. */
 void Launcher_Run();
+
 /* Shows a message box for an error. */
 void Launcher_ShowError(ReturnCode res, const char* place);
+/* Attempts to securely encode an option. */
+/* NOTE: Not all platforms support secure saving, DO NOT rely on this being secure. */
+void Launcher_SecureSetOpt(const char* opt, const String* data, const String* key);
 
 /* Starts the game from the given arguments. */
 bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server);

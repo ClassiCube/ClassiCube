@@ -306,6 +306,12 @@
     <ClInclude Include="Launcher.h">
       <Filter>Header Files\Launcher</Filter>
     </ClInclude>
+    <ClInclude Include="Resources.h">
+      <Filter>Header Files\Launcher</Filter>
+    </ClInclude>
+    <ClInclude Include="LWidgets.h">
+      <Filter>Header Files\Launcher</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -543,6 +549,12 @@
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
     <ClCompile Include="Launcher.c">
+      <Filter>Source Files\Launcher</Filter>
+    </ClCompile>
+    <ClCompile Include="Resources.c">
+      <Filter>Source Files\Launcher</Filter>
+    </ClCompile>
+    <ClCompile Include="LWidgets.c">
       <Filter>Source Files\Launcher</Filter>
     </ClCompile>
   </ItemGroup>

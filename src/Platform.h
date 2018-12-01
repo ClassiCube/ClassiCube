@@ -23,8 +23,6 @@ enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_E
 
 /* Newline for console and text files. */
 extern char* Platform_NewLine;
-/* Character in a path that distinguishes directories. (usually / or \) */
-extern char  Directory_Separator;
 /* Name of default system font used. (e.g. Arial) */
 extern char* Font_DefaultName;
 extern const ReturnCode ReturnCode_FileShareViolation;

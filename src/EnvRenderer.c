@@ -894,10 +894,9 @@ static void EnvRenderer_EnvVariableChanged(void* obj, int envVar) {
 *--------------------------------------------------EnvRenderer component--------------------------------------------------*
 *#########################################################################################################################*/
 static void EnvRenderer_Init(void) {
-	String renderType; char renderTypeBuffer[STRING_SIZE];
+	String renderType;
 	int flags;
-	String_InitArray(renderType, renderTypeBuffer);
-	Options_Get(OPT_RENDER_TYPE, &renderType, "normal");
+	Options_UNSAFE_Get(OPT_RENDER_TYPE, &renderType);
 
 	flags = Game_CalcRenderType(&renderType);
 	if (flags == -1) flags = 0;

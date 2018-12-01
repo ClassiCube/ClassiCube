@@ -95,8 +95,8 @@ bool Drawer2D_Clamp(Bitmap* bmp, int* x, int* y, int* width, int* height) {
 }
 #define Drawer2D_ClampPixel(p) (p < 0 ? 0 : (p > 255 ? 255 : p))
 
-void Gradient_Noise(Bitmap* bmp, int x, int y, int width, int height, 
-					BitmapCol col, int variation) {
+void Gradient_Noise(Bitmap* bmp, BitmapCol col, int variation,
+					int x, int y, int width, int height) {
 	BitmapCol* dst;
 	int xx, yy, n;
 	float noise;
@@ -122,8 +122,8 @@ void Gradient_Noise(Bitmap* bmp, int x, int y, int width, int height,
 	}
 }
 
-void Gradient_Vertical(Bitmap* bmp, int x, int y, int width, int height, 
-					   PackedCol a, PackedCol b) {
+void Gradient_Vertical(Bitmap* bmp, BitmapCol a, BitmapCol b,
+					   int x, int y, int width, int height) {
 	BitmapCol* row, col;
 	int xx, yy;
 	float t;
@@ -142,8 +142,8 @@ void Gradient_Vertical(Bitmap* bmp, int x, int y, int width, int height,
 	}
 }
 
-void Gradient_Blend(Bitmap* bmp, int x, int y, int width, int height, 
-					PackedCol col, int blend) {
+void Gradient_Blend(Bitmap* bmp, BitmapCol col, int blend,
+					int x, int y, int width, int height) {
 	BitmapCol* dst;
 	int xx, yy, t;
 	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;

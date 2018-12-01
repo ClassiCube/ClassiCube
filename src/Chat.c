@@ -101,7 +101,7 @@ static void Chat_OpenLog(struct DateTime* now) {
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
 	for (i = 0; i < 20; i++) {
 		path->length = 0;
-		String_Format4(path, "logs%r%p4-%p2-%p2 ", &Directory_Separator, &now->Year, &now->Month, &now->Day);
+		String_Format3(path, "logs/%p4-%p2-%p2 ", &now->Year, &now->Month, &now->Day);
 
 		if (i > 0) {
 			String_Format2(path, "%s _%i.log", &Chat_LogName, &i);
