@@ -121,6 +121,9 @@
     <Filter Include="Header Files\Launcher">
       <UniqueIdentifier>{6b1102a4-29d5-4c01-8f32-b9d9cb19b8aa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Launcher">
+      <UniqueIdentifier>{a46e060c-8a75-436f-ac18-f35d184735af}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Platform.h">
@@ -538,6 +541,9 @@
     </ClCompile>
     <ClCompile Include="Window.c">
       <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher.c">
+      <Filter>Source Files\Launcher</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

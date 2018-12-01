@@ -4,53 +4,72 @@
 #include "String.h"
 
 struct LScreen;
-TimeMS Launcher_PatchTime;
 
-extern BitmapCol Launcher_BackgroundCol       = BITMAPCOL_CONST(153, 127, 172, 255);
-extern BitmapCol Launcher_ButtonBorderCol     = BITMAPCOL_CONST( 97,  81, 110, 255);
-extern BitmapCol Launcher_ButtonForeActiveCol = BITMAPCOL_CONST(189, 168, 206, 255);
-extern BitmapCol Launcher_ButtonForeCol       = BITMAPCOL_CONST(141, 114, 165, 255);
-extern BitmapCol Launcher_ButtonHighlightCol  = BITMAPCOL_CONST(162, 131, 186, 255);
-
-void Launcher_ResetSkin(void);
-void Launcher_LoadSkin(void);
-void Launcher_SaveSkin(void);
-
-void Launcher_UpdateAsync(void);
-
-extern bool Launcher_ClassicBackground;
-
-void Launcher_TryLoadTexturePack(void);
-void Launcher_RedrawBackground(void);
-
-/* Redraws the specified region with the background pixels. */
-void Launcher_ResetArea(int x, int y, int width, int height);
-
+/* Currently active screen/menu. */
 extern struct LSCreen* Launcher_Screen;
 /* Whether the client drawing area needs to be redrawn/presented to the screen. */
 extern bool Launcher_Dirty, Launcher_PendingRedraw;
 /* The specific area/region of the window that needs to be redrawn. */
 extern Rect2D Launcher_DirtyArea;
-String Username;
-extern int Launcher_Width, Launcher_Height;
+/* Pixels containing contents of the window.*/
 extern Bitmap Launcher_Framebuffer;
+/* Whether to use stone tile background like minecraft.net. */
+extern bool Launcher_ClassicBackground;
 
 /* Whether at the next tick, the launcher window should proceed to stop displaying frames and subsequently exit. */
 extern bool Launcher_ShouldExit;
 /* Whether update script should be asynchronously run on exit. */
 extern bool Launcher_ShouldUpdate;
+/* Time which updated executable's "modified" time should be set to. */
+extern TimeMS Launcher_PatchTime;
 
+/* Base colour of pixels before any widgets are drawn. */
+extern BitmapCol Launcher_BackgroundCol;
+/* Colour of pixels on the 4 line borders around buttons. */
+extern BitmapCol Launcher_ButtonBorderCol;
+/* Colour of button when user has mouse over it. */
+extern BitmapCol Launcher_ButtonForeActiveCol;
+/* Colour of button when user does not have mouse over it. */
+extern BitmapCol Launcher_ButtonForeCol;
+/* Colour of line at top of buttons to give them a less flat look.*/
+extern BitmapCol Launcher_ButtonHighlightCol;
+
+/* Resets colours to default. */
+void Launcher_ResetSkin(void);
+/* Loads colours from options. */
+void Launcher_LoadSkin(void);
+/* Saves the colours to options. */
+/* NOTE: Does not save options file itself. */
+void Launcher_SaveSkin(void);
+
+/* Attempts to load font and terrain from texture pack. */
+void Launcher_TryLoadTexturePack(void);
+/* Redraws all pixels with default background. */
+/* NOTE: Also draws titlebar at top, if active screen permits it. */
+void Launcher_ResetPixels(void);
+/* Redraws the specified region with the background pixels. */
+void Launcher_ResetArea(int x, int y, int width, int height);
+
+/* Represents all known details about a server. */
 struct ServerListEntry {
 	String Hash, Name, Players, MaxPlayers, Flag;
 	String Uptime, IPAddress, Port, Mppass, Software;
 	bool Featured;
 };
-extern struct ServerListEntry* Launcher_Servers;
+/* List of all public servers on classicube.net server list. */
+extern struct ServerListEntry* Launcher_PublicServers;
+/* Number of public servers */
+extern int Launcher_NumServers;
 
-extern String Launcher_FontName;
+/* Sets currently active screen/menu, freeing old one. */
 void Launcher_SetScreen(struct LScreen* screen);
+/* Attempts to start the game by connecting to the given server. */
 bool Launcher_ConnectToServer(const String* hash);
+/* Launcher main loop. */
 void Launcher_Run();
+/* Shows a message box for an error. */
+void Launcher_ShowError(ReturnCode res, const char* place);
 
+/* Starts the game from the given arguments. */
 bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server);
 #endif

@@ -270,6 +270,7 @@
     <ClCompile Include="HeldBlockRenderer.c" />
     <ClCompile Include="InputHandler.c" />
     <ClCompile Include="Inventory.c" />
+    <ClCompile Include="Launcher.c" />
     <ClCompile Include="MapGenerator.c" />
     <ClCompile Include="Deflate.c" />
     <ClCompile Include="Model.c" />
