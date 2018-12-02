@@ -259,8 +259,8 @@ void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
 		if (res == ERR_END_OF_STREAM) break;
 		if (res) { Chat_LogError2(res, "reading from", &path); break; }
 		
-		String_TrimStart(&entry);
-		String_TrimEnd(&entry);
+		String_UNSAFE_TrimStart(&entry);
+		String_UNSAFE_TrimEnd(&entry);
 
 		if (!entry.length) continue;
 		if (filter && !filter(&entry)) continue;

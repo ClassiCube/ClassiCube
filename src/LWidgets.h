@@ -33,6 +33,7 @@ struct LButton {
 CC_NOINLINE void LButton_Init(struct LButton* w, int width, int height);
 CC_NOINLINE void LButton_SetText(struct LButton* w, const String* text, const FontDesc* font);
 
+struct LInput;
 struct LInput {
 	LWidget_Layout
 	int BaseWidth, RealWidth;
@@ -40,6 +41,15 @@ struct LInput {
 	const char* HintText;
 	/* Whether all characters should be rendered as *. */
 	bool Password;
+	/* Filter applied to text received from the clipboard. Can be NULL. */
+	void (*ClipboardFilter)(String* text);
+	/* Callback invoked when the text is changed. Can be NULL. */
+	void (*TextChanged)(struct LInput* w);
+	/* Filter that only lets certain characters be entered. Can be NULL. */
+	bool (*TextFilter)(char c);
+	/* Specifies the position that characters are inserted/deleted from. */
+	/* NOTE: -1 to insert/delete characters at end of the text. */
+	int CaretPos;
 	FontDesc Font, HintFont;
 	String Text;
 	int __TextHeight;
@@ -47,7 +57,20 @@ struct LInput {
 };
 CC_NOINLINE void LInput_Init(struct LInput* w, int width, int height, const char* hintText, const FontDesc* hintFont);
 CC_NOINLINE void LInput_SetText(struct LInput* w, const String* text, const FontDesc* font);
+CC_NOINLINE Rect2D LInput_MeasureCaret(struct LInput* w);
+CC_NOINLINE void LInput_AdvanceCaretPos(struct LInput* w, bool forwards);
+CC_NOINLINE void LInput_SetCaretToCursor(struct LInput* w, int x, int y);
 
+/* Appends a character to the end of the currently entered text. */
+CC_NOINLINE bool LInput_Append(struct LInput* w, char c);
+/* Removes the character preceding the caret in the currently entered text. */
+CC_NOINLINE bool LInput_Backspace(struct LInput* w);
+/* Removes the character at the caret in the currently entered text. */
+CC_NOINLINE bool LInput_Delete(struct LInput* w);
+/* Resets the currently entered text to an empty string. */
+CC_NOINLINE bool LInput_Clear(struct LInput* w);
+/* Sets the currently entered text to the contents of the system clipboard. */
+CC_NOINLINE bool LInput_CopyFromClipboard(struct LInput* w, const String* text);
 
 struct LLabel {
 	LWidget_Layout

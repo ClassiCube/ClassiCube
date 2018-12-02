@@ -1161,8 +1161,8 @@ static bool InputWidget_OtherKey(struct InputWidget* w, Key key) {
 		String_InitArray(text, textBuffer);
 		Window_GetClipboardText(&text);
 
-		String_TrimStart(&text);
-		String_TrimEnd(&text);
+		String_UNSAFE_TrimStart(&text);
+		String_UNSAFE_TrimEnd(&text);
 
 		if (!text.length) return true;
 		InputWidget_AppendString(w, &text);
@@ -1654,7 +1654,7 @@ static void ChatInputWidget_OnPressedEnter(void* widget) {
 	struct ChatInputWidget* w = widget;
 	/* Don't want trailing spaces in output message */
 	String text = w->Base.Text;
-	String_TrimEnd(&text);
+	String_UNSAFE_TrimEnd(&text);
 	if (text.length) { Chat_Send(&text, true); }
 
 	w->OrigStr.length = 0;

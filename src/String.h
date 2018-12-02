@@ -117,10 +117,10 @@ CC_NOINLINE void String_InsertAt(String* str, int offset, char c);
 CC_NOINLINE void String_DeleteAt(String* str, int offset);
 /* Trims leading spaces from the given string. */
 /* NOTE: Works by adjusting buffer/length, the characters in memory are not shifted. */
-CC_NOINLINE void String_TrimStart(String* str);
+CC_NOINLINE void String_UNSAFE_TrimStart(String* str);
 /* Trims trailing spaces from the given string. */
 /* NOTE: Works by adjusting buffer/length, the characters in memory are not shifted. */
-CC_NOINLINE void String_TrimEnd(String* str);
+CC_NOINLINE void String_UNSAFE_TrimEnd(String* str);
 
 /* Returns first index of the given substring in the given string, -1 if not found. */
 /* e.g. index of "ab" within "cbabd" is 2 */

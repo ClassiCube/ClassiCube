@@ -145,6 +145,74 @@ void LButton_SetText(struct LButton* w, const String* text, const FontDesc* font
 *#########################################################################################################################*/
 CC_NOINLINE void LInput_Init(struct LInput* w, int width, int height, const char* hintText, const FontDesc* hintFont);
 CC_NOINLINE void LInput_SetText(struct LInput* w, const String* text, const FontDesc* font);
+CC_NOINLINE Rect2D LInput_MeasureCaret(struct LInput* w);
+
+void LInput_AdvanceCaretPos(struct LInput* w, bool forwards) {
+	if (forwards && w->CaretPos == -1) return;
+	if (!forwards && w->CaretPos == 0) return;
+	if (w->CaretPos == -1 && !forwards) /* caret after text */
+		w->CaretPos = w->Text.length;
+
+	w->CaretPos += (forwards ? 1 : -1);
+	if (w->CaretPos < 0 || w->CaretPos >= w->Text.length) w->CaretPos = -1;
+}
+
+CC_NOINLINE void LInput_SetCaretToCursor(struct LInput* w, int x, int y);
+
+bool LInput_Append(struct LInput* w, char c) {
+	if (w->TextFilter && !w->TextFilter(c)) return false;
+
+	if (c >= ' ' && c <= '~' && c != '&' && w->Text.length < w->Text.capacity) {
+		if (w->CaretPos == -1) {
+			String_Append(&w->Text, c);
+		} else {
+			String_InsertAt(&w->Text, w->CaretPos, c);
+			w->CaretPos++;
+		}
+		if (w->TextChanged) w->TextChanged(w);
+		return true;
+	}
+	return false;
+}
+
+bool LInput_Backspace(struct LInput* w) {
+	if (w->Text.length == 0 || w->CaretPos == 0) return false;
+
+	if (w->CaretPos == -1) {
+		String_DeleteAt(&w->Text, w->Text.length - 1);
+	} else {	
+		String_DeleteAt(&w->Text, w->CaretPos - 1);
+		w->CaretPos--;
+		if (w->CaretPos == -1) w->CaretPos = 0;
+	}
+
+	if (w->TextChanged) TextChanged(w);
+	if (w->CaretPos >= w->Text.length) w->CaretPos = -1;
+	return true;
+}
+
+bool LInput_Delete(struct LInput* w) {
+	if (w->Text.length == 0 || w->CaretPos == -1) return false;
+
+	String_DeleteAt(&w->Text, w->CaretPos);
+	if (w->CaretPos == -1) w->CaretPos = 0;
+
+	if (w->TextChanged) w->TextChanged(w);
+	if (w->CaretPos >= w->Text.length) w->CaretPos = -1;
+	return true;
+}
+
+bool LInput_Clear(struct LInput* w) {
+	if (w->Text.length == 0) return false;
+	w->Text.length = 0;
+
+	if (w->TextChanged) w->TextChanged(w);
+	w->CaretPos = -1;
+	return true;
+}
+
+/* Sets the currently entered text to the contents of the system clipboard.  */
+CC_NOINLINE bool LInput_CopyFromClipboard(struct LInput* w, const String* text);
 
 
 /*########################################################################################################################*

@@ -194,7 +194,7 @@ static void SPConnection_AddPart(const String* text) {
 	for (i = 0; i < tmp.length; i++) {
 		if (tmp.buffer[i] == '%') tmp.buffer[i] = '&';
 	}
-	String_TrimEnd(&tmp);
+	String_UNSAFE_TrimEnd(&tmp);
 
 	col = Drawer2D_LastCol(&tmp, tmp.length);
 	if (col) SPConnection_LastCol = col;
