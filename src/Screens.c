@@ -429,6 +429,7 @@ static void StatusScreen_Render(void* screen, double delta) {
 	StatusScreen_Update(s, delta);
 	if (Game_HideGui) return;
 
+	/* TODO: If Game_ShowFps is off and not classic mode, we should just return here */
 	Gfx_SetTexturing(true);
 	if (Game_ShowFPS) Elem_Render(&s->Line1, delta);
 

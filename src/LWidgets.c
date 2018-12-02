@@ -140,10 +140,16 @@ void LButton_SetText(struct LButton* w, const String* text, const FontDesc* font
 }
 
 
+/*########################################################################################################################*
+*------------------------------------------------------InputWidget--------------------------------------------------------*
+*#########################################################################################################################*/
 CC_NOINLINE void LInput_Init(struct LInput* w, int width, int height, const char* hintText, const FontDesc* hintFont);
 CC_NOINLINE void LInput_SetText(struct LInput* w, const String* text, const FontDesc* font);
 
 
+/*########################################################################################################################*
+*------------------------------------------------------LabelWidget--------------------------------------------------------*
+*#########################################################################################################################*/
 static void LLabel_Redraw(void* widget) {
 	struct DrawTextArgs args;
 	struct LLabel* w = widget;
@@ -172,9 +178,52 @@ void LLabel_SetText(struct LLabel* w, const String* text, const FontDesc* font) 
 }
 
 
-static void LSlider_Redraw(void* widget) {
-	struct LSlider* w = widget;
+/*########################################################################################################################*
+*------------------------------------------------------SliderWidget-------------------------------------------------------*
+*#########################################################################################################################*/
+#define SDR_BORDER 1
+static void LSlider_DrawBoxBounds(struct LSlider* w) {
+	BitmapCol boundsTop    =  BITMAPCOL_CONST(119, 100, 132, 255);
+	BitmapCol boundsBottom =  BITMAPCOL_CONST(150, 130, 165, 255);
 
+	/* TODO: Check these are actually right */
+	Drawer2D_Clear(&Launcher_Framebuffer, boundsTop,
+				  w->X - SDR_BORDER,         w->Y - SDR_BORDER,
+				  w->Width + 2 * SDR_BORDER, SDR_BORDER);
+	Drawer2D_Clear(&Launcher_Framebuffer, boundsBottom,
+				  w->X - SDR_BORDER,         w->Y + w->Height,
+				  w->Width + 2 * SDR_BORDER, SDR_BORDER);
+
+	Gradient_Vertical(&Launcher_Framebuffer, boundsTop, boundsBottom,
+					 w->X - SDR_BORDER,      w->Y - SDR_BORDER,
+				  SDR_BORDER,                w->Height + SDR_BORDER);
+	Gradient_Vertical(&Launcher_Framebuffer, boundsTop, boundsBottom,
+					 w->X + w->Width,        w->Y - SDR_BORDER,
+					 SDR_BORDER,             w->Height + SDR_BORDER);
 }
 
-void LSlider_Init(struct LSlider* w, int width, int height);
+static void LSlider_DrawBox(struct LSlider* w) {
+	BitmapCol progTop    = BITMAPCOL_CONST(220, 204, 233, 255);
+	BitmapCol progBottom = BITMAPCOL_CONST(207, 181, 216, 255);
+
+	Gradient_Vertical(&Launcher_Framebuffer, progTop, progBottom,
+					  w->X, w->Y, w->Width, w->Height / 2);
+	Gradient_Vertical(&Launcher_Framebuffer, progBottom, progTop,
+					  w->X, w->Y + (w->Height / 2), w->Width, w->Height);
+}
+
+static void LSlider_Redraw(void* widget) {
+	struct LSlider* w = widget;
+	LSlider_DrawBoxBounds(w);
+	LSlider_DrawBox(w);
+
+	Drawer2D_Clear(&Launcher_Framebuffer, w->ProgressCol,
+				   w->X, w->Y, (int)(w->Width * w->Value / w->MaxValue), w->Height);
+}
+
+void LSlider_Init(struct LSlider* w, int width, int height) {
+	Widget_Reset(w);
+	w->Width  = width; w->Height = height;
+	w->Redraw = LSlider_Redraw;
+	w->MaxValue = 100;
+}

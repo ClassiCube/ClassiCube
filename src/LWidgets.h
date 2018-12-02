@@ -63,7 +63,7 @@ CC_NOINLINE void LLabel_SetText(struct LLabel* w, const String* text, const Font
 struct LSlider {
 	LWidget_Layout
 	int Value, MaxValue;
-	BitmapCol ProgCol;
+	BitmapCol ProgressCol;
 };
 CC_NOINLINE void LSlider_Init(struct LSlider* w, int width, int height);
 #endif

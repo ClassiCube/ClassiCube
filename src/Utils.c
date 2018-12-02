@@ -241,7 +241,7 @@ void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
 
 	String_InitArray(path, pathBuffer);
 	if (list->Folder) {
-		String_Format2(&path, "%c/c", list->Folder, list->Filename);
+		String_Format2(&path, "%c/%c", list->Folder, list->Filename);
 	} else {
 		String_AppendConst(&path, list->Filename);
 	}
