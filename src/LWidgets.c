@@ -20,8 +20,8 @@ void LWidget_CalcPosition(void* widget) {
 
 void LWidget_Reset(void* widget) {
 	struct LWidget* w = widget;
-	w->Active   = false;
-	w->Hidden   = false;
+	w->Hovered = false;
+	w->Hidden  = false;
 	w->X = 0; w->Y = 0;
 	w->Width = 0; w->Height = 0;
 	w->HorAnchor = ANCHOR_MIN;
@@ -30,7 +30,7 @@ void LWidget_Reset(void* widget) {
 
 	w->TabSelectable = false;
 	w->OnClick = NULL;
-	w->Redraw  = NULL;
+	w->VTABLE  = NULL;
 }
 
 
@@ -52,12 +52,12 @@ static void LButton_DrawBackground(struct LButton* w) {
 	BitmapCol col;
 
 	if (Launcher_ClassicBackground) {
-		col = w->Active ? activeCol : inactiveCol;
+		col = w->Hovered ? activeCol : inactiveCol;
 		Gradient_Noise(&Launcher_Framebuffer, col, 8,
 						w->X + BTN_BORDER,         w->Y + BTN_BORDER,
 						w->Width - 2 * BTN_BORDER, w->Height - 2 * BTN_BORDER);
 	} else {
-		col = w->Active ? Launcher_ButtonForeActiveCol : Launcher_ButtonForeCol;
+		col = w->Hovered ? Launcher_ButtonForeActiveCol : Launcher_ButtonForeCol;
 		Gradient_Vertical(&Launcher_Framebuffer, LButton_Expand(col, 8), LButton_Expand(col, -8),
 						  w->X + BTN_BORDER,         w->Y + BTN_BORDER,
 						  w->Width - 2 * BTN_BORDER, w->Height - 2 * BTN_BORDER);
@@ -88,14 +88,14 @@ static void LButton_DrawHighlight(struct LButton* w) {
 	BitmapCol highlightCol;
 
 	if (Launcher_ClassicBackground) {
-		highlightCol = w->Active ? activeCol : inactiveCol;
+		highlightCol = w->Hovered ? activeCol : inactiveCol;
 		Drawer2D_Clear(&Launcher_Framebuffer, highlightCol,
 						w->X + BTN_BORDER * 2,     w->Y + BTN_BORDER,
 						w->Width - BTN_BORDER * 4, BTN_BORDER);
 		Drawer2D_Clear(&Launcher_Framebuffer, highlightCol, 
 						w->X + BTN_BORDER,         w->Y + BTN_BORDER * 2,
 						BTN_BORDER,                w->Height - BTN_BORDER * 4);
-	} else if (!w->Active) {
+	} else if (!w->Hovered) {
 		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_ButtonHighlightCol, 
 						w->X + BTN_BORDER * 2,     w->Y + BTN_BORDER,
 						w->Width - BTN_BORDER * 4, BTN_BORDER);
@@ -116,17 +116,22 @@ static void LButton_Redraw(void* widget) {
 	LButton_DrawBorder(w);
 	LButton_DrawHighlight(w);
 
-	if (!w->Active) Drawer2D_Cols['f'] = Drawer2D_Cols['7'];
+	if (!w->Hovered) Drawer2D_Cols['f'] = Drawer2D_Cols['7'];
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, 
 					  w->X + xOffset / 2, w->Y + yOffset / 2);
-	if (!w->Active) Drawer2D_Cols['f'] = Drawer2D_Cols['F'];
+
+	if (!w->Hovered) Drawer2D_Cols['f'] = Drawer2D_Cols['F'];
+	Launcher_Dirty = true;
 }
 
+static struct LWidgetVTABLE lbutton_VTABLE = {
+	LButton_Redraw, LButton_Redraw, LButton_Redraw, NULL, NULL
+};
 void LButton_Init(struct LButton* w, int width, int height) {
 	Widget_Reset(w);
+	w->VTABLE = &lbutton_VTABLE;
 	w->TabSelectable = true;
 	w->Width  = width; w->Height = height;
-	w->Redraw = LButton_Redraw;
 	String_InitArray(w->Text, w->__TextBuffer);
 }
 
@@ -186,7 +191,7 @@ bool LInput_Backspace(struct LInput* w) {
 		if (w->CaretPos == -1) w->CaretPos = 0;
 	}
 
-	if (w->TextChanged) TextChanged(w);
+	if (w->TextChanged) w->TextChanged(w);
 	if (w->CaretPos >= w->Text.length) w->CaretPos = -1;
 	return true;
 }
@@ -225,11 +230,15 @@ static void LLabel_Redraw(void* widget) {
 
 	DrawTextArgs_Make(&args, &w->Text, &w->Font, true);
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, w->X, w->Y);
+	Launcher_Dirty = true;
 }
 
+static struct LWidgetVTABLE llabel_VTABLE = {
+	LLabel_Redraw, NULL, NULL, NULL, NULL
+};
 void LLabel_Init(struct LLabel* w) {
 	Widget_Reset(w);
-	w->Redraw = LLabel_Redraw;
+	w->VTABLE = &llabel_VTABLE;
 	String_InitArray(w->Text, w->__TextBuffer);
 }
 
@@ -287,11 +296,15 @@ static void LSlider_Redraw(void* widget) {
 
 	Drawer2D_Clear(&Launcher_Framebuffer, w->ProgressCol,
 				   w->X, w->Y, (int)(w->Width * w->Value / w->MaxValue), w->Height);
+	Launcher_Dirty = true;
 }
 
+static struct LWidgetVTABLE lslider_VTABLE = {
+	LSlider_Redraw, NULL, NULL, NULL, NULL
+};
 void LSlider_Init(struct LSlider* w, int width, int height) {
 	Widget_Reset(w);
+	w->VTABLE = &lslider_VTABLE;
 	w->Width  = width; w->Height = height;
-	w->Redraw = LSlider_Redraw;
 	w->MaxValue = 100;
 }

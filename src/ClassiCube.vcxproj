@@ -210,6 +210,8 @@
     <ClInclude Include="Gui.h" />
     <ClInclude Include="HeldBlockRenderer.h" />
     <ClInclude Include="Launcher.h" />
+    <ClInclude Include="LScreens.h" />
+    <ClInclude Include="LWeb.h" />
     <ClInclude Include="LWidgets.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Input.h" />
@@ -273,6 +275,8 @@
     <ClCompile Include="InputHandler.c" />
     <ClCompile Include="Inventory.c" />
     <ClCompile Include="Launcher.c" />
+    <ClCompile Include="LScreens.c" />
+    <ClCompile Include="LWeb.c" />
     <ClCompile Include="LWidgets.c" />
     <ClCompile Include="MapGenerator.c" />
     <ClCompile Include="Deflate.c" />

@@ -312,6 +312,12 @@
     <ClInclude Include="LWidgets.h">
       <Filter>Header Files\Launcher</Filter>
     </ClInclude>
+    <ClInclude Include="LWeb.h">
+      <Filter>Header Files\Launcher</Filter>
+    </ClInclude>
+    <ClInclude Include="LScreens.h">
+      <Filter>Header Files\Launcher</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -555,6 +561,12 @@
       <Filter>Source Files\Launcher</Filter>
     </ClCompile>
     <ClCompile Include="LWidgets.c">
+      <Filter>Source Files\Launcher</Filter>
+    </ClCompile>
+    <ClCompile Include="LWeb.c">
+      <Filter>Source Files\Launcher</Filter>
+    </ClCompile>
+    <ClCompile Include="LScreens.c">
       <Filter>Source Files\Launcher</Filter>
     </ClCompile>
   </ItemGroup>

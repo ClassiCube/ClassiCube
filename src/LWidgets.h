@@ -7,15 +7,30 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
+struct LWidgetVTABLE {
+	/* Called to redraw contents of this widget */
+	void (*Redraw)(void* widget);
+	/* Called when mouse hovers over this widget. */
+	void (*OnHover)(void* widget);
+	/* Called when mouse moves away from this widget. */
+	void (*OnUnhover)(void* widget);
+	/* Called when mouse clicks on this widget. */
+	/* NOTE: This function is just for general widget behaviour. */
+	/* OnClick callback is for per-widget instance behaviour. */
+	void (*OnSelected)(void* widget);
+	/* Called when mouse clicks on another widget. */
+	void (*OnUnselected)(void* widget);
+};
+
 #define LWidget_Layout \
+	struct LWidgetVTABLE* VTABLE; /* General widget functions */ \
 	int X, Y, Width, Height;      /* Top left corner, and dimensions, of this widget */ \
-	bool Active;                  /* Whether this widget is currently being moused over*/ \
+	bool Hovered;                 /* Whether this widget is currently being moused over*/ \
 	bool Hidden;                  /* Whether this widget is hidden from view */ \
 	bool TabSelectable;           /* Whether this widget gets selected when pressing tab */ \
 	uint8_t HorAnchor, VerAnchor; /* Specifies the reference point for when this widget is resized */ \
 	int XOffset, YOffset;         /* Offset from the reference point */ \
 	void (*OnClick)(void* widget, int x, int y); /* Called when widget is clicked */ \
-	void (*Redraw)(void* widget); /* Called to redraw contents of this widget */
 
 /* Represents an individual 2D gui component in the launcher. */
 struct LWidget { LWidget_Layout };
