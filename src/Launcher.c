@@ -13,14 +13,23 @@ bool Launcher_Dirty, Launcher_PendingRedraw;
 Rect2D Launcher_DirtyArea;
 Bitmap Launcher_Framebuffer;
 bool Launcher_ClassicBackground;
+FontDesc Launcher_TitleFont, Launcher_TextFont;
 
 bool Launcher_ShouldExit, Launcher_ShouldUpdate;
 TimeMS Launcher_PatchTime;
 struct ServerListEntry* Launcher_PublicServers;
 int Launcher_NumServers;
 
+void Launcher_ShowError(ReturnCode res, const char* place) {
+	String msg; char msgBuffer[STRING_SIZE * 2];
+	String_InitArray_NT(msg, msgBuffer);
+
+	String_Format2(&msg, "Error %x when %c", &res, place);
+	msg.buffer[msg.length] = '\0';
+	Window_ShowDialog("Error", msg.buffer);
+}
+
 /* TODO: FIX THESE STUBS!!! */
-void Launcher_ShowError(ReturnCode res, const char* place) { }
 void Launcher_SecureSetOpt(const char* opt, const String* data, const String* key) { }
 
 /*internal UpdateCheckTask checkTask;

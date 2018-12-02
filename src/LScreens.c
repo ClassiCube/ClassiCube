@@ -111,6 +111,11 @@ static void SettingsScreen_InitWidgets(struct SettingsScreen* s) {
 
 	LScreen_Button(s_, &s->BtnBack, 80, 35, "Back",
 					ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
+
+	s->BtnMode.OnClick    = SwitchToChooseMode;
+	s->BtnUpdates.OnClick = SwitchToUpdates;
+	s->BtnColours.OnClick = SwitchToColours;
+	s->BtnBack.OnClick    = SwitchToMain;
 }
 
 static void SwitchToChooseMode(void* w, int x, int y) { 
@@ -132,11 +137,6 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 
 	s->BtnColours.Hidden = Launcher_ClassicBackground;
 	s->LblColours.Hidden = Launcher_ClassicBackground;
-
-	s->BtnMode.OnClick    = SwitchToChooseMode;
-	s->BtnUpdates.OnClick = SwitchToUpdates;
-	s->BtnColours.OnClick = SwitchToColours;
-	s->BtnBack.OnClick    = SwitchToMain;
 	s->DrawAll(s);
 }
 

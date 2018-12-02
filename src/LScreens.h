@@ -30,7 +30,7 @@ struct LScreen {
 	struct LWidget** Widgets;
 };
 	
-struct LScreen* ChooseModeScreen_MakeInstance(void);
+struct LScreen* ChooseModeScreen_MakeInstance(bool firstTime);
 struct LScreen* ColoursScreen_MakeInstance(void);
 struct LScreen* DirectConnectScreen_MakeInstance(void);
 struct LScreen* MainScreen_MakeInstance(void);

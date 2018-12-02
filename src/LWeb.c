@@ -29,8 +29,8 @@ void LWebTask_Tick(struct LWebTask* task) {
 static void LWebTask_DefaultBegin(struct LWebTask* task) {
 	AsyncDownloader_GetData(&task->URL, false, &task->Identifier);
 }
-
-/*protected static JsonObject ParseJson(Request req) {
+/*
+protected static JsonObject ParseJson(Request req) {
 	JsonContext ctx = new JsonContext();
 	ctx.Val = (string)req.Data;
 	return (JsonObject)Json.ParseStream(ctx);
