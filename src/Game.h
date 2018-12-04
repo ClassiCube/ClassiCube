@@ -93,6 +93,7 @@ bool Game_CanPick(BlockID block);
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, uint8_t* skinType);
 bool Game_ValidateBitmap(const String* file, Bitmap* bmp);
 int  Game_CalcRenderType(const String* type);
+void Game_UpdateClientSize(void);
 void Game_SetFpsLimit(enum FpsLimit method);
 float Game_CalcLimitMillis(enum FpsLimit method);
 

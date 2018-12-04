@@ -4,7 +4,7 @@
 #include "Gui.h"
 #include "Game.h"
 
-/*static void LScreen_NullFunc(struct LScreen* s) { }
+static void LScreen_NullFunc(struct LScreen* s) { }
 static void LScreen_DrawAll(struct LScreen* s) {
 	struct LWidget* widget;
 	int i;
@@ -96,15 +96,15 @@ static struct ChooseModeScreen {
 static void ChooseMode_Click(bool classic, bool classicHacks) {
 	Launcher_ClassicBackground = classic;
 	Options_Load();
-	Options_Set(OPT_CLASSIC_MODE, classic);
-	if (classic) Options_Set(OPT_CLASSIC_HACKS, classicHacks);
+	Options_SetBool(OPT_CLASSIC_MODE, classic);
+	if (classic) Options_SetBool(OPT_CLASSIC_HACKS, classicHacks);
 
-	Options_Set("nostalgia-classicbg", classic);
-	Options_Set(OPT_CUSTOM_BLOCKS,   !classic);
-	Options_Set(OPT_CPE,             !classic);
-	Options_Set(OPT_SERVER_TEXTURES, !classic);
-	Options_Set(OPT_CLASSIC_TABLIST, classic);
-	Options_Set(OPT_CLASSIC_OPTIONS, classic);
+	Options_SetBool("nostalgia-classicbg", classic);
+	Options_SetBool(OPT_CUSTOM_BLOCKS,   !classic);
+	Options_SetBool(OPT_CPE,             !classic);
+	Options_SetBool(OPT_SERVER_TEXTURES, !classic);
+	Options_SetBool(OPT_CLASSIC_TABLIST, classic);
+	Options_SetBool(OPT_CLASSIC_OPTIONS, classic);
 	Options_Save();
 
 	Launcher_SetScreen(MainScreen_MakeInstance());
@@ -177,13 +177,13 @@ struct LScreen* ChooseModeScreen_MakeInstance(bool firstTime) {
 	s->Init = ChooseModeScreen_Init;
 	s->FirstTime = firstTime;
 	return (struct LScreen*)s;
-}*/
+}
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------SettingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
-/*static struct SettingsScreen {
+static struct SettingsScreen {
 	LScreen_Layout
 	struct LWidget* Widgets[7];
 	struct LButton BtnUpdates, BtnMode, BtnColours, BtnBack;
@@ -244,4 +244,4 @@ struct LScreen* SettingsScreen_MakeInstance(void) {
 	LScreen_Reset((struct LScreen*)s);
 	s->Init = SettingsScreen_Init;
 	return (struct LScreen*)s;
-}*/
+}

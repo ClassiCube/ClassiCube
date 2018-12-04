@@ -25,7 +25,7 @@ typedef void (*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 struct LScreen {
 	LScreen_Layout
 	/* All widgets in the screen. */
-	/* NOTE: This is vriable sized, so must be the last member. */
+	/* NOTE: This is variable sized, so must be the last member. */
 	/* (e.g. derived screens might use: struct LWidget* Widgets[10];) */
 	struct LWidget** Widgets;
 };

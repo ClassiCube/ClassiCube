@@ -21,6 +21,8 @@ extern bool DigSoundsExist, StepSoundsExist;
 extern int Resources_Size, Resources_Count;
 /* Returns flags of files that need to be fetched. */
 int Resources_GetFetchFlags(void);
+/* Checks existence of all assets. */
+void Resources_CheckExistence(void);
 
 extern struct ResourceSound {
 	const char* Name;

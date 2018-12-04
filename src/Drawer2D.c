@@ -58,7 +58,7 @@ static void Drawer2D_CalculateTextWidths(void) {
 
 			/* Iterate through each pixel of the given character, on the current scanline */
 			for (xx = Drawer2D_TileSize - 1; xx >= 0; xx--) {
-				if (row[x + xx].A < 127) continue;
+				if (!row[x + xx].A) continue;
 
 				/* Check if this is the pixel furthest to the right, for the current character */			
 				Drawer2D_Widths[i] = max(Drawer2D_Widths[i], xx + 1);

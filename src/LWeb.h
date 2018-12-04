@@ -10,6 +10,8 @@ struct LWebTask;
 struct LWebTask {
 	/* Whether the task has finished executing. */
 	bool Completed;
+	/* Whether the task is currently downloading/uploading, or is scheduled to be. */
+	bool Working;
 	/* Whether the task completed successfully. */
 	bool Success;
 	ReturnCode Res;

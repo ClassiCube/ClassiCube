@@ -289,7 +289,7 @@ int Game_CalcRenderType(const String* type) {
 	return -1;
 }
 
-static void Game_UpdateClientSize(void) {
+void Game_UpdateClientSize(void) {
 	Size2D size = Window_ClientSize;
 	Game_Width  = max(size.Width,  1);
 	Game_Height = max(size.Height, 1);

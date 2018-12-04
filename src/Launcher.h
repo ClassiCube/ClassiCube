@@ -8,9 +8,9 @@
 struct LScreen;
 
 /* Currently active screen/menu. */
-extern struct LSCreen* Launcher_Screen;
+extern struct LScreen* Launcher_Screen;
 /* Whether the client drawing area needs to be redrawn/presented to the screen. */
-extern bool Launcher_Dirty, Launcher_PendingRedraw;
+extern bool Launcher_Dirty;
 /* The specific area/region of the window that needs to be redrawn. */
 extern Rect2D Launcher_DirtyArea;
 /* Contains the pixels that are drawn to the window. */
@@ -58,6 +58,7 @@ void Launcher_ResetArea(int x, int y, int width, int height);
 struct ServerListEntry {
 	String Hash, Name, Players, MaxPlayers, Flag;
 	String Uptime, IPAddress, Port, Mppass, Software;
+	/*int Players, MaxPlayers, Uptime;*/
 	bool Featured;
 };
 /* List of all public servers on classicube.net server list. */
@@ -70,7 +71,7 @@ void Launcher_SetScreen(struct LScreen* screen);
 /* Attempts to start the game by connecting to the given server. */
 bool Launcher_ConnectToServer(const String* hash);
 /* Launcher main loop. */
-void Launcher_Run();
+void Launcher_Run(void);
 
 /* Shows a message box for an error. */
 void Launcher_ShowError(ReturnCode res, const char* place);

@@ -1,4 +1,6 @@
 #include "Launcher.h"
+#include "LScreens.h"
+#include "Resources.h"
 #include "Drawer2D.h"
 #include "Game.h"
 #include "Deflate.h"
@@ -7,9 +9,10 @@
 #include "Input.h"
 #include "Window.h"
 #include "GameStructs.h"
+#include "Event.h"
 
-struct LSCreen* Launcher_Screen;
-bool Launcher_Dirty, Launcher_PendingRedraw;
+struct LScreen* Launcher_Screen;
+bool Launcher_Dirty;
 Rect2D Launcher_DirtyArea;
 Bitmap Launcher_Framebuffer;
 bool Launcher_ClassicBackground;
@@ -32,59 +35,81 @@ void Launcher_ShowError(ReturnCode res, const char* place) {
 /* TODO: FIX THESE STUBS!!! */
 void Launcher_SecureSetOpt(const char* opt, const String* data, const String* key) { }
 
-/*internal UpdateCheckTask checkTask;
-bool fullRedraw;
+internal UpdateCheckTask checkTask;
+static bool fullRedraw, pendingRedraw;
+static FontDesc logoFont;
 
-Font logoFont;
+static void Launcher_RedrawAll(void) {
+	Launcher_ResetPixels();
+	if (Launcher_Screen) Launcher_Screen->DrawAll(Launcher_Screen);
+	fullRedraw = true;
+}
+
+static void Launcher_ReqeustRedraw(void) {
+	/* We may get multiple Redraw events in short timespan */
+	/* So we just request a redraw at next launcher tick */
+	pendingRedraw  = true;
+	Launcher_Dirty = true;
+}
+
+/* updates window state on resize and redraws contents. */
+static void Launcher_OnResize(void) {
+	Game_UpdateClientSize();
+	Launcher_Framebuffer.Width  = Game_Width;
+	Launcher_Framebuffer.Height = Game_Height;
+
+	Window_InitRaw(&Launcher_Framebuffer);
+	Launcher_RedrawAll();
+}
+
+void Launcher_SetScreen(struct LScreen* screen) {
+	if (Launcher_Screen) Launcher_Screen->Free(Launcher_Screen);
+	Launcher_ResetPixels();
+	Launcher_Screen = screen;
+
+	screen->Init(screen);
+	/* for hovering over active button etc */
+	screen->MouseMove(screen, 0, 0);
+}
+
 static void Launcher_Init(void) {
 	BitmapCol col = BITMAPCOL_CONST(125, 125, 125, 255);
-	Window.Resize += Resize;
+
+	Event_RegisterVoid(&WindowEvents_Resized,      NULL, Launcher_OnResize);
+	Event_RegisterVoid(&WindowEvents_StateChanged, NULL, Launcher_OnResize);
 	Window.FocusedChanged += RedrawAll;
-	Window.WindowStateChanged += Resize;
 	Window.Redraw += RedrawPending;
 	Keyboard.KeyDown += KeyDown;
 
 	Options_Load();
 	Options_Get(OPT_FONT_NAME, &Game_FontName, Font_DefaultName);
 	/* TODO: Handle Arial font not working */
-	/*logoFont = new Font(FontName, 32, FontStyle.Regular);
+	Font_Make(&logoFont,           &Game_FontName, 32, FONT_STYLE_NORMAL);
+	Font_Make(&Launcher_TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
+	Font_Make(&Launcher_TextFont,  &Game_FontName, 14, FONT_STYLE_NORMAL);
 
 	Drawer2D_Cols['g'] = col;
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("audio");
 }
 
-void Resize() {
-	UpdateClientSize();
-	platformDrawer.Resize();
-	RedrawAll();
-}
+void Dispose() {
+	Event_UnregisterVoid(&WindowEvents_Resized,      NULL, Launcher_OnResize);
+	Event_UnregisterVoid(&WindowEvents_StateChanged, NULL, Launcher_OnResize);
 
-void RedrawPending() {
-	// in case we get multiple of these events
-	pendingRedraw = true;
-	Dirty = true;
-}
+	Window.FocusedChanged -= RedrawAll;
+	Window.Redraw -= RedrawPending;
+	Keyboard.KeyDown -= KeyDown;
 
-void RedrawAll() {
-	RedrawBackground();
-	if (Screen != null) Screen.Resize();
-	fullRedraw = true;
-}
+	List<FastBitmap> bitmaps = FetchFlagsTask.Bitmaps;
+	for (int i = 0; i < bitmaps.Count; i++) {
+		bitmaps[i].Dispose();
+		bitmaps[i].Bitmap.Dispose();
+	}
 
-void SetScreen(Screen screen) {
-	if (Launcher_Screen) Screen.Dispose();
-	Launcher_ResetPixels();
-	Screen = screen;
-	screen.Init();
-	// for selecting active button etc
-	Screen.MouseMove(0, 0);
-}
-
-void UpdateClientSize() {
-	Size size = Window.ClientSize;
-	Width = Math.Max(size.Width, 1);
-	Height = Math.Max(size.Height, 1);
+	Font_Free(&logoFont);
+	Font_Free(&Launcher_TitleFont);
+	Font_Free(&Launcher_TextFont);
 }
 
 void Run() {
@@ -92,7 +117,7 @@ void Run() {
 		GraphicsMode.Default, DisplayDevice.Default);
 	Window_SetVisible(true);
 	Drawer2D_Component.Init();
-	UpdateClientSize();
+	Game_UpdateClientSize();
 
 	Launcher_Init();
 	Launcher_TryLoadTexturePack();
@@ -106,12 +131,11 @@ void Run() {
 	Downloader.Cookies = new CookieContainer();
 	Downloader.KeepAlive = true;
 
-	fetcher = new ResourceFetcher();
-	fetcher.CheckResourceExistence();
+	Resources_CheckExistence();
 	checkTask = new UpdateCheckTask();
 	checkTask.RunAsync(this);
 
-	if (!fetcher.AllResourcesExist) {
+	if (Resources_Count) {
 		SetScreen(new ResourcesScreen(this));
 	} else {
 		SetScreen(new MainScreen(this));
@@ -123,7 +147,7 @@ void Run() {
 		if (Launcher_ShouldExit) break;
 
 		checkTask.Tick();
-		Screen.Tick();
+		Launcher_Screen->Tick(Launcher_Screen);
 		if (Launcher_Dirty) Launcher_Display();
 		Thread_Sleep(10);
 	}
@@ -134,7 +158,7 @@ void Run() {
 	}
 
 	if (Launcher_Screen) {
-		Screen.Dispose();
+		Launcher_Screen->Free(Launcher_Screen);
 		Launcher_Screen = NULL;
 	}
 
@@ -146,12 +170,12 @@ void Run() {
 
 void Display() {
 	if (pendingRedraw) {
-		RedrawAll();
+		Launcher_RedrawAll();
 		pendingRedraw = false;
 	}
 
-	Screen.OnDisplay();
-	Dirty = false;
+	Launcher_Screen->OnDisplay(Launcher_Screen);
+	Launcher_Dirty = false;
 
 	Rectangle rec = new Rectangle(0, 0, Framebuffer.Width, Framebuffer.Height);
 	if (!fullRedraw && DirtyArea.Width > 0) {
@@ -166,21 +190,6 @@ void Display() {
 void KeyDown(Key key) {
 	if (IsShutdown(key)) Launcher_ShouldExit = true;
 }
-
-void Dispose() {
-	Window.Resize -= Resize;
-	Window.FocusedChanged -= RedrawAll;
-	Window.WindowStateChanged -= Resize;
-	Window.Redraw -= RedrawPending;
-	Keyboard.KeyDown -= KeyDown;
-
-	List<FastBitmap> bitmaps = FetchFlagsTask.Bitmaps;
-	for (int i = 0; i < bitmaps.Count; i++) {
-		bitmaps[i].Dispose();
-		bitmaps[i].Bitmap.Dispose();
-	}
-	logoFont.Dispose();
-}*/
 
 static bool Launcher_IsShutdown(Key key) {
 	if (key == KEY_F4 && Key_IsAltPressed()) return true;

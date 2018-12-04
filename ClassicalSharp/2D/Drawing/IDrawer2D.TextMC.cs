@@ -49,7 +49,7 @@ namespace ClassicalSharp {
 					for (int xx = boxSize - 1; xx >= 0; xx--) {
 						int pixel = row[x + xx];
 						byte a = (byte)(pixel >> 24);
-						if (a < 127) continue;
+						if (a == 0) continue;
 						
 						// Check if this is the pixel furthest to the right
 						int index = (tileY << 4) | tileX;

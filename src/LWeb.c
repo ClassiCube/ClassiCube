@@ -3,6 +3,7 @@
 
 static void LWebTask_Reset(struct LWebTask* task) {
 	task->Completed = false;
+	task->Working   = true;
 	task->Success   = false;
 	task->Start = DateTime_CurrentUTC_MS();
 }
