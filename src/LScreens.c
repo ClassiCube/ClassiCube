@@ -2,8 +2,9 @@
 #include "LWidgets.h"
 #include "Launcher.h"
 #include "Gui.h"
+#include "Game.h"
 
-static void LScreen_NullFunc(struct LScreen* s) { }
+/*static void LScreen_NullFunc(struct LScreen* s) { }
 static void LScreen_DrawAll(struct LScreen* s) {
 	struct LWidget* widget;
 	int i;
@@ -82,6 +83,104 @@ CC_NOINLINE static void LScreen_Slider(struct LScreen* s, struct LSlider* w, int
 }
 
 /*########################################################################################################################*
+*-------------------------------------------------------ChooseModeScreen--------------------------------------------------*
+*#########################################################################################################################*/
+static struct ChooseModeScreen {
+	LScreen_Layout
+	struct LWidget* Widgets[12];
+	struct LButton BtnEnhanced, BtnClassicHax, BtnClassic, BtnBack;
+	struct LLabel  LblTitle, LblHelp, LblEnhanced[2], LblClassicHax[2], LblClassic[2];
+	bool FirstTime;
+} ChooseModeScreen_Instance;
+
+static void ChooseMode_Click(bool classic, bool classicHacks) {
+	Launcher_ClassicBackground = classic;
+	Options_Load();
+	Options_Set(OPT_CLASSIC_MODE, classic);
+	if (classic) Options_Set(OPT_CLASSIC_HACKS, classicHacks);
+
+	Options_Set("nostalgia-classicbg", classic);
+	Options_Set(OPT_CUSTOM_BLOCKS,   !classic);
+	Options_Set(OPT_CPE,             !classic);
+	Options_Set(OPT_SERVER_TEXTURES, !classic);
+	Options_Set(OPT_CLASSIC_TABLIST, classic);
+	Options_Set(OPT_CLASSIC_OPTIONS, classic);
+	Options_Save();
+
+	Launcher_SetScreen(MainScreen_MakeInstance());
+}
+
+static void UseModeEnhanced(void* w, int x, int y) {
+	Launcher_SetScreen(ChooseModeScreen_MakeInstance(false));
+}
+static void UseModeClassicHax(void* w, int x, int y) {
+	Launcher_SetScreen(UpdatesScreen_MakeInstance());
+}
+static void UseModeClassic(void* w, int x, int y) {
+	Launcher_SetScreen(ColoursScreen_MakeInstance());
+}
+static void SwitchToSettings(void* w, int x, int y) {
+	Launcher_SetScreen(SettingsScreen_MakeInstance());
+}
+
+static void ChooseModeScreenScreen_InitWidgets(struct ChooseModeScreen* s) {
+	struct LScreen* s_ = (struct LScreen*)s;
+	int middle = Game_Width / 2;
+
+	LScreen_Label(s_,  &s->LblTitle, "&eGet the latest stuff",
+					ANCHOR_CENTRE, ANCHOR_CENTRE, 10, -135);
+
+	LScreen_Button(s_, &s->BtnEnhanced, 145, 35, "Enhanced",
+					ANCHOR_MIN, ANCHOR_CENTRE, middle - 250, -72);
+	LScreen_Label(s_,  &s->LblEnhanced[0], "&eEnables custom blocks, changing env",
+					ANCHOR_MIN, ANCHOR_CENTRE, middle - 85,  -72 - 12);
+	LScreen_Label(s_,  &s->LblEnhanced[1], "&esettings, longer messages, and more",
+					ANCHOR_MIN, ANCHOR_CENTRE, middle - 85,  -72 + 12);
+
+	LScreen_Button(s_, &s->BtnClassicHax, 145, 35, "Classic +hax",
+					ANCHOR_MIN, ANCHOR_CENTRE, middle - 250, 0);
+	LScreen_Label(s_,  &s->LblClassicHax[0], "&eSame as Classic mode, except that",
+					ANCHOR_MIN, ANCHOR_CENTRE, middle - 85,  0 - 12);
+	LScreen_Label(s_,  &s->LblClassicHax[1], "&ehacks (noclip/fly/speed) are enabled",
+					ANCHOR_MIN, ANCHOR_CENTRE, middle - 85,  0 + 12);
+
+	LScreen_Button(s_, &s->BtnClassic, 145, 35, "Classic",
+					ANCHOR_MIN, ANCHOR_CENTRE, middle - 250, 72);
+	LScreen_Label(s_,  &s->LblClassic[0], "&eOnly uses blocks and features from",
+					ANCHOR_MIN, ANCHOR_CENTRE, middle - 85,  72 - 12);
+	LScreen_Label(s_,  &s->LblClassic[1], "&ethe original minecraft classic",
+					ANCHOR_MIN, ANCHOR_CENTRE, middle - 85,   72 + 12);
+
+	LScreen_Label(s_,  &s->LblHelp, "&eClick &fEnhanced &eif you'e not sure which mode to choose.",
+					ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 160);
+	LScreen_Button(s_, &s->BtnBack, 80, 35, "Back",
+					ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
+
+	s->BtnEnhanced.OnClick   = UseModeEnhanced;
+	s->BtnClassicHax.OnClick = UseModeClassicHax;
+	s->BtnClassic.OnClick    = UseModeClassic;
+	s->BtnBack.OnClick       = SwitchToSettings;
+}
+
+static void ChooseModeScreen_Init(struct LScreen* s_) {
+	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;
+	if (!s->NumWidgets) ChooseModeScreen_InitWidgets(s);
+
+	s->LblHelp.Hidden = !s->FirstTime;
+	s->BtnBack.Hidden =  s->FirstTime;
+	s->DrawAll(s);
+}
+
+struct LScreen* ChooseModeScreen_MakeInstance(bool firstTime) {
+	struct ChooseModeScreen* s = &ChooseModeScreen_Instance;
+	LScreen_Reset((struct LScreen*)s);
+	s->Init = ChooseModeScreen_Init;
+	s->FirstTime = firstTime;
+	return (struct LScreen*)s;
+}*/
+
+
+/*########################################################################################################################*
 *--------------------------------------------------------SettingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
 /*static struct SettingsScreen {
@@ -90,6 +189,19 @@ CC_NOINLINE static void LScreen_Slider(struct LScreen* s, struct LSlider* w, int
 	struct LButton BtnUpdates, BtnMode, BtnColours, BtnBack;
 	struct LLabel  LblUpdates, LblMode, LblColours;
 } SettingsScreen_Instance;
+
+static void SwitchToChooseMode(void* w, int x, int y) { 
+	Launcher_SetScreen(ChooseModeScreen_MakeInstance(false)); 
+}
+static void SwitchToUpdates(void* w, int x, int y) { 
+	Launcher_SetScreen(UpdatesScreen_MakeInstance()); 
+}
+static void SwitchToColours(void* w, int x, int y) {
+	Launcher_SetScreen(ColoursScreen_MakeInstance()); 
+}
+static void SwitchToMain(void* w, int x, int y) { 
+	Launcher_SetScreen(MainScreen_MakeInstance()); 
+}
 
 static void SettingsScreen_InitWidgets(struct SettingsScreen* s) {
 	struct LScreen* s_ = (struct LScreen*)s;
@@ -118,19 +230,6 @@ static void SettingsScreen_InitWidgets(struct SettingsScreen* s) {
 	s->BtnBack.OnClick    = SwitchToMain;
 }
 
-static void SwitchToChooseMode(void* w, int x, int y) { 
-	Launcher_SetScreen(ChooseModeScreen_MakeInstance(false)); 
-}
-static void SwitchToUpdates(void* w, int x, int y) { 
-	Launcher_SetScreen(UpdatesScreen_MakeInstance()); 
-}
-static void SwitchToColours(void* w, int x, int y) {
-	Launcher_SetScreen(ColoursScreen_MakeInstance()); 
-}
-static void SwitchToMain(void* w, int x, int y) { 
-	Launcher_SetScreen(MainScreen_MakeInstance()); 
-}
-
 static void SettingsScreen_Init(struct LScreen* s_) {
 	struct SettingsScreen* s = (struct SettingsScreen*)s_;
 	if (!s->NumWidgets) SettingsScreen_InitWidgets(s);
@@ -145,5 +244,4 @@ struct LScreen* SettingsScreen_MakeInstance(void) {
 	LScreen_Reset((struct LScreen*)s);
 	s->Init = SettingsScreen_Init;
 	return (struct LScreen*)s;
-}
-*/
+}*/
