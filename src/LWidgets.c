@@ -148,6 +148,15 @@ void LButton_SetText(struct LButton* w, const String* text, const FontDesc* font
 /*########################################################################################################################*
 *------------------------------------------------------InputWidget--------------------------------------------------------*
 *#########################################################################################################################*/
+CC_NOINLINE static void LInput_GetText(struct LInput* w, String* text) {
+	int i;
+	if (!w->Password) { *text = w->Text; return; }
+
+	for (i = 0; i < w->Text.length; i++) {
+		String_Append(text, '*');
+	}
+}
+
 CC_NOINLINE void LInput_Init(struct LInput* w, int width, int height, const char* hintText, const FontDesc* hintFont);
 CC_NOINLINE void LInput_SetText(struct LInput* w, const String* text, const FontDesc* font);
 CC_NOINLINE Rect2D LInput_MeasureCaret(struct LInput* w);
@@ -162,7 +171,31 @@ void LInput_AdvanceCaretPos(struct LInput* w, bool forwards) {
 	if (w->CaretPos < 0 || w->CaretPos >= w->Text.length) w->CaretPos = -1;
 }
 
-CC_NOINLINE void LInput_SetCaretToCursor(struct LInput* w, int x, int y);
+void LInput_SetCaretToCursor(struct LInput* w, int x, int y) {
+	String text; char textBuffer[STRING_SIZE];
+	struct DrawTextArgs args;
+	int i, charX, charWidth;
+
+	String_InitArray(text, textBuffer);
+	LInput_GetText(w, &text);
+	x -= w->X; y -= w->Y;
+
+	DrawTextArgs_Make(&args, &text, &w->Font, true);
+	if (x >= Drawer2D_MeasureText(&args).Width) { 
+		w->CaretPos = -1; return; 
+	}
+
+	for (i = 0; i < text.length; i++) {
+		args.Text = String_UNSAFE_Substring(&text, 0, i);
+		charX     = Drawer2D_MeasureText(&args).Width;
+
+		args.Text = String_UNSAFE_Substring(&text, i, 1);
+		charWidth = Drawer2D_MeasureText(&args).Width;
+		if (x >= charX && x < charX + charWidth) {
+			w->CaretPos = i; return;
+		}
+	}
+}
 
 bool LInput_Append(struct LInput* w, char c) {
 	if (w->TextFilter && !w->TextFilter(c)) return false;

@@ -64,7 +64,6 @@ struct LoadingScreen {
 #define CHATSCREEN_MAX_GROUP 3
 struct ChatScreen {
 	Screen_Layout
-	struct Screen* HUD;
 	int InputOldHeight;
 	float ChatAcc;
 	bool SuppressNextPress;
@@ -363,11 +362,6 @@ static void StatusScreen_Update(struct StatusScreen* s, double delta) {
 }
 
 static void StatusScreen_OnResize(void* screen) { }
-static void StatusScreen_FontChanged(void* screen) {
-	struct StatusScreen* s = screen;
-	Elem_Recreate(s);
-}
-
 static void StatusScreen_ContextLost(void* screen) {
 	struct StatusScreen* s = screen;
 	TextAtlas_Free(&s->PosAtlas);
@@ -421,7 +415,6 @@ static void StatusScreen_Init(void* screen) {
 	struct StatusScreen* s = screen;
 	Drawer2D_MakeFont(&s->Font, 16, FONT_STYLE_NORMAL);
 	Screen_CommonInit(s);
-	Event_RegisterVoid(&ChatEvents_FontChanged, s, StatusScreen_FontChanged);
 }
 
 static void StatusScreen_Render(void* screen, double delta) {
@@ -447,7 +440,6 @@ static void StatusScreen_Free(void* screen) {
 	struct StatusScreen* s = screen;
 	Font_Free(&s->Font);
 	Screen_CommonFree(s);
-	Event_UnregisterVoid(&ChatEvents_FontChanged, s, StatusScreen_FontChanged);
 }
 
 static struct ScreenVTABLE StatusScreen_VTABLE = {
@@ -1206,7 +1198,6 @@ struct Screen* ChatScreen_MakeInstance(void) {
 	struct ChatScreen* s = &ChatScreen_Instance;
 	s->InputOldHeight     = -1;
 	s->LastDownloadStatus = Int32_MinValue;
-	s->HUD = Gui_HUD;
 
 	s->VTABLE = &ChatScreen_VTABLE;
 	return (struct Screen*)s;

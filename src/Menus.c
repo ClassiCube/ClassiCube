@@ -1431,8 +1431,8 @@ static void FontListScreen_EntryClick(void* screen, void* widget) {
 	int cur = s->CurrentIndex;
 
 	if (String_CaselessEqualsConst(&fontName, LIST_SCREEN_EMPTY)) return;
-	String_Copy(&Game_FontName, &fontName);
-	Options_Set(OPT_FONT_NAME,  &fontName);
+	String_Copy(&Drawer2D_FontName, &fontName);
+	Options_Set(OPT_FONT_NAME,      &fontName);
 
 	/* changing font recreates list menu */
 	Menu_HandleFontChange((struct Screen*)s);
@@ -1453,7 +1453,7 @@ static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget
 static void FontListScreen_Init(void* screen) {
 	struct ListScreen* s = screen;
 	ListScreen_Init(s);
-	ListScreen_Select(s, &Game_FontName);
+	ListScreen_Select(s, &Drawer2D_FontName);
 }
 
 static struct ScreenVTABLE FontListScreen_VTABLE = {

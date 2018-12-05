@@ -83,6 +83,17 @@ bool Gui_Contains(int recX, int recY, int width, int height, int x, int y) {
 	return x >= recX && y >= recY && x < (recX + width) && y < (recY + height);
 }
 
+CC_NOINLINE static void Gui_RecreateScreen(struct Screen* screen) {
+	if (Gfx_LostContext || !screen) return;
+	Elem_Recreate(screen);
+}
+
+static void Gui_FontChanged(void* obj) {
+	Gui_RecreateScreen(Gui_Active);
+	Gui_RecreateScreen(Gui_Status);
+	Gui_RecreateScreen(Gui_HUD);
+}
+
 static void Gui_FileChanged(void* obj, struct Stream* stream, const String* name) {
 	if (String_CaselessEqualsConst(name, "gui.png")) {
 		Game_UpdateTexture(&Gui_GuiTex, stream, name, NULL);
@@ -94,12 +105,11 @@ static void Gui_FileChanged(void* obj, struct Stream* stream, const String* name
 }
 
 static void Gui_Init(void) {
+	Event_RegisterVoid(&ChatEvents_FontChanged,     NULL, Gui_FontChanged);
 	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
 	Gui_Status = StatusScreen_MakeInstance();
 	Gui_HUD    = HUDScreen_MakeInstance();
-}
 
-static void Gui_Ready(void) {
 	Elem_Init(Gui_Status);
 	Elem_Init(Gui_HUD);
 }
@@ -113,6 +123,7 @@ static void Gui_Reset(void) {
 }
 
 static void Gui_Free(void) {
+	Event_UnregisterVoid(&ChatEvents_FontChanged,     NULL, Gui_FontChanged);
 	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
 	Gui_CloseActive();
 	Elem_TryFree(Gui_Status);
@@ -131,7 +142,6 @@ struct IGameComponent Gui_Component = {
 	Gui_Reset, /* Reset */
 	NULL, /* OnNewMap */
 	NULL, /* OnNewMapLoaded */
-	Gui_Ready
 };
 
 struct Screen* Gui_GetActiveScreen(void) {

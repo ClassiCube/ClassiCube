@@ -26,6 +26,9 @@ extern BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 #define DRAWER2D_OFFSET 1
 #define Drawer2D_GetCol(c) Drawer2D_Cols[(uint8_t)c]
 
+/* Name of default font, defaults to Font_DefaultName. */
+extern String Drawer2D_FontName;
+
 /* Clamps the given rectangle to line inside the bitmap. */
 /* Returns false if rectangle is completely outside bitmap's rectangle. */
 bool Drawer2D_Clamp(Bitmap* bmp, int* x, int* y, int* width, int* height);

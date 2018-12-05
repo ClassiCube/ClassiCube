@@ -69,12 +69,10 @@ static int Game_TasksCount, entTaskI;
 static char Game_UsernameBuffer[FILENAME_SIZE];
 static char Game_MppassBuffer[STRING_SIZE];
 static char Game_IPAddressBuffer[STRING_SIZE];
-static char Game_FontNameBuffer[STRING_SIZE];
 
 String Game_Username  = String_FromArray(Game_UsernameBuffer);
 String Game_Mppass    = String_FromArray(Game_MppassBuffer);
 String Game_IPAddress = String_FromArray(Game_IPAddressBuffer);
-String Game_FontName  = String_FromArray(Game_FontNameBuffer);
 
 static struct IGameComponent* comps_head;
 static struct IGameComponent* comps_tail;
@@ -329,16 +327,6 @@ static void Game_TextureChangedCore(void* obj, struct Stream* src, const String*
 		} else if (!Game_ChangeTerrainAtlas(&bmp)) {
 			Mem_Free(bmp.Scan0);
 		}		
-	} else if (String_CaselessEqualsConst(name, "default.png")) {
-		res = Png_Decode(&bmp, src);
-
-		if (res) {
-			Chat_LogError2(res, "decoding", name);
-			Mem_Free(bmp.Scan0);
-		} else {
-			Drawer2D_SetFontBitmap(&bmp);
-			Event_RaiseVoid(&ChatEvents_FontChanged);
-		}
 	}
 }
 
@@ -420,13 +408,6 @@ static void Game_LoadGuiOptions(void) {
 	Game_UseClassicOptions = Options_GetBool(OPT_CLASSIC_OPTIONS, false) || Game_ClassicMode;
 
 	Game_TabAutocomplete = Options_GetBool(OPT_TAB_AUTOCOMPLETE, false);
-	Options_Get(OPT_FONT_NAME, &Game_FontName, Font_DefaultName);
-	if (!Game_ClassicMode) {
-		Game_FontName.length = 0;
-		String_AppendConst(&Game_FontName, Font_DefaultName);
-	}
-
-	/* TODO: Handle Arial font not working */
 }
 
 void Game_Free(void* obj);
@@ -504,10 +485,6 @@ void Game_Load(void) {
 		if (comp->Init) comp->Init();
 	}
 	Game_ExtractInitialTexturePack();
-
-	for (comp = comps_head; comp; comp = comp->Next) {
-		if (comp->Ready) comp->Ready();
-	}
 
 	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
 	/* TODO: plugin dll support */

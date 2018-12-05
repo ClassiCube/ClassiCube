@@ -85,7 +85,7 @@ CC_NOINLINE static void LScreen_Slider(struct LScreen* s, struct LSlider* w, int
 /*########################################################################################################################*
 *-------------------------------------------------------ChooseModeScreen--------------------------------------------------*
 *#########################################################################################################################*/
-static struct ChooseModeScreen {
+/*static struct ChooseModeScreen {
 	LScreen_Layout
 	struct LWidget* Widgets[12];
 	struct LButton BtnEnhanced, BtnClassicHax, BtnClassic, BtnBack;
@@ -177,13 +177,13 @@ struct LScreen* ChooseModeScreen_MakeInstance(bool firstTime) {
 	s->Init = ChooseModeScreen_Init;
 	s->FirstTime = firstTime;
 	return (struct LScreen*)s;
-}
+}*/
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------SettingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
-static struct SettingsScreen {
+/*static struct SettingsScreen {
 	LScreen_Layout
 	struct LWidget* Widgets[7];
 	struct LButton BtnUpdates, BtnMode, BtnColours, BtnBack;
@@ -245,3 +245,4 @@ struct LScreen* SettingsScreen_MakeInstance(void) {
 	s->Init = SettingsScreen_Init;
 	return (struct LScreen*)s;
 }
+*/

@@ -34,8 +34,8 @@ void Launcher_ShowError(ReturnCode res, const char* place) {
 
 /* TODO: FIX THESE STUBS!!! */
 void Launcher_SecureSetOpt(const char* opt, const String* data, const String* key) { }
-
-internal UpdateCheckTask checkTask;
+/* TODO: FIX */
+/* internal UpdateCheckTask checkTask; */
 static bool fullRedraw, pendingRedraw;
 static FontDesc logoFont;
 
@@ -69,9 +69,12 @@ void Launcher_SetScreen(struct LScreen* screen) {
 
 	screen->Init(screen);
 	/* for hovering over active button etc */
-	screen->MouseMove(screen, 0, 0);
+	/* TODO: FIX */
+	/* screen->MouseMove(screen, 0, 0); */
 }
 
+/* TODO FIX */
+/*
 static void Launcher_Init(void) {
 	BitmapCol col = BITMAPCOL_CONST(125, 125, 125, 255);
 
@@ -81,12 +84,9 @@ static void Launcher_Init(void) {
 	Window.Redraw += RedrawPending;
 	Keyboard.KeyDown += KeyDown;
 
-	Options_Load();
-	Options_Get(OPT_FONT_NAME, &Game_FontName, Font_DefaultName);
-	/* TODO: Handle Arial font not working */
-	Font_Make(&logoFont,           &Game_FontName, 32, FONT_STYLE_NORMAL);
-	Font_Make(&Launcher_TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
-	Font_Make(&Launcher_TextFont,  &Game_FontName, 14, FONT_STYLE_NORMAL);
+	Font_Make(&logoFont,           &Drawer2D_FontName, 32, FONT_STYLE_NORMAL);
+	Font_Make(&Launcher_TitleFont, &Drawer2D_FontName, 16, FONT_STYLE_BOLD);
+	Font_Make(&Launcher_TextFont,  &Drawer2D_FontName, 14, FONT_STYLE_NORMAL);
 
 	Drawer2D_Cols['g'] = col;
 	Utils_EnsureDirectory("texpacks");
@@ -113,8 +113,10 @@ void Dispose() {
 }
 
 void Run() {
+	Options_Load();
 	Window = Factory.CreateWindow(640, 400, Program.AppName,
 		GraphicsMode.Default, DisplayDevice.Default);
+
 	Window_SetVisible(true);
 	Drawer2D_Component.Init();
 	Game_UpdateClientSize();
@@ -185,11 +187,7 @@ void Display() {
 	Window_DrawRaw(rec);
 	DirtyArea = Rectangle.Empty;
 	fullRedraw = false;
-}
-
-void KeyDown(Key key) {
-	if (IsShutdown(key)) Launcher_ShouldExit = true;
-}
+}*/
 
 static bool Launcher_IsShutdown(Key key) {
 	if (key == KEY_F4 && Key_IsAltPressed()) return true;
@@ -200,6 +198,10 @@ static bool Launcher_IsShutdown(Key key) {
 #else
 	return false;
 #endif
+}
+
+void KeyDown(Key key) {
+	if (Launcher_IsShutdown(key)) Launcher_ShouldExit = true;
 }
 
 /*########################################################################################################################*
@@ -308,7 +310,7 @@ static void Launcher_ProcessZipEntry(const String* path, struct Stream* data, st
 		res = Png_Decode(&bmp, data);
 
 		if (res) {
-			Launcher_ShowError(res, "decoding default.png"); return;
+			Launcher_ShowError(res, "decoding terrain.png"); return;
 		} else {
 			Drawer2D_SetFontBitmap(&bmp);
 			Launcher_LoadTextures(&bmp);

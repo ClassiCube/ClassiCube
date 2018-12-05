@@ -6,10 +6,17 @@
 #include "ErrorHandler.h"
 #include "Bitmap.h"
 #include "Game.h"
+#include "Event.h"
+#include "Chat.h"
 
 bool Drawer2D_BitmappedText;
 bool Drawer2D_BlackTextShadows;
 BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
+
+static char fontNameBuffer[STRING_SIZE];
+String Drawer2D_FontName = String_FromArray(fontNameBuffer);
+int Drawer2D_FontSize;
+FontDesc Drawer2D_DefaultFont;
 
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, const FontDesc* font, bool useShadow) {
 	args->Text = *text;
@@ -29,7 +36,7 @@ void Drawer2D_MakeFont(FontDesc* desc, int size, int style) {
 		desc->Size   = size;
 		desc->Style  = style;
 	} else {
-		Font_Make(desc, &Game_FontName, size, style);
+		Font_Make(desc, &Drawer2D_FontName, size, style);
 	}
 }
 
@@ -603,13 +610,38 @@ static void Drawer2D_Reset(void) {
 	}
 }
 
+static void Drawer2D_TextureChanged(void* obj, struct Stream* src, const String* name) {
+	Bitmap bmp;
+	ReturnCode res;
+	if (!String_CaselessEqualsConst(name, "default.png")) return;
+
+	if ((res = Png_Decode(&bmp, src))) {
+		Chat_LogError2(res, "decoding", name);
+		Mem_Free(bmp.Scan0);
+	} else {
+		Drawer2D_SetFontBitmap(&bmp);
+		Event_RaiseVoid(&ChatEvents_FontChanged);
+	}
+}
+
 static void Drawer2D_Init(void) {
 	Drawer2D_Reset();
 	Drawer2D_BitmappedText    = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
 	Drawer2D_BlackTextShadows = Options_GetBool(OPT_BLACK_TEXT, false);
+
+	Options_Get(OPT_FONT_NAME, &Drawer2D_FontName, Font_DefaultName);
+	if (Game_ClassicMode) {
+		Drawer2D_FontName.length = 0;
+		String_AppendConst(&Drawer2D_FontName, Font_DefaultName);
+	}
+	/* TODO: Handle Arial font not working */
+	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Drawer2D_TextureChanged);
 }
 
-static void Drawer2D_Free(void) { Drawer2D_FreeFontBitmap(); }
+static void Drawer2D_Free(void) { 
+	Drawer2D_FreeFontBitmap();
+	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Drawer2D_TextureChanged);
+}
 
 struct IGameComponent Drawer2D_Component = {
 	Drawer2D_Init,  /* Init  */

@@ -53,7 +53,6 @@ extern bool Game_SmoothLighting;
 extern bool Game_ChatLogging;
 extern bool Game_AutoRotate;
 extern bool Game_SmoothCamera;
-extern String Game_FontName;
 extern int  Game_ChatLines;
 extern bool Game_ClickableChat;
 extern bool Game_HideGui;

@@ -18,8 +18,6 @@ struct IGameComponent {
 	void (*OnNewMap)(void);
 	/* Called to update the component's state when the user has finished loading a new map. */
 	void (*OnNewMapLoaded)(void);
-	/* Called when the texture pack has been loaded and all components have been initialised. */
-	void (*Ready)(void);
 	/* Next component in linked list of components. */
 	struct IGameComponent* Next;
 };
