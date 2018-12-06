@@ -10,6 +10,7 @@
 #include "Window.h"
 #include "GameStructs.h"
 #include "Event.h"
+#include "AsyncDownloader.h"
 
 struct LScreen* Launcher_Screen;
 bool Launcher_Dirty;
@@ -17,6 +18,7 @@ Rect2D Launcher_DirtyArea;
 Bitmap Launcher_Framebuffer;
 bool Launcher_ClassicBackground;
 FontDesc Launcher_TitleFont, Launcher_TextFont;
+FontDesc Launcher_InputHintFont;
 
 bool Launcher_ShouldExit, Launcher_ShouldUpdate;
 TimeMS Launcher_PatchTime;
@@ -33,33 +35,31 @@ void Launcher_ShowError(ReturnCode res, const char* place) {
 }
 
 /* TODO: FIX THESE STUBS!!! */
-void Launcher_SecureSetOpt(const char* opt, const String* data, const String* key) { }
-/* TODO: FIX */
-/* internal UpdateCheckTask checkTask; */
+//void Launcher_SecureSetOpt(const char* opt, const String* data, const String* key) { }
+internal UpdateCheckTask checkTask; 
 static bool fullRedraw, pendingRedraw;
 static FontDesc logoFont;
 
-static void Launcher_RedrawAll(void) {
+static void Launcher_RedrawAll(void* obj) {
 	Launcher_ResetPixels();
 	if (Launcher_Screen) Launcher_Screen->DrawAll(Launcher_Screen);
 	fullRedraw = true;
 }
 
-static void Launcher_ReqeustRedraw(void) {
+static void Launcher_ReqeustRedraw(void* obj) {
 	/* We may get multiple Redraw events in short timespan */
 	/* So we just request a redraw at next launcher tick */
 	pendingRedraw  = true;
 	Launcher_Dirty = true;
 }
 
-/* updates window state on resize and redraws contents. */
-static void Launcher_OnResize(void) {
+static void Launcher_OnResize(void* obj) {
 	Game_UpdateClientSize();
 	Launcher_Framebuffer.Width  = Game_Width;
 	Launcher_Framebuffer.Height = Game_Height;
 
 	Window_InitRaw(&Launcher_Framebuffer);
-	Launcher_RedrawAll();
+	Launcher_RedrawAll(NULL);
 }
 
 void Launcher_SetScreen(struct LScreen* screen) {
@@ -69,24 +69,22 @@ void Launcher_SetScreen(struct LScreen* screen) {
 
 	screen->Init(screen);
 	/* for hovering over active button etc */
-	/* TODO: FIX */
-	/* screen->MouseMove(screen, 0, 0); */
+	screen->MouseMove(screen, 0, 0);
 }
 
-/* TODO FIX */
-/*
 static void Launcher_Init(void) {
 	BitmapCol col = BITMAPCOL_CONST(125, 125, 125, 255);
 
 	Event_RegisterVoid(&WindowEvents_Resized,      NULL, Launcher_OnResize);
 	Event_RegisterVoid(&WindowEvents_StateChanged, NULL, Launcher_OnResize);
-	Window.FocusedChanged += RedrawAll;
-	Window.Redraw += RedrawPending;
+	Event_RegisterVoid(&WindowEvents_FocusChanged, NULL, Launcher_RedrawAll);
+	Event_RegisterVoid(&WindowEvents_Redraw,       NULL, Launcher_ReqeustRedraw);
 	Keyboard.KeyDown += KeyDown;
 
 	Font_Make(&logoFont,           &Drawer2D_FontName, 32, FONT_STYLE_NORMAL);
 	Font_Make(&Launcher_TitleFont, &Drawer2D_FontName, 16, FONT_STYLE_BOLD);
 	Font_Make(&Launcher_TextFont,  &Drawer2D_FontName, 14, FONT_STYLE_NORMAL);
+	Font_Make(&Launcher_HintFont,  &Drawer2D_FontName, 12, FONT_STYLE_ITALIC);
 
 	Drawer2D_Cols['g'] = col;
 	Utils_EnsureDirectory("texpacks");
@@ -96,9 +94,8 @@ static void Launcher_Init(void) {
 void Dispose() {
 	Event_UnregisterVoid(&WindowEvents_Resized,      NULL, Launcher_OnResize);
 	Event_UnregisterVoid(&WindowEvents_StateChanged, NULL, Launcher_OnResize);
-
-	Window.FocusedChanged -= RedrawAll;
-	Window.Redraw -= RedrawPending;
+	Event_UnregisterVoid(&WindowEvents_FocusChanged, NULL, Launcher_RedrawAll);
+	Event_UnregisterVoid(&WindowEvents_Redraw,       NULL, Launcher_ReqeustRedraw);
 	Keyboard.KeyDown -= KeyDown;
 
 	List<FastBitmap> bitmaps = FetchFlagsTask.Bitmaps;
@@ -110,6 +107,7 @@ void Dispose() {
 	Font_Free(&logoFont);
 	Font_Free(&Launcher_TitleFont);
 	Font_Free(&Launcher_TextFont);
+	Font_Free(&Launcher_HintFont);
 }
 
 void Run() {
@@ -128,8 +126,7 @@ void Run() {
 	Launcher_Framebuffer.Height = Game_Height;
 	Window_InitRaw(&Launcher_Framebuffer);
 
-	Downloader = new AsyncDownloader(Drawer);
-	Downloader.Init("");
+	AsyncDownloader_Component.Init();
 	Downloader.Cookies = new CookieContainer();
 	Downloader.KeepAlive = true;
 
@@ -187,7 +184,7 @@ void Display() {
 	Window_DrawRaw(rec);
 	DirtyArea = Rectangle.Empty;
 	fullRedraw = false;
-}*/
+}
 
 static bool Launcher_IsShutdown(Key key) {
 	if (key == KEY_F4 && Key_IsAltPressed()) return true;
@@ -428,7 +425,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 		Options_Set("launcher-username", user);
 		Options_Set("launcher-ip",       ip);
 		Options_Set("launcher-port",     port);
-		Launcher_SecureSetOpt("launcher-mppass", mppass, user);
+		Launcher_SaveSecureOpt("launcher-mppass", mppass, user);
 		Options_Save();
 	}
 

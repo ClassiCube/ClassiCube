@@ -19,6 +19,8 @@ extern Bitmap Launcher_Framebuffer;
 extern bool Launcher_ClassicBackground;
 /* Default font for buttons and labels. */
 extern FontDesc Launcher_TitleFont, Launcher_TextFont;
+/* Default font for input widget hints. */
+extern FontDesc Launcher_HintFont;
 
 /* Whether at the next tick, the launcher window should proceed to stop displaying frames and subsequently exit. */
 extern bool Launcher_ShouldExit;
@@ -77,7 +79,10 @@ void Launcher_Run(void);
 void Launcher_ShowError(ReturnCode res, const char* place);
 /* Attempts to securely encode an option. */
 /* NOTE: Not all platforms support secure saving, DO NOT rely on this being secure. */
-void Launcher_SecureSetOpt(const char* opt, const String* data, const String* key);
+void Launcher_SaveSecureOpt(const char* opt, const String* data, const String* key);
+/* Attempts to securely decode an option. */
+/* NOTE: Not all platforms support secure saving, DO NOT rely on this being secure. */
+void Launcher_LoadSecureOpt(const char* opt, String* data, const String* key);
 
 /* Starts the game from the given arguments. */
 bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server);

@@ -19,6 +19,7 @@ typedef void (*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 	LScreen_Func OnDisplay; /* Called when framebuffer is about to be displayed. */ \
 	LWidget_Func HoverWidget; /* Called when mouse is moved over a given widget. */ \
 	LWidget_Func UnhoverWidget; /* Called when the mouse is moved away from a previously hovered widget. */ \
+	struct LWidget* OnEnterWidget; /* Default widget to auto-click when Enter is pressed. Can be NULL. */ \
 	struct LWidget* HoveredWidget; /* Widget the mouse is currently hovering over. */ \
 	int NumWidgets; /* Number of widgets actually used. */
 

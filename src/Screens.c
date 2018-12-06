@@ -1093,12 +1093,6 @@ static void ChatScreen_ContextRecreated(void* screen) {
 	struct ChatScreen* s = screen;
 	ChatScreen_ConstructWidgets(s);
 	ChatScreen_SetInitialMessages(s);
-}
-
-static void ChatScreen_FontChanged(void* screen) {
-	struct ChatScreen* s = screen;
-	if (!Drawer2D_BitmappedText) return;
-	Elem_Recreate(s);
 	ChatScreen_UpdateChatYOffset(s, true);
 }
 
@@ -1123,9 +1117,8 @@ static void ChatScreen_Init(void* screen) {
 	Drawer2D_MakeFont(&s->AnnouncementFont, largeSize, FONT_STYLE_NORMAL);
 	Screen_CommonInit(s);
 
-	Event_RegisterChat(&ChatEvents_ChatReceived,    s, ChatScreen_ChatReceived);
-	Event_RegisterVoid(&ChatEvents_FontChanged,     s, ChatScreen_FontChanged);
-	Event_RegisterInt(&ChatEvents_ColCodeChanged,   s, ChatScreen_ColCodeChanged);
+	Event_RegisterChat(&ChatEvents_ChatReceived,  s, ChatScreen_ChatReceived);
+	Event_RegisterInt(&ChatEvents_ColCodeChanged, s, ChatScreen_ColCodeChanged);
 }
 
 static void ChatScreen_Render(void* screen, double delta) {
@@ -1183,9 +1176,8 @@ static void ChatScreen_Free(void* screen) {
 	Font_Free(&s->AnnouncementFont);
 	Screen_CommonFree(s);
 
-	Event_UnregisterChat(&ChatEvents_ChatReceived,    s, ChatScreen_ChatReceived);
-	Event_UnregisterVoid(&ChatEvents_FontChanged,     s, ChatScreen_FontChanged);
-	Event_UnregisterInt(&ChatEvents_ColCodeChanged,   s, ChatScreen_ColCodeChanged);
+	Event_UnregisterChat(&ChatEvents_ChatReceived,  s, ChatScreen_ChatReceived);
+	Event_UnregisterInt(&ChatEvents_ColCodeChanged, s, ChatScreen_ColCodeChanged);
 }
 
 static struct ScreenVTABLE ChatScreen_VTABLE = {

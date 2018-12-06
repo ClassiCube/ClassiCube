@@ -25,7 +25,8 @@ struct LWidgetVTABLE {
 #define LWidget_Layout \
 	struct LWidgetVTABLE* VTABLE; /* General widget functions */ \
 	int X, Y, Width, Height;      /* Top left corner, and dimensions, of this widget */ \
-	bool Hovered;                 /* Whether this widget is currently being moused over*/ \
+	bool Hovered;                 /* Whether this widget is currently being moused over */ \
+	bool Selected;                /* Whether this widget is last widget to be clicked on */ \
 	bool Hidden;                  /* Whether this widget is hidden from view */ \
 	bool TabSelectable;           /* Whether this widget gets selected when pressing tab */ \
 	uint8_t HorAnchor, VerAnchor; /* Specifies the reference point for when this widget is resized */ \
@@ -42,8 +43,8 @@ struct LButton {
 	LWidget_Layout
 	String Text;
 	FontDesc Font;
-	Size2D __TextSize;
-	char __TextBuffer[STRING_SIZE];
+	Size2D _TextSize;
+	char _TextBuffer[STRING_SIZE];
 };
 CC_NOINLINE void LButton_Init(struct LButton* w, int width, int height);
 CC_NOINLINE void LButton_SetText(struct LButton* w, const String* text, const FontDesc* font);
@@ -51,7 +52,7 @@ CC_NOINLINE void LButton_SetText(struct LButton* w, const String* text, const Fo
 struct LInput;
 struct LInput {
 	LWidget_Layout
-	int BaseWidth, RealWidth;
+	int BaseWidth, _RealWidth;
 	/* Text displayed when the user has not entered anything in the text field. */
 	const char* HintText;
 	/* Whether all characters should be rendered as *. */
@@ -67,8 +68,8 @@ struct LInput {
 	int CaretPos;
 	FontDesc Font, HintFont;
 	String Text;
-	int __TextHeight;
-	char __TextBuffer[STRING_SIZE];
+	int _TextHeight;
+	char _TextBuffer[STRING_SIZE];
 };
 CC_NOINLINE void LInput_Init(struct LInput* w, int width, int height, const char* hintText, const FontDesc* hintFont);
 CC_NOINLINE void LInput_SetText(struct LInput* w, const String* text, const FontDesc* font);
@@ -84,15 +85,15 @@ CC_NOINLINE bool LInput_Backspace(struct LInput* w);
 CC_NOINLINE bool LInput_Delete(struct LInput* w);
 /* Resets the currently entered text to an empty string. */
 CC_NOINLINE bool LInput_Clear(struct LInput* w);
-/* Sets the currently entered text to the contents of the system clipboard. */
-CC_NOINLINE bool LInput_CopyFromClipboard(struct LInput* w, const String* text);
+/* Appends the contents of the system clipboard to the currently entered text. */
+CC_NOINLINE bool LInput_CopyFromClipboard(struct LInput* w);
 
 struct LLabel {
 	LWidget_Layout
 	FontDesc Font;
 	String Text;
-	Size2D __TextSize;
-	char __TextBuffer[STRING_SIZE];
+	Size2D _TextSize;
+	char _TextBuffer[STRING_SIZE];
 };
 CC_NOINLINE void LLabel_Init(struct LLabel* w);
 CC_NOINLINE void LLabel_SetText(struct LLabel* w, const String* text, const FontDesc* font);

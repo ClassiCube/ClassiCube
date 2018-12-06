@@ -23,7 +23,6 @@ namespace Launcher.Gui.Screens {
 			Mouse.Move += MouseMove;
 			Mouse.ButtonDown += MouseButtonDown;
 			Keyboard.KeyDown += KeyDown;
-			Keyboard.KeyUp += KeyUp;
 		}
 		
 		/// <summary> Function that is repeatedly called multiple times every second. </summary>
@@ -37,7 +36,6 @@ namespace Launcher.Gui.Screens {
 			Mouse.Move -= MouseMove;
 			Mouse.ButtonDown -= MouseButtonDown;
 			Keyboard.KeyDown -= KeyDown;
-			Keyboard.KeyUp -= KeyUp;
 		}
 		
 		/// <summary> Function called when the pixels from the framebuffer
@@ -148,22 +146,14 @@ namespace Launcher.Gui.Screens {
 			}
 		}
 		
-		protected virtual void KeyUp(Key key) {
-			if (key == Key.Tab)
-				tabDown = false;
-		}
-		
 		protected int IndexOfWidget(Widget w) {
 			for (int i = 0; i < widgets.Length; i++) {
 				if (widgets[i] == w) return i;
 			}
 			return -1;
 		}
-		
-		protected bool tabDown = false;
+
 		protected void HandleTab() {
-			if (tabDown) return;
-			tabDown = true;
 			bool shiftDown = game.IsKeyDown(Key.ShiftLeft)
 				|| game.IsKeyDown(Key.ShiftRight);
 			
