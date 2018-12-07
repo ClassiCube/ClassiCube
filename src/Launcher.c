@@ -20,8 +20,13 @@ Bitmap Launcher_Framebuffer;
 bool Launcher_ClassicBackground;
 FontDesc Launcher_TitleFont, Launcher_TextFont, Launcher_HintFont;
 
+static bool fullRedraw, pendingRedraw;
+static FontDesc logoFont;
+
 bool Launcher_ShouldExit, Launcher_ShouldUpdate, Launcher_SaveOptions;
 TimeMS Launcher_PatchTime;
+static void Launcher_ApplyUpdate(void);
+
 
 void Launcher_ShowError(ReturnCode res, const char* place) {
 	String msg; char msgBuffer[STRING_SIZE * 2];
@@ -32,9 +37,20 @@ void Launcher_ShowError(ReturnCode res, const char* place) {
 	Window_ShowDialog("Error", msg.buffer);
 }
 
-static bool fullRedraw, pendingRedraw;
-static FontDesc logoFont;
+void Launcher_SetScreen(struct LScreen* screen) {
+	if (Launcher_Screen) Launcher_Screen->Free(Launcher_Screen);
+	Launcher_ResetPixels();
+	Launcher_Screen = screen;
 
+	screen->Init(screen);
+	/* for hovering over active button etc */
+	screen->MouseMove(screen, 0, 0);
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------Event handler---------------------------------------------------*
+*#########################################################################################################################*/
 static void Launcher_RedrawAll(void* obj) {
 	Launcher_ResetPixels();
 	if (Launcher_Screen) Launcher_Screen->DrawAll(Launcher_Screen);
@@ -85,16 +101,10 @@ static void Launcher_MouseMove(void* obj, int deltaX, int deltaY) {
 	Launcher_Screen->MouseMove(Launcher_Screen, deltaX, deltaY);
 }
 
-void Launcher_SetScreen(struct LScreen* screen) {
-	if (Launcher_Screen) Launcher_Screen->Free(Launcher_Screen);
-	Launcher_ResetPixels();
-	Launcher_Screen = screen;
 
-	screen->Init(screen);
-	/* for hovering over active button etc */
-	screen->MouseMove(screen, 0, 0);
-}
-
+/*########################################################################################################################*
+*-----------------------------------------------------------Main body-----------------------------------------------------*
+*#########################################################################################################################*/
 static void Launcher_Display(void) {
 	Rect2D r;
 	if (pendingRedraw) {
@@ -216,6 +226,7 @@ void Laucher_Run(void) {
 	if (Window_Exists)
 		Window_Close();
 }
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Colours/Skin----------------------------------------------------*
@@ -416,6 +427,10 @@ void Launcher_ResetPixels(void) {
 	Launcher_Dirty = true;
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------Starter/Updater--------------------------------------------------*
+*#########################################################################################################################*/
 static TimeMS lastJoin;
 bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server) {
 #ifdef CC_BUILD_WINDOWS
@@ -462,4 +477,72 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 		return false;
 	}
 	return true;
+}
+
+#ifdef CC_BUILD_WIN
+static const char* Update_Script = \
+"@echo off\n" \
+"echo Waiting for launcher to exit..\n" \
+"echo 5..\n" \
+"ping 127.0.0.1 - n 2 > nul\n" \
+"echo 4..\n" \
+"ping 127.0.0.1 - n 2 > nul\n" \
+"echo 3..\n" \
+"ping 127.0.0.1 - n 2 > nul\n" \
+"echo 2..\n" \
+"ping 127.0.0.1 - n 2 > nul\n" \
+"echo 1..\n" \
+"ping 127.0.0.1 - n 2 > nul\n" \
+"echo Copying updated version\n" \
+"move ClassiCube.update ClassiCube.exe\n" \
+"echo Starting launcher again\n" \
+"start ClassiCube.exe\n" \
+"exit\n";
+#else
+static const char* Update_Script = \
+"@#!/bin/bash\n" \
+"echo Waiting for launcher to exit..\n" \
+"echo 5..\n" \
+"sleep 1\n" \
+"echo 4..\n" \
+"sleep 1\n" \
+"echo 3..\n" \
+"sleep 1\n" \
+"echo 2..\n" \
+"sleep 1\n" \
+"echo 1..\n" \
+"sleep 1\n" \
+"echo Copying updated version\n" \
+"mv ./ClassiCube.update ./ClassiCube\n" \
+"echo Starting launcher again\n" \
+"./ClassiCube\n";
+#endif
+
+static void Launcher_ApplyUpdate(void) {
+#ifdef CC_BUILD_WIN
+	static String scriptPath = String_FromConst("update.bat");
+	static String scriptName = String_FromConst("cmd");
+	static String scriptArgs = String_FromConst("/C start cmd /C update.bat");
+#else
+	static String scriptPath = String_FromConst("update.sh");
+	static String scriptName = String_FromConst("xterm");
+	static String scriptArgs = String_FromConst("./update.sh");
+#endif
+	struct Stream s;
+	ReturnCode res;
+
+	res = Stream_CreateFile(&s, &scriptPath);
+	if (res) { Launcher_ShowError(res, "creating update script"); return; }
+
+	/* Can't use WriteLine, want \n as actual newline not code page 437 */
+	res = Stream_Write(&s, Update_Script, sizeof(Update_Script) - 1);
+	if (res) { Launcher_ShowError(res, "writing update script"); return; }
+
+	res = s.Close(&s);
+	if (res) { Launcher_ShowError(res, "closing update script"); return; }
+
+	/* TODO: (open -a Terminal ", '"' + path + '"'); on OSX */
+	/* TODO: chmod +x on non-windows */
+	res = Platform_StartProcess(&scriptName, &scriptArgs);
+	if (res) { Launcher_ShowError(res, "starting update script"); return; }
 }

@@ -30,6 +30,35 @@ void LWebTask_Tick(struct LWebTask* task) {
 static void LWebTask_DefaultBegin(struct LWebTask* task) {
 	AsyncDownloader_GetData(&task->URL, false, &task->Identifier);
 }
+
+
+struct GetCSRFTokenTaskData GetCSRFTokenTask;
+void GetCSRFTokenTask_Run(void);
+
+struct SignInTaskData SignInTask;
+void SignInTask_Run(const String* user, const String* pass);
+
+
+struct FetchServerData FetchServerTask;
+void FetchServerTask_Run(const String* hash);
+
+
+struct FetchServersData FetchServersTask;
+void FetchServersTask_Run(void);
+
+
+struct UpdateCheckTaskData UpdateCheckTask;
+void UpdateCheckTask_Run(void);
+
+
+struct UpdateDownloadTaskData UpdateDownloadTask;
+void UpdateDownloadTask_Run(const String* file);
+
+
+struct FetchFlagsTaskData FetchFlagsTask;
+void FetchFlagsTask_Run(void);
+void FetchFlagsTask_Add(const String* name);
+
 /*
 protected static JsonObject ParseJson(Request req) {
 	JsonContext ctx = new JsonContext();
