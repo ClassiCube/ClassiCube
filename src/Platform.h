@@ -20,6 +20,8 @@ typedef int FileHandle;
 
 /* Origin points for when seeking in a file. */
 enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_END };
+/* Number of milliseconds since 01/01/0001 to start of unix time. */
+#define UNIX_EPOCH 62135596800000ULL
 
 /* Newline for console and text files. */
 extern char* Platform_NewLine;

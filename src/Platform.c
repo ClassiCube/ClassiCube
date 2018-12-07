@@ -301,7 +301,6 @@ void Platform_Log(const String* message) {
 	write(STDOUT_FILENO, "\n",            1);
 }
 
-#define UNIX_EPOCH 62135596800000ULL
 #define UnixTime_TotalMS(time) ((uint64_t)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
 TimeMS DateTime_CurrentUTC_MS(void) {
 	struct timeval cur;

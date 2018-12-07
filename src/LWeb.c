@@ -1,27 +1,14 @@
 #include "LWeb.h"
 #include "Platform.h"
 
+/*########################################################################################################################*
+*----------------------------------------------------------JSON-----------------------------------------------------------*
+*#########################################################################################################################*/
 #define TOKEN_NONE  0
 #define TOKEN_NUM   1
 #define TOKEN_TRUE  2
 #define TOKEN_FALSE 3
 #define TOKEN_NULL  4
-
-struct JsonContext {
-	/* Pointer to current character in JSON stream being inspected. */
-	char* Cur;
-	/* Number of characters left to be inspected. */
-	int Left;
-	/* Whether there was an error parsing the JSON. */
-	bool Failed;
-	/* Callback function invoked on each token read. */
-	void (*OnToken)(char token);
-	/* Callback function invoked on each member of an object or array. */
-	/* NOTE: This only works for 'simple' key-value pairs. */ newarray
-	void (*OnValue)(char token, String* value);
-}; 
-/* new array, new object functions?? */
-/* need to push/pop 'CurrentKey' */
 /* Consumes n characters from the JSON stream */
 #define JsonContext_Consume(ctx, n) ctx->Cur += n; ctx->Left -= n;
 
@@ -76,54 +63,20 @@ static String Json_ConsumeNumber(struct JsonContext* ctx) {
 	return String_Init(ctx->Cur - len, len, len);
 }
 
-static void Json_ConsumeObject(struct JsonContext* ctx) {
-	int token; /* push and pop cur key */
-
-	while (true) {
-		token = Json_ConsumeToken(ctx);
-		if (token == ',') continue;
-		if (token == '}') return;
-
-		if (token != '"') { ctx->Failed = true; return; }
-		string key = ParseString(ctx);
-
-		token = Json_ConsumeToken(ctx);
-		if (token != ':') { ctx->Failed = true; return; }
-
-		token = Json_ConsumeToken(ctx);
-		if (token == TOKEN_NONE) { ctx->Failed = true; return; }
-
-		members[key] = ParseValue(token, ctx);
-	}
-}
-
-static void Json_ConsumeArray(struct JsonContext* ctx) {
-	int token;
-
-	while (true) {
-		token = NextToken(ctx);
-		if (token == ',') continue;
-		if (token == ']') return;
-
-		if (token == TOKEN_NONE) { ctx->Failed = true; return; }
-		elements.Add(ParseValue(token, ctx));
-	}
-}
-
-static string ParseString(struct JsonContext* ctx) {
+static void Json_ConsumeString(struct JsonContext* ctx, String* str) {
 	int codepoint, h[4];
 	char c;
-	StringBuilder s = ctx.strBuffer; s.Length = 0;
+	str->length = 0;
 
 	for (; ctx->Left;) {
 		c = *ctx->Cur; JsonContext_Consume(ctx, 1);
-		if (c == '"') return s.ToString();
-		if (c != '\\') { s.Append(c); continue; }
+		if (c == '"') return;
+		if (c != '\\') { String_Append(str, c); continue; }
 
 		/* form of \X */
 		if (!ctx->Left) break;
 		c = *ctx->Cur; JsonContext_Consume(ctx, 1);
-		if (c == '/' || c == '\\' || c == '"') { s.Append(c); continue; }
+		if (c == '/' || c == '\\' || c == '"') { String_Append(str, c); continue; }
 
 		/* form of \uYYYY */
 		if (c != 'u' || ctx->Left < 4) break;
@@ -135,18 +88,63 @@ static string ParseString(struct JsonContext* ctx) {
 
 		codepoint = (h[0] << 12) | (h[1] << 8) | (h[2] << 4) | h[3];
 		/* don't want control characters in names/software */
-		if (codepoint >= 32) s.Append((char)codepoint);
+		/* TODO: Convert to CP437.. */
+		if (codepoint >= 32) String_Append(str, codepoint);
 		JsonContext_Consume(ctx, 4);
 	}
 
-	ctx->Failed = true; return null;
+	ctx->Failed = true; str->length = 0;
+}
+static String Json_ConsumeValue(int token, struct JsonContext* ctx);
+
+static void Json_ConsumeObject(struct JsonContext* ctx) {
+	char keyBuffer[STRING_SIZE];
+	String value, oldKey = ctx->CurKey;
+	int token;
+	ctx->OnNewObject();
+
+	while (true) {
+		token = Json_ConsumeToken(ctx);
+		if (token == ',') continue;
+		if (token == '}') return;
+
+		if (token != '"') { ctx->Failed = true; return; }
+		String_InitArray(ctx->CurKey, keyBuffer);
+		Json_ConsumeString(ctx, &ctx->CurKey);
+
+		token = Json_ConsumeToken(ctx);
+		if (token != ':') { ctx->Failed = true; return; }
+
+		token = Json_ConsumeToken(ctx);
+		if (token == TOKEN_NONE) { ctx->Failed = true; return; }
+
+		value = Json_ConsumeValue(token, ctx);
+		ctx->OnValue(&value);
+		ctx->CurKey = oldKey;
+	}
+}
+
+static void Json_ConsumeArray(struct JsonContext* ctx) {
+	String value;
+	int token;
+	ctx->OnNewArray();
+
+	while (true) {
+		token = Json_ConsumeToken(ctx);
+		if (token == ',') continue;
+		if (token == ']') return;
+
+		if (token == TOKEN_NONE) { ctx->Failed = true; return; }
+		value = Json_ConsumeValue(token, ctx);
+		ctx->OnValue(&value);
+	}
 }
 
 static String Json_ConsumeValue(int token, struct JsonContext* ctx) {
 	switch (token) {
-	case '{': return ParseObject(ctx);
-	case '[': return ParseArray(ctx);
-	case '"': return ParseString(ctx);
+	case '{': Json_ConsumeObject(ctx); break;
+	case '[': Json_ConsumeArray(ctx);  break;
+	case '"': Json_ConsumeString(ctx, &ctx->_tmp); return ctx->_tmp;
 
 	case TOKEN_NUM:   return Json_ConsumeNumber(ctx);
 	case TOKEN_TRUE:  return strTrue;
@@ -156,13 +154,32 @@ static String Json_ConsumeValue(int token, struct JsonContext* ctx) {
 	return String_Empty;
 }
 
+static void Json_NullOnNew(void) { }
+static void Json_NullOnValue(String* value) { }
+void Json_Init(struct JsonContext* ctx, String* str) {
+	ctx->Cur    = str->buffer;
+	ctx->Left   = str->length;
+	ctx->Failed = false;
+	ctx->CurKey = String_Empty;
 
-static object ParseStream(struct JsonContext* ctx) {
-	return ParseValue(NextToken(ctx), ctx);
+	ctx->OnNewArray  = Json_NullOnNew;
+	ctx->OnNewObject = Json_NullOnNew;
+	ctx->OnValue     = Json_NullOnValue;
+	String_InitArray(ctx->_tmp, ctx->_tmpBuffer);
+}
+
+void Json_Parse(struct JsonContext* ctx) {
+	int token;
+	do {
+		token = Json_ConsumeToken(ctx);
+		Json_ConsumeValue(token, ctx);
+	} while (token != TOKEN_NONE);
 }
 
 
-
+/*########################################################################################################################*
+*--------------------------------------------------------Web task---------------------------------------------------------*
+*#########################################################################################################################*/
 static void LWebTask_Reset(struct LWebTask* task) {
 	task->Completed = false;
 	task->Working   = true;
@@ -276,7 +293,7 @@ public sealed class SignInTask : WebTask {
 }
 
 
-public class ServerListEntry {
+public class ServerInfo {
 	public string Hash, Name, Players, MaxPlayers, Flag;
 	public string Uptime, IPAddress, Port, Mppass, Software;
 	public bool Featured;
@@ -289,8 +306,8 @@ public sealed class FetchServerTask : WebTask {
 		uri = "https://www.classicube.net/api/server/" + hash;
 	}
 
-	public static ServerListEntry ParseEntry(JsonObject obj) {
-		ServerListEntry entry = new ServerListEntry();
+	public static ServerInfo ParseEntry(JsonObject obj) {
+		ServerInfo entry = new ServerInfo();
 		entry.Hash = (string)obj["hash"];
 		entry.Name = (string)obj["name"];
 		entry.Players = (string)obj["players"];
@@ -318,7 +335,7 @@ public sealed class FetchServerTask : WebTask {
 		List<object> list = (List<object>)root["servers"];
 
 		JsonObject obj = (JsonObject)list[0];
-		ServerListEntry entry = ParseEntry(obj);
+		ServerInfo entry = ParseEntry(obj);
 		Info = new ClientStartData(Username, entry.Mppass, entry.IPAddress, entry.Port, entry.Name);
 	}
 }
@@ -329,10 +346,10 @@ public sealed class FetchServersTask : WebTask {
 		uri = "https://www.classicube.net/api/servers";
 	}
 
-	public List<ServerListEntry> Servers;
+	public List<ServerInfo> Servers;
 	protected override void Reset() {
 		base.Reset();
-		Servers = new List<ServerListEntry>();
+		Servers = new List<ServerInfo>();
 	}
 
 	protected override void Handle(Request req) {
@@ -341,7 +358,7 @@ public sealed class FetchServersTask : WebTask {
 
 		for (int i = 0; i < list.Count; i++) {
 			JsonObject obj = (JsonObject)list[i];
-			ServerListEntry entry = FetchServerTask.ParseEntry(obj);
+			ServerInfo entry = FetchServerTask.ParseEntry(obj);
 			Servers.Add(entry);
 		}
 	}

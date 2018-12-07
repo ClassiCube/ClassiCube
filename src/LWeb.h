@@ -6,8 +6,27 @@
 	Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
+/* State for parsing JSON text */
+struct JsonContext {
+	char* Cur;     /* Pointer to current character in JSON stream being inspected. */
+	int Left;      /* Number of characters left to be inspected. */
+	bool Failed;   /* Whether there was an error parsing the JSON. */
+	String CurKey; /* Key/Name of current member */
+	
+	void (*OnNewArray)(void);       /* Invoked when start of an array is read.  */
+	void (*OnNewObject)(void);      /* Invoked when start of an object is read. */
+	void (*OnValue)(String* value); /* Invoked on each member value in an object/array. */
+	String _tmp; /* temp value used for reading String values */
+	char _tmpBuffer[STRING_SIZE];
+};
+/* Initialises state of JSON parser. */
+void Json_Init(struct JsonContext* ctx, String* str);
+/* Parses the JSON text, invoking callbacks when value/array/objects are read. */
+/* NOTE: DO NOT persist the value argument in OnValue. */
+void Json_Parse(struct JsonContext* ctx);
+
 /* Represents all known details about a server. */
-struct ServerListEntry {
+struct ServerInfo {
 	String Hash, Name, Flag, IP, Port, Mppass, Software;
 	int Players, MaxPlayers, Uptime;
 	bool Featured;
@@ -16,19 +35,14 @@ struct ServerListEntry {
 
 struct LWebTask;
 struct LWebTask {
-	/* Whether the task has finished executing. */
-	bool Completed;
-	/* Whether the task is currently downloading/uploading, or is scheduled to be. */
-	bool Working;
-	/* Whether the task completed successfully. */
-	bool Success;
+	bool Completed; /* Whether the task has finished executing. */
+	bool Working;   /* Whether the task is currently in progress, or is scheduled to be. */
+	bool Success;   /* Whether the task completed successfully. */
 	ReturnCode Res;
-	/* Unique identifier for this web task. */
-	String Identifier;
-	/* URL this task is downloading from/uploading to. */
-	String URL;
-	/* Point in time this task was started at. */
-	TimeMS Start;
+	
+	String Identifier; /* Unique identifier for this web task. */
+	String URL;        /* URL this task is downloading from/uploading to. */
+	TimeMS Start;      /* Point in time this task was started at. */
 	/* Function called to begin downloading/uploading. */
 	void (*Begin)(struct LWebTask* task);
 	/* Called when task successfully downloaded/uploaded data. */
@@ -39,35 +53,29 @@ void LWebTask_Tick(struct LWebTask* task);
 
 extern struct GetCSRFTokenTaskData {
 	struct LWebTask Base;
-	/* Random CSRF token for logging in. */
-	String Token;
+	String Token; /* Random CSRF token for logging in. */
 } GetCSRFTokenTask;
 void GetCSRFTokenTask_Run(void);
 
 extern struct SignInTaskData {
 	struct LWebTask Base;
-	/* Username to sign in as. Changed to case correct username. */
-	String Username;
-	/* If sign in fails, the reason as to why. */
-	String Error;
+	String Username; /* Username to sign in as. Changed to case correct username. */
+	String Error;    /* If sign in fails, the reason as to why. */
 } SignInTask;
 void SignInTask_Run(const String* user, const String* pass);
 
 
 extern struct FetchServerData {
 	struct LWebTask Base;
-	/* Details about the given server on success. */
-	struct ServerListEntry Server;
+	struct ServerInfo Server; /* Details about the given server on success. */
 } FetchServerTask;
 void FetchServerTask_Run(const String* hash);
 
 
 extern struct FetchServersData {
 	struct LWebTask Base;
-	/* List of all public servers on classicube.net server list. */
-	struct ServerListEntry* Servers;
-	/* Number of public servers that have been fetched. */
-	int NumServers;
+	struct ServerInfo* Servers; /* List of all public servers on server list. */
+	int NumServers;             /* Number of public servers. */
 } FetchServersTask;
 void FetchServersTask_Run(void);
 
@@ -84,22 +92,17 @@ void UpdateCheckTask_Run(void);
 
 extern struct UpdateDownloadTaskData {
 	struct LWebTask Base;
-	/* The raw downloaded executable. */
-	uint8_t* Data;
-	/* Size of data in bytes. */
-	uint32_t DataLen;
+	uint8_t* Data; /* The raw downloaded executable. */
+	uint32_t Size; /* Size of data in bytes. */
 } UpdateDownloadTask;
 void UpdateDownloadTask_Run(const String* file);
 
 
 extern struct FetchFlagsTaskData {
 	struct LWebTask Base;
-	/* Number of flags that have been downloaded. */
-	int NumDownloaded;
-	/* Raw pixels for each downloaded flag. */
-	Bitmap* Bitmaps;
-	/* Name for each downloaded flag.*/
-	String* Names;
+	int NumDownloaded; /* Number of flags that have been downloaded. */
+	Bitmap* Bitmaps;   /* Raw pixels for each downloaded flag. */
+	String* Names;     /* Name for each downloaded flag.*/
 } FetchFlagsTask;
 void FetchFlagsTask_Run(void);
 void FetchFlagsTask_Add(const String* name);
