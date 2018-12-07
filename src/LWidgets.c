@@ -10,7 +10,7 @@
 #define BORDER 1
 
 void LWidget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
-	struct Widget* w = widget;
+	struct LWidget* w = widget;
 	w->HorAnchor = horAnchor; w->VerAnchor = verAnchor;
 	w->XOffset   = xOffset;   w->YOffset = yOffset;
 	LWidget_CalcPosition(widget);

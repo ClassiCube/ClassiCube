@@ -2,7 +2,7 @@
 #define CC_WINDOW_H
 #include "String.h"
 #include "Bitmap.h"
-/* Abstracts creating and managing a native window.
+/* Abstracts creating and managing the native window.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3 | Based on OpenTK code
 */
 
@@ -31,23 +31,23 @@
    OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/* The states a window can be in. */
+/* The states the window can be in. */
 typedef enum WindowState_ {
 	WINDOW_STATE_NORMAL, WINDOW_STATE_MINIMISED, WINDOW_STATE_MAXIMISED, WINDOW_STATE_FULLSCREEN
 } WindowState;
 struct GraphicsMode;
 
-/* Creates a new window of the given size at centre of the screen, with default graphics mode. */
+/* Creates the window as the given size at centre of the screen, with default graphics mode. */
 void Window_CreateSimple(int width, int height);
-/* Creates a new window of the given size at the given position on screen. */
+/* Creates the window as the given size at the given position on screen. */
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode);
 /* Sets the text of the titlebar above the window. */
 void Window_SetTitle(const String* title);
 /* Gets the text currently on the clipboard. */
-/* NOTE: You must have created a window beforehand. (necessary for X11) */
+/* NOTE: You MUST have created the window beforehand. (necessary for X11) */
 void Window_GetClipboardText(String* value);
 /* Sets the text currently on the clipboard. */
-/* NOTE: You must have created a window beforehand. (necessary for X11) */
+/* NOTE: You MUST have created the window beforehand. (necessary for X11) */
 void Window_SetClipboardText(const String* value);
 /* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */
 
@@ -100,7 +100,7 @@ void Window_SetScreenCursorPos(int x, int y);
 /* Whether the cursor is visible when over this window. */
 bool Window_GetCursorVisible(void);
 /* Sets whether the cursor is visible when over this window. */
-/* NOTE: You must be careful with this! OS typically uses a counter for visibility,
+/* NOTE: You MUST BE VERY CAREFUL with this! OS typically uses a counter for visibility,
 so setting invisible multiple times means you must then set visible multiple times. */
 void Window_SetCursorVisible(bool visible);
 

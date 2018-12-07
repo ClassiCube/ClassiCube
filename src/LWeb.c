@@ -1,6 +1,168 @@
 #include "LWeb.h"
 #include "Platform.h"
 
+#define TOKEN_NONE  0
+#define TOKEN_NUM   1
+#define TOKEN_TRUE  2
+#define TOKEN_FALSE 3
+#define TOKEN_NULL  4
+
+struct JsonContext {
+	/* Pointer to current character in JSON stream being inspected. */
+	char* Cur;
+	/* Number of characters left to be inspected. */
+	int Left;
+	/* Whether there was an error parsing the JSON. */
+	bool Failed;
+	/* Callback function invoked on each token read. */
+	void (*OnToken)(char token);
+	/* Callback function invoked on each member of an object or array. */
+	/* NOTE: This only works for 'simple' key-value pairs. */ newarray
+	void (*OnValue)(char token, String* value);
+}; 
+/* new array, new object functions?? */
+/* need to push/pop 'CurrentKey' */
+/* Consumes n characters from the JSON stream */
+#define JsonContext_Consume(ctx, n) ctx->Cur += n; ctx->Left -= n;
+
+static String strTrue  = String_FromConst("true");
+static String strFalse = String_FromConst("false");
+static String strNull  = String_FromConst("null");
+
+static bool Json_IsWhitespace(char c) {
+	return c == '\r' || c == '\n' || c == '\t' || c == ' ';
+}
+
+static bool Json_IsNumber(char c) {
+	return c == '-' || c == '.' || (c >= '0' && c <= '9');
+}
+
+static bool Json_ConsumeConstant(struct JsonContext* ctx, String* value) {
+	int i;
+	if (value->length > ctx->Left) return false;
+
+	for (i = 0; i < value->length; i++) {
+		if (ctx->Cur[i] != value->buffer[i]) return false;
+	}
+
+	JsonContext_Consume(ctx, value->length);
+	return true;
+}
+
+static int Json_ConsumeToken(struct JsonContext* ctx) {
+	for (; ctx->Left && Json_IsWhitespace(*ctx->Cur); ) { JsonContext_Consume(ctx, 1); }
+	if (!ctx->Left) return TOKEN_NONE;
+
+	char c = *ctx->Cur;
+	if (c == '{' || c == '}' || c == '[' || c == ']' || c == ',' || c == '"' || c == ':') {
+		JsonContext_Consume(ctx, 1); return c;
+	}
+
+	/* number token forms part of value, don't consume it */
+	if (Json_IsNumber(c)) return TOKEN_NUM;
+
+	if (Json_ConsumeConstant(ctx, &strTrue))  return TOKEN_TRUE;
+	if (Json_ConsumeConstant(ctx, &strFalse)) return TOKEN_FALSE;
+	if (Json_ConsumeConstant(ctx, &strNull))  return TOKEN_NULL;
+
+	/* invalid token */
+	JsonContext_Consume(ctx, 1);
+	return TOKEN_NONE;
+}
+
+static String Json_ConsumeNumber(struct JsonContext* ctx) {
+	int len = 0;
+	for (; ctx->Left && Json_IsNumber(*ctx->Cur); len++) { JsonContext_Consume(ctx, 1); }
+	return String_Init(ctx->Cur - len, len, len);
+}
+
+static void Json_ConsumeObject(struct JsonContext* ctx) {
+	int token; /* push and pop cur key */
+
+	while (true) {
+		token = Json_ConsumeToken(ctx);
+		if (token == ',') continue;
+		if (token == '}') return;
+
+		if (token != '"') { ctx->Failed = true; return; }
+		string key = ParseString(ctx);
+
+		token = Json_ConsumeToken(ctx);
+		if (token != ':') { ctx->Failed = true; return; }
+
+		token = Json_ConsumeToken(ctx);
+		if (token == TOKEN_NONE) { ctx->Failed = true; return; }
+
+		members[key] = ParseValue(token, ctx);
+	}
+}
+
+static void Json_ConsumeArray(struct JsonContext* ctx) {
+	int token;
+
+	while (true) {
+		token = NextToken(ctx);
+		if (token == ',') continue;
+		if (token == ']') return;
+
+		if (token == TOKEN_NONE) { ctx->Failed = true; return; }
+		elements.Add(ParseValue(token, ctx));
+	}
+}
+
+static string ParseString(struct JsonContext* ctx) {
+	int codepoint, h[4];
+	char c;
+	StringBuilder s = ctx.strBuffer; s.Length = 0;
+
+	for (; ctx->Left;) {
+		c = *ctx->Cur; JsonContext_Consume(ctx, 1);
+		if (c == '"') return s.ToString();
+		if (c != '\\') { s.Append(c); continue; }
+
+		/* form of \X */
+		if (!ctx->Left) break;
+		c = *ctx->Cur; JsonContext_Consume(ctx, 1);
+		if (c == '/' || c == '\\' || c == '"') { s.Append(c); continue; }
+
+		/* form of \uYYYY */
+		if (c != 'u' || ctx->Left < 4) break;
+
+		if (!PackedCol_Unhex(ctx->Cur[0], &h[0])) break;
+		if (!PackedCol_Unhex(ctx->Cur[1], &h[1])) break;
+		if (!PackedCol_Unhex(ctx->Cur[2], &h[2])) break;
+		if (!PackedCol_Unhex(ctx->Cur[3], &h[3])) break;
+
+		codepoint = (h[0] << 12) | (h[1] << 8) | (h[2] << 4) | h[3];
+		/* don't want control characters in names/software */
+		if (codepoint >= 32) s.Append((char)codepoint);
+		JsonContext_Consume(ctx, 4);
+	}
+
+	ctx->Failed = true; return null;
+}
+
+static String Json_ConsumeValue(int token, struct JsonContext* ctx) {
+	switch (token) {
+	case '{': return ParseObject(ctx);
+	case '[': return ParseArray(ctx);
+	case '"': return ParseString(ctx);
+
+	case TOKEN_NUM:   return Json_ConsumeNumber(ctx);
+	case TOKEN_TRUE:  return strTrue;
+	case TOKEN_FALSE: return strFalse;
+	case TOKEN_NULL:  break;
+	}
+	return String_Empty;
+}
+
+
+static object ParseStream(struct JsonContext* ctx) {
+	return ParseValue(NextToken(ctx), ctx);
+}
+
+
+
 static void LWebTask_Reset(struct LWebTask* task) {
 	task->Completed = false;
 	task->Working   = true;

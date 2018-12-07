@@ -206,7 +206,7 @@ ReturnCode Socket_Select(SocketHandle socket, int selectMode, bool* success);
 /* Initalises the platform specific http library state. */
 void Http_Init(void);
 /* Performs a http request, setting progress as data is received. */
-/* NOTE: NOT thread safe - you should always use AsyncDownloader for making requests. */
+/* NOTE: NOT thread safe - you should ALWAYS use AsyncDownloader for making requests. */
 ReturnCode Http_Do(struct AsyncRequest* req, volatile int* progress);
 /* Frees the platform specific http library state. */
 ReturnCode Http_Free(void);

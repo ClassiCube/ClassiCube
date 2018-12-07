@@ -88,7 +88,7 @@ void ServerConnection_CheckAsyncResources(void) {
 		Chat_Add1("&cError %i when trying to download texture pack", &item.Result);
 	} else {
 		int status = item.StatusCode;
-		if (status == 0 || status == 304) return;
+		if (status == 200 || status == 304) return;
 		Chat_Add1("&c%i error when trying to download texture pack", &status);
 	}
 }

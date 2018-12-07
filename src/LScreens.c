@@ -24,7 +24,7 @@ CC_NOINLINE static struct LWidget* LScreen_WidgetAt(struct LScreen* s, int x, in
 		w = s->Widgets[i];
 		if (w->Hidden) continue;
 
-		if (Gui_Contains(w->X, w->Y, w->Width, w->Height, w->X, w->Y)) return w;
+		if (Gui_Contains(w->X, w->Y, w->Width, w->Height, x, y)) return w;
 	}
 	return NULL;
 }
@@ -143,8 +143,10 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	s->MouseDown = LScreen_MouseDown;
 	s->MouseUp   = LScreen_MouseUp;
 	s->MouseMove = LScreen_MouseMove;
-	s->HoverWidget   = LScreen_HoverWidget;
-	s->UnhoverWidget = LScreen_UnhoverWidget;
+	s->HoverWidget    = LScreen_HoverWidget;
+	s->UnhoverWidget  = LScreen_UnhoverWidget;
+	s->SelectWidget   = LScreen_SelectWidget;
+	s->UnselectWidget = LScreen_UnselectWidget;
 
 	/* reset all widgets mouse state */
 	for (i = 0; i < s->NumWidgets; i++) { 

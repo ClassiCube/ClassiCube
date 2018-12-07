@@ -335,7 +335,6 @@ static void Launcher_ProcessZipEntry(const String* path, struct Stream* data, st
 		if (res) {
 			Launcher_ShowError(res, "decoding terrain.png"); return;
 		} else {
-			Drawer2D_SetFontBitmap(&bmp);
 			Launcher_LoadTextures(&bmp);
 		}
 	}
