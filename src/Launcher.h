@@ -26,6 +26,8 @@ extern FontDesc Launcher_HintFont;
 extern bool Launcher_ShouldExit;
 /* Whether update script should be asynchronously run on exit. */
 extern bool Launcher_ShouldUpdate;
+/* Whether options should be saved on closing launcher. */
+extern bool Launcher_SaveOptions;
 /* Time which updated executable's "modified" time should be set to. */
 extern TimeMS Launcher_PatchTime;
 
@@ -55,18 +57,6 @@ void Launcher_TryLoadTexturePack(void);
 void Launcher_ResetPixels(void);
 /* Redraws the specified region with the background pixels. */
 void Launcher_ResetArea(int x, int y, int width, int height);
-
-/* Represents all known details about a server. */
-struct ServerListEntry {
-	String Hash, Name, Players, MaxPlayers, Flag;
-	String Uptime, IPAddress, Port, Mppass, Software;
-	/*int Players, MaxPlayers, Uptime;*/
-	bool Featured;
-};
-/* List of all public servers on classicube.net server list. */
-extern struct ServerListEntry* Launcher_PublicServers;
-/* Number of public servers */
-extern int Launcher_NumServers;
 
 /* Sets currently active screen/menu, freeing old one. */
 void Launcher_SetScreen(struct LScreen* screen);

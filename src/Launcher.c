@@ -1,5 +1,6 @@
 #include "Launcher.h"
 #include "LScreens.h"
+#include "LWeb.h"
 #include "Resources.h"
 #include "Drawer2D.h"
 #include "Game.h"
@@ -17,13 +18,10 @@ bool Launcher_Dirty;
 Rect2D Launcher_DirtyArea;
 Bitmap Launcher_Framebuffer;
 bool Launcher_ClassicBackground;
-FontDesc Launcher_TitleFont, Launcher_TextFont;
-FontDesc Launcher_InputHintFont;
+FontDesc Launcher_TitleFont, Launcher_TextFont, Launcher_HintFont;
 
-bool Launcher_ShouldExit, Launcher_ShouldUpdate;
+bool Launcher_ShouldExit, Launcher_ShouldUpdate, Launcher_SaveOptions;
 TimeMS Launcher_PatchTime;
-struct ServerListEntry* Launcher_PublicServers;
-int Launcher_NumServers;
 
 void Launcher_ShowError(ReturnCode res, const char* place) {
 	String msg; char msgBuffer[STRING_SIZE * 2];
@@ -34,9 +32,6 @@ void Launcher_ShowError(ReturnCode res, const char* place) {
 	Window_ShowDialog("Error", msg.buffer);
 }
 
-/* TODO: FIX THESE STUBS!!! */
-//void Launcher_SecureSetOpt(const char* opt, const String* data, const String* key) { }
-internal UpdateCheckTask checkTask; 
 static bool fullRedraw, pendingRedraw;
 static FontDesc logoFont;
 
@@ -62,6 +57,30 @@ static void Launcher_OnResize(void* obj) {
 	Launcher_RedrawAll(NULL);
 }
 
+static bool Launcher_IsShutdown(int key) {
+	if (key == KEY_F4 && Key_IsAltPressed()) return true;
+
+	/* On OSX, Cmd+Q should also terminate the process */
+#ifdef CC_BUILD_OSX
+	return key == Key.Q && Key_IsWinPressed();
+#else
+	return false;
+#endif
+}
+
+static void Launcher_KeyDown(void* obj, int key) {
+	if (Launcher_IsShutdown(key)) Launcher_ShouldExit = true;
+	Launcher_Screen->KeyDown(Launcher_Screen, key);
+}
+
+static void Launcher_MouseDown(void* obj, int btn) {
+	Launcher_Screen->MouseDown(Launcher_Screen, btn);
+}
+
+static void Launcher_MouseMove(void* obj, int deltaX, int deltaY) {
+	Launcher_Screen->MouseMove(Launcher_Screen, deltaX, deltaY);
+}
+
 void Launcher_SetScreen(struct LScreen* screen) {
 	if (Launcher_Screen) Launcher_Screen->Free(Launcher_Screen);
 	Launcher_ResetPixels();
@@ -72,6 +91,28 @@ void Launcher_SetScreen(struct LScreen* screen) {
 	screen->MouseMove(screen, 0, 0);
 }
 
+static void Launcher_Display(void) {
+	Rect2D r;
+	if (pendingRedraw) {
+		Launcher_RedrawAll(NULL);
+		pendingRedraw = false;
+	}
+
+	Launcher_Screen->OnDisplay(Launcher_Screen);
+	Launcher_Dirty = false;
+
+	r.X = 0; r.Width  = Launcher_Framebuffer.Width;
+	r.Y = 0; r.Height = Launcher_Framebuffer.Height;
+
+	if (!fullRedraw && Launcher_DirtyArea.Width) r = Launcher_DirtyArea;
+	Window_DrawRaw(r);
+	fullRedraw = false;
+
+	r.X = 0; r.Width   = 0;
+	r.Y = 0; r.Height  = 0;
+	Launcher_DirtyArea = r;
+}
+
 static void Launcher_Init(void) {
 	BitmapCol col = BITMAPCOL_CONST(125, 125, 125, 255);
 
@@ -79,7 +120,10 @@ static void Launcher_Init(void) {
 	Event_RegisterVoid(&WindowEvents_StateChanged, NULL, Launcher_OnResize);
 	Event_RegisterVoid(&WindowEvents_FocusChanged, NULL, Launcher_RedrawAll);
 	Event_RegisterVoid(&WindowEvents_Redraw,       NULL, Launcher_ReqeustRedraw);
-	Keyboard.KeyDown += KeyDown;
+
+	Event_RegisterInt(&KeyEvents_Down,          NULL, Launcher_KeyDown);
+	Event_RegisterInt(&MouseEvents_Down,        NULL, Launcher_MouseDown);
+	Event_RegisterMouseMove(&MouseEvents_Moved, NULL, Launcher_MouseMove);
 
 	Font_Make(&logoFont,           &Drawer2D_FontName, 32, FONT_STYLE_NORMAL);
 	Font_Make(&Launcher_TitleFont, &Drawer2D_FontName, 16, FONT_STYLE_BOLD);
@@ -91,31 +135,37 @@ static void Launcher_Init(void) {
 	Utils_EnsureDirectory("audio");
 }
 
-void Dispose() {
+static void Launcher_Free(void) {
+	int i;
 	Event_UnregisterVoid(&WindowEvents_Resized,      NULL, Launcher_OnResize);
 	Event_UnregisterVoid(&WindowEvents_StateChanged, NULL, Launcher_OnResize);
 	Event_UnregisterVoid(&WindowEvents_FocusChanged, NULL, Launcher_RedrawAll);
 	Event_UnregisterVoid(&WindowEvents_Redraw,       NULL, Launcher_ReqeustRedraw);
-	Keyboard.KeyDown -= KeyDown;
+	
+	Event_UnregisterInt(&KeyEvents_Down,          NULL, Launcher_KeyDown);
+	Event_UnregisterInt(&MouseEvents_Down,        NULL, Launcher_MouseDown);
+	Event_UnregisterMouseMove(&MouseEvents_Moved, NULL, Launcher_MouseMove);
 
-	List<FastBitmap> bitmaps = FetchFlagsTask.Bitmaps;
-	for (int i = 0; i < bitmaps.Count; i++) {
-		bitmaps[i].Dispose();
-		bitmaps[i].Bitmap.Dispose();
+	for (i = 0; i < FetchFlagsTask.NumDownloaded; i++) {
+		Mem_Free(FetchFlagsTask.Bitmaps[i].Scan0);
 	}
 
 	Font_Free(&logoFont);
 	Font_Free(&Launcher_TitleFont);
 	Font_Free(&Launcher_TextFont);
 	Font_Free(&Launcher_HintFont);
+
+	Launcher_Screen->Free(Launcher_Screen);
+	Launcher_Screen = NULL;
 }
 
-void Run() {
-	Options_Load();
-	Window = Factory.CreateWindow(640, 400, Program.AppName,
-		GraphicsMode.Default, DisplayDevice.Default);
-
+void Laucher_Run(void) {
+	static String title = String_FromConst(PROGRAM_APP_NAME);
+	Window_CreateSimple(640, 480);
+	Window_SetTitle(&title);
 	Window_SetVisible(true);
+
+	Options_Load();
 	Drawer2D_Component.Init();
 	Game_UpdateClientSize();
 
@@ -126,79 +176,39 @@ void Run() {
 	Launcher_Framebuffer.Height = Game_Height;
 	Window_InitRaw(&Launcher_Framebuffer);
 
+	AsyncDownloader_Cookies = true;
 	AsyncDownloader_Component.Init();
-	Downloader.Cookies = new CookieContainer();
-	Downloader.KeepAlive = true;
 
 	Resources_CheckExistence();
-	checkTask = new UpdateCheckTask();
-	checkTask.RunAsync(this);
+	UpdateCheckTask_Run();
 
 	if (Resources_Count) {
-		SetScreen(new ResourcesScreen(this));
+		Launcher_SetScreen(ResourcesScreen_MakeInstance());
 	} else {
-		SetScreen(new MainScreen(this));
+		Launcher_SetScreen(MainScreen_MakeInstance());
 	}
 
-	while (true) {
+	for (;;) {
 		Window_ProcessEvents();
-		if (!Window_Exists) break;
+		if (!Window_Exists)      break;
 		if (Launcher_ShouldExit) break;
+		LWebTask_Tick(&UpdateCheckTask.Base);
 
-		checkTask.Tick();
 		Launcher_Screen->Tick(Launcher_Screen);
 		if (Launcher_Dirty) Launcher_Display();
 		Thread_Sleep(10);
 	}
 
-	if (Options.Load()) {
-		LauncherSkin.SaveToOptions();
-		Options.Save();
+	if (Launcher_SaveOptions) {
+		Options_Load();
+		Options_Save();
 	}
 
-	if (Launcher_Screen) {
-		Launcher_Screen->Free(Launcher_Screen);
-		Launcher_Screen = NULL;
-	}
-
+	Launcher_Free();
 	if (Launcher_ShouldUpdate)
-		Updater.Applier.ApplyUpdate();
+		Launcher_ApplyUpdate();
 	if (Window_Exists)
 		Window_Close();
-}
-
-void Display() {
-	if (pendingRedraw) {
-		Launcher_RedrawAll();
-		pendingRedraw = false;
-	}
-
-	Launcher_Screen->OnDisplay(Launcher_Screen);
-	Launcher_Dirty = false;
-
-	Rectangle rec = new Rectangle(0, 0, Framebuffer.Width, Framebuffer.Height);
-	if (!fullRedraw && DirtyArea.Width > 0) {
-		rec = DirtyArea;
-	}
-
-	Window_DrawRaw(rec);
-	DirtyArea = Rectangle.Empty;
-	fullRedraw = false;
-}
-
-static bool Launcher_IsShutdown(Key key) {
-	if (key == KEY_F4 && Key_IsAltPressed()) return true;
-
-	/* On OSX, Cmd+Q should also terminate the process */
-#ifdef CC_BUILD_OSX
-	return key == Key.Q && Key_IsWinPressed();
-#else
-	return false;
-#endif
-}
-
-void KeyDown(Key key) {
-	if (Launcher_IsShutdown(key)) Launcher_ShouldExit = true;
 }
 
 /*########################################################################################################################*

@@ -8,6 +8,9 @@
 struct IGameComponent;
 struct ScheduledTask;
 extern struct IGameComponent AsyncDownloader_Component;
+/* TODO: Implement these */
+extern bool AsyncDownloader_Cookies;
+/* TODO: Connection pooling */
 
 enum REQUEST_TYPE { REQUEST_TYPE_DATA, REQUEST_TYPE_CONTENT_LENGTH };
 enum AsyncProgress {

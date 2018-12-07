@@ -18,6 +18,18 @@ static void LScreen_DrawAll(struct LScreen* s) {
 	}
 }
 
+/*static void LScreen_KeyDown(struct LScreen* s, Key key) {
+
+}
+
+static void LScreen_MouseDown(struct LScreen* s, MouseButton btn) {
+
+}
+
+static void LScreen_MouseMove(struct LScreen* s, int deltaX, int deltaY) {
+
+}*/
+
 static void LScreen_HoverWidget(struct LScreen* s, struct LWidget* w) {
 	if (!w) return;
 	w->Hovered = true;
@@ -38,6 +50,9 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	s->DrawAll   = LScreen_DrawAll;
 	s->Tick      = LScreen_NullFunc;
 	s->OnDisplay = LScreen_NullFunc;
+	s->KeyDown   = LScreen_KeyDown;
+	s->MouseDown = LScreen_MouseDown;
+	s->MouseMove = LScreen_MouseMove;
 	s->HoverWidget   = LScreen_HoverWidget;
 	s->UnhoverWidget = LScreen_UnhoverWidget;
 
@@ -152,7 +167,7 @@ static void UseModeEnhanced(void* w, int x, int y)   { ChooseMode_Click(false, f
 static void UseModeClassicHax(void* w, int x, int y) { ChooseMode_Click(true,  true);  }
 static void UseModeClassic(void* w, int x, int y)    { ChooseMode_Click(true,  false); }
 
-static void ChooseModeScreenScreen_InitWidgets(struct ChooseModeScreen* s) {
+static void ChooseModeScreen_InitWidgets(struct ChooseModeScreen* s) {
 	struct LScreen* s_ = (struct LScreen*)s;
 	int middle = Game_Width / 2;
 
@@ -256,7 +271,7 @@ static void DirectConnectScreen_Save(const String* user, const String* mppass, c
 	Options_Set("launcher-dc-ip",       ip);
 	Options_Set("launcher-dc-port",     port);
 	Launcher_SaveSecureOpt("launcher-dc-mppass", mppass, user);
-	Options_Save();
+	Launcher_SaveOptions = true;
 }
 
 static void StartClient(void* w, int x, int y) {

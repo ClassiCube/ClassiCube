@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
 
 	String_InitArray(title, titleBuffer);
 	String_Format2(&title, "%c (%s)", PROGRAM_APP_NAME, &Game_Username);
-	Game_Run(width, height, &title, &device);
+	Game_Run(width, height, &title);
 
 	Platform_Exit(0);
 	return 0;

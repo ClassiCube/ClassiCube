@@ -2,6 +2,7 @@
 #define CC_LSCREENS_H
 #include "AsyncDownloader.h"
 #include "String.h"
+#include "Input.h"
 /* Implements screens/menus for the launcher.
 	Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -17,6 +18,9 @@ typedef void (*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 	LScreen_Func DrawAll; /* Redraws all widgets. */ \
 	LScreen_Func Tick; /* Repeatedly called multiple times every second. */ \
 	LScreen_Func OnDisplay; /* Called when framebuffer is about to be displayed. */ \
+	void (*KeyDown)(struct LScreen* s,   Key key); \
+	void (*MouseDown)(struct LScreen* s, MouseButton btn); \
+	void (*MouseMove)(struct LScreen* s, int deltaX, int deltaY); \
 	LWidget_Func HoverWidget; /* Called when mouse is moved over a given widget. */ \
 	LWidget_Func UnhoverWidget; /* Called when the mouse is moved away from a previously hovered widget. */ \
 	struct LWidget* OnEnterWidget; /* Default widget to auto-click when Enter is pressed. Can be NULL. */ \

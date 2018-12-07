@@ -74,10 +74,7 @@ static struct AsyncRequestList async_processed;
 static String async_skinServer = String_FromConst("http://static.classicube.net/skins/");
 static struct AsyncRequest async_curRequest;
 static volatile int async_curProgress = ASYNC_PROGRESS_NOTHING;
-/* TODO: Implement these */
-static bool ManageCookies;
-static bool KeepAlive;
-/* TODO: Connection pooling */
+bool AsyncDownloader_Cookies;
 
 static void AsyncDownloader_Add(const String* url, bool priority, const String* id, uint8_t type, TimeMS* lastModified, const String* etag, const String* data) {
 	struct AsyncRequest req = { 0 };

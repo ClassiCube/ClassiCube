@@ -37,6 +37,8 @@ typedef enum WindowState_ {
 } WindowState;
 struct GraphicsMode;
 
+/* Creates a new window of the given size at centre of the screen, with default graphics mode. */
+void Window_CreateSimple(int width, int height);
 /* Creates a new window of the given size at the given position on screen. */
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode);
 /* Sets the text of the titlebar above the window. */

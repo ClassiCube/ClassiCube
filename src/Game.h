@@ -96,5 +96,5 @@ void Game_UpdateClientSize(void);
 void Game_SetFpsLimit(enum FpsLimit method);
 float Game_CalcLimitMillis(enum FpsLimit method);
 
-void Game_Run(int width, int height, const String* title, struct DisplayDevice* device);
+void Game_Run(int width, int height, const String* title);
 #endif

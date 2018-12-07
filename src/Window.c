@@ -40,6 +40,18 @@ static void Window_DecodeAscii(String* value, uint8_t* chars, int numBytes) {
 	}
 }
 
+void Window_CreateSimple(int width, int height) {
+	struct DisplayDevice* device = &DisplayDevice_Default;
+	struct GraphicsMode mode;
+	int x, y;
+
+	x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
+	y = device->Bounds.Y + (device->Bounds.Height - height) / 2;
+	GraphicsMode_MakeDefault(&mode);
+
+	Window_Create(x, y, width, height, &mode);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Win32 window-------------------------------------------------------*

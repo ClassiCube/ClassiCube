@@ -702,17 +702,11 @@ void Game_Free(void* obj) {
 	Options_Save();
 }
 
-void Game_Run(int width, int height, const String* title, struct DisplayDevice* device) {
-	struct GraphicsMode mode;
+void Game_Run(int width, int height, const String* title) {
 	uint64_t lastRender, render;
 	double time;
-	int x, y;
 
-	x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
-	y = device->Bounds.Y + (device->Bounds.Height - height) / 2;
-	GraphicsMode_MakeDefault(&mode);
-
-	Window_Create(x, y, width, height, &mode);
+	Window_CreateSimple(width, height);
 	Window_SetTitle(title);
 	Window_SetVisible(true);
 

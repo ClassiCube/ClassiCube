@@ -8,7 +8,7 @@ static void LWebTask_Reset(struct LWebTask* task) {
 	task->Start = DateTime_CurrentUTC_MS();
 }
 
-void LWebTask_StartAsync(struct LWebTask* task) {
+static void LWebTask_StartAsync(struct LWebTask* task) {
 	LWebTask_Reset(task);
 	task->Begin(task);
 }
