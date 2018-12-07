@@ -223,10 +223,10 @@ static void SwitchToUpdates(void* w, int x, int y) {
 *#########################################################################################################################*/
 static struct ChooseModeScreen {
 	LScreen_Layout
-	struct LWidget* Widgets[12];
 	struct LButton BtnEnhanced, BtnClassicHax, BtnClassic, BtnBack;
 	struct LLabel  LblTitle, LblHelp, LblEnhanced[2], LblClassicHax[2], LblClassic[2];
 	bool FirstTime;
+	struct LWidget* _widgets[12];
 } ChooseModeScreen_Instance;
 
 CC_NOINLINE static void ChooseMode_Click(bool classic, bool classicHacks) {
@@ -253,6 +253,7 @@ static void UseModeClassic(void* w, int x, int y)    { ChooseMode_Click(true,  f
 static void ChooseModeScreen_InitWidgets(struct ChooseModeScreen* s) {
 	struct LScreen* s_ = (struct LScreen*)s;
 	int middle = Game_Width / 2;
+	s->Widgets = s->_widgets;
 
 	LScreen_Label(s_,  &s->LblTitle, "&eGet the latest stuff",
 					ANCHOR_CENTRE, ANCHOR_CENTRE, 10, -135);
@@ -312,11 +313,10 @@ struct LScreen* ChooseModeScreen_MakeInstance(bool firstTime) {
 *#########################################################################################################################*/
 static struct DirectConnectScreen {
 	LScreen_Layout
-	struct LWidget* Widgets[6];
 	struct LButton BtnConnect, BtnBack;
 	struct LInput IptUsername, IptAddress, IptMppass;
 	struct LLabel LblStatus;
-	bool FirstTime;
+	struct LWidget* _widgets[6];
 } DirectConnectScreen_Instance;
 
 CC_NOINLINE static void DirectConnectScreen_SetStatus(const char* msg) {
@@ -395,6 +395,7 @@ static void StartClient(void* w, int x, int y) {
 
 static void DirectConnectScreen_InitWidgets(struct DirectConnectScreen* s) {
 	struct LScreen* s_ = (struct LScreen*)s;
+	s->Widgets = s->_widgets;
 
 	LScreen_Input(s_, &s->IptUsername, 330, false, "&gUsername..",
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -120);
@@ -438,13 +439,14 @@ struct LScreen* DirectConnectScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 static struct SettingsScreen {
 	LScreen_Layout
-	struct LWidget* Widgets[7];
 	struct LButton BtnUpdates, BtnMode, BtnColours, BtnBack;
 	struct LLabel  LblUpdates, LblMode, LblColours;
+	struct LWidget* _widgets[7];
 } SettingsScreen_Instance;
 
 static void SettingsScreen_InitWidgets(struct SettingsScreen* s) {
 	struct LScreen* s_ = (struct LScreen*)s;
+	s->Widgets = s->_widgets;
 
 	LScreen_Button(s_, &s->BtnUpdates, 110, 35, "Updates",
 					ANCHOR_CENTRE, ANCHOR_CENTRE, -135, -120);

@@ -175,13 +175,12 @@ static void Launcher_Free(void) {
 	Launcher_Screen = NULL;
 }
 
-void Laucher_Run(void) {
+void Launcher_Run(void) {
 	static String title = String_FromConst(PROGRAM_APP_NAME);
 	Window_CreateSimple(640, 480);
 	Window_SetTitle(&title);
 	Window_SetVisible(true);
 
-	Options_Load();
 	Drawer2D_Component.Init();
 	Game_UpdateClientSize();
 
