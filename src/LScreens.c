@@ -344,6 +344,9 @@ static void DirectConnectScreen_Load(struct DirectConnectScreen* s) {
 	Launcher_LoadSecureOpt("launcher-dc-mppass", &mppass, &user);
 	String_InitArray(addr, addrBuffer);
 	String_Format2(&addr, "%s:%s", &ip, &port);
+
+	/* don't want just ':' for address */
+	if (addr.length == 1) addr.length = 0;
 	
 	LInput_SetText(&s->IptUsername, &user,   &Launcher_TextFont);
 	LInput_SetText(&s->IptAddress,  &addr,   &Launcher_TextFont);

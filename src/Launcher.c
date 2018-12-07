@@ -13,6 +13,16 @@
 #include "Event.h"
 #include "AsyncDownloader.h"
 
+/* TODO TODO TODO TODO TODO TODO TODO TODO FIX THESE STUBS */
+void Launcher_SaveSecureOpt(const char* opt, const String* data, const String* key) { }
+void Launcher_LoadSecureOpt(const char* opt, String* data, const String* key) { }
+void UpdateCheckTask_Run(void) { }
+struct LScreen* ColoursScreen_MakeInstance(void) { return NULL; }
+struct LScreen* MainScreen_MakeInstance(void) { return NULL; }
+struct LScreen* ResourcesScreen_MakeInstance(void) { return NULL; }
+struct LScreen* ServersScreen_MakeInstance(void) { return NULL; }
+struct LScreen* UpdatesScreen_MakeInstance(void) { return NULL; }
+
 struct LScreen* Launcher_Screen;
 bool Launcher_Dirty;
 Rect2D Launcher_DirtyArea;
@@ -177,7 +187,7 @@ static void Launcher_Free(void) {
 
 void Launcher_Run(void) {
 	static String title = String_FromConst(PROGRAM_APP_NAME);
-	Window_CreateSimple(640, 480);
+	Window_CreateSimple(640, 400);
 	Window_SetTitle(&title);
 	Window_SetVisible(true);
 
@@ -197,11 +207,13 @@ void Launcher_Run(void) {
 	Resources_CheckExistence();
 	UpdateCheckTask_Run();
 
-	if (Resources_Count) {
+	/* TODO TODO TODO TODO TODO TODO TODO TODO FIX THESE STUBS */
+	/*if (Resources_Count) {
 		Launcher_SetScreen(ResourcesScreen_MakeInstance());
 	} else {
 		Launcher_SetScreen(MainScreen_MakeInstance());
-	}
+	}*/
+	Launcher_SetScreen(DirectConnectScreen_MakeInstance());
 
 	for (;;) {
 		Window_ProcessEvents();

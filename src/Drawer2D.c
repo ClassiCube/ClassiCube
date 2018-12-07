@@ -606,7 +606,7 @@ static void Drawer2D_Reset(void) {
 	}
 	for (i = 10; i <= 15; i++) {
 		Drawer2D_HexEncodedCol('a' + (i - 10), i, 191, 64);
-		Drawer2D_HexEncodedCol('a' + (i - 10), i, 191, 64);
+		Drawer2D_HexEncodedCol('A' + (i - 10), i, 191, 64);
 	}
 }
 
