@@ -10,7 +10,7 @@ struct LWidget;
 struct LScreen;
 
 typedef void (*LScreen_Func)(struct LScreen* s);
-typedef void (*LWidget_Func)(struct LScreen* s, struct LWidget* w);
+typedef void(*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 
 #define LScreen_Layout \
 	LScreen_Func Init; /* Initialises widgets and other data. */ \
@@ -20,11 +20,15 @@ typedef void (*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 	LScreen_Func OnDisplay; /* Called when framebuffer is about to be displayed. */ \
 	void (*KeyDown)(struct LScreen* s,   Key key); \
 	void (*MouseDown)(struct LScreen* s, MouseButton btn); \
+	void (*MouseUp)(struct LScreen* s,   MouseButton btn); \
 	void (*MouseMove)(struct LScreen* s, int deltaX, int deltaY); \
-	LWidget_Func HoverWidget; /* Called when mouse is moved over a given widget. */ \
-	LWidget_Func UnhoverWidget; /* Called when the mouse is moved away from a previously hovered widget. */ \
-	struct LWidget* OnEnterWidget; /* Default widget to auto-click when Enter is pressed. Can be NULL. */ \
-	struct LWidget* HoveredWidget; /* Widget the mouse is currently hovering over. */ \
+	LWidget_Func HoverWidget;    /* Called when mouse is moved over a given widget. */ \
+	LWidget_Func UnhoverWidget;  /* Called when the mouse is moved away from a previously hovered widget. */ \
+	LWidget_Func SelectWidget;   /* Called when mouse clicks on a given widget. */ \
+	LWidget_Func UnselectWidget; /* Called when the mouse clicks on a different widget. */ \
+	struct LWidget* OnEnterWidget;  /* Default widget to auto-click when Enter is pressed. Can be NULL. */ \
+	struct LWidget* HoveredWidget;  /* Widget the mouse is currently hovering over. */ \
+	struct LWidget* SelectedWidget; /* Widget mouse last clicked on. */ \
 	int NumWidgets; /* Number of widgets actually used. */
 
 struct LScreen {

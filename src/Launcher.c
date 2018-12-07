@@ -77,6 +77,10 @@ static void Launcher_MouseDown(void* obj, int btn) {
 	Launcher_Screen->MouseDown(Launcher_Screen, btn);
 }
 
+static void Launcher_MouseUp(void* obj, int btn) {
+	Launcher_Screen->MouseUp(Launcher_Screen, btn);
+}
+
 static void Launcher_MouseMove(void* obj, int deltaX, int deltaY) {
 	Launcher_Screen->MouseMove(Launcher_Screen, deltaX, deltaY);
 }
@@ -123,6 +127,7 @@ static void Launcher_Init(void) {
 
 	Event_RegisterInt(&KeyEvents_Down,          NULL, Launcher_KeyDown);
 	Event_RegisterInt(&MouseEvents_Down,        NULL, Launcher_MouseDown);
+	Event_RegisterInt(&MouseEvents_Up,          NULL, Launcher_MouseUp);
 	Event_RegisterMouseMove(&MouseEvents_Moved, NULL, Launcher_MouseMove);
 
 	Font_Make(&logoFont,           &Drawer2D_FontName, 32, FONT_STYLE_NORMAL);
@@ -144,6 +149,7 @@ static void Launcher_Free(void) {
 	
 	Event_UnregisterInt(&KeyEvents_Down,          NULL, Launcher_KeyDown);
 	Event_UnregisterInt(&MouseEvents_Down,        NULL, Launcher_MouseDown);
+	Event_UnregisterInt(&MouseEvents_Up,          NULL, Launcher_MouseUp);
 	Event_UnregisterMouseMove(&MouseEvents_Moved, NULL, Launcher_MouseMove);
 
 	for (i = 0; i < FetchFlagsTask.NumDownloaded; i++) {

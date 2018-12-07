@@ -17,9 +17,9 @@ struct LWidgetVTABLE {
 	/* Called when mouse clicks on this widget. */
 	/* NOTE: This function is just for general widget behaviour. */
 	/* OnClick callback is for per-widget instance behaviour. */
-	void (*OnSelected)(void* widget);
+	void (*OnSelect)(void* widget);
 	/* Called when mouse clicks on another widget. */
-	void (*OnUnselected)(void* widget);
+	void (*OnUnselect)(void* widget);
 };
 
 #define LWidget_Layout \

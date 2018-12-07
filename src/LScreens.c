@@ -8,6 +8,27 @@
 *---------------------------------------------------------Screen base-----------------------------------------------------*
 *#########################################################################################################################*/
 static void LScreen_NullFunc(struct LScreen* s) { }
+CC_NOINLINE static int LScreen_IndexOf(struct LScreen* s, void* w) {
+	int i;
+	for (i = 0; i < s->NumWidgets; i++) {
+		if (s->Widgets[i] == w) return i;
+	}
+	return -1;
+}
+
+CC_NOINLINE static struct LWidget* LScreen_WidgetAt(struct LScreen* s, int x, int y) {
+	struct LWidget* w;
+	int i = 0;
+
+	for (i = 0; i < s->NumWidgets; i++) {
+		w = s->Widgets[i];
+		if (w->Hidden) continue;
+
+		if (Gui_Contains(w->X, w->Y, w->Width, w->Height, w->X, w->Y)) return w;
+	}
+	return NULL;
+}
+
 static void LScreen_DrawAll(struct LScreen* s) {
 	struct LWidget* widget;
 	int i;
@@ -18,28 +39,96 @@ static void LScreen_DrawAll(struct LScreen* s) {
 	}
 }
 
-/*static void LScreen_KeyDown(struct LScreen* s, Key key) {
+CC_NOINLINE static void LScreen_HandleTab(struct LScreen* s) {
+	struct LWidget* w;
+	int dir   = Key_IsShiftPressed() ? -1 : 1;
+	int index = 0, i, j;
 
+	if (s->SelectedWidget) {
+		index = LScreen_IndexOf(s, s->SelectedWidget) + dir;
+	}
+
+	for (j = 0; j < s->NumWidgets; j++) {
+		i = (index + j * dir) % s->NumWidgets;
+		if (i < 0) i += s->NumWidgets;
+
+		w = s->Widgets[i];
+		if (w->Hidden || !w->TabSelectable) continue;
+
+		s->UnselectWidget(s, s->SelectedWidget);
+		s->SelectWidget(s, w);
+		return;
+	}
+}
+
+static void LScreen_KeyDown(struct LScreen* s, Key key) {
+	if (key == KEY_TAB) {
+		LScreen_HandleTab(s);
+	} else if (key == KEY_ENTER) {
+		if (s->SelectedWidget && s->SelectedWidget->OnClick) {
+			s->SelectedWidget->OnClick(s->SelectedWidget, Mouse_X, Mouse_Y);
+		} else if (s->OnEnterWidget) {
+			s->OnEnterWidget->OnClick(s->OnEnterWidget,   Mouse_X, Mouse_Y);
+		}
+	}
 }
 
 static void LScreen_MouseDown(struct LScreen* s, MouseButton btn) {
+	struct LWidget* over = LScreen_WidgetAt(s, Mouse_X, Mouse_Y);
+	struct LWidget* prev = s->SelectedWidget;
 
+	if (over == prev) return;
+	if (prev) s->UnselectWidget(s, prev);
+	if (over) s->SelectWidget(s,   over);
+}
+
+static void LScreen_MouseUp(struct LScreen* s, MouseButton btn) {
+	struct LWidget* over = LScreen_WidgetAt(s, Mouse_X, Mouse_Y);
+	struct LWidget* prev = s->SelectedWidget;
+
+	/* if user moves mouse away, it doesn't count */
+	if (over != prev) {
+		s->UnselectWidget(s, prev);
+	} else if (over && over->OnClick) {
+		over->OnClick(over, Mouse_X, Mouse_Y);
+	}
 }
 
 static void LScreen_MouseMove(struct LScreen* s, int deltaX, int deltaY) {
+	struct LWidget* over = LScreen_WidgetAt(s, Mouse_X, Mouse_Y);
+	struct LWidget* prev = s->HoveredWidget;
 
-}*/
+	if (over == prev) return;
+	if (prev) s->UnhoverWidget(s, prev);
+	if (over) s->HoverWidget(s,   over);
+}
 
 static void LScreen_HoverWidget(struct LScreen* s, struct LWidget* w) {
 	if (!w) return;
-	w->Hovered = true;
+	w->Hovered       = true;
+	s->HoveredWidget = w;
 	if (w->VTABLE->OnHover) w->VTABLE->OnHover(w);
 }
 
 static void LScreen_UnhoverWidget(struct LScreen* s, struct LWidget* w) {
 	if (!w) return;
-	w->Hovered = false;
+	w->Hovered       = false;
+	s->HoveredWidget = NULL;
 	if (w->VTABLE->OnUnhover) w->VTABLE->OnUnhover(w);
+}
+
+static void LScreen_SelectWidget(struct LScreen* s, struct LWidget* w) {
+	if (!w) return;
+	w->Selected      = true;
+	s->SelectedWidget = w;
+	if (w->VTABLE->OnSelect) w->VTABLE->OnSelect(w);
+}
+
+static void LScreen_UnselectWidget(struct LScreen* s, struct LWidget* w) {
+	if (!w) return;
+	w->Selected       = false;
+	s->SelectedWidget = NULL;
+	if (w->VTABLE->OnUnselect) w->VTABLE->OnUnselect(w);
 }
 
 CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
@@ -52,6 +141,7 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	s->OnDisplay = LScreen_NullFunc;
 	s->KeyDown   = LScreen_KeyDown;
 	s->MouseDown = LScreen_MouseDown;
+	s->MouseUp   = LScreen_MouseUp;
 	s->MouseMove = LScreen_MouseMove;
 	s->HoverWidget   = LScreen_HoverWidget;
 	s->UnhoverWidget = LScreen_UnhoverWidget;
@@ -62,8 +152,9 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 		s->Widgets[i]->Selected = false;
 	}
 
-	s->OnEnterWidget = NULL;
-	s->HoveredWidget = NULL;
+	s->OnEnterWidget  = NULL;
+	s->HoveredWidget  = NULL;
+	s->SelectedWidget = NULL;
 }
 
 
@@ -108,14 +199,6 @@ CC_NOINLINE static void LScreen_Slider(struct LScreen* s, struct LSlider* w, int
 
 	s->Widgets[s->NumWidgets++] = (struct LWidget*)w;
 	LWidget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
-}
-
-CC_NOINLINE static int LScreen_IndexOf(struct LScreen* s, void* w) {
-	int i;
-	for (i = 0; i < s->NumWidgets; i++) {
-		if (s->Widgets[i] == w) return i;
-	}
-	return -1;
 }
 
 static void SwitchToChooseMode(void* w, int x, int y) {
