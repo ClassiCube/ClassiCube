@@ -129,7 +129,10 @@ static void LButton_Redraw(void* widget) {
 }
 
 static struct LWidgetVTABLE lbutton_VTABLE = {
-	LButton_Redraw, LButton_Redraw, LButton_Redraw, NULL, NULL
+	LButton_Redraw, 
+	NULL, NULL,                      /* Key    */
+	LButton_Redraw, LButton_Redraw,  /* Hover  */
+	NULL, NULL                       /* Select */
 };
 void LButton_Init(struct LButton* w, int width, int height) {
 	Widget_Reset(w);
@@ -268,10 +271,37 @@ static void LInput_Redraw(void* widget) {
 	Launcher_Dirty = true;
 }
 
+static void LInput_KeyDown(void* widget, Key key) {
+	struct LInput* w = widget;
+	if (key == KEY_BACKSPACE && LInput_Backspace(w)) {
+		RedrawLastInput();
+	} else if (key == KEY_DELETE && LInput_Delete(w)) {
+		RedrawLastInput();
+	} else if (key == KEY_C && Key_IsControlPressed()) {
+		if (w->Text.length) Window_SetClipboardText(&w->Text);
+	} else if (key == KEY_V && Key_IsControlPressed()) {
+		if (LInput_CopyFromClipboard(w)) RedrawLastInput();
+	} else if (key == KEY_ESCAPE) {
+		if (LInput_Clear(w)) RedrawLastInput();
+	} else if (key == KEY_LEFT) {
+		LInput_AdvanceCaretPos(w, false);
+		RedrawLastInput();
+	} else if (key == KEY_RIGHT) {
+		LInput_AdvanceCaretPos(w, true);
+		RedrawLastInput();
+	}
+}
+
+static void LInput_KeyChar(void* w, char c) {
+	LInput_Append((struct LInput*)w, c);
+}
+
 static struct LWidgetVTABLE linput_VTABLE = {
-	LInput_Redraw, NULL, NULL,
+	LInput_Redraw, 
+	LInput_KeyDown, LInput_KeyChar, /* Key    */
+	NULL, NULL,                     /* Hover  */
 	/* TODO: Don't redraw whole thing, just the outer border */
-	LInput_Redraw, LInput_Redraw
+	LInput_Redraw, LInput_Redraw    /* Select */
 };
 void LInput_Init(struct LInput* w, int width, int height, const char* hintText, const FontDesc* hintFont) {
 	Widget_Reset(w);
@@ -449,7 +479,10 @@ static void LLabel_Redraw(void* widget) {
 }
 
 static struct LWidgetVTABLE llabel_VTABLE = {
-	LLabel_Redraw, NULL, NULL, NULL, NULL
+	LLabel_Redraw, 
+	NULL, NULL, /* Key    */
+	NULL, NULL, /* Hover  */
+	NULL, NULL  /* Select */
 };
 void LLabel_Init(struct LLabel* w) {
 	Widget_Reset(w);
@@ -514,7 +547,10 @@ static void LSlider_Redraw(void* widget) {
 }
 
 static struct LWidgetVTABLE lslider_VTABLE = {
-	LSlider_Redraw, NULL, NULL, NULL, NULL
+	LSlider_Redraw, 
+	NULL, NULL, /* Key    */
+	NULL, NULL, /* Hover  */
+	NULL, NULL  /* Select */
 };
 void LSlider_Init(struct LSlider* w, int width, int height) {
 	Widget_Reset(w);

@@ -64,7 +64,7 @@ int Options_GetInt(const char* key, int min, int max, int defValue) {
 	String str;
 	int value;
 	if (!Options_UNSAFE_Get(key, &str))    return defValue;
-	if (!Convert_TryParseInt(&str, &value)) return defValue;
+	if (!Convert_ParseInt(&str, &value)) return defValue;
 
 	Math_Clamp(value, min, max);
 	return value;
@@ -74,7 +74,7 @@ bool Options_GetBool(const char* key, bool defValue) {
 	String str;
 	bool value;
 	if (!Options_UNSAFE_Get(key, &str))     return defValue;
-	if (!Convert_TryParseBool(&str, &value)) return defValue;
+	if (!Convert_ParseBool(&str, &value)) return defValue;
 
 	return value;
 }
@@ -83,7 +83,7 @@ float Options_GetFloat(const char* key, float min, float max, float defValue) {
 	String str;
 	float value;
 	if (!Options_UNSAFE_Get(key, &str))       return defValue;
-	if (!Convert_TryParseFloat(&str, &value)) return defValue;
+	if (!Convert_ParseFloat(&str, &value)) return defValue;
 
 	Math_Clamp(value, min, max);
 	return value;

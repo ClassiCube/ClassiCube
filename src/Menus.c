@@ -317,8 +317,8 @@ static void Menu_HandleFontChange(struct Screen* s) {
 	Elem_HandlesMouseMove(s, Mouse_X, Mouse_Y);
 }
 
-static int Menu_Int(const String* str)          { int v; Convert_TryParseInt(str, &v); return v; }
-static float Menu_Float(const String* str)      { float v; Convert_TryParseFloat(str, &v); return v; }
+static int Menu_Int(const String* str)          { int v; Convert_ParseInt(str, &v); return v; }
+static float Menu_Float(const String* str)      { float v; Convert_ParseFloat(str, &v); return v; }
 static PackedCol Menu_HexCol(const String* str) { PackedCol v; PackedCol_TryParseHex(str, &v); return v; }
 #define Menu_ReplaceActive(screen) Gui_FreeActive(); Gui_SetActive(screen);
 
@@ -1007,7 +1007,7 @@ CC_NOINLINE static int GenLevelScreen_GetInt(struct GenLevelScreen* s, int index
 
 	v = &input->Validator;
 	if (!v->VTABLE->IsValidValue(v, &text)) return 0;
-	Convert_TryParseInt(&text, &value); return value;
+	Convert_ParseInt(&text, &value); return value;
 }
 
 CC_NOINLINE static int GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, int index) {

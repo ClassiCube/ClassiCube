@@ -164,20 +164,20 @@ int Convert_Utf8ToUnicode(Codepoint* cp, const uint8_t* data, uint32_t len);
 int Convert_UnicodeToUtf8(Codepoint cp, uint8_t* data);
 
 /* Attempts to convert the given string into an unsigned 8 bit integer. */
-CC_NOINLINE bool Convert_TryParseUInt8(const String*  str, uint8_t* value);
+CC_NOINLINE bool Convert_ParseUInt8(const String*  str, uint8_t* value);
 /* Attempts to convert the given string into an signed 16 bit integer. */
-CC_NOINLINE bool Convert_TryParseInt16(const String*  str, int16_t* value);
+CC_NOINLINE bool Convert_ParseInt16(const String*  str, int16_t* value);
 /* Attempts to convert the given string into an unsigned 16 bit integer. */
-CC_NOINLINE bool Convert_TryParseUInt16(const String* str, uint16_t* value);
+CC_NOINLINE bool Convert_ParseUInt16(const String* str, uint16_t* value);
 /* Attempts to convert the given string into an integer. */
-CC_NOINLINE bool Convert_TryParseInt(const String*    str, int* value);
+CC_NOINLINE bool Convert_ParseInt(const String*    str, int* value);
 /* Attempts to convert the given string into an unsigned 64 bit integer. */
-CC_NOINLINE bool Convert_TryParseUInt64(const String* str, uint64_t* value);
+CC_NOINLINE bool Convert_ParseUInt64(const String* str, uint64_t* value);
 /* Attempts to convert the given string into a floating point number. */
-CC_NOINLINE bool Convert_TryParseFloat(const String*  str, float* value);
+CC_NOINLINE bool Convert_ParseFloat(const String*  str, float* value);
 /* Attempts to convert the given string into a bool. */
 /* NOTE: String must case-insensitively equal "true" or "false" */
-CC_NOINLINE bool Convert_TryParseBool(const String*   str, bool* value);
+CC_NOINLINE bool Convert_ParseBool(const String*   str, bool* value);
 
 #define STRINGSBUFFER_BUFFER_DEF_SIZE 4096
 #define STRINGSBUFFER_FLAGS_DEF_ELEMS 256

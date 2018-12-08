@@ -259,7 +259,7 @@ static void WoM_CheckSendWomID(void) {
 static PackedCol WoM_ParseCol(const String* value, PackedCol defaultCol) {
 	PackedCol col;
 	int argb;
-	if (!Convert_TryParseInt(value, &argb)) return defaultCol;
+	if (!Convert_ParseInt(value, &argb)) return defaultCol;
 
 	col.A = 255;
 	col.R = (uint8_t)(argb >> 16);
@@ -292,7 +292,7 @@ static void WoM_ParseConfig(struct AsyncRequest* item) {
 			col = WoM_ParseCol(&value, Env_DefaultFogCol);
 			Env_SetFogCol(col);
 		} else if (String_CaselessEqualsConst(&key, "environment.level")) {
-			if (Convert_TryParseInt(&value, &waterLevel)) {
+			if (Convert_ParseInt(&value, &waterLevel)) {
 				Env_SetEdgeHeight(waterLevel);
 			}
 		} else if (String_CaselessEqualsConst(&key, "user.detail") && !cpe_useMessageTypes) {

@@ -36,11 +36,11 @@ static void LScreen_DrawAll(struct LScreen* s) {
 
 	for (i = 0; i < s->NumWidgets; i++) {
 		widget = s->Widgets[i];
-		widget->VTABLE->Redraw(widget);
+		widget->VTABLE->Draw(widget);
 	}
 }
 
-CC_NOINLINE static void LScreen_HandleTab(struct LScreen* s) {
+static void LScreen_HandleTab(struct LScreen* s) {
 	struct LWidget* w;
 	int dir   = Key_IsShiftPressed() ? -1 : 1;
 	int index = 0, i, j;
@@ -71,7 +71,14 @@ static void LScreen_KeyDown(struct LScreen* s, Key key) {
 		} else if (s->OnEnterWidget) {
 			s->OnEnterWidget->OnClick(s->OnEnterWidget,   Mouse_X, Mouse_Y);
 		}
+	} else if (s->SelectedWidget) {
+		s->SelectedWidget->VTABLE->OnKeyDown(s->SelectedWidget, key);
 	}
+}
+
+static void LScreen_KeyPress(struct LScreen* s, char key) {
+	if (!s->SelectedWidget) return;
+	s->SelectedWidget->VTABLE->OnKeyPress(s->SelectedWidget, key);
 }
 
 static void LScreen_MouseDown(struct LScreen* s, MouseButton btn) {
@@ -141,6 +148,7 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	s->Tick      = LScreen_NullFunc;
 	s->OnDisplay = LScreen_NullFunc;
 	s->KeyDown   = LScreen_KeyDown;
+	s->KeyPress  = LScreen_KeyPress;
 	s->MouseDown = LScreen_MouseDown;
 	s->MouseUp   = LScreen_MouseUp;
 	s->MouseMove = LScreen_MouseMove;
@@ -323,71 +331,86 @@ struct LScreen* ChooseModeScreen_MakeInstance(bool firstTime) {
 /*########################################################################################################################*
 *---------------------------------------------------------ColoursScreen---------------------------------------------------*
 *#########################################################################################################################*/
-/*struct ColoursScreen {
+static struct ColoursScreen {
 	LScreen_Layout
 	struct LButton BtnDefault, BtnBack;
 	struct LLabel LblNames[5], LblRGB[3];
 	struct LInput IptColours[5 * 3];
 	struct LWidget* _widgets[25];
-};
+} ColoursScreen_Instance;
 
-static void MakeWidgets(struct ColoursScreen* s) {
+CC_NOINLINE static void ColoursScreen_Update(struct ColoursScreen* s, int i, BitmapCol col) {
+	String tmp; char tmpBuffer[3];
+
+	String_InitArray(tmp, tmpBuffer);
+	Convert_ParseUInt8(&tmp, &col.R);
+	LInput_SetText(&s->IptColours[i + 0], &tmp, &Launcher_TextFont);
+
+	tmp.length = 0;
+	Convert_ParseUInt8(&tmp, &col.G);
+	LInput_SetText(&s->IptColours[i + 1], &tmp, &Launcher_TextFont);
+
+	tmp.length = 0;
+	Convert_ParseUInt8(&tmp, &col.B);
+	LInput_SetText(&s->IptColours[i + 2], &tmp, &Launcher_TextFont);
+}
+
+CC_NOINLINE static void ColoursScreen_UpdateAll(struct ColoursScreen* s) {
+	ColoursScreen_Update(s,  0, Launcher_BackgroundCol);
+	ColoursScreen_Update(s,  3, Launcher_ButtonBorderCol);
+	ColoursScreen_Update(s,  6, Launcher_ButtonHighlightCol);
+	ColoursScreen_Update(s,  9, Launcher_ButtonForeCol);
+	ColoursScreen_Update(s, 12, Launcher_ButtonForeActiveCol);
+}
+
+static void ColoursScreen_InitWidgets(struct ColoursScreen* s) {
 	struct LScreen* s_ = (struct LScreen*)s;
 	int i;
 	for (i = 0; i < 5 * 3; i++) {
-		LScreen_Input(s_, &s->IptColours[i], 55, false, NULL, )
+		LScreen_Input(s_, &s->IptColours[i], 55, false, NULL);
 	}
-	MakeAllRGBTriplets(false);
 
-	LScreen_Label(s_, &s->LblNames[0], "Background",
-		ANCHOR_CENTRE, ANCHOR_CENTRE, -60, -100);
-	LScreen_Label(s_, &s->LblNames[1], "Button border",
-		ANCHOR_CENTRE, ANCHOR_CENTRE, -70, -60);
-	LScreen_Label(s_, &s->LblNames[2], "Button highlight",
-		ANCHOR_CENTRE, ANCHOR_CENTRE, -80, -20);
-	LScreen_Label(s_, &s->LblNames[3], "Button",
-		ANCHOR_CENTRE, ANCHOR_CENTRE, -40, 20);
-	LScreen_Label(s_, &s->LblNames[4], "Active button",
-		ANCHOR_CENTRE, ANCHOR_CENTRE, -70, 60);
+	LScreen_Label(s_, &s->LblNames[0], "Background");
+	LScreen_Label(s_, &s->LblNames[1], "Button border");
+	LScreen_Label(s_, &s->LblNames[2], "Button highlight");
+	LScreen_Label(s_, &s->LblNames[3], "Button");
+	LScreen_Label(s_, &s->LblNames[4], "Active button");
 
-	LScreen_Label(s_, &s->LblRGB[0], "Red",
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 30, -130);
-	LScreen_Label(s_, &s->LblRGB[1], "Green",
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 95, -130);
-	LScreen_Label(s_, &s->LblRGB[2], "Blue",
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 160, -130);
+	LScreen_Label(s_, &s->LblRGB[0], "Red");
+	LScreen_Label(s_, &s->LblRGB[1], "Green");
+	LScreen_Label(s_, &s->LblRGB[2], "Blue");
 
-	LScreen_Button(s_, &s->BtnDefault, 160, 35, "Default colours",
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 120);
-	LScreen_Button(s_, &s->BtnBack, 80, 35, "Back",
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
+	LScreen_Button(s_, &s->BtnDefault, 160, 35, "Default colours");
+	LScreen_Button(s_, &s->BtnBack,    80,  35, "Back");
+
+	ColoursScreen_UpdateAll(s);
 }
 
-void  MakeAllRGBTriplets(bool force) {
-	widgetIndex = 0;
-	MakeRGBTriplet(LauncherSkin.BackgroundCol, force, -100);
-	MakeRGBTriplet(LauncherSkin.ButtonBorderCol, force, 60);
-	MakeRGBTriplet(LauncherSkin.ButtonHighlightCol, force, -20);
-	MakeRGBTriplet(LauncherSkin.ButtonForeCol, force, 20);
-	MakeRGBTriplet(LauncherSkin.ButtonForeActiveCol, force, 60);
+static void ColoursScreen_Reposition(struct ColoursScreen* s) {
+	struct LScreen* s_ = (struct LScreen*)s;
+	int i, y;
+	for (i = 0; i < 5; i++) {
+		y = -100 + 40 * i;
+		LWidget_SetLocation(&s->IptColours[i*3 + 0], ANCHOR_CENTRE, ANCHOR_CENTRE,  30, y);
+		LWidget_SetLocation(&s->IptColours[i*3 + 1], ANCHOR_CENTRE, ANCHOR_CENTRE,  95, y);
+		LWidget_SetLocation(&s->IptColours[i*3 + 2], ANCHOR_CENTRE, ANCHOR_CENTRE, 160, y);
+	}
+
+	LWidget_SetLocation(&s->LblNames[0], ANCHOR_CENTRE, ANCHOR_CENTRE, -60, -100);
+	LWidget_SetLocation(&s->LblNames[1], ANCHOR_CENTRE, ANCHOR_CENTRE, -70,  -60);
+	LWidget_SetLocation(&s->LblNames[2], ANCHOR_CENTRE, ANCHOR_CENTRE, -80,  -20);
+	LWidget_SetLocation(&s->LblNames[3], ANCHOR_CENTRE, ANCHOR_CENTRE, -40,   20);
+	LWidget_SetLocation(&s->LblNames[4], ANCHOR_CENTRE, ANCHOR_CENTRE, -70,   60);
+
+	LWidget_SetLocation(&s->LblRGB[0], ANCHOR_CENTRE, ANCHOR_CENTRE,  30, -130);
+	LWidget_SetLocation(&s->LblRGB[1], ANCHOR_CENTRE, ANCHOR_CENTRE,  95, -130);
+	LWidget_SetLocation(&s->LblRGB[2], ANCHOR_CENTRE, ANCHOR_CENTRE, 160, -130);
+
+	LWidget_SetLocation(&s->BtnDefault, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 120);
+	LWidget_SetLocation(&s->BtnBack,    ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
 }
 
-void MakeRGBTriplet(PackedCol defCol, bool force, int y) {
-	MakeInput(GetCol(defCol.R, force), 55, false, 3, null)
-		.SetLocation(ANCHOR_CENTRE, ANCHOR_CENTRE, 30, y);
-	MakeInput(GetCol(defCol.G, force), 55, false, 3, null)
-		.SetLocation(ANCHOR_CENTRE, ANCHOR_CENTRE, 95, y);
-	MakeInput(GetCol(defCol.B, force), 55, false, 3, null)
-		.SetLocation(ANCHOR_CENTRE, ANCHOR_CENTRE, 160, y);
-}
-
-string GetCol(byte col, bool force) {
-	if (force) return col.ToString();
-	Widget widget = widgets[widgetIndex];
-	return widget == null ? col.ToString() : widget.Text;
-}
-
-void Init() {
+/*void Init() {
 	base.Init();
 	view.Init();
 
@@ -403,22 +426,11 @@ void Init() {
 }
 
 void ResetColours(int x, int y) {
-	LauncherSkin.ResetToDefault();
+	Launcher_ResetSkin();
 	view.MakeAllRGBTriplets(true);
 	game.RedrawBackground();
 	Resize();
 }
-
-void Resize() {
-	view.DrawAll();
-	game.Dirty = true;
-}
-
-void Dispose() {
-	view.Dispose();
-	base.Dispose();
-}
-
 
 float colourAcc;
 void MouseWheelChanged(float delta) {
@@ -457,27 +469,25 @@ void AdjustSelectedColour(int delta) {
 }
 
 void TextChanged(InputWidget widget) {
-	bool changed = false;
 	int index = IndexOfWidget(widget);
-	if (index < 3)       changed |= Parse(0, ref LauncherSkin.BackgroundCol);
-	else if (index < 6)  changed |= Parse(3, ref LauncherSkin.ButtonBorderCol);
-	else if (index < 9)  changed |= Parse(6, ref LauncherSkin.ButtonHighlightCol);
-	else if (index < 12) changed |= Parse(9, ref LauncherSkin.ButtonForeCol);
-	else if (index < 15) changed |= Parse(12, ref LauncherSkin.ButtonForeActiveCol);
+	BitmapCol* col;
+	uint8_t r, g, b;
 
-	if (!changed) return;
-	game.RedrawBackground();
+	if (index < 3)       col = &Launcher_BackgroundCol;
+	else if (index < 6)  col = &Launcher_ButtonBorderCol;
+	else if (index < 9)  col = &Launcher_ButtonHighlightCol;
+	else if (index < 12) col = &Launcher_ButtonForeCol;
+	else                 col = &Launcher_ButtonForeActiveCol;
+
+	/* if index of G input, changes to index of R input */
+/*	index = (index / 3) * 3;
+	if (!Convert_ParseUInt8(widgets[index + 0].Text, &r)) return;
+	if (!Convert_ParseUInt8(widgets[index + 1].Text, &g)) return;
+	if (!Convert_ParseUInt8(widgets[index + 2].Text, &b)) return;
+
+	col->R = r; col->G = g; col->B = b;
+	Launcher_ResetPixels();
 	Resize();
-}
-
-bool Parse(int index, ref PackedCol dst) {
-	byte r, g, b;
-	if (!Byte.TryParse(widgets[index + 0].Text, out r)
-		|| !Byte.TryParse(widgets[index + 1].Text, out g)
-		|| !Byte.TryParse(widgets[index + 2].Text, out b))
-		return false;
-	dst.R = r; dst.G = g; dst.B = b;
-	return true;
 }*/
 
 
@@ -498,7 +508,7 @@ CC_NOINLINE static void DirectConnectScreen_SetStatus(const char* msg) {
 	Launcher_ResetArea(w->X, w->Y, w->Width, w->Height);
 
 	LLabel_SetText(w, &str, &Launcher_TextFont);
-	w->VTABLE->Redraw(w);
+	w->VTABLE->Draw(w);
 }
 
 static void DirectConnectScreen_Load(struct DirectConnectScreen* s) {
@@ -559,7 +569,7 @@ static void StartClient(void* w, int x, int y) {
 	if (!Utils_ParseIP(&ip, raw_ip)) {
 		DirectConnectScreen_SetStatus("&eInvalid ip"); return;
 	}
-	if (!Convert_TryParseUInt16(&port, &raw_port)) {
+	if (!Convert_ParseUInt16(&port, &raw_port)) {
 		DirectConnectScreen_SetStatus("&eInvalid port"); return;
 	}
 	if (!mppass->length) mppass = &defMppass;

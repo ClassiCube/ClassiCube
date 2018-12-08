@@ -1471,7 +1471,7 @@ static size_t Http_GetHeaders(char *buffer, size_t size, size_t nitems, struct A
 		tmp = String_ClearedArray(req->Etag);
 		String_AppendString(&tmp, &value);
 	} else if (String_CaselessEqualsConst(&name, "Content-Length")) {
-		Convert_TryParseInt(&value, &req->ContentLength);
+		Convert_ParseInt(&value, &req->ContentLength);
 		/* TODO: Fix when ContentLength isn't RequestSize */
 		req->ResultSize = req->ContentLength;
 	} else if (String_CaselessEqualsConst(&name, "Last-Modified")) {

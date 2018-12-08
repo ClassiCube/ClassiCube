@@ -195,7 +195,7 @@ static float HacksComp_ParseFlagFloat(const char* flagRaw, struct HacksComp* hac
 	float value;
 
 	if (!raw.length || Game_ClassicMode)      return 1.0f;
-	if (!Convert_TryParseFloat(&raw, &value)) return 1.0f;
+	if (!Convert_ParseFloat(&raw, &value)) return 1.0f;
 	return value;
 }
 
@@ -204,7 +204,7 @@ static int HacksComp_ParseFlagInt(const char* flagRaw, struct HacksComp* hacks) 
 	int value;
 
 	if (!raw.length || Game_ClassicMode)    return 1;
-	if (!Convert_TryParseInt(&raw, &value)) return 1;
+	if (!Convert_ParseInt(&raw, &value)) return 1;
 	return value;
 }
 

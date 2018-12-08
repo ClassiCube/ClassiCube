@@ -384,7 +384,7 @@ static void ResolutionCommand_Execute(const String* args, int argsCount) {
 	int width, height;
 	if (argsCount < 2) {
 		Chat_AddRaw("&e/client: &cYou didn't specify width and height");
-	} else if (!Convert_TryParseInt(&args[0], &width) || !Convert_TryParseInt(&args[1], &height)) {
+	} else if (!Convert_ParseInt(&args[0], &width) || !Convert_ParseInt(&args[1], &height)) {
 		Chat_AddRaw("&e/client: &cWidth and height must be integers.");
 	} else if (width <= 0 || height <= 0) {
 		Chat_AddRaw("&e/client: &cWidth and height must be above 0.");
@@ -538,7 +538,7 @@ static void TeleportCommand_Execute(const String* args, int argsCount) {
 		Chat_AddRaw("&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
 		return;
 	}
-	if (!Convert_TryParseFloat(&args[0], &v.X) || !Convert_TryParseFloat(&args[1], &v.Y) || !Convert_TryParseFloat(&args[2], &v.Z)) {
+	if (!Convert_ParseFloat(&args[0], &v.X) || !Convert_ParseFloat(&args[1], &v.Y) || !Convert_ParseFloat(&args[2], &v.Z)) {
 		Chat_AddRaw("&e/client teleport: &cCoordinates must be decimals");
 		return;
 	}

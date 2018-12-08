@@ -20,6 +20,7 @@ typedef void(*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 	LScreen_Func Tick; /* Repeatedly called multiple times every second. */ \
 	LScreen_Func OnDisplay; /* Called when framebuffer is about to be displayed. */ \
 	void (*KeyDown)(struct LScreen* s,   Key key); \
+	void (*KeyPress)(struct LScreen* s,  char c);  \
 	void (*MouseDown)(struct LScreen* s, MouseButton btn); \
 	void (*MouseUp)(struct LScreen* s,   MouseButton btn); \
 	void (*MouseMove)(struct LScreen* s, int deltaX, int deltaY); \

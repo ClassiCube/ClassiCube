@@ -1,15 +1,19 @@
 #ifndef CC_LWIDGETS_H
 #define CC_LWIDGETS_H
 #include "Bitmap.h"
-#include "String.h"
 #include "Constants.h"
+#include "Input.h"
 /* Describes and manages individual 2D GUI elements in the launcher.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
 struct LWidgetVTABLE {
-	/* Called to redraw contents of this widget */
-	void (*Redraw)(void* widget);
+	/* Called to draw contents of this widget */
+	void (*Draw)(void* widget);
+	/* Called when key is pressed and this widget has focus. */
+	void (*OnKeyDown)(void* widget, Key key);
+	/* Called when key is pressed and this widget has focus. */
+	void (*OnKeyPress)(void* widget, char c);
 	/* Called when mouse hovers over this widget. */
 	void (*OnHover)(void* widget);
 	/* Called when mouse moves away from this widget. */

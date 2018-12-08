@@ -1345,12 +1345,12 @@ static bool Int_ValidChar(struct MenuInputValidator* v, char c) {
 static bool Int_ValidString(struct MenuInputValidator* v, const String* s) {
 	int value;
 	if (s->length == 1 && s->buffer[0] == '-') return true; /* input is just a minus sign */
-	return Convert_TryParseInt(s, &value);
+	return Convert_ParseInt(s, &value);
 }
 
 static bool Int_ValidValue(struct MenuInputValidator* v, const String* s) {
 	int value, min = v->Meta._Int.Min, max = v->Meta._Int.Max;
-	return Convert_TryParseInt(s, &value) && min <= value && value <= max;
+	return Convert_ParseInt(s, &value) && min <= value && value <= max;
 }
 
 static struct MenuInputValidatorVTABLE IntInputValidator_VTABLE = {
@@ -1388,12 +1388,12 @@ static bool Float_ValidChar(struct MenuInputValidator* v, char c) {
 static bool Float_ValidString(struct MenuInputValidator* v, const String* s) {
 	float value;
 	if (s->length == 1 && Float_ValidChar(v, s->buffer[0])) return true;
-	return Convert_TryParseFloat(s, &value);
+	return Convert_ParseFloat(s, &value);
 }
 
 static bool Float_ValidValue(struct MenuInputValidator* v, const String* s) {
 	float value, min = v->Meta._Float.Min, max = v->Meta._Float.Max;
-	return Convert_TryParseFloat(s, &value) && min <= value && value <= max;
+	return Convert_ParseFloat(s, &value) && min <= value && value <= max;
 }
 
 static struct MenuInputValidatorVTABLE FloatInputValidator_VTABLE = {

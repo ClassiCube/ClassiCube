@@ -336,8 +336,8 @@ void Hotkeys_Init(void) {
 
 		trigger = Utils_ParseEnum(&strKey, KEY_NONE, Key_Names, Array_Elems(Key_Names));
 		if (trigger == KEY_NONE) continue; 
-		if (!Convert_TryParseUInt8(&strMods, &modifiers)) continue;
-		if (!Convert_TryParseBool(&strMore,  &more))      continue;
+		if (!Convert_ParseUInt8(&strMods, &modifiers)) continue;
+		if (!Convert_ParseBool(&strMore,  &more))      continue;
 
 		Hotkeys_Add(trigger, modifiers, &strText, more);
 	}

@@ -14,6 +14,7 @@
 #include "AsyncDownloader.h"
 
 /* TODO TODO TODO TODO TODO TODO TODO TODO FIX THESE STUBS */
+void RedrawLastInput() { }
 void Launcher_SaveSecureOpt(const char* opt, const String* data, const String* key) { }
 void Launcher_LoadSecureOpt(const char* opt, String* data, const String* key) { }
 void UpdateCheckTask_Run(void) { }
@@ -102,6 +103,10 @@ static void Launcher_KeyDown(void* obj, int key) {
 	Launcher_Screen->KeyDown(Launcher_Screen, key);
 }
 
+static void Launcher_KeyPress(void* obj, int c) {
+	Launcher_Screen->KeyPress(Launcher_Screen, c);
+}
+
 static void Launcher_MouseDown(void* obj, int btn) {
 	Launcher_Screen->MouseDown(Launcher_Screen, btn);
 }
@@ -149,6 +154,7 @@ static void Launcher_Init(void) {
 	Event_RegisterVoid(&WindowEvents_Redraw,       NULL, Launcher_ReqeustRedraw);
 
 	Event_RegisterInt(&KeyEvents_Down,          NULL, Launcher_KeyDown);
+	Event_RegisterInt(&KeyEvents_Press,         NULL, Launcher_KeyPress);
 	Event_RegisterInt(&MouseEvents_Down,        NULL, Launcher_MouseDown);
 	Event_RegisterInt(&MouseEvents_Up,          NULL, Launcher_MouseUp);
 	Event_RegisterMouseMove(&MouseEvents_Moved, NULL, Launcher_MouseMove);
@@ -171,6 +177,7 @@ static void Launcher_Free(void) {
 	Event_UnregisterVoid(&WindowEvents_Redraw,       NULL, Launcher_ReqeustRedraw);
 	
 	Event_UnregisterInt(&KeyEvents_Down,          NULL, Launcher_KeyDown);
+	Event_UnregisterInt(&KeyEvents_Press,         NULL, Launcher_KeyPress);
 	Event_UnregisterInt(&MouseEvents_Down,        NULL, Launcher_MouseDown);
 	Event_UnregisterInt(&MouseEvents_Up,          NULL, Launcher_MouseUp);
 	Event_UnregisterMouseMove(&MouseEvents_Moved, NULL, Launcher_MouseMove);
@@ -216,7 +223,7 @@ void Launcher_Run(void) {
 	} else {
 		Launcher_SetScreen(MainScreen_MakeInstance());
 	}*/
-	Launcher_SetScreen(SettingsScreen_MakeInstance());
+	Launcher_SetScreen(DirectConnectScreen_MakeInstance());
 
 	for (;;) {
 		Window_ProcessEvents();
@@ -446,7 +453,7 @@ void Launcher_ResetPixels(void) {
 *#########################################################################################################################*/
 static TimeMS lastJoin;
 bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server) {
-#ifdef CC_BUILD_WINDOWS
+#ifdef CC_BUILD_WIN
 	static String exe = String_FromConst("ClassiCube.exe");
 #else
 	static String exe = String_FromConst("ClassiCube");
@@ -456,7 +463,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 	ReturnCode res;
 	
 	now = DateTime_CurrentUTC_MS();
-	if (lastJoin + 1000 < now) return false;
+	if (lastJoin + 1000 > now) return false;
 	lastJoin = now;
 
 	/* Make sure if the client has changed some settings in the meantime, we keep the changes */
@@ -464,7 +471,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 	Launcher_ShouldExit = Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false);
 
 	/* Save resume info */
-	if (server) {
+	if (server->length) {
 		Options_Set("launcher-server",   server);
 		Options_Set("launcher-username", user);
 		Options_Set("launcher-ip",       ip);
@@ -475,7 +482,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 
 	String_InitArray(args, argsBuffer);
 	String_AppendString(&args, user);
-	if (mppass->length) String_Format3(&args, "%s %s %s", mppass, ip, port);
+	if (mppass->length) String_Format3(&args, " %s %s %s", mppass, ip, port);
 
 	res = Platform_StartProcess(&exe, &args);
 #ifdef CC_BUILD_WINDOWS

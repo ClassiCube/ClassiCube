@@ -596,24 +596,24 @@ int Convert_UnicodeToUtf8(Codepoint cp, uint8_t* data) {
 /*########################################################################################################################*
 *--------------------------------------------------Numerical conversions--------------------------------------------------*
 *#########################################################################################################################*/
-bool Convert_TryParseUInt8(const String* str, uint8_t* value) {
+bool Convert_ParseUInt8(const String* str, uint8_t* value) {
 	int tmp; 
 	*value = 0;
-	if (!Convert_TryParseInt(str, &tmp) || tmp < 0 || tmp > UInt8_MaxValue) return false;
+	if (!Convert_ParseInt(str, &tmp) || tmp < 0 || tmp > UInt8_MaxValue) return false;
 	*value = (uint8_t)tmp; return true;
 }
 
-bool Convert_TryParseInt16(const String* str, int16_t* value) {
+bool Convert_ParseInt16(const String* str, int16_t* value) {
 	int tmp; 
 	*value = 0;
-	if (!Convert_TryParseInt(str, &tmp) || tmp < Int16_MinValue || tmp > Int16_MaxValue) return false;
+	if (!Convert_ParseInt(str, &tmp) || tmp < Int16_MinValue || tmp > Int16_MaxValue) return false;
 	*value = (int16_t)tmp; return true;
 }
 
-bool Convert_TryParseUInt16(const String* str, uint16_t* value) {
+bool Convert_ParseUInt16(const String* str, uint16_t* value) {
 	int tmp; 
 	*value = 0;
-	if (!Convert_TryParseInt(str, &tmp) || tmp < 0 || tmp > UInt16_MaxValue) return false;
+	if (!Convert_ParseInt(str, &tmp) || tmp < 0 || tmp > UInt16_MaxValue) return false;
 	*value = (uint16_t)tmp; return true;
 }
 
@@ -651,7 +651,7 @@ static bool Convert_TryParseDigits(const String* str, bool* negative, char* digi
 }
 
 #define INT32_DIGITS 10
-bool Convert_TryParseInt(const String* str, int* value) {
+bool Convert_ParseInt(const String* str, int* value) {
 	bool negative;
 	char digits[INT32_DIGITS];
 	int i, compare, sum = 0;
@@ -678,7 +678,7 @@ bool Convert_TryParseInt(const String* str, int* value) {
 }
 
 #define UINT64_DIGITS 20
-bool Convert_TryParseUInt64(const String* str, uint64_t* value) {
+bool Convert_ParseUInt64(const String* str, uint64_t* value) {
 	bool negative;
 	char digits[UINT64_DIGITS];
 	int i, compare;
@@ -698,7 +698,7 @@ bool Convert_TryParseUInt64(const String* str, uint64_t* value) {
 	return true;
 }
 
-bool Convert_TryParseFloat(const String* str, float* value) {
+bool Convert_ParseFloat(const String* str, float* value) {
 	int i = 0;
 	bool negate = false;
 	double sum, whole, fract, divide = 10.0;
@@ -730,7 +730,7 @@ bool Convert_TryParseFloat(const String* str, float* value) {
 	return true;
 }
 
-bool Convert_TryParseBool(const String* str, bool* value) {
+bool Convert_ParseBool(const String* str, bool* value) {
 	if (String_CaselessEqualsConst(str, "True")) {
 		*value = true; return true;
 	}

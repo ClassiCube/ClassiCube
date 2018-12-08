@@ -222,8 +222,8 @@ bool Utils_ParseIP(const String* ip, uint8_t* data) {
 	if (count != 4) return false;
 
 	return
-		Convert_TryParseUInt8(&parts[0], &data[0]) && Convert_TryParseUInt8(&parts[1], &data[1]) &&
-		Convert_TryParseUInt8(&parts[2], &data[2]) && Convert_TryParseUInt8(&parts[3], &data[3]);
+		Convert_ParseUInt8(&parts[0], &data[0]) && Convert_ParseUInt8(&parts[1], &data[1]) &&
+		Convert_ParseUInt8(&parts[2], &data[2]) && Convert_ParseUInt8(&parts[3], &data[3]);
 }
 
 

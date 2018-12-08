@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
 			Window_ShowDialog("Failed to start", "Invalid IP");
 			Platform_Exit(1); return 1;
 		}
-		if (!Convert_TryParseUInt16(&args[3], &port)) {
+		if (!Convert_ParseUInt16(&args[3], &port)) {
 			Window_ShowDialog("Failed to start", "Invalid port");
 			Platform_Exit(1); return 1;
 		}

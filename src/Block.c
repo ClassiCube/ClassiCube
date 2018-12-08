@@ -318,7 +318,7 @@ int Block_FindID(const String* name) {
 
 int Block_Parse(const String* name) {
 	int b;
-	if (Convert_TryParseInt(name, &b) && b < BLOCK_COUNT) return b;
+	if (Convert_ParseInt(name, &b) && b < BLOCK_COUNT) return b;
 	return Block_FindID(name);
 }
 

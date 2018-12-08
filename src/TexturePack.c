@@ -188,25 +188,25 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 			Chat_Add1("&cNot enough arguments for anim: %s", &line); continue;
 		}
 
-		if (!Convert_TryParseUInt8(&parts[0], &tileX) || tileX >= ATLAS2D_TILES_PER_ROW) {
+		if (!Convert_ParseUInt8(&parts[0], &tileX) || tileX >= ATLAS2D_TILES_PER_ROW) {
 			Chat_Add1("&cInvalid anim tile X coord: %s", &line); continue;
 		}
-		if (!Convert_TryParseUInt8(&parts[1], &tileY) || tileY >= ATLAS2D_MAX_ROWS_COUNT) {
+		if (!Convert_ParseUInt8(&parts[1], &tileY) || tileY >= ATLAS2D_MAX_ROWS_COUNT) {
 			Chat_Add1("&cInvalid anim tile Y coord: %s", &line); continue;
 		}
-		if (!Convert_TryParseUInt16(&parts[2], &data.FrameX)) {
+		if (!Convert_ParseUInt16(&parts[2], &data.FrameX)) {
 			Chat_Add1("&cInvalid anim frame X coord: %s", &line); continue;
 		}
-		if (!Convert_TryParseUInt16(&parts[3], &data.FrameY)) {
+		if (!Convert_ParseUInt16(&parts[3], &data.FrameY)) {
 			Chat_Add1("&cInvalid anim frame Y coord: %s", &line); continue;
 		}
-		if (!Convert_TryParseUInt16(&parts[4], &data.FrameSize)) {
+		if (!Convert_ParseUInt16(&parts[4], &data.FrameSize)) {
 			Chat_Add1("&cInvalid anim frame size: %s", &line); continue;
 		}
-		if (!Convert_TryParseUInt16(&parts[5], &data.StatesCount)) {
+		if (!Convert_ParseUInt16(&parts[5], &data.StatesCount)) {
 			Chat_Add1("&cInvalid anim states count: %s", &line); continue;
 		}
-		if (!Convert_TryParseInt16(&parts[6], &data.TickDelay)) {
+		if (!Convert_ParseInt16(&parts[6], &data.TickDelay)) {
 			Chat_Add1("&cInvalid anim tick delay: %s", &line); continue;
 		}
 
@@ -566,7 +566,7 @@ void TextureCache_GetLastModified(const String* url, TimeMS* time) {
 	String_InitArray(entry, entryBuffer);
 	TexturePack_GetFromTags(url, &entry, &cache_lastModified);
 
-	if (entry.length && Convert_TryParseUInt64(&entry, time)) {
+	if (entry.length && Convert_ParseUInt64(&entry, time)) {
 		*time /= TEXCACHE_TICKS_PER_MS;
 	} else {
 		String_InitArray(path, pathBuffer);
