@@ -276,6 +276,7 @@ static struct LWidgetVTABLE linput_VTABLE = {
 void LInput_Init(struct LInput* w, int width, int height, const char* hintText, const FontDesc* hintFont) {
 	Widget_Reset(w);
 	w->VTABLE = &linput_VTABLE;
+	w->TabSelectable = true;
 	String_InitArray(w->Text, w->_TextBuffer);
 
 	w->BaseWidth = width;

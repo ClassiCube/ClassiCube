@@ -15,6 +15,7 @@ typedef void(*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 #define LScreen_Layout \
 	LScreen_Func Init; /* Initialises widgets and other data. */ \
 	LScreen_Func Free; /* Cleans up all native resources. */ \
+	LScreen_Func Reposition; /* Repositions the widgets in the screen. */ \
 	LScreen_Func DrawAll; /* Redraws all widgets. */ \
 	LScreen_Func Tick; /* Repeatedly called multiple times every second. */ \
 	LScreen_Func OnDisplay; /* Called when framebuffer is about to be displayed. */ \

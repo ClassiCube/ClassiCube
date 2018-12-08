@@ -53,6 +53,8 @@ void Launcher_SetScreen(struct LScreen* screen) {
 	Launcher_Screen = screen;
 
 	screen->Init(screen);
+	screen->Reposition(screen);
+	screen->DrawAll(screen);
 	/* for hovering over active button etc */
 	screen->MouseMove(screen, 0, 0);
 }
@@ -80,6 +82,7 @@ static void Launcher_OnResize(void* obj) {
 	Launcher_Framebuffer.Height = Game_Height;
 
 	Window_InitRaw(&Launcher_Framebuffer);
+	if (Launcher_Screen) Launcher_Screen->Reposition(Launcher_Screen);
 	Launcher_RedrawAll(NULL);
 }
 
@@ -213,7 +216,7 @@ void Launcher_Run(void) {
 	} else {
 		Launcher_SetScreen(MainScreen_MakeInstance());
 	}*/
-	Launcher_SetScreen(DirectConnectScreen_MakeInstance());
+	Launcher_SetScreen(SettingsScreen_MakeInstance());
 
 	for (;;) {
 		Window_ProcessEvents();
