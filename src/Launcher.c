@@ -18,7 +18,6 @@ void RedrawLastInput() { }
 void Launcher_SaveSecureOpt(const char* opt, const String* data, const String* key) { }
 void Launcher_LoadSecureOpt(const char* opt, String* data, const String* key) { }
 void UpdateCheckTask_Run(void) { }
-struct LScreen* ColoursScreen_MakeInstance(void) { return NULL; }
 struct LScreen* MainScreen_MakeInstance(void) { return NULL; }
 struct LScreen* ResourcesScreen_MakeInstance(void) { return NULL; }
 struct LScreen* ServersScreen_MakeInstance(void) { return NULL; }
@@ -50,24 +49,23 @@ void Launcher_ShowError(ReturnCode res, const char* place) {
 
 void Launcher_SetScreen(struct LScreen* screen) {
 	if (Launcher_Screen) Launcher_Screen->Free(Launcher_Screen);
-	Launcher_ResetPixels();
 	Launcher_Screen = screen;
 
 	screen->Init(screen);
 	screen->Reposition(screen);
-	screen->DrawAll(screen);
 	/* for hovering over active button etc */
 	screen->MouseMove(screen, 0, 0);
+
+	Launcher_Redraw();
 }
 
 
 /*########################################################################################################################*
 *---------------------------------------------------------Event handler---------------------------------------------------*
 *#########################################################################################################################*/
-static void Launcher_RedrawAll(void* obj) {
-	Launcher_ResetPixels();
-	if (Launcher_Screen) Launcher_Screen->DrawAll(Launcher_Screen);
-	fullRedraw = true;
+static void Launcher_MaybeRedraw(void* obj) {
+	/* Only redraw when launcher has been initialised */
+	if (Launcher_Screen) Launcher_Redraw();
 }
 
 static void Launcher_ReqeustRedraw(void* obj) {
@@ -84,7 +82,7 @@ static void Launcher_OnResize(void* obj) {
 
 	Window_InitRaw(&Launcher_Framebuffer);
 	if (Launcher_Screen) Launcher_Screen->Reposition(Launcher_Screen);
-	Launcher_RedrawAll(NULL);
+	Launcher_Redraw();
 }
 
 static bool Launcher_IsShutdown(int key) {
@@ -126,7 +124,7 @@ static void Launcher_MouseMove(void* obj, int deltaX, int deltaY) {
 static void Launcher_Display(void) {
 	Rect2D r;
 	if (pendingRedraw) {
-		Launcher_RedrawAll(NULL);
+		Launcher_Redraw();
 		pendingRedraw = false;
 	}
 
@@ -150,7 +148,7 @@ static void Launcher_Init(void) {
 
 	Event_RegisterVoid(&WindowEvents_Resized,      NULL, Launcher_OnResize);
 	Event_RegisterVoid(&WindowEvents_StateChanged, NULL, Launcher_OnResize);
-	Event_RegisterVoid(&WindowEvents_FocusChanged, NULL, Launcher_RedrawAll);
+	Event_RegisterVoid(&WindowEvents_FocusChanged, NULL, Launcher_MaybeRedraw);
 	Event_RegisterVoid(&WindowEvents_Redraw,       NULL, Launcher_ReqeustRedraw);
 
 	Event_RegisterInt(&KeyEvents_Down,          NULL, Launcher_KeyDown);
@@ -173,7 +171,7 @@ static void Launcher_Free(void) {
 	int i;
 	Event_UnregisterVoid(&WindowEvents_Resized,      NULL, Launcher_OnResize);
 	Event_UnregisterVoid(&WindowEvents_StateChanged, NULL, Launcher_OnResize);
-	Event_UnregisterVoid(&WindowEvents_FocusChanged, NULL, Launcher_RedrawAll);
+	Event_UnregisterVoid(&WindowEvents_FocusChanged, NULL, Launcher_MaybeRedraw);
 	Event_UnregisterVoid(&WindowEvents_Redraw,       NULL, Launcher_ReqeustRedraw);
 	
 	Event_UnregisterInt(&KeyEvents_Down,          NULL, Launcher_KeyDown);
@@ -203,7 +201,9 @@ void Launcher_Run(void) {
 
 	Drawer2D_Component.Init();
 	Game_UpdateClientSize();
+	Drawer2D_BitmappedText = false;
 
+	Launcher_LoadSkin();
 	Launcher_Init();
 	Launcher_TryLoadTexturePack();
 
@@ -223,7 +223,7 @@ void Launcher_Run(void) {
 	} else {
 		Launcher_SetScreen(MainScreen_MakeInstance());
 	}*/
-	Launcher_SetScreen(DirectConnectScreen_MakeInstance());
+	Launcher_SetScreen(SettingsScreen_MakeInstance());
 
 	for (;;) {
 		Window_ProcessEvents();
@@ -445,6 +445,12 @@ void Launcher_ResetPixels(void) {
 
 	Drawer2D_BitmappedText = false;
 	Launcher_Dirty = true;
+}
+
+void Launcher_Redraw(void) {
+	Launcher_ResetPixels();
+	Launcher_Screen->DrawAll(Launcher_Screen);
+	fullRedraw = true;
 }
 
 

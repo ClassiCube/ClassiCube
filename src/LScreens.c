@@ -4,6 +4,7 @@
 #include "Gui.h"
 #include "Game.h"
 #include "Drawer2D.h"
+#include "ExtMath.h"
 
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
@@ -249,9 +250,14 @@ static void UseModeEnhanced(void* w, int x, int y)   { ChooseMode_Click(false, f
 static void UseModeClassicHax(void* w, int x, int y) { ChooseMode_Click(true,  true);  }
 static void UseModeClassic(void* w, int x, int y)    { ChooseMode_Click(true,  false); }
 
-static void ChooseModeScreen_InitWidgets(struct ChooseModeScreen* s) {
-	static String titleText = String_FromConst("Choose game mode");
-	struct LScreen* s_ = (struct LScreen*)s;
+static void ChooseModeScreen_Init(struct LScreen* s_) {
+	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;
+	static String titleText    = String_FromConst("Choose game mode");
+
+	s->LblHelp.Hidden = !s->FirstTime;
+	s->BtnBack.Hidden = s->FirstTime;
+
+	if (s->NumWidgets) return;
 	s->Widgets = s->_widgets;
 	LScreen_Label(s_,  &s->LblTitle, "");
 
@@ -299,14 +305,6 @@ static void ChooseModeScreen_Reposition(struct LScreen* s_) {
 	LWidget_SetLocation(&s->BtnBack, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
 }
 
-static void ChooseModeScreen_Init(struct LScreen* s_) {
-	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;
-	if (!s->NumWidgets) ChooseModeScreen_InitWidgets(s);
-
-	s->LblHelp.Hidden = !s->FirstTime;
-	s->BtnBack.Hidden =  s->FirstTime;
-}
-
 static void ChooseModeScreen_DrawAll(struct LScreen* s_) {
 	int midX = Game_Width / 2, midY = Game_Height / 2;
 	LScreen_DrawAll(s_);
@@ -343,15 +341,15 @@ CC_NOINLINE static void ColoursScreen_Update(struct ColoursScreen* s, int i, Bit
 	String tmp; char tmpBuffer[3];
 
 	String_InitArray(tmp, tmpBuffer);
-	Convert_ParseUInt8(&tmp, &col.R);
+	String_AppendInt(&tmp, col.R);
 	LInput_SetText(&s->IptColours[i + 0], &tmp, &Launcher_TextFont);
 
 	tmp.length = 0;
-	Convert_ParseUInt8(&tmp, &col.G);
+	String_AppendInt(&tmp, col.G);
 	LInput_SetText(&s->IptColours[i + 1], &tmp, &Launcher_TextFont);
 
 	tmp.length = 0;
-	Convert_ParseUInt8(&tmp, &col.B);
+	String_AppendInt(&tmp, col.B);
 	LInput_SetText(&s->IptColours[i + 2], &tmp, &Launcher_TextFont);
 }
 
@@ -363,11 +361,88 @@ CC_NOINLINE static void ColoursScreen_UpdateAll(struct ColoursScreen* s) {
 	ColoursScreen_Update(s, 12, Launcher_ButtonForeActiveCol);
 }
 
-static void ColoursScreen_InitWidgets(struct ColoursScreen* s) {
-	struct LScreen* s_ = (struct LScreen*)s;
+float colourAcc;
+void MouseWheelChanged(float delta) {
+	//int steps = Utils.AccumulateWheelDelta(ref colourAcc, delta);
+	//AdjustSelectedColour(steps);
+}
+
+static void ColoursScreen_TextChanged(struct LInput* w) {
+	struct ColoursScreen* s = &ColoursScreen_Instance;
+	int index = LScreen_IndexOf((struct LScreen*)s, w);
+	BitmapCol* col;
+	uint8_t r, g, b;
+
+	if (index < 3)       col = &Launcher_BackgroundCol;
+	else if (index < 6)  col = &Launcher_ButtonBorderCol;
+	else if (index < 9)  col = &Launcher_ButtonHighlightCol;
+	else if (index < 12) col = &Launcher_ButtonForeCol;
+	else                 col = &Launcher_ButtonForeActiveCol;
+
+	/* if index of G input, changes to index of R input */
+	index = (index / 3) * 3;
+	if (!Convert_ParseUInt8(&s->IptColours[index + 0].Text, &r)) return;
+	if (!Convert_ParseUInt8(&s->IptColours[index + 1].Text, &g)) return;
+	if (!Convert_ParseUInt8(&s->IptColours[index + 2].Text, &b)) return;
+
+	Launcher_SaveSkin();
+	Launcher_SaveOptions = true;
+
+	col->R = r; col->G = g; col->B = b;
+	Launcher_Redraw();
+}
+
+static void ColoursScreen_AdjustSelected(struct LScreen* s, int delta) {
+	struct LInput* w;
+	int index, newCol;
+	uint8_t col;
+
+	if (!s->SelectedWidget) return;
+	index = LScreen_IndexOf(s, s->SelectedWidget);
+	if (index >= 15) return;
+
+	w = (struct LInput*)s->SelectedWidget;
+	if (!Convert_ParseUInt8(&w->Text, &col)) return;
+	newCol = col + delta;
+
+	Math_Clamp(newCol, 0, 255);
+	w->Text.length = 0;
+	String_AppendInt(&w->Text, newCol);
+
+	if (w->CaretPos >= w->Text.length) w->CaretPos = -1;
+	ColoursScreen_TextChanged(w);
+}
+
+static void ColoursScreen_KeyDown(struct LScreen* s, Key key) {
+	if (key == KEY_LEFT) {
+		ColoursScreen_AdjustSelected(s, -1);
+	} else if (key == KEY_RIGHT) {
+		ColoursScreen_AdjustSelected(s, +1);
+	} else if (key == KEY_UP) {
+		ColoursScreen_AdjustSelected(s, +10);
+	} else if (key == KEY_DOWN) {
+		ColoursScreen_AdjustSelected(s, -10);
+	} else {
+		LScreen_KeyDown(s, key);
+	}
+}
+
+static void ColoursScreen_ResetAll(void* widget, int x, int y) {
+	Launcher_ResetSkin();
+	ColoursScreen_UpdateAll(&ColoursScreen_Instance);
+	Launcher_Redraw();
+}
+
+static void ColoursScreen_Init(struct LScreen* s_) {
+	struct ColoursScreen* s = (struct ColoursScreen*)s_;
 	int i;
+
+	if (s->NumWidgets) return;
+	s->Widgets = s->_widgets;
+	
 	for (i = 0; i < 5 * 3; i++) {
 		LScreen_Input(s_, &s->IptColours[i], 55, false, NULL);
+		s->IptColours[i].TextChanged = ColoursScreen_TextChanged;
 	}
 
 	LScreen_Label(s_, &s->LblNames[0], "Background");
@@ -383,11 +458,13 @@ static void ColoursScreen_InitWidgets(struct ColoursScreen* s) {
 	LScreen_Button(s_, &s->BtnDefault, 160, 35, "Default colours");
 	LScreen_Button(s_, &s->BtnBack,    80,  35, "Back");
 
+	s->BtnDefault.OnClick = ColoursScreen_ResetAll;
+	s->BtnBack.OnClick    = SwitchToSettings;
 	ColoursScreen_UpdateAll(s);
 }
 
-static void ColoursScreen_Reposition(struct ColoursScreen* s) {
-	struct LScreen* s_ = (struct LScreen*)s;
+static void ColoursScreen_Reposition(struct LScreen* s_) {
+	struct ColoursScreen* s = (struct ColoursScreen*)s_;
 	int i, y;
 	for (i = 0; i < 5; i++) {
 		y = -100 + 40 * i;
@@ -410,85 +487,14 @@ static void ColoursScreen_Reposition(struct ColoursScreen* s) {
 	LWidget_SetLocation(&s->BtnBack,    ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
 }
 
-/*void Init() {
-	base.Init();
-	view.Init();
-
-	widgets[view.defIndex].OnClick = ResetColours;
-	widgets[view.defIndex + 1].OnClick = SwitchToSettings;
-	SetupInputHandlers();
-	for (int i = 0; i < widgets.Length; i++) {
-		InputWidget input = widgets[i] as InputWidget;
-		if (input == null) continue;
-		input.Chars.TextChanged = TextChanged;
-	}
-	Resize();
+struct LScreen* ColoursScreen_MakeInstance(void) {
+	struct ColoursScreen* s = &ColoursScreen_Instance;
+	LScreen_Reset((struct LScreen*)s);
+	s->Init       = ColoursScreen_Init;
+	s->Reposition = ColoursScreen_Reposition;
+	s->KeyDown    = ColoursScreen_KeyDown;
+	return (struct LScreen*)s;
 }
-
-void ResetColours(int x, int y) {
-	Launcher_ResetSkin();
-	view.MakeAllRGBTriplets(true);
-	game.RedrawBackground();
-	Resize();
-}
-
-float colourAcc;
-void MouseWheelChanged(float delta) {
-	int steps = Utils.AccumulateWheelDelta(ref colourAcc, delta);
-	AdjustSelectedColour(steps);
-}
-
-void KeyDown(Key key) {
-	if (key == KEY_LEFT) {
-		AdjustSelectedColour(-1);
-	} else if (key == KEY_RIGHT) {
-		AdjustSelectedColour(+1);
-	} else if (key == KEY_UP) {
-		AdjustSelectedColour(+10);
-	} else if (key == KEY_DOWN) {
-		AdjustSelectedColour(-10);
-	} else {
-		base.KeyDown(key);
-	}
-}
-
-void AdjustSelectedColour(int delta) {
-	if (curInput == null) return;
-	int index = IndexOfWidget(curInput);
-	if (index >= 15) return;
-
-	byte col;
-	if (!Byte.TryParse(curInput.Text, out col))  return;
-	int newCol = col + delta;
-
-	Utils.Clamp(ref newCol, 0, 255);
-	curInput.Text = newCol.ToString();
-	if (curInput.Chars.CaretPos >= curInput.Text.Length)
-		curInput.Chars.CaretPos = -1;
-	TextChanged(curInput);
-}
-
-void TextChanged(InputWidget widget) {
-	int index = IndexOfWidget(widget);
-	BitmapCol* col;
-	uint8_t r, g, b;
-
-	if (index < 3)       col = &Launcher_BackgroundCol;
-	else if (index < 6)  col = &Launcher_ButtonBorderCol;
-	else if (index < 9)  col = &Launcher_ButtonHighlightCol;
-	else if (index < 12) col = &Launcher_ButtonForeCol;
-	else                 col = &Launcher_ButtonForeActiveCol;
-
-	/* if index of G input, changes to index of R input */
-/*	index = (index / 3) * 3;
-	if (!Convert_ParseUInt8(widgets[index + 0].Text, &r)) return;
-	if (!Convert_ParseUInt8(widgets[index + 1].Text, &g)) return;
-	if (!Convert_ParseUInt8(widgets[index + 2].Text, &b)) return;
-
-	col->R = r; col->G = g; col->B = b;
-	Launcher_ResetPixels();
-	Resize();
-}*/
 
 
 /*########################################################################################################################*
@@ -543,7 +549,7 @@ static void DirectConnectScreen_Save(const String* user, const String* mppass, c
 	Launcher_SaveOptions = true;
 }
 
-static void StartClient(void* w, int x, int y) {
+static void DirectConnectScreen_StartClient(void* w, int x, int y) {
 	static String loopbackIp = String_FromConst("127.0.0.1");
 	static String defMppass  = String_FromConst("(none)");
 	String* user   = &DirectConnectScreen_Instance.IptUsername.Text;
@@ -579,8 +585,9 @@ static void StartClient(void* w, int x, int y) {
 	Launcher_StartGame(user, mppass, &ip, &port, &String_Empty);
 }
 
-static void DirectConnectScreen_InitWidgets(struct DirectConnectScreen* s) {
-	struct LScreen* s_ = (struct LScreen*)s;
+static void DirectConnectScreen_Init(struct LScreen* s_) {
+	struct DirectConnectScreen* s = (struct DirectConnectScreen*)s_;
+	if (s->NumWidgets) return;
 	s->Widgets = s->_widgets;
 
 	LScreen_Input(s_, &s->IptUsername, 330, false, "&gUsername..");
@@ -591,9 +598,8 @@ static void DirectConnectScreen_InitWidgets(struct DirectConnectScreen* s) {
 	LScreen_Button(s_, &s->BtnBack,     80, 35, "Back");
 	LScreen_Label(s_,  &s->LblStatus, "");
 
-	s->BtnConnect.OnClick = StartClient;
+	s->BtnConnect.OnClick = DirectConnectScreen_StartClient;
 	s->BtnBack.OnClick    = SwitchToMain;
-
 	/* Init input text from options */
 	DirectConnectScreen_Load(s);
 }
@@ -607,11 +613,6 @@ static void DirectConnectScreen_Reposition(struct LScreen* s_) {
 	LWidget_SetLocation(&s->BtnConnect, ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 20);
 	LWidget_SetLocation(&s->BtnBack,    ANCHOR_CENTRE, ANCHOR_CENTRE,  125, 20);
 	LWidget_SetLocation(&s->LblStatus,  ANCHOR_CENTRE, ANCHOR_CENTRE,    0, 70);
-}
-
-static void DirectConnectScreen_Init(struct LScreen* s_) {
-	struct DirectConnectScreen* s = (struct DirectConnectScreen*)s_;
-	if (!s->NumWidgets) DirectConnectScreen_InitWidgets(s);
 }
 
 struct LScreen* DirectConnectScreen_MakeInstance(void) {
@@ -634,8 +635,13 @@ static struct SettingsScreen {
 	struct LWidget* _widgets[7];
 } SettingsScreen_Instance;
 
-static void SettingsScreen_InitWidgets(struct SettingsScreen* s) {
-	struct LScreen* s_ = (struct LScreen*)s;
+static void SettingsScreen_Init(struct LScreen* s_) {
+	struct SettingsScreen* s = (struct SettingsScreen*)s_;
+
+	s->BtnColours.Hidden = Launcher_ClassicBackground;
+	s->LblColours.Hidden = Launcher_ClassicBackground;
+
+	if (s->NumWidgets) return;
 	s->Widgets = s->_widgets;
 
 	LScreen_Button(s_, &s->BtnUpdates, 110, 35, "Updates");
@@ -667,14 +673,6 @@ static void SettingsScreen_Reposition(struct LScreen* s_) {
 	LWidget_SetLocation(&s->LblColours, ANCHOR_CENTRE, ANCHOR_CENTRE,   65, -20);
 
 	LWidget_SetLocation(&s->BtnBack, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
-}
-
-static void SettingsScreen_Init(struct LScreen* s_) {
-	struct SettingsScreen* s = (struct SettingsScreen*)s_;
-	if (!s->NumWidgets) SettingsScreen_InitWidgets(s);
-
-	s->BtnColours.Hidden = Launcher_ClassicBackground;
-	s->LblColours.Hidden = Launcher_ClassicBackground;
 }
 
 struct LScreen* SettingsScreen_MakeInstance(void) {

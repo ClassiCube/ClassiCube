@@ -427,8 +427,8 @@ void Window_GetClipboardText(String* value) {
 			isUnicode = false;
 		}
 		if (!hGlobal) { CloseClipboard(); return; }
-		LPVOID src = GlobalLock(hGlobal);
-		DWORD size = GlobalSize(hGlobal);
+		LPVOID src  = GlobalLock(hGlobal);
+		SIZE_T size = GlobalSize(hGlobal);
 
 		/* ignore trailing NULL at end */
 		/* TODO: Verify it's always there */

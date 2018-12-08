@@ -53,10 +53,12 @@ void Launcher_SaveSkin(void);
 /* Attempts to load font and terrain from texture pack. */
 void Launcher_TryLoadTexturePack(void);
 /* Redraws all pixels with default background. */
-/* NOTE: Also draws titlebar at top, if active screen permits it. */
+/* NOTE: Also draws titlebar at top, if current screen permits it. */
 void Launcher_ResetPixels(void);
 /* Redraws the specified region with the background pixels. */
 void Launcher_ResetArea(int x, int y, int width, int height);
+/* Resets pixels to default, then draws widgets of current screen over it. */
+void Launcher_Redraw(void);
 
 /* Sets currently active screen/menu, freeing old one. */
 void Launcher_SetScreen(struct LScreen* screen);

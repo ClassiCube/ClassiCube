@@ -22,22 +22,6 @@ void LWidget_CalcPosition(void* widget) {
 	w->Y = Gui_CalcPos(w->VerAnchor, w->YOffset, w->Height, Game_Height);
 }
 
-void LWidget_Reset(void* widget) {
-	struct LWidget* w = widget;
-	w->Hovered = false;
-	w->Selected = false;
-	w->Hidden  = false;
-	w->X = 0; w->Y = 0;
-	w->Width = 0; w->Height = 0;
-	w->HorAnchor = ANCHOR_MIN;
-	w->VerAnchor = ANCHOR_MIN;
-	w->XOffset = 0; w->YOffset = 0;
-
-	w->TabSelectable = false;
-	w->OnClick = NULL;
-	w->VTABLE  = NULL;
-}
-
 
 /*########################################################################################################################*
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
@@ -135,7 +119,6 @@ static struct LWidgetVTABLE lbutton_VTABLE = {
 	NULL, NULL                       /* Select */
 };
 void LButton_Init(struct LButton* w, int width, int height) {
-	Widget_Reset(w);
 	w->VTABLE = &lbutton_VTABLE;
 	w->TabSelectable = true;
 	w->Width  = width; w->Height = height;
@@ -304,7 +287,6 @@ static struct LWidgetVTABLE linput_VTABLE = {
 	LInput_Redraw, LInput_Redraw    /* Select */
 };
 void LInput_Init(struct LInput* w, int width, int height, const char* hintText, const FontDesc* hintFont) {
-	Widget_Reset(w);
 	w->VTABLE = &linput_VTABLE;
 	w->TabSelectable = true;
 	String_InitArray(w->Text, w->_TextBuffer);
@@ -485,7 +467,6 @@ static struct LWidgetVTABLE llabel_VTABLE = {
 	NULL, NULL  /* Select */
 };
 void LLabel_Init(struct LLabel* w) {
-	Widget_Reset(w);
 	w->VTABLE = &llabel_VTABLE;
 	String_InitArray(w->Text, w->_TextBuffer);
 }
@@ -553,7 +534,6 @@ static struct LWidgetVTABLE lslider_VTABLE = {
 	NULL, NULL  /* Select */
 };
 void LSlider_Init(struct LSlider* w, int width, int height) {
-	Widget_Reset(w);
 	w->VTABLE = &lslider_VTABLE;
 	w->Width  = width; w->Height = height;
 	w->MaxValue = 100;

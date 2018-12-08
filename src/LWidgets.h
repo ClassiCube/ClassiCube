@@ -41,7 +41,6 @@ struct LWidgetVTABLE {
 struct LWidget { LWidget_Layout };
 void LWidget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset);
 void LWidget_CalcPosition(void* widget);
-void LWidget_Reset(void* widget);
 
 struct LButton {
 	LWidget_Layout
