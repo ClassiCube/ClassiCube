@@ -451,7 +451,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 
 	for (yy = 0; yy < dstHeight; yy++) {
 		dstY = y + (yy + yPadding);
-		if (dstY >= bmp->Height) break;
+		if ((unsigned)dstY >= (unsigned)bmp->Height) continue;
 
 		fontY  = 0 + yy * Drawer2D_TileSize / dstHeight;
 		dstRow = Bitmap_GetRow(bmp, dstY);
@@ -471,7 +471,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 				if (!src.A) continue;
 
 				dstX = x + xx;
-				if (dstX >= bmp->Width) break;
+				if ((unsigned)dstX >= (unsigned)bmp->Width) continue;
 
 				dst.B = src.B * col.C.B / 255;
 				dst.G = src.G * col.C.G / 255;

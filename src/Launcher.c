@@ -14,7 +14,6 @@
 #include "AsyncDownloader.h"
 
 /* TODO TODO TODO TODO TODO TODO TODO TODO FIX THESE STUBS */
-void RedrawLastInput() { }
 void Launcher_SaveSecureOpt(const char* opt, const String* data, const String* key) { }
 void Launcher_LoadSecureOpt(const char* opt, String* data, const String* key) { }
 void UpdateCheckTask_Run(void) { }
@@ -117,6 +116,10 @@ static void Launcher_MouseMove(void* obj, int deltaX, int deltaY) {
 	Launcher_Screen->MouseMove(Launcher_Screen, deltaX, deltaY);
 }
 
+static void Launcher_MouseWheel(void* obj, float delta) {
+	Launcher_Screen->MouseWheel(Launcher_Screen, delta);
+}
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------------Main body-----------------------------------------------------*
@@ -156,6 +159,7 @@ static void Launcher_Init(void) {
 	Event_RegisterInt(&MouseEvents_Down,        NULL, Launcher_MouseDown);
 	Event_RegisterInt(&MouseEvents_Up,          NULL, Launcher_MouseUp);
 	Event_RegisterMouseMove(&MouseEvents_Moved, NULL, Launcher_MouseMove);
+	Event_RegisterFloat(&MouseEvents_Wheel,     NULL, Launcher_MouseWheel);
 
 	Font_Make(&logoFont,           &Drawer2D_FontName, 32, FONT_STYLE_NORMAL);
 	Font_Make(&Launcher_TitleFont, &Drawer2D_FontName, 16, FONT_STYLE_BOLD);
@@ -179,6 +183,7 @@ static void Launcher_Free(void) {
 	Event_UnregisterInt(&MouseEvents_Down,        NULL, Launcher_MouseDown);
 	Event_UnregisterInt(&MouseEvents_Up,          NULL, Launcher_MouseUp);
 	Event_UnregisterMouseMove(&MouseEvents_Moved, NULL, Launcher_MouseMove);
+	Event_UnregisterFloat(&MouseEvents_Wheel,     NULL, Launcher_MouseWheel);
 
 	for (i = 0; i < FetchFlagsTask.NumDownloaded; i++) {
 		Mem_Free(FetchFlagsTask.Bitmaps[i].Scan0);

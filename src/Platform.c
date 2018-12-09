@@ -1040,12 +1040,12 @@ static void Platform_GrayscaleGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, B
 	int xx, yy;
 
 	for (yy = 0; yy < img->rows; yy++) {
-		if ((y + yy) < 0 || (y + yy) >= bmp->Height) continue;
+		if ((unsigned)(y + yy) >= (unsigned)bmp->Height) continue;
 		src = img->buffer + (yy * img->pitch);
 		dst = Bitmap_GetRow(bmp, y + yy) + x;
 
-		for (xx = 0; xx < img->width; xx++, src++) {
-			if ((x + xx) < 0 || (x + xx) >= bmp->Width) continue;
+		for (xx = 0; xx < img->width; xx++, src++, dst++) {
+			if ((unsigned)(x + xx) >= (unsigned)bmp->Width) continue;
 			intensity = *src; invIntensity = UInt8_MaxValue - intensity;
 
 			dst->B = ((col.B * intensity) >> 8) + ((dst->B * invIntensity) >> 8);
@@ -1053,7 +1053,6 @@ static void Platform_GrayscaleGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, B
 			dst->R = ((col.R * intensity) >> 8) + ((dst->R * invIntensity) >> 8);
 			/*dst->A = ((col.A * intensity) >> 8) + ((dst->A * invIntensity) >> 8);*/
 			dst->A = intensity + ((dst->A * invIntensity) >> 8);
-			dst++;
 		}
 	}
 }
@@ -1065,12 +1064,12 @@ static void Platform_BlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, 
 	int xx, yy;
 
 	for (yy = 0; yy < img->rows; yy++) {
-		if ((y + yy) < 0 || (y + yy) >= bmp->Height) continue;
+		if ((unsigned)(y + yy) >= (unsigned)bmp->Height) continue;
 		src = img->buffer + (yy * img->pitch);
 		dst = Bitmap_GetRow(bmp, y + yy) + x;
 
-		for (xx = 0; xx < img->width; xx++) {
-			if ((x + xx) < 0 || (x + xx) >= bmp->Width) continue;
+		for (xx = 0; xx < img->width; xx++, dst++) {
+			if ((unsigned)(x + xx) >= (unsigned)bmp->Width) continue;
 			intensity = src[xx >> 3];
 
 			if (intensity & (1 << (7 - (xx & 7)))) {
@@ -1078,7 +1077,6 @@ static void Platform_BlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, 
 				/*dst->A = col.A*/
 				dst->A = 255;
 			}
-			dst++;
 		}
 	}
 }

@@ -22,6 +22,19 @@ void LWidget_CalcPosition(void* widget) {
 	w->Y = Gui_CalcPos(w->VerAnchor, w->YOffset, w->Height, Game_Height);
 }
 
+void LWidget_Draw(void* widget) {
+	struct LWidget* w = widget;
+	w->VTABLE->Draw(w);
+	w->Last.X = w->X; w->Last.Width  = w->Width;
+	w->Last.Y = w->Y; w->Last.Height = w->Height;
+}
+
+void LWidget_Redraw(void* widget) {
+	struct LWidget* w = widget;
+	Launcher_ResetArea(w->Last.X, w->Last.Y, w->Last.Width, w->Last.Height);
+	LWidget_Draw(w);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
@@ -257,26 +270,27 @@ static void LInput_Redraw(void* widget) {
 static void LInput_KeyDown(void* widget, Key key) {
 	struct LInput* w = widget;
 	if (key == KEY_BACKSPACE && LInput_Backspace(w)) {
-		RedrawLastInput();
+		LWidget_Redraw(w);
 	} else if (key == KEY_DELETE && LInput_Delete(w)) {
-		RedrawLastInput();
+		LWidget_Redraw(w);
 	} else if (key == KEY_C && Key_IsControlPressed()) {
 		if (w->Text.length) Window_SetClipboardText(&w->Text);
 	} else if (key == KEY_V && Key_IsControlPressed()) {
-		if (LInput_CopyFromClipboard(w)) RedrawLastInput();
+		if (LInput_CopyFromClipboard(w)) LWidget_Redraw(w);
 	} else if (key == KEY_ESCAPE) {
-		if (LInput_Clear(w)) RedrawLastInput();
+		if (LInput_Clear(w)) LWidget_Redraw(w);
 	} else if (key == KEY_LEFT) {
 		LInput_AdvanceCaretPos(w, false);
-		RedrawLastInput();
+		LWidget_Redraw(w);
 	} else if (key == KEY_RIGHT) {
 		LInput_AdvanceCaretPos(w, true);
-		RedrawLastInput();
+		LWidget_Redraw(w);
 	}
 }
 
-static void LInput_KeyChar(void* w, char c) {
-	LInput_Append((struct LInput*)w, c);
+static void LInput_KeyChar(void* widget, char c) {
+	struct LInput* w = widget;
+	if (LInput_Append(w, c)) LWidget_Redraw(w);
 }
 
 static struct LWidgetVTABLE linput_VTABLE = {

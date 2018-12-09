@@ -36,8 +36,7 @@ static void LScreen_DrawAll(struct LScreen* s) {
 	int i;
 
 	for (i = 0; i < s->NumWidgets; i++) {
-		widget = s->Widgets[i];
-		widget->VTABLE->Draw(widget);
+		LWidget_Draw(s->Widgets[i]);
 	}
 }
 
@@ -111,6 +110,7 @@ static void LScreen_MouseMove(struct LScreen* s, int deltaX, int deltaY) {
 	if (prev) s->UnhoverWidget(s, prev);
 	if (over) s->HoverWidget(s,   over);
 }
+static void LScreen_MouseWheel(struct LScreen* s, float delta) { }
 
 static void LScreen_HoverWidget(struct LScreen* s, struct LWidget* w) {
 	if (!w) return;
@@ -145,14 +145,15 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 
 	s->Init = NULL; /* screens should always override this */
 	s->Free = LScreen_NullFunc;
-	s->DrawAll   = LScreen_DrawAll;
-	s->Tick      = LScreen_NullFunc;
-	s->OnDisplay = LScreen_NullFunc;
-	s->KeyDown   = LScreen_KeyDown;
-	s->KeyPress  = LScreen_KeyPress;
-	s->MouseDown = LScreen_MouseDown;
-	s->MouseUp   = LScreen_MouseUp;
-	s->MouseMove = LScreen_MouseMove;
+	s->DrawAll    = LScreen_DrawAll;
+	s->Tick       = LScreen_NullFunc;
+	s->OnDisplay  = LScreen_NullFunc;
+	s->KeyDown    = LScreen_KeyDown;
+	s->KeyPress   = LScreen_KeyPress;
+	s->MouseDown  = LScreen_MouseDown;
+	s->MouseUp    = LScreen_MouseUp;
+	s->MouseMove  = LScreen_MouseMove;
+	s->MouseWheel = LScreen_MouseWheel;
 	s->HoverWidget    = LScreen_HoverWidget;
 	s->UnhoverWidget  = LScreen_UnhoverWidget;
 	s->SelectWidget   = LScreen_SelectWidget;
@@ -335,6 +336,7 @@ static struct ColoursScreen {
 	struct LLabel LblNames[5], LblRGB[3];
 	struct LInput IptColours[5 * 3];
 	struct LWidget* _widgets[25];
+	float ColourAcc;
 } ColoursScreen_Instance;
 
 CC_NOINLINE static void ColoursScreen_Update(struct ColoursScreen* s, int i, BitmapCol col) {
@@ -359,12 +361,6 @@ CC_NOINLINE static void ColoursScreen_UpdateAll(struct ColoursScreen* s) {
 	ColoursScreen_Update(s,  6, Launcher_ButtonHighlightCol);
 	ColoursScreen_Update(s,  9, Launcher_ButtonForeCol);
 	ColoursScreen_Update(s, 12, Launcher_ButtonForeActiveCol);
-}
-
-float colourAcc;
-void MouseWheelChanged(float delta) {
-	//int steps = Utils.AccumulateWheelDelta(ref colourAcc, delta);
-	//AdjustSelectedColour(steps);
 }
 
 static void ColoursScreen_TextChanged(struct LInput* w) {
@@ -413,6 +409,12 @@ static void ColoursScreen_AdjustSelected(struct LScreen* s, int delta) {
 	ColoursScreen_TextChanged(w);
 }
 
+static void ColoursScreen_MouseWheel(struct LScreen* s_, float delta) {
+	struct ColoursScreen* s = (struct ColoursScreen*)s_;
+	int steps = Utils_AccumulateWheelDelta(&s->ColourAcc, delta);
+	ColoursScreen_AdjustSelected(s_, steps);
+}
+
 static void ColoursScreen_KeyDown(struct LScreen* s, Key key) {
 	if (key == KEY_LEFT) {
 		ColoursScreen_AdjustSelected(s, -1);
@@ -437,6 +439,7 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 	struct ColoursScreen* s = (struct ColoursScreen*)s_;
 	int i;
 
+	s->ColourAcc = 0;
 	if (s->NumWidgets) return;
 	s->Widgets = s->_widgets;
 	
@@ -493,6 +496,7 @@ struct LScreen* ColoursScreen_MakeInstance(void) {
 	s->Init       = ColoursScreen_Init;
 	s->Reposition = ColoursScreen_Reposition;
 	s->KeyDown    = ColoursScreen_KeyDown;
+	s->MouseWheel = ColoursScreen_MouseWheel;
 	return (struct LScreen*)s;
 }
 
@@ -511,10 +515,9 @@ static struct DirectConnectScreen {
 CC_NOINLINE static void DirectConnectScreen_SetStatus(const char* msg) {
 	String str = String_FromReadonly(msg);
 	struct LLabel* w = &DirectConnectScreen_Instance.LblStatus;
-	Launcher_ResetArea(w->X, w->Y, w->Width, w->Height);
 
 	LLabel_SetText(w, &str, &Launcher_TextFont);
-	w->VTABLE->Draw(w);
+	LWidget_Redraw(w);
 }
 
 static void DirectConnectScreen_Load(struct DirectConnectScreen* s) {

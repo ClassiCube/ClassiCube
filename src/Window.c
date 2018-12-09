@@ -340,6 +340,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		return 0;
 
 	case WM_KILLFOCUS:
+		/* TODO: Keep track of keyboard when focus is lost */
 		Key_Clear();
 		break;
 
@@ -1274,6 +1275,8 @@ void Window_ProcessEvents(void) {
 			if (Window_Focused != wasFocused) {
 				Event_RaiseVoid(&WindowEvents_FocusChanged);
 			}
+			/* TODO: Keep track of keyboard when focus is lost */
+			if (!Window_Focused) Key_Clear();
 			break;
 
 		case MappingNotify:

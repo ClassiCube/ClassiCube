@@ -37,10 +37,11 @@ static bool Json_ConsumeConstant(struct JsonContext* ctx, String* value) {
 }
 
 static int Json_ConsumeToken(struct JsonContext* ctx) {
+	char c;
 	for (; ctx->Left && Json_IsWhitespace(*ctx->Cur); ) { JsonContext_Consume(ctx, 1); }
 	if (!ctx->Left) return TOKEN_NONE;
 
-	char c = *ctx->Cur;
+	c = *ctx->Cur;
 	if (c == '{' || c == '}' || c == '[' || c == ']' || c == ',' || c == '"' || c == ':') {
 		JsonContext_Consume(ctx, 1); return c;
 	}
