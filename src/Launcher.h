@@ -6,6 +6,11 @@
 	Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 struct LScreen;
+#ifdef CC_BUILD_WIN
+#define GAME_EXE_NAME "ClassiCube.exe"
+#else
+#define GAME_EXE_NAME "ClassiCube"
+#endif
 
 /* Currently active screen/menu. */
 extern struct LScreen* Launcher_Screen;
@@ -28,8 +33,6 @@ extern bool Launcher_ShouldExit;
 extern bool Launcher_ShouldUpdate;
 /* Whether options should be saved on closing launcher. */
 extern bool Launcher_SaveOptions;
-/* Time which updated executable's "modified" time should be set to. */
-extern TimeMS Launcher_PatchTime;
 
 /* Base colour of pixels before any widgets are drawn. */
 extern BitmapCol Launcher_BackgroundCol;

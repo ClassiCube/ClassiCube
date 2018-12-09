@@ -13,9 +13,12 @@ struct JsonContext {
 	bool Failed;   /* Whether there was an error parsing the JSON. */
 	String CurKey; /* Key/Name of current member */
 	
-	void (*OnNewArray)(void);       /* Invoked when start of an array is read.  */
-	void (*OnNewObject)(void);      /* Invoked when start of an object is read. */
-	void (*OnValue)(String* value); /* Invoked on each member value in an object/array. */
+	/* Invoked when start of an array is read. */
+	void (*OnNewArray)(struct JsonContext* ctx);        
+	/* Invoked when start of an object is read. */
+	void (*OnNewObject)(struct JsonContext* ctx);        
+	/* Invoked on each member value in an object/array. */
+	void (*OnValue)(struct JsonContext* ctx, const String* v); 
 	String _tmp; /* temp value used for reading String values */
 	char _tmpBuffer[STRING_SIZE];
 };
@@ -39,14 +42,13 @@ struct LWebTask {
 	bool Working;   /* Whether the task is currently in progress, or is scheduled to be. */
 	bool Success;   /* Whether the task completed successfully. */
 	ReturnCode Res;
+	int Status;
 	
 	String Identifier; /* Unique identifier for this web task. */
 	String URL;        /* URL this task is downloading from/uploading to. */
 	TimeMS Start;      /* Point in time this task was started at. */
-	/* Function called to begin downloading/uploading. */
-	void (*Begin)(struct LWebTask* task);
 	/* Called when task successfully downloaded/uploaded data. */
-	void (*Handle)(struct LWebTask* task, uint8_t* data, uint32_t len);
+	void (*Handle)(uint8_t* data, uint32_t len);
 };
 void LWebTask_Tick(struct LWebTask* task);
 
@@ -80,25 +82,25 @@ extern struct FetchServersData {
 void FetchServersTask_Run(void);
 
 
-extern struct UpdateCheckTaskData {
+extern struct CheckUpdateData {
 	struct LWebTask Base;
 	/* Timestamp latest commit/dev build and release were at. */
-	TimeMS DevTimestamp, ReleaseTimestamp;
+	TimeMS DevTimestamp, RelTimestamp;
 	/* Version of latest release. */
 	String LatestRelease;
-} UpdateCheckTask; /* TODO: Work out the JSON for this.. */
-void UpdateCheckTask_Run(void);
+} CheckUpdateTask; /* TODO: Work out the JSON for this.. */
+void CheckUpdateTask_Run(void);
 
 
-extern struct UpdateDownloadTaskData {
+extern struct FetchUpdateData {
 	struct LWebTask Base;
 	uint8_t* Data; /* The raw downloaded executable. */
 	uint32_t Size; /* Size of data in bytes. */
-} UpdateDownloadTask;
-void UpdateDownloadTask_Run(const String* file);
+} FetchUpdateTask;
+void FetchUpdateTask_Run(bool release, bool d3d9);
 
 
-extern struct FetchFlagsTaskData {
+extern struct FetchFlagsData {
 	struct LWebTask Base;
 	int NumDownloaded; /* Number of flags that have been downloaded. */
 	Bitmap* Bitmaps;   /* Raw pixels for each downloaded flag. */

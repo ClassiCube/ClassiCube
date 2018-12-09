@@ -52,8 +52,8 @@ struct LButton {
 	Size2D _TextSize;
 	char _TextBuffer[STRING_SIZE];
 };
-CC_NOINLINE void LButton_Init(struct LButton* w, int width, int height);
-CC_NOINLINE void LButton_SetText(struct LButton* w, const String* text, const FontDesc* font);
+CC_NOINLINE void LButton_Init(struct LButton* w, const FontDesc* font, int width, int height);
+CC_NOINLINE void LButton_SetText(struct LButton* w, const String* text);
 
 struct LInput;
 struct LInput {
@@ -77,8 +77,8 @@ struct LInput {
 	int _TextHeight;
 	char _TextBuffer[STRING_SIZE];
 };
-CC_NOINLINE void LInput_Init(struct LInput* w, int width, int height, const char* hintText, const FontDesc* hintFont);
-CC_NOINLINE void LInput_SetText(struct LInput* w, const String* text, const FontDesc* font);
+CC_NOINLINE void LInput_Init(struct LInput* w, const FontDesc* font, int width, int height, const char* hintText, const FontDesc* hintFont);
+CC_NOINLINE void LInput_SetText(struct LInput* w, const String* text);
 CC_NOINLINE Rect2D LInput_MeasureCaret(struct LInput* w);
 CC_NOINLINE void LInput_AdvanceCaretPos(struct LInput* w, bool forwards);
 CC_NOINLINE void LInput_SetCaretToCursor(struct LInput* w, int x, int y);
@@ -101,8 +101,8 @@ struct LLabel {
 	Size2D _TextSize;
 	char _TextBuffer[STRING_SIZE];
 };
-CC_NOINLINE void LLabel_Init(struct LLabel* w);
-CC_NOINLINE void LLabel_SetText(struct LLabel* w, const String* text, const FontDesc* font);
+CC_NOINLINE void LLabel_Init(struct LLabel* w, const FontDesc* font);
+CC_NOINLINE void LLabel_SetText(struct LLabel* w, const String* text);
 
 /* Represents a slider bar that may or may not be modifiable by the user. */
 struct LSlider {

@@ -103,7 +103,7 @@ static void LButton_DrawHighlight(struct LButton* w) {
 	}
 }
 
-static void LButton_Redraw(void* widget) {
+static void LButton_Draw(void* widget) {
 	struct DrawTextArgs args;
 	struct LButton* w = widget;
 	int xOffset, yOffset;
@@ -126,24 +126,23 @@ static void LButton_Redraw(void* widget) {
 }
 
 static struct LWidgetVTABLE lbutton_VTABLE = {
-	LButton_Redraw, 
-	NULL, NULL,                      /* Key    */
-	LButton_Redraw, LButton_Redraw,  /* Hover  */
-	NULL, NULL                       /* Select */
+	LButton_Draw, 
+	NULL, NULL,                 /* Key    */
+	LButton_Draw, LButton_Draw, /* Hover  */
+	NULL, NULL                  /* Select */
 };
-void LButton_Init(struct LButton* w, int width, int height) {
+void LButton_Init(struct LButton* w, const FontDesc* font, int width, int height) {
 	w->VTABLE = &lbutton_VTABLE;
 	w->TabSelectable = true;
+	w->Font   = *font;
 	w->Width  = width; w->Height = height;
 	String_InitArray(w->Text, w->_TextBuffer);
 }
 
-void LButton_SetText(struct LButton* w, const String* text, const FontDesc* font) {
+void LButton_SetText(struct LButton* w, const String* text) {
 	struct DrawTextArgs args;
-	w->Font = *font;
 	String_Copy(&w->Text, text);
-
-	DrawTextArgs_Make(&args, text, font, true);
+	DrawTextArgs_Make(&args, text, &w->Font, true);
 	w->_TextSize = Drawer2D_MeasureText(&args);
 }
 
@@ -238,7 +237,7 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 	}
 }
 
-static void LInput_Redraw(void* widget) {
+static void LInput_Draw(void* widget) {
 	String text; char textBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 	Size2D size;
@@ -294,16 +293,17 @@ static void LInput_KeyChar(void* widget, char c) {
 }
 
 static struct LWidgetVTABLE linput_VTABLE = {
-	LInput_Redraw, 
+	LInput_Draw, 
 	LInput_KeyDown, LInput_KeyChar, /* Key    */
 	NULL, NULL,                     /* Hover  */
 	/* TODO: Don't redraw whole thing, just the outer border */
-	LInput_Redraw, LInput_Redraw    /* Select */
+	LInput_Draw, LInput_Draw        /* Select */
 };
-void LInput_Init(struct LInput* w, int width, int height, const char* hintText, const FontDesc* hintFont) {
+void LInput_Init(struct LInput* w, const FontDesc* font, int width, int height, const char* hintText, const FontDesc* hintFont) {
 	w->VTABLE = &linput_VTABLE;
 	w->TabSelectable = true;
 	String_InitArray(w->Text, w->_TextBuffer);
+	w->Font  = *font;
 
 	w->BaseWidth = width;
 	w->Width = width; w->Height = height;
@@ -313,14 +313,12 @@ void LInput_Init(struct LInput* w, int width, int height, const char* hintText, 
 	w->HintText = hintText;
 }
 
-void LInput_SetText(struct LInput* w, const String* text_, const FontDesc* font) {
+void LInput_SetText(struct LInput* w, const String* text_) {
 	String text; char textBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 	Size2D size;
 
 	String_Copy(&w->Text, text_);
-	w->Font = *font;
-
 	String_InitArray(text, textBuffer);
 	LInput_GetText(w, &text);
 	DrawTextArgs_Make(&args, &text, &w->Font, true);
@@ -464,7 +462,7 @@ bool LInput_CopyFromClipboard(struct LInput* w) {
 /*########################################################################################################################*
 *------------------------------------------------------LabelWidget--------------------------------------------------------*
 *#########################################################################################################################*/
-static void LLabel_Redraw(void* widget) {
+static void LLabel_Draw(void* widget) {
 	struct DrawTextArgs args;
 	struct LLabel* w = widget;
 	if (w->Hidden) return;
@@ -475,20 +473,20 @@ static void LLabel_Redraw(void* widget) {
 }
 
 static struct LWidgetVTABLE llabel_VTABLE = {
-	LLabel_Redraw, 
+	LLabel_Draw, 
 	NULL, NULL, /* Key    */
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LLabel_Init(struct LLabel* w) {
+void LLabel_Init(struct LLabel* w, const FontDesc* font) {
 	w->VTABLE = &llabel_VTABLE;
 	String_InitArray(w->Text, w->_TextBuffer);
+	w->Font  = *font;
 }
 
-void LLabel_SetText(struct LLabel* w, const String* text, const FontDesc* font) {
+void LLabel_SetText(struct LLabel* w, const String* text) {
 	struct DrawTextArgs args;
 	Size2D size;
-	w->Font = *font;
 	String_Copy(&w->Text, text);
 
 	DrawTextArgs_Make(&args, &w->Text, &w->Font, true);
@@ -531,7 +529,7 @@ static void LSlider_DrawBox(struct LSlider* w) {
 					  w->X, w->Y + (w->Height / 2), w->Width, w->Height);
 }
 
-static void LSlider_Redraw(void* widget) {
+static void LSlider_Draw(void* widget) {
 	struct LSlider* w = widget;
 	LSlider_DrawBoxBounds(w);
 	LSlider_DrawBox(w);
@@ -542,7 +540,7 @@ static void LSlider_Redraw(void* widget) {
 }
 
 static struct LWidgetVTABLE lslider_VTABLE = {
-	LSlider_Redraw, 
+	LSlider_Draw, 
 	NULL, NULL, /* Key    */
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */

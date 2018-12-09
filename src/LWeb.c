@@ -102,7 +102,7 @@ static void Json_ConsumeObject(struct JsonContext* ctx) {
 	char keyBuffer[STRING_SIZE];
 	String value, oldKey = ctx->CurKey;
 	int token;
-	ctx->OnNewObject();
+	ctx->OnNewObject(ctx);
 
 	while (true) {
 		token = Json_ConsumeToken(ctx);
@@ -120,7 +120,7 @@ static void Json_ConsumeObject(struct JsonContext* ctx) {
 		if (token == TOKEN_NONE) { ctx->Failed = true; return; }
 
 		value = Json_ConsumeValue(token, ctx);
-		ctx->OnValue(&value);
+		ctx->OnValue(ctx, &value);
 		ctx->CurKey = oldKey;
 	}
 }
@@ -128,7 +128,7 @@ static void Json_ConsumeObject(struct JsonContext* ctx) {
 static void Json_ConsumeArray(struct JsonContext* ctx) {
 	String value;
 	int token;
-	ctx->OnNewArray();
+	ctx->OnNewArray(ctx);
 
 	while (true) {
 		token = Json_ConsumeToken(ctx);
@@ -137,7 +137,7 @@ static void Json_ConsumeArray(struct JsonContext* ctx) {
 
 		if (token == TOKEN_NONE) { ctx->Failed = true; return; }
 		value = Json_ConsumeValue(token, ctx);
-		ctx->OnValue(&value);
+		ctx->OnValue(ctx, &value);
 	}
 }
 
@@ -155,8 +155,8 @@ static String Json_ConsumeValue(int token, struct JsonContext* ctx) {
 	return String_Empty;
 }
 
-static void Json_NullOnNew(void) { }
-static void Json_NullOnValue(String* value) { }
+static void Json_NullOnNew(struct JsonContext* ctx) { }
+static void Json_NullOnValue(struct JsonContext* ctx, const String* v) { }
 void Json_Init(struct JsonContext* ctx, String* str) {
 	ctx->Cur    = str->buffer;
 	ctx->Left   = str->length;
@@ -185,12 +185,9 @@ static void LWebTask_Reset(struct LWebTask* task) {
 	task->Completed = false;
 	task->Working   = true;
 	task->Success   = false;
-	task->Start = DateTime_CurrentUTC_MS();
-}
-
-static void LWebTask_StartAsync(struct LWebTask* task) {
-	LWebTask_Reset(task);
-	task->Begin(task);
+	task->Start     = DateTime_CurrentUTC_MS();
+	task->Res       = 0;
+	task->Status    = 0;
 }
 
 void LWebTask_Tick(struct LWebTask* task) {
@@ -202,9 +199,13 @@ void LWebTask_Tick(struct LWebTask* task) {
 	delta = (int)(DateTime_CurrentUTC_MS() - task->Start);
 	Platform_Log2("%s took %i", &task->Identifier, &delta);
 
+	task->Res    = req.Result;
+	task->Status = req.StatusCode;
+
+	task->Working   = false;
 	task->Completed = true;
 	task->Success   = req.ResultData && req.ResultSize;
-	if (task->Success) task->Handle(task, req.ResultData, req.ResultSize);
+	if (task->Success) task->Handle(req.ResultData, req.ResultSize);
 }
 
 static void LWebTask_DefaultBegin(struct LWebTask* task) {
@@ -227,15 +228,63 @@ struct FetchServersData FetchServersTask;
 void FetchServersTask_Run(void);
 
 
-struct UpdateCheckTaskData UpdateCheckTask;
-void UpdateCheckTask_Run(void);
+/*########################################################################################################################*
+*-----------------------------------------------------CheckUpdateTask-----------------------------------------------------*
+*#########################################################################################################################*/
+struct CheckUpdateData CheckUpdateTask;
+static char relVersionBuffer[16];
+
+CC_NOINLINE static TimeMS CheckUpdateTask_ParseTime(const String* str) {
+	String time, fractional;
+	TimeMS ms;
+	/* timestamp is in form of "seconds.fractional" */
+	/* But only need to care about the seconds here */
+	String_UNSAFE_Separate(str, '.', &time, &fractional);
+
+	Convert_ParseUInt64(&time, &ms);
+	if (!ms) return 0;
+	return ms * 1000 + UNIX_EPOCH;
+}
+
+static void CheckUpdateTask_OnValue(struct JsonContext* ctx, const String* str) {
+	if (String_CaselessEqualsConst(&ctx->CurKey, "release_version")) {
+		String_Copy(&CheckUpdateTask.LatestRelease, str);
+	} else if (String_CaselessEqualsConst(&ctx->CurKey, "latest_ts")) {
+		CheckUpdateTask.DevTimestamp = CheckUpdateTask_ParseTime(str);
+	} else if (String_CaselessEqualsConst(&ctx->CurKey, "release_ts")) {
+		CheckUpdateTask.RelTimestamp = CheckUpdateTask_ParseTime(str);
+	}
+}
+
+static void CheckUpdateTask_Handle(uint8_t* data, uint32_t len) {
+	struct JsonContext ctx;
+	String str = String_Init(data, len, len);
+	Json_Init(&ctx, &str);
+	ctx.OnValue = CheckUpdateTask_OnValue;
+	Json_Parse(&ctx);
+}
+
+void CheckUpdateTask_Run(void) {
+	static String id  = String_FromConst("CC update check");
+	static String url = String_FromConst("http://cs.classicube.net/c_client/builds.json");
+	if (CheckUpdateTask.Base.Working) return;
+
+	LWebTask_Reset(&CheckUpdateTask.Base);
+	CheckUpdateTask.DevTimestamp = 0;
+	CheckUpdateTask.RelTimestamp = 0;
+	String_InitArray(CheckUpdateTask.LatestRelease, relVersionBuffer);
+
+	CheckUpdateTask.Base.Identifier = id;
+	AsyncDownloader_GetData(&url, false, &id);
+	CheckUpdateTask.Base.Handle     = CheckUpdateTask_Handle;
+}
 
 
-struct UpdateDownloadTaskData UpdateDownloadTask;
-void UpdateDownloadTask_Run(const String* file);
+struct FetchUpdateData FetchUpdateTask;
+void FetchUpdateTask_Run(bool release, bool d3d9);
 
 
-struct FetchFlagsTaskData FetchFlagsTask;
+struct FetchFlagsData FetchFlagsTask;
 void FetchFlagsTask_Run(void);
 void FetchFlagsTask_Add(const String* name);
 
@@ -362,56 +411,6 @@ public sealed class FetchServersTask : WebTask {
 			ServerInfo entry = FetchServerTask.ParseEntry(obj);
 			Servers.Add(entry);
 		}
-	}
-}
-
-
-public class Build {
-	public DateTime TimeBuilt;
-	public string DirectXPath, OpenGLPath;
-	public int DirectXSize, OpenGLSize;
-	public string Version;
-}
-
-public sealed class UpdateCheckTask : WebTask {
-	public UpdateCheckTask() {
-		identifier = "CC update check";
-		uri = "http://cs.classicube.net/builds.json";
-	}
-
-	public Build LatestDev, LatestStable;
-
-	protected override void Handle(Request req) {
-		JsonObject data = ParseJson(req);
-		JsonObject latest = (JsonObject)data["latest"];
-
-		LatestDev = MakeBuild(latest, false);
-		JsonObject releases = (JsonObject)data["releases"];
-
-		DateTime releaseTime = DateTime.MinValue;
-		foreach(KeyValuePair<string, object> pair in releases) {
-			Build build = MakeBuild((JsonObject)pair.Value, true);
-			if (build.TimeBuilt < releaseTime) continue;
-
-			LatestStable = build;
-			releaseTime = build.TimeBuilt;
-		}
-	}
-
-	static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-	Build MakeBuild(JsonObject obj, bool release) {
-		Build build = new Build();
-		string timeKey = release ? "release_ts" : "ts";
-		double rawTime = Double.Parse((string)obj[timeKey], CultureInfo.InvariantCulture);
-		build.TimeBuilt = epoch.AddSeconds(rawTime).ToLocalTime();
-
-		build.DirectXSize = Int32.Parse((string)obj["dx_size"]);
-		build.DirectXPath = (string)obj["dx_file"];
-		build.OpenGLSize = Int32.Parse((string)obj["ogl_size"]);
-		build.OpenGLPath = (string)obj["ogl_file"];
-		if (obj.ContainsKey("version"))
-			build.Version = (string)obj["version"];
-		return build;
 	}
 }
 

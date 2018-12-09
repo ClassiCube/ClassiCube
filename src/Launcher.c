@@ -16,11 +16,10 @@
 /* TODO TODO TODO TODO TODO TODO TODO TODO FIX THESE STUBS */
 void Launcher_SaveSecureOpt(const char* opt, const String* data, const String* key) { }
 void Launcher_LoadSecureOpt(const char* opt, String* data, const String* key) { }
-void UpdateCheckTask_Run(void) { }
+void FetchUpdateTask_Run(bool release, bool d3d9) { }
 struct LScreen* MainScreen_MakeInstance(void) { return NULL; }
 struct LScreen* ResourcesScreen_MakeInstance(void) { return NULL; }
 struct LScreen* ServersScreen_MakeInstance(void) { return NULL; }
-struct LScreen* UpdatesScreen_MakeInstance(void) { return NULL; }
 
 struct LScreen* Launcher_Screen;
 bool Launcher_Dirty;
@@ -33,7 +32,6 @@ static bool fullRedraw, pendingRedraw;
 static FontDesc logoFont;
 
 bool Launcher_ShouldExit, Launcher_ShouldUpdate, Launcher_SaveOptions;
-TimeMS Launcher_PatchTime;
 static void Launcher_ApplyUpdate(void);
 
 
@@ -220,7 +218,7 @@ void Launcher_Run(void) {
 	AsyncDownloader_Component.Init();
 
 	Resources_CheckExistence();
-	UpdateCheckTask_Run();
+	CheckUpdateTask_Run();
 
 	/* TODO TODO TODO TODO TODO TODO TODO TODO FIX THESE STUBS */
 	/*if (Resources_Count) {
@@ -234,7 +232,7 @@ void Launcher_Run(void) {
 		Window_ProcessEvents();
 		if (!Window_Exists)      break;
 		if (Launcher_ShouldExit) break;
-		LWebTask_Tick(&UpdateCheckTask.Base);
+		LWebTask_Tick(&CheckUpdateTask.Base);
 
 		Launcher_Screen->Tick(Launcher_Screen);
 		if (Launcher_Dirty) Launcher_Display();
@@ -454,7 +452,7 @@ void Launcher_ResetPixels(void) {
 
 void Launcher_Redraw(void) {
 	Launcher_ResetPixels();
-	Launcher_Screen->DrawAll(Launcher_Screen);
+	Launcher_Screen->Draw(Launcher_Screen);
 	fullRedraw = true;
 }
 
@@ -464,11 +462,7 @@ void Launcher_Redraw(void) {
 *#########################################################################################################################*/
 static TimeMS lastJoin;
 bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server) {
-#ifdef CC_BUILD_WIN
-	static String exe = String_FromConst("ClassiCube.exe");
-#else
-	static String exe = String_FromConst("ClassiCube");
-#endif
+	static String exe = String_FromConst(GAME_EXE_NAME);
 	String args; char argsBuffer[512];
 	TimeMS now;
 	ReturnCode res;

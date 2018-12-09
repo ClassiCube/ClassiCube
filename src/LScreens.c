@@ -1,5 +1,6 @@
 #include "LScreens.h"
 #include "LWidgets.h"
+#include "LWeb.h"
 #include "Launcher.h"
 #include "Gui.h"
 #include "Game.h"
@@ -31,10 +32,8 @@ CC_NOINLINE static struct LWidget* LScreen_WidgetAt(struct LScreen* s, int x, in
 	return NULL;
 }
 
-static void LScreen_DrawAll(struct LScreen* s) {
-	struct LWidget* widget;
+static void LScreen_Draw(struct LScreen* s) {
 	int i;
-
 	for (i = 0; i < s->NumWidgets; i++) {
 		LWidget_Draw(s->Widgets[i]);
 	}
@@ -145,7 +144,7 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 
 	s->Init = NULL; /* screens should always override this */
 	s->Free = LScreen_NullFunc;
-	s->DrawAll    = LScreen_DrawAll;
+	s->Draw       = LScreen_Draw;
 	s->Tick       = LScreen_NullFunc;
 	s->OnDisplay  = LScreen_NullFunc;
 	s->KeyDown    = LScreen_KeyDown;
@@ -176,20 +175,21 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 *#########################################################################################################################*/
 CC_NOINLINE static void LScreen_Button(struct LScreen* s, struct LButton* w, int width, int height, const char* text) {
 	String str = String_FromReadonly(text);
-	LButton_Init(w, width, height);
-	LButton_SetText(w, &str, &Launcher_TitleFont);
+	LButton_Init(w, &Launcher_TitleFont, width, height);
+	LButton_SetText(w, &str);
 	s->Widgets[s->NumWidgets++] = (struct LWidget*)w;
 }
 
 CC_NOINLINE static void LScreen_Label(struct LScreen* s, struct LLabel* w, const char* text) {
 	String str = String_FromReadonly(text);
-	LLabel_Init(w);
-	LLabel_SetText(w, &str, &Launcher_TextFont);
+	LLabel_Init(w, &Launcher_TextFont);
+	LLabel_SetText(w, &str);
 	s->Widgets[s->NumWidgets++] = (struct LWidget*)w;
 }
 
 CC_NOINLINE static void LScreen_Input(struct LScreen* s, struct LInput* w, int width, bool password, const char* hintText) {
-	LInput_Init(w, width, 30, hintText, &Launcher_HintFont);
+	LInput_Init(w, &Launcher_TextFont, width, 30, 
+				hintText, &Launcher_HintFont);
 	w->Password = password;
 	s->Widgets[s->NumWidgets++] = (struct LWidget*)w;
 }
@@ -282,7 +282,8 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 	s->BtnClassic.OnClick    = UseModeClassic;
 	s->BtnBack.OnClick       = SwitchToSettings;
 
-	LLabel_SetText(&s->LblTitle, &titleText, &Launcher_TitleFont);
+	s->LblTitle.Font = Launcher_TitleFont;
+	LLabel_SetText(&s->LblTitle, &titleText);
 }
 
 static void ChooseModeScreen_Reposition(struct LScreen* s_) {
@@ -306,9 +307,9 @@ static void ChooseModeScreen_Reposition(struct LScreen* s_) {
 	LWidget_SetLocation(&s->BtnBack, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
 }
 
-static void ChooseModeScreen_DrawAll(struct LScreen* s_) {
+static void ChooseModeScreen_Draw(struct LScreen* s) {
 	int midX = Game_Width / 2, midY = Game_Height / 2;
-	LScreen_DrawAll(s_);
+	LScreen_Draw(s);
 	
 	Drawer2D_Rect(&Launcher_Framebuffer, Launcher_ButtonBorderCol,
 					midX - 250, midY - 35, 490, 1);
@@ -321,7 +322,7 @@ struct LScreen* ChooseModeScreen_MakeInstance(bool firstTime) {
 	LScreen_Reset((struct LScreen*)s);
 	s->Init       = ChooseModeScreen_Init;
 	s->Reposition = ChooseModeScreen_Reposition;
-	s->DrawAll    = ChooseModeScreen_DrawAll;
+	s->Draw       = ChooseModeScreen_Draw;
 	s->FirstTime  = firstTime;
 	return (struct LScreen*)s;
 }
@@ -344,15 +345,15 @@ CC_NOINLINE static void ColoursScreen_Update(struct ColoursScreen* s, int i, Bit
 
 	String_InitArray(tmp, tmpBuffer);
 	String_AppendInt(&tmp, col.R);
-	LInput_SetText(&s->IptColours[i + 0], &tmp, &Launcher_TextFont);
+	LInput_SetText(&s->IptColours[i + 0], &tmp);
 
 	tmp.length = 0;
 	String_AppendInt(&tmp, col.G);
-	LInput_SetText(&s->IptColours[i + 1], &tmp, &Launcher_TextFont);
+	LInput_SetText(&s->IptColours[i + 1], &tmp);
 
 	tmp.length = 0;
 	String_AppendInt(&tmp, col.B);
-	LInput_SetText(&s->IptColours[i + 2], &tmp, &Launcher_TextFont);
+	LInput_SetText(&s->IptColours[i + 2], &tmp);
 }
 
 CC_NOINLINE static void ColoursScreen_UpdateAll(struct ColoursScreen* s) {
@@ -516,7 +517,7 @@ CC_NOINLINE static void DirectConnectScreen_SetStatus(const char* msg) {
 	String str = String_FromReadonly(msg);
 	struct LLabel* w = &DirectConnectScreen_Instance.LblStatus;
 
-	LLabel_SetText(w, &str, &Launcher_TextFont);
+	LLabel_SetText(w, &str);
 	LWidget_Redraw(w);
 }
 
@@ -538,9 +539,9 @@ static void DirectConnectScreen_Load(struct DirectConnectScreen* s) {
 	/* don't want just ':' for address */
 	if (addr.length == 1) addr.length = 0;
 	
-	LInput_SetText(&s->IptUsername, &user,   &Launcher_TextFont);
-	LInput_SetText(&s->IptAddress,  &addr,   &Launcher_TextFont);
-	LInput_SetText(&s->IptMppass,   &mppass, &Launcher_TextFont);
+	LInput_SetText(&s->IptUsername, &user);
+	LInput_SetText(&s->IptAddress,  &addr);
+	LInput_SetText(&s->IptMppass,   &mppass);
 }
 
 static void DirectConnectScreen_Save(const String* user, const String* mppass, const String* ip, const String* port) {
@@ -683,5 +684,198 @@ struct LScreen* SettingsScreen_MakeInstance(void) {
 	LScreen_Reset((struct LScreen*)s);
 	s->Init       = SettingsScreen_Init;
 	s->Reposition = SettingsScreen_Reposition;
+	return (struct LScreen*)s;
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------UpdatesScreen----------------------------------------------------*
+*#########################################################################################################################*/
+static struct UpdatesScreen {
+	LScreen_Layout
+	struct LButton BtnRel[2], BtnDev[2], BtnBack;
+	struct LLabel  LblYour, LblRel, LblDev, LblInfo, LblStatus;
+	struct LWidget* _widgets[10];
+} UpdatesScreen_Instance;
+
+static const char* buildName;
+static int buildProgress = -1;
+static void UpdatesScreen_Draw(struct LScreen* s) {
+	int midX = Game_Width / 2, midY = Game_Height / 2;
+	LScreen_Draw(s);
+
+	Drawer2D_Rect(&Launcher_Framebuffer, Launcher_ButtonBorderCol,
+				midX - 160, midY - 100, 320, 1);
+	Drawer2D_Rect(&Launcher_Framebuffer, Launcher_ButtonBorderCol, 
+				midX - 160, midY -   5, 320, 1);
+}
+
+static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, TimeMS time) {
+	String str; char buffer[STRING_SIZE];
+	String_InitArray(str, buffer);
+
+	String_AppendConst(&str, prefix);
+	if (!time) {
+		String_AppendConst(&str, "&cCheck failed");
+	} else {
+		// do something here..
+	}
+	LLabel_SetText(lbl, &str);
+}
+
+static void UpdatesScreen_FormatBoth(struct UpdatesScreen* s) {
+	UpdatesScreen_Format(&s->LblRel, "Latest release: ",   CheckUpdateTask.RelTimestamp);
+	UpdatesScreen_Format(&s->LblDev, "Latest dev build: ", CheckUpdateTask.DevTimestamp);
+}
+
+static void UpdatesScreen_Get(bool release, bool d3d9) {
+#ifdef CC_BUILD_WIN
+#ifdef _WIN64
+	static String path_d3d9 = String_FromConst("ClassiCube.64.exe");
+	static String path_ogl  = String_FromConst("ClassiCube.64-opengl.exe");
+#else
+	static String path_d3d9 = String_FromConst("ClassiCube.exe");
+	static String path_ogl  = String_FromConst("ClassiCube.opengl.exe");
+#endif
+#else
+	/* TODO: OSX, 32 bit linux */
+	static String path_d3d9 = String_FromConst("ClassiCube");
+	static String path_ogl  = String_FromConst("ClassiCube");
+#endif
+
+	TimeMS time = release ? CheckUpdateTask.RelTimestamp : CheckUpdateTask.DevTimestamp;
+	if (!time || FetchUpdateTask.Base.Working) return;
+	FetchUpdateTask_Run(release, d3d9);
+
+	if (release && d3d9)   buildName = "&eFetching latest release (Direct3D9)";
+	if (release && !d3d9)  buildName = "&eFetching latest release (OpenGL)";
+	if (!release && d3d9)  buildName = "&eFetching latest dev build (Direct3D9)";
+	if (!release && !d3d9) buildName = "&eFetching latest dev build (OpenGL)";
+
+	buildProgress = -1;
+	//Applier.PatchTime = build.TimeBuilt;
+	//view.statusText = buildName + "..";
+	//UpdateStatus();
+}
+
+void Init() {
+	//CheckUpdateTask_Run();
+}
+
+static void UpdatesScreen_CheckTick(struct UpdatesScreen* s) {
+	if (!CheckUpdateTask.Base.Working) return;
+	LWebTask_Tick(&CheckUpdateTask.Base);
+	if (!CheckUpdateTask.Base.Completed) return;
+	UpdatesScreen_FormatBoth(s);
+}
+
+static void UpdatesScreen_UpdateProgress(struct LWebTask* task) {
+	String identifier;
+	struct AsyncRequest item;
+	int progress;
+	if (!AsyncDownloader_GetCurrent(&item, &progress)) return;
+
+	identifier = String_FromRawArray(item.ID);
+	if (!String_Equals(&identifier, &task->Identifier)) return;
+	if (progress == buildProgress) return;
+
+	buildProgress = progress;
+	if (progress >= 0 && progress <= 100) {
+		//view.statusText = buildName + " &a" + progress + "%";
+		//UpdateStatus();
+	}
+}
+
+static void UpdatesScreen_FetchTick(struct UpdatesScreen* s) {
+	static String failedMsg = String_FromConst("&cFailed to fetch update");
+	if (!FetchUpdateTask.Base.Working) return;
+	LWebTask_Tick(&FetchUpdateTask.Base);
+	UpdatesScreen_UpdateProgress(&FetchUpdateTask.Base);
+	if (!FetchUpdateTask.Base.Completed) return;
+
+	if (!FetchUpdateTask.Base.Success) {
+		LLabel_SetText(&s->LblStatus, &failedMsg);
+		LWidget_Redraw(&s->LblStatus);
+	} else {
+		//csZip = fetchTask.ZipFile;
+		//Applier.ExtractUpdate(csZip);
+		Launcher_ShouldExit  = true;
+		Launcher_ShouldUpdate = true;
+
+		//if (cExe == null) return;
+		//string path = Client.GetExeName();
+		// TODO: Set last-modified time to actual time of dev build
+		//Platform.WriteAllBytes(path, cExe);
+		//Platform.SetLastModified(path, patchTime);
+	}
+}
+
+static void UpdatesScreen_RelD3D9(void* w, int x, int y)   { UpdatesScreen_Get(true,  true);  }
+static void UpdatesScreen_RelOpenGL(void* w, int x, int y) { UpdatesScreen_Get(true,  false); }
+static void UpdatesScreen_DevD3D9(void* w, int x, int y)   { UpdatesScreen_Get(false, true);  }
+static void UpdatesScreen_DevOpenGL(void* w, int x, int y) { UpdatesScreen_Get(false, false); }
+
+static void UpdatesScreen_Init(struct LScreen* s_) {
+	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
+	//DateTime writeTime = Platform.FileGetModifiedTime("ClassicalSharp.exe");
+
+	if (s->NumWidgets) return;
+	s->Widgets = s->_widgets;
+	LScreen_Label(s_, &s->LblYour, "Your build: (unknown)");
+
+	LScreen_Label(s_,  &s->LblRel, "Latest release: Checking..");
+	LScreen_Button(s_, &s->BtnRel[0], 130, 35, "Direct3D 9");
+	LScreen_Button(s_, &s->BtnRel[1], 130, 35, "OpenGL");
+
+	LScreen_Label(s_,  &s->LblDev, "Latest dev build: Checking..");
+	LScreen_Button(s_, &s->BtnDev[0], 130, 35, "Direct3D 9");
+	LScreen_Button(s_, &s->BtnDev[1], 130, 35, "OpenGL");
+
+	LScreen_Label(s_,  &s->LblInfo, "&eDirect3D 9 is recommended for Windows");
+	LScreen_Label(s_,  &s->LblStatus, "");
+	LScreen_Button(s_, &s->BtnBack, 80, 35, "Back");
+
+	s->BtnRel[0].OnClick = UpdatesScreen_RelD3D9;
+	s->BtnRel[1].OnClick = UpdatesScreen_RelOpenGL;
+	s->BtnDev[0].OnClick = UpdatesScreen_DevD3D9;
+	s->BtnDev[1].OnClick = UpdatesScreen_DevOpenGL;
+	s->BtnBack.OnClick   = SwitchToSettings;
+
+	/* Initially fill out with update check result from main menu */
+	if (CheckUpdateTask.Base.Completed && CheckUpdateTask.Base.Success) {
+		UpdatesScreen_FormatBoth(s);
+	}
+}
+
+static void UpdatesScreen_Reposition(struct LScreen* s_) {
+	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
+	LWidget_SetLocation(&s->LblYour, ANCHOR_CENTRE, ANCHOR_CENTRE, -5, -120);
+
+	LWidget_SetLocation(&s->LblRel,    ANCHOR_CENTRE, ANCHOR_CENTRE, -20, -75);
+	LWidget_SetLocation(&s->BtnRel[0], ANCHOR_CENTRE, ANCHOR_CENTRE, -80, -40);
+	LWidget_SetLocation(&s->BtnRel[1], ANCHOR_CENTRE, ANCHOR_CENTRE,  80, -40);
+
+	LWidget_SetLocation(&s->LblDev,    ANCHOR_CENTRE, ANCHOR_CENTRE, -30, 20);
+	LWidget_SetLocation(&s->BtnDev[0], ANCHOR_CENTRE, ANCHOR_CENTRE, -80, 55);
+	LWidget_SetLocation(&s->BtnDev[1], ANCHOR_CENTRE, ANCHOR_CENTRE,  80, 55);
+
+	LWidget_SetLocation(&s->LblInfo,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 105);
+	LWidget_SetLocation(&s->LblStatus, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 130);
+	LWidget_SetLocation(&s->BtnBack,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
+}
+
+static void UpdatesScreen_Tick(struct LScreen* s_) {
+	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
+	UpdatesScreen_FetchTick(s);
+	UpdatesScreen_CheckTick(s);
+}
+
+struct LScreen* UpdatesScreen_MakeInstance(void) {
+	struct UpdatesScreen* s = &UpdatesScreen_Instance;
+	LScreen_Reset((struct LScreen*)s);
+	s->Init       = UpdatesScreen_Init;
+	s->Draw       = UpdatesScreen_Draw;
+	s->Tick       = UpdatesScreen_Tick;
+	s->Reposition = UpdatesScreen_Reposition;
 	return (struct LScreen*)s;
 }
