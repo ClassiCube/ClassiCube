@@ -177,6 +177,18 @@ void Json_Parse(struct JsonContext* ctx) {
 	} while (token != TOKEN_NONE);
 }
 
+static void Json_Handle(uint8_t* data, uint32_t len, 
+						JsonOnValue onVal, JsonOnNew newArr, JsonOnNew newObj) {
+	struct JsonContext ctx;
+	String str = String_Init(data, len, len);
+	Json_Init(&ctx, &str);
+	
+	if (onVal)  ctx.OnValue     = onVal;
+	if (newArr) ctx.OnNewArray  = newArr;
+	if (newObj) ctx.OnNewObject = newObj;
+	Json_Parse(&ctx);
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------Web task---------------------------------------------------------*
@@ -204,7 +216,7 @@ void LWebTask_Tick(struct LWebTask* task) {
 
 	task->Working   = false;
 	task->Completed = true;
-	task->Success   = req.ResultData && req.ResultSize;
+	task->Success   = !task->Res && req.ResultData && req.ResultSize;
 	if (task->Success) task->Handle(req.ResultData, req.ResultSize);
 }
 
@@ -213,17 +225,52 @@ static void LWebTask_DefaultBegin(struct LWebTask* task) {
 }
 
 
-struct GetCSRFTokenTaskData GetCSRFTokenTask;
-void GetCSRFTokenTask_Run(void);
+/*########################################################################################################################*
+*-------------------------------------------------------GetTokenTask------------------------------------------------------*
+*#########################################################################################################################*/
+struct GetTokenTaskData GetTokenTask;
+char tokenBuffer[STRING_SIZE];
 
+static void GetTokenTask_OnValue(struct JsonContext* ctx, const String* str) {
+	if (!String_CaselessEqualsConst(&ctx->CurKey, "token")) return;
+	String_Copy(&GetTokenTask.Token, str);
+}
+
+static void GetTokenTask_Handle(uint8_t* data, uint32_t len) {
+	Json_Handle(data, len, GetTokenTask_OnValue, NULL, NULL);
+}
+
+void GetTokenTask_Run(void) {
+	static String id  = String_FromConst("CC get token");
+	static String url = String_FromConst("https://www.classicube.net/api/login");
+	if (GetTokenTask.Base.Working) return;
+
+	LWebTask_Reset(&GetTokenTask.Base);
+	String_InitArray(GetTokenTask.Token, tokenBuffer);
+
+	GetTokenTask.Base.Identifier = id;
+	AsyncDownloader_GetData(&url, false, &id);
+	GetTokenTask.Base.Handle     = GetTokenTask_Handle;
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------SignInTask-------------------------------------------------------*
+*#########################################################################################################################*/
 struct SignInTaskData SignInTask;
 void SignInTask_Run(const String* user, const String* pass);
 
 
+/*########################################################################################################################*
+*-----------------------------------------------------FetchServerTask-----------------------------------------------------*
+*#########################################################################################################################*/
 struct FetchServerData FetchServerTask;
 void FetchServerTask_Run(const String* hash);
 
 
+/*########################################################################################################################*
+*-----------------------------------------------------FetchServersTask----------------------------------------------------*
+*#########################################################################################################################*/
 struct FetchServersData FetchServersTask;
 void FetchServersTask_Run(void);
 
@@ -257,11 +304,7 @@ static void CheckUpdateTask_OnValue(struct JsonContext* ctx, const String* str) 
 }
 
 static void CheckUpdateTask_Handle(uint8_t* data, uint32_t len) {
-	struct JsonContext ctx;
-	String str = String_Init(data, len, len);
-	Json_Init(&ctx, &str);
-	ctx.OnValue = CheckUpdateTask_OnValue;
-	Json_Parse(&ctx);
+	Json_Handle(data, len, CheckUpdateTask_OnValue, NULL, NULL);
 }
 
 void CheckUpdateTask_Run(void) {
@@ -280,10 +323,16 @@ void CheckUpdateTask_Run(void) {
 }
 
 
+/*########################################################################################################################*
+*-----------------------------------------------------FetchUpdateTask-----------------------------------------------------*
+*#########################################################################################################################*/
 struct FetchUpdateData FetchUpdateTask;
 void FetchUpdateTask_Run(bool release, bool d3d9);
 
 
+/*########################################################################################################################*
+*-----------------------------------------------------FetchFlagsTask-----------------------------------------------------*
+*#########################################################################################################################*/
 struct FetchFlagsData FetchFlagsTask;
 void FetchFlagsTask_Run(void);
 void FetchFlagsTask_Add(const String* name);
@@ -295,8 +344,8 @@ protected static JsonObject ParseJson(Request req) {
 	return (JsonObject)Json.ParseStream(ctx);
 }
 
-public sealed class GetCSRFTokenTask : WebTask {
-	public GetCSRFTokenTask() {
+public sealed class GetTokenTask : WebTask {
+	public GetTokenTask() {
 		identifier = "CC get login";
 		uri = "https://www.classicube.net/api/login/";
 	}

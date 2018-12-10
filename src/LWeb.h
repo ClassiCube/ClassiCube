@@ -6,6 +6,10 @@
 	Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
+struct JsonContext;
+typedef void (*JsonOnValue)(struct JsonContext* ctx, const String* v);
+typedef void (*JsonOnNew)(struct JsonContext* ctx);
+
 /* State for parsing JSON text */
 struct JsonContext {
 	char* Cur;     /* Pointer to current character in JSON stream being inspected. */
@@ -13,12 +17,9 @@ struct JsonContext {
 	bool Failed;   /* Whether there was an error parsing the JSON. */
 	String CurKey; /* Key/Name of current member */
 	
-	/* Invoked when start of an array is read. */
-	void (*OnNewArray)(struct JsonContext* ctx);        
-	/* Invoked when start of an object is read. */
-	void (*OnNewObject)(struct JsonContext* ctx);        
-	/* Invoked on each member value in an object/array. */
-	void (*OnValue)(struct JsonContext* ctx, const String* v); 
+	JsonOnNew OnNewArray;  /* Invoked when start of an array is read. */
+	JsonOnNew OnNewObject; /* Invoked when start of an object is read. */
+	JsonOnValue OnValue;   /* Invoked on each member value in an object/array. */
 	String _tmp; /* temp value used for reading String values */
 	char _tmpBuffer[STRING_SIZE];
 };
@@ -53,11 +54,11 @@ struct LWebTask {
 void LWebTask_Tick(struct LWebTask* task);
 
 
-extern struct GetCSRFTokenTaskData {
+extern struct GetTokenTaskData {
 	struct LWebTask Base;
 	String Token; /* Random CSRF token for logging in. */
-} GetCSRFTokenTask;
-void GetCSRFTokenTask_Run(void);
+} GetTokenTask;
+void GetTokenTask_Run(void);
 
 extern struct SignInTaskData {
 	struct LWebTask Base;

@@ -150,7 +150,7 @@ void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar,
 
 /* Outputs a .png screenshot of the backbuffer. */
 ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height);
-/* Warns in chat if the backend has problems with the user's GPU. /*
+/* Warns in chat if the backend has problems with the user's GPU. */
 /* Returns whether legacy rendering mode for borders/sky/clouds is needed. */
 bool Gfx_WarnIfNecessary(void);
 /* Sets up state for rendering a new frame. */

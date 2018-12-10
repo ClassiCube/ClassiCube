@@ -47,7 +47,7 @@ CC_NOINLINE static bool Resources_CheckExist(const char* prefix, struct Resource
 	String_InitArray(path, pathBuffer);
 	for (i = 0; i < count; i++) {
 		path.length = 0;
-		String_Format2(&path, "audio/%c_%c", prefix, sounds[i].Name);
+		String_Format2(&path, "audio/%c_%c.wav", prefix, sounds[i].Name);
 
 		if (!File_Exists(&path)) return false;
 	}

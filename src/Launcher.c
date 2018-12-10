@@ -14,10 +14,9 @@
 #include "AsyncDownloader.h"
 
 /* TODO TODO TODO TODO TODO TODO TODO TODO FIX THESE STUBS */
-void Launcher_SaveSecureOpt(const char* opt, const String* data, const String* key) { }
-void Launcher_LoadSecureOpt(const char* opt, String* data, const String* key) { }
+void Launcher_SetSecureOpt(const char* opt, const String* data, const String* key) { }
+void Launcher_GetSecureOpt(const char* opt, String* data, const String* key) { }
 void FetchUpdateTask_Run(bool release, bool d3d9) { }
-struct LScreen* MainScreen_MakeInstance(void) { return NULL; }
 struct LScreen* ResourcesScreen_MakeInstance(void) { return NULL; }
 struct LScreen* ServersScreen_MakeInstance(void) { return NULL; }
 
@@ -220,13 +219,11 @@ void Launcher_Run(void) {
 	Resources_CheckExistence();
 	CheckUpdateTask_Run();
 
-	/* TODO TODO TODO TODO TODO TODO TODO TODO FIX THESE STUBS */
-	/*if (Resources_Count) {
+	if (Resources_Count) {
 		Launcher_SetScreen(ResourcesScreen_MakeInstance());
 	} else {
 		Launcher_SetScreen(MainScreen_MakeInstance());
-	}*/
-	Launcher_SetScreen(SettingsScreen_MakeInstance());
+	}
 
 	for (;;) {
 		Window_ProcessEvents();
@@ -481,7 +478,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 		Options_Set("launcher-username", user);
 		Options_Set("launcher-ip",       ip);
 		Options_Set("launcher-port",     port);
-		Launcher_SaveSecureOpt("launcher-mppass", mppass, user);
+		Launcher_SetSecureOpt("launcher-mppass", mppass, user);
 		Options_Save();
 	}
 

@@ -6,6 +6,7 @@
 
 #define PROGRAM_MAX_CMDARGS 5
 #define PROGRAM_APP_NAME "ClassiCube 0.99.9.2"
+#define PROGRAM_APP_VER  "0.99.9.2"
 
 /* Max number of characters strings can have. */
 #define STRING_SIZE 64
@@ -19,9 +20,9 @@
 #define CHUNK_SIZE_3 (CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE)
 
 #define CHUNK_MAX 15
-/* Local index in a chunk for a coordinate */
+/* Local index in a chunk for a coordinate. */
 #define CHUNK_MASK 15
-/* Chunk index for a coordinate */
+/* Chunk index for a coordinate. */
 #define CHUNK_SHIFT 4
 
 /* Chunk axis length (plus neighbours) in blocks. */

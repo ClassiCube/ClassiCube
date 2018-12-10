@@ -9,7 +9,7 @@
 /* Represents a particular instance in time in some timezone. Not necessarily UTC time. */
 /* NOTE: This is not an efficiently sized struct. Store DateTime_TotalMs instead for that. */
 struct DateTime {
-	int Year;  /* Year,   ranges from 0 to 65535 */
+	int Year;   /* Year,   ranges from 0 to 65535 */
 	int Month;  /* Month,  ranges from 1 to 12 */
 	int Day;    /* Day,    ranges from 1 to 31 */
 	int Hour;   /* Hour,   ranges from 0 to 23 */
