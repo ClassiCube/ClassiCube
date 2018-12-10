@@ -6,6 +6,7 @@
 #include "Game.h"
 #include "Drawer2D.h"
 #include "ExtMath.h"
+#include "Platform.h"
 
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
@@ -995,14 +996,29 @@ static void UpdatesScreen_Draw(struct LScreen* s) {
 
 static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, TimeMS time) {
 	String str; char buffer[STRING_SIZE];
-	String_InitArray(str, buffer);
+	TimeMS now;
 
+	String_InitArray(str, buffer);
 	String_AppendConst(&str, prefix);
+
 	if (!time) {
 		String_AppendConst(&str, "&cCheck failed");
 	} else {
-		// do something here..
-		String_AppendConst(&str, " ago");
+		now = DateTime_CurrentUTC_MS();
+		int delta = (int)(now - time) / 1000;
+
+		if (delta < SECS_PER_MIN) {
+			String_Format1(&str, "%i seconds ago", &delta);
+		} else if (delta < SECS_PER_HOUR) {
+			delta /= SECS_PER_MIN;
+			String_Format1(&str, "%i minutes ago", &delta);
+		} else if (delta < SECS_PER_DAY) {
+			delta /= SECS_PER_HOUR;
+			String_Format1(&str, "%i hours ago", &delta);
+		} else {
+			delta /= SECS_PER_DAY;
+			String_Format1(&str, "%i days ago", &delta);
+		}
 	}
 	LLabel_SetText(lbl, &str);
 }
@@ -1040,11 +1056,6 @@ static void UpdatesScreen_Get(bool release, bool d3d9) {
 	//Applier.PatchTime = build.TimeBuilt;
 	//view.statusText = buildName + "..";
 	//UpdateStatus();
-}
-
-void Init() {
-	//CheckUpdateTask_Run();
-	//FIX ALL THE COMMENTED OUT // CODE
 }
 
 static void UpdatesScreen_CheckTick(struct UpdatesScreen* s) {
@@ -1101,10 +1112,12 @@ static void UpdatesScreen_DevD3D9(void* w, int x, int y)   { UpdatesScreen_Get(f
 static void UpdatesScreen_DevOpenGL(void* w, int x, int y) { UpdatesScreen_Get(false, false); }
 
 static void UpdatesScreen_Init(struct LScreen* s_) {
+	static String exeName   = String_FromConst(GAME_EXE_NAME);
 	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
-	//DateTime writeTime = Platform.FileGetModifiedTime("ClassicalSharp.exe");
+	TimeMS buildTime;
+	ReturnCode res;
 
-	if (s->NumWidgets) return;
+	if (s->NumWidgets) { CheckUpdateTask_Run(); return; }
 	s->Widgets = s->_widgets;
 	LScreen_Label(s_, &s->LblYour, "Your build: (unknown)");
 
@@ -1129,6 +1142,14 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 	/* Initially fill out with update check result from main menu */
 	if (CheckUpdateTask.Base.Completed && CheckUpdateTask.Base.Success) {
 		UpdatesScreen_FormatBoth(s);
+	}
+	CheckUpdateTask_Run();
+	
+	res = File_GetModifiedTime(&exeName, &buildTime);
+	if (res) {
+		Launcher_ShowError(res, "getting build time");
+	} else {
+		UpdatesScreen_Format(&s->LblYour, "Your build: ", buildTime);
 	}
 }
 

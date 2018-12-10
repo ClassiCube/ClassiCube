@@ -10,12 +10,6 @@
 /*########################################################################################################################*
 *--------------------------------------------------------DateTime---------------------------------------------------------*
 *#########################################################################################################################*/
-#define DATETIME_SECONDS_PER_MINUTE 60
-#define DATETIME_SECONDS_PER_HOUR (60 * 60)
-#define DATETIME_SECONDS_PER_DAY (60 * 60 * 24)
-#define DATETIME_MINUTES_PER_HOUR 60
-#define DATETIME_HOURS_PER_DAY 24
-#define DATETIME_MILLISECS_PER_DAY (1000 * 60 * 60 * 24)
 
 #define DAYS_IN_400_YEARS 146097   /* (400*365) + 97 */
 static uint16_t DateTime_DaysTotal[13]     = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
@@ -47,11 +41,11 @@ int DateTime_TotalDays(const struct DateTime* time) {
 TimeMS DateTime_TotalMs(const struct DateTime* time) {
 	int days = DateTime_TotalDays(time);
 	uint64_t seconds =
-		(uint64_t)days * DATETIME_SECONDS_PER_DAY +
-		time->Hour     * DATETIME_SECONDS_PER_HOUR +
-		time->Minute   * DATETIME_SECONDS_PER_MINUTE +
+		(uint64_t)days * SECS_PER_DAY +
+		time->Hour     * SECS_PER_HOUR +
+		time->Minute   * SECS_PER_MIN +
 		time->Second;
-	return seconds * DATETIME_MILLIS_PER_SEC + time->Milli;
+	return seconds * MILLIS_PER_SEC + time->Milli;
 }
 
 void DateTime_FromTotalMs(struct DateTime* time, TimeMS ms) {
@@ -61,16 +55,16 @@ void DateTime_FromTotalMs(struct DateTime* time, TimeMS ms) {
 	bool leap;
 
 	/* Work out time component for just this day */
-	dayMS = (int)(ms % DATETIME_MILLISECS_PER_DAY);
-	time->Milli  = dayMS % DATETIME_MILLIS_PER_SEC;     dayMS /= DATETIME_MILLIS_PER_SEC;
-	time->Second = dayMS % DATETIME_SECONDS_PER_MINUTE; dayMS /= DATETIME_SECONDS_PER_MINUTE;
-	time->Minute = dayMS % DATETIME_MINUTES_PER_HOUR;   dayMS /= DATETIME_MINUTES_PER_HOUR;
-	time->Hour   = dayMS % DATETIME_HOURS_PER_DAY;      dayMS /= DATETIME_HOURS_PER_DAY;
+	dayMS = (int)(ms % MILLIS_PER_DAY);
+	time->Milli  = dayMS % MILLIS_PER_SEC; dayMS /= MILLIS_PER_SEC;
+	time->Second = dayMS % SECS_PER_MIN;   dayMS /= SECS_PER_MIN;
+	time->Minute = dayMS % MINS_PER_HOUR;  dayMS /= MINS_PER_HOUR;
+	time->Hour   = dayMS % HOURS_PER_DAY;  dayMS /= HOURS_PER_DAY;
 
 	/* Then work out day/month/year component (inverse TotalDays operation) */
 	/* Probably not the most efficient way of doing this. But it passes my tests at */
 	/* https://gist.github.com/UnknownShadow200/30993c66464bb03ead01577f3ab2a653 */
-	days = (int)(ms / DATETIME_MILLISECS_PER_DAY);
+	days = (int)(ms / MILLIS_PER_DAY);
 	year = 1 + ((days / DAYS_IN_400_YEARS) * 400); days %= DAYS_IN_400_YEARS;
 
 	for (; ; year++) {
@@ -94,8 +88,8 @@ void DateTime_FromTotalMs(struct DateTime* time, TimeMS ms) {
 }
 
 void DateTime_HttpDate(TimeMS ms, String* str) {
-	static char* days_of_week[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
-	static char* month_names[13] = { NULL, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+	static const char* days_of_week[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+	static const char* month_names[13] = { NULL, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 	struct DateTime t;
 	int days;
 

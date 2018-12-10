@@ -120,7 +120,7 @@ ReturnCode Directory_Enum(const String* path, void* obj, Directory_EnumCallback 
 /* Returns whether the given file exists. */
 bool File_Exists(const String* path);
 /* Returns the last time the file was modified, as number of milliseconds since 1/1/0001 */
-ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* ms);
+ReturnCode File_GetModifiedTime(const String* path, TimeMS* ms);
 
 /* Attempts to create a new (or overwrite) file for writing. */
 ReturnCode File_Create(FileHandle* file, const String* path);

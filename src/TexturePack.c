@@ -572,7 +572,7 @@ void TextureCache_GetLastModified(const String* url, TimeMS* time) {
 		String_InitArray(path, pathBuffer);
 		TextureCache_MakePath(&path, url);
 
-		res = File_GetModifiedTime_MS(&path, time);
+		res = File_GetModifiedTime(&path, time);
 		if (res) { Chat_LogError2(res, "getting last modified time of", url); *time = 0; }
 	}
 }

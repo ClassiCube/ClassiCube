@@ -434,7 +434,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	return Win_Return(res == ERROR_NO_MORE_FILES);
 }
 
-ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* time) {
+ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
 	FileHandle file; 
 	ReturnCode res = File_Open(&file, path);
 	if (res) return res;
@@ -567,7 +567,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	return res;
 }
 
-ReturnCode File_GetModifiedTime_MS(const String* path, TimeMS* time) {
+ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
 	char str[600]; 
 	struct stat sb;
 	Platform_ConvertString(str, path);

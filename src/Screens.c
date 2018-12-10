@@ -1403,7 +1403,7 @@ static struct DisconnectScreen DisconnectScreen_Instance;
 static void DisconnectScreen_ReconnectMessage(struct DisconnectScreen* s, String* msg) {
 	if (s->CanReconnect) {
 		int elapsedMS = (int)(DateTime_CurrentUTC_MS() - s->InitTime);
-		int secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLIS_PER_SEC;
+		int secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / MILLIS_PER_SEC;
 
 		if (secsLeft > 0) {
 			String_Format1(msg, "Reconnect in %i", &secsLeft); return;
@@ -1417,7 +1417,7 @@ static void DisconnectScreen_UpdateDelayLeft(struct DisconnectScreen* s, double 
 	int elapsedMS, secsLeft;
 
 	elapsedMS = (int)(DateTime_CurrentUTC_MS() - s->InitTime);
-	secsLeft  = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLIS_PER_SEC;
+	secsLeft  = (DISCONNECT_DELAY_MS - elapsedMS) / MILLIS_PER_SEC;
 	if (secsLeft < 0) secsLeft = 0;
 	if (s->LastSecsLeft == secsLeft && s->Reconnect.Active == s->LastActive) return;
 
@@ -1465,7 +1465,7 @@ static void DisconnectScreen_Init(void* screen) {
 	game_limitMs = 1000 / 5.0f;
 
 	s->InitTime     = DateTime_CurrentUTC_MS();
-	s->LastSecsLeft = DISCONNECT_DELAY_MS / DATETIME_MILLIS_PER_SEC;
+	s->LastSecsLeft = DISCONNECT_DELAY_MS / MILLIS_PER_SEC;
 }
 
 static void DisconnectScreen_Render(void* screen, double delta) {

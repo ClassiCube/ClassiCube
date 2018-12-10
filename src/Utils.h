@@ -18,7 +18,14 @@ struct DateTime {
 	int Milli; /* Milliseconds, ranges from 0 to 999 */
 };
 
-#define DATETIME_MILLIS_PER_SEC 1000
+#define MILLIS_PER_SEC 1000
+#define SECS_PER_MIN 60
+#define SECS_PER_HOUR (60 * 60)
+#define SECS_PER_DAY (60 * 60 * 24)
+#define MINS_PER_HOUR 60
+#define HOURS_PER_DAY 24
+#define MILLIS_PER_DAY (1000 * 60 * 60 * 24)
+
 int DateTime_TotalDays(const struct DateTime* time);
 TimeMS DateTime_TotalMs(const struct DateTime* time);
 void DateTime_FromTotalMs(struct DateTime* time, TimeMS ms);
