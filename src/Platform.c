@@ -144,8 +144,8 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void Mem_Set(void* dst, uint8_t value, uint32_t numBytes) { memset(dst, value, numBytes); }
-void Mem_Copy(void* dst, void* src,  uint32_t numBytes)   { memcpy(dst, src,   numBytes); }
+void Mem_Set(void* dst, uint8_t value,    uint32_t numBytes) { memset(dst, value, numBytes); }
+void Mem_Copy(void* dst, const void* src, uint32_t numBytes) { memcpy(dst, src,   numBytes); }
 
 CC_NOINLINE static void Platform_AllocFailed(const char* place) {	
 	String log; char logBuffer[STRING_SIZE+20 + 1];
@@ -475,7 +475,7 @@ ReturnCode File_Read(FileHandle file, uint8_t* buffer, uint32_t count, uint32_t*
 	return Win_Return(success);
 }
 
-ReturnCode File_Write(FileHandle file, uint8_t* buffer, uint32_t count, uint32_t* bytesWrote) {
+ReturnCode File_Write(FileHandle file, const uint8_t* buffer, uint32_t count, uint32_t* bytesWrote) {
 	BOOL success = WriteFile(file, buffer, count, bytesWrote, NULL);
 	return Win_Return(success);
 }
@@ -601,7 +601,7 @@ ReturnCode File_Read(FileHandle file, uint8_t* buffer, uint32_t count, uint32_t*
 	return Nix_Return(*bytesRead != -1);
 }
 
-ReturnCode File_Write(FileHandle file, uint8_t* buffer, uint32_t count, uint32_t* bytesWrote) {
+ReturnCode File_Write(FileHandle file, const uint8_t* buffer, uint32_t count, uint32_t* bytesWrote) {
 	*bytesWrote = write(file, buffer, count);
 	return Nix_Return(*bytesWrote != -1);
 }

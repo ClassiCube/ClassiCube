@@ -227,9 +227,7 @@ void Launcher_Run(void) {
 
 	for (;;) {
 		Window_ProcessEvents();
-		if (!Window_Exists)      break;
-		if (Launcher_ShouldExit) break;
-		LWebTask_Tick(&CheckUpdateTask.Base);
+		if (!Window_Exists || Launcher_ShouldExit) break;
 
 		Launcher_Screen->Tick(Launcher_Screen);
 		if (Launcher_Dirty) Launcher_Display();
@@ -306,6 +304,7 @@ void Launcher_SaveSkin(void) {
 	Launcher_SetCol("launcher-btn-fore-active-col",        Launcher_ButtonForeActiveCol);
 	Launcher_SetCol("launcher-btn-fore-inactive-col",      Launcher_ButtonForeCol);
 	Launcher_SetCol("launcher-btn-highlight-inactive-col", Launcher_ButtonHighlightCol);
+	Launcher_SaveOptions = true;
 }
 
 

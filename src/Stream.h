@@ -15,7 +15,7 @@ struct Stream {
 	/* Attempts to efficiently read a single byte from this stream. (fallbacks to Read) */
 	ReturnCode (*ReadU8)(struct Stream* s, uint8_t* data);
 	/* Attempts to write some bytes to this stream. */
-	ReturnCode (*Write)(struct Stream* s, uint8_t* data, uint32_t count, uint32_t* modified);
+	ReturnCode (*Write)(struct Stream* s, const uint8_t* data, uint32_t count, uint32_t* modified);
 	/* Attempts to quickly advance the position in this stream. (falls back to reading then discarding) */
 	ReturnCode (*Skip)(struct Stream* s, uint32_t count);
 
@@ -43,7 +43,7 @@ struct Stream {
 /* Attempts to fully read up to count bytes from the stream. */
 ReturnCode Stream_Read(struct Stream* s, uint8_t* buffer, uint32_t count);
 /* Attempts to fully write up to count bytes from the stream. */
-ReturnCode Stream_Write(struct Stream* s, uint8_t* buffer, uint32_t count);
+ReturnCode Stream_Write(struct Stream* s, const uint8_t* buffer, uint32_t count);
 /* Initalises default function pointers for a stream. (all read, write, seeks return an error) */
 void Stream_Init(struct Stream* s);
 /* Slow way of reading a U8 integer through stream->Read(stream, 1, tmp). */
@@ -66,13 +66,13 @@ CC_EXPORT void Stream_WriteonlyMemory(struct Stream* s, void* data, uint32_t len
 CC_EXPORT void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data, uint32_t size);
 
 /* Reads a little-endian 16 bit unsigned integer from memory. */
-uint16_t Stream_GetU16_LE(uint8_t* data);
+uint16_t Stream_GetU16_LE(const uint8_t* data);
 /* Reads a big-endian 16 bit unsigned integer from memory. */
-uint16_t Stream_GetU16_BE(uint8_t* data);
+uint16_t Stream_GetU16_BE(const uint8_t* data);
 /* Reads a little-endian 32 bit unsigned integer from memory. */
-uint32_t Stream_GetU32_LE(uint8_t* data);
+uint32_t Stream_GetU32_LE(const uint8_t* data);
 /* Reads a big-endian 32 bit unsigned integer from memory. */
-uint32_t Stream_GetU32_BE(uint8_t* data);
+uint32_t Stream_GetU32_BE(const uint8_t* data);
 
 /* Writes a big-endian 16 bit unsigned integer to memory. */
 void Stream_SetU16_BE(uint8_t* data, uint16_t value);

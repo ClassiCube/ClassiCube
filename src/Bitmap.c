@@ -507,7 +507,7 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 /*########################################################################################################################*
 *------------------------------------------------------PNG encoder--------------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode Bitmap_Crc32StreamWrite(struct Stream* stream, uint8_t* data, uint32_t count, uint32_t* modified) {
+static ReturnCode Bitmap_Crc32StreamWrite(struct Stream* stream, const uint8_t* data, uint32_t count, uint32_t* modified) {
 	struct Stream* source;
 	uint32_t i, crc32 = stream->Meta.CRC32.CRC32;
 

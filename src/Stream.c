@@ -21,7 +21,7 @@ ReturnCode Stream_Read(struct Stream* s, uint8_t* buffer, uint32_t count) {
 	return 0;
 }
 
-ReturnCode Stream_Write(struct Stream* s, uint8_t* buffer, uint32_t count) {
+ReturnCode Stream_Write(struct Stream* s, const uint8_t* buffer, uint32_t count) {
 	uint32_t write;
 	ReturnCode res;
 
@@ -35,7 +35,7 @@ ReturnCode Stream_Write(struct Stream* s, uint8_t* buffer, uint32_t count) {
 	return 0;
 }
 
-static ReturnCode Stream_DefaultIO(struct Stream* s, uint8_t* data, uint32_t count, uint32_t* modified) {
+static ReturnCode Stream_DefaultIO(struct Stream* s, const uint8_t* data, uint32_t count, uint32_t* modified) {
 	*modified = 0; return ReturnCode_NotSupported;
 }
 ReturnCode Stream_DefaultReadU8(struct Stream* s, uint8_t* data) {
@@ -86,7 +86,7 @@ void Stream_Init(struct Stream* s) {
 static ReturnCode Stream_FileRead(struct Stream* s, uint8_t* data, uint32_t count, uint32_t* modified) {
 	return File_Read(s->Meta.File, data, count, modified);
 }
-static ReturnCode Stream_FileWrite(struct Stream* s, uint8_t* data, uint32_t count, uint32_t* modified) {
+static ReturnCode Stream_FileWrite(struct Stream* s, const uint8_t* data, uint32_t count, uint32_t* modified) {
 	return File_Write(s->Meta.File, data, count, modified);
 }
 static ReturnCode Stream_FileClose(struct Stream* s) {
@@ -213,7 +213,7 @@ static ReturnCode Stream_MemoryReadU8(struct Stream* s, uint8_t* data) {
 	return 0;
 }
 
-static ReturnCode Stream_MemoryWrite(struct Stream* s, uint8_t* data, uint32_t count, uint32_t* modified) {
+static ReturnCode Stream_MemoryWrite(struct Stream* s, const uint8_t* data, uint32_t count, uint32_t* modified) {
 	count = min(count, s->Meta.Mem.Left);
 	Mem_Copy(s->Meta.Mem.Cur, data, count);
 
@@ -352,21 +352,21 @@ void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data
 /*########################################################################################################################*
 *-------------------------------------------------Read/Write primitives---------------------------------------------------*
 *#########################################################################################################################*/
-uint16_t Stream_GetU16_LE(uint8_t* data) {
+uint16_t Stream_GetU16_LE(const uint8_t* data) {
 	return (uint16_t)(data[0] | (data[1] << 8));
 }
 
-uint16_t Stream_GetU16_BE(uint8_t* data) {
+uint16_t Stream_GetU16_BE(const uint8_t* data) {
 	return (uint16_t)((data[0] << 8) | data[1]);
 }
 
-uint32_t Stream_GetU32_LE(uint8_t* data) {
+uint32_t Stream_GetU32_LE(const uint8_t* data) {
 	return (uint32_t)(
 		 (uint32_t)data[0]        | ((uint32_t)data[1] << 8) |
 		((uint32_t)data[2] << 16) | ((uint32_t)data[3] << 24));
 }
 
-uint32_t Stream_GetU32_BE(uint8_t* data) {
+uint32_t Stream_GetU32_BE(const uint8_t* data) {
 	return (uint32_t)(
 		((uint32_t)data[0] << 24) | ((uint32_t)data[1] << 16) |
 		((uint32_t)data[2] << 8)  |  (uint32_t)data[3]);

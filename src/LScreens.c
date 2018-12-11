@@ -387,8 +387,6 @@ static void ColoursScreen_TextChanged(struct LInput* w) {
 	if (!Convert_ParseUInt8(&s->IptColours[index + 2].Text, &b)) return;
 
 	Launcher_SaveSkin();
-	Launcher_SaveOptions = true;
-
 	col->R = r; col->G = g; col->B = b;
 	Launcher_Redraw();
 }
@@ -436,6 +434,7 @@ static void ColoursScreen_KeyDown(struct LScreen* s, Key key) {
 
 static void ColoursScreen_ResetAll(void* widget, int x, int y) {
 	Launcher_ResetSkin();
+	Launcher_SaveSkin();
 	ColoursScreen_UpdateAll(&ColoursScreen_Instance);
 	Launcher_Redraw();
 }
@@ -1021,6 +1020,7 @@ static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, TimeMS 
 		}
 	}
 	LLabel_SetText(lbl, &str);
+	LWidget_Redraw(lbl);
 }
 
 static void UpdatesScreen_FormatBoth(struct UpdatesScreen* s) {

@@ -86,7 +86,7 @@ CC_EXPORT void  Mem_Free(void* mem);
 /* Sets the contents of a block of memory to the given value. */
 void Mem_Set(void* dst, uint8_t value, uint32_t numBytes);
 /* Copies a block of memory to another block. NOTE: These blocks MUST NOT overlap. */
-void Mem_Copy(void* dst, void* src, uint32_t numBytes);
+void Mem_Copy(void* dst, const void* src, uint32_t numBytes);
 
 /* Logs a debug message to console. */
 void Platform_Log(const String* message);
@@ -131,7 +131,7 @@ ReturnCode File_Append(FileHandle* file, const String* path);
 /* Attempts to read data from the file. */
 ReturnCode File_Read(FileHandle file, uint8_t* buffer, uint32_t count, uint32_t* bytesRead);
 /* Attempts to write data to the file. */
-ReturnCode File_Write(FileHandle file, uint8_t* buffer, uint32_t count, uint32_t* bytesWrote);
+ReturnCode File_Write(FileHandle file, const uint8_t* buffer, uint32_t count, uint32_t* bytesWrote);
 /* Attempts to close the given file. */
 ReturnCode File_Close(FileHandle file);
 /* Attempts to seek to a position in the given file. */
