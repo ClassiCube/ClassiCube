@@ -590,7 +590,7 @@ ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
 	return 0;
 }
 
-ReturnCode File_SetModifiedTime(const char* path, TimeMS time) {
+ReturnCode File_SetModifiedTime(const String* path, TimeMS time) {
 	char str[600];
 	struct utimbuf times = { 0 };
 
@@ -2019,14 +2019,15 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 }
 
 ReturnCode Platform_StartProcess(const String* path, const String* args) {
-	String argv; char argvBuffer[300];
+	String file, argv; char argvBuffer[300];
 	TCHAR str[300], raw[300];
 	STARTUPINFO si = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
 	BOOL ok;
 
+	file = *path; Utils_UNSAFE_GetFilename(&file);
 	String_InitArray(argv, argvBuffer);
-	String_Format2(&argv, "%s %s", path, args);
+	String_Format2(&argv, "%s %s", &file, args);
 	Platform_ConvertString(str, path);
 	Platform_ConvertString(raw, &argv);
 

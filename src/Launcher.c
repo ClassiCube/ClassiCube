@@ -500,24 +500,23 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 
 #ifdef CC_BUILD_WIN
 #define UPDATE_SCRIPT \
-"@echo off\n" \
-"echo Waiting for launcher to exit..\n" \
-"echo 5..\n" \
-"ping 127.0.0.1 - n 2 > nul\n" \
-"echo 4..\n" \
-"ping 127.0.0.1 - n 2 > nul\n" \
-"echo 3..\n" \
-"ping 127.0.0.1 - n 2 > nul\n" \
-"echo 2..\n" \
-"ping 127.0.0.1 - n 2 > nul\n" \
-"echo 1..\n" \
-"ping 127.0.0.1 - n 2 > nul\n" \
-"echo Copying updated version\n" \
-"move ClassiCube.update ClassiCube.exe\n" \
-"rm ClassiCube.update" \
-"echo Starting launcher again\n" \
-"start ClassiCube.exe\n" \
-"exit\n"
+"@echo off\r\n" \
+"echo Waiting for launcher to exit..\r\n" \
+"echo 5..\r\n" \
+"ping 127.0.0.1 -n 2 > nul\r\n" \
+"echo 4..\r\n" \
+"ping 127.0.0.1 -n 2 > nul\r\n" \
+"echo 3..\r\n" \
+"ping 127.0.0.1 -n 2 > nul\r\n" \
+"echo 2..\r\n" \
+"ping 127.0.0.1 -n 2 > nul\r\n" \
+"echo 1..\r\n" \
+"ping 127.0.0.1 -n 2 > nul\r\n" \
+"echo Copying updated version\r\n" \
+"move ClassiCube.update ClassiCube.exe\r\n" \
+"echo Starting launcher again\r\n" \
+"start ClassiCube.exe\r\n" \
+"exit\r\n"
 #else
 #define UPDATE_SCRIPT \
 "@#!/bin/bash\n" \
@@ -534,7 +533,6 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 "sleep 1\n" \
 "echo Copying updated version\n" \
 "mv ./ClassiCube.update ./ClassiCube\n" \
-"rm ./ClassiCube.update" \
 "echo Starting launcher again\n" \
 "./ClassiCube\n"
 #endif
