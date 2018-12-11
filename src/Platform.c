@@ -40,7 +40,6 @@ void* DisplayDevice_Meta;
 
 #define HTTP_QUERY_ETAG 54 /* Missing from some old MingW32 headers */
 #define Socket__Error() WSAGetLastError()
-#define Win_Return(success) ((success) ? 0 : GetLastError())
 
 static HANDLE heap;
 char* Platform_NewLine    = "\r\n";
@@ -71,10 +70,9 @@ const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <utime.h>
 
 #define Socket__Error() errno
-#define Nix_Return(success) ((success) ? 0 : errno)
-
 char* Platform_NewLine    = "\n";
 pthread_mutex_t event_mutex;
 
@@ -380,7 +378,7 @@ ReturnCode Directory_Create(const String* path) {
 
 	Platform_ConvertString(str, path);
 	success = CreateDirectory(str, NULL);
-	return Win_Return(success);
+	return success ? 0 : GetLastError();
 }
 
 bool File_Exists(const String* path) {
@@ -431,7 +429,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 
 	res = GetLastError(); /* return code from FindNextFile */
 	FindClose(find);
-	return Win_Return(res == ERROR_NO_MORE_FILES);
+	return res == ERROR_NO_MORE_FILES ? 0 : GetLastError();
 }
 
 ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
@@ -451,11 +449,26 @@ ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
 	return res;
 }
 
+ReturnCode File_SetModifiedTime(const String* path, TimeMS time) {
+	FileHandle file;
+	ReturnCode res = File_Append(&file, path);
+	if (res) return res;
+
+	FILETIME ft;
+	uint64_t raw = 10000 * (time - FILETIME_EPOCH);
+	ft.dwLowDateTime  = (uint32_t)raw;
+	ft.dwHighDateTime = (uint32_t)(raw >> 32);
+
+	if (!SetFileTime(file, NULL, NULL, &ft)) res = GetLastError();
+	File_Close(file);
+	return res;
+}
+
 static ReturnCode File_Do(FileHandle* file, const String* path, DWORD access, DWORD createMode) {
 	TCHAR str[300]; 
 	Platform_ConvertString(str, path);
 	*file = CreateFile(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
-	return Win_Return(*file != INVALID_HANDLE_VALUE);
+	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
 ReturnCode File_Open(FileHandle* file, const String* path) {
@@ -472,32 +485,32 @@ ReturnCode File_Append(FileHandle* file, const String* path) {
 
 ReturnCode File_Read(FileHandle file, uint8_t* buffer, uint32_t count, uint32_t* bytesRead) {
 	BOOL success = ReadFile(file, buffer, count, bytesRead, NULL);
-	return Win_Return(success);
+	return success ? 0 : GetLastError();
 }
 
 ReturnCode File_Write(FileHandle file, const uint8_t* buffer, uint32_t count, uint32_t* bytesWrote) {
 	BOOL success = WriteFile(file, buffer, count, bytesWrote, NULL);
-	return Win_Return(success);
+	return success ? 0 : GetLastError();
 }
 
 ReturnCode File_Close(FileHandle file) {
-	return Win_Return(CloseHandle(file));
+	return CloseHandle(file) ? 0 : GetLastError();
 }
 
 ReturnCode File_Seek(FileHandle file, int offset, int seekType) {
 	static uint8_t modes[3] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
 	DWORD pos = SetFilePointer(file, offset, NULL, modes[seekType]);
-	return Win_Return(pos != INVALID_SET_FILE_POINTER);
+	return pos != INVALID_SET_FILE_POINTER ? 0 : GetLastError();
 }
 
-ReturnCode File_Position(FileHandle file, uint32_t* position) {
-	*position = SetFilePointer(file, 0, NULL, FILE_CURRENT);
-	return Win_Return(*position != INVALID_SET_FILE_POINTER);
+ReturnCode File_Position(FileHandle file, uint32_t* pos) {
+	*pos = SetFilePointer(file, 0, NULL, FILE_CURRENT);
+	return *pos != INVALID_SET_FILE_POINTER ? 0 : GetLastError();
 }
 
-ReturnCode File_Length(FileHandle file, uint32_t* length) {
-	*length = GetFileSize(file, NULL);
-	return Win_Return(*length != INVALID_FILE_SIZE);
+ReturnCode File_Length(FileHandle file, uint32_t* len) {
+	*len = GetFileSize(file, NULL);
+	return *len != INVALID_FILE_SIZE ? 0 : GetLastError();
 }
 #endif
 #ifdef CC_BUILD_POSIX
@@ -513,7 +526,7 @@ ReturnCode Directory_Create(const String* path) {
 	Platform_ConvertString(str, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
-	return Nix_Return(mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != -1);
+	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
 }
 
 bool File_Exists(const String* path) {
@@ -577,11 +590,20 @@ ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
 	return 0;
 }
 
+ReturnCode File_SetModifiedTime(const char* path, TimeMS time) {
+	char str[600];
+	struct utimbuf times = { 0 };
+
+	times.modtime = (time - UNIX_EPOCH) / 1000;
+	Platform_ConvertString(str, path);
+	return utime(str, &times) == -1 ? errno : 0;
+}
+
 static ReturnCode File_Do(FileHandle* file, const String* path, int mode) {
 	char str[600]; 
 	Platform_ConvertString(str, path);
 	*file = open(str, mode, (6 << 6) | (4 << 3) | 4); /* rw|r|r */
-	return Nix_Return(*file != -1);
+	return *file == -1 ? errno : 0;
 }
 
 ReturnCode File_Open(FileHandle* file, const String* path) {
@@ -598,32 +620,32 @@ ReturnCode File_Append(FileHandle* file, const String* path) {
 
 ReturnCode File_Read(FileHandle file, uint8_t* buffer, uint32_t count, uint32_t* bytesRead) {
 	*bytesRead = read(file, buffer, count);
-	return Nix_Return(*bytesRead != -1);
+	return *bytesRead == -1 ? errno : 0;
 }
 
 ReturnCode File_Write(FileHandle file, const uint8_t* buffer, uint32_t count, uint32_t* bytesWrote) {
 	*bytesWrote = write(file, buffer, count);
-	return Nix_Return(*bytesWrote != -1);
+	return *bytesWrote == -1 ? errno : 0;
 }
 
 ReturnCode File_Close(FileHandle file) {
-	return Nix_Return(close(file) != -1);
+	return close(file) == -1 ? errno : 0;
 }
 
 ReturnCode File_Seek(FileHandle file, int offset, int seekType) {
 	static uint8_t modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
-	return Nix_Return(lseek(file, offset, modes[seekType]) != -1);
+	return lseek(file, offset, modes[seekType]) == -1 ? errno : 0;
 }
 
-ReturnCode File_Position(FileHandle file, uint32_t* position) {
-	*position = lseek(file, 0, SEEK_CUR);
-	return Nix_Return(*position != -1);
+ReturnCode File_Position(FileHandle file, uint32_t* pos) {
+	*pos = lseek(file, 0, SEEK_CUR);
+	return *pos == -1 ? errno : 0;
 }
 
-ReturnCode File_Length(FileHandle file, uint32_t* length) {
+ReturnCode File_Length(FileHandle file, uint32_t* len) {
 	struct stat st;
-	if (fstat(file, &st) == -1) { *length = -1; return errno; }
-	*length = st.st_size; return 0;
+	if (fstat(file, &st) == -1) { *len = -1; return errno; }
+	*len = st.st_size; return 0;
 }
 #endif
 
@@ -1324,7 +1346,7 @@ static ReturnCode Http_Make(struct AsyncRequest* req, HINTERNET* handle) {
 
 	*handle = InternetOpenUrlA(hInternet, urlStr, headers.buffer, headers.length,
 		INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD, 0);
-	return Win_Return(*handle);
+	return *handle ? 0 : GetLastError();
 }
 
 static ReturnCode Http_GetHeaders(struct AsyncRequest* req, HINTERNET handle) {
@@ -1403,10 +1425,12 @@ ReturnCode Http_Do(struct AsyncRequest* req, volatile int* progress) {
 		if (res) { InternetCloseHandle(handle); return res; }
 	}
 
-	return Win_Return(InternetCloseHandle(handle));
+	return InternetCloseHandle(handle) ? 0 : GetLastError();
 }
 
-ReturnCode Http_Free(void) { return Win_Return(InternetCloseHandle(hInternet)); }
+ReturnCode Http_Free(void) { 
+	return InternetCloseHandle(hInternet) ? 0 : GetLastError();
+}
 #endif
 #ifdef CC_BUILD_POSIX
 CURL* curl;
@@ -2028,12 +2052,12 @@ ReturnCode Platform_LoadLibrary(const String* path, void** lib) {
 	TCHAR str[300];
 	Platform_ConvertString(str, path);
 	*lib = LoadLibrary(str);
-	return Win_Return(*lib);
+	return *lib ? 0 : GetLastError();
 }
 
 ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol) {
 	*symbol = GetProcAddress(lib, name);
-	return Win_Return(*symbol);
+	return *symbol ? 0 : GetLastError();
 }
 #endif
 #ifdef CC_BUILD_POSIX

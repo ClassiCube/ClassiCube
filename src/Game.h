@@ -50,7 +50,6 @@ extern bool Game_AllowCustomBlocks;
 extern bool Game_UseCPE;
 extern bool Game_AllowServerTextures;
 extern bool Game_SmoothLighting;
-extern bool Game_ChatLogging;
 extern bool Game_AutoRotate;
 extern bool Game_SmoothCamera;
 extern int  Game_ChatLines;

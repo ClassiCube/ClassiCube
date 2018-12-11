@@ -31,10 +31,10 @@ void Json_Parse(struct JsonContext* ctx);
 
 /* Represents all known details about a server. */
 struct ServerInfo {
-	String Hash, Name, Flag, IP, Port, Mppass, Software;
-	int Players, MaxPlayers, Uptime;
+	String Hash, Name, IP, Mppass, Software, Country;
+	int Players, MaxPlayers, Port, Uptime;
 	bool Featured;
-	char _Buffer[7][STRING_SIZE];
+	char _Buffer[6][STRING_SIZE];
 };
 
 struct LWebTask;
@@ -95,8 +95,8 @@ void CheckUpdateTask_Run(void);
 
 extern struct FetchUpdateData {
 	struct LWebTask Base;
-	uint8_t* Data; /* The raw downloaded executable. */
-	uint32_t Size; /* Size of data in bytes. */
+	/* Timestamp downloaded build was originally built at. */
+	TimeMS Timestamp;
 } FetchUpdateTask;
 void FetchUpdateTask_Run(bool release, bool d3d9);
 

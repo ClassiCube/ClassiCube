@@ -553,7 +553,6 @@ static void DirectConnectScreen_Save(const String* user, const String* mppass, c
 	Options_Set("launcher-dc-ip",       ip);
 	Options_Set("launcher-dc-port",     port);
 	Launcher_SetSecureOpt("launcher-dc-mppass", mppass, user);
-	Launcher_SaveOptions = true;
 }
 
 static void DirectConnectScreen_StartClient(void* w, int x, int y) {
@@ -663,7 +662,6 @@ static struct MainScreen {
 	SetStatus("&eSigning in..");
 	signingIn = true;
 
-	Launcher_SaveOptions = true;
 	Options_Set("launcher-cc-username", user);
 	Launcher_SetSecureOpt("launcher-cc-password", pass, user);
 }
@@ -979,10 +977,10 @@ static struct UpdatesScreen {
 	struct LButton BtnRel[2], BtnDev[2], BtnBack;
 	struct LLabel  LblYour, LblRel, LblDev, LblInfo, LblStatus;
 	struct LWidget* _widgets[10];
+	const char* BuildName;
+	int BuildProgress;
 } UpdatesScreen_Instance;
 
-static const char* buildName;
-static int buildProgress = -1;
 static void UpdatesScreen_Draw(struct LScreen* s) {
 	int midX = Game_Width / 2, midY = Game_Height / 2;
 	LScreen_Draw(s);
@@ -1029,33 +1027,24 @@ static void UpdatesScreen_FormatBoth(struct UpdatesScreen* s) {
 }
 
 static void UpdatesScreen_Get(bool release, bool d3d9) {
-#ifdef CC_BUILD_WIN
-#ifdef _WIN64
-	static String path_d3d9 = String_FromConst("ClassiCube.64.exe");
-	static String path_ogl  = String_FromConst("ClassiCube.64-opengl.exe");
-#else
-	static String path_d3d9 = String_FromConst("ClassiCube.exe");
-	static String path_ogl  = String_FromConst("ClassiCube.opengl.exe");
-#endif
-#else
-	/* TODO: OSX, 32 bit linux */
-	static String path_d3d9 = String_FromConst("ClassiCube");
-	static String path_ogl  = String_FromConst("ClassiCube");
-#endif
+	String str; char strBuffer[STRING_SIZE];
+	struct UpdatesScreen* s = &UpdatesScreen_Instance;
 
 	TimeMS time = release ? CheckUpdateTask.RelTimestamp : CheckUpdateTask.DevTimestamp;
 	if (!time || FetchUpdateTask.Base.Working) return;
 	FetchUpdateTask_Run(release, d3d9);
 
-	if (release && d3d9)   buildName = "&eFetching latest release (Direct3D9)";
-	if (release && !d3d9)  buildName = "&eFetching latest release (OpenGL)";
-	if (!release && d3d9)  buildName = "&eFetching latest dev build (Direct3D9)";
-	if (!release && !d3d9) buildName = "&eFetching latest dev build (OpenGL)";
+	if (release && d3d9)   s->BuildName = "&eFetching latest release (Direct3D9)";
+	if (release && !d3d9)  s->BuildName = "&eFetching latest release (OpenGL)";
+	if (!release && d3d9)  s->BuildName = "&eFetching latest dev build (Direct3D9)";
+	if (!release && !d3d9) s->BuildName = "&eFetching latest dev build (OpenGL)";
 
-	buildProgress = -1;
-	//Applier.PatchTime = build.TimeBuilt;
-	//view.statusText = buildName + "..";
-	//UpdateStatus();
+	s->BuildProgress = -1;
+	String_InitArray(str, strBuffer);
+
+	String_Format1(&str, "%c..", s->BuildName);
+	LLabel_SetText(&s->LblStatus, &str);
+	LWidget_Redraw(&s->LblStatus);
 }
 
 static void UpdatesScreen_CheckTick(struct UpdatesScreen* s) {
@@ -1065,7 +1054,8 @@ static void UpdatesScreen_CheckTick(struct UpdatesScreen* s) {
 	UpdatesScreen_FormatBoth(s);
 }
 
-static void UpdatesScreen_UpdateProgress(struct LWebTask* task) {
+static void UpdatesScreen_UpdateProgress(struct UpdatesScreen* s, struct LWebTask* task) {
+	String str; char strBuffer[STRING_SIZE];
 	String identifier;
 	struct AsyncRequest item;
 	int progress;
@@ -1073,36 +1063,31 @@ static void UpdatesScreen_UpdateProgress(struct LWebTask* task) {
 
 	identifier = String_FromRawArray(item.ID);
 	if (!String_Equals(&identifier, &task->Identifier)) return;
-	if (progress == buildProgress) return;
+	if (progress == s->BuildProgress) return;
 
-	buildProgress = progress;
-	if (progress >= 0 && progress <= 100) {
-		//view.statusText = buildName + " &a" + progress + "%";
-		//UpdateStatus();
-	}
+	s->BuildProgress = progress;
+	if (progress < 0 || progress > 100) return;
+	String_InitArray(str, strBuffer);
+
+	String_Format2(&str, "%c &a%i%%", s->BuildName, &s->BuildProgress);
+	LLabel_SetText(&s->LblStatus, &str);
+	LWidget_Redraw(&s->LblStatus);
 }
 
 static void UpdatesScreen_FetchTick(struct UpdatesScreen* s) {
 	static String failedMsg = String_FromConst("&cFailed to fetch update");
 	if (!FetchUpdateTask.Base.Working) return;
 	LWebTask_Tick(&FetchUpdateTask.Base);
-	UpdatesScreen_UpdateProgress(&FetchUpdateTask.Base);
+	UpdatesScreen_UpdateProgress(s, &FetchUpdateTask.Base);
 	if (!FetchUpdateTask.Base.Completed) return;
 
 	if (!FetchUpdateTask.Base.Success) {
 		LLabel_SetText(&s->LblStatus, &failedMsg);
 		LWidget_Redraw(&s->LblStatus);
 	} else {
-		//csZip = fetchTask.ZipFile;
-		//Applier.ExtractUpdate(csZip);
+		/* WebTask handles saving of ClassiCube.update for us */
 		Launcher_ShouldExit  = true;
 		Launcher_ShouldUpdate = true;
-
-		//if (cExe == null) return;
-		//string path = Client.GetExeName();
-		// TODO: Set last-modified time to actual time of dev build
-		//Platform.WriteAllBytes(path, cExe);
-		//Platform.SetLastModified(path, patchTime);
 	}
 }
 
@@ -1183,5 +1168,8 @@ struct LScreen* UpdatesScreen_MakeInstance(void) {
 	s->Draw       = UpdatesScreen_Draw;
 	s->Tick       = UpdatesScreen_Tick;
 	s->Reposition = UpdatesScreen_Reposition;
+
+	s->BuildName     = NULL;
+	s->BuildProgress = -1;
 	return (struct LScreen*)s;
 }

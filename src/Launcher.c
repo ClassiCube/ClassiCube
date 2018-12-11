@@ -16,7 +16,6 @@
 /* TODO TODO TODO TODO TODO TODO TODO TODO FIX THESE STUBS */
 void Launcher_SetSecureOpt(const char* opt, const String* data, const String* key) { }
 void Launcher_GetSecureOpt(const char* opt, String* data, const String* key) { }
-void FetchUpdateTask_Run(bool release, bool d3d9) { }
 struct LScreen* ResourcesScreen_MakeInstance(void) { return NULL; }
 struct LScreen* ServersScreen_MakeInstance(void) { return NULL; }
 
@@ -30,7 +29,7 @@ FontDesc Launcher_TitleFont, Launcher_TextFont, Launcher_HintFont;
 static bool fullRedraw, pendingRedraw;
 static FontDesc logoFont;
 
-bool Launcher_ShouldExit, Launcher_ShouldUpdate, Launcher_SaveOptions;
+bool Launcher_ShouldExit, Launcher_ShouldUpdate;
 static void Launcher_ApplyUpdate(void);
 
 
@@ -234,7 +233,7 @@ void Launcher_Run(void) {
 		Thread_Sleep(10);
 	}
 
-	if (Launcher_SaveOptions) {
+	if (Options_HasAnyChanged()) {
 		Options_Load();
 		Options_Save();
 	}
@@ -304,7 +303,6 @@ void Launcher_SaveSkin(void) {
 	Launcher_SetCol("launcher-btn-fore-active-col",        Launcher_ButtonForeActiveCol);
 	Launcher_SetCol("launcher-btn-fore-inactive-col",      Launcher_ButtonForeCol);
 	Launcher_SetCol("launcher-btn-highlight-inactive-col", Launcher_ButtonHighlightCol);
-	Launcher_SaveOptions = true;
 }
 
 
@@ -501,7 +499,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 }
 
 #ifdef CC_BUILD_WIN
-static const char* Update_Script = \
+#define UPDATE_SCRIPT \
 "@echo off\n" \
 "echo Waiting for launcher to exit..\n" \
 "echo 5..\n" \
@@ -516,11 +514,12 @@ static const char* Update_Script = \
 "ping 127.0.0.1 - n 2 > nul\n" \
 "echo Copying updated version\n" \
 "move ClassiCube.update ClassiCube.exe\n" \
+"rm ClassiCube.update" \
 "echo Starting launcher again\n" \
 "start ClassiCube.exe\n" \
-"exit\n";
+"exit\n"
 #else
-static const char* Update_Script = \
+#define UPDATE_SCRIPT \
 "@#!/bin/bash\n" \
 "echo Waiting for launcher to exit..\n" \
 "echo 5..\n" \
@@ -535,14 +534,15 @@ static const char* Update_Script = \
 "sleep 1\n" \
 "echo Copying updated version\n" \
 "mv ./ClassiCube.update ./ClassiCube\n" \
+"rm ./ClassiCube.update" \
 "echo Starting launcher again\n" \
-"./ClassiCube\n";
+"./ClassiCube\n"
 #endif
 
 static void Launcher_ApplyUpdate(void) {
 #ifdef CC_BUILD_WIN
 	static String scriptPath = String_FromConst("update.bat");
-	static String scriptName = String_FromConst("cmd");
+	static String scriptName = String_FromConst("C:/Windows/System32/cmd.exe");
 	static String scriptArgs = String_FromConst("/C start cmd /C update.bat");
 #else
 	static String scriptPath = String_FromConst("update.sh");
@@ -556,7 +556,7 @@ static void Launcher_ApplyUpdate(void) {
 	if (res) { Launcher_ShowError(res, "creating update script"); return; }
 
 	/* Can't use WriteLine, want \n as actual newline not code page 437 */
-	res = Stream_Write(&s, Update_Script, sizeof(Update_Script) - 1);
+	res = Stream_Write(&s, UPDATE_SCRIPT, sizeof(UPDATE_SCRIPT) - 1);
 	if (res) { Launcher_ShowError(res, "writing update script"); return; }
 
 	res = s.Close(&s);

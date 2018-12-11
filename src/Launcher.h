@@ -31,8 +31,6 @@ extern FontDesc Launcher_HintFont;
 extern bool Launcher_ShouldExit;
 /* Whether update script should be asynchronously run on exit. */
 extern bool Launcher_ShouldUpdate;
-/* Whether options should be saved on closing launcher. */
-extern bool Launcher_SaveOptions;
 
 /* Base colour of pixels before any widgets are drawn. */
 extern BitmapCol Launcher_BackgroundCol;

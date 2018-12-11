@@ -25,7 +25,10 @@ typedef enum MsgType_ {
 
 extern String Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
 extern StringsBuffer Chat_Log, Chat_InputLog;
+/* Whether chat messages are logged to disc. */
+extern bool Chat_Logging;
 
+/* Time at which last announcement message was received. */
 extern TimeMS Chat_AnnouncementReceived;
 /* Gets the time the ith chat message was received at. */
 TimeMS Chat_GetLogTime(int i);
@@ -43,6 +46,8 @@ struct ChatCommand {
 /* Registers a client-side command, allowing it to be used with /client [cmd name] */
 CC_EXPORT void Commands_Register(struct ChatCommand* cmd);
 
+/* Sets the name of log file (no .txt, so e.g. just "singleplayer") */
+/* NOTE: This can only be set once. */
 void Chat_SetLogName(const String* name);
 /* Sends a chat message, raising ChatEvents_ChatSending event. */
 /* NOTE: /client is always interpreted as client-side commands. */

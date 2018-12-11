@@ -121,6 +121,8 @@ ReturnCode Directory_Enum(const String* path, void* obj, Directory_EnumCallback 
 bool File_Exists(const String* path);
 /* Returns the last time the file was modified, as number of milliseconds since 1/1/0001 */
 ReturnCode File_GetModifiedTime(const String* path, TimeMS* ms);
+/* Sets the last time the file was modified, as number of milliseconds since 1/1/0001 */
+ReturnCode File_SetModifiedTime(const String* path, TimeMS ms);
 
 /* Attempts to create a new (or overwrite) file for writing. */
 ReturnCode File_Create(FileHandle* file, const String* path);
@@ -137,9 +139,9 @@ ReturnCode File_Close(FileHandle file);
 /* Attempts to seek to a position in the given file. */
 ReturnCode File_Seek(FileHandle file, int offset, int seekType);
 /* Attempts to get the current position in the given file. */
-ReturnCode File_Position(FileHandle file, uint32_t* position);
+ReturnCode File_Position(FileHandle file, uint32_t* pos);
 /* Attempts to retrieve the length of the given file. */
-ReturnCode File_Length(FileHandle file, uint32_t* length);
+ReturnCode File_Length(FileHandle file, uint32_t* len);
 
 /* Blocks the current thread for the given number of milliseconds. */
 CC_EXPORT void Thread_Sleep(uint32_t milliseconds);

@@ -475,6 +475,8 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 			}
 		case 'h':
 			String_Hex32(str, *((uint32_t*)arg)); break;
+		case '%':
+			String_Append(str, '%'); break;
 		default: 
 			ErrorHandler_Fail("Invalid type for string format");
 		}

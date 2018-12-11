@@ -53,7 +53,7 @@ bool Game_UseClassicTabList, Game_UseClassicOptions;
 bool Game_ClassicMode, Game_ClassicHacks;
 bool Game_AllowCustomBlocks, Game_UseCPE;
 bool Game_AllowServerTextures, Game_SmoothLighting;
-bool Game_ChatLogging, Game_AutoRotate;
+bool Game_AutoRotate;
 bool Game_SmoothCamera, Game_ClickableChat;
 bool Game_HideGui, Game_ShowFPS;
 
@@ -364,7 +364,6 @@ static void Game_LoadOptions(void) {
 	Game_AllowCustomBlocks = Options_GetBool(OPT_CUSTOM_BLOCKS, true);
 	Game_UseCPE            = Options_GetBool(OPT_CPE, true);
 	Game_SimpleArmsAnim    = Options_GetBool(OPT_SIMPLE_ARMS_ANIM, false);
-	Game_ChatLogging       = Options_GetBool(OPT_CHAT_LOGGING, true);
 	Game_ClassicArmModel   = Options_GetBool(OPT_CLASSIC_ARM_MODEL, Game_ClassicMode);
 
 	Game_ViewBobbing    = Options_GetBool(OPT_VIEW_BOBBING, true);
@@ -445,9 +444,9 @@ void Game_Load(void) {
 	Game_AddComponent(&Blocks_Component);
 	Game_AddComponent(&Drawer2D_Component);
 
+	Game_AddComponent(&Chat_Component);
 	Game_AddComponent(&Particles_Component);
 	Game_AddComponent(&TabList_Component);
-	Game_AddComponent(&Chat_Component);
 
 	Game_AddComponent(&Models_Component);
 	Game_AddComponent(&Entities_Component);

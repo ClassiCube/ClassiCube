@@ -23,6 +23,7 @@ String Chat_ClientStatus[3] = { String_FromArray(msgs[6]), String_FromArray(msgs
 String Chat_Announcement = String_FromArray(msgs[9]);
 TimeMS Chat_AnnouncementReceived;
 StringsBuffer Chat_Log, Chat_InputLog;
+bool Chat_Logging;
 
 /*########################################################################################################################*
 *-------------------------------------------------------Chat logging------------------------------------------------------*
@@ -86,7 +87,7 @@ void Chat_SetLogName(const String* name) {
 }
 
 static void Chat_DisableLogging(void) {
-	Game_ChatLogging = false;
+	Chat_Logging = false;
 	Chat_AddRaw("&cDisabling chat logging");
 }
 
@@ -130,7 +131,7 @@ static void Chat_AppendLog(const String* text) {
 	struct DateTime now;
 	ReturnCode res;	
 
-	if (!Chat_LogName.length || !Game_ChatLogging) return;
+	if (!Chat_LogName.length || !Chat_Logging) return;
 	DateTime_CurrentLocal(&now);
 
 	if (now.Day != ChatLog_LastLogDate.Day || now.Month != ChatLog_LastLogDate.Month || now.Year != ChatLog_LastLogDate.Year) {
@@ -579,6 +580,8 @@ static void Chat_Init(void) {
 	Commands_Register(&ModelCommand_Instance);
 	Commands_Register(&CuboidCommand_Instance);
 	Commands_Register(&TeleportCommand_Instance);
+
+	Chat_Logging = Options_GetBool(OPT_CHAT_LOGGING, true);
 }
 
 static void Chat_Reset(void) {

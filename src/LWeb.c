@@ -1,5 +1,6 @@
 #include "LWeb.h"
 #include "Platform.h"
+#include "Stream.h"
 
 /*########################################################################################################################*
 *----------------------------------------------------------JSON-----------------------------------------------------------*
@@ -218,6 +219,7 @@ void LWebTask_Tick(struct LWebTask* task) {
 	task->Completed = true;
 	task->Success   = !task->Res && req.ResultData && req.ResultSize;
 	if (task->Success) task->Handle(req.ResultData, req.ResultSize);
+	ASyncRequest_Free(&req);
 }
 
 static void LWebTask_DefaultBegin(struct LWebTask* task) {
@@ -265,14 +267,107 @@ void SignInTask_Run(const String* user, const String* pass);
 *-----------------------------------------------------FetchServerTask-----------------------------------------------------*
 *#########################################################################################################################*/
 struct FetchServerData FetchServerTask;
-void FetchServerTask_Run(const String* hash);
+static struct ServerInfo* curServer;
+
+static void ServerInfo_Init(struct ServerInfo* info) {
+	String_InitArray(info->Hash, info->_Buffer[0]);
+	String_InitArray(info->Name, info->_Buffer[1]);
+	String_InitArray(info->IP,   info->_Buffer[2]);
+
+	String_InitArray(info->Mppass,   info->_Buffer[3]);
+	String_InitArray(info->Software, info->_Buffer[4]);
+	String_InitArray(info->Country,  info->_Buffer[5]);
+
+	info->Players    = 0;
+	info->MaxPlayers = 0;
+	info->Uptime     = 0;
+	info->Featured   = false;
+}
+
+static void ServerInfo_Parse(struct JsonContext* ctx, const String* val) {
+	struct ServerInfo* info = curServer;
+	if (String_CaselessEqualsConst(&ctx->CurKey, "hash")) {
+		String_Copy(&info->Hash, val);
+	} else if (String_CaselessEqualsConst(&ctx->CurKey, "name")) {
+		String_Copy(&info->Name, val);
+	} else if (String_CaselessEqualsConst(&ctx->CurKey, "players")) {
+		Convert_ParseInt(val, &info->Players);
+	} else if (String_CaselessEqualsConst(&ctx->CurKey, "maxplayers")) {
+		Convert_ParseInt(val, &info->MaxPlayers);
+	} else if (String_CaselessEqualsConst(&ctx->CurKey, "uptime")) {
+		Convert_ParseInt(val, &info->Uptime);
+	} else if (String_CaselessEqualsConst(&ctx->CurKey, "mppass")) {
+		String_Copy(&info->Mppass, val);
+	} else if (String_CaselessEqualsConst(&ctx->CurKey, "ip")) {
+		String_Copy(&info->IP, val);
+	} else if (String_CaselessEqualsConst(&ctx->CurKey, "port")) {
+		Convert_ParseInt(val, &info->Port);
+	} else if (String_CaselessEqualsConst(&ctx->CurKey, "software")) {
+		String_Copy(&info->Software, val);
+	} else if (String_CaselessEqualsConst(&ctx->CurKey, "featured")) {
+		Convert_ParseBool(val, &info->Featured);
+	} else if (String_CaselessEqualsConst(&ctx->CurKey, "country_abbr")) {
+		String_Copy(&info->Country, val);
+	}
+}
+
+static void FetchServerTask_Handle(uint8_t* data, uint32_t len) {
+	curServer = &FetchServerTask.Server;
+	Json_Handle(data, len, ServerInfo_Parse, NULL, NULL);
+}
+
+void FetchServerTask_Run(const String* hash) {
+	static String id  = String_FromConst("CC fetch server");
+	String url; char urlBuffer[STRING_SIZE];
+	if (FetchServerTask.Base.Working) return;
+
+	LWebTask_Reset(&FetchServerTask.Base);
+	ServerInfo_Init(&FetchServerTask.Server);
+	String_InitArray(url, urlBuffer);
+	String_Format1(&url, "https://www.classicube.net/api/server/%s", hash);
+
+	FetchServerTask.Base.Identifier = id;
+	AsyncDownloader_GetData(&url, false, &id);
+	FetchServerTask.Base.Handle  = FetchServerTask_Handle;
+}
 
 
 /*########################################################################################################################*
 *-----------------------------------------------------FetchServersTask----------------------------------------------------*
 *#########################################################################################################################*/
 struct FetchServersData FetchServersTask;
-void FetchServersTask_Run(void);
+static void FetchServersTask_Count(struct JsonContext* ctx) {
+	FetchServersTask.NumServers++;
+}
+
+static void FetchServersTask_Next(struct JsonContext* ctx) {
+	curServer++;
+	ServerInfo_Init(curServer);
+}
+
+static void FetchServersTask_Handle(uint8_t* data, uint32_t len) {
+	Json_Handle(data, len, NULL, NULL, FetchServersTask_Count);
+	if (!FetchServersTask.NumServers) return;
+
+	FetchServersTask.Servers = Mem_Alloc(FetchServersTask.NumServers, sizeof(struct ServerInfo), "servers list");
+	curServer = FetchServersTask.Servers - 1;
+	Json_Handle(data, len, ServerInfo_Parse, NULL, FetchServersTask_Next);
+}
+
+void FetchServersTask_Run(void) {
+	static String id  = String_FromConst("CC fetch servers");
+	static String url = String_FromConst("https://www.classicube.net/api/servers");
+	if (FetchServersTask.Base.Working) return;
+
+	LWebTask_Reset(&FetchServersTask.Base);
+	Mem_Free(FetchServersTask.Servers);
+	FetchServersTask.Servers     = NULL;
+	FetchServersTask.NumServers = 0;
+
+	FetchServersTask.Base.Identifier = id;
+	AsyncDownloader_GetData(&url, false, &id);
+	FetchServersTask.Base.Handle = FetchServersTask_Handle;
+}
 
 
 /*########################################################################################################################*
@@ -327,7 +422,53 @@ void CheckUpdateTask_Run(void) {
 *-----------------------------------------------------FetchUpdateTask-----------------------------------------------------*
 *#########################################################################################################################*/
 struct FetchUpdateData FetchUpdateTask;
-void FetchUpdateTask_Run(bool release, bool d3d9);
+static void FetchUpdateTask_Handle(uint8_t* data, uint32_t len) {
+	static String path = String_FromConst("ClassiCube.update");
+	struct Stream stream;
+	ReturnCode res;
+
+	res = Stream_CreateFile(&stream, &path);
+	// TODO: FINISH THIS... 
+
+	res = Stream_Write(&stream, data, len);
+
+	stream.Close(&stream);
+
+	res = File_SetModifiedTime(&path, FetchUpdateTask.Timestamp);
+	// TODO: log errors..
+	// TODO: FINISHHHHH!!!!
+}
+
+void FetchUpdateTask_Run(bool release, bool d3d9) {
+#ifdef CC_BUILD_WIN
+#ifdef _WIN64
+	const char* exe_d3d9 = "ClassiCube.64.exe";
+	const char* exe_ogl  = "ClassiCube.64-opengl.exe";
+#else
+	const char* exe_d3d9 = "ClassiCube.exe";
+	const char* exe_ogl  = "ClassiCube.opengl.exe";
+#endif
+#else
+	/* TODO: OSX, 32 bit linux */
+	const char* exe_d3d9 = "ClassiCube";
+	const char* exe_ogl  = "ClassiCube";
+#endif
+	static String id = String_FromConst("CC update fetch");
+	String url; char urlBuffer[STRING_SIZE];
+	String_InitArray(url, urlBuffer);
+
+	String_Format2(&url, "http://cs.classicube.net/c_client/%c/%c",
+		release ? "release" : "latest",
+		d3d9    ? exe_d3d9  : exe_ogl);
+	if (FetchUpdateTask.Base.Working) return;
+
+	LWebTask_Reset(&FetchUpdateTask.Base);
+	FetchUpdateTask.Timestamp = release ? CheckUpdateTask.RelTimestamp : CheckUpdateTask.DevTimestamp;
+
+	FetchUpdateTask.Base.Identifier = id;
+	AsyncDownloader_GetData(&url, false, &id);
+	FetchUpdateTask.Base.Handle = FetchUpdateTask_Handle;
+}
 
 
 /*########################################################################################################################*
@@ -338,24 +479,6 @@ void FetchFlagsTask_Run(void);
 void FetchFlagsTask_Add(const String* name);
 
 /*
-protected static JsonObject ParseJson(Request req) {
-	JsonContext ctx = new JsonContext();
-	ctx.Val = (string)req.Data;
-	return (JsonObject)Json.ParseStream(ctx);
-}
-
-public sealed class GetTokenTask : WebTask {
-	public GetTokenTask() {
-		identifier = "CC get login";
-		uri = "https://www.classicube.net/api/login/";
-	}
-	public string Token;
-
-	protected override void Handle(Request req) {
-		JsonObject data = ParseJson(req);
-		Token = (string)data["token"];
-	}
-}
 
 public sealed class SignInTask : WebTask {
 	public SignInTask() {
@@ -390,113 +513,6 @@ public sealed class SignInTask : WebTask {
 		return "Unknown error occurred";
 	}
 }
-
-
-public class ServerInfo {
-	public string Hash, Name, Players, MaxPlayers, Flag;
-	public string Uptime, IPAddress, Port, Mppass, Software;
-	public bool Featured;
-}
-
-public sealed class FetchServerTask : WebTask {
-	public FetchServerTask(string user, string hash) {
-		Username = user;
-		identifier = "CC get servers";
-		uri = "https://www.classicube.net/api/server/" + hash;
-	}
-
-	public static ServerInfo ParseEntry(JsonObject obj) {
-		ServerInfo entry = new ServerInfo();
-		entry.Hash = (string)obj["hash"];
-		entry.Name = (string)obj["name"];
-		entry.Players = (string)obj["players"];
-		entry.MaxPlayers = (string)obj["maxplayers"];
-		entry.Uptime = (string)obj["uptime"];
-		entry.Mppass = (string)obj["mppass"];
-		entry.IPAddress = (string)obj["ip"];
-		entry.Port = (string)obj["port"];
-		entry.Software = (string)obj["software"];
-
-		if (obj.ContainsKey("featured")) {
-			entry.Featured = (bool)obj["featured"];
-		}
-		if (obj.ContainsKey("country_abbr")) {
-			entry.Flag = Utils.ToLower((string)obj["country_abbr"]);
-		}
-		return entry;
-	}
-
-	public string Username;
-	public ClientStartData Info;
-
-	protected override void Handle(Request req) {
-		JsonObject root = ParseJson(req);
-		List<object> list = (List<object>)root["servers"];
-
-		JsonObject obj = (JsonObject)list[0];
-		ServerInfo entry = ParseEntry(obj);
-		Info = new ClientStartData(Username, entry.Mppass, entry.IPAddress, entry.Port, entry.Name);
-	}
-}
-
-public sealed class FetchServersTask : WebTask {
-	public FetchServersTask() {
-		identifier = "CC get servers";
-		uri = "https://www.classicube.net/api/servers";
-	}
-
-	public List<ServerInfo> Servers;
-	protected override void Reset() {
-		base.Reset();
-		Servers = new List<ServerInfo>();
-	}
-
-	protected override void Handle(Request req) {
-		JsonObject root = ParseJson(req);
-		List<object> list = (List<object>)root["servers"];
-
-		for (int i = 0; i < list.Count; i++) {
-			JsonObject obj = (JsonObject)list[i];
-			ServerInfo entry = FetchServerTask.ParseEntry(obj);
-			Servers.Add(entry);
-		}
-	}
-}
-
-public sealed class UpdateDownloadTask : WebTask {
-	public UpdateDownloadTask(string dir) {
-		identifier = "CC update download";
-		uri = "http://cs.classicube.net/" + dir;
-	}
-
-	public byte[] ZipFile;
-
-	protected override void Begin() {
-		Game.Downloader.AsyncGetData(uri, false, identifier);
-	}
-
-	protected override void Handle(Request req) {
-		ZipFile = (byte[])req.Data;
-	}
-}
-
-public sealed class UpdateCClientTask : WebTask {
-	public UpdateCClientTask(string file) {
-		identifier = "CC CClient download";
-		uri = "http://cs.classicube.net/c_client/latest/" + file;
-	}
-
-	public byte[] File;
-
-	protected override void Begin() {
-		Game.Downloader.AsyncGetData(uri, false, identifier);
-	}
-
-	protected override void Handle(Request req) {
-		File = (byte[])req.Data;
-	}
-}
-
 
 public sealed class FetchFlagsTask : WebTask {
 	public FetchFlagsTask() {
