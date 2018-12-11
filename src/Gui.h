@@ -109,9 +109,10 @@ void Gui_CalcCursorVisible(void);
 #define TEXTATLAS_MAX_WIDTHS 16
 struct TextAtlas {
 	struct Texture Tex;
-	int Offset, CurX, FontSize;
+	int Offset, CurX;
 	float uScale;
 	int16_t Widths[TEXTATLAS_MAX_WIDTHS];
+	int16_t Offsets[TEXTATLAS_MAX_WIDTHS];
 };
 void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const FontDesc* font, const String* prefix);
 void TextAtlas_Free(struct TextAtlas* atlas);

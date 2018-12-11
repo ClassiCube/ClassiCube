@@ -266,24 +266,31 @@ void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const FontDesc
 	struct DrawTextArgs args; 
 	Size2D size;
 	Bitmap bmp;
-	int i;
+	int i, width;
 
 	DrawTextArgs_Make(&args, prefix, font, true);
 	size = Drawer2D_MeasureText(&args);
+	atlas->Offset = size.Width;
+	
+	width = atlas->Offset;
+	for (i = 0; i < chars->length; i++) {
+		args.Text = String_UNSAFE_Substring(chars, i, 1);
+		size = Drawer2D_MeasureText(&args);
 
-	atlas->Offset   = size.Width;
-	atlas->FontSize = font->Size;
-	size.Width += 16 * chars->length;
+		atlas->Widths[i]  = size.Width;
+		atlas->Offsets[i] = width;
+		/* add 1 pixel of padding */
+		width += size.Width + 1;
+	}
 
-	Mem_Set(atlas->Widths, 0, sizeof(atlas->Widths));
-	Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+	Bitmap_AllocateClearedPow2(&bmp, width, size.Height);
 	{
-		Drawer2D_DrawText(&bmp, &args, 0, 0);		
+		args.Text = *prefix;
+		Drawer2D_DrawText(&bmp, &args, 0, 0);	
+
 		for (i = 0; i < chars->length; i++) {
 			args.Text = String_UNSAFE_Substring(chars, i, 1);
-			atlas->Widths[i] = Drawer2D_MeasureText(&args).Width;
-
-			Drawer2D_DrawText(&bmp, &args, atlas->Offset + font->Size * i, 0);
+			Drawer2D_DrawText(&bmp, &args, atlas->Offsets[i], 0);
 		}
 		Drawer2D_Make2DTexture(&atlas->Tex, &bmp, size, 0, 0);
 	}	
@@ -303,8 +310,8 @@ void TextAtlas_Add(struct TextAtlas* atlas, int charI, VertexP3fT2fC4b** vertice
 	PackedCol white = PACKEDCOL_WHITE;
 
 	part.X  = atlas->CurX; part.Width = width;
-	part.uv.U1 = (atlas->Offset + charI * atlas->FontSize) * atlas->uScale;
-	part.uv.U2 = part.uv.U1 + width                        * atlas->uScale;
+	part.uv.U1 = atlas->Offsets[charI] * atlas->uScale;
+	part.uv.U2 = part.uv.U1 + width    * atlas->uScale;
 
 	atlas->CurX += width;	
 	Gfx_Make2DQuad(&part, white, vertices);
