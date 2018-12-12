@@ -281,13 +281,6 @@ void Drawer2D_Clear(Bitmap* bmp, BitmapCol col, int x, int y, int width, int hei
 }
 
 
-int Drawer2D_FontHeight(const FontDesc* font, bool useShadow) {
-	const static String text = String_FromConst("I");
-	struct DrawTextArgs args;
-	DrawTextArgs_Make(&args, &text, font, useShadow);
-	return Drawer2D_MeasureText(&args).Height;
-}
-
 void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, int X, int Y) {
 	static struct Texture empty = { GFX_NULL, Tex_Rect(0,0, 0,0), Tex_UV(0,0, 1,1) };
 	Size2D size = Drawer2D_MeasureText(args);
@@ -511,16 +504,14 @@ static void Drawer2D_DrawBitmapText(Bitmap* bmp, struct DrawTextArgs* args, int 
 	Drawer2D_DrawCore(bmp, args, x, y, false);
 }
 
-static Size2D Drawer2D_MeasureBitmapText(struct DrawTextArgs* args) {
+static int Drawer2D_MeasureBitmapWidth(struct DrawTextArgs* args) {
 	int i, point = args->Font.Size;
-	int offset, xPadding;
-	Size2D total;
+	int xPadding, width;
 	String text;
 
 	/* adjust coords to make drawn text match GDI fonts */
-	xPadding     = Drawer2D_XPadding(point);
-	total.Width  = 0;
-	total.Height = Drawer2D_AdjHeight(point);
+	xPadding = Drawer2D_XPadding(point);
+	width    = 0;
 
 	text = args->Text;
 	for (i = 0; i < text.length; i++) {
@@ -528,26 +519,22 @@ static Size2D Drawer2D_MeasureBitmapText(struct DrawTextArgs* args) {
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
 			i++; continue; /* skip over the colour code */
 		}
-		total.Width += Drawer2D_Width(point, c) + xPadding;
+		width += Drawer2D_Width(point, c) + xPadding;
 	}
 
 	/* TODO: this should be uncommented */
 	/* Remove padding at end */
-	/*if (total.Width > 0) total.Width -= xPadding;*/
+	/*if (width) width -= xPadding; */
 
-	if (args->UseShadow) {
-		offset = Drawer2D_ShadowOffset(point);
-		total.Width += offset; total.Height += offset;
-	}
-	return total;
+	if (args->UseShadow) { width += Drawer2D_ShadowOffset(point); }
+	return width;
 }
 
 void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 	BitmapCol col, backCol, black = BITMAPCOL_CONST(0, 0, 0, 255);
-	Size2D partSize;
 	String value = args->Text;
 	char colCode, nextCol = 'f';
-	int i;
+	int i, partWidth;
 
 	if (Drawer2D_IsEmptyText(&args->Text)) return;
 	if (Drawer2D_BitmappedText) { Drawer2D_DrawBitmapText(bmp, args, x, y); return; }
@@ -563,45 +550,68 @@ void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 			Platform_TextDraw(args, bmp, x + DRAWER2D_OFFSET, y + DRAWER2D_OFFSET, backCol);
 		}
 
-		partSize = Platform_TextDraw(args, bmp, x, y, col);
-		x += partSize.Width;
+		partWidth = Platform_TextDraw(args, bmp, x, y, col);
+		x += partWidth;
 	}
 	args->Text = value;
 }
 
-Size2D Drawer2D_MeasureText(struct DrawTextArgs* args) {
-	Size2D size, partSize;
+int Drawer2D_TextWidth(struct DrawTextArgs* args) {
 	String value = args->Text;
 	char nextCol = 'f';
-	int i;
+	int i, width;
 
-	size.Width = 0; size.Height = 0;
-	if (Drawer2D_IsEmptyText(&args->Text)) return size;
-	if (Drawer2D_BitmappedText) return Drawer2D_MeasureBitmapText(args);
+	if (Drawer2D_IsEmptyText(&args->Text)) return 0;
+	if (Drawer2D_BitmappedText) return Drawer2D_MeasureBitmapWidth(args);
+	width = 0;
 
 	for (i = 0; i < value.length; ) {
 		i = Drawer2D_NextPart(i, &value, &args->Text, &nextCol);
-		if (!args->Text.length) continue;
 
-		partSize    = Platform_TextMeasure(args);
-		size.Width  += partSize.Width;
-		size.Height = max(size.Height, partSize.Height);
+		if (!args->Text.length) continue;
+		width += Platform_TextWidth(args);
 	}
 
 	/* TODO: Is this font shadow offset right? */
-	if (args->UseShadow) { size.Width += DRAWER2D_OFFSET; size.Height += DRAWER2D_OFFSET; }
+	if (args->UseShadow) { width += DRAWER2D_OFFSET; }
+	
 	args->Text = value;
+	return width;
+}
+
+int Drawer2D_FontHeight(const FontDesc* font, bool useShadow) {
+	int height, point;
+	if (Drawer2D_BitmappedText) {
+		point = font->Size;
+		/* adjust coords to make drawn text match GDI fonts */
+		height = Drawer2D_AdjHeight(point);
+
+		if (useShadow) { height += Drawer2D_ShadowOffset(point); }
+	} else {
+		height = Platform_FontHeight(font);
+		/* TODO: Is this font shadow offset right? */
+		if (useShadow) { height += DRAWER2D_OFFSET; }
+	}
+	return height;
+}
+
+Size2D Drawer2D_MeasureText(struct DrawTextArgs* args) {
+	Size2D size;
+	size.Width  = Drawer2D_TextWidth(args);
+	size.Height = Drawer2D_FontHeight(&args->Font, args->UseShadow);
+
+	if (!size.Width) size.Height = 0;
 	return size;
 }
 
 void Drawer2D_DrawClippedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, int maxWidth) {
 	String str; char strBuffer[512];
 	struct DrawTextArgs part;
-	int i;
+	int i, width;
 
-	Size2D size = Drawer2D_MeasureText(args);
+	width = Drawer2D_TextWidth(args);
 	/* No clipping needed */
-	if (size.Width <= maxWidth) { Drawer2D_DrawText(bmp, args, x, y); return; }
+	if (width <= maxWidth) { Drawer2D_DrawText(bmp, args, x, y); return; }
 
 	String_InitArray(str, strBuffer);
 	String_Copy(&str, &args->Text);
@@ -614,14 +624,14 @@ void Drawer2D_DrawClippedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		/* skip over trailing spaces */
 		if (str.buffer[i - 1] == ' ') continue;
 		part.Text = String_UNSAFE_Substring(&str, 0, i + 2);
-		size = Drawer2D_MeasureText(&part);
-		if (size.Width <= maxWidth) { Drawer2D_DrawText(bmp, &part, x, y); return; }
+		width = Drawer2D_TextWidth(&part);
+		if (width <= maxWidth) { Drawer2D_DrawText(bmp, &part, x, y); return; }
 
 		/* If down to <= 2 chars, try omit trailing .. */
 		if (i > 2) continue;
 		part.Text = String_UNSAFE_Substring(&str, 0, i);
-		size = Drawer2D_MeasureText(&part);
-		if (size.Width <= maxWidth) { Drawer2D_DrawText(bmp, &part, x, y); return; }
+		width = Drawer2D_TextWidth(&part);
+		if (width <= maxWidth) { Drawer2D_DrawText(bmp, &part, x, y); return; }
 	}
 }
 

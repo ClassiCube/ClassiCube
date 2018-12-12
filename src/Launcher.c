@@ -480,7 +480,7 @@ void Launcher_ResetPixels(void) {
 
 	Drawer2D_BitmappedText = (useBitmappedFont || Launcher_ClassicBackground) && fontBmp.Scan0;
 	DrawTextArgs_Make(&args, &title_fore, &logoFont, false);
-	x = Game_Width / 2 - Drawer2D_MeasureText(&args).Width / 2;
+	x = Game_Width / 2 - Drawer2D_TextWidth(&args) / 2;
 
 	args.Text = title_back;
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x + 4, 4);

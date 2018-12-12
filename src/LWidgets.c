@@ -342,14 +342,14 @@ Rect2D LInput_MeasureCaret(struct LInput* w) {
 	r.Y = w->Y + w->Height - 5; r.Height = 2;
 
 	if (w->CaretPos == -1) {
-		r.X += Drawer2D_MeasureText(&args).Width;
+		r.X += Drawer2D_TextWidth(&args);
 		r.Width = 10;
 	} else {
 		args.Text = String_UNSAFE_Substring(&text, 0, w->CaretPos);
-		r.X += Drawer2D_MeasureText(&args).Width;
+		r.X += Drawer2D_TextWidth(&args);
 
 		args.Text = String_UNSAFE_Substring(&text, w->CaretPos, 1);
-		r.Width   = Drawer2D_MeasureText(&args).Width;
+		r.Width   = Drawer2D_TextWidth(&args);
 	}
 	return r;
 }
@@ -374,16 +374,16 @@ void LInput_SetCaretToCursor(struct LInput* w, int x, int y) {
 	x -= w->X; y -= w->Y;
 
 	DrawTextArgs_Make(&args, &text, &w->Font, true);
-	if (x >= Drawer2D_MeasureText(&args).Width) { 
+	if (x >= Drawer2D_TextWidth(&args)) {
 		w->CaretPos = -1; return; 
 	}
 
 	for (i = 0; i < text.length; i++) {
 		args.Text = String_UNSAFE_Substring(&text, 0, i);
-		charX     = Drawer2D_MeasureText(&args).Width;
+		charX     = Drawer2D_TextWidth(&args);
 
 		args.Text = String_UNSAFE_Substring(&text, i, 1);
-		charWidth = Drawer2D_MeasureText(&args).Width;
+		charWidth = Drawer2D_TextWidth(&args);
 		if (x >= charX && x < charX + charWidth) {
 			w->CaretPos = i; return;
 		}

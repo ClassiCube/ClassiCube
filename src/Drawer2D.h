@@ -57,6 +57,7 @@ void Drawer2D_Clear(Bitmap* bmp, BitmapCol col, int x, int y, int width, int hei
 
 void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, BitmapCol col);
 void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y);
+int Drawer2D_TextWidth(struct DrawTextArgs* args);
 Size2D Drawer2D_MeasureText(struct DrawTextArgs* args);
 void Drawer2D_DrawClippedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, int maxWidth);
 int Drawer2D_FontHeight(const FontDesc* font, bool useShadow);

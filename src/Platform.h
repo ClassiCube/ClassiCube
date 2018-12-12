@@ -181,10 +181,12 @@ CC_EXPORT void Font_GetNames(StringsBuffer* buffer);
 CC_EXPORT void Font_Make(FontDesc* desc, const String* fontName, int size, int style);
 /* Frees an allocated font. */
 CC_EXPORT void Font_Free(FontDesc* desc);
-/* Measures dimensions of the given text, if it was drawn with the given font. */
-CC_EXPORT Size2D Platform_TextMeasure(struct DrawTextArgs* args);
+/* Measures width of the given text when drawn with the given font. */
+int Platform_TextWidth(struct DrawTextArgs* args);
+/* Measures height of any text when drawn with the given font. */
+int Platform_FontHeight(const FontDesc* font);
 /* Draws the given text with the given font onto the given bitmap. */
-CC_EXPORT Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col);
+int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col);
 
 /* Allocates a new socket. */
 void Socket_Create(SocketHandle* socket);

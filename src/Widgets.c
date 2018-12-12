@@ -955,13 +955,13 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 		InputWidget_FormatLine(w, w->CaretY, &line);
 
 		args.Text = String_UNSAFE_Substring(&line, 0, w->CaretX);
-		lineWidth = Drawer2D_MeasureText(&args).Width;
+		lineWidth = Drawer2D_TextWidth(&args);
 		if (w->CaretY == 0) lineWidth += w->PrefixWidth;
 
 		if (w->CaretX < line.length) {
 			args.Text = String_UNSAFE_Substring(&line, w->CaretX, 1);
 			args.UseShadow = true;
-			w->CaretTex.Width = Drawer2D_MeasureText(&args).Width;
+			w->CaretTex.Width = Drawer2D_TextWidth(&args);
 		}
 	}
 
@@ -1260,11 +1260,11 @@ static bool InputWidget_MouseDown(void* widget, int x, int y, MouseButton button
 
 		for (cx = 0; cx < line.length; cx++) {
 			args.Text = String_UNSAFE_Substring(&line, 0, cx);
-			charX     = Drawer2D_MeasureText(&args).Width;
+			charX     = Drawer2D_TextWidth(&args);
 			if (cy == 0) charX += w->PrefixWidth;
 
 			args.Text = String_UNSAFE_Substring(&line, cx, 1);
-			charWidth = Drawer2D_MeasureText(&args).Width;
+			charWidth = Drawer2D_TextWidth(&args);
 
 			if (Gui_Contains(charX, cy * charHeight, charWidth, charHeight, x, y)) {
 				w->CaretPos = offset + cx;
@@ -2489,7 +2489,7 @@ static bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, String* text, int 
 		args.Text = String_UNSAFE_Substring(&line, bit.LineBeg, bit.LineLen);
 		args.Font = (bit.Len & TEXTGROUPWIDGET_URL) ? w->UnderlineFont : w->Font;
 
-		width = Drawer2D_MeasureText(&args).Width;
+		width = Drawer2D_TextWidth(&args);
 		if ((bit.Len & TEXTGROUPWIDGET_URL) && mouseX >= x && mouseX < x + width) {
 			bit.Len &= TEXTGROUPWIDGET_PACKED_LEN;
 			url = String_Init(&chars[bit.Beg], bit.Len, bit.Len);

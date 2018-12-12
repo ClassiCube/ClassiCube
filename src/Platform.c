@@ -1036,23 +1036,24 @@ static void Font_DirCallback(const String* path, void* obj) {
 }
 
 #define TEXT_CEIL(x) (((x) + 63) >> 6)
-Size2D Platform_TextMeasure(struct DrawTextArgs* args) {
+int Platform_TextWidth(struct DrawTextArgs* args) {
 	FT_Face face = args->Font.Handle;
 	String text  = args->Text;
-	Size2D s = { 0, 0 };
+	int i, width = 0;
 	Codepoint cp;
-	int i;
 
 	for (i = 0; i < text.length; i++) {
 		cp = Convert_CP437ToUnicode(text.buffer[i]);
 		FT_Load_Char(face, cp, 0); /* TODO: Check error */
-		s.Width += face->glyph->advance.x;
+		width += face->glyph->advance.x;
 	}
+	return TEXT_CEIL(width);
+}
 
-	s.Height = face->size->metrics.height;
-	s.Width  = TEXT_CEIL(s.Width);
-	s.Height = TEXT_CEIL(s.Height);
-	return s;
+int Platform_FontHeight(const FontDesc* font) {
+	FT_Face face = font->Handle;
+	int height   = face->size->metrics.height;
+	return TEXT_CEIL(height);
 }
 
 static void Platform_GrayscaleGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, BitmapCol col) {
@@ -1103,25 +1104,24 @@ static void Platform_BlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, 
 	}
 }
 
-Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col) {
+int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col) {
 	FT_Face face = args->Font.Handle;
-	String text = args->Text;
-	Size2D s = { 0, 0 };
-	int descender, begX = x;
+	String text  = args->Text;
+	int descender, height, begX = x;
 
 	/* glyph state */
 	FT_Bitmap* img;
 	int i, offset;
 	Codepoint cp;
 
-	s.Height  = TEXT_CEIL(face->size->metrics.height);
+	height    = TEXT_CEIL(face->size->metrics.height);
 	descender = TEXT_CEIL(face->size->metrics.descender);
 
 	for (i = 0; i < text.length; i++) {
 		cp = Convert_CP437ToUnicode(text.buffer[i]);
 		FT_Load_Char(face, cp, FT_LOAD_RENDER); /* TODO: Check error */
 
-		offset = (s.Height + descender) - face->glyph->bitmap_top;
+		offset = (height + descender) - face->glyph->bitmap_top;
 		x += face->glyph->bitmap_left; y += offset;
 
 		img = &face->glyph->bitmap;
@@ -1140,11 +1140,11 @@ Size2D Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, B
 		int ul_thick = FT_MulFix(face->underline_thickness, face->size->metrics.y_scale);
 
 		int ulHeight = TEXT_CEIL(ul_thick);
-		int ulY      = s.Height + TEXT_CEIL(ul_pos);
+		int ulY      = height + TEXT_CEIL(ul_pos);
 		Drawer2D_Underline(bmp, begX, ulY + y, x - begX, ulHeight, col);
 	}
 
-	s.Width = x - begX; return s;
+	return x - begX;
 }
 
 static void* FT_AllocWrapper(FT_Memory memory, long size) {
