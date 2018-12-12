@@ -116,8 +116,8 @@ struct ServerInfo;
 struct LTableColumn {
 	/* Name of this column. */
 	const char* Name;
-	/* Current and default width of this column. */
-	int Width, DefaultWidth;
+	/* Width of this column in pixels. */
+	int Width;
 	/* Gets the value of this column for the given row. */
 	void (*GetValue)(struct ServerInfo* row, String* str);
 	/* Sorts two rows based on value of this column in both rows. */
@@ -128,5 +128,26 @@ struct LTableColumn {
 /* Represents a table of server entries. */
 struct LTable {
 	LWidget_Layout
+	/* Columns of the table. */
+	struct LTableColumn* Columns;
+	/* Number of columns in the table. */
+	int NumColumns;
+	/* Fonts for text in header and rows. */
+	FontDesc RowFont, HdrFont;
+	/* Y start of rows and height of each row. */
+	int RowBegY, RowHeight;
+	/* Y height of headers. */
+	int HdrHeight;
+	/* Number of rows currently visible. */
+	int VisibleRows;
+
+	/* Index of column currently being dragged. */
+	int DraggingColumn;
+	/* Whether scrollbar is currently being dragged up or down. */
+	bool DraggingScrollbar;
+	int MouseOffset;
 };
+void LTable_Init(struct LTable* table, const FontDesc* hdrFont, const FontDesc* rowFont);
+CC_NOINLINE void LTable_StopDragging(struct LTable* table);
+void LTable_Reposition(struct LTable* table);
 #endif

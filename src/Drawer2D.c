@@ -594,6 +594,37 @@ Size2D Drawer2D_MeasureText(struct DrawTextArgs* args) {
 	return size;
 }
 
+void Drawer2D_DrawClippedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, int maxWidth) {
+	String str; char strBuffer[512];
+	struct DrawTextArgs part;
+	int i;
+
+	Size2D size = Drawer2D_MeasureText(args);
+	/* No clipping needed */
+	if (size.Width <= maxWidth) { Drawer2D_DrawText(bmp, args, x, y); return; }
+
+	String_InitArray(str, strBuffer);
+	String_Copy(&str, &args->Text);
+	String_Append(&str, '.');
+
+	part = *args;
+	for (i = str.length - 2; i > 0; i--) {
+		str.buffer[i] = '.';
+
+		/* skip over trailing spaces */
+		if (str.buffer[i - 1] == ' ') continue;
+		part.Text = String_UNSAFE_Substring(&str, 0, i + 2);
+		size = Drawer2D_MeasureText(&part);
+		if (size.Width <= maxWidth) { Drawer2D_DrawText(bmp, &part, x, y); return; }
+
+		/* If down to <= 2 chars, try omit trailing .. */
+		if (i > 2) continue;
+		part.Text = String_UNSAFE_Substring(&str, 0, i);
+		size = Drawer2D_MeasureText(&part);
+		if (size.Width <= maxWidth) { Drawer2D_DrawText(bmp, &part, x, y); return; }
+	}
+}
+
 
 /*########################################################################################################################*
 *---------------------------------------------------Drawer2D component----------------------------------------------------*

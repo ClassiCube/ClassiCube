@@ -370,6 +370,7 @@ static void FetchServersTask_Count(struct JsonContext* ctx) {
 
 static void FetchServersTask_Next(struct JsonContext* ctx) {
 	curServer++;
+	if (curServer < FetchServersTask.Servers) return;
 	ServerInfo_Init(curServer);
 }
 
@@ -378,7 +379,8 @@ static void FetchServersTask_Handle(uint8_t* data, uint32_t len) {
 	if (!FetchServersTask.NumServers) return;
 
 	FetchServersTask.Servers = Mem_Alloc(FetchServersTask.NumServers, sizeof(struct ServerInfo), "servers list");
-	curServer = FetchServersTask.Servers - 1;
+	/* -2 because servers is surrounded by a { */
+	curServer = FetchServersTask.Servers - 2;
 	Json_Handle(data, len, ServerInfo_Parse, NULL, FetchServersTask_Next);
 }
 

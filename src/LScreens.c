@@ -8,6 +8,7 @@
 #include "ExtMath.h"
 #include "Platform.h"
 #include "Stream.h"
+#include "Funcs.h"
 
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
@@ -917,7 +918,9 @@ static struct ServersScreen {
 	LScreen_Layout
 	struct LInput IptName, IptHash;
 	struct LButton BtnBack, BtnConnect, BtnRefresh;
-	struct LWidget* _widgets[5];
+	struct LTable Table;
+	struct LWidget* _widgets[6];
+	FontDesc RowFont;
 } ServersScreen_Instance;
 
 static void ServersScreen_Connect(void* w, int x, int y) {
@@ -937,6 +940,8 @@ static void ServersScreen_Refresh(void* w, int x, int y) {
 
 static void ServersScreen_Init(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
+
+	Font_Make(&s->RowFont, &Drawer2D_FontName, 11, FONT_STYLE_NORMAL);
 	if (s->NumWidgets) return;
 	s->Widgets = s->_widgets;
 
@@ -944,12 +949,20 @@ static void ServersScreen_Init(struct LScreen* s_) {
 	LScreen_Input(s_, &s->IptHash, 475, false, "&gclassicube.net/server/play/...");
 
 	LScreen_Button(s_, &s->BtnBack,    110, 30, "Back");
-	LScreen_Button(s_, &s->BtnConnect, 110, 30, "Connect");
+	LScreen_Button(s_, &s->BtnConnect, 130, 30, "Connect");
 	LScreen_Button(s_, &s->BtnRefresh, 110, 30, "Refresh");
 
 	s->BtnBack.OnClick    = SwitchToMain;
 	s->BtnConnect.OnClick = ServersScreen_Connect;
 	s->BtnRefresh.OnClick = ServersScreen_Refresh;
+
+	LTable_Init(&s->Table, &Launcher_TextFont, &s->RowFont);
+	s->Widgets[s->NumWidgets++] = (struct LWidget*)&s->Table;
+}
+
+static void ServersScreen_Free(struct LScreen* s_) {
+	struct ServersScreen* s = (struct ServersScreen*)s_;
+	Font_Free(&s->RowFont);
 }
 
 static void ServersScreen_Reposition(struct LScreen* s_) {
@@ -960,6 +973,13 @@ static void ServersScreen_Reposition(struct LScreen* s_) {
 	LWidget_SetLocation(&s->BtnBack,    ANCHOR_MAX, ANCHOR_MIN,  10, 10);
 	LWidget_SetLocation(&s->BtnConnect, ANCHOR_MAX, ANCHOR_MAX,  10, 10);
 	LWidget_SetLocation(&s->BtnRefresh, ANCHOR_MAX, ANCHOR_MIN, 135, 10);
+
+	s->Table.Width  = Game_Width - 10;
+	s->Table.Height = Game_Height - 100;
+	s->Table.Height = max(1, s->Table.Height);
+
+	LWidget_SetLocation(&s->Table, ANCHOR_MIN, ANCHOR_MIN, 10, 50);
+	LTable_Reposition(&s->Table);
 }
 
 struct LScreen* ServersScreen_MakeInstance(void) {
@@ -967,6 +987,7 @@ struct LScreen* ServersScreen_MakeInstance(void) {
 	LScreen_Reset((struct LScreen*)s);
 	s->HidesBackground = true;
 	s->Init       = ServersScreen_Init;
+	s->Free       = ServersScreen_Free;
 	s->Reposition = ServersScreen_Reposition;
 	return (struct LScreen*)s;
 }

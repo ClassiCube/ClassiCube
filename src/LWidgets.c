@@ -595,441 +595,374 @@ static int SoftwareColumn_Sort(struct ServerInfo* a, struct ServerInfo* b) {
 }
 
 static struct LTableColumn tableColumns[4] = {
-	{ "Name",     320, 320, NameColumn_Get,     NameColumn_Sort     },
-	{ "Players",   65,  65, PlayersColumn_Get,  PlayersColumn_Sort  },
-	{ "Uptime",    65,  65, UptimeColumn_Get,   UptimeColumn_Sort   },
-	{ "Software", 140, 140, SoftwareColumn_Get, SoftwareColumn_Sort }
+	{ "Name",     320, NameColumn_Get,     NameColumn_Sort     },
+	{ "Players",   65, PlayersColumn_Get,  PlayersColumn_Sort  },
+	{ "Uptime",    65, UptimeColumn_Get,   UptimeColumn_Sort   },
+	{ "Software", 140, SoftwareColumn_Get, SoftwareColumn_Sort }
 };
 
+#define GRIDLINE_SIZE   2
+#define SCROLLBAR_WIDTH 10
+#define CELL_YPADDING 3
+#define CELL_XPADDING 3
+
+
+void LTable_DrawHeaders(struct LTable* w) {
+	BitmapCol gridCol = BITMAPCOL_CONST(20, 20, 10, 255);
+	struct DrawTextArgs args;
+	int i, x, y;
+
+	if (!Launcher_ClassicBackground) {
+		Drawer2D_Clear(&Launcher_Framebuffer, gridCol,
+					w->X, w->Y,                w->Width, w->HdrHeight);
+		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundCol,
+					w->X, w->Y + w->HdrHeight, w->Width, GRIDLINE_SIZE);
+	}
+
+	DrawTextArgs_MakeEmpty(&args, &w->HdrFont, true);
+	x = w->X;
+	y = w->Y + CELL_YPADDING;
+
+	for (i = 0; i < w->NumColumns; i++) {
+		x += CELL_XPADDING;
+		args.Text = String_FromReadonly(w->Columns[i].Name);
+
+		Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
+								x, y, w->Columns[i].Width);
+		x += w->Columns[i].Width + CELL_XPADDING;
+	}
+}
+
+void LTable_DrawRows(struct LTable* w) {
+	BitmapCol gridCol = BITMAPCOL_CONST(20, 20, 10, 255);
+	String str; char strBuffer[STRING_SIZE];
+	struct DrawTextArgs args;
+	int i, x, y, row;
+
+	String_InitArray(str, strBuffer);
+	DrawTextArgs_Make(&args, &str, &w->RowFont, true);
+	y = w->RowBegY;
+
+	for (row = 0; row < w->VisibleRows; row++, y += w->RowHeight) {
+		x = w->X;
+
+		if (!Launcher_ClassicBackground) {
+			Drawer2D_Clear(&Launcher_Framebuffer, gridCol,
+				x, y, w->Width, w->RowHeight);
+		}
+		if (row >= FetchServersTask.NumServers) continue;
+
+		for (i = 0; i < w->NumColumns; i++) {
+			x += CELL_XPADDING;
+			args.Text.length = 0;
+			w->Columns[i].GetValue(&FetchServersTask.Servers[row], &args.Text);
+
+			Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args,
+				x, y, w->Columns[i].Width);
+			x += w->Columns[i].Width + CELL_XPADDING;
+		}
+	}
+}
 /*
-PackedCol backGridCol = new PackedCol(20, 20, 10);
-PackedCol foreGridCol = new PackedCol(40, 40, 40);
+int DrawColumn(IDrawer2D drawer, string header, int columnI, int x, ColumnFilter filter) {
+	int y = table.Y + 3;
+	int maxWidth = table.ColumnWidths[columnI];
+	bool separator = columnI > 0;
 
-int entryHeight, headerHeight;
-int headerStartY, headerEndY;
-int numEntries, maxIndex;
-Font font, titleFont;
+	DrawTextArgs args = new DrawTextArgs(header, titleFont, true);
+	TableEntry headerEntry = default(TableEntry);
+	DrawColumnEntry(drawer, ref args, maxWidth, x, ref y, ref headerEntry);
+	maxIndex = table.Count;
 
-void SetDrawData(IDrawer2D drawer, Font font, Font titleFont) {
-	this.font = font;
-	this.titleFont = titleFont;
+	y += 5;
+	for (int i = table.CurrentIndex; i < table.Count; i++) {
+		TableEntry entry = table.Get(i);
+		args = new DrawTextArgs(filter(entry), font, true);
 
-	headerHeight = drawer.FontHeight(titleFont, true);
-	entryHeight = drawer.FontHeight(font, true);
+		if ((i == table.SelectedIndex || entry.Featured) && !separator) {
+			int startY = y - 3;
+			int height = Math.Min(startY + (entryHeight + 4), table.Y + table.Height) - startY;
+			drawer.Clear(GetGridCol(entry.Featured, i == table.SelectedIndex), table.X, startY, table.Width, height);
+		}
+		if (!DrawColumnEntry(drawer, ref args, maxWidth, x, ref y, ref entry)) {
+			maxIndex = i; break;
+		}
+	}
+	if (separator && !game.ClassicBackground) {
+		drawer.Clear(LauncherSkin.BackgroundCol, x - 7, table.Y, 2, table.Height);
+	}
+	return maxWidth + 5;
 }
 
-void RecalculateDrawData() {
-		for (int i = 0; i < table.ColumnWidths.Length; i++) {
-			table.ColumnWidths[i] = table.DesiredColumnWidths[i];
-			Utils.Clamp(ref table.ColumnWidths[i], 20, game.Width - 20);
-		}
-		table.Width = game.Width - table.X;
-		ResetEntries();
-
-		int y = table.Y + 3;
-		y += headerHeight + 2;
-		maxIndex = table.Count;
-		y += 5;
-
-		for (int i = table.CurrentIndex; i < table.Count; i++) {
-			if (y + entryHeight > table.Y + table.Height) {
-				maxIndex = i; return;
-			}
-
-			table.entries[table.order[i]].Y = y;
-			table.entries[table.order[i]].Height = entryHeight;
-			y += entryHeight + 2;
-		}
+PackedCol GetGridCol(bool featured, bool selected) {
+	if (featured) {
+		if (selected) return new PackedCol(50, 53, 0);
+		return new PackedCol(101, 107, 0);
 	}
-
-	const int flagPadding = 15;
-	void RedrawData(IDrawer2D drawer) {
-		DrawGrid(drawer);
-		int x = table.X + flagPadding + 5;
-		x += DrawColumn(drawer, "Name",     0, x, filterName) + 5;
-		x += DrawColumn(drawer, "Players",  1, x, filterPlayers) + 5;
-		x += DrawColumn(drawer, "Uptime",   2, x, filterUptime) + 5;
-		x += DrawColumn(drawer, "Software", 3, x, filterSoftware) + 5;
-
-		DrawScrollbar(drawer);
-		DrawFlags();
-	}
-
-	void Redraw(IDrawer2D drawer) {
-		RecalculateDrawData();
-		RedrawData(drawer);
-	}
-
-	delegate string ColumnFilter(TableEntry entry);
-	// cache to avoid allocations every redraw
-	static string FilterName(TableEntry e) { return e.Name; }     static ColumnFilter filterName = FilterName;
-	static string FilterPlayers(TableEntry e) { return e.Players; }  static ColumnFilter filterPlayers = FilterPlayers;
-	static string FilterUptime(TableEntry e) { return e.Uptime; }   static ColumnFilter filterUptime = FilterUptime;
-	static string FilterSoftware(TableEntry e) { return e.Software; } static ColumnFilter filterSoftware = FilterSoftware;
-
-	static FastBitmap GetFlag(string flag) {
-		List<string> flags = FetchFlagsTask.Flags;
-		List<FastBitmap> bitmaps = FetchFlagsTask.Bitmaps;
-
-		for (int i = 0; i < flags.Count; i++) {
-			if (flags[i] != flag) continue;
-			return i < bitmaps.Count ? bitmaps[i] : null;
-		}
-		return null;
-	}
-
-	public void DrawFlags() {
-		using (FastBitmap dst = game.LockBits()) {
-			for (int i = table.CurrentIndex; i < maxIndex; i++) {
-				TableEntry entry = table.Get(i);
-				FastBitmap flag = GetFlag(entry.Flag);
-				if (flag == null) continue;
-
-				int x = table.X, y = entry.Y;
-				Rectangle rect = new Rectangle(x + 2, y + 3, 16, 11);
-				BitmapDrawer.Draw(flag, dst, rect);
-			}
-		}
-	}
-
-	int DrawColumn(IDrawer2D drawer, string header, int columnI, int x, ColumnFilter filter) {
-		int y = table.Y + 3;
-		int maxWidth = table.ColumnWidths[columnI];
-		bool separator = columnI > 0;
-
-		DrawTextArgs args = new DrawTextArgs(header, titleFont, true);
-		TableEntry headerEntry = default(TableEntry);
-		DrawColumnEntry(drawer, ref args, maxWidth, x, ref y, ref headerEntry);
-		maxIndex = table.Count;
-
-		y += 5;
-		for (int i = table.CurrentIndex; i < table.Count; i++) {
-			TableEntry entry = table.Get(i);
-			args = new DrawTextArgs(filter(entry), font, true);
-
-			if ((i == table.SelectedIndex || entry.Featured) && !separator) {
-				int startY = y - 3;
-				int height = Math.Min(startY + (entryHeight + 4), table.Y + table.Height) - startY;
-				drawer.Clear(GetGridCol(entry.Featured, i == table.SelectedIndex), table.X, startY, table.Width, height);
-			}
-			if (!DrawColumnEntry(drawer, ref args, maxWidth, x, ref y, ref entry)) {
-				maxIndex = i; break;
-			}
-		}
-		if (separator && !game.ClassicBackground) {
-			drawer.Clear(LauncherSkin.BackgroundCol, x - 7, table.Y, 2, table.Height);
-		}
-		return maxWidth + 5;
-	}
-
-	PackedCol GetGridCol(bool featured, bool selected) {
-		if (featured) {
-			if (selected) return new PackedCol(50, 53, 0);
-			return new PackedCol(101, 107, 0);
-		}
-		return foreGridCol;
-	}
-
-	bool DrawColumnEntry(IDrawer2D drawer, ref DrawTextArgs args,
-		int maxWidth, int x, ref int y, ref TableEntry entry) {
-		Size size = drawer.MeasureText(ref args);
-		bool empty = args.Text == "";
-		if (empty)
-			size.Height = entryHeight;
-		if (y + size.Height > table.Y + table.Height) {
-			y = table.Y + table.Height + 2; return false;
-		}
-
-		entry.Y = y; entry.Height = size.Height;
-		if (!empty) {
-			size.Width = Math.Min(maxWidth, size.Width);
-			args.SkipPartsCheck = false;
-			Drawer2DExt.DrawClippedText(ref args, drawer, x, y, maxWidth);
-		}
-		y += size.Height + 2;
-		return true;
-	}
-
-	void ResetEntries() {
-		for (int i = 0; i < table.Count; i++) {
-			table.entries[i].Height = 0;
-			table.entries[i].Y = -10;
-		}
-	}
-
-	void DrawGrid(IDrawer2D drawer) {
-		if (!game.ClassicBackground)
-			drawer.Clear(LauncherSkin.BackgroundCol,
-				table.X, table.Y + headerHeight + 5, table.Width, 2);
-		headerStartY = table.Y;
-
-		headerEndY = table.Y + headerHeight + 5;
-		int startY = headerEndY + 3;
-		numEntries = (table.Y + table.Height - startY) / (entryHeight + 3);
-	}
-
-	void DrawScrollbar(IDrawer2D drawer) {
-		PackedCol col = game.ClassicBackground ? new PackedCol(80, 80, 80) : LauncherSkin.ButtonBorderCol;
-		drawer.Clear(col, game.Width - 10, table.Y, 10, table.Height);
-		col = game.ClassicBackground ? new PackedCol(160, 160, 160) : LauncherSkin.ButtonForeActiveCol;
-		int yOffset, height;
-		table.GetScrollbarCoords(out yOffset, out height);
-		drawer.Clear(col, game.Width - 10, table.Y + yOffset, 10, height);
-	}
-}
+	PackedCol foreGridCol = new PackedCol(40, 40, 40);
+	return foreGridCol;
 }
 
-internal struct TableEntry {
-	public string Hash, Name, Players, Uptime, Software, RawUptime, Flag;
-	public int Y, Height;
-	public bool Featured;
+bool DrawColumnEntry(IDrawer2D drawer, ref DrawTextArgs args, int maxWidth, int x, ref int y, ref TableEntry entry) {
+	Size size = drawer.MeasureText(ref args);
+	bool empty = args.Text == "";
+	if (empty)
+		size.Height = entryHeight;
+	if (y + size.Height > table.Y + table.Height) {
+		y = table.Y + table.Height + 2; return false;
+	}
+
+	entry.Y = y; entry.Height = size.Height;
+	if (!empty) {
+		size.Width = Math.Min(maxWidth, size.Width);
+		args.SkipPartsCheck = false;
+		Drawer2DExt.DrawClippedText(ref args, drawer, x, y, maxWidth);
+	}
+	y += size.Height + 2;
+	return true;
 }
 
-public delegate void TableNeedsRedrawHandler();
 
-	TableView view;
-	public TableWidget(LauncherWindow window) : base(window) {
-		OnClick = HandleOnClick;
-		view = new TableView();
-		view.Init(window, this);
+
+const int flagPadding = 15;
+void DrawColumns(IDrawer2D drawer) {
+	int x = table.X + flagPadding + 5;
+	x += DrawColumn(drawer, "Name", 0, x, filterName) + 5;
+	x += DrawColumn(drawer, "Players", 1, x, filterPlayers) + 5;
+	x += DrawColumn(drawer, "Uptime", 2, x, filterUptime) + 5;
+	x += DrawColumn(drawer, "Software", 3, x, filterSoftware) + 5;
+}
+
+void DrawScrollbar(struct LTable* w) {
+	BitmapCol classicBack   = BITMAPCOL_CONST( 80,  80,  80, 255);
+	BitmapCol classicScroll = BITMAPCOL_CONST(160, 160, 160, 255);
+	BitmapCol backCol   = Launcher_ClassicBackground ? classicBack   : Launcher_ButtonBorderCol;
+	BitmapCol scrollCol = Launcher_ClassicBackground ? classicScroll : Launcher_ButtonForeActiveCol;
+
+	int x, y, height;
+	x = w->X + w->Width - SCROLLBAR_WIDTH;
+	LTable_GetScrollbarCoords(w, &y, &height);
+
+	Drawer2D_Clear(&Launcher_Framebuffer, backCol,
+					x, w->Y,     SCROLLBAR_WIDTH, w->Height);		
+	Drawer2D_Clear(&Launcher_Framebuffer, scrollCol, 
+					x, w->Y + y, SCROLLBAR_WIDTH, height);
+}
+
+void Draw(IDrawer2D drawer) {
+	DrawGrid(drawer);
+	DrawColumns(drawer);
+	DrawScrollbar(drawer);
+	DrawFlags();
+}
+
+static Bitmap* GetFlag(const String* flag) {
+	int i = 0;
+	for (i = 0; i < FetchFlagsTask.Count; i++) {
+		if (!String_CaselessEquals(flag, &FetchFlagsTask.Names[i])) continue;
+
+		return &FetchFlagsTask.Bitmaps[i];
 	}
+	return NULL;
+}
 
-	public TableNeedsRedrawHandler NeedRedraw;
-	public Action<string> SelectedChanged;
-	public int SelectedIndex = -1;
-	public string SelectedHash = "";
-	public int CurrentIndex, Count;
+void DrawFlags() {
+	for (int i = table.CurrentIndex; i < maxIndex; i++) {
+		TableEntry entry = table.Get(i);
+		FastBitmap flag = GetFlag(entry.Flag);
+		if (flag == null) continue;
 
-	internal TableEntry[] entries;
-	internal int[] order;
-	internal List<ServerListEntry> servers;
-	internal TableEntry Get(int i) { return entries[order[i]]; }
-
-	public void SetEntries(List<ServerListEntry> servers) {
-		entries = new TableEntry[servers.Count];
-		order = new int[servers.Count];
-		this.servers = servers;
-
-		for (int i = 0; i < servers.Count; i++) {
-			ServerListEntry e = servers[i];
-			TableEntry tableEntry = default(TableEntry);
-			tableEntry.Hash = e.Hash;
-			tableEntry.Name = e.Name;
-			tableEntry.Players = e.Players + "/" + e.MaxPlayers;
-			tableEntry.Software = e.Software;
-			tableEntry.Uptime = MakeUptime(e.Uptime);
-			tableEntry.RawUptime = e.Uptime;
-			tableEntry.Featured = e.Featured;
-			tableEntry.Flag = e.Flag;
-
-			entries[i] = tableEntry;
-			order[i] = i;
-		}
-		Count = entries.Length;
+		int x = table.X, y = entry.Y;
+		Rectangle rect = new Rectangle(x + 2, y + 3, 16, 11);
+		BitmapDrawer.Draw(flag, dst, rect);
 	}
+}
 
-	string curFilter;
-	public void FilterEntries(string filter) {
-		curFilter = filter;
-		Count = 0;
-		for (int i = 0; i < entries.Length; i++) {
-			TableEntry entry = entries[i];
-			if (entry.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0) {
-				order[Count++] = i;
-			}
-		}
-		for (int i = Count; i < entries.Length; i++) {
-			order[i] = -100000;
-		}
-	}
+void TableNeedsRedrawHandler();
 
-	internal void GetScrollbarCoords(out int y, out int height) {
-		if (Count == 0) { y = 0; height = 0; return; }
+public TableNeedsRedrawHandler NeedRedraw;
+public Action<string> SelectedChanged;
+public int SelectedIndex = -1;
+public string SelectedHash = "";
+public int CurrentIndex, Count;
 
-		float scale = Height / (float)Count;
-		y = (int)Math.Ceiling(CurrentIndex * scale);
-		height = (int)Math.Ceiling((view.maxIndex - CurrentIndex) * scale);
-		height = Math.Min(y + height, Height) - y;
-	}
+internal TableEntry[] entries;
+internal int[] order;
+internal List<ServerListEntry> servers;
+internal TableEntry Get(int i) { return entries[order[i]]; }
 
-	public void SetSelected(int index) {
-		if (index >= view.maxIndex) CurrentIndex = index + 1 - view.numEntries;
-		if (index < CurrentIndex) CurrentIndex = index;
-		if (index >= Count) index = Count - 1;
-		if (index < 0) index = 0;
+void SetEntries(List<ServerListEntry> servers) {
+	entries = new TableEntry[servers.Count];
+	order = new int[servers.Count];
+	Count = entries.Length;
+}
 
-		SelectedHash = "";
-		SelectedIndex = index;
-		lastIndex = index;
-		ClampIndex();
-
-		if (Count > 0) {
-			TableEntry entry = Get(index);
-			SelectedChanged(entry.Hash);
-			SelectedHash = entry.Hash;
-		}
-	}
-
-	public void SetSelected(string hash) {
-		SelectedIndex = -1;
-		for (int i = 0; i < Count; i++) {
-			if (Get(i).Hash != hash) continue;
-			SetSelected(i);
-			return;
+string curFilter;
+void FilterEntries(string filter) {
+	curFilter = filter;
+	Count = 0;
+	for (int i = 0; i < entries.Length; i++) {
+		TableEntry entry = entries[i];
+		if (entry.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0) {
+			order[Count++] = i;
 		}
 	}
-
-	public void ClampIndex() {
-		if (CurrentIndex > Count - view.numEntries)
-			CurrentIndex = Count - view.numEntries;
-		if (CurrentIndex < 0)
-			CurrentIndex = 0;
+	for (int i = Count; i < entries.Length; i++) {
+		order[i] = -100000;
 	}
+}
 
-	string MakeUptime(string rawSeconds) {
-		TimeSpan t = TimeSpan.FromSeconds(Double.Parse(rawSeconds));
-		if (t.TotalHours >= 24 * 7)
-			return (int)t.TotalDays + "d";
-		if (t.TotalHours >= 1)
-			return (int)t.TotalHours + "h";
-		if (t.TotalMinutes >= 1)
-			return (int)t.TotalMinutes + "m";
-		return (int)t.TotalSeconds + "s";
+static void LTable_GetScrollbarCoords(struct LTable* w, out int y, out int height) {
+	if (Count == 0) { y = 0; height = 0; return; }
+
+	float scale = Height / (float)Count;
+	y = (int)Math.Ceiling(CurrentIndex * scale);
+	height = (int)Math.Ceiling((view.maxIndex - CurrentIndex) * scale);
+	height = Math.Min(y + height, Height) - y;
+}
+
+void SetSelected(int index) {
+	if (index >= view.maxIndex) CurrentIndex = index + 1 - view.numEntries;
+	if (index < CurrentIndex) CurrentIndex = index;
+	if (index >= Count) index = Count - 1;
+	if (index < 0) index = 0;
+
+	SelectedHash = "";
+	SelectedIndex = index;
+	lastIndex = index;
+	ClampIndex();
+
+	if (Count > 0) {
+		TableEntry entry = Get(index);
+		SelectedChanged(entry.Hash);
+		SelectedHash = entry.Hash;
 	}
+}
 
-
-	public int[] ColumnWidths = new int[] { 320, 65, 65, 140 };
-	public int[] DesiredColumnWidths = new int[] { 320, 65, 65, 140 };
-
-	public void SetDrawData(IDrawer2D drawer, Font font, Font titleFont,
-		Anchor horAnchor, Anchor verAnchor, int x, int y) {
-		SetLocation(horAnchor, verAnchor, x, y);
-		view.SetDrawData(drawer, font, titleFont);
+void SetSelected(string hash) {
+	SelectedIndex = -1;
+	for (int i = 0; i < Count; i++) {
+		if (Get(i).Hash != hash) continue;
+		SetSelected(i);
+		return;
 	}
+}
 
-	public void RecalculateDrawData() { view.RecalculateDrawData(); }
-	public void RedrawData(IDrawer2D drawer) { view.RedrawData(drawer); }
-	public void RedrawFlags() { view.DrawFlags(); }
+void ClampIndex() {
+	if (CurrentIndex > Count - view.numEntries)
+		CurrentIndex = Count - view.numEntries;
+	if (CurrentIndex < 0)
+		CurrentIndex = 0;
+}
 
-	public override void Redraw(IDrawer2D drawer) {
-		RecalculateDrawData();
-		RedrawData(drawer);
-	}
+DefaultComparer defComp = new DefaultComparer();
+NameComparer nameComp = new NameComparer();
+PlayersComparer playerComp = new PlayersComparer();
+UptimeComparer uptimeComp = new UptimeComparer();
+SoftwareComparer softwareComp = new SoftwareComparer();
+internal int DraggingColumn = -1;
+internal bool DraggingScrollbar = false;
+internal int mouseOffset;
 
+void SortDefault() {
+	SortEntries(defComp, true);
+}
 
-	DefaultComparer defComp = new DefaultComparer();
-	NameComparer nameComp = new NameComparer();
-	PlayersComparer playerComp = new PlayersComparer();
-	UptimeComparer uptimeComp = new UptimeComparer();
-	SoftwareComparer softwareComp = new SoftwareComparer();
-	internal int DraggingColumn = -1;
-	internal bool DraggingScrollbar = false;
-	internal int mouseOffset;
-
-	public void SortDefault() {
-		SortEntries(defComp, true);
-	}
-
-	void SelectHeader(int mouseX, int mouseY) {
-		int x = X + 15;
-		for (int i = 0; i < ColumnWidths.Length; i++) {
-			x += ColumnWidths[i] + 10;
-			if (mouseX >= x - 8 && mouseX < x + 8) {
-				DraggingColumn = i;
-				lastIndex = -10; return;
-			}
-		}
-		TrySortColumns(mouseX);
-	}
-
-	void TrySortColumns(int mouseX) {
-		int x = X + TableView.flagPadding;
-		if (mouseX >= x && mouseX < x + ColumnWidths[0]) {
-			SortEntries(nameComp, false); return;
-		}
-
-		x += ColumnWidths[0] + 10;
-		if (mouseX >= x && mouseX < x + ColumnWidths[1]) {
-			SortEntries(playerComp, false); return;
-		}
-
-		x += ColumnWidths[1] + 10;
-		if (mouseX >= x && mouseX < x + ColumnWidths[2]) {
-			SortEntries(uptimeComp, false); return;
-		}
-
-		x += ColumnWidths[2] + 10;
-		if (mouseX >= x) {
-			SortEntries(softwareComp, false); return;
-		}
-	}
-
-	void SortEntries(TableEntryComparer comparer, bool noRedraw) {
-		Array.Sort(entries, 0, entries.Length, comparer);
-		lastIndex = -10;
-		if (curFilter != null && curFilter.Length > 0) {
-			FilterEntries(curFilter);
-		}
-
-		if (noRedraw) return;
-		comparer.Invert = !comparer.Invert;
-		SetSelected(SelectedHash);
-		NeedRedraw();
-	}
-
-	void GetSelectedServer(int mouseX, int mouseY) {
-		for (int i = 0; i < Count; i++) {
-			TableEntry entry = Get(i);
-			if (mouseY < entry.Y || mouseY >= entry.Y + entry.Height + 2) continue;
-
-			if (lastIndex == i && (DateTime.UtcNow - lastPress).TotalSeconds < 1) {
-				Window.ConnectToServer(servers, entry.Hash);
-				lastPress = DateTime.MinValue;
-				return;
-			}
-
-			SetSelected(i);
-			NeedRedraw();
-			break;
-		}
-	}
-
-	void HandleOnClick(int mouseX, int mouseY) {
-		if (mouseX >= Window.Width - 10) {
-			ScrollbarClick(mouseY);
-			DraggingScrollbar = true;
+void SelectHeader(int mouseX, int mouseY) {
+	int x = X + 15;
+	for (int i = 0; i < ColumnWidths.Length; i++) {
+		x += ColumnWidths[i] + 10;
+		if (mouseX >= x - 8 && mouseX < x + 8) {
+			DraggingColumn = i;
 			lastIndex = -10; return;
 		}
+	}
+	TrySortColumns(mouseX);
+}
 
-		if (mouseY >= view.headerStartY && mouseY < view.headerEndY) {
-			SelectHeader(mouseX, mouseY);
-		} else {
-			GetSelectedServer(mouseX, mouseY);
-		}
-		lastPress = DateTime.UtcNow;
+void TrySortColumns(int mouseX) {
+	int x = X + TableView.flagPadding;
+	if (mouseX >= x && mouseX < x + ColumnWidths[0]) {
+		SortEntries(nameComp, false); return;
 	}
 
-	int lastIndex = -10;
-	DateTime lastPress;
-	public void MouseMove(int x, int y, int deltaX, int deltaY) {
-		if (DraggingScrollbar) {
-			y -= Y;
-			float scale = Height / (float)Count;
-			CurrentIndex = (int)((y - mouseOffset) / scale);
-			ClampIndex();
-			NeedRedraw();
-		} else if (DraggingColumn >= 0) {
-			if (x >= Window.Width - 20) return;
-			int col = DraggingColumn;
-			ColumnWidths[col] += deltaX;
-			Utils.Clamp(ref ColumnWidths[col], 20, Window.Width - 20);
-			DesiredColumnWidths[col] = ColumnWidths[col];
-			NeedRedraw();
-		}
-
+	x += ColumnWidths[0] + 10;
+	if (mouseX >= x && mouseX < x + ColumnWidths[1]) {
+		SortEntries(playerComp, false); return;
 	}
 
-	void ScrollbarClick(int mouseY) {
+	x += ColumnWidths[1] + 10;
+	if (mouseX >= x && mouseX < x + ColumnWidths[2]) {
+		SortEntries(uptimeComp, false); return;
+	}
+
+	x += ColumnWidths[2] + 10;
+	if (mouseX >= x) {
+		SortEntries(softwareComp, false); return;
+	}
+}
+
+void SortEntries(TableEntryComparer comparer, bool noRedraw) {
+	Array.Sort(entries, 0, entries.Length, comparer);
+	lastIndex = -10;
+	if (curFilter != null && curFilter.Length > 0) {
+		FilterEntries(curFilter);
+	}
+
+	if (noRedraw) return;
+	comparer.Invert = !comparer.Invert;
+	SetSelected(SelectedHash);
+	NeedRedraw();
+}
+
+void GetSelectedServer(int mouseX, int mouseY) {
+	for (int i = 0; i < Count; i++) {
+		TableEntry entry = Get(i);
+		if (mouseY < entry.Y || mouseY >= entry.Y + entry.Height + 2) continue;
+
+		if (lastIndex == i) {
+			Launcher_ConnectToServer(entry.Hash);
+			return;
+		}
+
+		SetSelected(i);
+		NeedRedraw();
+		break;
+	}
+}
+
+void MouseDown(int mouseX, int mouseY) {
+	if (mouseX >= Window.Width - 10) {
+		ScrollbarClick(mouseY);
+		DraggingScrollbar = true;
+		lastIndex = -10; return;
+	}
+
+	if (mouseY >= view.headerStartY && mouseY < view.headerEndY) {
+		SelectHeader(mouseX, mouseY);
+	} else {
+		GetSelectedServer(mouseX, mouseY);
+	}
+}
+
+int lastIndex = -10;
+void MouseMove(int x, int y, int deltaX, int deltaY) {
+	if (DraggingScrollbar) {
+		y -= Y;
+		float scale = Height / (float)Count;
+		CurrentIndex = (int)((y - mouseOffset) / scale);
+		ClampIndex();
+		NeedRedraw();
+	} else if (DraggingColumn >= 0) {
+		if (x >= Window.Width - 20) return;
+		int col = DraggingColumn;
+		ColumnWidths[col] += deltaX;
+		Utils.Clamp(ref ColumnWidths[col], 20, Window.Width - 20);
+		NeedRedraw();
+	}
+}
+
+void ScrollbarClick(int mouseY) {
 		mouseY -= Y;
 		int y, height;
 		GetScrollbarCoords(out y, out height);
@@ -1047,5 +980,45 @@ public delegate void TableNeedsRedrawHandler();
 		NeedRedraw();
 	}
 }
-}
 */
+
+void LTable_StopDragging(struct LTable* table) {
+	table->DraggingColumn    = -1;
+	table->DraggingScrollbar = false;
+	table->MouseOffset       = 0;
+}
+
+void LTable_Reposition(struct LTable* w) {
+	int rowsHeight;
+	w->HdrHeight = Drawer2D_FontHeight(&w->HdrFont, true) + CELL_YPADDING * 2;
+	w->RowHeight = Drawer2D_FontHeight(&w->RowFont, true) + CELL_YPADDING * 2;
+
+	w->RowBegY = w->Y + w->HdrHeight + GRIDLINE_SIZE;
+	rowsHeight = w->Height - (w->RowBegY - w->Y);
+	w->VisibleRows = Math_CeilDiv(rowsHeight, w->RowHeight);
+}
+
+static void LTable_Draw(void* widget) {
+	struct LTable* w = widget;
+	LTable_DrawHeaders(w);
+	LTable_DrawRows(w);
+	Launcher_Dirty = true;
+}
+
+static struct LWidgetVTABLE ltable_VTABLE = {
+	LTable_Draw,
+	NULL, NULL, /* Key    */
+	NULL, NULL, /* Hover  */
+	NULL, NULL  /* Select */
+};
+void LTable_Init(struct LTable* w, const FontDesc* hdrFont, const FontDesc* rowFont) {
+	w->VTABLE     = &ltable_VTABLE;
+	w->Columns    = tableColumns;
+	w->NumColumns = Array_Elems(tableColumns);
+
+	w->HdrFont = *hdrFont;
+	w->RowFont = *rowFont;
+
+	LTable_StopDragging(w);
+	LTable_Reposition(w);
+}
