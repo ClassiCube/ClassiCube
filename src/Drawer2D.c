@@ -201,26 +201,26 @@ void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size,
 
 void Drawer2D_BmpScaled(Bitmap* dst, int x, int y, int width, int height,
 						Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight,
-						int scaleWidth, int scaleHeight, uint8_t scaleA, uint8_t scaleB) {
+						int scaleWidth, int scaleHeight, uint8_t tintA, uint8_t tintB) {
 	BitmapCol* dstRow, col;
 	BitmapCol* srcRow;
 	int xx, yy;
 	int scaledX, scaledY;
-	uint8_t scale;
+	uint8_t tint;
 
 	for (yy = 0; yy < height; yy++) {
 		scaledY = (y + yy) * srcHeight / scaleHeight;
 		srcRow  = Bitmap_GetRow(src, srcY + (scaledY % srcHeight));
 		dstRow  = Bitmap_GetRow(dst, y + yy) + x;
-		scale   = (uint8_t)Math_Lerp(scaleA, scaleB, (float)yy / height);
+		tint    = (uint8_t)Math_Lerp(tintA, tintB, (float)yy / height);
 
 		for (xx = 0; xx < width; xx++) {
 			scaledX = (x + xx) * srcWidth / scaleWidth;
 			col     = srcRow[srcX + (scaledX % srcWidth)];
 
-			dstRow[xx].B = (col.B * scale) / 255;
-			dstRow[xx].G = (col.G * scale) / 255;
-			dstRow[xx].R = (col.R * scale) / 255;
+			dstRow[xx].B = (col.B * tint) / 255;
+			dstRow[xx].G = (col.G * tint) / 255;
+			dstRow[xx].R = (col.R * tint) / 255;
 			dstRow[xx].A = col.A;
 		}
 	}
@@ -283,13 +283,12 @@ void Drawer2D_Clear(Bitmap* bmp, BitmapCol col, int x, int y, int width, int hei
 
 void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args, int X, int Y) {
 	static struct Texture empty = { GFX_NULL, Tex_Rect(0,0, 0,0), Tex_UV(0,0, 1,1) };
-	Size2D size = Drawer2D_MeasureText(args);
+	Size2D size;
 	Bitmap bmp;
 
-	if (!size.Width && !size.Height) {
-		*tex = empty; tex->X = X; tex->Y = Y;
-		return;
-	}
+	size = Drawer2D_MeasureText(args);
+	/* height is only 0 when width is 0 */
+	if (!size.Width) { *tex = empty; tex->X = X; tex->Y = Y; return; }
 
 	Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	{
