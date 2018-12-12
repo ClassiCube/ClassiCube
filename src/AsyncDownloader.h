@@ -20,20 +20,20 @@ enum AsyncProgress {
 };
 
 struct AsyncRequest {
-	char URL[STRING_SIZE];
-	char ID[STRING_SIZE];
+	char URL[STRING_SIZE];  /* URL data is downloaded from/uploaded to. */
+	char ID[STRING_SIZE];   /* Unique identifier for this request. */
+	TimeMS TimeAdded;       /* Time this request was added to queue of requests. */
+	TimeMS TimeDownloaded;  /* Time response contents were completely downloaded. */
+	int StatusCode;         /* HTTP status code returned in the response. */
+	uint32_t ContentLength; /* HTTP content length returned in the response. */
 
-	TimeMS TimeAdded, TimeDownloaded;
-	int StatusCode;
-	uint32_t ContentLength;
-
-	ReturnCode Result;
-	void*      ResultData;
-	uint32_t   ResultSize;
+	ReturnCode Result; /* 0 on success, otherwise platform-specific error. */
+	void*      Data;   /* Contents of the response. */
+	uint32_t   Size;   /* Size of the contents. */
 
 	TimeMS LastModified;    /* Time item cached at (if at all) */
 	char Etag[STRING_SIZE]; /* ETag of cached item (if any) */
-	uint8_t RequestType;
+	uint8_t RequestType;    /* Whether to fetch contents or just headers. */
 };
 
 void ASyncRequest_Free(struct AsyncRequest* request);
@@ -42,7 +42,7 @@ void AsyncDownloader_GetSkin(const String* id, const String* skinName);
 void AsyncDownloader_GetData(const String* url, bool priority, const String* id);
 void AsyncDownloader_GetContentLength(const String* url, bool priority, const String* id);
 /* TODO: Implement post */
-/* void AsyncDownloader_PostString(const String* url, bool priority, const String* id, const String* contents); */
+void AsyncDownloader_UNSAFE_PostData(const String* url, bool priority, const String* id, const void* data, const uint32_t size);
 void AsyncDownloader_GetDataEx(const String* url, bool priority, const String* id, TimeMS* lastModified, const String* etag);
 
 bool AsyncDownloader_Get(const String* id, struct AsyncRequest* item);

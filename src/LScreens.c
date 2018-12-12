@@ -433,7 +433,7 @@ static void ColoursScreen_KeyDown(struct LScreen* s, Key key) {
 	}
 }
 
-static void ColoursScreen_ResetAll(void* widget, int x, int y) {
+static void ColoursScreen_ResetAll(void* w, int x, int y) {
 	Launcher_ResetSkin();
 	Launcher_SaveSkin();
 	ColoursScreen_UpdateAll(&ColoursScreen_Instance);
@@ -884,7 +884,7 @@ static void MainScreen_TickFetchServers(struct MainScreen* s) {
 
 	if (FetchServersTask.Base.Success) {
 		s->SigningIn = false;
-		Launcher_SetScreen(SettingsScreen_MakeInstance());
+		Launcher_SetScreen(ServersScreen_MakeInstance());
 	} else {
 		MainScreen_Error(&FetchServersTask.Base, "retrieving servers list");
 	}
@@ -898,7 +898,6 @@ static void MainScreen_Tick(struct LScreen* s_) {
 	MainScreen_TickFetchServers(s);
 }
 
-
 struct LScreen* MainScreen_MakeInstance(void) {
 	struct MainScreen* s = &MainScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
@@ -907,6 +906,68 @@ struct LScreen* MainScreen_MakeInstance(void) {
 	s->Reposition = MainScreen_Reposition;
 	s->HoverWidget   = MainScreen_HoverWidget;
 	s->UnhoverWidget = MainScreen_UnhoverWidget;
+	return (struct LScreen*)s;
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------ServersScreen----------------------------------------------------*
+*#########################################################################################################################*/
+static struct ServersScreen {
+	LScreen_Layout
+	struct LInput IptName, IptHash;
+	struct LButton BtnBack, BtnConnect, BtnRefresh;
+	struct LWidget* _widgets[5];
+} ServersScreen_Instance;
+
+static void ServersScreen_Connect(void* w, int x, int y) {
+	Launcher_ConnectToServer(&ServersScreen_Instance.IptHash.Text);
+}
+
+static void ServersScreen_Refresh(void* w, int x, int y) {
+	const static String working = String_FromConst("&eWorking..");
+	struct LButton* btn;
+	if (FetchServersTask.Base.Working) return;
+
+	FetchServersTask_Run();
+	btn = &ServersScreen_Instance.BtnRefresh;
+	LButton_SetText(btn, &working);
+	LWidget_Redraw(btn);
+}
+
+static void ServersScreen_Init(struct LScreen* s_) {
+	struct ServersScreen* s = (struct ServersScreen*)s_;
+	if (s->NumWidgets) return;
+	s->Widgets = s->_widgets;
+
+	LScreen_Input(s_, &s->IptName, 370, false, "&gSearch servers..");
+	LScreen_Input(s_, &s->IptHash, 475, false, "&gclassicube.net/server/play/...");
+
+	LScreen_Button(s_, &s->BtnBack,    110, 30, "Back");
+	LScreen_Button(s_, &s->BtnConnect, 110, 30, "Connect");
+	LScreen_Button(s_, &s->BtnRefresh, 110, 30, "Refresh");
+
+	s->BtnBack.OnClick    = SwitchToMain;
+	s->BtnConnect.OnClick = ServersScreen_Connect;
+	s->BtnRefresh.OnClick = ServersScreen_Refresh;
+}
+
+static void ServersScreen_Reposition(struct LScreen* s_) {
+	struct ServersScreen* s = (struct ServersScreen*)s_;
+	LWidget_SetLocation(&s->IptName, ANCHOR_MIN, ANCHOR_MIN, 10, 10);
+	LWidget_SetLocation(&s->IptHash, ANCHOR_MIN, ANCHOR_MAX, 10, 10);
+
+	LWidget_SetLocation(&s->BtnBack,    ANCHOR_MAX, ANCHOR_MIN,  10, 10);
+	LWidget_SetLocation(&s->BtnConnect, ANCHOR_MAX, ANCHOR_MAX,  10, 10);
+	LWidget_SetLocation(&s->BtnRefresh, ANCHOR_MAX, ANCHOR_MIN, 135, 10);
+}
+
+struct LScreen* ServersScreen_MakeInstance(void) {
+	struct ServersScreen* s = &ServersScreen_Instance;
+	LScreen_Reset((struct LScreen*)s);
+	s->HidesBackground = true;
+	s->Init       = ServersScreen_Init;
+	s->Reposition = ServersScreen_Reposition;
 	return (struct LScreen*)s;
 }
 

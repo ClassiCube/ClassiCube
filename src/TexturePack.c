@@ -719,8 +719,8 @@ void TexturePack_Extract_Req(struct AsyncRequest* item) {
 
 	url  = String_FromRawArray(item->URL);
 	String_Copy(&World_TextureUrl, &url);
-	data = item->ResultData;
-	len  = item->ResultSize;
+	data = item->Data;
+	len  = item->Size;
 
 	etag = String_FromRawArray(item->Etag);
 	TextureCache_Set(&url, data, len);

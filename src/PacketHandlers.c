@@ -276,7 +276,7 @@ static void WoM_ParseConfig(struct AsyncRequest* item) {
 	PackedCol col;
 
 	String_InitArray(line, lineBuffer);
-	Stream_ReadonlyMemory(&mem, item->ResultData, item->ResultSize);
+	Stream_ReadonlyMemory(&mem, item->Data, item->Size);
 
 	while (!Stream_ReadLine(&mem, &line)) {
 		Platform_Log(&line);
@@ -311,7 +311,7 @@ static void WoM_Tick(void) {
 	struct AsyncRequest item;
 	if (!AsyncDownloader_Get(&wom_identifier, &item)) return;
 
-	if (item.ResultData) WoM_ParseConfig(&item);
+	if (item.Data) WoM_ParseConfig(&item);
 	ASyncRequest_Free(&item);
 }
 

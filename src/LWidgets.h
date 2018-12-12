@@ -111,4 +111,22 @@ struct LSlider {
 	BitmapCol ProgressCol;
 };
 CC_NOINLINE void LSlider_Init(struct LSlider* w, int width, int height);
+
+struct ServerInfo;
+struct LTableColumn {
+	/* Name of this column. */
+	const char* Name;
+	/* Current and default width of this column. */
+	int Width, DefaultWidth;
+	/* Gets the value of this column for the given row. */
+	void (*GetValue)(struct ServerInfo* row, String* str);
+	/* Sorts two rows based on value of this column in both rows. */
+	int (*SortRows)(struct ServerInfo* a, struct ServerInfo* b);
+	/* Whether to invert the order of row sorting. */
+	bool InvertSort;
+};
+/* Represents a table of server entries. */
+struct LTable {
+	LWidget_Layout
+};
 #endif

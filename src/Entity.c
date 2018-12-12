@@ -698,8 +698,8 @@ static void Player_CheckSkin(struct Player* p) {
 	}
 
 	if (!AsyncDownloader_Get(&skin, &item)) return;
-	if (!item.ResultData) { Player_SetSkinAll(p, true); return; }
-	Stream_ReadonlyMemory(&mem, item.ResultData, item.ResultSize);
+	if (!item.Data) { Player_SetSkinAll(p, true); return; }
+	Stream_ReadonlyMemory(&mem, item.Data, item.Size);
 
 	if ((res = Png_Decode(&bmp, &mem))) {
 		url = String_FromRawArray(item.URL);

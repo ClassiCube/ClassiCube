@@ -1384,8 +1384,8 @@ static ReturnCode Http_GetData(struct AsyncRequest* req, HINTERNET handle, volat
 	buffer    = Mem_Alloc(size, 1, "http get data");
 	totalRead = 0;
 
-	req->ResultData = buffer;
-	req->ResultSize = 0;
+	req->Data = buffer;
+	req->Size = 0;
 
 	for (;;) {
 		if (!InternetQueryDataAvailable(handle, &avail, 0, 0)) break;
@@ -1395,7 +1395,7 @@ static ReturnCode Http_GetData(struct AsyncRequest* req, HINTERNET handle, volat
 		if (totalRead + avail > size) {
 			size   = totalRead + avail;
 			buffer = Mem_Realloc(buffer, size, 1, "http inc data");
-			req->ResultData = buffer;
+			req->Data = buffer;
 		}
 
 		success = InternetReadFile(handle, &buffer[totalRead], avail, &read);
@@ -1404,7 +1404,7 @@ static ReturnCode Http_GetData(struct AsyncRequest* req, HINTERNET handle, volat
 
 		totalRead += read;
 		if (req->ContentLength) *progress = (int)(100.0f * totalRead / size);
-		req->ResultSize += read;
+		req->Size += read;
 	}
 
  	*progress = 100;

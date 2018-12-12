@@ -14,12 +14,9 @@
 #include "AsyncDownloader.h"
 
 /* TODO TODO TODO TODO TODO TODO TODO TODO FIX THESE STUBS */
-void SignInTask_Run(const String* user, const String* pass) { }
 void Launcher_SetSecureOpt(const char* opt, const String* data, const String* key) { }
 void Launcher_GetSecureOpt(const char* opt, String* data, const String* key) { }
 struct LScreen* ResourcesScreen_MakeInstance(void) { return NULL; }
-struct LScreen* ServersScreen_MakeInstance(void) { return NULL; }
-
 struct LScreen* Launcher_Screen;
 bool Launcher_Dirty;
 Rect2D Launcher_DirtyArea;
@@ -53,6 +50,50 @@ void Launcher_SetScreen(struct LScreen* screen) {
 	screen->MouseMove(screen, 0, 0);
 
 	Launcher_Redraw();
+}
+
+CC_NOINLINE static void Launcher_StartFromInfo(struct ServerInfo* info) {
+	String port; char portBuffer[STRING_INT_CHARS];
+	String_InitArray(port, portBuffer);
+
+	String_AppendInt(&port, info->Port);
+	Launcher_StartGame(&SignInTask.Username, &info->Mppass, &info->IP, &port, &info->Name);
+}
+
+bool Launcher_ConnectToServer(const String* hash) {
+	int i;
+	struct ServerInfo* info;
+	if (!hash->length) return false;
+
+	for (i = 0; i < FetchServersTask.NumServers; i++) {
+		info = &FetchServersTask.Servers[i];
+		if (!String_Equals(hash, &info->Hash)) continue;
+
+		Launcher_StartFromInfo(info);
+		return true;
+	}
+
+	/* Fallback to private server handling */
+	/* TODO: Rewrite to be async */
+	FetchServerTask_Run(hash);
+
+	while (!FetchServerTask.Base.Completed) { 
+		LWebTask_Tick(&FetchServerTask.Base);
+		Thread_Sleep(10); 
+	}
+
+	if (FetchServerTask.Server.Hash.length) {
+		Launcher_StartFromInfo(&FetchServerTask.Server);
+		return true;
+	} else if (FetchServerTask.Base.Res) {
+		Launcher_ShowError(FetchServerTask.Base.Res, "fetching server info");
+	} else if (FetchServerTask.Base.Status != 200) {
+		/* TODO: Use a better dialog message.. */
+		Launcher_ShowError(FetchServerTask.Base.Status, "fetching server info");
+	} else {
+		Window_ShowDialog("Failed to connect", "No server has that hash");
+	}
+	return true;
 }
 
 
@@ -424,6 +465,11 @@ void Launcher_ResetPixels(void) {
 	const static String title_back = String_FromConst("&0Classi&0Cube");
 	struct DrawTextArgs args;
 	int x;
+
+	if (Launcher_Screen && Launcher_Screen->HidesBackground) {
+		Launcher_ResetArea(0, 0, Game_Width, Game_Height);
+		return;
+	}
 
 	if (Launcher_ClassicBackground && terrainBmp.Scan0) {
 		Launcher_ClearTile(0,        0, Game_Width,               TILESIZE, TILESIZE);

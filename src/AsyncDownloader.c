@@ -6,9 +6,9 @@
 #include "GameStructs.h"
 
 void ASyncRequest_Free(struct AsyncRequest* request) {
-	Mem_Free(request->ResultData);
-	request->ResultData = NULL;
-	request->ResultSize = 0;
+	Mem_Free(request->Data);
+	request->Data = NULL;
+	request->Size = 0;
 }
 
 #define ASYNC_DEF_ELEMS 10
@@ -205,9 +205,9 @@ static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	Platform_Log3("HTTP: return code %i (http %i), in %i ms", 
 				&request->Result, &request->StatusCode, &elapsed);
 
-	if (request->ResultData) {
-		size = request->ResultSize;
-		addr = (uintptr_t)request->ResultData;
+	if (request->Data) {
+		size = request->Size;
+		addr = (uintptr_t)request->Data;
 		Platform_Log2("HTTP returned data: %i bytes at %x", &size, &addr);
 	}
 }

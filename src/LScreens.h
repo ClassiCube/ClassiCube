@@ -33,7 +33,8 @@ typedef void(*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 	struct LWidget* HoveredWidget;  /* Widget the mouse is currently hovering over. */ \
 	struct LWidget* SelectedWidget; /* Widget mouse last clicked on. */ \
 	int NumWidgets;           /* Number of widgets actually used. */ \
-	struct LWidget** Widgets; /* Array of pointers to all widgets in the screen. */
+	struct LWidget** Widgets; /* Array of pointers to all widgets in the screen. */ \
+	bool HidesBackground;     /* Whether titlebar in window is hidden. */
 
 struct LScreen { LScreen_Layout };
 	

@@ -218,8 +218,8 @@ void LWebTask_Tick(struct LWebTask* task) {
 
 	task->Working   = false;
 	task->Completed = true;
-	task->Success   = !task->Res && req.ResultData && req.ResultSize;
-	if (task->Success) task->Handle(req.ResultData, req.ResultSize);
+	task->Success   = !task->Res && req.Data && req.Size;
+	if (task->Success) task->Handle(req.Data, req.Size);
 	ASyncRequest_Free(&req);
 }
 
@@ -261,7 +261,33 @@ void GetTokenTask_Run(void) {
 *--------------------------------------------------------SignInTask-------------------------------------------------------*
 *#########################################################################################################################*/
 struct SignInTaskData SignInTask;
-void SignInTask_Run(const String* user, const String* pass);
+char userBuffer[STRING_SIZE];
+
+static void SignInTask_OnValue(struct JsonContext* ctx, const String* str) {
+	//if (!String_CaselessEqualsConst(&ctx->CurKey, "token")) return;
+	//String_Copy(&GetTokenTask.Token, str);
+}
+
+static void SignInTask_Handle(uint8_t* data, uint32_t len) {
+	//Json_Handle(data, len, GetTokenTask_OnValue, NULL, NULL);
+}
+
+void SignInTask_Run(const String* user, const String* pass) {
+	const static String id  = String_FromConst("CC post login");
+	const static String url = String_FromConst("https://www.classicube.net/api/login");
+	if (SignInTask.Base.Working) return;
+
+	LWebTask_Reset(&SignInTask.Base);
+	String_InitArray(SignInTask.Username, userBuffer);
+	SignInTask.Error.length = 0;
+
+	// remove this
+	String_Copy(&SignInTask.Username, user);
+
+	SignInTask.Base.Identifier = id;
+	AsyncDownloader_GetData(&url, false, &id);
+	SignInTask.Base.Handle     = SignInTask_Handle;
+}
 // NOTE: Remember to add &c for errors here too
 
 
