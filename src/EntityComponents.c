@@ -87,7 +87,7 @@ void AnimatedComp_Update(struct Entity* e, Vector3 oldPos, Vector3 newPos, doubl
 
 void AnimatedComp_GetCurrent(struct Entity* e, float t) {
 	struct AnimatedComp* anim = &e->Anim;
-	float idleTime = (float)Game_Accumulator;
+	float idleTime = (float)Game_Time;
 	float idleXRot = Math_SinF(idleTime * ANIM_IDLE_XPERIOD) * ANIM_IDLE_MAX;
 	float idleZRot = Math_CosF(idleTime * ANIM_IDLE_ZPERIOD) * ANIM_IDLE_MAX + ANIM_IDLE_MAX;
 

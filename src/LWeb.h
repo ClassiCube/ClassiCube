@@ -42,8 +42,8 @@ struct LWebTask {
 	bool Completed; /* Whether the task has finished executing. */
 	bool Working;   /* Whether the task is currently in progress, or is scheduled to be. */
 	bool Success;   /* Whether the task completed successfully. */
-	ReturnCode Res;
-	int Status;
+	ReturnCode Res; /* Error returned (e.g. for DNS failure) */
+	int Status;     /* HTTP return code for the request */
 	
 	String Identifier; /* Unique identifier for this web task. */
 	String URL;        /* URL this task is downloading from/uploading to. */

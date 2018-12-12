@@ -38,7 +38,7 @@ typedef signed __int64 int64_t;
 #endif
 #endif
 #else
-#error "I don't recognise this compiler. You'll need to add required definitions in Core.h!"
+#error "Unknown compiler. You'll need to add required definitions in Core.h!"
 #endif
 
 typedef uint16_t Codepoint;

@@ -128,13 +128,11 @@ static GfxResourceID clouds_vb, clouds_tex;
 static int clouds_vertices;
 
 void EnvRenderer_RenderClouds(double deltaTime) {
-	double time;
 	float offset;
 	struct Matrix m;
 
 	if (!clouds_vb || Env_CloudsHeight < -2000) return;
-	time   = Game_Accumulator;
-	offset = (float)(time / 2048.0f * 0.6f * Env_CloudsSpeed);
+	offset = (float)(Game_Time / 2048.0f * 0.6f * Env_CloudsSpeed);
 
 	m = Matrix_Identity; m.Row3.X = offset; /* translate X axis */
 	Gfx_LoadMatrix(MATRIX_TEXTURE, &m);
@@ -304,7 +302,7 @@ void EnvRenderer_RenderSkybox(double deltaTime) {
 
 	/* Base skybox rotation */
 	m       = Matrix_Identity;
-	rotTime = (float)(Game_Accumulator * 2 * MATH_PI); /* So speed of 1 rotates whole skybox every second */
+	rotTime = (float)(Game_Time * 2 * MATH_PI); /* So speed of 1 rotates whole skybox every second */
 	Matrix_RotateY(&rotY, Env_SkyboxHorSpeed * rotTime); Matrix_MulBy(&m, &rotY);
 	Matrix_RotateX(&rotX, Env_SkyboxVerSpeed * rotTime); Matrix_MulBy(&m, &rotX);
 
@@ -472,7 +470,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	pos.Y = max(World_Height, pos.Y);
 
 	speed     = (weather == WEATHER_RAINY ? 1.0f : 0.2f) * Env_WeatherSpeed;
-	vOffset   = (float)Game_Accumulator * speed;
+	vOffset   = (float)Game_Time * speed;
 	particles = weather == WEATHER_RAINY;
 	weather_accumulator += deltaTime;
 

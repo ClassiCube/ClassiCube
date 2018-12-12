@@ -34,7 +34,7 @@
 #include "Stream.h"
 
 int Game_Width, Game_Height;
-double Game_Accumulator;
+double Game_Time;
 int Game_ChunkUpdates, Game_Port;
 bool Game_CameraClipping, Game_UseCPEBlocks;
 
@@ -642,7 +642,7 @@ static void Game_RenderFrame(double delta) {
 	frameStart = Stopwatch_Measure();
 	Gfx_BeginFrame();
 	Gfx_BindIb(Gfx_defaultIb);
-	Game_Accumulator += delta;
+	Game_Time += delta;
 	Game_Vertices = 0;
 
 	Camera_Active->UpdateMouse();

@@ -7,6 +7,7 @@
 #include "Drawer2D.h"
 #include "ExtMath.h"
 #include "Platform.h"
+#include "Stream.h"
 
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
@@ -640,37 +641,81 @@ static struct MainScreen {
 	struct LInput IptUsername, IptPassword;
 	struct LLabel LblStatus, LblUpdate;
 	struct LWidget* _widgets[9];
+	bool SigningIn;
 } MainScreen_Instance;
 
-/*static void MainScreen_Login(void* w, int x, int y) {
+struct ResumeInfo {
+	String User, Ip, Port, Server, Mppass;
+	char _mppassBuffer[STRING_SIZE];
+	bool Valid;
+};
+
+CC_NOINLINE static void MainScreen_UNSAFE_GetResume(struct ResumeInfo* info, bool full) {
+	Options_UNSAFE_Get("launcher-server",   &info->Server);
+	Options_UNSAFE_Get("launcher-username", &info->User);
+	Options_UNSAFE_Get("launcher-ip",       &info->Ip);
+	Options_UNSAFE_Get("launcher-port",     &info->Port);
+
+	if (!full) return;
+	String_InitArray(info->Mppass, info->_mppassBuffer);
+	Launcher_GetSecureOpt("launcher-mppass", &info->Mppass, &info->User);
+
+	info->Valid = 
+		info->User.length && info->Mppass.length &&
+		info->Ip.length   && info->Port.length;
+}
+
+CC_NOINLINE void MainScreen_Error(struct LWebTask* task, const char* action) {
+	String str; char strBuffer[STRING_SIZE];
+	struct MainScreen* s = &MainScreen_Instance;
+
+	String_InitArray(str, strBuffer);
+	s->SigningIn = false;
+
+	if (task->Status) {
+		String_Format1(&str, "&cclassicube.net returned: %i error", &task->Status);
+	} else {
+		String_Format1(&str, "&cError %i when connecting to classicube.net", &task->Res);
+	}
+	LLabel_SetText(&s->LblStatus, &str);
+	LWidget_Redraw(&s->LblStatus);
+}
+
+static void MainScreen_Login(void* w, int x, int y) {
+	static String needUser = String_FromConst("&eUsername required");
+	static String needPass = String_FromConst("&ePassword required");
+	static String signIn   = String_FromConst("&e&eSigning in..");
+
 	struct MainScreen* s = &MainScreen_Instance;
 	String* user = &s->IptUsername.Text;
 	String* pass = &s->IptPassword.Text;
 
 	if (!user->length) {
-		SetStatus("&eUsername required"); return;
+		LLabel_SetText(&s->LblStatus, &needUser);
+		LWidget_Redraw(&s->LblStatus); return;
 	}
 	if (!pass->length) {
-		SetStatus("&ePassword required"); return;
+		LLabel_SetText(&s->LblStatus, &needPass);
+		LWidget_Redraw(&s->LblStatus); return;
 	}
+
 	if (GetTokenTask.Base.Working) return;
-
-	game.Username = Get(0);
-	UpdateSignInInfo(Get(0), Get(1));
-
-	GetTokenTask_Run();
-	SetStatus("&eSigning in..");
-	signingIn = true;
-
 	Options_Set("launcher-cc-username", user);
 	Launcher_SetSecureOpt("launcher-cc-password", pass, user);
+
+	GetTokenTask_Run();
+	LLabel_SetText(&s->LblStatus, &signIn);
+	LWidget_Redraw(&s->LblStatus);
+	s->SigningIn = true;
 }
 
 static void MainScreen_Resume(void* w, int x, int y) {
-	if (!resumeValid) return;
-	ClientStartData data = new ClientStartData(resumeUser, resumeMppass, resumeIp, resumePort, resumeServer);
-	Client.Start(data, resumeCCSkins, ref game.ShouldExit);
-}*/
+	struct ResumeInfo info;
+	MainScreen_UNSAFE_GetResume(&info, true);
+
+	if (!info.Valid) return;
+	Launcher_StartGame(&info.User, &info.Mppass, &info.Ip, &info.Port, &info.Server);
+}
 
 static void MainScreen_Singleplayer(void* w, int x, int y) {
 	static String defUser = String_FromConst("Singleplayer");
@@ -681,8 +726,10 @@ static void MainScreen_Singleplayer(void* w, int x, int y) {
 }
 
 static void MainScreen_Init(struct LScreen* s_) {
+	String user, pass; char passBuffer[STRING_SIZE];
 	static String update = String_FromConst("&eChecking..");
 	struct MainScreen* s = (struct MainScreen*)s_;
+
 	if (s->NumWidgets) return;
 	s->Widgets = s->_widgets;
 
@@ -699,8 +746,8 @@ static void MainScreen_Init(struct LScreen* s_) {
 	LScreen_Label(s_,  &s->LblUpdate, "");
 	LScreen_Button(s_, &s->BtnOptions, 100, 35, "Options");
 	
-	//s->BtnLogin.OnClick   = MainScreen_Login;
-	//s->BtnResume.OnClick  = MainScreen_Resume;
+	s->BtnLogin.OnClick   = MainScreen_Login;
+	s->BtnResume.OnClick  = MainScreen_Resume;
 	s->BtnDirect.OnClick  = SwitchToDirectConnect;
 	s->BtnSPlayer.OnClick = MainScreen_Singleplayer;
 	s->BtnOptions.OnClick = SwitchToSettings;
@@ -708,7 +755,13 @@ static void MainScreen_Init(struct LScreen* s_) {
 	/* need to set text here for right size */
 	s->LblUpdate.Font = Launcher_HintFont;
 	LLabel_SetText(&s->LblUpdate, &update);
-	//LoadSavedInfo();
+	
+	String_InitArray(pass, passBuffer);
+	Options_UNSAFE_Get("launcher-cc-username", &user);
+	Launcher_GetSecureOpt("launcher-cc-password", &pass, &user);
+
+	LInput_SetText(&s->IptUsername, &user);
+	LInput_SetText(&s->IptPassword, &pass);
 }
 
 static void MainScreen_Reposition(struct LScreen* s_) {
@@ -727,92 +780,65 @@ static void MainScreen_Reposition(struct LScreen* s_) {
 	LWidget_SetLocation(&s->BtnOptions, ANCHOR_MAX, ANCHOR_MAX,   6,   6);
 }
 
-/*string resumeUser, resumeIp, resumePort, resumeMppass, resumeServer;
-bool resumeCCSkins, resumeValid;
+static void MainScreen_HoverWidget(struct LScreen* s_, struct LWidget* w) {
+	String str; char strBuffer[STRING_SIZE];
+	struct MainScreen* s = (struct MainScreen*)s_;
+	struct ResumeInfo info;
 
-void LoadSavedInfo() {
-	LoadFromOptions();
-	LoadResumeInfo();
-}
+	LScreen_HoverWidget(s_, w);
+	if (s->SigningIn || w != (struct LWidget*)&s->BtnResume) return;
 
-void LoadFromOptions() {
-	String pass; char passBuffer[STRING_SIZE];
-	String user;
-	String_InitArray(pass, passBuffer);
+	MainScreen_UNSAFE_GetResume(&info, false);
+	if (!info.User.length) return;
+	String_InitArray(str, strBuffer);
 
-	Options_UNSAFE_Get("launcher-cc-username", &user);
-	Launcher_GetSecureOpt("launcher-cc-password", &pass, &user);
-
-	Set(0, user);
-	Set(1, pass);
-}
-
-void LoadResumeInfo() {
-	resumeServer = Options.Get("launcher-server", "");
-	resumeUser = Options.Get("launcher-username", "");
-	resumeIp = Options.Get("launcher-ip", "");
-	resumePort = Options.Get("launcher-port", "");
-
-	IPAddress address;
-	if (!IPAddress.TryParse(resumeIp, out address)) resumeIp = "";
-	ushort portNum;
-	if (!UInt16.TryParse(resumePort, out portNum)) resumePort = "";
-
-	string mppass = Options.Get("launcher-mppass", null);
-	resumeMppass = Secure.Decode(mppass, resumeUser);
-	resumeValid =
-		!String.IsNullOrEmpty(resumeUser) && !String.IsNullOrEmpty(resumeIp) &&
-		!String.IsNullOrEmpty(resumePort) && !String.IsNullOrEmpty(resumeMppass);
-}
-
-void SelectWidget(Widget widget, int mouseX, int mouseY) {
-	base.SelectWidget(widget, mouseX, mouseY);
-	if (signingIn || !resumeValid || widget != widgets[view.resIndex]) return;
-
-	string curUser = ((InputWidget)widgets[view.usernameIndex]).Text;
-	if (resumeServer != "" && resumeUser == curUser) {
-		SetStatus("&eResume to " + resumeServer);
-	} else if (resumeServer != "") {
-		SetStatus("&eResume as " + resumeUser + " to " + resumeServer);
+	if (info.Server.length && String_Equals(&info.User,	&s->IptUsername.Text)) {
+		String_Format1(&str, "&eResume to %s", &info.Server);
+	} else if (info.Server.length) {
+		String_Format2(&str, "&eResume as %s to %s", &info.User, &info.Server);
 	} else {
-		SetStatus("&eResume as " + resumeUser + " to " + resumeIp + ":" + resumePort);
+		String_Format3(&str, "&eResume as %s to %s:%s", &info.User, &info.Ip, &info.Port);
 	}
+
+	LLabel_SetText(&s->LblStatus, &str);
+	LWidget_Redraw(&s->LblStatus);
 }
 
-void UnselectWidget(Widget widget) {
-	base.UnselectWidget(widget);
-	if (signingIn || !resumeValid || widget != widgets[view.resIndex]) return;
-	SetStatus("");
+static void MainScreen_UnhoverWidget(struct LScreen* s_, struct LWidget* w) {
+	struct MainScreen* s = (struct MainScreen*)s_;
+	LScreen_UnhoverWidget(s_, w);
+	if (s->SigningIn || w != (struct LWidget*)&s->BtnResume) return;
+
+	LLabel_SetText(&s->LblStatus, &String_Empty);
+	LWidget_Redraw(&s->LblStatus);
 }
 
-void Dispose() {
-	StoreFields();
-	base.Dispose();
+/* TODO: Maybe find a not so hacky way.. */
+CC_NOINLINE static uint32_t MainScreen_GetVersion(const String* version) {
+	uint8_t raw[4];
+	if (!Utils_ParseIP(version, raw)) return 0;
+	return Stream_GetU32_BE(raw);
 }
 
-bool signingIn = false;*/
-
-/*static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
-	static String newRelease = String_FromConst("&aNew release");
+static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
+	static String needUpdate = String_FromConst("&aNew release");
 	static String upToDate   = String_FromConst("&eUp to date");
 	static String failed     = String_FromConst("&cCheck failed");
+	static String currentStr = String_FromConst(PROGRAM_APP_VER);
+	uint32_t latest, current;
 
 	if (!CheckUpdateTask.Base.Working)   return;
 	LWebTask_Tick(&CheckUpdateTask.Base);
 	if (!CheckUpdateTask.Base.Completed) return;
 
-	if (GetTokenTask.Base.Success) {
-		string latestVer = game.checkTask.LatestStable.Version.Substring(1);
-		int spaceIndex = Program.AppName.LastIndexOf(' ');
-		string currentVer = Program.AppName.Substring(spaceIndex + 1);
-		bool update = new Version(latestVer) > new Version(currentVer);
-
-		view.updateText = update ? "&aNew release" : "&eUp to date";
-		game.RedrawBackground();
+	if (CheckUpdateTask.Base.Success) {
+		latest  = MainScreen_GetVersion(&CheckUpdateTask.LatestRelease);
+		current = MainScreen_GetVersion(&currentStr);
+		LLabel_SetText(&s->LblUpdate, latest > current ? &needUpdate : &upToDate);
 	} else {
-		LLabel_SetText(&s->LblStatus, &failed);
+		LLabel_SetText(&s->LblUpdate, &failed);
 	}
-	LWidget_Redraw(&s->LblStatus);
+	LWidget_Redraw(&s->LblUpdate);
 }
 
 static void MainScreen_TickGetToken(struct MainScreen* s) {
@@ -823,24 +849,31 @@ static void MainScreen_TickGetToken(struct MainScreen* s) {
 	if (GetTokenTask.Base.Success) {
 		SignInTask_Run(&s->IptUsername.Text, &s->IptPassword.Text);
 	} else {
-		DisplayWebException(getTask.WebEx, "sign in");
+		MainScreen_Error(&GetTokenTask.Base, "sign in");
 	}
 }
 
 static void MainScreen_TickSignIn(struct MainScreen* s) {
+	static String fetchMsg = String_FromConst("&eRetrieving servers list..");
 	if (!SignInTask.Base.Working)   return;
 	LWebTask_Tick(&SignInTask.Base);
 	if (!SignInTask.Base.Completed) return;
 
-	if (postTask.Error != null) {
-		SetStatus("&c" + postTask.Error);
-	} else if (postTask.Success) {
-		game.Username = postTask.Username;
-		// SET IptUsername here too!!!! (if not String_Equals)
+	if (SignInTask.Error.length) {
+		LLabel_SetText(&s->LblStatus, &SignInTask.Error);
+		LWidget_Redraw(&s->LblStatus);
+	} else if (SignInTask.Base.Success) {
+		/* website returns case correct username */
+		if (!String_Equals(&s->IptUsername.Text, &SignInTask.Username)) {
+			LInput_SetText(&s->IptUsername, &SignInTask.Username);
+			LWidget_Redraw(&s->IptUsername);
+		}
+
 		FetchServersTask_Run();
-		SetStatus("&eRetrieving servers list..");
+		LLabel_SetText(&s->LblStatus, &fetchMsg);
+		LWidget_Redraw(&s->LblStatus);
 	} else {
-		DisplayWebException(postTask.WebEx, "sign in");
+		MainScreen_Error(&SignInTask.Base, "sign in");
 	}
 }
 
@@ -850,9 +883,10 @@ static void MainScreen_TickFetchServers(struct MainScreen* s) {
 	if (!FetchServersTask.Base.Completed) return;
 
 	if (FetchServersTask.Base.Success) {
+		s->SigningIn = false;
 		Launcher_SetScreen(SettingsScreen_MakeInstance());
 	} else {
-		DisplayWebException(fetchTask.WebEx, "retrieving servers list");
+		MainScreen_Error(&FetchServersTask.Base, "retrieving servers list");
 	}
 }
 
@@ -864,48 +898,15 @@ static void MainScreen_Tick(struct LScreen* s_) {
 	MainScreen_TickFetchServers(s);
 }
 
-string lastStatus;
-void SetStatus(string text) {
-	lastStatus = text;
-	LabelWidget widget = (LabelWidget)widgets[view.statusIndex];
-
-	game.ResetArea(widget.X, widget.Y, widget.Width, widget.Height);
-	widget.SetDrawData(drawer, text);
-	RedrawWidget(widget);
-	game.Dirty = true;
-}
-
-void DisplayWebException(WebException ex, string action) {
-	ErrorHandler.LogError(action, ex);
-	bool sslCertError = ex.Status == WebExceptionStatus.TrustFailure ||
-		(ex.Status == WebExceptionStatus.SendFailure && OpenTK.Configuration.RunningOnMono);
-	signingIn = false;
-
-	if (ex.Status == WebExceptionStatus.Timeout) {
-		string text = "&cTimed out when connecting to classicube.net.";
-		SetStatus(text);
-	} else if (ex.Status == WebExceptionStatus.ProtocolError) {
-		HttpWebResponse response = (HttpWebResponse)ex.Response;
-		int errorCode = (int)response.StatusCode;
-		string description = response.StatusDescription;
-		string text = "&cclassicube.net returned: (" + errorCode + ") " + description;
-		SetStatus(text);
-	} else if (ex.Status == WebExceptionStatus.NameResolutionFailure) {
-		string text = "&cUnable to resolve classicube.net" +
-			Environment.NewLine + "Are you connected to the internet?";
-		SetStatus(text);
-	} else {
-		string text = "&c" + ex.Status;
-		SetStatus(text);
-	}
-}*/
 
 struct LScreen* MainScreen_MakeInstance(void) {
 	struct MainScreen* s = &MainScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init       = MainScreen_Init;
-	//s->Tick       = MainScreen_Tick;
+	s->Tick       = MainScreen_Tick;
 	s->Reposition = MainScreen_Reposition;
+	s->HoverWidget   = MainScreen_HoverWidget;
+	s->UnhoverWidget = MainScreen_UnhoverWidget;
 	return (struct LScreen*)s;
 }
 

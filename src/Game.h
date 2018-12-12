@@ -11,8 +11,8 @@ struct DisplayDevice;
 struct Stream;
 
 extern int Game_Width, Game_Height;
-/* Total rendering time (in seconds) elapsed since the client was started. */
-extern double Game_Accumulator;
+/* Total time (in seconds) the game has been running for. */
+extern double Game_Time;
 extern int Game_ChunkUpdates;
 extern bool Game_CameraClipping;
 extern struct PickedPos Game_SelectedPos;

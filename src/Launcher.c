@@ -14,6 +14,7 @@
 #include "AsyncDownloader.h"
 
 /* TODO TODO TODO TODO TODO TODO TODO TODO FIX THESE STUBS */
+void SignInTask_Run(const String* user, const String* pass) { }
 void Launcher_SetSecureOpt(const char* opt, const String* data, const String* key) { }
 void Launcher_GetSecureOpt(const char* opt, String* data, const String* key) { }
 struct LScreen* ResourcesScreen_MakeInstance(void) { return NULL; }

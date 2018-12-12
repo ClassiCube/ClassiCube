@@ -1,3 +1,4 @@
+#include "Launcher.h"
 #include "LWeb.h"
 #include "Platform.h"
 #include "Stream.h"
@@ -261,6 +262,7 @@ void GetTokenTask_Run(void) {
 *#########################################################################################################################*/
 struct SignInTaskData SignInTask;
 void SignInTask_Run(const String* user, const String* pass);
+// NOTE: Remember to add &c for errors here too
 
 
 /*########################################################################################################################*
@@ -428,15 +430,14 @@ static void FetchUpdateTask_Handle(uint8_t* data, uint32_t len) {
 	ReturnCode res;
 
 	res = Stream_CreateFile(&stream, &path);
-	// TODO: FINISH THIS... 
+	if (res) { Launcher_ShowError(res, "creating update"); return; }
 
 	res = Stream_Write(&stream, data, len);
-
 	stream.Close(&stream);
+	if (res) { Launcher_ShowError(res, "saving update"); return; }
 
 	res = File_SetModifiedTime(&path, FetchUpdateTask.Timestamp);
-	// TODO: log errors..
-	// TODO: FINISHHHHH!!!!
+	if (res) Launcher_ShowError(res, "setting update time");
 }
 
 void FetchUpdateTask_Run(bool release, bool d3d9) {
