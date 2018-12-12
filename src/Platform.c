@@ -1495,7 +1495,7 @@ static size_t Http_GetHeaders(char *buffer, size_t size, size_t nitems, struct A
 	} else if (String_CaselessEqualsConst(&name, "Content-Length")) {
 		Convert_ParseInt(&value, &req->ContentLength);
 		/* TODO: Fix when ContentLength isn't RequestSize */
-		req->ResultSize = req->ContentLength;
+		req->Size = req->ContentLength;
 	} else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
 		String_InitArray_NT(tmp, tmpBuffer);
 		String_AppendString(&tmp, &value);
@@ -1512,14 +1512,14 @@ static size_t Http_GetData(char *buffer, size_t size, size_t nitems, struct Asyn
 	uint32_t total, left;
 	uint8_t* dst;
 		
-	total = req->ResultSize;
+	total = req->Size;
 	if (!total || req->RequestType == REQUEST_TYPE_CONTENT_LENGTH) return 0;
-	if (!req->ResultData) req->ResultData = Mem_Alloc(total, 1, "http get data");
+	if (!req->Data) req->Data = Mem_Alloc(total, 1, "http get data");
 
 	/* reuse Result as an offset */
 	left = total - req->Result;
 	left = min(left, nitems);
-	dst  = (uint8_t*)req->ResultData + req->Result;
+	dst  = (uint8_t*)req->Data + req->Result;
 
 	Mem_Copy(dst, buffer, left);
 	req->Result += left;
