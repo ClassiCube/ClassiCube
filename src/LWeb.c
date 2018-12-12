@@ -14,9 +14,9 @@
 /* Consumes n characters from the JSON stream */
 #define JsonContext_Consume(ctx, n) ctx->Cur += n; ctx->Left -= n;
 
-static String strTrue  = String_FromConst("true");
-static String strFalse = String_FromConst("false");
-static String strNull  = String_FromConst("null");
+const static String strTrue  = String_FromConst("true");
+const static String strFalse = String_FromConst("false");
+const static String strNull  = String_FromConst("null");
 
 static bool Json_IsWhitespace(char c) {
 	return c == '\r' || c == '\n' || c == '\t' || c == ' ';
@@ -26,7 +26,7 @@ static bool Json_IsNumber(char c) {
 	return c == '-' || c == '.' || (c >= '0' && c <= '9');
 }
 
-static bool Json_ConsumeConstant(struct JsonContext* ctx, String* value) {
+static bool Json_ConsumeConstant(struct JsonContext* ctx, const String* value) {
 	int i;
 	if (value->length > ctx->Left) return false;
 
@@ -244,8 +244,8 @@ static void GetTokenTask_Handle(uint8_t* data, uint32_t len) {
 }
 
 void GetTokenTask_Run(void) {
-	static String id  = String_FromConst("CC get token");
-	static String url = String_FromConst("https://www.classicube.net/api/login");
+	const static String id  = String_FromConst("CC get token");
+	const static String url = String_FromConst("https://www.classicube.net/api/login");
 	if (GetTokenTask.Base.Working) return;
 
 	LWebTask_Reset(&GetTokenTask.Base);
@@ -319,7 +319,7 @@ static void FetchServerTask_Handle(uint8_t* data, uint32_t len) {
 }
 
 void FetchServerTask_Run(const String* hash) {
-	static String id  = String_FromConst("CC fetch server");
+	const static String id  = String_FromConst("CC fetch server");
 	String url; char urlBuffer[STRING_SIZE];
 	if (FetchServerTask.Base.Working) return;
 
@@ -357,8 +357,8 @@ static void FetchServersTask_Handle(uint8_t* data, uint32_t len) {
 }
 
 void FetchServersTask_Run(void) {
-	static String id  = String_FromConst("CC fetch servers");
-	static String url = String_FromConst("https://www.classicube.net/api/servers");
+	const static String id  = String_FromConst("CC fetch servers");
+	const static String url = String_FromConst("https://www.classicube.net/api/servers");
 	if (FetchServersTask.Base.Working) return;
 
 	LWebTask_Reset(&FetchServersTask.Base);
@@ -405,8 +405,8 @@ static void CheckUpdateTask_Handle(uint8_t* data, uint32_t len) {
 }
 
 void CheckUpdateTask_Run(void) {
-	static String id  = String_FromConst("CC update check");
-	static String url = String_FromConst("http://cs.classicube.net/c_client/builds.json");
+	const static String id  = String_FromConst("CC update check");
+	const static String url = String_FromConst("http://cs.classicube.net/c_client/builds.json");
 	if (CheckUpdateTask.Base.Working) return;
 
 	LWebTask_Reset(&CheckUpdateTask.Base);
@@ -425,7 +425,7 @@ void CheckUpdateTask_Run(void) {
 *#########################################################################################################################*/
 struct FetchUpdateData FetchUpdateTask;
 static void FetchUpdateTask_Handle(uint8_t* data, uint32_t len) {
-	static String path = String_FromConst("ClassiCube.update");
+	const static String path = String_FromConst("ClassiCube.update");
 	struct Stream stream;
 	ReturnCode res;
 
@@ -454,7 +454,7 @@ void FetchUpdateTask_Run(bool release, bool d3d9) {
 	const char* exe_d3d9 = "ClassiCube";
 	const char* exe_ogl  = "ClassiCube";
 #endif
-	static String id = String_FromConst("CC update fetch");
+	const static String id = String_FromConst("CC update fetch");
 	String url; char urlBuffer[STRING_SIZE];
 	String_InitArray(url, urlBuffer);
 

@@ -685,7 +685,7 @@ void TexturePack_ExtractDefault(void) {
 }
 
 void TexturePack_ExtractCurrent(const String* url) {
-	static String zipExt = String_FromConst(".zip");
+	const static String zipExt = String_FromConst(".zip");
 	struct Stream stream;
 	bool zip;
 	ReturnCode res = 0;

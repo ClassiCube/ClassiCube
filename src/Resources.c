@@ -85,7 +85,7 @@ static bool Resources_SelectZipEntry(const String* path) {
 }
 
 static void Resources_CheckDefaultZip(void) {
-	static String path = String_FromConst("texpacks/default.zip");
+	const static String path = String_FromConst("texpacks/default.zip");
 	struct Stream stream;
 	struct ZipState state;
 	ReturnCode res;

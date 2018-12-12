@@ -41,8 +41,8 @@ static ReturnCode Map_SkipGZipHeader(struct Stream* stream) {
 }
 
 IMapImporter Map_FindImporter(const String* path) {
-	static String cw  = String_FromConst(".cw"),  lvl = String_FromConst(".lvl");
-	static String fcm = String_FromConst(".fcm"), dat = String_FromConst(".dat");
+	const static String cw  = String_FromConst(".cw"),  lvl = String_FromConst(".lvl");
+	const static String fcm = String_FromConst(".fcm"), dat = String_FromConst(".dat");
 
 	if (String_CaselessEnds(path, &cw))  return Cw_Load;
 	if (String_CaselessEnds(path, &lvl)) return Lvl_Load;
@@ -513,7 +513,7 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 	}
 
 	if (IsTag(tag->Parent, "BlockDefinitions")) {
-		String blockStr = String_FromConst("Block");
+		const static String blockStr = String_FromConst("Block");
 		if (!String_CaselessStarts(&tag->Name, &blockStr)) return;	
 
 		/* hack for sprite draw (can't rely on order of tags when reading) */

@@ -96,8 +96,8 @@ int Options_GetEnum(const char* key, int defValue, const char** names, int names
 }
 
 void Options_SetBool(const char* keyRaw, bool value) {
-	static String str_true  = String_FromConst("True");
-	static String str_false = String_FromConst("False");
+	const static String str_true  = String_FromConst("True");
+	const static String str_false = String_FromConst("False");
 	Options_Set(keyRaw, value ? &str_true : &str_false);
 }
 

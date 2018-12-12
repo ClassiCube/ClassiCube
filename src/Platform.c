@@ -990,7 +990,7 @@ static void Font_Add(const String* path, FT_Face face, char type, const char* de
 }
 
 static void Font_DirCallback(const String* path, void* obj) {
-	static String fonExt = String_FromConst(".fon");
+	const static String fonExt = String_FromConst(".fon");
 	String entry, name, fontPath;
 	FT_StreamRec stream = { 0 };
 	FT_Open_Args args;
@@ -1162,18 +1162,18 @@ static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, v
 #define FONT_CACHE_FILE "fontcache.txt"
 static void Font_Init(void) {
 #ifdef CC_BUILD_WIN
-	static String dir = String_FromConst("C:\\Windows\\fonts");
+	const static String dir = String_FromConst("C:\\Windows\\fonts");
 #endif
 #ifdef CC_BUILD_NIX
-	static String dir = String_FromConst("/usr/share/fonts");
+	const static String dir = String_FromConst("/usr/share/fonts");
 #endif
 #ifdef CC_BUILD_SOLARIS
-	static String dir = String_FromConst("/usr/share/fonts");
+	const static String dir = String_FromConst("/usr/share/fonts");
 #endif
 #ifdef CC_BUILD_OSX
-	static String dir = String_FromConst("/Library/Fonts");
+	const static String dir = String_FromConst("/Library/Fonts");
 #endif
-	static String cachePath = String_FromConst(FONT_CACHE_FILE);
+	const static String cachePath = String_FromConst(FONT_CACHE_FILE);
 	FT_Error err;
 
 	ft_mem.alloc   = FT_AllocWrapper;
@@ -2166,7 +2166,7 @@ static void Platform_InitDisplay(void) {
 #endif
 #ifdef CC_BUILD_NIX
 ReturnCode Platform_StartOpen(const String* args) {
-	static String path = String_FromConst("xdg-open");
+	const static String path = String_FromConst("xdg-open");
 	return Platform_StartProcess(&path, args);
 }
 static void Platform_InitStopwatch(void) { sw_freqDiv = 1000; }
@@ -2183,7 +2183,7 @@ void Platform_SetWorkingDir(void) {
 #ifdef CC_BUILD_SOLARIS
 ReturnCode Platform_StartOpen(const String* args) {
 	/* TODO: Is this on solaris, or just an OpenIndiana thing */
-	static String path = String_FromConst("xdg-open");
+	const static String path = String_FromConst("xdg-open");
 	return Platform_StartProcess(&path, args);
 }
 static void Platform_InitStopwatch(void) { sw_freqDiv = 1000; }
@@ -2199,7 +2199,7 @@ void Platform_SetWorkingDir(void) {
 #endif
 #ifdef CC_BUILD_OSX
 ReturnCode Platform_StartOpen(const String* args) {
-	static String path = String_FromConst("/usr/bin/open");
+	const static String path = String_FromConst("/usr/bin/open");
 	return Platform_StartProcess(&path, args);
 }
 void Platform_SetWorkingDir(void) {

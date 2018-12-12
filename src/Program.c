@@ -60,7 +60,7 @@ static void Program_RunGame(void) {
 }
 
 int main(int argc, char** argv) {
-	static String defPath = String_FromConst("texpacks/default.zip");	
+	const static String defPath = String_FromConst("texpacks/default.zip");
 	String args[PROGRAM_MAX_CMDARGS];
 	int argsCount;
 	uint8_t ip[4];

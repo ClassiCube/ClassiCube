@@ -370,9 +370,9 @@ static void StatusScreen_ContextLost(void* screen) {
 }
 
 static void StatusScreen_ContextRecreated(void* screen) {	
-	static String chars   = String_FromConst("0123456789-, ()");
-	static String prefix  = String_FromConst("Position: ");
-	static String version = String_FromConst("0.30");
+	const static String chars   = String_FromConst("0123456789-, ()");
+	const static String prefix  = String_FromConst("Position: ");
+	const static String version = String_FromConst("0.30");
 
 	struct StatusScreen* s = screen;
 	struct TextWidget* line1 = &s->Line1;
@@ -692,8 +692,8 @@ static struct ScreenVTABLE GeneratingScreen_VTABLE = {
 	LoadingScreen_OnResize,  LoadingScreen_ContextLost, LoadingScreen_ContextRecreated,
 };
 struct Screen* GeneratingScreen_MakeInstance(void) {
-	static String title   = String_FromConst("Generating level");
-	static String message = String_FromConst("Generating..");
+	const static String title   = String_FromConst("Generating level");
+	const static String message = String_FromConst("Generating..");
 
 	struct Screen* s = LoadingScreen_MakeInstance(&title, &message);
 	s->VTABLE = &GeneratingScreen_VTABLE;
@@ -814,7 +814,7 @@ static void ChatScreen_SetInitialMessages(struct ChatScreen* s) {
 }
 
 static void ChatScreen_CheckOtherStatuses(struct ChatScreen* s) {
-	static String texPack = String_FromConst("texturePack");
+	const static String texPack = String_FromConst("texturePack");
 	String str; char strBuffer[STRING_SIZE];
 	struct AsyncRequest request;
 	int progress;
@@ -910,7 +910,7 @@ static void ChatScreen_ScrollHistoryBy(struct ChatScreen* s, int delta) {
 }
 
 static bool ChatScreen_KeyDown(void* screen, Key key) {
-	static String slash  = String_FromConst("/");
+	const static String slash  = String_FromConst("/");
 	struct ChatScreen* s = screen;
 	struct InputWidget* input;
 	int defaultIndex;
@@ -1539,8 +1539,8 @@ static struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_OnResize,  DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
 struct Screen* DisconnectScreen_MakeInstance(const String* title, const String* message) {
-	static String kick = String_FromConst("Kicked ");
-	static String ban  = String_FromConst("Banned ");
+	const static String kick = String_FromConst("Kicked ");
+	const static String ban  = String_FromConst("Banned ");
 	String why; char whyBuffer[STRING_SIZE];
 	struct DisconnectScreen* s = &DisconnectScreen_Instance;
 

@@ -1019,7 +1019,7 @@ static GL_SetupVBRangeFunc gl_setupVBRangeFunc;
 
 #ifndef CC_BUILD_GL11
 static void GL_CheckVboSupport(void) {
-	static String vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
+	const static String vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
 	String extensions = String_FromReadonly(glGetString(GL_EXTENSIONS));
 	String version    = String_FromReadonly(glGetString(GL_VERSION));
 
@@ -1501,8 +1501,8 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 
 static bool nv_mem;
 void Gfx_MakeApiInfo(void) {
-	static String memExt = String_FromConst("GL_NVX_gpu_memory_info");
-	String extensions    = String_FromReadonly(glGetString(GL_EXTENSIONS));	
+	const static String memExt = String_FromConst("GL_NVX_gpu_memory_info");
+	String extensions = String_FromReadonly(glGetString(GL_EXTENSIONS));	
 	int depthBits;
 
 	nv_mem = String_CaselessContains(&extensions, &memExt);
@@ -1532,8 +1532,8 @@ void Gfx_UpdateApiInfo(void) {
 }
 
 bool Gfx_WarnIfNecessary(void) {
-	static String intel = String_FromConst("Intel");
-	String renderer     = String_FromReadonly(glGetString(GL_RENDERER));
+	const static String intel = String_FromConst("Intel");
+	String renderer = String_FromReadonly(glGetString(GL_RENDERER));
 
 #ifdef CC_BUILD_GL11
 	Chat_AddRaw("&cYou are using the very outdated OpenGL backend.");

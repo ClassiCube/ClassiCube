@@ -143,7 +143,7 @@ void Game_SetDefaultTexturePack(const String* texPack) {
 }
 
 bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
-	String terrain = String_FromConst("terrain.png");
+	const static String terrain = String_FromConst("terrain.png");
 	if (!Game_ValidateBitmap(&terrain, atlas)) return false;
 
 	if (atlas->Height < atlas->Width) {

@@ -240,9 +240,9 @@ void Block_SetDrawType(BlockID block, DrawType draw) {
 "_Iron_Double slab_Slab_Brick_TNT_Bookshelf_Mossy rocks_Obsidian_Cobblestone slab_Rope_Sandstone_Snow_Fire_Light pink"\
 "_Forest green_Brown_Deep blue_Turquoise_Ice_Ceramic tile_Magma_Pillar_Crate_Stone brick"
 
-static String Block_DefaultName(BlockID block) {
-	static String names   = String_FromConst(BLOCK_RAW_NAMES);
-	static String invalid = String_FromConst("Invalid");
+const static String Block_DefaultName(BlockID block) {
+	const static String names   = String_FromConst(BLOCK_RAW_NAMES);
+	const static String invalid = String_FromConst("Invalid");
 	int i, start = 0, end;
 
 	if (block >= BLOCK_CPE_COUNT) return invalid;
@@ -257,7 +257,7 @@ static String Block_DefaultName(BlockID block) {
 }
 
 void Block_ResetProps(BlockID block) {
-	String name = Block_DefaultName(block);
+	const String name = Block_DefaultName(block);
 
 	Block_BlocksLight[block] = DefaultSet_BlocksLight(block);
 	Block_FullBright[block] = DefaultSet_FullBright(block);

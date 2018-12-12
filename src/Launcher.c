@@ -196,7 +196,7 @@ static void Launcher_Free(void) {
 }
 
 void Launcher_Run(void) {
-	static String title = String_FromConst(PROGRAM_APP_NAME);
+	const static String title = String_FromConst(PROGRAM_APP_NAME);
 	Window_CreateSimple(640, 400);
 	Window_SetTitle(&title);
 	Window_SetVisible(true);
@@ -382,7 +382,7 @@ static void Launcher_ExtractTexturePack(const String* path) {
 }
 
 void Launcher_TryLoadTexturePack(void) {
-	static String defZipPath = String_FromConst("texpacks/default.zip");
+	const static String defZipPath = String_FromConst("texpacks/default.zip");
 	String path; char pathBuffer[FILENAME_SIZE];
 	String texPack;
 
@@ -420,8 +420,8 @@ void Launcher_ResetArea(int x, int y, int width, int height) {
 }
 
 void Launcher_ResetPixels(void) {
-	static String title_fore = String_FromConst("&eClassi&fCube");
-	static String title_back = String_FromConst("&0Classi&0Cube");
+	const static String title_fore = String_FromConst("&eClassi&fCube");
+	const static String title_back = String_FromConst("&0Classi&0Cube");
 	struct DrawTextArgs args;
 	int x;
 
@@ -457,7 +457,7 @@ void Launcher_Redraw(void) {
 *#########################################################################################################################*/
 static TimeMS lastJoin;
 bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server) {
-	static String exe = String_FromConst(GAME_EXE_NAME);
+	const static String exe = String_FromConst(GAME_EXE_NAME);
 	String args; char argsBuffer[512];
 	TimeMS now;
 	ReturnCode res;
@@ -540,13 +540,13 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 
 static void Launcher_ApplyUpdate(void) {
 #ifdef CC_BUILD_WIN
-	static String scriptPath = String_FromConst("update.bat");
-	static String scriptName = String_FromConst("C:/Windows/System32/cmd.exe");
-	static String scriptArgs = String_FromConst("/C start cmd /C update.bat");
+	const static String scriptPath = String_FromConst("update.bat");
+	const static String scriptName = String_FromConst("C:/Windows/System32/cmd.exe");
+	const static String scriptArgs = String_FromConst("/C start cmd /C update.bat");
 #else
-	static String scriptPath = String_FromConst("update.sh");
-	static String scriptName = String_FromConst("xterm");
-	static String scriptArgs = String_FromConst("./update.sh");
+	const static String scriptPath = String_FromConst("update.sh");
+	const static String scriptName = String_FromConst("xterm");
+	const static String scriptArgs = String_FromConst("./update.sh");
 #endif
 	struct Stream s;
 	ReturnCode res;

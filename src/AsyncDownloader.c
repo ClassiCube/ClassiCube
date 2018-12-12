@@ -71,7 +71,7 @@ static volatile bool async_terminate;
 
 static struct AsyncRequestList async_pending;
 static struct AsyncRequestList async_processed;
-static String async_skinServer = String_FromConst("http://static.classicube.net/skins/");
+const static String async_skinServer = String_FromConst("http://static.classicube.net/skins/");
 static struct AsyncRequest async_curRequest;
 static volatile int async_curProgress = ASYNC_PROGRESS_NOTHING;
 bool AsyncDownloader_Cookies;

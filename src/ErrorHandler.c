@@ -126,8 +126,8 @@ static void ErrorHandler_Backtrace(String* backtrace, void* ctx) {
 }
 
 static void ErrorHandler_DumpCommon(String* str, void* ctx) {
-	static String backtrace = String_FromConst("-- backtrace --\r\n");
-	static String modules   = String_FromConst("-- modules --\r\n");
+	const static String backtrace = String_FromConst("-- backtrace --\r\n");
+	const static String modules   = String_FromConst("-- modules --\r\n");
 	HANDLE process = GetCurrentProcess();
 
 	SymInitialize(process, NULL, TRUE);
@@ -390,8 +390,8 @@ static void ErrorHandler_DumpMemoryMap(void) {
 }
 
 static void ErrorHandler_DumpCommon(String* str, void* ctx) {
-	static String backtrace = String_FromConst("-- backtrace --\n");
-	static String memMap    = String_FromConst("-- memory map --\n");
+	const static String backtrace = String_FromConst("-- backtrace --\n");
+	const static String memMap    = String_FromConst("-- memory map --\n");
 
 	ErrorHandler_Log(&backtrace);
 	ErrorHandler_Backtrace(str, ctx);
@@ -427,7 +427,7 @@ static void ErrorHandler_DumpRegisters(void* ctx) {
 }
 
 static void ErrorHandler_DumpCommon(String* str, void* ctx) {
-	static String backtrace = String_FromConst("-- backtrace --\n");
+	const static String backtrace = String_FromConst("-- backtrace --\n");
 	ErrorHandler_Log(&backtrace);
 	ErrorHandler_Backtrace(str, ctx);
 }
@@ -442,7 +442,7 @@ static struct Stream logStream;
 static bool logOpen;
 
 void ErrorHandler_Log(const String* msg) {
-	static String path = String_FromConst("client.log");
+	const static String path = String_FromConst("client.log");
 	ReturnCode res;
 
 	if (!logOpen) {

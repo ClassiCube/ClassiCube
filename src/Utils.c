@@ -118,8 +118,8 @@ bool Utils_IsValidInputChar(char c, bool supportsCP437) {
 }
 
 bool Utils_IsUrlPrefix(const String* value, int index) {
-	static String http  = String_FromConst("http://");
-	static String https = String_FromConst("https://");
+	const static String http  = String_FromConst("http://");
+	const static String https = String_FromConst("https://");
 
 	return String_IndexOfString(value, &http)  == index
 		|| String_IndexOfString(value, &https) == index;

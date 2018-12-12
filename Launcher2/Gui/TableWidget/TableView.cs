@@ -122,12 +122,11 @@ namespace Launcher.Gui.Widgets {
 			for (int i = table.CurrentIndex; i < table.Count; i++) {
 				TableEntry entry = table.Get(i);
 				args = new DrawTextArgs(filter(entry), font, true);
-				int players = int.Parse(entry.Players.Substring(0, entry.Players.IndexOf('/')));
 				
-				if ((i == table.SelectedIndex || entry.Featured || players > 10) && !separator) {
+				if ((i == table.SelectedIndex || entry.Featured) && !separator) {
 					int startY = y - 3;
 					int height = Math.Min(startY + (entryHeight + 4), table.Y + table.Height) - startY;
-					drawer.Clear(GetGridCol(entry.Featured, players > 10, i == table.SelectedIndex), table.X, startY, table.Width, height);
+					drawer.Clear(GetGridCol(entry.Featured, i == table.SelectedIndex), table.X, startY, table.Width, height);
 				}				
 				if (!DrawColumnEntry(drawer, ref args, maxWidth, x, ref y, ref entry)) {
 					maxIndex = i; break;
@@ -139,14 +138,10 @@ namespace Launcher.Gui.Widgets {
 			return maxWidth + 5;
 		}
 
-		PackedCol GetGridCol(bool featured, bool players, bool selected) {
+		PackedCol GetGridCol(bool featured, bool selected) {
 			if (featured) {
 				if (selected) return new PackedCol(50, 53, 0);
 				return new PackedCol(101, 107, 0);
-			}
-			if (players) {
-				if (selected) return new PackedCol(20, 53, 0);
-				return new PackedCol(201, 207, 0);
 			}
 			return foreGridCol;
 		} 

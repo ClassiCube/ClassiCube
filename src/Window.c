@@ -1662,8 +1662,8 @@ static FN_GLXSWAPINTERVAL swapIntervalMESA, swapIntervalSGI;
 static bool ctx_supports_vSync;
 
 void GLContext_Init(struct GraphicsMode* mode) {
-	static String ext_mesa = String_FromConst("GLX_MESA_swap_control");
-	static String ext_sgi  = String_FromConst("GLX_SGI_swap_control");
+	const static String ext_mesa = String_FromConst("GLX_MESA_swap_control");
+	const static String ext_sgi  = String_FromConst("GLX_SGI_swap_control");
 
 	const char* raw_exts;
 	String exts;

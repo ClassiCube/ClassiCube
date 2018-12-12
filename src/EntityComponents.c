@@ -266,7 +266,7 @@ void HacksComp_CheckConsistency(struct HacksComp* hacks) {
 }
 
 void HacksComp_UpdateState(struct HacksComp* hacks) {
-	static String excHacks = String_FromConst("-hax");
+	const static String excHacks = String_FromConst("-hax");
 
 	HacksComp_SetAll(hacks, true);
 	hacks->CanBePushed = true;

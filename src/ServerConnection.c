@@ -60,7 +60,7 @@ void ServerConnection_RetrieveTexturePack(const String* url) {
 }
 
 void ServerConnection_DownloadTexturePack(const String* url) {
-	static String texPack = String_FromConst("texturePack");
+	const static String texPack = String_FromConst("texturePack");
 	String etag; char etagBuffer[STRING_SIZE];
 	TimeMS lastModified;
 
@@ -78,7 +78,7 @@ void ServerConnection_DownloadTexturePack(const String* url) {
 }
 
 void ServerConnection_CheckAsyncResources(void) {
-	static String texPack = String_FromConst("texturePack");
+	const static String texPack = String_FromConst("texturePack");
 	struct AsyncRequest item;
 	if (!AsyncDownloader_Get(&texPack, &item)) return;
 
@@ -145,7 +145,7 @@ int PingList_AveragePingMs(void) {
 *#########################################################################################################################*/
 #define SP_HasDir(path) (String_IndexOf(&path, '/', 0) >= 0 || String_IndexOf(&path, '\\', 0) >= 0)
 static void SPConnection_BeginConnect(void) {
-	static String logName = String_FromConst("Singleplayer");
+	const static String logName = String_FromConst("Singleplayer");
 	String path;
 	RNGState rnd;
 	int i, count;
@@ -285,7 +285,7 @@ static void MPConnection_FinishConnect(void) {
 }
 
 static void MPConnection_FailConnect(ReturnCode result) {
-	static String reason = String_FromConst("You failed to connect to the server. It's probably down!");
+	const static String reason = String_FromConst("You failed to connect to the server. It's probably down!");
 	String msg; char msgBuffer[STRING_SIZE * 2];
 
 	net_connecting = false;
@@ -376,8 +376,8 @@ static void MPConnection_SendPlayerClick(MouseButton button, bool buttonDown, En
 }
 
 static void MPConnection_CheckDisconnection(double delta) {
-	static String title  = String_FromConst("Disconnected!");
-	static String reason = String_FromConst("You've lost connection to the server");
+	const static String title  = String_FromConst("Disconnected!");
+	const static String reason = String_FromConst("You've lost connection to the server");
 
 	ReturnCode availRes, selectRes;
 	uint32_t pending = 0;
@@ -396,10 +396,10 @@ static void MPConnection_CheckDisconnection(double delta) {
 }
 
 static void MPConnection_Tick(struct ScheduledTask* task) {
-	static String title_lost  = String_FromConst("&eLost connection to the server");
-	static String reason_err  = String_FromConst("I/O error when reading packets");
-	static String title_disc  = String_FromConst("Disconnected");
-	static String msg_invalid = String_FromConst("Server sent invalid packet!");
+	const static String title_lost  = String_FromConst("&eLost connection to the server");
+	const static String reason_err  = String_FromConst("I/O error when reading packets");
+	const static String title_disc  = String_FromConst("Disconnected");
+	const static String msg_invalid = String_FromConst("Server sent invalid packet!");
 	String msg; char msgBuffer[STRING_SIZE * 2];
 
 	struct LocalPlayer* p;

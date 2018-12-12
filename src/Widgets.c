@@ -1281,7 +1281,7 @@ static bool InputWidget_MouseDown(void* widget, int x, int y, MouseButton button
 }
 
 CC_NOINLINE static void InputWidget_Create(struct InputWidget* w, const FontDesc* font, STRING_REF const String* prefix) {
-	static String caret = String_FromConst("_");
+	const static String caret = String_FromConst("_");
 	struct DrawTextArgs args;
 	Size2D size;
 	Widget_Reset(w);
@@ -1807,7 +1807,7 @@ static struct WidgetVTABLE ChatInputWidget_VTABLE = {
 	InputWidget_Reposition,
 };
 void ChatInputWidget_Create(struct ChatInputWidget* w, const FontDesc* font) {
-	static String prefix = String_FromConst("> ");
+	const static String prefix = String_FromConst("> ");
 
 	InputWidget_Create(&w->Base, font, &prefix);
 	w->TypingLogPos = Chat_InputLog.Count; /* Index of newest entry + 1. */
