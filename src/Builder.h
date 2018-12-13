@@ -11,11 +11,15 @@ Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 struct ChunkInfo;
 
 extern int Builder_SidesLevel, Builder_EdgeLevel;
+/* Whether smooth/advanced lighting mesh builder is used. */
+extern bool Builder_SmoothLighting;
 
 void Builder_Init(void);
 void Builder_OnNewMapLoaded(void);
+/* Builds the vertices mesh for the given chunk. */
 void Builder_MakeChunk(struct ChunkInfo* info);
 
 void NormalBuilder_SetActive(void);
 void AdvBuilder_SetActive(void);
+void Builder_ApplyActive(void);
 #endif

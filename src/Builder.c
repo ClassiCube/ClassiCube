@@ -6,7 +6,6 @@
 #include "Platform.h"
 #include "MapRenderer.h"
 #include "Graphics.h"
-#include "ErrorHandler.h"
 #include "Drawer.h"
 #include "ExtMath.h"
 #include "BlockID.h"
@@ -14,6 +13,7 @@
 #include "PackedCol.h"
 #include "TexturePack.h"
 #include "VertexStructs.h"
+#include "Options.h"
 
 int Builder_SidesLevel, Builder_EdgeLevel;
 /* Packs an index into the 16x16x16 count array. Coordinates range from 0 to 15. */
@@ -484,20 +484,6 @@ static void Builder_DrawSprite(int count) {
 	          v.Y = y1;                       v.V = v2; Builder_Vertices[index + 3] = v;
 
 	part->sOffset += 4;
-}
-
-void Builder_Init(void) {
-	Builder_Offsets[FACE_XMIN] = -1;
-	Builder_Offsets[FACE_XMAX] = 1;
-	Builder_Offsets[FACE_ZMIN] = -EXTCHUNK_SIZE;
-	Builder_Offsets[FACE_ZMAX] = EXTCHUNK_SIZE;
-	Builder_Offsets[FACE_YMIN] = -EXTCHUNK_SIZE_2;
-	Builder_Offsets[FACE_YMAX] = EXTCHUNK_SIZE_2;
-}
-
-void Builder_OnNewMapLoaded(void) {
-	Builder_SidesLevel = max(0, Env_SidesHeight);
-	Builder_EdgeLevel  = max(0, Env_EdgeHeight);
 }
 
 
@@ -1207,4 +1193,33 @@ void AdvBuilder_SetActive(void) {
 	Builder_StretchZ        = Adv_StretchZ;
 	Builder_RenderBlock     = Adv_RenderBlock;
 	Builder_PreStretchTiles = Adv_PreStretchTiles;
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------Builder interface-----------------------------------------------------*
+*#########################################################################################################################*/
+bool Builder_SmoothLighting;
+void Builder_ApplyActive(void) {
+	if (Builder_SmoothLighting) {
+		AdvBuilder_SetActive();
+	} else {
+		NormalBuilder_SetActive();
+	}
+}
+
+void Builder_Init(void) {
+	Builder_Offsets[FACE_XMIN] = -1;
+	Builder_Offsets[FACE_XMAX] =  1;
+	Builder_Offsets[FACE_ZMIN] = -EXTCHUNK_SIZE;
+	Builder_Offsets[FACE_ZMAX] =  EXTCHUNK_SIZE;
+	Builder_Offsets[FACE_YMIN] = -EXTCHUNK_SIZE_2;
+	Builder_Offsets[FACE_YMAX] =  EXTCHUNK_SIZE_2;
+
+	Builder_SmoothLighting = Options_GetBool(OPT_SMOOTH_LIGHTING, false);
+}
+
+void Builder_OnNewMapLoaded(void) {
+	Builder_SidesLevel = max(0, Env_SidesHeight);
+	Builder_EdgeLevel  = max(0, Env_EdgeHeight);
 }

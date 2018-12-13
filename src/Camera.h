@@ -8,11 +8,20 @@
 struct PickedPos;
 struct Camera;
 
+/* How sensitive camera is to movements of mouse. */
+extern int  Camera_Sensitivity;
+/* Whether smooth/cinematic camera mode is used. */
+extern bool Camera_Smooth;
+/* Whether third person camera clip against blocks. */
+extern bool Camera_Clipping;
+/* Whether to invert vertical mouse movement. */
+extern bool Camera_Invert;
+
 /* Tilt effect applied to the camera. */
 extern struct Matrix Camera_TiltM;
 /* Bobbing offset of camera from player's eye. */
 extern float Camera_BobbingVer, Camera_BobbingHor;
-/* Cached position the camera is at */
+/* Cached position the camera is at. */
 extern Vector3 Camera_CurrentPos;
 
 struct Camera {

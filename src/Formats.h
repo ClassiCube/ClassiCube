@@ -10,10 +10,10 @@ struct Stream;
 typedef ReturnCode (*IMapImporter)(struct Stream* stream);
 /* Attempts to find the suitable importer based on filename. */
 /* Returns NULL if no match found. */
-CC_EXPORT IMapImporter Map_FindImporter(const String* path);
+CC_API IMapImporter Map_FindImporter(const String* path);
 /* Attempts to import the map from the given file. */
 /* NOTE: Uses Map_FindImporter to import based on filename. */
-CC_EXPORT void Map_LoadFrom(const String* path);
+CC_API void Map_LoadFrom(const String* path);
 
 /* Imports a world from a .lvl MCSharp server map file. */
 /* Used by MCSharp/MCLawl/MCForge/MCDzienny/MCGalaxy. */

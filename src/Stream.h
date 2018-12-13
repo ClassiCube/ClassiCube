@@ -50,20 +50,20 @@ void Stream_Init(struct Stream* s);
 ReturnCode Stream_DefaultReadU8(struct Stream* s, uint8_t* data);
 
 /* Wrapper for File_Open() then Stream_FromFile() */
-CC_EXPORT ReturnCode Stream_OpenFile(struct Stream* s, const String* path);
+CC_API ReturnCode Stream_OpenFile(struct Stream* s, const String* path);
 /* Wrapper for File_Create() then Stream_FromFile() */
-CC_EXPORT ReturnCode Stream_CreateFile(struct Stream* s, const String* path);
+CC_API ReturnCode Stream_CreateFile(struct Stream* s, const String* path);
 /* Wraps a file, allowing reading from/writing to/seeking in the file. */
-CC_EXPORT void Stream_FromFile(struct Stream* s, FileHandle file);
+CC_API void Stream_FromFile(struct Stream* s, FileHandle file);
 
 /* Wraps another Stream, only allows reading up to 'len' bytes from the wrapped stream. */
-CC_EXPORT void Stream_ReadonlyPortion(struct Stream* s, struct Stream* source, uint32_t len);
+CC_API void Stream_ReadonlyPortion(struct Stream* s, struct Stream* source, uint32_t len);
 /* Wraps a block of memory, allowing reading from and seeking in the block. */
-CC_EXPORT void Stream_ReadonlyMemory(struct Stream* s, void* data, uint32_t len);
+CC_API void Stream_ReadonlyMemory(struct Stream* s, void* data, uint32_t len);
 /* Wraps a block of memory, allowing writing to and seeking in the block. */
-CC_EXPORT void Stream_WriteonlyMemory(struct Stream* s, void* data, uint32_t len);
+CC_API void Stream_WriteonlyMemory(struct Stream* s, void* data, uint32_t len);
 /* Wraps another Stream, reading through an intermediary buffer. (Useful for files, since each read call is expensive) */
-CC_EXPORT void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data, uint32_t size);
+CC_API void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data, uint32_t size);
 
 /* Reads a little-endian 16 bit unsigned integer from memory. */
 uint16_t Stream_GetU16_LE(const uint8_t* data);
@@ -87,7 +87,7 @@ ReturnCode Stream_ReadU32_BE(struct Stream* s, uint32_t* value);
 
 /* Reads a line of UTF8 encoded character from the stream. */
 /* NOTE: Reads one byte at a time. May want to use Stream_ReadonlyBuffered. */
-CC_EXPORT ReturnCode Stream_ReadLine(struct Stream* s, String* text);
+CC_API ReturnCode Stream_ReadLine(struct Stream* s, String* text);
 /* Writes a line of UTF8 encoded text to the stream. */
-CC_EXPORT ReturnCode Stream_WriteLine(struct Stream* s, String* text);
+CC_API ReturnCode Stream_WriteLine(struct Stream* s, String* text);
 #endif

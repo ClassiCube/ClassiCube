@@ -964,10 +964,10 @@ static void CPE_HoldThis(uint8_t* data) {
 	Handlers_ReadBlock(data, block);
 	canChange = *data == 0;
 
-	Inventory_CanChangeHeldBlock = true;
+	Inventory_CanChangeSelected = true;
 	Inventory_SetSelectedBlock(block);
-	Inventory_CanChangeHeldBlock = canChange;
-	Inventory_CanPick = block != BLOCK_AIR;
+	Inventory_CanChangeSelected = canChange;
+	Inventory_CanUse = block != BLOCK_AIR;
 }
 
 static void CPE_SetTextHotkey(uint8_t* data) {

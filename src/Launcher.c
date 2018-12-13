@@ -369,10 +369,15 @@ static void Launcher_LoadTextures(Bitmap* bmp) {
 	/* Precompute the scaled background */
 	Drawer2D_BmpScaled(&terrainBmp, TILESIZE, 0, TILESIZE, TILESIZE,
 						bmp, 2 * tileSize, 0, tileSize, tileSize,
-						TILESIZE, TILESIZE, 128, 64);
+						TILESIZE, TILESIZE);
 	Drawer2D_BmpScaled(&terrainBmp, 0, 0, TILESIZE, TILESIZE,
 						bmp, 1 * tileSize, 0, tileSize, tileSize,
-						TILESIZE, TILESIZE, 96, 96);					
+						TILESIZE, TILESIZE);
+
+	Gradient_Tint(&terrainBmp, 128, 64,
+				  TILESIZE, 0, TILESIZE, TILESIZE);
+	Gradient_Tint(&terrainBmp, 96, 96,
+				  0,        0, TILESIZE, TILESIZE);
 }
 
 static void Launcher_ProcessZipEntry(const String* path, struct Stream* data, struct ZipEntry* entry) {

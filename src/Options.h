@@ -80,27 +80,27 @@ void Options_Free(void);
 /* Returns whether the option was actually found. */
 STRING_REF bool Options_UNSAFE_Get(const char* keyRaw, String* value);
 /* Returns value of given option, or defalt value if not found. */
-CC_EXPORT void Options_Get(const char*       key, String* value, const char* defValue);
+CC_API void Options_Get(const char*       key, String* value, const char* defValue);
 /* Returns value of given option as an integer, or defalt value if could not be converted. */
-CC_EXPORT int  Options_GetInt(const char*    key, int min, int max, int defValue);
+CC_API int  Options_GetInt(const char*    key, int min, int max, int defValue);
 /* Returns value of given option as a bool, or defalt value if could not be converted. */
-CC_EXPORT bool Options_GetBool(const char*   key, bool defValue);
+CC_API bool Options_GetBool(const char*   key, bool defValue);
 /* Returns value of given option as a float, or defalt value if could not be converted. */
-CC_EXPORT float Options_GetFloat(const char* key, float min, float max, float defValue);
+CC_API float Options_GetFloat(const char* key, float min, float max, float defValue);
 /* Returns value of given option as an integer, or defalt value if could not be converted. */
 /* NOTE: Conversion is done by going through all elements of names, returning index of a match. */
-CC_EXPORT int   Options_GetEnum(const char*  key, int defValue, const char** names, int namesCount);
+CC_API int   Options_GetEnum(const char*  key, int defValue, const char** names, int namesCount);
 
 /* Sets value of given option to either "true" or "false". */
-CC_EXPORT void Options_SetBool(const char* keyRaw,  bool value);
+CC_API void Options_SetBool(const char* keyRaw,  bool value);
 /* Sets value of given option to given integer converted to a string. */
-CC_EXPORT void Options_SetInt(const char*  keyRaw,  int value);
+CC_API void Options_SetInt(const char*  keyRaw,  int value);
 /* Sets value of given option to given string. */
-CC_EXPORT void Options_Set(const char*     keyRaw,  const String* value);
+CC_API void Options_Set(const char*     keyRaw,  const String* value);
 /* Sets value of given option to given string. */
-CC_EXPORT void Options_SetString(const String* key, const String* value);
+CC_API void Options_SetString(const String* key, const String* value);
 /* Loads options from disc. Leaves options changed in this session alone. */
-CC_EXPORT void Options_Load(void);
+CC_API void Options_Load(void);
 /* Saves all options to disc. */
-CC_EXPORT void Options_Save(void);
+CC_API void Options_Save(void);
 #endif

@@ -358,7 +358,7 @@ static void RenderTypeCommand_Execute(const String* args, int argsCount) {
 		Chat_AddRaw("&e/client: &cYou didn't specify a new render type."); return;
 	}
 
-	flags = Game_CalcRenderType(&args[0]);
+	flags = EnvRenderer_CalcFlags(&args[0]);
 	if (flags >= 0) {
 		EnvRenderer_UseLegacyMode( flags & 1);
 		EnvRenderer_UseMinimalMode(flags & 2);

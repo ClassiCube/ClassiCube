@@ -561,6 +561,7 @@ void Block_UpdateCulling(BlockID block) {
 /*########################################################################################################################*
 *-------------------------------------------------------AutoRotate--------------------------------------------------------*
 *#########################################################################################################################*/
+bool AutoRotate_Enabled;
 static BlockID AutoRotate_Find(BlockID block, const String* name, const char* suffix) {
 	String str; char strBuffer[STRING_SIZE * 2];
 	int rotated;	
@@ -689,6 +690,8 @@ static void Blocks_Init(void) {
 		Block_CanPlace[block]  = true;
 		Block_CanDelete[block] = true;
 	}
+
+	AutoRotate_Enabled = true;
 	Blocks_Reset();
 	Event_RegisterVoid(&TextureEvents_AtlasChanged, NULL, Blocks_AtlasChanged);
 

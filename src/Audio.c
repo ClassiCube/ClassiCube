@@ -12,7 +12,9 @@
 #include "Chat.h"
 #include "Stream.h"
 
+int Audio_SoundsVolume, Audio_MusicVolume;
 static StringsBuffer files;
+
 static void Volume_Mix16(int16_t* samples, int count, int volume) {
 	int i;
 
@@ -207,7 +209,6 @@ CC_NOINLINE static void Sounds_Fail(ReturnCode res) {
 	Chat_LogError(res, "playing sounds");
 	Chat_AddRaw("&cDisabling sounds");
 	Audio_SetSounds(0);
-	Game_SoundsVolume = 0;
 }
 
 static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct AudioFormat* fmt, int volume) {
@@ -249,12 +250,12 @@ static void Sounds_Play(uint8_t type, struct Soundboard* board) {
 	int i, volume;
 	ReturnCode res;
 
-	if (type == SOUND_NONE || Game_SoundsVolume == 0) return;
+	if (type == SOUND_NONE || !Audio_SoundsVolume == 0) return;
 	snd = Soundboard_PickRandom(board, type);
 	if (!snd) return;
 
 	fmt     = snd->Format;
-	volume  = Game_SoundsVolume;
+	volume  = Audio_SoundsVolume;
 	outputs = fmt.Channels == 1 ? monoOutputs : stereoOutputs;
 
 	if (board == &digBoard) {
@@ -334,6 +335,7 @@ static void Sounds_Free(void) {
 void Audio_SetSounds(int volume) {
 	if (volume) Sounds_Init();
 	else        Sounds_Free();
+	Audio_SoundsVolume = volume;
 }
 
 void Audio_PlayDigSound(uint8_t type)  { Sounds_Play(type, &digBoard); }
@@ -359,7 +361,7 @@ static ReturnCode Music_Buffer(int i, int16_t* data, int maxSamples, struct Vorb
 		cur = &data[samples];
 		samples += Vorbis_OutputFrame(ctx, cur);
 	}
-	if (Game_MusicVolume < 100) { Volume_Mix16(data, samples, Game_MusicVolume); }
+	if (Audio_MusicVolume < 100) { Volume_Mix16(data, samples, Audio_MusicVolume); }
 
 	res2 = Audio_BufferData(music_out, i, data, samples * 2);
 	if (res2) { music_pendingStop = true; return res2; }
@@ -481,7 +483,7 @@ static void Music_RunLoop(void) {
 
 	if (res) {
 		Chat_AddRaw("&cDisabling music");
-		Game_MusicVolume = 0;
+		Audio_MusicVolume = 0;
 	}
 	Audio_StopAndFree(music_out);
 
@@ -510,6 +512,7 @@ static void Music_Free(void) {
 void Audio_SetMusic(int volume) {
 	if (volume) Music_Init();
 	else        Music_Free();
+	Audio_MusicVolume = volume;
 }
 
 
@@ -532,15 +535,17 @@ static void AudioManager_FilesCallback(const String* path, void* obj) {
 
 static void AudioManager_Init(void) {
 	const static String path = String_FromConst("audio");
+	int volume;
+
 	if (Directory_Exists(&path)) {
 		Directory_Enum(&path, NULL, AudioManager_FilesCallback);
 	}
 	music_waitable = Waitable_Create();
 
-	Game_MusicVolume  = AudioManager_GetVolume(OPT_MUSIC_VOLUME, OPT_USE_MUSIC);
-	Audio_SetMusic(Game_MusicVolume);
-	Game_SoundsVolume = AudioManager_GetVolume(OPT_SOUND_VOLUME, OPT_USE_SOUND);
-	Audio_SetSounds(Game_SoundsVolume);
+	volume = AudioManager_GetVolume(OPT_MUSIC_VOLUME, OPT_USE_MUSIC);
+	Audio_SetMusic(volume);
+	volume = AudioManager_GetVolume(OPT_SOUND_VOLUME, OPT_USE_SOUND);
+	Audio_SetSounds(volume);
 	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, Audio_PlayBlockSound);
 }
 

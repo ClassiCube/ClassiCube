@@ -12,6 +12,10 @@
 #include "Platform.h"
 #include "Bitmap.h"
 
+bool Gui_ClassicTexture, Gui_ClassicTabList, Gui_ClassicMenu;
+int  Gui_Chatlines;
+bool Gui_ClickableChat, Gui_TabAutocomplete, Gui_ShowFPS;
+
 GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
 struct Screen* Gui_Status;
 struct Screen* Gui_HUD;
@@ -88,6 +92,18 @@ CC_NOINLINE static void Gui_RecreateScreen(struct Screen* screen) {
 	Elem_Recreate(screen);
 }
 
+static void Gui_LoadOptions(void) {
+	Gui_Chatlines       = Options_GetInt(OPT_CHATLINES, 0, 30, 12);
+	Gui_ClickableChat   = Options_GetBool(OPT_CLICKABLE_CHAT, false);
+	Gui_TabAutocomplete = Options_GetBool(OPT_TAB_AUTOCOMPLETE, false);
+
+	Gui_ClassicTexture = Options_GetBool(OPT_CLASSIC_GUI, true)      || Game_ClassicMode;
+	Gui_ClassicTabList = Options_GetBool(OPT_CLASSIC_TABLIST, false) || Game_ClassicMode;
+	Gui_ClassicMenu    = Options_GetBool(OPT_CLASSIC_OPTIONS, false) || Game_ClassicMode;
+
+	Gui_ShowFPS = Options_GetBool(OPT_SHOW_FPS, true);
+}
+
 static void Gui_FontChanged(void* obj) {
 	Gui_RecreateScreen(Gui_Active);
 	Gui_RecreateScreen(Gui_Status);
@@ -107,9 +123,10 @@ static void Gui_FileChanged(void* obj, struct Stream* stream, const String* name
 static void Gui_Init(void) {
 	Event_RegisterVoid(&ChatEvents_FontChanged,     NULL, Gui_FontChanged);
 	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
+	Gui_LoadOptions();
+
 	Gui_Status = StatusScreen_MakeInstance();
 	Gui_HUD    = HUDScreen_MakeInstance();
-
 	Elem_Init(Gui_Status);
 	Elem_Init(Gui_HUD);
 }

@@ -8,11 +8,15 @@
 #include "Entity.h"
 #include "Input.h"
 
+int Camera_Sensitivity;
+bool Camera_Smooth, Camera_Clipping, Camera_Invert;
+
 struct Matrix Camera_TiltM;
 float Camera_BobbingVer, Camera_BobbingHor;
 Vector3 Camera_CurrentPos;
 struct Camera* Camera_Active;
 
+static struct PickedPos cameraClipPos;
 static Vector2 cam_rotOffset;
 static bool cam_isForwardThird;
 
@@ -62,11 +66,11 @@ static void PerspectiveCamera_RegrabMouse(void) {
 #define CAMERA_ADJUST 0.025f
 
 static Vector2 PerspectiveCamera_GetMouseDelta(void) {
-	float sensitivity = CAMERA_SENSI_FACTOR * Game_MouseSensitivity;
+	float sensitivity = CAMERA_SENSI_FACTOR * Camera_Sensitivity;
 	static float speedX, speedY;
 	Vector2 v;
 
-	if (Game_SmoothCamera) {
+	if (Camera_Smooth) {
 		speedX += cam_delta.X * CAMERA_ADJUST;
 		speedX *= CAMERA_SLIPPERY;
 		speedY += cam_delta.Y * CAMERA_ADJUST;
@@ -77,7 +81,7 @@ static Vector2 PerspectiveCamera_GetMouseDelta(void) {
 	}
 
 	v.X = speedX * sensitivity; v.Y = speedY * sensitivity;
-	if (Game_InvertMouse) v.Y = -v.Y;
+	if (Camera_Invert) v.Y = -v.Y;
 	return v;
 }
 
@@ -202,8 +206,8 @@ static Vector3 ThirdPersonCamera_GetPosition(float t) {
 	dir = Vector3_GetDirVector(rot.X, rot.Y);
 	Vector3_Negate(&dir, &dir);
 
-	Picking_ClipCameraPos(target, dir, dist, &Game_CameraClipPos);
-	return Game_CameraClipPos.Intersect;
+	Picking_ClipCameraPos(target, dir, dist, &cameraClipPos);
+	return cameraClipPos.Intersect;
 }
 
 static bool ThirdPersonCamera_Zoom(float amount) {
@@ -238,6 +242,10 @@ void Camera_Init(void) {
 	Camera_ThirdPerson.Next  = &Camera_ForwardThird;
 	Camera_ForwardThird.Next = &Camera_FirstPerson;
 	Camera_Active            = &Camera_FirstPerson;
+
+	Camera_Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 100, 30);
+	Camera_Clipping    = Options_GetBool(OPT_CAMERA_CLIPPING, true);
+	Camera_Invert = Options_GetBool(OPT_INVERT_MOUSE, false);
 }
 
 void Camera_CycleActive(void) {

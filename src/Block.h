@@ -113,9 +113,15 @@ void Block_SetTex(TextureLoc texLoc, Face face, BlockID blockId);
 #define Block_GetTex(block, face) Block_Textures[(block) * FACE_COUNT + (face)]
 
 bool Block_IsFaceHidden(BlockID block, BlockID other, Face face);
+/* Updates culling data of all blocks. */
 void Block_UpdateAllCulling(void);
+/* Updates culling data just for this block. */
+/* This includes whether block can be stretched, and visibility with other blocks. */
 void Block_UpdateCulling(BlockID block);
 
+/* Whether blocks can be automatically rotated. */
+extern bool AutoRotate_Enabled;
 /* Attempts to find the rotated block based on the user's orientation and offset on selected block. */
+/* If no rotated block is found, returns given block. */
 BlockID AutoRotate_RotateBlock(BlockID block);
 #endif

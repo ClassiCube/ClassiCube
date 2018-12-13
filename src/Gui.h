@@ -17,6 +17,21 @@ struct IGameComponent;
 struct GuiElem;
 extern struct IGameComponent Gui_Component;
 
+/* Whether vanilla MineCraft Classic gui texture is used. */
+extern bool Gui_ClassicTexture;
+/* Whether tab list is laid out like vanilla MineCraft Classic. */
+extern bool Gui_ClassicTabList;
+/* Whether menus are laid out like vanilla MineCraft Classic. */
+extern bool Gui_ClassicMenu;
+/* Maximum number of visible chatlines on screen. Can be 0. */
+extern int  Gui_Chatlines;
+/* Whether clicking on a chatline inserts it into chat input. */
+extern bool Gui_ClickableChat;
+/* Whether pressing tab in chat input attempts to autocomplete player names. */
+extern bool Gui_TabAutocomplete;
+/* Whether FPS counter (and other info) is shown in top left. */
+extern bool Gui_ShowFPS;
+
 #define GuiElemVTABLE_Layout() \
 	void (*Init)(void* elem); \
 	void (*Render)(void* elem, double delta); \
@@ -42,10 +57,10 @@ struct ScreenVTABLE {
 	Event_Void_Callback ContextRecreated;
 };
 #define Screen_Layout struct ScreenVTABLE* VTABLE; \
-	bool HandlesAllInput; /* Whether this screen handles all input. Prevents user interacting with the world */ \
-	bool BlocksWorld;     /* Whether this screen completely and opaquely covers the game world behind it */ \
-	bool HidesHUD;        /* Whether this screen hides the normal in-game HUD */ \
-	bool RenderHUDOver;   /* Whether the normal in-game HUD should be drawn over the top of this screen */
+	bool HandlesAllInput; /* Whether this screen handles all input. Prevents user interacting with the world. */ \
+	bool BlocksWorld;     /* Whether this screen completely and opaquely covers the game world behind it. */ \
+	bool HidesHUD;        /* Whether this screen hides the normal in-game HUD. */ \
+	bool RenderHUDOver;   /* Whether the normal in-game HUD should be drawn over the top of this screen. */
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Layout };
@@ -85,11 +100,11 @@ extern int Gui_OverlaysCount;
 
 int  Gui_CalcPos(uint8_t anchor, int offset, int size, int axisLen);
 bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
-/* Gets the screen that the user is currently interacting with.
-This means if an overlay is active, it will be over the top of other screens. */
+/* Gets the screen that the user is currently interacting with. */
+/* This means if an overlay is active, it will be over the top of other screens. */
 struct Screen* Gui_GetActiveScreen(void);
-/* Gets the non-overlay screen that the user is currently interacting with.
-This means if an overlay is active, it will return the screen under it. */
+/* Gets the non-overlay screen that the user is currently interacting with. */
+/* This means if an overlay is active, the screen under it is returned. */
 struct Screen* Gui_GetUnderlyingScreen(void);
 
 CC_NOINLINE void Gui_FreeActive(void);

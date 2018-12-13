@@ -52,7 +52,7 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m);
 /* Encodes a string in platform specific format. (e.g. unicode on windows, UTF8 on linux) */
 /* NOTE: Only useful for platform specific function calls - do NOT try to interpret the data. 
 Returns the number of bytes written, excluding trailing NULL terminator. */
-CC_EXPORT int Platform_ConvertString(void* data, const String* src);
+CC_API int Platform_ConvertString(void* data, const String* src);
 /* Initalises the platform specific state. */
 void Platform_Init(void);
 /* Frees the platform specific state. */
@@ -65,24 +65,24 @@ void Platform_Exit(ReturnCode code);
 int  Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args);
 
 /* Starts the given program with the given arguments. */
-CC_EXPORT ReturnCode Platform_StartProcess(const String* path, const String* args);
+CC_API ReturnCode Platform_StartProcess(const String* path, const String* args);
 /* Starts the platform-specific program to open the given url or filename. */
 /* For example, provide a http:// url to open a website in the user's web browser. */
-CC_EXPORT ReturnCode Platform_StartOpen(const String* args);
+CC_API ReturnCode Platform_StartOpen(const String* args);
 /* Attempts to load the native dynamic library from the given path. */
-CC_EXPORT ReturnCode Platform_LoadLibrary(const String* path, void** lib);
+CC_API ReturnCode Platform_LoadLibrary(const String* path, void** lib);
 /* Attempts to get the address of the symbol in the given dynamic library. */
 /* NOTE: Do NOT use this to load OpenGL functions, use GLContext_GetAddress. */
-CC_EXPORT ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol);
+CC_API ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol);
 
 /* Allocates a block of memory, with undetermined contents. Exits process on allocation failure. */
-CC_EXPORT void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place);
+CC_API void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place);
 /* Allocates a block of memory, with contents of all 0. Exits process on allocation failure. */
-CC_EXPORT void* Mem_AllocCleared(uint32_t numElems, uint32_t elemsSize, const char* place);
+CC_API void* Mem_AllocCleared(uint32_t numElems, uint32_t elemsSize, const char* place);
 /* Reallocates a block of memory, with undetermined contents. Exits process on reallocation failure. */
-CC_EXPORT void* Mem_Realloc(void* mem, uint32_t numElems, uint32_t elemsSize, const char* place);
+CC_API void* Mem_Realloc(void* mem, uint32_t numElems, uint32_t elemsSize, const char* place);
 /* Frees an allocated a block of memory. Does nothing when passed NULL. */
-CC_EXPORT void  Mem_Free(void* mem);
+CC_API void  Mem_Free(void* mem);
 /* Sets the contents of a block of memory to the given value. */
 void Mem_Set(void* dst, uint8_t value, uint32_t numBytes);
 /* Copies a block of memory to another block. NOTE: These blocks MUST NOT overlap. */
@@ -144,43 +144,43 @@ ReturnCode File_Position(FileHandle file, uint32_t* pos);
 ReturnCode File_Length(FileHandle file, uint32_t* len);
 
 /* Blocks the current thread for the given number of milliseconds. */
-CC_EXPORT void Thread_Sleep(uint32_t milliseconds);
+CC_API void Thread_Sleep(uint32_t milliseconds);
 typedef void Thread_StartFunc(void);
 /* Starts a new thread, optionally immediately detaching it. (See Thread_Detach) */
-CC_EXPORT void* Thread_Start(Thread_StartFunc* func, bool detach);
+CC_API void* Thread_Start(Thread_StartFunc* func, bool detach);
 /* Frees the platform specific persistent data associated with the thread. */
 /* NOTE: You must either detach or join threads, as this data otherwise leaks. */
-CC_EXPORT void Thread_Detach(void* handle);
+CC_API void Thread_Detach(void* handle);
 /* Blocks the current thread, until the given thread has finished. */
 /* NOTE: Once a thread has been detached, you can no longer use this method. */
-CC_EXPORT void Thread_Join(void* handle);
+CC_API void Thread_Join(void* handle);
 
 /* Allocates a new mutex. (used to synchronise access to a shared resource) */
-CC_EXPORT void* Mutex_Create(void);
+CC_API void* Mutex_Create(void);
 /* Frees an allocated mutex. */
-CC_EXPORT void  Mutex_Free(void* handle);
+CC_API void  Mutex_Free(void* handle);
 /* Locks the given mutex, blocking other threads from entering. */
-CC_EXPORT void  Mutex_Lock(void* handle);
+CC_API void  Mutex_Lock(void* handle);
 /* Unlocks the given mutex, allowing other threads to enter. */
-CC_EXPORT void  Mutex_Unlock(void* handle);
+CC_API void  Mutex_Unlock(void* handle);
 
 /* Allocates a new waitable. (used to conditionally wake-up a blocked thread) */
-CC_EXPORT void* Waitable_Create(void);
+CC_API void* Waitable_Create(void);
 /* Frees an allocated waitable. */
-CC_EXPORT void  Waitable_Free(void* handle);
+CC_API void  Waitable_Free(void* handle);
 /* Signals a waitable, waking up blocked threads. */
-CC_EXPORT void  Waitable_Signal(void* handle);
+CC_API void  Waitable_Signal(void* handle);
 /* Blocks the calling thread until the waitable gets signalled. */
-CC_EXPORT void  Waitable_Wait(void* handle);
+CC_API void  Waitable_Wait(void* handle);
 /* Blocks the calling thread until the waitable gets signalled, or milliseconds delay passes. */
-CC_EXPORT void  Waitable_WaitFor(void* handle, uint32_t milliseconds);
+CC_API void  Waitable_WaitFor(void* handle, uint32_t milliseconds);
 
 /* Gets the list of all supported font names on this platform. */
-CC_EXPORT void Font_GetNames(StringsBuffer* buffer);
+CC_API void Font_GetNames(StringsBuffer* buffer);
 /* Allocates a new font from the given arguments. */
-CC_EXPORT void Font_Make(FontDesc* desc, const String* fontName, int size, int style);
+CC_API void Font_Make(FontDesc* desc, const String* fontName, int size, int style);
 /* Frees an allocated font. */
-CC_EXPORT void Font_Free(FontDesc* desc);
+CC_API void Font_Free(FontDesc* desc);
 /* Measures width of the given text when drawn with the given font. */
 int Platform_TextWidth(struct DrawTextArgs* args);
 /* Measures height of any text when drawn with the given font. */

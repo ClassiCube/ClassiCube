@@ -126,7 +126,7 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	back = w->Active ? Button_SelectedTex : Button_ShadowTex;
 	if (w->Disabled) back = Button_DisabledTex;
 
-	back.ID = Game_UseClassicGui ? Gui_GuiClassicTex : Gui_GuiTex;
+	back.ID = Gui_ClassicTexture ? Gui_GuiClassicTex : Gui_GuiTex;
 	back.X = w->X; back.Width  = w->Width;
 	back.Y = w->Y; back.Height = w->Height;
 
@@ -323,7 +323,7 @@ static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
 	float width;
 	int i, x;
 	
-	tex = Game_UseClassicGui ? Gui_GuiClassicTex : Gui_GuiTex;
+	tex = Gui_ClassicTexture ? Gui_GuiClassicTex : Gui_GuiTex;
 	w->BackTex.ID = tex;
 	Texture_Render(&w->BackTex);
 
@@ -419,7 +419,7 @@ static bool HotbarWidget_KeyDown(void* widget, Key key) {
 	index = key - KEY_1;
 	if (KeyBind_IsPressed(KEYBIND_HOTBAR_SWITCH)) {
 		/* Pick from first to ninth row */
-		Inventory_SetOffset(index * INVENTORY_BLOCKS_PER_HOTBAR);
+		Inventory_SetHotbarIndex(index);
 		w->AltHandled = true;
 	} else {
 		Inventory_SetSelectedIndex(index);
@@ -443,7 +443,7 @@ static bool HotbarWidget_KeyUp(void* widget, Key key) {
 
 	/* Alternate between first and second row */
 	index = Inventory_Offset == 0 ? 1 : 0;
-	Inventory_SetOffset(index * INVENTORY_BLOCKS_PER_HOTBAR);
+	Inventory_SetHotbarIndex(index);
 	return true;
 }
 
@@ -479,7 +479,7 @@ static bool HotbarWidget_MouseScroll(void* widget, float delta) {
 	if (KeyBind_IsPressed(KEYBIND_HOTBAR_SWITCH)) {
 		index = Inventory_Offset / INVENTORY_BLOCKS_PER_HOTBAR;
 		index = HotbarWidget_ScrolledIndex(w, delta, index, 1);
-		Inventory_SetOffset(index * INVENTORY_BLOCKS_PER_HOTBAR);
+		Inventory_SetHotbarIndex(index);
 		w->AltHandled = true;
 	} else {
 		index = HotbarWidget_ScrolledIndex(w, delta, Inventory_SelectedIndex, -1);

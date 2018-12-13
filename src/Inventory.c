@@ -11,10 +11,10 @@ BlockID Inventory_Map[BLOCK_COUNT];
 
 int Inventory_SelectedIndex;
 int Inventory_Offset;
-bool Inventory_CanChangeHeldBlock, Inventory_CanPick;
+bool Inventory_CanChangeSelected, Inventory_CanUse;
 
-bool Inventory_CanChangeSelected(void) {
-	if (!Inventory_CanChangeHeldBlock) {
+bool Inventory_CheckChangeSelected(void) {
+	if (!Inventory_CanChangeSelected) {
 		Chat_AddRaw("&cThe server has forbidden you from changing your held block.");
 		return false;
 	}
@@ -22,20 +22,20 @@ bool Inventory_CanChangeSelected(void) {
 }
 
 void Inventory_SetSelectedIndex(int index) {
-	if (!Inventory_CanChangeSelected()) return;
+	if (!Inventory_CheckChangeSelected()) return;
 	Inventory_SelectedIndex = index;
 	Event_RaiseVoid(&UserEvents_HeldBlockChanged);
 }
 
-void Inventory_SetOffset(int offset) {
-	if (!Inventory_CanChangeSelected() || Game_ClassicMode) return;
-	Inventory_Offset = offset;
+void Inventory_SetHotbarIndex(int index) {
+	if (!Inventory_CheckChangeSelected() || Game_ClassicMode) return;
+	Inventory_Offset = index * INVENTORY_BLOCKS_PER_HOTBAR;
 	Event_RaiseVoid(&UserEvents_HeldBlockChanged);
 }
 
 void Inventory_SetSelectedBlock(BlockID block) {
 	int i;
-	if (!Inventory_CanChangeSelected()) return;
+	if (!Inventory_CheckChangeSelected()) return;
 	/* Swap with the current, if the new block is already in the hotbar */
 	
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
@@ -74,7 +74,7 @@ static BlockID Inventory_DefaultMapping(int slot) {
 	return BLOCK_AIR;
 }
 
-void Inventory_SetDefaultMapping(void) {
+void Inventory_ApplyDefaultMapping(void) {
 	int slot;
 	for (slot = 0; slot < Array_Elems(Inventory_Map); slot++) {
 		Inventory_Map[slot] = Inventory_DefaultMapping(slot);
@@ -106,9 +106,9 @@ void Inventory_Remove(BlockID block) {
 *--------------------------------------------------Inventory component----------------------------------------------------*
 *#########################################################################################################################*/
 static void Inventory_Reset(void) {
-	Inventory_SetDefaultMapping();
-	Inventory_CanChangeHeldBlock = true;
-	Inventory_CanPick = true;
+	Inventory_ApplyDefaultMapping();
+	Inventory_CanChangeSelected = true;
+	Inventory_CanUse            = true;
 }
 
 static void Inventory_Init(void) {

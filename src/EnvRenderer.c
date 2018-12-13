@@ -835,6 +835,15 @@ void EnvRenderer_UseMinimalMode(bool minimal) {
 	EnvRenderer_ContextRecreated(NULL);
 }
 
+int EnvRenderer_CalcFlags(const String* mode) {
+	if (String_CaselessEqualsConst(mode, "legacyfast")) return ENV_LEGACY | ENV_MINIMAL;
+	if (String_CaselessEqualsConst(mode, "legacy"))     return ENV_LEGACY;
+	if (String_CaselessEqualsConst(mode, "normal"))     return 0;
+	if (String_CaselessEqualsConst(mode, "normalfast")) return ENV_MINIMAL;
+
+	return -1;
+}
+
 
 static void EnvRenderer_FileChanged(void* obj, struct Stream* src, const String* name) {
 	if (String_CaselessEqualsConst(name, "clouds.png")) {
@@ -896,10 +905,10 @@ static void EnvRenderer_Init(void) {
 	int flags;
 	Options_UNSAFE_Get(OPT_RENDER_TYPE, &renderType);
 
-	flags = Game_CalcRenderType(&renderType);
+	flags = EnvRenderer_CalcFlags(&renderType);
 	if (flags == -1) flags = 0;
-	EnvRenderer_Legacy  = (flags & 1);
-	EnvRenderer_Minimal = (flags & 2);
+	EnvRenderer_Legacy  = flags & ENV_LEGACY;
+	EnvRenderer_Minimal = flags & ENV_MINIMAL;
 
 	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, EnvRenderer_FileChanged);
 	Event_RegisterVoid(&TextureEvents_PackChanged,  NULL, EnvRenderer_TexturePackChanged);

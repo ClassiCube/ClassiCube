@@ -18,7 +18,6 @@
 #include "Block.h"
 #include "World.h"
 #include "Formats.h"
-#include "ErrorHandler.h"
 #include "BlockPhysics.h"
 #include "MapRenderer.h"
 #include "TexturePack.h"
@@ -27,6 +26,7 @@
 #include "Gui.h"
 #include "Deflate.h"
 #include "Stream.h"
+#include "Builder.h"
 
 #define MenuBase_Layout Screen_Layout struct Widget** Widgets; int WidgetsCount;
 struct Menu { MenuBase_Layout };
@@ -184,7 +184,7 @@ static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width,
 }
 
 static void Menu_Back(void* s, int i, struct ButtonWidget* btn, const char* label, const FontDesc* font, Widget_LeftClick onClick) {
-	int width = Game_UseClassicOptions ? 400 : 200;
+	int width = Gui_ClassicMenu ? 400 : 200;
 	String msg = String_FromReadonly(label);
 	Menu_Button(s, i, btn, width, &msg, font, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
 }
@@ -614,7 +614,7 @@ static void PauseScreen_Game(void* a, void* b) { Gui_CloseActive(); }
 
 static void PauseScreen_CheckHacksAllowed(void* screen) {
 	struct PauseScreen* s = screen;
-	if (Game_UseClassicOptions) return;
+	if (Gui_ClassicMenu) return;
 	s->Buttons[4].Disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* select texture pack */
 }
 
@@ -622,7 +622,7 @@ static void PauseScreen_ContextRecreated(void* screen) {
 	const static String quitMsg = String_FromConst("Quit game");
 	struct PauseScreen* s = screen;
 
-	if (Game_UseClassicOptions) {
+	if (Gui_ClassicMenu) {
 		PauseScreen_MakeClassic(s, 0, -100, "Options...",            Menu_SwitchClassicOptions);
 		PauseScreen_MakeClassic(s, 1,  -50, "Generate new level...", Menu_SwitchClassicGenLevel);
 		PauseScreen_MakeClassic(s, 2,    0, "Load level...",         Menu_SwitchLoadLevel);
@@ -1656,7 +1656,7 @@ static int KeyBindingsScreen_MakeWidgets(struct KeyBindingsScreen* s, int y, int
 	Menu_Label(s, i, &s->Title, &titleText, &s->TitleFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -180); i++;
 
-	backClick = Game_UseClassicOptions ? Menu_SwitchClassicOptions : Menu_SwitchOptions;
+	backClick = Gui_ClassicMenu ? Menu_SwitchClassicOptions : Menu_SwitchOptions;
 	Menu_Back(s, i, &s->Back, "Done", &s->TitleFont, backClick); i++;
 	if (!s->LeftPage && !s->RightPage) return i;
 	
@@ -2177,15 +2177,14 @@ struct Screen* MenuOptionsScreen_MakeInstance(struct Widget** widgets, int count
 enum ViewDist { VIEW_TINY, VIEW_SHORT, VIEW_NORMAL, VIEW_FAR, VIEW_COUNT };
 const char* ViewDist_Names[VIEW_COUNT] = { "TINY", "SHORT", "NORMAL", "FAR" };
 
-static void ClassicOptionsScreen_GetMusic(String* v) { Menu_GetBool(v, Game_MusicVolume > 0); }
+static void ClassicOptionsScreen_GetMusic(String* v) { Menu_GetBool(v, Audio_MusicVolume > 0); }
 static void ClassicOptionsScreen_SetMusic(const String* v) {
-	Game_MusicVolume = String_CaselessEqualsConst(v, "ON") ? 100 : 0;
-	Audio_SetMusic(Game_MusicVolume);
-	Options_SetInt(OPT_MUSIC_VOLUME, Game_MusicVolume);
+	Audio_SetMusic(String_CaselessEqualsConst(v, "ON") ? 100 : 0);
+	Options_SetInt(OPT_MUSIC_VOLUME, Audio_MusicVolume);
 }
 
-static void ClassicOptionsScreen_GetInvert(String* v) { Menu_GetBool(v, Game_InvertMouse); }
-static void ClassicOptionsScreen_SetInvert(const String* v) { Game_InvertMouse = Menu_SetBool(v, OPT_INVERT_MOUSE); }
+static void ClassicOptionsScreen_GetInvert(String* v) { Menu_GetBool(v, Camera_Invert); }
+static void ClassicOptionsScreen_SetInvert(const String* v) { Camera_Invert = Menu_SetBool(v, OPT_INVERT_MOUSE); }
 
 static void ClassicOptionsScreen_GetViewDist(String* v) {
 	if (Game_ViewDistance >= 512) {
@@ -2209,15 +2208,14 @@ static void ClassicOptionsScreen_SetPhysics(const String* v) {
 	Physics_SetEnabled(Menu_SetBool(v, OPT_BLOCK_PHYSICS));
 }
 
-static void ClassicOptionsScreen_GetSounds(String* v) { Menu_GetBool(v, Game_SoundsVolume > 0); }
+static void ClassicOptionsScreen_GetSounds(String* v) { Menu_GetBool(v, Audio_SoundsVolume > 0); }
 static void ClassicOptionsScreen_SetSounds(const String* v) {
-	Game_SoundsVolume = String_CaselessEqualsConst(v, "ON") ? 100 : 0;
-	Audio_SetSounds(Game_SoundsVolume);
-	Options_SetInt(OPT_SOUND_VOLUME, Game_SoundsVolume);
+	Audio_SetSounds(String_CaselessEqualsConst(v, "ON") ? 100 : 0);
+	Options_SetInt(OPT_SOUND_VOLUME, Audio_SoundsVolume);
 }
 
-static void ClassicOptionsScreen_GetShowFPS(String* v) { Menu_GetBool(v, Game_ShowFPS); }
-static void ClassicOptionsScreen_SetShowFPS(const String* v) { Game_ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
+static void ClassicOptionsScreen_GetShowFPS(String* v) { Menu_GetBool(v, Gui_ShowFPS); }
+static void ClassicOptionsScreen_SetShowFPS(const String* v) { Gui_ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
 
 static void ClassicOptionsScreen_GetViewBob(String* v) { Menu_GetBool(v, Game_ViewBobbing); }
 static void ClassicOptionsScreen_SetViewBob(const String* v) { Game_ViewBobbing = Menu_SetBool(v, OPT_VIEW_BOBBING); }
@@ -2388,10 +2386,10 @@ struct Screen* EnvSettingsScreen_MakeInstance(void) {
 static void GraphicsOptionsScreen_GetViewDist(String* v) { String_AppendInt(v, Game_ViewDistance); }
 static void GraphicsOptionsScreen_SetViewDist(const String* v) { Game_UserSetViewDistance(Menu_Int(v)); }
 
-static void GraphicsOptionsScreen_GetSmooth(String* v) { Menu_GetBool(v, Game_SmoothLighting); }
+static void GraphicsOptionsScreen_GetSmooth(String* v) { Menu_GetBool(v, Builder_SmoothLighting); }
 static void GraphicsOptionsScreen_SetSmooth(const String* v) {
-	Game_SmoothLighting = Menu_SetBool(v, OPT_SMOOTH_LIGHTING);
-	MapRenderer_ApplyMeshBuilder();
+	Builder_SmoothLighting = Menu_SetBool(v, OPT_SMOOTH_LIGHTING);
+	Builder_ApplyActive();
 	MapRenderer_Refresh();
 }
 
@@ -2490,8 +2488,8 @@ static void GuiOptionsScreen_SetShadows(const String* v) {
 	Menu_HandleFontChange((struct Screen*)&MenuOptionsScreen_Instance);
 }
 
-static void GuiOptionsScreen_GetShowFPS(String* v) { Menu_GetBool(v, Game_ShowFPS); }
-static void GuiOptionsScreen_SetShowFPS(const String* v) { Game_ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
+static void GuiOptionsScreen_GetShowFPS(String* v) { Menu_GetBool(v, Gui_ShowFPS); }
+static void GuiOptionsScreen_SetShowFPS(const String* v) { Gui_ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
 
 static void GuiOptionsScreen_SetScale(const String* v, float* target, const char* optKey) {
 	*target = Menu_Float(v);
@@ -2505,18 +2503,18 @@ static void GuiOptionsScreen_SetHotbar(const String* v) { GuiOptionsScreen_SetSc
 static void GuiOptionsScreen_GetInventory(String* v) { String_AppendFloat(v, Game_RawInventoryScale, 1); }
 static void GuiOptionsScreen_SetInventory(const String* v) { GuiOptionsScreen_SetScale(v, &Game_RawInventoryScale, OPT_INVENTORY_SCALE); }
 
-static void GuiOptionsScreen_GetTabAuto(String* v) { Menu_GetBool(v, Game_TabAutocomplete); }
-static void GuiOptionsScreen_SetTabAuto(const String* v) { Game_TabAutocomplete = Menu_SetBool(v, OPT_TAB_AUTOCOMPLETE); }
+static void GuiOptionsScreen_GetTabAuto(String* v) { Menu_GetBool(v, Gui_TabAutocomplete); }
+static void GuiOptionsScreen_SetTabAuto(const String* v) { Gui_TabAutocomplete = Menu_SetBool(v, OPT_TAB_AUTOCOMPLETE); }
 
-static void GuiOptionsScreen_GetClickable(String* v) { Menu_GetBool(v, Game_ClickableChat); }
-static void GuiOptionsScreen_SetClickable(const String* v) { Game_ClickableChat = Menu_SetBool(v, OPT_CLICKABLE_CHAT); }
+static void GuiOptionsScreen_GetClickable(String* v) { Menu_GetBool(v, Gui_ClickableChat); }
+static void GuiOptionsScreen_SetClickable(const String* v) { Gui_ClickableChat = Menu_SetBool(v, OPT_CLICKABLE_CHAT); }
 
 static void GuiOptionsScreen_GetChatScale(String* v) { String_AppendFloat(v, Game_RawChatScale, 1); }
 static void GuiOptionsScreen_SetChatScale(const String* v) { GuiOptionsScreen_SetScale(v, &Game_RawChatScale, OPT_CHAT_SCALE); }
 
-static void GuiOptionsScreen_GetChatlines(String* v) { String_AppendInt(v, Game_ChatLines); }
+static void GuiOptionsScreen_GetChatlines(String* v) { String_AppendInt(v, Gui_Chatlines); }
 static void GuiOptionsScreen_SetChatlines(const String* v) {
-	Game_ChatLines = Menu_Int(v);
+	Gui_Chatlines = Menu_Int(v);
 	Options_Set(OPT_CHATLINES, v);
 	Gui_RefreshHud();
 }
@@ -2593,9 +2591,9 @@ static void HacksSettingsScreen_SetSpeed(const String* v) {
 	Options_Set(OPT_SPEED_FACTOR, v);
 }
 
-static void HacksSettingsScreen_GetClipping(String* v) { Menu_GetBool(v, Game_CameraClipping); }
+static void HacksSettingsScreen_GetClipping(String* v) { Menu_GetBool(v, Camera_Clipping); }
 static void HacksSettingsScreen_SetClipping(const String* v) {
-	Game_CameraClipping = Menu_SetBool(v, OPT_CAMERA_CLIPPING);
+	Camera_Clipping = Menu_SetBool(v, OPT_CAMERA_CLIPPING);
 }
 
 static void HacksSettingsScreen_GetJump(String* v) { String_AppendFloat(v, LocalPlayer_JumpHeight(), 3); }
@@ -2739,18 +2737,16 @@ struct Screen* HacksSettingsScreen_MakeInstance(void) {
 static void MiscOptionsScreen_GetReach(String* v) { String_AppendFloat(v, LocalPlayer_Instance.ReachDistance, 2); }
 static void MiscOptionsScreen_SetReach(const String* v) { LocalPlayer_Instance.ReachDistance = Menu_Float(v); }
 
-static void MiscOptionsScreen_GetMusic(String* v) { String_AppendInt(v, Game_MusicVolume); }
+static void MiscOptionsScreen_GetMusic(String* v) { String_AppendInt(v, Audio_MusicVolume); }
 static void MiscOptionsScreen_SetMusic(const String* v) {
-	Game_MusicVolume = Menu_Int(v);
 	Options_Set(OPT_MUSIC_VOLUME, v);
-	Audio_SetMusic(Game_MusicVolume);
+	Audio_SetMusic(Menu_Int(v));
 }
 
-static void MiscOptionsScreen_GetSounds(String* v) { String_AppendInt(v, Game_SoundsVolume); }
+static void MiscOptionsScreen_GetSounds(String* v) { String_AppendInt(v, Audio_SoundsVolume); }
 static void MiscOptionsScreen_SetSounds(const String* v) {
-	Game_SoundsVolume = Menu_Int(v);
 	Options_Set(OPT_SOUND_VOLUME, v);
-	Audio_SetSounds(Game_SoundsVolume);
+	Audio_SetSounds(Menu_Int(v));
 }
 
 static void MiscOptionsScreen_GetViewBob(String* v) { Menu_GetBool(v, Game_ViewBobbing); }
@@ -2764,12 +2760,12 @@ static void MiscOptionsScreen_SetPhysics(const String* v) {
 static void MiscOptionsScreen_GetAutoClose(String* v) { Menu_GetBool(v, Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false)); }
 static void MiscOptionsScreen_SetAutoClose(const String* v) { Menu_SetBool(v, OPT_AUTO_CLOSE_LAUNCHER); }
 
-static void MiscOptionsScreen_GetInvert(String* v) { Menu_GetBool(v, Game_InvertMouse); }
-static void MiscOptionsScreen_SetInvert(const String* v) { Game_InvertMouse = Menu_SetBool(v, OPT_INVERT_MOUSE); }
+static void MiscOptionsScreen_GetInvert(String* v) { Menu_GetBool(v, Camera_Invert); }
+static void MiscOptionsScreen_SetInvert(const String* v) { Camera_Invert = Menu_SetBool(v, OPT_INVERT_MOUSE); }
 
-static void MiscOptionsScreen_GetSensitivity(String* v) { String_AppendInt(v, Game_MouseSensitivity); }
+static void MiscOptionsScreen_GetSensitivity(String* v) { String_AppendInt(v, Camera_Sensitivity); }
 static void MiscOptionsScreen_SetSensitivity(const String* v) {
-	Game_MouseSensitivity = Menu_Int(v);
+	Camera_Sensitivity = Menu_Int(v);
 	Options_Set(OPT_SENSITIVITY, v);
 }
 
@@ -2835,14 +2831,14 @@ static void NostalgiaScreen_SetAnim(const String* v) {
 	Options_SetBool(OPT_SIMPLE_ARMS_ANIM, Game_SimpleArmsAnim);
 }
 
-static void NostalgiaScreen_GetGui(String* v) { Menu_GetBool(v, Game_UseClassicGui); }
-static void NostalgiaScreen_SetGui(const String* v) { Game_UseClassicGui = Menu_SetBool(v, OPT_CLASSIC_GUI); }
+static void NostalgiaScreen_GetGui(String* v) { Menu_GetBool(v, Gui_ClassicTexture); }
+static void NostalgiaScreen_SetGui(const String* v) { Gui_ClassicTexture = Menu_SetBool(v, OPT_CLASSIC_GUI); }
 
-static void NostalgiaScreen_GetList(String* v) { Menu_GetBool(v, Game_UseClassicTabList); }
-static void NostalgiaScreen_SetList(const String* v) { Game_UseClassicTabList = Menu_SetBool(v, OPT_CLASSIC_TABLIST); }
+static void NostalgiaScreen_GetList(String* v) { Menu_GetBool(v, Gui_ClassicTabList); }
+static void NostalgiaScreen_SetList(const String* v) { Gui_ClassicTabList = Menu_SetBool(v, OPT_CLASSIC_TABLIST); }
 
-static void NostalgiaScreen_GetOpts(String* v) { Menu_GetBool(v, Game_UseClassicOptions); }
-static void NostalgiaScreen_SetOpts(const String* v) { Game_UseClassicOptions = Menu_SetBool(v, OPT_CLASSIC_OPTIONS); }
+static void NostalgiaScreen_GetOpts(String* v) { Menu_GetBool(v, Gui_ClassicMenu); }
+static void NostalgiaScreen_SetOpts(const String* v) { Gui_ClassicMenu = Menu_SetBool(v, OPT_CLASSIC_OPTIONS); }
 
 static void NostalgiaScreen_GetCustom(String* v) { Menu_GetBool(v, Game_AllowCustomBlocks); }
 static void NostalgiaScreen_SetCustom(const String* v) { Game_AllowCustomBlocks = Menu_SetBool(v, OPT_CUSTOM_BLOCKS); }
@@ -2854,7 +2850,7 @@ static void NostalgiaScreen_GetTexs(String* v) { Menu_GetBool(v, Game_AllowServe
 static void NostalgiaScreen_SetTexs(const String* v) { Game_AllowServerTextures = Menu_SetBool(v, OPT_SERVER_TEXTURES); }
 
 static void NostalgiaScreen_SwitchBack(void* a, void* b) {
-	if (Game_UseClassicOptions) { Menu_SwitchPause(a, b); } else { Menu_SwitchOptions(a, b); }
+	if (Gui_ClassicMenu) { Menu_SwitchPause(a, b); } else { Menu_SwitchOptions(a, b); }
 }
 
 static void NostalgiaScreen_ContextRecreated(void* screen) {
@@ -3112,7 +3108,7 @@ static void UrlWarningOverlay_OpenUrl(void* screen, void* b) {
 static void UrlWarningOverlay_AppendUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = screen;
 	Gui_FreeOverlay(s);
-	if (Game_ClickableChat) { HUDScreen_AppendInput(Gui_HUD, &s->Url); }
+	if (Gui_ClickableChat) { HUDScreen_AppendInput(Gui_HUD, &s->Url); }
 }
 
 static void UrlWarningOverlay_ContextRecreated(void* screen) {

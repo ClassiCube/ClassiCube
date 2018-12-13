@@ -10,6 +10,7 @@
 #include "Model.h"
 #include "GameStructs.h"
 
+bool HeldBlockRenderer_Show;
 static BlockID held_block;
 static struct Entity held_entity;
 static struct Matrix held_blockProjection;
@@ -209,7 +210,7 @@ static void HeldBlockRenderer_DoAnimation(double delta, float lastSwingY) {
 void HeldBlockRenderer_Render(double delta) {
 	float lastSwingY;
 	struct Matrix view;
-	if (!Game_ShowBlockInHand) return;
+	if (!HeldBlockRenderer_Show) return;
 
 	lastSwingY  = held_swingY;
 	held_swingY = 0.0f;
@@ -234,10 +235,12 @@ struct EntityVTABLE heldEntity_VTABLE = {
 };
 static void HeldBlockRenderer_Init(void) {
 	Entity_Init(&held_entity);
-	held_entity.VTABLE = &heldEntity_VTABLE;
+	held_entity.VTABLE  = &heldEntity_VTABLE;
 	held_entity.NoShade = true;
 
-	held_lastBlock = Inventory_SelectedBlock;
+	HeldBlockRenderer_Show = Options_GetBool(OPT_SHOW_BLOCK_IN_HAND, true);
+	held_lastBlock         = Inventory_SelectedBlock;
+
 	Event_RegisterVoid(&GfxEvents_ProjectionChanged, NULL, HeldBlockRenderer_ProjectionChanged);
 	Event_RegisterVoid(&UserEvents_HeldBlockChanged, NULL, HeldBlockRenderer_DoSwitchBlockAnim);
 	Event_RegisterBlock(&UserEvents_BlockChanged,    NULL, HeldBlockRenderer_BlockChanged);

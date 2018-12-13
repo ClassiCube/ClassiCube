@@ -46,6 +46,10 @@ void Gradient_Vertical(Bitmap* bmp, BitmapCol a, BitmapCol b,
 /* Note that this only blends RGB, A is not blended. */
 void Gradient_Blend(Bitmap* bmp, BitmapCol col, int blend,
 					int x, int y, int width, int height);
+/* Tints the given area, linearly interpolating from a to b. */
+/* Note that this only tints RGB, A is not tinted. */
+void Gradient_Tint(Bitmap* bmp, uint8_t tintA, uint8_t tintB,
+				   int x, int y, int width, int height);
 
 /* Fills the given area using pixels from an indexed bitmap. */
 /* TODO: Currently this only handles square areas. */
@@ -53,11 +57,9 @@ void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size,
 						 uint8_t* indices, BitmapCol* palette);
 /* Fills the given area using pixels from a region in the source bitmap, by repeatedly tiling the region. */
 /* The pixels from the region are then scaled upwards or downwards depending on scale width and height. */
-/* The pixels are then tinted, with the tint factor a linear interpolation from tintA to tintB. */
-/* TODO: Bitmap tinting should be separate function. */
 void Drawer2D_BmpScaled(Bitmap* dst, int x, int y, int width, int height,
 						Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight,
-						int scaleWidth, int scaleHeight, uint8_t tintA, uint8_t tintB);
+						int scaleWidth, int scaleHeight);
 /* Fills the given area using pixels from a region in the source bitmap, by repeatedly tiling the region. */
 /* For example, if area was 12x5 and region was 5x5, region gets drawn at (0,0), (5,0), (10,0) */
 /* NOTE: The tiling origin is at (0, 0) not at (x, y) */

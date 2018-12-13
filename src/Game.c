@@ -36,31 +36,23 @@
 int Game_Width, Game_Height;
 double Game_Time;
 int Game_ChunkUpdates, Game_Port;
-bool Game_CameraClipping, Game_UseCPEBlocks;
+bool Game_UseCPEBlocks;
 
-struct PickedPos Game_SelectedPos, Game_CameraClipPos;
+struct PickedPos Game_SelectedPos;
 int Game_ViewDistance, Game_MaxViewDistance, Game_UserViewDistance;
 int Game_Fov, Game_DefaultFov, Game_ZoomFov;
 
 float game_limitMs;
 int  Game_FpsLimit, Game_Vertices;
 bool Game_ShowAxisLines, Game_SimpleArmsAnim;
-bool Game_ClassicArmModel, Game_InvertMouse;
+bool Game_ClassicArmModel;
 
-int  Game_MouseSensitivity, Game_ChatLines;
-bool Game_TabAutocomplete, Game_UseClassicGui;
-bool Game_UseClassicTabList, Game_UseClassicOptions;
 bool Game_ClassicMode, Game_ClassicHacks;
 bool Game_AllowCustomBlocks, Game_UseCPE;
-bool Game_AllowServerTextures, Game_SmoothLighting;
-bool Game_AutoRotate;
-bool Game_SmoothCamera, Game_ClickableChat;
-bool Game_HideGui, Game_ShowFPS;
+bool Game_AllowServerTextures;
 
-bool Game_ViewBobbing, Game_ShowBlockInHand;
-int  Game_SoundsVolume, Game_MusicVolume;
+bool Game_ViewBobbing, Game_HideGui;
 bool Game_BreakableLiquids, Game_ScreenshotRequested;
-int  Game_MaxChunkUpdates;
 float Game_RawHotbarScale, Game_RawChatScale, Game_RawInventoryScale;
 
 static struct ScheduledTask Game_Tasks[6];
@@ -271,20 +263,11 @@ bool Game_ValidateBitmap(const String* file, Bitmap* bmp) {
 	if (!Math_IsPowOf2(bmp->Width) || !Math_IsPowOf2(bmp->Height)) {
 		Chat_Add1("&cUnable to use %s from the texture pack.", file);
 
-		Chat_Add2("&c Its size is (%i,%i), which is not power of two dimensions.", 
+		Chat_Add2("&c Its size is (%i,%i), which is not a power of two size.", 
 			&bmp->Width, &bmp->Height);
 		return false;
 	}
 	return true;
-}
-
-int Game_CalcRenderType(const String* type) {
-	if (String_CaselessEqualsConst(type, "legacyfast")) return 0x03;
-	if (String_CaselessEqualsConst(type, "legacy"))     return 0x01;
-	if (String_CaselessEqualsConst(type, "normal"))     return 0x00;
-	if (String_CaselessEqualsConst(type, "normalfast")) return 0x02;
-
-	return -1;
 }
 
 void Game_UpdateClientSize(void) {
@@ -365,9 +348,7 @@ static void Game_LoadOptions(void) {
 	Game_UseCPE            = Options_GetBool(OPT_CPE, true);
 	Game_SimpleArmsAnim    = Options_GetBool(OPT_SIMPLE_ARMS_ANIM, false);
 	Game_ClassicArmModel   = Options_GetBool(OPT_CLASSIC_ARM_MODEL, Game_ClassicMode);
-
-	Game_ViewBobbing    = Options_GetBool(OPT_VIEW_BOBBING, true);
-	Game_SmoothLighting = Options_GetBool(OPT_SMOOTH_LIGHTING, false);
+	Game_ViewBobbing       = Options_GetBool(OPT_VIEW_BOBBING, true);
 
 	method = Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FPS_LIMIT_COUNT);
 	Game_SetFpsLimit(method);
@@ -378,14 +359,11 @@ static void Game_LoadOptions(void) {
 	Game_Fov        = Game_DefaultFov;
 	Game_ZoomFov    = Game_DefaultFov;
 	Game_BreakableLiquids = !Game_ClassicMode && Options_GetBool(OPT_MODIFIABLE_LIQUIDS, false);
-	Game_CameraClipping    = Options_GetBool(OPT_CAMERA_CLIPPING, true);
-	Game_MaxChunkUpdates   = Options_GetInt(OPT_MAX_CHUNK_UPDATES, 4, 1024, 30);
-
 	Game_AllowServerTextures = Options_GetBool(OPT_SERVER_TEXTURES, true);
-	Game_MouseSensitivity    = Options_GetInt(OPT_SENSITIVITY, 1, 100, 30);
-	Game_ShowBlockInHand     = Options_GetBool(OPT_SHOW_BLOCK_IN_HAND, true);
-	Game_InvertMouse         = Options_GetBool(OPT_INVERT_MOUSE, false);
 
+	Game_RawInventoryScale = Options_GetFloat(OPT_INVENTORY_SCALE, 0.25f, 5.0f, 1.0f);
+	Game_RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 1.0f);
+	Game_RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.35f, 5.0f, 1.0f);
 	/* TODO: Do we need to support option to skip SSL */
 	/*bool skipSsl = Options_GetBool("skip-ssl-check", false);
 	if (skipSsl) {
@@ -394,23 +372,8 @@ static void Game_LoadOptions(void) {
 	}*/
 }
 
-static void Game_LoadGuiOptions(void) {
-	Game_ChatLines         = Options_GetInt(OPT_CHATLINES, 0, 30, 12);
-	Game_ClickableChat     = Options_GetBool(OPT_CLICKABLE_CHAT, false);
-	Game_RawInventoryScale = Options_GetFloat(OPT_INVENTORY_SCALE, 0.25f, 5.0f, 1.0f);
-	Game_RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 1.0f);
-	Game_RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.35f, 5.0f, 1.0f);
-	Game_ShowFPS           = Options_GetBool(OPT_SHOW_FPS, true);
-
-	Game_UseClassicGui     = Options_GetBool(OPT_CLASSIC_GUI, true)      || Game_ClassicMode;
-	Game_UseClassicTabList = Options_GetBool(OPT_CLASSIC_TABLIST, false) || Game_ClassicMode;
-	Game_UseClassicOptions = Options_GetBool(OPT_CLASSIC_OPTIONS, false) || Game_ClassicMode;
-
-	Game_TabAutocomplete = Options_GetBool(OPT_TAB_AUTOCOMPLETE, false);
-}
-
 void Game_Free(void* obj);
-void Game_Load(void) {
+static void Game_Load(void) {
 	String title;      char titleBuffer[STRING_SIZE];
 	struct IGameComponent* comp;
 
@@ -418,7 +381,6 @@ void Game_Load(void) {
 	Game_MaxViewDistance  = 32768;
 	Game_UserViewDistance = 512;
 	Game_Fov = 70;
-	Game_AutoRotate = true;
 
 	Gfx_Init();
 	Gfx_SetVSync(true);
@@ -427,7 +389,6 @@ void Game_Load(void) {
 
 	Game_UpdateClientSize();
 	Game_LoadOptions();
-	Game_LoadGuiOptions();
 
 	Event_RegisterVoid(&WorldEvents_NewMap,         NULL, Game_OnNewMapCore);
 	Event_RegisterVoid(&WorldEvents_MapLoaded,      NULL, Game_OnNewMapLoadedCore);

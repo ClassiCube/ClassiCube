@@ -16,6 +16,7 @@
 
 int MapRenderer_ChunksX, MapRenderer_ChunksY, MapRenderer_ChunksZ;
 int MapRenderer_1DUsedCount, MapRenderer_ChunksCount;
+int MapRenderer_MaxUpdates;
 struct ChunkPartInfo* MapRenderer_PartsNormal;
 struct ChunkPartInfo* MapRenderer_PartsTranslucent;
 
@@ -517,7 +518,7 @@ static void MapRenderer_UpdateChunks(double delta) {
 
 	/* Build more chunks if 30 FPS or over, otherwise slowdown */
 	chunksTarget += delta < CHUNK_TARGET_TIME ? 1 : -1; 
-	Math_Clamp(chunksTarget, 4, Game_MaxChunkUpdates);
+	Math_Clamp(chunksTarget, 4, MapRenderer_MaxUpdates);
 
 	p = &LocalPlayer_Instance;
 	samePos = Vector3_Equals(&Camera_CurrentPos, &lastCamPos)
@@ -718,14 +719,6 @@ static void MapRenderer_RecalcVisibility_(void* obj) { lastCamPos = Vector3_BigP
 static void MapRenderer_DeleteChunks_(void* obj)     { MapRenderer_DeleteChunks(); }
 static void MapRenderer_Refresh_(void* obj)          { MapRenderer_Refresh(); }
 
-void MapRenderer_ApplyMeshBuilder(void) {
-	if (Game_SmoothLighting) {
-		AdvBuilder_SetActive();
-	} else {
-		NormalBuilder_SetActive();
-	}
-}
-
 static void MapRenderer_OnNewMap(void) {
 	Game_ChunkUpdates = 0;
 	MapRenderer_DeleteChunks();
@@ -770,7 +763,10 @@ static void MapRenderer_Init(void) {
 	/* This = 87 fixes map being invisible when no textures */
 	MapRenderer_1DUsedCount = 87; /* Atlas1D_UsedAtlasesCount(); */
 	chunkPos   = Vector3I_MaxValue();
-	MapRenderer_ApplyMeshBuilder();
+	MapRenderer_MaxUpdates = Options_GetInt(OPT_MAX_CHUNK_UPDATES, 4, 1024, 30);
+
+	Builder_Init();
+	Builder_ApplyActive();
 }
 
 static void MapRenderer_Free(void) {

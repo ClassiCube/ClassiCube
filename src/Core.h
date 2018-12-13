@@ -22,19 +22,19 @@ typedef signed __int64 int64_t;
 #define CC_INLINE inline
 #define CC_NOINLINE __declspec(noinline)
 #define CC_ALIGN_HINT(x) __declspec(align(x))
-#ifndef CC_EXPORT
-#define CC_EXPORT __declspec(dllexport, noinline)
+#ifndef CC_API
+#define CC_API __declspec(dllexport, noinline)
 #endif
 #elif __GNUC__
 #include <stdint.h>
 #define CC_INLINE inline
 #define CC_NOINLINE __attribute__((noinline))
 #define CC_ALIGN_HINT(x) __attribute__((aligned(x)))
-#ifndef CC_EXPORT
+#ifndef CC_API
 #ifdef _WIN32
-#define CC_EXPORT __attribute__((dllexport, noinline))
+#define CC_API __attribute__((dllexport, noinline))
 #else
-#define CC_EXPORT __attribute__((visibility("default"), noinline))
+#define CC_API __attribute__((visibility("default"), noinline))
 #endif
 #endif
 #else

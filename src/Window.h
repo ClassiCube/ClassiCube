@@ -105,7 +105,7 @@ so setting invisible multiple times means you must then set visible multiple tim
 void Window_SetCursorVisible(bool visible);
 
 /* Shows a dialog box window. */
-CC_EXPORT void Window_ShowDialog(const char* title, const char* msg);
+CC_API void Window_ShowDialog(const char* title, const char* msg);
 /* Initialises the internal state for being able to set window's pixels. */
 /* NOTE: Do not manually free bmp->Scan0 - it may be allocated by system. */
 /* NOTE: This function must also be called whenever the window is resized. */

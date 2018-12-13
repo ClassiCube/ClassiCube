@@ -146,7 +146,7 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 	if (key == KeyBind_Get(KEYBIND_HIDE_GUI)) {
 		Game_HideGui = !Game_HideGui;
 	} else if (key == KeyBind_Get(KEYBIND_SMOOTH_CAMERA)) {
-		InputHandler_Toggle(key, &Game_SmoothCamera,
+		InputHandler_Toggle(key, &Camera_Smooth,
 			"  &eSmooth camera is &aenabled",
 			"  &eSmooth camera is &cdisabled");
 	} else if (key == KeyBind_Get(KEYBIND_AXIS_LINES)) {
@@ -154,13 +154,13 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 			"  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show",
 			"  &eAxis lines no longer show");
 	} else if (key == KeyBind_Get(KEYBIND_AUTOROTATE)) {
-		InputHandler_Toggle(key, &Game_AutoRotate,
+		InputHandler_Toggle(key, &AutoRotate_Enabled,
 			"  &eAuto rotate is &aenabled",
 			"  &eAuto rotate is &cdisabled");
 	} else if (key == KeyBind_Get(KEYBIND_THIRD_PERSO)) {
 		Camera_CycleActive();
 	} else if (key == KeyBind_Get(KEYBIND_DROP_BLOCK)) {
-		if (Inventory_CanChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {
+		if (Inventory_CheckChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {
 			/* Don't assign SelectedIndex directly, because we don't want held block
 			switching positions if they already have air in their inventory hotbar. */
 			Inventory_Set(Inventory_SelectedIndex, BLOCK_AIR);
@@ -183,7 +183,7 @@ static bool InputHandler_HandleCoreKey(Key key) {
 	struct Screen* active = Gui_GetActiveScreen();
 
 	if (key == KeyBind_Get(KEYBIND_HIDE_FPS)) {
-		Game_ShowFPS = !Game_ShowFPS;
+		Gui_ShowFPS = !Gui_ShowFPS;
 	} else if (key == KeyBind_Get(KEYBIND_FULLSCREEN)) {
 		int state = Window_GetWindowState();
 		if (state != WINDOW_STATE_MAXIMISED) {
@@ -191,8 +191,8 @@ static bool InputHandler_HandleCoreKey(Key key) {
 			Window_SetWindowState(fullscreen ? WINDOW_STATE_NORMAL : WINDOW_STATE_FULLSCREEN);
 		}
 	} else if (key == KeyBind_Get(KEYBIND_FOG)) {
-		int16_t* viewDists = Game_UseClassicOptions ? input_classicViewDists : input_normViewDists;
-		int count = Game_UseClassicOptions ? Array_Elems(input_classicViewDists) : Array_Elems(input_normViewDists);
+		int16_t* viewDists = Gui_ClassicMenu ? input_classicViewDists : input_normViewDists;
+		int count = Gui_ClassicMenu ? Array_Elems(input_classicViewDists) : Array_Elems(input_normViewDists);
 
 		if (Key_IsShiftPressed()) {
 			InputHandler_CycleDistanceBackwards(viewDists, count);
@@ -335,7 +335,7 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		InputHandler_ButtonStateChanged(MOUSE_MIDDLE, middle);
 	}
 
-	if (Gui_GetActiveScreen()->HandlesAllInput || !Inventory_CanPick) return;
+	if (Gui_GetActiveScreen()->HandlesAllInput || !Inventory_CanUse) return;
 
 	if (left) {
 		/* always play delete animations, even if we aren't picking a block */
@@ -355,7 +355,7 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 
 		old   = World_GetBlock(p.X, p.Y, p.Z);
 		block = Inventory_SelectedBlock;
-		if (Game_AutoRotate) { block = AutoRotate_RotateBlock(block); }
+		if (AutoRotate_Enabled) block = AutoRotate_RotateBlock(block);
 
 		if (Game_CanPick(old) || !Block_CanPlace[block]) return;
 		/* air-ish blocks can only replace over other air-ish blocks */
@@ -371,7 +371,7 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		cur = World_GetBlock(p.X, p.Y, p.Z);
 		if (Block_Draw[cur] == DRAW_GAS) return;
 		if (!(Block_CanPlace[cur] || Block_CanDelete[cur])) return;
-		if (!Inventory_CanChangeSelected() || Inventory_SelectedBlock == cur) return;
+		if (!Inventory_CheckChangeSelected() || Inventory_SelectedBlock == cur) return;
 
 		/* Is the currently selected block an empty slot? */
 		if (Inventory_SelectedBlock == BLOCK_AIR) {
@@ -404,7 +404,7 @@ static void InputHandler_MouseWheel(void* obj, float delta) {
 
 	hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
 	if (!hotbar && Camera_Active->Zoom(delta)) return;
-	if (InputHandler_DoFovZoom(delta) || !Inventory_CanChangeHeldBlock) return;
+	if (InputHandler_DoFovZoom(delta) || !Inventory_CanChangeSelected) return;
 
 	widget = HUDScreen_GetHotbar(Gui_HUD);
 	Elem_HandlesMouseScroll(widget, delta);

@@ -66,14 +66,14 @@ struct InflateState {
 };
 
 /* Initialises DEFLATE decompressor state to defaults. */
-CC_EXPORT void Inflate_Init(struct InflateState* state, struct Stream* source);
+CC_API void Inflate_Init(struct InflateState* state, struct Stream* source);
 /* Attempts to decompress all currently pending data. */
 /* NOTE: This is a low level call - usually you should use Inflate_MakeStream. */
 void Inflate_Process(struct InflateState* state);
 /* Deompresses input data read from another stream using DEFLATE. Read only stream. */
 /* NOTE: This only uncompresses pure DEFLATE compressed data. */
 /* If data starts with a GZIP or ZLIB header, use GZipHeader_Read or ZLibHeader_Read to first skip it. */
-CC_EXPORT void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struct Stream* underlying);
+CC_API void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struct Stream* underlying);
 
 
 #define DEFLATE_BUFFER_SIZE 16384
@@ -97,17 +97,17 @@ struct DeflateState {
 };
 /* Compresses input data using DEFLATE, then writes compressed output to another stream. Write only stream. */
 /* DEFLATE compression is pure compressed data, there is no header or footer. */
-CC_EXPORT void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struct Stream* underlying);
+CC_API void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struct Stream* underlying);
 
 struct GZipState { struct DeflateState Base; uint32_t Crc32, Size; };
 /* Compresses input data using GZIP, then writes compressed output to another stream. Write only stream. */
 /* GZIP compression is GZIP header, followed by DEFLATE compressed data, followed by GZIP footer. */
-CC_EXPORT void GZip_MakeStream(struct Stream* stream, struct GZipState* state, struct Stream* underlying);
+CC_API void GZip_MakeStream(struct Stream* stream, struct GZipState* state, struct Stream* underlying);
 
 struct ZLibState { struct DeflateState Base; uint32_t Adler32; };
 /* Compresses input data using ZLIB, then writes compressed output to another stream. Write only stream. */
 /* ZLIB compression is ZLIB header, followed by DEFLATE compressed data, followed by ZLIB footer. */
-CC_EXPORT void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
+CC_API void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
 
 /* Minimal data needed to describe an entry in a .zip archive. */
 struct ZipEntry { uint32_t CompressedSize, UncompressedSize, LocalHeaderOffset, Crc32; };
@@ -130,8 +130,8 @@ struct ZipState {
 };
 
 /* Initialises .zip archive reader state to defaults. */
-CC_EXPORT void Zip_Init(struct ZipState* state, struct Stream* input);
+CC_API void Zip_Init(struct ZipState* state, struct Stream* input);
 /* Reads and processes the entries in a .zip archive. */
 /* NOTE: Must have been initialised with Zip_Init first. */
-CC_EXPORT ReturnCode Zip_Extract(struct ZipState* state);
+CC_API ReturnCode Zip_Extract(struct ZipState* state);
 #endif

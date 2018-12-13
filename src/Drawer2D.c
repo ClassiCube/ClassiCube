@@ -178,6 +178,25 @@ void Gradient_Blend(Bitmap* bmp, BitmapCol col, int blend,
 	}
 }
 
+void Gradient_Tint(Bitmap* bmp, uint8_t tintA, uint8_t tintB,
+				   int x, int y, int width, int height) {
+	BitmapCol* row;
+	uint8_t tint;
+	int xx, yy;
+	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
+
+	for (yy = 0; yy < height; yy++) {
+		row  = Bitmap_GetRow(bmp, y + yy) + x;
+		tint = (uint8_t)Math_Lerp(tintA, tintB, (float)yy / height);
+
+		for (xx = 0; xx < width; xx++) {
+			row[xx].B = (row[xx].B * tint) / 255;
+			row[xx].G = (row[xx].G * tint) / 255;
+			row[xx].R = (row[xx].R * tint) / 255;
+		}
+	}
+}
+
 void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size, 
 						uint8_t* indices, BitmapCol* palette) {
 	BitmapCol* row;
@@ -201,27 +220,20 @@ void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size,
 
 void Drawer2D_BmpScaled(Bitmap* dst, int x, int y, int width, int height,
 						Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight,
-						int scaleWidth, int scaleHeight, uint8_t tintA, uint8_t tintB) {
-	BitmapCol* dstRow, col;
+						int scaleWidth, int scaleHeight) {
+	BitmapCol* dstRow;
 	BitmapCol* srcRow;
 	int xx, yy;
 	int scaledX, scaledY;
-	uint8_t tint;
 
 	for (yy = 0; yy < height; yy++) {
 		scaledY = (y + yy) * srcHeight / scaleHeight;
 		srcRow  = Bitmap_GetRow(src, srcY + (scaledY % srcHeight));
 		dstRow  = Bitmap_GetRow(dst, y + yy) + x;
-		tint    = (uint8_t)Math_Lerp(tintA, tintB, (float)yy / height);
 
 		for (xx = 0; xx < width; xx++) {
-			scaledX = (x + xx) * srcWidth / scaleWidth;
-			col     = srcRow[srcX + (scaledX % srcWidth)];
-
-			dstRow[xx].B = (col.B * tint) / 255;
-			dstRow[xx].G = (col.G * tint) / 255;
-			dstRow[xx].R = (col.R * tint) / 255;
-			dstRow[xx].A = col.A;
+			scaledX    = (x + xx) * srcWidth / scaleWidth;
+			dstRow[xx] = srcRow[srcX + (scaledX % srcWidth)];
 		}
 	}
 }

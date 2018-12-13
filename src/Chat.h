@@ -44,7 +44,7 @@ struct ChatCommand {
 	struct ChatCommand* Next; /* Next command in linked-list of client commands */
 };
 /* Registers a client-side command, allowing it to be used with /client [cmd name] */
-CC_EXPORT void Commands_Register(struct ChatCommand* cmd);
+CC_API void Commands_Register(struct ChatCommand* cmd);
 
 /* Sets the name of log file (no .txt, so e.g. just "singleplayer") */
 /* NOTE: This can only be set once. */
@@ -52,13 +52,13 @@ void Chat_SetLogName(const String* name);
 /* Sends a chat message, raising ChatEvents_ChatSending event. */
 /* NOTE: /client is always interpreted as client-side commands. */
 /* In multiplayer this is sent to the server, in singleplayer just Chat_Add. */
-CC_EXPORT void Chat_Send(const String* text, bool logUsage);
+CC_API void Chat_Send(const String* text, bool logUsage);
 /* Shorthand for Chat_AddOf(str, MSG_TYPE_NORMAL) */
-CC_EXPORT void Chat_Add(const String* text);
+CC_API void Chat_Add(const String* text);
 /* Adds a chat message, raising ChatEvents_ChatReceived event. */
 /* MSG_TYPE_NORMAL is usually used for player chat and command messages. */
 /* Other message types are usually used for info/status messages. */
-CC_EXPORT void Chat_AddOf(const String* text, MsgType type);
+CC_API void Chat_AddOf(const String* text, MsgType type);
 /* Shorthand for Chat_AddOf(String_FromReadonly(raw), MSG_TYPE_NORMAL) */
 void Chat_AddRaw(const char* raw);
 

@@ -424,11 +424,11 @@ static void StatusScreen_Render(void* screen, double delta) {
 
 	/* TODO: If Game_ShowFps is off and not classic mode, we should just return here */
 	Gfx_SetTexturing(true);
-	if (Game_ShowFPS) Elem_Render(&s->Line1, delta);
+	if (Gui_ShowFPS) Elem_Render(&s->Line1, delta);
 
 	if (Game_ClassicMode) {
 		Elem_Render(&s->Line2, delta);
-	} else if (!Gui_Active && Game_ShowFPS) {
+	} else if (!Gui_Active && Gui_ShowFPS) {
 		if (StatusScreen_HacksChanged(s)) { StatusScreen_UpdateHackState(s); }
 		StatusScreen_DrawPosition(s);
 		Elem_Render(&s->Line2, delta);
@@ -747,7 +747,7 @@ static void ChatScreen_ResetChat(struct ChatScreen* s) {
 	int i;
 	Elem_TryFree(&s->Chat);
 
-	for (i = s->ChatIndex; i < s->ChatIndex + Game_ChatLines; i++) {
+	for (i = s->ChatIndex; i < s->ChatIndex + Gui_Chatlines; i++) {
 		if (i >= 0 && i < Chat_Log.Count) {
 			msg = StringsBuffer_UNSAFE_Get(&Chat_Log, i);
 			TextGroupWidget_PushUpAndReplaceLast(&s->Chat, &msg);
@@ -776,7 +776,7 @@ static void ChatScreen_ConstructWidgets(struct ChatScreen* s) {
 	Widget_SetLocation(&s->BottomRight, ANCHOR_MAX, ANCHOR_MAX, 0, yOffset);
 	Elem_Init(&s->BottomRight);
 
-	ChatScreen_MakeGroup(&s->Chat, Game_ChatLines, s->Chat_Textures, s->Chat_Buffer);
+	ChatScreen_MakeGroup(&s->Chat, Gui_Chatlines, s->Chat_Textures, s->Chat_Buffer);
 	Widget_SetLocation(&s->Chat, ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
 	Elem_Init(&s->Chat);
 
@@ -791,7 +791,7 @@ static void ChatScreen_ConstructWidgets(struct ChatScreen* s) {
 static void ChatScreen_SetInitialMessages(struct ChatScreen* s) {
 	int i;
 
-	s->ChatIndex = Chat_Log.Count - Game_ChatLines;
+	s->ChatIndex = Chat_Log.Count - Gui_Chatlines;
 	ChatScreen_ResetChat(s);
 
 	TextGroupWidget_SetText(&s->Status, 2, &Chat_Status[0]);
@@ -895,7 +895,7 @@ static void ChatElem_Recreate(struct TextGroupWidget* group, char code) {
 }
 
 static int ChatScreen_ClampIndex(int index) {
-	int maxIndex = Chat_Log.Count - Game_ChatLines;
+	int maxIndex = Chat_Log.Count - Gui_Chatlines;
 	int minIndex = min(0, maxIndex);
 	Math_Clamp(index, minIndex, maxIndex);
 	return index;
@@ -932,15 +932,15 @@ static bool ChatScreen_KeyDown(void* screen, Key key) {
 			SpecialInputWidget_SetActive(&s->AltText, false);
 
 			/* Reset chat when user has scrolled up in chat history */
-			defaultIndex = Chat_Log.Count - Game_ChatLines;
+			defaultIndex = Chat_Log.Count - Gui_Chatlines;
 			if (s->ChatIndex != defaultIndex) {
 				s->ChatIndex = ChatScreen_ClampIndex(defaultIndex);
 				ChatScreen_ResetChat(s);
 			}
 		} else if (key == KEY_PAGEUP) {
-			ChatScreen_ScrollHistoryBy(s, -Game_ChatLines);
+			ChatScreen_ScrollHistoryBy(s, -Gui_Chatlines);
 		} else if (key == KEY_PAGEDOWN) {
-			ChatScreen_ScrollHistoryBy(s, +Game_ChatLines);
+			ChatScreen_ScrollHistoryBy(s, +Gui_Chatlines);
 		} else {
 			Elem_HandlesKeyDown(&s->Input.Base, key);
 			ChatScreen_UpdateAltTextY(s);
@@ -1022,7 +1022,7 @@ static bool ChatScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 	if (Utils_IsUrlPrefix(&text, 0)) {
 		overlay = UrlWarningOverlay_MakeInstance(&text);
 		Gui_ShowOverlay(overlay, false);
-	} else if (Game_ClickableChat) {
+	} else if (Gui_ClickableChat) {
 		InputWidget_AppendString(&s->Input.Base, &text);
 	}
 	return true;
@@ -1054,10 +1054,10 @@ static void ChatScreen_ChatReceived(void* screen, const String* msg, int type) {
 
 	if (type == MSG_TYPE_NORMAL) {
 		s->ChatIndex++;
-		if (!Game_ChatLines) return;
+		if (!Gui_Chatlines) return;
 
 		chatMsg = *msg;
-		i = s->ChatIndex + (Game_ChatLines - 1);
+		i = s->ChatIndex + (Gui_Chatlines - 1);
 
 		if (i < Chat_Log.Count) { chatMsg = StringsBuffer_UNSAFE_Get(&Chat_Log, i); }
 		TextGroupWidget_PushUpAndReplaceLast(&s->Chat, &chatMsg);
@@ -1234,7 +1234,7 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	Elem_Init(&s->Hotbar);
 
 	if (!s->WasShowingList) return;
-	extended = ServerConnection_SupportsExtPlayerList && !Game_UseClassicTabList;
+	extended = ServerConnection_SupportsExtPlayerList && !Gui_ClassicTabList;
 	PlayerListWidget_Create(&s->PlayerList, &s->PlayerFont, !extended);
 	s->ShowingList = true;
 
@@ -1258,7 +1258,7 @@ static bool HUDScreen_KeyPress(void* screen, char keyChar) {
 static bool HUDScreen_KeyDown(void* screen, Key key) {
 	struct HUDScreen* s = screen;
 	Key playerListKey = KeyBind_Get(KEYBIND_PLAYER_LIST);
-	bool handles = playerListKey != KEY_TAB || !Game_TabAutocomplete || !s->Chat->HandlesAllInput;
+	bool handles = playerListKey != KEY_TAB || !Gui_TabAutocomplete || !s->Chat->HandlesAllInput;
 
 	if (key == playerListKey && handles) {
 		if (!s->ShowingList && !ServerConnection_IsSinglePlayer) {

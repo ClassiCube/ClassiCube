@@ -18,6 +18,8 @@ extern int MapRenderer_ChunksX, MapRenderer_ChunksY, MapRenderer_ChunksZ;
 extern int MapRenderer_1DUsedCount;
 /* Number of chunks in the world, or ChunksX * ChunksY * ChunksZ */
 extern int MapRenderer_ChunksCount;
+/* Maximum number of chunk updates that can be performed in a frame. */
+extern int MapRenderer_MaxUpdates;
 
 /* Buffer for all chunk parts. There are (MapRenderer_ChunksCount * Atlas1D_Count) parts in the buffer,
 with parts for 'normal' buffer being in lower half. */
@@ -86,9 +88,8 @@ void MapRenderer_DeleteChunk(struct ChunkInfo* info);
 void MapRenderer_BuildChunk(struct ChunkInfo* info, int* chunkUpdates);
 
 /* Refreshes chunks on the border of the map. */
-/* NOTE: Only refreshes chunks whose y is less than 'maxHeight'. */
+/* NOTE: Only refreshes border chunks whose y is less than 'maxHeight'. */
 void MapRenderer_RefreshBorders(int maxHeight);
 /* Deletes all chunks and resets internal state. */
 void MapRenderer_Refresh(void);
-void MapRenderer_ApplyMeshBuilder(void);
 #endif
