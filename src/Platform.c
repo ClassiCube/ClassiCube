@@ -37,6 +37,7 @@ void* DisplayDevice_Meta;
 #include <wininet.h>
 #include <mmsystem.h>
 #include <shellapi.h>
+#include <wincrypt.h>
 
 #define HTTP_QUERY_ETAG 54 /* Missing from some old MingW32 headers */
 #define Socket__Error() WSAGetLastError()
@@ -2018,6 +2019,29 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 	return i;
 }
 
+ReturnCode Platform_Encrypt(const uint8_t* data, int len, uint8_t** enc, int* encLen) {
+	DATA_BLOB dataIn, dataOut;
+	dataIn.cbData = len; dataIn.pbData = data;
+	if (!CryptProtectData(&dataIn, NULL, NULL, NULL, NULL, 0, &dataOut)) return GetLastError();
+
+	/* copy to memory we can free */
+	*enc    = Mem_Alloc(dataOut.cbData, 1, "encrypt data");
+	*encLen = dataOut.cbData;
+	Mem_Copy(*enc, dataOut.pbData, dataOut.cbData);
+	LocalFree(dataOut.pbData);
+}
+ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* decLen) {
+	DATA_BLOB dataIn, dataOut;
+	dataIn.cbData = len; dataIn.pbData = data;
+	if (!CryptUnprotectData(&dataIn, NULL, NULL, NULL, NULL, 0, &dataOut)) return GetLastError();
+
+	/* copy to memory we can free */
+	*dec    = Mem_Alloc(dataOut.cbData, 1, "decrypt data");
+	*decLen = dataOut.cbData;
+	Mem_Copy(*dec, dataOut.pbData, dataOut.cbData);
+	LocalFree(dataOut.pbData);
+}
+
 ReturnCode Platform_StartProcess(const String* path, const String* args) {
 	String file, argv; char argvBuffer[300];
 	TCHAR str[300], raw[300];
@@ -2060,6 +2084,12 @@ ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol) {
 	*symbol = GetProcAddress(lib, name);
 	return *symbol ? 0 : GetLastError();
 }
+#else
+ReturnCode Platform_Encrypt(const uint8_t* data, int len, uint8_t** enc, int* encLen) {
+	return ReturnCode_NotSupported;
+}
+ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* decLen) {
+	return ReturnCode_NotSupported;
 #endif
 #ifdef CC_BUILD_POSIX
 int Platform_ConvertString(void* data, const String* src) {

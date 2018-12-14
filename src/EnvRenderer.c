@@ -825,13 +825,9 @@ static void EnvRenderer_ContextRecreated(void* obj) {
 	EnvRenderer_UpdateAll();
 }
 
-void EnvRenderer_UseLegacyMode(bool legacy) {
-	EnvRenderer_Legacy = legacy;
-	EnvRenderer_ContextRecreated(NULL);
-}
-
-void EnvRenderer_UseMinimalMode(bool minimal) {
-	EnvRenderer_Minimal = minimal;
+void EnvRenderer_SetMode(int flags) {
+	EnvRenderer_Legacy  = flags & ENV_LEGACY;
+	EnvRenderer_Minimal = flags & ENV_MINIMAL;
 	EnvRenderer_ContextRecreated(NULL);
 }
 

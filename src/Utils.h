@@ -47,6 +47,14 @@ uint32_t Utils_CRC32(const uint8_t* data, uint32_t length);
 extern const uint32_t Utils_Crc32Table[256];
 CC_NOINLINE void* Utils_Resize(void* buffer, uint32_t* maxElems, uint32_t elemSize, uint32_t defElems, uint32_t expandElems);
 CC_NOINLINE bool Utils_ParseIP(const String* ip, uint8_t* data);
+/* Converts blocks of 3 bytes into 4 ASCII characters. (pads if needed) */
+/* Returns the number of ASCII characters written. */
+/* NOTE: You MUST ensure that dst is appropriately sized. */
+int Convert_ToBase64(const uint8_t* src, int len, char* dst);
+/* Converts blocks of 4 ASCII characters into 3 bytes. */
+/* Returns the number of bytes written. */
+/* NOTE: You MUST ensure that dst is appropriately sized. */
+int Convert_FromBase64(const char* src, int len, uint8_t* dst);
 
 struct EntryList {
 	const char* Folder;

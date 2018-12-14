@@ -6,6 +6,7 @@
 #include "Chat.h"
 #include "Errors.h"
 #include "Utils.h"
+#include "ErrorHandler.h"
 
 const char* FpsLimit_Names[FPS_LIMIT_COUNT] = {
 	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "LimitNone",
@@ -156,4 +157,58 @@ void Options_Load(void) {
 void Options_Save(void) {
 	EntryList_Save(&Options);
 	StringsBuffer_Clear(&Options_Changed);
+}
+
+void Options_SetSecure(const char* opt, const String* src, const String* key) {
+	char data[2000];
+	uint8_t* enc;
+	String tmp;
+	int i, encLen;
+
+	if (!src->length || !key->length) return;
+
+	if (Platform_Encrypt(src->buffer, src->length, &enc, &encLen)) {
+		/* fallback to NOT SECURE XOR. Prevents simple reading from options.txt */
+		encLen = src->length;
+		enc    = Mem_Alloc(encLen, 1, "XOR encode");
+	
+		for (i = 0; i < encLen; i++) {
+			enc[i] = (uint8_t)(src->buffer[i] ^ key->buffer[i % key->length] ^ 0x43);
+		}
+	}
+
+	if (encLen > 1500) ErrorHandler_Fail("too large to base64");
+	tmp.buffer   = data;
+	tmp.length   = Convert_ToBase64(enc, encLen, data);
+	tmp.capacity = tmp.length;
+
+	Options_Set(opt, &tmp);
+	Mem_Free(enc);
+}
+
+void Options_GetSecure(const char* opt, String* dst, const String* key) {
+	uint8_t data[1500];
+	uint8_t* dec;
+	String raw;
+	int i, decLen, dataLen;
+
+	Options_UNSAFE_Get(opt, &raw);
+	if (!raw.length || !key->length) return;
+	if (raw.length > 2000) ErrorHandler_Fail("too large to base64");
+	dataLen = Convert_FromBase64(raw.buffer, raw.length, data);
+
+	if (Platform_Decrypt(data, dataLen, &dec, &decLen)) {
+		/* fallback to NOT SECURE XOR. Prevents simple reading from options.txt */
+		decLen = dataLen;
+		dec    = Mem_Alloc(decLen, 1, "XOR decode");
+
+		for (i = 0; i < decLen; i++) {
+			dec[i] = (uint8_t)(data[i] ^ key->buffer[i % key->length] ^ 0x43);
+		}
+	}
+
+	for (i = 0; i < decLen; i++) {
+		String_Append(dst, dec[i]);
+	}
+	Mem_Free(dec);
 }

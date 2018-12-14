@@ -312,6 +312,7 @@ void LInput_Init(struct LInput* w, const FontDesc* font, int width, int height, 
 
 	w->HintFont = *hintFont;
 	w->HintText = hintText;
+	w->CaretPos = -1;
 }
 
 void LInput_SetText(struct LInput* w, const String* text_) {
@@ -641,7 +642,7 @@ void LTable_DrawRows(struct LTable* w) {
 
 	String_InitArray(str, strBuffer);
 	DrawTextArgs_Make(&args, &str, &w->RowFont, true);
-	y = w->RowBegY;
+	y = w->RowsBegY;
 
 	for (row = 0; row < w->VisibleRows; row++, y += w->RowHeight) {
 		x = w->X;
@@ -650,7 +651,7 @@ void LTable_DrawRows(struct LTable* w) {
 			Drawer2D_Clear(&Launcher_Framebuffer, gridCol,
 				x, y, w->Width, w->RowHeight);
 		}
-		if (row >= FetchServersTask.NumServers) continue;
+		if (row >= FetchServersTask.NumServers) continue; /* TODO: w->Count instead */
 
 		for (i = 0; i < w->NumColumns; i++) {
 			x += CELL_XPADDING;
@@ -658,7 +659,7 @@ void LTable_DrawRows(struct LTable* w) {
 			w->Columns[i].GetValue(&FetchServersTask.Servers[row], &args.Text);
 
 			Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args,
-				x, y, w->Columns[i].Width);
+									x, y, w->Columns[i].Width);
 			x += w->Columns[i].Width + CELL_XPADDING;
 		}
 	}
@@ -993,8 +994,8 @@ void LTable_Reposition(struct LTable* w) {
 	w->HdrHeight = Drawer2D_FontHeight(&w->HdrFont, true) + CELL_YPADDING * 2;
 	w->RowHeight = Drawer2D_FontHeight(&w->RowFont, true) + CELL_YPADDING * 2;
 
-	w->RowBegY = w->Y + w->HdrHeight + GRIDLINE_SIZE;
-	rowsHeight = w->Height - (w->RowBegY - w->Y);
+	w->RowsBegY = w->Y + w->HdrHeight + GRIDLINE_SIZE;
+	rowsHeight = w->Height - (w->RowsBegY - w->Y);
 	w->VisibleRows = Math_CeilDiv(rowsHeight, w->RowHeight);
 }
 

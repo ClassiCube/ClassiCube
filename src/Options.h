@@ -103,4 +103,11 @@ CC_API void Options_SetString(const String* key, const String* value);
 CC_API void Options_Load(void);
 /* Saves all options to disc. */
 CC_API void Options_Save(void);
+
+/* Attempts to securely encode an option. */
+/* NOTE: Not all platforms support secure saving. DO NOT RELY ON THIS BEING SECURE! */
+void Options_SetSecure(const char* opt, const String* data, const String* key);
+/* Attempts to securely decode an option. */
+/* NOTE: Not all platforms support secure saving. DO NOT RELY ON THIS BEING SECURE! */
+void Options_GetSecure(const char* opt, String* data, const String* key);
 #endif

@@ -12,10 +12,9 @@
 #include "GameStructs.h"
 #include "Event.h"
 #include "AsyncDownloader.h"
+#include "ExtMath.h"
 
 /* TODO TODO TODO TODO TODO TODO TODO TODO FIX THESE STUBS */
-void Launcher_SetSecureOpt(const char* opt, const String* data, const String* key) { }
-void Launcher_GetSecureOpt(const char* opt, String* data, const String* key) { }
 struct LScreen* ResourcesScreen_MakeInstance(void) { return NULL; }
 struct LScreen* Launcher_Screen;
 bool Launcher_Dirty;
@@ -471,7 +470,7 @@ void Launcher_ResetPixels(void) {
 	struct DrawTextArgs args;
 	int x;
 
-	if (Launcher_Screen && Launcher_Screen->HidesBackground) {
+	if (Launcher_Screen && Launcher_Screen->HidesTitlebar) {
 		Launcher_ResetArea(0, 0, Game_Width, Game_Height);
 		return;
 	}
@@ -527,7 +526,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 		Options_Set("launcher-username", user);
 		Options_Set("launcher-ip",       ip);
 		Options_Set("launcher-port",     port);
-		Launcher_SetSecureOpt("launcher-mppass", mppass, user);
+		Options_SetSecure("launcher-mppass", mppass, user);
 		Options_Save();
 	}
 

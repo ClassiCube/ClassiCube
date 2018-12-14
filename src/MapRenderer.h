@@ -18,7 +18,7 @@ extern int MapRenderer_ChunksX, MapRenderer_ChunksY, MapRenderer_ChunksZ;
 extern int MapRenderer_1DUsedCount;
 /* Number of chunks in the world, or ChunksX * ChunksY * ChunksZ */
 extern int MapRenderer_ChunksCount;
-/* Maximum number of chunk updates that can be performed in a frame. */
+/* Maximum number of chunk updates that can be performed in one frame. */
 extern int MapRenderer_MaxUpdates;
 
 /* Buffer for all chunk parts. There are (MapRenderer_ChunksCount * Atlas1D_Count) parts in the buffer,

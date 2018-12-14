@@ -70,13 +70,6 @@ void Launcher_Run(void);
 
 /* Shows a message box for an error. */
 void Launcher_ShowError(ReturnCode res, const char* place);
-/* Attempts to securely encode an option. */
-/* NOTE: Not all platforms support secure saving, DO NOT rely on this being secure. */
-void Launcher_SetSecureOpt(const char* opt, const String* data, const String* key);
-/* Attempts to securely decode an option. */
-/* NOTE: Not all platforms support secure saving, DO NOT rely on this being secure. */
-void Launcher_GetSecureOpt(const char* opt, String* data, const String* key);
-
 /* Starts the game from the given arguments. */
 bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server);
 #endif

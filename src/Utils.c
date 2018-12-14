@@ -220,6 +220,74 @@ bool Utils_ParseIP(const String* ip, uint8_t* data) {
 		Convert_ParseUInt8(&parts[2], &data[2]) && Convert_ParseUInt8(&parts[3], &data[3]);
 }
 
+const static char base64_table[64] = {
+	'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p',
+	'q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F',
+	'G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V',
+	'W','X','Y','Z','0','1','2','3','4','5','6','7','8','9','+','/'
+};
+int Convert_ToBase64(const uint8_t* src, int len, char* dst) {
+	char* beg = dst;
+	/* 3 bytes to 4 chars */
+	for (; len >= 3; len -= 3, src += 3) {
+		*dst++ = base64_table[                         (src[0] >> 2)];
+		*dst++ = base64_table[((src[0] & 0x03) << 4) | (src[1] >> 4)];
+		*dst++ = base64_table[((src[1] & 0x0F) << 2) | (src[2] >> 6)];
+		*dst++ = base64_table[((src[2] & 0x3F))];
+	}
+
+	switch (len) {
+	case 1:
+		*dst++ = base64_table[                         (src[0] >> 2)];
+		*dst++ = base64_table[((src[0] & 0x03) << 4)                ];
+		*dst++ = '=';
+		*dst++ = '=';
+		break;
+	case 2:
+		*dst++ = base64_table[                         (src[0] >> 2)];
+		*dst++ = base64_table[((src[0] & 0x03) << 4) | (src[1] >> 4)];
+		*dst++ = base64_table[((src[1] & 0x0F) << 2)                ];
+		*dst++ = '=';
+		break;
+	}
+	return (int)(dst - beg);
+}
+
+CC_NOINLINE static int Convert_DecodeBase64(char c) {
+	if (c >= 'a' && c <= 'z') return (c - 'a');
+	if (c >= 'A' && c <= 'Z') return (c - 'A') + 26;
+	if (c >= '0' && c <= '9') return (c - '0') + 52;
+	
+	if (c == '+') return 62;
+	if (c == '/') return 63;
+	return -1;
+}
+
+int Convert_FromBase64(const char* src, int len, uint8_t* dst) {
+	uint8_t* beg = dst;
+	int a, b, c, d;
+	/* base 64 must be padded with = to 4 characters */
+	if (len & 0x3) return 0;
+
+	/* 4 chars to 3 bytes */
+	/* stops on any invalid chars (also handles = padding) */
+	for (; len >= 4; len -= 4, src += 4) {
+		a = Convert_DecodeBase64(src[0]);
+		b = Convert_DecodeBase64(src[1]);
+		if (a == -1 || b == -1) break;
+		*dst++ = (a << 2) | (b >> 4);
+
+		c = Convert_DecodeBase64(src[2]);
+		if (c == -1) break;
+		*dst++ = (b << 4) | (c >> 2);
+
+		d = Convert_DecodeBase64(src[3]);
+		if (d == -1) break;
+		*dst++ = (c << 6) | (d     );
+	}
+	return (int)(dst - beg);
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------EntryList--------------------------------------------------------*

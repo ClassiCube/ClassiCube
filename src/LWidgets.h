@@ -135,7 +135,7 @@ struct LTable {
 	/* Fonts for text in header and rows. */
 	FontDesc RowFont, HdrFont;
 	/* Y start of rows and height of each row. */
-	int RowBegY, RowHeight;
+	int RowsBegY, RowHeight;
 	/* Y height of headers. */
 	int HdrHeight;
 	/* Number of rows currently visible. */

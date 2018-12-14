@@ -537,7 +537,7 @@ static void DirectConnectScreen_Load(struct DirectConnectScreen* s) {
 	Options_UNSAFE_Get("launcher-dc-port",     &port);
 	
 	String_InitArray(mppass, mppassBuffer);
-	Launcher_GetSecureOpt("launcher-dc-mppass", &mppass, &user);
+	Options_GetSecure("launcher-dc-mppass", &mppass, &user);
 	String_InitArray(addr, addrBuffer);
 	String_Format2(&addr, "%s:%s", &ip, &port);
 
@@ -554,7 +554,7 @@ static void DirectConnectScreen_Save(const String* user, const String* mppass, c
 	Options_Set("launcher-dc-username", user);
 	Options_Set("launcher-dc-ip",       ip);
 	Options_Set("launcher-dc-port",     port);
-	Launcher_SetSecureOpt("launcher-dc-mppass", mppass, user);
+	Options_SetSecure("launcher-dc-mppass", mppass, user);
 }
 
 static void DirectConnectScreen_StartClient(void* w, int x, int y) {
@@ -659,7 +659,7 @@ CC_NOINLINE static void MainScreen_UNSAFE_GetResume(struct ResumeInfo* info, boo
 
 	if (!full) return;
 	String_InitArray(info->Mppass, info->_mppassBuffer);
-	Launcher_GetSecureOpt("launcher-mppass", &info->Mppass, &info->User);
+	Options_GetSecure("launcher-mppass", &info->Mppass, &info->User);
 
 	info->Valid = 
 		info->User.length && info->Mppass.length &&
@@ -702,7 +702,7 @@ static void MainScreen_Login(void* w, int x, int y) {
 
 	if (GetTokenTask.Base.Working) return;
 	Options_Set("launcher-cc-username", user);
-	Launcher_SetSecureOpt("launcher-cc-password", pass, user);
+	Options_SetSecure("launcher-cc-password", pass, user);
 
 	GetTokenTask_Run();
 	LLabel_SetText(&s->LblStatus, &signIn);
@@ -759,7 +759,7 @@ static void MainScreen_Init(struct LScreen* s_) {
 	
 	String_InitArray(pass, passBuffer);
 	Options_UNSAFE_Get("launcher-cc-username", &user);
-	Launcher_GetSecureOpt("launcher-cc-password", &pass, &user);
+	Options_GetSecure("launcher-cc-password", &pass, &user);
 
 	LInput_SetText(&s->IptUsername, &user);
 	LInput_SetText(&s->IptPassword, &pass);
@@ -985,7 +985,7 @@ static void ServersScreen_Reposition(struct LScreen* s_) {
 struct LScreen* ServersScreen_MakeInstance(void) {
 	struct ServersScreen* s = &ServersScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
-	s->HidesBackground = true;
+	s->HidesTitlebar = true;
 	s->Init       = ServersScreen_Init;
 	s->Free       = ServersScreen_Free;
 	s->Reposition = ServersScreen_Reposition;

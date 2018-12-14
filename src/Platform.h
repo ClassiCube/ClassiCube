@@ -61,15 +61,22 @@ void Platform_Free(void);
 void Platform_SetWorkingDir(void);
 /* Exits the process with the given return code .*/
 void Platform_Exit(ReturnCode code);
+
 /* Gets the command line arguments passed to the program. */
 int  Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args);
+/* Encrypts data in a platform-specific manner. (may not be supported) */
+/* NOTE: Should only be implemented when platform natively supports it. */
+ReturnCode Platform_Encrypt(const uint8_t* data, int len, uint8_t** enc, int* encLen);
+/* Decrypts data in a platform-specific manner. (may not be supported) */
+/* NOTE: Should only be implemented when platform natively supports it. */
+ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* decLen);
 
 /* Starts the given program with the given arguments. */
 CC_API ReturnCode Platform_StartProcess(const String* path, const String* args);
 /* Starts the platform-specific program to open the given url or filename. */
 /* For example, provide a http:// url to open a website in the user's web browser. */
 CC_API ReturnCode Platform_StartOpen(const String* args);
-/* Attempts to load the native dynamic library from the given path. */
+/* Attempts to load a native dynamic library from the given path. */
 CC_API ReturnCode Platform_LoadLibrary(const String* path, void** lib);
 /* Attempts to get the address of the symbol in the given dynamic library. */
 /* NOTE: Do NOT use this to load OpenGL functions, use GLContext_GetAddress. */

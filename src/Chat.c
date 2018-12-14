@@ -360,9 +360,7 @@ static void RenderTypeCommand_Execute(const String* args, int argsCount) {
 
 	flags = EnvRenderer_CalcFlags(&args[0]);
 	if (flags >= 0) {
-		EnvRenderer_UseLegacyMode( flags & 1);
-		EnvRenderer_UseMinimalMode(flags & 2);
-
+		EnvRenderer_SetMode(flags);
 		Options_Set(OPT_RENDER_TYPE, &args[0]);
 		Chat_Add1("&e/client: &fRender type is now %s.", &args[0]);
 	} else {

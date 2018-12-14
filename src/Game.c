@@ -455,7 +455,7 @@ static void Game_Load(void) {
 		}
 	}*/
 
-	if (Gfx_WarnIfNecessary()) EnvRenderer_UseLegacyMode(true);
+	if (Gfx_WarnIfNecessary()) EnvRenderer_SetMode(EnvRenderer_Minimal | ENV_LEGACY);
 	String_InitArray(title, titleBuffer);
 	String_Format2(&title, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
 
