@@ -39,10 +39,14 @@ struct AsyncRequest {
 void ASyncRequest_Free(struct AsyncRequest* request);
 
 void AsyncDownloader_GetSkin(const String* id, const String* skinName);
+/* Asynchronously downloads contents of a webpage. */
 void AsyncDownloader_GetData(const String* url, bool priority, const String* id);
+/* Asynchronously downloads Content Length header of a webpage. */
 void AsyncDownloader_GetContentLength(const String* url, bool priority, const String* id);
 /* TODO: Implement post */
 void AsyncDownloader_UNSAFE_PostData(const String* url, bool priority, const String* id, const void* data, const uint32_t size);
+/* Asynchronously downloads contents of a webpage. */
+/* Optionally also sets If-Modified-Since and If-None-Match headers. */
 void AsyncDownloader_GetDataEx(const String* url, bool priority, const String* id, TimeMS* lastModified, const String* etag);
 
 /* Attempts to retrieve a fully completed request. */
