@@ -14,8 +14,6 @@
 #include "AsyncDownloader.h"
 #include "ExtMath.h"
 
-/* TODO TODO TODO TODO TODO TODO TODO TODO FIX THESE STUBS */
-struct LScreen* ResourcesScreen_MakeInstance(void) { return NULL; }
 struct LScreen* Launcher_Screen;
 bool Launcher_Dirty;
 Rect2D Launcher_DirtyArea;

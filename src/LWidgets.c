@@ -583,13 +583,16 @@ static void LSlider_DrawBox(struct LSlider* w) {
 	BitmapCol progBottom = BITMAPCOL_CONST(207, 181, 216, 255);
 
 	Gradient_Vertical(&Launcher_Framebuffer, progTop, progBottom,
-					  w->X, w->Y, w->Width, w->Height / 2);
+					  w->X,     w->Y, 
+					  w->Width, w->Height / 2);
 	Gradient_Vertical(&Launcher_Framebuffer, progBottom, progTop,
-					  w->X, w->Y + (w->Height / 2), w->Width, w->Height);
+					  w->X,     w->Y + (w->Height / 2), 
+		              w->Width, w->Height / 2);
 }
 
 static void LSlider_Draw(void* widget) {
 	struct LSlider* w = widget;
+	if (w->Hidden) return;
 	LSlider_DrawBoxBounds(w);
 	LSlider_DrawBox(w);
 

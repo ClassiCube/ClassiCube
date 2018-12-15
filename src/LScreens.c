@@ -928,11 +928,22 @@ static struct ResourcesScreen {
 	struct LWidget* _widgets[7];
 } ResourcesScreen_Instance;
 
-/*static void ResourcesScreen_Download(void* w, int x, int y) {
+static void ResourcesScreen_SetStatus(const String* text) {
+	BitmapCol boxCol = BITMAPCOL_CONST(120, 85, 151, 255);
+	struct LLabel* w = &ResourcesScreen_Instance.LblStatus;
+
+	Drawer2D_Clear(&Launcher_Framebuffer, boxCol,
+					w->X, w->Y, w->Width, w->Height);
+	LLabel_SetText(w, text);
+	LWidget_CalcPosition(w);
+	LWidget_Draw(w);
+}
+
+static void ResourcesScreen_Download(void* w, int x, int y) {
 	struct ResourcesScreen* s = &ResourcesScreen_Instance;
 	if (FetchResourcesTask.Base.Working) return;
 
-	FetchResourcesTask_Run(SetStatus);
+	FetchResourcesTask_Run(ResourcesScreen_SetStatus);
 	s->SelectedWidget = NULL;
 
 	s->BtnYes.Hidden   = true;
@@ -978,7 +989,7 @@ static void ResourcesScreen_Init(struct LScreen* s_) {
 	s->SdrProgress.Hidden = true;
 
 	/* TODO: Size 13 italic font?? does it matter?? */
-	/*String_InitArray(str, buffer);
+	String_InitArray(str, buffer);
 	size = Resources_Size / 1024.0f;
 
 	s->LblStatus.Font = Launcher_HintFont;
@@ -990,6 +1001,20 @@ static void ResourcesScreen_Init(struct LScreen* s_) {
 	s->BtnCancel.OnClick = ResourcesScreen_Next;
 }
 
+static void ResourcesScreen_Reposition(struct LScreen* s_) {
+	struct ResourcesScreen* s = (struct ResourcesScreen*)s_;
+	
+	LWidget_SetLocation(&s->LblLine1,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -50);
+	LWidget_SetLocation(&s->LblLine2,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
+	LWidget_SetLocation(&s->LblStatus, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  10);
+
+	LWidget_SetLocation(&s->BtnYes, ANCHOR_CENTRE, ANCHOR_CENTRE, -70, 45);
+	LWidget_SetLocation(&s->BtnNo,  ANCHOR_CENTRE, ANCHOR_CENTRE,  70, 45);
+
+	LWidget_SetLocation(&s->BtnCancel,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 45);
+	LWidget_SetLocation(&s->SdrProgress, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 15);
+}
+
 #define RESOURCES_XSIZE 190
 #define RESOURCES_YSIZE 70
 static void ResourcesScreen_Draw(struct LScreen* s) {
@@ -999,53 +1024,49 @@ static void ResourcesScreen_Draw(struct LScreen* s) {
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
 					0, 0, Game_Width, Game_Height);
 	Gradient_Noise(&Launcher_Framebuffer, boxCol, 4,
-		Game_Width - RESOURCES_XSIZE, Game_Height - RESOURCES_YSIZE,
-		RESOURCES_XSIZE * 2,          RESOURCES_YSIZE * 2);
+		Game_Width / 2 - RESOURCES_XSIZE, Game_Height / 2 - RESOURCES_YSIZE,
+		RESOURCES_XSIZE * 2,              RESOURCES_YSIZE * 2);
 	LScreen_Draw(s);
 }
 
-/*void SetStatus(string text) {
-	LabelWidget widget = (LabelWidget)widgets[0];
-	using (drawer) {
-		drawer.SetBitmap(game.Framebuffer);
-		drawer.Clear(backCol, widget.X, widget.Y, widget.Width, widget.Height);
-		widget.SetDrawData(drawer, text);
-		widget.SetLocation(Anchor.Centre, Anchor.Centre, 0, -10);
-		widget.Redraw(drawer);
-	}
-	game.Dirty = true;
-}
-
-static void ResourcesScreen_Tick(struct LScreen* s) {
-	if (!FetchResourcesTask.Base.Working || failed) return;
-	CheckCurrentProgress();
-
-	if (!fetcher.Check(SetStatus))
-		failed = true;
-
-	if (!fetcher.Done) return;
-	if (Resources_GetFetchFlags()) {
-		ResourcePatcher patcher = new ResourcePatcher(fetcher, drawer);
-		patcher.Run();
-	}
-
-	Launcher_TryLoadTexturePack();
-	ResourcesScreen_Next(NULL, 0, 0);
-}
-
-void CheckCurrentProgress(struct ResourcesScreen* s) {
+static void ResourcesScreen_UpdateProgress(struct ResourcesScreen* s) {
 	struct AsyncRequest req;
 	int progress;
 
 	if (!AsyncDownloader_GetCurrent(&req, &progress)) return;
 	/* making request still, haven't started download yet */
-	/*if (progress < 0 || progress > 100) return;
+	if (progress < 0 || progress > 100) return;
 
 	if (progress == s->SdrProgress.Value) return;
 	s->SdrProgress.Value = progress;
 	s->SdrProgress.Hidden = false;
 	s->SdrProgress.VTABLE->Draw(&s->SdrProgress);
-}*/
+}
+
+static void ResourcesScreen_Tick(struct LScreen* s_) {
+	struct ResourcesScreen* s = (struct ResourcesScreen*)s_;
+	if (!FetchResourcesTask.Base.Working) return;
+	ResourcesScreen_UpdateProgress(s);
+
+	LWebTask_Tick(&FetchResourcesTask.Base);
+	if (!FetchResourcesTask.Base.Completed) return;
+	if (!FetchResourcesTask.Base.Success)   return;
+
+	Launcher_TryLoadTexturePack();
+	ResourcesScreen_Next(NULL, 0, 0);
+}
+
+struct LScreen* ResourcesScreen_MakeInstance(void) {
+	struct ResourcesScreen* s = &ResourcesScreen_Instance;
+	LScreen_Reset((struct LScreen*)s);
+	s->Init       = ResourcesScreen_Init;
+	s->Draw       = ResourcesScreen_Draw;
+	s->Tick       = ResourcesScreen_Tick;
+	s->Reposition = ResourcesScreen_Reposition;
+	s->OnEnterWidget = (struct LWidget*)&s->BtnYes;
+	return (struct LScreen*)s;
+}
+
 
 
 /*########################################################################################################################*
