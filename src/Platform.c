@@ -2029,6 +2029,7 @@ ReturnCode Platform_Encrypt(const uint8_t* data, int len, uint8_t** enc, int* en
 	*encLen = dataOut.cbData;
 	Mem_Copy(*enc, dataOut.pbData, dataOut.cbData);
 	LocalFree(dataOut.pbData);
+	return 0;
 }
 ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* decLen) {
 	DATA_BLOB dataIn, dataOut;
@@ -2040,6 +2041,7 @@ ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* de
 	*decLen = dataOut.cbData;
 	Mem_Copy(*dec, dataOut.pbData, dataOut.cbData);
 	LocalFree(dataOut.pbData);
+	return 0;
 }
 
 ReturnCode Platform_StartProcess(const String* path, const String* args) {
