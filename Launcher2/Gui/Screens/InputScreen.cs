@@ -47,7 +47,7 @@ namespace Launcher.Gui.Screens {
 				if (lastRec == r) game.DirtyArea = r;
 				lastRec = r;
 				game.Dirty = true;
-			}			
+			}
 		}
 		
 		protected override void KeyDown(Key key) {

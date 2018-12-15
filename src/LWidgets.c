@@ -7,6 +7,7 @@
 #include "Window.h"
 #include "Funcs.h"
 #include "LWeb.h"
+#include "Platform.h"
 
 #define BORDER 1
 
@@ -127,7 +128,7 @@ static void LButton_Draw(void* widget) {
 }
 
 static struct LWidgetVTABLE lbutton_VTABLE = {
-	LButton_Draw, 
+	LButton_Draw, NULL,
 	NULL, NULL,                 /* Key    */
 	LButton_Draw, LButton_Draw, /* Hover  */
 	NULL, NULL                  /* Select */
@@ -267,6 +268,123 @@ static void LInput_Draw(void* widget) {
 	Launcher_Dirty = true;
 }
 
+static Rect2D LInput_MeasureCaret(struct LInput* w) {
+	String text; char textBuffer[STRING_SIZE];
+	struct DrawTextArgs args;
+	Rect2D r;
+
+	String_InitArray(text, textBuffer);
+	LInput_GetText(w, &text);
+	DrawTextArgs_Make(&args, &text, &w->Font, true);
+
+	r.X = w->X + 5;
+	r.Y = w->Y + w->Height - 5; r.Height = 2;
+
+	if (w->CaretPos == -1) {
+		r.X += Drawer2D_TextWidth(&args);
+		r.Width = 10;
+	} else {
+		args.Text = String_UNSAFE_Substring(&text, 0, w->CaretPos);
+		r.X += Drawer2D_TextWidth(&args);
+
+		args.Text = String_UNSAFE_Substring(&text, w->CaretPos, 1);
+		r.Width   = Drawer2D_TextWidth(&args);
+	}
+	return r;
+}
+
+static TimeMS caretStart;
+static bool lastCaretShow;
+static Rect2D lastCaretRec;
+#define Rect2D_Equals(a, b) a.X == b.X && a.Y == b.Y && a.Width == b.Width && a.Height == b.Height
+
+static void LInput_TickCaret(void* widget) {
+	struct LInput* w = widget;
+	BitmapCol col = BITMAPCOL_CONST(0, 0, 0, 255);
+	int elapsed;
+	bool caretShow;
+	Rect2D r;
+
+	elapsed = (int)(DateTime_CurrentUTC_MS() - caretStart);
+	if (!caretStart) return;
+
+	caretShow = (elapsed % 1000) < 500;
+	if (caretShow == lastCaretShow) return;
+	lastCaretShow = caretShow;
+
+	LInput_Draw(w);
+	r = LInput_MeasureCaret(w);
+
+	if (caretShow) {
+		Drawer2D_Clear(&Launcher_Framebuffer, col, 
+					   r.X, r.Y, r.Width, r.Height);
+	}
+	
+	/* Fast path, caret is blinking in same spot */
+	if (Rect2D_Equals(r, lastCaretRec)) {
+		Launcher_DirtyArea = r;
+	}
+
+	lastCaretRec   = r;
+	Launcher_Dirty = true;
+}
+
+static void LInput_AdvanceCaretPos(struct LInput* w, bool forwards) {
+	if (forwards && w->CaretPos == -1) return;
+	if (!forwards && w->CaretPos == 0) return;
+	if (w->CaretPos == -1 && !forwards) /* caret after text */
+		w->CaretPos = w->Text.length;
+
+	w->CaretPos += (forwards ? 1 : -1);
+	if (w->CaretPos < 0 || w->CaretPos >= w->Text.length) w->CaretPos = -1;
+}
+
+static void LInput_MoveCaretToCursor(struct LInput* w) {
+	String text; char textBuffer[STRING_SIZE];
+	struct DrawTextArgs args;
+	int i, charX, charWidth;
+	int x = Mouse_X, y = Mouse_Y;
+
+	/* Input widget may have been selected by pressing tab */
+	/* In which case cursor is completely outside, so ignore */
+	if (!Gui_Contains(w->X, w->Y, w->Width, w->Height, x, y)) return;
+	lastCaretShow = false;
+
+	String_InitArray(text, textBuffer);
+	LInput_GetText(w, &text);
+	x -= w->X; y -= w->Y;
+
+	DrawTextArgs_Make(&args, &text, &w->Font, true);
+	if (x >= Drawer2D_TextWidth(&args)) {
+		w->CaretPos = -1; return; 
+	}
+
+	for (i = 0; i < text.length; i++) {
+		args.Text = String_UNSAFE_Substring(&text, 0, i);
+		charX     = Drawer2D_TextWidth(&args);
+
+		args.Text = String_UNSAFE_Substring(&text, i, 1);
+		charWidth = Drawer2D_TextWidth(&args);
+		if (x >= charX && x < charX + charWidth) {
+			w->CaretPos = i; return;
+		}
+	}
+}
+
+static void LInput_Select(void* widget, bool wasSelected) {
+	caretStart = DateTime_CurrentUTC_MS();
+	LInput_MoveCaretToCursor((struct LInput*)widget);
+	/* TODO: Only draw outer border */
+	if (wasSelected) return;
+	LInput_Draw(widget);
+}
+
+static void LInput_Unselect(void* widget) {
+	caretStart = 0;
+	/* TODO: Only draw outer border */
+	LInput_Draw(widget);
+}
+
 static void LInput_KeyDown(void* widget, Key key) {
 	struct LInput* w = widget;
 	if (key == KEY_BACKSPACE && LInput_Backspace(w)) {
@@ -294,11 +412,11 @@ static void LInput_KeyChar(void* widget, char c) {
 }
 
 static struct LWidgetVTABLE linput_VTABLE = {
-	LInput_Draw, 
+	LInput_Draw, LInput_TickCaret,
 	LInput_KeyDown, LInput_KeyChar, /* Key    */
 	NULL, NULL,                     /* Hover  */
 	/* TODO: Don't redraw whole thing, just the outer border */
-	LInput_Draw, LInput_Draw        /* Select */
+	LInput_Select, LInput_Unselect  /* Select */
 };
 void LInput_Init(struct LInput* w, const FontDesc* font, int width, int height, const char* hintText, const FontDesc* hintFont) {
 	w->VTABLE = &linput_VTABLE;
@@ -328,67 +446,6 @@ void LInput_SetText(struct LInput* w, const String* text_) {
 	size = Drawer2D_MeasureText(&args);
 	w->_RealWidth  = max(w->BaseWidth, size.Width + 15);
 	w->_TextHeight = size.Height;
-}
-
-Rect2D LInput_MeasureCaret(struct LInput* w) {
-	String text; char textBuffer[STRING_SIZE];
-	struct DrawTextArgs args;
-	Rect2D r;
-
-	String_InitArray(text, textBuffer);
-	LInput_GetText(w, &text);
-	DrawTextArgs_Make(&args, &text, &w->Font, true);
-
-	r.X = w->X + 5;
-	r.Y = w->Y + w->Height - 5; r.Height = 2;
-
-	if (w->CaretPos == -1) {
-		r.X += Drawer2D_TextWidth(&args);
-		r.Width = 10;
-	} else {
-		args.Text = String_UNSAFE_Substring(&text, 0, w->CaretPos);
-		r.X += Drawer2D_TextWidth(&args);
-
-		args.Text = String_UNSAFE_Substring(&text, w->CaretPos, 1);
-		r.Width   = Drawer2D_TextWidth(&args);
-	}
-	return r;
-}
-
-void LInput_AdvanceCaretPos(struct LInput* w, bool forwards) {
-	if (forwards && w->CaretPos == -1) return;
-	if (!forwards && w->CaretPos == 0) return;
-	if (w->CaretPos == -1 && !forwards) /* caret after text */
-		w->CaretPos = w->Text.length;
-
-	w->CaretPos += (forwards ? 1 : -1);
-	if (w->CaretPos < 0 || w->CaretPos >= w->Text.length) w->CaretPos = -1;
-}
-
-void LInput_SetCaretToCursor(struct LInput* w, int x, int y) {
-	String text; char textBuffer[STRING_SIZE];
-	struct DrawTextArgs args;
-	int i, charX, charWidth;
-
-	String_InitArray(text, textBuffer);
-	LInput_GetText(w, &text);
-	x -= w->X; y -= w->Y;
-
-	DrawTextArgs_Make(&args, &text, &w->Font, true);
-	if (x >= Drawer2D_TextWidth(&args)) {
-		w->CaretPos = -1; return; 
-	}
-
-	for (i = 0; i < text.length; i++) {
-		args.Text = String_UNSAFE_Substring(&text, 0, i);
-		charX     = Drawer2D_TextWidth(&args);
-
-		args.Text = String_UNSAFE_Substring(&text, i, 1);
-		charWidth = Drawer2D_TextWidth(&args);
-		if (x >= charX && x < charX + charWidth) {
-			w->CaretPos = i; return;
-		}
-	}
 }
 
 bool LInput_Append(struct LInput* w, char c) {
@@ -475,7 +532,7 @@ static void LLabel_Draw(void* widget) {
 }
 
 static struct LWidgetVTABLE llabel_VTABLE = {
-	LLabel_Draw, 
+	LLabel_Draw, NULL,
 	NULL, NULL, /* Key    */
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
@@ -542,7 +599,7 @@ static void LSlider_Draw(void* widget) {
 }
 
 static struct LWidgetVTABLE lslider_VTABLE = {
-	LSlider_Draw, 
+	LSlider_Draw, NULL,
 	NULL, NULL, /* Key    */
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
@@ -1007,7 +1064,7 @@ static void LTable_Draw(void* widget) {
 }
 
 static struct LWidgetVTABLE ltable_VTABLE = {
-	LTable_Draw,
+	LTable_Draw, NULL,
 	NULL, NULL, /* Key    */
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */

@@ -170,7 +170,7 @@ static void Launcher_Display(void) {
 
 	Launcher_Screen->OnDisplay(Launcher_Screen);
 	Launcher_Dirty = false;
-
+	
 	r.X = 0; r.Width  = Launcher_Framebuffer.Width;
 	r.Y = 0; r.Height = Launcher_Framebuffer.Height;
 

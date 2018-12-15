@@ -10,9 +10,11 @@
 struct LWidgetVTABLE {
 	/* Called to draw contents of this widget */
 	void (*Draw)(void* widget);
-	/* Called when key is pressed and this widget has focus. */
+	/* Called repeatedly to update this widget when selected. */
+	void (*Tick)(void* widget);
+	/* Called when key is pressed and this widget is selected. */
 	void (*OnKeyDown)(void* widget, Key key);
-	/* Called when key is pressed and this widget has focus. */
+	/* Called when key is pressed and this widget is selected. */
 	void (*OnKeyPress)(void* widget, char c);
 	/* Called when mouse hovers over this widget. */
 	void (*OnHover)(void* widget);
@@ -21,7 +23,7 @@ struct LWidgetVTABLE {
 	/* Called when mouse clicks on this widget. */
 	/* NOTE: This function is just for general widget behaviour. */
 	/* OnClick callback is for per-widget instance behaviour. */
-	void (*OnSelect)(void* widget);
+	void (*OnSelect)(void* widget, bool wasSelected);
 	/* Called when mouse clicks on another widget. */
 	void (*OnUnselect)(void* widget);
 };
@@ -79,9 +81,6 @@ struct LInput {
 };
 CC_NOINLINE void LInput_Init(struct LInput* w, const FontDesc* font, int width, int height, const char* hintText, const FontDesc* hintFont);
 CC_NOINLINE void LInput_SetText(struct LInput* w, const String* text);
-CC_NOINLINE Rect2D LInput_MeasureCaret(struct LInput* w);
-CC_NOINLINE void LInput_AdvanceCaretPos(struct LInput* w, bool forwards);
-CC_NOINLINE void LInput_SetCaretToCursor(struct LInput* w, int x, int y);
 
 /* Appends a character to the end of the currently entered text. */
 CC_NOINLINE bool LInput_Append(struct LInput* w, char c);

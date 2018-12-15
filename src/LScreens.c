@@ -42,6 +42,39 @@ static void LScreen_Draw(struct LScreen* s) {
 	}
 }
 
+static void LScreen_Tick(struct LScreen* s) {
+	struct LWidget* w = s->SelectedWidget;
+	if (w && w->VTABLE->Tick) w->VTABLE->Tick(w);
+}
+
+CC_NOINLINE static void LScreen_HoverWidget(struct LScreen* s, struct LWidget* w) {
+	if (!w) return;
+	w->Hovered       = true;
+	s->HoveredWidget = w;
+	if (w->VTABLE->OnHover) w->VTABLE->OnHover(w);
+}
+
+CC_NOINLINE static void LScreen_UnhoverWidget(struct LScreen* s, struct LWidget* w) {
+	if (!w) return;
+	w->Hovered       = false;
+	s->HoveredWidget = NULL;
+	if (w->VTABLE->OnUnhover) w->VTABLE->OnUnhover(w);
+}
+
+CC_NOINLINE static void LScreen_SelectWidget(struct LScreen* s, struct LWidget* w, bool was) {
+	if (!w) return;
+	w->Selected      = true;
+	s->SelectedWidget = w;
+	if (w->VTABLE->OnSelect) w->VTABLE->OnSelect(w, was);
+}
+
+CC_NOINLINE static void LScreen_UnselectWidget(struct LScreen* s, struct LWidget* w) {
+	if (!w) return;
+	w->Selected       = false;
+	s->SelectedWidget = NULL;
+	if (w->VTABLE->OnUnselect) w->VTABLE->OnUnselect(w);
+}
+
 static void LScreen_HandleTab(struct LScreen* s) {
 	struct LWidget* w;
 	int dir   = Key_IsShiftPressed() ? -1 : 1;
@@ -58,8 +91,8 @@ static void LScreen_HandleTab(struct LScreen* s) {
 		w = s->Widgets[i];
 		if (w->Hidden || !w->TabSelectable) continue;
 
-		s->UnselectWidget(s, s->SelectedWidget);
-		s->SelectWidget(s, w);
+		LScreen_UnselectWidget(s, s->SelectedWidget);
+		LScreen_SelectWidget(s, w, false);
 		return;
 	}
 }
@@ -87,9 +120,8 @@ static void LScreen_MouseDown(struct LScreen* s, MouseButton btn) {
 	struct LWidget* over = LScreen_WidgetAt(s, Mouse_X, Mouse_Y);
 	struct LWidget* prev = s->SelectedWidget;
 
-	if (over == prev) return;
-	if (prev) s->UnselectWidget(s, prev);
-	if (over) s->SelectWidget(s,   over);
+	if (prev && over != prev) LScreen_UnselectWidget(s, prev);
+	if (over) LScreen_SelectWidget(s, over, over == prev);
 }
 
 static void LScreen_MouseUp(struct LScreen* s, MouseButton btn) {
@@ -98,7 +130,7 @@ static void LScreen_MouseUp(struct LScreen* s, MouseButton btn) {
 
 	/* if user moves mouse away, it doesn't count */
 	if (over != prev) {
-		s->UnselectWidget(s, prev);
+		LScreen_UnselectWidget(s, prev);
 	} else if (over && over->OnClick) {
 		over->OnClick(over, Mouse_X, Mouse_Y);
 	}
@@ -114,41 +146,13 @@ static void LScreen_MouseMove(struct LScreen* s, int deltaX, int deltaY) {
 }
 static void LScreen_MouseWheel(struct LScreen* s, float delta) { }
 
-static void LScreen_HoverWidget(struct LScreen* s, struct LWidget* w) {
-	if (!w) return;
-	w->Hovered       = true;
-	s->HoveredWidget = w;
-	if (w->VTABLE->OnHover) w->VTABLE->OnHover(w);
-}
-
-static void LScreen_UnhoverWidget(struct LScreen* s, struct LWidget* w) {
-	if (!w) return;
-	w->Hovered       = false;
-	s->HoveredWidget = NULL;
-	if (w->VTABLE->OnUnhover) w->VTABLE->OnUnhover(w);
-}
-
-static void LScreen_SelectWidget(struct LScreen* s, struct LWidget* w) {
-	if (!w) return;
-	w->Selected      = true;
-	s->SelectedWidget = w;
-	if (w->VTABLE->OnSelect) w->VTABLE->OnSelect(w);
-}
-
-static void LScreen_UnselectWidget(struct LScreen* s, struct LWidget* w) {
-	if (!w) return;
-	w->Selected       = false;
-	s->SelectedWidget = NULL;
-	if (w->VTABLE->OnUnselect) w->VTABLE->OnUnselect(w);
-}
-
 CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	int i;
 
 	s->Init = NULL; /* screens should always override this */
 	s->Free = LScreen_NullFunc;
 	s->Draw       = LScreen_Draw;
-	s->Tick       = LScreen_NullFunc;
+	s->Tick       = LScreen_Tick;
 	s->OnDisplay  = LScreen_NullFunc;
 	s->KeyDown    = LScreen_KeyDown;
 	s->KeyPress   = LScreen_KeyPress;
@@ -158,8 +162,6 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	s->MouseWheel = LScreen_MouseWheel;
 	s->HoverWidget    = LScreen_HoverWidget;
 	s->UnhoverWidget  = LScreen_UnhoverWidget;
-	s->SelectWidget   = LScreen_SelectWidget;
-	s->UnselectWidget = LScreen_UnselectWidget;
 
 	/* reset all widgets mouse state */
 	for (i = 0; i < s->NumWidgets; i++) { 
@@ -893,6 +895,8 @@ static void MainScreen_TickFetchServers(struct MainScreen* s) {
 
 static void MainScreen_Tick(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
+	LScreen_Tick(s_);
+
 	MainScreen_TickCheckUpdates(s);
 	MainScreen_TickGetToken(s);
 	MainScreen_TickSignIn(s);
@@ -907,6 +911,7 @@ struct LScreen* MainScreen_MakeInstance(void) {
 	s->Reposition = MainScreen_Reposition;
 	s->HoverWidget   = MainScreen_HoverWidget;
 	s->UnhoverWidget = MainScreen_UnhoverWidget;
+	s->OnEnterWidget = (struct LWidget*)&s->BtnLogin;
 	return (struct LScreen*)s;
 }
 
@@ -1240,6 +1245,8 @@ static void UpdatesScreen_Reposition(struct LScreen* s_) {
 
 static void UpdatesScreen_Tick(struct LScreen* s_) {
 	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
+	LScreen_Tick(s_);
+
 	UpdatesScreen_FetchTick(s);
 	UpdatesScreen_CheckTick(s);
 }

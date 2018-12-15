@@ -27,8 +27,6 @@ typedef void(*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 	void (*MouseWheel)(struct LScreen* s, float delta); \
 	LWidget_Func HoverWidget;    /* Called when mouse is moved over a given widget. */ \
 	LWidget_Func UnhoverWidget;  /* Called when the mouse is moved away from a previously hovered widget. */ \
-	LWidget_Func SelectWidget;   /* Called when mouse clicks on a given widget. */ \
-	LWidget_Func UnselectWidget; /* Called when the mouse clicks on a different widget. */ \
 	struct LWidget* OnEnterWidget;  /* Default widget to auto-click when Enter is pressed. Can be NULL. */ \
 	struct LWidget* HoveredWidget;  /* Widget the mouse is currently hovering over. */ \
 	struct LWidget* SelectedWidget; /* Widget mouse last clicked on. */ \

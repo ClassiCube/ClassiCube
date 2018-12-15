@@ -252,7 +252,7 @@ void Platform_Log(const String* message) {
 #define FILETIME_EPOCH 50491123200000ULL
 #define FileTime_TotalMS(time) ((time / 10000) + FILETIME_EPOCH)
 TimeMS DateTime_CurrentUTC_MS(void) {
-	FILETIME ft; GetSystemTimeAsFileTime(&ft);
+	FILETIME ft; GetSystemTimeAsFileTime(&ft); 
 	/* in 100 nanosecond units, since Jan 1 1601 */
 	uint64_t raw = ft.dwLowDateTime | ((uint64_t)ft.dwHighDateTime << 32);
 	return FileTime_TotalMS(raw);
