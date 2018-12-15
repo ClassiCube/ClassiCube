@@ -4,12 +4,12 @@
 #include "Constants.h"
 #include "Game.h"
 #include "Funcs.h"
-#include "ExtMath.h"
 #include "Utils.h"
 #include "Launcher.h"
 
 /*#define CC_TEST_VORBIS*/
 #ifdef CC_TEST_VORBIS
+#include "ExtMath.h"
 #include "Vorbis.h"
 
 #define VORBIS_N 1024

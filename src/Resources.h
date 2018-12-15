@@ -1,6 +1,6 @@
 #ifndef CC_RESOURCES_H
 #define CC_RESOURCES_H
-#include "Core.h"
+#include "LWeb.h"
 /* Implements checking, fetching, and patching the default game assets.
 	Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -35,5 +35,12 @@ extern struct ResourceMusic {
 	uint16_t Size;
 	bool Exists;
 } Resources_Music[7];
+
+typedef void (*FetchResourcesStatus)(const String* status);
+extern struct FetchResourcesData {
+	struct LWebTask Base;
+	FetchResourcesStatus SetStatus;
+} FetchResourcesTask;
+void FetchResourcesTask_Run(FetchResourcesStatus setStatus);
 
 #endif

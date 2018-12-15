@@ -45,7 +45,13 @@ void AsyncDownloader_GetContentLength(const String* url, bool priority, const St
 void AsyncDownloader_UNSAFE_PostData(const String* url, bool priority, const String* id, const void* data, const uint32_t size);
 void AsyncDownloader_GetDataEx(const String* url, bool priority, const String* id, TimeMS* lastModified, const String* etag);
 
+/* Attempts to retrieve a fully completed request. */
+/* Returns whether a request with a matching id was retrieved. */
 bool AsyncDownloader_Get(const String* id, struct AsyncRequest* item);
+/* Retrieves information about the request currently being processed. */
+/* Returns whether there is actually a request being currently processed. */
 bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, int* progress);
+/* Clears the list of pending requests. */
+void AsyncDownloader_Clear(void);
 void AsyncDownloader_PurgeOldEntriesTask(struct ScheduledTask* task);
 #endif

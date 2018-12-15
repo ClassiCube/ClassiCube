@@ -9,6 +9,7 @@
 #include "Platform.h"
 #include "Stream.h"
 #include "Funcs.h"
+#include "Resources.h"
 
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
@@ -914,6 +915,137 @@ struct LScreen* MainScreen_MakeInstance(void) {
 	s->OnEnterWidget = (struct LWidget*)&s->BtnLogin;
 	return (struct LScreen*)s;
 }
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------ResourcesScreen---------------------------------------------------*
+*#########################################################################################################################*/
+static struct ResourcesScreen {
+	LScreen_Layout
+	struct LLabel  LblLine1, LblLine2, LblStatus;
+	struct LButton BtnYes, BtnNo, BtnCancel;
+	struct LSlider SdrProgress;
+	struct LWidget* _widgets[7];
+} ResourcesScreen_Instance;
+
+/*static void ResourcesScreen_Download(void* w, int x, int y) {
+	struct ResourcesScreen* s = &ResourcesScreen_Instance;
+	if (FetchResourcesTask.Base.Working) return;
+
+	FetchResourcesTask_Run(SetStatus);
+	s->SelectedWidget = NULL;
+
+	s->BtnYes.Hidden   = true;
+	s->BtnNo.Hidden    = true;
+	s->LblLine1.Hidden = true;
+	s->LblLine2.Hidden = true;
+	s->BtnCancel.Hidden   = false;
+	s->SdrProgress.Hidden = false;
+	s->Draw((struct LScreen*)s);
+}
+
+static void ResourcesScreen_Next(void* w, int x, int y) {
+	const static String optionsTxt = String_FromConst("options.txt");
+	AsyncDownloader_Clear();
+
+	if (File_Exists(&optionsTxt)) {
+		Launcher_SetScreen(MainScreen_MakeInstance());
+	} else {
+		Launcher_SetScreen(ChooseModeScreen_MakeInstance(true));
+	}
+}
+
+static void ResourcesScreen_Init(struct LScreen* s_) {
+	String str; char buffer[STRING_SIZE];
+	BitmapCol progressCol = BITMAPCOL_CONST(0, 220, 0, 255);
+	struct ResourcesScreen* s = (struct ResourcesScreen*)s_;
+	float size;
+
+	if (s->NumWidgets) return;
+	s->Widgets = s->_widgets;
+
+	LScreen_Label(s_, &s->LblLine1, "Some required resources weren't found");
+	LScreen_Label(s_, &s->LblLine2, "Okay to download?");
+	LScreen_Label(s_, &s->LblStatus, "");
+	
+	LScreen_Button(s_, &s->BtnYes, 70, 35, "Yes");
+	LScreen_Button(s_, &s->BtnNo,  70, 35, "No");
+
+	LScreen_Button(s_, &s->BtnCancel, 120, 35, "Cancel");
+	LScreen_Slider(s_, &s->SdrProgress, 200, 10, 0, 100, progressCol);
+
+	s->BtnCancel.Hidden   = true;
+	s->SdrProgress.Hidden = true;
+
+	/* TODO: Size 13 italic font?? does it matter?? */
+	/*String_InitArray(str, buffer);
+	size = Resources_Size / 1024.0f;
+
+	s->LblStatus.Font = Launcher_HintFont;
+	String_Format1(&str, "&eDownload size: %f2 megabytes", &size);
+	LLabel_SetText(&s->LblStatus, &str);
+
+	s->BtnYes.OnClick    = ResourcesScreen_Download;
+	s->BtnNo.OnClick     = ResourcesScreen_Next;
+	s->BtnCancel.OnClick = ResourcesScreen_Next;
+}
+
+#define RESOURCES_XSIZE 190
+#define RESOURCES_YSIZE 70
+static void ResourcesScreen_Draw(struct LScreen* s) {
+	BitmapCol backCol = BITMAPCOL_CONST( 12, 12,  12, 255);
+	BitmapCol boxCol  = BITMAPCOL_CONST(120, 85, 151, 255);
+
+	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
+					0, 0, Game_Width, Game_Height);
+	Gradient_Noise(&Launcher_Framebuffer, boxCol, 4,
+		Game_Width - RESOURCES_XSIZE, Game_Height - RESOURCES_YSIZE,
+		RESOURCES_XSIZE * 2,          RESOURCES_YSIZE * 2);
+	LScreen_Draw(s);
+}
+
+/*void SetStatus(string text) {
+	LabelWidget widget = (LabelWidget)widgets[0];
+	using (drawer) {
+		drawer.SetBitmap(game.Framebuffer);
+		drawer.Clear(backCol, widget.X, widget.Y, widget.Width, widget.Height);
+		widget.SetDrawData(drawer, text);
+		widget.SetLocation(Anchor.Centre, Anchor.Centre, 0, -10);
+		widget.Redraw(drawer);
+	}
+	game.Dirty = true;
+}
+
+static void ResourcesScreen_Tick(struct LScreen* s) {
+	if (!FetchResourcesTask.Base.Working || failed) return;
+	CheckCurrentProgress();
+
+	if (!fetcher.Check(SetStatus))
+		failed = true;
+
+	if (!fetcher.Done) return;
+	if (Resources_GetFetchFlags()) {
+		ResourcePatcher patcher = new ResourcePatcher(fetcher, drawer);
+		patcher.Run();
+	}
+
+	Launcher_TryLoadTexturePack();
+	ResourcesScreen_Next(NULL, 0, 0);
+}
+
+void CheckCurrentProgress(struct ResourcesScreen* s) {
+	struct AsyncRequest req;
+	int progress;
+
+	if (!AsyncDownloader_GetCurrent(&req, &progress)) return;
+	/* making request still, haven't started download yet */
+	/*if (progress < 0 || progress > 100) return;
+
+	if (progress == s->SdrProgress.Value) return;
+	s->SdrProgress.Value = progress;
+	s->SdrProgress.Hidden = false;
+	s->SdrProgress.VTABLE->Draw(&s->SdrProgress);
+}*/
 
 
 /*########################################################################################################################*

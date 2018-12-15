@@ -1482,19 +1482,14 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 	Bitmap bmp;
 
 	DrawTextArgs_Make(&args, &w->Base.Lines[0], &w->Base.Font, false);
-	size = Drawer2D_MeasureText(&args);
+	size.Width   = Drawer2D_TextWidth(&args);
+	/* Text may be empty, but don't want 0 height if so */
+	size.Height  = Drawer2D_FontHeight(&w->Base.Font, false);
 	w->Base.CaretAccumulator = 0.0;
 
 	String_InitArray(range, rangeBuffer);
 	v = &w->Validator;
 	v->VTABLE->GetRange(v, &range);
-
-	/* Ensure we don't have 0 text height */
-	if (size.Height == 0) {
-		args.Text   = range;
-		size.Height = Drawer2D_MeasureText(&args).Height;
-		args.Text   = w->Base.Lines[0];
-	}
 
 	w->Base.Width  = max(size.Width,  w->MinWidth);
 	w->Base.Height = max(size.Height, w->MinHeight);

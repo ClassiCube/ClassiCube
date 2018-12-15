@@ -190,6 +190,15 @@ bool AsyncDownloader_GetCurrent(struct AsyncRequest* request, int* progress) {
 	return request->ID[0];
 }
 
+void AsyncDownloader_Clear(void) {
+	Mutex_Lock(async_pendingMutex);
+	{
+		AsyncRequestList_Free(&async_pending);
+	}
+	Mutex_Unlock(async_pendingMutex);
+	Waitable_Signal(async_waitable);
+}
+
 static void AsyncDownloader_ProcessRequest(struct AsyncRequest* request) {
 	String url = String_FromRawArray(request->URL);
 	uint64_t  beg, end;
@@ -304,18 +313,9 @@ static void AsyncDownloader_Init(void) {
 	async_workerThread = Thread_Start(AsyncDownloader_WorkerFunc, false);
 }
 
-static void AsyncDownloader_Reset(void) {
-	Mutex_Lock(async_pendingMutex);
-	{
-		AsyncRequestList_Free(&async_pending);
-	}
-	Mutex_Unlock(async_pendingMutex);
-	Waitable_Signal(async_waitable);
-}
-
 static void AsyncDownloader_Free(void) {
 	async_terminate = true;
-	AsyncDownloader_Reset();
+	AsyncDownloader_Clear();
 	Thread_Join(async_workerThread);
 
 	AsyncRequestList_Free(&async_pending);
@@ -331,5 +331,5 @@ static void AsyncDownloader_Free(void) {
 struct IGameComponent AsyncDownloader_Component = {
 	AsyncDownloader_Init, /* Init  */
 	AsyncDownloader_Free, /* Free  */
-	AsyncDownloader_Reset /* Reset */
+	AsyncDownloader_Clear /* Reset */
 };

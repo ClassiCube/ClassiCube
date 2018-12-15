@@ -120,7 +120,7 @@ public interface IGameComponent { }
 		}
 		
 		public void Clear() {
-			lock (pendingLocker)  {
+			lock (pendingLocker) {
 				pending.Clear();
 			}			
 			handle.Set();
