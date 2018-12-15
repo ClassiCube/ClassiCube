@@ -8,13 +8,13 @@ Compiling for linux:
 
 Cross compiling for windows:
 
-```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -ld3d9```
+```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9```
 
 Explicitly:
 
-```i586-mingw32msvc-gcc *.c -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_D3D9 -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -ld3d9```
+```i586-mingw32msvc-gcc *.c -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_D3D9 -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9```
 
-```i586-mingw32msvc-gcc *.c -DCC_BUILD_MANUAL -DCC_BUILD_WIN -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lopengl32```
+```i586-mingw32msvc-gcc *.c -DCC_BUILD_MANUAL -DCC_BUILD_WIN -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32```
 
 
 For ubuntu, this means you probably need to install: libx11-dev, libgl1-mesa-dev, libopenal-dev, libcurl4-gnutls-dev or libcurl4-openssl-dev

@@ -2092,6 +2092,7 @@ ReturnCode Platform_Encrypt(const uint8_t* data, int len, uint8_t** enc, int* en
 }
 ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* decLen) {
 	return ReturnCode_NotSupported;
+}
 #endif
 #ifdef CC_BUILD_POSIX
 int Platform_ConvertString(void* data, const String* src) {
