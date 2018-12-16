@@ -906,12 +906,23 @@ void Font_GetNames(StringsBuffer* buffer) {
 	}
 }
 
-static String Font_Lookup(const String* fontName, const char type) {
+static String Font_LookupOf(const String* fontName, const char type) {
 	String name; char nameBuffer[STRING_SIZE + 2];
 	String_InitArray(name, nameBuffer);
 
 	String_Format2(&name, "%s %r", fontName, &type);
 	return EntryList_UNSAFE_Get(&font_list, &name);
+}
+
+static String Font_Lookup(const String* fontName, int style) {
+	String path;
+	if (!font_list.Entries.Count) Font_Init();
+	path = String_Empty;
+
+	if (style & FONT_STYLE_BOLD)   path = Font_Lookup(fontName, 'B');
+	if (style & FONT_STYLE_ITALIC) path = Font_Lookup(fontName, 'I');
+
+	return Font_Lookup(fontName, 'R');
 }
 
 void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
@@ -924,13 +935,7 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 	desc->Size  = size;
 	desc->Style = style;
 
-	if (!font_list.Entries.Count) Font_Init();
-	path = String_Empty;
-
-	if (style & FONT_STYLE_BOLD)   path = Font_Lookup(fontName, 'B');
-	if (style & FONT_STYLE_ITALIC) path = Font_Lookup(fontName, 'I');
-
-	if (!path.length) path = Font_Lookup(fontName, 'R');
+	path = Font_Lookup(fontName, style);
 	if (!path.length) ErrorHandler_Fail("Unknown font");
 
 	stream = Mem_AllocCleared(1, sizeof(FT_StreamRec), "leaky font"); /* TODO: LEAKS MEMORY!!! */
@@ -1163,7 +1168,7 @@ static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, v
 #define FONT_CACHE_FILE "fontcache.txt"
 static void Font_Init(void) {
 #ifdef CC_BUILD_WIN
-	const static String dir = String_FromConst("C:\\Windows\\fonts");
+	const static String dir = String_FromConst("C:\\Windows\\Fonts");
 #endif
 #ifdef CC_BUILD_NIX
 	const static String dir = String_FromConst("/usr/share/fonts");

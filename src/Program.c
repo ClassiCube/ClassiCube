@@ -40,9 +40,15 @@ int main_imdct() {
 #endif
 
 static void Program_RunGame(void) {
+	const static String defPath = String_FromConst("texpacks/default.zip");
 	String title; char titleBuffer[STRING_SIZE];
 	struct DisplayDevice device;
 	int width, height;
+
+	if (!File_Exists(&defPath)) {
+		Window_ShowDialog("Missing file",
+			"default.zip is missing, try running launcher first.\n\nThe game will still run, but without any textures");
+	}
 
 	device = DisplayDevice_Default;
 	width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, device.Bounds.Width,  0);
@@ -60,7 +66,6 @@ static void Program_RunGame(void) {
 }
 
 int main(int argc, char** argv) {
-	const static String defPath = String_FromConst("texpacks/default.zip");
 	String args[PROGRAM_MAX_CMDARGS];
 	int argsCount;
 	uint8_t ip[4];
@@ -82,11 +87,6 @@ int main(int argc, char** argv) {
 	Utils_EnsureDirectory("maps");
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("texturecache");
-
-	if (!File_Exists(&defPath)) {
-		Window_ShowDialog("Missing file",
-			"default.zip is missing, try running launcher first.\n\nThe game will still run, but without any textures");
-	}
 	Options_Load();
 
 	if (argsCount == 0) {

@@ -1232,6 +1232,19 @@ static void UpdatesScreen_Draw(struct LScreen* s) {
 				midX - 160, midY -   5, 320, 1);
 }
 
+CC_NOINLINE static void UpdatesScreen_FormatTime(String* str, char* type, int delta, int unit) {
+	delta /= unit;
+	String_AppendInt(str, delta);
+	String_Append(str, ' ');
+	String_AppendConst(str, type);
+
+	if (delta > 1) {
+		String_AppendConst(str, "s ago");
+	} else {
+		String_AppendConst(str, " ago");
+	}
+}
+
 static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, TimeMS time) {
 	String str; char buffer[STRING_SIZE];
 	TimeMS now;
@@ -1246,16 +1259,13 @@ static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, TimeMS 
 		int delta = (int)(now - time) / 1000;
 
 		if (delta < SECS_PER_MIN) {
-			String_Format1(&str, "%i seconds ago", &delta);
+			UpdatesScreen_FormatTime(&str, "second", delta, 1);
 		} else if (delta < SECS_PER_HOUR) {
-			delta /= SECS_PER_MIN;
-			String_Format1(&str, "%i minutes ago", &delta);
+			UpdatesScreen_FormatTime(&str, "minute", delta, SECS_PER_MIN);
 		} else if (delta < SECS_PER_DAY) {
-			delta /= SECS_PER_HOUR;
-			String_Format1(&str, "%i hours ago", &delta);
+			UpdatesScreen_FormatTime(&str, "hour",   delta, SECS_PER_HOUR);
 		} else {
-			delta /= SECS_PER_DAY;
-			String_Format1(&str, "%i days ago", &delta);
+			UpdatesScreen_FormatTime(&str, "day",    delta, SECS_PER_DAY);
 		}
 	}
 	LLabel_SetText(lbl, &str);
