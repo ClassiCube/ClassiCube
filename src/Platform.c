@@ -44,7 +44,6 @@ void* DisplayDevice_Meta;
 
 static HANDLE heap;
 char* Platform_NewLine    = "\r\n";
-char* Font_DefaultName    = "Arial";
 
 const ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
@@ -88,20 +87,17 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #include <X11/Xlib.h>
 #include <AL/al.h>
 #include <AL/alc.h>
-char* Font_DefaultName = "Century Schoolbook L Roman";
 #endif
 #ifdef CC_BUILD_SOLARIS
 #include <X11/Xlib.h>
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <sys/filio.h>
-char* Font_DefaultName = "Century Schoolbook L Roman";
 #endif
 #ifdef CC_BUILD_OSX
 #include <mach/mach_time.h>
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
-char* Font_DefaultName = "Arial";
 #endif
 
 
@@ -914,7 +910,7 @@ static String Font_LookupOf(const String* fontName, const char type) {
 	return EntryList_UNSAFE_Get(&font_list, &name);
 }
 
-static String Font_Lookup(const String* fontName, int style) {
+String Font_Lookup(const String* fontName, int style) {
 	String path;
 	if (!font_list.Entries.Count) Font_Init();
 	path = String_Empty;

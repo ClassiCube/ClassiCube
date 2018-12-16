@@ -2391,7 +2391,7 @@ void Window_InitRaw(Bitmap* bmp) {
 	
 	colorSpace = CGColorSpaceCreateDeviceRGB();
 	provider   = CGDataProviderCreateWithData(NULL, bmp->Scan0, 
-					Bimap_DataSize(bmp->Width, bmp->Height), NULL);
+					Bitmap_DataSize(bmp->Width, bmp->Height), NULL);
 	
 	win_image = CGImageCreate(bmp->Width, bmp->Height, 8, 32, bmp->Width * 4, colorSpace, 
 					kCGBitmapByteOrder32Little | kCGImageAlphaFirst, provider, NULL, 0, 0);
@@ -2410,8 +2410,8 @@ void Window_DrawRaw(Rect2D r) {
 	
 	/* TODO: Only update changed bit.. */
 	rect.origin.x = 0; rect.origin.y = 0;
-	rect.size.x   = Window_ClientSize.Width;
-	rect.size.y   = Window_ClientSize.Height;
+	rect.size.width  = Window_ClientSize.Width;
+	rect.size.height = Window_ClientSize.Height;
 	
 	CGContextDrawImage(context, rect, win_image);
 	CGContextSynchronize(context);

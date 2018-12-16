@@ -124,7 +124,7 @@ static bool Launcher_IsShutdown(int key) {
 
 	/* On OSX, Cmd+Q should also terminate the process */
 #ifdef CC_BUILD_OSX
-	return key == Key.Q && Key_IsWinPressed();
+	return key == KEY_Q && Key_IsWinPressed();
 #else
 	return false;
 #endif

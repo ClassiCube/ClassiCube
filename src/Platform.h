@@ -25,8 +25,6 @@ enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_E
 
 /* Newline for console and text files. */
 extern char* Platform_NewLine;
-/* Name of default system font used. (e.g. Arial) */
-extern char* Font_DefaultName;
 extern const ReturnCode ReturnCode_FileShareViolation;
 extern const ReturnCode ReturnCode_FileNotFound;
 extern const ReturnCode ReturnCode_NotSupported;
@@ -184,6 +182,8 @@ CC_API void  Waitable_WaitFor(void* handle, uint32_t milliseconds);
 
 /* Gets the list of all supported font names on this platform. */
 CC_API void Font_GetNames(StringsBuffer* buffer);
+/* Finds the path of the given font, with closest matching style */
+String Font_Lookup(const String* fontName, int style);
 /* Allocates a new font from the given arguments. */
 CC_API void Font_Make(FontDesc* desc, const String* fontName, int size, int style);
 /* Frees an allocated font. */
