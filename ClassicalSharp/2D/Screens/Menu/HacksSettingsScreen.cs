@@ -19,7 +19,7 @@ namespace ClassicalSharp.Gui.Screens {
 			defaultValues[1] = "10";
 			validators[3]    = new RealValidator(0.1f, 2048f);
 			defaultValues[3] = (1.233f).ToString();
-			validators[9]    = new IntegerValidator(1, 150);
+			validators[9]    = new IntegerValidator(1, 179);
 			defaultValues[9] = "70";
 			
 			MakeDescriptions();

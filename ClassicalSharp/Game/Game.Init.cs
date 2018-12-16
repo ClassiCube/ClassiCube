@@ -186,7 +186,7 @@ namespace ClassicalSharp {
 			UserViewDistance = ViewDistance;
 			SmoothLighting = Options.GetBool(OptionsKey.SmoothLighting, false);
 			
-			DefaultFov = Options.GetInt(OptionsKey.FieldOfView, 1, 150, 70);
+			DefaultFov = Options.GetInt(OptionsKey.FieldOfView, 1, 179, 70);
 			Fov = DefaultFov;
 			ZoomFov = DefaultFov;
 			BreakableLiquids = !ClassicMode && Options.GetBool(OptionsKey.ModifiableLiquids, false);

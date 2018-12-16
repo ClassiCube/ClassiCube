@@ -168,7 +168,7 @@ void Game_UserSetViewDistance(int distance) {
 }
 
 void Game_UpdateProjection(void) {
-	Game_DefaultFov = Options_GetInt(OPT_FIELD_OF_VIEW, 1, 150, 70);
+	Game_DefaultFov = Options_GetInt(OPT_FIELD_OF_VIEW, 1, 179, 70);
 	Camera_Active->GetProjection(&Gfx_Projection);
 
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx_Projection);
@@ -355,7 +355,7 @@ static void Game_LoadOptions(void) {
 	Game_ViewDistance     = Options_GetInt(OPT_VIEW_DISTANCE, 16, 4096, 512);
 	Game_UserViewDistance = Game_ViewDistance;
 
-	Game_DefaultFov = Options_GetInt(OPT_FIELD_OF_VIEW, 1, 150, 70);
+	Game_DefaultFov = Options_GetInt(OPT_FIELD_OF_VIEW, 1, 179, 70);
 	Game_Fov        = Game_DefaultFov;
 	Game_ZoomFov    = Game_DefaultFov;
 	Game_BreakableLiquids = !Game_ClassicMode && Options_GetBool(OPT_MODIFIABLE_LIQUIDS, false);

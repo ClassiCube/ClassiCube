@@ -186,6 +186,19 @@ struct ResourceMusic Resources_Music[7] = {
 *-----------------------------------------------------------Fetcher-------------------------------------------------------*
 *#########################################################################################################################*/
 struct FetchResourcesData FetchResourcesTask;
+static void Fetcher_DownloadAll(void) {
+	String id; char idBuffer[STRING_SIZE];
+	String url; char urlBuffer[STRING_SIZE];
+	int i;
+
+	String_InitArray(id,  idBuffer);
+	String_InitArray(url, urlBuffer);
+}
+
+static void Fetcher_Next(void) {
+
+}
+
 /* TODO: Implement this.. */
 void FetchResourcesTask_Run(FetchResourcesStatus setStatus) { 
 }

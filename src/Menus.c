@@ -2721,7 +2721,7 @@ struct Screen* HacksSettingsScreen_MakeInstance(void) {
 	validators[3]    = MenuInputValidator_Float(0.10f, 2048.00f);
 	/* TODO: User may not always use . for decimal point, need to account for that */
 	defaultValues[3] = "1.233";
-	validators[9]    = MenuInputValidator_Int(1, 150);
+	validators[9]    = MenuInputValidator_Int(1, 179);
 	defaultValues[9] = "70";
 
 	struct Screen* s = MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
