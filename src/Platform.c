@@ -919,10 +919,10 @@ static String Font_Lookup(const String* fontName, int style) {
 	if (!font_list.Entries.Count) Font_Init();
 	path = String_Empty;
 
-	if (style & FONT_STYLE_BOLD)   path = Font_Lookup(fontName, 'B');
-	if (style & FONT_STYLE_ITALIC) path = Font_Lookup(fontName, 'I');
+	if (style & FONT_STYLE_BOLD)   path = Font_LookupOf(fontName, 'B');
+	if (style & FONT_STYLE_ITALIC) path = Font_LookupOf(fontName, 'I');
 
-	return Font_Lookup(fontName, 'R');
+	return Font_LookupOf(fontName, 'R');
 }
 
 void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
