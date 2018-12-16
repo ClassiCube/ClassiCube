@@ -16,7 +16,6 @@ BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 static char fontNameBuffer[STRING_SIZE];
 String Drawer2D_FontName = String_FromArray(fontNameBuffer);
 int Drawer2D_FontSize;
-FontDesc Drawer2D_DefaultFont;
 
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, const FontDesc* font, bool useShadow) {
 	args->Text = *text;
@@ -704,7 +703,7 @@ static void Drawer2D_CheckFont(void) {
 		path = Font_Lookup(&default_fonts[i], FONT_STYLE_NORMAL);
 		if (!path.length) continue;
 
-		String_Copy(&Drawer2D_DefaultFont, &path);
+		String_Copy(&Drawer2D_FontName, &default_fonts[i]);
 		return;
 	}
 	ErrorHandler_Fail("Unable to init default font");
