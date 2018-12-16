@@ -1324,7 +1324,7 @@ void Http_Init(void) {
 
 static ReturnCode Http_Make(struct AsyncRequest* req, HINTERNET* handle) {
 	String url = String_FromRawArray(req->URL);
-	char urlStr[STRING_SIZE + 1];
+	char urlStr[URL_MAX_SIZE + 1];
 	Mem_Copy(urlStr, url.buffer, url.length);
 
 	urlStr[url.length] = '\0';

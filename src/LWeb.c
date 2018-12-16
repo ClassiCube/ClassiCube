@@ -454,14 +454,9 @@ void CheckUpdateTask_Run(void) {
 struct FetchUpdateData FetchUpdateTask;
 static void FetchUpdateTask_Handle(uint8_t* data, uint32_t len) {
 	const static String path = String_FromConst("ClassiCube.update");
-	struct Stream stream;
 	ReturnCode res;
 
-	res = Stream_CreateFile(&stream, &path);
-	if (res) { Launcher_ShowError(res, "creating update"); return; }
-
-	res = Stream_Write(&stream, data, len);
-	stream.Close(&stream);
+	res = Stream_WriteTo(&path, data, len);
 	if (res) { Launcher_ShowError(res, "saving update"); return; }
 
 	res = File_SetModifiedTime(&path, FetchUpdateTask.Timestamp);

@@ -113,11 +113,24 @@ ReturnCode Stream_OpenFile(struct Stream* s, const String* path) {
 	Stream_FromFile(s, file);
 	return res;
 }
+
 ReturnCode Stream_CreateFile(struct Stream* s, const String* path) {
 	FileHandle file;
 	ReturnCode res = File_Create(&file, path);
 	Stream_FromFile(s, file);
 	return res;
+}
+
+ReturnCode Stream_WriteTo(const String* path, uint8_t* data, uint32_t length) {
+	struct Stream stream;
+	ReturnCode res, closeRes;
+
+	res = Stream_CreateFile(&stream, &path);
+	if (res) return res;
+
+	res      = Stream_Write(&stream, data, length);
+	closeRes = stream.Close(&stream);
+	return res ? res : closeRes;
 }
 
 void Stream_FromFile(struct Stream* s, FileHandle file) {

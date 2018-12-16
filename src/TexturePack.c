@@ -583,21 +583,14 @@ void TextureCache_GetETag(const String* url, String* etag) {
 
 void TextureCache_Set(const String* url, uint8_t* data, uint32_t length) {
 	String path; char pathBuffer[FILENAME_SIZE];
-	struct Stream stream;
 	ReturnCode res;
 
 	String_InitArray(path, pathBuffer);
 	TextureCache_MakePath(&path, url);
 	if (!Utils_EnsureDirectory("texturecache")) return;
 	
-	res = Stream_CreateFile(&stream, &path);
-	if (res) { Chat_LogError2(res, "creating cache for", &path); return; }
-
-	res = Stream_Write(&stream, data, length);
-	if (res) { Chat_LogError2(res, "saving data for", url); }
-
-	res = stream.Close(&stream);
-	if (res) { Chat_LogError2(res, "closing cache for", url); }
+	res = Stream_WriteTo(&path, data, length);
+	if (res) { Chat_LogError2(res, "caching", url); }
 }
 
 CC_NOINLINE static void TextureCache_SetEntry(const String* url, const String* data, struct EntryList* list) {

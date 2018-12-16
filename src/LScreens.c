@@ -928,22 +928,11 @@ static struct ResourcesScreen {
 	struct LWidget* _widgets[7];
 } ResourcesScreen_Instance;
 
-static void ResourcesScreen_SetStatus(const String* text) {
-	BitmapCol boxCol = BITMAPCOL_CONST(120, 85, 151, 255);
-	struct LLabel* w = &ResourcesScreen_Instance.LblStatus;
-
-	Drawer2D_Clear(&Launcher_Framebuffer, boxCol,
-					w->X, w->Y, w->Width, w->Height);
-	LLabel_SetText(w, text);
-	LWidget_CalcPosition(w);
-	LWidget_Draw(w);
-}
-
 static void ResourcesScreen_Download(void* w, int x, int y) {
 	struct ResourcesScreen* s = &ResourcesScreen_Instance;
-	if (FetchResourcesTask.Base.Working) return;
+	if (Fetcher_Working) return;
 
-	FetchResourcesTask_Run(ResourcesScreen_SetStatus);
+	Fetcher_Run();
 	s->SelectedWidget = NULL;
 
 	s->BtnYes.Hidden   = true;
@@ -1029,11 +1018,34 @@ static void ResourcesScreen_Draw(struct LScreen* s) {
 	LScreen_Draw(s);
 }
 
+static void ResourcesScreen_UpdateStatus(struct AsyncRequest* req) {
+	String str; char strBuffer[STRING_SIZE];
+	String id;
+	BitmapCol boxCol = BITMAPCOL_CONST(120, 85, 151, 255);
+	struct LLabel* w = &ResourcesScreen_Instance.LblStatus;
+	int count;
+
+	id = String_FromRawArray(req->ID);
+	String_InitArray(str, strBuffer);
+	count = Fetcher_Downloaded + 1;
+	String_Format3(&str, "&eFetching %s.. (%i/%i)", &id, &count, &Resources_Count);
+
+	/* Don't redraw status if can avoid it */
+	if (String_Equals(&str, &w->Text)) return;
+
+	Drawer2D_Clear(&Launcher_Framebuffer, boxCol,
+					w->X, w->Y, w->Width, w->Height);
+	LLabel_SetText(w, &str);
+	LWidget_CalcPosition(w);
+	LWidget_Draw(w);
+}
+
 static void ResourcesScreen_UpdateProgress(struct ResourcesScreen* s) {
 	struct AsyncRequest req;
 	int progress;
 
 	if (!AsyncDownloader_GetCurrent(&req, &progress)) return;
+	ResourcesScreen_UpdateStatus(&req);
 	/* making request still, haven't started download yet */
 	if (progress < 0 || progress > 100) return;
 
@@ -1045,12 +1057,13 @@ static void ResourcesScreen_UpdateProgress(struct ResourcesScreen* s) {
 
 static void ResourcesScreen_Tick(struct LScreen* s_) {
 	struct ResourcesScreen* s = (struct ResourcesScreen*)s_;
-	if (!FetchResourcesTask.Base.Working) return;
+	if (!Fetcher_Working) return;
 	ResourcesScreen_UpdateProgress(s);
 
-	LWebTask_Tick(&FetchResourcesTask.Base);
-	if (!FetchResourcesTask.Base.Completed) return;
-	if (!FetchResourcesTask.Base.Success)   return;
+	Fetcher_Update();
+	if (!Fetcher_Completed) return;
+	/* TODO: Log error here */
+	//if (!FetchResourcesTask.Base.Success)   return;
 
 	Launcher_TryLoadTexturePack();
 	ResourcesScreen_Next(NULL, 0, 0);

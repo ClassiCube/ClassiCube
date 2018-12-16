@@ -568,7 +568,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 "exit\r\n"
 #else
 #define UPDATE_SCRIPT \
-"@#!/bin/bash\n" \
+"#!/bin/bash\n" \
 "echo Waiting for launcher to exit..\n" \
 "echo 5..\n" \
 "sleep 1\n" \
@@ -596,18 +596,11 @@ static void Launcher_ApplyUpdate(void) {
 	const static String scriptName = String_FromConst("xterm");
 	const static String scriptArgs = String_FromConst("./update.sh");
 #endif
-	struct Stream s;
 	ReturnCode res;
 
-	res = Stream_CreateFile(&s, &scriptPath);
-	if (res) { Launcher_ShowError(res, "creating update script"); return; }
-
 	/* Can't use WriteLine, want \n as actual newline not code page 437 */
-	res = Stream_Write(&s, UPDATE_SCRIPT, sizeof(UPDATE_SCRIPT) - 1);
-	if (res) { Launcher_ShowError(res, "writing update script"); return; }
-
-	res = s.Close(&s);
-	if (res) { Launcher_ShowError(res, "closing update script"); return; }
+	res = Stream_WriteTo(&scriptPath, UPDATE_SCRIPT, sizeof(UPDATE_SCRIPT) - 1);
+	if (res) { Launcher_ShowError(res, "saving update script"); return; }
 
 	/* TODO: (open -a Terminal ", '"' + path + '"'); on OSX */
 	/* TODO: chmod +x on non-windows */

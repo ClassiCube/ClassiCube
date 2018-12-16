@@ -13,19 +13,23 @@
 *---------------------------------------------------------List/Checker----------------------------------------------------*
 *#########################################################################################################################*/
 bool DigSoundsExist, StepSoundsExist;
-int Resources_Size, Resources_Count;
+int Resources_Count, Resources_Downloaded, Resources_Size;
 
 static void Resources_CheckFiles(void) {
-	int flags = Resources_GetFetchFlags();
-	if (flags & FLAG_CLASSIC) { Resources_Size += 291;  Resources_Count++; }
-	if (flags & FLAG_MODERN)  { Resources_Size += 4621; Resources_Count++; }
-	if (flags & FLAG_TERRAIN) { Resources_Size += 7;    Resources_Count++; }
-	if (flags & FLAG_GUI)     { Resources_Size += 21;   Resources_Count++; }
+	int i, flags;
+	
+	flags = Resources_GetFetchFlags();
+	for (i = 0; i < Array_Elems(Resources_Files); i++) {
+		if (!(flags & Resources_Files[i].Flag)) continue;
+
+		Resources_Size += Resources_Files[i].Size;
+		Resources_Count++;
+	}
 }
 
 static void Resources_CheckMusic(void) {
 	String path; char pathBuffer[FILENAME_SIZE];
-	int i = 0;
+	int i;
 
 	String_InitArray(path, pathBuffer);
 	for (i = 0; i < Array_Elems(Resources_Music); i++) {
@@ -74,11 +78,11 @@ static bool Resources_SelectZipEntry(const String* path) {
 
 	name = *path;
 	Utils_UNSAFE_GetFilename(&name);
-	for (i = 0; i < Array_Elems(Resources_Files); i++) {
-		if (Resources_Files[i].Exists) continue;
+	for (i = 0; i < Array_Elems(Resources_Textures); i++) {
+		if (Resources_Textures[i].Exists) continue;
 
-		if (!String_CaselessEqualsConst(&name, Resources_Files[i].Filename)) continue;
-		Resources_Files[i].Exists = true;
+		if (!String_CaselessEqualsConst(&name, Resources_Textures[i].Filename)) continue;
+		Resources_Textures[i].Exists = true;
 		break;
 	}
 	return false;
@@ -104,10 +108,10 @@ static void Resources_CheckDefaultZip(void) {
 
 int Resources_GetFetchFlags(void) {
 	int flags = 0, i;
-	for (i = 0; i < Array_Elems(Resources_Files); i++) {
-		if (Resources_Files[i].Exists) continue;
+	for (i = 0; i < Array_Elems(Resources_Textures); i++) {
+		if (Resources_Textures[i].Exists) continue;
 
-		flags |= Resources_Files[i].Flags;
+		flags |= Resources_Textures[i].Flags;
 	}
 	return flags;
 }
@@ -119,13 +123,19 @@ void Resources_CheckExistence(void) {
 	Resources_CheckSounds();
 }
 
-struct ResourceFile Resources_Files[19] = {
+struct ResourceFile Resources_Files[4] = {
+	{ "classic jar", "http://launcher.mojang.com/mc/game/c0.30_01c/client/54622801f5ef1bcc1549a842c5b04cb5d5583005/client.jar",  291, FLAG_CLASSIC },
+	{ "1.6.2 jar",   "http://launcher.mojang.com/mc/game/1.6.2/client/b6cb68afde1d9cf4a20cbf27fa90d0828bf440a4/client.jar",     4621, FLAG_MODERN },
+	{ "gui.png patch",     "http://static.classicube.net/terrain-patch2.png",  7, FLAG_GUI },
+	{ "terrain.png patch", "http://static.classicube.net/gui.png",            21, FLAG_TERRAIN }
+};
+
+struct ResourceTexture Resources_Textures[19] = {
 	/* classic jar files */
 	{ "char.png",       FLAG_CLASSIC }, { "clouds.png",      FLAG_CLASSIC },
 	{ "default.png",    FLAG_CLASSIC }, { "particles.png",   FLAG_CLASSIC },
 	{ "rain.png",       FLAG_CLASSIC }, { "gui_classic.png", FLAG_CLASSIC },
-	{ "icons.png",      FLAG_CLASSIC },
-	{ "terrain.png",    FLAG_CLASSIC | FLAG_TERRAIN | FLAG_MODERN },
+	{ "icons.png",      FLAG_CLASSIC }, { "terrain.png",     FLAG_CLASSIC | FLAG_TERRAIN | FLAG_MODERN },
 	{ "creeper.png",    FLAG_CLASSIC }, { "pig.png",         FLAG_CLASSIC },
 	{ "sheep.png",      FLAG_CLASSIC }, { "sheep_fur.png",   FLAG_CLASSIC },
 	{ "skeleton.png",   FLAG_CLASSIC }, { "spider.png",      FLAG_CLASSIC },
@@ -185,20 +195,52 @@ struct ResourceMusic Resources_Music[7] = {
 /*########################################################################################################################*
 *-----------------------------------------------------------Fetcher-------------------------------------------------------*
 *#########################################################################################################################*/
-struct FetchResourcesData FetchResourcesTask;
-static void Fetcher_DownloadAll(void) {
-	String id; char idBuffer[STRING_SIZE];
-	String url; char urlBuffer[STRING_SIZE];
-	int i;
+bool Fetcher_Working, Fetcher_Completed;
+int  Fetcher_Downloaded;
+CC_NOINLINE static void Fetcher_DownloadAudio(const char* fmt, const char* name, const char* hash) {
+	String id;  char idBuffer[STRING_SIZE];
+	String url; char urlBuffer[STRING_SIZE * 2];
 
-	String_InitArray(id,  idBuffer);
+	String_InitArray(id, idBuffer);
+	String_Format1(&id, fmt, name);
+
 	String_InitArray(url, urlBuffer);
+	String_Format1(&url, "http://resources.download.minecraft.net/%c", hash);
+	AsyncDownloader_GetData(&url, false, &id);
 }
 
-static void Fetcher_Next(void) {
+void Fetcher_Run(void) {
+	String id, url;
+	int i, flags;
 
+	if (Fetcher_Working) return;
+	Fetcher_Working   = true;
+	Fetcher_Completed = false;
+	flags = Resources_GetFetchFlags();
+
+	for (i = 0; i < Array_Elems(Resources_Files); i++) {
+		if (!(flags & Resources_Files[i].Flag)) continue;
+
+		id  = String_FromReadonly(Resources_Files[i].Name);
+		url = String_FromReadonly(Resources_Files[i].Url);
+		AsyncDownloader_GetData(&url, false, &id);
+	}
+
+	for (i = 0; i < Array_Elems(Resources_Music); i++) {
+		if (Resources_Music[i].Exists) continue;
+		Fetcher_DownloadAudio(Resources_Music[i].Name, NULL,    Resources_Music[i].Hash);
+	}
+	for (i = 0; i < Array_Elems(Resources_Dig); i++) {
+		if (DigSoundsExist) continue;
+		Fetcher_DownloadAudio("dig_%c",  Resources_Dig[i].Name, Resources_Dig[i].Hash);
+	}
+	for (i = 0; i < Array_Elems(Resources_Step); i++) {
+		if (StepSoundsExist) continue;
+		Fetcher_DownloadAudio("step_%c", Resources_Dig[i].Name, Resources_Step[i].Hash);
+	}
 }
 
 /* TODO: Implement this.. */
-void FetchResourcesTask_Run(FetchResourcesStatus setStatus) { 
+void Fetcher_Update(void) {
+
 }

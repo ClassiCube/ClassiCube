@@ -7,6 +7,8 @@
 */
 struct IGameComponent;
 struct ScheduledTask;
+#define URL_MAX_SIZE (STRING_SIZE * 2)
+
 extern struct IGameComponent AsyncDownloader_Component;
 /* TODO: Implement these */
 extern bool AsyncDownloader_Cookies;
@@ -20,7 +22,7 @@ enum AsyncProgress {
 };
 
 struct AsyncRequest {
-	char URL[STRING_SIZE];  /* URL data is downloaded from/uploaded to. */
+	char URL[URL_MAX_SIZE]; /* URL data is downloaded from/uploaded to. */
 	char ID[STRING_SIZE];   /* Unique identifier for this request. */
 	TimeMS TimeAdded;       /* Time this request was added to queue of requests. */
 	TimeMS TimeDownloaded;  /* Time response contents were completely downloaded. */
