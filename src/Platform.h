@@ -70,10 +70,12 @@ ReturnCode Platform_Encrypt(const uint8_t* data, int len, uint8_t** enc, int* en
 ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* decLen);
 
 /* Starts the given program with the given arguments. */
-CC_API ReturnCode Platform_StartProcess(const String* path, const String* args);
+ReturnCode Platform_StartProcess(const String* path, const String* args);
 /* Starts the platform-specific program to open the given url or filename. */
 /* For example, provide a http:// url to open a website in the user's web browser. */
-CC_API ReturnCode Platform_StartOpen(const String* args);
+ReturnCode Platform_StartOpen(const String* args);
+/* Marks a file as being executable. */
+ReturnCode Platform_MarkExecutable(const String* path);
 /* Attempts to load a native dynamic library from the given path. */
 CC_API ReturnCode Platform_LoadLibrary(const String* path, void** lib);
 /* Attempts to get the address of the symbol in the given dynamic library. */

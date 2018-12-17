@@ -121,11 +121,11 @@ ReturnCode Stream_CreateFile(struct Stream* s, const String* path) {
 	return res;
 }
 
-ReturnCode Stream_WriteTo(const String* path, uint8_t* data, uint32_t length) {
+ReturnCode Stream_WriteTo(const String* path, const uint8_t* data, uint32_t length) {
 	struct Stream stream;
 	ReturnCode res, closeRes;
 
-	res = Stream_CreateFile(&stream, &path);
+	res = Stream_CreateFile(&stream, path);
 	if (res) return res;
 
 	res      = Stream_Write(&stream, data, length);

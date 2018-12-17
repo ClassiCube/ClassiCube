@@ -602,6 +602,9 @@ static void Launcher_ApplyUpdate(void) {
 	res = Stream_WriteTo(&scriptPath, UPDATE_SCRIPT, sizeof(UPDATE_SCRIPT) - 1);
 	if (res) { Launcher_ShowError(res, "saving update script"); return; }
 
+	res = Platform_MarkExecutable(&scriptPath);
+	if (res) Launcher_ShowError(res, "making update script executable");
+
 	/* TODO: (open -a Terminal ", '"' + path + '"'); on OSX */
 	/* TODO: chmod +x on non-windows */
 	res = Platform_StartProcess(&scriptName, &scriptArgs);

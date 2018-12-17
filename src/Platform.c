@@ -2075,6 +2075,8 @@ ReturnCode Platform_StartOpen(const String* args) {
 	instance = ShellExecute(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
 	return instance > 32 ? 0 : (ReturnCode)instance;
 }
+/* Don't need special execute permission on windows */
+ReturnCode Platform_MarkExecutable(const String* path) { return 0; }
 
 ReturnCode Platform_LoadLibrary(const String* path, void** lib) {
 	TCHAR str[300];
@@ -2159,6 +2161,16 @@ ReturnCode Platform_StartProcess(const String* path, const String* args) {
 		/* We do nothing here.. */
 		return 0;
 	}
+}
+
+ReturnCode Platform_MarkExecutable(const String* path) {
+	char str[600];
+	struct stat st;
+	Platform_ConvertString(str, path);
+
+	if (stat(str, &st) == -1) return errno;
+	st.st_mode |= S_IXUSR;
+	return chmod(str, st.st_mode) == -1 ? errno : 0;
 }
 
 static void Platform_TrimFilename(char* path, int len) {

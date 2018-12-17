@@ -9,7 +9,7 @@ struct LScreen;
 #ifdef CC_BUILD_WIN
 #define GAME_EXE_NAME "ClassiCube.exe"
 #else
-#define GAME_EXE_NAME "ClassiCube"
+#define GAME_EXE_NAME "./ClassiCube"
 #endif
 
 /* Currently active screen/menu. */

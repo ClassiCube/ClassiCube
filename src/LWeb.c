@@ -461,6 +461,9 @@ static void FetchUpdateTask_Handle(uint8_t* data, uint32_t len) {
 
 	res = File_SetModifiedTime(&path, FetchUpdateTask.Timestamp);
 	if (res) Launcher_ShowError(res, "setting update time");
+
+	res = Platform_MarkExecutable(&path);
+	if (res) Launcher_ShowError(res, "making update executable");
 }
 
 void FetchUpdateTask_Run(bool release, bool d3d9) {
