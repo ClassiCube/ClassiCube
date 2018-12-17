@@ -766,6 +766,7 @@ static void Player_Init(struct Entity* e) {
 *------------------------------------------------------LocalPlayer--------------------------------------------------------*
 *#########################################################################################################################*/
 struct LocalPlayer LocalPlayer_Instance;
+static bool hackPermMsgs;
 float LocalPlayer_JumpHeight(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	return (float)PhysicsComp_GetMaxHeight(p->Physics.JumpVel);
@@ -901,6 +902,7 @@ static void LocalPlayer_Init(void) {
 	hacks->FullBlockStep   = Options_GetBool(OPT_FULL_BLOCK_STEP, false);
 	p->Physics.UserJumpVel = Options_GetFloat(OPT_JUMP_VELOCITY, 0.0f, 52.0f, 0.42f);
 	p->Physics.JumpVel     = p->Physics.UserJumpVel;
+	hackPermMsgs           = Options_GetBool(OPT_HACK_PERM_MSGS, true);
 }
 
 static void LocalPlayer_Reset(void) {
@@ -970,7 +972,7 @@ static bool LocalPlayer_HandleRespawn(void) {
 		return true;
 	} else if (!p->_WarnedRespawn) {
 		p->_WarnedRespawn = true;
-		if (!Game_ClassicMode) Chat_AddRaw("&cRespawning is currently disabled");
+		if (hackPermMsgs) Chat_AddRaw("&cRespawning is currently disabled");
 	}
 	return false;
 }
@@ -994,7 +996,7 @@ static bool LocalPlayer_HandleFly(void) {
 		return true;
 	} else if (!p->_WarnedFly) {
 		p->_WarnedFly = true;
-		if (!Game_ClassicMode) Chat_AddRaw("&cFlying is currently disabled");		
+		if (hackPermMsgs) Chat_AddRaw("&cFlying is currently disabled");
 	}
 	return false;
 }
@@ -1009,7 +1011,7 @@ static bool LocalPlayer_HandleNoClip(void) {
 		return true;
 	} else if (!p->_WarnedNoclip) {
 		p->_WarnedNoclip = true;
-		if (!Game_ClassicMode) Chat_AddRaw("&cNoclip is currently disabled");		
+		if (hackPermMsgs) Chat_AddRaw("&cNoclip is currently disabled");
 	}
 	return false;
 }

@@ -29,6 +29,7 @@ namespace ClassicalSharp.Entities {
 		internal SoundComponent sound;
 		internal LocalInterpComponent interp;
 		internal TiltComponent tilt;
+		bool hackPermMsgs;
 		bool warnedRespawn, warnedFly, warnedNoclip;
 		
 		public LocalPlayer(Game game) : base(game) {
@@ -146,6 +147,7 @@ namespace ClassicalSharp.Entities {
 			Hacks.FullBlockStep   = Options.GetBool(OptionsKey.FullBlockStep, false);
 			physics.userJumpVel   = Options.GetFloat(OptionsKey.JumpVelocity, 0.0f, 52.0f, 0.42f);
 			physics.jumpVel = physics.userJumpVel;
+			hackPermMsgs    = Options.GetBool(OptionsKey.HackPermMsgs, true);
 		}
 		
 		void IGameComponent.Ready(Game game) { }
@@ -209,7 +211,7 @@ namespace ClassicalSharp.Entities {
 				return true;
 			} else if (!warnedRespawn) {
 				warnedRespawn = true;
-				if (!game.ClassicMode) game.Chat.Add("&cRespawning is currently disabled");				
+				if (!hackPermMsgs) game.Chat.Add("&cRespawning is currently disabled");				
 			}
 			return false;
 		}
@@ -231,7 +233,7 @@ namespace ClassicalSharp.Entities {
 				return true;
 			} else if (!warnedFly) {
 				warnedFly = true;
-				if (!game.ClassicMode) game.Chat.Add("&cFlying is currently disabled");				
+				if (!hackPermMsgs) game.Chat.Add("&cFlying is currently disabled");				
 			}
 			return false;
 		}
@@ -245,7 +247,7 @@ namespace ClassicalSharp.Entities {
 				return true;
 			} else if (!warnedNoclip) {
 				warnedNoclip = true;
-				if (!game.ClassicMode) game.Chat.Add("&cNoclip is currently disabled");				
+				if (!hackPermMsgs) game.Chat.Add("&cNoclip is currently disabled");				
 			}
 			return false;
 		}

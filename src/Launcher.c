@@ -606,7 +606,6 @@ static void Launcher_ApplyUpdate(void) {
 	if (res) Launcher_ShowError(res, "making update script executable");
 
 	/* TODO: (open -a Terminal ", '"' + path + '"'); on OSX */
-	/* TODO: chmod +x on non-windows */
 	res = Platform_StartProcess(&scriptName, &scriptArgs);
 	if (res) { Launcher_ShowError(res, "starting update script"); return; }
 }

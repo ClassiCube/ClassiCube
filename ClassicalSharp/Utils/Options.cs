@@ -45,6 +45,7 @@ namespace ClassicalSharp {
 		public const string CameraClipping = "hacks-cameraclipping";
 		public const string WOMStyleHacks = "hacks-womstylehacks";
 		public const string FullBlockStep = "hacks-fullblockstep";
+		public const string HackPermMsgs = "hacks-perm-msgs";
 		
 		public const string TabAutocomplete = "gui-tab-autocomplete";
 		public const string ShowBlockInHand = "gui-blockinhand";
