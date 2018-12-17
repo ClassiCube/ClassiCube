@@ -456,7 +456,7 @@ static void FetchUpdateTask_Handle(uint8_t* data, uint32_t len) {
 	const static String path = String_FromConst("ClassiCube.update");
 	ReturnCode res;
 
-	res = Stream_WriteTo(&path, data, len);
+	res = Stream_WriteAllTo(&path, data, len);
 	if (res) { Launcher_ShowError(res, "saving update"); return; }
 
 	res = File_SetModifiedTime(&path, FetchUpdateTask.Timestamp);

@@ -121,7 +121,7 @@ ReturnCode Stream_CreateFile(struct Stream* s, const String* path) {
 	return res;
 }
 
-ReturnCode Stream_WriteTo(const String* path, const uint8_t* data, uint32_t length) {
+ReturnCode Stream_WriteAllTo(const String* path, const uint8_t* data, uint32_t length) {
 	struct Stream stream;
 	ReturnCode res, closeRes;
 
@@ -383,6 +383,10 @@ uint32_t Stream_GetU32_BE(const uint8_t* data) {
 	return (uint32_t)(
 		((uint32_t)data[0] << 24) | ((uint32_t)data[1] << 16) |
 		((uint32_t)data[2] << 8)  |  (uint32_t)data[3]);
+}
+
+void Stream_SetU16_LE(uint8_t* data, uint16_t value) {
+	data[0] = (uint8_t)(value      ); data[1] = (uint8_t)(value >> 8 );
 }
 
 void Stream_SetU16_BE(uint8_t* data, uint16_t value) {

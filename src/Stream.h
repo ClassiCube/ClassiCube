@@ -54,7 +54,7 @@ CC_API ReturnCode Stream_OpenFile(struct Stream* s, const String* path);
 /* Wrapper for File_Create() then Stream_FromFile() */
 CC_API ReturnCode Stream_CreateFile(struct Stream* s, const String* path);
 /* Creates or overwrites a file, setting the contents to the given data. */
-ReturnCode Stream_WriteTo(const String* path, const uint8_t* data, uint32_t length);
+ReturnCode Stream_WriteAllTo(const String* path, const uint8_t* data, uint32_t length);
 /* Wraps a file, allowing reading from/writing to/seeking in the file. */
 CC_API void Stream_FromFile(struct Stream* s, FileHandle file);
 
@@ -76,6 +76,8 @@ uint32_t Stream_GetU32_LE(const uint8_t* data);
 /* Reads a big-endian 32 bit unsigned integer from memory. */
 uint32_t Stream_GetU32_BE(const uint8_t* data);
 
+/* Writes a little-endian 16 bit unsigned integer to memory. */
+void Stream_SetU16_LE(uint8_t* data, uint16_t value);
 /* Writes a big-endian 16 bit unsigned integer to memory. */
 void Stream_SetU16_BE(uint8_t* data, uint16_t value);
 /* Writes a little-endian 32 bit unsigned integer to memory. */

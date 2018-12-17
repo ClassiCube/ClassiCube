@@ -1018,6 +1018,18 @@ static void ResourcesScreen_Draw(struct LScreen* s) {
 	LScreen_Draw(s);
 }
 
+static void ResourcesScreen_SetStatus(const String* str) {
+	BitmapCol boxCol = BITMAPCOL_CONST(120, 85, 151, 255);
+	struct LLabel* w = &ResourcesScreen_Instance.LblStatus;
+
+	Drawer2D_Clear(&Launcher_Framebuffer, boxCol,
+		w->X, w->Y, w->Width, w->Height);
+	LLabel_SetText(w, str);
+	w->YOffset = -10;
+	LWidget_CalcPosition(w);
+	LWidget_Draw(w);
+}
+
 static void ResourcesScreen_UpdateStatus(struct AsyncRequest* req) {
 	String str; char strBuffer[STRING_SIZE];
 	String id;
@@ -1030,14 +1042,8 @@ static void ResourcesScreen_UpdateStatus(struct AsyncRequest* req) {
 	count = Fetcher_Downloaded + 1;
 	String_Format3(&str, "&eFetching %s.. (%i/%i)", &id, &count, &Resources_Count);
 
-	/* Don't redraw status if can avoid it */
 	if (String_Equals(&str, &w->Text)) return;
-
-	Drawer2D_Clear(&Launcher_Framebuffer, boxCol,
-					w->X, w->Y, w->Width, w->Height);
-	LLabel_SetText(w, &str);
-	LWidget_CalcPosition(w);
-	LWidget_Draw(w);
+	ResourcesScreen_SetStatus(&str);
 }
 
 static void ResourcesScreen_UpdateProgress(struct ResourcesScreen* s) {
@@ -1055,15 +1061,29 @@ static void ResourcesScreen_UpdateProgress(struct ResourcesScreen* s) {
 	s->SdrProgress.VTABLE->Draw(&s->SdrProgress);
 }
 
+static void ResourcesScreen_Error(struct ResourcesScreen* s) {
+	String str; char buffer[STRING_SIZE];
+	String_InitArray(str, buffer);
+
+	if (Fetcher_Error) {
+		String_Format1(&str, "&cError %h when downloading resources", &Fetcher_Error);
+	} else {
+		String_Format1(&str, "&c%i error when downloading resources", &Fetcher_StatusCode);
+	}
+	ResourcesScreen_SetStatus(&str);
+}
+
 static void ResourcesScreen_Tick(struct LScreen* s_) {
 	struct ResourcesScreen* s = (struct ResourcesScreen*)s_;
 	if (!Fetcher_Working) return;
-	ResourcesScreen_UpdateProgress(s);
 
+	ResourcesScreen_UpdateProgress(s);
 	Fetcher_Update();
 	if (!Fetcher_Completed) return;
-	/* TODO: Log error here */
-	//if (!FetchResourcesTask.Base.Success)   return;
+
+	if (Fetcher_Error || Fetcher_StatusCode) { 
+		ResourcesScreen_Error(s); return; 
+	}
 
 	Launcher_TryLoadTexturePack();
 	ResourcesScreen_Next(NULL, 0, 0);

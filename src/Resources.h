@@ -27,7 +27,7 @@ extern struct ResourceTexture {
 extern struct ResourceSound {
 	const char* Name;
 	const char* Hash;
-} Resources_Dig[31], Resources_Step[28];
+} Resources_Sounds[59];
 
 extern struct ResourceMusic {
 	const char* Name;
@@ -36,7 +36,7 @@ extern struct ResourceMusic {
 	bool Exists;
 } Resources_Music[7];
 
-extern bool DigSoundsExist, StepSoundsExist;
+extern bool SoundsExist;
 /* Number of resources that need to be downloaded. */
 extern int Resources_Count;
 /* Total size of resources that need to be downloaded. */
@@ -52,6 +52,11 @@ extern bool Fetcher_Working;
 extern bool Fetcher_Completed;
 /* Number of resources that have been downloaded so far. */
 extern int Fetcher_Downloaded;
+/* HTTP error (if any) that occurs when downloaded resources. */
+extern int Fetcher_StatusCode;
+/* Error (if any) that occurs when downloaded resources. */
+extern ReturnCode Fetcher_Error;
+
 /* Starts asynchronous download of required resources. */
 void Fetcher_Run(void);
 void Fetcher_Update(void);

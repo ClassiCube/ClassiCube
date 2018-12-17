@@ -589,7 +589,7 @@ void TextureCache_Set(const String* url, uint8_t* data, uint32_t length) {
 	TextureCache_MakePath(&path, url);
 	if (!Utils_EnsureDirectory("texturecache")) return;
 	
-	res = Stream_WriteTo(&path, data, length);
+	res = Stream_WriteAllTo(&path, data, length);
 	if (res) { Chat_LogError2(res, "caching", url); }
 }
 
