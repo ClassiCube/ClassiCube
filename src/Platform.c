@@ -2143,6 +2143,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 ReturnCode Platform_StartProcess(const String* path, const String* args) {
 	char str[600], raw[600];
 	pid_t pid;
+	int i, j;
 	Platform_ConvertString(str, path);
 	Platform_ConvertString(raw, args);
 
@@ -2151,8 +2152,18 @@ ReturnCode Platform_StartProcess(const String* path, const String* args) {
 
 	if (pid == 0) {
 		/* Executed in child process */
-		char* argv[3];
-		argv[0] = str; argv[1] = raw; argv[2] = NULL;
+		char* argv[15];
+		argv[0] = str; argv[1] = raw;
+
+		/* need to null-terminate multiple arguments */
+		for (i = 0, j = 2; raw[i] && i < Array_Elems(raw); i++) {
+			if (raw[i] != ' ') continue;
+
+			/* null terminate previous argument */
+			raw[i]    = '\0';
+			argv[j++] = &raw[i + 1];
+		}
+		argv[j] = NULL;
 
 		execvp(str, argv);
 		_exit(127); /* "command not found" */

@@ -77,33 +77,33 @@ CC_NOINLINE bool String_CaselessEqualsConst(const String* a, const char* b);
 /* NOTE: Digits are in reverse order, so e.g. '200' becomes '0','0','2' */
 CC_NOINLINE int  String_MakeUInt32(uint32_t num, char* digits);
 
-/* Appends a character to the end of a string. */
-/* Returns false when str->length == str->capcity, true otherwise. */
-bool String_Append(String* str, char c);
-/* Appends a boolean as either "true" or "false" to the end of a string. */
-CC_NOINLINE bool String_AppendBool(String* str, bool value);
-/* Appends the digits of an integer (and -sign if negative) to the end of a string. */
-CC_NOINLINE bool String_AppendInt(String* str, int num);
-/* Appends the digits of an unsigned 32 bit integer to the end of a string. */
-CC_NOINLINE bool String_AppendUInt32(String* str, uint32_t num);
-/* Attempts to append an integer value to the end of a string, padding left with 0. */
-CC_NOINLINE bool String_AppendPaddedInt(String* str, int num, int minDigits);
-/* Appends the digits of an unsigned 64 bit integer to the end of a string. */
-CC_NOINLINE bool String_AppendUInt64(String* str, uint64_t num);
+/* Attempts to append a character. */
+/* Does nothing if str->length == str->capcity. */
+void String_Append(String* str, char c);
+/* Attempts to append "true" if value is non-zero, "false" otherwise. */
+CC_NOINLINE void String_AppendBool(String* str, bool value);
+/* Attempts to append the digits of an integer (and -sign if negative). */
+CC_NOINLINE void String_AppendInt(String* str, int num);
+/* Attempts to append the digits of an unsigned 32 bit integer. */
+CC_NOINLINE void String_AppendUInt32(String* str, uint32_t num);
+/* Attempts to append the digits of an integer, padding left with 0. */
+CC_NOINLINE void String_AppendPaddedInt(String* str, int num, int minDigits);
+/* Attempts to append the digits of an unsigned 64 bit integer. */
+CC_NOINLINE void String_AppendUInt64(String* str, uint64_t num);
 
-/* Appends the digits of a float as a decimal. */
+/* Attempts to append the digits of a float as a decimal. */
 /* NOTE: If the number is an integer, no decimal point is added. */
 /* Otherwise, fracDigits digits are added after a decimal point. */
 /*  e.g. 1.0f produces "1", 2.6745f produces "2.67" when fracDigits is 2 */
-CC_NOINLINE bool String_AppendFloat(String* str, float num, int fracDigits); /* TODO: Need to account for , or . for decimal */
-/* Appends characters to the end of a string. src MUST be null-terminated. */
-CC_NOINLINE bool String_AppendConst(String* str, const char* src);
-/* Appends characters to the end of a string. */
-CC_NOINLINE bool String_AppendString(String* str, const String* src);
-/* Appends characters to the end of a string, skipping any colour codes. */
-CC_NOINLINE bool String_AppendColorless(String* str, const String* src);
-/* Appends the two hex digits of a byte to the end of a string. */
-CC_NOINLINE bool String_AppendHex(String* str, uint8_t value);
+CC_NOINLINE void String_AppendFloat(String* str, float num, int fracDigits); /* TODO: Need to account for , or . for decimal */
+/* Attempts to append characters. src MUST be null-terminated. */
+CC_NOINLINE void String_AppendConst(String* str, const char* src);
+/* Attempts to append characters of a string. */
+CC_NOINLINE void String_AppendString(String* str, const String* src);
+/* Attempts to append characters of a string, skipping any colour codes. */
+CC_NOINLINE void String_AppendColorless(String* str, const String* src);
+/* Attempts to append the two hex digits of a byte. */
+CC_NOINLINE void String_AppendHex(String* str, uint8_t value);
 
 /* Returns first index of the given character in the given string, -1 if not found. */
 CC_NOINLINE int String_IndexOf(const String* str, char c, int offset);

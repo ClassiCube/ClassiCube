@@ -135,17 +135,16 @@ bool String_CaselessEqualsConst(const String* a, const char* b) {
 }
 
 
-bool String_Append(String* str, char c) {
-	if (str->length == str->capacity) return false;
+void String_Append(String* str, char c) {
+	if (str->length == str->capacity) return;
 
 	str->buffer[str->length] = c;
 	str->length++;
-	return true;
 }
 
-bool String_AppendBool(String* str, bool value) {
+void String_AppendBool(String* str, bool value) {
 	const char* text = value ? "True" : "False";
-	return String_AppendConst(str, text);
+	String_AppendConst(str, text);
 }
 
 int String_MakeUInt32(uint32_t num, char* digits) {
@@ -156,25 +155,24 @@ int String_MakeUInt32(uint32_t num, char* digits) {
 	return len;
 }
 
-bool String_AppendInt(String* str, int num) {
+void String_AppendInt(String* str, int num) {
 	if (num < 0) {
 		num = -num;
-		if (!String_Append(str, '-')) return false;
+		String_Append(str, '-');
 	}
-	return String_AppendUInt32(str, (uint32_t)num);
+	String_AppendUInt32(str, (uint32_t)num);
 }
 
-bool String_AppendUInt32(String* str, uint32_t num) {
+void String_AppendUInt32(String* str, uint32_t num) {
 	char digits[STRING_INT_CHARS];
 	int i, count = String_MakeUInt32(num, digits);
 
 	for (i = count - 1; i >= 0; i--) {
-		if (!String_Append(str, digits[i])) return false;
+		String_Append(str, digits[i]);
 	}
-	return true;
 }
 
-bool String_AppendPaddedInt(String* str, int num, int minDigits) {
+void String_AppendPaddedInt(String* str, int num, int minDigits) {
 	char digits[STRING_INT_CHARS];
 	int i, count;
 	for (i = 0; i < minDigits; i++) { digits[i] = '0'; }
@@ -183,9 +181,8 @@ bool String_AppendPaddedInt(String* str, int num, int minDigits) {
 	if (count < minDigits) count = minDigits;
 
 	for (i = count - 1; i >= 0; i--) {
-		if (!String_Append(str, digits[i])) return false;
+		String_Append(str, digits[i]);
 	}
-	return true;
 }
 
 int String_MakeUInt64(uint64_t num, char* digits) {
@@ -196,17 +193,16 @@ int String_MakeUInt64(uint64_t num, char* digits) {
 	return len;
 }
 
-bool String_AppendUInt64(String* str, uint64_t num) {
+void String_AppendUInt64(String* str, uint64_t num) {
 	char digits[STRING_INT_CHARS];
 	int i, count = String_MakeUInt64(num, digits);
 
 	for (i = count - 1; i >= 0; i--) {
-		if (!String_Append(str, digits[i])) return false;
+		String_Append(str, digits[i]);
 	}
-	return true;
 }
 
-bool String_AppendFloat(String* str, float num, int fracDigits) {
+void String_AppendFloat(String* str, float num, int fracDigits) {
 	int i, whole, digit;
 	double frac;
 
@@ -216,78 +212,70 @@ bool String_AppendFloat(String* str, float num, int fracDigits) {
 	}
 
 	whole = (int)num;
-	if (!String_AppendUInt32(str, whole)) return false;
+	String_AppendUInt32(str, whole);
 
 	frac = (double)num - (double)whole;
-	if (frac == 0.0) return true;
+	if (frac == 0.0) return;
 	String_Append(str, '.'); /* don't need to check success */
 
 	for (i = 0; i < fracDigits; i++) {
 		frac *= 10;
 		digit = (int)frac % 10;
-		if (!String_Append(str, '0' + digit)) return false;
+		String_Append(str, '0' + digit);
 	}
-	return true;
 }
 
-bool String_AppendHex(String* str, uint8_t value) {
+void String_AppendHex(String* str, uint8_t value) {
 	/* 48 = index of 0, 55 = index of (A - 10) */
 	uint8_t hi = (value >> 4) & 0xF;
 	char c_hi  = hi < 10 ? (hi + 48) : (hi + 55);
 	uint8_t lo = value & 0xF;
 	char c_lo  = lo < 10 ? (lo + 48) : (lo + 55);
 
-	return String_Append(str, c_hi) && String_Append(str, c_lo);
+	String_Append(str, c_hi);
+	String_Append(str, c_lo);
 }
 
-CC_NOINLINE static bool String_Hex32(String* str, uint32_t value) {
-	bool appended;
+CC_NOINLINE static void String_Hex32(String* str, uint32_t value) {
 	int shift;
 
 	for (shift = 24; shift >= 0; shift -= 8) {
 		uint8_t part = (uint8_t)(value >> shift);
-		appended = String_AppendHex(str, part);
+		String_AppendHex(str, part);
 	}
-	return appended;
 }
 
-CC_NOINLINE static bool String_Hex64(String* str, uint64_t value) {
-	bool appended;
+CC_NOINLINE static void String_Hex64(String* str, uint64_t value) {
 	int shift;
 
 	for (shift = 56; shift >= 0; shift -= 8) {
 		uint8_t part = (uint8_t)(value >> shift);
-		appended = String_AppendHex(str, part);
+		String_AppendHex(str, part);
 	}
-	return appended;
 }
 
-bool String_AppendConst(String* str, const char* src) {
-	while (*src) {
-		if (!String_Append(str, *src)) return false;
-		src++;
+void String_AppendConst(String* str, const char* src) {
+	for (; *src; src++) {
+		String_Append(str, *src);
 	}
-	return true;
 }
 
-bool String_AppendString(String* str, const String* src) {
+void String_AppendString(String* str, const String* src) {
 	int i;
 	for (i = 0; i < src->length; i++) {
-		if (!String_Append(str, src->buffer[i])) return false;
+		String_Append(str, src->buffer[i]);
 	}
-	return true;
 }
 
-bool String_AppendColorless(String* str, const String* src) {
+void String_AppendColorless(String* str, const String* src) {
 	char c;
 	int i;
 
 	for (i = 0; i < src->length; i++) {
 		c = src->buffer[i];
 		if (c == '&') { i++; continue; } /* Skip over the following colour code */
-		if (!String_Append(str, c)) return false;
+		String_Append(str, c);
 	}
-	return true;
 }
 
 
