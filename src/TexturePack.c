@@ -621,9 +621,11 @@ void TextureCache_SetLastModified(const String* url, const TimeMS* lastModified)
 /*########################################################################################################################*
 *-------------------------------------------------------TexturePack-------------------------------------------------------*
 *#########################################################################################################################*/
-static void TexturePack_ProcessZipEntry(const String* path, struct Stream* stream, struct ZipEntry* entry) {
-	String name = *path; Utils_UNSAFE_GetFilename(&name);
+static ReturnCode TexturePack_ProcessZipEntry(const String* path, struct Stream* stream, void* obj) {
+	String name = *path; 
+	Utils_UNSAFE_GetFilename(&name);
 	Event_RaiseEntry(&TextureEvents_FileChanged, stream, &name);
+	return 0;
 }
 
 static ReturnCode TexturePack_ExtractZip(struct Stream* stream) {

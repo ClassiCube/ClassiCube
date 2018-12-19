@@ -13,19 +13,19 @@
 /*########################################################################################################################*
 *---------------------------------------------------------List/Checker----------------------------------------------------*
 *#########################################################################################################################*/
-bool SoundsExist;
+bool Textures_AllExist, Sounds_AllExist;
 int Resources_Count, Resources_Size;
+static int texturesFound;
 
-static void Resources_CheckFiles(void) {
-	int i, flags;
-	
-	flags = Resources_GetFetchFlags();
-	for (i = 0; i < Array_Elems(Resources_Files); i++) {
-		if (!(flags & Resources_Files[i].Flag)) continue;
+CC_NOINLINE static struct ResourceTexture* Resources_FindTex(const String* name) {
+	struct ResourceTexture* tex;
+	int i;
 
-		Resources_Size += Resources_Files[i].Size;
-		Resources_Count++;
+	for (i = 0; i < Array_Elems(Resources_Textures); i++) {
+		tex = &Resources_Textures[i];
+		if (String_CaselessEqualsConst(name, tex->Filename)) return tex;
 	}
+	return NULL;
 }
 
 static void Resources_CheckMusic(void) {
@@ -37,8 +37,8 @@ static void Resources_CheckMusic(void) {
 		path.length = 0;
 		String_Format1(&path, "audio/%c", Resources_Music[i].Name);
 
-		Resources_Music[i].Exists = File_Exists(&path);
-		if (Resources_Music[i].Exists) continue;
+		Resources_Music[i].Downloaded = File_Exists(&path);
+		if (Resources_Music[i].Downloaded) continue;
 
 		Resources_Size += Resources_Music[i].Size;
 		Resources_Count++;
@@ -55,32 +55,24 @@ static void Resources_CheckSounds(void) {
 		String_Format1(&path, "audio/%c.wav", Resources_Sounds[i].Name);
 
 		if (File_Exists(&path)) continue;
-		SoundsExist = false;
+		Sounds_AllExist = false;
 
 		Resources_Count += Array_Elems(Resources_Sounds);
 		Resources_Size  += 417;
 		return;
 	}
-	SoundsExist = true;
+	Sounds_AllExist = true;
 }
 
 static bool Resources_SelectZipEntry(const String* path) {
-	String name;
-	int i;
-
-	name = *path;
+	String name = *path;
 	Utils_UNSAFE_GetFilename(&name);
-	for (i = 0; i < Array_Elems(Resources_Textures); i++) {
-		if (Resources_Textures[i].Exists) continue;
 
-		if (!String_CaselessEqualsConst(&name, Resources_Textures[i].Filename)) continue;
-		Resources_Textures[i].Exists = true;
-		break;
-	}
+	if (Resources_FindTex(&name)) texturesFound++;
 	return false;
 }
 
-static void Resources_CheckDefaultZip(void) {
+static void Resources_CheckTextures(void) {
 	const static String path = String_FromConst("texpacks/default.zip");
 	struct Stream stream;
 	struct ZipState state;
@@ -95,46 +87,41 @@ static void Resources_CheckDefaultZip(void) {
 
 	res = Zip_Extract(&state);
 	stream.Close(&stream);
-	if (res) { Launcher_ShowError(res, "inspecting default.zip"); }
-}
+	if (res) Launcher_ShowError(res, "inspecting default.zip");
 
-int Resources_GetFetchFlags(void) {
-	int flags = 0, i;
-	for (i = 0; i < Array_Elems(Resources_Textures); i++) {
-		if (Resources_Textures[i].Exists) continue;
-
-		flags |= Resources_Textures[i].Flags;
-	}
-	return flags;
+	/* if somehow have say "gui.png", "GUI.png" */
+	Textures_AllExist = texturesFound >= Array_Elems(Resources_Textures);
 }
 
 void Resources_CheckExistence(void) {
-	Resources_CheckDefaultZip();
-	Resources_CheckFiles();
+	int i;
+	Resources_CheckTextures();
 	Resources_CheckMusic();
 	Resources_CheckSounds();
+
+	if (Textures_AllExist) return;
+	for (i = 0; i < Array_Elems(Resources_Files); i++) {
+		Resources_Count++;
+		Resources_Size += Resources_Files[i].Size;
+	}
 }
 
 struct ResourceFile Resources_Files[4] = {
-	{ "classic jar", "http://launcher.mojang.com/mc/game/c0.30_01c/client/54622801f5ef1bcc1549a842c5b04cb5d5583005/client.jar",  291, FLAG_CLASSIC },
-	{ "1.6.2 jar",   "http://launcher.mojang.com/mc/game/1.6.2/client/b6cb68afde1d9cf4a20cbf27fa90d0828bf440a4/client.jar",     4621, FLAG_MODERN },
-	{ "gui.png patch",     "http://static.classicube.net/terrain-patch2.png",  7, FLAG_GUI },
-	{ "terrain.png patch", "http://static.classicube.net/gui.png",            21, FLAG_TERRAIN }
+	{ "classic jar", "http://launcher.mojang.com/mc/game/c0.30_01c/client/54622801f5ef1bcc1549a842c5b04cb5d5583005/client.jar",  291 },
+	{ "1.6.2 jar",   "http://launcher.mojang.com/mc/game/1.6.2/client/b6cb68afde1d9cf4a20cbf27fa90d0828bf440a4/client.jar",     4621 },
+	{ "gui.png patch",     "http://static.classicube.net/terrain-patch2.png",  7 },
+	{ "terrain.png patch", "http://static.classicube.net/gui.png",            21 }
 };
 
-struct ResourceTexture Resources_Textures[19] = {
+struct ResourceTexture Resources_Textures[20] = {
 	/* classic jar files */
-	{ "char.png",       FLAG_CLASSIC }, { "clouds.png",      FLAG_CLASSIC },
-	{ "default.png",    FLAG_CLASSIC }, { "particles.png",   FLAG_CLASSIC },
-	{ "rain.png",       FLAG_CLASSIC }, { "gui_classic.png", FLAG_CLASSIC },
-	{ "icons.png",      FLAG_CLASSIC }, { "terrain.png",     FLAG_CLASSIC | FLAG_TERRAIN | FLAG_MODERN },
-	{ "creeper.png",    FLAG_CLASSIC }, { "pig.png",         FLAG_CLASSIC },
-	{ "sheep.png",      FLAG_CLASSIC }, { "sheep_fur.png",   FLAG_CLASSIC },
-	{ "skeleton.png",   FLAG_CLASSIC }, { "spider.png",      FLAG_CLASSIC },
-	{ "zombie.png",     FLAG_CLASSIC }, /* "arrows.png", "sign.png" */
+	{ "char.png"     }, { "clouds.png"      }, { "default.png" }, { "particles.png" },
+	{ "rain.png"     }, { "gui_classic.png" }, { "icons.png"   }, { "terrain.png"   },
+	{ "creeper.png"  }, { "pig.png"         }, { "sheep.png"   }, { "sheep_fur.png" },
+	{ "skeleton.png" }, { "spider.png"      }, { "zombie.png"  }, /* "arrows.png", "sign.png" */
 	/* other files */
-	{ "snow.png",       FLAG_MODERN },  { "chicken.png",     FLAG_MODERN },
-	{ "animations.png", FLAG_MODERN },  { "gui.png",         FLAG_GUI }
+	{ "snow.png"     }, { "chicken.png"     }, { "gui.png"     },
+	{ "animations.png" }, { "animations.txt" }
 };
 
 struct ResourceSound Resources_Sounds[59] = {
@@ -183,8 +170,261 @@ struct ResourceMusic Resources_Music[7] = {
 
 
 /*########################################################################################################################*
+*---------------------------------------------------------Zip writer------------------------------------------------------*
+*#########################################################################################################################*/
+static ReturnCode ZipPatcher_LocalFile(struct Stream* s, struct ResourceTexture* entry) {
+	String name = String_FromReadonly(entry->Filename);
+	uint8_t header[30 + STRING_SIZE];
+	ReturnCode res;
+	if ((res = s->Position(s, &entry->Offset))) return res;
+
+	Stream_SetU32_LE(&header[0], 0x04034b50);   /* signature */
+	Stream_SetU16_LE(&header[4],  20);          /* version needed */
+	Stream_SetU16_LE(&header[6],  0);           /* bitflags */
+	Stream_SetU16_LE(&header[8] , 0);           /* compression method */
+	Stream_SetU16_LE(&header[10], 0);           /* last modified */
+	Stream_SetU16_LE(&header[12], 0);           /* last modified */
+
+	Stream_SetU32_LE(&header[14], 0);           /* CRC32 */
+	Stream_SetU32_LE(&header[18], 0);           /* Compressed size */
+	Stream_SetU32_LE(&header[22], 0);           /* Uncompressed size */
+
+	Stream_SetU16_LE(&header[26], name.length); /* name length */
+	Stream_SetU16_LE(&header[28], 0);           /* extra field length */
+
+	Mem_Copy(&header[30], name.buffer, name.length);
+	return Stream_Write(s, header, 30 + name.length);
+}
+
+static ReturnCode ZipPatcher_CentralDir(struct Stream* s, struct ResourceTexture* res) {
+	String name = String_FromReadonly(res->Filename);
+	uint8_t header[46 + STRING_SIZE];
+	struct DateTime now;
+	int modTime, modDate;
+
+	DateTime_CurrentLocal(&now);
+	modTime = (now.Second / 2) | (now.Minute << 5) | (now.Hour << 11);
+	modDate = (now.Day) | (now.Month << 5) | ((now.Year - 1980) << 9);
+
+	Stream_SetU32_LE(&header[0],  0x02014b50); /* signature */
+	Stream_SetU16_LE(&header[4],  20);         /* version */
+	Stream_SetU16_LE(&header[6],  20);         /* version needed */
+	Stream_SetU16_LE(&header[8],  0);          /* bitflags */
+	Stream_SetU16_LE(&header[10], 0);          /* compression method */
+	Stream_SetU16_LE(&header[12], modTime);    /* last modified */
+	Stream_SetU16_LE(&header[14], modDate);    /* last modified */
+
+	Stream_SetU32_LE(&header[16], res->Crc32); /* CRC32 */
+	Stream_SetU32_LE(&header[20], res->Size);  /* compressed size */
+	Stream_SetU32_LE(&header[24], res->Size);  /* uncompressed size */
+
+	Stream_SetU16_LE(&header[28], name.length); /* name length */
+	Stream_SetU16_LE(&header[30], 0);           /* extra field length */
+	Stream_SetU16_LE(&header[32], 0);           /* file comment length */
+	Stream_SetU16_LE(&header[34], 0);           /* disk number */
+	Stream_SetU16_LE(&header[36], 0);           /* internal attributes */
+	Stream_SetU32_LE(&header[38], 0);           /* external attributes */
+	Stream_SetU32_LE(&header[42], res->Offset); /* local header offset */
+
+	Mem_Copy(&header[46], name.buffer, name.length);
+	return Stream_Write(s, header, 46 + name.length);
+}
+
+static ReturnCode ZipPatcher_EndOfCentralDir(struct Stream* s, uint32_t centralDirBeg, uint32_t centralDirEnd) {
+	uint8_t header[22];
+
+	Stream_SetU32_LE(&header[0], 0x06054b50); /* signature */
+	Stream_SetU16_LE(&header[4], 0);          /* disk number */
+	Stream_SetU16_LE(&header[6], 0);          /* disk number of start */
+	Stream_SetU16_LE(&header[8],  Array_Elems(Resources_Textures)); /* disk entries */
+	Stream_SetU16_LE(&header[10], Array_Elems(Resources_Textures)); /* total entries */
+	Stream_SetU32_LE(&header[12], centralDirEnd - centralDirBeg);   /* central dir size */
+	Stream_SetU32_LE(&header[16], centralDirBeg);                   /* central dir start */
+	Stream_SetU16_LE(&header[20], 0);         /* comment length */
+	return Stream_Write(s, header, 22);
+}
+
+static ReturnCode ZipPatcher_WriteData(struct Stream* s, struct ResourceTexture* tex, const uint8_t* data, uint32_t len) {
+	ReturnCode res;
+	tex->Size  = len;
+	tex->Crc32 = Utils_CRC32(data, len);
+
+	res = ZipPatcher_LocalFile(s, tex);
+	if (res) return res;
+	return Stream_Write(s, data, len);
+}
+
+static ReturnCode ZipPatcher_WriteStream(struct Stream* s, struct ResourceTexture* tex, struct Stream* src) {
+	uint8_t tmp[2048];
+	uint32_t read;
+	struct Stream crc32;
+	ReturnCode res;
+
+	res = ZipPatcher_LocalFile(s, tex);
+	if (res) return res;
+	Stream_WriteonlyCrc32(&crc32, s);
+
+	for (tex->Size = 0; ; tex->Size += read) {
+		res = src->Read(src, tmp, sizeof(tmp), &read);
+		if (res)   return res;
+		if (!read) break;
+
+		res = Stream_Write(&crc32, tmp, read);
+		if (res) return res;
+	}
+
+	tex->Crc32 = crc32.Meta.CRC32.CRC32 ^ 0xFFFFFFFFUL;
+	return 0;
+}
+
+
+/*########################################################################################################################*
 *-------------------------------------------------------Texture patcher---------------------------------------------------*
 *#########################################################################################################################*/
+#define ANIMS_TXT_CONTENTS \
+"# This file defines the animations used in a texture pack for ClassicalSharp and other supporting applications.\r\n" \
+"# Each line is in the format : <TileX> <TileY> <FrameX> <FrameY> <Frame size> <Frames count> <Tick delay>\r\n" \
+"# - TileX and TileY are the coordinates of the tile in terrain.png that will be replaced by the animation frames.\r\n" \
+"#     Essentially, TileX and TileY are the remainder and quotient of an ID in F10 menu divided by 16\r\n" \
+"#     For instance, obsidian texture(37) has TileX of 5, and TileY of 2\r\n" \
+"# - FrameX and FrameY are the pixel coordinates of the first animation frame in animations.png.\r\n" \
+"# - Frame Size is the size in pixels of an animation frame.\r\n" \
+"# - Frames count is the number of used frames.  The first frame is located at\r\n" \
+"#     (FrameX, FrameY), the second one at (FrameX + FrameSize, FrameY) and so on.\r\n" \
+"# - Tick delay is the number of ticks a frame doesn't change. For instance, delay of 0\r\n" \
+"#     means that the tile would be replaced every tick, while delay of 2 means\r\n" \
+"#     'replace with frame 1, don't change frame, don't change frame, replace with frame 2'.\r\n" \
+"# NOTE: If a file called 'uselavaanim' is in the texture pack, ClassicalSharp 0.99.2 onwards uses its built - in dynamic generation for the lava texture animation.\r\n" \
+"# NOTE : If a file called 'usewateranim' is in the texture pack, ClassicalSharp 0.99.5 onwards uses its built - in dynamic generation for the water texture animation.\r\n" \
+"\r\n" \
+"# fire\r\n" \
+"6 2 0 0 16 32 0"
+
+static bool TexPatcher_ClassicSelect(const String* path ) {
+	String name = *path;
+	Utils_UNSAFE_GetFilename(&name);
+	return Resources_FindTex(&name) != NULL;
+}
+
+static ReturnCode TexPatcher_ClassicProcess(const String* path, struct Stream* data, void* obj) {
+	static const String guiClassicPng = String_FromConst("gui_classic.png");
+	struct Stream* s = obj;
+	struct ResourceTexture* entry;
+
+	String name = *path;
+	Utils_UNSAFE_GetFilename(&name);
+	if (String_CaselessEqualsConst(&name, "gui.png")) name = guiClassicPng;
+
+	entry = Resources_FindTex(&name);
+	return ZipPatcher_WriteStream(s, entry, data);
+}
+
+static ReturnCode TexPatcher_ClassicFiles(struct Stream* s) {
+	struct ZipState zip;
+	struct Stream src;
+	ReturnCode res;
+
+	Stream_ReadonlyMemory(&src, Resources_Files[0].Data, Resources_Files[0].Len);
+	Zip_Init(&zip, &src);
+
+	zip.Obj = s;
+	zip.SelectEntry  = TexPatcher_ClassicSelect;
+	zip.ProcessEntry = TexPatcher_ClassicProcess;
+	return Zip_Extract(&zip);
+}
+
+static bool TexPatcher_ModernSelect(const String* path) {
+	return
+		String_CaselessEqualsConst(path, "assets/minecraft/textures/environment/snow.png") ||
+		String_CaselessEqualsConst(path, "assets/minecraft/textures/entity/chicken.png");
+}
+
+static ReturnCode TexPatcher_ModernProcess(const String* path, struct Stream* data, void* obj) {
+	struct Stream* s = obj;
+	struct ResourceTexture* entry;
+
+	String name = *path;
+	Utils_UNSAFE_GetFilename(&name);
+
+	entry = Resources_FindTex(&name);
+	return ZipPatcher_WriteStream(s, entry, data);
+}
+
+static ReturnCode TexPatcher_ModernFiles(struct Stream* s) {
+	struct ZipState zip;
+	struct Stream src;
+	ReturnCode res;
+
+	Stream_ReadonlyMemory(&src, Resources_Files[1].Data, Resources_Files[1].Len);
+	Zip_Init(&zip, &src);
+
+	zip.Obj = s;
+	zip.SelectEntry  = TexPatcher_ModernSelect;
+	zip.ProcessEntry = TexPatcher_ModernProcess;
+	return Zip_Extract(&zip);
+}
+
+static ReturnCode TexPatcher_NewFiles(struct Stream* s) {
+	static const String guiPng   = String_FromConst("gui.png");
+	static const String animsTxt = String_FromConst("animations.txt");
+	struct ResourceTexture* entry;
+	ReturnCode res;
+
+	/* make our own animations.txt */
+	entry = Resources_FindTex(&animsTxt);
+	res   = ZipPatcher_WriteData(s, entry, ANIMS_TXT_CONTENTS, sizeof(ANIMS_TXT_CONTENTS) - 1);
+	if (res) return res;
+
+	/* make ClassiCube gui.png */
+	entry = Resources_FindTex(&guiPng);
+	res   = ZipPatcher_WriteData(s, entry, Resources_Files[3].Data, Resources_Files[3].Len);
+	return res;
+}
+
+static ReturnCode TexPatcher_WriteEntries(struct Stream* s) {
+	static const String guiPng   = String_FromConst("gui.png");
+	static const String animsTxt = String_FromConst("animations.txt");
+	struct ResourceTexture* entry;
+
+	uint32_t beg, end;
+	int i;
+	ReturnCode res;
+
+	if ((res = TexPatcher_ClassicFiles(s))) return res;
+	if ((res = TexPatcher_ModernFiles(s)))  return res;
+	if ((res = TexPatcher_NewFiles(s)))     return res;
+	
+	if ((res = s->Position(s, &beg))) return res;
+	for (i = 0; i < Array_Elems(Resources_Textures); i++) {
+		if ((res = ZipPatcher_CentralDir(s, &Resources_Textures[i]))) return res;
+	}
+
+	if ((res = s->Position(s, &end))) return res;
+	return ZipPatcher_EndOfCentralDir(s, beg, end);
+}
+
+static void TexPatcher_MakeDefaultZip(void) {
+	const static String path = String_FromConst("texpacks/default.zip");
+	struct Stream s;
+	int i;
+	ReturnCode res;
+
+	res = Stream_CreateFile(&s, &path);
+	if (res) {
+		Launcher_ShowError(res, "creating default.zip");
+	} else {
+		res = TexPatcher_WriteEntries(&s);
+		if (res) Launcher_ShowError(res, "making default.zip");
+
+		res = s.Close(&s);
+		if (res) Launcher_ShowError(res, "closing default.zip");
+	}
+
+	for (i = 0; i < Array_Elems(Resources_Files); i++) {
+		Mem_Free(Resources_Files[i].Data);
+		Resources_Files[i].Data = NULL;
+	}
+}
 
 
 /*########################################################################################################################*
@@ -192,7 +432,7 @@ struct ResourceMusic Resources_Music[7] = {
 *#########################################################################################################################*/
 #define WAV_FourCC(a, b, c, d) (((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)c << 8) | (uint32_t)d)
 
-static void Patcher_FixupWaveHeader(struct Stream* s, struct VorbisState* ctx) {
+static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx) {
 	uint8_t header[44];
 	uint32_t length;
 	ReturnCode res;
@@ -202,9 +442,9 @@ static void Patcher_FixupWaveHeader(struct Stream* s, struct VorbisState* ctx) {
 	res = s->Seek(s, 0);
 	if (res) { Launcher_ShowError(res, "seeking to .wav start"); return; }
 
-	Stream_SetU32_BE(&header[0], WAV_FourCC('R','I','F','F'));
-	Stream_SetU32_LE(&header[4], length - 8);
-	Stream_SetU32_BE(&header[8], WAV_FourCC('W','A','V','E'));
+	Stream_SetU32_BE(&header[0],  WAV_FourCC('R','I','F','F'));
+	Stream_SetU32_LE(&header[4],  length - 8);
+	Stream_SetU32_BE(&header[8],  WAV_FourCC('W','A','V','E'));
 	Stream_SetU32_BE(&header[12], WAV_FourCC('f','m','t',' '));
 	Stream_SetU32_LE(&header[16], 16); /* fmt chunk size */
 	Stream_SetU16_LE(&header[20], 1);  /* PCM audio format */
@@ -221,7 +461,7 @@ static void Patcher_FixupWaveHeader(struct Stream* s, struct VorbisState* ctx) {
 	if (res) Launcher_ShowError(res, "fixing .wav header");
 }
 
-static void Patcher_DecodeSound(struct Stream* s, struct VorbisState* ctx) {
+static void SoundPatcher_DecodeAudio(struct Stream* s, struct VorbisState* ctx) {
 	int16_t* samples;
 	int count;
 	ReturnCode res;
@@ -247,7 +487,7 @@ static void Patcher_DecodeSound(struct Stream* s, struct VorbisState* ctx) {
 	Mem_Free(samples);
 }
 
-static void Patcher_SaveSound(struct ResourceSound* sound, struct AsyncRequest* req) {
+static void SoundPatcher_Save(struct ResourceSound* sound, struct AsyncRequest* req) {
 	String path; char pathBuffer[STRING_SIZE];
 	uint8_t buffer[OGG_BUFFER_SIZE];
 	struct Stream src, ogg, dst;
@@ -264,14 +504,14 @@ static void Patcher_SaveSound(struct ResourceSound* sound, struct AsyncRequest* 
 	Ogg_MakeStream(&ogg, buffer, &src);
 	ctx.Source = &ogg;
 
-	Patcher_DecodeSound(&dst, &ctx);
-	Patcher_FixupWaveHeader(&dst, &ctx);
+	SoundPatcher_DecodeAudio(&dst, &ctx);
+	SoundPatcher_FixupHeader(&dst, &ctx);
 
 	res = dst.Close(&dst);
 	if (res) Launcher_ShowError(res, "closing .wav file");
 }
 
-static void Patcher_SaveMusic(struct ResourceMusic* music, struct AsyncRequest* req) {
+static void MusicPatcher_Save(struct ResourceMusic* music, struct AsyncRequest* req) {
 	String path; char pathBuffer[STRING_SIZE];
 	ReturnCode res;
 
@@ -302,7 +542,7 @@ CC_NOINLINE static void Fetcher_DownloadAudio(const char* name, const char* hash
 
 void Fetcher_Run(void) {
 	String id, url;
-	int i, flags;
+	int i;
 
 	if (Fetcher_Working) return;
 	Fetcher_Error      = 0;
@@ -311,10 +551,9 @@ void Fetcher_Run(void) {
 
 	Fetcher_Working    = true;
 	Fetcher_Completed  = false;
-	flags = Resources_GetFetchFlags();
 
 	for (i = 0; i < Array_Elems(Resources_Files); i++) {
-		if (!(flags & Resources_Files[i].Flag)) continue;
+		if (Textures_AllExist) continue;
 
 		id  = String_FromReadonly(Resources_Files[i].Name);
 		url = String_FromReadonly(Resources_Files[i].Url);
@@ -322,11 +561,11 @@ void Fetcher_Run(void) {
 	}
 
 	for (i = 0; i < Array_Elems(Resources_Music); i++) {
-		if (Resources_Music[i].Exists) continue;
+		if (Resources_Music[i].Downloaded) continue;
 		Fetcher_DownloadAudio(Resources_Music[i].Name,  Resources_Music[i].Hash);
 	}
 	for (i = 0; i < Array_Elems(Resources_Sounds); i++) {
-		if (SoundsExist) continue;
+		if (Sounds_AllExist) continue;
 		Fetcher_DownloadAudio(Resources_Sounds[i].Name, Resources_Sounds[i].Hash);
 	}
 }
@@ -357,13 +596,24 @@ CC_NOINLINE static bool Fetcher_Get(const String* id, struct AsyncRequest* req) 
 	return true;
 }
 
+static void Fetcher_CheckFile(struct ResourceFile* file) {
+	String id = String_FromReadonly(file->Name);
+	struct AsyncRequest req;
+	if (!Fetcher_Get(&id, &req)) return;
+	
+	file->Downloaded = true;
+	file->Data       = req.Data;
+	file->Len        = req.Size;
+	/* don't free request */
+}
+
 static void Fetcher_CheckMusic(struct ResourceMusic* music) {
 	String id = String_FromReadonly(music->Name);
 	struct AsyncRequest req;
 	if (!Fetcher_Get(&id, &req)) return;
 
-	music->Exists = true;
-	Patcher_SaveMusic(music, &req);
+	music->Downloaded = true;
+	MusicPatcher_Save(music, &req);
 	ASyncRequest_Free(&req);
 }
 
@@ -372,16 +622,23 @@ static void Fetcher_CheckSound(struct ResourceSound* sound) {
 	struct AsyncRequest req;
 	if (!Fetcher_Get(&id, &req)) return;
 
-	Patcher_SaveSound(sound, &req);
+	SoundPatcher_Save(sound, &req);
 	ASyncRequest_Free(&req);
 }
 
 /* TODO: Implement this.. */
+/* TODO: How expensive is it to constantly do 'Get' over and make all these strings */
 void Fetcher_Update(void) {
 	int i;
 
+	for (i = 0; i < Array_Elems(Resources_Files); i++) {
+		if (Resources_Files[i].Downloaded) continue;
+		Fetcher_CheckFile(&Resources_Files[i]);
+	}
+	//if (Resources_Files[3].Data) TexPatcher_MakeDefaultZip();
+
 	for (i = 0; i < Array_Elems(Resources_Music); i++) {
-		if (Resources_Music[i].Exists) continue;
+		if (Resources_Music[i].Downloaded) continue;
 		Fetcher_CheckMusic(&Resources_Music[i]);
 	}
 

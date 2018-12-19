@@ -507,27 +507,6 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 /*########################################################################################################################*
 *------------------------------------------------------PNG encoder--------------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode Bitmap_Crc32StreamWrite(struct Stream* stream, const uint8_t* data, uint32_t count, uint32_t* modified) {
-	struct Stream* source;
-	uint32_t i, crc32 = stream->Meta.CRC32.CRC32;
-
-	/* TODO: Optimise this calculation */
-	for (i = 0; i < count; i++) {
-		crc32 = Utils_Crc32Table[(crc32 ^ data[i]) & 0xFF] ^ (crc32 >> 8);
-	}
-	stream->Meta.CRC32.CRC32 = crc32;
-
-	source = stream->Meta.CRC32.Source;
-	return source->Write(source, data, count, modified);
-}
-
-static void Bitmap_Crc32Stream(struct Stream* stream, struct Stream* underlying) {
-	Stream_Init(stream);
-	stream->Meta.CRC32.Source = underlying;
-	stream->Meta.CRC32.CRC32  = 0xFFFFFFFFUL;
-	stream->Write = Bitmap_Crc32StreamWrite;
-}
-
 static void Png_Filter(uint8_t filter, uint8_t* cur, uint8_t* prior, uint8_t* best, int lineLen) {
 	/* 3 bytes per pixel constant */
 	uint8_t a, b, c;
@@ -616,6 +595,7 @@ static void Png_EncodeRow(const BitmapCol* src, uint8_t* cur, uint8_t* prior, ui
 	if (bestFilter != PNG_FILTER_PAETH) {
 		Png_Filter(bestFilter, cur, prior, dst, lineLen);
 	}
+
 	best[0] = bestFilter;
 }
 
@@ -633,7 +613,7 @@ ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector select
 
 	if (!selectRow) selectRow = Png_SelectRow;
 	if ((res = Stream_Write(stream, png_sig, PNG_SIG_SIZE))) return res;
-	Bitmap_Crc32Stream(&chunk, stream);
+	Stream_WriteonlyCrc32(&chunk, stream);
 
 	/* Write header chunk */
 	Stream_SetU32_BE(&tmp[0], PNG_IHDR_SIZE);

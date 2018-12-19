@@ -67,6 +67,10 @@ CC_API void Stream_WriteonlyMemory(struct Stream* s, void* data, uint32_t len);
 /* Wraps another Stream, reading through an intermediary buffer. (Useful for files, since each read call is expensive) */
 CC_API void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data, uint32_t size);
 
+/* Wraps another Stream, calculating a running CRC32 as data is written. */
+/* To get the final CRC32, xor it with 0xFFFFFFFFUL */
+void Stream_WriteonlyCrc32(struct Stream* s, struct Stream* source);
+
 /* Reads a little-endian 16 bit unsigned integer from memory. */
 uint16_t Stream_GetU16_LE(const uint8_t* data);
 /* Reads a big-endian 16 bit unsigned integer from memory. */

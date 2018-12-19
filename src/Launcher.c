@@ -148,6 +148,7 @@ static void Launcher_MouseUp(void* obj, int btn) {
 }
 
 static void Launcher_MouseMove(void* obj, int deltaX, int deltaY) {
+	if (!Launcher_Screen) return;
 	Launcher_Screen->MouseMove(Launcher_Screen, deltaX, deltaY);
 }
 
@@ -376,30 +377,31 @@ static void Launcher_LoadTextures(Bitmap* bmp) {
 				  0,        0, TILESIZE, TILESIZE);
 }
 
-static void Launcher_ProcessZipEntry(const String* path, struct Stream* data, struct ZipEntry* entry) {
+static ReturnCode Launcher_ProcessZipEntry(const String* path, struct Stream* data, void* obj) {
 	Bitmap bmp;
 	ReturnCode res;
 
 	if (String_CaselessEqualsConst(path, "default.png")) {
-		if (fontBmp.Scan0) return;
+		if (fontBmp.Scan0) return 0;
 		res = Png_Decode(&fontBmp, data);
 
 		if (res) {
-			Launcher_ShowError(res, "decoding default.png"); return;
+			Launcher_ShowError(res, "decoding default.png"); return res;
 		} else {
 			Drawer2D_SetFontBitmap(&fontBmp);
 			useBitmappedFont = !Options_GetBool(OPT_USE_CHAT_FONT, false);
 		}
 	} else if (String_CaselessEqualsConst(path, "terrain.png")) {
-		if (terrainBmp.Scan0) return;
+		if (terrainBmp.Scan0) return 0;
 		res = Png_Decode(&bmp, data);
 
 		if (res) {
-			Launcher_ShowError(res, "decoding terrain.png"); return;
+			Launcher_ShowError(res, "decoding terrain.png"); return res;
 		} else {
 			Launcher_LoadTextures(&bmp);
 		}
 	}
+	return 0;
 }
 
 static void Launcher_ExtractTexturePack(const String* path) {

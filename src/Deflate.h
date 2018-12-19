@@ -110,7 +110,7 @@ struct ZLibState { struct DeflateState Base; uint32_t Adler32; };
 CC_API void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
 
 /* Minimal data needed to describe an entry in a .zip archive. */
-struct ZipEntry { uint32_t CompressedSize, UncompressedSize, LocalHeaderOffset, Crc32; };
+struct ZipEntry { uint32_t CompressedSize, UncompressedSize, LocalHeaderOffset; };
 #define ZIP_MAX_ENTRIES 2048
 
 /* Stores state for reading and processing entries in a .zip archive. */
@@ -118,11 +118,15 @@ struct ZipState {
 	/* Source of the .zip archive data. Must be seekable. */
 	struct Stream* Input;
 	/* Callback function to process the data in a .zip archive entry. */
-	/* NOTE: data stream may not be seekable. (entry data might be compressed) */
-	void (*ProcessEntry)(const String* path, struct Stream* data, struct ZipEntry* entry);
+	/* obj is user specified in state.Obj variable */
+	/* Return non-zero to indicate an error and stop further processing. */
+	/* NOTE: data stream MAY NOT be seekable. (i.e. entry data might be compressed) */
+	ReturnCode (*ProcessEntry)(const String* path, struct Stream* data, void* obj);
 	/* Predicate used to select which entries in a .zip archive get proessed. */
 	/* NOTE: returning false entirely skips the entry. (avoids pointless seek to entry) */
 	bool (*SelectEntry)(const String* path);
+	/* Generic object/pointer passed to ProcessEntry callback. */
+	void* Obj;
 	/* Number of entries in the .zip archive. */
 	int EntriesCount;
 	/* Data for each entry in the .zip archive. */

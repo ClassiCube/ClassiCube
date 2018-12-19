@@ -2115,6 +2115,8 @@ static void Window_ConnectEvents(void) {
 	
 	target = GetApplicationEventTarget();
 	/* TODO: Use EventTargetRef target = GetWindowEventTarget(windowRef); instead?? */
+	/* need WindowEventTargetRef, otherwise message boxes don't work */
+	/* but if use WindowEventTargetRef, can't click quit/move buttons anymore */
 	res = InstallEventHandler(target, NewEventHandlerUPP(Window_EventHandler),
 							  Array_Elems(eventTypes), eventTypes, NULL, NULL);
 	if (res) ErrorHandler_Fail2(res, "Connecting events");

@@ -3,6 +3,7 @@
 #include "Funcs.h"
 #include "ErrorHandler.h"
 #include "Errors.h"
+#include "Utils.h"
 
 /*########################################################################################################################*
 *---------------------------------------------------------Stream----------------------------------------------------------*
@@ -359,6 +360,32 @@ void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data
 	s->Meta.Buffered.Base   = data;
 	s->Meta.Buffered.Length = size;
 	s->Meta.Buffered.Source = source;
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------CRC32Stream---------------------------------------------------------*
+*#########################################################################################################################*/
+static ReturnCode Stream_Crc32Write(struct Stream* stream, const uint8_t* data, uint32_t count, uint32_t* modified) {
+	struct Stream* source;
+	uint32_t i, crc32 = stream->Meta.CRC32.CRC32;
+
+	/* TODO: Optimise this calculation */
+	for (i = 0; i < count; i++) {
+		crc32 = Utils_Crc32Table[(crc32 ^ data[i]) & 0xFF] ^ (crc32 >> 8);
+	}
+	stream->Meta.CRC32.CRC32 = crc32;
+
+	source = stream->Meta.CRC32.Source;
+	return source->Write(source, data, count, modified);
+}
+
+void Stream_WriteonlyCrc32(struct Stream* s, struct Stream* source) {
+	Stream_Init(s);
+	s->Write = Stream_Crc32Write;
+
+	s->Meta.CRC32.Source = source;
+	s->Meta.CRC32.CRC32  = 0xFFFFFFFFUL;
 }
 
 
