@@ -71,6 +71,7 @@ const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <utime.h>
+#include <poll.h>
 
 #define Socket__Error() errno
 char* Platform_NewLine    = "\n";
@@ -875,17 +876,6 @@ static bool Font_MakeArgs(const String* path, FT_Stream stream, FT_Open_Args* ar
 	return true;
 }
 
-static int Font_Find(const String* name, StringsBuffer* entries) {
-	String faceName;
-	int i;
-
-	for (i = 1; i < entries->Count; i += 2) {
-		faceName = StringsBuffer_UNSAFE_Get(entries, i);
-		if (String_CaselessEquals(&faceName, name)) return i;
-	}
-	return -1;
-}
-
 void Font_GetNames(StringsBuffer* buffer) {
 	String entry, name, path;
 	int i;
@@ -1273,33 +1263,62 @@ ReturnCode Socket_Close(SocketHandle socket) {
 	return res;
 }
 
-ReturnCode Socket_Select(SocketHandle socket, int selectMode, bool* success) {
+/* Alas, a simple cross-platform select() is not good enough */
+#ifdef CC_BUILD_WIN
+ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
-	int selectCount, nfds;
+	int selectCount;
+
+	set.fd_count    = 1;
+	set.fd_array[0] = socket;
+
+	if (mode == SOCKET_POLL_READ) {
+		selectCount = select(1, &set, NULL, NULL, &time);
+	} else {
+		selectCount = select(1, NULL, &set, NULL, &time);
+	}
+
+	if (selectCount == -1) { *success = false; return Socket__Error(); }
+
+	*success = set.fd_count != 0; return 0;
+}
+#else
+#ifdef CC_BUILD_OSX
+/* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
+ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success) {
+	fd_set set;
+	struct timeval time = { 0 };
+	int selectCount;
 
 	FD_ZERO(&set);
 	FD_SET(socket, &set);
 
-	#ifdef CC_BUILD_WIN
-	nfds = 1;
-	#else
-	nfds = socket + 1;
-	#endif
-
-	if (selectMode == SOCKET_SELECT_READ) {
-		selectCount = select(nfds, &set, NULL, NULL, &time);
+	if (selectMode == SOCKET_POLL_READ) {
+		selectCount = select(socket + 1, &set, NULL, NULL, &time);
 	} else {
-		selectCount = select(nfds, NULL, &set, NULL, &time);
+		selectCount = select(socket + 1, NULL, &set, NULL, &time);
 	}
 
 	if (selectCount == -1) { *success = false; return Socket__Error(); }
-#ifdef CC_BUILD_WIN
-	*success = set.fd_count != 0; return 0;
-#else
 	*success = FD_ISSET(socket, &set); return 0;
-#endif
 }
+#else
+ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success) {
+	struct pollfd pfd;
+	int flags;
+
+	pfd.fd     = socket;
+	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
+	if (poll(&pfd, 1, 0) == -1) { *success = false; return Socket__Error(); }
+	
+	/* to match select, closed socket still counts as readable */
+	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
+	*success = (pfd.revents & flags) != 0;
+	return 0;
+}
+#endif
+#endif
 
 
 /*########################################################################################################################*

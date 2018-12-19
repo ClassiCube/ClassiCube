@@ -223,10 +223,6 @@ void LWebTask_Tick(struct LWebTask* task) {
 	ASyncRequest_Free(&req);
 }
 
-static void LWebTask_DefaultBegin(struct LWebTask* task) {
-	AsyncDownloader_GetData(&task->URL, false, &task->Identifier);
-}
-
 
 /*########################################################################################################################*
 *-------------------------------------------------------GetTokenTask------------------------------------------------------*

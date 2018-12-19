@@ -311,7 +311,7 @@ static void MPConnection_TickConnect(void) {
 	if (res) { MPConnection_FailConnect(res); return; }
 
 	now = DateTime_CurrentUTC_MS();
-	Socket_Select(net_socket, SOCKET_SELECT_WRITE, &poll_write);
+	Socket_Poll(net_socket, SOCKET_POLL_WRITE, &poll_write);
 
 	if (poll_write) {
 		Socket_SetBlocking(net_socket, true);
@@ -381,16 +381,17 @@ static void MPConnection_CheckDisconnection(double delta) {
 
 	ReturnCode availRes, selectRes;
 	uint32_t pending = 0;
-	bool poll_success;
+	bool poll_read;
 
 	net_discAccumulator += delta;
 	if (net_discAccumulator < 1.0) return;
 	net_discAccumulator = 0.0;
 
 	availRes  = Socket_Available(net_socket, &pending);
-	selectRes = Socket_Select(net_socket, SOCKET_SELECT_READ, &poll_success);
+	/* poll read returns true when socket is closed */
+	selectRes = Socket_Poll(net_socket, SOCKET_POLL_READ, &poll_read);
 
-	if (net_writeFailed || availRes || selectRes || (pending == 0 && poll_success)) {	
+	if (net_writeFailed || availRes || selectRes || (pending == 0 && poll_read)) {	
 		Game_Disconnect(&title, &reason);
 	}
 }

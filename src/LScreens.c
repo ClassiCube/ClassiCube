@@ -1281,6 +1281,7 @@ CC_NOINLINE static void UpdatesScreen_FormatTime(String* str, char* type, int de
 static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, TimeMS time) {
 	String str; char buffer[STRING_SIZE];
 	TimeMS now;
+	int delta;
 
 	String_InitArray(str, buffer);
 	String_AppendConst(&str, prefix);
@@ -1288,8 +1289,8 @@ static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, TimeMS 
 	if (!time) {
 		String_AppendConst(&str, "&cCheck failed");
 	} else {
-		now = DateTime_CurrentUTC_MS();
-		int delta = (int)(now - time) / 1000;
+		now   = DateTime_CurrentUTC_MS();
+		delta = (int)(now - time) / 1000;
 
 		if (delta < SECS_PER_MIN) {
 			UpdatesScreen_FormatTime(&str, "second", delta, 1);
