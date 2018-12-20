@@ -1560,7 +1560,7 @@ ReturnCode Http_Do(struct AsyncRequest* req, volatile int* progress) {
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
 
 	curl_easy_setopt(curl, CURLOPT_URL,            urlStr);
-	curl_easy_setopt(curl, CURLOPT_USERAGENT,      PROGRAM_APP_NAME);
+	curl_easy_setopt(curl, CURLOPT_USERAGENT,      GAME_APP_NAME);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
 	curl_easy_setopt(curl, CURLOPT_NOPROGRESS,       0L);
@@ -2151,7 +2151,7 @@ void Platform_Exit(ReturnCode code) { exit(code); }
 int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args) {
 	int i, count;
 	argc--; /* skip executable path argument */
-	count = min(argc, PROGRAM_MAX_CMDARGS);
+	count = min(argc, GAME_MAX_CMDARGS);
 
 	for (i = 0; i < count; i++) {
 		args[i] = String_FromReadonly(argv[i + 1]);
