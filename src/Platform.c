@@ -908,7 +908,7 @@ String Font_Lookup(const String* fontName, int style) {
 	if (style & FONT_STYLE_BOLD)   path = Font_LookupOf(fontName, 'B');
 	if (style & FONT_STYLE_ITALIC) path = Font_LookupOf(fontName, 'I');
 
-	return Font_LookupOf(fontName, 'R');
+	return path.length ? path : Font_LookupOf(fontName, 'R');
 }
 
 void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {

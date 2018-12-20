@@ -2223,8 +2223,8 @@ void Window_SetClipboardText(const String* value) {
 	if (err) ErrorHandler_Fail2(err, "Clearing Pasteboard");
 	PasteboardSynchronize(pbRef);
 
-	len = Platform_ConvertString(str, value);
-	CFDataCreate(NULL, str, len);
+	len    = Platform_ConvertString(str, value);
+	cfData = CFDataCreate(NULL, str, len);
 	if (!cfData) ErrorHandler_Fail("CFDataCreate() returned null pointer");
 
 	PasteboardPutItemFlavor(pbRef, 1, FMT_UTF8, cfData, 0);
