@@ -55,94 +55,94 @@ extern ScheduledTaskCallback Gfx_LostContextFunction;
 /* Creates a new texture. (and also generates mipmaps if mipmaps) */
 /* NOTE: Only set mipmaps to true if Gfx_Mipmaps is also true, because whether textures
 use mipmapping may be either a per-texture or global state depending on the backend. */
-GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps);
+CC_API GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps);
 /* Updates a region of the given texture. (and mipmapped regions if mipmaps) */
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, bool mipmaps);
+CC_API void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, bool mipmaps);
 /* Sets the currently active texture. */
-void Gfx_BindTexture(GfxResourceID texId);
+CC_API void Gfx_BindTexture(GfxResourceID texId);
 /* Deletes the given texture, then sets it to GFX_NULL. */
-void Gfx_DeleteTexture(GfxResourceID* texId);
+CC_API void Gfx_DeleteTexture(GfxResourceID* texId);
 /* Sets whether texture colour is used when rendering vertices. */
-void Gfx_SetTexturing(bool enabled);
+CC_API void Gfx_SetTexturing(bool enabled);
 /* Turns on mipmapping. (if Gfx_Mipmaps is enabled) */
 /* NOTE: You must have created textures with mipmaps true for this to work. */
-void Gfx_EnableMipmaps(void);
+CC_API void Gfx_EnableMipmaps(void);
 /* Turns off mipmapping. (if GfX_Mipmaps is enabled) */
 /* NOTE: You must have created textures with mipmaps true for this to work. */
-void Gfx_DisableMipmaps(void);
+CC_API void Gfx_DisableMipmaps(void);
 
 /* Returns whether fog blending is enabled. */
-bool Gfx_GetFog(void);
+CC_API bool Gfx_GetFog(void);
 /* Sets whether fog blending is enabled. */
-void Gfx_SetFog(bool enabled);
+CC_API void Gfx_SetFog(bool enabled);
 /* Sets the colour of the blended fog. */
-void Gfx_SetFogCol(PackedCol col);
+CC_API void Gfx_SetFogCol(PackedCol col);
 /* Sets thickness of fog for FOG_EXP/FOG_EXP2 modes. */
-void Gfx_SetFogDensity(float value);
+CC_API void Gfx_SetFogDensity(float value);
 /* Sets extent/end of fog for FOG_LINEAR mode. */
-void Gfx_SetFogEnd(float value);
+CC_API void Gfx_SetFogEnd(float value);
 /* Sets in what way fog is blended. */
-void Gfx_SetFogMode(FogFunc func);
+CC_API void Gfx_SetFogMode(FogFunc func);
 
 /* Sets whether backface culling is performed. */
-void Gfx_SetFaceCulling(bool enabled);
+CC_API void Gfx_SetFaceCulling(bool enabled);
 /* Sets whether new pixels may be discarded based on their alpha. */
-void Gfx_SetAlphaTest(bool enabled);
+CC_API void Gfx_SetAlphaTest(bool enabled);
 /* Sets in what way pixels may be discarded based on their alpha. */
-void Gfx_SetAlphaTestFunc(CompareFunc func, float refValue);
+CC_API void Gfx_SetAlphaTestFunc(CompareFunc func, float refValue);
 /* Sets whether existing and new pixels are blended together. */
-void Gfx_SetAlphaBlending(bool enabled);
+CC_API void Gfx_SetAlphaBlending(bool enabled);
 /* Sets in what way existing and new pixels are blended. */
-void Gfx_SetAlphaBlendFunc(BlendFunc srcFunc, BlendFunc dstFunc);
+CC_API void Gfx_SetAlphaBlendFunc(BlendFunc srcFunc, BlendFunc dstFunc);
 /* Sets whether blending between the alpha components of texture and vertex colour is performed. */
-void Gfx_SetAlphaArgBlend(bool enabled);
+CC_API void Gfx_SetAlphaArgBlend(bool enabled);
 
 /* Clears the colour and depth buffer to default. */
-void Gfx_Clear(void);
+CC_API void Gfx_Clear(void);
 /* Sets the colour that the colour buffer is cleared to. */
-void Gfx_ClearCol(PackedCol col);
+CC_API void Gfx_ClearCol(PackedCol col);
 /* Sets whether pixels may be discard based on z/depth. */
-void Gfx_SetDepthTest(bool enabled);
+CC_API void Gfx_SetDepthTest(bool enabled);
 /* Sets in what may pixels may be discarded based on z/depth. */
-void Gfx_SetDepthTestFunc(CompareFunc func);
+CC_API void Gfx_SetDepthTestFunc(CompareFunc func);
 /* Sets whether R/G/B/A of pixels are actually written to the colour buffer channels. */
-void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a);
+CC_API void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a);
 /* Sets whether z/depth of pixels is actually written to the depth buffer. */
-void Gfx_SetDepthWrite(bool enabled);
+CC_API void Gfx_SetDepthWrite(bool enabled);
 
 /* Creates a new dynamic vertex buffer, whose contents can be updated later. */
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices);
+CC_API GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices);
 /* Creates a new vertex buffer and fills out its contents. */
-GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count);
+CC_API GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count);
 /* Creates a new index buffer and fills out its contents. */
-GfxResourceID Gfx_CreateIb(void* indices, int indicesCount);
+CC_API GfxResourceID Gfx_CreateIb(void* indices, int indicesCount);
 /* Sets the currently active vertex buffer. */
-void Gfx_BindVb(GfxResourceID vb);
+CC_API void Gfx_BindVb(GfxResourceID vb);
 /* Sets the currently active index buffer. */
-void Gfx_BindIb(GfxResourceID ib);
+CC_API void Gfx_BindIb(GfxResourceID ib);
 /* Deletes the given vertex buffer, then sets it to GFX_NULL. */
-void Gfx_DeleteVb(GfxResourceID* vb);
+CC_API void Gfx_DeleteVb(GfxResourceID* vb);
 /* Deletes the given index buffer, then sets it to GFX_NULL. */
-void Gfx_DeleteIb(GfxResourceID* ib);
+CC_API void Gfx_DeleteIb(GfxResourceID* ib);
 
 /* Sets the format of the rendered vertices. */
-void Gfx_SetVertexFormat(VertexFormat fmt);
+CC_API void Gfx_SetVertexFormat(VertexFormat fmt);
 /* Updates the data of a dynamic vertex buffer. */
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount);
+CC_API void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount);
 /* Renders vertices from the currently bound vertex buffer as lines. */
-void Gfx_DrawVb_Lines(int verticesCount);
+CC_API void Gfx_DrawVb_Lines(int verticesCount);
 /* Renders vertices from the currently bound vertex and index buffer as triangles. */
 /* NOTE: Offsets each index by startVertex. */
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex);
+CC_API void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex);
 /* Renders vertices from the currently bound vertex and index buffer as triangles. */
-void Gfx_DrawVb_IndexedTris(int verticesCount);
+CC_API void Gfx_DrawVb_IndexedTris(int verticesCount);
 /* Special case Gfx_DrawVb_IndexedTris_Range for map renderer */
 void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex);
 
 /* Loads the given matrix over the currently active matrix. */
-void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix);
+CC_API void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix);
 /* Loads the identity matrix over the currently active matrix. */
-void Gfx_LoadIdentityMatrix(MatrixType type);
+CC_API void Gfx_LoadIdentityMatrix(MatrixType type);
 /* Calculates an orthographic matrix suitable with this backend. (usually for 2D) */
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix);
 /* Calculates a projection matrix suitable with this backend. (usually for 3D) */

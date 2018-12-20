@@ -51,93 +51,93 @@ CC_NOINLINE String String_FromReadonly(STRING_REF const char* buffer);
 #define String_InitArray_NT(str, buffr) str.buffer = buffr; str.length = 0; str.capacity = sizeof(buffr) - 1;
 
 /* Removes all colour codes from the given string. */
-CC_NOINLINE void String_StripCols(String* str);
+CC_API void String_StripCols(String* str);
 /* Sets length of dst to 0, then appends all characters in src. */
-CC_NOINLINE void String_Copy(String* dst, const String* src);
+CC_API void String_Copy(String* dst, const String* src);
 /* UNSAFE: Returns a substring of the given string. (sub.buffer is within str.buffer + str.length) */
-CC_NOINLINE String String_UNSAFE_Substring(STRING_REF const String* str, int offset, int length);
+CC_API String String_UNSAFE_Substring(STRING_REF const String* str, int offset, int length);
 /* UNSAFE: Returns a substring of the given string. (sub.buffer is within str.buffer + str.length) */
 #define String_UNSAFE_SubstringAt(str, offset) (String_UNSAFE_Substring(str, offset, (str)->length - (offset)))
 /* UNSAFE: Splits a string of the form [str1][c][str2][c][str3].. into substrings. */
 /* e.g., "abc:id:xyz" becomes "abc","id","xyz" */
-CC_NOINLINE int String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int maxSubs);
+CC_API int String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int maxSubs);
 /* UNSAFE: Splits a string of the form [key][c][value] into two substrings. */
 /* e.g., "allowed =true" becomes "allowed" and "true", and excludes the space. */
 /* If c is not found, sets key to str and value to String_Empty, returns false. */
-CC_NOINLINE bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value);
+CC_API bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value);
 
 /* Whether all characters of the strings are equal. */
-CC_NOINLINE bool String_Equals(const String* a, const String* b);
+CC_API bool String_Equals(const String* a, const String* b);
 /* Whether all characters of the strings are case-insensitively equal. */
-CC_NOINLINE bool String_CaselessEquals(const String* a, const String* b);
+CC_API bool String_CaselessEquals(const String* a, const String* b);
 /* Whether all characters of the strings are case-insensitively equal. */
 /* NOTE: Faster than String_CaselessEquals(a, String_FromReadonly(b)) */
-CC_NOINLINE bool String_CaselessEqualsConst(const String* a, const char* b);
+CC_API bool String_CaselessEqualsConst(const String* a, const char* b);
 /* Breaks down an integer into an array of digits. */
 /* NOTE: Digits are in reverse order, so e.g. '200' becomes '0','0','2' */
-CC_NOINLINE int  String_MakeUInt32(uint32_t num, char* digits);
+CC_API int  String_MakeUInt32(uint32_t num, char* digits);
 
 /* Attempts to append a character. */
 /* Does nothing if str->length == str->capcity. */
 void String_Append(String* str, char c);
 /* Attempts to append "true" if value is non-zero, "false" otherwise. */
-CC_NOINLINE void String_AppendBool(String* str, bool value);
+CC_API void String_AppendBool(String* str, bool value);
 /* Attempts to append the digits of an integer (and -sign if negative). */
-CC_NOINLINE void String_AppendInt(String* str, int num);
+CC_API void String_AppendInt(String* str, int num);
 /* Attempts to append the digits of an unsigned 32 bit integer. */
-CC_NOINLINE void String_AppendUInt32(String* str, uint32_t num);
+CC_API void String_AppendUInt32(String* str, uint32_t num);
 /* Attempts to append the digits of an integer, padding left with 0. */
-CC_NOINLINE void String_AppendPaddedInt(String* str, int num, int minDigits);
+CC_API void String_AppendPaddedInt(String* str, int num, int minDigits);
 /* Attempts to append the digits of an unsigned 64 bit integer. */
-CC_NOINLINE void String_AppendUInt64(String* str, uint64_t num);
+CC_API void String_AppendUInt64(String* str, uint64_t num);
 
 /* Attempts to append the digits of a float as a decimal. */
 /* NOTE: If the number is an integer, no decimal point is added. */
 /* Otherwise, fracDigits digits are added after a decimal point. */
 /*  e.g. 1.0f produces "1", 2.6745f produces "2.67" when fracDigits is 2 */
-CC_NOINLINE void String_AppendFloat(String* str, float num, int fracDigits); /* TODO: Need to account for , or . for decimal */
+CC_API void String_AppendFloat(String* str, float num, int fracDigits); /* TODO: Need to account for , or . for decimal */
 /* Attempts to append characters. src MUST be null-terminated. */
-CC_NOINLINE void String_AppendConst(String* str, const char* src);
+CC_API void String_AppendConst(String* str, const char* src);
 /* Attempts to append characters of a string. */
-CC_NOINLINE void String_AppendString(String* str, const String* src);
+CC_API void String_AppendString(String* str, const String* src);
 /* Attempts to append characters of a string, skipping any colour codes. */
-CC_NOINLINE void String_AppendColorless(String* str, const String* src);
+CC_API void String_AppendColorless(String* str, const String* src);
 /* Attempts to append the two hex digits of a byte. */
-CC_NOINLINE void String_AppendHex(String* str, uint8_t value);
+CC_API void String_AppendHex(String* str, uint8_t value);
 
 /* Returns first index of the given character in the given string, -1 if not found. */
-CC_NOINLINE int String_IndexOf(const String* str, char c, int offset);
+CC_API int String_IndexOf(const String* str, char c, int offset);
 /* Returns last index of the given character in the given string, -1 if not found. */
-CC_NOINLINE int String_LastIndexOf(const String* str, char c);
+CC_API int String_LastIndexOf(const String* str, char c);
 /* Inserts the given character into the given string. Exits process if this fails. */
 /* e.g. inserting 'd' at offset '1' into "abc" produces "adbc" */
-CC_NOINLINE void String_InsertAt(String* str, int offset, char c);
+CC_API void String_InsertAt(String* str, int offset, char c);
 /* Deletes a character from the given string. Exits process if this fails. */
 /* e.g. deleting at offset '1' from "adbc" produces "abc" */
-CC_NOINLINE void String_DeleteAt(String* str, int offset);
+CC_API void String_DeleteAt(String* str, int offset);
 /* Trims leading spaces from the given string. */
 /* NOTE: Works by adjusting buffer/length, the characters in memory are not shifted. */
-CC_NOINLINE void String_UNSAFE_TrimStart(String* str);
+CC_API void String_UNSAFE_TrimStart(String* str);
 /* Trims trailing spaces from the given string. */
 /* NOTE: Works by adjusting buffer/length, the characters in memory are not shifted. */
-CC_NOINLINE void String_UNSAFE_TrimEnd(String* str);
+CC_API void String_UNSAFE_TrimEnd(String* str);
 
 /* Returns first index of the given substring in the given string, -1 if not found. */
 /* e.g. index of "ab" within "cbabd" is 2 */
-CC_NOINLINE int String_IndexOfString(const String* str, const String* sub);
+CC_API int String_IndexOfString(const String* str, const String* sub);
 /* Returns whether given substring is inside the given string. */
 #define String_ContainsString(str, sub) (String_IndexOfString(str, sub) >= 0)
 /* Returns whether given substring is case-insensitively inside the given string. */
-CC_NOINLINE bool String_CaselessContains(const String* str, const String* sub);
+CC_API bool String_CaselessContains(const String* str, const String* sub);
 /* Returns whether given substring is case-insensitively equal to the beginning of the given string. */
-CC_NOINLINE bool String_CaselessStarts(const String* str, const String* sub);
+CC_API bool String_CaselessStarts(const String* str, const String* sub);
 /* Returns whether given substring is case-insensitively equal to the ending of the given string. */
-CC_NOINLINE bool String_CaselessEnds(const String* str, const String* sub);
+CC_API bool String_CaselessEnds(const String* str, const String* sub);
 /* Compares the length of the given strings, then compares the characters if same length. Returns: */
 /* -X if a.length < b.length, X if a.length > b.length */
 /* -X if a.buffer[i] < b.buffer[i], X if a.buffer[i] > b.buffer[i] */
 /* else returns 0. NOTE: The return value is not just in -1,0,1! */
-CC_NOINLINE int  String_Compare(const String* a, const String* b);
+CC_API int  String_Compare(const String* a, const String* b);
 
 /* See String_Format4 */
 void String_Format1(String* str, const char* format, const void* a1);
@@ -164,20 +164,20 @@ int Convert_Utf8ToUnicode(Codepoint* cp, const uint8_t* data, uint32_t len);
 int Convert_UnicodeToUtf8(Codepoint cp, uint8_t* data);
 
 /* Attempts to convert the given string into an unsigned 8 bit integer. */
-CC_NOINLINE bool Convert_ParseUInt8(const String*  str, uint8_t* value);
+CC_API bool Convert_ParseUInt8(const String*  str, uint8_t* value);
 /* Attempts to convert the given string into an signed 16 bit integer. */
-CC_NOINLINE bool Convert_ParseInt16(const String*  str, int16_t* value);
+CC_API bool Convert_ParseInt16(const String*  str, int16_t* value);
 /* Attempts to convert the given string into an unsigned 16 bit integer. */
-CC_NOINLINE bool Convert_ParseUInt16(const String* str, uint16_t* value);
+CC_API bool Convert_ParseUInt16(const String* str, uint16_t* value);
 /* Attempts to convert the given string into an integer. */
-CC_NOINLINE bool Convert_ParseInt(const String*    str, int* value);
+CC_API bool Convert_ParseInt(const String*    str, int* value);
 /* Attempts to convert the given string into an unsigned 64 bit integer. */
-CC_NOINLINE bool Convert_ParseUInt64(const String* str, uint64_t* value);
+CC_API bool Convert_ParseUInt64(const String* str, uint64_t* value);
 /* Attempts to convert the given string into a floating point number. */
-CC_NOINLINE bool Convert_ParseFloat(const String*  str, float* value);
+CC_API bool Convert_ParseFloat(const String*  str, float* value);
 /* Attempts to convert the given string into a bool. */
 /* NOTE: String must case-insensitively equal "true" or "false" */
-CC_NOINLINE bool Convert_ParseBool(const String*   str, bool* value);
+CC_API bool Convert_ParseBool(const String*   str, bool* value);
 
 #define STRINGSBUFFER_BUFFER_DEF_SIZE 4096
 #define STRINGSBUFFER_FLAGS_DEF_ELEMS 256
@@ -192,23 +192,23 @@ typedef struct StringsBuffer_ {
 } StringsBuffer;
 
 /* Resets counts to 0, and frees any allocated memory. */
-CC_NOINLINE void StringsBuffer_Clear(StringsBuffer* buffer);
+CC_API void StringsBuffer_Clear(StringsBuffer* buffer);
 /* Copies the characters from the i'th string in the given buffer into the given string. */
-CC_NOINLINE void StringsBuffer_Get(StringsBuffer* buffer, int i, String* str);
+CC_API void StringsBuffer_Get(StringsBuffer* buffer, int i, String* str);
 /* UNSAFE: Returns a direct pointer to the i'th string in the given buffer. */
-CC_NOINLINE STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i);
+CC_API STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i);
 /* Adds a given string to the end of the given buffer. */
-CC_NOINLINE void StringsBuffer_Add(StringsBuffer* buffer, const String* str);
+CC_API void StringsBuffer_Add(StringsBuffer* buffer, const String* str);
 /* Removes the i'th string from the given buffer, shifting following strings downwards. */
-CC_NOINLINE void StringsBuffer_Remove(StringsBuffer* buffer, int index);
+CC_API void StringsBuffer_Remove(StringsBuffer* buffer, int index);
 
 /* Performs line wrapping on the given string. */
 /* e.g. "some random tex|t* (| is lineLen) becomes "some random" "text" */
-CC_NOINLINE void WordWrap_Do(STRING_REF String* text, String* lines, int numLines, int lineLen);
+void WordWrap_Do(STRING_REF String* text, String* lines, int numLines, int lineLen);
 /* Calculates the position of a raw index in the wrapped lines. */
-CC_NOINLINE void WordWrap_GetCoords(int index, const String* lines, int numLines, int* coordX, int* coordY);
+void WordWrap_GetCoords(int index, const String* lines, int numLines, int* coordX, int* coordY);
 /* Returns number of characters from current character to end of previous word. */
-CC_NOINLINE int  WordWrap_GetBackLength(const String* text, int index);
+int  WordWrap_GetBackLength(const String* text, int index);
 /* Returns number of characters from current character to start of next word. */
-CC_NOINLINE int  WordWrap_GetForwardLength(const String* text, int index);
+int  WordWrap_GetForwardLength(const String* text, int index);
 #endif

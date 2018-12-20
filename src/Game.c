@@ -473,7 +473,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&Audio_Component);
 	Game_AddComponent(&AxisLinesRenderer_Component);
 
-	//Game_LoadPlugins();
+	Game_LoadPlugins();
 	for (comp = comps_head; comp; comp = comp->Next) {
 		if (comp->Init) comp->Init();
 	}

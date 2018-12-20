@@ -364,7 +364,7 @@ void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------CRC32Stream---------------------------------------------------------*
+*-------------------------------------------------CRC32Stream/ReadU32-----------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode Stream_Crc32Write(struct Stream* stream, const uint8_t* data, uint32_t count, uint32_t* modified) {
 	struct Stream* source;
@@ -388,48 +388,6 @@ void Stream_WriteonlyCrc32(struct Stream* s, struct Stream* source) {
 	s->Meta.CRC32.CRC32  = 0xFFFFFFFFUL;
 }
 
-
-/*########################################################################################################################*
-*-------------------------------------------------Read/Write primitives---------------------------------------------------*
-*#########################################################################################################################*/
-uint16_t Stream_GetU16_LE(const uint8_t* data) {
-	return (uint16_t)(data[0] | (data[1] << 8));
-}
-
-uint16_t Stream_GetU16_BE(const uint8_t* data) {
-	return (uint16_t)((data[0] << 8) | data[1]);
-}
-
-uint32_t Stream_GetU32_LE(const uint8_t* data) {
-	return (uint32_t)(
-		 (uint32_t)data[0]        | ((uint32_t)data[1] << 8) |
-		((uint32_t)data[2] << 16) | ((uint32_t)data[3] << 24));
-}
-
-uint32_t Stream_GetU32_BE(const uint8_t* data) {
-	return (uint32_t)(
-		((uint32_t)data[0] << 24) | ((uint32_t)data[1] << 16) |
-		((uint32_t)data[2] << 8)  |  (uint32_t)data[3]);
-}
-
-void Stream_SetU16_LE(uint8_t* data, uint16_t value) {
-	data[0] = (uint8_t)(value      ); data[1] = (uint8_t)(value >> 8 );
-}
-
-void Stream_SetU16_BE(uint8_t* data, uint16_t value) {
-	data[0] = (uint8_t)(value >> 8 ); data[1] = (uint8_t)(value      );
-}
-
-void Stream_SetU32_LE(uint8_t* data, uint32_t value) {
-	data[0] = (uint8_t)(value      ); data[1] = (uint8_t)(value >> 8 );
-	data[2] = (uint8_t)(value >> 16); data[3] = (uint8_t)(value >> 24);
-}
-
-void Stream_SetU32_BE(uint8_t* data, uint32_t value) {
-	data[0] = (uint8_t)(value >> 24); data[1] = (uint8_t)(value >> 16);
-	data[2] = (uint8_t)(value >> 8 ); data[3] = (uint8_t)(value);
-}
-
 ReturnCode Stream_ReadU32_LE(struct Stream* s, uint32_t* value) {
 	uint8_t data[4]; ReturnCode res;
 	if ((res = Stream_Read(s, data, 4))) return res;
@@ -441,7 +399,6 @@ ReturnCode Stream_ReadU32_BE(struct Stream* s, uint32_t* value) {
 	if ((res = Stream_Read(s, data, 4))) return res;
 	*value = Stream_GetU32_BE(data); return 0;
 }
-
 
 /*########################################################################################################################*
 *--------------------------------------------------Read/Write strings-----------------------------------------------------*
