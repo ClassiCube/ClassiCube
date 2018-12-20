@@ -67,7 +67,7 @@ struct InflateState {
 
 /* Initialises DEFLATE decompressor state to defaults. */
 CC_API void Inflate_Init(struct InflateState* state, struct Stream* source);
-/* Attempts to decompress all currently pending data. */
+/* Attempts to decompress as much of the currently pending data as possible. */
 /* NOTE: This is a low level call - usually you should use Inflate_MakeStream. */
 void Inflate_Process(struct InflateState* state);
 /* Deompresses input data read from another stream using DEFLATE. Read only stream. */
@@ -122,13 +122,18 @@ struct ZipState {
 	/* Return non-zero to indicate an error and stop further processing. */
 	/* NOTE: data stream MAY NOT be seekable. (i.e. entry data might be compressed) */
 	ReturnCode (*ProcessEntry)(const String* path, struct Stream* data, void* obj);
-	/* Predicate used to select which entries in a .zip archive get proessed. */
+	/* Predicate used to select which entries in a .zip archive get processed. */
 	/* NOTE: returning false entirely skips the entry. (avoids pointless seek to entry) */
 	bool (*SelectEntry)(const String* path);
 	/* Generic object/pointer passed to ProcessEntry callback. */
 	void* Obj;
-	/* Number of entries in the .zip archive. */
-	int EntriesCount;
+
+	/* (internal) Number of entries selected by SelectEntry. */
+	int _usedEntries;
+	/* (internal) Total number of entries in the archive. */
+	int _totalEntries;
+	/* (internal) Offset to central directory entries. */
+	uint32_t _centralDirBeg;
 	/* Data for each entry in the .zip archive. */
 	struct ZipEntry Entries[ZIP_MAX_ENTRIES];
 };

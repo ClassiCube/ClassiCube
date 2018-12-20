@@ -372,6 +372,41 @@ static void Game_LoadOptions(void) {
 	}*/
 }
 
+static void Game_LoadPlugin(const String* filename, void* obj) {
+	void* lib;
+	void* verSymbol;  /* EXPORT int Plugin_ApiVersion = GAME_API_VER; */
+	void* compSymbol; /* EXPORT struct IGameComponent Plugin_Component = { (whatever) } */
+	int ver;
+	ReturnCode res;
+
+	res = Platform_LoadLibrary(filename, &lib);
+	if (res) { Chat_LogError2(res, "loading plugin", filename); return; }
+
+	res = Platform_GetSymbol(lib, "Plugin_ApiVersion", &verSymbol);
+	if (res) { Chat_LogError2(res, "getting plugin version", filename); return; }
+	res = Platform_GetSymbol(lib, "Plugin_Component", &compSymbol);
+	if (res) { Chat_LogError2(res, "initing plugin", filename); return; }
+
+	ver = *((int*)verSymbol);
+	if (ver < GAME_API_VER) {
+		Chat_Add1("&c%s plugin is outdated! Try getting a more recent version.", filename);
+		return;
+	} else if (ver > GAME_API_VER) {
+		Chat_Add1("&cYour game is too outdated to use %s plugin! Try updating it.", filename);
+		return;
+	}
+
+	Game_AddComponent((struct IGameComponent*)compSymbol);
+}
+
+static void Game_LoadPlugins(void) {
+	const static String dir = String_FromConst("plugins");
+	ReturnCode res;
+
+	res = Directory_Enum(&dir, NULL, Game_LoadPlugin);
+	if (res) Chat_LogError(res, "enumerating plugins directory");
+}
+
 void Game_Free(void* obj);
 static void Game_Load(void) {
 	String title;      char titleBuffer[STRING_SIZE];
@@ -438,22 +473,13 @@ static void Game_Load(void) {
 	Game_AddComponent(&Audio_Component);
 	Game_AddComponent(&AxisLinesRenderer_Component);
 
-	/* TODO: plugin dll support */
-	/* List<string> nonLoaded = PluginLoader.LoadAll(); */
-
+	//Game_LoadPlugins();
 	for (comp = comps_head; comp; comp = comp->Next) {
 		if (comp->Init) comp->Init();
 	}
-	Game_ExtractInitialTexturePack();
 
+	Game_ExtractInitialTexturePack();
 	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
-	/* TODO: plugin dll support */
-	/* if (nonLoaded != null) {
-		for (int i = 0; i < nonLoaded.Count; i++) {
-			Overlay warning = new PluginOverlay(this, nonLoaded[i]);
-			Gui_ShowOverlay(warning, false);
-		}
-	}*/
 
 	if (Gfx_WarnIfNecessary()) EnvRenderer_SetMode(EnvRenderer_Minimal | ENV_LEGACY);
 	String_InitArray(title, titleBuffer);

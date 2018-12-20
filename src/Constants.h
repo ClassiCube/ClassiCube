@@ -4,9 +4,10 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-#define PROGRAM_MAX_CMDARGS 5
-#define PROGRAM_APP_NAME "ClassiCube 0.99.9.2"
-#define PROGRAM_APP_VER  "0.99.9.2"
+#define GAME_MAX_CMDARGS 5
+#define GAME_APP_NAME "ClassiCube 0.99.9.2"
+#define GAME_APP_VER  "0.99.9.2"
+#define GAME_API_VER 1
 
 /* Max number of characters strings can have. */
 #define STRING_SIZE 64

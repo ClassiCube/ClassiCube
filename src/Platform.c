@@ -1333,7 +1333,7 @@ static HINTERNET hInternet;
 
 void Http_Init(void) {
 	/* TODO: Should we use INTERNET_OPEN_TYPE_PRECONFIG instead? */
-	hInternet = InternetOpenA(PROGRAM_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+	hInternet = InternetOpenA(GAME_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
 	if (!hInternet) ErrorHandler_Fail2(GetLastError(), "Failed to init WinINet");
 }
 
@@ -2031,7 +2031,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 	int i;
 	Platform_NextArg(&cmdArgs); /* skip exe path */
 
-	for (i = 0; i < PROGRAM_MAX_CMDARGS; i++) {
+	for (i = 0; i < GAME_MAX_CMDARGS; i++) {
 		args[i] = Platform_NextArg(&cmdArgs);
 
 		if (!args[i].length) break;

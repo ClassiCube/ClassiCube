@@ -61,12 +61,12 @@ static void Program_RunGame(void) {
 	}
 
 	String_InitArray(title, titleBuffer);
-	String_Format2(&title, "%c (%s)", PROGRAM_APP_NAME, &Game_Username);
+	String_Format2(&title, "%c (%s)", GAME_APP_NAME, &Game_Username);
 	Game_Run(width, height, &title);
 }
 
 int main(int argc, char** argv) {
-	String args[PROGRAM_MAX_CMDARGS];
+	String args[GAME_MAX_CMDARGS];
 	int argsCount;
 	uint8_t ip[4];
 	uint16_t port;
@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
 #ifdef CC_TEST_VORBIS
 	main_imdct();
 #endif
-	Platform_LogConst("Starting " PROGRAM_APP_NAME " ..");
+	Platform_LogConst("Starting " GAME_APP_NAME " ..");
 
 	Utils_EnsureDirectory("maps");
 	Utils_EnsureDirectory("texpacks");

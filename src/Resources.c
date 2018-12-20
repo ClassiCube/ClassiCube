@@ -172,11 +172,11 @@ struct ResourceMusic Resources_Music[7] = {
 /*########################################################################################################################*
 *---------------------------------------------------------Zip writer------------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode ZipPatcher_LocalFile(struct Stream* s, struct ResourceTexture* entry) {
-	String name = String_FromReadonly(entry->Filename);
+static ReturnCode ZipPatcher_LocalFile(struct Stream* s, struct ResourceTexture* e) {
+	String name = String_FromReadonly(e->Filename);
 	uint8_t header[30 + STRING_SIZE];
 	ReturnCode res;
-	if ((res = s->Position(s, &entry->Offset))) return res;
+	if ((res = s->Position(s, &e->Offset))) return res;
 
 	Stream_SetU32_LE(&header[0], 0x04034b50);   /* signature */
 	Stream_SetU16_LE(&header[4],  20);          /* version needed */
@@ -184,11 +184,11 @@ static ReturnCode ZipPatcher_LocalFile(struct Stream* s, struct ResourceTexture*
 	Stream_SetU16_LE(&header[8] , 0);           /* compression method */
 	Stream_SetU16_LE(&header[10], 0);           /* last modified */
 	Stream_SetU16_LE(&header[12], 0);           /* last modified */
-
-	Stream_SetU32_LE(&header[14], 0);           /* CRC32 */
-	Stream_SetU32_LE(&header[18], 0);           /* Compressed size */
-	Stream_SetU32_LE(&header[22], 0);           /* Uncompressed size */
-
+	
+	Stream_SetU32_LE(&header[14], e->Crc32);    /* CRC32 */
+	Stream_SetU32_LE(&header[18], e->Size);     /* Compressed size */
+	Stream_SetU32_LE(&header[22], e->Size);     /* Uncompressed size */
+	 
 	Stream_SetU16_LE(&header[26], name.length); /* name length */
 	Stream_SetU16_LE(&header[28], 0);           /* extra field length */
 
@@ -196,8 +196,8 @@ static ReturnCode ZipPatcher_LocalFile(struct Stream* s, struct ResourceTexture*
 	return Stream_Write(s, header, 30 + name.length);
 }
 
-static ReturnCode ZipPatcher_CentralDir(struct Stream* s, struct ResourceTexture* res) {
-	String name = String_FromReadonly(res->Filename);
+static ReturnCode ZipPatcher_CentralDir(struct Stream* s, struct ResourceTexture* e) {
+	String name = String_FromReadonly(e->Filename);
 	uint8_t header[46 + STRING_SIZE];
 	struct DateTime now;
 	int modTime, modDate;
@@ -206,17 +206,17 @@ static ReturnCode ZipPatcher_CentralDir(struct Stream* s, struct ResourceTexture
 	modTime = (now.Second / 2) | (now.Minute << 5) | (now.Hour << 11);
 	modDate = (now.Day) | (now.Month << 5) | ((now.Year - 1980) << 9);
 
-	Stream_SetU32_LE(&header[0],  0x02014b50); /* signature */
-	Stream_SetU16_LE(&header[4],  20);         /* version */
-	Stream_SetU16_LE(&header[6],  20);         /* version needed */
-	Stream_SetU16_LE(&header[8],  0);          /* bitflags */
-	Stream_SetU16_LE(&header[10], 0);          /* compression method */
-	Stream_SetU16_LE(&header[12], modTime);    /* last modified */
-	Stream_SetU16_LE(&header[14], modDate);    /* last modified */
+	Stream_SetU32_LE(&header[0],  0x02014b50);  /* signature */
+	Stream_SetU16_LE(&header[4],  20);          /* version */
+	Stream_SetU16_LE(&header[6],  20);          /* version needed */
+	Stream_SetU16_LE(&header[8],  0);           /* bitflags */
+	Stream_SetU16_LE(&header[10], 0);           /* compression method */
+	Stream_SetU16_LE(&header[12], modTime);     /* last modified */
+	Stream_SetU16_LE(&header[14], modDate);     /* last modified */
 
-	Stream_SetU32_LE(&header[16], res->Crc32); /* CRC32 */
-	Stream_SetU32_LE(&header[20], res->Size);  /* compressed size */
-	Stream_SetU32_LE(&header[24], res->Size);  /* uncompressed size */
+	Stream_SetU32_LE(&header[16], e->Crc32);    /* CRC32 */
+	Stream_SetU32_LE(&header[20], e->Size);     /* compressed size */
+	Stream_SetU32_LE(&header[24], e->Size);     /* uncompressed size */
 
 	Stream_SetU16_LE(&header[28], name.length); /* name length */
 	Stream_SetU16_LE(&header[30], 0);           /* extra field length */
@@ -224,7 +224,7 @@ static ReturnCode ZipPatcher_CentralDir(struct Stream* s, struct ResourceTexture
 	Stream_SetU16_LE(&header[34], 0);           /* disk number */
 	Stream_SetU16_LE(&header[36], 0);           /* internal attributes */
 	Stream_SetU32_LE(&header[38], 0);           /* external attributes */
-	Stream_SetU32_LE(&header[42], res->Offset); /* local header offset */
+	Stream_SetU32_LE(&header[42], e->Offset);   /* local header offset */
 
 	Mem_Copy(&header[46], name.buffer, name.length);
 	return Stream_Write(s, header, 46 + name.length);

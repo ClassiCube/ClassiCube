@@ -561,7 +561,7 @@ static void ServerConnection_Init(void) {
 
 	Gfx_LostContextFunction = ServerConnection.Tick;
 	ScheduledTask_Add(GAME_NET_TICKS, ServerConnection.Tick);
-	String_AppendConst(&ServerConnection_AppName, PROGRAM_APP_NAME);
+	String_AppendConst(&ServerConnection_AppName, GAME_APP_NAME);
 }
 
 static void ServerConnection_Free(void) {

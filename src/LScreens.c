@@ -828,7 +828,7 @@ static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
 	const static String needUpdate = String_FromConst("&aNew release");
 	const static String upToDate   = String_FromConst("&eUp to date");
 	const static String failed     = String_FromConst("&cCheck failed");
-	const static String currentStr = String_FromConst(PROGRAM_APP_VER);
+	const static String currentStr = String_FromConst(GAME_APP_VER);
 	uint32_t latest, current;
 
 	if (!CheckUpdateTask.Base.Working)   return;
