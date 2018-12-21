@@ -32,7 +32,7 @@ void Launcher_ShowError(ReturnCode res, const char* place) {
 	String msg; char msgBuffer[STRING_SIZE * 2];
 	String_InitArray_NT(msg, msgBuffer);
 
-	String_Format2(&msg, "Error %x when %c", &res, place);
+	String_Format2(&msg, "Error %h when %c", &res, place);
 	msg.buffer[msg.length] = '\0';
 	Window_ShowDialog("Error", msg.buffer);
 }

@@ -819,15 +819,15 @@ void StringsBuffer_Remove(StringsBuffer* buffer, int index) {
 	}
 
 	/* Adjust text offset of elements after this element */
-	/* Elements may not be in order so most account for that */
+	/* Elements may not be in order so must account for that */
 	offsetAdj = len << STRINGSBUFFER_LEN_SHIFT;
-	for (i = index; i < buffer->Count; i++) {
+	for (i = index; i < buffer->Count - 1; i++) {
 		buffer->FlagsBuffer[i] = buffer->FlagsBuffer[i + 1];
 		if (buffer->FlagsBuffer[i] >= flags) {
 			buffer->FlagsBuffer[i] -= offsetAdj;
 		}
 	}
-
+	
 	buffer->Count--;
 	buffer->TotalLength -= len;
 }

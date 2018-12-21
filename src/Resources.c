@@ -384,11 +384,11 @@ static ReturnCode ModernPatcher_PatchTile(struct Stream* data, struct TilePatch*
 	ReturnCode res;
 
 	if ((res = Png_Decode(&bmp, data))) return res;
-	Bitmap_CopyBlock(0, 0, tile->X1 * 16, tile->Y1 * 16, &terrainBmp, &bmp, 16);
+	Bitmap_CopyBlock(0, 0, tile->X1 * 16, tile->Y1 * 16, &bmp, &terrainBmp, 16);
 
 	/* only quartz needs copying to two tiles */
 	if (tile->Y2) {
-		Bitmap_CopyBlock(0, 0, tile->X2 * 16, tile->Y2 * 16, &terrainBmp, &bmp, 16);
+		Bitmap_CopyBlock(0, 0, tile->X2 * 16, tile->Y2 * 16, &bmp, &terrainBmp, 16);
 	}
 
 	Mem_Free(bmp.Scan0);
