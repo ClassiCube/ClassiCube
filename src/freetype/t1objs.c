@@ -28,10 +28,6 @@
 
 #include "t1errors.h"
 
-#ifndef T1_CONFIG_OPTION_NO_AFM
-#include "t1afm.h"
-#endif
-
 #include FT_SERVICE_POSTSCRIPT_CMAPS_H
 #include FT_INTERNAL_POSTSCRIPT_AUX_H
 
@@ -209,22 +205,6 @@
     memory = face->root.memory;
     type1  = &face->type1;
 
-#ifndef T1_CONFIG_OPTION_NO_MM_SUPPORT
-    /* release multiple masters information */
-    FT_ASSERT( ( face->len_buildchar == 0 ) == ( face->buildchar == NULL ) );
-
-    if ( face->buildchar )
-    {
-      FT_FREE( face->buildchar );
-
-      face->buildchar     = NULL;
-      face->len_buildchar = 0;
-    }
-
-    T1_Done_Blend( face );
-    face->blend = NULL;
-#endif
-
     /* release font info strings */
     {
       PS_FontInfo  info = &type1->font_info;
@@ -255,12 +235,6 @@
     FT_FREE( type1->encoding.char_index );
     FT_FREE( type1->encoding.char_name );
     FT_FREE( type1->font_name );
-
-#ifndef T1_CONFIG_OPTION_NO_AFM
-    /* release afm data if present */
-    if ( face->afm_data )
-      T1_Done_Metrics( memory, (AFM_FontInfo)face->afm_data );
-#endif
 
     /* release unicode map, if any */
 #if 0

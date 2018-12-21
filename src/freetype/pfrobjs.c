@@ -177,9 +177,6 @@
       if ( phy_font->num_strikes > 0 )
         pfrface->face_flags |= FT_FACE_FLAG_FIXED_SIZES;
 
-      if ( phy_font->num_kern_pairs > 0 )
-        pfrface->face_flags |= FT_FACE_FLAG_KERNING;
-
       /* If no family name was found in the `undocumented' auxiliary
        * data, use the font ID instead.  This sucks but is better than
        * nothing.
@@ -265,10 +262,6 @@
 
         error = FT_CMap_New( &pfr_cmap_class_rec, NULL, &charmap, NULL );
       }
-
-      /* check whether we have loaded any kerning pairs */
-      if ( phy_font->num_kern_pairs )
-        pfrface->face_flags |= FT_FACE_FLAG_KERNING;
     }
 
   Exit:
@@ -452,144 +445,6 @@
       metrics->height       = cbox.yMax - cbox.yMin;
       metrics->horiBearingX = cbox.xMin;
       metrics->horiBearingY = cbox.yMax - metrics->height;
-    }
-
-  Exit:
-    return error;
-  }
-
-
-  /*************************************************************************/
-  /*************************************************************************/
-  /*****                                                               *****/
-  /*****                      KERNING METHOD                           *****/
-  /*****                                                               *****/
-  /*************************************************************************/
-  /*************************************************************************/
-
-  FT_LOCAL_DEF( FT_Error )
-  pfr_face_get_kerning( FT_Face     pfrface,        /* PFR_Face */
-                        FT_UInt     glyph1,
-                        FT_UInt     glyph2,
-                        FT_Vector*  kerning )
-  {
-    PFR_Face     face     = (PFR_Face)pfrface;
-    FT_Error     error    = FT_Err_Ok;
-    PFR_PhyFont  phy_font = &face->phy_font;
-    FT_UInt32    code1, code2, pair;
-
-
-    kerning->x = 0;
-    kerning->y = 0;
-
-    if ( glyph1 > 0 )
-      glyph1--;
-
-    if ( glyph2 > 0 )
-      glyph2--;
-
-    /* convert glyph indices to character codes */
-    if ( glyph1 > phy_font->num_chars ||
-         glyph2 > phy_font->num_chars )
-      goto Exit;
-
-    code1 = phy_font->chars[glyph1].char_code;
-    code2 = phy_font->chars[glyph2].char_code;
-    pair  = PFR_KERN_INDEX( code1, code2 );
-
-    /* now search the list of kerning items */
-    {
-      PFR_KernItem  item   = phy_font->kern_items;
-      FT_Stream     stream = pfrface->stream;
-
-
-      for ( ; item; item = item->next )
-      {
-        if ( pair >= item->pair1 && pair <= item->pair2 )
-          goto FoundPair;
-      }
-      goto Exit;
-
-    FoundPair: /* we found an item, now parse it and find the value if any */
-      if ( FT_STREAM_SEEK( item->offset )                       ||
-           FT_FRAME_ENTER( item->pair_count * item->pair_size ) )
-        goto Exit;
-
-      {
-        FT_UInt    count       = item->pair_count;
-        FT_UInt    size        = item->pair_size;
-        FT_UInt    power       = 1 << FT_MSB( count );
-        FT_UInt    probe       = power * size;
-        FT_UInt    extra       = count - power;
-        FT_Byte*   base        = stream->cursor;
-        FT_Bool    twobytes    = FT_BOOL( item->flags & PFR_KERN_2BYTE_CHAR );
-        FT_Bool    twobyte_adj = FT_BOOL( item->flags & PFR_KERN_2BYTE_ADJ  );
-        FT_Byte*   p;
-        FT_UInt32  cpair;
-
-
-        if ( extra > 0 )
-        {
-          p = base + extra * size;
-
-          if ( twobytes )
-            cpair = FT_NEXT_ULONG( p );
-          else
-            cpair = PFR_NEXT_KPAIR( p );
-
-          if ( cpair == pair )
-            goto Found;
-
-          if ( cpair < pair )
-          {
-            if ( twobyte_adj )
-              p += 2;
-            else
-              p++;
-            base = p;
-          }
-        }
-
-        while ( probe > size )
-        {
-          probe >>= 1;
-          p       = base + probe;
-
-          if ( twobytes )
-            cpair = FT_NEXT_ULONG( p );
-          else
-            cpair = PFR_NEXT_KPAIR( p );
-
-          if ( cpair == pair )
-            goto Found;
-
-          if ( cpair < pair )
-            base += probe;
-        }
-
-        p = base;
-
-        if ( twobytes )
-          cpair = FT_NEXT_ULONG( p );
-        else
-          cpair = PFR_NEXT_KPAIR( p );
-
-        if ( cpair == pair )
-        {
-          FT_Int  value;
-
-
-        Found:
-          if ( twobyte_adj )
-            value = FT_PEEK_SHORT( p );
-          else
-            value = p[0];
-
-          kerning->x = item->base_adj + value;
-        }
-      }
-
-      FT_FRAME_EXIT();
     }
 
   Exit:

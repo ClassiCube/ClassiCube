@@ -136,7 +136,6 @@ FT_BEGIN_HEADER
   /*    FT_FACE_FLAG_SFNT                                                  */
   /*    FT_FACE_FLAG_CID_KEYED                                             */
   /*    FT_FACE_FLAG_TRICKY                                                */
-  /*    FT_FACE_FLAG_KERNING                                               */
   /*    FT_FACE_FLAG_MULTIPLE_MASTERS                                      */
   /*    FT_FACE_FLAG_VARIATION                                             */
   /*    FT_FACE_FLAG_GLYPH_NAMES                                           */
@@ -145,7 +144,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    FT_HAS_HORIZONTAL                                                  */
   /*    FT_HAS_VERTICAL                                                    */
-  /*    FT_HAS_KERNING                                                     */
   /*    FT_HAS_FIXED_SIZES                                                 */
   /*    FT_HAS_GLYPH_NAMES                                                 */
   /*    FT_HAS_COLOR                                                       */
@@ -232,9 +230,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    FT_Render_Glyph                                                    */
   /*    FT_Render_Mode                                                     */
-  /*    FT_Get_Kerning                                                     */
-  /*    FT_Kerning_Mode                                                    */
-  /*    FT_Get_Track_Kerning                                               */
   /*    FT_Get_Glyph_Name                                                  */
   /*    FT_Get_Postscript_Name                                             */
   /*                                                                       */
@@ -1161,13 +1156,6 @@ FT_BEGIN_HEADER
   /*      The face contains vertical glyph metrics.  This is only          */
   /*      available in some formats, not all of them.                      */
   /*                                                                       */
-  /*    FT_FACE_FLAG_KERNING ::                                            */
-  /*      The face contains kerning information.  If set, the kerning      */
-  /*      distance can be retrieved using the function @FT_Get_Kerning.    */
-  /*      Otherwise the function always return the vector (0,0).  Note     */
-  /*      that FreeType doesn't handle kerning data from the SFNT `GPOS'   */
-  /*      table (as present in many OpenType fonts).                       */
-  /*                                                                       */
   /*    FT_FACE_FLAG_FAST_GLYPHS ::                                        */
   /*      THIS FLAG IS DEPRECATED.  DO NOT USE OR TEST IT.                 */
   /*                                                                       */
@@ -1242,7 +1230,6 @@ FT_BEGIN_HEADER
 #define FT_FACE_FLAG_SFNT              ( 1L <<  3 )
 #define FT_FACE_FLAG_HORIZONTAL        ( 1L <<  4 )
 #define FT_FACE_FLAG_VERTICAL          ( 1L <<  5 )
-#define FT_FACE_FLAG_KERNING           ( 1L <<  6 )
 #define FT_FACE_FLAG_FAST_GLYPHS       ( 1L <<  7 )
 #define FT_FACE_FLAG_MULTIPLE_MASTERS  ( 1L <<  8 )
 #define FT_FACE_FLAG_GLYPH_NAMES       ( 1L <<  9 )
@@ -1283,20 +1270,6 @@ FT_BEGIN_HEADER
    */
 #define FT_HAS_VERTICAL( face ) \
           ( (face)->face_flags & FT_FACE_FLAG_VERTICAL )
-
-
-  /*************************************************************************
-   *
-   * @macro:
-   *   FT_HAS_KERNING( face )
-   *
-   * @description:
-   *   A macro that returns true whenever a face object contains kerning
-   *   data that can be accessed with @FT_Get_Kerning.
-   *
-   */
-#define FT_HAS_KERNING( face ) \
-          ( (face)->face_flags & FT_FACE_FLAG_KERNING )
 
 
   /*************************************************************************
@@ -2266,41 +2239,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    FT_Attach_Stream                                                   */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    `Attach' data to a face object.  Normally, this is used to read    */
-  /*    additional information for the face object.  For example, you can  */
-  /*    attach an AFM file that comes with a Type~1 font to get the        */
-  /*    kerning values and other metrics.                                  */
-  /*                                                                       */
-  /* <InOut>                                                               */
-  /*    face       :: The target face object.                              */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    parameters :: A pointer to @FT_Open_Args that must be filled by    */
-  /*                  the caller.                                          */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0~means success.                             */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    The meaning of the `attach' (i.e., what really happens when the    */
-  /*    new file is read) is not fixed by FreeType itself.  It really      */
-  /*    depends on the font format (and thus the font driver).             */
-  /*                                                                       */
-  /*    Client applications are expected to know what they are doing       */
-  /*    when invoking this function.  Most drivers simply do not implement */
-  /*    file or stream attachments.                                        */
-  /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FT_Attach_Stream( FT_Face        face,
-                    FT_Open_Args*  parameters );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
   /*    FT_Reference_Face                                                  */
   /*                                                                       */
   /* <Description>                                                         */
@@ -3232,136 +3170,6 @@ FT_BEGIN_HEADER
   FT_EXPORT( FT_Error )
   FT_Render_Glyph( FT_GlyphSlot    slot,
                    FT_Render_Mode  render_mode );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Enum>                                                                */
-  /*    FT_Kerning_Mode                                                    */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    An enumeration to specify the format of kerning values returned by */
-  /*    @FT_Get_Kerning.                                                   */
-  /*                                                                       */
-  /* <Values>                                                              */
-  /*    FT_KERNING_DEFAULT  :: Return grid-fitted kerning distances in     */
-  /*                           26.6 fractional pixels.                     */
-  /*                                                                       */
-  /*    FT_KERNING_UNFITTED :: Return un-grid-fitted kerning distances in  */
-  /*                           26.6 fractional pixels.                     */
-  /*                                                                       */
-  /*    FT_KERNING_UNSCALED :: Return the kerning vector in original font  */
-  /*                           units.                                      */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    FT_KERNING_DEFAULT returns full pixel values; it also makes        */
-  /*    FreeType heuristically scale down kerning distances at small ppem  */
-  /*    values so that they don't become too big.                          */
-  /*                                                                       */
-  /*    Both FT_KERNING_DEFAULT and FT_KERNING_UNFITTED use the current    */
-  /*    horizontal scaling factor (as set e.g. with @FT_Set_Char_Size) to  */
-  /*    convert font units to pixels.                                      */
-  /*                                                                       */
-  typedef enum  FT_Kerning_Mode_
-  {
-    FT_KERNING_DEFAULT = 0,
-    FT_KERNING_UNFITTED,
-    FT_KERNING_UNSCALED
-
-  } FT_Kerning_Mode;
-
-
-  /* these constants are deprecated; use the corresponding */
-  /* `FT_Kerning_Mode' values instead                      */
-#define ft_kerning_default   FT_KERNING_DEFAULT
-#define ft_kerning_unfitted  FT_KERNING_UNFITTED
-#define ft_kerning_unscaled  FT_KERNING_UNSCALED
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Get_Kerning                                                     */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Return the kerning vector between two glyphs of the same face.     */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face        :: A handle to a source face object.                   */
-  /*                                                                       */
-  /*    left_glyph  :: The index of the left glyph in the kern pair.       */
-  /*                                                                       */
-  /*    right_glyph :: The index of the right glyph in the kern pair.      */
-  /*                                                                       */
-  /*    kern_mode   :: See @FT_Kerning_Mode for more information.          */
-  /*                   Determines the scale and dimension of the returned  */
-  /*                   kerning vector.                                     */
-  /*                                                                       */
-  /* <Output>                                                              */
-  /*    akerning    :: The kerning vector.  This is either in font units,  */
-  /*                   fractional pixels (26.6 format), or pixels for      */
-  /*                   scalable formats, and in pixels for fixed-sizes     */
-  /*                   formats.                                            */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0~means success.                             */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    Only horizontal layouts (left-to-right & right-to-left) are        */
-  /*    supported by this method.  Other layouts, or more sophisticated    */
-  /*    kernings, are out of the scope of this API function -- they can be */
-  /*    implemented through format-specific interfaces.                    */
-  /*                                                                       */
-  /*    Kerning for OpenType fonts implemented in a `GPOS' table is not    */
-  /*    supported; use @FT_HAS_KERNING to find out whether a font has data */
-  /*    that can be extracted with `FT_Get_Kerning'.                       */
-  /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FT_Get_Kerning( FT_Face     face,
-                  FT_UInt     left_glyph,
-                  FT_UInt     right_glyph,
-                  FT_UInt     kern_mode,
-                  FT_Vector  *akerning );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Get_Track_Kerning                                               */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Return the track kerning for a given face object at a given size.  */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face       :: A handle to a source face object.                    */
-  /*                                                                       */
-  /*    point_size :: The point size in 16.16 fractional points.           */
-  /*                                                                       */
-  /*    degree     :: The degree of tightness.  Increasingly negative      */
-  /*                  values represent tighter track kerning, while        */
-  /*                  increasingly positive values represent looser track  */
-  /*                  kerning.  Value zero means no track kerning.         */
-  /*                                                                       */
-  /* <Output>                                                              */
-  /*    akerning   :: The kerning in 16.16 fractional points, to be        */
-  /*                  uniformly applied between all glyphs.                */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0~means success.                             */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    Currently, only the Type~1 font driver supports track kerning,     */
-  /*    using data from AFM files (if attached with @FT_Attach_File or     */
-  /*    @FT_Attach_Stream).                                                */
-  /*                                                                       */
-  /*    Only very few AFM files come with track kerning data; please refer */
-  /*    to Adobe's AFM specification for more details.                     */
-  /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FT_Get_Track_Kerning( FT_Face    face,
-                        FT_Fixed   point_size,
-                        FT_Int     degree,
-                        FT_Fixed*  akerning );
 
 
   /*************************************************************************/

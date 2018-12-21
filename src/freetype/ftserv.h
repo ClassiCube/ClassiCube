@@ -990,7 +990,6 @@ FT_BEGIN_HEADER
 #define FT_SERVICE_CID_H_FT             "freetype/svcid.h"
 #define FT_SERVICE_FONT_FORMAT_H        "svfntfmt.h"
 #define FT_SERVICE_GLYPH_DICT_H         "svgldict.h"
-#define FT_SERVICE_KERNING_H            "svkern.h"
 #define FT_SERVICE_METRICS_VARIATIONS_H "svmetric.h"
 #define FT_SERVICE_METRICS_VARIATIONS_H_FT "freetype/svmetric.h"
 #define FT_SERVICE_MULTIPLE_MASTERS_H   "svmm.h"

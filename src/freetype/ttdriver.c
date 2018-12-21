@@ -162,58 +162,6 @@
   /*************************************************************************/
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    tt_get_kerning                                                     */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A driver method used to return the kerning vector between two      */
-  /*    glyphs of the same face.                                           */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face        :: A handle to the source face object.                 */
-  /*                                                                       */
-  /*    left_glyph  :: The index of the left glyph in the kern pair.       */
-  /*                                                                       */
-  /*    right_glyph :: The index of the right glyph in the kern pair.      */
-  /*                                                                       */
-  /* <Output>                                                              */
-  /*    kerning     :: The kerning vector.  This is in font units for      */
-  /*                   scalable formats, and in pixels for fixed-sizes     */
-  /*                   formats.                                            */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    Only horizontal layouts (left-to-right & right-to-left) are        */
-  /*    supported by this function.  Other layouts, or more sophisticated  */
-  /*    kernings, are out of scope of this method (the basic driver        */
-  /*    interface is meant to be simple).                                  */
-  /*                                                                       */
-  /*    They can be implemented by format-specific interfaces.             */
-  /*                                                                       */
-  static FT_Error
-  tt_get_kerning( FT_Face     ttface,          /* TT_Face */
-                  FT_UInt     left_glyph,
-                  FT_UInt     right_glyph,
-                  FT_Vector*  kerning )
-  {
-    TT_Face       face = (TT_Face)ttface;
-    SFNT_Service  sfnt = (SFNT_Service)face->sfnt;
-
-
-    kerning->x = 0;
-    kerning->y = 0;
-
-    if ( sfnt )
-      kerning->x = sfnt->get_kerning( face, left_glyph, right_glyph );
-
-    return 0;
-  }
-
-
   static FT_Error
   tt_get_advances( FT_Face    ttface,
                    FT_UInt    start,
@@ -641,7 +589,7 @@
 
     tt_glyph_load,              /* FT_Slot_LoadFunc  load_glyph */
 
-    tt_get_kerning,             /* FT_Face_GetKerningFunc   get_kerning  */
+    NULL,                       /* FT_Face_GetKerningFunc   get_kerning  */
     NULL,                       /* FT_Face_AttachFunc       attach_file  */
     tt_get_advances,            /* FT_Face_GetAdvancesFunc  get_advances */
 

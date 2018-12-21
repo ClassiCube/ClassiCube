@@ -497,9 +497,6 @@
     <ClCompile Include="_ftinit.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="_ftmm.c">
-      <Filter>Source Files\Freetype</Filter>
-    </ClCompile>
     <ClCompile Include="_ftpfr.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>

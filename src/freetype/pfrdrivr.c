@@ -27,36 +27,6 @@
 #include "pfrerror.h"
 
 
-  FT_CALLBACK_DEF( FT_Error )
-  pfr_get_kerning( FT_Face     pfrface,     /* PFR_Face */
-                   FT_UInt     left,
-                   FT_UInt     right,
-                   FT_Vector  *avector )
-  {
-    PFR_Face     face = (PFR_Face)pfrface;
-    PFR_PhyFont  phys = &face->phy_font;
-
-
-    (void)pfr_face_get_kerning( pfrface, left, right, avector );
-
-    /* convert from metrics to outline units when necessary */
-    if ( phys->outline_resolution != phys->metrics_resolution )
-    {
-      if ( avector->x != 0 )
-        avector->x = FT_MulDiv( avector->x,
-                                (FT_Long)phys->outline_resolution,
-                                (FT_Long)phys->metrics_resolution );
-
-      if ( avector->y != 0 )
-        avector->y = FT_MulDiv( avector->y,
-                                (FT_Long)phys->outline_resolution,
-                                (FT_Long)phys->metrics_resolution );
-    }
-
-    return FT_Err_Ok;
-  }
-
-
  /*
   *  PFR METRICS SERVICE
   *
@@ -140,7 +110,7 @@
   const FT_Service_PfrMetricsRec  pfr_metrics_service_rec =
   {
     pfr_get_metrics,          /* get_metrics */
-    pfr_face_get_kerning,     /* get_kerning */
+    NULL,                     /* get_kerning */
     pfr_get_advance           /* get_advance */
   };
 
@@ -201,7 +171,7 @@
 
     pfr_slot_load,              /* FT_Slot_LoadFunc  load_glyph */
 
-    pfr_get_kerning,            /* FT_Face_GetKerningFunc   get_kerning  */
+    NULL,                       /* FT_Face_GetKerningFunc   get_kerning  */
     NULL,                       /* FT_Face_AttachFunc       attach_file  */
     NULL,                       /* FT_Face_GetAdvancesFunc  get_advances */
 

@@ -22,7 +22,6 @@
 #include "freetype/sfdriver.c"
 #include "freetype/sfobjs.c"
 #include "freetype/ttcmap.c"
-#include "freetype/ttkern.c"
 #include "freetype/ttload.c"
 #include "freetype/ttmtx.c"
 #include "freetype/ttpost.c"

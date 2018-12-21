@@ -623,25 +623,6 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* Define this configuration macro if you want to prevent the            */
-  /* compilation of `t1afm', which is in charge of reading Type 1 AFM      */
-  /* files into an existing face.  Note that if set, the T1 driver will be */
-  /* unable to produce kerning distances.                                  */
-  /*                                                                       */
-#define T1_CONFIG_OPTION_NO_AFM
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* Define this configuration macro if you want to prevent the            */
-  /* compilation of the Multiple Masters font support in the Type 1        */
-  /* driver.                                                               */
-  /*                                                                       */
-#define T1_CONFIG_OPTION_NO_MM_SUPPORT
-
-
-  /*************************************************************************/
-  /*                                                                       */
   /* T1_CONFIG_OPTION_OLD_ENGINE controls whether the pre-Adobe Type 1     */
   /* engine gets compiled into FreeType.  If defined, it is possible to    */
   /* switch between the two engines using the `hinting-engine' property of */

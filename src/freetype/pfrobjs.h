@@ -68,13 +68,6 @@ FT_BEGIN_HEADER
 
 
   FT_LOCAL( FT_Error )
-  pfr_face_get_kerning( FT_Face     face,       /* PFR_Face */
-                        FT_UInt     glyph1,
-                        FT_UInt     glyph2,
-                        FT_Vector*  kerning );
-
-
-  FT_LOCAL( FT_Error )
   pfr_slot_init( FT_GlyphSlot  slot );          /* PFR_Slot */
 
   FT_LOCAL( void )

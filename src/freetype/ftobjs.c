@@ -37,7 +37,6 @@
 #include FT_SERVICE_POSTSCRIPT_NAME_H
 #include FT_SERVICE_GLYPH_DICT_H
 #include FT_SERVICE_TT_CMAP_H
-#include FT_SERVICE_KERNING_H
 #include FT_SERVICE_TRUETYPE_ENGINE_H
 
 #include FT_DRIVER_H
@@ -1660,50 +1659,6 @@
   /* documentation is in freetype.h */
 
   FT_EXPORT_DEF( FT_Error )
-  FT_Attach_Stream( FT_Face        face,
-                    FT_Open_Args*  parameters )
-  {
-    FT_Stream  stream;
-    FT_Error   error;
-    FT_Driver  driver;
-
-    FT_Driver_Class  clazz;
-
-
-    /* test for valid `parameters' delayed to `FT_Stream_New' */
-
-    if ( !face )
-      return FT_THROW( Invalid_Face_Handle );
-
-    driver = face->driver;
-    if ( !driver )
-      return FT_THROW( Invalid_Driver_Handle );
-
-    error = FT_Stream_New( driver->root.library, parameters, &stream );
-    if ( error )
-      goto Exit;
-
-    /* we implement FT_Attach_Stream in each driver through the */
-    /* `attach_file' interface                                  */
-
-    error = FT_ERR( Unimplemented_Feature );
-    clazz = driver->clazz;
-    if ( clazz->attach_file )
-      error = clazz->attach_file( face, stream );
-
-    /* close the attached stream */
-    FT_Stream_Free( stream,
-                    (FT_Bool)( parameters->stream &&
-                               ( parameters->flags & FT_OPEN_STREAM ) ) );
-
-  Exit:
-    return error;
-  }
-
-
-  /* documentation is in freetype.h */
-
-  FT_EXPORT_DEF( FT_Error )
   FT_Reference_Face( FT_Face  face )
   {
     if ( !face )
@@ -2338,116 +2293,6 @@
     req.vertResolution = 0;
 
     return FT_Request_Size( face, &req );
-  }
-
-
-  /* documentation is in freetype.h */
-
-  FT_EXPORT_DEF( FT_Error )
-  FT_Get_Kerning( FT_Face     face,
-                  FT_UInt     left_glyph,
-                  FT_UInt     right_glyph,
-                  FT_UInt     kern_mode,
-                  FT_Vector  *akerning )
-  {
-    FT_Error   error = FT_Err_Ok;
-    FT_Driver  driver;
-
-
-    if ( !face )
-      return FT_THROW( Invalid_Face_Handle );
-
-    if ( !akerning )
-      return FT_THROW( Invalid_Argument );
-
-    driver = face->driver;
-
-    akerning->x = 0;
-    akerning->y = 0;
-
-    if ( driver->clazz->get_kerning )
-    {
-      error = driver->clazz->get_kerning( face,
-                                          left_glyph,
-                                          right_glyph,
-                                          akerning );
-      if ( !error )
-      {
-        if ( kern_mode != FT_KERNING_UNSCALED )
-        {
-          akerning->x = FT_MulFix( akerning->x, face->size->metrics.x_scale );
-          akerning->y = FT_MulFix( akerning->y, face->size->metrics.y_scale );
-
-          if ( kern_mode != FT_KERNING_UNFITTED )
-          {
-            FT_Pos  orig_x = akerning->x;
-            FT_Pos  orig_y = akerning->y;
-
-
-            /* we scale down kerning values for small ppem values */
-            /* to avoid that rounding makes them too big.         */
-            /* `25' has been determined heuristically.            */
-            if ( face->size->metrics.x_ppem < 25 )
-              akerning->x = FT_MulDiv( orig_x,
-                                       face->size->metrics.x_ppem, 25 );
-            if ( face->size->metrics.y_ppem < 25 )
-              akerning->y = FT_MulDiv( orig_y,
-                                       face->size->metrics.y_ppem, 25 );
-
-            akerning->x = FT_PIX_ROUND( akerning->x );
-            akerning->y = FT_PIX_ROUND( akerning->y );
-
-#ifdef FT_DEBUG_LEVEL_TRACE
-            {
-              FT_Pos  orig_x_rounded = FT_PIX_ROUND( orig_x );
-              FT_Pos  orig_y_rounded = FT_PIX_ROUND( orig_y );
-
-
-              if ( akerning->x != orig_x_rounded ||
-                   akerning->y != orig_y_rounded )
-                FT_TRACE5(( "FT_Get_Kerning: horizontal kerning"
-                            " (%d, %d) scaled down to (%d, %d) pixels\n",
-                            orig_x_rounded / 64, orig_y_rounded / 64,
-                            akerning->x / 64, akerning->y / 64 ));
-            }
-#endif
-          }
-        }
-      }
-    }
-
-    return error;
-  }
-
-
-  /* documentation is in freetype.h */
-
-  FT_EXPORT_DEF( FT_Error )
-  FT_Get_Track_Kerning( FT_Face    face,
-                        FT_Fixed   point_size,
-                        FT_Int     degree,
-                        FT_Fixed*  akerning )
-  {
-    FT_Service_Kerning  service;
-    FT_Error            error = FT_Err_Ok;
-
-
-    if ( !face )
-      return FT_THROW( Invalid_Face_Handle );
-
-    if ( !akerning )
-      return FT_THROW( Invalid_Argument );
-
-    FT_FACE_FIND_SERVICE( face, service, KERNING );
-    if ( !service )
-      return FT_THROW( Unimplemented_Feature );
-
-    error = service->get_track( face,
-                                point_size,
-                                degree,
-                                akerning );
-
-    return error;
   }
 
 

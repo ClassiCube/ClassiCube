@@ -96,35 +96,6 @@
   /* documentation is in ftpfr.h */
 
   FT_EXPORT_DEF( FT_Error )
-  FT_Get_PFR_Kerning( FT_Face     face,
-                      FT_UInt     left,
-                      FT_UInt     right,
-                      FT_Vector  *avector )
-  {
-    FT_Error               error;
-    FT_Service_PfrMetrics  service;
-
-
-    if ( !face )
-      return FT_THROW( Invalid_Face_Handle );
-
-    if ( !avector )
-      return FT_THROW( Invalid_Argument );
-
-    service = ft_pfr_check( face );
-    if ( service )
-      error = service->get_kerning( face, left, right, avector );
-    else
-      error = FT_Get_Kerning( face, left, right,
-                              FT_KERNING_UNSCALED, avector );
-
-    return error;
-  }
-
-
-  /* documentation is in ftpfr.h */
-
-  FT_EXPORT_DEF( FT_Error )
   FT_Get_PFR_Advance( FT_Face   face,
                       FT_UInt   gindex,
                       FT_Pos   *aadvance )

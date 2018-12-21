@@ -621,109 +621,11 @@
   }
 
 
-
-  /* load kerning pair data */
-  FT_CALLBACK_DEF( FT_Error )
-  pfr_extra_item_load_kerning_pairs( FT_Byte*     p,
-                                     FT_Byte*     limit,
-                                     PFR_PhyFont  phy_font )
-  {
-    PFR_KernItem  item   = NULL;
-    FT_Error      error  = FT_Err_Ok;
-    FT_Memory     memory = phy_font->memory;
-
-
-    if ( FT_NEW( item ) )
-      goto Exit;
-
-    PFR_CHECK( 4 );
-
-    item->pair_count = PFR_NEXT_BYTE( p );
-    item->base_adj   = PFR_NEXT_SHORT( p );
-    item->flags      = PFR_NEXT_BYTE( p );
-    item->offset     = phy_font->offset +
-                       (FT_Offset)( p - phy_font->cursor );
-
-#ifndef PFR_CONFIG_NO_CHECKS
-    item->pair_size = 3;
-
-    if ( item->flags & PFR_KERN_2BYTE_CHAR )
-      item->pair_size += 2;
-
-    if ( item->flags & PFR_KERN_2BYTE_ADJ )
-      item->pair_size += 1;
-
-    PFR_CHECK( item->pair_count * item->pair_size );
-#endif
-
-    /* load first and last pairs into the item to speed up */
-    /* lookup later...                                     */
-    if ( item->pair_count > 0 )
-    {
-      FT_UInt   char1, char2;
-      FT_Byte*  q;
-
-
-      if ( item->flags & PFR_KERN_2BYTE_CHAR )
-      {
-        q     = p;
-        char1 = PFR_NEXT_USHORT( q );
-        char2 = PFR_NEXT_USHORT( q );
-
-        item->pair1 = PFR_KERN_INDEX( char1, char2 );
-
-        q = p + item->pair_size * ( item->pair_count - 1 );
-        char1 = PFR_NEXT_USHORT( q );
-        char2 = PFR_NEXT_USHORT( q );
-
-        item->pair2 = PFR_KERN_INDEX( char1, char2 );
-      }
-      else
-      {
-        q     = p;
-        char1 = PFR_NEXT_BYTE( q );
-        char2 = PFR_NEXT_BYTE( q );
-
-        item->pair1 = PFR_KERN_INDEX( char1, char2 );
-
-        q = p + item->pair_size * ( item->pair_count - 1 );
-        char1 = PFR_NEXT_BYTE( q );
-        char2 = PFR_NEXT_BYTE( q );
-
-        item->pair2 = PFR_KERN_INDEX( char1, char2 );
-      }
-
-      /* add new item to the current list */
-      item->next                 = NULL;
-      *phy_font->kern_items_tail = item;
-      phy_font->kern_items_tail  = &item->next;
-      phy_font->num_kern_pairs  += item->pair_count;
-    }
-    else
-    {
-      /* empty item! */
-      FT_FREE( item );
-    }
-
-  Exit:
-    return error;
-
-  Too_Short:
-    FT_FREE( item );
-
-    error = FT_THROW( Invalid_Table );
-    FT_ERROR(( "pfr_extra_item_load_kerning_pairs:"
-               " invalid kerning pairs table\n" ));
-    goto Exit;
-  }
-
-
   static const PFR_ExtraItemRec  pfr_phy_font_extra_items[] =
   {
     { 1, (PFR_ExtraItem_ParseFunc)pfr_extra_item_load_bitmap_info },
     { 2, (PFR_ExtraItem_ParseFunc)pfr_extra_item_load_font_id },
     { 3, (PFR_ExtraItem_ParseFunc)pfr_extra_item_load_stem_snaps },
-    { 4, (PFR_ExtraItem_ParseFunc)pfr_extra_item_load_kerning_pairs },
     { 0, NULL }
   };
 
@@ -798,23 +700,6 @@
 
     FT_FREE( phy_font->blue_values );
     phy_font->num_blue_values = 0;
-
-    {
-      PFR_KernItem  item, next;
-
-
-      item = phy_font->kern_items;
-      while ( item )
-      {
-        next = item->next;
-        FT_FREE( item );
-        item = next;
-      }
-      phy_font->kern_items      = NULL;
-      phy_font->kern_items_tail = NULL;
-    }
-
-    phy_font->num_kern_pairs = 0;
   }
 
 
@@ -834,9 +719,6 @@
 
     phy_font->memory = memory;
     phy_font->offset = offset;
-
-    phy_font->kern_items      = NULL;
-    phy_font->kern_items_tail = &phy_font->kern_items;
 
     if ( FT_STREAM_SEEK( offset ) ||
          FT_FRAME_ENTER( size )   )

@@ -19,7 +19,6 @@
 #define FT_MAKE_OPTION_SINGLE_OBJECT
 #include "freetype/ft2build.h"
 
-#include "freetype/t1afm.c"
 #include "freetype/t1driver.c"
 #include "freetype/t1gload.c"
 #include "freetype/t1load.c"

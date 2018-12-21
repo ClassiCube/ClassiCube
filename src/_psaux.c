@@ -19,7 +19,6 @@
 #define FT_MAKE_OPTION_SINGLE_OBJECT
 #include "freetype/ft2build.h"
 
-#include "freetype/afmparse.c"
 #include "freetype/psauxmod.c"
 #include "freetype/psconv.c"
 #include "freetype/psobjs.c"

@@ -91,44 +91,6 @@ FT_BEGIN_HEADER
  /**********************************************************************
   *
   * @function:
-  *    FT_Get_PFR_Kerning
-  *
-  * @description:
-  *    Return the kerning pair corresponding to two glyphs in a PFR face.
-  *    The distance is expressed in metrics units, unlike the result of
-  *    @FT_Get_Kerning.
-  *
-  * @input:
-  *    face  :: A handle to the input face.
-  *
-  *    left  :: Index of the left glyph.
-  *
-  *    right :: Index of the right glyph.
-  *
-  * @output:
-  *    avector :: A kerning vector.
-  *
-  * @return:
-  *    FreeType error code.  0~means success.
-  *
-  * @note:
-  *    This function always return distances in original PFR metrics
-  *    units.  This is unlike @FT_Get_Kerning with the @FT_KERNING_UNSCALED
-  *    mode, which always returns distances converted to outline units.
-  *
-  *    You can use the value of the `x_scale' and `y_scale' parameters
-  *    returned by @FT_Get_PFR_Metrics to scale these to device subpixels.
-  */
-  FT_EXPORT( FT_Error )
-  FT_Get_PFR_Kerning( FT_Face     face,
-                      FT_UInt     left,
-                      FT_UInt     right,
-                      FT_Vector  *avector );
-
-
- /**********************************************************************
-  *
-  * @function:
   *    FT_Get_PFR_Advance
   *
   * @description:

@@ -21,7 +21,6 @@
 
 #include "freetype/ttdriver.c"   /* driver interface    */
 #include "freetype/ttgload.c"    /* glyph loader        */
-#include "freetype/ttgxvar.c"    /* gx distortable font */
 #include "freetype/ttinterp.c"
 #include "freetype/ttobjs.c"     /* object manager      */
 #include "freetype/ttpload.c"    /* tables loader       */

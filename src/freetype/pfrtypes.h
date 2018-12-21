@@ -172,33 +172,6 @@ FT_BEGIN_HEADER
 
   } PFR_DimensionRec, *PFR_Dimension;
 
-  /************************************************************************/
-
-  typedef struct PFR_KernItemRec_*  PFR_KernItem;
-
-  typedef struct  PFR_KernItemRec_
-  {
-    PFR_KernItem  next;
-    FT_Byte       pair_count;
-    FT_Byte       flags;
-    FT_Short      base_adj;
-    FT_UInt       pair_size;
-    FT_Offset     offset;
-    FT_UInt32     pair1;
-    FT_UInt32     pair2;
-
-  } PFR_KernItemRec;
-
-
-#define PFR_KERN_INDEX( g1, g2 )                          \
-          ( ( (FT_UInt32)(g1) << 16 ) | (FT_UInt16)(g2) )
-
-#define PFR_KERN_PAIR_INDEX( pair )                        \
-          PFR_KERN_INDEX( (pair)->glyph1, (pair)->glyph2 )
-
-#define PFR_NEXT_KPAIR( p )  ( p += 2,                              \
-                               ( (FT_UInt32)p[-2] << 16 ) | p[-1] )
-
 
   /************************************************************************/
 
@@ -238,10 +211,6 @@ FT_BEGIN_HEADER
     FT_Offset          chars_offset;
     PFR_Char           chars;
 
-    FT_UInt            num_kern_pairs;
-    PFR_KernItem       kern_items;
-    PFR_KernItem*      kern_items_tail;
-
     /* not part of the spec, but used during load */
     FT_ULong           bct_offset;
     FT_Byte*           cursor;
@@ -256,10 +225,6 @@ FT_BEGIN_HEADER
 #define PFR_PHY_2BYTE_GPS_SIZE    0x10U
 #define PFR_PHY_3BYTE_GPS_OFFSET  0x20U
 #define PFR_PHY_EXTRA_ITEMS       0x80U
-
-
-#define PFR_KERN_2BYTE_CHAR  0x01U
-#define PFR_KERN_2BYTE_ADJ   0x02U
 
 
   /************************************************************************/

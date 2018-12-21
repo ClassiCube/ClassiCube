@@ -1184,72 +1184,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*************************************************************************/
   /*****                                                               *****/
-  /*****                            AFM PARSER                         *****/
-  /*****                                                               *****/
-  /*************************************************************************/
-  /*************************************************************************/
-
-  typedef struct AFM_ParserRec_*  AFM_Parser;
-
-  typedef struct  AFM_Parser_FuncsRec_
-  {
-    FT_Error
-    (*init)( AFM_Parser  parser,
-             FT_Memory   memory,
-             FT_Byte*    base,
-             FT_Byte*    limit );
-
-    void
-    (*done)( AFM_Parser  parser );
-
-    FT_Error
-    (*parse)( AFM_Parser  parser );
-
-  } AFM_Parser_FuncsRec;
-
-
-  typedef struct AFM_StreamRec_*  AFM_Stream;
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Struct>                                                              */
-  /*    AFM_ParserRec                                                      */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    An AFM_Parser is a parser for the AFM files.                       */
-  /*                                                                       */
-  /* <Fields>                                                              */
-  /*    memory    :: The object used for memory operations (alloc and      */
-  /*                 realloc).                                             */
-  /*                                                                       */
-  /*    stream    :: This is an opaque object.                             */
-  /*                                                                       */
-  /*    FontInfo  :: The result will be stored here.                       */
-  /*                                                                       */
-  /*    get_index :: A user provided function to get a glyph index by its  */
-  /*                 name.                                                 */
-  /*                                                                       */
-  typedef struct  AFM_ParserRec_
-  {
-    FT_Memory     memory;
-    AFM_Stream    stream;
-
-    AFM_FontInfo  FontInfo;
-
-    FT_Int
-    (*get_index)( const char*  name,
-                  FT_Offset    len,
-                  void*        user_data );
-
-    void*         user_data;
-
-  } AFM_ParserRec;
-
-
-  /*************************************************************************/
-  /*************************************************************************/
-  /*****                                                               *****/
   /*****                     TYPE1 CHARMAPS                            *****/
   /*****                                                               *****/
   /*************************************************************************/
@@ -1304,7 +1238,8 @@ FT_BEGIN_HEADER
     T1_CMap_Classes  t1_cmap_classes;
 
     /* fields after this comment line were added after version 2.1.10 */
-    const AFM_Parser_FuncsRec*  afm_parser_funcs;
+    /*const AFM_Parser_FuncsRec*  afm_parser_funcs;*/
+	const void*                  afm_parser_funcs;
 
     const CFF_Decoder_FuncsRec*  cff_decoder_funcs;
 

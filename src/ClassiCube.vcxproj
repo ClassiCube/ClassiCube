@@ -321,7 +321,6 @@
     <ClCompile Include="_ftgasp.c" />
     <ClCompile Include="_ftglyph.c" />
     <ClCompile Include="_ftinit.c" />
-    <ClCompile Include="_ftmm.c" />
     <ClCompile Include="_ftpfr.c" />
     <ClCompile Include="_ftstroke.c" />
     <ClCompile Include="_ftsynth.c" />

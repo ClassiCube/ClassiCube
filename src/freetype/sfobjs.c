@@ -20,7 +20,6 @@
 #include "sfobjs.h"
 #include "ttload.h"
 #include "ttcmap.h"
-#include "ttkern.h"
 #include FT_INTERNAL_SFNT_H
 #include FT_INTERNAL_DEBUG_H
 #include FT_TRUETYPE_IDS_H
@@ -1335,10 +1334,9 @@
     if ( sfnt->load_eblc )
       LOAD_( eblc );
 
-    /* consider the pclt, kerning, and gasp tables as optional */
+    /* consider the pclt and gasp tables as optional */
     LOAD_( pclt );
     LOAD_( gasp );
-    LOAD_( kern );
 
     face->root.num_glyphs = face->max_profile.numGlyphs;
 
@@ -1412,23 +1410,6 @@
       /* vertical information? */
       if ( face->vertical_info )
         flags |= FT_FACE_FLAG_VERTICAL;
-
-      /* kerning available ? */
-      if ( TT_FACE_HAS_KERNING( face ) )
-        flags |= FT_FACE_FLAG_KERNING;
-
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-      /* Don't bother to load the tables unless somebody asks for them. */
-      /* No need to do work which will (probably) not be used.          */
-      if ( face->variation_support & TT_FACE_FLAG_VAR_FVAR )
-      {
-        if ( tt_face_lookup_table( face, TTAG_glyf ) != 0 &&
-             tt_face_lookup_table( face, TTAG_gvar ) != 0 )
-          flags |= FT_FACE_FLAG_MULTIPLE_MASTERS;
-        if ( tt_face_lookup_table( face, TTAG_CFF2 ) != 0 )
-          flags |= FT_FACE_FLAG_MULTIPLE_MASTERS;
-      }
-#endif
 
       root->face_flags = flags;
 
@@ -1737,9 +1718,6 @@
     /* freeing the embedded BDF properties */
     tt_face_free_bdf_props( face );
 #endif
-
-    /* freeing the kerning table */
-    tt_face_done_kern( face );
 
     /* freeing the collection table */
     FT_FREE( face->ttc_header.offsets );

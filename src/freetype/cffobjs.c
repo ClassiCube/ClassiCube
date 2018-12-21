@@ -656,79 +656,6 @@
         goto Exit;
       }
 
-#ifdef FT_DEBUG_LEVEL_TRACE
-      {
-        FT_UInt     idx;
-        FT_String*  s;
-
-
-        FT_TRACE4(( "SIDs\n" ));
-
-        /* dump string index, including default strings for convenience */
-        for ( idx = 0; idx <= 390; idx++ )
-        {
-          s = cff_index_get_sid_string( cff, idx );
-          if ( s )
-            FT_TRACE4(( "  %5d %s\n", idx, s ));
-        }
-
-        /* In Multiple Master CFFs, two SIDs hold the Normalize Design  */
-        /* Vector (NDV) and Convert Design Vector (CDV) charstrings,    */
-        /* which may contain NULL bytes in the middle of the data, too. */
-        /* We thus access `cff->strings' directly.                      */
-        for ( idx = 1; idx < cff->num_strings; idx++ )
-        {
-          FT_Byte*    s1    = cff->strings[idx - 1];
-          FT_Byte*    s2    = cff->strings[idx];
-          FT_PtrDist  s1len = s2 - s1 - 1; /* without the final NULL byte */
-          FT_PtrDist  l;
-
-
-          FT_TRACE4(( "  %5d ", idx + 390 ));
-          for ( l = 0; l < s1len; l++ )
-            FT_TRACE4(( "%c", s1[l] ));
-          FT_TRACE4(( "\n" ));
-        }
-
-        /* print last element */
-        if ( cff->num_strings )
-        {
-          FT_Byte*    s1    = cff->strings[cff->num_strings - 1];
-          FT_Byte*    s2    = cff->string_pool + cff->string_pool_size;
-          FT_PtrDist  s1len = s2 - s1 - 1;
-          FT_PtrDist  l;
-
-
-          FT_TRACE4(( "  %5d ", cff->num_strings + 390 ));
-          for ( l = 0; l < s1len; l++ )
-            FT_TRACE4(( "%c", s1[l] ));
-          FT_TRACE4(( "\n" ));
-        }
-      }
-#endif /* FT_DEBUG_LEVEL_TRACE */
-
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-      {
-        FT_Service_MultiMasters       mm  = (FT_Service_MultiMasters)face->mm;
-        FT_Service_MetricsVariations  var = (FT_Service_MetricsVariations)face->var;
-
-        FT_UInt  instance_index = (FT_UInt)face_index >> 16;
-
-
-        if ( FT_HAS_MULTIPLE_MASTERS( cffface ) &&
-             mm                                 &&
-             instance_index > 0                 )
-        {
-          error = mm->set_instance( cffface, instance_index );
-          if ( error )
-            goto Exit;
-
-          if ( var )
-            var->metrics_adjust( cffface );
-        }
-      }
-#endif /* TT_CONFIG_OPTION_GX_VAR_SUPPORT */
-
       if ( !dict->has_font_matrix )
         dict->units_per_em = pure_cff ? 1000 : face->root.units_per_EM;
 
@@ -978,13 +905,6 @@
         /* fixed width font? */
         if ( dict->is_fixed_pitch )
           flags |= FT_FACE_FLAG_FIXED_WIDTH;
-
-  /* XXX: WE DO NOT SUPPORT KERNING METRICS IN THE GPOS TABLE FOR NOW */
-#if 0
-        /* kerning available? */
-        if ( face->kern_pairs )
-          flags |= FT_FACE_FLAG_KERNING;
-#endif
 
         cffface->face_flags |= flags;
 

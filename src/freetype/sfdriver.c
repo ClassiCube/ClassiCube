@@ -37,7 +37,6 @@
 #endif
 
 #include "ttcmap.h"
-#include "ttkern.h"
 #include "ttmtx.h"
 
 #include FT_SERVICE_GLYPH_DICT_H
@@ -1208,7 +1207,7 @@
     tt_face_load_name,      /* TT_Load_Table_Func      load_name       */
     tt_face_free_name,      /* TT_Free_Table_Func      free_name       */
 
-    tt_face_load_kern,      /* TT_Load_Table_Func      load_kern       */
+    NULL,                   /* TT_Load_Table_Func      load_kern       */
     tt_face_load_gasp,      /* TT_Load_Table_Func      load_gasp       */
     tt_face_load_pclt,      /* TT_Load_Table_Func      load_init       */
 
@@ -1225,7 +1224,7 @@
                             /* TT_Free_Table_Func      free_psnames    */
 
     /* since version 2.1.8 */
-    tt_face_get_kerning,    /* TT_Face_GetKerningFunc  get_kerning     */
+    NULL,                   /* TT_Face_GetKerningFunc  get_kerning     */
 
     /* since version 2.2 */
     tt_face_load_font_dir,  /* TT_Load_Table_Func      load_font_dir   */

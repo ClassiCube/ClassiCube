@@ -1352,20 +1352,6 @@ FT_BEGIN_HEADER
   /*                            exposed by the API and the indices used in */
   /*                            the font's sbit table.                     */
   /*                                                                       */
-  /*    kern_table           :: A pointer to the `kern' table.             */
-  /*                                                                       */
-  /*    kern_table_size      :: The size of the `kern' table.              */
-  /*                                                                       */
-  /*    num_kern_tables      :: The number of supported kern subtables     */
-  /*                            (up to 32; FreeType recognizes only        */
-  /*                            horizontal ones with format 0).            */
-  /*                                                                       */
-  /*    kern_avail_bits      :: The availability status of kern subtables; */
-  /*                            if bit n is set, table n is available.     */
-  /*                                                                       */
-  /*    kern_order_bits      :: The sortedness status of kern subtables;   */
-  /*                            if bit n is set, table n is sorted.        */
-  /*                                                                       */
   /*    bdf                  :: Data related to an SFNT font's `bdf'       */
   /*                            table; see `tttypes.h'.                    */
   /*                                                                       */
@@ -1534,12 +1520,6 @@ FT_BEGIN_HEADER
     TT_SbitTableType      sbit_table_type;
     FT_UInt               sbit_num_strikes;
     FT_UInt*              sbit_strike_map;
-
-    FT_Byte*              kern_table;
-    FT_ULong              kern_table_size;
-    FT_UInt               num_kern_tables;
-    FT_UInt32             kern_avail_bits;
-    FT_UInt32             kern_order_bits;
 
 #ifdef TT_CONFIG_OPTION_BDF
     TT_BDFRec             bdf;

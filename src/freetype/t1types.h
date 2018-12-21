@@ -140,51 +140,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /***                                                                   ***/
   /***                                                                   ***/
-  /***                AFM FONT INFORMATION STRUCTURES                    ***/
-  /***                                                                   ***/
-  /***                                                                   ***/
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
-
-  typedef struct  AFM_TrackKernRec_
-  {
-    FT_Int    degree;
-    FT_Fixed  min_ptsize;
-    FT_Fixed  min_kern;
-    FT_Fixed  max_ptsize;
-    FT_Fixed  max_kern;
-
-  } AFM_TrackKernRec, *AFM_TrackKern;
-
-  typedef struct  AFM_KernPairRec_
-  {
-    FT_UInt  index1;
-    FT_UInt  index2;
-    FT_Int   x;
-    FT_Int   y;
-
-  } AFM_KernPairRec, *AFM_KernPair;
-
-  typedef struct  AFM_FontInfoRec_
-  {
-    FT_Bool        IsCIDFont;
-    FT_BBox        FontBBox;
-    FT_Fixed       Ascender;
-    FT_Fixed       Descender;
-    AFM_TrackKern  TrackKerns;   /* free if non-NULL */
-    FT_UInt        NumTrackKern;
-    AFM_KernPair   KernPairs;    /* free if non-NULL */
-    FT_UInt        NumKernPair;
-
-  } AFM_FontInfoRec, *AFM_FontInfo;
-
-
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
-  /***                                                                   ***/
-  /***                                                                   ***/
   /***                ORIGINAL T1_FACE CLASS DEFINITION                  ***/
   /***                                                                   ***/
   /***                                                                   ***/
@@ -203,7 +158,6 @@ FT_BEGIN_HEADER
     T1_FontRec      type1;
     const void*     psnames;
     const void*     psaux;
-    const void*     afm_data;
     FT_CharMapRec   charmaprecs[2];
     FT_CharMap      charmaps[2];
 
@@ -234,9 +188,6 @@ FT_BEGIN_HEADER
     void*            psaux;
     CID_FaceInfoRec  cid;
     PS_FontExtraRec  font_extra;
-#if 0
-    void*            afm_data;
-#endif
     CID_Subrs        subrs;
 
     /* since version 2.1 - interface to PostScript hinter */
