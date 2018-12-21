@@ -250,7 +250,7 @@ static void Sounds_Play(uint8_t type, struct Soundboard* board) {
 	int i, volume;
 	ReturnCode res;
 
-	if (type == SOUND_NONE || !Audio_SoundsVolume == 0) return;
+	if (type == SOUND_NONE || !Audio_SoundsVolume) return;
 	snd = Soundboard_PickRandom(board, type);
 	if (!snd) return;
 
@@ -279,7 +279,7 @@ static void Sounds_Play(uint8_t type, struct Soundboard* board) {
 		}
 
 		l = Audio_GetFormat(output->Handle);
-		if (l->Channels == 0 || AudioFormat_Eq(l, &fmt)) {
+		if (!l->Channels || AudioFormat_Eq(l, &fmt)) {
 			Sounds_PlayRaw(output, snd, &fmt, volume); return;
 		}
 	}

@@ -142,7 +142,7 @@ Vector3 Vector3_GetDirVector(float yawRad, float pitchRad) {
 }*/
 
 
-struct Matrix Matrix_Identity = {
+const struct Matrix Matrix_Identity = {
 	1.0f, 0.0f, 0.0f, 0.0f,
 	0.0f, 1.0f, 0.0f, 0.0f,
 	0.0f, 0.0f, 1.0f, 0.0f,
@@ -188,7 +188,7 @@ void Matrix_Scale(struct Matrix* result, float x, float y, float z) {
 	result->Row0.X = x; result->Row1.Y = y; result->Row2.Z = z;
 }
 
-void Matrix_Mul(struct Matrix* result, struct Matrix* left, struct Matrix* right) {
+void Matrix_Mul(struct Matrix* result, const struct Matrix* left, const struct Matrix* right) {
 	/* Originally from http://www.edais.co.uk/blog/?p=27 */
 	float
 		lM11 = left->Row0.X, lM12 = left->Row0.Y, lM13 = left->Row0.Z, lM14 = left->Row0.W,

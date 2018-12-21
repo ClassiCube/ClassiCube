@@ -125,6 +125,14 @@ struct BoxDesc {
 	float RotX,RotY,RotZ;        /* Rotation origin point */
 };
 
+#define BoxDesc_Dim(p1, p2) p1 < p2 ? p2 - p1 : p1 - p2
+/* Macros for making initialising a BoxDesc easier to understand. See Model.c for how these get used. */
+#define BoxDesc_Tex(x, y)                 x,y
+#define BoxDesc_Dims(x1,y1,z1,x2,y2,z2)   BoxDesc_Dim(x1,x2), BoxDesc_Dim(y1,y2), BoxDesc_Dim(z1,z2)
+#define BoxDesc_Bounds(x1,y1,z1,x2,y2,z2) x1/16.0f,y1/16.0f,z1/16.0f, x2/16.0f,y2/16.0f,z2/16.0f
+#define BoxDesc_Rot(x, y, z)              x/16.0f,y/16.0f,z/16.0f
+#define BoxDesc_Box(x1,y1,z1,x2,y2,z2)    BoxDesc_Dims(x1,y1,z1,x2,y2,z2), BoxDesc_Bounds(x1,y1,z1,x2,y2,z2)
+
 /* Builds a box model assuming the follow texture layout:
 let SW = sides width, BW = body width, BH = body height
 *********************************************************************************************

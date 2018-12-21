@@ -11,7 +11,7 @@ typedef struct Vector3_ { float X, Y, Z; } Vector3;
 typedef struct Vector3I_ { int X, Y, Z; } Vector3I;
 struct Vector4 { float X, Y, Z, W; };
 struct Matrix { struct Vector4 Row0, Row1, Row2, Row3; };
-extern struct Matrix Matrix_Identity;
+extern const struct Matrix Matrix_Identity;
 
 Vector3 Vector3_Create1(float value);
 Vector3 Vector3_Create3(float x, float y, float z);
@@ -62,14 +62,21 @@ Vector3 Vector3_GetDirVector(float yawRad, float pitchRad);
 NOTE: This is not an identity function. Returned pitch is always within [-90, 90] degrees.*/
 /*void Vector3_GetHeading(Vector3 dir, float* yawRad, float* pitchRad);*/
 
-void Matrix_RotateX(struct Matrix* result, float angle);
-void Matrix_RotateY(struct Matrix* result, float angle);
-void Matrix_RotateZ(struct Matrix* result, float angle);
-void Matrix_Translate(struct Matrix* result, float x, float y, float z);
-void Matrix_Scale(struct Matrix* result, float x, float y, float z);
+/* Returns a matrix representing a counter-clockwise rotation around X axis. */
+CC_API void Matrix_RotateX(struct Matrix* result, float angle);
+/* Returns a matrix representing a counter-clockwise rotation around Y axis. */
+CC_API void Matrix_RotateY(struct Matrix* result, float angle);
+/* Returns a matrix representing a counter-clockwise rotation around Z axis. */
+CC_API void Matrix_RotateZ(struct Matrix* result, float angle);
+/* Returns a matrix representing a translation to the given coordinates. */
+CC_API void Matrix_Translate(struct Matrix* result, float x, float y, float z);
+/* Returns a matrix representing a scaling by the given factors. */
+CC_API void Matrix_Scale(struct Matrix* result, float x, float y, float z);
 
 #define Matrix_MulBy(dst, right) Matrix_Mul(dst, dst, right)
-void Matrix_Mul(struct Matrix* result, struct Matrix* left, struct Matrix* right);
+/* Multiplies two matrices together. */
+/* NOTE: result can be the same pointer as left or right. */
+CC_API void Matrix_Mul(struct Matrix* result, const struct Matrix* left, const struct Matrix* right);
 
 void Matrix_Orthographic(struct Matrix* result, float width, float height, float zNear, float zFar);
 void Matrix_OrthographicOffCenter(struct Matrix* result, float left, float right, float bottom, float top, float zNear, float zFar);

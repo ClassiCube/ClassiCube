@@ -507,7 +507,7 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 /*########################################################################################################################*
 *------------------------------------------------------PNG encoder--------------------------------------------------------*
 *#########################################################################################################################*/
-static void Png_Filter(uint8_t filter, uint8_t* cur, uint8_t* prior, uint8_t* best, int lineLen) {
+static void Png_Filter(uint8_t filter, const uint8_t* cur, const uint8_t* prior, uint8_t* best, int lineLen) {
 	/* 3 bytes per pixel constant */
 	uint8_t a, b, c;
 	int i, p, pa, pb, pc;
@@ -562,15 +562,24 @@ static void Png_Filter(uint8_t filter, uint8_t* cur, uint8_t* prior, uint8_t* be
 	}
 }
 
-static void Png_EncodeRow(const BitmapCol* src, uint8_t* cur, uint8_t* prior, uint8_t* best, int lineLen) {
-	uint8_t* dst = cur;
+static void Png_MakeRow(const BitmapCol* src, uint8_t* dst, int lineLen, bool alpha) {
+	uint8_t* end = dst + lineLen;
+
+	if (alpha) {
+		for (; dst < end; src++, dst += 4) {
+			dst[0] = src->R; dst[1] = src->G; dst[2] = src->B; dst[3] = src->A;
+		}
+	} else {
+		for (; dst < end; src++, dst += 3) {
+			dst[0] = src->R; dst[1] = src->G; dst[2] = src->B;
+		}
+	}
+}
+
+static void Png_EncodeRow(const uint8_t* cur, const uint8_t* prior, uint8_t* best, int lineLen) {
+	uint8_t* dst;
 	int bestFilter, bestEstimate = Int32_MaxValue;
 	int x, filter, estimate;
-
-	for (x = 0; x < lineLen; x += 3) {
-		dst[0] = src->R; dst[1] = src->G; dst[2] = src->B;
-		src++; dst += 3;
-	}
 
 	dst = best + 1;
 	/* NOTE: Waste of time trying the PNG_NONE filter */
@@ -645,7 +654,8 @@ ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector select
 		uint8_t* prev  = (y & 1) == 0 ? prevLine : curLine;
 		uint8_t* cur   = (y & 1) == 0 ? curLine  : prevLine;
 
-		Png_EncodeRow(src, cur, prev, bestLine, lineSize);
+		Png_MakeRow(src, cur, lineSize, false); /* TODO: alpha */
+		Png_EncodeRow(cur, prev, bestLine, lineSize);
 		/* +1 for filter byte */
 		if ((res = Stream_Write(&zlStream, bestLine, lineSize + 1))) return res;
 	}
