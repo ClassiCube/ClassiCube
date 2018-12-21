@@ -277,6 +277,22 @@ static ReturnCode ZipPatcher_WriteStream(struct Stream* s, struct ResourceTextur
 	return 0;
 }
 
+static ReturnCode ZipPatcher_WritePng(struct Stream* s, struct ResourceTexture* tex, Bitmap* src) {
+	struct Stream crc32;
+	ReturnCode res;
+
+	res = ZipPatcher_LocalFile(s, tex);
+	if (res) return res;
+	//Stream_WriteonlyCrc32(&crc32, s);
+
+	//res = Png_Encode(src, &crc32, NULL, true);
+	res = Png_Encode(src, s, NULL, true);
+	if (res) return res;
+
+	//tex->Crc32 = crc32.Meta.CRC32.CRC32 ^ 0xFFFFFFFFUL;
+	return 0;
+}
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------Texture patcher---------------------------------------------------*
@@ -299,19 +315,26 @@ static ReturnCode ZipPatcher_WriteStream(struct Stream* s, struct ResourceTextur
 "\r\n" \
 "# fire\r\n" \
 "6 2 0 0 16 32 0"
+static Bitmap terrainBmp;
 
-static bool TexPatcher_ClassicSelect(const String* path ) {
+static bool ClassicPatcher_SelectEntry(const String* path ) {
 	String name = *path;
 	Utils_UNSAFE_GetFilename(&name);
 	return Resources_FindTex(&name) != NULL;
 }
 
-static ReturnCode TexPatcher_ClassicProcess(const String* path, struct Stream* data, void* obj) {
+static ReturnCode ClassicPatcher_ProcessEntry(const String* path, struct Stream* data, void* obj) {
 	static const String guiClassicPng = String_FromConst("gui_classic.png");
 	struct Stream* s = obj;
 	struct ResourceTexture* entry;
+	String name;
 
-	String name = *path;
+	/* terrain.png requires special patching */
+	if (String_CaselessEqualsConst(path, "terrain.png")) {
+		return Png_Decode(&terrainBmp, data);
+	}
+
+	name = *path;
 	Utils_UNSAFE_GetFilename(&name);
 	if (String_CaselessEqualsConst(&name, "gui.png")) name = guiClassicPng;
 
@@ -319,48 +342,121 @@ static ReturnCode TexPatcher_ClassicProcess(const String* path, struct Stream* d
 	return ZipPatcher_WriteStream(s, entry, data);
 }
 
-static ReturnCode TexPatcher_ClassicFiles(struct Stream* s) {
+static ReturnCode ClassicPatcher_ExtractFiles(struct Stream* s) {
 	struct ZipState zip;
 	struct Stream src;
-	ReturnCode res;
 
 	Stream_ReadonlyMemory(&src, Resources_Files[0].Data, Resources_Files[0].Len);
 	Zip_Init(&zip, &src);
 
 	zip.Obj = s;
-	zip.SelectEntry  = TexPatcher_ClassicSelect;
-	zip.ProcessEntry = TexPatcher_ClassicProcess;
+	zip.SelectEntry  = ClassicPatcher_SelectEntry;
+	zip.ProcessEntry = ClassicPatcher_ProcessEntry;
 	return Zip_Extract(&zip);
 }
 
-static bool TexPatcher_ModernSelect(const String* path) {
+/* the x,y of tiles in terrain.png which get patched */
+static struct TilePatch { const char* Name; uint8_t X1,Y1, X2,Y2; } modern_tiles[12] = {
+	{ "assets/minecraft/textures/blocks/sandstone_bottom.png", 9,3 },
+	{ "assets/minecraft/textures/blocks/sandstone_normal.png", 9,2 },
+	{ "assets/minecraft/textures/blocks/sandstone_top.png", 9,1, },
+	{ "assets/minecraft/textures/blocks/quartz_block_lines_top.png", 10,3, 10,1 },
+	{ "assets/minecraft/textures/blocks/quartz_block_lines.png", 10,2 },
+	{ "assets/minecraft/textures/blocks/stonebrick.png", 4,3 },
+	{ "assets/minecraft/textures/blocks/snow.png", 2,3 },
+	{ "assets/minecraft/textures/blocks/wool_colored_blue.png", 3,5 },
+	{"assets/minecraft/textures/blocks/wool_colored_brown.png", 2,5 },
+	{"assets/minecraft/textures/blocks/wool_colored_cyan.png", 4,5 },
+	{"assets/minecraft/textures/blocks/wool_colored_green.png", 1,5 },
+	{"assets/minecraft/textures/blocks/wool_colored_pink.png", 0,5 }
+};
+
+CC_NOINLINE static struct TilePatch* ModernPatcher_GetTile(const String* path) {
+	int i;
+	for (i = 0; i < Array_Elems(modern_tiles); i++) {
+		if (String_CaselessEqualsConst(path, modern_tiles[i].Name)) return &modern_tiles[i];
+	}
+	return NULL;
+}
+
+static ReturnCode ModernPatcher_PatchTile(struct Stream* data, struct TilePatch* tile) {
+	Bitmap bmp;
+	ReturnCode res;
+
+	if ((res = Png_Decode(&bmp, data))) return res;
+	Bitmap_CopyBlock(0, 0, tile->X1 * 16, tile->Y1 * 16, &terrainBmp, &bmp, 16);
+
+	/* only quartz needs copying to two tiles */
+	if (tile->Y2) {
+		Bitmap_CopyBlock(0, 0, tile->X2 * 16, tile->Y2 * 16, &terrainBmp, &bmp, 16);
+	}
+
+	Mem_Free(bmp.Scan0);
+	return 0;
+}
+
+
+static bool ModernPatcher_SelectEntry(const String* path) {
 	return
 		String_CaselessEqualsConst(path, "assets/minecraft/textures/environment/snow.png") ||
-		String_CaselessEqualsConst(path, "assets/minecraft/textures/entity/chicken.png");
+		String_CaselessEqualsConst(path, "assets/minecraft/textures/entity/chicken.png")   ||
+		String_CaselessEqualsConst(path, "assets/minecraft/textures/blocks/fire_layer_1.png") ||
+		ModernPatcher_GetTile(path) != NULL;
 }
 
-static ReturnCode TexPatcher_ModernProcess(const String* path, struct Stream* data, void* obj) {
+static ReturnCode ModernPatcher_MakeAnimations(struct Stream* s, struct Stream* data) {
+	static const String animsPng = String_FromConst("animations.png");
+	struct ResourceTexture* entry;
+	uint8_t anim_data[Bitmap_DataSize(512, 16)];
+	Bitmap anim, bmp;
+	ReturnCode res;
+	int i;
+
+	if ((res = Png_Decode(&bmp, data))) return res;
+	Bitmap_Create(&anim, 512, 16, anim_data);
+
+	for (i = 0; i < 512; i += 16) {
+		Bitmap_CopyBlock(0, i, i, 0, &bmp, &anim, 16);
+	}
+
+	Mem_Free(bmp.Scan0);
+	entry = Resources_FindTex(&animsPng);
+	return ZipPatcher_WritePng(s, entry, &anim);
+}
+
+static ReturnCode ModernPatcher_ProcessEntry(const String* path, struct Stream* data, void* obj) {
 	struct Stream* s = obj;
 	struct ResourceTexture* entry;
+	struct TilePatch* tile;
+	String name;
 
-	String name = *path;
-	Utils_UNSAFE_GetFilename(&name);
+	if (String_CaselessEqualsConst(path, "assets/minecraft/textures/environment/snow.png")
+		|| String_CaselessEqualsConst(path, "assets/minecraft/textures/entity/chicken.png")) {
+		name = *path;
+		Utils_UNSAFE_GetFilename(&name);
 
-	entry = Resources_FindTex(&name);
-	return ZipPatcher_WriteStream(s, entry, data);
+		entry = Resources_FindTex(&name);
+		return ZipPatcher_WriteStream(s, entry, data);
+	}
+
+	if (String_CaselessEqualsConst(path, "assets/minecraft/textures/blocks/fire_layer_1.png")) {
+		return ModernPatcher_MakeAnimations(s, data);
+	}
+
+	tile = ModernPatcher_GetTile(path);
+	return ModernPatcher_PatchTile(data, tile);
 }
 
-static ReturnCode TexPatcher_ModernFiles(struct Stream* s) {
+static ReturnCode ModernPatcher_ExtractFiles(struct Stream* s) {
 	struct ZipState zip;
 	struct Stream src;
-	ReturnCode res;
 
 	Stream_ReadonlyMemory(&src, Resources_Files[1].Data, Resources_Files[1].Len);
 	Zip_Init(&zip, &src);
 
 	zip.Obj = s;
-	zip.SelectEntry  = TexPatcher_ModernSelect;
-	zip.ProcessEntry = TexPatcher_ModernProcess;
+	zip.SelectEntry  = ModernPatcher_SelectEntry;
+	zip.ProcessEntry = ModernPatcher_ProcessEntry;
 	return Zip_Extract(&zip);
 }
 
@@ -378,21 +474,47 @@ static ReturnCode TexPatcher_NewFiles(struct Stream* s) {
 	/* make ClassiCube gui.png */
 	entry = Resources_FindTex(&guiPng);
 	res   = ZipPatcher_WriteData(s, entry, Resources_Files[3].Data, Resources_Files[3].Len);
+
+	return res;
+}
+
+static void TexPatcher_PatchTile(Bitmap* src, int srcX, int srcY, int dstX, int dstY) {
+	Bitmap_CopyBlock(srcX, srcY, dstX * 16, dstY & 16, src, &terrainBmp, 16);
+}
+
+static ReturnCode TexPatcher_Terrain(struct Stream* s) {
+	static const String terrainPng = String_FromConst("terrain.png");
+	struct ResourceTexture* entry;
+	Bitmap bmp;
+	struct Stream src;
+	ReturnCode res;
+
+	Stream_ReadonlyMemory(&src, Resources_Files[2].Data, Resources_Files[2].Len);
+	if ((res = Png_Decode(&bmp, &src))) return res;
+
+	TexPatcher_PatchTile(&bmp,  0,0, 3,3);
+	TexPatcher_PatchTile(&bmp, 16,0, 6,3);
+	TexPatcher_PatchTile(&bmp, 32,0, 6,2);
+
+	TexPatcher_PatchTile(&bmp,  0,16,  5,3);
+	TexPatcher_PatchTile(&bmp, 16,16,  6,5);
+	TexPatcher_PatchTile(&bmp, 32,16, 11,0);
+
+	entry = Resources_FindTex(&terrainPng);
+	res   = ZipPatcher_WritePng(s, entry, &terrainBmp);
+	Mem_Free(bmp.Scan0);
 	return res;
 }
 
 static ReturnCode TexPatcher_WriteEntries(struct Stream* s) {
-	static const String guiPng   = String_FromConst("gui.png");
-	static const String animsTxt = String_FromConst("animations.txt");
-	struct ResourceTexture* entry;
-
 	uint32_t beg, end;
 	int i;
 	ReturnCode res;
 
-	if ((res = TexPatcher_ClassicFiles(s))) return res;
-	if ((res = TexPatcher_ModernFiles(s)))  return res;
-	if ((res = TexPatcher_NewFiles(s)))     return res;
+	if ((res = ClassicPatcher_ExtractFiles(s))) return res;
+	if ((res = ModernPatcher_ExtractFiles(s)))  return res;
+	if ((res = TexPatcher_NewFiles(s)))         return res;
+	if ((res = TexPatcher_Terrain(s)))          return res;
 	
 	if ((res = s->Position(s, &beg))) return res;
 	for (i = 0; i < Array_Elems(Resources_Textures); i++) {

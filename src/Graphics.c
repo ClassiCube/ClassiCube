@@ -877,7 +877,7 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 	if (res) goto finished;
 	{
 		Bitmap bmp; Bitmap_Create(&bmp, width, height, rect.pBits);
-		res = Png_Encode(&bmp, output, NULL);
+		res = Png_Encode(&bmp, output, NULL, false);
 		if (res) { IDirect3DSurface9_UnlockRect(temp); goto finished; }
 	}
 	res = IDirect3DSurface9_UnlockRect(temp);
@@ -1494,7 +1494,7 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 	Bitmap_Allocate(&bmp, width, height);
 	glReadPixels(0, 0, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, bmp.Scan0);
 
-	res = Png_Encode(&bmp, output, GL_SelectRow);
+	res = Png_Encode(&bmp, output, GL_SelectRow, false);
 	Mem_Free(bmp.Scan0);
 	return res;
 }

@@ -925,6 +925,7 @@ static struct ResourcesScreen {
 	struct LLabel  LblLine1, LblLine2, LblStatus;
 	struct LButton BtnYes, BtnNo, BtnCancel;
 	struct LSlider SdrProgress;
+	int StatusYOffset; /* gets changed when downloading resources */
 	struct LWidget* _widgets[7];
 } ResourcesScreen_Instance;
 
@@ -961,6 +962,7 @@ static void ResourcesScreen_Init(struct LScreen* s_) {
 	struct ResourcesScreen* s = (struct ResourcesScreen*)s_;
 	float size;
 
+	s->StatusYOffset = 10;
 	if (s->NumWidgets) return;
 	s->Widgets = s->_widgets;
 
@@ -995,7 +997,7 @@ static void ResourcesScreen_Reposition(struct LScreen* s_) {
 	
 	LWidget_SetLocation(&s->LblLine1,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -50);
 	LWidget_SetLocation(&s->LblLine2,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
-	LWidget_SetLocation(&s->LblStatus, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  10);
+	LWidget_SetLocation(&s->LblStatus, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  s->StatusYOffset);
 
 	LWidget_SetLocation(&s->BtnYes, ANCHOR_CENTRE, ANCHOR_CENTRE, -70, 45);
 	LWidget_SetLocation(&s->BtnNo,  ANCHOR_CENTRE, ANCHOR_CENTRE,  70, 45);
@@ -1025,7 +1027,9 @@ static void ResourcesScreen_SetStatus(const String* str) {
 	Drawer2D_Clear(&Launcher_Framebuffer, boxCol,
 		w->X, w->Y, w->Width, w->Height);
 	LLabel_SetText(w, str);
+
 	w->YOffset = -10;
+	ResourcesScreen_Instance.StatusYOffset = w->YOffset;	
 	LWidget_CalcPosition(w);
 	LWidget_Draw(w);
 }

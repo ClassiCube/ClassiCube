@@ -47,6 +47,6 @@ typedef int (*Png_RowSelector)(Bitmap* bmp, int row);
 ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream);
 /* Encodes a bitmap in PNG format. */
 /* selectRow is optional. Can be used to modify how rows are encoded. (e.g. flip image) */
-/* NOTE: Always saves as RGB, alpha channel is discarded. */
-ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow);
+/* if alpha is non-zero, RGBA channels are saved, otherwise only RGB channels are. */
+ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow, bool alpha);
 #endif

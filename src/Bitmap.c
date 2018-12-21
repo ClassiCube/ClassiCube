@@ -609,8 +609,9 @@ static void Png_EncodeRow(const uint8_t* cur, const uint8_t* prior, uint8_t* bes
 }
 
 static int Png_SelectRow(Bitmap* bmp, int y) { return y; }
-ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow) {	
+ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow, bool alpha) {	
 	uint8_t tmp[32];
+	/* TODO: This should be * 4 for alpha (should switch to mem_alloc though) */
 	uint8_t prevLine[PNG_MAX_DIMS * 3], curLine[PNG_MAX_DIMS * 3];
 	uint8_t bestLine[PNG_MAX_DIMS * 3 + 1];
 
@@ -631,7 +632,7 @@ ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector select
 		Stream_SetU32_BE(&tmp[8],  bmp->Width);
 		Stream_SetU32_BE(&tmp[12], bmp->Height);
 		tmp[16] = 8;           /* bits per sample */
-		tmp[17] = PNG_COL_RGB; /* TODO: RGBA but mask all alpha to 255? */
+		tmp[17] = alpha ? PNG_COL_RGB_A : PNG_COL_RGB;
 		tmp[18] = 0;           /* DEFLATE compression method */
 		tmp[19] = 0;           /* ADAPTIVE filter method */
 		tmp[20] = 0;           /* Not using interlacing */
@@ -645,7 +646,7 @@ ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector select
 	if ((res = Stream_Write(&chunk, tmp, 4))) return res;
 
 	ZLib_MakeStream(&zlStream, &zlState, &chunk); 
-	lineSize = bmp->Width * 3;
+	lineSize = bmp->Width * (alpha ? 4 : 3);
 	Mem_Set(prevLine, 0, lineSize);
 
 	for (y = 0; y < bmp->Height; y++) {
@@ -654,7 +655,7 @@ ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector select
 		uint8_t* prev  = (y & 1) == 0 ? prevLine : curLine;
 		uint8_t* cur   = (y & 1) == 0 ? curLine  : prevLine;
 
-		Png_MakeRow(src, cur, lineSize, false); /* TODO: alpha */
+		Png_MakeRow(src, cur, lineSize, alpha);
 		Png_EncodeRow(cur, prev, bestLine, lineSize);
 		/* +1 for filter byte */
 		if ((res = Stream_Write(&zlStream, bestLine, lineSize + 1))) return res;
