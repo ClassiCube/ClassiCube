@@ -520,7 +520,7 @@ static ReturnCode TexPatcher_NewFiles(struct Stream* s) {
 }
 
 static void TexPatcher_PatchTile(Bitmap* src, int srcX, int srcY, int dstX, int dstY) {
-	Bitmap_CopyBlock(srcX, srcY, dstX * 16, dstY & 16, src, &terrainBmp, 16);
+	Bitmap_CopyBlock(srcX, srcY, dstX * 16, dstY * 16, src, &terrainBmp, 16);
 }
 
 static ReturnCode TexPatcher_Terrain(struct Stream* s) {
@@ -798,7 +798,7 @@ void Fetcher_Update(void) {
 		if (Resources_Files[i].Downloaded) continue;
 		Fetcher_CheckFile(&Resources_Files[i]);
 	}
-	//if (Resources_Files[3].Data) TexPatcher_MakeDefaultZip();
+	if (Resources_Files[3].Data) TexPatcher_MakeDefaultZip();
 
 	for (i = 0; i < Array_Elems(Resources_Music); i++) {
 		if (Resources_Music[i].Downloaded) continue;

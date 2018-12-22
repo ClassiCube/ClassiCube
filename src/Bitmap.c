@@ -507,21 +507,17 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 /*########################################################################################################################*
 *------------------------------------------------------PNG encoder--------------------------------------------------------*
 *#########################################################################################################################*/
-static void Png_Filter(uint8_t filter, const uint8_t* cur, const uint8_t* prior, uint8_t* best, int lineLen) {
+static void Png_Filter(uint8_t filter, const uint8_t* cur, const uint8_t* prior, uint8_t* best, int lineLen, int bpp) {
 	/* 3 bytes per pixel constant */
 	uint8_t a, b, c;
 	int i, p, pa, pb, pc;
 
 	switch (filter) {
-	case PNG_FILTER_NONE:
-		Mem_Copy(best, cur, lineLen);
-		break;
-
 	case PNG_FILTER_SUB:
-		best[0] = cur[0]; best[1] = cur[1]; best[2] = cur[2];
+		for (i = 0; i < bpp; i++) { best[i] = cur[i]; }
 
-		for (i = 3; i < lineLen; i++) {
-			best[i] = cur[i] - cur[i - 3];
+		for (; i < lineLen; i++) {
+			best[i] = cur[i] - cur[i - bpp];
 		}
 		break;
 
@@ -532,22 +528,18 @@ static void Png_Filter(uint8_t filter, const uint8_t* cur, const uint8_t* prior,
 		break;
 
 	case PNG_FILTER_AVERAGE:
-		best[0] = cur[0] - (prior[0] >> 1);
-		best[1] = cur[1] - (prior[1] >> 1);
-		best[2] = cur[2] - (prior[2] >> 1);
+		for (i = 0; i < bpp; i++) { best[i] = cur[i] - (prior[i] >> 1); }
 
-		for (i = 3; i < lineLen; i++) {
-			best[i] = cur[i] - ((prior[i] + cur[i - 3]) >> 1);
+		for (; i < lineLen; i++) {
+			best[i] = cur[i] - ((prior[i] + cur[i - bpp]) >> 1);
 		}
 		break;
 
 	case PNG_FILTER_PAETH:
-		best[0] = cur[0] - prior[0]; 
-		best[1] = cur[1] - prior[1];
-		best[2] = cur[2] - prior[2];
+		for (i = 0; i < bpp; i++) { best[i] = cur[i] - prior[i]; }
 
-		for (i = 3; i < lineLen; i++) {
-			a = cur[i - 3]; b = prior[i]; c = prior[i - 3];
+		for (; i < lineLen; i++) {
+			a = cur[i - bpp]; b = prior[i]; c = prior[i - bpp];
 			p = a + b - c;
 
 			pa = Math_AbsI(p - a);
@@ -576,7 +568,7 @@ static void Png_MakeRow(const BitmapCol* src, uint8_t* dst, int lineLen, bool al
 	}
 }
 
-static void Png_EncodeRow(const uint8_t* cur, const uint8_t* prior, uint8_t* best, int lineLen) {
+static void Png_EncodeRow(const uint8_t* cur, const uint8_t* prior, uint8_t* best, int lineLen, bool alpha) {
 	uint8_t* dst;
 	int bestFilter, bestEstimate = Int32_MaxValue;
 	int x, filter, estimate;
@@ -584,7 +576,7 @@ static void Png_EncodeRow(const uint8_t* cur, const uint8_t* prior, uint8_t* bes
 	dst = best + 1;
 	/* NOTE: Waste of time trying the PNG_NONE filter */
 	for (filter = PNG_FILTER_SUB; filter <= PNG_FILTER_PAETH; filter++) {
-		Png_Filter(filter, cur, prior, dst, lineLen);
+		Png_Filter(filter, cur, prior, dst, lineLen, alpha ? 4 : 3);
 
 		/* Estimate how well this filtered line will compress, based on */
 		/* smallest sum of magnitude of each byte (signed) in the line */
@@ -602,7 +594,7 @@ static void Png_EncodeRow(const uint8_t* cur, const uint8_t* prior, uint8_t* bes
 	/* The bytes in dst are from last filter run (paeth) */
 	/* However, we want dst to be bytes from the best filter */
 	if (bestFilter != PNG_FILTER_PAETH) {
-		Png_Filter(bestFilter, cur, prior, dst, lineLen);
+		Png_Filter(bestFilter, cur, prior, dst, lineLen, alpha ? 4 : 3);
 	}
 
 	best[0] = bestFilter;
@@ -659,7 +651,8 @@ ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector select
 		uint8_t* cur   = (y & 1) == 0 ? curLine  : prevLine;
 
 		Png_MakeRow(src, cur, lineSize, alpha);
-		Png_EncodeRow(cur, prev, bestLine, lineSize);
+		Png_EncodeRow(cur, prev, bestLine, lineSize, alpha);
+
 		/* +1 for filter byte */
 		if ((res = Stream_Write(&zlStream, bestLine, lineSize + 1))) return res;
 	}
