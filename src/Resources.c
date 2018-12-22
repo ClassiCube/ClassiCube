@@ -244,6 +244,40 @@ static ReturnCode ZipPatcher_EndOfCentralDir(struct Stream* s, uint32_t centralD
 	return Stream_Write(s, header, 22);
 }
 
+static ReturnCode ZipPatcher_FixupLocalFile(struct Stream* s, struct ResourceTexture* e) {
+	String name = String_FromReadonly(e->Filename);
+	uint8_t tmp[2048];
+	uint32_t dataBeg, dataEnd;
+	uint32_t i, crc, toRead, read;
+	ReturnCode res;
+
+	dataBeg = e->Offset + 30 + name.length;
+	if ((res = s->Position(s, &dataEnd))) return res;
+	e->Size = dataEnd - dataBeg;
+
+	/* work out the CRC 32 */
+	crc = 0xffffffffUL;
+	if ((res = s->Seek(s, dataBeg))) return res;
+
+	for (; dataBeg < dataEnd; dataBeg += read) {
+		toRead = dataEnd - dataBeg;
+		toRead = min(toRead, sizeof(tmp));
+
+		if ((res = s->Read(s, tmp, toRead, &read))) return res;
+		if (!read) return ERR_END_OF_STREAM;
+
+		for (i = 0; i < read; i++) {
+			crc = Utils_Crc32Table[(crc ^ tmp[i]) & 0xFF] ^ (crc >> 8);
+		}
+	}
+	e->Crc32 = crc ^ 0xffffffffUL;
+
+	/* then fixup the header */
+	if ((res = s->Seek(s, e->Offset)))      return res;
+	if ((res = ZipPatcher_LocalFile(s, e))) return res;
+	return s->Seek(s, dataEnd);
+}
+
 static ReturnCode ZipPatcher_WriteData(struct Stream* s, struct ResourceTexture* tex, const uint8_t* data, uint32_t len) {
 	ReturnCode res;
 	tex->Size  = len;
@@ -254,6 +288,21 @@ static ReturnCode ZipPatcher_WriteData(struct Stream* s, struct ResourceTexture*
 	return Stream_Write(s, data, len);
 }
 
+/*static ReturnCode ZipPatcher_WriteStream(struct Stream* s, struct ResourceTexture* tex, struct Stream* src) {
+	uint8_t tmp[2048];
+	uint32_t read;
+	ReturnCode res;
+	if ((res = ZipPatcher_LocalFile(s, tex))) return res;
+
+	for (;;) {
+		res = src->Read(src, tmp, sizeof(tmp), &read);
+		if (res)   return res;
+		if (!read) break;
+
+		if ((res = Stream_Write(s, tmp, read))) return res;
+	}
+	return ZipPatcher_FixupLocalFile(s, tex);
+}*/
 static ReturnCode ZipPatcher_WriteStream(struct Stream* s, struct ResourceTexture* tex, struct Stream* src) {
 	uint8_t tmp[2048];
 	uint32_t read;
@@ -274,23 +323,15 @@ static ReturnCode ZipPatcher_WriteStream(struct Stream* s, struct ResourceTextur
 	}
 
 	tex->Crc32 = crc32.Meta.CRC32.CRC32 ^ 0xFFFFFFFFUL;
-	return 0;
+	return ZipPatcher_FixupLocalFile(s, tex);
 }
 
 static ReturnCode ZipPatcher_WritePng(struct Stream* s, struct ResourceTexture* tex, Bitmap* src) {
-	struct Stream crc32;
 	ReturnCode res;
 
-	res = ZipPatcher_LocalFile(s, tex);
-	if (res) return res;
-	//Stream_WriteonlyCrc32(&crc32, s);
-
-	//res = Png_Encode(src, &crc32, NULL, true);
-	res = Png_Encode(src, s, NULL, true);
-	if (res) return res;
-
-	//tex->Crc32 = crc32.Meta.CRC32.CRC32 ^ 0xFFFFFFFFUL;
-	return 0;
+	if ((res = ZipPatcher_LocalFile(s, tex)))   return res;
+	if ((res = Png_Encode(src, s, NULL, true))) return res;
+	return ZipPatcher_FixupLocalFile(s, tex);
 }
 
 

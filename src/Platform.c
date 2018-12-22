@@ -473,10 +473,10 @@ ReturnCode File_Open(FileHandle* file, const String* path) {
 	return File_Do(file, path, GENERIC_READ, OPEN_EXISTING);
 }
 ReturnCode File_Create(FileHandle* file, const String* path) {
-	return File_Do(file, path, GENERIC_WRITE, CREATE_ALWAYS);
+	return File_Do(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
 }
 ReturnCode File_Append(FileHandle* file, const String* path) {
-	ReturnCode res = File_Do(file, path, GENERIC_WRITE, OPEN_ALWAYS);
+	ReturnCode res = File_Do(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 	if (res) return res;
 	return File_Seek(*file, 0, FILE_SEEKFROM_END);
 }
@@ -608,10 +608,10 @@ ReturnCode File_Open(FileHandle* file, const String* path) {
 	return File_Do(file, path, O_RDONLY);
 }
 ReturnCode File_Create(FileHandle* file, const String* path) {
-	return File_Do(file, path, O_WRONLY | O_CREAT | O_TRUNC);
+	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
 }
 ReturnCode File_Append(FileHandle* file, const String* path) {
-	ReturnCode res = File_Do(file, path, O_WRONLY | O_CREAT);
+	ReturnCode res = File_Do(file, path, O_RDWR | O_CREAT);
 	if (res) return res;
 	return File_Seek(*file, 0, FILE_SEEKFROM_END);
 }

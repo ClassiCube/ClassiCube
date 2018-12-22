@@ -617,9 +617,12 @@ ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector select
 
 	struct ZLibState zlState;
 	struct Stream chunk, zlStream;
-	uint32_t stream_len;
+	uint32_t stream_end, stream_beg;
 	int y, lineSize;
 	ReturnCode res;
+
+	/* stream may not start at 0 (e.g. when making default.zip) */
+	if ((res = stream->Position(stream, &stream_beg))) return res;
 
 	if (!selectRow) selectRow = Png_SelectRow;
 	if ((res = Stream_Write(stream, png_sig, PNG_SIG_SIZE))) return res;
@@ -666,13 +669,14 @@ ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector select
 	/* Write end chunk */
 	Stream_SetU32_BE(&tmp[4],  0);
 	Stream_SetU32_BE(&tmp[8],  PNG_FourCC('I','E','N','D'));
-	Stream_SetU32_BE(&tmp[12], 0xAE426082UL); /* CRC32 of iend */
+	Stream_SetU32_BE(&tmp[12], 0xAE426082UL); /* CRC32 of IEND */
 	if ((res = Stream_Write(stream, tmp, 16))) return res;
 
-	/* Come back to write size of data chunk */
-	if ((res = stream->Length(stream, &stream_len))) return res;
-	if ((res = stream->Seek(stream, 33)))            return res;
+	/* Come back to fixup size of data in data chunk */
+	if ((res = stream->Length(stream, &stream_end)))   return res;
+	if ((res = stream->Seek(stream, stream_beg + 33))) return res;
 
-	Stream_SetU32_BE(&tmp[0], stream_len - 57);
-	return Stream_Write(stream, tmp, 4);
+	Stream_SetU32_BE(&tmp[0], (stream_end - stream_beg) - 57);
+	if ((res = Stream_Write(stream, tmp, 4))) return res;
+	return stream->Seek(stream, stream_end);
 }

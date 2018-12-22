@@ -132,6 +132,7 @@ ReturnCode File_GetModifiedTime(const String* path, TimeMS* ms);
 ReturnCode File_SetModifiedTime(const String* path, TimeMS ms);
 
 /* Attempts to create a new (or overwrite) file for writing. */
+/* NOTE: If the file already exists, its contents are discarded. */
 ReturnCode File_Create(FileHandle* file, const String* path);
 /* Attempts to open an existing file for reading. */
 ReturnCode File_Open(FileHandle* file, const String* path);
