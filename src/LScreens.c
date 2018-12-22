@@ -1111,7 +1111,7 @@ struct LScreen* ResourcesScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 static struct ServersScreen {
 	LScreen_Layout
-	struct LInput IptName, IptHash;
+	struct LInput IptSearch, IptHash;
 	struct LButton BtnBack, BtnConnect, BtnRefresh;
 	struct LTable Table;
 	struct LWidget* _widgets[6];
@@ -1133,6 +1133,21 @@ static void ServersScreen_Refresh(void* w, int x, int y) {
 	LWidget_Redraw(btn);
 }
 
+static void ServersScreen_HashFilter(String* str) {
+	int lastIndex;
+	/* Server url look like http://www.classicube.net/server/play/aaaaa/ */
+	/* Trim it to only be the aaaaa */
+
+	if (str->buffer[str->length - 1] == '/') {
+		String_DeleteAt(str, str->length - 1);
+	}
+
+	/* Trim the URL parts before the hash */
+	lastIndex = String_LastIndexOf(str, '/');
+	if (lastIndex == -1) return;
+	*str = String_UNSAFE_SubstringAt(str, lastIndex + 1);
+}
+
 static void ServersScreen_SearchChanged(struct LInput* w) {
 	struct ServersScreen* s = &ServersScreen_Instance;
 	LTable_Filter(&s->Table, &w->Text);
@@ -1143,8 +1158,8 @@ static void ServersScreen_InitWidgets(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	s->Widgets = s->_widgets;
 
-	LScreen_Input(s_, &s->IptName, 370, false, "&gSearch servers..");
-	LScreen_Input(s_, &s->IptHash, 475, false, "&gclassicube.net/server/play/...");
+	LScreen_Input(s_, &s->IptSearch, 370, false, "&gSearch servers..");
+	LScreen_Input(s_, &s->IptHash,   475, false, "&gclassicube.net/server/play/...");
 
 	LScreen_Button(s_, &s->BtnBack,    110, 30, "Back");
 	LScreen_Button(s_, &s->BtnConnect, 130, 30, "Connect");
@@ -1154,7 +1169,8 @@ static void ServersScreen_InitWidgets(struct LScreen* s_) {
 	s->BtnConnect.OnClick = ServersScreen_Connect;
 	s->BtnRefresh.OnClick = ServersScreen_Refresh;
 
-	s->IptName.TextChanged = ServersScreen_SearchChanged;
+	s->IptSearch.TextChanged   = ServersScreen_SearchChanged;
+	s->IptHash.ClipboardFilter = ServersScreen_HashFilter;
 
 	LTable_Init(&s->Table, &Launcher_TextFont, &s->RowFont);
 	s->Widgets[s->NumWidgets++] = (struct LWidget*)&s->Table;
@@ -1166,11 +1182,12 @@ static void ServersScreen_Init(struct LScreen* s_) {
 
 	if (!s->NumWidgets) ServersScreen_InitWidgets(s_);
 	s->Table.RowFont = s->RowFont;
+	LTable_Reset(&s->Table);
 	
-	s->IptHash.Text.length = 0;
-	s->IptName.Text.length = 0;
-	LTable_Filter(&s->Table, &s->IptHash.Text);
-	LScreen_SelectWidget(s_, (struct LWidget*)&s->IptName, false);
+	/* unlike other menus, don't want these to persist */
+	s->IptHash.Text.length   = 0;
+	s->IptSearch.Text.length = 0;
+	LScreen_SelectWidget(s_, (struct LWidget*)&s->IptSearch, false);
 }
 
 static void ServersScreen_Free(struct LScreen* s_) {
@@ -1180,8 +1197,8 @@ static void ServersScreen_Free(struct LScreen* s_) {
 
 static void ServersScreen_Reposition(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
-	LWidget_SetLocation(&s->IptName, ANCHOR_MIN, ANCHOR_MIN, 10, 10);
-	LWidget_SetLocation(&s->IptHash, ANCHOR_MIN, ANCHOR_MAX, 10, 10);
+	LWidget_SetLocation(&s->IptSearch, ANCHOR_MIN, ANCHOR_MIN, 10, 10);
+	LWidget_SetLocation(&s->IptHash,   ANCHOR_MIN, ANCHOR_MAX, 10, 10);
 
 	LWidget_SetLocation(&s->BtnBack,    ANCHOR_MAX, ANCHOR_MIN,  10, 10);
 	LWidget_SetLocation(&s->BtnConnect, ANCHOR_MAX, ANCHOR_MAX,  10, 10);

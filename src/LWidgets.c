@@ -1047,7 +1047,13 @@ void ScrollbarClick(int mouseY) {
 }
 */
 
-void LTable_StopDragging(struct LTable* table) {
+static int LTable_DefaultSort(struct ServerInfo* a, struct ServerInfo* b) {
+	/* highest players, then highest uptime*/
+	if (a->Players != b->Players) return b->Players - a->Players;
+	return b->Uptime - a->Uptime;
+}
+
+static void LTable_StopDragging(struct LTable* table) {
 	table->DraggingColumn    = -1;
 	table->DraggingScrollbar = false;
 	table->MouseOffset       = 0;
@@ -1083,9 +1089,13 @@ void LTable_Init(struct LTable* w, const FontDesc* hdrFont, const FontDesc* rowF
 
 	w->HdrFont = *hdrFont;
 	w->RowFont = *rowFont;
+}
 
+void LTable_Reset(struct LTable* w) {
 	LTable_StopDragging(w);
 	LTable_Reposition(w);
+	w->Sorter = LTable_DefaultSort;
+	LTable_Filter(w, &String_Empty);
 }
 
 void LTable_Filter(struct LTable* w, const String* filter) {

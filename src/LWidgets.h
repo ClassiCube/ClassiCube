@@ -66,7 +66,7 @@ struct LInput {
 	/* Whether all characters should be rendered as *. */
 	bool Password;
 	/* Filter applied to text received from the clipboard. Can be NULL. */
-	void (*ClipboardFilter)(String* text);
+	void (*ClipboardFilter)(String* str);
 	/* Callback invoked when the text is changed. Can be NULL. */
 	void (*TextChanged)(struct LInput* w);
 	/* Filter that only lets certain characters be entered. Can be NULL. */
@@ -111,7 +111,9 @@ struct LSlider {
 };
 CC_NOINLINE void LSlider_Init(struct LSlider* w, int width, int height);
 
-struct ServerInfo;
+/* Returns sort order of two rows/server entries. */
+typedef int (*LTableSorter)(struct ServerInfo* a, struct serverInfo* b);
+
 struct LTableColumn {
 	/* Name of this column. */
 	const char* Name;
@@ -120,10 +122,11 @@ struct LTableColumn {
 	/* Gets the value of this column for the given row. */
 	void (*GetValue)(struct ServerInfo* row, String* str);
 	/* Sorts two rows based on value of this column in both rows. */
-	int (*SortRows)(struct ServerInfo* a, struct ServerInfo* b);
+	LTableSorter SortRows;
 	/* Whether to invert the order of row sorting. */
 	bool InvertSort;
 };
+
 /* Represents a table of server entries. */
 struct LTable {
 	LWidget_Layout
@@ -141,6 +144,8 @@ struct LTable {
 	int VisibleRows;
 	/* Total number of rows in the table (after filter is applied). */
 	int RowsCount;
+	/* Comparison function used to sort rows. */
+	LTableSorter Sorter;
 
 	/* Index of column currently being dragged. */
 	int DraggingColumn;
@@ -148,8 +153,12 @@ struct LTable {
 	bool DraggingScrollbar;
 	int MouseOffset;
 };
+/* Initialises a table. */
+/* NOTE: Must also call LTable_Reset to make a table actually useful. */
 void LTable_Init(struct LTable* table, const FontDesc* hdrFont, const FontDesc* rowFont);
-CC_NOINLINE void LTable_StopDragging(struct LTable* table);
+/* Resets state of a table (reset sorter, filter, etc) */
+void LTable_Reset(struct LTable* table);
+/* Adjusts Y position of rows and number of visible rows. */
 void LTable_Reposition(struct LTable* table);
 /* Filters rows to only show those containing 'filter' in the name. */
 void LTable_Filter(struct LTable* table, const String* filter);

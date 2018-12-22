@@ -373,12 +373,15 @@ static void Game_LoadOptions(void) {
 }
 
 static void Game_LoadPlugin(const String* filename, void* obj) {
+	const static String txt = String_FromConst(".txt");
 	void* lib;
 	void* verSymbol;  /* EXPORT int Plugin_ApiVersion = GAME_API_VER; */
 	void* compSymbol; /* EXPORT struct IGameComponent Plugin_Component = { (whatever) } */
 	int ver;
 	ReturnCode res;
 
+	/* ignore classicalsharp's accepted.txt */
+	if (String_CaselessEnds(filename, &txt)) return;
 	res = Platform_LoadLibrary(filename, &lib);
 	if (res) { Chat_LogError2(res, "loading plugin", filename); return; }
 
