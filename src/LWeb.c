@@ -1,5 +1,5 @@
-#include "Launcher.h"
 #include "LWeb.h"
+#include "Launcher.h"
 #include "Platform.h"
 #include "Stream.h"
 
@@ -306,6 +306,7 @@ static void ServerInfo_Init(struct ServerInfo* info) {
 	info->MaxPlayers = 0;
 	info->Uptime     = 0;
 	info->Featured   = false;
+	info->_order     = -100000;
 }
 
 static void ServerInfo_Parse(struct JsonContext* ctx, const String* val) {
@@ -371,10 +372,13 @@ static void FetchServersTask_Next(struct JsonContext* ctx) {
 }
 
 static void FetchServersTask_Handle(uint8_t* data, uint32_t len) {
+	/* -1 because servers is surrounded by a { */
+	FetchServersTask.NumServers = -1;
 	Json_Handle(data, len, NULL, NULL, FetchServersTask_Count);
-	if (!FetchServersTask.NumServers) return;
 
+	if (FetchServersTask.NumServers <= 0) return;
 	FetchServersTask.Servers = Mem_Alloc(FetchServersTask.NumServers, sizeof(struct ServerInfo), "servers list");
+
 	/* -2 because servers is surrounded by a { */
 	curServer = FetchServersTask.Servers - 2;
 	Json_Handle(data, len, ServerInfo_Parse, NULL, FetchServersTask_Next);

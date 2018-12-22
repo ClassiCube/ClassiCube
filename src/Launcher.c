@@ -197,10 +197,10 @@ static void Launcher_Init(void) {
 	Event_RegisterMouseMove(&MouseEvents_Moved, NULL, Launcher_MouseMove);
 	Event_RegisterFloat(&MouseEvents_Wheel,     NULL, Launcher_MouseWheel);
 
-	Font_Make(&logoFont,           &Drawer2D_FontName, 32, FONT_STYLE_NORMAL);
-	Font_Make(&Launcher_TitleFont, &Drawer2D_FontName, 16, FONT_STYLE_BOLD);
-	Font_Make(&Launcher_TextFont,  &Drawer2D_FontName, 14, FONT_STYLE_NORMAL);
-	Font_Make(&Launcher_HintFont,  &Drawer2D_FontName, 12, FONT_STYLE_ITALIC);
+	Drawer2D_MakeFont(&logoFont,           32, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&Launcher_TitleFont, 16, FONT_STYLE_BOLD);
+	Drawer2D_MakeFont(&Launcher_TextFont,  14, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&Launcher_HintFont,  12, FONT_STYLE_ITALIC);
 
 	Drawer2D_Cols['g'] = col;
 	Utils_EnsureDirectory("texpacks");
@@ -377,7 +377,7 @@ static void Launcher_LoadTextures(Bitmap* bmp) {
 				  0,        0, TILESIZE, TILESIZE);
 }
 
-static ReturnCode Launcher_ProcessZipEntry(const String* path, struct Stream* data, void* obj) {
+static ReturnCode Launcher_ProcessZipEntry(const String* path, struct Stream* data, struct ZipState* s) {
 	Bitmap bmp;
 	ReturnCode res;
 

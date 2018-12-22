@@ -1133,11 +1133,14 @@ static void ServersScreen_Refresh(void* w, int x, int y) {
 	LWidget_Redraw(btn);
 }
 
-static void ServersScreen_Init(struct LScreen* s_) {
-	struct ServersScreen* s = (struct ServersScreen*)s_;
+static void ServersScreen_SearchChanged(struct LInput* w) {
+	struct ServersScreen* s = &ServersScreen_Instance;
+	LTable_Filter(&s->Table, &w->Text);
+	LWidget_Draw(&s->Table);
+}
 
-	Font_Make(&s->RowFont, &Drawer2D_FontName, 11, FONT_STYLE_NORMAL);
-	if (s->NumWidgets) return;
+static void ServersScreen_InitWidgets(struct LScreen* s_) {
+	struct ServersScreen* s = (struct ServersScreen*)s_;
 	s->Widgets = s->_widgets;
 
 	LScreen_Input(s_, &s->IptName, 370, false, "&gSearch servers..");
@@ -1151,8 +1154,23 @@ static void ServersScreen_Init(struct LScreen* s_) {
 	s->BtnConnect.OnClick = ServersScreen_Connect;
 	s->BtnRefresh.OnClick = ServersScreen_Refresh;
 
+	s->IptName.TextChanged = ServersScreen_SearchChanged;
+
 	LTable_Init(&s->Table, &Launcher_TextFont, &s->RowFont);
 	s->Widgets[s->NumWidgets++] = (struct LWidget*)&s->Table;
+}
+
+static void ServersScreen_Init(struct LScreen* s_) {
+	struct ServersScreen* s = (struct ServersScreen*)s_;
+	Drawer2D_MakeFont(&s->RowFont, 11, FONT_STYLE_NORMAL);
+
+	if (!s->NumWidgets) ServersScreen_InitWidgets(s_);
+	s->Table.RowFont = s->RowFont;
+	
+	s->IptHash.Text.length = 0;
+	s->IptName.Text.length = 0;
+	LTable_Filter(&s->Table, &s->IptHash.Text);
+	LScreen_SelectWidget(s_, (struct LWidget*)&s->IptName, false);
 }
 
 static void ServersScreen_Free(struct LScreen* s_) {

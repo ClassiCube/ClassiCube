@@ -1095,11 +1095,11 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 
 	if (method == 0) {
 		Stream_ReadonlyPortion(&portion, stream, uncompressedSize);
-		return state->ProcessEntry(&path, &portion, state->Obj);
+		return state->ProcessEntry(&path, &portion, state);
 	} else if (method == 8) {
 		Stream_ReadonlyPortion(&portion, stream, compressedSize);
 		Inflate_MakeStream(&compStream, &inflate, &portion);
-		return state->ProcessEntry(&path, &compStream, state->Obj);
+		return state->ProcessEntry(&path, &compStream, state);
 	} else {
 		Platform_Log1("Unsupported.zip entry compression method: %i", &method);
 		/* TODO: Should this be an error */
@@ -1155,7 +1155,7 @@ enum ZipSig {
 	ZIP_SIG_LOCALFILEHEADER = 0x04034b50
 };
 
-static ReturnCode Zip_DefaultProcessor(const String* path, struct Stream* data, void* obj) { return 0; }
+static ReturnCode Zip_DefaultProcessor(const String* path, struct Stream* data, struct ZipState* s) { return 0; }
 static bool Zip_DefaultSelector(const String* path) { return true; }
 void Zip_Init(struct ZipState* state, struct Stream* input) {
 	state->Input = input;

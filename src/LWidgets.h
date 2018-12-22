@@ -137,8 +137,10 @@ struct LTable {
 	int RowsBegY, RowHeight;
 	/* Y height of headers. */
 	int HdrHeight;
-	/* Number of rows currently visible. */
+	/* Maximum number of rows visible. */
 	int VisibleRows;
+	/* Total number of rows in the table (after filter is applied). */
+	int RowsCount;
 
 	/* Index of column currently being dragged. */
 	int DraggingColumn;
@@ -149,4 +151,10 @@ struct LTable {
 void LTable_Init(struct LTable* table, const FontDesc* hdrFont, const FontDesc* rowFont);
 CC_NOINLINE void LTable_StopDragging(struct LTable* table);
 void LTable_Reposition(struct LTable* table);
+/* Filters rows to only show those containing 'filter' in the name. */
+void LTable_Filter(struct LTable* table, const String* filter);
+/* Attempts to select the row whose hash equals the given hash. Scrolls table if needed. */
+void LTable_SetSelected(struct LTable* table, const String* hash);
+/* Attempts to get the hash of the currently selected row. */
+void LTable_GetSelected(struct LTable* table, String* hash);
 #endif

@@ -184,7 +184,7 @@ CC_API void  Waitable_Wait(void* handle);
 CC_API void  Waitable_WaitFor(void* handle, uint32_t milliseconds);
 
 /* Gets the list of all supported font names on this platform. */
-CC_API void Font_GetNames(StringsBuffer* buffer);
+void Font_GetNames(StringsBuffer* buffer);
 /* Finds the path of the given font, with closest matching style */
 String Font_Lookup(const String* fontName, int style);
 /* Allocates a new font from the given arguments. */

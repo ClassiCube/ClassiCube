@@ -88,6 +88,7 @@ int main(int argc, char** argv) {
 	Utils_EnsureDirectory("maps");
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("texturecache");
+	Utils_EnsureDirectory("plugins");
 	Options_Load();
 
 	if (argsCount == 0) {

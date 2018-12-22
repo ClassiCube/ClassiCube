@@ -14,7 +14,7 @@ extern struct IGameComponent Drawer2D_Component;
 
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, const FontDesc* font, bool useShadow);
 void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, const FontDesc* font, bool useShadow);
-/* Initialises the given font. When Drawer2D_BitmappedText is false, makes native font handle. */
+/* Initialises the given font. When Drawer2D_BitmappedText is false, creates native font handle using Font_Make. */
 CC_NOINLINE void Drawer2D_MakeFont(FontDesc* desc, int size, int style);
 
 /* Whether text should be drawn and measured using the currently set font bitmap. */ 

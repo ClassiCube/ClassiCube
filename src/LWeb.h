@@ -35,6 +35,7 @@ struct ServerInfo {
 	int Players, MaxPlayers, Port, Uptime;
 	bool Featured;
 	char _Buffer[6][STRING_SIZE];
+	int _order; /* (internal) order in servers table */
 };
 
 struct LWebTask;

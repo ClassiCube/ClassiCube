@@ -668,6 +668,7 @@ static struct LTableColumn tableColumns[4] = {
 #define CELL_XPADDING 3
 
 
+#define LTable_Get(row) &FetchServersTask.Servers[FetchServersTask.Servers[row]._order]
 void LTable_DrawHeaders(struct LTable* w) {
 	BitmapCol gridCol = BITMAPCOL_CONST(20, 20, 10, 255);
 	struct DrawTextArgs args;
@@ -697,6 +698,7 @@ void LTable_DrawHeaders(struct LTable* w) {
 void LTable_DrawRows(struct LTable* w) {
 	BitmapCol gridCol = BITMAPCOL_CONST(20, 20, 10, 255);
 	String str; char strBuffer[STRING_SIZE];
+	struct ServerInfo* entry;
 	struct DrawTextArgs args;
 	int i, x, y, row;
 
@@ -711,12 +713,14 @@ void LTable_DrawRows(struct LTable* w) {
 			Drawer2D_Clear(&Launcher_Framebuffer, gridCol,
 				x, y, w->Width, w->RowHeight);
 		}
-		if (row >= FetchServersTask.NumServers) continue; /* TODO: w->Count instead */
+
+		if (row >= w->RowsCount) continue;
+		entry = LTable_Get(row);
 
 		for (i = 0; i < w->NumColumns; i++) {
 			x += CELL_XPADDING;
 			args.Text.length = 0;
-			w->Columns[i].GetValue(&FetchServersTask.Servers[row], &args.Text);
+			w->Columns[i].GetValue(entry, &args.Text);
 
 			Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args,
 									x, y, w->Columns[i].Width);
@@ -1082,4 +1086,22 @@ void LTable_Init(struct LTable* w, const FontDesc* hdrFont, const FontDesc* rowF
 
 	LTable_StopDragging(w);
 	LTable_Reposition(w);
+}
+
+void LTable_Filter(struct LTable* w, const String* filter) {
+	int i, j, count;
+
+	count = FetchServersTask.NumServers;
+	for (i = 0, j = 0; i < count; i++) {
+		if (String_CaselessContains(&FetchServersTask.Servers[i].Name, filter)) {
+			FetchServersTask.Servers[j++]._order = i;
+		}
+	}
+
+	w->RowsCount = j;
+	for (; j < count; j++) {
+		FetchServersTask.Servers[j]._order = -100000;
+	}
+	/* TODO: preserve selected server */
+	/* TODO: Resort entries again */
 }

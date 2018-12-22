@@ -364,9 +364,9 @@ static bool ClassicPatcher_SelectEntry(const String* path ) {
 	return Resources_FindTex(&name) != NULL;
 }
 
-static ReturnCode ClassicPatcher_ProcessEntry(const String* path, struct Stream* data, void* obj) {
+static ReturnCode ClassicPatcher_ProcessEntry(const String* path, struct Stream* data, struct ZipState* state) {
 	static const String guiClassicPng = String_FromConst("gui_classic.png");
-	struct Stream* s = obj;
+	struct Stream* s = state->Obj;
 	struct ResourceTexture* entry;
 	String name;
 
@@ -465,8 +465,8 @@ static ReturnCode ModernPatcher_MakeAnimations(struct Stream* s, struct Stream* 
 	return ZipPatcher_WritePng(s, entry, &anim);
 }
 
-static ReturnCode ModernPatcher_ProcessEntry(const String* path, struct Stream* data, void* obj) {
-	struct Stream* s = obj;
+static ReturnCode ModernPatcher_ProcessEntry(const String* path, struct Stream* data, struct ZipState* state) {
+	struct Stream* s = state->Obj;
 	struct ResourceTexture* entry;
 	struct TilePatch* tile;
 	String name;
