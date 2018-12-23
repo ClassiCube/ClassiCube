@@ -193,7 +193,7 @@ static void Huffman_Build(struct HuffmanTable* table, uint8_t* bitLens, int coun
 	bl_count[0] = 0;
 	for (i = 1; i < INFLATE_MAX_BITS; i++) {
 		if (bl_count[i] > (1 << i)) {
-			ErrorHandler_Fail("Too many huffman codes for bit length");
+			Logger_Abort("Too many huffman codes for bit length");
 		}
 	}
 
@@ -289,7 +289,7 @@ static int Huffman_Decode(struct InflateState* state, struct HuffmanTable* table
 		}
 	}
 
-	ErrorHandler_Fail("DEFLATE - Invalid huffman code");
+	Logger_Abort("DEFLATE - Invalid huffman code");
 	return -1;
 }
 
@@ -325,7 +325,7 @@ static int Huffman_Unsafe_Decode_Slow(struct InflateState* state, struct Huffman
 		}
 	}
 
-	ErrorHandler_Fail("DEFLATE - Invalid huffman code");
+	Logger_Abort("DEFLATE - Invalid huffman code");
 	return -1;
 }
 
@@ -496,7 +496,7 @@ void Inflate_Process(struct InflateState* state) {
 			} break;
 
 			case 3: {
-				ErrorHandler_Fail("DEFLATE - Invalid block type");
+				Logger_Abort("DEFLATE - Invalid block type");
 			} break;
 
 			}
@@ -509,7 +509,7 @@ void Inflate_Process(struct InflateState* state) {
 			nlen = Inflate_ReadBits(state, 16);
 
 			if (len != (nlen ^ 0xFFFFUL)) {
-				ErrorHandler_Fail("DEFLATE - Uncompressed block LEN check failed");
+				Logger_Abort("DEFLATE - Uncompressed block LEN check failed");
 			}
 			state->Index = len; /* Reuse for 'uncompressed length' */
 			state->State = INFLATE_STATE_UNCOMPRESSED_DATA;
@@ -602,7 +602,7 @@ void Inflate_Process(struct InflateState* state) {
 			case 16:
 				Inflate_EnsureBits(state, 2);
 				repeatCount = Inflate_ReadBits(state, 2);
-				if (!state->Index) ErrorHandler_Fail("DEFLATE - Tried to repeat invalid byte");
+				if (!state->Index) Logger_Abort("DEFLATE - Tried to repeat invalid byte");
 				repeatCount += 3; repeatValue = state->Buffer[state->Index - 1];
 				break;
 
@@ -621,7 +621,7 @@ void Inflate_Process(struct InflateState* state) {
 
 			count = state->NumLits + state->NumDists;
 			if (state->Index + repeatCount > count) {
-				ErrorHandler_Fail("DEFLATE - Tried to repeat past end");
+				Logger_Abort("DEFLATE - Tried to repeat past end");
 			}
 
 			Mem_Set(&state->Buffer[state->Index], repeatValue, repeatCount);

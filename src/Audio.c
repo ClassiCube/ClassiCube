@@ -1,5 +1,5 @@
 #include "Audio.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Platform.h"
 #include "Event.h"
 #include "Block.h"
@@ -167,7 +167,7 @@ static void Soundboard_Init(struct Soundboard* board, const String* boardName, S
 		res = Sound_ReadWave(&file, snd);
 
 		if (res) {
-			Chat_LogError2(res, "decoding", &file);
+			Logger_Warn2(res, "decoding", &file);
 			Mem_Free(snd->Data);
 			snd->Data     = NULL;
 			snd->DataSize = 0;
@@ -206,7 +206,7 @@ static struct SoundOutput monoOutputs[AUDIO_MAX_HANDLES]   = { SOUND_INV, SOUND_
 static struct SoundOutput stereoOutputs[AUDIO_MAX_HANDLES] = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
 
 CC_NOINLINE static void Sounds_Fail(ReturnCode res) {
-	Chat_LogError(res, "playing sounds");
+	Logger_Warn(res, "playing sounds");
 	Chat_AddRaw("&cDisabling sounds");
 	Audio_SetSounds(0);
 }
@@ -466,15 +466,15 @@ static void Music_RunLoop(void) {
 		Platform_Log1("playing music file: %s", &file);
 
 		res = Stream_OpenFile(&stream, &path);
-		if (res) { Chat_LogError2(res, "opening", &path); break; }
+		if (res) { Logger_Warn2(res, "opening", &path); break; }
 
 		res = Music_PlayOgg(&stream);
 		if (res) { 
-			Chat_LogError2(res, "playing", &path); stream.Close(&stream); break;
+			Logger_Warn2(res, "playing", &path); stream.Close(&stream); break;
 		}
 
 		res = stream.Close(&stream);
-		if (res) { Chat_LogError2(res, "closing", &path); break; }
+		if (res) { Logger_Warn2(res, "closing", &path); break; }
 
 		if (music_pendingStop) break;
 		delay = 1000 * 120 + Random_Range(&rnd, 0, 1000 * 300);

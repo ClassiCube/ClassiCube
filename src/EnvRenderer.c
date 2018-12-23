@@ -9,7 +9,7 @@
 #include "Event.h"
 #include "Utils.h"
 #include "Game.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Stream.h"
 #include "Block.h"
 #include "Event.h"

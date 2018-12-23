@@ -64,16 +64,16 @@ void Map_LoadFrom(const String* path) {
 	Game_Reset();
 	
 	res = Stream_OpenFile(&stream, path);
-	if (res) { Chat_LogError2(res, "opening", path); return; }
+	if (res) { Logger_Warn2(res, "opening", path); return; }
 
 	importer = Map_FindImporter(path);
 	if ((res = importer(&stream))) {
 		World_Reset();
-		Chat_LogError2(res, "decoding", path); stream.Close(&stream); return;
+		Logger_Warn2(res, "decoding", path); stream.Close(&stream); return;
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Chat_LogError2(res, "closing", path); }
+	if (res) { Logger_Warn2(res, "closing", path); }
 
 	World_SetNewMap(World_Blocks, World_BlocksSize, World_Width, World_Height, World_Length);
 	Event_RaiseVoid(&WorldEvents_MapLoaded);
@@ -287,34 +287,34 @@ struct NbtTag {
 };
 
 static uint8_t NbtTag_U8(struct NbtTag* tag) {
-	if (tag->TagID != NBT_I8) ErrorHandler_Fail("Expected I8 NBT tag");
+	if (tag->TagID != NBT_I8) Logger_Abort("Expected I8 NBT tag");
 	return tag->Value.U8;
 }
 
 static int16_t NbtTag_I16(struct NbtTag* tag) {
-	if (tag->TagID != NBT_I16) ErrorHandler_Fail("Expected I16 NBT tag");
+	if (tag->TagID != NBT_I16) Logger_Abort("Expected I16 NBT tag");
 	return tag->Value.I16;
 }
 
 static uint16_t NbtTag_U16(struct NbtTag* tag) {
-	if (tag->TagID != NBT_I16) ErrorHandler_Fail("Expected I16 NBT tag");
+	if (tag->TagID != NBT_I16) Logger_Abort("Expected I16 NBT tag");
 	return tag->Value.U16;
 }
 
 static float NbtTag_F32(struct NbtTag* tag) {
-	if (tag->TagID != NBT_F32) ErrorHandler_Fail("Expected F32 NBT tag");
+	if (tag->TagID != NBT_F32) Logger_Abort("Expected F32 NBT tag");
 	return tag->Value.F32;
 }
 
 static uint8_t* NbtTag_U8_Array(struct NbtTag* tag, int minSize) {
-	if (tag->TagID != NBT_I8S) ErrorHandler_Fail("Expected I8_Array NBT tag");
-	if (tag->DataSize < minSize) ErrorHandler_Fail("I8_Array NBT tag too small");
+	if (tag->TagID != NBT_I8S) Logger_Abort("Expected I8_Array NBT tag");
+	if (tag->DataSize < minSize) Logger_Abort("I8_Array NBT tag too small");
 
 	return NbtTag_IsSmall(tag) ? tag->Value.Small : tag->Value.Big;
 }
 
 static String NbtTag_String(struct NbtTag* tag) {
-	if (tag->TagID != NBT_STR) ErrorHandler_Fail("Expected String NBT tag");
+	if (tag->TagID != NBT_STR) Logger_Abort("Expected String NBT tag");
 	return tag->Value.Str.Text;
 }
 
@@ -427,7 +427,7 @@ static void Cw_Callback_1(struct NbtTag* tag) {
 	if (IsTag(tag, "Z")) { World_Length = NbtTag_U16(tag); return; }
 
 	if (IsTag(tag, "UUID")) {
-		if (tag->DataSize != sizeof(World_Uuid)) ErrorHandler_Fail("Map UUID must be 16 bytes");
+		if (tag->DataSize != sizeof(World_Uuid)) Logger_Abort("Map UUID must be 16 bytes");
 		Mem_Copy(World_Uuid, tag->Value.Small, sizeof(World_Uuid));
 		return;
 	}
@@ -793,7 +793,7 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 }
 
 static int32_t Dat_I32(struct JFieldDesc* field) {
-	if (field->Type != JFIELD_I32) ErrorHandler_Fail("Field type must be Int32");
+	if (field->Type != JFIELD_I32) Logger_Abort("Field type must be Int32");
 	return field->Value.I32;
 }
 
@@ -834,7 +834,7 @@ ReturnCode Dat_Load(struct Stream* stream) {
 		} else if (String_CaselessEqualsConst(&fieldName, "depth")) {
 			World_Height = Dat_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "blocks")) {
-			if (field->Type != JFIELD_ARRAY) ErrorHandler_Fail("Blocks field must be Array");
+			if (field->Type != JFIELD_ARRAY) Logger_Abort("Blocks field must be Array");
 			World_Blocks     = field->Value.Array.Ptr;
 #ifdef EXTENDED_BLOCKS
 			World_Blocks2    = World_Blocks;

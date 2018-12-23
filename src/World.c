@@ -1,5 +1,5 @@
 #include "World.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "String.h"
 #include "Platform.h"
 #include "Event.h"
@@ -66,7 +66,7 @@ void World_SetNewMap(BlockRaw* blocks, int blocksSize, int width, int height, in
 	if (!World_BlocksSize) World_Blocks = NULL;
 
 	if (blocksSize != (width * height * length)) {
-		ErrorHandler_Fail("Blocks array size does not match volume of map");
+		Logger_Abort("Blocks array size does not match volume of map");
 	}
 #ifdef EXTENDED_BLOCKS
 	World_Blocks2 = World_Blocks;

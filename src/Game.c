@@ -12,7 +12,7 @@
 #include "Window.h"
 #include "Event.h"
 #include "Utils.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Entity.h"
 #include "Chat.h"
 #include "Drawer2D.h"
@@ -85,7 +85,7 @@ int ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
 	task.Callback    = callback;
 
 	if (Game_TasksCount == Array_Elems(Game_Tasks)) {
-		ErrorHandler_Fail("ScheduledTask_Add - hit max count");
+		Logger_Abort("ScheduledTask_Add - hit max count");
 	}
 	Game_Tasks[Game_TasksCount++] = task;
 	return Game_TasksCount - 1;
@@ -232,7 +232,7 @@ bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* 
 	ReturnCode res;
 	
 	res = Png_Decode(&bmp, src);
-	if (res) { Chat_LogError2(res, "decoding", file); }
+	if (res) { Logger_Warn2(res, "decoding", file); }
 
 	success = !res && Game_ValidateBitmap(file, &bmp);
 	if (success) {
@@ -305,7 +305,7 @@ static void Game_TextureChangedCore(void* obj, struct Stream* src, const String*
 		res = Png_Decode(&bmp, src);
 
 		if (res) { 
-			Chat_LogError2(res, "decoding", name);
+			Logger_Warn2(res, "decoding", name);
 			Mem_Free(bmp.Scan0);
 		} else if (!Game_ChangeTerrainAtlas(&bmp)) {
 			Mem_Free(bmp.Scan0);
@@ -314,13 +314,20 @@ static void Game_TextureChangedCore(void* obj, struct Stream* src, const String*
 }
 
 static void Game_OnLowVRAMDetected(void* obj) {
-	if (Game_UserViewDistance <= 16) ErrorHandler_Fail("Out of video memory!");
+	if (Game_UserViewDistance <= 16) Logger_Abort("Out of video memory!");
 	Game_UserViewDistance /= 2;
 	Game_UserViewDistance = max(16, Game_UserViewDistance);
 
 	MapRenderer_Refresh();
 	Game_SetViewDistance(Game_UserViewDistance);
 	Chat_AddRaw("&cOut of VRAM! Halving view distance..");
+}
+
+static void Game_Warn(ReturnCode result, const char* place) {
+	Chat_Add4("&cError %h when %c", &result, place, NULL, NULL);
+}
+static void Game_Warn2(ReturnCode result, const char* place, const String* path) {
+	Chat_Add4("&cError %h when %c '%s'", &result, place, path, NULL);
 }
 
 static void Game_ExtractInitialTexturePack(void) {
@@ -383,12 +390,12 @@ static void Game_LoadPlugin(const String* filename, void* obj) {
 	/* ignore classicalsharp's accepted.txt */
 	if (String_CaselessEnds(filename, &txt)) return;
 	res = Platform_LoadLibrary(filename, &lib);
-	if (res) { Chat_LogError2(res, "loading plugin", filename); return; }
+	if (res) { Logger_Warn2(res, "loading plugin", filename); return; }
 
 	res = Platform_GetSymbol(lib, "Plugin_ApiVersion", &verSymbol);
-	if (res) { Chat_LogError2(res, "getting plugin version", filename); return; }
+	if (res) { Logger_Warn2(res, "getting version of", filename); return; }
 	res = Platform_GetSymbol(lib, "Plugin_Component", &compSymbol);
-	if (res) { Chat_LogError2(res, "initing plugin", filename); return; }
+	if (res) { Logger_Warn2(res, "initing", filename); return; }
 
 	ver = *((int*)verSymbol);
 	if (ver < GAME_API_VER) {
@@ -407,13 +414,16 @@ static void Game_LoadPlugins(void) {
 	ReturnCode res;
 
 	res = Directory_Enum(&dir, NULL, Game_LoadPlugin);
-	if (res) Chat_LogError(res, "enumerating plugins directory");
+	if (res) Logger_Warn(res, "enumerating plugins directory");
 }
 
 void Game_Free(void* obj);
 static void Game_Load(void) {
 	String title;      char titleBuffer[STRING_SIZE];
 	struct IGameComponent* comp;
+
+	Logger_Warn  = Game_Warn;
+	Logger_Warn2 = Game_Warn2;
 
 	Game_ViewDistance     = 512;
 	Game_MaxViewDistance  = 32768;
@@ -610,15 +620,15 @@ void Game_TakeScreenshot(void) {
 	String_Format1(&path, "screenshots/%s", &filename);
 
 	res = Stream_CreateFile(&stream, &path);
-	if (res) { Chat_LogError2(res, "creating", &path); return; }
+	if (res) { Logger_Warn2(res, "creating", &path); return; }
 
 	res = Gfx_TakeScreenshot(&stream, Game_Width, Game_Height);
 	if (res) { 
-		Chat_LogError2(res, "saving to", &path); stream.Close(&stream); return;
+		Logger_Warn2(res, "saving to", &path); stream.Close(&stream); return;
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Chat_LogError2(res, "closing", &path); return; }
+	if (res) { Logger_Warn2(res, "closing", &path); return; }
 
 	Chat_Add1("&eTaken screenshot as: %s", &filename);
 }
@@ -684,6 +694,9 @@ void Game_Free(void* obj) {
 	for (comp = comps_head; comp; comp = comp->Next) {
 		if (comp->Free) comp->Free();
 	}
+
+	Logger_Warn  = Logger_DialogWarn;
+	Logger_Warn2 = Logger_DialogWarn2;
 	Gfx_Free();
 
 	if (!Options_HasAnyChanged()) return;

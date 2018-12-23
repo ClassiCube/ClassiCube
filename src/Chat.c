@@ -3,7 +3,7 @@
 #include "Platform.h"
 #include "Event.h"
 #include "Game.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "ServerConnection.h"
 #include "World.h"
 #include "Inventory.h"
@@ -34,7 +34,7 @@ static TimeMS* Chat_LogTimes = Chat_DefaultLogTimes;
 static int Chat_LogTimesMax = CHAT_LOGTIMES_DEF_ELEMS, Chat_LogTimesCount;
 
 TimeMS Chat_GetLogTime(int i) {
-	if (i < 0 || i >= Chat_LogTimesCount) ErrorHandler_Fail("Tried to get time past LogTime end");
+	if (i < 0 || i >= Chat_LogTimesCount) Logger_Abort("Tried to get time past LogTime end");
 	return Chat_LogTimes[i];
 }
 
@@ -61,7 +61,7 @@ static void Chat_CloseLog(void) {
 	if (!Chat_LogStream.Meta.File) return;
 
 	res = Chat_LogStream.Close(&Chat_LogStream);
-	if (res) { Chat_LogError2(res, "closing", &Chat_LogPath); }
+	if (res) { Logger_Warn2(res, "closing", &Chat_LogPath); }
 }
 
 static bool Chat_AllowedLogChar(char c) {
@@ -113,7 +113,7 @@ static void Chat_OpenLog(struct DateTime* now) {
 		res = File_Append(&file, path);
 		if (res && res != ReturnCode_FileShareViolation) {
 			Chat_DisableLogging();
-			Chat_LogError2(res, "appending to", path); return;
+			Logger_Warn2(res, "appending to", path); return;
 		}
 
 		if (res == ReturnCode_FileShareViolation) continue;
@@ -150,15 +150,9 @@ static void Chat_AppendLog(const String* text) {
 	res = Stream_WriteLine(&Chat_LogStream, &str);
 	if (!res) return;
 	Chat_DisableLogging();
-	Chat_LogError2(res, "writing to", &Chat_LogPath);
+	Logger_Warn2(res, "writing to", &Chat_LogPath);
 }
 
-void Chat_LogError(ReturnCode result, const char* place) {
-	Chat_Add4("&cError %h when %c", &result, place, NULL, NULL);
-}
-void Chat_LogError2(ReturnCode result, const char* place, const String* path) {
-	Chat_Add4("&cError %h when %c '%s'", &result, place, path, NULL);
-}
 void Chat_Add1(const char* format, const void* a1) {
 	Chat_Add4(format, a1, NULL, NULL, NULL);
 }

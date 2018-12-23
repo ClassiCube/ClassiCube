@@ -1,7 +1,7 @@
 #include "AsyncDownloader.h"
 #include "Platform.h"
 #include "Funcs.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Stream.h"
 #include "GameStructs.h"
 
@@ -41,7 +41,7 @@ static void AsyncRequestList_Prepend(struct AsyncRequestList* list, struct Async
 }
 
 static void AsyncRequestList_RemoveAt(struct AsyncRequestList* list, int i) {
-	if (i < 0 || i >= list->Count) ErrorHandler_Fail("Tried to remove element at list end");
+	if (i < 0 || i >= list->Count) Logger_Abort("Tried to remove element at list end");
 
 	for (; i < list->Count - 1; i++) {
 		list->Requests[i] = list->Requests[i + 1];

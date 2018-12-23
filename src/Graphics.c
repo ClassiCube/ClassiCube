@@ -284,9 +284,9 @@ static DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 static D3DFORMAT d3d9_viewFormat, d3d9_depthFormat;
 
 #define D3D9_SetRenderState(state, value, name) \
-ReturnCode res = IDirect3DDevice9_SetRenderState(device, state, value); if (res) ErrorHandler_Fail2(res, name);
+ReturnCode res = IDirect3DDevice9_SetRenderState(device, state, value); if (res) Logger_Abort2(res, name);
 #define D3D9_SetRenderState2(state, value, name) \
-res = IDirect3DDevice9_SetRenderState(device, state, value);            if (res) ErrorHandler_Fail2(res, name);
+res = IDirect3DDevice9_SetRenderState(device, state, value);            if (res) Logger_Abort2(res, name);
 
 static void D3D9_SetDefaultRenderStates(void);
 static void D3D9_RestoreRenderStates(void);
@@ -327,7 +327,7 @@ static void D3D9_FindCompatibleFormat(void) {
 		res = IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, true);
 		if (!res) break;
 	}
-	if (i == count) ErrorHandler_Fail("Unable to create a back buffer with sufficient precision.");
+	if (i == count) Logger_Abort("Unable to create a back buffer with sufficient precision.");
 
 	count = Array_Elems(depthFormats);
 	for (i = 0; i < count; i++) {
@@ -335,7 +335,7 @@ static void D3D9_FindCompatibleFormat(void) {
 		res = IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, d3d9_depthFormat);
 		if (!res) break;
 	}
-	if (i == count) ErrorHandler_Fail("Unable to create a depth buffer with sufficient precision.");
+	if (i == count) Logger_Abort("Unable to create a depth buffer with sufficient precision.");
 }
 
 static void D3D9_FillPresentArgs(int width, int height, D3DPRESENT_PARAMETERS* args) {
@@ -383,11 +383,11 @@ void Gfx_Init(void) {
 		createFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
 		res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
 	}
-	if (res) ErrorHandler_Fail2(res, "Creating Direct3D9 device");
+	if (res) Logger_Abort2(res, "Creating Direct3D9 device");
 
 	D3DCAPS9 caps;
 	res = IDirect3DDevice9_GetDeviceCaps(device, &caps);
-	if (res) ErrorHandler_Fail2(res, "Getting Direct3D9 capabilities");
+	if (res) Logger_Abort2(res, "Getting Direct3D9 capabilities");
 
 	Gfx_MaxTexWidth  = caps.MaxTextureWidth;
 	Gfx_MaxTexHeight = caps.MaxTextureHeight;
@@ -410,13 +410,13 @@ void Gfx_Free(void) {
 static void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, int lvl) {
 	D3DLOCKED_RECT rect;
 	ReturnCode res = IDirect3DTexture9_LockRect(texture, lvl, &rect, NULL, 0);
-	if (res) ErrorHandler_Fail2(res, "D3D9_SetTextureData - Lock");
+	if (res) Logger_Abort2(res, "D3D9_SetTextureData - Lock");
 
 	uint32_t size = Bitmap_DataSize(bmp->Width, bmp->Height);
 	Mem_Copy(rect.pBits, bmp->Scan0, size);
 
 	res = IDirect3DTexture9_UnlockRect(texture, lvl);
-	if (res) ErrorHandler_Fail2(res, "D3D9_SetTextureData - Unlock");
+	if (res) Logger_Abort2(res, "D3D9_SetTextureData - Unlock");
 }
 
 static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp, int lvl) {
@@ -426,7 +426,7 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bi
 
 	D3DLOCKED_RECT rect;
 	ReturnCode res = IDirect3DTexture9_LockRect(texture, lvl, &rect, &part, 0);
-	if (res) ErrorHandler_Fail2(res, "D3D9_SetTexturePartData - Lock");
+	if (res) Logger_Abort2(res, "D3D9_SetTexturePartData - Lock");
 
 	/* We need to copy scanline by scanline, as generally rect.stride != data.stride */
 	uint8_t* src = (uint8_t*)bmp->Scan0;
@@ -441,7 +441,7 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bi
 	}
 
 	res = IDirect3DTexture9_UnlockRect(texture, lvl);
-	if (res) ErrorHandler_Fail2(res, "D3D9_SetTexturePartData - Unlock");
+	if (res) Logger_Abort2(res, "D3D9_SetTexturePartData - Unlock");
 }
 
 static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp, bool partial) {
@@ -480,13 +480,13 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 	int levels = 1 + (mipmaps ? mipmapsLevels : 0);
 
 	if (!Math_IsPowOf2(bmp->Width) || !Math_IsPowOf2(bmp->Height)) {
-		ErrorHandler_Fail("Textures must have power of two dimensions");
+		Logger_Abort("Textures must have power of two dimensions");
 	}
 
 	if (managedPool) {
 		res = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels, 
 			0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &tex, NULL);
-		if (res) ErrorHandler_Fail2(res, "D3D9_CreateTexture");
+		if (res) Logger_Abort2(res, "D3D9_CreateTexture");
 
 		D3D9_SetTextureData(tex, bmp, 0);
 		if (mipmaps) D3D9_DoMipmaps(tex, 0, 0, bmp, false);
@@ -494,17 +494,17 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 		IDirect3DTexture9* sys;
 		res = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels, 
 			0, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &sys, NULL);
-		if (res) ErrorHandler_Fail2(res, "D3D9_CreateTexture - SystemMem");
+		if (res) Logger_Abort2(res, "D3D9_CreateTexture - SystemMem");
 
 		D3D9_SetTextureData(sys, bmp, 0);
 		if (mipmaps) D3D9_DoMipmaps(sys, 0, 0, bmp, false);
 
 		res = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels, 
 			0, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &tex, NULL);
-		if (res) ErrorHandler_Fail2(res, "D3D9_CreateTexture - GPU");
+		if (res) Logger_Abort2(res, "D3D9_CreateTexture - GPU");
 
 		res = IDirect3DDevice9_UpdateTexture(device, (IDirect3DBaseTexture9*)sys, (IDirect3DBaseTexture9*)tex);
-		if (res) ErrorHandler_Fail2(res, "D3D9_CreateTexture - Update");
+		if (res) Logger_Abort2(res, "D3D9_CreateTexture - Update");
 		D3D9_FreeResource(&sys);
 	}
 	return tex;
@@ -518,7 +518,7 @@ void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, bool
 
 void Gfx_BindTexture(GfxResourceID texId) {
 	ReturnCode res = IDirect3DDevice9_SetTexture(device, 0, (IDirect3DBaseTexture9*)texId);
-	if (res) ErrorHandler_Fail2(res, "D3D9_BindTexture");
+	if (res) Logger_Abort2(res, "D3D9_BindTexture");
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) { D3D9_FreeResource(texId); }
@@ -526,20 +526,20 @@ void Gfx_DeleteTexture(GfxResourceID* texId) { D3D9_FreeResource(texId); }
 void Gfx_SetTexturing(bool enabled) {
 	if (enabled) return;
 	ReturnCode res = IDirect3DDevice9_SetTexture(device, 0, NULL);
-	if (res) ErrorHandler_Fail2(res, "D3D9_SetTexturing");
+	if (res) Logger_Abort2(res, "D3D9_SetTexturing");
 }
 
 void Gfx_EnableMipmaps(void) {
 	if (Gfx_Mipmaps) {
 		ReturnCode res = IDirect3DDevice9_SetSamplerState(device, 0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-		if (res) ErrorHandler_Fail2(res, "D3D9_EnableMipmaps");
+		if (res) Logger_Abort2(res, "D3D9_EnableMipmaps");
 	}
 }
 
 void Gfx_DisableMipmaps(void) {
 	if (Gfx_Mipmaps) {
 		ReturnCode res = IDirect3DDevice9_SetSamplerState(device, 0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
-		if (res) ErrorHandler_Fail2(res, "D3D9_DisableMipmaps");
+		if (res) Logger_Abort2(res, "D3D9_DisableMipmaps");
 	}
 }
 
@@ -642,7 +642,7 @@ void Gfx_SetAlphaBlendFunc(BlendFunc srcFunc, BlendFunc dstFunc) {
 void Gfx_SetAlphaArgBlend(bool enabled) {
 	D3DTEXTUREOP op = enabled ? D3DTOP_MODULATE : D3DTOP_SELECTARG1;
 	ReturnCode res  = IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_ALPHAOP, op);
-	if (res) ErrorHandler_Fail2(res, "D3D9_SetAlphaArgBlend");
+	if (res) Logger_Abort2(res, "D3D9_SetAlphaArgBlend");
 }
 
 void Gfx_ClearCol(PackedCol col) { d3d9_clearCol.C = col; }
@@ -707,7 +707,7 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	IDirect3DVertexBuffer9* vbuffer;
 	ReturnCode res = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
 		d3d9_formatMappings[fmt], D3DPOOL_DEFAULT, &vbuffer, NULL);
-	if (res) ErrorHandler_Fail2(res, "D3D9_CreateDynamicVb");
+	if (res) Logger_Abort2(res, "D3D9_CreateDynamicVb");
 
 	return vbuffer;
 }
@@ -715,11 +715,11 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, int size, const char* lockMsg, const char* unlockMsg, int lockFlags) {
 	void* dst = NULL;
 	ReturnCode res = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, lockFlags);
-	if (res) ErrorHandler_Fail2(res, lockMsg);
+	if (res) Logger_Abort2(res, lockMsg);
 
 	Mem_Copy(dst, data, size);
 	res = IDirect3DVertexBuffer9_Unlock(buffer);
-	if (res) ErrorHandler_Fail2(res, unlockMsg);
+	if (res) Logger_Abort2(res, unlockMsg);
 }
 
 GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
@@ -732,7 +732,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 			d3d9_formatMappings[fmt], D3DPOOL_DEFAULT, &vbuffer, NULL);
 		if (!res) break;
 
-		if (res != D3DERR_OUTOFVIDEOMEMORY) ErrorHandler_Fail2(res, "D3D9_CreateVb");
+		if (res != D3DERR_OUTOFVIDEOMEMORY) Logger_Abort2(res, "D3D9_CreateVb");
 		Event_RaiseVoid(&GfxEvents_LowVRAMDetected);
 	}
 
@@ -743,18 +743,18 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 static void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, int size) {
 	void* dst = NULL;
 	ReturnCode res = IDirect3DIndexBuffer9_Lock(buffer, 0, size, &dst, 0);
-	if (res) ErrorHandler_Fail2(res, "D3D9_CreateIb - Lock");
+	if (res) Logger_Abort2(res, "D3D9_CreateIb - Lock");
 
 	Mem_Copy(dst, data, size);
 	res = IDirect3DIndexBuffer9_Unlock(buffer);
-	if (res) ErrorHandler_Fail2(res, "D3D9_CreateIb - Unlock");
+	if (res) Logger_Abort2(res, "D3D9_CreateIb - Unlock");
 }
 
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
 	int size = indicesCount * 2;
 	IDirect3DIndexBuffer9* ibuffer;
 	ReturnCode res = IDirect3DDevice9_CreateIndexBuffer(device, size, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &ibuffer, NULL);
-	if (res) ErrorHandler_Fail2(res, "D3D9_CreateIb");
+	if (res) Logger_Abort2(res, "D3D9_CreateIb");
 
 	D3D9_SetIbData(ibuffer, indices, size);
 	return ibuffer;
@@ -763,13 +763,13 @@ GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
 void Gfx_BindVb(GfxResourceID vb) {
 	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
 	ReturnCode res = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, gfx_batchStride);
-	if (res) ErrorHandler_Fail2(res, "D3D9_BindVb");
+	if (res) Logger_Abort2(res, "D3D9_BindVb");
 }
 
 void Gfx_BindIb(GfxResourceID ib) {
 	IDirect3DIndexBuffer9* ibuffer = (IDirect3DIndexBuffer9*)ib;
 	ReturnCode res = IDirect3DDevice9_SetIndices(device, ibuffer);
-	if (res) ErrorHandler_Fail2(res, "D3D9_BindIb");
+	if (res) Logger_Abort2(res, "D3D9_BindIb");
 }
 
 void Gfx_DeleteVb(GfxResourceID* vb) { D3D9_FreeResource(vb); }
@@ -780,7 +780,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 	gfx_batchFormat = fmt;
 
 	ReturnCode res = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[fmt]);
-	if (res) ErrorHandler_Fail2(res, "D3D9_SetBatchFormat");
+	if (res) Logger_Abort2(res, "D3D9_SetBatchFormat");
 	gfx_batchStride = gfx_strideSizes[fmt];
 }
 
@@ -790,30 +790,30 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	D3D9_SetVbData(vbuffer, vertices, size, "D3D9_SetDynamicVbData - Lock", "D3D9_SetDynamicVbData - Unlock", D3DLOCK_DISCARD);
 
 	ReturnCode res = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, gfx_batchStride);
-	if (res) ErrorHandler_Fail2(res, "D3D9_SetDynamicVbData - Bind");
+	if (res) Logger_Abort2(res, "D3D9_SetDynamicVbData - Bind");
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
 	ReturnCode res = IDirect3DDevice9_DrawPrimitive(device, D3DPT_LINELIST, 0, verticesCount >> 1);
-	if (res) ErrorHandler_Fail2(res, "D3D9_DrawVb_Lines");
+	if (res) Logger_Abort2(res, "D3D9_DrawVb_Lines");
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	ReturnCode res = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
 		0, 0, verticesCount, 0, verticesCount >> 1);
-	if (res) ErrorHandler_Fail2(res, "D3D9_DrawVb_IndexedTris");
+	if (res) Logger_Abort2(res, "D3D9_DrawVb_IndexedTris");
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 	ReturnCode res = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
 		startVertex, 0, verticesCount, 0, verticesCount >> 1);
-	if (res) ErrorHandler_Fail2(res, "D3D9_DrawVb_IndexedTris");
+	if (res) Logger_Abort2(res, "D3D9_DrawVb_IndexedTris");
 }
 
 void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 	ReturnCode res = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
 		startVertex, 0, verticesCount, 0, verticesCount >> 1);
-	if (res) ErrorHandler_Fail2(res, "D3D9_DrawIndexedVb_TrisT2fC4b");
+	if (res) Logger_Abort2(res, "D3D9_DrawIndexedVb_TrisT2fC4b");
 }
 
 
@@ -831,7 +831,7 @@ void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
 
 	if (Gfx_LostContext) return;
 	res = IDirect3DDevice9_SetTransform(device, matrix_modes[type], matrix);
-	if (res) ErrorHandler_Fail2(res, "D3D9_LoadMatrix");
+	if (res) Logger_Abort2(res, "D3D9_LoadMatrix");
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
@@ -842,7 +842,7 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 
 	if (Gfx_LostContext) return;
 	res = IDirect3DDevice9_SetTransform(device, matrix_modes[type], &Matrix_Identity);
-	if (res) ErrorHandler_Fail2(res, "D3D9_LoadIdentityMatrix");
+	if (res) Logger_Abort2(res, "D3D9_LoadIdentityMatrix");
 }
 
 #define d3d9_zN -10000.0f
@@ -901,14 +901,14 @@ void Gfx_BeginFrame(void) { IDirect3DDevice9_BeginScene(device); }
 void Gfx_Clear(void) {
 	DWORD flags = D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER;
 	ReturnCode res = IDirect3DDevice9_Clear(device, 0, NULL, flags, d3d9_clearCol.Raw, 1.0f, 0);
-	if (res) ErrorHandler_Fail2(res, "D3D9_Clear");
+	if (res) Logger_Abort2(res, "D3D9_Clear");
 }
 
 void Gfx_EndFrame(void) {
 	IDirect3DDevice9_EndScene(device);
 	ReturnCode res = IDirect3DDevice9_Present(device, NULL, NULL, NULL, NULL);
 	if (!res) return;
-	if (res != D3DERR_DEVICELOST) ErrorHandler_Fail2(res, "D3D9_EndFrame");
+	if (res != D3DERR_DEVICELOST) Logger_Abort2(res, "D3D9_EndFrame");
 
 	/* TODO: Make sure this actually works on all graphics cards.*/
 	Gfx_LoseContext(" (Direct3D9 device lost)");
@@ -1043,7 +1043,7 @@ static void GL_CheckVboSupport(void) {
 		glBufferSubData = (FUNC_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubDataARB");
 #endif
 	} else {
-		ErrorHandler_Fail("Only OpenGL 1.1 supported.\r\n\r\n" \
+		Logger_Abort("Only OpenGL 1.1 supported.\r\n\r\n" \
 			"Compile the game with CC_BUILD_GL11, or ask on the classicube forums for it");
 	}
 }
@@ -1114,7 +1114,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	if (!Math_IsPowOf2(bmp->Width) || !Math_IsPowOf2(bmp->Height)) {
-		ErrorHandler_Fail("Textures must have power of two dimensions");
+		Logger_Abort("Textures must have power of two dimensions");
 	}
 
 	if (mipmaps) {

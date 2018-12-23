@@ -27,6 +27,7 @@
 #include "Deflate.h"
 #include "Stream.h"
 #include "Builder.h"
+#include "ErrorHandler.h"
 
 #define MenuBase_Layout Screen_Layout struct Widget** Widgets; int WidgetsCount;
 struct Menu { MenuBase_Layout };
@@ -1244,7 +1245,7 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const String* pat
 	ReturnCode res;
 
 	res = Stream_CreateFile(&stream, path);
-	if (res) { Chat_LogError2(res, "creating", path); return; }
+	if (res) { Logger_Warn2(res, "creating", path); return; }
 	GZip_MakeStream(&compStream, &state, &stream);
 
 	if (String_CaselessEnds(path, &cw)) {
@@ -1255,16 +1256,16 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const String* pat
 
 	if (res) {
 		stream.Close(&stream);
-		Chat_LogError2(res, "encoding", path); return;
+		Logger_Warn2(res, "encoding", path); return;
 	}
 
 	if ((res = compStream.Close(&compStream))) {
 		stream.Close(&stream);
-		Chat_LogError2(res, "closing", path); return;
+		Logger_Warn2(res, "closing", path); return;
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Chat_LogError2(res, "closing", path); return; }
+	if (res) { Logger_Warn2(res, "closing", path); return; }
 
 	Chat_Add1("&eSaved map to: %s", path);
 	Gui_FreeActive();

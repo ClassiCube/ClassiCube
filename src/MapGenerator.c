@@ -98,7 +98,7 @@ static void NotchyGen_FillOblateSpheroid(int x, int y, int z, float radius, Bloc
 #define Stack_Push(index)\
 stack[stack_size++] = index;\
 if (stack_size == 32768) {\
-	ErrorHandler_Fail("NotchyGen_FloodFail - stack limit hit");\
+	Logger_Abort("NotchyGen_FloodFail - stack limit hit");\
 }
 
 static void NotchyGen_FloodFill(int startIndex, BlockRaw block) {

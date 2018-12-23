@@ -9,6 +9,7 @@
 #include "Utils.h"
 #include "Vorbis.h"
 #include "Errors.h"
+#include "Logger.h"
 
 /*########################################################################################################################*
 *---------------------------------------------------------List/Checker----------------------------------------------------*
@@ -81,13 +82,13 @@ static void Resources_CheckTextures(void) {
 	if (!File_Exists(&path)) return;
 	res = Stream_OpenFile(&stream, &path);
 
-	if (res) { Launcher_ShowError(res, "checking default.zip"); return; }
+	if (res) { Logger_Warn(res, "checking default.zip"); return; }
 	Zip_Init(&state, &stream);
 	state.SelectEntry = Resources_SelectZipEntry;
 
 	res = Zip_Extract(&state);
 	stream.Close(&stream);
-	if (res) Launcher_ShowError(res, "inspecting default.zip");
+	if (res) Logger_Warn(res, "inspecting default.zip");
 
 	/* if somehow have say "gui.png", "GUI.png" */
 	Textures_AllExist = texturesFound >= Array_Elems(Resources_Textures);
@@ -574,13 +575,13 @@ static void TexPatcher_MakeDefaultZip(void) {
 
 	res = Stream_CreateFile(&s, &path);
 	if (res) {
-		Launcher_ShowError(res, "creating default.zip");
+		Logger_Warn(res, "creating default.zip");
 	} else {
 		res = TexPatcher_WriteEntries(&s);
-		if (res) Launcher_ShowError(res, "making default.zip");
+		if (res) Logger_Warn(res, "making default.zip");
 
 		res = s.Close(&s);
-		if (res) Launcher_ShowError(res, "closing default.zip");
+		if (res) Logger_Warn(res, "closing default.zip");
 	}
 
 	for (i = 0; i < Array_Elems(Resources_Files); i++) {
@@ -601,9 +602,9 @@ static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx) 
 	ReturnCode res;
 
 	res = s->Length(s, &length);
-	if (res) { Launcher_ShowError(res, "getting .wav length"); return; }
+	if (res) { Logger_Warn(res, "getting .wav length"); return; }
 	res = s->Seek(s, 0);
-	if (res) { Launcher_ShowError(res, "seeking to .wav start"); return; }
+	if (res) { Logger_Warn(res, "seeking to .wav start"); return; }
 
 	Stream_SetU32_BE(&header[0],  WAV_FourCC('R','I','F','F'));
 	Stream_SetU32_LE(&header[4],  length - 8);
@@ -621,7 +622,7 @@ static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx) 
 	Stream_SetU32_LE(&header[40], length - sizeof(header));
 
 	res = Stream_Write(s, header, sizeof(header));
-	if (res) Launcher_ShowError(res, "fixing .wav header");
+	if (res) Logger_Warn(res, "fixing .wav header");
 }
 
 static void SoundPatcher_DecodeAudio(struct Stream* s, struct VorbisState* ctx) {
@@ -631,21 +632,21 @@ static void SoundPatcher_DecodeAudio(struct Stream* s, struct VorbisState* ctx) 
 
 	/* ctx is all 0, so reuse it here for header */
 	res = Stream_Write(s, ctx, 44);
-	if (res) { Launcher_ShowError(res, "writing .wav header"); return; }
+	if (res) { Logger_Warn(res, "writing .wav header"); return; }
 
 	res = Vorbis_DecodeHeaders(ctx);
-	if (res) { Launcher_ShowError(res, "decoding .ogg header"); return; }
+	if (res) { Logger_Warn(res, "decoding .ogg header"); return; }
 	samples = Mem_Alloc(ctx->BlockSizes[1] * ctx->Channels, 2, ".ogg samples");
 
 	for (;;) {
 		res = Vorbis_DecodeFrame(ctx);
 		if (res == ERR_END_OF_STREAM) break;
-		if (res) { Launcher_ShowError(res, "decoding .ogg"); break; }
+		if (res) { Logger_Warn(res, "decoding .ogg"); break; }
 
 		count = Vorbis_OutputFrame(ctx, samples);
 		/* TODO: Do we need to account for big endian */
 		res = Stream_Write(s, samples, count * 2);
-		if (res) { Launcher_ShowError(res, "writing samples"); break; }
+		if (res) { Logger_Warn(res, "writing samples"); break; }
 	}
 	Mem_Free(samples);
 }
@@ -662,7 +663,7 @@ static void SoundPatcher_Save(struct ResourceSound* sound, struct AsyncRequest* 
 	String_Format1(&path, "audio/%c.wav", sound->Name);
 
 	res = Stream_CreateFile(&dst, &path);
-	if (res) { Launcher_ShowError(res, "creating .wav file"); return; }
+	if (res) { Logger_Warn(res, "creating .wav file"); return; }
 
 	Ogg_MakeStream(&ogg, buffer, &src);
 	ctx.Source = &ogg;
@@ -671,7 +672,7 @@ static void SoundPatcher_Save(struct ResourceSound* sound, struct AsyncRequest* 
 	SoundPatcher_FixupHeader(&dst, &ctx);
 
 	res = dst.Close(&dst);
-	if (res) Launcher_ShowError(res, "closing .wav file");
+	if (res) Logger_Warn(res, "closing .wav file");
 }
 
 static void MusicPatcher_Save(struct ResourceMusic* music, struct AsyncRequest* req) {
@@ -682,7 +683,7 @@ static void MusicPatcher_Save(struct ResourceMusic* music, struct AsyncRequest* 
 	String_Format1(&path, "audio/%c", music->Name);
 
 	res = Stream_WriteAllTo(&path, req->Data, req->Size);
-	if (res) Launcher_ShowError(res, "saving music file");
+	if (res) Logger_Warn(res, "saving music file");
 }
 
 

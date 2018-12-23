@@ -468,7 +468,7 @@ static void Classic_LevelDataChunk(uint8_t* data) {
 
 	if (!map_gzHeader.Done) {
 		res = GZipHeader_Read(&map_part, &map_gzHeader);
-		if (res && res != ERR_END_OF_STREAM) ErrorHandler_Fail2(res, "reading map data");
+		if (res && res != ERR_END_OF_STREAM) Logger_Abort2(res, "reading map data");
 	}
 
 	if (map_gzHeader.Done) {

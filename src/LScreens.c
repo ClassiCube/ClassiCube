@@ -10,6 +10,7 @@
 #include "Stream.h"
 #include "Funcs.h"
 #include "Resources.h"
+#include "Logger.h"
 
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
@@ -1457,7 +1458,7 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 	
 	res = File_GetModifiedTime(&exeName, &buildTime);
 	if (res) {
-		Launcher_ShowError(res, "getting build time");
+		Logger_Warn(res, "getting build time");
 	} else {
 		UpdatesScreen_Format(&s->LblYour, "Your build: ", buildTime);
 	}

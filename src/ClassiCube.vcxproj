@@ -202,7 +202,7 @@
     <ClInclude Include="Entity.h" />
     <ClInclude Include="EntityComponents.h" />
     <ClInclude Include="EnvRenderer.h" />
-    <ClInclude Include="ErrorHandler.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="Errors.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="Formats.h" />
@@ -308,7 +308,7 @@
     <ClCompile Include="Vectors.c" />
     <ClCompile Include="Vorbis.c" />
     <ClCompile Include="Widgets.c" />
-    <ClCompile Include="ErrorHandler.c" />
+    <ClCompile Include="Logger.c" />
     <ClCompile Include="Window.c" />
     <ClCompile Include="World.c" />
     <ClCompile Include="_autofit.c" />

@@ -186,7 +186,7 @@ static bool Picking_RayTrace(Vector3 origin, Vector3 dir, float reach, struct Pi
 		RayTracer_Step(&tracer);
 	}
 
-	ErrorHandler_Fail("Something went wrong, did over 25,000 iterations in Picking_RayTrace()");
+	Logger_Abort("Something went wrong, did over 25,000 iterations in Picking_RayTrace()");
 	return false;
 }
 

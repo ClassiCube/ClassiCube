@@ -150,9 +150,6 @@
     <ClInclude Include="VertexStructs.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="ErrorHandler.h">
-      <Filter>Header Files\Platform</Filter>
-    </ClInclude>
     <ClInclude Include="World.h">
       <Filter>Header Files\Map</Filter>
     </ClInclude>
@@ -318,6 +315,9 @@
     <ClInclude Include="Inventory.h">
       <Filter>Header Files\Game</Filter>
     </ClInclude>
+    <ClInclude Include="Logger.h">
+      <Filter>Header Files\Platform</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -455,9 +455,6 @@
     <ClCompile Include="Platform.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
-    <ClCompile Include="ErrorHandler.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="MapGenerator.c">
       <Filter>Source Files\Map</Filter>
     </ClCompile>
@@ -565,6 +562,9 @@
     </ClCompile>
     <ClCompile Include="Inventory.c">
       <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger.c">
+      <Filter>Source Files\Platform</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -18,6 +18,7 @@
 #include "Gui.h"
 #include "Stream.h"
 #include "Bitmap.h"
+#include "ErrorHandler.h"
 
 NameMode Entities_NameMode;
 ShadowMode Entities_ShadowMode;
@@ -703,7 +704,7 @@ static void Player_CheckSkin(struct Player* p) {
 
 	if ((res = Png_Decode(&bmp, &mem))) {
 		url = String_FromRawArray(item.URL);
-		Chat_LogError2(res, "decoding", &url);
+		Logger_Warn2(res, "decoding", &url);
 		Mem_Free(bmp.Scan0); return;
 	}
 

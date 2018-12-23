@@ -3,7 +3,7 @@
 #include "Funcs.h"
 #include "Platform.h"
 #include "ExtMath.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Bitmap.h"
 #include "Game.h"
 #include "Event.h"
@@ -679,7 +679,7 @@ static void Drawer2D_TextureChanged(void* obj, struct Stream* src, const String*
 	if (!String_CaselessEqualsConst(name, "default.png")) return;
 
 	if ((res = Png_Decode(&bmp, src))) {
-		Chat_LogError2(res, "decoding", name);
+		Logger_Warn2(res, "decoding", name);
 		Mem_Free(bmp.Scan0);
 	} else {
 		Drawer2D_SetFontBitmap(&bmp);
@@ -706,7 +706,7 @@ static void Drawer2D_CheckFont(void) {
 		String_Copy(&Drawer2D_FontName, &default_fonts[i]);
 		return;
 	}
-	ErrorHandler_Fail("Unable to init default font");
+	Logger_Abort("Unable to init default font");
 }
 
 static void Drawer2D_Init(void) {

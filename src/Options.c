@@ -177,7 +177,7 @@ void Options_SetSecure(const char* opt, const String* src, const String* key) {
 		}
 	}
 
-	if (encLen > 1500) ErrorHandler_Fail("too large to base64");
+	if (encLen > 1500) Logger_Abort("too large to base64");
 	tmp.buffer   = data;
 	tmp.length   = Convert_ToBase64(enc, encLen, data);
 	tmp.capacity = tmp.length;
@@ -194,7 +194,7 @@ void Options_GetSecure(const char* opt, String* dst, const String* key) {
 
 	Options_UNSAFE_Get(opt, &raw);
 	if (!raw.length || !key->length) return;
-	if (raw.length > 2000) ErrorHandler_Fail("too large to base64");
+	if (raw.length > 2000) Logger_Abort("too large to base64");
 	dataLen = Convert_FromBase64(raw.buffer, raw.length, data);
 
 	if (Platform_Decrypt(data, dataLen, &dec, &decLen)) {

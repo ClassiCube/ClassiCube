@@ -2,6 +2,7 @@
 #include "Launcher.h"
 #include "Platform.h"
 #include "Stream.h"
+#include "Logger.h"
 
 /*########################################################################################################################*
 *----------------------------------------------------------JSON-----------------------------------------------------------*
@@ -457,13 +458,13 @@ static void FetchUpdateTask_Handle(uint8_t* data, uint32_t len) {
 	ReturnCode res;
 
 	res = Stream_WriteAllTo(&path, data, len);
-	if (res) { Launcher_ShowError(res, "saving update"); return; }
+	if (res) { Logger_Warn(res, "saving update"); return; }
 
 	res = File_SetModifiedTime(&path, FetchUpdateTask.Timestamp);
-	if (res) Launcher_ShowError(res, "setting update time");
+	if (res) Logger_Warn(res, "setting update time");
 
 	res = Platform_MarkExecutable(&path);
-	if (res) Launcher_ShowError(res, "making update executable");
+	if (res) Logger_Warn(res, "making update executable");
 }
 
 void FetchUpdateTask_Run(bool release, bool d3d9) {

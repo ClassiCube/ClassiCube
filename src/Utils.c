@@ -5,6 +5,7 @@
 #include "Platform.h"
 #include "Stream.h"
 #include "Errors.h"
+#include "ErrorHandler.h"
 
 
 /*########################################################################################################################*
@@ -131,7 +132,7 @@ bool Utils_EnsureDirectory(const char* dirName) {
 	if (Directory_Exists(&dir)) return true;
 
 	res = Directory_Create(&dir);
-	if (res) { Chat_LogError2(res, "creating directory", &dir); }
+	if (res) { Logger_Warn2(res, "creating directory", &dir); }
 	return res == 0;
 }
 
@@ -310,7 +311,7 @@ void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
 	
 	res = Stream_OpenFile(&stream, &path);
 	if (res == ReturnCode_FileNotFound) return;
-	if (res) { Chat_LogError2(res, "opening", &path); return; }
+	if (res) { Logger_Warn2(res, "opening", &path); return; }
 
 	/* ReadLine reads single byte at a time */
 	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
@@ -319,7 +320,7 @@ void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
 	for (;;) {
 		res = Stream_ReadLine(&buffered, &entry);
 		if (res == ERR_END_OF_STREAM) break;
-		if (res) { Chat_LogError2(res, "reading from", &path); break; }
+		if (res) { Logger_Warn2(res, "reading from", &path); break; }
 		
 		String_UNSAFE_TrimStart(&entry);
 		String_UNSAFE_TrimEnd(&entry);
@@ -332,7 +333,7 @@ void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Chat_LogError2(res, "closing", &path); }
+	if (res) { Logger_Warn2(res, "closing", &path); }
 }
 
 void EntryList_Save(struct EntryList* list) {
@@ -350,16 +351,16 @@ void EntryList_Save(struct EntryList* list) {
 	}
 	
 	res = Stream_CreateFile(&stream, &path);
-	if (res) { Chat_LogError2(res, "creating", &path); return; }
+	if (res) { Logger_Warn2(res, "creating", &path); return; }
 
 	for (i = 0; i < list->Entries.Count; i++) {
 		entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
 		res   = Stream_WriteLine(&stream, &entry);
-		if (res) { Chat_LogError2(res, "writing to", &path); break; }
+		if (res) { Logger_Warn2(res, "writing to", &path); break; }
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Chat_LogError2(res, "closing", &path); }
+	if (res) { Logger_Warn2(res, "closing", &path); }
 }
 
 int EntryList_Remove(struct EntryList* list, const String* key) {

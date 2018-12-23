@@ -1,13 +1,13 @@
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Platform.h"
 #include "Chat.h"
 #include "Window.h"
 #include "Funcs.h"
 #include "Stream.h"
 
-static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void* ctx);
-static void ErrorHandler_DumpCommon(String* str, void* ctx);
-static void ErrorHandler_DumpRegisters(void* ctx);
+static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx);
+static void Logger_DumpCommon(String* str, void* ctx);
+static void Logger_DumpRegisters(void* ctx);
 
 #ifdef CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
@@ -24,7 +24,7 @@ struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
 /*########################################################################################################################*
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
-static int ErrorHandler_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, int max) {
+static int Logger_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, int max) {
 	STACKFRAME frame = { 0 };
 	frame.AddrPC.Mode     = AddrModeFlat;
 	frame.AddrFrame.Mode  = AddrModeFlat;
@@ -68,7 +68,7 @@ static int ErrorHandler_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, 
 	return count;
 }
 
-static BOOL CALLBACK ErrorHandler_DumpModule(const char* name, ULONG_PTR base, ULONG size, void* ctx) {
+static BOOL CALLBACK Logger_DumpModule(const char* name, ULONG_PTR base, ULONG size, void* ctx) {
 	String str; char strBuffer[STRING_SIZE * 4];
 	uintptr_t beg, end;
 
@@ -76,18 +76,18 @@ static BOOL CALLBACK ErrorHandler_DumpModule(const char* name, ULONG_PTR base, U
 	String_InitArray(str, strBuffer);
 
 	String_Format3(&str, "%c = %x-%x\r\n", name, &beg, &end);
-	ErrorHandler_Log(&str);
+	Logger_Log(&str);
 	return true;
 }
 
-static void ErrorHandler_Backtrace(String* backtrace, void* ctx) {
+static void Logger_Backtrace(String* backtrace, void* ctx) {
 	struct SymbolAndName sym = { 0 };
 	sym.Symbol.MaxNameLength = 255;
 	sym.Symbol.SizeOfStruct = sizeof(IMAGEHLP_SYMBOL);
 
 	HANDLE process = GetCurrentProcess();
 	struct StackPointers pointers[40];
-	int i, frames = ErrorHandler_GetFrames((CONTEXT*)ctx, pointers, 40);
+	int i, frames = Logger_GetFrames((CONTEXT*)ctx, pointers, 40);
 
 	for (i = 0; i < frames; i++) {
 		int number = i + 1;
@@ -120,25 +120,25 @@ static void ErrorHandler_Backtrace(String* backtrace, void* ctx) {
 		if (SymGetModuleInfo(process, addr, &module)) {
 			String_Format2(&str, "  in module %c (%c)\r\n", module.ModuleName, module.ImageName);
 		}
-		ErrorHandler_Log(&str);
+		Logger_Log(&str);
 	}
 	String_AppendConst(backtrace, "\r\n");
 }
 
-static void ErrorHandler_DumpCommon(String* str, void* ctx) {
+static void Logger_DumpCommon(String* str, void* ctx) {
 	const static String backtrace = String_FromConst("-- backtrace --\r\n");
 	const static String modules   = String_FromConst("-- modules --\r\n");
 	HANDLE process = GetCurrentProcess();
 
 	SymInitialize(process, NULL, TRUE);
-	ErrorHandler_Log(&backtrace);
-	ErrorHandler_Backtrace(str, ctx);
+	Logger_Log(&backtrace);
+	Logger_Backtrace(str, ctx);
 
-	ErrorHandler_Log(&modules);
-	EnumerateLoadedModules(process, ErrorHandler_DumpModule, NULL);
+	Logger_Log(&modules);
+	EnumerateLoadedModules(process, Logger_DumpModule, NULL);
 }
 
-static void ErrorHandler_DumpRegisters(void* ctx) {
+static void Logger_DumpRegisters(void* ctx) {
 	String str; char strBuffer[STRING_SIZE * 8];
 	CONTEXT* r;
 	if (!ctx) return;
@@ -173,14 +173,14 @@ static void ErrorHandler_DumpRegisters(void* ctx) {
 #else
 #error "Unknown machine type"
 #endif
-	ErrorHandler_Log(&str);
+	Logger_Log(&str);
 }
 
 
 /*########################################################################################################################*
 *------------------------------------------------------Error handling-----------------------------------------------------*
 *#########################################################################################################################*/
-static LONG WINAPI ErrorHandler_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
+static LONG WINAPI Logger_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
 	String msg; char msgBuffer[STRING_SIZE * 2 + 1];
 	uint32_t code;
 	uintptr_t addr;
@@ -192,20 +192,20 @@ static LONG WINAPI ErrorHandler_UnhandledFilter(struct _EXCEPTION_POINTERS* pInf
 	String_Format2(&msg, "Unhandled exception 0x%h at 0x%x", &code, &addr);
 	msg.buffer[msg.length] = '\0';
 
-	ErrorHandler_DumpRegisters(pInfo->ContextRecord);
-	ErrorHandler_FailCommon(0, msg.buffer, pInfo->ContextRecord);
+	Logger_DumpRegisters(pInfo->ContextRecord);
+	Logger_AbortCommon(0, msg.buffer, pInfo->ContextRecord);
 	return EXCEPTION_EXECUTE_HANDLER; /* TODO: different flag */
 }
 
-void ErrorHandler_Init(void) {
-	SetUnhandledExceptionFilter(ErrorHandler_UnhandledFilter);
+void Logger_Hook(void) {
+	SetUnhandledExceptionFilter(Logger_UnhandledFilter);
 }
 
 /* Don't want compiler doing anything fancy with registers */
 #if _MSC_VER
 #pragma optimize ("", off)
 #endif
-void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
+void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 	CONTEXT ctx;
 #ifndef _M_IX86
 	/* This method is guaranteed to exist on 64 bit windows */
@@ -245,7 +245,7 @@ void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
 	ctx.ContextFlags = CONTEXT_CONTROL;
 #endif
 
-	ErrorHandler_FailCommon(result, raw_msg, &ctx);
+	Logger_AbortCommon(result, raw_msg, &ctx);
 }
 #if _MSC_VER
 #pragma optimize ("", on)
@@ -263,7 +263,7 @@ void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
 /*########################################################################################################################*
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
-static void ErrorHandler_Backtrace(String* backtrace_, void* ctx) {
+static void Logger_Backtrace(String* backtrace_, void* ctx) {
 	String str; char strBuffer[STRING_SIZE * 5];
 	void* addrs[40];
 	int i, frames, num;
@@ -286,7 +286,7 @@ static void ErrorHandler_Backtrace(String* backtrace_, void* ctx) {
 		}
 
 		String_AppendString(backtrace_, &str);
-		ErrorHandler_Log(&str);
+		Logger_Log(&str);
 	}
 
 	String_AppendConst(backtrace_, "\n");
@@ -297,7 +297,7 @@ static void ErrorHandler_Backtrace(String* backtrace_, void* ctx) {
 /*########################################################################################################################*
 *------------------------------------------------------Error handling-----------------------------------------------------*
 *#########################################################################################################################*/
-static void ErrorHandler_SignalHandler(int sig, siginfo_t* info, void* ctx) {
+static void Logger_SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	String msg; char msgBuffer[STRING_SIZE * 2 + 1];
 	int type, code;
 	uintptr_t addr;
@@ -317,13 +317,13 @@ static void ErrorHandler_SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	String_Format3(&msg, "Unhandled signal %i (code %i) at 0x%x", &type, &code, &addr);
 	msg.buffer[msg.length] = '\0';
 
-	ErrorHandler_DumpRegisters(ctx);
-	ErrorHandler_FailCommon(0, msg.buffer, ctx);
+	Logger_DumpRegisters(ctx);
+	Logger_AbortCommon(0, msg.buffer, ctx);
 }
 
-void ErrorHandler_Init(void) {
+void Logger_Hook(void) {
 	struct sigaction sa, old;
-	sa.sa_sigaction = ErrorHandler_SignalHandler;
+	sa.sa_sigaction = Logger_SignalHandler;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART | SA_SIGINFO;
 
@@ -334,10 +334,10 @@ void ErrorHandler_Init(void) {
 	sigaction(SIGFPE,  &sa, &old);
 }
 
-void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
+void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 	ucontext_t ctx;
 	getcontext(&ctx);
-	ErrorHandler_FailCommon(result, raw_msg, &ctx);
+	Logger_AbortCommon(result, raw_msg, &ctx);
 }
 #endif
 
@@ -346,7 +346,7 @@ void ErrorHandler_Fail2(ReturnCode result, const char* raw_msg) {
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_NIX || defined CC_BUILD_SOLARIS
-static void ErrorHandler_DumpRegisters(void* ctx) {
+static void Logger_DumpRegisters(void* ctx) {
 	String str; char strBuffer[STRING_SIZE * 8];
 	mcontext_t r;
 	if (!ctx) return;
@@ -370,10 +370,10 @@ static void ErrorHandler_DumpRegisters(void* ctx) {
 #else
 #error "Unknown machine type"
 #endif
-	ErrorHandler_Log(&str);
+	Logger_Log(&str);
 }
 
-static void ErrorHandler_DumpMemoryMap(void) {
+static void Logger_DumpMemoryMap(void) {
 	String str; char strBuffer[STRING_SIZE * 5];
 	int n, fd;
 	
@@ -383,23 +383,23 @@ static void ErrorHandler_DumpMemoryMap(void) {
 
 	while ((n = read(fd, str.buffer, str.capacity)) > 0) {
 		str.length = n;
-		ErrorHandler_Log(&str);
+		Logger_Log(&str);
 	}
 
 	close(fd);
 }
 
-static void ErrorHandler_DumpCommon(String* str, void* ctx) {
+static void Logger_DumpCommon(String* str, void* ctx) {
 	const static String backtrace = String_FromConst("-- backtrace --\n");
 	const static String memMap    = String_FromConst("-- memory map --\n");
 
-	ErrorHandler_Log(&backtrace);
-	ErrorHandler_Backtrace(str, ctx);
-	ErrorHandler_Log(&memMap);
-	ErrorHandler_DumpMemoryMap();
+	Logger_Log(&backtrace);
+	Logger_Backtrace(str, ctx);
+	Logger_Log(&memMap);
+	Logger_DumpMemoryMap();
 }
 #elif defined CC_BUILD_OSX
-static void ErrorHandler_DumpRegisters(void* ctx) {
+static void Logger_DumpRegisters(void* ctx) {
 	String str; char strBuffer[STRING_SIZE * 8];
 	mcontext_t r;
 	if (!ctx) return;
@@ -423,13 +423,13 @@ static void ErrorHandler_DumpRegisters(void* ctx) {
 #else
 #error "Unknown machine type"
 #endif
-	ErrorHandler_Log(&str);
+	Logger_Log(&str);
 }
 
-static void ErrorHandler_DumpCommon(String* str, void* ctx) {
+static void Logger_DumpCommon(String* str, void* ctx) {
 	const static String backtrace = String_FromConst("-- backtrace --\n");
-	ErrorHandler_Log(&backtrace);
-	ErrorHandler_Backtrace(str, ctx);
+	Logger_Log(&backtrace);
+	Logger_Backtrace(str, ctx);
 }
 #endif
 
@@ -437,11 +437,32 @@ static void ErrorHandler_DumpCommon(String* str, void* ctx) {
 /*########################################################################################################################*
 *----------------------------------------------------------Common---------------------------------------------------------*
 *#########################################################################################################################*/
+void Logger_DialogWarn(ReturnCode res, const char* place) {
+	String msg; char msgBuffer[STRING_SIZE * 2];
+	String_InitArray_NT(msg, msgBuffer);
+
+	String_Format2(&msg, "Error %h when %c", &res, place);
+	msg.buffer[msg.length] = '\0';
+	Window_ShowDialog("Error", msg.buffer);
+}
+
+void Logger_DialogWarn2(ReturnCode res, const char* place, const String* path) {
+	String msg; char msgBuffer[STRING_SIZE * 4];
+	String_InitArray_NT(msg, msgBuffer);
+
+	String_Format3(&msg, "Error %h when %c '%s'", &res, place, path);
+	msg.buffer[msg.length] = '\0';
+	Window_ShowDialog("Error", msg.buffer);
+}
+
+Logger_WarnFunc  Logger_Warn  = Logger_DialogWarn;
+Logger_Warn2Func Logger_Warn2 = Logger_DialogWarn2;
+
 static FileHandle logFile;
 static struct Stream logStream;
 static bool logOpen;
 
-void ErrorHandler_Log(const String* msg) {
+void Logger_Log(const String* msg) {
 	const static String path = String_FromConst("client.log");
 	ReturnCode res;
 
@@ -455,7 +476,7 @@ void ErrorHandler_Log(const String* msg) {
 	Stream_Write(&logStream, msg->buffer, msg->length);
 }
 
-static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void* ctx) {	
+static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx) {	
 	String msg; char msgBuffer[3070 + 1];
 	String_InitArray_NT(msg, msgBuffer);
 
@@ -468,8 +489,8 @@ static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void
 		String_Format2(&msg, "%h%c", &result, Platform_NewLine);
 	} else { result = 1; }
 
-	ErrorHandler_Log(&msg);
-	ErrorHandler_DumpCommon(&msg, ctx);
+	Logger_Log(&msg);
+	Logger_DumpCommon(&msg, ctx);
 	if (logStream.Meta.File) File_Close(logFile);
 
 	String_AppendConst(&msg, "Full details of the crash have been logged to 'client.log'.\n");
@@ -480,4 +501,4 @@ static void ErrorHandler_FailCommon(ReturnCode result, const char* raw_msg, void
 	Platform_Exit(result);
 }
 
-void ErrorHandler_Fail(const char* raw_msg) { ErrorHandler_Fail2(0, raw_msg); }
+void Logger_Abort(const char* raw_msg) { Logger_Abort2(0, raw_msg); }

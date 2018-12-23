@@ -128,7 +128,7 @@ void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil, 
 		m->R = 2; m->G = 2; m->B = 1; break;
 	default:
 		/* mode->R = 0; mode->G = 0; mode->B = 0; */
-		ErrorHandler_Fail2(bpp, "Unsupported bits per pixel"); break;
+		Logger_Abort2(bpp, "Unsupported bits per pixel"); break;
 	}
 }
 void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
@@ -149,7 +149,7 @@ CC_NOINLINE static void Platform_AllocFailed(const char* place) {
 
 	String_Format1(&log, "Failed allocating memory for: %c", place);
 	log.buffer[log.length] = '\0';
-	ErrorHandler_Fail(log.buffer);
+	Logger_Abort(log.buffer);
 }
 
 #ifdef CC_BUILD_WIN
@@ -663,7 +663,7 @@ void* Thread_Start(Thread_StartFunc* func, bool detach) {
 	DWORD threadID;
 	void* handle = CreateThread(NULL, 0, Thread_StartCallback, func, 0, &threadID);
 	if (!handle) {
-		ErrorHandler_Fail2(GetLastError(), "Creating thread");
+		Logger_Abort2(GetLastError(), "Creating thread");
 	}
 
 	if (detach) Thread_Detach(handle);
@@ -672,7 +672,7 @@ void* Thread_Start(Thread_StartFunc* func, bool detach) {
 
 void Thread_Detach(void* handle) {
 	if (!CloseHandle((HANDLE)handle)) {
-		ErrorHandler_Fail2(GetLastError(), "Freeing thread handle");
+		Logger_Abort2(GetLastError(), "Freeing thread handle");
 	}
 }
 
@@ -683,7 +683,7 @@ void Thread_Join(void* handle) {
 
 static CRITICAL_SECTION mutexList[3]; int mutexIndex;
 void* Mutex_Create(void) {
-	if (mutexIndex == Array_Elems(mutexList)) ErrorHandler_Fail("Cannot allocate mutex");
+	if (mutexIndex == Array_Elems(mutexList)) Logger_Abort("Cannot allocate mutex");
 	CRITICAL_SECTION* ptr = &mutexList[mutexIndex];
 	InitializeCriticalSection(ptr); mutexIndex++;
 	return ptr;
@@ -696,14 +696,14 @@ void Mutex_Unlock(void* handle) { LeaveCriticalSection((CRITICAL_SECTION*)handle
 void* Waitable_Create(void) {
 	void* handle = CreateEvent(NULL, false, false, NULL);
 	if (!handle) {
-		ErrorHandler_Fail2(GetLastError(), "Creating waitable");
+		Logger_Abort2(GetLastError(), "Creating waitable");
 	}
 	return handle;
 }
 
 void Waitable_Free(void* handle) {
 	if (!CloseHandle((HANDLE)handle)) {
-		ErrorHandler_Fail2(GetLastError(), "Freeing waitable");
+		Logger_Abort2(GetLastError(), "Freeing waitable");
 	}
 }
 
@@ -727,7 +727,7 @@ void* Thread_StartCallback(void* lpParam) {
 void* Thread_Start(Thread_StartFunc* func, bool detach) {
 	pthread_t* ptr = Mem_Alloc(1, sizeof(pthread_t), "allocating thread");
 	int res = pthread_create(ptr, NULL, Thread_StartCallback, func);
-	if (res) ErrorHandler_Fail2(res, "Creating thread");
+	if (res) Logger_Abort2(res, "Creating thread");
 
 	if (detach) Thread_Detach(ptr);
 	return ptr;
@@ -736,61 +736,61 @@ void* Thread_Start(Thread_StartFunc* func, bool detach) {
 void Thread_Detach(void* handle) {
 	pthread_t* ptr = handle;
 	int res = pthread_detach(*ptr);
-	if (res) ErrorHandler_Fail2(res, "Detaching thread");
+	if (res) Logger_Abort2(res, "Detaching thread");
 	Mem_Free(ptr);
 }
 
 void Thread_Join(void* handle) {
 	pthread_t* ptr = handle;
 	int res = pthread_join(*ptr, NULL);
-	if (res) ErrorHandler_Fail2(res, "Joining thread");
+	if (res) Logger_Abort2(res, "Joining thread");
 	Mem_Free(ptr);
 }
 
 void* Mutex_Create(void) {
 	pthread_mutex_t* ptr = Mem_Alloc(1, sizeof(pthread_mutex_t), "allocating mutex");
 	int res = pthread_mutex_init(ptr, NULL);
-	if (res) ErrorHandler_Fail2(res, "Creating mutex");
+	if (res) Logger_Abort2(res, "Creating mutex");
 	return ptr;
 }
 
 void Mutex_Free(void* handle) {
 	int res = pthread_mutex_destroy((pthread_mutex_t*)handle);
-	if (res) ErrorHandler_Fail2(res, "Destroying mutex");
+	if (res) Logger_Abort2(res, "Destroying mutex");
 	Mem_Free(handle);
 }
 
 void Mutex_Lock(void* handle) {
 	int res = pthread_mutex_lock((pthread_mutex_t*)handle);
-	if (res) ErrorHandler_Fail2(res, "Locking mutex");
+	if (res) Logger_Abort2(res, "Locking mutex");
 }
 
 void Mutex_Unlock(void* handle) {
 	int res = pthread_mutex_unlock((pthread_mutex_t*)handle);
-	if (res) ErrorHandler_Fail2(res, "Unlocking mutex");
+	if (res) Logger_Abort2(res, "Unlocking mutex");
 }
 
 void* Waitable_Create(void) {
 	pthread_cond_t* ptr = Mem_Alloc(1, sizeof(pthread_cond_t), "allocating waitable");
 	int res = pthread_cond_init(ptr, NULL);
-	if (res) ErrorHandler_Fail2(res, "Creating event");
+	if (res) Logger_Abort2(res, "Creating event");
 	return ptr;
 }
 
 void Waitable_Free(void* handle) {
 	int res = pthread_cond_destroy((pthread_cond_t*)handle);
-	if (res) ErrorHandler_Fail2(res, "Destroying event");
+	if (res) Logger_Abort2(res, "Destroying event");
 	Mem_Free(handle);
 }
 
 void Waitable_Signal(void* handle) {
 	int res = pthread_cond_signal((pthread_cond_t*)handle);
-	if (res) ErrorHandler_Fail2(res, "Signalling event");
+	if (res) Logger_Abort2(res, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
 	int res = pthread_cond_wait((pthread_cond_t*)handle, &event_mutex);
-	if (res) ErrorHandler_Fail2(res, "Waiting event");
+	if (res) Logger_Abort2(res, "Waiting event");
 }
 
 void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
@@ -806,7 +806,7 @@ void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
 
 	res = pthread_cond_timedwait((pthread_cond_t*)handle, &event_mutex, &ts);
 	if (res == ETIMEDOUT) return;
-	if (res) ErrorHandler_Fail2(res, "Waiting timed event");
+	if (res) Logger_Abort2(res, "Waiting timed event");
 }
 #endif
 
@@ -922,7 +922,7 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 	desc->Style = style;
 
 	path = Font_Lookup(fontName, style);
-	if (!path.length) ErrorHandler_Fail("Unknown font");
+	if (!path.length) Logger_Abort("Unknown font");
 
 	stream = Mem_AllocCleared(1, sizeof(FT_StreamRec), "leaky font"); /* TODO: LEAKS MEMORY!!! */
 	if (!Font_MakeArgs(&path, stream, &args)) return;
@@ -937,11 +937,11 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 #endif
 
 	err = FT_New_Face(ft_lib, &args, 0, &face);
-	if (err) ErrorHandler_Fail2(err, "Creating font failed");
+	if (err) Logger_Abort2(err, "Creating font failed");
 	desc->Handle = face;
 
 	err = FT_Set_Char_Size(face, size * 64, 0, DPI_DEVICE, 0);
-	if (err) ErrorHandler_Fail2(err, "Resizing font failed");
+	if (err) Logger_Abort2(err, "Resizing font failed");
 }
 
 void Font_Free(FontDesc* desc) {
@@ -955,7 +955,7 @@ void Font_Free(FontDesc* desc) {
 
 	face = desc->Handle;
 	err  = FT_Done_Face(face);
-	if (err) ErrorHandler_Fail2(err, "Deleting font failed");
+	if (err) Logger_Abort2(err, "Deleting font failed");
 	desc->Handle = NULL;
 }
 
@@ -1173,7 +1173,7 @@ static void Font_Init(void) {
 	ft_mem.realloc = FT_ReallocWrapper;
 
 	err = FT_New_Library(&ft_mem, &ft_lib);
-	if (err) ErrorHandler_Fail2(err, "Failed to init freetype");
+	if (err) Logger_Abort2(err, "Failed to init freetype");
 
 	FT_Add_Default_Modules(ft_lib);
 	FT_Set_Default_Properties(ft_lib);
@@ -1194,7 +1194,7 @@ static void Font_Init(void) {
 void Socket_Create(SocketHandle* socketResult) {
 	*socketResult = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (*socketResult == -1) {
-		ErrorHandler_Fail2(Socket__Error(), "Failed to create socket");
+		Logger_Abort2(Socket__Error(), "Failed to create socket");
 	}
 }
 
@@ -1334,7 +1334,7 @@ static HINTERNET hInternet;
 void Http_Init(void) {
 	/* TODO: Should we use INTERNET_OPEN_TYPE_PRECONFIG instead? */
 	hInternet = InternetOpenA(GAME_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
-	if (!hInternet) ErrorHandler_Fail2(GetLastError(), "Failed to init WinINet");
+	if (!hInternet) Logger_Abort2(GetLastError(), "Failed to init WinINet");
 }
 
 static ReturnCode Http_Make(struct AsyncRequest* req, HINTERNET* handle) {
@@ -1458,10 +1458,10 @@ CURL* curl;
 
 void Http_Init(void) {
 	CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
-	if (res) ErrorHandler_Fail2(res, "Failed to init curl");
+	if (res) Logger_Abort2(res, "Failed to init curl");
 
 	curl = curl_easy_init();
-	if (!curl) ErrorHandler_Fail("Failed to init easy curl");
+	if (!curl) Logger_Abort("Failed to init easy curl");
 }
 
 static int Http_Progress(int* progress, double total, double received, double a, double b) {
@@ -1620,7 +1620,7 @@ void Audio_Init(AudioHandle* handle, int buffers) {
 		ctx->Count = buffers;
 		return;
 	}
-	ErrorHandler_Fail("No free audio contexts");
+	Logger_Abort("No free audio contexts");
 }
 
 ReturnCode Audio_Free(AudioHandle handle) {
@@ -1717,18 +1717,18 @@ static volatile int audio_refs;
 
 static void Audio_CheckContextErrors(void) {
 	ALenum err = alcGetError(audio_device);
-	if (err) ErrorHandler_Fail2(err, "Error creating OpenAL context");
+	if (err) Logger_Abort2(err, "Error creating OpenAL context");
 }
 
 static void Audio_CreateContext(void) {
 	audio_device = alcOpenDevice(NULL);
-	if (!audio_device) ErrorHandler_Fail("Failed to create OpenAL device");
+	if (!audio_device) Logger_Abort("Failed to create OpenAL device");
 	Audio_CheckContextErrors();
 
 	audio_context = alcCreateContext(audio_device, NULL);
 	if (!audio_context) {
 		alcCloseDevice(audio_device);
-		ErrorHandler_Fail("Failed to create OpenAL context");
+		Logger_Abort("Failed to create OpenAL context");
 	}
 	Audio_CheckContextErrors();
 
@@ -1773,7 +1773,7 @@ void Audio_Init(AudioHandle* handle, int buffers) {
 
 	alDistanceModel(AL_NONE);
 	err = alGetError();
-	if (err) { ErrorHandler_Fail2(err, "DistanceModel"); }
+	if (err) { Logger_Abort2(err, "DistanceModel"); }
 
 	for (i = 0; i < Array_Elems(Audio_Contexts); i++) {
 		struct AudioContext* ctx = &Audio_Contexts[i];
@@ -1788,7 +1788,7 @@ void Audio_Init(AudioHandle* handle, int buffers) {
 		ctx->Source = -1;
 		return;
 	}
-	ErrorHandler_Fail("No free audio contexts");
+	Logger_Abort("No free audio contexts");
 }
 
 ReturnCode Audio_Free(AudioHandle handle) {
@@ -1821,7 +1821,7 @@ static ALenum GetALFormat(int channels, int bitsPerSample) {
         if (channels == 1) return AL_FORMAT_MONO8;
         if (channels == 2) return AL_FORMAT_STEREO8;
 	}
-	ErrorHandler_Fail("Unsupported audio format"); return 0;
+	Logger_Abort("Unsupported audio format"); return 0;
 }
 
 ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
@@ -1935,7 +1935,7 @@ ReturnCode Audio_StopAndFree(AudioHandle handle) {
 int Platform_ConvertString(void* data, const String* src) {
 	TCHAR* dst = data;
 	int i;
-	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
+	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
 
 	for (i = 0; i < src->length; i++) {
 		*dst = Convert_CP437ToUnicode(src->buffer[i]); dst++;
@@ -1953,7 +1953,7 @@ void Platform_Init(void) {
 	heap = GetProcessHeap();
 	
 	res = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (res) ErrorHandler_Fail2(res, "WSAStartup failed");
+	if (res) Logger_Abort2(res, "WSAStartup failed");
 }
 
 void Platform_Free(void) {
@@ -2123,7 +2123,7 @@ int Platform_ConvertString(void* data, const String* src) {
 
 	Codepoint cp;
 	int i, len = 0;
-	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
+	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
 
 	for (i = 0; i < src->length; i++) {
 		cur = dst + len;
@@ -2227,7 +2227,7 @@ ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol) {
 static void Platform_InitDisplay(void) {
 	Display* display = XOpenDisplay(NULL);
 	int screen;
-	if (!display) ErrorHandler_Fail("Failed to open display");
+	if (!display) Logger_Abort("Failed to open display");
 
 	DisplayDevice_Meta = display;
 	screen = DefaultScreen(display);

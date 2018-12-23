@@ -52,13 +52,13 @@ void String_Copy(String* dst, const String* src) {
 
 String String_UNSAFE_Substring(STRING_REF const String* str, int offset, int length) {
 	if (offset < 0 || offset > str->length) {
-		ErrorHandler_Fail("Offset for substring out of range");
+		Logger_Abort("Offset for substring out of range");
 	}
 	if (length < 0 || length > str->length) {
-		ErrorHandler_Fail("Length for substring out of range");
+		Logger_Abort("Length for substring out of range");
 	}
 	if (offset + length > str->length) {
-		ErrorHandler_Fail("Result substring is out of range");
+		Logger_Abort("Result substring is out of range");
 	}
 	return String_Init(str->buffer + offset, length, length);
 }
@@ -299,10 +299,10 @@ void String_InsertAt(String* str, int offset, char c) {
 	int i;
 
 	if (offset < 0 || offset > str->length) {
-		ErrorHandler_Fail("Offset for InsertAt out of range");
+		Logger_Abort("Offset for InsertAt out of range");
 	}
 	if (str->length == str->capacity) {
-		ErrorHandler_Fail("Cannot insert character into full string");
+		Logger_Abort("Cannot insert character into full string");
 	}
 	
 	for (i = str->length; i > offset; i--) {
@@ -316,7 +316,7 @@ void String_DeleteAt(String* str, int offset) {
 	int i;
 
 	if (offset < 0 || offset >= str->length) {
-		ErrorHandler_Fail("Offset for DeleteAt out of range");
+		Logger_Abort("Offset for DeleteAt out of range");
 	}
 	
 	for (i = offset; i < str->length - 1; i++) {
@@ -466,7 +466,7 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 		case '%':
 			String_Append(str, '%'); break;
 		default: 
-			ErrorHandler_Fail("Invalid type for string format");
+			Logger_Abort("Invalid type for string format");
 		}
 	}
 }
@@ -767,7 +767,7 @@ void StringsBuffer_Get(StringsBuffer* buffer, int i, String* str) {
 
 String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i) {
 	uint32_t flags, offset, len;
-	if (i < 0 || i >= buffer->Count) ErrorHandler_Fail("Tried to get String past StringsBuffer end");
+	if (i < 0 || i >= buffer->Count) Logger_Abort("Tried to get String past StringsBuffer end");
 
 	flags  = buffer->FlagsBuffer[i];
 	offset = flags >> STRINGSBUFFER_LEN_SHIFT;
@@ -786,7 +786,7 @@ void StringsBuffer_Add(StringsBuffer* buffer, const String* str) {
 	}
 
 	if (str->length > STRINGSBUFFER_LEN_MASK) {
-		ErrorHandler_Fail("String too big to insert into StringsBuffer");
+		Logger_Abort("String too big to insert into StringsBuffer");
 	}
 
 	textOffset = buffer->TotalLength;
@@ -805,7 +805,7 @@ void StringsBuffer_Add(StringsBuffer* buffer, const String* str) {
 void StringsBuffer_Remove(StringsBuffer* buffer, int index) {
 	uint32_t flags, offset, len;
 	uint32_t i, offsetAdj;
-	if (index < 0 || index >= buffer->Count) ErrorHandler_Fail("Tried to remove String past StringsBuffer end");
+	if (index < 0 || index >= buffer->Count) Logger_Abort("Tried to remove String past StringsBuffer end");
 
 	flags  = buffer->FlagsBuffer[index];
 	offset = flags >> STRINGSBUFFER_LEN_SHIFT;
@@ -895,7 +895,7 @@ void WordWrap_GetCoords(int index, const String* lines, int numLines, int* coord
 int WordWrap_GetBackLength(const String* text, int index) {
 	int start = index;
 	if (index <= 0) return 0;
-	if (index >= text->length) ErrorHandler_Fail("WordWrap_GetBackLength - index past end of string");
+	if (index >= text->length) Logger_Abort("WordWrap_GetBackLength - index past end of string");
 	
 	/* Go backward to the end of the previous word */
 	while (index > 0 && text->buffer[index] == ' ') index--;
@@ -908,7 +908,7 @@ int WordWrap_GetBackLength(const String* text, int index) {
 int WordWrap_GetForwardLength(const String* text, int index) {
 	int start = index, length = text->length;
 	if (index == -1) return 0;
-	if (index >= text->length) ErrorHandler_Fail("WordWrap_GetForwardLength - index past end of string");
+	if (index >= text->length) Logger_Abort("WordWrap_GetForwardLength - index past end of string");
 
 	/* Go forward to the end of the word 'index' is currently in */
 	while (index < length && text->buffer[index] != ' ') index++;

@@ -1,5 +1,5 @@
 #include "Vorbis.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Platform.h"
 #include "Event.h"
 #include "Block.h"
@@ -110,7 +110,7 @@ static uint32_t Vorbis_ReadBits(struct VorbisState* ctx, uint32_t bitsCount) {
 
 	while (ctx->NumBits < bitsCount) {
 		res = ctx->Source->ReadU8(ctx->Source, &portion);
-		if (res) { ErrorHandler_Fail2(res, "Failed to read byte for vorbis"); }
+		if (res) { Logger_Abort2(res, "Failed to read byte for vorbis"); }
 		Vorbis_PushByte(ctx, portion);
 	}
 
@@ -139,7 +139,7 @@ static uint32_t Vorbis_ReadBit(struct VorbisState* ctx) {
 
 	if (!ctx->NumBits) {
 		res = ctx->Source->ReadU8(ctx->Source, &portion);
-		if (res) { ErrorHandler_Fail2(res, "Failed to read byte for vorbis"); }
+		if (res) { Logger_Abort2(res, "Failed to read byte for vorbis"); }
 		Vorbis_PushByte(ctx, portion);
 	}
 
@@ -371,7 +371,7 @@ static uint32_t Codebook_DecodeScalar(struct VorbisState* ctx, struct Codebook* 
 		codewords += c->NumCodewords[depth];
 		values    += c->NumCodewords[depth];
 	}
-	ErrorHandler_Fail("Invalid huffman code");
+	Logger_Abort("Invalid huffman code");
 	return -1;
 }
 
@@ -399,7 +399,7 @@ static void Codebook_DecodeVectors(struct VorbisState* ctx, struct Codebook* c, 
 			if (c->SequenceP) last = value;
 		}
 	} else {
-		ErrorHandler_Fail("Invalid huffman code");
+		Logger_Abort("Invalid huffman code");
 	}
 }
 

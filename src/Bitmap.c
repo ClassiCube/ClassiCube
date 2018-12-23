@@ -3,7 +3,7 @@
 #include "PackedCol.h"
 #include "ExtMath.h"
 #include "Deflate.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Stream.h"
 #include "Errors.h"
 #include "Utils.h"
@@ -119,7 +119,7 @@ static void Png_Reconstruct(uint8_t type, uint8_t bytesPerPixel, uint8_t* line, 
 		return;
 
 	default:
-		ErrorHandler_Fail("PNG scanline has invalid filter type");
+		Logger_Abort("PNG scanline has invalid filter type");
 		return;
 	}
 }

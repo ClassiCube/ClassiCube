@@ -71,14 +71,8 @@ int main(int argc, char** argv) {
 	uint8_t ip[4];
 	uint16_t port;
 
-	argsCount = Platform_GetCommandLineArgs(argc, argv, args);
-	/* NOTE: Make sure to comment this out before pushing a commit */
-	/* String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565"); */
-	/* String rawArgs = String_FromConst("UnknownShadow200"); */
-	/* argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4); */
-
 	Platform_SetWorkingDir();
-	ErrorHandler_Init();
+	Logger_Hook();
 	Platform_Init();
 #ifdef CC_TEST_VORBIS
 	main_imdct();
@@ -90,6 +84,12 @@ int main(int argc, char** argv) {
 	Utils_EnsureDirectory("texturecache");
 	Utils_EnsureDirectory("plugins");
 	Options_Load();
+
+	argsCount = Platform_GetCommandLineArgs(argc, argv, args);
+	/* NOTE: Make sure to comment this out before pushing a commit */
+	/* String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565"); */
+	/* String rawArgs = String_FromConst("UnknownShadow200"); */
+	/* argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4); */
 
 	if (argsCount == 0) {
 		Launcher_Run();

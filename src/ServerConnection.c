@@ -293,7 +293,7 @@ static void MPConnection_FailConnect(ReturnCode result) {
 
 	if (result) {
 		String_Format3(&msg, "Error connecting to %s:%i: %i", &Game_IPAddress, &Game_Port, &result);
-		ErrorHandler_Log(&msg);
+		Logger_Log(&msg);
 		msg.length = 0;
 	}
 
@@ -435,7 +435,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 		String_InitArray(msg, msgBuffer);
 		String_Format3(&msg, "Error reading from %s:%i: %i", &Game_IPAddress, &Game_Port, &res);
 
-		ErrorHandler_Log(&msg);
+		Logger_Log(&msg);
 		Game_Disconnect(&title_lost, &reason_err);
 		return;
 	}

@@ -193,7 +193,7 @@ void Gui_RefreshHud(void) { Elem_Recreate(Gui_HUD); }
 void Gui_ShowOverlay(struct Screen* overlay, bool atFront) {
 	int i;
 	if (Gui_OverlaysCount == GUI_MAX_OVERLAYS) {
-		ErrorHandler_Fail("Gui_ShowOverlay - hit max count");
+		Logger_Abort("Gui_ShowOverlay - hit max count");
 	}
 
 	if (atFront) {		

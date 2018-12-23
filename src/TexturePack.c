@@ -16,6 +16,7 @@
 #include "ExtMath.h"
 #include "Chat.h"
 #include "Options.h"
+#include "Logger.h"
 
 #define LIQUID_ANIM_MAX 64
 /* Based off the incredible work from https://dl.dropboxusercontent.com/u/12694594/lava.txt
@@ -180,7 +181,7 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 	for (;;) {
 		res = Stream_ReadLine(&buffered, &line);
 		if (res == ERR_END_OF_STREAM) break;
-		if (res) { Chat_LogError2(res, "reading from", path); break; }
+		if (res) { Logger_Warn2(res, "reading from", path); break; }
 
 		if (!line.length || line.buffer[0] == '#') continue;
 		count = String_UNSAFE_Split(&line, ' ', parts, ANIM_MIN_ARGS);
@@ -354,7 +355,7 @@ static void Animations_FileChanged(void* obj, struct Stream* stream, const Strin
 		res = Png_Decode(&anims_bmp, stream);
 		if (!res) return;
 
-		Chat_LogError2(res, "decoding", name);
+		Logger_Warn2(res, "decoding", name);
 		Mem_Free(anims_bmp.Scan0);
 		anims_bmp.Scan0 = NULL;
 	} else if (String_CaselessEqualsConst(name, "animations.txt")) {
@@ -545,7 +546,7 @@ bool TextureCache_Get(const String* url, struct Stream* stream) {
 	res = Stream_OpenFile(stream, &path);
 
 	if (res == ReturnCode_FileNotFound) return false;
-	if (res) { Chat_LogError2(res, "opening cache for", url); return false; }
+	if (res) { Logger_Warn2(res, "opening cache for", url); return false; }
 	return true;
 }
 
@@ -573,7 +574,7 @@ void TextureCache_GetLastModified(const String* url, TimeMS* time) {
 		TextureCache_MakePath(&path, url);
 
 		res = File_GetModifiedTime(&path, time);
-		if (res) { Chat_LogError2(res, "getting last modified time of", url); *time = 0; }
+		if (res) { Logger_Warn2(res, "getting last modified time of", url); *time = 0; }
 	}
 }
 
@@ -590,7 +591,7 @@ void TextureCache_Set(const String* url, uint8_t* data, uint32_t length) {
 	if (!Utils_EnsureDirectory("texturecache")) return;
 	
 	res = Stream_WriteAllTo(&path, data, length);
-	if (res) { Chat_LogError2(res, "caching", url); }
+	if (res) { Logger_Warn2(res, "caching", url); }
 }
 
 CC_NOINLINE static void TextureCache_SetEntry(const String* url, const String* data, struct EntryList* list) {
@@ -647,13 +648,13 @@ void TexturePack_ExtractZip_File(const String* filename) {
 	String_Format1(&path, "texpacks/%s", filename);
 
 	res = Stream_OpenFile(&stream, &path);
-	if (res) { Chat_LogError2(res, "opening", &path); return; }
+	if (res) { Logger_Warn2(res, "opening", &path); return; }
 
 	res = TexturePack_ExtractZip(&stream);
-	if (res) { Chat_LogError2(res, "extracting", &path); }
+	if (res) { Logger_Warn2(res, "extracting", &path); }
 
 	res = stream.Close(&stream);
-	if (res) { Chat_LogError2(res, "closing", &path); }
+	if (res) { Logger_Warn2(res, "closing", &path); }
 }
 
 ReturnCode TexturePack_ExtractTerrainPng(struct Stream* stream) {
@@ -697,11 +698,11 @@ void TexturePack_ExtractCurrent(const String* url) {
 
 			res = zip ? TexturePack_ExtractZip(&stream) :
 						TexturePack_ExtractTerrainPng(&stream);		
-			if (res) Chat_LogError2(res, zip ? "extracting" : "decoding", url);
+			if (res) Logger_Warn2(res, zip ? "extracting" : "decoding", url);
 		}
 
 		res = stream.Close(&stream);
-		if (res) { Chat_LogError2(res, "closing cache for", url); }
+		if (res) Logger_Warn2(res, "closing cache for", url);
 	}
 }
 
@@ -727,6 +728,6 @@ void TexturePack_Extract_Req(struct AsyncRequest* item) {
 	res = png ? TexturePack_ExtractTerrainPng(&mem) 
 			 : TexturePack_ExtractZip(&mem);
 
-	if (res) Chat_LogError2(res, png ? "decoding" : "extracting", &url);
+	if (res) Logger_Warn2(res, png ? "decoding" : "extracting", &url);
 	ASyncRequest_Free(item);
 }

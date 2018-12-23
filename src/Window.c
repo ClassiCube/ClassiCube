@@ -2,7 +2,7 @@
 #include "Platform.h"
 #include "Input.h"
 #include "Event.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Funcs.h"
 
 bool Window_Exists, Window_Focused;
@@ -392,15 +392,15 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 
 	ATOM atom = RegisterClassEx(&wc);
-	if (!atom) ErrorHandler_Fail2(GetLastError(), "Failed to register window class");
+	if (!atom) Logger_Abort2(GetLastError(), "Failed to register window class");
 
 	win_handle = CreateWindowEx(0, atom, NULL, CC_WIN_STYLE,
 		rect.left, rect.top, Rect_Width(rect), Rect_Height(rect),
 		NULL, NULL, win_instance, NULL);
-	if (!win_handle) ErrorHandler_Fail2(GetLastError(), "Failed to create window");
+	if (!win_handle) Logger_Abort2(GetLastError(), "Failed to create window");
 
 	win_DC = GetDC(win_handle);
-	if (!win_DC) ErrorHandler_Fail2(GetLastError(), "Failed to get device context");
+	if (!win_DC) Logger_Abort2(GetLastError(), "Failed to get device context");
 	Window_Exists = true;
 }
 
@@ -569,7 +569,7 @@ void Window_SetWindowState(int state) {
 Point2D Window_PointToClient(int x, int y) {
 	Point2D point = { x, y };
 	if (!ScreenToClient(win_handle, &point)) {
-		ErrorHandler_Fail2(GetLastError(), "Converting point from client to screen coordinates");
+		Logger_Abort2(GetLastError(), "Converting point from client to screen coordinates");
 	}
 	return point;
 }
@@ -577,7 +577,7 @@ Point2D Window_PointToClient(int x, int y) {
 Point2D Window_PointToScreen(int x, int y) {
 	Point2D point = { x, y };
 	if (!ClientToScreen(win_handle, &point)) {
-		ErrorHandler_Fail2(GetLastError(), "Converting point from screen to client coordinates");
+		Logger_Abort2(GetLastError(), "Converting point from screen to client coordinates");
 	}
 	return point;
 }
@@ -659,7 +659,7 @@ void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	if (mode->Buffers > 1)    pfd.dwFlags |= PFD_DOUBLEBUFFER;
 
 	int modeIndex = ChoosePixelFormat(win_DC, &pfd);
-	if (modeIndex == 0) { ErrorHandler_Fail("Requested graphics mode not available"); }
+	if (modeIndex == 0) { Logger_Abort("Requested graphics mode not available"); }
 
 	Mem_Set(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
@@ -667,7 +667,7 @@ void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 
 	DescribePixelFormat(win_DC, modeIndex, pfd.nSize, &pfd);
 	if (!SetPixelFormat(win_DC, modeIndex, &pfd)) {
-		ErrorHandler_Fail2(GetLastError(), "SetPixelFormat failed");
+		Logger_Abort2(GetLastError(), "SetPixelFormat failed");
 	}
 }
 
@@ -684,11 +684,11 @@ void GLContext_Init(struct GraphicsMode* mode) {
 		ctx_Handle = wglCreateContext(win_DC);
 	}
 	if (!ctx_Handle) {
-		ErrorHandler_Fail2(GetLastError(), "Failed to create OpenGL context");
+		Logger_Abort2(GetLastError(), "Failed to create OpenGL context");
 	}
 
 	if (!wglMakeCurrent(win_DC, ctx_Handle)) {
-		ErrorHandler_Fail2(GetLastError(), "Failed to make OpenGL context current");
+		Logger_Abort2(GetLastError(), "Failed to make OpenGL context current");
 	}
 
 	ctx_DC = wglGetCurrentDC();
@@ -699,7 +699,7 @@ void GLContext_Init(struct GraphicsMode* mode) {
 void GLContext_Update(void) { }
 void GLContext_Free(void) {
 	if (!wglDeleteContext(ctx_Handle)) {
-		ErrorHandler_Fail2(GetLastError(), "Failed to destroy OpenGL context");
+		Logger_Abort2(GetLastError(), "Failed to destroy OpenGL context");
 	}
 	ctx_Handle = NULL;
 }
@@ -711,7 +711,7 @@ void* GLContext_GetAddress(const char* function) {
 
 void GLContext_SwapBuffers(void) {
 	if (!SwapBuffers(ctx_DC)) {
-		ErrorHandler_Fail2(GetLastError(), "Failed to swap buffers");
+		Logger_Abort2(GetLastError(), "Failed to swap buffers");
 	}
 }
 
@@ -944,7 +944,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	win_handle = XCreateWindow(win_display, win_rootWin, x, y, width, height,
 		0, win_visual.depth /* CopyFromParent*/, InputOutput, win_visual.visual, 
 		CWColormap | CWEventMask | CWBackPixel | CWBorderPixel, &attributes);
-	if (!win_handle) ErrorHandler_Fail("XCreateWindow failed");
+	if (!win_handle) Logger_Abort("XCreateWindow failed");
 
 	hints.base_width  = width;
 	hints.base_height = height;
@@ -1673,13 +1673,13 @@ void GLContext_Init(struct GraphicsMode* mode) {
 		Platform_LogConst("Context create failed. Trying indirect...");
 		ctx_Handle = glXCreateContext(win_display, &win_visual, NULL, false);
 	}
-	if (!ctx_Handle) ErrorHandler_Fail("Failed to create OpenGL context");
+	if (!ctx_Handle) Logger_Abort("Failed to create OpenGL context");
 
 	if (!glXIsDirect(win_display, ctx_Handle)) {
 		Platform_LogConst("== WARNING: Context is not direct ==");
 	}
 	if (!glXMakeCurrent(win_display, win_handle, ctx_Handle)) {
-		ErrorHandler_Fail("Failed to make OpenGL context current.");
+		Logger_Abort("Failed to make OpenGL context current.");
 	}
 
 	/* GLX may return non-null function pointers that don't actually work */
@@ -1762,7 +1762,7 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 
 	GLContext_GetAttribs(mode, attribs);	
 	if (!glXQueryVersion(win_display, &major, &minor)) {
-		ErrorHandler_Fail("glXQueryVersion failed");
+		Logger_Abort("glXQueryVersion failed");
 	}
 
 	if (major >= 1 && minor >= 3) {
@@ -1780,7 +1780,7 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 		visual = glXChooseVisual(win_display, win_screen, attribs);
 	}
 	if (!visual) {
-		ErrorHandler_Fail("Requested GraphicsMode not available.");
+		Logger_Abort("Requested GraphicsMode not available.");
 	}
 
 	info = *visual;
@@ -1843,14 +1843,14 @@ static void Window_UpdateSize(void) {
 	if (win_state == WINDOW_STATE_FULLSCREEN) return;
 	
 	res = GetWindowBounds(win_handle, kWindowStructureRgn, &r);
-	if (res) ErrorHandler_Fail2(res, "Getting window bounds");
+	if (res) Logger_Abort2(res, "Getting window bounds");
 	Window_Bounds.X = r.left;
 	Window_Bounds.Y = r.top;
 	Window_Bounds.Width  = Rect_Width(r);
 	Window_Bounds.Height = Rect_Height(r);
 	
 	res = GetWindowBounds(win_handle, kWindowGlobalPortRgn, &r);
-	if (res) ErrorHandler_Fail2(res, "Getting window clientsize");
+	if (res) Logger_Abort2(res, "Getting window clientsize");
 	Window_ClientSize.Width  = Rect_Width(r);
 	Window_ClientSize.Height = Rect_Height(r);
 }
@@ -1869,20 +1869,20 @@ static void Window_UpdateWindowState(void) {
 		meaning they are maximised up to their reported ideal size. So report a large ideal size. */
 		idealSize.v = 9000; idealSize.h = 9000;
 		res = ZoomWindowIdeal(win_handle, inZoomOut, &idealSize);
-		if (res) ErrorHandler_Fail2(res, "Maximising window");
+		if (res) Logger_Abort2(res, "Maximising window");
 		break;
 
 	case WINDOW_STATE_NORMAL:
 		if (Window_GetWindowState() == WINDOW_STATE_MAXIMISED) {
 			idealSize.v = 0; idealSize.h = 0;
 			res = ZoomWindowIdeal(win_handle, inZoomIn, &idealSize);
-			if (res) ErrorHandler_Fail2(res, "Un-maximising window");
+			if (res) Logger_Abort2(res, "Un-maximising window");
 		}
 		break;
 
 	case WINDOW_STATE_MINIMISED:
 		res = CollapseWindow(win_handle, true);
-		if (res) ErrorHandler_Fail2(res, "Minimising window");
+		if (res) Logger_Abort2(res, "Minimising window");
 		break;
 	}
 
@@ -1905,11 +1905,11 @@ OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventRef inEv
 		case kEventRawKeyUp:
 			res = GetEventParameter(inEvent, kEventParamKeyCode, typeUInt32, 
 									NULL, sizeof(UInt32), NULL, &code);
-			if (res) ErrorHandler_Fail2(res, "Getting key button");
+			if (res) Logger_Abort2(res, "Getting key button");
 			
 			res = GetEventParameter(inEvent, kEventParamKeyMacCharCodes, typeChar, 
 									NULL, sizeof(char), NULL, &charCode);
-			if (res) ErrorHandler_Fail2(res, "Getting key char");
+			if (res) Logger_Abort2(res, "Getting key char");
 			
 			key = Window_MapKey(code);
 			if (key == KEY_NONE) {
@@ -1939,7 +1939,7 @@ OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventRef inEv
 		case kEventRawKeyModifiersChanged:
 			res = GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, 
 									NULL, sizeof(UInt32), NULL, &code);
-			if (res) ErrorHandler_Fail2(res, "Getting key modifiers");
+			if (res) Logger_Abort2(res, "Getting key modifiers");
 			
 			/* TODO: Is this even needed */
 			repeat = Key_KeyRepeat; 
@@ -2012,7 +2012,7 @@ OSStatus Window_ProcessMouseEvent(EventHandlerCallRef inCaller, EventRef inEvent
 	
 	/* this error comes up from the application event handler */
 	if (res && res != eventParameterNotFoundErr) {
-		ErrorHandler_Fail2(res, "Getting mouse position");
+		Logger_Abort2(res, "Getting mouse position");
 	}
 	
 	mousePos.X = (int)pt.x; mousePos.Y = (int)pt.y;
@@ -2028,7 +2028,7 @@ OSStatus Window_ProcessMouseEvent(EventHandlerCallRef inCaller, EventRef inEvent
 			down = kind == kEventMouseDown;
 			res  = GetEventParameter(inEvent, kEventParamMouseButton, typeMouseButton, 
 									 NULL, sizeof(EventMouseButton), NULL, &button);
-			if (res) ErrorHandler_Fail2(res, "Getting mouse button");
+			if (res) Logger_Abort2(res, "Getting mouse button");
 			
 			switch (button) {
 				case kEventMouseButtonPrimary:
@@ -2043,7 +2043,7 @@ OSStatus Window_ProcessMouseEvent(EventHandlerCallRef inCaller, EventRef inEvent
 		case kEventMouseWheelMoved:
 			res = GetEventParameter(inEvent, kEventParamMouseWheelDelta, typeSInt32,
 									NULL, sizeof(SInt32), NULL, &delta);
-			if (res) ErrorHandler_Fail2(res, "Getting mouse wheel delta");
+			if (res) Logger_Abort2(res, "Getting mouse wheel delta");
 			Mouse_SetWheel(Mouse_Wheel + delta);
 			return 0;
 			
@@ -2119,7 +2119,7 @@ static void Window_ConnectEvents(void) {
 	/* but if use WindowEventTargetRef, can't click quit/move buttons anymore */
 	res = InstallEventHandler(target, NewEventHandlerUPP(Window_EventHandler),
 							  Array_Elems(eventTypes), eventTypes, NULL, NULL);
-	if (res) ErrorHandler_Fail2(res, "Connecting events");
+	if (res) Logger_Abort2(res, "Connecting events");
 }
 
 
@@ -2137,14 +2137,14 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 						  kWindowStandardDocumentAttributes | kWindowStandardHandlerAttribute |
 						  kWindowInWindowMenuAttribute | kWindowLiveResizeAttribute,
 						  &r, &win_handle);
-	if (res) ErrorHandler_Fail2(res, "Failed to create window");
+	if (res) Logger_Abort2(res, "Failed to create window");
 
 	Window_SetLocation(r.left, r.right);
 	Window_SetSize(Rect_Width(r), Rect_Height(r));
 	Window_UpdateSize();
 	
 	res = GetWindowBounds(win_handle, kWindowTitleBarRgn, &r);
-	if (res) ErrorHandler_Fail2(res, "Failed to get titlebar size");
+	if (res) Logger_Abort2(res, "Failed to get titlebar size");
 	title_height = Rect_Height(r);
 	AcquireRootMenu();
 	
@@ -2175,7 +2175,7 @@ PasteboardRef Window_GetPasteboard(void) {
 	PasteboardRef pbRef;
 	OSStatus err = PasteboardCreate(kPasteboardClipboard, &pbRef);
 	
-	if (err) ErrorHandler_Fail2(err, "Creating Pasteboard reference");
+	if (err) Logger_Abort2(err, "Creating Pasteboard reference");
 	PasteboardSynchronize(pbRef);
 	return pbRef;
 }
@@ -2194,11 +2194,11 @@ void Window_GetClipboardText(String* value) {
 	pbRef = Window_GetPasteboard();
 
 	err = PasteboardGetItemCount(pbRef, &itemCount);
-	if (err) ErrorHandler_Fail2(err, "Getting item count from Pasteboard");
+	if (err) Logger_Abort2(err, "Getting item count from Pasteboard");
 	if (itemCount < 1) return;
 	
 	err = PasteboardGetItemIdentifier(pbRef, 1, &itemID);
-	if (err) ErrorHandler_Fail2(err, "Getting item identifier from Pasteboard");
+	if (err) Logger_Abort2(err, "Getting item identifier from Pasteboard");
 	
 	if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF16, &outData))) {	
 		ptr = CFDataGetBytePtr(outData);
@@ -2220,12 +2220,12 @@ void Window_SetClipboardText(const String* value) {
 
 	pbRef = Window_GetPasteboard();
 	err   = PasteboardClear(pbRef);
-	if (err) ErrorHandler_Fail2(err, "Clearing Pasteboard");
+	if (err) Logger_Abort2(err, "Clearing Pasteboard");
 	PasteboardSynchronize(pbRef);
 
 	len    = Platform_ConvertString(str, value);
 	cfData = CFDataCreate(NULL, str, len);
-	if (!cfData) ErrorHandler_Fail("CFDataCreate() returned null pointer");
+	if (!cfData) Logger_Abort("CFDataCreate() returned null pointer");
 
 	PasteboardPutItemFlavor(pbRef, 1, FMT_UTF8, cfData, 0);
 }
@@ -2269,7 +2269,7 @@ void Window_SetWindowState(int state) {
 	}
 	if (old_state == WINDOW_STATE_MINIMISED) {
 		err = CollapseWindow(win_handle, false);
-		if (err) ErrorHandler_Fail2(err, "Un-minimising window");
+		if (err) Logger_Abort2(err, "Un-minimising window");
 	}
 	Window_UpdateWindowState();
 }
@@ -2408,7 +2408,7 @@ void Window_DrawRaw(Rect2D r) {
 	OSStatus err;
 	
 	err = QDBeginCGContext(win_winPort, &context);
-	if (err) ErrorHandler_Fail2(err, "Begin draw");
+	if (err) Logger_Abort2(err, "Begin draw");
 	
 	/* TODO: Only update changed bit.. */
 	rect.origin.x = 0; rect.origin.y = 0;
@@ -2418,7 +2418,7 @@ void Window_DrawRaw(Rect2D r) {
 	CGContextDrawImage(context, rect, win_image);
 	CGContextSynchronize(context);
 	err = QDEndCGContext(win_winPort, &context);
-	if (err) ErrorHandler_Fail2(err, "End draw");
+	if (err) Logger_Abort2(err, "End draw");
 }
 
 
@@ -2434,7 +2434,7 @@ static void GLContext_Check(int code, const char* place) {
 	if (code) return;
 
 	res = aglGetError();
-	if (res) ErrorHandler_Fail2(res, place);
+	if (res) Logger_Abort2(res, place);
 }
 
 static void GLContext_MakeCurrent(void) {
@@ -2527,7 +2527,7 @@ void GLContext_Init(struct GraphicsMode* mode) {
 
 	/* Initially try creating fullscreen compatible context */	
 	res = DMGetGDeviceByDisplayID(CGMainDisplayID(), &gdevice, false);
-	if (res) ErrorHandler_Fail2(res, "Getting display device failed");
+	if (res) Logger_Abort2(res, "Getting display device failed");
 
 	GLContext_GetAttribs(mode, attribs, true);
 	fmt = aglChoosePixelFormat(&gdevice, 1, attribs);
@@ -2542,7 +2542,7 @@ void GLContext_Init(struct GraphicsMode* mode) {
 		fmt = aglChoosePixelFormat(NULL, 0, attribs);
 		res = aglGetError();
 	}
-	if (res) ErrorHandler_Fail2(res, "Choosing pixel format");
+	if (res) Logger_Abort2(res, "Choosing pixel format");
 
 	ctx_handle = aglCreateContext(fmt, NULL);
 	GLContext_Check(0, "Creating GL context");

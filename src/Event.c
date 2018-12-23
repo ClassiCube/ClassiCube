@@ -56,12 +56,12 @@ static void Event_RegisterImpl(struct Event_Void* handlers, void* obj, Event_Voi
 	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		if (handlers->Handlers[i] == handler && handlers->Objs[i] == obj) {
-			ErrorHandler_Fail("Attempt to register event handler that was already registered");
+			Logger_Abort("Attempt to register event handler that was already registered");
 		}
 	}
 
 	if (handlers->Count == EVENT_MAX_CALLBACKS) {
-		ErrorHandler_Fail("Unable to register another event handler");
+		Logger_Abort("Unable to register another event handler");
 	} else {
 		handlers->Handlers[handlers->Count] = handler;
 		handlers->Objs[handlers->Count]     = obj;
@@ -85,7 +85,7 @@ static void Event_UnregisterImpl(struct Event_Void* handlers, void* obj, Event_V
 		handlers->Objs[handlers->Count]     = NULL;
 		return;
 	}
-	ErrorHandler_Fail("Attempt to unregister event handler that was not registered to begin with");
+	Logger_Abort("Attempt to unregister event handler that was not registered to begin with");
 }
 
 void Event_RaiseVoid(struct Event_Void* handlers) {

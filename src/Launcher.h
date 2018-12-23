@@ -72,9 +72,6 @@ void Launcher_SetScreen(struct LScreen* screen);
 bool Launcher_ConnectToServer(const String* hash);
 /* Launcher main loop. */
 void Launcher_Run(void);
-
-/* Shows a message box for an error. */
-void Launcher_ShowError(ReturnCode res, const char* place);
 /* Starts the game from the given arguments. */
 bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server);
 #endif

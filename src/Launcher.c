@@ -14,6 +14,7 @@
 #include "AsyncDownloader.h"
 #include "ExtMath.h"
 #include "Funcs.h"
+#include "Logger.h"
 
 struct LScreen* Launcher_Screen;
 Rect2D Launcher_Dirty;
@@ -26,16 +27,6 @@ static FontDesc logoFont;
 
 bool Launcher_ShouldExit, Launcher_ShouldUpdate;
 static void Launcher_ApplyUpdate(void);
-
-
-void Launcher_ShowError(ReturnCode res, const char* place) {
-	String msg; char msgBuffer[STRING_SIZE * 2];
-	String_InitArray_NT(msg, msgBuffer);
-
-	String_Format2(&msg, "Error %h when %c", &res, place);
-	msg.buffer[msg.length] = '\0';
-	Window_ShowDialog("Error", msg.buffer);
-}
 
 void Launcher_SetScreen(struct LScreen* screen) {
 	if (Launcher_Screen) Launcher_Screen->Free(Launcher_Screen);
@@ -83,10 +74,10 @@ bool Launcher_ConnectToServer(const String* hash) {
 		Launcher_StartFromInfo(&FetchServerTask.Server);
 		return true;
 	} else if (FetchServerTask.Base.Res) {
-		Launcher_ShowError(FetchServerTask.Base.Res, "fetching server info");
+		Logger_Warn(FetchServerTask.Base.Res, "fetching server info");
 	} else if (FetchServerTask.Base.Status != 200) {
 		/* TODO: Use a better dialog message.. */
-		Launcher_ShowError(FetchServerTask.Base.Status, "fetching server info");
+		Logger_Warn(FetchServerTask.Base.Status, "fetching server info");
 	} else {
 		Window_ShowDialog("Failed to connect", "No server has that hash");
 	}
@@ -377,7 +368,7 @@ static ReturnCode Launcher_ProcessZipEntry(const String* path, struct Stream* da
 		res = Png_Decode(&fontBmp, data);
 
 		if (res) {
-			Launcher_ShowError(res, "decoding default.png"); return res;
+			Logger_Warn(res, "decoding default.png"); return res;
 		} else {
 			Drawer2D_SetFontBitmap(&fontBmp);
 			useBitmappedFont = !Options_GetBool(OPT_USE_CHAT_FONT, false);
@@ -387,7 +378,7 @@ static ReturnCode Launcher_ProcessZipEntry(const String* path, struct Stream* da
 		res = Png_Decode(&bmp, data);
 
 		if (res) {
-			Launcher_ShowError(res, "decoding terrain.png"); return res;
+			Logger_Warn(res, "decoding terrain.png"); return res;
 		} else {
 			Launcher_LoadTextures(&bmp);
 		}
@@ -402,7 +393,7 @@ static void Launcher_ExtractTexturePack(const String* path) {
 
 	res = Stream_OpenFile(&stream, path);
 	if (res) {
-		Launcher_ShowError(res, "opening texture pack"); return;
+		Logger_Warn(res, "opening texture pack"); return;
 	}
 
 	Zip_Init(&state, &stream);
@@ -411,7 +402,7 @@ static void Launcher_ExtractTexturePack(const String* path) {
 	res = Zip_Extract(&state);
 
 	if (res) {
-		Launcher_ShowError(res, "extracting texture pack");
+		Logger_Warn(res, "extracting texture pack");
 	}
 	stream.Close(&stream);
 }
@@ -558,7 +549,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 #endif
 
 	if (res) {
-		Launcher_ShowError(res, "starting game");
+		Logger_Warn(res, "starting game");
 		Launcher_ShouldExit = false;
 		return false;
 	}
@@ -618,12 +609,12 @@ static void Launcher_ApplyUpdate(void) {
 
 	/* Can't use WriteLine, want \n as actual newline not code page 437 */
 	res = Stream_WriteAllTo(&scriptPath, UPDATE_SCRIPT, sizeof(UPDATE_SCRIPT) - 1);
-	if (res) { Launcher_ShowError(res, "saving update script"); return; }
+	if (res) { Logger_Warn(res, "saving update script"); return; }
 
 	res = Platform_MarkExecutable(&scriptPath);
-	if (res) Launcher_ShowError(res, "making update script executable");
+	if (res) Logger_Warn(res, "making update script executable");
 
 	/* TODO: (open -a Terminal ", '"' + path + '"'); on OSX */
 	res = Platform_StartProcess(&scriptName, &scriptArgs);
-	if (res) { Launcher_ShowError(res, "starting update script"); return; }
+	if (res) { Logger_Warn(res, "starting update script"); return; }
 }
