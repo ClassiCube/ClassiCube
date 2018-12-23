@@ -741,13 +741,13 @@ const char* cpe_clientExtensions[30] = {
 static void CPE_SetMapEnvUrl(uint8_t* data);
 
 #define Ext_Deg2Packed(x) ((int16_t)((x) * 65536.0f / 360.0f))
-void CPE_WritePlayerClick(MouseButton button, bool buttonDown, uint8_t targetId, struct PickedPos* pos) {
+void CPE_WritePlayerClick(MouseButton button, bool pressed, uint8_t targetId, struct PickedPos* pos) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	uint8_t* data = ServerConnection_WriteBuffer;
 	*data++ = OPCODE_PLAYER_CLICK;
 	{
 		*data++ = button;
-		*data++ = buttonDown;
+		*data++ = !pressed;
 		Stream_SetU16_BE(data, Ext_Deg2Packed(p->HeadY)); data += 2;
 		Stream_SetU16_BE(data, Ext_Deg2Packed(p->HeadX)); data += 2;
 

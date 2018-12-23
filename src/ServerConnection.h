@@ -71,7 +71,7 @@ struct ServerConnectionFuncs {
 	/* Sends a position update to the server. */
 	void (*SendPosition)(Vector3 pos, float rotY, float headX);
 	/* Sends a PlayerClick packet to the server. */
-	void (*SendPlayerClick)(MouseButton button, bool isDown, EntityID targetId, struct PickedPos* pos);
+	void (*SendPlayerClick)(MouseButton button, bool pressed, EntityID targetId, struct PickedPos* pos);
 };
 
 /* Currently active connection to a server. */

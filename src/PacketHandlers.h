@@ -18,5 +18,5 @@ void Classic_WriteChat(const String* text, bool partial);
 void Classic_WritePosition(Vector3 pos, float rotY, float headX);
 void Classic_WriteSetBlock(int x, int y, int z, bool place, BlockID block);
 void Classic_WriteLogin(const String* username, const String* verKey);
-void CPE_WritePlayerClick(MouseButton button, bool buttonDown, uint8_t targetId, struct PickedPos* pos);
+void CPE_WritePlayerClick(MouseButton button, bool pressed, uint8_t targetId, struct PickedPos* pos);
 #endif

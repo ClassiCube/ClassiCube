@@ -221,7 +221,7 @@ static void SPConnection_SendChat(const String* text) {
 }
 
 static void SPConnection_SendPosition(Vector3 pos, float rotY, float headX) { }
-static void SPConnection_SendPlayerClick(MouseButton button, bool isDown, EntityID targetId, struct PickedPos* pos) { }
+static void SPConnection_SendPlayerClick(MouseButton button, bool pressed, EntityID targetId, struct PickedPos* pos) { }
 
 static void SPConnection_Tick(struct ScheduledTask* task) {
 	if (ServerConnection_Disconnected) return;
