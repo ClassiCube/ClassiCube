@@ -27,7 +27,7 @@
 #include "Deflate.h"
 #include "Stream.h"
 #include "Builder.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 
 #define MenuBase_Layout Screen_Layout struct Widget** Widgets; int WidgetsCount;
 struct Menu { MenuBase_Layout };

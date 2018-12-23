@@ -8,7 +8,7 @@
 #include "Screens.h"
 #include "Camera.h"
 #include "InputHandler.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Platform.h"
 #include "Bitmap.h"
 

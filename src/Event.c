@@ -1,5 +1,5 @@
 #include "Event.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 
 struct Event_Int EntityEvents_Added;
 struct Event_Int EntityEvents_Removed;

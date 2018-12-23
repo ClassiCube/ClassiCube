@@ -1,5 +1,5 @@
 #include "Deflate.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Funcs.h"
 #include "Platform.h"
 #include "Stream.h"

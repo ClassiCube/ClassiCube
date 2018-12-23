@@ -5,7 +5,7 @@
 #include "Platform.h"
 #include "Stream.h"
 #include "Errors.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 
 
 /*########################################################################################################################*

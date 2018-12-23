@@ -10,7 +10,7 @@
 #include "MapGenerator.h"
 #include "Platform.h"
 #include "Game.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Vectors.h"
 #include "Chat.h"
 

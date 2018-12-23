@@ -14,7 +14,7 @@
 #include "Event.h"
 #include "Chat.h"
 #include "Game.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Bitmap.h"
 #include "Block.h"
 

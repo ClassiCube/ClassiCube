@@ -1,6 +1,6 @@
 #include "MapGenerator.h"
 #include "BlockID.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Platform.h"

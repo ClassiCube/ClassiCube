@@ -1,7 +1,7 @@
 #include "Stream.h"
 #include "Platform.h"
 #include "Funcs.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Errors.h"
 #include "Utils.h"
 

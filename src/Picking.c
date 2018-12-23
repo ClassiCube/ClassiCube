@@ -6,7 +6,7 @@
 #include "World.h"
 #include "Funcs.h"
 #include "Block.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Camera.h"
 
 static float pickedPos_dist;

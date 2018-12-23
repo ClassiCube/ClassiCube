@@ -1,6 +1,6 @@
 #include "String.h"
 #include "Funcs.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Platform.h"
 #include "Stream.h"
 #include "Utils.h"

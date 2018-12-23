@@ -6,7 +6,7 @@
 #include "Chat.h"
 #include "Errors.h"
 #include "Utils.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 
 const char* FpsLimit_Names[FPS_LIMIT_COUNT] = {
 	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "LimitNone",

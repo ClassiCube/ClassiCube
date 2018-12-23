@@ -18,7 +18,7 @@
 #include "Gui.h"
 #include "Stream.h"
 #include "Bitmap.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 
 NameMode Entities_NameMode;
 ShadowMode Entities_ShadowMode;

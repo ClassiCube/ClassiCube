@@ -17,7 +17,7 @@
 #include "Camera.h"
 #include "TexturePack.h"
 #include "Menus.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "PacketHandlers.h"
 #include "Inventory.h"
 #include "Platform.h"

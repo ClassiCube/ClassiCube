@@ -19,7 +19,7 @@
 #include "Lighting.h"
 #include "AsyncDownloader.h"
 #include "Drawer2D.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "TexturePack.h"
 #include "Gui.h"
 #include "Errors.h"

@@ -3,7 +3,7 @@
 #include "Funcs.h"
 #include "Options.h"
 #include "Utils.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Platform.h"
 #include "Chat.h"
 

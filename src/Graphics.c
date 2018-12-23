@@ -1,5 +1,5 @@
 #include "Graphics.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Platform.h"
 #include "Window.h"
 #include "Funcs.h"

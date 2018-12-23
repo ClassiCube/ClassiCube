@@ -5,7 +5,7 @@
 #include "Entity.h"
 #include "Platform.h"
 #include "ExtMath.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Game.h"
 #include "ServerConnection.h"
 #include "Event.h"

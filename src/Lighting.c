@@ -4,7 +4,7 @@
 #include "MapRenderer.h"
 #include "Platform.h"
 #include "World.h"
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Event.h"
 #include "GameStructs.h"
 

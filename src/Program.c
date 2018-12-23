@@ -1,4 +1,4 @@
-#include "ErrorHandler.h"
+#include "Logger.h"
 #include "Platform.h"
 #include "Window.h"
 #include "Constants.h"
