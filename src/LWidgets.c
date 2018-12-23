@@ -124,7 +124,7 @@ static void LButton_Draw(void* widget) {
 					  w->X + xOffset / 2, w->Y + yOffset / 2);
 
 	if (!w->Hovered) Drawer2D_Cols['f'] = Drawer2D_Cols['F'];
-	Launcher_Dirty = true;
+	Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
 }
 
 static struct LWidgetVTABLE lbutton_VTABLE = {
@@ -265,7 +265,7 @@ static void LInput_Draw(void* widget) {
 	Drawer2D_Cols['f'] = Drawer2D_Cols['0'];
 	LInput_DrawText(w, &args);
 	Drawer2D_Cols['f'] = Drawer2D_Cols['F'];
-	Launcher_Dirty = true;
+	Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
 }
 
 static Rect2D LInput_MeasureCaret(struct LInput* w) {
@@ -320,13 +320,13 @@ static void LInput_TickCaret(void* widget) {
 					   r.X, r.Y, r.Width, r.Height);
 	}
 	
-	/* Fast path, caret is blinking in same spot */
 	if (Rect2D_Equals(r, lastCaretRec)) {
-		Launcher_DirtyArea = r;
+		/* Fast path, caret is blinking in same spot */
+		Launcher_MarkDirty(r.X, r.Y, r.Width, r.Height);
+	} else {
+		Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
 	}
-
-	lastCaretRec   = r;
-	Launcher_Dirty = true;
+	lastCaretRec = r;
 }
 
 static void LInput_AdvanceCaretPos(struct LInput* w, bool forwards) {
@@ -528,7 +528,7 @@ static void LLabel_Draw(void* widget) {
 
 	DrawTextArgs_Make(&args, &w->Text, &w->Font, true);
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, w->X, w->Y);
-	Launcher_Dirty = true;
+	Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
 }
 
 static struct LWidgetVTABLE llabel_VTABLE = {
@@ -598,7 +598,7 @@ static void LSlider_Draw(void* widget) {
 
 	Drawer2D_Clear(&Launcher_Framebuffer, w->ProgressCol,
 				   w->X, w->Y, (int)(w->Width * w->Value / w->MaxValue), w->Height);
-	Launcher_Dirty = true;
+	Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
 }
 
 static struct LWidgetVTABLE lslider_VTABLE = {
@@ -617,21 +617,25 @@ void LSlider_Init(struct LSlider* w, int width, int height) {
 /*########################################################################################################################*
 *------------------------------------------------------TableWidget--------------------------------------------------------*
 *#########################################################################################################################*/
-static void NameColumn_Get(struct ServerInfo* row, String* str) {
-	String_Copy(str, &row->Name);
+static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
+	BitmapCol col = BITMAPCOL_CONST(128, 0, 0, 255);
+	Drawer2D_Clear(&Launcher_Framebuffer, col, x, y, 16, 11);
+}
+static void NameColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
+	args->Text = row->Name;
 }
 static int NameColumn_Sort(struct ServerInfo* a, struct ServerInfo* b) {
 	return String_Compare(&a->Name, &b->Name);
 }
 
-static void PlayersColumn_Get(struct ServerInfo* row, String* str) {
-	String_Format2(str, "%i/%i", &row->Players, &row->MaxPlayers);
+static void PlayersColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
+	String_Format2(&args->Text, "%i/%i", &row->Players, &row->MaxPlayers);
 }
 static int PlayersColumn_Sort(struct ServerInfo* a, struct ServerInfo* b) {
 	return b->Players - a->Players;
 }
 
-static void UptimeColumn_Get(struct ServerInfo* row, String* str) {
+static void UptimeColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
 	int uptime = row->Uptime;
 	char unit  = 's';
 
@@ -642,24 +646,25 @@ static void UptimeColumn_Get(struct ServerInfo* row, String* str) {
 	} else if (uptime >= SECS_PER_MIN) {
 		uptime /= SECS_PER_MIN;  unit = 'm';
 	}
-	String_Format2(str, "%i%r", &uptime, &unit);
+	String_Format2(&args->Text, "%i%r", &uptime, &unit);
 }
 static int UptimeColumn_Sort(struct ServerInfo* a, struct ServerInfo* b) {
 	return b->Uptime - a->Uptime;
 }
 
-static void SoftwareColumn_Get(struct ServerInfo* row, String* str) {
-	String_Copy(str, &row->Software);
+static void SoftwareColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
+	args->Text = row->Software;
 }
 static int SoftwareColumn_Sort(struct ServerInfo* a, struct ServerInfo* b) {
 	return String_Compare(&a->Software, &b->Software);
 }
 
-static struct LTableColumn tableColumns[4] = {
-	{ "Name",     320, NameColumn_Get,     NameColumn_Sort     },
-	{ "Players",   65, PlayersColumn_Get,  PlayersColumn_Sort  },
-	{ "Uptime",    65, UptimeColumn_Get,   UptimeColumn_Sort   },
-	{ "Software", 140, SoftwareColumn_Get, SoftwareColumn_Sort }
+static struct LTableColumn tableColumns[5] = {
+	{ "",          20, FlagColumn_Draw,     NULL,                false },
+	{ "Name",     320, NameColumn_Draw,     NameColumn_Sort,     true  },
+	{ "Players",   65, PlayersColumn_Draw,  PlayersColumn_Sort,  true  },
+	{ "Uptime",    65, UptimeColumn_Draw,   UptimeColumn_Sort,   true  },
+	{ "Software", 140, SoftwareColumn_Draw, SoftwareColumn_Sort, false }
 };
 
 #define GRIDLINE_SIZE   2
@@ -719,12 +724,20 @@ void LTable_DrawRows(struct LTable* w) {
 
 		for (i = 0; i < w->NumColumns; i++) {
 			x += CELL_XPADDING;
-			args.Text.length = 0;
-			w->Columns[i].GetValue(entry, &args.Text);
+			args.Text = str;
+			w->Columns[i].DrawRow(entry, &args, x, y);
 
-			Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args,
-									x, y, w->Columns[i].Width);
-			x += w->Columns[i].Width + CELL_XPADDING;
+			if (args.Text.length) {
+				Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
+										x, y, w->Columns[i].Width);
+			}
+			x += w->Columns[i].Width;
+
+			if (!Launcher_ClassicBackground && w->Columns[i].ColumnGridline) {
+				Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundCol,
+								x, y, GRIDLINE_SIZE, w->RowHeight);
+			}
+			x += CELL_XPADDING;
 		}
 	}
 }
@@ -1073,7 +1086,7 @@ static void LTable_Draw(void* widget) {
 	struct LTable* w = widget;
 	LTable_DrawHeaders(w);
 	LTable_DrawRows(w);
-	Launcher_Dirty = true;
+	Launcher_MarkAllDirty();
 }
 
 static struct LWidgetVTABLE ltable_VTABLE = {

@@ -41,6 +41,7 @@ static void LScreen_Draw(struct LScreen* s) {
 	for (i = 0; i < s->NumWidgets; i++) {
 		LWidget_Draw(s->Widgets[i]);
 	}
+	Launcher_MarkAllDirty();
 }
 
 static void LScreen_Tick(struct LScreen* s) {

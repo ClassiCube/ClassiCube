@@ -112,17 +112,24 @@ struct LSlider {
 CC_NOINLINE void LSlider_Init(struct LSlider* w, int width, int height);
 
 /* Returns sort order of two rows/server entries. */
-typedef int (*LTableSorter)(struct ServerInfo* a, struct serverInfo* b);
+typedef int (*LTableSorter)(struct ServerInfo* a, struct ServerInfo* b);
 
 struct LTableColumn {
 	/* Name of this column. */
 	const char* Name;
 	/* Width of this column in pixels. */
 	int Width;
-	/* Gets the value of this column for the given row. */
-	void (*GetValue)(struct ServerInfo* row, String* str);
+	/* Draws the value of this column for the given row. */
+	/* If args.Text is changed to something, that text gets drawn afterwards. */
+	/* Most of the time that's all you need to do. */
+	void (*DrawRow)(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y);
 	/* Sorts two rows based on value of this column in both rows. */
 	LTableSorter SortRows;
+	/* Whether a vertical gridline (and padding) appears after this. */
+	bool ColumnGridline;
+	/* Whether user can interact with this column. */
+	/* Non-interactable columns can't be sorted/resized. */
+	bool Interactable;
 	/* Whether to invert the order of row sorting. */
 	bool InvertSort;
 };

@@ -13,15 +13,15 @@
 #include "Event.h"
 #include "AsyncDownloader.h"
 #include "ExtMath.h"
+#include "Funcs.h"
 
 struct LScreen* Launcher_Screen;
-bool Launcher_Dirty;
-Rect2D Launcher_DirtyArea;
+Rect2D Launcher_Dirty;
 Bitmap Launcher_Framebuffer;
 bool Launcher_ClassicBackground;
 FontDesc Launcher_TitleFont, Launcher_TextFont, Launcher_HintFont;
 
-static bool fullRedraw, pendingRedraw;
+static bool pendingRedraw;
 static FontDesc logoFont;
 
 bool Launcher_ShouldExit, Launcher_ShouldUpdate;
@@ -106,7 +106,7 @@ static void Launcher_ReqeustRedraw(void* obj) {
 	/* We may get multiple Redraw events in short timespan */
 	/* So we just request a redraw at next launcher tick */
 	pendingRedraw  = true;
-	Launcher_Dirty = true;
+	Launcher_MarkAllDirty();
 }
 
 static void Launcher_OnResize(void* obj) {
@@ -161,25 +161,16 @@ static void Launcher_MouseWheel(void* obj, float delta) {
 *-----------------------------------------------------------Main body-----------------------------------------------------*
 *#########################################################################################################################*/
 static void Launcher_Display(void) {
-	Rect2D r;
 	if (pendingRedraw) {
 		Launcher_Redraw();
 		pendingRedraw = false;
 	}
 
 	Launcher_Screen->OnDisplay(Launcher_Screen);
-	Launcher_Dirty = false;
-	
-	r.X = 0; r.Width  = Launcher_Framebuffer.Width;
-	r.Y = 0; r.Height = Launcher_Framebuffer.Height;
+	Window_DrawRaw(Launcher_Dirty);
 
-	if (!fullRedraw && Launcher_DirtyArea.Width) r = Launcher_DirtyArea;
-	Window_DrawRaw(r);
-	fullRedraw = false;
-
-	r.X = 0; r.Width   = 0;
-	r.Y = 0; r.Height  = 0;
-	Launcher_DirtyArea = r;
+	Launcher_Dirty.X = 0; Launcher_Dirty.Width   = 0;
+	Launcher_Dirty.Y = 0; Launcher_Dirty.Height  = 0;
 }
 
 static void Launcher_Init(void) {
@@ -269,7 +260,7 @@ void Launcher_Run(void) {
 		if (!Window_Exists || Launcher_ShouldExit) break;
 
 		Launcher_Screen->Tick(Launcher_Screen);
-		if (Launcher_Dirty) Launcher_Display();
+		if (Launcher_Dirty.Width) Launcher_Display();
 		Thread_Sleep(10);
 	}
 
@@ -461,6 +452,7 @@ void Launcher_ResetArea(int x, int y, int width, int height) {
 	} else {
 		Gradient_Noise(&Launcher_Framebuffer, Launcher_BackgroundCol, 6, x, y, width, height);
 	}
+	Launcher_MarkDirty(x, y, width, height);
 }
 
 void Launcher_ResetPixels(void) {
@@ -491,13 +483,38 @@ void Launcher_ResetPixels(void) {
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x, 0);
 
 	Drawer2D_BitmappedText = false;
-	Launcher_Dirty = true;
+	Launcher_MarkAllDirty();
 }
 
 void Launcher_Redraw(void) {
 	Launcher_ResetPixels();
 	Launcher_Screen->Draw(Launcher_Screen);
-	fullRedraw = true;
+	Launcher_MarkAllDirty();
+}
+
+void Launcher_MarkDirty(int x, int y, int width, int height) {
+	int x1, y1, x2, y2;
+	if (!Drawer2D_Clamp(&Launcher_Framebuffer, &x, &y, &width, &height)) return;
+
+	/* union with existing dirty area */
+	if (Launcher_Dirty.Width) {
+		x1 = min(x, Launcher_Dirty.X);
+		y1 = min(y, Launcher_Dirty.Y);
+
+		x2 = max(x + width, Launcher_Dirty.X + Launcher_Dirty.Width);
+		y2 = max(y + width, Launcher_Dirty.Y + Launcher_Dirty.Height);
+
+		x = x1; width  = x2 - x1;
+		y = y1; height = y2 - y1;
+	}
+
+	Launcher_Dirty.X = x; Launcher_Dirty.Width  = width;
+	Launcher_Dirty.Y = y; Launcher_Dirty.Height = height;
+}
+
+void Launcher_MarkAllDirty(void) {
+	Launcher_Dirty.X = 0; Launcher_Dirty.Width  = Launcher_Framebuffer.Width;
+	Launcher_Dirty.Y = 0; Launcher_Dirty.Height = Launcher_Framebuffer.Height;
 }
 
 
