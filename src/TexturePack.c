@@ -6,7 +6,7 @@
 #include "Graphics.h"
 #include "Event.h"
 #include "Game.h"
-#include "AsyncDownloader.h"
+#include "Http.h"
 #include "Platform.h"
 #include "Deflate.h"
 #include "Stream.h"
@@ -706,7 +706,7 @@ void TexturePack_ExtractCurrent(const String* url) {
 	}
 }
 
-void TexturePack_Extract_Req(struct AsyncRequest* item) {
+void TexturePack_Extract_Req(struct HttpRequest* item) {
 	String url, etag;
 	void* data; uint32_t len;
 	struct Stream mem;
@@ -729,5 +729,5 @@ void TexturePack_Extract_Req(struct AsyncRequest* item) {
 			 : TexturePack_ExtractZip(&mem);
 
 	if (res) Logger_Warn2(res, png ? "decoding" : "extracting", &url);
-	ASyncRequest_Free(item);
+	HttpRequest_Free(item);
 }

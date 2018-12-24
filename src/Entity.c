@@ -11,7 +11,7 @@
 #include "Lighting.h"
 #include "Drawer2D.h"
 #include "Particle.h"
-#include "AsyncDownloader.h"
+#include "Http.h"
 #include "Chat.h"
 #include "Model.h"
 #include "Input.h"
@@ -688,7 +688,7 @@ static void Player_CheckSkin(struct Player* p) {
 	struct Player* first;
 	String url, skin = String_FromRawArray(e->SkinNameRaw);
 
-	struct AsyncRequest item;
+	struct HttpRequest item;
 	struct Stream mem;
 	Bitmap bmp;
 	ReturnCode res;
@@ -696,14 +696,14 @@ static void Player_CheckSkin(struct Player* p) {
 	if (!p->FetchedSkin && e->Model->UsesSkin) {
 		first = Player_FirstOtherWithSameSkinAndFetchedSkin(p);
 		if (!first) {
-			AsyncDownloader_GetSkin(&skin, &skin);
+			Http_AsyncGetSkin(&skin, &skin);
 		} else {
 			Player_CopySkin(p, first);
 		}
 		p->FetchedSkin = true;
 	}
 
-	if (!AsyncDownloader_Get(&skin, &item)) return;
+	if (!Http_GetResult(&skin, &item)) return;
 	if (!item.Data) { Player_SetSkinAll(p, true); return; }
 	Stream_ReadonlyMemory(&mem, item.Data, item.Size);
 

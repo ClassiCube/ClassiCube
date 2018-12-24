@@ -949,7 +949,7 @@ static void ResourcesScreen_Download(void* w, int x, int y) {
 
 static void ResourcesScreen_Next(void* w, int x, int y) {
 	const static String optionsTxt = String_FromConst("options.txt");
-	AsyncDownloader_Clear();
+	Http_ClearPending();
 
 	if (File_Exists(&optionsTxt)) {
 		Launcher_SetScreen(MainScreen_MakeInstance());
@@ -1036,7 +1036,7 @@ static void ResourcesScreen_SetStatus(const String* str) {
 	LWidget_Draw(w);
 }
 
-static void ResourcesScreen_UpdateStatus(struct AsyncRequest* req) {
+static void ResourcesScreen_UpdateStatus(struct HttpRequest* req) {
 	String str; char strBuffer[STRING_SIZE];
 	String id;
 	BitmapCol boxCol = BITMAPCOL_CONST(120, 85, 151, 255);
@@ -1053,10 +1053,10 @@ static void ResourcesScreen_UpdateStatus(struct AsyncRequest* req) {
 }
 
 static void ResourcesScreen_UpdateProgress(struct ResourcesScreen* s) {
-	struct AsyncRequest req;
+	struct HttpRequest req;
 	int progress;
 
-	if (!AsyncDownloader_GetCurrent(&req, &progress)) return;
+	if (!Http_GetCurrent(&req, &progress)) return;
 	ResourcesScreen_UpdateStatus(&req);
 	/* making request still, haven't started download yet */
 	if (progress < 0 || progress > 100) return;
@@ -1386,9 +1386,9 @@ static void UpdatesScreen_CheckTick(struct UpdatesScreen* s) {
 static void UpdatesScreen_UpdateProgress(struct UpdatesScreen* s, struct LWebTask* task) {
 	String str; char strBuffer[STRING_SIZE];
 	String identifier;
-	struct AsyncRequest item;
+	struct HttpRequest item;
 	int progress;
-	if (!AsyncDownloader_GetCurrent(&item, &progress)) return;
+	if (!Http_GetCurrent(&item, &progress)) return;
 
 	identifier = String_FromRawArray(item.ID);
 	if (!String_Equals(&identifier, &task->Identifier)) return;

@@ -17,7 +17,7 @@
 #include "Model.h"
 #include "Funcs.h"
 #include "Lighting.h"
-#include "AsyncDownloader.h"
+#include "Http.h"
 #include "Drawer2D.h"
 #include "Logger.h"
 #include "TexturePack.h"
@@ -243,7 +243,7 @@ static void WoM_CheckMotd(void) {
 	applied in the new world if the async 'get env request' didn't complete before the old world was unloaded */
 	wom_counter++;
 	WoM_UpdateIdentifier();
-	AsyncDownloader_GetData(&url, true, &wom_identifier);
+	Http_AsyncGetData(&url, true, &wom_identifier);
 	wom_sendId = true;
 }
 
@@ -268,7 +268,7 @@ static PackedCol WoM_ParseCol(const String* value, PackedCol defaultCol) {
 	return col;
 }
 
-static void WoM_ParseConfig(struct AsyncRequest* item) {
+static void WoM_ParseConfig(struct HttpRequest* item) {
 	String line; char lineBuffer[STRING_SIZE * 2];
 	struct Stream mem;
 	String key, value;
@@ -308,11 +308,11 @@ static void WoM_Reset(void) {
 }
 
 static void WoM_Tick(void) {
-	struct AsyncRequest item;
-	if (!AsyncDownloader_Get(&wom_identifier, &item)) return;
+	struct HttpRequest item;
+	if (!Http_GetResult(&wom_identifier, &item)) return;
 
 	if (item.Data) WoM_ParseConfig(&item);
-	ASyncRequest_Free(&item);
+	HttpRequest_Free(&item);
 }
 
 

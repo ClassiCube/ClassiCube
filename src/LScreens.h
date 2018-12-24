@@ -1,6 +1,6 @@
 #ifndef CC_LSCREENS_H
 #define CC_LSCREENS_H
-#include "AsyncDownloader.h"
+#include "Http.h"
 #include "String.h"
 #include "Input.h"
 /* Implements screens/menus for the launcher.

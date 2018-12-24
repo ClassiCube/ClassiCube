@@ -11,7 +11,7 @@
 #include "Window.h"
 #include "GameStructs.h"
 #include "Event.h"
-#include "AsyncDownloader.h"
+#include "Http.h"
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Logger.h"
@@ -234,8 +234,8 @@ void Launcher_Run(void) {
 	Launcher_Framebuffer.Height = Game_Height;
 	Window_InitRaw(&Launcher_Framebuffer);
 
-	AsyncDownloader_Cookies = true;
-	AsyncDownloader_Component.Init();
+	Http_UseCookies = true;
+	Http_Component.Init();
 
 	Resources_CheckExistence();
 	CheckUpdateTask_Run();

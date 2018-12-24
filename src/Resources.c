@@ -651,7 +651,7 @@ static void SoundPatcher_DecodeAudio(struct Stream* s, struct VorbisState* ctx) 
 	Mem_Free(samples);
 }
 
-static void SoundPatcher_Save(struct ResourceSound* sound, struct AsyncRequest* req) {
+static void SoundPatcher_Save(struct ResourceSound* sound, struct HttpRequest* req) {
 	String path; char pathBuffer[STRING_SIZE];
 	uint8_t buffer[OGG_BUFFER_SIZE];
 	struct Stream src, ogg, dst;
@@ -675,7 +675,7 @@ static void SoundPatcher_Save(struct ResourceSound* sound, struct AsyncRequest* 
 	if (res) Logger_Warn(res, "closing .wav file");
 }
 
-static void MusicPatcher_Save(struct ResourceMusic* music, struct AsyncRequest* req) {
+static void MusicPatcher_Save(struct ResourceMusic* music, struct HttpRequest* req) {
 	String path; char pathBuffer[STRING_SIZE];
 	ReturnCode res;
 
@@ -701,7 +701,7 @@ CC_NOINLINE static void Fetcher_DownloadAudio(const char* name, const char* hash
 	String_InitArray(url, urlBuffer);
 	String_Format3(&url, "http://resources.download.minecraft.net/%r%r/%c", 
 					&hash[0], &hash[1], hash);
-	AsyncDownloader_GetData(&url, false, &id);
+	Http_AsyncGetData(&url, false, &id);
 }
 
 void Fetcher_Run(void) {
@@ -721,7 +721,7 @@ void Fetcher_Run(void) {
 
 		id  = String_FromReadonly(Resources_Files[i].Name);
 		url = String_FromReadonly(Resources_Files[i].Url);
-		AsyncDownloader_GetData(&url, false, &id);
+		Http_AsyncGetData(&url, false, &id);
 	}
 
 	for (i = 0; i < Array_Elems(Resources_Music); i++) {
@@ -739,8 +739,8 @@ static void Fetcher_Finish(void) {
 	Fetcher_Working   = false;
 }
 
-CC_NOINLINE static bool Fetcher_Get(const String* id, struct AsyncRequest* req) {
-	if (!AsyncDownloader_Get(id, req)) return false;
+CC_NOINLINE static bool Fetcher_Get(const String* id, struct HttpRequest* req) {
+	if (!Http_GetResult(id, req)) return false;
 
 	if (req->Result) {
 		Fetcher_Error = req->Result;
@@ -762,7 +762,7 @@ CC_NOINLINE static bool Fetcher_Get(const String* id, struct AsyncRequest* req) 
 
 static void Fetcher_CheckFile(struct ResourceFile* file) {
 	String id = String_FromReadonly(file->Name);
-	struct AsyncRequest req;
+	struct HttpRequest req;
 	if (!Fetcher_Get(&id, &req)) return;
 	
 	file->Downloaded = true;
@@ -773,21 +773,21 @@ static void Fetcher_CheckFile(struct ResourceFile* file) {
 
 static void Fetcher_CheckMusic(struct ResourceMusic* music) {
 	String id = String_FromReadonly(music->Name);
-	struct AsyncRequest req;
+	struct HttpRequest req;
 	if (!Fetcher_Get(&id, &req)) return;
 
 	music->Downloaded = true;
 	MusicPatcher_Save(music, &req);
-	ASyncRequest_Free(&req);
+	HttpRequest_Free(&req);
 }
 
 static void Fetcher_CheckSound(struct ResourceSound* sound) {
 	String id = String_FromReadonly(sound->Name);
-	struct AsyncRequest req;
+	struct HttpRequest req;
 	if (!Fetcher_Get(&id, &req)) return;
 
 	SoundPatcher_Save(sound, &req);
-	ASyncRequest_Free(&req);
+	HttpRequest_Free(&req);
 }
 
 /* TODO: Implement this.. */

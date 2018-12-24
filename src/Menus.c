@@ -14,7 +14,7 @@
 #include "ExtMath.h"
 #include "Window.h"
 #include "Camera.h"
-#include "AsyncDownloader.h"
+#include "Http.h"
 #include "Block.h"
 #include "World.h"
 #include "Formats.h"
@@ -3251,11 +3251,11 @@ static void TexPackOverlay_NoClick(void* screen, void* widget) {
 }
 
 static void TexPackOverlay_Render(void* screen, double delta) {
-	struct AsyncRequest item;
+	struct HttpRequest item;
 	struct TexPackOverlay* s = screen;
 
 	MenuScreen_Render(s, delta);
-	if (!AsyncDownloader_Get(&s->Identifier, &item)) return;
+	if (!Http_GetResult(&s->Identifier, &item)) return;
 
 	s->ContentLength = item.ContentLength;
 	if (!s->ContentLength) return;
@@ -3326,7 +3326,7 @@ struct Screen* TexPackOverlay_MakeInstance(const String* url) {
 	String_Format1(&s->Identifier, "CL_%s", url);
 	s->ContentLength = 0;
 
-	AsyncDownloader_GetContentLength(url, true, &s->Identifier);
+	Http_AsyncGetHeaders(url, true, &s->Identifier);
 	s->VTABLE = &TexPackOverlay_VTABLE;
 	return (struct Screen*)s;
 }

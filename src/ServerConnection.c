@@ -5,7 +5,7 @@
 #include "Chat.h"
 #include "Block.h"
 #include "Event.h"
-#include "AsyncDownloader.h"
+#include "Http.h"
 #include "Funcs.h"
 #include "Entity.h"
 #include "Graphics.h"
@@ -74,13 +74,13 @@ void ServerConnection_DownloadTexturePack(const String* url) {
 	}
 
 	TexturePack_ExtractCurrent(url);
-	AsyncDownloader_GetDataEx(url, true, &texPack, &lastModified, &etag);
+	Http_AsyncGetDataEx(url, true, &texPack, &lastModified, &etag);
 }
 
 void ServerConnection_CheckAsyncResources(void) {
 	const static String texPack = String_FromConst("texturePack");
-	struct AsyncRequest item;
-	if (!AsyncDownloader_Get(&texPack, &item)) return;
+	struct HttpRequest item;
+	if (!Http_GetResult(&texPack, &item)) return;
 
 	if (item.Data) {
 		TexturePack_Extract_Req(&item);

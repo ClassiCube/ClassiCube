@@ -15,7 +15,7 @@
 #include "ExtMath.h"
 #include "Window.h"
 #include "Camera.h"
-#include "AsyncDownloader.h"
+#include "Http.h"
 #include "Block.h"
 #include "Menus.h"
 #include "World.h"
@@ -816,12 +816,12 @@ static void ChatScreen_SetInitialMessages(struct ChatScreen* s) {
 static void ChatScreen_CheckOtherStatuses(struct ChatScreen* s) {
 	const static String texPack = String_FromConst("texturePack");
 	String str; char strBuffer[STRING_SIZE];
-	struct AsyncRequest request;
+	struct HttpRequest request;
 	int progress;
 	bool hasRequest;
 	String identifier;
 	
-	hasRequest = AsyncDownloader_GetCurrent(&request, &progress);
+	hasRequest = Http_GetCurrent(&request, &progress);
 	identifier = String_FromRawArray(request.ID);	
 
 	/* Is terrain / texture pack currently being downloaded? */

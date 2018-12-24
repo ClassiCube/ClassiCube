@@ -206,11 +206,11 @@ static void LWebTask_Reset(struct LWebTask* task) {
 }
 
 void LWebTask_Tick(struct LWebTask* task) {
-	struct AsyncRequest req;
+	struct HttpRequest req;
 	int delta;
 	if (task->Completed) return;
 
-	if (!AsyncDownloader_Get(&task->Identifier, &req)) return;
+	if (!Http_GetResult(&task->Identifier, &req)) return;
 	delta = (int)(DateTime_CurrentUTC_MS() - task->Start);
 	Platform_Log2("%s took %i", &task->Identifier, &delta);
 
@@ -221,7 +221,7 @@ void LWebTask_Tick(struct LWebTask* task) {
 	task->Completed = true;
 	task->Success   = !task->Res && req.Data && req.Size;
 	if (task->Success) task->Handle(req.Data, req.Size);
-	ASyncRequest_Free(&req);
+	HttpRequest_Free(&req);
 }
 
 
@@ -249,7 +249,7 @@ void GetTokenTask_Run(void) {
 	String_InitArray(GetTokenTask.Token, tokenBuffer);
 
 	GetTokenTask.Base.Identifier = id;
-	AsyncDownloader_GetData(&url, false, &id);
+	Http_AsyncGetData(&url, false, &id);
 	GetTokenTask.Base.Handle     = GetTokenTask_Handle;
 }
 
@@ -282,7 +282,7 @@ void SignInTask_Run(const String* user, const String* pass) {
 	String_Copy(&SignInTask.Username, user);
 
 	SignInTask.Base.Identifier = id;
-	AsyncDownloader_GetData(&url, false, &id);
+	Http_AsyncGetData(&url, false, &id);
 	SignInTask.Base.Handle     = SignInTask_Handle;
 }
 // NOTE: Remember to add &c for errors here too
@@ -353,7 +353,7 @@ void FetchServerTask_Run(const String* hash) {
 	String_Format1(&url, "https://www.classicube.net/api/server/%s", hash);
 
 	FetchServerTask.Base.Identifier = id;
-	AsyncDownloader_GetData(&url, false, &id);
+	Http_AsyncGetData(&url, false, &id);
 	FetchServerTask.Base.Handle  = FetchServerTask_Handle;
 }
 
@@ -396,7 +396,7 @@ void FetchServersTask_Run(void) {
 	FetchServersTask.NumServers = 0;
 
 	FetchServersTask.Base.Identifier = id;
-	AsyncDownloader_GetData(&url, false, &id);
+	Http_AsyncGetData(&url, false, &id);
 	FetchServersTask.Base.Handle = FetchServersTask_Handle;
 }
 
@@ -444,7 +444,7 @@ void CheckUpdateTask_Run(void) {
 	String_InitArray(CheckUpdateTask.LatestRelease, relVersionBuffer);
 
 	CheckUpdateTask.Base.Identifier = id;
-	AsyncDownloader_GetData(&url, false, &id);
+	Http_AsyncGetData(&url, false, &id);
 	CheckUpdateTask.Base.Handle     = CheckUpdateTask_Handle;
 }
 
@@ -494,7 +494,7 @@ void FetchUpdateTask_Run(bool release, bool d3d9) {
 	FetchUpdateTask.Timestamp = release ? CheckUpdateTask.RelTimestamp : CheckUpdateTask.DevTimestamp;
 
 	FetchUpdateTask.Base.Identifier = id;
-	AsyncDownloader_GetData(&url, false, &id);
+	Http_AsyncGetData(&url, false, &id);
 	FetchUpdateTask.Base.Handle = FetchUpdateTask_Handle;
 }
 

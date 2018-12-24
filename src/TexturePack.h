@@ -10,7 +10,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3 */
 
 struct Stream;
-struct AsyncRequest;
+struct HttpRequest;
 struct IGameComponent;
 extern struct IGameComponent Animations_Component;
 
@@ -97,5 +97,5 @@ void TextureCache_SetLastModified(const String* url, const TimeMS* lastModified)
 void TexturePack_ExtractZip_File(const String* filename);
 void TexturePack_ExtractDefault(void);
 void TexturePack_ExtractCurrent(const String* url);
-void TexturePack_Extract_Req(struct AsyncRequest* item);
+void TexturePack_Extract_Req(struct HttpRequest* item);
 #endif

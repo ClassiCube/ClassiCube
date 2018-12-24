@@ -18,7 +18,7 @@
 #include "Drawer2D.h"
 #include "Model.h"
 #include "Particle.h"
-#include "AsyncDownloader.h"
+#include "Http.h"
 #include "Inventory.h"
 #include "InputHandler.h"
 #include "ServerConnection.h"
@@ -459,7 +459,7 @@ static void Game_Load(void) {
 
 	Game_AddComponent(&Models_Component);
 	Game_AddComponent(&Entities_Component);
-	Game_AddComponent(&AsyncDownloader_Component);
+	Game_AddComponent(&Http_Component);
 	Game_AddComponent(&Lighting_Component);
 
 	Game_AddComponent(&Animations_Component);

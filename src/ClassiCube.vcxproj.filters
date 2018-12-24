@@ -234,9 +234,6 @@
     <ClInclude Include="ServerConnection.h">
       <Filter>Header Files\Network</Filter>
     </ClInclude>
-    <ClInclude Include="AsyncDownloader.h">
-      <Filter>Header Files\Network</Filter>
-    </ClInclude>
     <ClInclude Include="Event.h">
       <Filter>Header Files\Game</Filter>
     </ClInclude>
@@ -317,6 +314,9 @@
     </ClInclude>
     <ClInclude Include="Logger.h">
       <Filter>Header Files\Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="Http.h">
+      <Filter>Header Files\Network</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -438,9 +438,6 @@
       <Filter>Source Files\TexturePack</Filter>
     </ClCompile>
     <ClCompile Include="PacketHandlers.c">
-      <Filter>Source Files\Network</Filter>
-    </ClCompile>
-    <ClCompile Include="AsyncDownloader.c">
       <Filter>Source Files\Network</Filter>
     </ClCompile>
     <ClCompile Include="EnvRenderer.c">
@@ -565,6 +562,9 @@
     </ClCompile>
     <ClCompile Include="Logger.c">
       <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Http.c">
+      <Filter>Source Files\Network</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

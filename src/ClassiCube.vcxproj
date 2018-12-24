@@ -187,7 +187,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="AsyncDownloader.h" />
+    <ClInclude Include="Http.h" />
     <ClInclude Include="Audio.h" />
     <ClInclude Include="AxisLinesRenderer.h" />
     <ClInclude Include="BlockID.h" />
@@ -253,7 +253,7 @@
     <ClInclude Include="World.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AsyncDownloader.c" />
+    <ClCompile Include="Http.c" />
     <ClCompile Include="Audio.c" />
     <ClCompile Include="Camera.c" />
     <ClCompile Include="AxisLinesRenderer.c" />

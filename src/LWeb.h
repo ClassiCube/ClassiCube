@@ -1,6 +1,6 @@
 #ifndef CC_LWEB_H
 #define CC_LWEB_H
-#include "AsyncDownloader.h"
+#include "Http.h"
 #include "String.h"
 /* Implements asynchronous web tasks for the launcher.
 	Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

@@ -6,7 +6,7 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 struct DrawTextArgs;
-struct AsyncRequest;
+struct HttpRequest;
 struct DateTime;
 
 enum Socket_PollMode { SOCKET_POLL_READ, SOCKET_POLL_WRITE };
@@ -220,14 +220,6 @@ ReturnCode Socket_Close(SocketHandle socket);
 /* NOTE: A closed socket is still considered readable. */
 /* NOTE: A socket is considered writable once it has finished connecting. */
 ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success);
-
-/* Initalises the platform specific http library state. */
-void Http_Init(void);
-/* Performs a http request, setting progress as data is received. */
-/* NOTE: NOT thread safe - you should ALWAYS use AsyncDownloader for making requests. */
-ReturnCode Http_Do(struct AsyncRequest* req, volatile int* progress);
-/* Frees the platform specific http library state. */
-ReturnCode Http_Free(void);
 
 #define AUDIO_MAX_BUFFERS 4
 /* Information about a source of audio. */
