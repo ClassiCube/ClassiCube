@@ -1636,7 +1636,7 @@ void Window_ShowDialog(const char* title, const char* msg) {
 static GC win_gc;
 static XImage* win_image;
 void Window_InitRaw(Bitmap* bmp) {
-	if (!win_gc) win_gc = XCreateGC(win_display, win_handle, NULL, NULL);
+	if (!win_gc) win_gc = XCreateGC(win_display, win_handle, 0, NULL);
 	if (win_image) XFree(win_image);
 
 	Mem_Free(bmp->Scan0);

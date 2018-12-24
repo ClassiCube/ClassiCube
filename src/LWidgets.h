@@ -111,6 +111,8 @@ struct LSlider {
 };
 CC_NOINLINE void LSlider_Init(struct LSlider* w, int width, int height);
 
+struct ServerInfo;
+struct DrawTextArgs;
 /* Returns sort order of two rows/server entries. */
 typedef int (*LTableSorter)(struct ServerInfo* a, struct ServerInfo* b);
 
