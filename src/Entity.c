@@ -579,7 +579,8 @@ static struct Player* Player_FirstOtherWithSameSkinAndFetchedSkin(struct Player*
 	return NULL;
 }
 
-static void Player_ApplySkin(struct Player* player, struct Player* from) {
+/* Copies skin data from another player */
+static void Player_CopySkin(struct Player* player, struct Player* from) {
 	struct Entity* dst = &player->Base;
 	struct Entity* src = &from->Base;
 	String skin;
@@ -592,9 +593,10 @@ static void Player_ApplySkin(struct Player* player, struct Player* from) {
 	/* Custom mob textures */
 	dst->MobTextureId = GFX_NULL;
 	skin = String_FromRawArray(dst->SkinNameRaw);
-	if (Utils_IsUrlPrefix(&skin, 0)) { dst->MobTextureId = dst->TextureId; }
+	if (Utils_IsUrlPrefix(&skin, 0)) dst->MobTextureId = dst->TextureId;
 }
 
+/* Resets skin data for the given player */
 void Player_ResetSkin(struct Player* player) {
 	struct Entity* e = &player->Base;
 	e->uScale = 1.0f; e->vScale = 1.0f;
@@ -603,7 +605,7 @@ void Player_ResetSkin(struct Player* player) {
 	e->SkinType     = SKIN_64x32;
 }
 
-/* Apply or reset skin, for all players with same skin */
+/* Copies or resets skin data for all players with same skin */
 static void Player_SetSkinAll(struct Player* player, bool reset) {
 	struct Entity* entity = &player->Base;
 	struct Player* p;
@@ -622,11 +624,13 @@ static void Player_SetSkinAll(struct Player* player, bool reset) {
 		if (reset) {
 			Player_ResetSkin(p);
 		} else {
-			Player_ApplySkin(p, player);
+			Player_CopySkin(p, player);
 		}
 	}
 }
 
+/* Clears hat area from a skin bitmap if it's completely white or black,
+   so skins edited with Microsoft Paint or similiar don't have a solid hat */
 static void Player_ClearHat(Bitmap* bmp, uint8_t skinType) {
 	int sizeX  = (bmp->Width / 64) * 32;
 	int yScale = skinType == SKIN_64x32 ? 32 : 64;
@@ -653,6 +657,7 @@ static void Player_ClearHat(Bitmap* bmp, uint8_t skinType) {
 	}
 }
 
+/* Ensures skin is a power of two size, resizing if needed. */
 static void Player_EnsurePow2(struct Player* p, Bitmap* bmp) {
 	uint32_t stride;
 	int width, height;
@@ -693,7 +698,7 @@ static void Player_CheckSkin(struct Player* p) {
 		if (!first) {
 			AsyncDownloader_GetSkin(&skin, &skin);
 		} else {
-			Player_ApplySkin(p, first);
+			Player_CopySkin(p, first);
 		}
 		p->FetchedSkin = true;
 	}
@@ -709,8 +714,8 @@ static void Player_CheckSkin(struct Player* p) {
 	}
 
 	Gfx_DeleteTexture(&e->TextureId);
-	Player_EnsurePow2(p, &bmp);
 	Player_SetSkinAll(p, true);
+	Player_EnsurePow2(p, &bmp);
 	e->SkinType = Utils_GetSkinType(&bmp);
 
 	if (bmp.Width > Gfx_MaxTexWidth || bmp.Height > Gfx_MaxTexHeight) {

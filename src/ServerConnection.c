@@ -370,8 +370,8 @@ static void MPConnection_SendPosition(Vector3 pos, float rotY, float headX) {
 	Net_SendPacket();
 }
 
-static void MPConnection_SendPlayerClick(MouseButton button, bool buttonDown, EntityID targetId, struct PickedPos* pos) {
-	CPE_WritePlayerClick(button, buttonDown, targetId, pos);
+static void MPConnection_SendPlayerClick(MouseButton button, bool pressed, EntityID targetId, struct PickedPos* pos) {
+	CPE_WritePlayerClick(button, pressed, targetId, pos);
 	Net_SendPacket();
 }
 
