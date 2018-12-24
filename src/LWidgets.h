@@ -143,8 +143,8 @@ struct LTable {
 	int NumColumns;
 	/* Fonts for text in header and rows. */
 	FontDesc RowFont, HdrFont;
-	/* Y start of rows and height of each row. */
-	int RowsBegY, RowHeight;
+	/* Y start and end of rows and height of each row. */
+	int RowsBegY, RowsEndY, RowHeight;
 	/* Y height of headers. */
 	int HdrHeight;
 	/* Maximum number of rows visible. */
@@ -153,6 +153,11 @@ struct LTable {
 	int RowsCount;
 	/* Comparison function used to sort rows. */
 	LTableSorter Sorter;
+
+	/* Hash of the currently selected server. */
+	String* SelectedHash;
+	/* Filter for which server names to show. */
+	String* Filter;
 
 	/* Index of column currently being dragged. */
 	int DraggingColumn;
@@ -167,10 +172,11 @@ void LTable_Init(struct LTable* table, const FontDesc* hdrFont, const FontDesc* 
 void LTable_Reset(struct LTable* table);
 /* Adjusts Y position of rows and number of visible rows. */
 void LTable_Reposition(struct LTable* table);
-/* Filters rows to only show those containing 'filter' in the name. */
-void LTable_Filter(struct LTable* table, const String* filter);
+/* Filters rows to only show those containing 'w->Filter' in the name. */
+void LTable_ApplyFilter(struct LTable* table);
+/* Calculates the sorted order of rows in the table. */
+/* NOTE: You must use ApplyFilter to actually update visible row order. */
+void LTable_CalcSortOrder(struct LTable* table);
 /* Attempts to select the row whose hash equals the given hash. Scrolls table if needed. */
 void LTable_SetSelected(struct LTable* table, const String* hash);
-/* Attempts to get the hash of the currently selected row. */
-void LTable_GetSelected(struct LTable* table, String* hash);
 #endif

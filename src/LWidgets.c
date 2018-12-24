@@ -660,7 +660,7 @@ static int SoftwareColumn_Sort(struct ServerInfo* a, struct ServerInfo* b) {
 }
 
 static struct LTableColumn tableColumns[5] = {
-	{ "",          20, FlagColumn_Draw,     NULL,                false },
+	{ "",          15, FlagColumn_Draw,     NULL,                false },
 	{ "Name",     320, NameColumn_Draw,     NameColumn_Sort,     true  },
 	{ "Players",   65, PlayersColumn_Draw,  PlayersColumn_Sort,  true  },
 	{ "Uptime",    65, UptimeColumn_Draw,   UptimeColumn_Sort,   true  },
@@ -669,38 +669,99 @@ static struct LTableColumn tableColumns[5] = {
 
 #define GRIDLINE_SIZE   2
 #define SCROLLBAR_WIDTH 10
-#define CELL_YPADDING 3
-#define CELL_XPADDING 3
-
-
+#define HDR_YPADDING 3
+#define ROW_YPADDING 1
+#define CELL_XPADDING 5
 #define LTable_Get(row) &FetchServersTask.Servers[FetchServersTask.Servers[row]._order]
-void LTable_DrawHeaders(struct LTable* w) {
+
+static void LTable_DrawHeaderBackground(struct LTable* w) {
 	BitmapCol gridCol = BITMAPCOL_CONST(20, 20, 10, 255);
-	struct DrawTextArgs args;
-	int i, x, y;
+	if (Launcher_ClassicBackground) return;
 
-	if (!Launcher_ClassicBackground) {
-		Drawer2D_Clear(&Launcher_Framebuffer, gridCol,
-					w->X, w->Y,                w->Width, w->HdrHeight);
-		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundCol,
-					w->X, w->Y + w->HdrHeight, w->Width, GRIDLINE_SIZE);
+	Drawer2D_Clear(&Launcher_Framebuffer, gridCol,
+					w->X, w->Y, w->Width, w->HdrHeight);
+}
+
+static BitmapCol LTable_RowCol(struct LTable* w, struct ServerInfo* row) {
+	BitmapCol emptyCol = BITMAPCOL_CONST(0, 0, 0, 0);
+	BitmapCol gridCol  = BITMAPCOL_CONST(20, 20, 10, 255);
+	BitmapCol featSelCol  = BITMAPCOL_CONST( 50,  53,  0, 255);
+	BitmapCol featuredCol = BITMAPCOL_CONST(101, 107,  0, 255);
+	BitmapCol selectedCol = BITMAPCOL_CONST( 40,  40, 40, 255);
+	bool selected;
+
+	if (row) {
+		selected = String_Equals(&row->Hash, w->SelectedHash);
+		if (row->Featured) {
+			return selected ? featSelCol : featuredCol;
+		} else if (selected) {
+			return selectedCol;
+		}
 	}
+	return Launcher_ClassicBackground ? emptyCol : gridCol;
+}
 
-	DrawTextArgs_MakeEmpty(&args, &w->HdrFont, true);
-	x = w->X;
-	y = w->Y + CELL_YPADDING;
+static void LTable_DrawRowsBackground(struct LTable* w) {
+	struct ServerInfo* entry;
+	BitmapCol col;
+	int y, row, height;
 
-	for (i = 0; i < w->NumColumns; i++) {
-		x += CELL_XPADDING;
-		args.Text = String_FromReadonly(w->Columns[i].Name);
+	y = w->RowsBegY;
+	for (row = 0; row < w->VisibleRows; row++, y += w->RowHeight) {
+		entry = row < w->RowsCount ? LTable_Get(row) : NULL;
+		col   = LTable_RowCol(w, entry);
 
-		Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
-								x, y, w->Columns[i].Width);
-		x += w->Columns[i].Width + CELL_XPADDING;
+		if (!col.A) continue;
+		/* last row may get chopped off */
+		height = min(y + w->RowHeight, w->RowsEndY) - y;
+
+		Drawer2D_Clear(&Launcher_Framebuffer, col,
+					   w->X, y, w->Width, height);
 	}
 }
 
-void LTable_DrawRows(struct LTable* w) {
+static void LTable_DrawGridlines(struct LTable* w) {
+	int i, x;
+	if (Launcher_ClassicBackground) return;
+
+	x = w->X;
+	Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundCol,
+				   x, w->Y + w->HdrHeight, w->Width, GRIDLINE_SIZE);
+
+	for (i = 0; i < w->NumColumns; i++) {
+		x += w->Columns[i].Width;
+		if (!w->Columns[i].ColumnGridline) continue;
+			
+		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundCol,
+					   x, w->Y, GRIDLINE_SIZE, w->Height);
+		x += GRIDLINE_SIZE;
+	}
+}
+
+static void LTable_DrawBackground(struct LTable* w) {
+	LTable_DrawHeaderBackground(w);
+	LTable_DrawRowsBackground(w);
+	LTable_DrawGridlines(w);
+}
+
+static void LTable_DrawHeaders(struct LTable* w) {
+	struct DrawTextArgs args;
+	int i, x, y;
+
+	DrawTextArgs_MakeEmpty(&args, &w->HdrFont, true);
+	x = w->X; y = w->Y;
+
+	for (i = 0; i < w->NumColumns; i++) {
+		args.Text = String_FromReadonly(w->Columns[i].Name);
+		Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
+								x + CELL_XPADDING, y + HDR_YPADDING, w->Columns[i].Width);
+
+		x += w->Columns[i].Width;
+		if (w->Columns[i].ColumnGridline) x += GRIDLINE_SIZE;
+	}
+}
+
+static void LTable_DrawRows(struct LTable* w) {
 	BitmapCol gridCol = BITMAPCOL_CONST(20, 20, 10, 255);
 	String str; char strBuffer[STRING_SIZE];
 	struct ServerInfo* entry;
@@ -714,30 +775,21 @@ void LTable_DrawRows(struct LTable* w) {
 	for (row = 0; row < w->VisibleRows; row++, y += w->RowHeight) {
 		x = w->X;
 
-		if (!Launcher_ClassicBackground) {
-			Drawer2D_Clear(&Launcher_Framebuffer, gridCol,
-				x, y, w->Width, w->RowHeight);
-		}
-
-		if (row >= w->RowsCount) continue;
+		if (row >= w->RowsCount)            break;
+		if (y + w->RowHeight > w->RowsEndY) break;
 		entry = LTable_Get(row);
 
 		for (i = 0; i < w->NumColumns; i++) {
-			x += CELL_XPADDING;
 			args.Text = str;
 			w->Columns[i].DrawRow(entry, &args, x, y);
 
 			if (args.Text.length) {
 				Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
-										x, y, w->Columns[i].Width);
+										x + CELL_XPADDING, y + ROW_YPADDING, w->Columns[i].Width);
 			}
-			x += w->Columns[i].Width;
 
-			if (!Launcher_ClassicBackground && w->Columns[i].ColumnGridline) {
-				Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundCol,
-								x, y, GRIDLINE_SIZE, w->RowHeight);
-			}
-			x += CELL_XPADDING;
+			x += w->Columns[i].Width;
+			if (w->Columns[i].ColumnGridline) x += GRIDLINE_SIZE;
 		}
 	}
 }
@@ -1074,16 +1126,18 @@ static void LTable_StopDragging(struct LTable* table) {
 
 void LTable_Reposition(struct LTable* w) {
 	int rowsHeight;
-	w->HdrHeight = Drawer2D_FontHeight(&w->HdrFont, true) + CELL_YPADDING * 2;
-	w->RowHeight = Drawer2D_FontHeight(&w->RowFont, true) + CELL_YPADDING * 2;
+	w->HdrHeight = Drawer2D_FontHeight(&w->HdrFont, true) + HDR_YPADDING * 2;
+	w->RowHeight = Drawer2D_FontHeight(&w->RowFont, true) + ROW_YPADDING * 2;
 
 	w->RowsBegY = w->Y + w->HdrHeight + GRIDLINE_SIZE;
-	rowsHeight = w->Height - (w->RowsBegY - w->Y);
+	w->RowsEndY = w->Y + w->Height;
+	rowsHeight  = w->Height - (w->RowsBegY - w->Y);
 	w->VisibleRows = Math_CeilDiv(rowsHeight, w->RowHeight);
 }
 
 static void LTable_Draw(void* widget) {
 	struct LTable* w = widget;
+	LTable_DrawBackground(w);
 	LTable_DrawHeaders(w);
 	LTable_DrawRows(w);
 	Launcher_MarkAllDirty();
@@ -1107,16 +1161,20 @@ void LTable_Init(struct LTable* w, const FontDesc* hdrFont, const FontDesc* rowF
 void LTable_Reset(struct LTable* w) {
 	LTable_StopDragging(w);
 	LTable_Reposition(w);
-	w->Sorter = LTable_DefaultSort;
-	LTable_Filter(w, &String_Empty);
+
+	w->Sorter               = LTable_DefaultSort;
+	w->SelectedHash->length = 0;
+	w->Filter->length       = 0;
+	LTable_CalcSortOrder(w);
+	LTable_ApplyFilter(w);
 }
 
-void LTable_Filter(struct LTable* w, const String* filter) {
+void LTable_ApplyFilter(struct LTable* w) {
 	int i, j, count;
 
 	count = FetchServersTask.NumServers;
 	for (i = 0, j = 0; i < count; i++) {
-		if (String_CaselessContains(&FetchServersTask.Servers[i].Name, filter)) {
+		if (String_CaselessContains(&FetchServersTask.Servers[i].Name, w->Filter)) {
 			FetchServersTask.Servers[j++]._order = i;
 		}
 	}
@@ -1127,4 +1185,8 @@ void LTable_Filter(struct LTable* w, const String* filter) {
 	}
 	/* TODO: preserve selected server */
 	/* TODO: Resort entries again */
+}
+
+void LTable_CalcSortOrder(struct LTable* table) {
+	/* TODO: Implement */
 }

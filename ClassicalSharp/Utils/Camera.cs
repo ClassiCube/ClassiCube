@@ -92,7 +92,7 @@ namespace ClassicalSharp {
 			float sensitivity = sensiFactor * game.MouseSensitivity;
 
 			if (game.SmoothCamera) {
-				speedX += delta.X * adjust;
+				speedX += delta.X * adjust; game.LocalPlayer.ModelScale.XYZ
 				speedX *= slippery;
 				speedY += delta.Y * adjust;
 				speedY *= slippery;

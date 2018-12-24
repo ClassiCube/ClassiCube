@@ -1152,7 +1152,7 @@ static void ServersScreen_HashFilter(String* str) {
 
 static void ServersScreen_SearchChanged(struct LInput* w) {
 	struct ServersScreen* s = &ServersScreen_Instance;
-	LTable_Filter(&s->Table, &w->Text);
+	LTable_ApplyFilter(&s->Table);
 	LWidget_Draw(&s->Table);
 }
 
@@ -1175,6 +1175,9 @@ static void ServersScreen_InitWidgets(struct LScreen* s_) {
 	s->IptHash.ClipboardFilter = ServersScreen_HashFilter;
 
 	LTable_Init(&s->Table, &Launcher_TextFont, &s->RowFont);
+	s->Table.Filter       = &s->IptSearch.Text;
+	s->Table.SelectedHash = &s->IptHash.Text;
+
 	s->Widgets[s->NumWidgets++] = (struct LWidget*)&s->Table;
 }
 
