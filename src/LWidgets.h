@@ -153,6 +153,8 @@ struct LTable {
 	int VisibleRows;
 	/* Total number of rows in the table (after filter is applied). */
 	int RowsCount;
+	/* Index of top row currently visible. */
+	int TopRow;
 	/* Comparison function used to sort rows. */
 	LTableSorter Sorter;
 
@@ -176,9 +178,8 @@ void LTable_Reset(struct LTable* table);
 void LTable_Reposition(struct LTable* table);
 /* Filters rows to only show those containing 'w->Filter' in the name. */
 void LTable_ApplyFilter(struct LTable* table);
-/* Calculates the sorted order of rows in the table. */
-/* NOTE: You must use ApplyFilter to actually update visible row order. */
-void LTable_CalcSortOrder(struct LTable* table);
-/* Attempts to select the row whose hash equals the given hash. Scrolls table if needed. */
-void LTable_SetSelected(struct LTable* table, const String* hash);
+/* Sorts the rows in the table by current Sorter function of table */
+void LTable_Sort(struct LTable* table);
+/* If selected row is not visible, adjusts top row so it does show. */
+void LTable_ShowSelected(struct LTable* table);
 #endif

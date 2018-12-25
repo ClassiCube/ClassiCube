@@ -667,13 +667,46 @@ static struct LTableColumn tableColumns[5] = {
 	{ "Software", 140, SoftwareColumn_Draw, SoftwareColumn_Sort, false }
 };
 
+#define LTable_Get(row) &FetchServersTask.Servers[FetchServersTask.Servers[row]._order]
+
+/* Works out top and height of the scrollbar */
+static void LTable_GetScrollbarCoords(struct LTable* w, int* y, int* height) {
+	float scale;
+	if (!w->RowsCount) { *y = 0; *height = 0; return; }
+
+	scale   = w->Height / (float)w->RowsCount;
+	*y      = Math_Ceil(w->TopRow * scale);
+	*height = Math_Ceil(w->VisibleRows * scale);
+	*height = min(*y + *height, w->Height) - *y;
+}
+
+/* Ensures top/first visible row index lies within table */
+static void LTable_ClampTopRow(struct LTable* w) { 
+	if (w->TopRow > w->RowsCount - w->VisibleRows) {
+		w->TopRow = w->RowsCount - w->VisibleRows;
+	}
+	if (w->TopRow < 0) w->TopRow = 0;
+}
+
+/* Returns index of selected row in currently visible rows */
+static int LTable_GetSelectedIndex(struct LTable* w) {
+	struct ServerInfo* entry;
+	int row;
+
+	for (row = 0; row < w->RowsCount; row++) {
+		entry = LTable_Get(row);
+		if (String_CaselessEquals(w->SelectedHash, &entry->Hash)) return row;
+	}
+	return -1;
+}
+
 #define GRIDLINE_SIZE   2
 #define SCROLLBAR_WIDTH 10
 #define HDR_YPADDING 3
 #define ROW_YPADDING 1
 #define CELL_XPADDING 5
-#define LTable_Get(row) &FetchServersTask.Servers[FetchServersTask.Servers[row]._order]
 
+/* Draws background behind column headers */
 static void LTable_DrawHeaderBackground(struct LTable* w) {
 	BitmapCol gridCol = BITMAPCOL_CONST(20, 20, 10, 255);
 	if (Launcher_ClassicBackground) return;
@@ -682,6 +715,7 @@ static void LTable_DrawHeaderBackground(struct LTable* w) {
 					w->X, w->Y, w->Width, w->HdrHeight);
 }
 
+/* Works out the background colour of the given row */
 static BitmapCol LTable_RowCol(struct LTable* w, struct ServerInfo* row) {
 	BitmapCol emptyCol = BITMAPCOL_CONST(0, 0, 0, 0);
 	BitmapCol gridCol  = BITMAPCOL_CONST(20, 20, 10, 255);
@@ -701,13 +735,16 @@ static BitmapCol LTable_RowCol(struct LTable* w, struct ServerInfo* row) {
 	return Launcher_ClassicBackground ? emptyCol : gridCol;
 }
 
+/* Draws background behind each row in the table */
 static void LTable_DrawRowsBackground(struct LTable* w) {
 	struct ServerInfo* entry;
 	BitmapCol col;
-	int y, row, height;
+	int y, height, row, end;
 
-	y = w->RowsBegY;
-	for (row = 0; row < w->VisibleRows; row++, y += w->RowHeight) {
+	y   = w->RowsBegY;
+	end = w->TopRow + w->VisibleRows;
+
+	for (row = w->TopRow; row < end; row++, y += w->RowHeight) {
 		entry = row < w->RowsCount ? LTable_Get(row) : NULL;
 		col   = LTable_RowCol(w, entry);
 
@@ -720,6 +757,7 @@ static void LTable_DrawRowsBackground(struct LTable* w) {
 	}
 }
 
+/* Draws a gridline below column headers and gridlines after each column */
 static void LTable_DrawGridlines(struct LTable* w) {
 	int i, x;
 	if (Launcher_ClassicBackground) return;
@@ -738,12 +776,14 @@ static void LTable_DrawGridlines(struct LTable* w) {
 	}
 }
 
+/* Draws the entire background of the table */
 static void LTable_DrawBackground(struct LTable* w) {
 	LTable_DrawHeaderBackground(w);
 	LTable_DrawRowsBackground(w);
 	LTable_DrawGridlines(w);
 }
 
+/* Draws title of each column at top of the table */
 static void LTable_DrawHeaders(struct LTable* w) {
 	struct DrawTextArgs args;
 	int i, x, y;
@@ -761,18 +801,20 @@ static void LTable_DrawHeaders(struct LTable* w) {
 	}
 }
 
+/* Draws contents of the currently visible rows in the table */
 static void LTable_DrawRows(struct LTable* w) {
 	BitmapCol gridCol = BITMAPCOL_CONST(20, 20, 10, 255);
 	String str; char strBuffer[STRING_SIZE];
 	struct ServerInfo* entry;
 	struct DrawTextArgs args;
-	int i, x, y, row;
+	int i, x, y, row, end;
 
 	String_InitArray(str, strBuffer);
 	DrawTextArgs_Make(&args, &str, &w->RowFont, true);
-	y = w->RowsBegY;
+	y   = w->RowsBegY;
+	end = w->TopRow + w->VisibleRows;
 
-	for (row = 0; row < w->VisibleRows; row++, y += w->RowHeight) {
+	for (row = w->TopRow; row < end; row++, y += w->RowHeight) {
 		x = w->X;
 
 		if (row >= w->RowsCount)            break;
@@ -793,77 +835,9 @@ static void LTable_DrawRows(struct LTable* w) {
 		}
 	}
 }
-/*
-int DrawColumn(IDrawer2D drawer, string header, int columnI, int x, ColumnFilter filter) {
-	int y = table.Y + 3;
-	int maxWidth = table.ColumnWidths[columnI];
-	bool separator = columnI > 0;
 
-	DrawTextArgs args = new DrawTextArgs(header, titleFont, true);
-	TableEntry headerEntry = default(TableEntry);
-	DrawColumnEntry(drawer, ref args, maxWidth, x, ref y, ref headerEntry);
-	maxIndex = table.Count;
-
-	y += 5;
-	for (int i = table.CurrentIndex; i < table.Count; i++) {
-		TableEntry entry = table.Get(i);
-		args = new DrawTextArgs(filter(entry), font, true);
-
-		if ((i == table.SelectedIndex || entry.Featured) && !separator) {
-			int startY = y - 3;
-			int height = Math.Min(startY + (entryHeight + 4), table.Y + table.Height) - startY;
-			drawer.Clear(GetGridCol(entry.Featured, i == table.SelectedIndex), table.X, startY, table.Width, height);
-		}
-		if (!DrawColumnEntry(drawer, ref args, maxWidth, x, ref y, ref entry)) {
-			maxIndex = i; break;
-		}
-	}
-	if (separator && !game.ClassicBackground) {
-		drawer.Clear(LauncherSkin.BackgroundCol, x - 7, table.Y, 2, table.Height);
-	}
-	return maxWidth + 5;
-}
-
-PackedCol GetGridCol(bool featured, bool selected) {
-	if (featured) {
-		if (selected) return new PackedCol(50, 53, 0);
-		return new PackedCol(101, 107, 0);
-	}
-	PackedCol foreGridCol = new PackedCol(40, 40, 40);
-	return foreGridCol;
-}
-
-bool DrawColumnEntry(IDrawer2D drawer, ref DrawTextArgs args, int maxWidth, int x, ref int y, ref TableEntry entry) {
-	Size size = drawer.MeasureText(ref args);
-	bool empty = args.Text == "";
-	if (empty)
-		size.Height = entryHeight;
-	if (y + size.Height > table.Y + table.Height) {
-		y = table.Y + table.Height + 2; return false;
-	}
-
-	entry.Y = y; entry.Height = size.Height;
-	if (!empty) {
-		size.Width = Math.Min(maxWidth, size.Width);
-		args.SkipPartsCheck = false;
-		Drawer2DExt.DrawClippedText(ref args, drawer, x, y, maxWidth);
-	}
-	y += size.Height + 2;
-	return true;
-}
-
-
-
-const int flagPadding = 15;
-void DrawColumns(IDrawer2D drawer) {
-	int x = table.X + flagPadding + 5;
-	x += DrawColumn(drawer, "Name", 0, x, filterName) + 5;
-	x += DrawColumn(drawer, "Players", 1, x, filterPlayers) + 5;
-	x += DrawColumn(drawer, "Uptime", 2, x, filterUptime) + 5;
-	x += DrawColumn(drawer, "Software", 3, x, filterSoftware) + 5;
-}
-
-void DrawScrollbar(struct LTable* w) {
+/* Draws scrollbar on the right edge of the table */
+static void LTable_DrawScrollbar(struct LTable* w) {
 	BitmapCol classicBack   = BITMAPCOL_CONST( 80,  80,  80, 255);
 	BitmapCol classicScroll = BITMAPCOL_CONST(160, 160, 160, 255);
 	BitmapCol backCol   = Launcher_ClassicBackground ? classicBack   : Launcher_ButtonBorderCol;
@@ -879,37 +853,7 @@ void DrawScrollbar(struct LTable* w) {
 					x, w->Y + y, SCROLLBAR_WIDTH, height);
 }
 
-void Draw(IDrawer2D drawer) {
-	DrawGrid(drawer);
-	DrawColumns(drawer);
-	DrawScrollbar(drawer);
-	DrawFlags();
-}
-
-static Bitmap* GetFlag(const String* flag) {
-	int i = 0;
-	for (i = 0; i < FetchFlagsTask.Count; i++) {
-		if (!String_CaselessEquals(flag, &FetchFlagsTask.Names[i])) continue;
-
-		return &FetchFlagsTask.Bitmaps[i];
-	}
-	return NULL;
-}
-
-void DrawFlags() {
-	for (int i = table.CurrentIndex; i < maxIndex; i++) {
-		TableEntry entry = table.Get(i);
-		FastBitmap flag = GetFlag(entry.Flag);
-		if (flag == null) continue;
-
-		int x = table.X, y = entry.Y;
-		Rectangle rect = new Rectangle(x + 2, y + 3, 16, 11);
-		BitmapDrawer.Draw(flag, dst, rect);
-	}
-}
-
-void TableNeedsRedrawHandler();
-
+/*void TableNeedsRedrawHandler();
 public TableNeedsRedrawHandler NeedRedraw;
 public Action<string> SelectedChanged;
 public int SelectedIndex = -1;
@@ -940,15 +884,6 @@ void FilterEntries(string filter) {
 	for (int i = Count; i < entries.Length; i++) {
 		order[i] = -100000;
 	}
-}
-
-static void LTable_GetScrollbarCoords(struct LTable* w, out int y, out int height) {
-	if (Count == 0) { y = 0; height = 0; return; }
-
-	float scale = Height / (float)Count;
-	y = (int)Math.Ceiling(CurrentIndex * scale);
-	height = (int)Math.Ceiling((view.maxIndex - CurrentIndex) * scale);
-	height = Math.Min(y + height, Height) - y;
 }
 
 void SetSelected(int index) {
@@ -1112,12 +1047,13 @@ void ScrollbarClick(int mouseY) {
 }
 */
 
+/* Default sort order. (most active server, then by highest uptime) */
 static int LTable_DefaultSort(struct ServerInfo* a, struct ServerInfo* b) {
-	/* highest players, then highest uptime*/
 	if (a->Players != b->Players) return b->Players - a->Players;
 	return b->Uptime - a->Uptime;
 }
 
+/* Stops an in-progress dragging of resizing column. */
 static void LTable_StopDragging(struct LTable* table) {
 	table->DraggingColumn    = -1;
 	table->DraggingScrollbar = false;
@@ -1132,7 +1068,9 @@ void LTable_Reposition(struct LTable* w) {
 	w->RowsBegY = w->Y + w->HdrHeight + GRIDLINE_SIZE;
 	w->RowsEndY = w->Y + w->Height;
 	rowsHeight  = w->Height - (w->RowsBegY - w->Y);
+
 	w->VisibleRows = Math_CeilDiv(rowsHeight, w->RowHeight);
+	LTable_ClampTopRow(w);
 }
 
 static void LTable_Draw(void* widget) {
@@ -1140,6 +1078,7 @@ static void LTable_Draw(void* widget) {
 	LTable_DrawBackground(w);
 	LTable_DrawHeaders(w);
 	LTable_DrawRows(w);
+	LTable_DrawScrollbar(w);
 	Launcher_MarkAllDirty();
 }
 
@@ -1162,10 +1101,11 @@ void LTable_Reset(struct LTable* w) {
 	LTable_StopDragging(w);
 	LTable_Reposition(w);
 
+	w->TopRow = 0;
 	w->Sorter               = LTable_DefaultSort;
 	w->SelectedHash->length = 0;
 	w->Filter->length       = 0;
-	LTable_CalcSortOrder(w);
+	LTable_Sort(w);
 	LTable_ApplyFilter(w);
 }
 
@@ -1185,8 +1125,44 @@ void LTable_ApplyFilter(struct LTable* w) {
 	}
 	/* TODO: preserve selected server */
 	/* TODO: Resort entries again */
+	LTable_ClampTopRow(w); /* TODO: may need to move this elsewhere */
 }
 
-void LTable_CalcSortOrder(struct LTable* table) {
-	/* TODO: Implement */
+static LTableSorter curSorter;
+static void LTable_QuickSort(int left, int right) {
+	struct ServerInfo* keys = FetchServersTask.Servers; struct ServerInfo key;
+
+	while (left < right) {
+		int i = left, j = right;
+		struct ServerInfo* mid = &keys[(i + j) >> 1];
+
+		/* partition the list */
+		while (i <= j) {
+			while (curSorter(mid, &keys[i]) < 0) i++;
+			while (curSorter(mid, &keys[j]) > 0) j--;
+			QuickSort_Swap_Maybe();
+		}
+		/* recurse into the smaller subset */
+		QuickSort_Recurse(LTable_QuickSort)
+	}
+}
+
+void LTable_Sort(struct LTable* w) {
+	if (!FetchServersTask.NumServers) return;
+	curSorter = w->Sorter;
+	//LTable_QuickSort(0, FetchServersTask.NumServers - 1);
+
+	LTable_ApplyFilter(w);
+}
+
+void LTable_ShowSelected(struct LTable* w) {
+	int i = LTable_GetSelectedIndex(w);
+	if (i == -1) return;
+
+	if (i >= w->TopRow + w->VisibleRows) {
+		/* leave one row below selected NOPE TODO FIX... */
+		w->TopRow = i - w->VisibleRows;
+	}
+	if (i < w->TopRow) w->TopRow = i;
+	LTable_ClampTopRow(w);
 }

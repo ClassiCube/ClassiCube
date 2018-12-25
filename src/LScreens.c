@@ -1156,6 +1156,12 @@ static void ServersScreen_SearchChanged(struct LInput* w) {
 	LWidget_Draw(&s->Table);
 }
 
+static void ServersScreen_HashChanged(struct LInput* w) {
+	struct ServersScreen* s = &ServersScreen_Instance;
+	LTable_ShowSelected(&s->Table);
+	LWidget_Draw(&s->Table);
+}
+
 static void ServersScreen_InitWidgets(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	s->Widgets = s->_widgets;
@@ -1172,6 +1178,7 @@ static void ServersScreen_InitWidgets(struct LScreen* s_) {
 	s->BtnRefresh.OnClick = ServersScreen_Refresh;
 
 	s->IptSearch.TextChanged   = ServersScreen_SearchChanged;
+	s->IptHash.TextChanged     = ServersScreen_HashChanged;
 	s->IptHash.ClipboardFilter = ServersScreen_HashFilter;
 
 	LTable_Init(&s->Table, &Launcher_TextFont, &s->RowFont);
@@ -1224,6 +1231,7 @@ struct LScreen* ServersScreen_MakeInstance(void) {
 	s->Init       = ServersScreen_Init;
 	s->Free       = ServersScreen_Free;
 	s->Reposition = ServersScreen_Reposition;
+	s->OnEnterWidget = (struct LWidget*)&s->BtnConnect;
 	return (struct LScreen*)s;
 }
 
