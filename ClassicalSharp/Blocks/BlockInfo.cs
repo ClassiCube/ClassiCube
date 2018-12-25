@@ -105,6 +105,7 @@ namespace ClassicalSharp {
 			DefinedCustomBlocks = new uint[count >> 5];
 			Count = count;
 			SetMaxUsed(count - 1);
+			SetDefaultPerms();
 		}
 		
 		public static void SetMaxUsed(int max) {
