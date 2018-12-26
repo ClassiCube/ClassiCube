@@ -72,9 +72,9 @@ void Key_SetPressed(Key key, bool pressed) {
 	Key_Pressed[key] = pressed;
 
 	if (pressed) {
-		Event_RaiseInt(&KeyEvents_Down, key);
+		Event_RaiseInt(&KeyEvents.Down, key);
 	} else {
-		Event_RaiseInt(&KeyEvents_Up, key);
+		Event_RaiseInt(&KeyEvents.Up, key);
 	}
 }
 
@@ -98,22 +98,22 @@ void Mouse_SetPressed(MouseButton btn, bool pressed) {
 	Mouse_Pressed[btn] = pressed;
 
 	if (pressed) {
-		Event_RaiseInt(&MouseEvents_Down, btn);
+		Event_RaiseInt(&MouseEvents.Down, btn);
 	} else {
-		Event_RaiseInt(&MouseEvents_Up, btn);
+		Event_RaiseInt(&MouseEvents.Up, btn);
 	}
 }
 
 void Mouse_SetWheel(float wheel) {
 	float delta = wheel - Mouse_Wheel;
 	Mouse_Wheel = wheel;
-	Event_RaiseFloat(&MouseEvents_Wheel, delta);
+	Event_RaiseFloat(&MouseEvents.Wheel, delta);
 }
 
 void Mouse_SetPosition(int x, int y) {
 	int deltaX = x - Mouse_X, deltaY = y - Mouse_Y;
 	Mouse_X = x; Mouse_Y = y;
-	Event_RaiseMouseMove(&MouseEvents_Moved, deltaX, deltaY);
+	Event_RaiseMouseMove(&MouseEvents.Moved, deltaX, deltaY);
 }
 
 

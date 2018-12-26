@@ -312,7 +312,7 @@ static void Menu_Remove(void* screen, int i) {
 }
 
 static void Menu_HandleFontChange(struct Screen* s) {
-	Event_RaiseVoid(&ChatEvents_FontChanged);
+	Event_RaiseVoid(&ChatEvents.FontChanged);
 	Elem_Recreate(s);
 	Gui_RefreshHud();
 	Elem_HandlesMouseMove(s, Mouse_X, Mouse_Y);
@@ -659,13 +659,13 @@ static void PauseScreen_ContextRecreated(void* screen) {
 static void PauseScreen_Init(void* screen) {
 	struct PauseScreen* s = screen;
 	MenuScreen_Init(s);
-	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
+	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
 }
 
 static void PauseScreen_Free(void* screen) {
 	struct PauseScreen* s = screen;
 	MenuScreen_Free(s);
-	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
+	Event_UnregisterVoid(&UserEvents.HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
 }
 
 static struct ScreenVTABLE PauseScreen_VTABLE = {
@@ -738,13 +738,13 @@ static void OptionsGroupScreen_ContextRecreated(void* screen) {
 static void OptionsGroupScreen_Init(void* screen) {
 	struct OptionsGroupScreen* s = screen;
 	MenuScreen_Init(s);
-	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
+	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
 }
 
 static void OptionsGroupScreen_Free(void* screen) {
 	struct OptionsGroupScreen* s = screen;
 	MenuScreen_Free(s);
-	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
+	Event_UnregisterVoid(&UserEvents.HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
 }
 
 static bool OptionsGroupScreen_MouseMove(void* screen, int x, int y) {
@@ -2668,13 +2668,13 @@ static void HacksSettingsScreen_CheckHacksAllowed(void* screen) {
 static void HacksSettingsScreen_ContextLost(void* screen) {
 	struct MenuOptionsScreen* s = screen;
 	MenuOptionsScreen_ContextLost(s);
-	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, s, HacksSettingsScreen_CheckHacksAllowed);
+	Event_UnregisterVoid(&UserEvents.HackPermissionsChanged, s, HacksSettingsScreen_CheckHacksAllowed);
 }
 
 static void HacksSettingsScreen_ContextRecreated(void* screen) {
 	struct MenuOptionsScreen* s = screen;
 	struct Widget** widgets = s->Widgets;
-	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, s, HacksSettingsScreen_CheckHacksAllowed);
+	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, s, HacksSettingsScreen_CheckHacksAllowed);
 
 	MenuOptionsScreen_Make(s, 0, -1, -150, "Hacks enabled",    MenuOptionsScreen_Bool,
 		HacksSettingsScreen_GetHacks,    HacksSettingsScreen_SetHacks);

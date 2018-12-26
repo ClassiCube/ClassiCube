@@ -2146,9 +2146,9 @@ static void PlayerListWidget_Init(void* widget) {
 	TextWidget_Create(&w->Title, &title, &w->Font);
 	Widget_SetLocation(&w->Title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
 
-	Event_RegisterInt(&TabListEvents_Added,   w, PlayerListWidget_TabEntryAdded);
-	Event_RegisterInt(&TabListEvents_Changed, w, PlayerListWidget_TabEntryChanged);
-	Event_RegisterInt(&TabListEvents_Removed, w, PlayerListWidget_TabEntryRemoved);
+	Event_RegisterInt(&TabListEvents.Added,   w, PlayerListWidget_TabEntryAdded);
+	Event_RegisterInt(&TabListEvents.Changed, w, PlayerListWidget_TabEntryChanged);
+	Event_RegisterInt(&TabListEvents.Removed, w, PlayerListWidget_TabEntryRemoved);
 }
 
 static void PlayerListWidget_Render(void* widget, double delta) {
@@ -2188,9 +2188,9 @@ static void PlayerListWidget_Free(void* widget) {
 	}
 
 	Elem_TryFree(&w->Title);
-	Event_UnregisterInt(&TabListEvents_Added,   w, PlayerListWidget_TabEntryAdded);
-	Event_UnregisterInt(&TabListEvents_Changed, w, PlayerListWidget_TabEntryChanged);
-	Event_UnregisterInt(&TabListEvents_Removed, w, PlayerListWidget_TabEntryRemoved);
+	Event_UnregisterInt(&TabListEvents.Added,   w, PlayerListWidget_TabEntryAdded);
+	Event_UnregisterInt(&TabListEvents.Changed, w, PlayerListWidget_TabEntryChanged);
+	Event_UnregisterInt(&TabListEvents.Removed, w, PlayerListWidget_TabEntryRemoved);
 }
 
 static struct WidgetVTABLE PlayerListWidget_VTABLE = {

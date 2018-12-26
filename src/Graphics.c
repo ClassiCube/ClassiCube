@@ -61,7 +61,7 @@ void Gfx_LoseContext(const char* reason) {
 	Gfx_LostContext = true;
 	Platform_Log1("Lost graphics context: %c", reason);
 
-	Event_RaiseVoid(&GfxEvents_ContextLost);
+	Event_RaiseVoid(&GfxEvents.ContextLost);
 	Gfx_FreeDefaultResources();
 }
 
@@ -69,7 +69,7 @@ void Gfx_RecreateContext(void) {
 	Gfx_LostContext = false;
 	Platform_LogConst("Recreating graphics context");
 
-	Event_RaiseVoid(&GfxEvents_ContextRecreated);
+	Event_RaiseVoid(&GfxEvents.ContextRecreated);
 	Gfx_InitDefaultResources();
 }
 
@@ -733,7 +733,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 		if (!res) break;
 
 		if (res != D3DERR_OUTOFVIDEOMEMORY) Logger_Abort2(res, "D3D9_CreateVb");
-		Event_RaiseVoid(&GfxEvents_LowVRAMDetected);
+		Event_RaiseVoid(&GfxEvents.LowVRAMDetected);
 	}
 
 	D3D9_SetVbData(vbuffer, vertices, size, "D3D9_CreateVb - Lock", "D3D9_CreateVb - Unlock", 0);

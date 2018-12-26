@@ -683,7 +683,7 @@ static void Drawer2D_TextureChanged(void* obj, struct Stream* src, const String*
 		Mem_Free(bmp.Scan0);
 	} else {
 		Drawer2D_SetFontBitmap(&bmp);
-		Event_RaiseVoid(&ChatEvents_FontChanged);
+		Event_RaiseVoid(&ChatEvents.FontChanged);
 	}
 }
 
@@ -721,12 +721,12 @@ static void Drawer2D_Init(void) {
 	}
 
 	Drawer2D_CheckFont();
-	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Drawer2D_TextureChanged);
+	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, Drawer2D_TextureChanged);
 }
 
 static void Drawer2D_Free(void) { 
 	Drawer2D_FreeFontBitmap();
-	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Drawer2D_TextureChanged);
+	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Drawer2D_TextureChanged);
 }
 
 struct IGameComponent Drawer2D_Component = {

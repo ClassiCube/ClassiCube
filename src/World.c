@@ -131,10 +131,10 @@ bool World_IsValidPos_3I(Vector3I p) {
 *-------------------------------------------------------Environment-------------------------------------------------------*
 *#########################################################################################################################*/
 #define Env_Set(src, dst, var) \
-if (src != dst) { dst = src; Event_RaiseInt(&WorldEvents_EnvVarChanged, var); }
+if (src != dst) { dst = src; Event_RaiseInt(&WorldEvents.EnvVarChanged, var); }
 
 #define Env_SetCol(src, dst, var)\
-if (!PackedCol_Equals(src, dst)) { dst = src; Event_RaiseInt(&WorldEvents_EnvVarChanged, var); }
+if (!PackedCol_Equals(src, dst)) { dst = src; Event_RaiseInt(&WorldEvents.EnvVarChanged, var); }
 
 const char* Weather_Names[3] = { "Sunny", "Rainy", "Snowy" };
 

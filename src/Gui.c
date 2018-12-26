@@ -30,16 +30,16 @@ void Gui_DefaultRecreate(void* elem) {
 
 void Screen_CommonInit(void* screen) { 
 	struct Screen* s = screen;
-	Event_RegisterVoid(&GfxEvents_ContextLost,      s, s->VTABLE->ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, s, s->VTABLE->ContextRecreated);
+	Event_RegisterVoid(&GfxEvents.ContextLost,      s, s->VTABLE->ContextLost);
+	Event_RegisterVoid(&GfxEvents.ContextRecreated, s, s->VTABLE->ContextRecreated);
 
 	if (Gfx_LostContext) return;
 	s->VTABLE->ContextRecreated(s);
 }
 
 void Screen_CommonFree(void* screen) { struct Screen* s = screen;
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      s, s->VTABLE->ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, s, s->VTABLE->ContextRecreated);
+	Event_UnregisterVoid(&GfxEvents.ContextLost,      s, s->VTABLE->ContextLost);
+	Event_UnregisterVoid(&GfxEvents.ContextRecreated, s, s->VTABLE->ContextRecreated);
 	s->VTABLE->ContextLost(s);
 }
 
@@ -121,8 +121,8 @@ static void Gui_FileChanged(void* obj, struct Stream* stream, const String* name
 }
 
 static void Gui_Init(void) {
-	Event_RegisterVoid(&ChatEvents_FontChanged,     NULL, Gui_FontChanged);
-	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
+	Event_RegisterVoid(&ChatEvents.FontChanged,     NULL, Gui_FontChanged);
+	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, Gui_FileChanged);
 	Gui_LoadOptions();
 
 	Gui_Status = StatusScreen_MakeInstance();
@@ -140,8 +140,8 @@ static void Gui_Reset(void) {
 }
 
 static void Gui_Free(void) {
-	Event_UnregisterVoid(&ChatEvents_FontChanged,     NULL, Gui_FontChanged);
-	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
+	Event_UnregisterVoid(&ChatEvents.FontChanged,     NULL, Gui_FontChanged);
+	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Gui_FileChanged);
 	Gui_CloseActive();
 	Elem_TryFree(Gui_Status);
 	Elem_TryFree(Gui_HUD);

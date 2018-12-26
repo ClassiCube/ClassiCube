@@ -471,20 +471,20 @@ static void Particles_Init(void) {
 	Random_InitFromCurrentTime(&rnd);
 	Particles_ContextRecreated(NULL);	
 
-	Event_RegisterBlock(&UserEvents_BlockChanged,   NULL, Particles_BreakBlockEffect_Handler);
-	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Particles_FileChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, Particles_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, Particles_ContextRecreated);
+	Event_RegisterBlock(&UserEvents.BlockChanged,   NULL, Particles_BreakBlockEffect_Handler);
+	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, Particles_FileChanged);
+	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, Particles_ContextLost);
+	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, Particles_ContextRecreated);
 }
 
 static void Particles_Free(void) {
 	Gfx_DeleteTexture(&Particles_TexId);
 	Particles_ContextLost(NULL);
 
-	Event_UnregisterBlock(&UserEvents_BlockChanged,   NULL, Particles_BreakBlockEffect_Handler);
-	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Particles_FileChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, Particles_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, Particles_ContextRecreated);
+	Event_UnregisterBlock(&UserEvents.BlockChanged,   NULL, Particles_BreakBlockEffect_Handler);
+	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Particles_FileChanged);
+	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, Particles_ContextLost);
+	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, Particles_ContextRecreated);
 }
 
 static void Particles_Reset(void) { rain_count = 0; terrain_count = 0; }

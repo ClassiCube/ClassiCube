@@ -546,14 +546,14 @@ static void AudioManager_Init(void) {
 	Audio_SetMusic(volume);
 	volume = AudioManager_GetVolume(OPT_SOUND_VOLUME, OPT_USE_SOUND);
 	Audio_SetSounds(volume);
-	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, Audio_PlayBlockSound);
+	Event_RegisterBlock(&UserEvents.BlockChanged, NULL, Audio_PlayBlockSound);
 }
 
 static void AudioManager_Free(void) {
 	Music_Free();
 	Sounds_Free();
 	Waitable_Free(music_waitable);
-	Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, Audio_PlayBlockSound);
+	Event_UnregisterBlock(&UserEvents.BlockChanged, NULL, Audio_PlayBlockSound);
 }
 
 struct IGameComponent Audio_Component = {

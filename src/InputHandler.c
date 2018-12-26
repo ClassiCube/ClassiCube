@@ -164,7 +164,7 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 			/* Don't assign SelectedIndex directly, because we don't want held block
 			switching positions if they already have air in their inventory hotbar. */
 			Inventory_Set(Inventory_SelectedIndex, BLOCK_AIR);
-			Event_RaiseVoid(&UserEvents_HeldBlockChanged);
+			Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 		}
 	} else if (key == KeyBind_Get(KEYBIND_IDOVERLAY)) {
 		if (Gui_OverlaysCount) return true;
@@ -348,7 +348,7 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		if (Block_Draw[old] == DRAW_GAS || !Block_CanDelete[old]) return;
 
 		Game_ChangeBlock(p.X, p.Y, p.Z, BLOCK_AIR);
-		Event_RaiseBlock(&UserEvents_BlockChanged, p, old, BLOCK_AIR);
+		Event_RaiseBlock(&UserEvents.BlockChanged, p, old, BLOCK_AIR);
 	} else if (right) {
 		p = Game_SelectedPos.TranslatedPos;
 		if (!Game_SelectedPos.Valid || !World_IsValidPos_3I(p)) return;
@@ -363,7 +363,7 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		if (!InputHandler_CheckIsFree(block)) return;
 
 		Game_ChangeBlock(p.X, p.Y, p.Z, block);
-		Event_RaiseBlock(&UserEvents_BlockChanged, p, old, block);
+		Event_RaiseBlock(&UserEvents.BlockChanged, p, old, block);
 	} else if (middle) {
 		p = Game_SelectedPos.BlockPos;
 		if (!World_IsValidPos_3I(p)) return;
@@ -500,13 +500,13 @@ static void InputHandler_KeyPress(void* obj, int keyChar) {
 }
 
 void InputHandler_Init(void) {
-	Event_RegisterFloat(&MouseEvents_Wheel,     NULL, InputHandler_MouseWheel);
-	Event_RegisterMouseMove(&MouseEvents_Moved, NULL, InputHandler_MouseMove);
-	Event_RegisterInt(&MouseEvents_Down,        NULL, InputHandler_MouseDown);
-	Event_RegisterInt(&MouseEvents_Up,          NULL, InputHandler_MouseUp);
-	Event_RegisterInt(&KeyEvents_Down,          NULL, InputHandler_KeyDown);
-	Event_RegisterInt(&KeyEvents_Up,            NULL, InputHandler_KeyUp);
-	Event_RegisterInt(&KeyEvents_Press,         NULL, InputHandler_KeyPress);
+	Event_RegisterFloat(&MouseEvents.Wheel,     NULL, InputHandler_MouseWheel);
+	Event_RegisterMouseMove(&MouseEvents.Moved, NULL, InputHandler_MouseMove);
+	Event_RegisterInt(&MouseEvents.Down,        NULL, InputHandler_MouseDown);
+	Event_RegisterInt(&MouseEvents.Up,          NULL, InputHandler_MouseUp);
+	Event_RegisterInt(&KeyEvents.Down,          NULL, InputHandler_KeyDown);
+	Event_RegisterInt(&KeyEvents.Up,            NULL, InputHandler_KeyUp);
+	Event_RegisterInt(&KeyEvents.Press,         NULL, InputHandler_KeyPress);
 
 	KeyBind_Init();
 	Hotkeys_Init();

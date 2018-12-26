@@ -54,7 +54,7 @@ extern GfxResourceID Atlas1D_TexIds[ATLAS1D_MAX_ATLASES];
 #define Atlas1D_Index(texLoc) ((texLoc) >> Atlas1D_Shift) /* texLoc / Atlas1D_TilesPerAtlas */
 
 /* Loads the given atlas and converts it into an array of 1D atlases. */
-/* NOTE: Use Game_ChangeTerrainAtlas to change atlas, because that raises TextureEvents_AtlasChanged */
+/* NOTE: Use Game_ChangeTerrainAtlas to change atlas, because that raises TextureEvents.AtlasChanged */
 void Atlas_Update(Bitmap* bmp);
 /* Loads the given tile into a new separate texture. */
 GfxResourceID Atlas_LoadTile(TextureLoc texLoc);

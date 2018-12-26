@@ -182,12 +182,12 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		Window_Focused = LOWORD(wParam) != 0;
 
 		if (Window_Focused != wasFocused) {
-			Event_RaiseVoid(&WindowEvents_FocusChanged);
+			Event_RaiseVoid(&WindowEvents.FocusChanged);
 		}
 		break;
 
 	case WM_ERASEBKGND:
-		Event_RaiseVoid(&WindowEvents_Redraw);
+		Event_RaiseVoid(&WindowEvents.Redraw);
 		return 1;
 
 	case WM_WINDOWPOSCHANGED:
@@ -197,7 +197,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 		if (pos->x != Window_Bounds.X || pos->y != Window_Bounds.Y) {
 			Window_Bounds.X = pos->x; Window_Bounds.Y = pos->y;
-			Event_RaiseVoid(&WindowEvents_Moved);
+			Event_RaiseVoid(&WindowEvents.Moved);
 		}
 
 		if (pos->cx != Window_Bounds.Width || pos->cy != Window_Bounds.Height) {
@@ -209,7 +209,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 				SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
 			if (suppress_resize <= 0) {
-				Event_RaiseVoid(&WindowEvents_Resized);
+				Event_RaiseVoid(&WindowEvents.Resized);
 			}
 		}
 	} break;
@@ -236,14 +236,14 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 		if (new_state != win_state) {
 			win_state = new_state;
-			Event_RaiseVoid(&WindowEvents_StateChanged);
+			Event_RaiseVoid(&WindowEvents.StateChanged);
 		}
 	} break;
 
 
 	case WM_CHAR:
 		if (Convert_TryUnicodeToCP437((Codepoint)wParam, &keyChar)) {
-			Event_RaiseInt(&KeyEvents_Press, keyChar);
+			Event_RaiseInt(&KeyEvents.Press, keyChar);
 		}
 		break;
 
@@ -356,7 +356,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	} break;
 
 	case WM_CLOSE:
-		Event_RaiseVoid(&WindowEvents_Closing);
+		Event_RaiseVoid(&WindowEvents.Closing);
 		Window_Destroy();
 		break;
 
@@ -364,7 +364,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		Window_Exists = false;
 		UnregisterClass(CC_WIN_CLASSNAME, win_instance);
 		if (win_DC) ReleaseDC(win_handle, win_DC);
-		Event_RaiseVoid(&WindowEvents_Closed);
+		Event_RaiseVoid(&WindowEvents.Closed);
 		break;
 	}
 	return DefWindowProc(handle, message, wParam, lParam);
@@ -896,7 +896,7 @@ static void Window_RefreshBounds(XEvent* e) {
 
 	if (loc.X != Window_Bounds.X || loc.Y != Window_Bounds.Y) {
 		Window_Bounds.X = loc.X; Window_Bounds.Y = loc.Y;
-		Event_RaiseVoid(&WindowEvents_Moved);
+		Event_RaiseVoid(&WindowEvents.Moved);
 	}
 
 	/* Note: width and height denote the internal (client) size.
@@ -907,7 +907,7 @@ static void Window_RefreshBounds(XEvent* e) {
 	if (size.Width != Window_Bounds.Width || size.Height != Window_Bounds.Height) {		 
 		Window_ClientSize.Width  = e->xconfigure.width;  Window_Bounds.Width  = size.Width;
 		Window_ClientSize.Height = e->xconfigure.height; Window_Bounds.Height = size.Height;
-		Event_RaiseVoid(&WindowEvents_Resized);
+		Event_RaiseVoid(&WindowEvents.Resized);
 	}
 }
 
@@ -1194,18 +1194,18 @@ void Window_ProcessEvents(void) {
 			win_visible = e.type == MapNotify;
 
 			if (win_visible != wasVisible) {
-				Event_RaiseVoid(&WindowEvents_VisibilityChanged);
+				Event_RaiseVoid(&WindowEvents.VisibilityChanged);
 			}
 			break;
 
 		case ClientMessage:
 			if (!win_isExiting && e.xclient.data.l[0] == wm_destroy) {
 				Platform_LogConst("Exit message received.");
-				Event_RaiseVoid(&WindowEvents_Closing);
+				Event_RaiseVoid(&WindowEvents.Closing);
 
 				win_isExiting = true;
 				Window_Destroy();
-				Event_RaiseVoid(&WindowEvents_Closed);
+				Event_RaiseVoid(&WindowEvents.Closed);
 			} break;
 
 		case DestroyNotify:
@@ -1219,7 +1219,7 @@ void Window_ProcessEvents(void) {
 
 		case Expose:
 			if (e.xexpose.count == 0) {
-				Event_RaiseVoid(&WindowEvents_Redraw);
+				Event_RaiseVoid(&WindowEvents.Redraw);
 			}
 			break;
 
@@ -1233,7 +1233,7 @@ void Window_ProcessEvents(void) {
 			char raw; int i;
 			for (i = 0; i < status; i++) {
 				if (!Convert_TryUnicodeToCP437((uint8_t)data[i], &raw)) continue;
-				Event_RaiseInt(&KeyEvents_Press, raw);
+				Event_RaiseInt(&KeyEvents.Press, raw);
 			}
 		} break;
 
@@ -1273,7 +1273,7 @@ void Window_ProcessEvents(void) {
 			Window_Focused = e.type == FocusIn;
 
 			if (Window_Focused != wasFocused) {
-				Event_RaiseVoid(&WindowEvents_FocusChanged);
+				Event_RaiseVoid(&WindowEvents.FocusChanged);
 			}
 			/* TODO: Keep track of keyboard when focus is lost */
 			if (!Window_Focused) Key_Clear();
@@ -1288,7 +1288,7 @@ void Window_ProcessEvents(void) {
 
 		case PropertyNotify:
 			if (e.xproperty.atom == net_wm_state) {
-				Event_RaiseVoid(&WindowEvents_StateChanged);
+				Event_RaiseVoid(&WindowEvents.StateChanged);
 			}
 
 			/*if (e.xproperty.atom == net_frame_extents) {
@@ -1886,9 +1886,9 @@ static void Window_UpdateWindowState(void) {
 		break;
 	}
 
-	Event_RaiseVoid(&WindowEvents_StateChanged);
+	Event_RaiseVoid(&WindowEvents.StateChanged);
 	Window_UpdateSize();
-	Event_RaiseVoid(&WindowEvents_Resized);
+	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
 OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventRef inEvent, void* userData) {
@@ -1929,7 +1929,7 @@ OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventRef inEv
 			/* TODO: Should we be using kEventTextInputUnicodeForKeyEvent for this */
 			/* Look at documentation for kEventRawKeyRepeat */
 			if (!Convert_TryUnicodeToCP437((uint8_t)charCode, &raw)) return 0;
-			Event_RaiseInt(&KeyEvents_Press, raw);
+			Event_RaiseInt(&KeyEvents.Press, raw);
 			return 0;
 			
 		case kEventRawKeyUp:
@@ -1962,12 +1962,12 @@ OSStatus Window_ProcessWindowEvent(EventHandlerCallRef inCaller, EventRef inEven
 	
 	switch (GetEventKind(inEvent)) {
 		case kEventWindowClose:
-			Event_RaiseVoid(&WindowEvents_Closing);
+			Event_RaiseVoid(&WindowEvents.Closing);
 			return eventNotHandledErr;
 			
 		case kEventWindowClosed:
 			Window_Exists = false;
-			Event_RaiseVoid(&WindowEvents_Closed);
+			Event_RaiseVoid(&WindowEvents.Closed);
 			return 0;
 			
 		case kEventWindowBoundsChanged:
@@ -1976,18 +1976,18 @@ OSStatus Window_ProcessWindowEvent(EventHandlerCallRef inCaller, EventRef inEven
 			Window_UpdateSize();
 			
 			if (width != Window_ClientSize.Width || height != Window_ClientSize.Height) {
-				Event_RaiseVoid(&WindowEvents_Resized);
+				Event_RaiseVoid(&WindowEvents.Resized);
 			}
 			return eventNotHandledErr;
 			
 		case kEventWindowActivated:
 			Window_Focused = true;
-			Event_RaiseVoid(&WindowEvents_FocusChanged);
+			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			return eventNotHandledErr;
 			
 		case kEventWindowDeactivated:
 			Window_Focused = false;
-			Event_RaiseVoid(&WindowEvents_FocusChanged);
+			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			return eventNotHandledErr;
 	}
 	return eventNotHandledErr;
@@ -2297,7 +2297,7 @@ void Window_SetClientSize(int width, int height) {
 }
 
 void Window_Close(void) {
-	Event_RaiseVoid(&WindowEvents_Closed);
+	Event_RaiseVoid(&WindowEvents.Closed);
 	/* TODO: Does this raise the event twice? */
 	Window_Destroy();
 }

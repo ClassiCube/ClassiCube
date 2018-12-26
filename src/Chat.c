@@ -177,7 +177,7 @@ void Chat_AddRaw(const char* raw) {
 void Chat_Add(const String* text) { Chat_AddOf(text, MSG_TYPE_NORMAL); }
 
 void Chat_AddOf(const String* text, MsgType type) {
-	Event_RaiseChat(&ChatEvents_ChatReceived, text, type);
+	Event_RaiseChat(&ChatEvents.ChatReceived, text, type);
 
 	if (type == MSG_TYPE_NORMAL) {
 		StringsBuffer_Add(&Chat_Log, text);
@@ -476,7 +476,7 @@ static void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID old, 
 		CuboidCommand_DoCuboid();
 
 		if (!cuboid_persist) {
-			Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
+			Event_UnregisterBlock(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
 			cuboid_hooked = false;
 			Chat_AddOf(&String_Empty, MSG_TYPE_CLIENTSTATUS_1);
 		} else {
@@ -488,7 +488,7 @@ static void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID old, 
 
 static void CuboidCommand_Execute(const String* args, int argsCount) {
 	if (cuboid_hooked) {
-		Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
+		Event_UnregisterBlock(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
 		cuboid_hooked = false;
 	}
 
@@ -503,7 +503,7 @@ static void CuboidCommand_Execute(const String* args, int argsCount) {
 	}
 
 	Chat_AddOf(&cuboid_msg, MSG_TYPE_CLIENTSTATUS_1);
-	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
+	Event_RegisterBlock(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
 	cuboid_hooked = true;
 }
 
@@ -554,7 +554,7 @@ static struct ChatCommand TeleportCommand_Instance = {
 *#########################################################################################################################*/
 void Chat_Send(const String* text, bool logUsage) {
 	if (!text->length) return;
-	Event_RaiseChat(&ChatEvents_ChatSending, text, 0);
+	Event_RaiseChat(&ChatEvents.ChatSending, text, 0);
 	if (logUsage) StringsBuffer_Add(&Chat_InputLog, text);
 
 	if (Commands_IsCommandPrefix(text)) {

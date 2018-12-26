@@ -241,15 +241,15 @@ static void HeldBlockRenderer_Init(void) {
 	HeldBlockRenderer_Show = Options_GetBool(OPT_SHOW_BLOCK_IN_HAND, true);
 	held_lastBlock         = Inventory_SelectedBlock;
 
-	Event_RegisterVoid(&GfxEvents_ProjectionChanged, NULL, HeldBlockRenderer_ProjectionChanged);
-	Event_RegisterVoid(&UserEvents_HeldBlockChanged, NULL, HeldBlockRenderer_DoSwitchBlockAnim);
-	Event_RegisterBlock(&UserEvents_BlockChanged,    NULL, HeldBlockRenderer_BlockChanged);
+	Event_RegisterVoid(&GfxEvents.ProjectionChanged, NULL, HeldBlockRenderer_ProjectionChanged);
+	Event_RegisterVoid(&UserEvents.HeldBlockChanged, NULL, HeldBlockRenderer_DoSwitchBlockAnim);
+	Event_RegisterBlock(&UserEvents.BlockChanged,    NULL, HeldBlockRenderer_BlockChanged);
 }
 
 static void HeldBlockRenderer_Free(void) {
-	Event_UnregisterVoid(&GfxEvents_ProjectionChanged, NULL, HeldBlockRenderer_ProjectionChanged);
-	Event_UnregisterVoid(&UserEvents_HeldBlockChanged, NULL, HeldBlockRenderer_DoSwitchBlockAnim);
-	Event_UnregisterBlock(&UserEvents_BlockChanged,    NULL, HeldBlockRenderer_BlockChanged);
+	Event_UnregisterVoid(&GfxEvents.ProjectionChanged, NULL, HeldBlockRenderer_ProjectionChanged);
+	Event_UnregisterVoid(&UserEvents.HeldBlockChanged, NULL, HeldBlockRenderer_DoSwitchBlockAnim);
+	Event_UnregisterBlock(&UserEvents.BlockChanged,    NULL, HeldBlockRenderer_BlockChanged);
 }
 
 struct IGameComponent HeldBlockRenderer_Component = {

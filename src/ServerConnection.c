@@ -158,7 +158,7 @@ static void SPConnection_BeginConnect(void) {
 		Block_CanPlace[i]  = true;
 		Block_CanDelete[i] = true;
 	}
-	Event_RaiseVoid(&BlockEvents_PermissionsChanged);
+	Event_RaiseVoid(&BlockEvents.PermissionsChanged);
 
 	/* For when user drops a map file onto ClassiCube.exe */
 	path = Game_Username;
@@ -274,7 +274,7 @@ static TimeMS net_connectTimeout;
 static void ServerConnection_Free(void);
 static void MPConnection_FinishConnect(void) {
 	net_connecting = false;
-	Event_RaiseFloat(&WorldEvents_Loading, 0.0f);
+	Event_RaiseFloat(&WorldEvents.Loading, 0.0f);
 	net_readCurrent = net_readBuffer;
 	ServerConnection_WriteBuffer = net_writeBuffer;
 
@@ -320,7 +320,7 @@ static void MPConnection_TickConnect(void) {
 		MPConnection_FailConnect(0);
 	} else {
 		int leftMS = (int)(net_connectTimeout - now);
-		Event_RaiseFloat(&WorldEvents_Loading, (float)leftMS / NET_TIMEOUT_MS);
+		Event_RaiseFloat(&WorldEvents.Loading, (float)leftMS / NET_TIMEOUT_MS);
 	}
 }
 

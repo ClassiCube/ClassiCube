@@ -2,11 +2,11 @@
 #define CC_EVENT_H
 #include "String.h"
 #include "Vectors.h"
-/* Helper method for managing events, and contains all events.
+/* Helper methods for using events, and contains all events.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-/* Maximum number of event handlers that can be registered. */
+/* Max callbacks that can be registered for an event. */
 #define EVENT_MAX_CALLBACKS 32
 struct Stream;
 
@@ -52,82 +52,126 @@ struct Event_Chat {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
-void Event_RaiseVoid(struct Event_Void* handlers);
-void Event_RegisterVoid(struct Event_Void* handlers,   void* obj, Event_Void_Callback handler);
-void Event_UnregisterVoid(struct Event_Void* handlers, void* obj, Event_Void_Callback handler);
+/* Registers a callback function for the given event. */
+/* NOTE: Trying to register a callback twice or over EVENT_MAX_CALLBACKS callbacks will terminate the game. */
+CC_API void Event_Register(struct Event_Void* handlers,   void* obj, Event_Void_Callback handler);
+/* Unregisters a callback function for the given event. */
+/* NOTE: Trying to unregister a non-registered callback will terminate the game. */
+CC_API void Event_Unregister(struct Event_Void* handlers, void* obj, Event_Void_Callback handler);
+#define Event_RegisterMacro(handlers,   obj, handler) Event_Register((struct Event_Void*)(handlers),   obj, (Event_Void_Callback)(handler))
+#define Event_UnregisterMacro(handlers, obj, handler) Event_Unregister((struct Event_Void*)(handlers), obj, (Event_Void_Callback)(handler))
 
-void Event_RaiseInt(struct Event_Int* handlers, int arg);
-void Event_RegisterInt(struct Event_Int* handlers,   void* obj, Event_Int_Callback handler);
-void Event_UnregisterInt(struct Event_Int* handlers, void* obj, Event_Int_Callback handler);
+/* Calls all registered callback for an event with no arguments. */
+CC_API void Event_RaiseVoid(struct Event_Void* handlers);
+#define Event_RegisterVoid(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
+#define Event_UnregisterVoid(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
-void Event_RaiseFloat(struct Event_Float* handlers, float arg);
-void Event_RegisterFloat(struct Event_Float* handlers,   void* obj, Event_Float_Callback handler);
-void Event_UnregisterFloat(struct Event_Float* handlers, void* obj, Event_Float_Callback handler);
+/* Calls all registered callback for an event which has an int argument. */
+/* NOTE: The actual argument "type" may be char, Key, uint8_t etc */
+CC_API void Event_RaiseInt(struct Event_Int* handlers, int arg);
+#define Event_RegisterInt(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
+#define Event_UnregisterInt(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
+/* Calls all registered callbacks for an event which has a float argument. */
+CC_API void Event_RaiseFloat(struct Event_Float* handlers, float arg);
+#define Event_RegisterFloat(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
+#define Event_UnregisterFloat(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
+
+/* Calls all registered callbacks for an event which has data stream and name argumenst. */
+/* This is (currently) only used for processing entries from default.zip */
 void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, const String* name);
-void Event_RegisterEntry(struct Event_Entry* handlers,   void* obj, Event_Entry_Callback handler);
-void Event_UnregisterEntry(struct Event_Entry* handlers, void* obj, Event_Entry_Callback handler);
+#define Event_RegisterEntry(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
+#define Event_UnregisterEntry(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
+/* Calls all registered callbacks for an event which takes block change arguments. */
+/* These are the coordinates/location of the change, block there before, block there now. */
 void Event_RaiseBlock(struct Event_Block* handlers, Vector3I coords, BlockID oldBlock, BlockID block);
-void Event_RegisterBlock(struct Event_Block* handlers,   void* obj, Event_Block_Callback handler);
-void Event_UnregisterBlock(struct Event_Block* handlers, void* obj, Event_Block_Callback handler);
+#define Event_RegisterBlock(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
+#define Event_UnregisterBlock(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
+/* Calls all registered callbacks for an event which has mouse movement arguments. */
+/* This is simply delta since last move. Use Mouse_X and Mouse_Y to get the mouse position. */
 void Event_RaiseMouseMove(struct Event_MouseMove* handlers, int xDelta, int yDelta);
-void Event_RegisterMouseMove(struct Event_MouseMove* handlers,   void* obj, Event_MouseMove_Callback handler);
-void Event_UnregisterMouseMove(struct Event_MouseMove* handlers, void* obj, Event_MouseMove_Callback handler);
+#define Event_RegisterMouseMove(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
+#define Event_UnregisterMouseMove(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
+/* Calls all registered callbacks for an event which has chat message type and contents. */
+/* See MsgType enum in Chat.h for what types of messages there are. */
 void Event_RaiseChat(struct Event_Chat* handlers, const String* msg, int msgType);
-void Event_RegisterChat(struct Event_Chat* handlers,   void* obj, Event_Chat_Callback handler);
-void Event_UnregisterChat(struct Event_Chat* handlers, void* obj, Event_Chat_Callback handler);
+#define Event_RegisterChat(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
+#define Event_UnregisterChat(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
-extern struct Event_Int EntityEvents_Added;    /* Entity is spawned in the current world */
-extern struct Event_Int EntityEvents_Removed;  /* Entity is despawned from the current world */
-extern struct Event_Int TabListEvents_Added;   /* Tab list entry is created */
-extern struct Event_Int TabListEvents_Changed; /* Tab list entry is modified */
-extern struct Event_Int TabListEvents_Removed; /* Tab list entry is removed */
+extern struct _EntityEventsList {
+	struct Event_Int Added;    /* Entity is spawned in the current world */
+	struct Event_Int Removed;  /* Entity is despawned from the current world */
+} EntityEvents;
 
-extern struct Event_Void TextureEvents_AtlasChanged; /* Terrain atlas (terrain.png) is changed */
-extern struct Event_Void TextureEvents_PackChanged;  /* Texture pack is changed */
-extern struct Event_Entry TextureEvents_FileChanged; /* File in a texture pack is changed (terrain.png, rain.png) */
+extern struct _TabListEventsList {
+	struct Event_Int Added;   /* Tab list entry is created */
+	struct Event_Int Changed; /* Tab list entry is modified */
+	struct Event_Int Removed; /* Tab list entry is removed */
+} TabListEvents;
 
-extern struct Event_Void GfxEvents_ViewDistanceChanged; /* View/fog distance is changed */
-extern struct Event_Void GfxEvents_LowVRAMDetected;     /* Insufficient VRAM detected, need to free some GPU resources */
-extern struct Event_Void GfxEvents_ProjectionChanged;   /* Projection matrix has changed */
-extern struct Event_Void GfxEvents_ContextLost;         /* Context is destroyed after having been previously created */
-extern struct Event_Void GfxEvents_ContextRecreated;    /* Context is recreated after having been previously lost */
+extern struct _TextureEventsList {
+	struct Event_Void  AtlasChanged; /* Terrain atlas (terrain.png) is changed */
+	struct Event_Void  PackChanged;  /* Texture pack is changed */
+	struct Event_Entry FileChanged;  /* File in a texture pack is changed (terrain.png, rain.png) */
+} TextureEvents;
 
-extern struct Event_Block UserEvents_BlockChanged;          /* User changes a block */
-extern struct Event_Void UserEvents_HackPermissionsChanged; /* Hack permissions of the player changes */
-extern struct Event_Void UserEvents_HeldBlockChanged;       /* Held block in hotbar changes */
+extern struct _GfxEventsList {
+	struct Event_Void ViewDistanceChanged; /* View/fog distance is changed */
+	struct Event_Void LowVRAMDetected;     /* Insufficient VRAM detected, need to free some GPU resources */
+	struct Event_Void ProjectionChanged;   /* Projection matrix has changed */
+	struct Event_Void ContextLost;         /* Context is destroyed after having been previously created */
+	struct Event_Void ContextRecreated;    /* Context is recreated after having been previously lost */
+} GfxEvents;
 
-extern struct Event_Void BlockEvents_PermissionsChanged; /* Block permissions (can place/delete) for a block changes */
-extern struct Event_Void BlockEvents_BlockDefChanged;    /* Block definition is changed or removed */
+extern struct _UserEventsList {
+	struct Event_Block BlockChanged;           /* User changes a block */
+	struct Event_Void  HackPermissionsChanged; /* Hack permissions of the player changes */
+	struct Event_Void  HeldBlockChanged;       /* Held block in hotbar changes */
+} UserEvents;
 
-extern struct Event_Void WorldEvents_NewMap;       /* Player begins loading a new world */
-extern struct Event_Float WorldEvents_Loading;      /* Portion of world is decompressed/generated (Arg is progress from 0-1) */
-extern struct Event_Void WorldEvents_MapLoaded;    /* New world has finished loading, player can now interact with it */
-extern struct Event_Int WorldEvents_EnvVarChanged; /* World environment variable changed by player/CPE/WoM config */
+extern struct _BlockEventsList {
+	struct Event_Void PermissionsChanged; /* Block permissions (can place/delete) for a block changes */
+	struct Event_Void BlockDefChanged;    /* Block definition is changed or removed */
+} BlockEvents;
 
-extern struct Event_Void ChatEvents_FontChanged;   /* User changes whether system chat font used, and when the bitmapped font texture changes */
-extern struct Event_Chat ChatEvents_ChatReceived;  /* Raised when message is being added to chat */
-extern struct Event_Chat ChatEvents_ChatSending;   /* Raised when user sends a message */
-extern struct Event_Int ChatEvents_ColCodeChanged; /* Raised when a colour code changes */
+extern struct _WorldEventsList {
+	struct Event_Void  NewMap;        /* Player begins loading a new world */
+	struct Event_Float Loading;       /* Portion of world is decompressed/generated (Arg is progress from 0-1) */
+	struct Event_Void  MapLoaded;     /* New world has finished loading, player can now interact with it */
+	struct Event_Int   EnvVarChanged; /* World environment variable changed by player/CPE/WoM config */
+} WorldEvents;
 
-extern struct Event_Void WindowEvents_Redraw;             /* Window contents invalidated, should be redrawn */
-extern struct Event_Void WindowEvents_Moved;              /* Window is moved */
-extern struct Event_Void WindowEvents_Resized;            /* Window is resized */
-extern struct Event_Void WindowEvents_Closing;            /* Window is about to close */
-extern struct Event_Void WindowEvents_Closed;             /* Window has closed */
-extern struct Event_Void WindowEvents_VisibilityChanged;  /* Visibility of the window changed */
-extern struct Event_Void WindowEvents_FocusChanged;       /* Focus of the window changed */
-extern struct Event_Void WindowEvents_StateChanged;       /* WindowState of the window changed */
+extern struct _ChatEventsList {
+	struct Event_Void FontChanged;   /* User changes whether system chat font used, and when the bitmapped font texture changes */
+	struct Event_Chat ChatReceived;  /* Raised when message is being added to chat */
+	struct Event_Chat ChatSending;   /* Raised when user sends a message */
+	struct Event_Int  ColCodeChanged; /* Raised when a colour code changes */
+} ChatEvents;
 
-extern struct Event_Int KeyEvents_Press; /* Raised when a character is typed. Arg is a character */
-extern struct Event_Int KeyEvents_Down;  /* Raised when a key is pressed. Arg is a member of Key enumeration */
-extern struct Event_Int KeyEvents_Up;    /* Raised when a key is released. Arg is a member of Key enumeration */
+extern struct _WindowEventsList {
+	struct Event_Void Redraw;             /* Window contents invalidated, should be redrawn */
+	struct Event_Void Moved;              /* Window is moved */
+	struct Event_Void Resized;            /* Window is resized */
+	struct Event_Void Closing;            /* Window is about to close */
+	struct Event_Void Closed;             /* Window has closed */
+	struct Event_Void VisibilityChanged;  /* Visibility of the window changed */
+	struct Event_Void FocusChanged;       /* Focus of the window changed */
+	struct Event_Void StateChanged;       /* WindowState of the window changed */
+} WindowEvents;
 
-extern struct Event_MouseMove MouseEvents_Moved; /* Mouse position is changed (Arg is delta from last position) */
-extern struct Event_Int MouseEvents_Down;        /* Mouse button is pressed (Arg is MouseButton member) */
-extern struct Event_Int MouseEvents_Up;          /* Mouse button is released (Arg is MouseButton member) */
-extern struct Event_Float MouseEvents_Wheel;      /* Mouse wheel is moved/scrolled (Arg is wheel delta) */
+struct _KeyEventsList {
+	struct Event_Int Press; /* Raised when a character is typed. Arg is a character */
+	struct Event_Int Down;  /* Raised when a key is pressed. Arg is a member of Key enumeration */
+	struct Event_Int Up;    /* Raised when a key is released. Arg is a member of Key enumeration */
+} KeyEvents;
+
+extern struct _MouseEventsList {
+	struct Event_MouseMove Moved; /* Mouse position is changed (Arg is delta from last position) */
+	struct Event_Int Down;        /* Mouse button is pressed (Arg is MouseButton member) */
+	struct Event_Int Up;          /* Mouse button is released (Arg is MouseButton member) */
+	struct Event_Float Wheel;     /* Mouse wheel is moved/scrolled (Arg is wheel delta) */
+} MouseEvents;
 #endif

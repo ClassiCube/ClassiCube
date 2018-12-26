@@ -326,7 +326,7 @@ static void Entities_ChatFontChanged(void* obj) {
 }
 
 void Entities_Remove(EntityID id) {
-	Event_RaiseInt(&EntityEvents_Removed, id);
+	Event_RaiseInt(&EntityEvents.Removed, id);
 	Entities_List[id]->VTABLE->Despawn(Entities_List[id]);
 	Entities_List[id] = NULL;
 }
@@ -1105,9 +1105,9 @@ void NetPlayer_Init(struct NetPlayer* p, const String* displayName, const String
 *--------------------------------------------------------Entities---------------------------------------------------------*
 *#########################################################################################################################*/
 static void Entities_Init(void) {
-	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, Entities_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, Entities_ContextRecreated);
-	Event_RegisterVoid(&ChatEvents_FontChanged,     NULL, Entities_ChatFontChanged);
+	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, Entities_ContextLost);
+	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, Entities_ContextRecreated);
+	Event_RegisterVoid(&ChatEvents.FontChanged,     NULL, Entities_ChatFontChanged);
 
 	Entities_NameMode = Options_GetEnum(OPT_NAMES_MODE, NAME_MODE_HOVERED,
 		NameMode_Names, Array_Elems(NameMode_Names));
@@ -1128,9 +1128,9 @@ static void Entities_Free(void) {
 		Entities_Remove((EntityID)i);
 	}
 
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, Entities_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, Entities_ContextRecreated);
-	Event_UnregisterVoid(&ChatEvents_FontChanged,     NULL, Entities_ChatFontChanged);
+	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, Entities_ContextLost);
+	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, Entities_ContextRecreated);
+	Event_UnregisterVoid(&ChatEvents.FontChanged,     NULL, Entities_ChatFontChanged);
 
 	if (ShadowComponent_ShadowTex) {
 		Gfx_DeleteTexture(&ShadowComponent_ShadowTex);

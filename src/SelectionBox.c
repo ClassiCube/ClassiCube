@@ -208,8 +208,8 @@ void Selections_Render(double delta) {
 *--------------------------------------------------Selections component---------------------------------------------------*
 *#########################################################################################################################*/
 static void Selections_Init(void) {
-	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, Selections_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, Selections_ContextRecreated);
+	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, Selections_ContextLost);
+	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, Selections_ContextRecreated);
 }
 
 static void Selections_Reset(void) {
@@ -218,8 +218,8 @@ static void Selections_Reset(void) {
 
 static void Selections_Free(void) {
 	Selections_ContextLost(NULL);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, Selections_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, Selections_ContextRecreated);
+	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, Selections_ContextLost);
+	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, Selections_ContextRecreated);
 }
 
 struct IGameComponent Selections_Component = {

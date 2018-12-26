@@ -369,14 +369,14 @@ static void Animations_FileChanged(void* obj, struct Stream* stream, const Strin
 
 static void Animations_Init(void) {
 	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
-	Event_RegisterVoid(&TextureEvents_PackChanged,  NULL, Animations_PackChanged);
-	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Animations_FileChanged);
+	Event_RegisterVoid(&TextureEvents.PackChanged,  NULL, Animations_PackChanged);
+	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, Animations_FileChanged);
 }
 
 static void Animations_Free(void) {
 	Animations_Clear();
-	Event_UnregisterVoid(&TextureEvents_PackChanged,  NULL, Animations_PackChanged);
-	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Animations_FileChanged);
+	Event_UnregisterVoid(&TextureEvents.PackChanged,  NULL, Animations_PackChanged);
+	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Animations_FileChanged);
 }
 
 struct IGameComponent Animations_Component = {
@@ -625,13 +625,13 @@ void TextureCache_SetLastModified(const String* url, const TimeMS* lastModified)
 static ReturnCode TexturePack_ProcessZipEntry(const String* path, struct Stream* stream, struct ZipState* s) {
 	String name = *path; 
 	Utils_UNSAFE_GetFilename(&name);
-	Event_RaiseEntry(&TextureEvents_FileChanged, stream, &name);
+	Event_RaiseEntry(&TextureEvents.FileChanged, stream, &name);
 	return 0;
 }
 
 static ReturnCode TexturePack_ExtractZip(struct Stream* stream) {
 	struct ZipState state;
-	Event_RaiseVoid(&TextureEvents_PackChanged);
+	Event_RaiseVoid(&TextureEvents.PackChanged);
 	if (Gfx_LostContext) return 0;
 	
 	Zip_Init(&state, stream);
@@ -662,7 +662,7 @@ ReturnCode TexturePack_ExtractTerrainPng(struct Stream* stream) {
 	ReturnCode res = Png_Decode(&bmp, stream);
 
 	if (!res) {
-		Event_RaiseVoid(&TextureEvents_PackChanged);
+		Event_RaiseVoid(&TextureEvents.PackChanged);
 		if (Game_ChangeTerrainAtlas(&bmp)) return 0;
 	}
 

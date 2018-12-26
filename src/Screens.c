@@ -150,8 +150,8 @@ static void InventoryScreen_Init(void* screen) {
 	Key_KeyRepeat     = true;
 	Screen_CommonInit(s);
 
-	Event_RegisterVoid(&BlockEvents_PermissionsChanged, s, InventoryScreen_OnBlockChanged);
-	Event_RegisterVoid(&BlockEvents_BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
+	Event_RegisterVoid(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
+	Event_RegisterVoid(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
 }
 
 static void InventoryScreen_Render(void* screen, double delta) {
@@ -171,8 +171,8 @@ static void InventoryScreen_Free(void* screen) {
 	Key_KeyRepeat = false;
 	Screen_CommonFree(s);
 	
-	Event_UnregisterVoid(&BlockEvents_PermissionsChanged, s, InventoryScreen_OnBlockChanged);
-	Event_UnregisterVoid(&BlockEvents_BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
+	Event_UnregisterVoid(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
+	Event_UnregisterVoid(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
 }
 
 static bool InventoryScreen_KeyDown(void* screen, Key key) {
@@ -568,7 +568,7 @@ static void LoadingScreen_Init(void* screen) {
 	Screen_CommonInit(s);
 
 	Gfx_SetFog(false);
-	Event_RegisterFloat(&WorldEvents_Loading, s, LoadingScreen_MapLoading);
+	Event_RegisterFloat(&WorldEvents.Loading, s, LoadingScreen_MapLoading);
 }
 
 #define PROG_BAR_WIDTH 200
@@ -599,7 +599,7 @@ static void LoadingScreen_Free(void* screen) {
 	struct LoadingScreen* s = screen;
 	Font_Free(&s->Font);
 	Screen_CommonFree(s);
-	Event_UnregisterFloat(&WorldEvents_Loading, s, LoadingScreen_MapLoading);
+	Event_UnregisterFloat(&WorldEvents.Loading, s, LoadingScreen_MapLoading);
 }
 
 static struct ScreenVTABLE LoadingScreen_VTABLE = {
@@ -632,7 +632,7 @@ struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen_
 *#########################################################################################################################*/
 static void GeneratingScreen_Init(void* screen) {
 	World_Reset();
-	Event_RaiseVoid(&WorldEvents_NewMap);
+	Event_RaiseVoid(&WorldEvents.NewMap);
 	Gen_Done = false;
 	LoadingScreen_Init(screen);
 
@@ -666,7 +666,7 @@ static void GeneratingScreen_EndGeneration(void) {
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
 
 	Camera_CurrentPos = Camera_Active->GetPosition(0.0f);
-	Event_RaiseVoid(&WorldEvents_MapLoaded);
+	Event_RaiseVoid(&WorldEvents.MapLoaded);
 }
 
 static void GeneratingScreen_Render(void* screen, double delta) {
@@ -1117,8 +1117,8 @@ static void ChatScreen_Init(void* screen) {
 	Drawer2D_MakeFont(&s->AnnouncementFont, largeSize, FONT_STYLE_NORMAL);
 	Screen_CommonInit(s);
 
-	Event_RegisterChat(&ChatEvents_ChatReceived,  s, ChatScreen_ChatReceived);
-	Event_RegisterInt(&ChatEvents_ColCodeChanged, s, ChatScreen_ColCodeChanged);
+	Event_RegisterChat(&ChatEvents.ChatReceived,  s, ChatScreen_ChatReceived);
+	Event_RegisterInt(&ChatEvents.ColCodeChanged, s, ChatScreen_ColCodeChanged);
 }
 
 static void ChatScreen_Render(void* screen, double delta) {
@@ -1176,8 +1176,8 @@ static void ChatScreen_Free(void* screen) {
 	Font_Free(&s->AnnouncementFont);
 	Screen_CommonFree(s);
 
-	Event_UnregisterChat(&ChatEvents_ChatReceived,  s, ChatScreen_ChatReceived);
-	Event_UnregisterInt(&ChatEvents_ColCodeChanged, s, ChatScreen_ColCodeChanged);
+	Event_UnregisterChat(&ChatEvents.ChatReceived,  s, ChatScreen_ChatReceived);
+	Event_UnregisterInt(&ChatEvents.ColCodeChanged, s, ChatScreen_ColCodeChanged);
 }
 
 static struct ScreenVTABLE ChatScreen_VTABLE = {

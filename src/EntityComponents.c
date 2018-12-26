@@ -291,7 +291,7 @@ void HacksComp_UpdateState(struct HacksComp* hacks) {
 	hacks->MaxJumps     = HacksComp_ParseFlagInt("jumps=",      hacks);
 
 	HacksComp_CheckConsistency(hacks);
-	Event_RaiseVoid(&UserEvents_HackPermissionsChanged);
+	Event_RaiseVoid(&UserEvents.HackPermissionsChanged);
 }
 
 

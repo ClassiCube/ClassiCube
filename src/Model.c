@@ -1677,9 +1677,9 @@ void Models_Init(void) {
 	Model_RegisterDefaultModels();
 	Models_ContextRecreated(NULL);
 
-	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Models_TextureChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, Models_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, Models_ContextRecreated);
+	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, Models_TextureChanged);
+	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, Models_ContextLost);
+	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, Models_ContextRecreated);
 }
 
 void Models_Free(void) {
@@ -1690,9 +1690,9 @@ void Models_Free(void) {
 	}
 	Models_ContextLost(NULL);
 
-	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Models_TextureChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, Models_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, Models_ContextRecreated);
+	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Models_TextureChanged);
+	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, Models_ContextLost);
+	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, Models_ContextRecreated);
 }
 
 struct IGameComponent Models_Component = {

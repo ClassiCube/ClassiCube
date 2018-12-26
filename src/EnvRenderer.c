@@ -906,27 +906,27 @@ static void EnvRenderer_Init(void) {
 	EnvRenderer_Legacy  = flags & ENV_LEGACY;
 	EnvRenderer_Minimal = flags & ENV_MINIMAL;
 
-	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, EnvRenderer_FileChanged);
-	Event_RegisterVoid(&TextureEvents_PackChanged,  NULL, EnvRenderer_TexturePackChanged);
-	Event_RegisterVoid(&TextureEvents_AtlasChanged, NULL, EnvRenderer_TerrainAtlasChanged);
+	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, EnvRenderer_FileChanged);
+	Event_RegisterVoid(&TextureEvents.PackChanged,  NULL, EnvRenderer_TexturePackChanged);
+	Event_RegisterVoid(&TextureEvents.AtlasChanged, NULL, EnvRenderer_TerrainAtlasChanged);
 
-	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, NULL, EnvRenderer_ViewDistanceChanged);
-	Event_RegisterInt(&WorldEvents_EnvVarChanged,      NULL, EnvRenderer_EnvVariableChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost,         NULL, EnvRenderer_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated,    NULL, EnvRenderer_ContextRecreated);
+	Event_RegisterVoid(&GfxEvents.ViewDistanceChanged, NULL, EnvRenderer_ViewDistanceChanged);
+	Event_RegisterInt(&WorldEvents.EnvVarChanged,      NULL, EnvRenderer_EnvVariableChanged);
+	Event_RegisterVoid(&GfxEvents.ContextLost,         NULL, EnvRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents.ContextRecreated,    NULL, EnvRenderer_ContextRecreated);
 
 	Game_SetViewDistance(Game_UserViewDistance);
 }
 
 static void EnvRenderer_Free(void) {
-	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, EnvRenderer_FileChanged);
-	Event_UnregisterVoid(&TextureEvents_PackChanged,  NULL, EnvRenderer_TexturePackChanged);
-	Event_UnregisterVoid(&TextureEvents_AtlasChanged, NULL, EnvRenderer_TerrainAtlasChanged);
+	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, EnvRenderer_FileChanged);
+	Event_UnregisterVoid(&TextureEvents.PackChanged,  NULL, EnvRenderer_TexturePackChanged);
+	Event_UnregisterVoid(&TextureEvents.AtlasChanged, NULL, EnvRenderer_TerrainAtlasChanged);
 
-	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, NULL, EnvRenderer_ViewDistanceChanged);
-	Event_UnregisterInt(&WorldEvents_EnvVarChanged,      NULL, EnvRenderer_EnvVariableChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,         NULL, EnvRenderer_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated,    NULL, EnvRenderer_ContextRecreated);
+	Event_UnregisterVoid(&GfxEvents.ViewDistanceChanged, NULL, EnvRenderer_ViewDistanceChanged);
+	Event_UnregisterInt(&WorldEvents.EnvVarChanged,      NULL, EnvRenderer_EnvVariableChanged);
+	Event_UnregisterVoid(&GfxEvents.ContextLost,         NULL, EnvRenderer_ContextLost);
+	Event_UnregisterVoid(&GfxEvents.ContextRecreated,    NULL, EnvRenderer_ContextRecreated);
 
 	EnvRenderer_ContextLost(NULL);
 	Mem_Free(Weather_Heightmap);

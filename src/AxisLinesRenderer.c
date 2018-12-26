@@ -65,12 +65,12 @@ static void AxisLinesRenderer_ContextLost(void* obj) {
 }
 
 static void AxisLinesRenderer_Init(void) {
-	Event_RegisterVoid(&GfxEvents_ContextLost, NULL, AxisLinesRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents.ContextLost, NULL, AxisLinesRenderer_ContextLost);
 }
 
 static void AxisLinesRenderer_Free(void) {
 	AxisLinesRenderer_ContextLost(NULL);
-	Event_UnregisterVoid(&GfxEvents_ContextLost, NULL, AxisLinesRenderer_ContextLost);
+	Event_UnregisterVoid(&GfxEvents.ContextLost, NULL, AxisLinesRenderer_ContextLost);
 }
 
 struct IGameComponent AxisLinesRenderer_Component = {

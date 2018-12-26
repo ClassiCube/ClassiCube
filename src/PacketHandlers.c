@@ -125,16 +125,16 @@ static void Handlers_AddTablistEntry(EntityID id, const String* playerName, cons
 			   || !String_Equals(groupName,  &oldGroupName)  || groupRank != oldGroupRank;	
 		if (changed) {
 			TabList_Set(id, playerName, listName, groupName, groupRank);
-			Event_RaiseInt(&TabListEvents_Changed, id);
+			Event_RaiseInt(&TabListEvents.Changed, id);
 		}
 	} else {
 		TabList_Set(id, playerName, listName, groupName, groupRank);
-		Event_RaiseInt(&TabListEvents_Added, id);
+		Event_RaiseInt(&TabListEvents.Added, id);
 	}
 }
 
 static void Handlers_RemoveTablistEntry(EntityID id) {
-	Event_RaiseInt(&TabListEvents_Removed, id);
+	Event_RaiseInt(&TabListEvents.Removed, id);
 	TabList_Remove(id);
 }
 
@@ -165,7 +165,7 @@ static void Handlers_AddEntity(uint8_t* data, EntityID id, const String* display
 
 		NetPlayer_Init(pl, displayName, skinName);
 		Entities_List[id] = &pl->Base;
-		Event_RaiseInt(&EntityEvents_Added, id);
+		Event_RaiseInt(&EntityEvents.Added, id);
 	} else {
 		p = &LocalPlayer_Instance;
 		p->Base.VTABLE->Despawn(&p->Base);
@@ -407,7 +407,7 @@ static void Classic_Ping(uint8_t* data) { }
 
 static void Classic_StartLoading(void) {
 	World_Reset();
-	Event_RaiseVoid(&WorldEvents_NewMap);
+	Event_RaiseVoid(&WorldEvents.NewMap);
 	Stream_ReadonlyMemory(&map_part, NULL, 0);
 
 	classic_prevScreen = Gui_Active;
@@ -506,7 +506,7 @@ static void Classic_LevelDataChunk(uint8_t* data) {
 	}
 
 	progress = !map_blocks ? 0.0f : (float)map_index / map_volume;
-	Event_RaiseFloat(&WorldEvents_Loading, progress);
+	Event_RaiseFloat(&WorldEvents.Loading, progress);
 }
 
 static void Classic_LevelFinalise(uint8_t* data) {
@@ -534,7 +534,7 @@ static void Classic_LevelFinalise(uint8_t* data) {
 	}
 #endif
 
-	Event_RaiseVoid(&WorldEvents_MapLoaded);
+	Event_RaiseVoid(&WorldEvents.MapLoaded);
 	WoM_CheckSendWomID();
 
 	map_blocks       = NULL;
@@ -954,7 +954,7 @@ static void CPE_CustomBlockLevel(uint8_t* data) {
 	CPE_WriteCustomBlockLevel(1);
 	Net_SendPacket();
 	Game_UseCPEBlocks = true;
-	Event_RaiseVoid(&BlockEvents_PermissionsChanged);
+	Event_RaiseVoid(&BlockEvents.PermissionsChanged);
 }
 
 static void CPE_HoldThis(uint8_t* data) {
@@ -1100,7 +1100,7 @@ static void CPE_SetBlockPermission(uint8_t* data) {
 
 	Block_CanPlace[block]  = *data++ != 0;
 	Block_CanDelete[block] = *data++ != 0;
-	Event_RaiseVoid(&BlockEvents_PermissionsChanged);
+	Event_RaiseVoid(&BlockEvents.PermissionsChanged);
 }
 
 static void CPE_ChangeModel(uint8_t* data) {
@@ -1157,7 +1157,7 @@ static void CPE_HackControl(uint8_t* data) {
 	}
 
 	physics->ServerJumpVel = physics->JumpVel;
-	Event_RaiseVoid(&UserEvents_HackPermissionsChanged);
+	Event_RaiseVoid(&UserEvents.HackPermissionsChanged);
 }
 
 static void CPE_ExtAddEntity2(uint8_t* data) {
@@ -1227,7 +1227,7 @@ static void CPE_SetTextColor(uint8_t* data) {
 	if (code == '%' || code == '&') return;
 
 	Drawer2D_Cols[code] = c;
-	Event_RaiseInt(&ChatEvents_ColCodeChanged, code);
+	Event_RaiseInt(&ChatEvents.ColCodeChanged, code);
 }
 
 static void CPE_SetMapEnvUrl(uint8_t* data) {
@@ -1507,7 +1507,7 @@ static void BlockDefs_UndefineBlock(uint8_t* data) {
 	if (block < BLOCK_CPE_COUNT) { Inventory_AddDefault(block); }
 
 	Block_SetCustomDefined(block, false);
-	Event_RaiseVoid(&BlockEvents_BlockDefChanged);
+	Event_RaiseVoid(&BlockEvents.BlockDefChanged);
 }
 
 static void BlockDefs_DefineBlockExt(uint8_t* data) {

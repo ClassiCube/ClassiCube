@@ -24,13 +24,13 @@ bool Inventory_CheckChangeSelected(void) {
 void Inventory_SetSelectedIndex(int index) {
 	if (!Inventory_CheckChangeSelected()) return;
 	Inventory_SelectedIndex = index;
-	Event_RaiseVoid(&UserEvents_HeldBlockChanged);
+	Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 }
 
 void Inventory_SetHotbarIndex(int index) {
 	if (!Inventory_CheckChangeSelected() || Game_ClassicMode) return;
 	Inventory_Offset = index * INVENTORY_BLOCKS_PER_HOTBAR;
-	Event_RaiseVoid(&UserEvents_HeldBlockChanged);
+	Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 }
 
 void Inventory_SetSelectedBlock(BlockID block) {
@@ -45,7 +45,7 @@ void Inventory_SetSelectedBlock(BlockID block) {
 	}
 
 	Inventory_Set(Inventory_SelectedIndex, block);
-	Event_RaiseVoid(&UserEvents_HeldBlockChanged);
+	Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 }
 
 const static uint8_t inv_classicTable[] = {

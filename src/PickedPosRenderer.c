@@ -111,14 +111,14 @@ static void PickedPosRenderer_ContextRecreated(void* obj) {
 
 static void PickedPosRenderer_Init(void) {
 	PickedPosRenderer_ContextRecreated(NULL);
-	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, PickedPosRenderer_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, PickedPosRenderer_ContextRecreated);
+	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, PickedPosRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, PickedPosRenderer_ContextRecreated);
 }
 
 static void PickedPosRenderer_Free(void) {
 	PickedPosRenderer_ContextLost(NULL);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, PickedPosRenderer_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, PickedPosRenderer_ContextRecreated);
+	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, PickedPosRenderer_ContextLost);
+	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, PickedPosRenderer_ContextRecreated);
 }
 
 struct IGameComponent PickedPosRenderer_Component = {

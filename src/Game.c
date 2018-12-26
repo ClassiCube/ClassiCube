@@ -148,7 +148,7 @@ bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
 	Atlas_Free();
 	Atlas_Update(atlas);
 
-	Event_RaiseVoid(&TextureEvents_AtlasChanged);
+	Event_RaiseVoid(&TextureEvents.AtlasChanged);
 	return true;
 }
 
@@ -157,7 +157,7 @@ void Game_SetViewDistance(int distance) {
 	if (distance == Game_ViewDistance) return;
 	Game_ViewDistance = distance;
 
-	Event_RaiseVoid(&GfxEvents_ViewDistanceChanged);
+	Event_RaiseVoid(&GfxEvents.ViewDistanceChanged);
 	Game_UpdateProjection();
 }
 
@@ -172,12 +172,12 @@ void Game_UpdateProjection(void) {
 	Camera_Active->GetProjection(&Gfx_Projection);
 
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx_Projection);
-	Event_RaiseVoid(&GfxEvents_ProjectionChanged);
+	Event_RaiseVoid(&GfxEvents.ProjectionChanged);
 }
 
 void Game_Disconnect(const String* title, const String* reason) {
 	World_Reset();
-	Event_RaiseVoid(&WorldEvents_NewMap);
+	Event_RaiseVoid(&WorldEvents.NewMap);
 	Gui_FreeActive();
 	Gui_SetActive(DisconnectScreen_MakeInstance(title, reason));
 	Game_Reset();
@@ -438,13 +438,13 @@ static void Game_Load(void) {
 	Game_UpdateClientSize();
 	Game_LoadOptions();
 
-	Event_RegisterVoid(&WorldEvents_NewMap,         NULL, Game_OnNewMapCore);
-	Event_RegisterVoid(&WorldEvents_MapLoaded,      NULL, Game_OnNewMapLoadedCore);
-	Event_RegisterEntry(&TextureEvents_FileChanged, NULL, Game_TextureChangedCore);
-	Event_RegisterVoid(&GfxEvents_LowVRAMDetected,  NULL, Game_OnLowVRAMDetected);
+	Event_RegisterVoid(&WorldEvents.NewMap,         NULL, Game_OnNewMapCore);
+	Event_RegisterVoid(&WorldEvents.MapLoaded,      NULL, Game_OnNewMapLoadedCore);
+	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, Game_TextureChangedCore);
+	Event_RegisterVoid(&GfxEvents.LowVRAMDetected,  NULL, Game_OnLowVRAMDetected);
 
-	Event_RegisterVoid(&WindowEvents_Resized,       NULL, Game_OnResize);
-	Event_RegisterVoid(&WindowEvents_Closed,        NULL, Game_Free);
+	Event_RegisterVoid(&WindowEvents.Resized,       NULL, Game_OnResize);
+	Event_RegisterVoid(&WindowEvents.Closed,        NULL, Game_Free);
 
 	TextureCache_Init();
 	/* TODO: Survival vs Creative game mode */
@@ -683,13 +683,13 @@ void Game_Free(void* obj) {
 	struct IGameComponent* comp;
 	Atlas_Free();
 
-	Event_UnregisterVoid(&WorldEvents_NewMap,         NULL, Game_OnNewMapCore);
-	Event_UnregisterVoid(&WorldEvents_MapLoaded,      NULL, Game_OnNewMapLoadedCore);
-	Event_UnregisterEntry(&TextureEvents_FileChanged, NULL, Game_TextureChangedCore);
-	Event_UnregisterVoid(&GfxEvents_LowVRAMDetected,  NULL, Game_OnLowVRAMDetected);
+	Event_UnregisterVoid(&WorldEvents.NewMap,         NULL, Game_OnNewMapCore);
+	Event_UnregisterVoid(&WorldEvents.MapLoaded,      NULL, Game_OnNewMapLoadedCore);
+	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Game_TextureChangedCore);
+	Event_UnregisterVoid(&GfxEvents.LowVRAMDetected,  NULL, Game_OnLowVRAMDetected);
 
-	Event_UnregisterVoid(&WindowEvents_Resized,       NULL, Game_OnResize);
-	Event_UnregisterVoid(&WindowEvents_Closed,        NULL, Game_Free);
+	Event_UnregisterVoid(&WindowEvents.Resized,       NULL, Game_OnResize);
+	Event_UnregisterVoid(&WindowEvents.Closed,        NULL, Game_Free);
 
 	for (comp = comps_head; comp; comp = comp->Next) {
 		if (comp->Free) comp->Free();
@@ -713,7 +713,7 @@ void Game_Run(int width, int height, const String* title) {
 	Window_SetVisible(true);
 
 	Game_Load();
-	Event_RaiseVoid(&WindowEvents_Resized);
+	Event_RaiseVoid(&WindowEvents.Resized);
 
 	lastRender = Stopwatch_Measure();
 	for (;;) {

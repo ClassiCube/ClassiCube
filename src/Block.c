@@ -198,7 +198,7 @@ void Block_DefineCustom(BlockID block) {
 
 	Inventory_AddDefault(block);
 	Block_SetCustomDefined(block, true);
-	Event_RaiseVoid(&BlockEvents_BlockDefChanged);
+	Event_RaiseVoid(&BlockEvents.BlockDefChanged);
 }
 
 static void Block_RecalcIsLiquid(BlockID b) {
@@ -693,7 +693,7 @@ static void Blocks_Init(void) {
 
 	AutoRotate_Enabled = true;
 	Blocks_Reset();
-	Event_RegisterVoid(&TextureEvents_AtlasChanged, NULL, Blocks_AtlasChanged);
+	Event_RegisterVoid(&TextureEvents.AtlasChanged, NULL, Blocks_AtlasChanged);
 
 	Block_CanPlace[BLOCK_AIR] = false;         Block_CanDelete[BLOCK_AIR] = false;
 	Block_CanPlace[BLOCK_LAVA] = false;        Block_CanDelete[BLOCK_LAVA] = false;
@@ -704,7 +704,7 @@ static void Blocks_Init(void) {
 }
 
 static void Blocks_Free(void) {
-	Event_UnregisterVoid(&TextureEvents_AtlasChanged, NULL, Blocks_AtlasChanged);
+	Event_UnregisterVoid(&TextureEvents.AtlasChanged, NULL, Blocks_AtlasChanged);
 }
 
 struct IGameComponent Blocks_Component = {

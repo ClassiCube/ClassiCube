@@ -60,7 +60,7 @@ void Map_LoadFrom(const String* path) {
 	ReturnCode res;
 
 	World_Reset();
-	Event_RaiseVoid(&WorldEvents_NewMap);
+	Event_RaiseVoid(&WorldEvents.NewMap);
 	Game_Reset();
 	
 	res = Stream_OpenFile(&stream, path);
@@ -76,7 +76,7 @@ void Map_LoadFrom(const String* path) {
 	if (res) { Logger_Warn2(res, "closing", path); }
 
 	World_SetNewMap(World_Blocks, World_BlocksSize, World_Width, World_Height, World_Length);
-	Event_RaiseVoid(&WorldEvents_MapLoaded);
+	Event_RaiseVoid(&WorldEvents.MapLoaded);
 
 	LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnRotY, p->SpawnHeadX, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
@@ -527,7 +527,7 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 		Block_DefineCustom(id);
 		Block_CanPlace[id]  = true;
 		Block_CanDelete[id] = true;
-		Event_RaiseVoid(&BlockEvents_PermissionsChanged);
+		Event_RaiseVoid(&BlockEvents.PermissionsChanged);
 
 		cw_curID = 0;
 	}

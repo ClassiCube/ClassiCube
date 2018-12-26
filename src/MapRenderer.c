@@ -751,14 +751,14 @@ static void MapRenderer_OnNewMapLoaded(void) {
 }
 
 static void MapRenderer_Init(void) {
-	Event_RegisterVoid(&TextureEvents_AtlasChanged,  NULL, MapRenderer_TerrainAtlasChanged);
-	Event_RegisterInt(&WorldEvents_EnvVarChanged,    NULL, MapRenderer_EnvVariableChanged);
-	Event_RegisterVoid(&BlockEvents_BlockDefChanged, NULL, MapRenderer_BlockDefinitionChanged);
+	Event_RegisterVoid(&TextureEvents.AtlasChanged,  NULL, MapRenderer_TerrainAtlasChanged);
+	Event_RegisterInt(&WorldEvents.EnvVarChanged,    NULL, MapRenderer_EnvVariableChanged);
+	Event_RegisterVoid(&BlockEvents.BlockDefChanged, NULL, MapRenderer_BlockDefinitionChanged);
 
-	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, NULL, MapRenderer_RecalcVisibility_);
-	Event_RegisterVoid(&GfxEvents_ProjectionChanged,   NULL, MapRenderer_RecalcVisibility_);
-	Event_RegisterVoid(&GfxEvents_ContextLost,         NULL, MapRenderer_DeleteChunks_);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated,    NULL, MapRenderer_Refresh_);
+	Event_RegisterVoid(&GfxEvents.ViewDistanceChanged, NULL, MapRenderer_RecalcVisibility_);
+	Event_RegisterVoid(&GfxEvents.ProjectionChanged,   NULL, MapRenderer_RecalcVisibility_);
+	Event_RegisterVoid(&GfxEvents.ContextLost,         NULL, MapRenderer_DeleteChunks_);
+	Event_RegisterVoid(&GfxEvents.ContextRecreated,    NULL, MapRenderer_Refresh_);
 
 	/* This = 87 fixes map being invisible when no textures */
 	MapRenderer_1DUsedCount = 87; /* Atlas1D_UsedAtlasesCount(); */
@@ -770,14 +770,14 @@ static void MapRenderer_Init(void) {
 }
 
 static void MapRenderer_Free(void) {
-	Event_UnregisterVoid(&TextureEvents_AtlasChanged,  NULL, MapRenderer_TerrainAtlasChanged);
-	Event_UnregisterInt(&WorldEvents_EnvVarChanged,    NULL, MapRenderer_EnvVariableChanged);
-	Event_UnregisterVoid(&BlockEvents_BlockDefChanged, NULL, MapRenderer_BlockDefinitionChanged);
+	Event_UnregisterVoid(&TextureEvents.AtlasChanged,  NULL, MapRenderer_TerrainAtlasChanged);
+	Event_UnregisterInt(&WorldEvents.EnvVarChanged,    NULL, MapRenderer_EnvVariableChanged);
+	Event_UnregisterVoid(&BlockEvents.BlockDefChanged, NULL, MapRenderer_BlockDefinitionChanged);
 
-	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, NULL, MapRenderer_RecalcVisibility_);
-	Event_UnregisterVoid(&GfxEvents_ProjectionChanged,   NULL, MapRenderer_RecalcVisibility_);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,         NULL, MapRenderer_DeleteChunks_);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated,    NULL, MapRenderer_Refresh_);
+	Event_UnregisterVoid(&GfxEvents.ViewDistanceChanged, NULL, MapRenderer_RecalcVisibility_);
+	Event_UnregisterVoid(&GfxEvents.ProjectionChanged,   NULL, MapRenderer_RecalcVisibility_);
+	Event_UnregisterVoid(&GfxEvents.ContextLost,         NULL, MapRenderer_DeleteChunks_);
+	Event_UnregisterVoid(&GfxEvents.ContextRecreated,    NULL, MapRenderer_Refresh_);
 
 	MapRenderer_OnNewMap();
 }

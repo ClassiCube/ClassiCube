@@ -514,7 +514,7 @@ static void Physics_HandleTnt(int index, BlockID block) {
 }
 
 void Physics_Init(void) {
-	Event_RegisterVoid(&WorldEvents_MapLoaded,    NULL, Physics_OnNewMapLoaded);
+	Event_RegisterVoid(&WorldEvents.MapLoaded,    NULL, Physics_OnNewMapLoaded);
 	Physics_Enabled = Options_GetBool(OPT_BLOCK_PHYSICS, true);
 	TickQueue_Init(&physics_lavaQ);
 	TickQueue_Init(&physics_waterQ);
@@ -557,7 +557,7 @@ void Physics_Init(void) {
 }
 
 void Physics_Free(void) {
-	Event_UnregisterVoid(&WorldEvents_MapLoaded,    NULL, Physics_OnNewMapLoaded);
+	Event_UnregisterVoid(&WorldEvents.MapLoaded,    NULL, Physics_OnNewMapLoaded);
 }
 
 void Physics_Tick(void) {

@@ -167,17 +167,17 @@ static void Launcher_Display(void) {
 static void Launcher_Init(void) {
 	BitmapCol col = BITMAPCOL_CONST(125, 125, 125, 255);
 
-	Event_RegisterVoid(&WindowEvents_Resized,      NULL, Launcher_OnResize);
-	Event_RegisterVoid(&WindowEvents_StateChanged, NULL, Launcher_OnResize);
-	Event_RegisterVoid(&WindowEvents_FocusChanged, NULL, Launcher_MaybeRedraw);
-	Event_RegisterVoid(&WindowEvents_Redraw,       NULL, Launcher_ReqeustRedraw);
+	Event_RegisterVoid(&WindowEvents.Resized,      NULL, Launcher_OnResize);
+	Event_RegisterVoid(&WindowEvents.StateChanged, NULL, Launcher_OnResize);
+	Event_RegisterVoid(&WindowEvents.FocusChanged, NULL, Launcher_MaybeRedraw);
+	Event_RegisterVoid(&WindowEvents.Redraw,       NULL, Launcher_ReqeustRedraw);
 
-	Event_RegisterInt(&KeyEvents_Down,          NULL, Launcher_KeyDown);
-	Event_RegisterInt(&KeyEvents_Press,         NULL, Launcher_KeyPress);
-	Event_RegisterInt(&MouseEvents_Down,        NULL, Launcher_MouseDown);
-	Event_RegisterInt(&MouseEvents_Up,          NULL, Launcher_MouseUp);
-	Event_RegisterMouseMove(&MouseEvents_Moved, NULL, Launcher_MouseMove);
-	Event_RegisterFloat(&MouseEvents_Wheel,     NULL, Launcher_MouseWheel);
+	Event_RegisterInt(&KeyEvents.Down,          NULL, Launcher_KeyDown);
+	Event_RegisterInt(&KeyEvents.Press,         NULL, Launcher_KeyPress);
+	Event_RegisterInt(&MouseEvents.Down,        NULL, Launcher_MouseDown);
+	Event_RegisterInt(&MouseEvents.Up,          NULL, Launcher_MouseUp);
+	Event_RegisterMouseMove(&MouseEvents.Moved, NULL, Launcher_MouseMove);
+	Event_RegisterFloat(&MouseEvents.Wheel,     NULL, Launcher_MouseWheel);
 
 	Drawer2D_MakeFont(&logoFont,           32, FONT_STYLE_NORMAL);
 	Drawer2D_MakeFont(&Launcher_TitleFont, 16, FONT_STYLE_BOLD);
@@ -191,17 +191,17 @@ static void Launcher_Init(void) {
 
 static void Launcher_Free(void) {
 	int i;
-	Event_UnregisterVoid(&WindowEvents_Resized,      NULL, Launcher_OnResize);
-	Event_UnregisterVoid(&WindowEvents_StateChanged, NULL, Launcher_OnResize);
-	Event_UnregisterVoid(&WindowEvents_FocusChanged, NULL, Launcher_MaybeRedraw);
-	Event_UnregisterVoid(&WindowEvents_Redraw,       NULL, Launcher_ReqeustRedraw);
+	Event_UnregisterVoid(&WindowEvents.Resized,      NULL, Launcher_OnResize);
+	Event_UnregisterVoid(&WindowEvents.StateChanged, NULL, Launcher_OnResize);
+	Event_UnregisterVoid(&WindowEvents.FocusChanged, NULL, Launcher_MaybeRedraw);
+	Event_UnregisterVoid(&WindowEvents.Redraw,       NULL, Launcher_ReqeustRedraw);
 	
-	Event_UnregisterInt(&KeyEvents_Down,          NULL, Launcher_KeyDown);
-	Event_UnregisterInt(&KeyEvents_Press,         NULL, Launcher_KeyPress);
-	Event_UnregisterInt(&MouseEvents_Down,        NULL, Launcher_MouseDown);
-	Event_UnregisterInt(&MouseEvents_Up,          NULL, Launcher_MouseUp);
-	Event_UnregisterMouseMove(&MouseEvents_Moved, NULL, Launcher_MouseMove);
-	Event_UnregisterFloat(&MouseEvents_Wheel,     NULL, Launcher_MouseWheel);
+	Event_UnregisterInt(&KeyEvents.Down,          NULL, Launcher_KeyDown);
+	Event_UnregisterInt(&KeyEvents.Press,         NULL, Launcher_KeyPress);
+	Event_UnregisterInt(&MouseEvents.Down,        NULL, Launcher_MouseDown);
+	Event_UnregisterInt(&MouseEvents.Up,          NULL, Launcher_MouseUp);
+	Event_UnregisterMouseMove(&MouseEvents.Moved, NULL, Launcher_MouseMove);
+	Event_UnregisterFloat(&MouseEvents.Wheel,     NULL, Launcher_MouseWheel);
 
 	for (i = 0; i < FetchFlagsTask.NumDownloaded; i++) {
 		Mem_Free(FetchFlagsTask.Bitmaps[i].Scan0);
