@@ -13,13 +13,13 @@ struct LWidgetVTABLE {
 	/* Called repeatedly to update this widget when selected. */
 	void (*Tick)(void* widget);
 	/* Called when key is pressed and this widget is selected. */
-	void (*OnKeyDown)(void* widget, Key key);
+	void (*KeyDown)(void* widget, Key key);
 	/* Called when key is pressed and this widget is selected. */
-	void (*OnKeyPress)(void* widget, char c);
-	/* Called when mouse hovers over this widget. */
-	void (*OnHover)(void* widget);
+	void (*KeyPress)(void* widget, char c);
+	/* Called when mouse hovers/moves over this widget. */
+	void (*MouseMove)(void* widget, int deltaX, int deltaY);
 	/* Called when mouse moves away from this widget. */
-	void (*OnUnhover)(void* widget);
+	void (*MouseLeft)(void* widget);
 	/* Called when mouse clicks on this widget. */
 	/* NOTE: This function is just for general widget behaviour. */
 	/* OnClick callback is for per-widget instance behaviour. */
@@ -169,6 +169,7 @@ struct LTable {
 	int DraggingColumn;
 	/* Whether scrollbar is currently being dragged up or down. */
 	bool DraggingScrollbar;
+	/* Offset of mouse for scrollbar dragging. */
 	int MouseOffset;
 };
 /* Initialises a table. */

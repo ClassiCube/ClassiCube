@@ -126,12 +126,13 @@ static void LButton_Draw(void* widget) {
 	if (!w->Hovered) Drawer2D_Cols['f'] = Drawer2D_Cols['F'];
 	Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
 }
+static void LButton_Hover(void* w, int x, int y) { LButton_Draw(w); }
 
 static struct LWidgetVTABLE lbutton_VTABLE = {
 	LButton_Draw, NULL,
-	NULL, NULL,                 /* Key    */
-	LButton_Draw, LButton_Draw, /* Hover  */
-	NULL, NULL                  /* Select */
+	NULL, NULL,                  /* Key    */
+	LButton_Hover, LButton_Draw, /* Hover  */
+	NULL, NULL                   /* Select */
 };
 void LButton_Init(struct LButton* w, const FontDesc* font, int width, int height) {
 	w->VTABLE = &lbutton_VTABLE;
@@ -706,8 +707,9 @@ static void LTable_SetSelectedTo(struct LTable* w, int index) {
 	if (index >= w->RowsCount) index = w->RowsCount - 1;
 	if (index < 0) index = 0;
 
-	String_Copy(w->Filter, &LTable_Get(index)->Hash);
+	String_Copy(w->SelectedHash, &LTable_Get(index)->Hash);
 	LTable_ShowSelected(w);
+	w->OnSelectedChanged();
 }
 
 #define GRIDLINE_SIZE   2
@@ -749,18 +751,18 @@ static BitmapCol LTable_RowCol(struct LTable* w, struct ServerInfo* row) {
 static void LTable_DrawRowsBackground(struct LTable* w) {
 	struct ServerInfo* entry;
 	BitmapCol col;
-	int y, height, row, end;
+	int y, height, row;
 
-	y   = w->RowsBegY;
-	end = w->TopRow + w->VisibleRows;
-
-	for (row = w->TopRow; row < end; row++, y += w->RowHeight) {
+	y = w->RowsBegY;
+	for (row = w->TopRow; ; row++, y += w->RowHeight) {
 		entry = row < w->RowsCount ? LTable_Get(row) : NULL;
 		col   = LTable_RowCol(w, entry);
-
 		if (!col.A) continue;
+
 		/* last row may get chopped off */
 		height = min(y + w->RowHeight, w->RowsEndY) - y;
+		/* hit the end of the table */
+		if (height < 0) break;
 
 		Drawer2D_Clear(&Launcher_Framebuffer, col,
 					   w->X, y, w->Width, height);
@@ -863,16 +865,16 @@ static void LTable_DrawScrollbar(struct LTable* w) {
 					x, w->Y + y, SCROLLBAR_WIDTH, height);
 }
 
-static void LTable_HandleKeyDown(struct LTable* w, Key key) {
+static void LTable_KeyDown(struct LTable* w, Key key) {
 	int index = LTable_GetSelectedIndex(w);
 	if (key == KEY_UP) {
-		index++;
-	} else if (key == KEY_DOWN) {
 		index--;
+	} else if (key == KEY_DOWN) {
+		index++;
 	} else if (key == KEY_PAGEUP) {
-		index += w->VisibleRows;
-	} else if (key == KEY_PAGEDOWN) {
 		index -= w->VisibleRows;
+	} else if (key == KEY_PAGEDOWN) {
+		index += w->VisibleRows;
 	} else { return; }
 
 	LTable_SetSelectedTo(w, index);
@@ -897,150 +899,62 @@ static void LTable_MouseMove(struct LTable* w, int deltaX, int deltaY) {
 	}
 }
 
-static void LTable_MouseDown(struct LTable* w) {
-	int x = Mouse_X - w->X, y = Mouse_Y - w->Y;
-
-	if (x >= w->X + w->Width - SCROLLBAR_WIDTH) {
-		//ScrollbarClick(mouseY);
-		w->DraggingScrollbar = true;
-		//lastIndex = -10; return;
-	}
-
-	if (y < w->HdrHeight) {
-		//SelectHeader(mouseX, mouseY);
-	} else {
-		//GetSelectedServer(mouseX, mouseY);
-	}
+static void LTable_RowsClick(struct LTable* w) {
+	int mouseY = Mouse_Y - w->RowsBegY;
+	LTable_SetSelectedTo(w, w->TopRow + mouseY / w->RowHeight);
 }
 
-/*void TableNeedsRedrawHandler();
+static void LTable_HeadersClick(struct LTable* w) {
+	int x, i, mouseX = Mouse_X - w->X;
 
-DefaultComparer defComp = new DefaultComparer();
-NameComparer nameComp = new NameComparer();
-PlayersComparer playerComp = new PlayersComparer();
-UptimeComparer uptimeComp = new UptimeComparer();
-SoftwareComparer softwareComp = new SoftwareComparer();
-internal int DraggingColumn = -1;
-internal bool DraggingScrollbar = false;
-internal int mouseOffset;
-
-void SortDefault() {
-	SortEntries(defComp, true);
-}
-
-void SelectHeader(int mouseX, int mouseY) {
-	int x = X + 15;
-	for (int i = 0; i < ColumnWidths.Length; i++) {
-		x += ColumnWidths[i] + 10;
-		if (mouseX >= x - 8 && mouseX < x + 8) {
-			DraggingColumn = i;
-			lastIndex = -10; return;
-		}
-	}
-	TrySortColumns(mouseX);
-}
-
-void TrySortColumns(int mouseX) {
-	int x = X + TableView.flagPadding;
-	if (mouseX >= x && mouseX < x + ColumnWidths[0]) {
-		SortEntries(nameComp, false); return;
-	}
-
-	x += ColumnWidths[0] + 10;
-	if (mouseX >= x && mouseX < x + ColumnWidths[1]) {
-		SortEntries(playerComp, false); return;
-	}
-
-	x += ColumnWidths[1] + 10;
-	if (mouseX >= x && mouseX < x + ColumnWidths[2]) {
-		SortEntries(uptimeComp, false); return;
-	}
-
-	x += ColumnWidths[2] + 10;
-	if (mouseX >= x) {
-		SortEntries(softwareComp, false); return;
-	}
-}
-
-void SortEntries(TableEntryComparer comparer, bool noRedraw) {
-	Array.Sort(entries, 0, entries.Length, comparer);
-	lastIndex = -10;
-	if (curFilter != null && curFilter.Length > 0) {
-		FilterEntries(curFilter);
-	}
-
-	if (noRedraw) return;
-	comparer.Invert = !comparer.Invert;
-	SetSelected(SelectedHash);
-	NeedRedraw();
-}
-
-void GetSelectedServer(int mouseX, int mouseY) {
-	for (int i = 0; i < Count; i++) {
-		TableEntry entry = Get(i);
-		if (mouseY < entry.Y || mouseY >= entry.Y + entry.Height + 2) continue;
-
-		if (lastIndex == i) {
-			Launcher_ConnectToServer(entry.Hash);
+	for (i = 0, x = w->X; i < w->NumColumns; i++) {
+		/* clicked on gridline, begin dragging */
+		if (mouseX >= (x - 8) && mouseX < (x + 8) && w->Columns[i].Interactable) {
+			w->DraggingColumn = i;
 			return;
 		}
 
-		SetSelected(i);
-		NeedRedraw();
-		break;
-	}
-}
-
-void MouseDown(int mouseX, int mouseY) {
-	if (mouseX >= Window.Width - 10) {
-		ScrollbarClick(mouseY);
-		DraggingScrollbar = true;
-		lastIndex = -10; return;
+		x += w->Columns[i].Width;
+		if (w->Columns[i].ColumnGridline) x += GRIDLINE_SIZE;
 	}
 
-	if (mouseY >= view.headerStartY && mouseY < view.headerEndY) {
-		SelectHeader(mouseX, mouseY);
-	} else {
-		GetSelectedServer(mouseX, mouseY);
-	}
-}
-
-int lastIndex = -10;
-void MouseMove(int x, int y, int deltaX, int deltaY) {
-	if (DraggingScrollbar) {
-		y -= Y;
-		float scale = Height / (float)Count;
-		CurrentIndex = (int)((y - mouseOffset) / scale);
-		ClampIndex();
-		NeedRedraw();
-	} else if (DraggingColumn >= 0) {
-		if (x >= Window.Width - 20) return;
-		int col = DraggingColumn;
-		ColumnWidths[col] += deltaX;
-		Utils.Clamp(ref ColumnWidths[col], 20, Window.Width - 20);
-		NeedRedraw();
-	}
-}
-
-void ScrollbarClick(int mouseY) {
-		mouseY -= Y;
-		int y, height;
-		GetScrollbarCoords(out y, out height);
-		int delta = (view.maxIndex - CurrentIndex);
-
-		if (mouseY < y) {
-			CurrentIndex -= delta;
-		} else if (mouseY >= y + height) {
-			CurrentIndex += delta;
-		} else {
-			DraggingScrollbar = true;
-			mouseOffset = mouseY - y;
+	for (i = 0, x = w->X; i < w->NumColumns; i++) {
+		if (mouseX >= x && mouseX < (x + w->Columns[i].Width) && w->Columns[i].Interactable) {
+			/* TODO: Fix this.. */
+			//LTable_Sort(w);
+			return;
 		}
-		ClampIndex();
-		NeedRedraw();
 	}
 }
-*/
+
+/* Handles clicking on the scrollbar on right edge of table */
+static void LTable_ScrollbarClick(struct LTable* w) {
+	int y, height, mouseY = Mouse_Y - w->Y;
+	LTable_GetScrollbarCoords(w, &y, &height);
+
+	if (mouseY < y) {
+		w->TopRow -= w->VisibleRows;
+	} else if (mouseY >= y + height) {
+		w->TopRow += w->VisibleRows;
+	} else {
+		w->MouseOffset = mouseY - y;
+	}
+
+	LTable_ClampTopRow(w);
+}
+
+static void LTable_MouseDown(struct LTable* w, bool wasSelected) {
+	if (Mouse_X >= Game_Width - SCROLLBAR_WIDTH) {
+		LTable_ScrollbarClick(w);
+		w->DraggingScrollbar = true;
+		//lastIndex = -10;
+	} else if (Mouse_Y < w->RowsBegY) {
+		LTable_HeadersClick(w);
+	} else {
+		LTable_RowsClick(w);
+	}
+	LWidget_Draw(w);
+}
 
 /* Default sort order. (most active server, then by highest uptime) */
 static int LTable_DefaultSort(struct ServerInfo* a, struct ServerInfo* b) {
@@ -1064,7 +978,7 @@ void LTable_Reposition(struct LTable* w) {
 	w->RowsEndY = w->Y + w->Height;
 	rowsHeight  = w->Height - (w->RowsBegY - w->Y);
 
-	w->VisibleRows = Math_CeilDiv(rowsHeight, w->RowHeight);
+	w->VisibleRows = rowsHeight / w->RowHeight;
 	LTable_ClampTopRow(w);
 }
 
@@ -1079,9 +993,9 @@ static void LTable_Draw(void* widget) {
 
 static struct LWidgetVTABLE ltable_VTABLE = {
 	LTable_Draw, NULL,
-	NULL, NULL, /* Key    */
-	NULL, NULL, /* Hover  */
-	NULL, NULL  /* Select */
+	LTable_KeyDown,   NULL, /* Key    */
+	LTable_MouseMove, NULL, /* Hover  */
+	LTable_MouseDown, LTable_StopDragging  /* Select */
 };
 void LTable_Init(struct LTable* w, const FontDesc* hdrFont, const FontDesc* rowFont) {
 	w->VTABLE     = &ltable_VTABLE;
@@ -1155,8 +1069,7 @@ void LTable_ShowSelected(struct LTable* w) {
 	if (i == -1) return;
 
 	if (i >= w->TopRow + w->VisibleRows) {
-		/* leave one row below selected NOPE TODO FIX... */
-		w->TopRow = i - w->VisibleRows;
+		w->TopRow = i - (w->VisibleRows - 1);
 	}
 	if (i < w->TopRow) w->TopRow = i;
 	LTable_ClampTopRow(w);

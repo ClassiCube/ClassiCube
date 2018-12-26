@@ -50,19 +50,8 @@ static void LScreen_Tick(struct LScreen* s) {
 	if (w && w->VTABLE->Tick) w->VTABLE->Tick(w);
 }
 
-CC_NOINLINE static void LScreen_HoverWidget(struct LScreen* s, struct LWidget* w) {
-	if (!w) return;
-	w->Hovered       = true;
-	s->HoveredWidget = w;
-	if (w->VTABLE->OnHover) w->VTABLE->OnHover(w);
-}
-
-CC_NOINLINE static void LScreen_UnhoverWidget(struct LScreen* s, struct LWidget* w) {
-	if (!w) return;
-	w->Hovered       = false;
-	s->HoveredWidget = NULL;
-	if (w->VTABLE->OnUnhover) w->VTABLE->OnUnhover(w);
-}
+static void LScreen_HoverWidget(struct LScreen* s,   struct LWidget* w) { }
+static void LScreen_UnhoverWidget(struct LScreen* s, struct LWidget* w) { }
 
 CC_NOINLINE static void LScreen_SelectWidget(struct LScreen* s, struct LWidget* w, bool was) {
 	if (!w) return;
@@ -110,13 +99,13 @@ static void LScreen_KeyDown(struct LScreen* s, Key key) {
 			s->OnEnterWidget->OnClick(s->OnEnterWidget,   Mouse_X, Mouse_Y);
 		}
 	} else if (s->SelectedWidget) {
-		s->SelectedWidget->VTABLE->OnKeyDown(s->SelectedWidget, key);
+		s->SelectedWidget->VTABLE->KeyDown(s->SelectedWidget, key);
 	}
 }
 
 static void LScreen_KeyPress(struct LScreen* s, char key) {
 	if (!s->SelectedWidget) return;
-	s->SelectedWidget->VTABLE->OnKeyPress(s->SelectedWidget, key);
+	s->SelectedWidget->VTABLE->KeyPress(s->SelectedWidget, key);
 }
 
 static void LScreen_MouseDown(struct LScreen* s, MouseButton btn) {
@@ -142,10 +131,25 @@ static void LScreen_MouseUp(struct LScreen* s, MouseButton btn) {
 static void LScreen_MouseMove(struct LScreen* s, int deltaX, int deltaY) {
 	struct LWidget* over = LScreen_WidgetAt(s, Mouse_X, Mouse_Y);
 	struct LWidget* prev = s->HoveredWidget;
+	if (over == prev) return; /* TODO: ... */
 
-	if (over == prev) return;
-	if (prev) s->UnhoverWidget(s, prev);
-	if (over) s->HoverWidget(s,   over);
+	if (prev) {
+		prev->Hovered    = false;
+		s->HoveredWidget = NULL;
+		s->UnhoverWidget(s, prev);
+
+		if (!prev->VTABLE->MouseLeft) return;
+		prev->VTABLE->MouseLeft(prev);
+	}
+
+	if (over) {
+		over->Hovered    = true;
+		s->HoveredWidget = over;
+		s->HoverWidget(s, over);
+
+		if (!over->VTABLE->MouseMove) return;
+		over->VTABLE->MouseMove(over, deltaX, deltaY);
+	}
 }
 static void LScreen_MouseWheel(struct LScreen* s, float delta) { }
 
@@ -790,8 +794,6 @@ static void MainScreen_HoverWidget(struct LScreen* s_, struct LWidget* w) {
 	String str; char strBuffer[STRING_SIZE];
 	struct MainScreen* s = (struct MainScreen*)s_;
 	struct ResumeInfo info;
-
-	LScreen_HoverWidget(s_, w);
 	if (s->SigningIn || w != (struct LWidget*)&s->BtnResume) return;
 
 	MainScreen_UNSAFE_GetResume(&info, false);
@@ -812,7 +814,6 @@ static void MainScreen_HoverWidget(struct LScreen* s_, struct LWidget* w) {
 
 static void MainScreen_UnhoverWidget(struct LScreen* s_, struct LWidget* w) {
 	struct MainScreen* s = (struct MainScreen*)s_;
-	LScreen_UnhoverWidget(s_, w);
 	if (s->SigningIn || w != (struct LWidget*)&s->BtnResume) return;
 
 	LLabel_SetText(&s->LblStatus, &String_Empty);
@@ -1162,6 +1163,12 @@ static void ServersScreen_HashChanged(struct LInput* w) {
 	LWidget_Draw(&s->Table);
 }
 
+static void ServersScreen_OnSelectedChanged(void) {
+	struct ServersScreen* s = &ServersScreen_Instance;
+	LWidget_Redraw(&s->IptHash);
+	LWidget_Draw(&s->Table);
+}
+
 static void ServersScreen_InitWidgets(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	s->Widgets = s->_widgets;
@@ -1184,6 +1191,7 @@ static void ServersScreen_InitWidgets(struct LScreen* s_) {
 	LTable_Init(&s->Table, &Launcher_TextFont, &s->RowFont);
 	s->Table.Filter       = &s->IptSearch.Text;
 	s->Table.SelectedHash = &s->IptHash.Text;
+	s->Table.OnSelectedChanged = ServersScreen_OnSelectedChanged;
 
 	s->Widgets[s->NumWidgets++] = (struct LWidget*)&s->Table;
 }
