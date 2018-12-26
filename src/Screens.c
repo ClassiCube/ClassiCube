@@ -147,7 +147,6 @@ static void InventoryScreen_Init(void* screen) {
 	   might be toggled after Init() is called. This causes the cursor to 
 	   be moved back to the middle of the window. */
 	s->DeferredSelect = true;
-	Key_KeyRepeat     = true;
 	Screen_CommonInit(s);
 
 	Event_RegisterVoid(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
@@ -168,28 +167,27 @@ static void InventoryScreen_OnResize(void* screen) {
 static void InventoryScreen_Free(void* screen) {
 	struct InventoryScreen* s = screen;
 	Font_Free(&s->Font);
-	Key_KeyRepeat = false;
 	Screen_CommonFree(s);
 	
 	Event_UnregisterVoid(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
 	Event_UnregisterVoid(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
 }
 
-static bool InventoryScreen_KeyDown(void* screen, Key key) {
+static bool InventoryScreen_KeyDown(void* screen, Key key, bool was) {
 	struct InventoryScreen* s = screen;
 	struct TableWidget* table = &s->Table;
 
-	if (key == KeyBind_Get(KEYBIND_PAUSE_EXIT)) {
+	if (key == KEY_ESCAPE) {
 		Gui_CloseActive();
 	} else if (key == KeyBind_Get(KEYBIND_INVENTORY) && s->ReleasedInv) {
 		Gui_CloseActive();
 	} else if (key == KEY_ENTER && table->SelectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->Elements[table->SelectedIndex]);
 		Gui_CloseActive();
-	} else if (Elem_HandlesKeyDown(table, key)) {
+	} else if (Elem_HandlesKeyDown(table, key, was)) {
 	} else {
 		struct HUDScreen* hud = (struct HUDScreen*)Gui_HUD;
-		return Elem_HandlesKeyDown(&hud->Hotbar, key);
+		return Elem_HandlesKeyDown(&hud->Hotbar, key, was);
 	}
 	return true;
 }
@@ -407,7 +405,8 @@ static void StatusScreen_ContextRecreated(void* screen) {
 	}
 }
 
-static bool StatusScreen_Key(void* elem, Key key) { return false; }
+static bool StatusScreen_KeyDown(void* elem, Key key, bool was) { return false; }
+static bool StatusScreen_KeyUp(void* elem, Key key) { return false; }
 static bool StatusScreen_KeyPress(void* elem, char keyChar) { return false; }
 static bool StatusScreen_MouseScroll(void* elem, float delta) { return false; }
 
@@ -443,9 +442,9 @@ static void StatusScreen_Free(void* screen) {
 }
 
 static struct ScreenVTABLE StatusScreen_VTABLE = {
-	StatusScreen_Init,  StatusScreen_Render, StatusScreen_Free,     Gui_DefaultRecreate,
-	StatusScreen_Key,   StatusScreen_Key,    StatusScreen_KeyPress,
-	Screen_Mouse,       Screen_Mouse,        Screen_MouseMove,      StatusScreen_MouseScroll,
+	StatusScreen_Init,    StatusScreen_Render, StatusScreen_Free,     Gui_DefaultRecreate,
+	StatusScreen_KeyDown, StatusScreen_KeyUp,  StatusScreen_KeyPress,
+	Screen_Mouse,         Screen_Mouse,        Screen_MouseMove,      StatusScreen_MouseScroll,
 	StatusScreen_OnResize, StatusScreen_ContextLost, StatusScreen_ContextRecreated,
 };
 struct Screen* StatusScreen_MakeInstance(void) {
@@ -496,9 +495,9 @@ static void LoadingScreen_ContextRecreated(void* screen) {
 	LoadingScreen_SetMessage(s);
 }
 
-static bool LoadingScreen_KeyDown(void* sceen, Key key) {
+static bool LoadingScreen_KeyDown(void* sceen, Key key, bool was) {
 	if (key == KEY_TAB) return true;
-	return Elem_HandlesKeyDown(Gui_HUD, key);
+	return Elem_HandlesKeyDown(Gui_HUD, key, was);
 }
 
 static bool LoadingScreen_KeyPress(void* scren, char keyChar) {
@@ -736,7 +735,6 @@ static void ChatScreen_SetHandlesAllInput(struct ChatScreen* s, bool handles) {
 static void ChatScreen_OpenInput(struct ChatScreen* s, const String* initialText) {
 	s->SuppressNextPress = true;
 	ChatScreen_SetHandlesAllInput(s, true);
-	Key_KeyRepeat = true;
 
 	String_Copy(&s->Input.Base.Text, initialText);
 	Elem_Recreate(&s->Input.Base);
@@ -909,7 +907,7 @@ static void ChatScreen_ScrollHistoryBy(struct ChatScreen* s, int delta) {
 	ChatScreen_ResetChat(s);
 }
 
-static bool ChatScreen_KeyDown(void* screen, Key key) {
+static bool ChatScreen_KeyDown(void* screen, Key key, bool was) {
 	const static String slash  = String_FromConst("/");
 	struct ChatScreen* s = screen;
 	struct InputWidget* input;
@@ -918,13 +916,10 @@ static bool ChatScreen_KeyDown(void* screen, Key key) {
 	s->SuppressNextPress = false;
 	/* Handle text input bar */
 	if (s->HandlesAllInput) {
-		if (key == KeyBind_Get(KEYBIND_SEND_CHAT) || key == KEY_KP_ENTER || key == KeyBind_Get(KEYBIND_PAUSE_EXIT)) {
+		if (key == KeyBind_Get(KEYBIND_SEND_CHAT) || key == KEY_KP_ENTER || key == KEY_ESCAPE) {
 			ChatScreen_SetHandlesAllInput(s, false);
-			Key_KeyRepeat = false;
 
-			if (key == KeyBind_Get(KEYBIND_PAUSE_EXIT)) {
-				InputWidget_Clear(&s->Input.Base);
-			}
+			if (key == KEY_ESCAPE) InputWidget_Clear(&s->Input.Base);
 			ChatScreen_InputStr.length = 0;
 
 			input = &s->Input.Base;
@@ -942,7 +937,7 @@ static bool ChatScreen_KeyDown(void* screen, Key key) {
 		} else if (key == KEY_PAGEDOWN) {
 			ChatScreen_ScrollHistoryBy(s, +Gui_Chatlines);
 		} else {
-			Elem_HandlesKeyDown(&s->Input.Base, key);
+			Elem_HandlesKeyDown(&s->Input.Base, key, was);
 			ChatScreen_UpdateAltTextY(s);
 		}
 		return key < KEY_F1 || key > KEY_F35;
@@ -1255,7 +1250,7 @@ static bool HUDScreen_KeyPress(void* screen, char keyChar) {
 	return Elem_HandlesKeyPress(s->Chat, keyChar); 
 }
 
-static bool HUDScreen_KeyDown(void* screen, Key key) {
+static bool HUDScreen_KeyDown(void* screen, Key key, bool was) {
 	struct HUDScreen* s = screen;
 	Key playerListKey = KeyBind_Get(KEYBIND_PLAYER_LIST);
 	bool handles = playerListKey != KEY_TAB || !Gui_TabAutocomplete || !s->Chat->HandlesAllInput;
@@ -1268,7 +1263,7 @@ static bool HUDScreen_KeyDown(void* screen, Key key) {
 		return true;
 	}
 
-	return Elem_HandlesKeyDown(s->Chat, key) || Elem_HandlesKeyDown(&s->Hotbar, key);
+	return Elem_HandlesKeyDown(s->Chat, key, was) || Elem_HandlesKeyDown(&s->Hotbar, key, was);
 }
 
 static bool HUDScreen_KeyUp(void* screen, Key key) {
@@ -1500,7 +1495,7 @@ static void DisconnectScreen_OnResize(void* screen) {
 	Widget_Reposition(&s->Reconnect);
 }
 
-static bool DisconnectScreen_KeyDown(void* s, Key key) { return key < KEY_F1 || key > KEY_F35; }
+static bool DisconnectScreen_KeyDown(void* s, Key key, bool was) { return key < KEY_F1 || key > KEY_F35; }
 static bool DisconnectScreen_KeyPress(void* s, char keyChar) { return true; }
 static bool DisconnectScreen_KeyUp(void* s, Key key) { return true; }
 

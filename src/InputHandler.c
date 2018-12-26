@@ -157,7 +157,7 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 		InputHandler_Toggle(key, &AutoRotate_Enabled,
 			"  &eAuto rotate is &aenabled",
 			"  &eAuto rotate is &cdisabled");
-	} else if (key == KeyBind_Get(KEYBIND_THIRD_PERSO)) {
+	} else if (key == KeyBind_Get(KEYBIND_THIRD_PERSON)) {
 		Camera_CycleActive();
 	} else if (key == KeyBind_Get(KEYBIND_DROP_BLOCK)) {
 		if (Inventory_CheckChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {
@@ -199,7 +199,7 @@ static bool InputHandler_HandleCoreKey(Key key) {
 		} else {
 			InputHandler_CycleDistanceForwards(viewDists, count);
 		}
-	} else if ((key == KeyBind_Get(KEYBIND_PAUSE_EXIT) || key == KEY_PAUSE) && !active->HandlesAllInput) {
+	} else if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !active->HandlesAllInput) {
 		Gui_FreeActive();
 		Gui_SetActive(PauseScreen_MakeInstance());
 	} else if (key == KeyBind_Get(KEYBIND_INVENTORY) && active == Gui_HUD) {
@@ -450,7 +450,7 @@ static bool InputHandler_SimulateMouse(Key key, bool pressed) {
 	return true;
 }
 
-static void InputHandler_KeyDown(void* obj, int key) {
+static void InputHandler_KeyDown(void* obj, int key, bool was) {
 	struct Screen* active;
 	int idx;
 	struct HotkeyData* hkey;
@@ -461,11 +461,14 @@ static void InputHandler_KeyDown(void* obj, int key) {
 
 	if (InputHandler_IsShutdown(key)) {
 		/* TODO: Do we need a separate exit function in Game class? */
-		Window_Close();
-	} else if (key == KeyBind_Get(KEYBIND_SCREENSHOT)) {
-		Game_ScreenshotRequested = true;
-	} else if (Elem_HandlesKeyDown(active, key)) {
-	} else if (InputHandler_HandleCoreKey(key)) {
+		Window_Close(); return;
+	} else if (key == KeyBind_Get(KEYBIND_SCREENSHOT) && !was) {
+		Game_ScreenshotRequested = true; return;
+	} else if (Elem_HandlesKeyDown(active, key, was)) { return; }
+
+	/* These should not be triggered multiple times when holding down */
+	if (was) return;
+	if (InputHandler_HandleCoreKey(key)) {
 	} else if (LocalPlayer_HandlesKey(key)) {
 	} else {
 		idx = Hotkeys_FindPartial(key);

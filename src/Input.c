@@ -11,7 +11,6 @@
 /*########################################################################################################################*
 *-----------------------------------------------------------Key-----------------------------------------------------------*
 *#########################################################################################################################*/
-bool Key_KeyRepeat;
 bool Key_Pressed[KEY_COUNT];
 
 #define Key_Function_Names \
@@ -68,12 +67,12 @@ const char* Key_Names[KEY_COUNT] = {
 };*/
 
 void Key_SetPressed(Key key, bool pressed) {
-	if (Key_Pressed[key] == pressed && !Key_KeyRepeat) return;
+	bool wasPressed  = Key_Pressed[key];
 	Key_Pressed[key] = pressed;
 
 	if (pressed) {
-		Event_RaiseInt(&KeyEvents.Down, key);
-	} else {
+		Event_RaiseInput(&KeyEvents.Down, key, wasPressed);
+	} else if (wasPressed) {
 		Event_RaiseInt(&KeyEvents.Up, key);
 	}
 }
@@ -124,24 +123,24 @@ static Key KeyBind_Keys[KEYBIND_COUNT];
 static uint8_t KeyBind_Defaults[KEYBIND_COUNT] = {
 	KEY_W, KEY_S, KEY_A, KEY_D,
 	KEY_SPACE, KEY_R, KEY_ENTER, KEY_T,
-	KEY_B, KEY_F, KEY_ENTER, KEY_ESCAPE,
-	KEY_TAB, KEY_LSHIFT, KEY_X, KEY_Z,
-	KEY_Q, KEY_E, KEY_LALT, KEY_F3,
-	KEY_F12, KEY_F11, KEY_F5, KEY_F1,
-	KEY_F7, KEY_C, KEY_LCTRL, KEY_NONE,
-	KEY_NONE, KEY_NONE, KEY_F6, KEY_LALT, 
-	KEY_F8, KEY_G, KEY_F10, KEY_NONE,
+	KEY_B, KEY_F, KEY_ENTER, KEY_TAB, 
+	KEY_LSHIFT, KEY_X, KEY_Z, KEY_Q, KEY_E, 
+	KEY_LALT, KEY_F3, KEY_F12, KEY_F11, 
+	KEY_F5, KEY_F1, KEY_F7, KEY_C, 
+	KEY_LCTRL, KEY_NONE, KEY_NONE, KEY_NONE, 
+	KEY_F6, KEY_LALT, KEY_F8, 
+	KEY_G, KEY_F10, KEY_NONE
 };
 const char* KeyBind_Names[KEYBIND_COUNT] = {
 	"Forward", "Back", "Left", "Right",
-	"Jump", "Respawn", "SetSpawn", "Chat",
-	"Inventory", "ToggleFog", "SendChat", "PauseOrExit",
-	"PlayerList", "Speed", "NoClip", "Fly",
-	"FlyUp", "FlyDown", "ExtInput", "HideFPS",
-	"Screenshot", "Fullscreen", "ThirdPerson", "HideGUI",
-	"AxisLines", "ZoomScrolling", "HalfSpeed", "MouseLeft",
-	"MouseMiddle", "MouseRight", "AutoRotate", "HotbarSwitching",
-	"SmoothCamera", "DropBlock", "IDOverlay", "BreakableLiquids",
+	"Jump", "Respawn", "SetSpawn", "Chat", "Inventory", 
+	"ToggleFog", "SendChat", "PlayerList", 
+	"Speed", "NoClip", "Fly", "FlyUp", "FlyDown", 
+	"ExtInput", "HideFPS", "Screenshot", "Fullscreen", 
+	"ThirdPerson", "HideGUI", "AxisLines", "ZoomScrolling", 
+	"HalfSpeed", "MouseLeft", "MouseMiddle", "MouseRight", 
+	"AutoRotate", "HotbarSwitching", "SmoothCamera", 
+	"DropBlock", "IDOverlay", "BreakableLiquids"
 };
 
 Key KeyBind_Get(KeyBind binding) { return KeyBind_Keys[binding]; }
@@ -162,7 +161,6 @@ void KeyBind_Load(void) {
 		mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Key_Names, KEY_COUNT);
 		if (mapping != KEY_ESCAPE) KeyBind_Keys[i] = mapping;
 	}
-	KeyBind_Keys[KEYBIND_PAUSE_EXIT] = KEY_ESCAPE;
 }
 
 void KeyBind_Save(void) {

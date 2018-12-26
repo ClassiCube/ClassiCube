@@ -13,7 +13,7 @@ struct LWidgetVTABLE {
 	/* Called repeatedly to update this widget when selected. */
 	void (*Tick)(void* widget);
 	/* Called when key is pressed and this widget is selected. */
-	void (*KeyDown)(void* widget, Key key);
+	void (*KeyDown)(void* widget, Key key, bool wasDown);
 	/* Called when key is pressed and this widget is selected. */
 	void (*KeyPress)(void* widget, char c);
 	/* Called when mouse hovers/moves over this widget. */

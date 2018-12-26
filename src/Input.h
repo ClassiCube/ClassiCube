@@ -66,9 +66,6 @@ typedef enum Key_ {
 	KEY_COUNT
 } Key;
 
-/* Gets whether key repeating is on or not. When on, multiple KeyDown events are raised when the same key is 
-held down for a period of time (frequency depends on platform). Should be on for menu input, off for game input. */
-extern bool Key_KeyRepeat;
 /* Simple names for each keyboard button. */
 extern const char* Key_Names[KEY_COUNT];
 
@@ -80,9 +77,10 @@ extern const char* Key_Names[KEY_COUNT];
 /* Pressed state of each keyboard button. Use Key_SetPressed to change. */
 extern bool Key_Pressed[KEY_COUNT];
 /* Sets the pressed state of a keyboard button. */
-/* Raises KeyEvents.Up or KeyEvents.Down if state differs, or Key_KeyRepeat is on. */
+/* Raises KeyEvents.Up   if not pressed, but was pressed before. */
+/* Raises KeyEvents.Down if pressed (repeating is whether it was pressed before) */
 void Key_SetPressed(Key key, bool pressed);
-/* Resets all keys to not pressed state. */
+/* Resets all keys to be not pressed. */
 /* Raises KeyEvents.Up for each previously pressed key. */
 void Key_Clear(void);
 
@@ -112,13 +110,13 @@ void Mouse_SetPosition(int x, int y);
 typedef enum KeyBind_ {
 	KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_LEFT, KEYBIND_RIGHT, 
 	KEYBIND_JUMP, KEYBIND_RESPAWN, KEYBIND_SET_SPAWN, KEYBIND_CHAT,
-	KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_SEND_CHAT, KEYBIND_PAUSE_EXIT, 
-	KEYBIND_PLAYER_LIST, KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_FLY, 
-	KEYBIND_FLY_UP, KEYBIND_FLY_DOWN, KEYBIND_EXT_INPUT, KEYBIND_HIDE_FPS,
-	KEYBIND_SCREENSHOT, KEYBIND_FULLSCREEN, KEYBIND_THIRD_PERSO, KEYBIND_HIDE_GUI, 
-	KEYBIND_AXIS_LINES, KEYBIND_ZOOM_SCROLL, KEYBIND_HALF_SPEED, KEYBIND_MOUSE_LEFT, 
-	KEYBIND_MOUSE_MIDDLE, KEYBIND_MOUSE_RIGHT, KEYBIND_AUTOROTATE, KEYBIND_HOTBAR_SWITCH, 
-	KEYBIND_SMOOTH_CAMERA, KEYBIND_DROP_BLOCK, KEYBIND_IDOVERLAY, KEYBIND_BREAK_LIQUIDS,
+	KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_SEND_CHAT, KEYBIND_PLAYER_LIST, 
+	KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN, 
+	KEYBIND_EXT_INPUT, KEYBIND_HIDE_FPS, KEYBIND_SCREENSHOT, KEYBIND_FULLSCREEN,
+	KEYBIND_THIRD_PERSON, KEYBIND_HIDE_GUI, KEYBIND_AXIS_LINES, KEYBIND_ZOOM_SCROLL, 
+	KEYBIND_HALF_SPEED, KEYBIND_MOUSE_LEFT, KEYBIND_MOUSE_MIDDLE, KEYBIND_MOUSE_RIGHT, 
+	KEYBIND_AUTOROTATE, KEYBIND_HOTBAR_SWITCH, KEYBIND_SMOOTH_CAMERA, 
+	KEYBIND_DROP_BLOCK, KEYBIND_IDOVERLAY, KEYBIND_BREAK_LIQUIDS,
 	KEYBIND_COUNT
 } KeyBind;
 

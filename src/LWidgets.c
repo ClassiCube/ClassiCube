@@ -386,7 +386,7 @@ static void LInput_Unselect(void* widget) {
 	LInput_Draw(widget);
 }
 
-static void LInput_KeyDown(void* widget, Key key) {
+static void LInput_KeyDown(void* widget, Key key, bool was) {
 	struct LInput* w = widget;
 	if (key == KEY_BACKSPACE && LInput_Backspace(w)) {
 		LWidget_Redraw(w);
@@ -865,7 +865,7 @@ static void LTable_DrawScrollbar(struct LTable* w) {
 					x, w->Y + y, SCROLLBAR_WIDTH, height);
 }
 
-static void LTable_KeyDown(struct LTable* w, Key key) {
+static void LTable_KeyDown(struct LTable* w, Key key, bool was) {
 	int index = LTable_GetSelectedIndex(w);
 	if (key == KEY_UP) {
 		index--;

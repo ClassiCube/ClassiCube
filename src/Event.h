@@ -52,6 +52,12 @@ struct Event_Chat {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
+typedef void (*Event_Input_Callback)(void* obj, int key, bool repeating);
+struct Event_Input {
+	Event_Input_Callback Handlers[EVENT_MAX_CALLBACKS];
+	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
+};
+
 /* Registers a callback function for the given event. */
 /* NOTE: Trying to register a callback twice or over EVENT_MAX_CALLBACKS callbacks will terminate the game. */
 CC_API void Event_Register(struct Event_Void* handlers,   void* obj, Event_Void_Callback handler);
@@ -100,6 +106,13 @@ void Event_RaiseMouseMove(struct Event_MouseMove* handlers, int xDelta, int yDel
 void Event_RaiseChat(struct Event_Chat* handlers, const String* msg, int msgType);
 #define Event_RegisterChat(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
 #define Event_UnregisterChat(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
+
+/* Calls all registered callbacks for an event which has keyboard key/mouse button. */
+/* repeating is whether the key/button was already pressed down. (i.e. user is holding down key) */
+/* NOTE: 'pressed up'/'released' events will always have repeating as false. */
+void Event_RaiseInput(struct Event_Input* handlers, int key, bool repeating);
+#define Event_RegisterInput(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
+#define Event_UnregisterInput(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
 extern struct _EntityEventsList {
 	struct Event_Int Added;    /* Entity is spawned in the current world */
@@ -163,9 +176,9 @@ extern struct _WindowEventsList {
 } WindowEvents;
 
 struct _KeyEventsList {
-	struct Event_Int Press; /* Raised when a character is typed. Arg is a character */
-	struct Event_Int Down;  /* Raised when a key is pressed. Arg is a member of Key enumeration */
-	struct Event_Int Up;    /* Raised when a key is released. Arg is a member of Key enumeration */
+	struct Event_Int Press;  /* Raised when a character is typed. Arg is a character */
+	struct Event_Input Down; /* Raised when a key is pressed. Arg is a member of Key enumeration */
+	struct Event_Int Up;     /* Raised when a key is released. Arg is a member of Key enumeration */
 } KeyEvents;
 
 extern struct _MouseEventsList {

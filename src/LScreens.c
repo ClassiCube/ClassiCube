@@ -89,17 +89,20 @@ static void LScreen_HandleTab(struct LScreen* s) {
 	}
 }
 
-static void LScreen_KeyDown(struct LScreen* s, Key key) {
+static void LScreen_KeyDown(struct LScreen* s, Key key, bool was) {
 	if (key == KEY_TAB) {
 		LScreen_HandleTab(s);
 	} else if (key == KEY_ENTER) {
+		/* Shouldn't multi click when holding down Enter */
+		if (was) return;
+
 		if (s->SelectedWidget && s->SelectedWidget->OnClick) {
 			s->SelectedWidget->OnClick(s->SelectedWidget, Mouse_X, Mouse_Y);
 		} else if (s->OnEnterWidget) {
 			s->OnEnterWidget->OnClick(s->OnEnterWidget,   Mouse_X, Mouse_Y);
 		}
 	} else if (s->SelectedWidget) {
-		s->SelectedWidget->VTABLE->KeyDown(s->SelectedWidget, key);
+		s->SelectedWidget->VTABLE->KeyDown(s->SelectedWidget, key, was);
 	}
 }
 
@@ -429,7 +432,7 @@ static void ColoursScreen_MouseWheel(struct LScreen* s_, float delta) {
 	ColoursScreen_AdjustSelected(s_, steps);
 }
 
-static void ColoursScreen_KeyDown(struct LScreen* s, Key key) {
+static void ColoursScreen_KeyDown(struct LScreen* s, Key key, bool was) {
 	if (key == KEY_LEFT) {
 		ColoursScreen_AdjustSelected(s, -1);
 	} else if (key == KEY_RIGHT) {
@@ -439,7 +442,7 @@ static void ColoursScreen_KeyDown(struct LScreen* s, Key key) {
 	} else if (key == KEY_DOWN) {
 		ColoursScreen_AdjustSelected(s, -10);
 	} else {
-		LScreen_KeyDown(s, key);
+		LScreen_KeyDown(s, key, was);
 	}
 }
 

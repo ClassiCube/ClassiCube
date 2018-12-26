@@ -121,9 +121,9 @@ static bool Launcher_IsShutdown(int key) {
 #endif
 }
 
-static void Launcher_KeyDown(void* obj, int key) {
+static void Launcher_KeyDown(void* obj, int key, bool was) {
 	if (Launcher_IsShutdown(key)) Launcher_ShouldExit = true;
-	Launcher_Screen->KeyDown(Launcher_Screen, key);
+	Launcher_Screen->KeyDown(Launcher_Screen, key, was);
 }
 
 static void Launcher_KeyPress(void* obj, int c) {
@@ -172,7 +172,7 @@ static void Launcher_Init(void) {
 	Event_RegisterVoid(&WindowEvents.FocusChanged, NULL, Launcher_MaybeRedraw);
 	Event_RegisterVoid(&WindowEvents.Redraw,       NULL, Launcher_ReqeustRedraw);
 
-	Event_RegisterInt(&KeyEvents.Down,          NULL, Launcher_KeyDown);
+	Event_RegisterInput(&KeyEvents.Down,        NULL, Launcher_KeyDown);
 	Event_RegisterInt(&KeyEvents.Press,         NULL, Launcher_KeyPress);
 	Event_RegisterInt(&MouseEvents.Down,        NULL, Launcher_MouseDown);
 	Event_RegisterInt(&MouseEvents.Up,          NULL, Launcher_MouseUp);
@@ -196,7 +196,7 @@ static void Launcher_Free(void) {
 	Event_UnregisterVoid(&WindowEvents.FocusChanged, NULL, Launcher_MaybeRedraw);
 	Event_UnregisterVoid(&WindowEvents.Redraw,       NULL, Launcher_ReqeustRedraw);
 	
-	Event_UnregisterInt(&KeyEvents.Down,          NULL, Launcher_KeyDown);
+	Event_UnregisterInput(&KeyEvents.Down,        NULL, Launcher_KeyDown);
 	Event_UnregisterInt(&KeyEvents.Press,         NULL, Launcher_KeyPress);
 	Event_UnregisterInt(&MouseEvents.Down,        NULL, Launcher_MouseDown);
 	Event_UnregisterInt(&MouseEvents.Up,          NULL, Launcher_MouseUp);

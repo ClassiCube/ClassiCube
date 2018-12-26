@@ -37,7 +37,7 @@ extern bool Gui_ShowFPS;
 	void (*Render)(void* elem, double delta); \
 	void (*Free)(void* elem); \
 	void (*Recreate)(void* elem); \
-	bool (*HandlesKeyDown)(void* elem, Key key); \
+	bool (*HandlesKeyDown)(void* elem, Key key, bool wasDown); \
 	bool (*HandlesKeyUp)(void* elem, Key key); \
 	bool (*HandlesKeyPress)(void* elem, char keyChar); \
 	bool (*HandlesMouseDown)(void* elem, int x, int y, MouseButton btn); \
@@ -139,9 +139,9 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vert
 #define Elem_Render(elem, delta)  (elem)->VTABLE->Render(elem, delta)
 #define Elem_Free(elem)           (elem)->VTABLE->Free(elem)
 #define Elem_Recreate(elem)       (elem)->VTABLE->Recreate(elem)
-#define Elem_HandlesKeyPress(elem, key) (elem)->VTABLE->HandlesKeyPress(elem, key)
-#define Elem_HandlesKeyDown(elem, key)  (elem)->VTABLE->HandlesKeyDown(elem, key)
-#define Elem_HandlesKeyUp(elem, key)    (elem)->VTABLE->HandlesKeyUp(elem, key)
+#define Elem_HandlesKeyPress(elem, key)      (elem)->VTABLE->HandlesKeyPress(elem, key)
+#define Elem_HandlesKeyDown(elem, key, was)  (elem)->VTABLE->HandlesKeyDown(elem, key, was)
+#define Elem_HandlesKeyUp(elem, key)         (elem)->VTABLE->HandlesKeyUp(elem, key)
 #define Elem_HandlesMouseDown(elem, x, y, btn) (elem)->VTABLE->HandlesMouseDown(elem, x, y, btn)
 #define Elem_HandlesMouseUp(elem, x, y, btn)   (elem)->VTABLE->HandlesMouseUp(elem, x, y, btn)
 #define Elem_HandlesMouseMove(elem, x, y)      (elem)->VTABLE->HandlesMouseMove(elem, x, y)
