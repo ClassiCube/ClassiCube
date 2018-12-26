@@ -667,7 +667,7 @@ static struct LTableColumn tableColumns[5] = {
 	{ "Software", 140, SoftwareColumn_Draw, SoftwareColumn_Sort, false }
 };
 
-#define LTable_Get(row) &FetchServersTask.Servers[FetchServersTask.Servers[row]._order]
+#define LTable_Get(row) (&FetchServersTask.Servers[FetchServersTask.Servers[row]._order])
 
 /* Works out top and height of the scrollbar */
 static void LTable_GetScrollbarCoords(struct LTable* w, int* y, int* height) {
@@ -698,6 +698,16 @@ static int LTable_GetSelectedIndex(struct LTable* w) {
 		if (String_CaselessEquals(w->SelectedHash, &entry->Hash)) return row;
 	}
 	return -1;
+}
+
+/* Sets selected row to given row, scrolling table if needed. */
+static void LTable_SetSelectedTo(struct LTable* w, int index) {
+	if (!w->RowsCount) return;
+	if (index >= w->RowsCount) index = w->RowsCount - 1;
+	if (index < 0) index = 0;
+
+	String_Copy(w->Filter, &LTable_Get(index)->Hash);
+	LTable_ShowSelected(w);
 }
 
 #define GRIDLINE_SIZE   2
@@ -853,72 +863,57 @@ static void LTable_DrawScrollbar(struct LTable* w) {
 					x, w->Y + y, SCROLLBAR_WIDTH, height);
 }
 
+static void LTable_HandleKeyDown(struct LTable* w, Key key) {
+	int index = LTable_GetSelectedIndex(w);
+	if (key == KEY_UP) {
+		index++;
+	} else if (key == KEY_DOWN) {
+		index--;
+	} else if (key == KEY_PAGEUP) {
+		index += w->VisibleRows;
+	} else if (key == KEY_PAGEDOWN) {
+		index -= w->VisibleRows;
+	} else { return; }
+
+	LTable_SetSelectedTo(w, index);
+}
+
+static void LTable_MouseMove(struct LTable* w, int deltaX, int deltaY) {
+	int x = Mouse_X - w->X, y = Mouse_Y - w->Y, col;
+
+	if (w->DraggingScrollbar) {
+		float scale = w->Height / (float)w->RowsCount;
+		w->TopRow   = (int)((y - w->MouseOffset) / scale);
+
+		LTable_ClampTopRow(w);
+		LWidget_Redraw(w);
+	} else if (w->DraggingColumn >= 0) {
+		if (x >= w->X + w->Width - 20) return;
+		col = w->DraggingColumn;
+
+		w->Columns[col].Width += deltaX;
+		Math_Clamp(w->Columns[col].Width, 20, w->Width - 20);
+		LWidget_Redraw(w);
+	}
+}
+
+static void LTable_MouseDown(struct LTable* w) {
+	int x = Mouse_X - w->X, y = Mouse_Y - w->Y;
+
+	if (x >= w->X + w->Width - SCROLLBAR_WIDTH) {
+		//ScrollbarClick(mouseY);
+		w->DraggingScrollbar = true;
+		//lastIndex = -10; return;
+	}
+
+	if (y < w->HdrHeight) {
+		//SelectHeader(mouseX, mouseY);
+	} else {
+		//GetSelectedServer(mouseX, mouseY);
+	}
+}
+
 /*void TableNeedsRedrawHandler();
-public TableNeedsRedrawHandler NeedRedraw;
-public Action<string> SelectedChanged;
-public int SelectedIndex = -1;
-public string SelectedHash = "";
-public int CurrentIndex, Count;
-
-internal TableEntry[] entries;
-internal int[] order;
-internal List<ServerListEntry> servers;
-internal TableEntry Get(int i) { return entries[order[i]]; }
-
-void SetEntries(List<ServerListEntry> servers) {
-	entries = new TableEntry[servers.Count];
-	order = new int[servers.Count];
-	Count = entries.Length;
-}
-
-string curFilter;
-void FilterEntries(string filter) {
-	curFilter = filter;
-	Count = 0;
-	for (int i = 0; i < entries.Length; i++) {
-		TableEntry entry = entries[i];
-		if (entry.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0) {
-			order[Count++] = i;
-		}
-	}
-	for (int i = Count; i < entries.Length; i++) {
-		order[i] = -100000;
-	}
-}
-
-void SetSelected(int index) {
-	if (index >= view.maxIndex) CurrentIndex = index + 1 - view.numEntries;
-	if (index < CurrentIndex) CurrentIndex = index;
-	if (index >= Count) index = Count - 1;
-	if (index < 0) index = 0;
-
-	SelectedHash = "";
-	SelectedIndex = index;
-	lastIndex = index;
-	ClampIndex();
-
-	if (Count > 0) {
-		TableEntry entry = Get(index);
-		SelectedChanged(entry.Hash);
-		SelectedHash = entry.Hash;
-	}
-}
-
-void SetSelected(string hash) {
-	SelectedIndex = -1;
-	for (int i = 0; i < Count; i++) {
-		if (Get(i).Hash != hash) continue;
-		SetSelected(i);
-		return;
-	}
-}
-
-void ClampIndex() {
-	if (CurrentIndex > Count - view.numEntries)
-		CurrentIndex = Count - view.numEntries;
-	if (CurrentIndex < 0)
-		CurrentIndex = 0;
-}
 
 DefaultComparer defComp = new DefaultComparer();
 NameComparer nameComp = new NameComparer();

@@ -162,6 +162,8 @@ struct LTable {
 	String* SelectedHash;
 	/* Filter for which server names to show. */
 	String* Filter;
+	/* Callback when selected has has changed. */
+	void (*OnSelectedChanged)(void);
 
 	/* Index of column currently being dragged. */
 	int DraggingColumn;
