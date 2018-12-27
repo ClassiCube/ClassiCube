@@ -510,6 +510,7 @@ void Game_SetFpsLimit(enum FpsLimit method) {
 }
 
 float Game_CalcLimitMillis(enum FpsLimit method) {
+	if (method == FPS_LIMIT_144) return 1000/144.0f;
 	if (method == FPS_LIMIT_120) return 1000/120.0f;
 	if (method == FPS_LIMIT_60)  return 1000/60.0f;
 	if (method == FPS_LIMIT_30)  return 1000/30.0f;

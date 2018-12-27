@@ -266,7 +266,7 @@ static void SignInTask_OnValue(struct JsonContext* ctx, const String* str) {
 }
 
 static void SignInTask_Handle(uint8_t* data, uint32_t len) {
-	//Json_Handle(data, len, GetTokenTask_OnValue, NULL, NULL);
+	Json_Handle(data, len, SignInTask_OnValue, NULL, NULL);
 }
 
 void SignInTask_Run(const String* user, const String* pass) {

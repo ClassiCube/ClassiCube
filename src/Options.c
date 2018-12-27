@@ -9,7 +9,7 @@
 #include "Logger.h"
 
 const char* FpsLimit_Names[FPS_LIMIT_COUNT] = {
-	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "LimitNone",
+	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "Limit144FPS", "LimitNone",
 };
 struct EntryList Options;
 static StringsBuffer Options_Changed;

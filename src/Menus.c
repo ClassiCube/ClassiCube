@@ -2443,7 +2443,7 @@ struct Screen* GraphicsOptionsScreen_MakeInstance(void) {
 	static const char* descs[Array_Elems(buttons)];
 	descs[0] = \
 		"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.|" \
-		"&e30/60/120 FPS: &f30/60/120 frames rendered at most each second.|" \
+		"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.|" \
 		"&eNoLimit: &fRenders as many frames as possible each second.|" \
 		"&cUsing NoLimit mode is discouraged.";
 	descs[2] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
