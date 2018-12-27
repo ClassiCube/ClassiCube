@@ -149,6 +149,7 @@ static void Http_SysMakeHeaders(String* headers, struct HttpRequest* req) {
 /* Creates and sends a http req */
 static ReturnCode Http_SysMakeRequest(struct HttpRequest* req, HINTERNET* handle) {
 	struct HttpCacheEntry entry;
+	const char* verb;
 	DWORD flags;
 	String headers; char headersBuffer[STRING_SIZE * 3];
 	String path;    char pathBuffer[URL_MAX_SIZE + 1];
@@ -166,7 +167,9 @@ static ReturnCode Http_SysMakeRequest(struct HttpRequest* req, HINTERNET* handle
 	flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD;
 	if (entry.Https) flags |= INTERNET_FLAG_SECURE;
 
-	*handle = HttpOpenRequestA(entry.Handle, "GET", pathBuffer, NULL, NULL, NULL, flags, 0);
+	verb    = req->RequestType == REQUEST_TYPE_GET ? "GET" : "HEAD";
+	*handle = HttpOpenRequestA(entry.Handle, verb, pathBuffer, NULL, NULL, NULL, flags, 0);
+
 	return *handle && HttpSendRequestA(*handle, headers.buffer, headers.length, NULL, 0)
 			? 0 : GetLastError();
 }
