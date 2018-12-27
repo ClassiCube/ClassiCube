@@ -46,45 +46,132 @@ static HINTERNET hInternet;
 #define FLAG_LENGTH  HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER
 #define FLAG_LASTMOD HTTP_QUERY_LAST_MODIFIED  | HTTP_QUERY_FLAG_SYSTEMTIME
 
+/* caches connections to web servers */
+struct HttpCacheEntry {
+	HINTERNET Handle; /* Native connection handle. */
+	String Address;   /* Address of server. (e.g. "classicube.net") */
+	uint16_t Port;    /* Port server is listening on. (e.g 80) */
+	bool Https;       /* Whether HTTPS or just HTTP protocol. */
+	char _addressBuffer[STRING_SIZE + 1];
+};
+#define HTTP_CACHE_ENTRIES 10
+static struct HttpCacheEntry http_cache[HTTP_CACHE_ENTRIES];
+
+/* Splits up the components of a URL */
+static void HttpCache_MakeEntry(const String* url, struct HttpCacheEntry* entry, String* resource) {
+	const static String schemeEnd = String_FromConst("://");
+	String scheme, path, addr, name, port;
+
+	/* URL is of form [scheme]://[server name]:[server port]/[resource] */
+	int idx = String_IndexOfString(url, &schemeEnd);
+
+	scheme = idx == -1 ? String_Empty : String_UNSAFE_Substring(url,   0, idx);
+	path   = idx == -1 ? *url         : String_UNSAFE_SubstringAt(url, idx + 3);
+	entry->Https = String_CaselessEqualsConst(&scheme, "https");
+
+	String_UNSAFE_Separate(&path, '/', &addr, resource);
+	String_UNSAFE_Separate(&addr, ':', &name, &port);
+
+	String_InitArray_NT(entry->Address, entry->_addressBuffer);
+	String_Copy(&entry->Address, &name);
+	entry->Address.buffer[entry->Address.length] = '\0';
+
+	if (!Convert_ParseUInt16(&port, &entry->Port)) {
+		entry->Port = entry->Https ? 443 : 80;
+	}
+}
+
+/* Inserts entry into the cache at the given index */
+static ReturnCode HttpCache_Insert(int i, struct HttpCacheEntry* e) {
+	HINTERNET conn;
+	conn = InternetConnectA(hInternet, e->Address.buffer, e->Port, NULL, NULL, 
+				INTERNET_SERVICE_HTTP, e->Https ? INTERNET_FLAG_SECURE : 0, 0);
+	if (!conn) return GetLastError();
+
+	e->Handle     = conn;
+	http_cache[i] = *e;
+	return 0;
+}
+
+/* Finds or inserts the given entry into the cache */
+static ReturnCode HttpCache_Lookup(struct HttpCacheEntry* e) {
+	struct HttpCacheEntry* c;
+	int i;
+
+	for (i = 0; i < HTTP_CACHE_ENTRIES; i++) {
+		c = &http_cache[i];
+		if (c->Https == e->Https && String_Equals(&c->Address, &e->Address) && c->Port == e->Port) {
+			e->Handle = c->Handle;
+			return 0;
+		}
+	}
+
+	for (i = 0; i < HTTP_CACHE_ENTRIES; i++) {
+		if (http_cache[i].Handle) continue;
+		return HttpCache_Insert(i, e);
+	}
+
+	/* TODO: Should we be consistent in which entry gets evicted? */
+	i = (uint8_t)Stopwatch_Measure() % HTTP_CACHE_ENTRIES;
+	InternetCloseHandle(http_cache[i].Handle);
+	return HttpCache_Insert(i, e);
+}
+
 static void Http_SysInit(void) {
 	/* TODO: Should we use INTERNET_OPEN_TYPE_PRECONFIG instead? */
 	hInternet = InternetOpenA(GAME_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
 	if (!hInternet) Logger_Abort2(GetLastError(), "Failed to init WinINet");
 }
 
-static ReturnCode Http_SysMake(struct HttpRequest* req, HINTERNET* handle) {
-	String url = String_FromRawArray(req->URL);
-	char urlStr[URL_MAX_SIZE + 1];
-	Mem_Copy(urlStr, url.buffer, url.length);
+/* Adds custom HTTP headers for a req */
+static void Http_SysMakeHeaders(String* headers, struct HttpRequest* req) {
+	if (!req->Etag[0] && !req->LastModified) {
+		headers->buffer = NULL; return;
+	}
 
-	urlStr[url.length] = '\0';
-	char headersBuffer[STRING_SIZE * 3];
-	String headers = String_FromArray(headersBuffer);
+	if (req->LastModified) {
+		String_AppendConst(headers, "If-Modified-Since: ");
+		DateTime_HttpDate(req->LastModified, headers);
+		String_AppendConst(headers, "\r\n");
+	}
 
-	/* https://stackoverflow.com/questions/25308488/c-wininet-custom-http-headers */
-	if (req->Etag[0] || req->LastModified) {
-		if (req->LastModified) {
-			String_AppendConst(&headers, "If-Modified-Since: ");
-			DateTime_HttpDate(req->LastModified, &headers);
-			String_AppendConst(&headers, "\r\n");
-		}
+	if (req->Etag[0]) {
+		String etag = String_FromRawArray(req->Etag);
+		String_AppendConst(headers, "If-None-Match: ");
+		String_AppendString(headers, &etag);
+		String_AppendConst(headers, "\r\n");
+	}
 
-		if (req->Etag[0]) {
-			String etag = String_FromRawArray(req->Etag);
-			String_AppendConst(&headers, "If-None-Match: ");
-			String_AppendString(&headers, &etag);
-			String_AppendConst(&headers, "\r\n");
-		}
-
-		String_AppendConst(&headers, "\r\n\r\n");
-		headers.buffer[headers.length] = '\0';
-	} else { headers.buffer = NULL; }
-
-	*handle = InternetOpenUrlA(hInternet, urlStr, headers.buffer, headers.length,
-		INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD, 0);
-	return *handle ? 0 : GetLastError();
+	String_AppendConst(headers, "\r\n\r\n");
+	headers->buffer[headers->length] = '\0';
 }
 
+/* Creates and sends a http req */
+static ReturnCode Http_SysMakeRequest(struct HttpRequest* req, HINTERNET* handle) {
+	struct HttpCacheEntry entry;
+	DWORD flags;
+	String headers; char headersBuffer[STRING_SIZE * 3];
+	String path;    char pathBuffer[URL_MAX_SIZE + 1];
+	String url = String_FromRawArray(req->URL);
+
+	HttpCache_MakeEntry(&url, &entry, &path);
+	Mem_Copy(pathBuffer, path.buffer, path.length);
+	pathBuffer[path.length] = '\0';
+
+	HttpCache_Lookup(&entry);
+	/* https://stackoverflow.com/questions/25308488/c-wininet-custom-http-headers */
+	String_InitArray(headers, headersBuffer);
+	Http_SysMakeHeaders(&headers, req);
+
+	flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD;
+	if (entry.Https) flags |= INTERNET_FLAG_SECURE;
+
+	*handle = HttpOpenRequestA(entry.Handle, "GET", pathBuffer, NULL, NULL, NULL, flags, 0);
+	return *handle && HttpSendRequestA(*handle, headers.buffer, headers.length, NULL, 0)
+			? 0 : GetLastError();
+}
+
+/* Gets headers from a http response */
 static ReturnCode Http_SysGetHeaders(struct HttpRequest* req, HINTERNET handle) {
 	DWORD len;
 
@@ -112,6 +199,7 @@ static ReturnCode Http_SysGetHeaders(struct HttpRequest* req, HINTERNET handle) 
 	return 0;
 }
 
+/* Gets the data/contents of a http response */
 static ReturnCode Http_SysGetData(struct HttpRequest* req, HINTERNET handle, volatile int* progress) {
 	uint8_t* buffer;
 	uint32_t size, totalRead;
@@ -150,16 +238,17 @@ static ReturnCode Http_SysGetData(struct HttpRequest* req, HINTERNET handle, vol
 	return 0;
 }
 
+/* Performs a http req and inspecting the response */
 static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
 	HINTERNET handle;
-	ReturnCode res = Http_SysMake(req, &handle);
+	ReturnCode res = Http_SysMakeRequest(req, &handle);
 	if (res) return res;
 
 	*progress = ASYNC_PROGRESS_FETCHING_DATA;
 	res = Http_SysGetHeaders(req, handle);
 	if (res) { InternetCloseHandle(handle); return res; }
 
-	if (req->RequestType != REQUEST_TYPE_HEAD && req->StatusCode == 200) {
+	if (req->RequestType != REQUEST_TYPE_HEAD) {
 		res = Http_SysGetData(req, handle, progress);
 		if (res) { InternetCloseHandle(handle); return res; }
 	}
@@ -167,8 +256,13 @@ static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
 	return InternetCloseHandle(handle) ? 0 : GetLastError();
 }
 
-static ReturnCode Http_SysFree(void) {
-	return InternetCloseHandle(hInternet) ? 0 : GetLastError();
+static void Http_SysFree(void) {
+	int i;
+	for (i = 0; i < HTTP_CACHE_ENTRIES; i++) {
+		if (!http_cache[i].Handle) continue;
+		InternetCloseHandle(http_cache[i].Handle);
+	}
+	InternetCloseHandle(hInternet);
 }
 #endif
 #ifdef CC_BUILD_POSIX
@@ -301,10 +395,9 @@ static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
 	return res;
 }
 
-static ReturnCode Http_SysFree(void) {
+static void Http_SysFree(void) {
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
-	return 0;
 }
 #endif
 
@@ -377,7 +470,7 @@ static struct HttpRequest http_curRequest;
 static volatile int http_curProgress = ASYNC_PROGRESS_NOTHING;
 bool Http_UseCookies;
 
-/* Adds a request to the list of pending requests, waking up worker thread if needed. */
+/* Adds a req to the list of pending requests, waking up worker thread if needed. */
 static void Http_Add(const String* url, bool priority, const String* id, uint8_t type, TimeMS* lastModified, const String* etag, const String* data) {
 	struct HttpRequest req = { 0 };
 	String reqUrl, reqID, reqEtag;
@@ -393,7 +486,7 @@ static void Http_Add(const String* url, bool priority, const String* id, uint8_t
 	String_InitArray(reqEtag, req.Etag);
 	if (lastModified) { req.LastModified = *lastModified; }
 	if (etag)         { String_Copy(&reqEtag, etag); }
-	/* request.Data = data; TODO: Implement this. do we need to copy or expect caller to malloc it?  */
+	/* req.Data = data; TODO: Implement this. do we need to copy or expect caller to malloc it?  */
 
 	Mutex_Lock(http_pendingMutex);
 	{	
@@ -501,47 +594,50 @@ void Http_ClearPending(void) {
 	Waitable_Signal(http_waitable);
 }
 
-static void Http_ProcessRequest(struct HttpRequest* request) {
-	String url = String_FromRawArray(request->URL);
+/* Attempts to download the server's response headers and data to the given req */
+static void Http_ProcessRequest(struct HttpRequest* req) {
+	String url = String_FromRawArray(req->URL);
 	uint64_t  beg, end;
 	uint32_t  size, elapsed;
 	uintptr_t addr;
 
-	Platform_Log2("Downloading from %s (type %b)", &url, &request->RequestType);
+	Platform_Log2("Downloading from %s (type %b)", &url, &req->RequestType);
 	beg = Stopwatch_Measure();
-	request->Result = Http_SysDo(request, &http_curProgress);
+	req->Result = Http_SysDo(req, &http_curProgress);
 	end = Stopwatch_Measure();
 
 	elapsed = Stopwatch_ElapsedMicroseconds(beg, end) / 1000;
 	Platform_Log3("HTTP: return code %i (http %i), in %i ms", 
-				&request->Result, &request->StatusCode, &elapsed);
+				&req->Result, &req->StatusCode, &elapsed);
 
-	if (request->Data) {
-		size = request->Size;
-		addr = (uintptr_t)request->Data;
+	if (req->Data) {
+		size = req->Size;
+		addr = (uintptr_t)req->Data;
 		Platform_Log2("HTTP returned data: %i bytes at %x", &size, &addr);
 	}
+	req->Success = !req->Result && req->StatusCode == 200 && req->Data && req->Size;
 }
 
-static void Http_CompleteResult(struct HttpRequest* request) {
+/* Adds given req to list of processed/completed requests */
+static void Http_CompleteRequest(struct HttpRequest* req) {
 	struct HttpRequest older;
-	String id = String_FromRawArray(request->ID);
+	String id = String_FromRawArray(req->ID);
 	int index;
-	request->TimeDownloaded = DateTime_CurrentUTC_MS();
+	req->TimeDownloaded = DateTime_CurrentUTC_MS();
 
 	index = HttpRequestList_Find(&id, &older);
 	if (index >= 0) {
 		/* very rare case - priority item was inserted, then inserted again (so put before first item), */
 		/* and both items got downloaded before an external function removed them from the queue */
-		if (older.TimeAdded > request->TimeAdded) {
-			HttpRequest_Free(request);
+		if (older.TimeAdded > req->TimeAdded) {
+			HttpRequest_Free(req);
 		} else {
-			/* normal case, replace older request */
+			/* normal case, replace older req */
 			HttpRequest_Free(&older);
-			http_processed.Requests[index] = *request;				
+			http_processed.Requests[index] = *req;				
 		}
 	} else {
-		HttpRequestList_Append(&http_processed, request);
+		HttpRequestList_Append(&http_processed, req);
 	}
 }
 
@@ -564,7 +660,7 @@ static void Http_WorkerLoop(void) {
 		Mutex_Unlock(http_pendingMutex);
 
 		if (stop) return;
-		/* Block until another thread submits a request to do */
+		/* Block until another thread submits a req to do */
 		if (!hasRequest) {
 			Platform_LogConst("Going back to sleep...");
 			Waitable_Wait(http_waitable);
@@ -580,12 +676,12 @@ static void Http_WorkerLoop(void) {
 		Mutex_Unlock(http_curRequestMutex);
 
 		Platform_LogConst("Doing it");
-		/* performing request doesn't need thread safety */
+		/* performing req doesn't need thread safety */
 		Http_ProcessRequest(&request);
 
 		Mutex_Lock(http_processedMutex);
 		{
-			Http_CompleteResult(&request);
+			Http_CompleteRequest(&request);
 		}
 		Mutex_Unlock(http_processedMutex);
 

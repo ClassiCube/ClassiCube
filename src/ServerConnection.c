@@ -82,7 +82,7 @@ void ServerConnection_CheckAsyncResources(void) {
 	struct HttpRequest item;
 	if (!Http_GetResult(&texPack, &item)) return;
 
-	if (item.Data) {
+	if (item.Success) {
 		TexturePack_Extract_Req(&item);
 	} else if (item.Result) {
 		Chat_Add1("&cError %i when trying to download texture pack", &item.Result);

@@ -311,7 +311,7 @@ static void WoM_Tick(void) {
 	struct HttpRequest item;
 	if (!Http_GetResult(&wom_identifier, &item)) return;
 
-	if (item.Data) WoM_ParseConfig(&item);
+	if (item.Success) WoM_ParseConfig(&item);
 	HttpRequest_Free(&item);
 }
 

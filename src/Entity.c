@@ -704,7 +704,7 @@ static void Player_CheckSkin(struct Player* p) {
 	}
 
 	if (!Http_GetResult(&skin, &item)) return;
-	if (!item.Data) { Player_SetSkinAll(p, true); return; }
+	if (!item.Success) { Player_SetSkinAll(p, true); return; }
 	Stream_ReadonlyMemory(&mem, item.Data, item.Size);
 
 	if ((res = Png_Decode(&bmp, &mem))) {

@@ -219,7 +219,7 @@ void LWebTask_Tick(struct LWebTask* task) {
 
 	task->Working   = false;
 	task->Completed = true;
-	task->Success   = !task->Res && req.Data && req.Size;
+	task->Success   = req.Success;
 	if (task->Success) task->Handle(req.Data, req.Size);
 	HttpRequest_Free(&req);
 }

@@ -32,11 +32,12 @@ struct HttpRequest {
 
 	ReturnCode Result; /* 0 on success, otherwise platform-specific error. */
 	void*      Data;   /* Contents of the response. (i.e. result data) */
-	uint32_t   Size;   /* Size of the contents. */
+	uint32_t   Size;   /* Size of the contents. (may still be non-zero for non 200 status codes) */
 
 	TimeMS LastModified;    /* Time item cached at (if at all) */
 	char Etag[STRING_SIZE]; /* ETag of cached item (if any) */
 	uint8_t RequestType;    /* Whether to fetch contents or just headers. */
+	bool Success;           /* Whether Result is 0, status is 200, and data is not NULL */
 };
 
 /* Frees data from a HTTP request. */
