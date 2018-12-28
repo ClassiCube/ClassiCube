@@ -34,8 +34,10 @@ struct ServerInfo {
 	String Hash, Name, IP, Mppass, Software, Country;
 	int Players, MaxPlayers, Port, Uptime;
 	bool Featured;
-	char _Buffer[6][STRING_SIZE];
-	int _order; /* (internal) order in servers table */
+	int _order; /* (internal) order in servers table after filtering */
+	char _hashBuffer[32],   _nameBuffer[STRING_SIZE];
+	char _ipBuffer[16],     _mppassBuffer[STRING_SIZE];
+	char _countryBuffer[8], _softBuffer[STRING_SIZE];
 };
 
 struct LWebTask;
@@ -79,9 +81,11 @@ void FetchServerTask_Run(const String* hash);
 extern struct FetchServersData {
 	struct LWebTask Base;
 	struct ServerInfo* Servers; /* List of all public servers on server list. */
+	uint16_t* Orders;           /* Order of each server (after sorting) */
 	int NumServers;             /* Number of public servers. */
 } FetchServersTask;
 void FetchServersTask_Run(void);
+void FetchServersTask_ResetOrder(void);
 
 
 extern struct CheckUpdateData {

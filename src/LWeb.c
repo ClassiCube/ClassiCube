@@ -314,13 +314,13 @@ struct FetchServerData FetchServerTask;
 static struct ServerInfo* curServer;
 
 static void ServerInfo_Init(struct ServerInfo* info) {
-	String_InitArray(info->Hash, info->_Buffer[0]);
-	String_InitArray(info->Name, info->_Buffer[1]);
-	String_InitArray(info->IP,   info->_Buffer[2]);
+	String_InitArray(info->Hash, info->_hashBuffer);
+	String_InitArray(info->Name, info->_nameBuffer);
+	String_InitArray(info->IP,   info->_ipBuffer);
 
-	String_InitArray(info->Mppass,   info->_Buffer[3]);
-	String_InitArray(info->Software, info->_Buffer[4]);
-	String_InitArray(info->Country,  info->_Buffer[5]);
+	String_InitArray(info->Mppass,   info->_mppassBuffer);
+	String_InitArray(info->Software, info->_softBuffer);
+	String_InitArray(info->Country,  info->_countryBuffer);
 
 	info->Players    = 0;
 	info->MaxPlayers = 0;
@@ -398,6 +398,7 @@ static void FetchServersTask_Handle(uint8_t* data, uint32_t len) {
 
 	if (FetchServersTask.NumServers <= 0) return;
 	FetchServersTask.Servers = Mem_Alloc(FetchServersTask.NumServers, sizeof(struct ServerInfo), "servers list");
+	FetchServersTask.Orders  = Mem_Alloc(FetchServersTask.NumServers, 2, "servers order");
 
 	/* -2 because servers is surrounded by a { */
 	curServer = FetchServersTask.Servers - 2;
@@ -411,12 +412,22 @@ void FetchServersTask_Run(void) {
 
 	LWebTask_Reset(&FetchServersTask.Base);
 	Mem_Free(FetchServersTask.Servers);
-	FetchServersTask.Servers     = NULL;
+	Mem_Free(FetchServersTask.Orders);
+
 	FetchServersTask.NumServers = 0;
+	FetchServersTask.Servers    = NULL;
+	FetchServersTask.Orders     = NULL;
 
 	FetchServersTask.Base.Identifier = id;
 	Http_AsyncGetData(&url, false, &id);
 	FetchServersTask.Base.Handle = FetchServersTask_Handle;
+}
+
+void FetchServersTask_ResetOrder(void) {
+	int i;
+	for (i = 0; i < FetchServersTask.NumServers; i++) {
+		FetchServersTask.Orders[i] = i;
+	}
 }
 
 

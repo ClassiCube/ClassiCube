@@ -1023,7 +1023,6 @@ void LTable_Reset(struct LTable* w) {
 	w->SelectedHash->length = 0;
 	w->Filter->length       = 0;
 	LTable_Sort(w);
-	LTable_ApplyFilter(w);
 }
 
 void LTable_ApplyFilter(struct LTable* w) {
@@ -1032,7 +1031,7 @@ void LTable_ApplyFilter(struct LTable* w) {
 	count = FetchServersTask.NumServers;
 	for (i = 0, j = 0; i < count; i++) {
 		if (String_CaselessContains(&FetchServersTask.Servers[i].Name, w->Filter)) {
-			FetchServersTask.Servers[j++]._order = i;
+			FetchServersTask.Servers[j++]._order = FetchServersTask.Orders[i];
 		}
 	}
 
@@ -1047,16 +1046,17 @@ void LTable_ApplyFilter(struct LTable* w) {
 
 static LTableSorter curSorter;
 static void LTable_QuickSort(int left, int right) {
-	struct ServerInfo* keys = FetchServersTask.Servers; struct ServerInfo key;
+	uint16_t* keys = FetchServersTask.Orders; uint16_t key;
+	struct ServerInfo* values = FetchServersTask.Servers;
 
 	while (left < right) {
 		int i = left, j = right;
-		struct ServerInfo* mid = &keys[(i + j) >> 1];
+		struct ServerInfo* mid = &values[keys[(i + j) >> 1]];
 
 		/* partition the list */
 		while (i <= j) {
-			while (curSorter(mid, &keys[i]) < 0) i++;
-			while (curSorter(mid, &keys[j]) > 0) j--;
+			while (curSorter(mid, &values[keys[i]]) < 0) i++;
+			while (curSorter(mid, &values[keys[j]]) > 0) j--;
 			QuickSort_Swap_Maybe();
 		}
 		/* recurse into the smaller subset */
@@ -1066,10 +1066,12 @@ static void LTable_QuickSort(int left, int right) {
 
 void LTable_Sort(struct LTable* w) {
 	if (!FetchServersTask.NumServers) return;
+	FetchServersTask_ResetOrder();
 	curSorter = w->Sorter;
-	//LTable_QuickSort(0, FetchServersTask.NumServers - 1);
+	LTable_QuickSort(0, FetchServersTask.NumServers - 1);
 
 	LTable_ApplyFilter(w);
+	LTable_ShowSelected(w);
 }
 
 void LTable_ShowSelected(struct LTable* w) {
