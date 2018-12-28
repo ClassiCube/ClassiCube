@@ -119,7 +119,6 @@ static ReturnCode HttpCache_Lookup(struct HttpCacheEntry* e) {
 
 static void Http_SysInit(void) {
 	/* TODO: Should we use INTERNET_OPEN_TYPE_PRECONFIG instead? */
-	/* INTERNET_OPEN_TYPE_DIRECT */
 	hInternet = InternetOpenA(GAME_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
 	if (!hInternet) Logger_Abort2(GetLastError(), "Failed to init WinINet");
 }
@@ -251,7 +250,7 @@ static ReturnCode Http_SysGetData(struct HttpRequest* req, HINTERNET handle, vol
 static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
 	HINTERNET handle;
 	ReturnCode res = Http_SysMakeRequest(req, &handle);
-	Mem_Free(req->Data);
+	HttpRequest_Free(req);
 	if (res) return res;
 
 	*progress = ASYNC_PROGRESS_FETCHING_DATA;
@@ -318,6 +317,18 @@ static struct curl_slist* Http_SysMake(struct HttpRequest* req) {
 	return list;
 }
 
+static void Http_SysSetType(struct HttpRequest* req) {
+	if (req->RequestType == REQUEST_TYPE_HEAD) {
+		curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
+	} else if (req->RequestType == REQUEST_TYPE_POST) {
+		curl_easy_setopt(curl, CURLOPT_POST,   1L);
+		/* TODO: Just use POSTFIELDS ?? */
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE,  req->Size);
+		curl_easy_setopt(curl, CURLOPT_COPYPOSTFIELDS, req->Data);
+		HttpRequest_Free(req);
+	}
+}
+
 static size_t Http_SysGetHeaders(char *buffer, size_t size, size_t nitems, struct HttpRequest* req) {
 	String tmp; char tmpBuffer[STRING_SIZE + 1];
 	String line, name, value;
@@ -337,8 +348,6 @@ static size_t Http_SysGetHeaders(char *buffer, size_t size, size_t nitems, struc
 		String_AppendString(&tmp, &value);
 	} else if (String_CaselessEqualsConst(&name, "Content-Length")) {
 		Convert_ParseInt(&value, &req->ContentLength);
-		/* TODO: Fix when ContentLength isn't RequestSize */
-		req->Size = req->ContentLength;
 	} else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
 		String_InitArray_NT(tmp, tmpBuffer);
 		String_AppendString(&tmp, &value);
@@ -351,21 +360,28 @@ static size_t Http_SysGetHeaders(char *buffer, size_t size, size_t nitems, struc
 	return nitems;
 }
 
+static int curlBufferSize;
 static size_t Http_SysGetData(char *buffer, size_t size, size_t nitems, struct HttpRequest* req) {
-	uint32_t total, left;
 	uint8_t* dst;
-		
-	total = req->Size;
-	if (!total || req->RequestType == REQUEST_TYPE_HEAD) return 0;
-	if (!req->Data) req->Data = Mem_Alloc(total, 1, "http get data");
 
-	/* reuse Result as an offset */
-	left = total - req->Result;
-	left = min(left, nitems);
-	dst  = (uint8_t*)req->Data + req->Result;
+	if (!curlBufferSize) {
+		curlBufferSize = req->ContentLength ? req->ContentLength : 1;
+		req->Data = Mem_Alloc(curlBufferSize, 1, "http get data");
+		req->Size = 0;
+	}
 
-	Mem_Copy(dst, buffer, left);
-	req->Result += left;
+	/* expand buffer if needed */
+	if (req->Size + nitems > curlBufferSize) {
+		curlBufferSize = req->Size + nitems;
+		req->Data      = Mem_Realloc(req->Data, curlBufferSize, 1, "http inc data");
+	}
+
+	dst = (uint8_t*)req->Data + req->Size;
+	Mem_Copy(dst, buffer, nitems);
+	req->Size  += nitems;
+
+	/* TODO: Set progress */
+	//if (req->ContentLength) *progress = (int)(100.0f * req->Size / curlBufferSize);
 	return nitems;
 }
 
@@ -380,6 +396,8 @@ static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
 	curl_easy_reset(curl);
 	list = Http_SysMake(req);
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
+	curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "");
+	Http_SysSetType(req);
 
 	curl_easy_setopt(curl, CURLOPT_URL,            urlStr);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT,      GAME_APP_NAME);
@@ -394,6 +412,7 @@ static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,  Http_SysGetData);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
 
+	curlBufferSize = 0;
 	*progress = ASYNC_PROGRESS_FETCHING_DATA;
 	res = curl_easy_perform(curl);
 	*progress = 100;
