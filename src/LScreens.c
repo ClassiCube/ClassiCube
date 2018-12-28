@@ -980,7 +980,7 @@ static void ResourcesScreen_Init(struct LScreen* s_) {
 	LScreen_Button(s_, &s->BtnNo,  70, 35, "No");
 
 	LScreen_Button(s_, &s->BtnCancel, 120, 35, "Cancel");
-	LScreen_Slider(s_, &s->SdrProgress, 200, 10, 0, 100, progressCol);
+	LScreen_Slider(s_, &s->SdrProgress, 200, 12, 0, 100, progressCol);
 
 	s->BtnCancel.Hidden   = true;
 	s->SdrProgress.Hidden = true;
