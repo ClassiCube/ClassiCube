@@ -12,34 +12,6 @@ Size2D Window_ClientSize;
 static bool win_cursorVisible = true;
 bool Window_GetCursorVisible(void) { return win_cursorVisible; }
 
-static void Window_DecodeUtf16(String* value, Codepoint* chars, int numBytes) {
-	int i; char c;
-	
-	for (i = 0; i < (numBytes >> 1); i++) {
-		if (Convert_TryUnicodeToCP437(chars[i], &c)) String_Append(value, c);
-	}
-}
-
-static void Window_DecodeUtf8(String* value, uint8_t* chars, int numBytes) {
-	int len; Codepoint cp; char c;
-
-	for (; numBytes > 0; numBytes -= len) {
-		len = Convert_Utf8ToUnicode(&cp, chars, numBytes);
-		if (!len) return;
-
-		if (Convert_TryUnicodeToCP437(cp, &c)) String_Append(value, c);
-		chars += len;
-	}
-}
-
-static void Window_DecodeAscii(String* value, uint8_t* chars, int numBytes) {
-	int i; char c;
-
-	for (i = 0; i < numBytes; i++) {
-		if (Convert_TryUnicodeToCP437(chars[i], &c)) String_Append(value, c);
-	}
-}
-
 void Window_CreateSimple(int width, int height) {
 	struct DisplayDevice* device = &DisplayDevice_Default;
 	struct GraphicsMode mode;
@@ -434,9 +406,9 @@ void Window_GetClipboardText(String* value) {
 		/* ignore trailing NULL at end */
 		/* TODO: Verify it's always there */
 		if (isUnicode) {
-			Window_DecodeUtf16(value, (Codepoint*)src, size - 2);
+			Convert_DecodeUtf16(value, (Codepoint*)src, size - 2);
 		} else {
-			Window_DecodeAscii(value, (uint8_t*)src,   size - 1);
+			Convert_DecodeAscii(value, (uint8_t*)src,   size - 1);
 		}
 
 		GlobalUnlock(hGlobal);
@@ -1311,7 +1283,7 @@ void Window_ProcessEvents(void) {
 
 				if (data && items && prop_type == xa_utf8_string) {
 					clipboard_paste_text.length = 0;
-					Window_DecodeUtf8(&clipboard_paste_text, data, items);
+					Convert_DecodeUtf8(&clipboard_paste_text, data, items);
 				}
 				if (data) XFree(data);
 			}
@@ -1895,7 +1867,6 @@ OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventRef inEv
 	UInt32 kind, code;
 	Key key;
 	char charCode, raw;
-	bool repeat;
 	OSStatus res;
 	
 	kind = GetEventKind(inEvent);
@@ -1941,17 +1912,11 @@ OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventRef inEv
 									NULL, sizeof(UInt32), NULL, &code);
 			if (res) Logger_Abort2(res, "Getting key modifiers");
 			
-			/* TODO: Is this even needed */
-			repeat = Key_KeyRepeat; 
-			Key_KeyRepeat = false;
-			
-			Key_SetPressed(KEY_LCTRL,  (code & 0x1000) != 0);
-			Key_SetPressed(KEY_LALT,   (code & 0x0800) != 0);
-			Key_SetPressed(KEY_LSHIFT, (code & 0x0200) != 0);
-			Key_SetPressed(KEY_LWIN,   (code & 0x0100) != 0);			
-			Key_SetPressed(KEY_CAPSLOCK,  (code & 0x0400) != 0);
-			
-			Key_KeyRepeat = repeat;
+			Key_SetPressed(KEY_LCTRL,    (code & 0x1000) != 0);
+			Key_SetPressed(KEY_LALT,     (code & 0x0800) != 0);
+			Key_SetPressed(KEY_LSHIFT,   (code & 0x0200) != 0);
+			Key_SetPressed(KEY_LWIN,     (code & 0x0100) != 0);			
+			Key_SetPressed(KEY_CAPSLOCK, (code & 0x0400) != 0);
 			return 0;
 	}
 	return eventNotHandledErr;
@@ -2203,11 +2168,11 @@ void Window_GetClipboardText(String* value) {
 	if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF16, &outData))) {	
 		ptr = CFDataGetBytePtr(outData);
 		len = CFDataGetLength(outData);
-		if (ptr) Window_DecodeUtf16(value, (Codepoint*)ptr, len);
+		if (ptr) Convert_DecodeUtf16(value, (Codepoint*)ptr, len);
 	} else if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF8, &outData))) {
 		ptr = CFDataGetBytePtr(outData);
 		len = CFDataGetLength(outData);
-		if (ptr) Window_DecodeUtf8(value, (uint8_t*)ptr, len);
+		if (ptr) Convert_DecodeUtf8(value, (uint8_t*)ptr, len);
 	}
 }
 

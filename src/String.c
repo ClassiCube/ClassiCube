@@ -526,19 +526,6 @@ bool Convert_TryUnicodeToCP437(Codepoint cp, char* c) {
 	*c = '?'; return false;
 }
 
-void String_DecodeUtf8(String* str, uint8_t* data, uint32_t len) {
-	Codepoint cp;
-	int read;
-
-	while (len) {
-		read = Convert_Utf8ToUnicode(&cp, data, len);
-		if (!read) break;
-
-		String_Append(str, Convert_UnicodeToCP437(cp));
-		data += read; len -= read;
-	}
-}
-
 int Convert_Utf8ToUnicode(Codepoint* cp, const uint8_t* data, uint32_t len) {
 	*cp = '\0';
 	if (!len) return 0;
@@ -579,6 +566,34 @@ int Convert_UnicodeToUtf8(Codepoint cp, uint8_t* data) {
 		data[1] = 0x80 | ((cp >>  6) & 0x3F);
 		data[2] = 0x80 | ((cp)       & 0x3F);
 		return 3;
+	}
+}
+
+void Convert_DecodeUtf16(String* value, Codepoint* chars, int numBytes) {
+	int i; char c;
+	
+	for (i = 0; i < (numBytes >> 1); i++) {
+		if (Convert_TryUnicodeToCP437(chars[i], &c)) String_Append(value, c);
+	}
+}
+
+void Convert_DecodeUtf8(String* value, uint8_t* chars, int numBytes) {
+	int len; Codepoint cp; char c;
+
+	for (; numBytes > 0; numBytes -= len) {
+		len = Convert_Utf8ToUnicode(&cp, chars, numBytes);
+		if (!len) return;
+
+		if (Convert_TryUnicodeToCP437(cp, &c)) String_Append(value, c);
+		chars += len;
+	}
+}
+
+void Convert_DecodeAscii(String* value, uint8_t* chars, int numBytes) {
+	int i; char c;
+
+	for (i = 0; i < numBytes; i++) {
+		if (Convert_TryUnicodeToCP437(chars[i], &c)) String_Append(value, c);
 	}
 }
 

@@ -65,13 +65,30 @@ static void Program_RunGame(void) {
 	Game_Run(width, height, &title);
 }
 
+static void Program_SetCurrentDirectory(void) {
+	String path; char pathBuffer[FILENAME_SIZE];
+	int i;
+	ReturnCode res;
+	String_InitArray(path, pathBuffer);
+
+	res = Platform_GetExePath(&path);
+	if (res) { Logger_Warn(res, "getting exe path"); return; }
+
+	/* get rid of filename at end of directory */
+	for (i = path.length - 1; i >= 0; i--, path.length--) {
+		if (path.buffer[i] == '/' || path.buffer[i] == '\\') break;
+	}
+	res = Platform_SetCurrentDirectory(&path);
+	if (res) { Logger_Warn(res, "setting current directory"); return; }
+}
+
 int main(int argc, char** argv) {
 	String args[GAME_MAX_CMDARGS];
 	int argsCount;
 	uint8_t ip[4];
 	uint16_t port;
 
-	Platform_SetWorkingDir();
+	Program_SetCurrentDirectory();
 	Logger_Hook();
 	Platform_Init();
 #ifdef CC_TEST_VORBIS

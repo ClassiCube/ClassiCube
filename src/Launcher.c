@@ -514,7 +514,7 @@ void Launcher_MarkAllDirty(void) {
 *#########################################################################################################################*/
 static TimeMS lastJoin;
 bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server) {
-	const static String exe = String_FromConst(GAME_EXE_NAME);
+	String path; char pathBuffer[FILENAME_SIZE];
 	String args; char argsBuffer[512];
 	TimeMS now;
 	ReturnCode res;
@@ -525,7 +525,6 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 
 	/* Make sure if the client has changed some settings in the meantime, we keep the changes */
 	Options_Load();
-	Launcher_ShouldExit = Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false);
 
 	/* Save resume info */
 	if (server->length) {
@@ -537,22 +536,23 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 		Options_Save();
 	}
 
+	String_InitArray(path, pathBuffer);
+	res = Platform_GetExePath(&path);
+	if (res) { Logger_Warn(res, "getting .exe path"); return false; }
+
 	String_InitArray(args, argsBuffer);
 	String_AppendString(&args, user);
 	if (mppass->length) String_Format3(&args, " %s %s %s", mppass, ip, port);
 
-	res = Platform_StartProcess(&exe, &args);
+	res = Platform_StartProcess(&path, &args);
 #ifdef CC_BUILD_WINDOWS
 	/* TODO: Check this*/
 	/* HRESULT when user clicks 'cancel' to 'are you sure you want to run ClassiCube.exe' */
 	if (res == 0x80004005) return;
 #endif
+	if (res) { Logger_Warn(res, "starting game"); return false; }
 
-	if (res) {
-		Logger_Warn(res, "starting game");
-		Launcher_ShouldExit = false;
-		return false;
-	}
+	Launcher_ShouldExit = Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false);
 	return true;
 }
 

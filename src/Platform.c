@@ -96,6 +96,7 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #endif
 #ifdef CC_BUILD_OSX
 #include <mach/mach_time.h>
+#include <mach-o/dyld.h>
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
 #endif
@@ -560,7 +561,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 
 		len = String_CalcLen(src, UInt16_MaxValue);
-		String_DecodeUtf8(&path, src, len);
+		Convert_DecodeUtf8(&path, src, len);
 
 		/* TODO: fallback to stat when this fails */
 		if (entry->d_type == DT_DIR) {
@@ -1293,7 +1294,7 @@ ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success) {
 	FD_ZERO(&set);
 	FD_SET(socket, &set);
 
-	if (selectMode == SOCKET_POLL_READ) {
+	if (mode == SOCKET_POLL_READ) {
 		selectCount = select(socket + 1, &set, NULL, NULL, &time);
 	} else {
 		selectCount = select(socket + 1, NULL, &set, NULL, &time);
@@ -1712,18 +1713,10 @@ static void Platform_InitStopwatch(void) {
 	} else { sw_freqDiv = 10; }
 }
 
-void Platform_SetWorkingDir(void) {
-	TCHAR dirName[FILENAME_SIZE + 1];
-	DWORD len = GetModuleFileName(NULL, dirName, FILENAME_SIZE);
-	if (!len) return;
-
-	/* get rid of filename at end of directory */
-	for (; len > 0; len--) {
-		if (dirName[len] == '/' || dirName[len] == '\\') break;
-	}
-
-	dirName[len] = '\0';
-	SetCurrentDirectory(dirName);
+ReturnCode Platform_SetCurrentDirectory(const String* path) {
+	TCHAR str[300];
+	Platform_ConvertString(str, path);
+	return SetCurrentDirectory(str) ? 0 : GetLastError();
 }
 
 void Platform_Exit(ReturnCode code) { ExitProcess(code); }
@@ -1790,6 +1783,19 @@ ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* de
 	*decLen = dataOut.cbData;
 	Mem_Copy(*dec, dataOut.pbData, dataOut.cbData);
 	LocalFree(dataOut.pbData);
+	return 0;
+}
+
+ReturnCode Platform_GetExePath(String* path) {
+	TCHAR chars[FILENAME_SIZE + 1];
+	DWORD len = GetModuleFileName(NULL, chars, FILENAME_SIZE);
+	if (!len) return GetLastError();
+
+#ifdef UNICODE
+	Convert_DecodeUtf16(path, chars, len * 2);
+#else
+	Convert_DecodeAscii(path, chars, len);
+#endif
 	return 0;
 }
 
@@ -1873,6 +1879,12 @@ void Platform_Init(void) {
 void Platform_Free(void) {
 	pthread_mutex_destroy(&event_mutex);
 	pthread_mutex_destroy(&audio_lock);
+}
+
+ReturnCode Platform_SetCurrentDirectory(const String* path) {
+	char str[600];
+	Platform_ConvertString(str, path);
+	return chdir(str) == -1 ? errno : 0;
 }
 
 void Platform_Exit(ReturnCode code) { exit(code); }
@@ -1976,13 +1988,13 @@ ReturnCode Platform_StartOpen(const String* args) {
 }
 static void Platform_InitStopwatch(void) { sw_freqDiv = 1000; }
 
-void Platform_SetWorkingDir(void) {
-	char path[FILENAME_SIZE + 1] = { 0 };
-	int len = readlink("/proc/self/exe", path, FILENAME_SIZE);
-	if (len <= 0) return;
+ReturnCode Platform_GetExePath(String* path) {
+	char str[600];
+	int len = readlink("/proc/self/exe", str, 600);
+	if (len == -1) return errno;
 
-	Platform_TrimFilename(path, len);
-	chdir(path);
+	Convert_DecodeUtf8(path, str, len);
+	return 0;
 }
 #endif
 #ifdef CC_BUILD_SOLARIS
@@ -1993,13 +2005,13 @@ ReturnCode Platform_StartOpen(const String* args) {
 }
 static void Platform_InitStopwatch(void) { sw_freqDiv = 1000; }
 
-void Platform_SetWorkingDir(void) {
-	char path[FILENAME_SIZE + 1] = { 0 };
-	int len = readlink("/proc/self/path/a.out", path, FILENAME_SIZE);
-	if (len <= 0) return;
+ReturnCode Platform_GetExePath(String* path) {
+	char str[600];
+	int len = readlink("/proc/self/path/a.out", str, 600);
+	if (len == -1) return errno;
 
-	Platform_TrimFilename(path, len);
-	chdir(path);
+	Convert_DecodeUtf8(path, str, len);
+	return 0;
 }
 #endif
 #ifdef CC_BUILD_OSX
@@ -2007,28 +2019,13 @@ ReturnCode Platform_StartOpen(const String* args) {
 	const static String path = String_FromConst("/usr/bin/open");
 	return Platform_StartProcess(&path, args);
 }
-void Platform_SetWorkingDir(void) {
-	char path[1024];
-	CFBundleRef bundle;
-	CFURLRef bundleUrl;
-	CFStringRef cfPath;
-	int len;
+ReturnCode Platform_GetExePath(String* path) {
+	char str[600];
+	int len = 600;
 
-	bundle = CFBundleGetMainBundle();
-	if (!bundle) return;
-	bundleUrl = CFBundleCopyBundleURL(bundle);
-	if (!bundleUrl) return;
-
-	cfPath = CFURLCopyFileSystemPath(bundleUrl, kCFURLPOSIXPathStyle);
-	if (!cfPath) return;
-	CFStringGetCString(cfPath, path, Array_Elems(path), kCFStringEncodingUTF8);
-
-	CFRelease(bundleUrl);
-	CFRelease(cfPath);
-
-	len = String_CalcLen(path, Array_Elems(path));
-	Platform_TrimFilename(path, len);
-	chdir(path);
+	if (_NSGetExecutablePath(str, &len) != 0) return ReturnCode_InvalidArg;
+	Convert_DecodeUtf8(path, str, len);
+	return 0;
 }
 
 static void Platform_InitDisplay(void) {

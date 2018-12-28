@@ -155,13 +155,21 @@ Codepoint Convert_CP437ToUnicode(char c);
 char Convert_UnicodeToCP437(Codepoint cp);
 /* Attempts to convert a unicode character to its code page 437 equivalent. */
 bool Convert_TryUnicodeToCP437(Codepoint cp, char* c);
-/* Appends all characters from UTF8 encoded data to the given string. */
-void String_DecodeUtf8(String* str, uint8_t* data, uint32_t len);
 /* Decodes a unicode character from UTF8, returning number of bytes read. */
 /* Returns 0 if not enough input data to read the character. */
 int Convert_Utf8ToUnicode(Codepoint* cp, const uint8_t* data, uint32_t len);
 /* Encodes a unicode character in UTF8, returning number of bytes written. */
 int Convert_UnicodeToUtf8(Codepoint cp, uint8_t* data);
+
+/* Attempts to append all characters from UTF16 encoded data to the given string. */
+/* Characters not in code page 437 are omitted. */
+void Convert_DecodeUtf16(String* str, Codepoint* chars, int numBytes);
+/* Attempts to append all characters from UTF8 encoded data to the given string. */
+/* Characters not in code page 437 are omitted. */
+void Convert_DecodeUtf8(String* str, uint8_t* chars, int numBytes);
+/* Attempts to append all characters from ASCII encoded data to the given string. */
+/* Characters not in code page 437 are omitted. */
+void Convert_DecodeAscii(String* str, uint8_t* chars, int numBytes);
 
 /* Attempts to convert the given string into an unsigned 8 bit integer. */
 CC_API bool Convert_ParseUInt8(const String*  str, uint8_t* value);

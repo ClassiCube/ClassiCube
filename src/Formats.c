@@ -329,7 +329,7 @@ static ReturnCode Nbt_ReadString(struct Stream* stream, String* str) {
 	if (len > Array_Elems(buffer)) return CW_ERR_STRING_LEN;
 	if ((res = Stream_Read(stream, buffer, len))) return res;
 
-	String_DecodeUtf8(str, buffer, len);
+	Convert_DecodeUtf8(str, buffer, len);
 	return 0;
 }
 

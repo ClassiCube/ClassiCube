@@ -55,8 +55,9 @@ CC_API int Platform_ConvertString(void* data, const String* src);
 void Platform_Init(void);
 /* Frees the platform specific state. */
 void Platform_Free(void);
-/* Sets current directory to the directory the executable is in. */
-void Platform_SetWorkingDir(void);
+/* Sets current/working directory to the given directory. */
+/* This is the 'base directory' relative paths are based on. */
+ReturnCode Platform_SetCurrentDirectory(const String* path);
 /* Exits the process with the given return code .*/
 void Platform_Exit(ReturnCode code);
 
@@ -69,6 +70,8 @@ ReturnCode Platform_Encrypt(const uint8_t* data, int len, uint8_t** enc, int* en
 /* NOTE: Should only be implemented when platform natively supports it. */
 ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* decLen);
 
+/* Returns the full path of the application's executable. */
+ReturnCode Platform_GetExePath(String* path);
 /* Starts the given program with the given arguments. */
 ReturnCode Platform_StartProcess(const String* path, const String* args);
 /* Starts the platform-specific program to open the given url or filename. */
