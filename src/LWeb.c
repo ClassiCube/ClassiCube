@@ -260,9 +260,26 @@ void GetTokenTask_Run(void) {
 struct SignInTaskData SignInTask;
 char userBuffer[STRING_SIZE];
 
+static void SignInTask_LogError(const String* str) {
+	const static String userErr = String_FromConst("&cWrong username or password");
+	const static String verErr  = String_FromConst("&cAccount verification required");
+	const static String unkErr  = String_FromConst("&cUnknown error occurred");
+
+	if (String_CaselessEqualsConst(str, "username") || String_CaselessEqualsConst(str, "password")) {
+		SignInTask.Error = userErr;
+	} else if (String_CaselessEqualsConst(str, "verification")) {
+		SignInTask.Error = verErr;
+	} else if (str->length) {
+		SignInTask.Error = unkErr;
+	}
+}
+
 static void SignInTask_OnValue(struct JsonContext* ctx, const String* str) {
-	//if (!String_CaselessEqualsConst(&ctx->CurKey, "token")) return;
-	//String_Copy(&GetTokenTask.Token, str);
+	if (String_CaselessEqualsConst(&ctx->CurKey, "username")) {
+		String_Copy(&SignInTask.Username, str);
+	} else if (String_CaselessEqualsConst(&ctx->CurKey, "errors")) {
+		SignInTask_LogError(str);
+	}
 }
 
 static void SignInTask_Handle(uint8_t* data, uint32_t len) {
@@ -272,20 +289,22 @@ static void SignInTask_Handle(uint8_t* data, uint32_t len) {
 void SignInTask_Run(const String* user, const String* pass) {
 	const static String id  = String_FromConst("CC post login");
 	const static String url = String_FromConst("https://www.classicube.net/api/login");
+	String tmp; char tmpBuffer[STRING_SIZE * 5];
 	if (SignInTask.Base.Working) return;
 
 	LWebTask_Reset(&SignInTask.Base);
 	String_InitArray(SignInTask.Username, userBuffer);
 	SignInTask.Error.length = 0;
 
-	// remove this
-	String_Copy(&SignInTask.Username, user);
+	String_InitArray(tmp, tmpBuffer);
+	/* TODO: URL ENCODE THIS.. */
+	String_Format3(&tmp, "username=%s&password=%s&token=%s",
+					user, pass, &GetTokenTask.Token);
 
 	SignInTask.Base.Identifier = id;
-	Http_AsyncGetData(&url, false, &id);
+	Http_AsyncPostData(&url, false, &id, tmp.buffer, tmp.length);
 	SignInTask.Base.Handle     = SignInTask_Handle;
 }
-// NOTE: Remember to add &c for errors here too
 
 
 /*########################################################################################################################*

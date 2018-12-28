@@ -119,13 +119,14 @@ static ReturnCode HttpCache_Lookup(struct HttpCacheEntry* e) {
 
 static void Http_SysInit(void) {
 	/* TODO: Should we use INTERNET_OPEN_TYPE_PRECONFIG instead? */
+	/* INTERNET_OPEN_TYPE_DIRECT */
 	hInternet = InternetOpenA(GAME_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
 	if (!hInternet) Logger_Abort2(GetLastError(), "Failed to init WinINet");
 }
 
 /* Adds custom HTTP headers for a req */
 static void Http_SysMakeHeaders(String* headers, struct HttpRequest* req) {
-	if (!req->Etag[0] && !req->LastModified) {
+	if (!req->Etag[0] && !req->LastModified && !req->Data) {
 		headers->buffer = NULL; return;
 	}
 
@@ -142,16 +143,21 @@ static void Http_SysMakeHeaders(String* headers, struct HttpRequest* req) {
 		String_AppendConst(headers, "\r\n");
 	}
 
+	if (req->Data) {
+		String_AppendConst(headers, "Content-Type: application/x-www-form-urlencoded\r\n");
+	}
+
 	String_AppendConst(headers, "\r\n\r\n");
 	headers->buffer[headers->length] = '\0';
 }
 
 /* Creates and sends a http req */
 static ReturnCode Http_SysMakeRequest(struct HttpRequest* req, HINTERNET* handle) {
+	const static char* verbs[3] = { "GET", "HEAD", "POST" };
 	struct HttpCacheEntry entry;
-	const char* verb;
 	DWORD flags;
-	String headers; char headersBuffer[STRING_SIZE * 3];
+
+	String headers; char headersBuffer[STRING_SIZE * 4];
 	String path;    char pathBuffer[URL_MAX_SIZE + 1];
 	String url = String_FromRawArray(req->URL);
 
@@ -167,11 +173,11 @@ static ReturnCode Http_SysMakeRequest(struct HttpRequest* req, HINTERNET* handle
 	flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD;
 	if (entry.Https) flags |= INTERNET_FLAG_SECURE;
 
-	verb    = req->RequestType == REQUEST_TYPE_GET ? "GET" : "HEAD";
-	*handle = HttpOpenRequestA(entry.Handle, verb, pathBuffer, NULL, NULL, NULL, flags, 0);
+	*handle = HttpOpenRequestA(entry.Handle, verbs[req->RequestType], 
+								pathBuffer, NULL, NULL, NULL, flags, 0);
 
-	return *handle && HttpSendRequestA(*handle, headers.buffer, headers.length, NULL, 0)
-			? 0 : GetLastError();
+	return *handle && HttpSendRequestA(*handle, headers.buffer, headers.length, 
+										req->Data, req->Size) ? 0 : GetLastError();
 }
 
 /* Gets headers from a http response */
@@ -245,6 +251,7 @@ static ReturnCode Http_SysGetData(struct HttpRequest* req, HINTERNET handle, vol
 static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
 	HINTERNET handle;
 	ReturnCode res = Http_SysMakeRequest(req, &handle);
+	Mem_Free(req->Data);
 	if (res) return res;
 
 	*progress = ASYNC_PROGRESS_FETCHING_DATA;
@@ -474,7 +481,7 @@ static volatile int http_curProgress = ASYNC_PROGRESS_NOTHING;
 bool Http_UseCookies;
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed. */
-static void Http_Add(const String* url, bool priority, const String* id, uint8_t type, TimeMS* lastModified, const String* etag, const String* data) {
+static void Http_Add(const String* url, bool priority, const String* id, uint8_t type, TimeMS* lastModified, const String* etag, const void* data, uint32_t size) {
 	struct HttpRequest req = { 0 };
 	String reqUrl, reqID, reqEtag;
 
@@ -489,7 +496,12 @@ static void Http_Add(const String* url, bool priority, const String* id, uint8_t
 	String_InitArray(reqEtag, req.Etag);
 	if (lastModified) { req.LastModified = *lastModified; }
 	if (etag)         { String_Copy(&reqEtag, etag); }
-	/* req.Data = data; TODO: Implement this. do we need to copy or expect caller to malloc it?  */
+
+	if (data) {
+		req.Data = Mem_Alloc(size, 1, "Http_PostData");
+		Mem_Copy(req.Data, data, size);
+		req.Size = size;
+	}
 
 	Mutex_Lock(http_pendingMutex);
 	{	
@@ -515,24 +527,23 @@ void Http_AsyncGetSkin(const String* id, const String* skinName) {
 		String_AppendColorless(&url, skinName);
 		String_AppendConst(&url, ".png");
 	}
-
-	Http_Add(&url, false, id, REQUEST_TYPE_GET, NULL, NULL, NULL);
+	Http_AsyncGetData(&url, false, id);
 }
 
 void Http_AsyncGetData(const String* url, bool priority, const String* id) {
-	Http_Add(url, priority, id, REQUEST_TYPE_GET, NULL, NULL, NULL);
+	Http_Add(url, priority, id, REQUEST_TYPE_GET, NULL, NULL, NULL, 0);
 }
 
 void Http_AsyncGetHeaders(const String* url, bool priority, const String* id) {
-	Http_Add(url, priority, id, REQUEST_TYPE_HEAD, NULL, NULL, NULL);
+	Http_Add(url, priority, id, REQUEST_TYPE_HEAD, NULL, NULL, NULL, 0);
 }
 
-void AsyncDownloader_PostString(const String* url, bool priority, const String* id, const String* contents) {
-	Http_Add(url, priority, id, REQUEST_TYPE_GET, NULL, NULL, contents);
+void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, uint32_t size) {
+	Http_Add(url, priority, id, REQUEST_TYPE_POST, NULL, NULL, data, size);
 }
 
 void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, TimeMS* lastModified, const String* etag) {
-	Http_Add(url, priority, id, REQUEST_TYPE_GET, lastModified, etag, NULL);
+	Http_Add(url, priority, id, REQUEST_TYPE_GET, lastModified, etag, NULL, 0);
 }
 
 void Http_PurgeOldEntriesTask(struct ScheduledTask* task) {

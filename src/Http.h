@@ -15,7 +15,7 @@ extern struct IGameComponent Http_Component;
 extern bool Http_UseCookies;
 /* TODO: Connection pooling */
 
-enum HttpRequestType { REQUEST_TYPE_GET, REQUEST_TYPE_HEAD };
+enum HttpRequestType { REQUEST_TYPE_GET, REQUEST_TYPE_HEAD, REQUEST_TYPE_POST };
 enum HttpProgress {
 	ASYNC_PROGRESS_NOTHING        = -3,
 	ASYNC_PROGRESS_MAKING_REQUEST = -2,
@@ -52,9 +52,8 @@ void Http_AsyncGetData(const String* url, bool priority, const String* id);
 /* Asynchronously performs a http HEAD request. (e.g. to get Content-Length header) */
 void Http_AsyncGetHeaders(const String* url, bool priority, const String* id);
 /* Asynchronously performs a http POST request. (e.g. to submit data) */
-/* NOTE: data and size MUST PERSIST until the request is completed. */
-/* TODO: maybe we shouldn't force that.. instead mem alloc data and size */
-void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, const uint32_t size);
+/* NOTE: You don't have to persist data, Http makes a copy of it. */
+void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, uint32_t size);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
 /* Also sets the If-Modified-Since and If-None-Match headers. (if not NULL)  */
 void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, TimeMS* lastModified, const String* etag);
