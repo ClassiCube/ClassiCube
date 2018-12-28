@@ -1012,26 +1012,29 @@ static void ResourcesScreen_Reposition(struct LScreen* s_) {
 	LWidget_SetLocation(&s->SdrProgress, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 15);
 }
 
+CC_NOINLINE static void ResourcesScreen_ResetArea(int x, int y, int width, int height) {
+	BitmapCol boxCol = BITMAPCOL_CONST(120, 85, 151, 255);
+	Gradient_Noise(&Launcher_Framebuffer, boxCol, 4, x, y, width, height);
+	Launcher_MarkDirty(x, y, width, height);
+}
+
 #define RESOURCES_XSIZE 190
 #define RESOURCES_YSIZE 70
 static void ResourcesScreen_Draw(struct LScreen* s) {
 	BitmapCol backCol = BITMAPCOL_CONST( 12, 12,  12, 255);
-	BitmapCol boxCol  = BITMAPCOL_CONST(120, 85, 151, 255);
 
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
 					0, 0, Game_Width, Game_Height);
-	Gradient_Noise(&Launcher_Framebuffer, boxCol, 4,
+	ResourcesScreen_ResetArea(
 		Game_Width / 2 - RESOURCES_XSIZE, Game_Height / 2 - RESOURCES_YSIZE,
 		RESOURCES_XSIZE * 2,              RESOURCES_YSIZE * 2);
 	LScreen_Draw(s);
 }
 
 static void ResourcesScreen_SetStatus(const String* str) {
-	BitmapCol boxCol = BITMAPCOL_CONST(120, 85, 151, 255);
 	struct LLabel* w = &ResourcesScreen_Instance.LblStatus;
-
-	Drawer2D_Clear(&Launcher_Framebuffer, boxCol,
-		w->X, w->Y, w->Width, w->Height);
+	ResourcesScreen_ResetArea(w->Last.X, w->Last.Y, 
+							  w->Last.Width, w->Last.Height);
 	LLabel_SetText(w, str);
 
 	w->YOffset = -10;
@@ -1043,7 +1046,6 @@ static void ResourcesScreen_SetStatus(const String* str) {
 static void ResourcesScreen_UpdateStatus(struct HttpRequest* req) {
 	String str; char strBuffer[STRING_SIZE];
 	String id;
-	BitmapCol boxCol = BITMAPCOL_CONST(120, 85, 151, 255);
 	struct LLabel* w = &ResourcesScreen_Instance.LblStatus;
 	int count;
 
