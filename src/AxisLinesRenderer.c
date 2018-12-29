@@ -13,12 +13,12 @@ static GfxResourceID axisLines_vb;
 #define AXISLINES_LENGTH 3.0f
 
 void AxisLinesRenderer_Render(double delta) {
-	static uint8_t indices[36] = {
+	const static uint8_t indices[36] = {
 		2,2,1, 2,2,3, 4,2,3, 4,2,1, /* X arrow */
 		1,2,2, 1,2,4, 3,2,4, 3,2,2, /* Z arrow */
 		1,2,3, 1,4,3, 3,4,1, 3,2,1, /* Y arrow */
 	};
-	static PackedCol cols[3] = {
+	const static PackedCol cols[3] = {
 		PACKEDCOL_CONST(255,   0,   0, 255), /* Red   */
 		PACKEDCOL_CONST(  0,   0, 255, 255), /* Blue  */
 		PACKEDCOL_CONST(  0, 255,   0, 255), /* Green */

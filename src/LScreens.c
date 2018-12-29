@@ -1221,6 +1221,25 @@ static void ServersScreen_Init(struct LScreen* s_) {
 	LScreen_SelectWidget(s_, (struct LWidget*)&s->IptSearch, false);
 }
 
+static void ServersScreen_Tick(struct LScreen* s_) {
+	const static String refresh = String_FromConst("Refresh");
+	const static String failed  = String_FromConst("&cFailed");
+	struct ServersScreen* s = (struct ServersScreen*)s_;
+
+	if (!FetchServersTask.Base.Working) return;
+	LWebTask_Tick(&FetchServersTask.Base);
+	if (!FetchServersTask.Base.Completed) return;
+
+	if (FetchServersTask.Base.Success) {
+		LTable_Sort(&s->Table);
+		LWidget_Draw(&s->Table);
+	}
+
+	LButton_SetText(&s->BtnRefresh, 
+				FetchServersTask.Base.Success ? &refresh : &failed);
+	LWidget_Redraw(&s->BtnRefresh);
+}
+
 static void ServersScreen_Free(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	Font_Free(&s->RowFont);
@@ -1270,6 +1289,7 @@ struct LScreen* ServersScreen_MakeInstance(void) {
 	s->TableAcc = 0.0f;
 
 	s->Init       = ServersScreen_Init;
+	s->Tick       = ServersScreen_Tick;
 	s->Free       = ServersScreen_Free;
 	s->Reposition = ServersScreen_Reposition;
 	s->MouseWheel = ServersScreen_MouseWheel;

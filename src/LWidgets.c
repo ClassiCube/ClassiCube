@@ -636,14 +636,14 @@ static void NameColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, i
 	args->Text = row->Name;
 }
 static int NameColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
-	return String_Compare(&a->Name, &b->Name);
+	return String_Compare(&b->Name, &a->Name);
 }
 
 static void PlayersColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
 	String_Format2(&args->Text, "%i/%i", &row->Players, &row->MaxPlayers);
 }
 static int PlayersColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
-	return a->Players - b->Players;
+	return b->Players - a->Players;
 }
 
 static void UptimeColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
@@ -660,14 +660,14 @@ static void UptimeColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args,
 	String_Format2(&args->Text, "%i%r", &uptime, &unit);
 }
 static int UptimeColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
-	return a->Uptime - b->Uptime;
+	return b->Uptime - a->Uptime;
 }
 
 static void SoftwareColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
 	args->Text = row->Software;
 }
 static int SoftwareColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
-	return String_Compare(&a->Software, &b->Software);
+	return String_Compare(&b->Software, &a->Software);
 }
 
 static struct LTableColumn tableColumns[5] = {
@@ -955,8 +955,8 @@ static void LTable_HeadersClick(struct LTable* w) {
 	for (i = 0, x = w->X; i < w->NumColumns; i++) {
 		if (mouseX >= x && mouseX < (x + w->Columns[i].Width) && w->Columns[i].Interactable) {
 			sortingCol = i;
-			LTable_Sort(w);
 			w->Columns[i].InvertSort = !w->Columns[i].InvertSort;
+			LTable_Sort(w);
 			return;
 		}
 

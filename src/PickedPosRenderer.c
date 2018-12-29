@@ -43,7 +43,7 @@ x,3,0,  x,2,0,  x,2,3,  x,3,3,
 0,3,z,  0,2,z,  3,2,z,  3,3,z,
 
 void PickedPosRenderer_Update(struct PickedPos* selected) {
-	static uint8_t indices[288] = {
+	const static uint8_t indices[288] = {
 		PickedPos_Y(0) PickedPos_Y(3) /* YMin, YMax */
 		PickedPos_X(0) PickedPos_X(3) /* XMin, XMax */
 		PickedPos_Z(0) PickedPos_Z(3) /* ZMin, ZMax */

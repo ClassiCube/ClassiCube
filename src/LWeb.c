@@ -392,6 +392,13 @@ static void FetchServersTask_Next(struct JsonContext* ctx) {
 }
 
 static void FetchServersTask_Handle(uint8_t* data, uint32_t len) {
+	Mem_Free(FetchServersTask.Servers);
+	Mem_Free(FetchServersTask.Orders);
+
+	FetchServersTask.NumServers = 0;
+	FetchServersTask.Servers    = NULL;
+	FetchServersTask.Orders     = NULL;
+
 	/* -1 because servers is surrounded by a { */
 	FetchServersTask.NumServers = -1;
 	Json_Handle(data, len, NULL, NULL, FetchServersTask_Count);
@@ -409,14 +416,7 @@ void FetchServersTask_Run(void) {
 	const static String id  = String_FromConst("CC fetch servers");
 	const static String url = String_FromConst("https://www.classicube.net/api/servers");
 	if (FetchServersTask.Base.Working) return;
-
 	LWebTask_Reset(&FetchServersTask.Base);
-	Mem_Free(FetchServersTask.Servers);
-	Mem_Free(FetchServersTask.Orders);
-
-	FetchServersTask.NumServers = 0;
-	FetchServersTask.Servers    = NULL;
-	FetchServersTask.Orders     = NULL;
 
 	FetchServersTask.Base.Identifier = id;
 	Http_AsyncGetData(&url, false, &id);
