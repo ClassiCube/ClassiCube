@@ -86,6 +86,7 @@ extern struct FetchServersData {
 } FetchServersTask;
 void FetchServersTask_Run(void);
 void FetchServersTask_ResetOrder(void);
+#define Servers_Get(i) (&FetchServersTask.Servers[FetchServersTask.Orders[i]])
 
 
 extern struct CheckUpdateData {

@@ -26,6 +26,8 @@ struct LWidgetVTABLE {
 	void (*OnSelect)(void* widget, bool wasSelected);
 	/* Called when mouse clicks on another widget. */
 	void (*OnUnselect)(void* widget);
+	/* Called when mouse wheel is scrolled and this widget is selected. */
+	void (*MouseWheel)(void* widget, float delta);
 };
 
 #define LWidget_Layout \
@@ -124,7 +126,7 @@ struct LTableColumn {
 	/* Most of the time that's all you need to do. */
 	void (*DrawRow)(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y);
 	/* Returns sort order of two rows, based on value of this column in both rows. */
-	int (*SortOrder)(struct ServerInfo* a, struct ServerInfo* b);
+	int (*SortOrder)(const struct ServerInfo* a, const struct ServerInfo* b);
 	/* Whether a vertical gridline (and padding) appears after this. */
 	bool ColumnGridline;
 	/* Whether user can interact with this column. */
@@ -167,7 +169,11 @@ struct LTable {
 	bool DraggingScrollbar;
 	/* Offset of mouse for scrollbar dragging. */
 	int MouseOffset;
+	float _wheelAcc; /* mouse wheel accumulator */
 };
+/* Gets the current ith row */
+#define LTable_Get(row) (&FetchServersTask.Servers[FetchServersTask.Servers[row]._order])
+
 /* Initialises a table. */
 /* NOTE: Must also call LTable_Reset to make a table actually useful. */
 void LTable_Init(struct LTable* table, const FontDesc* hdrFont, const FontDesc* rowFont);
@@ -175,6 +181,9 @@ void LTable_Init(struct LTable* table, const FontDesc* hdrFont, const FontDesc* 
 void LTable_Reset(struct LTable* table);
 /* Adjusts Y position of rows and number of visible rows. */
 void LTable_Reposition(struct LTable* table);
+/* Whether this table would handle the given key being pressed. */
+/* e.g. used so pressing up/down works even when another widget is selected */
+bool LTable_HandlesKey(Key key);
 /* Filters rows to only show those containing 'w->Filter' in the name. */
 void LTable_ApplyFilter(struct LTable* table);
 /* Sorts the rows in the table by current Sorter function of table */

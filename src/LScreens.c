@@ -1124,10 +1124,17 @@ static struct ServersScreen {
 	struct LTable Table;
 	struct LWidget* _widgets[6];
 	FontDesc RowFont;
+	float TableAcc;
 } ServersScreen_Instance;
 
 static void ServersScreen_Connect(void* w, int x, int y) {
-	Launcher_ConnectToServer(&ServersScreen_Instance.IptHash.Text);
+	struct LTable* table = &ServersScreen_Instance.Table;
+	String* hash         = &ServersScreen_Instance.IptHash.Text;
+
+	if (!hash->length && table->RowsCount) { 
+		hash = &LTable_Get(table->TopRow)->Hash; 
+	}
+	Launcher_ConnectToServer(hash);
 }
 
 static void ServersScreen_Refresh(void* w, int x, int y) {
@@ -1237,13 +1244,31 @@ static void ServersScreen_Reposition(struct LScreen* s_) {
 	LTable_Reposition(&s->Table);
 }
 
+static void ServersScreen_MouseWheel(struct LScreen* s_, float delta) {
+	struct ServersScreen* s = (struct ServersScreen*)s_;
+	s->Table.VTABLE->MouseWheel(&s->Table, delta);
+}
+
+static void ServersScreen_KeyDown(struct LScreen* s_, Key key, bool was) {
+	struct ServersScreen* s = (struct ServersScreen*)s_;
+	if (!LTable_HandlesKey(key)) {
+		LScreen_KeyDown(s_, key, was);
+	} else {
+		s->Table.VTABLE->KeyDown(&s->Table, key, was);
+	}
+}
+
 struct LScreen* ServersScreen_MakeInstance(void) {
 	struct ServersScreen* s = &ServersScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->HidesTitlebar = true;
+	s->TableAcc = 0.0f;
+
 	s->Init       = ServersScreen_Init;
 	s->Free       = ServersScreen_Free;
 	s->Reposition = ServersScreen_Reposition;
+	s->MouseWheel = ServersScreen_MouseWheel;
+	s->KeyDown    = ServersScreen_KeyDown;
 	s->OnEnterWidget = (struct LWidget*)&s->BtnConnect;
 	return (struct LScreen*)s;
 }

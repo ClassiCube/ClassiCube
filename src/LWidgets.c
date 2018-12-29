@@ -633,14 +633,14 @@ static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, i
 static void NameColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
 	args->Text = row->Name;
 }
-static int NameColumn_Sort(struct ServerInfo* a, struct ServerInfo* b) {
+static int NameColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return String_Compare(&a->Name, &b->Name);
 }
 
 static void PlayersColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
 	String_Format2(&args->Text, "%i/%i", &row->Players, &row->MaxPlayers);
 }
-static int PlayersColumn_Sort(struct ServerInfo* a, struct ServerInfo* b) {
+static int PlayersColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return a->Players - b->Players;
 }
 
@@ -657,14 +657,14 @@ static void UptimeColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args,
 	}
 	String_Format2(&args->Text, "%i%r", &uptime, &unit);
 }
-static int UptimeColumn_Sort(struct ServerInfo* a, struct ServerInfo* b) {
+static int UptimeColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return a->Uptime - b->Uptime;
 }
 
 static void SoftwareColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
 	args->Text = row->Software;
 }
-static int SoftwareColumn_Sort(struct ServerInfo* a, struct ServerInfo* b) {
+static int SoftwareColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return String_Compare(&a->Software, &b->Software);
 }
 
@@ -677,9 +677,7 @@ static struct LTableColumn tableColumns[5] = {
 };
 
 
-#define LTable_Get(row) (&FetchServersTask.Servers[FetchServersTask.Servers[row]._order])
 static int sortingCol = -1;
-
 /* Works out top and height of the scrollbar */
 static void LTable_GetScrollbarCoords(struct LTable* w, int* y, int* height) {
 	float scale;
@@ -875,8 +873,14 @@ static void LTable_DrawScrollbar(struct LTable* w) {
 					x, w->Y + y, SCROLLBAR_WIDTH, height);
 }
 
-static void LTable_KeyDown(struct LTable* w, Key key, bool was) {
+bool LTable_HandlesKey(Key key) {
+	return key == KEY_UP || key == KEY_DOWN || key == KEY_PAGEUP || key == KEY_PAGEDOWN;
+}
+
+static void LTable_KeyDown(void* widget, Key key, bool was) {
+	struct LTable* w = widget;
 	int index = LTable_GetSelectedIndex(w);
+
 	if (key == KEY_UP) {
 		index--;
 	} else if (key == KEY_DOWN) {
@@ -890,7 +894,8 @@ static void LTable_KeyDown(struct LTable* w, Key key, bool was) {
 	LTable_SetSelectedTo(w, index);
 }
 
-static void LTable_MouseMove(struct LTable* w, int deltaX, int deltaY) {
+static void LTable_MouseMove(void* widget, int deltaX, int deltaY) {
+	struct LTable* w = widget;
 	int x = Mouse_X - w->X, y = Mouse_Y - w->Y, col;
 
 	if (w->DraggingScrollbar) {
@@ -914,6 +919,7 @@ static void LTable_RowsClick(struct LTable* w) {
 	LTable_SetSelectedTo(w, w->TopRow + mouseY / w->RowHeight);
 }
 
+/* Handles clicking on column headers (either resizes a column or sort rows) */
 static void LTable_HeadersClick(struct LTable* w) {
 	int x, i, mouseX = Mouse_X - w->X;
 
@@ -957,7 +963,9 @@ static void LTable_ScrollbarClick(struct LTable* w) {
 	LTable_ClampTopRow(w);
 }
 
-static void LTable_MouseDown(struct LTable* w, bool wasSelected) {
+static void LTable_MouseDown(void* widget, bool wasSelected) {
+	struct LTable* w = widget;
+
 	if (Mouse_X >= Game_Width - SCROLLBAR_WIDTH) {
 		LTable_ScrollbarClick(w);
 		w->DraggingScrollbar = true;
@@ -967,6 +975,13 @@ static void LTable_MouseDown(struct LTable* w, bool wasSelected) {
 	} else {
 		LTable_RowsClick(w);
 	}
+	LWidget_Draw(w);
+}
+
+static void LTable_MouseWheel(void* widget, float delta) {
+	struct LTable* w = widget;
+	w->TopRow -= Utils_AccumulateWheelDelta(&w->_wheelAcc, delta);
+	LTable_ClampTopRow(w);
 	LWidget_Draw(w);
 }
 
@@ -1003,7 +1018,8 @@ static struct LWidgetVTABLE ltable_VTABLE = {
 	LTable_Draw, NULL,
 	LTable_KeyDown,   NULL, /* Key    */
 	LTable_MouseMove, NULL, /* Hover  */
-	LTable_MouseDown, LTable_StopDragging  /* Select */
+	LTable_MouseDown, LTable_StopDragging,  /* Select */
+	LTable_MouseWheel,      /* Wheel */
 };
 void LTable_Init(struct LTable* w, const FontDesc* hdrFont, const FontDesc* rowFont) {
 	w->VTABLE     = &ltable_VTABLE;
@@ -1018,8 +1034,10 @@ void LTable_Reset(struct LTable* w) {
 	LTable_StopDragging(w);
 	LTable_Reposition(w);
 
-	w->TopRow  = 0;
-	sortingCol = -1;
+	w->TopRow    = 0;
+	sortingCol   = -1;
+	w->_wheelAcc = 0.0f;
+
 	w->SelectedHash->length = 0;
 	w->Filter->length       = 0;
 	LTable_Sort(w);
@@ -1030,7 +1048,7 @@ void LTable_ApplyFilter(struct LTable* w) {
 
 	count = FetchServersTask.NumServers;
 	for (i = 0, j = 0; i < count; i++) {
-		if (String_CaselessContains(&FetchServersTask.Servers[i].Name, w->Filter)) {
+		if (String_CaselessContains(&Servers_Get(i)->Name, w->Filter)) {
 			FetchServersTask.Servers[j++]._order = FetchServersTask.Orders[i];
 		}
 	}
@@ -1039,12 +1057,10 @@ void LTable_ApplyFilter(struct LTable* w) {
 	for (; j < count; j++) {
 		FetchServersTask.Servers[j]._order = -100000;
 	}
-	/* TODO: preserve selected server */
-	/* TODO: Resort entries again */
-	LTable_ClampTopRow(w); /* TODO: may need to move this elsewhere */
+	LTable_ClampTopRow(w);
 }
 
-static int LTable_SortOrder(struct ServerInfo* a, struct ServerInfo* b) {
+static int LTable_SortOrder(const struct ServerInfo* a, const struct ServerInfo* b) {
 	int order;
 	if (sortingCol >= 0) {
 		order = tableColumns[sortingCol].SortOrder(a, b);
@@ -1058,16 +1074,15 @@ static int LTable_SortOrder(struct ServerInfo* a, struct ServerInfo* b) {
 
 static void LTable_QuickSort(int left, int right) {
 	uint16_t* keys = FetchServersTask.Orders; uint16_t key;
-	struct ServerInfo* values = FetchServersTask.Servers;
 
 	while (left < right) {
 		int i = left, j = right;
-		struct ServerInfo* mid = &values[keys[(i + j) >> 1]];
+		struct ServerInfo* mid = Servers_Get((i + j) >> 1);
 
 		/* partition the list */
 		while (i <= j) {
-			while (LTable_SortOrder(mid, &values[keys[i]]) < 0) i++;
-			while (LTable_SortOrder(mid, &values[keys[j]]) > 0) j--;
+			while (LTable_SortOrder(mid, Servers_Get(i)) < 0) i++;
+			while (LTable_SortOrder(mid, Servers_Get(j)) > 0) j--;
 			QuickSort_Swap_Maybe();
 		}
 		/* recurse into the smaller subset */
