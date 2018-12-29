@@ -113,8 +113,6 @@ CC_NOINLINE void LSlider_Init(struct LSlider* w, int width, int height);
 
 struct ServerInfo;
 struct DrawTextArgs;
-/* Returns sort order of two rows/server entries. */
-typedef int (*LTableSorter)(struct ServerInfo* a, struct ServerInfo* b);
 
 struct LTableColumn {
 	/* Name of this column. */
@@ -125,8 +123,8 @@ struct LTableColumn {
 	/* If args.Text is changed to something, that text gets drawn afterwards. */
 	/* Most of the time that's all you need to do. */
 	void (*DrawRow)(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y);
-	/* Sorts two rows based on value of this column in both rows. */
-	LTableSorter SortRows;
+	/* Returns sort order of two rows, based on value of this column in both rows. */
+	int (*SortOrder)(struct ServerInfo* a, struct ServerInfo* b);
 	/* Whether a vertical gridline (and padding) appears after this. */
 	bool ColumnGridline;
 	/* Whether user can interact with this column. */
@@ -155,8 +153,6 @@ struct LTable {
 	int RowsCount;
 	/* Index of top row currently visible. */
 	int TopRow;
-	/* Comparison function used to sort rows. */
-	LTableSorter Sorter;
 
 	/* Hash of the currently selected server. */
 	String* SelectedHash;
