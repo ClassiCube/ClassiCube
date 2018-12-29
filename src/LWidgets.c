@@ -167,64 +167,61 @@ CC_NOINLINE static void LInput_GetText(struct LInput* w, String* text) {
 
 static void LInput_DrawOuterBorder(struct LInput* w) {
 	BitmapCol col = BITMAPCOL_CONST(97, 81, 110, 255);
-	int width = w->_RealWidth;
 
 	if (w->Selected) {
 		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->X,                  w->Y, 
-			width,                 BORDER);
+			w->X,                     w->Y, 
+			w->Width,                 BORDER);
 		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->X,                  w->Y + w->Height - BORDER, 
-			width,                 BORDER);
+			w->X,                     w->Y + w->Height - BORDER, 
+			w->Width,                 BORDER);
 		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->X,                  w->Y, 
-			BORDER,                w->Height);
+			w->X,                     w->Y, 
+			BORDER,                   w->Height);
 		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->X + width - BORDER, w->Y, 
-			BORDER,                w->Height);
+			w->X + w->Width - BORDER, w->Y, 
+			BORDER,                   w->Height);
 	} else {
-		Launcher_ResetArea(w->X,                  w->Y, 
-						   width,                 BORDER);
-		Launcher_ResetArea(w->X,                  w->Y + w->Height - BORDER,
-						   width,                 BORDER);
-		Launcher_ResetArea(w->X,                  w->Y, 
-						   BORDER,                w->Height);
-		Launcher_ResetArea(w->X + width - BORDER, w->Y, 
-						   BORDER,                w->Height);
+		Launcher_ResetArea(w->X,                     w->Y, 
+						   w->Width,                 BORDER);
+		Launcher_ResetArea(w->X,                     w->Y + w->Height - BORDER,
+						   w->Width,                 BORDER);
+		Launcher_ResetArea(w->X,                     w->Y, 
+						   BORDER,                   w->Height);
+		Launcher_ResetArea(w->X + w->Width - BORDER, w->Y, 
+						   BORDER,                   w->Height);
 	}
 }
 
 static void LInput_DrawInnerBorder(struct LInput* w) {
 	BitmapCol col = BITMAPCOL_CONST(165, 142, 168, 255);
-	int width = w->_RealWidth;
 
 	Drawer2D_Clear(&Launcher_Framebuffer, col,
-		w->X + BORDER,          w->Y + BORDER, 
-		width - BORDER2,        BORDER);
+		w->X + BORDER,             w->Y + BORDER, 
+		w->Width - BORDER2,        BORDER);
 	Drawer2D_Clear(&Launcher_Framebuffer, col,
-		w->X + BORDER,          w->Y + w->Height - BORDER2,
-		width - BORDER2,        BORDER);
+		w->X + BORDER,             w->Y + w->Height - BORDER2,
+		w->Width - BORDER2,        BORDER);
 	Drawer2D_Clear(&Launcher_Framebuffer, col,
-		w->X + BORDER,          w->Y + BORDER, 
-		BORDER,                 w->Height - BORDER2);
+		w->X + BORDER,             w->Y + BORDER, 
+		BORDER,                    w->Height - BORDER2);
 	Drawer2D_Clear(&Launcher_Framebuffer, col,
-		w->X + width - BORDER2, w->Y + BORDER,
-		BORDER,                 w->Height - BORDER2);
+		w->X + w->Width - BORDER2, w->Y + BORDER,
+		BORDER,                    w->Height - BORDER2);
 }
 
 static void LInput_BlendBoxTop(struct LInput* w) {
 	BitmapCol col = BITMAPCOL_CONST(0, 0, 0, 255);
-	int width = w->_RealWidth;
 
 	Gradient_Blend(&Launcher_Framebuffer, col, 75,
-		w->X + BORDER,   w->Y + BORDER, 
-		width - BORDER2, BORDER);
+		w->X + BORDER,      w->Y + BORDER, 
+		w->Width - BORDER2, BORDER);
 	Gradient_Blend(&Launcher_Framebuffer, col, 50,
-		w->X + BORDER,   w->Y + BORDER2,
-		width - BORDER2, BORDER);
+		w->X + BORDER,      w->Y + BORDER2,
+		w->Width - BORDER2, BORDER);
 	Gradient_Blend(&Launcher_Framebuffer, col, 25,
-		w->X + BORDER,   w->Y + BORDER3, 
-		width - BORDER2, BORDER);
+		w->X + BORDER,      w->Y + BORDER3, 
+		w->Width - BORDER2, BORDER);
 }
 
 static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
@@ -257,13 +254,14 @@ static void LInput_Draw(void* widget) {
 	DrawTextArgs_Make(&args, &text, &w->Font, false);
 
 	size = Drawer2D_MeasureText(&args);
-	w->_RealWidth  = max(w->BaseWidth, size.Width + 20);
+	w->Width       = max(w->MinWidth, size.Width + 20);
 	w->_TextHeight = size.Height;
 
 	LInput_DrawOuterBorder(w);
 	LInput_DrawInnerBorder(w);
 	Drawer2D_Clear(&Launcher_Framebuffer, white,
-		w->X + 2, w->Y + 2, w->_RealWidth - 4, w->Height - 4);
+		w->X + BORDER2,     w->Y + BORDER2, 
+		w->Width - BORDER4, w->Height - BORDER4);
 	LInput_BlendBoxTop(w);
 
 	Drawer2D_Cols['f'] = Drawer2D_Cols['0'];
@@ -428,8 +426,8 @@ void LInput_Init(struct LInput* w, const FontDesc* font, int width, int height, 
 	String_InitArray(w->Text, w->_TextBuffer);
 	w->Font  = *font;
 
-	w->BaseWidth = width;
-	w->Width = width; w->Height = height;
+	w->MinWidth = width;
+	w->Width    = width; w->Height = height;
 	LWidget_CalcPosition(w);
 
 	w->HintFont = *hintFont;
@@ -448,7 +446,7 @@ void LInput_SetText(struct LInput* w, const String* text_) {
 	DrawTextArgs_Make(&args, &text, &w->Font, true);
 
 	size = Drawer2D_MeasureText(&args);
-	w->_RealWidth  = max(w->BaseWidth, size.Width + 15);
+	w->Width       = max(w->MinWidth, size.Width + 20);
 	w->_TextHeight = size.Height;
 }
 
@@ -891,6 +889,7 @@ static void LTable_KeyDown(void* widget, Key key, bool was) {
 		index += w->VisibleRows;
 	} else { return; }
 
+	w->_lastRow = -1;
 	LTable_SetSelectedTo(w, index);
 }
 
@@ -916,7 +915,19 @@ static void LTable_MouseMove(void* widget, int deltaX, int deltaY) {
 
 static void LTable_RowsClick(struct LTable* w) {
 	int mouseY = Mouse_Y - w->RowsBegY;
-	LTable_SetSelectedTo(w, w->TopRow + mouseY / w->RowHeight);
+	int row    = w->TopRow + mouseY / w->RowHeight;
+	TimeMS now;
+
+	LTable_SetSelectedTo(w, row);
+	now         = DateTime_CurrentUTC_MS();
+
+	/* double click on row to join */
+	if (w->_lastClick + 1000 >= now && row == w->_lastRow) {
+		Launcher_ConnectToServer(&LTable_Get(row)->Hash);
+	}
+
+	w->_lastRow   = LTable_GetSelectedIndex(w);
+	w->_lastClick = now;
 }
 
 /* Handles clicking on column headers (either resizes a column or sort rows) */
@@ -960,6 +971,7 @@ static void LTable_ScrollbarClick(struct LTable* w) {
 		w->MouseOffset = mouseY - y;
 	}
 
+	w->DraggingScrollbar = true;
 	LTable_ClampTopRow(w);
 }
 
@@ -968,10 +980,10 @@ static void LTable_MouseDown(void* widget, bool wasSelected) {
 
 	if (Mouse_X >= Game_Width - SCROLLBAR_WIDTH) {
 		LTable_ScrollbarClick(w);
-		w->DraggingScrollbar = true;
-		//lastIndex = -10;
+		w->_lastRow = -1;
 	} else if (Mouse_Y < w->RowsBegY) {
 		LTable_HeadersClick(w);
+		w->_lastRow = -1;
 	} else {
 		LTable_RowsClick(w);
 	}
@@ -983,6 +995,7 @@ static void LTable_MouseWheel(void* widget, float delta) {
 	w->TopRow -= Utils_AccumulateWheelDelta(&w->_wheelAcc, delta);
 	LTable_ClampTopRow(w);
 	LWidget_Draw(w);
+	w->_lastRow = -1;
 }
 
 /* Stops an in-progress dragging of resizing column. */
@@ -1057,6 +1070,8 @@ void LTable_ApplyFilter(struct LTable* w) {
 	for (; j < count; j++) {
 		FetchServersTask.Servers[j]._order = -100000;
 	}
+
+	w->_lastRow = -1;
 	LTable_ClampTopRow(w);
 }
 

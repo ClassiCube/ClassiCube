@@ -62,7 +62,7 @@ CC_NOINLINE void LButton_SetText(struct LButton* w, const String* text);
 struct LInput;
 struct LInput {
 	LWidget_Layout
-	int BaseWidth, _RealWidth;
+	int MinWidth;
 	/* Text displayed when the user has not entered anything in the text field. */
 	const char* HintText;
 	/* Whether all characters should be rendered as *. */
@@ -170,6 +170,8 @@ struct LTable {
 	/* Offset of mouse for scrollbar dragging. */
 	int MouseOffset;
 	float _wheelAcc; /* mouse wheel accumulator */
+	int _lastRow; /* last clicked row (for doubleclick join) */
+	TimeMS _lastClick;   /* time of last mouse click on a row */
 };
 /* Gets the current ith row */
 #define LTable_Get(row) (&FetchServersTask.Servers[FetchServersTask.Servers[row]._order])
