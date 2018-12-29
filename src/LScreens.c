@@ -134,15 +134,14 @@ static void LScreen_MouseUp(struct LScreen* s, MouseButton btn) {
 static void LScreen_MouseMove(struct LScreen* s, int deltaX, int deltaY) {
 	struct LWidget* over = LScreen_WidgetAt(s, Mouse_X, Mouse_Y);
 	struct LWidget* prev = s->HoveredWidget;
-	if (over == prev) return; /* TODO: ... */
+	bool overSame = prev == over;
 
-	if (prev) {
+	if (prev && !overSame) {
 		prev->Hovered    = false;
 		s->HoveredWidget = NULL;
 		s->UnhoverWidget(s, prev);
 
-		if (!prev->VTABLE->MouseLeft) return;
-		prev->VTABLE->MouseLeft(prev);
+		if (prev->VTABLE->MouseLeft) prev->VTABLE->MouseLeft(prev);
 	}
 
 	if (over) {
@@ -151,7 +150,7 @@ static void LScreen_MouseMove(struct LScreen* s, int deltaX, int deltaY) {
 		s->HoverWidget(s, over);
 
 		if (!over->VTABLE->MouseMove) return;
-		over->VTABLE->MouseMove(over, deltaX, deltaY);
+		over->VTABLE->MouseMove(over, deltaX, deltaY, overSame);
 	}
 }
 static void LScreen_MouseWheel(struct LScreen* s, float delta) { }
@@ -1258,6 +1257,12 @@ static void ServersScreen_KeyDown(struct LScreen* s_, Key key, bool was) {
 	}
 }
 
+static void ServersScreen_MouseUp(struct LScreen* s_, MouseButton btn) {
+	struct ServersScreen* s = (struct ServersScreen*)s_;
+	s->Table.VTABLE->OnUnselect(&s->Table);
+	LScreen_MouseUp(s_, btn);
+}
+
 struct LScreen* ServersScreen_MakeInstance(void) {
 	struct ServersScreen* s = &ServersScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
@@ -1269,6 +1274,7 @@ struct LScreen* ServersScreen_MakeInstance(void) {
 	s->Reposition = ServersScreen_Reposition;
 	s->MouseWheel = ServersScreen_MouseWheel;
 	s->KeyDown    = ServersScreen_KeyDown;
+	s->MouseUp    = ServersScreen_MouseUp;
 	s->OnEnterWidget = (struct LWidget*)&s->BtnConnect;
 	return (struct LScreen*)s;
 }

@@ -129,7 +129,11 @@ static void LButton_Draw(void* widget) {
 	if (!w->Hovered) Drawer2D_Cols['f'] = Drawer2D_Cols['F'];
 	Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
 }
-static void LButton_Hover(void* w, int x, int y) { LButton_Draw(w); }
+
+static void LButton_Hover(void* w, int x, int y, bool wasOver) { 
+	/* only need to redraw when changing from unhovered to hovered */	
+	if (!wasOver) LButton_Draw(w); 
+}
 
 static struct LWidgetVTABLE lbutton_VTABLE = {
 	LButton_Draw, NULL,
@@ -893,18 +897,21 @@ static void LTable_KeyDown(void* widget, Key key, bool was) {
 	LTable_SetSelectedTo(w, index);
 }
 
-static void LTable_MouseMove(void* widget, int deltaX, int deltaY) {
+static void LTable_MouseMove(void* widget, int deltaX, int deltaY, bool wasOver) {
 	struct LTable* w = widget;
 	int x = Mouse_X - w->X, y = Mouse_Y - w->Y, col;
 
 	if (w->DraggingScrollbar) {
 		float scale = w->Height / (float)w->RowsCount;
-		w->TopRow   = (int)((y - w->MouseOffset) / scale);
+		int row     = (int)((y - w->MouseOffset) / scale);
+		/* avoid expensive redraw when possible */
+		if (w->TopRow == row) return;
 
+		w->TopRow = row;
 		LTable_ClampTopRow(w);
 		LWidget_Redraw(w);
 	} else if (w->DraggingColumn >= 0) {
-		if (x >= w->X + w->Width - 20) return;
+		if (!deltaX || x >= w->X + w->Width - 20) return;
 		col = w->DraggingColumn;
 
 		w->Columns[col].Width += deltaX;
@@ -919,7 +926,7 @@ static void LTable_RowsClick(struct LTable* w) {
 	TimeMS now;
 
 	LTable_SetSelectedTo(w, row);
-	now         = DateTime_CurrentUTC_MS();
+	now = DateTime_CurrentUTC_MS();
 
 	/* double click on row to join */
 	if (w->_lastClick + 1000 >= now && row == w->_lastRow) {
@@ -932,12 +939,12 @@ static void LTable_RowsClick(struct LTable* w) {
 
 /* Handles clicking on column headers (either resizes a column or sort rows) */
 static void LTable_HeadersClick(struct LTable* w) {
-	int x, i, mouseX = Mouse_X - w->X;
+	int x, i, mouseX = Mouse_X;
 
 	for (i = 0, x = w->X; i < w->NumColumns; i++) {
 		/* clicked on gridline, begin dragging */
 		if (mouseX >= (x - 8) && mouseX < (x + 8) && w->Columns[i].Interactable) {
-			w->DraggingColumn = i;
+			w->DraggingColumn = i - 1;
 			return;
 		}
 

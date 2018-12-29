@@ -17,7 +17,7 @@ struct LWidgetVTABLE {
 	/* Called when key is pressed and this widget is selected. */
 	void (*KeyPress)(void* widget, char c);
 	/* Called when mouse hovers/moves over this widget. */
-	void (*MouseMove)(void* widget, int deltaX, int deltaY);
+	void (*MouseMove)(void* widget, int deltaX, int deltaY, bool wasOver);
 	/* Called when mouse moves away from this widget. */
 	void (*MouseLeft)(void* widget);
 	/* Called when mouse clicks on this widget. */
