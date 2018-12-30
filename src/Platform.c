@@ -990,6 +990,16 @@ static void Font_DirCallback(const String* path, void* obj) {
 	FT_Error err;
 	int i, flags;
 
+	/* Completely skip windows .FON files */
+	if (String_CaselessEnds(path, &fonExt)) return;
+
+	/* If font is already known good, skip it */
+	for (i = 0; i < font_list.Entries.Count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(&font_list.Entries, i);
+		String_UNSAFE_Separate(&entry, font_list.Separator, &name, &fontPath);
+		if (String_CaselessEquals(path, &fontPath)) return;
+	}
+
 	if (!Font_MakeArgs(path, &stream, &args)) return;
 
 	/* For OSX font suitcase files */
@@ -1000,16 +1010,6 @@ static void Font_DirCallback(const String* path, void* obj) {
 	filename.buffer[filename.length] = '\0';
 	args.pathname = filename.buffer;
 #endif
-
-	/* If font is already known good, skip it */
-	for (i = 0; i < font_list.Entries.Count; i++) {
-		entry = StringsBuffer_UNSAFE_Get(&font_list.Entries, i);
-		String_UNSAFE_Separate(&entry, font_list.Separator, &name, &fontPath);
-		if (String_CaselessEquals(path, &fontPath)) return;
-	}
-
-	/* Completely skip windows .FON files */
-	if (String_CaselessEnds(path, &fonExt)) return;
 
 	err = FT_New_Face(ft_lib, &args, 0, &face);
 	if (err) { stream.close(&stream); return; }

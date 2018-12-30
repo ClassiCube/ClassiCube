@@ -1235,8 +1235,10 @@ static void ServersScreen_Tick(struct LScreen* s_) {
 	const static String refresh = String_FromConst("Refresh");
 	const static String failed  = String_FromConst("&cFailed");
 	struct ServersScreen* s = (struct ServersScreen*)s_;
+	int count;
+	LScreen_Tick(s_);
 
-	int count = FetchFlagsTask.Count;
+	count = FetchFlagsTask.Count;
 	LWebTask_Tick(&FetchFlagsTask.Base);
 	/* TODO: Only redraw flags */
 	if (count != FetchFlagsTask.Count) LWidget_Draw(&s->Table);
