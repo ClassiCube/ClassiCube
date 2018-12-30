@@ -190,7 +190,6 @@ static void Launcher_Init(void) {
 }
 
 static void Launcher_Free(void) {
-	int i;
 	Event_UnregisterVoid(&WindowEvents.Resized,      NULL, Launcher_OnResize);
 	Event_UnregisterVoid(&WindowEvents.StateChanged, NULL, Launcher_OnResize);
 	Event_UnregisterVoid(&WindowEvents.FocusChanged, NULL, Launcher_MaybeRedraw);
@@ -203,10 +202,7 @@ static void Launcher_Free(void) {
 	Event_UnregisterMouseMove(&MouseEvents.Moved, NULL, Launcher_MouseMove);
 	Event_UnregisterFloat(&MouseEvents.Wheel,     NULL, Launcher_MouseWheel);
 
-	for (i = 0; i < FetchFlagsTask.NumDownloaded; i++) {
-		Mem_Free(FetchFlagsTask.Bitmaps[i].Scan0);
-	}
-
+	Flags_Free();
 	Font_Free(&logoFont);
 	Font_Free(&Launcher_TitleFont);
 	Font_Free(&Launcher_TextFont);

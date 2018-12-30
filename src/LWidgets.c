@@ -629,9 +629,12 @@ void LSlider_Init(struct LSlider* w, int width, int height) {
 *------------------------------------------------------TableWidget--------------------------------------------------------*
 *#########################################################################################################################*/
 static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
-	BitmapCol col = BITMAPCOL_CONST(128, 0, 0, 255);
-	Drawer2D_Clear(&Launcher_Framebuffer, col, x, y, 16, 11);
+	Bitmap* bmp = Flags_Get(&row->Country);
+	/* TODO: Not move down so much, need to adjust text */
+	/* y + 6 */
+	if (bmp) Drawer2D_BmpCopy(&Launcher_Framebuffer, x + 2, y + 3, bmp);
 }
+
 static void NameColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
 	args->Text = row->Name;
 }
@@ -1055,12 +1058,12 @@ void LTable_Reset(struct LTable* w) {
 	LTable_Reposition(w);
 
 	w->TopRow    = 0;
+	w->RowsCount = 0;
 	sortingCol   = -1;
 	w->_wheelAcc = 0.0f;
 
 	w->SelectedHash->length = 0;
 	w->Filter->length       = 0;
-	LTable_Sort(w);
 }
 
 void LTable_ApplyFilter(struct LTable* w) {

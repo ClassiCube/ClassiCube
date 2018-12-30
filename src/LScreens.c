@@ -742,6 +742,8 @@ static void MainScreen_Init(struct LScreen* s_) {
 	const static String update = String_FromConst("&eChecking..");
 	struct MainScreen* s = (struct MainScreen*)s_;
 
+	/* status should reset after user has gone to another menu */
+	s->LblStatus.Text.length = 0;
 	if (s->NumWidgets) return;
 	s->Widgets = s->_widgets;
 
@@ -1180,6 +1182,15 @@ static void ServersScreen_OnSelectedChanged(void) {
 	LWidget_Draw(&s->Table);
 }
 
+static void ServersScreen_ReloadServers(struct ServersScreen* s) {
+	int i;
+	LTable_Sort(&s->Table);
+
+	for (i = 0; i < FetchServersTask.NumServers; i++) {
+		FetchFlagsTask_Add(&FetchServersTask.Servers[i].Country);
+	}
+}
+
 static void ServersScreen_InitWidgets(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	s->Widgets = s->_widgets;
@@ -1213,11 +1224,10 @@ static void ServersScreen_Init(struct LScreen* s_) {
 
 	if (!s->NumWidgets) ServersScreen_InitWidgets(s_);
 	s->Table.RowFont = s->RowFont;
+	/* also resets hash and filter */
 	LTable_Reset(&s->Table);
-	
-	/* unlike other menus, don't want these to persist */
-	s->IptHash.Text.length   = 0;
-	s->IptSearch.Text.length = 0;
+
+	ServersScreen_ReloadServers(s);
 	LScreen_SelectWidget(s_, (struct LWidget*)&s->IptSearch, false);
 }
 
@@ -1226,12 +1236,17 @@ static void ServersScreen_Tick(struct LScreen* s_) {
 	const static String failed  = String_FromConst("&cFailed");
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 
+	int count = FetchFlagsTask.Count;
+	LWebTask_Tick(&FetchFlagsTask.Base);
+	/* TODO: Only redraw flags */
+	if (count != FetchFlagsTask.Count) LWidget_Draw(&s->Table);
+
 	if (!FetchServersTask.Base.Working) return;
 	LWebTask_Tick(&FetchServersTask.Base);
 	if (!FetchServersTask.Base.Completed) return;
 
 	if (FetchServersTask.Base.Success) {
-		LTable_Sort(&s->Table);
+		ServersScreen_ReloadServers(s);
 		LWidget_Draw(&s->Table);
 	}
 

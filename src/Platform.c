@@ -147,7 +147,7 @@ CC_NOINLINE static void Platform_AllocFailed(const char* place) {
 	String log; char logBuffer[STRING_SIZE+20 + 1];
 	String_InitArray_NT(log, logBuffer);
 
-	String_Format1(&log, "Failed allocating memory for: %c", place);
+	String_Format1(&log, "Out of memory! (when allocating %c)", place);
 	log.buffer[log.length] = '\0';
 	Logger_Abort(log.buffer);
 }
@@ -1942,14 +1942,6 @@ ReturnCode Platform_MarkExecutable(const String* path) {
 	if (stat(str, &st) == -1) return errno;
 	st.st_mode |= S_IXUSR;
 	return chmod(str, st.st_mode) == -1 ? errno : 0;
-}
-
-static void Platform_TrimFilename(char* path, int len) {
-	/* get rid of filename at end of directory */
-	for (; len > 0; len--) {
-		if (path[len] == '/' || path[len] == '\\') break;
-		path[len] = '\0';
-	}
 }
 
 ReturnCode Platform_LoadLibrary(const String* path, void** lib) {

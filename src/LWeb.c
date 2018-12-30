@@ -533,77 +533,89 @@ void FetchUpdateTask_Run(bool release, bool d3d9) {
 *-----------------------------------------------------FetchFlagsTask-----------------------------------------------------*
 *#########################################################################################################################*/
 struct FetchFlagsData FetchFlagsTask;
-void FetchFlagsTask_Run(void);
-void FetchFlagsTask_Add(const String* name);
+static int flagsCount, flagsBufferCount;
+struct FlagData {
+	Bitmap  Bmp;
+	String Name;
+	char _nameBuffer[8];
+};
+static struct FlagData* flags;
 
-/*
+static void FetchFlagsTask_DownloadNext(void);
+static void FetchFlagsTask_Handle(uint8_t* data, uint32_t len) {
+	struct Stream s;
+	ReturnCode res;
 
-public sealed class SignInTask : WebTask {
-	public SignInTask() {
-		identifier = "CC post login";
-		uri = "https://www.classicube.net/api/login/";
-	}
-	public string Username, Password, Token, Error;
+	Stream_ReadonlyMemory(&s, data, len);
+	res = Png_Decode(&flags[FetchFlagsTask.Count].Bmp, &s);
+	if (res) Logger_Warn(res, "decoding flag");
 
-	protected override void Begin() {
-		string data = String.Format(
-			"username={0}&password={1}&token={2}",
-			Uri.EscapeDataString(Username),
-			Uri.EscapeDataString(Password),
-			Uri.EscapeDataString(Token)
-		);
-		Game.Downloader.AsyncPostString(uri, false, identifier, data);
-	}
+	FetchFlagsTask.Count++;
+	FetchFlagsTask_DownloadNext();
+}
 
-	protected override void Handle(Request req) {
-		JsonObject data = ParseJson(req);
-		Error = GetLoginError(data);
-		Username = (string)data["username"];
-	}
+static void FetchFlagsTask_DownloadNext(void) {
+	const static String id = String_FromConst("CC get flag");
+	String url; char urlBuffer[STRING_SIZE];
+	String_InitArray(url, urlBuffer);
 
-	static string GetLoginError(JsonObject obj) {
-		List<object> errors = (List<object>)obj["errors"];
-		if (errors.Count == 0) return null;
+	if (FetchFlagsTask.Base.Working)        return;
+	if (FetchFlagsTask.Count == flagsCount) return;
 
-		string err = (string)errors[0];
-		if (err == "username" || err == "password") return "Wrong username or password";
-		if (err == "verification") return "Account verification required";
-		return "Unknown error occurred";
+	LWebTask_Reset(&FetchFlagsTask.Base);
+	String_Format1(&url, "http://static.classicube.net/img/flags/%s.png", &flags[FetchFlagsTask.Count].Name);
+
+	FetchFlagsTask.Base.Identifier = id;
+	Http_AsyncGetData(&url, false, &id);
+	FetchFlagsTask.Base.Handle = FetchFlagsTask_Handle;
+}
+
+static void FetchFlagsTask_Ensure(void) {
+	if (flagsCount < flagsBufferCount) return;
+	flagsBufferCount = flagsCount + 10;
+
+	if (flags) {
+		flags = Mem_Realloc(flags, flagsBufferCount, sizeof(struct FlagData), "flags");
+	} else {
+		flags = Mem_Alloc(flagsBufferCount, sizeof(struct FlagData), "flags");
 	}
 }
 
-public sealed class FetchFlagsTask : WebTask {
-	public FetchFlagsTask() {
-		identifier = "CC get flag";
+void FetchFlagsTask_Add(const String* name) {
+	char c;
+	int i;
+
+	for (i = 0; i < flagsCount; i++) {
+		if (String_CaselessEquals(name, &flags[i].Name)) return;
+	}
+	FetchFlagsTask_Ensure();
+	
+	Bitmap_Create(&flags[flagsCount].Bmp, 0, 0, NULL);
+	String_InitArray(flags[flagsCount].Name, flags[flagsCount]._nameBuffer);
+
+	/* classicube.net only works with lowercase flag urls */
+	for (i = 0; i < name->length; i++) {
+		c = name->buffer[i];
+		Char_MakeLower(c);
+		String_Append(&flags[flagsCount].Name, c);
 	}
 
-	public bool PendingRedraw;
-	public static int DownloadedCount;
-	public static List<string> Flags = new List<string>();
-	public static List<FastBitmap> Bitmaps = new List<FastBitmap>();
+	flagsCount++;
+	FetchFlagsTask_DownloadNext();
+}
 
-	public void AsyncGetFlag(string flag) {
-		for (int i = 0; i < Flags.Count; i++) {
-			if (Flags[i] == flag) return;
-		}
-		Flags.Add(flag);
+Bitmap* Flags_Get(const String* name) {
+	int i;
+	for (i = 0; i < FetchFlagsTask.Count; i++) {
+		if (!String_CaselessEquals(name, &flags[i].Name)) continue;
+		return &flags[i].Bmp;
 	}
+	return NULL;
+}
 
-	protected override void Begin() {
-		if (Flags.Count == DownloadedCount) return;
-		uri = "http://static.classicube.net/img/flags/" + Flags[DownloadedCount] + ".png";
-		Game.Downloader.AsyncGetImage(uri, false, identifier);
-	}
-
-	protected override void Handle(Request req) {
-		Bitmap bmp = (Bitmap)req.Data;
-		FastBitmap fast = new FastBitmap(bmp, true, true);
-		Bitmaps.Add(fast);
-		DownloadedCount++;
-		PendingRedraw = true;
-
-		Reset();
-		Begin();
+void Flags_Free(void) {
+	int i;
+	for (i = 0; i < FetchFlagsTask.Count; i++) {
+		Mem_Free(flags[i].Bmp.Scan0);
 	}
 }
-}*/

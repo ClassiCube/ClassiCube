@@ -66,8 +66,7 @@ void Drawer2D_BmpScaled(Bitmap* dst, int x, int y, int width, int height,
 void Drawer2D_BmpTiled(Bitmap* dst, int x, int y, int width, int height,
 					   Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight);
 /* Fills the given area using pixels from the source bitmap. */
-/* NOTE: You MUST ensure width and height are less than src's dimensions. */
-void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, int width, int height, Bitmap* src);
+void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, Bitmap* src);
 
 /* Fills the given area with the given colour, then draws blended borders around it. */
 void Drawer2D_Rect(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height);

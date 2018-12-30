@@ -107,13 +107,14 @@ extern struct FetchUpdateData {
 void FetchUpdateTask_Run(bool release, bool d3d9);
 
 
-extern struct FetchFlagsData {
+extern struct FetchFlagsData { 
 	struct LWebTask Base;
-	int Count;         /* Total number of flags. */
-	int NumDownloaded; /* Number of flags that have been downloaded. */
-	Bitmap* Bitmaps;   /* Raw pixels for each downloaded flag. */
-	String* Names;     /* Name for each downloaded flag.*/
+	/* Number of flags downloaded. */
+	int Count;
 } FetchFlagsTask;
-void FetchFlagsTask_Run(void);
 void FetchFlagsTask_Add(const String* name);
+/* Gets the downloaded bitmap for the given flag. */
+Bitmap* Flags_Get(const String* name);
+/* Frees all flag bitmaps. */
+void Flags_Free(void);
 #endif

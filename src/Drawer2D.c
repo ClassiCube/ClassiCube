@@ -254,7 +254,8 @@ void Drawer2D_BmpTiled(Bitmap* dst, int x, int y, int width, int height,
 	}
 }
 
-void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, int width, int height, Bitmap* src) {
+void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, Bitmap* src) {
+	int width = src->Width, height = src->Height;
 	BitmapCol* dstRow;
 	BitmapCol* srcRow;
 	int xx, yy;
