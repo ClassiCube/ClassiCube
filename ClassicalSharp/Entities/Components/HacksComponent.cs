@@ -33,6 +33,7 @@ namespace ClassicalSharp.Entities {
 		public bool CanSpeed = true;
 		public bool CanFly = true;
 		public bool CanRespawn = true;
+		public bool CanPreciseRespawn = false;
 		public bool CanNoclip = true;
 		public bool CanPushbackBlocks = true;
 		public bool CanSeeAllNames = true;
@@ -138,6 +139,7 @@ namespace ClassicalSharp.Entities {
 		public void UpdateHacksState() {
 			SetAllHacks(true);
 			CanBePushed = true;
+			CanPreciseRespawn = false;
 			if (HacksFlags == null) return;			
 			
 			// By default (this is also the case with WoM), we can use hacks.
@@ -147,6 +149,7 @@ namespace ClassicalSharp.Entities {
 			ParseFlag(ref CanNoclip, "noclip");
 			ParseFlag(ref CanSpeed, "speed");
 			ParseFlag(ref CanRespawn, "respawn");
+			ParseFlag(ref CanPreciseRespawn, "preciserespawn");
 			ParseFlag(ref CanBePushed, "push");
 
 			if (UserType == 0x64) ParseAllFlag("ophax");

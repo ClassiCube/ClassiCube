@@ -180,18 +180,20 @@ namespace ClassicalSharp.Entities {
 			AABB bb;
 			
 			// Spawn player at highest valid position
-			if (game.World.IsValidPos(P)) {
-				bb = AABB.Make(spawn, Size);
-				for (int y = P.Y; y <= game.World.Height; y++) {
-					float spawnY = Respawn.HighestFreeY(game, ref bb);
-					if (spawnY == float.NegativeInfinity) {
-						BlockID block = game.World.GetPhysicsBlock(P.X, y, P.Z);
-						float height = BlockInfo.Collide[block] == CollideType.Solid ? BlockInfo.MaxBB[block].Y : 0;
-						spawn.Y = y + height + Entity.Adjustment;
-						break;
-					}
-					bb.Min.Y += 1; bb.Max.Y += 1;
-				}
+			if (!Hacks.CanPreciseRespawn) {
+			    if (game.World.IsValidPos(P)) {
+			        bb = AABB.Make(spawn, Size);
+			        for (int y = P.Y; y <= game.World.Height; y++) {
+			            float spawnY = Respawn.HighestFreeY(game, ref bb);
+			            if (spawnY == float.NegativeInfinity) {
+			                BlockID block = game.World.GetPhysicsBlock(P.X, y, P.Z);
+			                float height = BlockInfo.Collide[block] == CollideType.Solid ? BlockInfo.MaxBB[block].Y : 0;
+			                spawn.Y = y + height + Entity.Adjustment;
+			                break;
+			            }
+			            bb.Min.Y += 1; bb.Max.Y += 1;
+			        }
+			    }
 			}
 			
 			spawn.Y += 2/16f;
@@ -206,7 +208,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		bool HandleRespawn() {
-			if (Hacks.CanRespawn) {
+			if (Hacks.CanRespawn || Hacks.CanPreciseRespawn) {
 				DoRespawn();
 				return true;
 			} else if (!warnedRespawn) {
@@ -217,10 +219,16 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		bool HandleSetSpawn() {
-			if (Hacks.CanRespawn) {
-				Spawn.X = Utils.Floor(Position.X) + 0.5f;
-				Spawn.Y = Position.Y;
-				Spawn.Z = Utils.Floor(Position.Z) + 0.5f;
+			if (Hacks.CanRespawn || Hacks.CanPreciseRespawn) {
+		        if (Hacks.CanPreciseRespawn) {
+		            Spawn.X = Position.X;
+		            Spawn.Y = Position.Y;
+		            Spawn.Z = Position.Z;
+		        } else {
+		            Spawn.X = Utils.Floor(Position.X) + 0.5f;
+		            Spawn.Y = Position.Y;
+		            Spawn.Z = Utils.Floor(Position.Z) + 0.5f;
+		        }
 				SpawnRotY  = RotY;
 				SpawnHeadX = HeadX;
 			}
