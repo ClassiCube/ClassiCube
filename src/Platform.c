@@ -1152,7 +1152,7 @@ int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, Bitm
 		x -= face->glyph->bitmap_left; y -= offset;
 	}
 
-	if (args->Font.Style == FONT_STYLE_UNDERLINE) {
+	if (args->Font.Style & FONT_FLAG_UNDERLINE) {
 		int ul_pos   = FT_MulFix(face->underline_position,  face->size->metrics.y_scale);
 		int ul_thick = FT_MulFix(face->underline_thickness, face->size->metrics.y_scale);
 

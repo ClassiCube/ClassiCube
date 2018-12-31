@@ -69,7 +69,7 @@ struct ChatScreen {
 	bool SuppressNextPress;
 	int ChatIndex;
 	int LastDownloadStatus;
-	FontDesc ChatFont, ChatUrlFont, AnnouncementFont;
+	FontDesc ChatFont, AnnouncementFont;
 	struct TextWidget Announcement;
 	struct ChatInputWidget Input;
 	struct TextGroupWidget Status, BottomRight, Chat, ClientStatus;
@@ -754,7 +754,7 @@ static void ChatScreen_ResetChat(struct ChatScreen* s) {
 }
 
 static void ChatScreen_ConstructWidgets(struct ChatScreen* s) {
-#define ChatScreen_MakeGroup(widget, lines, textures, buffer) TextGroupWidget_Create(widget, lines, &s->ChatFont, &s->ChatUrlFont, textures, buffer);
+#define ChatScreen_MakeGroup(widget, lines, textures, buffer) TextGroupWidget_Create(widget, lines, &s->ChatFont, textures, buffer);
 	int yOffset = ChatScreen_BottomOffset() + 15;
 
 	ChatInputWidget_Create(&s->Input, &s->ChatFont);
@@ -1108,7 +1108,6 @@ static void ChatScreen_Init(void* screen) {
 	Math_Clamp(largeSize, 8, 60);
 
 	Drawer2D_MakeFont(&s->ChatFont,         fontSize,  FONT_STYLE_NORMAL);
-	Drawer2D_MakeFont(&s->ChatUrlFont,      fontSize,  FONT_STYLE_UNDERLINE);
 	Drawer2D_MakeFont(&s->AnnouncementFont, largeSize, FONT_STYLE_NORMAL);
 	Screen_CommonInit(s);
 
@@ -1167,7 +1166,6 @@ static void ChatScreen_Render(void* screen, double delta) {
 static void ChatScreen_Free(void* screen) {
 	struct ChatScreen* s = screen;
 	Font_Free(&s->ChatFont);
-	Font_Free(&s->ChatUrlFont);
 	Font_Free(&s->AnnouncementFont);
 	Screen_CommonFree(s);
 

@@ -488,7 +488,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		x = begX;
 	}
 
-	if (args->Font.Style != FONT_STYLE_UNDERLINE) return;
+	if (!(args->Font.Style & FONT_FLAG_UNDERLINE)) return;
 	/* scale up bottom row of a cell to drawn text font */
 	cellY = (8 - 1) * dstHeight / 8;
 	underlineY      = y + (cellY + yPadding);

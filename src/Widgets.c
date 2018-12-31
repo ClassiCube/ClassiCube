@@ -2483,7 +2483,7 @@ static bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, String* text, int 
 	for (i = 0, x = 0; i < portionsCount; i++) {
 		bit = portions[i];
 		args.Text = String_UNSAFE_Substring(&line, bit.LineBeg, bit.LineLen);
-		args.Font = (bit.Len & TEXTGROUPWIDGET_URL) ? w->UnderlineFont : w->Font;
+		args.Font = w->Font;
 
 		width = Drawer2D_TextWidth(&args);
 		if ((bit.Len & TEXTGROUPWIDGET_URL) && mouseX >= x && mouseX < x + width) {
@@ -2538,14 +2538,12 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 	Size2D partSizes[Array_Elems(portions)];
 	Bitmap bmp;
 	int portionsCount;
-	int i, x;
+	int i, x, ul;
 
 	portionsCount = TextGroupWidget_Reduce(w, chars, index, portions);
 	for (i = 0; i < portionsCount; i++) {
 		bit = portions[i];
-
 		args->Text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
-		args->Font = (bit.Len & TEXTGROUPWIDGET_URL) ? w->UnderlineFont : w->Font;
 
 		partSizes[i] = Drawer2D_MeasureText(args);
 		size.Height = max(partSizes[i].Height, size.Height);
@@ -2557,11 +2555,13 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 		x = 0;
 		for (i = 0; i < portionsCount; i++) {
 			bit = portions[i];
-
+			ul  = (bit.Len & TEXTGROUPWIDGET_URL);
 			args->Text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
-			args->Font = (bit.Len & TEXTGROUPWIDGET_URL) ? w->UnderlineFont : w->Font;
 
+			if (ul) args->Font.Style |= FONT_FLAG_UNDERLINE;
 			Drawer2D_DrawText(&bmp, args, x, 0);
+			if (ul) args->Font.Style &= ~FONT_FLAG_UNDERLINE;
+
 			x += partSizes[i].Width;
 		}
 		Drawer2D_Make2DTexture(tex, &bmp, size, 0, 0);
@@ -2641,13 +2641,12 @@ static struct WidgetVTABLE TextGroupWidget_VTABLE = {
 	Widget_Mouse,         Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
 	TextGroupWidget_Reposition,
 };
-void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, const FontDesc* font, const FontDesc* ulFont, STRING_REF struct Texture* textures, STRING_REF char* buffer) {
+void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, const FontDesc* font, STRING_REF struct Texture* textures, STRING_REF char* buffer) {
 	Widget_Reset(w);
 	w->VTABLE = &TextGroupWidget_VTABLE;
 
 	w->LinesCount = lines;
 	w->Font       = *font;
-	w->UnderlineFont = *ulFont;
 	w->Textures   = textures;
 	w->Buffer     = buffer;
 }

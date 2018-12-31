@@ -161,14 +161,14 @@ CC_NOINLINE void ChatInputWidget_Create(struct ChatInputWidget* w, const FontDes
 struct TextGroupWidget {
 	Widget_Layout
 	int LinesCount, DefaultHeight;
-	FontDesc Font, UnderlineFont;
+	FontDesc Font;
 	bool PlaceholderHeight[TEXTGROUPWIDGET_MAX_LINES];
 	uint8_t LineLengths[TEXTGROUPWIDGET_MAX_LINES];
 	struct Texture* Textures;
 	char* Buffer;
 };
 
-CC_NOINLINE void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, const FontDesc* font, const FontDesc* ulFont, STRING_REF struct Texture* textures, STRING_REF char* buffer);
+CC_NOINLINE void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, const FontDesc* font, STRING_REF struct Texture* textures, STRING_REF char* buffer);
 CC_NOINLINE void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* w, int index, bool placeHolder);
 CC_NOINLINE void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* w, const String* text);
 CC_NOINLINE int  TextGroupWidget_UsedHeight(struct TextGroupWidget* w);

@@ -1919,7 +1919,7 @@ static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* s, int idx
 	descRaw = String_FromReadonly(desc);
 	count   = String_UNSAFE_Split(&descRaw, '|', descLines, Array_Elems(descLines));
 
-	TextGroupWidget_Create(&s->ExtHelp, count, &s->TextFont, &s->TextFont, s->ExtHelp_Textures, s->ExtHelp_Buffer);
+	TextGroupWidget_Create(&s->ExtHelp, count, &s->TextFont, s->ExtHelp_Textures, s->ExtHelp_Buffer);
 	Widget_SetLocation((struct Widget*)(&s->ExtHelp), ANCHOR_MIN, ANCHOR_MIN, 0, 0);
 	Elem_Init(&s->ExtHelp);
 
