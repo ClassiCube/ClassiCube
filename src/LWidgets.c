@@ -734,10 +734,13 @@ static void LTable_SetSelectedTo(struct LTable* w, int index) {
 /* Draws background behind column headers */
 static void LTable_DrawHeaderBackground(struct LTable* w) {
 	BitmapCol gridCol = BITMAPCOL_CONST(20, 20, 10, 255);
-	if (Launcher_ClassicBackground) return;
 
-	Drawer2D_Clear(&Launcher_Framebuffer, gridCol,
-					w->X, w->Y, w->Width, w->HdrHeight);
+	if (!Launcher_ClassicBackground) {
+		Drawer2D_Clear(&Launcher_Framebuffer, gridCol,
+						w->X, w->Y, w->Width, w->HdrHeight);
+	} else {
+		Launcher_ResetArea(w->X, w->Y, w->Width, w->HdrHeight);
+	}
 }
 
 /* Works out the background colour of the given row */
@@ -769,16 +772,19 @@ static void LTable_DrawRowsBackground(struct LTable* w) {
 	y = w->RowsBegY;
 	for (row = w->TopRow; ; row++, y += w->RowHeight) {
 		entry = row < w->RowsCount ? LTable_Get(row) : NULL;
-		col   = LTable_RowCol(w, entry);
-		if (!col.A) continue;
+		col   = LTable_RowCol(w, entry);	
 
 		/* last row may get chopped off */
 		height = min(y + w->RowHeight, w->RowsEndY) - y;
 		/* hit the end of the table */
 		if (height < 0) break;
 
-		Drawer2D_Clear(&Launcher_Framebuffer, col,
-					   w->X, y, w->Width, height);
+		if (col.A) {
+			Drawer2D_Clear(&Launcher_Framebuffer, col,
+				w->X, y, w->Width, height);
+		} else {
+			Launcher_ResetArea(w->X, y, w->Width, height);
+		}
 	}
 }
 
