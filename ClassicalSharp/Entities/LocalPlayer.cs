@@ -196,7 +196,7 @@ namespace ClassicalSharp.Entities {
 			    }
 			}
 			
-			spawn.Y += 2/16f;
+			if (!Hacks.CanPreciseRespawn) { spawn.Y += 2/16f; }
 			LocationUpdate update = LocationUpdate.MakePosAndOri(spawn, SpawnRotY, SpawnHeadX, false);
 			SetLocation(update, false);
 			Velocity = Vector3.Zero;
