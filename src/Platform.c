@@ -72,6 +72,7 @@ const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <sys/stat.h>
 #include <utime.h>
 #include <poll.h>
+#include <signal.h>
 
 #define Socket__Error() errno
 char* Platform_NewLine    = "\n";
@@ -1911,6 +1912,7 @@ int Platform_ConvertString(void* data, const String* src) {
 }
 
 void Platform_Init(void) {
+	signal(SIGCHLD, SIG_IGN);
 	Platform_InitDisplay();
 	Platform_InitStopwatch();
 	pthread_mutex_init(&event_mutex, NULL);

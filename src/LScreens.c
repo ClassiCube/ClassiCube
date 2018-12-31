@@ -658,15 +658,21 @@ static struct MainScreen {
 
 struct ResumeInfo {
 	String User, Ip, Port, Server, Mppass;
-	char _mppassBuffer[STRING_SIZE];
+	char _userBuffer[STRING_SIZE], _serverBuffer[STRING_SIZE];
+	char _ipBuffer[16], _portBuffer[16], _mppassBuffer[STRING_SIZE];
 	bool Valid;
 };
 
-CC_NOINLINE static void MainScreen_UNSAFE_GetResume(struct ResumeInfo* info, bool full) {
-	Options_UNSAFE_Get("launcher-server",   &info->Server);
-	Options_UNSAFE_Get("launcher-username", &info->User);
-	Options_UNSAFE_Get("launcher-ip",       &info->Ip);
-	Options_UNSAFE_Get("launcher-port",     &info->Port);
+CC_NOINLINE static void MainScreen_GetResume(struct ResumeInfo* info, bool full) {
+	String_InitArray(info->Server,   info->_serverBuffer);
+	Options_Get("launcher-server",   &info->Server, NULL);
+	String_InitArray(info->User,     info->_userBuffer);
+	Options_Get("launcher-username", &info->User, NULL);
+
+	String_InitArray(info->Ip,   info->_ipBuffer);
+	Options_Get("launcher-ip",   &info->Ip, NULL);
+	String_InitArray(info->Port, info->_portBuffer);
+	Options_Get("launcher-port", &info->Port, NULL);
 
 	if (!full) return;
 	String_InitArray(info->Mppass, info->_mppassBuffer);
@@ -723,7 +729,7 @@ static void MainScreen_Login(void* w, int x, int y) {
 
 static void MainScreen_Resume(void* w, int x, int y) {
 	struct ResumeInfo info;
-	MainScreen_UNSAFE_GetResume(&info, true);
+	MainScreen_GetResume(&info, true);
 
 	if (!info.Valid) return;
 	Launcher_StartGame(&info.User, &info.Mppass, &info.Ip, &info.Port, &info.Server);
@@ -800,7 +806,7 @@ static void MainScreen_HoverWidget(struct LScreen* s_, struct LWidget* w) {
 	struct ResumeInfo info;
 	if (s->SigningIn || w != (struct LWidget*)&s->BtnResume) return;
 
-	MainScreen_UNSAFE_GetResume(&info, false);
+	MainScreen_GetResume(&info, false);
 	if (!info.User.length) return;
 	String_InitArray(str, strBuffer);
 
