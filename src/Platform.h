@@ -188,7 +188,7 @@ CC_API void  Waitable_WaitFor(void* handle, uint32_t milliseconds);
 
 /* Gets the list of all supported font names on this platform. */
 void Font_GetNames(StringsBuffer* buffer);
-/* Finds the path of the given font, with closest matching style */
+/* Finds the path and face number of the given font, with closest matching style */
 String Font_Lookup(const String* fontName, int style);
 /* Allocates a new font from the given arguments. */
 CC_API void Font_Make(FontDesc* desc, const String* fontName, int size, int style);

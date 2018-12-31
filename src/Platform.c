@@ -926,21 +926,24 @@ String Font_Lookup(const String* fontName, int style) {
 
 void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 	struct FontData* data;
-	String path;
+	String value, path, index;
+	int faceIndex;
 	FT_Open_Args args;
 	FT_Error err;
 
 	desc->Size  = size;
 	desc->Style = style;
 
-	path = Font_Lookup(fontName, style);
-	if (!path.length) Logger_Abort("Unknown font");
+	value = Font_Lookup(fontName, style);
+	if (!value.length) Logger_Abort("Unknown font");
+	String_UNSAFE_Separate(&value, ',', &path, &index);
+	Convert_ParseInt(&index, &faceIndex);
 
 	data = Mem_Alloc(1, sizeof(struct FontData), "FontData");
 	if (!FontData_Init(&path, data, &args)) return;
 	desc->Handle = data;
 
-	err = FT_New_Face(ft_lib, &args, 0, &data->face);
+	err = FT_New_Face(ft_lib, &args, faceIndex, &data->face);
 	if (err) Logger_Abort2(err, "Creating font failed");
 	err = FT_Set_Char_Size(data->face, size * 64, 0, DPI_DEVICE, 0);
 	if (err) Logger_Abort2(err, "Resizing font failed");
@@ -963,35 +966,65 @@ void Font_Free(FontDesc* desc) {
 	desc->Handle = NULL;
 }
 
-static void Font_Add(const String* path, FT_Face face, char type, const char* defStyle) {
-	String name; char nameBuffer[STRING_SIZE];
-	String style;
+static void Font_Add(const String* path, FT_Face face, int index, char type, const char* defStyle) {
+	String key;   char keyBuffer[STRING_SIZE];
+	String value; char valueBuffer[FILENAME_SIZE];
+	String style = String_Empty;
 
 	if (!face->family_name || !(face->face_flags & FT_FACE_FLAG_SCALABLE)) return;
-	String_InitArray(name, nameBuffer);
-	String_AppendConst(&name, face->family_name);
-
 	/* don't want 'Arial Regular' or 'Arial Bold' */
 	if (face->style_name) {
 		style = String_FromReadonly(face->style_name);
-		if (!String_CaselessEqualsConst(&style, defStyle)) {
-			String_Format1(&name, " %c", face->style_name);
-		}
+		if (String_CaselessEqualsConst(&style, defStyle)) style.length = 0;
 	}
 
-	Platform_Log1("Face: %s", &name);
-	String_Append(&name, ' '); String_Append(&name, type);
-	EntryList_Set(&font_list, &name, path);
+	String_InitArray(key, keyBuffer);
+	if (style.length) {
+		String_Format3(&key, "%c %c %r", face->family_name, face->style_name, &type);
+	} else {
+		String_Format2(&key, "%c %r", face->family_name, &type);
+	}
+
+	String_InitArray(value, valueBuffer);
+	String_Format2(&value, "%s,%i", path, &index);
+
+	Platform_Log2("Face: %s = %s", &key, &value);
+	EntryList_Set(&font_list, &key, &value);
 	font_list_changed = true;
+}
+
+static int Font_Register(const String* path, int faceIndex) {
+	struct FontData data;
+	FT_Open_Args args;
+	FT_Error err;
+	int flags, count;
+
+	if (!FontData_Init(path, &data, &args)) return 0;
+	err = FT_New_Face(ft_lib, &args, faceIndex, &data.face);
+	if (err) { FontData_Close(&data); return 0; }
+
+	flags = data.face->style_flags;
+	count = data.face->num_faces;
+
+	if (flags == (FT_STYLE_FLAG_BOLD | FT_STYLE_FLAG_ITALIC)) {
+		Font_Add(path, data.face, faceIndex, 'Z', "Bold Italic");
+	} else if (flags == FT_STYLE_FLAG_BOLD) {
+		Font_Add(path, data.face, faceIndex, 'B', "Bold");
+	} else if (flags == FT_STYLE_FLAG_ITALIC) {
+		Font_Add(path, data.face, faceIndex, 'I', "Italic");
+	} else if (flags == 0) {
+		Font_Add(path, data.face, faceIndex, 'R', "Regular");
+	}
+
+	FT_Done_Face(data.face);
+	FontData_Close(&data);
+	return count;
 }
 
 static void Font_DirCallback(const String* path, void* obj) {
 	const static String fonExt = String_FromConst(".fon");
 	String entry, name, fontPath;
-	struct FontData data;
-	FT_Open_Args args;
-	FT_Error err;
-	int i, flags;
+	int i, count;
 
 	/* Completely skip windows .FON files */
 	if (String_CaselessEnds(path, &fonExt)) return;
@@ -1003,23 +1036,11 @@ static void Font_DirCallback(const String* path, void* obj) {
 		if (String_CaselessEquals(path, &fontPath)) return;
 	}
 
-	if (!FontData_Init(path, &data, &args)) return;
-	err = FT_New_Face(ft_lib, &args, 0, &data.face);
-	if (err) { FontData_Close(&data); return; }
-	flags = data.face->style_flags;
-
-	if (flags == (FT_STYLE_FLAG_BOLD | FT_STYLE_FLAG_ITALIC)) {
-		Font_Add(path, data.face, 'Z', "Bold Italic");
-	} else if (flags == FT_STYLE_FLAG_BOLD) {
-		Font_Add(path, data.face, 'B', "Bold");
-	} else if (flags == FT_STYLE_FLAG_ITALIC) {
-		Font_Add(path, data.face, 'I', "Italic");
-	} else if (flags == 0) {
-		Font_Add(path, data.face, 'R', "Regular");
+	count = Font_Register(path, 0);
+	/* There may be more than one font in a font file */
+	for (i = 1; i < count; i++) {
+		Font_Register(path, i);
 	}
-
-	FT_Done_Face(data.face);
-	FontData_Close(&data);
 }
 
 #define TEXT_CEIL(x) (((x) + 63) >> 6)
@@ -1155,7 +1176,7 @@ static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, v
 	return Mem_Realloc(block, new_size, 1, "Freetype data");
 }
 
-#define FONT_CACHE_FILE "fontcache.txt"
+#define FONT_CACHE_FILE "fontscache.txt"
 static void Font_Init(void) {
 #ifdef CC_BUILD_WIN
 	const static String dir = String_FromConst("C:\\Windows\\Fonts");
