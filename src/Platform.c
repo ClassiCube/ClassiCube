@@ -823,57 +823,70 @@ static void Font_Init(void);
 #define DPI_PIXEL  72
 #define DPI_DEVICE 96 /* TODO: GetDeviceCaps(hdc, LOGPIXELSY) in Platform_InitDisplay ? */
 
+struct FontData {
+	FT_Face face;
+	struct Stream src, file;
+	FT_StreamRec stream;
+	uint8_t buffer[8192]; /* small buffer to minimise disk I/O */
+	uint16_t widths[256]; /* cached width of each character glyph */
+#ifdef CC_BUILD_OSX
+	char filename[FILENAME_SIZE + 1];
+#endif
+};
 
-static unsigned long Font_ReadWrapper(FT_Stream s, unsigned long offset, unsigned char* buffer, unsigned long count) {
-	struct Stream* stream;
+static unsigned long FontData_Read(FT_Stream s, unsigned long offset, unsigned char* buffer, unsigned long count) {
+	struct FontData* data;
 	ReturnCode res;
 
 	if (!count && offset > s->size) return 1;
-	stream = s->descriptor.pointer;
-	if (s->pos != offset) stream->Seek(stream, offset);
+	data = s->descriptor.pointer;
+	if (s->pos != offset) data->src.Seek(&data->src, offset);
 
-	res = Stream_Read(stream, buffer, count);
+	res = Stream_Read(&data->src, buffer, count);
 	return res ? 0 : count;
 }
 
-static void Font_CloseWrapper(FT_Stream s) {
-	struct Stream* stream;
-	struct Stream* source;
-
-	stream = s->descriptor.pointer;
-	if (!stream) return;
-	source = stream->Meta.Buffered.Source;
-
-	/* Close the actual file stream */
-	source->Close(source);
-	Mem_Free(s->descriptor.pointer);
-	s->descriptor.pointer = NULL;
-}
-
-static bool Font_MakeArgs(const String* path, FT_Stream stream, FT_Open_Args* args) {
-	struct Stream* data;
-	uint8_t* buffer;
+static bool FontData_Init(const String* path, struct FontData* data, FT_Open_Args* args) {
 	FileHandle file;
 	uint32_t size;
 
 	if (File_Open(&file, path)) return false;
 	if (File_Length(file, &size)) { File_Close(file); return false; }
-	stream->size = size;
 
-	data   = Mem_Alloc(1, sizeof(struct Stream) * 2 + 8192, "Font_MakeArgs");
-	buffer = (uint8_t*)&data[2];
-	Stream_FromFile(&data[1], file);
-	Stream_ReadonlyBuffered(&data[0], &data[1], buffer, 8192);
+	data->stream.base = NULL;
+	data->stream.size = size;
+	data->stream.pos  = 0;
 
-	stream->descriptor.pointer = data;
-	stream->memory = &ft_mem;
-	stream->read   = Font_ReadWrapper;
-	stream->close  = Font_CloseWrapper;
+	data->stream.descriptor.pointer = data;
+	data->stream.read   = FontData_Read;
+	data->stream.close  = NULL;
+
+	data->stream.memory = &ft_mem;
+	data->stream.cursor = NULL;
+	data->stream.limit  = NULL;
 
 	args->flags    = FT_OPEN_STREAM;
 	args->pathname = NULL;
-	args->stream   = stream;
+	args->stream   = &data->stream;
+
+	Stream_FromFile(&data->file, file);
+	Stream_ReadonlyBuffered(&data->src, &data->file, data->buffer, sizeof(data->buffer));
+
+	/* For OSX font suitcase files */
+#ifdef CC_BUILD_OSX
+	String filename = String_NT_Array(data->filename);
+	String_Copy(&filename, &path);
+	data->filename[filename.length] = '\0';
+	args->pathname = data->filename;
+#endif
+	Mem_Set(data->widths, 0xFF, sizeof(data->widths));
 	return true;
+}
+
+static void FontData_Close(struct FontData* font) {
+	/* Close the actual file stream */
+	struct Stream* source = &font->file;
+	source->Close(source);
 }
 
 void Font_GetNames(StringsBuffer* buffer) {
@@ -912,10 +925,9 @@ String Font_Lookup(const String* fontName, int style) {
 }
 
 void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
+	struct FontData* data;
 	String path;
-	FT_Stream stream;
 	FT_Open_Args args;
-	FT_Face face;
 	FT_Error err;
 
 	desc->Size  = size;
@@ -924,28 +936,18 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 	path = Font_Lookup(fontName, style);
 	if (!path.length) Logger_Abort("Unknown font");
 
-	stream = Mem_AllocCleared(1, sizeof(FT_StreamRec), "leaky font"); /* TODO: LEAKS MEMORY!!! */
-	if (!Font_MakeArgs(&path, stream, &args)) return;
+	data = Mem_Alloc(1, sizeof(struct FontData), "FontData");
+	if (!FontData_Init(&path, data, &args)) return;
+	desc->Handle = data;
 
-	/* For OSX font suitcase files */
-#ifdef CC_BUILD_OSX
-	char filenameBuffer[FILENAME_SIZE + 1];
-	String filename = String_NT_Array(filenameBuffer);
-	String_Copy(&filename, &path);
-	filename.buffer[filename.length] = '\0';
-	args.pathname = filename.buffer;
-#endif
-
-	err = FT_New_Face(ft_lib, &args, 0, &face);
+	err = FT_New_Face(ft_lib, &args, 0, &data->face);
 	if (err) Logger_Abort2(err, "Creating font failed");
-	desc->Handle = face;
-
-	err = FT_Set_Char_Size(face, size * 64, 0, DPI_DEVICE, 0);
+	err = FT_Set_Char_Size(data->face, size * 64, 0, DPI_DEVICE, 0);
 	if (err) Logger_Abort2(err, "Resizing font failed");
 }
 
 void Font_Free(FontDesc* desc) {
-	FT_Face face;
+	struct FontData* data;
 	FT_Error err;
 
 	desc->Size  = 0;
@@ -953,9 +955,11 @@ void Font_Free(FontDesc* desc) {
 	/* NULL for fonts created by Drawer2D_MakeFont and bitmapped text mode is on */
 	if (!desc->Handle) return;
 
-	face = desc->Handle;
-	err  = FT_Done_Face(face);
+	data = desc->Handle;
+	err  = FT_Done_Face(data->face);
 	if (err) Logger_Abort2(err, "Deleting font failed");
+
+	Mem_Free(data);
 	desc->Handle = NULL;
 }
 
@@ -984,9 +988,8 @@ static void Font_Add(const String* path, FT_Face face, char type, const char* de
 static void Font_DirCallback(const String* path, void* obj) {
 	const static String fonExt = String_FromConst(".fon");
 	String entry, name, fontPath;
-	FT_StreamRec stream = { 0 };
+	struct FontData data;
 	FT_Open_Args args;
-	FT_Face face;
 	FT_Error err;
 	int i, flags;
 
@@ -1000,52 +1003,52 @@ static void Font_DirCallback(const String* path, void* obj) {
 		if (String_CaselessEquals(path, &fontPath)) return;
 	}
 
-	if (!Font_MakeArgs(path, &stream, &args)) return;
-
-	/* For OSX font suitcase files */
-#ifdef CC_BUILD_OSX
-	char filenameBuffer[FILENAME_SIZE + 1];
-	String filename = String_NT_Array(filenameBuffer);
-	String_Copy(&filename, path);
-	filename.buffer[filename.length] = '\0';
-	args.pathname = filename.buffer;
-#endif
-
-	err = FT_New_Face(ft_lib, &args, 0, &face);
-	if (err) { stream.close(&stream); return; }
-	flags = face->style_flags;
+	if (!FontData_Init(path, &data, &args)) return;
+	err = FT_New_Face(ft_lib, &args, 0, &data.face);
+	if (err) { FontData_Close(&data); return; }
+	flags = data.face->style_flags;
 
 	if (flags == (FT_STYLE_FLAG_BOLD | FT_STYLE_FLAG_ITALIC)) {
-		Font_Add(path, face, 'Z', "Bold Italic");
+		Font_Add(path, data.face, 'Z', "Bold Italic");
 	} else if (flags == FT_STYLE_FLAG_BOLD) {
-		Font_Add(path, face, 'B', "Bold");
+		Font_Add(path, data.face, 'B', "Bold");
 	} else if (flags == FT_STYLE_FLAG_ITALIC) {
-		Font_Add(path, face, 'I', "Italic");
+		Font_Add(path, data.face, 'I', "Italic");
 	} else if (flags == 0) {
-		Font_Add(path, face, 'R', "Regular");
+		Font_Add(path, data.face, 'R', "Regular");
 	}
-	FT_Done_Face(face);
+
+	FT_Done_Face(data.face);
+	FontData_Close(&data);
 }
 
 #define TEXT_CEIL(x) (((x) + 63) >> 6)
 int Platform_TextWidth(struct DrawTextArgs* args) {
-	FT_Face face = args->Font.Handle;
+	struct FontData* data = args->Font.Handle;
+	FT_Face face = data->face;
 	String text  = args->Text;
-	int i, width = 0;
+	int i, width = 0, charWidth;
 	Codepoint cp;
 
 	for (i = 0; i < text.length; i++) {
-		cp = Convert_CP437ToUnicode(text.buffer[i]);
-		FT_Load_Char(face, cp, 0); /* TODO: Check error */
-		width += face->glyph->advance.x;
+		charWidth = data->widths[(uint8_t)text.buffer[i]];
+		/* need to calculate glyph width */
+		if (charWidth == UInt16_MaxValue) {
+			cp = Convert_CP437ToUnicode(text.buffer[i]);
+			FT_Load_Char(face, cp, 0); /* TODO: Check error */
+
+			charWidth = face->glyph->advance.x;
+			data->widths[(uint8_t)text.buffer[i]] = charWidth;
+		}
+		width += charWidth;
 	}
 	return TEXT_CEIL(width);
 }
 
 int Platform_FontHeight(const FontDesc* font) {
-	FT_Face face = font->Handle;
-	int height   = face->size->metrics.height;
-	return TEXT_CEIL(height);
+	struct FontData* data = font->Handle;
+	FT_Face face = data->face;
+	return TEXT_CEIL(face->size->metrics.height);
 }
 
 static void Platform_GrayscaleGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, BitmapCol col) {
@@ -1097,7 +1100,8 @@ static void Platform_BlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, 
 }
 
 int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col) {
-	FT_Face face = args->Font.Handle;
+	struct FontData* data = args->Font.Handle;
+	FT_Face face = data->face;
 	String text  = args->Text;
 	int descender, height, begX = x;
 
