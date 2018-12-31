@@ -1033,7 +1033,8 @@ static int Font_Register(const String* path, int faceIndex) {
 
 static void Font_DirCallback(const String* path, void* obj) {
 	const static String fonExt = String_FromConst(".fon");
-	String entry, name, fontPath;
+	String entry, name, value;
+	String fontPath, index;
 	int i, count;
 
 	/* Completely skip windows .FON files */
@@ -1042,7 +1043,9 @@ static void Font_DirCallback(const String* path, void* obj) {
 	/* If font is already known good, skip it */
 	for (i = 0; i < font_list.Entries.Count; i++) {
 		entry = StringsBuffer_UNSAFE_Get(&font_list.Entries, i);
-		String_UNSAFE_Separate(&entry, font_list.Separator, &name, &fontPath);
+		String_UNSAFE_Separate(&entry, font_list.Separator, &name, &value);
+
+		String_UNSAFE_Separate(&value, ',', &fontPath, &index);
 		if (String_CaselessEquals(path, &fontPath)) return;
 	}
 
