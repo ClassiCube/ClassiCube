@@ -11,6 +11,7 @@
 #include "freetype/ft2build.h"
 #include "freetype/freetype.h"
 #include "freetype/ftmodapi.h"
+#include "freetype/ftglyph.h"
 
 static void Platform_InitDisplay(void);
 static void Platform_InitStopwatch(void);
@@ -829,6 +830,7 @@ struct FontData {
 	FT_StreamRec stream;
 	uint8_t buffer[8192]; /* small buffer to minimise disk I/O */
 	uint16_t widths[256]; /* cached width of each character glyph */
+	FT_Glyph glyphs[256]; /* cached glyph */
 #ifdef CC_BUILD_OSX
 	char filename[FILENAME_SIZE + 1];
 #endif
@@ -880,13 +882,20 @@ static bool FontData_Init(const String* path, struct FontData* data, FT_Open_Arg
 	args->pathname = data->filename;
 #endif
 	Mem_Set(data->widths, 0xFF, sizeof(data->widths));
+	Mem_Set(data->glyphs, 0x00, sizeof(data->glyphs));
 	return true;
 }
 
-static void FontData_Close(struct FontData* font) {
+static void FontData_Free(struct FontData* font) {
+	int i;
 	/* Close the actual file stream */
 	struct Stream* source = &font->file;
 	source->Close(source);
+
+	for (i = 0; i < 256; i++) {
+		if (!font->glyphs[i]) continue;
+		FT_Done_Glyph(font->glyphs[i]);
+	}
 }
 
 void Font_GetNames(StringsBuffer* buffer) {
@@ -1001,7 +1010,7 @@ static int Font_Register(const String* path, int faceIndex) {
 
 	if (!FontData_Init(path, &data, &args)) return 0;
 	err = FT_New_Face(ft_lib, &args, faceIndex, &data.face);
-	if (err) { FontData_Close(&data); return 0; }
+	if (err) { FontData_Free(&data); return 0; }
 
 	flags = data.face->style_flags;
 	count = data.face->num_faces;
@@ -1017,7 +1026,7 @@ static int Font_Register(const String* path, int faceIndex) {
 	}
 
 	FT_Done_Face(data.face);
-	FontData_Close(&data);
+	FontData_Free(&data);
 	return count;
 }
 
@@ -1127,6 +1136,7 @@ int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, Bitm
 	int descender, height, begX = x;
 
 	/* glyph state */
+	FT_BitmapGlyph glyph;
 	FT_Bitmap* img;
 	int i, offset;
 	Codepoint cp;
@@ -1135,21 +1145,27 @@ int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, Bitm
 	descender = TEXT_CEIL(face->size->metrics.descender);
 
 	for (i = 0; i < text.length; i++) {
-		cp = Convert_CP437ToUnicode(text.buffer[i]);
-		FT_Load_Char(face, cp, FT_LOAD_RENDER); /* TODO: Check error */
+		glyph = data->glyphs[(uint8_t)text.buffer[i]];
+		if (!glyph) {
+			cp = Convert_CP437ToUnicode(text.buffer[i]);
+			FT_Load_Char(face, cp, FT_LOAD_RENDER); /* TODO: Check error */
 
-		offset = (height + descender) - face->glyph->bitmap_top;
-		x += face->glyph->bitmap_left; y += offset;
+			FT_Get_Glyph(face->glyph, &glyph);
+			data->glyphs[(uint8_t)text.buffer[i]] = glyph;
+		}
 
-		img = &face->glyph->bitmap;
+		offset = (height + descender) - glyph->top;
+		x += glyph->left; y += offset;
+
+		img = &glyph->bitmap;
 		if (img->num_grays == 2) {
 			Platform_BlackWhiteGlyph(img, bmp, x, y, col);
 		} else {
 			Platform_GrayscaleGlyph(img, bmp, x, y, col);
 		}
 
-		x += TEXT_CEIL(face->glyph->advance.x);
-		x -= face->glyph->bitmap_left; y -= offset;
+		x += TEXT_CEIL(glyph->root.advance.x >> 10);
+		x -= glyph->left; y -= offset;
 	}
 
 	if (args->Font.Style & FONT_FLAG_UNDERLINE) {

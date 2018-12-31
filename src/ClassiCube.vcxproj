@@ -316,7 +316,6 @@
     <ClCompile Include="_ftbase.c" />
     <ClCompile Include="_ftbbox.c" />
     <ClCompile Include="_ftbitmap.c" />
-    <ClCompile Include="_ftcache.c" />
     <ClCompile Include="_ftcid.c" />
     <ClCompile Include="_ftgasp.c" />
     <ClCompile Include="_ftglyph.c" />

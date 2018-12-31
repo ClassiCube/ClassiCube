@@ -533,9 +533,6 @@
     <ClCompile Include="_truetype.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="_ftcache.c">
-      <Filter>Source Files\Freetype</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
