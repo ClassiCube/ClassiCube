@@ -409,14 +409,18 @@ static void TabList_RemoveAt(int index) {
 	}
 }
 
-bool TabList_Remove(EntityID id) {
-	if (!TabList_Valid(id)) return false;
+static void TabList_Delete(EntityID id) {
+	if (!TabList_Valid(id)) return;
 
 	TabList_RemoveAt(TabList_PlayerNames[id]);
 	TabList_RemoveAt(TabList_ListNames[id]);
 	TabList_RemoveAt(TabList_GroupNames[id]);
 	TabList_GroupRanks[id] = 0;
-	return true;
+}
+
+void TabList_Remove(EntityID id) {
+	TabList_Delete(id);
+	Event_RaiseInt(&TabListEvents.Removed, id);
 }
 
 void TabList_Set(EntityID id, const String* player, const String* list, const String* group, uint8_t rank) {
@@ -424,7 +428,7 @@ void TabList_Set(EntityID id, const String* player, const String* list, const St
 
 	String_InitArray(colorlessName, colorlessBuffer);
 	String_AppendColorless(&colorlessName, player);
-	TabList_Remove(id);
+	TabList_Delete(id);
 
 	TabList_PlayerNames[id] = TabList_Buffer.Count; StringsBuffer_Add(&TabList_Buffer, &colorlessName);
 	TabList_ListNames[id]   = TabList_Buffer.Count; StringsBuffer_Add(&TabList_Buffer, list);

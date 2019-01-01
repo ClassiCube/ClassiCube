@@ -700,7 +700,7 @@ void Game_Free(void* obj) {
 	Logger_Warn2 = Logger_DialogWarn2;
 	Gfx_Free();
 
-	if (!Options_HasAnyChanged()) return;
+	if (!Options_ChangedCount()) return;
 	Options_Load();
 	Options_Save();
 }

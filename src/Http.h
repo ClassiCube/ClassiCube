@@ -11,9 +11,6 @@ struct ScheduledTask;
 #define URL_MAX_SIZE (STRING_SIZE * 2)
 
 extern struct IGameComponent Http_Component;
-/* TODO: Implement these */
-extern bool Http_UseCookies;
-/* TODO: Connection pooling */
 
 enum HttpRequestType { REQUEST_TYPE_GET, REQUEST_TYPE_HEAD, REQUEST_TYPE_POST };
 enum HttpProgress {

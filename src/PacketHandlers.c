@@ -133,11 +133,6 @@ static void Handlers_AddTablistEntry(EntityID id, const String* playerName, cons
 	}
 }
 
-static void Handlers_RemoveTablistEntry(EntityID id) {
-	Event_RaiseInt(&TabListEvents.Removed, id);
-	TabList_Remove(id);
-}
-
 static void Handlers_CheckName(EntityID id, String* name, String* skin) {
 	String colorlessName; char colorlessBuffer[STRING_SIZE];
 
@@ -194,7 +189,7 @@ void Handlers_RemoveEntity(EntityID id) {
 
 	/* See comment about some servers in Classic_AddEntity */
 	if (!Classic_TabList_Get(id)) return;
-	Handlers_RemoveTablistEntry(id);
+	TabList_Remove(id);
 	Classic_TabList_Reset(id);
 }
 
@@ -1040,7 +1035,7 @@ static void CPE_ExtAddEntity(uint8_t* data) {
 
 static void CPE_ExtRemovePlayerName(uint8_t* data) {
 	EntityID id = data[1];
-	Handlers_RemoveTablistEntry(id);
+	TabList_Remove(id);
 }
 
 static void CPE_MakeSelection(uint8_t* data) {

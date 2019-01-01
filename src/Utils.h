@@ -32,7 +32,6 @@ void DateTime_FromTotalMs(struct DateTime* time, TimeMS ms);
 void DateTime_HttpDate(TimeMS ms, String* str);
 
 CC_NOINLINE int Utils_ParseEnum(const String* text, int defValue, const char** names, int namesCount);
-bool Utils_IsValidInputChar(char c, bool supportsCP437);
 bool Utils_IsUrlPrefix(const String* value, int index);
 
 /* Creates the directory if it doesn't exist. (logs failure in chat) */

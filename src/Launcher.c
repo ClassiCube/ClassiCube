@@ -230,9 +230,7 @@ void Launcher_Run(void) {
 	Launcher_Framebuffer.Height = Game_Height;
 	Window_InitRaw(&Launcher_Framebuffer);
 
-	Http_UseCookies = true;
 	Http_Component.Init();
-
 	Resources_CheckExistence();
 	CheckUpdateTask_Run();
 
@@ -251,7 +249,7 @@ void Launcher_Run(void) {
 		Thread_Sleep(10);
 	}
 
-	if (Options_HasAnyChanged()) {
+	if (Options_ChangedCount()) {
 		Options_Load();
 		Options_Save();
 	}

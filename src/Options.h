@@ -72,8 +72,8 @@ extern const char* FpsLimit_Names[FPS_LIMIT_COUNT];
 #define OPT_MAX_CHUNK_UPDATES "gfx-maxchunkupdates"
 
 extern struct EntryList Options;
-/* Returns whether user has changed any options this session. */
-bool Options_HasAnyChanged(void);
+/* Returns the number of options changed via Options_SetXYZ since last save. */
+int Options_ChangedCount(void);
 /* Frees any memory allocated in storing options. */
 void Options_Free(void);
 

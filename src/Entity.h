@@ -16,9 +16,6 @@ extern struct IGameComponent Entities_Component;
 
 /* Offset used to avoid floating point roundoff errors. */
 #define ENTITY_ADJUSTMENT 0.001f
-/* Maxmimum number of characters in a model name. */
-#define ENTITY_MAX_MODEL_LENGTH 11
-
 #define ENTITIES_MAX_COUNT 256
 #define ENTITIES_SELF_ID 255
 
@@ -34,8 +31,7 @@ typedef enum ShadowMode_ {
 extern ShadowMode Entities_ShadowMode;
 extern const char* ShadowMode_Names[SHADOW_MODE_COUNT];
 
-#define ENTITY_TYPE_NONE 0
-#define ENTITY_TYPE_PLAYER 1
+enum EntityType { ENTITY_TYPE_NONE, ENTITY_TYPE_PLAYER };
 
 #define LOCATIONUPDATE_FLAG_POS   0x01
 #define LOCATIONUPDATE_FLAG_HEADX 0x02
@@ -120,8 +116,11 @@ extern uint16_t TabList_PlayerNames[TABLIST_MAX_NAMES];
 extern uint16_t TabList_ListNames[TABLIST_MAX_NAMES];
 extern uint16_t TabList_GroupNames[TABLIST_MAX_NAMES];
 extern uint8_t  TabList_GroupRanks[TABLIST_MAX_NAMES];
+
+/* Returns whether the given tab list entry is used at all. */
 bool TabList_Valid(EntityID id);
-bool TabList_Remove(EntityID id);
+/* Removes the tab list entry with the given ID, raising TabListEvents.Removed event. */
+void TabList_Remove(EntityID id);
 void TabList_Set(EntityID id, const String* player, const String* list, const String* group, uint8_t rank);
 
 #define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_PlayerNames[id]);

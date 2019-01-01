@@ -497,7 +497,6 @@ static struct HttpRequestList http_processed;
 const static String http_skinServer = String_FromConst("http://static.classicube.net/skins/");
 static struct HttpRequest http_curRequest;
 static volatile int http_curProgress = ASYNC_PROGRESS_NOTHING;
-bool Http_UseCookies;
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed. */
 static void Http_Add(const String* url, bool priority, const String* id, uint8_t type, TimeMS* lastModified, const String* etag, const void* data, uint32_t size) {

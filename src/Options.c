@@ -14,7 +14,7 @@ const char* FpsLimit_Names[FPS_LIMIT_COUNT] = {
 struct EntryList Options;
 static StringsBuffer Options_Changed;
 
-bool Options_HasAnyChanged(void) { return Options_Changed.Count > 0;  }
+int Options_ChangedCount(void) { return Options_Changed.Count;  }
 
 void Options_Free(void) {
 	StringsBuffer_Clear(&Options.Entries);
@@ -64,7 +64,7 @@ void Options_Get(const char* key, String* value, const char* defValue) {
 int Options_GetInt(const char* key, int min, int max, int defValue) {
 	String str;
 	int value;
-	if (!Options_UNSAFE_Get(key, &str))    return defValue;
+	if (!Options_UNSAFE_Get(key, &str))  return defValue;
 	if (!Convert_ParseInt(&str, &value)) return defValue;
 
 	Math_Clamp(value, min, max);
@@ -74,7 +74,7 @@ int Options_GetInt(const char* key, int min, int max, int defValue) {
 bool Options_GetBool(const char* key, bool defValue) {
 	String str;
 	bool value;
-	if (!Options_UNSAFE_Get(key, &str))     return defValue;
+	if (!Options_UNSAFE_Get(key, &str))   return defValue;
 	if (!Convert_ParseBool(&str, &value)) return defValue;
 
 	return value;
@@ -83,7 +83,7 @@ bool Options_GetBool(const char* key, bool defValue) {
 float Options_GetFloat(const char* key, float min, float max, float defValue) {
 	String str;
 	float value;
-	if (!Options_UNSAFE_Get(key, &str))       return defValue;
+	if (!Options_UNSAFE_Get(key, &str))    return defValue;
 	if (!Convert_ParseFloat(&str, &value)) return defValue;
 
 	Math_Clamp(value, min, max);

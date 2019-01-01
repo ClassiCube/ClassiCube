@@ -114,10 +114,6 @@ int Utils_ParseEnum(const String* text, int defValue, const char** names, int na
 	return defValue;
 }
 
-bool Utils_IsValidInputChar(char c, bool supportsCP437) {
-	return supportsCP437 || (Convert_CP437ToUnicode(c) == c);
-}
-
 bool Utils_IsUrlPrefix(const String* value, int index) {
 	const static String http  = String_FromConst("http://");
 	const static String https = String_FromConst("https://");

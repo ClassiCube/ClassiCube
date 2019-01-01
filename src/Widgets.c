@@ -1008,7 +1008,7 @@ void InputWidget_Clear(struct InputWidget* w) {
 }
 
 static bool InputWidget_AllowedChar(void* widget, char c) {
-	return Utils_IsValidInputChar(c, ServerConnection_SupportsFullCP437);
+	return ServerConnection_SupportsFullCP437 || (Convert_CP437ToUnicode(c) == c);
 }
 
 static void InputWidget_AppendChar(struct InputWidget* w, char c) {
@@ -1440,7 +1440,7 @@ static void String_Range(struct MenuInputValidator* v, String* range) {
 }
 
 static bool String_ValidChar(struct MenuInputValidator* v, char c) {
-	return c != '&' && Utils_IsValidInputChar(c, true);
+	return c != '&';
 }
 
 static bool String_ValidString(struct MenuInputValidator* v, const String* s) {
