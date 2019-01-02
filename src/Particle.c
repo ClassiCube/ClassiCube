@@ -55,15 +55,15 @@ static void Particle_Reset(struct Particle* p, Vector3 pos, Vector3 velocity, fl
 }
 
 static bool Particle_CanPass(BlockID block, bool throughLiquids) {
-	uint8_t draw = Block_Draw[block];
-	return draw == DRAW_GAS || draw == DRAW_SPRITE || (throughLiquids && Block_IsLiquid[block]);
+	uint8_t draw = Blocks.Draw[block];
+	return draw == DRAW_GAS || draw == DRAW_SPRITE || (throughLiquids && Blocks.IsLiquid[block]);
 }
 
 static bool Particle_CollideHor(Vector3* nextPos, BlockID block) {
 	Vector3 horPos = Vector3_Create3((float)Math_Floor(nextPos->X), 0.0f, (float)Math_Floor(nextPos->Z));
 	Vector3 min, max;
-	Vector3_Add(&min, &Block_MinBB[block], &horPos);
-	Vector3_Add(&max, &Block_MaxBB[block], &horPos);
+	Vector3_Add(&min, &Blocks.MinBB[block], &horPos);
+	Vector3_Add(&max, &Blocks.MaxBB[block], &horPos);
 	return nextPos->X >= min.X && nextPos->Z >= min.Z && nextPos->X < max.X && nextPos->Z < max.Z;
 }
 
@@ -90,7 +90,7 @@ static bool Particle_TestY(struct Particle* p, int y, bool topFace, bool through
 
 	block = Particle_GetBlock((int)p->NextPos.X, y, (int)p->NextPos.Z);
 	if (Particle_CanPass(block, throughLiquids)) return true;
-	minBB = Block_MinBB[block]; maxBB = Block_MaxBB[block];
+	minBB = Blocks.MinBB[block]; maxBB = Blocks.MaxBB[block];
 
 	collideY   = y + (topFace ? maxBB.Y : minBB.Y);
 	collideVer = topFace ? (p->NextPos.Y < collideY) : (p->NextPos.Y > collideY);
@@ -114,8 +114,8 @@ static bool Particle_PhysicsTick(struct Particle* p, float gravity, bool through
 
 	p->LastPos = p->NextPos;
 	cur  = Particle_GetBlock((int)p->NextPos.X, (int)p->NextPos.Y, (int)p->NextPos.Z);
-	minY = Math_Floor(p->NextPos.Y) + Block_MinBB[cur].Y;
-	maxY = Math_Floor(p->NextPos.Y) + Block_MaxBB[cur].Y;
+	minY = Math_Floor(p->NextPos.Y) + Blocks.MinBB[cur].Y;
+	maxY = Math_Floor(p->NextPos.Y) + Blocks.MaxBB[cur].Y;
 
 	if (!Particle_CanPass(cur, throughLiquids) && p->NextPos.Y >= minY
 		&& p->NextPos.Y < maxY && Particle_CollideHor(&p->NextPos, cur)) {
@@ -234,13 +234,13 @@ static void TerrainParticle_Render(struct TerrainParticle* p, float t, VertexP3f
 	Vector3_Lerp(&pos, &p->Base.LastPos, &p->Base.NextPos, t);
 	size.X = (float)p->Base.Size * 0.015625f; size.Y = size.X;
 	
-	if (!Block_FullBright[p->Block]) {
+	if (!Blocks.FullBright[p->Block]) {
 		x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
 		col = World_IsValidPos(x, y, z) ? Lighting_Col_XSide(x, y, z) : Env_SunXSide;
 	}
 
-	if (Block_Tinted[p->Block]) {
-		PackedCol tintCol = Block_FogCol[p->Block];
+	if (Blocks.Tinted[p->Block]) {
+		PackedCol tintCol = Blocks.FogCol[p->Block];
 		col.R = (uint8_t)(col.R * tintCol.R / 255);
 		col.G = (uint8_t)(col.G * tintCol.G / 255);
 		col.B = (uint8_t)(col.B * tintCol.B / 255);
@@ -363,14 +363,14 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 	float life;
 	int x, y, z, type;
 
-	if (now != BLOCK_AIR || Block_Draw[old] == DRAW_GAS) return;
+	if (now != BLOCK_AIR || Blocks.Draw[old] == DRAW_GAS) return;
 	Vector3I_ToVector3(&origin, &coords);
 	loc = Block_GetTex(old, FACE_XMIN);
 	
 	baseRec = Atlas1D_TexRec(loc, 1, &texIndex);
 	uScale  = (1.0f/16.0f); vScale = (1.0f/16.0f) * Atlas1D_InvTileSize;
 
-	minBB = Block_MinBB[old];    maxBB = Block_MaxBB[old];
+	minBB = Blocks.MinBB[old];    maxBB = Blocks.MaxBB[old];
 	minX  = (int)(minBB.X * 16); maxX  = (int)(maxBB.X * 16);
 	minZ  = (int)(minBB.Z * 16); maxZ  = (int)(maxBB.Z * 16);
 

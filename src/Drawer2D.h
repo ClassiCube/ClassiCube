@@ -24,10 +24,8 @@ extern bool Drawer2D_BitmappedText;
 extern bool Drawer2D_BlackTextShadows;
 /* List of all colours. (An A of 0 means the colour is not used) */
 extern BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
-#define DRAWER2D_OFFSET 1
 #define Drawer2D_GetCol(c) Drawer2D_Cols[(uint8_t)c]
-
-/* Name of default font, defaults to Font_DefaultName. */
+/* Name of default system font. */
 extern String Drawer2D_FontName;
 
 /* Clamps the given rectangle to line inside the bitmap. */

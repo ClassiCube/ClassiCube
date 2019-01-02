@@ -332,7 +332,7 @@ static void Physics_PropagateLava(int posIndex, int x, int y, int z) {
 	BlockID block = World_Blocks[posIndex];
 	if (block == BLOCK_WATER || block == BLOCK_STILL_WATER) {
 		Game_UpdateBlock(x, y, z, BLOCK_STONE);
-	} else if (Block_Collide[block] == COLLIDE_GAS) {
+	} else if (Blocks.Collide[block] == COLLIDE_GAS) {
 		TickQueue_Enqueue(&physics_lavaQ, PHYSICS_LAVA_DELAY | posIndex);
 		Game_UpdateBlock(x, y, z, BLOCK_LAVA);
 	}
@@ -372,7 +372,7 @@ static void Physics_PropagateWater(int posIndex, int x, int y, int z) {
 
 	if (block == BLOCK_LAVA || block == BLOCK_STILL_LAVA) {
 		Game_UpdateBlock(x, y, z, BLOCK_STONE);
-	} else if (Block_Collide[block] == COLLIDE_GAS && block != BLOCK_ROPE) {
+	} else if (Blocks.Collide[block] == COLLIDE_GAS && block != BLOCK_ROPE) {
 		/* Sponge check */		
 		for (yy = (y < 2 ? 0 : y - 2); yy <= (y > physics_maxWaterY ? World_MaxY : y + 2); yy++) {
 			for (zz = (z < 2 ? 0 : z - 2); zz <= (z > physics_maxWaterZ ? World_MaxZ : z + 2); zz++) {

@@ -17,11 +17,11 @@ struct IGameComponent;
 struct GuiElem;
 extern struct IGameComponent Gui_Component;
 
-/* Whether vanilla MineCraft Classic gui texture is used. */
+/* Whether vanilla Minecraft Classic gui texture is used. */
 extern bool Gui_ClassicTexture;
-/* Whether tab list is laid out like vanilla MineCraft Classic. */
+/* Whether tab list is laid out like vanilla Minecraft Classic. */
 extern bool Gui_ClassicTabList;
-/* Whether menus are laid out like vanilla MineCraft Classic. */
+/* Whether menus are laid out like vanilla Minecraft Classic. */
 extern bool Gui_ClassicMenu;
 /* Maximum number of visible chatlines on screen. Can be 0. */
 extern int  Gui_Chatlines;

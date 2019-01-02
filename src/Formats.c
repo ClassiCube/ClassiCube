@@ -517,16 +517,16 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 		if (!String_CaselessStarts(&tag->Name, &blockStr)) return;	
 
 		/* hack for sprite draw (can't rely on order of tags when reading) */
-		if (Block_SpriteOffset[id] == 0) {
-			Block_SpriteOffset[id] = Block_Draw[id];
-			Block_Draw[id] = DRAW_SPRITE;
+		if (Blocks.SpriteOffset[id] == 0) {
+			Blocks.SpriteOffset[id] = Blocks.Draw[id];
+			Blocks.Draw[id] = DRAW_SPRITE;
 		} else {
-			Block_SpriteOffset[id] = 0;
+			Blocks.SpriteOffset[id] = 0;
 		}
 
 		Block_DefineCustom(id);
-		Block_CanPlace[id]  = true;
-		Block_CanDelete[id] = true;
+		Blocks.CanPlace[id]  = true;
+		Blocks.CanDelete[id] = true;
 		Event_RaiseVoid(&BlockEvents.PermissionsChanged);
 
 		cw_curID = 0;
@@ -550,11 +550,11 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 	if (IsTag(tag->Parent->Parent, "BlockDefinitions") && Game_AllowCustomBlocks) {
 		if (IsTag(tag, "ID"))             { cw_curID = NbtTag_U8(tag); return; }
 		if (IsTag(tag, "CollideType"))    { Block_SetCollide(id, NbtTag_U8(tag)); return; }
-		if (IsTag(tag, "Speed"))          { Block_SpeedMultiplier[id] = NbtTag_F32(tag); return; }
-		if (IsTag(tag, "TransmitsLight")) { Block_BlocksLight[id] = NbtTag_U8(tag) == 0; return; }
-		if (IsTag(tag, "FullBright"))     { Block_FullBright[id] = NbtTag_U8(tag) != 0; return; }
-		if (IsTag(tag, "BlockDraw"))      { Block_Draw[id] = NbtTag_U8(tag); return; }
-		if (IsTag(tag, "Shape"))          { Block_SpriteOffset[id] = NbtTag_U8(tag); return; }
+		if (IsTag(tag, "Speed"))          { Blocks.SpeedMultiplier[id] = NbtTag_F32(tag); return; }
+		if (IsTag(tag, "TransmitsLight")) { Blocks.BlocksLight[id] = NbtTag_U8(tag) == 0; return; }
+		if (IsTag(tag, "FullBright"))     { Blocks.FullBright[id] = NbtTag_U8(tag) != 0; return; }
+		if (IsTag(tag, "BlockDraw"))      { Blocks.Draw[id] = NbtTag_U8(tag); return; }
+		if (IsTag(tag, "Shape"))          { Blocks.SpriteOffset[id] = NbtTag_U8(tag); return; }
 
 		if (IsTag(tag, "Name")) {
 			String name = NbtTag_String(tag);
@@ -575,30 +575,30 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 		
 		if (IsTag(tag, "WalkSound")) {
 			sound = NbtTag_U8(tag);
-			Block_DigSounds[id]  = sound;
-			Block_StepSounds[id] = sound;
-			if (sound == SOUND_GLASS) Block_StepSounds[id] = SOUND_STONE;
+			Blocks.DigSounds[id]  = sound;
+			Blocks.StepSounds[id] = sound;
+			if (sound == SOUND_GLASS) Blocks.StepSounds[id] = SOUND_STONE;
 			return;
 		}
 
 		if (IsTag(tag, "Fog")) {
 			arr = NbtTag_U8_Array(tag, 4);
-			Block_FogDensity[id] = (arr[0] + 1) / 128.0f;
+			Blocks.FogDensity[id] = (arr[0] + 1) / 128.0f;
 			/* Fix for older ClassicalSharp versions which saved wrong fog density value */
-			if (arr[0] == 0xFF) Block_FogDensity[id] = 0.0f;
+			if (arr[0] == 0xFF) Blocks.FogDensity[id] = 0.0f;
  
-			Block_FogCol[id].R = arr[1];
-			Block_FogCol[id].G = arr[2];
-			Block_FogCol[id].B = arr[3];
-			Block_FogCol[id].A = 255;
+			Blocks.FogCol[id].R = arr[1];
+			Blocks.FogCol[id].G = arr[2];
+			Blocks.FogCol[id].B = arr[3];
+			Blocks.FogCol[id].A = 255;
 			return;
 		}
 
 		if (IsTag(tag, "Coords")) {
 			arr = NbtTag_U8_Array(tag, 6);
-			Block_MinBB[id].X = arr[0] / 16.0f; Block_MaxBB[id].X = arr[3] / 16.0f;
-			Block_MinBB[id].Y = arr[1] / 16.0f; Block_MaxBB[id].Y = arr[4] / 16.0f;
-			Block_MinBB[id].Z = arr[2] / 16.0f; Block_MaxBB[id].Z = arr[5] / 16.0f;
+			Blocks.MinBB[id].X = arr[0] / 16.0f; Blocks.MaxBB[id].X = arr[3] / 16.0f;
+			Blocks.MinBB[id].Y = arr[1] / 16.0f; Blocks.MaxBB[id].Y = arr[4] / 16.0f;
+			Blocks.MinBB[id].Z = arr[2] / 16.0f; Blocks.MaxBB[id].Z = arr[5] / 16.0f;
 			return;
 		}
 	}
@@ -951,7 +951,7 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, int b) {
 	String name;
 	int len;
 
-	bool sprite = Block_Draw[b] == DRAW_SPRITE;
+	bool sprite = Blocks.Draw[b] == DRAW_SPRITE;
 	union IntAndFloat speed;
 	uint8_t fog;
 	PackedCol col;
@@ -964,8 +964,8 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, int b) {
 		String_AppendHex(&name, b);
 		tmp[15] = b;
 
-		tmp[30] = Block_Collide[b];
-		speed.f = Block_SpeedMultiplier[b];
+		tmp[30] = Blocks.Collide[b];
+		speed.f = Blocks.SpeedMultiplier[b];
 		Stream_SetU32_BE(&tmp[39], speed.u);
 
 		tmp[58] = (uint8_t)Block_GetTex(b, FACE_YMAX);
@@ -975,18 +975,18 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, int b) {
 		tmp[62] = (uint8_t)Block_GetTex(b, FACE_ZMIN);
 		tmp[63] = (uint8_t)Block_GetTex(b, FACE_ZMAX);
 
-		tmp[81]  = Block_BlocksLight[b] ? 0 : 1;
-		tmp[94]  = Block_DigSounds[b];
-		tmp[108] = Block_FullBright[b] ? 1 : 0;
-		tmp[117] = sprite ? 0 : (uint8_t)(Block_MaxBB[b].Y * 16);
-		tmp[130] = sprite ? Block_SpriteOffset[b] : Block_Draw[b];
+		tmp[81]  = Blocks.BlocksLight[b] ? 0 : 1;
+		tmp[94]  = Blocks.DigSounds[b];
+		tmp[108] = Blocks.FullBright[b] ? 1 : 0;
+		tmp[117] = sprite ? 0 : (uint8_t)(Blocks.MaxBB[b].Y * 16);
+		tmp[130] = sprite ? Blocks.SpriteOffset[b] : Blocks.Draw[b];
 
-		fog = (uint8_t)(128 * Block_FogDensity[b] - 1);
-		col = Block_FogCol[b];
-		tmp[141] = Block_FogDensity[b] ? fog : 0;
+		fog = (uint8_t)(128 * Blocks.FogDensity[b] - 1);
+		col = Blocks.FogCol[b];
+		tmp[141] = Blocks.FogDensity[b] ? fog : 0;
 		tmp[142] = col.R; tmp[143] = col.G; tmp[144] = col.B;
 
-		minBB = Block_MinBB[b]; maxBB = Block_MaxBB[b];
+		minBB = Blocks.MinBB[b]; maxBB = Blocks.MaxBB[b];
 		tmp[158] = (uint8_t)(minBB.X * 16); tmp[159] = (uint8_t)(minBB.Y * 16); tmp[160] = (uint8_t)(minBB.Z * 16);
 		tmp[161] = (uint8_t)(maxBB.X * 16); tmp[162] = (uint8_t)(maxBB.Y * 16); tmp[163] = (uint8_t)(maxBB.Z * 16);
 	}

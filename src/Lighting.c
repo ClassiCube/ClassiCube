@@ -15,8 +15,8 @@ int16_t* Lighting_Heightmap;
 for (y = maxY; y >= 0; y--, i -= World_OneY) {\
 	block = get_block;\
 \
-	if (Block_BlocksLight[block]) {\
-		offset = (Block_LightOffset[block] >> FACE_YMAX) & 1;\
+	if (Blocks.BlocksLight[block]) {\
+		offset = (Blocks.LightOffset[block] >> FACE_YMAX) & 1;\
 		Lighting_Heightmap[hIndex] = y - offset;\
 		return y - offset;\
 	}\
@@ -92,10 +92,10 @@ void Lighting_Refresh(void) {
 *----------------------------------------------------Lighting update------------------------------------------------------*
 *#########################################################################################################################*/
 static void Lighting_UpdateLighting(int x, int y, int z, BlockID oldBlock, BlockID newBlock, int index, int lightH) {
-	bool didBlock  = Block_BlocksLight[oldBlock];
-	bool nowBlocks = Block_BlocksLight[newBlock];
-	int oldOffset  = (Block_LightOffset[oldBlock] >> FACE_YMAX) & 1;
-	int newOffset  = (Block_LightOffset[newBlock] >> FACE_YMAX) & 1;
+	bool didBlock  = Blocks.BlocksLight[oldBlock];
+	bool nowBlocks = Blocks.BlocksLight[newBlock];
+	int oldOffset  = (Blocks.LightOffset[oldBlock] >> FACE_YMAX) & 1;
+	int newOffset  = (Blocks.LightOffset[newBlock] >> FACE_YMAX) & 1;
 	BlockID above;
 
 	/* Two cases we need to handle here: */
@@ -116,7 +116,7 @@ static void Lighting_UpdateLighting(int x, int y, int z, BlockID oldBlock, Block
 		/* For a solid block on top of an upside down slab, they will both have the same light height. */
 		/* So we need to account for this particular case. */
 		above = y == (World_Height - 1) ? BLOCK_AIR : World_GetBlock(x, y + 1, z);
-		if (Block_BlocksLight[above]) return;
+		if (Blocks.BlocksLight[above]) return;
 
 		if (nowBlocks) {
 			Lighting_Heightmap[index] = y - newOffset;
@@ -127,14 +127,14 @@ static void Lighting_UpdateLighting(int x, int y, int z, BlockID oldBlock, Block
 }
 
 static bool Lighting_Needs(BlockID block, BlockID other) {
-	return Block_Draw[block] != DRAW_OPAQUE || Block_Draw[other] != DRAW_GAS;
+	return Blocks.Draw[block] != DRAW_OPAQUE || Blocks.Draw[other] != DRAW_GAS;
 }
 
 #define Lighting_NeedsNeighourBody(get_block)\
 /* Update if any blocks in the chunk are affected by light change. */ \
 for (; y >= minY; y--, i -= World_OneY) {\
 	other    = get_block;\
-	affected = y == nY ? Lighting_Needs(block, other) : Block_Draw[other] != DRAW_GAS;\
+	affected = y == nY ? Lighting_Needs(block, other) : Blocks.Draw[other] != DRAW_GAS;\
 	if (affected) return true;\
 }
 
@@ -273,8 +273,8 @@ for (y = World_Height - 1; y >= 0; y--) {\
 			curRunCount = skip[index];\
 			x += curRunCount; mapIndex += curRunCount; index += curRunCount;\
 \
-			if (x < xCount && Block_BlocksLight[get_block]) {\
-				lightOffset = (Block_LightOffset[get_block] >> FACE_YMAX) & 1;\
+			if (x < xCount && Blocks.BlocksLight[get_block]) {\
+				lightOffset = (Blocks.LightOffset[get_block] >> FACE_YMAX) & 1;\
 				Lighting_Heightmap[hIndex + x] = (int16_t)(y - lightOffset);\
 				elemsLeft--;\
 				skip[index] = 0;\

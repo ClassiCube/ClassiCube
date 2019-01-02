@@ -40,83 +40,125 @@ typedef enum CollideType_ {
 	COLLIDE_CLIMB_ROPE    /* Rope/Ladder style climbing interaction when player collides. */
 } CollideType;
 
-/* Whether a block is a liquid. (Like water/lava) */
-extern bool Block_IsLiquid[BLOCK_COUNT];
-/* Whether a block prevents lights from passing through it. */
-extern bool Block_BlocksLight[BLOCK_COUNT];
-/* Whether a block is fully bright/light emitting. (Like lava) */
-extern bool Block_FullBright[BLOCK_COUNT];
-extern PackedCol Block_FogCol[BLOCK_COUNT];
-extern float Block_FogDensity[BLOCK_COUNT];
-/* Basic collide type of a block. (gas, liquid, or solid) */
-extern uint8_t Block_Collide[BLOCK_COUNT];
-extern uint8_t Block_ExtendedCollide[BLOCK_COUNT];
-extern float   Block_SpeedMultiplier[BLOCK_COUNT];
-extern uint8_t Block_LightOffset[BLOCK_COUNT];
-extern uint8_t Block_Draw[BLOCK_COUNT];
-extern uint8_t Block_DigSounds[BLOCK_COUNT];
-extern uint8_t Block_StepSounds[BLOCK_COUNT];
-extern uint8_t Block_Tinted[BLOCK_COUNT];
-/* Whether a block has an opaque draw type, a min of (0,0,0), and a max of (1,1,1) */
-extern bool    Block_FullOpaque[BLOCK_COUNT];
-extern uint8_t Block_SpriteOffset[BLOCK_COUNT];
+extern struct _BlockLists {
+	/* Whether this block is a liquid. (Like water/lava) */
+	bool IsLiquid[BLOCK_COUNT];
+	/* Whether this block prevents lights from passing through it. */
+	bool BlocksLight[BLOCK_COUNT];
+	/* Whether this block is fully bright/light emitting. (Like lava) */
+	bool FullBright[BLOCK_COUNT];
+	/* Fog colour when player is inside this block. */
+	/* NOTE: Only applies if fog density is not 0. */
+	PackedCol FogCol[BLOCK_COUNT];
+	/* How thick fog is when player is inside this block. */
+	float FogDensity[BLOCK_COUNT];
+	/* Basic collision type of this block. (gas, liquid, or solid) */
+	uint8_t Collide[BLOCK_COUNT];
+	/* Extended collision type of this block, usually same as basic. */
+	/* NOTE: Not always the case. (e.g. ice, water, lava, rope differ) */
+	uint8_t ExtendedCollide[BLOCK_COUNT];
+	/* Speed multiplier when player is touching this block. */
+	/* Can be < 1 to slow player down, or > 1 to speed up. */
+	float SpeedMultiplier[BLOCK_COUNT];
+	/* Bit flags of which faces of this block uses light colour from neighbouring blocks. */
+	/* e.g. a block with Min.X of 0.0 uses light colour at X-1,Y,Z for XMIN face. */
+	/* e.g. a block with Min.X of 0.1 uses light colour at X,Y,Z   for XMIN face. */
+	uint8_t LightOffset[BLOCK_COUNT];
+	/* Draw method used when rendering this block. */
+	uint8_t Draw[BLOCK_COUNT];
+	/* Sound produced when the player manually destroys this block. */
+	uint8_t DigSounds[BLOCK_COUNT];
+	/* Sound produced when the player walks on this block. */
+	uint8_t StepSounds[BLOCK_COUNT];
+	/* Whether fog colour is used to apply a tint effect to this block. */
+	bool Tinted[BLOCK_COUNT];
+	/* Whether this block has an opaque draw type, min of (0,0,0), and max of (1,1,1) */
+	bool FullOpaque[BLOCK_COUNT];
+	/* Offset/variation mode of this block. (only when drawn as a sprite) */
+	/* Some modes slightly randomly offset blocks to produce nicer looking clumps. */
+	uint8_t SpriteOffset[BLOCK_COUNT];
+
+	/* Coordinates of min corner of this block for collisions. */
+	Vector3 MinBB[BLOCK_COUNT];
+	/* Coordinates of max corner of this block for collisions. */
+	Vector3 MaxBB[BLOCK_COUNT];
+	/* Coordinates of min corner of this block for rendering. */
+	/* e.g. ice is very slightly offset horizontally. */
+	Vector3 RenderMinBB[BLOCK_COUNT];
+	/* Coordinates of max corner of this block for rendering. */
+	/* e.g. ice is very slightly offset horizontally. */
+	Vector3 RenderMaxBB[BLOCK_COUNT];
+
+	/* Texture ids of each face of blocks. */
+	TextureLoc Textures[BLOCK_COUNT * FACE_COUNT];
+	/* Whether this block is allowed to be placed. */
+	bool CanPlace[BLOCK_COUNT];
+	/* Whether this block is allowed to be deleted. */
+	bool CanDelete[BLOCK_COUNT];
+
+	/* Bit flags of faces hidden of two neighbouring blocks. */
+	uint8_t Hidden[BLOCK_COUNT * BLOCK_COUNT];
+	/* Bit flags of which faces of this block can stretch with greedy meshing. */
+	uint8_t CanStretch[BLOCK_COUNT];
+} Blocks;
 
 #define Block_Tint(col, block)\
-if (Block_Tinted[block]) {\
-	PackedCol tintCol = Block_FogCol[block];\
+if (Blocks.Tinted[block]) {\
+	PackedCol tintCol = Blocks.FogCol[block];\
 	col.R = (uint8_t)(col.R * tintCol.R / 255);\
 	col.G = (uint8_t)(col.G * tintCol.G / 255);\
 	col.B = (uint8_t)(col.B * tintCol.B / 255);\
 }
-
-extern Vector3 Block_MinBB[BLOCK_COUNT];
-extern Vector3 Block_MaxBB[BLOCK_COUNT];
-extern Vector3 Block_RenderMinBB[BLOCK_COUNT];
-extern Vector3 Block_RenderMaxBB[BLOCK_COUNT];
-
-extern TextureLoc Block_Textures[BLOCK_COUNT * FACE_COUNT];
-/* Whether the player has permission to place a block. */
-extern bool Block_CanPlace[BLOCK_COUNT];
-/* Whether the player has permission to delete a block. */
-extern bool Block_CanDelete[BLOCK_COUNT];
-
-/* Bit flags of faces hidden of two neighbouring blocks. */
-extern uint8_t Block_Hidden[BLOCK_COUNT * BLOCK_COUNT];
-/* Bit flags of which faces of a block can stretch with greedy meshing. */
-extern uint8_t Block_CanStretch[BLOCK_COUNT];
 
 #ifdef EXTENDED_BLOCKS
 extern int Block_UsedCount, Block_IDMask;
 extern void Block_SetUsedCount(int count);
 #endif
 
+/* Returns whether the given block has been changed from default. */
 bool Block_IsCustomDefined(BlockID block);
+/* Sets whether the given block has been changed from default. */
 void Block_SetCustomDefined(BlockID block, bool defined);
 void Block_DefineCustom(BlockID block);
 
+/* Sets the basic and extended collide types of the given block. */
 void Block_SetCollide(BlockID block, CollideType collide);
 void Block_SetDrawType(BlockID block, DrawType draw);
+/* Resets all the properties of the given block to default. */
 void Block_ResetProps(BlockID block);
 
+/* Gets the name of the given block. */
+/* NOTE: Name points directly within underlying buffer, you MUST NOT persist this string. */
 STRING_REF String Block_UNSAFE_GetName(BlockID block);
+/* Sets the name of the given block. */
 void Block_SetName(BlockID block, const String* name);
+/* Finds the ID of the block whose name caselessly matches given name. */
 int Block_FindID(const String* name);
+/* Attempts to parse given name as a numerical block ID. */
+/* Falls back to Block_FindID if this fails. */
 int Block_Parse(const String* name);
 
+/* Calculates render min/max corners of this block. */
+/* Works by slightly offsetting collision min/max corners. */
 void Block_CalcRenderBounds(BlockID block);
+/* Calculates light colour offset for each face of the given block. */
 void Block_CalcLightOffset(BlockID block);
+/* Recalculates bounding boxes of all sprite blocks. */
 void Block_RecalculateAllSpriteBB(void);
+/* Recalculates bounding box of the given sprite block. */
 void Block_RecalculateBB(BlockID block);
 
+/* Sets the textures of the side faces of the given block. */
 void Block_SetSide(TextureLoc texLoc, BlockID blockId);
+/* Sets the texture of the given face of the given block. */
 void Block_SetTex(TextureLoc texLoc, Face face, BlockID blockId);
-#define Block_GetTex(block, face) Block_Textures[(block) * FACE_COUNT + (face)]
+#define Block_GetTex(block, face) Blocks.Textures[(block) * FACE_COUNT + (face)]
 
 bool Block_IsFaceHidden(BlockID block, BlockID other, Face face);
 /* Updates culling data of all blocks. */
 void Block_UpdateAllCulling(void);
 /* Updates culling data just for this block. */
-/* This includes whether block can be stretched, and visibility with other blocks. */
+/* (e.g. whether block can be stretched, visibility with other blocks) */
 void Block_UpdateCulling(BlockID block);
 
 /* Whether blocks can be automatically rotated. */

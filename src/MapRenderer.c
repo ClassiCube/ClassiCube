@@ -72,8 +72,8 @@ CC_NOINLINE static int MapRenderer_UsedAtlases(void) {
 	TextureLoc maxLoc = 0;
 	int i;
 
-	for (i = 0; i < Array_Elems(Block_Textures); i++) {
-		maxLoc = max(maxLoc, Block_Textures[i]);
+	for (i = 0; i < Array_Elems(Blocks.Textures); i++) {
+		maxLoc = max(maxLoc, Blocks.Textures[i]);
 	}
 	return Atlas1D_Index(maxLoc) + 1;
 }
@@ -90,7 +90,7 @@ static void MapRenderer_CheckWeather(double delta) {
 
 	block   = World_SafeGetBlock_3I(pos);
 	outside = pos.X < 0 || pos.Y < 0 || pos.Z < 0 || pos.X >= World_Width || pos.Z >= World_Length;
-	inTranslucent = Block_Draw[block] == DRAW_TRANSLUCENT || (pos.Y < Env_EdgeHeight && outside);
+	inTranslucent = Blocks.Draw[block] == DRAW_TRANSLUCENT || (pos.Y < Env_EdgeHeight && outside);
 
 	/* If we are under water, render weather before to blend properly */
 	if (!inTranslucent || Env_Weather == WEATHER_SUNNY) return;

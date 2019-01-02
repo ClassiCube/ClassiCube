@@ -15,7 +15,7 @@ BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 
 static char fontNameBuffer[STRING_SIZE];
 String Drawer2D_FontName = String_FromArray(fontNameBuffer);
-int Drawer2D_FontSize;
+#define DRAWER2D_OFFSET 1
 
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, const FontDesc* font, bool useShadow) {
 	args->Text = *text;

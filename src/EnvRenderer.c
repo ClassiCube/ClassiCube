@@ -51,12 +51,12 @@ static void EnvRenderer_CalcFog(float* density, PackedCol* col) {
 	Vector3I_ToVector3(&pos, &coords);           /* pos = coords; */
 
 	block = World_SafeGetBlock_3I(coords);
-	Vector3_Add(&blockBB.Min, &pos, &Block_MinBB[block]);
-	Vector3_Add(&blockBB.Max, &pos, &Block_MaxBB[block]);
+	Vector3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
+	Vector3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 
-	if (AABB_ContainsPoint(&blockBB, &pos) && Block_FogDensity[block] != 0.0f) {
-		*density = Block_FogDensity[block];
-		*col     = Block_FogCol[block];
+	if (AABB_ContainsPoint(&blockBB, &pos) && Blocks.FogDensity[block] != 0.0f) {
+		*density = Blocks.FogDensity[block];
+		*col     = Blocks.FogCol[block];
 	} else {
 		*density = 0.0f;
 		/* Blend fog and sky together */
@@ -376,7 +376,7 @@ static void EnvRenderer_InitWeatherHeightmap(void) {
 
 #define EnvRenderer_RainCalcBody(get_block)\
 for (y = maxY; y >= 0; y--, i -= World_OneY) {\
-	draw = Block_Draw[get_block];\
+	draw = Blocks.Draw[get_block];\
 \
 	if (!(draw == DRAW_GAS || draw == DRAW_SPRITE)) {\
 		Weather_Heightmap[hIndex] = y;\
@@ -411,12 +411,12 @@ static float EnvRenderer_RainHeight(int x, int z) {
 	height = Weather_Heightmap[hIndex];
 
 	y = height == Int16_MaxValue ? EnvRenderer_CalcRainHeightAt(x, World_MaxY, z, hIndex) : height;
-	return y == -1 ? 0 : y + Block_MaxBB[World_GetBlock(x, y, z)].Y;
+	return y == -1 ? 0 : y + Blocks.MaxBB[World_GetBlock(x, y, z)].Y;
 }
 
 void EnvRenderer_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
-	bool didBlock = !(Block_Draw[oldBlock] == DRAW_GAS || Block_Draw[oldBlock] == DRAW_SPRITE);
-	bool nowBlock = !(Block_Draw[newBlock] == DRAW_GAS || Block_Draw[newBlock] == DRAW_SPRITE);
+	bool didBlock = !(Blocks.Draw[oldBlock] == DRAW_GAS || Blocks.Draw[oldBlock] == DRAW_SPRITE);
+	bool nowBlock = !(Blocks.Draw[newBlock] == DRAW_GAS || Blocks.Draw[newBlock] == DRAW_SPRITE);
 	int hIndex, height;
 	if (didBlock == nowBlock) return;
 
@@ -545,7 +545,7 @@ void EnvRenderer_RenderBorders(BlockID block, GfxResourceID vb, GfxResourceID te
 	if (!vb) return;
 
 	Gfx_SetTexturing(true);
-	Gfx_SetupAlphaState(Block_Draw[block]);
+	Gfx_SetupAlphaState(Blocks.Draw[block]);
 	Gfx_EnableMipmaps();
 
 	Gfx_BindTexture(tex);
@@ -554,7 +554,7 @@ void EnvRenderer_RenderBorders(BlockID block, GfxResourceID vb, GfxResourceID te
 	Gfx_DrawVb_IndexedTris(count);
 
 	Gfx_DisableMipmaps();
-	Gfx_RestoreAlphaState(Block_Draw[block]);
+	Gfx_RestoreAlphaState(Blocks.Draw[block]);
 	Gfx_SetTexturing(false);
 }
 
@@ -601,8 +601,8 @@ static void EnvRenderer_UpdateBorderTextures(void) {
 	EnvRenderer_MakeBorderTex(&sides_tex, Env_SidesBlock);
 }
 
-#define Borders_HorOffset(block) (Block_RenderMinBB[block].X - Block_MinBB[block].X)
-#define Borders_YOffset(block)   (Block_RenderMinBB[block].Y - Block_MinBB[block].Y)
+#define Borders_HorOffset(block) (Blocks.RenderMinBB[block].X - Blocks.MinBB[block].X)
+#define Borders_YOffset(block)   (Blocks.RenderMinBB[block].Y - Blocks.MinBB[block].Y)
 
 static void EnvRenderer_DrawBorderX(int x, int z1, int z2, int y1, int y2, PackedCol col, VertexP3fT2fC4b** vertices) {
 	int endZ = z2, endY = y2, startY = y1, axisSize = EnvRenderer_AxisSize();
@@ -697,7 +697,7 @@ static void EnvRenderer_UpdateMapSides(void) {
 	Gfx_DeleteVb(&sides_vb);
 	block = Env_SidesBlock;
 
-	if (Block_Draw[block] == DRAW_GAS) return;
+	if (Blocks.Draw[block] == DRAW_GAS) return;
 	EnvRenderer_CalcBorderRects(rects);
 
 	sides_vertices = 0;
@@ -717,7 +717,7 @@ static void EnvRenderer_UpdateMapSides(void) {
 	}
 	cur = ptr;
 
-	sides_fullBright = Block_FullBright[block];
+	sides_fullBright = Blocks.FullBright[block];
 	col = sides_fullBright ? white : Env_ShadowCol;
 	Block_Tint(col, block)
 
@@ -756,7 +756,7 @@ static void EnvRenderer_UpdateMapEdges(void) {
 	Gfx_DeleteVb(&edges_vb);
 	block = Env_EdgeBlock;
 
-	if (Block_Draw[block] == DRAW_GAS) return;
+	if (Blocks.Draw[block] == DRAW_GAS) return;
 	EnvRenderer_CalcBorderRects(rects);
 
 	edges_vertices = 0;
@@ -771,7 +771,7 @@ static void EnvRenderer_UpdateMapEdges(void) {
 	}
 	cur = ptr;
 
-	edges_fullBright = Block_FullBright[block];
+	edges_fullBright = Blocks.FullBright[block];
 	col = edges_fullBright ? white : Env_SunCol;
 	Block_Tint(col, block)
 

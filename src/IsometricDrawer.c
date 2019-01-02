@@ -138,9 +138,9 @@ void IsometricDrawer_BeginBatch(VertexP3fT2fC4b* vertices, GfxResourceID vb) {
 }
 
 void IsometricDrawer_DrawBatch(BlockID block, float size, float x, float y) {
-	bool bright = Block_FullBright[block];
+	bool bright = Blocks.FullBright[block];
 	Vector3 min, max;
-	if (Block_Draw[block] == DRAW_GAS) return;
+	if (Blocks.Draw[block] == DRAW_GAS) return;
 
 	/* isometric coords size: cosY * -scale - sinY * scale */
 	/* we need to divide by (2 * cosY), as the calling function expects size to be in pixels. */
@@ -154,16 +154,16 @@ void IsometricDrawer_DrawBatch(BlockID block, float size, float x, float y) {
 	/* See comment in GfxCommon_Draw2DTexture() */
 	iso_pos.X -= 0.5f; iso_pos.Y -= 0.5f;
 
-	if (Block_Draw[block] == DRAW_SPRITE) {
+	if (Blocks.Draw[block] == DRAW_SPRITE) {
 		IsometricDrawer_SpriteXQuad(block, true);
 		IsometricDrawer_SpriteZQuad(block, true);
 
 		IsometricDrawer_SpriteZQuad(block, false);
 		IsometricDrawer_SpriteXQuad(block, false);
 	} else {
-		Drawer_MinBB = Block_MinBB[block]; Drawer_MinBB.Y = 1.0f - Drawer_MinBB.Y;
-		Drawer_MaxBB = Block_MaxBB[block]; Drawer_MaxBB.Y = 1.0f - Drawer_MaxBB.Y;
-		min = Block_MinBB[block]; max = Block_MaxBB[block];
+		Drawer_MinBB = Blocks.MinBB[block]; Drawer_MinBB.Y = 1.0f - Drawer_MinBB.Y;
+		Drawer_MaxBB = Blocks.MaxBB[block]; Drawer_MaxBB.Y = 1.0f - Drawer_MaxBB.Y;
+		min = Blocks.MinBB[block]; max = Blocks.MaxBB[block];
 
 		Drawer_X1 = iso_scale * (1.0f - min.X * 2.0f) + iso_pos.X; 
 		Drawer_X2 = iso_scale * (1.0f - max.X * 2.0f) + iso_pos.X;
@@ -172,8 +172,8 @@ void IsometricDrawer_DrawBatch(BlockID block, float size, float x, float y) {
 		Drawer_Z1 = iso_scale * (1.0f - min.Z * 2.0f) + iso_pos.Z; 
 		Drawer_Z2 = iso_scale * (1.0f - max.Z * 2.0f) + iso_pos.Z;
 
-		Drawer_Tinted  = Block_Tinted[block];
-		Drawer_TintCol = Block_FogCol[block];
+		Drawer_Tinted  = Blocks.Tinted[block];
+		Drawer_TintCol = Blocks.FogCol[block];
 
 		Drawer_XMax(1, bright ? iso_col : iso_colXSide, 
 			IsometricDrawer_GetTexLoc(block, FACE_XMAX), &iso_vertices);

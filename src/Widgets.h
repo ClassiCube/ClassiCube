@@ -73,6 +73,8 @@ struct TableWidget {
 };
 
 CC_NOINLINE void TableWidget_Create(struct TableWidget* w);
+/* Sets the selected block in the table to the given block. */
+/* Also adjusts scrollbar and moves cursor to be over the given block. */
 CC_NOINLINE void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block);
 CC_NOINLINE void TableWidget_OnInventoryChanged(struct TableWidget* w);
 CC_NOINLINE void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block);

@@ -208,7 +208,7 @@ void Game_UpdateBlock(int x, int y, int z, BlockID block) {
 
 	/* Refresh the chunk the block was located in. */
 	chunk = MapRenderer_GetChunk(cx, cy, cz);
-	chunk->AllAir &= Block_Draw[block] == DRAW_GAS;
+	chunk->AllAir &= Blocks.Draw[block] == DRAW_GAS;
 	MapRenderer_RefreshChunk(cx, cy, cz);
 }
 
@@ -219,11 +219,11 @@ void Game_ChangeBlock(int x, int y, int z, BlockID block) {
 }
 
 bool Game_CanPick(BlockID block) {
-	if (Block_Draw[block] == DRAW_GAS)    return false;
-	if (Block_Draw[block] == DRAW_SPRITE) return true;
+	if (Blocks.Draw[block] == DRAW_GAS)    return false;
+	if (Blocks.Draw[block] == DRAW_SPRITE) return true;
 
-	if (Block_Collide[block] != COLLIDE_LIQUID) return true;
-	return Game_BreakableLiquids && Block_CanPlace[block] && Block_CanDelete[block];
+	if (Blocks.Collide[block] != COLLIDE_LIQUID) return true;
+	return Game_BreakableLiquids && Blocks.CanPlace[block] && Blocks.CanDelete[block];
 }
 
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, uint8_t* skinType) {
@@ -572,7 +572,7 @@ static void Game_Render3D(double delta, float t) {
 
 	/* Need to render again over top of translucent block, as the selection outline */
 	/* is drawn without writing to the depth buffer */
-	if (Game_SelectedPos.Valid && !Game_HideGui && Block_Draw[Game_SelectedPos.Block] == DRAW_TRANSLUCENT) {
+	if (Game_SelectedPos.Valid && !Game_HideGui && Blocks.Draw[Game_SelectedPos.Block] == DRAW_TRANSLUCENT) {
 		PickedPosRenderer_Render(delta);
 	}
 

@@ -1446,8 +1446,8 @@ static void BlockModel_CreateParts(void) { }
 
 static float BlockModel_GetEyeY(struct Entity* entity) {
 	BlockID block = entity->ModelBlock;
-	float minY = Block_MinBB[block].Y;
-	float maxY = Block_MaxBB[block].Y;
+	float minY = Blocks.MinBB[block].Y;
+	float maxY = Blocks.MaxBB[block].Y;
 	return block == BLOCK_AIR ? 1 : (minY + maxY) / 2.0f;
 }
 
@@ -1473,13 +1473,13 @@ static void BlockModel_RecalcProperties(struct Entity* p) {
 	BlockID block = p->ModelBlock;
 	float height;
 
-	if (Block_Draw[block] == DRAW_GAS) {
+	if (Blocks.Draw[block] == DRAW_GAS) {
 		bModel_minBB = Vector3_Zero;
 		bModel_maxBB = Vector3_One;
 		height = 1.0f;
 	} else {
-		bModel_minBB = Block_MinBB[block];
-		bModel_maxBB = Block_MaxBB[block];
+		bModel_minBB = Blocks.MinBB[block];
+		bModel_maxBB = Blocks.MaxBB[block];
 		height = bModel_maxBB.Y - bModel_minBB.Y;
 	}
 	block_model.NameYOffset = height + 0.075f;
@@ -1583,13 +1583,13 @@ static void BlockModel_DrawParts(bool sprite) {
 		BlockModel_SpriteXQuad(true, false);
 		BlockModel_SpriteXQuad(true, true);
 	} else {
-		Drawer_MinBB = Block_MinBB[bModel_block]; Drawer_MinBB.Y = 1.0f - Drawer_MinBB.Y;
-		Drawer_MaxBB = Block_MaxBB[bModel_block]; Drawer_MaxBB.Y = 1.0f - Drawer_MaxBB.Y;
-		Drawer_Tinted  = Block_Tinted[bModel_block];
-		Drawer_TintCol = Block_FogCol[bModel_block];
+		Drawer_MinBB = Blocks.MinBB[bModel_block]; Drawer_MinBB.Y = 1.0f - Drawer_MinBB.Y;
+		Drawer_MaxBB = Blocks.MaxBB[bModel_block]; Drawer_MaxBB.Y = 1.0f - Drawer_MaxBB.Y;
+		Drawer_Tinted  = Blocks.Tinted[bModel_block];
+		Drawer_TintCol = Blocks.FogCol[bModel_block];
 
-		min = Block_RenderMinBB[bModel_block];
-		max = Block_RenderMaxBB[bModel_block];
+		min = Blocks.RenderMinBB[bModel_block];
+		max = Blocks.RenderMaxBB[bModel_block];
 		Drawer_X1 = min.X - 0.5f; Drawer_Y1 = min.Y; Drawer_Z1 = min.Z - 0.5f;
 		Drawer_X2 = max.X - 0.5f; Drawer_Y2 = max.Y; Drawer_Z2 = max.Z - 0.5f;		
 
@@ -1609,14 +1609,14 @@ static void BlockModel_DrawModel(struct Entity* p) {
 
 	bModel_block = p->ModelBlock;
 	BlockModel_RecalcProperties(p);
-	if (Block_Draw[bModel_block] == DRAW_GAS) return;
+	if (Blocks.Draw[bModel_block] == DRAW_GAS) return;
 
-	if (Block_FullBright[bModel_block]) {
+	if (Blocks.FullBright[bModel_block]) {
 		for (i = 0; i < FACE_COUNT; i++) {
 			Model_Cols[i] = white;
 		}
 	}
-	sprite = Block_Draw[bModel_block] == DRAW_SPRITE;
+	sprite = Blocks.Draw[bModel_block] == DRAW_SPRITE;
 
 	bModel_lastTexIndex = -1;	
 	BlockModel_DrawParts(sprite);

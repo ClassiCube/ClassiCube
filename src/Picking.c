@@ -172,8 +172,8 @@ static bool Picking_RayTrace(Vector3 origin, Vector3 dir, float reach, struct Pi
 		v.X = (float)x; v.Y = (float)y; v.Z = (float)z;
 
 		tracer.Block = insideMap ? Picking_GetInside(x, y, z) : Picking_GetOutside(x, y, z, pOrigin);
-		Vector3_Add(&minBB, &v, &Block_RenderMinBB[tracer.Block]);
-		Vector3_Add(&maxBB, &v, &Block_RenderMaxBB[tracer.Block]);
+		Vector3_Add(&minBB, &v, &Blocks.RenderMinBB[tracer.Block]);
+		Vector3_Add(&maxBB, &v, &Blocks.RenderMaxBB[tracer.Block]);
 
 		dxMin = Math_AbsF(origin.X - minBB.X); dxMax = Math_AbsF(origin.X - maxBB.X);
 		dyMin = Math_AbsF(origin.Y - minBB.Y); dyMax = Math_AbsF(origin.Y - maxBB.Y);
@@ -220,7 +220,7 @@ static bool Picking_ClipCamera(struct PickedPos* pos) {
 	Vector3 intersect;
 	float t0, t1;
 
-	if (Block_Draw[tracer.Block] == DRAW_GAS || Block_Collide[tracer.Block] != COLLIDE_SOLID) return false;
+	if (Blocks.Draw[tracer.Block] == DRAW_GAS || Blocks.Collide[tracer.Block] != COLLIDE_SOLID) return false;
 	if (!Intersection_RayIntersectsBox(tracer.Origin, tracer.Dir, tracer.Min, tracer.Max, &t0, &t1)) return false;
 
 	/* Need to collide with slightly outside block, to avoid camera clipping issues */

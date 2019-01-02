@@ -1093,8 +1093,8 @@ static void CPE_SetBlockPermission(uint8_t* data) {
 	BlockID block; 
 	Handlers_ReadBlock(data, block);
 
-	Block_CanPlace[block]  = *data++ != 0;
-	Block_CanDelete[block] = *data++ != 0;
+	Blocks.CanPlace[block]  = *data++ != 0;
+	Blocks.CanDelete[block] = *data++ != 0;
 	Event_RaiseVoid(&BlockEvents.PermissionsChanged);
 }
 
@@ -1391,7 +1391,7 @@ static void CPE_Tick(void) {
 static void BlockDefs_OnBlockUpdated(BlockID block, bool didBlockLight) {
 	if (!World_Blocks) return;
 	/* Need to refresh lighting when a block's light blocking state changes */
-	if (Block_BlocksLight[block] != didBlockLight) { Lighting_Refresh(); }
+	if (Blocks.BlocksLight[block] != didBlockLight) { Lighting_Refresh(); }
 }
 
 static TextureLoc BlockDefs_Tex(uint8_t** ptr) {
@@ -1416,7 +1416,7 @@ static BlockID BlockDefs_DefineBlockCommonStart(uint8_t** ptr, bool uniqueSideTe
 	uint8_t* data = *ptr;
 
 	Handlers_ReadBlock(data, block);
-	didBlockLight = Block_BlocksLight[block];
+	didBlockLight = Blocks.BlocksLight[block];
 	Block_ResetProps(block);
 	
 	String_InitArray(name, nameBuffer);
@@ -1426,7 +1426,7 @@ static BlockID BlockDefs_DefineBlockCommonStart(uint8_t** ptr, bool uniqueSideTe
 
 	speedLog2 = (*data++ - 128) / 64.0f;
 	#define LOG_2 0.693147180559945
-	Block_SpeedMultiplier[block] = (float)Math_Exp(LOG_2 * speedLog2); /* pow(2, x) */
+	Blocks.SpeedMultiplier[block] = (float)Math_Exp(LOG_2 * speedLog2); /* pow(2, x) */
 
 	Block_SetTex(BlockDefs_Tex(&data), FACE_YMAX, block);
 	if (uniqueSideTexs) {
@@ -1439,15 +1439,15 @@ static BlockID BlockDefs_DefineBlockCommonStart(uint8_t** ptr, bool uniqueSideTe
 	}
 	Block_SetTex(BlockDefs_Tex(&data), FACE_YMIN, block);
 
-	Block_BlocksLight[block] = *data++ == 0;
+	Blocks.BlocksLight[block] = *data++ == 0;
 	BlockDefs_OnBlockUpdated(block, didBlockLight);
 
 	sound = *data++;
-	Block_StepSounds[block] = sound;
-	Block_DigSounds[block]  = sound;
-	if (sound == SOUND_GLASS) Block_StepSounds[block] = SOUND_STONE;
+	Blocks.StepSounds[block] = sound;
+	Blocks.DigSounds[block]  = sound;
+	if (sound == SOUND_GLASS) Blocks.StepSounds[block] = SOUND_STONE;
 
-	Block_FullBright[block] = *data++ != 0;
+	Blocks.FullBright[block] = *data++ != 0;
 	*ptr = data;
 	return block;
 }
@@ -1459,16 +1459,16 @@ static void BlockDefs_DefineBlockCommonEnd(uint8_t* data, uint8_t shape, BlockID
 
 	blockDraw = *data++;
 	if (shape == 0) {
-		Block_SpriteOffset[block] = blockDraw;
+		Blocks.SpriteOffset[block] = blockDraw;
 		blockDraw = DRAW_SPRITE;
 	}
-	Block_Draw[block] = blockDraw;
+	Blocks.Draw[block] = blockDraw;
 
 	density = *data++;
-	Block_FogDensity[block] = density == 0 ? 0.0f : (density + 1) / 128.0f;
+	Blocks.FogDensity[block] = density == 0 ? 0.0f : (density + 1) / 128.0f;
 
 	c.R = *data++; c.G = *data++; c.B = *data++; c.A = 255;
-	Block_FogCol[block] = c;
+	Blocks.FogCol[block] = c;
 	Block_DefineCustom(block);
 }
 
@@ -1477,12 +1477,12 @@ static void BlockDefs_DefineBlock(uint8_t* data) {
 
 	uint8_t shape = *data++;
 	if (shape > 0 && shape <= 16) {
-		Block_MaxBB[block].Y = shape / 16.0f;
+		Blocks.MaxBB[block].Y = shape / 16.0f;
 	}
 
 	BlockDefs_DefineBlockCommonEnd(data, shape, block);
 	/* Update sprite BoundingBox if necessary */
-	if (Block_Draw[block] == DRAW_SPRITE) {
+	if (Blocks.Draw[block] == DRAW_SPRITE) {
 		Block_RecalculateBB(block);
 	}
 }
@@ -1492,7 +1492,7 @@ static void BlockDefs_UndefineBlock(uint8_t* data) {
 	bool didBlockLight;
 
 	Handlers_ReadBlock(data, block);
-	didBlockLight = Block_BlocksLight[block];
+	didBlockLight = Blocks.BlocksLight[block];
 
 	Block_ResetProps(block);
 	BlockDefs_OnBlockUpdated(block, didBlockLight);
@@ -1517,8 +1517,8 @@ static void BlockDefs_DefineBlockExt(uint8_t* data) {
 	maxBB.Y = (int8_t)(*data++) / 16.0f;
 	maxBB.Z = (int8_t)(*data++) / 16.0f;
 
-	Block_MinBB[block] = minBB;
-	Block_MaxBB[block] = maxBB;
+	Blocks.MinBB[block] = minBB;
+	Blocks.MaxBB[block] = maxBB;
 	BlockDefs_DefineBlockCommonEnd(data, 1, block);
 }
 

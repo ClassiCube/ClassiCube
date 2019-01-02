@@ -269,10 +269,10 @@ float Respawn_HighestSolidY(struct AABB* bb) {
 			for (x = minX; x <= maxX; x++) { v.X = (float)x;
 
 				block = World_GetPhysicsBlock(x, y, z);
-				Vector3_Add(&blockBB.Min, &v, &Block_MinBB[block]);
-				Vector3_Add(&blockBB.Max, &v, &Block_MaxBB[block]);
+				Vector3_Add(&blockBB.Min, &v, &Blocks.MinBB[block]);
+				Vector3_Add(&blockBB.Max, &v, &Blocks.MaxBB[block]);
 
-				if (Block_Collide[block] != COLLIDE_SOLID) continue;
+				if (Blocks.Collide[block] != COLLIDE_SOLID) continue;
 				if (!AABB_Intersects(bb, &blockBB)) continue;
 				if (blockBB.Max.Y > highestY) highestY = blockBB.Max.Y;
 			}

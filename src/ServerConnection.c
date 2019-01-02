@@ -155,8 +155,8 @@ static void SPConnection_BeginConnect(void) {
 	count = Game_UseCPEBlocks ? BLOCK_CPE_COUNT : BLOCK_ORIGINAL_COUNT;
 
 	for (i = 1; i < count; i++) {
-		Block_CanPlace[i]  = true;
-		Block_CanDelete[i] = true;
+		Blocks.CanPlace[i]  = true;
+		Blocks.CanDelete[i] = true;
 	}
 	Event_RaiseVoid(&BlockEvents.PermissionsChanged);
 

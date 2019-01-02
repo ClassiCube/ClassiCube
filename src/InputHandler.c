@@ -215,7 +215,7 @@ static bool InputHandler_HandleCoreKey(Key key) {
 	return true;
 }
 
-static bool InputHandler_TouchesSolid(BlockID b) { return Block_Collide[b] == COLLIDE_SOLID; }
+static bool InputHandler_TouchesSolid(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
 static bool InputHandler_PushbackPlace(struct AABB* blockBB) {
 	struct Entity* p        = &LocalPlayer_Instance.Base;
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
@@ -265,8 +265,8 @@ static bool InputHandler_IntersectsOthers(Vector3 pos, BlockID block) {
 	struct Entity* entity;
 	int id;
 
-	Vector3_Add(&blockBB.Min, &pos, &Block_MinBB[block]);
-	Vector3_Add(&blockBB.Max, &pos, &Block_MaxBB[block]);
+	Vector3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
+	Vector3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 	
 	for (id = 0; id < ENTITIES_SELF_ID; id++) {
 		entity = Entities_List[id];
@@ -288,14 +288,14 @@ static bool InputHandler_CheckIsFree(BlockID block) {
 	struct LocationUpdate update;
 
 	/* Non solid blocks (e.g. water/flowers) can always be placed on players */
-	if (Block_Collide[block] != COLLIDE_SOLID) return true;
+	if (Blocks.Collide[block] != COLLIDE_SOLID) return true;
 
 	Vector3I_ToVector3(&pos, &Game_SelectedPos.TranslatedPos);
 	if (InputHandler_IntersectsOthers(pos, block)) return false;
 	
 	nextPos = LocalPlayer_Instance.Interp.Next.Pos;
-	Vector3_Add(&blockBB.Min, &pos, &Block_MinBB[block]);
-	Vector3_Add(&blockBB.Max, &pos, &Block_MaxBB[block]);
+	Vector3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
+	Vector3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 
 	/* NOTE: Need to also test against next position here, otherwise player can 
 	fall through the block at feet as collision is performed against nextPos */
@@ -311,7 +311,7 @@ static bool InputHandler_CheckIsFree(BlockID block) {
 	if (AABB_Intersects(&playerBB, &blockBB)) return false;
 
 	/* Push player upwards when they are jumping and trying to place a block underneath them */
-	nextPos.Y = pos.Y + Block_MaxBB[block].Y + ENTITY_ADJUSTMENT;
+	nextPos.Y = pos.Y + Blocks.MaxBB[block].Y + ENTITY_ADJUSTMENT;
 	LocationUpdate_MakePos(&update, nextPos, false);
 	p->VTABLE->SetLocation(p, &update, false);
 	return true;
@@ -345,7 +345,7 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		if (!Game_SelectedPos.Valid || !World_IsValidPos_3I(p)) return;
 
 		old = World_GetBlock(p.X, p.Y, p.Z);
-		if (Block_Draw[old] == DRAW_GAS || !Block_CanDelete[old]) return;
+		if (Blocks.Draw[old] == DRAW_GAS || !Blocks.CanDelete[old]) return;
 
 		Game_ChangeBlock(p.X, p.Y, p.Z, BLOCK_AIR);
 		Event_RaiseBlock(&UserEvents.BlockChanged, p, old, BLOCK_AIR);
@@ -357,9 +357,9 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		block = Inventory_SelectedBlock;
 		if (AutoRotate_Enabled) block = AutoRotate_RotateBlock(block);
 
-		if (Game_CanPick(old) || !Block_CanPlace[block]) return;
+		if (Game_CanPick(old) || !Blocks.CanPlace[block]) return;
 		/* air-ish blocks can only replace over other air-ish blocks */
-		if (Block_Draw[block] == DRAW_GAS && Block_Draw[old] != DRAW_GAS) return;
+		if (Blocks.Draw[block] == DRAW_GAS && Blocks.Draw[old] != DRAW_GAS) return;
 		if (!InputHandler_CheckIsFree(block)) return;
 
 		Game_ChangeBlock(p.X, p.Y, p.Z, block);
@@ -369,8 +369,8 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		if (!World_IsValidPos_3I(p)) return;
 
 		cur = World_GetBlock(p.X, p.Y, p.Z);
-		if (Block_Draw[cur] == DRAW_GAS) return;
-		if (!(Block_CanPlace[cur] || Block_CanDelete[cur])) return;
+		if (Blocks.Draw[cur] == DRAW_GAS) return;
+		if (!(Blocks.CanPlace[cur] || Blocks.CanDelete[cur])) return;
 		if (!Inventory_CheckChangeSelected() || Inventory_SelectedBlock == cur) return;
 
 		/* Is the currently selected block an empty slot? */

@@ -28,7 +28,7 @@ static void HeldBlockRenderer_RenderModel(void) {
 	Gfx_SetTexturing(true);
 	Gfx_SetDepthTest(false);
 	
-	if (Block_Draw[held_block] == DRAW_GAS) {
+	if (Blocks.Draw[held_block] == DRAW_GAS) {
 		model = LocalPlayer_Instance.Base.Model;
 		held_entity.ModelScale = Vector3_Create1(1.0f);
 
@@ -39,9 +39,9 @@ static void HeldBlockRenderer_RenderModel(void) {
 		model = Model_Get(&block);
 		held_entity.ModelScale = Vector3_Create1(0.4f);
 
-		Gfx_SetupAlphaState(Block_Draw[held_block]);
+		Gfx_SetupAlphaState(Blocks.Draw[held_block]);
 		Model_Render(model, &held_entity);
-		Gfx_RestoreAlphaState(Block_Draw[held_block]);
+		Gfx_RestoreAlphaState(Blocks.Draw[held_block]);
 	}
 	
 	Gfx_SetTexturing(false);
@@ -81,14 +81,14 @@ static void HeldBlockRenderer_ResetHeldState(void) {
 }
 
 static void HeldBlockRenderer_SetBaseOffset(void) {
-	bool sprite = Block_Draw[held_block] == DRAW_SPRITE;
+	bool sprite = Blocks.Draw[held_block] == DRAW_SPRITE;
 	Vector3 normalOffset = { 0.56f, -0.72f, -0.72f };
 	Vector3 spriteOffset = { 0.46f, -0.52f, -0.72f };
 	Vector3 offset = sprite ? spriteOffset : normalOffset;
 
 	Vector3_Add(&held_entity.Position, &held_entity.Position, &offset);
-	if (!sprite && Block_Draw[held_block] != DRAW_GAS) {
-		float height = Block_MaxBB[held_block].Y - Block_MinBB[held_block].Y;
+	if (!sprite && Blocks.Draw[held_block] != DRAW_GAS) {
+		float height = Blocks.MaxBB[held_block].Y - Blocks.MinBB[held_block].Y;
 		held_entity.Position.Y += 0.2f * (1.0f - height);
 	}
 }
