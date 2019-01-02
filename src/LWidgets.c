@@ -714,7 +714,7 @@ static int LTable_GetSelectedIndex(struct LTable* w) {
 	return -1;
 }
 
-/* Sets selected row to given row, scrolling table if needed. */
+/* Sets selected row to given row, scrolling table if needed */
 static void LTable_SetSelectedTo(struct LTable* w, int index) {
 	if (!w->RowsCount) return;
 	if (index >= w->RowsCount) index = w->RowsCount - 1;
@@ -834,7 +834,6 @@ static void LTable_DrawHeaders(struct LTable* w) {
 
 /* Draws contents of the currently visible rows in the table */
 static void LTable_DrawRows(struct LTable* w) {
-	BitmapCol gridCol = BITMAPCOL_CONST(20, 20, 10, 255);
 	String str; char strBuffer[STRING_SIZE];
 	struct ServerInfo* entry;
 	struct DrawTextArgs args;

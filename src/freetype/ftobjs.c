@@ -1382,6 +1382,301 @@
   }
 
 
+#ifdef FT_MACINTOSH
+
+  /* The behavior here is very similar to that in base/ftmac.c, but it     */
+  /* is designed to work on non-mac systems, so no mac specific calls.     */
+  /*                                                                       */
+  /* We look at the file and determine if it is a mac dfont file or a mac  */
+  /* resource file, or a macbinary file containing a mac resource file.    */
+  /*                                                                       */
+  /* Unlike ftmac I'm not going to look at a `FOND'.  I don't really see   */
+  /* the point, especially since there may be multiple `FOND' resources.   */
+  /* Instead I'll just look for `sfnt' and `POST' resources, ordered as    */
+  /* they occur in the file.                                               */
+  /*                                                                       */
+  /* Note that multiple `POST' resources do not mean multiple postscript   */
+  /* fonts; they all get jammed together to make what is essentially a     */
+  /* pfb file.                                                             */
+  /*                                                                       */
+  /* We aren't interested in `NFNT' or `FONT' bitmap resources.            */
+  /*                                                                       */
+  /* As soon as we get an `sfnt' load it into memory and pass it off to    */
+  /* FT_Open_Face.                                                         */
+  /*                                                                       */
+  /* If we have a (set of) `POST' resources, massage them into a (memory)  */
+  /* pfb file and pass that to FT_Open_Face.  (As with ftmac.c I'm not     */
+  /* going to try to save the kerning info.  After all that lives in the   */
+  /* `FOND' which isn't in the file containing the `POST' resources so     */
+  /* we don't really have access to it.                                    */
+
+
+  /* Finalizer for a memory stream; gets called by FT_Done_Face(). */
+  /* It frees the memory it uses.                                  */
+  /* From `ftmac.c'.                                               */
+  static void
+  memory_stream_close( FT_Stream  stream )
+  {
+    FT_Memory  memory = stream->memory;
+
+
+    FT_FREE( stream->base );
+
+    stream->size  = 0;
+    stream->base  = NULL;
+    stream->close = NULL;
+  }
+
+
+  /* Create a new memory stream from a buffer and a size. */
+  /* From `ftmac.c'.                                      */
+  static FT_Error
+  new_memory_stream( FT_Library           library,
+                     FT_Byte*             base,
+                     FT_ULong             size,
+                     FT_Stream_CloseFunc  close,
+                     FT_Stream           *astream )
+  {
+    FT_Error   error;
+    FT_Memory  memory;
+    FT_Stream  stream = NULL;
+
+
+    if ( !library )
+      return FT_THROW( Invalid_Library_Handle );
+
+    if ( !base )
+      return FT_THROW( Invalid_Argument );
+
+    *astream = NULL;
+    memory   = library->memory;
+    if ( FT_NEW( stream ) )
+      goto Exit;
+
+    FT_Stream_OpenMemory( stream, base, size );
+
+    stream->close = close;
+
+    *astream = stream;
+
+  Exit:
+    return error;
+  }
+
+
+  /* Create a new FT_Face given a buffer and a driver name. */
+  /* From `ftmac.c'.                                        */
+  FT_LOCAL_DEF( FT_Error )
+  open_face_from_buffer( FT_Library   library,
+                         FT_Byte*     base,
+                         FT_ULong     size,
+                         FT_Long      face_index,
+                         const char*  driver_name,
+                         FT_Face     *aface )
+  {
+    FT_Open_Args  args;
+    FT_Error      error;
+    FT_Stream     stream = NULL;
+    FT_Memory     memory = library->memory;
+
+
+    error = new_memory_stream( library,
+                               base,
+                               size,
+                               memory_stream_close,
+                               &stream );
+    if ( error )
+    {
+      FT_FREE( base );
+      return error;
+    }
+
+    args.flags  = FT_OPEN_STREAM;
+    args.stream = stream;
+    if ( driver_name )
+    {
+      args.flags  = args.flags | FT_OPEN_DRIVER;
+      args.driver = FT_Get_Module( library, driver_name );
+    }
+
+    /* At this point, the face index has served its purpose;  */
+    /* whoever calls this function has already used it to     */
+    /* locate the correct font data.  We should not propagate */
+    /* this index to FT_Open_Face() (unless it is negative).  */
+
+    if ( face_index > 0 )
+      face_index &= 0x7FFF0000L; /* retain GX data */
+
+    error = ft_open_face_internal( library, &args, face_index, aface, 0 );
+
+    if ( !error )
+      (*aface)->face_flags &= ~FT_FACE_FLAG_EXTERNAL_STREAM;
+    else
+      FT_Stream_Free( stream, 0 );
+
+    return error;
+  }
+
+
+  /* Look up `TYP1' or `CID ' table from sfnt table directory.       */
+  /* `offset' and `length' must exclude the binary header in tables. */
+
+  /* Type 1 and CID-keyed font drivers should recognize sfnt-wrapped */
+  /* format too.  Here, since we can't expect that the TrueType font */
+  /* driver is loaded unconditionally, we must parse the font by     */
+  /* ourselves.  We are only interested in the name of the table and */
+  /* the offset.                                                     */
+
+  static FT_Error
+  ft_lookup_PS_in_sfnt_stream( FT_Stream  stream,
+                               FT_Long    face_index,
+                               FT_ULong*  offset,
+                               FT_ULong*  length,
+                               FT_Bool*   is_sfnt_cid )
+  {
+    FT_Error   error;
+    FT_UShort  numTables;
+    FT_Long    pstable_index;
+    FT_ULong   tag;
+    int        i;
+
+
+    *offset = 0;
+    *length = 0;
+    *is_sfnt_cid = FALSE;
+
+    /* TODO: support for sfnt-wrapped PS/CID in TTC format */
+
+    /* version check for 'typ1' (should be ignored?) */
+    if ( FT_READ_ULONG( tag ) )
+      return error;
+    if ( tag != TTAG_typ1 )
+      return FT_THROW( Unknown_File_Format );
+
+    if ( FT_READ_USHORT( numTables ) )
+      return error;
+    if ( FT_STREAM_SKIP( 2 * 3 ) ) /* skip binary search header */
+      return error;
+
+    pstable_index = -1;
+    *is_sfnt_cid  = FALSE;
+
+    for ( i = 0; i < numTables; i++ )
+    {
+      if ( FT_READ_ULONG( tag )     || FT_STREAM_SKIP( 4 )      ||
+           FT_READ_ULONG( *offset ) || FT_READ_ULONG( *length ) )
+        return error;
+
+      if ( tag == TTAG_CID )
+      {
+        pstable_index++;
+        *offset += 22;
+        *length -= 22;
+        *is_sfnt_cid = TRUE;
+        if ( face_index < 0 )
+          return FT_Err_Ok;
+      }
+      else if ( tag == TTAG_TYP1 )
+      {
+        pstable_index++;
+        *offset += 24;
+        *length -= 24;
+        *is_sfnt_cid = FALSE;
+        if ( face_index < 0 )
+          return FT_Err_Ok;
+      }
+      if ( face_index >= 0 && pstable_index == face_index )
+        return FT_Err_Ok;
+    }
+
+    return FT_THROW( Table_Missing );
+  }
+
+
+  FT_LOCAL_DEF( FT_Error )
+  open_face_PS_from_sfnt_stream( FT_Library     library,
+                                 FT_Stream      stream,
+                                 FT_Long        face_index,
+                                 FT_Int         num_params,
+                                 FT_Parameter  *params,
+                                 FT_Face       *aface )
+  {
+    FT_Error   error;
+    FT_Memory  memory = library->memory;
+    FT_ULong   offset, length;
+    FT_ULong   pos;
+    FT_Bool    is_sfnt_cid;
+    FT_Byte*   sfnt_ps = NULL;
+
+    FT_UNUSED( num_params );
+    FT_UNUSED( params );
+
+
+    /* ignore GX stuff */
+    if ( face_index > 0 )
+      face_index &= 0xFFFFL;
+
+    pos = FT_STREAM_POS();
+
+    error = ft_lookup_PS_in_sfnt_stream( stream,
+                                         face_index,
+                                         &offset,
+                                         &length,
+                                         &is_sfnt_cid );
+    if ( error )
+      goto Exit;
+
+    if ( offset > stream->size )
+    {
+      FT_TRACE2(( "open_face_PS_from_sfnt_stream: invalid table offset\n" ));
+      error = FT_THROW( Invalid_Table );
+      goto Exit;
+    }
+    else if ( length > stream->size - offset )
+    {
+      FT_TRACE2(( "open_face_PS_from_sfnt_stream: invalid table length\n" ));
+      error = FT_THROW( Invalid_Table );
+      goto Exit;
+    }
+
+    error = FT_Stream_Seek( stream, pos + offset );
+    if ( error )
+      goto Exit;
+
+    if ( FT_ALLOC( sfnt_ps, (FT_Long)length ) )
+      goto Exit;
+
+    error = FT_Stream_Read( stream, (FT_Byte *)sfnt_ps, length );
+    if ( error )
+    {
+      FT_FREE( sfnt_ps );
+      goto Exit;
+    }
+
+    error = open_face_from_buffer( library,
+                                   sfnt_ps,
+                                   length,
+                                   FT_MIN( face_index, 0 ),
+                                   is_sfnt_cid ? "cid" : "type1",
+                                   aface );
+  Exit:
+    {
+      FT_Error  error1;
+
+
+      if ( FT_ERR_EQ( error, Unknown_File_Format ) )
+      {
+        error1 = FT_Stream_Seek( stream, pos );
+        if ( error1 )
+          return error1;
+      }
+
+      return error;
+    }
+  }
+#endif  /* FT_MACINTOSH */
+
+
   /* documentation is in freetype.h */
 
 #ifndef FT_MACINTOSH

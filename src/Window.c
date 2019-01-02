@@ -1985,6 +1985,10 @@ OSStatus Window_ProcessMouseEvent(EventHandlerCallRef inCaller, EventRef inEvent
 	if (win_state != WINDOW_STATE_FULLSCREEN) {
 		mousePos.Y -= title_height;
 	}
+
+	/* mousePos.Y will be < 0 if user clicks or moves on titlebar */
+	/* don't intercept this, prevents clicking close/minimise/maximise from working */
+	if (mousePos.Y < 0) return eventNotHandledErr;
 	
 	kind = GetEventKind(inEvent);
 	switch (kind) {
@@ -2078,10 +2082,7 @@ static void Window_ConnectEvents(void) {
 	EventTargetRef target;
 	OSStatus res;
 	
-	target = GetApplicationEventTarget();
-	/* TODO: Use EventTargetRef target = GetWindowEventTarget(windowRef); instead?? */
-	/* need WindowEventTargetRef, otherwise message boxes don't work */
-	/* but if use WindowEventTargetRef, can't click quit/move buttons anymore */
+	target = GetWindowEventTarget(win_handle);
 	res = InstallEventHandler(target, NewEventHandlerUPP(Window_EventHandler),
 							  Array_Elems(eventTypes), eventTypes, NULL, NULL);
 	if (res) Logger_Abort2(res, "Connecting events");
@@ -2345,6 +2346,8 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	RunStandardAlert(dialog, NULL, &itemHit);
 }
 
+
+/* TODO: WORK OUT WHY THIS IS BROKEN!!!!
 static CGrafPtr win_winPort;
 static CGImageRef win_image;
 
@@ -2375,7 +2378,7 @@ void Window_DrawRaw(Rect2D r) {
 	err = QDBeginCGContext(win_winPort, &context);
 	if (err) Logger_Abort2(err, "Begin draw");
 	
-	/* TODO: Only update changed bit.. */
+	// TODO: Only update changed bit.. 
 	rect.origin.x = 0; rect.origin.y = 0;
 	rect.size.width  = Window_ClientSize.Width;
 	rect.size.height = Window_ClientSize.Height;
@@ -2384,6 +2387,52 @@ void Window_DrawRaw(Rect2D r) {
 	CGContextSynchronize(context);
 	err = QDEndCGContext(win_winPort, &context);
 	if (err) Logger_Abort2(err, "End draw");
+}
+*/
+
+static CGrafPtr win_winPort;
+static CGImageRef win_image;
+static Bitmap* bmp_;
+static CGColorSpaceRef colorSpace;
+static CGDataProviderRef provider;
+
+void Window_InitRaw(Bitmap* bmp) {
+	if (!win_winPort) win_winPort = GetWindowPort(win_handle);
+	Mem_Free(bmp->Scan0);
+	bmp->Scan0 = Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
+
+	colorSpace = CGColorSpaceCreateDeviceRGB();
+
+	bmp_ = bmp;
+	//CGColorSpaceRelease(colorSpace);
+}
+
+void Window_DrawRaw(Rect2D r) {
+	CGContextRef context = NULL;
+	CGRect rect;
+	OSStatus err;
+
+	err = QDBeginCGContext(win_winPort, &context);
+	if (err) Logger_Abort2(err, "Begin draw");
+	/* TODO: REPLACE THIS AWFUL HACK */
+
+	/* TODO: Only update changed bit.. */
+	rect.origin.x = 0; rect.origin.y = 0;
+	rect.size.width = Window_ClientSize.Width;
+	rect.size.height = Window_ClientSize.Height;
+
+	provider = CGDataProviderCreateWithData(NULL, bmp_->Scan0,
+		Bitmap_DataSize(bmp_->Width, bmp_->Height), NULL);
+	win_image = CGImageCreate(bmp_->Width, bmp_->Height, 8, 32, bmp_->Width * 4, colorSpace,
+		kCGBitmapByteOrder32Little | kCGImageAlphaFirst, provider, NULL, 0, 0);
+
+	CGContextDrawImage(context, rect, win_image);
+	CGContextSynchronize(context);
+	err = QDEndCGContext(win_winPort, &context);
+	if (err) Logger_Abort2(err, "End draw");
+
+	CGImageRelease(win_image);
+	CGDataProviderRelease(provider);
 }
 
 

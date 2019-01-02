@@ -86,7 +86,7 @@ static void HeldBlockRenderer_SetBaseOffset(void) {
 	Vector3 spriteOffset = { 0.46f, -0.52f, -0.72f };
 	Vector3 offset = sprite ? spriteOffset : normalOffset;
 
-	Vector3_Add(&held_entity.Position, &held_entity.Position, &offset);
+	Vector3_AddBy(&held_entity.Position, &offset);
 	if (!sprite && Blocks.Draw[held_block] != DRAW_GAS) {
 		float height = Blocks.MaxBB[held_block].Y - Blocks.MinBB[held_block].Y;
 		held_entity.Position.Y += 0.2f * (1.0f - height);

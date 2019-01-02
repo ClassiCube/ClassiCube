@@ -124,7 +124,7 @@ static void Http_SysInit(void) {
 }
 
 /* Adds custom HTTP headers for a req */
-static void Http_SysMakeHeaders(String* headers, struct HttpRequest* req) {
+static void Http_MakeHeaders(String* headers, struct HttpRequest* req) {
 	if (!req->Etag[0] && !req->LastModified && !req->Data) {
 		headers->buffer = NULL; return;
 	}
@@ -150,8 +150,8 @@ static void Http_SysMakeHeaders(String* headers, struct HttpRequest* req) {
 	headers->buffer[headers->length] = '\0';
 }
 
-/* Creates and sends a http req */
-static ReturnCode Http_SysMakeRequest(struct HttpRequest* req, HINTERNET* handle) {
+/* Creates and sends a HTTP requst */
+static ReturnCode Http_StartRequest(struct HttpRequest* req, HINTERNET* handle) {
 	const static char* verbs[3] = { "GET", "HEAD", "POST" };
 	struct HttpCacheEntry entry;
 	DWORD flags;
@@ -167,7 +167,7 @@ static ReturnCode Http_SysMakeRequest(struct HttpRequest* req, HINTERNET* handle
 	HttpCache_Lookup(&entry);
 	/* https://stackoverflow.com/questions/25308488/c-wininet-custom-http-headers */
 	String_InitArray(headers, headersBuffer);
-	Http_SysMakeHeaders(&headers, req);
+	Http_MakeHeaders(&headers, req);
 
 	flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD;
 	if (entry.Https) flags |= INTERNET_FLAG_SECURE;
@@ -179,8 +179,8 @@ static ReturnCode Http_SysMakeRequest(struct HttpRequest* req, HINTERNET* handle
 										req->Data, req->Size) ? 0 : GetLastError();
 }
 
-/* Gets headers from a http response */
-static ReturnCode Http_SysGetHeaders(struct HttpRequest* req, HINTERNET handle) {
+/* Gets headers from a HTTP response */
+static ReturnCode Http_ProcessHeaders(struct HttpRequest* req, HINTERNET handle) {
 	DWORD len;
 
 	len = sizeof(DWORD);
@@ -207,8 +207,8 @@ static ReturnCode Http_SysGetHeaders(struct HttpRequest* req, HINTERNET handle) 
 	return 0;
 }
 
-/* Gets the data/contents of a http response */
-static ReturnCode Http_SysGetData(struct HttpRequest* req, HINTERNET handle, volatile int* progress) {
+/* Downloads the data/contents of a HTTP response */
+static ReturnCode Http_DownloadData(struct HttpRequest* req, HINTERNET handle, volatile int* progress) {
 	uint8_t* buffer;
 	uint32_t size, totalRead;
 	uint32_t read, avail;
@@ -246,19 +246,18 @@ static ReturnCode Http_SysGetData(struct HttpRequest* req, HINTERNET handle, vol
 	return 0;
 }
 
-/* Performs a http req and inspecting the response */
 static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
 	HINTERNET handle;
-	ReturnCode res = Http_SysMakeRequest(req, &handle);
+	ReturnCode res = Http_StartRequest(req, &handle);
 	HttpRequest_Free(req);
 	if (res) return res;
 
 	*progress = ASYNC_PROGRESS_FETCHING_DATA;
-	res = Http_SysGetHeaders(req, handle);
+	res = Http_ProcessHeaders(req, handle);
 	if (res) { InternetCloseHandle(handle); return res; }
 
 	if (req->RequestType != REQUEST_TYPE_HEAD) {
-		res = Http_SysGetData(req, handle, progress);
+		res = Http_DownloadData(req, handle, progress);
 		if (res) { InternetCloseHandle(handle); return res; }
 	}
 
@@ -285,13 +284,15 @@ static void Http_SysInit(void) {
 	if (!curl) Logger_Abort("Failed to init easy curl");
 }
 
-static int Http_SysProgress(int* progress, double total, double received, double a, double b) {
+/* Updates progress of current download */
+static int Http_UpdateProgress(int* progress, double total, double received, double a, double b) {
 	if (total == 0) return 0;
 	*progress = (int)(100 * received / total);
 	return 0;
 }
 
-static struct curl_slist* Http_SysMake(struct HttpRequest* req) {
+/* Makes custom request HTTP headers, usually none. */
+static struct curl_slist* Http_MakeHeaders(struct HttpRequest* req) {
 	String tmp; char buffer[STRING_SIZE + 1];
 	struct curl_slist* list = NULL;
 	String etag;
@@ -317,19 +318,8 @@ static struct curl_slist* Http_SysMake(struct HttpRequest* req) {
 	return list;
 }
 
-static void Http_SysSetType(struct HttpRequest* req) {
-	if (req->RequestType == REQUEST_TYPE_HEAD) {
-		curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
-	} else if (req->RequestType == REQUEST_TYPE_POST) {
-		curl_easy_setopt(curl, CURLOPT_POST,   1L);
-		/* TODO: Just use POSTFIELDS ?? */
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE,  req->Size);
-		curl_easy_setopt(curl, CURLOPT_COPYPOSTFIELDS, req->Data);
-		HttpRequest_Free(req);
-	}
-}
-
-static size_t Http_SysGetHeaders(char *buffer, size_t size, size_t nitems, struct HttpRequest* req) {
+/* Processes a HTTP header downloaded from the server */
+static size_t Http_ProcessHeader(char *buffer, size_t size, size_t nitems, struct HttpRequest* req) {
 	String tmp; char tmpBuffer[STRING_SIZE + 1];
 	String line, name, value;
 	time_t time;
@@ -361,7 +351,8 @@ static size_t Http_SysGetHeaders(char *buffer, size_t size, size_t nitems, struc
 }
 
 static int curlBufferSize;
-static size_t Http_SysGetData(char *buffer, size_t size, size_t nitems, struct HttpRequest* req) {
+/* Processes a chunk of data downloaded from the web server */
+static size_t Http_ProcessData(char *buffer, size_t size, size_t nitems, struct HttpRequest* req) {
 	uint8_t* dst;
 
 	if (!curlBufferSize) {
@@ -385,32 +376,49 @@ static size_t Http_SysGetData(char *buffer, size_t size, size_t nitems, struct H
 	return nitems;
 }
 
-static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
-	struct curl_slist* list;
-	String url = String_FromRawArray(req->URL);
-	char urlStr[600];
-	long status = 0;
-	CURLcode res;
-
-	Platform_ConvertString(urlStr, &url);
-	curl_easy_reset(curl);
-	list = Http_SysMake(req);
-	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
-	curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "");
-	Http_SysSetType(req);
-
-	curl_easy_setopt(curl, CURLOPT_URL,            urlStr);
+/* Sets general curl options for a request */
+static void Http_SetCurlOpts(struct HttpRequest* req, volatile int* progress) {
+	curl_easy_setopt(curl, CURLOPT_COOKIEJAR,      "");
 	curl_easy_setopt(curl, CURLOPT_USERAGENT,      GAME_APP_NAME);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
 	curl_easy_setopt(curl, CURLOPT_NOPROGRESS,       0L);
-	curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, Http_SysProgress);
+	curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, Http_UpdateProgress);
 	curl_easy_setopt(curl, CURLOPT_PROGRESSDATA,     progress);
 
-	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, Http_SysGetHeaders);
+	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, Http_ProcessHeader);
 	curl_easy_setopt(curl, CURLOPT_HEADERDATA,     req);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,  Http_SysGetData);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,  Http_ProcessData);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
+}
+
+static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
+	String url = String_FromRawArray(req->URL);
+	char urlStr[600];
+	void* post_data = req->Data;
+	struct curl_slist* list;
+	long status = 0;
+	CURLcode res;
+
+	curl_easy_reset(curl);
+	list = Http_MakeHeaders(req);
+	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
+
+	Http_SetCurlOpts(req, progress);
+	Platform_ConvertString(urlStr, &url);
+	curl_easy_setopt(curl, CURLOPT_URL, urlStr);
+
+	if (req->RequestType == REQUEST_TYPE_HEAD) {
+		curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
+	} else if (req->RequestType == REQUEST_TYPE_POST) {
+		curl_easy_setopt(curl, CURLOPT_POST,   1L);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE,  req->Size);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS,     req->Data);
+
+		/* per curl docs, we must persist POST data until request finishes */
+		req->Data = NULL;
+		HttpRequest_Free(req);
+	}
 
 	curlBufferSize = 0;
 	*progress = ASYNC_PROGRESS_FETCHING_DATA;
@@ -421,6 +429,8 @@ static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
 	req->StatusCode = status;
 
 	curl_slist_free_all(list);
+	/* can free now that request has finished */
+	Mem_Free(post_data);
 	return res;
 }
 

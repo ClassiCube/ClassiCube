@@ -878,7 +878,7 @@ static bool FontData_Init(const String* path, struct FontData* data, FT_Open_Arg
 	/* For OSX font suitcase files */
 #ifdef CC_BUILD_OSX
 	String filename = String_NT_Array(data->filename);
-	String_Copy(&filename, &path);
+	String_Copy(&filename, path);
 	data->filename[filename.length] = '\0';
 	args->pathname = data->filename;
 #endif

@@ -43,7 +43,6 @@ typedef signed __int64 int64_t;
 
 typedef uint16_t Codepoint;
 typedef uint8_t bool;
-typedef uint8_t bool;
 #define true 1
 #define false 0
 #ifndef NULL
