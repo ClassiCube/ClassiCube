@@ -101,6 +101,7 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #include <mach-o/dyld.h>
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
+#include <ApplicationServices/ApplicationServices.h>
 #endif
 
 
