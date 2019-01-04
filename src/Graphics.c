@@ -460,7 +460,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp
 		cur = Mem_Alloc(width * height, 4, "mipmaps");
 		Gfx_GenMipmaps(width, height, cur, prev);
 
-		Bitmap_Create(&mipmap, width, height, cur);
+		Bitmap_Init(mipmap, width, height, cur);
 		if (partial) {
 			D3D9_SetTexturePartData(texture, x, y, &mipmap, lvl);
 		} else {
@@ -863,6 +863,7 @@ void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar,
 ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 	IDirect3DSurface9* backbuffer = NULL;
 	IDirect3DSurface9* temp = NULL;
+	Bitmap bmp;
 	ReturnCode res;
 
 	res = IDirect3DDevice9_GetBackBuffer(device, 0, 0, D3DBACKBUFFER_TYPE_MONO, &backbuffer);
@@ -875,8 +876,8 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 	D3DLOCKED_RECT rect;
 	res = IDirect3DSurface9_LockRect(temp, &rect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
 	if (res) goto finished;
-	{
-		Bitmap bmp; Bitmap_Create(&bmp, width, height, rect.pBits);
+	{		
+		Bitmap_Init(bmp, width, height, rect.pBits);
 		res = Png_Encode(&bmp, output, NULL, false);
 		if (res) { IDirect3DSurface9_UnlockRect(temp); goto finished; }
 	}

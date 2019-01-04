@@ -14,20 +14,32 @@ typedef CC_ALIGN_HINT(4) struct BitmapCol_ {
 /* Unioned with Packed member for efficient equality comparison */
 typedef union BitmapColUnion_ { BitmapCol C; uint32_t Raw; } BitmapColUnion;
 
+/* Scales RGB of the given colour. */
+BitmapCol BitmapCol_Scale(BitmapCol value, float t);
+
+/* A 2D array of BitmapCol pixels */
 typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
 
 #define PNG_MAX_DIMS 0x8000
 #define BITMAPCOL_CONST(r, g, b, a) { b, g, r, a }
 
+/* Returns number of bytes a bitmap consumes. */
 #define Bitmap_DataSize(width, height) ((uint32_t)(width) * (uint32_t)(height) * 4)
+/* Gets the yth row of a bitmap as raw uint32_t* pointer. */
+/* NOTE: You SHOULD not rely on the order of the 4 bytes in the pointer. */
+/* Different platforms may have different endian, or different component order. */
 #define Bitmap_RawRow(bmp, y) ((uint32_t*)(bmp)->Scan0  + (y) * (bmp)->Width)
+/* Gets the yth row of the given bitmap. */
 #define Bitmap_GetRow(bmp, y) ((BitmapCol*)(bmp)->Scan0 + (y) * (bmp)->Width)
+/* Gets the pixel at (x,y) in the given bitmap. */
+/* NOTE: Does NOT check coordinates are inside the bitmap. */
 #define Bitmap_GetPixel(bmp, x, y) (Bitmap_GetRow(bmp, y)[x])
 
-BitmapCol BitmapCol_Scale(BitmapCol value, float t);
-void Bitmap_Create(Bitmap* bmp, int width, int height, uint8_t* scan0);
+/* Initialises a bitmap instance. */
+#define Bitmap_Init(bmp, width, height, scan0) bmp.Width = width; bmp.Height = height; bmp.Scan0 = scan0;
 /* Copies a rectangle of pixels from one bitmap to another. */
 /* NOTE: If src and dst are the same, src and dst rectangles MUST NOT overlap. */
+/* NOTE: Rectangles are NOT checked for whether they lie inside the bitmaps. */
 void Bitmap_CopyBlock(int srcX, int srcY, int dstX, int dstY, Bitmap* src, Bitmap* dst, int size);
 /* Allocates a new bitmap of the given dimensions. */
 /* NOTE: You are responsible for freeing its memory! */

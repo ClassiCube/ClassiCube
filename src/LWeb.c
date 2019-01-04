@@ -590,7 +590,7 @@ void FetchFlagsTask_Add(const String* name) {
 	}
 	FetchFlagsTask_Ensure();
 	
-	Bitmap_Create(&flags[flagsCount].Bmp, 0, 0, NULL);
+	Bitmap_Init(flags[flagsCount].Bmp, 0, 0, NULL);
 	String_InitArray(flags[flagsCount].Name, flags[flagsCount]._nameBuffer);
 
 	/* classicube.net only works with lowercase flag urls */

@@ -234,7 +234,7 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int s
 	if (size > ANIMS_FAST_SIZE) {	
 		ptr = Mem_Alloc(size * size, 4, "anim frame");
 	}
-	Bitmap_Create(&frame, size, size, ptr);
+	Bitmap_Init(frame, size, size, ptr);
 
 	if (!data) {
 		if (texLoc == 30) {
@@ -425,7 +425,7 @@ static void Atlas_Convert2DTo1D(void) {
 			atlasY = Atlas2D_TileY(tile) * tileSize;
 
 			Bitmap_CopyBlock(atlasX, atlasY, 0, y * tileSize,
-				&Atlas_Bitmap, &atlas1D, tileSize);
+							&Atlas_Bitmap, &atlas1D, tileSize);
 		}
 		Atlas1D_TexIds[i] = Gfx_CreateTexture(&atlas1D, true, Gfx_Mipmaps);
 	}
@@ -479,7 +479,7 @@ GfxResourceID Atlas_LoadTile(TextureLoc texLoc) {
 		Mem_Free(tile.Scan0);
 		return texId;
 	} else {	
-		Bitmap_Create(&tile, tileSize, tileSize, scan0);
+		Bitmap_Init(tile, tileSize, tileSize, scan0);
 		return Atlas_LoadTile_Raw(texLoc, &tile);
 	}
 }

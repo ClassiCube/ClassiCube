@@ -15,10 +15,6 @@ BitmapCol BitmapCol_Scale(BitmapCol value, float t) {
 	return value;
 }
 
-void Bitmap_Create(Bitmap* bmp, int width, int height, uint8_t* scan0) {
-	bmp->Width = width; bmp->Height = height; bmp->Scan0 = scan0;
-}
-
 void Bitmap_CopyBlock(int srcX, int srcY, int dstX, int dstY, Bitmap* src, Bitmap* dst, int size) {
 	int x, y;
 	for (y = 0; y < size; y++) {
@@ -350,7 +346,9 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 	struct Stream compStream, datStream;
 	struct ZLibHeader zlibHeader;
 
-	Bitmap_Create(bmp, 0, 0, NULL);
+	bmp->Width = 0; bmp->Height = 0;
+	bmp->Scan0 = NULL;
+
 	res = Stream_Read(stream, tmp, PNG_SIG_SIZE);
 	if (res) return res;
 	if (!Png_Detect(tmp, PNG_SIG_SIZE)) return PNG_ERR_INVALID_SIG;

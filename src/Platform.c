@@ -1063,16 +1063,23 @@ int Platform_TextWidth(struct DrawTextArgs* args) {
 	FT_Face face = data->face;
 	String text  = args->Text;
 	int i, width = 0, charWidth;
+	FT_Error res;
 	Codepoint cp;
 
 	for (i = 0; i < text.length; i++) {
 		charWidth = data->widths[(uint8_t)text.buffer[i]];
 		/* need to calculate glyph width */
 		if (charWidth == UInt16_MaxValue) {
-			cp = Convert_CP437ToUnicode(text.buffer[i]);
-			FT_Load_Char(face, cp, 0); /* TODO: Check error */
+			cp  = Convert_CP437ToUnicode(text.buffer[i]);
+			res = FT_Load_Char(face, cp, 0); /* TODO: Check error */
 
-			charWidth = face->glyph->advance.x;
+			if (res) {
+				Platform_Log2("Error %i measuring width of %r", &res, &text.buffer[i]);
+				charWidth = 0;
+			} else {
+				charWidth = face->glyph->advance.x;		
+			}
+
 			data->widths[(uint8_t)text.buffer[i]] = charWidth;
 		}
 		width += charWidth;
@@ -1144,6 +1151,7 @@ int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, Bitm
 	FT_BitmapGlyph glyph;
 	FT_Bitmap* img;
 	int i, offset;
+	FT_Error res;
 	Codepoint cp;
 
 	height    = TEXT_CEIL(face->size->metrics.height);
@@ -1152,10 +1160,15 @@ int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, Bitm
 	for (i = 0; i < text.length; i++) {
 		glyph = data->glyphs[(uint8_t)text.buffer[i]];
 		if (!glyph) {
-			cp = Convert_CP437ToUnicode(text.buffer[i]);
-			FT_Load_Char(face, cp, FT_LOAD_RENDER); /* TODO: Check error */
+			cp  = Convert_CP437ToUnicode(text.buffer[i]);
+			res = FT_Load_Char(face, cp, FT_LOAD_RENDER);
 
-			FT_Get_Glyph(face->glyph, &glyph);
+			if (res) {
+				Platform_Log2("Error %i drawing %r", &res, &text.buffer[i]);
+				continue;
+			}
+
+			FT_Get_Glyph(face->glyph, &glyph); /* TODO: Check error */
 			data->glyphs[(uint8_t)text.buffer[i]] = glyph;
 		}
 

@@ -64,11 +64,11 @@ extern struct _BlockLists {
 	/* e.g. a block with Min.X of 0.0 uses light colour at X-1,Y,Z for XMIN face. */
 	/* e.g. a block with Min.X of 0.1 uses light colour at X,Y,Z   for XMIN face. */
 	uint8_t LightOffset[BLOCK_COUNT];
-	/* Draw method used when rendering this block. */
+	/* Draw method used when rendering this block. See DrawType enum. */
 	uint8_t Draw[BLOCK_COUNT];
-	/* Sound produced when the player manually destroys this block. */
+	/* Sound played when the player manually destroys this block. See SoundType enum. */
 	uint8_t DigSounds[BLOCK_COUNT];
-	/* Sound produced when the player walks on this block. */
+	/* Sound played when the player walks on this block. See SoundType enum. */
 	uint8_t StepSounds[BLOCK_COUNT];
 	/* Whether fog colour is used to apply a tint effect to this block. */
 	bool Tinted[BLOCK_COUNT];

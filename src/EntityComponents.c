@@ -608,10 +608,11 @@ static void ShadowComponent_MakeTex(void) {
 	BitmapCol outPix = BITMAPCOL_CONST(0, 0, 0, 0);
 	Bitmap bmp; 
 	uint32_t x, y;
-	Bitmap_Create(&bmp, sh_size, sh_size, pixels);
 
+	Bitmap_Init(bmp, sh_size, sh_size, pixels);
 	for (y = 0; y < sh_size; y++) {
 		BitmapCol* row = Bitmap_GetRow(&bmp, y);
+
 		for (x = 0; x < sh_size; x++) {
 			double dist = 
 				(sh_half - (x + 0.5)) * (sh_half - (x + 0.5)) +

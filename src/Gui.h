@@ -86,6 +86,7 @@ struct WidgetVTABLE {
 struct Widget { Widget_Layout };
 void Widget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset);
 void Widget_CalcPosition(void* widget);
+/* Resets Widget struct fields to 0/NULL (except VTABLE) */
 void Widget_Reset(void* widget);
 /* Whether the given point is located within the bounds of the widget. */
 bool Widget_Contains(void* widget, int x, int y);
@@ -99,6 +100,7 @@ extern struct Screen* Gui_Overlays[GUI_MAX_OVERLAYS];
 extern int Gui_OverlaysCount;
 
 int  Gui_CalcPos(uint8_t anchor, int offset, int size, int axisLen);
+/* Returns whether the given rectangle contains the given point. */
 bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
 /* Gets the screen that the user is currently interacting with. */
 /* This means if an overlay is active, it will be over the top of other screens. */
@@ -107,7 +109,10 @@ struct Screen* Gui_GetActiveScreen(void);
 /* This means if an overlay is active, the screen under it is returned. */
 struct Screen* Gui_GetUnderlyingScreen(void);
 
+/* Frees the active screen if it is not NULL. */
+/* NOTE: You should usually use Gui_CloseActive instead. */
 CC_NOINLINE void Gui_FreeActive(void);
+/* Sets the active screen/menu that the user interacts with. */
 /* NOTE: This doesn't free old active screen - must call Gui_FreeActive() first */
 CC_NOINLINE void Gui_SetActive(struct Screen* screen);
 /* NOTE: Same as Gui_FreeActive(); Gui_SetActive(NULL); */

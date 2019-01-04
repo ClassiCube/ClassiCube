@@ -41,8 +41,8 @@ struct HuffmanTable {
 struct InflateState {
 	uint8_t State;
 	bool LastBlock;   /* Whether the last DEFLATE block has been encounted in the stream */
-	uint32_t Bits;    /* Holds bits across byte boundaries*/
-	uint32_t NumBits; /* Number of bits in Bits buffer*/
+	uint32_t Bits;    /* Holds bits across byte boundaries */
+	uint32_t NumBits; /* Number of bits in Bits buffer */
 
 	uint8_t* NextIn;   /* Pointer within Input buffer to next byte that can be read */
 	uint32_t AvailIn;  /* Max number of bytes that can be read from Input buffer */
@@ -68,7 +68,7 @@ struct InflateState {
 /* Initialises DEFLATE decompressor state to defaults. */
 CC_API void Inflate_Init(struct InflateState* state, struct Stream* source);
 /* Attempts to decompress as much of the currently pending data as possible. */
-/* NOTE: This is a low level call - usually you should use Inflate_MakeStream. */
+/* NOTE: This is a low level call - usually you treat as a stream via Inflate_MakeStream. */
 void Inflate_Process(struct InflateState* state);
 /* Deompresses input data read from another stream using DEFLATE. Read only stream. */
 /* NOTE: This only uncompresses pure DEFLATE compressed data. */
@@ -119,7 +119,6 @@ struct ZipState {
 	/* Source of the .zip archive data. Must be seekable. */
 	struct Stream* Input;
 	/* Callback function to process the data in a .zip archive entry. */
-	/* obj is user specified in state.Obj variable */
 	/* Return non-zero to indicate an error and stop further processing. */
 	/* NOTE: data stream MAY NOT be seekable. (i.e. entry data might be compressed) */
 	ReturnCode (*ProcessEntry)(const String* path, struct Stream* data, struct ZipState* state);

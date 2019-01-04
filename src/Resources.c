@@ -455,7 +455,7 @@ static ReturnCode ModernPatcher_MakeAnimations(struct Stream* s, struct Stream* 
 	int i;
 
 	if ((res = Png_Decode(&bmp, data))) return res;
-	Bitmap_Create(&anim, 512, 16, anim_data);
+	Bitmap_Init(anim, 512, 16, anim_data);
 
 	for (i = 0; i < 512; i += 16) {
 		Bitmap_CopyBlock(0, i, i, 0, &bmp, &anim, 16);
