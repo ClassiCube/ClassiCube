@@ -2016,8 +2016,8 @@ static int PlayerListWidget_PlayerCompare(int x, int y) {
 	uint8_t xRank, yRank;
 	String xNameRaw, yNameRaw;
 
-	xRank = TabList_GroupRanks[x];
-	yRank = TabList_GroupRanks[y];
+	xRank = TabList.GroupRanks[x];
+	yRank = TabList.GroupRanks[y];
 	if (xRank != yRank) return (xRank < yRank ? -1 : 1);
 	
 	String_InitArray(xName, xNameBuffer);

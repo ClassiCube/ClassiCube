@@ -48,15 +48,15 @@ void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil, 
 void GraphicsMode_MakeDefault(struct GraphicsMode* m);
 
 /* Encodes a string in platform specific format. (e.g. unicode on windows, UTF8 on linux) */
-/* NOTE: Only useful for platform specific function calls - do NOT try to interpret the data. 
-Returns the number of bytes written, excluding trailing NULL terminator. */
+/* NOTE: Only useful for platform specific function calls - do NOT try to interpret the data. */
+/* Returns the number of bytes written, excluding trailing NULL terminator. */
 CC_API int Platform_ConvertString(void* data, const String* src);
 /* Initalises the platform specific state. */
 void Platform_Init(void);
 /* Frees the platform specific state. */
 void Platform_Free(void);
 /* Sets current/working directory to the given directory. */
-/* This is the 'base directory' relative paths are based on. */
+/* This is the 'base directory' relative paths are relative to. */
 ReturnCode Platform_SetCurrentDirectory(const String* path);
 /* Exits the process with the given return code .*/
 void Platform_Exit(ReturnCode code);
@@ -95,7 +95,8 @@ CC_API void* Mem_Realloc(void* mem, uint32_t numElems, uint32_t elemsSize, const
 CC_API void  Mem_Free(void* mem);
 /* Sets the contents of a block of memory to the given value. */
 void Mem_Set(void* dst, uint8_t value, uint32_t numBytes);
-/* Copies a block of memory to another block. NOTE: These blocks MUST NOT overlap. */
+/* Copies a block of memory to another block of memory. */
+/* NOTE: These blocks MUST NOT overlap. */
 void Mem_Copy(void* dst, const void* src, uint32_t numBytes);
 
 /* Logs a debug message to console. */

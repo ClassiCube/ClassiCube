@@ -383,39 +383,35 @@ void Entities_DrawShadows(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------TabList----------------------------------------------------------*
 *#########################################################################################################################*/
-StringsBuffer TabList_Buffer;
-uint16_t TabList_PlayerNames[TABLIST_MAX_NAMES];
-uint16_t TabList_ListNames[TABLIST_MAX_NAMES];
-uint16_t TabList_GroupNames[TABLIST_MAX_NAMES];
-uint8_t  TabList_GroupRanks[TABLIST_MAX_NAMES];
+struct _TabListData TabList;
 
 bool TabList_Valid(EntityID id) {
-	return TabList_PlayerNames[id] || TabList_ListNames[id] || TabList_GroupNames[id];
+	return TabList.PlayerNames[id] || TabList.ListNames[id] || TabList.GroupNames[id];
 }
 
 static void TabList_RemoveAt(int index) {
 	int i;
-	StringsBuffer_Remove(&TabList_Buffer, index);
+	StringsBuffer_Remove(&TabList.Buffer, index);
 
 	for (i = 0; i < TABLIST_MAX_NAMES; i++) {
-		if (TabList_PlayerNames[i] == index) { TabList_PlayerNames[i] = 0; }
-		if (TabList_PlayerNames[i] > index)  { TabList_PlayerNames[i]--; }
+		if (TabList.PlayerNames[i] == index) { TabList.PlayerNames[i] = 0; }
+		if (TabList.PlayerNames[i] > index)  { TabList.PlayerNames[i]--; }
 
-		if (TabList_ListNames[i] == index) { TabList_ListNames[i] = 0; }
-		if (TabList_ListNames[i] > index)  { TabList_ListNames[i]--; }
+		if (TabList.ListNames[i] == index) { TabList.ListNames[i] = 0; }
+		if (TabList.ListNames[i] > index)  { TabList.ListNames[i]--; }
 
-		if (TabList_GroupNames[i] == index) { TabList_GroupNames[i] = 0; }
-		if (TabList_GroupNames[i] > index)  { TabList_GroupNames[i]--; }
+		if (TabList.GroupNames[i] == index) { TabList.GroupNames[i] = 0; }
+		if (TabList.GroupNames[i] > index)  { TabList.GroupNames[i]--; }
 	}
 }
 
 static void TabList_Delete(EntityID id) {
 	if (!TabList_Valid(id)) return;
 
-	TabList_RemoveAt(TabList_PlayerNames[id]);
-	TabList_RemoveAt(TabList_ListNames[id]);
-	TabList_RemoveAt(TabList_GroupNames[id]);
-	TabList_GroupRanks[id] = 0;
+	TabList_RemoveAt(TabList.PlayerNames[id]);
+	TabList_RemoveAt(TabList.ListNames[id]);
+	TabList_RemoveAt(TabList.GroupNames[id]);
+	TabList.GroupRanks[id] = 0;
 }
 
 void TabList_Remove(EntityID id) {
@@ -430,19 +426,19 @@ void TabList_Set(EntityID id, const String* player, const String* list, const St
 	String_AppendColorless(&colorlessName, player);
 	TabList_Delete(id);
 
-	TabList_PlayerNames[id] = TabList_Buffer.Count; StringsBuffer_Add(&TabList_Buffer, &colorlessName);
-	TabList_ListNames[id]   = TabList_Buffer.Count; StringsBuffer_Add(&TabList_Buffer, list);
-	TabList_GroupNames[id]  = TabList_Buffer.Count; StringsBuffer_Add(&TabList_Buffer, group);
-	TabList_GroupRanks[id]  = rank;
+	TabList.PlayerNames[id] = TabList.Buffer.Count; StringsBuffer_Add(&TabList.Buffer, &colorlessName);
+	TabList.ListNames[id]   = TabList.Buffer.Count; StringsBuffer_Add(&TabList.Buffer, list);
+	TabList.GroupNames[id]  = TabList.Buffer.Count; StringsBuffer_Add(&TabList.Buffer, group);
+	TabList.GroupRanks[id]  = rank;
 }
 
-static void TabList_Free(void) { StringsBuffer_Clear(&TabList_Buffer); }
+static void TabList_Free(void) { StringsBuffer_Clear(&TabList.Buffer); }
 static void TabList_Reset(void) {
-	Mem_Set(TabList_PlayerNames, 0, sizeof(TabList_PlayerNames));
-	Mem_Set(TabList_ListNames,   0, sizeof(TabList_ListNames));
-	Mem_Set(TabList_GroupNames,  0, sizeof(TabList_GroupNames));
-	Mem_Set(TabList_GroupRanks,  0, sizeof(TabList_GroupRanks));
-	StringsBuffer_Clear(&TabList_Buffer);
+	Mem_Set(TabList.PlayerNames, 0, sizeof(TabList.PlayerNames));
+	Mem_Set(TabList.ListNames,   0, sizeof(TabList.ListNames));
+	Mem_Set(TabList.GroupNames,  0, sizeof(TabList.GroupNames));
+	Mem_Set(TabList.GroupRanks,  0, sizeof(TabList.GroupRanks));
+	StringsBuffer_Clear(&TabList.Buffer);
 }
 
 struct IGameComponent TabList_Component = {

@@ -119,7 +119,7 @@ static void Handlers_AddTablistEntry(EntityID id, const String* playerName, cons
 		oldPlayerName = TabList_UNSAFE_GetPlayer(id);
 		oldListName   = TabList_UNSAFE_GetList(id);
 		oldGroupName  = TabList_UNSAFE_GetGroup(id);
-		oldGroupRank  = TabList_GroupRanks[id];
+		oldGroupRank  = TabList.GroupRanks[id];
 
 		changed = !String_Equals(playerName, &oldPlayerName) || !String_Equals(listName, &oldListName) 
 			   || !String_Equals(groupName,  &oldGroupName)  || groupRank != oldGroupRank;	
