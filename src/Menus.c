@@ -2384,15 +2384,15 @@ static void GraphicsOptionsScreen_SetSmooth(const String* v) {
 	MapRenderer_Refresh();
 }
 
-static void GraphicsOptionsScreen_GetNames(String* v) { String_AppendConst(v, NameMode_Names[Entities_NameMode]); }
+static void GraphicsOptionsScreen_GetNames(String* v) { String_AppendConst(v, NameMode_Names[Entities.NamesMode]); }
 static void GraphicsOptionsScreen_SetNames(const String* v) {
-	Entities_NameMode = Utils_ParseEnum(v, 0, NameMode_Names, NAME_MODE_COUNT);
+	Entities.NamesMode = Utils_ParseEnum(v, 0, NameMode_Names, NAME_MODE_COUNT);
 	Options_Set(OPT_NAMES_MODE, v);
 }
 
-static void GraphicsOptionsScreen_GetShadows(String* v) { String_AppendConst(v, ShadowMode_Names[Entities_ShadowMode]); }
+static void GraphicsOptionsScreen_GetShadows(String* v) { String_AppendConst(v, ShadowMode_Names[Entities.ShadowsMode]); }
 static void GraphicsOptionsScreen_SetShadows(const String* v) {
-	Entities_ShadowMode = Utils_ParseEnum(v, 0, ShadowMode_Names, SHADOW_MODE_COUNT);
+	Entities.ShadowsMode = Utils_ParseEnum(v, 0, ShadowMode_Names, SHADOW_MODE_COUNT);
 	Options_Set(OPT_ENTITY_SHADOW, v);
 }
 

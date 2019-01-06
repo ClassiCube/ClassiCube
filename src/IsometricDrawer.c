@@ -161,19 +161,19 @@ void IsometricDrawer_DrawBatch(BlockID block, float size, float x, float y) {
 		IsometricDrawer_SpriteZQuad(block, false);
 		IsometricDrawer_SpriteXQuad(block, false);
 	} else {
-		Drawer_MinBB = Blocks.MinBB[block]; Drawer_MinBB.Y = 1.0f - Drawer_MinBB.Y;
-		Drawer_MaxBB = Blocks.MaxBB[block]; Drawer_MaxBB.Y = 1.0f - Drawer_MaxBB.Y;
+		Drawer.MinBB = Blocks.MinBB[block]; Drawer.MinBB.Y = 1.0f - Drawer.MinBB.Y;
+		Drawer.MaxBB = Blocks.MaxBB[block]; Drawer.MaxBB.Y = 1.0f - Drawer.MaxBB.Y;
 		min = Blocks.MinBB[block]; max = Blocks.MaxBB[block];
 
-		Drawer_X1 = iso_scale * (1.0f - min.X * 2.0f) + iso_pos.X; 
-		Drawer_X2 = iso_scale * (1.0f - max.X * 2.0f) + iso_pos.X;
-		Drawer_Y1 = iso_scale * (1.0f - min.Y * 2.0f) + iso_pos.Y; 
-		Drawer_Y2 = iso_scale * (1.0f - max.Y * 2.0f) + iso_pos.Y;
-		Drawer_Z1 = iso_scale * (1.0f - min.Z * 2.0f) + iso_pos.Z; 
-		Drawer_Z2 = iso_scale * (1.0f - max.Z * 2.0f) + iso_pos.Z;
+		Drawer.X1 = iso_scale * (1.0f - min.X * 2.0f) + iso_pos.X; 
+		Drawer.X2 = iso_scale * (1.0f - max.X * 2.0f) + iso_pos.X;
+		Drawer.Y1 = iso_scale * (1.0f - min.Y * 2.0f) + iso_pos.Y; 
+		Drawer.Y2 = iso_scale * (1.0f - max.Y * 2.0f) + iso_pos.Y;
+		Drawer.Z1 = iso_scale * (1.0f - min.Z * 2.0f) + iso_pos.Z; 
+		Drawer.Z2 = iso_scale * (1.0f - max.Z * 2.0f) + iso_pos.Z;
 
-		Drawer_Tinted  = Blocks.Tinted[block];
-		Drawer_TintCol = Blocks.FogCol[block];
+		Drawer.Tinted  = Blocks.Tinted[block];
+		Drawer.TintCol = Blocks.FogCol[block];
 
 		Drawer_XMax(1, bright ? iso_col : iso_colXSide, 
 			IsometricDrawer_GetTexLoc(block, FACE_XMAX), &iso_vertices);

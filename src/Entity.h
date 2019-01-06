@@ -19,16 +19,14 @@ extern struct IGameComponent Entities_Component;
 #define ENTITIES_MAX_COUNT 256
 #define ENTITIES_SELF_ID 255
 
-typedef enum NameMode_ {
+enum NameMode {
 	NAME_MODE_NONE, NAME_MODE_HOVERED, NAME_MODE_ALL, NAME_MODE_ALL_HOVERED, NAME_MODE_ALL_UNSCALED, NAME_MODE_COUNT
-} NameMode;
-extern NameMode Entities_NameMode;
+};
 extern const char* NameMode_Names[NAME_MODE_COUNT];
 
-typedef enum ShadowMode_ {
+enum ShadowMode {
 	SHADOW_MODE_NONE, SHADOW_MODE_SNAP_TO_BLOCK, SHADOW_MODE_CIRCLE, SHADOW_MODE_CIRCLE_ALL, SHADOW_MODE_COUNT
-} ShadowMode;
-extern ShadowMode Entities_ShadowMode;
+};
 extern const char* ShadowMode_Names[SHADOW_MODE_COUNT];
 
 enum EntityType { ENTITY_TYPE_NONE, ENTITY_TYPE_PLAYER };
@@ -48,8 +46,11 @@ struct LocationUpdate {
 
 /* Clamps the given angle so it lies between [0, 360). */
 float LocationUpdate_Clamp(float degrees);
+/* Makes a location update only containing yaw and pitch. */
 void LocationUpdate_MakeOri(struct LocationUpdate* update, float rotY, float headX);
+/* Makes a location update only containing position */
 void LocationUpdate_MakePos(struct LocationUpdate* update, Vector3 pos, bool rel);
+/* Makes a location update containing position, yaw and pitch. */
 void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, float rotY, float headX, bool rel);
 
 struct Entity;
@@ -113,14 +114,26 @@ bool Entity_TouchesAnyRope(struct Entity* e);
 bool Entity_TouchesAnyLava(struct Entity* e);
 bool Entity_TouchesAnyWater(struct Entity* e);
 
-extern struct Entity* Entities_List[ENTITIES_MAX_COUNT];
+/* Global data for all entities */
+/* (Actual entities may point to NetPlayers_List or elsewhere) */
+extern struct _EntitiesData {
+	struct Entity* List[ENTITIES_MAX_COUNT];
+	uint8_t NamesMode, ShadowsMode;
+} Entities;
+
+/* Ticks all entities. */
 void Entities_Tick(struct ScheduledTask* task);
+/* Renders all entities. */
 void Entities_RenderModels(double delta, float t);
+/* Renders the name tags of entities, depending on Entities.NamesMode. */
 void Entities_RenderNames(double delta);
+/* Renders hovered entity name tags. (these appears through blocks) */
 void Entities_RenderHoveredNames(double delta);
+/* Removes the given entity, raising EntityEvents.Removed event. */
 void Entities_Remove(EntityID id);
 /* Gets the ID of the closest entity to the given entity. */
 EntityID Entities_GetCloset(struct Entity* src);
+/* Draws shadows under entities, depending on Entities.ShadowsMode */
 void Entities_DrawShadows(void);
 
 #define TABLIST_MAX_NAMES 256

@@ -643,7 +643,7 @@ void ShadowComponent_Draw(struct Entity* e) {
 
 	/* TODO: Should shadow component use its own VB? */
 	ptr = vertices;
-	if (Entities_ShadowMode == SHADOW_MODE_SNAP_TO_BLOCK) {
+	if (Entities.ShadowsMode == SHADOW_MODE_SNAP_TO_BLOCK) {
 		vb = Gfx_texVb;
 		x1 = Math_Floor(pos.X); z1 = Math_Floor(pos.Z);
 		if (!ShadowComponent_GetBlocks(e, x1, y, z1, data)) return;
@@ -1224,7 +1224,7 @@ void PhysicsComp_DoEntityPush(struct Entity* entity) {
 	dir.Y = 0.0f;
 
 	for (id = 0; id < ENTITIES_MAX_COUNT; id++) {
-		other = Entities_List[id];
+		other = Entities.List[id];
 		if (!other || other == entity) continue;
 		if (!other->Model->Pushes)     continue;
 

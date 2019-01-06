@@ -617,15 +617,15 @@ static void NormalBuilder_RenderBlock(int index) {
 	baseOffset = (Blocks.Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
 	lightFlags = Blocks.LightOffset[Builder_Block];
 
-	Drawer_MinBB = Blocks.MinBB[Builder_Block]; Drawer_MinBB.Y = 1.0f - Drawer_MinBB.Y;
-	Drawer_MaxBB = Blocks.MaxBB[Builder_Block]; Drawer_MaxBB.Y = 1.0f - Drawer_MaxBB.Y;
+	Drawer.MinBB = Blocks.MinBB[Builder_Block]; Drawer.MinBB.Y = 1.0f - Drawer.MinBB.Y;
+	Drawer.MaxBB = Blocks.MaxBB[Builder_Block]; Drawer.MaxBB.Y = 1.0f - Drawer.MaxBB.Y;
 
 	min = Blocks.RenderMinBB[Builder_Block]; max = Blocks.RenderMaxBB[Builder_Block];
-	Drawer_X1 = Builder_X + min.X; Drawer_Y1 = Builder_Y + min.Y; Drawer_Z1 = Builder_Z + min.Z;
-	Drawer_X2 = Builder_X + max.X; Drawer_Y2 = Builder_Y + max.Y; Drawer_Z2 = Builder_Z + max.Z;
+	Drawer.X1 = Builder_X + min.X; Drawer.Y1 = Builder_Y + min.Y; Drawer.Z1 = Builder_Z + min.Z;
+	Drawer.X2 = Builder_X + max.X; Drawer.Y2 = Builder_Y + max.Y; Drawer.Z2 = Builder_Z + max.Z;
 
-	Drawer_Tinted  = Blocks.Tinted[Builder_Block];
-	Drawer_TintCol = Blocks.FogCol[Builder_Block];
+	Drawer.Tinted  = Blocks.Tinted[Builder_Block];
+	Drawer.TintCol = Blocks.FogCol[Builder_Block];
 
 	if (count_XMin) {
 		loc    = Block_GetTex(Builder_Block, FACE_XMIN);

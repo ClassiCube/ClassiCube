@@ -269,7 +269,7 @@ static bool InputHandler_IntersectsOthers(Vector3 pos, BlockID block) {
 	Vector3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 	
 	for (id = 0; id < ENTITIES_SELF_ID; id++) {
-		entity = Entities_List[id];
+		entity = Entities.List[id];
 		if (!entity) continue;
 
 		Entity_GetBounds(entity, &entityBB);

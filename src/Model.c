@@ -1583,15 +1583,15 @@ static void BlockModel_DrawParts(bool sprite) {
 		BlockModel_SpriteXQuad(true, false);
 		BlockModel_SpriteXQuad(true, true);
 	} else {
-		Drawer_MinBB = Blocks.MinBB[bModel_block]; Drawer_MinBB.Y = 1.0f - Drawer_MinBB.Y;
-		Drawer_MaxBB = Blocks.MaxBB[bModel_block]; Drawer_MaxBB.Y = 1.0f - Drawer_MaxBB.Y;
-		Drawer_Tinted  = Blocks.Tinted[bModel_block];
-		Drawer_TintCol = Blocks.FogCol[bModel_block];
+		Drawer.MinBB = Blocks.MinBB[bModel_block]; Drawer.MinBB.Y = 1.0f - Drawer.MinBB.Y;
+		Drawer.MaxBB = Blocks.MaxBB[bModel_block]; Drawer.MaxBB.Y = 1.0f - Drawer.MaxBB.Y;
+		Drawer.Tinted  = Blocks.Tinted[bModel_block];
+		Drawer.TintCol = Blocks.FogCol[bModel_block];
 
 		min = Blocks.RenderMinBB[bModel_block];
 		max = Blocks.RenderMaxBB[bModel_block];
-		Drawer_X1 = min.X - 0.5f; Drawer_Y1 = min.Y; Drawer_Z1 = min.Z - 0.5f;
-		Drawer_X2 = max.X - 0.5f; Drawer_Y2 = max.Y; Drawer_Z2 = max.Z - 0.5f;		
+		Drawer.X1 = min.X - 0.5f; Drawer.Y1 = min.Y; Drawer.Z1 = min.Z - 0.5f;
+		Drawer.X2 = max.X - 0.5f; Drawer.Y2 = max.Y; Drawer.Z2 = max.Z - 0.5f;		
 
 		loc = BlockModel_GetTex(FACE_YMIN, &ptr); Drawer_YMin(1, Model_Cols[1], loc, &ptr);
 		loc = BlockModel_GetTex(FACE_ZMIN, &ptr); Drawer_ZMin(1, Model_Cols[3], loc, &ptr);

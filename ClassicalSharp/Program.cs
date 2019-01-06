@@ -37,6 +37,8 @@ namespace ClassicalSharp {
 			string user = null, mppass = null;
 			string skinServer = "http://static.classicube.net/skins/";
 			
+			args = new string[] { "UnknownShadow200", "mppass", "127.0.0.1", "25565" };
+			
 			if (args.Length == 0 || args.Length == 1) {
 				user = args.Length > 0 ? args[0] : "Singleplayer";
 			} else if (args.Length < 4) {

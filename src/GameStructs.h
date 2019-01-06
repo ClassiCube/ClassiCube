@@ -21,6 +21,7 @@ struct IGameComponent {
 	/* Next component in linked list of components. */
 	struct IGameComponent* Next;
 };
+/* Adds a component to linked list of components. (always at end) */
 CC_NOINLINE void Game_AddComponent(struct IGameComponent* comp);
 
 /* Represents a task that periodically runs on the main thread every specified interval. */
@@ -35,5 +36,6 @@ struct ScheduledTask {
 };
 
 typedef void (*ScheduledTaskCallback)(struct ScheduledTask* task);
+/* Adds a component to list of scheduled tasks. (always at end) */
 CC_NOINLINE int ScheduledTask_Add(double interval, ScheduledTaskCallback callback);
 #endif

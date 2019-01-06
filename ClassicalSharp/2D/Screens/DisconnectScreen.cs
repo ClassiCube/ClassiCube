@@ -88,6 +88,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public override bool HandlesMouseUp(int mouseX, int mouseY, MouseButton button) { return true; }		
 		
 		public override bool HandlesMouseMove(int mouseX, int mouseY) {
+			if (reconnect == null) return true;
 			reconnect.Active = !reconnect.Disabled && reconnect.Contains(mouseX, mouseY);
 			return true;
 		}

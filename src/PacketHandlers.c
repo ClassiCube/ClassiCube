@@ -155,11 +155,11 @@ static void Handlers_AddEntity(uint8_t* data, EntityID id, const String* display
 	struct NetPlayer* pl;
 
 	if (id != ENTITIES_SELF_ID) {
-		if (Entities_List[id]) Entities_Remove(id);
+		if (Entities.List[id]) Entities_Remove(id);
 		pl = &NetPlayers_List[id];
 
 		NetPlayer_Init(pl, displayName, skinName);
-		Entities_List[id] = &pl->Base;
+		Entities.List[id] = &pl->Base;
 		Event_RaiseInt(&EntityEvents.Added, id);
 	} else {
 		p = &LocalPlayer_Instance;
@@ -183,7 +183,7 @@ static void Handlers_AddEntity(uint8_t* data, EntityID id, const String* display
 }
 
 void Handlers_RemoveEntity(EntityID id) {
-	struct Entity* entity = Entities_List[id];
+	struct Entity* entity = Entities.List[id];
 	if (!entity) return;
 	if (id != ENTITIES_SELF_ID) Entities_Remove(id);
 
@@ -194,7 +194,7 @@ void Handlers_RemoveEntity(EntityID id) {
 }
 
 static void Handlers_UpdateLocation(EntityID playerId, struct LocationUpdate* update, bool interpolate) {
-	struct Entity* entity = Entities_List[playerId];
+	struct Entity* entity = Entities.List[playerId];
 	if (entity) {
 		entity->VTABLE->SetLocation(entity, update, interpolate);
 	}
@@ -1107,7 +1107,7 @@ static void CPE_ChangeModel(uint8_t* data) {
 	id = *data++;
 	Handlers_ReadString(&data, &model);
 
-	entity = Entities_List[id];
+	entity = Entities.List[id];
 	if (entity) { Entity_SetModel(entity, &model); }
 }
 
@@ -1287,7 +1287,7 @@ static void CPE_SetEntityProperty(uint8_t* data) {
 	uint8_t type = *data++;
 	int value    = (int)Stream_GetU32_BE(data);
 
-	entity = Entities_List[id];
+	entity = Entities.List[id];
 	if (!entity) return;
 
 	switch (type) {

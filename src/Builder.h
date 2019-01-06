@@ -16,7 +16,7 @@ extern bool Builder_SmoothLighting;
 
 void Builder_Init(void);
 void Builder_OnNewMapLoaded(void);
-/* Builds the vertices mesh for the given chunk. */
+/* Builds the mesh of vertices for the given chunk. */
 void Builder_MakeChunk(struct ChunkInfo* info);
 
 void NormalBuilder_SetActive(void);

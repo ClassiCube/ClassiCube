@@ -20,8 +20,6 @@
 #include "Bitmap.h"
 #include "Logger.h"
 
-NameMode Entities_NameMode;
-ShadowMode Entities_ShadowMode;
 const char* NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const char* ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
 
@@ -220,14 +218,14 @@ bool Entity_TouchesAnyWater(struct Entity* e) {
 /*########################################################################################################################*
 *--------------------------------------------------------Entities---------------------------------------------------------*
 *#########################################################################################################################*/
-struct Entity* Entities_List[ENTITIES_MAX_COUNT];
+struct _EntitiesData Entities;
 static EntityID entities_closestId;
 
 void Entities_Tick(struct ScheduledTask* task) {
 	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities_List[i]) continue;
-		Entities_List[i]->VTABLE->Tick(Entities_List[i], task->Interval);
+		if (!Entities.List[i]) continue;
+		Entities.List[i]->VTABLE->Tick(Entities.List[i], task->Interval);
 	}
 }
 
@@ -237,8 +235,8 @@ void Entities_RenderModels(double delta, float t) {
 	Gfx_SetAlphaTest(true);
 	
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities_List[i]) continue;
-		Entities_List[i]->VTABLE->RenderModel(Entities_List[i], delta, t);
+		if (!Entities.List[i]) continue;
+		Entities.List[i]->VTABLE->RenderModel(Entities.List[i], delta, t);
 	}
 	Gfx_SetTexturing(false);
 	Gfx_SetAlphaTest(false);
@@ -250,9 +248,9 @@ void Entities_RenderNames(double delta) {
 	bool hadFog;
 	int i;
 
-	if (Entities_NameMode == NAME_MODE_NONE) return;
+	if (Entities.NamesMode == NAME_MODE_NONE) return;
 	entities_closestId = Entities_GetCloset(&p->Base);
-	if (!p->Hacks.CanSeeAllNames || Entities_NameMode != NAME_MODE_ALL) return;
+	if (!p->Hacks.CanSeeAllNames || Entities.NamesMode != NAME_MODE_ALL) return;
 
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
@@ -260,9 +258,9 @@ void Entities_RenderNames(double delta) {
 	if (hadFog) Gfx_SetFog(false);
 
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities_List[i]) continue;
+		if (!Entities.List[i]) continue;
 		if (i != entities_closestId || i == ENTITIES_SELF_ID) {
-			Entities_List[i]->VTABLE->RenderName(Entities_List[i]);
+			Entities.List[i]->VTABLE->RenderName(Entities.List[i]);
 		}
 	}
 
@@ -276,8 +274,8 @@ void Entities_RenderHoveredNames(double delta) {
 	bool allNames, hadFog;
 	int i;
 
-	if (Entities_NameMode == NAME_MODE_NONE) return;
-	allNames = !(Entities_NameMode == NAME_MODE_HOVERED || Entities_NameMode == NAME_MODE_ALL) 
+	if (Entities.NamesMode == NAME_MODE_NONE) return;
+	allNames = !(Entities.NamesMode == NAME_MODE_HOVERED || Entities.NamesMode == NAME_MODE_ALL) 
 		&& p->Hacks.CanSeeAllNames;
 
 	Gfx_SetTexturing(true);
@@ -287,9 +285,9 @@ void Entities_RenderHoveredNames(double delta) {
 	if (hadFog) Gfx_SetFog(false);
 
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities_List[i]) continue;
+		if (!Entities.List[i]) continue;
 		if ((i == entities_closestId || allNames) && i != ENTITIES_SELF_ID) {
-			Entities_List[i]->VTABLE->RenderName(Entities_List[i]);
+			Entities.List[i]->VTABLE->RenderName(Entities.List[i]);
 		}
 	}
 
@@ -302,8 +300,8 @@ void Entities_RenderHoveredNames(double delta) {
 static void Entities_ContextLost(void* obj) {
 	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities_List[i]) continue;
-		Entities_List[i]->VTABLE->ContextLost(Entities_List[i]);
+		if (!Entities.List[i]) continue;
+		Entities.List[i]->VTABLE->ContextLost(Entities.List[i]);
 	}
 	Gfx_DeleteTexture(&ShadowComponent_ShadowTex);
 }
@@ -311,24 +309,24 @@ static void Entities_ContextLost(void* obj) {
 static void Entities_ContextRecreated(void* obj) {
 	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities_List[i]) continue;
-		Entities_List[i]->VTABLE->ContextRecreated(Entities_List[i]);
+		if (!Entities.List[i]) continue;
+		Entities.List[i]->VTABLE->ContextRecreated(Entities.List[i]);
 	}
 }
 
 static void Entities_ChatFontChanged(void* obj) {
 	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities_List[i]) continue;
-		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
-		Player_UpdateNameTex((struct Player*)Entities_List[i]);
+		if (!Entities.List[i]) continue;
+		if (Entities.List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
+		Player_UpdateNameTex((struct Player*)Entities.List[i]);
 	}
 }
 
 void Entities_Remove(EntityID id) {
 	Event_RaiseInt(&EntityEvents.Removed, id);
-	Entities_List[id]->VTABLE->Despawn(Entities_List[id]);
-	Entities_List[id] = NULL;
+	Entities.List[id]->VTABLE->Despawn(Entities.List[id]);
+	Entities.List[id] = NULL;
 }
 
 EntityID Entities_GetCloset(struct Entity* src) {
@@ -341,7 +339,7 @@ EntityID Entities_GetCloset(struct Entity* src) {
 	int i;
 
 	for (i = 0; i < ENTITIES_SELF_ID; i++) { /* because we don't want to pick against local player */
-		struct Entity* entity = Entities_List[i];
+		struct Entity* entity = Entities.List[i];
 		if (!entity) continue;
 
 		if (Intersection_RayIntersectsRotatedBox(eyePos, dir, entity, &t0, &t1) && t0 < closestDist) {
@@ -354,7 +352,7 @@ EntityID Entities_GetCloset(struct Entity* src) {
 
 void Entities_DrawShadows(void) {
 	int i;
-	if (Entities_ShadowMode == SHADOW_MODE_NONE) return;
+	if (Entities.ShadowsMode == SHADOW_MODE_NONE) return;
 	ShadowComponent_BoundShadowTex = false;
 
 	Gfx_SetAlphaArgBlend(true);
@@ -363,13 +361,13 @@ void Entities_DrawShadows(void) {
 	Gfx_SetTexturing(true);
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
-	ShadowComponent_Draw(Entities_List[ENTITIES_SELF_ID]);
+	ShadowComponent_Draw(Entities.List[ENTITIES_SELF_ID]);
 
-	if (Entities_ShadowMode == SHADOW_MODE_CIRCLE_ALL) {	
+	if (Entities.ShadowsMode == SHADOW_MODE_CIRCLE_ALL) {	
 		for (i = 0; i < ENTITIES_SELF_ID; i++) {
-			if (!Entities_List[i]) continue;
-			if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
-			ShadowComponent_Draw(Entities_List[i]);
+			if (!Entities.List[i]) continue;
+			if (Entities.List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
+			ShadowComponent_Draw(Entities.List[i]);
 		}
 	}
 
@@ -531,7 +529,7 @@ static void Player_DrawName(struct Player* p) {
 	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);
 	size.X = p->NameTex.Width * scale; size.Y = p->NameTex.Height * scale;
 
-	if (Entities_NameMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {			
+	if (Entities.NamesMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {			
 		Matrix_Mul(&mat, &Gfx_View, &Gfx_Projection); /* TODO: This mul is slow, avoid it */
 		/* Get W component of transformed position */
 		scale = pos.X * mat.Row0.W + pos.Y * mat.Row1.W + pos.Z * mat.Row2.W + mat.Row3.W;
@@ -551,10 +549,10 @@ static struct Player* Player_FirstOtherWithSameSkin(struct Player* player) {
 
 	skin = String_FromRawArray(entity->SkinNameRaw);
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities_List[i] || Entities_List[i] == entity) continue;
-		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
+		if (!Entities.List[i] || Entities.List[i] == entity) continue;
+		if (Entities.List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
-		p     = (struct Player*)Entities_List[i];
+		p     = (struct Player*)Entities.List[i];
 		pSkin = String_FromRawArray(p->Base.SkinNameRaw);
 		if (String_Equals(&skin, &pSkin)) return p;
 	}
@@ -569,10 +567,10 @@ static struct Player* Player_FirstOtherWithSameSkinAndFetchedSkin(struct Player*
 
 	skin = String_FromRawArray(entity->SkinNameRaw);
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities_List[i] || Entities_List[i] == entity) continue;
-		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
+		if (!Entities.List[i] || Entities.List[i] == entity) continue;
+		if (Entities.List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
-		p     = (struct Player*)Entities_List[i];
+		p     = (struct Player*)Entities.List[i];
 		pSkin = String_FromRawArray(p->Base.SkinNameRaw);
 		if (p->FetchedSkin && String_Equals(&skin, &pSkin)) return p;
 	}
@@ -614,10 +612,10 @@ static void Player_SetSkinAll(struct Player* player, bool reset) {
 
 	skin = String_FromRawArray(entity->SkinNameRaw);
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities_List[i]) continue;
-		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
+		if (!Entities.List[i]) continue;
+		if (Entities.List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
-		p     = (struct Player*)Entities_List[i];
+		p     = (struct Player*)Entities.List[i];
 		pSkin = String_FromRawArray(p->Base.SkinNameRaw);
 		if (!String_Equals(&skin, &pSkin)) continue;
 
@@ -1084,7 +1082,7 @@ static void NetPlayer_RenderName(struct Entity* e) {
 	if (!p->ShouldRender) return;
 
 	distance  = Model_RenderDistance(e);
-	threshold = Entities_NameMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
+	threshold = Entities.NamesMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
 	if (distance <= (float)threshold) Player_DrawName((struct Player*)p);
 }
 
@@ -1109,22 +1107,22 @@ static void Entities_Init(void) {
 	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, Entities_ContextRecreated);
 	Event_RegisterVoid(&ChatEvents.FontChanged,     NULL, Entities_ChatFontChanged);
 
-	Entities_NameMode = Options_GetEnum(OPT_NAMES_MODE, NAME_MODE_HOVERED,
+	Entities.NamesMode = Options_GetEnum(OPT_NAMES_MODE, NAME_MODE_HOVERED,
 		NameMode_Names, Array_Elems(NameMode_Names));
-	if (Game_ClassicMode) Entities_NameMode = NAME_MODE_HOVERED;
+	if (Game_ClassicMode) Entities.NamesMode = NAME_MODE_HOVERED;
 
-	Entities_ShadowMode = Options_GetEnum(OPT_ENTITY_SHADOW, SHADOW_MODE_NONE,
+	Entities.ShadowsMode = Options_GetEnum(OPT_ENTITY_SHADOW, SHADOW_MODE_NONE,
 		ShadowMode_Names, Array_Elems(ShadowMode_Names));
-	if (Game_ClassicMode) Entities_ShadowMode = SHADOW_MODE_NONE;
+	if (Game_ClassicMode) Entities.ShadowsMode = SHADOW_MODE_NONE;
 
-	Entities_List[ENTITIES_SELF_ID] = &LocalPlayer_Instance.Base;
+	Entities.List[ENTITIES_SELF_ID] = &LocalPlayer_Instance.Base;
 	LocalPlayer_Init();
 }
 
 static void Entities_Free(void) {
 	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities_List[i]) continue;
+		if (!Entities.List[i]) continue;
 		Entities_Remove((EntityID)i);
 	}
 
