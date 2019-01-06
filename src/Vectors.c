@@ -3,53 +3,6 @@
 #include "Funcs.h"
 #include "Constants.h"
 
-const Vector3 Vector3_Zero = { 0.0f, 0.0f, 0.0f };
-const Vector3 Vector3_One  = { 1.0f, 1.0f, 1.0f };
-
-Vector3 Vector3_Create1(float value) {
-	Vector3 v; v.X = value; v.Y = value; v.Z = value; return v;
-}
-
-Vector3 Vector3_Create3(float x, float y, float z) {
-	Vector3 v; v.X = x; v.Y = y; v.Z = z; return v;
-}
-
-Vector3I Vector3I_MaxValue(void) {
-	Vector3I v = { Int32_MaxValue, Int32_MaxValue, Int32_MaxValue }; return v;
-}
-
-Vector3 Vector3_BigPos(void) {
-	Vector3 v = { 1e25f, 1e25f, 1e25f }; return v;
-}
-
-float Vector3_LengthSquared(const Vector3* v) {
-	return v->X * v->X + v->Y * v->Y + v->Z * v->Z;
-}
-
-void Vector3_Add(Vector3* result, Vector3* a, Vector3* b) { 
-	result->X = a->X + b->X; result->Y = a->Y + b->Y; result->Z = a->Z + b->Z;
-}
-
-void Vector3_Add1(Vector3* result, Vector3* a, float b) {
-	result->X = a->X + b; result->Y = a->Y + b; result->Z = a->Z + b;
-}
-
-void Vector3_Sub(Vector3* result, Vector3* a, Vector3* b) {
-	result->X = a->X - b->X; result->Y = a->Y - b->Y; result->Z = a->Z - b->Z;
-}
-
-void Vector3_Mul1(Vector3* result, Vector3* a, float scale) {
-	result->X = a->X * scale; result->Y = a->Y * scale; result->Z = a->Z * scale;
-}
-
-void Vector3_Mul3(Vector3* result, Vector3* a, Vector3* scale) {
-	result->X = a->X * scale->X; result->Y = a->Y * scale->Y; result->Z = a->Z * scale->Z;
-}
-
-void Vector3_Negate(Vector3* result, Vector3* a) { 
-	result->X = -a->X; result->Y = -a->Y; result->Z = -a->Z;
-}
-
 void Vector3_Lerp(Vector3* result, Vector3* a, Vector3* b, float blend) {
 	result->X = blend * (b->X - a->X) + a->X;
 	result->Y = blend * (b->Y - a->Y) + a->Y;
@@ -101,15 +54,6 @@ Vector3 Vector3_RotateZ(Vector3 v, float angle) {
 	float sinA = (float)Math_Sin(angle);
 	return Vector3_Create3(cosA * v.X + sinA * v.Y, -sinA * v.X + cosA * v.Y, v.Z);
 }
-
-
-#define Vec3_EQ(a, b) a->X == b->X && a->Y == b->Y && a->Z == b->Z
-#define Vec3_NE(a, b) a->X != b->X || a->Y != b->Y || a->Z != b->Z
-
-bool Vector3_Equals(const Vector3* a, const Vector3* b) { return Vec3_EQ(a, b); }
-bool Vector3_NotEquals(const Vector3* a, const Vector3* b) { return Vec3_NE(a, b); }
-bool Vector3I_Equals(const Vector3I* a, const Vector3I* b) { return Vec3_EQ(a, b); }
-bool Vector3I_NotEquals(const Vector3I* a, const Vector3I* b) { return Vec3_NE(a, b); }
 
 
 void Vector3I_Floor(Vector3I* result, Vector3* a) {

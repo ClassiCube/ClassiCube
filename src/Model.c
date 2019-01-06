@@ -1474,8 +1474,8 @@ static void BlockModel_RecalcProperties(struct Entity* p) {
 	float height;
 
 	if (Blocks.Draw[block] == DRAW_GAS) {
-		bModel_minBB = Vector3_Zero;
-		bModel_maxBB = Vector3_One;
+		bModel_minBB = Vector3_Zero();
+		bModel_maxBB = Vector3_One();
 		height = 1.0f;
 	} else {
 		bModel_minBB = Blocks.MinBB[block];

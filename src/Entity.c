@@ -812,7 +812,7 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 		hacks->FlyingDown   = KeyBind_IsPressed(KEYBIND_FLY_DOWN);
 
 		if (hacks->WOMStyleHacks && hacks->Enabled && hacks->CanNoclip) {
-			if (hacks->Noclip) p->Base.Velocity = Vector3_Zero;
+			if (hacks->Noclip) p->Base.Velocity = Vector3_Zero();
 			hacks->Noclip = KeyBind_IsPressed(KEYBIND_NOCLIP);
 		}
 	}
@@ -842,7 +842,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 
 	/* Immediate stop in noclip mode */
 	if (!hacks->NoclipSlide && (hacks->Noclip && xMoving == 0 && zMoving == 0)) {
-		e->Velocity = Vector3_Zero;
+		e->Velocity = Vector3_Zero();
 	}
 
 	PhysicsComp_UpdateVelocityState(&p->Physics);
@@ -912,7 +912,7 @@ static void LocalPlayer_Init(void) {
 static void LocalPlayer_Reset(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	p->ReachDistance = 5.0f;
-	p->Base.Velocity = Vector3_Zero;
+	p->Base.Velocity = Vector3_Zero();
 	p->Physics.JumpVel       = 0.42f;
 	p->Physics.ServerJumpVel = 0.42f;
 	/* p->Base.Health = 20; TODO: survival mode stuff */
@@ -920,8 +920,8 @@ static void LocalPlayer_Reset(void) {
 
 static void LocalPlayer_OnNewMap(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	p->Base.Velocity = Vector3_Zero;
-	p->OldVelocity   = Vector3_Zero;
+	p->Base.Velocity = Vector3_Zero();
+	p->OldVelocity   = Vector3_Zero();
 
 	p->_WarnedRespawn = false;
 	p->_WarnedFly     = false;
@@ -961,7 +961,7 @@ static void LocalPlayer_DoRespawn(void) {
 	spawn.Y += 2.0f/16.0f;
 	LocationUpdate_MakePosAndOri(&update, spawn, p->SpawnRotY, p->SpawnHeadX, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
-	p->Base.Velocity = Vector3_Zero;
+	p->Base.Velocity = Vector3_Zero();
 
 	/* Update onGround, otherwise if 'respawn' then 'space' is pressed, you still jump into the air if onGround was true before */
 	Entity_GetBounds(&p->Base, &bb);

@@ -201,13 +201,16 @@ void Block_SetCollide(BlockID block, CollideType collide) {
 }
 
 void Block_SetDrawType(BlockID block, DrawType draw) {
+	Vector3 zero = Vector3_Zero();
+	Vector3 one  = Vector3_One();
+
 	if (draw == DRAW_OPAQUE && Blocks.Collide[block] != COLLIDE_SOLID) draw = DRAW_TRANSPARENT;
 	Blocks.Draw[block] = draw;
 	Block_RecalcIsLiquid(block);
 
 	Blocks.FullOpaque[block] = draw == DRAW_OPAQUE
-		&& Vector3_Equals(&Blocks.MinBB[block], &Vector3_Zero)
-		&& Vector3_Equals(&Blocks.MaxBB[block], &Vector3_One);
+		&& Vector3_Equals(&Blocks.MinBB[block], &zero)
+		&& Vector3_Equals(&Blocks.MaxBB[block], &one);
 }
 
 
@@ -250,11 +253,11 @@ void Block_ResetProps(BlockID block) {
 
 	Blocks.Draw[block] = DefaultSet_Draw(block);
 	if (Blocks.Draw[block] == DRAW_SPRITE) {
-		Blocks.MinBB[block] = Vector3_Create3(2.50f / 16.0f, 0.0f, 2.50f / 16.0f);
-		Blocks.MaxBB[block] = Vector3_Create3(13.5f / 16.0f, 1.0f, 13.5f / 16.0f);
+		Blocks.MinBB[block] = Vector3_Create3(2.50f/16.0f, 0.0f, 2.50f/16.0f);
+		Blocks.MaxBB[block] = Vector3_Create3(13.5f/16.0f, 1.0f, 13.5f/16.0f);
 	} else {		
-		Blocks.MinBB[block] = Vector3_Zero;
-		Blocks.MaxBB[block] = Vector3_One;
+		Blocks.MinBB[block] = Vector3_Zero();
+		Blocks.MaxBB[block] = Vector3_One();
 		Blocks.MaxBB[block].Y = DefaultSet_Height(block);
 	}
 
@@ -414,7 +417,7 @@ void Block_RecalculateBB(BlockID block) {
 	TextureLoc texLoc = Block_GetTex(block, FACE_XMAX);
 	int x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
 
-	static Vector3 centre = { 0.5f, 0.0f, 0.5f };
+	Vector3 centre = { 0.5f, 0.0f, 0.5f };
 	float minX = 0, minY = 0, maxX = 1, maxY = 1;
 	Vector3 minRaw, maxRaw;
 

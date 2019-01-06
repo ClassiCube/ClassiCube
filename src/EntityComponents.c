@@ -893,9 +893,10 @@ static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, i
 void Collisions_MoveAndWallSlide(struct CollisionsComp* comp) {
 	struct Entity* e = comp->Entity;
 	struct AABB entityBB, entityExtentBB;
+	Vector3 zero = Vector3_Zero();
 	int count;
 
-	if (Vector3_Equals(&e->Velocity, &Vector3_Zero)) return;
+	if (Vector3_Equals(&e->Velocity, &zero)) return;
 	count = Searcher_FindReachableBlocks(e,            &entityBB, &entityExtentBB);
 	Collisions_CollideWithReachableBlocks(comp, count, &entityBB, &entityExtentBB);
 }
@@ -1148,13 +1149,13 @@ void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vector3 vel) {
 	}
 
 	if (Entity_TouchesAnyWater(entity) && !hacks->Floating) {
-		Vector3 waterDrag = VECTOR3_CONST(0.8f, 0.8f, 0.8f);
+		Vector3 waterDrag = { 0.8f, 0.8f, 0.8f };
 		PhysicsComp_MoveNormal(comp, vel, 0.02f * horSpeed, waterDrag, LIQUID_GRAVITY, verSpeed);
 	} else if (Entity_TouchesAnyLava(entity) && !hacks->Floating) {
-		Vector3 lavaDrag = VECTOR3_CONST(0.5f, 0.5f, 0.5f);
+		Vector3 lavaDrag = { 0.5f, 0.5f, 0.5f };
 		PhysicsComp_MoveNormal(comp, vel, 0.02f * horSpeed, lavaDrag, LIQUID_GRAVITY, verSpeed);
 	} else if (Entity_TouchesAnyRope(entity) && !hacks->Floating) {
-		Vector3 ropeDrag = VECTOR3_CONST(0.5f, 0.85f, 0.5f);
+		Vector3 ropeDrag = { 0.5f, 0.85f, 0.5f };
 		PhysicsComp_MoveNormal(comp, vel, 0.02f * 1.7f, ropeDrag, ROPE_GRAVITY, verSpeed);
 	} else {
 		factor  = hacks->Floating || entity->OnGround ? 0.1f : 0.02f;
