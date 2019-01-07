@@ -180,7 +180,7 @@ namespace ClassicalSharp.Entities {
 			AABB bb;
 			
 			// Spawn player at highest valid position
-			if (!Hacks.CanPreciseRespawn) {
+			if (Hacks.CanAnyHacks) {
 			    if (game.World.IsValidPos(P)) {
 			        bb = AABB.Make(spawn, Size);
 			        for (int y = P.Y; y <= game.World.Height; y++) {
@@ -196,7 +196,7 @@ namespace ClassicalSharp.Entities {
 			    }
 			}
 			
-			if (!Hacks.CanPreciseRespawn) { spawn.Y += 2/16f; }
+			spawn.Y += 2/16f;
 			LocationUpdate update = LocationUpdate.MakePosAndOri(spawn, SpawnRotY, SpawnHeadX, false);
 			SetLocation(update, false);
 			Velocity = Vector3.Zero;
@@ -208,7 +208,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		bool HandleRespawn() {
-			if (Hacks.CanRespawn || Hacks.CanPreciseRespawn) {
+			if (Hacks.CanRespawn) {
 				DoRespawn();
 				return true;
 			} else if (!warnedRespawn) {
@@ -219,8 +219,12 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		bool HandleSetSpawn() {
-			if (Hacks.CanRespawn || Hacks.CanPreciseRespawn) {
-		        if (Hacks.CanPreciseRespawn) {
+			if (Hacks.CanRespawn) {
+		        if (!Hacks.CanAnyHacks && !onGround) {
+		            game.Chat.Add("&cCannot set spawn mid-air while hacks are disabled");
+		            return false;
+		        }
+		        if (!Hacks.CanAnyHacks) {
 		            Spawn.X = Position.X;
 		            Spawn.Y = Position.Y;
 		            Spawn.Z = Position.Z;
