@@ -650,7 +650,7 @@ void ShadowComponent_Draw(struct Entity* e) {
 
 		ShadowComponent_DrawSquareShadow(&ptr, data[0].Y, x1, z1);
 	} else {
-		vb = Model_Vb;
+		vb = Models.Vb;
 		x1 = Math_Floor(pos.X - shadow_radius); z1 = Math_Floor(pos.Z - shadow_radius);
 		x2 = Math_Floor(pos.X + shadow_radius); z2 = Math_Floor(pos.Z + shadow_radius);
 
@@ -1316,7 +1316,7 @@ static bool SoundComp_ShouldPlay(struct LocalPlayer* p, Vector3 soundPos) {
 	if (p->Base.Anim.Swing < 0.999f) return distSq > 1.75f * 1.75f;
 
 	/* have our legs just crossed over the '0' point? */
-	if (Camera_Active->IsThirdPerson) {
+	if (Camera.Active->IsThirdPerson) {
 		oldLegRot = (float)Math_Cos(p->Base.Anim.WalkTimeO);
 		newLegRot = (float)Math_Cos(p->Base.Anim.WalkTimeN);
 	} else {

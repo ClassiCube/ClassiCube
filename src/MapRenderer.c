@@ -86,7 +86,7 @@ static void MapRenderer_CheckWeather(double delta) {
 	Vector3I pos;
 	BlockID block;
 	bool outside;
-	Vector3I_Floor(&pos, &Camera_CurrentPos);
+	Vector3I_Floor(&pos, &Camera.CurrentPos);
 
 	block   = World_SafeGetBlock_3I(pos);
 	outside = pos.X < 0 || pos.Y < 0 || pos.Z < 0 || pos.X >= World_Width || pos.Z >= World_Length;
@@ -521,14 +521,14 @@ static void MapRenderer_UpdateChunks(double delta) {
 	Math_Clamp(chunksTarget, 4, MapRenderer_MaxUpdates);
 
 	p = &LocalPlayer_Instance;
-	samePos = Vector3_Equals(&Camera_CurrentPos, &lastCamPos)
+	samePos = Vector3_Equals(&Camera.CurrentPos, &lastCamPos)
 		&& p->Base.HeadX == lastHeadX && p->Base.HeadY == lastHeadY;
 
 	renderChunksCount = samePos ?
 		MapRenderer_UpdateChunksStill(&chunkUpdates) :
 		MapRenderer_UpdateChunksAndVisibility(&chunkUpdates);
 
-	lastCamPos = Camera_CurrentPos;
+	lastCamPos = Camera.CurrentPos;
 	lastHeadX  = p->Base.HeadX; 
 	lastHeadY  = p->Base.HeadY;
 
@@ -563,7 +563,7 @@ static void MapRenderer_UpdateSortOrder(void) {
 	int i, dx, dy, dz;
 
 	/* pos is centre coordinate of chunk camera is in */
-	Vector3I_Floor(&pos, &Camera_CurrentPos);
+	Vector3I_Floor(&pos, &Camera.CurrentPos);
 	pos.X = (pos.X & ~CHUNK_MASK) + HALF_CHUNK_SIZE;
 	pos.Y = (pos.Y & ~CHUNK_MASK) + HALF_CHUNK_SIZE;
 	pos.Z = (pos.Z & ~CHUNK_MASK) + HALF_CHUNK_SIZE;

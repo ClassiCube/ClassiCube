@@ -116,7 +116,7 @@ bool Entity_TouchesAnyWater(struct Entity* e);
 
 /* Global data for all entities */
 /* (Actual entities may point to NetPlayers_List or elsewhere) */
-extern struct _EntitiesData {
+CC_VAR extern struct _EntitiesData {
 	struct Entity* List[ENTITIES_MAX_COUNT];
 	uint8_t NamesMode, ShadowsMode;
 } Entities;
@@ -138,7 +138,7 @@ void Entities_DrawShadows(void);
 
 #define TABLIST_MAX_NAMES 256
 /* Data for all entries in tab list */
-extern struct _TabListData {
+CC_VAR extern struct _TabListData {
 	uint16_t PlayerNames[TABLIST_MAX_NAMES];
 	uint16_t ListNames[TABLIST_MAX_NAMES];
 	uint16_t GroupNames[TABLIST_MAX_NAMES];

@@ -7,7 +7,7 @@
 #include "ExtMath.h"
 #include "Logger.h"
 #include "Game.h"
-#include "ServerConnection.h"
+#include "Server.h"
 #include "Event.h"
 #include "Funcs.h"
 #include "Errors.h"
@@ -491,7 +491,7 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 		if (IsTag(tag, "TextureURL")) {
 			String url = NbtTag_String(tag);
 			if (Game_AllowServerTextures && url.length) {
-				ServerConnection_RetrieveTexturePack(&url);
+				Server_RetrieveTexturePack(&url);
 			}
 			return;
 		}

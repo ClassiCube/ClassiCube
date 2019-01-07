@@ -114,24 +114,24 @@ void Event_RaiseInput(struct Event_Input* handlers, int key, bool repeating);
 #define Event_RegisterInput(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
 #define Event_UnregisterInput(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
-extern struct _EntityEventsList {
+CC_VAR extern struct _EntityEventsList {
 	struct Event_Int Added;    /* Entity is spawned in the current world */
 	struct Event_Int Removed;  /* Entity is despawned from the current world */
 } EntityEvents;
 
-extern struct _TabListEventsList {
+CC_VAR extern struct _TabListEventsList {
 	struct Event_Int Added;   /* Tab list entry is created */
 	struct Event_Int Changed; /* Tab list entry is modified */
 	struct Event_Int Removed; /* Tab list entry is removed */
 } TabListEvents;
 
-extern struct _TextureEventsList {
+CC_VAR extern struct _TextureEventsList {
 	struct Event_Void  AtlasChanged; /* Terrain atlas (terrain.png) is changed */
 	struct Event_Void  PackChanged;  /* Texture pack is changed */
 	struct Event_Entry FileChanged;  /* File in a texture pack is changed (terrain.png, rain.png) */
 } TextureEvents;
 
-extern struct _GfxEventsList {
+CC_VAR extern struct _GfxEventsList {
 	struct Event_Void ViewDistanceChanged; /* View/fog distance is changed */
 	struct Event_Void LowVRAMDetected;     /* Insufficient VRAM detected, need to free some GPU resources */
 	struct Event_Void ProjectionChanged;   /* Projection matrix has changed */
@@ -139,32 +139,32 @@ extern struct _GfxEventsList {
 	struct Event_Void ContextRecreated;    /* Context is recreated after having been previously lost */
 } GfxEvents;
 
-extern struct _UserEventsList {
+CC_VAR extern struct _UserEventsList {
 	struct Event_Block BlockChanged;           /* User changes a block */
 	struct Event_Void  HackPermissionsChanged; /* Hack permissions of the player changes */
 	struct Event_Void  HeldBlockChanged;       /* Held block in hotbar changes */
 } UserEvents;
 
-extern struct _BlockEventsList {
+CC_VAR extern struct _BlockEventsList {
 	struct Event_Void PermissionsChanged; /* Block permissions (can place/delete) for a block changes */
 	struct Event_Void BlockDefChanged;    /* Block definition is changed or removed */
 } BlockEvents;
 
-extern struct _WorldEventsList {
+CC_VAR extern struct _WorldEventsList {
 	struct Event_Void  NewMap;        /* Player begins loading a new world */
 	struct Event_Float Loading;       /* Portion of world is decompressed/generated (Arg is progress from 0-1) */
 	struct Event_Void  MapLoaded;     /* New world has finished loading, player can now interact with it */
 	struct Event_Int   EnvVarChanged; /* World environment variable changed by player/CPE/WoM config */
 } WorldEvents;
 
-extern struct _ChatEventsList {
+CC_VAR extern struct _ChatEventsList {
 	struct Event_Void FontChanged;   /* User changes whether system chat font used, and when the bitmapped font texture changes */
 	struct Event_Chat ChatReceived;  /* Raised when message is being added to chat */
 	struct Event_Chat ChatSending;   /* Raised when user sends a message */
 	struct Event_Int  ColCodeChanged; /* Raised when a colour code changes */
 } ChatEvents;
 
-extern struct _WindowEventsList {
+CC_VAR extern struct _WindowEventsList {
 	struct Event_Void Redraw;             /* Window contents invalidated, should be redrawn */
 	struct Event_Void Moved;              /* Window is moved */
 	struct Event_Void Resized;            /* Window is resized */
@@ -175,13 +175,13 @@ extern struct _WindowEventsList {
 	struct Event_Void StateChanged;       /* WindowState of the window changed */
 } WindowEvents;
 
-struct _KeyEventsList {
+CC_VAR struct _KeyEventsList {
 	struct Event_Int Press;  /* Raised when a character is typed. Arg is a character */
 	struct Event_Input Down; /* Raised when a key is pressed. Arg is a member of Key enumeration */
 	struct Event_Int Up;     /* Raised when a key is released. Arg is a member of Key enumeration */
 } KeyEvents;
 
-extern struct _MouseEventsList {
+CC_VAR extern struct _MouseEventsList {
 	struct Event_MouseMove Moved; /* Mouse position is changed (Arg is delta from last position) */
 	struct Event_Int Down;        /* Mouse button is pressed (Arg is MouseButton member) */
 	struct Event_Int Up;          /* Mouse button is released (Arg is MouseButton member) */

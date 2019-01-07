@@ -37,7 +37,7 @@ void AxisLinesRenderer_Render(double delta) {
 
 	Gfx_SetTexturing(false);
 	pos   = LocalPlayer_Instance.Base.Position; pos.Y += 0.05f;
-	count = Camera_Active->IsThirdPerson ? 12 : 8;
+	count = Camera.Active->IsThirdPerson ? 12 : 8;
 	 
 	Vector3_Add1(&coords[0], &pos, -AXISLINES_LENGTH);
 	Vector3_Add1(&coords[1], &pos, -AXISLINES_THICKNESS);

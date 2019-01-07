@@ -47,7 +47,7 @@ static void EnvRenderer_CalcFog(float* density, PackedCol* col) {
 	struct AABB blockBB;
 	float blend;
 
-	Vector3I_Floor(&coords, &Camera_CurrentPos); /* coords = floor(camera_pos); */
+	Vector3I_Floor(&coords, &Camera.CurrentPos); /* coords = floor(camera_pos); */
 	Vector3I_ToVector3(&pos, &coords);           /* pos = coords; */
 
 	block = World_SafeGetBlock_3I(coords);
@@ -215,7 +215,7 @@ void EnvRenderer_RenderSky(double deltaTime) {
 	if (!sky_vb || EnvRenderer_ShouldRenderSkybox()) return;
 
 	normY = (float)World_Height + 8.0f;
-	skyY  = max(Camera_CurrentPos.Y + 8.0f, normY);
+	skyY  = max(Camera.CurrentPos.Y + 8.0f, normY);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
 	Gfx_BindVb(sky_vb);
 
@@ -307,10 +307,10 @@ void EnvRenderer_RenderSkybox(double deltaTime) {
 	Matrix_RotateX(&rotX, Env_SkyboxVerSpeed * rotTime); Matrix_MulBy(&m, &rotX);
 
 	/* Rotate around camera */
-	pos = Camera_CurrentPos;
-	Camera_CurrentPos = Vector3_Zero();
-	Camera_Active->GetView(&view); Matrix_MulBy(&m, &view);
-	Camera_CurrentPos = pos;
+	pos = Camera.CurrentPos;
+	Camera.CurrentPos = Vector3_Zero();
+	Camera.Active->GetView(&view); Matrix_MulBy(&m, &view);
+	Camera.CurrentPos = pos;
 
 	Gfx_LoadMatrix(MATRIX_VIEW, &m);
 	Gfx_BindVb(skybox_vb);
@@ -461,7 +461,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	if (!Weather_Heightmap) EnvRenderer_InitWeatherHeightmap();
 	Gfx_BindTexture(weather == WEATHER_RAINY ? rain_tex : snow_tex);
 
-	Vector3I_Floor(&pos, &Camera_CurrentPos);
+	Vector3I_Floor(&pos, &Camera.CurrentPos);
 	moved = Vector3I_NotEquals(&pos, &weather_lastPos);
 	weather_lastPos = pos;
 
@@ -567,7 +567,7 @@ void EnvRenderer_RenderMapEdges(double delta) {
 	/* Do not draw water when player cannot see it */
 	/* Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps */
 	int yVisible = min(0, Env_SidesHeight);
-	if (Camera_CurrentPos.Y < yVisible) return;
+	if (Camera.CurrentPos.Y < yVisible) return;
 
 	EnvRenderer_RenderBorders(Env_EdgeBlock,
 		edges_vb, edges_tex, edges_vertices);

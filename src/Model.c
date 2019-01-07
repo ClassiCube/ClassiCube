@@ -13,13 +13,7 @@
 #include "Stream.h"
 #include "Funcs.h"
 
-PackedCol Model_Cols[FACE_COUNT];
-float Model_uScale, Model_vScale;
-float Model_cosHead, Model_sinHead;
-uint8_t Model_Rotation, Model_skinType;
-struct Model* Model_ActiveModel;
-
-GfxResourceID Model_Vb;
+struct _ModelsData Models;
 VertexP3fT2fC4b Model_Vertices[MODEL_MAX_VERTICES];
 struct Model* Human_ModelPtr;
 
@@ -56,8 +50,8 @@ void Model_Init(struct Model* model) {
 	model->UsesHumanSkin  = false;
 	model->Pushes = true;
 
-	model->Gravity = 0.08f;
-	model->Drag = Vector3_Create3(0.91f, 0.98f, 0.91f);
+	model->Gravity        = 0.08f;
+	model->Drag           = Vector3_Create3(0.91f, 0.98f, 0.91f);
 	model->GroundFriction = Vector3_Create3(0.6f, 1.0f, 0.6f);
 
 	model->MaxScale    = 2.0f;
@@ -97,7 +91,7 @@ static float Model_MinDist(float dist, float extent) {
 float Model_RenderDistance(struct Entity* entity) {
 	Vector3 pos     = entity->Position;
 	struct AABB* bb = &entity->ModelAABB;
-	Vector3 camPos  = Camera_CurrentPos;
+	Vector3 camPos  = Camera.CurrentPos;
 	float dx, dy, dz;
 
 	/* X and Z are already at centre of model */
@@ -138,57 +132,57 @@ void Model_SetupState(struct Model* model, struct Entity* entity) {
 	/* only apply when using humanoid skins */
 	_64x64 &= model->UsesHumanSkin || entity->MobTextureId;
 
-	Model_uScale = entity->uScale * 0.015625f;
-	Model_vScale = entity->vScale * (_64x64 ? 0.015625f : 0.03125f);
+	Models.uScale = entity->uScale * 0.015625f;
+	Models.vScale = entity->vScale * (_64x64 ? 0.015625f : 0.03125f);
 
-	Model_Cols[0] = col;
+	Models.Cols[0] = col;
 	if (!entity->NoShade) {
-		Model_Cols[1] = PackedCol_Scale(col, PACKEDCOL_SHADE_YMIN);
-		Model_Cols[2] = PackedCol_Scale(col, PACKEDCOL_SHADE_Z);
-		Model_Cols[4] = PackedCol_Scale(col, PACKEDCOL_SHADE_X);
+		Models.Cols[1] = PackedCol_Scale(col, PACKEDCOL_SHADE_YMIN);
+		Models.Cols[2] = PackedCol_Scale(col, PACKEDCOL_SHADE_Z);
+		Models.Cols[4] = PackedCol_Scale(col, PACKEDCOL_SHADE_X);
 	} else {
-		Model_Cols[1] = col; Model_Cols[2] = col; Model_Cols[4] = col;
+		Models.Cols[1] = col; Models.Cols[2] = col; Models.Cols[4] = col;
 	}
 
-	Model_Cols[3] = Model_Cols[2]; 
-	Model_Cols[5] = Model_Cols[4];
+	Models.Cols[3] = Models.Cols[2]; 
+	Models.Cols[5] = Models.Cols[4];
 	yawDelta = entity->HeadY - entity->RotY;
 
-	Model_cosHead = (float)Math_Cos(yawDelta * MATH_DEG2RAD);
-	Model_sinHead = (float)Math_Sin(yawDelta * MATH_DEG2RAD);
-	Model_ActiveModel = model;
+	Models.cosHead = (float)Math_Cos(yawDelta * MATH_DEG2RAD);
+	Models.sinHead = (float)Math_Sin(yawDelta * MATH_DEG2RAD);
+	Models.Active  = model;
 }
 
 void Model_UpdateVB(void) {
-	struct Model* model = Model_ActiveModel;
-	Gfx_UpdateDynamicVb_IndexedTris(Model_Vb, Model_Vertices, model->index);
+	struct Model* model = Models.Active;
+	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, Model_Vertices, model->index);
 	model->index = 0;
 }
 
 void Model_ApplyTexture(struct Entity* entity) {
-	struct Model* model = Model_ActiveModel;
+	struct Model* model = Models.Active;
 	struct ModelTex* data;
 	GfxResourceID tex;
 	bool _64x64;
 
 	tex = model->UsesHumanSkin ? entity->TextureId : entity->MobTextureId;
 	if (tex) {
-		Model_skinType = entity->SkinType;
+		Models.skinType = entity->SkinType;
 	} else {
 		data = model->defaultTex;
 		tex  = data->TexID;
-		Model_skinType = data->SkinType;
+		Models.skinType = data->SkinType;
 	}
 
 	Gfx_BindTexture(tex);
-	_64x64 = Model_skinType != SKIN_64x32;
+	_64x64 = Models.skinType != SKIN_64x32;
 
-	Model_uScale = entity->uScale * 0.015625f;
-	Model_vScale = entity->vScale * (_64x64 ? 0.015625f : 0.03125f);
+	Models.uScale = entity->uScale * 0.015625f;
+	Models.vScale = entity->vScale * (_64x64 ? 0.015625f : 0.03125f);
 }
 
 void Model_DrawPart(struct ModelPart* part) {
-	struct Model* model     = Model_ActiveModel;
+	struct Model* model     = Models.Active;
 	struct ModelVertex* src = &model->vertices[part->Offset];
 	VertexP3fT2fC4b* dst    = &Model_Vertices[model->index];
 
@@ -198,10 +192,10 @@ void Model_DrawPart(struct ModelPart* part) {
 	for (i = 0; i < count; i++) {
 		v = *src;
 		dst->X = v.X; dst->Y = v.Y; dst->Z = v.Z;
-		dst->Col = Model_Cols[i >> 2];
+		dst->Col = Models.Cols[i >> 2];
 
-		dst->U = (v.U & UV_POS_MASK) * Model_uScale - (v.U >> UV_MAX_SHIFT) * 0.01f * Model_uScale;
-		dst->V = (v.V & UV_POS_MASK) * Model_vScale - (v.V >> UV_MAX_SHIFT) * 0.01f * Model_vScale;
+		dst->U = (v.U & UV_POS_MASK) * Models.uScale - (v.U >> UV_MAX_SHIFT) * 0.01f * Models.uScale;
+		dst->V = (v.V & UV_POS_MASK) * Models.vScale - (v.V >> UV_MAX_SHIFT) * 0.01f * Models.vScale;
 		src++; dst++;
 	}
 	model->index += count;
@@ -212,7 +206,7 @@ void Model_DrawPart(struct ModelPart* part) {
 #define Model_RotateZ t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t;
 
 void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart* part, bool head) {
-	struct Model* model     = Model_ActiveModel;
+	struct Model* model     = Models.Active;
 	struct ModelVertex* src = &model->vertices[part->Offset];
 	VertexP3fT2fC4b* dst    = &Model_Vertices[model->index];
 
@@ -229,29 +223,29 @@ void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart
 		v.X -= x; v.Y -= y; v.Z -= z;
 
 		/* Rotate locally */
-		if (Model_Rotation == ROTATE_ORDER_ZYX) {
+		if (Models.Rotation == ROTATE_ORDER_ZYX) {
 			Model_RotateZ
 			Model_RotateY
 			Model_RotateX
-		} else if (Model_Rotation == ROTATE_ORDER_XZY) {
+		} else if (Models.Rotation == ROTATE_ORDER_XZY) {
 			Model_RotateX
 			Model_RotateZ
 			Model_RotateY
-		} else if (Model_Rotation == ROTATE_ORDER_YZX) {
+		} else if (Models.Rotation == ROTATE_ORDER_YZX) {
 			Model_RotateY
 			Model_RotateZ
 			Model_RotateX
 		}
 
-		/* Rotate globally */
+		/* Rotate globally (inlined RotY) */
 		if (head) {
-			t = Model_cosHead * v.X - Model_sinHead * v.Z; v.Z = Model_sinHead * v.X + Model_cosHead * v.Z; v.X = t; /* Inlined RotY */
+			t = Models.cosHead * v.X - Models.sinHead * v.Z; v.Z = Models.sinHead * v.X + Models.cosHead * v.Z; v.X = t;
 		}
 		dst->X = v.X + x; dst->Y = v.Y + y; dst->Z = v.Z + z;
-		dst->Col = Model_Cols[i >> 2];
+		dst->Col = Models.Cols[i >> 2];
 
-		dst->U = (v.U & UV_POS_MASK) * Model_uScale - (v.U >> UV_MAX_SHIFT) * 0.01f * Model_uScale;
-		dst->V = (v.V & UV_POS_MASK) * Model_vScale - (v.V >> UV_MAX_SHIFT) * 0.01f * Model_vScale;
+		dst->U = (v.U & UV_POS_MASK) * Models.uScale - (v.U >> UV_MAX_SHIFT) * 0.01f * Models.uScale;
+		dst->V = (v.V & UV_POS_MASK) * Models.vScale - (v.V >> UV_MAX_SHIFT) * 0.01f * Models.vScale;
 		src++; dst++;
 	}
 	model->index += count;
@@ -280,14 +274,14 @@ void Model_RenderArm(struct Model* model, struct Entity* entity) {
 	Matrix_Mul(&m, &translate, &m);
 
 	Gfx_LoadMatrix(MATRIX_VIEW, &m);
-	Model_Rotation = ROTATE_ORDER_YZX;
+	Models.Rotation = ROTATE_ORDER_YZX;
 	model->DrawArm(entity);
-	Model_Rotation = ROTATE_ORDER_ZYX;
+	Models.Rotation = ROTATE_ORDER_ZYX;
 	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx_View);
 }
 
 void Model_DrawArmPart(struct ModelPart* part) {
-	struct Model* model  = Model_ActiveModel;
+	struct Model* model  = Models.Active;
 	struct ModelPart arm = *part;
 	arm.RotX = model->armX / 16.0f; 
 	arm.RotY = (model->armY + model->armY / 2) / 16.0f;
@@ -308,7 +302,7 @@ void BoxDesc_BuildBox(struct ModelPart* part, const struct BoxDesc* desc) {
 	float x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	float x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
 	int x = desc->TexX, y = desc->TexY;
-	struct Model* m = Model_ActiveModel;
+	struct Model* m = Models.Active;
 
 	BoxDesc_YQuad(m, x + sidesW,                  y,          bodyW, sidesW, x1, x2, z2, z1, y2, true);  /* top */
 	BoxDesc_YQuad(m, x + sidesW + bodyW,          y,          bodyW, sidesW, x2, x1, z2, z1, y1, false); /* bottom */
@@ -326,7 +320,7 @@ void BoxDesc_BuildRotatedBox(struct ModelPart* part, const struct BoxDesc* desc)
 	float x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	float x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
 	int x = desc->TexX, y = desc->TexY, i;
-	struct Model* m = Model_ActiveModel;
+	struct Model* m = Models.Active;
 
 	BoxDesc_YQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW,  bodyH, x1, x2, z1, z2, y2, false); /* top */
 	BoxDesc_YQuad(m, x + sidesW,                  y + sidesW, bodyW,  bodyH, x2, x1, z1, z2, y1, false); /* bottom */
@@ -388,21 +382,21 @@ static struct ModelTex* textures_head;
 #define Model_RetAABB(x1,y1,z1, x2,y2,z2) static struct AABB BB = { (x1)/16.0f,(y1)/16.0f,(z1)/16.0f, (x2)/16.0f,(y2)/16.0f,(z2)/16.0f }; *bb = BB;
 
 static void Models_ContextLost(void* obj) {
-	Gfx_DeleteVb(&Model_Vb);
+	Gfx_DeleteVb(&Models.Vb);
 }
 
 static void Models_ContextRecreated(void* obj) {
-	Model_Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, MODEL_MAX_VERTICES);
+	Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, MODEL_MAX_VERTICES);
 }
 
 static void Model_Make(struct Model* model) {
-	struct Model* active = Model_ActiveModel;
-	Model_ActiveModel = model;
+	struct Model* active = Models.Active;
+	Models.Active = model;
 	model->CreateParts();
 
 	model->initalised = true;
 	model->index      = 0;
-	Model_ActiveModel = active;
+	Models.Active     = active;
 }
 
 struct Model* Model_Get(const String* name) {
@@ -466,7 +460,7 @@ static void HumanModel_DrawModelSet(struct Entity* entity, struct ModelSet* mode
 	Model_ApplyTexture(entity);
 	Gfx_SetAlphaTest(false);
 
-	type = Model_skinType;
+	type = Models.skinType;
 	set  = &model->Limbs[type & 0x3];
 
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &model->Head, true);
@@ -474,10 +468,10 @@ static void HumanModel_DrawModelSet(struct Entity* entity, struct ModelSet* mode
 	Model_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  &set->LeftLeg,  false);
 	Model_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, &set->RightLeg, false);
 
-	Model_Rotation = ROTATE_ORDER_XZY;
+	Models.Rotation = ROTATE_ORDER_XZY;
 	Model_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  &set->LeftArm,  false);
 	Model_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, &set->RightArm, false);
-	Model_Rotation = ROTATE_ORDER_ZYX;
+	Models.Rotation = ROTATE_ORDER_ZYX;
 	Model_UpdateVB();
 
 	Gfx_SetAlphaTest(true);
@@ -486,10 +480,10 @@ static void HumanModel_DrawModelSet(struct Entity* entity, struct ModelSet* mode
 		Model_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  &set->LeftLegLayer,  false);
 		Model_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, &set->RightLegLayer, false);
 
-		Model_Rotation = ROTATE_ORDER_XZY;
+		Models.Rotation = ROTATE_ORDER_XZY;
 		Model_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  &set->LeftArmLayer,  false);
 		Model_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, &set->RightArmLayer, false);
-		Model_Rotation = ROTATE_ORDER_ZYX;
+		Models.Rotation = ROTATE_ORDER_ZYX;
 	}
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &model->Hat, true);
 	Model_UpdateVB();
@@ -499,7 +493,7 @@ static void HumanModel_DrawArmSet(struct Entity* entity, struct ModelSet* model)
 	struct ModelLimbs* set;
 	int type;
 
-	type = Model_skinType;
+	type = Models.skinType;
 	set  = &model->Limbs[type & 0x3];
 
 	Model_DrawArmPart(&set->RightArm);
@@ -914,7 +908,7 @@ static void ChickenModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.0f,
 static void ChickenModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-8, 4,15,4); }
 
 static void ChickenModel_DrawModel(struct Entity* entity) {
-	PackedCol col = Model_Cols[0];
+	PackedCol col = Models.Cols[0];
 	int i;
 	Model_ApplyTexture(entity);
 
@@ -927,7 +921,7 @@ static void ChickenModel_DrawModel(struct Entity* entity) {
 	Model_DrawRotate(0, 0,  Math_AbsF(entity->Anim.LeftArmX), &Chicken_RightWing, false);
 
 	for (i = 0; i < FACE_COUNT; i++) {
-		Model_Cols[i] = PackedCol_Scale(col, 0.7f);
+		Models.Cols[i] = PackedCol_Scale(col, 0.7f);
 	}
 
 	Model_DrawRotate(entity->Anim.LeftLegX,  0, 0, &chicken_leftLeg, false);
@@ -1371,7 +1365,7 @@ static void SpiderModel_DrawModel(struct Entity* entity) {
 	rotX = Math_SinF(entity->Anim.WalkTime)     * entity->Anim.Swing * MATH_PI;
 	rotZ = Math_CosF(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 16.0f;
 	rotY = Math_SinF(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 32.0f;
-	Model_Rotation = ROTATE_ORDER_XZY;
+	Models.Rotation = ROTATE_ORDER_XZY;
 
 	Model_DrawRotate(rotX,  quarterPi  + rotY, eighthPi + rotZ, &spider_leftLeg, false);
 	Model_DrawRotate(-rotX,  eighthPi  + rotY, eighthPi + rotZ, &spider_leftLeg, false);
@@ -1383,7 +1377,7 @@ static void SpiderModel_DrawModel(struct Entity* entity) {
 	Model_DrawRotate(rotX,   eighthPi - rotY, -eighthPi - rotZ, &spider_rightLeg, false);
 	Model_DrawRotate(-rotX, quarterPi - rotY, -eighthPi - rotZ, &spider_rightLeg, false);
 
-	Model_Rotation = ROTATE_ORDER_ZYX;
+	Models.Rotation = ROTATE_ORDER_ZYX;
 	Model_UpdateVB();
 }
 
@@ -1515,7 +1509,7 @@ static void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
 	TextureRec rec = Atlas1D_TexRec(loc, 1, &bModel_texIndex);
 
 	BlockModel_FlushIfNotSame;
-	col = Model_Cols[0];
+	col = Models.Cols[0];
 	Block_Tint(col, bModel_block);
 
 	xz1 = 0.0f; xz2 = 0.0f;
@@ -1545,7 +1539,7 @@ static void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
 	TextureRec rec = Atlas1D_TexRec(loc, 1, &bModel_texIndex);
 
 	BlockModel_FlushIfNotSame;
-	col = Model_Cols[0];
+	col = Models.Cols[0];
 	Block_Tint(col, bModel_block);
 
 	x1 = 0.0f; x2 = 0.0f; z1 = 0.0f; z2 = 0.0f;
@@ -1593,12 +1587,12 @@ static void BlockModel_DrawParts(bool sprite) {
 		Drawer.X1 = min.X - 0.5f; Drawer.Y1 = min.Y; Drawer.Z1 = min.Z - 0.5f;
 		Drawer.X2 = max.X - 0.5f; Drawer.Y2 = max.Y; Drawer.Z2 = max.Z - 0.5f;		
 
-		loc = BlockModel_GetTex(FACE_YMIN, &ptr); Drawer_YMin(1, Model_Cols[1], loc, &ptr);
-		loc = BlockModel_GetTex(FACE_ZMIN, &ptr); Drawer_ZMin(1, Model_Cols[3], loc, &ptr);
-		loc = BlockModel_GetTex(FACE_XMAX, &ptr); Drawer_XMax(1, Model_Cols[5], loc, &ptr);
-		loc = BlockModel_GetTex(FACE_ZMAX, &ptr); Drawer_ZMax(1, Model_Cols[2], loc, &ptr);
-		loc = BlockModel_GetTex(FACE_XMIN, &ptr); Drawer_XMin(1, Model_Cols[4], loc, &ptr);
-		loc = BlockModel_GetTex(FACE_YMAX, &ptr); Drawer_YMax(1, Model_Cols[0], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_YMIN, &ptr); Drawer_YMin(1, Models.Cols[1], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_ZMIN, &ptr); Drawer_ZMin(1, Models.Cols[3], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_XMAX, &ptr); Drawer_XMax(1, Models.Cols[5], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_ZMAX, &ptr); Drawer_ZMax(1, Models.Cols[2], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_XMIN, &ptr); Drawer_XMin(1, Models.Cols[4], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_YMAX, &ptr); Drawer_YMax(1, Models.Cols[0], loc, &ptr);
 	}
 }
 
@@ -1613,7 +1607,7 @@ static void BlockModel_DrawModel(struct Entity* p) {
 
 	if (Blocks.FullBright[bModel_block]) {
 		for (i = 0; i < FACE_COUNT; i++) {
-			Model_Cols[i] = white;
+			Models.Cols[i] = white;
 		}
 	}
 	sprite = Blocks.Draw[bModel_block] == DRAW_SPRITE;

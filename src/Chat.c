@@ -4,7 +4,7 @@
 #include "Event.h"
 #include "Game.h"
 #include "Logger.h"
-#include "ServerConnection.h"
+#include "Server.h"
 #include "World.h"
 #include "Inventory.h"
 #include "Entity.h"
@@ -209,7 +209,7 @@ static bool Commands_IsCommandPrefix(const String* str) {
 	const static String prefix      = String_FromConst(COMMANDS_PREFIX);
 
 	if (!str->length) return false;
-	if (ServerConnection_IsSinglePlayer && str->buffer[0] == '/') return true;
+	if (Server.IsSinglePlayer && str->buffer[0] == '/') return true;
 	
 	return String_CaselessStarts(str, &prefixSpace)
 		|| String_CaselessEquals(str, &prefix);
@@ -246,7 +246,7 @@ static struct ChatCommand* Commands_GetMatch(const String* cmdName) {
 		Chat_AddRaw("&e/client: Type &a/client &efor a list of commands.");
 		return NULL;
 	}
-	if (match->SingleplayerOnly && !ServerConnection_IsSinglePlayer) {
+	if (match->SingleplayerOnly && !Server.IsSinglePlayer) {
 		Chat_Add1("&e/client: \"&f%s&e\" can only be used in singleplayer.", cmdName);
 		return NULL;
 	}
@@ -560,7 +560,7 @@ void Chat_Send(const String* text, bool logUsage) {
 	if (Commands_IsCommandPrefix(text)) {
 		Commands_Execute(text);
 	} else {
-		ServerConnection.SendChat(text);
+		Server.SendChat(text);
 	}
 }
 

@@ -241,7 +241,7 @@ void Picking_CalculatePickedBlock(Vector3 origin, Vector3 dir, float reach, stru
 }
 
 void Picking_ClipCameraPos(Vector3 origin, Vector3 dir, float reach, struct PickedPos* pos) {
-	bool noClip = !Camera_Clipping || LocalPlayer_Instance.Hacks.Noclip;
+	bool noClip = !Camera.Clipping || LocalPlayer_Instance.Hacks.Noclip;
 	if (noClip || !Picking_RayTrace(origin, dir, reach, pos, Picking_ClipCamera)) {
 		PickedPos_SetAsInvalid(pos);
 		Vector3_Mul1(&pos->Intersect, &dir, reach);             /* intersect = dir * reach */

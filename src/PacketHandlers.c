@@ -1,7 +1,7 @@
 #include "PacketHandlers.h"
 #include "Deflate.h"
 #include "Utils.h"
-#include "ServerConnection.h"
+#include "Server.h"
 #include "Stream.h"
 #include "Game.h"
 #include "Entity.h"
@@ -223,7 +223,7 @@ static void WoM_CheckMotd(void) {
 	String motd, host;
 	int index;	
 
-	motd = ServerConnection_ServerMOTD;
+	motd = Server.ServerMOTD;
 	if (!motd.length) return;
 	index = String_IndexOfString(&motd, &cfg);
 	if (Game_PureClassic || index == -1) return;
@@ -316,20 +316,20 @@ static void WoM_Tick(void) {
 *#########################################################################################################################*/
 
 void Classic_WriteChat(const String* text, bool partial) {
-	uint8_t* data = ServerConnection_WriteBuffer;
+	uint8_t* data = Server.WriteBuffer;
 	*data++ = OPCODE_MESSAGE;
 	{
-		*data++ = ServerConnection_SupportsPartialMessages ? partial : ENTITIES_SELF_ID;
+		*data++ = Server.SupportsPartialMessages ? partial : ENTITIES_SELF_ID;
 		Handlers_WriteString(data, text); data += STRING_SIZE;
 	}
-	ServerConnection_WriteBuffer = data;
+	Server.WriteBuffer = data;
 }
 
 void Classic_WritePosition(Vector3 pos, float rotY, float headX) {
 	BlockID payload;
 	int x, y, z;
 
-	uint8_t* data = ServerConnection_WriteBuffer;
+	uint8_t* data = Server.WriteBuffer;
 	*data++ = OPCODE_ENTITY_TELEPORT;
 	{
 		payload = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID;
@@ -351,11 +351,11 @@ void Classic_WritePosition(Vector3 pos, float rotY, float headX) {
 		*data++ = Math_Deg2Packed(rotY);
 		*data++ = Math_Deg2Packed(headX);
 	}
-	ServerConnection_WriteBuffer = data;
+	Server.WriteBuffer = data;
 }
 
 void Classic_WriteSetBlock(int x, int y, int z, bool place, BlockID block) {
-	uint8_t* data = ServerConnection_WriteBuffer;
+	uint8_t* data = Server.WriteBuffer;
 	*data++ = OPCODE_SET_BLOCK_CLIENT;
 	{
 		Stream_SetU16_BE(data, x); data += 2;
@@ -364,11 +364,11 @@ void Classic_WriteSetBlock(int x, int y, int z, bool place, BlockID block) {
 		*data++ = place;
 		Handlers_WriteBlock(data, block);
 	}
-	ServerConnection_WriteBuffer = data;
+	Server.WriteBuffer = data;
 }
 
 void Classic_WriteLogin(const String* username, const String* verKey) {
-	uint8_t* data = ServerConnection_WriteBuffer;
+	uint8_t* data = Server.WriteBuffer;
 	*data++ = OPCODE_HANDSHAKE;
 	{
 		*data++ = 7; /* protocol version */
@@ -376,25 +376,25 @@ void Classic_WriteLogin(const String* username, const String* verKey) {
 		Handlers_WriteString(data, verKey);   data += STRING_SIZE;
 		*data++ = Game_UseCPE ? 0x42 : 0x00;
 	}
-	ServerConnection_WriteBuffer = data;
+	Server.WriteBuffer = data;
 }
 
 static void Classic_Handshake(uint8_t* data) {
 	struct HacksComp* hacks;
 
-	ServerConnection_ServerName.length = 0;
-	ServerConnection_ServerMOTD.length = 0;
+	Server.ServerName.length = 0;
+	Server.ServerMOTD.length = 0;
 	data++; /* protocol version */
 
-	Handlers_ReadString(&data, &ServerConnection_ServerName);
-	Handlers_ReadString(&data, &ServerConnection_ServerMOTD);
-	Chat_SetLogName(&ServerConnection_ServerName);
+	Handlers_ReadString(&data, &Server.ServerName);
+	Handlers_ReadString(&data, &Server.ServerMOTD);
+	Chat_SetLogName(&Server.ServerName);
 
 	hacks = &LocalPlayer_Instance.Hacks;
 	HacksComp_SetUserType(hacks, *data, !cpe_blockPerms);
 	
-	String_Copy(&hacks->HacksFlags,         &ServerConnection_ServerName);
-	String_AppendString(&hacks->HacksFlags, &ServerConnection_ServerMOTD);
+	String_Copy(&hacks->HacksFlags,         &Server.ServerName);
+	String_AppendString(&hacks->HacksFlags, &Server.ServerMOTD);
 	HacksComp_UpdateState(hacks);
 }
 
@@ -412,7 +412,7 @@ static void Classic_StartLoading(void) {
 		classic_prevScreen = NULL;
 	}
 
-	Gui_SetActive(LoadingScreen_MakeInstance(&ServerConnection_ServerName, &ServerConnection_ServerMOTD));
+	Gui_SetActive(LoadingScreen_MakeInstance(&Server.ServerName, &Server.ServerMOTD));
 	WoM_CheckMotd();
 	classic_receivedFirstPos = false;
 
@@ -738,7 +738,7 @@ static void CPE_SetMapEnvUrl(uint8_t* data);
 #define Ext_Deg2Packed(x) ((int16_t)((x) * 65536.0f / 360.0f))
 void CPE_WritePlayerClick(MouseButton button, bool pressed, uint8_t targetId, struct PickedPos* pos) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	uint8_t* data = ServerConnection_WriteBuffer;
+	uint8_t* data = Server.WriteBuffer;
 	*data++ = OPCODE_PLAYER_CLICK;
 	{
 		*data++ = button;
@@ -763,46 +763,46 @@ void CPE_WritePlayerClick(MouseButton button, bool pressed, uint8_t targetId, st
 		}
 		data++;
 	}
-	ServerConnection_WriteBuffer += 15;
+	Server.WriteBuffer += 15;
 }
 
 static void CPE_WriteExtInfo(const String* appName, int extensionsCount) {
-	uint8_t* data = ServerConnection_WriteBuffer; 
+	uint8_t* data = Server.WriteBuffer; 
 	*data++ = OPCODE_EXT_INFO;
 	{
 		Handlers_WriteString(data, appName);     data += STRING_SIZE;
 		Stream_SetU16_BE(data, extensionsCount); data += 2;
 	}
-	ServerConnection_WriteBuffer = data;
+	Server.WriteBuffer = data;
 }
 
 static void CPE_WriteExtEntry(const String* extensionName, int extensionVersion) {
-	uint8_t* data = ServerConnection_WriteBuffer;
+	uint8_t* data = Server.WriteBuffer;
 	*data++ = OPCODE_EXT_ENTRY;
 	{
 		Handlers_WriteString(data, extensionName); data += STRING_SIZE;
 		Stream_SetU32_BE(data, extensionVersion);  data += 4;
 	}
-	ServerConnection_WriteBuffer = data;
+	Server.WriteBuffer = data;
 }
 
 static void CPE_WriteCustomBlockLevel(uint8_t version) {
-	uint8_t* data = ServerConnection_WriteBuffer;
+	uint8_t* data = Server.WriteBuffer;
 	*data++ = OPCODE_CUSTOM_BLOCK_LEVEL;
 	{
 		*data++ = version;
 	}
-	ServerConnection_WriteBuffer = data;
+	Server.WriteBuffer = data;
 }
 
 static void CPE_WriteTwoWayPing(bool serverToClient, int payload) {
-	uint8_t* data = ServerConnection_WriteBuffer; 
+	uint8_t* data = Server.WriteBuffer; 
 	*data++ = OPCODE_TWO_WAY_PING;
 	{
 		*data++ = serverToClient;
 		Stream_SetU16_BE(data, payload); data += 2;
 	}
-	ServerConnection_WriteBuffer = data;
+	Server.WriteBuffer = data;
 }
 
 static void CPE_SendCpeExtInfoReply(void) {
@@ -825,7 +825,7 @@ static void CPE_SendCpeExtInfoReply(void) {
 	if (!Game_AllowCustomBlocks) count -= 2;
 #endif
 
-	CPE_WriteExtInfo(&ServerConnection_AppName, count);
+	CPE_WriteExtInfo(&Server.AppName, count);
 	Net_SendPacket();
 
 	for (i = 0; i < Array_Elems(cpe_clientExtensions); i++) {
@@ -889,19 +889,19 @@ static void CPE_ExtEntry(uint8_t* data) {
 	} else if (String_CaselessEqualsConst(&ext, "MessageTypes")) {
 		cpe_useMessageTypes = true;
 	} else if (String_CaselessEqualsConst(&ext, "ExtPlayerList")) {
-		ServerConnection_SupportsExtPlayerList = true;
+		Server.SupportsExtPlayerList = true;
 	} else if (String_CaselessEqualsConst(&ext, "BlockPermissions")) {
 		cpe_blockPerms = true;
 	} else if (String_CaselessEqualsConst(&ext, "PlayerClick")) {
-		ServerConnection_SupportsPlayerClick = true;
+		Server.SupportsPlayerClick = true;
 	} else if (String_CaselessEqualsConst(&ext, "EnvMapAppearance")) {
 		cpe_envMapVer = extVersion;
 		if (extVersion == 1) return;
 		Net_PacketSizes[OPCODE_ENV_SET_MAP_APPEARANCE] += 4;
 	} else if (String_CaselessEqualsConst(&ext, "LongerMessages")) {
-		ServerConnection_SupportsPartialMessages = true;
+		Server.SupportsPartialMessages = true;
 	} else if (String_CaselessEqualsConst(&ext, "FullCP437")) {
-		ServerConnection_SupportsFullCP437 = true;
+		Server.SupportsFullCP437 = true;
 	} else if (String_CaselessEqualsConst(&ext, "BlockDefinitionsExt")) {
 		cpe_blockDefsExtVer = extVersion;
 		if (extVersion == 1) return;
@@ -959,10 +959,10 @@ static void CPE_HoldThis(uint8_t* data) {
 	Handlers_ReadBlock(data, block);
 	canChange = *data == 0;
 
-	Inventory_CanChangeSelected = true;
+	Inventory.CanChangeSelected = true;
 	Inventory_SetSelectedBlock(block);
-	Inventory_CanChangeSelected = canChange;
-	Inventory_CanUse = block != BLOCK_AIR;
+	Inventory.CanChangeSelected = canChange;
+	Inventory.CanUse = block != BLOCK_AIR;
 }
 
 static void CPE_SetTextHotkey(uint8_t* data) {
@@ -1236,7 +1236,7 @@ static void CPE_SetMapEnvUrl(uint8_t* data) {
 		/* don't extract default texture pack if we can */
 		if (World_TextureUrl.length) TexturePack_ExtractDefault();
 	} else if (Utils_IsUrlPrefix(&url, 0)) {
-		ServerConnection_RetrieveTexturePack(&url);
+		Server_RetrieveTexturePack(&url);
 	}
 	Platform_Log1("Image url: %s", &url);
 }
@@ -1334,7 +1334,7 @@ static void CPE_SetInventoryOrder(uint8_t* data) {
 	Handlers_ReadBlock(data, order);
 
 	Inventory_Remove(block);
-	if (order) { Inventory_Map[order - 1] = block; }
+	if (order) { Inventory.Map[order - 1] = block; }
 }
 
 static void CPE_Reset(void) {

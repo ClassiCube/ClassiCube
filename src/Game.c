@@ -21,7 +21,7 @@
 #include "Http.h"
 #include "Inventory.h"
 #include "InputHandler.h"
-#include "ServerConnection.h"
+#include "Server.h"
 #include "TexturePack.h"
 #include "Screens.h"
 #include "SelectionBox.h"
@@ -169,7 +169,7 @@ void Game_UserSetViewDistance(int distance) {
 
 void Game_UpdateProjection(void) {
 	Game_DefaultFov = Options_GetInt(OPT_FIELD_OF_VIEW, 1, 179, 70);
-	Camera_Active->GetProjection(&Gfx_Projection);
+	Camera.Active->GetProjection(&Gfx_Projection);
 
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx_Projection);
 	Event_RaiseVoid(&GfxEvents.ProjectionChanged);
@@ -215,7 +215,7 @@ void Game_UpdateBlock(int x, int y, int z, BlockID block) {
 void Game_ChangeBlock(int x, int y, int z, BlockID block) {
 	BlockID old = World_GetBlock(x, y, z);
 	Game_UpdateBlock(x, y, z, block);
-	ServerConnection.SendBlock(x, y, z, old, block);
+	Server.SendBlock(x, y, z, old, block);
 }
 
 bool Game_CanPick(BlockID block) {
@@ -468,7 +468,7 @@ static void Game_Load(void) {
 
 	Game_AddComponent(&MapRenderer_Component);
 	Game_AddComponent(&EnvRenderer_Component);
-	Game_AddComponent(&ServerConnection_Component);
+	Game_AddComponent(&Server_Component);
 	Camera_Init();
 	Game_UpdateProjection();
 
@@ -500,7 +500,7 @@ static void Game_Load(void) {
 
 	Gui_FreeActive();
 	Gui_SetActive(LoadingScreen_MakeInstance(&title, &String_Empty));
-	ServerConnection.BeginConnect();
+	Server.BeginConnect();
 }
 
 void Game_SetFpsLimit(enum FpsLimit method) {
@@ -529,7 +529,7 @@ static void Game_LimitFPS(uint64_t frameStart) {
 }
 
 static void Game_UpdateViewMatrix(void) {
-	Camera_Active->GetView(&Gfx_View);
+	Camera.Active->GetView(&Gfx_View);
 	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx_View);
 	FrustumCulling_CalcFrustumEquations(&Gfx_Projection, &Gfx_View);
 }
@@ -544,7 +544,7 @@ static void Game_Render3D(double delta, float t) {
 	Entities_RenderNames(delta);
 
 	Particles_Render(delta, t);
-	Camera_Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
+	Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
 
 	EnvRenderer_UpdateFog();
 	EnvRenderer_RenderSky(delta);
@@ -562,7 +562,7 @@ static void Game_Render3D(double delta, float t) {
 
 	/* Render water over translucent blocks when underwater for proper alpha blending */
 	pos = LocalPlayer_Instance.Base.Position;
-	if (Camera_CurrentPos.Y < Env_EdgeHeight && (pos.X < 0 || pos.Z < 0 || pos.X > World_Width || pos.Z > World_Length)) {
+	if (Camera.CurrentPos.Y < Env_EdgeHeight && (pos.X < 0 || pos.Z < 0 || pos.X > World_Width || pos.Z > World_Length)) {
 		MapRenderer_RenderTranslucent(delta);
 		EnvRenderer_RenderMapEdges(delta);
 	} else {
@@ -646,7 +646,7 @@ static void Game_RenderFrame(double delta) {
 	Game_Time += delta;
 	Game_Vertices = 0;
 
-	Camera_Active->UpdateMouse();
+	Camera.Active->UpdateMouse();
 	if (!Window_Focused && !Gui_GetActiveScreen()->HandlesAllInput) {
 		Gui_FreeActive();
 		Gui_SetActive(PauseScreen_MakeInstance());
@@ -663,7 +663,7 @@ static void Game_RenderFrame(double delta) {
 	LocalPlayer_SetInterpPosition(t);
 
 	Gfx_Clear();
-	Camera_CurrentPos = Camera_Active->GetPosition(t);
+	Camera.CurrentPos = Camera.Active->GetPosition(t);
 	Game_UpdateViewMatrix();
 
 	visible = !Gui_Active || !Gui_Active->BlocksWorld;

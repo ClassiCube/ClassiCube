@@ -10,7 +10,7 @@
 #include "Model.h"
 #include "Screens.h"
 #include "Platform.h"
-#include "ServerConnection.h"
+#include "Server.h"
 #include "Event.h"
 #include "Chat.h"
 #include "Game.h"
@@ -328,7 +328,7 @@ static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
 	w->BackTex.ID = tex;
 	Texture_Render(&w->BackTex);
 
-	i     = Inventory_SelectedIndex;
+	i     = Inventory.SelectedIndex;
 	width = w->ElemSize + w->BorderSize;
 	x     = (int)(w->X + w->BarXOffset + width * i + w->ElemSize / 2);
 
@@ -343,7 +343,7 @@ static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
 	float width, scale;
 	int i, x, y;
 
-	IsometricDrawer_BeginBatch(vertices, Model_Vb);
+	IsometricDrawer_BeginBatch(vertices, Models.Vb);
 	width =  w->ElemSize + w->BorderSize;
 	scale = (w->ElemSize * 13.5f/16.0f) / 2.0f;
 
@@ -443,7 +443,7 @@ static bool HotbarWidget_KeyUp(void* widget, Key key) {
 	if (!Window_Focused) return true;
 
 	/* Alternate between first and second row */
-	index = Inventory_Offset == 0 ? 1 : 0;
+	index = Inventory.Offset == 0 ? 1 : 0;
 	Inventory_SetHotbarIndex(index);
 	return true;
 }
@@ -478,12 +478,12 @@ static bool HotbarWidget_MouseScroll(void* widget, float delta) {
 	int index;
 
 	if (KeyBind_IsPressed(KEYBIND_HOTBAR_SWITCH)) {
-		index = Inventory_Offset / INVENTORY_BLOCKS_PER_HOTBAR;
+		index = Inventory.Offset / INVENTORY_BLOCKS_PER_HOTBAR;
 		index = HotbarWidget_ScrolledIndex(w, delta, index, 1);
 		Inventory_SetHotbarIndex(index);
 		w->AltHandled = true;
 	} else {
-		index = HotbarWidget_ScrolledIndex(w, delta, Inventory_SelectedIndex, -1);
+		index = HotbarWidget_ScrolledIndex(w, delta, Inventory.SelectedIndex, -1);
 		Inventory_SetSelectedIndex(index);
 	}
 	return true;
@@ -603,10 +603,10 @@ void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block) {
 }
 
 static bool TableWidget_RowEmpty(struct TableWidget* w, int start) {
-	int i, end = min(start + w->ElementsPerRow, Array_Elems(Inventory_Map));
+	int i, end = min(start + w->ElementsPerRow, Array_Elems(Inventory.Map));
 
 	for (i = start; i < end; i++) {
-		if (Inventory_Map[i] != BLOCK_AIR) return false;
+		if (Inventory.Map[i] != BLOCK_AIR) return false;
 	}
 	return true;
 }
@@ -616,12 +616,12 @@ static void TableWidget_RecreateElements(struct TableWidget* w) {
 	BlockID block;
 	w->ElementsCount = 0;
 
-	for (i = 0; i < Array_Elems(Inventory_Map); ) {
+	for (i = 0; i < Array_Elems(Inventory.Map); ) {
 		if ((i % w->ElementsPerRow) == 0 && TableWidget_RowEmpty(w, i)) {
 			i += w->ElementsPerRow; continue;
 		}
 
-		block = Inventory_Map[i];
+		block = Inventory.Map[i];
 		if (block < max) { w->Elements[w->ElementsCount++] = block; }
 		i++;
 	}
@@ -1008,7 +1008,7 @@ void InputWidget_Clear(struct InputWidget* w) {
 }
 
 static bool InputWidget_AllowedChar(void* widget, char c) {
-	return ServerConnection_SupportsFullCP437 || (Convert_CP437ToUnicode(c) == c);
+	return Server.SupportsFullCP437 || (Convert_CP437ToUnicode(c) == c);
 }
 
 static void InputWidget_AppendChar(struct InputWidget* w, char c) {
@@ -1793,7 +1793,7 @@ static bool ChatInputWidget_KeyDown(void* widget, Key key, bool was) {
 }
 
 static int ChatInputWidget_GetMaxLines(void) {
-	return !Game_ClassicMode && ServerConnection_SupportsPartialMessages ? 3 : 1;
+	return !Game_ClassicMode && Server.SupportsPartialMessages ? 3 : 1;
 }
 
 static struct WidgetVTABLE ChatInputWidget_VTABLE = {

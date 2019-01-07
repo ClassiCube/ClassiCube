@@ -15,7 +15,7 @@ extern struct IGameComponent Models_Component;
 
 #define MODEL_QUAD_VERTICES 4
 #define MODEL_BOX_VERTICES (FACE_COUNT * MODEL_QUAD_VERTICES)
-enum ROTATE_ORDER { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX };
+enum RotateOrder { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX };
 
 /* Describes a vertex within a model. */
 struct ModelVertex { float X, Y, Z; uint16_t U, V; };
@@ -72,15 +72,26 @@ struct Model {
 public CustomModel[] CustomModels = new CustomModel[256];
 #endif
 
-extern PackedCol Model_Cols[FACE_COUNT];
-/* U/V scale applied to the skin when rendering the model. */
-/* Default uScale is 1/32, vScale is 1/32 or 1/64 depending on skin. */
-extern float Model_uScale, Model_vScale;
-/* Angle of offset of head from body rotation */
-extern float Model_cosHead, Model_sinHead;
-extern uint8_t Model_Rotation, Model_skinType;
-extern struct Model* Model_ActiveModel;
-void Model_Init(struct Model* model);
+/* Shared data for models. */
+CC_VAR extern struct _ModelsData {
+	/* Tint colour applied to the faces of model parts. */
+	PackedCol Cols[FACE_COUNT];
+	/* U/V scale applied to skin texture when rendering models. */
+	/* Default uScale is 1/32, vScale is 1/32 or 1/64 depending on skin. */
+	float uScale, vScale;
+	/* Angle of offset of head from body rotation */
+	float cosHead, sinHead;
+	/* Order of axes rotation when rendering parts. */
+	uint8_t Rotation;
+	uint8_t skinType;
+	/* Model currently being built or rendered. */
+	struct Model* Active;
+	/* Dynamic vertex buffer for uploading model vertices. */
+	GfxResourceID Vb;
+} Models;
+
+/* Initialises fields of a model to default. */
+CC_API void Model_Init(struct Model* model);
 
 #define Model_SetPointers(instance, typeName)\
 instance.GetEyeY = typeName ## _GetEyeY;\
@@ -89,26 +100,37 @@ instance.GetPickingBounds = typeName ## _GetPickingBounds;\
 instance.CreateParts = typeName ## _CreateParts;\
 instance.DrawModel = typeName ## _DrawModel;
 
+/* Whether the bounding sphere of the model is currently visible. */
 bool Model_ShouldRender(struct Entity* entity);
+/* Approximately how far the given entity is away from the player. */
 float Model_RenderDistance(struct Entity* entity);
-void Model_Render(struct Model* model, struct Entity* entity);
-void Model_SetupState(struct Model* model, struct Entity* entity);
-void Model_UpdateVB(void);
-void Model_ApplyTexture(struct Entity* entity);
-void Model_DrawPart(struct ModelPart* part);
-void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart* part, bool head);
+/* Draws the given entity as the given model. */
+CC_API void Model_Render(struct Model* model, struct Entity* entity);
+/* Sets up state to be suitable for rendering the given model. */
+/* NOTE: Model_Render already calls this, you don't normally need to call this. */
+CC_API void Model_SetupState(struct Model* model, struct Entity* entity);
+/* Flushes buffered vertices to the GPU. */
+CC_API void Model_UpdateVB(void);
+/* Applies the skin texture of the given entity to the model. */
+/* Uses model's default texture if the entity doesn't have a custom skin. */
+CC_API void Model_ApplyTexture(struct Entity* entity);
+/* Draws the given part with no part-specific rotation (e.g. torso). */
+CC_API void Model_DrawPart(struct ModelPart* part);
+/* Draws the given part with rotation around part's rotation origin. (e.g. arms, head) */
+CC_API void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart* part, bool head);
+/* Renders the 'arm' of a model. */
 void Model_RenderArm(struct Model* model, struct Entity* entity);
-void Model_DrawArmPart(struct ModelPart* part);
+/* Draws the given part with appropriate rotation to produce an arm look. */
+CC_API void Model_DrawArmPart(struct ModelPart* part);
 
 /* Maximum number of vertices a model can have */
 #define MODEL_MAX_VERTICES (24 * 12)
-extern GfxResourceID Model_Vb;
 extern VertexP3fT2fC4b Model_Vertices[MODEL_MAX_VERTICES];
 extern struct Model* Human_ModelPtr;
 
-/* Returns pointer to model whose name caselessly matches given name. */
+/* Returns a pointer to the model whose name caselessly matches given name. */
 CC_API struct Model* Model_Get(const String* name);
-/* Returns index of cached texture whose name caselessly matches given name. */
+/* Returns index of the model texture whose name caselessly matches given name. */
 CC_API struct ModelTex* Model_GetTexture(const String* name);
 /* Adds a model to the list of models. (e.g. "skeleton") */
 /* Models can be applied to entities to change their appearance. Use Entity_SetModel for that. */

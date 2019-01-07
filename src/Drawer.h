@@ -6,7 +6,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-extern struct _DrawerData {
+CC_VAR extern struct _DrawerData {
 	/* Whether a colour tinting effect should be applied to all faces. */
 	bool Tinted;
 	/* The colour to multiply colour of faces by (tinting effect). */
@@ -22,15 +22,15 @@ extern struct _DrawerData {
 } Drawer;
 
 /* Draws minimum X face of the cuboid. (i.e. at X1) */
-void Drawer_XMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
+CC_API void Drawer_XMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
 /* Draws maximum X face of the cuboid. (i.e. at X2) */
-void Drawer_XMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
+CC_API void Drawer_XMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
 /* Draws minimum Z face of the cuboid. (i.e. at Z1) */
-void Drawer_ZMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
+CC_API void Drawer_ZMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
 /* Draws maximum Z face of the cuboid. (i.e. at Z2) */
-void Drawer_ZMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
+CC_API void Drawer_ZMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
 /* Draws minimum Y face of the cuboid. (i.e. at Y1) */
-void Drawer_YMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
+CC_API void Drawer_YMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
 /* Draws maximum Y face of the cuboid. (i.e. at Y2) */
-void Drawer_YMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
+CC_API void Drawer_YMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
 #endif

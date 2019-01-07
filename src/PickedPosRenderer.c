@@ -55,7 +55,7 @@ void PickedPosRenderer_Update(struct PickedPos* selected) {
 	float dist, offset, size;
 	Vector3 coords[4];
 
-	Vector3_Sub(&delta, &Camera_CurrentPos, &selected->Min);
+	Vector3_Sub(&delta, &Camera.CurrentPos, &selected->Min);
 	dist = Vector3_LengthSquared(&delta);
 
 	offset = 0.01f;

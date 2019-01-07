@@ -1,6 +1,6 @@
 #include "InputHandler.h"
 #include "Utils.h"
-#include "ServerConnection.h"
+#include "Server.h"
 #include "HeldBlockRenderer.h"
 #include "Game.h"
 #include "Platform.h"
@@ -44,7 +44,7 @@ static void InputHandler_ButtonStateUpdate(MouseButton button, bool pressed) {
 	}
 
 	input_buttonsDown[button] = pressed;
-	ServerConnection.SendPlayerClick(button, pressed, 
+	Server.SendPlayerClick(button, pressed, 
 									(EntityID)input_pickingId, &Game_SelectedPos);	
 }
 
@@ -63,7 +63,7 @@ void InputHandler_ScreenChanged(struct Screen* oldScreen, struct Screen* newScre
 		input_lastClick = DateTime_CurrentUTC_MS();
 	}
 
-	if (ServerConnection_SupportsPlayerClick) {
+	if (Server.SupportsPlayerClick) {
 		input_pickingId = -1;
 		InputHandler_ButtonStateChanged(MOUSE_LEFT,   false);
 		InputHandler_ButtonStateChanged(MOUSE_RIGHT,  false);
@@ -146,7 +146,7 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 	if (key == KeyBind_Get(KEYBIND_HIDE_GUI)) {
 		Game_HideGui = !Game_HideGui;
 	} else if (key == KeyBind_Get(KEYBIND_SMOOTH_CAMERA)) {
-		InputHandler_Toggle(key, &Camera_Smooth,
+		InputHandler_Toggle(key, &Camera.Smooth,
 			"  &eSmooth camera is &aenabled",
 			"  &eSmooth camera is &cdisabled");
 	} else if (key == KeyBind_Get(KEYBIND_AXIS_LINES)) {
@@ -163,7 +163,7 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 		if (Inventory_CheckChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {
 			/* Don't assign SelectedIndex directly, because we don't want held block
 			switching positions if they already have air in their inventory hotbar. */
-			Inventory_Set(Inventory_SelectedIndex, BLOCK_AIR);
+			Inventory_Set(Inventory.SelectedIndex, BLOCK_AIR);
 			Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 		}
 	} else if (key == KeyBind_Get(KEYBIND_IDOVERLAY)) {
@@ -328,14 +328,14 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 	if (cooldown && delta < 250) return; /* 4 times per second */
 	input_lastClick = now;
 
-	if (ServerConnection_SupportsPlayerClick && !Gui_GetActiveScreen()->HandlesAllInput) {
+	if (Server.SupportsPlayerClick && !Gui_GetActiveScreen()->HandlesAllInput) {
 		input_pickingId = -1;
 		InputHandler_ButtonStateChanged(MOUSE_LEFT,   left);
 		InputHandler_ButtonStateChanged(MOUSE_RIGHT,  right);
 		InputHandler_ButtonStateChanged(MOUSE_MIDDLE, middle);
 	}
 
-	if (Gui_GetActiveScreen()->HandlesAllInput || !Inventory_CanUse) return;
+	if (Gui_GetActiveScreen()->HandlesAllInput || !Inventory.CanUse) return;
 
 	if (left) {
 		/* always play delete animations, even if we aren't picking a block */
@@ -403,8 +403,8 @@ static void InputHandler_MouseWheel(void* obj, float delta) {
 	if (Elem_HandlesMouseScroll(active, delta)) return;
 
 	hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
-	if (!hotbar && Camera_Active->Zoom(delta)) return;
-	if (InputHandler_DoFovZoom(delta) || !Inventory_CanChangeSelected) return;
+	if (!hotbar && Camera.Active->Zoom(delta)) return;
+	if (InputHandler_DoFovZoom(delta) || !Inventory.CanChangeSelected) return;
 
 	widget = HUDScreen_GetHotbar(Gui_HUD);
 	Elem_HandlesMouseScroll(widget, delta);
@@ -430,7 +430,7 @@ static void InputHandler_MouseDown(void* obj, int button) {
 static void InputHandler_MouseUp(void* obj, int button) {
 	struct Screen* active = Gui_GetActiveScreen();
 	if (!Elem_HandlesMouseUp(active, Mouse_X, Mouse_Y, button)) {
-		if (ServerConnection_SupportsPlayerClick && button <= MOUSE_MIDDLE) {
+		if (Server.SupportsPlayerClick && button <= MOUSE_MIDDLE) {
 			input_pickingId = -1;
 			InputHandler_ButtonStateChanged(button, false);
 		}
