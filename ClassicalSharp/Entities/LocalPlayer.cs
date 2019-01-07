@@ -180,7 +180,7 @@ namespace ClassicalSharp.Entities {
 			AABB bb;
 			
 			// Spawn player at highest valid position
-			if (Hacks.CanAnyHacks) {
+			if (Hacks.CanNoclip) {
 			    if (game.World.IsValidPos(P)) {
 			        bb = AABB.Make(spawn, Size);
 			        for (int y = P.Y; y <= game.World.Height; y++) {
@@ -220,11 +220,10 @@ namespace ClassicalSharp.Entities {
 		
 		bool HandleSetSpawn() {
 			if (Hacks.CanRespawn) {
-		        if (!Hacks.CanAnyHacks && !onGround) {
-		            game.Chat.Add("&cCannot set spawn mid-air while hacks are disabled");
+		        if (!Hacks.CanNoclip && !onGround) {
 		            return false;
 		        }
-		        if (!Hacks.CanAnyHacks) {
+		        if (!Hacks.CanNoclip) {
 		            Spawn.X = Position.X;
 		            Spawn.Y = Position.Y;
 		            Spawn.Z = Position.Z;
