@@ -24,6 +24,7 @@ typedef signed __int64 int64_t;
 #define CC_ALIGN_HINT(x) __declspec(align(x))
 #ifndef CC_API
 #define CC_API __declspec(dllexport, noinline)
+#define CC_VAR __declspec(dllexport)
 #endif
 #elif __GNUC__
 #include <stdint.h>
@@ -33,8 +34,10 @@ typedef signed __int64 int64_t;
 #ifndef CC_API
 #ifdef _WIN32
 #define CC_API __attribute__((dllexport, noinline))
+#define CC_VAR __attribute__((dllexport))
 #else
 #define CC_API __attribute__((visibility("default"), noinline))
+#define CC_VAR __attribute__((visibility("default")))
 #endif
 #endif
 #else

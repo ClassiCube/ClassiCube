@@ -8,21 +8,27 @@
 struct PickedPos;
 struct Camera;
 
-/* How sensitive camera is to movements of mouse. */
-extern int  Camera_Sensitivity;
-/* Whether smooth/cinematic camera mode is used. */
-extern bool Camera_Smooth;
-/* Whether third person camera clip against blocks. */
-extern bool Camera_Clipping;
-/* Whether to invert vertical mouse movement. */
-extern bool Camera_Invert;
+/* Shared data for cameras. */
+struct _CameraData {
+	/* How sensitive camera is to movements of mouse. */
+	int Sensitivity;
+	/* Whether smooth/cinematic camera mode is used. */
+	bool Smooth;
+	/* Whether third person camera clip against blocks. */
+	bool Clipping;
+	/* Whether to invert vertical mouse movement. */
+	bool Invert;
 
-/* Tilt effect applied to the camera. */
-extern struct Matrix Camera_TiltM;
-/* Bobbing offset of camera from player's eye. */
-extern float Camera_BobbingVer, Camera_BobbingHor;
-/* Cached position the camera is at. */
-extern Vector3 Camera_CurrentPos;
+	/* Tilt effect applied to the camera. */
+	struct Matrix TiltM;
+	/* Bobbing offset of camera from player's eye. */
+	float BobbingVer, BobbingHor;
+
+	/* Cached position the camera is at. */
+	Vector3 CurrentPos;
+	/* Camera user is currently using. */
+	struct Camera* Active;
+} Camera;
 
 struct Camera {
 	/* Whether this camera is third person. (i.e. not allowed when -thirdperson in MOTD) */
@@ -53,8 +59,6 @@ struct Camera {
 	bool (*Zoom)(float amount);
 };
 
-/* Camera user is currently using. */
-extern struct Camera* Camera_Active;
 /* Initialises the default cameras. */
 void Camera_Init(void);
 /* Switches to the next camera in the list. */

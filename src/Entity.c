@@ -865,12 +865,12 @@ static void LocalPlayer_RenderModel(struct Entity* e, double deltaTime, float t)
 	AnimatedComp_GetCurrent(e, t);
 	TiltComp_GetCurrent(&p->Tilt, t);
 
-	if (!Camera_Active->IsThirdPerson) return;
+	if (!Camera.Active->IsThirdPerson) return;
 	Model_Render(e->Model, e);
 }
 
 static void LocalPlayer_RenderName(struct Entity* e) {
-	if (!Camera_Active->IsThirdPerson) return;
+	if (!Camera.Active->IsThirdPerson) return;
 	Player_DrawName((struct Player*)e);
 }
 

@@ -175,7 +175,7 @@ void Selections_Render(double delta) {
 
 	/* TODO: Proper selection box sorting. But this is very difficult because
 	   we can have boxes within boxes, intersecting boxes, etc. Probably not worth it. */
-	cameraPos = Camera_CurrentPos;
+	cameraPos = Camera.CurrentPos;
 	for (i = 0; i < selections_count; i++) {
 		SelectionBox_Intersect(&selections_list[i], cameraPos);
 	}

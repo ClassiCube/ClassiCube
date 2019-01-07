@@ -1,4 +1,4 @@
-#include "ServerConnection.h"
+#include "Server.h"
 #include "BlockPhysics.h"
 #include "Game.h"
 #include "Drawer2D.h"
@@ -27,39 +27,30 @@ static char server_nameBuffer[STRING_SIZE];
 static char server_motdBuffer[STRING_SIZE];
 static char server_appBuffer[STRING_SIZE];
 static int server_ticks;
-
-struct ServerConnectionFuncs ServerConnection;
-bool ServerConnection_IsSinglePlayer, ServerConnection_Disconnected;
-String ServerConnection_ServerName = String_FromArray(server_nameBuffer);
-String ServerConnection_ServerMOTD = String_FromArray(server_motdBuffer);
-String ServerConnection_AppName    = String_FromArray(server_appBuffer);
-
-uint8_t* ServerConnection_WriteBuffer; 
-bool ServerConnection_SupportsExtPlayerList, ServerConnection_SupportsPlayerClick;
-bool ServerConnection_SupportsPartialMessages, ServerConnection_SupportsFullCP437;
+struct _ServerConnectionData Server;
 
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
 *#########################################################################################################################*/
-static void ServerConnection_ResetState(void) {
-	ServerConnection_Disconnected = false;
-	ServerConnection_SupportsExtPlayerList = false;
-	ServerConnection_SupportsPlayerClick = false;
-	ServerConnection_SupportsPartialMessages = false;
-	ServerConnection_SupportsFullCP437 = false;
+static void Server_ResetState(void) {
+	Server.Disconnected            = false;
+	Server.SupportsExtPlayerList   = false;
+	Server.SupportsPlayerClick     = false;
+	Server.SupportsPartialMessages = false;
+	Server.SupportsFullCP437       = false;
 }
 
-void ServerConnection_RetrieveTexturePack(const String* url) {
+void Server_RetrieveTexturePack(const String* url) {
 	struct Screen* warning;
 	if (!TextureCache_HasAccepted(url) && !TextureCache_HasDenied(url)) {
 		warning = TexPackOverlay_MakeInstance(url);
 		Gui_ShowOverlay(warning, false);
 	} else {
-		ServerConnection_DownloadTexturePack(url);
+		Server_DownloadTexturePack(url);
 	}
 }
 
-void ServerConnection_DownloadTexturePack(const String* url) {
+void Server_DownloadTexturePack(const String* url) {
 	const static String texPack = String_FromConst("texturePack");
 	String etag; char etagBuffer[STRING_SIZE];
 	TimeMS lastModified;
@@ -77,7 +68,7 @@ void ServerConnection_DownloadTexturePack(const String* url) {
 	Http_AsyncGetDataEx(url, true, &texPack, &lastModified, &etag);
 }
 
-void ServerConnection_CheckAsyncResources(void) {
+static void Server_CheckAsyncResources(void) {
 	const static String texPack = String_FromConst("texturePack");
 	struct HttpRequest item;
 	if (!Http_GetResult(&texPack, &item)) return;
@@ -224,30 +215,29 @@ static void SPConnection_SendPosition(Vector3 pos, float rotY, float headX) { }
 static void SPConnection_SendPlayerClick(MouseButton button, bool pressed, EntityID targetId, struct PickedPos* pos) { }
 
 static void SPConnection_Tick(struct ScheduledTask* task) {
-	if (ServerConnection_Disconnected) return;
+	if (Server.Disconnected) return;
 	if ((server_ticks % 3) == 0) {
 		Physics_Tick();
-		ServerConnection_CheckAsyncResources();
+		Server_CheckAsyncResources();
 	}
 	server_ticks++;
 }
 
-static struct ServerConnectionFuncs SPConnection = {
-	SPConnection_BeginConnect, SPConnection_Tick,
-	SPConnection_SendBlock,    SPConnection_SendChat,
-	SPConnection_SendPosition, SPConnection_SendPlayerClick
-};
-
 static void SPConnection_Init(void) {
-	ServerConnection_ResetState();
+	Server_ResetState();
 	Physics_Init();
-	
-	ServerConnection_SupportsFullCP437 = !Game_ClassicMode;
-	ServerConnection_SupportsPartialMessages = true;
-	ServerConnection_IsSinglePlayer = true;
 
-	ServerConnection = SPConnection;
-	ServerConnection_WriteBuffer = NULL;
+	Server.BeginConnect    = SPConnection_BeginConnect;
+	Server.Tick            = SPConnection_Tick;
+	Server.SendBlock       = SPConnection_SendBlock;
+	Server.SendChat        = SPConnection_SendChat;
+	Server.SendPosition    = SPConnection_SendPosition;
+	Server.SendPlayerClick = SPConnection_SendPlayerClick;
+	
+	Server.SupportsFullCP437       = !Game_ClassicMode;
+	Server.SupportsPartialMessages = true;
+	Server.IsSinglePlayer          = true;
+	Server.WriteBuffer = NULL;
 }
 
 
@@ -271,12 +261,12 @@ static bool net_connecting;
 static TimeMS net_connectTimeout;
 #define NET_TIMEOUT_MS (15 * 1000)
 
-static void ServerConnection_Free(void);
+static void Server_Free(void);
 static void MPConnection_FinishConnect(void) {
 	net_connecting = false;
 	Event_RaiseFloat(&WorldEvents.Loading, 0.0f);
 	net_readCurrent = net_readBuffer;
-	ServerConnection_WriteBuffer = net_writeBuffer;
+	Server.WriteBuffer = net_writeBuffer;
 
 	Handlers_Reset();
 	Classic_WriteLogin(&Game_Username, &Game_Mppass);
@@ -299,7 +289,7 @@ static void MPConnection_FailConnect(ReturnCode result) {
 
 	String_Format2(&msg, "Failed to connect to %s:%i", &Game_IPAddress, &Game_Port);
 	Game_Disconnect(&msg, &reason);
-	ServerConnection_Free();
+	Server_Free();
 }
 
 static void MPConnection_TickConnect(void) {
@@ -327,7 +317,7 @@ static void MPConnection_TickConnect(void) {
 static void MPConnection_BeginConnect(void) {
 	ReturnCode res;
 	Socket_Create(&net_socket);
-	ServerConnection_Disconnected = false;
+	Server.Disconnected = false;
 
 	Socket_SetBlocking(net_socket, false);
 	net_connecting = true;
@@ -411,7 +401,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	int i, remaining;
 	ReturnCode res;
 
-	if (ServerConnection_Disconnected) return;
+	if (Server.Disconnected) return;
 	if (net_connecting) { MPConnection_TickConnect(); return; }
 
 	/* over 30 seconds since last packet */
@@ -419,7 +409,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	if (net_lastPacket + (30 * 1000) < now) {
 		MPConnection_CheckDisconnection(task->Interval);
 	}
-	if (ServerConnection_Disconnected) return;
+	if (Server.Disconnected) return;
 
 	pending = 0;
 	res     = Socket_Available(net_socket, &pending);
@@ -483,10 +473,10 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 
 	/* Network is ticked 60 times a second. We only send position updates 20 times a second */
 	if ((server_ticks % 3) == 0) {
-		ServerConnection_CheckAsyncResources();
+		Server_CheckAsyncResources();
 		Handlers_Tick();
 		/* Have any packets been written? */
-		if (ServerConnection_WriteBuffer != net_writeBuffer) {
+		if (Server.WriteBuffer != net_writeBuffer) {
 			Net_SendPacket();
 		}
 	}
@@ -498,9 +488,9 @@ void Net_SendPacket(void) {
 	uint8_t* cur;
 	ReturnCode res;
 
-	left = (uint32_t)(ServerConnection_WriteBuffer - net_writeBuffer);
-	ServerConnection_WriteBuffer = net_writeBuffer;
-	if (ServerConnection_Disconnected) return;
+	left = (uint32_t)(Server.WriteBuffer - net_writeBuffer);
+	Server.WriteBuffer = net_writeBuffer;
+	if (Server.Disconnected) return;
 
 	/* NOTE: Not immediately disconnecting here, as otherwise we sometimes miss out on kick messages */
 	cur = net_writeBuffer;
@@ -511,25 +501,25 @@ void Net_SendPacket(void) {
 	}
 }
 
-static struct ServerConnectionFuncs MPConnection = {
-	MPConnection_BeginConnect, MPConnection_Tick,
-	MPConnection_SendBlock,    MPConnection_SendChat,
-	MPConnection_SendPosition, MPConnection_SendPlayerClick
-};
-
 static void MPConnection_Init(void) {
-	ServerConnection_ResetState();
-	ServerConnection_IsSinglePlayer = false;
+	Server_ResetState();
+	Server.IsSinglePlayer = false;
 
-	ServerConnection = MPConnection;
-	net_readCurrent  = net_readBuffer;
-	ServerConnection_WriteBuffer = net_writeBuffer;
+	Server.BeginConnect    = MPConnection_BeginConnect;
+	Server.Tick            = MPConnection_Tick;
+	Server.SendBlock       = MPConnection_SendBlock;
+	Server.SendChat        = MPConnection_SendChat;
+	Server.SendPosition    = MPConnection_SendPosition;
+	Server.SendPlayerClick = MPConnection_SendPlayerClick;
+
+	net_readCurrent    = net_readBuffer;
+	Server.WriteBuffer = net_writeBuffer;
 }
 
 
 static void MPConnection_OnNewMap(void) {
 	int i;
-	if (ServerConnection_IsSinglePlayer) return;
+	if (Server.IsSinglePlayer) return;
 
 	/* wipe all existing entities */
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
@@ -539,7 +529,7 @@ static void MPConnection_OnNewMap(void) {
 
 static void MPConnection_Reset(void) {
 	int i;
-	if (ServerConnection_IsSinglePlayer) return;
+	if (Server.IsSinglePlayer) return;
 	
 	for (i = 0; i < OPCODE_COUNT; i++) {
 		Net_Handlers[i]    = NULL;
@@ -549,34 +539,38 @@ static void MPConnection_Reset(void) {
 	net_writeFailed = false;
 	Block_SetUsedCount(256);
 	Handlers_Reset();
-	ServerConnection_Free();
+	Server_Free();
 }
 
-static void ServerConnection_Init(void) {
+static void Server_Init(void) {
+	String_InitArray(Server.ServerName, server_nameBuffer);
+	String_InitArray(Server.ServerMOTD, server_motdBuffer);
+	String_InitArray(Server.AppName,    server_appBuffer);
+
 	if (!Game_IPAddress.length) {
 		SPConnection_Init();
 	} else {
 		MPConnection_Init();
 	}
 
-	Gfx_LostContextFunction = ServerConnection.Tick;
-	ScheduledTask_Add(GAME_NET_TICKS, ServerConnection.Tick);
-	String_AppendConst(&ServerConnection_AppName, GAME_APP_NAME);
+	Gfx_LostContextFunction = Server.Tick;
+	ScheduledTask_Add(GAME_NET_TICKS, Server.Tick);
+	String_AppendConst(&Server.AppName, GAME_APP_NAME);
 }
 
-static void ServerConnection_Free(void) {
-	if (ServerConnection_IsSinglePlayer) {
+static void Server_Free(void) {
+	if (Server.IsSinglePlayer) {
 		Physics_Free();
 	} else {
-		if (ServerConnection_Disconnected) return;
+		if (Server.Disconnected) return;
 		Socket_Close(net_socket);
-		ServerConnection_Disconnected = true;
+		Server.Disconnected = true;
 	}
 }
 
-struct IGameComponent ServerConnection_Component = {
-	ServerConnection_Init, /* Init  */
-	ServerConnection_Free, /* Free  */
+struct IGameComponent Server_Component = {
+	Server_Init, /* Init  */
+	Server_Free, /* Free  */
 	MPConnection_Reset,    /* Reset */
 	MPConnection_OnNewMap  /* OnNewMap */
 };

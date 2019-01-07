@@ -6,15 +6,10 @@
 #include "Chat.h"
 #include "GameStructs.h"
 
-BlockID Inventory_Table[INVENTORY_HOTBARS * INVENTORY_BLOCKS_PER_HOTBAR];
-BlockID Inventory_Map[BLOCK_COUNT];
-
-int Inventory_SelectedIndex;
-int Inventory_Offset;
-bool Inventory_CanChangeSelected, Inventory_CanUse;
+struct _InventoryData Inventory;
 
 bool Inventory_CheckChangeSelected(void) {
-	if (!Inventory_CanChangeSelected) {
+	if (!Inventory.CanChangeSelected) {
 		Chat_AddRaw("&cThe server has forbidden you from changing your held block.");
 		return false;
 	}
@@ -23,13 +18,13 @@ bool Inventory_CheckChangeSelected(void) {
 
 void Inventory_SetSelectedIndex(int index) {
 	if (!Inventory_CheckChangeSelected()) return;
-	Inventory_SelectedIndex = index;
+	Inventory.SelectedIndex = index;
 	Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 }
 
 void Inventory_SetHotbarIndex(int index) {
 	if (!Inventory_CheckChangeSelected() || Game_ClassicMode) return;
-	Inventory_Offset = index * INVENTORY_BLOCKS_PER_HOTBAR;
+	Inventory.Offset = index * INVENTORY_BLOCKS_PER_HOTBAR;
 	Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 }
 
@@ -44,7 +39,7 @@ void Inventory_SetSelectedBlock(BlockID block) {
 		break;
 	}
 
-	Inventory_Set(Inventory_SelectedIndex, block);
+	Inventory_Set(Inventory.SelectedIndex, block);
 	Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 }
 
@@ -76,28 +71,28 @@ static BlockID Inventory_DefaultMapping(int slot) {
 
 void Inventory_ApplyDefaultMapping(void) {
 	int slot;
-	for (slot = 0; slot < Array_Elems(Inventory_Map); slot++) {
-		Inventory_Map[slot] = Inventory_DefaultMapping(slot);
+	for (slot = 0; slot < Array_Elems(Inventory.Map); slot++) {
+		Inventory.Map[slot] = Inventory_DefaultMapping(slot);
 	}
 }
 
 void Inventory_AddDefault(BlockID block) {
 	int slot;
 	if (block >= BLOCK_CPE_COUNT) {
-		Inventory_Map[block - 1] = block; return;
+		Inventory.Map[block - 1] = block; return;
 	}
 	
 	for (slot = 0; slot < BLOCK_MAX_CPE; slot++) {
 		if (Inventory_DefaultMapping(slot) != block) continue;
-		Inventory_Map[slot] = block;
+		Inventory.Map[slot] = block;
 		return;
 	}
 }
 
 void Inventory_Remove(BlockID block) {
 	int slot;
-	for (slot = 0; slot < Array_Elems(Inventory_Map); slot++) {
-		if (Inventory_Map[slot] == block) Inventory_Map[slot] = BLOCK_AIR;
+	for (slot = 0; slot < Array_Elems(Inventory.Map); slot++) {
+		if (Inventory.Map[slot] == block) Inventory.Map[slot] = BLOCK_AIR;
 	}
 }
 
@@ -107,12 +102,12 @@ void Inventory_Remove(BlockID block) {
 *#########################################################################################################################*/
 static void Inventory_Reset(void) {
 	Inventory_ApplyDefaultMapping();
-	Inventory_CanChangeSelected = true;
-	Inventory_CanUse            = true;
+	Inventory.CanChangeSelected = true;
+	Inventory.CanUse            = true;
 }
 
 static void Inventory_Init(void) {
-	BlockID* inv = Inventory_Table;
+	BlockID* inv = Inventory.Table;
 	Inventory_Reset();
 	
 	inv[0] = BLOCK_STONE;  inv[1] = BLOCK_COBBLE; inv[2] = BLOCK_BRICK;

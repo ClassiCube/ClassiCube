@@ -9,7 +9,7 @@
 #include "Funcs.h"
 #include "Model.h"
 #include "MapGenerator.h"
-#include "ServerConnection.h"
+#include "Server.h"
 #include "Chat.h"
 #include "ExtMath.h"
 #include "Window.h"
@@ -647,7 +647,7 @@ static void PauseScreen_ContextRecreated(void* screen) {
 		Menu_Back(s,   7, &s->Buttons[7], "Back to game",&s->TitleFont, PauseScreen_Game);
 	}
 
-	if (!ServerConnection_IsSinglePlayer) {
+	if (!Server.IsSinglePlayer) {
 		s->Buttons[1].Disabled = true;
 		s->Buttons[2].Disabled = true;
 	}
@@ -2174,8 +2174,8 @@ static void ClassicOptionsScreen_SetMusic(const String* v) {
 	Options_SetInt(OPT_MUSIC_VOLUME, Audio_MusicVolume);
 }
 
-static void ClassicOptionsScreen_GetInvert(String* v) { Menu_GetBool(v, Camera_Invert); }
-static void ClassicOptionsScreen_SetInvert(const String* v) { Camera_Invert = Menu_SetBool(v, OPT_INVERT_MOUSE); }
+static void ClassicOptionsScreen_GetInvert(String* v) { Menu_GetBool(v, Camera.Invert); }
+static void ClassicOptionsScreen_SetInvert(const String* v) { Camera.Invert = Menu_SetBool(v, OPT_INVERT_MOUSE); }
 
 static void ClassicOptionsScreen_GetViewDist(String* v) {
 	if (Game_ViewDistance >= 512) {
@@ -2247,8 +2247,8 @@ static void ClassicOptionsScreen_ContextRecreated(void* screen) {
 	Menu_Back(s,  10, &s->Buttons[10], "Done",     &s->TitleFont, Menu_SwitchPause);
 
 	/* Disable certain options */
-	if (!ServerConnection_IsSinglePlayer) Menu_Remove(s, 3);
-	if (!Game_ClassicHacks)               Menu_Remove(s, 8);
+	if (!Server.IsSinglePlayer) Menu_Remove(s, 3);
+	if (!Game_ClassicHacks)     Menu_Remove(s, 8);
 }
 
 struct Screen* ClassicOptionsScreen_MakeInstance(void) {
@@ -2582,9 +2582,9 @@ static void HacksSettingsScreen_SetSpeed(const String* v) {
 	Options_Set(OPT_SPEED_FACTOR, v);
 }
 
-static void HacksSettingsScreen_GetClipping(String* v) { Menu_GetBool(v, Camera_Clipping); }
+static void HacksSettingsScreen_GetClipping(String* v) { Menu_GetBool(v, Camera.Clipping); }
 static void HacksSettingsScreen_SetClipping(const String* v) {
-	Camera_Clipping = Menu_SetBool(v, OPT_CAMERA_CLIPPING);
+	Camera.Clipping = Menu_SetBool(v, OPT_CAMERA_CLIPPING);
 }
 
 static void HacksSettingsScreen_GetJump(String* v) { String_AppendFloat(v, LocalPlayer_JumpHeight(), 3); }
@@ -2751,12 +2751,12 @@ static void MiscOptionsScreen_SetPhysics(const String* v) {
 static void MiscOptionsScreen_GetAutoClose(String* v) { Menu_GetBool(v, Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false)); }
 static void MiscOptionsScreen_SetAutoClose(const String* v) { Menu_SetBool(v, OPT_AUTO_CLOSE_LAUNCHER); }
 
-static void MiscOptionsScreen_GetInvert(String* v) { Menu_GetBool(v, Camera_Invert); }
-static void MiscOptionsScreen_SetInvert(const String* v) { Camera_Invert = Menu_SetBool(v, OPT_INVERT_MOUSE); }
+static void MiscOptionsScreen_GetInvert(String* v) { Menu_GetBool(v, Camera.Invert); }
+static void MiscOptionsScreen_SetInvert(const String* v) { Camera.Invert = Menu_SetBool(v, OPT_INVERT_MOUSE); }
 
-static void MiscOptionsScreen_GetSensitivity(String* v) { String_AppendInt(v, Camera_Sensitivity); }
+static void MiscOptionsScreen_GetSensitivity(String* v) { String_AppendInt(v, Camera.Sensitivity); }
 static void MiscOptionsScreen_SetSensitivity(const String* v) {
-	Camera_Sensitivity = Menu_Int(v);
+	Camera.Sensitivity = Menu_Int(v);
 	Options_Set(OPT_SENSITIVITY, v);
 }
 
@@ -2786,8 +2786,8 @@ static void MiscOptionsScreen_ContextRecreated(void* screen) {
 	widgets[9] = NULL; widgets[10] = NULL; widgets[11] = NULL;
 
 	/* Disable certain options */
-	if (!ServerConnection_IsSinglePlayer) Menu_Remove(s, 0);
-	if (!ServerConnection_IsSinglePlayer) Menu_Remove(s, 4);
+	if (!Server.IsSinglePlayer) Menu_Remove(s, 0);
+	if (!Server.IsSinglePlayer) Menu_Remove(s, 4);
 }
 
 struct Screen* MiscOptionsScreen_MakeInstance(void) {
@@ -3219,7 +3219,7 @@ static void TexPackOverlay_YesClick(void* screen, void* widget) {
 	Gui_FreeOverlay(s);
 	url = String_UNSAFE_SubstringAt(&s->Identifier, 3);
 
-	ServerConnection_DownloadTexturePack(&url);
+	Server_DownloadTexturePack(&url);
 	isAlways = WarningOverlay_IsAlways(s, widget);
 	if (isAlways && !TextureCache_HasAccepted(&url)) {
 		TextureCache_Accept(&url);

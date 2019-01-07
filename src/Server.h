@@ -2,7 +2,7 @@
 #define CC_SERVERCONNECTION_H
 #include "Input.h"
 #include "Vectors.h"
-/* Represents a connection to either a singleplayer or multiplayer server.
+/* Represents a connection to either a multiplayer or an internal singleplayer server.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
@@ -40,25 +40,14 @@ struct PickedPos;
 struct Stream;
 struct IGameComponent;
 struct ScheduledTask;
-extern struct IGameComponent ServerConnection_Component;
+extern struct IGameComponent Server_Component;
 
 int PingList_NextPingData(void);
 void PingList_Update(int data);
 int PingList_AveragePingMs(void);
 
-/* Whether the player is connected to singleplayer/loopback server. */
-extern bool ServerConnection_IsSinglePlayer;
-/* Whether the player has been disconnected from the server. */
-extern bool ServerConnection_Disconnected;
-/* The current name of the server. (Shows as first line when loading) */
-extern String ServerConnection_ServerName;
-/* The current MOTD of the server. (Shows as second line when loading) */
-extern String ServerConnection_ServerMOTD;
-/* The software name the client identifies itself as being to the server. */
-/* By default this is the same as PROGRAM_APP_NAME */
-extern String ServerConnection_AppName;
-
-struct ServerConnectionFuncs {
+/* Data for currently active connection to a server. */
+CC_VAR extern struct _ServerConnectionData {
 	/* Begins connecting to the server. */
 	/* NOTE: Usually asynchronous, but not always. */
 	void (*BeginConnect)(void);
@@ -72,23 +61,39 @@ struct ServerConnectionFuncs {
 	void (*SendPosition)(Vector3 pos, float rotY, float headX);
 	/* Sends a PlayerClick packet to the server. */
 	void (*SendPlayerClick)(MouseButton button, bool pressed, EntityID targetId, struct PickedPos* pos);
-};
 
-/* Currently active connection to a server. */
-extern struct ServerConnectionFuncs ServerConnection;
-extern uint8_t* ServerConnection_WriteBuffer;
+	/* The current name of the server. (Shows as first line when loading) */
+	String ServerName;
+	/* The current MOTD of the server. (Shows as second line when loading) */
+	String ServerMOTD;
+	/* The software name the client identifies itself as being to the server. */
+	/* By default this is the same as PROGRAM_APP_NAME */
+	String AppName;
 
-/* Whether the server supports separate tab list from entities in world. */
-extern bool ServerConnection_SupportsExtPlayerList;
-/* Whether the server supports packet with detailed info on mouse clicks. */
-extern bool ServerConnection_SupportsPlayerClick;
-/* Whether the server supports combining multiple chat packets into one. */
-extern bool ServerConnection_SupportsPartialMessages;
-/* Whether the server supports all of code page 437, not just ASCII. */
-extern bool ServerConnection_SupportsFullCP437;
+	/* Buffer to data to send to the server. */
+	uint8_t* WriteBuffer;
+	/* Whether the player is connected to singleplayer/internal server. */
+	bool IsSinglePlayer;
+	/* Whether the player has been disconnected from the server. */
+	bool Disconnected;
 
-void ServerConnection_RetrieveTexturePack(const String* url);
-void ServerConnection_DownloadTexturePack(const String* url);
+	/* Whether the server supports separate tab list from entities in world. */
+	bool SupportsExtPlayerList;
+	/* Whether the server supports packet with detailed info on mouse clicks. */
+	bool SupportsPlayerClick;
+	/* Whether the server supports combining multiple chat packets into one. */
+	bool SupportsPartialMessages;
+	/* Whether the server supports all of code page 437, not just ASCII. */
+	bool SupportsFullCP437;
+} Server;
+
+/* If the user hasn't previously accepted url, displays a dialog asking to confirm downloading it. */
+/* Otherwise just calls Server_DownloadTexturePack. */
+void Server_RetrieveTexturePack(const String* url);
+/* Queues the given URL to be asynchronously downloaded. */
+/* The texture pack will later be loaded in Server.Tick, once it has finished downloading. */
+/* NOTE: If a cached texture pack exists for the given URL, that gets immediately loaded. */
+void Server_DownloadTexturePack(const String* url);
 
 typedef void (*Net_Handler)(uint8_t* data);
 extern uint16_t Net_PacketSizes[OPCODE_COUNT];

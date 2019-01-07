@@ -272,7 +272,7 @@ void Gui_CalcCursorVisible(void) {
 
 	Window_SetCursorVisible(vis);
 	if (Window_Focused)
-		Camera_Active->RegrabMouse();
+		Camera.Active->RegrabMouse();
 }
 
 

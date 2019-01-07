@@ -10,7 +10,7 @@
 #include "TexturePack.h"
 #include "Model.h"
 #include "MapGenerator.h"
-#include "ServerConnection.h"
+#include "Server.h"
 #include "Chat.h"
 #include "ExtMath.h"
 #include "Window.h"
@@ -312,7 +312,7 @@ static void StatusScreen_DrawPosition(struct StatusScreen* s) {
 	Gfx_BindTexture(atlas->Tex.ID);
 	/* TODO: Do we need to use a separate VB here? */
 	count = (int)(ptr - vertices);
-	Gfx_UpdateDynamicVb_IndexedTris(Model_Vb, vertices, count);
+	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, vertices, count);
 }
 
 static bool StatusScreen_HacksChanged(struct StatusScreen* s) {
@@ -526,7 +526,7 @@ static void LoadingScreen_UpdateBackgroundVB(VertexP3fT2fC4b* vertices, int coun
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 	/* TODO: Do we need to use a separate VB here? */
-	Gfx_UpdateDynamicVb_IndexedTris(Model_Vb, vertices, count);
+	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, vertices, count);
 }
 
 #define LOADING_TILE_SIZE 64
@@ -664,7 +664,7 @@ static void GeneratingScreen_EndGeneration(void) {
 	LocationUpdate_MakePosAndOri(&update, p->Spawn, 0.0f, 0.0f, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
 
-	Camera_CurrentPos = Camera_Active->GetPosition(0.0f);
+	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
 	Event_RaiseVoid(&WorldEvents.MapLoaded);
 }
 
@@ -957,7 +957,7 @@ static bool ChatScreen_KeyUp(void* screen, Key key) {
 	struct ChatScreen* s = screen;
 	if (!s->HandlesAllInput) return false;
 
-	if (ServerConnection_SupportsFullCP437 && key == KeyBind_Get(KEYBIND_EXT_INPUT)) {
+	if (Server.SupportsFullCP437 && key == KeyBind_Get(KEYBIND_EXT_INPUT)) {
 		if (!Window_Focused) return true;
 		SpecialInputWidget_SetActive(&s->AltText, !s->AltText.Active);
 	}
@@ -1227,7 +1227,7 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	Elem_Init(&s->Hotbar);
 
 	if (!s->WasShowingList) return;
-	extended = ServerConnection_SupportsExtPlayerList && !Gui_ClassicTabList;
+	extended = Server.SupportsExtPlayerList && !Gui_ClassicTabList;
 	PlayerListWidget_Create(&s->PlayerList, &s->PlayerFont, !extended);
 	s->ShowingList = true;
 
@@ -1254,7 +1254,7 @@ static bool HUDScreen_KeyDown(void* screen, Key key, bool was) {
 	bool handles = playerListKey != KEY_TAB || !Gui_TabAutocomplete || !s->Chat->HandlesAllInput;
 
 	if (key == playerListKey && handles) {
-		if (!s->ShowingList && !ServerConnection_IsSinglePlayer) {
+		if (!s->ShowingList && !Server.IsSinglePlayer) {
 			s->WasShowingList = true;
 			HUDScreen_ContextRecreated(s);
 		}
@@ -1509,7 +1509,7 @@ static bool DisconnectScreen_MouseDown(void* screen, int x, int y, MouseButton b
 
 		Gui_FreeActive();
 		Gui_SetActive(LoadingScreen_MakeInstance(&title, &String_Empty));
-		ServerConnection.BeginConnect();
+		Server.BeginConnect();
 	}
 	return true;
 }

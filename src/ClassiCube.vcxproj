@@ -232,7 +232,7 @@
     <ClInclude Include="Resources.h" />
     <ClInclude Include="Screens.h" />
     <ClInclude Include="SelectionBox.h" />
-    <ClInclude Include="ServerConnection.h" />
+    <ClInclude Include="Server.h" />
     <ClInclude Include="Stream.h" />
     <ClInclude Include="GameStructs.h" />
     <ClInclude Include="TexturePack.h" />
@@ -300,7 +300,7 @@
     <ClCompile Include="Resources.c" />
     <ClCompile Include="Screens.c" />
     <ClCompile Include="SelectionBox.c" />
-    <ClCompile Include="ServerConnection.c" />
+    <ClCompile Include="Server.c" />
     <ClCompile Include="Stream.c" />
     <ClCompile Include="String.c" />
     <ClCompile Include="TexturePack.c" />
