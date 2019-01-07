@@ -221,6 +221,7 @@ namespace ClassicalSharp.Entities {
 		bool HandleSetSpawn() {
 			if (Hacks.CanRespawn) {
 		        if (!Hacks.CanNoclip && !onGround) {
+		            game.Chat.Add("&cCannot set spawn midair when noclip is disabled");
 		            return false;
 		        }
 		        if (!Hacks.CanNoclip) {
