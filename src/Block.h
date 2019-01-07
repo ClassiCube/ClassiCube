@@ -40,7 +40,7 @@ typedef enum CollideType_ {
 	COLLIDE_CLIMB_ROPE    /* Rope/Ladder style climbing interaction when player collides. */
 } CollideType;
 
-extern struct _BlockLists {
+CC_VAR extern struct _BlockLists {
 	/* Whether this block is a liquid. (Like water/lava) */
 	bool IsLiquid[BLOCK_COUNT];
 	/* Whether this block prevents lights from passing through it. */

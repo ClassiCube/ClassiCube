@@ -305,7 +305,7 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 
 static void ChooseModeScreen_Reposition(struct LScreen* s_) {
 	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;
-	int middle = Game_Width / 2;
+	int middle = Game.Width / 2;
 	LWidget_SetLocation(&s->LblTitle, ANCHOR_CENTRE, ANCHOR_CENTRE, 10, -135);
 
 	LWidget_SetLocation(&s->BtnEnhanced,    ANCHOR_MIN, ANCHOR_CENTRE, middle - 250, -72);
@@ -325,7 +325,7 @@ static void ChooseModeScreen_Reposition(struct LScreen* s_) {
 }
 
 static void ChooseModeScreen_Draw(struct LScreen* s) {
-	int midX = Game_Width / 2, midY = Game_Height / 2;
+	int midX = Game.Width / 2, midY = Game.Height / 2;
 	LScreen_Draw(s);
 	
 	Drawer2D_Rect(&Launcher_Framebuffer, Launcher_ButtonBorderCol,
@@ -1031,9 +1031,9 @@ static void ResourcesScreen_Draw(struct LScreen* s) {
 	BitmapCol backCol = BITMAPCOL_CONST( 12, 12,  12, 255);
 
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
-					0, 0, Game_Width, Game_Height);
+					0, 0, Game.Width, Game.Height);
 	ResourcesScreen_ResetArea(
-		Game_Width / 2 - RESOURCES_XSIZE, Game_Height / 2 - RESOURCES_YSIZE,
+		Game.Width / 2 - RESOURCES_XSIZE, Game.Height / 2 - RESOURCES_YSIZE,
 		RESOURCES_XSIZE * 2,              RESOURCES_YSIZE * 2);
 	LScreen_Draw(s);
 }
@@ -1277,8 +1277,8 @@ static void ServersScreen_Reposition(struct LScreen* s_) {
 	LWidget_SetLocation(&s->BtnConnect, ANCHOR_MAX, ANCHOR_MAX,  10, 10);
 	LWidget_SetLocation(&s->BtnRefresh, ANCHOR_MAX, ANCHOR_MIN, 135, 10);
 
-	s->Table.Width  = Game_Width - 10;
-	s->Table.Height = Game_Height - 100;
+	s->Table.Width  = Game.Width - 10;
+	s->Table.Height = Game.Height - 100;
 	s->Table.Height = max(1, s->Table.Height);
 
 	LWidget_SetLocation(&s->Table, ANCHOR_MIN, ANCHOR_MIN, 10, 50);
@@ -1395,7 +1395,7 @@ static struct UpdatesScreen {
 } UpdatesScreen_Instance;
 
 static void UpdatesScreen_Draw(struct LScreen* s) {
-	int midX = Game_Width / 2, midY = Game_Height / 2;
+	int midX = Game.Width / 2, midY = Game.Height / 2;
 	LScreen_Draw(s);
 
 	Drawer2D_Rect(&Launcher_Framebuffer, Launcher_ButtonBorderCol,

@@ -33,9 +33,8 @@
 #include "Audio.h"
 #include "Stream.h"
 
-int Game_Width, Game_Height;
-double Game_Time;
-int Game_ChunkUpdates, Game_Port;
+struct _GameData Game;
+int  Game_Port;
 bool Game_UseCPEBlocks;
 
 struct PickedPos Game_SelectedPos;
@@ -45,7 +44,6 @@ int Game_Fov, Game_DefaultFov, Game_ZoomFov;
 float game_limitMs;
 int  Game_FpsLimit, Game_Vertices;
 bool Game_ShowAxisLines, Game_SimpleArmsAnim;
-bool Game_ClassicArmModel;
 
 bool Game_ClassicMode, Game_ClassicHacks;
 bool Game_AllowCustomBlocks, Game_UseCPE;
@@ -93,7 +91,7 @@ int ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
 
 
 int Game_GetWindowScale(void) {
-	float windowScale = min(Game_Width / 640.0f, Game_Height / 480.0f);
+	float windowScale = min(Game.Width / 640.0f, Game.Height / 480.0f);
 	return 1 + (int)windowScale;
  }
 
@@ -272,8 +270,8 @@ bool Game_ValidateBitmap(const String* file, Bitmap* bmp) {
 
 void Game_UpdateClientSize(void) {
 	Size2D size = Window_ClientSize;
-	Game_Width  = max(size.Width,  1);
-	Game_Height = max(size.Height, 1);
+	Game.Width  = max(size.Width,  1);
+	Game.Height = max(size.Height, 1);
 }
 
 static void Game_OnResize(void* obj) {
@@ -354,7 +352,6 @@ static void Game_LoadOptions(void) {
 	Game_AllowCustomBlocks = Options_GetBool(OPT_CUSTOM_BLOCKS, true);
 	Game_UseCPE            = Options_GetBool(OPT_CPE, true);
 	Game_SimpleArmsAnim    = Options_GetBool(OPT_SIMPLE_ARMS_ANIM, false);
-	Game_ClassicArmModel   = Options_GetBool(OPT_CLASSIC_ARM_MODEL, Game_ClassicMode);
 	Game_ViewBobbing       = Options_GetBool(OPT_VIEW_BOBBING, true);
 
 	method = Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FPS_LIMIT_COUNT);
@@ -623,7 +620,7 @@ void Game_TakeScreenshot(void) {
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Logger_Warn2(res, "creating", &path); return; }
 
-	res = Gfx_TakeScreenshot(&stream, Game_Width, Game_Height);
+	res = Gfx_TakeScreenshot(&stream, Game.Width, Game.Height);
 	if (res) { 
 		Logger_Warn2(res, "saving to", &path); stream.Close(&stream); return;
 	}
@@ -643,7 +640,7 @@ static void Game_RenderFrame(double delta) {
 	frameStart = Stopwatch_Measure();
 	Gfx_BeginFrame();
 	Gfx_BindIb(Gfx_defaultIb);
-	Game_Time += delta;
+	Game.Time += delta;
 	Game_Vertices = 0;
 
 	Camera.Active->UpdateMouse();

@@ -232,7 +232,7 @@ static void Menu_RenderBounds(void) {
 	Then using wolfram alpha to solve the glblendfunc equation */
 	PackedCol topCol    = PACKEDCOL_CONST(24, 24, 24, 105);
 	PackedCol bottomCol = PACKEDCOL_CONST(51, 51, 98, 162);
-	Gfx_Draw2DGradient(0, 0, Game_Width, Game_Height, topCol, bottomCol);
+	Gfx_Draw2DGradient(0, 0, Game.Width, Game.Height, topCol, bottomCol);
 }
 
 static int Menu_DoMouseDown(void* screen, int x, int y, MouseButton btn) {
@@ -895,7 +895,7 @@ static void EditHotkeyScreen_Render(void* screen, double delta) {
 	int x, y;
 	MenuScreen_Render(screen, delta);
 
-	x = Game_Width / 2; y = Game_Height / 2;	
+	x = Game.Width / 2; y = Game.Height / 2;	
 	Gfx_Draw2DFlat(x - 250, y - 65, 500, 2, grey);
 	Gfx_Draw2DFlat(x - 250, y + 45, 500, 2, grey);
 }
@@ -1302,7 +1302,7 @@ static void SaveLevelScreen_Render(void* screen, double delta) {
 	int x, y;
 	MenuScreen_Render(screen, delta);
 
-	x = Game_Width / 2; y = Game_Height / 2;
+	x = Game.Width / 2; y = Game.Height / 2;
 	Gfx_Draw2DFlat(x - 250, y + 90, 500, 2, grey);
 }
 
@@ -1901,8 +1901,8 @@ static void MenuOptionsScreen_FreeExtHelp(struct MenuOptionsScreen* s) {
 }
 
 static void MenuOptionsScreen_RepositionExtHelp(struct MenuOptionsScreen* s) {
-	s->ExtHelp.XOffset = Game_Width  / 2 - s->ExtHelp.Width / 2;
-	s->ExtHelp.YOffset = Game_Height / 2 + 100;
+	s->ExtHelp.XOffset = Game.Width  / 2 - s->ExtHelp.Width / 2;
+	s->ExtHelp.YOffset = Game.Height / 2 + 100;
 	Widget_Reposition(&s->ExtHelp);
 }
 
@@ -2813,8 +2813,8 @@ struct Screen* MiscOptionsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------NostalgiaScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-static void NostalgiaScreen_GetHand(String* v) { Menu_GetBool(v, Game_ClassicArmModel); }
-static void NostalgiaScreen_SetHand(const String* v) { Game_ClassicArmModel = Menu_SetBool(v, OPT_CLASSIC_ARM_MODEL); }
+static void NostalgiaScreen_GetHand(String* v) { Menu_GetBool(v, Models.ClassicArms); }
+static void NostalgiaScreen_SetHand(const String* v) { Models.ClassicArms = Menu_SetBool(v, OPT_CLASSIC_ARM_MODEL); }
 
 static void NostalgiaScreen_GetAnim(String* v) { Menu_GetBool(v, !Game_SimpleArmsAnim); }
 static void NostalgiaScreen_SetAnim(const String* v) {
@@ -2942,15 +2942,15 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 	struct TexIdsOverlay* s = screen;
 	int size;
 
-	size = Game_Height / ATLAS2D_TILES_PER_ROW;
+	size = Game.Height / ATLAS2D_TILES_PER_ROW;
 	size = (size / 8) * 8;
 	Math_Clamp(size, 8, 40);
 
 	s->DynamicVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TEXID_OVERLAY_VERTICES_COUNT);
 	TextAtlas_Make(&s->IdAtlas, &chars, &s->TextFont, &prefix);
 
-	s->XOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas_RowsCount,     Game_Width);
-	s->YOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Game_Height);
+	s->XOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas_RowsCount,       Game.Width);
+	s->YOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Game.Height);
 	s->TileSize = size;
 	
 	Menu_Label(s, 0, &s->Title, &title, &s->TitleFont,

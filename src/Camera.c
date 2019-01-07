@@ -18,7 +18,7 @@ static bool cam_isForwardThird;
 *#########################################################################################################################*/
 static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
 	float fovy = Game_Fov * MATH_DEG2RAD;
-	float aspectRatio = (float)Game_Width / (float)Game_Height;
+	float aspectRatio = (float)Game.Width / (float)Game.Height;
 	Matrix_PerspectiveFieldOfView(proj, fovy, aspectRatio, Gfx_MinZNear, (float)Game_ViewDistance);
 }
 
@@ -40,8 +40,8 @@ static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
 static Point2D cam_prev, cam_delta;
 static void PerspectiveCamera_CentreMousePosition(void) {
 	Point2D topLeft = Window_PointToScreen(0, 0);
-	int cenX = topLeft.X + Game_Width  / 2;
-	int cenY = topLeft.Y + Game_Height / 2;
+	int cenX = topLeft.X + Game.Width  / 2;
+	int cenY = topLeft.Y + Game.Height / 2;
 
 	Window_SetScreenCursorPos(cenX, cenY);
 	/* Fixes issues with large DPI displays on Windows >= 8.0. */

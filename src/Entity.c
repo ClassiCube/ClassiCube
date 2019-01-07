@@ -418,16 +418,32 @@ void TabList_Remove(EntityID id) {
 }
 
 void TabList_Set(EntityID id, const String* player, const String* list, const String* group, uint8_t rank) {
-	String colorlessName; char colorlessBuffer[STRING_SIZE];
+	String oldPlayer, oldList, oldGroup;
+	uint8_t oldRank;
+	struct Event_Int* events;
+	
+	if (TabList_Valid(id)) {
+		oldPlayer = TabList_UNSAFE_GetPlayer(id);
+		oldList   = TabList_UNSAFE_GetList(id);
+		oldGroup  = TabList_UNSAFE_GetGroup(id);
+		oldRank   = TabList.GroupRanks[id];
 
-	String_InitArray(colorlessName, colorlessBuffer);
-	String_AppendColorless(&colorlessName, player);
+		/* Don't redraw the tab list if nothing changed. */
+		if (String_Equals(player, &oldPlayer)  && String_Equals(list, &oldList)
+			&& String_Equals(group, &oldGroup) && rank == oldRank) return;
+
+		events = &TabListEvents.Changed;
+	} else {
+		events = &TabListEvents.Added;
+	}
 	TabList_Delete(id);
 
-	TabList.PlayerNames[id] = TabList.Buffer.Count; StringsBuffer_Add(&TabList.Buffer, &colorlessName);
+	TabList.PlayerNames[id] = TabList.Buffer.Count; StringsBuffer_Add(&TabList.Buffer, player);
 	TabList.ListNames[id]   = TabList.Buffer.Count; StringsBuffer_Add(&TabList.Buffer, list);
 	TabList.GroupNames[id]  = TabList.Buffer.Count; StringsBuffer_Add(&TabList.Buffer, group);
 	TabList.GroupRanks[id]  = rank;
+
+	Event_RaiseInt(&TabListEvents.Added, id);
 }
 
 static void TabList_Free(void) { StringsBuffer_Clear(&TabList.Buffer); }

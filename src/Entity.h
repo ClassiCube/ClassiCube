@@ -102,14 +102,14 @@ void Entity_GetPickingBounds(struct Entity* e, struct AABB* bb);
 /* Gets the current collision bounds of the given entity. */
 void Entity_GetBounds(struct Entity* e, struct AABB* bb);
 /* Sets the model of the entity. (i.e its appearance) */
-void Entity_SetModel(struct Entity* e, const String* model);
+CC_API void Entity_SetModel(struct Entity* e, const String* model);
 /* Updates cached Size and ModelAABB of the given entity. */
 /* NOTE: Only needed when manually changing Model or ModelScale. */
 /* Entity_SetModel implicitly call this method. */
 void Entity_UpdateModelBounds(struct Entity* e);
 
 /* Whether the given entity is touching any blocks meeting the given condition .*/
-bool Entity_TouchesAny(struct AABB* bb, Entity_TouchesCondition cond);
+CC_API bool Entity_TouchesAny(struct AABB* bb, Entity_TouchesCondition cond);
 bool Entity_TouchesAnyRope(struct Entity* e);	
 bool Entity_TouchesAnyLava(struct Entity* e);
 bool Entity_TouchesAnyWater(struct Entity* e);
@@ -139,18 +139,24 @@ void Entities_DrawShadows(void);
 #define TABLIST_MAX_NAMES 256
 /* Data for all entries in tab list */
 CC_VAR extern struct _TabListData {
+	/* Raw unformatted name (for Tab name auto complete) */
 	uint16_t PlayerNames[TABLIST_MAX_NAMES];
+	/* Formatted name for display in tab list. */
 	uint16_t ListNames[TABLIST_MAX_NAMES];
+	/* Name of the group this entry is in (e.g. rank name, map name) */
 	uint16_t GroupNames[TABLIST_MAX_NAMES];
+	/* Position/Order of this entry within the group. */
 	uint8_t  GroupRanks[TABLIST_MAX_NAMES];
 	StringsBuffer Buffer;
 } TabList;
 
 /* Returns whether the tab list entry with the given ID is used at all. */
-bool TabList_Valid(EntityID id);
+CC_API bool TabList_Valid(EntityID id);
 /* Removes the tab list entry with the given ID, raising TabListEvents.Removed event. */
-void TabList_Remove(EntityID id);
-void TabList_Set(EntityID id, const String* player, const String* list, const String* group, uint8_t rank);
+CC_API void TabList_Remove(EntityID id);
+/* Sets the data for the tab list entry with the given id. */
+/* Raises TabListEvents.Changed if replacing, TabListEvents.Added if a new entry. */
+CC_API void TabList_Set(EntityID id, const String* player, const String* list, const String* group, uint8_t rank);
 
 #define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList.Buffer, TabList.PlayerNames[id]);
 #define TabList_UNSAFE_GetList(id)   StringsBuffer_UNSAFE_Get(&TabList.Buffer, TabList.ListNames[id]);

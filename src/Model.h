@@ -19,12 +19,18 @@ enum RotateOrder { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX };
 
 /* Describes a vertex within a model. */
 struct ModelVertex { float X, Y, Z; uint16_t U, V; };
-void ModelVertex_Init(struct ModelVertex* vertex, float x, float y, float z, int u, int v);
+static CC_INLINE void ModelVertex_Init(struct ModelVertex* vertex, float x, float y, float z, int u, int v) {
+	vertex->X = x; vertex->Y = y; vertex->Z = z;
+	vertex->U = u; vertex->V = v;
+}
 
 /* Describes the starting index of this part within a model's array of vertices,
 and the number of vertices following the starting index that this part uses. */
 struct ModelPart { uint16_t Offset, Count; float RotX, RotY, RotZ; };
-void ModelPart_Init(struct ModelPart* part, int offset, int count, float rotX, float rotY, float rotZ);
+static CC_INLINE void ModelPart_Init(struct ModelPart* part, int offset, int count, float rotX, float rotY, float rotZ) {
+	part->Offset = offset; part->Count = count;
+	part->RotX = rotX; part->RotY = rotY; part->RotZ = rotZ;
+}
 
 struct ModelTex;
 /* Contains information about a texture used for models. */
@@ -83,7 +89,10 @@ CC_VAR extern struct _ModelsData {
 	float cosHead, sinHead;
 	/* Order of axes rotation when rendering parts. */
 	uint8_t Rotation;
+	/* Skin type of current skin texture. */
 	uint8_t skinType;
+	/* Whether to render arms like vanilla Minecraft Classic. */
+	bool ClassicArms;
 	/* Model currently being built or rendered. */
 	struct Model* Active;
 	/* Dynamic vertex buffer for uploading model vertices. */
@@ -151,8 +160,8 @@ struct BoxDesc {
 /* Macros for making initialising a BoxDesc easier to understand. See Model.c for how these get used. */
 #define BoxDesc_Tex(x, y)                 x,y
 #define BoxDesc_Dims(x1,y1,z1,x2,y2,z2)   BoxDesc_Dim(x1,x2), BoxDesc_Dim(y1,y2), BoxDesc_Dim(z1,z2)
-#define BoxDesc_Bounds(x1,y1,z1,x2,y2,z2) x1/16.0f,y1/16.0f,z1/16.0f, x2/16.0f,y2/16.0f,z2/16.0f
-#define BoxDesc_Rot(x, y, z)              x/16.0f,y/16.0f,z/16.0f
+#define BoxDesc_Bounds(x1,y1,z1,x2,y2,z2) (x1)/16.0f,(y1)/16.0f,(z1)/16.0f, (x2)/16.0f,(y2)/16.0f,(z2)/16.0f
+#define BoxDesc_Rot(x, y, z)              (x)/16.0f,(y)/16.0f,(z)/16.0f
 #define BoxDesc_Box(x1,y1,z1,x2,y2,z2)    BoxDesc_Dims(x1,y1,z1,x2,y2,z2), BoxDesc_Bounds(x1,y1,z1,x2,y2,z2)
 
 /* Builds a box model assuming the follow texture layout:

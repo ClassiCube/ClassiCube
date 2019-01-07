@@ -11,11 +11,19 @@ struct Entity;
 
 /* Descibes an axis aligned bounding box. */
 struct AABB { Vector3 Min, Max; };
-void AABB_Make(struct AABB* result, Vector3* pos, Vector3* size);
-void AABB_Offset(struct AABB* result, struct AABB* bb, Vector3* amount);
+
+/* Makes an AABB centred at the base of the given position, that is: */
+/* Min = [pos.X - size.X/2, pos.Y         , pos.Z - size.Z/2] */
+/* Max = [pos.X + size.X/2, pos.Y + size.Y, pos.Z + size.Z/2] */
+CC_API void AABB_Make(struct AABB* result, const Vector3* pos, const Vector3* size);
+/* Adds amount to Min and Max corners of the given AABB. */
+void AABB_Offset(struct AABB* result, const struct AABB* bb, const Vector3* amount);
+/* Whether the given AABB touches another AABB on any axis. */
 bool AABB_Intersects(const struct AABB* bb, const struct AABB* other);
+/* Whether the given ABBB contains another AABB. */
 bool AABB_Contains(const struct AABB* parent, const struct AABB* child);
-bool AABB_ContainsPoint(const struct AABB* parent, Vector3* P);
+/* Whether the given point lies insides bounds of the given AABB. */
+bool AABB_ContainsPoint(const struct AABB* parent, const Vector3* P);
 
 /* Calculates the intersection point of a ray and a rotated bounding box. */
 bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, struct Entity* target, float* tMin, float* tMax);

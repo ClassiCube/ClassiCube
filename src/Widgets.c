@@ -573,8 +573,8 @@ static void TableWidget_UpdatePos(struct TableWidget* w) {
 	int rowsDisplayed = min(TABLE_MAX_ROWS_DISPLAYED, w->RowsCount);
 	w->Width  = w->CellSize * w->ElementsPerRow;
 	w->Height = w->CellSize * rowsDisplayed;
-	w->X = Game_Width  / 2 - w->Width  / 2;
-	w->Y = Game_Height / 2 - w->Height / 2;
+	w->X = Game.Width  / 2 - w->Width  / 2;
+	w->Y = Game.Height / 2 - w->Height / 2;
 	TableWidget_UpdateDescTexPos(w);
 }
 
@@ -1635,7 +1635,7 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 		caretAtEnd = (w->CaretY == i) && (w->CaretX == INPUTWIDGET_LEN || w->CaretPos == -1);
 		width      = w->LineSizes[i].Width + (caretAtEnd ? w->CaretTex.Width : 0);
 		/* Cover whole window width to match original classic behaviour */
-		if (Game_PureClassic) { width = max(width, Game_Width - x * 4); }
+		if (Game_PureClassic) { width = max(width, Game.Width - x * 4); }
 	
 		Gfx_Draw2DFlat(x, y, width + w->Padding * 2, w->PrefixHeight, backCol);
 		y += w->LineSizes[i].Height;
@@ -1871,7 +1871,7 @@ void PlayerListWidget_GetNameUnder(struct PlayerListWidget* w, int x, int y, Str
 static void PlayerListWidget_UpdateTableDimensions(struct PlayerListWidget* w) {
 	int width = w->XMax - w->XMin, height = w->YHeight;
 	w->X = (w->XMin                     ) - LIST_BOUNDS_SIZE;
-	w->Y = (Game_Height / 2 - height / 2) - LIST_BOUNDS_SIZE;
+	w->Y = (Game.Height / 2 - height / 2) - LIST_BOUNDS_SIZE;
 	w->Width  = width  + LIST_BOUNDS_SIZE * 2;
 	w->Height = height + LIST_BOUNDS_SIZE * 2;
 }
@@ -1930,11 +1930,11 @@ static void PlayerListWidget_RepositionColumns(struct PlayerListWidget* w) {
 	}
 
 	if (width < 480) width = 480;
-	w->XMin = Game_Width / 2 - width / 2;
-	w->XMax = Game_Width / 2 + width / 2;
+	w->XMin = Game.Width / 2 - width / 2;
+	w->XMax = Game.Width / 2 + width / 2;
 
 	x = w->XMin;
-	y = Game_Height / 2 - w->YHeight / 2;
+	y = Game.Height / 2 - w->YHeight / 2;
 
 	for (col = 0; col < columns; col++) {
 		PlayerListWidget_SetColumnPos(w, col, x, y);
@@ -1946,7 +1946,7 @@ static void PlayerListWidget_Reposition(void* widget) {
 	struct PlayerListWidget* w = widget;
 	int i, y, oldX, oldY;
 
-	y = Game_Height / 4 - w->Height / 2;
+	y = Game.Height / 4 - w->Height / 2;
 	w->YOffset = -max(0, y);
 
 	oldX = w->X; oldY = w->Y;
@@ -2266,7 +2266,7 @@ static int TextGroupWidget_CalcY(struct TextGroupWidget* w, int index, int newHe
 			textures[i].Y += deltaY;
 		}
 	} else {
-		y = Game_Height - w->YOffset;
+		y = Game.Height - w->YOffset;
 		for (i = index + 1; i < w->LinesCount; i++) {
 			y -= textures[i].Height;
 		}
@@ -2311,7 +2311,7 @@ static void TextGroupWidget_Reposition(void* widget) {
 	if (!w->LinesCount) return;
 
 	for (i = 0; i < w->LinesCount; i++) {
-		textures[i].X = Gui_CalcPos(w->HorAnchor, w->XOffset, textures[i].Width, Game_Width);
+		textures[i].X = Gui_CalcPos(w->HorAnchor, w->XOffset, textures[i].Width, Game.Width);
 		textures[i].Y += w->Y - oldY;
 	}
 }
@@ -2592,7 +2592,7 @@ void TextGroupWidget_SetText(struct TextGroupWidget* w, int index, const String*
 		tex.Height = w->PlaceholderHeight[index] ? w->DefaultHeight : 0;
 	}
 
-	tex.X = Gui_CalcPos(w->HorAnchor, w->XOffset, tex.Width, Game_Width);
+	tex.X = Gui_CalcPos(w->HorAnchor, w->XOffset, tex.Width, Game.Width);
 	tex.Y = TextGroupWidget_CalcY(w, index, tex.Height);
 	w->Textures[index] = tex;
 	TextGroupWidget_UpdateDimensions(w);

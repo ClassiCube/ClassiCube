@@ -26,9 +26,16 @@ typedef union PackedColUnion_ { PackedCol C; uint32_t Raw; } PackedColUnion;
 #define PACKEDCOL_WHITE PACKEDCOL_CONST(255, 255, 255, 255)
 #define PackedCol_ARGB(r, g, b, a) (((uint32_t)(r) << 16) | ((uint32_t)(g) << 8) | ((uint32_t)(b)) | ((uint32_t)(a) << 24))
 
-bool PackedCol_Equals(PackedCol a, PackedCol b);
-PackedCol PackedCol_Scale(PackedCol value, float t);
-PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t);
+/* Whether components of two colours are all equal. */
+static CC_INLINE bool PackedCol_Equals(PackedCol a, PackedCol b) {
+	return a.R == b.R && a.G == b.G && a.B == b.B && a.A == b.A;
+}
+
+/* Scales RGB components of the given colour. */
+CC_API PackedCol PackedCol_Scale(PackedCol value, float t);
+/* Linearly interpolates RGB components of the two given colours. */
+CC_API PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t);
+
 CC_NOINLINE bool PackedCol_Unhex(char hex, int* value);
 CC_NOINLINE void PackedCol_ToHex(String* str, PackedCol value);
 CC_NOINLINE bool PackedCol_TryParseHex(const String* str, PackedCol* value);

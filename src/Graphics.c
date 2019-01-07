@@ -352,7 +352,7 @@ static void D3D9_FillPresentArgs(int width, int height, D3DPRESENT_PARAMETERS* a
 
 static void D3D9_RecreateDevice(void) {
 	D3DPRESENT_PARAMETERS args = { 0 };
-	D3D9_FillPresentArgs(Game_Width, Game_Height, &args);
+	D3D9_FillPresentArgs(Game.Width, Game.Height, &args);
 
 	while (IDirect3DDevice9_Reset(device, &args) == D3DERR_DEVICELOST) {
 		D3D9_LoopUntilRetrieved();
@@ -1568,7 +1568,7 @@ void Gfx_EndFrame(void) {
 }
 
 void Gfx_OnWindowResize(void) {
-	glViewport(0, 0, Game_Width, Game_Height);
+	glViewport(0, 0, Game.Width, Game.Height);
 	GLContext_Update();
 }
 #endif

@@ -12,7 +12,7 @@
 /*########################################################################################################################*
 *----------------------------------------------------------AABB-----------------------------------------------------------*
 *#########################################################################################################################*/
-void AABB_Make(struct AABB* result, Vector3* pos, Vector3* size) {
+void AABB_Make(struct AABB* result, const Vector3* pos, const Vector3* size) {
 	result->Min.X = pos->X - size->X * 0.5f;
 	result->Min.Y = pos->Y;
 	result->Min.Z = pos->Z - size->Z * 0.5f;
@@ -22,7 +22,7 @@ void AABB_Make(struct AABB* result, Vector3* pos, Vector3* size) {
 	result->Max.Z = pos->Z + size->Z * 0.5f;
 }
 
-void AABB_Offset(struct AABB* result, struct AABB* bb, Vector3* amount) {
+void AABB_Offset(struct AABB* result, const struct AABB* bb, const Vector3* amount) {
 	Vector3_Add(&result->Min, &bb->Min, amount);
 	Vector3_Add(&result->Max, &bb->Max, amount);
 }
@@ -40,7 +40,7 @@ bool AABB_Contains(const struct AABB* parent, const struct AABB* child) {
 		child->Max.X <= parent->Max.X && child->Max.Y <= parent->Max.Y && child->Max.Z <= parent->Max.Z;
 }
 
-bool AABB_ContainsPoint(const struct AABB* parent, Vector3* P) {
+bool AABB_ContainsPoint(const struct AABB* parent, const Vector3* P) {
 	return
 		P->X >= parent->Min.X && P->Y >= parent->Min.Y && P->Z >= parent->Min.Z &&
 		P->X <= parent->Max.X && P->Y <= parent->Max.Y && P->Z <= parent->Max.Z;

@@ -661,7 +661,7 @@ void MapRenderer_BuildChunk(struct ChunkInfo* info, int* chunkUpdates) {
 	struct ChunkPartInfo* ptr;
 	int i;
 
-	Game_ChunkUpdates++;
+	Game.ChunkUpdates++;
 	(*chunkUpdates)++;
 	info->PendingDelete = false;
 	Builder_MakeChunk(info);
@@ -720,7 +720,7 @@ static void MapRenderer_DeleteChunks_(void* obj)     { MapRenderer_DeleteChunks(
 static void MapRenderer_Refresh_(void* obj)          { MapRenderer_Refresh(); }
 
 static void MapRenderer_OnNewMap(void) {
-	Game_ChunkUpdates = 0;
+	Game.ChunkUpdates = 0;
 	MapRenderer_DeleteChunks();
 	MapRenderer_ResetPartCounts();
 

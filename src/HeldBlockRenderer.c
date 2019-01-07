@@ -95,7 +95,7 @@ static void HeldBlockRenderer_SetBaseOffset(void) {
 
 static void HeldBlockRenderer_ProjectionChanged(void* obj) {
 	float fov = 70.0f * MATH_DEG2RAD;
-	float aspectRatio = (float)Game_Width / (float)Game_Height;
+	float aspectRatio = (float)Game.Width / (float)Game.Height;
 	float zNear = Gfx_MinZNear;
 	Gfx_CalcPerspectiveMatrix(fov, aspectRatio, zNear, (float)Game_ViewDistance, &held_blockProjection);
 }

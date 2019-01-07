@@ -52,8 +52,8 @@ void Widget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int 
 
 void Widget_CalcPosition(void* widget) {
 	struct Widget* w = widget;
-	w->X = Gui_CalcPos(w->HorAnchor, w->XOffset, w->Width , Game_Width );
-	w->Y = Gui_CalcPos(w->VerAnchor, w->YOffset, w->Height, Game_Height);
+	w->X = Gui_CalcPos(w->HorAnchor, w->XOffset, w->Width , Game.Width );
+	w->Y = Gui_CalcPos(w->VerAnchor, w->YOffset, w->Height, Game.Height);
 }
 
 void Widget_Reset(void* widget) {
@@ -240,7 +240,7 @@ void Gui_FreeOverlay(void* overlay) {
 
 void Gui_RenderGui(double delta) {
 	bool showHUD, hudBefore;
-	Gfx_Mode2D(Game_Width, Game_Height);
+	Gfx_Mode2D(Game.Width, Game.Height);
 
 	showHUD   = !Gui_Active || !Gui_Active->HidesHUD;
 	hudBefore = !Gui_Active || !Gui_Active->RenderHUDOver;

@@ -14,8 +14,8 @@ typedef CC_ALIGN_HINT(4) struct BitmapCol_ {
 /* Unioned with Packed member for efficient equality comparison */
 typedef union BitmapColUnion_ { BitmapCol C; uint32_t Raw; } BitmapColUnion;
 
-/* Scales RGB of the given colour. */
-BitmapCol BitmapCol_Scale(BitmapCol value, float t);
+/* Scales RGB components of the given colour. */
+CC_API BitmapCol BitmapCol_Scale(BitmapCol value, float t);
 
 /* A 2D array of BitmapCol pixels */
 typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
@@ -56,9 +56,9 @@ typedef int (*Png_RowSelector)(Bitmap* bmp, int row);
      https://handmade.network/forums/wip/t/2363-implementing_a_basic_png_reader_the_handmade_way
      https://github.com/nothings/stb/blob/master/stb_image.h
 */
-ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream);
+CC_API ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream);
 /* Encodes a bitmap in PNG format. */
 /* selectRow is optional. Can be used to modify how rows are encoded. (e.g. flip image) */
 /* if alpha is non-zero, RGBA channels are saved, otherwise only RGB channels are. */
-ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow, bool alpha);
+CC_API ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow, bool alpha);
 #endif

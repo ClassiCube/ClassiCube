@@ -102,8 +102,8 @@ static void Launcher_ReqeustRedraw(void* obj) {
 
 static void Launcher_OnResize(void* obj) {
 	Game_UpdateClientSize();
-	Launcher_Framebuffer.Width  = Game_Width;
-	Launcher_Framebuffer.Height = Game_Height;
+	Launcher_Framebuffer.Width  = Game.Width;
+	Launcher_Framebuffer.Height = Game.Height;
 
 	Window_InitRaw(&Launcher_Framebuffer);
 	if (Launcher_Screen) Launcher_Screen->Reposition(Launcher_Screen);
@@ -226,8 +226,8 @@ void Launcher_Run(void) {
 	Launcher_Init();
 	Launcher_TryLoadTexturePack();
 
-	Launcher_Framebuffer.Width  = Game_Width;
-	Launcher_Framebuffer.Height = Game_Height;
+	Launcher_Framebuffer.Width  = Game.Width;
+	Launcher_Framebuffer.Height = Game.Height;
 	Window_InitRaw(&Launcher_Framebuffer);
 
 	Http_Component.Init();
@@ -447,20 +447,20 @@ void Launcher_ResetPixels(void) {
 	int x;
 
 	if (Launcher_Screen && Launcher_Screen->HidesTitlebar) {
-		Launcher_ResetArea(0, 0, Game_Width, Game_Height);
+		Launcher_ResetArea(0, 0, Game.Width, Game.Height);
 		return;
 	}
 
 	if (Launcher_ClassicBackground && terrainBmp.Scan0) {
-		Launcher_ClearTile(0,        0, Game_Width,               TILESIZE, TILESIZE);
-		Launcher_ClearTile(0, TILESIZE, Game_Width, Game_Height - TILESIZE, 0);
+		Launcher_ClearTile(0,        0, Game.Width,               TILESIZE, TILESIZE);
+		Launcher_ClearTile(0, TILESIZE, Game.Width, Game.Height - TILESIZE, 0);
 	} else {
-		Launcher_ResetArea(0, 0, Game_Width, Game_Height);
+		Launcher_ResetArea(0, 0, Game.Width, Game.Height);
 	}
 
 	Drawer2D_BitmappedText = (useBitmappedFont || Launcher_ClassicBackground) && fontBmp.Scan0;
 	DrawTextArgs_Make(&args, &title_fore, &logoFont, false);
-	x = Game_Width / 2 - Drawer2D_TextWidth(&args) / 2;
+	x = Game.Width / 2 - Drawer2D_TextWidth(&args) / 2;
 
 	args.Text = title_back;
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x + 4, 4);

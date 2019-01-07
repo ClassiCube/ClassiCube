@@ -1,10 +1,6 @@
 #include "PackedCol.h"
 #include "ExtMath.h"
 
-bool PackedCol_Equals(PackedCol a, PackedCol b) {
-	return a.R == b.R && a.G == b.G && a.B == b.B && a.A == b.A;
-}
-
 PackedCol PackedCol_Scale(PackedCol value, float t) {
 	value.R = (uint8_t)(value.R * t);
 	value.G = (uint8_t)(value.G * t);

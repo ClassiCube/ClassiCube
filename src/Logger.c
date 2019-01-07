@@ -198,7 +198,7 @@ static LONG WINAPI Logger_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
 }
 
 void Logger_Hook(void) {
-	//SetUnhandledExceptionFilter(Logger_UnhandledFilter);
+	SetUnhandledExceptionFilter(Logger_UnhandledFilter);
 }
 
 /* Don't want compiler doing anything fancy with registers */

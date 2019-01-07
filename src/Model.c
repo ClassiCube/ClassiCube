@@ -24,16 +24,6 @@ struct Model* Human_ModelPtr;
 #define AABB_Height(bb) ((bb)->Max.Y - (bb)->Min.Y)
 #define AABB_Length(bb) ((bb)->Max.Z - (bb)->Min.Z)
 
-void ModelVertex_Init(struct ModelVertex* vertex, float x, float y, float z, int u, int v) {
-	vertex->X = x; vertex->Y = y; vertex->Z = z;
-	vertex->U = (uint16_t)u; vertex->V = (uint16_t)v;
-}
-
-void ModelPart_Init(struct ModelPart* part, int offset, int count, float rotX, float rotY, float rotZ) {
-	part->Offset = offset; part->Count = count;
-	part->RotX = rotX; part->RotY = rotY; part->RotZ = rotZ;
-}
-
 
 /*########################################################################################################################*
 *------------------------------------------------------------Model--------------------------------------------------------*
@@ -260,7 +250,7 @@ void Model_RenderArm(struct Model* model, struct Entity* entity) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Model_ApplyTexture(entity);
 
-	if (Game_ClassicArmModel) {
+	if (Models.ClassicArms) {
 		/* TODO: Position's not quite right. */
 		/* Matrix_Translate(out m, -armX / 16f + 0.2f, -armY / 16f - 0.20f, 0); */
 		/* is better, but that breaks the dig animation */
@@ -286,7 +276,7 @@ void Model_DrawArmPart(struct ModelPart* part) {
 	arm.RotX = model->armX / 16.0f; 
 	arm.RotY = (model->armY + model->armY / 2) / 16.0f;
 
-	if (Game_ClassicArmModel) {
+	if (Models.ClassicArms) {
 		Model_DrawRotate(0, -90 * MATH_DEG2RAD, 120 * MATH_DEG2RAD, &arm, false);
 	} else {
 		Model_DrawRotate(-20 * MATH_DEG2RAD, -70 * MATH_DEG2RAD, 135 * MATH_DEG2RAD, &arm, false);
@@ -1670,6 +1660,7 @@ static void Model_RegisterDefaultModels(void) {
 void Models_Init(void) {
 	Model_RegisterDefaultModels();
 	Models_ContextRecreated(NULL);
+	Models.ClassicArms = Options_GetBool(OPT_CLASSIC_ARM_MODEL, Game_ClassicMode);
 
 	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, Models_TextureChanged);
 	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, Models_ContextLost);
