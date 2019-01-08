@@ -488,19 +488,10 @@
     <ClCompile Include="_ftinit.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="_ftpfr.c">
-      <Filter>Source Files\Freetype</Filter>
-    </ClCompile>
-    <ClCompile Include="_ftstroke.c">
-      <Filter>Source Files\Freetype</Filter>
-    </ClCompile>
     <ClCompile Include="_ftsynth.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
     <ClCompile Include="_fttype1.c">
-      <Filter>Source Files\Freetype</Filter>
-    </ClCompile>
-    <ClCompile Include="_pfr.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
     <ClCompile Include="_psaux.c">
