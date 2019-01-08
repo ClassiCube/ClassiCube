@@ -665,14 +665,14 @@ struct ResumeInfo {
 
 CC_NOINLINE static void MainScreen_GetResume(struct ResumeInfo* info, bool full) {
 	String_InitArray(info->Server,   info->_serverBuffer);
-	Options_Get("launcher-server",   &info->Server, NULL);
+	Options_Get("launcher-server",   &info->Server, "");
 	String_InitArray(info->User,     info->_userBuffer);
-	Options_Get("launcher-username", &info->User, NULL);
+	Options_Get("launcher-username", &info->User, "");
 
 	String_InitArray(info->Ip,   info->_ipBuffer);
-	Options_Get("launcher-ip",   &info->Ip, NULL);
+	Options_Get("launcher-ip",   &info->Ip, "");
 	String_InitArray(info->Port, info->_portBuffer);
-	Options_Get("launcher-port", &info->Port, NULL);
+	Options_Get("launcher-port", &info->Port, "");
 
 	if (!full) return;
 	String_InitArray(info->Mppass, info->_mppassBuffer);
@@ -683,7 +683,7 @@ CC_NOINLINE static void MainScreen_GetResume(struct ResumeInfo* info, bool full)
 		info->Ip.length   && info->Port.length;
 }
 
-CC_NOINLINE void MainScreen_Error(struct LWebTask* task, const char* action) {
+CC_NOINLINE static void MainScreen_Error(struct LWebTask* task, const char* action) {
 	String str; char strBuffer[STRING_SIZE];
 	struct MainScreen* s = &MainScreen_Instance;
 

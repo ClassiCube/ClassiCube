@@ -179,21 +179,20 @@ namespace ClassicalSharp.Entities {
 			Vector3I P = Vector3I.Floor(spawn);
 			AABB bb;
 			
-			// Spawn player at highest valid position
-			if (Hacks.CanNoclip) {
-			    if (game.World.IsValidPos(P)) {
-			        bb = AABB.Make(spawn, Size);
-			        for (int y = P.Y; y <= game.World.Height; y++) {
-			            float spawnY = Respawn.HighestFreeY(game, ref bb);
-			            if (spawnY == float.NegativeInfinity) {
-			                BlockID block = game.World.GetPhysicsBlock(P.X, y, P.Z);
-			                float height = BlockInfo.Collide[block] == CollideType.Solid ? BlockInfo.MaxBB[block].Y : 0;
-			                spawn.Y = y + height + Entity.Adjustment;
-			                break;
-			            }
-			            bb.Min.Y += 1; bb.Max.Y += 1;
-			        }
-			    }
+			// Spawn player at highest solid position to match vanilla Minecraft classic
+			// Only when player can noclip, since this can let you 'clip' to above solid blocks
+			if (Hacks.CanNoclip && game.World.IsValidPos(P)) {
+				bb = AABB.Make(spawn, Size);
+				for (int y = P.Y; y <= game.World.Height; y++) {
+					float spawnY = Respawn.HighestFreeY(game, ref bb);
+					if (spawnY == float.NegativeInfinity) {
+						BlockID block = game.World.GetPhysicsBlock(P.X, y, P.Z);
+						float height = BlockInfo.Collide[block] == CollideType.Solid ? BlockInfo.MaxBB[block].Y : 0;
+						spawn.Y = y + height + Entity.Adjustment;
+						break;
+					}
+					bb.Min.Y += 1; bb.Max.Y += 1;
+				}
 			}
 			
 			spawn.Y += 2/16f;
@@ -224,15 +223,16 @@ namespace ClassicalSharp.Entities {
 		            game.Chat.Add("&cCannot set spawn midair when noclip is disabled");
 		            return false;
 		        }
+				
+				// Spawn is normally centered to match vanilla Minecraft classic
 		        if (!Hacks.CanNoclip) {
-		            Spawn.X = Position.X;
-		            Spawn.Y = Position.Y;
-		            Spawn.Z = Position.Z;
+		            Spawn   = Position;
 		        } else {
 		            Spawn.X = Utils.Floor(Position.X) + 0.5f;
 		            Spawn.Y = Position.Y;
 		            Spawn.Z = Utils.Floor(Position.Z) + 0.5f;
 		        }
+
 				SpawnRotY  = RotY;
 				SpawnHeadX = HeadX;
 			}

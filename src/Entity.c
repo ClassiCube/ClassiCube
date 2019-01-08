@@ -958,8 +958,9 @@ static void LocalPlayer_DoRespawn(void) {
 	if (!World_Blocks) return;
 	Vector3I_Floor(&pos, &spawn);	
 
-	/* Spawn player at highest valid position */
-	if (World_IsValidPos_3I(pos)) {
+	/* Spawn player at highest solid position to match vanilla Minecraft classic */
+	/* Only when player can noclip, since this can let you 'clip' to above solid blocks */
+	if (p->Hacks.CanNoclip && World_IsValidPos_3I(pos)) {
 		AABB_Make(&bb, &spawn, &p->Base.Size);
 		for (y = pos.Y; y <= World_Height; y++) {
 			spawnY = Respawn_HighestSolidY(&bb);
@@ -1000,11 +1001,23 @@ static bool LocalPlayer_HandleRespawn(void) {
 static bool LocalPlayer_HandleSetSpawn(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (p->Hacks.CanRespawn) {
-		p->Spawn.X = Math_Floor(p->Base.Position.X) + 0.5f;
-		p->Spawn.Y = p->Base.Position.Y;
-		p->Spawn.Z = Math_Floor(p->Base.Position.Z) + 0.5f;
-		p->SpawnRotY  = p->Base.RotY;
-		p->SpawnHeadX = p->Base.HeadX;
+
+		if (!p->Hacks.CanNoclip && !p->Base.OnGround) {
+			Chat_AddRaw("&cCannot set spawn midair when noclip is disabled");
+			return false;
+		}
+
+		/* Spawn is normally centered to match vanilla Minecraft classic */
+		if (!p->Hacks.CanNoclip) {
+			p->Spawn   = p->Base.Position;
+		} else {
+			p->Spawn.X = Math_Floor(p->Base.Position.X) + 0.5f;
+			p->Spawn.Y = p->Base.Position.Y;
+			p->Spawn.Z = Math_Floor(p->Base.Position.Z) + 0.5f;
+		}
+		
+		p->SpawnRotY   = p->Base.RotY;
+		p->SpawnHeadX  = p->Base.HeadX;
 	}
 	return LocalPlayer_HandleRespawn();
 }
