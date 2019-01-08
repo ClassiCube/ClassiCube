@@ -15,7 +15,6 @@ BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 
 static char fontNameBuffer[STRING_SIZE];
 String Drawer2D_FontName = String_FromArray(fontNameBuffer);
-#define DRAWER2D_OFFSET 1
 
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, const FontDesc* font, bool useShadow) {
 	args->Text = *text;
@@ -558,10 +557,10 @@ void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 		col = Drawer2D_GetCol(colCode);
 		if (args->UseShadow) {
 			backCol = Drawer2D_BlackTextShadows ? black : BitmapCol_Scale(col, 0.25f);
-			Platform_TextDraw(args, bmp, x + DRAWER2D_OFFSET, y + DRAWER2D_OFFSET, backCol);
+			Platform_TextDraw(args, bmp, x, y, backCol, true);
 		}
 
-		partWidth = Platform_TextDraw(args, bmp, x, y, col);
+		partWidth = Platform_TextDraw(args, bmp, x, y, col, false);
 		x += partWidth;
 	}
 	args->Text = value;
@@ -583,9 +582,7 @@ int Drawer2D_TextWidth(struct DrawTextArgs* args) {
 		width += Platform_TextWidth(args);
 	}
 
-	/* TODO: Is this font shadow offset right? */
-	if (args->UseShadow) { width += DRAWER2D_OFFSET; }
-	
+	if (args->UseShadow) width += 2;
 	args->Text = value;
 	return width;
 }
@@ -600,8 +597,7 @@ int Drawer2D_FontHeight(const FontDesc* font, bool useShadow) {
 		if (useShadow) { height += Drawer2D_ShadowOffset(point); }
 	} else {
 		height = Platform_FontHeight(font);
-		/* TODO: Is this font shadow offset right? */
-		if (useShadow) { height += DRAWER2D_OFFSET; }
+		if (useShadow) height += 2;
 	}
 	return height;
 }

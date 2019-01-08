@@ -220,7 +220,8 @@ void Launcher_Run(void) {
 
 	Drawer2D_Component.Init();
 	Game_UpdateClientSize();
-	Drawer2D_BitmappedText = false;
+	Drawer2D_BitmappedText    = false;
+	Drawer2D_BlackTextShadows = true;
 
 	Launcher_LoadSkin();
 	Launcher_Init();

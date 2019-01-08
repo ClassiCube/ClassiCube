@@ -213,7 +213,7 @@ namespace ClassicalSharp.Entities {
 				return true;
 			} else if (!warnedRespawn) {
 				warnedRespawn = true;
-				if (!hackPermMsgs) game.Chat.Add("&cRespawning is currently disabled");				
+				if (hackPermMsgs) game.Chat.Add("&cRespawning is currently disabled");				
 			}
 			return false;
 		}
@@ -245,7 +245,7 @@ namespace ClassicalSharp.Entities {
 				return true;
 			} else if (!warnedFly) {
 				warnedFly = true;
-				if (!hackPermMsgs) game.Chat.Add("&cFlying is currently disabled");				
+				if (hackPermMsgs) game.Chat.Add("&cFlying is currently disabled");				
 			}
 			return false;
 		}
@@ -259,7 +259,7 @@ namespace ClassicalSharp.Entities {
 				return true;
 			} else if (!warnedNoclip) {
 				warnedNoclip = true;
-				if (!hackPermMsgs) game.Chat.Add("&cNoclip is currently disabled");				
+				if (hackPermMsgs) game.Chat.Add("&cNoclip is currently disabled");				
 			}
 			return false;
 		}

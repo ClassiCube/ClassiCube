@@ -200,7 +200,7 @@ int Platform_TextWidth(struct DrawTextArgs* args);
 /* Measures height of any text when drawn with the given font. */
 int Platform_FontHeight(const FontDesc* font);
 /* Draws the given text with the given font onto the given bitmap. */
-int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col);
+int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow);
 
 /* Allocates a new socket. */
 void Socket_Create(SocketHandle* socket);
