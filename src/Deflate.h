@@ -88,6 +88,9 @@ struct DeflateState {
 	uint8_t* NextOut;    /* Pointer within Output buffer to next byte that can be written */
 	uint32_t AvailOut;   /* Max number of bytes that can be written to Output buffer */
 	struct Stream* Dest; /* Destination that Output buffer is written to */
+
+	uint16_t LitsCodewords[INFLATE_MAX_LITS]; /* Codewords for each value */
+	uint8_t LitsLens[INFLATE_MAX_LITS];       /* Bit lengths of each codeword */
 	
 	uint8_t Input[DEFLATE_BUFFER_SIZE];
 	uint8_t Output[DEFLATE_OUT_SIZE];

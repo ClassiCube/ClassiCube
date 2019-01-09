@@ -10,7 +10,7 @@
 /*########################################################################################################################*
 *-------------------------------------------------------GZip header-------------------------------------------------------*
 *#########################################################################################################################*/
-enum GZIP_STATE {
+enum GzipState {
 	GZIP_STATE_HEADER1, GZIP_STATE_HEADER2, GZIP_STATE_COMPRESSIONMETHOD, GZIP_STATE_FLAGS,
 	GZIP_STATE_LASTMODIFIED, GZIP_STATE_COMPRESSIONFLAGS, GZIP_STATE_OPERATINGSYSTEM, 
 	GZIP_STATE_HEADERCHECKSUM, GZIP_STATE_FILENAME, GZIP_STATE_COMMENT, GZIP_STATE_DONE
@@ -18,7 +18,7 @@ enum GZIP_STATE {
 
 void GZipHeader_Init(struct GZipHeader* header) {
 	header->State = GZIP_STATE_HEADER1;
-	header->Done = false;
+	header->Done  = false;
 	header->Flags = 0;
 	header->PartsRead = 0;
 }
@@ -98,11 +98,11 @@ ReturnCode GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
 /*########################################################################################################################*
 *-------------------------------------------------------ZLib header-------------------------------------------------------*
 *#########################################################################################################################*/
-enum ZLIB_STATE { ZLIB_STATE_COMPRESSIONMETHOD, ZLIB_STATE_FLAGS, ZLIB_STATE_DONE };
+enum ZlibState { ZLIB_STATE_COMPRESSIONMETHOD, ZLIB_STATE_FLAGS, ZLIB_STATE_DONE };
 
 void ZLibHeader_Init(struct ZLibHeader* header) {
 	header->State = ZLIB_STATE_COMPRESSIONMETHOD;
-	header->Done = false;
+	header->Done  = false;
 }
 
 ReturnCode ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header) {
@@ -173,7 +173,7 @@ static uint32_t Huffman_ReverseBits(uint32_t n, uint8_t bits) {
 }
 
 /* Builds a huffman tree, based on input lengths of each codeword */
-static void Huffman_Build(struct HuffmanTable* table, uint8_t* bitLens, int count) {
+static void Huffman_Build(struct HuffmanTable* table, const uint8_t* bitLens, int count) {
 	int bl_count[INFLATE_MAX_BITS], bl_offsets[INFLATE_MAX_BITS];
 	int code, offset, value;
 	int i, j;
@@ -197,10 +197,10 @@ static void Huffman_Build(struct HuffmanTable* table, uint8_t* bitLens, int coun
 		}
 	}
 
-	/* Compute the codewords for the huffman tree
-	* Codewords are ordered, so consider this example tree:
-	*    2 of length 2, 3 of length 3, 1 of length 4
-	* Codewords produced would be: 00,01 100,101,110, 1110 
+	/* Compute the codewords for the huffman tree.
+	*  Codewords are ordered, so consider this example tree:
+	*     2 of length 2, 3 of length 3, 1 of length 4
+	*  Codewords produced would be: 00,01 100,101,110, 1110 
 	*/
 	code = 0; offset = 0;
 	for (i = 1; i < INFLATE_MAX_BITS; i++) {
@@ -212,8 +212,8 @@ static void Huffman_Build(struct HuffmanTable* table, uint8_t* bitLens, int coun
 		offset += bl_count[i];
 
 		/* Last codeword is actually: code + (bl_count[i] - 1)
-		* Hoever, when decoding we peform < against this value though, so need to add 1 here 
-		* This way, don't need to special case bit lengths with 0 codewords when decoding 
+		*  However, when decoding we peform < against this value though, so need to add 1 here.
+		*  This way, don't need to special case bit lengths with 0 codewords when decoding.
 		*/
 		if (bl_count[i]) {
 			table->EndCodewords[i] = code + bl_count[i];
@@ -222,9 +222,9 @@ static void Huffman_Build(struct HuffmanTable* table, uint8_t* bitLens, int coun
 		}
 	}
 
-	/* Assigns values to each codeword
-	* Note that although codewords are ordered, values may not be
-	* Some values may also not be assigned to any codeword
+	/* Assigns values to each codeword.
+	*  Note that although codewords are ordered, values may not be.
+	*  Some values may also not be assigned to any codeword.
 	*/
 	value = 0;
 	Mem_Set(table->Fast, UInt8_MaxValue, sizeof(table->Fast));
@@ -233,7 +233,7 @@ static void Huffman_Build(struct HuffmanTable* table, uint8_t* bitLens, int coun
 		if (!len) continue;
 		table->Values[bl_offsets[len]] = value;
 
-		/* Compute the accelerated lookup table values for this codeword
+		/* Compute the accelerated lookup table values for this codeword.
 		* For example, assume len = 4 and codeword = 0100
 		* - Shift it left to be 0100_00000
 		* - Then, for all the indices from 0100_00000 to 0100_11111,
@@ -342,7 +342,7 @@ void Inflate_Init(struct InflateState* state, struct Stream* source) {
 	state->WindowIndex = 0;
 }
 
-static uint8_t fixed_lits[INFLATE_MAX_LITS] = {
+const static uint8_t fixed_lits[INFLATE_MAX_LITS] = {
 	8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
 	8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
 	8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
@@ -353,7 +353,7 @@ static uint8_t fixed_lits[INFLATE_MAX_LITS] = {
 	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, 9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
 	7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7, 7,7,7,7,7,7,7,7,8,8,8,8,8,8,8,8
 };
-static uint8_t fixed_dists[INFLATE_MAX_DISTS] = {
+const static uint8_t fixed_dists[INFLATE_MAX_DISTS] = {
 	5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5, 5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
 };
 
@@ -761,6 +761,8 @@ void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struc
 *#########################################################################################################################*/
 /* Pushes given bits, but does not write them */
 #define Deflate_PushBits(state, value, bits) state->Bits |= (value) << state->NumBits; state->NumBits += (bits);
+/* Pushes bits of the huffman codeword bits for the given literal, but does not write them */
+#define Deflate_PushLit(state, value) Deflate_PushBits(state, state->LitsCodewords[value], state->LitsLens[value])
 /* Pushes given bits (reversing for huffman code), but does not write them */
 #define Deflate_PushHuff(state, value, bits) Deflate_PushBits(state, Huffman_ReverseBits(value, bits), bits)
 /* Writes given byte to output */
@@ -780,8 +782,7 @@ static uint32_t Deflate_Hash(uint8_t* src) {
 }
 
 static void Deflate_Lit(struct DeflateState* state, int lit) {
-	if (lit <= 143) { Deflate_PushHuff(state, lit + 48, 8); } 
-	else { Deflate_PushHuff(state, lit + 256, 9); }
+	Deflate_PushLit(state, lit);
 	Deflate_FlushBits(state);
 }
 
@@ -794,8 +795,7 @@ static void Deflate_LenDist(struct DeflateState* state, int len, int dist) {
 	/* TODO: Do we actually need the if (len_bits[j]) ????????? does writing 0 bits matter??? */
 
 	for (j = 0; len >= len_base[j + 1]; j++);
-	if (j <= 22) { Deflate_PushHuff(state, j + 1, 7); }
-	else { Deflate_PushHuff(state, j + 169, 8); }
+	Deflate_PushLit(state, j + 257);
 	if (len_bits[j]) { Deflate_PushBits(state, len - len_base[j], len_bits[j]); }
 	Deflate_FlushBits(state);
 
@@ -932,7 +932,7 @@ static ReturnCode Deflate_StreamClose(struct Stream* stream) {
 	if (res) return res;
 
 	/* Write huffman encoded "literal 256" to terminate symbols */
-	Deflate_PushBits(state, 512, 7); 
+	Deflate_PushLit(state, 256);
 	Deflate_FlushBits(state);
 
 	/* In case last byte still has a few extra bits */
@@ -942,6 +942,25 @@ static ReturnCode Deflate_StreamClose(struct Stream* stream) {
 	}
 
 	return Stream_Write(state->Dest, state->Output, DEFLATE_OUT_SIZE - state->AvailOut);
+}
+
+/* Constructs a huffman encoding table (for values to codewords) */
+static void Deflate_BuildTable(const uint8_t* lens, int count, uint16_t* codewords, uint8_t* bitlens) {
+	int i, j, offset, codeword;
+	struct HuffmanTable table;
+
+	Huffman_Build(&table, lens, count);
+	for (i = 0; i < INFLATE_MAX_BITS; i++) {
+		if (!table.EndCodewords[i]) continue;
+		count = table.EndCodewords[i] - table.FirstCodewords[i];
+
+		for (j = 0; j < count; j++) {
+			offset   = table.Values[table.FirstOffsets[i] + j];
+			codeword = table.FirstCodewords[i] + j;
+			bitlens[offset]   = i;
+			codewords[offset] = Huffman_ReverseBits(codeword, i);
+		}
+	}
 }
 
 void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struct Stream* underlying) {
@@ -960,7 +979,8 @@ void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struc
 	state->WroteHeader = false;
 
 	Mem_Set(state->Head, 0, sizeof(state->Head));
-	Mem_Set(state->Prev, 0, sizeof(state->Prev));	
+	Mem_Set(state->Prev, 0, sizeof(state->Prev));
+	Deflate_BuildTable(fixed_lits, INFLATE_MAX_LITS, state->LitsCodewords, state->LitsLens);
 }
 
 

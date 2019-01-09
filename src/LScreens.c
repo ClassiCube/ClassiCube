@@ -98,6 +98,8 @@ static void LScreen_KeyDown(struct LScreen* s, Key key, bool was) {
 
 		if (s->SelectedWidget && s->SelectedWidget->OnClick) {
 			s->SelectedWidget->OnClick(s->SelectedWidget, Mouse_X, Mouse_Y);
+		} else if (s->HoveredWidget && s->HoveredWidget->OnClick) {
+			s->HoveredWidget->OnClick(s->HoveredWidget,   Mouse_X, Mouse_Y);
 		} else if (s->OnEnterWidget) {
 			s->OnEnterWidget->OnClick(s->OnEnterWidget,   Mouse_X, Mouse_Y);
 		}
@@ -341,6 +343,7 @@ struct LScreen* ChooseModeScreen_MakeInstance(bool firstTime) {
 	s->Reposition = ChooseModeScreen_Reposition;
 	s->Draw       = ChooseModeScreen_Draw;
 	s->FirstTime  = firstTime;
+	s->OnEnterWidget = (struct LWidget*)&s->BtnEnhanced;
 	return (struct LScreen*)s;
 }
 
