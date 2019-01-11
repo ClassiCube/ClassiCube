@@ -46,6 +46,18 @@ struct Model {
 	struct ModelVertex* vertices;	
 	/* Pointer to default texture for this model */
 	struct ModelTex* defaultTex;
+
+	/* Returns height the 'nametag' gets drawn at above the entity's feet. */
+	float (*GetNameY)(struct Entity* entity);
+	/* Returns height the 'eye' is located at above the entity's feet. */
+	float (*GetEyeY)(struct Entity* entity);
+	/* Sets entity->Size to the collision size of this model. */
+	void (*GetCollisionSize)(struct Entity* entity);
+	/* Sets entity->ModelAABB to the 'picking' bounds of this model. */
+	/* This is the AABB around the entity in which mouse clicks trigger 'interaction'. */
+	/* NOTE: These bounds are not transformed. (i.e. no rotation, centered around 0,0,0) */
+	void (*GetPickingBounds)(struct Entity* entity);
+
 	/* Count of assigned vertices within the raw vertices array */
 	int index;
 	uint8_t armX, armY; /* these translate arm model part back to (0, 0) */
@@ -58,20 +70,14 @@ struct Model {
 
 	float Gravity; Vector3 Drag, GroundFriction;
 
-	float (*GetEyeY)(struct Entity* entity);
-	void (*GetCollisionSize)(Vector3* size);
-	void (*GetPickingBounds)(struct AABB* bb);
 	void (*CreateParts)(void);
 	void (*DrawModel)(struct Entity* entity);
 	/* Returns the transformation matrix applied to the model when rendering */
 	/* NOTE: Most models just use Entity_GetTransform (except SittingModel) */
 	void (*GetTransform)(struct Entity* entity, Vector3 pos, struct Matrix* m);
-	/* Recalculates properties such as name Y offset, collision size */
-	/* NOTE: Not needed for most models (except BlockModel) */
-	void (*RecalcProperties)(struct Entity* entity);
 	void (*DrawArm)(struct Entity* entity);
 
-	float NameYOffset, MaxScale, ShadowScale, NameScale;
+	float MaxScale, ShadowScale, NameScale;
 	struct Model* Next;
 };
 #if 0
@@ -103,9 +109,6 @@ CC_VAR extern struct _ModelsData {
 CC_API void Model_Init(struct Model* model);
 
 #define Model_SetPointers(instance, typeName)\
-instance.GetEyeY = typeName ## _GetEyeY;\
-instance.GetCollisionSize = typeName ## _GetCollisionSize; \
-instance.GetPickingBounds = typeName ## _GetPickingBounds;\
 instance.CreateParts = typeName ## _CreateParts;\
 instance.DrawModel = typeName ## _DrawModel;
 

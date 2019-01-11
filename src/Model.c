@@ -50,7 +50,6 @@ void Model_Init(struct Model* model) {
 	model->armX = 6; model->armY = 12;
 
 	model->GetTransform     = Model_GetTransform;
-	model->RecalcProperties = Model_NullFunc;
 	model->DrawArm          = Model_NullFunc;
 }
 
@@ -368,8 +367,8 @@ void BoxDesc_ZQuad(struct Model* m, int texX, int texY, int texWidth, int texHei
 static struct Model* models_head;
 static struct ModelTex* textures_head;
 
-#define Model_RetSize(x,y,z) static Vector3 P = { (x)/16.0f,(y)/16.0f,(z)/16.0f }; *size = P;
-#define Model_RetAABB(x1,y1,z1, x2,y2,z2) static struct AABB BB = { (x1)/16.0f,(y1)/16.0f,(z1)/16.0f, (x2)/16.0f,(y2)/16.0f,(z2)/16.0f }; *bb = BB;
+#define Model_RetSize(x,y,z) static Vector3 P = { (x)/16.0f,(y)/16.0f,(z)/16.0f }; e->Size = P;
+#define Model_RetAABB(x1,y1,z1, x2,y2,z2) static struct AABB BB = { (x1)/16.0f,(y1)/16.0f,(z1)/16.0f, (x2)/16.0f,(y2)/16.0f,(z2)/16.0f }; e->ModelAABB = BB;
 
 static void Models_ContextLost(void* obj) {
 	Gfx_DeleteVb(&Models.Vb);
@@ -492,10 +491,19 @@ static void HumanModel_DrawArmSet(struct Entity* entity, struct ModelSet* model)
 }
 
 
+static float HumanModel_GetNameY(struct Entity* e) { return 32.5f/16.0f; }
+static float HumanModel_GetEyeY(struct Entity* e)  { return 26.0f/16.0f; }
+static void HumanModel_GetSize(struct Entity* e)   { Model_RetSize(8.6f,28.1f,8.6f); }
+static void HumanModel_GetBounds(struct Entity* e) { Model_RetAABB(-8,0,-4, 8,32,4); }
+
 static struct ModelSet human_set;
 static struct ModelVertex human_vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
 static struct ModelTex human_tex = { "char.png" };
-static struct Model  human_model = { "humanoid", human_vertices, &human_tex };
+static struct Model  human_model = { 
+	"humanoid", human_vertices, &human_tex,
+	HumanModel_GetNameY, HumanModel_GetEyeY,
+	HumanModel_GetSize,  HumanModel_GetBounds,
+};
 
 static void HumanModel_CreateParts(void) {
 	static struct BoxDesc head = {
@@ -620,10 +628,6 @@ static void HumanModel_CreateParts(void) {
 	BoxDesc_BuildBox(&setSlim->RightArmLayer, &rArmL);
 }
 
-static float HumanModel_GetEyeY(struct Entity* entity)   { return 26.0f/16.0f; }
-static void HumanModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.6f,28.1f,8.6f); }
-static void HumanModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-8,0,-4, 8,32,4); }
-
 static void HumanModel_DrawModel(struct Entity* entity) {
 	HumanModel_DrawModelSet(entity, &human_set);
 }
@@ -638,7 +642,6 @@ static struct Model* HumanoidModel_GetInstance(void) {
 	human_model.DrawArm  = HumanModel_DrawArm;
 	human_model.CalcHumanAnims = true;
 	human_model.UsesHumanSkin  = true;
-	human_model.NameYOffset = 32.5f/16.0f;
 	return &human_model;
 }
 
@@ -647,8 +650,18 @@ static struct Model* HumanoidModel_GetInstance(void) {
 *---------------------------------------------------------ChibiModel------------------------------------------------------*
 *#########################################################################################################################*/
 static struct ModelSet chibi_set;
+
+static float ChibiModel_GetNameY(struct Entity* e) { return 20.2f/16.0f; }
+static float ChibiModel_GetEyeY(struct Entity* e)  { return 14.0f/16.0f; }
+static void ChibiModel_GetSize(struct Entity* e)   { Model_RetSize(4.6f,20.1f,4.6f); }
+static void ChibiModel_GetBounds(struct Entity* e) { Model_RetAABB(-4,0,-4, 4,16,4); }
+
 static struct ModelVertex chibi_vertices[MODEL_BOX_VERTICES * (7 + 7 + 4)];
-static struct Model chibi_model = { "chibi", chibi_vertices, &human_tex };
+static struct Model chibi_model = { 
+	"chibi", chibi_vertices, &human_tex,
+	ChibiModel_GetNameY, ChibiModel_GetEyeY, 
+	ChibiModel_GetSize,  ChibiModel_GetBounds
+};
 
 CC_NOINLINE static void ChibiModel_ScalePart(struct ModelPart* dst, struct ModelPart* src) {
 	struct ModelVertex v;
@@ -703,10 +716,6 @@ static void ChibiModel_CreateParts(void) {
 	BoxDesc_BuildBox(&chibi_set.Hat,  &hat);
 }
 
-static float ChibiModel_GetEyeY(struct Entity* entity)   { return 14.0f/16.0f; }
-static void ChibiModel_GetCollisionSize(Vector3* size)   { Model_RetSize(4.6f,20.1f,4.6f); }
-static void ChibiModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,16,4); }
-
 static void ChibiModel_DrawModel(struct Entity* entity) {
 	HumanModel_DrawModelSet(entity, &chibi_set);
 }
@@ -724,7 +733,6 @@ static struct Model* ChibiModel_GetInstance(void) {
 	chibi_model.UsesHumanSkin  = true;
 	chibi_model.MaxScale    = 3.0f;
 	chibi_model.ShadowScale = 0.5f;
-	chibi_model.NameYOffset = 20.2f/16.0f;
 	return &chibi_model;
 }
 
@@ -732,13 +740,18 @@ static struct Model* ChibiModel_GetInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------SittingModel-----------------------------------------------------*
 *#########################################################################################################################*/
-static struct Model sitting_model = { "sit", human_vertices, &human_tex };
 #define SIT_OFFSET 10.0f
 static void SittingModel_CreateParts(void) { }
 
-static float SittingModel_GetEyeY(struct Entity* entity)   { return (26.0f - SIT_OFFSET) / 16.0f; }
-static void SittingModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.6f,28.1f - SIT_OFFSET,8.6f); }
-static void SittingModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-8,0,-4, 8,32 - SIT_OFFSET,4); }
+static float SittingModel_GetNameY(struct Entity* e) { return 32.5f/16.0f; }
+static float SittingModel_GetEyeY(struct Entity* e)  { return (26.0f - SIT_OFFSET) / 16.0f; }
+static void SittingModel_GetSize(struct Entity* e)   { Model_RetSize(8.6f,28.1f - SIT_OFFSET,8.6f); }
+static void SittingModel_GetBounds(struct Entity* e) { Model_RetAABB(-8,0,-4, 8,32 - SIT_OFFSET,4); }
+
+static struct Model sitting_model = { "sit", human_vertices, &human_tex,
+	SittingModel_GetNameY, SittingModel_GetEyeY,
+	SittingModel_GetSize,  SittingModel_GetBounds
+};
 
 static void SittingModel_GetTransform(struct Entity* entity, Vector3 pos, struct Matrix* m) {
 	pos.Y -= (SIT_OFFSET / 16.0f) * entity->ModelScale.Y;
@@ -759,7 +772,6 @@ static struct Model* SittingModel_GetInstance(void) {
 	sitting_model.UsesHumanSkin  = true;
 	sitting_model.ShadowScale  = 0.5f;
 	sitting_model.GetTransform = SittingModel_GetTransform;
-	sitting_model.NameYOffset  = 32.5f/16.0f;
 	return &sitting_model;
 }
 
@@ -790,12 +802,17 @@ static struct Model* CorpseModel_GetInstance(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------HeadModel-------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Model head_model = { "head", human_vertices, &human_tex };
 static void HeadModel_CreateParts(void) { }
 
-static float HeadModel_GetEyeY(struct Entity* entity)   { return 6.0f/16.0f; }
-static void HeadModel_GetCollisionSize(Vector3* size)   { Model_RetSize(7.9f,7.9f,7.9f); }
-static void HeadModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,8,4); }
+static float HeadModel_GetNameY(struct Entity* e) { return 32.5f/16.0f; }
+static float HeadModel_GetEyeY(struct Entity* e)  { return 6.0f/16.0f; }
+static void HeadModel_GetSize(struct Entity* e)   { Model_RetSize(7.9f,7.9f,7.9f); }
+static void HeadModel_GetBounds(struct Entity* e) { Model_RetAABB(-4,0,-4, 4,8,4); }
+
+static struct Model head_model = { "head", human_vertices, &human_tex,
+	HeadModel_GetNameY, HeadModel_GetEyeY,
+	HeadModel_GetSize,  HeadModel_GetBounds
+};
 
 static void HeadModel_GetTransform(struct Entity* entity, Vector3 pos, struct Matrix* m) {
 	pos.Y -= (24.0f/16.0f) * entity->ModelScale.Y;
@@ -820,7 +837,6 @@ static struct Model* HeadModel_GetInstance(void) {
 	head_model.UsesHumanSkin = true;
 	head_model.Pushes        = false;
 	head_model.GetTransform  = HeadModel_GetTransform;
-	head_model.NameYOffset   = 32.5f/16.0f;
 	return &head_model;
 }
 
@@ -830,9 +846,18 @@ static struct Model* HeadModel_GetInstance(void) {
 *#########################################################################################################################*/
 static struct ModelPart chicken_head, chicken_head2, chicken_head3, chicken_torso;
 static struct ModelPart chicken_leftLeg, chicken_rightLeg, chicken_leftWing, Chicken_RightWing;
+
+static float ChickenModel_GetNameY(struct Entity* e) { return 1.0125f; }
+static float ChickenModel_GetEyeY(struct Entity* e)  { return 14.0f/16.0f; }
+static void ChickenModel_GetSize(struct Entity* e)   { Model_RetSize(8.0f,12.0f,8.0f); }
+static void ChickenModel_GetBounds(struct Entity* e) { Model_RetAABB(-4,0,-8, 4,15,4); }
+
 static struct ModelVertex chicken_vertices[MODEL_BOX_VERTICES * 6 + (MODEL_QUAD_VERTICES * 2) * 2];
 static struct ModelTex chicken_tex = { "chicken.png" };
-static struct Model chicken_model = { "chicken", chicken_vertices, &chicken_tex };
+static struct Model chicken_model = { "chicken", chicken_vertices, &chicken_tex,
+	ChickenModel_GetNameY, ChickenModel_GetEyeY,
+	ChickenModel_GetSize,  ChickenModel_GetBounds
+};
 
 static void ChickenModel_MakeLeg(struct ModelPart* part, int x1, int x2, int legX1, int legX2) {
 #define ch_y1 (1.0f  / 64.0f)
@@ -893,10 +918,6 @@ static void ChickenModel_CreateParts(void) {
 	ChickenModel_MakeLeg(&chicken_rightLeg, 0, 3, 1, 2);
 }
 
-static float ChickenModel_GetEyeY(struct Entity* entity)   { return 14.0f/16.0f; }
-static void ChickenModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.0f,12.0f,8.0f); }
-static void ChickenModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-8, 4,15,4); }
-
 static void ChickenModel_DrawModel(struct Entity* entity) {
 	PackedCol col = Models.Cols[0];
 	int i;
@@ -922,7 +943,6 @@ static void ChickenModel_DrawModel(struct Entity* entity) {
 static struct Model* ChickenModel_GetInstance(void) {
 	Model_Init(&chicken_model);
 	Model_SetPointers(chicken_model, ChickenModel);
-	chicken_model.NameYOffset = 1.0125f;
 	return &chicken_model;
 }
 
@@ -932,9 +952,19 @@ static struct Model* ChickenModel_GetInstance(void) {
 *#########################################################################################################################*/
 static struct ModelPart creeper_head, creeper_torso, creeper_leftLegFront;
 static struct ModelPart creeper_rightLegFront, creeper_leftLegBack, creeper_rightLegBack;
+
+static float CreeperModel_GetNameY(struct Entity* e) { return 1.7f; }
+static float CreeperModel_GetEyeY(struct Entity* e)  { return 22.0f/16.0f; }
+static void CreeperModel_GetSize(struct Entity* e)   { Model_RetSize(8.0f,26.0f,8.0f); }
+static void CreeperModel_GetBounds(struct Entity* e) { Model_RetAABB(-4,0,-6, 4,26,6); }
+
 static struct ModelVertex creeper_vertices[MODEL_BOX_VERTICES * 6];
 static struct ModelTex creeper_tex = { "creeper.png" };
-static struct Model creeper_model  = { "creeper", creeper_vertices, &creeper_tex };
+static struct Model creeper_model  = { 
+	"creeper", creeper_vertices, &creeper_tex,
+	CreeperModel_GetNameY, CreeperModel_GetEyeY,
+	CreeperModel_GetSize,  CreeperModel_GetBounds
+};
 
 static void CreeperModel_CreateParts(void) {
 	static struct BoxDesc head = {
@@ -976,10 +1006,6 @@ static void CreeperModel_CreateParts(void) {
 	BoxDesc_BuildBox(&creeper_rightLegBack,  &rBack);
 }
 
-static float CreeperModel_GetEyeY(struct Entity* entity)   { return 22.0f/16.0f; }
-static void CreeperModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.0f,26.0f,8.0f); }
-static void CreeperModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-6, 4,26,6); }
-
 static void CreeperModel_DrawModel(struct Entity* entity) {
 	Model_ApplyTexture(entity);
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &creeper_head, true);
@@ -995,7 +1021,6 @@ static void CreeperModel_DrawModel(struct Entity* entity) {
 static struct Model* CreeperModel_GetInstance(void) {
 	Model_Init(&creeper_model);
 	Model_SetPointers(creeper_model, CreeperModel);
-	creeper_model.NameYOffset = 1.7f;
 	return &creeper_model;
 }
 
@@ -1005,9 +1030,19 @@ static struct Model* CreeperModel_GetInstance(void) {
 *#########################################################################################################################*/
 static struct ModelPart pig_head, pig_torso, pig_leftLegFront, pig_rightLegFront;
 static struct ModelPart pig_leftLegBack, pig_rightLegBack;
+
+static float PigModel_GetNameY(struct Entity* e) { return 1.075f; }
+static float PigModel_GetEyeY(struct Entity* e)  { return 12.0f/16.0f; }
+static void PigModel_GetSize(struct Entity* e)   { Model_RetSize(14.0f,14.0f,14.0f); }
+static void PigModel_GetBounds(struct Entity* e) { Model_RetAABB(-5,0,-14, 5,16,9); }
+
 static struct ModelVertex pig_vertices[MODEL_BOX_VERTICES * 6];
 static struct ModelTex pig_tex = { "pig.png" };
-static struct Model pig_model  = { "pig", pig_vertices, &pig_tex };
+static struct Model pig_model  = { 
+	"pig", pig_vertices, &pig_tex,
+	PigModel_GetNameY, PigModel_GetEyeY,
+	PigModel_GetSize,  PigModel_GetBounds
+};
 
 static void PigModel_CreateParts(void) {
 	static struct BoxDesc head = {
@@ -1049,10 +1084,6 @@ static void PigModel_CreateParts(void) {
 	BoxDesc_BuildBox(&pig_rightLegBack,  &rBack);
 }
 
-static float PigModel_GetEyeY(struct Entity* entity)   { return 12.0f/16.0f; }
-static void PigModel_GetCollisionSize(Vector3* size)   { Model_RetSize(14.0f,14.0f,14.0f); }
-static void PigModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-5,0,-14, 5,16,9); }
-
 static void PigModel_DrawModel(struct Entity* entity) {
 	Model_ApplyTexture(entity);
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &pig_head, true);
@@ -1068,7 +1099,6 @@ static void PigModel_DrawModel(struct Entity* entity) {
 static struct Model* PigModel_GetInstance(void) {
 	Model_Init(&pig_model);
 	Model_SetPointers(pig_model, PigModel);
-	pig_model.NameYOffset = 1.075f;
 	return &pig_model;
 }
 
@@ -1080,11 +1110,23 @@ static struct ModelPart sheep_head, sheep_torso, sheep_leftLegFront;
 static struct ModelPart sheep_rightLegFront, sheep_leftLegBack, sheep_rightLegBack;
 static struct ModelPart fur_head, fur_torso, fur_leftLegFront, fur_rightLegFront;
 static struct ModelPart fur_leftLegBack, fur_rightLegBack;
+
+static float SheepModel_GetNameY(struct Entity* e) { return 1.48125f; }
+static float SheepModel_GetEyeY(struct Entity* e)  { return 20.0f/16.0f; }
+static void SheepModel_GetSize(struct Entity* e)   { Model_RetSize(10.0f,20.0f,10.0f); }
+static void SheepModel_GetBounds(struct Entity* e) { Model_RetAABB(-6,0,-13, 6,23,10); }
+
 static struct ModelVertex sheep_vertices[MODEL_BOX_VERTICES * 6 * 2];
 static struct ModelTex sheep_tex = { "sheep.png" };
 static struct ModelTex fur_tex   = { "sheep_fur.png" };
-static struct Model sheep_model  = { "sheep", sheep_vertices, &sheep_tex };
-static struct Model nofur_model  = { "sheep_nofur", sheep_vertices, &sheep_tex };
+static struct Model sheep_model  = { "sheep", sheep_vertices, &sheep_tex,
+	SheepModel_GetNameY, SheepModel_GetEyeY,
+	SheepModel_GetSize,  SheepModel_GetBounds
+};
+static struct Model nofur_model  = { "sheep_nofur", sheep_vertices, &sheep_tex,
+	SheepModel_GetNameY, SheepModel_GetEyeY,
+	SheepModel_GetSize,  SheepModel_GetBounds
+};
 
 static void SheepModel_CreateParts(void) {
 	static struct BoxDesc head = {
@@ -1170,10 +1212,6 @@ static void SheepModel_CreateParts(void) {
 	BoxDesc_BuildBox(&fur_rightLegBack,  &frBack);
 }
 
-static float SheepModel_GetEyeY(struct Entity* entity)   { return 20.0f/16.0f; }
-static void SheepModel_GetCollisionSize(Vector3* size)   { Model_RetSize(10.0f,20.0f,10.0f); }
-static void SheepModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-6,0,-13, 6,23,10); }
-
 static void NoFurModel_DrawModel(struct Entity* entity) {
 	Model_ApplyTexture(entity);
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &sheep_head, true);
@@ -1202,7 +1240,6 @@ static void SheepModel_DrawModel(struct Entity* entity) {
 static struct Model* SheepModel_GetInstance(void) {
 	Model_Init(&sheep_model);
 	Model_SetPointers(sheep_model, SheepModel);
-	sheep_model.NameYOffset = 1.48125f;
 	return &sheep_model;
 }
 
@@ -1210,7 +1247,6 @@ static struct Model* NoFurModel_GetInstance(void) {
 	Model_Init(&nofur_model);
 	Model_SetPointers(nofur_model, SheepModel);
 	nofur_model.DrawModel   = NoFurModel_DrawModel;
-	nofur_model.NameYOffset = 1.48125f;
 	return &nofur_model;
 }
 
@@ -1220,9 +1256,17 @@ static struct Model* NoFurModel_GetInstance(void) {
 *#########################################################################################################################*/
 static struct ModelPart skeleton_head, skeleton_torso, skeleton_leftLeg;
 static struct ModelPart skeleton_rightLeg, skeleton_leftArm, skeleton_rightArm;
+
+static void SkeletonModel_GetSize(struct Entity* e)   { Model_RetSize(8.0f,28.1f,8.0f); }
+static void SkeletonModel_GetBounds(struct Entity* e) { Model_RetAABB(-4,0,-4, 4,32,4); }
+
 static struct ModelVertex skeleton_vertices[MODEL_BOX_VERTICES * 6];
 static struct ModelTex skeleton_tex = { "skeleton.png" };
-static struct Model skeleton_model  = { "skeleton", skeleton_vertices, &skeleton_tex };
+static struct Model skeleton_model  = { 
+	"skeleton", skeleton_vertices, &skeleton_tex,
+	HumanModel_GetNameY,   HumanModel_GetEyeY,
+	SkeletonModel_GetSize, SkeletonModel_GetBounds
+};
 
 static void SkeletonModel_CreateParts(void) {
 	static struct BoxDesc head = {
@@ -1264,10 +1308,6 @@ static void SkeletonModel_CreateParts(void) {
 	BoxDesc_BuildBox(&skeleton_rightArm, &rArm);
 }
 
-static float SkeletonModel_GetEyeY(struct Entity* entity)   { return 26.0f/16.0f; }
-static void SkeletonModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.0f,28.1f,8.0f); }
-static void SkeletonModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,32,4); }
-
 static void SkeletonModel_DrawModel(struct Entity* entity) {
 	Model_ApplyTexture(entity);
 	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &skeleton_head, true);
@@ -1290,7 +1330,6 @@ static struct Model* SkeletonModel_GetInstance(void) {
 	Model_SetPointers(skeleton_model, SkeletonModel);
 	skeleton_model.DrawArm  = SkeletonModel_DrawArm;
 	skeleton_model.armX = 5;
-	skeleton_model.NameYOffset = 2.075f;
 	return &skeleton_model;
 }
 
@@ -1300,9 +1339,19 @@ static struct Model* SkeletonModel_GetInstance(void) {
 *#########################################################################################################################*/
 static struct ModelPart spider_head, spider_link, spider_end;
 static struct ModelPart spider_leftLeg, spider_rightLeg;
+
+static float SpiderModel_GetNameY(struct Entity* e) { return 1.0125f; }
+static float SpiderModel_GetEyeY(struct Entity* e)  { return 8.0f/16.0f; }
+static void SpiderModel_GetSize(struct Entity* e)   { Model_RetSize(15.0f,12.0f,15.0f); }
+static void SpiderModel_GetBounds(struct Entity* e) { Model_RetAABB(-5,0,-11, 5,12,15); }
+
 static struct ModelVertex spider_vertices[MODEL_BOX_VERTICES * 5];
 static struct ModelTex spider_tex = { "spider.png" };
-static struct Model spider_model  = { "spider", spider_vertices, &spider_tex };
+static struct Model spider_model  = { 
+	"spider", spider_vertices, &spider_tex,
+	SpiderModel_GetNameY, SpiderModel_GetEyeY,
+	SpiderModel_GetSize,  SpiderModel_GetBounds
+};
 
 static void SpiderModel_CreateParts(void) {
 	static struct BoxDesc head = {
@@ -1338,10 +1387,6 @@ static void SpiderModel_CreateParts(void) {
 	BoxDesc_BuildBox(&spider_rightLeg, &rLeg);
 }
 
-static float SpiderModel_GetEyeY(struct Entity* entity)   { return 8.0f/16.0f; }
-static void SpiderModel_GetCollisionSize(Vector3* size)   { Model_RetSize(15.0f,12.0f,15.0f); }
-static void SpiderModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-5,0,-11, 5,12,15); }
-
 #define quarterPi (MATH_PI / 4.0f)
 #define eighthPi  (MATH_PI / 8.0f)
 
@@ -1374,7 +1419,6 @@ static void SpiderModel_DrawModel(struct Entity* entity) {
 static struct Model* SpiderModel_GetInstance(void) {
 	Model_Init(&spider_model);
 	Model_SetPointers(spider_model, SpiderModel);
-	spider_model.NameYOffset = 1.0125f;
 	return &spider_model;
 }
 
@@ -1382,13 +1426,16 @@ static struct Model* SpiderModel_GetInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------ZombieModel------------------------------------------------------*
 *#########################################################################################################################*/
+static void ZombieModel_GetBounds(struct Entity* e) { Model_RetAABB(-4,0,-4, 4,32,4); }
+
 static struct ModelTex zombie_tex = { "zombie.png" };
-static struct Model zombie_model  = { "zombie", human_vertices, &zombie_tex };
+static struct Model zombie_model  = { 
+	"zombie", human_vertices, &zombie_tex,
+	HumanModel_GetNameY, HumanModel_GetEyeY, 
+	HumanModel_GetSize,  ZombieModel_GetBounds 
+};
 
 static void ZombieModel_CreateParts(void) { }
-static float ZombieModel_GetEyeY(struct Entity* entity)   { return 26.0f/16.0f; }
-static void ZombieModel_GetCollisionSize(Vector3* size)   { Model_RetSize(8.6f,28.1f,8.6f); }
-static void ZombieModel_GetPickingBounds(struct AABB* bb) { Model_RetAABB(-4,0,-4, 4,32,4); }
 
 static void ZombieModel_DrawModel(struct Entity* entity) {
 	Model_ApplyTexture(entity);
@@ -1413,7 +1460,6 @@ static struct Model* ZombieModel_GetInstance(void) {
 	Model_Init(&zombie_model);
 	Model_SetPointers(zombie_model, ZombieModel);
 	zombie_model.DrawArm  = ZombieModel_DrawArm;
-	zombie_model.NameYOffset = 2.075f;
 	return &zombie_model;
 }
 
@@ -1428,14 +1474,33 @@ static int bModel_lastTexIndex = -1, bModel_texIndex;
 
 static void BlockModel_CreateParts(void) { }
 
-static float BlockModel_GetEyeY(struct Entity* entity) {
-	BlockID block = entity->ModelBlock;
+static float BlockModel_GetNameY(struct Entity* e) {
+	BlockID block = e->ModelBlock;
+	float height;
+
+	if (Blocks.Draw[block] == DRAW_GAS) {
+		bModel_minBB = Vector3_Zero();
+		bModel_maxBB = Vector3_One();
+		height = 1.0f;
+	} else {
+		bModel_minBB = Blocks.MinBB[block];
+		bModel_maxBB = Blocks.MaxBB[block];
+		/* TODO: Should this just be maxY... */
+		height = bModel_maxBB.Y - bModel_minBB.Y;
+	}
+	return height + 0.075f;
+}
+
+static float BlockModel_GetEyeY(struct Entity* e) {
+	BlockID block = e->ModelBlock;
 	float minY = Blocks.MinBB[block].Y;
 	float maxY = Blocks.MaxBB[block].Y;
 	return block == BLOCK_AIR ? 1 : (minY + maxY) / 2.0f;
 }
 
-static void BlockModel_GetCollisionSize(Vector3* size) {
+static void BlockModel_GetCollisionSize(struct Entity* e) {
+	Vector3* size = &e->Size;
+	BlockModel_GetNameY(e); /* TODO: REMOVE THIS HACK */
 	static Vector3 shrink = { 0.75f/16.0f, 0.75f/16.0f, 0.75f/16.0f };
 	Vector3_Sub(size, &bModel_maxBB, &bModel_minBB);
 
@@ -1447,26 +1512,11 @@ static void BlockModel_GetCollisionSize(Vector3* size) {
 	size->Z = max(size->Z, 0.125f/16.0f);
 }
 
-static void BlockModel_GetPickingBounds(struct AABB* bb) {
+static void BlockModel_GetPickingBounds(struct Entity* e) {
 	static Vector3 offset = { -0.5f, 0.0f, -0.5f };
-	Vector3_Add(&bb->Min, &bModel_minBB, &offset);
-	Vector3_Add(&bb->Max, &bModel_maxBB, &offset);
-}
-
-static void BlockModel_RecalcProperties(struct Entity* p) {
-	BlockID block = p->ModelBlock;
-	float height;
-
-	if (Blocks.Draw[block] == DRAW_GAS) {
-		bModel_minBB = Vector3_Zero();
-		bModel_maxBB = Vector3_One();
-		height = 1.0f;
-	} else {
-		bModel_minBB = Blocks.MinBB[block];
-		bModel_maxBB = Blocks.MaxBB[block];
-		height = bModel_maxBB.Y - bModel_minBB.Y;
-	}
-	block_model.NameYOffset = height + 0.075f;
+	BlockModel_GetNameY(e); /* TODO: REMOVE THIS HACK */
+	Vector3_Add(&e->ModelAABB.Min, &bModel_minBB, &offset);
+	Vector3_Add(&e->ModelAABB.Max, &bModel_maxBB, &offset);
 }
 
 static void BlockModel_Flush(void) {
@@ -1592,7 +1642,7 @@ static void BlockModel_DrawModel(struct Entity* p) {
 	int i;
 
 	bModel_block = p->ModelBlock;
-	BlockModel_RecalcProperties(p);
+	BlockModel_GetNameY(p); /* TODO: REMOVE THIS HACK */
 	if (Blocks.Draw[bModel_block] == DRAW_GAS) return;
 
 	if (Blocks.FullBright[bModel_block]) {
@@ -1618,7 +1668,11 @@ static struct Model* BlockModel_GetInstance(void) {
 	block_model.Bobbing  = false;
 	block_model.UsesSkin = false;
 	block_model.Pushes   = false;
-	block_model.RecalcProperties = BlockModel_RecalcProperties;
+
+	block_model.GetNameY         = BlockModel_GetNameY;
+	block_model.GetEyeY          = BlockModel_GetEyeY;
+	block_model.GetCollisionSize = BlockModel_GetCollisionSize;
+	block_model.GetPickingBounds = BlockModel_GetPickingBounds;
 	return &block_model;
 }
 

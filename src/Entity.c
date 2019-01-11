@@ -145,7 +145,6 @@ void Entity_SetModel(struct Entity* e, const String* model) {
 	if (!e->Model) Entity_SetBlockModel(e, &name);
 
 	Entity_ParseScale(e, &scale);
-	e->Model->RecalcProperties(e);
 	Entity_UpdateModelBounds(e);
 	
 	skin = String_FromRawArray(e->SkinNameRaw);
@@ -154,8 +153,8 @@ void Entity_SetModel(struct Entity* e, const String* model) {
 
 void Entity_UpdateModelBounds(struct Entity* e) {
 	struct Model* model = e->Model;
-	model->GetCollisionSize(&e->Size);
-	model->GetPickingBounds(&e->ModelAABB);
+	model->GetCollisionSize(e);
+	model->GetPickingBounds(e);
 
 	Vector3_Mul3By(&e->Size,          &e->ModelScale);
 	Vector3_Mul3By(&e->ModelAABB.Min, &e->ModelScale);
@@ -538,8 +537,7 @@ static void Player_DrawName(struct Player* p) {
 	Gfx_BindTexture(p->NameTex.ID);
 
 	model = e->Model;
-	model->RecalcProperties(e);
-	Vector3_TransformY(&pos, model->NameYOffset, &e->Transform);
+	Vector3_TransformY(&pos, model->GetNameY(e), &e->Transform);
 
 	scale  = model->NameScale * e->ModelScale.Y;
 	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);

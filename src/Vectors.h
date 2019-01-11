@@ -20,7 +20,6 @@ struct Matrix { struct Vector4 Row0, Row1, Row2, Row3; };
 
 /* Identity matrix. (A * Identity = A) */
 extern const struct Matrix Matrix_Identity;
-#define VECTOR3_CONST(x, y, z) { x, y, z };
 
 /* Returns a vector with all components 0. */
 static CC_INLINE Vector3 Vector3_Zero(void) {
@@ -44,6 +43,7 @@ static CC_INLINE Vector3 Vector3_Create1(float value) {
 static CC_INLINE Vector3 Vector3_Create3(float x, float y, float z) {
 	Vector3 v; v.X = x; v.Y = y; v.Z = z; return v;
 }
+
 /* Returns the squared length of the vector. */
 /* Squared length can be used for comparison, to avoid a costly sqrt() */
 /* However, you must sqrt() this when adding lengths. */
