@@ -104,12 +104,14 @@ static void LScreen_KeyDown(struct LScreen* s, Key key, bool was) {
 			s->OnEnterWidget->OnClick(s->OnEnterWidget,   Mouse_X, Mouse_Y);
 		}
 	} else if (s->SelectedWidget) {
+		if (!s->SelectedWidget->VTABLE->KeyDown) return;
 		s->SelectedWidget->VTABLE->KeyDown(s->SelectedWidget, key, was);
 	}
 }
 
 static void LScreen_KeyPress(struct LScreen* s, char key) {
-	if (!s->SelectedWidget) return;
+	if (!s->SelectedWidget);
+	if (!s->SelectedWidget->VTABLE->KeyPress) return;
 	s->SelectedWidget->VTABLE->KeyPress(s->SelectedWidget, key);
 }
 
