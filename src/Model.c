@@ -1476,19 +1476,18 @@ static void BlockModel_CreateParts(void) { }
 
 static float BlockModel_GetNameY(struct Entity* e) {
 	BlockID block = e->ModelBlock;
-	float height;
+	float top;
 
 	if (Blocks.Draw[block] == DRAW_GAS) {
 		bModel_minBB = Vector3_Zero();
 		bModel_maxBB = Vector3_One();
-		height = 1.0f;
+		top = 1.0f;
 	} else {
 		bModel_minBB = Blocks.MinBB[block];
 		bModel_maxBB = Blocks.MaxBB[block];
-		/* TODO: Should this just be maxY... */
-		height = bModel_maxBB.Y - bModel_minBB.Y;
+		top = bModel_maxBB.Y;
 	}
-	return height + 0.075f;
+	return top + 0.075f;
 }
 
 static float BlockModel_GetEyeY(struct Entity* e) {
