@@ -47,6 +47,10 @@ struct Model {
 	/* Pointer to default texture for this model */
 	struct ModelTex* defaultTex;
 
+	/* Creates the ModelParts of this model and fills out vertices. */
+	void (*MakeParts)(void);
+	/* Draws/Renders this model for the given entity. */
+	void (*DrawModel)(struct Entity* entity);
 	/* Returns height the 'nametag' gets drawn at above the entity's feet. */
 	float (*GetNameY)(struct Entity* entity);
 	/* Returns height the 'eye' is located at above the entity's feet. */
@@ -70,8 +74,6 @@ struct Model {
 
 	float Gravity; Vector3 Drag, GroundFriction;
 
-	void (*CreateParts)(void);
-	void (*DrawModel)(struct Entity* entity);
 	/* Returns the transformation matrix applied to the model when rendering */
 	/* NOTE: Most models just use Entity_GetTransform (except SittingModel) */
 	void (*GetTransform)(struct Entity* entity, Vector3 pos, struct Matrix* m);
