@@ -1459,40 +1459,29 @@ static struct Model* ZombieModel_GetInstance(void) {
 *---------------------------------------------------------BlockModel------------------------------------------------------*
 *#########################################################################################################################*/
 static BlockID bModel_block = BLOCK_AIR;
-static Vector3 bModel_minBB, bModel_maxBB;
 static int bModel_lastTexIndex = -1, bModel_texIndex, bModel_index;
 
 static float BlockModel_GetNameY(struct Entity* e) {
 	BlockID block = e->ModelBlock;
-	float top;
-
-	if (Blocks.Draw[block] == DRAW_GAS) {
-		bModel_minBB = Vector3_Zero();
-		bModel_maxBB = Vector3_One();
-		top = 1.0f;
-	} else {
-		bModel_minBB = Blocks.MinBB[block];
-		bModel_maxBB = Blocks.MaxBB[block];
-		top = bModel_maxBB.Y;
-	}
-	return top + 0.075f;
+	return Blocks.MaxBB[block].Y + 0.075f;
 }
 
 static float BlockModel_GetEyeY(struct Entity* e) {
 	BlockID block = e->ModelBlock;
-	float minY = Blocks.MinBB[block].Y;
-	float maxY = Blocks.MaxBB[block].Y;
+	float minY    = Blocks.MinBB[block].Y;
+	float maxY    = Blocks.MaxBB[block].Y;
 	return block == BLOCK_AIR ? 1 : (minY + maxY) / 2.0f;
 }
 
 static void BlockModel_GetSize(struct Entity* e) {
-	Vector3* size = &e->Size;
-	BlockModel_GetNameY(e); /* TODO: REMOVE THIS HACK */
 	static Vector3 shrink = { 0.75f/16.0f, 0.75f/16.0f, 0.75f/16.0f };
-	Vector3_Sub(size, &bModel_maxBB, &bModel_minBB);
+	Vector3* size = &e->Size;
+	BlockID block = e->ModelBlock;
 
+	Vector3_Sub(size, &Blocks.MaxBB[block], &Blocks.MinBB[block]);
 	/* to fit slightly inside */
 	Vector3_SubBy(size, &shrink);
+
 	/* fix for 0 size blocks */
 	size->X = max(size->X, 0.125f/16.0f);
 	size->Y = max(size->Y, 0.125f/16.0f);
@@ -1501,9 +1490,10 @@ static void BlockModel_GetSize(struct Entity* e) {
 
 static void BlockModel_GetBounds(struct Entity* e) {
 	static Vector3 offset = { -0.5f, 0.0f, -0.5f };
-	BlockModel_GetNameY(e); /* TODO: REMOVE THIS HACK */
-	Vector3_Add(&e->ModelAABB.Min, &bModel_minBB, &offset);
-	Vector3_Add(&e->ModelAABB.Max, &bModel_maxBB, &offset);
+	BlockID block = e->ModelBlock;
+
+	Vector3_Add(&e->ModelAABB.Min, &Blocks.MinBB[block], &offset);
+	Vector3_Add(&e->ModelAABB.Max, &Blocks.MaxBB[block], &offset);
 }
 
 static void BlockModel_Flush(void) {
@@ -1630,7 +1620,6 @@ static void BlockModel_Draw(struct Entity* p) {
 	int i;
 
 	bModel_block = p->ModelBlock;
-	BlockModel_GetNameY(p); /* TODO: REMOVE THIS HACK */
 	if (Blocks.Draw[bModel_block] == DRAW_GAS) return;
 
 	if (Blocks.FullBright[bModel_block]) {

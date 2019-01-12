@@ -945,10 +945,12 @@ const char* D3D9_StrFormat(D3DFORMAT format) {
 static float d3d9_totalMem;
 void Gfx_MakeApiInfo(void) {
 	D3DADAPTER_IDENTIFIER9 adapter = { 0 };
+	int pointerSize = sizeof(void*) * 8;
+
 	IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter);
 	d3d9_totalMem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
 
-	String_AppendConst(&Gfx_ApiInfo[0],"-- Using Direct3D9 --");
+	String_Format1(&Gfx_ApiInfo[0], "-- Using Direct3D9 (%i bit) --", &pointerSize);
 	String_Format1(&Gfx_ApiInfo[1], "Adapter: %c",         adapter.Description);
 	String_Format1(&Gfx_ApiInfo[2], "Processing mode: %c", D3D9_StrFlags());
 	Gfx_UpdateApiInfo();
@@ -1504,12 +1506,12 @@ static bool nv_mem;
 void Gfx_MakeApiInfo(void) {
 	const static String memExt = String_FromConst("GL_NVX_gpu_memory_info");
 	String extensions = String_FromReadonly(glGetString(GL_EXTENSIONS));	
-	int depthBits;
+	int depthBits, pointerSize = sizeof(void*) * 8;
 
 	nv_mem = String_CaselessContains(&extensions, &memExt);
 	glGetIntegerv(GL_DEPTH_BITS, &depthBits);
 
-	String_AppendConst(&Gfx_ApiInfo[0],"-- Using OpenGL --");
+	String_Format1(&Gfx_ApiInfo[0], "-- Using OpenGL (%i bit) --", &pointerSize);
 	String_Format1(&Gfx_ApiInfo[1], "Vendor: %c",     glGetString(GL_VENDOR));
 	String_Format1(&Gfx_ApiInfo[2], "Renderer: %c",   glGetString(GL_RENDERER));
 	String_Format1(&Gfx_ApiInfo[3], "GL version: %c", glGetString(GL_VERSION));
