@@ -105,14 +105,15 @@ CC_VAR extern struct _ModelsData {
 	struct Model* Active;
 	/* Dynamic vertex buffer for uploading model vertices. */
 	GfxResourceID Vb;
+	/* Temporary storage for vertices. */
+	VertexP3fT2fC4b* Vertices;
+	/* Maximum number of vertices that can be stored in Vertices. */
+	/* NOTE: If you change this, you MUST also destroy and recreate the dynamic VB. */
+	int MaxVertices;
 } Models;
 
 /* Initialises fields of a model to default. */
 CC_API void Model_Init(struct Model* model);
-
-#define Model_SetPointers(instance, typeName)\
-instance.CreateParts = typeName ## _CreateParts;\
-instance.DrawModel = typeName ## _DrawModel;
 
 /* Whether the bounding sphere of the model is currently visible. */
 bool Model_ShouldRender(struct Entity* entity);
@@ -137,9 +138,6 @@ void Model_RenderArm(struct Model* model, struct Entity* entity);
 /* Draws the given part with appropriate rotation to produce an arm look. */
 CC_API void Model_DrawArmPart(struct ModelPart* part);
 
-/* Maximum number of vertices a model can have */
-#define MODEL_MAX_VERTICES (24 * 12)
-extern VertexP3fT2fC4b Model_Vertices[MODEL_MAX_VERTICES];
 extern struct Model* Human_ModelPtr;
 
 /* Returns a pointer to the model whose name caselessly matches given name. */

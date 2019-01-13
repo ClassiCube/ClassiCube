@@ -110,7 +110,7 @@ static void LScreen_KeyDown(struct LScreen* s, Key key, bool was) {
 }
 
 static void LScreen_KeyPress(struct LScreen* s, char key) {
-	if (!s->SelectedWidget);
+	if (!s->SelectedWidget) return;
 	if (!s->SelectedWidget->VTABLE->KeyPress) return;
 	s->SelectedWidget->VTABLE->KeyPress(s->SelectedWidget, key);
 }
@@ -295,7 +295,7 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 	LScreen_Label(s_,  &s->LblClassic[0], "&eOnly uses blocks and features from");
 	LScreen_Label(s_,  &s->LblClassic[1], "&ethe original minecraft classic");
 
-	LScreen_Label(s_,  &s->LblHelp, "&eClick &fEnhanced &eif you'e not sure which mode to choose.");
+	LScreen_Label(s_,  &s->LblHelp, "&eClick &fEnhanced &eif you're not sure which mode to choose.");
 	LScreen_Button(s_, &s->BtnBack, 80, 35, "Back");
 
 	s->BtnEnhanced.OnClick   = UseModeEnhanced;

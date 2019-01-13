@@ -14,7 +14,6 @@
 #include "Funcs.h"
 
 struct _ModelsData Models;
-VertexP3fT2fC4b Model_Vertices[MODEL_MAX_VERTICES];
 struct Model* Human_ModelPtr;
 
 #define UV_POS_MASK ((uint16_t)0x7FFF)
@@ -145,7 +144,7 @@ void Model_SetupState(struct Model* model, struct Entity* entity) {
 
 void Model_UpdateVB(void) {
 	struct Model* model = Models.Active;
-	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, Model_Vertices, model->index);
+	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, Models.Vertices, model->index);
 	model->index = 0;
 }
 
@@ -174,7 +173,7 @@ void Model_ApplyTexture(struct Entity* entity) {
 void Model_DrawPart(struct ModelPart* part) {
 	struct Model* model     = Models.Active;
 	struct ModelVertex* src = &model->vertices[part->Offset];
-	VertexP3fT2fC4b* dst    = &Model_Vertices[model->index];
+	VertexP3fT2fC4b* dst    = &Models.Vertices[model->index];
 
 	struct ModelVertex v;
 	int i, count = part->Count;
@@ -198,7 +197,7 @@ void Model_DrawPart(struct ModelPart* part) {
 void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart* part, bool head) {
 	struct Model* model     = Models.Active;
 	struct ModelVertex* src = &model->vertices[part->Offset];
-	VertexP3fT2fC4b* dst    = &Model_Vertices[model->index];
+	VertexP3fT2fC4b* dst    = &Models.Vertices[model->index];
 
 	float cosX = Math_CosF(-angleX), sinX = Math_SinF(-angleX);
 	float cosY = Math_CosF(-angleY), sinY = Math_SinF(-angleY);
@@ -376,7 +375,7 @@ static void Models_ContextLost(void* obj) {
 }
 
 static void Models_ContextRecreated(void* obj) {
-	Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, MODEL_MAX_VERTICES);
+	Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, Models.MaxVertices);
 }
 
 static void Model_Make(struct Model* model) {
@@ -1514,7 +1513,7 @@ static TextureLoc BlockModel_GetTex(Face face, VertexP3fT2fC4b** ptr) {
 	BlockModel_FlushIfNotSame;
 
 	/* Need to reload ptr, in case was flushed */
-	*ptr = &Model_Vertices[bModel_index];
+	*ptr = &Models.Vertices[bModel_index];
 	bModel_index += 4;
 	return texLoc;
 }
@@ -1539,7 +1538,7 @@ static void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
 		else {        rec.U1 = 0.5f; xz1 =  5.5f/16.0f; }
 	}
 
-	ptr   = &Model_Vertices[bModel_index];
+	ptr   = &Models.Vertices[bModel_index];
 	v.Col = col;
 
 	v.X = xz1; v.Y = 0.0f; v.Z = xz1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
@@ -1569,7 +1568,7 @@ static void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
 		else {        rec.U2 = 0.5f; x2 =  5.5f/16.0f; z2 = -5.5f/16.0f; }
 	}
 
-	ptr   = &Model_Vertices[bModel_index];
+	ptr   = &Models.Vertices[bModel_index];
 	v.Col = col;
 
 	v.X = x1; v.Y = 0.0f; v.Z = z1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
@@ -1657,6 +1656,9 @@ static struct Model* BlockModel_GetInstance(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Model component---------------------------------------------------*
 *#########################################################################################################################*/
+/* NOTE: None of the built in models use more than 12 parts at once. */
+static VertexP3fT2fC4b defaultVertices[MODEL_BOX_VERTICES * 12];
+
 static void Model_RegisterDefaultModels(void) {
 	Model_RegisterTexture(&human_tex);
 	Model_RegisterTexture(&chicken_tex);
@@ -1688,7 +1690,10 @@ static void Model_RegisterDefaultModels(void) {
 	Model_Register(CorpseModel_GetInstance());
 }
 
-void Models_Init(void) {
+static void Models_Init(void) {
+	Models.Vertices    = defaultVertices;
+	Models.MaxVertices = Array_Elems(defaultVertices);
+
 	Model_RegisterDefaultModels();
 	Models_ContextRecreated(NULL);
 	Models.ClassicArms = Options_GetBool(OPT_CLASSIC_ARM_MODEL, Game_ClassicMode);
@@ -1698,7 +1703,7 @@ void Models_Init(void) {
 	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, Models_ContextRecreated);
 }
 
-void Models_Free(void) {
+static void Models_Free(void) {
 	struct ModelTex* tex;
 
 	for (tex = textures_head; tex; tex = tex->Next) {
