@@ -2696,6 +2696,9 @@ static void SpecialInputWidget_IntersectsBody(struct SpecialInputWidget* w, int 
 
 	/* TODO: need to insert characters that don't affect w->CaretPos index, adjust w->CaretPos colour */
 	str = String_Init(&e.Contents.buffer[i], e.CharsPerItem, 0);
+
+	/* TODO: Not be so hacky */
+	if (w->SelectedIndex == 0) str.length = 2;
 	InputWidget_AppendString(w->AppendObj, &str);
 }
 

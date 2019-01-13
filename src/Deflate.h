@@ -76,7 +76,8 @@ void Inflate_Process(struct InflateState* state);
 CC_API void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struct Stream* underlying);
 
 
-#define DEFLATE_BUFFER_SIZE 16384
+#define DEFLATE_BLOCK_SIZE  16384
+#define DEFLATE_BUFFER_SIZE 32768
 #define DEFLATE_OUT_SIZE 8192
 #define DEFLATE_HASH_SIZE 0x1000UL
 #define DEFLATE_HASH_MASK 0x0FFFUL
@@ -94,8 +95,8 @@ struct DeflateState {
 	
 	uint8_t Input[DEFLATE_BUFFER_SIZE];
 	uint8_t Output[DEFLATE_OUT_SIZE];
-	uint16_t Head[DEFLATE_HASH_SIZE];
-	uint16_t Prev[DEFLATE_BUFFER_SIZE];
+	int Head[DEFLATE_HASH_SIZE];
+	int Prev[DEFLATE_BUFFER_SIZE];
 	bool WroteHeader;
 };
 /* Compresses input data using DEFLATE, then writes compressed output to another stream. Write only stream. */

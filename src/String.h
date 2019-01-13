@@ -21,13 +21,16 @@ typedef struct String_ {
 	uint16_t capacity; /* Max number of characters  */
 } String;
 
-/* Counts number of characters until a '\0' is found. */
-int String_CalcLen(const char* raw, int capacity);
 /* Constant string that points to NULL and has 0 length. */
 /* NOTE: Do NOT modify the contents of this string! */
 extern const String String_Empty;
 /* Constructs a string from the given arguments. */
-String String_Init(STRING_REF char* buffer, int length, int capacity);
+static CC_INLINE String String_Init(STRING_REF char* buffer, int length, int capacity) {
+	String s; s.buffer = buffer; s.length = length; s.capacity = capacity; return s;
+}
+
+/* Counts number of characters until a '\0' is found. */
+int String_CalcLen(const char* raw, int capacity);
 /* Constructs a string from the given arguments, then sets all characters to '\0'. */
 String String_InitAndClear(STRING_REF char* buffer, int capacity);
 /* Constructs a string from a (maybe null terminated) buffer. */

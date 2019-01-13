@@ -7,12 +7,6 @@
 
 const String String_Empty;
 
-String String_Init(STRING_REF char* buffer, int length, int capacity) {
-	String s; 
-	s.buffer = buffer; s.length = length; s.capacity = capacity; 
-	return s;
-}
-
 String String_InitAndClear(STRING_REF char* buffer, int capacity) {
 	String str = String_Init(buffer, 0, capacity);	
 	int i;

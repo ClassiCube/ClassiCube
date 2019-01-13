@@ -33,8 +33,6 @@ struct _CameraData {
 struct Camera {
 	/* Whether this camera is third person. (i.e. not allowed when -thirdperson in MOTD) */
 	bool IsThirdPerson;
-	/* Next camera in linked list of cameras. */
-	struct Camera* Next;
 
 	/* Calculates the current projection matrix of this camera. */
 	void (*GetProjection)(struct Matrix* proj);
@@ -57,10 +55,15 @@ struct Camera {
 	void (*GetPickedBlock)(struct PickedPos* pos);
 	/* Zooms the camera in or out when scrolling mouse wheel. */
 	bool (*Zoom)(float amount);
+
+	/* Next camera in linked list of cameras. */
+	struct Camera* Next;
 };
 
 /* Initialises the default cameras. */
 void Camera_Init(void);
-/* Switches to the next camera in the list. */
+/* Switches to next camera in the list of cameras. */
 void Camera_CycleActive(void);
+/* Registers a camera for use. */
+CC_API void Camera_Register(struct Camera* camera);
 #endif

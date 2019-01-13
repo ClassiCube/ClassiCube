@@ -221,6 +221,7 @@ void Commands_Register(struct ChatCommand* cmd) {
 	} else {
 		cmds_tail->Next = cmd;
 	}
+
 	cmds_tail = cmd;
 	cmd->Next = NULL;
 }

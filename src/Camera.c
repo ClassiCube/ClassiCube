@@ -161,7 +161,7 @@ static Vector3 FirstPersonCamera_GetPosition(float t) {
 
 static bool FirstPersonCamera_Zoom(float amount) { return false; }
 struct Camera Camera_FirstPerson = {
-	false, NULL,
+	false,
 	PerspectiveCamera_GetProjection,  PerspectiveCamera_GetView,
 	FirstPersonCamera_GetOrientation, FirstPersonCamera_GetPosition,
 	PerspectiveCamera_UpdateMouse,    PerspectiveCamera_RegrabMouse,
@@ -212,14 +212,14 @@ static bool ThirdPersonCamera_Zoom(float amount) {
 }
 
 struct Camera Camera_ThirdPerson = {
-	true, NULL,
+	true,
 	PerspectiveCamera_GetProjection,  PerspectiveCamera_GetView,
 	ThirdPersonCamera_GetOrientation, ThirdPersonCamera_GetPosition,
 	PerspectiveCamera_UpdateMouse,    PerspectiveCamera_RegrabMouse,
 	PerspectiveCamera_GetPickedBlock, ThirdPersonCamera_Zoom,
 };
 struct Camera Camera_ForwardThird = {
-	true, NULL,
+	true,
 	PerspectiveCamera_GetProjection,  PerspectiveCamera_GetView,
 	ThirdPersonCamera_GetOrientation, ThirdPersonCamera_GetPosition,
 	PerspectiveCamera_UpdateMouse,    PerspectiveCamera_RegrabMouse,
@@ -231,10 +231,11 @@ struct Camera Camera_ForwardThird = {
 *-----------------------------------------------------General camera------------------------------------------------------*
 *#########################################################################################################################*/
 void Camera_Init(void) {
-	Camera_FirstPerson.Next  = &Camera_ThirdPerson;
-	Camera_ThirdPerson.Next  = &Camera_ForwardThird;
-	Camera_ForwardThird.Next = &Camera_FirstPerson;
-	Camera.Active            = &Camera_FirstPerson;
+	Camera_Register(&Camera_FirstPerson);
+	Camera_Register(&Camera_ThirdPerson);
+	Camera_Register(&Camera_ForwardThird);
+
+	Camera.Active      = &Camera_FirstPerson;
 
 	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 100, 30);
 	Camera.Clipping    = Options_GetBool(OPT_CAMERA_CLIPPING, true);
@@ -254,4 +255,17 @@ void Camera_CycleActive(void) {
 	/* reset rotation offset when changing cameras */
 	cam_rotOffset.X = 0.0f; cam_rotOffset.Y = 0.0f;
 	Game_UpdateProjection();
+}
+
+static struct Camera* cams_head;
+static struct Camera* cams_tail;
+void Camera_Register(struct Camera* cam) {
+	if (!cams_head) {
+		cams_head = cam;
+	} else {
+		cams_tail->Next = cam;
+	}
+
+	cams_tail = cam;
+	cam->Next = cams_head;
 }
