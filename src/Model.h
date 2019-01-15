@@ -50,7 +50,7 @@ struct Model {
 	/* Creates the ModelParts of this model and fills out vertices. */
 	void (*MakeParts)(void);
 	/* Draws/Renders this model for the given entity. */
-	void (*DrawModel)(struct Entity* entity);
+	void (*Draw)(struct Entity* entity);
 	/* Returns height the 'nametag' gets drawn at above the entity's feet. */
 	float (*GetNameY)(struct Entity* entity);
 	/* Returns height the 'eye' is located at above the entity's feet. */
@@ -110,6 +110,8 @@ CC_VAR extern struct _ModelsData {
 	/* Maximum number of vertices that can be stored in Vertices. */
 	/* NOTE: If you change this, you MUST also destroy and recreate the dynamic VB. */
 	int MaxVertices;
+	/* Pointer to humanoid/human model.*/
+	struct Model* Human;
 } Models;
 
 /* Initialises fields of a model to default. */
@@ -137,8 +139,6 @@ CC_API void Model_DrawRotate(float angleX, float angleY, float angleZ, struct Mo
 void Model_RenderArm(struct Model* model, struct Entity* entity);
 /* Draws the given part with appropriate rotation to produce an arm look. */
 CC_API void Model_DrawArmPart(struct ModelPart* part);
-
-extern struct Model* Human_ModelPtr;
 
 /* Returns a pointer to the model whose name caselessly matches given name. */
 CC_API struct Model* Model_Get(const String* name);

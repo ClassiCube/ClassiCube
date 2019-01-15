@@ -121,7 +121,7 @@ static void Entity_SetBlockModel(struct Entity* e, const String* model) {
 
 	if (raw == -1) {
 		/* use default humanoid model */
-		e->Model      = Human_ModelPtr;
+		e->Model      = Models.Human;
 	} else {	
 		e->ModelBlock = (BlockID)raw;
 		e->Model      = Model_Get(&block);

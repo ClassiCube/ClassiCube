@@ -14,7 +14,6 @@
 #include "Funcs.h"
 
 struct _ModelsData Models;
-struct Model* Human_ModelPtr;
 
 #define UV_POS_MASK ((uint16_t)0x7FFF)
 #define UV_MAX ((uint16_t)0x8000)
@@ -105,7 +104,7 @@ void Model_Render(struct Model* model, struct Entity* entity) {
 	Matrix_Mul(&m, &entity->Transform, &Gfx_View);
 
 	Gfx_LoadMatrix(MATRIX_VIEW, &m);
-	model->DrawModel(entity);
+	model->Draw(entity);
 	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx_View);
 }
 
@@ -792,7 +791,7 @@ static struct Model* CorpseModel_GetInstance(void) {
 	corpse_model      = human_model;
 	corpse_model.Name = "corpse";
 	corpse_model.MakeParts = Model_NoParts;
-	corpse_model.DrawModel = CorpseModel_Draw;
+	corpse_model.Draw = CorpseModel_Draw;
 	return &corpse_model;
 }
 
@@ -1672,7 +1671,7 @@ static void Model_RegisterDefaultModels(void) {
 
 	Model_Register(HumanoidModel_GetInstance());
 	Model_Make(&human_model);
-	Human_ModelPtr = &human_model;
+	Models.Human = &human_model;
 
 	Model_Register(ChickenModel_GetInstance());
 	Model_Register(CreeperModel_GetInstance());

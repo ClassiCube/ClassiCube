@@ -2690,6 +2690,7 @@ static void HacksSettingsScreen_ContextRecreated(void* screen) {
 
 	Menu_Back(s, 10, &s->Buttons[10], "Done", &s->TitleFont, Menu_SwitchOptions);
 	widgets[11] = NULL; widgets[12] = NULL; widgets[13] = NULL;
+	HacksSettingsScreen_CheckHacksAllowed(screen);
 }
 
 struct Screen* HacksSettingsScreen_MakeInstance(void) {

@@ -321,7 +321,7 @@ static void HelpCommand_Execute(const String* args, int argsCount) {
 	}
 }
 
-static struct ChatCommand HelpCommand_Instance = {
+static struct ChatCommand HelpCommand = {
 	"Help", HelpCommand_Execute, false,
 	{
 		"&a/client help [command name]",
@@ -339,7 +339,7 @@ static void GpuInfoCommand_Execute(const String* args, int argsCount) {
 	}
 }
 
-static struct ChatCommand GpuInfoCommand_Instance = {
+static struct ChatCommand GpuInfoCommand = {
 	"GpuInfo", GpuInfoCommand_Execute, false,
 	{
 		"&a/client gpuinfo",
@@ -363,7 +363,7 @@ static void RenderTypeCommand_Execute(const String* args, int argsCount) {
 	}
 }
 
-static struct ChatCommand RenderTypeCommand_Instance = {
+static struct ChatCommand RenderTypeCommand = {
 	"RenderType", RenderTypeCommand_Execute, false,
 	{
 		"&a/client rendertype [normal/legacy/legacyfast]",
@@ -389,7 +389,7 @@ static void ResolutionCommand_Execute(const String* args, int argsCount) {
 	}
 }
 
-static struct ChatCommand ResolutionCommand_Instance = {
+static struct ChatCommand ResolutionCommand = {
 	"Resolution", ResolutionCommand_Execute, false,
 	{
 		"&a/client resolution [width] [height]",
@@ -405,7 +405,7 @@ static void ModelCommand_Execute(const String* args, int argsCount) {
 	}
 }
 
-static struct ChatCommand ModelCommand_Instance = {
+static struct ChatCommand ModelCommand = {
 	"Model", ModelCommand_Execute, true,
 	{
 		"&a/client model [name]",
@@ -508,7 +508,7 @@ static void CuboidCommand_Execute(const String* args, int argsCount) {
 	cuboid_hooked = true;
 }
 
-static struct ChatCommand CuboidCommand_Instance = {
+static struct ChatCommand CuboidCommand = {
 	"Cuboid", CuboidCommand_Execute, true, 
 	{
 		"&a/client cuboid [block] [persist]",
@@ -541,7 +541,7 @@ static void TeleportCommand_Execute(const String* args, int argsCount) {
 	e->VTABLE->SetLocation(e, &update, false);
 }
 
-static struct ChatCommand TeleportCommand_Instance = {
+static struct ChatCommand TeleportCommand = {
 	"TP", TeleportCommand_Execute, true,
 	{
 		"&a/client tp [x y z]",
@@ -566,13 +566,13 @@ void Chat_Send(const String* text, bool logUsage) {
 }
 
 static void Chat_Init(void) {
-	Commands_Register(&GpuInfoCommand_Instance);
-	Commands_Register(&HelpCommand_Instance);
-	Commands_Register(&RenderTypeCommand_Instance);
-	Commands_Register(&ResolutionCommand_Instance);
-	Commands_Register(&ModelCommand_Instance);
-	Commands_Register(&CuboidCommand_Instance);
-	Commands_Register(&TeleportCommand_Instance);
+	Commands_Register(&GpuInfoCommand);
+	Commands_Register(&HelpCommand);
+	Commands_Register(&RenderTypeCommand);
+	Commands_Register(&ResolutionCommand);
+	Commands_Register(&ModelCommand);
+	Commands_Register(&CuboidCommand);
+	Commands_Register(&TeleportCommand);
 
 	Chat_Logging = Options_GetBool(OPT_CHAT_LOGGING, true);
 }
