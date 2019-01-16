@@ -753,15 +753,14 @@ static void SittingModel_Draw(struct Entity* entity) {
 	HumanModel_Draw(entity);
 }
 
-static float SittingModel_GetNameY(struct Entity* e) { return 32.5f/16.0f; }
 static float SittingModel_GetEyeY(struct Entity* e)  { return (26.0f - SIT_OFFSET) / 16.0f; }
 static void SittingModel_GetSize(struct Entity* e)   { Model_RetSize(8.6f,28.1f - SIT_OFFSET,8.6f); }
 static void SittingModel_GetBounds(struct Entity* e) { Model_RetAABB(-8,0,-4, 8,32 - SIT_OFFSET,4); }
 
 static struct Model sitting_model = { "sit", human_vertices, &human_tex,
-	Model_NoParts,         SittingModel_Draw,
-	SittingModel_GetNameY, SittingModel_GetEyeY,
-	SittingModel_GetSize,  SittingModel_GetBounds
+	Model_NoParts,        SittingModel_Draw,
+	HumanModel_GetNameY,  SittingModel_GetEyeY,
+	SittingModel_GetSize, SittingModel_GetBounds
 };
 
 static struct Model* SittingModel_GetInstance(void) {
@@ -816,15 +815,14 @@ static void HeadModel_Draw(struct Entity* entity) {
 	Model_UpdateVB();
 }
 
-static float HeadModel_GetNameY(struct Entity* e) { return 32.5f/16.0f; }
 static float HeadModel_GetEyeY(struct Entity* e)  { return 6.0f/16.0f; }
 static void HeadModel_GetSize(struct Entity* e)   { Model_RetSize(7.9f,7.9f,7.9f); }
 static void HeadModel_GetBounds(struct Entity* e) { Model_RetAABB(-4,0,-4, 4,8,4); }
 
 static struct Model head_model = { "head", human_vertices, &human_tex,
-	Model_NoParts,      HeadModel_Draw,
-	HeadModel_GetNameY, HeadModel_GetEyeY,
-	HeadModel_GetSize,  HeadModel_GetBounds
+	Model_NoParts,       HeadModel_Draw,
+	HumanModel_GetNameY, HeadModel_GetEyeY,
+	HeadModel_GetSize,   HeadModel_GetBounds
 };
 
 static struct Model* HeadModel_GetInstance(void) {

@@ -442,7 +442,7 @@ void TabList_Set(EntityID id, const String* player, const String* list, const St
 	TabList.GroupNames[id]  = TabList.Buffer.Count; StringsBuffer_Add(&TabList.Buffer, group);
 	TabList.GroupRanks[id]  = rank;
 
-	Event_RaiseInt(&TabListEvents.Added, id);
+	Event_RaiseInt(events, id);
 }
 
 static void TabList_Free(void) { StringsBuffer_Clear(&TabList.Buffer); }
