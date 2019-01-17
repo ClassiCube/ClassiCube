@@ -357,27 +357,27 @@ const static uint8_t fixed_dists[INFLATE_MAX_DISTS] = {
 	5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5, 5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
 };
 
-static uint16_t len_base[31] = { 
+const static uint16_t len_base[31] = { 
 	3,4,5,6,7,8,9,10,11,13,
 	15,17,19,23,27,31,35,43,51,59,
 	67,83,99,115,131,163,195,227,258,0,0 
 };
-static uint8_t len_bits[31] = { 
+const static uint8_t len_bits[31] = { 
 	0,0,0,0,0,0,0,0,1,1,
 	1,1,2,2,2,2,3,3,3,3,
 	4,4,4,4,5,5,5,5,0,0,0 
 };
-static uint16_t dist_base[32] = {
+const static uint16_t dist_base[32] = {
 	1,2,3,4,5,7,9,13,17,25,
 	33,49,65,97,129,193,257,385,513,769,
 	1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,0,0 
 };
-static uint8_t dist_bits[32] = { 
+const static uint8_t dist_bits[32] = {
 	0,0,0,0,1,1,2,2,3,3,
 	4,4,5,5,6,6,7,7,8,8,
 	9,9,10,10,11,11,12,12,13,13,0,0 
 };
-static uint8_t codelens_order[INFLATE_MAX_CODELENS] = {
+const static uint8_t codelens_order[INFLATE_MAX_CODELENS] = {
 	16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15 
 };
 
@@ -759,6 +759,18 @@ void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struc
 /*########################################################################################################################*
 *---------------------------------------------------Deflate (compress)----------------------------------------------------*
 *#########################################################################################################################*/
+/* these are copies of len_base and dist_base, with UINT16_MAX instead of 0 for sentinel cutoff */
+const static uint16_t deflate_len[30] = {
+	3,4,5,6,7,8,9,10,11,13,
+	15,17,19,23,27,31,35,43,51,59,
+	67,83,99,115,131,163,195,227,258,UInt16_MaxValue
+};
+const static uint16_t deflate_dist[31] = {
+	1,2,3,4,5,7,9,13,17,25,
+	33,49,65,97,129,193,257,385,513,769,
+	1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,UInt16_MaxValue
+};
+
 /* Pushes given bits, but does not write them */
 #define Deflate_PushBits(state, value, bits) state->Bits |= (value) << state->NumBits; state->NumBits += (bits);
 /* Pushes bits of the huffman codeword bits for the given literal, but does not write them */
@@ -770,50 +782,65 @@ void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struc
 /* Flushes bits in buffer to output buffer */
 #define Deflate_FlushBits(state) while (state->NumBits >= 8) { Deflate_WriteByte(state); }
 
-#define DEFLATE_MAX_MATCH_LEN 258
+#define MIN_MATCH_LEN 3
+#define MAX_MATCH_LEN 258
+
+/* Number of bytes that match (are the same) from a and b */
 static int Deflate_MatchLen(uint8_t* a, uint8_t* b, int maxLen) {
 	int i = 0;
 	while (i < maxLen && *a == *b) { i++; a++; b++; }
 	return i;
 }
 
+/* Hashes 3 bytes of data */
 static uint32_t Deflate_Hash(uint8_t* src) {
 	return (uint32_t)((src[0] << 8) ^ (src[1] << 4) ^ (src[2])) & DEFLATE_HASH_MASK;
 }
 
+/* Writes a literal to state->Output */
 static void Deflate_Lit(struct DeflateState* state, int lit) {
 	Deflate_PushLit(state, lit);
 	Deflate_FlushBits(state);
 }
 
+/* Writes a length-distance pair to state->Output */
 static void Deflate_LenDist(struct DeflateState* state, int len, int dist) {
 	int j;
-	len_base[29]  = UInt16_MaxValue;
-	dist_base[30] = UInt16_MaxValue;
-	/* TODO: Remove this hack out into Deflate_FlushBlock */
-	/* TODO: is that hack even thread-safe */
 	/* TODO: Do we actually need the if (len_bits[j]) ????????? does writing 0 bits matter??? */
 
-	for (j = 0; len >= len_base[j + 1]; j++);
+	for (j = 0; len >= deflate_len[j + 1]; j++);
 	Deflate_PushLit(state, j + 257);
-	if (len_bits[j]) { Deflate_PushBits(state, len - len_base[j], len_bits[j]); }
+	if (len_bits[j]) { Deflate_PushBits(state, len - deflate_len[j], len_bits[j]); }
 	Deflate_FlushBits(state);
 
-	for (j = 0; dist >= dist_base[j + 1]; j++);
+	for (j = 0; dist >= deflate_dist[j + 1]; j++);
 	Deflate_PushHuff(state, j, 5);
-	if (dist_bits[j]) { Deflate_PushBits(state, dist - dist_base[j], dist_bits[j]); }
+	if (dist_bits[j]) { Deflate_PushBits(state, dist - deflate_dist[j], dist_bits[j]); }
 	Deflate_FlushBits(state);
-
-	len_base[29]  = 0;
-	dist_base[30] = 0;
 }
 
+/* Moves "current block" to "previous block", adjusting state if needed. */
+static void Deflate_MoveBlock(struct DeflateState* state) {
+	int i;
+	Mem_Copy(state->Input, state->Input + DEFLATE_BLOCK_SIZE, DEFLATE_BLOCK_SIZE);
+	state->InputPosition = DEFLATE_BLOCK_SIZE;
+
+	/* adjust hash table offsets, removing offsets that are no longer in data at all */
+	for (i = 0; i < Array_Elems(state->Head); i++) {
+		state->Head[i] = state->Head[i] < DEFLATE_BLOCK_SIZE ? 0 : (state->Head[i] - DEFLATE_BLOCK_SIZE);
+	}
+	for (i = 0; i < Array_Elems(state->Prev); i++) {
+		state->Prev[i] = state->Prev[i] < DEFLATE_BLOCK_SIZE ? 0 : (state->Prev[i] - DEFLATE_BLOCK_SIZE);
+	}
+}
+
+/* Compresses current block of data */
 static ReturnCode Deflate_FlushBlock(struct DeflateState* state, int len) {
 	uint32_t hash, nextHash;
-	int bestLen, maxLen, matchLen;
+	int bestLen, maxLen, matchLen, depth;
 	int bestPos, pos, nextPos;
 	uint16_t oldHead;
-	uint8_t* src;
+	uint8_t* input;
 	uint8_t* cur;
 	ReturnCode res;
 
@@ -822,45 +849,45 @@ static ReturnCode Deflate_FlushBlock(struct DeflateState* state, int len) {
 		Deflate_PushBits(state, 3, 3); /* final block TRUE, block type FIXED */
 	}
 
-	/* TODO: Hash chains should persist past one block flush */
-	Mem_Set(state->Head, 0, sizeof(state->Head));
-	Mem_Set(state->Prev, 0, sizeof(state->Prev));
-
 	/* Based off descriptions from http://www.gzip.org/algorithm.txt and
 	https://github.com/nothings/stb/blob/master/stb_image_write.h */
-	src = state->Input;
-	cur = src;
+	input = state->Input;
+	cur   = input + DEFLATE_BLOCK_SIZE;
 
-	while (len > 3) {
+	/* Compress current block of data */
+	/* Use > instead of >=, because also try match at one byte after current */
+	while (len > MIN_MATCH_LEN) {
 		hash   = Deflate_Hash(cur);
-		maxLen = min(len, DEFLATE_MAX_MATCH_LEN);
+		maxLen = min(len, MAX_MATCH_LEN);
 
-		bestLen = 3 - 1; /* Match must be at least 3 bytes */
+		bestLen = MIN_MATCH_LEN - 1; /* Match must be at least 3 bytes */
 		bestPos = 0;
 
 		/* Find longest match starting at this byte */
+		/* Only explore up to 5 previous matches, to avoid slow performance */
+		/* (i.e prefer quickly saving maps/screenshots to completely optimal filesize) */
 		pos = state->Head[hash];
-		while (pos != 0) { /* TODO: Need to limit chain length here */
-			matchLen = Deflate_MatchLen(&src[pos], cur, maxLen);
+		for (depth = 0; pos != 0 && depth < 5; depth++) {
+			matchLen = Deflate_MatchLen(&input[pos], cur, maxLen);
 			if (matchLen > bestLen) { bestLen = matchLen; bestPos = pos; }
 			pos = state->Prev[pos];
 		}
 
 		/* Insert this entry into the hash chain */
-		pos = (int)(cur - src);
+		pos = (int)(cur - input);
 		oldHead = state->Head[hash];
 		state->Head[hash] = pos;
 		state->Prev[pos]  = oldHead;
 
 		/* Lazy evaluation: Find longest match starting at next byte */
 		/* If that's longer than the longest match at current byte, throwaway this match */
-		if (bestPos && len > 2) {
+		if (bestPos) {
 			nextHash = Deflate_Hash(cur + 1);
 			nextPos  = state->Head[nextHash];
-			maxLen   = min(len - 1, DEFLATE_MAX_MATCH_LEN);
+			maxLen   = min(len - 1, MAX_MATCH_LEN);
 
-			while (nextPos != 0) { /* TODO: Need to limit chain length here */
-				matchLen = Deflate_MatchLen(&src[nextPos], cur + 1, maxLen);
+			for (depth = 0; nextPos != 0 && depth < 5; depth++) {
+				matchLen = Deflate_MatchLen(&input[nextPos], cur + 1, maxLen);
 				if (matchLen > bestLen) { bestPos = 0; break; }
 				nextPos = state->Prev[nextPos];
 			}
@@ -887,48 +914,51 @@ static ReturnCode Deflate_FlushBlock(struct DeflateState* state, int len) {
 		Deflate_Lit(state, *cur);
 		len--; cur++;
 	}
-	state->InputPosition = 0;
 
 	res = Stream_Write(state->Dest, state->Output, DEFLATE_OUT_SIZE - state->AvailOut);
 	state->NextOut  = state->Output;
 	state->AvailOut = DEFLATE_OUT_SIZE;
+
+	Deflate_MoveBlock(state);
 	return res;
 }
 
-static ReturnCode Deflate_StreamWrite(struct Stream* stream, const uint8_t* data, uint32_t count, uint32_t* modified) {
+/* Adds data to buffered output data, flushing if needed */
+static ReturnCode Deflate_StreamWrite(struct Stream* stream, const uint8_t* data, uint32_t total, uint32_t* modified) {
 	struct DeflateState* state;
 	ReturnCode res;
 
 	state = stream->Meta.Inflate;
 	*modified = 0;
 
-	while (count > 0) {
+	while (total > 0) {
 		uint8_t* dst = &state->Input[state->InputPosition];
-		uint32_t toWrite = count;
-		if (state->InputPosition + toWrite >= DEFLATE_BUFFER_SIZE) {
-			toWrite = DEFLATE_BUFFER_SIZE - state->InputPosition;
+		uint32_t len = total;
+		if (state->InputPosition + len >= DEFLATE_BUFFER_SIZE) {
+			len = DEFLATE_BUFFER_SIZE - state->InputPosition;
 		}
 
-		Mem_Copy(dst, data, toWrite);
-		count -= toWrite;
-		state->InputPosition += toWrite;
-		*modified += toWrite;
-		data += toWrite;
+		Mem_Copy(dst, data, len);
+		total -= len;
+		state->InputPosition += len;
+		*modified += len;
+		data += len;
 
 		if (state->InputPosition == DEFLATE_BUFFER_SIZE) {
-			res = Deflate_FlushBlock(state, DEFLATE_BUFFER_SIZE);
+			res = Deflate_FlushBlock(state, DEFLATE_BLOCK_SIZE);
 			if (res) return res;
 		}
 	}
 	return 0;
 }
 
+/* Flushes any buffered data, then writes terminating symbol */
 static ReturnCode Deflate_StreamClose(struct Stream* stream) {
 	struct DeflateState* state;
 	ReturnCode res;
 
 	state = stream->Meta.Inflate;
-	res   = Deflate_FlushBlock(state, state->InputPosition);
+	res   = Deflate_FlushBlock(state, state->InputPosition - DEFLATE_BLOCK_SIZE);
 	if (res) return res;
 
 	/* Write huffman encoded "literal 256" to terminate symbols */
@@ -969,7 +999,8 @@ void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struc
 	stream->Write = Deflate_StreamWrite;
 	stream->Close = Deflate_StreamClose;
 
-	state->InputPosition = 0;
+	/* First half of buffer is "previous block" */
+	state->InputPosition = DEFLATE_BLOCK_SIZE;
 	state->Bits    = 0;
 	state->NumBits = 0;
 
