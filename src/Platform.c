@@ -243,10 +243,20 @@ int Stopwatch_ElapsedMicroseconds(uint64_t beg, uint64_t end) {
 }
 
 #ifdef CC_BUILD_WIN
+static HANDLE conHandle;
+static BOOL hasDebugger;
+
 void Platform_Log(const String* message) {
-	/* TODO: log to console */
-	OutputDebugStringA(message->buffer);
-	OutputDebugStringA("\n");
+	DWORD wrote;
+	if (conHandle) {
+		WriteFile(conHandle, message->buffer, message->length, &wrote, NULL);
+		WriteFile(conHandle, "\n",            1,               &wrote, NULL);
+	}
+	if (hasDebugger) {
+		/* TODO: This reads past the end of the buffer */
+		OutputDebugStringA(message->buffer);
+		OutputDebugStringA("\n");
+	}
 }
 
 #define FILETIME_EPOCH 50491123200000ULL
@@ -1154,7 +1164,6 @@ int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, Bitm
 	FT_Glyph* glyphs = data->glyphs;
 	int descender, height, begX = x;
 	
-
 	/* glyph state */
 	FT_BitmapGlyph glyph;
 	FT_Bitmap* img;
@@ -1758,6 +1767,10 @@ void Platform_Init(void) {
 	
 	res = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (res) Logger_Abort2(res, "WSAStartup failed");
+
+	hasDebugger = IsDebuggerPresent();
+	if (!AttachConsole(ATTACH_PARENT_PROCESS)) return;
+	conHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 }
 
 void Platform_Free(void) {
