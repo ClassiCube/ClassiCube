@@ -30,7 +30,7 @@ static CC_INLINE String String_Init(STRING_REF char* buffer, int length, int cap
 }
 
 /* Counts number of characters until a '\0' is found. */
-int String_CalcLen(const char* raw, int capacity);
+CC_API int String_CalcLen(const char* raw, int capacity);
 /* Constructs a string from the given arguments, then sets all characters to '\0'. */
 String String_InitAndClear(STRING_REF char* buffer, int capacity);
 /* Constructs a string from a (maybe null terminated) buffer. */

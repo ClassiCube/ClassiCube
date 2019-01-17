@@ -97,7 +97,7 @@ Vector3 Entity_GetEyePosition(struct Entity* e);
 /* (i.e. distance to eye from feet/base of the model) */
 float Entity_GetEyeHeight(struct Entity* e);
 /* Calculates the transformation matrix applied when rendering the given entity. */
-void Entity_GetTransform(struct Entity* e, Vector3 pos, Vector3 scale, struct Matrix* m);
+CC_API void Entity_GetTransform(struct Entity* e, Vector3 pos, Vector3 scale, struct Matrix* m);
 void Entity_GetPickingBounds(struct Entity* e, struct AABB* bb);
 /* Gets the current collision bounds of the given entity. */
 void Entity_GetBounds(struct Entity* e, struct AABB* bb);

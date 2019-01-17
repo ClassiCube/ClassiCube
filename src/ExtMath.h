@@ -20,8 +20,8 @@ float Math_SqrtF(float x);
 float Math_Mod1(float x);
 int   Math_AbsI(int x);
 
-double Math_Sin(double x);
-double Math_Cos(double x);
+CC_API double Math_Sin(double x);
+CC_API double Math_Cos(double x);
 float Math_SinF(float x);
 float Math_CosF(float x);
 

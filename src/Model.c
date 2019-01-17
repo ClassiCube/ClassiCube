@@ -198,9 +198,9 @@ void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart
 	struct ModelVertex* src = &model->vertices[part->Offset];
 	VertexP3fT2fC4b* dst    = &Models.Vertices[model->index];
 
-	float cosX = Math_CosF(-angleX), sinX = Math_SinF(-angleX);
-	float cosY = Math_CosF(-angleY), sinY = Math_SinF(-angleY);
-	float cosZ = Math_CosF(-angleZ), sinZ = Math_SinF(-angleZ);
+	float cosX = (float)Math_Cos(-angleX), sinX = (float)Math_Sin(-angleX);
+	float cosY = (float)Math_Cos(-angleY), sinY = (float)Math_Sin(-angleY);
+	float cosZ = (float)Math_Cos(-angleZ), sinZ = (float)Math_Sin(-angleZ);
 	float t, x = part->RotX, y = part->RotY, z = part->RotZ;
 	
 	struct ModelVertex v;
@@ -1374,9 +1374,9 @@ static void SpiderModel_Draw(struct Entity* entity) {
 	Model_DrawPart(&spider_link);
 	Model_DrawPart(&spider_end);
 
-	rotX = Math_SinF(entity->Anim.WalkTime)     * entity->Anim.Swing * MATH_PI;
-	rotZ = Math_CosF(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 16.0f;
-	rotY = Math_SinF(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 32.0f;
+	rotX = (float)Math_Sin(entity->Anim.WalkTime)     * entity->Anim.Swing * MATH_PI;
+	rotZ = (float)Math_Cos(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 16.0f;
+	rotY = (float)Math_Sin(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 32.0f;
 	Models.Rotation = ROTATE_ORDER_XZY;
 
 	Model_DrawRotate(rotX,  quarterPi  + rotY, eighthPi + rotZ, &spider_leftLeg, false);
