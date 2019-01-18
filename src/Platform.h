@@ -118,7 +118,7 @@ void DateTime_CurrentLocal(struct DateTime* time);
 /* NOTE: The value returned is platform-specific - do NOT try to interpret the value. */
 uint64_t Stopwatch_Measure(void);
 /* Returns total elapsed microseconds between two stopwatch measurements. */
-int Stopwatch_ElapsedMicroseconds(uint64_t beg, uint64_t end);
+uint64_t Stopwatch_ElapsedMicroseconds(uint64_t beg, uint64_t end);
 
 /* Returns whether the given directory exists. */
 bool Directory_Exists(const String* path);

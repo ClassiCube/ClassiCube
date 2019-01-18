@@ -648,7 +648,7 @@ static void Http_ProcessRequest(struct HttpRequest* req) {
 	req->Result = Http_SysDo(req, &http_curProgress);
 	end = Stopwatch_Measure();
 
-	elapsed = Stopwatch_ElapsedMicroseconds(beg, end) / 1000;
+	elapsed = (int)Stopwatch_ElapsedMicroseconds(beg, end) / 1000;
 	Platform_Log3("HTTP: return code %i (http %i), in %i ms", 
 				&req->Result, &req->StatusCode, &elapsed);
 

@@ -234,12 +234,9 @@ void Platform_LogConst(const char* message) {
 
 /* TODO: check this is actually accurate */
 static uint64_t sw_freqMul = 1, sw_freqDiv = 1;
-int Stopwatch_ElapsedMicroseconds(uint64_t beg, uint64_t end) {
-	uint64_t delta;
+uint64_t Stopwatch_ElapsedMicroseconds(uint64_t beg, uint64_t end) {
 	if (end < beg) return 0;
-
-	delta = ((end - beg) * sw_freqMul) / sw_freqDiv;
-	return (int)delta;
+	return ((end - beg) * sw_freqMul) / sw_freqDiv;
 }
 
 #ifdef CC_BUILD_WIN
