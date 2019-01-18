@@ -21,12 +21,12 @@
 *--------------------------------------------------------General----------------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode Map_ReadBlocks(struct Stream* stream) {
-	World_BlocksSize = World_Width * World_Length * World_Height;
-	World_Blocks     = Mem_Alloc(World_BlocksSize, 1, "map blocks");
+	World.BlocksSize = World.Width * World.Length * World.Height;
+	World.Blocks     = Mem_Alloc(World.BlocksSize, 1, "map blocks");
 #ifdef EXTENDED_BLOCKS
-	World_Blocks2    = World_Blocks;
+	World.Blocks2    = World.Blocks;
 #endif
-	return Stream_Read(stream, World_Blocks, World_BlocksSize);
+	return Stream_Read(stream, World.Blocks, World.BlocksSize);
 }
 
 static ReturnCode Map_SkipGZipHeader(struct Stream* stream) {
@@ -75,7 +75,7 @@ void Map_LoadFrom(const String* path) {
 	res = stream.Close(&stream);
 	if (res) { Logger_Warn2(res, "closing", path); }
 
-	World_SetNewMap(World_Blocks, World_BlocksSize, World_Width, World_Height, World_Length);
+	World_SetNewMap(World.Blocks, World.BlocksSize, World.Width, World.Height, World.Length);
 	Event_RaiseVoid(&WorldEvents.MapLoaded);
 
 	LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnRotY, p->SpawnHeadX, false);
@@ -115,13 +115,13 @@ static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
 	int x, y, z, i;
 
 	/* skip bounds checks when we know chunk is entirely inside map */
-	int adjWidth  = World_Width  & ~0x0F;
-	int adjHeight = World_Height & ~0x0F;
-	int adjLength = World_Length & ~0x0F;
+	int adjWidth  = World.Width  & ~0x0F;
+	int adjHeight = World.Height & ~0x0F;
+	int adjLength = World.Length & ~0x0F;
 
-	for (y = 0; y < World_Height; y += LVL_CHUNKSIZE) {
-		for (z = 0; z < World_Length; z += LVL_CHUNKSIZE) {
-			for (x = 0; x < World_Width; x += LVL_CHUNKSIZE) {
+	for (y = 0; y < World.Height; y += LVL_CHUNKSIZE) {
+		for (z = 0; z < World.Length; z += LVL_CHUNKSIZE) {
+			for (x = 0; x < World.Width; x += LVL_CHUNKSIZE) {
 
 				if ((res = stream->ReadU8(stream, &hasCustom))) return res;
 				if (hasCustom != 1) continue;
@@ -133,15 +133,15 @@ static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
 						xx = i & 0xF; yy = (i >> 8) & 0xF; zz = (i >> 4) & 0xF;
 
 						index = baseIndex + World_Pack(xx, yy, zz);
-						World_Blocks[index] = World_Blocks[index] == LVL_CUSTOMTILE ? chunk[i] : World_Blocks[index];
+						World.Blocks[index] = World.Blocks[index] == LVL_CUSTOMTILE ? chunk[i] : World.Blocks[index];
 					}
 				} else {
 					for (i = 0; i < sizeof(chunk); i++) {
 						xx = i & 0xF; yy = (i >> 8) & 0xF; zz = (i >> 4) & 0xF;
-						if ((x + xx) >= World_Width || (y + yy) >= World_Height || (z + zz) >= World_Length) continue;
+						if ((x + xx) >= World.Width || (y + yy) >= World.Height || (z + zz) >= World.Length) continue;
 
 						index = baseIndex + World_Pack(xx, yy, zz);
-						World_Blocks[index] = World_Blocks[index] == LVL_CUSTOMTILE ? chunk[i] : World_Blocks[index];
+						World.Blocks[index] = World.Blocks[index] == LVL_CUSTOMTILE ? chunk[i] : World.Blocks[index];
 					}
 				}
 			}
@@ -166,9 +166,9 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 	if ((res = Stream_Read(&compStream, header, sizeof(header)))) return res;
 	if (Stream_GetU16_LE(&header[0]) != 1874) return LVL_ERR_VERSION;
 
-	World_Width  = Stream_GetU16_LE(&header[2]);
-	World_Length = Stream_GetU16_LE(&header[4]);
-	World_Height = Stream_GetU16_LE(&header[6]);
+	World.Width  = Stream_GetU16_LE(&header[2]);
+	World.Length = Stream_GetU16_LE(&header[4]);
+	World.Height = Stream_GetU16_LE(&header[6]);
 
 	p->Spawn.X = Stream_GetU16_LE(&header[8]);
 	p->Spawn.Z = Stream_GetU16_LE(&header[10]);
@@ -178,15 +178,15 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 	/* (2) pervisit, perbuild permissions */
 
 	if ((res = Map_ReadBlocks(&compStream))) return res;
-	blocks = World_Blocks;
+	blocks = World.Blocks;
 	/* Bulk convert 4 blocks at once */
-	for (i = 0; i < (World_BlocksSize & ~3); i += 4) {
+	for (i = 0; i < (World.BlocksSize & ~3); i += 4) {
 		*blocks = Lvl_table[*blocks]; blocks++;
 		*blocks = Lvl_table[*blocks]; blocks++;
 		*blocks = Lvl_table[*blocks]; blocks++;
 		*blocks = Lvl_table[*blocks]; blocks++;
 	}
-	for (; i < World_BlocksSize; i++) {
+	for (; i < World.BlocksSize; i++) {
 		*blocks = Lvl_table[*blocks]; blocks++;
 	}
 
@@ -227,9 +227,9 @@ ReturnCode Fcm_Load(struct Stream* stream) {
 	if (Stream_GetU32_LE(&header[0]) != 0x0FC2AF40UL)        return FCM_ERR_IDENTIFIER;
 	if (header[4] != 13) return FCM_ERR_REVISION;
 	
-	World_Width  = Stream_GetU16_LE(&header[5]);
-	World_Height = Stream_GetU16_LE(&header[7]);
-	World_Length = Stream_GetU16_LE(&header[9]);
+	World.Width  = Stream_GetU16_LE(&header[5]);
+	World.Height = Stream_GetU16_LE(&header[7]);
+	World.Length = Stream_GetU16_LE(&header[9]);
 	
 	p->Spawn.X = ((int)Stream_GetU32_LE(&header[11])) / 32.0f;
 	p->Spawn.Y = ((int)Stream_GetU32_LE(&header[15])) / 32.0f;
@@ -239,7 +239,7 @@ ReturnCode Fcm_Load(struct Stream* stream) {
 
 	/* header[25] (4) date modified */
 	/* header[29] (4) date created */
-	Mem_Copy(&World_Uuid, &header[33], sizeof(World_Uuid));
+	Mem_Copy(&World.Uuid, &header[33], sizeof(World.Uuid));
 	/* header[49] (26) layer index */
 	count = (int)Stream_GetU32_LE(&header[75]);
 
@@ -422,27 +422,27 @@ static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* s
 *--------------------------------------------------ClassicWorld format----------------------------------------------------*
 *#########################################################################################################################*/
 static void Cw_Callback_1(struct NbtTag* tag) {
-	if (IsTag(tag, "X")) { World_Width  = NbtTag_U16(tag); return; }
-	if (IsTag(tag, "Y")) { World_Height = NbtTag_U16(tag); return; }
-	if (IsTag(tag, "Z")) { World_Length = NbtTag_U16(tag); return; }
+	if (IsTag(tag, "X")) { World.Width  = NbtTag_U16(tag); return; }
+	if (IsTag(tag, "Y")) { World.Height = NbtTag_U16(tag); return; }
+	if (IsTag(tag, "Z")) { World.Length = NbtTag_U16(tag); return; }
 
 	if (IsTag(tag, "UUID")) {
-		if (tag->DataSize != sizeof(World_Uuid)) Logger_Abort("Map UUID must be 16 bytes");
-		Mem_Copy(World_Uuid, tag->Value.Small, sizeof(World_Uuid));
+		if (tag->DataSize != sizeof(World.Uuid)) Logger_Abort("Map UUID must be 16 bytes");
+		Mem_Copy(World.Uuid, tag->Value.Small, sizeof(World.Uuid));
 		return;
 	}
 
 	if (IsTag(tag, "BlockArray")) {
-		World_BlocksSize = tag->DataSize;
+		World.BlocksSize = tag->DataSize;
 		if (NbtTag_IsSmall(tag)) {
-			World_Blocks = Mem_Alloc(World_BlocksSize, 1, ".cw map blocks");
-			Mem_Copy(World_Blocks, tag->Value.Small, tag->DataSize);
+			World.Blocks = Mem_Alloc(World.BlocksSize, 1, ".cw map blocks");
+			Mem_Copy(World.Blocks, tag->Value.Small, tag->DataSize);
 		} else {
-			World_Blocks = tag->Value.Big;
-			tag->Value.Big = NULL; /* So Nbt_ReadTag doesn't call Mem_Free on World_Blocks */
+			World.Blocks = tag->Value.Big;
+			tag->Value.Big = NULL; /* So Nbt_ReadTag doesn't call Mem_Free on World.Blocks */
 		}
 #ifdef EXTENDED_BLOCKS
-		World_Blocks2 = World_Blocks;
+		World.Blocks2 = World.Blocks;
 #endif
 	}
 }
@@ -828,18 +828,18 @@ ReturnCode Dat_Load(struct Stream* stream) {
 		fieldName = String_FromRawArray(field->FieldName);
 
 		if (String_CaselessEqualsConst(&fieldName, "width")) {
-			World_Width  = Dat_I32(field);
+			World.Width  = Dat_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "height")) {
-			World_Length = Dat_I32(field);
+			World.Length = Dat_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "depth")) {
-			World_Height = Dat_I32(field);
+			World.Height = Dat_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "blocks")) {
 			if (field->Type != JFIELD_ARRAY) Logger_Abort("Blocks field must be Array");
-			World_Blocks     = field->Value.Array.Ptr;
+			World.Blocks     = field->Value.Array.Ptr;
 #ifdef EXTENDED_BLOCKS
-			World_Blocks2    = World_Blocks;
+			World.Blocks2    = World.Blocks;
 #endif
-			World_BlocksSize = field->Value.Array.Size;
+			World.BlocksSize = field->Value.Array.Size;
 		} else if (String_CaselessEqualsConst(&fieldName, "xSpawn")) {
 			p->Spawn.X = (float)Dat_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "ySpawn")) {
@@ -1005,11 +1005,11 @@ ReturnCode Cw_Save(struct Stream* stream) {
 
 	Mem_Copy(tmp, cw_begin, sizeof(cw_begin));
 	{
-		Mem_Copy(&tmp[43], World_Uuid, sizeof(World_Uuid));
-		Stream_SetU16_BE(&tmp[63], World_Width);
-		Stream_SetU16_BE(&tmp[69], World_Height);
-		Stream_SetU16_BE(&tmp[75], World_Length);
-		Stream_SetU32_BE(&tmp[127], World_BlocksSize);
+		Mem_Copy(&tmp[43], World.Uuid, sizeof(World.Uuid));
+		Stream_SetU16_BE(&tmp[63], World.Width);
+		Stream_SetU16_BE(&tmp[69], World.Height);
+		Stream_SetU16_BE(&tmp[75], World.Length);
+		Stream_SetU32_BE(&tmp[127], World.BlocksSize);
 		
 		/* TODO: Maybe keep real spawn too? */
 		Stream_SetU16_BE(&tmp[89],  (uint16_t)p->Base.Position.X);
@@ -1019,7 +1019,7 @@ ReturnCode Cw_Save(struct Stream* stream) {
 		tmp[112] = Math_Deg2Packed(p->SpawnHeadX);
 	}
 	if ((res = Stream_Write(stream, tmp, sizeof(cw_begin)))) return res;
-	if ((res = Stream_Write(stream, World_Blocks, World_BlocksSize))) return res;
+	if ((res = Stream_Write(stream, World.Blocks, World.BlocksSize))) return res;
 
 	Mem_Copy(tmp, cw_meta_cpe, sizeof(cw_meta_cpe));
 	{
@@ -1076,22 +1076,22 @@ ReturnCode Schematic_Save(struct Stream* stream) {
 
 	Mem_Copy(tmp, sc_begin, sizeof(sc_begin));
 	{
-		Stream_SetU16_BE(&tmp[41], World_Width);
-		Stream_SetU16_BE(&tmp[52], World_Height);
-		Stream_SetU16_BE(&tmp[63], World_Length);
-		Stream_SetU32_BE(&tmp[74], World_BlocksSize);
+		Stream_SetU16_BE(&tmp[41], World.Width);
+		Stream_SetU16_BE(&tmp[52], World.Height);
+		Stream_SetU16_BE(&tmp[63], World.Length);
+		Stream_SetU32_BE(&tmp[74], World.BlocksSize);
 	}
 	if ((res = Stream_Write(stream, tmp, sizeof(sc_begin)))) return res;
-	if ((res = Stream_Write(stream, World_Blocks, World_BlocksSize))) return res;
+	if ((res = Stream_Write(stream, World.Blocks, World.BlocksSize))) return res;
 
 	Mem_Copy(tmp, sc_data, sizeof(sc_data));
 	{
-		Stream_SetU32_BE(&tmp[7], World_BlocksSize);
+		Stream_SetU32_BE(&tmp[7], World.BlocksSize);
 	}
 	if ((res = Stream_Write(stream, tmp, sizeof(sc_data)))) return res;
 
-	for (i = 0; i < World_BlocksSize; i += sizeof(chunk)) {
-		int count = World_BlocksSize - i; count = min(count, sizeof(chunk));
+	for (i = 0; i < World.BlocksSize; i += sizeof(chunk)) {
+		int count = World.BlocksSize - i; count = min(count, sizeof(chunk));
 		if ((res = Stream_Write(stream, chunk, count))) return res;
 	}
 	return Stream_Write(stream, sc_end, sizeof(sc_end));

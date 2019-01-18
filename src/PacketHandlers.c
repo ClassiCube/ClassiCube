@@ -508,7 +508,7 @@ static void Classic_LevelFinalise(uint8_t* data) {
 #ifdef EXTENDED_BLOCKS
 	if (cpe_extBlocks) {
 		/* defer allocation of scond map array if possible */
-		World_Blocks2 = map2_blocks ? map2_blocks : map_blocks;
+		World.Blocks2 = map2_blocks ? map2_blocks : map_blocks;
 		Block_SetUsedCount(map2_blocks ? 768 : 256);
 	}
 #endif
@@ -1185,7 +1185,7 @@ static void CPE_BulkBlockUpdate(uint8_t* data) {
 
 	for (i = 0; i < count; i++) {
 		index = indices[i];
-		if (index < 0 || index >= World_BlocksSize) continue;
+		if (index < 0 || index >= World.BlocksSize) continue;
 		World_Unpack(index, x, y, z);
 
 		if (World_IsValidPos(x, y, z)) {
@@ -1373,7 +1373,7 @@ static void CPE_Tick(void) {
 *------------------------------------------------------Custom blocks------------------------------------------------------*
 *#########################################################################################################################*/
 static void BlockDefs_OnBlockUpdated(BlockID block, bool didBlockLight) {
-	if (!World_Blocks) return;
+	if (!World.Blocks) return;
 	/* Need to refresh lighting when a block's light blocking state changes */
 	if (Blocks.BlocksLight[block] != didBlockLight) { Lighting_Refresh(); }
 }

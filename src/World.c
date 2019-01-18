@@ -9,17 +9,7 @@
 #include "Physics.h"
 #include "Game.h"
 
-BlockRaw* World_Blocks;
-#ifdef EXTENDED_BLOCKS
-BlockRaw* World_Blocks2;
-#endif
-int World_BlocksSize;
-
-int World_Width, World_Height, World_Length;
-int World_MaxX, World_MaxY, World_MaxZ;
-int World_OneY;
-uint8_t World_Uuid[16];
-
+struct _WorldData World;
 /*########################################################################################################################*
 *----------------------------------------------------------World----------------------------------------------------------*
 *#########################################################################################################################*/
@@ -34,48 +24,48 @@ static void World_NewUuid(void) {
 	}
 
 	for (i = 0; i < 16; i++) {
-		World_Uuid[i] = Random_Next(&rnd, 256);
+		World.Uuid[i] = Random_Next(&rnd, 256);
 	}
 
 	/* Set version and variant bits */
-	World_Uuid[6] &= 0x0F;
-	World_Uuid[6] |= 0x40; /* version 4*/
-	World_Uuid[8] &= 0x3F;
-	World_Uuid[8] |= 0x80; /* variant 2*/
+	World.Uuid[6] &= 0x0F;
+	World.Uuid[6] |= 0x40; /* version 4*/
+	World.Uuid[8] &= 0x3F;
+	World.Uuid[8] |= 0x80; /* variant 2*/
 }
 
 void World_Reset(void) {
 #ifdef EXTENDED_BLOCKS
-	if (World_Blocks != World_Blocks2) Mem_Free(World_Blocks2);
+	if (World.Blocks != World.Blocks2) Mem_Free(World.Blocks2);
 #endif
-	Mem_Free(World_Blocks);
-	World_Width = 0; World_Height = 0; World_Length = 0;
-	World_MaxX = 0;  World_MaxY = 0;   World_MaxZ = 0;
+	Mem_Free(World.Blocks);
+	World.Width = 0; World.Height = 0; World.Length = 0;
+	World.MaxX = 0;  World.MaxY = 0;   World.MaxZ = 0;
 
 #ifdef EXTENDED_BLOCKS
-	World_Blocks2 = NULL;
+	World.Blocks2 = NULL;
 #endif
-	World_Blocks = NULL; World_BlocksSize = 0;
+	World.Blocks = NULL; World.BlocksSize = 0;
 	Env_Reset();
 	World_NewUuid();
 }
 
 void World_SetNewMap(BlockRaw* blocks, int blocksSize, int width, int height, int length) {
-	World_Width = width; World_Height = height; World_Length = length;
-	World_Blocks = blocks; World_BlocksSize = blocksSize;
-	if (!World_BlocksSize) World_Blocks = NULL;
+	World.Width = width; World.Height = height; World.Length = length;
+	World.Blocks = blocks; World.BlocksSize = blocksSize;
+	if (!World.BlocksSize) World.Blocks = NULL;
 
 	if (blocksSize != (width * height * length)) {
 		Logger_Abort("Blocks array size does not match volume of map");
 	}
 #ifdef EXTENDED_BLOCKS
-	World_Blocks2 = World_Blocks;
+	World.Blocks2 = World.Blocks;
 #endif
 
-	World_OneY = width * length;
-	World_MaxX = width  - 1;
-	World_MaxY = height - 1;
-	World_MaxZ = length - 1;
+	World.OneY = width * length;
+	World.MaxX = width  - 1;
+	World.MaxY = height - 1;
+	World.MaxZ = length - 1;
 
 	if (Env_EdgeHeight == -1) {
 		Env_EdgeHeight = height / 2;
@@ -89,25 +79,25 @@ void World_SetNewMap(BlockRaw* blocks, int blocksSize, int width, int height, in
 #ifdef EXTENDED_BLOCKS
 void World_SetBlock(int x, int y, int z, BlockID block) {
 	int i = World_Pack(x, y, z);
-	World_Blocks[i] = (BlockRaw)block;
+	World.Blocks[i] = (BlockRaw)block;
 
 	/* defer allocation of second map array if possible */
-	if (World_Blocks == World_Blocks2) {
+	if (World.Blocks == World.Blocks2) {
 		if (block < 256) return;
-		World_Blocks2 = Mem_AllocCleared(World_BlocksSize, 1, "blocks array upper");
+		World.Blocks2 = Mem_AllocCleared(World.BlocksSize, 1, "blocks array upper");
 		Block_SetUsedCount(768);
 	}
-	World_Blocks2[i] = (BlockRaw)(block >> 8);
+	World.Blocks2[i] = (BlockRaw)(block >> 8);
 }
 #else
 void World_SetBlock(int x, int y, int z, BlockID block) {
-	World_Blocks[World_Pack(x, y, z)] = block; 
+	World.Blocks[World_Pack(x, y, z)] = block; 
 }
 #endif
 
 BlockID World_GetPhysicsBlock(int x, int y, int z) {
-	if (x < 0 || x >= World_Width || z < 0 || z >= World_Length || y < 0) return BLOCK_BEDROCK;
-	if (y >= World_Height) return BLOCK_AIR;
+	if (x < 0 || x >= World.Width || z < 0 || z >= World.Length || y < 0) return BLOCK_BEDROCK;
+	if (y >= World.Height) return BLOCK_AIR;
 
 	return World_GetBlock(x, y, z);
 }
@@ -118,12 +108,12 @@ BlockID World_SafeGetBlock_3I(Vector3I p) {
 
 bool World_IsValidPos(int x, int y, int z) {
 	return x >= 0 && y >= 0 && z >= 0 && 
-		x < World_Width && y < World_Height && z < World_Length;
+		x < World.Width && y < World.Height && z < World.Length;
 }
 
 bool World_IsValidPos_3I(Vector3I p) {
 	return p.X >= 0 && p.Y >= 0 && p.Z >= 0 &&
-		p.X < World_Width && p.Y < World_Height && p.Z < World_Length;
+		p.X < World.Width && p.Y < World.Height && p.Z < World.Length;
 }
 
 
@@ -287,11 +277,11 @@ Vector3 Respawn_FindSpawnPosition(float x, float z, Vector3 modelSize) {
 	float highestY;
 	int y;
 
-	spawn.Y = World_Height + ENTITY_ADJUSTMENT;
+	spawn.Y = World.Height + ENTITY_ADJUSTMENT;
 	AABB_Make(&bb, &spawn, &modelSize);
 	spawn.Y = 0.0f;
 	
-	for (y = World_Height; y >= 0; y--) {
+	for (y = World.Height; y >= 0; y--) {
 		highestY = Respawn_HighestSolidY(&bb);
 		if (highestY != RESPAWN_NOT_FOUND) {
 			spawn.Y = highestY; break;

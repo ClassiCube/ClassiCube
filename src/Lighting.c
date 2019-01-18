@@ -12,7 +12,7 @@ int16_t* Lighting_Heightmap;
 #define HEIGHT_UNCALCULATED Int16_MaxValue
 
 #define Lighting_CalcBody(get_block)\
-for (y = maxY; y >= 0; y--, i -= World_OneY) {\
+for (y = maxY; y >= 0; y--, i -= World.OneY) {\
 	block = get_block;\
 \
 	if (Blocks.BlocksLight[block]) {\
@@ -28,12 +28,12 @@ static int Lighting_CalcHeightAt(int x, int maxY, int z, int hIndex) {
 	int y, offset;
 
 #ifndef EXTENDED_BLOCKS
-	Lighting_CalcBody(World_Blocks[i]);
+	Lighting_CalcBody(World.Blocks[i]);
 #else
 	if (Block_UsedCount <= 256) {
-		Lighting_CalcBody(World_Blocks[i]);
+		Lighting_CalcBody(World.Blocks[i]);
 	} else {
-		Lighting_CalcBody(World_Blocks[i] | (World_Blocks2[i] << 8));
+		Lighting_CalcBody(World.Blocks[i] | (World.Blocks2[i] << 8));
 	}
 #endif
 
@@ -44,7 +44,7 @@ static int Lighting_CalcHeightAt(int x, int maxY, int z, int hIndex) {
 static int Lighting_GetLightHeight(int x, int z) {
 	int hIndex = Lighting_Pack(x, z);
 	int lightH = Lighting_Heightmap[hIndex];
-	return lightH == HEIGHT_UNCALCULATED ? Lighting_CalcHeightAt(x, World_Height - 1, z, hIndex) : lightH;
+	return lightH == HEIGHT_UNCALCULATED ? Lighting_CalcHeightAt(x, World.Height - 1, z, hIndex) : lightH;
 }
 
 /* Outside colour is same as sunlight colour, so we reuse when possible */
@@ -82,7 +82,7 @@ PackedCol Lighting_Col_ZSide_Fast(int x, int y, int z) {
 
 void Lighting_Refresh(void) {
 	int i;
-	for (i = 0; i < World_Width * World_Length; i++) {
+	for (i = 0; i < World.Width * World.Length; i++) {
 		Lighting_Heightmap[i] = HEIGHT_UNCALCULATED;
 	}
 }
@@ -115,7 +115,7 @@ static void Lighting_UpdateLighting(int x, int y, int z, BlockID oldBlock, Block
 	} else if (y == lightH && oldOffset == 0) {
 		/* For a solid block on top of an upside down slab, they will both have the same light height. */
 		/* So we need to account for this particular case. */
-		above = y == (World_Height - 1) ? BLOCK_AIR : World_GetBlock(x, y + 1, z);
+		above = y == (World.Height - 1) ? BLOCK_AIR : World_GetBlock(x, y + 1, z);
 		if (Blocks.BlocksLight[above]) return;
 
 		if (nowBlocks) {
@@ -132,7 +132,7 @@ static bool Lighting_Needs(BlockID block, BlockID other) {
 
 #define Lighting_NeedsNeighourBody(get_block)\
 /* Update if any blocks in the chunk are affected by light change. */ \
-for (; y >= minY; y--, i -= World_OneY) {\
+for (; y >= minY; y--, i -= World.OneY) {\
 	other    = get_block;\
 	affected = y == nY ? Lighting_Needs(block, other) : Blocks.Draw[other] != DRAW_GAS;\
 	if (affected) return true;\
@@ -143,12 +143,12 @@ static bool Lighting_NeedsNeighour(BlockID block, int i, int minY, int y, int nY
 	bool affected;
 
 #ifndef EXTENDED_BLOCKS
-	Lighting_NeedsNeighourBody(World_Blocks[i]);
+	Lighting_NeedsNeighourBody(World.Blocks[i]);
 #else
 	if (Block_UsedCount <= 256) {
-		Lighting_NeedsNeighourBody(World_Blocks[i]);
+		Lighting_NeedsNeighourBody(World.Blocks[i]);
 	} else {
-		Lighting_NeedsNeighourBody(World_Blocks[i] | (World_Blocks2[i] << 8));
+		Lighting_NeedsNeighourBody(World.Blocks[i] | (World.Blocks2[i] << 8));
 	}
 #endif
 	return false;
@@ -167,7 +167,7 @@ static void Lighting_ResetNeighbour(int x, int y, int z, BlockID block, int cx, 
 		for (cy = maxCy; cy >= minCy; cy--) {
 			minY = (cy << CHUNK_SHIFT); 
 			maxY = (cy << CHUNK_SHIFT) + CHUNK_MAX;
-			if (maxY > World_MaxY) maxY = World_MaxY;
+			if (maxY > World.MaxY) maxY = World.MaxY;
 
 			if (Lighting_NeedsNeighour(block, World_Pack(x, maxY, z), minY, maxY, y)) {
 				MapRenderer_RefreshChunk(cx, cy, cz);
@@ -261,7 +261,7 @@ static int Lighting_InitialHeightmapCoverage(int x1, int z1, int xCount, int zCo
 }
 
 #define Lighting_CalculateBody(get_block)\
-for (y = World_Height - 1; y >= 0; y--) {\
+for (y = World.Height - 1; y >= 0; y--) {\
 	if (elemsLeft <= 0) { return true; } \
 	mapIndex = World_Pack(x1, y, z1);\
 	hIndex   = Lighting_Pack(x1, z1);\
@@ -298,8 +298,8 @@ for (y = World_Height - 1; y >= 0; y--) {\
 			x++; mapIndex++; index++; \
 		}\
 		prevRunCount = 0;\
-		hIndex += World_Width;\
-		mapIndex = baseIndex + World_Width; /* advance one Z */ \
+		hIndex += World.Width;\
+		mapIndex = baseIndex + World.Width; /* advance one Z */ \
 	}\
 }
 
@@ -310,12 +310,12 @@ static bool Lighting_CalculateHeightmapCoverage(int x1, int z1, int xCount, int 
 	int x, y, z;
 
 #ifndef EXTENDED_BLOCKS
-	Lighting_CalculateBody(World_Blocks[mapIndex]);
+	Lighting_CalculateBody(World.Blocks[mapIndex]);
 #else
 	if (Block_UsedCount <= 256) {
-		Lighting_CalculateBody(World_Blocks[mapIndex]);
+		Lighting_CalculateBody(World.Blocks[mapIndex]);
 	} else {
-		Lighting_CalculateBody(World_Blocks[mapIndex] | (World_Blocks2[mapIndex] << 8));
+		Lighting_CalculateBody(World.Blocks[mapIndex] | (World.Blocks2[mapIndex] << 8));
 	}
 #endif
 	return false;
@@ -337,8 +337,8 @@ static void Lighting_FinishHeightmapCoverage(int x1, int z1, int xCount, int zCo
 }
 
 void Lighting_LightHint(int startX, int startZ) {
-	int x1 = max(startX, 0), x2 = min(World_Width,  startX + EXTCHUNK_SIZE);
-	int z1 = max(startZ, 0), z2 = min(World_Length, startZ + EXTCHUNK_SIZE);
+	int x1 = max(startX, 0), x2 = min(World.Width,  startX + EXTCHUNK_SIZE);
+	int z1 = max(startZ, 0), z2 = min(World.Length, startZ + EXTCHUNK_SIZE);
 	int xCount = x2 - x1, zCount = z2 - z1;
 	int32_t skip[EXTCHUNK_SIZE * EXTCHUNK_SIZE];
 
@@ -358,7 +358,7 @@ static void Lighting_Reset(void) {
 }
 
 static void Lighting_OnNewMapLoaded(void) {
-	Lighting_Heightmap = Mem_Alloc(World_Width * World_Length, 2, "lighting heightmap");
+	Lighting_Heightmap = Mem_Alloc(World.Width * World.Length, 2, "lighting heightmap");
 	Lighting_Refresh();
 }
 

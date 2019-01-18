@@ -565,7 +565,7 @@ static bool ShadowComponent_GetBlocks(struct Entity* e, int x, int y, int z, str
 	for (i = 0; i < 4; i++) { data[i] = zeroData; }
 	cur  = data;
 	posY = e->Position.Y;
-	outside = x < 0 || z < 0 || x >= World_Width || z >= World_Length;
+	outside = x < 0 || z < 0 || x >= World.Width || z >= World.Length;
 
 	for (i = 0; y >= 0 && i < 4; y--) {
 		if (!outside) {
@@ -635,7 +635,7 @@ void ShadowComponent_Draw(struct Entity* e) {
 
 	pos = e->Position;
 	if (pos.Y < 0.0f) return;
-	y = min((int)pos.Y, World_MaxY);
+	y = min((int)pos.Y, World.MaxY);
 
 	radius = 7.0f * min(e->ModelScale.Y, 1.0f) * e->Model->ShadowScale;
 	shadow_radius  = radius / 16.0f;
@@ -1072,9 +1072,9 @@ static float PhysicsComp_LowestModifier(struct PhysicsComp* comp, struct AABB* b
 	Vector3I_Floor(&bbMin, &bounds->Min);
 	Vector3I_Floor(&bbMax, &bounds->Max);	
 
-	bbMin.X = max(bbMin.X, 0); bbMax.X = min(bbMax.X, World_MaxX);
-	bbMin.Y = max(bbMin.Y, 0); bbMax.Y = min(bbMax.Y, World_MaxY);
-	bbMin.Z = max(bbMin.Z, 0); bbMax.Z = min(bbMax.Z, World_MaxZ);
+	bbMin.X = max(bbMin.X, 0); bbMax.X = min(bbMax.X, World.MaxX);
+	bbMin.Y = max(bbMin.Y, 0); bbMax.Y = min(bbMax.Y, World.MaxY);
+	bbMin.Z = max(bbMin.Z, 0); bbMax.Z = min(bbMax.Z, World.MaxZ);
 	
 	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (float)y;
 		for (z = bbMin.Z; z <= bbMax.Z; z++) { v.Z = (float)z;

@@ -89,7 +89,7 @@ static void MapRenderer_CheckWeather(double delta) {
 	Vector3I_Floor(&pos, &Camera.CurrentPos);
 
 	block   = World_SafeGetBlock_3I(pos);
-	outside = pos.X < 0 || pos.Y < 0 || pos.Z < 0 || pos.X >= World_Width || pos.Z >= World_Length;
+	outside = pos.X < 0 || pos.Y < 0 || pos.Z < 0 || pos.X >= World.Width || pos.Z >= World.Length;
 	inTranslucent = Blocks.Draw[block] == DRAW_TRANSLUCENT || (pos.Y < Env_EdgeHeight && outside);
 
 	/* If we are under water, render weather before to blend properly */
@@ -353,9 +353,9 @@ static void MapRenderer_ResetPartCounts(void) {
 
 static void MapRenderer_InitChunks(void) {
 	int x, y, z, index = 0;
-	for (z = 0; z < World_Length; z += CHUNK_SIZE) {
-		for (y = 0; y < World_Height; y += CHUNK_SIZE) {
-			for (x = 0; x < World_Width; x += CHUNK_SIZE) {
+	for (z = 0; z < World.Length; z += CHUNK_SIZE) {
+		for (y = 0; y < World.Height; y += CHUNK_SIZE) {
+			for (x = 0; x < World.Width; x += CHUNK_SIZE) {
 				ChunkInfo_Reset(&mapChunks[index], x, y, z);
 				sortedChunks[index] = &mapChunks[index];
 				renderChunks[index] = &mapChunks[index];
@@ -368,9 +368,9 @@ static void MapRenderer_InitChunks(void) {
 
 static void MapRenderer_ResetChunks(void) {
 	int x, y, z, index = 0;
-	for (z = 0; z < World_Length; z += CHUNK_SIZE) {
-		for (y = 0; y < World_Height; y += CHUNK_SIZE) {
-			for (x = 0; x < World_Width; x += CHUNK_SIZE) {
+	for (z = 0; z < World.Length; z += CHUNK_SIZE) {
+		for (y = 0; y < World.Height; y += CHUNK_SIZE) {
+			for (x = 0; x < World.Width; x += CHUNK_SIZE) {
 				ChunkInfo_Reset(&mapChunks[index], x, y, z);
 				index++;
 			}
@@ -392,7 +392,7 @@ void MapRenderer_Refresh(void) {
 	int oldCount;
 	chunkPos = Vector3I_MaxValue();
 
-	if (mapChunks && World_Blocks) {
+	if (mapChunks && World.Blocks) {
 		MapRenderer_DeleteChunks();
 		MapRenderer_ResetChunks();
 
@@ -412,7 +412,7 @@ void MapRenderer_RefreshBorders(int maxHeight) {
 	bool onBorder;
 
 	chunkPos = Vector3I_MaxValue();
-	if (!mapChunks || !World_Blocks) return;
+	if (!mapChunks || !World.Blocks) return;
 
 	for (cz = 0; cz < MapRenderer_ChunksZ; cz++) {
 		for (cy = 0; cy < MapRenderer_ChunksY; cy++) {
@@ -731,9 +731,9 @@ static void MapRenderer_OnNewMap(void) {
 
 static void MapRenderer_OnNewMapLoaded(void) {
 	int count;
-	MapRenderer_ChunksX = (World_Width  + CHUNK_MAX) >> CHUNK_SHIFT;
-	MapRenderer_ChunksY = (World_Height + CHUNK_MAX) >> CHUNK_SHIFT;
-	MapRenderer_ChunksZ = (World_Length + CHUNK_MAX) >> CHUNK_SHIFT;
+	MapRenderer_ChunksX = (World.Width  + CHUNK_MAX) >> CHUNK_SHIFT;
+	MapRenderer_ChunksY = (World.Height + CHUNK_MAX) >> CHUNK_SHIFT;
+	MapRenderer_ChunksZ = (World.Length + CHUNK_MAX) >> CHUNK_SHIFT;
 
 	count = MapRenderer_ChunksX * MapRenderer_ChunksY * MapRenderer_ChunksZ;
 	/* TODO: Only perform reallocation when map volume has changed */

@@ -105,7 +105,7 @@ void Entity_GetBounds(struct Entity* e, struct AABB* bb);
 CC_API void Entity_SetModel(struct Entity* e, const String* model);
 /* Updates cached Size and ModelAABB of the given entity. */
 /* NOTE: Only needed when manually changing Model or ModelScale. */
-/* Entity_SetModel implicitly call this method. */
+/* Entity_SetModel already calls this method. */
 void Entity_UpdateModelBounds(struct Entity* e);
 
 /* Whether the given entity is touching any blocks meeting the given condition .*/

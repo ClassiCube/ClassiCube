@@ -1084,7 +1084,7 @@ int Platform_TextWidth(struct DrawTextArgs* args) {
 		/* need to calculate glyph width */
 		if (charWidth == UInt16_MaxValue) {
 			cp  = Convert_CP437ToUnicode(text.buffer[i]);
-			res = FT_Load_Char(face, cp, 0); /* TODO: Check error */
+			res = FT_Load_Char(face, cp, 0);
 
 			if (res) {
 				Platform_Log2("Error %i measuring width of %r", &res, &text.buffer[i]);

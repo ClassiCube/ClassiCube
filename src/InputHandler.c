@@ -246,7 +246,7 @@ static bool InputHandler_PushbackPlace(struct AABB* blockBB) {
 	/* Being vertically above the map is acceptable though */
 	insideMap =
 		pos.X > 0.0f && pos.Y >= 0.0f && pos.Z > 0.0f &&
-		pos.X < World_Width && pos.Z < World_Length;
+		pos.X < World.Width && pos.Z < World.Length;
 	if (!insideMap) return false;
 
 	AABB_Make(&playerBB, &pos, &p->Size);

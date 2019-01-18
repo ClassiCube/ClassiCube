@@ -112,7 +112,7 @@ void EnvRenderer_UpdateFog(void) {
 	EnvRenderer_CalcFog(&fogDensity, &fogCol);
 	Gfx_ClearCol(fogCol);
 
-	if (!World_Blocks) return;
+	if (!World.Blocks) return;
 	if (EnvRenderer_Minimal) {
 		EnvRenderer_UpdateFogMinimal(fogDensity);
 	} else {
@@ -182,13 +182,13 @@ static void EnvRenderer_UpdateClouds(void) {
 	int extent;
 	int x1, z1, x2, z2;
 	
-	if (!World_Blocks || Gfx_LostContext) return;
+	if (!World.Blocks || Gfx_LostContext) return;
 	Gfx_DeleteVb(&clouds_vb);
 	if (EnvRenderer_Minimal) return;
 
 	extent = Utils_AdjViewDist(Game_ViewDistance);
-	x1 = -extent; x2 = World_Width  + extent;
-	z1 = -extent; z2 = World_Length + extent;
+	x1 = -extent; x2 = World.Width  + extent;
+	z1 = -extent; z2 = World.Length + extent;
 	clouds_vertices = EnvRenderer_Vertices(x2 - x1, z2 - z1);
 
 	ptr = v;
@@ -214,7 +214,7 @@ void EnvRenderer_RenderSky(double deltaTime) {
 	float skyY, normY, dy;
 	if (!sky_vb || EnvRenderer_ShouldRenderSkybox()) return;
 
-	normY = (float)World_Height + 8.0f;
+	normY = (float)World.Height + 8.0f;
 	skyY  = max(Camera.CurrentPos.Y + 8.0f, normY);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
 	Gfx_BindVb(sky_vb);
@@ -261,13 +261,13 @@ static void EnvRenderer_UpdateSky(void) {
 	int extent, height;
 	int x1, z1, x2, z2;
 
-	if (!World_Blocks || Gfx_LostContext) return;
+	if (!World.Blocks || Gfx_LostContext) return;
 	Gfx_DeleteVb(&sky_vb);
 	if (EnvRenderer_Minimal) return;
 
 	extent = Utils_AdjViewDist(Game_ViewDistance);
-	x1 = -extent; x2 = World_Width  + extent;
-	z1 = -extent; z2 = World_Length + extent;
+	x1 = -extent; x2 = World.Width  + extent;
+	z1 = -extent; z2 = World.Length + extent;
 	sky_vertices = EnvRenderer_Vertices(x2 - x1, z2 - z1);
 
 	ptr = v;
@@ -275,7 +275,7 @@ static void EnvRenderer_UpdateSky(void) {
 		ptr = Mem_Alloc(sky_vertices, sizeof(VertexP3fC4b), "temp sky vertices");
 	}
 
-	height = max((World_Height + 2), Env_CloudsHeight) + 6;
+	height = max((World.Height + 2), Env_CloudsHeight) + 6;
 	EnvRenderer_DrawSkyY(x1, z1, x2, z2, height, ptr);
 	sky_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FC4B, sky_vertices);
 
@@ -363,19 +363,19 @@ static Vector3I weather_lastPos;
 
 #define WEATHER_EXTENT 4
 #define WEATHER_VERTS_COUNT 8 * (WEATHER_EXTENT * 2 + 1) * (WEATHER_EXTENT * 2 + 1)
-#define Weather_Pack(x, z) ((x) * World_Length + (z))
+#define Weather_Pack(x, z) ((x) * World.Length + (z))
 
 static void EnvRenderer_InitWeatherHeightmap(void) {
 	int i;
-	Weather_Heightmap = Mem_Alloc(World_Width * World_Length, 2, "weather heightmap");
+	Weather_Heightmap = Mem_Alloc(World.Width * World.Length, 2, "weather heightmap");
 	
-	for (i = 0; i < World_Width * World_Length; i++) {
+	for (i = 0; i < World.Width * World.Length; i++) {
 		Weather_Heightmap[i] = Int16_MaxValue;
 	}
 }
 
 #define EnvRenderer_RainCalcBody(get_block)\
-for (y = maxY; y >= 0; y--, i -= World_OneY) {\
+for (y = maxY; y >= 0; y--, i -= World.OneY) {\
 	draw = Blocks.Draw[get_block];\
 \
 	if (!(draw == DRAW_GAS || draw == DRAW_SPRITE)) {\
@@ -389,12 +389,12 @@ static int EnvRenderer_CalcRainHeightAt(int x, int maxY, int z, int hIndex) {
 	uint8_t draw;
 
 #ifndef EXTENDED_BLOCKS
-	EnvRenderer_RainCalcBody(World_Blocks[i]);
+	EnvRenderer_RainCalcBody(World.Blocks[i]);
 #else
 	if (Block_UsedCount <= 256) {
-		EnvRenderer_RainCalcBody(World_Blocks[i]);
+		EnvRenderer_RainCalcBody(World.Blocks[i]);
 	} else {
-		EnvRenderer_RainCalcBody(World_Blocks[i] | (World_Blocks2[i] << 8));
+		EnvRenderer_RainCalcBody(World.Blocks[i] | (World.Blocks2[i] << 8));
 	}
 #endif
 
@@ -405,12 +405,12 @@ static int EnvRenderer_CalcRainHeightAt(int x, int maxY, int z, int hIndex) {
 static float EnvRenderer_RainHeight(int x, int z) {
 	int hIndex, height;
 	int y;
-	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) return (float)Env_EdgeHeight;
+	if (x < 0 || z < 0 || x >= World.Width || z >= World.Length) return (float)Env_EdgeHeight;
 
 	hIndex = Weather_Pack(x, z);
 	height = Weather_Heightmap[hIndex];
 
-	y = height == Int16_MaxValue ? EnvRenderer_CalcRainHeightAt(x, World_MaxY, z, hIndex) : height;
+	y = height == Int16_MaxValue ? EnvRenderer_CalcRainHeightAt(x, World.MaxY, z, hIndex) : height;
 	return y == -1 ? 0 : y + Blocks.MaxBB[World_GetBlock(x, y, z)].Y;
 }
 
@@ -467,7 +467,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 
 	/* Rain should extend up by 64 blocks, or to the top of the world. */
 	pos.Y += 64;
-	pos.Y = max(World_Height, pos.Y);
+	pos.Y = max(World.Height, pos.Y);
 
 	speed     = (weather == WEATHER_RAINY ? 1.0f : 0.2f) * Env_WeatherSpeed;
 	vOffset   = (float)Game.Time * speed;
@@ -589,11 +589,11 @@ static Rect2D EnvRenderer_Rect(int x, int y, int width, int height) {
 
 static void EnvRenderer_CalcBorderRects(Rect2D* rects) {
 	int extent = Utils_AdjViewDist(Game_ViewDistance);
-	rects[0] = EnvRenderer_Rect(-extent, -extent,      extent + World_Width + extent, extent);
-	rects[1] = EnvRenderer_Rect(-extent, World_Length, extent + World_Width + extent, extent);
+	rects[0] = EnvRenderer_Rect(-extent, -extent,      extent + World.Width + extent, extent);
+	rects[1] = EnvRenderer_Rect(-extent, World.Length, extent + World.Width + extent, extent);
 
-	rects[2] = EnvRenderer_Rect(-extent,     0, extent, World_Length);
-	rects[3] = EnvRenderer_Rect(World_Width, 0, extent, World_Length);
+	rects[2] = EnvRenderer_Rect(-extent,     0, extent, World.Length);
+	rects[3] = EnvRenderer_Rect(World.Width, 0, extent, World.Length);
 }
 
 static void EnvRenderer_UpdateBorderTextures(void) {
@@ -693,7 +693,7 @@ static void EnvRenderer_UpdateMapSides(void) {
 	VertexP3fT2fC4b* ptr;
 	VertexP3fT2fC4b* cur;
 
-	if (!World_Blocks || Gfx_LostContext) return;
+	if (!World.Blocks || Gfx_LostContext) return;
 	Gfx_DeleteVb(&sides_vb);
 	block = Env_SidesBlock;
 
@@ -707,9 +707,9 @@ static void EnvRenderer_UpdateMapSides(void) {
 	}
 
 	y = Env_SidesHeight;
-	sides_vertices += EnvRenderer_Vertices(World_Width, World_Length); /* YQuads beneath map */
-	sides_vertices += 2 * EnvRenderer_Vertices(World_Width,  Math_AbsI(y)); /* ZQuads */
-	sides_vertices += 2 * EnvRenderer_Vertices(World_Length, Math_AbsI(y)); /* XQuads */
+	sides_vertices += EnvRenderer_Vertices(World.Width, World.Length); /* YQuads beneath map */
+	sides_vertices += 2 * EnvRenderer_Vertices(World.Width,  Math_AbsI(y)); /* ZQuads */
+	sides_vertices += 2 * EnvRenderer_Vertices(World.Length, Math_AbsI(y)); /* XQuads */
 
 	ptr = v;
 	if (sides_vertices > ENV_SMALL_VERTICES) {
@@ -731,11 +731,11 @@ static void EnvRenderer_UpdateMapSides(void) {
 	y1 = 0; y2 = y;
 	if (y < 0) { y1 = y; y2 = 0; }
 
-	EnvRenderer_DrawBorderY(0, 0, World_Width, World_Length, 0, col, 0, 0, &cur);
-	EnvRenderer_DrawBorderZ(0, 0, World_Width, y1, y2, col, &cur);
-	EnvRenderer_DrawBorderZ(World_Length, 0, World_Width, y1, y2, col, &cur);
-	EnvRenderer_DrawBorderX(0, 0, World_Length, y1, y2, col, &cur);
-	EnvRenderer_DrawBorderX(World_Width, 0, World_Length, y1, y2, col, &cur);
+	EnvRenderer_DrawBorderY(0, 0, World.Width, World.Length, 0, col, 0, 0, &cur);
+	EnvRenderer_DrawBorderZ(0, 0, World.Width, y1, y2, col, &cur);
+	EnvRenderer_DrawBorderZ(World.Length, 0, World.Width, y1, y2, col, &cur);
+	EnvRenderer_DrawBorderX(0, 0, World.Length, y1, y2, col, &cur);
+	EnvRenderer_DrawBorderX(World.Width, 0, World.Length, y1, y2, col, &cur);
 
 	sides_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FT2FC4B, sides_vertices);
 	if (sides_vertices > ENV_SMALL_VERTICES) Mem_Free(ptr);
@@ -752,7 +752,7 @@ static void EnvRenderer_UpdateMapEdges(void) {
 	VertexP3fT2fC4b* ptr;
 	VertexP3fT2fC4b* cur;
 
-	if (!World_Blocks || Gfx_LostContext) return;
+	if (!World.Blocks || Gfx_LostContext) return;
 	Gfx_DeleteVb(&edges_vb);
 	block = Env_EdgeBlock;
 

@@ -119,8 +119,8 @@ static BlockID Picking_GetInside(int x, int y, int z) {
 	bool sides;
 	int height;
 
-	if (x >= 0 && z >= 0 && x < World_Width && z < World_Length) {
-		if (y >= World_Height) return BLOCK_AIR;
+	if (x >= 0 && z >= 0 && x < World.Width && z < World.Length) {
+		if (y >= World.Height) return BLOCK_AIR;
 		if (y >= 0) return World_GetBlock(x, y, z);
 	}
 
@@ -134,19 +134,19 @@ static BlockID Picking_GetOutside(int x, int y, int z, Vector3I origin) {
 	bool sides;
 	int height;
 
-	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) return BLOCK_AIR;
+	if (x < 0 || z < 0 || x >= World.Width || z >= World.Length) return BLOCK_AIR;
 	sides = Env_SidesBlock != BLOCK_AIR;
 	/* handling of blocks inside the map, above, and on borders */
 
-	if (y >= World_Height) return BLOCK_AIR;
+	if (y >= World.Height) return BLOCK_AIR;
 	if (sides && y == -1 && origin.Y > 0) return PICKING_BORDER;
 	if (sides && y ==  0 && origin.Y < 0) return PICKING_BORDER;
 	height = Env_SidesHeight; if (height < 1) height = 1;
 
 	if (sides && x == 0          && y >= 0 && y < height && origin.X < 0)             return PICKING_BORDER;
 	if (sides && z == 0          && y >= 0 && y < height && origin.Z < 0)             return PICKING_BORDER;
-	if (sides && x == World_MaxX && y >= 0 && y < height && origin.X >= World_Width)  return PICKING_BORDER;
-	if (sides && z == World_MaxZ && y >= 0 && y < height && origin.Z >= World_Length) return PICKING_BORDER;
+	if (sides && x == World.MaxX && y >= 0 && y < height && origin.X >= World.Width)  return PICKING_BORDER;
+	if (sides && z == World.MaxZ && y >= 0 && y < height && origin.Z >= World.Length) return PICKING_BORDER;
 	if (y >= 0) return World_GetBlock(x, y, z);
 	return BLOCK_AIR;
 }

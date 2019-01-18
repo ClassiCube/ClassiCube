@@ -121,9 +121,9 @@ static void Builder_SetPartInfo(struct Builder1DPart* part, int* offset, struct 
 
 
 static void Builder_Stretch(int x1, int y1, int z1) {
-	int xMax = min(World_Width,  x1 + CHUNK_SIZE);
-	int yMax = min(World_Height, y1 + CHUNK_SIZE);
-	int zMax = min(World_Length, z1 + CHUNK_SIZE);
+	int xMax = min(World.Width,  x1 + CHUNK_SIZE);
+	int yMax = min(World.Height, y1 + CHUNK_SIZE);
+	int zMax = min(World.Length, z1 + CHUNK_SIZE);
 
 	int cIndex, index, tileIdx, count;
 	BlockID b;
@@ -181,8 +181,8 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 
 				index++;
 				if (Builder_Counts[index] == 0 ||
-					(x == World_MaxX && (y < Builder_SidesLevel || (b >= BLOCK_WATER && b <= BLOCK_STILL_LAVA && y < Builder_EdgeLevel))) ||
-					(x != World_MaxX && (Blocks.Hidden[tileIdx + Builder_Chunk[cIndex + 1]] & (1 << FACE_XMAX)) != 0)) {
+					(x == World.MaxX && (y < Builder_SidesLevel || (b >= BLOCK_WATER && b <= BLOCK_STILL_LAVA && y < Builder_EdgeLevel))) ||
+					(x != World.MaxX && (Blocks.Hidden[tileIdx + Builder_Chunk[cIndex + 1]] & (1 << FACE_XMAX)) != 0)) {
 					Builder_Counts[index] = 0;
 				} else {
 					count = Builder_StretchZ(index, x, y, z, cIndex, b, FACE_XMAX);
@@ -203,8 +203,8 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 
 				index++;
 				if (Builder_Counts[index] == 0 ||
-					(z == World_MaxZ && (y < Builder_SidesLevel || (b >= BLOCK_WATER && b <= BLOCK_STILL_LAVA && y < Builder_EdgeLevel))) ||
-					(z != World_MaxZ && (Blocks.Hidden[tileIdx + Builder_Chunk[cIndex + EXTCHUNK_SIZE]] & (1 << FACE_ZMAX)) != 0)) {
+					(z == World.MaxZ && (y < Builder_SidesLevel || (b >= BLOCK_WATER && b <= BLOCK_STILL_LAVA && y < Builder_EdgeLevel))) ||
+					(z != World.MaxZ && (Blocks.Hidden[tileIdx + Builder_Chunk[cIndex + EXTCHUNK_SIZE]] & (1 << FACE_ZMAX)) != 0)) {
 					Builder_Counts[index] = 0;
 				} else {
 					count = Builder_StretchX(index, x, y, z, cIndex, b, FACE_ZMAX);
@@ -244,12 +244,12 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 for (yy = -1; yy < 17; ++yy) {\
 	y = yy + y1;\
 	if (y < 0) continue;\
-	if (y >= World_Height) break;\
+	if (y >= World.Height) break;\
 \
 	for (zz = -1; zz < 17; ++zz) {\
 		z = zz + z1;\
 		if (z < 0) continue;\
-		if (z >= World_Length) break;\
+		if (z >= World.Length) break;\
 \
 		index  = World_Pack(x1 - 1, y, z);\
 		cIndex = Builder_PackChunk(-1, yy, zz);\
@@ -257,7 +257,7 @@ for (yy = -1; yy < 17; ++yy) {\
 		for (xx = -1; xx < 17; ++xx, ++index, ++cIndex) {\
 			x = xx + x1;\
 			if (x < 0) continue;\
-			if (x >= World_Width) break;\
+			if (x >= World.Width) break;\
 \
 			block    = get_block;\
 			allAir   = allAir   && Blocks.Draw[block] == DRAW_GAS;\
@@ -274,12 +274,12 @@ static void Builder_ReadChunkData(int x1, int y1, int z1, bool* outAllAir, bool*
 	int xx, yy, zz, x, y, z;
 
 #ifndef EXTENDED_BLOCKS
-	Builder_ReadChunkBody(World_Blocks[index]);
+	Builder_ReadChunkBody(World.Blocks[index]);
 #else
 	if (Block_UsedCount <= 256) {
-		Builder_ReadChunkBody(World_Blocks[index]);
+		Builder_ReadChunkBody(World.Blocks[index]);
 	} else {
-		Builder_ReadChunkBody(World_Blocks[index] | (World_Blocks2[index] << 8));
+		Builder_ReadChunkBody(World.Blocks[index] | (World.Blocks2[index] << 8));
 	}
 #endif
 
@@ -305,16 +305,16 @@ static bool Builder_BuildChunk(int x1, int y1, int z1, bool* allAir) {
 	Mem_Set(chunk, BLOCK_AIR, EXTCHUNK_SIZE_3 * sizeof(BlockID));
 	Builder_ReadChunkData(x1, y1, z1, allAir, &allSolid);
 
-	if (x1 == 0 || y1 == 0 || z1 == 0 || x1 + CHUNK_SIZE >= World_Width ||
-		y1 + CHUNK_SIZE >= World_Height || z1 + CHUNK_SIZE >= World_Length) allSolid = false;
+	if (x1 == 0 || y1 == 0 || z1 == 0 || x1 + CHUNK_SIZE >= World.Width ||
+		y1 + CHUNK_SIZE >= World.Height || z1 + CHUNK_SIZE >= World.Length) allSolid = false;
 
 	if (*allAir || allSolid) return false;
 	Lighting_LightHint(x1 - 1, z1 - 1);
 
 	Mem_Set(counts, 1, CHUNK_SIZE_3 * FACE_COUNT);
-	xMax = min(World_Width,  x1 + CHUNK_SIZE);
-	yMax = min(World_Height, y1 + CHUNK_SIZE);
-	zMax = min(World_Length, z1 + CHUNK_SIZE);
+	xMax = min(World.Width,  x1 + CHUNK_SIZE);
+	yMax = min(World.Height, y1 + CHUNK_SIZE);
+	zMax = min(World.Length, z1 + CHUNK_SIZE);
 
 	Builder_ChunkEndX = xMax; Builder_ChunkEndZ = zMax;
 	Builder_Stretch(x1, y1, z1);
@@ -498,15 +498,15 @@ static PackedCol Normal_LightCol(int x, int y, int z, Face face, BlockID block) 
 	case FACE_XMIN:
 		return x < offset                ? Env_SunXSide : Lighting_Col_XSide_Fast(x - offset, y, z);
 	case FACE_XMAX:
-		return x > (World_MaxX - offset) ? Env_SunXSide : Lighting_Col_XSide_Fast(x + offset, y, z);
+		return x > (World.MaxX - offset) ? Env_SunXSide : Lighting_Col_XSide_Fast(x + offset, y, z);
 	case FACE_ZMIN:
 		return z < offset                ? Env_SunZSide : Lighting_Col_ZSide_Fast(x, y, z - offset);
 	case FACE_ZMAX:
-		return z > (World_MaxZ - offset) ? Env_SunZSide : Lighting_Col_ZSide_Fast(x, y, z + offset);
+		return z > (World.MaxZ - offset) ? Env_SunZSide : Lighting_Col_ZSide_Fast(x, y, z + offset);
 	case FACE_YMIN:
 		return y <= 0                    ? Env_SunYMin  : Lighting_Col_YMin_Fast(x, y - offset, z);
 	case FACE_YMAX:
-		return y >= World_MaxY           ? Env_SunCol   : Lighting_Col_YMax_Fast(x, (y + 1) - offset, z);
+		return y >= World.MaxY           ? Env_SunCol   : Lighting_Col_YMax_Fast(x, (y + 1) - offset, z);
 	}
 	return invalid; /* should never happen */
 }
@@ -643,7 +643,7 @@ static void NormalBuilder_RenderBlock(int index) {
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? white :
-			Builder_X <= (World_MaxX - offset) ? Lighting_Col_XSide_Fast(Builder_X + offset, Builder_Y, Builder_Z) : Env_SunXSide;
+			Builder_X <= (World.MaxX - offset) ? Lighting_Col_XSide_Fast(Builder_X + offset, Builder_Y, Builder_Z) : Env_SunXSide;
 		Drawer_XMax(count_XMax, col, loc, &part->fVertices[FACE_XMAX]);
 	}
 
@@ -663,7 +663,7 @@ static void NormalBuilder_RenderBlock(int index) {
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? white :
-			Builder_Z <= (World_MaxZ - offset) ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z + offset) : Env_SunZSide;
+			Builder_Z <= (World.MaxZ - offset) ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z + offset) : Env_SunZSide;
 		Drawer_ZMax(count_ZMax, col, loc, &part->fVertices[FACE_ZMAX]);
 	}
 
@@ -733,10 +733,10 @@ enum ADV_MASK {
 static int Adv_Lit(int x, int y, int z, int cIndex) {
 	int flags, offset, lightHeight;
 	BlockID block;
-	if (y < 0 || y >= World_Height) return 7; /* all faces lit */
+	if (y < 0 || y >= World.Height) return 7; /* all faces lit */
 
 	/* TODO: check sides height (if sides > edges), check if edge block casts a shadow */
-	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) {
+	if (x < 0 || z < 0 || x >= World.Width || z >= World.Length) {
 		return y >= Builder_EdgeLevel ? 7 : y == (Builder_EdgeLevel - 1) ? 6 : 0;
 	}
 

@@ -171,9 +171,9 @@ bool Entity_TouchesAny(struct AABB* bounds, Entity_TouchesCondition condition) {
 	Vector3I_Floor(&bbMin, &bounds->Min);
 	Vector3I_Floor(&bbMax, &bounds->Max);
 
-	bbMin.X = max(bbMin.X, 0); bbMax.X = min(bbMax.X, World_MaxX);
-	bbMin.Y = max(bbMin.Y, 0); bbMax.Y = min(bbMax.Y, World_MaxY);
-	bbMin.Z = max(bbMin.Z, 0); bbMax.Z = min(bbMax.Z, World_MaxZ);
+	bbMin.X = max(bbMin.X, 0); bbMax.X = min(bbMax.X, World.MaxX);
+	bbMin.Y = max(bbMin.Y, 0); bbMax.Y = min(bbMax.Y, World.MaxY);
+	bbMin.Z = max(bbMin.Z, 0); bbMax.Z = min(bbMax.Z, World.MaxZ);
 
 	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (float)y;
 		for (z = bbMin.Z; z <= bbMax.Z; z++) { v.Z = (float)z;
@@ -844,7 +844,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	bool wasOnGround;
 	Vector3 headingVelocity;
 
-	if (!World_Blocks) return;
+	if (!World.Blocks) return;
 	e->StepSize = hacks->FullBlockStep && hacks->Enabled && hacks->CanAnyHacks && hacks->CanSpeed ? 1.0f : 0.5f;
 	p->OldVelocity = e->Velocity;
 	wasOnGround    = e->OnGround;
@@ -953,14 +953,14 @@ static void LocalPlayer_DoRespawn(void) {
 	float height, spawnY;
 	int y;
 
-	if (!World_Blocks) return;
+	if (!World.Blocks) return;
 	Vector3I_Floor(&pos, &spawn);	
 
 	/* Spawn player at highest solid position to match vanilla Minecraft classic */
 	/* Only when player can noclip, since this can let you 'clip' to above solid blocks */
 	if (p->Hacks.CanNoclip && World_IsValidPos_3I(pos)) {
 		AABB_Make(&bb, &spawn, &p->Base.Size);
-		for (y = pos.Y; y <= World_Height; y++) {
+		for (y = pos.Y; y <= World.Height; y++) {
 			spawnY = Respawn_HighestSolidY(&bb);
 
 			if (spawnY == RESPAWN_NOT_FOUND) {

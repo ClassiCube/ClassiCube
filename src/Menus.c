@@ -1111,11 +1111,11 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 	struct GenLevelScreen* s = screen;
 	String_InitArray(tmp, tmpBuffer);
 
-	String_AppendInt(&tmp, World_Width);
+	String_AppendInt(&tmp, World.Width);
 	GenLevelScreen_Input(s, 0, -80, false, &tmp);
-	String_AppendInt(&tmp, World_Height);
+	String_AppendInt(&tmp, World.Height);
 	GenLevelScreen_Input(s, 1, -40, false, &tmp);
-	String_AppendInt(&tmp, World_Length);
+	String_AppendInt(&tmp, World.Length);
 	GenLevelScreen_Input(s, 2,   0, false, &tmp);
 	GenLevelScreen_Input(s, 3,  40, true,  &tmp);
 
@@ -2341,9 +2341,9 @@ struct Screen* EnvSettingsScreen_MakeInstance(void) {
 	String cloudHeight, edgeHeight;
 
 	cloudHeight = String_ClearedArray(cloudHeightBuffer);
-	String_AppendInt(&cloudHeight, World_Height + 2);
+	String_AppendInt(&cloudHeight, World.Height + 2);
 	edgeHeight  = String_ClearedArray(edgeHeightBuffer);
-	String_AppendInt(&edgeHeight,  World_Height / 2);
+	String_AppendInt(&edgeHeight,  World.Height / 2);
 
 	validators[0]    = MenuInputValidator_Hex();
 	defaultValues[0] = ENV_DEFAULT_CLOUDSCOL_HEX;

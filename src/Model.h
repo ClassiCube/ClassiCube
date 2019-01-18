@@ -62,19 +62,19 @@ struct Model {
 	/* NOTE: These bounds are not transformed. (i.e. no rotation, centered around 0,0,0) */
 	void (*GetPickingBounds)(struct Entity* entity);
 
-	/* Count of assigned vertices within the raw vertices array */
+	/* The rest of the fields are set in Model_Init() */
 	int index;
 	uint8_t armX, armY; /* these translate arm model part back to (0, 0) */
 
 	bool initalised;
-	/* Whether the model should be slightly bobbed up and down when rendering */
+	/* Whether the model should be slightly bobbed up and down when rendering. */
 	/* e.g. for HumanoidModel, when legs are at the peak of their swing, whole model is moved slightly down */
 	bool Bobbing;
 	bool UsesSkin, CalcHumanAnims, UsesHumanSkin, Pushes;
 
 	float Gravity; Vector3 Drag, GroundFriction;
 
-	/* Returns the transformation matrix applied to the model when rendering */
+	/* Returns the transformation matrix applied to the model when rendering. */
 	/* NOTE: Most models just use Entity_GetTransform (except SittingModel) */
 	void (*GetTransform)(struct Entity* entity, Vector3 pos, struct Matrix* m);
 	void (*DrawArm)(struct Entity* entity);

@@ -106,12 +106,12 @@ static void Physics_OnNewMapLoaded(void* obj) {
 	TickQueue_Clear(&physics_lavaQ);
 	TickQueue_Clear(&physics_waterQ);
 
-	physics_maxWaterX = World_MaxX - 2;
-	physics_maxWaterY = World_MaxY - 2;
-	physics_maxWaterZ = World_MaxZ - 2;
+	physics_maxWaterX = World.MaxX - 2;
+	physics_maxWaterY = World.MaxY - 2;
+	physics_maxWaterZ = World.MaxZ - 2;
 
-	Tree_Width = World_Width; Tree_Height = World_Height; Tree_Length = World_Length;
-	Tree_Blocks = World_Blocks;
+	Tree_Width = World.Width; Tree_Height = World.Height; Tree_Length = World.Length;
+	Tree_Blocks = World.Blocks;
 	Random_InitFromCurrentTime(&physics_rnd);
 	Tree_Rnd = &physics_rnd;
 }
@@ -122,25 +122,25 @@ void Physics_SetEnabled(bool enabled) {
 }
 
 static void Physics_Activate(int index) {
-	BlockID block = World_Blocks[index];
+	BlockID block = World.Blocks[index];
 	PhysicsHandler activate = Physics_OnActivate[block];
 	if (activate) activate(index, block);
 }
 
 static void Physics_ActivateNeighbours(int x, int y, int z, int index) {
 	if (x > 0)          Physics_Activate(index - 1);
-	if (x < World_MaxX) Physics_Activate(index + 1);
-	if (z > 0)          Physics_Activate(index - World_Width);
-	if (z < World_MaxZ) Physics_Activate(index + World_Width);
-	if (y > 0)          Physics_Activate(index - World_OneY);
-	if (y < World_MaxY) Physics_Activate(index + World_OneY);
+	if (x < World.MaxX) Physics_Activate(index + 1);
+	if (z > 0)          Physics_Activate(index - World.Width);
+	if (z < World.MaxZ) Physics_Activate(index + World.Width);
+	if (y > 0)          Physics_Activate(index - World.OneY);
+	if (y < World.MaxY) Physics_Activate(index + World.OneY);
 }
 
 static bool Physics_IsEdgeWater(int x, int y, int z) {
 	return
 		(Env_EdgeBlock == BLOCK_WATER || Env_EdgeBlock == BLOCK_STILL_WATER)
 		&& (y >= Env_SidesHeight && y < Env_EdgeHeight)
-		&& (x == 0 || z == 0 || x == World_MaxX || z == World_MaxZ);
+		&& (x == 0 || z == 0 || x == World.MaxX || z == World.MaxZ);
 }
 
 
@@ -171,29 +171,29 @@ static void Physics_TickRandomBlocks(void) {
 	PhysicsHandler tick;
 	int x, y, z, x2, y2, z2;
 
-	for (y = 0; y < World_Height; y += CHUNK_SIZE) {
-		y2 = min(y + CHUNK_MAX, World_MaxY);
-		for (z = 0; z < World_Length; z += CHUNK_SIZE) {
-			z2 = min(z + CHUNK_MAX, World_MaxZ);
-			for (x = 0; x < World_Width; x += CHUNK_SIZE) {
-				x2 = min(x + CHUNK_MAX, World_MaxX);
+	for (y = 0; y < World.Height; y += CHUNK_SIZE) {
+		y2 = min(y + CHUNK_MAX, World.MaxY);
+		for (z = 0; z < World.Length; z += CHUNK_SIZE) {
+			z2 = min(z + CHUNK_MAX, World.MaxZ);
+			for (x = 0; x < World.Width; x += CHUNK_SIZE) {
+				x2 = min(x + CHUNK_MAX, World.MaxX);
 
 				/* Inlined 3 random ticks for this chunk */
 				lo = World_Pack( x,  y,  z);
 				hi = World_Pack(x2, y2, z2);
 				
 				index = Random_Range(&physics_rnd, lo, hi);
-				block = World_Blocks[index];
+				block = World.Blocks[index];
 				tick = Physics_OnRandomTick[block];
 				if (tick) tick(index, block);
 
 				index = Random_Range(&physics_rnd, lo, hi);
-				block = World_Blocks[index];
+				block = World.Blocks[index];
 				tick = Physics_OnRandomTick[block];
 				if (tick) tick(index, block);
 
 				index = Random_Range(&physics_rnd, lo, hi);
-				block = World_Blocks[index];
+				block = World.Blocks[index];
 				tick = Physics_OnRandomTick[block];
 				if (tick) tick(index, block);
 			}
@@ -208,9 +208,9 @@ static void Physics_DoFalling(int index, BlockID block) {
 	int x, y, z;
 
 	/* Find lowest block can fall into */
-	while (index >= World_OneY) {
-		index -= World_OneY;
-		other  = World_Blocks[index];
+	while (index >= World.OneY) {
+		index -= World.OneY;
+		other  = World.Blocks[index];
 
 		if (other == BLOCK_AIR || (other >= BLOCK_WATER && other <= BLOCK_STILL_LAVA))
 			found = index;
@@ -250,7 +250,7 @@ static void Physics_HandleSapling(int index, BlockID block) {
 	World_Unpack(index, x, y, z);
 
 	below = BLOCK_AIR;
-	if (y > 0) below = World_Blocks[index - World_OneY];
+	if (y > 0) below = World.Blocks[index - World.OneY];
 	if (below != BLOCK_GRASS) return;
 
 	height = 5 + Random_Next(&physics_rnd, 3);
@@ -297,7 +297,7 @@ static void Physics_HandleFlower(int index, BlockID block) {
 	}
 
 	below = BLOCK_DIRT;
-	if (y > 0) below = World_Blocks[index - World_OneY];
+	if (y > 0) below = World.Blocks[index - World.OneY];
 	if (!(below == BLOCK_DIRT || below == BLOCK_GRASS)) {
 		Game_UpdateBlock(x, y, z, BLOCK_AIR);
 		Physics_ActivateNeighbours(x, y, z, index);
@@ -316,7 +316,7 @@ static void Physics_HandleMushroom(int index, BlockID block) {
 	}
 
 	below = BLOCK_STONE;
-	if (y > 0) below = World_Blocks[index - World_OneY];
+	if (y > 0) below = World.Blocks[index - World.OneY];
 	if (!(below == BLOCK_STONE || below == BLOCK_COBBLE)) {
 		Game_UpdateBlock(x, y, z, BLOCK_AIR);
 		Physics_ActivateNeighbours(x, y, z, index);
@@ -329,7 +329,7 @@ static void Physics_PlaceLava(int index, BlockID block) {
 }
 
 static void Physics_PropagateLava(int posIndex, int x, int y, int z) {
-	BlockID block = World_Blocks[posIndex];
+	BlockID block = World.Blocks[posIndex];
 	if (block == BLOCK_WATER || block == BLOCK_STILL_WATER) {
 		Game_UpdateBlock(x, y, z, BLOCK_STONE);
 	} else if (Blocks.Collide[block] == COLLIDE_GAS) {
@@ -343,10 +343,10 @@ static void Physics_ActivateLava(int index, BlockID block) {
 	World_Unpack(index, x, y, z);
 
 	if (x > 0)          Physics_PropagateLava(index - 1, x - 1, y, z);
-	if (x < World_MaxX) Physics_PropagateLava(index + 1, x + 1, y, z);
-	if (z > 0)          Physics_PropagateLava(index - World_Width, x, y, z - 1);
-	if (z < World_MaxZ) Physics_PropagateLava(index + World_Width, x, y, z + 1);
-	if (y > 0)          Physics_PropagateLava(index - World_OneY, x, y - 1, z);
+	if (x < World.MaxX) Physics_PropagateLava(index + 1, x + 1, y, z);
+	if (z > 0)          Physics_PropagateLava(index - World.Width, x, y, z - 1);
+	if (z < World.MaxZ) Physics_PropagateLava(index + World.Width, x, y, z + 1);
+	if (y > 0)          Physics_PropagateLava(index - World.OneY, x, y - 1, z);
 }
 
 static void Physics_TickLava(void) {
@@ -354,7 +354,7 @@ static void Physics_TickLava(void) {
 	for (i = 0; i < count; i++) {
 		int index;
 		if (Physics_CheckItem(&physics_lavaQ, &index)) {
-			BlockID block = World_Blocks[index];
+			BlockID block = World.Blocks[index];
 			if (!(block == BLOCK_LAVA || block == BLOCK_STILL_LAVA)) continue;
 			Physics_ActivateLava(index, block);
 		}
@@ -367,16 +367,16 @@ static void Physics_PlaceWater(int index, BlockID block) {
 }
 
 static void Physics_PropagateWater(int posIndex, int x, int y, int z) {
-	BlockID block = World_Blocks[posIndex];
+	BlockID block = World.Blocks[posIndex];
 	int xx, yy, zz;
 
 	if (block == BLOCK_LAVA || block == BLOCK_STILL_LAVA) {
 		Game_UpdateBlock(x, y, z, BLOCK_STONE);
 	} else if (Blocks.Collide[block] == COLLIDE_GAS && block != BLOCK_ROPE) {
 		/* Sponge check */		
-		for (yy = (y < 2 ? 0 : y - 2); yy <= (y > physics_maxWaterY ? World_MaxY : y + 2); yy++) {
-			for (zz = (z < 2 ? 0 : z - 2); zz <= (z > physics_maxWaterZ ? World_MaxZ : z + 2); zz++) {
-				for (xx = (x < 2 ? 0 : x - 2); xx <= (x > physics_maxWaterX ? World_MaxX : x + 2); xx++) {
+		for (yy = (y < 2 ? 0 : y - 2); yy <= (y > physics_maxWaterY ? World.MaxY : y + 2); yy++) {
+			for (zz = (z < 2 ? 0 : z - 2); zz <= (z > physics_maxWaterZ ? World.MaxZ : z + 2); zz++) {
+				for (xx = (x < 2 ? 0 : x - 2); xx <= (x > physics_maxWaterX ? World.MaxX : x + 2); xx++) {
 					block = World_GetBlock(xx, yy, zz);
 					if (block == BLOCK_SPONGE) return;
 				}
@@ -393,10 +393,10 @@ static void Physics_ActivateWater(int index, BlockID block) {
 	World_Unpack(index, x, y, z);
 
 	if (x > 0)          Physics_PropagateWater(index - 1,           x - 1, y,     z);
-	if (x < World_MaxX) Physics_PropagateWater(index + 1,           x + 1, y,     z);
-	if (z > 0)          Physics_PropagateWater(index - World_Width, x,     y,     z - 1);
-	if (z < World_MaxZ) Physics_PropagateWater(index + World_Width, x,     y,     z + 1);
-	if (y > 0)          Physics_PropagateWater(index - World_OneY,  x,     y - 1, z);
+	if (x < World.MaxX) Physics_PropagateWater(index + 1,           x + 1, y,     z);
+	if (z > 0)          Physics_PropagateWater(index - World.Width, x,     y,     z - 1);
+	if (z < World.MaxZ) Physics_PropagateWater(index + World.Width, x,     y,     z + 1);
+	if (y > 0)          Physics_PropagateWater(index - World.OneY,  x,     y - 1, z);
 }
 
 static void Physics_TickWater(void) {
@@ -404,7 +404,7 @@ static void Physics_TickWater(void) {
 	for (i = 0; i < count; i++) {
 		int index;
 		if (Physics_CheckItem(&physics_waterQ, &index)) {
-			BlockID block = World_Blocks[index];
+			BlockID block = World.Blocks[index];
 			if (!(block == BLOCK_WATER || block == BLOCK_STILL_WATER)) continue;
 			Physics_ActivateWater(index, block);
 		}
@@ -441,7 +441,7 @@ static void Physics_DeleteSponge(int index, BlockID block) {
 					if (!World_IsValidPos(xx, yy, zz)) continue;
 
 					index = World_Pack(xx, yy, zz);
-					block = World_Blocks[index];
+					block = World.Blocks[index];
 					if (block == BLOCK_WATER || block == BLOCK_STILL_WATER) {
 						TickQueue_Enqueue(&physics_waterQ, index | PHYSICS_ONE_DELAY);
 					}
@@ -455,9 +455,9 @@ static void Physics_DeleteSponge(int index, BlockID block) {
 static void Physics_HandleSlab(int index, BlockID block) {
 	int x, y, z;
 	World_Unpack(index, x, y, z);
-	if (index < World_OneY) return;
+	if (index < World.OneY) return;
 
-	if (World_Blocks[index - World_OneY] != BLOCK_SLAB) return;
+	if (World.Blocks[index - World.OneY] != BLOCK_SLAB) return;
 	Game_UpdateBlock(x, y,     z, BLOCK_AIR);
 	Game_UpdateBlock(x, y - 1, z, BLOCK_DOUBLE_SLAB);
 }
@@ -465,9 +465,9 @@ static void Physics_HandleSlab(int index, BlockID block) {
 static void Physics_HandleCobblestoneSlab(int index, BlockID block) {
 	int x, y, z;
 	World_Unpack(index, x, y, z);
-	if (index < World_OneY) return;
+	if (index < World.OneY) return;
 
-	if (World_Blocks[index - World_OneY] != BLOCK_COBBLE_SLAB) return;
+	if (World.Blocks[index - World.OneY] != BLOCK_COBBLE_SLAB) return;
 	Game_UpdateBlock(x, y,     z, BLOCK_AIR);
 	Game_UpdateBlock(x, y - 1, z, BLOCK_COBBLE);
 }
@@ -497,7 +497,7 @@ static void Physics_Explode(int x, int y, int z, int power) {
 				if (!World_IsValidPos(xx, yy, zz)) continue;
 				index = World_Pack(xx, yy, zz);
 
-				block = World_Blocks[index];
+				block = World.Blocks[index];
 				if (block < BLOCK_CPE_COUNT && physics_blocksTnt[block]) continue;
 
 				Game_UpdateBlock(xx, yy, zz, BLOCK_AIR);
@@ -561,7 +561,7 @@ void Physics_Free(void) {
 }
 
 void Physics_Tick(void) {
-	if (!Physics_Enabled || !World_Blocks) return;
+	if (!Physics_Enabled || !World.Blocks) return;
 
 	/*if ((tickCount % 5) == 0) {*/
 	Physics_TickLava();

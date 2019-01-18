@@ -654,11 +654,11 @@ static void GeneratingScreen_EndGeneration(void) {
 		Chat_AddRaw("&cFailed to generate the map."); return;
 	}
 
-	World_BlocksSize = Gen_Width * Gen_Height * Gen_Length;
-	World_SetNewMap(Gen_Blocks, World_BlocksSize, Gen_Width, Gen_Height, Gen_Length);
+	World.BlocksSize = Gen_Width * Gen_Height * Gen_Length;
+	World_SetNewMap(Gen_Blocks, World.BlocksSize, Gen_Width, Gen_Height, Gen_Length);
 	Gen_Blocks = NULL;
 
-	x = (World_Width / 2) + 0.5f; z = (World_Length / 2) + 0.5f;
+	x = (World.Width / 2) + 0.5f; z = (World.Length / 2) + 0.5f;
 	p->Spawn = Respawn_FindSpawnPosition(x, z, p->Base.Size);
 
 	LocationUpdate_MakePosAndOri(&update, p->Spawn, 0.0f, 0.0f, false);

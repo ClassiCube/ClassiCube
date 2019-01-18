@@ -8,19 +8,32 @@
 */
 struct AABB;
 
-#define World_Unpack(idx, x, y, z) x = idx % World_Width; z = (idx / World_Width) % World_Length; y = (idx / World_Width) / World_Length;
-#define World_Pack(x, y, z) (((y) * World_Length + (z)) * World_Width + (x))
+/* Unpacka an index into x,y,z (slow!) */
+#define World_Unpack(idx, x, y, z) x = idx % World.Width; z = (idx / World.Width) % World.Length; y = (idx / World.Width) / World.Length;
+/* Packs an x,y,z into a single index */
+#define World_Pack(x, y, z) (((y) * World.Length + (z)) * World.Width + (x))
 
-extern BlockRaw* World_Blocks;
+CC_VAR extern struct _WorldData {
+	/* The blocks in the world. */
+	BlockRaw* Blocks;
 #ifdef EXTENDED_BLOCKS
-extern BlockRaw* World_Blocks2;
+	/* The upper 8 bit of blocks in the world. */
+	/* If only 8 bit blocks are used, equals World_Blocks. */
+	BlockRaw* Blocks2;
 #endif
-extern int World_BlocksSize;
+	/* Volume of the world. */
+	int BlocksSize;
 
-extern int World_Width, World_Height, World_Length;
-extern int World_MaxX, World_MaxY, World_MaxZ;
-extern int World_OneY;
-extern uint8_t World_Uuid[16];
+	/* Dimensions of the world. */
+	int Width, Height, Length;
+	/* Maximum X/Y/Z coordinate in the world. */
+	/* (i.e. Width - 1, Height - 1, Length - 1) */
+	int MaxX, MaxY, MaxZ;
+	/* Adds one Y coordinate to a packed index. */
+	int OneY;
+	/* Unique identifier for this world. */
+	uint8_t Uuid[16];
+} World;
 extern String World_TextureUrl;
 
 /* Frees the blocks array, sets dimensions to 0, resets environment to default. */
@@ -34,7 +47,7 @@ CC_API void World_SetNewMap(BlockRaw* blocks, int blocksSize, int width, int hei
 extern int Block_IDMask;
 static CC_INLINE BlockID World_GetBlock(int x, int y, int z) {
 	int i = World_Pack(x, y, z);
-	return (BlockID)((World_Blocks[i] | (World_Blocks2[i] << 8)) & Block_IDMask);
+	return (BlockID)((World.Blocks[i] | (World.Blocks2[i] << 8)) & Block_IDMask);
 }
 #else
 #define World_GetBlock(x, y, z) World_Blocks[World_Pack(x, y, z)]
