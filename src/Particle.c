@@ -68,7 +68,7 @@ static bool Particle_CollideHor(Vector3* nextPos, BlockID block) {
 }
 
 static BlockID Particle_GetBlock(int x, int y, int z) {
-	if (World_IsValidPos(x, y, z)) { return World_GetBlock(x, y, z); }
+	if (World_Contains(x, y, z)) { return World_GetBlock(x, y, z); }
 
 	if (y >= Env_EdgeHeight) return BLOCK_AIR;
 	if (y >= Env_SidesHeight) return Env_EdgeBlock;
@@ -165,7 +165,7 @@ static void RainParticle_Render(struct RainParticle* p, float t, VertexP3fT2fC4b
 	size.X = (float)p->Base.Size * 0.015625f; size.Y = size.X;
 
 	x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
-	col = World_IsValidPos(x, y, z) ? Lighting_Col(x, y, z) : Env_SunCol;
+	col = World_Contains(x, y, z) ? Lighting_Col(x, y, z) : Env_SunCol;
 	Particle_DoRender(&size, &pos, &rain_rec, col, vertices);
 }
 
@@ -236,7 +236,7 @@ static void TerrainParticle_Render(struct TerrainParticle* p, float t, VertexP3f
 	
 	if (!Blocks.FullBright[p->Block]) {
 		x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
-		col = World_IsValidPos(x, y, z) ? Lighting_Col_XSide(x, y, z) : Env_SunXSide;
+		col = World_Contains(x, y, z) ? Lighting_Col_XSide(x, y, z) : Env_SunXSide;
 	}
 
 	if (Blocks.Tinted[p->Block]) {

@@ -109,10 +109,11 @@ static void EnvRenderer_UpdateFogNormal(float fogDensity, PackedCol fogCol) {
 
 void EnvRenderer_UpdateFog(void) {
 	float fogDensity; PackedCol fogCol;
+	if (!World.Blocks) return;
+
 	EnvRenderer_CalcFog(&fogDensity, &fogCol);
 	Gfx_ClearCol(fogCol);
 
-	if (!World.Blocks) return;
 	if (EnvRenderer_Minimal) {
 		EnvRenderer_UpdateFogMinimal(fogDensity);
 	} else {
@@ -405,7 +406,7 @@ static int EnvRenderer_CalcRainHeightAt(int x, int maxY, int z, int hIndex) {
 static float EnvRenderer_RainHeight(int x, int z) {
 	int hIndex, height;
 	int y;
-	if (x < 0 || z < 0 || x >= World.Width || z >= World.Length) return (float)Env_EdgeHeight;
+	if (!World_ContainsXZ(x, z)) return (float)Env_EdgeHeight;
 
 	hIndex = Weather_Pack(x, z);
 	height = Weather_Heightmap[hIndex];

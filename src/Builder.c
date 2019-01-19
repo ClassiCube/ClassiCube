@@ -736,7 +736,7 @@ static int Adv_Lit(int x, int y, int z, int cIndex) {
 	if (y < 0 || y >= World.Height) return 7; /* all faces lit */
 
 	/* TODO: check sides height (if sides > edges), check if edge block casts a shadow */
-	if (x < 0 || z < 0 || x >= World.Width || z >= World.Length) {
+	if (!World_ContainsXZ(x, z)) {
 		return y >= Builder_EdgeLevel ? 7 : y == (Builder_EdgeLevel - 1) ? 6 : 0;
 	}
 

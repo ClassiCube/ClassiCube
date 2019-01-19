@@ -504,7 +504,11 @@ static void Classic_LevelFinalise(uint8_t* data) {
 	loadingMs = (int)(DateTime_CurrentUTC_MS() - map_receiveStart);
 	Platform_Log1("map loading took: %i", &loadingMs);
 
-	World_SetNewMap(map_blocks, map_volume, width, height, length);
+	if (map_volume != (width * height * length)) {
+		Logger_Abort("Blocks array size does not match volume of map");
+	}
+
+	World_SetNewMap(map_blocks, width, height, length);
 #ifdef EXTENDED_BLOCKS
 	if (cpe_extBlocks) {
 		/* defer allocation of scond map array if possible */
@@ -533,7 +537,7 @@ static void Classic_SetBlock(uint8_t* data) {
 	data += 6;
 
 	Handlers_ReadBlock(data, block);
-	if (World_IsValidPos(x, y, z)) {
+	if (World_Contains(x, y, z)) {
 		Game_UpdateBlock(x, y, z, block);
 	}
 }
@@ -1185,10 +1189,10 @@ static void CPE_BulkBlockUpdate(uint8_t* data) {
 
 	for (i = 0; i < count; i++) {
 		index = indices[i];
-		if (index < 0 || index >= World.BlocksSize) continue;
+		if (index < 0 || index >= World.Volume) continue;
 		World_Unpack(index, x, y, z);
 
-		if (World_IsValidPos(x, y, z)) {
+		if (World_Contains(x, y, z)) {
 			Game_UpdateBlock(x, y, z, blocks[i]);
 		}
 	}

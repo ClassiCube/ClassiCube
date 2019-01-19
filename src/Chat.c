@@ -448,7 +448,8 @@ static void CuboidCommand_DoCuboid(void) {
 
 	Vector3I_Min(&min, &cuboid_mark1, &cuboid_mark2);
 	Vector3I_Max(&max, &cuboid_mark1, &cuboid_mark2);
-	if (!World_IsValidPos_3I(min) || !World_IsValidPos_3I(max)) return;
+	if (!World_Contains(min.X, min.Y, min.Z)) return;
+	if (!World_Contains(max.X, max.Y, max.Z)) return;
 
 	toPlace = (BlockID)cuboid_block;
 	if (cuboid_block == -1) toPlace = Inventory_SelectedBlock;

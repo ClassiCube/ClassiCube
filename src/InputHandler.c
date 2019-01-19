@@ -321,7 +321,7 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 	TimeMS now = DateTime_CurrentUTC_MS();
 	int delta  = (int)(now - input_lastClick);
 
-	Vector3I p;
+	Vector3I pos;
 	BlockID old, cur, block;
 	int i;
 
@@ -341,19 +341,19 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		/* always play delete animations, even if we aren't picking a block */
 		HeldBlockRenderer_ClickAnim(true);
 
-		p = Game_SelectedPos.BlockPos;
-		if (!Game_SelectedPos.Valid || !World_IsValidPos_3I(p)) return;
+		pos = Game_SelectedPos.BlockPos;
+		if (!Game_SelectedPos.Valid || !World_Contains(pos.X, pos.Y, pos.Z)) return;
 
-		old = World_GetBlock(p.X, p.Y, p.Z);
+		old = World_GetBlock(pos.X, pos.Y, pos.Z);
 		if (Blocks.Draw[old] == DRAW_GAS || !Blocks.CanDelete[old]) return;
 
-		Game_ChangeBlock(p.X, p.Y, p.Z, BLOCK_AIR);
-		Event_RaiseBlock(&UserEvents.BlockChanged, p, old, BLOCK_AIR);
+		Game_ChangeBlock(pos.X, pos.Y, pos.Z, BLOCK_AIR);
+		Event_RaiseBlock(&UserEvents.BlockChanged, pos, old, BLOCK_AIR);
 	} else if (right) {
-		p = Game_SelectedPos.TranslatedPos;
-		if (!Game_SelectedPos.Valid || !World_IsValidPos_3I(p)) return;
+		pos = Game_SelectedPos.TranslatedPos;
+		if (!Game_SelectedPos.Valid || !World_Contains(pos.X, pos.Y, pos.Z)) return;
 
-		old   = World_GetBlock(p.X, p.Y, p.Z);
+		old   = World_GetBlock(pos.X, pos.Y, pos.Z);
 		block = Inventory_SelectedBlock;
 		if (AutoRotate_Enabled) block = AutoRotate_RotateBlock(block);
 
@@ -362,13 +362,13 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		if (Blocks.Draw[block] == DRAW_GAS && Blocks.Draw[old] != DRAW_GAS) return;
 		if (!InputHandler_CheckIsFree(block)) return;
 
-		Game_ChangeBlock(p.X, p.Y, p.Z, block);
-		Event_RaiseBlock(&UserEvents.BlockChanged, p, old, block);
+		Game_ChangeBlock(pos.X, pos.Y, pos.Z, block);
+		Event_RaiseBlock(&UserEvents.BlockChanged, pos, old, block);
 	} else if (middle) {
-		p = Game_SelectedPos.BlockPos;
-		if (!World_IsValidPos_3I(p)) return;
+		pos = Game_SelectedPos.BlockPos;
+		if (!World_Contains(pos.X, pos.Y, pos.Z)) return;
 
-		cur = World_GetBlock(p.X, p.Y, p.Z);
+		cur = World_GetBlock(pos.X, pos.Y, pos.Z);
 		if (Blocks.Draw[cur] == DRAW_GAS) return;
 		if (!(Blocks.CanPlace[cur] || Blocks.CanDelete[cur])) return;
 		if (!Inventory_CheckChangeSelected() || Inventory_SelectedBlock == cur) return;

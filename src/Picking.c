@@ -119,7 +119,7 @@ static BlockID Picking_GetInside(int x, int y, int z) {
 	bool sides;
 	int height;
 
-	if (x >= 0 && z >= 0 && x < World.Width && z < World.Length) {
+	if (World_ContainsXZ(x, z)) {
 		if (y >= World.Height) return BLOCK_AIR;
 		if (y >= 0) return World_GetBlock(x, y, z);
 	}
@@ -134,7 +134,7 @@ static BlockID Picking_GetOutside(int x, int y, int z, Vector3I origin) {
 	bool sides;
 	int height;
 
-	if (x < 0 || z < 0 || x >= World.Width || z >= World.Length) return BLOCK_AIR;
+	if (!World_ContainsXZ(x, z)) return BLOCK_AIR;
 	sides = Env_SidesBlock != BLOCK_AIR;
 	/* handling of blocks inside the map, above, and on borders */
 
@@ -164,7 +164,7 @@ static bool Picking_RayTrace(Vector3 origin, Vector3 dir, float reach, struct Pi
 
 	RayTracer_SetVectors(&tracer, origin, dir);
 	Vector3I_Floor(&pOrigin, &origin);
-	insideMap = World_IsValidPos_3I(pOrigin);
+	insideMap = World_Contains(pOrigin.X, pOrigin.Y, pOrigin.Z);
 	reachSq   = reach * reach;
 		
 	for (i = 0; i < 25000; i++) {

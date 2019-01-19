@@ -21,12 +21,12 @@
 *--------------------------------------------------------General----------------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode Map_ReadBlocks(struct Stream* stream) {
-	World.BlocksSize = World.Width * World.Length * World.Height;
-	World.Blocks     = Mem_Alloc(World.BlocksSize, 1, "map blocks");
+	World.Volume = World.Width * World.Length * World.Height;
+	World.Blocks     = Mem_Alloc(World.Volume, 1, "map blocks");
 #ifdef EXTENDED_BLOCKS
 	World.Blocks2    = World.Blocks;
 #endif
-	return Stream_Read(stream, World.Blocks, World.BlocksSize);
+	return Stream_Read(stream, World.Blocks, World.Volume);
 }
 
 static ReturnCode Map_SkipGZipHeader(struct Stream* stream) {
@@ -75,7 +75,7 @@ void Map_LoadFrom(const String* path) {
 	res = stream.Close(&stream);
 	if (res) { Logger_Warn2(res, "closing", path); }
 
-	World_SetNewMap(World.Blocks, World.BlocksSize, World.Width, World.Height, World.Length);
+	World_SetNewMap(World.Blocks, World.Width, World.Height, World.Length);
 	Event_RaiseVoid(&WorldEvents.MapLoaded);
 
 	LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnRotY, p->SpawnHeadX, false);
@@ -180,13 +180,13 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 	if ((res = Map_ReadBlocks(&compStream))) return res;
 	blocks = World.Blocks;
 	/* Bulk convert 4 blocks at once */
-	for (i = 0; i < (World.BlocksSize & ~3); i += 4) {
+	for (i = 0; i < (World.Volume & ~3); i += 4) {
 		*blocks = Lvl_table[*blocks]; blocks++;
 		*blocks = Lvl_table[*blocks]; blocks++;
 		*blocks = Lvl_table[*blocks]; blocks++;
 		*blocks = Lvl_table[*blocks]; blocks++;
 	}
-	for (; i < World.BlocksSize; i++) {
+	for (; i < World.Volume; i++) {
 		*blocks = Lvl_table[*blocks]; blocks++;
 	}
 
@@ -433,9 +433,9 @@ static void Cw_Callback_1(struct NbtTag* tag) {
 	}
 
 	if (IsTag(tag, "BlockArray")) {
-		World.BlocksSize = tag->DataSize;
+		World.Volume = tag->DataSize;
 		if (NbtTag_IsSmall(tag)) {
-			World.Blocks = Mem_Alloc(World.BlocksSize, 1, ".cw map blocks");
+			World.Blocks = Mem_Alloc(World.Volume, 1, ".cw map blocks");
 			Mem_Copy(World.Blocks, tag->Value.Small, tag->DataSize);
 		} else {
 			World.Blocks = tag->Value.Big;
@@ -623,7 +623,7 @@ ReturnCode Cw_Load(struct Stream* stream) {
 	uint8_t tag;
 	struct Stream compStream;
 	struct InflateState state;
-	Vector3* spawn; Vector3I P;
+	Vector3* spawn; Vector3I pos;
 	ReturnCode res;
 
 	Inflate_MakeStream(&compStream, &state, stream);
@@ -636,8 +636,11 @@ ReturnCode Cw_Load(struct Stream* stream) {
 
 	/* Older versions incorrectly multiplied spawn coords by * 32, so we check for that */
 	spawn = &LocalPlayer_Instance.Spawn; 
-	Vector3I_Floor(&P, spawn);
-	if (!World_IsValidPos_3I(P)) { spawn->X /= 32.0f; spawn->Y /= 32.0f; spawn->Z /= 32.0f; }
+	Vector3I_Floor(&pos, spawn);
+
+	if (!World_Contains(pos.X, pos.Y, pos.Z)) { 
+		spawn->X /= 32.0f; spawn->Y /= 32.0f; spawn->Z /= 32.0f; 
+	}
 	return 0;
 }
 
@@ -839,7 +842,7 @@ ReturnCode Dat_Load(struct Stream* stream) {
 #ifdef EXTENDED_BLOCKS
 			World.Blocks2    = World.Blocks;
 #endif
-			World.BlocksSize = field->Value.Array.Size;
+			World.Volume = field->Value.Array.Size;
 		} else if (String_CaselessEqualsConst(&fieldName, "xSpawn")) {
 			p->Spawn.X = (float)Dat_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "ySpawn")) {
@@ -1009,7 +1012,7 @@ ReturnCode Cw_Save(struct Stream* stream) {
 		Stream_SetU16_BE(&tmp[63], World.Width);
 		Stream_SetU16_BE(&tmp[69], World.Height);
 		Stream_SetU16_BE(&tmp[75], World.Length);
-		Stream_SetU32_BE(&tmp[127], World.BlocksSize);
+		Stream_SetU32_BE(&tmp[127], World.Volume);
 		
 		/* TODO: Maybe keep real spawn too? */
 		Stream_SetU16_BE(&tmp[89],  (uint16_t)p->Base.Position.X);
@@ -1019,7 +1022,7 @@ ReturnCode Cw_Save(struct Stream* stream) {
 		tmp[112] = Math_Deg2Packed(p->SpawnHeadX);
 	}
 	if ((res = Stream_Write(stream, tmp, sizeof(cw_begin)))) return res;
-	if ((res = Stream_Write(stream, World.Blocks, World.BlocksSize))) return res;
+	if ((res = Stream_Write(stream, World.Blocks, World.Volume))) return res;
 
 	Mem_Copy(tmp, cw_meta_cpe, sizeof(cw_meta_cpe));
 	{
@@ -1079,19 +1082,19 @@ ReturnCode Schematic_Save(struct Stream* stream) {
 		Stream_SetU16_BE(&tmp[41], World.Width);
 		Stream_SetU16_BE(&tmp[52], World.Height);
 		Stream_SetU16_BE(&tmp[63], World.Length);
-		Stream_SetU32_BE(&tmp[74], World.BlocksSize);
+		Stream_SetU32_BE(&tmp[74], World.Volume);
 	}
 	if ((res = Stream_Write(stream, tmp, sizeof(sc_begin)))) return res;
-	if ((res = Stream_Write(stream, World.Blocks, World.BlocksSize))) return res;
+	if ((res = Stream_Write(stream, World.Blocks, World.Volume))) return res;
 
 	Mem_Copy(tmp, sc_data, sizeof(sc_data));
 	{
-		Stream_SetU32_BE(&tmp[7], World.BlocksSize);
+		Stream_SetU32_BE(&tmp[7], World.Volume);
 	}
 	if ((res = Stream_Write(stream, tmp, sizeof(sc_data)))) return res;
 
-	for (i = 0; i < World.BlocksSize; i += sizeof(chunk)) {
-		int count = World.BlocksSize - i; count = min(count, sizeof(chunk));
+	for (i = 0; i < World.Volume; i += sizeof(chunk)) {
+		int count = World.Volume - i; count = min(count, sizeof(chunk));
 		if ((res = Stream_Write(stream, chunk, count))) return res;
 	}
 	return Stream_Write(stream, sc_end, sizeof(sc_end));

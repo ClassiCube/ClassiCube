@@ -89,7 +89,7 @@ static void MapRenderer_CheckWeather(double delta) {
 	Vector3I_Floor(&pos, &Camera.CurrentPos);
 
 	block   = World_SafeGetBlock_3I(pos);
-	outside = pos.X < 0 || pos.Y < 0 || pos.Z < 0 || pos.X >= World.Width || pos.Z >= World.Length;
+	outside = pos.Y < 0 || World_ContainsXZ(pos.X, pos.Z);
 	inTranslucent = Blocks.Draw[block] == DRAW_TRANSLUCENT || (pos.Y < Env_EdgeHeight && outside);
 
 	/* If we are under water, render weather before to blend properly */

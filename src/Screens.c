@@ -630,8 +630,6 @@ struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen_
 *--------------------------------------------------GeneratingMapScreen----------------------------------------------------*
 *#########################################################################################################################*/
 static void GeneratingScreen_Init(void* screen) {
-	World_Reset();
-	Event_RaiseVoid(&WorldEvents.NewMap);
 	Gen_Done = false;
 	LoadingScreen_Init(screen);
 
@@ -654,8 +652,7 @@ static void GeneratingScreen_EndGeneration(void) {
 		Chat_AddRaw("&cFailed to generate the map."); return;
 	}
 
-	World.BlocksSize = Gen_Width * Gen_Height * Gen_Length;
-	World_SetNewMap(Gen_Blocks, World.BlocksSize, Gen_Width, Gen_Height, Gen_Length);
+	World_SetNewMap(Gen_Blocks, World.Width, World.Height, World.Length);
 	Gen_Blocks = NULL;
 
 	x = (World.Width / 2) + 0.5f; z = (World.Length / 2) + 0.5f;

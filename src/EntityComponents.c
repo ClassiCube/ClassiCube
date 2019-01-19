@@ -563,9 +563,9 @@ static bool ShadowComponent_GetBlocks(struct Entity* e, int x, int y, int z, str
 	int i;
 
 	for (i = 0; i < 4; i++) { data[i] = zeroData; }
-	cur  = data;
-	posY = e->Position.Y;
-	outside = x < 0 || z < 0 || x >= World.Width || z >= World.Length;
+	cur     = data;
+	posY    = e->Position.Y;
+	outside = !World_ContainsXZ(x, z);
 
 	for (i = 0; y >= 0 && i < 4; y--) {
 		if (!outside) {

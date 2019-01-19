@@ -22,7 +22,7 @@ CC_VAR extern struct _WorldData {
 	BlockRaw* Blocks2;
 #endif
 	/* Volume of the world. */
-	int BlocksSize;
+	int Volume;
 
 	/* Dimensions of the world. */
 	int Width, Height, Length;
@@ -40,11 +40,16 @@ extern String World_TextureUrl;
 CC_API void World_Reset(void);
 /* Sets the blocks array and dimensions of the map. */
 /* May also sets some environment settings like border/clouds height, if they are -1 */
-/* NOTE: Exits the game if size vs dimensions are inconsistent. */
-CC_API void World_SetNewMap(BlockRaw* blocks, int blocksSize, int width, int height, int length);
+CC_API void World_SetNewMap(BlockRaw* blocks, int width, int height, int length);
+/* Sets the various dimension and max coordinate related variables. */
+/* NOTE: This is an internal API. Use World_SetNewMap instead. */
+CC_NOINLINE void World_SetDimensions(int width, int height, int length);
 
 #ifdef EXTENDED_BLOCKS
 extern int Block_IDMask;
+
+/* Gets the block at the given coordinates. */
+/* NOTE: Does NOT check that the coordinates are inside the map. */
 static CC_INLINE BlockID World_GetBlock(int x, int y, int z) {
 	int i = World_Pack(x, y, z);
 	return (BlockID)((World.Blocks[i] | (World.Blocks2[i] << 8)) & Block_IDMask);
@@ -53,11 +58,28 @@ static CC_INLINE BlockID World_GetBlock(int x, int y, int z) {
 #define World_GetBlock(x, y, z) World_Blocks[World_Pack(x, y, z)]
 #endif
 
+/* If Y is above the map, returns BLOCK_AIR. */
+/* If coordinates are outside the map, returns BLOCK_AIR. */
+/* Otherwise returns the block at the given coordinates. */
 BlockID World_GetPhysicsBlock(int x, int y, int z);
+/* Sets the block at the given coordinates. */
+/* NOTE: Does NOT check that the coordinates are inside the map. */
 void World_SetBlock(int x, int y, int z, BlockID block);
+/* If coordinates are outside the map, returns BLOCK_AIR. */
+/* Otherwise returns the block at the given coordinates. */
 BlockID World_SafeGetBlock_3I(Vector3I p);
-bool World_IsValidPos(int x, int y, int z);
-bool World_IsValidPos_3I(Vector3I p);
+
+/* Whether the given coordinates lie inside the map. */
+static CC_INLINE bool World_Contains(int x, int y, int z) {
+	return (unsigned)x < (unsigned)World.Width
+		&& (unsigned)y < (unsigned)World.Height
+		&& (unsigned)z < (unsigned)World.Length;
+}
+/* Whether the given coordinates lie horizontally inside the map. */
+static CC_INLINE bool World_ContainsXZ(int x, int z) {
+	return (unsigned)x < (unsigned)World.Width 
+		&& (unsigned)z < (unsigned)World.Length;
+}
 
 enum EnvVar_ {
 	ENV_VAR_EDGE_BLOCK, ENV_VAR_SIDES_BLOCK, ENV_VAR_EDGE_HEIGHT, ENV_VAR_SIDES_OFFSET,

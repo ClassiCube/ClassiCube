@@ -160,8 +160,9 @@ static void SPConnection_BeginConnect(void) {
 	}
 
 	Random_InitFromCurrentTime(&rnd);
-	Gen_SetDimensions(128, 64, 128); Gen_Vanilla = true;
-	Gen_Seed = Random_Next(&rnd, Int32_MaxValue);
+	World_SetDimensions(128, 64, 128);
+	Gen_Vanilla = true;
+	Gen_Seed    = Random_Next(&rnd, Int32_MaxValue);
 
 	Gui_FreeActive();
 	Gui_SetActive(GeneratingScreen_MakeInstance());

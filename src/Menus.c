@@ -1018,6 +1018,15 @@ CC_NOINLINE static int GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, int i
 	return GenLevelScreen_GetInt(s, index);
 }
 
+static void GenLevelScreen_Begin(int width, int height, int length) {
+	World_Reset();
+	Event_RaiseVoid(&WorldEvents.NewMap);
+	World_SetDimensions(width, height, length);
+
+	Gui_FreeActive();
+	Gui_SetActive(GeneratingScreen_MakeInstance());
+}
+
 static void GenLevelScreen_Gen(void* screen, bool vanilla) {
 	struct GenLevelScreen* s = screen;
 	int width  = GenLevelScreen_GetInt(s, 0);
@@ -1031,11 +1040,8 @@ static void GenLevelScreen_Gen(void* screen, bool vanilla) {
 	} else if (!width || !height || !length) {
 		Chat_AddRaw("&cOne of the map dimensions is invalid.");
 	} else {
-		Gen_SetDimensions(width, height, length); 
 		Gen_Vanilla = vanilla; Gen_Seed = seed;
-
-		Gui_FreeActive();
-		Gui_SetActive(GeneratingScreen_MakeInstance());
+		GenLevelScreen_Begin(width, height, length);
 	}
 }
 
@@ -1158,11 +1164,10 @@ struct Screen* GenLevelScreen_MakeInstance(void) {
 static struct ClassicGenScreen ClassicGenScreen_Instance;
 static void ClassicGenScreen_Gen(int size) {
 	RNGState rnd; Random_InitFromCurrentTime(&rnd);
-	Gen_SetDimensions(size, 64, size); Gen_Vanilla = true;
-	Gen_Seed = Random_Next(&rnd, Int32_MaxValue);
+	Gen_Vanilla = true;
+	Gen_Seed    = Random_Next(&rnd, Int32_MaxValue);
 
-	Gui_FreeActive();
-	Gui_SetActive(GeneratingScreen_MakeInstance());
+	GenLevelScreen_Begin(size, 64, size);
 }
 
 static void ClassicGenScreen_Small(void* a, void* b)  { ClassicGenScreen_Gen(128); }

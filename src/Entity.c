@@ -62,8 +62,8 @@ void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, fl
 *#########################################################################################################################*/
 static PackedCol Entity_GetCol(struct Entity* e) {
 	Vector3 eyePos = Entity_GetEyePosition(e);
-	Vector3I P; Vector3I_Floor(&P, &eyePos);
-	return World_IsValidPos_3I(P) ? Lighting_Col(P.X, P.Y, P.Z) : Env_SunCol;
+	Vector3I pos; Vector3I_Floor(&pos, &eyePos);
+	return World_Contains(pos.X, pos.Y, pos.Z) ? Lighting_Col(pos.X, pos.Y, pos.Z) : Env_SunCol;
 }
 
 void Entity_Init(struct Entity* e) {
@@ -958,7 +958,7 @@ static void LocalPlayer_DoRespawn(void) {
 
 	/* Spawn player at highest solid position to match vanilla Minecraft classic */
 	/* Only when player can noclip, since this can let you 'clip' to above solid blocks */
-	if (p->Hacks.CanNoclip && World_IsValidPos_3I(pos)) {
+	if (p->Hacks.CanNoclip && World_Contains(pos.X, pos.Y, pos.Z)) {
 		AABB_Make(&bb, &spawn, &p->Base.Size);
 		for (y = pos.Y; y <= World.Height; y++) {
 			spawnY = Respawn_HighestSolidY(&bb);

@@ -4,26 +4,20 @@
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Platform.h"
+#include "World.h"
 
 volatile float Gen_CurrentProgress;
 volatile const char* Gen_CurrentState;
 volatile bool Gen_Done;
-int Gen_Width, Gen_Height, Gen_Length, Gen_Seed;
+int Gen_Seed;
 bool Gen_Vanilla;
 BlockRaw* Gen_Blocks;
 
-static int Gen_MaxX, Gen_MaxY, Gen_MaxZ, Gen_Volume, Gen_OneY;
-#define Gen_Pack(x, y, z) (((y) * Gen_Length + (z)) * Gen_Width + (x))
-
 static void Gen_Init(void) {
-	Gen_MaxX = Gen_Width - 1; Gen_MaxY = Gen_Height - 1; Gen_MaxZ = Gen_Length - 1;
-	Gen_Volume = Gen_Width * Gen_Length * Gen_Height;
-	Gen_OneY   = Gen_Width * Gen_Length;
-
 	Gen_CurrentProgress = 0.0f;
 	Gen_CurrentState    = "";
 
-	Gen_Blocks = Mem_Alloc(Gen_Volume, 1, "map blocks for gen");
+	Gen_Blocks = Mem_Alloc(World.Volume, 1, "map blocks for gen");
 	Gen_Done   = false;
 }
 
@@ -32,7 +26,7 @@ static void Gen_Init(void) {
 *-----------------------------------------------------Flatgrass gen-------------------------------------------------------*
 *#########################################################################################################################*/
 static void FlatgrassGen_MapSet(int yBeg, int yEnd, BlockRaw block) {
-	uint32_t oneY = (uint32_t)Gen_OneY;
+	uint32_t oneY = (uint32_t)World.OneY;
 	BlockRaw* ptr = Gen_Blocks;
 	int y, yHeight;
 
@@ -50,13 +44,13 @@ void FlatgrassGen_Generate(void) {
 	Gen_Init();
 
 	Gen_CurrentState = "Setting air blocks";
-	FlatgrassGen_MapSet(Gen_Height / 2, Gen_MaxY, BLOCK_AIR);
+	FlatgrassGen_MapSet(World.Height / 2, World.MaxY, BLOCK_AIR);
 
 	Gen_CurrentState = "Setting dirt blocks";
-	FlatgrassGen_MapSet(0, Gen_Height / 2 - 2, BLOCK_DIRT);
+	FlatgrassGen_MapSet(0, World.Height / 2 - 2, BLOCK_DIRT);
 
 	Gen_CurrentState = "Setting grass blocks";
-	FlatgrassGen_MapSet(Gen_Height / 2 - 1, Gen_Height / 2 - 1, BLOCK_GRASS);
+	FlatgrassGen_MapSet(World.Height / 2 - 1, World.Height / 2 - 1, BLOCK_GRASS);
 
 	Gen_Done = true;
 }
@@ -71,11 +65,11 @@ static RNGState rnd;
 
 static void NotchyGen_FillOblateSpheroid(int x, int y, int z, float radius, BlockRaw block) {
 	int xBeg = Math_Floor(max(x - radius, 0));
-	int xEnd = Math_Floor(min(x + radius, Gen_MaxX));
+	int xEnd = Math_Floor(min(x + radius, World.MaxX));
 	int yBeg = Math_Floor(max(y - radius, 0));
-	int yEnd = Math_Floor(min(y + radius, Gen_MaxY));
+	int yEnd = Math_Floor(min(y + radius, World.MaxY));
 	int zBeg = Math_Floor(max(z - radius, 0));
-	int zEnd = Math_Floor(min(z + radius, Gen_MaxZ));
+	int zEnd = Math_Floor(min(z + radius, World.MaxZ));
 
 	float radiusSq = radius * radius;
 	int index;
@@ -86,7 +80,7 @@ static void NotchyGen_FillOblateSpheroid(int x, int y, int z, float radius, Bloc
 			for (xx = xBeg; xx <= xEnd; xx++) { dx = xx - x;
 
 				if ((dx * dx + 2 * dy * dy + dz * dz) < radiusSq) {
-					index = Gen_Pack(xx, yy, zz);
+					index = World_Pack(xx, yy, zz);
 					if (Gen_Blocks[index] == BLOCK_STONE)
 						Gen_Blocks[index] = block;
 				}
@@ -117,15 +111,15 @@ static void NotchyGen_FloodFill(int startIndex, BlockRaw block) {
 		if (Gen_Blocks[index] != BLOCK_AIR) continue;
 		Gen_Blocks[index] = block;
 
-		x = index  % Gen_Width;
-		y = index  / Gen_OneY;
-		z = (index / Gen_Width) % Gen_Length;
+		x = index  % World.Width;
+		y = index  / World.OneY;
+		z = (index / World.Width) % World.Length;
 
 		if (x > 0)        { Stack_Push(index - 1); }
-		if (x < Gen_MaxX) { Stack_Push(index + 1); }
-		if (z > 0)        { Stack_Push(index - Gen_Width); }
-		if (z < Gen_MaxZ) { Stack_Push(index + Gen_Width); }
-		if (y > 0)        { Stack_Push(index - Gen_OneY); }
+		if (x < World.MaxX) { Stack_Push(index + 1); }
+		if (z > 0)        { Stack_Push(index - World.Width); }
+		if (z < World.MaxZ) { Stack_Push(index + World.Width); }
+		if (y > 0)        { Stack_Push(index - World.OneY); }
 	}
 }
 
@@ -142,10 +136,10 @@ static void NotchyGen_CreateHeightmap(void) {
 	OctaveNoise_Init(&n3, &rnd, 6);
 
 	Gen_CurrentState = "Building heightmap";
-	for (z = 0; z < Gen_Length; z++) {
-		Gen_CurrentProgress = (float)z / Gen_Length;
+	for (z = 0; z < World.Length; z++) {
+		Gen_CurrentProgress = (float)z / World.Length;
 
-		for (x = 0; x < Gen_Width; x++) {
+		for (x = 0; x < World.Width; x++) {
 			hLow   = CombinedNoise_Calc(&n1, x * 1.3f, z * 1.3f) / 6 - 4;
 			height = hLow;
 
@@ -165,7 +159,7 @@ static void NotchyGen_CreateHeightmap(void) {
 }
 
 static int NotchyGen_CreateStrataFast(void) {
-	uint32_t oneY = (uint32_t)Gen_OneY;
+	uint32_t oneY = (uint32_t)World.OneY;
 	int stoneHeight, airHeight;
 	int y;
 
@@ -179,14 +173,14 @@ static int NotchyGen_CreateStrataFast(void) {
 	/* We can quickly fill in bottom solid layers */
 	for (y = 1; y <= stoneHeight; y++) {
 		Mem_Set(Gen_Blocks + y * oneY, BLOCK_STONE, oneY);
-		Gen_CurrentProgress = (float)y / Gen_Height;
+		Gen_CurrentProgress = (float)y / World.Height;
 	}
 
 	/* Fill in rest of map wih air */
 	airHeight = max(0, stoneHeight) + 1;
-	for (y = airHeight; y < Gen_Height; y++) {
+	for (y = airHeight; y < World.Height; y++) {
 		Mem_Set(Gen_Blocks + y * oneY, BLOCK_AIR, oneY);
-		Gen_CurrentProgress = (float)y / Gen_Height;
+		Gen_CurrentProgress = (float)y / World.Height;
 	}
 
 	/* if stoneHeight is <= 0, then no layer is fully stone */
@@ -196,7 +190,7 @@ static int NotchyGen_CreateStrataFast(void) {
 static void NotchyGen_CreateStrata(void) {
 	int dirtThickness, dirtHeight;
 	int minStoneY, stoneHeight;
-	int hIndex = 0, maxY = Gen_MaxY, index = 0;
+	int hIndex = 0, maxY = World.MaxY, index = 0;
 	int x, y, z;
 	struct OctaveNoise n;
 
@@ -205,10 +199,10 @@ static void NotchyGen_CreateStrata(void) {
 	OctaveNoise_Init(&n, &rnd, 8);
 
 	Gen_CurrentState = "Creating strata";
-	for (z = 0; z < Gen_Length; z++) {
-		Gen_CurrentProgress = (float)z / Gen_Length;
+	for (z = 0; z < World.Length; z++) {
+		Gen_CurrentProgress = (float)z / World.Length;
 
-		for (x = 0; x < Gen_Width; x++) {
+		for (x = 0; x < World.Width; x++) {
 			dirtThickness = (int)(OctaveNoise_Calc(&n, (float)x, (float)z) / 24 - 4);
 			dirtHeight    = Heightmap[hIndex++];
 			stoneHeight   = dirtHeight + dirtThickness;
@@ -216,15 +210,15 @@ static void NotchyGen_CreateStrata(void) {
 			stoneHeight = min(stoneHeight, maxY);
 			dirtHeight  = min(dirtHeight,  maxY);
 
-			index = Gen_Pack(x, minStoneY, z);
+			index = World_Pack(x, minStoneY, z);
 			for (y = minStoneY; y <= stoneHeight; y++) {
-				Gen_Blocks[index] = BLOCK_STONE; index += Gen_OneY;
+				Gen_Blocks[index] = BLOCK_STONE; index += World.OneY;
 			}
 
 			stoneHeight = max(stoneHeight, 0);
-			index = Gen_Pack(x, (stoneHeight + 1), z);
+			index = World_Pack(x, (stoneHeight + 1), z);
 			for (y = stoneHeight + 1; y <= dirtHeight; y++) {
-				Gen_Blocks[index] = BLOCK_DIRT; index += Gen_OneY;
+				Gen_Blocks[index] = BLOCK_DIRT; index += World.OneY;
 			}
 		}
 	}
@@ -238,14 +232,14 @@ static void NotchyGen_CarveCaves(void) {
 	int cenX, cenY, cenZ;
 	int i, j;
 
-	cavesCount       = Gen_Volume / 8192;
+	cavesCount       = World.Volume / 8192;
 	Gen_CurrentState = "Carving caves";
 	for (i = 0; i < cavesCount; i++) {
 		Gen_CurrentProgress = (float)i / cavesCount;
 
-		caveX = (float)Random_Next(&rnd, Gen_Width);
-		caveY = (float)Random_Next(&rnd, Gen_Height);
-		caveZ = (float)Random_Next(&rnd, Gen_Length);
+		caveX = (float)Random_Next(&rnd, World.Width);
+		caveY = (float)Random_Next(&rnd, World.Height);
+		caveZ = (float)Random_Next(&rnd, World.Length);
 
 		caveLen = (int)(Random_Float(&rnd) * Random_Float(&rnd) * 200.0f);
 		theta   = Random_Float(&rnd) * 2.0f * MATH_PI; deltaTheta = 0.0f;
@@ -267,7 +261,7 @@ static void NotchyGen_CarveCaves(void) {
 			cenY = (int)(caveY + (Random_Next(&rnd, 4) - 2) * 0.2f);
 			cenZ = (int)(caveZ + (Random_Next(&rnd, 4) - 2) * 0.2f);
 
-			radius = (Gen_Height - cenY) / (float)Gen_Height;
+			radius = (World.Height - cenY) / (float)World.Height;
 			radius = 1.2f + (radius * 3.5f + 1.0f) * caveRadius;
 			radius = radius * Math_SinF(j * MATH_PI / caveLen);
 			NotchyGen_FillOblateSpheroid(cenX, cenY, cenZ, radius, BLOCK_AIR);
@@ -282,14 +276,14 @@ static void NotchyGen_CarveOreVeins(float abundance, const char* state, BlockRaw
 	float radius;
 	int i, j;
 
-	numVeins         = (int)(Gen_Volume * abundance / 16384);
+	numVeins         = (int)(World.Volume * abundance / 16384);
 	Gen_CurrentState = state;
 	for (i = 0; i < numVeins; i++) {
 		Gen_CurrentProgress = (float)i / numVeins;
 
-		veinX = (float)Random_Next(&rnd, Gen_Width);
-		veinY = (float)Random_Next(&rnd, Gen_Height);
-		veinZ = (float)Random_Next(&rnd, Gen_Length);
+		veinX = (float)Random_Next(&rnd, World.Width);
+		veinY = (float)Random_Next(&rnd, World.Height);
+		veinZ = (float)Random_Next(&rnd, World.Length);
 
 		veinLen = (int)(Random_Float(&rnd) * Random_Float(&rnd) * 75 * abundance);
 		theta = Random_Float(&rnd) * 2.0f * MATH_PI; deltaTheta = 0.0f;
@@ -317,24 +311,24 @@ static void NotchyGen_FloodFillWaterBorders(void) {
 	int x, z;
 	Gen_CurrentState = "Flooding edge water";
 
-	index1 = Gen_Pack(0, waterY, 0);
-	index2 = Gen_Pack(0, waterY, Gen_Length - 1);
-	for (x = 0; x < Gen_Width; x++) {
-		Gen_CurrentProgress = 0.0f + ((float)x / Gen_Width) * 0.5f;
+	index1 = World_Pack(0, waterY, 0);
+	index2 = World_Pack(0, waterY, World.Length - 1);
+	for (x = 0; x < World.Width; x++) {
+		Gen_CurrentProgress = 0.0f + ((float)x / World.Width) * 0.5f;
 
 		NotchyGen_FloodFill(index1, BLOCK_WATER);
 		NotchyGen_FloodFill(index2, BLOCK_WATER);
 		index1++; index2++;
 	}
 
-	index1 = Gen_Pack(0,             waterY, 0);
-	index2 = Gen_Pack(Gen_Width - 1, waterY, 0);
-	for (z = 0; z < Gen_Length; z++) {
-		Gen_CurrentProgress = 0.5f + ((float)z / Gen_Length) * 0.5f;
+	index1 = World_Pack(0,             waterY, 0);
+	index2 = World_Pack(World.Width - 1, waterY, 0);
+	for (z = 0; z < World.Length; z++) {
+		Gen_CurrentProgress = 0.5f + ((float)z / World.Length) * 0.5f;
 
 		NotchyGen_FloodFill(index1, BLOCK_WATER);
 		NotchyGen_FloodFill(index2, BLOCK_WATER);
-		index1 += Gen_Width; index2 += Gen_Width;
+		index1 += World.Width; index2 += World.Width;
 	}
 }
 
@@ -342,15 +336,15 @@ static void NotchyGen_FloodFillWater(void) {
 	int numSources;
 	int i, x, y, z;
 
-	numSources       = Gen_Width * Gen_Length / 800;
+	numSources       = World.Width * World.Length / 800;
 	Gen_CurrentState = "Flooding water";
 	for (i = 0; i < numSources; i++) {
 		Gen_CurrentProgress = (float)i / numSources;
 
-		x = Random_Next(&rnd, Gen_Width);
-		z = Random_Next(&rnd, Gen_Length);
+		x = Random_Next(&rnd, World.Width);
+		z = Random_Next(&rnd, World.Length);
 		y = waterLevel - Random_Range(&rnd, 1, 3);
-		NotchyGen_FloodFill(Gen_Pack(x, y, z), BLOCK_WATER);
+		NotchyGen_FloodFill(World_Pack(x, y, z), BLOCK_WATER);
 	}
 }
 
@@ -358,15 +352,15 @@ static void NotchyGen_FloodFillLava(void) {
 	int numSources;
 	int i, x, y, z;
 
-	numSources       = Gen_Width * Gen_Length / 20000;
+	numSources       = World.Width * World.Length / 20000;
 	Gen_CurrentState = "Flooding lava";
 	for (i = 0; i < numSources; i++) {
 		Gen_CurrentProgress = (float)i / numSources;
 
-		x = Random_Next(&rnd, Gen_Width);
-		z = Random_Next(&rnd, Gen_Length);
+		x = Random_Next(&rnd, World.Width);
+		z = Random_Next(&rnd, World.Length);
 		y = (int)((waterLevel - 3) * Random_Float(&rnd) * Random_Float(&rnd));
-		NotchyGen_FloodFill(Gen_Pack(x, y, z), BLOCK_LAVA);
+		NotchyGen_FloodFill(World_Pack(x, y, z), BLOCK_LAVA);
 	}
 }
 
@@ -380,15 +374,15 @@ static void NotchyGen_CreateSurfaceLayer(void) {
 	OctaveNoise_Init(&n2, &rnd, 8);
 
 	Gen_CurrentState = "Creating surface";
-	for (z = 0; z < Gen_Length; z++) {
-		Gen_CurrentProgress = (float)z / Gen_Length;
+	for (z = 0; z < World.Length; z++) {
+		Gen_CurrentProgress = (float)z / World.Length;
 
-		for (x = 0; x < Gen_Width; x++) {
+		for (x = 0; x < World.Width; x++) {
 			y = Heightmap[hIndex++];
-			if (y < 0 || y >= Gen_Height) continue;
+			if (y < 0 || y >= World.Height) continue;
 
-			index = Gen_Pack(x, y, z);
-			above = y >= Gen_MaxY ? BLOCK_AIR : Gen_Blocks[index + Gen_OneY];
+			index = World_Pack(x, y, z);
+			above = y >= World.MaxY ? BLOCK_AIR : Gen_Blocks[index + World.OneY];
 
 			/* TODO: update heightmap */
 			if (above == BLOCK_WATER && (OctaveNoise_Calc(&n2, (float)x, (float)z) > 12)) {
@@ -407,14 +401,14 @@ static void NotchyGen_PlantFlowers(void) {
 	int flowerX, flowerY, flowerZ;
 	int i, j, k, index;
 
-	numPatches       = Gen_Width * Gen_Length / 3000;
+	numPatches       = World.Width * World.Length / 3000;
 	Gen_CurrentState = "Planting flowers";
 	for (i = 0; i < numPatches; i++) {
 		Gen_CurrentProgress = (float)i / numPatches;
 
 		block  = (BlockRaw)(BLOCK_DANDELION + Random_Next(&rnd, 2));
-		patchX = Random_Next(&rnd, Gen_Width);
-		patchZ = Random_Next(&rnd, Gen_Length);
+		patchX = Random_Next(&rnd, World.Width);
+		patchZ = Random_Next(&rnd, World.Length);
 
 		for (j = 0; j < 10; j++) {
 			flowerX = patchX; flowerZ = patchZ;
@@ -422,12 +416,12 @@ static void NotchyGen_PlantFlowers(void) {
 				flowerX += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 				flowerZ += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 
-				if (flowerX < 0 || flowerZ < 0 || flowerX >= Gen_Width || flowerZ >= Gen_Length) continue;
-				flowerY = Heightmap[flowerZ * Gen_Width + flowerX] + 1;
-				if (flowerY <= 0 || flowerY >= Gen_Height) continue;
+				if (!World_ContainsXZ(flowerX, flowerZ)) continue;
+				flowerY = Heightmap[flowerZ * World.Width + flowerX] + 1;
+				if (flowerY <= 0 || flowerY >= World.Height) continue;
 
-				index = Gen_Pack(flowerX, flowerY, flowerZ);
-				if (Gen_Blocks[index] == BLOCK_AIR && Gen_Blocks[index - Gen_OneY] == BLOCK_GRASS)
+				index = World_Pack(flowerX, flowerY, flowerZ);
+				if (Gen_Blocks[index] == BLOCK_AIR && Gen_Blocks[index - World.OneY] == BLOCK_GRASS)
 					Gen_Blocks[index] = block;
 			}
 		}
@@ -441,15 +435,15 @@ static void NotchyGen_PlantMushrooms(void) {
 	int mushX,  mushY,  mushZ;
 	int i, j, k, index;
 
-	numPatches       = Gen_Volume / 2000;
+	numPatches       = World.Volume / 2000;
 	Gen_CurrentState = "Planting mushrooms";
 	for (i = 0; i < numPatches; i++) {
 		Gen_CurrentProgress = (float)i / numPatches;
 
 		block  = (BlockRaw)(BLOCK_BROWN_SHROOM + Random_Next(&rnd, 2));
-		patchX = Random_Next(&rnd, Gen_Width);
-		patchY = Random_Next(&rnd, Gen_Height);
-		patchZ = Random_Next(&rnd, Gen_Length);
+		patchX = Random_Next(&rnd, World.Width);
+		patchY = Random_Next(&rnd, World.Height);
+		patchZ = Random_Next(&rnd, World.Length);
 
 		for (j = 0; j < 20; j++) {
 			mushX = patchX; mushY = patchY; mushZ = patchZ;
@@ -457,12 +451,12 @@ static void NotchyGen_PlantMushrooms(void) {
 				mushX += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 				mushZ += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 
-				if (mushX < 0 || mushZ < 0 || mushX >= Gen_Width || mushZ >= Gen_Length) continue;
-				groundHeight = Heightmap[mushZ * Gen_Width + mushX];
+				if (!World_ContainsXZ(mushX, mushZ)) continue;
+				groundHeight = Heightmap[mushZ * World.Width + mushX];
 				if (mushY >= (groundHeight - 1)) continue;
 
-				index = Gen_Pack(mushX, mushY, mushZ);
-				if (Gen_Blocks[index] == BLOCK_AIR && Gen_Blocks[index - Gen_OneY] == BLOCK_STONE)
+				index = World_Pack(mushX, mushY, mushZ);
+				if (Gen_Blocks[index] == BLOCK_AIR && Gen_Blocks[index - World.OneY] == BLOCK_STONE)
 					Gen_Blocks[index] = block;
 			}
 		}
@@ -480,17 +474,16 @@ static void NotchyGen_PlantTrees(void) {
 	Vector3I coords[TREE_MAX_COUNT];
 	BlockRaw blocks[TREE_MAX_COUNT];
 
-	Tree_Width  = Gen_Width; Tree_Height = Gen_Height; Tree_Length = Gen_Length;
 	Tree_Blocks = Gen_Blocks;
 	Tree_Rnd    = &rnd;
 
-	numPatches       = Gen_Width * Gen_Length / 4000;
+	numPatches       = World.Width * World.Length / 4000;
 	Gen_CurrentState = "Planting trees";
 	for (i = 0; i < numPatches; i++) {
 		Gen_CurrentProgress = (float)i / numPatches;
 
-		patchX = Random_Next(&rnd, Gen_Width);
-		patchZ = Random_Next(&rnd, Gen_Length);
+		patchX = Random_Next(&rnd, World.Width);
+		patchZ = Random_Next(&rnd, World.Length);
 
 		for (j = 0; j < 20; j++) {
 			treeX = patchX; treeZ = patchZ;
@@ -498,21 +491,19 @@ static void NotchyGen_PlantTrees(void) {
 				treeX += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 				treeZ += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 
-				if (treeX < 0 || treeZ < 0 || treeX >= Gen_Width ||
-					treeZ >= Gen_Length || Random_Float(&rnd) >= 0.25) continue;
-
-				treeY = Heightmap[treeZ * Gen_Width + treeX] + 1;
-				if (treeY >= Gen_Height) continue;
+				if (!World_ContainsXZ(treeX, treeZ) || Random_Float(&rnd) >= 0.25) continue;
+				treeY = Heightmap[treeZ * World.Width + treeX] + 1;
+				if (treeY >= World.Height) continue;
 				treeHeight = 5 + Random_Next(&rnd, 3);
 
-				index = Gen_Pack(treeX, treeY, treeZ);
-				under = treeY > 0 ? Gen_Blocks[index - Gen_OneY] : BLOCK_AIR;
+				index = World_Pack(treeX, treeY, treeZ);
+				under = treeY > 0 ? Gen_Blocks[index - World.OneY] : BLOCK_AIR;
 
 				if (under == BLOCK_GRASS && TreeGen_CanGrow(treeX, treeY, treeZ, treeHeight)) {
 					count = TreeGen_Grow(treeX, treeY, treeZ, treeHeight, coords, blocks);
 
 					for (m = 0; m < count; m++) {
-						index = Gen_Pack(coords[m].X, coords[m].Y, coords[m].Z);
+						index = World_Pack(coords[m].X, coords[m].Y, coords[m].Z);
 						Gen_Blocks[index] = blocks[m];
 					}
 				}
@@ -523,11 +514,11 @@ static void NotchyGen_PlantTrees(void) {
 
 void NotchyGen_Generate(void) {
 	Gen_Init();
-	Heightmap = Mem_Alloc(Gen_Width * Gen_Length, 2, "gen heightmap");
+	Heightmap = Mem_Alloc(World.Width * World.Length, 2, "gen heightmap");
 
 	Random_Init(&rnd, Gen_Seed);
-	waterLevel = Gen_Height / 2;	
-	minHeight = Gen_Height;
+	waterLevel = World.Height / 2;	
+	minHeight  = World.Height;
 
 	NotchyGen_CreateHeightmap();
 	NotchyGen_CreateStrata();
@@ -645,10 +636,8 @@ float CombinedNoise_Calc(struct CombinedNoise* n, float x, float y) {
 /*########################################################################################################################*
 *----------------------------------------------------Tree generation------------------------------------------------------*
 *#########################################################################################################################*/
-int Tree_Width, Tree_Height, Tree_Length;
 BlockRaw* Tree_Blocks;
 RNGState* Tree_Rnd;
-#define Tree_Pack(x, y, z) (((y) * Tree_Length + (z)) * Tree_Width + (x))
 
 bool TreeGen_CanGrow(int treeX, int treeY, int treeZ, int treeHeight) {
 	int baseHeight = treeHeight - 4;
@@ -659,10 +648,9 @@ bool TreeGen_CanGrow(int treeX, int treeY, int treeZ, int treeHeight) {
 	for (y = treeY; y < treeY + baseHeight; y++) {
 		for (z = treeZ - 1; z <= treeZ + 1; z++) {
 			for (x = treeX - 1; x <= treeX + 1; x++) {
-				if (x < 0 || y < 0 || z < 0 || x >= Tree_Width || y >= Tree_Height || z >= Tree_Length)
-					return false;
 
-				index = Tree_Pack(x, y, z);
+				if (!World_Contains(x, y, z)) return false;
+				index = World_Pack(x, y, z);
 				if (Tree_Blocks[index] != BLOCK_AIR) return false;
 			}
 		}
@@ -672,10 +660,9 @@ bool TreeGen_CanGrow(int treeX, int treeY, int treeZ, int treeHeight) {
 	for (y = treeY + baseHeight; y < treeY + treeHeight; y++) {
 		for (z = treeZ - 2; z <= treeZ + 2; z++) {
 			for (x = treeX - 2; x <= treeX + 2; x++) {
-				if (x < 0 || y < 0 || z < 0 || x >= Tree_Width || y >= Tree_Height || z >= Tree_Length)
-					return false;
 
-				index = Tree_Pack(x, y, z);
+				if (!World_Contains(x, y, z)) return false;
+				index = World_Pack(x, y, z);
 				if (Tree_Blocks[index] != BLOCK_AIR) return false;
 			}
 		}

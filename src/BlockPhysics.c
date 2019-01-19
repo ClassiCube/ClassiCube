@@ -110,7 +110,6 @@ static void Physics_OnNewMapLoaded(void* obj) {
 	physics_maxWaterY = World.MaxY - 2;
 	physics_maxWaterZ = World.MaxZ - 2;
 
-	Tree_Width = World.Width; Tree_Height = World.Height; Tree_Length = World.Length;
 	Tree_Blocks = World.Blocks;
 	Random_InitFromCurrentTime(&physics_rnd);
 	Tree_Rnd = &physics_rnd;
@@ -419,7 +418,7 @@ static void Physics_PlaceSponge(int index, BlockID block) {
 	for (yy = y - 2; yy <= y + 2; yy++) {
 		for (zz = z - 2; zz <= z + 2; zz++) {
 			for (xx = x - 2; xx <= x + 2; xx++) {
-				if (!World_IsValidPos(xx, yy, zz)) continue;
+				if (!World_Contains(xx, yy, zz)) continue;
 
 				block = World_GetBlock(xx, yy, zz);
 				if (block == BLOCK_WATER || block == BLOCK_STILL_WATER) {
@@ -438,7 +437,7 @@ static void Physics_DeleteSponge(int index, BlockID block) {
 		for (zz = z - 3; zz <= z + 3; zz++) {
 			for (xx = x - 3; xx <= x + 3; xx++) {
 				if (Math_AbsI(yy - y) == 3 || Math_AbsI(zz - z) == 3 || Math_AbsI(xx - x) == 3) {
-					if (!World_IsValidPos(xx, yy, zz)) continue;
+					if (!World_Contains(xx, yy, zz)) continue;
 
 					index = World_Pack(xx, yy, zz);
 					block = World.Blocks[index];
@@ -494,7 +493,7 @@ static void Physics_Explode(int x, int y, int z, int power) {
 				if (dx * dx + dy * dy + dz * dz > powerSquared) continue;
 
 				xx = x + dx; yy = y + dy; zz = z + dz;
-				if (!World_IsValidPos(xx, yy, zz)) continue;
+				if (!World_Contains(xx, yy, zz)) continue;
 				index = World_Pack(xx, yy, zz);
 
 				block = World.Blocks[index];

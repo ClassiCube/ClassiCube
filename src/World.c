@@ -37,35 +37,24 @@ static void World_NewUuid(void) {
 void World_Reset(void) {
 #ifdef EXTENDED_BLOCKS
 	if (World.Blocks != World.Blocks2) Mem_Free(World.Blocks2);
-#endif
-	Mem_Free(World.Blocks);
-	World.Width = 0; World.Height = 0; World.Length = 0;
-	World.MaxX = 0;  World.MaxY = 0;   World.MaxZ = 0;
-
-#ifdef EXTENDED_BLOCKS
 	World.Blocks2 = NULL;
 #endif
-	World.Blocks = NULL; World.BlocksSize = 0;
+	Mem_Free(World.Blocks);
+	World.Blocks = NULL;
+
+	World_SetDimensions(0, 0, 0);
 	Env_Reset();
 	World_NewUuid();
 }
 
-void World_SetNewMap(BlockRaw* blocks, int blocksSize, int width, int height, int length) {
-	World.Width = width; World.Height = height; World.Length = length;
-	World.Blocks = blocks; World.BlocksSize = blocksSize;
-	if (!World.BlocksSize) World.Blocks = NULL;
+void World_SetNewMap(BlockRaw* blocks, int width, int height, int length) {
+	World_SetDimensions(width, height, length);
+	World.Blocks = blocks;
 
-	if (blocksSize != (width * height * length)) {
-		Logger_Abort("Blocks array size does not match volume of map");
-	}
+	if (!World.Volume) World.Blocks = NULL;
 #ifdef EXTENDED_BLOCKS
 	World.Blocks2 = World.Blocks;
 #endif
-
-	World.OneY = width * length;
-	World.MaxX = width  - 1;
-	World.MaxY = height - 1;
-	World.MaxZ = length - 1;
 
 	if (Env_EdgeHeight == -1) {
 		Env_EdgeHeight = height / 2;
@@ -73,6 +62,16 @@ void World_SetNewMap(BlockRaw* blocks, int blocksSize, int width, int height, in
 	if (Env_CloudsHeight == -1) {
 		Env_CloudsHeight = height + 2;
 	}
+}
+
+CC_NOINLINE void World_SetDimensions(int width, int height, int length) {
+	World.Width  = width; World.Height = height; World.Length = length;
+	World.Volume = width * height * length;
+
+	World.OneY = width * length;
+	World.MaxX = width  - 1;
+	World.MaxY = height - 1;
+	World.MaxZ = length - 1;
 }
 
 
@@ -84,7 +83,7 @@ void World_SetBlock(int x, int y, int z, BlockID block) {
 	/* defer allocation of second map array if possible */
 	if (World.Blocks == World.Blocks2) {
 		if (block < 256) return;
-		World.Blocks2 = Mem_AllocCleared(World.BlocksSize, 1, "blocks array upper");
+		World.Blocks2 = Mem_AllocCleared(World.Volume, 1, "blocks array upper");
 		Block_SetUsedCount(768);
 	}
 	World.Blocks2[i] = (BlockRaw)(block >> 8);
@@ -96,24 +95,14 @@ void World_SetBlock(int x, int y, int z, BlockID block) {
 #endif
 
 BlockID World_GetPhysicsBlock(int x, int y, int z) {
-	if (x < 0 || x >= World.Width || z < 0 || z >= World.Length || y < 0) return BLOCK_BEDROCK;
+	if (y < 0 || !World_ContainsXZ(x, z)) return BLOCK_BEDROCK;
 	if (y >= World.Height) return BLOCK_AIR;
 
 	return World_GetBlock(x, y, z);
 }
 
 BlockID World_SafeGetBlock_3I(Vector3I p) {
-	return World_IsValidPos(p.X, p.Y, p.Z) ? World_GetBlock(p.X, p.Y, p.Z) : BLOCK_AIR;
-}
-
-bool World_IsValidPos(int x, int y, int z) {
-	return x >= 0 && y >= 0 && z >= 0 && 
-		x < World.Width && y < World.Height && z < World.Length;
-}
-
-bool World_IsValidPos_3I(Vector3I p) {
-	return p.X >= 0 && p.Y >= 0 && p.Z >= 0 &&
-		p.X < World.Width && p.Y < World.Height && p.Z < World.Length;
+	return World_Contains(p.X, p.Y, p.Z) ? World_GetBlock(p.X, p.Y, p.Z) : BLOCK_AIR;
 }
 
 
