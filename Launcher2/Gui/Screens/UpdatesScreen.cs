@@ -139,7 +139,7 @@ namespace Launcher.Gui.Screens {
 			Build build   = release ? stable : dev;
 			
 			if (last == DateTime.MinValue || fetchTask != null) return;
-			if (Client.CClient && fetchCClientTask != null)     return;
+			if (fetchCClientTask != null)                       return;
 			if (build.DirectXSize < 50000 || build.OpenGLSize < 50000) return;
 			
 			bool gameOpen = CheckClientInstances();
@@ -152,11 +152,9 @@ namespace Launcher.Gui.Screens {
 			fetchTask = new UpdateDownloadTask(path);
 			fetchTask.RunAsync(game);
 			
-			if (Client.CClient) {
-				path = GetCExe(dx);
-				fetchCClientTask = new UpdateCClientTask(path);
-				fetchCClientTask.RunAsync(game);
-			}
+			path = GetCExe(dx);
+			fetchCClientTask = new UpdateCClientTask(path);
+			fetchCClientTask.RunAsync(game);
 			
 			if (release && dx)   buildName = "&eFetching latest release (Direct3D9)";
 			if (release && !dx)  buildName = "&eFetching latest release (OpenGL)";
@@ -209,13 +207,8 @@ namespace Launcher.Gui.Screens {
 				UpdateStatus();
 			} else {
 				csZip = fetchTask.ZipFile;
-				
-				if (!Client.CClient) {
-					ApplyUpdate();
-				} else {
-					buildName = "&eFetching latest C client";
-					UpdateStatus();
-				}
+				buildName = "&eFetching latest C client";
+				UpdateStatus();
 			}
 			fetchTask = null;
 		}

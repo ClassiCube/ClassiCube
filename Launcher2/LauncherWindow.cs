@@ -22,7 +22,7 @@ namespace Launcher {
 	public sealed partial class LauncherWindow {
 		
 		public INativeWindow Window;
-		public IDrawer2D Drawer;	
+		public IDrawer2D Drawer;
 		public Screen Screen;
 		
 		/// <summary> Whether the client drawing area needs to be redrawn/presented to the screen. </summary>
@@ -33,7 +33,7 @@ namespace Launcher {
 		public string Username;
 		public AsyncDownloader Downloader;
 		
-		public int Width, Height;	
+		public int Width, Height;
 		public Bitmap Framebuffer;
 		
 		/// <summary> Whether at the next tick, the launcher window should proceed to stop displaying frames and subsequently exit. </summary>
@@ -86,6 +86,11 @@ namespace Launcher {
 			}
 			
 			IDrawer2D.Cols['g'] = new PackedCol(125, 125, 125);
+			
+			if (Configuration.RunningOnWindows && Platform.FileExists(Client.GetExeName())) {
+				ErrorHandler.ShowDialog("Deprecated Client",
+				                        "ClassicalSharp is deprecated - use " + Client.GetExeName() + " instead");
+			}
 		}
 		
 		void LoadSettings() {
@@ -115,7 +120,7 @@ namespace Launcher {
 		
 		void RedrawAll() {
 			if (Program.ShowingErrorDialog) return;
-			RedrawBackground();			
+			RedrawBackground();
 			if (Screen != null) Screen.Resize();
 			fullRedraw = true;
 		}
