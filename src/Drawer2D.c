@@ -323,7 +323,6 @@ bool Drawer2D_ValidColCodeAt(const String* text, int i) {
 	if (i >= text->length) return false;
 	return Drawer2D_GetCol(text->buffer[i]).A > 0;
 }
-bool Drawer2D_ValidColCode(char c) { return Drawer2D_GetCol(c).A > 0; }
 
 bool Drawer2D_IsEmptyText(const String* text) {
 	int i;
