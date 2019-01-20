@@ -630,9 +630,7 @@ void LSlider_Init(struct LSlider* w, int width, int height) {
 *#########################################################################################################################*/
 static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
 	Bitmap* bmp = Flags_Get(&row->Country);
-	/* TODO: Not move down so much, need to adjust text */
-	/* y + 6 */
-	if (bmp) Drawer2D_BmpCopy(&Launcher_Framebuffer, x + 2, y + 3, bmp);
+	if (bmp) Drawer2D_BmpCopy(&Launcher_Framebuffer, x + 2, y + 6, bmp);
 }
 
 static void NameColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
@@ -675,10 +673,10 @@ static int SoftwareColumn_Sort(const struct ServerInfo* a, const struct ServerIn
 
 static struct LTableColumn tableColumns[5] = {
 	{ "",          15, FlagColumn_Draw,     NULL,                false, false },
-	{ "Name",     325, NameColumn_Draw,     NameColumn_Sort,     true,  true  },
-	{ "Players",   70, PlayersColumn_Draw,  PlayersColumn_Sort,  true,  true  },
-	{ "Uptime",    70, UptimeColumn_Draw,   UptimeColumn_Sort,   true,  true  },
-	{ "Software", 140, SoftwareColumn_Draw, SoftwareColumn_Sort, false, true  }
+	{ "Name",     328, NameColumn_Draw,     NameColumn_Sort,     true,  true  },
+	{ "Players",   73, PlayersColumn_Draw,  PlayersColumn_Sort,  true,  true  },
+	{ "Uptime",    73, UptimeColumn_Draw,   UptimeColumn_Sort,   true,  true  },
+	{ "Software", 143, SoftwareColumn_Draw, SoftwareColumn_Sort, false, true  }
 };
 
 
@@ -727,8 +725,11 @@ static void LTable_SetSelectedTo(struct LTable* w, int index) {
 
 #define GRIDLINE_SIZE   2
 #define SCROLLBAR_WIDTH 10
-#define HDR_YPADDING 3
+#define HDR_YOFFSET 3
+#define HDR_YPADDING 5
+#define ROW_YOFFSET 3
 #define ROW_YPADDING 1
+#define CELL_XOFFSET 6
 #define CELL_XPADDING 5
 
 /* Draws background behind column headers */
@@ -825,7 +826,8 @@ static void LTable_DrawHeaders(struct LTable* w) {
 	for (i = 0; i < w->NumColumns; i++) {
 		args.Text = String_FromReadonly(w->Columns[i].Name);
 		Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
-								x + CELL_XPADDING, y + HDR_YPADDING, w->Columns[i].Width);
+								x + CELL_XOFFSET, y + HDR_YOFFSET, 
+								w->Columns[i].Width - CELL_XPADDING);
 
 		x += w->Columns[i].Width;
 		if (w->Columns[i].ColumnGridline) x += GRIDLINE_SIZE;
@@ -857,7 +859,8 @@ static void LTable_DrawRows(struct LTable* w) {
 
 			if (args.Text.length) {
 				Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
-										x + CELL_XPADDING, y + ROW_YPADDING, w->Columns[i].Width);
+										x + CELL_XOFFSET, y + ROW_YOFFSET, 
+										w->Columns[i].Width - CELL_XPADDING);
 			}
 
 			x += w->Columns[i].Width;
@@ -1022,8 +1025,8 @@ static void LTable_StopDragging(struct LTable* table) {
 
 void LTable_Reposition(struct LTable* w) {
 	int rowsHeight;
-	w->HdrHeight = Drawer2D_FontHeight(&w->HdrFont, true) + HDR_YPADDING * 2;
-	w->RowHeight = Drawer2D_FontHeight(&w->RowFont, true) + ROW_YPADDING * 2;
+	w->HdrHeight = Drawer2D_FontHeight(&w->HdrFont, true) + HDR_YPADDING;
+	w->RowHeight = Drawer2D_FontHeight(&w->RowFont, true) + ROW_YPADDING;
 
 	w->RowsBegY = w->Y + w->HdrHeight + GRIDLINE_SIZE;
 	w->RowsEndY = w->Y + w->Height;
