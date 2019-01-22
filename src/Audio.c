@@ -175,7 +175,7 @@ static void Soundboard_Init(struct Soundboard* board, const String* boardName, S
 	}
 }
 
-struct Sound* Soundboard_PickRandom(struct Soundboard* board, uint8_t type) {
+static struct Sound* Soundboard_PickRandom(struct Soundboard* board, uint8_t type) {
 	String name;
 	struct SoundGroup* group;
 	int idx;
@@ -438,7 +438,7 @@ cleanup:
 static void Music_RunLoop(void) {
 	const static String ogg = String_FromConst(".ogg");
 	char pathBuffer[FILENAME_SIZE];
-	String path = String_FromArray(pathBuffer);
+	String path;
 
 	uint16_t musicFiles[MUSIC_MAX_FILES];
 	String file;
@@ -461,7 +461,7 @@ static void Music_RunLoop(void) {
 		idx  = Random_Range(&rnd, 0, count);
 		file = StringsBuffer_UNSAFE_Get(&files, musicFiles[idx]);
 		
-		path.length = 0;
+		String_InitArray(path, pathBuffer);
 		String_Format1(&path, "audio/%s", &file);
 		Platform_Log1("playing music file: %s", &file);
 

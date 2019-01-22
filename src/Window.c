@@ -1863,7 +1863,7 @@ static void Window_UpdateWindowState(void) {
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
-OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventRef inEvent, void* userData) {
+static OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventRef inEvent, void* userData) {
 	UInt32 kind, code;
 	Key key;
 	char charCode, raw;
@@ -1922,7 +1922,7 @@ OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventRef inEv
 	return eventNotHandledErr;
 }
 
-OSStatus Window_ProcessWindowEvent(EventHandlerCallRef inCaller, EventRef inEvent, void* userData) {
+static OSStatus Window_ProcessWindowEvent(EventHandlerCallRef inCaller, EventRef inEvent, void* userData) {
 	int width, height;
 	
 	switch (GetEventKind(inEvent)) {
@@ -1958,7 +1958,7 @@ OSStatus Window_ProcessWindowEvent(EventHandlerCallRef inCaller, EventRef inEven
 	return eventNotHandledErr;
 }
 
-OSStatus Window_ProcessMouseEvent(EventHandlerCallRef inCaller, EventRef inEvent, void* userData) {
+static OSStatus Window_ProcessMouseEvent(EventHandlerCallRef inCaller, EventRef inEvent, void* userData) {
 	HIPoint pt;
 	Point2D mousePos;
 	UInt32 kind;

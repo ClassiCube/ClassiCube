@@ -603,7 +603,7 @@ static void Launcher_ApplyUpdate(void) {
 	ReturnCode res;
 
 	/* Can't use WriteLine, want \n as actual newline not code page 437 */
-	res = Stream_WriteAllTo(&scriptPath, UPDATE_SCRIPT, sizeof(UPDATE_SCRIPT) - 1);
+	res = Stream_WriteAllTo(&scriptPath, (const uint8_t*)UPDATE_SCRIPT, sizeof(UPDATE_SCRIPT) - 1);
 	if (res) { Logger_Warn(res, "saving update script"); return; }
 
 	res = Platform_MarkExecutable(&scriptPath);

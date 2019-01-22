@@ -1046,7 +1046,7 @@ static void GL_CheckVboSupport(void) {
 		glBufferSubData = (FUNC_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubDataARB");
 #endif
 	} else {
-		Logger_Abort("Only OpenGL 1.1 supported.\r\n\r\n" \
+		Logger_Abort("Only OpenGL 1.1 supported.\n\n" \
 			"Compile the game with CC_BUILD_GL11, or ask on the classicube forums for it");
 	}
 }
