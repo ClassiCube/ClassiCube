@@ -86,9 +86,9 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_WIN
 #endif
 #ifdef __linux__
-#define CC_BUILD_NIX
-#define CC_BUILD_POSIX
+#define CC_BUILD_LINUX
 #define CC_BUILD_X11
+#define CC_BUILD_POSIX
 #endif
 #ifdef __APPLE__
 #define CC_BUILD_OSX
@@ -96,8 +96,8 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #endif
 #ifdef __sun__
 #define CC_BUILD_SOLARIS
-#define CC_BUILD_POSIX
 #define CC_BUILD_X11
+#define CC_BUILD_POSIX
 #endif
 #endif
 

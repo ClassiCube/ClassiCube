@@ -498,19 +498,27 @@ static void FetchUpdateTask_Handle(uint8_t* data, uint32_t len) {
 }
 
 void FetchUpdateTask_Run(bool release, bool d3d9) {
-#ifdef CC_BUILD_WIN
-#ifdef _WIN64
+#if defined CC_BUILD_WIN
+#if _M_IX86
 	const char* exe_d3d9 = "ClassiCube.64.exe";
 	const char* exe_ogl  = "ClassiCube.64-opengl.exe";
-#else
+#elif _M_X64
 	const char* exe_d3d9 = "ClassiCube.exe";
 	const char* exe_ogl  = "ClassiCube.opengl.exe";
 #endif
-#else
-	/* TODO: OSX, 32 bit linux */
+#elif defined CC_BUILD_LINUX
+#if __i386__
+	const char* exe_d3d9 = "ClassiCube.32";
+	const char* exe_ogl  = "ClassiCube.32";
+#elif __x86_64__
 	const char* exe_d3d9 = "ClassiCube";
 	const char* exe_ogl  = "ClassiCube";
 #endif
+#elif defined CC_BUILD_OSX
+	const char* exe_d3d9 = "ClassiCube.osx";
+	const char* exe_ogl  = "ClassiCube.osx";
+#endif
+
 	const static String id = String_FromConst("CC update fetch");
 	String url; char urlBuffer[STRING_SIZE];
 	String_InitArray(url, urlBuffer);

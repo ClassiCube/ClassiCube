@@ -345,7 +345,7 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 /*########################################################################################################################*
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_NIX || defined CC_BUILD_SOLARIS
+#if defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS
 static void Logger_DumpRegisters(void* ctx) {
 	String str; char strBuffer[STRING_SIZE * 8];
 	mcontext_t r;

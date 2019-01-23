@@ -85,7 +85,7 @@ const ReturnCode ReturnCode_InvalidArg   = EINVAL;
 const ReturnCode ReturnCode_SocketInProgess = EINPROGRESS;
 const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #endif
-#ifdef CC_BUILD_NIX
+#ifdef CC_BUILD_LINUX
 #include <X11/Xlib.h>
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -347,7 +347,7 @@ void DateTime_CurrentLocal(struct DateTime* time_) {
 
 #define NS_PER_SEC 1000000000ULL
 #endif
-#ifdef CC_BUILD_NIX
+#ifdef CC_BUILD_LINUX
 uint64_t Stopwatch_Measure(void) {
 	struct timespec t;
 	/* TODO: CLOCK_MONOTONIC_RAW ?? */
@@ -691,15 +691,16 @@ void Thread_Join(void* handle) {
 	Thread_Detach(handle);
 }
 
-static CRITICAL_SECTION mutexList[3]; int mutexIndex;
 void* Mutex_Create(void) {
-	if (mutexIndex == Array_Elems(mutexList)) Logger_Abort("Cannot allocate mutex");
-	CRITICAL_SECTION* ptr = &mutexList[mutexIndex];
-	InitializeCriticalSection(ptr); mutexIndex++;
+	CRITICAL_SECTION* ptr = Mem_Alloc(1, sizeof(CRITICAL_SECTION), "mutex");
+	InitializeCriticalSection(ptr);
 	return ptr;
 }
 
-void Mutex_Free(void* handle)   { DeleteCriticalSection((CRITICAL_SECTION*)handle); }
+void Mutex_Free(void* handle)   { 
+	DeleteCriticalSection((CRITICAL_SECTION*)handle); 
+	Mem_Free(handle);
+}
 void Mutex_Lock(void* handle)   { EnterCriticalSection((CRITICAL_SECTION*)handle); }
 void Mutex_Unlock(void* handle) { LeaveCriticalSection((CRITICAL_SECTION*)handle); }
 
@@ -1236,7 +1237,7 @@ static void Font_Init(void) {
 #ifdef CC_BUILD_WIN
 	const static String dir = String_FromConst("C:\\Windows\\Fonts");
 #endif
-#ifdef CC_BUILD_NIX
+#ifdef CC_BUILD_LINUX
 	const static String dir = String_FromConst("/usr/share/fonts");
 #endif
 #ifdef CC_BUILD_SOLARIS
@@ -2058,7 +2059,7 @@ static void Platform_InitDisplay(void) {
 	DisplayDevice_Default.BitsPerPixel  = DefaultDepth(display,  screen);
 }
 #endif
-#ifdef CC_BUILD_NIX
+#ifdef CC_BUILD_LINUX
 ReturnCode Platform_StartOpen(const String* args) {
 	const static String path = String_FromConst("xdg-open");
 	return Platform_StartProcess(&path, args);
