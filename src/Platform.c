@@ -85,10 +85,17 @@ const ReturnCode ReturnCode_InvalidArg   = EINVAL;
 const ReturnCode ReturnCode_SocketInProgess = EINPROGRESS;
 const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #endif
+/* Platform specific include files */
 #ifdef CC_BUILD_LINUX
 #include <X11/Xlib.h>
 #include <AL/al.h>
 #include <AL/alc.h>
+#endif
+#ifdef CC_BUILD_BSD
+#include <X11/Xlib.h>
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <sys/sysctl.h>
 #endif
 #ifdef CC_BUILD_SOLARIS
 #include <X11/Xlib.h>
@@ -347,7 +354,7 @@ void DateTime_CurrentLocal(struct DateTime* time_) {
 
 #define NS_PER_SEC 1000000000ULL
 #endif
-#ifdef CC_BUILD_LINUX
+#if defined CC_BUILD_LINUX || defined CC_BUILD_BSD
 uint64_t Stopwatch_Measure(void) {
 	struct timespec t;
 	/* TODO: CLOCK_MONOTONIC_RAW ?? */
@@ -1240,6 +1247,9 @@ static void Font_Init(void) {
 #ifdef CC_BUILD_LINUX
 	const static String dir = String_FromConst("/usr/share/fonts");
 #endif
+#ifdef CC_BUILD_BSD
+	const static String dir = String_FromConst("/usr/local/share/fonts");
+#endif
 #ifdef CC_BUILD_SOLARIS
 	const static String dir = String_FromConst("/usr/share/fonts");
 #endif
@@ -2059,13 +2069,15 @@ static void Platform_InitDisplay(void) {
 	DisplayDevice_Default.BitsPerPixel  = DefaultDepth(display,  screen);
 }
 #endif
-#ifdef CC_BUILD_LINUX
+#if defined CC_BUILD_LINUX || defined CC_BUILD_BSD || defined CC_BUILD_SOLARIS
 ReturnCode Platform_StartOpen(const String* args) {
+	/* TODO: Can this also be used on solaris, or is it just an OpenIndiana thing */
 	const static String path = String_FromConst("xdg-open");
 	return Platform_StartProcess(&path, args);
 }
 static void Platform_InitStopwatch(void) { sw_freqDiv = 1000; }
-
+#endif
+#ifdef CC_BUILD_LINUX
 ReturnCode Platform_GetExePath(String* path) {
 	char str[600];
 	int len = readlink("/proc/self/exe", str, 600);
@@ -2075,14 +2087,25 @@ ReturnCode Platform_GetExePath(String* path) {
 	return 0;
 }
 #endif
-#ifdef CC_BUILD_SOLARIS
-ReturnCode Platform_StartOpen(const String* args) {
-	/* TODO: Is this on solaris, or just an OpenIndiana thing */
-	const static String path = String_FromConst("xdg-open");
-	return Platform_StartProcess(&path, args);
-}
-static void Platform_InitStopwatch(void) { sw_freqDiv = 1000; }
+#ifdef CC_BUILD_BSD
+ReturnCode Platform_GetExePath(String* path) {
+	char str[600];
+	int mib[4];
+	size_t size = 600;
 
+	mib[0] = CTL_KERN;
+	mib[1] = KERN_PROC;
+	mib[2] = KERN_PROC_PATHNAME;
+	mib[3] = -1; /* self process id */
+
+	if (sysctl(mib, 4, str, &size, NULL, 0) == -1) return errno;
+
+	size = String_CalcLen(str, 600);
+	Convert_DecodeUtf8(path, str, size);
+	return 0;
+}
+#endif
+#ifdef CC_BUILD_SOLARIS
 ReturnCode Platform_GetExePath(String* path) {
 	char str[600];
 	int len = readlink("/proc/self/path/a.out", str, 600);

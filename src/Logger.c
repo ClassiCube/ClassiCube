@@ -345,7 +345,7 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 /*########################################################################################################################*
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS
+#if defined CC_BUILD_OSX || defined CC_BUILD_LINUX || defined CC_BUILD_BSD || defined CC_BUILD_SOLARIS
 static void Logger_DumpRegisters(void* ctx) {
 	String str; char strBuffer[STRING_SIZE * 8];
 	mcontext_t r;
@@ -355,6 +355,7 @@ static void Logger_DumpRegisters(void* ctx) {
 	String_InitArray(str, strBuffer);
 	String_AppendConst(&str, "-- registers --\n");
 
+#if defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS
 	/* TODO: There must be a better way of getting these.. */
 #ifdef __i386__
 	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r.gregs[11], &r.gregs[8], &r.gregs[10]);
@@ -370,9 +371,48 @@ static void Logger_DumpRegisters(void* ctx) {
 #else
 #error "Unknown machine type"
 #endif
+#endif
+
+#if defined CC_BUILD_OSX
+	/* You can find these definitions at /usr/include/mach/i386/_structs.h */
+#if defined __i386__
+	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r->__ss.__eax, &r->__ss.__ebx, &r->__ss.__ecx);
+	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r->__ss.__edx, &r->__ss.__esi, &r->__ss.__edi);
+	String_Format3(&str, "eip=%x ebp=%x esp=%x\n", &r->__ss.__eip, &r->__ss.__ebp, &r->__ss.__esp);
+#elif defined __x86_64__
+	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r->__ss.__rax, &r->__ss.__rbx, &r->__ss.__rcx);
+	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r->__ss.__rdx, &r->__ss.__rsi, &r->__ss.__rdi);
+	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r->__ss.__rip, &r->__ss.__rbp, &r->__ss.__rsp);
+	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r->__ss.__r8, &r->__ss.__r9, &r->__ss.__r10);
+	String_Format3(&str, "r11=%x r12=%x r13=%x\n", &r->__ss.__r11, &r->__ss.__r12, &r->__ss.__r13);
+	String_Format2(&str, "r14=%x r15=%x\n", &r->__ss.__r14, &r->__ss.__r15);
+#else
+#error "Unknown machine type"
+#endif
+#endif
+
+#if defined CC_BUILD_BSD
+#if defined __i386__
+	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r.mc__eax, &r.mc__ebx, &r.mc__ecx);
+	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r.mc__edx, &r.mc__esi, &r.mc__edi);
+	String_Format3(&str, "eip=%x ebp=%x esp=%x\n", &r.mc__eip, &r.mc__ebp, &r.mc__esp);
+#elif defined __x86_64__
+	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r.mc__rax, &r.mc__rbx, &r.mc__rcx);
+	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r.mc__rdx, &r.mc__rsi, &r.mc__rdi);
+	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r.mc__rip, &r.mc__rbp, &r.mc__rsp);
+	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r.mc__r8,  &r.mc__r9,  &r.mc__r10);
+	String_Format3(&str, "r11=%x r12=%x r13=%x\n", &r.mc__r11, &r.mc__r12, &r.mc__r13);
+	String_Format2(&str, "r14=%x r15=%x\n",        &r.mc__r14, &r.mc__r15);
+#else
+#error "Unknown machine type"
+#endif
+#endif
+
 	Logger_Log(&str);
 }
+#endif
 
+#if defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS
 static void Logger_DumpMemoryMap(void) {
 	String str; char strBuffer[STRING_SIZE * 5];
 	int n, fd;
@@ -398,34 +438,7 @@ static void Logger_DumpCommon(String* str, void* ctx) {
 	Logger_Log(&memMap);
 	Logger_DumpMemoryMap();
 }
-#elif defined CC_BUILD_OSX
-static void Logger_DumpRegisters(void* ctx) {
-	String str; char strBuffer[STRING_SIZE * 8];
-	mcontext_t r;
-	if (!ctx) return;
-
-	r = ((ucontext_t*)ctx)->uc_mcontext;
-	String_InitArray(str, strBuffer);
-	String_AppendConst(&str, "-- registers --\n");
-
-	/* You can find these definitions at /usr/include/mach/i386/_structs.h */
-#if defined __i386__
-	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r->__ss.__eax, &r->__ss.__ebx, &r->__ss.__ecx);
-	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r->__ss.__edx, &r->__ss.__esi, &r->__ss.__edi);
-	String_Format3(&str, "eip=%x ebp=%x esp=%x\n", &r->__ss.__eip, &r->__ss.__ebp, &r->__ss.__esp);
-#elif defined __x86_64__
-	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r->__ss.__rax, &r->__ss.__rbx, &r->__ss.__rcx);
-	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r->__ss.__rdx, &r->__ss.__rsi, &r->__ss.__rdi);
-	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r->__ss.__rip, &r->__ss.__rbp, &r->__ss.__rsp);
-	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r->__ss.__r8,  &r->__ss.__r9,  &r->__ss.__r10);
-	String_Format3(&str, "r11=%x r12=%x r13=%x\n", &r->__ss.__r11, &r->__ss.__r12, &r->__ss.__r13);
-	String_Format2(&str, "r14=%x r15=%x\n",        &r->__ss.__r14, &r->__ss.__r15);
-#else
-#error "Unknown machine type"
-#endif
-	Logger_Log(&str);
-}
-
+#elif defined CC_BUILD_OSX || defined CC_BUILD_BSD
 static void Logger_DumpCommon(String* str, void* ctx) {
 	const static String backtrace = String_FromConst("-- backtrace --\n");
 	Logger_Log(&backtrace);

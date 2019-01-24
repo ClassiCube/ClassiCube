@@ -99,6 +99,11 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_X11
 #define CC_BUILD_POSIX
 #endif
+#ifdef __FreeBSD__
+#define CC_BUILD_BSD
+#define CC_BUILD_X11
+#define CC_BUILD_POSIX
+#endif
 #endif
 
 #ifdef CC_BUILD_D3D9
