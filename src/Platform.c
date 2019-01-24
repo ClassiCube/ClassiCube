@@ -75,8 +75,7 @@ const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <signal.h>
 
 #define Socket__Error() errno
-char* Platform_NewLine    = "\n";
-pthread_mutex_t event_mutex;
+char* Platform_NewLine = "\n";
 
 const ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const ReturnCode ReturnCode_FileNotFound = ENOENT;
@@ -788,43 +787,66 @@ void Mutex_Unlock(void* handle) {
 	if (res) Logger_Abort2(res, "Unlocking mutex");
 }
 
+struct WaitData {
+	pthread_cont_t  cond;
+	pthread_mutex_t mutex;
+};
+
 void* Waitable_Create(void) {
-	pthread_cond_t* ptr = Mem_Alloc(1, sizeof(pthread_cond_t), "allocating waitable");
-	int res = pthread_cond_init(ptr, NULL);
-	if (res) Logger_Abort2(res, "Creating event");
+	struct WaitData* ptr = Mem_Alloc(1, sizeof(struct WaitData), "allocating waitable");
+	int res;
+	
+	res = pthread_cond_init(&ptr->cond, NULL);
+	if (res) Logger_Abort2(res, "Creating waitable");
+	res = pthread_mutex_init(&ptr->mutex, NULL);
+	if (res) Logger_Abort2(res, "Creating waitable mutex");
 	return ptr;
 }
 
 void Waitable_Free(void* handle) {
-	int res = pthread_cond_destroy((pthread_cond_t*)handle);
-	if (res) Logger_Abort2(res, "Destroying event");
+	struct WaitData* ptr = handle;
+	int res;
+	
+	res = pthread_cond_destroy(&ptr->cond);
+	if (res) Logger_Abort2(res, "Destroying waitable");
+	res = pthread_mutex_destroy(&ptr->mutex);
+	if (res) Logger_Abort2(res, "Destroying waitable mutex");
 	Mem_Free(handle);
 }
 
 void Waitable_Signal(void* handle) {
-	int res = pthread_cond_signal((pthread_cond_t*)handle);
+	struct WaitData* ptr = handle;
+	int res = pthread_cond_signal(&ptr->cond);
 	if (res) Logger_Abort2(res, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
-	int res = pthread_cond_wait((pthread_cond_t*)handle, &event_mutex);
-	if (res) Logger_Abort2(res, "Waiting event");
+	struct WaitData* ptr = handle;
+	int res;
+
+	Mutex_Lock(&ptr->mutex);
+	res = pthread_cond_wait(&ptr->cond, &ptr->mutex);
+	if (res) Logger_Abort2(res, "Waitable wait");
+	Mutex_Unlock(&ptr->mutex);
 }
 
 void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
+	struct WaitData* ptr = handle;
 	struct timeval tv;
 	struct timespec ts;
 	int res;
 	gettimeofday(&tv, NULL);
 
+	/* absolute time for some silly reason */
 	ts.tv_sec = tv.tv_sec + milliseconds / 1000;
 	ts.tv_nsec = 1000 * (tv.tv_usec + 1000 * (milliseconds % 1000));
 	ts.tv_sec += ts.tv_nsec / NS_PER_SEC;
 	ts.tv_nsec %= NS_PER_SEC;
 
-	res = pthread_cond_timedwait((pthread_cond_t*)handle, &event_mutex, &ts);
-	if (res == ETIMEDOUT) return;
-	if (res) Logger_Abort2(res, "Waiting timed event");
+	Mutex_Lock(&ptr->mutex);
+	res = pthread_cond_timedwait(&ptr->cond, &ptr->mutex, &ts);
+	if (res && res != ETIMEDOUT) Logger_Abort2(res, "Waitable wait for");
+	Mutex_Unlock(&ptr->mutex);
 }
 #endif
 
@@ -1968,12 +1990,10 @@ void Platform_Init(void) {
 	signal(SIGCHLD, SIG_IGN);
 	Platform_InitDisplay();
 	Platform_InitStopwatch();
-	pthread_mutex_init(&event_mutex, NULL);
 	pthread_mutex_init(&audio_lock,  NULL);
 }
 
 void Platform_Free(void) {
-	pthread_mutex_destroy(&event_mutex);
 	pthread_mutex_destroy(&audio_lock);
 }
 
