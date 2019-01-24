@@ -517,6 +517,10 @@ void FetchUpdateTask_Run(bool release, bool d3d9) {
 #elif defined CC_BUILD_OSX
 	const char* exe_d3d9 = "ClassiCube.osx";
 	const char* exe_ogl  = "ClassiCube.osx";
+#else
+#warn "Unsupported platform, launcher updating will not work"
+	const char* exe_d3d9 = "ClassiCube.unknown";
+	const char* exe_ogl  = "ClassiCube.unknown";
 #endif
 
 	const static String id = String_FromConst("CC update fetch");

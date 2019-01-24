@@ -788,7 +788,7 @@ void Mutex_Unlock(void* handle) {
 }
 
 struct WaitData {
-	pthread_cont_t  cond;
+	pthread_cond_t  cond;
 	pthread_mutex_t mutex;
 };
 
@@ -1333,14 +1333,14 @@ ReturnCode Socket_GetError(SocketHandle socket, ReturnCode* result) {
 }
 
 ReturnCode Socket_Connect(SocketHandle socket, const String* ip, int port) {
-	struct { int16_t Family; uint8_t Port[2], IP[4], Pad[8]; } addr;
+	struct sockaddr addr;
 	ReturnCode res;
 
-	addr.Family = AF_INET;
-	Stream_SetU16_BE(addr.Port, port);
-	Utils_ParseIP(ip, addr.IP);
+	addr.sa_family = AF_INET;
+	Stream_SetU16_BE(&addr.sa_data[0], port);
+	Utils_ParseIP(ip, &addr.sa_data[2]);
 
-	res = connect(socket, (struct sockaddr*)(&addr), sizeof(addr));
+	res = connect(socket, &addr, sizeof(addr));
 	return res == -1 ? Socket__Error() : 0;
 }
 

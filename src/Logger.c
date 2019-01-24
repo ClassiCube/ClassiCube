@@ -393,16 +393,16 @@ static void Logger_DumpRegisters(void* ctx) {
 
 #if defined CC_BUILD_BSD
 #if defined __i386__
-	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r.mc__eax, &r.mc__ebx, &r.mc__ecx);
-	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r.mc__edx, &r.mc__esi, &r.mc__edi);
-	String_Format3(&str, "eip=%x ebp=%x esp=%x\n", &r.mc__eip, &r.mc__ebp, &r.mc__esp);
+	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r.mc_eax, &r.mc_ebx, &r.mc_ecx);
+	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r.mc_edx, &r.mc_esi, &r.mc_edi);
+	String_Format3(&str, "eip=%x ebp=%x esp=%x\n", &r.mc_eip, &r.mc_ebp, &r.mc_esp);
 #elif defined __x86_64__
-	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r.mc__rax, &r.mc__rbx, &r.mc__rcx);
-	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r.mc__rdx, &r.mc__rsi, &r.mc__rdi);
-	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r.mc__rip, &r.mc__rbp, &r.mc__rsp);
-	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r.mc__r8,  &r.mc__r9,  &r.mc__r10);
-	String_Format3(&str, "r11=%x r12=%x r13=%x\n", &r.mc__r11, &r.mc__r12, &r.mc__r13);
-	String_Format2(&str, "r14=%x r15=%x\n",        &r.mc__r14, &r.mc__r15);
+	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r.mc_rax, &r.mc_rbx, &r.mc_rcx);
+	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r.mc_rdx, &r.mc_rsi, &r.mc_rdi);
+	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r.mc_rip, &r.mc_rbp, &r.mc_rsp);
+	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r.mc_r8,  &r.mc_r9,  &r.mc_r10);
+	String_Format3(&str, "r11=%x r12=%x r13=%x\n", &r.mc_r11, &r.mc_r12, &r.mc_r13);
+	String_Format2(&str, "r14=%x r15=%x\n",        &r.mc_r14, &r.mc_r15);
 #else
 #error "Unknown machine type"
 #endif
