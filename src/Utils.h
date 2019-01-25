@@ -15,7 +15,7 @@ struct DateTime {
 	int Hour;   /* Hour,   ranges from 0 to 23 */
 	int Minute; /* Minute, ranges from 0 to 59 */
 	int Second; /* Second, ranges from 0 to 59 */
-	int Milli; /* Milliseconds, ranges from 0 to 999 */
+	int Milli;  /* Milliseconds, ranges from 0 to 999 */
 };
 
 #define MILLIS_PER_SEC 1000
@@ -34,7 +34,7 @@ void DateTime_HttpDate(TimeMS ms, String* str);
 CC_NOINLINE int Utils_ParseEnum(const String* text, int defValue, const char** names, int namesCount);
 bool Utils_IsUrlPrefix(const String* value, int index);
 
-/* Creates the directory if it doesn't exist. (logs failure in chat) */
+/* Creates the directory if it doesn't exist. (logs failure using Logger_Warn2) */
 bool Utils_EnsureDirectory(const char* dirName);
 /* Gets the filename portion of a path. (e.g. "dir/file.txt" -> "file.txt") */
 void Utils_UNSAFE_GetFilename(STRING_REF String* path);
@@ -43,6 +43,8 @@ int Utils_AccumulateWheelDelta(float* accumulator, float delta);
 
 uint8_t Utils_GetSkinType(const Bitmap* bmp);
 uint32_t Utils_CRC32(const uint8_t* data, uint32_t length);
+/* CRC32 lookup table, for faster CRC32 calculations. */
+/* NOTE: This cannot be just indexed by byte value - see Utils_CRC32 implementation. */
 extern const uint32_t Utils_Crc32Table[256];
 CC_NOINLINE void* Utils_Resize(void* buffer, uint32_t* maxElems, uint32_t elemSize, uint32_t defElems, uint32_t expandElems);
 CC_NOINLINE bool Utils_ParseIP(const String* ip, uint8_t* data);

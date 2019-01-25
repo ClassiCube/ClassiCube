@@ -345,7 +345,7 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 /*########################################################################################################################*
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_OSX || defined CC_BUILD_LINUX || defined CC_BUILD_BSD || defined CC_BUILD_SOLARIS
+#ifdef CC_BUILD_POSIX
 static void Logger_DumpRegisters(void* ctx) {
 	String str; char strBuffer[STRING_SIZE * 8];
 	mcontext_t r;
@@ -357,11 +357,11 @@ static void Logger_DumpRegisters(void* ctx) {
 
 #if defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS
 	/* TODO: There must be a better way of getting these.. */
-#ifdef __i386__
+#if defined __i386__
 	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r.gregs[11], &r.gregs[8], &r.gregs[10]);
 	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r.gregs[9],  &r.gregs[5], &r.gregs[4]);
 	String_Format3(&str, "eip=%x ebp=%x esp=%x\n", &r.gregs[14], &r.gregs[6], &r.gregs[7]);
-#elif __x86_64__
+#elif defined __x86_64__
 	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r.gregs[13], &r.gregs[11], &r.gregs[14]);
 	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r.gregs[12], &r.gregs[9],  &r.gregs[8]);
 	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r.gregs[16], &r.gregs[10], &r.gregs[15]);

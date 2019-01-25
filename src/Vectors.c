@@ -3,13 +3,13 @@
 #include "Funcs.h"
 #include "Constants.h"
 
-void Vector3_Lerp(Vector3* result, Vector3* a, Vector3* b, float blend) {
+void Vector3_Lerp(Vector3* result, const Vector3* a, const Vector3* b, float blend) {
 	result->X = blend * (b->X - a->X) + a->X;
 	result->Y = blend * (b->Y - a->Y) + a->Y;
 	result->Z = blend * (b->Z - a->Z) + a->Z;
 }
 
-void Vector3_Normalize(Vector3* result, Vector3* a) {
+void Vector3_Normalize(Vector3* result, const Vector3* a) {
 	float lenSquared = a->X * a->X + a->Y * a->Y + a->Z * a->Z;
 	float scale = 1.0f / Math_SqrtF(lenSquared);
 	result->X = a->X * scale;
@@ -17,7 +17,7 @@ void Vector3_Normalize(Vector3* result, Vector3* a) {
 	result->Z = a->Z * scale;
 }
 
-void Vector3_Transform(Vector3* result, Vector3* a, struct Matrix*  mat) {
+void Vector3_Transform(Vector3* result, Vector3* a, const struct Matrix*  mat) {
 	/* a could be pointing to result - can't directly assign X/Y/Z therefore */
 	float x = a->X * mat->Row0.X + a->Y * mat->Row1.X + a->Z * mat->Row2.X + mat->Row3.X;
 	float y = a->X * mat->Row0.Y + a->Y * mat->Row1.Y + a->Z * mat->Row2.Y + mat->Row3.Y;
@@ -25,7 +25,7 @@ void Vector3_Transform(Vector3* result, Vector3* a, struct Matrix*  mat) {
 	result->X = x; result->Y = y; result->Z = z;
 }
 
-void Vector3_TransformY(Vector3* result, float y, struct Matrix*  mat) {
+void Vector3_TransformY(Vector3* result, float y, const struct Matrix*  mat) {
 	result->X = y * mat->Row1.X + mat->Row3.X;
 	result->Y = y * mat->Row1.Y + mat->Row3.Y;
 	result->Z = y * mat->Row1.Z + mat->Row3.Z;
@@ -56,19 +56,19 @@ Vector3 Vector3_RotateZ(Vector3 v, float angle) {
 }
 
 
-void Vector3I_Floor(Vector3I* result, Vector3* a) {
+void Vector3I_Floor(Vector3I* result, const Vector3* a) {
 	result->X = Math_Floor(a->X); result->Y = Math_Floor(a->Y); result->Z = Math_Floor(a->Z);
 }
 
-void Vector3I_ToVector3(Vector3* result, Vector3I* a) {
+void Vector3I_ToVector3(Vector3* result, const Vector3I* a) {
 	result->X = (float)a->X; result->Y = (float)a->Y; result->Z = (float)a->Z;
 }
 
-void Vector3I_Min(Vector3I* result, Vector3I* a, Vector3I* b) {
+void Vector3I_Min(Vector3I* result, const Vector3I* a, const Vector3I* b) {
 	result->X = min(a->X, b->X); result->Y = min(a->Y, b->Y); result->Z = min(a->Z, b->Z);
 }
 
-void Vector3I_Max(Vector3I* result, Vector3I* a, Vector3I* b) {
+void Vector3I_Max(Vector3I* result, const Vector3I* a, const Vector3I* b) {
 	result->X = max(a->X, b->X); result->Y = max(a->Y, b->Y); result->Z = max(a->Z, b->Z);
 }
 

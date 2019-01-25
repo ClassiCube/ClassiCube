@@ -27,7 +27,7 @@ static CC_INLINE Vector3 Vector3_Zero(void) {
 }
 /* Returns a vector with all components 1. */
 static CC_INLINE Vector3 Vector3_One(void) {
-	Vector3 v = { 1, 1, 1}; return v;
+	Vector3 v = { 1, 1, 1 }; return v;
 }
 /* Returns a vector with all components set to Int32_MaxValue. */
 static CC_INLINE Vector3I Vector3I_MaxValue(void) {
@@ -81,14 +81,14 @@ static CC_INLINE void Vector3_Negate(Vector3* result, Vector3* a) {
 #define Vector3_Mul3By(dst, value) Vector3_Mul3(dst, dst, value)
 
 /* Linearly interpolates components of two vectors. */
-void Vector3_Lerp(Vector3* result, Vector3* a, Vector3* b, float blend);
+void Vector3_Lerp(Vector3* result, const Vector3* a, const Vector3* b, float blend);
 /* Scales all components of a vector to lie in [-1, 1] */
-void Vector3_Normalize(Vector3* result, Vector3* a);
+void Vector3_Normalize(Vector3* result, const Vector3* a);
 
 /* Transforms a vector by the given matrix. */
-void Vector3_Transform(Vector3* result, Vector3* a, struct Matrix* mat);
+void Vector3_Transform(Vector3* result, const Vector3* a, const struct Matrix* mat);
 /* Same as Vector3_Transform, but faster since X and Z are assumed as 0. */
-void Vector3_TransformY(Vector3* result, float y, struct Matrix* mat);
+void Vector3_TransformY(Vector3* result, float y, const struct Matrix* mat);
 
 Vector3 Vector3_RotateX(Vector3 v, float angle);
 Vector3 Vector3_RotateY(Vector3 v, float angle);
@@ -112,10 +112,10 @@ static CC_INLINE bool Vector3I_NotEquals(const Vector3I* a, const Vector3I* b) {
 	return a->X != b->X || a->Y != b->Y || a->Z != b->Z;
 }
 
-void Vector3I_Floor(Vector3I* result, Vector3* a);
-void Vector3I_ToVector3(Vector3* result, Vector3I* a);
-void Vector3I_Min(Vector3I* result, Vector3I* a, Vector3I* b);
-void Vector3I_Max(Vector3I* result, Vector3I* a, Vector3I* b);
+void Vector3I_Floor(Vector3I* result, const Vector3* a);
+void Vector3I_ToVector3(Vector3* result, const Vector3I* a);
+void Vector3I_Min(Vector3I* result, const Vector3I* a, const Vector3I* b);
+void Vector3I_Max(Vector3I* result, const Vector3I* a, const Vector3I* b);
 
 /* Returns a normalised vector facing in the direction described by the given yaw and pitch. */
 Vector3 Vector3_GetDirVector(float yawRad, float pitchRad);
