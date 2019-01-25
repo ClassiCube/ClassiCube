@@ -835,10 +835,16 @@ static void MainScreen_UnhoverWidget(struct LScreen* s_, struct LWidget* w) {
 	LWidget_Redraw(&s->LblStatus);
 }
 
-/* TODO: Maybe find a not so hacky way.. */
 CC_NOINLINE static uint32_t MainScreen_GetVersion(const String* version) {
-	uint8_t raw[4];
-	if (!Utils_ParseIP(version, raw)) return 0;
+	uint8_t raw[4] = { 0, 0, 0, 0 };
+	String parts[4];
+	int i, count;
+	
+	/* 1.0.1 -> { 1, 0, 1, 0 } */
+	count = String_UNSAFE_Split(version, '.', parts, 4);
+	for (i = 0; i < count; i++) {
+		Convert_ParseUInt8(&parts[i], &raw[i]);
+	}
 	return Stream_GetU32_BE(raw);
 }
 

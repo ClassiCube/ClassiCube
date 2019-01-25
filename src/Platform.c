@@ -54,7 +54,6 @@ const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #endif
 /* POSIX is mainly shared between Linux and OSX */
 #ifdef CC_BUILD_POSIX
-#include <curl/curl.h>
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
