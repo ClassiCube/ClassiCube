@@ -17,7 +17,7 @@ void Vector3_Normalize(Vector3* result, const Vector3* a) {
 	result->Z = a->Z * scale;
 }
 
-void Vector3_Transform(Vector3* result, Vector3* a, const struct Matrix*  mat) {
+void Vector3_Transform(Vector3* result, const Vector3* a, const struct Matrix* mat) {
 	/* a could be pointing to result - can't directly assign X/Y/Z therefore */
 	float x = a->X * mat->Row0.X + a->Y * mat->Row1.X + a->Z * mat->Row2.X + mat->Row3.X;
 	float y = a->X * mat->Row0.Y + a->Y * mat->Row1.Y + a->Z * mat->Row2.Y + mat->Row3.Y;
