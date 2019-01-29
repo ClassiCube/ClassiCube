@@ -134,7 +134,7 @@ int PingList_AveragePingMs(void) {
 /*########################################################################################################################*
 *-------------------------------------------------Singleplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
-#define SP_HasDir(path) (String_IndexOf(&path, '/', 0) >= 0 || String_IndexOf(&path, '\\', 0) >= 0)
+#define SP_HasDir(path) (String_IndexOf(&path, '/') >= 0 || String_IndexOf(&path, '\\') >= 0)
 static void SPConnection_BeginConnect(void) {
 	const static String logName = String_FromConst("Singleplayer");
 	String path;

@@ -1849,9 +1849,9 @@ static String Platform_NextArg(STRING_REF String* args) {
 	if (args->length && args->buffer[0] == '"') {
 		/* "xy za" is used for arg with spaces */
 		*args = String_UNSAFE_SubstringAt(args, 1);
-		end = String_IndexOf(args, '"', 0);
+		end = String_IndexOf(args, '"');
 	} else {
-		end = String_IndexOf(args, ' ', 0);
+		end = String_IndexOf(args, ' ');
 	}
 
 	if (end == -1) {

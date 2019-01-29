@@ -109,9 +109,13 @@ CC_API void String_AppendColorless(String* str, const String* src);
 CC_API void String_AppendHex(String* str, uint8_t value);
 
 /* Returns first index of the given character in the given string, -1 if not found. */
-CC_API int String_IndexOf(const String* str, char c, int offset);
+#define String_IndexOf(str, c) String_IndexOfAt(str, 0, c)
+/* Returns first index of the given character in the given string, -1 if not found. */
+CC_API int String_IndexOfAt(const String* str, int offset, char c);
 /* Returns last index of the given character in the given string, -1 if not found. */
-CC_API int String_LastIndexOf(const String* str, char c);
+#define String_LastIndexOf(str, c) String_LastIndexOfAt(str, 0, c)
+/* Returns last index of the given character in the given string, -1 if not found. */
+CC_API int String_LastIndexOfAt(const String* str, int offset, char c);
 /* Inserts the given character into the given string. Exits process if this fails. */
 /* e.g. inserting 'd' at offset '1' into "abc" produces "adbc" */
 CC_API void String_InsertAt(String* str, int offset, char c);

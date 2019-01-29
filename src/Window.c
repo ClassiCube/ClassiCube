@@ -1428,7 +1428,7 @@ static void X11Textbox_Measure(X11Textbox* t, XFontStruct* font) {
 	int end, len, lines = 0;
 
     for (end = 0; end >= 0; lines++) {
-        end = String_IndexOf(&str, '\n', 0);
+        end = String_IndexOf(&str, '\n');
 		len = end == -1 ? str.length : end;
 
         XTextExtents(font, str.buffer, len, &direction, &ascent, &descent, &overall);
@@ -1447,7 +1447,7 @@ static void X11Textbox_Draw(X11Textbox* t, X11Window* w) {
 	int end, len;
 
     for (end = 0; end >= 0; y += t->LineHeight) {
-        end = String_IndexOf(&str, '\n', 0);
+        end = String_IndexOf(&str, '\n');
 		len = end == -1 ? str.length : end;
 
         XDrawString(dpy, w->win, w->gc, t->X, y, str.buffer, len);

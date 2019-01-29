@@ -2525,7 +2525,7 @@ static bool TextGroupWidget_MightHaveUrls(struct TextGroupWidget* w) {
 		if (!w->LineLengths[i]) continue;
 
 		line = TextGroupWidget_UNSAFE_Get(w, i);
-		if (String_IndexOf(&line, '/', 0) >= 0) return true;
+		if (String_IndexOf(&line, '/') >= 0) return true;
 	}
 	return false;
 }

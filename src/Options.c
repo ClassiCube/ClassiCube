@@ -41,7 +41,7 @@ bool Options_UNSAFE_Get(const char* keyRaw, String* value) {
 
 	/* Fallback to without '-' (e.g. "hacks-fly" to "fly") */
 	/* Needed for some very old options.txt files */
-	idx = String_IndexOf(&key, '-', 0);
+	idx = String_IndexOf(&key, '-');
 	if (idx == -1) return false;
 	key = String_UNSAFE_SubstringAt(&key, idx + 1);
 

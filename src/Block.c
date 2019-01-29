@@ -166,7 +166,7 @@ void Block_SetCustomDefined(BlockID block, bool defined) {
 void Block_DefineCustom(BlockID block) {
 	PackedCol black = PACKEDCOL_CONST(0, 0, 0, 255);
 	String name     = Block_UNSAFE_GetName(block);
-	Blocks.Tinted[block] = !PackedCol_Equals(Blocks.FogCol[block], black) && String_IndexOf(&name, '#', 0) >= 0;
+	Blocks.Tinted[block] = !PackedCol_Equals(Blocks.FogCol[block], black) && String_IndexOf(&name, '#') >= 0;
 
 	Block_SetDrawType(block, Blocks.Draw[block]);
 	Block_CalcRenderBounds(block);
@@ -223,17 +223,17 @@ void Block_SetDrawType(BlockID block, DrawType draw) {
 const static String Block_DefaultName(BlockID block) {
 	const static String names   = String_FromConst(BLOCK_RAW_NAMES);
 	const static String invalid = String_FromConst("Invalid");
-	int i, start = 0, end;
+	int i, beg = 0, end;
 
 	if (block >= BLOCK_CPE_COUNT) return invalid;
 	/* Find start and end of this particular block name. */
 	for (i = 0; i < block; i++) {
-		start = String_IndexOf(&names, '_', start) + 1;
+		beg = String_IndexOfAt(&names, beg, '_') + 1;
 	}
 
-	end = String_IndexOf(&names, '_', start);
+	end = String_IndexOfAt(&names, beg, '_');
 	if (end == -1) end = names.length;
-	return String_UNSAFE_Substring(&names, start, end - start);
+	return String_UNSAFE_Substring(&names, beg, end - beg);
 }
 
 void Block_ResetProps(BlockID block) {
@@ -542,104 +542,146 @@ void Block_UpdateCulling(BlockID block) {
 *-------------------------------------------------------AutoRotate--------------------------------------------------------*
 *#########################################################################################################################*/
 bool AutoRotate_Enabled;
-static BlockID AutoRotate_Find(BlockID block, const String* name, const char* suffix) {
-	String str; char strBuffer[STRING_SIZE * 2];
-	int rotated;	
 
-	String_InitArray(str, strBuffer);
-	String_AppendString(&str, name);
-	String_AppendConst(&str, suffix);
+/* replaces a portion of a string, appends otherwise*/
+static void AutoRotate_Insert(String* str, int offset, const char* suffix) {
+	int i = str->length - offset;
 
-	rotated = Block_FindID(&str);
-	return rotated == -1 ? block : (BlockID)rotated;
+	for (; *suffix; suffix++, i++) {
+		if (i < str->length) {
+			str->buffer[i] = *suffix;
+		} else {
+			String_Append(str, *suffix);
+		}
+	}
+}
+/* finds proper rotated form of a block, based on the given name */
+static int FindRotated(String* name, int offset);
+
+static int GetRotated(String* name, int offset) {
+	int rotated = FindRotated(name, offset);
+	return rotated == -1 ? Block_FindID(name) : rotated;
 }
 
-static BlockID AutoRotate_RotateCorner(BlockID block, const String* name) {
+static int RotateCorner(String* name, int offset) {
 	float x = Game_SelectedPos.Intersect.X - (float)Game_SelectedPos.TranslatedPos.X;
 	float z = Game_SelectedPos.Intersect.Z - (float)Game_SelectedPos.TranslatedPos.Z;
 
-	if (x  < 0.5f && z  < 0.5f) return AutoRotate_Find(block, name, "-NW");
-	if (x >= 0.5f && z  < 0.5f) return AutoRotate_Find(block, name, "-NE");
-	if (x  < 0.5f && z >= 0.5f) return AutoRotate_Find(block, name, "-SW");
-	if (x >= 0.5f && z >= 0.5f) return AutoRotate_Find(block, name, "-SE");
-	return block;
+	if (x < 0.5f && z < 0.5f) {
+		AutoRotate_Insert(name, offset, "-NW");
+	} else if (x >= 0.5f && z < 0.5f) {
+		AutoRotate_Insert(name, offset, "-NE");
+	} else if (x < 0.5f && z >= 0.5f) {
+		AutoRotate_Insert(name, offset, "-SW");
+	} else if (x >= 0.5f && z >= 0.5f) {
+		AutoRotate_Insert(name, offset, "-SE");
+	}
+	return GetRotated(name, offset);
 }
 
-static BlockID AutoRotate_RotateVertical(BlockID block, const String* name) {
+static int RotateVertical(String* name, int offset) {
 	float y = Game_SelectedPos.Intersect.Y - (float)Game_SelectedPos.TranslatedPos.Y;
 
 	if (y >= 0.5f) {
-		return AutoRotate_Find(block, name, "-U");
+		AutoRotate_Insert(name, offset, "-U");
 	} else {
-		return AutoRotate_Find(block, name, "-D");
+		AutoRotate_Insert(name, offset, "-D");
 	}
+	return GetRotated(name, offset);
 }
 
-static BlockID AutoRotate_RotateOther(BlockID block, const String* name) {
-	float yaw; Face face;
+static int RotateFence(String* name, int offset) {
+	float yaw;
 	/* Fence type blocks */
-	if (AutoRotate_Find(BLOCK_AIR, name, "-UD") == BLOCK_AIR) {
-		yaw = LocalPlayer_Instance.Base.HeadY;
-		yaw = LocationUpdate_Clamp(yaw);
+	yaw = LocalPlayer_Instance.Base.HeadY;
+	yaw = LocationUpdate_Clamp(yaw);
 
-		if (yaw < 45.0f || (yaw >= 135.0f && yaw < 225.0f) || yaw > 315.0f) {
-			return AutoRotate_Find(block, name, "-WE");
-		} else {
-			return AutoRotate_Find(block, name, "-NS");
-		}
+	if (yaw < 45.0f || (yaw >= 135.0f && yaw < 225.0f) || yaw > 315.0f) {
+		AutoRotate_Insert(name, offset, "-WE");
+	} else {
+		AutoRotate_Insert(name, offset, "-NS");
 	}
-
-	/* Thin pillar type blocks */
-	face = Game_SelectedPos.Closest;
-	if (face == FACE_YMAX || face == FACE_YMIN) return AutoRotate_Find(block, name, "-UD");
-	if (face == FACE_XMAX || face == FACE_XMIN) return AutoRotate_Find(block, name, "-WE");
-	if (face == FACE_ZMAX || face == FACE_ZMIN) return AutoRotate_Find(block, name, "-NS");
-	return block;
+	return GetRotated(name, offset);
 }
 
-static BlockID AutoRotate_RotateDirection(BlockID block, const String* name) {
+static int RotatePillar(String* name, int offset) {
+	/* Thin pillar type blocks */
+	Face face = Game_SelectedPos.Closest;
+
+	if (face == FACE_YMAX || face == FACE_YMIN) {
+		AutoRotate_Insert(name, offset, "-UD");
+	} else if (face == FACE_XMAX || face == FACE_XMIN) {
+		AutoRotate_Insert(name, offset, "-WE");
+	} else if (face == FACE_ZMAX || face == FACE_ZMIN) {
+		AutoRotate_Insert(name, offset, "-NS");
+	}
+	return GetRotated(name, offset);
+}
+
+static int RotateDirection(String* name, int offset) {
 	float yaw;
 	yaw = LocalPlayer_Instance.Base.HeadY;
 	yaw = LocationUpdate_Clamp(yaw);
 
 	if (yaw >= 45.0f && yaw < 135.0f) {
-		return AutoRotate_Find(block, name, "-E");
+		AutoRotate_Insert(name, offset, "-E");
 	} else if (yaw >= 135.0f && yaw < 225.0f) {
-		return AutoRotate_Find(block, name, "-S");
+		AutoRotate_Insert(name, offset, "-S");
 	} else if (yaw >= 225.0f && yaw < 315.0f) {
-		return AutoRotate_Find(block, name, "-W");
+		AutoRotate_Insert(name, offset, "-W");
 	} else {
-		return AutoRotate_Find(block, name, "-N");
+		AutoRotate_Insert(name, offset, "-N");
 	}
+	return GetRotated(name, offset);
 }
 
 #define AR_EQ1(s, x)    (dir0 == x && dir1 == '\0')
 #define AR_EQ2(s, x, y) (dir0 == x && dir1 == y)
-BlockID AutoRotate_RotateBlock(BlockID block) {
-	String name  = Block_UNSAFE_GetName(block);
-	String dir, group;
+static int FindRotated(String* name, int offset) {	
+	String dir;
 	char dir0, dir1;
 
-	int dirIndex = String_LastIndexOf(&name, '-');
-	if (dirIndex == -1) return block; /* not a directional block */
+	int dirIndex = String_LastIndexOfAt(name, offset, '-');
+	if (dirIndex == -1) return -1; /* not a directional block */
 
-	dir   = String_UNSAFE_SubstringAt(&name, dirIndex + 1);
-	group = String_UNSAFE_Substring(&name, 0, dirIndex);
+	dir = String_UNSAFE_SubstringAt(name, dirIndex);
+	dir.length -= offset;
+	if (dir.length > 3) return -1;
+	offset += dir.length;
 
-	if (dir.length > 2) return block;
-	dir0 = dir.length > 0 ? dir.buffer[0] : '\0'; Char_MakeLower(dir0);
-	dir1 = dir.length > 1 ? dir.buffer[1] : '\0'; Char_MakeLower(dir1);
+	/* e.g. -D or -ns */
+	dir0 = dir.length > 1 ? dir.buffer[1] : '\0'; Char_MakeLower(dir0);
+	dir1 = dir.length > 2 ? dir.buffer[2] : '\0'; Char_MakeLower(dir1);
 
 	if (AR_EQ2(dir, 'n','w') || AR_EQ2(dir, 'n','e') || AR_EQ2(dir, 's','w') || AR_EQ2(dir, 's','e')) {
-		return AutoRotate_RotateCorner(block, &group);
+		return RotateCorner(name, offset);
 	} else if (AR_EQ1(dir, 'u') || AR_EQ1(dir, 'd')) {
-		return AutoRotate_RotateVertical(block, &group);
+		return RotateVertical(name, offset);
 	} else if (AR_EQ1(dir, 'n') || AR_EQ1(dir, 'w') || AR_EQ1(dir, 's') || AR_EQ1(dir, 'e')) {
-		return AutoRotate_RotateDirection(block, &group);
+		return RotateDirection(name, offset);
 	} else if (AR_EQ2(dir, 'u','d') || AR_EQ2(dir, 'w','e') || AR_EQ2(dir, 'n','s')) {
-		return AutoRotate_RotateOther(block, &group);
+		AutoRotate_Insert(name, offset, "-UD");
+		if (Block_FindID(name) == -1) {
+			return RotateFence(name, offset);
+		} else {
+			return RotatePillar(name, offset);
+		}
 	}
-	return block;
+	return -1;
+}
+
+BlockID AutoRotate_RotateBlock(BlockID block) {
+	String str; char strBuffer[STRING_SIZE * 2];
+	String name;
+	int rotated;
+	
+	name = Block_UNSAFE_GetName(block);
+	String_InitArray(str, strBuffer);
+	String_AppendString(&str, &name);
+
+	/* need to copy since we change characters in name */
+	rotated = FindRotated(&str, 0);
+	return rotated == -1 ? block : (BlockID)rotated;
 }
 
 

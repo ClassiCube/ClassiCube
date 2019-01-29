@@ -178,16 +178,16 @@ bool HacksComp_Floating(struct HacksComp* hacks) {
 static String HacksComp_UNSAFE_FlagValue(const char* flagRaw, struct HacksComp* hacks) {
 	String* joined = &hacks->HacksFlags;
 	String flag    = String_FromReadonly(flagRaw);
-	int start, end;
+	int beg, end;
 
-	start = String_IndexOfString(joined, &flag);
-	if (start < 0) return String_Empty;
-	start += flag.length;
+	beg = String_IndexOfString(joined, &flag);
+	if (beg < 0) return String_Empty;
+	beg += flag.length;
 
-	end = String_IndexOf(joined, ' ', start);
+	end = String_IndexOfAt(joined, beg, ' ');
 	if (end < 0) end = joined->length;
 
-	return String_UNSAFE_Substring(joined, start, end - start);
+	return String_UNSAFE_Substring(joined, beg, end - beg);
 }
 
 static float HacksComp_ParseFlagFloat(const char* flagRaw, struct HacksComp* hacks) {

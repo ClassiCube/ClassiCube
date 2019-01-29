@@ -58,14 +58,14 @@ String String_UNSAFE_Substring(STRING_REF const String* str, int offset, int len
 }
 
 int String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int maxSubs) {
-	int start = 0, end, count, i;
+	int beg = 0, end, count, i;
 
-	for (i = 0; i < maxSubs && start <= str->length; i++) {
-		end = String_IndexOf(str, c, start);
+	for (i = 0; i < maxSubs && beg <= str->length; i++) {
+		end = String_IndexOfAt(str, beg, c);
 		if (end == -1) end = str->length;
 
-		subs[i] = String_UNSAFE_Substring(str, start, end - start);
-		start = end + 1;
+		subs[i] = String_UNSAFE_Substring(str, beg, end - beg);
+		beg = end + 1;
 	}
 
 	count = i;
@@ -75,7 +75,7 @@ int String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int 
 }
 
 bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value) {
-	int idx = String_IndexOf(str, c, 0);
+	int idx = String_IndexOf(str, c);
 	if (idx == -1) {
 		*key   = *str;
 		*value = String_Empty;
@@ -273,7 +273,7 @@ void String_AppendColorless(String* str, const String* src) {
 }
 
 
-int String_IndexOf(const String* str, char c, int offset) {
+int String_IndexOfAt(const String* str, int offset, char c) {
 	int i;
 	for (i = offset; i < str->length; i++) {
 		if (str->buffer[i] == c) return i;
@@ -281,9 +281,9 @@ int String_IndexOf(const String* str, char c, int offset) {
 	return -1;
 }
 
-int String_LastIndexOf(const String* str, char c) {
+int String_LastIndexOfAt(const String* str, int offset, char c) {
 	int i;
-	for (i = str->length - 1; i >= 0; i--) {
+	for (i = (str->length - 1) - offset; i >= 0; i--) {
 		if (str->buffer[i] == c) return i;
 	}
 	return -1;
