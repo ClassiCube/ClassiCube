@@ -10,7 +10,7 @@ Rect2D Window_Bounds;
 Size2D Window_ClientSize;
 
 static bool win_cursorVisible = true;
-bool Window_GetCursorVisible(void) { return win_cursorVisible; }
+bool Cursor_GetVisible(void) { return win_cursorVisible; }
 
 void Window_CreateSimple(int width, int height) {
 	struct DisplayDevice* device = &DisplayDevice_Default;
@@ -567,14 +567,14 @@ void Window_ProcessEvents(void) {
 	}
 }
 
-Point2D Window_GetScreenCursorPos(void) {
+Point2D Cursor_GetScreenPos(void) {
 	POINT point; GetCursorPos(&point);
 	Point2D p = { point.x, point.y }; return p;
 }
-void Window_SetScreenCursorPos(int x, int y) {
+void Cursor_SetScreenPos(int x, int y) {
 	SetCursorPos(x, y);
 }
-void Window_SetCursorVisible(bool visible) {
+void Cursor_SetVisible(bool visible) {
 	win_cursorVisible = visible;
 	ShowCursor(visible ? 1 : 0);
 }
@@ -1335,7 +1335,7 @@ Point2D Window_PointToScreen(int x, int y) {
 	return p;
 }
 
-Point2D Window_GetScreenCursorPos(void) {
+Point2D Cursor_GetScreenPos(void) {
 	Window rootW, childW;
 	Point2D root, child;
 	unsigned int mask;
@@ -1344,25 +1344,26 @@ Point2D Window_GetScreenCursorPos(void) {
 	return root;
 }
 
-void Window_SetScreenCursorPos(int x, int y) {
+void Cursor_SetScreenPos(int x, int y) {
 	XWarpPointer(win_display, None, win_rootWin, 0, 0, 0, 0, x, y);
 	XFlush(win_display); /* TODO: not sure if XFlush call is necessary */
 }
 
-static Cursor win_blankCursor;
-void Window_SetCursorVisible(bool visible) {
+void Cursor_SetVisible(bool visible) {
+	static Cursor blankCursor;
 	win_cursorVisible = visible;
+
 	if (visible) {
 		XUndefineCursor(win_display, win_handle);
 	} else {
-		if (!win_blankCursor) {
+		if (!blankCursor) {
 			char data  = 0;
 			XColor col = { 0 };
-			Pixmap pixmap   = XCreateBitmapFromData(win_display, win_handle, &data, 1, 1);
-			win_blankCursor = XCreatePixmapCursor(win_display, pixmap, pixmap, &col, &col, 0, 0);
+			Pixmap pixmap = XCreateBitmapFromData(win_display, win_handle, &data, 1, 1);
+			blankCursor   = XCreatePixmapCursor(win_display, pixmap, pixmap, &col, &col, 0, 0);
 			XFreePixmap(win_display, pixmap);
 		}
-		XDefineCursor(win_display, win_handle, win_blankCursor);
+		XDefineCursor(win_display, win_handle, blankCursor);
 	}
 }
 
@@ -2305,7 +2306,7 @@ Point2D Window_PointToScreen(int x, int y) {
 	return p;
 }
 
-Point2D Window_GetScreenCursorPos(void) {
+Point2D Cursor_GetScreenPos(void) {
 	HIPoint point;
 	Point2D p;
 	/* NOTE: HIGetMousePosition is OSX 10.5 or later */
@@ -2316,7 +2317,7 @@ Point2D Window_GetScreenCursorPos(void) {
 	return p;
 }
 
-void Window_SetScreenCursorPos(int x, int y) {
+void Cursor_SetScreenPos(int x, int y) {
 	CGPoint point;
 	point.x = x; point.y = y;
 	
@@ -2325,7 +2326,7 @@ void Window_SetScreenCursorPos(int x, int y) {
 	CGAssociateMouseAndMouseCursorPosition(1);
 }
 
-void Window_SetCursorVisible(bool visible) {
+void Cursor_SetVisible(bool visible) {
 	win_cursorVisible = visible;
 	if (visible) {
 		CGDisplayShowCursor(CGMainDisplayID());

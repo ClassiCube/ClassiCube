@@ -546,7 +546,7 @@ static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 
 	topLeft = Window_PointToScreen(0, 0);
 	x += topLeft.X; y += topLeft.Y;
-	Window_SetScreenCursorPos(x, y);
+	Cursor_SetScreenPos(x, y);
 }
 
 static void TableWidget_MakeBlockDesc(String* desc, BlockID block) {

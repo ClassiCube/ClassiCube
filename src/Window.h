@@ -94,15 +94,15 @@ Point2D Window_PointToClient(int x, int y);
 Point2D Window_PointToScreen(int x, int y);
 
 /* Gets the position of the cursor in screen coordinates. */
-Point2D Window_GetScreenCursorPos(void);
+Point2D Cursor_GetScreenPos(void);
 /* Sets the position of the cursor in screen coordinates. */
-void Window_SetScreenCursorPos(int x, int y);
+void Cursor_SetScreenPos(int x, int y);
 /* Whether the cursor is visible when over this window. */
-bool Window_GetCursorVisible(void);
+bool Cursor_GetVisible(void);
 /* Sets whether the cursor is visible when over this window. */
 /* NOTE: You MUST BE VERY CAREFUL with this! OS typically uses a counter for visibility,
 so setting invisible multiple times means you must then set visible multiple times. */
-void Window_SetCursorVisible(bool visible);
+void Cursor_SetVisible(bool visible);
 
 /* Shows a dialog box window. */
 CC_API void Window_ShowDialog(const char* title, const char* msg);

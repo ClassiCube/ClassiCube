@@ -1125,7 +1125,7 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 	ReturnCode res;
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
 
-	method = Stream_GetU16_LE(&header[4]);
+	method           = Stream_GetU16_LE(&header[4]);
 	compressedSize   = Stream_GetU32_LE(&header[14]);
 	uncompressedSize = Stream_GetU32_LE(&header[18]);
 
@@ -1139,6 +1139,7 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 
 	path = String_Init(pathBuffer, pathLen, pathLen);
 	if ((res = Stream_Read(stream, pathBuffer, pathLen))) return res;
+	state->_curEntry = entry;
 
 	if (!state->SelectEntry(&path)) return 0;
 	/* local file may have extra data before actual data (e.g. ZIP64) */
@@ -1182,6 +1183,7 @@ static ReturnCode Zip_ReadCentralDirectory(struct ZipState* state) {
 	if (state->_usedEntries >= ZIP_MAX_ENTRIES) return ZIP_ERR_TOO_MANY_ENTRIES;
 	entry = &state->Entries[state->_usedEntries++];
 
+	entry->CRC32             = Stream_GetU32_LE(&header[12]);
 	entry->CompressedSize    = Stream_GetU32_LE(&header[16]);
 	entry->UncompressedSize  = Stream_GetU32_LE(&header[20]);
 	entry->LocalHeaderOffset = Stream_GetU32_LE(&header[38]);

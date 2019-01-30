@@ -279,52 +279,35 @@ static ReturnCode ZipPatcher_FixupLocalFile(struct Stream* s, struct ResourceTex
 	return s->Seek(s, dataEnd);
 }
 
-static ReturnCode ZipPatcher_WriteData(struct Stream* s, struct ResourceTexture* tex, const uint8_t* data, uint32_t len) {
+static ReturnCode ZipPatcher_WriteData(struct Stream* dst, struct ResourceTexture* tex, const uint8_t* data, uint32_t len) {
 	ReturnCode res;
 	tex->Size  = len;
 	tex->Crc32 = Utils_CRC32(data, len);
 
-	res = ZipPatcher_LocalFile(s, tex);
+	res = ZipPatcher_LocalFile(dst, tex);
 	if (res) return res;
-	return Stream_Write(s, data, len);
+	return Stream_Write(dst, data, len);
 }
 
-/*static ReturnCode ZipPatcher_WriteStream(struct Stream* s, struct ResourceTexture* tex, struct Stream* src) {
+static ReturnCode ZipPatcher_WriteZipEntry(struct Stream* src, struct ResourceTexture* tex, struct ZipState* state) {
 	uint8_t tmp[2048];
 	uint32_t read;
+	struct Stream* dst = state->Obj;
 	ReturnCode res;
-	if ((res = ZipPatcher_LocalFile(s, tex))) return res;
+
+	tex->Size  = state->_curEntry->UncompressedSize;
+	tex->Crc32 = state->_curEntry->CRC32;
+	res = ZipPatcher_LocalFile(dst, tex);
+	if (res) return res;
 
 	for (;;) {
 		res = src->Read(src, tmp, sizeof(tmp), &read);
 		if (res)   return res;
 		if (!read) break;
 
-		if ((res = Stream_Write(s, tmp, read))) return res;
+		if ((res = Stream_Write(dst, tmp, read))) return res;
 	}
-	return ZipPatcher_FixupLocalFile(s, tex);
-}*/
-static ReturnCode ZipPatcher_WriteStream(struct Stream* s, struct ResourceTexture* tex, struct Stream* src) {
-	uint8_t tmp[2048];
-	uint32_t read;
-	struct Stream crc32;
-	ReturnCode res;
-
-	res = ZipPatcher_LocalFile(s, tex);
-	if (res) return res;
-	Stream_WriteonlyCrc32(&crc32, s);
-
-	for (tex->Size = 0; ; tex->Size += read) {
-		res = src->Read(src, tmp, sizeof(tmp), &read);
-		if (res)   return res;
-		if (!read) break;
-
-		res = Stream_Write(&crc32, tmp, read);
-		if (res) return res;
-	}
-
-	tex->Crc32 = crc32.Meta.CRC32.CRC32 ^ 0xFFFFFFFFUL;
-	return ZipPatcher_FixupLocalFile(s, tex);
+	return 0;
 }
 
 static ReturnCode ZipPatcher_WritePng(struct Stream* s, struct ResourceTexture* tex, Bitmap* src) {
@@ -367,7 +350,6 @@ static bool ClassicPatcher_SelectEntry(const String* path ) {
 
 static ReturnCode ClassicPatcher_ProcessEntry(const String* path, struct Stream* data, struct ZipState* state) {
 	static const String guiClassicPng = String_FromConst("gui_classic.png");
-	struct Stream* s = state->Obj;
 	struct ResourceTexture* entry;
 	String name;
 
@@ -381,7 +363,7 @@ static ReturnCode ClassicPatcher_ProcessEntry(const String* path, struct Stream*
 	if (String_CaselessEqualsConst(&name, "gui.png")) name = guiClassicPng;
 
 	entry = Resources_FindTex(&name);
-	return ZipPatcher_WriteStream(s, entry, data);
+	return ZipPatcher_WriteZipEntry(data, entry, state);
 }
 
 static ReturnCode ClassicPatcher_ExtractFiles(struct Stream* s) {
@@ -467,7 +449,6 @@ static ReturnCode ModernPatcher_MakeAnimations(struct Stream* s, struct Stream* 
 }
 
 static ReturnCode ModernPatcher_ProcessEntry(const String* path, struct Stream* data, struct ZipState* state) {
-	struct Stream* s = state->Obj;
 	struct ResourceTexture* entry;
 	struct TilePatch* tile;
 	String name;
@@ -478,11 +459,12 @@ static ReturnCode ModernPatcher_ProcessEntry(const String* path, struct Stream* 
 		Utils_UNSAFE_GetFilename(&name);
 
 		entry = Resources_FindTex(&name);
-		return ZipPatcher_WriteStream(s, entry, data);
+		return ZipPatcher_WriteZipEntry(data, entry, state);
 	}
 
 	if (String_CaselessEqualsConst(path, "assets/minecraft/textures/blocks/fire_layer_1.png")) {
-		return ModernPatcher_MakeAnimations(s, data);
+		struct Stream* dst = state->Obj;
+		return ModernPatcher_MakeAnimations(dst, data);
 	}
 
 	tile = ModernPatcher_GetTile(path);

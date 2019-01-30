@@ -270,7 +270,7 @@ void Gui_CalcCursorVisible(void) {
 	if (vis == gui_cursorVisible) return;
 	gui_cursorVisible = vis;
 
-	Window_SetCursorVisible(vis);
+	Cursor_SetVisible(vis);
 	if (Window_Focused)
 		Camera.Active->RegrabMouse();
 }

@@ -114,8 +114,8 @@ struct ZLibState { struct DeflateState Base; uint32_t Adler32; };
 CC_API void ZLib_MakeStream(struct Stream* stream, struct ZLibState* state, struct Stream* underlying);
 
 /* Minimal data needed to describe an entry in a .zip archive. */
-struct ZipEntry { uint32_t CompressedSize, UncompressedSize, LocalHeaderOffset; };
-#define ZIP_MAX_ENTRIES 2048
+struct ZipEntry { uint32_t CompressedSize, UncompressedSize, LocalHeaderOffset, CRC32; };
+#define ZIP_MAX_ENTRIES 1024
 struct ZipState;
 
 /* Stores state for reading and processing entries in a .zip archive. */
@@ -138,6 +138,8 @@ struct ZipState {
 	int _totalEntries;
 	/* (internal) Offset to central directory entries. */
 	uint32_t _centralDirBeg;
+	/* (internal) Current entry being processed. */
+	struct ZipEntry* _curEntry;
 	/* Data for each entry in the .zip archive. */
 	struct ZipEntry Entries[ZIP_MAX_ENTRIES];
 };
