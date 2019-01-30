@@ -240,7 +240,44 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 	}
 }
 
-#define Builder_ReadChunkBody(get_block)\
+#define ReadChunkBody(get_block)\
+for (yy = -1; yy < 17; ++yy) {\
+	y = yy + y1;\
+	for (zz = -1; zz < 17; ++zz) {\
+\
+		index  = World_Pack(x1 - 1, y, z1 + zz);\
+		cIndex = Builder_PackChunk(-1, yy, zz);\
+		for (xx = -1; xx < 17; ++xx, ++index, ++cIndex) {\
+\
+			block    = get_block;\
+			allAir   = allAir   && Blocks.Draw[block] == DRAW_GAS;\
+			allSolid = allSolid && Blocks.FullOpaque[block];\
+			Builder_Chunk[cIndex] = block;\
+		}\
+	}\
+}
+
+static bool ReadChunkData(int x1, int y1, int z1, bool* outAllAir) {
+	bool allAir = true, allSolid = true;
+	int index, cIndex;
+	BlockID block;
+	int xx, yy, zz, y;
+
+#ifndef EXTENDED_BLOCKS
+	ReadChunkBody(World.Blocks[index]);
+#else
+	if (Block_UsedCount <= 256) {
+		ReadChunkBody(World.Blocks[index]);
+	} else {
+		ReadChunkBody(World.Blocks[index] | (World.Blocks2[index] << 8));
+	}
+#endif
+
+	*outAllAir = allAir;
+	return allSolid;
+}
+
+#define ReadBorderChunkBody(get_block)\
 for (yy = -1; yy < 17; ++yy) {\
 	y = yy + y1;\
 	if (y < 0) continue;\
@@ -259,32 +296,31 @@ for (yy = -1; yy < 17; ++yy) {\
 			if (x < 0) continue;\
 			if (x >= World.Width) break;\
 \
-			block    = get_block;\
-			allAir   = allAir   && Blocks.Draw[block] == DRAW_GAS;\
-			allSolid = allSolid && Blocks.FullOpaque[block];\
+			block  = get_block;\
+			allAir = allAir && Blocks.Draw[block] == DRAW_GAS;\
 			Builder_Chunk[cIndex] = block;\
 		}\
 	}\
 }
 
-static void Builder_ReadChunkData(int x1, int y1, int z1, bool* outAllAir, bool* outAllSolid) {
-	bool allAir = true, allSolid = true;
+static bool ReadBorderChunkData(int x1, int y1, int z1, bool* outAllAir) {
+	bool allAir = true;
 	int index, cIndex;
 	BlockID block;
 	int xx, yy, zz, x, y, z;
 
 #ifndef EXTENDED_BLOCKS
-	Builder_ReadChunkBody(World.Blocks[index]);
+	ReadBorderChunkBody(World.Blocks[index]);
 #else
 	if (Block_UsedCount <= 256) {
-		Builder_ReadChunkBody(World.Blocks[index]);
+		ReadBorderChunkBody(World.Blocks[index]);
 	} else {
-		Builder_ReadChunkBody(World.Blocks[index] | (World.Blocks2[index] << 8));
+		ReadBorderChunkBody(World.Blocks[index] | (World.Blocks2[index] << 8));
 	}
 #endif
 
-	*outAllAir   = allAir;
-	*outAllSolid = allSolid;
+	*outAllAir = allAir;
+	return false;
 }
 
 static bool Builder_BuildChunk(int x1, int y1, int z1, bool* allAir) {
@@ -292,7 +328,7 @@ static bool Builder_BuildChunk(int x1, int y1, int z1, bool* allAir) {
 	uint8_t counts[CHUNK_SIZE_3 * FACE_COUNT]; 
 	int bitFlags[EXTCHUNK_SIZE_3];
 
-	bool allSolid;
+	bool allSolid, onBorder;
 	int xMax, yMax, zMax;
 	int cIndex, index;
 	int x, y, z, xx, yy, zz;
@@ -301,12 +337,18 @@ static bool Builder_BuildChunk(int x1, int y1, int z1, bool* allAir) {
 	Builder_Counts = counts;
 	Builder_BitFlags = bitFlags;
 	Builder_PreStretchTiles(x1, y1, z1);
+	
+	onBorder = 
+		x1 == 0 || y1 == 0 || z1 == 0   || x1 + CHUNK_SIZE >= World.Width ||
+		y1 + CHUNK_SIZE >= World.Height || z1 + CHUNK_SIZE >= World.Length;
 
-	Mem_Set(chunk, BLOCK_AIR, EXTCHUNK_SIZE_3 * sizeof(BlockID));
-	Builder_ReadChunkData(x1, y1, z1, allAir, &allSolid);
-
-	if (x1 == 0 || y1 == 0 || z1 == 0 || x1 + CHUNK_SIZE >= World.Width ||
-		y1 + CHUNK_SIZE >= World.Height || z1 + CHUNK_SIZE >= World.Length) allSolid = false;
+	if (onBorder) {
+		/* less optimal case here */
+		Mem_Set(chunk, BLOCK_AIR, EXTCHUNK_SIZE_3 * sizeof(BlockID));
+		allSolid = ReadBorderChunkData(x1, y1, z1, allAir);
+	} else {
+		allSolid = ReadChunkData(x1, y1, z1, allAir);
+	}
 
 	if (*allAir || allSolid) return false;
 	Lighting_LightHint(x1 - 1, z1 - 1);
