@@ -500,11 +500,11 @@ static void FetchUpdateTask_Handle(uint8_t* data, uint32_t len) {
 void FetchUpdateTask_Run(bool release, bool d3d9) {
 #if defined CC_BUILD_WIN
 #if _M_IX86
-	const char* exe_d3d9 = "ClassiCube.64.exe";
-	const char* exe_ogl  = "ClassiCube.64-opengl.exe";
-#elif _M_X64
 	const char* exe_d3d9 = "ClassiCube.exe";
 	const char* exe_ogl  = "ClassiCube.opengl.exe";
+#elif _M_X64
+	const char* exe_d3d9 = "ClassiCube.64.exe";
+	const char* exe_ogl  = "ClassiCube.64.opengl.exe";
 #endif
 #elif defined CC_BUILD_LINUX
 #if __i386__
