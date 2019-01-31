@@ -2119,10 +2119,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	title_height = Rect_Height(r);
 	AcquireRootMenu();
 	
-	/* TODO: Apparently GetCurrentProcess is needed */
 	GetCurrentProcess(&psn);
-	/* NOTE: TransformProcessType is OSX 10.3 or later */
-	TransformProcessType(&psn, kProcessTransformToForegroundApplication);
 	SetFrontProcess(&psn);
 	
 	/* TODO: Use BringWindowToFront instead.. (look in the file which has RepositionWindow in it) !!!! */

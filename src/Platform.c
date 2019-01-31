@@ -14,7 +14,6 @@
 #include "freetype/ftglyph.h"
 
 static void Platform_InitDisplay(void);
-static void Platform_InitStopwatch(void);
 struct DisplayDevice DisplayDevice_Default;
 void* DisplayDevice_Meta;
 
@@ -1786,27 +1785,6 @@ int Platform_ConvertString(void* data, const String* src) {
 	return src->length * 2;
 }
 
-void Platform_Init(void) {	
-	WSADATA wsaData;
-	ReturnCode res;
-
-	Platform_InitDisplay();
-	Platform_InitStopwatch();
-	heap = GetProcessHeap();
-	
-	res = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (res) Logger_Abort2(res, "WSAStartup failed");
-
-	hasDebugger = IsDebuggerPresent();
-	if (!AttachConsole(ATTACH_PARENT_PROCESS)) return;
-	conHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-}
-
-void Platform_Free(void) {
-	WSACleanup();
-	HeapDestroy(heap);
-}
-
 static void Platform_InitDisplay(void) {
 	HDC hdc = GetDC(NULL);
 
@@ -1827,6 +1805,27 @@ static void Platform_InitStopwatch(void) {
 		sw_freqMul = 1000 * 1000;
 		sw_freqDiv = freq.QuadPart;
 	} else { sw_freqDiv = 10; }
+}
+
+void Platform_Init(void) {	
+	WSADATA wsaData;
+	ReturnCode res;
+
+	Platform_InitDisplay();
+	Platform_InitStopwatch();
+	heap = GetProcessHeap();
+	
+	res = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (res) Logger_Warn(res, "starting WSA");
+
+	hasDebugger = IsDebuggerPresent();
+	if (!AttachConsole(ATTACH_PARENT_PROCESS)) return;
+	conHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+}
+
+void Platform_Free(void) {
+	WSACleanup();
+	HeapDestroy(heap);
 }
 
 ReturnCode Platform_SetCurrentDirectory(const String* path) {
@@ -1985,11 +1984,10 @@ int Platform_ConvertString(void* data, const String* src) {
 	return len;
 }
 
-void Platform_Init(void) {
+static void Platform_InitCommon(void) {
 	signal(SIGCHLD, SIG_IGN);
 	Platform_InitDisplay();
-	Platform_InitStopwatch();
-	pthread_mutex_init(&audio_lock,  NULL);
+	pthread_mutex_init(&audio_lock, NULL);
 }
 
 void Platform_Free(void) {
@@ -2094,7 +2092,12 @@ ReturnCode Platform_StartOpen(const String* args) {
 	const static String path = String_FromConst("xdg-open");
 	return Platform_StartProcess(&path, args);
 }
-static void Platform_InitStopwatch(void) { sw_freqDiv = 1000; }
+
+void Platform_Init(void) {
+	Platform_InitCommon();
+	/* stopwatch always in nanoseconds */
+	sw_freqDiv = 1000; 
+}
 #endif
 #ifdef CC_BUILD_LINUX
 ReturnCode Platform_GetExePath(String* path) {
@@ -2165,5 +2168,16 @@ static void Platform_InitStopwatch(void) {
 
 	sw_freqMul = tb.numer;
 	sw_freqDiv = tb.denom * 1000;
+}
+
+void Platform_Init(void) {
+	ProcessSerialNumber psn;
+	Platform_InitCommon();
+	Platform_InitStopwatch();
+	
+	/* NOTE: Call as soon as possible, otherwise can't click on dialog boxes. */
+	GetCurrentProcess(&psn);
+	/* NOTE: TransformProcessType is OSX 10.3 or later */
+	TransformProcessType(&psn, kProcessTransformToForegroundApplication);
 }
 #endif

@@ -88,9 +88,9 @@ int main(int argc, char** argv) {
 	uint8_t ip[4];
 	uint16_t port;
 
-	Program_SetCurrentDirectory();
 	Logger_Hook();
 	Platform_Init();
+	Program_SetCurrentDirectory();
 #ifdef CC_TEST_VORBIS
 	main_imdct();
 #endif
