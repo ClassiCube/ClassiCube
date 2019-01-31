@@ -360,7 +360,11 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	wc.hInstance = win_instance;
 	wc.lpfnWndProc   = Window_Procedure;
 	wc.lpszClassName = CC_WIN_CLASSNAME;
-	/* TODO: Set window icons here */
+
+	wc.hIcon   = (HICON)LoadImage(win_instance, MAKEINTRESOURCE(1), IMAGE_ICON,
+			GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), 0);
+	wc.hIconSm = (HICON)LoadImage(win_instance,MAKEINTRESOURCE(1), IMAGE_ICON,
+			GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0);
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 
 	ATOM atom = RegisterClassEx(&wc);
