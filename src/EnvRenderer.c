@@ -815,6 +815,7 @@ static void EnvRenderer_UpdateAll(void) {
 	EnvRenderer_UpdateSkybox();
 	EnvRenderer_UpdateFog();
 
+	if (Gfx_LostContext) return;
 	/* TODO: Don't allocate unless used? */
 	weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, WEATHER_VERTS_COUNT);
 	/* TODO: Don't need to do this on every new map */

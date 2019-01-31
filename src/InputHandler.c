@@ -20,8 +20,8 @@
 
 static bool input_buttonsDown[3];
 static int input_pickingId = -1;
-static int16_t input_normViewDists[10] = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
-static int16_t input_classicViewDists[4] = { 8, 32, 128, 512 };
+static short normViewDists[10]   = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+static short classicViewDists[4] = { 8, 32, 128, 512 };
 static TimeMS input_lastClick;
 static float input_fovIndex = -1.0f;
 
@@ -91,7 +91,7 @@ static void InputHandler_Toggle(Key key, bool* target, const char* enableMsg, co
 	}
 }
 
-static void InputHandler_CycleDistanceForwards(int16_t* viewDists, int count) {
+static void InputHandler_CycleDistanceForwards(const short* viewDists, int count) {
 	int i, dist;
 	for (i = 0; i < count; i++) {
 		dist = viewDists[i];
@@ -103,7 +103,7 @@ static void InputHandler_CycleDistanceForwards(int16_t* viewDists, int count) {
 	Game_UserSetViewDistance(viewDists[0]);
 }
 
-static void InputHandler_CycleDistanceBackwards(int16_t* viewDists, int count) {
+static void InputHandler_CycleDistanceBackwards(const short* viewDists, int count) {
 	int i, dist;
 	for (i = count - 1; i >= 0; i--) {
 		dist = viewDists[i];
@@ -191,8 +191,8 @@ static bool InputHandler_HandleCoreKey(Key key) {
 			Window_SetWindowState(fullscreen ? WINDOW_STATE_NORMAL : WINDOW_STATE_FULLSCREEN);
 		}
 	} else if (key == KeyBind_Get(KEYBIND_FOG)) {
-		int16_t* viewDists = Gui_ClassicMenu ? input_classicViewDists : input_normViewDists;
-		int count = Gui_ClassicMenu ? Array_Elems(input_classicViewDists) : Array_Elems(input_normViewDists);
+		short* viewDists = Gui_ClassicMenu ? classicViewDists : normViewDists;
+		int count = Gui_ClassicMenu ? Array_Elems(classicViewDists) : Array_Elems(normViewDists);
 
 		if (Key_IsShiftPressed()) {
 			InputHandler_CycleDistanceBackwards(viewDists, count);
