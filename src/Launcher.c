@@ -584,17 +584,24 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 "sleep 1\n" \
 "echo 1..\n" \
 "sleep 1\n" \
+"cd $(cd -P -- \"$(dirname -- \"$0\")\" && pwd -P)\n" \
 "echo Copying updated version\n" \
 "mv ./ClassiCube.update ./ClassiCube\n" \
 "echo Starting launcher again\n" \
 "./ClassiCube\n"
 #endif
+/* The weird 'cd' line changes current directory to the directory update.sh is in */
+/* Needed because bash's current directory isn't always client's directory (e.g. on OSX) */
 
 static void Launcher_ApplyUpdate(void) {
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 	const static String scriptPath = String_FromConst("update.bat");
 	const static String scriptName = String_FromConst("C:/Windows/System32/cmd.exe");
 	const static String scriptArgs = String_FromConst("/C start cmd /C update.bat");
+#elif defined CC_BUILD_OSX
+	const static String scriptPath = String_FromConst("update.sh");
+	const static String scriptName = String_FromConst("/usr/bin/open");
+	const static String scriptArgs = String_FromConst("-a Terminal ./update.sh");
 #else
 	const static String scriptPath = String_FromConst("update.sh");
 	const static String scriptName = String_FromConst("xterm");
