@@ -6,8 +6,6 @@
 #include "Stream.h"
 
 static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx);
-static void Logger_DumpCommon(String* str, void* ctx);
-static void Logger_DumpRegisters(void* ctx);
 
 #ifdef CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
@@ -24,6 +22,44 @@ struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
 /*########################################################################################################################*
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
+static void Logger_DumpRegisters(void* ctx) {
+	String str; char strBuffer[STRING_SIZE * 8];
+	CONTEXT* r;
+	if (!ctx) return;
+
+	r = (CONTEXT*)ctx;
+	String_InitArray(str, strBuffer);
+	String_AppendConst(&str, "-- registers --\r\n");
+
+#if defined _M_IX86
+	String_Format3(&str, "eax=%x ebx=%x ecx=%x\r\n", &r->Eax, &r->Ebx, &r->Ecx);
+	String_Format3(&str, "edx=%x esi=%x edi=%x\r\n", &r->Edx, &r->Esi, &r->Edi);
+	String_Format3(&str, "eip=%x ebp=%x esp=%x\r\n", &r->Eip, &r->Ebp, &r->Esp);
+#elif defined _M_X64
+	String_Format3(&str, "rax=%x rbx=%x rcx=%x\r\n", &r->Rax, &r->Rbx, &r->Rcx);
+	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\r\n", &r->Rdx, &r->Rsi, &r->Rdi);
+	String_Format3(&str, "rip=%x rbp=%x rsp=%x\r\n", &r->Rip, &r->Rbp, &r->Rsp);
+	String_Format3(&str, "r8 =%x r9 =%x r10=%x\r\n", &r->R8,  &r->R9,  &r->R10);
+	String_Format3(&str, "r11=%x r12=%x r13=%x\r\n", &r->R11, &r->R12, &r->R13);
+	String_Format2(&str, "r14=%x r15=%x\r\n"       , &r->R14, &r->R15);
+#elif defined _M_IA64
+	String_Format3(&str, "r1 =%x r2 =%x r3 =%x\r\n", &r->IntGp,  &r->IntT0,  &r->IntT1);
+	String_Format3(&str, "r4 =%x r5 =%x r6 =%x\r\n", &r->IntS0,  &r->IntS1,  &r->IntS2);
+	String_Format3(&str, "r7 =%x r8 =%x r9 =%x\r\n", &r->IntS3,  &r->IntV0,  &r->IntT2);
+	String_Format3(&str, "r10=%x r11=%x r12=%x\r\n", &r->IntT3,  &r->IntT4,  &r->IntSp);
+	String_Format3(&str, "r13=%x r14=%x r15=%x\r\n", &r->IntTeb, &r->IntT5,  &r->IntT6);
+	String_Format3(&str, "r16=%x r17=%x r18=%x\r\n", &r->IntT7,  &r->IntT8,  &r->IntT9);
+	String_Format3(&str, "r19=%x r20=%x r21=%x\r\n", &r->IntT10, &r->IntT11, &r->IntT12);
+	String_Format3(&str, "r22=%x r23=%x r24=%x\r\n", &r->IntT13, &r->IntT14, &r->IntT15);
+	String_Format3(&str, "r25=%x r26=%x r27=%x\r\n", &r->IntT16, &r->IntT17, &r->IntT18);
+	String_Format3(&str, "r28=%x r29=%x r30=%x\r\n", &r->IntT19, &r->IntT20, &r->IntT21);
+	String_Format3(&str, "r31=%x nat=%x pre=%x\r\n", &r->IntT22, &r->IntNats,&r->Preds);
+#else
+#error "Unknown machine type"
+#endif
+	Logger_Log(&str);
+}
+
 static int Logger_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, int max) {
 	STACKFRAME frame = { 0 };
 	frame.AddrPC.Mode     = AddrModeFlat;
@@ -66,18 +102,6 @@ static int Logger_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, int ma
 		pointers[count].Stack       = frame.AddrStack.Offset;
 	}
 	return count;
-}
-
-static BOOL CALLBACK Logger_DumpModule(const char* name, ULONG_PTR base, ULONG size, void* ctx) {
-	String str; char strBuffer[STRING_SIZE * 4];
-	uintptr_t beg, end;
-
-	beg = base; end = base + (size - 1);
-	String_InitArray(str, strBuffer);
-
-	String_Format3(&str, "%c = %x-%x\r\n", name, &beg, &end);
-	Logger_Log(&str);
-	return true;
 }
 
 static void Logger_Backtrace(String* backtrace, void* ctx) {
@@ -125,55 +149,33 @@ static void Logger_Backtrace(String* backtrace, void* ctx) {
 	String_AppendConst(backtrace, "\r\n");
 }
 
-static void Logger_DumpCommon(String* str, void* ctx) {
+static void Logger_DumpBacktrace(String* str, void* ctx) {
 	const static String backtrace = String_FromConst("-- backtrace --\r\n");
-	const static String modules   = String_FromConst("-- modules --\r\n");
 	HANDLE process = GetCurrentProcess();
 
 	SymInitialize(process, NULL, TRUE);
 	Logger_Log(&backtrace);
 	Logger_Backtrace(str, ctx);
+}
+
+static BOOL CALLBACK Logger_DumpModule(const char* name, ULONG_PTR base, ULONG size, void* ctx) {
+	String str; char strBuffer[STRING_SIZE * 4];
+	uintptr_t beg, end;
+
+	beg = base; end = base + (size - 1);
+	String_InitArray(str, strBuffer);
+
+	String_Format3(&str, "%c = %x-%x\r\n", name, &beg, &end);
+	Logger_Log(&str);
+	return true;
+}
+
+static void Logger_DumpMisc(void* ctx) {
+	const static String modules = String_FromConst("-- modules --\r\n");
+	HANDLE process = GetCurrentProcess();
 
 	Logger_Log(&modules);
 	EnumerateLoadedModules(process, Logger_DumpModule, NULL);
-}
-
-static void Logger_DumpRegisters(void* ctx) {
-	String str; char strBuffer[STRING_SIZE * 8];
-	CONTEXT* r;
-	if (!ctx) return;
-
-	r = (CONTEXT*)ctx;
-	String_InitArray(str, strBuffer);
-	String_AppendConst(&str, "-- registers --\r\n");
-
-#if defined _M_IX86
-	String_Format3(&str, "eax=%x ebx=%x ecx=%x\r\n", &r->Eax, &r->Ebx, &r->Ecx);
-	String_Format3(&str, "edx=%x esi=%x edi=%x\r\n", &r->Edx, &r->Esi, &r->Edi);
-	String_Format3(&str, "eip=%x ebp=%x esp=%x\r\n", &r->Eip, &r->Ebp, &r->Esp);
-#elif defined _M_X64
-	String_Format3(&str, "rax=%x rbx=%x rcx=%x\r\n", &r->Rax, &r->Rbx, &r->Rcx);
-	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\r\n", &r->Rdx, &r->Rsi, &r->Rdi);
-	String_Format3(&str, "rip=%x rbp=%x rsp=%x\r\n", &r->Rip, &r->Rbp, &r->Rsp);
-	String_Format3(&str, "r8 =%x r9 =%x r10=%x\r\n", &r->R8,  &r->R9,  &r->R10);
-	String_Format3(&str, "r11=%x r12=%x r13=%x\r\n", &r->R11, &r->R12, &r->R13);
-	String_Format2(&str, "r14=%x r15=%x\r\n"       , &r->R14, &r->R15);
-#elif defined _M_IA64
-	String_Format3(&str, "r1 =%x r2 =%x r3 =%x\r\n", &r->IntGp,  &r->IntT0,  &r->IntT1);
-	String_Format3(&str, "r4 =%x r5 =%x r6 =%x\r\n", &r->IntS0,  &r->IntS1,  &r->IntS2);
-	String_Format3(&str, "r7 =%x r8 =%x r9 =%x\r\n", &r->IntS3,  &r->IntV0,  &r->IntT2);
-	String_Format3(&str, "r10=%x r11=%x r12=%x\r\n", &r->IntT3,  &r->IntT4,  &r->IntSp);
-	String_Format3(&str, "r13=%x r14=%x r15=%x\r\n", &r->IntTeb, &r->IntT5,  &r->IntT6);
-	String_Format3(&str, "r16=%x r17=%x r18=%x\r\n", &r->IntT7,  &r->IntT8,  &r->IntT9);
-	String_Format3(&str, "r19=%x r20=%x r21=%x\r\n", &r->IntT10, &r->IntT11, &r->IntT12);
-	String_Format3(&str, "r22=%x r23=%x r24=%x\r\n", &r->IntT13, &r->IntT14, &r->IntT15);
-	String_Format3(&str, "r25=%x r26=%x r27=%x\r\n", &r->IntT16, &r->IntT17, &r->IntT18);
-	String_Format3(&str, "r28=%x r29=%x r30=%x\r\n", &r->IntT19, &r->IntT20, &r->IntT21);
-	String_Format3(&str, "r31=%x nat=%x pre=%x\r\n", &r->IntT22, &r->IntNats,&r->Preds);
-#else
-#error "Unknown machine type"
-#endif
-	Logger_Log(&str);
 }
 
 
@@ -192,7 +194,6 @@ static LONG WINAPI Logger_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
 	String_Format2(&msg, "Unhandled exception 0x%h at 0x%x", &code, &addr);
 	msg.buffer[msg.length] = '\0';
 
-	Logger_DumpRegisters(pInfo->ContextRecord);
 	Logger_AbortCommon(0, msg.buffer, pInfo->ContextRecord);
 	return EXCEPTION_EXECUTE_HANDLER; /* TODO: different flag */
 }
@@ -293,6 +294,12 @@ static void Logger_Backtrace(String* backtrace_, void* ctx) {
 	free(strings);
 }
 
+static void Logger_DumpBacktrace(String* str, void* ctx) {
+	const static String backtrace = String_FromConst("-- backtrace --\n");
+	Logger_Log(&backtrace);
+	Logger_Backtrace(str, ctx);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Error handling-----------------------------------------------------*
@@ -317,7 +324,6 @@ static void Logger_SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	String_Format3(&msg, "Unhandled signal %i (code %i) at 0x%x", &type, &code, &addr);
 	msg.buffer[msg.length] = '\0';
 
-	Logger_DumpRegisters(ctx);
 	Logger_AbortCommon(0, msg.buffer, ctx);
 }
 
@@ -413,10 +419,13 @@ static void Logger_DumpRegisters(void* ctx) {
 #endif
 
 #if defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS
-static void Logger_DumpMemoryMap(void) {
+static void Logger_DumpMisc(void* ctx) {
+	const static String memMap = String_FromConst("-- memory map --\n");
 	String str; char strBuffer[STRING_SIZE * 5];
 	int n, fd;
-	
+
+	Logger_Log(&memMap);
+	/* dumps all known ranges of memory */
 	fd = open("/proc/self/maps", O_RDONLY);
 	if (fd < 0) return;
 	String_InitArray(str, strBuffer);
@@ -428,22 +437,8 @@ static void Logger_DumpMemoryMap(void) {
 
 	close(fd);
 }
-
-static void Logger_DumpCommon(String* str, void* ctx) {
-	const static String backtrace = String_FromConst("-- backtrace --\n");
-	const static String memMap    = String_FromConst("-- memory map --\n");
-
-	Logger_Log(&backtrace);
-	Logger_Backtrace(str, ctx);
-	Logger_Log(&memMap);
-	Logger_DumpMemoryMap();
-}
 #elif defined CC_BUILD_OSX || defined CC_BUILD_BSD
-static void Logger_DumpCommon(String* str, void* ctx) {
-	const static String backtrace = String_FromConst("-- backtrace --\n");
-	Logger_Log(&backtrace);
-	Logger_Backtrace(str, ctx);
-}
+static void Logger_DumpMisc(void* ctx) { }
 #endif
 
 
@@ -493,7 +488,8 @@ static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx
 	String msg; char msgBuffer[3070 + 1];
 	String_InitArray_NT(msg, msgBuffer);
 
-	String_Format3(&msg, "ClassiCube crashed.%cMessage: %c%c", Platform_NewLine, raw_msg, Platform_NewLine);
+	String_Format4(&msg, "--------------------%cClassiCube crashed.%cMessage: %c%c", 
+					Platform_NewLine, Platform_NewLine, raw_msg, Platform_NewLine);
 	#ifdef CC_COMMIT_SHA
 	String_Format2(&msg, "Commit SHA: %c%c", CC_COMMIT_SHA, Platform_NewLine);
 	#endif
@@ -503,7 +499,9 @@ static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx
 	} else { result = 1; }
 
 	Logger_Log(&msg);
-	Logger_DumpCommon(&msg, ctx);
+	Logger_DumpRegisters(ctx);
+	Logger_DumpBacktrace(&msg, ctx);
+	Logger_DumpMisc(ctx);
 	if (logStream.Meta.File) File_Close(logFile);
 
 	String_AppendConst(&msg, "Full details of the crash have been logged to 'client.log'.\n");
