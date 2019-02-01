@@ -42,7 +42,7 @@ void* DisplayDevice_Meta;
 #define Socket__Error() WSAGetLastError()
 
 static HANDLE heap;
-char* Platform_NewLine    = "\r\n";
+char* Platform_NewLine = "\r\n";
 
 const ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
