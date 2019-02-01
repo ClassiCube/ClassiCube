@@ -76,7 +76,7 @@ static void ImprovedNoise_Init(uint8_t* p, RNGState* rnd) {
 	}
 }
 
-static float ImprovedNoise_Calc(uint8_t* p, float x, float y) {
+static float ImprovedNoise_Calc(const uint8_t* p, float x, float y) {
 	int xFloor, yFloor, X, Y;
 	float u, v;
 	int A, B, hash;
@@ -124,7 +124,7 @@ static void OctaveNoise_Init(struct OctaveNoise* n, RNGState* rnd, int octaves) 
 	}
 }
 
-static float OctaveNoise_Calc(struct OctaveNoise* n, float x, float y) {
+static float OctaveNoise_Calc(const struct OctaveNoise* n, float x, float y) {
 	float amplitude = 1, freq = 1;
 	float sum = 0;
 	int i;
@@ -144,7 +144,7 @@ static void CombinedNoise_Init(struct CombinedNoise* n, RNGState* rnd, int octav
 	OctaveNoise_Init(&n->noise2, rnd, octaves2);
 }
 
-static float CombinedNoise_Calc(struct CombinedNoise* n, float x, float y) {
+static float CombinedNoise_Calc(const struct CombinedNoise* n, float x, float y) {
 	float offset = OctaveNoise_Calc(&n->noise2, x, y);
 	return OctaveNoise_Calc(&n->noise1, x + offset, y);
 }
