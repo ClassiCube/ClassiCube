@@ -1,0 +1,17 @@
+* Goodlyay - many suggestions, and being a great second pairs of eyes for issues and 
+  improvements with character modelling, animating, and view bobbing. Also designed the icons.
+* AndrewPH - Advice on how to improve ui of both client and launcher, multiple 
+  suggestions, and hosting the automatic build bot for ClassicalSharp.
+* 123DMWM - many suggestions, and assistance in identifying bugs and their causes.
+* video_error - Allowing remote use of an OSX machine, pointing out many flaws in the plugin API.
+  The OSX port would not have been possible without you, thanks!
+* Jerralish - reverse engineering and documenting the original classic map generation algorithm.
+* Cybertoon - Adding water animation, better metal step/dig sounds, identifying multiple flaws
+* FabTheZen - suggestions about how to improve user experience, testing.
+* Cheesse - multiple suggestions, testing ClassicalSharp on AMD graphics cards.
+* Hemsindor - testing ClassicalSharp on OSX.
+
+And a big thanks to everyone else in the ClassiCube community (who I didn't mention here),
+who in the past have provided many suggestions and assisted in identifying bugs.
+
+* Portions of the FreeType project (https://www.freetype.org/) are used for text rendering
