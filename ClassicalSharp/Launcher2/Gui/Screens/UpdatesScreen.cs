@@ -179,7 +179,7 @@ namespace Launcher.Gui.Screens {
 			game.ShouldUpdate = true;
 			
 			if (cExe == null) return;
-			string path = Client.GetExeName();
+			string path = Client.GetCExeName();
 			// TODO: Set last-modified time to actual time of dev build
 			Platform.WriteAllBytes(path, cExe);
 		}
