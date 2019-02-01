@@ -79,7 +79,7 @@ const ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used a
 const ReturnCode ReturnCode_FileNotFound = ENOENT;
 const ReturnCode ReturnCode_NotSupported = EPERM;
 const ReturnCode ReturnCode_InvalidArg   = EINVAL;
-const ReturnCode ReturnCode_SocketInProgess = EINPROGRESS;
+const ReturnCode ReturnCode_SocketInProgess  = EINPROGRESS;
 const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #endif
 /* Platform specific include files */
