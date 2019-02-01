@@ -57,6 +57,100 @@ void FlatgrassGen_Generate(void) {
 
 
 /*########################################################################################################################*
+*---------------------------------------------------Noise generation------------------------------------------------------*
+*#########################################################################################################################*/
+#define NOISE_TABLE_SIZE 512
+static void ImprovedNoise_Init(uint8_t* p, RNGState* rnd) {
+	uint8_t tmp;
+	int i, j;
+	for (i = 0; i < 256; i++) { p[i] = i; }
+
+	/* shuffle randomly using fisher-yates */
+	for (i = 0; i < 256; i++) {
+		j   = Random_Range(rnd, i, 256);
+		tmp = p[i]; p[i] = p[j]; p[j] = tmp;
+	}
+
+	for (i = 0; i < 256; i++) {
+		p[i + 256] = p[i];
+	}
+}
+
+static float ImprovedNoise_Calc(uint8_t* p, float x, float y) {
+	int xFloor, yFloor, X, Y;
+	float u, v;
+	int A, B, hash;
+	float g22, g12, c1;
+	float g21, g11, c2;
+
+	xFloor = x >= 0 ? (int)x : (int)x - 1;
+	yFloor = y >= 0 ? (int)y : (int)y - 1;
+	X = xFloor & 0xFF; Y = yFloor & 0xFF;
+	x -= xFloor;       y -= yFloor;
+
+	u = x * x * x * (x * (x * 6 - 15) + 10); /* Fade(x) */
+	v = y * y * y * (y * (y * 6 - 15) + 10); /* Fade(y) */
+	A = p[X] + Y; B = p[X + 1] + Y;
+
+	/* Normally, calculating Grad involves a function call. However, we can directly pack this table
+	(since each value indicates either -1, 0 1) into a set of bit flags. This way we avoid needing
+	to call another function that performs branching */
+#define xFlags 0x46552222
+#define yFlags 0x2222550A
+
+	hash = (p[p[A]] & 0xF) << 1;
+	g22  = (((xFlags >> hash) & 3) - 1) * x       + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[A], x, y) */
+	hash = (p[p[B]] & 0xF) << 1;
+	g12  = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[B], x - 1, y) */
+	c1   = g22 + u * (g12 - g22);
+
+	hash = (p[p[A + 1]] & 0xF) << 1;
+	g21  = (((xFlags >> hash) & 3) - 1) * x       + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[A + 1], x, y - 1) */
+	hash = (p[p[B + 1]] & 0xF) << 1;
+	g11  = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[B + 1], x - 1, y - 1) */
+	c2   = g21 + u * (g11 - g21);
+
+	return c1 + v * (c2 - c1);
+}
+
+
+struct OctaveNoise { uint8_t p[8][NOISE_TABLE_SIZE]; int octaves; };
+static void OctaveNoise_Init(struct OctaveNoise* n, RNGState* rnd, int octaves) {
+	int i;
+	n->octaves = octaves;
+	
+	for (i = 0; i < octaves; i++) {
+		ImprovedNoise_Init(n->p[i], rnd);
+	}
+}
+
+static float OctaveNoise_Calc(struct OctaveNoise* n, float x, float y) {
+	float amplitude = 1, freq = 1;
+	float sum = 0;
+	int i;
+
+	for (i = 0; i < n->octaves; i++) {
+		sum += ImprovedNoise_Calc(n->p[i], x * freq, y * freq) * amplitude;
+		amplitude *= 2.0f;
+		freq *= 0.5f;
+	}
+	return sum;
+}
+
+
+struct CombinedNoise { struct OctaveNoise noise1, noise2; };
+static void CombinedNoise_Init(struct CombinedNoise* n, RNGState* rnd, int octaves1, int octaves2) {
+	OctaveNoise_Init(&n->noise1, rnd, octaves1);
+	OctaveNoise_Init(&n->noise2, rnd, octaves2);
+}
+
+static float CombinedNoise_Calc(struct CombinedNoise* n, float x, float y) {
+	float offset = OctaveNoise_Calc(&n->noise2, x, y);
+	return OctaveNoise_Calc(&n->noise1, x + offset, y);
+}
+
+
+/*########################################################################################################################*
 *----------------------------------------------------Notchy map gen-------------------------------------------------------*
 *#########################################################################################################################*/
 static int waterLevel, minHeight;
@@ -539,97 +633,6 @@ void NotchyGen_Generate(void) {
 	Mem_Free(Heightmap);
 	Heightmap = NULL;
 	Gen_Done  = true;
-}
-
-
-/*########################################################################################################################*
-*---------------------------------------------------Noise generation------------------------------------------------------*
-*#########################################################################################################################*/
-void ImprovedNoise_Init(uint8_t* p, RNGState* rnd) {
-	uint8_t tmp;
-	int i, j;
-	for (i = 0; i < 256; i++) { p[i] = i; }
-
-	/* shuffle randomly using fisher-yates */
-	for (i = 0; i < 256; i++) {
-		j   = Random_Range(rnd, i, 256);
-		tmp = p[i]; p[i] = p[j]; p[j] = tmp;
-	}
-
-	for (i = 0; i < 256; i++) {
-		p[i + 256] = p[i];
-	}
-}
-
-float ImprovedNoise_Calc(uint8_t* p, float x, float y) {
-	int xFloor, yFloor, X, Y;
-	float u, v;
-	int A, B, hash;
-	float g22, g12, c1;
-	float g21, g11, c2;
-
-	xFloor = x >= 0 ? (int)x : (int)x - 1;
-	yFloor = y >= 0 ? (int)y : (int)y - 1;
-	X = xFloor & 0xFF; Y = yFloor & 0xFF;
-	x -= xFloor;       y -= yFloor;
-
-	u = x * x * x * (x * (x * 6 - 15) + 10); /* Fade(x) */
-	v = y * y * y * (y * (y * 6 - 15) + 10); /* Fade(y) */
-	A = p[X] + Y; B = p[X + 1] + Y;
-
-	/* Normally, calculating Grad involves a function call. However, we can directly pack this table
-	(since each value indicates either -1, 0 1) into a set of bit flags. This way we avoid needing
-	to call another function that performs branching */
-#define xFlags 0x46552222
-#define yFlags 0x2222550A
-
-	hash = (p[p[A]] & 0xF) << 1;
-	g22  = (((xFlags >> hash) & 3) - 1) * x       + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[A], x, y) */
-	hash = (p[p[B]] & 0xF) << 1;
-	g12  = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[B], x - 1, y) */
-	c1   = g22 + u * (g12 - g22);
-
-	hash = (p[p[A + 1]] & 0xF) << 1;
-	g21  = (((xFlags >> hash) & 3) - 1) * x       + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[A + 1], x, y - 1) */
-	hash = (p[p[B + 1]] & 0xF) << 1;
-	g11  = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[B + 1], x - 1, y - 1) */
-	c2   = g21 + u * (g11 - g21);
-
-	return c1 + v * (c2 - c1);
-}
-
-
-void OctaveNoise_Init(struct OctaveNoise* n, RNGState* rnd, int octaves) {
-	int i;
-	n->octaves = octaves;
-	
-	for (i = 0; i < octaves; i++) {
-		ImprovedNoise_Init(n->p[i], rnd);
-	}
-}
-
-float OctaveNoise_Calc(struct OctaveNoise* n, float x, float y) {
-	float amplitude = 1, freq = 1;
-	float sum = 0;
-	int i;
-
-	for (i = 0; i < n->octaves; i++) {
-		sum += ImprovedNoise_Calc(n->p[i], x * freq, y * freq) * amplitude;
-		amplitude *= 2.0f;
-		freq *= 0.5f;
-	}
-	return sum;
-}
-
-
-void CombinedNoise_Init(struct CombinedNoise* n, RNGState* rnd, int octaves1, int octaves2) {
-	OctaveNoise_Init(&n->noise1, rnd, octaves1);
-	OctaveNoise_Init(&n->noise2, rnd, octaves2);
-}
-
-float CombinedNoise_Calc(struct CombinedNoise* n, float x, float y) {
-	float offset = OctaveNoise_Calc(&n->noise2, x, y);
-	return OctaveNoise_Calc(&n->noise1, x + offset, y);
 }
 
 
