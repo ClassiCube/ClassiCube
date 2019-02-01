@@ -14,11 +14,11 @@ namespace Launcher {
 		public static bool CClient;
 		
 		public static string GetExeName() {
-			if (!CClient) return "ClassicalSharp.exe";
-			
-			if (OpenTK.Configuration.RunningOnWindows)
-				return "ClassiCube.exe";
-			return "ClassiCube"; // TODO: OSX filename
+			return CClient ? GetCExeName() : "ClassicalSharp.exe";
+		}
+		
+		public static string GetCExeName() {
+			return OpenTK.Configuration.RunningOnWindows ? "ClassiCube.exe" : "ClassiCube";
 		}
 		
 		public static bool Start(ClientStartData data, bool classicubeSkins, ref bool shouldExit) {

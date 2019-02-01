@@ -87,9 +87,12 @@ namespace Launcher {
 			
 			IDrawer2D.Cols['g'] = new PackedCol(125, 125, 125);
 			
-			if (Client.CClient && Configuration.RunningOnWindows && Platform.FileExists(Client.GetExeName())) {
+			if (Platform.FileExists(Client.GetCExeName())) {
 				ErrorHandler.ShowDialog("Deprecated Client",
-				                        "ClassicalSharp is deprecated - use " + Client.GetExeName() + " instead");
+				                        "ClassicalSharp is deprecated - use " + Client.GetCExeName() + " instead");
+			} else {
+				ErrorHandler.ShowDialog("Deprecated Client",
+				                        "ClassicalSharp is deprecated - update to latest release again and use " + Client.GetCExeName() + " instead");
 			}
 		}
 		

@@ -124,8 +124,12 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		static string GetCExe(bool dx) {
-			// TODO: OSX, 32 bit linux
-			if (!OpenTK.Configuration.RunningOnWindows) return "ClassiCube";
+			// only a 32 bit build for OSX
+			if (OpenTK.Configuration.RunningOnMacOS) return "ClassiCube.osx";
+			
+			if (!OpenTK.Configuration.RunningOnWindows) {
+				return IntPtr.Size == 8 ? "ClassiCube" : "ClassiCube.32";
+			}
 			
 			if (IntPtr.Size == 8) {
 				return dx ? "ClassiCube.64.exe" : "ClassiCube.64-opengl.exe";

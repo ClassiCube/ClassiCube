@@ -484,12 +484,20 @@ void Logger_Log(const String* msg) {
 	Stream_Write(&logStream, msg->buffer, msg->length);
 }
 
+static void Logger_DumpSpacing(void) {
+	String msg; char msgBuffer[STRING_SIZE];
+	String_InitArray(msg, msgBuffer);
+
+	String_Format2(&msg, "%c----------------------------------------%c",
+		Platform_NewLine, Platform_NewLine);
+	Logger_Log(&msg);
+}
+
 static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx) {	
 	String msg; char msgBuffer[3070 + 1];
 	String_InitArray_NT(msg, msgBuffer);
 
-	String_Format4(&msg, "--------------------%cClassiCube crashed.%cMessage: %c%c", 
-					Platform_NewLine, Platform_NewLine, raw_msg, Platform_NewLine);
+	String_Format3(&msg, "ClassiCube crashed.%cMessage: %c%c", Platform_NewLine, raw_msg, Platform_NewLine);
 	#ifdef CC_COMMIT_SHA
 	String_Format2(&msg, "Commit SHA: %c%c", CC_COMMIT_SHA, Platform_NewLine);
 	#endif
@@ -498,7 +506,9 @@ static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx
 		String_Format2(&msg, "%h%c", &result, Platform_NewLine);
 	} else { result = 1; }
 
+	Logger_DumpSpacing();
 	Logger_Log(&msg);
+
 	Logger_DumpRegisters(ctx);
 	Logger_DumpBacktrace(&msg, ctx);
 	Logger_DumpMisc(ctx);
