@@ -858,7 +858,6 @@ ReturnCode Dat_Load(struct Stream* stream) {
 /*########################################################################################################################*
 *--------------------------------------------------ClassicWorld export----------------------------------------------------*
 *#########################################################################################################################*/
-#define CW_META_VERSION 'E','x','t','e','n','s','i','o','n','V','e','r','s','i','o','n'
 #define CW_META_RGB NBT_I16,0,1,'R',0,0,  NBT_I16,0,1,'G',0,0,  NBT_I16,0,1,'B',0,0,
 
 static int Cw_WriteEndString(uint8_t* data, const String* text) {
@@ -893,19 +892,16 @@ NBT_DICT, 0,12, 'C','l','a','s','s','i','c','W','o','r','l','d',
 	NBT_END,
 	NBT_I8S,  0,10, 'B','l','o','c','k','A','r','r','a','y', 0,0,0,0,
 };
-static uint8_t cw_meta_cpe[395] = {
+static uint8_t cw_meta_cpe[303] = {
 	NBT_DICT, 0,8,  'M','e','t','a','d','a','t','a',
 		NBT_DICT, 0,3, 'C','P','E',
 			NBT_DICT, 0,13, 'C','l','i','c','k','D','i','s','t','a','n','c','e',
-				NBT_I32,  0,16, CW_META_VERSION,                 0,0,0,1,
 				NBT_I16,  0,8,  'D','i','s','t','a','n','c','e', 0,0,
 			NBT_END,
 			NBT_DICT, 0,14, 'E','n','v','W','e','a','t','h','e','r','T','y','p','e',
-				NBT_I32,  0,16, CW_META_VERSION,                             0,0,0,1,
 				NBT_I8,   0,11, 'W','e','a','t','h','e','r','T','y','p','e', 0,
 			NBT_END,
 			NBT_DICT, 0,9,  'E','n','v','C','o','l','o','r','s',
-				NBT_I32,  0,16, CW_META_VERSION,                0,0,0,1,
 				NBT_DICT, 0,3, 'S','k','y',                     CW_META_RGB
 				NBT_END,
 				NBT_DICT, 0,5, 'C','l','o','u','d',             CW_META_RGB
@@ -918,7 +914,6 @@ static uint8_t cw_meta_cpe[395] = {
 				NBT_END,
 			NBT_END,
 			NBT_DICT, 0,16, 'E','n','v','M','a','p','A','p','p','e','a','r','a','n','c','e',
-				NBT_I32,  0,16, CW_META_VERSION,                         0,0,0,1,
 				NBT_I8,   0,9,  'S','i','d','e','B','l','o','c','k',     0,
 				NBT_I8,   0,9,  'E','d','g','e','B','l','o','c','k',     0,
 				NBT_I16,  0,9,  'S','i','d','e','L','e','v','e','l',     0,0,
@@ -1026,20 +1021,20 @@ ReturnCode Cw_Save(struct Stream* stream) {
 
 	Mem_Copy(tmp, cw_meta_cpe, sizeof(cw_meta_cpe));
 	{
-		Stream_SetU16_BE(&tmp[67], (uint16_t)(LocalPlayer_Instance.ReachDistance * 32));
-		tmp[124] = Env_Weather;
+		Stream_SetU16_BE(&tmp[44], (uint16_t)(LocalPlayer_Instance.ReachDistance * 32));
+		tmp[78] = Env_Weather;
 
-		col = Env_SkyCol;    tmp[172] = col.R; tmp[178] = col.G; tmp[184] = col.B;
-		col = Env_CloudsCol; tmp[199] = col.R; tmp[205] = col.G; tmp[211] = col.B;
-		col = Env_FogCol;    tmp[224] = col.R; tmp[230] = col.G; tmp[236] = col.B;
-		col = Env_ShadowCol; tmp[253] = col.R; tmp[259] = col.G; tmp[265] = col.B;
-		col = Env_SunCol;    tmp[283] = col.R; tmp[289] = col.G; tmp[295] = col.B;
+		col = Env_SkyCol;    tmp[103] = col.R; tmp[109] = col.G; tmp[115] = col.B;
+		col = Env_CloudsCol; tmp[130] = col.R; tmp[136] = col.G; tmp[142] = col.B;
+		col = Env_FogCol;    tmp[155] = col.R; tmp[161] = col.G; tmp[167] = col.B;
+		col = Env_ShadowCol; tmp[184] = col.R; tmp[190] = col.G; tmp[196] = col.B;
+		col = Env_SunCol;    tmp[214] = col.R; tmp[220] = col.G; tmp[226] = col.B;
 
-		tmp[352] = (BlockRaw)Env_SidesBlock;
-		tmp[365] = (BlockRaw)Env_EdgeBlock;
-		Stream_SetU16_BE(&tmp[378], Env_EdgeHeight);
+		tmp[260] = (BlockRaw)Env_SidesBlock;
+		tmp[273] = (BlockRaw)Env_EdgeBlock;
+		Stream_SetU16_BE(&tmp[286], Env_EdgeHeight);
 	}
-	len = Cw_WriteEndString(&tmp[393], &World_TextureUrl);
+	len = Cw_WriteEndString(&tmp[301], &World_TextureUrl);
 	if ((res = Stream_Write(stream, tmp, sizeof(cw_meta_cpe) + len))) return res;
 
 	if ((res = Stream_Write(stream, cw_meta_defs, sizeof(cw_meta_defs)))) return res;

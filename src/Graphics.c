@@ -918,14 +918,14 @@ void Gfx_EndFrame(void) {
 }
 
 bool Gfx_WarnIfNecessary(void) { return false; }
-const char* D3D9_StrFlags(void) {
+static const char* D3D9_StrFlags(void) {
 	if (createFlags & D3DCREATE_HARDWARE_VERTEXPROCESSING) return "Hardware";
 	if (createFlags & D3DCREATE_MIXED_VERTEXPROCESSING)    return "Mixed";
 	if (createFlags & D3DCREATE_SOFTWARE_VERTEXPROCESSING) return "Software";
 	return "(none)";
 }
 
-const char* D3D9_StrFormat(D3DFORMAT format) {
+static const char* D3D9_StrFormat(D3DFORMAT format) {
 	switch (format) {
 	case D3DFMT_D32:     return "D32";
 	case D3DFMT_D24X8:   return "D24X8";
@@ -1238,30 +1238,30 @@ void Gfx_SetDepthTestFunc(CompareFunc func) {
 *---------------------------------------------------Vertex/Index buffers--------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GL11
-static GfxResourceID GL_GenAndBind(GLenum target) {
-	GfxResourceID id;
+static GLuint GL_GenAndBind(GLenum target) {
+	GLuint id;
 	glGenBuffers(1, &id);
 	glBindBuffer(target, id);
 	return id;
 }
 
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	GfxResourceID id = GL_GenAndBind(GL_ARRAY_BUFFER);
-	uint32_t size    = maxVertices * gfx_strideSizes[fmt];
+	GLuint id     = GL_GenAndBind(GL_ARRAY_BUFFER);
+	uint32_t size = maxVertices * gfx_strideSizes[fmt];
 	glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
 	return id;
 }
 
 GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
-	GfxResourceID id = GL_GenAndBind(GL_ARRAY_BUFFER);
-	uint32_t size    = count * gfx_strideSizes[fmt];
+	GLuint id     = GL_GenAndBind(GL_ARRAY_BUFFER);
+	uint32_t size = count * gfx_strideSizes[fmt];
 	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 	return id;
 }
 
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
-	GfxResourceID id = GL_GenAndBind(GL_ELEMENT_ARRAY_BUFFER);
-	uint32_t size    = indicesCount * 2;
+	GLuint id     = GL_GenAndBind(GL_ELEMENT_ARRAY_BUFFER);
+	uint32_t size = indicesCount * 2;
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
 	return id;
 }
@@ -1287,7 +1287,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 	int curFormat = gfx_batchFormat, stride;
 	Gfx_SetVertexFormat(fmt);
 
-	GfxResourceID list = glGenLists(1);
+	GLuint list = glGenLists(1);
 	glNewList(list, GL_COMPILE);
 	count &= ~0x01; /* Need to get rid of the 1 extra element, see comment in chunk mesh builder for why */
 
@@ -1393,7 +1393,7 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 }
 #else
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	gl_activeList = gl_DYNAMICLISTID;
+	gl_activeList      = gl_DYNAMICLISTID;
 	gl_dynamicListData = vertices;
 }
 

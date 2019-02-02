@@ -8,7 +8,7 @@
 struct Stream;
 /* Imports a world encoded in a particular map file format. */
 typedef ReturnCode (*IMapImporter)(struct Stream* stream);
-/* Attempts to find the suitable importer based on filename. */
+/* Attempts to find a suitable importer based on filename. */
 /* Returns NULL if no match found. */
 CC_API IMapImporter Map_FindImporter(const String* path);
 /* Attempts to import the map from the given file. */
