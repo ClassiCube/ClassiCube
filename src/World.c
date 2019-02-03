@@ -53,7 +53,11 @@ void World_SetNewMap(BlockRaw* blocks, int width, int height, int length) {
 
 	if (!World.Volume) World.Blocks = NULL;
 #ifdef EXTENDED_BLOCKS
-	World.Blocks2 = World.Blocks;
+	/* .cw maps may have set this to a non-NULL when importing */
+	if (!World.Blocks2) {
+		World.Blocks2 = World.Blocks;
+		Block_SetUsedCount(256);
+	}
 #endif
 
 	if (Env_EdgeHeight == -1) {
@@ -73,6 +77,13 @@ CC_NOINLINE void World_SetDimensions(int width, int height, int length) {
 	World.MaxY = height - 1;
 	World.MaxZ = length - 1;
 }
+
+#ifdef EXTENDED_BLOCKS
+void World_SetMapUpper(BlockRaw* blocks) {
+	World.Blocks2 = blocks;
+	Block_SetUsedCount(768);
+}
+#endif
 
 
 #ifdef EXTENDED_BLOCKS

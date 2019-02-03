@@ -105,8 +105,8 @@ int main(int argc, char** argv) {
 	argsCount = Platform_GetCommandLineArgs(argc, argv, args);
 	/* NOTE: Make sure to comment this out before pushing a commit */
 	/* String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565"); */
-	/* String rawArgs = String_FromConst("UnknownShadow200"); */
-	/* argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4); */
+	String rawArgs = String_FromConst("UnknownShadow200"); 
+	argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4);
 
 	if (argsCount == 0) {
 		Launcher_Run();

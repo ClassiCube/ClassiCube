@@ -421,6 +421,18 @@ static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* s
 /*########################################################################################################################*
 *--------------------------------------------------ClassicWorld format----------------------------------------------------*
 *#########################################################################################################################*/
+static void* Cw_GetBlocks(struct NbtTag* tag) {
+	void* ptr;
+	if (NbtTag_IsSmall(tag)) {
+		ptr = Mem_Alloc(tag->DataSize, 1, ".cw map blocks");
+		Mem_Copy(ptr, tag->Value.Small, tag->DataSize);
+	} else {
+		ptr = tag->Value.Big;
+		tag->Value.Big = NULL; /* So Nbt_ReadTag doesn't call Mem_Free on World.Blocks */
+	}
+	return ptr;
+}
+
 static void Cw_Callback_1(struct NbtTag* tag) {
 	if (IsTag(tag, "X")) { World.Width  = NbtTag_U16(tag); return; }
 	if (IsTag(tag, "Y")) { World.Height = NbtTag_U16(tag); return; }
@@ -434,17 +446,14 @@ static void Cw_Callback_1(struct NbtTag* tag) {
 
 	if (IsTag(tag, "BlockArray")) {
 		World.Volume = tag->DataSize;
-		if (NbtTag_IsSmall(tag)) {
-			World.Blocks = Mem_Alloc(World.Volume, 1, ".cw map blocks");
-			Mem_Copy(World.Blocks, tag->Value.Small, tag->DataSize);
-		} else {
-			World.Blocks = tag->Value.Big;
-			tag->Value.Big = NULL; /* So Nbt_ReadTag doesn't call Mem_Free on World.Blocks */
-		}
+		World.Blocks = Cw_GetBlocks(tag);
 #ifdef EXTENDED_BLOCKS
 		World.Blocks2 = World.Blocks;
 #endif
 	}
+#ifdef EXTENDED_BLOCKS
+	if (IsTag(tag, "BlockArray2")) World_SetMapUpper(Cw_GetBlocks(tag));
+#endif
 }
 
 static void Cw_Callback_2(struct NbtTag* tag) {
@@ -892,6 +901,9 @@ NBT_DICT, 0,12, 'C','l','a','s','s','i','c','W','o','r','l','d',
 	NBT_END,
 	NBT_I8S,  0,10, 'B','l','o','c','k','A','r','r','a','y', 0,0,0,0,
 };
+static uint8_t cw_map2[18] = {
+	NBT_I8S,  0,11, 'B','l','o','c','k','A','r','r','a','y','2', 0,0,0,0,
+};
 static uint8_t cw_meta_cpe[303] = {
 	NBT_DICT, 0,8,  'M','e','t','a','d','a','t','a',
 		NBT_DICT, 0,3, 'C','P','E',
@@ -1016,8 +1028,16 @@ ReturnCode Cw_Save(struct Stream* stream) {
 		tmp[107] = Math_Deg2Packed(p->SpawnRotY);
 		tmp[112] = Math_Deg2Packed(p->SpawnHeadX);
 	}
-	if ((res = Stream_Write(stream, tmp, sizeof(cw_begin)))) return res;
+	if ((res = Stream_Write(stream, tmp,      sizeof(cw_begin)))) return res;
 	if ((res = Stream_Write(stream, World.Blocks, World.Volume))) return res;
+
+	if (World.Blocks != World.Blocks2) {
+		Mem_Copy(tmp, cw_map2, sizeof(cw_map2));
+		Stream_SetU32_BE(&tmp[14], World.Volume);
+
+		if ((res = Stream_Write(stream, tmp,        sizeof(cw_map2)))) return res;
+		if ((res = Stream_Write(stream, World.Blocks2, World.Volume))) return res;
+	}
 
 	Mem_Copy(tmp, cw_meta_cpe, sizeof(cw_meta_cpe));
 	{

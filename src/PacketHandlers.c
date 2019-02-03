@@ -510,10 +510,9 @@ static void Classic_LevelFinalise(uint8_t* data) {
 
 	World_SetNewMap(map_blocks, width, height, length);
 #ifdef EXTENDED_BLOCKS
-	if (cpe_extBlocks) {
-		/* defer allocation of scond map array if possible */
-		World.Blocks2 = map2_blocks ? map2_blocks : map_blocks;
-		Block_SetUsedCount(map2_blocks ? 768 : 256);
+	/* defer allocation of second map array if possible */
+	if (cpe_extBlocks && map2_blocks) {
+		World_SetMapUpper(map2_blocks);
 	}
 #endif
 

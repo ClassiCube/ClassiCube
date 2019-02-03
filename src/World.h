@@ -47,6 +47,8 @@ CC_NOINLINE void World_SetDimensions(int width, int height, int length);
 
 #ifdef EXTENDED_BLOCKS
 extern int Block_IDMask;
+/* Sets World.Blocks2 and updates internal state for more than 256 blocks. */
+void World_SetMapUpper(BlockRaw* blocks);
 
 /* Gets the block at the given coordinates. */
 /* NOTE: Does NOT check that the coordinates are inside the map. */
