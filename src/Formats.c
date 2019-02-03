@@ -557,7 +557,8 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 	}
 
 	if (IsTag(tag->Parent->Parent, "BlockDefinitions") && Game_AllowCustomBlocks) {
-		if (IsTag(tag, "ID"))             { cw_curID = NbtTag_U8(tag); return; }
+		if (IsTag(tag, "ID"))             { cw_curID = NbtTag_U8(tag);  return; }
+		if (IsTag(tag, "ID2"))            { cw_curID = NbtTag_U16(tag); return; }
 		if (IsTag(tag, "CollideType"))    { Block_SetCollide(id, NbtTag_U8(tag)); return; }
 		if (IsTag(tag, "Speed"))          { Blocks.SpeedMultiplier[id] = NbtTag_F32(tag); return; }
 		if (IsTag(tag, "TransmitsLight")) { Blocks.BlocksLight[id] = NbtTag_U8(tag) == 0; return; }
@@ -573,12 +574,16 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 
 		if (IsTag(tag, "Textures")) {
 			arr = NbtTag_U8_Array(tag, 6);
-			Block_SetTex(arr[0], FACE_YMAX, id);
-			Block_SetTex(arr[1], FACE_YMIN, id);
-			Block_SetTex(arr[2], FACE_XMIN, id);
-			Block_SetTex(arr[3], FACE_XMAX, id);
-			Block_SetTex(arr[4], FACE_ZMIN, id);
-			Block_SetTex(arr[5], FACE_ZMAX, id);
+			Block_Tex(id, FACE_YMAX) = arr[0]; Block_Tex(id, FACE_YMIN) = arr[1];
+			Block_Tex(id, FACE_XMIN) = arr[2]; Block_Tex(id, FACE_XMAX) = arr[3];
+			Block_Tex(id, FACE_ZMIN) = arr[4]; Block_Tex(id, FACE_ZMAX) = arr[5];
+
+			/* hacky way of storing upper 8 bits */
+			if (tag->DataSize >= 12) {
+				Block_Tex(id, FACE_YMAX) |= arr[6]  << 8; Block_Tex(id, FACE_YMIN) |= arr[7]  << 8;
+				Block_Tex(id, FACE_XMIN) |= arr[8]  << 8; Block_Tex(id, FACE_XMAX) |= arr[9]  << 8;
+				Block_Tex(id, FACE_ZMIN) |= arr[10] << 8; Block_Tex(id, FACE_ZMAX) |= arr[11] << 8;
+			}
 			return;
 		}
 		
@@ -934,12 +939,17 @@ static uint8_t cw_meta_cpe[303] = {
 static uint8_t cw_meta_defs[19] = {
 			NBT_DICT, 0,16, 'B','l','o','c','k','D','e','f','i','n','i','t','i','o','n','s',
 };
-static uint8_t cw_meta_def[173] = {
-				NBT_DICT, 0,7,  'B','l','o','c','k','\0','\0',
+static uint8_t cw_meta_def[189] = {
+				NBT_DICT, 0,9,  'B','l','o','c','k','\0','\0','\0','\0',
 					NBT_I8,  0,2,  'I','D',                              0,
+					/* It would be have been better to just change ID to be a I16 */
+					/* Unfortunately this isn't backwards compatible with ClassicalSharp */
+					NBT_I16, 0,3,  'I','D','2',                          0,0,
 					NBT_I8,  0,11, 'C','o','l','l','i','d','e','T','y','p','e', 0,
 					NBT_F32, 0,5,  'S','p','e','e','d',                  0,0,0,0,
-					NBT_I8S, 0,8,  'T','e','x','t','u','r','e','s',      0,0,0,6, 0,0,0,0,0,0,
+					/* Ugly hack for supporting texture IDs over 255 */
+					/* First 6 elements are lower 8 bits, next 6 are upper 8 bits */
+					NBT_I8S, 0,8,  'T','e','x','t','u','r','e','s',      0,0,0,12, 0,0,0,0,0,0, 0,0,0,0,0,0,
 					NBT_I8,  0,14, 'T','r','a','n','s','m','i','t','s','L','i','g','h','t', 0,
 					NBT_I8,  0,9,  'W','a','l','k','S','o','u','n','d',  0,
 					NBT_I8,  0,10, 'F','u','l','l','B','r','i','g','h','t', 0,
@@ -956,6 +966,7 @@ static uint8_t cw_end[4] = {
 NBT_END,
 };
 
+
 static ReturnCode Cw_WriteBockDef(struct Stream* stream, int b) {
 	uint8_t tmp[512];
 	String name;
@@ -963,6 +974,7 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, int b) {
 
 	bool sprite = Blocks.Draw[b] == DRAW_SPRITE;
 	union IntAndFloat speed;
+	TextureLoc tex;
 	uint8_t fog;
 	PackedCol col;
 	Vector3 minBB, maxBB;	
@@ -970,39 +982,42 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, int b) {
 	Mem_Copy(tmp, cw_meta_def, sizeof(cw_meta_def));
 	{
 		/* Hacky unique tag name for each */
-		name = String_Init(&tmp[8], 0, 2);
+		name = String_Init(&tmp[8], 0, 4);
+		String_AppendHex(&name, b >> 8);
 		String_AppendHex(&name, b);
-		tmp[15] = b;
 
-		tmp[30] = Blocks.Collide[b];
+		tmp[17] = b;
+		Stream_SetU16_BE(&tmp[24], b);
+
+		tmp[40] = Blocks.Collide[b];
 		speed.f = Blocks.SpeedMultiplier[b];
-		Stream_SetU32_BE(&tmp[39], speed.u);
+		Stream_SetU32_BE(&tmp[49], speed.u);
 
-		tmp[58] = (uint8_t)Block_GetTex(b, FACE_YMAX);
-		tmp[59] = (uint8_t)Block_GetTex(b, FACE_YMIN);
-		tmp[60] = (uint8_t)Block_GetTex(b, FACE_XMIN);
-		tmp[61] = (uint8_t)Block_GetTex(b, FACE_XMAX);
-		tmp[62] = (uint8_t)Block_GetTex(b, FACE_ZMIN);
-		tmp[63] = (uint8_t)Block_GetTex(b, FACE_ZMAX);
+		tex = Block_Tex(b, FACE_YMAX); tmp[68] = tex; tmp[74] = tex >> 8;
+		tex = Block_Tex(b, FACE_YMIN); tmp[69] = tex; tmp[75] = tex >> 8;
+		tex = Block_Tex(b, FACE_XMIN); tmp[70] = tex; tmp[76] = tex >> 8;
+		tex = Block_Tex(b, FACE_XMAX); tmp[71] = tex; tmp[77] = tex >> 8;
+		tex = Block_Tex(b, FACE_ZMIN); tmp[72] = tex; tmp[78] = tex >> 8;
+		tex = Block_Tex(b, FACE_ZMAX); tmp[73] = tex; tmp[79] = tex >> 8;
 
-		tmp[81]  = Blocks.BlocksLight[b] ? 0 : 1;
-		tmp[94]  = Blocks.DigSounds[b];
-		tmp[108] = Blocks.FullBright[b] ? 1 : 0;
-		tmp[117] = sprite ? 0 : (uint8_t)(Blocks.MaxBB[b].Y * 16);
-		tmp[130] = sprite ? Blocks.SpriteOffset[b] : Blocks.Draw[b];
+		tmp[97]  = Blocks.BlocksLight[b] ? 0 : 1;
+		tmp[110] = Blocks.DigSounds[b];
+		tmp[124] = Blocks.FullBright[b] ? 1 : 0;
+		tmp[133] = sprite ? 0 : (uint8_t)(Blocks.MaxBB[b].Y * 16);
+		tmp[146] = sprite ? Blocks.SpriteOffset[b] : Blocks.Draw[b];
 
 		fog = (uint8_t)(128 * Blocks.FogDensity[b] - 1);
 		col = Blocks.FogCol[b];
-		tmp[141] = Blocks.FogDensity[b] ? fog : 0;
-		tmp[142] = col.R; tmp[143] = col.G; tmp[144] = col.B;
+		tmp[157] = Blocks.FogDensity[b] ? fog : 0;
+		tmp[158] = col.R; tmp[159] = col.G; tmp[160] = col.B;
 
 		minBB = Blocks.MinBB[b]; maxBB = Blocks.MaxBB[b];
-		tmp[158] = (uint8_t)(minBB.X * 16); tmp[159] = (uint8_t)(minBB.Y * 16); tmp[160] = (uint8_t)(minBB.Z * 16);
-		tmp[161] = (uint8_t)(maxBB.X * 16); tmp[162] = (uint8_t)(maxBB.Y * 16); tmp[163] = (uint8_t)(maxBB.Z * 16);
+		tmp[174] = (uint8_t)(minBB.X * 16); tmp[175] = (uint8_t)(minBB.Y * 16); tmp[176] = (uint8_t)(minBB.Z * 16);
+		tmp[177] = (uint8_t)(maxBB.X * 16); tmp[178] = (uint8_t)(maxBB.Y * 16); tmp[179] = (uint8_t)(maxBB.Z * 16);
 	}
 
 	name = Block_UNSAFE_GetName(b);
-	len  = Cw_WriteEndString(&tmp[171], &name);
+	len  = Cw_WriteEndString(&tmp[187], &name);
 	return Stream_Write(stream, tmp, sizeof(cw_meta_def) + len);
 }
 
@@ -1058,7 +1073,7 @@ ReturnCode Cw_Save(struct Stream* stream) {
 	if ((res = Stream_Write(stream, tmp, sizeof(cw_meta_cpe) + len))) return res;
 
 	if ((res = Stream_Write(stream, cw_meta_defs, sizeof(cw_meta_defs)))) return res;
-	for (b = 1; b < 256; b++) {
+	for (b = 1; b < BLOCK_COUNT; b++) {
 		if (!Block_IsCustomDefined(b)) continue;
 		if ((res = Cw_WriteBockDef(stream, b))) return res;
 	}

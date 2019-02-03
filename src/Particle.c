@@ -365,7 +365,7 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 
 	if (now != BLOCK_AIR || Blocks.Draw[old] == DRAW_GAS) return;
 	Vector3I_ToVector3(&origin, &coords);
-	loc = Block_GetTex(old, FACE_XMIN);
+	loc = Block_Tex(old, FACE_XMIN);
 	
 	baseRec = Atlas1D_TexRec(loc, 1, &texIndex);
 	uScale  = (1.0f/16.0f); vScale = (1.0f/16.0f) * Atlas1D_InvTileSize;

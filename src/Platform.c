@@ -1819,8 +1819,11 @@ void Platform_Init(void) {
 	if (res) Logger_Warn(res, "starting WSA");
 
 	hasDebugger = IsDebuggerPresent();
-	if (!AttachConsole(ATTACH_PARENT_PROCESS)) return;
+	/* For when user runs from command prompt */
+	AttachConsole(ATTACH_PARENT_PROCESS);
+
 	conHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (conHandle == INVALID_HANDLE_VALUE) conHandle = NULL;
 }
 
 void Platform_Free(void) {

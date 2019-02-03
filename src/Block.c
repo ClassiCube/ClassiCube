@@ -266,13 +266,13 @@ void Block_ResetProps(BlockID block) {
 	Block_CalcLightOffset(block);
 
 	if (block >= BLOCK_CPE_COUNT) {
-		Block_SetTex(0, FACE_YMAX, block);
-		Block_SetTex(0, FACE_YMIN, block);
+		Block_Tex(block, FACE_YMAX) = 0;
+		Block_Tex(block, FACE_YMIN) = 0;
 		Block_SetSide(0, block);
 	} else {
-		Block_SetTex(topTex[block],    FACE_YMAX, block);
-		Block_SetTex(bottomTex[block], FACE_YMIN, block);
-		Block_SetSide(sideTex[block],   block);
+		Block_Tex(block, FACE_YMAX) = topTex[block];
+		Block_Tex(block, FACE_YMIN) = bottomTex[block];
+		Block_SetSide(sideTex[block], block);
 	}
 }
 
@@ -308,10 +308,6 @@ void Block_SetSide(TextureLoc texLoc, BlockID blockId) {
 	Blocks.Textures[index + FACE_XMAX] = texLoc;
 	Blocks.Textures[index + FACE_ZMIN] = texLoc;
 	Blocks.Textures[index + FACE_ZMAX] = texLoc;
-}
-
-void Block_SetTex(TextureLoc texLoc, Face face, BlockID blockId) {
-	Blocks.Textures[blockId * FACE_COUNT + face] = texLoc;
 }
 
 
@@ -414,7 +410,7 @@ static float Block_GetSpriteBB_MaxY(int size, int tileX, int tileY, Bitmap* bmp)
 void Block_RecalculateBB(BlockID block) {
 	Bitmap* bmp  = &Atlas_Bitmap;
 	int tileSize = Atlas_TileSize;
-	TextureLoc texLoc = Block_GetTex(block, FACE_XMAX);
+	TextureLoc texLoc = Block_Tex(block, FACE_XMAX);
 	int x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
 
 	Vector3 centre = { 0.5f, 0.0f, 0.5f };

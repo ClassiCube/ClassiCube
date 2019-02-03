@@ -1505,8 +1505,8 @@ static void BlockModel_Flush(void) {
 
 #define BlockModel_FlushIfNotSame if (bModel_lastTexIndex != bModel_texIndex) { BlockModel_Flush(); }
 static TextureLoc BlockModel_GetTex(Face face, VertexP3fT2fC4b** ptr) {
-	TextureLoc texLoc   = Block_GetTex(bModel_block, face);
-	bModel_texIndex = Atlas1D_Index(texLoc);
+	TextureLoc texLoc = Block_Tex(bModel_block, face);
+	bModel_texIndex   = Atlas1D_Index(texLoc);
 	BlockModel_FlushIfNotSame;
 
 	/* Need to reload ptr, in case was flushed */
@@ -1519,7 +1519,7 @@ static void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
 	VertexP3fT2fC4b* ptr, v;
 	PackedCol col;
 	float xz1, xz2;
-	TextureLoc loc = Block_GetTex(bModel_block, FACE_ZMAX);
+	TextureLoc loc = Block_Tex(bModel_block, FACE_ZMAX);
 	TextureRec rec = Atlas1D_TexRec(loc, 1, &bModel_texIndex);
 
 	BlockModel_FlushIfNotSame;
@@ -1549,7 +1549,7 @@ static void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
 	VertexP3fT2fC4b* ptr, v;
 	PackedCol col;
 	float x1, x2, z1, z2;
-	TextureLoc loc = Block_GetTex(bModel_block, FACE_XMAX);
+	TextureLoc loc = Block_Tex(bModel_block, FACE_XMAX);
 	TextureRec rec = Atlas1D_TexRec(loc, 1, &bModel_texIndex);
 
 	BlockModel_FlushIfNotSame;

@@ -1415,16 +1415,16 @@ static BlockID BlockDefs_DefineBlockCommonStart(uint8_t** ptr, bool uniqueSideTe
 	#define LOG_2 0.693147180559945
 	Blocks.SpeedMultiplier[block] = (float)Math_Exp(LOG_2 * speedLog2); /* pow(2, x) */
 
-	Block_SetTex(BlockDefs_Tex(&data), FACE_YMAX, block);
+	Block_Tex(block, FACE_YMAX) = BlockDefs_Tex(&data);
 	if (uniqueSideTexs) {
-		Block_SetTex(BlockDefs_Tex(&data), FACE_XMIN, block);
-		Block_SetTex(BlockDefs_Tex(&data), FACE_XMAX, block);
-		Block_SetTex(BlockDefs_Tex(&data), FACE_ZMIN, block);
-		Block_SetTex(BlockDefs_Tex(&data), FACE_ZMAX, block);
+		Block_Tex(block, FACE_XMIN) = BlockDefs_Tex(&data);
+		Block_Tex(block, FACE_XMAX) = BlockDefs_Tex(&data);
+		Block_Tex(block, FACE_ZMIN) = BlockDefs_Tex(&data);
+		Block_Tex(block, FACE_ZMAX) = BlockDefs_Tex(&data);
 	} else {
 		Block_SetSide(BlockDefs_Tex(&data), block);
 	}
-	Block_SetTex(BlockDefs_Tex(&data), FACE_YMIN, block);
+	Block_Tex(block, FACE_YMIN) = BlockDefs_Tex(&data);
 
 	Blocks.BlocksLight[block] = *data++ == 0;
 	BlockDefs_OnBlockUpdated(block, didBlockLight);

@@ -575,7 +575,7 @@ void EnvRenderer_RenderMapEdges(double delta) {
 }
 
 static void EnvRenderer_MakeBorderTex(GfxResourceID* texId, BlockID block) {
-	TextureLoc loc = Block_GetTex(block, FACE_YMAX);
+	TextureLoc loc = Block_Tex(block, FACE_YMAX);
 	if (Gfx_LostContext) return;
 
 	Gfx_DeleteTexture(texId);

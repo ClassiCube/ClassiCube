@@ -540,7 +540,7 @@ static void LoadingScreen_DrawBackground(void) {
 	int count  = 0, atlasIndex, y;
 	bool bound = false;
 
-	loc = Block_GetTex(BLOCK_DIRT, FACE_YMAX);
+	loc = Block_Tex(BLOCK_DIRT, FACE_YMAX);
 	tex.ID    = GFX_NULL;
 	Tex_SetRect(tex, 0,0, Game.Width,LOADING_TILE_SIZE);
 	tex.uv    = Atlas1D_TexRec(loc, 1, &atlasIndex);
