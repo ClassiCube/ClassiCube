@@ -219,9 +219,7 @@ void Game_ChangeBlock(int x, int y, int z, BlockID block) {
 bool Game_CanPick(BlockID block) {
 	if (Blocks.Draw[block] == DRAW_GAS)    return false;
 	if (Blocks.Draw[block] == DRAW_SPRITE) return true;
-
-	if (Blocks.Collide[block] != COLLIDE_LIQUID) return true;
-	return Game_BreakableLiquids && Blocks.CanPlace[block] && Blocks.CanDelete[block];
+	return Blocks.Collide[block] != COLLIDE_LIQUID || Game_BreakableLiquids;
 }
 
 bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, uint8_t* skinType) {
