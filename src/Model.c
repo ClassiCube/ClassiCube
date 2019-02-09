@@ -364,7 +364,9 @@ void BoxDesc_ZQuad(struct Model* m, int texX, int texY, int texWidth, int texHei
 *--------------------------------------------------------Models common----------------------------------------------------*
 *#########################################################################################################################*/
 static struct Model* models_head;
+static struct Model* models_tail;
 static struct ModelTex* textures_head;
+static struct ModelTex* textures_tail;
 
 #define Model_RetSize(x,y,z) static Vector3 P = { (x)/16.0f,(y)/16.0f,(z)/16.0f }; e->Size = P;
 #define Model_RetAABB(x1,y1,z1, x2,y2,z2) static struct AABB BB = { (x1)/16.0f,(y1)/16.0f,(z1)/16.0f, (x2)/16.0f,(y2)/16.0f,(z2)/16.0f }; e->ModelAABB = BB;
@@ -409,13 +411,11 @@ struct ModelTex* Model_GetTexture(const String* name) {
 }
 
 void Model_Register(struct Model* model) {
-	model->Next = models_head;
-	models_head = model;
+	LinkedList_Add(model, models_head, models_tail);
 }
 
 void Model_RegisterTexture(struct ModelTex* tex) {
-	tex->Next     = textures_head;
-	textures_head = tex;
+	LinkedList_Add(tex, textures_head, textures_tail);
 }
 
 static void Models_TextureChanged(void* obj, struct Stream* stream, const String* name) {

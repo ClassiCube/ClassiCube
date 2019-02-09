@@ -216,14 +216,7 @@ static bool Commands_IsCommandPrefix(const String* str) {
 }
 
 void Commands_Register(struct ChatCommand* cmd) {
-	if (!cmds_head) {
-		cmds_head = cmd;
-	} else {
-		cmds_tail->Next = cmd;
-	}
-
-	cmds_tail = cmd;
-	cmd->Next = NULL;
+	LinkedList_Add(cmd, cmds_head, cmds_tail);
 }
 
 static struct ChatCommand* Commands_GetMatch(const String* cmdName) {

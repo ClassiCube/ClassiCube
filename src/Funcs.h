@@ -32,4 +32,10 @@ if (j - left <= right - i) {\
 	if (i < right) { quickSort(i, right); }\
 	right = j;\
 }
+
+#define LinkedList_Add(item, head, tail)\
+if (!head) { head = item; } else { tail->Next = item; }\
+tail       = item;\
+item->Next = NULL;
+
 #endif

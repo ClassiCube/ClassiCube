@@ -67,13 +67,7 @@ String Game_IPAddress = String_FromArray(Game_IPAddressBuffer);
 static struct IGameComponent* comps_head;
 static struct IGameComponent* comps_tail;
 void Game_AddComponent(struct IGameComponent* comp) {
-	if (!comps_head) {
-		comps_head = comp;
-	} else {
-		comps_tail->Next = comp;
-	}
-	comps_tail = comp;
-	comp->Next = NULL;
+	LinkedList_Add(comp, comps_head, comps_tail);
 }
 
 int ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
