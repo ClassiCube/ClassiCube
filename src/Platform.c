@@ -33,7 +33,6 @@ void* DisplayDevice_Meta;
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <wininet.h>
 #include <mmsystem.h>
 #include <shellapi.h>
 #include <wincrypt.h>

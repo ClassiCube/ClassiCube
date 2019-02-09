@@ -377,15 +377,22 @@ static void Game_LoadOptions(void) {
 }
 
 static void Game_LoadPlugin(const String* filename, void* obj) {
-	const static String txt = String_FromConst(".txt");
+#if defined CC_BUILD_WIN
+	const static String ext = String_FromConst(".dll");
+#elif defined CC_BUILD_OSX
+	const static String ext = String_FromConst(".dylib");
+#else
+	const static String ext = String_FromConst(".so");
+#endif
+
 	void* lib;
 	void* verSymbol;  /* EXPORT int Plugin_ApiVersion = GAME_API_VER; */
 	void* compSymbol; /* EXPORT struct IGameComponent Plugin_Component = { (whatever) } */
 	int ver;
 	ReturnCode res;
 
-	/* ignore classicalsharp's accepted.txt */
-	if (String_CaselessEnds(filename, &txt)) return;
+	/* ignore accepted.txt, deskop.ini, .pdb files, etc */
+	if (!String_CaselessEnds(filename, &ext)) return;
 	res = Platform_LoadLibrary(filename, &lib);
 	if (res) { Logger_Warn2(res, "loading plugin", filename); return; }
 
