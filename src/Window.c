@@ -448,25 +448,17 @@ void Window_SetClipboardText(const String* value) {
 }
 
 
-void Window_SetBounds(Rect2D rect) {
-	/* Note: the bounds variable is updated when the resize/move message arrives.*/
-	SetWindowPos(win_handle, NULL, rect.X, rect.Y, rect.Width, rect.Height, 0);
-}
-
 void Window_SetLocation(int x, int y) {
 	SetWindowPos(win_handle, NULL, x, y, 0, 0, SWP_NOSIZE);
 }
 
 void Window_SetSize(int width, int height) {
-	SetWindowPos(win_handle, NULL, 0, 0, width, height, SWP_NOMOVE);
-}
-
-void Window_SetClientSize(int width, int height) {
 	DWORD style = GetWindowLong(win_handle, GWL_STYLE);
-	RECT rect = { 0, 0, width, height };
-
+	RECT rect   = { 0, 0, width, height };
 	AdjustWindowRect(&rect, style, false);
-	Window_SetSize(Rect_Width(rect), Rect_Height(rect));
+
+	SetWindowPos(win_handle, NULL, 0, 0, 
+				Rect_Width(rect), Rect_Height(rect), SWP_NOMOVE);
 }
 
 void* Window_GetWindowHandle(void) { return win_handle; }
@@ -537,7 +529,10 @@ void Window_SetWindowState(int state) {
 
 	/* Restore previous window size/location if necessary */
 	if (command == SW_RESTORE && (prev_bounds.Width || prev_bounds.Height)) {
-		Window_SetBounds(prev_bounds);
+		Rect2D rect = prev_bounds;
+		/* NOTE: the bounds variable is updated when the resize/move message arrives. */
+		SetWindowPos(win_handle, NULL, rect.X, rect.Y, rect.Width, rect.Height, 0);
+
 		prev_bounds.Width = 0; prev_bounds.Height = 0;
 	}
 }
@@ -1089,27 +1084,12 @@ void Window_SetWindowState(int state) {
 	Window_ProcessEvents();
 }
 
-void Window_SetBounds(Rect2D rect) {
-	int width  = rect.Width  - borderLeft - borderRight;
-	int height = rect.Height - borderTop  - borderBottom;
-	XMoveResizeWindow(win_display, win_handle, rect.X, rect.Y,
-		max(width, 1), max(height, 1));
-	Window_ProcessEvents();
-}
-
 void Window_SetLocation(int x, int y) {
 	XMoveWindow(win_display, win_handle, x, y);
 	Window_ProcessEvents();
 }
 
 void Window_SetSize(int width, int height) {
-	int adjWidth  = width  - borderLeft - borderRight;
-	int adjHeight = height - borderTop  - borderBottom;
-	XResizeWindow(win_display, win_handle, adjWidth, adjHeight);
-	Window_ProcessEvents();
-}
-
-void Window_SetClientSize(int width, int height) {
 	XResizeWindow(win_display, win_handle, width, height);
 	Window_ProcessEvents();
 }
@@ -2109,9 +2089,6 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 						  kWindowInWindowMenuAttribute | kWindowLiveResizeAttribute,
 						  &r, &win_handle);
 	if (res) Logger_Abort2(res, "Failed to create window");
-
-	Window_SetLocation(r.left, r.right);
-	Window_SetSize(Rect_Width(r), Rect_Height(r));
 	Window_UpdateSize();
 	
 	res = GetWindowBounds(win_handle, kWindowTitleBarRgn, &r);
@@ -2242,16 +2219,11 @@ void Window_SetWindowState(int state) {
 	Window_UpdateWindowState();
 }
 
-void Window_SetBounds(Rect2D rect) {
-	Window_SetLocation(rect.X, rect.Y);
-	Window_SetSize(rect.Width, rect.Height);
-}
-
 void Window_SetLocation(int x, int y) {
 	MoveWindow(win_handle, x, y, false);
 }
 
-void Window_SetSize(int width, int height) {
+static void Window_SetExternalSize(int width, int height) {
 	/* SizeWindow works in client size */
 	/* But SetSize is window size, so reduce it */
 	width  -= (Window_Bounds.Width  - Window_ClientSize.Width);
@@ -2260,7 +2232,7 @@ void Window_SetSize(int width, int height) {
 	SizeWindow(win_handle, width, height, true);
 }
 
-void Window_SetClientSize(int width, int height) {
+void Window_SetSize(int width, int height) {
 	SizeWindow(win_handle, width, height, true);
 }
 
@@ -2500,7 +2472,7 @@ static void GLContext_UnsetFullscreen(void) {
 
 	ctx_fullscreen = false;
 	Window_UpdateWindowState();
-	Window_SetSize(ctx_windowedBounds.Width, ctx_windowedBounds.Height);
+	Window_SetExternalSize(ctx_windowedBounds.Width, ctx_windowedBounds.Height);
 }
 
 static void GLContext_SetFullscreen(void) {

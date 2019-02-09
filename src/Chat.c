@@ -376,7 +376,7 @@ static void ResolutionCommand_Execute(const String* args, int argsCount) {
 	} else if (width <= 0 || height <= 0) {
 		Chat_AddRaw("&e/client: &cWidth and height must be above 0.");
 	} else {
-		Window_SetClientSize(width, height);
+		Window_SetSize(width, height);
 		Options_SetInt(OPT_WINDOW_WIDTH,  width);
 		Options_SetInt(OPT_WINDOW_HEIGHT, height);
 	}

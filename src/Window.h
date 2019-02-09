@@ -73,15 +73,11 @@ extern Rect2D Window_Bounds;
 /* Size of the internal bounds of the window. */
 /* This is the size of area that can be drawn on. (i.e. content size) */
 extern Size2D Window_ClientSize;
-/* Sets the position and external size of the window. */
-void Window_SetBounds(Rect2D rect);
 /* Sets the position of the window on the screen. */
 void Window_SetLocation(int x, int y);
-/* Sets the external size of the window. */
-/* NOTE: You usually want to use Window_SetClientSize instead. */
+/* Sets the size of the internal bounds of the window. */
+/* NOTE: This size excludes the bounds of borders + title */
 void Window_SetSize(int width, int height);
-/* Sets the internal size of the window. */
-void Window_SetClientSize(int width, int height);
 
 /* Closes then destroys the window. */
 /* Raises the WindowClosing and WindowClosed events. */
