@@ -135,7 +135,7 @@ bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
 		Chat_AddRaw("&c Its height is less than its width.");
 		return false;
 	}
-	if (Gfx_LostContext) return false;
+	if (Gfx.LostContext) return false;
 
 	Atlas_Free();
 	Atlas_Update(atlas);
@@ -161,9 +161,9 @@ void Game_UserSetViewDistance(int distance) {
 
 void Game_UpdateProjection(void) {
 	Game_DefaultFov = Options_GetInt(OPT_FIELD_OF_VIEW, 1, 179, 70);
-	Camera.Active->GetProjection(&Gfx_Projection);
+	Camera.Active->GetProjection(&Gfx.Projection);
 
-	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx_Projection);
+	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
 	Event_RaiseVoid(&GfxEvents.ProjectionChanged);
 }
 
@@ -236,7 +236,7 @@ bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* 
 }
 
 bool Game_ValidateBitmap(const String* file, Bitmap* bmp) {
-	int maxWidth = Gfx_MaxTexWidth, maxHeight = Gfx_MaxTexHeight;
+	int maxWidth = Gfx.MaxTexWidth, maxHeight = Gfx.MaxTexHeight;
 	if (!bmp->Scan0) {
 		Chat_Add1("&cError loading %s from the texture pack.", file);
 		return false;
@@ -429,7 +429,7 @@ static void Game_Load(void) {
 	Gfx_Init();
 	Gfx_SetVSync(true);
 	Gfx_MakeApiInfo();
-	Gfx_Mipmaps = Options_GetBool(OPT_MIPMAPS, false);
+	Gfx.Mipmaps = Options_GetBool(OPT_MIPMAPS, false);
 
 	Game_UpdateClientSize();
 	Game_LoadOptions();
@@ -525,9 +525,9 @@ static void Game_LimitFPS(uint64_t frameStart) {
 }
 
 static void Game_UpdateViewMatrix(void) {
-	Camera.Active->GetView(&Gfx_View);
-	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx_View);
-	FrustumCulling_CalcFrustumEquations(&Gfx_Projection, &Gfx_View);
+	Camera.Active->GetView(&Gfx.View);
+	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
+	FrustumCulling_CalcFrustumEquations(&Gfx.Projection, &Gfx.View);
 }
 
 static void Game_Render3D(double delta, float t) {

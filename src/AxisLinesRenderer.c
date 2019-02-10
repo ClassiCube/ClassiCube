@@ -29,7 +29,7 @@ void AxisLinesRenderer_Render(double delta) {
 	VertexP3fC4b* ptr = vertices;
 	int i, count;
 
-	if (!Game_ShowAxisLines || Gfx_LostContext) return;
+	if (!Game_ShowAxisLines || Gfx.LostContext) return;
 	/* Don't do it in a ContextRecreated handler, because we only want VB recreated if ShowAxisLines in on. */
 	if (!axisLines_vb) {
 		axisLines_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, AXISLINES_NUM_VERTICES);

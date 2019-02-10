@@ -517,7 +517,7 @@ void Player_UpdateNameTex(struct Player* player) {
 	struct Entity* e = &player->Base;
 	e->VTABLE->ContextLost(e);
 
-	if (Gfx_LostContext) return;
+	if (Gfx.LostContext) return;
 	Player_MakeNameTexture(player);
 }
 
@@ -544,7 +544,7 @@ static void Player_DrawName(struct Player* p) {
 	size.X = p->NameTex.Width * scale; size.Y = p->NameTex.Height * scale;
 
 	if (Entities.NamesMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {			
-		Matrix_Mul(&mat, &Gfx_View, &Gfx_Projection); /* TODO: This mul is slow, avoid it */
+		Matrix_Mul(&mat, &Gfx.View, &Gfx.Projection); /* TODO: This mul is slow, avoid it */
 		/* Get W component of transformed position */
 		scale = pos.X * mat.Row0.W + pos.Y * mat.Row1.W + pos.Z * mat.Row2.W + mat.Row3.W;
 		size.X *= scale * 0.2f; size.Y *= scale * 0.2f;
@@ -730,7 +730,7 @@ static void Player_CheckSkin(struct Player* p) {
 	Player_EnsurePow2(p, &bmp);
 	e->SkinType = Utils_GetSkinType(&bmp);
 
-	if (bmp.Width > Gfx_MaxTexWidth || bmp.Height > Gfx_MaxTexHeight) {
+	if (bmp.Width > Gfx.MaxTexWidth || bmp.Height > Gfx.MaxTexHeight) {
 		Chat_Add1("&cSkin %s is too large", &skin);
 	} else if (e->SkinType != SKIN_INVALID) {
 		if (e->Model->UsesHumanSkin) Player_ClearHat(&bmp, e->SkinType);

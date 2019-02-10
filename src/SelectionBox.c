@@ -171,7 +171,7 @@ void Selections_Render(double delta) {
 	VertexP3fC4b edgeVertices[SELECTIONS_MAX_VERTICES]; VertexP3fC4b* edgesPtr;
 	Vector3 cameraPos;
 	int i;
-	if (!selections_count || Gfx_LostContext) return;
+	if (!selections_count || Gfx.LostContext) return;
 
 	/* TODO: Proper selection box sorting. But this is very difficult because
 	   we can have boxes within boxes, intersecting boxes, etc. Probably not worth it. */

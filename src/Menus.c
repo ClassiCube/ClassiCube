@@ -2401,11 +2401,11 @@ static void GraphicsOptionsScreen_SetShadows(const String* v) {
 	Options_Set(OPT_ENTITY_SHADOW, v);
 }
 
-static void GraphicsOptionsScreen_GetMipmaps(String* v) { Menu_GetBool(v, Gfx_Mipmaps); }
+static void GraphicsOptionsScreen_GetMipmaps(String* v) { Menu_GetBool(v, Gfx.Mipmaps); }
 static void GraphicsOptionsScreen_SetMipmaps(const String* v) {
 	String url; char urlBuffer[STRING_SIZE];
 
-	Gfx_Mipmaps = Menu_SetBool(v, OPT_MIPMAPS);
+	Gfx.Mipmaps = Menu_SetBool(v, OPT_MIPMAPS);
 	String_InitArray(url, urlBuffer);
 	String_Copy(&url, &World_TextureUrl);
 

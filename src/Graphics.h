@@ -34,12 +34,20 @@ typedef enum MatrixType_ {
 void Gfx_Init(void);
 void Gfx_Free(void);
 
-extern int Gfx_MaxTexWidth, Gfx_MaxTexHeight;
-extern float Gfx_MinZNear;
-extern bool Gfx_LostContext;
-extern bool Gfx_Mipmaps;
-extern bool Gfx_CustomMipmapsLevels;
-extern struct Matrix Gfx_View, Gfx_Projection;
+CC_VAR extern struct _GfxData {
+	/* Maximum dimensions textures can be created up to. (usually 1024 to 16384) */
+	int MaxTexWidth, MaxTexHeight;
+	float MinZNear;
+	/* Whether context graphics has been lost (all creation/render fails) */
+	bool LostContext;
+	/* Whether some textures are created with mipmaps. */
+	bool Mipmaps;
+	/* Whether mipmaps must be created for all dimensions down to 1x1 or not. */
+	bool CustomMipmapsLevels;
+	struct Matrix View, Projection;
+	/* Callback invoked when the context is lost. Repeatedly invoked until a context can be retrieved. */
+	ScheduledTaskCallback LostContextFunction;
+} Gfx;
 
 extern String Gfx_ApiInfo[7];
 extern GfxResourceID Gfx_defaultIb;
@@ -48,9 +56,6 @@ extern GfxResourceID Gfx_quadVb, Gfx_texVb;
 #define ICOUNT(verticesCount) (((verticesCount) >> 2) * 6)
 #define GFX_MAX_INDICES (65536 / 4 * 6)
 #define GFX_MAX_VERTICES 65536
-
-/* Callback invoked when the context is lost. Repeatedly invoked until a context can be retrieved. */
-extern ScheduledTaskCallback Gfx_LostContextFunction;
 
 /* Creates a new texture. (and also generates mipmaps if mipmaps) */
 /* NOTE: Only set mipmaps to true if Gfx_Mipmaps is also true, because whether textures

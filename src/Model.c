@@ -101,11 +101,11 @@ void Model_Render(struct Model* model, struct Entity* entity) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 
 	model->GetTransform(entity, pos, &entity->Transform);
-	Matrix_Mul(&m, &entity->Transform, &Gfx_View);
+	Matrix_Mul(&m, &entity->Transform, &Gfx.View);
 
 	Gfx_LoadMatrix(MATRIX_VIEW, &m);
 	model->Draw(entity);
-	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx_View);
+	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
 }
 
 void Model_SetupState(struct Model* model, struct Entity* entity) {
@@ -258,14 +258,14 @@ void Model_RenderArm(struct Model* model, struct Entity* entity) {
 	}
 
 	Entity_GetTransform(entity, pos, entity->ModelScale, &m);
-	Matrix_Mul(&m, &m,         &Gfx_View);
+	Matrix_Mul(&m, &m,         &Gfx.View);
 	Matrix_Mul(&m, &translate, &m);
 
 	Gfx_LoadMatrix(MATRIX_VIEW, &m);
 	Models.Rotation = ROTATE_ORDER_YZX;
 	model->DrawArm(entity);
 	Models.Rotation = ROTATE_ORDER_ZYX;
-	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx_View);
+	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
 }
 
 void Model_DrawArmPart(struct ModelPart* part) {

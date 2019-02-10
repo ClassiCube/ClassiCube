@@ -554,7 +554,7 @@ static void Server_Init(void) {
 		MPConnection_Init();
 	}
 
-	Gfx_LostContextFunction = Server.Tick;
+	Gfx.LostContextFunction = Server.Tick;
 	ScheduledTask_Add(GAME_NET_TICKS, Server.Tick);
 	String_AppendConst(&Server.AppName, GAME_APP_NAME);
 }

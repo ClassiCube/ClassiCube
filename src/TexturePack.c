@@ -248,7 +248,7 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int s
 	}
 
 	tex = Atlas1D_TexIds[dstX];
-	if (tex) { Gfx_UpdateTexturePart(tex, 0, dstY, &frame, Gfx_Mipmaps); }
+	if (tex) { Gfx_UpdateTexturePart(tex, 0, dstY, &frame, Gfx.Mipmaps); }
 	if (size > ANIMS_FAST_SIZE) Mem_Free(ptr);
 }
 
@@ -427,7 +427,7 @@ static void Atlas_Convert2DTo1D(void) {
 			Bitmap_CopyBlock(atlasX, atlasY, 0, y * tileSize,
 							&Atlas_Bitmap, &atlas1D, tileSize);
 		}
-		Atlas1D_TexIds[i] = Gfx_CreateTexture(&atlas1D, true, Gfx_Mipmaps);
+		Atlas1D_TexIds[i] = Gfx_CreateTexture(&atlas1D, true, Gfx.Mipmaps);
 	}
 	Mem_Free(atlas1D.Scan0);
 }
@@ -435,7 +435,7 @@ static void Atlas_Convert2DTo1D(void) {
 static void Atlas_Update1D(void) {
 	int maxAtlasHeight, maxTilesPerAtlas, maxTiles;
 
-	maxAtlasHeight   = min(4096, Gfx_MaxTexHeight);
+	maxAtlasHeight   = min(4096, Gfx.MaxTexHeight);
 	maxTilesPerAtlas = maxAtlasHeight / Atlas_TileSize;
 	maxTiles         = Atlas_RowsCount * ATLAS2D_TILES_PER_ROW;
 
@@ -463,7 +463,7 @@ static GfxResourceID Atlas_LoadTile_Raw(TextureLoc texLoc, Bitmap* element) {
 	if (y >= Atlas_RowsCount) return GFX_NULL;
 
 	Bitmap_CopyBlock(x * size, y * size, 0, 0, &Atlas_Bitmap, element, size);
-	return Gfx_CreateTexture(element, false, Gfx_Mipmaps);
+	return Gfx_CreateTexture(element, false, Gfx.Mipmaps);
 }
 
 GfxResourceID Atlas_LoadTile(TextureLoc texLoc) {
@@ -632,7 +632,7 @@ static ReturnCode TexturePack_ProcessZipEntry(const String* path, struct Stream*
 static ReturnCode TexturePack_ExtractZip(struct Stream* stream) {
 	struct ZipState state;
 	Event_RaiseVoid(&TextureEvents.PackChanged);
-	if (Gfx_LostContext) return 0;
+	if (Gfx.LostContext) return 0;
 	
 	Zip_Init(&state, stream);
 	state.ProcessEntry = TexturePack_ProcessZipEntry;

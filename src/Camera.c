@@ -19,7 +19,7 @@ static bool cam_isForwardThird;
 static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
 	float fovy = Game_Fov * MATH_DEG2RAD;
 	float aspectRatio = (float)Game.Width / (float)Game.Height;
-	Matrix_PerspectiveFieldOfView(proj, fovy, aspectRatio, Gfx_MinZNear, (float)Game_ViewDistance);
+	Matrix_PerspectiveFieldOfView(proj, fovy, aspectRatio, Gfx.MinZNear, (float)Game_ViewDistance);
 }
 
 static void PerspectiveCamera_GetView(struct Matrix* mat) {

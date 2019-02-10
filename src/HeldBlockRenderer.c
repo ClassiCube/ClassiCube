@@ -56,7 +56,7 @@ static void HeldBlockRenderer_SetMatrix(void) {
 
 	Matrix_Translate(&lookAt, -eye.X, -eye.Y, -eye.Z);
 	Matrix_Mul(&m, &lookAt, &Camera.TiltM);
-	Gfx_View = m;
+	Gfx.View = m;
 }
 
 static void HeldBlockRenderer_ResetHeldState(void) {
@@ -96,7 +96,7 @@ static void HeldBlockRenderer_SetBaseOffset(void) {
 static void HeldBlockRenderer_ProjectionChanged(void* obj) {
 	float fov = 70.0f * MATH_DEG2RAD;
 	float aspectRatio = (float)Game.Width / (float)Game.Height;
-	float zNear = Gfx_MinZNear;
+	float zNear = Gfx.MinZNear;
 	Gfx_CalcPerspectiveMatrix(fov, aspectRatio, zNear, (float)Game_ViewDistance, &held_blockProjection);
 }
 
@@ -215,7 +215,7 @@ void HeldBlockRenderer_Render(double delta) {
 	lastSwingY  = held_swingY;
 	held_swingY = 0.0f;
 	held_block  = Inventory_SelectedBlock;
-	view = Gfx_View;
+	view = Gfx.View;
 
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &held_blockProjection);
 	HeldBlockRenderer_SetMatrix();
@@ -225,8 +225,8 @@ void HeldBlockRenderer_Render(double delta) {
 	HeldBlockRenderer_SetBaseOffset();
 	if (!Camera.Active->IsThirdPerson) HeldBlockRenderer_RenderModel();
 
-	Gfx_View = view;
-	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx_Projection);
+	Gfx.View = view;
+	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
 }
 
 struct EntityVTABLE heldEntity_VTABLE = {

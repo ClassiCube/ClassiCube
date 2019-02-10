@@ -15,11 +15,7 @@
 #define NOMCX
 #define NOIME
 
-int Gfx_MaxTexWidth, Gfx_MaxTexHeight;
-float Gfx_MinZNear;
-bool Gfx_LostContext;
-bool Gfx_Mipmaps, Gfx_CustomMipmapsLevels;
-struct Matrix Gfx_View, Gfx_Projection;
+struct _GfxData Gfx;
 
 static char Gfx_ApiBuffer[7][STRING_SIZE];
 String Gfx_ApiInfo[7] = {
@@ -31,9 +27,8 @@ String Gfx_ApiInfo[7] = {
 
 GfxResourceID Gfx_defaultIb;
 GfxResourceID Gfx_quadVb, Gfx_texVb;
-ScheduledTaskCallback Gfx_LostContextFunction;
 
-static int gfx_strideSizes[2] = { 16, 24 };
+const static int gfx_strideSizes[2] = { 16, 24 };
 static int gfx_batchStride, gfx_batchFormat = -1;
 
 static bool gfx_vsync, gfx_fogEnabled;
@@ -58,7 +53,7 @@ CC_NOINLINE static void Gfx_FreeDefaultResources(void) {
 }
 
 void Gfx_LoseContext(const char* reason) {
-	Gfx_LostContext = true;
+	Gfx.LostContext = true;
 	Platform_Log1("Lost graphics context: %c", reason);
 
 	Event_RaiseVoid(&GfxEvents.ContextLost);
@@ -66,7 +61,7 @@ void Gfx_LoseContext(const char* reason) {
 }
 
 void Gfx_RecreateContext(void) {
-	Gfx_LostContext = false;
+	Gfx.LostContext = false;
 	Platform_LogConst("Recreating graphics context");
 
 	Event_RaiseVoid(&GfxEvents.ContextRecreated);
@@ -152,8 +147,8 @@ void Gfx_Mode2D(int width, int height) {
 }
 
 void Gfx_Mode3D(void) {
-	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx_Projection);
-	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx_View);
+	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
+	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
 
 	Gfx_SetDepthTest(true);
 	Gfx_SetAlphaBlending(false);
@@ -246,7 +241,7 @@ void Gfx_GenMipmaps(int width, int height, uint8_t* lvlScan0, uint8_t* scan0) {
 
 int Gfx_MipmapsLevels(int width, int height) {
 	int lvlsWidth = Math_Log2(width), lvlsHeight = Math_Log2(height);
-	if (Gfx_CustomMipmapsLevels) {
+	if (Gfx.CustomMipmapsLevels) {
 		int lvls = min(lvlsWidth, lvlsHeight);
 		return min(lvls, 4);
 	} else {
@@ -305,7 +300,7 @@ static void D3D9_FreeResource(GfxResourceID* resource) {
 static void D3D9_LoopUntilRetrieved(void) {
 	struct ScheduledTask task;
 	task.Interval = 1.0f / 60.0f;
-	task.Callback = Gfx_LostContextFunction;
+	task.Callback = Gfx.LostContextFunction;
 
 	while (true) {
 		Thread_Sleep(16);
@@ -364,7 +359,7 @@ static void D3D9_RecreateDevice(void) {
 }
 
 void Gfx_Init(void) {
-	Gfx_MinZNear = 0.05f;
+	Gfx.MinZNear = 0.05f;
 	void* winHandle = Window_GetWindowHandle();
 	d3d = Direct3DCreate9(D3D_SDK_VERSION);
 
@@ -389,10 +384,10 @@ void Gfx_Init(void) {
 	res = IDirect3DDevice9_GetDeviceCaps(device, &caps);
 	if (res) Logger_Abort2(res, "Getting Direct3D9 capabilities");
 
-	Gfx_MaxTexWidth  = caps.MaxTextureWidth;
-	Gfx_MaxTexHeight = caps.MaxTextureHeight;
+	Gfx.MaxTexWidth  = caps.MaxTextureWidth;
+	Gfx.MaxTexHeight = caps.MaxTextureHeight;
 
-	Gfx_CustomMipmapsLevels = true;
+	Gfx.CustomMipmapsLevels = true;
 	D3D9_SetDefaultRenderStates();
 	Gfx_InitDefaultResources();
 }
@@ -530,14 +525,14 @@ void Gfx_SetTexturing(bool enabled) {
 }
 
 void Gfx_EnableMipmaps(void) {
-	if (Gfx_Mipmaps) {
+	if (Gfx.Mipmaps) {
 		ReturnCode res = IDirect3DDevice9_SetSamplerState(device, 0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
 		if (res) Logger_Abort2(res, "D3D9_EnableMipmaps");
 	}
 }
 
 void Gfx_DisableMipmaps(void) {
-	if (Gfx_Mipmaps) {
+	if (Gfx.Mipmaps) {
 		ReturnCode res = IDirect3DDevice9_SetSamplerState(device, 0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
 		if (res) Logger_Abort2(res, "D3D9_DisableMipmaps");
 	}
@@ -569,7 +564,7 @@ void Gfx_SetFog(bool enabled) {
 	if (gfx_fogEnabled == enabled) return;
 	gfx_fogEnabled = enabled;
 
-	if (Gfx_LostContext) return;
+	if (Gfx.LostContext) return;
 	D3D9_SetRenderState(D3DRS_FOGENABLE, enabled, "D3D9_SetFog");
 }
 
@@ -577,7 +572,7 @@ void Gfx_SetFogCol(PackedCol col) {
 	if (PackedCol_Equals(col, d3d9_fogCol.C)) return;
 	d3d9_fogCol.C = col;
 
-	if (Gfx_LostContext) return;
+	if (Gfx.LostContext) return;
 	D3D9_SetRenderState(D3DRS_FOGCOLOR, d3d9_fogCol.Raw, "D3D9_SetFogColour");
 }
 
@@ -586,7 +581,7 @@ void Gfx_SetFogDensity(float value) {
 	if (value == d3d9_fogDensity) return;
 	d3d9_fogDensity = value;
 
-	if (Gfx_LostContext) return;
+	if (Gfx.LostContext) return;
 	raw.f = value;
 	D3D9_SetRenderState(D3DRS_FOGDENSITY, raw.u, "D3D9_SetFogDensity");
 }
@@ -596,7 +591,7 @@ void Gfx_SetFogEnd(float value) {
 	if (value == d3d9_fogEnd) return;
 	d3d9_fogEnd = value;
 
-	if (Gfx_LostContext) return;
+	if (Gfx.LostContext) return;
 	raw.f = value;
 	D3D9_SetRenderState(D3DRS_FOGEND, raw.u, "D3D9_SetFogEnd");
 }
@@ -607,7 +602,7 @@ void Gfx_SetFogMode(FogFunc func) {
 	if (mode == d3d9_fogMode) return;
 
 	d3d9_fogMode = mode;
-	if (Gfx_LostContext) return;
+	if (Gfx.LostContext) return;
 	D3D9_SetRenderState(D3DRS_FOGTABLEMODE, mode, "D3D9_SetFogMode");
 }
 
@@ -829,7 +824,7 @@ void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
 		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
 	}
 
-	if (Gfx_LostContext) return;
+	if (Gfx.LostContext) return;
 	res = IDirect3DDevice9_SetTransform(device, matrix_modes[type], matrix);
 	if (res) Logger_Abort2(res, "D3D9_LoadMatrix");
 }
@@ -840,7 +835,7 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
 	}
 
-	if (Gfx_LostContext) return;
+	if (Gfx.LostContext) return;
 	res = IDirect3DDevice9_SetTransform(device, matrix_modes[type], &Matrix_Identity);
 	if (res) Logger_Abort2(res, "D3D9_LoadIdentityMatrix");
 }
@@ -954,7 +949,7 @@ void Gfx_MakeApiInfo(void) {
 	String_Format1(&Gfx_ApiInfo[1], "Adapter: %c",         adapter.Description);
 	String_Format1(&Gfx_ApiInfo[2], "Processing mode: %c", D3D9_StrFlags());
 	Gfx_UpdateApiInfo();
-	String_Format2(&Gfx_ApiInfo[4], "Max texture size: (%i, %i)", &Gfx_MaxTexWidth, &Gfx_MaxTexHeight);
+	String_Format2(&Gfx_ApiInfo[4], "Max texture size: (%i, %i)", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
 	String_Format1(&Gfx_ApiInfo[5], "Depth buffer format: %c",    D3D9_StrFormat(d3d9_depthFormat));
 	String_Format1(&Gfx_ApiInfo[6], "Back buffer format: %c",     D3D9_StrFormat(d3d9_viewFormat));
 }
@@ -1057,12 +1052,12 @@ void Gfx_Init(void) {
 	GraphicsMode_MakeDefault(&mode);
 	GLContext_Init(&mode);
 
-	Gfx_MinZNear = 0.1f;
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx_MaxTexWidth);
-	Gfx_MaxTexHeight = Gfx_MaxTexWidth;
+	Gfx.MinZNear = 0.1f;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx.MaxTexWidth);
+	Gfx.MaxTexHeight = Gfx.MaxTexWidth;
 
 #ifndef CC_BUILD_GL11
-	Gfx_CustomMipmapsLevels = true;
+	Gfx.CustomMipmapsLevels = true;
 	GL_CheckVboSupport();
 #endif
 	Gfx_InitDefaultResources();
@@ -1122,7 +1117,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 
 	if (mipmaps) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-		if (Gfx_CustomMipmapsLevels) {
+		if (Gfx.CustomMipmapsLevels) {
 			int lvls = Gfx_MipmapsLevels(bmp->Width, bmp->Height);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, lvls);
 		}
@@ -1516,7 +1511,7 @@ void Gfx_MakeApiInfo(void) {
 	String_Format1(&Gfx_ApiInfo[2], "Renderer: %c",   glGetString(GL_RENDERER));
 	String_Format1(&Gfx_ApiInfo[3], "GL version: %c", glGetString(GL_VERSION));
 	/* Memory usage line goes here */
-	String_Format2(&Gfx_ApiInfo[5], "Max texture size: (%i, %i)", &Gfx_MaxTexWidth, &Gfx_MaxTexHeight);
+	String_Format2(&Gfx_ApiInfo[5], "Max texture size: (%i, %i)", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
 	String_Format1(&Gfx_ApiInfo[6], "Depth buffer bits: %i", &depthBits);
 }
 

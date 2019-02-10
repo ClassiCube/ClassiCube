@@ -33,7 +33,7 @@ void Screen_CommonInit(void* screen) {
 	Event_RegisterVoid(&GfxEvents.ContextLost,      s, s->VTABLE->ContextLost);
 	Event_RegisterVoid(&GfxEvents.ContextRecreated, s, s->VTABLE->ContextRecreated);
 
-	if (Gfx_LostContext) return;
+	if (Gfx.LostContext) return;
 	s->VTABLE->ContextRecreated(s);
 }
 
@@ -88,7 +88,7 @@ bool Gui_Contains(int recX, int recY, int width, int height, int x, int y) {
 }
 
 CC_NOINLINE static void Gui_RecreateScreen(struct Screen* screen) {
-	if (Gfx_LostContext || !screen) return;
+	if (Gfx.LostContext || !screen) return;
 	Elem_Recreate(screen);
 }
 

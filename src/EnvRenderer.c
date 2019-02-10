@@ -183,7 +183,7 @@ static void EnvRenderer_UpdateClouds(void) {
 	int extent;
 	int x1, z1, x2, z2;
 	
-	if (!World.Blocks || Gfx_LostContext) return;
+	if (!World.Blocks || Gfx.LostContext) return;
 	Gfx_DeleteVb(&clouds_vb);
 	if (EnvRenderer_Minimal) return;
 
@@ -223,7 +223,7 @@ void EnvRenderer_RenderSky(double deltaTime) {
 	if (skyY == normY) {
 		Gfx_DrawVb_IndexedTris(sky_vertices);
 	} else {
-		m  = Gfx_View;
+		m  = Gfx.View;
 		dy = skyY - normY; 
 		/* inlined Y translation matrix multiply */
 		m.Row3.X += dy * m.Row1.X; m.Row3.Y += dy * m.Row1.Y;
@@ -231,7 +231,7 @@ void EnvRenderer_RenderSky(double deltaTime) {
 
 		Gfx_LoadMatrix(MATRIX_VIEW, &m);
 		Gfx_DrawVb_IndexedTris(sky_vertices);
-		Gfx_LoadMatrix(MATRIX_VIEW, &Gfx_View);
+		Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
 	}
 }
 
@@ -262,7 +262,7 @@ static void EnvRenderer_UpdateSky(void) {
 	int extent, height;
 	int x1, z1, x2, z2;
 
-	if (!World.Blocks || Gfx_LostContext) return;
+	if (!World.Blocks || Gfx.LostContext) return;
 	Gfx_DeleteVb(&sky_vb);
 	if (EnvRenderer_Minimal) return;
 
@@ -318,7 +318,7 @@ void EnvRenderer_RenderSkybox(double deltaTime) {
 	Gfx_DrawVb_IndexedTris(SKYBOX_COUNT);
 
 	Gfx_SetTexturing(false);
-	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx_View);
+	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
 	Gfx_SetDepthWrite(true);
 }
 
@@ -345,7 +345,7 @@ static void EnvRenderer_UpdateSkybox(void) {
 	};
 	int i;
 
-	if (Gfx_LostContext) return;
+	if (Gfx.LostContext) return;
 	Gfx_DeleteVb(&skybox_vb);
 	if (EnvRenderer_Minimal) return;
 
@@ -576,7 +576,7 @@ void EnvRenderer_RenderMapEdges(double delta) {
 
 static void EnvRenderer_MakeBorderTex(GfxResourceID* texId, BlockID block) {
 	TextureLoc loc = Block_Tex(block, FACE_YMAX);
-	if (Gfx_LostContext) return;
+	if (Gfx.LostContext) return;
 
 	Gfx_DeleteTexture(texId);
 	*texId = Atlas_LoadTile(loc);
@@ -694,7 +694,7 @@ static void EnvRenderer_UpdateMapSides(void) {
 	VertexP3fT2fC4b* ptr;
 	VertexP3fT2fC4b* cur;
 
-	if (!World.Blocks || Gfx_LostContext) return;
+	if (!World.Blocks || Gfx.LostContext) return;
 	Gfx_DeleteVb(&sides_vb);
 	block = Env_SidesBlock;
 
@@ -753,7 +753,7 @@ static void EnvRenderer_UpdateMapEdges(void) {
 	VertexP3fT2fC4b* ptr;
 	VertexP3fT2fC4b* cur;
 
-	if (!World.Blocks || Gfx_LostContext) return;
+	if (!World.Blocks || Gfx.LostContext) return;
 	Gfx_DeleteVb(&edges_vb);
 	block = Env_EdgeBlock;
 
@@ -815,7 +815,7 @@ static void EnvRenderer_UpdateAll(void) {
 	EnvRenderer_UpdateSkybox();
 	EnvRenderer_UpdateFog();
 
-	if (Gfx_LostContext) return;
+	if (Gfx.LostContext) return;
 	/* TODO: Don't allocate unless used? */
 	weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, WEATHER_VERTS_COUNT);
 	/* TODO: Don't need to do this on every new map */

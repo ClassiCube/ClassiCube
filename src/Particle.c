@@ -29,7 +29,7 @@ void Particle_DoRender(Vector2* size, Vector3* pos, TextureRec* rec, PackedCol c
 
 	sX = size->X * 0.5f; sY = size->Y * 0.5f;
 	centre = *pos; centre.Y += sY;
-	view   = &Gfx_View;
+	view   = &Gfx.View;
 	
 	aX = view->Row0.X * sX; aY = view->Row1.X * sX; aZ = view->Row2.X * sX; /* right * size.X * 0.5f */
 	bX = view->Row0.Y * sY; bY = view->Row1.Y * sY; bZ = view->Row2.Y * sY; /* up    * size.Y * 0.5f */
@@ -323,7 +323,7 @@ static void Particles_FileChanged(void* obj, struct Stream* stream, const String
 
 void Particles_Render(double delta, float t) {
 	if (!terrain_count && !rain_count) return;
-	if (Gfx_LostContext) return;
+	if (Gfx.LostContext) return;
 
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);

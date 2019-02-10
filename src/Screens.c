@@ -1023,7 +1023,7 @@ static bool ChatScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 static void ChatScreen_ColCodeChanged(void* screen, int code) {
 	struct ChatScreen* s = screen;
 	double caretAcc;
-	if (Gfx_LostContext) return;
+	if (Gfx.LostContext) return;
 
 	SpecialInputWidget_UpdateCols(&s->AltText);
 	ChatElem_Recreate(&s->Chat, code);
@@ -1042,7 +1042,7 @@ static void ChatScreen_ChatReceived(void* screen, const String* msg, int type) {
 	struct ChatScreen* s = screen;
 	String chatMsg;
 	int i;
-	if (Gfx_LostContext) return;
+	if (Gfx.LostContext) return;
 
 	if (type == MSG_TYPE_NORMAL) {
 		s->ChatIndex++;
