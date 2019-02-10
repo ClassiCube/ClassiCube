@@ -25,9 +25,6 @@ CC_VAR extern struct _InventoryData {
 	int Offset;
 	/* Whether the user is allowed to change selected/held block. */
 	bool CanChangeSelected;
-	/* Whether the user can use the inventory at all. */
-	/* NOTE: false prevents the user from deleting/picking/placing blocks. */
-	bool CanUse;
 } Inventory;
 
 /* Gets the block at the nth index in the current hotbar. */

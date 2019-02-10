@@ -949,7 +949,6 @@ static void CPE_HoldThis(uint8_t* data) {
 	Inventory.CanChangeSelected = true;
 	Inventory_SetSelectedBlock(block);
 	Inventory.CanChangeSelected = canChange;
-	Inventory.CanUse = block != BLOCK_AIR;
 }
 
 static void CPE_SetTextHotkey(uint8_t* data) {

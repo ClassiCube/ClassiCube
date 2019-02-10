@@ -335,7 +335,7 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		InputHandler_ButtonStateChanged(MOUSE_MIDDLE, middle);
 	}
 
-	if (Gui_GetActiveScreen()->HandlesAllInput || !Inventory.CanUse) return;
+	if (Gui_GetActiveScreen()->HandlesAllInput) return;
 
 	if (left) {
 		/* always play delete animations, even if we aren't picking a block */

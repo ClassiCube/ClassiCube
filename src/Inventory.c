@@ -18,7 +18,6 @@ bool Inventory_CheckChangeSelected(void) {
 
 void Inventory_SetSelectedIndex(int index) {
 	if (!Inventory_CheckChangeSelected()) return;
-	Inventory.CanUse        = true;
 	Inventory.SelectedIndex = index;
 	Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 }
@@ -33,7 +32,6 @@ void Inventory_SetSelectedBlock(BlockID block) {
 	int i;
 	if (!Inventory_CheckChangeSelected()) return;
 	/* Swap with the current, if the new block is already in the hotbar */
-	Inventory.CanUse = true;
 	
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
 		if (Inventory_Get(i) != block) continue;
@@ -105,7 +103,6 @@ void Inventory_Remove(BlockID block) {
 static void Inventory_Reset(void) {
 	Inventory_ApplyDefaultMapping();
 	Inventory.CanChangeSelected = true;
-	Inventory.CanUse            = true;
 }
 
 static void Inventory_Init(void) {
