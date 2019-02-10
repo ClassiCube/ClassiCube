@@ -1598,7 +1598,7 @@ struct Screen* LoadLevelScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 static struct KeyBindingsScreen KeyBindingsScreen_Instance;
 static void KeyBindingsScreen_GetText(struct KeyBindingsScreen* s, int i, String* text) {
-	Key key = KeyBind_Get(s->Binds[i]);
+	Key key = KeyBinds[s->Binds[i]];
 	String_Format2(text, "%c: %c", s->Descs[i], Key_Names[key]);
 }
 
@@ -1676,7 +1676,7 @@ static bool KeyBindingsScreen_KeyDown(void* screen, Key key, bool was) {
 
 	if (s->CurI == -1) return MenuScreen_KeyDown(s, key, was);
 	bind = s->Binds[s->CurI];
-	if (key == KEY_ESCAPE) key = KeyBind_GetDefault(bind);
+	if (key == KEY_ESCAPE) key = KeyBind_Defaults[bind];
 
 	KeyBind_Set(bind, key);
 	String_InitArray(text, textBuffer);
@@ -1699,7 +1699,7 @@ static bool KeyBindingsScreen_MouseDown(void* screen, int x, int y, MouseButton 
 	/* Reset a key binding */
 	if ((s->CurI == -1 || s->CurI == i) && i < s->BindsCount) {
 		s->CurI = i;
-		Elem_HandlesKeyDown(s, KeyBind_GetDefault(s->Binds[i]), false);
+		Elem_HandlesKeyDown(s, KeyBind_Defaults[s->Binds[i]], false);
 	}
 	return true;
 }
@@ -3057,7 +3057,7 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 static bool TexIdsOverlay_KeyDown(void* screen, Key key, bool was) {
 	struct Screen* active = Gui_GetUnderlyingScreen();
 
-	if (key == KeyBind_Get(KEYBIND_IDOVERLAY) || key == KEY_ESCAPE) {
+	if (key == KeyBinds[KEYBIND_IDOVERLAY] || key == KEY_ESCAPE) {
 		Gui_FreeOverlay(screen); return true;
 	}
 	return Elem_HandlesKeyDown(active, key, was);

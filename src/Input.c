@@ -25,20 +25,21 @@ bool Key_Pressed[KEY_COUNT];
 
 const char* Key_Names[KEY_COUNT] = {
 	"None",
-	"ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight",
-	"AltLeft", "AltRight", "WinLeft", "WinRight", "Menu",
 	Key_Function_Names,
+	"ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight",
+	"AltLeft", "AltRight", "WinLeft", "WinRight",
 	"Up", "Down", "Left", "Right",
-	"Enter", "Escape", "Space", "Tab", "BackSpace", "Insert",
-	"Delete", "PageUp", "PageDown", "Home", "End", "CapsLock",
+	"Number0", "Number1", "Number2", "Number3", "Number4",
+	"Number5", "Number6", "Number7", "Number8", "Number9",
+	"Insert", "Delete", "Home", "End", "PageUp", "PageDown",
+	"Menu",
+	Key_Ascii_Names,
+	"Enter", "Escape", "Space", "BackSpace", "Tab", "CapsLock",
 	"ScrollLock", "PrintScreen", "Pause", "NumLock",
 	"Keypad0", "Keypad1", "Keypad2", "Keypad3", "Keypad4",
 	"Keypad5", "Keypad6", "Keypad7", "Keypad8", "Keypad9",
 	"KeypadDivide", "KeypadMultiply", "KeypadSubtract",
-	"KeypadAdd", "KeypadDecimal", "KeypadEnter",
-	Key_Ascii_Names,
-	"Number0", "Number1", "Number2", "Number3", "Number4",
-	"Number5", "Number6", "Number7", "Number8", "Number9",
+	"KeypadAdd", "KeypadDecimal", "KeypadEnter",	
 	"Tilde", "Minus", "Plus", "BracketLeft", "BracketRight",
 	"Semicolon", "Quote", "Comma", "Period", "Slash", "BackSlash",
 	"XButton1", "XButton2",
@@ -119,17 +120,17 @@ void Mouse_SetPosition(int x, int y) {
 /*########################################################################################################################*
 *---------------------------------------------------------Keybinds--------------------------------------------------------*
 *#########################################################################################################################*/
-static Key KeyBind_Keys[KEYBIND_COUNT];
-static uint8_t KeyBind_Defaults[KEYBIND_COUNT] = {
-	KEY_W, KEY_S, KEY_A, KEY_D,
-	KEY_SPACE, KEY_R, KEY_ENTER, KEY_T,
-	KEY_B, KEY_F, KEY_ENTER, KEY_TAB, 
-	KEY_LSHIFT, KEY_X, KEY_Z, KEY_Q, KEY_E, 
+uint8_t KeyBinds[KEYBIND_COUNT];
+const uint8_t KeyBind_Defaults[KEYBIND_COUNT] = {
+	'W', 'S', 'A', 'D',
+	KEY_SPACE, 'R', KEY_ENTER, 'T',
+	'B', 'F', KEY_ENTER, KEY_TAB, 
+	KEY_LSHIFT, 'X', 'Z', 'Q', 'E', 
 	KEY_LALT, KEY_F3, KEY_F12, KEY_F11, 
-	KEY_F5, KEY_F1, KEY_F7, KEY_C, 
-	KEY_LCTRL, KEY_NONE, KEY_NONE, KEY_NONE, 
+	KEY_F5, KEY_F1, KEY_F7, 'C', 
+	KEY_LCTRL, 0, 0, 0, 
 	KEY_F6, KEY_LALT, KEY_F8, 
-	KEY_G, KEY_F10, KEY_NONE
+	'G', KEY_F10, 0
 };
 const char* KeyBind_Names[KEYBIND_COUNT] = {
 	"Forward", "Back", "Left", "Right",
@@ -143,9 +144,7 @@ const char* KeyBind_Names[KEYBIND_COUNT] = {
 	"DropBlock", "IDOverlay", "BreakableLiquids"
 };
 
-Key KeyBind_Get(KeyBind binding) { return KeyBind_Keys[binding]; }
-Key KeyBind_GetDefault(KeyBind binding) { return KeyBind_Defaults[binding]; }
-bool KeyBind_IsPressed(KeyBind binding) { return Key_Pressed[KeyBind_Keys[binding]]; }
+bool KeyBind_IsPressed(KeyBind binding) { return Key_Pressed[KeyBinds[binding]]; }
 
 void KeyBind_Load(void) {
 	String name; char nameBuffer[STRING_SIZE + 1];
@@ -159,7 +158,7 @@ void KeyBind_Load(void) {
 		name.buffer[name.length] = '\0';
 
 		mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Key_Names, KEY_COUNT);
-		if (mapping != KEY_ESCAPE) KeyBind_Keys[i] = mapping;
+		if (mapping != KEY_ESCAPE) KeyBinds[i] = mapping;
 	}
 }
 
@@ -173,20 +172,20 @@ void KeyBind_Save(void) {
 		name.length = 0; 
 		String_Format1(&name, "key-%c", KeyBind_Names[i]);
 
-		value = String_FromReadonly(Key_Names[KeyBind_Keys[i]]);
+		value = String_FromReadonly(Key_Names[KeyBinds[i]]);
 		Options_SetString(&name, &value);
 	}
 }
 
 void KeyBind_Set(KeyBind binding, Key key) {
-	KeyBind_Keys[binding] = key;
+	KeyBinds[binding] = key;
 	KeyBind_Save();
 }
 
 void KeyBind_Init(void) {
 	int i;
 	for (i = 0; i < KEYBIND_COUNT; i++) {
-		KeyBind_Keys[i] = KeyBind_Defaults[i];
+		KeyBinds[i] = KeyBind_Defaults[i];
 	}
 	KeyBind_Load();
 }
@@ -196,10 +195,10 @@ void KeyBind_Init(void) {
 *---------------------------------------------------------Hotkeys---------------------------------------------------------*
 *#########################################################################################################################*/
 const uint8_t Hotkeys_LWJGL[256] = {
-	0, KEY_ESCAPE, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, KEY_MINUS, KEY_PLUS, KEY_BACKSPACE, KEY_TAB,
-	KEY_Q, KEY_W, KEY_E, KEY_R, KEY_T, KEY_Y, KEY_U, KEY_I, KEY_O, KEY_P, KEY_LBRACKET, KEY_RBRACKET, KEY_ENTER, KEY_LCTRL, KEY_A, KEY_S,
-	KEY_D, KEY_F, KEY_G, KEY_H, KEY_J, KEY_K, KEY_L, KEY_SEMICOLON, KEY_QUOTE, KEY_TILDE, KEY_LSHIFT, KEY_BACKSLASH, KEY_Z, KEY_X, KEY_C, KEY_V,
-	KEY_B, KEY_N, KEY_M, KEY_COMMA, KEY_PERIOD, KEY_SLASH, KEY_RSHIFT, 0, KEY_LALT, KEY_SPACE, KEY_CAPSLOCK, KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5,
+	0, KEY_ESCAPE, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', KEY_MINUS, KEY_PLUS, KEY_BACKSPACE, KEY_TAB,
+	'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', KEY_LBRACKET, KEY_RBRACKET, KEY_ENTER, KEY_LCTRL, 'A', 'S',
+	'D', 'F', 'G', 'H', 'J', 'K', 'L', KEY_SEMICOLON, KEY_QUOTE, KEY_TILDE, KEY_LSHIFT, KEY_BACKSLASH, 'Z', 'X', 'C', 'V',
+	'B', 'N', 'M', KEY_COMMA, KEY_PERIOD, KEY_SLASH, KEY_RSHIFT, 0, KEY_LALT, KEY_SPACE, KEY_CAPSLOCK, KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5,
 	KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_NUMLOCK, KEY_SCROLLLOCK, KEY_KP7, KEY_KP8, KEY_KP9, KEY_KP_MINUS, KEY_KP4, KEY_KP5, KEY_KP6, KEY_KP_PLUS, KEY_KP1,
 	KEY_KP2, KEY_KP3, KEY_KP0, KEY_KP_DECIMAL, 0, 0, 0, KEY_F11, KEY_F12, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, KEY_F13, KEY_F14, KEY_F15, KEY_F16, KEY_F17, KEY_F18, 0, 0, 0, 0, 0, 0,

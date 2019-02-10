@@ -179,7 +179,7 @@ static bool InventoryScreen_KeyDown(void* screen, Key key, bool was) {
 
 	if (key == KEY_ESCAPE) {
 		Gui_CloseActive();
-	} else if (key == KeyBind_Get(KEYBIND_INVENTORY) && s->ReleasedInv) {
+	} else if (key == KeyBinds[KEYBIND_INVENTORY] && s->ReleasedInv) {
 		Gui_CloseActive();
 	} else if (key == KEY_ENTER && table->SelectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->Elements[table->SelectedIndex]);
@@ -197,7 +197,7 @@ static bool InventoryScreen_KeyUp(void* screen, Key key) {
 	struct InventoryScreen* s = screen;
 	struct HUDScreen* hud;
 
-	if (key == KeyBind_Get(KEYBIND_INVENTORY)) {
+	if (key == KeyBinds[KEYBIND_INVENTORY]) {
 		s->ReleasedInv = true; return true;
 	}
 
@@ -913,7 +913,7 @@ static bool ChatScreen_KeyDown(void* screen, Key key, bool was) {
 	s->SuppressNextPress = false;
 	/* Handle text input bar */
 	if (s->HandlesAllInput) {
-		if (key == KeyBind_Get(KEYBIND_SEND_CHAT) || key == KEY_KP_ENTER || key == KEY_ESCAPE) {
+		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == KEY_KP_ENTER || key == KEY_ESCAPE) {
 			ChatScreen_SetHandlesAllInput(s, false);
 
 			if (key == KEY_ESCAPE) InputWidget_Clear(&s->Input.Base);
@@ -940,7 +940,7 @@ static bool ChatScreen_KeyDown(void* screen, Key key, bool was) {
 		return key < KEY_F1 || key > KEY_F35;
 	}
 
-	if (key == KeyBind_Get(KEYBIND_CHAT)) {
+	if (key == KeyBinds[KEYBIND_CHAT]) {
 		ChatScreen_OpenInput(s, &String_Empty);
 	} else if (key == KEY_SLASH) {
 		ChatScreen_OpenInput(s, &slash);
@@ -954,7 +954,7 @@ static bool ChatScreen_KeyUp(void* screen, Key key) {
 	struct ChatScreen* s = screen;
 	if (!s->HandlesAllInput) return false;
 
-	if (Server.SupportsFullCP437 && key == KeyBind_Get(KEYBIND_EXT_INPUT)) {
+	if (Server.SupportsFullCP437 && key == KeyBinds[KEYBIND_EXT_INPUT]) {
 		if (!Window_Focused) return true;
 		SpecialInputWidget_SetActive(&s->AltText, !s->AltText.Active);
 	}
@@ -1247,7 +1247,7 @@ static bool HUDScreen_KeyPress(void* screen, char keyChar) {
 
 static bool HUDScreen_KeyDown(void* screen, Key key, bool was) {
 	struct HUDScreen* s = screen;
-	Key playerListKey = KeyBind_Get(KEYBIND_PLAYER_LIST);
+	Key playerListKey = KeyBinds[KEYBIND_PLAYER_LIST];
 	bool handles = playerListKey != KEY_TAB || !Gui_TabAutocomplete || !s->Chat->HandlesAllInput;
 
 	if (key == playerListKey && handles) {
@@ -1263,7 +1263,7 @@ static bool HUDScreen_KeyDown(void* screen, Key key, bool was) {
 
 static bool HUDScreen_KeyUp(void* screen, Key key) {
 	struct HUDScreen* s = screen;
-	if (key == KeyBind_Get(KEYBIND_PLAYER_LIST) && s->ShowingList) {
+	if (key == KeyBinds[KEYBIND_PLAYER_LIST] && s->ShowingList) {
 		s->ShowingList    = false;
 		s->WasShowingList = false;
 		Elem_TryFree(&s->PlayerList);

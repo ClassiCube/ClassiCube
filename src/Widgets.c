@@ -415,9 +415,9 @@ static void HotbarWidget_Render(void* widget, double delta) {
 static bool HotbarWidget_KeyDown(void* widget, Key key, bool was) {
 	struct HotbarWidget* w = widget;
 	int index;
-	if (key < KEY_1 || key > KEY_9) return false;
+	if (key < '1' || key > '9') return false;
 
-	index = key - KEY_1;
+	index = key - '1';
 	if (KeyBind_IsPressed(KEYBIND_HOTBAR_SWITCH)) {
 		/* Pick from first to ninth row */
 		Inventory_SetHotbarIndex(index);
@@ -436,7 +436,7 @@ static bool HotbarWidget_KeyUp(void* widget, Key key) {
 	     a) user presses alt then number
 	     b) user presses alt
 	   We only do case b) if case a) did not happen */
-	if (key != KeyBind_Get(KEYBIND_HOTBAR_SWITCH)) return false;
+	if (key != KeyBinds[KEYBIND_HOTBAR_SWITCH]) return false;
 	if (w->AltHandled) { w->AltHandled = false; return true; } /* handled already */
 
 	/* Don't switch hotbar when alt+tab */
@@ -1158,7 +1158,7 @@ static bool InputWidget_OtherKey(struct InputWidget* w, Key key) {
 	maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
 	if (!InputWidget_ControlDown()) return false;
 
-	if (key == KEY_V && w->Text.length < maxChars) {
+	if (key == 'V' && w->Text.length < maxChars) {
 		String_InitArray(text, textBuffer);
 		Window_GetClipboardText(&text);
 
@@ -1168,7 +1168,7 @@ static bool InputWidget_OtherKey(struct InputWidget* w, Key key) {
 		if (!text.length) return true;
 		InputWidget_AppendString(w, &text);
 		return true;
-	} else if (key == KEY_C) {
+	} else if (key == 'C') {
 		if (!w->Text.length) return true;
 		Window_SetClipboardText(&w->Text);
 		return true;

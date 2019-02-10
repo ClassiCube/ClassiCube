@@ -33,31 +33,33 @@
 typedef enum Key_ {	
 	KEY_NONE, /* Unrecognised key */
 
-	KEY_LSHIFT, KEY_RSHIFT, KEY_LCTRL, KEY_RCTRL,
-	KEY_LALT, KEY_RALT, KEY_LWIN, KEY_RWIN, KEY_MENU,
-
-	KEY_F1,  KEY_F2,  KEY_F3,  KEY_F4,  KEY_F5,  KEY_F6,  KEY_F7,  KEY_F8,  KEY_F9,  KEY_F10,
+	KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10,
 	KEY_F11, KEY_F12, KEY_F13, KEY_F14, KEY_F15, KEY_F16, KEY_F17, KEY_F18, KEY_F19, KEY_F20,
 	KEY_F21, KEY_F22, KEY_F23, KEY_F24, KEY_F25, KEY_F26, KEY_F27, KEY_F28, KEY_F29, KEY_F30,
 	KEY_F31, KEY_F32, KEY_F33, KEY_F34, KEY_F35,
 
+	KEY_LSHIFT, KEY_RSHIFT, KEY_LCTRL, KEY_RCTRL,
+	KEY_LALT, KEY_RALT, KEY_LWIN, KEY_RWIN,
+
 	KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT,
 
-	KEY_ENTER, KEY_ESCAPE, KEY_SPACE, KEY_TAB, KEY_BACKSPACE, KEY_INSERT,
-	KEY_DELETE, KEY_PAGEUP, KEY_PAGEDOWN, KEY_HOME, KEY_END, KEY_CAPSLOCK,
+	KEY_0, KEY_1, KEY_2, KEY_3, KEY_4,
+	KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, /* same as 0-9 */
+
+	KEY_INSERT, KEY_DELETE, KEY_HOME, KEY_END, KEY_PAGEUP, KEY_PAGEDOWN,
+	KEY_MENU,
+
+	KEY_A, KEY_B, KEY_C, KEY_D, KEY_E, KEY_F, KEY_G, KEY_H, KEY_I, KEY_J,
+	KEY_K, KEY_L, KEY_M, KEY_N, KEY_O, KEY_P, KEY_Q, KEY_R, KEY_S, KEY_T,
+	KEY_U, KEY_V, KEY_W, KEY_X, KEY_Y, KEY_Z, /* same as A-Z */
+
+	KEY_ENTER, KEY_ESCAPE, KEY_SPACE, KEY_BACKSPACE, KEY_TAB, KEY_CAPSLOCK,
 	KEY_SCROLLLOCK, KEY_PRINTSCREEN, KEY_PAUSE, KEY_NUMLOCK,
 
 	KEY_KP0, KEY_KP1, KEY_KP2, KEY_KP3, KEY_KP4,
 	KEY_KP5, KEY_KP6, KEY_KP7, KEY_KP8, KEY_KP9,
 	KEY_KP_DIVIDE, KEY_KP_MULTIPLY, KEY_KP_MINUS,
 	KEY_KP_PLUS, KEY_KP_DECIMAL, KEY_KP_ENTER,
-
-	KEY_A, KEY_B, KEY_C, KEY_D, KEY_E, KEY_F, KEY_G, KEY_H, KEY_I, KEY_J,
-	KEY_K, KEY_L, KEY_M, KEY_N, KEY_O, KEY_P, KEY_Q, KEY_R, KEY_S, KEY_T,
-	KEY_U, KEY_V, KEY_W, KEY_X, KEY_Y, KEY_Z,
-
-	KEY_0, KEY_1, KEY_2, KEY_3, KEY_4,
-	KEY_5, KEY_6, KEY_7, KEY_8, KEY_9,
 
 	KEY_TILDE, KEY_MINUS, KEY_PLUS, KEY_LBRACKET, KEY_RBRACKET,
 	KEY_SEMICOLON, KEY_QUOTE, KEY_COMMA, KEY_PERIOD, KEY_SLASH, KEY_BACKSLASH,
@@ -120,10 +122,11 @@ typedef enum KeyBind_ {
 	KEYBIND_COUNT
 } KeyBind;
 
-/* Gets the key that is bound to the the given key binding. */
-Key KeyBind_Get(KeyBind binding);
-/* Gets the default key that the given key binding is bound to */
-Key KeyBind_GetDefault(KeyBind binding);
+/* The keys that are bound to each key binding. */
+extern uint8_t KeyBinds[KEYBIND_COUNT];
+/* Default key that each key binding is bound to */
+extern const uint8_t KeyBind_Defaults[KEYBIND_COUNT];
+
 /* Gets whether the key bound to the given key binding is pressed. */
 bool KeyBind_IsPressed(KeyBind binding);
 /* Set the key that the given key binding is bound to. (also updates options list) */

@@ -1053,15 +1053,15 @@ bool LocalPlayer_HandlesKey(Key key) {
 	struct PhysicsComp* physics = &p->Physics;
 	int maxJumps;
 
-	if (key == KeyBind_Get(KEYBIND_RESPAWN)) {
+	if (key == KeyBinds[KEYBIND_RESPAWN]) {
 		return LocalPlayer_HandleRespawn();
-	} else if (key == KeyBind_Get(KEYBIND_SET_SPAWN)) {
+	} else if (key == KeyBinds[KEYBIND_SET_SPAWN]) {
 		return LocalPlayer_HandleSetSpawn();
-	} else if (key == KeyBind_Get(KEYBIND_FLY)) {
+	} else if (key == KeyBinds[KEYBIND_FLY]) {
 		return LocalPlayer_HandleFly();
-	} else if (key == KeyBind_Get(KEYBIND_NOCLIP)) {
+	} else if (key == KeyBinds[KEYBIND_NOCLIP]) {
 		return LocalPlayer_HandleNoClip();
-	} else if (key == KeyBind_Get(KEYBIND_JUMP) && !p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
+	} else if (key == KeyBinds[KEYBIND_JUMP] && !p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
 		maxJumps = hacks->CanDoubleJump && hacks->WOMStyleHacks ? 2 : 0;
 		maxJumps = max(maxJumps, hacks->MaxJumps - 1);
 

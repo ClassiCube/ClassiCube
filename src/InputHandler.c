@@ -76,7 +76,7 @@ static bool InputHandler_IsShutdown(Key key) {
 
 	/* On OSX, Cmd+Q should also terminate the process */
 #ifdef CC_BUILD_OSX
-	return key == KEY_Q && Key_IsWinPressed();
+	return key == 'Q' && Key_IsWinPressed();
 #else
 	return false;
 #endif
@@ -143,33 +143,33 @@ static bool InputHandler_DoFovZoom(float deltaPrecise) {
 }
 
 static bool InputHandler_HandleNonClassicKey(Key key) {
-	if (key == KeyBind_Get(KEYBIND_HIDE_GUI)) {
+	if (key == KeyBinds[KEYBIND_HIDE_GUI]) {
 		Game_HideGui = !Game_HideGui;
-	} else if (key == KeyBind_Get(KEYBIND_SMOOTH_CAMERA)) {
+	} else if (key == KeyBinds[KEYBIND_SMOOTH_CAMERA]) {
 		InputHandler_Toggle(key, &Camera.Smooth,
 			"  &eSmooth camera is &aenabled",
 			"  &eSmooth camera is &cdisabled");
-	} else if (key == KeyBind_Get(KEYBIND_AXIS_LINES)) {
+	} else if (key == KeyBinds[KEYBIND_AXIS_LINES]) {
 		InputHandler_Toggle(key, &Game_ShowAxisLines,
 			"  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show",
 			"  &eAxis lines no longer show");
-	} else if (key == KeyBind_Get(KEYBIND_AUTOROTATE)) {
+	} else if (key == KeyBinds[KEYBIND_AUTOROTATE]) {
 		InputHandler_Toggle(key, &AutoRotate_Enabled,
 			"  &eAuto rotate is &aenabled",
 			"  &eAuto rotate is &cdisabled");
-	} else if (key == KeyBind_Get(KEYBIND_THIRD_PERSON)) {
+	} else if (key == KeyBinds[KEYBIND_THIRD_PERSON]) {
 		Camera_CycleActive();
-	} else if (key == KeyBind_Get(KEYBIND_DROP_BLOCK)) {
+	} else if (key == KeyBinds[KEYBIND_DROP_BLOCK]) {
 		if (Inventory_CheckChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {
 			/* Don't assign SelectedIndex directly, because we don't want held block
 			switching positions if they already have air in their inventory hotbar. */
 			Inventory_Set(Inventory.SelectedIndex, BLOCK_AIR);
 			Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 		}
-	} else if (key == KeyBind_Get(KEYBIND_IDOVERLAY)) {
+	} else if (key == KeyBinds[KEYBIND_IDOVERLAY]) {
 		if (Gui_OverlaysCount) return true;
 		Gui_ShowOverlay(TexIdsOverlay_MakeInstance(), false);
-	} else if (key == KeyBind_Get(KEYBIND_BREAK_LIQUIDS)) {
+	} else if (key == KeyBinds[KEYBIND_BREAK_LIQUIDS]) {
 		InputHandler_Toggle(key, &Game_BreakableLiquids,
 			"  &eBreakable liquids is &aenabled",
 			"  &eBreakable liquids is &cdisabled");
@@ -182,15 +182,15 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 static bool InputHandler_HandleCoreKey(Key key) {
 	struct Screen* active = Gui_GetActiveScreen();
 
-	if (key == KeyBind_Get(KEYBIND_HIDE_FPS)) {
+	if (key == KeyBinds[KEYBIND_HIDE_FPS]) {
 		Gui_ShowFPS = !Gui_ShowFPS;
-	} else if (key == KeyBind_Get(KEYBIND_FULLSCREEN)) {
+	} else if (key == KeyBinds[KEYBIND_FULLSCREEN]) {
 		int state = Window_GetWindowState();
 		if (state != WINDOW_STATE_MAXIMISED) {
 			bool fullscreen = state == WINDOW_STATE_FULLSCREEN;
 			Window_SetWindowState(fullscreen ? WINDOW_STATE_NORMAL : WINDOW_STATE_FULLSCREEN);
 		}
-	} else if (key == KeyBind_Get(KEYBIND_FOG)) {
+	} else if (key == KeyBinds[KEYBIND_FOG]) {
 		short* viewDists = Gui_ClassicMenu ? classicViewDists : normViewDists;
 		int count = Gui_ClassicMenu ? Array_Elems(classicViewDists) : Array_Elems(normViewDists);
 
@@ -202,7 +202,7 @@ static bool InputHandler_HandleCoreKey(Key key) {
 	} else if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !active->HandlesAllInput) {
 		Gui_FreeActive();
 		Gui_SetActive(PauseScreen_MakeInstance());
-	} else if (key == KeyBind_Get(KEYBIND_INVENTORY) && active == Gui_HUD) {
+	} else if (key == KeyBinds[KEYBIND_INVENTORY] && active == Gui_HUD) {
 		Gui_FreeActive();
 		Gui_SetActive(InventoryScreen_MakeInstance());
 	} else if (key == KEY_F5 && Game_ClassicMode) {
@@ -438,9 +438,9 @@ static void InputHandler_MouseUp(void* obj, int button) {
 }
 
 static bool InputHandler_SimulateMouse(Key key, bool pressed) {
-	Key left   = KeyBind_Get(KEYBIND_MOUSE_LEFT);
-	Key middle = KeyBind_Get(KEYBIND_MOUSE_MIDDLE);
-	Key right  = KeyBind_Get(KEYBIND_MOUSE_RIGHT);
+	Key left   = KeyBinds[KEYBIND_MOUSE_LEFT];
+	Key middle = KeyBinds[KEYBIND_MOUSE_MIDDLE];
+	Key right  = KeyBinds[KEYBIND_MOUSE_RIGHT];
 	MouseButton btn;
 	if (!(key == left || key == middle || key == right)) return false;
 
@@ -462,7 +462,7 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 	if (InputHandler_IsShutdown(key)) {
 		/* TODO: Do we need a separate exit function in Game class? */
 		Window_Close(); return;
-	} else if (key == KeyBind_Get(KEYBIND_SCREENSHOT) && !was) {
+	} else if (key == KeyBinds[KEYBIND_SCREENSHOT] && !was) {
 		Game_ScreenshotRequested = true; return;
 	} else if (Elem_HandlesKeyDown(active, key, was)) { return; }
 
@@ -489,7 +489,7 @@ static void InputHandler_KeyUp(void* obj, int key) {
 	struct Screen* active;
 	if (InputHandler_SimulateMouse(key, false)) return;
 
-	if (key == KeyBind_Get(KEYBIND_ZOOM_SCROLL)) {
+	if (key == KeyBinds[KEYBIND_ZOOM_SCROLL]) {
 		InputHandler_SetFOV(Game_DefaultFov, false);
 	}
 
