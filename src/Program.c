@@ -124,7 +124,12 @@ int main(int argc, char** argv) {
 		String_Copy(&Game_IPAddress, &args[2]);
 
 		if (!Utils_ParseIP(&args[2], ip)) {
-			Window_ShowDialog("Failed to start", "Invalid IP");
+			char tmpIpBuffer[200];
+			String tmpIp = String_NT_Array(tmpIpBuffer);
+			String_Format1(&tmpIp, "Invalid IP: %s", &args[2]);
+			tmpIp.buffer[tmpIp.length] = '\0';
+
+			Window_ShowDialog("Failed to start", tmpIpBuffer);
 			Platform_Exit(1); return 1;
 		}
 		if (!Convert_ParseUInt16(&args[3], &port)) {
