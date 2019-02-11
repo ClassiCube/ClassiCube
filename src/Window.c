@@ -921,7 +921,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	e.xconfigure.y = y;
 	e.xconfigure.width = width;
 	e.xconfigure.height = height;
-	Window_RefreshBounds(&e.configure);
+	Window_RefreshBounds(&e.xconfigure);
 
 	/* Request that auto-repeat is only set on devices that support it physically.
 	   This typically means that it's turned off for keyboards (which is what we want).
@@ -1158,7 +1158,7 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case ConfigureNotify:
-			Window_RefreshBounds(&e.xonfigure);
+			Window_RefreshBounds(&e.xconfigure);
 			break;
 
 		case Expose:
