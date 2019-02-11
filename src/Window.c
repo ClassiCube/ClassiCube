@@ -6,8 +6,7 @@
 #include "Funcs.h"
 
 bool Window_Exists, Window_Focused;
-Rect2D Window_Bounds;
-Size2D Window_ClientSize;
+Rect2D Window_Bounds, Window_ClientBounds;
 
 static bool win_cursorVisible = true;
 bool Cursor_GetVisible(void) { return win_cursorVisible; }
@@ -136,11 +135,26 @@ static void Window_SetHiddenBorder(bool hidden) {
 	suppress_resize--;
 }
 
-static void Window_UpdateClientSize(HWND handle) {
+static CC_INLINE void Window_SetRect(Rect2D* dst, const RECT* src) {
+	dst->X = src->left;
+	dst->Y = src->top;
+	dst->Width  = src->right  - src->left;
+	dst->Height = src->bottom - src->top;
+}
+
+static void Window_RefreshBounds(void) {
 	RECT rect;
-	GetClientRect(handle, &rect);
-	Window_ClientSize.Width  = Rect_Width(rect);
-	Window_ClientSize.Height = Rect_Height(rect);
+	POINT topLeft = { 0, 0 };
+
+	GetWindowRect(win_handle, &rect);
+	Window_SetRect(&Window_Bounds, &rect);
+	GetClientRect(win_handle, &rect);
+	Window_SetRect(&Window_ClientBounds, &rect);
+
+	/* MSDN says GetClientRect always returns 0,0 for top left */
+	ClientToScreen(win_handle, &topLeft);
+	Window_ClientBounds.X = topLeft.x;
+	Window_ClientBounds.Y = topLeft.y;
 }
 
 static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -167,15 +181,16 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		WINDOWPOS* pos = (WINDOWPOS*)lParam;
 		if (pos->hwnd != win_handle) break;
 
-		if (pos->x != Window_Bounds.X || pos->y != Window_Bounds.Y) {
-			Window_Bounds.X = pos->x; Window_Bounds.Y = pos->y;
+		bool moved = pos->x  != Window_Bounds.X     || pos->y  != Window_Bounds.Y;
+		bool sized = pos->cx != Window_Bounds.Width || pos->cy != Window_Bounds.Height;
+
+		if (moved) {
+			Window_RefreshBounds();
 			Event_RaiseVoid(&WindowEvents.Moved);
 		}
 
-		if (pos->cx != Window_Bounds.Width || pos->cy != Window_Bounds.Height) {
-			Window_Bounds.Width = pos->cx; Window_Bounds.Height = pos->cy;
-			Window_UpdateClientSize(handle);
-
+		if (sized) {
+			Window_RefreshBounds();
 			SetWindowPos(win_handle, NULL,
 				Window_Bounds.X, Window_Bounds.Y, Window_Bounds.Width, Window_Bounds.Height,
 				SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
@@ -317,15 +332,8 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		break;
 
 	case WM_CREATE:
-	{
-		CREATESTRUCT* cs = (CREATESTRUCT*)lParam;
-		if (!cs->hwndParent) {
-			Window_Bounds.X = cs->x; Window_Bounds.Width  = cs->cx;		
-			Window_Bounds.Y = cs->y; Window_Bounds.Height = cs->cy;
-			Window_UpdateClientSize(handle);
-			invisible_since_creation = true;
-		}
-	} break;
+		invisible_since_creation = true;
+		break;
 
 	case WM_CLOSE:
 		Event_RaiseVoid(&WindowEvents.Closing);
@@ -363,7 +371,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 
 	wc.hIcon   = (HICON)LoadImage(win_instance, MAKEINTRESOURCE(1), IMAGE_ICON,
 			GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), 0);
-	wc.hIconSm = (HICON)LoadImage(win_instance,MAKEINTRESOURCE(1), IMAGE_ICON,
+	wc.hIconSm = (HICON)LoadImage(win_instance, MAKEINTRESOURCE(1), IMAGE_ICON,
 			GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0);
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 
@@ -373,7 +381,9 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	win_handle = CreateWindowEx(0, atom, NULL, CC_WIN_STYLE,
 		rect.left, rect.top, Rect_Width(rect), Rect_Height(rect),
 		NULL, NULL, win_instance, NULL);
+
 	if (!win_handle) Logger_Abort2(GetLastError(), "Failed to create window");
+	Window_RefreshBounds();
 
 	win_DC = GetDC(win_handle);
 	if (!win_DC) Logger_Abort2(GetLastError(), "Failed to get device context");
@@ -535,22 +545,6 @@ void Window_SetWindowState(int state) {
 
 		prev_bounds.Width = 0; prev_bounds.Height = 0;
 	}
-}
-
-Point2D Window_PointToClient(int x, int y) {
-	Point2D point = { x, y };
-	if (!ScreenToClient(win_handle, &point)) {
-		Logger_Abort2(GetLastError(), "Converting point from client to screen coordinates");
-	}
-	return point;
-}
-
-Point2D Window_PointToScreen(int x, int y) {
-	Point2D point = { x, y };
-	if (!ClientToScreen(win_handle, &point)) {
-		Logger_Abort2(GetLastError(), "Converting point from screen to client coordinates");
-	}
-	return point;
 }
 
 void Window_ProcessEvents(void) {
@@ -853,27 +847,25 @@ static void Window_RefreshBorders(void) {
 	XFree(borders);
 }
 
-static void Window_RefreshBounds(XEvent* e) {
-	Point2D loc;
-	Size2D size;
+static void Window_RefreshBounds(const XConfigureEvent* e) {
 	Window_RefreshBorders();
-	
-	loc.X = e->xconfigure.x - borderLeft;
-	loc.Y = e->xconfigure.y - borderTop;
 
-	if (loc.X != Window_Bounds.X || loc.Y != Window_Bounds.Y) {
-		Window_Bounds.X = loc.X; Window_Bounds.Y = loc.Y;
+	if (e->x != Window_ClientBounds.X || e->y != Window_ClientBounds.Y) {
+		Window_ClientBounds.X = e->x; Window_ClientBounds.Y = e->y;
+
+		/* To get the external (window) position, need to add the border */
+		Window_Bounds.X = e->x - borderLeft;
+		Window_Bounds.Y = e->y - borderTop;
 		Event_RaiseVoid(&WindowEvents.Moved);
 	}
 
-	/* Note: width and height denote the internal (client) size.
-	   To get the external (window) size, we need to add the border size. */	
-	size.Width  = e->xconfigure.width  + borderLeft + borderRight;
-	size.Height = e->xconfigure.height + borderTop  + borderBottom;
+	if (e->width != Window_ClientBounds.Width || e->height != Window_ClientBounds.Height) {
+		Window_ClientBounds.Width  = e->width;
+		Window_ClientBounds.Height = e->height;
 
-	if (size.Width != Window_Bounds.Width || size.Height != Window_Bounds.Height) {		 
-		Window_ClientSize.Width  = e->xconfigure.width;  Window_Bounds.Width  = size.Width;
-		Window_ClientSize.Height = e->xconfigure.height; Window_Bounds.Height = size.Height;
+		/* To get the external (window) size, need to add the border size */
+		Window_Bounds.Width  = e->width  + borderLeft + borderRight;
+		Window_Bounds.Height = e->height + borderTop  + borderBottom;
 		Event_RaiseVoid(&WindowEvents.Resized);
 	}
 }
@@ -924,12 +916,12 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 
 	/* Set the initial window size to ensure X, Y, Width, Height and the rest
 	   return the correct values inside the constructor and the Load event. */
-	XEvent e = { 0 };
+	XEvent e;
 	e.xconfigure.x = x;
 	e.xconfigure.y = y;
 	e.xconfigure.width = width;
 	e.xconfigure.height = height;
-	Window_RefreshBounds(&e);
+	Window_RefreshBounds(&e.configure);
 
 	/* Request that auto-repeat is only set on devices that support it physically.
 	   This typically means that it's turned off for keyboards (which is what we want).
@@ -1166,7 +1158,7 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case ConfigureNotify:
-			Window_RefreshBounds(&e);
+			Window_RefreshBounds(&e.xonfigure);
 			break;
 
 		case Expose:
@@ -1299,20 +1291,6 @@ void Window_ProcessEvents(void) {
 		} break;
 		}
 	}
-}
-
-Point2D Window_PointToClient(int x, int y) {
-	Point2D p;
-	Window child;
-	XTranslateCoordinates(win_display, win_rootWin, win_handle, x, y, &p.X, &p.Y, &child);
-	return p;
-}
-
-Point2D Window_PointToScreen(int x, int y) {
-	Point2D p;
-	Window child;
-	XTranslateCoordinates(win_display, win_handle, win_rootWin, x, y, &p.X, &p.Y, &child);
-	return p;
 }
 
 Point2D Cursor_GetScreenPos(void) {
@@ -1790,22 +1768,26 @@ static void Window_Destroy(void) {
 	Window_Exists = false;
 }
 
-static void Window_UpdateSize(void) {
+static CC_INLINE void Window_SetRect(Rect2D* dst, const Rect* src) {
+	dst->X = src->left;
+	dst->Y = src->top;
+	dst->Width = src->right   - src->left;
+	dst->Height = src->bottom - src->top;
+}
+
+static void Window_RefreshBounds(void) {
 	Rect r;
 	OSStatus res;
 	if (win_state == WINDOW_STATE_FULLSCREEN) return;
 	
 	res = GetWindowBounds(win_handle, kWindowStructureRgn, &r);
 	if (res) Logger_Abort2(res, "Getting window bounds");
-	Window_Bounds.X = r.left;
-	Window_Bounds.Y = r.top;
-	Window_Bounds.Width  = Rect_Width(r);
-	Window_Bounds.Height = Rect_Height(r);
+	Window_SetRect(&Window_Bounds, r);
 	
+	/* TODO: kWindowContentRgn ??? */
 	res = GetWindowBounds(win_handle, kWindowGlobalPortRgn, &r);
-	if (res) Logger_Abort2(res, "Getting window clientsize");
-	Window_ClientSize.Width  = Rect_Width(r);
-	Window_ClientSize.Height = Rect_Height(r);
+	if (res) Logger_Abort2(res, "Getting window clientbounds");
+	Window_SetRect(&Window_ClientBounds, r);
 }
 
 static void Window_UpdateWindowState(void) {
@@ -1840,7 +1822,7 @@ static void Window_UpdateWindowState(void) {
 	}
 
 	Event_RaiseVoid(&WindowEvents.StateChanged);
-	Window_UpdateSize();
+	Window_RefreshBounds();
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
@@ -1917,11 +1899,11 @@ static OSStatus Window_ProcessWindowEvent(EventHandlerCallRef inCaller, EventRef
 			return 0;
 			
 		case kEventWindowBoundsChanged:
-			width  = Window_ClientSize.Width;
-			height = Window_ClientSize.Height;
-			Window_UpdateSize();
+			width  = Window_ClientBounds.Width;
+			height = Window_ClientBounds.Height;
+			Window_RefreshBounds();
 			
-			if (width != Window_ClientSize.Width || height != Window_ClientSize.Height) {
+			if (width != Window_ClientBounds.Width || height != Window_ClientBounds.Height) {
 				Event_RaiseVoid(&WindowEvents.Resized);
 			}
 			return eventNotHandledErr;
@@ -2082,10 +2064,10 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	r.top  = y; r.bottom = y + height;
 	res = CreateNewWindow(kDocumentWindowClass,
 						  kWindowStandardDocumentAttributes | kWindowStandardHandlerAttribute |
-						  kWindowInWindowMenuAttribute | kWindowLiveResizeAttribute,
-						  &r, &win_handle);
+						  kWindowInWindowMenuAttribute | kWindowLiveResizeAttribute, &r, &win_handle);
+
 	if (res) Logger_Abort2(res, "Failed to create window");
-	Window_UpdateSize();
+	Window_RefreshBounds();
 	
 	res = GetWindowBounds(win_handle, kWindowTitleBarRgn, &r);
 	if (res) Logger_Abort2(res, "Failed to get titlebar size");
@@ -2219,15 +2201,6 @@ void Window_SetLocation(int x, int y) {
 	MoveWindow(win_handle, x, y, false);
 }
 
-static void Window_SetExternalSize(int width, int height) {
-	/* SizeWindow works in client size */
-	/* But SetSize is window size, so reduce it */
-	width  -= (Window_Bounds.Width  - Window_ClientSize.Width);
-	height -= (Window_Bounds.Height - Window_ClientSize.Height);
-	
-	SizeWindow(win_handle, width, height, true);
-}
-
 void Window_SetSize(int width, int height) {
 	SizeWindow(win_handle, width, height, true);
 }
@@ -2255,24 +2228,6 @@ void Window_ProcessEvents(void) {
 		SendEventToEventTarget(theEvent, target);
 		ReleaseEvent(theEvent);
 	}
-}
-
-Point2D Window_PointToClient(int x, int y) {
-	Rect r;
-	Point2D p;
-	GetWindowBounds(win_handle, kWindowContentRgn, &r);
-	
-	p.X = x - r.left; p.Y = y - r.top;
-	return p;
-}
-
-Point2D Window_PointToScreen(int x, int y) {
-	Rect r;
-	Point2D p;
-	GetWindowBounds(win_handle, kWindowContentRgn, &r);
-	
-	p.X = x + r.left; p.Y = y + r.top;
-	return p;
 }
 
 Point2D Cursor_GetScreenPos(void) {
@@ -2350,8 +2305,8 @@ void Window_DrawRaw(Rect2D r) {
 	
 	// TODO: Only update changed bit.. 
 	rect.origin.x = 0; rect.origin.y = 0;
-	rect.size.width  = Window_ClientSize.Width;
-	rect.size.height = Window_ClientSize.Height;
+	rect.size.width  = Window_ClientBounds.Width;
+	rect.size.height = Window_ClientBounds.Height;
 	
 	CGContextDrawImage(context, rect, win_image);
 	CGContextSynchronize(context);
@@ -2388,8 +2343,8 @@ void Window_DrawRaw(Rect2D r) {
 
 	/* TODO: Only update changed bit.. */
 	rect.origin.x = 0; rect.origin.y = 0;
-	rect.size.width = Window_ClientSize.Width;
-	rect.size.height = Window_ClientSize.Height;
+	rect.size.width  = Window_ClientBounds.Width;
+	rect.size.height = Window_ClientBounds.Height;
 
 	provider = CGDataProviderCreateWithData(NULL, bmp_->Scan0,
 		Bitmap_DataSize(bmp_->Width, bmp_->Height), NULL);
@@ -2467,7 +2422,7 @@ static void GLContext_UnsetFullscreen(void) {
 
 	ctx_fullscreen = false;
 	Window_UpdateWindowState();
-	Window_SetExternalSize(ctx_windowedBounds.Width, ctx_windowedBounds.Height);
+	Window_SetSize(ctx_windowedBounds.Width, ctx_windowedBounds.Height);
 }
 
 static void GLContext_SetFullscreen(void) {
@@ -2493,11 +2448,9 @@ static void GLContext_SetFullscreen(void) {
 	}
 
 	ctx_fullscreen     = true;
-	ctx_windowedBounds = Window_Bounds;
+	ctx_windowedBounds = Window_ClientBounds;
 
-	Window_ClientSize.Width = displayWidth;
-	Window_ClientSize.Width = displayHeight;
-
+	Window_ClientBounds = DisplayDevice_Default.Bounds;
 	Window_Bounds = DisplayDevice_Default.Bounds;
 	win_state     = WINDOW_STATE_FULLSCREEN;
 }

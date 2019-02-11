@@ -260,14 +260,13 @@ bool Game_ValidateBitmap(const String* file, Bitmap* bmp) {
 	return true;
 }
 
-void Game_UpdateClientSize(void) {
-	Size2D size = Window_ClientSize;
-	Game.Width  = max(size.Width,  1);
-	Game.Height = max(size.Height, 1);
+void Game_UpdateDimensions(void) {
+	Game.Width  = max(Window_ClientBounds.Width,  1);
+	Game.Height = max(Window_ClientBounds.Height, 1);
 }
 
 static void Game_OnResize(void* obj) {
-	Game_UpdateClientSize();
+	Game_UpdateDimensions();
 	Gfx_OnWindowResize();
 	Game_UpdateProjection();
 	Gui_OnResize();
@@ -431,7 +430,7 @@ static void Game_Load(void) {
 	Gfx_MakeApiInfo();
 	Gfx.Mipmaps = Options_GetBool(OPT_MIPMAPS, false);
 
-	Game_UpdateClientSize();
+	Game_UpdateDimensions();
 	Game_LoadOptions();
 
 	Event_RegisterVoid(&WorldEvents.NewMap,         NULL, Game_OnNewMapCore);

@@ -85,7 +85,7 @@ bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* 
 /* (must be power of two size and be <= Gfx_MaxTexWidth/Gfx_MaxHeight) */
 bool Game_ValidateBitmap(const String* file, Bitmap* bmp);
 /* Updates Game_Width and Game_Height. */
-void Game_UpdateClientSize(void);
+void Game_UpdateDimensions(void);
 /* Sets the strategy/method used to limit frames per second. */
 void Game_SetFpsLimit(enum FpsLimit method);
 /* Returns max time process sleeps for when limiting frames using the given method. */

@@ -39,9 +39,8 @@ static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
 
 static Point2D cam_prev, cam_delta;
 static void PerspectiveCamera_CentreMousePosition(void) {
-	Point2D topLeft = Window_PointToScreen(0, 0);
-	int cenX = topLeft.X + Game.Width  / 2;
-	int cenY = topLeft.Y + Game.Height / 2;
+	int cenX = Window_ClientBounds.X + Game.Width  / 2;
+	int cenY = Window_ClientBounds.Y + Game.Height / 2;
 
 	Cursor_SetScreenPos(cenX, cenY);
 	/* Fixes issues with large DPI displays on Windows >= 8.0. */

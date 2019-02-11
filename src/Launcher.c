@@ -101,7 +101,7 @@ static void Launcher_ReqeustRedraw(void* obj) {
 }
 
 static void Launcher_OnResize(void* obj) {
-	Game_UpdateClientSize();
+	Game_UpdateDimensions();
 	Launcher_Framebuffer.Width  = Game.Width;
 	Launcher_Framebuffer.Height = Game.Height;
 
@@ -219,7 +219,7 @@ void Launcher_Run(void) {
 	Window_SetVisible(true);
 
 	Drawer2D_Component.Init();
-	Game_UpdateClientSize();
+	Game_UpdateDimensions();
 	Drawer2D_BitmappedText    = false;
 	Drawer2D_BlackTextShadows = true;
 

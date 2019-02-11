@@ -536,7 +536,6 @@ static void TableWidget_UpdateScrollbarPos(struct TableWidget* w) {
 }
 
 static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
-	Point2D topLeft;
 	int x, y, idx;
 	if (w->SelectedIndex == -1) return;
 
@@ -544,8 +543,8 @@ static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 	TableWidget_GetCoords(w, idx, &x, &y);
 	x += w->CellSize / 2; y += w->CellSize / 2;
 
-	topLeft = Window_PointToScreen(0, 0);
-	x += topLeft.X; y += topLeft.Y;
+	x += Window_ClientBounds.X;
+	y += Window_ClientBounds.Y;
 	Cursor_SetScreenPos(x, y);
 }
 
@@ -1161,9 +1160,6 @@ static bool InputWidget_OtherKey(struct InputWidget* w, Key key) {
 	if (key == 'V' && w->Text.length < maxChars) {
 		String_InitArray(text, textBuffer);
 		Window_GetClipboardText(&text);
-
-		String_UNSAFE_TrimStart(&text);
-		String_UNSAFE_TrimEnd(&text);
 
 		if (!text.length) return true;
 		InputWidget_AppendString(w, &text);

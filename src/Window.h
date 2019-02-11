@@ -67,12 +67,12 @@ int Window_GetWindowState(void);
 /* Sets the current state of the window, see WindowState enum. */
 void Window_SetWindowState(int state);
 
-/* The external bounds of the window in screen coordinates. */
-/* Size of external bounds is client size + borders + title */
+/* External bounds of the window in screen coordinates. */
+/* Essentially, this is client bounds + borders + titlebar */
 extern Rect2D Window_Bounds;
-/* Size of the internal bounds of the window. */
-/* This is the size of area that can be drawn on. (i.e. content size) */
-extern Size2D Window_ClientSize;
+/* Client bounds of the window in screen coordinates. */
+/* Essentially, this is the area that can draw to (i.e. content area) */
+extern Rect2D Window_ClientBounds;
 /* Sets the position of the window on the screen. */
 void Window_SetLocation(int x, int y);
 /* Sets the size of the internal bounds of the window. */
@@ -84,10 +84,6 @@ void Window_SetSize(int width, int height);
 void Window_Close(void);
 /* Processes all pending window messages/events. */
 void Window_ProcessEvents(void);
-/* Converts the specified point from screen to client coordinates. */
-Point2D Window_PointToClient(int x, int y);
-/* Converts the specified point from client to screen coordinates. */
-Point2D Window_PointToScreen(int x, int y);
 
 /* Gets the position of the cursor in screen coordinates. */
 Point2D Cursor_GetScreenPos(void);
