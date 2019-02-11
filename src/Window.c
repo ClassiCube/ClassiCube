@@ -1885,7 +1885,7 @@ static OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventR
 }
 
 static OSStatus Window_ProcessWindowEvent(EventHandlerCallRef inCaller, EventRef inEvent, void* userData) {
-	int width, height;
+	Rect2D old;
 	
 	switch (GetEventKind(inEvent)) {
 		case kEventWindowClose:
@@ -1898,11 +1898,13 @@ static OSStatus Window_ProcessWindowEvent(EventHandlerCallRef inCaller, EventRef
 			return 0;
 			
 		case kEventWindowBoundsChanged:
-			width  = Window_ClientBounds.Width;
-			height = Window_ClientBounds.Height;
+			old = Window_ClientBounds;
 			Window_RefreshBounds();
 			
-			if (width != Window_ClientBounds.Width || height != Window_ClientBounds.Height) {
+			if (old.X != Window_ClientBounds.X || old.Y != Window_ClientBounds.Y) {
+				Event_RaiseVoid(&WindowEvents.Moved);
+			}
+			if (old.Width != Window_ClientBounds.Width || old.Height != Window_ClientBounds.Height) {
 				Event_RaiseVoid(&WindowEvents.Resized);
 			}
 			return eventNotHandledErr;
