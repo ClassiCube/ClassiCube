@@ -884,6 +884,29 @@ static unsigned long FontData_Read(FT_Stream s, unsigned long offset, unsigned c
 	return res ? 0 : count;
 }
 
+static void FontData_Free(struct FontData* font) {
+	int i;
+
+	/* Close the actual underlying file */
+	struct Stream* source = &font->file;
+	if (!source->Meta.File) return;
+	source->Close(source);
+
+	for (i = 0; i < 256; i++) {
+		if (!font->glyphs[i]) continue;
+		FT_Done_Glyph(font->glyphs[i]);
+	}
+	for (i = 0; i < 256; i++) {
+		if (!font->shadow_glyphs[i]) continue;
+		FT_Done_Glyph(font->shadow_glyphs[i]);
+	}
+}
+
+static void FontData_Close(FT_Stream stream) {
+	struct FontData* data = stream->descriptor.pointer;
+	FontData_Free(data);
+}
+
 static bool FontData_Init(const String* path, struct FontData* data, FT_Open_Args* args) {
 	FileHandle file;
 	uint32_t size;
@@ -897,7 +920,7 @@ static bool FontData_Init(const String* path, struct FontData* data, FT_Open_Arg
 
 	data->stream.descriptor.pointer = data;
 	data->stream.read   = FontData_Read;
-	data->stream.close  = NULL;
+	data->stream.close  = FontData_Close;
 
 	data->stream.memory = &ft_mem;
 	data->stream.cursor = NULL;
@@ -921,22 +944,6 @@ static bool FontData_Init(const String* path, struct FontData* data, FT_Open_Arg
 	Mem_Set(data->glyphs,        0x00, sizeof(data->glyphs));
 	Mem_Set(data->shadow_glyphs, 0x00, sizeof(data->shadow_glyphs));
 	return true;
-}
-
-static void FontData_Free(struct FontData* font) {
-	int i;
-	/* Close the actual file stream */
-	struct Stream* source = &font->file;
-	source->Close(source);
-
-	for (i = 0; i < 256; i++) {
-		if (!font->glyphs[i]) continue;
-		FT_Done_Glyph(font->glyphs[i]);
-	}
-	for (i = 0; i < 256; i++) {
-		if (!font->shadow_glyphs[i]) continue;
-		FT_Done_Glyph(font->shadow_glyphs[i]);
-	}
 }
 
 void Font_GetNames(StringsBuffer* buffer) {
@@ -1067,7 +1074,6 @@ static int Font_Register(const String* path, int faceIndex) {
 	}
 
 	FT_Done_Face(data.face);
-	FontData_Free(&data);
 	return count;
 }
 
