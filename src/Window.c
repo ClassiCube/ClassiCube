@@ -1728,7 +1728,6 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 #include <AGL/agl.h>
 
 static WindowRef win_handle;
-static int title_height;
 static int win_state;
 /* Hacks for fullscreen */
 static bool ctx_pendingWindowed, ctx_pendingFullscreen;
@@ -1782,12 +1781,12 @@ static void Window_RefreshBounds(void) {
 	
 	res = GetWindowBounds(win_handle, kWindowStructureRgn, &r);
 	if (res) Logger_Abort2(res, "Getting window bounds");
-	Window_SetRect(&Window_Bounds, r);
+	Window_SetRect(&Window_Bounds, &r);
 	
 	/* TODO: kWindowContentRgn ??? */
 	res = GetWindowBounds(win_handle, kWindowGlobalPortRgn, &r);
 	if (res) Logger_Abort2(res, "Getting window clientbounds");
-	Window_SetRect(&Window_ClientBounds, r);
+	Window_SetRect(&Window_ClientBounds, &r);
 }
 
 static void Window_UpdateWindowState(void) {
@@ -1930,27 +1929,22 @@ static OSStatus Window_ProcessMouseEvent(EventHandlerCallRef inCaller, EventRef 
 	SInt32 delta;
 	OSStatus res;	
 	
-	if (win_state == WINDOW_STATE_FULLSCREEN) {
-		res = GetEventParameter(inEvent, kEventParamMouseLocation, typeHIPoint,
-								NULL, sizeof(HIPoint), NULL, &pt);
-	} else {
-		res = GetEventParameter(inEvent, kEventParamWindowMouseLocation, typeHIPoint, 
-								NULL, sizeof(HIPoint), NULL, &pt);
-	}
-	
+	res = GetEventParameter(inEvent, kEventParamMouseLocation, typeHIPoint,
+							NULL, sizeof(HIPoint), NULL, &pt);
 	/* this error comes up from the application event handler */
 	if (res && res != eventParameterNotFoundErr) {
 		Logger_Abort2(res, "Getting mouse position");
 	}
 	
 	mousePos.X = (int)pt.x; mousePos.Y = (int)pt.y;
-	/* Location is relative to structure (i.e. external size) of window */
+	/* kEventParamMouseLocation is in screen coordinates */
 	if (win_state != WINDOW_STATE_FULLSCREEN) {
-		mousePos.Y -= title_height;
+		mousePos.X -= Window_ClientBounds.X;
+		mousePos.Y -= Window_ClientBounds.Y;
 	}
 
-	/* mousePos.Y will be < 0 if user clicks or moves on titlebar */
-	/* don't intercept this, prevents clicking close/minimise/maximise from working */
+	/* mousePos.Y is < 0 if user clicks or moves when over titlebar */
+	/* Don't intercept this, prevents clicking close/minimise/maximise from working */
 	if (mousePos.Y < 0) return eventNotHandledErr;
 	
 	kind = GetEventKind(inEvent);
@@ -2068,12 +2062,8 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 
 	if (res) Logger_Abort2(res, "Failed to create window");
 	Window_RefreshBounds();
-	
-	res = GetWindowBounds(win_handle, kWindowTitleBarRgn, &r);
-	if (res) Logger_Abort2(res, "Failed to get titlebar size");
-	title_height = Rect_Height(r);
-	AcquireRootMenu();
-	
+
+	AcquireRootMenu();	
 	GetCurrentProcess(&psn);
 	SetFrontProcess(&psn);
 	
@@ -2094,7 +2084,7 @@ void Window_SetTitle(const String* title) {
 }
 
 /* NOTE: All Pasteboard functions are OSX 10.3 or later */
-PasteboardRef Window_GetPasteboard(void) {
+static PasteboardRef Window_GetPasteboard(void) {
 	PasteboardRef pbRef;
 	OSStatus err = PasteboardCreate(kPasteboardClipboard, &pbRef);
 	
