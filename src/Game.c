@@ -52,6 +52,7 @@ bool Game_AllowServerTextures;
 bool Game_ViewBobbing, Game_HideGui;
 bool Game_BreakableLiquids, Game_ScreenshotRequested;
 float Game_RawHotbarScale, Game_RawChatScale, Game_RawInventoryScale;
+int Game_CameraMass;
 
 static struct ScheduledTask Game_Tasks[6];
 static int Game_TasksCount, entTaskI;
@@ -359,6 +360,8 @@ static void Game_LoadOptions(void) {
 	Game_RawInventoryScale = Options_GetFloat(OPT_INVENTORY_SCALE, 0.25f, 5.0f, 1.0f);
 	Game_RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 1.0f);
 	Game_RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.35f, 5.0f, 1.0f);
+
+	Game_CameraMass = Options_GetInt(OPT_CAMERA_MASS, 1, 100, 20);
 	/* TODO: Do we need to support option to skip SSL */
 	/*bool skipSsl = Options_GetBool("skip-ssl-check", false);
 	if (skipSsl) {
@@ -641,7 +644,7 @@ static void Game_RenderFrame(double delta) {
 	Game.Time += delta;
 	Game_Vertices = 0;
 
-	Camera.Active->UpdateMouse();
+	Camera.Active->UpdateMouse(delta);
 	if (!Window_Focused && !Gui_GetActiveScreen()->HandlesAllInput) {
 		Gui_FreeActive();
 		Gui_SetActive(PauseScreen_MakeInstance());

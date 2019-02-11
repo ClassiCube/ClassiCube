@@ -70,6 +70,7 @@ extern const char* FpsLimit_Names[FPS_LIMIT_COUNT];
 #define OPT_CLASSIC_HACKS "nostalgia-hacks"
 #define OPT_CLASSIC_ARM_MODEL "nostalgia-classicarm"
 #define OPT_MAX_CHUNK_UPDATES "gfx-maxchunkupdates"
+#define OPT_CAMERA_MASS "camera-mass"
 
 extern struct EntryList Options;
 /* Returns the number of options changed via Options_SetXYZ since last save. */

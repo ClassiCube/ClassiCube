@@ -12,6 +12,7 @@ struct _CameraData Camera;
 static struct PickedPos cameraClipPos;
 static Vector2 cam_rotOffset;
 static bool cam_isForwardThird;
+static float cam_deltaTime;
 
 /*########################################################################################################################*
 *--------------------------------------------------Perspective camera-----------------------------------------------------*
@@ -54,19 +55,22 @@ static void PerspectiveCamera_RegrabMouse(void) {
 }
 
 #define CAMERA_SENSI_FACTOR (0.0002f / 3.0f * MATH_RAD2DEG)
-#define CAMERA_SLIPPERY 0.97f
-#define CAMERA_ADJUST 0.025f
 
 static Vector2 PerspectiveCamera_GetMouseDelta(void) {
 	float sensitivity = CAMERA_SENSI_FACTOR * Camera.Sensitivity;
-	static float speedX, speedY;
+	static float speedX, speedY, newSpeedX, newSpeedY, accelX, accelY;
 	Vector2 v;
 
 	if (Camera.Smooth) {
-		speedX += cam_delta.X * CAMERA_ADJUST;
-		speedX *= CAMERA_SLIPPERY;
-		speedY += cam_delta.Y * CAMERA_ADJUST;
-		speedY *= CAMERA_SLIPPERY;
+		accelX = (cam_delta.X - speedX) * 20.0f / Game_CameraMass;
+		accelY = (cam_delta.Y - speedY) * 20.0f / Game_CameraMass;
+		newSpeedX = accelX * cam_deltaTime + speedX;
+		newSpeedY = accelY * cam_deltaTime + speedY;
+		//NOTE: High acceleration means velocity "overshoots" the correct position on low fps, causing wiggling. If newSpeed has opposite sign of speed, set speed to 0;
+		if (newSpeedX * speedX < 0) speedX = 0;
+		else speedX = newSpeedX;
+		if (newSpeedY * speedY < 0) speedY = 0;
+		else speedY = newSpeedY;
 	} else {
 		speedX = (float)cam_delta.X;
 		speedY = (float)cam_delta.Y;
@@ -101,7 +105,7 @@ static void PerspectiveCamera_UpdateMouseRotation(void) {
 	e->VTABLE->SetLocation(e, &update, false);
 }
 
-static void PerspectiveCamera_UpdateMouse(void) {
+static void PerspectiveCamera_UpdateMouse(float delta) {
 	struct Screen* screen = Gui_GetActiveScreen();
 	Point2D pos;
 
@@ -112,6 +116,7 @@ static void PerspectiveCamera_UpdateMouse(void) {
 		cam_delta.X = pos.X - cam_prev.X; cam_delta.Y = pos.Y - cam_prev.Y;
 		PerspectiveCamera_CentreMousePosition();
 	}
+	cam_deltaTime = delta;
 	PerspectiveCamera_UpdateMouseRotation();
 }
 

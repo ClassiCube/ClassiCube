@@ -52,6 +52,7 @@ extern bool Game_ScreenshotRequested;
 extern bool Game_HideGui;
 
 extern float Game_RawHotbarScale, Game_RawChatScale, Game_RawInventoryScale;
+extern int Game_CameraMass;
 float Game_Scale(float value);
 float Game_GetHotbarScale(void);
 float Game_GetInventoryScale(void);

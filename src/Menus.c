@@ -2416,59 +2416,69 @@ static void GraphicsOptionsScreen_SetMipmaps(const String* v) {
 
 	String_Copy(&World_TextureUrl, &url);
 }
+static void GraphicsOptionsScreen_GetCameraMass(String* v) { String_AppendInt(v, Game_CameraMass); }
+static void GraphicsOptionsScreen_SetCameraMass(const String* c) {
+	Game_CameraMass = Menu_Int(c);
+	Options_Set(OPT_CAMERA_MASS, c);
+}
 
 static void GraphicsOptionsScreen_ContextRecreated(void* screen) {
 	struct MenuOptionsScreen* s = screen;
 	struct Widget** widgets = s->Widgets;
 
-	MenuOptionsScreen_Make(s, 0, -1, -50, "FPS mode",          MenuOptionsScreen_Enum, 
-		MenuOptionsScreen_GetFPS,          MenuOptionsScreen_SetFPS);
-	MenuOptionsScreen_Make(s, 1, -1,   0, "View distance",     MenuOptionsScreen_Input, 
-		GraphicsOptionsScreen_GetViewDist, GraphicsOptionsScreen_SetViewDist);
-	MenuOptionsScreen_Make(s, 2, -1,  50, "Advanced lighting", MenuOptionsScreen_Bool,
-		GraphicsOptionsScreen_GetSmooth,   GraphicsOptionsScreen_SetSmooth);
+	MenuOptionsScreen_Make(s, 0, -1, -100, "Smooth Camera Mass", MenuOptionsScreen_Input,
+		GraphicsOptionsScreen_GetCameraMass, GraphicsOptionsScreen_SetCameraMass);
+	MenuOptionsScreen_Make(s, 1, -1, -50,  "FPS mode",           MenuOptionsScreen_Enum, 
+		MenuOptionsScreen_GetFPS,            MenuOptionsScreen_SetFPS);
+	MenuOptionsScreen_Make(s, 2, -1,   0,  "View distance",      MenuOptionsScreen_Input, 
+		GraphicsOptionsScreen_GetViewDist,   GraphicsOptionsScreen_SetViewDist);
+	MenuOptionsScreen_Make(s, 3, -1,  50,  "Advanced lighting",  MenuOptionsScreen_Bool,
+		GraphicsOptionsScreen_GetSmooth,     GraphicsOptionsScreen_SetSmooth);
 
-	MenuOptionsScreen_Make(s, 3, 1, -50, "Names",   MenuOptionsScreen_Enum, 
-		GraphicsOptionsScreen_GetNames,    GraphicsOptionsScreen_SetNames);
-	MenuOptionsScreen_Make(s, 4, 1,   0, "Shadows", MenuOptionsScreen_Enum, 
+	MenuOptionsScreen_Make(s, 4, 1, -50, "Names",   MenuOptionsScreen_Enum, 
+		GraphicsOptionsScreen_GetNames,   GraphicsOptionsScreen_SetNames);
+	MenuOptionsScreen_Make(s, 5, 1,   0, "Shadows", MenuOptionsScreen_Enum, 
 		GraphicsOptionsScreen_GetShadows, GraphicsOptionsScreen_SetShadows);
-	MenuOptionsScreen_Make(s, 5, 1,  50, "Mipmaps", MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(s, 6, 1,  50, "Mipmaps", MenuOptionsScreen_Bool,
 		GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps);
 
-	Menu_Back(s, 6, &s->Buttons[6], "Done", &s->TitleFont, Menu_SwitchOptions);
-	widgets[7] = NULL; widgets[8] = NULL; widgets[9] = NULL;
+	Menu_Back(s, 7, &s->Buttons[7], "Done", &s->TitleFont, Menu_SwitchOptions);
+	widgets[8] = NULL; widgets[9] = NULL; widgets[10] = NULL;
 }
 
 struct Screen* GraphicsOptionsScreen_MakeInstance(void) {
-	static struct ButtonWidget buttons[7];
+	static struct ButtonWidget buttons[8];
 	static struct MenuInputValidator validators[Array_Elems(buttons)];
 	static const char* defaultValues[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 	
 	static const char* descs[Array_Elems(buttons)];
-	descs[0] = \
+	descs[0] = "&eChange the mass (i.e. smoothness) of the smooth camera.";
+	descs[1] = \
 		"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.|" \
 		"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.|" \
 		"&eNoLimit: &fRenders as many frames as possible each second.|" \
 		"&cUsing NoLimit mode is discouraged.";
-	descs[2] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
-	descs[3] = \
+	descs[3] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
+	descs[4] = \
 		"&eNone: &fNo names of players are drawn.|" \
 		"&eHovered: &fName of the targeted player is drawn see-through.|" \
 		"&eAll: &fNames of all other players are drawn normally.|" \
 		"&eAllHovered: &fAll names of players are drawn see-through.|" \
 		"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.";
-	descs[4] = \
+	descs[5] = \
 		"&eNone: &fNo entity shadows are drawn.|" \
 		"&eSnapToBlock: &fA square shadow is shown on block you are directly above.|" \
 		"&eCircle: &fA circular shadow is shown across the blocks you are above.|" \
 		"&eCircleAll: &fA circular shadow is shown underneath all entities.";
 	
-	validators[0]    = MenuInputValidator_Enum(FpsLimit_Names, FPS_LIMIT_COUNT);
-	validators[1]    = MenuInputValidator_Int(8, 4096);
-	defaultValues[1] = "512";
-	validators[3]    = MenuInputValidator_Enum(NameMode_Names,   NAME_MODE_COUNT);
-	validators[4]    = MenuInputValidator_Enum(ShadowMode_Names, SHADOW_MODE_COUNT);
+	validators[0]    = MenuInputValidator_Int(1, 100);
+	defaultValues[0] = "20";
+	validators[1]    = MenuInputValidator_Enum(FpsLimit_Names, FPS_LIMIT_COUNT);
+	validators[2]    = MenuInputValidator_Int(8, 4096);
+	defaultValues[2] = "512";
+	validators[4]    = MenuInputValidator_Enum(NameMode_Names,   NAME_MODE_COUNT);
+	validators[5]    = MenuInputValidator_Enum(ShadowMode_Names, SHADOW_MODE_COUNT);
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
 		GraphicsOptionsScreen_ContextRecreated, validators, defaultValues, descs, Array_Elems(descs));

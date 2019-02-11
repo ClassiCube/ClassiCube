@@ -46,7 +46,7 @@ struct Camera {
 
 	/* Called to update the camera's state. */
 	/* Typically, this is used to adjust yaw/pitch based on mouse movement. */
-	void (*UpdateMouse)(void);
+	void (*UpdateMouse)(float delta);
 	/* Called when user closes all menus, and is interacting with camera again. */
 	/* Typically, this is used to move mouse cursor to centre of the window. */
 	void (*RegrabMouse)(void);
