@@ -111,10 +111,9 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 /*########################################################################################################################*
 *------------------------------------------------------GraphicsMode-------------------------------------------------------*
 *#########################################################################################################################*/
-void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil, int buffers) {
+void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil) {
 	m->DepthBits    = depth;
 	m->StencilBits  = stencil;
-	m->Buffers      = buffers;
 	m->IsIndexed    = bpp < 15;
 	m->BitsPerPixel = bpp;
 
@@ -139,7 +138,7 @@ void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil, 
 }
 void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
 	int bpp = DisplayDevice_Default.BitsPerPixel;
-	GraphicsMode_Make(m, bpp, 24, 0, 2);
+	GraphicsMode_Make(m, bpp, 24, 0);
 }
 
 

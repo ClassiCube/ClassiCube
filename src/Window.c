@@ -614,7 +614,7 @@ void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	PIXELFORMATDESCRIPTOR pfd = { 0 };
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	pfd.nVersion = 1;
-	pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
+	pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
 	/* TODO: PFD_SUPPORT_COMPOSITION FLAG? CHECK IF IT WORKS ON XP */
 	pfd.cColorBits = mode->R + mode->G + mode->B;
 
@@ -626,8 +626,6 @@ void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 
 	pfd.cDepthBits   = mode->DepthBits;
 	pfd.cStencilBits = mode->StencilBits;
-	if (mode->DepthBits <= 0) pfd.dwFlags |= PFD_DEPTH_DONTCARE;
-	if (mode->Buffers > 1)    pfd.dwFlags |= PFD_DOUBLEBUFFER;
 
 	int modeIndex = ChoosePixelFormat(win_DC, &pfd);
 	if (modeIndex == 0) { Logger_Abort("Requested graphics mode not available"); }
@@ -1701,8 +1699,8 @@ static void GLContext_GetAttribs(struct GraphicsMode* mode, int* attribs) {
 	if (mode->StencilBits) {
 		attribs[i++] = GLX_STENCIL_SIZE; attribs[i++] = mode->StencilBits;
 	}
-	if (mode->Buffers > 1) { attribs[i++] = GLX_DOUBLEBUFFER; }
 
+	attribs[i++] = GLX_DOUBLEBUFFER;
 	attribs[i++] = 0;
 }
 
@@ -2450,9 +2448,8 @@ static void GLContext_GetAttribs(struct GraphicsMode* mode, int* attribs, bool f
 		attribs[i++] = AGL_STENCIL_SIZE; attribs[i++] = mode->StencilBits;
 	}
 
-	if (mode->Buffers > 1) { attribs[i++] = AGL_DOUBLEBUFFER; }
-	if (fullscreen)        { attribs[i++] = AGL_FULLSCREEN; }
-
+	attribs[i++] = AGL_DOUBLEBUFFER;
+	if (fullscreen) { attribs[i++] = AGL_FULLSCREEN; }
 	attribs[i++] = 0;
 }
 

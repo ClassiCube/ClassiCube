@@ -82,6 +82,16 @@ static void Program_SetCurrentDirectory(void) {
 	if (res) { Logger_Warn(res, "setting current directory"); return; }
 }
 
+static void Program_FailInvalidArg(const char* name, const String* arg) {
+	char tmpBuffer[256];
+	String tmp = String_NT_Array(tmpBuffer);
+
+	String_Format2(&tmp, "%c '%s'", name, arg);
+	tmp.buffer[tmp.length] = '\0';
+	Window_ShowDialog("Failed to start", tmpBuffer);
+	Platform_Exit(1);
+}
+
 int main(int argc, char** argv) {
 	String args[GAME_MAX_CMDARGS];
 	int argsCount;
@@ -124,17 +134,12 @@ int main(int argc, char** argv) {
 		String_Copy(&Game_IPAddress, &args[2]);
 
 		if (!Utils_ParseIP(&args[2], ip)) {
-			char tmpIpBuffer[200];
-			String tmpIp = String_NT_Array(tmpIpBuffer);
-			String_Format1(&tmpIp, "Invalid IP: %s", &args[2]);
-			tmpIp.buffer[tmpIp.length] = '\0';
-
-			Window_ShowDialog("Failed to start", tmpIpBuffer);
-			Platform_Exit(1); return 1;
+			Program_FailInvalidArg("Invalid IP", &args[2]);
+			return 1;
 		}
 		if (!Convert_ParseUInt16(&args[3], &port)) {
-			Window_ShowDialog("Failed to start", "Invalid port");
-			Platform_Exit(1); return 1;
+			Program_FailInvalidArg("Invalid port", &args[3]);
+			return 1;
 		}
 		Game_Port = port;
 		Program_RunGame();

@@ -40,10 +40,9 @@ extern void* DisplayDevice_Meta;
 struct GraphicsMode {
 	int R,G,B,A, BitsPerPixel, IsIndexed; /* Colour buffer data */
 	int DepthBits, StencilBits; /* Z buffer data */
-	int Buffers; /* Number of buffers (usually 2 for double buffer) */
 };
 /* Creates a new GraphicsMode from the given data. */
-void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil, int buffers);
+void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil);
 /* Creates a GraphicsMode compatible with the default display device. */
 void GraphicsMode_MakeDefault(struct GraphicsMode* m);
 
