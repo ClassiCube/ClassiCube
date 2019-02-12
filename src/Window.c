@@ -1942,7 +1942,7 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 				case kEventMouseButtonTertiary:
 					Mouse_SetPressed(MOUSE_MIDDLE, down); break;
 			}
-			return 0;
+			return eventNotHandledErr;
 			
 		case kEventMouseWheelMoved:
 			res = GetEventParameter(inEvent, kEventParamMouseWheelDelta, typeSInt32,

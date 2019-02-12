@@ -47,7 +47,7 @@ static void Program_RunGame(void) {
 
 	if (!File_Exists(&defPath)) {
 		Window_ShowDialog("Missing file",
-			"default.zip is missing, try running launcher first.\n\nThe game will still run, but without any textures");
+			"default.zip is missing, try downloading resources first.\n\nThe game will still run, but without any textures");
 	}
 
 	device = DisplayDevice_Default;
@@ -124,8 +124,7 @@ int main(int argc, char** argv) {
 		String_Copy(&Game_Username, &args[0]);
 		Program_RunGame();
 	} else if (argsCount < 4) {
-		Window_ShowDialog("Failed to start", "ClassiCube.exe is only the raw client.\n\n" \
-			"Use the launcher instead, or provide command line arguments");
+		Window_ShowDialog("Failed to start", "Missing IP and/or port");
 		Platform_Exit(1);
 		return 1;
 	} else {
