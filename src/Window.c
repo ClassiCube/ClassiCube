@@ -1825,10 +1825,9 @@ static void Window_UpdateWindowState(void) {
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
-static OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventRef inEvent, void* userData) {
+static OSStatus Window_ProcessKeyboardEvent(EventRef inEvent) {
 	UInt32 kind, code;
 	Key key;
-	char charCode, raw;
 	OSStatus res;
 	
 	kind = GetEventKind(inEvent);
@@ -1836,38 +1835,15 @@ static OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventR
 		case kEventRawKeyDown:
 		case kEventRawKeyRepeat:
 		case kEventRawKeyUp:
-			res = GetEventParameter(inEvent, kEventParamKeyCode, typeUInt32, 
+			res = GetEventParameter(inEvent, kEventParamKeyCode, typeUInt32,
 									NULL, sizeof(UInt32), NULL, &code);
 			if (res) Logger_Abort2(res, "Getting key button");
-			
-			res = GetEventParameter(inEvent, kEventParamKeyMacCharCodes, typeChar, 
-									NULL, sizeof(char), NULL, &charCode);
-			if (res) Logger_Abort2(res, "Getting key char");
-			
+
 			key = Window_MapKey(code);
-			if (key == KEY_NONE) {
-				Platform_Log1("Key %i not mapped, ignoring press.", &code);
-				return 0;
-			}
-			break;
-	}
+			if (!key) { Platform_Log1("Ignoring unmapped key %i", &code); return 0; }
 
-	switch (kind) {
-		/* TODO: Should we be messing with KeyRepeat in kEventRawKeyRepeat here? */
-		/* Looking at documentation, probably not */
-		case kEventRawKeyDown:
-		case kEventRawKeyRepeat:
-			Key_SetPressed(key, true);
-
-			/* TODO: Should we be using kEventTextInputUnicodeForKeyEvent for this */
-			/* Look at documentation for kEventRawKeyRepeat */
-			if (!Convert_TryUnicodeToCP437((uint8_t)charCode, &raw)) return 0;
-			Event_RaiseInt(&KeyEvents.Press, raw);
-			return 0;
-			
-		case kEventRawKeyUp:
-			Key_SetPressed(key, false);
-			return 0;
+			Key_SetPressed(key, kind != kEventRawKeyUp);
+			return eventNotHandledErr;
 			
 		case kEventRawKeyModifiersChanged:
 			res = GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, 
@@ -1879,12 +1855,12 @@ static OSStatus Window_ProcessKeyboardEvent(EventHandlerCallRef inCaller, EventR
 			Key_SetPressed(KEY_LSHIFT,   (code & 0x0200) != 0);
 			Key_SetPressed(KEY_LWIN,     (code & 0x0100) != 0);			
 			Key_SetPressed(KEY_CAPSLOCK, (code & 0x0400) != 0);
-			return 0;
+			return eventNotHandledErr;
 	}
 	return eventNotHandledErr;
 }
 
-static OSStatus Window_ProcessWindowEvent(EventHandlerCallRef inCaller, EventRef inEvent, void* userData) {
+static OSStatus Window_ProcessWindowEvent(EventRef inEvent) {
 	Rect2D old;
 	
 	switch (GetEventKind(inEvent)) {
@@ -1922,7 +1898,7 @@ static OSStatus Window_ProcessWindowEvent(EventHandlerCallRef inCaller, EventRef
 	return eventNotHandledErr;
 }
 
-static OSStatus Window_ProcessMouseEvent(EventHandlerCallRef inCaller, EventRef inEvent, void* userData) {
+static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 	HIPoint pt;
 	Point2D mousePos;
 	UInt32 kind;
@@ -1977,15 +1953,33 @@ static OSStatus Window_ProcessMouseEvent(EventHandlerCallRef inCaller, EventRef 
 			
 		case kEventMouseMoved:
 		case kEventMouseDragged:
-			if (win_state != WINDOW_STATE_FULLSCREEN) {
-				/* Ignore clicks in the title bar */
-				if (pt.y < 0) return eventNotHandledErr;
-			}
-			
 			if (mousePos.X != Mouse_X || mousePos.Y != Mouse_Y) {
 				Mouse_SetPosition(mousePos.X, mousePos.Y);
 			}
 			return eventNotHandledErr;
+	}
+	return eventNotHandledErr;
+}
+
+static OSStatus Window_ProcessTextEvent(EventRef inEvent) {
+	UInt32 kind;
+	UniChar chars[17] = { 0 };
+	char keyChar;
+	int i;
+	OSStatus res;
+	
+	kind = GetEventKind(inEvent);
+	if (kind != kEventTextInputUnicodeForKeyEvent) return eventNotHandledErr;
+	
+	/* TODO: is the assumption we only get 1-4 characters always valid */
+	res = GetEventParameter(inEvent, kEventParamTextInputSendText,
+							typeUnicodeText, NULL, 16 * sizeof(UniChar), NULL, chars);
+	if (res) Logger_Abort2(res, "Getting text chars");
+
+	for (i = 0; i < 16 && chars[i]; i++) {
+		if (Convert_TryUnicodeToCP437(chars[i], &keyChar)) {
+			Event_RaiseInt(&KeyEvents.Press, keyChar);
+		}
 	}
 	return eventNotHandledErr;
 }
@@ -2002,11 +1996,13 @@ static OSStatus Window_EventHandler(EventHandlerCallRef inCaller, EventRef inEve
 			break;
 			
 		case kEventClassKeyboard:
-			return Window_ProcessKeyboardEvent(inCaller, inEvent, userData);
+			return Window_ProcessKeyboardEvent(inEvent);
 		case kEventClassMouse:
-			return Window_ProcessMouseEvent(inCaller, inEvent, userData);
+			return Window_ProcessMouseEvent(inEvent);
 		case kEventClassWindow:
-			return Window_ProcessWindowEvent(inCaller, inEvent, userData);
+			return Window_ProcessWindowEvent(inEvent);
+		case kEventClassTextInput:
+			return Window_ProcessTextEvent(inEvent);
 	}
 	return eventNotHandledErr;
 }
@@ -2036,6 +2032,7 @@ static void Window_ConnectEvents(void) {
 		{ kEventClassWindow, kEventWindowActivated },
 		{ kEventClassWindow, kEventWindowDeactivated },
 		
+		{ kEventClassTextInput, kEventTextInputUnicodeForKeyEvent },
 		{ kEventClassAppleEvent, kEventAppleEvent }
 	};
 	EventTargetRef target;
