@@ -1930,7 +1930,7 @@ ReturnCode Platform_StartProcess(const String* path, const String* args) {
 
 	file = *path; Utils_UNSAFE_GetFilename(&file);
 	String_InitArray(argv, argvBuffer);
-	String_Format2(&argv, "%s %s", &file, args);
+	String_Format2(&argv, "\"%s\" %s", &file, args);
 	Platform_ConvertString(str, path);
 	Platform_ConvertString(raw, &argv);
 

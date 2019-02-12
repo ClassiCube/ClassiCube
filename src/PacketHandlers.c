@@ -722,7 +722,7 @@ const char* cpe_clientExtensions[30] = {
 };
 static void CPE_SetMapEnvUrl(uint8_t* data);
 
-#define Ext_Deg2Packed(x) ((int16_t)((x) * 65536.0f / 360.0f))
+#define Ext_Deg2Packed(x) ((int)((x) * 65536.0f / 360.0f))
 void CPE_WritePlayerClick(MouseButton button, bool pressed, uint8_t targetId, struct PickedPos* pos) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	uint8_t* data = Server.WriteBuffer;
