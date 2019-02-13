@@ -2416,9 +2416,9 @@ static void GraphicsOptionsScreen_SetMipmaps(const String* v) {
 
 	String_Copy(&World_TextureUrl, &url);
 }
-static void GraphicsOptionsScreen_GetCameraMass(String* v) { String_AppendInt(v, Game_CameraMass); }
+static void GraphicsOptionsScreen_GetCameraMass(String* v) { String_AppendInt(v, Camera.Mass); }
 static void GraphicsOptionsScreen_SetCameraMass(const String* c) {
-	Game_CameraMass = Menu_Int(c);
+	Camera.Mass = Menu_Int(c);
 	Options_Set(OPT_CAMERA_MASS, c);
 }
 

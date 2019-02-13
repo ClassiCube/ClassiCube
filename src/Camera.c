@@ -62,8 +62,8 @@ static Vector2 PerspectiveCamera_GetMouseDelta(void) {
 	Vector2 v;
 
 	if (Camera.Smooth) {
-		accelX = (cam_delta.X - speedX) * 20.0f / Game_CameraMass;
-		accelY = (cam_delta.Y - speedY) * 20.0f / Game_CameraMass;
+		accelX = (cam_delta.X - speedX) * 20.0f / Camera.Mass;
+		accelY = (cam_delta.Y - speedY) * 20.0f / Camera.Mass;
 		newSpeedX = accelX * cam_deltaTime + speedX;
 		newSpeedY = accelY * cam_deltaTime + speedY;
 		//NOTE: High acceleration means velocity "overshoots" the correct position on low fps, causing wiggling. If newSpeed has opposite sign of speed, set speed to 0;
@@ -244,6 +244,7 @@ void Camera_Init(void) {
 	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 100, 30);
 	Camera.Clipping    = Options_GetBool(OPT_CAMERA_CLIPPING, true);
 	Camera.Invert      = Options_GetBool(OPT_INVERT_MOUSE, false);
+	Camera.Mass        = Options_GetInt(OPT_CAMERA_MASS, 1, 100, 20);
 }
 
 void Camera_CycleActive(void) {

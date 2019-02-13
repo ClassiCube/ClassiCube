@@ -52,7 +52,6 @@ bool Game_AllowServerTextures;
 bool Game_ViewBobbing, Game_HideGui;
 bool Game_BreakableLiquids, Game_ScreenshotRequested;
 float Game_RawHotbarScale, Game_RawChatScale, Game_RawInventoryScale;
-int Game_CameraMass;
 
 static struct ScheduledTask Game_Tasks[6];
 static int Game_TasksCount, entTaskI;
@@ -361,7 +360,6 @@ static void Game_LoadOptions(void) {
 	Game_RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 1.0f);
 	Game_RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.35f, 5.0f, 1.0f);
 
-	Game_CameraMass = Options_GetInt(OPT_CAMERA_MASS, 1, 100, 20);
 	/* TODO: Do we need to support option to skip SSL */
 	/*bool skipSsl = Options_GetBool("skip-ssl-check", false);
 	if (skipSsl) {
