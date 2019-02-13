@@ -265,8 +265,10 @@ static TimeMS net_connectTimeout;
 static void Server_Free(void);
 static void MPConnection_FinishConnect(void) {
 	net_connecting = false;
+	Event_RaiseVoid(&NetEvents.Connected);
 	Event_RaiseFloat(&WorldEvents.Loading, 0.0f);
-	net_readCurrent = net_readBuffer;
+
+	net_readCurrent    = net_readBuffer;
 	Server.WriteBuffer = net_writeBuffer;
 
 	Handlers_Reset();

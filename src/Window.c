@@ -58,7 +58,7 @@ static Rect2D prev_bounds; /* Used to restore previous size when leaving fullscr
 /*########################################################################################################################*
 *-----------------------------------------------------Private details-----------------------------------------------------*
 *#########################################################################################################################*/
-static uint8_t key_map[14 * 16] = {
+const static uint8_t key_map[14 * 16] = {
 	0, 0, 0, 0, 0, 0, 0, 0, KEY_BACKSPACE, KEY_TAB, 0, 0, 0, KEY_ENTER, 0, 0,
 	0, 0, 0, KEY_PAUSE, KEY_CAPSLOCK, 0, 0, 0, 0, 0, 0, KEY_ESCAPE, 0, 0, 0, 0,
 	KEY_SPACE, KEY_PAGEUP, KEY_PAGEDOWN, KEY_END, KEY_HOME, KEY_LEFT, KEY_UP, KEY_RIGHT, KEY_DOWN, 0, KEY_PRINTSCREEN, 0, KEY_PRINTSCREEN, KEY_INSERT, KEY_DELETE, 0,
@@ -1739,7 +1739,7 @@ static bool ctx_pendingWindowed, ctx_pendingFullscreen;
 *-----------------------------------------------------Private details-----------------------------------------------------*
 *#########################################################################################################################*/
 /* Sourced from https://www.meandmark.com/keycodes.html */
-static uint8_t key_map[8 * 16] = {
+const static uint8_t key_map[8 * 16] = {
 	'A', 'S', 'D', 'F', 'H', 'G', 'Z', 'X', 'C', 'V', 0, 'B', 'Q', 'W', 'E', 'R',
 	'Y', 'T', '1', '2', '3', '4', '6', '5', KEY_PLUS, '9', '7', KEY_MINUS, '8', '0', KEY_RBRACKET, 'O',
 	'U', KEY_LBRACKET, 'I', 'P', KEY_ENTER, 'L', 'J', KEY_QUOTE, 'K', KEY_SEMICOLON, KEY_BACKSLASH, KEY_COMMA, KEY_SLASH, 'N', 'M', KEY_PERIOD,

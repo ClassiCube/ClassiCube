@@ -12,6 +12,7 @@ struct _ChatEventsList    ChatEvents;
 struct _WindowEventsList  WindowEvents;
 struct _KeyEventsList     KeyEvents;
 struct _MouseEventsList   MouseEvents;
+struct _NetEventsList     NetEvents;
 
 void Event_Register(struct Event_Void* handlers, void* obj, Event_Void_Callback handler) {
 	int i;

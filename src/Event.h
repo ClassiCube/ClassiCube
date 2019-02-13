@@ -187,4 +187,9 @@ CC_VAR extern struct _MouseEventsList {
 	struct Event_Int Up;          /* Mouse button is released (Arg is MouseButton member) */
 	struct Event_Float Wheel;     /* Mouse wheel is moved/scrolled (Arg is wheel delta) */
 } MouseEvents;
+
+CC_VAR extern struct _NetEventsList {
+	struct Event_Void Connected;    /* Connection to a server was established. */
+	struct Event_Void Disconnected; /* Connection to the server was lost. */
+} NetEvents;
 #endif
