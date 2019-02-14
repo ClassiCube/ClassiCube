@@ -175,7 +175,7 @@ CC_VAR extern struct _WindowEventsList {
 	struct Event_Void StateChanged;       /* WindowState of the window changed */
 } WindowEvents;
 
-CC_VAR struct _KeyEventsList {
+CC_VAR extern struct _KeyEventsList {
 	struct Event_Int Press;  /* Raised when a character is typed. Arg is a character */
 	struct Event_Input Down; /* Raised when a key is pressed. Arg is a member of Key enumeration */
 	struct Event_Int Up;     /* Raised when a key is released. Arg is a member of Key enumeration */

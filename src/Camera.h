@@ -9,7 +9,7 @@ struct PickedPos;
 struct Camera;
 
 /* Shared data for cameras. */
-struct _CameraData {
+extern struct _CameraData {
 	/* How sensitive camera is to movements of mouse. */
 	int Sensitivity;
 	/* Whether smooth/cinematic camera mode is used. */
