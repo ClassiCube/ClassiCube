@@ -90,6 +90,9 @@ static ReturnCode HttpCache_Insert(int i, struct HttpCacheEntry* e) {
 
 	e->Handle     = conn;
 	http_cache[i] = *e;
+
+	/* otherwise address buffer points to stack buffer */
+	http_cache[i].Address.buffer = http_cache[i]._addressBuffer;
 	return 0;
 }
 

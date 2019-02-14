@@ -2130,7 +2130,7 @@ static void PlayerListWidget_TabEntryRemoved(void* widget, int id) {
 }
 
 static void PlayerListWidget_Init(void* widget) {
-	static String title = String_FromConst("Connected players:");
+	const static String title = String_FromConst("Connected players:");
 	struct PlayerListWidget* w = widget;
 	int id;
 

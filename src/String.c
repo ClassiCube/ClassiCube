@@ -469,14 +469,14 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 /*########################################################################################################################*
 *------------------------------------------------Character set conversions------------------------------------------------*
 *#########################################################################################################################*/
-static Codepoint Convert_ControlChars[32] = {
+const static Codepoint controlChars[32] = {
 	0x0000, 0x263A, 0x263B, 0x2665, 0x2666, 0x2663, 0x2660, 0x2022,
 	0x25D8, 0x25CB, 0x25D9, 0x2642, 0x2640, 0x266A, 0x266B, 0x263C,
 	0x25BA, 0x25C4, 0x2195, 0x203C, 0x00B6, 0x00A7, 0x25AC, 0x21A8,
 	0x2191, 0x2193, 0x2192, 0x2190, 0x221F, 0x2194, 0x25B2, 0x25BC
 };
 
-static Codepoint Convert_ExtendedChars[129] = { 0x2302,
+const static Codepoint extendedChars[129] = { 0x2302,
 	0x00C7, 0x00FC, 0x00E9, 0x00E2, 0x00E4, 0x00E0, 0x00E5, 0x00E7,
 	0x00EA, 0x00EB, 0x00E8, 0x00EF, 0x00EE, 0x00EC, 0x00C4, 0x00C5,
 	0x00C9, 0x00E6, 0x00C6, 0x00F4, 0x00F6, 0x00F2, 0x00FB, 0x00F9,
@@ -497,9 +497,9 @@ static Codepoint Convert_ExtendedChars[129] = { 0x2302,
 
 Codepoint Convert_CP437ToUnicode(char c) {
 	uint8_t raw = (uint8_t)c;
-	if (raw < 0x20) return Convert_ControlChars[raw];
+	if (raw < 0x20) return controlChars[raw];
 	if (raw < 0x7F) return raw;
-	return Convert_ExtendedChars[raw - 0x7F];
+	return extendedChars[raw - 0x7F];
 }
 
 char Convert_UnicodeToCP437(Codepoint cp) {
@@ -510,11 +510,11 @@ bool Convert_TryUnicodeToCP437(Codepoint cp, char* c) {
 	int i;
 	if (cp >= 0x20 && cp < 0x7F) { *c = (char)cp; return true; }
 
-	for (i = 0; i < Array_Elems(Convert_ControlChars); i++) {
-		if (Convert_ControlChars[i] == cp) { *c = i; return true; }
+	for (i = 0; i < Array_Elems(controlChars); i++) {
+		if (controlChars[i] == cp) { *c = i; return true; }
 	}
-	for (i = 0; i < Array_Elems(Convert_ExtendedChars); i++) {
-		if (Convert_ExtendedChars[i] == cp) { *c = i + 0x7F; return true; }
+	for (i = 0; i < Array_Elems(extendedChars); i++) {
+		if (extendedChars[i] == cp) { *c = i + 0x7F; return true; }
 	}
 
 	*c = '?'; return false;
@@ -864,7 +864,7 @@ void WordWrap_Do(STRING_REF String* text, String* lines, int numLines, int lineL
 		for (lineEnd = nextLineStart; lineEnd >= lineStart; lineEnd--) {
 			if (WordWrap_IsWrapper(text->buffer[lineEnd])) break;
 		}
-		lineEnd++; /* move after wrapper char (i.e. beginning of last word)*/
+		lineEnd++; /* move after wrapper char (i.e. beginning of last word) */
 
 		if (lineEnd <= lineStart || lineEnd >= nextLineStart) {
 			/* Three special cases handled by this: */
