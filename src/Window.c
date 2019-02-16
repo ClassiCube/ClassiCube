@@ -968,10 +968,13 @@ void Window_SetClipboardText(const String* value) {
 }
 
 static bool win_visible;
-bool Window_GetVisible(void) { return win_visible; }
+bool Window_GetVisible(void) {
+	XWindowAttributes attr;
+	XGetWindowAttributes(win_display, win_handle, &attr);
+	return attr.map_state == IsViewable;
+}
 
 void Window_SetVisible(bool visible) {
-	if (visible == win_visible) return;
 	if (visible) {
 		XMapWindow(win_display, win_handle);
 	} else {
@@ -2145,8 +2148,6 @@ void Window_SetClipboardText(const String* value) {
 
 bool Window_GetVisible(void) { return IsWindowVisible(win_handle); }
 void Window_SetVisible(bool visible) {
-	if (visible == Window_GetVisible()) return;
-	
 	if (visible) {
 		ShowWindow(win_handle);
 		RepositionWindow(win_handle, NULL, kWindowCenterOnMainScreen);
