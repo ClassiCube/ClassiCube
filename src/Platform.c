@@ -1266,22 +1266,25 @@ static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, v
 #define FONT_CACHE_FILE "fontscache.txt"
 static void Font_Init(void) {
 #ifdef CC_BUILD_WIN
-	const static String dir = String_FromConst("C:\\Windows\\Fonts");
+	const static String dirs[1] = {
+		String_FromConst("C:\\Windows\\Fonts")
+	};
 #endif
-#ifdef CC_BUILD_LINUX
-	const static String dir = String_FromConst("/usr/share/fonts");
-#endif
-#ifdef CC_BUILD_BSD
-	const static String dir = String_FromConst("/usr/local/share/fonts");
-#endif
-#ifdef CC_BUILD_SOLARIS
-	const static String dir = String_FromConst("/usr/share/fonts");
+#if defined CC_BUILD_LINUX || defined CC_BUILD_BSD || defined CC_BUILD_SOLARIS
+	const static String dirs[2] = {
+		String_FromConst("/usr/share/fonts"),
+		String_FromConst("/usr/local/share/fonts")
+	};
 #endif
 #ifdef CC_BUILD_OSX
-	const static String dir = String_FromConst("/Library/Fonts");
+	const static String dirs[2] = {
+		String_FromConst("/System/Library/Fonts"),
+		String_FromConst("/Library/Fonts")
+	};
 #endif
 	const static String cachePath = String_FromConst(FONT_CACHE_FILE);
 	FT_Error err;
+	int i;
 
 	ft_mem.alloc   = FT_AllocWrapper;
 	ft_mem.free    = FT_FreeWrapper;
@@ -1298,7 +1301,9 @@ static void Font_Init(void) {
 	}
 
 	EntryList_Init(&font_list, NULL, FONT_CACHE_FILE, '=');
-	Directory_Enum(&dir, NULL, Font_DirCallback);
+	for (i = 0; i < Array_Elems(dirs); i++) {
+		Directory_Enum(&dirs[i], NULL, Font_DirCallback);
+	}
 	if (font_list_changed) EntryList_Save(&font_list);
 }
 

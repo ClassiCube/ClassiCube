@@ -277,7 +277,7 @@ static void Http_SysFree(void) {
 }
 #endif
 #ifdef CC_BUILD_POSIX
-CURL* curl;
+static CURL* curl;
 
 static void Http_SysInit(void) {
 	CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
