@@ -168,8 +168,8 @@ CC_VAR extern struct _WindowEventsList {
 	struct Event_Void Redraw;             /* Window contents invalidated, should be redrawn */
 	struct Event_Void Moved;              /* Window is moved */
 	struct Event_Void Resized;            /* Window is resized */
-	struct Event_Void Closing;            /* Window is about to close */
-	struct Event_Void Closed;             /* Window has closed */
+	struct Event_Void Closing;            /* Window is about to close (should free resources/save state/etc here) */
+	struct Event_Void Destroyed;          /* Window has been destroyed (cannot call Window_XYZ functions anymore) */
 	struct Event_Void VisibilityChanged;  /* Visibility of the window changed */
 	struct Event_Void FocusChanged;       /* Focus of the window changed */
 	struct Event_Void StateChanged;       /* WindowState of the window changed */

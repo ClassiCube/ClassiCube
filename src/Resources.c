@@ -388,11 +388,11 @@ static struct TilePatch { const char* Name; uint8_t X1,Y1, X2,Y2; } modern_tiles
 	{ "assets/minecraft/textures/blocks/quartz_block_lines.png", 10,2 },
 	{ "assets/minecraft/textures/blocks/stonebrick.png", 4,3 },
 	{ "assets/minecraft/textures/blocks/snow.png", 2,3 },
-	{ "assets/minecraft/textures/blocks/wool_colored_blue.png", 3,5 },
-	{"assets/minecraft/textures/blocks/wool_colored_brown.png", 2,5 },
-	{"assets/minecraft/textures/blocks/wool_colored_cyan.png", 4,5 },
-	{"assets/minecraft/textures/blocks/wool_colored_green.png", 1,5 },
-	{"assets/minecraft/textures/blocks/wool_colored_pink.png", 0,5 }
+	{ "assets/minecraft/textures/blocks/wool_colored_blue.png",  3,5 },
+	{ "assets/minecraft/textures/blocks/wool_colored_brown.png", 2,5 },
+	{ "assets/minecraft/textures/blocks/wool_colored_cyan.png",  4,5 },
+	{ "assets/minecraft/textures/blocks/wool_colored_green.png", 1,5 },
+	{ "assets/minecraft/textures/blocks/wool_colored_pink.png",  0,5 }
 };
 
 CC_NOINLINE static struct TilePatch* ModernPatcher_GetTile(const String* path) {

@@ -441,7 +441,7 @@ static void Game_Load(void) {
 	Event_RegisterVoid(&GfxEvents.LowVRAMDetected,  NULL, Game_OnLowVRAMDetected);
 
 	Event_RegisterVoid(&WindowEvents.Resized,       NULL, Game_OnResize);
-	Event_RegisterVoid(&WindowEvents.Closed,        NULL, Game_Free);
+	Event_RegisterVoid(&WindowEvents.Closing,       NULL, Game_Free);
 
 	TextureCache_Init();
 	/* TODO: Survival vs Creative game mode */
@@ -687,7 +687,7 @@ void Game_Free(void* obj) {
 	Event_UnregisterVoid(&GfxEvents.LowVRAMDetected,  NULL, Game_OnLowVRAMDetected);
 
 	Event_UnregisterVoid(&WindowEvents.Resized,       NULL, Game_OnResize);
-	Event_UnregisterVoid(&WindowEvents.Closed,        NULL, Game_Free);
+	Event_UnregisterVoid(&WindowEvents.Closing,       NULL, Game_Free);
 
 	for (comp = comps_head; comp; comp = comp->Next) {
 		if (comp->Free) comp->Free();

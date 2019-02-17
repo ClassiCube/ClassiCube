@@ -76,12 +76,6 @@ const static uint8_t key_map[14 * 16] = {
 };
 static Key Window_MapKey(WPARAM key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
 
-static void Window_Destroy(void) {
-	if (!Window_Exists) return;
-	DestroyWindow(win_handle);
-	Window_Exists = false;
-}
-
 static void Window_ResetWindowState(void) {
 	suppress_resize++;
 	Window_SetWindowState(WINDOW_STATE_NORMAL);
@@ -337,14 +331,16 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_CLOSE:
 		Event_RaiseVoid(&WindowEvents.Closing);
-		Window_Destroy();
+		if (Window_Exists) DestroyWindow(win_handle);
+		Window_Exists = false;
 		break;
 
 	case WM_DESTROY:
 		Window_Exists = false;
 		UnregisterClass(CC_WIN_CLASSNAME, win_instance);
+
 		if (win_DC) ReleaseDC(win_handle, win_DC);
-		Event_RaiseVoid(&WindowEvents.Closed);
+		Event_RaiseVoid(&WindowEvents.Destroyed);
 		break;
 	}
 	return DefWindowProc(handle, message, wParam, lParam);
@@ -1097,12 +1093,6 @@ void Window_Close(void) {
 	XFlush(win_display);
 }
 
-void Window_Destroy(void) {
-	XSync(win_display, true);
-	XDestroyWindow(win_display, win_handle);
-	Window_Exists = false;
-}
-
 static void Window_ToggleKey(XKeyEvent* keyEvent, bool pressed) {
 	KeySym keysym1 = XLookupKeysym(keyEvent, 0);
 	KeySym keysym2 = XLookupKeysym(keyEvent, 1);
@@ -1129,7 +1119,7 @@ static bool Window_GetPendingEvent(XEvent* e) {
 
 void Window_ProcessEvents(void) {
 	XEvent e;
-	bool wasVisible, wasFocused;
+	bool wasFocused;
 
 	while (Window_Exists) {
 		if (!Window_GetPendingEvent(&e)) break;
@@ -1137,27 +1127,24 @@ void Window_ProcessEvents(void) {
 		switch (e.type) {
 		case MapNotify:
 		case UnmapNotify:
-			wasVisible  = win_visible;
-			win_visible = e.type == MapNotify;
-
-			if (win_visible != wasVisible) {
-				Event_RaiseVoid(&WindowEvents.VisibilityChanged);
-			}
+			Event_RaiseVoid(&WindowEvents.VisibilityChanged);
 			break;
 
 		case ClientMessage:
-			if (!win_isExiting && e.xclient.data.l[0] == wm_destroy) {
-				Platform_LogConst("Exit message received.");
-				Event_RaiseVoid(&WindowEvents.Closing);
+			if (e.xclient.data.l[0] != wm_destroy) break;
+			Platform_LogConst("Exit message received.");			
+			Event_RaiseVoid(&WindowEvents.Closing);
 
-				win_isExiting = true;
-				Window_Destroy();
-				Event_RaiseVoid(&WindowEvents.Closed);
-			} break;
+			/* sync and discard all events queued */
+			XSync(win_display, true);
+			XDestroyWindow(win_display, win_handle);
+			Window_Exists = false;
+			break;
 
 		case DestroyNotify:
 			Platform_LogConst("Window destroyed");
 			Window_Exists = false;
+			Event_RaiseVoid(&WindowEvents.Destroyed);
 			break;
 
 		case ConfigureNotify:
@@ -1763,13 +1750,6 @@ static Key Window_MapKey(UInt32 key) { return key < Array_Elems(key_map) ? key_m
 /*Backspace = 51,  (0x33, KEY_DELETE according to that link)*/
 /*Return = 52,     (0x34, ??? according to that link)*/
 /*Menu = 110,      (0x6E, ??? according to that link)*/
-
-static void Window_Destroy(void) {
-	if (!Window_Exists) return;
-	DisposeWindow(win_handle);
-	Window_Exists = false;
-}
-
 static CC_INLINE void Window_SetRect(Rect2D* dst, const Rect* src) {
 	dst->X = src->left;
 	dst->Y = src->top;
@@ -1868,12 +1848,13 @@ static OSStatus Window_ProcessWindowEvent(EventRef inEvent) {
 	
 	switch (GetEventKind(inEvent)) {
 		case kEventWindowClose:
+			Window_Exists = false;
 			Event_RaiseVoid(&WindowEvents.Closing);
 			return eventNotHandledErr;
 			
 		case kEventWindowClosed:
 			Window_Exists = false;
-			Event_RaiseVoid(&WindowEvents.Closed);
+			Event_RaiseVoid(&WindowEvents.Destroyed);
 			return 0;
 			
 		case kEventWindowBoundsChanged:
@@ -2196,9 +2177,10 @@ void Window_SetSize(int width, int height) {
 }
 
 void Window_Close(void) {
-	Event_RaiseVoid(&WindowEvents.Closed);
-	/* TODO: Does this raise the event twice? */
-	Window_Destroy();
+	/* DisposeWindow only sends a kEventWindowClosed */
+	Event_RaiseVoid(&WindowEvents.Closing);
+	if (Window_Exists) DisposeWindow(win_handle);
+	Window_Exists = false;
 }
 
 void Window_ProcessEvents(void) {
