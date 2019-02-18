@@ -363,7 +363,7 @@ static void FetchServerTask_Handle(uint8_t* data, uint32_t len) {
 
 void FetchServerTask_Run(const String* hash) {
 	const static String id  = String_FromConst("CC fetch server");
-	String url; char urlBuffer[STRING_SIZE];
+	String url; char urlBuffer[URL_MAX_SIZE];
 	if (FetchServerTask.Base.Working) return;
 
 	LWebTask_Reset(&FetchServerTask.Base);
@@ -523,7 +523,7 @@ void FetchUpdateTask_Run(bool release, bool d3d9) {
 #endif
 
 	const static String id = String_FromConst("CC update fetch");
-	String url; char urlBuffer[STRING_SIZE];
+	String url; char urlBuffer[URL_MAX_SIZE];
 	String_InitArray(url, urlBuffer);
 
 	String_Format2(&url, "http://cs.classicube.net/c_client/%c/%c",
@@ -567,7 +567,7 @@ static void FetchFlagsTask_Handle(uint8_t* data, uint32_t len) {
 
 static void FetchFlagsTask_DownloadNext(void) {
 	const static String id = String_FromConst("CC get flag");
-	String url; char urlBuffer[STRING_SIZE];
+	String url; char urlBuffer[URL_MAX_SIZE];
 	String_InitArray(url, urlBuffer);
 
 	if (FetchFlagsTask.Base.Working)        return;
