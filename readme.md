@@ -46,3 +46,27 @@ Run ClassiCube.exe. You can connect to LAN/locally hosted servers, ~~minecraft.n
 * If the server has disabled hacks, key combinations such as fly and speed will not do anything.
 * To see the list of built in commands, type `/client`.
 * To see help for a given built in command, type `/client help <command name>`.
+
+### Compiling on linux
+
+Install appropriate libs as required. For ubuntu this means: libx11-dev, libgl1-mesa-dev, libopenal-dev, libcurl4-gnutls-dev or libcurl4-openssl-dev
+
+Compiling for linux: 
+
+```gcc *.c -o ClassiCube -lX11 -lpthread -lGL -lm -lcurl -lopenal -ldl```
+
+Cross compiling for windows:
+
+```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9```
+
+Explicitly:
+
+```i586-mingw32msvc-gcc *.c -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_D3D9 -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9```
+
+```i586-mingw32msvc-gcc *.c -DCC_BUILD_MANUAL -DCC_BUILD_WIN -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32```
+
+### Documentation
+
+Functions and variables in .h files are mostly documented.
+
+General information (e.g. portablity) for the game's source code can be found in the misc folder.
