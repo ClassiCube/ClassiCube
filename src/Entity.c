@@ -110,8 +110,10 @@ static void Entity_ParseScale(struct Entity* e, const String* scale) {
 	float value, maxScale;
 	if (!Convert_ParseFloat(scale, &value)) return;
 
-	maxScale = e->Model->MaxScale;
-	Math_Clamp(value, 0.01f, maxScale);
+	value = max(value, 0.001f);
+	/* local player doesn't allow giant model scales */
+	/* (can't climb stairs, extremely CPU intensive collisions) */
+	if (e->ModelRestrictedScale) { value = min(value, e->Model->MaxScale); }
 	e->ModelScale = Vector3_Create1(value);
 }
 
@@ -904,6 +906,7 @@ static void LocalPlayer_Init(void) {
 	PhysicsComp_Init(&p->Physics, &p->Base);
 	TiltComp_Init(&p->Tilt);
 
+	p->Base.ModelRestrictedScale = true;
 	p->ReachDistance = 5.0f;
 	p->Physics.Hacks = &p->Hacks;
 	p->Physics.Collisions = &p->Collisions;

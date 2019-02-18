@@ -74,6 +74,7 @@ struct Entity {
 
 	struct Model* Model;
 	BlockID ModelBlock; /* BlockID, if model name was originally a valid block. */
+	bool ModelRestrictedScale; /* true to restrict model scale (needed for local player, otherwise collisions are too costly) */
 	struct AABB ModelAABB;
 	Vector3 ModelScale, Size;
 	float StepSize;
