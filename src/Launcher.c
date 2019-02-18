@@ -566,9 +566,9 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 "echo 1..\r\n" \
 "ping 127.0.0.1 -n 2 > nul\r\n" \
 "echo Copying updated version\r\n" \
-"move ClassiCube.update ClassiCube.exe\r\n" \
+"move ClassiCube.update %s\r\n" \
 "echo Starting launcher again\r\n" \
-"start ClassiCube.exe\r\n" \
+"start %s\r\n" \
 "exit\r\n"
 #else
 #define UPDATE_SCRIPT \
@@ -586,9 +586,9 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 "sleep 1\n" \
 "cd $(cd -P -- \"$(dirname -- \"$0\")\" && pwd -P)\n" \
 "echo Copying updated version\n" \
-"mv ./ClassiCube.update ./ClassiCube\n" \
+"mv ./ClassiCube.update ./%s\n" \
 "echo Starting launcher again\n" \
-"./ClassiCube\n"
+"./%s\n"
 #endif
 /* The weird 'cd' line changes current directory to the directory update.sh is in */
 /* Needed because bash's current directory isn't always client's directory (e.g. on OSX) */
@@ -607,10 +607,20 @@ static void Launcher_ApplyUpdate(void) {
 	const static String scriptName = String_FromConst("xterm");
 	const static String scriptArgs = String_FromConst("./update.sh");
 #endif
+	char strBuffer[1024], exeBuffer[FILENAME_SIZE];
+	String str, exe;
 	ReturnCode res;
 
+	String_InitArray(exe, exeBuffer);
+	res = Platform_GetExePath(&exe);
+	if (res) { Logger_Warn(res, "getting executable path"); return; }
+
+	Utils_UNSAFE_GetFilename(&exe);
+	String_InitArray(str, strBuffer);
+	String_Format2(&str, UPDATE_SCRIPT, &exe, &exe);
+
 	/* Can't use WriteLine, want \n as actual newline not code page 437 */
-	res = Stream_WriteAllTo(&scriptPath, (const uint8_t*)UPDATE_SCRIPT, sizeof(UPDATE_SCRIPT) - 1);
+	res = Stream_WriteAllTo(&scriptPath, str.buffer, str.length);
 	if (res) { Logger_Warn(res, "saving update script"); return; }
 
 	res = Platform_MarkExecutable(&scriptPath);
