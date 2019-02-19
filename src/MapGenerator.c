@@ -5,6 +5,7 @@
 #include "Funcs.h"
 #include "Platform.h"
 #include "World.h"
+#include "Utils.h"
 
 volatile float Gen_CurrentProgress;
 volatile const char* Gen_CurrentState;
@@ -185,22 +186,23 @@ static void NotchyGen_FillOblateSpheroid(int x, int y, int z, float radius, Bloc
 
 #define Stack_Push(index)\
 stack[stack_size++] = index;\
-if (stack_size == 32768) {\
+if (stack_size == stack_limit) {\
 	Logger_Abort("NotchyGen_FloodFail - stack limit hit");\
 }
 
-static void NotchyGen_FloodFill(int startIndex, BlockRaw block) {
-	/* This is way larger size than I actually have seen used, but we play it safe here.*/
-	int32_t stack[32768];
-	int stack_size = 0, index;
+#define STACK_FAST 8192
+static void NotchyGen_FloodFill(int index, BlockRaw block) {
+	int32_t* stack;
+	int32_t stack_default[STACK_FAST]; /* try to avoid malloc if we can */
+	int count = 0, limit = STACK_FAST;
 	int x, y, z;
 
-	if (startIndex < 0) return; /* y below map, immediately ignore */
-	Stack_Push(startIndex);
+	stack = stack_default;
+	if (index < 0) return; /* y below map, don't bother starting */
+	stack[count++] = index;
 
-	while (stack_size > 0) {
-		stack_size--;
-		index = stack[stack_size];
+	while (count) {
+		index = stack[--count];
 
 		if (Gen_Blocks[index] != BLOCK_AIR) continue;
 		Gen_Blocks[index] = block;
@@ -209,12 +211,18 @@ static void NotchyGen_FloodFill(int startIndex, BlockRaw block) {
 		y = index  / World.OneY;
 		z = (index / World.Width) % World.Length;
 
-		if (x > 0)        { Stack_Push(index - 1); }
-		if (x < World.MaxX) { Stack_Push(index + 1); }
-		if (z > 0)        { Stack_Push(index - World.Width); }
-		if (z < World.MaxZ) { Stack_Push(index + World.Width); }
-		if (y > 0)        { Stack_Push(index - World.OneY); }
+		/* need to increase stack */
+		if (count >= limit - FACE_COUNT) {
+			stack = Utils_Resize(stack, &limit, 4, STACK_FAST, STACK_FAST);
+		}
+
+		if (x > 0)          { stack[count++] = index - 1; }
+		if (x < World.MaxX) { stack[count++] = index + 1; }
+		if (z > 0)          { stack[count++] = index - World.Width; }
+		if (z < World.MaxZ) { stack[count++] = index + World.Width; }
+		if (y > 0)          { stack[count++] = index - World.OneY; }
 	}
+	if (limit > STACK_FAST) Mem_Free(stack);
 }
 
 
