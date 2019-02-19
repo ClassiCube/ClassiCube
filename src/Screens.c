@@ -9,7 +9,7 @@
 #include "Funcs.h"
 #include "TexturePack.h"
 #include "Model.h"
-#include "MapGenerator.h"
+#include "Generator.h"
 #include "Server.h"
 #include "Chat.h"
 #include "ExtMath.h"

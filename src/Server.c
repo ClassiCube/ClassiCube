@@ -12,7 +12,7 @@
 #include "Gui.h"
 #include "Screens.h"
 #include "Formats.h"
-#include "MapGenerator.h"
+#include "Generator.h"
 #include "World.h"
 #include "Camera.h"
 #include "TexturePack.h"

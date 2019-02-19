@@ -1,6 +1,5 @@
-#include "MapGenerator.h"
+#include "Generator.h"
 #include "BlockID.h"
-#include "Logger.h"
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Platform.h"
@@ -182,12 +181,6 @@ static void NotchyGen_FillOblateSpheroid(int x, int y, int z, float radius, Bloc
 			}
 		}
 	}
-}
-
-#define Stack_Push(index)\
-stack[stack_size++] = index;\
-if (stack_size == stack_limit) {\
-	Logger_Abort("NotchyGen_FloodFail - stack limit hit");\
 }
 
 #define STACK_FAST 8192

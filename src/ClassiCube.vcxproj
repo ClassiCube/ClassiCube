@@ -222,7 +222,7 @@
     <ClInclude Include="Inventory.h" />
     <ClInclude Include="IsometricDrawer.h" />
     <ClInclude Include="Lighting.h" />
-    <ClInclude Include="MapGenerator.h" />
+    <ClInclude Include="Generator.h" />
     <ClInclude Include="MapRenderer.h" />
     <ClInclude Include="Options.h" />
     <ClInclude Include="Particle.h" />
@@ -278,7 +278,7 @@
     <ClCompile Include="LScreens.c" />
     <ClCompile Include="LWeb.c" />
     <ClCompile Include="LWidgets.c" />
-    <ClCompile Include="MapGenerator.c" />
+    <ClCompile Include="Generator.c" />
     <ClCompile Include="Deflate.c" />
     <ClCompile Include="Model.c" />
     <ClCompile Include="Menus.c" />

@@ -699,7 +699,6 @@ static Window win_rootWin;
 static Window win_handle;
 static XVisualInfo win_visual;
 static int borderLeft, borderRight, borderTop, borderBottom;
-static bool win_isExiting;
  
 static Atom wm_destroy, net_wm_state;
 static Atom net_wm_state_minimized;
@@ -963,7 +962,6 @@ void Window_SetClipboardText(const String* value) {
 	XSetSelectionOwner(win_display, xa_clipboard, win_handle, 0);
 }
 
-static bool win_visible;
 bool Window_GetVisible(void) {
 	XWindowAttributes attr;
 	XGetWindowAttributes(win_display, win_handle, &attr);

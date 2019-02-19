@@ -22,10 +22,7 @@
 *#########################################################################################################################*/
 static ReturnCode Map_ReadBlocks(struct Stream* stream) {
 	World.Volume = World.Width * World.Length * World.Height;
-	World.Blocks     = Mem_Alloc(World.Volume, 1, "map blocks");
-#ifdef EXTENDED_BLOCKS
-	World.Blocks2    = World.Blocks;
-#endif
+	World.Blocks = Mem_Alloc(World.Volume, 1, "map blocks");
 	return Stream_Read(stream, World.Blocks, World.Volume);
 }
 
@@ -88,6 +85,19 @@ void Map_LoadFrom(const String* path) {
 *#########################################################################################################################*/
 #define LVL_CUSTOMTILE 163
 #define LVL_CHUNKSIZE 16
+/* MCSharp* format is a GZIP compressed binary map format. All metadata is discarded.
+	U16 "Identifier" (must be 1874)
+	U16 "Width",  "Length", "Height"
+	U16 "SpawnX", "SpawnZ", "SpawnY"
+	U8  "Yaw", "Pitch"
+	U16 "Build permissions" (ignored)
+	U8* "Blocks"
+	
+	-- this data is only in MCGalaxy maps
+	U8  "Identifier" (0xBD for 'block definitions', i.e. custom blocks)
+	U8* "Data"       (16x16x16 sparsely allocated chunks)
+}*/
+
 const static uint8_t Lvl_table[256] = {
 	 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
 	16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
@@ -202,6 +212,20 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 /*########################################################################################################################*
 *----------------------------------------------------fCraft map format----------------------------------------------------*
 *#########################################################################################################################*/
+/* fCraft* format is a binary map format. All metadata is discarded.
+	U32 "Identifier" (must be FC2AF40)
+	U8  "Revision"   (only '13' supported)
+	U16 "Width",  "Height", "Length"
+	U32 "SpawnX", "SpawnY", "SpawnZ"
+	U8  "Yaw", "Pitch"
+	U32 "DateModified", "DateCreated" (ignored)
+	U8* "UUID"
+	U8  "Layers"     (only maps with 1 layer supported)
+	U8* "LayersInfo" (ignored, assumes only layer is map blocks)
+	U32 "MetaCount"
+	METADATA { STR "Group", "Key", "Value" }
+	U8* "Blocks"
+}*/
 static ReturnCode Fcm_ReadString(struct Stream* stream) {
 	uint8_t data[2];
 	int len;
@@ -421,6 +445,46 @@ static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* s
 /*########################################################################################################################*
 *--------------------------------------------------ClassicWorld format----------------------------------------------------*
 *#########################################################################################################################*/
+/* ClassicWorld is a NBT tag based map format. Tags not listed below are discarded.
+COMPOUND "ClassicWorld" {
+	U8* "UUID"
+	U16 "X", "Y", "Z"
+	COMPOUND "Spawn" {
+		I16 "X", "Y", "Z"
+		U8  "H", "P"
+	}
+	U8* "BlockArray"  (lower 8 bits, required)
+	U8* "BlockArray2" (upper 8 bits, optional)
+	COMPOUND "Metadata" {
+		COMPOUND "CPE" {
+			COMPOUND "ClickDistance"  { U16 "Reach" }
+			COMPOUND "EnvWeatherType" { U8 "WeatherType" }
+			COMPOUND "EnvMapAppearance" {
+				U8 "SideBlock", "EdgeBlock"
+				I16 "SidesLevel"
+				STR "TextureURL"
+			}
+			COMPOUND "EnvColors" {
+				COMPOUND "Sky"      { U16 "R", "G", "B" }
+				COMPOUND "Cloud"    { U16 "R", "G", "B" }
+				COMPOUND "Fog"      { U16 "R", "G", "B" }
+				COMPOUND "Sunlight" { U16 "R", "G", "B" }
+				COMPOUND "Ambient"  { U16 "R", "G", "B" }
+			}
+			COMPOUND "BlockDefinitions" {
+				COMPOUND "Block_XYZ" { (name must start with 'Block')
+					U8  "ID", U16 "ID2"
+					STR "Name"
+					F32 "Speed"
+					U8  "CollideType", "BlockDraw"					
+					U8  "TransmitsLight", "FullBright"
+					U8  "Shape"	, "WalkSound"	
+					U8* "Textures", "Fog", "Coords"
+				}
+			}
+		}
+	}
+}*/
 static void* Cw_GetBlocks(struct NbtTag* tag) {
 	void* ptr;
 	if (NbtTag_IsSmall(tag)) {
@@ -447,9 +511,6 @@ static void Cw_Callback_1(struct NbtTag* tag) {
 	if (IsTag(tag, "BlockArray")) {
 		World.Volume = tag->DataSize;
 		World.Blocks = Cw_GetBlocks(tag);
-#ifdef EXTENDED_BLOCKS
-		World.Blocks2 = World.Blocks;
-#endif
 	}
 #ifdef EXTENDED_BLOCKS
 	if (IsTag(tag, "BlockArray2")) World_SetMapUpper(Cw_GetBlocks(tag));
@@ -662,6 +723,24 @@ ReturnCode Cw_Load(struct Stream* stream) {
 /*########################################################################################################################*
 *-------------------------------------------------Minecraft .dat format---------------------------------------------------*
 *#########################################################################################################################*/
+/* ClassicWorld is a NBT tag based map format. Tags not listed below are discarded.
+     Stream              BlockData        BlockDataTiny      BlockDataLong
+|--------------|     |---------------|  |---------------|  |---------------| 
+| U16 Magic    |     |>BlockDataTiny |  | TC_BLOCKDATA  |  | TC_BLOCKLONG  |
+| U16 Version  |     |>BlockDataLong |  | U8 Size       |  | U32 Size      |
+| Content[var] |     |_______________|  | U8 Data[size] |  | U8 Data[size] |
+|______________|                        |_______________|  |_______________|
+
+    Content
+|--------------| |--------------| 
+| >BlockData   | | >NewString   |
+| >Object      | | >TC_RESET    |
+|______________| | >TC_NULL     |
+| >PrevObject     |
+| >NewClass     |
+| >NewEnum     |
+
+}*/
 enum JTypeCode {
 	TC_NULL = 0x70, TC_REFERENCE = 0x71, TC_CLASSDESC = 0x72, TC_OBJECT = 0x73, 
 	TC_STRING = 0x74, TC_ARRAY = 0x75, TC_ENDBLOCKDATA = 0x78
@@ -852,10 +931,7 @@ ReturnCode Dat_Load(struct Stream* stream) {
 			World.Height = Dat_I32(field);
 		} else if (String_CaselessEqualsConst(&fieldName, "blocks")) {
 			if (field->Type != JFIELD_ARRAY) Logger_Abort("Blocks field must be Array");
-			World.Blocks     = field->Value.Array.Ptr;
-#ifdef EXTENDED_BLOCKS
-			World.Blocks2    = World.Blocks;
-#endif
+			World.Blocks = field->Value.Array.Ptr;
 			World.Volume = field->Value.Array.Size;
 		} else if (String_CaselessEqualsConst(&fieldName, "xSpawn")) {
 			p->Spawn.X = (float)Dat_I32(field);

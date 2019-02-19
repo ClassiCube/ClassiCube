@@ -7,7 +7,7 @@
 #include "Block.h"
 #include "Lighting.h"
 #include "Options.h"
-#include "MapGenerator.h"
+#include "Generator.h"
 #include "Platform.h"
 #include "Game.h"
 #include "Logger.h"
