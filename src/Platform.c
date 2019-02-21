@@ -2008,6 +2008,7 @@ static void Platform_InitStopwatch(void) {
 	} else { sw_freqDiv = 10; }
 }
 
+typedef BOOL (WINAPI *AttachConsoleFunc)(DWORD dwProcessId);
 void Platform_Init(void) {	
 	WSADATA wsaData;
 	ReturnCode res;
@@ -2021,7 +2022,9 @@ void Platform_Init(void) {
 
 	hasDebugger = IsDebuggerPresent();
 	/* For when user runs from command prompt */
-	AttachConsole(ATTACH_PARENT_PROCESS);
+	/* NOTE: Need to dynamically load, not supported on Windows 2000 */
+	AttachConsoleFunc attach = Platform_GetSymbolFrom("Kernel32", "AttachConsole");
+	if (attach) attach(ATTACH_PARENT_PROCESS);
 
 	conHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (conHandle == INVALID_HANDLE_VALUE) conHandle = NULL;
