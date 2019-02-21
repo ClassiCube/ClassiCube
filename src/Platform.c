@@ -1266,8 +1266,9 @@ static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, v
 #define FONT_CACHE_FILE "fontscache.txt"
 static void Font_Init(void) {
 #ifdef CC_BUILD_WIN
-	const static String dirs[1] = {
-		String_FromConst("C:\\Windows\\Fonts")
+	const static String dirs[2] = {
+		String_FromConst("C:/Windows/Fonts"),
+		String_FromConst("C:/WINNT/Fonts")
 	};
 #endif
 #if defined CC_BUILD_LINUX || defined CC_BUILD_BSD || defined CC_BUILD_SOLARIS
@@ -2023,7 +2024,7 @@ void Platform_Init(void) {
 	hasDebugger = IsDebuggerPresent();
 	/* For when user runs from command prompt */
 	/* NOTE: Need to dynamically load, not supported on Windows 2000 */
-	AttachConsoleFunc attach = Platform_GetSymbolFrom("Kernel32", "AttachConsole");
+	AttachConsoleFunc attach = Platform_GetSymbolFrom("KERNEL32.DLL", "AttachConsole");
 	if (attach) attach(ATTACH_PARENT_PROCESS);
 
 	conHandle = GetStdHandle(STD_OUTPUT_HANDLE);

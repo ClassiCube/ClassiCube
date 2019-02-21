@@ -2474,8 +2474,8 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
-	/* TODO: Apparently we don't need this for OSX */
-	return NULL;
+	void* address = Platform_GetSymbolFrom("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", function);
+	return GLContext_IsInvalidAddress(address) ? NULL : address;
 }
 
 void GLContext_SwapBuffers(void) {

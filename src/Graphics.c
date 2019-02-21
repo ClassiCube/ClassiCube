@@ -995,18 +995,16 @@ static GfxResourceID gl_activeList;
 static void* gl_dynamicListData;
 #else
 /* Weak linked on OSX, so we don't need to use GetProcAddress */
-#ifndef CC_BUILD_OSX
 typedef void (APIENTRY *FUNC_GLBINDBUFFER) (GLenum target, GLuint buffer);
 typedef void (APIENTRY *FUNC_GLDELETEBUFFERS) (GLsizei n, const GLuint *buffers);
 typedef void (APIENTRY *FUNC_GLGENBUFFERS) (GLsizei n, GLuint *buffers);
 typedef void (APIENTRY *FUNC_GLBUFFERDATA) (GLenum target, uintptr_t size, const GLvoid* data, GLenum usage);
 typedef void (APIENTRY *FUNC_GLBUFFERSUBDATA) (GLenum target, uintptr_t offset, uintptr_t size, const GLvoid* data);
-static FUNC_GLBINDBUFFER    glBindBuffer;
-static FUNC_GLDELETEBUFFERS glDeleteBuffers;
-static FUNC_GLGENBUFFERS    glGenBuffers;
-static FUNC_GLBUFFERDATA    glBufferData;
-static FUNC_GLBUFFERSUBDATA glBufferSubData;
-#endif
+static FUNC_GLBINDBUFFER    _glBindBuffer;
+static FUNC_GLDELETEBUFFERS _glDeleteBuffers;
+static FUNC_GLGENBUFFERS    _glGenBuffers;
+static FUNC_GLBUFFERDATA    _glBufferData;
+static FUNC_GLBUFFERSUBDATA _glBufferSubData;
 #endif
 
 static int gl_compare[8] = { GL_ALWAYS, GL_NOTEQUAL, GL_NEVER, GL_LESS, GL_LEQUAL, GL_EQUAL, GL_GEQUAL, GL_GREATER };
@@ -1025,21 +1023,18 @@ static void GL_CheckVboSupport(void) {
 	int minor = (int)(version.buffer[2] - '0');
 
 	/* Supported in core since 1.5 */
-	if ((major > 1) || (major == 1 && minor >= 5)) {
-		/* TODO: Do we still need to think about ARB functions on OSX? */
-#ifndef CC_BUILD_OSX
-		glBindBuffer    = (FUNC_GLBINDBUFFER)GLContext_GetAddress("glBindBuffer");
-		glDeleteBuffers = (FUNC_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffers");
-		glGenBuffers    = (FUNC_GLGENBUFFERS)GLContext_GetAddress("glGenBuffers");
-		glBufferData    = (FUNC_GLBUFFERDATA)GLContext_GetAddress("glBufferData");
-		glBufferSubData = (FUNC_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubData");
+	if (major > 1 || (major == 1 && minor >= 5)) {
+		_glBindBuffer    = (FUNC_GLBINDBUFFER)GLContext_GetAddress("glBindBuffer");
+		_glDeleteBuffers = (FUNC_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffers");
+		_glGenBuffers    = (FUNC_GLGENBUFFERS)GLContext_GetAddress("glGenBuffers");
+		_glBufferData    = (FUNC_GLBUFFERDATA)GLContext_GetAddress("glBufferData");
+		_glBufferSubData = (FUNC_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubData");
 	} else if (String_CaselessContains(&extensions, &vboExt)) {
-		glBindBuffer    = (FUNC_GLBINDBUFFER)GLContext_GetAddress("glBindBufferARB");
-		glDeleteBuffers = (FUNC_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffersARB");
-		glGenBuffers    = (FUNC_GLGENBUFFERS)GLContext_GetAddress("glGenBuffersARB");
-		glBufferData    = (FUNC_GLBUFFERDATA)GLContext_GetAddress("glBufferDataARB");
-		glBufferSubData = (FUNC_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubDataARB");
-#endif
+		_glBindBuffer    = (FUNC_GLBINDBUFFER)GLContext_GetAddress("glBindBufferARB");
+		_glDeleteBuffers = (FUNC_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffersARB");
+		_glGenBuffers    = (FUNC_GLGENBUFFERS)GLContext_GetAddress("glGenBuffersARB");
+		_glBufferData    = (FUNC_GLBUFFERDATA)GLContext_GetAddress("glBufferDataARB");
+		_glBufferSubData = (FUNC_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubDataARB");
 	} else {
 		Logger_Abort("Only OpenGL 1.1 supported.\n\n" \
 			"Compile the game with CC_BUILD_GL11, or ask on the classicube forums for it");
@@ -1235,29 +1230,29 @@ void Gfx_SetDepthTestFunc(CompareFunc func) {
 #ifndef CC_BUILD_GL11
 static GLuint GL_GenAndBind(GLenum target) {
 	GLuint id;
-	glGenBuffers(1, &id);
-	glBindBuffer(target, id);
+	_glGenBuffers(1, &id);
+	_glBindBuffer(target, id);
 	return id;
 }
 
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	GLuint id     = GL_GenAndBind(GL_ARRAY_BUFFER);
 	uint32_t size = maxVertices * gfx_strideSizes[fmt];
-	glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
+	_glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
 	return id;
 }
 
 GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 	GLuint id     = GL_GenAndBind(GL_ARRAY_BUFFER);
 	uint32_t size = count * gfx_strideSizes[fmt];
-	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+	_glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 	return id;
 }
 
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
 	GLuint id     = GL_GenAndBind(GL_ELEMENT_ARRAY_BUFFER);
 	uint32_t size = indicesCount * 2;
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
+	_glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
 	return id;
 }
 
@@ -1266,13 +1261,13 @@ void Gfx_BindIb(GfxResourceID ib) { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib); }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	if (!vb || *vb == GFX_NULL) return;
-	glDeleteBuffers(1, vb);
+	_glDeleteBuffers(1, vb);
 	*vb = GFX_NULL;
 }
 
 void Gfx_DeleteIb(GfxResourceID* ib) {
 	if (!ib || *ib == GFX_NULL) return;
-	glDeleteBuffers(1, ib);
+	_glDeleteBuffers(1, ib);
 	*ib = GFX_NULL;
 }
 #else
@@ -1360,8 +1355,8 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 #ifndef CC_BUILD_GL11
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	uint32_t size = vCount * gfx_batchStride;
-	glBindBuffer(GL_ARRAY_BUFFER, vb);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
+	_glBindBuffer(GL_ARRAY_BUFFER, vb);
+	_glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
