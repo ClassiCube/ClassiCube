@@ -90,7 +90,7 @@ bool Launcher_ConnectToServer(const String* hash) {
 *#########################################################################################################################*/
 static void Launcher_MaybeRedraw(void* obj) {
 	/* Only redraw when launcher has been initialised */
-	if (Launcher_Screen) Launcher_Redraw();
+	if (Launcher_Screen && Window_Exists) Launcher_Redraw();
 }
 
 static void Launcher_ReqeustRedraw(void* obj) {

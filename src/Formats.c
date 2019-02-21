@@ -723,7 +723,7 @@ ReturnCode Cw_Load(struct Stream* stream) {
 /*########################################################################################################################*
 *-------------------------------------------------Minecraft .dat format---------------------------------------------------*
 *#########################################################################################################################*/
-/* ClassicWorld is a NBT tag based map format. Tags not listed below are discarded.
+/* .dat is a java serialised map format. Rather than bothering following this, I skip a lot of it.
      Stream              BlockData        BlockDataTiny      BlockDataLong
 |--------------|     |---------------|  |---------------|  |---------------| 
 | U16 Magic    |     |>BlockDataTiny |  | TC_BLOCKDATA  |  | TC_BLOCKLONG  |
