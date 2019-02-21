@@ -78,11 +78,16 @@ ReturnCode Platform_StartProcess(const String* path, const String* args);
 ReturnCode Platform_StartOpen(const String* args);
 /* Marks a file as being executable. */
 ReturnCode Platform_MarkExecutable(const String* path);
+
 /* Attempts to load a native dynamic library from the given path. */
 CC_API ReturnCode Platform_LoadLibrary(const String* path, void** lib);
 /* Attempts to get the address of the symbol in the given dynamic library. */
 /* NOTE: Do NOT use this to load OpenGL functions, use GLContext_GetAddress. */
 CC_API ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol);
+/* Simple wrapper for Platform_LoadLibrary then Platform_GetSymbol. */
+/* NOTE: This should ONLY be used for dynamically loading platform-specific symbols. */
+/* (e.g. functionality that only exists on recent operating system versions) */
+void* Platform_GetSymbolFrom(const char* filename, const char* name);
 
 /* Allocates a block of memory, with undetermined contents. Exits process on allocation failure. */
 CC_API void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place);

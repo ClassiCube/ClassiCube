@@ -1292,9 +1292,7 @@ static void Font_Init(void) {
 
 	err = FT_New_Library(&ft_mem, &ft_lib);
 	if (err) Logger_Abort2(err, "Failed to init freetype");
-
 	FT_Add_Default_Modules(ft_lib);
-	FT_Set_Default_Properties(ft_lib);
 
 	if (!File_Exists(&cachePath)) {
 		Window_ShowDialog("One time load", "Initialising font cache, this can take several seconds.");
@@ -1779,6 +1777,200 @@ ReturnCode Audio_StopAndFree(AudioHandle handle) {
 
 
 /*########################################################################################################################*
+*-----------------------------------------------------Process/Module------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_WIN
+ReturnCode Platform_GetExePath(String* path) {
+	TCHAR chars[FILENAME_SIZE + 1];
+	DWORD len = GetModuleFileName(NULL, chars, FILENAME_SIZE);
+	if (!len) return GetLastError();
+
+#ifdef UNICODE
+	Convert_DecodeUtf16(path, chars, len * 2);
+#else
+	Convert_DecodeAscii(path, chars, len);
+#endif
+	return 0;
+}
+
+ReturnCode Platform_StartProcess(const String* path, const String* args) {
+	String file, argv; char argvBuffer[300];
+	TCHAR str[300], raw[300];
+	STARTUPINFO si = { 0 };
+	PROCESS_INFORMATION pi = { 0 };
+	BOOL ok;
+
+	file = *path; Utils_UNSAFE_GetFilename(&file);
+	String_InitArray(argv, argvBuffer);
+	String_Format2(&argv, "\"%s\" %s", &file, args);
+	Platform_ConvertString(str, path);
+	Platform_ConvertString(raw, &argv);
+
+	si.cb = sizeof(STARTUPINFO);
+	ok    = CreateProcess(str, raw, NULL, NULL, false, 0, NULL, NULL, &si, &pi);
+	if (!ok) return GetLastError();
+
+	/* Don't leak memory for proess return code */
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+	return 0;
+}
+
+ReturnCode Platform_StartOpen(const String* args) {
+	TCHAR str[300];
+	HINSTANCE instance;
+	Platform_ConvertString(str, args);
+	instance = ShellExecute(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
+	return instance > 32 ? 0 : (ReturnCode)instance;
+}
+/* Don't need special execute permission on windows */
+ReturnCode Platform_MarkExecutable(const String* path) { return 0; }
+
+ReturnCode Platform_LoadLibrary(const String* path, void** lib) {
+	TCHAR str[300];
+	Platform_ConvertString(str, path);
+	*lib = LoadLibrary(str);
+	return *lib ? 0 : GetLastError();
+}
+
+ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol) {
+	*symbol = GetProcAddress(lib, name);
+	return *symbol ? 0 : GetLastError();
+}
+#endif
+#ifdef CC_BUILD_POSIX
+ReturnCode Platform_StartProcess(const String* path, const String* args) {
+	char str[600], raw[600];
+	pid_t pid;
+	int i, j;
+	Platform_ConvertString(str, path);
+	Platform_ConvertString(raw, args);
+
+	pid = fork();
+	if (pid == -1) return errno;
+
+	if (pid == 0) {
+		/* Executed in child process */
+		char* argv[15];
+		argv[0] = str; argv[1] = raw;
+
+		/* need to null-terminate multiple arguments */
+		for (i = 0, j = 2; raw[i] && i < Array_Elems(raw); i++) {
+			if (raw[i] != ' ') continue;
+
+			/* null terminate previous argument */
+			raw[i]    = '\0';
+			argv[j++] = &raw[i + 1];
+		}
+		argv[j] = NULL;
+
+		execvp(str, argv);
+		_exit(127); /* "command not found" */
+	} else {
+		/* Executed in parent process */
+		/* We do nothing here.. */
+		return 0;
+	}
+}
+
+ReturnCode Platform_MarkExecutable(const String* path) {
+	char str[600];
+	struct stat st;
+	Platform_ConvertString(str, path);
+
+	if (stat(str, &st) == -1) return errno;
+	st.st_mode |= S_IXUSR;
+	return chmod(str, st.st_mode) == -1 ? errno : 0;
+}
+
+ReturnCode Platform_LoadLibrary(const String* path, void** lib) {
+	char str[600];
+	Platform_ConvertString(str, path);
+	*lib = dlopen(str, RTLD_NOW);
+	return *lib == NULL;
+}
+
+ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol) {
+	*symbol = dlsym(lib, name);
+	return *symbol == NULL; /* dlerror would be proper, but eh */
+}
+#endif
+#if defined CC_BUILD_LINUX || defined CC_BUILD_BSD || defined CC_BUILD_SOLARIS
+ReturnCode Platform_StartOpen(const String* args) {
+	/* TODO: Can this also be used on solaris, or is it just an OpenIndiana thing */
+	const static String path = String_FromConst("xdg-open");
+	return Platform_StartProcess(&path, args);
+}
+#endif
+#ifdef CC_BUILD_LINUX
+ReturnCode Platform_GetExePath(String* path) {
+	char str[600];
+	int len = readlink("/proc/self/exe", str, 600);
+	if (len == -1) return errno;
+
+	Convert_DecodeUtf8(path, str, len);
+	return 0;
+}
+#endif
+#ifdef CC_BUILD_BSD
+ReturnCode Platform_GetExePath(String* path) {
+	char str[600];
+	int mib[4];
+	size_t size = 600;
+
+	mib[0] = CTL_KERN;
+	mib[1] = KERN_PROC;
+	mib[2] = KERN_PROC_PATHNAME;
+	mib[3] = -1; /* self process id */
+
+	if (sysctl(mib, 4, str, &size, NULL, 0) == -1) return errno;
+
+	size = String_CalcLen(str, 600);
+	Convert_DecodeUtf8(path, str, size);
+	return 0;
+}
+#endif
+#ifdef CC_BUILD_SOLARIS
+ReturnCode Platform_GetExePath(String* path) {
+	char str[600];
+	int len = readlink("/proc/self/path/a.out", str, 600);
+	if (len == -1) return errno;
+
+	Convert_DecodeUtf8(path, str, len);
+	return 0;
+}
+#endif
+#ifdef CC_BUILD_OSX
+ReturnCode Platform_StartOpen(const String* args) {
+	const static String path = String_FromConst("/usr/bin/open");
+	return Platform_StartProcess(&path, args);
+}
+ReturnCode Platform_GetExePath(String* path) {
+	char str[600];
+	int len = 600;
+
+	if (_NSGetExecutablePath(str, &len) != 0) return ReturnCode_InvalidArg;
+	Convert_DecodeUtf8(path, str, len);
+	return 0;
+}
+#endif
+
+void* Platform_GetSymbolFrom(const char* filename, const char* name) {
+	void* symbol;
+	void* lib;
+	String path;
+	ReturnCode res;
+
+	path = String_FromReadonly(filename);
+	res = Platform_LoadLibrary(&path, &lib);
+	if (res) return NULL;
+
+	res = Platform_GetSymbol(lib, name, &symbol);
+	return res ? NULL : symbol;
+}
+
+
+/*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WIN
@@ -1912,71 +2104,6 @@ ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* de
 	LocalFree(dataOut.pbData);
 	return 0;
 }
-
-ReturnCode Platform_GetExePath(String* path) {
-	TCHAR chars[FILENAME_SIZE + 1];
-	DWORD len = GetModuleFileName(NULL, chars, FILENAME_SIZE);
-	if (!len) return GetLastError();
-
-#ifdef UNICODE
-	Convert_DecodeUtf16(path, chars, len * 2);
-#else
-	Convert_DecodeAscii(path, chars, len);
-#endif
-	return 0;
-}
-
-ReturnCode Platform_StartProcess(const String* path, const String* args) {
-	String file, argv; char argvBuffer[300];
-	TCHAR str[300], raw[300];
-	STARTUPINFO si = { 0 };
-	PROCESS_INFORMATION pi = { 0 };
-	BOOL ok;
-
-	file = *path; Utils_UNSAFE_GetFilename(&file);
-	String_InitArray(argv, argvBuffer);
-	String_Format2(&argv, "\"%s\" %s", &file, args);
-	Platform_ConvertString(str, path);
-	Platform_ConvertString(raw, &argv);
-
-	si.cb = sizeof(STARTUPINFO);
-	ok    = CreateProcess(str, raw, NULL, NULL, false, 0, NULL, NULL, &si, &pi);
-	if (!ok) return GetLastError();
-
-	/* Don't leak memory for proess return code */
-	CloseHandle(pi.hProcess);
-	CloseHandle(pi.hThread);
-	return 0;
-}
-
-ReturnCode Platform_StartOpen(const String* args) {
-	TCHAR str[300];
-	HINSTANCE instance;
-	Platform_ConvertString(str, args);
-	instance = ShellExecute(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
-	return instance > 32 ? 0 : (ReturnCode)instance;
-}
-/* Don't need special execute permission on windows */
-ReturnCode Platform_MarkExecutable(const String* path) { return 0; }
-
-ReturnCode Platform_LoadLibrary(const String* path, void** lib) {
-	TCHAR str[300];
-	Platform_ConvertString(str, path);
-	*lib = LoadLibrary(str);
-	return *lib ? 0 : GetLastError();
-}
-
-ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol) {
-	*symbol = GetProcAddress(lib, name);
-	return *symbol ? 0 : GetLastError();
-}
-#else
-ReturnCode Platform_Encrypt(const uint8_t* data, int len, uint8_t** enc, int* encLen) {
-	return ReturnCode_NotSupported;
-}
-ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* decLen) {
-	return ReturnCode_NotSupported;
-}
 #endif
 #ifdef CC_BUILD_POSIX
 int Platform_ConvertString(void* data, const String* src) {
@@ -2025,60 +2152,11 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 	return count;
 }
 
-ReturnCode Platform_StartProcess(const String* path, const String* args) {
-	char str[600], raw[600];
-	pid_t pid;
-	int i, j;
-	Platform_ConvertString(str, path);
-	Platform_ConvertString(raw, args);
-
-	pid = fork();
-	if (pid == -1) return errno;
-
-	if (pid == 0) {
-		/* Executed in child process */
-		char* argv[15];
-		argv[0] = str; argv[1] = raw;
-
-		/* need to null-terminate multiple arguments */
-		for (i = 0, j = 2; raw[i] && i < Array_Elems(raw); i++) {
-			if (raw[i] != ' ') continue;
-
-			/* null terminate previous argument */
-			raw[i]    = '\0';
-			argv[j++] = &raw[i + 1];
-		}
-		argv[j] = NULL;
-
-		execvp(str, argv);
-		_exit(127); /* "command not found" */
-	} else {
-		/* Executed in parent process */
-		/* We do nothing here.. */
-		return 0;
-	}
+ReturnCode Platform_Encrypt(const uint8_t* data, int len, uint8_t** enc, int* encLen) {
+	return ReturnCode_NotSupported;
 }
-
-ReturnCode Platform_MarkExecutable(const String* path) {
-	char str[600];
-	struct stat st;
-	Platform_ConvertString(str, path);
-
-	if (stat(str, &st) == -1) return errno;
-	st.st_mode |= S_IXUSR;
-	return chmod(str, st.st_mode) == -1 ? errno : 0;
-}
-
-ReturnCode Platform_LoadLibrary(const String* path, void** lib) {
-	char str[600];
-	Platform_ConvertString(str, path);
-	*lib = dlopen(str, RTLD_NOW);
-	return *lib == NULL;
-}
-
-ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol) {
-	*symbol = dlsym(lib, name);
-	return *symbol == NULL; /* dlerror would be proper, but eh */
+ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* decLen) {
+	return ReturnCode_NotSupported;
 }
 #endif
 #ifdef CC_BUILD_X11
@@ -2099,70 +2177,13 @@ static void Platform_InitDisplay(void) {
 }
 #endif
 #if defined CC_BUILD_LINUX || defined CC_BUILD_BSD || defined CC_BUILD_SOLARIS
-ReturnCode Platform_StartOpen(const String* args) {
-	/* TODO: Can this also be used on solaris, or is it just an OpenIndiana thing */
-	const static String path = String_FromConst("xdg-open");
-	return Platform_StartProcess(&path, args);
-}
-
 void Platform_Init(void) {
 	Platform_InitCommon();
 	/* stopwatch always in nanoseconds */
 	sw_freqDiv = 1000; 
 }
 #endif
-#ifdef CC_BUILD_LINUX
-ReturnCode Platform_GetExePath(String* path) {
-	char str[600];
-	int len = readlink("/proc/self/exe", str, 600);
-	if (len == -1) return errno;
-
-	Convert_DecodeUtf8(path, str, len);
-	return 0;
-}
-#endif
-#ifdef CC_BUILD_BSD
-ReturnCode Platform_GetExePath(String* path) {
-	char str[600];
-	int mib[4];
-	size_t size = 600;
-
-	mib[0] = CTL_KERN;
-	mib[1] = KERN_PROC;
-	mib[2] = KERN_PROC_PATHNAME;
-	mib[3] = -1; /* self process id */
-
-	if (sysctl(mib, 4, str, &size, NULL, 0) == -1) return errno;
-
-	size = String_CalcLen(str, 600);
-	Convert_DecodeUtf8(path, str, size);
-	return 0;
-}
-#endif
-#ifdef CC_BUILD_SOLARIS
-ReturnCode Platform_GetExePath(String* path) {
-	char str[600];
-	int len = readlink("/proc/self/path/a.out", str, 600);
-	if (len == -1) return errno;
-
-	Convert_DecodeUtf8(path, str, len);
-	return 0;
-}
-#endif
 #ifdef CC_BUILD_OSX
-ReturnCode Platform_StartOpen(const String* args) {
-	const static String path = String_FromConst("/usr/bin/open");
-	return Platform_StartProcess(&path, args);
-}
-ReturnCode Platform_GetExePath(String* path) {
-	char str[600];
-	int len = 600;
-
-	if (_NSGetExecutablePath(str, &len) != 0) return ReturnCode_InvalidArg;
-	Convert_DecodeUtf8(path, str, len);
-	return 0;
-}
-
 static void Platform_InitDisplay(void) {
 	CGDirectDisplayID display = CGMainDisplayID();
 	CGRect bounds = CGDisplayBounds(display);
