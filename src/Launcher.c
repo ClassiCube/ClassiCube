@@ -605,7 +605,7 @@ static void Launcher_ApplyUpdate(void) {
 #else
 	const static String scriptPath = String_FromConst("update.sh");
 	const static String scriptName = String_FromConst("xterm");
-	const static String scriptArgs = String_FromConst("./update.sh");
+	const static String scriptArgs = String_FromConst("-e ./update.sh");
 #endif
 	char strBuffer[1024], exeBuffer[FILENAME_SIZE];
 	String str, exe;

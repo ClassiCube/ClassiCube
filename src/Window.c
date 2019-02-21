@@ -50,7 +50,6 @@ static HINSTANCE win_instance;
 static HWND win_handle;
 static HDC win_DC;
 static int win_state;
-static bool invisible_since_creation; /* Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront) */
 static int suppress_resize; /* Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events */
 static Rect2D prev_bounds; /* Used to restore previous size when leaving fullscreen mode */
 
@@ -221,7 +220,6 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		}
 	} break;
 
-
 	case WM_CHAR:
 		if (Convert_TryUnicodeToCP437((Codepoint)wParam, &keyChar)) {
 			Event_RaiseInt(&KeyEvents.Press, keyChar);
@@ -243,26 +241,21 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		return 0;
 
 	case WM_LBUTTONDOWN:
-		Mouse_SetPressed(MOUSE_LEFT,   true);
-		break;
+		Mouse_SetPressed(MOUSE_LEFT,   true); break;
 	case WM_MBUTTONDOWN:
-		Mouse_SetPressed(MOUSE_MIDDLE, true);
-		break;
+		Mouse_SetPressed(MOUSE_MIDDLE, true); break;
 	case WM_RBUTTONDOWN:
-		Mouse_SetPressed(MOUSE_RIGHT,  true);
-		break;
+		Mouse_SetPressed(MOUSE_RIGHT,  true); break;
 	case WM_XBUTTONDOWN:
 		Key_SetPressed(HIWORD(wParam) == 1 ? KEY_XBUTTON1 : KEY_XBUTTON2, true);
 		break;
+
 	case WM_LBUTTONUP:
-		Mouse_SetPressed(MOUSE_LEFT,   false);
-		break;
+		Mouse_SetPressed(MOUSE_LEFT,   false); break;
 	case WM_MBUTTONUP:
-		Mouse_SetPressed(MOUSE_MIDDLE, false);
-		break;
+		Mouse_SetPressed(MOUSE_MIDDLE, false); break;
 	case WM_RBUTTONUP:
-		Mouse_SetPressed(MOUSE_RIGHT,  false);
-		break;
+		Mouse_SetPressed(MOUSE_RIGHT,  false); break;
 	case WM_XBUTTONUP:
 		Key_SetPressed(HIWORD(wParam) == 1 ? KEY_XBUTTON1 : KEY_XBUTTON2, false);
 		break;
@@ -323,10 +316,6 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	case WM_KILLFOCUS:
 		/* TODO: Keep track of keyboard when focus is lost */
 		Key_Clear();
-		break;
-
-	case WM_CREATE:
-		invisible_since_creation = true;
 		break;
 
 	case WM_CLOSE:
@@ -473,10 +462,8 @@ bool Window_GetVisible(void) { return IsWindowVisible(win_handle); }
 void Window_SetVisible(bool visible) {
 	if (visible) {
 		ShowWindow(win_handle, SW_SHOW);
-		if (invisible_since_creation) {
-			BringWindowToTop(win_handle);
-			SetForegroundWindow(win_handle);
-		}
+		BringWindowToTop(win_handle);
+		SetForegroundWindow(win_handle);
 	} else {
 		ShowWindow(win_handle, SW_HIDE);
 	}
