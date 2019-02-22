@@ -620,7 +620,7 @@ static void Launcher_ApplyUpdate(void) {
 	String_Format2(&str, UPDATE_SCRIPT, &exe, &exe);
 
 	/* Can't use WriteLine, want \n as actual newline not code page 437 */
-	res = Stream_WriteAllTo(&scriptPath, str.buffer, str.length);
+	res = Stream_WriteAllTo(&scriptPath, (const uint8_t*)str.buffer, str.length);
 	if (res) { Logger_Warn(res, "saving update script"); return; }
 
 	res = Platform_MarkExecutable(&scriptPath);

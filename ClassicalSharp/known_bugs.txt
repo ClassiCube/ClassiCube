@@ -1,0 +1,4 @@
+* Blocks over 256 are not saved or loaded at all.
+* Custom block information for blocks over 256 is not saved or loaded at all.
+* /hold 0 prevents you deleting blocks until you change to another.
+* Sometimes when holding air and your own model is a block model, you crash.
