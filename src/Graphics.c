@@ -973,7 +973,7 @@ void Gfx_OnWindowResize(void) {
 /* The OpenGL backend is a bit verbose, since it's really 3 backends in one:
  * - OpenGL 1.1 (completely lacking GPU, fallbacks to say Windows built-in software rasteriser)
  * - OpenGL 1.5 or OpenGL 1.2 + GL_ARB_vertex_buffer_object (default desktop backend)
- * - OpenGL ES 2.0 (alternative modern-ish backend)
+ * - OpenGL 2.0 (alternative modern-ish backend)
 */
 #ifndef CC_BUILD_D3D9
 #ifdef CC_BUILD_WIN

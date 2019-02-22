@@ -1984,8 +1984,6 @@ static void Window_ConnectEvents(void) {
 		{ kEventClassMouse, kEventMouseUp },
 		{ kEventClassMouse, kEventMouseMoved },
 		{ kEventClassMouse, kEventMouseDragged },
-		{ kEventClassMouse, kEventMouseEntered},
-		{ kEventClassMouse, kEventMouseExited },
 		{ kEventClassMouse, kEventMouseWheelMoved },
 		
 		{ kEventClassKeyboard, kEventRawKeyDown },
@@ -2761,7 +2759,7 @@ void Window_ProcessEvents(void) {
 			Event_RaiseVoid(&WindowEvents.Closing);
 
 			SDL_DestroyWindow(win_handle);
-			Event_RaiseVoid(&WindowEvents.Closed);
+			Event_RaiseVoid(&WindowEvents.Destroyed);
 			break;
 		}
 	}
