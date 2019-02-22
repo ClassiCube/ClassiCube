@@ -195,7 +195,7 @@ static BitmapCol Gfx_Average(BitmapCol p1, BitmapCol p2) {
 	uint32_t b2, g2, r2;
 	BitmapCol ave;
 
-	a1 = p1.A; a2 = p2.A; 
+	a1 = p1.A; a2 = p2.A;
 	aSum = (a1 + a2);
 	aSum = aSum > 0 ? aSum : 1; /* avoid divide by 0 below */
 
@@ -392,7 +392,7 @@ void Gfx_Init(void) {
 	Gfx_InitDefaultResources();
 }
 
-void Gfx_Free(void) { 
+void Gfx_Free(void) {
 	Gfx_FreeDefaultResources();
 	D3D9_FreeResource(&device);
 	D3D9_FreeResource(&d3d);
@@ -431,7 +431,7 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bi
 
 	for (yy = 0; yy < bmp->Height; yy++) {
 		Mem_Copy(dst, src, stride);
-		src += stride; 
+		src += stride;
 		dst += rect.Pitch;
 	}
 
@@ -448,8 +448,8 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp
 	int lvl, width = bmp->Width, height = bmp->Height;
 
 	for (lvl = 1; lvl <= lvls; lvl++) {
-		x /= 2; y /= 2; 
-		if (width > 1)   width /= 2; 
+		x /= 2; y /= 2;
+		if (width > 1)   width /= 2;
 		if (height > 1) height /= 2;
 
 		cur = Mem_Alloc(width * height, 4, "mipmaps");
@@ -479,7 +479,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 	}
 
 	if (managedPool) {
-		res = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels, 
+		res = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels,
 			0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &tex, NULL);
 		if (res) Logger_Abort2(res, "D3D9_CreateTexture");
 
@@ -487,14 +487,14 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 		if (mipmaps) D3D9_DoMipmaps(tex, 0, 0, bmp, false);
 	} else {
 		IDirect3DTexture9* sys;
-		res = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels, 
+		res = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels,
 			0, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &sys, NULL);
 		if (res) Logger_Abort2(res, "D3D9_CreateTexture - SystemMem");
 
 		D3D9_SetTextureData(sys, bmp, 0);
 		if (mipmaps) D3D9_DoMipmaps(sys, 0, 0, bmp, false);
 
-		res = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels, 
+		res = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels,
 			0, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &tex, NULL);
 		if (res) Logger_Abort2(res, "D3D9_CreateTexture - GPU");
 
@@ -871,7 +871,7 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 	D3DLOCKED_RECT rect;
 	res = IDirect3DSurface9_LockRect(temp, &rect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
 	if (res) goto finished;
-	{		
+	{
 		Bitmap_Init(bmp, width, height, rect.pBits);
 		res = Png_Encode(&bmp, output, NULL, false);
 		if (res) { IDirect3DSurface9_UnlockRect(temp); goto finished; }
@@ -970,6 +970,11 @@ void Gfx_OnWindowResize(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------OpenGL---------------------------------------------------------*
 *#########################################################################################################################*/
+/* The OpenGL backend is a bit verbose, since it's really 3 backends in one:
+ * - OpenGL 1.1 (completely lacking GPU, fallbacks to say Windows built-in software rasteriser)
+ * - OpenGL 1.5 or OpenGL 1.2 + GL_ARB_vertex_buffer_object (default desktop backend)
+ * - OpenGL ES 2.0 (alternative modern-ish backend)
+*/
 #ifndef CC_BUILD_D3D9
 #ifdef CC_BUILD_WIN
 #include <windows.h>
@@ -981,20 +986,23 @@ void Gfx_OnWindowResize(void) {
 #include <GL/gl.h>
 #endif
 
-/* Extensions from later than OpenGL 1.1 */
-#define GL_TEXTURE_MAX_LEVEL    0x813D
-#define GL_ARRAY_BUFFER         0x8892
-#define GL_ELEMENT_ARRAY_BUFFER 0x8893
-#define GL_STATIC_DRAW          0x88E4
-#define GL_DYNAMIC_DRAW         0x88E8
-#define GL_BGRA_EXT             0x80E1
-
 #ifdef CC_BUILD_GL11
 static GfxResourceID gl_activeList;
 #define gl_DYNAMICLISTID 1234567891
 static void* gl_dynamicListData;
+#elif CC_BUILD_GLMODERN
+#define _glBindBuffer(t,b)        glBindBuffer(t,b)
+#define _glDeleteBuffers(n,b)     glDeleteBuffers(n,b)
+#define _glGenBuffers(n,b)        glGenBuffers(n,b)
+#define _glBufferData(t,s,d,u)    glBufferData(t,s,d,u)
+#define _glBufferSubData(t,o,s,d) glBufferSubData(t,o,s,d)
 #else
-/* Weak linked on OSX, so we don't need to use GetProcAddress */
+/* Not present in some gl.h which only have up to OpenGL 1.1 */
+#define GL_ARRAY_BUFFER         0x8892
+#define GL_ELEMENT_ARRAY_BUFFER 0x8893
+#define GL_STATIC_DRAW          0x88E4
+#define GL_DYNAMIC_DRAW         0x88E8
+
 typedef void (APIENTRY *FUNC_GLBINDBUFFER) (GLenum target, GLuint buffer);
 typedef void (APIENTRY *FUNC_GLDELETEBUFFERS) (GLsizei n, const GLuint *buffers);
 typedef void (APIENTRY *FUNC_GLGENBUFFERS) (GLsizei n, GLuint *buffers);
@@ -1007,41 +1015,17 @@ static FUNC_GLBUFFERDATA    _glBufferData;
 static FUNC_GLBUFFERSUBDATA _glBufferSubData;
 #endif
 
+#define GL_TEXTURE_MAX_LEVEL 0x813D
+#define GL_BGRA_EXT          0x80E1
 static int gl_compare[8] = { GL_ALWAYS, GL_NOTEQUAL, GL_NEVER, GL_LESS, GL_LEQUAL, GL_EQUAL, GL_GEQUAL, GL_GREATER };
+
 typedef void (*GL_SetupVBFunc)(void);
 typedef void (*GL_SetupVBRangeFunc)(int startVertex);
 static GL_SetupVBFunc gl_setupVBFunc;
 static GL_SetupVBRangeFunc gl_setupVBRangeFunc;
 
-#ifndef CC_BUILD_GL11
-static void GL_CheckVboSupport(void) {
-	const static String vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
-	String extensions = String_FromReadonly(glGetString(GL_EXTENSIONS));
-	String version    = String_FromReadonly(glGetString(GL_VERSION));
-
-	int major = (int)(version.buffer[0] - '0'); /* x.y. (and so forth) */
-	int minor = (int)(version.buffer[2] - '0');
-
-	/* Supported in core since 1.5 */
-	if (major > 1 || (major == 1 && minor >= 5)) {
-		_glBindBuffer    = (FUNC_GLBINDBUFFER)GLContext_GetAddress("glBindBuffer");
-		_glDeleteBuffers = (FUNC_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffers");
-		_glGenBuffers    = (FUNC_GLGENBUFFERS)GLContext_GetAddress("glGenBuffers");
-		_glBufferData    = (FUNC_GLBUFFERDATA)GLContext_GetAddress("glBufferData");
-		_glBufferSubData = (FUNC_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubData");
-	} else if (String_CaselessContains(&extensions, &vboExt)) {
-		_glBindBuffer    = (FUNC_GLBINDBUFFER)GLContext_GetAddress("glBindBufferARB");
-		_glDeleteBuffers = (FUNC_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffersARB");
-		_glGenBuffers    = (FUNC_GLGENBUFFERS)GLContext_GetAddress("glGenBuffersARB");
-		_glBufferData    = (FUNC_GLBUFFERDATA)GLContext_GetAddress("glBufferDataARB");
-		_glBufferSubData = (FUNC_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubDataARB");
-	} else {
-		Logger_Abort("Only OpenGL 1.1 supported.\n\n" \
-			"Compile the game with CC_BUILD_GL11, or ask on the classicube forums for it");
-	}
-}
-#endif
-
+static void GL_CheckSupport(void);
+static void GL_InitState(void);
 void Gfx_Init(void) {
 	struct GraphicsMode mode;
 	GraphicsMode_MakeDefault(&mode);
@@ -1051,15 +1035,9 @@ void Gfx_Init(void) {
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx.MaxTexWidth);
 	Gfx.MaxTexHeight = Gfx.MaxTexWidth;
 
-#ifndef CC_BUILD_GL11
-	Gfx.CustomMipmapsLevels = true;
-	GL_CheckVboSupport();
-#endif
+	GL_CheckSupport();
+	GL_InitState();
 	Gfx_InitDefaultResources();
-
-	glHint(GL_FOG_HINT, GL_NICEST);
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
 }
 
 void Gfx_Free(void) {
@@ -1142,7 +1120,6 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	*texId = GFX_NULL;
 }
 
-void Gfx_SetTexturing(bool enabled) { gl_Toggle(GL_TEXTURE_2D); }
 void Gfx_EnableMipmaps(void) { }
 void Gfx_DisableMipmaps(void) { }
 
@@ -1150,52 +1127,8 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol gl_lastFogCol;
-static float gl_lastFogEnd = -1, gl_lastFogDensity = -1;
-static int gl_lastFogMode = -1;
 static PackedCol gl_lastClearCol;
-
-void Gfx_SetFog(bool enabled) {
-	gfx_fogEnabled = enabled;
-	gl_Toggle(GL_FOG);
-}
-
-void Gfx_SetFogCol(PackedCol col) {
-	float rgba[4];
-	if (PackedCol_Equals(col, gl_lastFogCol)) return;
-
-	rgba[0] = col.R / 255.0f; rgba[1] = col.G / 255.0f;
-	rgba[2] = col.B / 255.0f; rgba[3] = col.A / 255.0f;
-
-	glFogfv(GL_FOG_COLOR, rgba);
-	gl_lastFogCol = col;
-}
-
-void Gfx_SetFogDensity(float value) {
-	if (value == gl_lastFogDensity) return;
-	glFogf(GL_FOG_DENSITY, value);
-	gl_lastFogDensity = value;
-}
-
-void Gfx_SetFogEnd(float value) {
-	if (value == gl_lastFogEnd) return;
-	glFogf(GL_FOG_END, value);
-	gl_lastFogEnd = value;
-}
-
-void Gfx_SetFogMode(FogFunc func) {
-	static GLint modes[3] = { GL_LINEAR, GL_EXP, GL_EXP2 };
-	if (func == gl_lastFogMode) return;
-
-	glFogi(GL_FOG_MODE, modes[func]);
-	gl_lastFogMode = func;
-}
-
 void Gfx_SetFaceCulling(bool enabled) { gl_Toggle(GL_CULL_FACE); }
-void Gfx_SetAlphaTest(bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
-void Gfx_SetAlphaTestFunc(CompareFunc func, float value) {
-	glAlphaFunc(gl_compare[func], value);
-}
 
 void Gfx_SetAlphaBlending(bool enabled) { gl_Toggle(GL_BLEND); }
 void Gfx_SetAlphaBlendFunc(BlendFunc srcFunc, BlendFunc dstFunc) {
@@ -1221,6 +1154,13 @@ void Gfx_SetDepthWrite(bool enabled) {
 void Gfx_SetDepthTest(bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
 void Gfx_SetDepthTestFunc(CompareFunc func) {
 	glDepthFunc(gl_compare[func]);
+}
+
+void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
+	Matrix_OrthographicOffCenter(matrix, 0.0f, width, height, 0.0f, -10000.0f, 10000.0f);
+}
+void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar, struct Matrix* matrix) {
+	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
 }
 
 
@@ -1256,8 +1196,8 @@ GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
 	return id;
 }
 
-void Gfx_BindVb(GfxResourceID vb) { glBindBuffer(GL_ARRAY_BUFFER, vb); }
-void Gfx_BindIb(GfxResourceID ib) { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib); }
+void Gfx_BindVb(GfxResourceID vb) { _glBindBuffer(GL_ARRAY_BUFFER, vb); }
+void Gfx_BindIb(GfxResourceID ib) { _glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib); }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	if (!vb || *vb == GFX_NULL) return;
@@ -1270,210 +1210,13 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 	_glDeleteBuffers(1, ib);
 	*ib = GFX_NULL;
 }
-#else
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) { return gl_DYNAMICLISTID;  }
-GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
-	/* We need to setup client state properly when building the list */
-	int curFormat = gfx_batchFormat, stride;
-	Gfx_SetVertexFormat(fmt);
 
-	GLuint list = glGenLists(1);
-	glNewList(list, GL_COMPILE);
-	count &= ~0x01; /* Need to get rid of the 1 extra element, see comment in chunk mesh builder for why */
-
-	uint16_t indices[GFX_MAX_INDICES];
-	Gfx_MakeIndices(indices, ICOUNT(count));
-	stride = gfx_strideSizes[fmt];
-
-	glVertexPointer(3, GL_FLOAT, stride, vertices);
-	glColorPointer(4, GL_UNSIGNED_BYTE, stride, (void*)((uint8_t*)vertices + 12));
-	if (fmt == VERTEX_FORMAT_P3FT2FC4B) {
-		glTexCoordPointer(2, GL_FLOAT, stride, (void*)((uint8_t*)vertices + 16));
-	}
-
-	glDrawElements(GL_TRIANGLES, ICOUNT(count), GL_UNSIGNED_SHORT, indices);
-	glEndList();
-	Gfx_SetVertexFormat(curFormat);
-	return list;
-}
-
-GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) { return GFX_NULL; }
-void Gfx_BindVb(GfxResourceID vb) { gl_activeList = vb; }
-void Gfx_BindIb(GfxResourceID ib) { }
-void Gfx_DeleteIb(GfxResourceID* ib) { }
-
-void Gfx_DeleteVb(GfxResourceID* vb) {
-	if (!vb || *vb == GFX_NULL) return;
-	if (*vb != gl_DYNAMICLISTID) glDeleteLists(*vb, 1);
-	*vb = GFX_NULL;
-}
-#endif
-
-void GL_SetupVbPos3fCol4b(void) {
-	glVertexPointer(3, GL_FLOAT,        sizeof(VertexP3fC4b), (void*)0);
-	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VertexP3fC4b), (void*)12);
-}
-
-void GL_SetupVbPos3fTex2fCol4b(void) {
-	glVertexPointer(3, GL_FLOAT,        sizeof(VertexP3fT2fC4b), (void*)0);
-	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VertexP3fT2fC4b), (void*)12);
-	glTexCoordPointer(2, GL_FLOAT,      sizeof(VertexP3fT2fC4b), (void*)16);
-}
-
-void GL_SetupVbPos3fCol4b_Range(int startVertex) {
-	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fC4b);
-	glVertexPointer(3, GL_FLOAT,          sizeof(VertexP3fC4b), (void*)(offset));
-	glColorPointer(4, GL_UNSIGNED_BYTE,   sizeof(VertexP3fC4b), (void*)(offset + 12));
-}
-
-void GL_SetupVbPos3fTex2fCol4b_Range(int startVertex) {
-	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fT2fC4b);
-	glVertexPointer(3,  GL_FLOAT,         sizeof(VertexP3fT2fC4b), (void*)(offset));
-	glColorPointer(4, GL_UNSIGNED_BYTE,   sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
-	glTexCoordPointer(2, GL_FLOAT,        sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
-}
-
-void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_batchFormat) return;
-
-	if (gfx_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	}
-	gfx_batchFormat = fmt;
-	gfx_batchStride = gfx_strideSizes[fmt];
-
-	if (fmt == VERTEX_FORMAT_P3FT2FC4B) {
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		gl_setupVBFunc      = GL_SetupVbPos3fTex2fCol4b;
-		gl_setupVBRangeFunc = GL_SetupVbPos3fTex2fCol4b_Range;
-	} else {
-		gl_setupVBFunc      = GL_SetupVbPos3fCol4b;
-		gl_setupVBRangeFunc = GL_SetupVbPos3fCol4b_Range;
-	}
-}
-
-#ifndef CC_BUILD_GL11
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	uint32_t size = vCount * gfx_batchStride;
 	_glBindBuffer(GL_ARRAY_BUFFER, vb);
 	_glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
 }
-
-void Gfx_DrawVb_Lines(int verticesCount) {
-	gl_setupVBFunc();
-	glDrawArrays(GL_LINES, 0, verticesCount);
-}
-
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	gl_setupVBRangeFunc(startVertex);
-	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
-}
-
-void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	gl_setupVBFunc();
-	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
-}
-
-void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
-	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fT2fC4b);
-	glVertexPointer(3, GL_FLOAT,        sizeof(VertexP3fT2fC4b), (void*)(offset));
-	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
-	glTexCoordPointer(2, GL_FLOAT,      sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
-	glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),   GL_UNSIGNED_SHORT, NULL);
-}
-#else
-void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	gl_activeList      = gl_DYNAMICLISTID;
-	gl_dynamicListData = vertices;
-}
-
-static void GL_V16(VertexP3fC4b v) {
-	glColor4ub(v.Col.R, v.Col.G, v.Col.B, v.Col.A);
-	glVertex3f(v.X, v.Y, v.Z);
-}
-
-static void GL_V24(VertexP3fT2fC4b v) {
-	glColor4ub(v.Col.R, v.Col.G, v.Col.B, v.Col.A);
-	glTexCoord2f(v.U, v.V);
-	glVertex3f(v.X, v.Y, v.Z);
-}
-
-static void GL_DrawDynamicTriangles(int verticesCount, int startVertex) {
-	int i;
-	glBegin(GL_TRIANGLES);
-	
-	if (gfx_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
-		VertexP3fT2fC4b* ptr = (VertexP3fT2fC4b*)gl_dynamicListData;
-		for (i = startVertex; i < startVertex + verticesCount; i += 4) {
-			GL_V24(ptr[i + 0]); GL_V24(ptr[i + 1]); GL_V24(ptr[i + 2]);
-			GL_V24(ptr[i + 2]); GL_V24(ptr[i + 3]); GL_V24(ptr[i + 0]);
-		}
-	} else {
-		VertexP3fC4b* ptr = (VertexP3fC4b*)gl_dynamicListData;
-		for (i = startVertex; i < startVertex + verticesCount; i += 4) {
-			GL_V16(ptr[i + 0]); GL_V16(ptr[i + 1]); GL_V16(ptr[i + 2]);
-			GL_V16(ptr[i + 2]); GL_V16(ptr[i + 3]); GL_V16(ptr[i + 0]);
-		}
-	}
-	glEnd();
-}
-
-void Gfx_DrawVb_Lines(int verticesCount) {
-	int i;
-	glBegin(GL_LINES);
-	
-	if (gfx_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
-		VertexP3fT2fC4b* ptr = (VertexP3fT2fC4b*)gl_dynamicListData;
-		for (i = 0; i < verticesCount; i += 2) { GL_V24(ptr[i + 0]); GL_V24(ptr[i + 1]); }
-	} else {
-		VertexP3fC4b* ptr = (VertexP3fC4b*)gl_dynamicListData;
-		for (i = 0; i < verticesCount; i += 2) { GL_V16(ptr[i + 0]); GL_V16(ptr[i + 1]); }
-	}
-	glEnd();
-}
-
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	if (gl_activeList != gl_DYNAMICLISTID) { glCallList(gl_activeList); } 
-	else { GL_DrawDynamicTriangles(verticesCount, startVertex); }
-}
-
-void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	if (gl_activeList != gl_DYNAMICLISTID) { glCallList(gl_activeList); } 
-	else { GL_DrawDynamicTriangles(verticesCount, 0); }
-}
-
-static GfxResourceID gl_lastPartialList;
-void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
-	/* TODO: This renders the whole map, bad performance!! FIX FIX */
-	if (gl_activeList == gl_lastPartialList) return;
-	glCallList(gl_activeList);
-	gl_lastPartialList = gl_activeList;
-}
 #endif
-
-
-/*########################################################################################################################*
-*---------------------------------------------------------Matrices--------------------------------------------------------*
-*#########################################################################################################################*/
-static GLenum matrix_modes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
-static int lastMatrix;
-
-void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
-	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
-	glLoadMatrixf((float*)matrix); 
-}
-
-void Gfx_LoadIdentityMatrix(MatrixType type) {
-	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
-	glLoadIdentity(); 
-}
-
-void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
-	Matrix_OrthographicOffCenter(matrix, 0.0f, width, height, 0.0f, -10000.0f, 10000.0f);
-}
-void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar, struct Matrix* matrix) {
-	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
-}
 
 
 /*########################################################################################################################*
@@ -1495,7 +1238,7 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 static bool nv_mem;
 void Gfx_MakeApiInfo(void) {
 	const static String memExt = String_FromConst("GL_NVX_gpu_memory_info");
-	String extensions = String_FromReadonly(glGetString(GL_EXTENSIONS));	
+	String extensions = String_FromReadonly(glGetString(GL_EXTENSIONS));
 	int depthBits, pointerSize = sizeof(void*) * 8;
 
 	nv_mem = String_CaselessContains(&extensions, &memExt);
@@ -1554,13 +1297,419 @@ void Gfx_Clear(void) {
 
 void Gfx_EndFrame(void) {
 	GLContext_SwapBuffers();
-#ifdef CC_BUILD_GL11
-	gl_activeList = NULL;
-#endif
 }
 
 void Gfx_OnWindowResize(void) {
 	glViewport(0, 0, Game.Width, Game.Height);
 	GLContext_Update();
 }
+
+/*########################################################################################################################*
+*------------------------------------------------------OpenGL modern------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_GLMODERN
+static GLuint GL_CompileShader(GLenum type, const char* src) {
+    GLint temp;
+    GLuint shader = glCreateShader(type);
+    if (!shader) Logger_Abort("Failed to create shader");
+
+    glShaderSource(shader, 1, &src, NULL);
+    glCompileShader(shader);
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &temp);
+
+    if (temp) return shader;
+	temp = 0;
+	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &temp);
+
+	if (temp > 1) {
+		char logInfo[2048];
+		glGetShaderInfoLog(shader, 2047, NULL, logInfo);
+
+		logInfo[2047] = '\0';
+		Platform_LogConst(logInfo);
+	}
+	Logger_Abort("Failed to compile shader");
+	return 0;
+}
+
+static GLuint GL_CompileProgram(const char* vShaderSrc, const char* fShaderSrc) {
+    GLuint vertex, fragment, program;
+    GLint temp;
+
+    vertex   = GL_CompileShader(GL_VERTEX_SHADER,   vShaderSrc);
+    fragment = GL_CompileShader(GL_FRAGMENT_SHADER, fShaderSrc);
+    program  = glCreateProgram();
+    if (!program) Logger_Abort("Failed to create program");
+
+    glAttachShader(program, vertex);
+    glAttachShader(program, fragment);
+    glLinkProgram(program);
+    glGetProgramiv(program, GL_LINK_STATUS, &temp);
+
+    if (temp) {
+		glDetachShader(program, vertex);
+		glDetachShader(program, fragment);
+
+		glDeleteShader(vertex);
+		glDeleteShader(fragment);
+		return program;
+    }
+	temp = 0;
+	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &temp);
+
+    if (temp > 1) {
+		char logInfo[2048];
+		glGetProgramInfoLog(program, 2047, NULL, logInfo);
+
+		logInfo[2047] = '\0';
+		Platform_LogConst(logInfo);
+	}
+	Logger_Abort("Failed to compile program");
+	return program;
+}
+
+void Gfx_SetFog(bool enabled) { }
+void Gfx_SetFogCol(PackedCol col) { }
+void Gfx_SetFogDensity(float value) { }
+void Gfx_SetFogEnd(float value) { }
+void Gfx_SetFogMode(FogFunc func) { }
+
+void Gfx_SetTexturing(bool enabled) { }
+void Gfx_SetAlphaTest(bool enabled) { }
+void Gfx_SetAlphaTestFunc(CompareFunc func, float refValue) { }
+
+static struct Matrix view, proj;
+void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
+	if (type == MATRIX_VIEW)      view = *matrix;
+	if (type == MATRIX_PROJECTION) proj = *matrix;
+
+	struct Matrix mvp;
+	Matrix_Mul(&mvp, &view, &proj);
+	glUniformMatrix4fv(0, 1, false, &mvp);
+}
+void Gfx_LoadIdentityMatrix(MatrixType type) {
+	Gfx_LoadMatrix(type, &Matrix_Identity);
+}
+
+static void GL_CheckSupport(void) { }
+static void GL_InitState(void) {
+	GLuint prog = GL_CompileProgram(
+"attribute vec3 in_pos;\n"\
+"attribute vec4 in_col;\n"\
+"attribute vec2 in_uv;\n"\
+"varying vec4 out_col;\n"\
+"varying vec2 out_uv;\n"\
+"uniform mat4 mvp;\n"\
+"void main() {\n"\
+"   gl_Position = mvp * vec4(in_pos, 1.0);\n"\
+"   out_col = in_col;\n"\
+"   out_uv  = in_uv;\n"\
+"}",
+
+"precision highp float;\n"\
+"varying vec4 out_col;\n"\
+"varying vec2 out_uv;\n"\
+"uniform sampler2D texImage;\n"\
+"void main() {\n"\
+"   gl_FragColor = texture2D(texImage, out_uv) * out_col;\n"\
+"}");
+	glUseProgram(prog);
+}
+
+void Gfx_SetVertexFormat(VertexFormat fmt) { }
+void Gfx_DrawVb_Lines(int verticesCount) { }
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) { }
+void Gfx_DrawVb_IndexedTris(int verticesCount) { }
+
+void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+
+	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fT2fC4b);
+	//GL_APICALL void GL_APIENTRY glVertexAttribPointer (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)(offset));
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
+	glVertexAttribPointer(2, 2, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
+	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
+ }
+#endif
+
+
+/*########################################################################################################################*
+*------------------------------------------------------OpenGL legacy------------------------------------------------------*
+*#########################################################################################################################*/
+#ifndef CC_BUILD_GLMODERN
+static PackedCol gl_lastFogCol;
+static float gl_lastFogEnd = -1, gl_lastFogDensity = -1;
+static int gl_lastFogMode = -1;
+
+void Gfx_SetFog(bool enabled) {
+	gfx_fogEnabled = enabled;
+	gl_Toggle(GL_FOG);
+}
+
+void Gfx_SetFogCol(PackedCol col) {
+	float rgba[4];
+	if (PackedCol_Equals(col, gl_lastFogCol)) return;
+
+	rgba[0] = col.R / 255.0f; rgba[1] = col.G / 255.0f;
+	rgba[2] = col.B / 255.0f; rgba[3] = col.A / 255.0f;
+
+	glFogfv(GL_FOG_COLOR, rgba);
+	gl_lastFogCol = col;
+}
+
+void Gfx_SetFogDensity(float value) {
+	if (value == gl_lastFogDensity) return;
+	glFogf(GL_FOG_DENSITY, value);
+	gl_lastFogDensity = value;
+}
+
+void Gfx_SetFogEnd(float value) {
+	if (value == gl_lastFogEnd) return;
+	glFogf(GL_FOG_END, value);
+	gl_lastFogEnd = value;
+}
+
+void Gfx_SetFogMode(FogFunc func) {
+	static GLint modes[3] = { GL_LINEAR, GL_EXP, GL_EXP2 };
+	if (func == gl_lastFogMode) return;
+
+	glFogi(GL_FOG_MODE, modes[func]);
+	gl_lastFogMode = func;
+}
+
+void Gfx_SetTexturing(bool enabled) { gl_Toggle(GL_TEXTURE_2D); }
+void Gfx_SetAlphaTest(bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
+void Gfx_SetAlphaTestFunc(CompareFunc func, float value) {
+	glAlphaFunc(gl_compare[func], value);
+}
+
+static GLenum matrix_modes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
+static int lastMatrix;
+
+void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
+	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
+	glLoadMatrixf((float*)matrix);
+}
+
+void Gfx_LoadIdentityMatrix(MatrixType type) {
+	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
+	glLoadIdentity();
+}
+
+static void GL_InitState(void) {
+	glHint(GL_FOG_HINT, GL_NICEST);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------------Drawing--------------------------------------------------------*
+*#########################################################################################################################*/
+static void GL_SetupVbPos3fCol4b(void) {
+	glVertexPointer(3, GL_FLOAT,        sizeof(VertexP3fC4b), (void*)0);
+	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VertexP3fC4b), (void*)12);
+}
+
+static void GL_SetupVbPos3fTex2fCol4b(void) {
+	glVertexPointer(3, GL_FLOAT,        sizeof(VertexP3fT2fC4b), (void*)0);
+	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VertexP3fT2fC4b), (void*)12);
+	glTexCoordPointer(2, GL_FLOAT,      sizeof(VertexP3fT2fC4b), (void*)16);
+}
+
+static void GL_SetupVbPos3fCol4b_Range(int startVertex) {
+	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fC4b);
+	glVertexPointer(3, GL_FLOAT,          sizeof(VertexP3fC4b), (void*)(offset));
+	glColorPointer(4, GL_UNSIGNED_BYTE,   sizeof(VertexP3fC4b), (void*)(offset + 12));
+}
+
+static void GL_SetupVbPos3fTex2fCol4b_Range(int startVertex) {
+	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fT2fC4b);
+	glVertexPointer(3,  GL_FLOAT,         sizeof(VertexP3fT2fC4b), (void*)(offset));
+	glColorPointer(4, GL_UNSIGNED_BYTE,   sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
+	glTexCoordPointer(2, GL_FLOAT,        sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
+}
+
+void Gfx_SetVertexFormat(VertexFormat fmt) {
+	if (fmt == gfx_batchFormat) return;
+
+	if (gfx_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	}
+	gfx_batchFormat = fmt;
+	gfx_batchStride = gfx_strideSizes[fmt];
+
+	if (fmt == VERTEX_FORMAT_P3FT2FC4B) {
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		gl_setupVBFunc      = GL_SetupVbPos3fTex2fCol4b;
+		gl_setupVBRangeFunc = GL_SetupVbPos3fTex2fCol4b_Range;
+	} else {
+		gl_setupVBFunc      = GL_SetupVbPos3fCol4b;
+		gl_setupVBRangeFunc = GL_SetupVbPos3fCol4b_Range;
+	}
+}
+
+#ifndef CC_BUILD_GL11
+void Gfx_DrawVb_Lines(int verticesCount) {
+	gl_setupVBFunc();
+	glDrawArrays(GL_LINES, 0, verticesCount);
+}
+
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+	gl_setupVBRangeFunc(startVertex);
+	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
+}
+
+void Gfx_DrawVb_IndexedTris(int verticesCount) {
+	gl_setupVBFunc();
+	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
+}
+
+void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
+	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fT2fC4b);
+	glVertexPointer(3, GL_FLOAT,        sizeof(VertexP3fT2fC4b), (void*)(offset));
+	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
+	glTexCoordPointer(2, GL_FLOAT,      sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
+	glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),   GL_UNSIGNED_SHORT, NULL);
+}
+
+static void GL_CheckSupport(void) {
+	const static String vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
+	String extensions = String_FromReadonly(glGetString(GL_EXTENSIONS));
+	String version    = String_FromReadonly(glGetString(GL_VERSION));
+
+	int major = (int)(version.buffer[0] - '0'); /* x.y. (and so forth) */
+	int minor = (int)(version.buffer[2] - '0');
+
+	/* Supported in core since 1.5 */
+	if (major > 1 || (major == 1 && minor >= 5)) {
+		_glBindBuffer    = (FUNC_GLBINDBUFFER)GLContext_GetAddress("glBindBuffer");
+		_glDeleteBuffers = (FUNC_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffers");
+		_glGenBuffers    = (FUNC_GLGENBUFFERS)GLContext_GetAddress("glGenBuffers");
+		_glBufferData    = (FUNC_GLBUFFERDATA)GLContext_GetAddress("glBufferData");
+		_glBufferSubData = (FUNC_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubData");
+	} else if (String_CaselessContains(&extensions, &vboExt)) {
+		_glBindBuffer    = (FUNC_GLBINDBUFFER)GLContext_GetAddress("glBindBufferARB");
+		_glDeleteBuffers = (FUNC_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffersARB");
+		_glGenBuffers    = (FUNC_GLGENBUFFERS)GLContext_GetAddress("glGenBuffersARB");
+		_glBufferData    = (FUNC_GLBUFFERDATA)GLContext_GetAddress("glBufferDataARB");
+		_glBufferSubData = (FUNC_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubDataARB");
+	} else {
+		Logger_Abort("Only OpenGL 1.1 supported.\n\n" \
+			"Compile the game with CC_BUILD_GL11, or ask on the classicube forums for it");
+	}
+	Gfx.CustomMipmapsLevels = true;
+}
+#else
+GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) { return gl_DYNAMICLISTID;  }
+GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
+	/* We need to setup client state properly when building the list */
+	int curFormat = gfx_batchFormat, stride;
+	Gfx_SetVertexFormat(fmt);
+
+	GLuint list = glGenLists(1);
+	glNewList(list, GL_COMPILE);
+	count &= ~0x01; /* Need to get rid of the 1 extra element, see comment in chunk mesh builder for why */
+
+	uint16_t indices[GFX_MAX_INDICES];
+	Gfx_MakeIndices(indices, ICOUNT(count));
+	stride = gfx_strideSizes[fmt];
+
+	glVertexPointer(3, GL_FLOAT, stride, vertices);
+	glColorPointer(4, GL_UNSIGNED_BYTE, stride, (void*)((uint8_t*)vertices + 12));
+	if (fmt == VERTEX_FORMAT_P3FT2FC4B) {
+		glTexCoordPointer(2, GL_FLOAT, stride, (void*)((uint8_t*)vertices + 16));
+	}
+
+	glDrawElements(GL_TRIANGLES, ICOUNT(count), GL_UNSIGNED_SHORT, indices);
+	glEndList();
+	Gfx_SetVertexFormat(curFormat);
+	return list;
+}
+
+GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) { return GFX_NULL; }
+void Gfx_BindVb(GfxResourceID vb) { gl_activeList = vb; }
+void Gfx_BindIb(GfxResourceID ib) { }
+void Gfx_DeleteIb(GfxResourceID* ib) { }
+
+void Gfx_DeleteVb(GfxResourceID* vb) {
+	if (!vb || *vb == GFX_NULL) return;
+	if (*vb != gl_DYNAMICLISTID) glDeleteLists(*vb, 1);
+	*vb = GFX_NULL;
+}
+
+void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
+	gl_activeList      = gl_DYNAMICLISTID;
+	gl_dynamicListData = vertices;
+}
+
+static void GL_V16(VertexP3fC4b v) {
+	glColor4ub(v.Col.R, v.Col.G, v.Col.B, v.Col.A);
+	glVertex3f(v.X, v.Y, v.Z);
+}
+
+static void GL_V24(VertexP3fT2fC4b v) {
+	glColor4ub(v.Col.R, v.Col.G, v.Col.B, v.Col.A);
+	glTexCoord2f(v.U, v.V);
+	glVertex3f(v.X, v.Y, v.Z);
+}
+
+static void GL_DrawDynamicTriangles(int verticesCount, int startVertex) {
+	int i;
+	glBegin(GL_TRIANGLES);
+
+	if (gfx_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
+		VertexP3fT2fC4b* ptr = (VertexP3fT2fC4b*)gl_dynamicListData;
+		for (i = startVertex; i < startVertex + verticesCount; i += 4) {
+			GL_V24(ptr[i + 0]); GL_V24(ptr[i + 1]); GL_V24(ptr[i + 2]);
+			GL_V24(ptr[i + 2]); GL_V24(ptr[i + 3]); GL_V24(ptr[i + 0]);
+		}
+	} else {
+		VertexP3fC4b* ptr = (VertexP3fC4b*)gl_dynamicListData;
+		for (i = startVertex; i < startVertex + verticesCount; i += 4) {
+			GL_V16(ptr[i + 0]); GL_V16(ptr[i + 1]); GL_V16(ptr[i + 2]);
+			GL_V16(ptr[i + 2]); GL_V16(ptr[i + 3]); GL_V16(ptr[i + 0]);
+		}
+	}
+	glEnd();
+}
+
+void Gfx_DrawVb_Lines(int verticesCount) {
+	int i;
+	glBegin(GL_LINES);
+
+	if (gfx_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
+		VertexP3fT2fC4b* ptr = (VertexP3fT2fC4b*)gl_dynamicListData;
+		for (i = 0; i < verticesCount; i += 2) { GL_V24(ptr[i + 0]); GL_V24(ptr[i + 1]); }
+	} else {
+		VertexP3fC4b* ptr = (VertexP3fC4b*)gl_dynamicListData;
+		for (i = 0; i < verticesCount; i += 2) { GL_V16(ptr[i + 0]); GL_V16(ptr[i + 1]); }
+	}
+	glEnd();
+}
+
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+	if (gl_activeList != gl_DYNAMICLISTID) { glCallList(gl_activeList); }
+	else { GL_DrawDynamicTriangles(verticesCount, startVertex); }
+}
+
+void Gfx_DrawVb_IndexedTris(int verticesCount) {
+	if (gl_activeList != gl_DYNAMICLISTID) { glCallList(gl_activeList); }
+	else { GL_DrawDynamicTriangles(verticesCount, 0); }
+}
+
+static GfxResourceID gl_lastPartialList;
+void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
+	/* TODO: This renders the whole map, bad performance!! FIX FIX */
+	if (gl_activeList == gl_lastPartialList) return;
+	glCallList(gl_activeList);
+	gl_lastPartialList = gl_activeList;
+}
+
+static void GL_CheckSupport(void) { }
+#endif /* CC_BUILD_GL11 */
+#endif /* !CC_BUILD_GLMODERN */
 #endif
