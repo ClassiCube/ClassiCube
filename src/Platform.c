@@ -2153,6 +2153,8 @@ int Platform_ConvertString(void* data, const String* src) {
 
 static void Platform_InitCommon(void) {
 	signal(SIGCHLD, SIG_IGN);
+	/* So writing to closed socket doesn't raise SIGPIPE */
+	signal(SIGPIPE, SIG_IGN);
 	Platform_InitDisplay();
 	pthread_mutex_init(&audio_lock, NULL);
 }
