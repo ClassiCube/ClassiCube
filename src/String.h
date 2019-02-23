@@ -166,6 +166,7 @@ bool Convert_TryUnicodeToCP437(Codepoint cp, char* c);
 /* Returns 0 if not enough input data to read the character. */
 int Convert_Utf8ToUnicode(Codepoint* cp, const uint8_t* data, uint32_t len);
 /* Encodes a unicode character in UTF8, returning number of bytes written. */
+/* The number of bytes written is always either 1,2 or 3. */
 int Convert_UnicodeToUtf8(Codepoint cp, uint8_t* data);
 
 /* Attempts to append all characters from UTF16 encoded data to the given string. */

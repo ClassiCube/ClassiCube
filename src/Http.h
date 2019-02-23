@@ -55,6 +55,11 @@ void Http_AsyncPostData(const String* url, bool priority, const String* id, cons
 /* Also sets the If-Modified-Since and If-None-Match headers. (if not NULL)  */
 void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, TimeMS* lastModified, const String* etag);
 
+/* Encodes data using % or URL encoding. */
+void Http_UrlEncode(String* dst, const uint8_t* data, int len);
+/* Converts characters to UTF8, then calls Http_URlEncode on them. */
+void Http_UrlEncodeUtf8(String* dst, const String* src);
+
 /* Attempts to retrieve a fully completed request. */
 /* NOTE: You MUST also check Result/StatusCode, and check Size is > 0. */
 /* (because a completed request may not have completed successfully) */

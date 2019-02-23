@@ -741,6 +741,41 @@ static void Http_WorkerLoop(void) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Http misc---------------------------------------------------------*
+*#########################################################################################################################*/
+static bool Http_UrlDirect(uint8_t c) {
+	return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+		|| c == '-' || c == '_' || c == '.' || c == '~';
+}
+
+void Http_UrlEncode(String* dst, const uint8_t* data, int len) {
+	int i;
+	for (i = 0; i < len; i++) {
+		uint8_t c = data[i];
+
+		if (Http_UrlDirect(c)) {
+			String_Append(dst, c);
+		} else {
+			String_Append(dst,  '%');
+			String_AppendHex(dst, c);
+		}
+	}
+}
+
+void Http_UrlEncodeUtf8(String* dst, const String* src) {
+	uint8_t data[4];
+	Codepoint cp;
+	int i, len;
+
+	for (i = 0; i < src->length; i++) {
+		cp  = Convert_CP437ToUnicode(src->buffer[i]);
+		len = Convert_UnicodeToUtf8(cp, data);
+		Http_UrlEncode(dst, data, len);
+	}
+}
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------Http component------------------------------------------------------*
 *#########################################################################################################################*/
 static void Http_Init(void) {

@@ -626,7 +626,6 @@ static void Launcher_ApplyUpdate(void) {
 	res = Platform_MarkExecutable(&scriptPath);
 	if (res) Logger_Warn(res, "making update script executable");
 
-	/* TODO: (open -a Terminal ", '"' + path + '"'); on OSX */
 	res = Platform_StartProcess(&scriptName, &scriptArgs);
 	if (res) { Logger_Warn(res, "starting update script"); return; }
 }

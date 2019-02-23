@@ -107,6 +107,10 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #include <OpenAL/alc.h>
 #include <ApplicationServices/ApplicationServices.h>
 #endif
+#ifdef CC_BUILD_WEB
+#include <emscripten.h>
+#include <AL/al.h>
+#endif
 
 
 /*########################################################################################################################*
@@ -366,6 +370,12 @@ uint64_t Stopwatch_Measure(void) {
 #ifdef CC_BUILD_OSX
 uint64_t Stopwatch_Measure(void) {
 	return mach_absolute_time();
+}
+#endif
+#ifdef CC_BUILD_WEB
+uint64_t Stopwatch_Measure(void) {
+	/* time is a milliseconds double */
+	return (uint64_t)(emscripten_get_now() * 1000);
 }
 #endif
 
@@ -1954,6 +1964,13 @@ ReturnCode Platform_GetExePath(String* path) {
 	if (_NSGetExecutablePath(str, &len) != 0) return ReturnCode_InvalidArg;
 	Convert_DecodeUtf8(path, str, len);
 	return 0;
+}
+#endif
+#ifdef CC_BUILD_WEB
+ReturnCode Platform_StartOpen(const String* args) {
+	char str[600];
+	Platfrom_ConvetString(args, str);
+	EM_ASM_({ window.open(Pointer_stringify($0)); }, str);
 }
 #endif
 

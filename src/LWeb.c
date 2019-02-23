@@ -286,10 +286,15 @@ static void SignInTask_Handle(uint8_t* data, uint32_t len) {
 	Json_Handle(data, len, SignInTask_OnValue, NULL, NULL);
 }
 
+static void SignInTask_Append(String* dst, const char* key, const String* value) {
+	String_AppendConst(dst, key);
+	Http_UrlEncodeUtf8(dst, value);
+}
+
 void SignInTask_Run(const String* user, const String* pass) {
 	const static String id  = String_FromConst("CC post login");
 	const static String url = String_FromConst("https://www.classicube.net/api/login");
-	String tmp; char tmpBuffer[STRING_SIZE * 5];
+	String tmp; char tmpBuffer[STRING_SIZE * 6];
 	if (SignInTask.Base.Working) return;
 
 	LWebTask_Reset(&SignInTask.Base);
@@ -297,9 +302,9 @@ void SignInTask_Run(const String* user, const String* pass) {
 	SignInTask.Error.length = 0;
 
 	String_InitArray(tmp, tmpBuffer);
-	/* TODO: URL ENCODE THIS.. */
-	String_Format3(&tmp, "username=%s&password=%s&token=%s",
-					user, pass, &GetTokenTask.Token);
+	SignInTask_Append(&tmp, "username=",  user);
+	SignInTask_Append(&tmp, "&password=", pass);
+	SignInTask_Append(&tmp, "&token=",    &GetTokenTask.Token);
 
 	SignInTask.Base.Identifier = id;
 	Http_AsyncPostData(&url, false, &id, tmp.buffer, tmp.length);
