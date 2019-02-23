@@ -20,9 +20,14 @@
 
 #include <windows.h>
 #include <wininet.h>
-
 #define HTTP_QUERY_ETAG 54 /* Missing from some old MingW32 headers */
 #endif
+
+/* Can't use curl for the web */
+#ifdef CC_BUILD_WEB
+#undef CC_BUILD_POSIX
+#endif
+
 /* POSIX is mainly shared between Linux and OSX */
 #ifdef CC_BUILD_POSIX
 #include <curl/curl.h>
@@ -441,6 +446,14 @@ static void Http_SysFree(void) {
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
 }
+#endif
+#ifdef CC_BUILD_WEB
+/* TODO: Implement this backend */
+static void Http_SysInit(void) { }
+static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
+	return ReturnCode_NotSupported;
+}
+static void Http_SysFree(void) { }
 #endif
 
 

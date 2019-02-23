@@ -976,21 +976,22 @@ void Gfx_OnWindowResize(void) {
  * - OpenGL 2.0 (alternative modern-ish backend)
 */
 #ifndef CC_BUILD_D3D9
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 #include <windows.h>
-#endif
-
-#ifdef CC_BUILD_OSX
+#include <GL/gl.h>
+#elif defined CC_BUILD_OSX
 #include <OpenGL/gl.h>
+#elif defined CC_BUILD_GLMODERN
+#include <GLES2/gl2.h>
 #else
 #include <GL/gl.h>
 #endif
 
-#ifdef CC_BUILD_GL11
+#if defined CC_BUILD_GL11
 static GfxResourceID gl_activeList;
 #define gl_DYNAMICLISTID 1234567891
 static void* gl_dynamicListData;
-#elif CC_BUILD_GLMODERN
+#elif defined CC_BUILD_GLMODERN
 #define _glBindBuffer(t,b)        glBindBuffer(t,b)
 #define _glDeleteBuffers(n,b)     glDeleteBuffers(n,b)
 #define _glGenBuffers(n,b)        glGenBuffers(n,b)

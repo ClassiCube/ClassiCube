@@ -80,6 +80,9 @@ bool Widget_Contains(void* widget, int x, int y) {
 int Gui_CalcPos(uint8_t anchor, int offset, int size, int axisLen) {
 	if (anchor == ANCHOR_MIN) return offset;
 	if (anchor == ANCHOR_MAX) return axisLen - size - offset;
+
+	if (anchor == ANCHOR_CENTRE_MIN) return (axisLen / 2) + offset;
+	if (anchor == ANCHOR_CENTRE_MAX) return (axisLen / 2) - size - offset;
 	return (axisLen - size) / 2 + offset;
 }
 

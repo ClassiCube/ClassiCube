@@ -13,8 +13,8 @@
 *#########################################################################################################################*/
 
 #define DAYS_IN_400_YEARS 146097   /* (400*365) + 97 */
-static uint16_t DateTime_DaysTotal[13]     = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
-static uint16_t DateTime_DaysTotalLeap[13] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
+const static uint16_t daysTotal[13]     = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
+const static uint16_t daysTotalLeap[13] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
 
 static bool DateTime_IsLeapYear(int year) {
 	if ((year % 4)   != 0) return false;
@@ -30,7 +30,7 @@ int DateTime_TotalDays(const struct DateTime* time) {
 	days += (y / 4) - (y / 100) + (y / 400);
 
 	/* Add days of prior months in this year */
-	days += DateTime_DaysTotal[time->Month - 1];
+	days += daysTotal[time->Month - 1];
 	/* Add Feb 29, if this is a leap year, and day of point in time is after Feb 28 */
 	if (DateTime_IsLeapYear(time->Year) && time->Month > 2) days++;
 	/* Add days in this month */
@@ -63,7 +63,7 @@ void DateTime_FromTotalMs(struct DateTime* time, TimeMS ms) {
 	time->Hour   = dayMS % HOURS_PER_DAY;  dayMS /= HOURS_PER_DAY;
 
 	/* Then work out day/month/year component (inverse TotalDays operation) */
-	/* Probably not the most efficient way of doing this. But it passes my tests at */
+	/* Not the most efficient way of doing this. But it passes my tests at */
 	/* https://gist.github.com/UnknownShadow200/30993c66464bb03ead01577f3ab2a653 */
 	days = (int)(ms / MILLIS_PER_DAY);
 	year = 1 + ((days / DAYS_IN_400_YEARS) * 400); days %= DAYS_IN_400_YEARS;
@@ -77,7 +77,7 @@ void DateTime_FromTotalMs(struct DateTime* time, TimeMS ms) {
 	}
 
 	time->Year = year;
-	totalDays  = leap ? DateTime_DaysTotalLeap : DateTime_DaysTotal;
+	totalDays  = leap ? daysTotalLeap : daysTotal;
 
 	for (month = 1; month <= 12; month++) {
 		if (days >= totalDays[month]) continue;

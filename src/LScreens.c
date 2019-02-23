@@ -309,20 +309,19 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 
 static void ChooseModeScreen_Reposition(struct LScreen* s_) {
 	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;
-	int middle = Game.Width / 2;
 	LWidget_SetLocation(&s->LblTitle, ANCHOR_CENTRE, ANCHOR_CENTRE, 10, -135);
 
-	LWidget_SetLocation(&s->BtnEnhanced,    ANCHOR_MIN, ANCHOR_CENTRE, middle - 250, -72);
-	LWidget_SetLocation(&s->LblEnhanced[0], ANCHOR_MIN, ANCHOR_CENTRE, middle - 85,  -72 - 12);
-	LWidget_SetLocation(&s->LblEnhanced[1], ANCHOR_MIN, ANCHOR_CENTRE, middle - 85,  -72 + 12);
+	LWidget_SetLocation(&s->BtnEnhanced,    ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -250, -72);
+	LWidget_SetLocation(&s->LblEnhanced[0], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, -72 - 12);
+	LWidget_SetLocation(&s->LblEnhanced[1], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, -72 + 12);
 
-	LWidget_SetLocation(&s->BtnClassicHax,    ANCHOR_MIN, ANCHOR_CENTRE, middle - 250, 0);
-	LWidget_SetLocation(&s->LblClassicHax[0], ANCHOR_MIN, ANCHOR_CENTRE, middle - 85,  0 - 12);
-	LWidget_SetLocation(&s->LblClassicHax[1], ANCHOR_MIN, ANCHOR_CENTRE, middle - 85,  0 + 12);
+	LWidget_SetLocation(&s->BtnClassicHax,    ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -250, 0);
+	LWidget_SetLocation(&s->LblClassicHax[0], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, 0 - 12);
+	LWidget_SetLocation(&s->LblClassicHax[1], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, 0 + 12);
 
-	LWidget_SetLocation(&s->BtnClassic,    ANCHOR_MIN, ANCHOR_CENTRE, middle - 250, 72);
-	LWidget_SetLocation(&s->LblClassic[0], ANCHOR_MIN, ANCHOR_CENTRE, middle - 85,  72 - 12);
-	LWidget_SetLocation(&s->LblClassic[1], ANCHOR_MIN, ANCHOR_CENTRE, middle - 85,  72 + 12);
+	LWidget_SetLocation(&s->BtnClassic,    ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -250, 72);
+	LWidget_SetLocation(&s->LblClassic[0], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, 72 - 12);
+	LWidget_SetLocation(&s->LblClassic[1], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, 72 + 12);
 
 	LWidget_SetLocation(&s->LblHelp, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 160);
 	LWidget_SetLocation(&s->BtnBack, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
@@ -498,11 +497,11 @@ static void ColoursScreen_Reposition(struct LScreen* s_) {
 		LWidget_SetLocation(&s->IptColours[i*3 + 2], ANCHOR_CENTRE, ANCHOR_CENTRE, 160, y);
 	}
 
-	LWidget_SetLocation(&s->LblNames[0], ANCHOR_CENTRE, ANCHOR_CENTRE, -60, -100);
-	LWidget_SetLocation(&s->LblNames[1], ANCHOR_CENTRE, ANCHOR_CENTRE, -70,  -60);
-	LWidget_SetLocation(&s->LblNames[2], ANCHOR_CENTRE, ANCHOR_CENTRE, -80,  -20);
-	LWidget_SetLocation(&s->LblNames[3], ANCHOR_CENTRE, ANCHOR_CENTRE, -40,   20);
-	LWidget_SetLocation(&s->LblNames[4], ANCHOR_CENTRE, ANCHOR_CENTRE, -70,   60);
+	LWidget_SetLocation(&s->LblNames[0], ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 10, -100);
+	LWidget_SetLocation(&s->LblNames[1], ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 10,  -60);
+	LWidget_SetLocation(&s->LblNames[2], ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 10,  -20);
+	LWidget_SetLocation(&s->LblNames[3], ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 10,   20);
+	LWidget_SetLocation(&s->LblNames[4], ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 10,   60);
 
 	LWidget_SetLocation(&s->LblRGB[0], ANCHOR_CENTRE, ANCHOR_CENTRE,  30, -130);
 	LWidget_SetLocation(&s->LblRGB[1], ANCHOR_CENTRE, ANCHOR_CENTRE,  95, -130);
@@ -1372,14 +1371,14 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 
 static void SettingsScreen_Reposition(struct LScreen* s_) {
 	struct SettingsScreen* s = (struct SettingsScreen*)s_;
-	LWidget_SetLocation(&s->BtnUpdates, ANCHOR_CENTRE, ANCHOR_CENTRE, -135, -120);
-	LWidget_SetLocation(&s->LblUpdates, ANCHOR_CENTRE, ANCHOR_CENTRE,   10, -120);
+	LWidget_SetLocation(&s->BtnUpdates, ANCHOR_CENTRE,     ANCHOR_CENTRE, -135, -120);
+	LWidget_SetLocation(&s->LblUpdates, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -70, -120);
 
-	LWidget_SetLocation(&s->BtnMode, ANCHOR_CENTRE, ANCHOR_CENTRE, -135, -70);
-	LWidget_SetLocation(&s->LblMode, ANCHOR_CENTRE, ANCHOR_CENTRE,   55, -70);
+	LWidget_SetLocation(&s->BtnMode, ANCHOR_CENTRE,     ANCHOR_CENTRE, -135, -70);
+	LWidget_SetLocation(&s->LblMode, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -70, -70);
 
-	LWidget_SetLocation(&s->BtnColours, ANCHOR_CENTRE, ANCHOR_CENTRE, -135, -20);
-	LWidget_SetLocation(&s->LblColours, ANCHOR_CENTRE, ANCHOR_CENTRE,   65, -20);
+	LWidget_SetLocation(&s->BtnColours, ANCHOR_CENTRE,     ANCHOR_CENTRE, -135, -20);
+	LWidget_SetLocation(&s->LblColours, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -70, -20);
 
 	LWidget_SetLocation(&s->BtnBack, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
 }

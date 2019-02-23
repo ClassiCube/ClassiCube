@@ -8,9 +8,11 @@
 */
 
 enum GuiAnchor {
-	ANCHOR_MIN,    /* Left or top */
-	ANCHOR_CENTRE, /* Middle */
-	ANCHOR_MAX     /* Bottom or right */
+	ANCHOR_MIN,        /* = offset */
+	ANCHOR_CENTRE,     /* = (axis/2) - (size/2) - offset; */
+	ANCHOR_MAX,        /* = axis - size - offset */
+	ANCHOR_CENTRE_MIN, /* = (axis/2) + offset */
+	ANCHOR_CENTRE_MAX, /* = (axis/2) - size - offset */
 };
 
 struct IGameComponent;

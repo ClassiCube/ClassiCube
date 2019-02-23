@@ -110,6 +110,7 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #ifdef CC_BUILD_WEB
 #include <emscripten.h>
 #include <AL/al.h>
+#include <AL/alc.h>
 #endif
 
 
@@ -1294,6 +1295,10 @@ static void Font_Init(void) {
 		String_FromConst("/Library/Fonts")
 	};
 #endif
+#ifdef CC_BUILD_WEB
+	/* TODO: Implement fonts */
+	const static String dirs[1] = { String_FromConst("Fonts") };
+#endif
 	const static String cachePath = String_FromConst(FONT_CACHE_FILE);
 	FT_Error err;
 	int i;
@@ -1969,9 +1974,10 @@ ReturnCode Platform_GetExePath(String* path) {
 #ifdef CC_BUILD_WEB
 ReturnCode Platform_StartOpen(const String* args) {
 	char str[600];
-	Platfrom_ConvetString(args, str);
+	Platform_ConvertString(str, args);
 	EM_ASM_({ window.open(Pointer_stringify($0)); }, str);
 }
+ReturnCode Platform_GetExePath(String* path) { return ReturnCode_NotSupported; }
 #endif
 
 void* Platform_GetSymbolFrom(const char* filename, const char* name) {
@@ -2234,5 +2240,13 @@ void Platform_Init(void) {
 	GetCurrentProcess(&psn);
 	/* NOTE: TransformProcessType is OSX 10.3 or later */
 	TransformProcessType(&psn, kProcessTransformToForegroundApplication);
+}
+#endif
+#ifdef CC_BUILD_WEB
+void Platform_Init(void) {
+	/* TODO: Actually get real window size here */
+	DisplayDevice_Default.Bounds.Width  = 900;
+	DisplayDevice_Default.Bounds.Height = 700;
+	DisplayDevice_Default.BitsPerPixel  = 32;
 }
 #endif

@@ -7,6 +7,20 @@
 
 static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx);
 
+#ifdef CC_BUILD_WEB
+/* Can't see native CPU state with javascript */
+#undef CC_BUILD_POSIX
+
+static void Logger_DumpBacktrace(String* str, void* ctx) { }
+static void Logger_DumpRegisters(void* ctx) { }
+static void Logger_DumpMisc(void* ctx) { }
+
+void Logger_Hook(void) { }
+void Logger_Abort2(ReturnCode result, const char* raw_msg) {
+	Logger_AbortCommon(result, raw_msg, NULL);
+}
+#endif
+
 #ifdef CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
