@@ -456,7 +456,7 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 	struct HotkeyData* hkey;
 	String text;
 
-	if (InputHandler_SimulateMouse(key, true)) return;
+	if (!was && InputHandler_SimulateMouse(key, true)) return;
 	active = Gui_GetActiveScreen();
 
 	if (InputHandler_IsShutdown(key)) {
