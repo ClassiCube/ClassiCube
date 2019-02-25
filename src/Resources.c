@@ -145,18 +145,18 @@ struct ResourceSound Resources_Sounds[59] = {
 
 	{ "step_cloth1",  "5fd568d724ba7d53911b6cccf5636f859d2662e8" }, { "step_cloth2",  "56c1d0ac0de2265018b2c41cb571cc6631101484" },
 	{ "step_cloth3",  "9c63f2a3681832dc32d206f6830360bfe94b5bfc" }, { "step_cloth4",  "55da1856e77cfd31a7e8c3d358e1f856c5583198" },
-	{ "step_grass1",  "227ab99bf7c6cf0b2002e0f7957d0ff7e5cb0c96" }, { "step_grass2",  "5c971029d9284676dce1dda2c9d202f8c47163b2" },
-	{ "step_grass3",  "76de0a736928eac5003691d73bdc2eda92116198" }, { "step_grass4",  "bc28801224a0aa77fdc93bb7c6c94beacdf77331" },
-	{ "step_gravel1", "1d761cb3bcb45498719e4fba0751e1630e134f1a" }, { "step_gravel2", "ac7a7c8d106e26abc775b1b46150c083825d8ddc" },
-	{ "step_gravel3", "c109b985a7e6d5d3828c92e00aefa49deca0eb8c" }, { "step_gravel4", "a47adece748059294c5f563c0fcac02fa0e4bab4" },
-	{ "step_sand1",   "9813c8185197f4a4296649f27a9d738c4a6dfc78" }, { "step_sand2",   "bd1750c016f6bab40934eff0b0fb64c41c86e44b" },
-	{ "step_sand3",   "ab07279288fa49215bada5c17627e6a54ad0437c" }, { "step_sand4",   "a474236fb0c75bd65a6010e87dbc000d345fc185" },
+	{ "step_grass1",  "41cbf5dd08e951ad65883854e74d2e034929f572" }, { "step_grass2",  "86cb1bb0c45625b18e00a64098cd425a38f6d3f2" },
+	{ "step_grass3",  "f7d7e5c7089c9b45fa5d1b31542eb455fad995db" }, { "step_grass4",  "c7b1005d4926f6a2e2387a41ab1fb48a72f18e98" },
+	{ "step_gravel1", "e8b89f316f3e9989a87f6e6ff12db9abe0f8b09f" }, { "step_gravel2", "c3b3797d04cb9640e1d3a72d5e96edb410388fa3" },
+	{ "step_gravel3", "48f7e1bb098abd36b9760cca27b9d4391a23de26" }, { "step_gravel4", "7bf3553a4fe41a0078f4988a13d6e1ed8663ef4c" },
+	{ "step_sand1",   "9e59c3650c6c3fc0a475f1b753b2fcfef430bf81" }, { "step_sand2",   "0fa4234797f336ada4e3735e013e44d1099afe57" },
+	{ "step_sand3",   "c75589cc0087069f387de127dd1499580498738e" }, { "step_sand4",   "37afa06f97d58767a1cd1382386db878be1532dd" },
 	{ "step_snow1",   "e9bab7d3d15541f0aaa93fad31ad37fd07e03a6c" }, { "step_snow2",   "5887d10234c4f244ec5468080412f3e6ef9522f3" },
 	{ "step_snow3",   "a4bc069321a96236fde04a3820664cc23b2ea619" }, { "step_snow4",   "e26fa3036cdab4c2264ceb19e1cd197a2a510227" },
-	{ "step_stone1",  "4a2e3795ffd4d3aab0834b7e41903af3a8f7d197" }, { "step_stone2",  "22a383d9c22342305a4f16fec0bb479a885f8da2" },
-	{ "step_stone3",  "a533e7ae975e62592de868e0d0572778614bd587" }, { "step_stone4",  "d5218034051a13322d7b5efc0b5a9af739615f04" },
-	{ "step_wood1",   "afb01196e2179e3b15b48f3373cea4c155d56b84" }, { "step_wood2",   "1e82a43c30cf8fcbe05d0bc2760ecba5d2320314" },
-	{ "step_wood3",   "27722125968ac60c0f191a961b17e406f1351c6e" }, { "step_wood4",   "29586f60bfe6f521dbc748919d4f0dc5b28beefd" }
+	{ "step_stone1",  "4e094ed8dfa98656d8fec52a7d20c5ee6098b6ad" }, { "step_stone2",  "9c92f697142ae320584bf64c0d54381d59703528" },
+	{ "step_stone3",  "8f23c02475d388b23e5faa680eafe6b991d7a9d4" }, { "step_stone4",  "363545a76277e5e47538b2dd3a0d6aa4f7a87d34" },
+	{ "step_wood1",   "9bc2a84d0aa98113fc52609976fae8fc88ea6333" }, { "step_wood2",   "98102533e6085617a2962157b4f3658f59aea018" },
+	{ "step_wood3",   "45b2aef7b5049e81b39b58f8d631563fadcc778b" }, { "step_wood4",   "dc66978374a46ab2b87db6472804185824868095" }
 };
 
 struct ResourceMusic Resources_Music[7] = {
