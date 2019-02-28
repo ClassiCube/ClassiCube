@@ -41,7 +41,7 @@ void* DisplayDevice_Meta;
 #define Socket__Error() WSAGetLastError()
 
 static HANDLE heap;
-char* Platform_NewLine = "\r\n";
+const char* Platform_NewLine = "\r\n";
 
 const ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
@@ -73,7 +73,7 @@ const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <signal.h>
 
 #define Socket__Error() errno
-char* Platform_NewLine = "\n";
+const char* Platform_NewLine = "\n";
 
 const ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const ReturnCode ReturnCode_FileNotFound = ENOENT;

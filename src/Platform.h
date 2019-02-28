@@ -24,7 +24,7 @@ enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_E
 #define UNIX_EPOCH 62135596800000ULL
 
 /* Newline for console and text files. */
-extern char* Platform_NewLine;
+extern const char* Platform_NewLine;
 extern const ReturnCode ReturnCode_FileShareViolation;
 extern const ReturnCode ReturnCode_FileNotFound;
 extern const ReturnCode ReturnCode_NotSupported;

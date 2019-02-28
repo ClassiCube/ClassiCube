@@ -314,13 +314,7 @@ static void Game_OnLowVRAMDetected(void* obj) {
 	Chat_AddRaw("&cOut of VRAM! Halving view distance..");
 }
 
-static void Game_Warn(ReturnCode result, const char* place) {
-	Chat_Add4("&cError %h when %c", &result, place, NULL, NULL);
-}
-static void Game_Warn2(ReturnCode result, const char* place, const String* path) {
-	Chat_Add4("&cError %h when %c '%s'", &result, place, path, NULL);
-}
-
+static void Game_WarnFunc(const String* msg) { Chat_Add1("&c%s", msg); }
 static void Game_ExtractInitialTexturePack(void) {
 	String texPack; char texPackBuffer[STRING_SIZE];
 
@@ -418,9 +412,7 @@ void Game_Free(void* obj);
 static void Game_Load(void) {
 	String title;      char titleBuffer[STRING_SIZE];
 	struct IGameComponent* comp;
-
-	Logger_Warn  = Game_Warn;
-	Logger_Warn2 = Game_Warn2;
+	Logger_WarnFunc = Game_WarnFunc;
 
 	Game_ViewDistance     = 512;
 	Game_MaxViewDistance  = 32768;
@@ -693,8 +685,7 @@ void Game_Free(void* obj) {
 		if (comp->Free) comp->Free();
 	}
 
-	Logger_Warn  = Logger_DialogWarn;
-	Logger_Warn2 = Logger_DialogWarn2;
+	Logger_WarnFunc = Logger_DialogWarn;
 	Gfx_Free();
 
 	if (!Options_ChangedCount()) return;

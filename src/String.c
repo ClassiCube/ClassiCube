@@ -131,9 +131,7 @@ bool String_CaselessEqualsConst(const String* a, const char* b) {
 
 void String_Append(String* str, char c) {
 	if (str->length == str->capacity) return;
-
-	str->buffer[str->length] = c;
-	str->length++;
+	str->buffer[str->length++] = c;
 }
 
 void String_AppendBool(String* str, bool value) {

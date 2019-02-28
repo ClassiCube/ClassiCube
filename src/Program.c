@@ -82,13 +82,29 @@ static void Program_SetCurrentDirectory(void) {
 	if (res) { Logger_Warn(res, "setting current directory"); return; }
 }
 
-static void Program_FailInvalidArg(const char* name, const String* arg) {
-	char tmpBuffer[256];
-	String tmp = String_NT_Array(tmpBuffer);
-
+CC_NOINLINE static void Exit_InvalidArg(const char* name, const String* arg) {
+	String tmp; char tmpBuffer[256];
+	String_InitArray(tmp, tmpBuffer);
 	String_Format2(&tmp, "%c '%s'", name, arg);
-	tmp.buffer[tmp.length] = '\0';
-	Window_ShowDialog("Failed to start", tmpBuffer);
+
+	Logger_DialogTitle = "Failed to start";
+	Logger_DialogWarn(&tmp);
+	Platform_Exit(1);
+}
+
+CC_NOINLINE static void Exit_MissingArgs(int argsCount, const String* args) {
+	String tmp; char tmpBuffer[256];
+	int i;
+	String_InitArray(tmp, tmpBuffer);
+
+	String_AppendConst(&tmp, "Missing IP and/or port - ");
+	for (i = 0; i < argsCount; i++) { 
+		String_AppendString(&tmp, &args[i]);
+		String_Append(&tmp, ' ');
+	}
+
+	Logger_DialogTitle = "Failed to start";
+	Logger_DialogWarn(&tmp);
 	Platform_Exit(1);
 }
 
@@ -124,8 +140,7 @@ int main(int argc, char** argv) {
 		String_Copy(&Game_Username, &args[0]);
 		Program_RunGame();
 	} else if (argsCount < 4) {
-		Window_ShowDialog("Failed to start", "Missing IP and/or port");
-		Platform_Exit(1);
+		Exit_MissingArgs(argsCount, args);
 		return 1;
 	} else {
 		String_Copy(&Game_Username,  &args[0]);
@@ -133,11 +148,11 @@ int main(int argc, char** argv) {
 		String_Copy(&Game_IPAddress, &args[2]);
 
 		if (!Utils_ParseIP(&args[2], ip)) {
-			Program_FailInvalidArg("Invalid IP", &args[2]);
+			Exit_InvalidArg("Invalid IP", &args[2]);
 			return 1;
 		}
 		if (!Convert_ParseUInt16(&args[3], &port)) {
-			Program_FailInvalidArg("Invalid port", &args[3]);
+			Exit_InvalidArg("Invalid port", &args[3]);
 			return 1;
 		}
 		Game_Port = port;

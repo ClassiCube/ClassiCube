@@ -677,7 +677,7 @@ int  Fetcher_StatusCode, Fetcher_Downloaded;
 ReturnCode Fetcher_Error;
 
 CC_NOINLINE static void Fetcher_DownloadAudio(const char* name, const char* hash) {
-	String url; char urlBuffer[STRING_SIZE * 2];
+	String url; char urlBuffer[URL_MAX_SIZE];
 	String id = String_FromReadonly(name);
 
 	String_InitArray(url, urlBuffer);

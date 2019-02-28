@@ -294,7 +294,7 @@ static void SignInTask_Append(String* dst, const char* key, const String* value)
 void SignInTask_Run(const String* user, const String* pass) {
 	const static String id  = String_FromConst("CC post login");
 	const static String url = String_FromConst("https://www.classicube.net/api/login");
-	String tmp; char tmpBuffer[STRING_SIZE * 6];
+	String tmp; char tmpBuffer[384];
 	if (SignInTask.Base.Working) return;
 
 	LWebTask_Reset(&SignInTask.Base);

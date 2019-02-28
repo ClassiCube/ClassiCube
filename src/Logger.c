@@ -37,7 +37,7 @@ struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
 static void Logger_DumpRegisters(void* ctx) {
-	String str; char strBuffer[STRING_SIZE * 8];
+	String str; char strBuffer[512];
 	CONTEXT* r;
 	if (!ctx) return;
 
@@ -131,7 +131,7 @@ static void Logger_Backtrace(String* backtrace, void* ctx) {
 		int number = i + 1;
 		uintptr_t addr = pointers[i].Instruction;
 
-		char strBuffer[STRING_SIZE * 10];
+		char strBuffer[512];
 		String str = String_FromArray(strBuffer);
 
 		/* instruction pointer */
@@ -173,7 +173,7 @@ static void Logger_DumpBacktrace(String* str, void* ctx) {
 }
 
 static BOOL CALLBACK Logger_DumpModule(const char* name, ULONG_PTR base, ULONG size, void* ctx) {
-	String str; char strBuffer[STRING_SIZE * 4];
+	String str; char strBuffer[256];
 	uintptr_t beg, end;
 
 	beg = base; end = base + (size - 1);
@@ -279,7 +279,7 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
 static void Logger_Backtrace(String* backtrace_, void* ctx) {
-	String str; char strBuffer[STRING_SIZE * 5];
+	String str; char strBuffer[384];
 	void* addrs[40];
 	int i, frames, num;
 	char** strings;
@@ -367,7 +367,7 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_POSIX
 static void Logger_DumpRegisters(void* ctx) {
-	String str; char strBuffer[STRING_SIZE * 8];
+	String str; char strBuffer[512];
 	mcontext_t r;
 	if (!ctx) return;
 
@@ -459,26 +459,32 @@ static void Logger_DumpMisc(void* ctx) { }
 /*########################################################################################################################*
 *----------------------------------------------------------Common---------------------------------------------------------*
 *#########################################################################################################################*/
-void Logger_DialogWarn(ReturnCode res, const char* place) {
-	String msg; char msgBuffer[STRING_SIZE * 2];
-	String_InitArray_NT(msg, msgBuffer);
+void Logger_Warn(ReturnCode res, const char* place) {
+	String msg; char msgBuffer[128];
+	String_InitArray(msg, msgBuffer);
 
 	String_Format2(&msg, "Error %h when %c", &res, place);
-	msg.buffer[msg.length] = '\0';
-	Window_ShowDialog("Error", msg.buffer);
+	Logger_WarnFunc(&msg);
 }
 
-void Logger_DialogWarn2(ReturnCode res, const char* place, const String* path) {
-	String msg; char msgBuffer[STRING_SIZE * 4];
-	String_InitArray_NT(msg, msgBuffer);
+void Logger_Warn2(ReturnCode res, const char* place, const String* path) {
+	String msg; char msgBuffer[256];
+	String_InitArray(msg, msgBuffer);
 
 	String_Format3(&msg, "Error %h when %c '%s'", &res, place, path);
-	msg.buffer[msg.length] = '\0';
-	Window_ShowDialog("Error", msg.buffer);
+	Logger_WarnFunc(&msg);
 }
 
-Logger_WarnFunc  Logger_Warn  = Logger_DialogWarn;
-Logger_Warn2Func Logger_Warn2 = Logger_DialogWarn2;
+void Logger_DialogWarn(const String* msg) {
+	String dst; char dstBuffer[256];
+	String_InitArray_NT(dst, dstBuffer);
+
+	String_AppendString(&dst, msg);
+	dst.buffer[dst.length] = '\0';
+	Window_ShowDialog(Logger_DialogTitle, dst.buffer);
+}
+const char* Logger_DialogTitle = "Error";
+Logger_DoWarn Logger_WarnFunc  = Logger_DialogWarn;
 
 static FileHandle logFile;
 static struct Stream logStream;
