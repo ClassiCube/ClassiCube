@@ -65,6 +65,7 @@ static void Program_RunGame(void) {
 	Game_Run(width, height, &title);
 }
 
+/* Attempts to set current/working directory to the directory exe file is in */
 static void Program_SetCurrentDirectory(void) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	int i;
@@ -82,6 +83,7 @@ static void Program_SetCurrentDirectory(void) {
 	if (res) { Logger_Warn(res, "setting current directory"); return; }
 }
 
+/* Terminates the program due to an invalid command line argument */
 CC_NOINLINE static void Exit_InvalidArg(const char* name, const String* arg) {
 	String tmp; char tmpBuffer[256];
 	String_InitArray(tmp, tmpBuffer);
@@ -92,6 +94,7 @@ CC_NOINLINE static void Exit_InvalidArg(const char* name, const String* arg) {
 	Platform_Exit(1);
 }
 
+/* Terminates the program due to insufficient command line arguments */
 CC_NOINLINE static void Exit_MissingArgs(int argsCount, const String* args) {
 	String tmp; char tmpBuffer[256];
 	int i;

@@ -5,7 +5,7 @@
 #include "Stream.h"
 #include "GameStructs.h"
 
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
@@ -21,15 +21,12 @@
 #include <windows.h>
 #include <wininet.h>
 #define HTTP_QUERY_ETAG 54 /* Missing from some old MingW32 headers */
-#endif
-
-/* Can't use curl for the web */
-#ifdef CC_BUILD_WEB
+#elif defined CC_BUILD_WEB
+/* Use javascript web api for Emscripten */
 #undef CC_BUILD_POSIX
-#endif
-
+#include <emscripten/fetch.h>
+#elif defined CC_BUILD_POSIX
 /* POSIX is mainly shared between Linux and OSX */
-#ifdef CC_BUILD_POSIX
 #include <curl/curl.h>
 #include <time.h>
 #endif
@@ -40,9 +37,268 @@ void HttpRequest_Free(struct HttpRequest* request) {
 	request->Size = 0;
 }
 
+/*########################################################################################################################*
+*----------------------------------------------------Http requests list---------------------------------------------------*
+*#########################################################################################################################*/
+#define HTTP_DEF_ELEMS 10
+struct RequestList {
+	int MaxElems, Count;
+	struct HttpRequest* Entries;
+	struct HttpRequest DefaultEntries[HTTP_DEF_ELEMS];
+};
+
+/* Expands request list buffer if there is no room for another request */
+static void RequestList_EnsureSpace(struct RequestList* list) {
+	if (list->Count < list->MaxElems) return;
+	list->Entries = Utils_Resize(list->Entries, &list->MaxElems,
+									sizeof(struct HttpRequest), HTTP_DEF_ELEMS, 10);
+}
+
+/* Adds another request to end (for normal priority request) */
+static void RequestList_Append(struct RequestList* list, struct HttpRequest* item) {
+	RequestList_EnsureSpace(list);
+	list->Entries[list->Count++] = *item;
+}
+
+/* Inserts a request at start (for high priority request) */
+static void RequestList_Prepend(struct RequestList* list, struct HttpRequest* item) {
+	int i;
+	RequestList_EnsureSpace(list);
+	
+	for (i = list->Count; i > 0; i--) {
+		list->Entries[i] = list->Entries[i - 1];
+	}
+	list->Entries[0] = *item;
+	list->Count++;
+}
+
+/* Removes the request at the given index */
+static void RequestList_RemoveAt(struct RequestList* list, int i) {
+	if (i < 0 || i >= list->Count) Logger_Abort("Tried to remove element at list end");
+
+	for (; i < list->Count - 1; i++) {
+		list->Entries[i] = list->Entries[i + 1];
+	}
+	list->Count--;
+}
+
+/* Finds index of request whose id matches the given id */
+static int RequestList_Find(struct RequestList* list, const String* id, struct HttpRequest* item) {
+	String reqID;
+	int i;
+
+	for (i = 0; i < list->Count; i++) {
+		reqID = String_FromRawArray(list->Entries[i].ID);
+		if (!String_Equals(id, &reqID)) continue;
+
+		*item = list->Entries[i];
+		return i;
+	}
+	return -1;
+}
+
+/* Resets state to default */
+static void RequestList_Init(struct RequestList* list) {
+	list->MaxElems = HTTP_DEF_ELEMS;
+	list->Count    = 0;
+	list->Entries = list->DefaultEntries;
+}
+
+/* Frees any dynamically allocated memory, then resets state to default */
+static void RequestList_Free(struct RequestList* list) {
+	if (list->Entries != list->DefaultEntries) {
+		Mem_Free(list->Entries);
+	}
+	RequestList_Init(list);
+}
+
 
 /*########################################################################################################################*
-*-------------------------------------------------System/Native interface-------------------------------------------------*
+*--------------------------------------------------Common downloader code-------------------------------------------------*
+*#########################################################################################################################*/
+static void* workerWaitable;
+static void* workerThread;
+static void* pendingMutex;
+static void* processedMutex;
+static void* curRequestMutex;
+static volatile bool http_terminate;
+
+static struct RequestList pendingReqs;
+static struct RequestList processedReqs;
+static struct HttpRequest http_curRequest;
+static volatile int http_curProgress = ASYNC_PROGRESS_NOTHING;
+
+#ifdef CC_BUILD_WEB
+static void Http_DownloadNextAsync(void);
+#endif
+
+/* Adds a req to the list of pending requests, waking up worker thread if needed. */
+static void Http_Add(const String* url, bool priority, const String* id, uint8_t type, TimeMS* lastModified, const String* etag, const void* data, uint32_t size) {
+	struct HttpRequest req = { 0 };
+	String reqUrl, reqID, reqEtag;
+
+	String_InitArray(reqUrl, req.URL);
+	String_Copy(&reqUrl, url);
+	String_InitArray(reqID, req.ID);
+	String_Copy(&reqID, id);
+
+	req.RequestType = type;
+	Platform_Log2("Adding %s (type %b)", &reqUrl, &type);
+
+	String_InitArray(reqEtag, req.Etag);
+	if (lastModified) { req.LastModified = *lastModified; }
+	if (etag)         { String_Copy(&reqEtag, etag); }
+
+	if (data) {
+		req.Data = Mem_Alloc(size, 1, "Http_PostData");
+		Mem_Copy(req.Data, data, size);
+		req.Size = size;
+	}
+
+	Mutex_Lock(pendingMutex);
+	{	
+		req.TimeAdded = DateTime_CurrentUTC_MS();
+		if (priority) {
+			RequestList_Prepend(&pendingReqs, &req);
+		} else {
+			RequestList_Append(&pendingReqs,  &req);
+		}
+	}
+	Mutex_Unlock(pendingMutex);
+
+#ifndef CC_BUILD_WEB
+	Waitable_Signal(workerWaitable);
+#else
+	Http_DownloadNextAsync();
+#endif
+}
+
+/* Sets up state to begin a http request */
+static void Http_BeginRequest(struct HttpRequest* req) {
+	String url = String_FromRawArray(req->URL);
+	Platform_Log2("Downloading from %s (type %b)", &url, &req->RequestType);
+
+	Mutex_Lock(curRequestMutex);
+	{
+		http_curRequest  = *req;
+		http_curProgress = ASYNC_PROGRESS_MAKING_REQUEST;
+	}
+	Mutex_Unlock(curRequestMutex);
+}
+
+/* Adds given request to list of processed/completed requests */
+static void Http_CompleteRequest(struct HttpRequest* req) {
+	struct HttpRequest older;
+	String id = String_FromRawArray(req->ID);
+	int index;
+	req->TimeDownloaded = DateTime_CurrentUTC_MS();
+
+	index = RequestList_Find(&processedReqs, &id, &older);
+	if (index >= 0) {
+		/* very rare case - priority item was inserted, then inserted again (so put before first item), */
+		/* and both items got downloaded before an external function removed them from the queue */
+		if (older.TimeAdded > req->TimeAdded) {
+			HttpRequest_Free(req);
+		} else {
+			/* normal case, replace older req */
+			HttpRequest_Free(&older);
+			processedReqs.Entries[index] = *req;
+		}
+	} else {
+		RequestList_Append(&processedReqs, req);
+	}
+}
+
+/* Updates state after a completed http request */
+static void Http_FinishRequest(struct HttpRequest* req) {
+	if (req->Data) Platform_Log1("HTTP returned data: %i bytes", &req->Size);
+	req->Success = !req->Result && req->StatusCode == 200 && req->Data && req->Size;
+
+	Mutex_Lock(processedMutex);
+	{
+		Http_CompleteRequest(req);
+	}
+	Mutex_Unlock(processedMutex);
+
+	Mutex_Lock(curRequestMutex);
+	{
+		http_curRequest.ID[0] = '\0';
+		http_curProgress = ASYNC_PROGRESS_NOTHING;
+	}
+	Mutex_Unlock(curRequestMutex);
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------Emscripten implementation------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_WEB
+static void Http_SysInit(void) { }
+static void Http_SysFree(void) { }
+static void Http_DownloadAsync(struct HttpRequest* req);
+
+static void Http_DownloadNextAsync(void) {
+	struct HttpRequest req;
+	if (http_terminate || !pendingReqs.Count) return;
+	/* already working on a request currently */
+	if (http_curRequest.ID[0] != '\0') return;
+
+	req = pendingReqs.Entries[0];
+	RequestList_RemoveAt(&pendingReqs, 0);
+	Http_DownloadAsync(&req);
+}
+
+static void Http_UpdateProgress(emscripten_fetch_t* fetch) {
+	if (!fetch->totalBytes) return;
+	http_curProgress = (int)(100.0f * fetch->dataOffset / fetch->totalBytes);
+}
+
+static void Http_FinishedAsync(emscripten_fetch_t* fetch) {
+	struct HttpRequest* req = &http_curRequest;
+	req->Data       = fetch->data;
+	req->Size       = fetch->numBytes;
+	req->StatusCode = fetch->status;
+
+	/* data needs to persist beyond closing of fetch data */
+	fetch->data = NULL;
+	emscripten_fetch_close(fetch);
+
+	Http_FinishRequest(&http_curRequest);
+	Http_DownloadNextAsync();
+}
+
+static void Http_DownloadAsync(struct HttpRequest* req) {
+	emscripten_fetch_attr_t attr;
+	emscripten_fetch_attr_init(&attr);
+
+	String url = String_FromRawArray(req->URL);
+	char urlStr[600];
+	Platform_ConvertString(urlStr, &url);
+
+	switch (req->RequestType) {
+	case REQUEST_TYPE_GET:  Mem_Copy(attr.requestMethod, "GET",  4); break;
+	case REQUEST_TYPE_HEAD: Mem_Copy(attr.requestMethod, "HEAD", 5); break;
+	case REQUEST_TYPE_POST: Mem_Copy(attr.requestMethod, "POST", 5); break;
+	}
+
+	if (req->RequestType == REQUEST_TYPE_POST) {
+		attr.requestData     = req->Data;
+		attr.requestDataSize = req->Size;
+	}
+
+	attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+	attr.onsuccess  = Http_FinishedAsync;
+	attr.onerror    = Http_FinishedAsync;
+	attr.onprogress = Http_UpdateProgress;
+
+	Http_BeginRequest(req);
+	emscripten_fetch(&attr, urlStr);
+}
+#endif
+
+
+/*########################################################################################################################*
+*--------------------------------------------------Native implementation--------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WIN
 static HINTERNET hInternet;
@@ -216,13 +472,13 @@ static ReturnCode Http_ProcessHeaders(struct HttpRequest* req, HINTERNET handle)
 }
 
 /* Downloads the data/contents of a HTTP response */
-static ReturnCode Http_DownloadData(struct HttpRequest* req, HINTERNET handle, volatile int* progress) {
+static ReturnCode Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
 	uint8_t* buffer;
 	uint32_t size, totalRead;
 	uint32_t read, avail;
 	bool success;
 	
-	*progress = 0;
+	http_curProgress = 0;
 	size      = req->ContentLength ? req->ContentLength : 1;
 	buffer    = Mem_Alloc(size, 1, "http get data");
 	totalRead = 0;
@@ -246,26 +502,26 @@ static ReturnCode Http_DownloadData(struct HttpRequest* req, HINTERNET handle, v
 		if (!read) break;
 
 		totalRead += read;
-		if (req->ContentLength) *progress = (int)(100.0f * totalRead / size);
+		if (req->ContentLength) http_curProgress = (int)(100.0f * totalRead / size);
 		req->Size += read;
 	}
 
- 	*progress = 100;
+ 	http_curProgress = 100;
 	return 0;
 }
 
-static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
+static ReturnCode Http_SysDo(struct HttpRequest* req) {
 	HINTERNET handle;
 	ReturnCode res = Http_StartRequest(req, &handle);
 	HttpRequest_Free(req);
 	if (res) return res;
 
-	*progress = ASYNC_PROGRESS_FETCHING_DATA;
+	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
 	res = Http_ProcessHeaders(req, handle);
 	if (res) { InternetCloseHandle(handle); return res; }
 
 	if (req->RequestType != REQUEST_TYPE_HEAD) {
-		res = Http_DownloadData(req, handle, progress);
+		res = Http_DownloadData(req, handle);
 		if (res) { InternetCloseHandle(handle); return res; }
 	}
 
@@ -293,9 +549,8 @@ static void Http_SysInit(void) {
 }
 
 /* Updates progress of current download */
-static int Http_UpdateProgress(int* progress, double total, double received, double a, double b) {
-	if (total == 0) return 0;
-	*progress = (int)(100 * received / total);
+static int Http_UpdateProgress(void* ptr, double total, double received, double a, double b) {
+	if (total) http_curProgress = (int)(100 * received / total);
 	return 0;
 }
 
@@ -378,21 +633,17 @@ static size_t Http_ProcessData(char *buffer, size_t size, size_t nitems, struct 
 	dst = (uint8_t*)req->Data + req->Size;
 	Mem_Copy(dst, buffer, nitems);
 	req->Size  += nitems;
-
-	/* TODO: Set progress */
-	//if (req->ContentLength) *progress = (int)(100.0f * req->Size / curlBufferSize);
 	return nitems;
 }
 
 /* Sets general curl options for a request */
-static void Http_SetCurlOpts(struct HttpRequest* req, volatile int* progress) {
+static void Http_SetCurlOpts(struct HttpRequest* req) {
 	curl_easy_setopt(curl, CURLOPT_COOKIEJAR,      "");
 	curl_easy_setopt(curl, CURLOPT_USERAGENT,      GAME_APP_NAME);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
 	curl_easy_setopt(curl, CURLOPT_NOPROGRESS,       0L);
 	curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, Http_UpdateProgress);
-	curl_easy_setopt(curl, CURLOPT_PROGRESSDATA,     progress);
 
 	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, Http_ProcessHeader);
 	curl_easy_setopt(curl, CURLOPT_HEADERDATA,     req);
@@ -400,7 +651,7 @@ static void Http_SetCurlOpts(struct HttpRequest* req, volatile int* progress) {
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
 }
 
-static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
+static ReturnCode Http_SysDo(struct HttpRequest* req) {
 	String url = String_FromRawArray(req->URL);
 	char urlStr[600];
 	void* post_data = req->Data;
@@ -412,7 +663,7 @@ static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
 	list = Http_MakeHeaders(req);
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
 
-	Http_SetCurlOpts(req, progress);
+	Http_SetCurlOpts(req);
 	Platform_ConvertString(urlStr, &url);
 	curl_easy_setopt(curl, CURLOPT_URL, urlStr);
 
@@ -429,9 +680,9 @@ static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
 	}
 
 	curlBufferSize = 0;
-	*progress = ASYNC_PROGRESS_FETCHING_DATA;
+	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
 	res = curl_easy_perform(curl);
-	*progress = 100;
+	http_curProgress = 100;
 
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
 	req->StatusCode = status;
@@ -447,118 +698,53 @@ static void Http_SysFree(void) {
 	curl_global_cleanup();
 }
 #endif
-#ifdef CC_BUILD_WEB
-/* TODO: Implement this backend */
-static void Http_SysInit(void) { }
-static ReturnCode Http_SysDo(struct HttpRequest* req, volatile int* progress) {
-	return ReturnCode_NotSupported;
+
+#ifndef CC_BUILD_WEB
+static void Http_WorkerLoop(void) {
+	struct HttpRequest request;
+	bool hasRequest, stop;
+	uint64_t beg, end;
+	uint32_t elapsed;
+
+	for (;;) {
+		hasRequest = false;
+
+		Mutex_Lock(pendingMutex);
+		{
+			stop = http_terminate;
+			if (!stop && pendingReqs.Count) {
+				request = pendingReqs.Entries[0];
+				hasRequest = true;
+				RequestList_RemoveAt(&pendingReqs, 0);
+			}
+		}
+		Mutex_Unlock(pendingMutex);
+
+		if (stop) return;
+		/* Block until another thread submits a req to do */
+		if (!hasRequest) {
+			Platform_LogConst("Going back to sleep...");
+			Waitable_Wait(workerWaitable);
+			continue;
+		}
+		Http_BeginRequest(&request);
+
+		beg = Stopwatch_Measure();
+		request.Result = Http_SysDo(&request);
+		end = Stopwatch_Measure();
+
+		Platform_Log3("HTTP: return code %i (http %i), in %i ms",
+			&request.Result, &request.StatusCode, &elapsed);
+		Http_FinishRequest(&request);
+	}
 }
-static void Http_SysFree(void) { }
 #endif
 
 
 /*########################################################################################################################*
-*-------------------------------------------------Asynchronous downloader-------------------------------------------------*
+*----------------------------------------------------Http public api------------------------------------------------------*
 *#########################################################################################################################*/
-#define HTTP_DEF_ELEMS 10
-struct HttpRequestList {
-	int MaxElems, Count;
-	struct HttpRequest* Requests;
-	struct HttpRequest DefaultRequests[HTTP_DEF_ELEMS];
-};
-
-static void HttpRequestList_EnsureSpace(struct HttpRequestList* list) {
-	if (list->Count < list->MaxElems) return;
-	list->Requests = Utils_Resize(list->Requests, &list->MaxElems,
-									sizeof(struct HttpRequest), HTTP_DEF_ELEMS, 10);
-}
-
-static void HttpRequestList_Append(struct HttpRequestList* list, struct HttpRequest* item) {
-	HttpRequestList_EnsureSpace(list);
-	list->Requests[list->Count++] = *item;
-}
-
-static void HttpRequestList_Prepend(struct HttpRequestList* list, struct HttpRequest* item) {
-	int i;
-	HttpRequestList_EnsureSpace(list);
-	
-	for (i = list->Count; i > 0; i--) {
-		list->Requests[i] = list->Requests[i - 1];
-	}
-	list->Requests[0] = *item;
-	list->Count++;
-}
-
-static void HttpRequestList_RemoveAt(struct HttpRequestList* list, int i) {
-	if (i < 0 || i >= list->Count) Logger_Abort("Tried to remove element at list end");
-
-	for (; i < list->Count - 1; i++) {
-		list->Requests[i] = list->Requests[i + 1];
-	}
-	list->Count--;
-}
-
-static void HttpRequestList_Init(struct HttpRequestList* list) {
-	list->MaxElems = HTTP_DEF_ELEMS;
-	list->Count    = 0;
-	list->Requests = list->DefaultRequests;
-}
-
-static void HttpRequestList_Free(struct HttpRequestList* list) {
-	if (list->Requests != list->DefaultRequests) {
-		Mem_Free(list->Requests);
-	}
-	HttpRequestList_Init(list);
-}
-
-static void* http_waitable;
-static void* http_workerThread;
-static void* http_pendingMutex;
-static void* http_processedMutex;
-static void* http_curRequestMutex;
-static volatile bool http_terminate;
-
-static struct HttpRequestList http_pending;
-static struct HttpRequestList http_processed;
-const static String http_skinServer = String_FromConst("http://static.classicube.net/skins/");
-static struct HttpRequest http_curRequest;
-static volatile int http_curProgress = ASYNC_PROGRESS_NOTHING;
-
-/* Adds a req to the list of pending requests, waking up worker thread if needed. */
-static void Http_Add(const String* url, bool priority, const String* id, uint8_t type, TimeMS* lastModified, const String* etag, const void* data, uint32_t size) {
-	struct HttpRequest req = { 0 };
-	String reqUrl, reqID, reqEtag;
-
-	String_InitArray(reqUrl, req.URL);
-	String_Copy(&reqUrl, url);
-	String_InitArray(reqID, req.ID);
-	String_Copy(&reqID, id);
-
-	req.RequestType = type;
-	Platform_Log2("Adding %s (type %b)", &reqUrl, &type);
-
-	String_InitArray(reqEtag, req.Etag);
-	if (lastModified) { req.LastModified = *lastModified; }
-	if (etag)         { String_Copy(&reqEtag, etag); }
-
-	if (data) {
-		req.Data = Mem_Alloc(size, 1, "Http_PostData");
-		Mem_Copy(req.Data, data, size);
-		req.Size = size;
-	}
-
-	Mutex_Lock(http_pendingMutex);
-	{	
-		req.TimeAdded = DateTime_CurrentUTC_MS();
-		if (priority) {
-			HttpRequestList_Prepend(&http_pending, &req);
-		} else {
-			HttpRequestList_Append(&http_pending, &req);
-		}
-	}
-	Mutex_Unlock(http_pendingMutex);
-	Waitable_Signal(http_waitable);
-}
+const static String skinServer = String_FromConst("http://static.classicube.net/skins/");
 
 void Http_AsyncGetSkin(const String* id, const String* skinName) {
 	String url; char urlBuffer[STRING_SIZE];
@@ -567,7 +753,7 @@ void Http_AsyncGetSkin(const String* id, const String* skinName) {
 	if (Utils_IsUrlPrefix(skinName, 0)) {
 		String_Copy(&url, skinName);
 	} else {
-		String_AppendString(&url, &http_skinServer);
+		String_AppendString(&url, &skinServer);
 		String_AppendColorless(&url, skinName);
 		String_AppendConst(&url, ".png");
 	}
@@ -577,15 +763,12 @@ void Http_AsyncGetSkin(const String* id, const String* skinName) {
 void Http_AsyncGetData(const String* url, bool priority, const String* id) {
 	Http_Add(url, priority, id, REQUEST_TYPE_GET, NULL, NULL, NULL, 0);
 }
-
 void Http_AsyncGetHeaders(const String* url, bool priority, const String* id) {
 	Http_Add(url, priority, id, REQUEST_TYPE_HEAD, NULL, NULL, NULL, 0);
 }
-
 void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, uint32_t size) {
 	Http_Add(url, priority, id, REQUEST_TYPE_POST, NULL, NULL, data, size);
 }
-
 void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, TimeMS* lastModified, const String* etag) {
 	Http_Add(url, priority, id, REQUEST_TYPE_GET, lastModified, etag, NULL, 0);
 }
@@ -594,168 +777,50 @@ void Http_PurgeOldEntriesTask(struct ScheduledTask* task) {
 	struct HttpRequest* item;
 	int i;
 
-	Mutex_Lock(http_processedMutex);
+	Mutex_Lock(processedMutex);
 	{
 		TimeMS now = DateTime_CurrentUTC_MS();
-		for (i = http_processed.Count - 1; i >= 0; i--) {
-			item = &http_processed.Requests[i];
+		for (i = processedReqs.Count - 1; i >= 0; i--) {
+			item = &processedReqs.Entries[i];
 			if (item->TimeDownloaded + (10 * 1000) >= now) continue;
 
 			HttpRequest_Free(item);
-			HttpRequestList_RemoveAt(&http_processed, i);
+			RequestList_RemoveAt(&processedReqs, i);
 		}
 	}
-	Mutex_Unlock(http_processedMutex);
-}
-
-static int HttpRequestList_Find(const String* id, struct HttpRequest* item) {
-	String reqID;
-	int i;
-
-	for (i = 0; i < http_processed.Count; i++) {
-		reqID = String_FromRawArray(http_processed.Requests[i].ID);
-		if (!String_Equals(id, &reqID)) continue;
-
-		*item = http_processed.Requests[i];
-		return i;
-	}
-	return -1;
+	Mutex_Unlock(processedMutex);
 }
 
 bool Http_GetResult(const String* id, struct HttpRequest* item) {
 	int i;
-	Mutex_Lock(http_processedMutex);
+	Mutex_Lock(processedMutex);
 	{
-		i = HttpRequestList_Find(id, item);
-		if (i >= 0) HttpRequestList_RemoveAt(&http_processed, i);
+		i = RequestList_Find(&processedReqs, id, item);
+		if (i >= 0) RequestList_RemoveAt(&processedReqs, i);
 	}
-	Mutex_Unlock(http_processedMutex);
+	Mutex_Unlock(processedMutex);
 	return i >= 0;
 }
 
 bool Http_GetCurrent(struct HttpRequest* request, int* progress) {
-	Mutex_Lock(http_curRequestMutex);
+	Mutex_Lock(curRequestMutex);
 	{
 		*request  = http_curRequest;
 		*progress = http_curProgress;
 	}
-	Mutex_Unlock(http_curRequestMutex);
+	Mutex_Unlock(curRequestMutex);
 	return request->ID[0];
 }
 
 void Http_ClearPending(void) {
-	Mutex_Lock(http_pendingMutex);
+	Mutex_Lock(pendingMutex);
 	{
-		HttpRequestList_Free(&http_pending);
+		RequestList_Free(&pendingReqs);
 	}
-	Mutex_Unlock(http_pendingMutex);
-	Waitable_Signal(http_waitable);
+	Mutex_Unlock(pendingMutex);
+	Waitable_Signal(workerWaitable);
 }
 
-/* Attempts to download the server's response headers and data to the given req */
-static void Http_ProcessRequest(struct HttpRequest* req) {
-	String url = String_FromRawArray(req->URL);
-	uint64_t  beg, end;
-	uint32_t  size, elapsed;
-	uintptr_t addr;
-
-	Platform_Log2("Downloading from %s (type %b)", &url, &req->RequestType);
-	beg = Stopwatch_Measure();
-	req->Result = Http_SysDo(req, &http_curProgress);
-	end = Stopwatch_Measure();
-
-	elapsed = (int)Stopwatch_ElapsedMicroseconds(beg, end) / 1000;
-	Platform_Log3("HTTP: return code %i (http %i), in %i ms", 
-				&req->Result, &req->StatusCode, &elapsed);
-
-	if (req->Data) {
-		size = req->Size;
-		addr = (uintptr_t)req->Data;
-		Platform_Log2("HTTP returned data: %i bytes at %x", &size, &addr);
-	}
-	req->Success = !req->Result && req->StatusCode == 200 && req->Data && req->Size;
-}
-
-/* Adds given req to list of processed/completed requests */
-static void Http_CompleteRequest(struct HttpRequest* req) {
-	struct HttpRequest older;
-	String id = String_FromRawArray(req->ID);
-	int index;
-	req->TimeDownloaded = DateTime_CurrentUTC_MS();
-
-	index = HttpRequestList_Find(&id, &older);
-	if (index >= 0) {
-		/* very rare case - priority item was inserted, then inserted again (so put before first item), */
-		/* and both items got downloaded before an external function removed them from the queue */
-		if (older.TimeAdded > req->TimeAdded) {
-			HttpRequest_Free(req);
-		} else {
-			/* normal case, replace older req */
-			HttpRequest_Free(&older);
-			http_processed.Requests[index] = *req;				
-		}
-	} else {
-		HttpRequestList_Append(&http_processed, req);
-	}
-}
-
-static void Http_WorkerLoop(void) {
-	struct HttpRequest request;
-	bool hasRequest, stop;
-
-	for (;;) {
-		hasRequest = false;
-
-		Mutex_Lock(http_pendingMutex);
-		{
-			stop = http_terminate;
-			if (!stop && http_pending.Count) {
-				request = http_pending.Requests[0];
-				hasRequest = true;
-				HttpRequestList_RemoveAt(&http_pending, 0);
-			}
-		}
-		Mutex_Unlock(http_pendingMutex);
-
-		if (stop) return;
-		/* Block until another thread submits a req to do */
-		if (!hasRequest) {
-			Platform_LogConst("Going back to sleep...");
-			Waitable_Wait(http_waitable);
-			continue;
-		}
-
-		Platform_LogConst("Got something to do!");
-		Mutex_Lock(http_curRequestMutex);
-		{
-			http_curRequest = request;
-			http_curProgress = ASYNC_PROGRESS_MAKING_REQUEST;
-		}
-		Mutex_Unlock(http_curRequestMutex);
-
-		Platform_LogConst("Doing it");
-		/* performing req doesn't need thread safety */
-		Http_ProcessRequest(&request);
-
-		Mutex_Lock(http_processedMutex);
-		{
-			Http_CompleteRequest(&request);
-		}
-		Mutex_Unlock(http_processedMutex);
-
-		Mutex_Lock(http_curRequestMutex);
-		{
-			http_curRequest.ID[0] = '\0';
-			http_curProgress = ASYNC_PROGRESS_NOTHING;
-		}
-		Mutex_Unlock(http_curRequestMutex);
-	}
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Http misc---------------------------------------------------------*
-*#########################################################################################################################*/
 static bool Http_UrlDirect(uint8_t c) {
 	return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
 		|| c == '-' || c == '_' || c == '.' || c == '~';
@@ -793,30 +858,34 @@ void Http_UrlEncodeUtf8(String* dst, const String* src) {
 *#########################################################################################################################*/
 static void Http_Init(void) {
 	ScheduledTask_Add(30, Http_PurgeOldEntriesTask);
-	HttpRequestList_Init(&http_pending);
-	HttpRequestList_Init(&http_processed);
+	RequestList_Init(&pendingReqs);
+	RequestList_Init(&processedReqs);
 	Http_SysInit();
 
-	http_waitable = Waitable_Create();
-	http_pendingMutex    = Mutex_Create();
-	http_processedMutex  = Mutex_Create();
-	http_curRequestMutex = Mutex_Create();
-	http_workerThread = Thread_Start(Http_WorkerLoop, false);
+	workerWaitable  = Waitable_Create();
+	pendingMutex    = Mutex_Create();
+	processedMutex  = Mutex_Create();
+	curRequestMutex = Mutex_Create();
+#ifndef CC_BUILD_WEB
+	workerThread    = Thread_Start(Http_WorkerLoop, false);
+#endif
 }
 
 static void Http_Free(void) {
 	http_terminate = true;
 	Http_ClearPending();
-	Thread_Join(http_workerThread);
+#ifndef CC_BUILD_WEB
+	Thread_Join(workerThread);
+#endif
 
-	HttpRequestList_Free(&http_pending);
-	HttpRequestList_Free(&http_processed);
+	RequestList_Free(&pendingReqs);
+	RequestList_Free(&processedReqs);
 	Http_SysFree();
 
-	Waitable_Free(http_waitable);
-	Mutex_Free(http_pendingMutex);
-	Mutex_Free(http_processedMutex);
-	Mutex_Free(http_curRequestMutex);
+	Waitable_Free(workerWaitable);
+	Mutex_Free(pendingMutex);
+	Mutex_Free(processedMutex);
+	Mutex_Free(curRequestMutex);
 }
 
 struct IGameComponent Http_Component = {

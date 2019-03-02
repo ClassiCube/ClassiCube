@@ -33,7 +33,7 @@ struct HttpRequest {
 
 	TimeMS LastModified;    /* Time item cached at (if at all) */
 	char Etag[STRING_SIZE]; /* ETag of cached item (if any) */
-	uint8_t RequestType;    /* Whether to fetch contents or just headers. */
+	uint8_t RequestType;    /* See the various REQUEST_TYPE_ */
 	bool Success;           /* Whether Result is 0, status is 200, and data is not NULL */
 };
 
@@ -49,7 +49,7 @@ void Http_AsyncGetData(const String* url, bool priority, const String* id);
 /* Asynchronously performs a http HEAD request. (e.g. to get Content-Length header) */
 void Http_AsyncGetHeaders(const String* url, bool priority, const String* id);
 /* Asynchronously performs a http POST request. (e.g. to submit data) */
-/* NOTE: You don't have to persist data, Http makes a copy of it. */
+/* NOTE: You don't have to persist data, a copy is made of it. */
 void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, uint32_t size);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
 /* Also sets the If-Modified-Since and If-None-Match headers. (if not NULL)  */
