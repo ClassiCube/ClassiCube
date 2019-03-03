@@ -47,7 +47,9 @@ Run ClassiCube.exe. You can connect to LAN/locally hosted servers, ~~minecraft.n
 * To see the list of built in commands, type `/client`.
 * To see help for a given built in command, type `/client help <command name>`.
 
-### Compiling on linux
+### Compiling
+
+#### Linux
 
 Install appropriate libs as required. For ubuntu this means: libx11-dev, libgl1-mesa-dev, libopenal-dev, libcurl4-gnutls-dev or libcurl4-openssl-dev
 
@@ -64,6 +66,12 @@ Explicitly:
 ```i586-mingw32msvc-gcc *.c -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_D3D9 -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9```
 
 ```i586-mingw32msvc-gcc *.c -DCC_BUILD_MANUAL -DCC_BUILD_WIN -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32```
+
+#### OpenBSD
+
+Install libexecinfo package if needed.
+
+```gcc *.c -o ClassiCube -isystem /usr/X11R6/include -isystem /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lX11 -lGL -lcurl -lopenal -lexecinfo```
 
 ### Documentation
 

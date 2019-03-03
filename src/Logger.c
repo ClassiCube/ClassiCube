@@ -268,8 +268,8 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 #ifdef CC_BUILD_POSIX
 #ifndef CC_BUILD_OPENBSD
 #include <ucontext.h>
-#include <execinfo.h>
 #endif
+#include <execinfo.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>

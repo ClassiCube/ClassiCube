@@ -861,7 +861,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	XSetWindowAttributes attributes = { 0 };
 	XSizeHints hints = { 0 };
 	uintptr_t addr;
-	bool supported;
+	int supported;
 
 	win_display = DisplayDevice_Meta;
 	win_screen  = DefaultScreen(win_display);
