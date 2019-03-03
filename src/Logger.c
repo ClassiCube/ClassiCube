@@ -38,10 +38,8 @@ struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
 *#########################################################################################################################*/
 static void Logger_DumpRegisters(void* ctx) {
 	String str; char strBuffer[512];
-	CONTEXT* r;
-	if (!ctx) return;
+	CONTEXT* r = (CONTEXT*)ctx;
 
-	r = (CONTEXT*)ctx;
 	String_InitArray(str, strBuffer);
 	String_AppendConst(&str, "-- registers --\r\n");
 
@@ -266,10 +264,12 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 #pragma optimize ("", on)
 #endif
 #endif
-/* POSIX is mainly shared between Linux and OSX */
+/* POSIX can be shared between Linux/BSD/OSX */
 #ifdef CC_BUILD_POSIX
+#ifndef CC_BUILD_OPENBSD
 #include <ucontext.h>
 #include <execinfo.h>
+#endif
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -368,10 +368,14 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 #ifdef CC_BUILD_POSIX
 static void Logger_DumpRegisters(void* ctx) {
 	String str; char strBuffer[512];
+#ifdef CC_BUILD_OPENBSD
+	struct sigcontext r;
+	r = *((ucontext_t*)ctx);
+#else
 	mcontext_t r;
-	if (!ctx) return;
-
 	r = ((ucontext_t*)ctx)->uc_mcontext;
+#endif
+
 	String_InitArray(str, strBuffer);
 	String_AppendConst(&str, "-- registers --\n");
 
@@ -403,7 +407,7 @@ static void Logger_DumpRegisters(void* ctx) {
 	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r->__ss.__rax, &r->__ss.__rbx, &r->__ss.__rcx);
 	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r->__ss.__rdx, &r->__ss.__rsi, &r->__ss.__rdi);
 	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r->__ss.__rip, &r->__ss.__rbp, &r->__ss.__rsp);
-	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r->__ss.__r8, &r->__ss.__r9, &r->__ss.__r10);
+	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r->__ss.__r8,  &r->__ss.__r9,  &r->__ss.__r10);
 	String_Format3(&str, "r11=%x r12=%x r13=%x\n", &r->__ss.__r11, &r->__ss.__r12, &r->__ss.__r13);
 	String_Format2(&str, "r14=%x r15=%x\n", &r->__ss.__r14, &r->__ss.__r15);
 #else
@@ -411,7 +415,7 @@ static void Logger_DumpRegisters(void* ctx) {
 #endif
 #endif
 
-#if defined CC_BUILD_BSD
+#if defined CC_BUILD_FREEBSD
 #if defined __i386__
 	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r.mc_eax, &r.mc_ebx, &r.mc_ecx);
 	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r.mc_edx, &r.mc_esi, &r.mc_edi);
@@ -423,6 +427,23 @@ static void Logger_DumpRegisters(void* ctx) {
 	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r.mc_r8,  &r.mc_r9,  &r.mc_r10);
 	String_Format3(&str, "r11=%x r12=%x r13=%x\n", &r.mc_r11, &r.mc_r12, &r.mc_r13);
 	String_Format2(&str, "r14=%x r15=%x\n",        &r.mc_r14, &r.mc_r15);
+#else
+#error "Unknown machine type"
+#endif
+#endif
+
+#if defined CC_BUILD_OPENBSD
+#if defined __i386__
+	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r.sc_eax, &r.sc_ebx, &r.sc_ecx);
+	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r.sc_edx, &r.sc_esi, &r.sc_edi);
+	String_Format3(&str, "eip=%x ebp=%x esp=%x\n", &r.sc_eip, &r.sc_ebp, &r.sc_esp);
+#elif defined __x86_64__
+	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r.sc_rax, &r.sc_rbx, &r.sc_rcx);
+	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r.sc_rdx, &r.sc_rsi, &r.sc_rdi);
+	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r.sc_rip, &r.sc_rbp, &r.sc_rsp);
+	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r.sc_r8,  &r.sc_r9,  &r.sc_r10);
+	String_Format3(&str, "r11=%x r12=%x r13=%x\n", &r.sc_r11, &r.sc_r12, &r.sc_r13);
+	String_Format2(&str, "r14=%x r15=%x\n",        &r.sc_r14, &r.sc_r15);
 #else
 #error "Unknown machine type"
 #endif
@@ -451,7 +472,7 @@ static void Logger_DumpMisc(void* ctx) {
 
 	close(fd);
 }
-#elif defined CC_BUILD_OSX || defined CC_BUILD_BSD
+#elif defined CC_BUILD_OSX || defined CC_BUILD_FREEBSD || defined CC_BUILD_OPENBSD
 static void Logger_DumpMisc(void* ctx) { }
 #endif
 
@@ -529,7 +550,7 @@ static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx
 	Logger_DumpSpacing();
 	Logger_Log(&msg);
 
-	Logger_DumpRegisters(ctx);
+	if (ctx) Logger_DumpRegisters(ctx);
 	Logger_DumpBacktrace(&msg, ctx);
 	Logger_DumpMisc(ctx);
 	if (logStream.Meta.File) File_Close(logFile);

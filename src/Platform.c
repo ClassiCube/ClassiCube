@@ -50,7 +50,7 @@ const ReturnCode ReturnCode_InvalidArg   = ERROR_INVALID_PARAMETER;
 const ReturnCode ReturnCode_SocketInProgess  = WSAEINPROGRESS;
 const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #endif
-/* POSIX is mainly shared between Linux and OSX */
+/* POSIX can be shared between Linux/BSD/OSX */
 #ifdef CC_BUILD_POSIX
 #include <errno.h>
 #include <time.h>
@@ -82,32 +82,30 @@ const ReturnCode ReturnCode_InvalidArg   = EINVAL;
 const ReturnCode ReturnCode_SocketInProgess  = EINPROGRESS;
 const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #endif
-/* Platform specific include files */
-#ifdef CC_BUILD_LINUX
-#include <X11/Xlib.h>
-#include <AL/al.h>
-#include <AL/alc.h>
-#endif
-#ifdef CC_BUILD_BSD
-#include <X11/Xlib.h>
-#include <AL/al.h>
-#include <AL/alc.h>
+/* Even more can be shared between UNIX-ish platforms */
+#if defined CC_BUILD_LINUX
+#define CC_BUILD_UNIX
+#elif defined CC_BUILD_FREEBSD
+#define CC_BUILD_UNIX
 #include <sys/sysctl.h>
-#endif
-#ifdef CC_BUILD_SOLARIS
-#include <X11/Xlib.h>
-#include <AL/al.h>
-#include <AL/alc.h>
+#elif defined CC_BUILD_OPENBSD
+#define CC_BUILD_UNIX
+#elif defined CC_BUILD_SOLARIS
+#define CC_BUILD_UNIX
 #include <sys/filio.h>
 #endif
-#ifdef CC_BUILD_OSX
+/* Platform specific include files */
+#if defined CC_BUILD_UNIX
+#include <X11/Xlib.h>
+#include <AL/al.h>
+#include <AL/alc.h>
+#elif defined CC_BUILD_OSX
 #include <mach/mach_time.h>
 #include <mach-o/dyld.h>
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
 #include <ApplicationServices/ApplicationServices.h>
-#endif
-#ifdef CC_BUILD_WEB
+#elif defined CC_BUILD_WEB
 #include <emscripten.h>
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -355,7 +353,7 @@ void DateTime_CurrentLocal(struct DateTime* time_) {
 
 #define NS_PER_SEC 1000000000ULL
 #endif
-#if defined CC_BUILD_LINUX || defined CC_BUILD_BSD
+#if defined CC_BUILD_LINUX || defined CC_BUILD_FREEBSD || defined CC_BUILD_OPENBSD
 uint64_t Stopwatch_Measure(void) {
 	struct timespec t;
 	/* TODO: CLOCK_MONOTONIC_RAW ?? */
@@ -1283,7 +1281,7 @@ static void Font_Init(void) {
 		String_FromConst("C:/WINNT/Fonts")
 	};
 #endif
-#if defined CC_BUILD_LINUX || defined CC_BUILD_BSD || defined CC_BUILD_SOLARIS
+#ifdef CC_BUILD_UNIX
 	const static String dirs[2] = {
 		String_FromConst("/usr/share/fonts"),
 		String_FromConst("/usr/local/share/fonts")
@@ -1912,9 +1910,9 @@ ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol) {
 	return *symbol == NULL; /* dlerror would be proper, but eh */
 }
 #endif
-#if defined CC_BUILD_LINUX || defined CC_BUILD_BSD || defined CC_BUILD_SOLARIS
+#ifdef CC_BUILD_UNIX
 ReturnCode Platform_StartOpen(const String* args) {
-	/* TODO: Can this also be used on solaris, or is it just an OpenIndiana thing */
+	/* TODO: Can this be used on original Solaris, or is it just an OpenIndiana thing */
 	const static String path = String_FromConst("xdg-open");
 	return Platform_StartProcess(&path, args);
 }
@@ -1929,7 +1927,7 @@ ReturnCode Platform_GetExePath(String* path) {
 	return 0;
 }
 #endif
-#ifdef CC_BUILD_BSD
+#ifdef CC_BUILD_FREEBSD
 ReturnCode Platform_GetExePath(String* path) {
 	char str[600];
 	int mib[4];
@@ -2206,7 +2204,7 @@ static void Platform_InitDisplay(void) {
 	DisplayDevice_Default.BitsPerPixel  = DefaultDepth(display,  screen);
 }
 #endif
-#if defined CC_BUILD_LINUX || defined CC_BUILD_BSD || defined CC_BUILD_SOLARIS
+#ifdef CC_BUILD_UNIX
 void Platform_Init(void) {
 	Platform_InitCommon();
 	/* stopwatch always in nanoseconds */
