@@ -90,6 +90,7 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #include <sys/sysctl.h>
 #elif defined CC_BUILD_OPENBSD
 #define CC_BUILD_UNIX
+#include <sys/sysctl.h>
 #elif defined CC_BUILD_SOLARIS
 #define CC_BUILD_UNIX
 #include <sys/filio.h>
@@ -1939,6 +1940,37 @@ ReturnCode Platform_GetExePath(String* path) {
 	mib[3] = -1; /* self process id */
 
 	if (sysctl(mib, 4, str, &size, NULL, 0) == -1) return errno;
+
+	size = String_CalcLen(str, 600);
+	Convert_DecodeUtf8(path, str, size);
+	return 0;
+}
+#endif
+#ifdef CC_BUILD_OPENBSD
+ReturnCode Platform_GetExePath(String* path) {
+	char tmp[600];
+	int mib[4];
+	size_t size;
+	char* argv[100];
+	char* str;
+
+	mib[0] = CTL_KERN;
+	mib[1] = KERN_PROC_ARGS;
+	mib[2] = getpid();
+	mib[3] = KERN_PROC_ARGV;
+
+	/* NOTE: OpenBSD doesn't seem to let us get executable's location, so fallback to argv[0] */
+	/* See OpenBSD sysctl manpage for why argv array is so large */
+	/*... The buffer pointed to by oldp is filled with an array of char pointers followed by the strings themselves... */
+	size = 100 * sizeof(char*);
+	if (sysctl(mib, 4, argv, &size, NULL, 0) == -1) return errno;
+
+	str = argv[0];
+	if (str[0] != '/') {
+		/* relative path */
+		if (!realpath(str, tmp)) return errno;
+		str = tmp;
+	}
 
 	size = String_CalcLen(str, 600);
 	Convert_DecodeUtf8(path, str, size);
