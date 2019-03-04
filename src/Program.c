@@ -42,7 +42,6 @@ int main_imdct() {
 static void Program_RunGame(void) {
 	const static String defPath = String_FromConst("texpacks/default.zip");
 	String title; char titleBuffer[STRING_SIZE];
-	struct DisplayDevice device;
 	int width, height;
 
 	if (!File_Exists(&defPath)) {
@@ -50,14 +49,13 @@ static void Program_RunGame(void) {
 			"default.zip is missing, try downloading resources first.\n\nThe game will still run, but without any textures");
 	}
 
-	device = DisplayDevice_Default;
-	width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, device.Bounds.Width,  0);
-	height = Options_GetInt(OPT_WINDOW_HEIGHT, 0, device.Bounds.Height, 0);
+	width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, Display_Bounds.Width,  0);
+	height = Options_GetInt(OPT_WINDOW_HEIGHT, 0, Display_Bounds.Height, 0);
 
 	/* No custom resolution has been set */
 	if (width == 0 || height == 0) {
 		width = 854; height = 480;
-		if (device.Bounds.Width < 854) width = 640;
+		if (Display_Bounds.Width < 854) width = 640;
 	}
 
 	String_InitArray(title, titleBuffer);

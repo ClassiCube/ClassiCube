@@ -2169,7 +2169,7 @@ ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* de
 void Platform_Init(void) {
 	Platform_InitCommon();
 	/* stopwatch always in nanoseconds */
-	sw_freqDiv = 1000; i
+	sw_freqDiv = 1000;
 }
 #endif
 #ifdef CC_BUILD_OSX
