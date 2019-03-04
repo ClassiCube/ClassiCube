@@ -50,9 +50,9 @@ TimeMS DateTime_TotalMs(const struct DateTime* time) {
 }
 
 void DateTime_FromTotalMs(struct DateTime* time, TimeMS ms) {
+	const uint16_t* totalDays;
 	int dayMS, days, year;
 	int daysInYear, month;
-	uint16_t* totalDays;
 	bool leap;
 
 	/* Work out time component for just this day */

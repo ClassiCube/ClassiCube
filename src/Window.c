@@ -38,6 +38,7 @@ static void Window_RegrabMouse(void) {
 	Window_CentreMousePosition();
 }
 
+#ifndef CC_BUILD_SDL
 void Window_EnableRawMouse(void) {
 	Window_RegrabMouse();
 	Cursor_SetVisible(false);
@@ -53,6 +54,7 @@ void Window_DisableRawMouse(void) {
 	Window_RegrabMouse();
 	Cursor_SetVisible(true);
 }
+#endif
 
 
 /*########################################################################################################################*
@@ -2523,6 +2525,7 @@ void GLContext_SetVSync(bool enabled) {
 #ifdef CC_BUILD_SDL
 #include <SDL2/SDL.h>
 static SDL_Window* win_handle;
+static bool win_rawMouse;
 
 static void Window_RefreshBounds(void) {
 	Rect2D r;
@@ -2777,6 +2780,7 @@ void Window_ProcessEvents(void) {
 			break;
 		case SDL_MOUSEMOTION:
 			Mouse_SetPosition(e.motion.x, e.motion.y);
+			if (win_rawMouse) Event_RaiseMouseMove(&MouseEvents.RawMoved, e.motion.xrel, e.motion.yrel);
 			break;
 		case SDL_TEXTINPUT:
 			Window_HandleTextEvent(&e); break;
@@ -2871,4 +2875,20 @@ void GLContext_SetVSync(bool enabled) {
 	SDL_GL_SetSwapInterval(enabled);
 }
 #endif
+
+void Window_EnableRawMouse(void) {
+	Window_RegrabMouse();
+	SDL_SetRelativeMouseMode(true);
+	win_rawMouse = true;
+}
+
+void Window_UpdateRawMouse(void) {
+	Window_CentreMousePosition();
+}
+
+void Window_DisableRawMouse(void) {
+	Window_RegrabMouse();
+	SDL_SetRelativeMouseMode(false);
+	win_rawMouse = false;
+}
 #endif

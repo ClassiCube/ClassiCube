@@ -292,6 +292,7 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 	attr.onprogress = Http_UpdateProgress;
 
 	Http_BeginRequest(req);
+	/* TODO: SET requestHeaders!!! */
 	emscripten_fetch(&attr, urlStr);
 }
 #endif

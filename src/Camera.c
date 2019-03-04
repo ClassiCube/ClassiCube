@@ -83,7 +83,6 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 	float headY, headX;
 	Vector2 rot = PerspectiveCamera_GetMouseDelta(delta);
 
-	cam_delta.X = 0; cam_delta.Y = 0;
 	if (Key_IsAltPressed() && Camera.Active->IsThirdPerson) {
 		cam_rotOffset.X += rot.X; cam_rotOffset.Y += rot.Y;
 		return;
@@ -101,11 +100,11 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 }
 
 static void PerspectiveCamera_UpdateMouse(double delta) {
-	struct Screen* screen = Gui_GetActiveScreen();
-	if (!screen->HandlesAllInput && Window_Focused) {
-		Window_UpdateRawMouse();
-	}
+	struct Screen* s = Gui_GetActiveScreen();
+	if (!s->HandlesAllInput && Window_Focused) Window_UpdateRawMouse();
+
 	PerspectiveCamera_UpdateMouseRotation(delta);
+	cam_delta.X = 0; cam_delta.Y = 0;
 }
 
 static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
