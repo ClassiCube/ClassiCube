@@ -13,10 +13,6 @@
 #include "freetype/ftmodapi.h"
 #include "freetype/ftglyph.h"
 
-static void Platform_InitDisplay(void);
-struct DisplayDevice DisplayDevice_Default;
-void* DisplayDevice_Meta;
-
 #ifdef CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
@@ -97,7 +93,6 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #endif
 /* Platform specific include files */
 #if defined CC_BUILD_UNIX
-#include <X11/Xlib.h>
 #include <AL/al.h>
 #include <AL/alc.h>
 #elif defined CC_BUILD_OSX
@@ -105,46 +100,11 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #include <mach-o/dyld.h>
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
-#include <ApplicationServices/ApplicationServices.h>
 #elif defined CC_BUILD_WEB
 #include <emscripten.h>
 #include <AL/al.h>
 #include <AL/alc.h>
 #endif
-
-
-/*########################################################################################################################*
-*------------------------------------------------------GraphicsMode-------------------------------------------------------*
-*#########################################################################################################################*/
-void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil) {
-	m->DepthBits    = depth;
-	m->StencilBits  = stencil;
-	m->IsIndexed    = bpp < 15;
-	m->BitsPerPixel = bpp;
-
-	m->A = 0;
-	switch (bpp) {
-	case 32:
-		m->R = 8; m->G = 8; m->B = 8; m->A = 8; break;
-	case 24:
-		m->R = 8; m->G = 8; m->B = 8; break;
-	case 16:
-		m->R = 5; m->G = 6; m->B = 5; break;
-	case 15:
-		m->R = 5; m->G = 5; m->B = 5; break;
-	case 8:
-		m->R = 3; m->G = 3; m->B = 2; break;
-	case 4:
-		m->R = 2; m->G = 2; m->B = 1; break;
-	default:
-		/* mode->R = 0; mode->G = 0; mode->B = 0; */
-		Logger_Abort2(bpp, "Unsupported bits per pixel"); break;
-	}
-}
-void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
-	int bpp = DisplayDevice_Default.BitsPerPixel;
-	GraphicsMode_Make(m, bpp, 24, 0);
-}
 
 
 /*########################################################################################################################*
@@ -868,7 +828,7 @@ static bool font_list_changed;
 static void Font_Init(void);
 
 #define DPI_PIXEL  72
-#define DPI_DEVICE 96 /* TODO: GetDeviceCaps(hdc, LOGPIXELSY) in Platform_InitDisplay ? */
+#define DPI_DEVICE 96 /* TODO: GetDeviceCaps(hdc, LOGPIXELSY) in Window_Init ? */
 
 struct FontData {
 	FT_Face face;
@@ -2041,18 +2001,6 @@ int Platform_ConvertString(void* data, const String* src) {
 	return src->length * 2;
 }
 
-static void Platform_InitDisplay(void) {
-	HDC hdc = GetDC(NULL);
-
-	DisplayDevice_Default.Bounds.X = 0;
-	DisplayDevice_Default.Bounds.Y = 0;
-	DisplayDevice_Default.Bounds.Width  = GetSystemMetrics(SM_CXSCREEN);
-	DisplayDevice_Default.Bounds.Height = GetSystemMetrics(SM_CYSCREEN);
-	DisplayDevice_Default.BitsPerPixel  = GetDeviceCaps(hdc, BITSPIXEL);
-
-	ReleaseDC(NULL, hdc);
-}
-
 static void Platform_InitStopwatch(void) {
 	LARGE_INTEGER freq;
 	sw_highRes = QueryPerformanceFrequency(&freq);
@@ -2068,7 +2016,6 @@ void Platform_Init(void) {
 	WSADATA wsaData;
 	ReturnCode res;
 
-	Platform_InitDisplay();
 	Platform_InitStopwatch();
 	heap = GetProcessHeap();
 	
@@ -2185,7 +2132,6 @@ static void Platform_InitCommon(void) {
 	signal(SIGCHLD, SIG_IGN);
 	/* So writing to closed socket doesn't raise SIGPIPE */
 	signal(SIGPIPE, SIG_IGN);
-	Platform_InitDisplay();
 	pthread_mutex_init(&audio_lock, NULL);
 }
 
@@ -2219,42 +2165,14 @@ ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* de
 	return ReturnCode_NotSupported;
 }
 #endif
-#ifdef CC_BUILD_X11
-static void Platform_InitDisplay(void) {
-	Display* display = XOpenDisplay(NULL);
-	int screen;
-	if (!display) Logger_Abort("Failed to open display");
-
-	DisplayDevice_Meta = display;
-	screen = DefaultScreen(display);
-
-	/* TODO: Use Xinerama and XRandR for querying these */
-	DisplayDevice_Default.Bounds.X = 0;
-	DisplayDevice_Default.Bounds.Y = 0;
-	DisplayDevice_Default.Bounds.Width  = DisplayWidth(display,  screen);
-	DisplayDevice_Default.Bounds.Height = DisplayHeight(display, screen);
-	DisplayDevice_Default.BitsPerPixel  = DefaultDepth(display,  screen);
-}
-#endif
 #ifdef CC_BUILD_UNIX
 void Platform_Init(void) {
 	Platform_InitCommon();
 	/* stopwatch always in nanoseconds */
-	sw_freqDiv = 1000; 
+	sw_freqDiv = 1000; i
 }
 #endif
 #ifdef CC_BUILD_OSX
-static void Platform_InitDisplay(void) {
-	CGDirectDisplayID display = CGMainDisplayID();
-	CGRect bounds = CGDisplayBounds(display);
-
-	DisplayDevice_Default.Bounds.X = (int)bounds.origin.x;
-	DisplayDevice_Default.Bounds.Y = (int)bounds.origin.y;
-	DisplayDevice_Default.Bounds.Width  = (int)bounds.size.width;
-	DisplayDevice_Default.Bounds.Height = (int)bounds.size.height;
-	DisplayDevice_Default.BitsPerPixel  = CGDisplayBitsPerPixel(display);
-}
-
 static void Platform_InitStopwatch(void) {
 	mach_timebase_info_data_t tb = { 0 };
 	mach_timebase_info(&tb);

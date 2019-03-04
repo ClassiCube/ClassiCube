@@ -5,6 +5,9 @@
 #include "Logger.h"
 #include "Funcs.h"
 
+int Display_BitsPerPixel;
+Rect2D Display_Bounds;
+
 bool Window_Exists, Window_Focused;
 Rect2D Window_Bounds, Window_ClientBounds;
 
@@ -12,12 +15,11 @@ static bool win_cursorVisible = true;
 bool Cursor_GetVisible(void) { return win_cursorVisible; }
 
 void Window_CreateSimple(int width, int height) {
-	struct DisplayDevice* device = &DisplayDevice_Default;
 	struct GraphicsMode mode;
 	int x, y;
 
-	x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
-	y = device->Bounds.Y + (device->Bounds.Height - height) / 2;
+	x = Display_Bounds.X + (Display_Bounds.Width  - width)  / 2;
+	y = Display_Bounds.Y + (Display_Bounds.Height - height) / 2;
 	GraphicsMode_MakeDefault(&mode);
 
 	Window_Create(x, y, width, height, &mode);
@@ -55,6 +57,39 @@ void Window_DisableRawMouse(void) {
 	Cursor_SetVisible(true);
 }
 #endif
+
+
+/*########################################################################################################################*
+*------------------------------------------------------GraphicsMode-------------------------------------------------------*
+*#########################################################################################################################*/
+void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil) {
+	m->DepthBits    = depth;
+	m->StencilBits  = stencil;
+	m->IsIndexed    = bpp < 15;
+	m->BitsPerPixel = bpp;
+
+	m->A = 0;
+	switch (bpp) {
+	case 32:
+		m->R = 8; m->G = 8; m->B = 8; m->A = 8; break;
+	case 24:
+		m->R = 8; m->G = 8; m->B = 8; break;
+	case 16:
+		m->R = 5; m->G = 6; m->B = 5; break;
+	case 15:
+		m->R = 5; m->G = 5; m->B = 5; break;
+	case 8:
+		m->R = 3; m->G = 3; m->B = 2; break;
+	case 4:
+		m->R = 2; m->G = 2; m->B = 1; break;
+	default:
+		/* mode->R = 0; mode->G = 0; mode->B = 0; */
+		Logger_Abort2(bpp, "Unsupported bits per pixel"); break;
+	}
+}
+void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
+	GraphicsMode_Make(m, Display_BitsPerPixel, 24, 0);
+}
 
 
 /*########################################################################################################################*
@@ -370,6 +405,14 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
+void Window_Init(void) {
+	HDC hdc = GetDC(NULL);
+	Display_Bounds.Width  = GetSystemMetrics(SM_CXSCREEN);
+	Display_Bounds.Height = GetSystemMetrics(SM_CYSCREEN);
+	Display_BitsPerPixel  = GetDeviceCaps(hdc, BITSPIXEL);
+	ReleaseDC(NULL, hdc);
+}
+
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
 	win_instance = GetModuleHandle(NULL);
 	/* TODO: UngroupFromTaskbar(); */
@@ -888,15 +931,27 @@ static void Window_RefreshBounds(const XConfigureEvent* e) {
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
 static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode);
+void Window_Init(void) {
+	Display* display = XOpenDisplay(NULL);
+	int screen;
+	if (!display) Logger_Abort("Failed to open display");
+	screen = DefaultScreen(display);
+
+	win_display = display;
+	win_screen  = screen;
+	win_rootWin = RootWindow(display, screen);
+
+	/* TODO: Use Xinerama and XRandR for querying these */
+	Display_Bounds.Width  = DisplayWidth(display,  screen);
+	Display_Bounds.Height = DisplayHeight(display, screen);
+	Display_BitsPerPixel  = DefaultDepth(display,  screen);
+}
+
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
 	XSetWindowAttributes attributes = { 0 };
 	XSizeHints hints = { 0 };
 	uintptr_t addr;
 	int supported;
-
-	win_display = DisplayDevice_Meta;
-	win_screen  = DefaultScreen(win_display);
-	win_rootWin = RootWindow(win_display, win_screen);
 
 	/* Open a display connection to the X server, and obtain the screen and root window */
 	addr = (uintptr_t)win_display;
@@ -1564,7 +1619,7 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 
 void Window_ShowDialog(const char* title, const char* msg) {
 	X11Window w = { 0 };
-	dpy = DisplayDevice_Meta;
+	dpy = win_display;
 
 	X11_MessageBox(title, msg, &w);
 	X11Window_Free(&w);
@@ -1732,6 +1787,7 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_OSX
 #include <AGL/agl.h>
+#include <ApplicationServices/ApplicationServices.h>
 
 static WindowRef win_handle;
 static int win_state;
@@ -2044,6 +2100,17 @@ static void Window_ConnectEvents(void) {
 /*########################################################################################################################*
  *--------------------------------------------------Public implementation--------------------------------------------------*
  *#########################################################################################################################*/
+void Window_Init(void) {
+	CGDirectDisplayID display = CGMainDisplayID();
+	CGRect bounds = CGDisplayBounds(display);
+
+	Display_Bounds.X = (int)bounds.origin.x;
+	Display_Bounds.Y = (int)bounds.origin.y;
+	Display_Bounds.Width  = (int)bounds.size.width;
+	Display_Bounds.Height = (int)bounds.size.height;
+	Display_BitsPerPixel  = CGDisplayBitsPerPixel(display);
+}
+
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
 	Rect r;
 	OSStatus res;
@@ -2410,8 +2477,8 @@ static void GLContext_UnsetFullscreen(void) {
 }
 
 static void GLContext_SetFullscreen(void) {
-	int displayWidth  = DisplayDevice_Default.Bounds.Width;
-	int displayHeight = DisplayDevice_Default.Bounds.Height;
+	int displayWidth  = Display_Bounds.Width;
+	int displayHeight = Display_Bounds.Height;
 	int code;
 
 	Platform_LogConst("Switching to AGL fullscreen");
@@ -2434,8 +2501,8 @@ static void GLContext_SetFullscreen(void) {
 	ctx_fullscreen     = true;
 	ctx_windowedBounds = Window_ClientBounds;
 
-	Window_ClientBounds = DisplayDevice_Default.Bounds;
-	Window_Bounds = DisplayDevice_Default.Bounds;
+	Window_ClientBounds = Display_Bounds;
+	Window_Bounds = Display_Bounds;
 	win_state     = WINDOW_STATE_FULLSCREEN;
 }
 
@@ -2545,6 +2612,16 @@ static void Window_SDLFail(const char* place) {
 	String_Format2(&str, "Error when %c: %c", place, SDL_GetError());
 	str.buffer[str.length] = '\0';
 	Logger_Abort(str.buffer);
+}
+
+void Window_Init(void) {
+	SDL_DisplayMode mode = { 0 };
+	SDL_Init(SDL_INIT_VIDEO);
+	SDL_GetDesktopDisplayMode(0, &mode);
+
+	Display_Bounds.Width  = mode.w;
+	Display_Bounds.Height = mode.h;
+	Display_BitsPerPixel  = SDL_BITSPERPIXEL(mode.format);
 }
 
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {

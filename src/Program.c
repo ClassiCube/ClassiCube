@@ -119,6 +119,7 @@ int main(int argc, char** argv) {
 
 	Logger_Hook();
 	Platform_Init();
+	Window_Init();
 	Program_SetCurrentDirectory();
 #ifdef CC_TEST_VORBIS
 	main_imdct();

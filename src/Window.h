@@ -32,10 +32,21 @@
 */
 
 /* The states the window can be in. */
-typedef enum WindowState_ {
-	WINDOW_STATE_NORMAL, WINDOW_STATE_MINIMISED, WINDOW_STATE_MAXIMISED, WINDOW_STATE_FULLSCREEN
-} WindowState;
-struct GraphicsMode;
+enum WindowState { WINDOW_STATE_NORMAL, WINDOW_STATE_MINIMISED, WINDOW_STATE_MAXIMISED, WINDOW_STATE_FULLSCREEN };
+extern int Display_BitsPerPixel;
+extern Rect2D Display_Bounds;
+
+struct GraphicsMode {
+	int R, G, B, A, BitsPerPixel, IsIndexed; /* Colour buffer data */
+	int DepthBits, StencilBits; /* Z buffer data */
+};
+
+/* Initalises state for window. Also sets DisplayDevice.Default members. */
+void Window_Init(void);
+/* Creates a new GraphicsMode from the given data. */
+void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil);
+/* Creates a GraphicsMode compatible with the default display device. */
+void GraphicsMode_MakeDefault(struct GraphicsMode* m);
 
 /* Creates the window as the given size at centre of the screen, with default graphics mode. */
 void Window_CreateSimple(int width, int height);

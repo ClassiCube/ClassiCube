@@ -25,7 +25,11 @@ CC_API double Math_Cos(double x);
 float Math_SinF(float x);
 float Math_CosF(float x);
 
+/* Computes loge(x). Can also be used to approximate logy(x). */
+/* e.g. for log3(x), use: Math_Log(x)/log(3) */
 double Math_Log(double x);
+/* Computes e^x. Can also be used to approximate y^x. */
+/* e.g. for 3^x, use: Math_Exp(log(3)*x) */
 double Math_Exp(double x);
 double Math_FastTan(double x);
 

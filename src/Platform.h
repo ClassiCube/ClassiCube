@@ -32,20 +32,6 @@ extern const ReturnCode ReturnCode_SocketInProgess;
 extern const ReturnCode ReturnCode_SocketWouldBlock;
 extern const ReturnCode ReturnCode_InvalidArg;
 
-/* Data for a display device. (usually a monitor) */
-struct DisplayDevice { int BitsPerPixel; Rect2D Bounds; };
-extern struct DisplayDevice DisplayDevice_Default;
-extern void* DisplayDevice_Meta;
-
-struct GraphicsMode {
-	int R,G,B,A, BitsPerPixel, IsIndexed; /* Colour buffer data */
-	int DepthBits, StencilBits; /* Z buffer data */
-};
-/* Creates a new GraphicsMode from the given data. */
-void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil);
-/* Creates a GraphicsMode compatible with the default display device. */
-void GraphicsMode_MakeDefault(struct GraphicsMode* m);
-
 /* Encodes a string in platform specific format. (e.g. unicode on windows, UTF8 on linux) */
 /* NOTE: Only useful for platform specific function calls - do NOT try to interpret the data. */
 /* Returns the number of bytes written, excluding trailing NULL terminator. */
