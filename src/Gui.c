@@ -189,7 +189,7 @@ void Gui_SetActive(struct Screen* screen) {
 	}
 
 	Gui_Active = screen;
-	Gui_CalcCursorVisible();
+	Camera_CheckFocus();
 }
 void Gui_RefreshHud(void) { Elem_Recreate(Gui_HUD); }
 
@@ -211,7 +211,7 @@ void Gui_ShowOverlay(struct Screen* overlay, bool atFront) {
 	Gui_OverlaysCount++;
 
 	Elem_Init(overlay);
-	Gui_CalcCursorVisible();
+	Camera_CheckFocus();
 }
 
 int Gui_IndexOverlay(const void* overlay) {
@@ -238,7 +238,7 @@ void Gui_FreeOverlay(void* overlay) {
 
 	Gui_OverlaysCount--;
 	Gui_Overlays[Gui_OverlaysCount] = NULL;
-	Gui_CalcCursorVisible();
+	Camera_CheckFocus();
 }
 
 void Gui_RenderGui(double delta) {
@@ -265,17 +265,6 @@ void Gui_OnResize(void) {
 	for (i = 0; i < Gui_OverlaysCount; i++) {
 		Screen_OnResize(Gui_Overlays[i]);
 	}
-}
-
-static bool gui_cursorVisible = true;
-void Gui_CalcCursorVisible(void) {
-	bool vis = Gui_GetActiveScreen()->HandlesAllInput;
-	if (vis == gui_cursorVisible) return;
-	gui_cursorVisible = vis;
-
-	Cursor_SetVisible(vis);
-	if (Window_Focused)
-		Camera.Active->RegrabMouse();
 }
 
 

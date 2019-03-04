@@ -182,10 +182,11 @@ CC_VAR extern struct _KeyEventsList {
 } KeyEvents;
 
 CC_VAR extern struct _MouseEventsList {
-	struct Event_MouseMove Moved; /* Mouse position is changed (Arg is delta from last position) */
+	struct Event_MouseMove Moved; /* Cursor position changed (Arg is delta from last position) */
 	struct Event_Int Down;        /* Mouse button is pressed (Arg is MouseButton member) */
 	struct Event_Int Up;          /* Mouse button is released (Arg is MouseButton member) */
 	struct Event_Float Wheel;     /* Mouse wheel is moved/scrolled (Arg is wheel delta) */
+	struct Event_MouseMove RawMoved; /* Raw mouse position changed (Arg is delta) */
 } MouseEvents;
 
 CC_VAR extern struct _NetEventsList {

@@ -126,7 +126,6 @@ int  Gui_IndexOverlay(const void* overlay);
 void Gui_FreeOverlay(void* overlay);
 void Gui_RenderGui(double delta);
 void Gui_OnResize(void);
-void Gui_CalcCursorVisible(void);
 
 #define TEXTATLAS_MAX_WIDTHS 16
 struct TextAtlas {

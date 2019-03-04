@@ -12,6 +12,20 @@ struct _CameraData Camera;
 static struct PickedPos cameraClipPos;
 static Vector2 cam_rotOffset;
 static bool cam_isForwardThird;
+static Point2D cam_delta;
+
+static void Camera_AcquireFocus(void) {
+	Window_EnableRawMouse();
+}
+static void Camera_LoseFocus(void) {
+	Window_DisableRawMouse();
+}
+static void Camera_OnRawMouseMoved(int deltaX, int deltaY) {
+	cam_delta.X += deltaX; cam_delta.Y += deltaY;
+}
+static void Camera_RawMouseMovedHandler(void* obj, int deltaX, int deltaY) {
+	Camera.Active->OnRawMouseMoved(deltaX, deltaY);
+}
 
 /*########################################################################################################################*
 *--------------------------------------------------Perspective camera-----------------------------------------------------*
@@ -37,27 +51,11 @@ static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
 	Picking_CalculatePickedBlock(eyePos, dir, reach, pos);
 }
 
-static Point2D cam_prev, cam_delta;
-static void PerspectiveCamera_CentreMousePosition(void) {
-	int cenX = Window_ClientBounds.X + Game.Width  / 2;
-	int cenY = Window_ClientBounds.Y + Game.Height / 2;
-
-	Cursor_SetScreenPos(cenX, cenY);
-	/* Fixes issues with large DPI displays on Windows >= 8.0. */
-	cam_prev = Cursor_GetScreenPos();
-}
-
-static void PerspectiveCamera_RegrabMouse(void) {
-	if (!Window_Exists) return;
-	cam_delta.X = 0; cam_delta.Y = 0;
-	PerspectiveCamera_CentreMousePosition();
-}
-
 #define CAMERA_SENSI_FACTOR (0.0002f / 3.0f * MATH_RAD2DEG)
 #define CAMERA_SLIPPERY 0.97f
 #define CAMERA_ADJUST 0.025f
 
-static Vector2 PerspectiveCamera_GetMouseDelta(void) {
+static Vector2 PerspectiveCamera_GetMouseDelta(double delta) {
 	float sensitivity = CAMERA_SENSI_FACTOR * Camera.Sensitivity;
 	static float speedX, speedY;
 	Vector2 v;
@@ -77,14 +75,15 @@ static Vector2 PerspectiveCamera_GetMouseDelta(void) {
 	return v;
 }
 
-static void PerspectiveCamera_UpdateMouseRotation(void) {
+static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct Entity* e      = &p->Base;
 
 	struct LocationUpdate update;
 	float headY, headX;
-	Vector2 rot = PerspectiveCamera_GetMouseDelta();
+	Vector2 rot = PerspectiveCamera_GetMouseDelta(delta);
 
+	cam_delta.X = 0; cam_delta.Y = 0;
 	if (Key_IsAltPressed() && Camera.Active->IsThirdPerson) {
 		cam_rotOffset.X += rot.X; cam_rotOffset.Y += rot.Y;
 		return;
@@ -101,18 +100,12 @@ static void PerspectiveCamera_UpdateMouseRotation(void) {
 	e->VTABLE->SetLocation(e, &update, false);
 }
 
-static void PerspectiveCamera_UpdateMouse(void) {
+static void PerspectiveCamera_UpdateMouse(double delta) {
 	struct Screen* screen = Gui_GetActiveScreen();
-	Point2D pos;
-
-	if (screen->HandlesAllInput) {
-		cam_delta.X = 0; cam_delta.Y = 0;
-	} else if (Window_Focused) {
-		pos = Cursor_GetScreenPos();
-		cam_delta.X = pos.X - cam_prev.X; cam_delta.Y = pos.Y - cam_prev.Y;
-		PerspectiveCamera_CentreMousePosition();
+	if (!screen->HandlesAllInput && Window_Focused) {
+		Window_UpdateRawMouse();
 	}
-	PerspectiveCamera_UpdateMouseRotation();
+	PerspectiveCamera_UpdateMouseRotation(delta);
 }
 
 static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
@@ -163,7 +156,8 @@ struct Camera Camera_FirstPerson = {
 	false,
 	PerspectiveCamera_GetProjection,  PerspectiveCamera_GetView,
 	FirstPersonCamera_GetOrientation, FirstPersonCamera_GetPosition,
-	PerspectiveCamera_UpdateMouse,    PerspectiveCamera_RegrabMouse,
+	PerspectiveCamera_UpdateMouse,    Camera_OnRawMouseMoved,
+	Camera_AcquireFocus,              Camera_LoseFocus,
 	PerspectiveCamera_GetPickedBlock, FirstPersonCamera_Zoom,
 };
 
@@ -214,14 +208,16 @@ struct Camera Camera_ThirdPerson = {
 	true,
 	PerspectiveCamera_GetProjection,  PerspectiveCamera_GetView,
 	ThirdPersonCamera_GetOrientation, ThirdPersonCamera_GetPosition,
-	PerspectiveCamera_UpdateMouse,    PerspectiveCamera_RegrabMouse,
+	PerspectiveCamera_UpdateMouse,    Camera_OnRawMouseMoved,
+	Camera_AcquireFocus,              Camera_LoseFocus,
 	PerspectiveCamera_GetPickedBlock, ThirdPersonCamera_Zoom,
 };
 struct Camera Camera_ForwardThird = {
 	true,
 	PerspectiveCamera_GetProjection,  PerspectiveCamera_GetView,
 	ThirdPersonCamera_GetOrientation, ThirdPersonCamera_GetPosition,
-	PerspectiveCamera_UpdateMouse,    PerspectiveCamera_RegrabMouse,
+	PerspectiveCamera_UpdateMouse,    Camera_OnRawMouseMoved,
+	Camera_AcquireFocus,              Camera_LoseFocus,
 	PerspectiveCamera_GetPickedBlock, ThirdPersonCamera_Zoom,
 };
 
@@ -234,7 +230,8 @@ void Camera_Init(void) {
 	Camera_Register(&Camera_ThirdPerson);
 	Camera_Register(&Camera_ForwardThird);
 
-	Camera.Active      = &Camera_FirstPerson;
+	Camera.Active = &Camera_FirstPerson;
+	Event_RegisterMouseMove(&MouseEvents.RawMoved, NULL, Camera_RawMouseMovedHandler);
 
 	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 100, 30);
 	Camera.Clipping    = Options_GetBool(OPT_CAMERA_CLIPPING, true);
@@ -262,4 +259,17 @@ void Camera_Register(struct Camera* cam) {
 	LinkedList_Add(cam, cams_head, cams_tail);
 	/* want a circular linked list */
 	cam->Next = cams_head;
+}
+
+static bool cam_focussed;
+void Camera_CheckFocus(void) {
+	bool focus = !Gui_GetActiveScreen()->HandlesAllInput;
+	if (focus == cam_focussed) return;
+	cam_focussed = focus;
+
+	if (focus) {
+		Camera.Active->AcquireFocus();
+	} else {
+		Camera.Active->LoseFocus();
+	}
 }

@@ -635,7 +635,7 @@ static void Game_RenderFrame(double delta) {
 	Game.Time += delta;
 	Game_Vertices = 0;
 
-	Camera.Active->UpdateMouse();
+	Camera.Active->UpdateMouse(delta);
 	if (!Window_Focused && !Gui_GetActiveScreen()->HandlesAllInput) {
 		Gui_FreeActive();
 		Gui_SetActive(PauseScreen_MakeInstance());

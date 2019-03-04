@@ -107,7 +107,7 @@ void Entity_GetBounds(struct Entity* e, struct AABB* bb) {
 }
 
 static void Entity_ParseScale(struct Entity* e, const String* scale) {
-	float value, maxScale;
+	float value;
 	if (!Convert_ParseFloat(scale, &value)) return;
 
 	value = max(value, 0.001f);

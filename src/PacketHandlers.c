@@ -23,6 +23,7 @@
 #include "TexturePack.h"
 #include "Gui.h"
 #include "Errors.h"
+#include "Camera.h"
 
 /* Classic state */
 static uint8_t classic_tabList[ENTITIES_MAX_COUNT >> 3];
@@ -495,7 +496,7 @@ static void Classic_LevelFinalise(uint8_t* data) {
 	Gui_CloseActive();
 	Gui_Active = classic_prevScreen;
 	classic_prevScreen = NULL;
-	Gui_CalcCursorVisible();
+	Camera_CheckFocus();
 
 	width  = Stream_GetU16_BE(&data[0]);
 	height = Stream_GetU16_BE(&data[2]);
@@ -966,7 +967,7 @@ static void CPE_SetTextHotkey(uint8_t* data) {
 	if (keyCode > 255) return;
 
 	key = Hotkeys_LWJGL[keyCode];
-	if (key == KEY_NONE) return;
+	if (!key) return;
 	Platform_Log3("CPE hotkey added: %c, %b: %s", Key_Names[key], &keyMods, &action);
 
 	if (!action.length) {

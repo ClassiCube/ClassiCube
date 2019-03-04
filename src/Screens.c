@@ -726,7 +726,7 @@ static void ChatScreen_UpdateAltTextY(struct ChatScreen* s) {
 static void ChatScreen_SetHandlesAllInput(struct ChatScreen* s, bool handles) {
 	s->HandlesAllInput       = handles;
 	Gui_HUD->HandlesAllInput = handles;
-	Gui_CalcCursorVisible();
+	Camera_CheckFocus();
 }
 
 static void ChatScreen_OpenInput(struct ChatScreen* s, const String* initialText) {
@@ -1069,7 +1069,7 @@ static void ChatScreen_ContextLost(void* screen) {
 	struct ChatScreen* s = screen;
 	if (s->HandlesAllInput) {
 		String_Copy(&ChatScreen_InputStr, &s->Input.Base.Text);
-		Gui_CalcCursorVisible();
+		Camera_CheckFocus();
 	}
 
 	Elem_TryFree(&s->Chat);

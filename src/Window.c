@@ -23,6 +23,37 @@ void Window_CreateSimple(int width, int height) {
 	Window_Create(x, y, width, height, &mode);
 }
 
+static Point2D cursorPrev;
+static void Window_CentreMousePosition(void) {
+	int cenX = Window_ClientBounds.X + Window_ClientBounds.Width  / 2;
+	int cenY = Window_ClientBounds.Y + Window_ClientBounds.Height / 2;
+
+	Cursor_SetScreenPos(cenX, cenY);
+	/* Fixes issues with large DPI displays on Windows >= 8.0. */
+	cursorPrev = Cursor_GetScreenPos();
+}
+
+static void Window_RegrabMouse(void) {
+	if (!Window_Focused || !Window_Exists) return;
+	Window_CentreMousePosition();
+}
+
+void Window_EnableRawMouse(void) {
+	Window_RegrabMouse();
+	Cursor_SetVisible(false);
+}
+
+void Window_UpdateRawMouse(void) {
+	Point2D p = Cursor_GetScreenPos();
+	Event_RaiseMouseMove(&MouseEvents.RawMoved, p.X - cursorPrev.X, p.Y - cursorPrev.Y);
+	Window_CentreMousePosition();
+}
+
+void Window_DisableRawMouse(void) {
+	Window_RegrabMouse();
+	Cursor_SetVisible(true);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Win32 window-------------------------------------------------------*
@@ -303,9 +334,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 		default:
 			mappedKey = Window_MapKey(wParam);
-			if (mappedKey != KEY_NONE) {
-				Key_SetPressed(mappedKey, pressed);
-			}
+			if (mappedKey) Key_SetPressed(mappedKey, pressed);
 			return 0;
 		}
 	} break;
@@ -1083,8 +1112,8 @@ static void Window_ToggleKey(XKeyEvent* keyEvent, bool pressed) {
 	KeySym keysym2 = XLookupKeysym(keyEvent, 1);
 
 	Key key = Window_MapKey(keysym1);
-	if (key == KEY_NONE) key = Window_MapKey(keysym2);
-	if (key != KEY_NONE) Key_SetPressed(key, pressed);
+	if (!key) key = Window_MapKey(keysym2);
+	if (key)  Key_SetPressed(key, pressed);
 }
 
 static Atom Window_GetSelectionProperty(XEvent* e) {

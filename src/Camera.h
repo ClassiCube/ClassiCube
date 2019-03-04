@@ -45,11 +45,14 @@ struct Camera {
 	Vector3 (*GetPosition)(float t);
 
 	/* Called to update the camera's state. */
-	/* Typically, this is used to adjust yaw/pitch based on mouse movement. */
-	void (*UpdateMouse)(void);
+	/* Typically, this is used to adjust yaw/pitch based on accumulated mouse movement. */
+	void (*UpdateMouse)(double delta);
+	/* Called when mouse has moved. */
+	void (*OnRawMouseMoved)(int deltaX, int deltaY);
 	/* Called when user closes all menus, and is interacting with camera again. */
-	/* Typically, this is used to move mouse cursor to centre of the window. */
-	void (*RegrabMouse)(void);
+	void (*AcquireFocus)(void);
+	/* Called when user is no longer interacting with camera. (e.g. opened menu) */
+	void (*LoseFocus)(void);
 
 	/* Calculates selected block in the world, based on camera's current state */
 	void (*GetPickedBlock)(struct PickedPos* pos);
@@ -66,4 +69,7 @@ void Camera_Init(void);
 void Camera_CycleActive(void);
 /* Registers a camera for use. */
 CC_API void Camera_Register(struct Camera* camera);
+/* Checks whether camera is still focused or not. */
+/* If focus changes, calls AcquireFocus or LoseFocus */
+void Camera_CheckFocus(void);
 #endif

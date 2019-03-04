@@ -857,13 +857,13 @@ static void EditHotkeyScreen_SaveChanges(void* screen, void* b) {
 	struct EditHotkeyScreen* s = screen;
 	struct HotkeyData hotkey = s->OrigHotkey;
 
-	if (hotkey.Trigger != KEY_NONE) {
+	if (hotkey.Trigger) {
 		Hotkeys_Remove(hotkey.Trigger, hotkey.Flags);
 		Hotkeys_UserRemovedHotkey(hotkey.Trigger, hotkey.Flags);
 	}
 
 	hotkey = s->CurHotkey;
-	if (hotkey.Trigger != KEY_NONE) {
+	if (hotkey.Trigger) {
 		String text = s->Input.Base.Text;
 		Hotkeys_Add(hotkey.Trigger, hotkey.Flags, &text, hotkey.StaysOpen);
 		Hotkeys_UserAddedHotkey(hotkey.Trigger, hotkey.Flags, hotkey.StaysOpen, &text);
@@ -877,7 +877,7 @@ static void EditHotkeyScreen_RemoveHotkey(void* screen, void* b) {
 	struct EditHotkeyScreen* s = screen;
 	struct HotkeyData hotkey = s->OrigHotkey;
 
-	if (hotkey.Trigger != KEY_NONE) {
+	if (hotkey.Trigger) {
 		Hotkeys_Remove(hotkey.Trigger, hotkey.Flags);
 		Hotkeys_UserRemovedHotkey(hotkey.Trigger, hotkey.Flags);
 	}

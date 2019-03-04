@@ -106,6 +106,16 @@ void Window_InitRaw(Bitmap* bmp);
 /* r can be used to only update a small region of pixels (may be ignored) */
 void Window_DrawRaw(Rect2D r);
 
+/* Begins listening for raw input and starts raising MouseEvents.RawMoved. */
+/* NOTE: Some backends only raise it when Window_UpdateRawMouse is called.  */
+/* Cursor will also be hidden and moved to window centre. */
+void Window_EnableRawMouse(void);
+/* Updates mouse state. (such as centreing cursor) */
+void Window_UpdateRawMouse(void);
+/* Disables listening for raw input and stops raising MouseEvents.RawMoved */
+/* Cursor will also be unhidden and moved back to window centre. */
+void Window_DisableRawMouse(void);
+
 #ifndef CC_BUILD_D3D9
 /* Initialises an OpenGL context that most closely matches the input arguments. */
 /* NOTE: You must have created a window beforehand, as the GL context is attached to the window. */
