@@ -192,7 +192,7 @@ static void Handlers_UpdateLocation(EntityID playerId, struct LocationUpdate* up
 /* Partially based on information from http://files.worldofminecraft.com/texturing/ */
 /* NOTE: http://files.worldofminecraft.com/ has been down for quite a while, so support was removed on Oct 10, 2015 */
 
-static char wom_identifierBuffer[STRING_SIZE];
+static char wom_identifierBuffer[32];
 static String wom_identifier = String_FromArray(wom_identifierBuffer);
 static int wom_counter;
 static bool wom_sendId, wom_sentId;

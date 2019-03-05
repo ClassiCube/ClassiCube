@@ -2199,7 +2199,7 @@ static void ClassicOptionsScreen_SetViewDist(const String* v) {
 	Game_UserSetViewDistance(dist);
 }
 
-static void ClassicOptionsScreen_GetPhysics(String* v) { Menu_GetBool(v, Physics_Enabled); }
+static void ClassicOptionsScreen_GetPhysics(String* v) { Menu_GetBool(v, Physics.Enabled); }
 static void ClassicOptionsScreen_SetPhysics(const String* v) {
 	Physics_SetEnabled(Menu_SetBool(v, OPT_BLOCK_PHYSICS));
 }
@@ -2749,7 +2749,7 @@ static void MiscOptionsScreen_SetSounds(const String* v) {
 static void MiscOptionsScreen_GetViewBob(String* v) { Menu_GetBool(v, Game_ViewBobbing); }
 static void MiscOptionsScreen_SetViewBob(const String* v) { Game_ViewBobbing = Menu_SetBool(v, OPT_VIEW_BOBBING); }
 
-static void MiscOptionsScreen_GetPhysics(String* v) { Menu_GetBool(v, Physics_Enabled); }
+static void MiscOptionsScreen_GetPhysics(String* v) { Menu_GetBool(v, Physics.Enabled); }
 static void MiscOptionsScreen_SetPhysics(const String* v) {
 	Physics_SetEnabled(Menu_SetBool(v, OPT_BLOCK_PHYSICS));
 }

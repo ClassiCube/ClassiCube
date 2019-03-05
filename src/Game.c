@@ -693,6 +693,39 @@ void Game_Free(void* obj) {
 	Options_Save();
 }
 
+#define Game_DoFrameBody() \
+	Window_ProcessEvents();\
+	if (!Window_Exists) return;\
+	\
+	render = Stopwatch_Measure();\
+	time   = Stopwatch_ElapsedMicroseconds(lastRender, render) / (1000.0 * 1000.0);\
+	\
+	if (time > 1.0) time = 1.0; /* avoid large delta with suspended process */ \
+	if (time > 0.0) { lastRender = Stopwatch_Measure(); Game_RenderFrame(time); }
+
+#ifdef CC_BUILD_WEB
+#include <emscripten.h>
+static uint64_t lastRender;
+
+static void Game_DoFrame(void) {
+	uint64_t render; 
+	double time;
+	Game_DoFrameBody()
+}
+
+static void Game_RunLoop(void) {
+	lastRender = Stopwatch_Measure();
+	emscripten_set_main_loop(Game_DoFrame, 0, false);
+}
+#else
+static void Game_RunLoop(void) {
+	uint64_t lastRender, render; 
+	double time;
+	lastRender = Stopwatch_Measure();
+	for (;;) { Game_DoFrameBody() }
+}
+#endif
+
 void Game_Run(int width, int height, const String* title) {
 	uint64_t lastRender, render;
 	double time;
@@ -703,19 +736,5 @@ void Game_Run(int width, int height, const String* title) {
 
 	Game_Load();
 	Event_RaiseVoid(&WindowEvents.Resized);
-
-	lastRender = Stopwatch_Measure();
-	for (;;) {
-		Window_ProcessEvents();
-		if (!Window_Exists) break;
-
-		/* Limit maximum render to 1 second (for suspended process) */
-		render = Stopwatch_Measure();
-		time   = Stopwatch_ElapsedMicroseconds(lastRender, render) / (1000.0 * 1000.0);
-		if (time > 1.0) time = 1.0;
-		if (time <= 0.0) continue;
-
-		lastRender = Stopwatch_Measure();
-		Game_RenderFrame(time);
-	}
+	Game_RunLoop();
 }

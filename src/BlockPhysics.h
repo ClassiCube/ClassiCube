@@ -4,8 +4,23 @@
 /* Implements simple block physics.
    Copyright 2014 - 2017 ClassicalSharp | Licensed under BSD-3
 */
+typedef void (*PhysicsHandler)(int index, BlockID block);
 
-extern bool Physics_Enabled;
+CC_VAR extern struct Physics_ {
+	/* Whether block physics are enabled at all. */
+	bool Enabled;
+	/* Called when block is activated by a neighbouring block change. */
+	/* e.g. trigger sand falling, water flooding */
+	PhysicsHandler OnActivate[256];
+	/* Called when this block is randomly activated. */
+	/* e.g. grass eventually fading to dirt in darkness */
+	PhysicsHandler OnRandomTick[256];
+	/* Called when user manually places a block. */
+	PhysicsHandler OnPlace[256];
+	/* Called when user manually deletes a block. */
+	PhysicsHandler OnDelete[256];
+} Physics;
+
 void Physics_SetEnabled(bool enabled);
 void Physics_OnBlockChanged(int x, int y, int z, BlockID old, BlockID now);
 void Physics_Init(void);

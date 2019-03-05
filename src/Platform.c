@@ -2193,10 +2193,5 @@ void Platform_Init(void) {
 }
 #endif
 #ifdef CC_BUILD_WEB
-void Platform_Init(void) {
-	/* TODO: Actually get real window size here */
-	DisplayDevice_Default.Bounds.Width  = 900;
-	DisplayDevice_Default.Bounds.Height = 700;
-	DisplayDevice_Default.BitsPerPixel  = 32;
-}
+void Platform_Init(void) { }
 #endif
