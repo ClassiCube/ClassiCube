@@ -3099,7 +3099,7 @@ static struct UrlWarningOverlay UrlWarningOverlay_Instance;
 static void UrlWarningOverlay_OpenUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = screen;
 	Gui_FreeOverlay(s);
-	Platform_StartOpen(&s->Url);
+	Process_StartOpen(&s->Url);
 }
 
 static void UrlWarningOverlay_AppendUrl(void* screen, void* b) {

@@ -380,12 +380,12 @@ static void Game_LoadPlugin(const String* filename, void* obj) {
 
 	/* ignore accepted.txt, deskop.ini, .pdb files, etc */
 	if (!String_CaselessEnds(filename, &ext)) return;
-	res = Platform_LoadLibrary(filename, &lib);
+	res = DynamicLib_Load(filename, &lib);
 	if (res) { Logger_Warn2(res, "loading plugin", filename); return; }
 
-	res = Platform_GetSymbol(lib, "Plugin_ApiVersion", &verSymbol);
+	res = DynamicLib_Get(lib, "Plugin_ApiVersion", &verSymbol);
 	if (res) { Logger_Warn2(res, "getting version of", filename); return; }
-	res = Platform_GetSymbol(lib, "Plugin_Component", &compSymbol);
+	res = DynamicLib_Get(lib, "Plugin_Component", &compSymbol);
 	if (res) { Logger_Warn2(res, "initing", filename); return; }
 
 	ver = *((int*)verSymbol);

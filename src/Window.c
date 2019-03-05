@@ -2570,7 +2570,7 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
-	void* address = Platform_GetSymbolFrom("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", function);
+	void* address = DynamicLib_GetFrom("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", function);
 	return GLContext_IsInvalidAddress(address) ? NULL : address;
 }
 

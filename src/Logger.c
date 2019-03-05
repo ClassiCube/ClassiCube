@@ -560,7 +560,7 @@ static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx
 
 	msg.buffer[msg.length] = '\0';
 	Window_ShowDialog("We're sorry", msg.buffer);
-	Platform_Exit(result);
+	Process_Exit(result);
 }
 
 void Logger_Abort(const char* raw_msg) { Logger_Abort2(0, raw_msg); }

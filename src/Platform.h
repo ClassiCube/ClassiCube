@@ -43,8 +43,8 @@ void Platform_Free(void);
 /* Sets current/working directory to the given directory. */
 /* This is the 'base directory' relative paths are relative to. */
 ReturnCode Platform_SetCurrentDirectory(const String* path);
-/* Exits the process with the given return code .*/
-void Platform_Exit(ReturnCode code);
+/* Marks a file as being executable. */
+ReturnCode Platform_MarkExecutable(const String* path);
 
 /* Gets the command line arguments passed to the program. */
 int  Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args);
@@ -56,24 +56,24 @@ ReturnCode Platform_Encrypt(const uint8_t* data, int len, uint8_t** enc, int* en
 ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* decLen);
 
 /* Returns the full path of the application's executable. */
-ReturnCode Platform_GetExePath(String* path);
+ReturnCode Process_GetExePath(String* path);
 /* Starts the given program with the given arguments. */
-ReturnCode Platform_StartProcess(const String* path, const String* args);
+ReturnCode Process_Start(const String* path, const String* args);
 /* Starts the platform-specific program to open the given url or filename. */
 /* For example, provide a http:// url to open a website in the user's web browser. */
-ReturnCode Platform_StartOpen(const String* args);
-/* Marks a file as being executable. */
-ReturnCode Platform_MarkExecutable(const String* path);
+ReturnCode Process_StartOpen(const String* args);
+/* Exits the process with the given return code .*/
+void Process_Exit(ReturnCode code);
 
 /* Attempts to load a native dynamic library from the given path. */
-CC_API ReturnCode Platform_LoadLibrary(const String* path, void** lib);
+CC_API ReturnCode DynamicLib_Load(const String* path, void** lib);
 /* Attempts to get the address of the symbol in the given dynamic library. */
 /* NOTE: Do NOT use this to load OpenGL functions, use GLContext_GetAddress. */
-CC_API ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol);
-/* Simple wrapper for Platform_LoadLibrary then Platform_GetSymbol. */
+CC_API ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol);
+/* Simple wrapper for DynamicLib_Load then DynamicLib_Get. */
 /* NOTE: This should ONLY be used for dynamically loading platform-specific symbols. */
 /* (e.g. functionality that only exists on recent operating system versions) */
-void* Platform_GetSymbolFrom(const char* filename, const char* name);
+void* DynamicLib_GetFrom(const char* filename, const char* name);
 
 /* Allocates a block of memory, with undetermined contents. Exits process on allocation failure. */
 CC_API void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place);

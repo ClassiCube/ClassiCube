@@ -532,14 +532,14 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 	}
 
 	String_InitArray(path, pathBuffer);
-	res = Platform_GetExePath(&path);
+	res = Process_GetExePath(&path);
 	if (res) { Logger_Warn(res, "getting .exe path"); return false; }
 
 	String_InitArray(args, argsBuffer);
 	String_AppendString(&args, user);
 	if (mppass->length) String_Format3(&args, " %s %s %s", mppass, ip, port);
 
-	res = Platform_StartProcess(&path, &args);
+	res = Process_Start(&path, &args);
 #ifdef CC_BUILD_WINDOWS
 	/* TODO: Check this*/
 	/* HRESULT when user clicks 'cancel' to 'are you sure you want to run ClassiCube.exe' */
@@ -612,7 +612,7 @@ static void Launcher_ApplyUpdate(void) {
 	ReturnCode res;
 
 	String_InitArray(exe, exeBuffer);
-	res = Platform_GetExePath(&exe);
+	res = Process_GetExePath(&exe);
 	if (res) { Logger_Warn(res, "getting executable path"); return; }
 
 	Utils_UNSAFE_GetFilename(&exe);
@@ -626,6 +626,6 @@ static void Launcher_ApplyUpdate(void) {
 	res = Platform_MarkExecutable(&scriptPath);
 	if (res) Logger_Warn(res, "making update script executable");
 
-	res = Platform_StartProcess(&scriptName, &scriptArgs);
+	res = Process_Start(&scriptName, &scriptArgs);
 	if (res) { Logger_Warn(res, "starting update script"); return; }
 }

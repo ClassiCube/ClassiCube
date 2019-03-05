@@ -1309,12 +1309,56 @@ void Gfx_OnWindowResize(void) {
 *------------------------------------------------------OpenGL modern------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_GLMODERN
-static GLuint GL_CompileShader(GLenum type, const char* src) {
-    GLint temp;
-    GLuint shader = glCreateShader(type);
-    if (!shader) Logger_Abort("Failed to create shader");
+#define SHADER_FLAG_TEX (1 << 0)
 
-    glShaderSource(shader, 1, &src, NULL);
+static struct GLShader {
+	int ShaderFlags;   /* what features are enabled for this shader */
+	int DirtyUniforms; /* which associated uniforms need to be resent to GPU */
+	GLuint Program;    /* OpenGL program ID (0 if not yet compiled) */
+} shaders[2] = {
+	{ 0 },
+	{ SHADER_FLAG_TEX }
+};
+
+/* Generates source code for a GLSL vertex shader, based on shader's flags */
+static void GL_GenVertexShader(const GLShader* shader, String* dst) {
+	int uv = shader->flags & SHADER_FLAG_TEX;
+	String_AppendConst(dst,         "attribute vec3 in_pos;\n");
+	String_AppendConst(dst,         "attribute vec4 in_col;\n");
+	if (uv) String_AppendConst(dst, "attribute vec2 in_uv;\n");
+	String_AppendConst(dst,         "varying vec4 out_col;\n");
+	if (uv) String_AppendConst(dst, "varying vec2 out_uv;\n");
+	String_AppendConst(dst,         "uniform mat4 mvp;\n");
+	String_AppendConst(dst,         "void main() {\n");
+	String_AppendConst(dst,         "  gl_Position = mvp * vec4(in_pos, 1.0);\n");
+	String_AppendConst(dst,         "  out_col = in_col;\n");
+	if (uv) String_AppendConst(dst, "  out_uv  = in_uv;\n");
+	String_AppendConst(dst,         "}");
+}
+
+/* Generates source code for a GLSL fragment shader, based on shader's flags */
+static void GL_GenFragmentShader(const GLShader* shader, String* dst) {
+	int uv = shader->flags & SHADER_FLAG_TEX;
+	String_AppendConst(dst,         "precision highp float;\n");
+	String_AppendConst(dst,         "varying vec4 out_col;\n");
+	if (uv) String_AppendConst(dst, "varying vec2 out_uv;\n");
+	if (uv) String_AppendConst(dst, "uniform sampler2D texImage;\n");
+	String_AppendConst(dst,         "void main() {\n");
+	if (uv) String_AppendConst(dst, "  gl_FragColor = texture2D(texImage, out_uv) * out_col;");
+	else    String_AppendConst(dst, "  gl_FragColor = out_col;");
+	String_AppendConst(dst,         "}");
+}
+
+/* Tries to compile GLSL shader code. Aborts program on failure. */
+static GLuint GL_CompileShader(GLenum type, const String* src) {
+	GLint temp, shader;
+	int len;
+    
+	shader = glCreateShader(type);
+    if (!shader) Logger_Abort("Failed to create shader");
+	len = src->length;
+
+    glShaderSource(shader, 1, &src->buffer, &len);
     glCompileShader(shader);
     glGetShaderiv(shader, GL_COMPILE_STATUS, &temp);
 
@@ -1333,7 +1377,8 @@ static GLuint GL_CompileShader(GLenum type, const char* src) {
 	return 0;
 }
 
-static GLuint GL_CompileProgram(const char* vShaderSrc, const char* fShaderSrc) {
+/* Tries to compile vertex and fragment shaders, then link into an OpenGL program. */
+static GLuint GL_CompileProgram(const GLShader* src) {
     GLuint vertex, fragment, program;
     GLint temp;
 

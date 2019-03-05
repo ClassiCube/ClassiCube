@@ -1565,7 +1565,7 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 	CheckUpdateTask_Run();
 
 	String_InitArray(path, pathBuffer);
-	res = Platform_GetExePath(&path);
+	res = Process_GetExePath(&path);
 	if (res) { Logger_Warn(res, "getting .exe path"); return; }
 	
 	res = File_GetModifiedTime(&path, &buildTime);

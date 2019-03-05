@@ -70,7 +70,7 @@ static void Program_SetCurrentDirectory(void) {
 	ReturnCode res;
 	String_InitArray(path, pathBuffer);
 
-	res = Platform_GetExePath(&path);
+	res = Process_GetExePath(&path);
 	if (res) { Logger_Warn(res, "getting exe path"); return; }
 
 	/* get rid of filename at end of directory */
@@ -89,7 +89,7 @@ CC_NOINLINE static void Exit_InvalidArg(const char* name, const String* arg) {
 
 	Logger_DialogTitle = "Failed to start";
 	Logger_DialogWarn(&tmp);
-	Platform_Exit(1);
+	Process_Exit(1);
 }
 
 /* Terminates the program due to insufficient command line arguments */
@@ -106,7 +106,7 @@ CC_NOINLINE static void Exit_MissingArgs(int argsCount, const String* args) {
 
 	Logger_DialogTitle = "Failed to start";
 	Logger_DialogWarn(&tmp);
-	Platform_Exit(1);
+	Process_Exit(1);
 }
 
 int main(int argc, char** argv) {
@@ -161,6 +161,6 @@ int main(int argc, char** argv) {
 		Program_RunGame();
 	}
 
-	Platform_Exit(0);
+	Process_Exit(0);
 	return 0;
 }

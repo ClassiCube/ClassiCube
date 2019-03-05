@@ -1756,7 +1756,7 @@ ReturnCode Audio_StopAndFree(AudioHandle handle) {
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WIN
-ReturnCode Platform_GetExePath(String* path) {
+ReturnCode Process_GetExePath(String* path) {
 	TCHAR chars[FILENAME_SIZE + 1];
 	DWORD len = GetModuleFileName(NULL, chars, FILENAME_SIZE);
 	if (!len) return GetLastError();
@@ -1769,7 +1769,7 @@ ReturnCode Platform_GetExePath(String* path) {
 	return 0;
 }
 
-ReturnCode Platform_StartProcess(const String* path, const String* args) {
+ReturnCode Process_Start(const String* path, const String* args) {
 	String file, argv; char argvBuffer[300];
 	TCHAR str[300], raw[300];
 	STARTUPINFO si = { 0 };
@@ -1792,30 +1792,30 @@ ReturnCode Platform_StartProcess(const String* path, const String* args) {
 	return 0;
 }
 
-ReturnCode Platform_StartOpen(const String* args) {
+ReturnCode Process_StartOpen(const String* args) {
 	TCHAR str[300];
 	HINSTANCE instance;
 	Platform_ConvertString(str, args);
 	instance = ShellExecute(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
 	return instance > 32 ? 0 : (ReturnCode)instance;
 }
-/* Don't need special execute permission on windows */
-ReturnCode Platform_MarkExecutable(const String* path) { return 0; }
 
-ReturnCode Platform_LoadLibrary(const String* path, void** lib) {
+void Process_Exit(ReturnCode code) { ExitProcess(code); }
+
+ReturnCode DynamicLib_Load(const String* path, void** lib) {
 	TCHAR str[300];
 	Platform_ConvertString(str, path);
 	*lib = LoadLibrary(str);
 	return *lib ? 0 : GetLastError();
 }
 
-ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol) {
+ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) {
 	*symbol = GetProcAddress(lib, name);
 	return *symbol ? 0 : GetLastError();
 }
 #endif
 #ifdef CC_BUILD_POSIX
-ReturnCode Platform_StartProcess(const String* path, const String* args) {
+ReturnCode Process_Start(const String* path, const String* args) {
 	char str[600], raw[600];
 	pid_t pid;
 	int i, j;
@@ -1849,37 +1849,29 @@ ReturnCode Platform_StartProcess(const String* path, const String* args) {
 	}
 }
 
-ReturnCode Platform_MarkExecutable(const String* path) {
-	char str[600];
-	struct stat st;
-	Platform_ConvertString(str, path);
+void Process_Exit(ReturnCode code) { exit(code); }
 
-	if (stat(str, &st) == -1) return errno;
-	st.st_mode |= S_IXUSR;
-	return chmod(str, st.st_mode) == -1 ? errno : 0;
-}
-
-ReturnCode Platform_LoadLibrary(const String* path, void** lib) {
+ReturnCode DynamicLib_Load(const String* path, void** lib) {
 	char str[600];
 	Platform_ConvertString(str, path);
 	*lib = dlopen(str, RTLD_NOW);
 	return *lib == NULL;
 }
 
-ReturnCode Platform_GetSymbol(void* lib, const char* name, void** symbol) {
+ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) {
 	*symbol = dlsym(lib, name);
 	return *symbol == NULL; /* dlerror would be proper, but eh */
 }
 #endif
 #ifdef CC_BUILD_UNIX
-ReturnCode Platform_StartOpen(const String* args) {
+ReturnCode Process_StartOpen(const String* args) {
 	/* TODO: Can this be used on original Solaris, or is it just an OpenIndiana thing */
 	const static String path = String_FromConst("xdg-open");
-	return Platform_StartProcess(&path, args);
+	return Process_Start(&path, args);
 }
 #endif
 #ifdef CC_BUILD_LINUX
-ReturnCode Platform_GetExePath(String* path) {
+ReturnCode Process_GetExePath(String* path) {
 	char str[600];
 	int len = readlink("/proc/self/exe", str, 600);
 	if (len == -1) return errno;
@@ -1889,7 +1881,7 @@ ReturnCode Platform_GetExePath(String* path) {
 }
 #endif
 #ifdef CC_BUILD_FREEBSD
-ReturnCode Platform_GetExePath(String* path) {
+ReturnCode Process_GetExePath(String* path) {
 	char str[600];
 	int mib[4];
 	size_t size = 600;
@@ -1907,7 +1899,7 @@ ReturnCode Platform_GetExePath(String* path) {
 }
 #endif
 #ifdef CC_BUILD_OPENBSD
-ReturnCode Platform_GetExePath(String* path) {
+ReturnCode Process_GetExePath(String* path) {
 	char tmp[600];
 	int mib[4];
 	size_t size;
@@ -1938,7 +1930,7 @@ ReturnCode Platform_GetExePath(String* path) {
 }
 #endif
 #ifdef CC_BUILD_SOLARIS
-ReturnCode Platform_GetExePath(String* path) {
+ReturnCode Process_GetExePath(String* path) {
 	char str[600];
 	int len = readlink("/proc/self/path/a.out", str, 600);
 	if (len == -1) return errno;
@@ -1948,11 +1940,11 @@ ReturnCode Platform_GetExePath(String* path) {
 }
 #endif
 #ifdef CC_BUILD_OSX
-ReturnCode Platform_StartOpen(const String* args) {
+ReturnCode Process_StartOpen(const String* args) {
 	const static String path = String_FromConst("/usr/bin/open");
-	return Platform_StartProcess(&path, args);
+	return Process_Start(&path, args);
 }
-ReturnCode Platform_GetExePath(String* path) {
+ReturnCode Process_GetExePath(String* path) {
 	char str[600];
 	int len = 600;
 
@@ -1962,25 +1954,25 @@ ReturnCode Platform_GetExePath(String* path) {
 }
 #endif
 #ifdef CC_BUILD_WEB
-ReturnCode Platform_StartOpen(const String* args) {
+ReturnCode Process_StartOpen(const String* args) {
 	char str[600];
 	Platform_ConvertString(str, args);
 	EM_ASM_({ window.open(Pointer_stringify($0)); }, str);
 }
-ReturnCode Platform_GetExePath(String* path) { return ReturnCode_NotSupported; }
+ReturnCode Process_GetExePath(String* path) { return ReturnCode_NotSupported; }
 #endif
 
-void* Platform_GetSymbolFrom(const char* filename, const char* name) {
+void* DynamicLib_GetFrom(const char* filename, const char* name) {
 	void* symbol;
 	void* lib;
 	String path;
 	ReturnCode res;
 
 	path = String_FromReadonly(filename);
-	res = Platform_LoadLibrary(&path, &lib);
+	res = DynamicLib_Load(&path, &lib);
 	if (res) return NULL;
 
-	res = Platform_GetSymbol(lib, name, &symbol);
+	res = DynamicLib_Get(lib, name, &symbol);
 	return res ? NULL : symbol;
 }
 
@@ -2025,7 +2017,7 @@ void Platform_Init(void) {
 	hasDebugger = IsDebuggerPresent();
 	/* For when user runs from command prompt */
 	/* NOTE: Need to dynamically load, not supported on Windows 2000 */
-	AttachConsoleFunc attach = Platform_GetSymbolFrom("KERNEL32.DLL", "AttachConsole");
+	AttachConsoleFunc attach = DynamicLib_GetFrom("KERNEL32.DLL", "AttachConsole");
 	if (attach) attach(ATTACH_PARENT_PROCESS);
 
 	conHandle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -2043,7 +2035,8 @@ ReturnCode Platform_SetCurrentDirectory(const String* path) {
 	return SetCurrentDirectory(str) ? 0 : GetLastError();
 }
 
-void Platform_Exit(ReturnCode code) { ExitProcess(code); }
+/* Don't need special execute permission on windows */
+ReturnCode Platform_MarkExecutable(const String* path) { return 0; }
 
 static String Platform_NextArg(STRING_REF String* args) {
 	String arg;
@@ -2145,7 +2138,15 @@ ReturnCode Platform_SetCurrentDirectory(const String* path) {
 	return chdir(str) == -1 ? errno : 0;
 }
 
-void Platform_Exit(ReturnCode code) { exit(code); }
+ReturnCode Platform_MarkExecutable(const String* path) {
+	char str[600];
+	struct stat st;
+	Platform_ConvertString(str, path);
+
+	if (stat(str, &st) == -1) return errno;
+	st.st_mode |= S_IXUSR;
+	return chmod(str, st.st_mode) == -1 ? errno : 0;
+}
 
 int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args) {
 	int i, count;
