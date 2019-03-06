@@ -1309,20 +1309,20 @@ void Gfx_OnWindowResize(void) {
 *------------------------------------------------------OpenGL modern------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_GLMODERN
-#define SHADER_FLAG_TEX (1 << 0)
+#define SHADER_FT_TEX (1 << 0)
 
 static struct GLShader {
-	int ShaderFlags;   /* what features are enabled for this shader */
-	int DirtyUniforms; /* which associated uniforms need to be resent to GPU */
-	GLuint Program;    /* OpenGL program ID (0 if not yet compiled) */
+	int Features;   /* what features are enabled for this shader */
+	int Uniforms;   /* which associated uniforms need to be resent to GPU */
+	GLuint Program; /* OpenGL program ID (0 if not yet compiled) */
 } shaders[2] = {
 	{ 0 },
-	{ SHADER_FLAG_TEX }
+	{ SHADER_FT_TEX }
 };
 
 /* Generates source code for a GLSL vertex shader, based on shader's flags */
-static void GL_GenVertexShader(const GLShader* shader, String* dst) {
-	int uv = shader->flags & SHADER_FLAG_TEX;
+static void GL_GenVertexShader(const struct GLShader* shader, String* dst) {
+	int uv = shader->Features & SHADER_FT_TEX;
 	String_AppendConst(dst,         "attribute vec3 in_pos;\n");
 	String_AppendConst(dst,         "attribute vec4 in_col;\n");
 	if (uv) String_AppendConst(dst, "attribute vec2 in_uv;\n");
@@ -1337,8 +1337,8 @@ static void GL_GenVertexShader(const GLShader* shader, String* dst) {
 }
 
 /* Generates source code for a GLSL fragment shader, based on shader's flags */
-static void GL_GenFragmentShader(const GLShader* shader, String* dst) {
-	int uv = shader->flags & SHADER_FLAG_TEX;
+static void GL_GenFragmentShader(const struct GLShader* shader, String* dst) {
+	int uv = shader->Features & SHADER_FT_TEX;
 	String_AppendConst(dst,         "precision highp float;\n");
 	String_AppendConst(dst,         "varying vec4 out_col;\n");
 	if (uv) String_AppendConst(dst, "varying vec2 out_uv;\n");
@@ -1353,7 +1353,7 @@ static void GL_GenFragmentShader(const GLShader* shader, String* dst) {
 static GLuint GL_CompileShader(GLenum type, const String* src) {
 	GLint temp, shader;
 	int len;
-    
+
 	shader = glCreateShader(type);
     if (!shader) Logger_Abort("Failed to create shader");
 	len = src->length;
@@ -1378,14 +1378,22 @@ static GLuint GL_CompileShader(GLenum type, const String* src) {
 }
 
 /* Tries to compile vertex and fragment shaders, then link into an OpenGL program. */
-static GLuint GL_CompileProgram(const GLShader* src) {
+static void GL_CompileProgram(struct GLShader* shader) {
+	char tmpBuffer[2048]; String tmp;
     GLuint vertex, fragment, program;
     GLint temp;
 
-    vertex   = GL_CompileShader(GL_VERTEX_SHADER,   vShaderSrc);
-    fragment = GL_CompileShader(GL_FRAGMENT_SHADER, fShaderSrc);
+	String_InitArray(tmp, tmpBuffer);
+	GL_GenVertexShader(shader, &tmp);
+    vertex = GL_CompileShader(GL_VERTEX_SHADER, &tmp);
+
+    tmp.length = 0;
+    GL_GenFragmentShader(shader, &tmp);
+    fragment = GL_CompileShader(GL_FRAGMENT_SHADER, &tmp);
+
     program  = glCreateProgram();
     if (!program) Logger_Abort("Failed to create program");
+    shader->Program = program;
 
     glAttachShader(program, vertex);
     glAttachShader(program, fragment);
@@ -1403,15 +1411,17 @@ static GLuint GL_CompileProgram(const GLShader* src) {
 	temp = 0;
 	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &temp);
 
-    if (temp > 1) {
-		char logInfo[2048];
-		glGetProgramInfoLog(program, 2047, NULL, logInfo);
+    if (temp == 0) return;
+    glGetProgramInfoLog(program, 2047, NULL, tmpBuffer);
 
-		logInfo[2047] = '\0';
-		Platform_LogConst(logInfo);
-	}
+	tmpBuffer[2047] = '\0';
+	Platform_LogConst(tmpBuffer);
 	Logger_Abort("Failed to compile program");
-	return program;
+}
+
+static void GL_ReloadUniforms(void) {
+	struct GLShader* shader = gl_activeShader;
+	if (shader->Uniforms &
 }
 
 void Gfx_SetFog(bool enabled) { }
@@ -1439,41 +1449,70 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 
 static void GL_CheckSupport(void) { }
 static void GL_InitState(void) {
-	GLuint prog = GL_CompileProgram(
-"attribute vec3 in_pos;\n"\
-"attribute vec4 in_col;\n"\
-"attribute vec2 in_uv;\n"\
-"varying vec4 out_col;\n"\
-"varying vec2 out_uv;\n"\
-"uniform mat4 mvp;\n"\
-"void main() {\n"\
-"   gl_Position = mvp * vec4(in_pos, 1.0);\n"\
-"   out_col = in_col;\n"\
-"   out_uv  = in_uv;\n"\
-"}",
+	GL_CompileProgram(&shaders[1]);
+	glUseProgram(shaders[1].Program);
 
-"precision highp float;\n"\
-"varying vec4 out_col;\n"\
-"varying vec2 out_uv;\n"\
-"uniform sampler2D texImage;\n"\
-"void main() {\n"\
-"   gl_FragColor = texture2D(texImage, out_uv) * out_col;\n"\
-"}");
-	glUseProgram(prog);
-}
-
-void Gfx_SetVertexFormat(VertexFormat fmt) { }
-void Gfx_DrawVb_Lines(int verticesCount) { }
-void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) { }
-void Gfx_DrawVb_IndexedTris(int verticesCount) { }
-
-void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
+}
 
+static void GL_SetupVbPos3fCol4b(void) {
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, sizeof(VertexP3fC4b), (void*)0);
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  sizeof(VertexP3fC4b), (void*)12);
+}
+
+static void GL_SetupVbPos3fTex2fCol4b(void) {
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)0);
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  sizeof(VertexP3fT2fC4b), (void*)12);
+	glVertexAttribPointer(2, 2, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)16);
+}
+
+static void GL_SetupVbPos3fCol4b_Range(int startVertex) {
+	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fC4b);
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, sizeof(VertexP3fC4b), (void*)(offset));
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  sizeof(VertexP3fC4b), (void*)(offset + 12));
+}
+
+static void GL_SetupVbPos3fTex2fCol4b_Range(int startVertex) {
 	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fT2fC4b);
-	//GL_APICALL void GL_APIENTRY glVertexAttribPointer (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)(offset));
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
+	glVertexAttribPointer(2, 2, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
+}
+
+void Gfx_SetVertexFormat(VertexFormat fmt) {
+	if (fmt == gfx_batchFormat) return;
+	gfx_batchFormat = fmt;
+	gfx_batchStride = gfx_strideSizes[fmt];
+
+	if (fmt == VERTEX_FORMAT_P3FT2FC4B) {
+		glEnableVertexAttribArray(2);
+		gl_setupVBFunc      = GL_SetupVbPos3fTex2fCol4b;
+		gl_setupVBRangeFunc = GL_SetupVbPos3fTex2fCol4b_Range;
+	} else {
+		glDisableVertexAttribArray(2);
+		gl_setupVBFunc      = GL_SetupVbPos3fCol4b;
+		gl_setupVBRangeFunc = GL_SetupVbPos3fCol4b_Range;
+	}
+}
+
+void Gfx_DrawVb_Lines(int verticesCount) {
+	gl_setupVBFunc();
+	glDrawArrays(GL_LINES, 0, verticesCount);
+}
+
+void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
+	gl_setupVBRangeFunc(startVertex);
+	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
+}
+
+void Gfx_DrawVb_IndexedTris(int verticesCount) {
+	gl_setupVBFunc();
+	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
+}
+
+void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
+	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fT2fC4b);
 	glVertexAttribPointer(0, 3, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)(offset));
 	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
 	glVertexAttribPointer(2, 2, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
@@ -1526,7 +1565,7 @@ void Gfx_SetFogMode(FogFunc func) {
 	gl_lastFogMode = func;
 }
 
-void Gfx_SetTexturing(bool enabled) { gl_Toggle(GL_TEXTURE_2D); }
+void Gfx_SetTexturing(bool enabled) { }
 void Gfx_SetAlphaTest(bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
 void Gfx_SetAlphaTestFunc(CompareFunc func, float value) {
 	glAlphaFunc(gl_compare[func], value);
@@ -1581,18 +1620,17 @@ static void GL_SetupVbPos3fTex2fCol4b_Range(int startVertex) {
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_batchFormat) return;
-
-	if (gfx_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	}
 	gfx_batchFormat = fmt;
 	gfx_batchStride = gfx_strideSizes[fmt];
 
 	if (fmt == VERTEX_FORMAT_P3FT2FC4B) {
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glEnable(GL_TEXTURE_2D);
 		gl_setupVBFunc      = GL_SetupVbPos3fTex2fCol4b;
 		gl_setupVBRangeFunc = GL_SetupVbPos3fTex2fCol4b_Range;
 	} else {
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glDisable(GL_TEXTURE_2D);
 		gl_setupVBFunc      = GL_SetupVbPos3fCol4b;
 		gl_setupVBRangeFunc = GL_SetupVbPos3fCol4b_Range;
 	}
