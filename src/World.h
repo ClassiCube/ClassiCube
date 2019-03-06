@@ -83,11 +83,12 @@ static CC_INLINE bool World_ContainsXZ(int x, int z) {
 		&& (unsigned)z < (unsigned)World.Length;
 }
 
-enum EnvVar_ {
+enum EnvVar {
 	ENV_VAR_EDGE_BLOCK, ENV_VAR_SIDES_BLOCK, ENV_VAR_EDGE_HEIGHT, ENV_VAR_SIDES_OFFSET,
 	ENV_VAR_CLOUDS_HEIGHT, ENV_VAR_CLOUDS_SPEED, ENV_VAR_WEATHER_SPEED, ENV_VAR_WEATHER_FADE,
 	ENV_VAR_WEATHER, ENV_VAR_EXP_FOG, ENV_VAR_SKYBOX_HOR_SPEED, ENV_VAR_SKYBOX_VER_SPEED,
-	ENV_VAR_SKY_COL, ENV_VAR_CLOUDS_COL, ENV_VAR_FOG_COL, ENV_VAR_SUN_COL, ENV_VAR_SHADOW_COL
+	ENV_VAR_SKY_COL, ENV_VAR_CLOUDS_COL, ENV_VAR_FOG_COL, ENV_VAR_SUN_COL, ENV_VAR_SHADOW_COL, 
+	ENV_VAR_SKYBOX_COL
 };
 
 extern BlockID Env_EdgeBlock, Env_SidesBlock;
@@ -105,8 +106,8 @@ extern int Env_Weather;
 extern bool Env_ExpFog;
 extern float Env_SkyboxHorSpeed, Env_SkyboxVerSpeed;
 
-extern PackedCol Env_SkyCol, Env_FogCol, Env_CloudsCol;
-extern PackedCol Env_DefaultSkyCol, Env_DefaultFogCol, Env_DefaultCloudsCol;
+extern PackedCol Env_SkyCol, Env_FogCol, Env_CloudsCol, Env_SkyboxCol;
+extern PackedCol Env_DefaultSkyCol, Env_DefaultFogCol, Env_DefaultCloudsCol, Env_DefaultSkyboxCol;
 extern PackedCol Env_SunCol,    Env_SunXSide,    Env_SunZSide,    Env_SunYMin;
 extern PackedCol Env_ShadowCol, Env_ShadowXSide, Env_ShadowZSide, Env_ShadowYMin;
 extern PackedCol Env_DefaultSunCol, Env_DefaultShadowCol;
@@ -156,8 +157,10 @@ CC_API void Env_SetSkyCol(PackedCol col);
 /* Sets base colour of the horizon fog. (default #FFFFFF) */
 /* Actual fog colour is blended between sky and fog colours, based on view distance. */
 CC_API void Env_SetFogCol(PackedCol col);
-/* Sets colour of the clouds and skybox. (default #FFFFFF) */
+/* Sets colour of clouds. (default #FFFFFF) */
 CC_API void Env_SetCloudsCol(PackedCol col);
+/* Sets colour of the skybox. (default #FFFFFF) */
+CC_API void Env_SetSkyboxCol(PackedCol col);
 /* Sets colour of sunlight. (default #FFFFFF) */
 /* This is the colour used for lighting when not underground. */
 CC_API void Env_SetSunCol(PackedCol col);

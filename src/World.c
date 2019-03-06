@@ -131,6 +131,7 @@ const char* Weather_Names[3] = { "Sunny", "Rainy", "Snowy" };
 PackedCol Env_DefaultSkyCol    = PACKEDCOL_CONST(0x99, 0xCC, 0xFF, 0xFF);
 PackedCol Env_DefaultFogCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
 PackedCol Env_DefaultCloudsCol = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
+PackedCol Env_DefaultSkyboxCol = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
 PackedCol Env_DefaultSunCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
 PackedCol Env_DefaultShadowCol = PACKEDCOL_CONST(0x9B, 0x9B, 0x9B, 0xFF);
 
@@ -140,7 +141,7 @@ float Env_CloudsSpeed, Env_WeatherSpeed, Env_WeatherFade;
 int Env_Weather; bool Env_ExpFog;
 float Env_SkyboxHorSpeed, Env_SkyboxVerSpeed;
 
-PackedCol Env_SkyCol, Env_FogCol, Env_CloudsCol;
+PackedCol Env_SkyCol, Env_FogCol, Env_CloudsCol, Env_SkyboxCol;
 PackedCol Env_SunCol,    Env_SunXSide,    Env_SunZSide,    Env_SunYMin;
 PackedCol Env_ShadowCol, Env_ShadowXSide, Env_ShadowZSide, Env_ShadowYMin;
 
@@ -172,8 +173,9 @@ void Env_Reset(void) {
 	Env_SkyCol    = Env_DefaultSkyCol;
 	Env_FogCol    = Env_DefaultFogCol;
 	Env_CloudsCol = Env_DefaultCloudsCol;
+	Env_SkyboxCol = Env_DefaultSkyboxCol;
 	Env_Weather = WEATHER_SUNNY;
-	Env_ExpFog = false;
+	Env_ExpFog  = false;
 }
 
 
@@ -228,6 +230,9 @@ void Env_SetFogCol(PackedCol col) {
 }
 void Env_SetCloudsCol(PackedCol col) {
 	Env_SetCol(col, Env_CloudsCol, ENV_VAR_CLOUDS_COL);
+}
+void Env_SetSkyboxCol(PackedCol col) {
+	Env_SetCol(col, Env_SkyboxCol, ENV_VAR_SKYBOX_COL);
 }
 
 void Env_SetSunCol(PackedCol col) {

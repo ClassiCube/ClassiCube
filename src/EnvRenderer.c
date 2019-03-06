@@ -349,7 +349,7 @@ static void EnvRenderer_UpdateSkybox(void) {
 	Gfx_DeleteVb(&skybox_vb);
 	if (EnvRenderer_Minimal) return;
 
-	for (i = 0; i < SKYBOX_COUNT; i++) { vertices[i].Col = Env_CloudsCol; }
+	for (i = 0; i < SKYBOX_COUNT; i++) { vertices[i].Col = Env_SkyboxCol; }
 	skybox_vb = Gfx_CreateVb(vertices, VERTEX_FORMAT_P3FT2FC4B, SKYBOX_COUNT);
 }
 
@@ -887,10 +887,11 @@ static void EnvRenderer_EnvVariableChanged(void* obj, int envVar) {
 		EnvRenderer_UpdateFog();
 	} else if (envVar == ENV_VAR_CLOUDS_COL) {
 		EnvRenderer_UpdateClouds();
-		EnvRenderer_UpdateSkybox();
 	} else if (envVar == ENV_VAR_CLOUDS_HEIGHT) {
 		EnvRenderer_UpdateSky();
 		EnvRenderer_UpdateClouds();
+	} else if (envVar == ENV_VAR_SKYBOX_COL) {
+		EnvRenderer_UpdateSkybox();
 	}
 }
 

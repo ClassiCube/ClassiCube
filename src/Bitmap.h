@@ -8,7 +8,11 @@ struct Stream;
 
 /* Represents an ARGB colour, suitable for native graphics API texture pixels. */
 typedef CC_ALIGN_HINT(4) struct BitmapCol_ {
+#ifndef CC_BUILD_WEB
 	uint8_t B, G, R, A;
+#else
+	uint8_t R, G, B, A;
+#endif
 } BitmapCol;
 /* Represents an ARGB colour, suitable for native graphics API texture pixels. */
 /* Unioned with Packed member for efficient equality comparison */

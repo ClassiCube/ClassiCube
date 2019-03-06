@@ -1018,7 +1018,11 @@ static FUNC_GLBUFFERSUBDATA _glBufferSubData;
 #endif
 
 #define GL_TEXTURE_MAX_LEVEL 0x813D
-#define GL_BGRA_EXT          0x80E1
+#ifndef CC_BUILD_WEB
+#define PIXEL_FORMAT 0x80E1 /* GL_BGRA_EXT */
+#else
+#define PIXEL_FORMAT GL_RGBA
+#endif
 static int gl_compare[8] = { GL_ALWAYS, GL_NOTEQUAL, GL_NEVER, GL_LESS, GL_LEQUAL, GL_EQUAL, GL_GEQUAL, GL_GREATER };
 
 typedef void (*GL_SetupVBFunc)(void);
@@ -1069,9 +1073,9 @@ static void GL_DoMipmaps(GfxResourceID texId, int x, int y, Bitmap* bmp, bool pa
 		Gfx_GenMipmaps(width, height, cur, prev);
 
 		if (partial) {
-			glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, cur);
+			glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, cur);
 		} else {
-			glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, cur);
+			glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, cur);
 		}
 
 		if (prev != bmp->Scan0) Mem_Free(prev);
@@ -1100,7 +1104,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	}
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->Width, bmp->Height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, bmp->Scan0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->Width, bmp->Height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, bmp->Scan0);
 
 	if (mipmaps) GL_DoMipmaps(texId, 0, 0, bmp, false);
 	return texId;
@@ -1108,7 +1112,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, bool mipmaps) {
 	glBindTexture(GL_TEXTURE_2D, texId);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->Width, part->Height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, part->Scan0);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->Width, part->Height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, part->Scan0);
 	if (mipmaps) GL_DoMipmaps(texId, x, y, part, true);
 }
 
@@ -1230,7 +1234,7 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 	ReturnCode res;
 
 	Bitmap_Allocate(&bmp, width, height);
-	glReadPixels(0, 0, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, bmp.Scan0);
+	glReadPixels(0, 0, width, height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, bmp.Scan0);
 
 	res = Png_Encode(&bmp, output, GL_SelectRow, false);
 	Mem_Free(bmp.Scan0);
@@ -1321,9 +1325,10 @@ static bool gfx_alphaTest;
 
 /* shader programs (emulate fixed function) */
 static struct GLShader {
-	int Features;   /* what features are enabled for this shader */
-	int Uniforms;   /* which associated uniforms need to be resent to GPU */
-	GLuint Program; /* OpenGL program ID (0 if not yet compiled) */
+	int Features;     /* what features are enabled for this shader */
+	int Uniforms;     /* which associated uniforms need to be resent to GPU */
+	GLuint Program;   /* OpenGL program ID (0 if not yet compiled) */
+	int Locations[1]; /* location of uniforms (not constant) */
 } shaders[4] = {
 	{ 0 },
 	{ SHADER_FT_ALP },
@@ -1360,7 +1365,7 @@ static void Gfx_GenFragmentShader(const struct GLShader* shader, String* dst) {
 	String_AppendConst(dst,         "void main() {\n");
 	if (uv) String_AppendConst(dst, "  vec4 col = texture2D(texImage, out_uv) * out_col;");
 	else    String_AppendConst(dst, "  vec4 col = out_col;");
-	if (al) String_AppendConst(dst, "  if (col.a < 0.5f) discard;");
+	if (al) String_AppendConst(dst, "  if (col.a < 0.5) discard;");
 	String_AppendConst(dst,         "  gl_FragColor = col;");
 	String_AppendConst(dst,         "}");
 }
@@ -1422,16 +1427,18 @@ static void Gfx_CompileProgram(struct GLShader* shader) {
 
 		glDeleteShader(vertex);
 		glDeleteShader(fragment);
-		return program;
+
+		shader->Locations[0] = glGetUniformLocation(program, "mvp");
+		return;
     }
 	temp = 0;
 	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &temp);
 
-    if (temp == 0) return;
-    glGetProgramInfoLog(program, 2047, NULL, tmpBuffer);
-
-	tmpBuffer[2047] = '\0';
-	Platform_LogConst(tmpBuffer);
+	if (temp > 0) {
+		glGetProgramInfoLog(program, 2047, NULL, tmpBuffer);
+		tmpBuffer[2047] = '\0';
+		Platform_LogConst(tmpBuffer);
+	}
 	Logger_Abort("Failed to compile program");
 }
 
@@ -1445,11 +1452,11 @@ static void Gfx_DirtyUniform(int uniform) {
 
 /* Sends changes uniforms to the GPU for current program */
 static void Gfx_ReloadUniforms(void) {
-	struct GLShader* shader = gl_activeShader;
+	struct GLShader* s = gl_activeShader;
 
-	if (shader->Uniforms & SHADER_UF_MVP) {
-		glUniformMatrix4fv(0, 1, false, &_mvp);
-		shader->Uniforms &= ~SHADER_UF_MVP;
+	if (s->Uniforms & SHADER_UF_MVP) {
+		glUniformMatrix4fv(s->Locations[0], 1, false, &_mvp);
+		s->Uniforms &= ~SHADER_UF_MVP;
 	}
 }
 
@@ -1610,7 +1617,7 @@ void Gfx_SetFogMode(FogFunc func) {
 	gl_lastFogMode = func;
 }
 
-void Gfx_SetTexturing(bool enabled) { }
+void Gfx_SetTexturing(bool enabled) { gl_Toggle(GL_TEXTURE_2D); }
 void Gfx_SetAlphaTest(bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
 void Gfx_SetAlphaTestFunc(CompareFunc func, float value) {
 	glAlphaFunc(gl_compare[func], value);
@@ -1646,7 +1653,7 @@ static void GL_InitState(void) {
 #else
 /* no client side array, use vertex buffer object */
 #define VB_PTR 0
-#define IP_PTR NULL
+#define IB_PTR NULL
 #endif
 
 static void GL_SetupVbPos3fCol4b(void) {
@@ -1680,12 +1687,10 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 
 	if (fmt == VERTEX_FORMAT_P3FT2FC4B) {
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
 		gl_setupVBFunc      = GL_SetupVbPos3fTex2fCol4b;
 		gl_setupVBRangeFunc = GL_SetupVbPos3fTex2fCol4b_Range;
 	} else {
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glDisable(GL_TEXTURE_2D);
 		gl_setupVBFunc      = GL_SetupVbPos3fCol4b;
 		gl_setupVBRangeFunc = GL_SetupVbPos3fCol4b_Range;
 	}

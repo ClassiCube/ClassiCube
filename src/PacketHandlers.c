@@ -1073,6 +1073,8 @@ static void CPE_SetEnvCol(uint8_t* data) {
 		Env_SetShadowCol(invalid ? Env_DefaultShadowCol : c);
 	} else if (variable == 4) {
 		Env_SetSunCol(invalid ? Env_DefaultSunCol : c);
+	} else if (variable == 5) {
+		Env_SetSkyboxCol(invalid ? Env_DefaultSkyboxCol : c);
 	}
 }
 
