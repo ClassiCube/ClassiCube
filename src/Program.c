@@ -65,6 +65,7 @@ static void Program_RunGame(void) {
 
 /* Attempts to set current/working directory to the directory exe file is in */
 static void Program_SetCurrentDirectory(void) {
+#ifndef CC_BUILD_WEB
 	String path; char pathBuffer[FILENAME_SIZE];
 	int i;
 	ReturnCode res;
@@ -79,6 +80,7 @@ static void Program_SetCurrentDirectory(void) {
 	}
 	res = Platform_SetCurrentDirectory(&path);
 	if (res) { Logger_Warn(res, "setting current directory"); return; }
+#endif
 }
 
 /* Terminates the program due to an invalid command line argument */
@@ -137,7 +139,12 @@ int main(int argc, char** argv) {
 	/* argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4); */
 
 	if (argsCount == 0) {
+#ifdef CC_BUILD_WEB
+		String_AppendConst(&Game_Username, "WebTest!");
+		Program_RunGame();	
+#else
 		Launcher_Run();
+#endif
 	} else if (argsCount == 1) {
 		String_Copy(&Game_Username, &args[0]);
 		Program_RunGame();

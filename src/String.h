@@ -171,13 +171,13 @@ int Convert_UnicodeToUtf8(Codepoint cp, uint8_t* data);
 
 /* Attempts to append all characters from UTF16 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
-void Convert_DecodeUtf16(String* str, Codepoint* chars, int numBytes);
+void Convert_DecodeUtf16(String* str, const Codepoint* chars, int numBytes);
 /* Attempts to append all characters from UTF8 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
-void Convert_DecodeUtf8(String* str, uint8_t* chars, int numBytes);
+void Convert_DecodeUtf8(String* str, const uint8_t* chars, int numBytes);
 /* Attempts to append all characters from ASCII encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
-void Convert_DecodeAscii(String* str, uint8_t* chars, int numBytes);
+void Convert_DecodeAscii(String* str, const uint8_t* chars, int numBytes);
 
 /* Attempts to convert the given string into an unsigned 8 bit integer. */
 CC_API bool Convert_ParseUInt8(const String*  str, uint8_t* value);

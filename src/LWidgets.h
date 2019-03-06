@@ -7,6 +7,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
+#ifndef CC_BUILD_WEB
 struct LWidgetVTABLE {
 	/* Called to draw contents of this widget */
 	void (*Draw)(void* widget);
@@ -192,4 +193,5 @@ void LTable_ApplyFilter(struct LTable* table);
 void LTable_Sort(struct LTable* table);
 /* If selected row is not visible, adjusts top row so it does show. */
 void LTable_ShowSelected(struct LTable* table);
+#endif
 #endif

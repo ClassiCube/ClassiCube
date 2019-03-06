@@ -11,6 +11,7 @@ struct LScreen;
 
 typedef void (*LScreen_Func)(struct LScreen* s);
 typedef void(*LWidget_Func)(struct LScreen* s, struct LWidget* w);
+#ifndef CC_BUILD_WEB
 
 #define LScreen_Layout \
 	LScreen_Func Init; /* Initialises widgets and other data. */ \
@@ -44,4 +45,5 @@ struct LScreen* ResourcesScreen_MakeInstance(void);
 struct LScreen* ServersScreen_MakeInstance(void);
 struct LScreen* SettingsScreen_MakeInstance(void);
 struct LScreen* UpdatesScreen_MakeInstance(void);
+#endif
 #endif

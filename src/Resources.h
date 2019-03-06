@@ -10,6 +10,7 @@
 #define FLAG_GUI     0x04 /* file depends on patched gui.png */
 #define FLAG_TERRAIN 0x08 /* file depends on patched terrain.png */
 
+#ifndef CC_BUILD_WEB
 extern struct ResourceFile {
 	const char* Name;
 	const char* Url;
@@ -64,5 +65,5 @@ void Fetcher_Run(void);
 /* Checks if any resources have finished downloading. */
 /* If any have, performs required patching and saving. */
 void Fetcher_Update(void);
-
+#endif
 #endif

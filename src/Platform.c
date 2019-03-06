@@ -1236,25 +1236,22 @@ static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, v
 
 #define FONT_CACHE_FILE "fontscache.txt"
 static void Font_Init(void) {
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 	const static String dirs[2] = {
 		String_FromConst("C:/Windows/Fonts"),
 		String_FromConst("C:/WINNT/Fonts")
 	};
-#endif
-#ifdef CC_BUILD_UNIX
+#elif defined CC_BUILD_UNIX
 	const static String dirs[2] = {
 		String_FromConst("/usr/share/fonts"),
 		String_FromConst("/usr/local/share/fonts")
 	};
-#endif
-#ifdef CC_BUILD_OSX
+#elif defined CC_BUILD_OSX
 	const static String dirs[2] = {
 		String_FromConst("/System/Library/Fonts"),
 		String_FromConst("/Library/Fonts")
 	};
-#endif
-#ifdef CC_BUILD_WEB
+#elif defined CC_BUILD_WEB
 	/* TODO: Implement fonts */
 	const static String dirs[1] = { String_FromConst("Fonts") };
 #endif
@@ -1304,9 +1301,14 @@ ReturnCode Socket_Available(SocketHandle socket, uint32_t* available) {
 	return Socket_ioctl(socket, FIONREAD, available);
 }
 ReturnCode Socket_SetBlocking(SocketHandle socket, bool blocking) {
+#ifdef CC_BUILD_WEB
+	return ReturnCode_NotSupported; /* sockets always async */
+#else
 	int blocking_raw = blocking ? 0 : -1;
 	return Socket_ioctl(socket, FIONBIO, &blocking_raw);
+#endif
 }
+
 
 ReturnCode Socket_GetError(SocketHandle socket, ReturnCode* result) {
 	int resultSize = sizeof(ReturnCode);
@@ -1341,7 +1343,9 @@ ReturnCode Socket_Close(SocketHandle socket) {
 	ReturnCode res = 0;
 	ReturnCode res1, res2;
 
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WEB
+	res1 = 0;
+#elif defined CC_BUILD_WIN
 	res1 = shutdown(socket, SD_BOTH);
 #else
 	res1 = shutdown(socket, SHUT_RDWR);

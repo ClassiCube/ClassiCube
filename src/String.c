@@ -561,7 +561,7 @@ int Convert_UnicodeToUtf8(Codepoint cp, uint8_t* data) {
 	}
 }
 
-void Convert_DecodeUtf16(String* value, Codepoint* chars, int numBytes) {
+void Convert_DecodeUtf16(String* value, const Codepoint* chars, int numBytes) {
 	int i; char c;
 	
 	for (i = 0; i < (numBytes >> 1); i++) {
@@ -569,7 +569,7 @@ void Convert_DecodeUtf16(String* value, Codepoint* chars, int numBytes) {
 	}
 }
 
-void Convert_DecodeUtf8(String* value, uint8_t* chars, int numBytes) {
+void Convert_DecodeUtf8(String* value, const uint8_t* chars, int numBytes) {
 	int len; Codepoint cp; char c;
 
 	for (; numBytes > 0; numBytes -= len) {
@@ -581,7 +581,7 @@ void Convert_DecodeUtf8(String* value, uint8_t* chars, int numBytes) {
 	}
 }
 
-void Convert_DecodeAscii(String* value, uint8_t* chars, int numBytes) {
+void Convert_DecodeAscii(String* value, const uint8_t* chars, int numBytes) {
 	int i; char c;
 
 	for (i = 0; i < numBytes; i++) {
