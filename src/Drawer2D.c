@@ -513,7 +513,7 @@ static void Drawer2D_DrawBitmapText(Bitmap* bmp, struct DrawTextArgs* args, int 
 	Drawer2D_DrawCore(bmp, args, x, y, false);
 }
 
-static int Drawer2D_MeasureBitmapWidth(struct DrawTextArgs* args) {
+static int Drawer2D_MeasureBitmapWidth(const struct DrawTextArgs* args) {
 	int i, point = args->Font.Size;
 	int xPadding, width;
 	String text;

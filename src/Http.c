@@ -734,8 +734,9 @@ static void Http_WorkerLoop(void) {
 		request.Result = Http_SysDo(&request);
 		end = Stopwatch_Measure();
 
+		elapsed = Stopwatch_ElapsedMicroseconds(beg, end) / 1000;
 		Platform_Log3("HTTP: return code %i (http %i), in %i ms",
-			&request.Result, &request.StatusCode, &elapsed);
+					&request.Result, &request.StatusCode, &elapsed);
 		Http_FinishRequest(&request);
 	}
 }

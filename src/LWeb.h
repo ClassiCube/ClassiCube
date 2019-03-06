@@ -9,7 +9,6 @@
 struct JsonContext;
 typedef void (*JsonOnValue)(struct JsonContext* ctx, const String* v);
 typedef void (*JsonOnNew)(struct JsonContext* ctx);
-#ifndef CC_BUILD_WEB
 
 /* State for parsing JSON text */
 struct JsonContext {
@@ -118,5 +117,4 @@ void FetchFlagsTask_Add(const String* name);
 Bitmap* Flags_Get(const String* name);
 /* Frees all flag bitmaps. */
 void Flags_Free(void);
-#endif
 #endif

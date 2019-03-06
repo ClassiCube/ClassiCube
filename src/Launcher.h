@@ -7,7 +7,6 @@
 */
 struct LScreen;
 
-#ifndef CC_BUILD_WEB
 /* Currently active screen/menu. */
 extern struct LScreen* Launcher_Screen;
 /* The area/region of the window that needs to be redrawn and presented to the screen. */
@@ -70,5 +69,4 @@ bool Launcher_ConnectToServer(const String* hash);
 void Launcher_Run(void);
 /* Starts the game from the given arguments. */
 bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server);
-#endif
 #endif

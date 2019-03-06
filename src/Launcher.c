@@ -16,6 +16,7 @@
 #include "Funcs.h"
 #include "Logger.h"
 
+#ifndef CC_BUILD_WEB
 struct LScreen* Launcher_Screen;
 Rect2D Launcher_Dirty;
 Bitmap Launcher_Framebuffer;
@@ -629,3 +630,4 @@ static void Launcher_ApplyUpdate(void) {
 	res = Process_Start(&scriptName, &scriptArgs);
 	if (res) { Logger_Warn(res, "starting update script"); return; }
 }
+#endif

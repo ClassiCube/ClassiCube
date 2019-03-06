@@ -9,6 +9,7 @@
 #include "LWeb.h"
 #include "Platform.h"
 
+#ifndef CC_BUILD_WEB
 #define BORDER 1
 #define BORDER2 (2 * BORDER)
 #define BORDER3 (3 * BORDER)
@@ -1142,3 +1143,4 @@ void LTable_ShowSelected(struct LTable* w) {
 	if (i < w->TopRow) w->TopRow = i;
 	LTable_ClampTopRow(w);
 }
+#endif
