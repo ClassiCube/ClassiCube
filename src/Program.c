@@ -79,7 +79,7 @@ static void Program_SetCurrentDirectory(void) {
 		if (path.buffer[i] == '/' || path.buffer[i] == '\\') break;
 	}
 	res = Platform_SetCurrentDirectory(&path);
-	if (res) { Logger_Warn(res, "setting current directory"); return; }
+	if (res) { Logger_OldWarn(res, "setting current directory"); return; }
 #endif
 }
 
