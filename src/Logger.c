@@ -525,12 +525,19 @@ void Logger_Log(const String* msg) {
 	Stream_Write(&logStream, msg->buffer, msg->length);
 }
 
-static void Logger_DumpSpacing(void) {
-	String msg; char msgBuffer[STRING_SIZE];
-	String_InitArray(msg, msgBuffer);
+static void Logger_LogCrashHeader(void) {
+	String msg; char msgBuffer[96];
+	struct DateTime now;
 
+	String_InitArray(msg, msgBuffer);
 	String_Format2(&msg, "%c----------------------------------------%c",
 		Platform_NewLine, Platform_NewLine);
+	Logger_Log(&msg);
+	msg.length = 0;
+
+	DateTime_CurrentLocal(&now);
+	String_Format3(&msg, "Crash time: %p2/%p2/%p4 ", &now.Day, &now.Month, &now.Year);
+	String_Format4(&msg, "%p2:%p2:%p2%c", &now.Hour, &now.Minute, &now.Second, Platform_NewLine);
 	Logger_Log(&msg);
 }
 
@@ -547,7 +554,7 @@ static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx
 		String_Format2(&msg, "%h%c", &result, Platform_NewLine);
 	} else { result = 1; }
 
-	Logger_DumpSpacing();
+	Logger_LogCrashHeader();
 	Logger_Log(&msg);
 
 	if (ctx) Logger_DumpRegisters(ctx);
