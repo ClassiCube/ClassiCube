@@ -70,7 +70,7 @@ void Map_LoadFrom(const String* path) {
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Logger_Warn2(res, "closing", path, Platform_DescribeError); }
+	if (res) { Logger_Warn2(res, "closing", path); }
 
 	World_SetNewMap(World.Blocks, World.Width, World.Height, World.Length);
 	Event_RaiseVoid(&WorldEvents.MapLoaded);

@@ -2197,7 +2197,7 @@ bool Platform_DescribeError(ReturnCode res, String* dst) {
 	int len;
 
 	len = strerror_r(res, chars, 600);
-	if (len === -1) return false;
+	if (len == -1) return false;
 
 	len = String_CalcLen(chars, 600);
 	Convert_DecodeUtf8(dst, chars, len);
