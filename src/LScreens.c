@@ -1567,10 +1567,10 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 
 	String_InitArray(path, pathBuffer);
 	res = Process_GetExePath(&path);
-	if (res) { Logger_Warn(res, "getting .exe path"); return; }
+	if (res) { Logger_OldWarn(res, "getting .exe path"); return; }
 	
 	res = File_GetModifiedTime(&path, &buildTime);
-	if (res) { Logger_Warn(res, "getting build time"); return; }
+	if (res) { Logger_OldWarn(res, "getting build time"); return; }
 
 	UpdatesScreen_Format(&s->LblYour, "Your build: ", buildTime);
 }

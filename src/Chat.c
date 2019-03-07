@@ -113,7 +113,8 @@ static void Chat_OpenLog(struct DateTime* now) {
 		res = File_Append(&file, path);
 		if (res && res != ReturnCode_FileShareViolation) {
 			Chat_DisableLogging();
-			Logger_Warn2(res, "appending to", path); return;
+			Logger_Warn2(res, "appending to", path);
+			return;
 		}
 
 		if (res == ReturnCode_FileShareViolation) continue;

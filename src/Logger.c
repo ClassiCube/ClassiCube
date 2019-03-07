@@ -480,7 +480,7 @@ static void Logger_DumpMisc(void* ctx) { }
 /*########################################################################################################################*
 *----------------------------------------------------------Common---------------------------------------------------------*
 *#########################################################################################################################*/
-void Logger_Warn(ReturnCode res, const char* place) {
+void Logger_OldWarn(ReturnCode res, const char* place) {
 	String msg; char msgBuffer[128];
 	String_InitArray(msg, msgBuffer);
 
@@ -488,12 +488,47 @@ void Logger_Warn(ReturnCode res, const char* place) {
 	Logger_WarnFunc(&msg);
 }
 
-void Logger_Warn2(ReturnCode res, const char* place, const String* path) {
+void Logger_OldWarn2(ReturnCode res, const char* place, const String* path) {
 	String msg; char msgBuffer[256];
 	String_InitArray(msg, msgBuffer);
 
 	String_Format3(&msg, "Error %h when %c '%s'", &res, place, path);
 	Logger_WarnFunc(&msg);
+}
+
+void Logger_SysWarn(ReturnCode res, const char* place, Logger_DescribeError describeErr) {
+	String msg; char msgBuffer[256];
+	String_InitArray(msg, msgBuffer);
+	String_Append(&msg, '"');
+
+	if (describeErr(res, &msg)) {
+		String_Format2(&msg, "\" (i) error when %c", &res, place);
+	} else {
+		String_DeleteAt(&msg, 0);
+		String_Format2(&msg, "Error %h when %c", &res, place);
+	}	
+	Logger_WarnFunc(&msg);
+}
+
+void Logger_SysWarn2(ReturnCode res, const char* place, const String* path, Logger_DescribeError describeErr) {
+	String msg; char msgBuffer[256];
+	String_InitArray(msg, msgBuffer);
+	String_Append(&msg, '"');
+
+	if (describeErr(res, &msg)) {
+		String_Format3(&msg, "\" (%i) error when %c '%s'", &res, place, path);
+	} else {
+		String_DeleteAt(&msg, 0);
+		String_Format3(&msg, "Error %h when %c '%s'", &res, place, path);
+	}	
+	Logger_WarnFunc(&msg);
+}
+
+void Logger_DynamicLibWarn2(ReturnCode res, const char* place, const String* path) {
+	Logger_SysWarn2(res, place, path, DynamicLib_DescribeError);
+}
+void Logger_Warn2(ReturnCode res, const char* place, const String* path) {
+	Logger_SysWarn2(res, place, path, Platform_DescribeError);
 }
 
 void Logger_DialogWarn(const String* msg) {

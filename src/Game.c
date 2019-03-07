@@ -363,7 +363,7 @@ static void Game_LoadOptions(void) {
 	}*/
 }
 
-static void Game_LoadPlugin(const String* filename, void* obj) {
+static void Game_LoadPlugin(const String* path, void* obj) {
 #if defined CC_BUILD_WIN
 	const static String ext = String_FromConst(".dll");
 #elif defined CC_BUILD_OSX
@@ -379,21 +379,21 @@ static void Game_LoadPlugin(const String* filename, void* obj) {
 	ReturnCode res;
 
 	/* ignore accepted.txt, deskop.ini, .pdb files, etc */
-	if (!String_CaselessEnds(filename, &ext)) return;
-	res = DynamicLib_Load(filename, &lib);
-	if (res) { Logger_Warn2(res, "loading plugin", filename); return; }
+	if (!String_CaselessEnds(path, &ext)) return;
+	res = DynamicLib_Load(path, &lib);
+	if (res) { Logger_DynamicLibWarn2(res, "loading plugin", path); return; }
 
 	res = DynamicLib_Get(lib, "Plugin_ApiVersion", &verSymbol);
-	if (res) { Logger_Warn2(res, "getting version of", filename); return; }
+	if (res) { Logger_DynamicLibWarn2(res, "getting version of", path); return; }
 	res = DynamicLib_Get(lib, "Plugin_Component", &compSymbol);
-	if (res) { Logger_Warn2(res, "initing", filename); return; }
+	if (res) { Logger_DynamicLibWarn2(res, "initing", path); return; }
 
 	ver = *((int*)verSymbol);
 	if (ver < GAME_API_VER) {
-		Chat_Add1("&c%s plugin is outdated! Try getting a more recent version.", filename);
+		Chat_Add1("&c%s plugin is outdated! Try getting a more recent version.", path);
 		return;
 	} else if (ver > GAME_API_VER) {
-		Chat_Add1("&cYour game is too outdated to use %s plugin! Try updating it.", filename);
+		Chat_Add1("&cYour game is too outdated to use %s plugin! Try updating it.", path);
 		return;
 	}
 
@@ -405,7 +405,7 @@ static void Game_LoadPlugins(void) {
 	ReturnCode res;
 
 	res = Directory_Enum(&dir, NULL, Game_LoadPlugin);
-	if (res) Logger_Warn(res, "enumerating plugins directory");
+	if (res) Logger_OldWarn(res, "enumerating plugins directory");
 }
 
 void Game_Free(void* obj);
@@ -727,9 +727,6 @@ static void Game_RunLoop(void) {
 #endif
 
 void Game_Run(int width, int height, const String* title) {
-	uint64_t lastRender, render;
-	double time;
-
 	Window_CreateSimple(width, height);
 	Window_SetTitle(title);
 	Window_SetVisible(true);

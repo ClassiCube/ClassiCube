@@ -54,6 +54,10 @@ ReturnCode Platform_Encrypt(const uint8_t* data, int len, uint8_t** enc, int* en
 /* Decrypts data in a platform-specific manner. (may not be supported) */
 /* NOTE: Should only be implemented when platform natively supports it. */
 ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* decLen);
+/* Outputs more detailed information about errors with operating system functions. */
+/* NOTE: This is for general functions like file I/O. If a more specific 
+describe exists (e.g. DynamicLib_DescribeError), that should be preferred. */
+bool Platform_DescribeError(ReturnCode res, String* dst);
 
 /* Returns the full path of the application's executable. */
 ReturnCode Process_GetExePath(String* path);
@@ -74,6 +78,10 @@ CC_API ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol);
 /* NOTE: This should ONLY be used for dynamically loading platform-specific symbols. */
 /* (e.g. functionality that only exists on recent operating system versions) */
 void* DynamicLib_GetFrom(const char* filename, const char* name);
+/* Outputs more detailed information about errors with the DynamicLib functions. */
+/* NOTE: You must call this immediately after DynamicLib_Load/DynamicLib_Get,
+ because on some platforms, the error is a static string instead of from error code. */
+bool DynamicLib_DescribeError(ReturnCode res, String* dst);
 
 /* Allocates a block of memory, with undetermined contents. Exits process on allocation failure. */
 CC_API void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place);

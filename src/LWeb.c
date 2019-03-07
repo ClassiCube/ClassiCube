@@ -494,13 +494,13 @@ static void FetchUpdateTask_Handle(uint8_t* data, uint32_t len) {
 	ReturnCode res;
 
 	res = Stream_WriteAllTo(&path, data, len);
-	if (res) { Logger_Warn(res, "saving update"); return; }
+	if (res) { Logger_OldWarn(res, "saving update"); return; }
 
 	res = File_SetModifiedTime(&path, FetchUpdateTask.Timestamp);
-	if (res) Logger_Warn(res, "setting update time");
+	if (res) Logger_OldWarn(res, "setting update time");
 
 	res = Platform_MarkExecutable(&path);
-	if (res) Logger_Warn(res, "making update executable");
+	if (res) Logger_OldWarn(res, "making update executable");
 }
 
 void FetchUpdateTask_Run(bool release, bool d3d9) {
@@ -565,7 +565,7 @@ static void FetchFlagsTask_Handle(uint8_t* data, uint32_t len) {
 
 	Stream_ReadonlyMemory(&s, data, len);
 	res = Png_Decode(&flags[FetchFlagsTask.Count].Bmp, &s);
-	if (res) Logger_Warn(res, "decoding flag");
+	if (res) Logger_OldWarn(res, "decoding flag");
 
 	FetchFlagsTask.Count++;
 	FetchFlagsTask_DownloadNext();

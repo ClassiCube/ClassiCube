@@ -5,6 +5,7 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
+typedef bool (*Logger_DescribeError)(ReturnCode res, String* dst);
 typedef void (*Logger_DoWarn)(const String* msg);
 /* Informs the user about a non-fatal error. */
 /* By default this shows a message box, but changes to in-game chat when game is running. */
@@ -14,8 +15,19 @@ extern const char* Logger_DialogTitle;
 void Logger_DialogWarn(const String* msg);
 
 /* Informs the user about a non-fatal error, with a message of form: "Error [result] when [place] */
-void Logger_Warn(ReturnCode res, const char* place);
-/* Informs the user about a non-fatal error, with a message of form: "Error [result] when [place] 'path' */
+void Logger_OldWarn(ReturnCode res, const char* place);
+/* Informs the user about a non-fatal error, with a message of form: "Error [result] when [place] '[path]' */
+void Logger_OldWarn2(ReturnCode res, const char* place, const String* path);
+/* Informs the user about a non-fatal error, with a message of either: 
+"Error [error desc] ([result]) when [place] or "Error [result] when [place] */
+void Logger_SysWarn(ReturnCode res, const char* place, Logger_DescribeError describeErr);
+/* Informs the user about a non-fatal error, with a message of either:
+"Error [error desc] ([result]) when [place] 'path' or "Error [result] when [place] 'path' */
+void Logger_SysWarn2(ReturnCode res, const char* place, const String* path, Logger_DescribeError describeErr);
+
+/* Shortcut for Logger_SysWarn2 with DynamicLib_DescribeError */
+void Logger_DynamicLibWarn2(ReturnCode res, const char* place, const String* path);
+/* Shortcut for Logger_SysWarn2 with Platform_DescribeError */
 void Logger_Warn2(ReturnCode res, const char* place, const String* path);
 
 /* Hooks the operating system's unhandled error callback/signal. */

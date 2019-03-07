@@ -26,6 +26,12 @@
 #define _UNICODE
 #endif
 
+#ifdef UNICODE
+#define Platform_DecodeString(dst, src, len) Convert_DecodeUtf16(dst, src, (len) * 2)
+#else
+#define Platform_DecodeString(dst, src, len) Convert_DecodeAscii(dst, src, len)
+#endif
+
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -1765,11 +1771,7 @@ ReturnCode Process_GetExePath(String* path) {
 	DWORD len = GetModuleFileName(NULL, chars, FILENAME_SIZE);
 	if (!len) return GetLastError();
 
-#ifdef UNICODE
-	Convert_DecodeUtf16(path, chars, len * 2);
-#else
-	Convert_DecodeAscii(path, chars, len);
-#endif
+	Platform_DecodeString(path, chars, len);
 	return 0;
 }
 
@@ -1816,6 +1818,10 @@ ReturnCode DynamicLib_Load(const String* path, void** lib) {
 ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) {
 	*symbol = GetProcAddress(lib, name);
 	return *symbol ? 0 : GetLastError();
+}
+
+bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
+	return Platform_DescribeError(res, dst);
 }
 #endif
 #ifdef CC_BUILD_POSIX
@@ -1865,6 +1871,12 @@ ReturnCode DynamicLib_Load(const String* path, void** lib) {
 ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) {
 	*symbol = dlsym(lib, name);
 	return *symbol == NULL; /* dlerror would be proper, but eh */
+}
+
+bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
+	char* err = dlerror();
+	if (err) String_AppendConst(dst, err);
+	return err && err[0];
 }
 #endif
 #ifdef CC_BUILD_UNIX
@@ -2016,7 +2028,7 @@ void Platform_Init(void) {
 	heap = GetProcessHeap();
 	
 	res = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (res) Logger_Warn(res, "starting WSA");
+	if (res) Logger_OldWarn(res, "starting WSA");
 
 	hasDebugger = IsDebuggerPresent();
 	/* For when user runs from command prompt */
@@ -2106,6 +2118,16 @@ ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* de
 	LocalFree(dataOut.pbData);
 	return 0;
 }
+
+bool Platform_DescribeError(ReturnCode res, String* dst) {
+	TCHAR chars[600];
+	res = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+					NULL, res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), chars, 600, NULL);
+	if (!res) return false;
+
+	Platform_DecodeString(dst, chars, res);
+	return true;
+}
 #endif
 #ifdef CC_BUILD_POSIX
 int Platform_ConvertString(void* data, const String* src) {
@@ -2168,6 +2190,18 @@ ReturnCode Platform_Encrypt(const uint8_t* data, int len, uint8_t** enc, int* en
 }
 ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* decLen) {
 	return ReturnCode_NotSupported;
+}
+
+bool Platform_DescribeError(ReturnCode res, String* dst) {
+	char chars[600];
+	int len;
+
+	len = strerror_r(res, chars, 600);
+	if (len === -1) return false;
+
+	len = String_CalcLen(chars, 600);
+	Convert_DecodeUtf8(dst, chars, len);
+	return true;
 }
 #endif
 #ifdef CC_BUILD_UNIX
