@@ -27,6 +27,8 @@ void Logger_SysWarn2(ReturnCode res, const char* place, const String* path, Logg
 
 /* Shortcut for Logger_SysWarn2 with DynamicLib_DescribeError */
 void Logger_DynamicLibWarn2(ReturnCode res, const char* place, const String* path);
+/* Shortcut for Logger_SysWarn with Platform_DescribeError */
+void Logger_Warn(ReturnCode res, const char* place);
 /* Shortcut for Logger_SysWarn2 with Platform_DescribeError */
 void Logger_Warn2(ReturnCode res, const char* place, const String* path);
 

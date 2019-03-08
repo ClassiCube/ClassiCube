@@ -4,23 +4,11 @@
 #include "Window.h"
 #include "Funcs.h"
 #include "Stream.h"
-
-static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx);
+#include "Errors.h"
 
 #ifdef CC_BUILD_WEB
-/* Can't see native CPU state with javascript */
-#undef CC_BUILD_POSIX
-
-static void Logger_DumpBacktrace(String* str, void* ctx) { }
-static void Logger_DumpRegisters(void* ctx) { }
-static void Logger_DumpMisc(void* ctx) { }
-
-void Logger_Hook(void) { }
-void Logger_Abort2(ReturnCode result, const char* raw_msg) {
-	Logger_AbortCommon(result, raw_msg, NULL);
-}
+#undef CC_BUILD_POSIX /* Can't see native CPU state with javascript */
 #endif
-
 #ifdef CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
@@ -28,49 +16,198 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 #define NOIME
 #include <windows.h>
 #include <imagehlp.h>
+#endif
+/* POSIX can be shared between Linux/BSD/OSX */
+#ifdef CC_BUILD_POSIX
+#ifndef CC_BUILD_OPENBSD
+#include <ucontext.h>
+#endif
+#include <execinfo.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <signal.h>
+#endif
 
-struct StackPointers { uintptr_t Instruction, Frame, Stack; };
-struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
+
+/*########################################################################################################################*
+*----------------------------------------------------------Warning--------------------------------------------------------*
+*#########################################################################################################################*/
+void Logger_DialogWarn(const String* msg) {
+	String dst; char dstBuffer[512];
+	String_InitArray_NT(dst, dstBuffer);
+
+	String_AppendString(&dst, msg);
+	dst.buffer[dst.length] = '\0';
+	Window_ShowDialog(Logger_DialogTitle, dst.buffer);
+}
+const char* Logger_DialogTitle = "Error";
+Logger_DoWarn Logger_WarnFunc  = Logger_DialogWarn;
+
+void Logger_OldWarn(ReturnCode res, const char* place) {
+	String msg; char msgBuffer[128];
+	String_InitArray(msg, msgBuffer);
+
+	String_Format2(&msg, "Error %h when %c", &res, place);
+	Logger_WarnFunc(&msg);
+}
+
+void Logger_OldWarn2(ReturnCode res, const char* place, const String* path) {
+	String msg; char msgBuffer[256];
+	String_InitArray(msg, msgBuffer);
+
+	String_Format3(&msg, "Error %h when %c '%s'", &res, place, path);
+	Logger_WarnFunc(&msg);
+}
+
+/* Returns a description for ClassiCube specific error codes */
+static const char* Logger_GetCCErrorDesc(ReturnCode res) {
+	switch (res) {
+	case ERR_END_OF_STREAM:   return "End of stream";
+	case OGG_ERR_INVALID_SIG: return "Invalid OGG signature";
+	case OGG_ERR_VERSION:     return "Invalid OGG format version";
+
+		/*WAV_ERR_STREAM_HDR,
+			WAV_ERR_STREAM_TYPE, 
+			WAV_ERR_DATA_TYPE,
+			WAV_ERR_NO_DATA,
+			/* Vorbis audio decoding errors */ /*
+			VORBIS_ERR_HEADER,
+			VORBIS_ERR_WRONG_HEADER,
+			VORBIS_ERR_FRAMING,
+			VORBIS_ERR_VERSION, 
+			VORBIS_ERR_BLOCKSIZE, 
+			VORBIS_ERR_CHANS,
+			VORBIS_ERR_TIME_TYPE,
+			VORBIS_ERR_FLOOR_TYPE, 
+			VORBIS_ERR_RESIDUE_TYPE,
+			VORBIS_ERR_MAPPING_TYPE, 
+			VORBIS_ERR_MODE_TYPE,
+			VORBIS_ERR_CODEBOOK_SYNC, 
+			VORBIS_ERR_CODEBOOK_ENTRY, 
+			VORBIS_ERR_CODEBOOK_LOOKUP,
+			VORBIS_ERR_MODE_WINDOW, 
+			VORBIS_ERR_MODE_TRANSFORM,
+			VORBIS_ERR_MAPPING_CHANS, 
+			VORBIS_ERR_MAPPING_RESERVED,
+			VORBIS_ERR_FRAME_TYPE,
+			/* PNG image decoding errors */ /*
+			PNG_ERR_INVALID_SIG, 
+			PNG_ERR_INVALID_HDR_SIZE,
+			PNG_ERR_TOO_WIDE,
+			PNG_ERR_TOO_TALL,
+			PNG_ERR_INVALID_COL_BPP, 
+			PNG_ERR_COMP_METHOD,
+			PNG_ERR_FILTER, 
+			PNG_ERR_INTERLACED,
+			PNG_ERR_PAL_ENTRIES, 
+			PNG_ERR_PAL_SIZE,
+			PNG_ERR_TRANS_COUNT, 
+			PNG_ERR_TRANS_INVALID,
+			PNG_ERR_INVALID_END_SIZE, 
+			PNG_ERR_NO_DATA,
+			/* ZIP archive decoding errors */ /*
+			ZIP_ERR_TOO_MANY_ENTRIES, 
+			ZIP_ERR_SEEK_END_OF_CENTRAL_DIR, 
+			ZIP_ERR_NO_END_OF_CENTRAL_DIR,
+			ZIP_ERR_SEEK_CENTRAL_DIR, 
+			ZIP_ERR_INVALID_CENTRAL_DIR,
+			ZIP_ERR_SEEK_LOCAL_DIR, 
+			ZIP_ERR_INVALID_LOCAL_DIR, 
+			ZIP_ERR_FILENAME_LEN,
+			/* GZIP header decoding errors */ /*
+			GZIP_ERR_HEADER1, 
+			GZIP_ERR_HEADER2, 
+			GZIP_ERR_METHOD, 
+			GZIP_ERR_FLAGS,
+			/* ZLIB header decoding errors */ /*
+			ZLIB_ERR_METHOD, 
+			ZLIB_ERR_WINDOW_SIZE,
+			ZLIB_ERR_FLAGS,
+			/* FCM map decoding errors */ /*
+			FCM_ERR_IDENTIFIER, 
+			FCM_ERR_REVISION,
+			/* LVL map decoding errors */ /*
+			LVL_ERR_VERSION,
+			/* DAT map decoding errors */ /*
+			DAT_ERR_IDENTIFIER,
+			DAT_ERR_VERSION, 
+			DAT_ERR_JIDENTIFIER,
+			DAT_ERR_JVERSION,
+			DAT_ERR_ROOT_TYPE,
+			DAT_ERR_JSTRING_LEN,
+			DAT_ERR_JFIELD_CLASS_NAME,
+			DAT_ERR_JCLASS_TYPE, 
+			DAT_ERR_JCLASS_FIELDS,
+			DAT_ERR_JCLASS_ANNOTATION,
+			DAT_ERR_JOBJECT_TYPE, 
+			DAT_ERR_JARRAY_TYPE,
+			DAT_ERR_JARRAY_CONTENT,
+			/* CW map decoding errors */ /*
+			NBT_ERR_INT32S, 
+			NBT_ERR_UNKNOWN,
+			CW_ERR_ROOT_TAG,
+			CW_ERR_STRING_LEN
+			*/
+
+	case PNG_ERR_INVALID_SIG:      return "Invalid PNG signature";
+	case PNG_ERR_INVALID_HDR_SIZE: return "Invalid PNG header size";
+	case PNG_ERR_TOO_WIDE:         return "PNG image too wide";
+	case PNG_ERR_TOO_TALL:         return "PNG image too tall";
+	case PNG_ERR_INTERLACED:       return "Interlaced PNGs unsupported";
+	}
+	return NULL;
+}
+
+/* Appends more detailed information about an error if possible */
+static void Logger_AppendErrorDesc(String* msg, ReturnCode res, Logger_DescribeError describeErr) {
+	const char* cc_err;
+	String err; char errBuffer[128];
+	String_InitArray(err, errBuffer);
+
+	cc_err = Logger_GetCCErrorDesc(res);
+	if (cc_err) {
+		String_Format1(msg, "\n  Error meaning: %c", cc_err);
+	} else if (describeErr(res, &err)) {
+		String_Format1(msg, "\n  Error meaning: %s", &err);
+	}
+}
+
+void Logger_SysWarn(ReturnCode res, const char* place, Logger_DescribeError describeErr) {
+	String msg; char msgBuffer[256];
+	String_InitArray(msg, msgBuffer);
+
+	String_Format2(&msg, "Error %h when %c", &res, place);
+	Logger_AppendErrorDesc(&msg, res, describeErr);
+	Logger_WarnFunc(&msg);
+}
+
+void Logger_SysWarn2(ReturnCode res, const char* place, const String* path, Logger_DescribeError describeErr) {
+	String msg; char msgBuffer[256];
+	String_InitArray(msg, msgBuffer);
+
+	String_Format3(&msg, "Error %h when %c '%s'", &res, place, path);
+	Logger_AppendErrorDesc(&msg, res, describeErr);
+	Logger_WarnFunc(&msg);
+}
+
+void Logger_DynamicLibWarn2(ReturnCode res, const char* place, const String* path) {
+	Logger_SysWarn2(res, place, path, DynamicLib_DescribeError);
+}
+void Logger_Warn(ReturnCode res, const char* place) {
+	Logger_SysWarn(res, place,  Platform_DescribeError);
+}
+void Logger_Warn2(ReturnCode res, const char* place, const String* path) {
+	Logger_SysWarn2(res, place, path, Platform_DescribeError);
+}
 
 
 /*########################################################################################################################*
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
-static void Logger_DumpRegisters(void* ctx) {
-	String str; char strBuffer[512];
-	CONTEXT* r = (CONTEXT*)ctx;
-
-	String_InitArray(str, strBuffer);
-	String_AppendConst(&str, "-- registers --\r\n");
-
-#if defined _M_IX86
-	String_Format3(&str, "eax=%x ebx=%x ecx=%x\r\n", &r->Eax, &r->Ebx, &r->Ecx);
-	String_Format3(&str, "edx=%x esi=%x edi=%x\r\n", &r->Edx, &r->Esi, &r->Edi);
-	String_Format3(&str, "eip=%x ebp=%x esp=%x\r\n", &r->Eip, &r->Ebp, &r->Esp);
-#elif defined _M_X64
-	String_Format3(&str, "rax=%x rbx=%x rcx=%x\r\n", &r->Rax, &r->Rbx, &r->Rcx);
-	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\r\n", &r->Rdx, &r->Rsi, &r->Rdi);
-	String_Format3(&str, "rip=%x rbp=%x rsp=%x\r\n", &r->Rip, &r->Rbp, &r->Rsp);
-	String_Format3(&str, "r8 =%x r9 =%x r10=%x\r\n", &r->R8,  &r->R9,  &r->R10);
-	String_Format3(&str, "r11=%x r12=%x r13=%x\r\n", &r->R11, &r->R12, &r->R13);
-	String_Format2(&str, "r14=%x r15=%x\r\n"       , &r->R14, &r->R15);
-#elif defined _M_IA64
-	String_Format3(&str, "r1 =%x r2 =%x r3 =%x\r\n", &r->IntGp,  &r->IntT0,  &r->IntT1);
-	String_Format3(&str, "r4 =%x r5 =%x r6 =%x\r\n", &r->IntS0,  &r->IntS1,  &r->IntS2);
-	String_Format3(&str, "r7 =%x r8 =%x r9 =%x\r\n", &r->IntS3,  &r->IntV0,  &r->IntT2);
-	String_Format3(&str, "r10=%x r11=%x r12=%x\r\n", &r->IntT3,  &r->IntT4,  &r->IntSp);
-	String_Format3(&str, "r13=%x r14=%x r15=%x\r\n", &r->IntTeb, &r->IntT5,  &r->IntT6);
-	String_Format3(&str, "r16=%x r17=%x r18=%x\r\n", &r->IntT7,  &r->IntT8,  &r->IntT9);
-	String_Format3(&str, "r19=%x r20=%x r21=%x\r\n", &r->IntT10, &r->IntT11, &r->IntT12);
-	String_Format3(&str, "r22=%x r23=%x r24=%x\r\n", &r->IntT13, &r->IntT14, &r->IntT15);
-	String_Format3(&str, "r25=%x r26=%x r27=%x\r\n", &r->IntT16, &r->IntT17, &r->IntT18);
-	String_Format3(&str, "r28=%x r29=%x r30=%x\r\n", &r->IntT19, &r->IntT20, &r->IntT21);
-	String_Format3(&str, "r31=%x nat=%x pre=%x\r\n", &r->IntT22, &r->IntNats,&r->Preds);
-#else
-#error "Unknown machine type"
-#endif
-	Logger_Log(&str);
-}
+#if defined CC_BUILD_WIN
+struct StackPointers { uintptr_t Instruction, Frame, Stack; };
+struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
 
 static int Logger_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, int max) {
 	STACKFRAME frame = { 0 };
@@ -170,6 +307,42 @@ static void Logger_DumpBacktrace(String* str, void* ctx) {
 	Logger_Backtrace(str, ctx);
 }
 
+static void Logger_DumpRegisters(void* ctx) {
+	String str; char strBuffer[512];
+	CONTEXT* r = (CONTEXT*)ctx;
+
+	String_InitArray(str, strBuffer);
+	String_AppendConst(&str, "-- registers --\r\n");
+
+#if defined _M_IX86
+	String_Format3(&str, "eax=%x ebx=%x ecx=%x\r\n", &r->Eax, &r->Ebx, &r->Ecx);
+	String_Format3(&str, "edx=%x esi=%x edi=%x\r\n", &r->Edx, &r->Esi, &r->Edi);
+	String_Format3(&str, "eip=%x ebp=%x esp=%x\r\n", &r->Eip, &r->Ebp, &r->Esp);
+#elif defined _M_X64
+	String_Format3(&str, "rax=%x rbx=%x rcx=%x\r\n", &r->Rax, &r->Rbx, &r->Rcx);
+	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\r\n", &r->Rdx, &r->Rsi, &r->Rdi);
+	String_Format3(&str, "rip=%x rbp=%x rsp=%x\r\n", &r->Rip, &r->Rbp, &r->Rsp);
+	String_Format3(&str, "r8 =%x r9 =%x r10=%x\r\n", &r->R8,  &r->R9,  &r->R10);
+	String_Format3(&str, "r11=%x r12=%x r13=%x\r\n", &r->R11, &r->R12, &r->R13);
+	String_Format2(&str, "r14=%x r15=%x\r\n"       , &r->R14, &r->R15);
+#elif defined _M_IA64
+	String_Format3(&str, "r1 =%x r2 =%x r3 =%x\r\n", &r->IntGp,  &r->IntT0,  &r->IntT1);
+	String_Format3(&str, "r4 =%x r5 =%x r6 =%x\r\n", &r->IntS0,  &r->IntS1,  &r->IntS2);
+	String_Format3(&str, "r7 =%x r8 =%x r9 =%x\r\n", &r->IntS3,  &r->IntV0,  &r->IntT2);
+	String_Format3(&str, "r10=%x r11=%x r12=%x\r\n", &r->IntT3,  &r->IntT4,  &r->IntSp);
+	String_Format3(&str, "r13=%x r14=%x r15=%x\r\n", &r->IntTeb, &r->IntT5,  &r->IntT6);
+	String_Format3(&str, "r16=%x r17=%x r18=%x\r\n", &r->IntT7,  &r->IntT8,  &r->IntT9);
+	String_Format3(&str, "r19=%x r20=%x r21=%x\r\n", &r->IntT10, &r->IntT11, &r->IntT12);
+	String_Format3(&str, "r22=%x r23=%x r24=%x\r\n", &r->IntT13, &r->IntT14, &r->IntT15);
+	String_Format3(&str, "r25=%x r26=%x r27=%x\r\n", &r->IntT16, &r->IntT17, &r->IntT18);
+	String_Format3(&str, "r28=%x r29=%x r30=%x\r\n", &r->IntT19, &r->IntT20, &r->IntT21);
+	String_Format3(&str, "r31=%x nat=%x pre=%x\r\n", &r->IntT22, &r->IntNats,&r->Preds);
+#else
+#error "Unknown machine type"
+#endif
+	Logger_Log(&str);
+}
+
 static BOOL CALLBACK Logger_DumpModule(const char* name, ULONG_PTR base, ULONG size, void* ctx) {
 	String str; char strBuffer[256];
 	uintptr_t beg, end;
@@ -190,94 +363,8 @@ static void Logger_DumpMisc(void* ctx) {
 	EnumerateLoadedModules(process, Logger_DumpModule, NULL);
 }
 
-
-/*########################################################################################################################*
-*------------------------------------------------------Error handling-----------------------------------------------------*
-*#########################################################################################################################*/
-static LONG WINAPI Logger_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
-	String msg; char msgBuffer[STRING_SIZE * 2 + 1];
-	uint32_t code;
-	uintptr_t addr;
-
-	code = (uint32_t)pInfo->ExceptionRecord->ExceptionCode;
-	addr = (uintptr_t)pInfo->ExceptionRecord->ExceptionAddress;
-
-	String_InitArray_NT(msg, msgBuffer);
-	String_Format2(&msg, "Unhandled exception 0x%h at 0x%x", &code, &addr);
-	msg.buffer[msg.length] = '\0';
-
-	Logger_AbortCommon(0, msg.buffer, pInfo->ContextRecord);
-	return EXCEPTION_EXECUTE_HANDLER; /* TODO: different flag */
-}
-
-void Logger_Hook(void) {
-	SetUnhandledExceptionFilter(Logger_UnhandledFilter);
-}
-
-/* Don't want compiler doing anything fancy with registers */
-#if _MSC_VER
-#pragma optimize ("", off)
 #endif
-void Logger_Abort2(ReturnCode result, const char* raw_msg) {
-	CONTEXT ctx;
-#ifndef _M_IX86
-	/* This method is guaranteed to exist on 64 bit windows */
-	/* It is missing in 32 bit Windows 2000 however */
-	RtlCaptureContext(&ctx);
-#elif _MSC_VER
-	/* Stack frame layout on x86: */
-	/* [ebp] is previous frame's EBP */
-	/* [ebp+4] is previous frame's EIP (return address) */
-	/* address of [ebp+8] is previous frame's ESP */
-	__asm {
-		mov eax, [ebp]
-		mov [ctx.Ebp], eax
-		mov eax, [ebp+4]
-		mov [ctx.Eip], eax
-		lea eax, [ebp+8]
-		mov [ctx.Esp], eax
-		mov [ctx.ContextFlags], CONTEXT_CONTROL
-	}
-#else
-	int32_t _ebp, _eip, _esp;
-	/* TODO: I think this is right, not sure.. */
-	__asm__(
-		"mov 0(%%ebp), %%eax \n\t"
-		"mov %%eax, %0       \n\t"
-		"mov 4(%%ebp), %%eax \n\t"
-		"mov %%eax, %1       \n\t"
-		"lea 8(%%ebp), %%eax \n\t"
-		"mov %%eax, %2"
-		: "=m" (_ebp), "=m" (_eip), "=m" (_esp)
-		:
-		: "eax", "memory");
-
-	ctx.Ebp = _ebp;
-	ctx.Eip = _eip;
-	ctx.Esp = _esp;
-	ctx.ContextFlags = CONTEXT_CONTROL;
-#endif
-
-	Logger_AbortCommon(result, raw_msg, &ctx);
-}
-#if _MSC_VER
-#pragma optimize ("", on)
-#endif
-#endif
-/* POSIX can be shared between Linux/BSD/OSX */
 #ifdef CC_BUILD_POSIX
-#ifndef CC_BUILD_OPENBSD
-#include <ucontext.h>
-#endif
-#include <execinfo.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <signal.h>
-
-/*########################################################################################################################*
-*-------------------------------------------------------Info dumping------------------------------------------------------*
-*#########################################################################################################################*/
 static void Logger_Backtrace(String* backtrace_, void* ctx) {
 	String str; char strBuffer[384];
 	void* addrs[40];
@@ -314,58 +401,6 @@ static void Logger_DumpBacktrace(String* str, void* ctx) {
 	Logger_Backtrace(str, ctx);
 }
 
-
-/*########################################################################################################################*
-*------------------------------------------------------Error handling-----------------------------------------------------*
-*#########################################################################################################################*/
-static void Logger_SignalHandler(int sig, siginfo_t* info, void* ctx) {
-	String msg; char msgBuffer[STRING_SIZE * 2 + 1];
-	int type, code;
-	uintptr_t addr;
-
-	/* Uninstall handler to avoid chance of infinite loop */
-	signal(SIGSEGV, SIG_DFL);
-	signal(SIGBUS,  SIG_DFL);
-	signal(SIGILL,  SIG_DFL);
-	signal(SIGABRT, SIG_DFL);
-	signal(SIGFPE,  SIG_DFL);
-
-	type = info->si_signo;
-	code = info->si_code;
-	addr = (uintptr_t)info->si_addr;
-
-	String_InitArray_NT(msg, msgBuffer);
-	String_Format3(&msg, "Unhandled signal %i (code %i) at 0x%x", &type, &code, &addr);
-	msg.buffer[msg.length] = '\0';
-
-	Logger_AbortCommon(0, msg.buffer, ctx);
-}
-
-void Logger_Hook(void) {
-	struct sigaction sa, old;
-	sa.sa_sigaction = Logger_SignalHandler;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = SA_RESTART | SA_SIGINFO;
-
-	sigaction(SIGSEGV, &sa, &old);
-	sigaction(SIGBUS,  &sa, &old);
-	sigaction(SIGILL,  &sa, &old);
-	sigaction(SIGABRT, &sa, &old);
-	sigaction(SIGFPE,  &sa, &old);
-}
-
-void Logger_Abort2(ReturnCode result, const char* raw_msg) {
-	ucontext_t ctx;
-	getcontext(&ctx);
-	Logger_AbortCommon(result, raw_msg, &ctx);
-}
-#endif
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Info dumping------------------------------------------------------*
-*#########################################################################################################################*/
-#ifdef CC_BUILD_POSIX
 static void Logger_DumpRegisters(void* ctx) {
 	String str; char strBuffer[512];
 #ifdef CC_BUILD_OPENBSD
@@ -451,8 +486,8 @@ static void Logger_DumpRegisters(void* ctx) {
 
 	Logger_Log(&str);
 }
-#endif
 
+/* OS specific stuff */
 #if defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS
 static void Logger_DumpMisc(void* ctx) {
 	const static String memMap = String_FromConst("-- memory map --\n");
@@ -472,76 +507,143 @@ static void Logger_DumpMisc(void* ctx) {
 
 	close(fd);
 }
-#elif defined CC_BUILD_OSX || defined CC_BUILD_FREEBSD || defined CC_BUILD_OPENBSD
+#else
 static void Logger_DumpMisc(void* ctx) { }
+#endif
+#endif
+#ifdef CC_BUILD_WEB
+static void Logger_DumpBacktrace(String* str, void* ctx) { }
+static void Logger_DumpRegisters(void* ctx) { }
+static void Logger_DumpMisc(void* ctx) { }
+#endif
+
+/*########################################################################################################################*
+*------------------------------------------------------Error handling-----------------------------------------------------*
+*#########################################################################################################################*/
+static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx);
+
+#ifdef CC_BUILD_WIN
+static LONG WINAPI Logger_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
+	String msg; char msgBuffer[STRING_SIZE * 2 + 1];
+	uint32_t code;
+	uintptr_t addr;
+
+	code = (uint32_t)pInfo->ExceptionRecord->ExceptionCode;
+	addr = (uintptr_t)pInfo->ExceptionRecord->ExceptionAddress;
+
+	String_InitArray_NT(msg, msgBuffer);
+	String_Format2(&msg, "Unhandled exception 0x%h at 0x%x", &code, &addr);
+	msg.buffer[msg.length] = '\0';
+
+	Logger_AbortCommon(0, msg.buffer, pInfo->ContextRecord);
+	return EXCEPTION_EXECUTE_HANDLER; /* TODO: different flag */
+}
+void Logger_Hook(void) { SetUnhandledExceptionFilter(Logger_UnhandledFilter); }
+
+/* Don't want compiler doing anything fancy with registers */
+#if _MSC_VER
+#pragma optimize ("", off)
+#endif
+void Logger_Abort2(ReturnCode result, const char* raw_msg) {
+	CONTEXT ctx;
+#ifndef _M_IX86
+	/* This method is guaranteed to exist on 64 bit windows */
+	/* It is missing in 32 bit Windows 2000 however */
+	RtlCaptureContext(&ctx);
+#elif _MSC_VER
+	/* Stack frame layout on x86: */
+	/* [ebp] is previous frame's EBP */
+	/* [ebp+4] is previous frame's EIP (return address) */
+	/* address of [ebp+8] is previous frame's ESP */
+	__asm {
+		mov eax, [ebp]
+		mov [ctx.Ebp], eax
+		mov eax, [ebp+4]
+		mov [ctx.Eip], eax
+		lea eax, [ebp+8]
+		mov [ctx.Esp], eax
+		mov [ctx.ContextFlags], CONTEXT_CONTROL
+	}
+#else
+	int32_t _ebp, _eip, _esp;
+	/* TODO: I think this is right, not sure.. */
+	__asm__(
+		"mov 0(%%ebp), %%eax \n\t"
+		"mov %%eax, %0       \n\t"
+		"mov 4(%%ebp), %%eax \n\t"
+		"mov %%eax, %1       \n\t"
+		"lea 8(%%ebp), %%eax \n\t"
+		"mov %%eax, %2"
+		: "=m" (_ebp), "=m" (_eip), "=m" (_esp)
+		:
+		: "eax", "memory");
+
+	ctx.Ebp = _ebp;
+	ctx.Eip = _eip;
+	ctx.Esp = _esp;
+	ctx.ContextFlags = CONTEXT_CONTROL;
+#endif
+
+	Logger_AbortCommon(result, raw_msg, &ctx);
+}
+#if _MSC_VER
+#pragma optimize ("", on)
+#endif
+#endif
+#ifdef CC_BUILD_POSIX
+static void Logger_SignalHandler(int sig, siginfo_t* info, void* ctx) {
+	String msg; char msgBuffer[STRING_SIZE * 2 + 1];
+	int type, code;
+	uintptr_t addr;
+
+	/* Uninstall handler to avoid chance of infinite loop */
+	signal(SIGSEGV, SIG_DFL);
+	signal(SIGBUS,  SIG_DFL);
+	signal(SIGILL,  SIG_DFL);
+	signal(SIGABRT, SIG_DFL);
+	signal(SIGFPE,  SIG_DFL);
+
+	type = info->si_signo;
+	code = info->si_code;
+	addr = (uintptr_t)info->si_addr;
+
+	String_InitArray_NT(msg, msgBuffer);
+	String_Format3(&msg, "Unhandled signal %i (code %i) at 0x%x", &type, &code, &addr);
+	msg.buffer[msg.length] = '\0';
+
+	Logger_AbortCommon(0, msg.buffer, ctx);
+}
+
+void Logger_Hook(void) {
+	struct sigaction sa, old;
+	sa.sa_sigaction = Logger_SignalHandler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART | SA_SIGINFO;
+
+	sigaction(SIGSEGV, &sa, &old);
+	sigaction(SIGBUS,  &sa, &old);
+	sigaction(SIGILL,  &sa, &old);
+	sigaction(SIGABRT, &sa, &old);
+	sigaction(SIGFPE,  &sa, &old);
+}
+
+void Logger_Abort2(ReturnCode result, const char* raw_msg) {
+	ucontext_t ctx;
+	getcontext(&ctx);
+	Logger_AbortCommon(result, raw_msg, &ctx);
+}
+#endif
+#ifdef CC_BUILD_WEB
+void Logger_Hook(void) { }
+void Logger_Abort2(ReturnCode result, const char* raw_msg) {
+	Logger_AbortCommon(result, raw_msg, NULL);
+}
 #endif
 
 
 /*########################################################################################################################*
 *----------------------------------------------------------Common---------------------------------------------------------*
 *#########################################################################################################################*/
-void Logger_OldWarn(ReturnCode res, const char* place) {
-	String msg; char msgBuffer[128];
-	String_InitArray(msg, msgBuffer);
-
-	String_Format2(&msg, "Error %h when %c", &res, place);
-	Logger_WarnFunc(&msg);
-}
-
-void Logger_OldWarn2(ReturnCode res, const char* place, const String* path) {
-	String msg; char msgBuffer[256];
-	String_InitArray(msg, msgBuffer);
-
-	String_Format3(&msg, "Error %h when %c '%s'", &res, place, path);
-	Logger_WarnFunc(&msg);
-}
-
-void Logger_SysWarn(ReturnCode res, const char* place, Logger_DescribeError describeErr) {
-	String msg; char msgBuffer[256];
-	String_InitArray(msg, msgBuffer);
-	String_Append(&msg, '"');
-
-	if (describeErr(res, &msg)) {
-		String_Format2(&msg, "\" (i) error when %c", &res, place);
-	} else {
-		String_DeleteAt(&msg, 0);
-		String_Format2(&msg, "Error %h when %c", &res, place);
-	}	
-	Logger_WarnFunc(&msg);
-}
-
-void Logger_SysWarn2(ReturnCode res, const char* place, const String* path, Logger_DescribeError describeErr) {
-	String msg; char msgBuffer[256];
-	String_InitArray(msg, msgBuffer);
-	String_Append(&msg, '"');
-
-	if (describeErr(res, &msg)) {
-		String_Format3(&msg, "\" (%i) error when %c '%s'", &res, place, path);
-	} else {
-		String_DeleteAt(&msg, 0);
-		String_Format3(&msg, "Error %h when %c '%s'", &res, place, path);
-	}	
-	Logger_WarnFunc(&msg);
-}
-
-void Logger_DynamicLibWarn2(ReturnCode res, const char* place, const String* path) {
-	Logger_SysWarn2(res, place, path, DynamicLib_DescribeError);
-}
-void Logger_Warn2(ReturnCode res, const char* place, const String* path) {
-	Logger_SysWarn2(res, place, path, Platform_DescribeError);
-}
-
-void Logger_DialogWarn(const String* msg) {
-	String dst; char dstBuffer[256];
-	String_InitArray_NT(dst, dstBuffer);
-
-	String_AppendString(&dst, msg);
-	dst.buffer[dst.length] = '\0';
-	Window_ShowDialog(Logger_DialogTitle, dst.buffer);
-}
-const char* Logger_DialogTitle = "Error";
-Logger_DoWarn Logger_WarnFunc  = Logger_DialogWarn;
-
 static FileHandle logFile;
 static struct Stream logStream;
 static bool logOpen;

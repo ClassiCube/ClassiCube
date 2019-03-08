@@ -364,7 +364,7 @@ static ReturnCode Launcher_ProcessZipEntry(const String* path, struct Stream* da
 		res = Png_Decode(&fontBmp, data);
 
 		if (res) {
-			Logger_OldWarn(res, "decoding default.png"); return res;
+			Logger_Warn(res, "decoding default.png"); return res;
 		} else {
 			Drawer2D_SetFontBitmap(&fontBmp);
 			useBitmappedFont = !Options_GetBool(OPT_USE_CHAT_FONT, false);
@@ -374,7 +374,7 @@ static ReturnCode Launcher_ProcessZipEntry(const String* path, struct Stream* da
 		res = Png_Decode(&bmp, data);
 
 		if (res) {
-			Logger_OldWarn(res, "decoding terrain.png"); return res;
+			Logger_Warn(res, "decoding terrain.png"); return res;
 		} else {
 			Launcher_LoadTextures(&bmp);
 		}
@@ -388,18 +388,14 @@ static void Launcher_ExtractTexturePack(const String* path) {
 	ReturnCode res;
 
 	res = Stream_OpenFile(&stream, path);
-	if (res) {
-		Logger_OldWarn(res, "opening texture pack"); return;
-	}
+	if (res) { Logger_Warn(res, "opening texture pack"); return; }
 
 	Zip_Init(&state, &stream);
 	state.SelectEntry  = Launcher_SelectZipEntry;
 	state.ProcessEntry = Launcher_ProcessZipEntry;
 	res = Zip_Extract(&state);
 
-	if (res) {
-		Logger_OldWarn(res, "extracting texture pack");
-	}
+	if (res) { Logger_Warn(res, "extracting texture pack"); }
 	stream.Close(&stream);
 }
 
@@ -534,7 +530,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 
 	String_InitArray(path, pathBuffer);
 	res = Process_GetExePath(&path);
-	if (res) { Logger_OldWarn(res, "getting .exe path"); return false; }
+	if (res) { Logger_Warn(res, "getting .exe path"); return false; }
 
 	String_InitArray(args, argsBuffer);
 	String_AppendString(&args, user);
@@ -546,7 +542,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 	/* HRESULT when user clicks 'cancel' to 'are you sure you want to run ClassiCube.exe' */
 	if (res == 0x80004005) return;
 #endif
-	if (res) { Logger_OldWarn(res, "starting game"); return false; }
+	if (res) { Logger_Warn(res, "starting game"); return false; }
 
 	Launcher_ShouldExit = Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false);
 	return true;
@@ -614,7 +610,7 @@ static void Launcher_ApplyUpdate(void) {
 
 	String_InitArray(exe, exeBuffer);
 	res = Process_GetExePath(&exe);
-	if (res) { Logger_OldWarn(res, "getting executable path"); return; }
+	if (res) { Logger_Warn(res, "getting executable path"); return; }
 
 	Utils_UNSAFE_GetFilename(&exe);
 	String_InitArray(str, strBuffer);
@@ -622,12 +618,12 @@ static void Launcher_ApplyUpdate(void) {
 
 	/* Can't use WriteLine, want \n as actual newline not code page 437 */
 	res = Stream_WriteAllTo(&scriptPath, (const uint8_t*)str.buffer, str.length);
-	if (res) { Logger_OldWarn(res, "saving update script"); return; }
+	if (res) { Logger_Warn(res, "saving update script"); return; }
 
 	res = Platform_MarkExecutable(&scriptPath);
-	if (res) Logger_OldWarn(res, "making update script executable");
+	if (res) Logger_Warn(res, "making update script executable");
 
 	res = Process_Start(&scriptName, &scriptArgs);
-	if (res) { Logger_OldWarn(res, "starting update script"); return; }
+	if (res) { Logger_Warn(res, "starting update script"); return; }
 }
 #endif

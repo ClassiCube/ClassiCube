@@ -1462,16 +1462,12 @@ static void X11Textbox_Measure(X11Textbox* t, XFontStruct* font) {
 }
 
 static void X11Textbox_Draw(X11Textbox* t, X11Window* w) {
-    String str = String_FromReadonly(t->Text);
+	String str = String_FromReadonly(t->Text), line;
     int y = t->Y + t->LineHeight - t->Descent; /* TODO: is -Descent even right? */
-	int end, len;
 
-    for (end = 0; end >= 0; y += t->LineHeight) {
-        end = String_IndexOf(&str, '\n');
-		len = end == -1 ? str.length : end;
-
-        XDrawString(dpy, w->win, w->gc, t->X, y, str.buffer, len);
-        if (end >= 0) str = String_UNSAFE_SubstringAt(&str, end + 1);
+    while (str.length) {
+		String_UNSAFE_SplitBy(&str, '\n', &line);
+		XDrawString(dpy, w->win, w->gc, t->X, y, line.buffer, line.length);
     }
 }
 

@@ -367,7 +367,7 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 
 		switch (fourCC) {
 		case PNG_FourCC('I','H','D','R'): {
-			if (dataSize != PNG_IHDR_SIZE) return PNG_ERR_INVALID_HEADER_SIZE;
+			if (dataSize != PNG_IHDR_SIZE) return PNG_ERR_INVALID_HDR_SIZE;
 			res = Stream_Read(stream, tmp, PNG_IHDR_SIZE);
 			if (res) return res;
 

@@ -72,14 +72,14 @@ static void Program_SetCurrentDirectory(void) {
 	String_InitArray(path, pathBuffer);
 
 	res = Process_GetExePath(&path);
-	if (res) { Logger_OldWarn(res, "getting exe path"); return; }
+	if (res) { Logger_Warn(res, "getting exe path"); return; }
 
 	/* get rid of filename at end of directory */
 	for (i = path.length - 1; i >= 0; i--, path.length--) {
 		if (path.buffer[i] == '/' || path.buffer[i] == '\\') break;
 	}
 	res = Platform_SetCurrentDirectory(&path);
-	if (res) { Logger_OldWarn(res, "setting current directory"); return; }
+	if (res) { Logger_Warn(res, "setting current directory"); return; }
 #endif
 }
 

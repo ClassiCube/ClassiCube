@@ -314,7 +314,14 @@ static void Game_OnLowVRAMDetected(void* obj) {
 	Chat_AddRaw("&cOut of VRAM! Halving view distance..");
 }
 
-static void Game_WarnFunc(const String* msg) { Chat_Add1("&c%s", msg); }
+static void Game_WarnFunc(const String* msg) {
+	String str = *msg, line;
+	while (str.length) {
+		String_UNSAFE_SplitBy(&str, '\n', &line);
+		Chat_Add1("&c%s", &line);
+	}
+}
+
 static void Game_ExtractInitialTexturePack(void) {
 	String texPack; char texPackBuffer[STRING_SIZE];
 
@@ -405,7 +412,7 @@ static void Game_LoadPlugins(void) {
 	ReturnCode res;
 
 	res = Directory_Enum(&dir, NULL, Game_LoadPlugin);
-	if (res) Logger_OldWarn(res, "enumerating plugins directory");
+	if (res) Logger_Warn(res, "enumerating plugins directory");
 }
 
 void Game_Free(void* obj);
