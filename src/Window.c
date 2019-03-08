@@ -1442,18 +1442,14 @@ typedef struct {
 } X11Textbox;
 
 static void X11Textbox_Measure(X11Textbox* t, XFontStruct* font) {
-    String str = String_FromReadonly(t->Text);
+    String str = String_FromReadonly(t->Text), line;
     XCharStruct overall;
-	int direction, ascent, descent;
-	int end, len, lines = 0;
+	int direction, ascent, descent, lines = 0;
 
-    for (end = 0; end >= 0; lines++) {
-        end = String_IndexOf(&str, '\n');
-		len = end == -1 ? str.length : end;
-
-        XTextExtents(font, str.buffer, len, &direction, &ascent, &descent, &overall);
+	for (; str.length; lines++) {
+		String_UNSAFE_SplitBy(&str, '\n', &line);
+        XTextExtents(font, line.buffer, line.length, &direction, &ascent, &descent, &overall);
         t->Width = max(overall.width, t->Width);
-        if (end >= 0) str = String_UNSAFE_SubstringAt(&str, end + 1);
     }
 
     t->LineHeight = ascent + descent;
@@ -1465,9 +1461,9 @@ static void X11Textbox_Draw(X11Textbox* t, X11Window* w) {
 	String str = String_FromReadonly(t->Text), line;
     int y = t->Y + t->LineHeight - t->Descent; /* TODO: is -Descent even right? */
 
-    while (str.length) {
+	for (; str.length; y += t->LineHeight) {
 		String_UNSAFE_SplitBy(&str, '\n', &line);
-		XDrawString(dpy, w->win, w->gc, t->X, y, line.buffer, line.length);
+		XDrawString(dpy, w->win, w->gc, t->X, y, line.buffer, line.length);		
     }
 }
 
