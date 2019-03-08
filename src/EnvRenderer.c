@@ -568,7 +568,7 @@ void EnvRenderer_RenderMapEdges(double delta) {
 	/* Do not draw water when player cannot see it */
 	/* Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps */
 	int yVisible = min(0, Env_SidesHeight);
-	if (Camera.CurrentPos.Y < yVisible) return;
+	if (Camera.CurrentPos.Y < yVisible && sides_vb) return;
 
 	EnvRenderer_RenderBorders(Env_EdgeBlock,
 		edges_vb, edges_tex, edges_vertices);
