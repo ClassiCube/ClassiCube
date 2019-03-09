@@ -550,13 +550,13 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 		if (IsTag(tag, "Distance")) { p->ReachDistance = NbtTag_U16(tag) / 32.0f; return; }
 	}
 	if (IsTag(tag->Parent, "EnvWeatherType")) {
-		if (IsTag(tag, "WeatherType")) { Env_SetWeather(NbtTag_U8(tag)); return; }
+		if (IsTag(tag, "WeatherType")) { Env_Weather = NbtTag_U8(tag); return; }
 	}
 
 	if (IsTag(tag->Parent, "EnvMapAppearance")) {
-		if (IsTag(tag, "SideBlock")) { Env_SetSidesBlock(NbtTag_U8(tag));  return; }
-		if (IsTag(tag, "EdgeBlock")) { Env_SetEdgeBlock(NbtTag_U8(tag));   return; }
-		if (IsTag(tag, "SideLevel")) { Env_SetEdgeHeight(NbtTag_I16(tag)); return; }
+		if (IsTag(tag, "SideBlock")) { Env_SidesBlock = NbtTag_U8(tag);  return; }
+		if (IsTag(tag, "EdgeBlock")) { Env_EdgeBlock  = NbtTag_U8(tag);  return; }
+		if (IsTag(tag, "SideLevel")) { Env_EdgeHeight = NbtTag_I16(tag); return; }
 
 		if (IsTag(tag, "TextureURL")) {
 			String url = NbtTag_String(tag);
@@ -570,11 +570,11 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 	/* Callback for compound tag is called after all its children have been processed */
 	if (IsTag(tag->Parent, "EnvColors")) {
 		if (IsTag(tag, "Sky")) {
-			Env_SetSkyCol(Cw_ParseCol(Env_DefaultSkyCol)); return;
+			Env_SkyCol = Cw_ParseCol(Env_DefaultSkyCol); return;
 		} else if (IsTag(tag, "Cloud")) {
-			Env_SetCloudsCol(Cw_ParseCol(Env_DefaultCloudsCol)); return;
+			Env_CloudsCol = Cw_ParseCol(Env_DefaultCloudsCol); return;
 		} else if (IsTag(tag, "Fog")) {
-			Env_SetFogCol(Cw_ParseCol(Env_DefaultFogCol)); return;
+			Env_FogCol = Cw_ParseCol(Env_DefaultFogCol); return;
 		} else if (IsTag(tag, "Sunlight")) {
 			Env_SetSunCol(Cw_ParseCol(Env_DefaultSunCol)); return;
 		} else if (IsTag(tag, "Ambient")) {
