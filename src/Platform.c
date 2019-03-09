@@ -95,6 +95,7 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #include <sys/sysctl.h>
 #elif defined CC_BUILD_NETBSD
 #define CC_BUILD_UNIX
+#include <sys/sysctl.h>
 #elif defined CC_BUILD_SOLARIS
 #define CC_BUILD_UNIX
 #include <sys/filio.h>
@@ -1901,15 +1902,9 @@ ReturnCode Process_GetExePath(String* path) {
 #endif
 #ifdef CC_BUILD_FREEBSD
 ReturnCode Process_GetExePath(String* path) {
+	static int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
 	char str[600];
-	int mib[4];
 	size_t size = 600;
-
-	mib[0] = CTL_KERN;
-	mib[1] = KERN_PROC;
-	mib[2] = KERN_PROC_PATHNAME;
-	mib[3] = -1; /* self process id */
-
 	if (sysctl(mib, 4, str, &size, NULL, 0) == -1) return errno;
 
 	size = String_CalcLen(str, 600);
@@ -1919,21 +1914,17 @@ ReturnCode Process_GetExePath(String* path) {
 #endif
 #ifdef CC_BUILD_OPENBSD
 ReturnCode Process_GetExePath(String* path) {
-	char tmp[600];
-	int mib[4];
+	static int mib[4] = { CTL_KERN, KERN_PROC_ARGS, 0, KERN_PROC_ARGV };
+	char tmp[600];	
 	size_t size;
 	char* argv[100];
 	char* str;
 
-	mib[0] = CTL_KERN;
-	mib[1] = KERN_PROC_ARGS;
-	mib[2] = getpid();
-	mib[3] = KERN_PROC_ARGV;
-
 	/* NOTE: OpenBSD doesn't seem to let us get executable's location, so fallback to argv[0] */
 	/* See OpenBSD sysctl manpage for why argv array is so large */
 	/*... The buffer pointed to by oldp is filled with an array of char pointers followed by the strings themselves... */
-	size = 100 * sizeof(char*);
+	mib[2] = getpid();
+	size   = 100 * sizeof(char*);
 	if (sysctl(mib, 4, argv, &size, NULL, 0) == -1) return errno;
 
 	str = argv[0];
@@ -1950,15 +1941,9 @@ ReturnCode Process_GetExePath(String* path) {
 #endif
 #ifdef CC_BUILD_NETBSD
 ReturnCode Process_GetExePath(String* path) {
+	static int mib[4] = { CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME };
 	char str[600];
-	int mib[4];
-	size_t size = 600;
-
-	mib[0] = CTL_KERN;
-	mib[1] = KERN_PROC_ARGS;
-	mib[2] = -1; /* self process id */
-	mib[2] = KERN_PROC_PATHNAME;
-	
+	size_t size = 600;	
 	if (sysctl(mib, 4, str, &size, NULL, 0) == -1) return errno;
 
 	size = String_CalcLen(str, 600);

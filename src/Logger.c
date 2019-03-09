@@ -484,6 +484,24 @@ static void Logger_DumpRegisters(void* ctx) {
 #endif
 #endif
 
+#if defined CC_BUILD_NETBSD
+	/* You can find these definitions at /usr/include/i386/mcontext.h */
+#if defined __i386__
+	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r.__gregs[_REG_EAX], &r.__gregs[_REG_EBX], &r.__gregs[_REG_ECX]);
+	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r.__gregs[_REG_EDX], &r.__gregs[_REG_ESI], &r.__gregs[_REG_EDI]);
+	String_Format3(&str, "eip=%x ebp=%x esp=%x\n", &r.__gregs[_REG_EIP], &r.__gregs[_REG_EBP], &r.__gregs[_REG_ESP]);
+#elif defined __x86_64__
+	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r.__gregs[_REG_RAX], &r.__gregs[_REG_RBX], &r.__gregs[_REG_RCX]);
+	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r.__gregs[_REG_RDX], &r.__gregs[_REG_RSI], &r.__gregs[_REG_RDI]);
+	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r.__gregs[_REG_RIP], &r.__gregs[_REG_RBP], &r.__gregs[_REG_RSP]);
+	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r.__gregs[_REG_R8],  &r.__gregs[_REG_R9],  &r.__gregs[_REG_R10]);
+	String_Format3(&str, "r11=%x r12=%x r13=%x\n", &r.__gregs[_REG_R11], &r.__gregs[_REG_R12], &r.__gregs[_REG_R13]);
+	String_Format2(&str, "r14=%x r15=%x\n",        &r.__gregs[_REG_R14], &r.__gregs[_REG_R15]);
+#else
+#error "Unknown machine type"
+#endif
+#endif
+
 	Logger_Log(&str);
 }
 
