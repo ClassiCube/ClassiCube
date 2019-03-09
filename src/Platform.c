@@ -93,6 +93,8 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #elif defined CC_BUILD_OPENBSD
 #define CC_BUILD_UNIX
 #include <sys/sysctl.h>
+#elif defined CC_BUILD_NETBSD
+#define CC_BUILD_UNIX
 #elif defined CC_BUILD_SOLARIS
 #define CC_BUILD_UNIX
 #include <sys/filio.h>
@@ -320,28 +322,23 @@ void DateTime_CurrentLocal(struct DateTime* time_) {
 
 #define NS_PER_SEC 1000000000ULL
 #endif
-#if defined CC_BUILD_LINUX || defined CC_BUILD_FREEBSD || defined CC_BUILD_OPENBSD
+/* clock_gettime is optional, see http://pubs.opengroup.org/onlinepubs/009696899/functions/clock_getres.html */
+/* "... These functions are part of the Timers option and need not be available on all implementations..." */
+#if defined CC_BUILD_WEB
+uint64_t Stopwatch_Measure(void) {
+	/* time is a milliseconds double */
+	return (uint64_t)(emscripten_get_now() * 1000);
+}
+#elif defined CC_BUILD_OSX
+uint64_t Stopwatch_Measure(void) { return mach_absolute_time(); }
+#elif defined CC_BUILD_SOLARIS
+uint64_t Stopwatch_Measure(void) { return gethrtime(); }
+#elif defined CC_BUILD_UNIX
 uint64_t Stopwatch_Measure(void) {
 	struct timespec t;
 	/* TODO: CLOCK_MONOTONIC_RAW ?? */
 	clock_gettime(CLOCK_MONOTONIC, &t);
 	return (uint64_t)t.tv_sec * NS_PER_SEC + t.tv_nsec;
-}
-#endif
-#ifdef CC_BUILD_SOLARIS
-uint64_t Stopwatch_Measure(void) {
-	return gethrtime();
-}
-#endif
-#ifdef CC_BUILD_OSX
-uint64_t Stopwatch_Measure(void) {
-	return mach_absolute_time();
-}
-#endif
-#ifdef CC_BUILD_WEB
-uint64_t Stopwatch_Measure(void) {
-	/* time is a milliseconds double */
-	return (uint64_t)(emscripten_get_now() * 1000);
 }
 #endif
 
@@ -1247,6 +1244,12 @@ static void Font_Init(void) {
 		String_FromConst("C:/Windows/Fonts"),
 		String_FromConst("C:/WINNT/Fonts")
 	};
+#elif defined CC_BUILD_NETBSD
+	const static String dirs[3] = {
+		String_FromConst("/usr/X11R7/lib/X11/fonts"),
+		String_FromConst("/usr/pkg/lib/X11/fonts"),
+		String_FromConst("/usr/pkg/share/fonts")
+	};
 #elif defined CC_BUILD_UNIX
 	const static String dirs[2] = {
 		String_FromConst("/usr/share/fonts"),
@@ -1939,6 +1942,24 @@ ReturnCode Process_GetExePath(String* path) {
 		if (!realpath(str, tmp)) return errno;
 		str = tmp;
 	}
+
+	size = String_CalcLen(str, 600);
+	Convert_DecodeUtf8(path, str, size);
+	return 0;
+}
+#endif
+#ifdef CC_BUILD_NETBSD
+ReturnCode Process_GetExePath(String* path) {
+	char str[600];
+	int mib[4];
+	size_t size = 600;
+
+	mib[0] = CTL_KERN;
+	mib[1] = KERN_PROC_ARGS;
+	mib[2] = -1; /* self process id */
+	mib[2] = KERN_PROC_PATHNAME;
+	
+	if (sysctl(mib, 4, str, &size, NULL, 0) == -1) return errno;
 
 	size = String_CalcLen(str, 600);
 	Convert_DecodeUtf8(path, str, size);

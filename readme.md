@@ -73,6 +73,10 @@ Install libexecinfo package if needed.
 
 ```gcc *.c -o ClassiCube -isystem /usr/X11R6/include -isystem /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lX11 -lGL -lcurl -lopenal -lexecinfo```
 
+#### NetBSD
+
+```gcc *.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib -lX11 -lGL -lcurl -lopenal -lpthread -lexecinfo```
+
 ### Documentation
 
 Functions and variables in .h files are mostly documented.
