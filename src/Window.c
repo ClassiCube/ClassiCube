@@ -1331,7 +1331,7 @@ void Window_ProcessEvents(void) {
 			reply.xselection.requestor = e.xselectionrequest.requestor;
 			reply.xselection.selection = e.xselectionrequest.selection;
 			reply.xselection.target = e.xselectionrequest.target;
-			reply.xselection.property = NULL;
+			reply.xselection.property = 0;
 			reply.xselection.time = e.xselectionrequest.time;
 
 			if (e.xselectionrequest.selection == xa_clipboard && e.xselectionrequest.target == xa_utf8_string && clipboard_copy_text.length) {

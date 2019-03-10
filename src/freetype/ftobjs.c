@@ -37,43 +37,8 @@
 #include FT_SERVICE_POSTSCRIPT_NAME_H
 #include FT_SERVICE_GLYPH_DICT_H
 #include FT_SERVICE_TT_CMAP_H
-#include FT_SERVICE_TRUETYPE_ENGINE_H
 
 #include FT_DRIVER_H
-
-
-#ifdef FT_DEBUG_LEVEL_TRACE
-
-#include FT_BITMAP_H
-
-#if defined( _MSC_VER )      /* Visual C++ (and Intel C++)   */
-  /* We disable the warning `conversion from XXX to YYY,     */
-  /* possible loss of data' in order to compile cleanly with */
-  /* the maximum level of warnings: `md5.c' is non-FreeType  */
-  /* code, and it gets used during development builds only.  */
-#pragma warning( push )
-#pragma warning( disable : 4244 )
-#endif /* _MSC_VER */
-
-  /* It's easiest to include `md5.c' directly.  However, since OpenSSL */
-  /* also provides the same functions, there might be conflicts if     */
-  /* both FreeType and OpenSSL are built as static libraries.  For     */
-  /* this reason, we put the MD5 stuff into the `FT_' namespace.       */
-#define MD5_u32plus  FT_MD5_u32plus
-#define MD5_CTX      FT_MD5_CTX
-#define MD5_Init     FT_MD5_Init
-#define MD5_Update   FT_MD5_Update
-#define MD5_Final    FT_MD5_Final
-
-#undef  HAVE_OPENSSL
-
-#include "md5.c"
-
-#if defined( _MSC_VER )
-#pragma warning( pop )
-#endif
-
-#endif /* FT_DEBUG_LEVEL_TRACE */
 
 
 #define GRID_FIT_METRICS
@@ -4201,37 +4166,6 @@
          hook_index <
            ( sizeof ( library->debug_hooks ) / sizeof ( void* ) ) )
       library->debug_hooks[hook_index] = debug_hook;
-  }
-
-
-  /* documentation is in ftmodapi.h */
-
-  FT_EXPORT_DEF( FT_TrueTypeEngineType )
-  FT_Get_TrueType_Engine_Type( FT_Library  library )
-  {
-    FT_TrueTypeEngineType  result = FT_TRUETYPE_ENGINE_TYPE_NONE;
-
-
-    if ( library )
-    {
-      FT_Module  module = FT_Get_Module( library, "truetype" );
-
-
-      if ( module )
-      {
-        FT_Service_TrueTypeEngine  service;
-
-
-        service = (FT_Service_TrueTypeEngine)
-                    ft_module_get_service( module,
-                                           FT_SERVICE_ID_TRUETYPE_ENGINE,
-                                           0 );
-        if ( service )
-          result = service->engine_type;
-      }
-    }
-
-    return result;
   }
 
 

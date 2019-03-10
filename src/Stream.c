@@ -36,8 +36,11 @@ ReturnCode Stream_Write(struct Stream* s, const uint8_t* buffer, uint32_t count)
 	return 0;
 }
 
-static ReturnCode Stream_DefaultIO(struct Stream* s, const uint8_t* data, uint32_t count, uint32_t* modified) {
-	*modified = 0; return ReturnCode_NotSupported;
+static ReturnCode Stream_DefaultRead(struct Stream* s, uint8_t* data, uint32_t count, uint32_t* modified) {
+	return ReturnCode_NotSupported;
+}
+static ReturnCode Stream_DefaultWrite(struct Stream* s, const uint8_t* data, uint32_t count, uint32_t* modified) {
+	return ReturnCode_NotSupported;
 }
 ReturnCode Stream_DefaultReadU8(struct Stream* s, uint8_t* data) {
 	uint32_t modified;
@@ -64,14 +67,14 @@ static ReturnCode Stream_DefaultSeek(struct Stream* s, uint32_t pos) {
 	return ReturnCode_NotSupported; 
 }
 static ReturnCode Stream_DefaultGet(struct Stream* s, uint32_t* value) { 
-	*value = 0; return ReturnCode_NotSupported; 
+	return ReturnCode_NotSupported; 
 }
 static ReturnCode Stream_DefaultClose(struct Stream* s) { return 0; }
 
 void Stream_Init(struct Stream* s) {
-	s->Read   = Stream_DefaultIO;
+	s->Read   = Stream_DefaultRead;
 	s->ReadU8 = Stream_DefaultReadU8;
-	s->Write  = Stream_DefaultIO;
+	s->Write  = Stream_DefaultWrite;
 	s->Skip   = Stream_DefaultSkip;
 
 	s->Seek   = Stream_DefaultSeek;
