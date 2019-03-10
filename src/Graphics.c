@@ -1314,49 +1314,78 @@ void Gfx_OnWindowResize(void) {
 *------------------------------------------------------OpenGL modern------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_GLMODERN
-#define SHADER_FT_TEX (1 << 0)
-#define SHADER_FT_ALP (1 << 1)
+#define FTR_TEXTURE_UV (1 << 0)
+#define FTR_ALPHA_TEST (1 << 1)
+#define FTR_TEX_MATRIX (1 << 2)
+#define FTR_LINEAR_FOG (1 << 3)
+#define FTR_DENSIT_FOG (1 << 4)
 
-#define SHADER_UF_MVP (1 << 0)
+#define UNI_MVP_MATRIX (1 << 0)
+#define UNI_TEX_MATRIX (1 << 1)
+#define UNI_FOG_COL    (1 << 2)
+#define UNI_FOG_END    (1 << 3)
+#define UNI_FOG_DENS   (1 << 4)
 
 /* cached uniforms (cached for multiple programs */
-static struct Matrix _view, _proj, _mvp;
-static bool gfx_alphaTest;
+static struct Matrix _view, _proj, _tex, _mvp;
+static bool gfx_alphaTest, gfx_texTransform;
 
 /* shader programs (emulate fixed function) */
 static struct GLShader {
 	int Features;     /* what features are enabled for this shader */
 	int Uniforms;     /* which associated uniforms need to be resent to GPU */
 	GLuint Program;   /* OpenGL program ID (0 if not yet compiled) */
-	int Locations[1]; /* location of uniforms (not constant) */
-} shaders[4] = {
-	{ 0 },
-	{ SHADER_FT_ALP },
-	{ SHADER_FT_TEX },
-	{ SHADER_FT_TEX | SHADER_FT_ALP }
+	int Locations[5]; /* location of uniforms (not constant) */
+} shaders[6 * 3] = {
+	/* no fog */
+	{ 0              },
+	{ 0              | FTR_ALPHA_TEST },
+	{ FTR_TEXTURE_UV },
+	{ FTR_TEXTURE_UV | FTR_ALPHA_TEST },
+	{ FTR_TEXTURE_UV | FTR_TEX_MATRIX },
+	{ FTR_TEXTURE_UV | FTR_TEX_MATRIX | FTR_ALPHA_TEST },
+	/* linear fog */
+	{ FTR_LINEAR_FOG | 0              },
+	{ FTR_LINEAR_FOG | 0              | FTR_ALPHA_TEST },
+	{ FTR_LINEAR_FOG | FTR_TEXTURE_UV },
+	{ FTR_LINEAR_FOG | FTR_TEXTURE_UV | FTR_ALPHA_TEST },
+	{ FTR_LINEAR_FOG | FTR_TEXTURE_UV | FTR_TEX_MATRIX },
+	{ FTR_LINEAR_FOG | FTR_TEXTURE_UV | FTR_TEX_MATRIX | FTR_ALPHA_TEST },
+	/* density fog */
+	{ FTR_DENSIT_FOG | 0              },
+	{ FTR_DENSIT_FOG | 0              | FTR_ALPHA_TEST },
+	{ FTR_DENSIT_FOG | FTR_TEXTURE_UV },
+	{ FTR_DENSIT_FOG | FTR_TEXTURE_UV | FTR_ALPHA_TEST },
+	{ FTR_DENSIT_FOG | FTR_TEXTURE_UV | FTR_TEX_MATRIX },
+	{ FTR_DENSIT_FOG | FTR_TEXTURE_UV | FTR_TEX_MATRIX | FTR_ALPHA_TEST },
 };
 static struct GLShader* gl_activeShader;
 
 /* Generates source code for a GLSL vertex shader, based on shader's flags */
 static void Gfx_GenVertexShader(const struct GLShader* shader, String* dst) {
-	int uv = shader->Features & SHADER_FT_TEX;
+	int uv = shader->Features & FTR_TEXTURE_UV;
+	int tm = shader->Features & FTR_TEX_MATRIX;
+
 	String_AppendConst(dst,         "attribute vec3 in_pos;\n");
 	String_AppendConst(dst,         "attribute vec4 in_col;\n");
 	if (uv) String_AppendConst(dst, "attribute vec2 in_uv;\n");
 	String_AppendConst(dst,         "varying vec4 out_col;\n");
 	if (uv) String_AppendConst(dst, "varying vec2 out_uv;\n");
 	String_AppendConst(dst,         "uniform mat4 mvp;\n");
+	if (tm) String_AppendConst(dst, "uniform mat4 texMatrix;\n");
 	String_AppendConst(dst,         "void main() {\n");
 	String_AppendConst(dst,         "  gl_Position = mvp * vec4(in_pos, 1.0);\n");
 	String_AppendConst(dst,         "  out_col = in_col;\n");
 	if (uv) String_AppendConst(dst, "  out_uv  = in_uv;\n");
+	/* TODO: Fix this dirty hack for clouds */
+	if (tm) String_AppendConst(dst, "  out_uv = (texMatrix * vec4(out_uv,0.0,1.0)).xy;\n");
 	String_AppendConst(dst,         "}");
 }
 
 /* Generates source code for a GLSL fragment shader, based on shader's flags */
 static void Gfx_GenFragmentShader(const struct GLShader* shader, String* dst) {
-	int uv = shader->Features & SHADER_FT_TEX;
-	int al = shader->Features & SHADER_FT_ALP;
+	int uv = shader->Features & FTR_TEXTURE_UV;
+	int al = shader->Features & FTR_ALPHA_TEST;
 
 	String_AppendConst(dst,         "precision highp float;\n");
 	String_AppendConst(dst,         "varying vec4 out_col;\n");
@@ -1429,6 +1458,10 @@ static void Gfx_CompileProgram(struct GLShader* shader) {
 		glDeleteShader(fragment);
 
 		shader->Locations[0] = glGetUniformLocation(program, "mvp");
+		shader->Locations[1] = glGetUniformLocation(program, "texMatrix");
+		shader->Locations[2] = glGetUniformLocation(program, "fogCol");
+		shader->Locations[3] = glGetUniformLocation(program, "fogEnd");
+		shader->Locations[4] = glGetUniformLocation(program, "fogDensity");
 		return;
     }
 	temp = 0;
@@ -1454,9 +1487,14 @@ static void Gfx_DirtyUniform(int uniform) {
 static void Gfx_ReloadUniforms(void) {
 	struct GLShader* s = gl_activeShader;
 
-	if (s->Uniforms & SHADER_UF_MVP) {
+	if (s->Uniforms & UNI_MVP_MATRIX) {
 		glUniformMatrix4fv(s->Locations[0], 1, false, &_mvp);
-		s->Uniforms &= ~SHADER_UF_MVP;
+		s->Uniforms &= ~UNI_MVP_MATRIX;
+	}
+
+	if ((s->Uniforms & UNI_TEX_MATRIX) && (s->Features & FTR_TEX_MATRIX)) {
+		glUniformMatrix4fv(s->Locations[1], 1, false, &_tex);
+		s->Uniforms &= ~UNI_TEX_MATRIX;
 	}
 }
 
@@ -1466,8 +1504,9 @@ static void Gfx_SwitchProgram(void) {
 	struct GLShader* shader;
 	int index = 0;
 
-	if (gfx_alphaTest) index |= 1;
-	if (gfx_batchFormat == VERTEX_FORMAT_P3FT2FC4B) index |= 2;
+	if (gfx_batchFormat == VERTEX_FORMAT_P3FT2FC4B) index += 2;
+	if (gfx_texTransform) index += 2;
+	if (gfx_alphaTest)    index += 1;
 
 	shader = &shaders[index];
 	if (shader == gl_activeShader) return;
@@ -1489,15 +1528,27 @@ void Gfx_SetAlphaTest(bool enabled) { gfx_alphaTest = enabled; Gfx_SwitchProgram
 void Gfx_SetAlphaTestFunc(CompareFunc func, float refValue) { }
 
 void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
-	if (type == MATRIX_VIEW)       _view  = *matrix;
-	if (type == MATRIX_PROJECTION) _proj = *matrix;
+	if (type == MATRIX_VIEW || type == MATRIX_PROJECTION) {
+		if (type == MATRIX_VIEW)       _view = *matrix;
+		if (type == MATRIX_PROJECTION) _proj = *matrix;
 
-	Matrix_Mul(&_mvp, &_view, &_proj);
-	Gfx_DirtyUniform(SHADER_UF_MVP);
-	Gfx_ReloadUniforms();
+		Matrix_Mul(&_mvp, &_view, &_proj);
+		Gfx_DirtyUniform(UNI_MVP_MATRIX);
+		Gfx_ReloadUniforms();
+	} else {
+		_tex = *matrix;
+		gfx_texTransform = true;
+		Gfx_DirtyUniform(UNI_TEX_MATRIX);
+		Gfx_SwitchProgram();
+	}
 }
 void Gfx_LoadIdentityMatrix(MatrixType type) {
-	Gfx_LoadMatrix(type, &Matrix_Identity);
+	if (type == MATRIX_VIEW || type == MATRIX_PROJECTION) {
+		Gfx_LoadMatrix(type, &Matrix_Identity);
+	} else {
+		gfx_texTransform = false;
+		Gfx_SwitchProgram();
+	}
 }
 
 static void GL_CheckSupport(void) { }
