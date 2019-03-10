@@ -49,6 +49,23 @@ Run ClassiCube.exe. You can connect to LAN/locally hosted servers, ~~minecraft.n
 
 ### Compiling
 
+#### Windows
+
+##### Compiling with Visual Studio:
+Open ClassiCube.sln and compile it.
+
+##### Compiling with MinGW
+I am assuming you used the installer from http://www.mingw.org/
+1. Install MinGW. You need mingw32-base-bin and msys-base-bin packages.
+2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
+3. Compile with the same flags as under **Cross Compiling for windows**, but use *gcc* instead of*i586-mingw32msvc-gcc*
+
+##### Compiling with MinGW-w64
+I am assuming you used the installer from https://sourceforge.net/projects/mingw-w64/
+1. Install MinGW-W64
+2. Use either *Run Terminal* from Start Menu or run *mingw-w64.bat* in the installation folder
+3. Compile with the same flags as under **Cross Compiling for windows**, but use *gcc* instead of*i586-mingw32msvc-gcc*
+
 #### Linux
 
 Install appropriate libs as required. For ubuntu this means: libx11-dev, libgl1-mesa-dev, libopenal-dev, libcurl4-gnutls-dev or libcurl4-openssl-dev
