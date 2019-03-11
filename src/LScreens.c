@@ -630,9 +630,9 @@ static void DirectConnectScreen_Init(struct LScreen* s_) {
 
 static void DirectConnectScreen_Reposition(struct LScreen* s_) {
 	struct DirectConnectScreen* s = (struct DirectConnectScreen*)s_;
-	LWidget_SetLocation(&s->IptUsername, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -120);
-	LWidget_SetLocation(&s->IptAddress,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  -75);
-	LWidget_SetLocation(&s->IptMppass,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  -30);
+	LWidget_SetLocation(&s->IptUsername, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -165, -120);
+	LWidget_SetLocation(&s->IptAddress,  ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -165,  -75);
+	LWidget_SetLocation(&s->IptMppass,   ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -165,  -30);
 
 	LWidget_SetLocation(&s->BtnConnect, ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 20);
 	LWidget_SetLocation(&s->BtnBack,    ANCHOR_CENTRE, ANCHOR_CENTRE,  125, 20);
@@ -791,8 +791,8 @@ static void MainScreen_Init(struct LScreen* s_) {
 
 static void MainScreen_Reposition(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
-	LWidget_SetLocation(&s->IptUsername, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -120);
-	LWidget_SetLocation(&s->IptPassword, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  -75);
+	LWidget_SetLocation(&s->IptUsername, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -140, -120);
+	LWidget_SetLocation(&s->IptPassword, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -140,  -75);
 
 	LWidget_SetLocation(&s->BtnLogin,  ANCHOR_CENTRE, ANCHOR_CENTRE, -90, -25);
 	LWidget_SetLocation(&s->LblStatus, ANCHOR_CENTRE, ANCHOR_CENTRE,   0,  20);
