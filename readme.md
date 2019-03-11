@@ -6,7 +6,7 @@ ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that
 
 You can grab the latest stable binaries [here](https://cs.classicube.net/c_client/release).
 
-You can grab the very builds [here](http://cs.classicube.net/c_client/latest)
+You can grab the very latest builds [here](http://cs.classicube.net/c_client/latest)
 
 #### What ClassiCube is
 * Works with both ~~minecraft.net~~(classic has been removed by Mojang) and classicube.net accounts.
@@ -58,13 +58,13 @@ Open ClassiCube.sln and compile it.
 I am assuming you used the installer from http://www.mingw.org/
 1. Install MinGW. You need mingw32-base-bin and msys-base-bin packages.
 2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
-3. Compile with the same flags as under **Cross Compiling for windows**, but use *gcc* instead of*i586-mingw32msvc-gcc*
+3. Compile with the same flags as under **Cross Compiling for windows**, but use *gcc* instead of *i586-mingw32msvc-gcc*
 
 ##### Compiling with MinGW-w64
 I am assuming you used the installer from https://sourceforge.net/projects/mingw-w64/
 1. Install MinGW-W64
 2. Use either *Run Terminal* from Start Menu or run *mingw-w64.bat* in the installation folder
-3. Compile with the same flags as under **Cross Compiling for windows**, but use *gcc* instead of*i586-mingw32msvc-gcc*
+3. Compile with the same flags as under **Cross Compiling for windows**, but use *gcc* instead of *i586-mingw32msvc-gcc*
 
 #### Linux
 
