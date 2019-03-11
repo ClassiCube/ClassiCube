@@ -276,7 +276,7 @@ static DWORD d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ 
 static IDirect3D9* d3d;
 static IDirect3DDevice9* device;
 static DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
-static D3DFORMAT d3d9_viewFormat, d3d9_depthFormat;
+static D3DFORMAT gfx_viewFormat, gfx_depthFormat;
 
 #define D3D9_SetRenderState(state, value, name) \
 ReturnCode res = IDirect3DDevice9_SetRenderState(device, state, value); if (res) Logger_Abort2(res, name);
@@ -318,26 +318,26 @@ static void D3D9_FindCompatibleFormat(void) {
 	int i, count = Array_Elems(viewFormats);
 
 	for (i = 0; i < count; i++) {
-		d3d9_viewFormat = viewFormats[i];
-		res = IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, true);
+		gfx_viewFormat = viewFormats[i];
+		res = IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, gfx_viewFormat, gfx_viewFormat, true);
 		if (!res) break;
 	}
 	if (i == count) Logger_Abort("Unable to create a back buffer with sufficient precision.");
 
 	count = Array_Elems(depthFormats);
 	for (i = 0; i < count; i++) {
-		d3d9_depthFormat = depthFormats[i];
-		res = IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, d3d9_depthFormat);
+		gfx_depthFormat = depthFormats[i];
+		res = IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, gfx_viewFormat, gfx_viewFormat, gfx_depthFormat);
 		if (!res) break;
 	}
 	if (i == count) Logger_Abort("Unable to create a depth buffer with sufficient precision.");
 }
 
 static void D3D9_FillPresentArgs(int width, int height, D3DPRESENT_PARAMETERS* args) {
-	args->AutoDepthStencilFormat = d3d9_depthFormat;
+	args->AutoDepthStencilFormat = gfx_depthFormat;
 	args->BackBufferWidth  = width;
 	args->BackBufferHeight = height;
-	args->BackBufferFormat = d3d9_viewFormat;
+	args->BackBufferFormat = gfx_viewFormat;
 	args->BackBufferCount  = 1;
 	args->EnableAutoDepthStencil = true;
 	args->PresentationInterval   = gfx_vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
@@ -542,18 +542,18 @@ void Gfx_DisableMipmaps(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedColUnion d3d9_fogCol;
-static float d3d9_fogDensity = -1.0f, d3d9_fogEnd = -1.0f;
-static D3DFOGMODE d3d9_fogMode = D3DFOG_NONE;
+static PackedColUnion gfx_fogCol;
+static float gfx_fogDensity = -1.0f, gfx_fogEnd = -1.0f;
+static D3DFOGMODE gfx_fogMode = D3DFOG_NONE;
 
-static bool d3d9_alphaTesting, d3d9_alphaBlending;
-static int d3d9_alphaTestRef;
-static D3DCMPFUNC d3d9_alphaTestFunc = D3DCMP_ALWAYS;
-static D3DBLEND d3d9_srcBlendFunc = D3DBLEND_ONE, d3d9_dstBlendFunc = D3DBLEND_ZERO;
+static bool gfx_alphaTesting, gfx_alphaBlending;
+static int gfx_alphaTestRef;
+static D3DCMPFUNC gfx_alphaTestFunc = D3DCMP_ALWAYS;
+static D3DBLEND gfx_srcBlendFunc = D3DBLEND_ONE, gfx_dstBlendFunc = D3DBLEND_ZERO;
 
-static PackedColUnion d3d9_clearCol;
-static bool d3d9_depthTesting, d3d9_depthWriting;
-static D3DCMPFUNC d3d9_depthTestFunc = D3DCMP_LESSEQUAL;
+static PackedColUnion gfx_clearCol;
+static bool gfx_depthTesting, gfx_depthWriting;
+static D3DCMPFUNC gfx_depthTestFunc = D3DCMP_LESSEQUAL;
 
 void Gfx_SetFaceCulling(bool enabled) {
 	D3DCULL mode = enabled ? D3DCULL_CW : D3DCULL_NONE;
@@ -569,17 +569,17 @@ void Gfx_SetFog(bool enabled) {
 }
 
 void Gfx_SetFogCol(PackedCol col) {
-	if (PackedCol_Equals(col, d3d9_fogCol.C)) return;
-	d3d9_fogCol.C = col;
+	if (PackedCol_Equals(col, gfx_fogCol.C)) return;
+	gfx_fogCol.C = col;
 
 	if (Gfx.LostContext) return;
-	D3D9_SetRenderState(D3DRS_FOGCOLOR, d3d9_fogCol.Raw, "D3D9_SetFogColour");
+	D3D9_SetRenderState(D3DRS_FOGCOLOR, gfx_fogCol.Raw, "D3D9_SetFogColour");
 }
 
 void Gfx_SetFogDensity(float value) {
 	union IntAndFloat raw;
-	if (value == d3d9_fogDensity) return;
-	d3d9_fogDensity = value;
+	if (value == gfx_fogDensity) return;
+	gfx_fogDensity = value;
 
 	if (Gfx.LostContext) return;
 	raw.f = value;
@@ -588,8 +588,8 @@ void Gfx_SetFogDensity(float value) {
 
 void Gfx_SetFogEnd(float value) {
 	union IntAndFloat raw;
-	if (value == d3d9_fogEnd) return;
-	d3d9_fogEnd = value;
+	if (value == gfx_fogEnd) return;
+	gfx_fogEnd = value;
 
 	if (Gfx.LostContext) return;
 	raw.f = value;
@@ -599,39 +599,39 @@ void Gfx_SetFogEnd(float value) {
 void Gfx_SetFogMode(FogFunc func) {
 	static D3DFOGMODE modes[3] = { D3DFOG_LINEAR, D3DFOG_EXP, D3DFOG_EXP2 };
 	D3DFOGMODE mode = modes[func];
-	if (mode == d3d9_fogMode) return;
+	if (mode == gfx_fogMode) return;
 
-	d3d9_fogMode = mode;
+	gfx_fogMode = mode;
 	if (Gfx.LostContext) return;
 	D3D9_SetRenderState(D3DRS_FOGTABLEMODE, mode, "D3D9_SetFogMode");
 }
 
 void Gfx_SetAlphaTest(bool enabled) {
-	if (d3d9_alphaTesting == enabled) return;
-	d3d9_alphaTesting = enabled;
+	if (gfx_alphaTesting == enabled) return;
+	gfx_alphaTesting = enabled;
 	D3D9_SetRenderState(D3DRS_ALPHATESTENABLE, enabled, "D3D9_SetAlphaTest");
 }
 
 void Gfx_SetAlphaTestFunc(CompareFunc func, float refValue) {
-	d3d9_alphaTestFunc = d3d9_compareFuncs[func];
-	D3D9_SetRenderState(D3DRS_ALPHAFUNC, d3d9_alphaTestFunc, "D3D9_SetAlphaTest_Func");
-	d3d9_alphaTestRef = (int)(refValue * 255);
-	D3D9_SetRenderState2(D3DRS_ALPHAREF, d3d9_alphaTestRef,  "D3D9_SetAlphaTest_Ref");
+	gfx_alphaTestFunc = d3d9_compareFuncs[func];
+	D3D9_SetRenderState(D3DRS_ALPHAFUNC, gfx_alphaTestFunc, "D3D9_SetAlphaTest_Func");
+	gfx_alphaTestRef = (int)(refValue * 255);
+	D3D9_SetRenderState2(D3DRS_ALPHAREF, gfx_alphaTestRef,  "D3D9_SetAlphaTest_Ref");
 }
 
 void Gfx_SetAlphaBlending(bool enabled) {
-	if (d3d9_alphaBlending == enabled) return;
-	d3d9_alphaBlending = enabled;
+	if (gfx_alphaBlending == enabled) return;
+	gfx_alphaBlending = enabled;
 	D3D9_SetRenderState(D3DRS_ALPHABLENDENABLE, enabled, "D3D9_SetAlphaBlending");
 }
 
 void Gfx_SetAlphaBlendFunc(BlendFunc srcFunc, BlendFunc dstFunc) {
 	static D3DBLEND funcs[6] = { D3DBLEND_ZERO, D3DBLEND_ONE, D3DBLEND_SRCALPHA, D3DBLEND_INVSRCALPHA, D3DBLEND_DESTALPHA, D3DBLEND_INVDESTALPHA };
 
-	d3d9_srcBlendFunc = funcs[srcFunc];
-	D3D9_SetRenderState(D3DRS_SRCBLEND,   d3d9_srcBlendFunc, "D3D9_SetAlphaBlendFunc_Src");
-	d3d9_dstBlendFunc = funcs[dstFunc];
-	D3D9_SetRenderState2(D3DRS_DESTBLEND, d3d9_dstBlendFunc, "D3D9_SetAlphaBlendFunc_Dst");
+	gfx_srcBlendFunc = funcs[srcFunc];
+	D3D9_SetRenderState(D3DRS_SRCBLEND,   gfx_srcBlendFunc, "D3D9_SetAlphaBlendFunc_Src");
+	gfx_dstBlendFunc = funcs[dstFunc];
+	D3D9_SetRenderState2(D3DRS_DESTBLEND, gfx_dstBlendFunc, "D3D9_SetAlphaBlendFunc_Dst");
 }
 
 void Gfx_SetAlphaArgBlend(bool enabled) {
@@ -640,24 +640,24 @@ void Gfx_SetAlphaArgBlend(bool enabled) {
 	if (res) Logger_Abort2(res, "D3D9_SetAlphaArgBlend");
 }
 
-void Gfx_ClearCol(PackedCol col) { d3d9_clearCol.C = col; }
+void Gfx_ClearCol(PackedCol col) { gfx_clearCol.C = col; }
 void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a) {
 	DWORD channels = (r ? 1u : 0u) | (g ? 2u : 0u) | (b ? 4u : 0u) | (a ? 8u : 0u);
 	D3D9_SetRenderState(D3DRS_COLORWRITEENABLE, channels, "D3D9_SetColourWrite");
 }
 
 void Gfx_SetDepthTest(bool enabled) {
-	d3d9_depthTesting = enabled;
+	gfx_depthTesting = enabled;
 	D3D9_SetRenderState(D3DRS_ZENABLE, enabled, "D3D9_SetDepthTest");
 }
 
 void Gfx_SetDepthTestFunc(CompareFunc func) {
-	d3d9_depthTestFunc = d3d9_compareFuncs[func];
-	D3D9_SetRenderState(D3DRS_ZFUNC, d3d9_alphaTestFunc, "D3D9_SetDepthTestFunc");
+	gfx_depthTestFunc = d3d9_compareFuncs[func];
+	D3D9_SetRenderState(D3DRS_ZFUNC, gfx_alphaTestFunc, "D3D9_SetDepthTestFunc");
 }
 
 void Gfx_SetDepthWrite(bool enabled) {
-	d3d9_depthWriting = enabled;
+	gfx_depthWriting = enabled;
 	D3D9_SetRenderState(D3DRS_ZWRITEENABLE, enabled, "D3D9_SetDepthWrite");
 }
 
@@ -673,24 +673,24 @@ static void D3D9_SetDefaultRenderStates(void) {
 
 static void D3D9_RestoreRenderStates(void) {
 	union IntAndFloat raw;
-	D3D9_SetRenderState(D3DRS_ALPHATESTENABLE,   d3d9_alphaTesting,  "D3D9_AlphaTest");
-	D3D9_SetRenderState2(D3DRS_ALPHABLENDENABLE, d3d9_alphaBlending, "D3D9_AlphaBlend");
-	D3D9_SetRenderState2(D3DRS_ALPHAFUNC,        d3d9_alphaTestFunc, "D3D9_AlphaTestFunc");
-	D3D9_SetRenderState2(D3DRS_ALPHAREF,         d3d9_alphaTestRef,  "D3D9_AlphaRefFunc");
-	D3D9_SetRenderState2(D3DRS_SRCBLEND,         d3d9_srcBlendFunc,  "D3D9_AlphaSrcBlend");
-	D3D9_SetRenderState2(D3DRS_DESTBLEND,        d3d9_dstBlendFunc,  "D3D9_AlphaDstBlend");
+	D3D9_SetRenderState(D3DRS_ALPHATESTENABLE,   gfx_alphaTesting,  "D3D9_AlphaTest");
+	D3D9_SetRenderState2(D3DRS_ALPHABLENDENABLE, gfx_alphaBlending, "D3D9_AlphaBlend");
+	D3D9_SetRenderState2(D3DRS_ALPHAFUNC,        gfx_alphaTestFunc, "D3D9_AlphaTestFunc");
+	D3D9_SetRenderState2(D3DRS_ALPHAREF,         gfx_alphaTestRef,  "D3D9_AlphaRefFunc");
+	D3D9_SetRenderState2(D3DRS_SRCBLEND,         gfx_srcBlendFunc,  "D3D9_AlphaSrcBlend");
+	D3D9_SetRenderState2(D3DRS_DESTBLEND,        gfx_dstBlendFunc,  "D3D9_AlphaDstBlend");
 
 	D3D9_SetRenderState2(D3DRS_FOGENABLE, gfx_fogEnabled,  "D3D9_Fog");
-	D3D9_SetRenderState2(D3DRS_FOGCOLOR,  d3d9_fogCol.Raw, "D3D9_FogColor");
-	raw.f = d3d9_fogDensity;
-	D3D9_SetRenderState2(D3DRS_FOGDENSITY, raw.u,          "D3D9_FogDensity");
-	raw.f = d3d9_fogEnd;
-	D3D9_SetRenderState2(D3DRS_FOGEND, raw.u,              "D3D9_FogEnd");
-	D3D9_SetRenderState2(D3DRS_FOGTABLEMODE, d3d9_fogMode, "D3D9_FogMode");
+	D3D9_SetRenderState2(D3DRS_FOGCOLOR,  gfx_fogCol.Raw, "gfx_fogColor");
+	raw.f = gfx_fogDensity;
+	D3D9_SetRenderState2(D3DRS_FOGDENSITY, raw.u,          "gfx_fogDensity");
+	raw.f = gfx_fogEnd;
+	D3D9_SetRenderState2(D3DRS_FOGEND, raw.u,              "gfx_fogEnd");
+	D3D9_SetRenderState2(D3DRS_FOGTABLEMODE, gfx_fogMode, "D3D9_FogMode");
 
-	D3D9_SetRenderState2(D3DRS_ZFUNC,        d3d9_depthTestFunc, "D3D9_DepthTestFunc");
-	D3D9_SetRenderState2(D3DRS_ZENABLE,      d3d9_depthTesting,  "D3D9_DepthTest");
-	D3D9_SetRenderState2(D3DRS_ZWRITEENABLE, d3d9_depthWriting,  "D3D9_DepthWrite");
+	D3D9_SetRenderState2(D3DRS_ZFUNC,        gfx_depthTestFunc, "D3D9_DepthTestFunc");
+	D3D9_SetRenderState2(D3DRS_ZENABLE,      gfx_depthTesting,  "D3D9_DepthTest");
+	D3D9_SetRenderState2(D3DRS_ZWRITEENABLE, gfx_depthWriting,  "D3D9_DepthWrite");
 }
 
 
@@ -896,7 +896,7 @@ void Gfx_SetVSync(bool value) {
 void Gfx_BeginFrame(void) { IDirect3DDevice9_BeginScene(device); }
 void Gfx_Clear(void) {
 	DWORD flags = D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER;
-	ReturnCode res = IDirect3DDevice9_Clear(device, 0, NULL, flags, d3d9_clearCol.Raw, 1.0f, 0);
+	ReturnCode res = IDirect3DDevice9_Clear(device, 0, NULL, flags, gfx_clearCol.Raw, 1.0f, 0);
 	if (res) Logger_Abort2(res, "D3D9_Clear");
 }
 
@@ -937,27 +937,27 @@ static const char* D3D9_StrFormat(D3DFORMAT format) {
 	return "(unknown)";
 }
 
-static float d3d9_totalMem;
+static float gfx_totalMem;
 void Gfx_MakeApiInfo(void) {
 	D3DADAPTER_IDENTIFIER9 adapter = { 0 };
 	int pointerSize = sizeof(void*) * 8;
 
 	IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter);
-	d3d9_totalMem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
+	gfx_totalMem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
 
 	String_Format1(&Gfx_ApiInfo[0], "-- Using Direct3D9 (%i bit) --", &pointerSize);
 	String_Format1(&Gfx_ApiInfo[1], "Adapter: %c",         adapter.Description);
 	String_Format1(&Gfx_ApiInfo[2], "Processing mode: %c", D3D9_StrFlags());
 	Gfx_UpdateApiInfo();
 	String_Format2(&Gfx_ApiInfo[4], "Max texture size: (%i, %i)", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
-	String_Format1(&Gfx_ApiInfo[5], "Depth buffer format: %c",    D3D9_StrFormat(d3d9_depthFormat));
-	String_Format1(&Gfx_ApiInfo[6], "Back buffer format: %c",     D3D9_StrFormat(d3d9_viewFormat));
+	String_Format1(&Gfx_ApiInfo[5], "Depth buffer format: %c",    D3D9_StrFormat(gfx_depthFormat));
+	String_Format1(&Gfx_ApiInfo[6], "Back buffer format: %c",     D3D9_StrFormat(gfx_viewFormat));
 }
 
 void Gfx_UpdateApiInfo(void) {
 	float mem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
 	Gfx_ApiInfo[3].length = 0;
-	String_Format2(&Gfx_ApiInfo[3], "Video memory: %f2 MB total, %f2 free", &d3d9_totalMem, &mem);
+	String_Format2(&Gfx_ApiInfo[3], "Video memory: %f2 MB total, %f2 free", &gfx_totalMem, &mem);
 }
 
 void Gfx_OnWindowResize(void) {
@@ -988,9 +988,9 @@ void Gfx_OnWindowResize(void) {
 #endif
 
 #if defined CC_BUILD_GL11
-static GfxResourceID gl_activeList;
+static GfxResourceID gfx_activeList;
 #define gl_DYNAMICLISTID 1234567891
-static void* gl_dynamicListData;
+static void* gfx_dynamicListData;
 static uint16_t gl_indices[GFX_MAX_INDICES];
 #elif defined CC_BUILD_GLMODERN
 #define _glBindBuffer(t,b)        glBindBuffer(t,b)
@@ -1027,8 +1027,8 @@ static int gl_compare[8] = { GL_ALWAYS, GL_NOTEQUAL, GL_NEVER, GL_LESS, GL_LEQUA
 
 typedef void (*GL_SetupVBFunc)(void);
 typedef void (*GL_SetupVBRangeFunc)(int startVertex);
-static GL_SetupVBFunc gl_setupVBFunc;
-static GL_SetupVBRangeFunc gl_setupVBRangeFunc;
+static GL_SetupVBFunc gfx_setupVBFunc;
+static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 
 static void GL_CheckSupport(void);
 static void GL_InitState(void);
@@ -1133,7 +1133,10 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol gl_lastClearCol;
+static PackedCol gfx_clearCol, gfx_fogCol;
+static float gfx_fogEnd = -1, gfx_fogDensity = -1;
+static int gfx_fogMode  = -1;
+
 void Gfx_SetFaceCulling(bool enabled) { gl_Toggle(GL_CULL_FACE); }
 
 void Gfx_SetAlphaBlending(bool enabled) { gl_Toggle(GL_BLEND); }
@@ -1144,9 +1147,9 @@ void Gfx_SetAlphaBlendFunc(BlendFunc srcFunc, BlendFunc dstFunc) {
 void Gfx_SetAlphaArgBlend(bool enabled) { }
 
 void Gfx_ClearCol(PackedCol col) {
-	if (PackedCol_Equals(col, gl_lastClearCol)) return;
+	if (PackedCol_Equals(col, gfx_clearCol)) return;
 	glClearColor(col.R / 255.0f, col.G / 255.0f, col.B / 255.0f, col.A / 255.0f);
-	gl_lastClearCol = col;
+	gfx_clearCol = col;
 }
 
 void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a) {
@@ -1319,6 +1322,7 @@ void Gfx_OnWindowResize(void) {
 #define FTR_TEX_MATRIX (1 << 2)
 #define FTR_LINEAR_FOG (1 << 3)
 #define FTR_DENSIT_FOG (1 << 4)
+#define FTR_HASANY_FOG (FTR_LINEAR_FOG | FTR_DENSIT_FOG)
 
 #define UNI_MVP_MATRIX (1 << 0)
 #define UNI_TEX_MATRIX (1 << 1)
@@ -1359,7 +1363,7 @@ static struct GLShader {
 	{ FTR_DENSIT_FOG | FTR_TEXTURE_UV | FTR_TEX_MATRIX },
 	{ FTR_DENSIT_FOG | FTR_TEXTURE_UV | FTR_TEX_MATRIX | FTR_ALPHA_TEST },
 };
-static struct GLShader* gl_activeShader;
+static struct GLShader* gfx_activeShader;
 
 /* Generates source code for a GLSL vertex shader, based on shader's flags */
 static void Gfx_GenVertexShader(const struct GLShader* shader, String* dst) {
@@ -1373,6 +1377,7 @@ static void Gfx_GenVertexShader(const struct GLShader* shader, String* dst) {
 	if (uv) String_AppendConst(dst, "varying vec2 out_uv;\n");
 	String_AppendConst(dst,         "uniform mat4 mvp;\n");
 	if (tm) String_AppendConst(dst, "uniform mat4 texMatrix;\n");
+
 	String_AppendConst(dst,         "void main() {\n");
 	String_AppendConst(dst,         "  gl_Position = mvp * vec4(in_pos, 1.0);\n");
 	String_AppendConst(dst,         "  out_col = in_col;\n");
@@ -1386,16 +1391,27 @@ static void Gfx_GenVertexShader(const struct GLShader* shader, String* dst) {
 static void Gfx_GenFragmentShader(const struct GLShader* shader, String* dst) {
 	int uv = shader->Features & FTR_TEXTURE_UV;
 	int al = shader->Features & FTR_ALPHA_TEST;
+	int fl = shader->Features & FTR_LINEAR_FOG;
+	int fd = shader->Features & FTR_DENSIT_FOG;
+	int fm = shader->Features & FTR_HASANY_FOG;
 
 	String_AppendConst(dst,         "precision highp float;\n");
 	String_AppendConst(dst,         "varying vec4 out_col;\n");
 	if (uv) String_AppendConst(dst, "varying vec2 out_uv;\n");
 	if (uv) String_AppendConst(dst, "uniform sampler2D texImage;\n");
+	if (fm) String_AppendConst(dst, "uniform vec4 fogCol;\n");
+	if (fl) String_AppendConst(dst, "uniform float fogEnd;\n");
+	if (fd) String_AppendConst(dst, "uniform float fogDensity;\n");
+
 	String_AppendConst(dst,         "void main() {\n");
-	if (uv) String_AppendConst(dst, "  vec4 col = texture2D(texImage, out_uv) * out_col;");
-	else    String_AppendConst(dst, "  vec4 col = out_col;");
-	if (al) String_AppendConst(dst, "  if (col.a < 0.5) discard;");
-	String_AppendConst(dst,         "  gl_FragColor = col;");
+	if (uv) String_AppendConst(dst, "  vec4 col = texture2D(texImage, out_uv) * out_col;\n");
+	else    String_AppendConst(dst, "  vec4 col = out_col;\n");
+	if (al) String_AppendConst(dst, "  if (col.a < 0.5) discard;\n");
+	if (fm) String_AppendConst(dst, "  float depth = gl_FragCoord.z / gl_FragCoord.w;\n");
+	if (fl) String_AppendConst(dst, "  float f = clamp((fogEnd - depth) / fogEnd, 0.0, 1.0);\n");
+	if (fd) String_AppendConst(dst, "  float f = clamp(exp(fogDensity * depth), 0.0, 1.0);\n");
+	if (fm) String_AppendConst(dst, "  col = f * col + (1.0 - f) * fogCol;\n");
+	String_AppendConst(dst,         "  gl_FragColor = col;\n");
 	String_AppendConst(dst,         "}");
 }
 
@@ -1485,16 +1501,30 @@ static void Gfx_DirtyUniform(int uniform) {
 
 /* Sends changes uniforms to the GPU for current program */
 static void Gfx_ReloadUniforms(void) {
-	struct GLShader* s = gl_activeShader;
+	struct GLShader* s = gfx_activeShader;
 
 	if (s->Uniforms & UNI_MVP_MATRIX) {
 		glUniformMatrix4fv(s->Locations[0], 1, false, &_mvp);
 		s->Uniforms &= ~UNI_MVP_MATRIX;
 	}
-
 	if ((s->Uniforms & UNI_TEX_MATRIX) && (s->Features & FTR_TEX_MATRIX)) {
 		glUniformMatrix4fv(s->Locations[1], 1, false, &_tex);
 		s->Uniforms &= ~UNI_TEX_MATRIX;
+	}
+	if ((s->Uniforms & UNI_FOG_COL) && (s->Features & FTR_HASANY_FOG)) {
+		glUniform4f(s->Locations[2], gfx_fogCol.R / 255.0f, gfx_fogCol.G / 255.0f, 
+									 gfx_fogCol.B / 255.0f, gfx_fogCol.A / 255.0f);
+		s->Uniforms &= ~UNI_FOG_COL;
+	}
+	if ((s->Uniforms & UNI_FOG_END) && (s->Features & FTR_LINEAR_FOG)) {
+		glUniform1f(s->Locations[3], gfx_fogEnd);
+		s->Uniforms &= ~UNI_FOG_END;
+	}
+	if ((s->Uniforms & UNI_FOG_DENS) && (s->Features & FTR_DENSIT_FOG)) {
+		/* See https://docs.microsoft.com/en-us/previous-versions/ms537113(v%3Dvs.85) */
+		/* The equation for EXP mode is exp(-density * z), so just negate density here */
+		glUniform1f(s->Locations[4], -gfx_fogDensity);
+		s->Uniforms &= ~UNI_FOG_DENS;
 	}
 }
 
@@ -1504,24 +1534,52 @@ static void Gfx_SwitchProgram(void) {
 	struct GLShader* shader;
 	int index = 0;
 
+	if (gfx_fogEnabled) {
+		index += 6;                       /* linear fog */
+		if (gfx_fogMode >= 1) index += 6; /* exp fog */
+	}
+
 	if (gfx_batchFormat == VERTEX_FORMAT_P3FT2FC4B) index += 2;
 	if (gfx_texTransform) index += 2;
 	if (gfx_alphaTest)    index += 1;
 
+
 	shader = &shaders[index];
-	if (shader == gl_activeShader) return;
+	if (shader == gfx_activeShader) { Gfx_ReloadUniforms(); return; }
 	if (!shader->Program) Gfx_CompileProgram(shader);
 
-	gl_activeShader = shader;
+	gfx_activeShader = shader;
 	glUseProgram(shader->Program);
 	Gfx_ReloadUniforms();
 }
 
-void Gfx_SetFog(bool enabled) { }
-void Gfx_SetFogCol(PackedCol col) { }
-void Gfx_SetFogDensity(float value) { }
-void Gfx_SetFogEnd(float value) { }
-void Gfx_SetFogMode(FogFunc func) { }
+void Gfx_SetFog(bool enabled) { gfx_fogEnabled = enabled; Gfx_SwitchProgram(); }
+void Gfx_SetFogCol(PackedCol col) {
+	if (PackedCol_Equals(col, gfx_fogCol)) return;
+	gfx_fogCol = col;
+	Gfx_DirtyUniform(UNI_FOG_COL);
+	Gfx_ReloadUniforms();
+}
+
+void Gfx_SetFogDensity(float value) {
+	if (gfx_fogDensity == value) return;
+	gfx_fogDensity = value;
+	Gfx_DirtyUniform(UNI_FOG_DENS);
+	Gfx_ReloadUniforms();
+}
+
+void Gfx_SetFogEnd(float value) {
+	if (gfx_fogEnd == value) return;
+	gfx_fogEnd = value;
+	Gfx_DirtyUniform(UNI_FOG_END);
+	Gfx_ReloadUniforms();
+}
+
+void Gfx_SetFogMode(FogFunc func) {
+	if (gfx_fogMode == func) return;
+	gfx_fogMode = func;
+	Gfx_SwitchProgram();
+}
 
 void Gfx_SetTexturing(bool enabled) { }
 void Gfx_SetAlphaTest(bool enabled) { gfx_alphaTest = enabled; Gfx_SwitchProgram(); }
@@ -1589,28 +1647,28 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 
 	if (fmt == VERTEX_FORMAT_P3FT2FC4B) {
 		glEnableVertexAttribArray(2);
-		gl_setupVBFunc      = GL_SetupVbPos3fTex2fCol4b;
-		gl_setupVBRangeFunc = GL_SetupVbPos3fTex2fCol4b_Range;
+		gfx_setupVBFunc      = GL_SetupVbPos3fTex2fCol4b;
+		gfx_setupVBRangeFunc = GL_SetupVbPos3fTex2fCol4b_Range;
 	} else {
 		glDisableVertexAttribArray(2);
-		gl_setupVBFunc      = GL_SetupVbPos3fCol4b;
-		gl_setupVBRangeFunc = GL_SetupVbPos3fCol4b_Range;
+		gfx_setupVBFunc      = GL_SetupVbPos3fCol4b;
+		gfx_setupVBRangeFunc = GL_SetupVbPos3fCol4b_Range;
 	}
 	Gfx_SwitchProgram();
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
-	gl_setupVBFunc();
+	gfx_setupVBFunc();
 	glDrawArrays(GL_LINES, 0, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	gl_setupVBRangeFunc(startVertex);
+	gfx_setupVBRangeFunc(startVertex);
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	gl_setupVBFunc();
+	gfx_setupVBFunc();
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
 }
 
@@ -1628,10 +1686,6 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 *------------------------------------------------------OpenGL legacy------------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GLMODERN
-static PackedCol gl_lastFogCol;
-static float gl_lastFogEnd = -1, gl_lastFogDensity = -1;
-static int gl_lastFogMode = -1;
-
 void Gfx_SetFog(bool enabled) {
 	gfx_fogEnabled = enabled;
 	gl_Toggle(GL_FOG);
@@ -1639,33 +1693,33 @@ void Gfx_SetFog(bool enabled) {
 
 void Gfx_SetFogCol(PackedCol col) {
 	float rgba[4];
-	if (PackedCol_Equals(col, gl_lastFogCol)) return;
+	if (PackedCol_Equals(col, gfx_fogCol)) return;
 
 	rgba[0] = col.R / 255.0f; rgba[1] = col.G / 255.0f;
 	rgba[2] = col.B / 255.0f; rgba[3] = col.A / 255.0f;
 
 	glFogfv(GL_FOG_COLOR, rgba);
-	gl_lastFogCol = col;
+	gfx_fogCol = col;
 }
 
 void Gfx_SetFogDensity(float value) {
-	if (value == gl_lastFogDensity) return;
+	if (value == gfx_fogDensity) return;
 	glFogf(GL_FOG_DENSITY, value);
-	gl_lastFogDensity = value;
+	gfx_fogDensity = value;
 }
 
 void Gfx_SetFogEnd(float value) {
-	if (value == gl_lastFogEnd) return;
+	if (value == gfx_fogEnd) return;
 	glFogf(GL_FOG_END, value);
-	gl_lastFogEnd = value;
+	gfx_fogEnd = value;
 }
 
 void Gfx_SetFogMode(FogFunc func) {
 	static GLint modes[3] = { GL_LINEAR, GL_EXP, GL_EXP2 };
-	if (func == gl_lastFogMode) return;
+	if (func == gfx_fogMode) return;
 
 	glFogi(GL_FOG_MODE, modes[func]);
-	gl_lastFogMode = func;
+	gfx_fogMode = func;
 }
 
 void Gfx_SetTexturing(bool enabled) { gl_Toggle(GL_TEXTURE_2D); }
@@ -1699,7 +1753,7 @@ static void GL_InitState(void) {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_GL11
 /* point to client side dynamic array */
-#define VB_PTR ((uint8_t*)gl_dynamicListData)
+#define VB_PTR ((uint8_t*)gfx_dynamicListData)
 #define IB_PTR gl_indices
 #else
 /* no client side array, use vertex buffer object */
@@ -1738,33 +1792,33 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 
 	if (fmt == VERTEX_FORMAT_P3FT2FC4B) {
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		gl_setupVBFunc      = GL_SetupVbPos3fTex2fCol4b;
-		gl_setupVBRangeFunc = GL_SetupVbPos3fTex2fCol4b_Range;
+		gfx_setupVBFunc      = GL_SetupVbPos3fTex2fCol4b;
+		gfx_setupVBRangeFunc = GL_SetupVbPos3fTex2fCol4b_Range;
 	} else {
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		gl_setupVBFunc      = GL_SetupVbPos3fCol4b;
-		gl_setupVBRangeFunc = GL_SetupVbPos3fCol4b_Range;
+		gfx_setupVBFunc      = GL_SetupVbPos3fCol4b;
+		gfx_setupVBRangeFunc = GL_SetupVbPos3fCol4b_Range;
 	}
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
-	gl_setupVBFunc();
+	gfx_setupVBFunc();
 	glDrawArrays(GL_LINES, 0, verticesCount);
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 #ifdef CC_BUILD_GL11
-	if (gl_activeList != gl_DYNAMICLISTID) { glCallList(gl_activeList); return; }
+	if (gfx_activeList != gl_DYNAMICLISTID) { glCallList(gfx_activeList); return; }
 #endif
-	gl_setupVBRangeFunc(startVertex);
+	gfx_setupVBRangeFunc(startVertex);
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
 #ifdef CC_BUILD_GL11
-	if (gl_activeList != gl_DYNAMICLISTID) { glCallList(gl_activeList); return; }
+	if (gfx_activeList != gl_DYNAMICLISTID) { glCallList(gfx_activeList); return; }
 #endif
-	gl_setupVBFunc();
+	gfx_setupVBFunc();
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
 }
 
@@ -1814,21 +1868,21 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 	/* We need to setup client state properly when building the list */
 	int curFormat = gfx_batchFormat;
 	Gfx_SetVertexFormat(fmt);
-	void* dyn_data     = gl_dynamicListData;
-	gl_dynamicListData = vertices;
+	void* dyn_data     = gfx_dynamicListData;
+	gfx_dynamicListData = vertices;
 
 	glNewList(list, GL_COMPILE);
-	gl_setupVBFunc();
+	gfx_setupVBFunc();
 	glDrawElements(GL_TRIANGLES, ICOUNT(count), GL_UNSIGNED_SHORT, gl_indices);
 	glEndList();
 
 	Gfx_SetVertexFormat(curFormat);
-	gl_dynamicListData = dyn_data;
+	gfx_dynamicListData = dyn_data;
 	return list;
 }
 
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) { return GFX_NULL; }
-void Gfx_BindVb(GfxResourceID vb) { gl_activeList = vb; }
+void Gfx_BindVb(GfxResourceID vb) { gfx_activeList = vb; }
 void Gfx_BindIb(GfxResourceID ib) { }
 void Gfx_DeleteIb(GfxResourceID* ib) { }
 
@@ -1839,16 +1893,16 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	gl_activeList      = gl_DYNAMICLISTID;
-	gl_dynamicListData = vertices;
+	gfx_activeList      = gl_DYNAMICLISTID;
+	gfx_dynamicListData = vertices;
 }
 
 static GfxResourceID gl_lastPartialList;
 void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 	/* TODO: This renders the whole map, bad performance!! FIX FIX */
-	if (gl_activeList == gl_lastPartialList) return;
-	glCallList(gl_activeList);
-	gl_lastPartialList = gl_activeList;
+	if (gfx_activeList == gl_lastPartialList) return;
+	glCallList(gfx_activeList);
+	gl_lastPartialList = gfx_activeList;
 }
 
 static void GL_CheckSupport(void) {
