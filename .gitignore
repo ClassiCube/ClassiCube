@@ -31,7 +31,7 @@ bld/
 [sS]rc/options.txt
 [sS]rc/ClassiCube*
 [sS]rc/screenshots
-
+[sS]rc/fontscache.txt
 #GCC object files
 *.o
 
