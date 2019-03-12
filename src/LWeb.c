@@ -507,7 +507,7 @@ void FetchUpdateTask_Run(bool release, bool d3d9) {
 #if defined CC_BUILD_WIN
 #if _WIN64
 	const char* exe_d3d9 = "ClassiCube.64.exe";
-	const char* exe_ogl  = "ClassiCube.64.opengl.exe";
+	const char* exe_ogl  = "ClassiCube.64-opengl.exe";
 #else
 	const char* exe_d3d9 = "ClassiCube.exe";
 	const char* exe_ogl  = "ClassiCube.opengl.exe";

@@ -74,7 +74,7 @@ int String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int 
 	return count;
 }
 
-CC_API void String_UNSAFE_SplitBy(STRING_REF String* str, char c, String* part) {
+void String_UNSAFE_SplitBy(STRING_REF String* str, char c, String* part) {
 	int idx = String_IndexOf(str, c);
 	if (idx == -1) {
 		*part = *str;

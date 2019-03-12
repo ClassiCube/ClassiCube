@@ -206,7 +206,7 @@ static bool InputHandler_HandleCoreKey(Key key) {
 		Gui_FreeActive();
 		Gui_SetActive(InventoryScreen_MakeInstance());
 	} else if (key == KEY_F5 && Game_ClassicMode) {
-		int weather = Env_Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
+		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
 		Env_SetWeather(weather);
 	} else {
 		if (Game_ClassicMode) return false;

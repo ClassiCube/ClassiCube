@@ -13,6 +13,7 @@ struct AABB;
 /* Packs an x,y,z into a single index */
 #define World_Pack(x, y, z) (((y) * World.Length + (z)) * World.Width + (x))
 
+/* Contains general data about the world, primarily the blocks. */
 CC_VAR extern struct _WorldData {
 	/* The blocks in the world. */
 	BlockRaw* Blocks;
@@ -91,26 +92,27 @@ enum EnvVar {
 	ENV_VAR_SKYBOX_COL
 };
 
-extern BlockID Env_EdgeBlock, Env_SidesBlock;
-extern int Env_EdgeHeight;
-extern int Env_SidesOffset;
-#define Env_SidesHeight (Env_EdgeHeight + Env_SidesOffset)
-extern int Env_CloudsHeight;
-extern float Env_CloudsSpeed;
+/* Contains data about the current environment of the world. */
+CC_VAR extern struct _EnvData {
+	BlockID EdgeBlock, SidesBlock;
+	int EdgeHeight, SidesOffset;
+	int CloudsHeight;
+	float CloudsSpeed;
+
+	float WeatherSpeed, WeatherFade;
+	int Weather, ExpFog;
+	float SkyboxHorSpeed, SkyboxVerSpeed;
+
+	PackedCol SkyCol, FogCol, CloudsCol, SkyboxCol;
+	PackedCol SunCol, SunXSide, SunZSide, SunYMin;
+	PackedCol ShadowCol, ShadowXSide, ShadowZSide, ShadowYMin;
+} Env;
+#define Env_SidesHeight (Env.EdgeHeight + Env.SidesOffset)
 
 enum Weather_ { WEATHER_SUNNY, WEATHER_RAINY, WEATHER_SNOWY };
 extern const char* Weather_Names[3];
-extern float Env_WeatherSpeed;
-extern float Env_WeatherFade;
-extern int Env_Weather;
-extern bool Env_ExpFog;
-extern float Env_SkyboxHorSpeed, Env_SkyboxVerSpeed;
-
-extern PackedCol Env_SkyCol, Env_FogCol, Env_CloudsCol, Env_SkyboxCol;
-extern PackedCol Env_DefaultSkyCol, Env_DefaultFogCol, Env_DefaultCloudsCol, Env_DefaultSkyboxCol;
-extern PackedCol Env_SunCol,    Env_SunXSide,    Env_SunZSide,    Env_SunYMin;
-extern PackedCol Env_ShadowCol, Env_ShadowXSide, Env_ShadowZSide, Env_ShadowYMin;
-extern PackedCol Env_DefaultSunCol, Env_DefaultShadowCol;
+extern const PackedCol Env_DefaultSkyCol, Env_DefaultFogCol, Env_DefaultCloudsCol, Env_DefaultSkyboxCol;
+extern const PackedCol Env_DefaultSunCol, Env_DefaultShadowCol;
 
 #define ENV_DEFAULT_SKYCOL_HEX "99CCFF"
 #define ENV_DEFAULT_FOGCOL_HEX "FFFFFF"

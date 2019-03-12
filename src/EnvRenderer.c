@@ -61,7 +61,7 @@ static void EnvRenderer_CalcFog(float* density, PackedCol* col) {
 		*density = 0.0f;
 		/* Blend fog and sky together */
 		blend    = EnvRenderer_BlendFactor((float)Game_ViewDistance);
-		*col     = PackedCol_Lerp(Env_FogCol, Env_SkyCol, blend);
+		*col     = PackedCol_Lerp(Env.FogCol, Env.SkyCol, blend);
 	}
 }
 
@@ -88,7 +88,7 @@ static void EnvRenderer_UpdateFogNormal(float fogDensity, PackedCol fogCol) {
 	if (fogDensity != 0.0f) {
 		Gfx_SetFogMode(FOG_EXP);
 		Gfx_SetFogDensity(fogDensity);
-	} else if (Env_ExpFog) {
+	} else if (Env.ExpFog) {
 		Gfx_SetFogMode(FOG_EXP);
 		/* f = 1-z/end   f = e^(-dz)
 		   solve for f = 0.01 gives:
@@ -132,8 +132,8 @@ void EnvRenderer_RenderClouds(double deltaTime) {
 	float offset;
 	struct Matrix m;
 
-	if (!clouds_vb || Env_CloudsHeight < -2000) return;
-	offset = (float)(Game.Time / 2048.0f * 0.6f * Env_CloudsSpeed);
+	if (!clouds_vb || Env.CloudsHeight < -2000) return;
+	offset = (float)(Game.Time / 2048.0f * 0.6f * Env.CloudsSpeed);
 
 	m = Matrix_Identity; m.Row3.X = offset; /* translate X axis */
 	Gfx_LoadMatrix(MATRIX_TEXTURE, &m);
@@ -157,7 +157,7 @@ static void EnvRenderer_DrawCloudsY(int x1, int z1, int x2, int z2, int y, Verte
 	float offset = (float)Math_CeilDiv(-x1, 2048);
 
 	VertexP3fT2fC4b v;
-	v.Y = (float)y + 0.1f; v.Col = Env_CloudsCol;
+	v.Y = (float)y + 0.1f; v.Col = Env.CloudsCol;
 
 	for (; x1 < endX; x1 += axisSize) {
 		x2 = x1 + axisSize;
@@ -197,7 +197,7 @@ static void EnvRenderer_UpdateClouds(void) {
 		ptr = Mem_Alloc(clouds_vertices, sizeof(VertexP3fT2fC4b), "temp clouds vertices");
 	}
 
-	EnvRenderer_DrawCloudsY(x1, z1, x2, z2, Env_CloudsHeight, ptr);
+	EnvRenderer_DrawCloudsY(x1, z1, x2, z2, Env.CloudsHeight, ptr);
 	clouds_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FT2FC4B, clouds_vertices);
 
 	if (clouds_vertices > ENV_SMALL_VERTICES) Mem_Free(ptr);
@@ -238,7 +238,7 @@ void EnvRenderer_RenderSky(double deltaTime) {
 static void EnvRenderer_DrawSkyY(int x1, int z1, int x2, int z2, int y, VertexP3fC4b* vertices) {
 	int endX = x2, endZ = z2, startZ = z1, axisSize = EnvRenderer_AxisSize();
 	VertexP3fC4b v;
-	v.Y = (float)y; v.Col = Env_SkyCol;
+	v.Y = (float)y; v.Col = Env.SkyCol;
 
 	for (; x1 < endX; x1 += axisSize) {
 		x2 = x1 + axisSize;
@@ -276,7 +276,7 @@ static void EnvRenderer_UpdateSky(void) {
 		ptr = Mem_Alloc(sky_vertices, sizeof(VertexP3fC4b), "temp sky vertices");
 	}
 
-	height = max((World.Height + 2), Env_CloudsHeight) + 6;
+	height = max((World.Height + 2), Env.CloudsHeight) + 6;
 	EnvRenderer_DrawSkyY(x1, z1, x2, z2, height, ptr);
 	sky_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FC4B, sky_vertices);
 
@@ -304,8 +304,8 @@ void EnvRenderer_RenderSkybox(double deltaTime) {
 	/* Base skybox rotation */
 	m       = Matrix_Identity;
 	rotTime = (float)(Game.Time * 2 * MATH_PI); /* So speed of 1 rotates whole skybox every second */
-	Matrix_RotateY(&rotY, Env_SkyboxHorSpeed * rotTime); Matrix_MulBy(&m, &rotY);
-	Matrix_RotateX(&rotX, Env_SkyboxVerSpeed * rotTime); Matrix_MulBy(&m, &rotX);
+	Matrix_RotateY(&rotY, Env.SkyboxHorSpeed * rotTime); Matrix_MulBy(&m, &rotY);
+	Matrix_RotateX(&rotX, Env.SkyboxVerSpeed * rotTime); Matrix_MulBy(&m, &rotX);
 
 	/* Rotate around camera */
 	pos = Camera.CurrentPos;
@@ -349,7 +349,7 @@ static void EnvRenderer_UpdateSkybox(void) {
 	Gfx_DeleteVb(&skybox_vb);
 	if (EnvRenderer_Minimal) return;
 
-	for (i = 0; i < SKYBOX_COUNT; i++) { vertices[i].Col = Env_SkyboxCol; }
+	for (i = 0; i < SKYBOX_COUNT; i++) { vertices[i].Col = Env.SkyboxCol; }
 	skybox_vb = Gfx_CreateVb(vertices, VERTEX_FORMAT_P3FT2FC4B, SKYBOX_COUNT);
 }
 
@@ -406,7 +406,7 @@ static int EnvRenderer_CalcRainHeightAt(int x, int maxY, int z, int hIndex) {
 static float EnvRenderer_RainHeight(int x, int z) {
 	int hIndex, height;
 	int y;
-	if (!World_ContainsXZ(x, z)) return (float)Env_EdgeHeight;
+	if (!World_ContainsXZ(x, z)) return (float)Env.EdgeHeight;
 
 	hIndex = Weather_Pack(x, z);
 	height = Weather_Heightmap[hIndex];
@@ -441,7 +441,7 @@ void EnvRenderer_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID n
 static float EnvRenderer_RainAlphaAt(float x) {
 	/* Wolfram Alpha: fit {0,178},{1,169},{4,147},{9,114},{16,59},{25,9} */
 	float falloff = 0.05f * x * x - 7 * x;
-	return 178 + falloff * Env_WeatherFade;
+	return 178 + falloff * Env.WeatherFade;
 }
 
 void EnvRenderer_RenderWeather(double deltaTime) {
@@ -457,7 +457,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	float worldV, v1, v2;
 	float x1,y1,z1, x2,y2,z2;
 
-	weather = Env_Weather;
+	weather = Env.Weather;
 	if (weather == WEATHER_SUNNY) return;
 	if (!Weather_Heightmap) EnvRenderer_InitWeatherHeightmap();
 	Gfx_BindTexture(weather == WEATHER_RAINY ? rain_tex : snow_tex);
@@ -470,13 +470,13 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	pos.Y += 64;
 	pos.Y = max(World.Height, pos.Y);
 
-	speed     = (weather == WEATHER_RAINY ? 1.0f : 0.2f) * Env_WeatherSpeed;
+	speed     = (weather == WEATHER_RAINY ? 1.0f : 0.2f) * Env.WeatherSpeed;
 	vOffset   = (float)Game.Time * speed;
 	particles = weather == WEATHER_RAINY;
 	weather_accumulator += deltaTime;
 
 	ptr   = vertices;
-	v.Col = Env_SunCol;
+	v.Col = Env.SunCol;
 
 	for (dx = -WEATHER_EXTENT; dx <= WEATHER_EXTENT; dx++) {
 		for (dz = -WEATHER_EXTENT; dz <= WEATHER_EXTENT; dz++) {
@@ -542,7 +542,7 @@ static int sides_vertices, edges_vertices;
 static bool sides_fullBright, edges_fullBright;
 static TextureLoc edges_lastTexLoc, sides_lastTexLoc;
 
-void EnvRenderer_RenderBorders(BlockID block, GfxResourceID vb, GfxResourceID tex, int count) {
+static void EnvRenderer_RenderBorders(BlockID block, GfxResourceID vb, GfxResourceID tex, int count) {
 	if (!vb) return;
 
 	Gfx_SetTexturing(true);
@@ -560,7 +560,7 @@ void EnvRenderer_RenderBorders(BlockID block, GfxResourceID vb, GfxResourceID te
 }
 
 void EnvRenderer_RenderMapSides(double delta) {
-	EnvRenderer_RenderBorders(Env_SidesBlock, 
+	EnvRenderer_RenderBorders(Env.SidesBlock, 
 		sides_vb, sides_tex, sides_vertices);
 }
 
@@ -570,7 +570,7 @@ void EnvRenderer_RenderMapEdges(double delta) {
 	int yVisible = min(0, Env_SidesHeight);
 	if (Camera.CurrentPos.Y < yVisible && sides_vb) return;
 
-	EnvRenderer_RenderBorders(Env_EdgeBlock,
+	EnvRenderer_RenderBorders(Env.EdgeBlock,
 		edges_vb, edges_tex, edges_vertices);
 }
 
@@ -598,8 +598,8 @@ static void EnvRenderer_CalcBorderRects(Rect2D* rects) {
 }
 
 static void EnvRenderer_UpdateBorderTextures(void) {
-	EnvRenderer_MakeBorderTex(&edges_tex, Env_EdgeBlock);
-	EnvRenderer_MakeBorderTex(&sides_tex, Env_SidesBlock);
+	EnvRenderer_MakeBorderTex(&edges_tex, Env.EdgeBlock);
+	EnvRenderer_MakeBorderTex(&sides_tex, Env.SidesBlock);
 }
 
 #define Borders_HorOffset(block) (Blocks.RenderMinBB[block].X - Blocks.MinBB[block].X)
@@ -696,7 +696,7 @@ static void EnvRenderer_UpdateMapSides(void) {
 
 	if (!World.Blocks || Gfx.LostContext) return;
 	Gfx_DeleteVb(&sides_vb);
-	block = Env_SidesBlock;
+	block = Env.SidesBlock;
 
 	if (Blocks.Draw[block] == DRAW_GAS) return;
 	EnvRenderer_CalcBorderRects(rects);
@@ -719,7 +719,7 @@ static void EnvRenderer_UpdateMapSides(void) {
 	cur = ptr;
 
 	sides_fullBright = Blocks.FullBright[block];
-	col = sides_fullBright ? white : Env_ShadowCol;
+	col = sides_fullBright ? white : Env.ShadowCol;
 	Block_Tint(col, block)
 
 	for (i = 0; i < 4; i++) {
@@ -755,7 +755,7 @@ static void EnvRenderer_UpdateMapEdges(void) {
 
 	if (!World.Blocks || Gfx.LostContext) return;
 	Gfx_DeleteVb(&edges_vb);
-	block = Env_EdgeBlock;
+	block = Env.EdgeBlock;
 
 	if (Blocks.Draw[block] == DRAW_GAS) return;
 	EnvRenderer_CalcBorderRects(rects);
@@ -773,10 +773,10 @@ static void EnvRenderer_UpdateMapEdges(void) {
 	cur = ptr;
 
 	edges_fullBright = Blocks.FullBright[block];
-	col = edges_fullBright ? white : Env_SunCol;
+	col = edges_fullBright ? white : Env.SunCol;
 	Block_Tint(col, block)
 
-	y = (float)Env_EdgeHeight;
+	y = (float)Env.EdgeHeight;
 	for (i = 0; i < 4; i++) {
 		r = rects[i];
 		EnvRenderer_DrawBorderY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, col,
@@ -869,10 +869,10 @@ static void EnvRenderer_ViewDistanceChanged(void* obj) {
 
 static void EnvRenderer_EnvVariableChanged(void* obj, int envVar) {
 	if (envVar == ENV_VAR_EDGE_BLOCK) {
-		EnvRenderer_MakeBorderTex(&edges_tex, Env_EdgeBlock);
+		EnvRenderer_MakeBorderTex(&edges_tex, Env.EdgeBlock);
 		EnvRenderer_UpdateMapEdges();
 	} else if (envVar == ENV_VAR_SIDES_BLOCK) {
-		EnvRenderer_MakeBorderTex(&sides_tex, Env_SidesBlock);
+		EnvRenderer_MakeBorderTex(&sides_tex, Env.SidesBlock);
 		EnvRenderer_UpdateMapSides();
 	} else if (envVar == ENV_VAR_EDGE_HEIGHT || envVar == ENV_VAR_SIDES_OFFSET) {
 		EnvRenderer_UpdateMapEdges();

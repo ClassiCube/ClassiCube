@@ -53,31 +53,31 @@ bool Lighting_IsLit(int x, int y, int z) {
 }
 
 PackedCol Lighting_Col(int x, int y, int z) {
-	return y > Lighting_GetLightHeight(x, z) ? Env_SunCol : Env_ShadowCol;
+	return y > Lighting_GetLightHeight(x, z) ? Env.SunCol : Env.ShadowCol;
 }
 
 PackedCol Lighting_Col_XSide(int x, int y, int z) {
-	return y > Lighting_GetLightHeight(x, z) ? Env_SunXSide : Env_ShadowXSide;
+	return y > Lighting_GetLightHeight(x, z) ? Env.SunXSide : Env.ShadowXSide;
 }
 
 PackedCol Lighting_Col_Sprite_Fast(int x, int y, int z) {
-	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env_SunCol : Env_ShadowCol;
+	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env.SunCol : Env.ShadowCol;
 }
 
 PackedCol Lighting_Col_YMax_Fast(int x, int y, int z) {
-	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env_SunCol : Env_ShadowCol;
+	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env.SunCol : Env.ShadowCol;
 }
 
 PackedCol Lighting_Col_YMin_Fast(int x, int y, int z) {
-	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env_SunYMin : Env_ShadowYMin;
+	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env.SunYMin : Env.ShadowYMin;
 }
 
 PackedCol Lighting_Col_XSide_Fast(int x, int y, int z) {
-	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env_SunXSide : Env_ShadowXSide;
+	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env.SunXSide : Env.ShadowXSide;
 }
 
 PackedCol Lighting_Col_ZSide_Fast(int x, int y, int z) {
-	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env_SunZSide : Env_ShadowZSide;
+	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env.SunZSide : Env.ShadowZSide;
 }
 
 void Lighting_Refresh(void) {

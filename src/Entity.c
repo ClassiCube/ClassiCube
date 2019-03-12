@@ -63,7 +63,7 @@ void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, fl
 static PackedCol Entity_GetCol(struct Entity* e) {
 	Vector3 eyePos = Entity_GetEyePosition(e);
 	Vector3I pos; Vector3I_Floor(&pos, &eyePos);
-	return World_Contains(pos.X, pos.Y, pos.Z) ? Lighting_Col(pos.X, pos.Y, pos.Z) : Env_SunCol;
+	return World_Contains(pos.X, pos.Y, pos.Z) ? Lighting_Col(pos.X, pos.Y, pos.Z) : Env.SunCol;
 }
 
 void Entity_Init(struct Entity* e) {

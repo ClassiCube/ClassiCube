@@ -125,7 +125,7 @@ static BlockID Picking_GetInside(int x, int y, int z) {
 	}
 
 	/* bedrock on bottom or outside map */
-	sides  = Env_SidesBlock != BLOCK_AIR;
+	sides  = Env.SidesBlock != BLOCK_AIR;
 	height = Env_SidesHeight; if (height < 1) height = 1;
 	return sides && y < height ? PICKING_BORDER : BLOCK_AIR;
 }
@@ -135,7 +135,7 @@ static BlockID Picking_GetOutside(int x, int y, int z, Vector3I origin) {
 	int height;
 
 	if (!World_ContainsXZ(x, z)) return BLOCK_AIR;
-	sides = Env_SidesBlock != BLOCK_AIR;
+	sides = Env.SidesBlock != BLOCK_AIR;
 	/* handling of blocks inside the map, above, and on borders */
 
 	if (y >= World.Height) return BLOCK_AIR;

@@ -131,8 +131,8 @@ static void Physics_ActivateNeighbours(int x, int y, int z, int index) {
 
 static bool Physics_IsEdgeWater(int x, int y, int z) {
 	return
-		(Env_EdgeBlock == BLOCK_WATER || Env_EdgeBlock == BLOCK_STILL_WATER)
-		&& (y >= Env_SidesHeight && y < Env_EdgeHeight)
+		(Env.EdgeBlock == BLOCK_WATER || Env.EdgeBlock == BLOCK_STILL_WATER)
+		&& (y >= Env_SidesHeight && y < Env.EdgeHeight)
 		&& (x == 0 || z == 0 || x == World.MaxX || z == World.MaxZ);
 }
 

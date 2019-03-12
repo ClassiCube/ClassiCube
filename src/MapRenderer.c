@@ -90,10 +90,10 @@ static void MapRenderer_CheckWeather(double delta) {
 
 	block   = World_SafeGetBlock_3I(pos);
 	outside = pos.Y < 0 || World_ContainsXZ(pos.X, pos.Z);
-	inTranslucent = Blocks.Draw[block] == DRAW_TRANSLUCENT || (pos.Y < Env_EdgeHeight && outside);
+	inTranslucent = Blocks.Draw[block] == DRAW_TRANSLUCENT || (pos.Y < Env.EdgeHeight && outside);
 
 	/* If we are under water, render weather before to blend properly */
-	if (!inTranslucent || Env_Weather == WEATHER_SUNNY) return;
+	if (!inTranslucent || Env.Weather == WEATHER_SUNNY) return;
 	Gfx_SetAlphaBlending(true);
 	EnvRenderer_RenderWeather(delta);
 	Gfx_SetAlphaBlending(false);
@@ -287,7 +287,7 @@ void MapRenderer_RenderTranslucent(double delta) {
 
 	Gfx_SetDepthWrite(true);
 	/* If we weren't under water, render weather after to blend properly */
-	if (!inTranslucent && Env_Weather != WEATHER_SUNNY) {
+	if (!inTranslucent && Env.Weather != WEATHER_SUNNY) {
 		Gfx_SetAlphaTest(true);
 		EnvRenderer_RenderWeather(delta);
 		Gfx_SetAlphaTest(false);
@@ -691,7 +691,7 @@ static void MapRenderer_EnvVariableChanged(void* obj, int envVar) {
 	} else if (envVar == ENV_VAR_EDGE_HEIGHT || envVar == ENV_VAR_SIDES_OFFSET) {
 		int oldClip        = Builder_EdgeLevel;
 		Builder_SidesLevel = max(0, Env_SidesHeight);
-		Builder_EdgeLevel  = max(0, Env_EdgeHeight);
+		Builder_EdgeLevel  = max(0, Env.EdgeHeight);
 
 		/* Only need to refresh chunks on map borders up to highest edge level.*/
 		MapRenderer_RefreshBorders(max(oldClip, Builder_EdgeLevel));

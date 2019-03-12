@@ -538,17 +538,17 @@ static PackedCol Normal_LightCol(int x, int y, int z, Face face, BlockID block) 
 
 	switch (face) {
 	case FACE_XMIN:
-		return x < offset                ? Env_SunXSide : Lighting_Col_XSide_Fast(x - offset, y, z);
+		return x < offset                ? Env.SunXSide : Lighting_Col_XSide_Fast(x - offset, y, z);
 	case FACE_XMAX:
-		return x > (World.MaxX - offset) ? Env_SunXSide : Lighting_Col_XSide_Fast(x + offset, y, z);
+		return x > (World.MaxX - offset) ? Env.SunXSide : Lighting_Col_XSide_Fast(x + offset, y, z);
 	case FACE_ZMIN:
-		return z < offset                ? Env_SunZSide : Lighting_Col_ZSide_Fast(x, y, z - offset);
+		return z < offset                ? Env.SunZSide : Lighting_Col_ZSide_Fast(x, y, z - offset);
 	case FACE_ZMAX:
-		return z > (World.MaxZ - offset) ? Env_SunZSide : Lighting_Col_ZSide_Fast(x, y, z + offset);
+		return z > (World.MaxZ - offset) ? Env.SunZSide : Lighting_Col_ZSide_Fast(x, y, z + offset);
 	case FACE_YMIN:
-		return y <= 0                    ? Env_SunYMin  : Lighting_Col_YMin_Fast(x, y - offset, z);
+		return y <= 0                    ? Env.SunYMin  : Lighting_Col_YMin_Fast(x, y - offset, z);
 	case FACE_YMAX:
-		return y >= World.MaxY           ? Env_SunCol   : Lighting_Col_YMax_Fast(x, (y + 1) - offset, z);
+		return y >= World.MaxY           ? Env.SunCol   : Lighting_Col_YMax_Fast(x, (y + 1) - offset, z);
 	}
 	return invalid; /* should never happen */
 }
@@ -675,7 +675,7 @@ static void NormalBuilder_RenderBlock(int index) {
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? white :
-			Builder_X >= offset ? Lighting_Col_XSide_Fast(Builder_X - offset, Builder_Y, Builder_Z) : Env_SunXSide;
+			Builder_X >= offset ? Lighting_Col_XSide_Fast(Builder_X - offset, Builder_Y, Builder_Z) : Env.SunXSide;
 		Drawer_XMin(count_XMin, col, loc, &part->fVertices[FACE_XMIN]);
 	}
 
@@ -685,7 +685,7 @@ static void NormalBuilder_RenderBlock(int index) {
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? white :
-			Builder_X <= (World.MaxX - offset) ? Lighting_Col_XSide_Fast(Builder_X + offset, Builder_Y, Builder_Z) : Env_SunXSide;
+			Builder_X <= (World.MaxX - offset) ? Lighting_Col_XSide_Fast(Builder_X + offset, Builder_Y, Builder_Z) : Env.SunXSide;
 		Drawer_XMax(count_XMax, col, loc, &part->fVertices[FACE_XMAX]);
 	}
 
@@ -695,7 +695,7 @@ static void NormalBuilder_RenderBlock(int index) {
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? white :
-			Builder_Z >= offset ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z - offset) : Env_SunZSide;
+			Builder_Z >= offset ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z - offset) : Env.SunZSide;
 		Drawer_ZMin(count_ZMin, col, loc, &part->fVertices[FACE_ZMIN]);
 	}
 
@@ -705,7 +705,7 @@ static void NormalBuilder_RenderBlock(int index) {
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? white :
-			Builder_Z <= (World.MaxZ - offset) ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z + offset) : Env_SunZSide;
+			Builder_Z <= (World.MaxZ - offset) ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z + offset) : Env.SunZSide;
 		Drawer_ZMax(count_ZMax, col, loc, &part->fVertices[FACE_ZMAX]);
 	}
 
@@ -1221,10 +1221,10 @@ static void Adv_PreStretchTiles(int x1, int y1, int z1) {
 	adv_bitFlags = Builder_BitFlags;
 
 	for (i = 0; i <= 4; i++) {
-		adv_lerp[i]  = PackedCol_Lerp(Env_ShadowCol,   Env_SunCol,   i / 4.0f);
-		adv_lerpX[i] = PackedCol_Lerp(Env_ShadowXSide, Env_SunXSide, i / 4.0f);
-		adv_lerpZ[i] = PackedCol_Lerp(Env_ShadowZSide, Env_SunZSide, i / 4.0f);
-		adv_lerpY[i] = PackedCol_Lerp(Env_ShadowYMin,  Env_SunYMin,  i / 4.0f);
+		adv_lerp[i]  = PackedCol_Lerp(Env.ShadowCol,   Env.SunCol,   i / 4.0f);
+		adv_lerpX[i] = PackedCol_Lerp(Env.ShadowXSide, Env.SunXSide, i / 4.0f);
+		adv_lerpZ[i] = PackedCol_Lerp(Env.ShadowZSide, Env.SunZSide, i / 4.0f);
+		adv_lerpY[i] = PackedCol_Lerp(Env.ShadowYMin,  Env.SunYMin,  i / 4.0f);
 	}
 }
 
@@ -1263,5 +1263,5 @@ void Builder_Init(void) {
 
 void Builder_OnNewMapLoaded(void) {
 	Builder_SidesLevel = max(0, Env_SidesHeight);
-	Builder_EdgeLevel  = max(0, Env_EdgeHeight);
+	Builder_EdgeLevel  = max(0, Env.EdgeHeight);
 }

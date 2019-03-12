@@ -2272,37 +2272,37 @@ struct Screen* ClassicOptionsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------EnvSettingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
-static void EnvSettingsScreen_GetCloudsCol(String* v) { PackedCol_ToHex(v, Env_CloudsCol); }
+static void EnvSettingsScreen_GetCloudsCol(String* v) { PackedCol_ToHex(v, Env.CloudsCol); }
 static void EnvSettingsScreen_SetCloudsCol(const String* v) { Env_SetCloudsCol(Menu_HexCol(v)); }
 
-static void EnvSettingsScreen_GetSkyCol(String* v) { PackedCol_ToHex(v, Env_SkyCol); }
+static void EnvSettingsScreen_GetSkyCol(String* v) { PackedCol_ToHex(v, Env.SkyCol); }
 static void EnvSettingsScreen_SetSkyCol(const String* v) { Env_SetSkyCol(Menu_HexCol(v)); }
 
-static void EnvSettingsScreen_GetFogCol(String* v) { PackedCol_ToHex(v, Env_FogCol); }
+static void EnvSettingsScreen_GetFogCol(String* v) { PackedCol_ToHex(v, Env.FogCol); }
 static void EnvSettingsScreen_SetFogCol(const String* v) { Env_SetFogCol(Menu_HexCol(v)); }
 
-static void EnvSettingsScreen_GetCloudsSpeed(String* v) { String_AppendFloat(v, Env_CloudsSpeed, 2); }
+static void EnvSettingsScreen_GetCloudsSpeed(String* v) { String_AppendFloat(v, Env.CloudsSpeed, 2); }
 static void EnvSettingsScreen_SetCloudsSpeed(const String* v) { Env_SetCloudsSpeed(Menu_Float(v)); }
 
-static void EnvSettingsScreen_GetCloudsHeight(String* v) { String_AppendInt(v, Env_CloudsHeight); }
+static void EnvSettingsScreen_GetCloudsHeight(String* v) { String_AppendInt(v, Env.CloudsHeight); }
 static void EnvSettingsScreen_SetCloudsHeight(const String* v) { Env_SetCloudsHeight(Menu_Int(v)); }
 
-static void EnvSettingsScreen_GetSunCol(String* v) { PackedCol_ToHex(v, Env_SunCol); }
+static void EnvSettingsScreen_GetSunCol(String* v) { PackedCol_ToHex(v, Env.SunCol); }
 static void EnvSettingsScreen_SetSunCol(const String* v) { Env_SetSunCol(Menu_HexCol(v)); }
 
-static void EnvSettingsScreen_GetShadowCol(String* v) { PackedCol_ToHex(v, Env_ShadowCol); }
+static void EnvSettingsScreen_GetShadowCol(String* v) { PackedCol_ToHex(v, Env.ShadowCol); }
 static void EnvSettingsScreen_SetShadowCol(const String* v) { Env_SetShadowCol(Menu_HexCol(v)); }
 
-static void EnvSettingsScreen_GetWeather(String* v) { String_AppendConst(v, Weather_Names[Env_Weather]); }
+static void EnvSettingsScreen_GetWeather(String* v) { String_AppendConst(v, Weather_Names[Env.Weather]); }
 static void EnvSettingsScreen_SetWeather(const String* v) {
 	int raw = Utils_ParseEnum(v, 0, Weather_Names, Array_Elems(Weather_Names));
 	Env_SetWeather(raw); 
 }
 
-static void EnvSettingsScreen_GetWeatherSpeed(String* v) { String_AppendFloat(v, Env_WeatherSpeed, 2); }
+static void EnvSettingsScreen_GetWeatherSpeed(String* v) { String_AppendFloat(v, Env.WeatherSpeed, 2); }
 static void EnvSettingsScreen_SetWeatherSpeed(const String* v) { Env_SetWeatherSpeed(Menu_Float(v)); }
 
-static void EnvSettingsScreen_GetEdgeHeight(String* v) { String_AppendInt(v, Env_EdgeHeight); }
+static void EnvSettingsScreen_GetEdgeHeight(String* v) { String_AppendInt(v, Env.EdgeHeight); }
 static void EnvSettingsScreen_SetEdgeHeight(const String* v) { Env_SetEdgeHeight(Menu_Int(v)); }
 
 static void EnvSettingsScreen_ContextRecreated(void* screen) {

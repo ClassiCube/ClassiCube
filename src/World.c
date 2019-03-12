@@ -60,12 +60,8 @@ void World_SetNewMap(BlockRaw* blocks, int width, int height, int length) {
 	}
 #endif
 
-	if (Env_EdgeHeight == -1) {
-		Env_EdgeHeight = height / 2;
-	}
-	if (Env_CloudsHeight == -1) {
-		Env_CloudsHeight = height + 2;
-	}
+	if (Env.EdgeHeight == -1)   { Env.EdgeHeight   = height / 2; }
+	if (Env.CloudsHeight == -1) { Env.CloudsHeight = height + 2; }
 }
 
 CC_NOINLINE void World_SetDimensions(int width, int height, int length) {
@@ -126,122 +122,113 @@ if (src != dst) { dst = src; Event_RaiseInt(&WorldEvents.EnvVarChanged, var); }
 #define Env_SetCol(src, dst, var)\
 if (!PackedCol_Equals(src, dst)) { dst = src; Event_RaiseInt(&WorldEvents.EnvVarChanged, var); }
 
+struct _EnvData Env;
 const char* Weather_Names[3] = { "Sunny", "Rainy", "Snowy" };
 
-PackedCol Env_DefaultSkyCol    = PACKEDCOL_CONST(0x99, 0xCC, 0xFF, 0xFF);
-PackedCol Env_DefaultFogCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
-PackedCol Env_DefaultCloudsCol = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
-PackedCol Env_DefaultSkyboxCol = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
-PackedCol Env_DefaultSunCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
-PackedCol Env_DefaultShadowCol = PACKEDCOL_CONST(0x9B, 0x9B, 0x9B, 0xFF);
-
-BlockID Env_EdgeBlock, Env_SidesBlock;
-int Env_EdgeHeight, Env_SidesOffset, Env_CloudsHeight; 
-float Env_CloudsSpeed, Env_WeatherSpeed, Env_WeatherFade;
-int Env_Weather; bool Env_ExpFog;
-float Env_SkyboxHorSpeed, Env_SkyboxVerSpeed;
-
-PackedCol Env_SkyCol, Env_FogCol, Env_CloudsCol, Env_SkyboxCol;
-PackedCol Env_SunCol,    Env_SunXSide,    Env_SunZSide,    Env_SunYMin;
-PackedCol Env_ShadowCol, Env_ShadowXSide, Env_ShadowZSide, Env_ShadowYMin;
+const PackedCol Env_DefaultSkyCol    = PACKEDCOL_CONST(0x99, 0xCC, 0xFF, 0xFF);
+const PackedCol Env_DefaultFogCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
+const PackedCol Env_DefaultCloudsCol = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
+const PackedCol Env_DefaultSkyboxCol = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
+const PackedCol Env_DefaultSunCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
+const PackedCol Env_DefaultShadowCol = PACKEDCOL_CONST(0x9B, 0x9B, 0x9B, 0xFF);
 
 static char World_TextureUrlBuffer[STRING_SIZE];
 String World_TextureUrl = String_FromArray(World_TextureUrlBuffer);
 
 void Env_Reset(void) {
-	Env_EdgeHeight   = -1;
-	Env_SidesOffset  = -2;
-	Env_CloudsHeight = -1;
+	Env.EdgeHeight   = -1;
+	Env.SidesOffset  = -2;
+	Env.CloudsHeight = -1;
 
-	Env_EdgeBlock  = BLOCK_STILL_WATER;
-	Env_SidesBlock = BLOCK_BEDROCK;
+	Env.EdgeBlock  = BLOCK_STILL_WATER;
+	Env.SidesBlock = BLOCK_BEDROCK;
 
-	Env_CloudsSpeed    = 1.0f;
-	Env_WeatherSpeed   = 1.0f;
-	Env_WeatherFade    = 1.0f;
-	Env_SkyboxHorSpeed = 0.0f;
-	Env_SkyboxVerSpeed = 0.0f;
+	Env.CloudsSpeed    = 1.0f;
+	Env.WeatherSpeed   = 1.0f;
+	Env.WeatherFade    = 1.0f;
+	Env.SkyboxHorSpeed = 0.0f;
+	Env.SkyboxVerSpeed = 0.0f;
 
-	Env_ShadowCol = Env_DefaultShadowCol;
-	PackedCol_GetShaded(Env_ShadowCol, &Env_ShadowXSide,
-		&Env_ShadowZSide, &Env_ShadowYMin);
+	Env.ShadowCol = Env_DefaultShadowCol;
+	PackedCol_GetShaded(Env.ShadowCol, &Env.ShadowXSide,
+		&Env.ShadowZSide, &Env.ShadowYMin);
 
-	Env_SunCol = Env_DefaultSunCol;
-	PackedCol_GetShaded(Env_SunCol, &Env_SunXSide,
-		&Env_SunZSide, &Env_SunYMin);
+	Env.SunCol = Env_DefaultSunCol;
+	PackedCol_GetShaded(Env.SunCol, &Env.SunXSide,
+		&Env.SunZSide, &Env.SunYMin);
 
-	Env_SkyCol    = Env_DefaultSkyCol;
-	Env_FogCol    = Env_DefaultFogCol;
-	Env_CloudsCol = Env_DefaultCloudsCol;
-	Env_SkyboxCol = Env_DefaultSkyboxCol;
-	Env_Weather = WEATHER_SUNNY;
-	Env_ExpFog  = false;
+	Env.SkyCol    = Env_DefaultSkyCol;
+	Env.FogCol    = Env_DefaultFogCol;
+	Env.CloudsCol = Env_DefaultCloudsCol;
+	Env.SkyboxCol = Env_DefaultSkyboxCol;
+	Env.Weather = WEATHER_SUNNY;
+	Env.ExpFog  = false;
 }
 
 
 void Env_SetEdgeBlock(BlockID block) {
 	/* some server software wrongly uses this value */
 	if (block == 255 && !Block_IsCustomDefined(255)) block = BLOCK_STILL_WATER; 
-	Env_Set(block, Env_EdgeBlock, ENV_VAR_EDGE_BLOCK);
+	Env_Set(block, Env.EdgeBlock, ENV_VAR_EDGE_BLOCK);
 }
 void Env_SetSidesBlock(BlockID block) {
 	/* some server software wrongly uses this value */
 	if (block == 255 && !Block_IsCustomDefined(255)) block = BLOCK_BEDROCK;
-	Env_Set(block, Env_SidesBlock, ENV_VAR_SIDES_BLOCK);
+	Env_Set(block, Env.SidesBlock, ENV_VAR_SIDES_BLOCK);
 }
 
 void Env_SetEdgeHeight(int height) {
-	Env_Set(height, Env_EdgeHeight, ENV_VAR_EDGE_HEIGHT);
+	Env_Set(height, Env.EdgeHeight, ENV_VAR_EDGE_HEIGHT);
 }
 void Env_SetSidesOffset(int offset) {
-	Env_Set(offset, Env_SidesOffset, ENV_VAR_SIDES_OFFSET);
+	Env_Set(offset, Env.SidesOffset, ENV_VAR_SIDES_OFFSET);
 }
 void Env_SetCloudsHeight(int height) {
-	Env_Set(height, Env_CloudsHeight, ENV_VAR_CLOUDS_HEIGHT);
+	Env_Set(height, Env.CloudsHeight, ENV_VAR_CLOUDS_HEIGHT);
 }
 void Env_SetCloudsSpeed(float speed) {
-	Env_Set(speed, Env_CloudsSpeed, ENV_VAR_CLOUDS_SPEED);
+	Env_Set(speed, Env.CloudsSpeed, ENV_VAR_CLOUDS_SPEED);
 }
 
 void Env_SetWeatherSpeed(float speed) {
-	Env_Set(speed, Env_WeatherSpeed, ENV_VAR_WEATHER_SPEED);
+	Env_Set(speed, Env.WeatherSpeed, ENV_VAR_WEATHER_SPEED);
 }
 void Env_SetWeatherFade(float rate) {
-	Env_Set(rate, Env_WeatherFade, ENV_VAR_WEATHER_FADE);
+	Env_Set(rate, Env.WeatherFade, ENV_VAR_WEATHER_FADE);
 }
 void Env_SetWeather(int weather) {
-	Env_Set(weather, Env_Weather, ENV_VAR_WEATHER);
+	Env_Set(weather, Env.Weather, ENV_VAR_WEATHER);
 }
 void Env_SetExpFog(bool expFog) {
-	Env_Set(expFog, Env_ExpFog, ENV_VAR_EXP_FOG);
+	Env_Set(expFog, Env.ExpFog, ENV_VAR_EXP_FOG);
 }
 void Env_SetSkyboxHorSpeed(float speed) {
-	Env_Set(speed, Env_SkyboxHorSpeed, ENV_VAR_SKYBOX_HOR_SPEED);
+	Env_Set(speed, Env.SkyboxHorSpeed, ENV_VAR_SKYBOX_HOR_SPEED);
 }
 void Env_SetSkyboxVerSpeed(float speed) {
-	Env_Set(speed, Env_SkyboxVerSpeed, ENV_VAR_SKYBOX_VER_SPEED);
+	Env_Set(speed, Env.SkyboxVerSpeed, ENV_VAR_SKYBOX_VER_SPEED);
 }
 
 void Env_SetSkyCol(PackedCol col) {
-	Env_SetCol(col, Env_SkyCol, ENV_VAR_SKY_COL);
+	Env_SetCol(col, Env.SkyCol, ENV_VAR_SKY_COL);
 }
 void Env_SetFogCol(PackedCol col) {
-	Env_SetCol(col, Env_FogCol, ENV_VAR_FOG_COL);
+	Env_SetCol(col, Env.FogCol, ENV_VAR_FOG_COL);
 }
 void Env_SetCloudsCol(PackedCol col) {
-	Env_SetCol(col, Env_CloudsCol, ENV_VAR_CLOUDS_COL);
+	Env_SetCol(col, Env.CloudsCol, ENV_VAR_CLOUDS_COL);
 }
 void Env_SetSkyboxCol(PackedCol col) {
-	Env_SetCol(col, Env_SkyboxCol, ENV_VAR_SKYBOX_COL);
+	Env_SetCol(col, Env.SkyboxCol, ENV_VAR_SKYBOX_COL);
 }
 
 void Env_SetSunCol(PackedCol col) {
-	PackedCol_GetShaded(col, &Env_SunXSide, &Env_SunZSide, &Env_SunYMin);
-	Env_SetCol(col, Env_SunCol, ENV_VAR_SUN_COL);
+	PackedCol_GetShaded(col, &Env.SunXSide, &Env.SunZSide, &Env.SunYMin);
+	Env_SetCol(col, Env.SunCol, ENV_VAR_SUN_COL);
 }
 void Env_SetShadowCol(PackedCol col) {
-	PackedCol_GetShaded(col, &Env_ShadowXSide, &Env_ShadowZSide, &Env_ShadowYMin);
-	Env_SetCol(col, Env_ShadowCol, ENV_VAR_SHADOW_COL);
+	PackedCol_GetShaded(col, &Env.ShadowXSide, &Env.ShadowZSide, &Env.ShadowYMin);
+	Env_SetCol(col, Env.ShadowCol, ENV_VAR_SHADOW_COL);
 }
 
 
