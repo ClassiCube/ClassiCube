@@ -575,7 +575,7 @@ static struct curl_slist* Http_MakeHeaders(struct HttpRequest* req) {
 		String_InitArray_NT(tmp, buffer);
 		String_AppendConst(&tmp, "Last-Modified: ");
 
-		DateTime_HttpDate(req->LastModified, &tmp);
+		Http_FormatDate(req->LastModified, &tmp);
 		tmp.buffer[tmp.length] = '\0';
 		list = curl_slist_append(list, tmp.buffer);
 	}
